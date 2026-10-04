@@ -1296,7 +1296,9 @@
   "Smart": "Smart",
   "Turbo": "Turbo",
   "Boost": "Boost",
-  "Natur": "Nature"
+  "Natur": "Nature",
+  "Hier gibt es noch keine Geräte": "No devices here yet",
+  "Im Casora Studio einem Raum zuordnen": "Assign them to a room in Casora Studio"
  },
  "patterns": [
   [
