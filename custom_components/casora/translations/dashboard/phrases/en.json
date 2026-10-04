@@ -1288,7 +1288,9 @@
   "Wartung nötig": "Service needed",
   "Abfallkalender gerade nicht erreichbar": "Waste calendar unreachable right now",
   "Nicht erreichbar": "Unreachable",
-  "Die Abholtermine kommen wieder, sobald der Entsorger antwortet.": "Pickup dates will be back as soon as the collection service responds."
+  "Die Abholtermine kommen wieder, sobald der Entsorger antwortet.": "Pickup dates will be back as soon as the collection service responds.",
+  "Lautsprecher und TVs": "Speakers & TVs",
+  "Sonstiges": "Other"
  },
  "patterns": [
   [

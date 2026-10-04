@@ -6,6 +6,9 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ## 1.0.6 – unreleased
 
+### New
+- Phone, room page: tiles are grouped by category, like in Apple's Home app – Light, Climate (heating, floor heating, air purifier, fan, blinds), Security, Speakers & TVs, Water and Other, each with a small heading. Within a group the Studio order stays. Rooms with up to 3 tiles or only one kind of device stay as before, without headings. Studio → Look & Controls → Phone: "Group rooms by category on the phone" (on by default) switches it off per dashboard.
+
 ### Fixed
 - Security badge: A camera reported as ready but delivering no picture (for example through a proxy) counted as fine in the badge while the camera card already showed "Offline". The badge now reports it as offline too, including the separate camera badge in a room.
 
