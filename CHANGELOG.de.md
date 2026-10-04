@@ -41,6 +41,10 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   Popup jetzt selbst um. Die Zeile verschwindet aus den verfügbaren Updates, „Wartet auf Neustart“
   erscheint und der Kopf bietet „Jetzt neu starten“, ohne das Popup zu schließen und neu zu öffnen.
   Nach dem Neustart verschwindet der Bereich wieder.
+- Handy: Der Punkt „Szenen“ in der unteren Leiste zeigt jetzt dieselben Szenen in derselben Reihenfolge
+  wie die Szenen-Badge an Desktop und Tablet. Ist an der Badge nichts ausgewählt, stehen dort weiter alle
+  Szenen. Bestehende Handy-Dashboards folgen der Badge sofort; einmal das Studio öffnen trägt die Auswahl
+  ins Handy-Layout ein.
 
 ## 1.0.4 – 04.10.2026
 

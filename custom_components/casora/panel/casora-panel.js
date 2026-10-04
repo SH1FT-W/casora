@@ -1615,7 +1615,17 @@ function phoneStale(pair) {
   if (renamed.length) syncPairRooms(trial);
   syncRoomChips(trial);
   const chips = chipsOf(trial.mobile) !== before;
-  return renamed.length || chips ? { renamed, chips } : null;
+  const scenes = phoneScenesStale(pair);
+  return renamed.length || chips || scenes ? { renamed, chips, scenes } : null;
+}
+
+// Szenen-Auswahl der Badge (Desktop/Tablet) fehlt an der Handy-Leiste? Dashboards von vor 1.0.5
+// trugen sie dort nicht; beim Öffnen des Studios gleicht _reconcilePhone sie an.
+function phoneScenesStale(pair) {
+  const src = ((((pair.desktop || {}).compact || {}).rooms || [])[0] || {}).variables || {};
+  const navs = (((pair.mobile || {}).chrome || {}).extraCards || []).filter((c) => c && c.type === MOBILE_NAV);
+  return navs.some((c) => SCENE_LIST_KEYS.some((k) =>
+    stable(scenePrefValue(k, src[k])) !== stable(scenePrefValue(k, c[k]))));
 }
 
 function extractPair(desktopCfg, mobileCfg, templates, editable) {
@@ -2442,7 +2452,8 @@ function applyScenePick(cfg, rooms) {
   }
   eachObject(cfg, (o) => {
     const nav = o.type === "custom:casora-nav";
-    if (nav || (o.type === FILTER_OVERLAY && o.room)) {
+    // Die Handy-Leiste („Szenen“) zeigt dieselbe Auswahl wie die Szenen-Badge (1.0.5).
+    if (nav || o.type === MOBILE_NAV || (o.type === FILTER_OVERLAY && o.room)) {
       (nav ? SCENE_KEYS : SCENE_LIST_KEYS).forEach((k) => {
         const x = val(k);
         if (x) o[k] = x; else delete o[k];
@@ -13939,10 +13950,12 @@ class CasoraPanel extends HTMLElement {
       const mlive = await this._ws({ type: "lovelace/config", url_path: pair.mobileUrl });
       const mcfg = expandAny(pair.mobile, { extras: omit(mlive, ["views", "button_card_templates"]),
         templates: mlive.button_card_templates });
+      applyScenePick(mcfg, rooms);
       await this._hass.callWS({ type: "lovelace/config/save", url_path: pair.mobileUrl, config: mcfg });
       pair.mobileRaw = clone(mcfg);
       if (res.renamed) this._log(`phone layout: ${res.renamed} renamed room(s) brought up to date`, "ok");
       if (stale.chips) this._log("phone layout: room badges brought up to date", "ok");
+      if (stale.scenes) this._log("phone Scenes: badge selection brought up to date", "ok");
       await this._syncFilterOptions();
     } catch (e) {
       this._log("phone layout not brought up to date: " + e.message, "warn");
