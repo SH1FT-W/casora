@@ -1641,6 +1641,7 @@ const SECTIONS = [
       // Die Detailfenster von Home Assistant (Mehr-Infos), nicht Casoras eigene Popups.
       { id: "dialogs", label: "HA detail dialogs" },
       { id: "text", label: "Text" },
+      { id: "phone", label: "Phone" },
       { id: "perf", label: "Performance" },
     ],
     fields: [
@@ -1676,6 +1677,12 @@ const SECTIONS = [
       { key: "font_family", sub: "text", label: "Font name", type: "text", auto: true, scope: "dashboard",
         placeholder: "Gilroy", when: (v) => v.font === "custom",
         hint: "Upload the font files (.woff2, .ttf, .otf) – one per weight. Fonts you bought may not ship with Casora, so you add them yourself." },
+      // #8: Unschärfe des Raumfotos hinter einem geöffneten Raum am Handy (filter-overlay.js,
+      // --casora-room-photo-blur). Leer = 28 px wie bisher; geht über casora_mobile_bg ans Handy.
+      { key: "room_photo_blur", sub: "phone", label: "Room photo on the phone", type: "range",
+        min: 0, max: 40, step: 1, rangeDefault: 28, minText: "Sharp", maxText: "Very soft",
+        auto: true, scope: "dashboard",
+        hint: "How soft the room photo behind an open room looks. Sharp shows the room clearly." },
       { key: "performance", sub: "perf", label: "Performance mode", type: "select",
         auto: true, scope: "dashboard",
         options: ["", "auto", "on"],
@@ -7989,6 +7996,11 @@ class CasoraPanel extends HTMLElement {
           filter:blur(40px) contrast(0.75) saturate(0.90) brightness(1.00);
         }
         .miniphone .mp-photo { transition:filter 0.30s ease; }
+        /* #8: Raum mit eigenem Foto, wie filter-overlay.js am Handy (Standard 28 px). */
+        .miniphone.filtered.roomphoto .mp-photo:not(.mp-barveilimg) {
+          height:calc(100% + var(--ph-overscan) * 2);
+          filter:blur(var(--ph-room-blur, 28px)) saturate(1.05);
+        }
         .miniphone { --ph-safe:59px; }
         .miniphone .mp-bar {
           position:absolute; top:0; left:0; right:0;
@@ -9049,6 +9061,13 @@ class CasoraPanel extends HTMLElement {
           padding:0; border:0; opacity:0; pointer-events:none;
         }
         .row input, .row select, .row textarea { width:100%; box-sizing:border-box; }
+        .rangefield { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center;
+          column-gap:10px; row-gap:2px; }
+        .rangefield .rangeend { color:var(--ink-2); font-size:var(--t-foot); white-space:nowrap; }
+        .rangefield .rangeval { grid-column:1 / -1; justify-self:center; color:var(--ink-2);
+          font-size:var(--t-foot); font-variant-numeric:tabular-nums; }
+        .row .rangefield input[type=range] { -webkit-appearance:auto; appearance:auto; height:22px; padding:0;
+          margin:0; border:0; background:none; box-shadow:none; accent-color:var(--accent); cursor:pointer; }
         .row input.bad { box-shadow:inset 0 0 0 1px #ff453a; }
         .row > select, .row > input, .row > .combo > input { height:38px; }
         .row > textarea { height:auto; }
@@ -16005,6 +16024,45 @@ class CasoraPanel extends HTMLElement {
           addFault(cur);
           return;
         }
+        if (f.type === "range") {
+          // Schieberegler (#8): Standard = leer gespeichert; Wert sofort in die Vorschau.
+          const def = f.rangeDefault;
+          const box = document.createElement("div");
+          box.className = "rangefield";
+          const lo = document.createElement("span");
+          lo.className = "rangeend";
+          lo.textContent = f.minText;
+          const inp = document.createElement("input");
+          inp.type = "range";
+          inp.min = String(f.min); inp.max = String(f.max); inp.step = String(f.step || 1);
+          const n0 = Number(cur);
+          inp.value = String(cur === "" || !Number.isFinite(n0) ? def : n0);
+          inp.setAttribute("aria-label", trLabel(f.label));
+          const hi = document.createElement("span");
+          hi.className = "rangeend";
+          hi.textContent = f.maxText;
+          const val = document.createElement("span");
+          val.className = "rangeval";
+          val.setAttribute("data-no-i18n", "");
+          const show = () => { val.textContent = inp.value + " px"; };
+          show();
+          let t0 = 0;
+          inp.addEventListener("input", () => {
+            show();
+            clearTimeout(t0);
+            t0 = setTimeout(() => {
+              const n = Number(inp.value);
+              setVar(f.key, n === def ? undefined : n, f);
+              filled(f);
+            }, 60);
+          });
+          box.appendChild(lo); box.appendChild(inp); box.appendChild(hi); box.appendChild(val);
+          row.appendChild(box);
+          addDrop(row, f);
+          fs.appendChild(row);
+          addHint();
+          return;
+        }
         if (f.domains) {
           const pinned = f.repeatKinds && this._slotKind.get(room.path + "|" + unitOf(f));
           const kind = pinned && f.repeatKinds.find((k) => k.id === pinned);
@@ -20615,7 +20673,20 @@ class CasoraPanel extends HTMLElement {
     img.alt = "";
     const wide = (((this._pair || {}).desktop || {}).compact || {}).rooms || [];
     const home = wide.find((r) => r.path === "home") || wide[0];
-    const name = sv.image || (home && (home.variables || {}).image);
+    let name = sv.image || (home && (home.variables || {}).image);
+    // #8: Raum offen wie am Handy: dessen Foto, so weich wie unter Design & Bedienung eingestellt.
+    if (roomPop) {
+      const si = (st.compact.rooms || []).findIndex((sc) => (sc.name || "") === roomPop);
+      const lk = (((this._pair || {}).link || {}).links || []).find((l) => l.section === si);
+      const own = lk && !lk.overview && wide[lk.room] ? (wide[lk.room].variables || {}).image : null;
+      if (own) {
+        name = own;
+        screen.classList.add("roomphoto");
+        const raw = [((home || {}).variables || {}).room_photo_blur, sv.room_photo_blur].find(isSet);
+        const rb = Number(raw);
+        if (isSet(raw) && Number.isFinite(rb) && rb >= 0) screen.style.setProperty("--ph-room-blur", rb + "px");
+      }
+    }
     const found = (this._imgs || []).find((i) => i.name === name);
     const url = found && ((this._miniDark && found.night) || found.day);
     if (url) img.src = url; else screen.classList.add("nophoto");

@@ -352,6 +352,11 @@
 
   const H_SCROLL_IDS = new Set(['media_row', 'climate_row', 'rooms_row']);
 
+  // #8: Unschärfe des Raumfotos (Studio: Design & Bedienung → Mobil; casora_mobile_bg setzt die
+  // Variable). Standard 28 px wie bisher; der Schleier beim Scrollen skaliert mit (28 → 44 px).
+  const ROOM_PHOTO_BLUR = 'var(--casora-room-photo-blur, 28px)';
+  const ROOM_VEIL_BLUR  = `calc(${ROOM_PHOTO_BLUR} * 11 / 7)`;
+
   const _blurLayers = new Set();
   const _otherBlurUp = (ownBlurEl) => {
     for (const el of _blurLayers) {
@@ -979,7 +984,7 @@
           this._blurLayerRoomBg = `linear-gradient(var(--casora-filter-veil, rgba(8,10,14,0.32)), var(--casora-filter-veil, rgba(8,10,14,0.32))) center center / cover no-repeat, url("/casora_assets/rooms/${_pic}.jpg") center center / cover no-repeat`;
           Object.assign(blurLayer.style, {
             backdropFilter: 'none', webkitBackdropFilter: 'none',
-            background: this._blurLayerRoomBg, filter: 'blur(28px) saturate(1.05)',
+            background: this._blurLayerRoomBg, filter: `blur(${ROOM_PHOTO_BLUR}) saturate(1.05)`,
             top: '-96px', left: '-96px', right: 'auto', bottom: 'auto', // Blur-Rand (läuft transparent aus) außerhalb des Bildschirms;
             width: 'calc(100vw + 192px)', height: 'calc(100lvh + 192px)', // feste Bildschirmmaße, unabhängig vom Eltern-Element
             transform: 'translateZ(0)', webkitTransform: 'translateZ(0)',
@@ -2508,7 +2513,16 @@
           // The scale pushes the blur's transparent edge bleed off-screen.
           'filter:blur(44px) saturate(1.02)', 'transform:scale(1.12)',
         ].join(';');
-        if (bgAfter) {
+        if (this._blurLayerRoomBg) {
+          // #8: Raum mit eigenem Foto: dasselbe Foto wie die Hintergrundebene, gleich gelegt
+          // (Rand außerhalb des Bildschirms), Unschärfe skaliert mit der Einstellung.
+          Object.assign(veilInner.style, {
+            top: '-96px', left: '-96px', right: 'auto', bottom: 'auto',
+            width: 'calc(100vw + 192px)', height: 'calc(100lvh + 192px)',
+            transform: 'none', filter: `blur(${ROOM_VEIL_BLUR}) saturate(1.02)`,
+            background: this._blurLayerRoomBg,
+          });
+        } else if (bgAfter) {
           veilInner.style.backgroundImage    = `linear-gradient(var(--casora-filter-veil, rgba(0,0,0,0.22)), var(--casora-filter-veil, rgba(0,0,0,0.22))), ${bgAfter.backgroundImage}`;
           veilInner.style.backgroundPosition = `0 0, ${bgAfter.backgroundPosition}`;
           veilInner.style.backgroundSize     = `100% 100%, ${bgAfter.backgroundSize}`;

@@ -6,6 +6,11 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ## 1.0.4 – 04.10.2026
 
+### New
+- Look & Controls · Phone: a new “Room photo on the phone” slider sets how soft the room photo behind an
+  open room looks, from Sharp (0 px) to Very soft (40 px). The default stays 28 px, the veil while
+  scrolling follows it, and the Studio preview shows the room photo with the chosen softness right away.
+
 ### Fixed
 - The overview's name now looks the same everywhere: a name you gave it (also “Home” in German) stays
   exactly as you typed it in the navigation, room title, phone bar, phone header and Studio. Only the
