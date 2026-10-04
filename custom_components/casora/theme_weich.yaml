@@ -364,8 +364,10 @@ Casora Weich:
       casora-icon-inactive-fallback-color: var(--casora-icon-fallback-color)
       # Handy-Kategorieansicht (filter-overlay.js): Schleier über dem Foto in Leinen statt Schwarz
       casora-filter-veil: rgba(244,239,231,0.42)
-      # Lesbarkeits-Schleier über dem Hintergrundfoto (nur hell): oben Leinen 66 %, nach unten 0 %
+      # Lesbarkeits-Schleier über dem Hintergrundfoto (hell und dunkel): oben Leinen 66 %, nach unten 0 %
       casora-wallpaper-veil-light: "linear-gradient(to bottom, rgba(244,239,231,0.66) 0%, rgba(244,239,231,0) 100%)"
+      # Desktop/Tablet: nur links hinter Titel, Badges und Überschriften, nach rechts auslaufend
+      casora-wallpaper-veil-light-wide: "linear-gradient(to right, rgba(244,239,231,0.65) 0%, rgba(244,239,231,0.30) 45%, rgba(244,239,231,0) 75%)"
 
       # Navigation, Popups, Bedienelemente
       casora-nav-bg: rgba(251,248,243,0.78)
@@ -746,6 +748,10 @@ Casora Weich:
       casora-entity-name-active: rgba(40,34,29,0.92)
       casora-entity-state: var(--casora-text-2)
       casora-camera-plain-text: var(--casora-entity-state)   # Runde 2: Kamera ohne Bild wie jeder Kachelstatus
+      # Lesbarkeits-Schleier wie hell, in der dunklen Grundfarbe: Handy oben 66 % nach unten 0 %,
+      # Desktop/Tablet links 65 % nach rechts 0 %
+      casora-wallpaper-veil-light: "linear-gradient(to bottom, rgba(36,33,30,0.66) 0%, rgba(36,33,30,0) 100%)"
+      casora-wallpaper-veil-light-wide: "linear-gradient(to right, rgba(36,33,30,0.65) 0%, rgba(36,33,30,0.30) 45%, rgba(36,33,30,0) 75%)"
       casora-entity-state-active: rgba(112,76,48,0.96)
       casora-entity-state-active-color: rgba(112,76,48,0.96)
       casora-toggle-inactive-opacity: 1
