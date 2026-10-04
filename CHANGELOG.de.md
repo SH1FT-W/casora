@@ -26,6 +26,8 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   28 px, der Schleier beim Scrollen geht mit, und die Studio-Vorschau zeigt das Raumfoto sofort so.
 
 ### Behoben
+- Swipe-Kachel: Am Stapelende scrollt die Kachelreihe wieder weiter, beim Blättern im Stapel bleibt die
+  Reihe stehen (Tablet und Desktop).
 - Medien: Ein schon pausierter Player taucht nach jedem Neustart von Home Assistant oder einem kurzen Ausfall
   nicht mehr 10 Minuten lang wieder auf. Casora merkt sich, wann er wirklich pausiert wurde (gleicher Titel),
   und die Ausblende-Zeit zählt ab dort.

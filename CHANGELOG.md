@@ -25,6 +25,8 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   scrolling follows it, and the Studio preview shows the room photo with the chosen softness right away.
 
 ### Fixed
+- Swipe tile: at the end of the stack the tile row scrolls on again, and while paging through the stack
+  the row stays put (tablet and desktop).
 - Media: a player that was already paused no longer shows up again for 10 minutes after every Home Assistant
   restart or short dropout. Casora remembers when it was really paused (same title), so the hide timer counts
   from there.
