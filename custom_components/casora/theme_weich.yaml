@@ -285,6 +285,8 @@ Casora Weich:
   # A-07: Kachelabstand Desktop/Tablet (war 16), Handy-Raster (Standard 8) – minimal enger
   casora-tile-row-gap-desktop: 12px
   casora-tile-row-gap-mobile: 8px
+  # Handy-Raum: Abstand Badge-Reihe -> erste Kachelreihe (Standard 24px), 5x Kachelraster
+  casora-room-badges-gap-mobile: 40px
   # A-03: Kachel-Schalter wie im Licht-Popup (gefüllte Spur, weißer Knopf)
   casora-toggle-style: solid
   casora-toggle-hover-filter: brightness(1.04)
