@@ -1,0 +1,331 @@
+# ============================================================================
+# ============================================================================
+casora_shared:
+  variables:
+    # Room images to preload (for smooth transitions between rooms)
+    # Add your room names here - both light and dark variants will be preloaded
+    preload_rooms: []  # Set in your dashboard file — see casora.yaml for example
+    preload_night_suffix: "-night"
+    preload_path: "/casora_assets/rooms"
+    preload_extension: ".jpg"
+
+  styles:
+    grid:
+      - grid-template-columns: 1fr max-content
+      - grid-template-areas: '"n n" "badges badges" "badges_climate badges_climate" "badges_presence badges_presence" "badges_media badges_media" "badges_lights badges_lights" "badges_security badges_security" "badges_energy badges_energy" "now_playing now_playing"'
+      - grid-template-rows: min-content min-content min-content min-content min-content min-content
+      - row-gap: 0
+      - align-content: start
+
+  extra_styles: |
+    [[[
+      const rooms = variables.preload_rooms || [];
+      const suffix = variables.preload_night_suffix || '-night';
+      const basePath = variables.preload_path || '/casora_assets/rooms';
+      const ext = variables.preload_extension || '.jpg';
+
+      const isDark =
+        typeof hass?.themes?.darkMode === 'boolean'
+          ? hass.themes.darkMode
+          : window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      // Keyed so a dark-mode switch re-warms the other variant and releases the previous one.
+      const preloadKey = (isDark ? 'night' : 'day') + '|' + rooms.join(',');
+
+      if (window.casoraPreloadKey !== preloadKey) {
+        window.casoraPreloadKey = preloadKey;
+        window.casoraPreloadedImages = [];
+
+        const warm = (src) => {
+          const img = new Image();
+          img.decoding = 'async';
+          if ('fetchPriority' in img) img.fetchPriority = 'low';
+          img.src = src;
+          window.casoraPreloadedImages.push(img);
+          return (img.decode ? img.decode() : Promise.resolve()).catch(() => {});
+        };
+
+        // One at a time on idle, so warming other rooms never competes with the current paint.
+        const queue = rooms.map(r => `${basePath}/${r}${isDark ? suffix : ''}${ext}`);
+        const idle = window.requestIdleCallback
+          ? (fn) => window.requestIdleCallback(fn, { timeout: 3000 })
+          : (fn) => setTimeout(fn, 300);
+        const step = () => {
+          const next = queue.shift();
+          if (next) warm(next).then(() => idle(step));
+        };
+        idle(step);
+      }
+
+      return `
+
+    :host{
+      position: relative;
+      z-index: 0;
+
+      --hero-gutter: var(--content-rail,
+                      var(--casora-rail-left,
+                      var(--page-gutter, 8vw)));
+      --hero-top: var(--header-top-desktop, clamp(220px, 26vh, 340px));
+      --hero-temp-font-size: var(--hero-temp-font-size-desktop, 18px);
+      --hero-temp-font-weight: 600;
+      --hero-temp-letter-spacing: 0.04em;
+      --hero-temp-reserve: calc(var(--hero-temp-font-size) * 1.2);
+      /* Read by casora_room as the weather widget's own height, which it subtracts to
+         bottom-anchor the block. Must track the real height or the widget drifts down
+         into the room name as the weather scales. 48px at the 10px floor. */
+      --hero-weather-hero-height: calc(var(--casora-u-weather, 10px) * 4.8);
+      --hero-header-gap-current: var(--hero-header-gap-desktop, 6px);
+      --hero-img-blur-current: var(--hero-img-blur, 4px) !important;
+      --hero-img-scale-current: var(--hero-img-scale, 1.08);
+      --hero-img-filter: blur(var(--hero-img-blur-current))
+        saturate(var(--hero-img-saturate, 1.02))
+        brightness(var(--hero-img-brightness, .985));
+      --hero-img-filter-from: blur(var(--hero-img-blur-current))
+        saturate(var(--hero-img-saturate-from, 1.0))
+        brightness(var(--hero-img-brightness-from, .97));
+      --casora-hover-filter: none !important;
+      --casora-card-hover-filter: none !important;
+      --casora-card-hover-shadow: none !important;
+      -webkit-tap-highlight-color: transparent !important;
+      --mdc-ripple-press-opacity: 0 !important;
+    }
+
+    :host ha-card{
+      position: relative;
+      pointer-events: auto !important;
+      cursor: default !important;
+      filter: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+      box-shadow: none !important;
+      --ha-card-box-shadow: none !important;
+      transition: none !important;
+      -webkit-tap-highlight-color: transparent !important;
+      --mdc-ripple-press-opacity: 0 !important;
+      background-repeat: no-repeat, no-repeat !important;
+      background-position: center center, center center !important;
+      background-size: cover, cover !important;
+      background-attachment: local, local !important;
+      isolation: isolate !important;
+      overflow-x: hidden !important;
+      overflow-y: hidden !important;
+    }
+
+    :host ha-card:hover,
+    :host ha-card:focus-within,
+    :host ha-card:active{
+      filter:none !important;
+      box-shadow:none !important;
+      transform:none !important;
+      cursor:default !important;
+      --ha-card-box-shadow: none !important;
+    }
+
+    /* Dither over the photo. The demo renders are 1672x941 and get upscaled
+       past 2x on a Retina display, which stretches every quantisation step in
+       the sky into a visible band. It cannot go in the ::after stack: that
+       layer carries --hero-img-filter, and a blurred dither is not a dither. */
+    :host ha-card::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      pointer-events:none;
+      z-index:-9;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+      mix-blend-mode: overlay;
+      opacity: var(--casora-bg-grain, 0.16);
+    }
+
+    /* Background image */
+    :host ha-card::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      pointer-events:none;
+      z-index:-10;
+      background-image:
+        var(--hero-wash, linear-gradient(transparent, transparent)),
+        linear-gradient(var(--hero-tint, rgba(55,55,55,0.50)), var(--hero-tint, rgba(55,55,55,0.50))),
+        var(--hero-img);
+      background-position: 0 0, 0 0, var(--hero-img-pos, center center), var(--hero-img-pos, center center);
+      background-size: 100% 100%, 100% 100%, cover, cover;
+      background-repeat: no-repeat;
+      filter: var(--hero-img-filter);
+      transform: scale(var(--hero-img-scale-current, 1.08));
+      transform-origin: center;
+      transition: filter .45s ease, transform .5s ease;
+      animation: casoraRoomParallax var(--casora-hero-anim-dur, 0.5s)
+        var(--casora-hero-anim-delay, 0.05s) cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    }
+
+    @keyframes casoraRoomParallax {
+      from { transform: scale(var(--hero-img-scale-current, 1.08)) translateX(1.2%); }
+      to   { transform: scale(var(--hero-img-scale-current, 1.08)) translateX(0%); }
+    }
+
+    #name{
+      animation: heroNameFade var(--casora-hero-anim-dur, .4s) ease both;
+    }
+
+    @keyframes heroNameFade{
+      from{ opacity:0; }
+      to{   opacity:0.9; }
+    }
+
+    /* Mobile */
+    @media (max-width: 767px), (max-height: 500px){
+      :host{
+        --hero-img-blur-current: var(--hero-img-blur-mobile, 1px) !important;
+        --hero-img-saturate: var(--hero-img-saturate-mobile, 1.02);
+        --hero-img-brightness: var(--hero-img-brightness-mobile, .99);
+        --hero-img-scale-current: var(--hero-img-scale-mobile, 1.04) !important;
+        --hero-tint: var(--hero-tint-mobile, rgba(56,56,56,0.08));
+        --hero-wash: var(--hero-wash-mobile, linear-gradient(transparent, transparent));
+        --hero-top: calc(var(--header-top-mobile, clamp(80px, 12svh, 120px)) - var(--header-top-mobile-nudge, 0px));
+        --hero-temp-font-size: var(--hero-temp-font-size-mobile, 13px);
+        --hero-temp-reserve: 0px;
+        --hero-header-gap-current: var(--hero-header-gap-mobile, 5px);
+        --tiles-pad-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+        --hero-gutter: var(--content-rail,
+                      var(--casora-rail-left,
+                      var(--page-gutter-mobile, 10px)));
+        --casora-header-shield-h: calc(var(--hero-top) + var(--casora-header-stack-h-current, 240px));
+        touch-action: none !important;
+        overscroll-behavior: none !important;
+      }
+
+      :host ha-card::after{
+        animation: none !important;
+        transition: none !important;
+        filter:
+          blur(var(--hero-img-blur-current))
+          saturate(var(--hero-img-saturate-mobile, 1.02))
+          brightness(var(--hero-img-brightness-mobile, .99)) !important;
+        transform: scale(var(--hero-img-scale-current, 1.04)) !important;
+      }
+
+      :host ha-card{
+        position: fixed !important;
+        inset: 0 !important;
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        max-height: 100dvh !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        touch-action: none !important;
+        overscroll-behavior: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: transparent !important;
+        transform: translateZ(0) !important;
+        -webkit-transform: translateZ(0) !important;
+      }
+
+      :host .button-card-main{
+        position: fixed !important;
+        inset: 0 !important;
+        overflow: hidden !important;
+        touch-action: none !important;
+        overscroll-behavior: none !important;
+        padding:
+          var(--hero-top)
+          var(--hero-gutter)
+          var(--tiles-pad-bottom)
+          var(--hero-gutter) !important;
+      }
+
+      :host .container{
+        position: relative !important;
+        inset: auto !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        overflow-x: hidden !important;
+      }
+
+      :host .button-card-content,
+      :host .grid{
+        padding:0 !important;
+        margin:0 !important;
+        overflow:visible !important;
+        display:grid !important;
+      }
+    }
+
+    @media (max-width: 767px) and (orientation: portrait){
+      :host{
+        --hero-temp-reserve: 0px;
+      }
+
+      #name,
+      .name,
+      .button-card-name{
+        margin-bottom: var(--hero-title-to-badges-gap-mobile, 8px) !important;
+      }
+    }
+
+    @media (max-height: 500px) and (orientation: landscape){
+      :host{
+        --hero-gutter: 18px;
+        --hero-top: calc(env(safe-area-inset-top, 0px) + 96px + var(--casora-hero-top-landscape-nudge, 0px));
+        --tiles-pad-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      }
+
+      :host .button-card-main{
+        padding:
+          var(--hero-top)
+          calc(18px + env(safe-area-inset-right, 0px))
+          calc(16px + env(safe-area-inset-bottom, 0px))
+          calc(18px + env(safe-area-inset-left, 0px)) !important;
+      }
+    }
+
+    @media (max-width: 767px){
+      :host{
+        --hero-weather-title-size: 16px;
+        --hero-weather-sub-size: 13px;
+        --hero-weather-icon-size: 26px;
+      }
+    }
+
+    @media (max-width: 767px) and (orientation: portrait) and (pointer: coarse),
+           (max-width: 767px) and (orientation: portrait) and (hover: none) {
+      :host .button-card-content,
+      :host .grid {
+        grid-template-areas: "n weather" "badges badges" "badges_climate badges_climate" "badges_presence badges_presence" "badges_media badges_media" "badges_lights badges_lights" "badges_security badges_security" "badges_energy badges_energy" "now_playing now_playing" !important;
+        grid-template-rows: min-content min-content min-content min-content min-content min-content !important;
+      }
+
+    }
+
+    @media (orientation: landscape) and (pointer: coarse),
+           (orientation: landscape) and (hover: none) {
+      :host #weather {
+        display: none !important;
+      }
+    }
+
+    @media (min-width: 768px) and (min-height: 601px) and (pointer: coarse),
+           (min-width: 768px) and (min-height: 601px) and (hover: none) {
+      :host {
+        touch-action: none !important;
+        overscroll-behavior: none !important;
+      }
+      :host ha-card {
+        position: fixed !important;
+        inset: 0 !important;
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+        max-height: 100dvh !important;
+        overflow: hidden !important;
+        touch-action: none !important;
+        overscroll-behavior: none !important;
+      }
+    }`;
+    ]]]

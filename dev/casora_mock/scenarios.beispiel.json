@@ -1,0 +1,23 @@
+{
+ "_hinweis": "Beispiel. Als scenarios.json neben fixture.json legen (beide privat, nicht im Repo). Schlüssel = Szenario, Werte = Zustände.",
+ "_drucker": {
+  "status": "sensor.printer_print_status",
+  "step": "sensor.printer_current_stage",
+  "effective": "sensor.printer_stage_effective",
+  "pause": "button.printer_pause",
+  "resume": "button.printer_resume",
+  "stop": "button.printer_stop"
+ },
+ "drucker_druckt": {
+  "sensor.printer_print_status": "running",
+  "sensor.printer_current_stage": "printing",
+  "sensor.printer_print_progress": "42"
+ },
+ "drucker_abgebrochen": {
+  "sensor.printer_print_status": "failed",
+  "sensor.printer_current_stage": "idle"
+ },
+ "waesche_laeuft": {
+  "sensor.washer_state": "running"
+ }
+}

@@ -1,0 +1,184 @@
+casora_notifications_button:
+  show_icon: false
+
+  variables:
+    # window.casoraIconUrl load-race guard - see casora_default.yaml for why.
+    casora_icon_url_guard:
+      force_eval: true
+      value: |
+        [[[
+          if (typeof window.casoraIconUrl !== 'function') {
+            window.casoraIconUrl = (name) =>
+              (window.CASORA_ICONS && window.CASORA_ICONS[name]) ||
+              `/casora_assets/icons/${name}.svg`;
+          }
+          return true;
+        ]]]
+    shown: true
+
+    # One object, composed by whoever renders the bell - see casora_room. The
+    # module treats an absent key as "leave the default alone", so a dashboard
+    # only has to say what it changed.
+    notification_config: null
+
+    # force_eval so a change in Casora reaches the module on the next render
+    # rather than waiting for a reload.
+    casora_notify_config:
+      force_eval: true
+      value: |
+        [[[
+          if (window._casoraNotify && variables.notification_config) {
+            window._casoraNotify.configure(variables.notification_config);
+          }
+          return true;
+        ]]]
+
+  tap_action:
+    action: javascript
+    javascript: |
+      [[[
+        if (window._casoraNotify) window._casoraNotify.open(this);
+      ]]]
+
+  hold_action: { action: none }
+  double_tap_action: { action: none }
+
+  custom_fields:
+    glyph: >
+      [[[
+        const n = window._casoraNotify ? window._casoraNotify.count : 0;
+        const phone = window.matchMedia(
+          '(max-width: 767px), (max-height: 500px)').matches;
+        const badged = phone && n > 0;
+        const url = window.casoraIconUrl(badged ? 'bell-badge' : 'bell');
+        return `<img class="casora-bell${badged ? ' badged' : ''}" src="${url}"
+          alt="" aria-hidden="true">`;
+      ]]]
+
+  styles:
+    card:
+      - --casora-bell-vis: '[[[ return variables.shown ? "grid" : "none" ]]]'
+      - padding: 0
+      - background: transparent
+      - box-shadow: none !important
+      - border: none !important
+      - cursor: pointer
+    custom_fields:
+      glyph:
+        - display: grid
+        - place-items: center
+        - line-height: 0
+
+  extra_styles: |
+
+    /* ha-card is overflow:visible so the count can sit proud of the circle,
+       which also stopped it clipping button-card's ripple - a square layer
+       filling the card's box, so the hover read as a box behind the disc. */
+    :host{
+      --button-card-ripple-color: transparent !important;
+      --button-card-ripple-hover-color: transparent !important;
+      --ha-ripple-color: transparent !important;
+      --ha-ripple-hover-color: transparent !important;
+      --mdc-ripple-press-opacity: 0 !important;
+    }
+    :host ha-ripple,
+    :host mwc-ripple{ display: none !important; }
+    :host{
+      display: grid !important;
+      place-items: center !important;
+      /* The count is mounted beside ha-card rather than inside it, and hangs
+         over the circle's edge from here. */
+      position: relative !important;
+      overflow: visible !important;
+      width: var(--casora-chrome-btn-size, 34px) !important;
+      height: var(--casora-chrome-btn-size, 34px) !important;
+      color: #fff !important;
+      pointer-events: auto !important;
+    }
+
+    /* MUST match casora_settings_button and .np-head-wave: same size, same flat
+       fill, blur but no rim. Three controls on one row read as one set only if
+       nothing about them disagrees. */
+    :host ha-card{
+      /* styles.card lands the var on ha-card, so it is read here - a custom
+         property set on a child is invisible to its parent. */
+      display: var(--casora-bell-vis, none) !important;
+      position: relative !important;
+      width: var(--casora-chrome-btn-size, 34px) !important;
+      height: var(--casora-chrome-btn-size, 34px) !important;
+      border-radius: 50% !important;
+      place-items: center !important;
+      background: var(--casora-bell-fill, var(--casora-chrome-fill, rgba(0,0,0,0.40))) !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      box-shadow: none !important;
+      transition: background 180ms cubic-bezier(.32,.72,0,1) !important;
+    }
+
+    /* The count hangs outside the circle, and .ellipsis both clips and
+       bottom-aligns everything button-card puts inside it. */
+    :host .vertical,
+    :host .ellipsis,
+    :host .custom-field,
+    :host .custom-field-glyph{ overflow: visible !important; }
+
+    /* Height only, width auto: the source viewBox is taller than it is wide,
+       so constraining both would squash it. */
+    :host .casora-bell{
+      position: absolute !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      height: var(--casora-bell-size, 17px) !important;
+      width: auto !important;
+      display: block !important;
+      pointer-events: none !important;
+      /* The glyph is an <img>, so it inverts with a filter rather than a fill.
+         casora-core sets both this and --casora-bell-fill while the panel is up. */
+      filter: var(--casora-bell-filter, var(--casora-chrome-glyph-filter, none)) !important;
+      transition: filter 180ms cubic-bezier(.32,.72,0,1) !important;
+    }
+
+    /* bell-badge draws its bell across 87.87% of its viewBox, the rest being
+       the badge above it, so at a shared height the bell came out 2px smaller
+       than the plain glyph. 1/0.8787 renders the BELL at the same size. */
+    :host .casora-bell.badged{
+      height: calc(var(--casora-bell-size, 17px) * 1.138) !important;
+    }
+
+    /* An app-icon badge: it overlaps the top-right corner and overhangs it,
+       rather than being tucked inside the circle. */
+    :host .casora-bell-count{
+      position: absolute !important;
+      top: var(--casora-bell-count-top, -3px) !important;
+      right: var(--casora-bell-count-right, -3px) !important;
+      min-width: 16px !important;
+      height: 16px !important;
+      padding: 0 4px !important;
+      box-sizing: border-box !important;
+      border-radius: 999px !important;
+      background-color: var(--casora-bell-badge, #ff4245) !important;
+      background-image: none !important;
+      color: #fff !important;
+      /* Above the capsule's glass rim on the phone, which is a positioned
+         ::after and would otherwise paint over the badge and wash it out. */
+      z-index: 3 !important;
+      opacity: 1 !important;
+      isolation: isolate !important;
+      font-family: var(--primary-font-family, system-ui) !important;
+      font-size: 10.5px !important;
+      font-weight: 600 !important;
+      line-height: 1 !important;
+      letter-spacing: -0.01em !important;
+      place-items: center !important;
+      pointer-events: none !important;
+      /* No ring. Apple's app badges carry no stroke, and a dark one read as a
+         hole punched through the button rather than a badge sitting on it. */
+      box-shadow: none !important;
+    }
+
+    @media (hover: hover) and (pointer: fine){
+      :host ha-card:hover{
+        background: var(--casora-bell-fill, var(--casora-chrome-fill-hover, rgba(0,0,0,0.55))) !important;
+      }
+    }

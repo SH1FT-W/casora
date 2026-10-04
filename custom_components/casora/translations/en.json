@@ -1,0 +1,242 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Casora",
+        "description": "Adds the Casora configuration panel to the sidebar."
+      }
+    },
+    "abort": {
+      "already_configured": "Casora is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Casora – Settings",
+        "description": "Leave fields empty to let Casora choose: the default AI from Settings → AI tasks and outdoor sensors by name.",
+        "data": {
+          "ai_task_entity": "AI for coaches, cameras and plants",
+          "ai_task_web_entity": "AI with web search (update check, recipe)",
+          "outdoor_temperature": "Outdoor temperature",
+          "outdoor_humidity": "Outdoor humidity",
+          "price_kwh": "Electricity price",
+          "ki_hinweise": "Notes for the AI",
+          "rezept_liste": "Shopping list for the ingredients (recipe of the week)",
+          "ki_plan_energie": "Energy coach automatically",
+          "ki_plan_heizung": "Heating coach automatically",
+          "ki_plan_lueftung": "Ventilation coach automatically",
+          "ki_plan_rezept": "Recipe of the week automatically",
+          "ki_plan_update": "Update check",
+          "lueften_push": "Send ventilation push to",
+          "lueften_personen": "Only notify when at home",
+          "beta_updates": "Beta versions"
+        },
+        "data_description": {
+          "ki_hinweise": "Added to every review, e.g. “The bedroom window is tilted on purpose.”",
+          "ki_plan_energie": "Automatic: Sundays at 18:00. Custom time e.g. “sun 18:00” (mon to sun).",
+          "ki_plan_heizung": "Automatic: Mondays at 07:00, heating season only.",
+          "ki_plan_lueftung": "Automatic: Saturdays at 10:00.",
+          "ki_plan_rezept": "Automatic: Mondays at 06:00.",
+          "ki_plan_update": "Daily: once a day. Off: no AI assessment in the updates popup.",
+          "lueften_push": "“Ventilate now” (7–22 h) and “Close window” (7–23 h) after 10 min, CO₂ above 2500 ppm right away. Empty = no push notifications.",
+          "lueften_personen": "“Ventilate now” only when one of these people is home. Empty = anyone.",
+          "beta_updates": "Try new features earlier. Betas can have bugs. With HACS, turn on betas in HACS instead."
+        }
+      }
+    },
+    "error": {
+      "invalid_plan": "Invalid time. Allowed: Off, Automatic or e.g. “sun 18:00”.",
+      "invalid": "Invalid input."
+    }
+  },
+  "selector": {
+    "ki_plan": {
+      "options": {
+        "off": "Off",
+        "auto": "Automatic"
+      }
+    },
+    "ki_plan_update": {
+      "options": {
+        "off": "Off",
+        "daily": "Daily",
+        "manual": "Only on button press"
+      }
+    }
+  },
+  "services": {
+    "energie_coach": {
+      "name": "Energy coach",
+      "description": "Reviews last week's energy dashboard data with AI.",
+      "fields": {}
+    },
+    "heizungs_coach": {
+      "name": "Heating coach",
+      "description": "Reviews last week's heating time and temperatures with AI.",
+      "fields": {
+        "nur_heizsaison": {
+          "name": "Heating season only",
+          "description": "Heating season only"
+        }
+      }
+    },
+    "lueftungs_coach": {
+      "name": "Ventilation coach",
+      "description": "Reviews last week's humidity, CO₂ and window openings with AI.",
+      "fields": {}
+    },
+    "kamera_beschreiben": {
+      "name": "Describe camera image",
+      "description": "Lets the AI describe the current camera image.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Entity"
+        }
+      }
+    },
+    "pflanzen_doktor": {
+      "name": "Plant doctor",
+      "description": "Care tip for a plant from 7 days of readings.",
+      "fields": {
+        "plant": {
+          "name": "Plant",
+          "description": "Plant"
+        }
+      }
+    },
+    "aquarium_doktor": {
+      "name": "Aquarium doctor",
+      "description": "AI assessment of an aquarium from 7 days of temperature, equipment, light and leak sensor.",
+      "fields": {
+        "temp": {
+          "name": "Temperature sensor",
+          "description": "Water temperature of the tank"
+        },
+        "name": {
+          "name": "Name",
+          "description": "Name of the tank"
+        },
+        "devices": {
+          "name": "Equipment",
+          "description": "List of devices: label, entity, power"
+        },
+        "light": {
+          "name": "Light",
+          "description": "Tank light"
+        },
+        "leak": {
+          "name": "Leak sensor",
+          "description": "Leak sensor at the tank"
+        }
+      }
+    },
+    "ebike_check": {
+      "name": "Bike check",
+      "description": "AI assessment of the e-bike: service, wear by mileage and battery care.",
+      "fields": {
+        "entities": {
+          "name": "Entities",
+          "description": "Entities of the bike"
+        },
+        "name": {
+          "name": "Name",
+          "description": "Name of the bike"
+        }
+      }
+    },
+    "update_pruefen": {
+      "name": "Check update with AI",
+      "description": "Checks release notes of pending updates against this system.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Entity"
+        }
+      }
+    },
+    "update_bestaetigen": {
+      "name": "Confirm AI check",
+      "description": "Unlocks “Update” after reading the warning.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Entity"
+        }
+      }
+    },
+    "rezept_neu": {
+      "name": "New recipe idea",
+      "description": "Lets the AI suggest a recipe of the week.",
+      "fields": {}
+    },
+    "rezept_auf_liste": {
+      "name": "Ingredients to shopping list",
+      "description": "Adds the recipe's ingredients to the shopping list.",
+      "fields": {}
+    },
+    "umstellen": {
+      "name": "Switch to Casora names",
+      "description": "Converts older dashboards to Casora names (with backup).",
+      "fields": {
+        "probelauf": {
+          "name": "Only count, change nothing",
+          "description": "Only count, change nothing"
+        }
+      }
+    },
+    "einrichten": {
+      "name": "Set up",
+      "description": "Creates missing Casora helpers and scripts (runs automatically at startup) and reports anything it could not create."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "lueften": {
+        "name": "Casora Ventilation"
+      },
+      "energie": {
+        "name": "Casora Energy coach"
+      },
+      "heizung": {
+        "name": "Casora Heating coach"
+      },
+      "lueftung": {
+        "name": "Casora Ventilation coach"
+      },
+      "rezept": {
+        "name": "Casora Recipe of the week"
+      },
+      "kamera": {
+        "name": "Casora Camera AI"
+      },
+      "pflanzen": {
+        "name": "Casora Plant AI"
+      },
+      "update": {
+        "name": "Casora Update AI analysis"
+      },
+      "aquarium": {
+        "name": "Casora Aquarium AI"
+      },
+      "ebike": {
+        "name": "Casora E-bike AI"
+      }
+    },
+    "binary_sensor": {
+      "lueften_hinweis": {
+        "name": "Casora Ventilation hint"
+      },
+      "solar_tipp": {
+        "name": "Casora Solar tip"
+      }
+    }
+  },
+  "issues": {
+    "restart_after_update": {
+      "title": "Casora {version} installed – restart required",
+      "description": "Casora was updated to version {version}. Restart Home Assistant to load it."
+    }
+  }
+}

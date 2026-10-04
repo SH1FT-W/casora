@@ -1,0 +1,150 @@
+casora_scene_row:
+  template:
+    - casora_default
+    - casora_scene_core
+
+  variables:
+    mobile_filter_category: unfiltered
+    layout: row
+    room: null
+    scenes: null
+    sort_debug: false
+    scene_exclude: null
+    scene_order: null
+    scene_icons: {}
+    scene_colors: {}
+    scene_transition: 4
+    # 41vw is tuned for portrait; landscape is ~2x wider, so cap it.
+    chip_width: min(41vw, 176px)
+
+  show_icon: false
+  show_name: false
+  show_state: false
+  show_label: false
+  show_entity_picture: false
+
+  tap_action: {action: none}
+  hold_action: {action: none}
+  double_tap_action: {action: none}
+
+  extra_styles: |
+    /* max-width: overlay hosts are fit-content and collapse without this. */
+    :host {
+      display: block !important;
+      width: 100% !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+    }
+    /* Theme sets will-change on every ha-card; that kills descendant blur. */
+    ha-card {
+      will-change: auto !important;
+      transform: none !important;
+      filter: none !important;
+      isolation: auto !important;
+      contain: none !important;
+    }
+    #scenes_row::-webkit-scrollbar { display: none !important; }
+
+  custom_fields:
+    scenes_row: |
+      [[[
+        const SC = window._casoraSC;
+        if (!SC) return '';
+
+        const _self = this;
+        const ids = SC.list(states, typeof hass !== 'undefined' ? hass : null, variables);
+        if (!ids.length) return '';
+
+        // Surface key survives a card rebuild; smart-row recreates its children.
+        const _key = (variables.layout || 'row') + '|' + (variables.room || '') + '|' + ids.join(',');
+
+        if (SC.frozenHtml) {
+          const _frozen = SC.frozenHtml(_key);
+          if (_frozen) return _frozen;
+        }
+        SC.prefetch(ids, states);
+
+        const grid = variables.layout === 'grid';
+        const icons = variables.scene_icons || {};
+        // Colors live on SC so the JS-built Scenes page and room rows see them too.
+        if (SC.noteColors) SC.noteColors(variables.scene_colors);
+        const opts = {
+          transition: variables.scene_transition == null ? 4 : variables.scene_transition,
+          width: variables.chip_width || 'min(41vw, 176px)',
+          grid: grid,
+        };
+
+        const _sid = SC.surfaceId ? SC.surfaceId(_key) : null;
+        const ord = SC.order ? SC.order(ids, states, _sid) : null;
+
+        if (SC.flip) {
+          if (!_self._scBusyBound) {
+            _self._scBusyBound = true;
+            try {
+              _self.addEventListener('scroll', () => { window._casoraSCBusy = Date.now(); }, { passive: true });
+            } catch (_) {}
+          }
+          requestAnimationFrame(() => { try { SC.flip(_self, _key); } catch (_) {} });
+        }
+
+        const inner = grid
+          ? 'display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--casora-scene-grid-row-gap, 12px) var(--casora-scene-grid-col-gap, 11px);width:100%;pointer-events:auto;'
+          : 'display:flex;flex-direction:row;gap:8px;width:max-content;min-width:100%;pointer-events:auto;';
+
+        const dbg = (variables.sort_debug === true && SC.sortDebug)
+          ? '<div style="font:11px/1.4 ui-monospace,monospace;color:rgba(255,255,255,0.75);'
+            + 'padding:2px 0 6px 0;white-space:pre-wrap;word-break:break-all;">'
+            + SC.sortDebug() + '</div>'
+          : '';
+
+        const _html = dbg + '<div style="' + inner + '">'
+          + ids.map((id) => SC.chipHtml(id, states, Object.assign(
+              { icon: icons[id] || null, order: ord ? ord.get(id) : null, sid: _sid }, opts))).join('')
+          + '</div>';
+        if (SC.noteHtml) SC.noteHtml(_key, _html);
+        return _html;
+      ]]]
+
+  styles:
+    card:
+      - background: transparent !important
+      - backdrop-filter: none !important
+      - "-webkit-backdrop-filter": none !important
+      - box-shadow: none !important
+      - border: none !important
+      - border-radius: "0 !important"
+      - padding: "0 0 var(--casora-scene-row-gap, 0px) 0 !important"
+      - margin: "0 !important"
+      - width: "100%"
+      - pointer-events: "auto !important"
+      - will-change: "auto !important"
+      - transform: "none !important"
+      - filter: "none !important"
+      - isolation: "auto !important"
+      - contain: "none !important"
+    grid:
+      # Not a grid: a grid area sizes to max-content and the strip stops scrolling.
+      - display: block !important
+      - padding: "0 !important"
+      - margin: "0 !important"
+    custom_fields:
+      scenes_row:
+        - overflow-x: |
+            [[[ return variables.layout === 'grid' ? 'visible' : 'auto'; ]]]
+        - overflow-y: |
+            [[[ return variables.layout === 'grid' ? 'visible' : 'hidden'; ]]]
+        - touch-action: |
+            [[[ return variables.layout === 'grid' ? 'auto' : 'pan-x'; ]]]
+        - overscroll-behavior-x: contain
+        - scrollbar-width: none
+        - "-ms-overflow-style": none
+        - "-webkit-overflow-scrolling": touch
+        - padding-left: "max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) !important"
+        - padding-right: "var(--casora-rail-left, 16px) !important"
+        - margin: "0 !important"
+        - width: "100%"
+        - box-sizing: border-box
+        - display: block
+        # pointer-events is inherited as none from an ancestor; taps and pan both die without this.
+        - pointer-events: "auto !important"

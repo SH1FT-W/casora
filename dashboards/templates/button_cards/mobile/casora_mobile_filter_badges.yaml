@@ -1,0 +1,263 @@
+casora_mobile_filter_badges:
+  custom_fields:
+    badges:
+      card:
+        card_mod:
+          style: |
+            ha-card {
+              background: transparent !important;
+              box-shadow: none !important;
+              overflow: visible !important;
+              padding: 0 !important;
+              contain: none !important;
+              isolation: auto !important;
+              will-change: auto !important;
+              width: max-content !important;
+              min-width: 100% !important;
+            }
+        cards:
+        - entity: input_select.casora_mobile_filter
+          tap_action:
+            action: fire-dom-event
+            casora_filter: |
+              [[[
+                const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';
+                return cur === 'security' ? 'all' : 'security';
+              ]]]
+          template: casora_badge_security_group
+          type: custom:button-card
+          variables:
+            alarm_entity: '[[[ return variables.security_entity_1 ]]]'
+            doors_entity: '[[[ return variables.security_entity_2 ]]]'
+            enabled: true
+            lock_entity: '[[[ return variables.lock_entity ]]]'
+            lock_entity_2: '[[[ return variables.lock_entity_2 ]]]'
+        - entity: input_select.casora_mobile_filter
+          tap_action:
+            action: fire-dom-event
+            casora_filter: |
+              [[[
+                const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';
+                return cur === 'climate' ? 'all' : 'climate';
+              ]]]
+          template: casora_badge_climate_group
+          type: custom:button-card
+          variables:
+            climate_entity: '[[[ return variables.climate_entity ]]]'
+            climate_entity_2: '[[[ return variables.climate_entity_2 ]]]'
+            enabled: true
+            humidity_sensor: '[[[ return variables.humidity_sensor ]]]'
+            quality_sensor: '[[[ return variables.quality_sensor ]]]'
+            temp_sensor: '[[[ return variables.temp_sensor ]]]'
+            temp_sensor_2: '[[[ return variables.temp_sensor_2 ]]]'
+            temp_sensor_3: '[[[ return variables.temp_sensor_3 ]]]'
+            temp_sensor_4: '[[[ return variables.temp_sensor_4 ]]]'
+            temp_sensor_5: '[[[ return variables.temp_sensor_5 ]]]'
+            temp_unit: C
+        - entity: input_select.casora_mobile_filter
+          tap_action:
+            action: fire-dom-event
+            casora_filter: |
+              [[[
+                const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';
+                return cur === 'lights' ? 'all' : 'lights';
+              ]]]
+          template: casora_badge_light_group
+          type: custom:button-card
+          variables:
+            enabled: true
+            entity_1: '[[[ return variables.light_entity_1 ]]]'
+            entity_2: '[[[ return variables.light_entity_2 ]]]'
+            entity_3: '[[[ return variables.light_entity_3 ]]]'
+            light_group_entity: '[[[ return variables.light_group_entity ]]]'
+        - entity: input_select.casora_mobile_filter
+          tap_action:
+            action: fire-dom-event
+            casora_filter: |
+              [[[
+                const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';
+                return cur === 'presence' ? 'all' : 'presence';
+              ]]]
+          template: casora_badge_presence_group
+          type: custom:button-card
+          variables:
+            enabled: true
+            entity_1: '[[[ return variables.presence_entity_1 ]]]'
+            entity_2: '[[[ return variables.presence_entity_2 ]]]'
+        - entity: input_select.casora_mobile_filter
+          tap_action:
+            action: fire-dom-event
+            casora_filter: |
+              [[[
+                const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';
+                return cur === 'energy' ? 'all' : 'energy';
+              ]]]
+          template: casora_badge_energy_group
+          type: custom:button-card
+          variables:
+            enabled: true
+            home_power_entity: '[[[ return variables.home_power_entity || variables.power_entity ]]]'
+            power_entity: '[[[ return variables.power_entity ]]]'
+            row_entity: input_select.casora_mobile_filter
+        - entity: input_select.casora_mobile_filter
+          tap_action:
+            action: fire-dom-event
+            casora_filter: |
+              [[[
+                const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';
+                return cur === 'media' ? 'all' : 'media';
+              ]]]
+          template: casora_badge_media_group
+          type: custom:button-card
+          variables:
+            always_visible: true
+            enabled: true
+            entity_1: '[[[ return variables.media_entity_1 ]]]'
+            entity_10: '[[[ return variables.media_entity_7 ]]]'
+            entity_11: '[[[ return variables.media_entity_8 ]]]'
+            entity_12: '[[[ return variables.media_entity_9 ]]]'
+            entity_2: '[[[ return variables.media_entity_2 ]]]'
+            entity_3: '[[[ return variables.media_entity_3 ]]]'
+            entity_4: '[[[ return variables.media_entity_4 ]]]'
+            entity_6: '[[[ return variables.psn_entity_1 ]]]'
+            entity_7: '[[[ return variables.psn_entity_2 ]]]'
+            entity_8: '[[[ return variables.media_entity_5 ]]]'
+            entity_9: '[[[ return variables.media_entity_6 ]]]'
+            pc_count: |
+              [[[
+                const V = {
+                  discord_online: variables.discord_online_entity,
+                  discord_game: variables.discord_game_entity,
+                  steam_online: variables.steam_online_entity,
+                  steam_game: variables.steam_game_entity,
+                  duplicate_game: variables.duplicate_game,
+                };
+                const P = window._casoraPCSources?.(states, V) || {};
+                return (P.discord ? 1 : 0) + (P.steam ? 1 : 0);
+              ]]]
+        layout:
+          align-items: center
+          grid-auto-columns: max-content
+          grid-auto-flow: column
+          grid-column-gap: var(--badge-gap-current, var(--badge-gap, 10px))
+          grid-template-columns: none
+          justify-content: start
+          justify-items: start
+          margin: 0
+          padding: 0
+        layout_type: custom:grid-layout
+        type: custom:layout-card
+  double_tap_action:
+    action: none
+  extra_styles: |
+    :host {
+      position: sticky !important;
+      top: -200px !important;
+      z-index: 100 !important;
+      display: block !important;
+    }
+    :host(.casora-navbar-card.casora-navbar-card):active {
+      filter: none !important;
+      -webkit-filter: none !important;
+    }
+    :host { filter: none !important; -webkit-filter: none !important; }
+    ha-card.button-card-main {
+      background: transparent !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      box-shadow: none !important;
+      border: none !important;
+      overflow: visible !important;
+      padding: 0 !important;
+      contain: none !important;
+      isolation: auto !important;
+      will-change: auto !important;
+      transition: none !important;
+      filter: none !important;
+      -webkit-filter: none !important;
+    }
+    .button-card-main, .button-card-content, #customfields {
+      overflow: visible !important;
+      contain: none !important;
+      isolation: auto !important;
+    }
+  hold_action:
+    action: none
+  show_entity_picture: false
+  show_icon: false
+  show_label: false
+  show_name: false
+  show_state: false
+  styles:
+    card:
+    - background: transparent !important
+    - backdrop-filter: none !important
+    - -webkit-backdrop-filter: none !important
+    - box-shadow: none !important
+    - border: none !important
+    - border-radius: 0 !important
+    - padding: 0 0 6px 0 !important
+    - margin: 0 !important
+    custom_fields:
+      badges:
+      - overflow-x: auto
+      - overflow-y: hidden
+      - overscroll-behavior-x: contain
+      - scrollbar-width: none
+      - -ms-overflow-style: none
+      - padding-left: max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) !important
+      - padding-right: var(--casora-rail-left, 16px) !important
+      - margin: 0 !important
+      - width: 100%
+      - box-sizing: border-box
+      - display: block
+    grid:
+    - display: block !important
+    - padding: 0 !important
+    - margin: 0 !important
+  tap_action:
+    action: none
+  variables:
+    climate_entity: null
+    climate_entity_2: null
+    discord_game_entity: null
+    discord_online_entity: null
+    duplicate_game: discord
+    home_power_entity: null
+    humidity_sensor: null
+    light_entity_1: null
+    light_entity_2: null
+    light_entity_3: null
+    light_group_entity: null
+    lock_entity: null
+    lock_entity_2: null
+    media_entity_1: null
+    media_entity_2: null
+    media_entity_3: null
+    media_entity_4: null
+    media_entity_5: null
+    media_entity_6: null
+    media_entity_7: null
+    media_entity_8: null
+    media_entity_9: null
+    power_entity: null
+    presence_entity_1: null
+    presence_entity_2: null
+    psn_entity_1: null
+    psn_entity_2: null
+    quality_sensor: null
+    security_entity_1: null
+    security_entity_2: null
+    security_entity_3: null
+    security_label_1: null
+    security_label_2: null
+    security_label_3: null
+    security_locks: null
+    security_locks_label: null
+    steam_game_entity: null
+    steam_online_entity: null
+    temp_sensor: null
+    temp_sensor_2: null
+    temp_sensor_3: null
+    temp_sensor_4: null
+    temp_sensor_5: null

@@ -1,0 +1,159 @@
+# Casora: KI-Einschätzung anstehender Updates (Dienst casora.update_pruefen; täglich, falls eingestellt).
+# Variablen: request (update.* oder leer = alle), sensor_id, ai_web_entity, sprache.
+- event: casora_update_ai_prune
+  event_data: {}
+- variables:
+    req: '{{ request | default('''') }}'
+    analysen: '{{ state_attr(sensor_id, ''analysen'') or [] }}'
+    todo: "{% set ns = namespace(l=[]) %} {% if req %}\n  {% if is_state(req, 'on') %}{% set ns.l = [req] %}{% endif %}\n\
+      {% else %}\n  {% for s in states.update if s.state == 'on' and not s.attributes.get('in_progress') %}\n    {% set hit\
+      \ = analysen | selectattr('id', 'eq', s.entity_id) | list %}\n    {% set it = hit[0] if hit else none %}\n    {% set\
+      \ age = (now() - as_datetime(it.checked)).total_seconds() if it is not none and it.checked else 999999 %}\n    {% set\
+      \ fresh = it is not none and (it.to | string) == (s.attributes.latest_version | string)\n       and (it.status == 'done'\
+      \ or age < 21600) %}\n    {% if not fresh %}{% set ns.l = ns.l + [s.entity_id] %}{% endif %}\n  {% endfor %}\n{% endif\
+      \ %} {{ ns.l[:3] }}"
+- condition: template
+  value_template: '{{ todo | count > 0 }}'
+- variables:
+    ha_version: '{{ state_attr(''update.home_assistant_core_update'', ''installed_version'') }}'
+    domains: "{{ states | map(attribute='entity_id') | map('config_entry_id') | reject('none') | unique\n   | map('config_entry_attr',\
+      \ 'domain') | unique | sort | list }}"
+- repeat:
+    for_each: '{{ todo }}'
+    sequence:
+    - variables:
+        eid: '{{ repeat.item }}'
+        name: "{{ (state_attr(repeat.item, 'title') or state_attr(repeat.item, 'friendly_name') or repeat.item)\n   | regex_replace('\\\
+          s+(Update|Firmware)$', '') }}"
+        v_from: '{{ state_attr(repeat.item, ''installed_version'') | string }}'
+        v_to: '{{ state_attr(repeat.item, ''latest_version'') | string }}'
+        kontext: "{% set eid = repeat.item %} {% set ce = config_entry_id(eid) %} {% set src = config_entry_attr(ce, 'domain')\
+          \ if ce else '' %} {% set url = state_attr(eid, 'release_url') or '' %} {% set summ = (state_attr(eid, 'release_summary')\
+          \ or '') | regex_replace('<[^>]+>', '') | truncate(1500) %} {% set dev = device_id(eid) %} {% set repo = url.split('/')[4]\
+          \ if 'github.com/' in url and url.split('/') | count > 4 else '' %} {% set norm = (repo or name) | lower | regex_replace('^(ha|hass|homeassistant|home-assistant|hacs)[-_\
+          \ ]', '') | regex_replace('[^a-z0-9]', '') | replace('update', '') %} {% set ns = namespace(m='') %} {% for d in\
+          \ domains if not ns.m and norm | length > 3 %}\n  {% set dn = d | replace('_', '') %}\n  {% if dn == norm or (dn\
+          \ | length > 4 and dn in norm) or (norm in dn) %}{% set ns.m = d %}{% endif %}\n{% endfor %} {% if eid == 'update.home_assistant_core_update'\
+          \ %}Art: Home Assistant Core {% elif eid == 'update.home_assistant_operating_system_update' %}Art: Home Assistant\
+          \ OS {% elif eid == 'update.home_assistant_supervisor_update' %}Art: Home Assistant Supervisor {% elif src == 'hacs'\
+          \ %}Art: HACS-Repository (Integration, Frontend-Karte oder Theme){% if repo %}, GitHub-Repo {{ url.split('/')[3]\
+          \ }}/{{ repo }}{% endif %} {% elif src == 'hassio' %}Art: Home-Assistant-App (Add-on) {% else %}Art: Firmware/Software\
+          \ eines Geräts, Integration {{ src }} {% endif %} {% if dev %}Gerät: {{ device_attr(dev, 'name_by_user') or device_attr(dev,\
+          \ 'name') }} | Hersteller: {{ device_attr(dev, 'manufacturer') }} | Modell: {{ device_attr(dev, 'model') }}{% endif\
+          \ %} Release-URL: {{ url or 'keine' }} {% if summ %}Kurzfassung der Integration: {{ summ }}{% endif %} {% if ns.m\
+          \ %}Passende installierte Integration: {{ ns.m }} ({{ integration_entities(ns.m) | count }} Entitäten, z. B.: {{\
+          \ integration_entities(ns.m)[:40] | join(', ') }}){% endif %}"
+    - event: casora_update_ai_result
+      event_data:
+        entity_id: '{{ eid }}'
+        name: '{{ name }}'
+        from: '{{ v_from }}'
+        version: '{{ v_to }}'
+        status: running
+    - action: ai_task.generate_data
+      continue_on_error: true
+      response_variable: r
+      data:
+        entity_id: '{{ ai_web_entity }}'
+        task_name: Casora Update-Analyse {{ name }}
+        instructions: 'Du prüfst ein anstehendes Update für ein bestimmtes Home-Assistant-System auf Breaking Changes und
+          nötige Schritte, die GENAU DIESES System betreffen. Antworte auf {{ sprache | default(''Deutsch'') }}, knapp, ohne Markdown.
+
+
+          UPDATE
+
+          Name: {{ name }}
+
+          Installiert: {{ v_from }}  →  Neu: {{ v_to }}
+
+          {{ kontext }}
+
+
+          VORGEHEN
+
+          - Lies die Release-Notes (web_fetch auf die Release-URL; bei Home Assistant Core den Blogpost und dort den Abschnitt
+          "Backward-incompatible changes"; sonst per web_search).
+
+          - Überspringt das Update Versionen (z. B. 2026.8 → 2026.10 oder v6.3 → v7.1), berücksichtige ALLE Zwischenversionen.
+
+          - Vergleiche jede Breaking Change mit dem System unten. Betrifft sie eine Integration/Gerät, das hier nicht vorkommt,
+          ist sie für dieses System irrelevant.
+
+
+          SYSTEM
+
+          Home Assistant Core {{ ha_version }}
+
+          Installierte Integrationen: {{ domains | join('', '') }}
+
+
+          BEWERTUNG (level)
+
+          - breaking: etwas in diesem System hört ohne Eingriff auf zu funktionieren (entfernte Entität/Option, geänderte
+          Entity-IDs, entfernte YAML-Konfiguration, eingestelltes Gerät o. Ä.)
+
+          - action: nichts bricht sofort, aber ein manueller Schritt ist nötig oder dringend empfohlen (Neukonfiguration,
+          Neustart, Migration prüfen)
+
+          - info: Änderungen ohne Handlungsbedarf für dieses System (auch: Breaking Changes nur für nicht installierte Integrationen)
+
+          - unknown: keine Release-Notes auffindbar
+
+          In ''affects'' nur Dinge nennen, die in diesem System tatsächlich vorkommen (Integration, Entität, Gerät). In ''todo''
+          konkrete Schritte, leer wenn nichts zu tun ist. ''headline'' höchstens 60 Zeichen.'
+        structure:
+          level:
+            required: true
+            selector:
+              select:
+                options:
+                - breaking
+                - action
+                - info
+                - unknown
+          headline:
+            description: Kurzfazit, max. 60 Zeichen
+            required: true
+            selector:
+              text: {}
+          summary:
+            description: 1-3 Sätze, was sich ändert und ob es dieses System betrifft
+            required: true
+            selector:
+              text:
+                multiline: true
+          affects:
+            description: Konkret betroffene Teile dieses Systems
+            selector:
+              text:
+                multiple: true
+          todo:
+            description: Konkrete Schritte vor/nach dem Update
+            selector:
+              text:
+                multiple: true
+          source:
+            description: Wichtigste genutzte Quelle (URL)
+            selector:
+              text: {}
+    - if:
+      - condition: template
+        value_template: '{{ r is defined and r.data is defined and r.data is mapping }}'
+      then:
+      - event: casora_update_ai_result
+        event_data:
+          entity_id: '{{ eid }}'
+          name: '{{ name }}'
+          from: '{{ v_from }}'
+          version: '{{ v_to }}'
+          status: done
+          result: '{{ r.data }}'
+      else:
+      - event: casora_update_ai_result
+        event_data:
+          entity_id: '{{ eid }}'
+          name: '{{ name }}'
+          from: '{{ v_from }}'
+          version: '{{ v_to }}'
+          status: error
+          error: KI-Anfrage fehlgeschlagen

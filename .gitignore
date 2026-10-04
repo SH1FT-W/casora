@@ -1,0 +1,29 @@
+# Test-Schnappschuss aus dem Testhaus – niemals committen
+dev/casora_mock/fixture.json
+dev/casora_mock/skip.txt
+__pycache__/
+*.pyc
+.DS_Store
+custom_components/casora/panel/casora-studio.js
+dev/demo/privat.json
+dev/casora_mock/einstellungen.privat.js
+dev/casora_mock/scenarios.json
+dev/e2e/testhaus.json
+dev/privat-woerter.txt
+# Arbeitsskripte (Screenshots, Aufräumen, Debug) – lokal, nicht ins Repo
+dev/e2e/_*.mjs
+dev/tools-local/
+
+# Arbeitskopien der Agents (Claude Code)
+.claude/
+
+# Karten-Update-Pakete (tools/build-card-update.py) – kommen als Release-Anhang, nicht ins Repo
+/karten-*.json
+/karten-*.md
+dev/casora_mock/stress.json
+
+# Qualitäts-Gate (dev/qa/gate.sh): Ergebnisse und Protokolle – lokal
+/.qa/
+
+# Cloudflare-Wrangler-Cache (Konto-ID, Mail)
+.wrangler/

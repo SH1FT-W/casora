@@ -1,0 +1,73 @@
+energie_coach:
+heizungs_coach:
+  fields:
+    nur_heizsaison:
+      selector:
+        boolean:
+lueftungs_coach:
+kamera_beschreiben:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          domain: camera
+pflanzen_doktor:
+  fields:
+    plant:
+      required: true
+      selector:
+        entity:
+          domain: plant
+aquarium_doktor:
+  fields:
+    temp:
+      required: true
+      selector:
+        entity:
+          domain: sensor
+    name:
+      selector:
+        text:
+    devices:
+      selector:
+        object:
+    light:
+      selector:
+        entity:
+          domain: light
+    leak:
+      selector:
+        entity:
+          domain: binary_sensor
+ebike_check:
+  fields:
+    entities:
+      required: true
+      selector:
+        entity:
+          multiple: true
+    name:
+      selector:
+        text:
+update_pruefen:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          domain: update
+update_bestaetigen:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          domain: update
+rezept_neu:
+rezept_auf_liste:
+umstellen:
+  fields:
+    probelauf:
+      selector:
+        boolean:
+einrichten:

@@ -1,0 +1,80 @@
+casora_energy:
+  template:
+    - casora_entity
+    - casora_popup_energy
+
+  show_name: true
+  show_state: true
+  show_entity_picture: true
+
+  variables:
+    mobile_filter_category: energy
+    icon: energy
+    high_threshold: 500
+    # Drop-out point for the active state. Null scales it to 80% of
+    # high_threshold; set it explicitly to widen or narrow the dead band.
+    release_threshold: null
+    normal_threshold: 200
+    heavy_threshold: 1000
+    extreme_threshold: 3000
+    room_name: null
+    entity_power: null
+    entity_usage_today: null
+    entity_usage_month: null
+    entity_cost_today: null
+    entity_cost_month: null
+    usage_shows: null
+
+  icon_tap_action:
+    action: more-info
+
+  hold_action:
+    action: more-info
+
+  name: Current Consumption
+
+  # Idle · Normal · Heavy Usage · Extreme Usage (same tiers as the popup pill)
+  state_display: |
+    [[[
+      const id = variables.entity_power || entity?.entity_id;
+      const w = parseFloat(states[id]?.state);
+      if (!Number.isFinite(w)) return 'Unavailable';
+      if (w >= Number(variables.extreme_threshold ?? 3000)) return 'Extreme Usage';
+      if (w >= Number(variables.heavy_threshold   ?? 1000)) return 'Heavy Usage';
+      if (w >= Number(variables.normal_threshold  ?? 200))  return 'Normal';
+      return 'Idle';
+    ]]]
+
+  state:
+    - operator: template
+      value: |
+        [[[
+          const w = parseFloat(entity?.state);
+          if (!Number.isFinite(w)) { this._casoraEnergyActive = false; return false; }
+          const on  = Number(variables.high_threshold ?? 500);
+          const off = Number(variables.release_threshold ?? on * 0.8);
+          const now = this._casoraEnergyActive === true ? (w >= off) : (w >= on);
+          this._casoraEnergyActive = now;
+          return now;
+        ]]]
+      styles:
+        card:
+          - "--casora-active-overlay-opacity": "1"
+          - --casora-entity-overlay-tint: var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))
+          - "--casora-active-overlay-dur": "0s"
+          - --casora-entity-top-gradient: none
+          - box-shadow: var(--button-card-box-shadow-active, var(--button-card-box-shadow)) !important
+          - --casora-icon-color-current: var(--casora-icon-inactive-color)
+          - --casora-icon-circle-bg: var(--casora-icon-color-current)
+          - --casora-icon-mask-active: "0"
+        name:
+          - color: var(--casora-entity-name-active, var(--primary-text-color))
+        state:
+          - color: var(--casora-entity-state-active-color)
+        img_cell:
+          - opacity: "1 !important"
+          - filter: none !important
+          - background: "var(--casora-icon-color-current) !important"
+        entity_picture:
+          - opacity: "1 !important"
+          - filter: none !important

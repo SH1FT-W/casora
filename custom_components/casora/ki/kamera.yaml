@@ -1,0 +1,48 @@
+# Casora: Kamerabild per KI beschreiben (Dienst casora.kamera_beschreiben).
+# Variablen: entity_id (Kamera), ai_entity. Ergebnis per Event casora_cam_ai_result.
+- event: casora_cam_ai_result
+  event_data:
+    entity_id: '{{ entity_id }}'
+    status: running
+- action: ai_task.generate_data
+  continue_on_error: true
+  response_variable: r
+  data:
+    entity_id: '{{ ai_entity }}'
+    task_name: Casora Kamera {{ state_attr(entity_id, 'friendly_name') }}
+    instructions: 'Du siehst ein aktuelles Standbild der Kamera "{{ state_attr(entity_id, ''friendly_name'') }}" in einem
+      Privathaus. Es ist {{ now().strftime(''%H:%M'') }} Uhr ({{ ''Tag'' if is_state(''sun.sun'', ''above_horizon'') else
+      ''Nacht'' }}).
+
+      Beschreibe auf {{ sprache | default(''Deutsch'') }} in 1-2 kurzen Sätzen, was gerade zu sehen ist: Personen (Anzahl, was sie tun), Tiere, Fahrzeuge,
+      Pakete, offene Türen/Fenster, bei einem 3D-Drucker den Zustand des Drucks (sauber, Fadensalat, abgelöst). Keine Mutmaßungen
+      über Identitäten. Ist das Bild zu dunkel oder leer, sag das knapp.
+
+      auffaellig = true nur bei etwas, das man sich ansehen sollte (fremde Person, Paket, Tier im Haus, offene Tür, fehlerhafter
+      Druck).'
+    attachments:
+    - media_content_id: media-source://camera/{{ entity_id }}
+      media_content_type: image/jpeg
+    structure:
+      beschreibung:
+        required: true
+        selector:
+          text: {}
+      auffaellig:
+        required: true
+        selector:
+          boolean: {}
+- if:
+  - condition: template
+    value_template: '{{ r is defined and r.data is defined and r.data is mapping }}'
+  then:
+  - event: casora_cam_ai_result
+    event_data:
+      entity_id: '{{ entity_id }}'
+      status: done
+      result: '{{ r.data }}'
+  else:
+  - event: casora_cam_ai_result
+    event_data:
+      entity_id: '{{ entity_id }}'
+      status: error

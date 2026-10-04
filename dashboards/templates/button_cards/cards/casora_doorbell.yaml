@@ -1,0 +1,6 @@
+casora_doorbell:
+  template:
+    - casora_camera
+
+  # Kept so existing tiles that relied on the template's default keep their label.
+  name: Doorbell

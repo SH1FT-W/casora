@@ -1,0 +1,24 @@
+casora_humidifier:
+  template: [casora_air_device]
+
+  name: Humidifier
+
+  variables:
+    # casora_entity derives BOTH the mask and entity_picture from this. The
+    # template used to override entity_picture instead and leave this unset,
+    # so the mask resolved to 'default' and won - that was the question mark.
+    icon: humidifier
+
+  styles:
+    entity_picture:
+      - width: 100%
+      - height: 100%
+      - object-fit: contain
+      - opacity: 0.8
+      - transition: opacity 0.2s ease, filter 0.2s ease, transform 0.15s ease
+      - cursor: pointer
+
+    img_cell:
+      - box-shadow: none !important
+      - transition: filter 0.2s ease
+      - cursor: pointer

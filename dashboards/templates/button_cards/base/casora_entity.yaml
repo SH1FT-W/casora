@@ -1,0 +1,1049 @@
+casora_entity:
+  template:
+    - casora_default
+  class: casora-entity
+  show_state: true
+  show_entity_picture: true
+  show_icon: false
+
+  hidden: |
+    [[[
+      const off = (v) => v === false || v === 'false' || v === 0 || v === '0';
+      if (off(variables?.enabled)) return true;
+      if (String(variables?.show_when ?? 'always') !== 'active') return false;
+      const idle = variables?.idle;
+      return idle === true || idle === 'true' || idle === 1 || idle === '1';
+    ]]]
+
+  variables:
+    size: small  # small | large — phones only, see header
+    icon_never_masked: false  # skip the CSS mask-tint entirely; always show the raw entity_picture <img> (icon file must supply its own inactive-state art)
+    active_entities: null  # optional entity (or list) that can drive this card's active state in addition to its own `entity:`
+    active_entities_mode: any  # any (default) = active if ANY of active_entities is active; all = only when every one of them is
+    mobile_filter_category: null
+    battery_entity: null
+    battery_low_threshold: 20
+    # Off keeps the tile in the room's config and takes it off the dashboard,
+    # so a card can be parked without losing what was set up on it. Hiding the
+    # HOST is what smart-row watches - it collapses the slot and closes the gap
+    # the same way it does for a conditional card.
+    enabled: true
+    show_when: always  # always | active: active takes the tile off the dashboard while idle is true
+    idle: false  # set by the card template that owns the active rule
+    active_override: null
+    show_toggle: false
+    toggle_entity: null
+    toggle_service: null
+    toggle_service_data: null
+    show_progress: false
+    progress_transport: true  # center a play/pause glyph in the ring when the entity supports it
+    progress_entity: null
+    progress_value: null
+    progress_active_states:
+      - playing
+      - cleaning
+      - returning
+      - washing
+      - rinsing
+      - spinning
+      - drying
+      - running
+      - active
+
+  extra_styles: |
+    /* Diagonal specular hairline */
+    ha-card::before{
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      padding: 1px;
+      box-sizing: border-box;
+      opacity: var(--casora-active-overlay-opacity, 0);
+      background: linear-gradient(
+        to bottom right,
+        var(--casora-card-specular-start, transparent) 0%,
+        var(--casora-card-specular-mid, transparent) 45%,
+        var(--casora-card-specular-mid, transparent) 55%,
+        var(--casora-card-specular-end, transparent) 100%
+      );
+      -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+    }
+
+    #battery{
+      opacity: 0;
+      transform: scale(.92);
+      transition: opacity .8s ease, transform .3s ease;
+      will-change: opacity, transform;
+    }
+
+    @media (hover: hover) and (pointer: fine){
+      :host(:hover) #battery,
+      :host(:focus-within) #battery{
+        opacity: .6;
+        transform: scale(1);
+      }
+    }
+
+    @media (hover: none) and (pointer: coarse){
+      #battery{ opacity: 0; }
+    }
+
+    /* ── Page load animation ── */
+    /* No filter here on purpose: one non-compositable property forces the whole
+       animation onto the main thread, where the cold-load template compile
+       stalls it. transform+opacity only keeps it on the compositor. */
+    @keyframes casoraFadeIn {
+      from { opacity: 0; transform: translateY(100px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0)     scale(1);    }
+    }
+
+    @keyframes casoraFadeInRight {
+      from { opacity: 0; transform: translateX(80px); }
+      to   { opacity: 1; transform: translateX(0);    }
+    }
+
+    /* Desktop + tablet: slide in from right */
+    ha-card {
+      animation: var(--casora-anim-name, casoraFadeInRight) var(--casora-anim-duration, 0.4s) cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: var(--casora-anim-delay, var(--delay-d, 0s));
+      animation-play-state: var(--casora-init-play, running);
+      will-change: opacity, transform;
+    }
+
+    /* Mobile portrait: slide up from bottom */
+    @media (max-width: 767px) and (orientation: portrait) {
+      ha-card {
+        animation: var(--casora-anim-name, casoraFadeIn) var(--casora-anim-duration, 0.45s) cubic-bezier(0.16, 1, 0.3, 1) both;
+        animation-delay: var(--casora-anim-delay, var(--delay, 0s));
+        animation-play-state: var(--casora-init-play, running);
+      }
+    }
+
+    /* Progress */
+    #progress {
+      background: none !important;
+      mask: none !important;
+      -webkit-mask: none !important;
+      overflow: visible;
+    }
+
+    #progress svg {
+      position: relative;
+      z-index: 1;
+    }
+
+    #progress svg .casora-progress-glyph {
+      fill: var(--casora-progress-arc-color, var(--casora-color-teal, #00c3d0));
+      stroke: var(--casora-progress-arc-color, var(--casora-color-teal, #00c3d0));
+    }
+
+    #progress svg .casora-progress-track {
+      stroke: var(--casora-progress-track-color, rgba(0,0,0,0.12));
+    }
+
+    #progress svg .casora-progress-arc {
+      stroke: var(--casora-progress-arc-color, rgba(255,255,255,0.5));
+      stroke-opacity: var(--casora-progress-arc-opacity, 1);
+      stroke-dashoffset: calc(87.965px - var(--casora-progress-pct, 0) * 0.87965px);
+      transition: stroke-dashoffset 0.8s linear;
+    }
+
+    /* Toggle tracks the tile unit, like the icon circle, so it stays proportional to the
+       card. A fraction of the height, never height/200px: dividing a length by a length
+       is CSS Values 4 and Firefox drops the whole declaration. On :host so it also
+       reaches cards whose root element the ha-card selector does not match. */
+    :host {
+      --casora-toggle-width: calc(var(--casora-entity-height-current, 200px) * 0.23);
+      --casora-toggle-height: calc(var(--casora-entity-height-current, 200px) * 0.13);
+    }
+
+    ha-card {
+      --casora-height-mq: var(--casora-entity-height-current, var(--casora-entity-height-desktop, 200px));
+      --casora-box-shadow-mq: var(--casora-tile-glass-rim-desktop, var(--casora-tile-glass-rim, inset 0 1px 0 -0.5px rgba(255,255,255,0.10), 0 2px 8px rgba(0,0,0,0.10)));
+      /* Sized off the icon circle: two balanced circles in opposite corners. Ratio, not a
+         literal, so it tracks the card automatically. Visible ring is 32/36 of this (r14 +
+         stroke 4 in a 36 viewBox), i.e. ~0.8x the icon circle. */
+      --casora-progress-size-mq: calc(var(--casora-icon-circle-size, 44px) * var(--casora-progress-icon-ratio, 0.9));
+      --casora-icon-circle-size: calc(var(--casora-entity-height-current, 200px) * var(--casora-icon-circle-ratio, 0.22));  /* casora_thermostat's temp puck reads this too */
+      /* Every top-corner extra centers on this, so the toggle, the progress ring and
+         the thermostat's rail stay in line with the icon circle at every tile size. */
+      --casora-icon-center-y: calc(
+        var(--casora-entity-inner-pad-current, var(--casora-entity-inner-pad-desktop, 20px))
+        + var(--casora-tile-icon-mt, -2px)
+        + var(--casora-icon-circle-size, 44px) / 2);
+      --casora-entity-active-tint-current: var(--casora-entity-active-tint, rgba(255,255,255,0.94));
+      --casora-icon-fallback-color: rgba(50,50,50,0.85);
+      --casora-toggle-off-color-active: var(--casora-toggle-off-fill-active, rgba(0,0,0,0.55));
+      --casora-progress-arc-color: var(--casora-progress-color, var(--casora-color-teal, #00c3d0));
+      --casora-progress-arc-opacity: 1;
+
+      /* Tile geometry. Only -mq is rewritten by the breakpoint; -lg never is.
+         styles.card picks between them off variables.size. */
+      --casora-tile-areas-mq: "i" "n" "s";
+      --casora-tile-cols-mq: 1fr;
+      --casora-tile-rows-mq: 1fr min-content min-content;
+      --casora-tile-gap-mq: 4px 0;
+      --casora-tile-name-mb-mq: -2px;
+      --casora-tile-align-content-mq: start;
+      --casora-tile-icon-align-mq: start;
+      --casora-tile-icon-mt-mq: -2px;
+      --casora-tile-extras-mq: block;
+      --casora-tile-radius-mq: var(--ha-card-border-radius, 28px);
+      --casora-tile-state-inset-mq: 0px;
+
+      --casora-tile-areas-lg: "i" "n" "s";
+      --casora-tile-cols-lg: 1fr;
+      --casora-tile-rows-lg: 1fr min-content min-content;
+      --casora-tile-gap-lg: 4px 0;
+      --casora-tile-name-mb-lg: -2px;
+      --casora-tile-align-content-lg: start;
+      --casora-tile-icon-align-lg: start;
+      --casora-tile-icon-mt-lg: -2px;
+      --casora-tile-extras-lg: block;
+      --casora-tile-radius-lg: var(--ha-card-border-radius, 28px);
+      --casora-tile-state-inset-lg: 0px;
+
+      /* Defaults, so first paint is correct before styles.card stamps these
+         inline a frame later. */
+      --casora-tile-areas: var(--casora-tile-areas-mq);
+      --casora-tile-cols: var(--casora-tile-cols-mq);
+      --casora-tile-rows: var(--casora-tile-rows-mq);
+      --casora-tile-gap: var(--casora-tile-gap-mq);
+      --casora-tile-name-mb: var(--casora-tile-name-mb-mq);
+      --casora-tile-align-content: var(--casora-tile-align-content-mq);
+      --casora-tile-icon-align: var(--casora-tile-icon-align-mq);
+      --casora-tile-icon-mt: var(--casora-tile-icon-mt-mq);
+      --casora-tile-extras: var(--casora-tile-extras-mq);
+      --casora-tile-radius: var(--casora-tile-radius-mq);
+      --casora-tile-state-inset: var(--casora-tile-state-inset-mq);
+    }
+
+    /* 100cqi for the auto-fitting state text = the card's content box. */
+    ha-card { container-type: inline-size; }
+
+    /* Media list must match the one casora-smart-row switches its grid on. */
+    @media (max-width: 767px) and (orientation: portrait),
+           (max-height: 500px) and (orientation: portrait),
+           (max-height: 600px) and (orientation: landscape) {
+      ha-card {
+        --casora-height-mq: 100%;  /* the grid track owns the height */
+        --casora-icon-circle-size: 42px;
+        --casora-toggle-width: 46px;   /* height-current is not this tier's tile height */
+        --casora-toggle-height: 26px;
+        --casora-tile-areas-mq: "i n" "i s";
+        --casora-tile-cols-mq: auto minmax(0, 1fr);
+        --casora-tile-rows-mq: auto auto;
+        --casora-tile-gap-mq: 1px 10px;
+        --casora-tile-name-mb-mq: 0px;  /* -2px is tuned for the 4px stacked gap */
+        --casora-tile-align-content-mq: center;
+        --casora-tile-icon-align-mq: center;
+        --casora-tile-icon-mt-mq: 0px;
+        --casora-tile-icon-mt-lg: 0px;  /* or a large tile's icon sits 2px above its small neighbor */
+        --casora-tile-extras-mq: none;  /* no corners; icon_tap_action toggles instead */
+        --casora-tile-radius-mq: var(--casora-tile-radius-phone, 26px);
+        --casora-tile-radius-lg: var(--casora-tile-radius-phone, 26px);
+        --casora-tile-state-inset-mq: calc(42px + 10px);
+      }
+
+      /* Keeps nested custom-field cards on the tile radius too. */
+      :host {
+        --ha-card-border-radius: var(--casora-tile-radius-phone, 26px);
+      }
+    }
+
+    @media (max-width: 767px), (max-height: 600px) {
+      ha-card {
+        /* Phone tiles stay flat: drop the desktop rim, not just dim it. */
+        --casora-box-shadow-mq: var(--casora-tile-glass-rim, inset 0 1px 0 -0.5px rgba(255,255,255,0.10), 0 2px 8px rgba(0,0,0,0.10));
+        --casora-toggle-width: 40px;
+        --casora-progress-icon-ratio: 0.8;
+        --casora-entity-active-tint-current: var(--casora-entity-active-tint-mobile, var(--casora-entity-active-tint, rgba(255,255,255,1)));
+      }
+    }
+
+    #toggle {
+      opacity: var(--casora-toggle-opacity, 0.65);
+      transition: opacity 0.18s ease;
+      /* Default until the JS-templated inline display lands, or it flashes in. */
+      display: var(--casora-tile-extras, block);
+      /* button-card gives every custom field class="ellipsis" (overflow:hidden) on the
+         same div it stamps the inline style onto; !important here beats both. */
+      overflow: visible !important;
+    }
+
+    #progress {
+      display: var(--casora-progress-display, none);
+    }
+
+    #state {
+      opacity: var(--casora-state-opacity, 0.75);
+    }
+
+    /* button-card's .no-icon rules set end/start here, which closes the gap on
+       casora_thermostat only. */
+    #name, #state {
+      align-self: center !important;
+      /* .ellipsis clips at the padding box, so 1.15 line-height cuts descenders
+         off; the negative margin keeps the layout where it was. */
+      padding-block: 0.16em;
+      margin-block: -0.16em;
+    }
+
+    @keyframes casoraEntityFanSpin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    /* Icon circles */
+    #img-cell, .casora-icon-circle {
+      position: relative;
+      border-radius: 50% !important;
+      background: var(--casora-icon-circle-bg, rgba(0,0,0,0.20)) !important;
+      width: var(--casora-icon-circle-size, 44px) !important;
+      height: var(--casora-icon-circle-size, 44px) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      overflow: hidden !important;
+      box-shadow: var(--casora-icon-circle-shadow, 0 2px 6px rgba(0,0,0,0.04)) !important;
+      transition: background-color 0.3s ease;
+    }
+    /* Inactive-icon tint */
+    #img-cell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      width: var(--casora-icon-mask-scale, 60%);
+      height: var(--casora-icon-mask-scale, 60%);
+      background-color: var(--casora-icon-inactive-color, rgba(255,255,255,0.95));
+      -webkit-mask-image: var(--casora-icon-mask-image, none);
+      mask-image: var(--casora-icon-mask-image, none);
+      -webkit-mask-size: contain;
+      mask-size: contain;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      mask-position: center;
+      opacity: var(--casora-icon-mask-active, 0);
+      pointer-events: none;
+      transition: background-color 0.3s ease, opacity 0.3s ease;
+    }
+    #img-cell img {
+      width: var(--casora-icon-mask-scale, 60%) !important;
+      height: var(--casora-icon-mask-scale, 60%) !important;
+      max-width: var(--casora-icon-mask-scale, 60%) !important;
+      max-height: var(--casora-icon-mask-scale, 60%) !important;
+      object-fit: contain !important;
+      flex: none !important;
+      opacity: calc(1 - var(--casora-icon-mask-active, 1)) !important;
+      transition: opacity 0.3s ease !important;
+    }
+    #img-cell ha-icon {
+      --mdc-icon-size: 25px !important;
+      flex: none !important;
+      color: rgba(255,255,255,1.0) !important;
+    }
+    #icon { color: rgba(255,255,255,1.0) !important; }
+
+    @media (max-width: 767px) and (orientation: portrait),
+           (max-height: 500px) and (orientation: portrait),
+           (max-height: 600px) and (orientation: landscape) {
+      #img-cell ha-icon { --mdc-icon-size: 24px !important; }
+    }
+    @media (hover: hover) {
+      #img-cell:hover, .casora-icon-circle:hover { transform: scale(1.03); transition: transform 0.15s ease; }
+    }
+    @media (hover: none) {
+      #img-cell:active, .casora-icon-circle:active { filter: brightness(1.15); transform: scale(1.03); }
+    }
+
+    ha-card { isolation: isolate; }
+
+    ha-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      z-index: -1;
+      background: var(--casora-entity-overlay-tint, var(--casora-entity-active-tint-current, rgba(255,255,255,0.94)));
+      opacity: var(--casora-active-overlay-opacity, 0);
+      transition: opacity var(--casora-active-overlay-dur, .5s) ease, background-color .35s ease;
+    }
+
+    /* Steady top/bottom glow (active state) */
+    #container::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: var(--casora-tile-radius, var(--ha-card-border-radius, 28px));
+      pointer-events: none;
+      z-index: -1;
+      opacity: var(--casora-entity-glow-opacity, 0);
+      transition: opacity var(--casora-active-overlay-dur, .5s) ease;
+      background:
+        radial-gradient(60% 24px at 50% 0%,   rgba(255,255,255,0.20) 0%, transparent 100%),
+        radial-gradient(60% 24px at 50% 100%, rgba(255,255,255,0.15) 0%, transparent 100%);
+    }
+
+    :host { scroll-snap-align: start; }
+
+  card_mod:
+    style: |
+      ha-card::after {
+        transition: opacity var(--casora-active-overlay-dur, .40s) ease, background-color .35s ease !important;
+      }
+      @media (hover: hover) {
+        :host(:hover) ha-card::after {
+          transition: opacity .18s ease, background-color .18s ease !important;
+        }
+        /* A small neutral lift, not the active veil at low opacity - reusing
+           the on-state tint pushed a translucent tile's warm backdrop through
+           with it, so hovering read as warmer rather than brighter. */
+        :host(:hover) ha-card {
+          --casora-active-overlay-opacity: var(--casora-hover-overlay-opacity, 0.05);
+          --casora-entity-overlay-tint: var(--casora-entity-hover-tint, rgba(255,255,255,0.30));
+        }
+      }
+
+  custom_fields:
+    toggle:
+      card:
+        type: custom:button-card
+        entity: '[[[ return entity?.entity_id ]]]'
+        show_name: false
+        show_state: false
+        show_icon: false
+        tap_action:
+          action: call-service
+          service: |
+            [[[
+              if (variables.toggle_service) return variables.toggle_service;
+
+              const target = variables.toggle_entity || entity?.entity_id || '';
+              const state = (states[target]?.state || entity?.state || '').toLowerCase();
+              if (state === 'unavailable' || state === 'unknown') return 'none';
+
+              if (target.startsWith('lock.')) {
+                if (state === 'locked') return 'lock.unlock';
+                if (state === 'unlocked') return 'lock.lock';
+                return 'none';
+              }
+
+              if (target.startsWith('media_player.')) {
+                const feats = Number(states[target]?.attributes?.supported_features || 0);
+                if (state === 'off') return (feats & 128) ? 'media_player.turn_on' : 'none';
+                return (feats & 256) ? 'media_player.turn_off' : 'none';
+              }
+
+              return 'homeassistant.toggle';
+            ]]]
+          service_data: |
+            [[[
+              if (variables.toggle_service_data) return variables.toggle_service_data;
+
+              return {
+                entity_id: variables.toggle_entity || entity?.entity_id
+              };
+            ]]]
+        custom_fields:
+          svg: |
+            [[[
+              const KF_ID = 'casora-toggle-kf-v8';
+              if (!document.getElementById(KF_ID)) {
+                const s = document.createElement('style');
+                s.id = KF_ID;
+                s.textContent = [
+                  '@keyframes casora-thumb-on-d{from{transform:translateX(0)}to{transform:translateX(18px)}}',
+                  '@keyframes casora-thumb-off-d{from{transform:translateX(18px)}to{transform:translateX(0)}}',
+                  '@keyframes casora-thumb-on-m{from{transform:translateX(0)}to{transform:translateX(12px)}}',
+                  '@keyframes casora-thumb-off-m{from{transform:translateX(12px)}to{transform:translateX(0)}}'
+                ].join('');
+                document.head.appendChild(s);
+              }
+              const toggleTarget = variables.toggle_entity || entity?.entity_id || '';
+              const toggleState = (states[toggleTarget]?.state || entity?.state || "").toLowerCase();
+              const activeStates = ["on","open","opening","playing","unlocked","unlocking","cleaning","returning","cool","heat"];
+              const extraStates = Array.isArray(variables.active_states) ? variables.active_states.map(v => String(v).toLowerCase()) : [];
+              const isOn = [...activeStates, ...extraStates].includes(toggleState);
+              const mob = window.matchMedia('(max-width: 767px), (max-height: 600px)').matches;
+              const W = mob ? 38 : 44, H = mob ? 26 : 26, r = mob ? 8 : 9, cx0 = mob ? 14 : 14;
+              const SW = W + 2;
+              const travel = mob ? 12 : 18;
+              const stateKey = '_casora_toggle_' + (entity?.entity_id || '');
+              const shouldAnimate = window[stateKey] !== undefined && window[stateKey] !== isOn;
+              window[stateKey] = isOn;
+              const anim = isOn ? (mob ? 'casora-thumb-on-m' : 'casora-thumb-on-d') : (mob ? 'casora-thumb-off-m' : 'casora-thumb-off-d');
+              const animStyle = shouldAnimate ? `animation:${anim} 0.2s ease forwards;` : '';
+              const circleCx = (!shouldAnimate && isOn) ? cx0 + travel : cx0;
+              const mid = 'htm-' + (entity?.entity_id || '').replace(/[^a-z0-9]/gi, '-');
+              const trackFillVar = getComputedStyle(document.documentElement).getPropertyValue('--casora-toggle-track-fill').trim();
+              const trackFill = trackFillVar || 'rgba(255,255,255,0.85)';
+              const offColor = 'var(--casora-toggle-off-color, rgba(255,255,255,0.8))';
+              if (isOn) {
+                return `<svg viewBox="0 0 ${SW} ${H}" style="display:block;width:100%;height:100%;overflow:visible;"><defs><mask id="${mid}"><rect x="2" y="1" width="${W-2}" height="${H-2}" rx="${(H-2)/2}" fill="white"/><circle cx="${circleCx}" cy="${H/2}" r="${r}" fill="black" style="${animStyle}"/></mask></defs><rect x="2" y="1" width="${W-2}" height="${H-2}" rx="${(H-2)/2}" fill="${trackFill}" mask="url(#${mid})"/></svg>`;
+              } else {
+                return `<svg viewBox="0 0 ${SW} ${H}" style="display:block;width:100%;height:100%;overflow:visible;"><rect x="2" y="1" width="${W-2}" height="${H-2}" rx="${(H-2)/2}" fill="none" stroke-width="2" style="stroke:${offColor};"/><circle cx="${circleCx}" cy="${H/2}" r="${r}" style="${animStyle}fill:${offColor};"/></svg>`;
+              }
+            ]]]
+        styles:
+          card:
+            - background: transparent !important
+            - background-color: transparent !important
+            - --ha-card-background: transparent
+            - box-shadow: none !important
+            - border: none !important
+            - backdrop-filter: none !important
+            - "-webkit-backdrop-filter": none !important
+            - padding: 0 !important
+            - overflow: visible !important
+            - "--button-card-ripple-color": transparent !important
+            - "-webkit-tap-highlight-color": transparent !important
+            - border-radius: 0 !important
+          grid:
+            - padding: 0 !important
+            - overflow: visible !important
+          custom_fields:
+            svg:
+              - line-height: 0
+              - overflow: visible
+        extra_styles: |
+          @keyframes casora-thumb-on-d{from{transform:translateX(0)}to{transform:translateX(18px)}}
+          @keyframes casora-thumb-off-d{from{transform:translateX(18px)}to{transform:translateX(0)}}
+          @keyframes casora-thumb-on-m{from{transform:translateX(0)}to{transform:translateX(12px)}}
+          @keyframes casora-thumb-off-m{from{transform:translateX(12px)}to{transform:translateX(0)}}
+          :host {
+            display: block !important;
+            width: var(--casora-toggle-width, 46px) !important;
+            height: var(--casora-toggle-height, 26px) !important;
+            overflow: visible !important;
+            cursor: pointer;
+          }
+          /* .ellipsis puts overflow:hidden on this field div, in THIS card's shadow root -
+             the outer card's #toggle rule cannot reach it. */
+          #svg, #container {
+            overflow: visible !important;
+            width: 100% !important;
+            height: 100% !important;
+          }
+          /* Visual size stays; a transparent halo brings the tap target to 44pt. */
+          @media (pointer: coarse) {
+            #container { position: relative !important; }
+            #container::after {
+              content: "";
+              position: absolute;
+              inset: -12px;
+              border-radius: 9999px;
+            }
+          }
+          ha-card, #container {
+            overflow: visible !important;
+            background: transparent !important;
+            --ha-card-background: transparent !important;
+          }
+          @media (hover: hover) {
+            :host { transition: filter 0.2s ease; }
+            :host(:hover) { filter: brightness(1.5) !important; }
+          }
+
+    battery: |
+      [[[
+        const batt = variables.battery_entity;
+        if (!batt) return "";
+        const st = states[batt];
+        if (!st) return "";
+        const raw = (st.state ?? "").toString().toLowerCase();
+        const isLowWord = ["low", "critical"].includes(raw);
+        const n = parseFloat(raw);
+        const hasNum = Number.isFinite(n);
+        const threshold = Number(variables.battery_low_threshold ?? 20);
+        const isLowNum = hasNum && n <= threshold;
+        if (!(isLowWord || isLowNum)) return "";
+        const size = (window.innerWidth < 768) ? 20 : 24;
+        return `
+          <ha-icon
+            icon="mdi:battery-alert"
+            style="
+              --mdc-icon-size:${size}px;
+              color: var(--casora-entity-state, var(--secondary-text-color));
+              opacity: .7;
+            "
+          ></ha-icon>
+        `;
+      ]]]
+
+    progress: |
+      [[[
+        const PROP_ID = 'casora-progress-property-v2';
+        if (!document.getElementById(PROP_ID)) {
+          const s = document.createElement('style');
+          s.id = PROP_ID;
+          s.textContent = '@property --casora-progress-pct { syntax: "<number>"; inherits: true; initial-value: 0; }';
+          document.head.appendChild(s);
+        }
+
+        const dom = (entity?.entity_id || '').split('.')[0];
+        const st = (entity?.state || '').toLowerCase();
+        const feats = Number(entity?.attributes?.supported_features || 0);
+
+        let glyph = '', svc = '';
+        if (variables.progress_transport) {
+          if (dom === 'media_player' && (feats & 16385)) {
+            glyph = st === 'paused' ? 'play' : 'pause';
+            svc = 'media_player.media_play_pause';
+          } else if (dom === 'vacuum' && (feats & 4)) {
+            glyph = st === 'paused' ? 'play' : 'pause';
+            svc = st === 'paused' ? 'vacuum.start' : 'vacuum.pause';
+          }
+        }
+
+        const GLYPHS = {
+          pause: '<rect class="casora-progress-glyph" x="14" y="13" width="2.6" height="10" rx="1.3"/>'
+               + '<rect class="casora-progress-glyph" x="19.4" y="13" width="2.6" height="10" rx="1.3"/>',
+          play:  '<path class="casora-progress-glyph" d="M15.4 12.9 L23.8 18 L15.4 23.1 Z"'
+               + ' stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>',
+        };
+
+        let inner = '';
+        if (glyph && svc) {
+          const [d, sv] = svc.split('.');
+          const stop = 'event.stopPropagation();event.stopImmediatePropagation();';
+          const act = stop + "document.querySelector('home-assistant').hass.callService('"
+                    + d + "','" + sv + "',{entity_id:'" + entity?.entity_id + "'});";
+          inner = `<g style="cursor:pointer;pointer-events:auto;" onpointerdown="${stop}" ontouchstart="${stop}" onclick="${act}">`
+                + `<circle cx="18" cy="18" r="12" fill="transparent"/>${GLYPHS[glyph]}</g>`;
+        }
+
+        return `<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:100%;overflow:visible;">
+          <g transform="rotate(-90 18 18)">
+            <circle class="casora-progress-track" cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="4" stroke-linecap="round"/>
+            <circle class="casora-progress-arc" cx="18" cy="18" r="14" fill="none" stroke="var(--casora-color-teal, #00c3d0)" stroke-width="4" stroke-linecap="round" stroke-dasharray="87.965"/>
+          </g>
+          ${inner}
+        </svg>`;
+      ]]]
+
+  icon_tap_action:
+    action: |
+      [[[ return variables.show_toggle ? 'call-service' : 'none'; ]]]
+    service: |
+      [[[
+        if (variables.toggle_service) return variables.toggle_service;
+
+        const target = variables.toggle_entity || entity?.entity_id || '';
+        const state = (states[target]?.state || entity?.state || '').toLowerCase();
+        if (state === 'unavailable' || state === 'unknown') return 'none';
+
+        if (target.startsWith('lock.')) {
+          if (state === 'locked') return 'lock.unlock';
+          if (state === 'unlocked') return 'lock.lock';
+          return 'none';
+        }
+
+        if (target.startsWith('media_player.')) {
+          const feats = Number(states[target]?.attributes?.supported_features || 0);
+          if (state === 'off') return (feats & 128) ? 'media_player.turn_on' : 'none';
+          return (feats & 256) ? 'media_player.turn_off' : 'none';
+        }
+
+        return 'homeassistant.toggle';
+      ]]]
+    service_data: |
+      [[[
+        if (variables.toggle_service_data) return variables.toggle_service_data;
+
+        return {
+          entity_id: variables.toggle_entity || entity?.entity_id
+        };
+      ]]]
+
+  entity_picture: |
+    [[[
+      const icon = variables.icon || "default";
+      return window.casoraIconUrl(icon);
+    ]]]
+
+  state_display: |
+    [[[
+      if (!entity?.state) return "";
+      if (entity.state === "ok") return "Healthy";
+      return hass.formatEntityState(entity) || entity.state;
+    ]]]
+
+  state:
+    - operator: template
+      value: |
+        [[[
+          if (variables.active_override !== null && variables.active_override !== undefined) {
+            return !!variables.active_override;
+          }
+
+          const defaults = ["on","open","opening","unlocked","unlocking","playing","cleaning","returning","cool","heat","washing","rinsing","spinning","drying","running","active","problem"];
+          const extra = Array.isArray(variables.active_states) ? variables.active_states.map(v => String(v).toLowerCase()) : [];
+          const activeStates = [...defaults, ...extra];
+
+          if (activeStates.includes((entity?.state || "").toLowerCase())) return true;
+
+          const list = Array.isArray(variables.active_entities)
+            ? variables.active_entities.filter(Boolean)
+            : (variables.active_entities ? [variables.active_entities] : []);
+          if (!list.length) return false;
+
+          const isOn = (eid) => activeStates.includes(String(states[eid]?.state || "").toLowerCase());
+
+          return String(variables.active_entities_mode || "any").toLowerCase() === "all"
+            ? list.every(isOn)
+            : list.some(isOn);
+        ]]]
+      styles:
+        card:
+          - box-shadow: var(--casora-button-card-box-shadow-active-current, var(--button-card-box-shadow-active, var(--button-card-box-shadow))) !important
+          - "--casora-active-overlay-opacity": "1"
+          - "--casora-active-overlay-dur": "0s"
+          # Inline so it outranks the hover rule's stylesheet-level value.
+          - --casora-entity-overlay-tint: var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))
+          - --casora-entity-top-gradient: none
+          - --casora-toggle-opacity: var(--casora-toggle-active-opacity, 0.70)
+          - --casora-toggle-off-color: var(--casora-toggle-off-color-active, rgba(255,255,255,0.8))
+          - --casora-icon-color-current: |
+              [[[
+                const icon   = variables.icon || '';
+                const domain = (entity?.entity_id || '').split('.')[0];
+                if (icon === 'energy' || icon === 'power') {
+                  const pid = variables.entity_power || entity?.entity_id;
+                  const w = parseFloat(states[pid]?.state);
+                  if (!Number.isFinite(w)) return 'var(--casora-badge-energy-color, #30D158)';
+                  if (w >= Number(variables.extreme_threshold ?? 3000)) return 'var(--casora-badge-energy-very-high-color, #FF4245)';
+                  if (w >= Number(variables.heavy_threshold   ?? 1000)) return 'var(--casora-badge-energy-high-color, #FF9230)';
+                  if (w >= Number(variables.normal_threshold  ?? 200))  return 'var(--casora-badge-energy-medium-color, #FFD600)';
+                  return 'var(--casora-badge-energy-low-color, #30D158)';
+                }
+                const byIcon = {
+                  plant:    'var(--casora-color-yellow, #FFCC00)',
+                  updates:  'var(--casora-color-teal, #00c3d0)',
+                  wifi:     'var(--casora-popup-primary-color, #00c3d0)',
+                  doorbell: 'var(--casora-color-teal, #00c3d0)',
+                };
+                const byDomain = {
+                  light:        'var(--casora-color-yellow, #FFCC00)',
+                  fan:          'var(--casora-color-teal, #00C3D0)',
+                  humidifier:   'var(--casora-color-teal, #00C3D0)',
+                  climate:      'var(--casora-color-teal, #00C3D0)',
+                  vacuum:       'var(--casora-color-teal, #00C3D0)',
+                  cover:        'var(--casora-color-teal, #00c3d0)',
+                  media_player: 'var(--casora-color-teal, #00c3d0)',
+                  lock:         entity?.state === 'unlocking' ? 'var(--casora-color-yellow, #FFCC00)' : 'var(--casora-color-teal, #00c3d0)',
+                  plant:        'var(--casora-color-yellow, #FFCC00)',
+                };
+                return byIcon[icon] || byDomain[domain] || 'var(--casora-icon-fallback-color, rgba(255,255,255,0.95))';
+              ]]]
+          - --casora-icon-svg-url: |
+              [[[
+                const pic = entity?.attributes?.entity_picture || '';
+                if (pic && pic.startsWith('/local/')) return `url('${pic}')`;
+                const icon = variables.icon || 'default';
+                return `url('${window.casoraIconUrl(icon)}')`;
+              ]]]
+          - --casora-icon-use-mask: |
+              [[[
+                const pic = entity?.attributes?.entity_picture || '';
+                if (pic && (pic.startsWith('/api/') || pic.startsWith('http'))) return '0';
+                return '1';
+              ]]]
+          - --casora-icon-circle-bg: var(--casora-icon-color-current)
+          - --casora-icon-mask-active: "0"
+          - --casora-entity-glow-opacity: var(--casora-entity-glow-opacity-active, 0)
+        name:
+          - color: var(--casora-entity-ink-name, var(--casora-entity-name-active, var(--primary-text-color)))
+        state:
+          - color: var(--casora-entity-ink-state, var(--casora-entity-state-active-color, var(--casora-entity-state-active, var(--secondary-text-color))))
+        icon:
+          - color: var(--casora-icon-color-current) !important
+        img_cell:
+          - opacity: "1 !important"
+          - filter: none !important
+        entity_picture:
+          - opacity: "1 !important"
+          - filter: none !important
+  styles:
+    card:
+      - --casora-tile-areas: |
+          [[[ return variables.size === 'large' ? 'var(--casora-tile-areas-lg)' : 'var(--casora-tile-areas-mq)'; ]]]
+      - --casora-tile-cols: |
+          [[[ return variables.size === 'large' ? 'var(--casora-tile-cols-lg)' : 'var(--casora-tile-cols-mq)'; ]]]
+      - --casora-tile-rows: |
+          [[[ return variables.size === 'large' ? 'var(--casora-tile-rows-lg)' : 'var(--casora-tile-rows-mq)'; ]]]
+      - --casora-tile-gap: |
+          [[[ return variables.size === 'large' ? 'var(--casora-tile-gap-lg)' : 'var(--casora-tile-gap-mq)'; ]]]
+      - --casora-tile-name-mb: |
+          [[[ return variables.size === 'large' ? 'var(--casora-tile-name-mb-lg)' : 'var(--casora-tile-name-mb-mq)'; ]]]
+      - --casora-tile-align-content: |
+          [[[ return variables.size === 'large' ? 'var(--casora-tile-align-content-lg)' : 'var(--casora-tile-align-content-mq)'; ]]]
+      - --casora-tile-icon-align: |
+          [[[ return variables.size === 'large' ? 'var(--casora-tile-icon-align-lg)' : 'var(--casora-tile-icon-align-mq)'; ]]]
+      - --casora-tile-icon-mt: |
+          [[[ return variables.size === 'large' ? 'var(--casora-tile-icon-mt-lg)' : 'var(--casora-tile-icon-mt-mq)'; ]]]
+      - --casora-tile-extras: |
+          [[[ return variables.size === 'large' ? 'var(--casora-tile-extras-lg)' : 'var(--casora-tile-extras-mq)'; ]]]
+      - --casora-tile-radius: |
+          [[[ return variables.size === 'large' ? 'var(--casora-tile-radius-lg)' : 'var(--casora-tile-radius-mq)'; ]]]
+      - --casora-tile-state-inset: |
+          [[[ return variables.size === 'large' ? 'var(--casora-tile-state-inset-lg)' : 'var(--casora-tile-state-inset-mq)'; ]]]
+      - --delay: calc(round(down, var(--casora-position-index, 0), 2) / 2 * 0.06s)
+      - --delay-d: calc(var(--casora-position-index, 0) * 0.04s)
+      - --casora-entity-anim-name: |
+          [[[
+            if (!window._casoraAnimSetup) {
+              window._casoraAnimSetup = true;
+              window._casoraFromBg = false;
+              window._casoraLastPath = window.location.pathname;
+              document.addEventListener('visibilitychange', () => {
+                if (document.hidden) window._casoraFromBg = true;
+              });
+              window.addEventListener('location-changed', () => {
+                const newPath = window.location.pathname;
+                if (newPath !== window._casoraLastPath) {
+                  window._casoraFromBg = false;
+                }
+                window._casoraLastPath = newPath;
+              });
+            }
+            return window._casoraFromBg ? 'none' : 'casoraFadeIn';
+          ]]]
+      - --casora-toggle-opacity: var(--casora-toggle-inactive-opacity, 0.65)
+      - --casora-state-opacity: var(--casora-entity-state-opacity, 0.75)
+      - --casora-entity-glow-opacity: var(--casora-entity-glow-opacity-inactive, 0.08)
+      - --casora-icon-inactive-color: |
+          [[[
+            const icon   = variables.icon || '';
+            const domain = (entity?.entity_id || '').split('.')[0];
+            if (domain === 'media_player') return 'var(--casora-icon-inactive-fallback-color, rgba(255,255,255,0.95))';
+            if (icon === 'energy' || icon === 'power') {
+              const pid = variables.entity_power || entity?.entity_id;
+              const w = parseFloat(states[pid]?.state);
+              if (!Number.isFinite(w)) return 'var(--casora-badge-energy-color, #30D158)';
+              if (w >= Number(variables.extreme_threshold ?? 3000)) return 'var(--casora-badge-energy-very-high-color, #FF4245)';
+              if (w >= Number(variables.heavy_threshold   ?? 1000)) return 'var(--casora-badge-energy-high-color, #FF9230)';
+              if (w >= Number(variables.normal_threshold  ?? 200))  return 'var(--casora-badge-energy-medium-color, #FFD600)';
+              return 'var(--casora-badge-energy-low-color, #30D158)';
+            }
+            const byIcon = {
+              plant:    'var(--casora-color-green, #30D158)',
+              wifi:     'var(--casora-popup-primary-color, #00c3d0)',
+              doorbell: 'var(--casora-color-teal, #00c3d0)',
+            };
+            const byDomain = {
+              light:        'var(--casora-color-yellow, #FFCC00)',
+              fan:          'var(--casora-color-teal, #00C3D0)',
+              humidifier:   'var(--casora-color-teal, #00C3D0)',
+              climate:      'var(--casora-color-teal, #00C3D0)',
+              vacuum:       'var(--casora-color-teal, #00C3D0)',
+              cover:        'var(--casora-color-teal, #00c3d0)',
+              lock:         'var(--casora-color-teal, #00c3d0)',
+              plant:        'var(--casora-color-green, #30D158)',
+            };
+            return byIcon[icon] || byDomain[domain] || 'var(--casora-icon-inactive-fallback-color, rgba(255,255,255,0.95))';
+          ]]]
+      - --casora-icon-mask-image: |
+          [[[
+            return `url('${window.casoraIconUrl(variables.icon || 'default')}')`;
+          ]]]
+      - --casora-icon-mask-active: |
+          [[[
+            return variables.icon_never_masked ? '0' : '1';
+          ]]]
+      - background-color: var(--casora-entity-background)
+      - border-radius: var(--casora-tile-radius, var(--ha-card-border-radius, 28px))
+      - box-shadow: var(--casora-box-shadow-mq) !important
+      - --casora-card-hover-shadow: var(--casora-box-shadow-mq)
+      - height: var(--casora-height-mq)
+      - padding: var(--casora-entity-inner-pad-current, var(--casora-entity-inner-pad-desktop, 20px))
+      - position: relative
+      - display: |
+          [[[
+            return (states['input_boolean.casora_mobile_navigation']?.state === 'on') ? 'none' : 'block';
+          ]]]
+      - --ha-card-border-width: 0
+      - overflow: visible !important
+      - --casora-progress-pct: |
+          [[[
+            if (!variables.show_progress) return 0;
+
+            let v = variables.progress_value;
+
+            if (v === null || v === undefined) {
+              const target = variables.progress_entity || entity?.entity_id;
+              const st = states[target];
+
+              if (!st) return 0;
+
+              const rawState = st.state;
+              const attrs = st.attributes || {};
+
+              const stateNum = parseFloat(rawState);
+              if (Number.isFinite(stateNum)) {
+                v = stateNum;
+              }
+
+              else if (Number.isFinite(Number(attrs.percentage))) {
+                v = Number(attrs.percentage);
+              } else if (Number.isFinite(Number(attrs.progress))) {
+                v = Number(attrs.progress);
+              }
+
+              else if (
+                Number.isFinite(Number(attrs.media_position)) &&
+                Number.isFinite(Number(attrs.media_duration)) &&
+                Number(attrs.media_duration) > 0
+              ) {
+                const position = Number(attrs.media_position);
+                const duration = Number(attrs.media_duration);
+                const stateNow = (st.state || '').toLowerCase();
+
+                let effectivePosition = position;
+
+                if (
+                  stateNow === 'playing' &&
+                  attrs.media_position_updated_at
+                ) {
+                  const updatedAt = new Date(attrs.media_position_updated_at).getTime();
+                  if (Number.isFinite(updatedAt)) {
+                    const elapsed = Math.max(0, (Date.now() - updatedAt) / 1000);
+                    effectivePosition += elapsed;
+                  }
+                }
+
+                effectivePosition = Math.max(0, Math.min(duration, effectivePosition));
+                v = (effectivePosition / duration) * 100;
+              }
+
+              else {
+                v = 0;
+              }
+            }
+
+            const n = Number(v);
+            return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0;
+          ]]]
+
+      - --casora-progress-display: |
+          [[[
+            if (!variables.show_progress) return 'none';
+            const activeStates = variables.progress_active_states || [];
+            const s = (entity?.state || '').toLowerCase();
+            return activeStates.includes(s) ? 'var(--casora-tile-extras, block)' : 'none';
+          ]]]
+
+    custom_fields:
+      toggle:
+        - position: absolute
+        - top: calc(var(--casora-icon-center-y) - var(--casora-toggle-height) / 2)
+        - right: var(--casora-entity-inner-pad-current, var(--casora-entity-inner-pad-desktop, 20px))
+        - z-index: 2
+        - line-height: 0
+        - display: |
+            [[[
+              if (!variables.show_toggle) return 'none';
+              const target = variables.toggle_entity || entity?.entity_id || '';
+              const tState = (states[target]?.state || entity?.state || '').toLowerCase();
+              if (tState === 'unavailable' || tState === 'unknown') return 'none';
+              if (target.startsWith('media_player.')) {
+                const feats = states[target]?.attributes?.supported_features;
+                if (typeof feats === 'number' && !(feats & 384)) return 'none';
+              }
+              if (variables.show_progress) {
+                const activeStates = variables.progress_active_states || [];
+                const s = (entity?.state || '').toLowerCase();
+                if (activeStates.includes(s)) return 'none';
+              }
+              return 'var(--casora-tile-extras, block)';
+            ]]]
+
+      battery:
+        - position: absolute
+        - bottom: var(--casora-entity-inner-pad-current, var(--casora-entity-inner-pad-desktop, 20px))
+        - right: var(--casora-entity-inner-pad-current, var(--casora-entity-inner-pad-desktop, 20px))
+        - display: var(--casora-tile-extras, block)
+        - line-height: 0
+        - z-index: 3
+        - pointer-events: none
+        - filter: drop-shadow(0 2px 6px rgba(0,0,0,.25))
+
+      progress:
+        - position: absolute
+        - top: calc(var(--casora-icon-center-y) - var(--casora-progress-size-mq) / 2)
+        - right: var(--casora-entity-inner-pad-current, var(--casora-entity-inner-pad-desktop, 20px))
+        - width: var(--casora-progress-size-mq)
+        - height: var(--casora-progress-size-mq)
+        - display: var(--casora-progress-display, none)
+        - z-index: 2
+        - pointer-events: none
+        - overflow: visible
+        - line-height: 0
+
+    name:
+      - color: var(--casora-entity-name, rgba(255,255,255,0.9)) !important
+      - font-weight: 550
+      - letter-spacing: -0.01em
+      - text-shadow: var(--casora-entity-text-shadow, 0 1px 4px rgba(0,0,0,0.35))
+      - justify-self: start
+      - margin-bottom: calc(var(--casora-tile-name-mb, -2px) - 0.16em)
+      - font-size: var(--casora-entity-name-font-current, var(--casora-entity-name-font-desktop, 18px))
+      - line-height: 1.15
+      - white-space: nowrap
+      - overflow: hidden
+      - text-overflow: ellipsis
+      - transition: color .18s ease, opacity .18s ease
+
+    state:
+      - text-transform: capitalize
+      - color: var(--casora-entity-state, var(--secondary-text-color)) !important
+      - font-size: var(--casora-entity-state-font-current, var(--casora-entity-state-font-desktop, 15px))
+      - text-shadow: var(--casora-entity-text-shadow, 0 0 5px rgba(0,0,0,0.1))
+      - justify-self: start
+      - font-weight: 400
+      - letter-spacing: -0.006em
+      - line-height: 1.15
+      - transition: color .18s ease, opacity .18s ease
+
+    grid:
+      - grid-template-columns: var(--casora-tile-cols, 1fr)
+      - grid-template-rows: var(--casora-tile-rows, 1fr min-content min-content)
+      - grid-template-areas: 'var(--casora-tile-areas, "i" "n" "s")'
+      - gap: var(--casora-tile-gap, 4px 0)
+      - align-content: var(--casora-tile-align-content, start)
+      - justify-items: start
+      - align-items: start
+
+    img_cell:
+      - justify-self: start
+      - align-self: var(--casora-tile-icon-align, start)
+      - margin-top: var(--casora-tile-icon-mt, -2px)
+      - color: var(--casora-entity-state, var(--secondary-text-color)) !important
+      - width: var(--casora-entity-icon-size-current, var(--casora-entity-icon-size-desktop, 34px))
+      - height: var(--casora-entity-icon-size-current, var(--casora-entity-icon-size-desktop, 34px))
+      - background: transparent
+      - transition: opacity .18s ease, filter .18s ease
+
+    entity_picture:
+      - opacity: |
+          [[[
+            return variables.icon_never_masked ? 'var(--casora-entity-picture-inactive-opacity, .9)' : '0';
+          ]]]
+      - filter: var(--casora-entity-picture-inactive-filter, brightness(0.85) saturate(0.9))
+      - transition: opacity .18s ease, filter .18s ease
+
+    icon:
+      - color: var(--casora-entity-state, var(--secondary-text-color)) !important
+      - width: 100%
+      - height: 100%

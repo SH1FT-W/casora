@@ -1,0 +1,191 @@
+casora_badge_climate_group:
+  template: [casora_badge_base]
+
+  entity: input_select.casora_expanded_row
+
+  variables:
+    enabled: true
+    temp_sensor: null
+    temp_sensor_2: null
+    temp_sensor_3: null
+    temp_sensor_4: null
+    temp_sensor_5: null
+    humidity_sensor: null
+    quality_sensor: null
+    temp_unit: 'F'
+    climate_entity: null
+    climate_entity_2: null
+    climate_entity_3: null
+
+  tap_action:
+    action: call-service
+    service: input_select.select_option
+    service_data:
+      entity_id: input_select.casora_expanded_row
+      option: >
+        [[[
+          return states['input_select.casora_expanded_row']?.state === 'climate' ? 'none' : 'climate';
+        ]]]
+
+  hold_action:
+    action: none
+
+  double_tap_action:
+    action: none
+
+  icon: mdi:fan
+
+  styles:
+    card:
+      - background: >
+          [[[
+            return entity?.state === 'climate'
+              ? 'var(--badge-active-color, rgba(255,255,255,0.85))'
+              : 'var(--badge-background, rgba(10,12,14,0.65))';
+          ]]]
+      - display: >
+          [[[
+            const ev = variables?.enabled;
+            const enabled = (ev === undefined || ev === null) ? true :
+              (typeof ev === 'boolean') ? ev :
+              (typeof ev === 'number') ? ev !== 0 :
+              !['false','0','no','off','disabled'].includes(String(ev).trim().toLowerCase());
+            if (!enabled) return 'none';
+            return !!(variables.temp_sensor || variables.humidity_sensor || variables.quality_sensor)
+              ? 'inline-grid' : 'none';
+          ]]]
+      - --badge-title-color: >
+          [[[
+            return entity?.state === 'climate' ? 'rgba(0,0,0,0.85)' : 'var(--primary-text-color)';
+          ]]]
+      - --badge-sub-color: >
+          [[[
+            return entity?.state === 'climate' ? 'rgba(0,0,0,0.6)' : 'var(--secondary-text-color)';
+          ]]]
+      - --casora-fan-animation: >
+          [[[
+            const entities = [
+              variables.climate_entity,
+              variables.climate_entity_2,
+              variables.climate_entity_3
+            ].filter(e => !!e);
+            const hvacActive = entities.some(eid => {
+              const s = hass.states[eid];
+              if (!s) return false;
+              const action = s.attributes?.hvac_action;
+              if (['heating','cooling','fan_only','fan','drying'].includes(action)) return true;
+              return !['off','unavailable','unknown'].includes(s.state);
+            });
+
+            const prev = this._casoraPrevHvac;
+            this._casoraPrevHvac = hvacActive;
+            const justOn  = hvacActive  && prev === false;
+            const justOff = !hvacActive && prev === true;
+
+            if (hvacActive) {
+              return justOn
+                ? 'casora-fan-spin 1.5s ease-in 1, casora-fan-spin 0.9s linear 1.5s infinite'
+                : 'casora-fan-spin 0.9s linear infinite';
+            }
+            if (justOff) return 'casora-fan-coast 1.5s ease-out 1 forwards';
+            return 'none';
+          ]]]
+      - --casora-badge-icon-inactive: >
+          [[[
+            return entity?.state === 'climate'
+              ? 'var(--badge-title-inactive-selected, rgba(0,0,0,0.7))'
+              : 'var(--badge-title-inactive)';
+          ]]]
+      - --casora-badge-icon-color: >
+          [[[
+            const entities = [
+              variables.climate_entity,
+              variables.climate_entity_2,
+              variables.climate_entity_3
+            ].filter(e => !!e);
+            const hvacActive = entities.some(eid => {
+              const s = hass.states[eid];
+              if (!s) return false;
+              const action = s.attributes?.hvac_action;
+              if (['heating','cooling','fan_only','fan','drying'].includes(action)) return true;
+              return !['off','unavailable','unknown'].includes(s.state);
+            });
+            if (hvacActive) return 'var(--casora-badge-climate-color)';
+            const sensor = variables.temp_sensor || variables.temp_sensor_2 || variables.temp_sensor_3 || variables.temp_sensor_4 || variables.temp_sensor_5;
+            const v = parseFloat(hass.states[sensor]?.state);
+            if (!sensor || isNaN(v)) return 'var(--casora-badge-icon-inactive, var(--badge-title-inactive))';
+            const unit = String(variables.temp_unit || 'F').toUpperCase();
+            const t = (unit === 'F')
+              ? { veryCold: 65, cool: 70, comfortable: 76, warm: 81, hot: 85 }
+              : { veryCold: 18, cool: 21, comfortable: 24, warm: 27, hot: 29 };
+            if (v <= t.veryCold)    return 'var(--casora-badge-climate-very-cold-color)';
+            if (v <= t.cool)        return 'var(--casora-badge-climate-color)';
+            if (v <= t.comfortable) return 'var(--casora-badge-temp-comfortable-color)';
+            if (v <= t.warm)        return 'var(--casora-badge-temp-warm-color)';
+            if (v <= t.hot)         return 'var(--casora-badge-temp-hot-color)';
+            return 'var(--casora-badge-temp-very-hot-color)';
+          ]]]
+      - --icon-primary-color: var(--casora-badge-icon-color)
+      - --paper-item-icon-color: var(--casora-badge-icon-color)
+      - --state-icon-color: var(--casora-badge-icon-color)
+      - --card-mod-icon-color: var(--casora-badge-icon-color)
+
+    icon:
+      - color: var(--casora-badge-icon-color)
+
+  name: >
+    [[[
+      const sensors = [
+        variables.temp_sensor,
+        variables.temp_sensor_2,
+        variables.temp_sensor_3,
+        variables.temp_sensor_4,
+        variables.temp_sensor_5
+      ].filter(s => !!s)
+        .map(s => parseFloat(states[s]?.state))
+        .filter(v => !isNaN(v));
+
+      let sub = '';
+      if (sensors.length > 0) {
+        const minT = Math.round(Math.min(...sensors));
+        const maxT = Math.round(Math.max(...sensors));
+        sub = minT === maxT ? `${minT}°` : `${minT}–${maxT}°`;
+      }
+
+      return `
+        <div class="badge-wrap">
+          <div class="badge-title">Climate</div>
+          ${sub ? `<div class="badge-sub">${sub}</div>` : ''}
+        </div>
+      `;
+    ]]]
+
+  extra_styles: >
+    [[[
+      const ev = variables?.enabled;
+      const enabled = (ev === undefined || ev === null) ? true :
+        (typeof ev === 'boolean') ? ev :
+        (typeof ev === 'number') ? ev !== 0 :
+        !['false','0','no','off','disabled'].includes(String(ev).trim().toLowerCase());
+      const hasSensor = !!(variables.temp_sensor || variables.humidity_sensor || variables.quality_sensor);
+      const show = enabled && hasSensor;
+
+      return `:host{display:${show ? 'inline-block' : 'none'} !important;order:var(--casora-badge-order-climate,1);}
+        @keyframes casora-fan-spin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+        @keyframes casora-fan-coast {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+        #icon {
+          color: var(--casora-badge-icon-color) !important;
+          --icon-primary-color: var(--casora-badge-icon-color) !important;
+          --paper-item-icon-color: var(--casora-badge-icon-color) !important;
+          --state-icon-color: var(--casora-badge-icon-color) !important;
+          --card-mod-icon-color: var(--casora-badge-icon-color) !important;
+          transform-origin: center !important;
+          animation: var(--casora-fan-animation, none) !important;
+        }`;
+    ]]]

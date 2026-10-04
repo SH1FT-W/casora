@@ -1,0 +1,173 @@
+# Mobile Dashboard Header
+casora_mobile_weather:
+  show_icon: false
+  show_name: true
+  show_state: false
+  show_label: false
+  show_entity_picture: false
+  full_width: true
+  tap_action: {action: none}
+
+  hold_action: {action: none}
+  double_tap_action: {action: none}
+
+  variables:
+    weather_entity: null
+    weather_temp_sensor: null
+    show_notifications: true
+    # Written by Casora when it saves this layout, exactly as the wide one
+    # gates its settings dots. A YAML phone dashboard never gets one.
+    casora_ui_managed: false
+
+    # Declared so Casora's Notifications section reaches this layout too: the
+    # panel writes a dashboard-scoped key to every mobile template that
+    # DECLARES it, so a key missing here silently keeps its default on the
+    # phone while the wide layout obeys the switch.
+    notify_safety: true
+    notify_air: true
+    notify_locks: true
+    notify_alarm: true
+    notify_doorbell: true
+    notify_doors: true
+    notify_people: true
+    notify_vacuum: true
+    notify_appliances: true
+    notify_plants: true
+    notify_battery: true
+    notify_updates: true
+    notify_restart: true
+    notification_appliances: null
+    notification_appliance_timers: null
+    notification_co2_ppm: null
+    notification_open_minutes: null
+    notification_battery_threshold: null
+    # A glitched reading (100 -> 3 -> 100) must not raise a notice: a battery
+    # counts as low only once it has read low for this long.
+    notification_battery_hold_minutes: null
+    # A helper (input_datetime, input_text or input_number) holding when
+    # notifications were last marked read. Set it and every surface shares
+    # one read state; leave it null and each browser keeps its own.
+    notification_read_entity: null
+
+    # One composer for both layouts - see casora-core. force_eval so a change
+    # in Casora lands on the next render instead of waiting for a reload.
+    casora_notify_config:
+      force_eval: true
+      value: |
+        [[[
+          // Stash regardless: on a cold load this runs before casora-core.js,
+          // and the module picks the stash up when it initializes. Without it
+          // a layout that renders once - the phone - never applied its
+          // switches at all.
+          window._casoraNotifyCfg = variables;
+          if (window._casoraNotify) window._casoraNotify.configureFrom(variables);
+          return true;
+        ]]]
+
+  name: >
+    [[[
+      const T = window._casoraT || ((k, en, v) => String(en).replace(/\{(\w+)\}/g,
+        (m, p) => (v && Object.prototype.hasOwnProperty.call(v, p) ? String(v[p]) : m)));
+      const f = states['input_select.casora_mobile_filter']?.state ?? 'all';
+      const labels = {
+        all: T('filter.all', 'Home'),
+        climate: T('filter.climate', 'Climate'),
+        lights: T('filter.lights', 'Lights'),
+        presence: T('filter.presence', 'People'),
+        media: T('filter.media', 'Media'),
+        security: T('filter.security', 'Security'),
+        energy: T('filter.energy', 'Energy')
+      };
+      return labels[f] || labels.all;
+    ]]]
+
+  extra_styles: |
+    @keyframes titleFadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    #name { animation: titleFadeIn 0.3s ease-out both; }
+    ha-card.button-card-main {
+      align-items: stretch !important;
+      justify-content: flex-start !important;
+      text-align: left !important;
+    }
+    #container, .button-card-content { width: 100% !important; }
+    #name { justify-self: start !important; }
+
+
+  custom_fields:
+    notifications:
+      card:
+        type: custom:button-card
+        template: casora_mobile_chrome
+        variables:
+          show_notifications: '[[[ return variables.show_notifications !== false ]]]'
+          show_edit: '[[[ return !!variables.casora_ui_managed ]]]'
+          show_assist: '[[[ return variables.show_assist !== false ]]]'
+
+    weather:
+      card:
+        type: custom:button-card
+        template: casora_weather
+        entity: '[[[ return variables.weather_entity ]]]'
+        variables:
+          weather_temp_sensor: '[[[ return variables.weather_temp_sensor ]]]'
+          hero_mode: false
+
+  styles:
+    card:
+      - background: transparent
+      - backdrop-filter: "none !important"
+      - -webkit-backdrop-filter: "none !important"
+      - box-shadow: none
+      - border: none
+      - border-radius: 0
+      - padding: "calc(52px + var(--casora-mobile-chrome-drop, 4px)) var(--casora-rail-left, 16px) 12px max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px))"
+      - margin: 0
+      - "--button-card-ripple-color": transparent
+      - "-webkit-tap-highlight-color": transparent
+      - overflow: visible
+      - position: relative
+    grid:
+      - display: block
+      - text-align: left
+      - justify-items: start
+    name:
+      - font-size: "var(--hero-room-name-size-current, clamp(38px, 4vw + 2px, 64px))"
+      - font-weight: "700"
+      - color: "#ffffff"
+      - opacity: "0.9"
+      - letter-spacing: "-2px"
+      - line-height: "1.2"
+      - text-align: left
+      - overflow: visible
+      - padding: 0
+      - margin: 0
+      - max-width: "calc(100% - 145px)"
+    custom_fields:
+      notifications:
+        - display: >
+            [[[
+              const bell = variables.show_notifications !== false;
+              return (bell || variables.casora_ui_managed) ? 'block' : 'none';
+            ]]]
+        - position: absolute
+        - top: var(--casora-mobile-chrome-top, 0px)
+        - right: "var(--casora-rail-left, 16px)"
+        # The capsule sizes to what it holds, so no width is set here.
+        - z-index: 2
+        - overflow: visible
+        - pointer-events: auto
+
+      weather:
+        - display: >
+            [[[
+              const f = states['input_select.casora_mobile_filter']?.state ?? 'all';
+              return f === 'all' ? 'block' : 'none';
+            ]]]
+        - position: absolute
+        - top: "calc(52px + var(--casora-mobile-chrome-drop, 4px) + var(--hero-room-name-size-current, 38px) * 0.6)"
+        - transform: translateY(-50%)
+        - right: "var(--casora-rail-left, 16px)"
+        - z-index: 1

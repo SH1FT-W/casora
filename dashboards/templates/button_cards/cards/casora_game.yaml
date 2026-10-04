@@ -1,0 +1,60 @@
+# Game Activity Card
+casora_game:
+  show_empty: false
+  template:
+    - casora_media
+
+  variables:
+    mobile_filter_category: media
+    icon: play
+
+    game: |
+      [[[
+        const a = entity?.attributes || {};
+        const dead = ['none','unknown','unavailable',''];
+        const named = String(a.game ?? '').trim();
+        if (named && !dead.includes(named.toLowerCase())) return named;
+        const st = String(entity?.state ?? '').trim();
+        const isTitle = typeof window.casoraPsnStateTitle === 'function'
+          ? window.casoraPsnStateTitle(st)
+          : !['playing','paused','idle','on','off','home','away','online','offline',
+              'standby','unavailable','unknown','none','null',''].includes(st.toLowerCase());
+        return isTitle ? st : '';
+      ]]]
+
+    is_active: |
+      [[[
+        if (!variables.game) return false;
+        const st = String(entity?.state ?? '').toLowerCase();
+        return !['offline','off','none','unavailable','unknown',''].includes(st);
+      ]]]
+
+    active_override: '[[[ return variables.is_active; ]]]'
+    idle: '[[[ return !variables.is_active; ]]]'
+
+    art_url: |
+      [[[
+        const a = entity?.attributes || {};
+        const pick = [a.game_image_main, a.game_image_header, a.game_icon]
+          .find(x => x && String(x).trim());
+        if (!pick) return '';
+        const u = String(pick).trim();
+        return u.startsWith('/') ? window.location.origin + u : u;
+      ]]]
+
+    has_artwork: '[[[ return !!(variables.is_active && variables.art_url); ]]]'
+
+  state_display: |
+    [[[
+      if (variables.is_active && variables.game) {
+        const esc = (t) => String(t ?? '')
+          .replaceAll("&","&amp;")
+          .replaceAll("<","&lt;")
+          .replaceAll(">","&gt;")
+          .replaceAll('"',"&quot;")
+          .trim();
+        return `<span class="casora-media-state">${esc(variables.game)}</span>`;
+      }
+      if (!entity?.state) return "";
+      return hass.formatEntityState(entity) || entity.state;
+    ]]]

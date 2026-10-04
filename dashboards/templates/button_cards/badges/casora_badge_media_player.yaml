@@ -1,0 +1,452 @@
+casora_badge_media_player:
+  template: [casora_badge_base, casora_badge_media]
+  show_icon: false
+  show_entity_picture: true
+  show_name: true
+  show_state: false
+  show_label: false
+
+  variables:
+    enabled: true
+    entity: null
+    pause_timeout_minutes: 10
+    group_entities: null
+
+  entity: '[[[ return variables.entity || entity?.entity_id ]]]'
+
+  styles:
+    card:
+      - padding: "var(--casora-media-badge-pad-v, 0px) calc(var(--casora-badge-opacity, 1) * 8px) var(--casora-media-badge-pad-v, 0px) calc(var(--casora-badge-opacity, 1) * 12px) !important"
+      - max-width: "calc(var(--casora-badge-opacity, 1) * var(--badge-media-max-width-current, 600px)) !important"
+      - min-height: "calc(var(--casora-badge-opacity, 1) * (var(--badge-min-height-current, var(--badge-min-height, 50px)) + 3px)) !important"
+      
+      - --casora-badge-opacity: >
+          [[[
+            const P = (v) => { try { this.style.setProperty('--casora-badge-opacity', v); } catch (e) {} return v; };
+            return P((() => {
+            const cacheKey = '_casoraBadgeOpacity';
+            const enabled = (v) => {
+              if (v === undefined || v === null) return true;
+              if (typeof v === 'boolean') return v;
+              if (typeof v === 'number') return v !== 0;
+              const s = String(v).trim().toLowerCase();
+              return !['false','0','no','off','disabled'].includes(s);
+            };
+
+            if (!enabled(variables.enabled)) return '0';
+
+            const eid = variables.entity || entity?.entity_id;
+            const s = eid ? states[eid] : null;
+            if (!s) return this[cacheKey] || '0';
+
+            const st = String(s.state || '');
+            if (['unavailable','unknown','off','standby'].includes(st)) { this[cacheKey] = '0'; return '0'; }
+
+            const a = s.attributes || {};
+            const title  = String(a.media_title || '').trim();
+            const artist = String(a.media_artist || a.artist || a.media_album_artist || '').trim();
+            const hasContent = !!(title || artist);
+
+            if (['playing','buffering'].includes(st)) { const r = hasContent ? '1' : '0'; this[cacheKey] = r; return r; }
+
+            if (st === 'paused') {
+              if (!hasContent) { this[cacheKey] = '0'; return '0'; }
+              const timeout = Number(variables.pause_timeout_minutes ?? 10);
+              if (timeout <= 0) { this[cacheKey] = '1'; return '1'; }
+              const r = ((new Date() - new Date(s.last_changed)) / 60000) > timeout ? '0' : '1';
+              this[cacheKey] = r;
+              return r;
+            }
+
+            if (['idle','on'].includes(st)) { const r = hasContent ? '1' : '0'; this[cacheKey] = r; return r; }
+
+            this[cacheKey] = '0';
+            return '0';
+            })());
+          ]]]
+
+      - --casora-badge-ptr: >
+          [[[
+            const enabled = (v) => {
+              if (v === undefined || v === null) return true;
+              if (typeof v === 'boolean') return v;
+              if (typeof v === 'number') return v !== 0;
+              const s = String(v).trim().toLowerCase();
+              return !['false','0','no','off','disabled'].includes(s);
+            };
+
+            if (!enabled(variables.enabled)) return 'none';
+
+            const eid = variables.entity || entity?.entity_id;
+            const s = eid ? states[eid] : null;
+            if (!s) return 'none';
+
+            const st = String(s.state || '');
+            if (['unavailable','unknown','off','standby'].includes(st)) return 'none';
+
+            const a = s.attributes || {};
+            const title  = String(a.media_title || '').trim();
+            const artist = String(a.media_artist || a.artist || a.media_album_artist || '').trim();
+            const hasContent = !!(title || artist);
+
+            if (['playing','buffering'].includes(st)) return hasContent ? 'auto' : 'none';
+
+            if (st === 'paused') {
+              if (!hasContent) return 'none';
+              const timeout = Number(variables.pause_timeout_minutes ?? 10);
+              if (timeout <= 0) return 'auto';
+              return ((new Date() - new Date(s.last_changed)) / 60000) > timeout ? 'none' : 'auto';
+            }
+
+            if (['idle','on'].includes(st)) return hasContent ? 'auto' : 'none';
+
+            return 'none';
+          ]]]
+
+      - --bg-url: >
+          [[[
+            const cacheKey = '_casoraMpBgUrl';
+            const overrideEid = variables.entity;
+            const a = overrideEid ? (states[overrideEid]?.attributes || {}) : (entity?.attributes || {});
+
+            const raw =
+              a.entity_picture ||
+              a.media_image_url ||
+              a.media_album_cover_url ||
+              a.image_url;
+
+            if (raw) {
+              const url = String(raw).startsWith('/') ? `${location.origin}${raw}` : raw;
+              if (this._casoraBgRawUrl !== url) {
+                this._casoraBgRawUrl = url;
+                const img = new Image();
+                img.onload = () => {
+                  if (this._casoraBgRawUrl !== url) return; // superseded already
+                  const wrapped = `url("${url}")`;
+                  this[cacheKey] = wrapped;
+                  const card = this.shadowRoot?.querySelector('ha-card');
+                  if (card) { card.style.setProperty('--bg-url', wrapped);
+                               card.style.setProperty('--casora-badge-has-art', '1'); }
+                  this.requestUpdate?.();
+                };
+                img.src = url;
+              }
+            }
+            return this[cacheKey] || 'none';
+          ]]]
+
+    grid:
+      - grid-template-areas: '"i info controls"'
+      - grid-template-columns: min-content minmax(0, 1fr) min-content
+      - column-gap: 11px
+      - align-items: center
+
+    name:
+      - grid-area: info
+      - padding: 0 7px 0 0 !important
+      - margin-top: 2px !important
+      - min-width: 0
+      - max-width: 100%
+      - overflow: hidden !important
+      - text-align: left !important
+      - justify-self: start
+      - z-index: 6
+
+    custom_fields:
+      controls:
+        - grid-area: controls
+        - z-index: 30
+
+  entity_picture: >
+    [[[
+      const eid = variables.entity || entity?.entity_id;
+      const a = eid ? (states[eid]?.attributes || {}) : {};
+      const raw =
+        a.entity_picture ||
+        a.media_image_url ||
+        a.media_album_cover_url ||
+        a.image_url;
+
+      if (raw) return String(raw).startsWith('/') ? `${location.origin}${raw}` : raw;
+
+      const appName = String(a.app_name || a.source || '').toLowerCase();
+      const appId = String(a.app_id || '').toLowerCase();
+      if (appName.includes('youtube') || appId.includes('youtube'))
+        return '/casora_assets/icons/youtube.png';
+
+      return null;
+    ]]]
+
+  name: >
+    [[[
+      const eid = variables.entity || entity?.entity_id;
+      const a = eid ? (states[eid]?.attributes || {}) : {};
+      const rawTitle = String(a.media_title || '').trim();
+      let artist = String(a.media_artist || a.artist || a.media_album_artist || '').trim();
+      let title = rawTitle;
+
+      if (!artist && a.media_content_type === 'tvshow') {
+        const series = String(a.media_series_title || '').trim();
+        const season  = a.media_season  ? `S${String(a.media_season).padStart(2,'0')}`  : '';
+        const episode = a.media_episode ? `E${String(a.media_episode).padStart(2,'0')}` : '';
+        const ep = [season, episode].filter(Boolean).join('');
+        artist = [series, ep].filter(Boolean).join(' · ');
+      }
+
+      if (!artist) {
+        const parts = rawTitle.split(/\s+[-–—]\s+/);
+        if (parts.length >= 3) {
+          title = parts[parts.length - 1];
+          artist = parts.slice(0, parts.length - 1).join(' – ');
+        }
+      }
+
+      const esc = (s) => String(s ?? '')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+
+      const groupCount = Array.isArray(variables.group_entities) ? variables.group_entities.length + 1 : 0;
+      const countPill = groupCount > 1 ? `<span class="group-count"><span class="gc-plus">+</span>${groupCount}</span>` : '';
+
+      return `
+        <div class="badge-wrap">
+          <div class="badge-title">${esc(title || a.friendly_name || 'Media')}${countPill}</div>
+          <div class="badge-sub">${esc(artist || '')}</div>
+        </div>
+      `;
+    ]]]
+
+  tap_action:
+    action: more-info
+    entity: '[[[ return variables.entity || entity?.entity_id ]]]'
+
+  hold_action:
+    action: none
+
+  custom_fields:
+    controls:
+      card:
+        type: custom:button-card
+        show_icon: false
+        show_name: false
+        show_state: false
+        styles:
+          card:
+            - background: transparent
+            - box-shadow: none
+            - padding: 0
+            - margin: 0
+            - border-radius: 9999px
+            - border: none !important
+            - box-shadow: none !important
+            - backdrop-filter: none !important
+            - overflow: visible !important
+          grid:
+            - grid-template-areas: '"play next"'
+            - grid-template-columns: min-content min-content
+            - column-gap: 8px
+            - align-items: center
+
+        custom_fields:
+          play:
+            card:
+              type: custom:button-card
+              entity: '[[[ return variables.entity ]]]'
+              icon: >
+                [[[
+                  const eid = variables.entity;
+                  const st = eid ? String(states[eid]?.state || '') : '';
+                  return (st === 'playing') ? 'mdi:pause' : 'mdi:play';
+                ]]]
+              show_icon: true
+              show_name: false
+              styles:
+                card:
+                  - width: var(--badge-media-btn-size-current, var(--badge-media-btn-size, 44px))
+                  - height: var(--badge-media-btn-size-current, var(--badge-media-btn-size, 44px))
+                  - border-radius: 9999px
+                  - background: rgba(0,0,0,0)
+                  - backdrop-filter: none !important
+                  - -webkit-backdrop-filter: none !important
+                  - border: none !important
+                  - padding: 6px
+                  - transform: none !important
+                  - position: relative
+                grid:
+                  - place-items: center
+                icon:
+                  - color: rgba(255,255,255,0.96)
+                  - width: var(--badge-media-btn-icon-size-current, var(--badge-media-btn-icon-size, 28px))
+                  - height: var(--badge-media-btn-icon-size-current, var(--badge-media-btn-icon-size, 28px))
+              tap_action:
+                action: call-service
+                service: media_player.media_play_pause
+                service_data:
+                  entity_id: '[[[ return [variables.entity, ...(variables.group_entities||[])].filter(Boolean) ]]]'
+              extra_styles: |
+                ha-ripple,
+                mwc-ripple {
+                  display: none !important;
+                }
+                /* Glow */
+                ha-card::after{
+                  content:"";
+                  position:absolute;
+                  inset:0;
+                  border-radius:9999px;
+                  pointer-events:none;
+                  mix-blend-mode: screen;
+                  z-index: 1;
+                  box-shadow:
+                    0 0 3px 0px rgba(255,255,255,0.05),
+                    0 0 7px 0px rgba(255,255,255,0.02);
+                }
+                /* Hover */
+                ha-card::before{
+                  content:"";
+                  position:absolute;
+                  inset:0;
+                  border-radius:9999px;
+                  background:#000;
+                  opacity:0;
+                  pointer-events:none;
+                  z-index: 2;
+                  transition: opacity .18s ease;
+                }
+                ha-card{
+                  transform: none !important;
+                }
+                ha-card:hover::before{
+                  opacity:0.12;
+                }
+                ha-card:active{
+                  transform: none !important;
+                }
+                ha-card:active::before{
+                  opacity:0.20;
+                }
+
+          next:
+            card:
+              type: custom:button-card
+              icon: mdi:skip-next
+              show_icon: true
+              show_name: false
+              styles:
+                card:
+                  - width: var(--badge-media-btn-size-current, var(--badge-media-btn-size, 44px))
+                  - height: var(--badge-media-btn-size-current, var(--badge-media-btn-size, 44px))
+                  - border-radius: 9999px
+                  - background: rgba(0,0,0,0)
+                  - backdrop-filter: none !important
+                  - -webkit-backdrop-filter: none !important
+                  - padding: 6px
+                  - transform: none !important
+                  - border: none !important
+                  - position: relative
+                grid:
+                  - place-items: center
+                icon:
+                  - color: rgba(255,255,255,0.96)
+                  - width: var(--badge-media-btn-icon-size-current, var(--badge-media-btn-icon-size, 28px))
+                  - height: var(--badge-media-btn-icon-size-current, var(--badge-media-btn-icon-size, 28px))
+              tap_action:
+                action: call-service
+                service: media_player.media_next_track
+                service_data:
+                  entity_id: '[[[ return [variables.entity, ...(variables.group_entities||[])].filter(Boolean) ]]]'
+              extra_styles: |
+                ha-ripple,
+                mwc-ripple {
+                  display: none !important;
+                }
+                /* Glow */
+                ha-card::after{
+                  content:"";
+                  position:absolute;
+                  inset:0;
+                  border-radius:9999px;
+                  pointer-events:none;
+                  mix-blend-mode: screen;
+                  z-index: 1;
+                  box-shadow:
+                    0 0 3px 0px rgba(255,255,255,0.18),
+                    0 0 7px 0px rgba(255,255,255,0.09);
+                }
+                /* Hover */
+                ha-card::before{
+                  content:"";
+                  position:absolute;
+                  inset:0;
+                  border-radius:9999px;
+                  background:#000;
+                  opacity:0;
+                  pointer-events:none;
+                  z-index: 2;
+                  transition: opacity .18s ease;
+                }
+                ha-card{
+                  transform: none !important;
+                }
+                ha-card:hover::before{
+                  opacity:0.10;
+                }
+                ha-card:active{
+                  transform: none !important;
+                }
+                ha-card:active::before{
+                  opacity:0.20;
+                }
+
+  extra_styles: |
+    :host{
+      --casora-badge-title: var(--badge-font-size-current, var(--badge-font-size, 15px));
+      --casora-badge-sub: calc(var(--casora-badge-title) - 2px);
+
+      display: var(--casora-badge-display, inline-block) !important;
+      width: var(--casora-badge-width, fit-content) !important;
+      max-width: 100% !important;
+      justify-self: start !important;
+      align-self: start !important;
+      pointer-events: none !important;
+      margin-left: 1px !important;
+    }
+
+    :host ha-card{
+      cursor: pointer;
+      pointer-events: var(--casora-badge-ptr, none);
+      opacity: calc((1 - var(--casora-badge-enter-p)) * var(--casora-row-fade, 1)) !important;
+    }
+
+    @media (max-width: 767px) and (orientation: portrait) {
+      :host {
+        --badge-media-max-width-current: calc(100vw - 2 * var(--hero-gutter, 16px));
+      }
+    }
+
+    .group-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1;
+      padding: 2px 5px;
+      border-radius: 9999px;
+      background: rgba(255,255,255,0.22);
+      color: rgba(255,255,255,0.95);
+      margin-left: 6px;
+      vertical-align: middle;
+      position: relative;
+      top: -2px;
+      letter-spacing: 0.02em;
+    }
+
+    .gc-plus {
+      position: relative;
+      top: -1px;
+      margin-right: 1px;
+    }

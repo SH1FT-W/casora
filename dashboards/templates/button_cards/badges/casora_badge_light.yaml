@@ -1,0 +1,136 @@
+casora_badge_light:
+  template: [casora_badge_base, casora_popup_light]
+
+  variables:
+    enabled: true
+
+  show_state: false
+  show_label: false
+  show_icon: true
+  icon: mdi:lightbulb
+
+  tap_action:
+    haptic: light
+    action: |
+      [[[
+        if (!window.casoraPopupAction || window.casoraPopupAction() !== 'fire-dom-event') return 'more-info';
+        const members = entity?.entity_id ? states[entity.entity_id]?.attributes?.entity_id : null;
+        return Array.isArray(members) && members.length > 0 ? 'fire-dom-event' : 'more-info';
+      ]]]
+    entity: '[[[ return entity?.entity_id ]]]'
+
+  icon_tap_action:
+    action: none
+
+  hold_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.casora_light_smart_toggle
+      variables:
+        light_entity: '[[[ return entity?.entity_id ]]]'
+
+  double_tap_action:
+    action: none
+
+  extra_styles: >
+    [[[
+      const SVG_URL  = window.casoraIconUrl('light');
+      const ICON_PCT = 90;
+
+      return `
+        #img-cell, .img-cell{ position: relative; }
+
+        #img-cell #icon, .img-cell #icon{
+          color: transparent !important;
+          opacity: 0 !important;
+        }
+
+        #img-cell::before,
+        .img-cell::before{
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-color: var(--casora-icon-color, var(--primary-text-color)) !important;
+          -webkit-mask: url('${SVG_URL}') no-repeat center / auto ${ICON_PCT}%;
+          mask: url('${SVG_URL}') no-repeat center / auto ${ICON_PCT}%;
+          transform: translateZ(0);
+        }
+      `;
+    ]]]
+
+  styles:
+    img_cell:
+      - overflow: visible !important
+
+    card:
+      - display: >
+          [[[
+            const v = variables?.enabled;
+            const enabled = (v === undefined || v === null) ? true :
+              (typeof v === 'boolean') ? v :
+              (typeof v === 'number') ? v !== 0 :
+              !['false','0','no','off','disabled'].includes(String(v).trim().toLowerCase());
+
+            const hasEnt = !!entity?.entity_id;
+            const stRaw  = String(entity?.state ?? '').trim();
+            const st     = stRaw.toLowerCase();
+            const hide   = !enabled || !hasEnt || !stRaw || ['unknown','unavailable','none'].includes(st);
+
+            return hide ? 'none' : 'inline-grid';
+          ]]]
+      - --badge-title-color: >
+          [[[
+            return entity?.state === 'on'
+              ? 'var(--primary-text-color)'
+              : 'var(--badge-title-inactive)';
+          ]]]
+      - --badge-sub-color: >
+          [[[
+            return entity?.state === 'on'
+              ? 'var(--secondary-text-color)'
+              : 'color-mix(in oklab, var(--secondary-text-color) 70%, transparent)';
+          ]]]
+      - --casora-icon-color: >
+          [[[
+            if (entity?.state !== 'on') return 'var(--badge-title-inactive)';
+            return 'var(--casora-badge-light-color)';
+          ]]]
+    icon:
+      - color: transparent
+
+  name: >
+    [[[
+      const eid = entity?.entity_id;
+      const _h  = typeof hass !== 'undefined' ? hass : null;
+      const members = entity?.attributes?.entity_id;
+
+      const areaName = () => {
+        const ents = _h?.entities || {};
+        const reg = ents[eid] || (ents.get && ents.get(eid)) || null;
+        if (!reg) return null;
+        const aid = reg.area_id || (reg.device_id ? _h?.devices?.[reg.device_id]?.area_id : null);
+        return aid ? (_h?.areas?.[aid]?.name || null) : null;
+      };
+      const isGroup = Array.isArray(members) && members.length > 0;
+
+      const friendly = (isGroup ? areaName() : null)
+                    || entity?.attributes?.friendly_name
+                    || 'Light';
+      const isOn     = entity?.state === 'on';
+      let sub;
+      if (!isOn) {
+        sub = 'Off';
+      } else {
+        const brightness = entity?.attributes?.brightness;
+        sub = brightness != null ? `${Math.round((brightness / 255) * 100)}%` : 'On';
+      }
+
+      const esc = (t) => String(t || '').replaceAll('"', '&quot;');
+      return `
+        <div class="badge-wrap">
+          <div class="badge-title">${esc(friendly)}</div>
+          <div class="badge-sub">${esc(sub)}</div>
+        </div>
+      `;
+    ]]]

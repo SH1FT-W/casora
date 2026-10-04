@@ -1,0 +1,174 @@
+
+casora_network:
+  template:
+    - casora_entity
+    - casora_popup_network
+
+  variables:
+    upload_sensor: null
+    icon: wifi
+    idle_threshold: 1
+    light_threshold: 10
+    heavy_threshold: 50
+    room_name: null
+    entity_download: null
+    entity_upload: null
+    entity_ping: null
+    entity_status: null
+    entity_stat_1: null
+    entity_stat_2: null
+    entity_stat_3: null
+    entity_stat_4: null
+    action_1_entity: null
+    action_1_label: null
+    action_1_status: null
+    action_2_entity: null
+    action_2_label: null
+    action_2_status: null
+
+  icon_tap_action:
+    action: more-info
+    entity: >
+      [[[
+        const ulId = variables.entity_upload || variables.upload_sensor;
+        const dl = parseFloat(entity?.state);
+        const ul = parseFloat(states[ulId]?.state);
+        return (Number.isFinite(ul) && ul > dl && ulId)
+          ? ulId
+          : entity.entity_id;
+      ]]]
+
+  hold_action:
+    action: more-info
+    entity: >
+      [[[
+        const ulId = variables.entity_upload || variables.upload_sensor;
+        const dl = parseFloat(entity?.state);
+        const ul = parseFloat(states[ulId]?.state);
+        return (Number.isFinite(ul) && ul > dl && ulId)
+          ? ulId
+          : entity.entity_id;
+      ]]]
+
+  # Idle · Light Downloads/Uploads · Active Downloads/Uploads · Heavy Downloads/Uploads
+  state_display: >
+    [[[
+      const dlId  = variables.entity_download || entity?.entity_id;
+      const ulId  = variables.entity_upload   || variables.upload_sensor || null;
+      const stat1 = variables.entity_stat_1 || null;
+      const stat2 = variables.entity_stat_2 || null;
+      const stat3 = variables.entity_stat_3 || null;
+      const stat4 = variables.entity_stat_4 || null;
+
+      const safe = (id) => { if (!id) return null; const n = parseFloat(states[id]?.state); return isNaN(n) ? null : n; };
+
+      const fit = (t) => window.casoraStateFit?.(t) ?? t;
+
+      const allVals = [safe(dlId), safe(ulId)].filter(v => v != null);
+      const max = allVals.length > 0 ? Math.max(...allVals) : 0;
+
+      const dl   = safe(dlId);
+      const ul   = safe(ulId);
+      const dlOk = dl != null;
+      const ulOk = ul != null;
+
+      const idle  = Number(variables.idle_threshold  ?? 1);
+      const light = Number(variables.light_threshold ?? 10);
+      const heavy = Number(variables.heavy_threshold ?? 50);
+
+      if (max < idle) return fit('Idle');
+
+      const tier = max < light ? 'Light' : max < heavy ? 'Active' : 'Heavy';
+      const dir  = (!dlOk || (ulOk && ul > dl)) ? 'Upload' : 'Download';
+      return fit(`${tier} ${dir}`);
+    ]]]
+
+  # Icon Activity
+  state:
+    - operator: template
+      value: |
+        [[[
+          const safe = (id) => { if (!id) return null; const n = parseFloat(states[id]?.state); return isNaN(n) ? null : n; };
+          const vals = [
+            safe(variables.entity_download || entity?.entity_id),
+            safe(variables.entity_upload || variables.upload_sensor),
+          ].filter(v => v != null);
+          const max   = vals.length > 0 ? Math.max(...vals) : 0;
+          const light = Number(variables.light_threshold ?? 10);
+          return max >= light;
+        ]]]
+      styles:
+        card:
+          - "--casora-active-overlay-opacity": "1"
+          - --casora-entity-overlay-tint: var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))
+          - "--casora-active-overlay-dur": "0s"
+          - --casora-entity-top-gradient: none
+          - box-shadow: var(--casora-button-card-box-shadow-active-current, var(--button-card-box-shadow-active, var(--button-card-box-shadow))) !important
+          - --casora-icon-color-current: "var(--casora-popup-primary-color, #00c3d0)"
+          - --casora-icon-svg-url: "[[[ return `url('${window.casoraIconUrl(variables.icon || 'wifi')}')`; ]]]"
+          - --casora-icon-use-mask: "1"
+          - --casora-icon-circle-bg: var(--casora-icon-color-current)
+          - --casora-icon-mask-active: "0"
+        name:
+          - color: var(--casora-entity-name-active, var(--primary-text-color))
+        state:
+          - color: var(--casora-entity-state-active-color)
+        img_cell:
+          - opacity: "1 !important"
+          - filter: none !important
+          - background: "var(--casora-popup-primary-color, #00c3d0) !important"
+        entity_picture:
+          - opacity: "1 !important"
+          - filter: none !important
+    - operator: template
+      value: |
+        [[[
+          const safe = (id) => { if (!id) return null; const n = parseFloat(states[id]?.state); return isNaN(n) ? null : n; };
+          const vals = [
+            safe(variables.entity_download || entity?.entity_id),
+            safe(variables.entity_upload || variables.upload_sensor),
+          ].filter(v => v != null);
+          const max   = vals.length > 0 ? Math.max(...vals) : 0;
+          const heavy = Number(variables.heavy_threshold ?? 50);
+          return max >= heavy;
+        ]]]
+      styles:
+        card:
+          - "--casora-active-overlay-opacity": "1"
+          - --casora-entity-overlay-tint: var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))
+          - "--casora-active-overlay-dur": "0s"
+          - --casora-entity-top-gradient: none
+          - box-shadow: var(--casora-button-card-box-shadow-active-current, var(--button-card-box-shadow-active, var(--button-card-box-shadow))) !important
+          - --casora-icon-color-current: "var(--casora-popup-yellow-color, #ffd600)"
+          - --casora-icon-svg-url: "[[[ return `url('${window.casoraIconUrl(variables.icon || 'wifi')}')`; ]]]"
+          - --casora-icon-use-mask: "1"
+          - --casora-icon-circle-bg: var(--casora-icon-color-current)
+          - --casora-icon-mask-active: "0"
+        name:
+          - color: var(--casora-entity-name-active, var(--primary-text-color))
+        state:
+          - color: var(--casora-entity-state-active-color)
+        img_cell:
+          - opacity: "1 !important"
+          - filter: none !important
+          - background: "var(--casora-popup-yellow-color, #ffd600) !important"
+        entity_picture:
+          - opacity: "1 !important"
+          - filter: none !important
+
+  styles:
+    card:
+      - --casora-icon-mask-scale: 64.8%
+      - --casora-icon-inactive-color: |
+          [[[
+            const safe = (id) => { if (!id) return null; const n = parseFloat(states[id]?.state); return isNaN(n) ? null : n; };
+            const vals = [
+              safe(variables.entity_download || entity?.entity_id),
+              safe(variables.entity_upload || variables.upload_sensor),
+            ].filter(v => v != null);
+            const max  = vals.length > 0 ? Math.max(...vals) : 0;
+            const idle = Number(variables.idle_threshold ?? 1);
+            return max >= idle
+              ? 'var(--casora-popup-primary-color, #00c3d0)'
+              : 'var(--casora-icon-inactive-fallback-color, rgba(255,255,255,0.95))';
+          ]]]

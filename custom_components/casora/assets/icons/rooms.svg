@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.2 -0.2 24.4 24.4" fill="none" stroke="#000" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Casora: Grundriss als Kacheln (Räume-Knopf der Mobile-Nav), SF-Symbol-Stil -->
+  <rect x="3" y="3" width="18" height="18" rx="4.2"/>
+  <path d="M12.6 3v8.4M3 11.4h18M9.2 11.4V21"/>
+</svg>

@@ -1,0 +1,79 @@
+# Casora Glass – erzeugt von tools/build-glass-theme.py, nicht von Hand bearbeiten.
+# Nur die Abweichungen vom Casora-Theme; helfer.py legt sie beim Laden darüber.
+# Herkunft: Hemma 1.4.1 hemma_glass.yaml (MIT, Will Sanderson), auf Hemma 2 übertragen.
+Casora Glass:
+  ha-shadow-light: inset 0 0 0 1px rgba(255,255,255,0.03), inset 2.5px 2.5px 1.5px -3.5px rgba(255,255,255,0.2), inset -2.5px -2.5px 1.5px -3.5px rgba(255,255,255,0.2), inset 0 10px 18px -16px rgba(255,255,255,0.25), inset 0 -10px 18px -16px rgba(255,255,255,0.25)
+  ha-shadow-light-hover: inset 0 0 0 1px rgba(255,255,255,0.03), inset 2.5px 2.5px 1.5px -3.5px rgba(255,255,255,0.2), inset -2.5px -2.5px 1.5px -3.5px rgba(255,255,255,0.2), inset 0 10px 18px -16px rgba(255,255,255,0.25), inset 0 -10px 18px -16px rgba(255,255,255,0.25), 0 8px 20px rgba(0,0,0,0.04)
+  ha-shadow-light-mobile: inset 0 0 0 1px rgba(255,255,255,0.03), inset 3px 3px 1px -3px rgba(255,255,255,0.22), inset -3px -3px 1px -3px rgba(255,255,255,0.22), inset 0 10px 18px -16px rgba(255,255,255,0.35), inset 0 -10px 18px -16px rgba(255,255,255,0.35)
+  ha-shadow-dark: inset 3px 3px 1px -3.5px rgba(120,120,120,0.3), inset -3px -3px 1px -3.5px rgba(120,120,120,0.3), inset 0 10px 18px -16px rgba(255,255,255,0.16), inset 0 -10px 18px -16px rgba(255,255,255,0.16)
+  ha-shadow-dark-hover: inset 3px 3px 1px -3.5px rgba(120,120,120,0.3), inset -3px -3px 1px -3.5px rgba(120,120,120,0.3), inset 0 10px 18px -16px rgba(255,255,255,0.16), inset 0 -10px 18px -16px rgba(255,255,255,0.16), 0 8px 20px rgba(0,0,0,0.04)
+  ha-shadow-dark-mobile: inset 3px 3px 1px -3px rgba(140,140,140,0.30), inset -3px -3px 1px -3px rgba(140,140,140,0.30), inset 0 10px 18px -16px rgba(255,255,255,0.30), inset 0 -10px 18px -16px rgba(255,255,255,0.30)
+  ha-card-box-shadow-light: inset 0 0 0 1px rgba(255,255,255,0.12), inset 3px 3px 1px -3.5px rgba(255,255,255,0.1), inset -2px -2px 0.5px -2px rgba(255,255,255,0.1), inset 0 10px 18px -16px rgba(255,255,255,0.2), inset 0 -10px 18px -16px rgba(255,255,255,0.2)
+  ha-card-box-shadow-dark: inset 0 0 0 1px rgba(255,255,255,0.12), inset 3px 3px 1px -3.5px rgba(120,120,120,0.1), inset -3px -3px 1px -3.5px rgba(120,120,120,0.1), inset 0 10px 18px -16px rgba(255,255,255,0.2), inset 0 -10px 18px -16px rgba(255,255,255,0.16)
+  ha-dialog-surface-backdrop-filter: blur(15px) saturate(1.2)
+  ha-card-backdrop-filter: blur(12px) saturate(1.4)
+  casora-entity-picture-inactive-opacity: 0.98
+  casora-entity-picture-inactive-filter: brightness(.98) saturate(0.9)
+  casora-entity-text-shadow: 0 0 4px rgba(0,0,0,0.1)
+  card-mod-theme: Casora Glass
+  uix-theme: Casora Glass
+  modes:
+    light:
+      ha-card-background: rgba(100,100,100,0.1)
+      casora-entity-background: rgba(255,255,255,0.08)
+      casora-entity-background-active: rgba(255,255,255,0.25)
+      casora-entity-active-tint: rgba(255,255,255,0.22)
+      casora-entity-active-tint-mobile: rgba(255,255,255,0.22)
+      casora-entity-name-active: rgba(255,255,255,1)
+      casora-entity-state: rgba(240,240,240,0.85)
+      casora-entity-state-opacity: 0.78
+      casora-entity-state-active: rgba(245,245,245,0.98)
+      casora-entity-state-active-color: rgba(255,255,255,0.90)
+      casora-toggle-inactive-opacity: 0.65
+      casora-nav-bg: rgba(0,0,0,0.3)
+      casora-nav-active-fill: rgba(255,255,255,0.3)
+      casora-popup-tile-hover: rgba(255,255,255,0.14)
+      casora-card-specular-start: transparent
+      casora-card-specular-mid: transparent
+      casora-card-specular-end: transparent
+      dialog-box-shadow: var(--casora-dialog-shadow)
+      casora-dialog-shadow: inset 0 0 0 1px rgba(255,255,255,0.20), inset 3px 3px 1px -3px rgba(255,255,255,0.18), inset -3px -3px 1px -3px rgba(255,255,255,0.18), inset 0 10px 20px -14px rgba(255,255,255,0.30), inset 0 -10px 20px -14px rgba(255,255,255,0.30)
+      button-card-box-shadow: var(--ha-shadow-light)
+      button-card-box-shadow-mobile: var(--ha-shadow-light-mobile)
+      button-card-box-shadow-active: var(--ha-shadow-light)
+      button-card-box-shadow-active-mobile: var(--ha-shadow-light-mobile)
+      button-card-box-shadow-hover: var(--ha-shadow-light-hover)
+      button-card-box-shadow-hover-mobile: var(--ha-shadow-light-mobile)
+      mdc-dialog-scrim-color: rgba(0,0,0,0.25)
+      mdc-text-field-fill-color: rgba(50,50,50,0.4)
+      mdc-select-fill-color: rgba(50,50,50,0.4)
+      ha-dialog-background: rgba(255,255,255,0.1)
+      casora-dialog-bg: rgba(255,255,255,0.1)
+      ha-dialog-surface-background: rgba(255,255,255,0.1)
+    dark:
+      casora-entity-background: rgba(255,255,255,0.08)
+      casora-entity-background-active: rgba(255,255,255,0.25)
+      casora-entity-active-tint: rgba(255,255,255,0.22)
+      casora-entity-active-tint-mobile: rgba(255,255,255,0.22)
+      casora-entity-name: rgba(255,255,255,0.85)
+      casora-entity-name-active: rgba(255,255,255,1)
+      casora-entity-state: rgba(255,255,255,0.7)
+      casora-entity-state-opacity: 0.75
+      casora-entity-state-active: rgba(255,255,255,0.8)
+      casora-entity-state-active-color: rgba(255,255,255,0.85)
+      casora-nav-active-fill: rgba(255,255,255,0.3)
+      casora-card-specular-start: transparent
+      casora-card-specular-mid: transparent
+      casora-card-specular-end: transparent
+      casora-toggle-inactive-opacity: 0.65
+      dialog-box-shadow: var(--casora-dialog-shadow)
+      casora-dialog-shadow: inset 0 0 0 1px rgba(255,255,255,0.12), inset 3px 3px 1px -3.5px rgba(120,120,120,0.1), inset -3px -3px 1px -3.5px rgba(120,120,120,0.1), inset 0 10px 18px -16px rgba(255,255,255,0.20), inset 0 -10px 18px -16px rgba(255,255,255,0.16)
+      button-card-box-shadow: var(--ha-shadow-dark)
+      button-card-box-shadow-active: var(--ha-shadow-dark)
+      button-card-box-shadow-mobile: var(--ha-shadow-dark-mobile)
+      button-card-box-shadow-active-mobile: var(--ha-shadow-dark-mobile)
+      button-card-box-shadow-hover: var(--ha-shadow-dark-hover)
+      button-card-box-shadow-hover-mobile: var(--ha-shadow-dark-mobile)
+      ha-dialog-background: rgba(0,0,0,0.35)
+      casora-dialog-bg: rgba(0,0,0,0.35)
+      ha-dialog-surface-background: rgba(0,0,0,0.35)

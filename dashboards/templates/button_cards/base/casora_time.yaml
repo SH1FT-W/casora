@@ -1,0 +1,87 @@
+casora_time:
+  template:
+    - casora_default
+
+  variables:
+    time_entity: sensor.time
+    use_12h: true
+    time_suffix:
+
+  name: >
+    [[[
+      const id  = variables.time_entity || "sensor.time";
+      const ent = states[id];
+      if (!ent) return "";
+
+      const raw    = String(ent.state || "");
+      const use12  = variables.use_12h === true;
+      const suffix = (variables.time_suffix || "").toString().trim();
+
+      const to12h = (timeStr) => {
+        const m = String(timeStr).match(/^(\d{1,2}):(\d{2})$/);
+        if (!m) return timeStr;
+        let h = parseInt(m[1], 10);
+        const min = m[2];
+        const ampm = h >= 12 ? "PM" : "AM";
+        h = h % 12;
+        if (h === 0) h = 12;
+        return `${h}:${min} ${ampm}`;
+      };
+
+      let timePart = raw;
+      if (raw.includes(",")) {
+        const parts = raw.split(",");
+        timePart = (parts[1] || "").trim() || raw;
+      }
+
+      let display = timePart;
+      if (use12 && /^\d{1,2}:\d{2}$/.test(timePart)) {
+        display = to12h(timePart);
+      }
+
+      if (suffix) display = `${display} ${suffix}`;
+
+      return display.toUpperCase();
+    ]]]
+
+  show_icon: false
+  show_state: false
+  show_label: false
+
+  styles:
+    grid:
+      - grid-template-areas: '"n"'
+      - grid-template-columns: max-content
+      - grid-template-rows: min-content
+      - justify-items: end
+      - align-items: center
+
+    card:
+      - background: transparent
+      - box-shadow: none !important
+      - border: none !important
+      - backdrop-filter: none
+      - border-radius: 0
+      - padding: 0
+      - margin: 0
+      - height: min-content
+      - width: max-content
+      - min-width: 0
+      - overflow: visible
+      - pointer-events: none
+      - "--mdc-ripple-press-opacity": 0
+      - "-webkit-tap-highlight-color": transparent
+
+    name:
+      - color: var(--primary-text-color)
+      - opacity: var(--casora-time-opacity, 1)
+      - letter-spacing: 1px
+      - font-size: var(--casora-chrome-font-size, 18px)
+      - line-height: 1
+      - text-transform: uppercase
+      - font-weight: var(--casora-chrome-font-weight, 700)
+      - white-space: nowrap
+      - justify-self: end
+      - align-self: center
+      - padding: 0
+      - margin: 0

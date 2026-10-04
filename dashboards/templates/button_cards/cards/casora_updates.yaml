@@ -1,0 +1,77 @@
+casora_updates:
+  template:
+    - casora_entity
+    - casora_popup_updates
+
+  variables:
+    icon: updates
+    show_when: active
+    idle: |
+      [[[
+        const restart = Object.keys(states)
+          .filter(id => id.startsWith('update.'))
+          .some(id => {
+            const e = states[id], a = (e && e.attributes) || {};
+            return e && e.state === 'off'
+              && a.installed_version && a.installed_version === a.latest_version
+              && String(a.release_summary || '').toLowerCase().includes('restart');
+          });
+        const n = Number(entity?.state);
+        return !(Number.isFinite(n) && n > 0) && !restart;
+      ]]]
+
+  icon_tap_action:
+    action: more-info
+
+  hold_action:
+    action: more-info
+
+  state_display: |
+    [[[
+      const restart = Object.keys(states)
+        .filter(id => id.startsWith('update.'))
+        .some(id => {
+          const e = states[id], a = (e && e.attributes) || {};
+          return e && e.state === 'off'
+            && a.installed_version && a.installed_version === a.latest_version
+            && String(a.release_summary || '').toLowerCase().includes('restart');
+        });
+      const n = Number(entity.state);
+      if (Number.isFinite(n) && n === 1) return '1 Update';
+      if (Number.isFinite(n) && n > 1) return `${n} Updates`;
+      return restart ? 'Restart required' : 'Up to date';
+    ]]]
+
+  state:
+    - operator: template
+      value: |
+        [[[
+          const restart = Object.keys(states)
+            .filter(id => id.startsWith('update.'))
+            .some(id => {
+              const e = states[id], a = (e && e.attributes) || {};
+              return e && e.state === 'off'
+                && a.installed_version && a.installed_version === a.latest_version
+                && String(a.release_summary || '').toLowerCase().includes('restart');
+            });
+          const n = Number(entity.state);
+          return (Number.isFinite(n) && n > 0) || restart;
+        ]]]
+      styles:
+        card:
+          - "--casora-active-overlay-opacity": "1"
+          - --casora-entity-overlay-tint: var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))
+          - "--casora-active-overlay-dur": "0s"
+          - --casora-entity-top-gradient: none
+          - box-shadow: var(--button-card-box-shadow-active, var(--button-card-box-shadow)) !important
+        name:
+          - color: var(--casora-entity-name-active, var(--primary-text-color))
+        state:
+          - color: var(--casora-entity-state-active-color)
+        img_cell:
+          - opacity: "1 !important"
+          - filter: none !important
+          - background: "var(--casora-color-teal, #00c3d0) !important"
+        entity_picture:
+          - opacity: "1 !important"
+          - filter: none !important

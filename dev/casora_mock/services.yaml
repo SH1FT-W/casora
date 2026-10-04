@@ -1,0 +1,17 @@
+scenario:
+  fields:
+    name:
+      required: true
+      example: drucker_druckt
+      selector:
+        select:
+          options:
+            - drucker_druckt
+            - drucker_heizt
+            - drucker_abgebrochen
+            - waesche_laeuft
+            - trockner_laeuft
+            - geschirrspueler_laeuft
+            - sauger_reinigt
+            - alarm_ausgeloest
+reset:

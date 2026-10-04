@@ -1,0 +1,33 @@
+# Template Sensors (optional)
+# ============================================================================
+# Loaded by `template: !include sensors.yaml` in configuration.yaml.
+#
+# Nothing in Casora requires these. They exist as a no-integration fallback for
+# the clock on each room's hero card, which `casora_time` reads from
+# `sensor.time` by default. That sensor comes from Home Assistant's
+# Date & Time integration, which is NOT part of default_config. If you'd rather
+# not add that integration, point casora_time at the sensor below instead:
+#
+#   casora_time:
+#     variables:
+#       time_entity: sensor.current_time
+#
+# `Current Time` emits "%H:%M" (e.g. "14:30"), the same format casora_time
+# expects from sensor.time, so it's a drop-in. Templates using now() are
+# re-evaluated by HA at the start of every minute, so it ticks like a clock.
+#
+# `Current Date` is unused by Casora and included purely as a convenience.
+#
+# Safe to delete BOTH this file and the `template: !include sensors.yaml` line
+# in configuration.yaml if you don't want either sensor, but remove the line
+# too, or Home Assistant will fail to start on the missing include.
+# ============================================================================
+- sensor:
+    - name: Current Date
+      state: >
+        {% set days = ["st", "nd", "rd"] %}
+        {% set day = now().day %}
+        {{ now().strftime('%A ') }}{{ day }}{{ days[day-1] if day in range(1, 4)
+        and day not in range(11, 14) else 'th' }} {{ now().strftime('%B %Y') }}
+    - name: Current Time
+      state: "{{ now().strftime('%H:%M') }}"

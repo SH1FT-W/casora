@@ -1,0 +1,349 @@
+# Base Badge Template
+casora_badge_base:
+  # window.casoraIconUrl load-race guard - see casora_default.yaml for why.
+  variables:
+    casora_icon_url_guard:
+      force_eval: true
+      value: |
+        [[[
+          if (typeof window.casoraIconUrl !== 'function') {
+            window.casoraIconUrl = (name) =>
+              (window.CASORA_ICONS && window.CASORA_ICONS[name]) ||
+              `/casora_assets/icons/${name}.svg`;
+          }
+          return true;
+        ]]]
+
+    # Same guarded-initialiser pattern as the icon-url guard above: casora_popup_camera
+    # defines this too, for cards that reach it through the popup rather than a badge.
+    casora_camera_alert_helper:
+      force_eval: true
+      value: |
+        [[[
+          if (typeof window.casoraCameraAlert !== 'function') {
+            window.casoraCameraAlert = function (hass, states, cams, windowMinutes) {
+              const reg = (hass && hass.entities) || {};
+              const devs = {};
+              cams.forEach(function (id) {
+                const d = reg[id] && reg[id].device_id;
+                if (d) devs[d] = true;
+              });
+              const span = (Number(windowMinutes) > 0 ? Number(windowMinutes) : 5) * 60000;
+              const now = Date.now();
+              states['sensor.time'];
+              let ding = false, motion = false;
+              Object.keys(reg).forEach(function (id) {
+                if (id.indexOf('event.') !== 0) return;
+                if (!devs[reg[id].device_id]) return;
+                const t = Date.parse(states[id] && states[id].state);
+                if (!isFinite(t) || now - t > span) return;
+                if (/ding|doorbell|button/.test(id)) ding = true;
+                else if (/motion/.test(id)) motion = true;
+              });
+              return ding ? 'Doorbell' : motion ? 'Motion Detected' : '';
+            };
+          }
+          return true;
+        ]]]
+
+  classes:
+    card:
+      - casora-badge
+  styles:
+    card:
+      - background: var(--badge-background, rgba(10,12,14,0.65))
+      - backdrop-filter: blur(var(--badge-blur, 14px))
+      - -webkit-backdrop-filter: blur(var(--badge-blur, 14px))
+      - box-shadow: none
+      - --ha-card-box-shadow: none
+      - --ha-shadow-light-hover: none
+      - --ha-shadow-dark-hover: none
+      - --casora-badge-hover-shadow: none
+      - border: none !important
+      - border-radius: var(--badge-br, 9999px)
+      - padding: var(--badge-padding-current, var(--badge-padding, 6px 14px))
+      - min-height: var(--badge-min-height-current, var(--badge-min-height, 44px))
+      - display: >
+          [[[
+            const v = variables?.enabled;
+            if (v === undefined || v === null) return 'inline-grid';
+            if (typeof v === 'boolean') return v ? 'inline-grid' : 'none';
+            if (typeof v === 'number') return v !== 0 ? 'inline-grid' : 'none';
+            const s = String(v).trim().toLowerCase();
+            if (['false','0','no','off','disabled'].includes(s)) return 'none';
+            return 'inline-grid';
+          ]]]
+      - align-items: center
+      - gap: var(--badge-col-gap-current, var(--badge-col-gap, 10px))
+      - --casora-badge-enter-delay: >
+          [[[
+            const step = Number(variables?.enter_step ?? 22);
+            let i = 0;
+            try {
+              const sibs = this.parentElement?.children;
+              if (sibs && sibs.length > 1) {
+                for (const el of sibs) {
+                  if (el === this) break;
+                  if (el.localName !== this.localName) continue;
+                  const c = el.shadowRoot && el.shadowRoot.querySelector('ha-card');
+                  if (c && c.style.display === 'none') continue;
+                  i++;
+                }
+              }
+            } catch (e) {}
+            return i > 0 ? (i * step) + 'ms' : 'inherit';
+          ]]]
+      - width: fit-content
+      - margin-inline-start: 0
+      - margin-inline-end: 0
+      - margin-block-start: 0
+      - margin-block-end: 0
+      - position: relative
+      - isolation: isolate
+      - --badge-title-color: var(--casora-badge-title-color, var(--primary-text-color))
+      - --badge-sub-color: var(--casora-badge-sub-color, var(--secondary-text-color))
+      - overflow: hidden
+      - clip-path: inset(0 round var(--badge-br, 9999px))
+
+    grid:
+      - grid-template-areas: '"i l"'
+      - grid-template-columns: min-content minmax(0, 1fr)
+      - column-gap: var(--badge-col-gap-current, var(--badge-col-gap, 10px))
+      - row-gap: 0
+      - align-items: center
+
+    name:
+      - grid-area: l
+      - min-width: 0
+      - color: var(--badge-title-color, var(--secondary-text-color))
+      - font-weight: 700
+      - font-size: var(--badge-font-size-current, var(--badge-font-size, 13px))
+      - line-height: 1.2
+      - text-align: left
+      - justify-self: start
+      - z-index: 4
+
+    icon:
+      - grid-area: i
+      - width: var(--badge-icon-size-current, var(--badge-icon-size, 30px))
+      - height: var(--badge-icon-size-current, var(--badge-icon-size, 30px))
+      - color: var(--primary-text-color)
+      - z-index: 4
+
+    img_cell:
+      - width: var(--casora-badge-icon-override, var(--badge-icon-size-current, var(--badge-icon-size, 30px))) !important
+      - height: var(--casora-badge-icon-override, var(--badge-icon-size-current, var(--badge-icon-size, 30px))) !important
+      - border-radius: 9999px !important
+      - overflow: hidden !important
+      - display: flex !important
+      - align-items: center !important
+      - justify-content: center !important
+
+    entity_picture:
+      - grid-area: i
+      - width: var(--badge-icon-size-current, var(--badge-icon-size, 28px))
+      - height: var(--badge-icon-size-current, var(--badge-icon-size, 28px))
+      - border-radius: 50%
+      - z-index: 4
+      - object-fit: cover
+
+    label:
+      - font-size: var(--badge-font-size-current, var(--badge-font-size, 13px))
+
+    state:
+      - font-size: var(--badge-font-size-current, var(--badge-font-size, 13px))
+
+  extra_styles: |
+    :host{
+      --badge-sub-opacity: var(--casora-badge-sub-opacity, .80);
+      --badge-after-z:  2;
+      --badge-before-z: 3;
+      --casora-badge-hover-shadow: none;
+
+      /* Sub-badge entrance */
+      --casora-badge-enter-t: var(--casora-row-fade, 1);
+      --casora-badge-enter-p: calc(1 - var(--casora-badge-enter-t));
+      --casora-badge-enter-lift: -22px;
+      --casora-badge-enter-depth: 0.24;
+      --casora-badge-enter-origin: 50% -45%;
+      --casora-badge-enter-dur: calc(0.30s + var(--casora-badge-enter-t) * 0.12s);
+      --casora-badge-enter-fade: calc(0.18s + var(--casora-badge-enter-t) * 0.04s);
+      --casora-badge-enter-squash: 0.08;
+      --casora-badge-enter-transform:
+        translateX(calc(var(--casora-badge-enter-p) * var(--casora-badge-converge-x, 0px)))
+        translateY(calc(var(--casora-badge-enter-p) * var(--casora-badge-enter-lift)))
+        scaleX(calc(1 - var(--casora-badge-enter-p) *
+          (var(--casora-badge-enter-depth) - var(--casora-badge-enter-squash))))
+        scaleY(calc(1 - var(--casora-badge-enter-p) *
+          (var(--casora-badge-enter-depth) + var(--casora-badge-enter-squash))));
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      :host {
+        --casora-badge-enter-lift: 0px !important;
+        --casora-badge-enter-depth: 0 !important;
+        --casora-badge-enter-squash: 0 !important;
+        --casora-badge-converge-x: 0px !important;
+      }
+      :host ha-card {
+        --casora-badge-enter-delay: 0ms !important;
+      }
+    }
+
+    @media (max-width: 767px) and (orientation: portrait) {
+      ha-card {
+        min-height: var(--badge-min-height-current, 43px) !important;
+        padding: var(--badge-padding-current, 1px 14px 1px 6px) !important;
+      }
+      #img-cell, .img-cell {
+        width: var(--badge-icon-size-current, 32px) !important;
+        height: var(--badge-icon-size-current, 32px) !important;
+      }
+      #name { font-size: var(--badge-font-size-current, 13px) !important; }
+      .badge-title { font-size: var(--badge-font-size-current, 13px) !important; }
+      .badge-sub { font-size: calc(var(--badge-font-size-current, 13px) - 1px) !important; }
+    }
+
+    @media (max-height: 600px) and (orientation: landscape) {
+      ha-card {
+        min-height: var(--badge-min-height-current, 36px) !important;
+        padding: var(--badge-padding-current, 1px 12px 1px 6px) !important;
+      }
+      #img-cell, .img-cell {
+        width: var(--badge-icon-size-current, 26px) !important;
+        height: var(--badge-icon-size-current, 26px) !important;
+      }
+      #name { font-size: var(--badge-font-size-current, 12px) !important; }
+      .badge-title { font-size: var(--badge-font-size-current, 12px) !important; }
+      .badge-sub { font-size: calc(var(--badge-font-size-current, 12px) - 1px) !important; }
+    }
+
+    /* Tablet (touch, 768-1400px) */
+    @media (min-width: 768px) and (max-width: 1400px) and (min-height: 501px) and (pointer: coarse),
+           (min-width: 768px) and (max-width: 1400px) and (min-height: 501px) and (hover: none) {
+      :host {
+        --badge-icon-size-current: var(--badge-icon-size-tablet, 26px) !important;
+        --badge-min-height-current: var(--badge-min-height-tablet, 40px) !important;
+        --badge-padding-current: var(--badge-padding-tablet, 7px 14px 8px 7px) !important;
+        --badge-font-size-current: var(--badge-font-size-tablet, 13px) !important;
+      }
+      #img-cell, .img-cell {
+        width: var(--badge-icon-size-current, 26px) !important;
+        height: var(--badge-icon-size-current, 26px) !important;
+      }
+      #name { font-size: var(--badge-font-size-current, 13px) !important; }
+      .badge-title { font-size: var(--badge-font-size-current, 13px) !important; }
+      .badge-sub { font-size: calc(var(--badge-font-size-current, 13px) - 1px) !important; }
+    }
+
+    :host ha-card {
+      /* Stagger In */
+      --casora-badge-enter-delay-current:
+        calc(var(--casora-badge-enter-delay, 0ms) * var(--casora-badge-enter-t));
+
+      opacity: var(--casora-badge-enter-t);
+      transform-origin: var(--casora-badge-enter-origin);
+      transform: var(--casora-badge-enter-transform);
+      translate: var(--casora-badge-flip-x, 0px);
+      box-shadow: var(--casora-badge-glass-rim, none) !important;
+      transition: background-color .22s ease,
+                  box-shadow .24s ease,
+                  translate var(--casora-badge-flip-dur, 0.42s)
+                            var(--casora-badge-flip-ease, cubic-bezier(0.32, 0.72, 0, 1)),
+                  /* Geometry holds its value for --casora-badge-hold, non-zero
+                     only while hiding, so the badge keeps its size until its
+                     field finishes closing over it. Zero (instant) otherwise. */
+                  max-width 0s var(--casora-badge-hold, 0s),
+                  padding 0s var(--casora-badge-hold, 0s),
+                  min-height 0s var(--casora-badge-hold, 0s),
+                  transform var(--casora-badge-enter-dur) var(--casora-badge-enter-ease, cubic-bezier(0.34, 1.26, 0.44, 1)) var(--casora-badge-enter-delay-current),
+                  filter .18s ease,
+                  opacity var(--casora-badge-enter-fade) ease var(--casora-badge-enter-delay-current) !important;
+    }
+
+    ha-card:not(#casora-badge-shadow-suppress):hover {
+      box-shadow: var(--casora-badge-glass-rim, none) !important;
+      opacity: 0.99 !important;
+    }
+
+    @media (max-width: 767px), (max-height: 600px) {
+      ha-card { --casora-badge-glass-rim: none; }
+    }
+
+    ha-card::after{  z-index: var(--badge-after-z, 2) !important; }
+    ha-card::before{ z-index: var(--badge-before-z, 3) !important; }
+
+    #img-cell{
+      width:  var(--badge-icon-size-current, var(--badge-icon-size, 30px)) !important;
+      height: var(--badge-icon-size-current, var(--badge-icon-size, 30px)) !important;
+      border-radius: 9999px !important;
+      overflow: hidden !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background: var(--casora-badge-icon-bg, transparent) !important;
+    }
+
+    #img-cell img,
+    #img-cell ha-img{
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      display: block !important;
+      border-radius: inherit !important;
+    }
+
+    #icon{
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      pointer-events: none !important;
+    }
+
+    #icon ha-icon,
+    #icon ha-svg-icon,
+    #img-cell{
+      pointer-events: none !important;
+    }
+
+    #name{
+      display:flex !important;
+      align-items:center !important;
+      min-width: 0 !important;
+      overflow: hidden !important;
+      line-height: normal !important;
+    }
+
+    .badge-wrap{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap: 1px;
+      min-width:0;
+      max-width:100%;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .badge-title{
+      font-size: var(--badge-font-size-current, 13px);
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--badge-title-color, var(--secondary-text-color));
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .badge-sub{
+      font-size: calc(var(--badge-font-size-current, 13px) - 1px);
+      font-weight: 500;
+      line-height: 1.2;
+      opacity: var(--badge-sub-opacity, .82);
+      color: var(--badge-sub-color, var(--secondary-text-color));
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+

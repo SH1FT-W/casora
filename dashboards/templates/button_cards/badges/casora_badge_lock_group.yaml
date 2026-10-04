@@ -1,0 +1,84 @@
+casora_badge_lock_group:
+  template: [casora_badge_base, casora_popup_lock]
+
+  show_state: false
+  show_label: false
+  show_icon: true
+  icon: mdi:lock
+
+  variables:
+    enabled: true
+    label: null
+    icon_size: null
+
+  styles:
+    card:
+      - display: >
+          [[[
+            const v = variables?.enabled;
+            const enabled = (v === undefined || v === null) ? true :
+              (typeof v === 'boolean') ? v :
+              (typeof v === 'number') ? v !== 0 :
+              !['false','0','no','off','disabled'].includes(String(v).trim().toLowerCase());
+            const locks = Array.isArray(variables?.locks) ? variables.locks.filter(Boolean) : [];
+            return (enabled && locks.length) ? 'inline-grid' : 'none';
+          ]]]
+      - --casora-badge-icon-color: var(--casora-badge-security-color, #00c3d0)
+      - --icon-primary-color: var(--casora-badge-icon-color)
+      - --paper-item-icon-color: var(--casora-badge-icon-color)
+      - --state-icon-color: var(--casora-badge-icon-color)
+
+    icon:
+      - color: var(--casora-badge-icon-color)
+
+  name: >
+    [[[
+      const esc = (t) => String(t ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const locks = Array.isArray(variables?.locks) ? variables.locks.filter(Boolean) : [];
+      const total = locks.length;
+      const open = locks.filter(id => String(states[id]?.state || '').toLowerCase() !== 'locked').length;
+      const sub = total === 0 ? ''
+                : open === 0 ? (total === 1 ? 'Locked' : 'All Locked')
+                : open + ' Unlocked';
+
+      return `
+        <div class="badge-wrap">
+          <div class="badge-title">${esc(variables?.label || 'Doors')}</div>
+          ${sub ? `<div class="badge-sub">${esc(sub)}</div>` : ''}
+        </div>
+      `;
+    ]]]
+
+  extra_styles: >
+    [[[
+      const v = variables?.enabled;
+      const enabled = (v === undefined || v === null) ? true :
+        (typeof v === 'boolean') ? v :
+        (typeof v === 'number') ? v !== 0 :
+        !['false','0','no','off','disabled'].includes(String(v).trim().toLowerCase());
+      const locks = Array.isArray(variables?.locks) ? variables.locks.filter(Boolean) : [];
+      const hide = !enabled || !locks.length;
+
+      const open = locks.filter(id => String(states[id]?.state || '').toLowerCase() !== 'locked').length;
+      const URL = window.casoraIconUrl(open === 0 ? 'lock-fill' : 'lock-open-fill');
+      const SIZE = variables?.icon_size || '72%';
+
+      return `:host{display:${hide ? 'none' : 'inline-block'} !important;}
+        #img-cell, .img-cell{ position: relative; }
+
+        #img-cell #icon, .img-cell #icon{
+          color: transparent !important;
+          opacity: 0 !important;
+        }
+
+        #img-cell::before,
+        .img-cell::before{
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-color: var(--casora-badge-icon-color, var(--casora-badge-security-color, #00c3d0)) !important;
+          -webkit-mask: url('${URL}') no-repeat center / auto ${SIZE};
+          mask: url('${URL}') no-repeat center / auto ${SIZE};
+          transform: translateZ(0);
+        }`;
+    ]]]

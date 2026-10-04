@@ -1,0 +1,68 @@
+casora_battery:
+  template:
+    - casora_entity
+    - casora_popup_battery
+
+  variables:
+    icon: battery
+    batteries: null
+
+  hold_action:
+    action: none
+
+  state_display: |
+    [[[
+      const list = variables.batteries || variables.entity_filter;
+      const batteries = (list
+        ? list.map(id => states[id]).filter(Boolean)
+        : Object.values(states)
+      ).filter(e => {
+        if (e.state === 'unavailable' || e.state === 'unknown') return false;
+        if (isNaN(parseFloat(e.state))) return false;
+        return e.attributes.device_class === 'battery';
+      });
+      if (batteries.length === 0) return 'No Sensors';
+      const anyLow = batteries.some(e => parseFloat(e.state) <= 20);
+      return anyLow ? 'Needs Attention' : 'Healthy';
+    ]]]
+
+  state:
+    - operator: template
+      value: |
+        [[[
+          const list = variables.batteries || variables.entity_filter;
+          return (list
+            ? list.map(id => states[id]).filter(Boolean)
+            : Object.values(states)
+          ).some(e => {
+            if (e.state === 'unavailable' || e.state === 'unknown') return false;
+            const pct = parseFloat(e.state);
+            if (isNaN(pct)) return false;
+            return e.attributes.device_class === 'battery' && pct <= 20;
+          });
+        ]]]
+      styles:
+        card:
+          - "--casora-active-overlay-opacity": "1"
+          - --casora-entity-overlay-tint: var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))
+          - "--casora-active-overlay-dur": "0s"
+          - --casora-entity-top-gradient: none
+          - box-shadow: var(--button-card-box-shadow-active, var(--button-card-box-shadow)) !important
+          - --casora-icon-color-current: "var(--casora-battery-yellow, #FFD600)"
+          - --casora-icon-circle-bg: var(--casora-icon-color-current)
+          - --casora-icon-mask-active: "0"
+        name:
+          - color: var(--casora-entity-name-active, var(--primary-text-color))
+        state:
+          - color: var(--casora-entity-state-active-color)
+        img_cell:
+          - opacity: "1 !important"
+          - filter: none !important
+          - background: "var(--casora-icon-color-current) !important"
+        entity_picture:
+          - opacity: "1 !important"
+          - filter: none !important
+
+  styles:
+    card:
+      - --casora-icon-inactive-color: "var(--casora-color-green, #30D158)"

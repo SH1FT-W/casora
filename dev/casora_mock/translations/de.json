@@ -1,0 +1,22 @@
+{
+  "entity": {
+    "select": {
+      "active_program": {
+        "state": {
+          "laundry_care_washer_program_cotton": "Baumwolle",
+          "laundry_care_washer_program_mix": "Mix",
+          "laundry_care_washer_program_easy_care": "Pflegeleicht",
+          "laundry_care_washer_program_wool": "Wolle"
+        }
+      },
+      "selected_program": {
+        "state": {
+          "laundry_care_washer_program_cotton": "Baumwolle",
+          "laundry_care_washer_program_mix": "Mix",
+          "laundry_care_washer_program_easy_care": "Pflegeleicht",
+          "laundry_care_washer_program_wool": "Wolle"
+        }
+      }
+    }
+  }
+}

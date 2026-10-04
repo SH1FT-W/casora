@@ -1,0 +1,2312 @@
+{
+ "exact": {
+  "Abholung heute": "Pickup today",
+  "Abholung morgen · heute Abend raus": "Pickup tomorrow · put out tonight",
+  "Abholung": "Pickup",
+  "Keine Abholung": "No pickup",
+  "An": "On",
+  "Aus": "Off",
+  "an": "on",
+  "aus": "off",
+  "Offen": "Open",
+  "offen": "open",
+  "Geöffnet": "Open",
+  "Geschlossen": "Closed",
+  "geöffnet": "open",
+  "geschlossen": "closed",
+  "Verriegelt": "Locked",
+  "Entriegelt": "Unlocked",
+  "Bereit": "Ready",
+  "Fertig": "Done",
+  "Pausiert": "Paused",
+  "Läuft": "Running",
+  "läuft": "running",
+  "Läuft …": "Running …",
+  "Läuft…": "Running…",
+  "Lädt": "Charging",
+  "Getrennt": "Disconnected",
+  "Verbunden": "Connected",
+  "Fehler": "Error",
+  "Nicht verfügbar": "Unavailable",
+  "nicht verfügbar": "unavailable",
+  "Gerade nicht verfügbar": "Not available right now",
+  "Keine": "None",
+  "Keine Aktiv": "None Active",
+  "Keine aktiv": "None active",
+  "Kein Dienst": "No service",
+  "Neu": "New",
+  "Alle": "All",
+  "Gesamt": "Total",
+  "Fällig": "Due",
+  "Überfällig": "Overdue",
+  "Übersprungen": "Skipped",
+  "Gelöst": "Resolved",
+  "Ausgelöst": "Triggered",
+  "Kühl": "Cool",
+  "Heiß": "Hot",
+  "Sehr heiß": "Very hot",
+  "Mäßig": "Moderate",
+  "mäßig": "moderate",
+  "Gut": "Good",
+  "Schlecht": "Poor",
+  "Sehr schlecht": "Very poor",
+  "Ausgezeichnet": "Excellent",
+  "Außergewöhnlich": "Exceptional",
+  "heute": "today",
+  "gestern": "yesterday",
+  "morgen": "tomorrow",
+  "jetzt": "now",
+  "gerade eben": "just now",
+  "Gerade eben": "Just now",
+  "ganztägig": "all day",
+  "jede Woche": "every week",
+  "Demnächst": "Soon",
+  "Früher": "Earlier",
+  "Diese Woche": "This week",
+  "Letzte 30 Tage": "Last 30 days",
+  "Nächste 4 Wochen": "Next 4 weeks",
+  "30 Tage": "30 days",
+  "7 Tage": "7 days",
+  "Älter als ein Tag": "Older than a day",
+  "Räume": "Rooms",
+  "Raum": "Room",
+  "Szenen": "Scenes",
+  "Szene": "Scene",
+  "Favoriten": "Favorites",
+  "Aktivität": "Activity",
+  "Akku": "Battery",
+  "Akku schwach": "Battery low",
+  "Akku verbraucht": "Battery depleted",
+  "Akku & Strom": "Battery & Power",
+  "Akku Lecksensor": "Leak sensor battery",
+  "Akku Temperaturfühler": "Thermometer battery",
+  "Akku-Bereich": "Battery range",
+  "Akku-Gesundheit": "Battery health",
+  "Aktualisieren": "Update",
+  "Aktueller Raum": "Current room",
+  "Aktueller Verbrauch": "Current consumption",
+  "Alarm ausgelöst": "Alarm triggered",
+  "Alarm ausgelöst!": "Alarm triggered!",
+  "Alarm läuft an": "Alarm arming",
+  "Alle An": "All On",
+  "Alle Aus": "All Off",
+  "Alle an": "All on",
+  "Alle aus": "All off",
+  "Alle Lichter": "All lights",
+  "Alle Räume aus": "All rooms off",
+  "Alle Szenen": "All scenes",
+  "Alle Temperaturen im Normalbereich": "All temperatures normal",
+  "Alle Türen entriegelt": "All doors unlocked",
+  "Alle Türen verriegelt": "All doors locked",
+  "Alle aktualisieren": "Update all",
+  "Alle entriegelt": "All unlocked",
+  "Alle geschlossen": "All closed",
+  "Alle geöffnet": "All open",
+  "Alle offline": "All offline",
+  "Alle unterwegs": "All away",
+  "Alle verriegelt": "All locked",
+  "Alle zuhause": "All home",
+  "Alles im grünen Bereich": "All good",
+  "An · alle Räume warm genug": "On · all rooms warm enough",
+  "AquaStop ausgelöst": "AquaStop triggered",
+  "Aufnahme nicht verfügbar": "Recording unavailable",
+  "Ausfüllen": "Fill",
+  "Außenluft": "Outdoor air",
+  "Außenluft belastet": "Outdoor air polluted",
+  "Außenluft enthält mehr Wasser": "Outdoor air holds more moisture",
+  "Außenluft ist feuchter": "Outdoor air is more humid",
+  "Außenluft ist trockener": "Outdoor air is drier",
+  "Außentemperatur": "Outdoor temperature",
+  "Bald lüften": "Ventilate soon",
+  "Beifahrertür": "Passenger door",
+  "Bekommt zu viel Licht": "Gets too much light",
+  "Bereit zum Starten": "Ready to start",
+  "Bereit zur Anpassung": "Ready to adjust",
+  "Bestätigen": "Confirm",
+  "Betttemperatur gestört": "Bed temperature fault",
+  "Bewölkt": "Cloudy",
+  "Bitte nachfüllen": "Please refill",
+  "Bitte nicht stören: an": "Do not disturb: on",
+  "Bitte nicht stören: aus": "Do not disturb: off",
+  "Braucht Dünger": "Needs fertilizer",
+  "Braucht etwas Pflege": "Needs some care",
+  "Braucht mehr Licht": "Needs more light",
+  "Braucht sofortige Pflege": "Needs care now",
+  "Bypass und Entladen": "Bypass and discharging",
+  "CO₂ erhöht – lüften": "CO₂ elevated – ventilate",
+  "CO₂ hoch – Fenster öffnen": "CO₂ high – open a window",
+  "Claude schaut sich das Bild an …": "Claude is looking at the image …",
+  "Cookidoo-App öffnen": "Open Cookidoo app",
+  "Apple Music öffnen": "Open Apple Music",
+  "Dock-Fehler": "Dock error",
+  "Dosiermenge je Stoß": "Dose per pulse",
+  "Druck": "Print",
+  "Druck abbrechen": "Cancel print",
+  "Druck läuft gerade": "Printing right now",
+  "Druck prüfen": "Check print",
+  "Druckbett heizt vor": "Preheating bed",
+  "Druckbett kühlt ab": "Bed cooling down",
+  "Du bist diesen Monat nicht dran": "Not your turn this month",
+  "Durchgänge erfasst": "Cycles recorded",
+  "Düngeanlage": "Dosing pump",
+  "Dünger": "Fertilizer",
+  "Düse": "Nozzle",
+  "Düse heizt auf": "Heating nozzle",
+  "Düse kühlt ab": "Nozzle cooling down",
+  "Düse verstopft": "Nozzle clogged",
+  "Düse wird gereinigt": "Cleaning nozzle",
+  "Düsentemperatur gestört": "Nozzle temperature fault",
+  "EU-Data-Act-Portal, kommt verzögert": "EU Data Act portal, arrives delayed",
+  "Eigene Leistung": "Own power draw",
+  "Eingriff nötig": "Action needed",
+  "Einkaufsliste nicht verfügbar": "Shopping list unavailable",
+  "Energie heute": "Energy today",
+  "Erde zu feucht": "Soil too wet",
+  "Erde zu trocken": "Soil too dry",
+  "Erhöhte Partikelbelastung": "Elevated particulates",
+  "Erste Schicht wird geprüft": "Checking first layer",
+  "Fahrertür": "Driver door",
+  "Falls das Ende nicht erkannt wird": "If the end isn't detected",
+  "Fehler aufgetreten": "An error occurred",
+  "Fehler bei der Anfrage.": "The request failed.",
+  "Fehler bei der Spracheingabe.": "Voice input failed.",
+  "Fehler gemeldet": "Error reported",
+  "Fehler in der ersten Schicht": "First layer failed",
+  "Fenster": "Windows",
+  "Fenster & Schiebedach": "Windows & sunroof",
+  "Fenster &amp; Schiebedach": "Windows &amp; sunroof",
+  "Fenster hinten links": "Rear left window",
+  "Fenster hinten rechts": "Rear right window",
+  "Fenster offen": "Window open",
+  "Fenster schließen": "Close window",
+  "Fenster vorne links": "Front left window",
+  "Fenster vorne rechts": "Front right window",
+  "Fenster weit auf, nach Außentemperatur": "Windows wide open, timed by outdoor temperature",
+  "Fenster-Erkennung": "Window detection",
+  "Fensterläden": "Shutters",
+  "Fernstart am Gerät nicht erlaubt": "Remote start not allowed on the appliance",
+  "Feuchte": "Humidity",
+  "Feuchter draußen": "More humid outside",
+  "Filter": "Filter",
+  "Filter & Kondensator reinigen": "Clean filter & condenser",
+  "Filter reinigen": "Clean filter",
+  "Filter verstopft": "Filter clogged",
+  "Firmware passt nicht": "Firmware mismatch",
+  "Firmware-Update verfügbar": "Firmware update available",
+  "Fläche": "Area",
+  "Fläche insgesamt": "Total area",
+  "Frischwasser auffüllen": "Refill fresh water",
+  "Frontabdeckung prüfen": "Check front cover",
+  "Fußbodenheizung": "Floor heating",
+  "Fährt herunter": "Shutting down",
+  "Fährt zum Dock": "Returning to dock",
+  "Fährt zum Ziel": "Going to target",
+  "Fährt zur Moppwäsche": "Going to mop wash",
+  "Gehärteter Stahl": "Hardened steel",
+  "Gerade kein Überschuss": "No surplus right now",
+  "Kein Überschuss": "No surplus",
+  "Kein Sensor gewählt": "No sensor selected",
+  "Jetzt nutzen": "Use it now",
+  "Keiner": "None",
+  "Hausverbrauch": "Home consumption",
+  "Solar-Tipp": "Solar Tip",
+  "Sobald Sonnenstrom übrig ist, steht hier, welches Gerät sich lohnt.": "When there is solar surplus, this shows which appliance is worth running.",
+  "Gereinigte Fläche": "Cleaned area",
+  "Gerät": "Device",
+  "Geräte": "Devices",
+  "Geräte laufen schon": "Appliances already running",
+  "Gerätemeldung (HMS)": "Device message (HMS)",
+  "Geräteprofil": "Device profile",
+  "Gerätestatus": "Device status",
+  "Geschirrspüler": "Dishwasher",
+  "Waschmaschine": "Washer",
+  "Trockner": "Dryer",
+  "3D-Drucker": "3D Printer",
+  "Saugroboter": "Robot vacuum",
+  "Gilt bis morgen 9:00, dann übernimmt wieder der HA-Zeitplan.": "Holds until 9:00 tomorrow, then the HA schedule takes over again.",
+  "Für Räder mit Bosch Smart System: Die Werte kommen aus der Integration Bosch eBike (HACS: Xunil99/ha-bosch-ebike).": "For bikes with the Bosch Smart System: the values come from the Bosch eBike integration (HACS: Xunil99/ha-bosch-ebike).",
+  "Gründlich": "Thorough",
+  "Gründlich+": "Thorough+",
+  "Hauptbürste": "Main brush",
+  "Hauptbürste blockiert": "Main brush blocked",
+  "Hauptspülen": "Main rinse",
+  "Hauptwäsche": "Main wash",
+  "Heizkörper": "Radiator",
+  "Heizung": "Heating",
+  "Herausnehmen und ausspülen": "Remove and rinse",
+  "Home Assistant jetzt neu starten?": "Restart Home Assistant now?",
+  "Höhenmeter": "Elevation",
+  "Höhenmeter gesamt": "Total elevation",
+  "Hört zu …": "Listening …",
+  "In der Cookidoo-App auf \"Meine Woche\" planen": "Plan it in the Cookidoo app under \"My Week\"",
+  "Info-Licht am Boden": "Floor info light",
+  "Ist die Wohnungstür abgeschlossen?": "Is the front door locked?",
+  "Jetzt lüften": "Ventilate now",
+  "Jetzt prüfen": "Check now",
+  "KI prüft noch …": "AI is still checking …",
+  "KI-Blick auf den Druck": "AI view of the print",
+  "KI-Check steht noch aus": "AI check pending",
+  "Kalender nicht erreichbar": "Calendar unreachable",
+  "Kaum Aktivität": "Hardly any activity",
+  "Kehrt zurück": "Returning",
+  "Kehrt zurück & Moppwäsche": "Returning & mop wash",
+  "Kein Bild – die Kamera ist aus, schläft oder ist nicht erreichbar.": "No image – the camera is off, asleep or unreachable.",
+  "Die Kamera ist aus oder offline und liefert gerade kein Bild.": "The camera is off or offline and has no image right now.",
+  "Kein Zugriff aufs Mikrofon – bitte in den Einstellungen erlauben.": "No microphone access – please allow it in settings.",
+  "Keine Antwort erhalten.": "No answer received.",
+  "Keine Batteriesensoren gefunden": "No battery sensors found",
+  "Keine Daten": "No data",
+  "Keine Detailbeschreibung verfügbar.": "No detailed description available.",
+  "Keine Idee gefunden": "No idea found",
+  "Keine Kameras": "No cameras",
+  "Keine Kameras verfügbar": "No cameras available",
+  "Keine Pflanzensensoren konfiguriert": "No plant sensors configured",
+  "Keine Rückmeldung": "No response",
+  "Keine Sensoren": "No sensors",
+  "Keine Statusdaten": "No status data",
+  "Keine Szene aktiv": "No scene active",
+  "Keine Szenen": "No scenes",
+  "Keine Termine": "No events",
+  "Keine Tonnen gefunden": "No bins found",
+  "Keine Updates in 30 Tagen": "No updates in 30 days",
+  "Keine Updates offen": "No pending updates",
+  "Keine Verbindung": "No connection",
+  "Keine Verbindung zu Home Assistant.": "No connection to Home Assistant.",
+  "Keine Warnung": "No warning",
+  "Keine aktiven Warnungen": "No active warnings",
+  "Klarspülen": "Rinse",
+  "Klarspüler": "Rinse aid",
+  "Kosten Monat": "Cost this month",
+  "Kosten heute": "Cost today",
+  "Kosten letzter Durchgang": "Cost of last cycle",
+  "Kurz volle Leistung": "Short full-power boost",
+  "Lautstärke": "Volume",
+  "Leert Staubbehälter": "Emptying dustbin",
+  "Leistung": "Power",
+  "Leistung der Station": "Station power",
+  "Leistung jetzt": "Power now",
+  "Leistung · 24 Stunden": "Power · 24 hours",
+  "Letzte Aufgabe": "Last task",
+  "Letzte Aufnahme": "Last recording",
+  "Letzte Durchgänge": "Recent cycles",
+  "Letzte Fahrt": "Last ride",
+  "Letzte Reinigung": "Last clean",
+  "Licht": "Light",
+  "Licht nicht erreichbar": "Light unreachable",
+  "Licht offline": "Light offline",
+  "Luft gut": "Air is good",
+  "Luft zu feucht": "Air too humid",
+  "Luft zu trocken": "Air too dry",
+  "Luftfeuchte außen": "Outdoor humidity",
+  "Luftqualität": "Air quality",
+  "Luftqualität ist gut": "Air quality is good",
+  "Luftqualität ist hervorragend": "Air quality is excellent",
+  "Luftqualität ist mäßig": "Air quality is moderate",
+  "Luftqualität nicht verfügbar": "Air quality unavailable",
+  "Länger abwesend": "Away for a while",
+  "Lässt sich nicht fortsetzen": "Can't resume",
+  "Läuft seit": "Running since",
+  "Lüften": "Ventilate",
+  "Lüften empfohlen": "Ventilation recommended",
+  "Lüften erkannt": "Ventilation detected",
+  "Lüften hilft gegen Feuchte": "Ventilating helps against humidity",
+  "Lüften hilft nicht gegen Feuchte": "Ventilating won't help against humidity",
+  "Lüfter zu langsam": "Fan too slow",
+  "Lüftet": "Ventilating",
+  "Maschine läuft gerade": "Machine is running",
+  "Maschinenpflege fällig": "Machine care due",
+  "Material wird geprüft": "Checking material",
+  "Mikrofon nicht verfügbar.": "Microphone unavailable.",
+  "Min. übrig": "min left",
+  "Mopp nicht angebracht": "Mop not attached",
+  "Moppwäsche": "Mop wash",
+  "Moppwäsche gestört": "Mop wash fault",
+  "Muss gedüngt werden": "Needs fertilizing",
+  "NO₂ erkannt – lüften": "NO₂ detected – ventilate",
+  "Nachfüllen & Pflege": "Refill & care",
+  "Nachfüllen &amp; Pflege": "Refill &amp; care",
+  "Neu auswerten": "Re-evaluate",
+  "Neu prüfen": "Check again",
+  "Neu starten": "Restart",
+  "Nicht stören": "Do not disturb",
+  "Nichts Neues": "Nothing new",
+  "Nichts geplant": "Nothing planned",
+  "Nichts läuft": "Nothing playing",
+  "Nichts in den nächsten 30 Tagen": "Nothing in the next 30 days",
+  "Noch keine Idee": "No idea yet",
+  "Noch nicht geprüft": "Not checked yet",
+  "Nächste Abholung": "Next pickup",
+  "Nächste Solltemperatur": "Next target temperature",
+  "Nächster Service": "Next service",
+  "Nährstoffe": "Nutrients",
+  "Oberer Stoßfänger gedrückt": "Top bumper pressed",
+  "Per Bluetooth nicht erreichbar": "Not reachable via Bluetooth",
+  "Pflanze kämpft": "Plant is struggling",
+  "Pflanze schwächelt": "Plant is weakening",
+  "Pflege": "Care",
+  "Pflege fällig": "Care due",
+  "Prognose für dieses Programm": "Forecast for this program",
+  "Programm": "Program",
+  "Programm abbrechen": "Cancel program",
+  "Programm abgebrochen": "Program cancelled",
+  "Programm abgeschlossen": "Program finished",
+  "Programm aus der Roborock-App": "Program from the Roborock app",
+  "Programm festlegen": "Set program",
+  "Programm „Maschinenpflege“ mit Reiniger starten": "Start the “machine care” program with cleaner",
+  "Prüfen": "Check",
+  "Prüft …": "Checking …",
+  "Prüfung fehlgeschlagen": "Check failed",
+  "Qualität": "Quality",
+  "Reichweite jetzt": "Range now",
+  "Reichweite voller Akku": "Range on a full battery",
+  "Restzeit": "Time left",
+  "Roboter lädt nicht": "Robot isn't charging",
+  "Räder blockiert": "Wheels blocked",
+  "Räder hängen in der Luft": "Wheels lifted",
+  "Räume auswählen": "Choose rooms",
+  "Räume reinigen": "Clean rooms",
+  "Saugstärke": "Suction",
+  "Saugt & wischt Raum": "Vacuuming & mopping room",
+  "Schalte alle Lichter aus": "Turn off all lights",
+  "Scharfschaltung läuft": "Arming",
+  "Schlafzimmer Fenster ist offen": "Bedroom window is open",
+  "Schließen": "Close",
+  "Schließt": "Closing",
+  "Schließt bei Temperatursturz": "Closes on a temperature drop",
+  "Schließt sich…": "Closing…",
+  "Schmutzfänger (Station)": "Dirt trap (station)",
+  "Schmutzfänger prüfen": "Check dirt trap",
+  "Seitenbürste": "Side brush",
+  "Seitenbürste blockiert": "Side brush blocked",
+  "Sensordaten nicht verfügbar": "Sensor data unavailable",
+  "Sensoren temporär deaktiviert": "Sensors temporarily disabled",
+  "Service fällig": "Service due",
+  "Sind noch Lichter an?": "Are any lights on?",
+  "Sirene an": "Siren on",
+  "Sirene auslösen?": "Sound the siren?",
+  "Solaranteil heute": "Solar share today",
+  "Spaßmodus": "Fun mode",
+  "Speiseplan nicht verfügbar": "Meal plan unavailable",
+  "Spülen": "Rinse",
+  "Starten": "Start",
+  "Startet später": "Starts later",
+  "Staubbehälter fehlt": "Dustbin missing",
+  "Staubbehälter leeren": "Empty dustbin",
+  "Std. übrig": "h left",
+  "Steckdose nicht erreichbar": "Plug unreachable",
+  "Stoßfänger klemmt": "Bumper stuck",
+  "Stoßlüften": "Burst ventilation",
+  "Stromstärke": "Current",
+  "Süßwasser": "Freshwater",
+  "Taste an der Steckdose": "Button on the plug",
+  "Tasten am Gerät gesperrt": "Device buttons locked",
+  "Tasten an der Station": "Station buttons",
+  "Teils bewölkt": "Partly cloudy",
+  "Teilweise bewölkt": "Partly cloudy",
+  "Teilweise geöffnet": "Partly open",
+  "Temperatur": "Temperature",
+  "Temperatur am Heizkörper": "Radiator temperature",
+  "Temperatur im AMS": "AMS temperature",
+  "Temperatur im Haus": "Temperature at home",
+  "Temperatur im Normalbereich": "Temperature normal",
+  "Temperatur kritisch": "Temperature critical",
+  "Temperaturfühler": "Thermometer",
+  "Temperaturfühler offline": "Thermometer offline",
+  "Ton an": "Sound on",
+  "Trotzdem aus": "Turn off anyway",
+  "Tür": "Door",
+  "Tür entriegelt": "Door unlocked",
+  "Tür hinten links": "Rear left door",
+  "Tür hinten rechts": "Rear right door",
+  "Tür ist offen": "Door is open",
+  "Tür offen": "Door open",
+  "Tür verriegelt": "Door locked",
+  "Türen": "Doors",
+  "Türen & Fenster": "Doors & windows",
+  "Türen & Fenster überwacht": "Doors & windows monitored",
+  "Türen & Klappen": "Doors & hatches",
+  "Türen &amp; Klappen": "Doors &amp; hatches",
+  "Unbekanntes Programm": "Unknown program",
+  "VOCs erkannt – lüften": "VOCs detected – ventilate",
+  "Ventilöffnung": "Valve opening",
+  "Verbrauch": "Consumption",
+  "Verbrauch Monat": "Consumption this month",
+  "Verbrauch heute": "Consumption today",
+  "Verbrauch pro Tag": "Consumption per day",
+  "Verfügbare Updates": "Available updates",
+  "Verlauf nicht verfügbar": "History unavailable",
+  "Verzögerter Start": "Delayed start",
+  "Vollständig geladen": "Fully charged",
+  "Vorhänge": "Curtains",
+  "Vorspülen": "Pre-rinse",
+  "Vorwäsche": "Pre-wash",
+  "Wasser erkannt": "Water detected",
+  "Wasser erkannt!": "Water detected!",
+  "Wasserbehälter leer": "Water tank empty",
+  "Wasserstärke": "Water flow",
+  "Weiter": "Next",
+  "Weitere Geräte": "More devices",
+  "Welche Fenster sind offen?": "Which windows are open?",
+  "Welche Lichter sind an?": "Which lights are on?",
+  "Weniger als 1 Min. übrig": "Less than 1 min left",
+  "Wie warm ist es im Büro?": "How warm is it in the office?",
+  "Windig & bewölkt": "Windy & cloudy",
+  "Wird übernommen": "Applying",
+  "Wird abgebrochen": "Cancelling",
+  "Wird aktiviert…": "Turning on…",
+  "Wird aktualisiert": "Updating",
+  "Wird deaktiviert…": "Turning off…",
+  "Wird eingerichtet": "Setting up",
+  "Wird entfernt": "Removing",
+  "Wird entriegelt…": "Unlocking…",
+  "Wird erkannt …": "Detecting …",
+  "Wird geladen …": "Loading …",
+  "Wird geleert": "Emptying",
+  "Wird gewaschen": "Washing",
+  "Wird installiert": "Installing",
+  "Wird unscharf geschaltet": "Disarming",
+  "Wird verriegelt…": "Locking…",
+  "Wirklich öffnen?": "Really open?",
+  "Wischt Raum": "Mopping room",
+  "Wärmeanforderung": "Heat demand",
+  "Zeitplan überschrieben": "Schedule overridden",
+  "Zeitüberschreitung – bitte nochmal versuchen.": "Timed out – please try again.",
+  "Zieltemperatur alle Räume": "Target temperature, all rooms",
+  "Zu viel Dünger": "Too much fertilizer",
+  "Zuletzt aktualisiert": "Last updated",
+  "Zuletzt gedruckt": "Last printed",
+  "Zum Öffnen tippen": "Tap to open",
+  "Zurücksetzen": "Reset",
+  "Zusätzliche Käufe": "Additional purchases",
+  "Zählerstand": "Meter reading",
+  "außen": "outside",
+  "Öffnen": "Open",
+  "Öffnet": "Opening",
+  "Öffnet sich…": "Opening…",
+  "Ölstand": "Oil level",
+  "Ölwechsel": "Oil change",
+  "Idee der Woche von Claude": "Claude's idea of the week",
+  "Lüftungs-Coach": "Ventilation coach",
+  "Heizungs-Coach": "Heating coach",
+  "Energie-Coach": "Energy coach",
+  "Raumklima": "Room climate",
+  "Sonnenstrom übrig": "Spare solar power",
+  "Fahrzeug": "Vehicle",
+  "Rezept der Woche": "Recipe of the week",
+  "Schlösser": "Locks",
+  "Beleuchtung": "Lighting",
+  "Jalousien": "Blinds",
+  "Klima": "Climate",
+  "Energie": "Energy",
+  "Sicherheit": "Security",
+  "Medien": "Media",
+  "Personen": "People",
+  "Batterien": "Batteries",
+  "Netzwerk": "Network",
+  "Pflanzen": "Plants",
+  "Kameras": "Cameras",
+  "Kalender": "Calendar",
+  "Abfall": "Waste",
+  "Abfall heute": "Waste today",
+  "Abfall morgen": "Waste tomorrow",
+  "Restmüll": "General waste",
+  "Biomüll": "Organic waste",
+  "Papier": "Paper",
+  "Gelber Sack": "Recycling",
+  "Wertstoff": "Recycling",
+  "Abkühlen": "Cooling down",
+  "Abpumpen nicht möglich": "Can't drain",
+  "Abbrechen": "Cancel",
+  "Beispiel-Künstler": "Example Artist",
+  "Türen offen": "Doors open",
+  "Zuletzt": "Last",
+  "Zuletzt:": "Last:",
+  "Entlädt": "Discharging",
+  "Weißton": "White tone",
+  "Helligkeit": "Brightness",
+  "Farbe": "Colour",
+  "Temperaturverlauf": "Temperature history",
+  "Fenster offen · noch": "Window open · still",
+  "Zu feucht": "Too humid",
+  "Luftfeuchte": "Humidity",
+  "Heizt": "Heating",
+  "Heizen": "Heat",
+  "Kühlen": "Cool",
+  "Druckt": "Printing",
+  "Reinigt": "Cleaning",
+  "Saugt": "Vacuuming",
+  "Angedockt": "Docked",
+  "Lädt auf": "Charging",
+  "Unterwegs": "Away",
+  "Zuhause": "Home",
+  "Abwesend": "Away",
+  "Luft": "Air",
+  "Wasser": "Water",
+  "Strom": "Power",
+  "Solar": "Solar",
+  "Netz": "Grid",
+  "Haus": "Home",
+  "Einspeisung": "Feed-in",
+  "Netzbezug": "Grid import",
+  "Autarkie": "Self-sufficiency",
+  "Eigenverbrauch": "Self-consumption",
+  "Heute": "Today",
+  "Dieser Monat": "This month",
+  "Diesen Monat": "This month",
+  "Monat": "Month",
+  "Woche": "Week",
+  "Jahr": "Year",
+  "Schwach": "Low",
+  "Voll": "Full",
+  "Leer": "Empty",
+  "Niedrig": "Low",
+  "Hoch": "High",
+  "Mittel": "Medium",
+  "Normal": "Normal",
+  "Online": "Online",
+  "Offline": "Offline",
+  "Unbekannt": "Unknown",
+  "Bauteillüfter": "Part cooling fan",
+  "Druckkopflüfter": "Hotend fan",
+  "Druckraumlüfter": "Chamber fan",
+  "Lüfter": "Fan",
+  "Claude wertet einmal pro Woche (samstags 10 Uhr) Feuchte, CO₂ und Fensterzeiten aus und sagt, wo, wann und wie lange sich Lüften lohnt.": "Once a week (Saturdays at 10:00) Claude reviews humidity, CO₂ and window times and tells you where, when and how long airing out is worth it.",
+  "Die Auswertung startet mit der Heizsaison: Sobald geheizt wird, prüft Claude jeden Montag Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad.": "The review starts with the heating season: once the heating runs, Claude checks heating time, room temperatures, heating with open windows and the bathroom radiator every Monday.",
+  "Gesichert": "Secured",
+  "Sicher": "Secure",
+  "Braucht Aufmerksamkeit": "Needs attention",
+  "Nicht gesichert": "Not secure",
+  "Fortschritt": "Progress",
+  "Schicht": "Layer",
+  "Aufgabe": "Job",
+  "Steuerung": "Controls",
+  "Pausieren": "Pause",
+  "Fortsetzen": "Resume",
+  "Druckraumlicht": "Chamber light",
+  "Kamera": "Camera",
+  "Temperaturen": "Temperatures",
+  "Druckbett": "Bed",
+  "Steckdose": "Plug",
+  "Spannung": "Voltage",
+  "Luftfeuchtigkeit im AMS": "AMS humidity",
+  "Drucker": "Printer",
+  "Druckzeit insgesamt": "Total print time",
+  "Druckplatte": "Build plate",
+  "Texturiert (PEI)": "Textured (PEI)",
+  "Glatt (PEI)": "Smooth (PEI)",
+  "Edelstahl": "Stainless steel",
+  "Einstellungen": "Settings",
+  "Luftfeuchtigkeit": "Humidity",
+  "Status": "Status",
+  "Modus": "Mode",
+  "Zustand": "State",
+  "Zielwert": "Target",
+  "Feinstaub PM2,5": "Particulates PM2.5",
+  "Bodenfeuchtigkeit": "Soil moisture",
+  "Beleuchtungsstärke": "Illuminance",
+  "Bewegung": "Motion",
+  "Ausschalten": "Turn off",
+  "Einschalten": "Turn on",
+  "Durchschnitt im Haus": "Home average",
+  "Halbe Ladung": "Half load",
+  "Heizkreise mit Strom versorgt": "Heating circuits powered",
+  "Kindersicherung": "Child lock",
+  "Nur im Betrieb schaltbar": "Only while running",
+  "Verbindung": "Connection",
+  "Weitere Einstellungen": "More settings",
+  "Nächste Stunden": "Next hours",
+  "Nachtlicht": "Night light",
+  "Anzeige": "Display",
+  "Automatik": "Auto",
+  "Heizpause": "Heating pause",
+  "Temperaturabsenkung": "Setback",
+  "Abgerufen": "Fetched",
+  "Abpumpen": "Draining",
+  "AdBlue-Reichweite": "AdBlue range",
+  "Akkufehler": "Battery error",
+  "Akkustand": "Battery level",
+  "Aktiv": "Active",
+  "Aktiver": "Active",
+  "Aktivieren": "Activate",
+  "Aktiviert": "Activated",
+  "Aktualisiert": "Updated",
+  "Aktuell": "Current",
+  "Anbieter": "Provider",
+  "Angenehm": "Comfortable",
+  "Angepasst": "Adjusted",
+  "Angezogen": "Engaged",
+  "Anpassen": "Adjust",
+  "Anzeigen": "Show",
+  "Aquarien": "Aquariums",
+  "Aquarium-Doktor": "Aquarium doctor",
+  "Aufgehoben": "Lifted",
+  "Aufheben": "Lift",
+  "Aufheizen": "Heating up",
+  "Aufmerksamkeit": "Attention",
+  "Aufnahme": "Recording",
+  "Aufwachen": "Waking up",
+  "Ausblenden": "Hide",
+  "Ausgeschaltet": "Off",
+  "Ausgewogen": "Balanced",
+  "Ausstehend": "Pending",
+  "Automatisch": "Automatic",
+  "Badezimmer": "Bathroom",
+  "Batterie": "Battery",
+  "Beckenlicht": "Tank light",
+  "Bedeckt": "Overcast",
+  "Beenden": "Stop",
+  "Beendet": "Finished",
+  "Benachrichtigungen": "Notifications",
+  "Beobachten": "Watch",
+  "Bereitschaft": "Standby",
+  "Beschattungsautomatik": "Shading automation",
+  "Betriebsart": "Operating mode",
+  "Betriebssystem": "Operating system",
+  "Bezug": "From grid",
+  "Bild": "Picture",
+  "Blockiert": "Blocked",
+  "Bodenfeuchte": "Soil moisture",
+  "Büro": "Office",
+  "Datenstand": "Data as of",
+  "Deaktivieren": "Deactivate",
+  "Deaktiviert": "Disarmed",
+  "Diebstahl": "Theft",
+  "Dosieren": "Dose",
+  "Dosiert": "Dosed",
+  "Druckfehler": "Print error",
+  "Durchgang": "Cycle",
+  "Durchgängen": "cycles",
+  "Eigene": "Custom",
+  "Eigenversorgung": "Self-sufficiency",
+  "Eingeschaltet": "On",
+  "Einkaufsliste": "Shopping list",
+  "Einpassen": "Fit",
+  "Einweichen": "Soak",
+  "Endet": "Ends",
+  "Energiebedarf": "Energy demand",
+  "Energieverbrauch": "Energy use",
+  "Entkalken": "Descale",
+  "Entwarnung": "All clear",
+  "Erinnerung": "Reminder",
+  "Erkannt": "Detected",
+  "Erkennung": "Detection",
+  "Erledigt": "Done",
+  "Extrem": "Extreme",
+  "Fahrt": "Ride",
+  "Fahrten": "Rides",
+  "Fahrzeit": "Ride time",
+  "Favorit": "Favorite",
+  "Fehlgeschlagen": "Failed",
+  "Fernstart": "Remote start",
+  "Feststellbremse": "Parking brake",
+  "Filamentwechsel": "Filament change",
+  "Flur": "Hallway",
+  "Frei": "Free",
+  "Freigeben": "Approve",
+  "Gekippt": "Tilted",
+  "Gemeldet": "Reported",
+  "Gering": "Low",
+  "Geringer": "Lower",
+  "Geschwindigkeit": "Speed",
+  "Gestartet": "Started",
+  "Gestern": "Yesterday",
+  "Gestoppt": "Stopped",
+  "Gesund": "Healthy",
+  "Gewitter": "Thunderstorm",
+  "HA-Zeitplan": "HA schedule",
+  "Hagel": "Hail",
+  "Handeln": "Act",
+  "Hauptschalter": "Main switch",
+  "Hauswirtschaftsraum": "Utility room",
+  "Heckklappe": "Tailgate",
+  "Hinweis": "Note",
+  "Hinweise": "Notes",
+  "Inaktiv": "Inactive",
+  "Inspektion": "Inspection",
+  "Installiert": "Installed",
+  "Intensiv": "Intensive",
+  "Isoliert": "Isolated",
+  "Jalousien-Automatik": "Blind automation",
+  "Jetzt": "Now",
+  "Kalibrierung": "Calibration",
+  "Kalorien": "Calories",
+  "Kalt": "Cold",
+  "Kaltstart": "Cold start",
+  "Kanal": "Channel",
+  "Kartierung": "Mapping",
+  "Kilometerstand": "Odometer",
+  "Klar": "Clear",
+  "Klingel": "Doorbell",
+  "Knitterschutz": "Anti-crease",
+  "Kritisch": "Critical",
+  "Küche": "Kitchen",
+  "LAN-Download": "LAN download",
+  "Ladefehler": "Charging error",
+  "Ladevorrang": "Charging priority",
+  "Ladezyklen": "Charge cycles",
+  "Lagerwartung": "Bearing maintenance",
+  "Langzeit": "Long-term",
+  "Lecksensor": "Leak sensor",
+  "Leicht": "Light",
+  "Leise": "Quiet",
+  "Leiser": "Quieter",
+  "Lichtsteuerung": "Light control",
+  "Luftdruck": "Air pressure",
+  "Luftreiniger": "Air purifier",
+  "Manuell": "Manual",
+  "Markisen": "Awnings",
+  "Maschinenpflege": "Machine care",
+  "Maschinenreinigung": "Machine cleaning",
+  "Meerwasser": "Saltwater",
+  "Meldefehler": "Reporting error",
+  "Messwerte": "Readings",
+  "Minuten": "minutes",
+  "Motorhaube": "Bonnet",
+  "Motorstunden": "Motor hours",
+  "Nacht": "Night",
+  "Nachtmodus": "Night mode",
+  "Neustart": "Restart",
+  "Nivellieren": "Levelling",
+  "Notfall": "Emergency",
+  "Notstrom": "Backup power",
+  "Optionen": "Options",
+  "Orten": "Locate",
+  "Patrouille": "Patrol",
+  "Pflanzen-Doktor": "Plant doctor",
+  "Profil": "Profile",
+  "Punktreinigung": "Spot cleaning",
+  "Quelle": "Source",
+  "Raumluft": "Indoor air",
+  "Raumreinigung": "Room cleaning",
+  "Raumtemperatur": "Room temperature",
+  "Rausstellen": "Put out",
+  "Referenzfahrt": "Homing",
+  "Regen": "Rain",
+  "Regeneriersalz": "Dishwasher salt",
+  "Regnerisch": "Rainy",
+  "Reichweite": "Range",
+  "Reinigen": "Clean",
+  "Reinigung": "Cleaning",
+  "Reinigungen": "Cleanings",
+  "Reinigungsmodus": "Cleaning mode",
+  "Ruhig": "Calm",
+  "Salz": "Salt",
+  "Sanft": "Gentle",
+  "Sauber": "Clean",
+  "Saugen": "Vacuum",
+  "Schiebedach": "Sunroof",
+  "Schildkröte": "Turtle",
+  "Schlafzimmer": "Bedroom",
+  "Schleudern": "Spin",
+  "Schnee": "Snow",
+  "Schneefall": "Snowfall",
+  "Schneeregen": "Sleet",
+  "Schnell": "Quick",
+  "Schnellwahl": "Quick select",
+  "Schrittverlust": "Step loss",
+  "Schutzladung": "Protective charge",
+  "Schwer": "Severe",
+  "Sensoren": "Sensors",
+  "Sicherheitswarnung": "Safety warning",
+  "Sichtweite": "Visibility",
+  "Slicen": "Slicing",
+  "Sofort": "Immediately",
+  "Solaranlage": "Solar system",
+  "Sonnig": "Sunny",
+  "Speiseplan": "Meal plan",
+  "Starker": "Heavy",
+  "Starkregen": "Heavy rain",
+  "Startet": "Starting",
+  "Statistik": "Statistics",
+  "Stufe": "Level",
+  "Stumm": "Muted",
+  "Stunde": "hour",
+  "Stunden": "hours",
+  "Tagen": "days",
+  "Tarif": "Tariff",
+  "Tastensperre": "Key lock",
+  "Technik": "Equipment",
+  "Temperaturwarnung": "Temperature warning",
+  "Terrasse": "Terrace",
+  "Tonnen": "Bins",
+  "Trittfrequenz": "Cadence",
+  "Trocken": "Dry",
+  "Trocknen": "Dry",
+  "Trocknet": "Drying",
+  "Trommelreinigung": "Drum cleaning",
+  "Unklar": "Unclear",
+  "Unkritisch": "Uncritical",
+  "Unscharf": "Disarmed",
+  "Unter": "Below",
+  "Unterbrochen": "Interrupted",
+  "Unwetter": "Severe weather",
+  "Urlaub": "Vacation",
+  "VERBLEIBEND": "REMAINING",
+  "Ventil-Anpassung": "Valve adjustment",
+  "Verriegelung": "Locking",
+  "Vorbereitung": "Preparing",
+  "WLAN-Download": "Wi-Fi download",
+  "Warm": "Warm",
+  "Warnung": "Warning",
+  "Wartung": "Maintenance",
+  "Waschen": "Wash",
+  "Waschküche": "Laundry",
+  "Wasserbedarf": "Water demand",
+  "Wassertemperatur": "Water temperature",
+  "Wetterwarnung": "Weather warning",
+  "Wiedergabe": "Playback",
+  "Windig": "Windy",
+  "Wischen": "Mop",
+  "Wischmodus": "Mop mode",
+  "Wischt": "Mopping",
+  "Wohnzimmer": "Living room",
+  "Zeitplan": "Schedule",
+  "Zonenreinigung": "Zone cleaning",
+  "Überschwemmung": "Flood",
+  "überschwemmung": "flood",
+  "Januar": "January",
+  "Februar": "February",
+  "März": "March",
+  "Mär": "Mar",
+  "April": "April",
+  "Mai": "May",
+  "Juni": "June",
+  "Juli": "July",
+  "August": "August",
+  "September": "September",
+  "Oktober": "October",
+  "November": "November",
+  "Dezember": "December",
+  "Montag": "Monday",
+  "Dienstag": "Tuesday",
+  "Mittwoch": "Wednesday",
+  "Donnerstag": "Thursday",
+  "Freitag": "Friday",
+  "Samstag": "Saturday",
+  "Sonntag": "Sunday",
+  "1 Reinigung": "1 cleaning",
+  "1 Update braucht Aufmerksamkeit": "1 update needs attention",
+  "AMS getrennt": "AMS disconnected",
+  "AMS wird vorbereitet": "Preparing AMS",
+  "Ablaufpumpe blockiert": "Drain pump blocked",
+  "Absturzsensor verschmutzt": "Cliff sensor dirty",
+  "Abwesend scharf schalten?": "Arm away?",
+  "Aktiviert (Abwesend)": "Armed (Away)",
+  "Aktiviert (Bypass)": "Armed (Bypass)",
+  "Aktiviert (Zuhause)": "Armed (Home)",
+  "Aktiviert (Nacht)": "Armed (Night)",
+  "Aktiviert (Urlaub)": "Armed (Vacation)",
+  "Alarm deaktiviert": "Alarm disarmed",
+  "Alles aktuell": "All up to date",
+  "Alles eingekauft": "All bought",
+  "Alles gelesen": "All read",
+  "Als beendet markieren": "Mark as finished",
+  "Amtliche Warnung": "Official warning",
+  "Amtliche Warnung (NINA)": "Official warning (NINA)",
+  "Andere Idee": "Another idea",
+  "Aquarium-Licht": "Aquarium light",
+  "Auf die Einkaufsliste": "Add to shopping list",
+  "Automatisch erkennen": "Detect automatically",
+  "Batterie schwach": "Battery low",
+  "Betrifft bei dir": "Affects you",
+  "Bett wird nivelliert": "Levelling bed",
+  "Bewegung erkannt": "Motion detected",
+  "Bewegungsmelder inaktiv": "Motion sensor inactive",
+  "Bitte warten": "Please wait",
+  "Bluetooth-Verbindung kurz unterbrochen": "Bluetooth connection briefly interrupted",
+  "Braucht dringend Aufmerksamkeit": "Needs urgent attention",
+  "Braucht etwas Aufmerksamkeit": "Needs some attention",
+  "braucht Aufmerksamkeit": "needs attention",
+  "Breaking Change betrifft dich": "breaking change affects you",
+  "Breaking Changes betreffen dich": "breaking changes affect you",
+  "CO₂-Wert hoch": "CO₂ high",
+  "Claude liest die Release-Notes …": "Claude is reading the release notes …",
+  "Claude prüft Bodenfeuchte, Licht, Temperatur und Luftfeuchte der letzten 7 Tage passend zur Art und gibt einen Pflegetipp.": "Claude checks soil moisture, light, temperature and humidity over the last 7 days against the species and gives a care tip.",
+  "Zu hoch": "Too high",
+  "Zu niedrig": "Too low",
+  "Claude prüft Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad der letzten 7 Tage.": "Claude reviews heating time, room temperatures, heating with open windows and the bathroom radiator over the last 7 days.",
+  "Code eingeben…": "Enter code…",
+  "Das Mikrofon funktioniert nur über HTTPS – bitte Home Assistant über die Tailscale-Adresse (https://…ts.net) öffnen.": "The microphone only works over HTTPS – please open Home Assistant via its HTTPS address.",
+  "Dashboard bearbeiten": "Edit dashboard",
+  "Deine Region": "Your region",
+  "Details in der Bambu-App": "Details in the Bambu app",
+  "Diebstahl gemeldet": "Theft reported",
+  "Du bist diesen Monat dran": "It's your turn this month",
+  "Du bist dran": "Your turn",
+  "Nicht dran": "Not your turn",
+  "Dock getrennt": "Dock disconnected",
+  "Druckbett wird gescannt": "Scanning bed",
+  "Drucker offline": "Printer offline",
+  "Druckplatte wird erkannt": "Detecting build plate",
+  "Eigenes Tagesprofil der Lampe": "Lamp's own daily profile",
+  "Eingriff erforderlich": "Intervention required",
+  "Einmalig erlaubt": "Allowed once",
+  "Endet gleich": "Ending soon",
+  "Energie gesamt": "Total energy",
+  "Erkennung fortsetzen": "Resume detection",
+  "Erkennung pausieren": "Pause detection",
+  "Wenn die Maschine kurz angehalten wird": "When the machine is paused briefly",
+  "Ersparnis gesamt": "Total savings",
+  "Erst saugen, dann wischen": "Vacuum first, then mop",
+  "Extra Trocken": "Extra dry",
+  "Extreme Warnung": "Extreme warning",
+  "Extremes Unwetter": "Extreme weather",
+  "Extrusion wird kalibriert": "Calibrating extrusion",
+  "Fahrzeit gesamt": "Total ride time",
+  "Farben nach deiner Automation": "Colours from your automation",
+  "Fast fertig": "Almost done",
+  "Feinstaub PM2.5": "Particulates PM2.5",
+  "Fernsteuerung aktiv": "Remote control active",
+  "Feste Zieltemperatur": "Fixed target temperature",
+  "Filament wird entladen": "Unloading filament",
+  "Filament wird geladen": "Loading filament",
+  "Fluss wird kalibriert": "Calibrating flow",
+  "Frag Assist …": "Ask Assist …",
+  "Frischwassertank leer": "Clean water tank empty",
+  "Ganzes Haus": "Whole home",
+  "Gas erkannt": "Gas detected",
+  "Geladen (12 Monate)": "Charged (12 months)",
+  "Gerade angekommen": "Just arrived",
+  "Gerade gegangen": "Just left",
+  "Heute gefahren": "Ridden today",
+  "Gestern gefahren": "Ridden yesterday",
+  "Heute gegossen": "Watered today",
+  "Gestern gegossen": "Watered yesterday",
+  "Gewitter mit Regen": "Thunderstorm with rain",
+  "Heizkreise stromlos": "Heating circuits unpowered",
+  "Heute dosiert": "Dosed today",
+  "Hohe Feuchtigkeit": "High humidity",
+  "Ich habe nichts verstanden.": "I didn't catch that.",
+  "Idee holen": "Get an idea",
+  "Im Anruf": "On a call",
+  "Immer erlaubt": "Always allowed",
+  "Intensiv 70°": "Intensive 70°",
+  "Jetzt aktualisieren": "Update now",
+  "Jetzt auswerten": "Analyse now",
+  "Jetzt dosieren": "Dose now",
+  "Jetzt neu starten": "Restart now",
+  "Jetzt starten": "Start now",
+  "Zeitversetzt starten": "Start delayed",
+  "Kindersicherung aktiv": "Child lock active",
+  "Klare Nacht": "Clear night",
+  "Kohlenmonoxid erkannt": "Carbon monoxide detected",
+  "Kritische Temperaturabweichung!": "Critical temperature deviation!",
+  "Lädt und Bypass": "Charging and bypass",
+  "Lade Vorhersage …": "Loading forecast …",
+  "Laden bis": "Charge up to",
+  "Nicht entladen unter": "Don't discharge below",
+  "Laufzeit insgesamt": "Total runtime",
+  "Lecksensor offline": "Leak sensor offline",
+  "Letzter Durchgang": "Last cycle",
+  "Letzter Versuch fehlgeschlagen": "Last attempt failed",
+  "Lidar blockiert": "Lidar blocked",
+  "Manueller Modus": "Manual mode",
+  "Mopp fehlt": "Mop missing",
+  "Mopp trocknen": "Dry mop",
+  "Mopp waschen": "Wash mop",
+  "Mopp wird angebracht": "Attaching mop",
+  "Mopp wird entfernt": "Removing mop",
+  "Motor wird kalibriert": "Calibrating motor",
+  "NINA Warnung": "NINA warning",
+  "Nach Zeitplan": "Scheduled",
+  "Neue Post im Briefkasten": "New mail in the mailbox",
+  "Neues Gespräch": "New conversation",
+  "Neustart ausstehend": "Restart pending",
+  "Neustart erforderlich": "Restart required",
+  "Nicht angepasst": "Not adjusted",
+  "Nicht erkannt": "Not detected",
+  "Nicht gemeldet": "Not reported",
+  "Nicht verbunden": "Not connected",
+  "Nicht verriegelt": "Not locked",
+  "Niedriger Wasserdruck": "Low water pressure",
+  "Noch nie": "Never",
+  "Nur Anzeige": "Display only",
+  "Pflanze ist gesund": "Plant is healthy",
+  "Push am Vorabend": "Push the evening before",
+  "Rauch erkannt": "Smoke detected",
+  "Reichweite je Modus": "Range per mode",
+  "Reinigung gestartet": "Cleaning started",
+  "Reinigungen insgesamt": "Total cleanings",
+  "Reispfanne mit Hähnchen und Pilzen": "Rice pan with chicken and mushrooms",
+  "Roboter gekippt": "Robot tilted",
+  "Roboter steckt fest": "Robot stuck",
+  "Saugen & wischen": "Vacuum & mop",
+  "Saugt & wischt": "Vacuuming & mopping",
+  "Saugt & wischt Zone": "Vacuuming & mopping zone",
+  "Wischt Zone": "Mopping zone",
+  "Scharf schalten?": "Arm?",
+  "Unscharf schalten?": "Disarm?",
+  "Sirene stoppen?": "Stop siren?",
+  "Schmutzwasser leeren": "Empty dirty water",
+  "Schmutzwassertank voll": "Dirty water tank full",
+  "Schnell 45°": "Quick 45°",
+  "Schnell 65°": "Quick 65°",
+  "Schnell 30": "Quick 30",
+  "Baumwolle 40": "Cotton 40",
+  "Pflegeleicht": "Easy care",
+  "Schneller fertig": "Finish faster",
+  "Schwere Warnung": "Severe warning",
+  "Sehr kalt": "Very cold",
+  "Zu kalt": "Too cold",
+  "Sehr trocken": "Very dry",
+  "Sensoren reinigen": "Clean sensors",
+  "Service & Sicherheit": "Service & safety",
+  "Service nach Strecke": "Service by distance",
+  "Sonstige Wartung": "Other maintenance",
+  "Speedtest starten": "Run speed test",
+  "Spracheingabe fehlgeschlagen.": "Voice input failed.",
+  "Starte den Saugroboter": "Start the robot vacuum",
+  "Starts insgesamt": "Total starts",
+  "Stoppt …": "Stopping …",
+  "Stoppt…": "Stopping…",
+  "Sucht ein Rezept …": "Finding a recipe …",
+  "Temperaturwarnung aktiv": "Temperature warning active",
+  "Trocknet Mopp": "Drying mop",
+  "Trocknung endet": "Drying ending",
+  "Verbindung stabil": "Connection stable",
+  "Verschobene Termine": "Rescheduled dates",
+  "Voll geladen": "Fully charged",
+  "Voll, Bypass": "Full, bypass",
+  "Vollschutz aktiv": "Full protection active",
+  "Von dir pausiert": "Paused by you",
+  "WLAN & Sperren": "Wi-Fi & blocks",
+  "Warte auf Pflanzendaten": "Waiting for plant data",
+  "Warte auf Start": "Waiting to start",
+  "Wartet auf Druckbett": "Waiting for bed",
+  "Wartet auf Neustart": "Waiting for restart",
+  "Was steht auf der Einkaufsliste?": "What's on the shopping list?",
+  "Wasserheizung verkalkt": "Water heater scaled",
+  "Wasserkasten fehlt": "Water tank missing",
+  "Wetterwarnung aufgehoben": "Weather warning lifted",
+  "Wie kann ich helfen?": "How can I help?",
+  "Wie warm ist das Meerwasseraquarium?": "How warm is the saltwater aquarium?",
+  "Wie warm ist es im Wohnzimmer?": "How warm is it in the living room?",
+  "Wieder anzeigen": "Show again",
+  "Zum Freigeben oben in der Update-Zeile auf „Freigeben“ tippen und bestätigen.": "To approve, tap “Approve” in the update row above and confirm.",
+  "KI: alle unkritisch": "AI: all uncritical",
+  "KI: unkritisch": "AI: uncritical",
+  "Installieren empfohlen": "Install recommended",
+  "auf der Arbeit": "at work",
+  "dauert länger als üblich": "is taking longer than usual",
+  "gibt es noch keine eigene Auswertung. „Neu auswerten“ erstellt sie für alle Räume.": "has no review of its own yet. “Re-analyse” creates one for every room.",
+  "sehr schlecht": "very poor",
+  "Stufe 1": "Level 1",
+  "Stufe 2": "Level 2",
+  "Stufe 3": "Level 3",
+  "Durchgänge seit dem letzten Mal": "cycles since last time",
+  "Ø Dauer": "Ø duration",
+  "Ø pro Durchgang": "Ø per cycle",
+  "Wertstoffabfall": "Recycling",
+  "Aktuelle Wiedergabe": "Now playing",
+  "Beispiel-Titel": "Example Title",
+  "Daten: Deutscher Wetterdienst (DWD)": "Data: Deutscher Wetterdienst (DWD)",
+  "Internetsperre": "Internet block",
+  "Latenz": "Latency",
+  "Startzeit": "Start time",
+  "Wetter": "Weather",
+  "Zieltemperatur": "Target temperature",
+  "braucht Wasser": "needs water",
+  "braucht Dünger": "needs fertiliser",
+  "braucht mehr Licht": "needs more light",
+  "steht in zu trockener Luft": "air is too dry",
+  "steht in zu feuchter Luft": "air is too humid",
+  "ausgezeichnet": "excellent",
+  "gut": "good",
+  "schlecht": "poor",
+  "Lädt aus dem Netz": "Charging from grid",
+  "Übernahme fehlgeschlagen": "Takeover failed",
+  "Backup läuft": "Backup running",
+  "An/Aus": "On/Off",
+  "12-V-Batterie": "12 V battery",
+  "Luftfeuchtigkeit außen": "Outdoor humidity",
+  "NINA-Warnung": "NINA warning",
+  "NINA-Warnungen": "NINA warnings",
+  "Nächstes Backup überfällig": "Next backup overdue",
+  "Aktuell keine NINA-Meldungen": "No NINA alerts right now",
+  "Kamera nicht erreichbar": "Camera unreachable",
+  "Kein Bild – Kamera ist offline oder ihr Dienst läuft nicht.": "No image – the camera is offline or its service is not running.",
+  "Kamera offline": "Camera offline",
+  "Schloss offline": "Lock offline",
+  "Fenster gekippt": "Window tilted",
+  "Tor offen": "Gate open",
+  "Luft ausgezeichnet": "Air is excellent",
+  "Luft mäßig": "Air is moderate",
+  "Luft schlecht": "Air is poor",
+  "Luft sehr schlecht": "Air is very poor",
+  "Klemmt": "Jammed",
+  "Wird geöffnet…": "Opening…",
+  "Gerät fehlt": "Device missing",
+  "Aktionen": "Actions",
+  "Gerät nicht erreichbar": "Device unreachable",
+  "Aus (Bürste angehoben)": "Off (brush raised)",
+  "Eigene Wassermenge": "Custom water flow",
+  "Nur wischen": "Mop only",
+  "Pflanze": "Plant",
+  "Rezept": "Recipe",
+  "Tür gekippt": "Door tilted",
+  "Ton": "Sound",
+  "Beschreiben": "Describe",
+  "Prüfe Strom und WLAN der Kamera.": "Check the camera's power and Wi-Fi.",
+  "Erneut versuchen": "Try again",
+  "Schloss": "Lock",
+  "Sirene": "Siren",
+  "Alarm": "Alarm",
+  "Tor": "Gate",
+  "Lichtfarbe": "Light colour",
+  "Leuchten im Raum": "Lights in this room",
+  "Gedimmt": "Dimmed",
+  "Volle Helligkeit": "Full brightness",
+  "Neutral": "Neutral",
+  "zuletzt": "last",
+  "Kanäle": "Channels",
+  "Becken": "Tanks",
+  "Aquarien · Temperaturen": "Aquariums · Temperatures",
+  "Mehr": "More",
+  "Weniger": "Less",
+  "WLAN": "Wi-Fi",
+  "Verbraucher": "Consumers",
+  "Energiefluss": "Energy flow",
+  "Sperren": "Blocks",
+  "Internet": "Internet",
+  "Durchsatz": "Throughput",
+  "Gerätedetails": "Device details",
+  "Update verfügbar": "Update available",
+  "Problem": "Problem",
+  "Speedtest läuft …": "Speed test running …",
+  "Kapazität": "Capacity",
+  "Tipps": "Tips",
+  "Noch keine Auswertung": "No analysis yet",
+  "Solarbank": "Solarbank",
+  "Betriebszustand": "Operating state",
+  "Lastvorgabe": "Load setpoint",
+  "Öffentliche IP": "Public IP",
+  "LAN-Upload": "LAN upload",
+  "WLAN-Upload": "Wi-Fi upload",
+  "pro Woche sparbar": "savable per week",
+  "Kein Strom ins Netz": "No power to the grid",
+  "Abgabelimit": "Output limit",
+  "Claude wertet die letzte Woche aus …": "Claude is analysing the last week …",
+  "Niedriger Akkustand": "Low battery",
+  "Alle Geräte": "All devices",
+  "Keine Warnungen": "No warnings",
+  "Alles in Ordnung": "All good",
+  "Alle Schlösser": "All locks",
+  "Alle Kameras": "All cameras",
+  "Nicht geprüft": "Not checked",
+  "KI-Fehler": "AI error",
+  "KI prüft …": "AI checking …",
+  "1 Batterie schwach": "1 battery low",
+  "Tippen zum Verriegeln": "Tap to lock",
+  "Tippen zum Entriegeln": "Tap to unlock",
+  "Tippen, um alle zu verriegeln": "Tap to lock all",
+  "Tippen, um alle zu entriegeln": "Tap to unlock all",
+  "Wird verriegelt …": "Locking …",
+  "Wird entriegelt …": "Unlocking …",
+  "● Unkritisch": "● Uncritical",
+  "● Breaking": "● Breaking",
+  "● Handeln": "● Action needed",
+  "KI-Blick: Druck prüfen": "AI look: check print",
+  "Fertig gegen": "Done around",
+  "Station": "Station",
+  "Alles aufgefüllt": "All topped up",
+  "Salz, Klarspüler und Pflege sind in Ordnung": "Salt, rinse aid and care are fine",
+  "Fühler": "Sensors",
+  "Verlauf": "History",
+  "Verlauf der letzten 24 Stunden": "History of the last 24 hours",
+  "Rad-Check im Detail": "Bike check in detail",
+  "Motor": "Motor",
+  "Alles zu und verriegelt": "All closed and locked",
+  "Alles zu": "All closed",
+  "Feststellbremse angezogen": "Parking brake on",
+  "Tank fast leer": "Tank almost empty",
+  "Speiseplan der nächsten 7 Tage ist leer": "Meal plan for the next 7 days is empty",
+  "Zutaten der Idee": "Ingredients of the idea",
+  "Raumluft gut": "Indoor air good",
+  "Heute keine Termine": "No events today",
+  "1 Termin heute": "1 event today",
+  "Keine Szenen gefunden. Casora zeigt alle Szenen, die in den Entitäten weder ausgeblendet noch deaktiviert sind.": "No scenes found. Casora shows every scene that is neither hidden nor disabled in the entities.",
+  "Aquarium": "Aquarium",
+  "Auto": "Car",
+  "Jalousie": "Blind",
+  "E-Bike": "E-bike",
+  "Ventilator": "Fan",
+  "Spiel": "Game",
+  "Luftbefeuchter": "Humidifier",
+  "Anwesenheit": "Presence",
+  "Schalter": "Switch",
+  "Updates": "Updates",
+  "Wetterwarnungen": "Weather warnings",
+  "Noch keine Geräte – im Studio hinzufügen": "No devices yet – add them in the Studio",
+  "Noch kein Gerät zugeordnet": "No device assigned yet",
+  "Im Casora Studio dieser Kachel ein Gerät zuweisen": "Assign a device to this tile in Casora Studio",
+  "Im Casora Studio neu zuordnen": "Reassign it in Casora Studio",
+  "Noch nicht eingerichtet": "Not set up yet",
+  "Im Casora Studio der Kachel den Solar-Tipp zuordnen.": "Assign the solar tip to this tile in Casora Studio.",
+  "Noch keine Tageswerte": "No daily values yet",
+  "Im Casora Studio Zähler und Verbraucher zuordnen": "Assign meters and consumers in Casora Studio",
+  "waschen": "do laundry",
+  "spülen": "run the dishwasher",
+  "trocknen": "run the dryer",
+  "Fühlt sich wohl": "Doing well",
+  "Braucht Wasser": "Needs water",
+  "Steht zu nass": "Too wet",
+  "Steht zu kalt": "Too cold",
+  "Steht zu warm": "Too warm",
+  "Zu viel Sonne": "Too much sun",
+  "Überdüngt": "Over-fertilized",
+  "Bitte nachsehen": "Take a look",
+  "Keine Messwerte": "No readings",
+  "Wartet auf Daten": "Waiting for data",
+  "steht zu nass": "is too wet",
+  "ist überdüngt": "is over-fertilized",
+  "bekommt zu viel Sonne": "gets too much sun",
+  "steht zu kalt": "is too cold",
+  "steht zu warm": "is too warm",
+  "Ausgeräumt": "Unloaded",
+  "Wäsche ist noch drin": "Laundry is still inside",
+  "Wäsche ist noch im Trockner": "Laundry is still in the dryer",
+  "Fertig · Wäsche drin": "Done · laundry inside",
+  "Wird beim Öffnen der Tür erkannt": "Detected when the door opens",
+  "Welches Programm läuft?": "Which program is running?",
+  "Nächstes Programm": "Next program",
+  "Erkennung anhalten": "Pause detection",
+  "Wenn die Maschine kurz unterbrochen wird": "If the machine is briefly interrupted",
+  "Die Erkennung ist angehalten": "Detection is paused",
+  "Erkennung verbessern": "Improve detection",
+  "1 Einstellung empfohlen, in WashData übernehmen": "1 setting recommended, apply it in WashData",
+  "Durchgänge insgesamt": "Cycles in total",
+  "Programme": "Programs",
+  "Programm gewählt": "Program selected",
+  "An der Maschine gewählt": "Selected on the machine",
+  "Prüfung": "Check",
+  "Spülstopp": "Rinse hold",
+  "Stromausfall": "Power failure",
+  "Störung": "Fault",
+  "Wartung nötig": "Service needed"
+ },
+ "patterns": [
+  [
+   "^Wartet seit (.+)$",
+   "Waiting for {1}"
+  ],
+  [
+   "^Üblich sind (.+)$",
+   "Usually {1}"
+  ],
+  [
+   "^(\\d+) Einstellungen empfohlen, in WashData übernehmen$",
+   "{1} settings recommended, apply them in WashData"
+  ],
+  [
+   "^Ø (.+)$",
+   "Ø {1}"
+  ],
+  ["^Abholung in (\\d+) Tagen$", "Pickup in {1} days"],
+  [
+   "^(\\d+) von (\\d+) An$",
+   "{1} of {2} on"
+  ],
+  [
+   "^(\\d+) von (\\d+) Räumen an$",
+   "{1} of {2} rooms on"
+  ],
+  [
+   "^KI: 1 Update braucht Aufmerksamkeit$",
+   "AI: 1 update needs attention"
+  ],
+  [
+   "^KI: (\\d+) Updates brauchen Aufmerksamkeit$",
+   "AI: {1} updates need attention"
+  ],
+  [
+   "^Schließt (\\d+) Updates ab$",
+   "Finishing {1} updates"
+  ],
+  [
+   "^Backup (vor .+|gerade eben)$",
+   "Backup {1}"
+  ],
+  [
+   "^Absenkung um (.+)$",
+   "Setback by {1}"
+  ],
+  [
+   "^Letzte Fahrt vor (.+) T\\.$",
+   "Last ride {1} days ago"
+  ],
+  [
+   "^Diesen Monat bist du dran, danach wieder im (.+)\\.$",
+   "It's your turn this month, next in {1}."
+  ],
+  [
+   "^Diesen Monat bist du dran\\.?$",
+   "It's your turn this month."
+  ],
+  [
+   "^startet in (.+)$",
+   "starts in {1}"
+  ],
+  [
+   "^trocken in etwa (\\d+) Tagen?$",
+   "dry in about {1} days"
+  ],
+  [
+   "^trocken in etwa 1 Tag$",
+   "dry in about 1 day"
+  ],
+  [
+   "^Vor (\\d+) Tagen gegossen$",
+   "Watered {1} days ago"
+  ],
+  [
+   "^davon (.+) Std\\. mit Unterstützung$",
+   "{1} h with assist"
+  ],
+  [
+   "^in (\\d[\\d.,]*) km$",
+   "in {1} km"
+  ],
+  [
+   "^(\\d+) ?% des aktuellen Verbrauchs$",
+   "{1}% of current use"
+  ],
+  [
+   "^(\\d+) werden installiert$",
+   "{1} installing"
+  ],
+  [
+   "^(\\d+) Updates brauchen Aufmerksamkeit$",
+   "{1} updates need attention"
+  ],
+  [
+   "^(\\d+) Breaking Changes betreffen dich$",
+   "{1} breaking changes affect you"
+  ],
+  [
+   "^1 Breaking Change betrifft dich$",
+   "1 breaking change affects you"
+  ],
+  [
+   "^(.+) g/m³ absolut$",
+   "{1} g/m³ absolute"
+  ],
+  [
+   "^drinnen Ø (.+)$",
+   "indoor Ø {1}"
+  ],
+  [
+   "^Heute (.+) kWh Bezug$",
+   "Today {1} kWh from grid"
+  ],
+  [
+   "^Heute (.+) kWh entladen$",
+   "Today {1} kWh discharged"
+  ],
+  [
+   "^(.+) km aufgezeichnet$",
+   "{1} km recorded"
+  ],
+  [
+   "^(.+) ohne Strom$",
+   "{1} without power"
+  ],
+  [
+   "^(.+) von (.+) aus Solar und Akku$",
+   "{1} of {2} from solar and battery"
+  ],
+  [
+   "^Reinigt (.+)$",
+   "Cleaning {1}"
+  ],
+  [
+   "^Schließt das (.+)-Update ab$",
+   "Finishing the {1} update"
+  ],
+  [
+   "^(.+) Update verfügbar$",
+   "{1} update available"
+  ],
+  [
+   "^(.+) hat das Haus verlassen$",
+   "{1} left home"
+  ],
+  [
+   "^(.+) ist angekommen$",
+   "{1} arrived home"
+  ],
+  [
+   "^(.+) ist gekippt$",
+   "{1} is tilted"
+  ],
+  [
+   "^(.+) ist gleich fertig$",
+   "{1} is almost done"
+  ],
+  [
+   "^(.+) läuft$",
+   "{1} running"
+  ],
+  [
+   "^(.+) hat geklingelt$",
+   "{1} rang the doorbell"
+  ],
+  [
+   "^(.+) hat fertig gereinigt$",
+   "{1} finished cleaning"
+  ],
+  [
+   "^(.+) ist auf der Arbeit$",
+   "{1} is at work"
+  ],
+  [
+   "^(.+) ist im (.+)$",
+   "{1} is at {2}"
+  ],
+  [
+   "^(.+) ist in der (.+)$",
+   "{1} is at {2}"
+  ],
+  [
+   "^(.+) ist am (.+)$",
+   "{1} is at {2}"
+  ],
+  [
+   "^(.+) ist bei (.+)$",
+   "{1} is at {2}"
+  ],
+  [
+   "^(.+) umgeschaltet auf (.+)$",
+   "{1} switched to {2}"
+  ],
+  [
+   "^Alarm scharf – (.+)$",
+   "Alarm armed – {1}"
+  ],
+  [
+   "^(.+) braucht Wasser$",
+   "{1} needs water"
+  ],
+  [
+   "^(.+) steht zu nass$",
+   "{1} is too wet"
+  ],
+  [
+   "^(.+) braucht Dünger$",
+   "{1} needs fertiliser"
+  ],
+  [
+   "^(.+) ist überdüngt$",
+   "{1} is over-fertilized"
+  ],
+  [
+   "^(.+) braucht mehr Licht$",
+   "{1} needs more light"
+  ],
+  [
+   "^(.+) bekommt zu viel Sonne$",
+   "{1} gets too much sun"
+  ],
+  [
+   "^(.+) steht zu kalt$",
+   "{1} is too cold"
+  ],
+  [
+   "^(.+) steht zu warm$",
+   "{1} is too warm"
+  ],
+  [
+   "^(.+) steht in zu trockener Luft$",
+   "{1}: air too dry"
+  ],
+  [
+   "^(.+) steht in zu feuchter Luft$",
+   "{1}: air too humid"
+  ],
+  [
+   "^(\\d+) Reinigungen$",
+   "{1} cleanings"
+  ],
+  [
+   "^(\\d+) entriegelt$",
+   "{1} unlocked"
+  ],
+  [
+   "^Gestern, (.+)$",
+   "Yesterday, {1}"
+  ],
+  [
+   "^Heute, (.+)$",
+   "Today, {1}"
+  ],
+  [
+   "^alle (\\d+) Wochen$",
+   "every {1} weeks"
+  ],
+  [
+   "^jede Woche$",
+   "every week"
+  ],
+  [
+   "^Luft ([^·]+)$",
+   "Air {1}"
+  ],
+  [
+   "^PM2,5 (.+)$",
+   "PM2.5 {1}"
+  ],
+  [
+   "^(\\d+) Tage?$",
+   "{1} days"
+  ],
+  [
+   "^(\\d+) Stunden$",
+   "{1} hours"
+  ],
+  [
+   "^ca\\. (.+)$",
+   "approx. {1}"
+  ],
+  [
+   "^(\\d{1,2}) Uhr$",
+   "{1}:00"
+  ],
+  [
+   "^(.+) · Gehärteter Stahl$",
+   "{1} · hardened steel"
+  ],
+  [
+   "^(.+) · Edelstahl$",
+   "{1} · stainless steel"
+  ],
+  [
+   "^Ziel (.+)$",
+   "Target {1}"
+  ],
+  [
+   "^Stufe (\\d+) von (\\d+)$",
+   "Level {1} of {2}"
+  ],
+  [
+   "^(\\d+) von (\\d+)$",
+   "{1} of {2}"
+  ],
+  [
+   "^Temperatur · (\\d+) Stunden$",
+   "Temperature · {1} hours"
+  ],
+  [
+   "^Leistung · (\\d+) Stunden$",
+   "Power · {1} hours"
+  ],
+  [
+   "^Online seit (\\d+) Stunden$",
+   "Online for {1} hours"
+  ],
+  [
+   "^Online seit (\\d+) Tagen$",
+   "Online for {1} days"
+  ],
+  [
+   "^vor 1 Stunde$",
+   "1 hour ago"
+  ],
+  [
+   "^vor (\\d+) Stunden$",
+   "{1} hours ago"
+  ],
+  [
+   "^vor 1 Minute$",
+   "1 minute ago"
+  ],
+  [
+   "^vor (\\d+) Minuten$",
+   "{1} minutes ago"
+  ],
+  [
+   "^(\\d+) An$",
+   "{1} On"
+  ],
+  [
+   "^(\\d+) an$",
+   "{1} on"
+  ],
+  [
+   "^(\\d+) aktiv$",
+   "{1} active"
+  ],
+  [
+   "^(\\d+) Aktiv$",
+   "{1} active"
+  ],
+  [
+   "^(\\d+) Aus$",
+   "{1} Off"
+  ],
+  [
+   "^(\\d+) läuft$",
+   "{1} running"
+  ],
+  [
+   "^(\\d+) offen$",
+   "{1} open"
+  ],
+  [
+   "^(\\d+) Offen$",
+   "{1} Open"
+  ],
+  [
+   "^1 Schloss$",
+   "1 Lock"
+  ],
+  [
+   "^(\\d+) Schlösser$",
+   "{1} Locks"
+  ],
+  [
+   "^1 Raum heizt gerade$",
+   "1 room heating"
+  ],
+  [
+   "^(\\d+) Räume heizen gerade$",
+   "{1} rooms heating"
+  ],
+  [
+   "^1 Raum reinigen$",
+   "Clean 1 room"
+  ],
+  [
+   "^(\\d+) Räume reinigen$",
+   "Clean {1} rooms"
+  ],
+  [
+   "^(\\d+) Räume$",
+   "{1} rooms"
+  ],
+  [
+   "^1 Sensor offen$",
+   "1 sensor open"
+  ],
+  [
+   "^(\\d+) Sensoren offen$",
+   "{1} sensors open"
+  ],
+  [
+   "^1 Tür entriegelt$",
+   "1 door unlocked"
+  ],
+  [
+   "^(\\d+) Türen entriegelt$",
+   "{1} doors unlocked"
+  ],
+  [
+   "^(\\d+) Öffnungen offen$",
+   "{1} openings open"
+  ],
+  [
+   "^(\\d+) Updates verfügbar$",
+   "{1} updates available"
+  ],
+  [
+   "^(\\d+) Geräte mit schwachem Akku$",
+   "{1} devices with low battery"
+  ],
+  [
+   "^(\\d+) Szenen$",
+   "{1} scenes"
+  ],
+  [
+   "^1 Szene$",
+   "1 scene"
+  ],
+  [
+   "^(\\d+) Durchgänge$",
+   "{1} cycles"
+  ],
+  [
+   "^In (\\d+) Durchgängen$",
+   "In {1} cycles"
+  ],
+  [
+   "^in (\\d+) Durchgängen$",
+   "in {1} cycles"
+  ],
+  [
+   "^(\\d+) Durchgänge seit dem letzten Mal$",
+   "{1} cycles since last time"
+  ],
+  [
+   "^(\\d+) Unterwegs$",
+   "{1} Away"
+  ],
+  [
+   "^(\\d+) unterwegs$",
+   "{1} away"
+  ],
+  [
+   "^(\\d+) Räumen an$",
+   "on in {1} rooms"
+  ],
+  [
+   "^(\\d+) Min\\. übrig$",
+   "{1} min left"
+  ],
+  [
+   "^(\\d+) Std\\. übrig$",
+   "{1} h left"
+  ],
+  [
+   "^(\\d+) Std\\. (\\d+) Min\\.$",
+   "{1} h {2} min"
+  ],
+  [
+   "^(\\d+) Min\\.$",
+   "{1} min"
+  ],
+  [
+   "^(\\d+) Std\\.$",
+   "{1} h"
+  ],
+  [
+   "^vor (\\d+) Min\\.$",
+   "{1} min ago"
+  ],
+  [
+   "^vor (\\d+) Std\\.$",
+   "{1} h ago"
+  ],
+  [
+   "^vor (\\d+) T\\.$",
+   "{1} d ago"
+  ],
+  [
+   "^vor (\\d+) Tagen$",
+   "{1} days ago"
+  ],
+  [
+   "^vor (\\d+) Tag$",
+   "{1} day ago"
+  ],
+  [
+   "^vor (\\d+) Std\\. (\\d+) Min\\.$",
+   "{1} h {2} min ago"
+  ],
+  [
+   "^seit (\\d+) Tagen fällig$",
+   "due for {1} days"
+  ],
+  [
+   "^in (\\d+) Tagen$",
+   "in {1} days"
+  ],
+  [
+   "^In (\\d+) Tagen$",
+   "In {1} days"
+  ],
+  [
+   "^(.+) Uhr$",
+   "{1}"
+  ],
+  [
+   "^um (\\d+) Uhr$",
+   "at {1}:00"
+  ],
+  [
+   "^heute (\\d{1,2}:\\d{2})$",
+   "today {1}"
+  ],
+  [
+   "^morgen (\\d{1,2}:\\d{2})$",
+   "tomorrow {1}"
+  ],
+  [
+   "^gestern (\\d{1,2}:\\d{2})$",
+   "yesterday {1}"
+  ],
+  [
+   "^Fertig um (.+)$",
+   "Done at {1}"
+  ],
+  [
+   "^Fertig gegen (.+)$",
+   "Done around {1}"
+  ],
+  [
+   "^Läuft seit (.+)$",
+   "Running since {1}"
+  ],
+  [
+   "^läuft seit (.+)$",
+   "running since {1}"
+  ],
+  [
+   "^noch (.+)$",
+   "{1} left"
+  ],
+  [
+   "^Zuletzt bekannt · vor (\\d+) Tagen$",
+   "Last known · {1} days ago"
+  ],
+  [
+   "^Zuletzt: (.+)$",
+   "Last: {1}"
+  ],
+  [
+   "^Zuletzt (.+)$",
+   "Last {1}"
+  ],
+  [
+   "^KI-Einschätzung · vor (\\d+) (Min\\.|Std\\.|T\\.)$",
+   "AI assessment · {1} {2} ago"
+  ],
+  [
+   "^KI-Einschätzung · gerade eben$",
+   "AI assessment · just now"
+  ],
+  [
+   "^Letzte Fahrt vor (\\d+) Tagen$",
+   "Last ride {1} days ago"
+  ],
+  [
+   "^Letzte Fahrt vor (\\d+) Tagen; Akkustand nach Lagerung unbekannt$",
+   "Last ride {1} days ago; battery level after storage unknown"
+  ],
+  [
+   "^Service fällig seit (\\S+) \\((\\d+) Tage überfällig\\)$",
+   "Service due since {1} ({2} days overdue)"
+  ],
+  [
+   "^davon (\\d+) Std\\. mit Unterstützung$",
+   "{1} h of it with assist"
+  ],
+  [
+   "^Nächster Dienst im (.+)\\.$",
+   "Next duty in {1}."
+  ],
+  [
+   "^Verriegelt · Stand vor (\\d+) Std\\.$",
+   "Locked · as of {1} h ago"
+  ],
+  [
+   "^Entriegelt · Stand vor (\\d+) Std\\.$",
+   "Unlocked · as of {1} h ago"
+  ],
+  [
+   "^Kühlt auf (.+)$",
+   "Cooling to {1}"
+  ],
+  [
+   "^Heizt auf (.+)$",
+   "Heating to {1}"
+  ],
+  [
+   "^Kühl · (.+)$",
+   "Cool · {1}"
+  ],
+  [
+   "^Heizt · (.+)$",
+   "Heating · {1}"
+  ],
+  [
+   "^Bereit · (.+)$",
+   "Ready · {1}"
+  ],
+  [
+   "^Lädt · (.+)$",
+   "Charging · {1}"
+  ],
+  [
+   "^Entlädt · (.+)$",
+   "Discharging · {1}"
+  ],
+  [
+   "^Fällig · (.+)$",
+   "Due · {1}"
+  ],
+  [
+   "^Prüfen · (.+)$",
+   "Check · {1}"
+  ],
+  [
+   "^Pausiert: (.+)$",
+   "Paused: {1}"
+  ],
+  [
+   "^Akku (\\d+) ?%$",
+   "Battery {1}%"
+  ],
+  [
+   "^Akku (.+)$",
+   "Battery {1}"
+  ],
+  [
+   "^(\\d+) ?% Luftfeuchte$",
+   "{1}% humidity"
+  ],
+  [
+   "^(\\d+) ?% Feuchtigkeit$",
+   "{1}% moisture"
+  ],
+  [
+   "^(\\d+) ?% geöffnet$",
+   "{1}% open"
+  ],
+  [
+   "^(\\d+) geöffnet$",
+   "{1} open"
+  ],
+  [
+   "^(\\d+) gekippt$",
+   "{1} tilted"
+  ],
+  [
+   "^(\\d+) ?% Akku$",
+   "{1}% battery"
+  ],
+  [
+   "^Tank (\\d+) ?%$",
+   "Tank {1}%"
+  ],
+  [
+   "^CO₂ (\\d+) ppm$",
+   "CO₂ {1} ppm"
+  ],
+  [
+   "^Feuchte (\\d+) %$",
+   "Humidity {1}%"
+  ],
+  [
+   "^VOC (\\d+) ppb$",
+   "VOC {1} ppb"
+  ],
+  [
+   "^Fenster offen · noch (\\d+) Min\\.$",
+   "Window open · {1} min to go"
+  ],
+  [
+   "^Fenster offen seit (.+)$",
+   "Window open for {1}"
+  ],
+  [
+   "^Fenster seit (.+) offen$",
+   "Window open for {1}"
+  ],
+  [
+   "^Außenluft belastet \\(PM2\\.5 (\\d+)\\)$",
+   "Outdoor air polluted (PM2.5 {1})"
+  ],
+  [
+   "^Feuchte (\\d+) % · draußen feuchter$",
+   "Humidity {1}% · more humid outside"
+  ],
+  [
+   "^≈ (.+) frei · jetzt (.+)$",
+   "≈ {1} spare · now {2}"
+  ],
+  [
+   "^jetzt (.+)$",
+   "now {1}"
+  ],
+  [
+   "^(.+) oder (.+)$",
+   "{1} or {2}"
+  ],
+  [
+   "^(.+) fällig$",
+   "{1} due"
+  ],
+  [
+   "^(.+) ist offen$",
+   "{1} is open"
+  ],
+  [
+   "^(.+) nachfüllen$",
+   "Refill {1}"
+  ],
+  [
+   "^Alle (\\d+) Updates jetzt installieren\\?$",
+   "Install all {1} updates now?"
+  ],
+  [
+   "^(\\d+) Tage$",
+   "{1} days"
+  ],
+  [
+   "^(\\d+) Tag$",
+   "{1} day"
+  ],
+  [
+   "^(\\d+) Woche$",
+   "{1} week"
+  ],
+  [
+   "^(\\d+) Wochen$",
+   "{1} weeks"
+  ],
+  [
+   "^Nächstes (.+)$",
+   "Next {1}"
+  ],
+  [
+   "^Als Nächstes: (.+)$",
+   "Up next: {1}"
+  ],
+  [
+   "^Räume unterschiedlich · Ø (.+)$",
+   "Rooms differ · avg {1}"
+  ],
+  [
+   "^(.+) · heute Abend raus$",
+   "{1} · put out tonight"
+  ],
+  [
+   "^(.+) · keine Leistung$",
+   "{1} · no power"
+  ],
+  [
+   "^(.+) · lädt$",
+   "{1} · charging"
+  ],
+  [
+   "^Aus · (.+)$",
+   "Off · {1}"
+  ],
+  [
+   "^An · (.+)$",
+   "On · {1}"
+  ],
+  [
+   "^Über (.+)$",
+   "Over {1}"
+  ],
+  [
+   "^bis (.+)$",
+   "until {1}"
+  ],
+  [
+   "^seit (.+)$",
+   "since {1}"
+  ],
+  [
+   "^(\\d+) übersprungen$",
+   "{1} skipped"
+  ],
+  [
+   "^Online seit (.+)$",
+   "Online for {1}"
+  ],
+  [
+   "^(.+) · (\\d+) Stunden$",
+   "{1} · {2} hours"
+  ],
+  [
+   "^(.+) · (\\d+) Tage$",
+   "{1} · {2} days"
+  ],
+  [
+   "^(\\d+) ?% Luftfeuchtigkeit$",
+   "{1}% humidity"
+  ],
+  [
+   "^Aktuell keine NINA-Meldungen für (.+)$",
+   "No NINA alerts for {1} right now"
+  ],
+  [
+   "^Einspeisung (.+)$",
+   "Feed-in {1}"
+  ],
+  [
+   "^(\\d+) Kameras offline$",
+   "{1} cameras offline"
+  ],
+  [
+   "^(\\d+) Schlösser offline$",
+   "{1} locks offline"
+  ],
+  [
+   "^(\\d+) Tore offen$",
+   "{1} gates open"
+  ],
+  [
+   "^(.+) ausgeschaltet$",
+   "{1} turned off"
+  ],
+  [
+   "^(.+) ausgelöst$",
+   "{1} triggered"
+  ],
+  [
+   "^Vor (\\d+) Min\\.$",
+   "{1} min ago"
+  ],
+  [
+   "^Vor (\\d+) Std\\.$",
+   "{1} h ago"
+  ],
+  [
+   "^Vor (\\d+) T\\.$",
+   "{1} d ago"
+  ],
+  [
+   "^Vor (\\d+) Tagen$",
+   "{1} days ago"
+  ],
+  [
+   "^Vor 1 Tag$",
+   "1 day ago"
+  ],
+  [
+   "^Vor (\\d+) Minuten$",
+   "{1} minutes ago"
+  ],
+  [
+   "^Vor (\\d+) Stunden$",
+   "{1} hours ago"
+  ],
+  [
+   "^Seit (\\d+) Min\\.$",
+   "For {1} min"
+  ],
+  [
+   "^Seit (\\d+) Std\\.$",
+   "For {1} h"
+  ],
+  [
+   "^Seit (\\d+) T\\.$",
+   "For {1} d"
+  ],
+  [
+   "^Seit (.+)$",
+   "Since {1}"
+  ],
+  [
+   "^(\\d+) Türen offen$",
+   "{1} doors open"
+  ],
+  [
+   "^(\\d+) Fenster offen$",
+   "{1} windows open"
+  ],
+  [
+   "^(\\d+) Fenster gekippt$",
+   "{1} windows tilted"
+  ],
+  [
+   "^(\\d+) Türen gekippt$",
+   "{1} doors tilted"
+  ],
+  [
+   "^(\\d+) % aus Solar und Akku · heute (.+)$",
+   "{1} % from solar and battery · today {2}"
+  ],
+  [
+   "^(\\d+) % aus Solar und Akku$",
+   "{1} % from solar and battery"
+  ],
+  [
+   "^Einspeisung · (\\d+) % aus Solar und Akku · heute (.+)$",
+   "Feed-in · {1} % from solar and battery · today {2}"
+  ],
+  [
+   "^Einspeisung · heute (.+)$",
+   "Feed-in · today {1}"
+  ],
+  [
+   "^heute (.+)$",
+   "today {1}"
+  ],
+  [
+   "^Solarbank-Fehler (.+)$",
+   "Solarbank error {1}"
+  ],
+  [
+   "^(.+) gespeichert$",
+   "{1} stored"
+  ],
+  [
+   "^Modul (\\d+)$",
+   "Module {1}"
+  ],
+  [
+   "^(\\d+) Clients$",
+   "{1} clients"
+  ],
+  [
+   "^Gesamt (.+) kWh$",
+   "Total {1} kWh"
+  ],
+  [
+   "^(\\d+) Batterien schwach$",
+   "{1} batteries low"
+  ],
+  [
+   "^Am niedrigsten: (.+) (\\d+) %$",
+   "Lowest: {1} {2} %"
+  ],
+  [
+   "^(\\d+) von (\\d+) online$",
+   "{1} of {2} online"
+  ],
+  [
+   "^Bewegung vor (\\d+) Min\\.$",
+   "Motion {1} min ago"
+  ],
+  [
+   "^Bewegung vor (\\d+) Std\\.$",
+   "Motion {1} h ago"
+  ],
+  [
+   "^Bewegung vor (\\d+) T\\.$",
+   "Motion {1} d ago"
+  ],
+  [
+   "^Bewegung gerade eben$",
+   "Motion just now"
+  ],
+  [
+   "^Neu: (.+) · KI: Nicht geprüft$",
+   "New: {1} · AI: not checked"
+  ],
+  [
+   "^Neu: (.+) · KI: Unklar$",
+   "New: {1} · AI: unclear"
+  ],
+  [
+   "^Neu: (.+) · KI: KI prüft …$",
+   "New: {1} · AI: checking …"
+  ],
+  [
+   "^Neu: (.+) · $",
+   "New: {1} · "
+  ],
+  [
+   "^Neu: (.+)$",
+   "New: {1}",
+   "^(\\d+) Termine heute$",
+   "{1} events today"
+  ],
+  [
+   "^Reichweite (\\d[\\d.,]*)$",
+   "Range {1}"
+  ],
+  [
+   "^Nächste Inspektion in (.+) km$",
+   "Next inspection in {1} km"
+  ],
+  [
+   "^Nächste Inspektion (\\d{2}\\.\\d{2}\\.\\d{4})$",
+   "Next inspection {1}"
+  ],
+  [
+   "^(\\d+) % in (\\d+) Min\\.$",
+   "{1} % in {2} min"
+  ],
+  [
+   "^(Heute|Morgen|Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag): (.+)$",
+   "{1}: {2}"
+  ],
+  [
+   "^(.+) offen$",
+   "{1} open"
+  ]
+ ]
+}

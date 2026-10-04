@@ -1,0 +1,13 @@
+{
+ "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
+ "exact": {
+  "Casora": "Casora",
+  "Welcome to Casora": "Welcome to Casora",
+  "Leave Casora?": "Leave Casora?",
+  "every Casora tile is one": "every Casora tile is one",
+  "provides card_mod, which Casora's templates use throughout": "provides card_mod, which Casora's templates use throughout",
+  "Cards Casora does not manage. They sit below the tiles, exactly as": "Cards Casora does not manage. They sit below the tiles, exactly as",
+  "Never yet": "Never"
+ },
+ "patterns": []
+}

@@ -1,0 +1,242 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Casora",
+        "description": "Fügt das Casora-Einstellungsfenster zur Seitenleiste hinzu."
+      }
+    },
+    "abort": {
+      "already_configured": "Casora ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Casora – Einstellungen",
+        "description": "Leere Felder wählt Casora selbst: die Standard-KI aus Einstellungen → KI-Aufgaben und Außensensoren über ihren Namen.",
+        "data": {
+          "ai_task_entity": "KI für Coaches, Kamera und Pflanzen",
+          "ai_task_web_entity": "KI mit Websuche (Update-Analyse, Rezept)",
+          "outdoor_temperature": "Außentemperatur",
+          "outdoor_humidity": "Außenfeuchte",
+          "price_kwh": "Strompreis",
+          "ki_hinweise": "Hinweise für die KI",
+          "rezept_liste": "Einkaufsliste für die Zutaten (Rezept der Woche)",
+          "ki_plan_energie": "Energie-Coach automatisch",
+          "ki_plan_heizung": "Heizungs-Coach automatisch",
+          "ki_plan_lueftung": "Lüftungs-Coach automatisch",
+          "ki_plan_rezept": "Rezept der Woche automatisch",
+          "ki_plan_update": "Update-Check",
+          "lueften_push": "Lüften-Hinweise per Push an",
+          "lueften_personen": "Lüften nur melden, wenn zuhause",
+          "beta_updates": "Beta-Versionen"
+        },
+        "data_description": {
+          "ki_hinweise": "Wird jeder Auswertung mitgegeben, z. B. „Fenster im Schlafzimmer stehen bewusst auf Kipp.“",
+          "ki_plan_energie": "Automatisch: sonntags 18 Uhr. Eigene Zeit z. B. „sun 18:00“ (Wochentag englisch, mon bis sun).",
+          "ki_plan_heizung": "Automatisch: montags 7 Uhr, nur in der Heizsaison.",
+          "ki_plan_lueftung": "Automatisch: samstags 10 Uhr.",
+          "ki_plan_rezept": "Automatisch: montags 6 Uhr.",
+          "ki_plan_update": "Täglich: einmal am Tag. Aus: keine KI-Einschätzung im Update-Popup.",
+          "lueften_push": "„Jetzt lüften“ (7–22 Uhr), „Fenster schließen“ (7–23 Uhr) nach 10 Min., CO₂ über 2500 ppm sofort. Leer = keine Push-Meldungen.",
+          "lueften_personen": "„Jetzt lüften“ nur, wenn eine dieser Personen zuhause ist. Leer = irgendjemand.",
+          "beta_updates": "Neue Funktionen früher testen. Betas können Fehler haben. Mit HACS schaltest du Betas in HACS ein."
+        }
+      }
+    },
+    "error": {
+      "invalid_plan": "Ungültige Zeit. Erlaubt: Aus, Automatisch oder z. B. „sun 18:00“.",
+      "invalid": "Ungültige Eingabe."
+    }
+  },
+  "selector": {
+    "ki_plan": {
+      "options": {
+        "off": "Aus",
+        "auto": "Automatisch"
+      }
+    },
+    "ki_plan_update": {
+      "options": {
+        "off": "Aus",
+        "daily": "Täglich",
+        "manual": "Nur auf Knopfdruck"
+      }
+    }
+  },
+  "services": {
+    "energie_coach": {
+      "name": "Energie-Coach",
+      "description": "Wertet die letzte Woche aus dem Energie-Dashboard per KI aus.",
+      "fields": {}
+    },
+    "heizungs_coach": {
+      "name": "Heizungs-Coach",
+      "description": "Wertet Heizdauer, Raum- und Außentemperatur der letzten Woche per KI aus.",
+      "fields": {
+        "nur_heizsaison": {
+          "name": "Nur in der Heizsaison",
+          "description": "Nur in der Heizsaison"
+        }
+      }
+    },
+    "lueftungs_coach": {
+      "name": "Lüftungs-Coach",
+      "description": "Wertet Feuchte, CO₂ und Fensteröffnungen der letzten Woche per KI aus.",
+      "fields": {}
+    },
+    "kamera_beschreiben": {
+      "name": "Kamerabild beschreiben",
+      "description": "Lässt die KI das aktuelle Kamerabild beschreiben.",
+      "fields": {
+        "entity_id": {
+          "name": "Entität",
+          "description": "Entität"
+        }
+      }
+    },
+    "pflanzen_doktor": {
+      "name": "Pflanzen-Doktor",
+      "description": "Pflegetipp für eine Pflanze aus 7 Tagen Messwerten.",
+      "fields": {
+        "plant": {
+          "name": "Pflanze",
+          "description": "Pflanze"
+        }
+      }
+    },
+    "aquarium_doktor": {
+      "name": "Aquarium-Doktor",
+      "description": "KI-Einschätzung eines Aquariums aus 7 Tagen Temperatur, Technik, Licht und Lecksensor.",
+      "fields": {
+        "temp": {
+          "name": "Temperaturfühler",
+          "description": "Wassertemperatur des Beckens"
+        },
+        "name": {
+          "name": "Name",
+          "description": "Name des Beckens"
+        },
+        "devices": {
+          "name": "Technik",
+          "description": "Liste der Geräte: label, entity, power"
+        },
+        "light": {
+          "name": "Licht",
+          "description": "Beckenlicht"
+        },
+        "leak": {
+          "name": "Lecksensor",
+          "description": "Lecksensor am Becken"
+        }
+      }
+    },
+    "ebike_check": {
+      "name": "Rad-Check",
+      "description": "KI-Einschätzung des E-Bikes: Service, Verschleiß nach Kilometern und Akku-Pflege.",
+      "fields": {
+        "entities": {
+          "name": "Entitäten",
+          "description": "Entitäten des Rads"
+        },
+        "name": {
+          "name": "Name",
+          "description": "Name des Rads"
+        }
+      }
+    },
+    "update_pruefen": {
+      "name": "Update per KI prüfen",
+      "description": "Prüft Release-Notes anstehender Updates gegen dieses System.",
+      "fields": {
+        "entity_id": {
+          "name": "Entität",
+          "description": "Entität"
+        }
+      }
+    },
+    "update_bestaetigen": {
+      "name": "KI-Check bestätigen",
+      "description": "Gibt „Aktualisieren“ nach gelesener Warnung frei.",
+      "fields": {
+        "entity_id": {
+          "name": "Entität",
+          "description": "Entität"
+        }
+      }
+    },
+    "rezept_neu": {
+      "name": "Neue Rezept-Idee",
+      "description": "Lässt die KI ein Rezept der Woche vorschlagen.",
+      "fields": {}
+    },
+    "rezept_auf_liste": {
+      "name": "Zutaten auf Einkaufsliste",
+      "description": "Setzt die Zutaten der Rezeptidee auf die Einkaufsliste.",
+      "fields": {}
+    },
+    "umstellen": {
+      "name": "Auf Casora-Namen umstellen",
+      "description": "Stellt ältere Dashboards auf Casora-Namen um (mit Sicherung).",
+      "fields": {
+        "probelauf": {
+          "name": "Nur zählen, nichts ändern",
+          "description": "Nur zählen, nichts ändern"
+        }
+      }
+    },
+    "einrichten": {
+      "name": "Einrichten",
+      "description": "Legt fehlende Casora-Helfer und -Skripte an (passiert beim Start automatisch) und meldet, was fehlt."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "lueften": {
+        "name": "Casora Lüften"
+      },
+      "energie": {
+        "name": "Casora Energie-Coach"
+      },
+      "heizung": {
+        "name": "Casora Heizungs-Coach"
+      },
+      "lueftung": {
+        "name": "Casora Lüftungs-Coach"
+      },
+      "rezept": {
+        "name": "Casora Rezept der Woche"
+      },
+      "kamera": {
+        "name": "Casora Kamera KI"
+      },
+      "pflanzen": {
+        "name": "Casora Pflanzen KI"
+      },
+      "update": {
+        "name": "Casora Update KI-Analyse"
+      },
+      "aquarium": {
+        "name": "Casora Aquarium KI"
+      },
+      "ebike": {
+        "name": "Casora E-Bike KI"
+      }
+    },
+    "binary_sensor": {
+      "lueften_hinweis": {
+        "name": "Casora Lüften Hinweis"
+      },
+      "solar_tipp": {
+        "name": "Casora Solar-Tipp"
+      }
+    }
+  },
+  "issues": {
+    "restart_after_update": {
+      "title": "Casora {version} ist installiert – Neustart nötig",
+      "description": "Casora wurde auf Version {version} aktualisiert. Starte Home Assistant neu, damit die neue Fassung geladen wird."
+    }
+  }
+}

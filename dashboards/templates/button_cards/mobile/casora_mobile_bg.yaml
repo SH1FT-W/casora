@@ -1,0 +1,175 @@
+# Mobile Dashboard Background
+casora_mobile_bg:
+  template: [casora_shared]
+
+  show_icon: false
+  show_name: false
+  show_state: false
+  show_label: false
+  show_entity_picture: false
+  tap_action: {action: none}
+  hold_action: {action: none}
+  double_tap_action: {action: none}
+
+  variables:
+    preload_rooms: []
+    # The phone dashboard has ONE hero photo, not one per room - its rooms are
+    # sections of a single view. Same naming as a room card: a base name under
+    # /casora_assets/rooms/, with -night alongside it. Left null, the theme's own
+    # --casora-mobile-hero-img-day/-night win, which is how this shipped.
+    image: null
+    image_night: null
+
+  custom_fields:
+    bg_init: >
+      [[[
+        const ID = 'casora-mobile-hero-src';
+        let el = document.getElementById(ID);
+        const base = variables.image;
+        if (!base) {
+          if (el) el.remove();
+          return '';
+        }
+        const night = variables.image_night || (base + '-night');
+        const dir = '/casora_assets/rooms/';
+        const css = ':root{'
+          + '--casora-mobile-hero-img-day:url("' + dir + base + '.jpg") !important;'
+          + '--casora-mobile-hero-img-night:url("' + dir + night + '.jpg") !important;'
+          + '}';
+        if (!el) {
+          el = document.createElement('style');
+          el.id = ID;
+          document.head.appendChild(el);
+        }
+        if (el.textContent !== css) el.textContent = css;
+        return '';
+      ]]]
+
+  styles:
+    card:
+      - box-shadow: "none !important"
+      - border-radius: "0 !important"
+      - "--hero-img-scale": "1.0"
+      - "--hero-img-scale-mobile": "1.0"
+      - "--hero-img-scale-current": "1.0"
+      - "--hero-img-blur-current": "0px"
+      - "--casora-safe-top": "env(safe-area-inset-top, 0px)"
+      - "--casora-hero-overscan": "var(--casora-mobile-hero-overscan, calc(3 * var(--casora-mobile-hero-blur, 2px)))"
+      - background-color: "var(--casora-mobile-hero-floor, #524f4d) !important"
+      - background-image: "none !important"
+
+  extra_styles: |
+    /* LAYER 2 - the photo, uniformly blurred */
+    :host ha-card::after {
+      content: "" !important;
+      inset:
+        calc(-1 * var(--casora-hero-overscan))
+        calc(-1 * var(--casora-hero-overscan))
+        var(--casora-hero-overscan) !important;
+      z-index: -10 !important;
+      pointer-events: none !important;
+      background-color: transparent !important;
+      background-image: var(--casora-mobile-hero-img) !important;
+      background-size:
+        auto calc(var(--casora-mobile-hero-height, 28%) + var(--casora-safe-top)
+                  + var(--casora-hero-overscan)) !important;
+      background-position:
+        var(--casora-mobile-hero-x, 50%) var(--casora-mobile-hero-y, 0%) !important;
+      background-repeat: no-repeat !important;
+      filter:
+        blur(var(--casora-mobile-hero-blur, 2px))
+        contrast(var(--casora-mobile-hero-photo-contrast, 0.90))
+        saturate(var(--casora-mobile-hero-photo-saturate, 0.94))
+        brightness(var(--casora-mobile-hero-photo-brightness, 1.05)) !important;
+      transform: none !important;
+      animation: none !important;
+      -webkit-mask-image: none !important;
+      mask-image: none !important;
+    }
+
+    /* LANDSCAPE */
+    @media (orientation: landscape) and (max-height: 500px) {
+      :host ha-card::after {
+        background-size: 100% auto !important;
+      }
+      :host ha-card {
+        --casora-mobile-hero-fade-start:
+          var(--casora-mobile-hero-fade-start-landscape, 76%);
+        --casora-mobile-hero-p-handoff:
+          var(--casora-mobile-hero-p-handoff-landscape, 96%);
+        --casora-mobile-hero-p-upper:
+          var(--casora-mobile-hero-p-upper-landscape, 97%);
+        --casora-mobile-hero-p-mid:
+          var(--casora-mobile-hero-p-mid-landscape, 98%);
+        --casora-mobile-hero-p-lower:
+          var(--casora-mobile-hero-p-lower-landscape, 99%);
+        --casora-mobile-hero-wash-mid:
+          var(--casora-mobile-hero-wash-mid-landscape, 30%);
+        --casora-mobile-hero-wash-end:
+          var(--casora-mobile-hero-wash-end-landscape, 58%);
+        --casora-mobile-hero-mesh-a:
+          var(--casora-mobile-hero-mesh-a-landscape, transparent);
+        --casora-mobile-hero-mesh-b:
+          var(--casora-mobile-hero-mesh-b-landscape, transparent);
+      }
+    }
+
+    /* LAYER 3 - wash, mesh and the color gradient */
+    :host ha-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -9;
+      pointer-events: none;
+      /* casora_shared's grain layer is this same pseudo-element; without these
+         resets its overlay blend and 0.16 opacity erase the whole gradient. */
+      mix-blend-mode: normal !important;
+      opacity: 1 !important;
+      border-radius: 0 !important;
+      background-image:
+        /* Wash */
+        linear-gradient(
+          to bottom,
+          var(--casora-mobile-hero-tint-top, rgba(28,24,20,0.34)) 0%,
+          var(--casora-mobile-hero-tint-bot, rgba(28,24,20,0.12))
+            calc(var(--casora-mobile-hero-wash-mid, 27%) + var(--casora-safe-top)),
+          transparent
+            calc(var(--casora-mobile-hero-wash-end, 70%) + var(--casora-safe-top))),
+        /* Mesh - derived from the photo by casora-core.js */
+        radial-gradient(
+          var(--casora-mobile-hero-mesh-a-size, 120% 46%) at
+            var(--casora-mobile-hero-mesh-a-pos, 18% 58%),
+          var(--casora-mobile-hero-mesh-a, transparent) 0%,
+          transparent 72%),
+        radial-gradient(
+          var(--casora-mobile-hero-mesh-b-size, 130% 50%) at
+            var(--casora-mobile-hero-mesh-b-pos, 88% 92%),
+          var(--casora-mobile-hero-mesh-b, transparent) 0%,
+          transparent 70%),
+        /* The dissolve the photo hands over to. */
+        linear-gradient(
+          var(--casora-mobile-hero-angle, 180deg),
+          transparent
+            calc(var(--casora-mobile-hero-fade-start, 12%) + var(--casora-safe-top)),
+          var(--casora-mobile-hero-c-handoff, #90857b)
+            calc(var(--casora-mobile-hero-p-handoff, 30%) + var(--casora-safe-top)),
+          var(--casora-mobile-hero-c-upper, #807870)
+            calc(var(--casora-mobile-hero-p-upper, 55%) + var(--casora-safe-top)),
+          var(--casora-mobile-hero-c-mid, #706a64)
+            calc(var(--casora-mobile-hero-p-mid, 67%) + var(--casora-safe-top)),
+          var(--casora-mobile-hero-c-lower, #615d59)
+            calc(var(--casora-mobile-hero-p-lower, 80%) + var(--casora-safe-top)),
+          var(--casora-mobile-hero-c-base, #524f4d)
+            calc(var(--casora-mobile-hero-p-base, 100%) + var(--casora-safe-top)));
+      background-size:
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        100% 100%;
+      background-position:
+        0 0,
+        0 0,
+        0 0,
+        0 0;
+      background-repeat: no-repeat;
+    }

@@ -1,0 +1,201 @@
+casora_now_playing_header:
+  template:
+    - casora_default
+
+  show_icon: false
+  show_name: false
+  show_state: false
+  show_label: false
+
+  variables:
+    open: 0
+    minimized_entity: input_boolean.casora_now_playing_minimized
+    playing: false
+
+    # Records the tap's intent in the CAPTURE phase, before button-card's own
+    # handler calls the service, and kicks the shell so it re-renders on this
+    # frame rather than waiting for the helper. A force_eval wrapper is a
+    # variables feature: under custom_fields button-card writes to force_eval
+    # and the frozen Lovelace config throws.
+    opt_init:
+      force_eval: true
+      value: |
+        [[[
+          if (!this._npOptWired) {
+            this._npOptWired = true;
+            const el = this;
+            el.addEventListener('pointerdown', () => {
+              try {
+                const st = states[variables.minimized_entity];
+                window.casoraIntend?.('np-min', st?.state === 'on' ? 0 : 1);
+                // Both, or the fill and the tiles run a round trip apart.
+                window.casoraKick?.(el);
+                (window._casoraNPKick || [])[0]?.();
+              } catch (e) {}
+            }, { capture: true });
+          }
+          return '';
+        ]]]
+
+  tap_action:
+    haptic: light
+    action: call-service
+    service: input_boolean.toggle
+    service_data:
+      entity_id: '[[[ return variables.minimized_entity; ]]]'
+  hold_action:
+    action: none
+  double_tap_action:
+    action: none
+
+  styles:
+    card:
+      - --casora-card-hover-shadow: none
+      - --casora-card-hover-filter: none
+      - --np-head-open: '[[[ return variables.open ? 1 : 0; ]]]'
+      - --np-head-min: >
+          [[[
+            const st = states[variables.minimized_entity];
+            const real = st?.state === 'on' ? 1 : 0;
+            return window.casoraOptimistic
+              ? window.casoraOptimistic('np-min', st, real) : real;
+          ]]]
+      - --np-head-playing: >
+          [[[
+            const run = variables.playing ? 'running' : 'paused';
+            try { this.style.setProperty('--np-head-playing', run); } catch (e) {}
+            return run;
+          ]]]
+      - --np-head-anim: >
+          [[[
+            const anim = variables.playing ? 'np-wave-bounce' : 'none';
+            try { this.style.setProperty('--np-head-anim', anim); } catch (e) {}
+            return anim;
+          ]]]
+      - background: none !important
+      - backdrop-filter: none !important
+      - -webkit-backdrop-filter: none !important
+      - box-shadow: none !important
+      - border: none !important
+      - padding: 0 !important
+      - margin: 0 !important
+      - width: max-content !important
+      - justify-self: end !important
+      - cursor: pointer
+
+    grid:
+      - display: flex !important
+      - flex-direction: row !important
+      - align-items: center !important
+      - justify-content: flex-end !important
+      - gap: 10px !important
+
+  custom_fields:
+    caret: >
+      [[[
+        return `<div class="np-head-wave">
+          <span class="np-wave-bar"></span>
+          <span class="np-wave-bar"></span>
+          <span class="np-wave-bar"></span>
+          <span class="np-wave-bar"></span>
+          <span class="np-wave-bar"></span>
+        </div>`;
+      ]]]
+
+  extra_styles: |
+    :host{
+      display: block;
+      overflow: visible;
+      --casora-card-hover-shadow: none;
+      --casora-card-hover-filter: none;
+    }
+
+    ha-ripple, mwc-ripple { display: none !important; }
+
+    ha-card.button-card-main,
+    #container,
+    .button-card-content,
+    #customfields,
+    #caret{
+      overflow: visible !important;
+    }
+
+    #caret.ellipsis{
+      overflow: visible !important;
+      text-overflow: clip !important;
+    }
+
+    .np-head-wave{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: calc(var(--np-wave-u, 8px) * 0.34);
+      flex: none;
+      /* MUST match casora_menu_icon's settings button exactly - same size, same
+          fill, no rim and no backdrop-filter. Flat, the way the reference draws
+          them; the glass rim read as a raised bubble at this diameter and the
+          two buttons stopped looking like one control set. */
+      width: 34px;
+      height: 34px;
+      box-sizing: border-box;
+      border-radius: 50%;
+      /* Inverts when the panel it controls is open, the same rule the settings
+         button follows: fill says active, geometry never changes.
+         --np-head-min is 1 while collapsed, 0 while expanded. */
+      background: color-mix(in srgb, #fff calc((1 - var(--np-head-min, 0)) * 100%),
+                            var(--casora-chrome-fill, rgba(0,0,0,0.40)));
+      /* No backdrop-filter, deliberately. A translucent fill plus a blur renders
+         differently depending on the backdrop root its ancestors create, and
+         this sits inside #now_playing while the settings button sits straight
+         over the photo - two identical declarations, two different results. A
+         flat fill cannot disagree. MUST match casora_settings_button. */
+      /* Bars sized from their own unit so they clear the rim as they animate. */
+      --np-wave-u: calc(var(--casora-u, 10px) * 0.66);
+      opacity: var(--np-head-open, 0);
+      transform: scale(calc(0.4 + (0.6 * var(--np-head-open, 0))));
+      transform-origin: center;
+      transition:
+        opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1),
+        background-color 0.34s cubic-bezier(0.32, 0.72, 0, 1),
+        transform 0.46s cubic-bezier(0.34, 1.42, 0.5, 1);
+      transition-delay: calc((1 - var(--np-head-open, 0)) * 0.42s);
+    }
+
+    .np-wave-bar{
+      /* One width in both states. It used to vary with --np-head-min - first
+         thinner when inverted, then thicker once I compensated - so it was never
+         the same bar twice. This is the inverted width, kept for both. */
+      width: calc(var(--np-wave-u, 8px) * 0.25 + 0.7px);
+      height: calc(var(--np-wave-u, 8px) * 1.2);
+      border-radius: 1px;
+      transform-origin: center;
+      background: color-mix(in srgb, #1c1c20 calc((1 - var(--np-head-min, 0)) * 100%),
+                            rgba(255,255,255,0.90));
+      transition: width 0.34s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+      animation: np-wave-bounce 1.53s ease-in-out infinite;
+      /* Stopped, not paused. animation-play-state froze each bar wherever its
+         own cycle had reached - every bar has a different duration and delay -
+         so a stopped waveform sometimes held all five near scaleY(0.42) and the
+         short ones shrank to a few px, reading as the settings button's dots.
+         With no animation the bars sit at the staggered heights below, which is
+         unmistakably an equaliser. */
+      animation-name: var(--np-head-anim, none);
+    }
+
+    .np-wave-bar:nth-child(1){ height: calc(var(--np-wave-u, 8px) * 0.8); animation-duration: 1.19s;  animation-delay: 0.05s; }
+    .np-wave-bar:nth-child(2){ height: calc(var(--np-wave-u, 8px) * 1.3); animation-duration: 1.615s; animation-delay: 0.15s; }
+    .np-wave-bar:nth-child(3){ height: calc(var(--np-wave-u, 8px) * 1.7); animation-duration: 1.02s;  animation-delay: 0s;    }
+    .np-wave-bar:nth-child(4){ height: calc(var(--np-wave-u, 8px) * 1.2); animation-duration: 1.785s; animation-delay: 0.2s;  }
+    .np-wave-bar:nth-child(5){ height: calc(var(--np-wave-u, 8px) * 0.8); animation-duration: 1.36s;  animation-delay: 0.1s;  }
+
+    /* Rests at full height at both ends so it leaves and rejoins the stopped
+       pose without a jump, and a frozen frame can never be the short one. */
+    @keyframes np-wave-bounce{
+      0%, 100% { transform: scaleY(1); }
+      50%      { transform: scaleY(0.42); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .np-head-wave, .np-wave-bar{ transition: none; animation: none !important; }
+      .np-head-wave{ transform: none; }
+    }

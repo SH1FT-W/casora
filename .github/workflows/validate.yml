@@ -1,0 +1,31 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  hassfest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: home-assistant/actions/hassfest@master
+
+  # Studio → „Updates“ liest die mitgelieferte Kopie der CHANGELOG (tools/sync-changelog.py).
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/sync-changelog.py --check
+
+  # HACS-Prüfung nur manuell: private Repos kann sie nicht auslesen,
+  # Beschreibung/Topics/Lizenz braucht es erst beim Veröffentlichen.
+  hacs:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hacs/action@main
+        with:
+          category: integration

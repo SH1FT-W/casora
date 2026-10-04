@@ -1,0 +1,39 @@
+{
+ "eigene": [
+  "casora_actions_active_entity",
+  "casora_actions_overlay",
+  "casora_actions_overlay_toggle",
+  "casora_dashboard_redirect",
+  "casora_expanded_row",
+  "casora_light_smart_toggle",
+  "casora_lock_overlay",
+  "casora_mobile_filter",
+  "casora_mobile_navigation",
+  "casora_motion_badges",
+  "casora_notifications_read",
+  "casora_now_playing_minimized",
+  "casora_now_playing_pinned",
+  "casora_restart_confirm_1",
+  "casora_restart_confirm_2",
+  "casora_restart_done_1",
+  "casora_restart_done_2",
+  "casora_restart_toggle",
+  "casora_thermostat_active_entity",
+  "casora_thermostat_mode",
+  "casora_thermostat_overlay",
+  "casora_thermostat_overlay_toggle",
+  "casora_thermostat_target_temperature",
+  "casora_aquarium_ki",
+  "casora_ebike_ki",
+  "casora_energie_coach",
+  "casora_heizungs_coach",
+  "casora_kamera_ki",
+  "casora_lueftungs_coach",
+  "casora_pflanzen_ki",
+  "casora_rezept_der_woche",
+  "casora_update_ki_analyse"
+ ],
+ "praefixe": [
+  "casora_motion_"
+ ]
+}

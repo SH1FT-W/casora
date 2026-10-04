@@ -1,0 +1,23 @@
+casora_default:
+  variables:
+    casora_icon_url_guard:
+      force_eval: true
+      value: |
+        [[[
+          if (typeof window.casoraIconUrl !== 'function') {
+            window.casoraIconUrl = (name) =>
+              (window.CASORA_ICONS && window.CASORA_ICONS[name]) ||
+              `/casora_assets/icons/${name}.svg`;
+          }
+          return true;
+        ]]]
+
+  styles:
+    card:
+      - "--button-card-ripple-color": transparent
+      - "-webkit-tap-highlight-color": transparent
+      - position: relative
+      - border-radius: 0
+      - padding: 0
+      - margin: 0
+      - box-shadow: var(--ha-card-box-shadow)

@@ -1,0 +1,290 @@
+# Helfer und Skripte, die Casoras Karten brauchen.
+# Die Integration legt sie beim Start selbst an (helfer.py), wenn es sie noch
+# nicht gibt – als normale UI-Helfer bzw. Einträge in scripts.yaml.
+# Früher: packages/casora_helpers.yaml. Wer das Paket noch hat, behält es;
+# vorhandene Entitäten werden nie angefasst.
+
+
+input_boolean:
+  casora_dashboard_redirect:
+    name: Casora Dashboard Redirect
+    initial: on
+
+  casora_now_playing_minimized:
+    name: Casora Now Playing Minimized
+    initial: off
+
+  casora_thermostat_overlay:
+    name: Thermostat Overlay
+    initial: off
+
+  casora_actions_overlay:
+    name: Entity Actions Overlay
+    initial: off
+
+  casora_mobile_navigation:
+    name: Mobile Navigation
+    initial: off
+
+  casora_lock_overlay:
+    name: Lock Overlay
+    initial: off
+
+  casora_motion_badges:
+    name: Motion Badges
+    initial: on
+
+  casora_restart_confirm_1:
+    name: Network Restart Confirm 1
+    initial: off
+
+  casora_restart_confirm_2:
+    name: Network Restart Confirm 2
+    initial: off
+
+  casora_restart_done_1:
+    name: Network Restart Done 1
+    initial: off
+
+  casora_restart_done_2:
+    name: Network Restart Done 2
+    initial: off
+
+input_text:
+  # Which Now Playing source is pinned to the primary slot
+  casora_now_playing_pinned:
+    name: "Casora Now Playing - Pinned"
+    initial: ""
+    max: 32
+
+
+  casora_thermostat_active_entity:
+    name: "Casora Thermostat - Active Entity"
+    initial: ""
+
+  casora_actions_active_entity:
+    name: "Casora Entity Actions - Active Entity"
+    initial: ""
+
+input_datetime:
+  casora_notifications_read:
+    name: "Casora Notifications - Last Read"
+    has_date: true
+    has_time: true
+
+input_number:
+  # Einheit/Grenzen setzt helfer.py passend zum Einheitensystem (°C: 15–30, 0,5).
+  casora_thermostat_target_temperature:
+    name: Thermostat Target Temperature
+    min: 68
+    max: 75
+    step: 1
+    unit_of_measurement: "°F"
+    mode: slider
+
+# Mobile badge filters
+input_select:
+  casora_mobile_filter:
+    name: Mobile Dashboard Filter
+    options:
+      - all
+      - climate
+      - lights
+      - presence
+      - media
+      - security
+      - energy
+      - room_scenes
+    initial: all
+    # Raum-Einträge (room_…) ergänzt Casora Studio beim Speichern.
+
+  # Badges row
+  casora_expanded_row:
+    name: Expanded Badge Row
+    options:
+      - none
+      - climate
+      - presence
+      - media
+      - lights
+      - security
+      - energy
+      - scenes
+    initial: none
+
+  # Thermostat mode
+  casora_thermostat_mode:
+    name: Thermostat Mode
+    options:
+      - heat
+      - cool
+    initial: heat
+
+# Updates restart button
+script:
+  casora_restart_toggle:
+    alias: "Casora - Restart Toggle"
+    description: >
+      One-button handler: first tap enters confirm mode, second tap
+      restarts the device and shows a done state, tapping done dismisses it.
+    mode: single
+    fields:
+      button_entity:
+        required: true
+      helper_entity:
+        required: true
+      done_entity:
+        required: false
+    sequence:
+      - choose:
+          - conditions:
+              - "{{ done_entity | default('') != '' and is_state(done_entity | default('x'), 'on') }}"
+            sequence:
+              - service: input_boolean.turn_off
+                target:
+                  entity_id: "{{ done_entity }}"
+          - conditions:
+              - "{{ is_state(helper_entity, 'on') }}"
+            sequence:
+              - service: button.press
+                target:
+                  entity_id: "{{ button_entity }}"
+              - if:
+                  - "{{ done_entity | default('') != '' }}"
+                then:
+                  - service: input_boolean.turn_on
+                    target:
+                      entity_id: "{{ done_entity }}"
+              - service: input_boolean.turn_off
+                target:
+                  entity_id: "{{ helper_entity }}"
+        default:
+          - service: input_boolean.turn_on
+            target:
+              entity_id: "{{ helper_entity }}"
+
+  # Lights - smart toggle
+  casora_light_smart_toggle:
+    alias: "Casora - Smart Light Toggle"
+    description: >
+      Saves the current light state before turning off.
+      For light groups, snapshots each individual member so only
+      the lights that were on get restored (not the whole group).
+      Falls back to a plain turn_on if no saved state exists yet.
+    fields:
+      light_entity:
+        description: "Entity ID of the light or light group to toggle"
+        required: true
+        selector:
+          entity:
+            domain: light
+    mode: queued
+    max: 5
+    sequence:
+      - variables:
+          scene_id: "casora_restore_{{ light_entity | replace('.', '_') }}"
+          scene_entity: "scene.casora_restore_{{ light_entity | replace('.', '_') }}"
+      - choose:
+          # Light is ON → snapshot current state then turn off
+          - conditions:
+              - condition: template
+                value_template: "{{ states(light_entity) == 'on' }}"
+            sequence:
+              - service: scene.create
+                data:
+                  scene_id: "{{ scene_id }}"
+                  snapshot_entities: >-
+                    {% set m = state_attr(light_entity, 'entity_id') %}
+                    {% if m %}{{ m }}{% else %}{{ [light_entity] }}{% endif %}
+              - service: light.turn_off
+                continue_on_error: true
+                target:
+                  entity_id: "{{ light_entity }}"
+        # Light is OFF → restore snapshot if it exists, otherwise turn on normally
+        default:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: >-
+                      {{ scene_entity in (states.scene | map(attribute='entity_id') | list) }}
+                sequence:
+                  - service: scene.turn_on
+                    data:
+                      entity_id: "{{ scene_entity }}"
+            default:
+              - service: light.turn_on
+                target:
+                  entity_id: "{{ light_entity }}"
+
+  # Thermostat toggle
+  casora_thermostat_overlay_toggle:
+    alias: "Casora - Thermostat Overlay Toggle"
+    description: >
+      Debounced open/close/switch for the thermostat temperature controls
+      overlay. Tapping a card opens its controls; tapping the same card again
+      closes them; tapping a different card switches the overlay to that
+      card instead of stacking a second open card. mode: single means any
+      taps that arrive while this script is running (including the 400ms
+      cooldown) are silently dropped, preventing the rapid-fire queue buildup
+      that causes the animation to stutter.
+    mode: single
+    fields:
+      thermostat_entity_id:
+        description: entity_id of the thermostat card that was tapped
+        required: true
+    sequence:
+      - if:
+          - condition: state
+            entity_id: input_boolean.casora_thermostat_overlay
+            state: "on"
+          - condition: template
+            value_template: "{{ states('input_text.casora_thermostat_active_entity') == thermostat_entity_id }}"
+        then:
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.casora_thermostat_overlay
+        else:
+          - service: input_text.set_value
+            data:
+              entity_id: input_text.casora_thermostat_active_entity
+              value: "{{ thermostat_entity_id }}"
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.casora_thermostat_overlay
+      - delay:
+          milliseconds: 400
+
+  # Entity actions toggle
+  casora_actions_overlay_toggle:
+    alias: "Casora - Entity Actions Overlay Toggle"
+    description: >
+      Open/close/switch for the casora_entity_actions inline controls. Same
+      shape as the thermostat overlay: the boolean alone cannot say WHICH
+      card was tapped, so the companion input_text carries the entity and
+      every visibility gate checks both.
+    mode: single
+    fields:
+      actions_entity_id:
+        description: entity_id of the actions card that was tapped
+        required: true
+    sequence:
+      - if:
+          - condition: state
+            entity_id: input_boolean.casora_actions_overlay
+            state: "on"
+          - condition: template
+            value_template: "{{ states('input_text.casora_actions_active_entity') == actions_entity_id }}"
+        then:
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.casora_actions_overlay
+        else:
+          - service: input_text.set_value
+            data:
+              entity_id: input_text.casora_actions_active_entity
+              value: "{{ actions_entity_id }}"
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.casora_actions_overlay
+      - delay:
+          milliseconds: 400

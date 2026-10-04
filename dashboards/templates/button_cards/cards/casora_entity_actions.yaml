@@ -1,0 +1,513 @@
+
+casora_entity_actions:
+  template:
+    - casora_entity
+
+  variables:
+    # Every other Casora tile is domain-specific and names its own glyph. This
+    # one takes anything, so it derives one - unset, casora_entity resolves the
+    # icon to `default`, which draws a question mark. A card that sets its own
+    # `icon:` still wins: card variables override template variables.
+    # The panel's preview carries the same map, so the two agree.
+    icon: >
+      [[[
+        const dom = String(entity?.entity_id || '').split('.')[0];
+        return ({
+          light: 'light', switch: 'plug', input_boolean: 'plug',
+          fan: 'fan', climate: 'thermostat', humidifier: 'humidifier',
+          media_player: 'speaker', lock: 'lock-fill', cover: 'curtain-open',
+          vacuum: 'vacuum', script: 'scenes', scene: 'scenes',
+          automation: 'scenes', button: 'power_on', input_button: 'power_on',
+          binary_sensor: 'motion', remote: 'tv', water_heater: 'hot_water',
+          valve: 'curtain-open', siren: 'motion',
+        })[dom] || 'default';
+      ]]]
+    svg_path: /casora_assets/icons
+
+    # The compact phone tile puts the name in the top right corner, which is
+    # where the action glyphs go. casora-core's CASORA_TEMPLATE_SIZES carries the
+    # matching entry so casoraCardSize agrees from the RAW config, before
+    # button-card has merged this in.
+    # Mirrored in casora-core's CASORA_TEMPLATE_SIZES, which reads the RAW config.
+    size: large
+
+    # action_N_icon is deliberately EMPTY, not mdi:help-circle. renderIcon reads
+    # `iconRaw || the entity's own icon attribute || mdi:help-circle`, and a
+    # declared default is never falsy - so declaring the question mark here made
+    # both fallbacks dead code and every unset button drew a question mark.
+
+    # Shared overlay state. A bare input_boolean cannot say WHICH tile was
+    # tapped, so the companion input_text carries the entity and every gate
+    # checks both. See feedback_shared_overlay_needs_active_entity_guard.
+    actions_toggle_helper: input_boolean.casora_actions_overlay
+    actions_active_helper: input_text.casora_actions_active_entity
+
+    action_1_enabled: true
+    action_1_entity:
+    action_1_label:
+    action_1_icon:
+    action_1_action: more-info
+    action_1_navigation_path:
+    action_1_service:
+    action_1_service_data: {}
+
+    action_2_enabled: true
+    action_2_entity:
+    action_2_label:
+    action_2_icon:
+    action_2_action: more-info
+    action_2_navigation_path:
+    action_2_service:
+    action_2_service_data: {}
+
+  tap_action:
+    haptic: light
+    action: |
+      [[[
+        return window._casoraActions?.isOpen(variables, states, entity?.entity_id)
+          ? 'call-service' : 'more-info';
+      ]]]
+    service: script.turn_on
+    service_data:
+      entity_id: script.casora_actions_overlay_toggle
+      variables:
+        # Device-scoped, so the helper pair (one for the whole install) can only
+        # match the surface that was tapped. Safe to bake: this and the action
+        # above are evaluated in the same render, so if casora-core were missing
+        # the action would already be more-info and this would go unused.
+        actions_entity_id: |
+          [[[ return window._casoraActions?.openKey(entity?.entity_id) || entity?.entity_id; ]]]
+
+  hold_action:
+    action: none
+
+  double_tap_action:
+    action: none
+
+  styles:
+    card:
+      - padding: var(--casora-actions-pad)
+      - position: relative
+      - overflow: hidden !important
+
+    name:
+      - opacity: |
+          [[[
+            return window._casoraActions?.isOpen(variables, states, entity.entity_id) ? '0' : '1';
+          ]]]
+      - transition: opacity 0.18s ease
+
+    state:
+      - opacity: |
+          [[[
+            return window._casoraActions?.isOpen(variables, states, entity.entity_id) ? '0' : '1';
+          ]]]
+      - transition: opacity 0.18s ease
+
+    custom_fields:
+      more:
+        - display: |
+            [[[ return window._casoraActions?.any(variables) ? 'block' : 'none'; ]]]
+        - position: absolute
+        - z-index: 9
+        - overflow: hidden
+        - box-sizing: border-box
+        - padding: 0
+        - margin: 0
+        - border-radius: 50%
+        - top: |
+            [[[ return window._casoraActions?.moreGeom(variables, entity?.state)?.top || ''; ]]]
+        - right: |
+            [[[ return window._casoraActions?.moreGeom(variables, entity?.state)?.right || ''; ]]]
+        - width: |
+            [[[ return window._casoraActions?.moreGeom(variables, entity?.state)?.width || ''; ]]]
+        - height: |
+            [[[ return window._casoraActions?.moreGeom(variables, entity?.state)?.height || ''; ]]]
+        - background-size: |
+            [[[
+              return window._casoraActions?.isOpen(variables, states, entity?.entity_id)
+                ? '100% 100%' : '0% 0%';
+            ]]]
+        - transition-property: background-size, right, top
+        - transition-duration: 0.24s, var(--casora-actions-corner-shift, 0.26s), var(--casora-actions-corner-shift, 0.26s)
+        - transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1)
+      pill_1:
+        - display: |
+            [[[ return window._casoraActions?.enabled(variables, 1) ? 'block' : 'none'; ]]]
+        - position: absolute
+        - z-index: 8
+        - overflow: hidden
+        - box-sizing: border-box
+        - padding: 0
+        - margin: 0
+        - border-radius: var(--casora-actions-btn-radius)
+        - top: |
+            [[[ return window._casoraActions?.pillGeom(variables, 1)?.top || ''; ]]]
+        - right: |
+            [[[ return window._casoraActions?.pillGeom(variables, 1)?.right || ''; ]]]
+        - width: |
+            [[[ return window._casoraActions?.pillGeom(variables, 1)?.width || ''; ]]]
+        - height: |
+            [[[ return window._casoraActions?.pillGeom(variables, 1)?.height || ''; ]]]
+        - opacity: |
+            [[[
+              const m = window._casoraActions?.motion(variables, states, entity.entity_id, 1);
+              return m ? m.opacity : '1';
+            ]]]
+        - transform: |
+            [[[
+              const m = window._casoraActions?.motion(variables, states, entity.entity_id, 1);
+              return m ? m.transform : 'none';
+            ]]]
+        - pointer-events: |
+            [[[
+              const m = window._casoraActions?.motion(variables, states, entity.entity_id, 1);
+              return m ? m.pointerEvents : 'auto';
+            ]]]
+        - transition-property: opacity, transform
+        - transition-duration: |
+            [[[
+              const m = window._casoraActions?.motion(variables, states, entity.entity_id, 1);
+              if (!m) return '';
+              return [m.duration, m.duration].join(', ');
+            ]]]
+        - transition-timing-function: |
+            [[[
+              const m = window._casoraActions?.motion(variables, states, entity.entity_id, 1);
+              if (!m) return '';
+              return [m.easing, m.easing].join(', ');
+            ]]]
+        - transition-delay: |
+            [[[
+              const m = window._casoraActions?.motion(variables, states, entity.entity_id, 1);
+              if (!m) return '';
+              return [m.delay, m.delay].join(', ');
+            ]]]
+      pill_2:
+        - display: |
+            [[[ return window._casoraActions?.enabled(variables, 2) ? 'block' : 'none'; ]]]
+        - position: absolute
+        - z-index: 8
+        - overflow: hidden
+        - box-sizing: border-box
+        - padding: 0
+        - margin: 0
+        - border-radius: var(--casora-actions-btn-radius)
+        - top: |
+            [[[ return window._casoraActions?.pillGeom(variables, 2)?.top || ''; ]]]
+        - right: |
+            [[[ return window._casoraActions?.pillGeom(variables, 2)?.right || ''; ]]]
+        - width: |
+            [[[ return window._casoraActions?.pillGeom(variables, 2)?.width || ''; ]]]
+        - height: |
+            [[[ return window._casoraActions?.pillGeom(variables, 2)?.height || ''; ]]]
+        - opacity: |
+            [[[
+              const m = window._casoraActions?.motion(variables, states, entity.entity_id, 2);
+              return m ? m.opacity : '1';
+            ]]]
+        - transform: |
+            [[[
+              const m = window._casoraActions?.motion(variables, states, entity.entity_id, 2);
+              return m ? m.transform : 'none';
+            ]]]
+        - pointer-events: |
+            [[[
+              const m = window._casoraActions?.motion(variables, states, entity.entity_id, 2);
+              return m ? m.pointerEvents : 'auto';
+            ]]]
+        - transition-property: opacity, transform
+        - transition-duration: |
+            [[[
+              const m = window._casoraActions?.motion(variables, states, entity.entity_id, 2);
+              if (!m) return '';
+              return [m.duration, m.duration].join(', ');
+            ]]]
+        - transition-timing-function: |
+            [[[
+              const m = window._casoraActions?.motion(variables, states, entity.entity_id, 2);
+              if (!m) return '';
+              return [m.easing, m.easing].join(', ');
+            ]]]
+        - transition-delay: |
+            [[[
+              const m = window._casoraActions?.motion(variables, states, entity.entity_id, 2);
+              if (!m) return '';
+              return [m.delay, m.delay].join(', ');
+            ]]]
+
+  custom_fields:
+    more: |
+      [[[
+        void states[variables.actions_toggle_helper];
+        void states[variables.actions_active_helper];
+        const A = window._casoraActions;
+        if (!A) {
+          if (window._casoraCoreWaiters !== null) {
+            (window._casoraCoreWaiters = window._casoraCoreWaiters || new Set()).add(this);
+          }
+          return '';
+        }
+        A.bind(this, variables, hass);
+        return A.moreMarkup(variables, entity?.entity_id);
+      ]]]
+
+    pill_1: |
+      [[[
+        const A = window._casoraActions;
+        if (!A) return '';
+        A.bind(this, variables, hass);
+        const raw = this._config?.name;
+        const own = (typeof raw === 'string' && raw.indexOf('[[[') === -1)
+          ? raw : (entity?.attributes?.friendly_name || '');
+        return A.markup(variables, 1, states, own, hass);
+      ]]]
+
+    pill_2: |
+      [[[
+        const A = window._casoraActions;
+        if (!A) return '';
+        A.bind(this, variables, hass);
+        const raw = this._config?.name;
+        const own = (typeof raw === 'string' && raw.indexOf('[[[') === -1)
+          ? raw : (entity?.attributes?.friendly_name || '');
+        return A.markup(variables, 2, states, own, hass);
+      ]]]
+
+  extra_styles: |
+    :host {
+      --casora-actions-pad: var(--casora-entity-inner-pad-current, var(--casora-entity-inner-pad-desktop, 20px));
+      --casora-actions-btn-radius: 13px;
+      --casora-actions-icon-size: 23px;
+      --casora-actions-svg-size: 20px;
+      --casora-actions-corner-gap: 4px;
+      --casora-actions-more-size: 21px;
+      --casora-actions-more-offset: 16px;
+      --casora-actions-more-fill-r: 18px;
+      --casora-actions-corner-shift: 0.26s;
+      --casora-actions-pill-h: 40px;
+      --casora-actions-pill-gap: 8px;
+      --casora-actions-pill-bottom: var(--casora-actions-pad);
+      --casora-actions-label-size: 15px;
+      /* FIT_REF_PX in casora-core must equal this floor. */
+      --casora-actions-label-min: 12px;
+      --casora-actions-glyph-gap: 10px;
+      --casora-actions-label-gap: 12px;
+
+      --casora-actions-dur-in: 0.30s;
+      --casora-actions-dur-out: 0.14s;
+      --casora-actions-ease-in: cubic-bezier(0.32, 0.72, 0, 1);
+      --casora-actions-ease-out: cubic-bezier(0.4, 0, 0.7, 1);
+      --casora-actions-pill-scale: 0.94;
+      --casora-actions-pill-rise: 6px;
+
+      --casora-actions-press-more: 0.86;
+      --casora-actions-press-pill: 0.97;
+      --casora-actions-press-down: 0.12s;
+      --casora-actions-press-up: 0.28s;
+      --casora-actions-ease-press-down: cubic-bezier(0.2, 0, 0.4, 1);
+      --casora-actions-ease-press-up: cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    /* On ha-card, not :host: --casora-icon-circle-size lives here and a :host
+       var cannot read one from a descendant. */
+    ha-card {
+      --casora-actions-hit: var(--casora-icon-circle-size, 40px);
+      /* The button is one fixed size everywhere; only its distance from the
+         corner follows the tile's own padding. --more-offset is half the dots
+         plus the gap that keeps the fill off the edge. */
+      --casora-actions-more-inset: calc(
+        var(--casora-actions-hit) / 2 - var(--casora-actions-more-offset));
+      --casora-actions-more-fill: radial-gradient(circle closest-side,
+        var(--casora-actions-pill-bg) var(--casora-actions-more-fill-r),
+        transparent calc(var(--casora-actions-more-fill-r) + 0.5px));
+      --casora-actions-pill-pad-start: calc(
+        (var(--casora-actions-hit) - var(--casora-actions-icon-size)) / 2);
+      --casora-side-lit: var(--casora-active-overlay-opacity, 0);
+      --casora-actions-ink: color-mix(in srgb, #000 calc(var(--casora-side-lit) * 100%), #fff);
+      /* Matches the tile toggle, whose track is rgba(0,0,0,0.75) under
+         --casora-toggle-opacity. That 0.75 is the theme's track-fill alpha. */
+      --casora-actions-dots-opacity: calc(0.75 * var(--casora-toggle-opacity, 0.8));
+      --casora-actions-pill-bg-on: color-mix(in srgb,
+        rgba(0, 0, 0, 0.20) calc(var(--casora-side-lit) * 100%),
+        rgba(255, 255, 255, 0.26));
+      --casora-actions-pill-bg: color-mix(in srgb,
+        rgba(0, 0, 0, 0.10) calc(var(--casora-side-lit) * 100%),
+        rgba(255, 255, 255, 0.13));
+      --casora-actions-pill-bg-hover: color-mix(in srgb,
+        rgba(0, 0, 0, 0.16) calc(var(--casora-side-lit) * 100%),
+        rgba(255, 255, 255, 0.19));
+    }
+
+    @media (max-width: 767px), (max-height: 600px) {
+      .casora-act-pill .casora-act-glyphbox { display: none; }
+      .casora-act-pill {
+        gap: 0;
+        --casora-actions-label-inset: 0px;
+        --casora-actions-pill-pad-start: 14px;
+      }
+
+      :host {
+        --casora-actions-btn-radius: 12px;
+        --casora-actions-icon-size: 22px;
+        --casora-actions-svg-size: 19px;
+        --casora-actions-corner-gap: 2px;
+        --casora-actions-pill-h: 30px;
+        --casora-actions-pill-gap: 6px;
+        --casora-actions-pill-bottom: 10px;
+        --casora-actions-label-size: 14px;
+      }
+    }
+
+    /* The press lives one level in: the pill wrapper's transform belongs to
+       the cross-fade. */
+    .casora-act-hit {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      gap: var(--casora-actions-glyph-gap, 10px);
+      box-sizing: border-box;
+      border-radius: inherit;
+      overflow: hidden;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+
+      transform: scale(1);
+      transition:
+        transform var(--casora-actions-press-up, 0.28s)
+          var(--casora-actions-ease-press-up, cubic-bezier(0.32, 0.72, 0, 1)),
+        background-color 0.18s ease;
+    }
+
+    .casora-act-hit.pressed {
+      transform: scale(var(--casora-act-press, 0.96));
+      background: var(--casora-actions-pill-bg-hover);
+      transition:
+        transform var(--casora-actions-press-down, 0.12s)
+          var(--casora-actions-ease-press-down, cubic-bezier(0.2, 0, 0.4, 1)),
+        background-color var(--casora-actions-press-down, 0.12s) ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .casora-act-hit, .casora-act-hit.pressed { transform: none; }
+    }
+
+    .casora-act-more {
+      justify-content: center;
+      background: transparent;
+      --casora-act-press: var(--casora-actions-press-more, 0.86);
+    }
+
+    .casora-act-more.pressed {
+      background: radial-gradient(circle closest-side,
+        var(--casora-actions-pill-bg-hover) var(--casora-actions-more-fill-r),
+        transparent calc(var(--casora-actions-more-fill-r) + 0.5px));
+    }
+
+    .casora-act-dots {
+      display: block;
+      flex: none;
+      width: var(--casora-actions-more-size);
+      height: var(--casora-actions-more-size);
+      fill: var(--casora-actions-ink);
+      opacity: var(--casora-actions-dots-opacity);
+      pointer-events: none;
+    }
+
+    .casora-act-pill {
+      background: var(--casora-actions-pill-bg);
+      --casora-act-press: var(--casora-actions-press-pill, 0.97);
+      padding-inline-start: var(--casora-actions-pill-pad-start);
+      padding-inline-end: var(--casora-actions-label-gap, 12px);
+      /* The label sizes off 100cqi, which is the CONTENT box. */
+      container-type: inline-size;
+      --casora-actions-label-inset: calc(
+        var(--casora-actions-icon-size)
+        + var(--casora-actions-glyph-gap, 10px));
+    }
+
+    .casora-act-glyphbox {
+      flex: none;
+      display: grid;
+      place-items: center;
+      width: var(--casora-actions-icon-size);
+      height: var(--casora-actions-icon-size);
+    }
+
+    .casora-act-label {
+      flex: 0 1 auto;
+      /* Without it the label refuses to shrink and clips mid-word. */
+      min-width: 0;
+      display: block;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: var(--casora-actions-label-size);
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      color: var(--casora-actions-ink);
+      opacity: 0.9;
+    }
+
+    .casora-act-icon {
+      display: block;
+      object-fit: contain;
+
+      background: transparent !important;
+      background-color: transparent !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      filter: none;
+
+      color: var(--casora-actions-ink);
+      opacity: 0.52;
+
+      transition: color 0.18s ease, opacity 0.18s ease;
+    }
+
+    /* HA's own hook; without it mdi glyphs ride a text baseline and sit low. */
+    .casora-act-ha-icon {
+      --mdc-icon-size: var(--casora-actions-icon-size);
+      --ha-icon-display: block;
+      width: var(--casora-actions-icon-size);
+      height: var(--casora-actions-icon-size);
+      line-height: 0;
+    }
+
+    .casora-act-svg {
+      filter: brightness(0) invert(calc(1 - var(--casora-side-lit)));
+      width: var(--casora-actions-svg-size);
+      height: var(--casora-actions-svg-size);
+      object-fit: contain;
+    }
+
+    .casora-act-hit.active .casora-act-icon {
+      opacity: 1;
+    }
+
+    .casora-act-pill.active {
+      background: var(--casora-actions-pill-bg-on);
+    }
+
+    .casora-act-hit.unavailable .casora-act-icon {
+      opacity: 0.35;
+      color: var(--disabled-text-color);
+    }
+
+    .casora-act-hit.unavailable .casora-act-label {
+      opacity: 0.5;
+    }
+
+    #glyph_1, #glyph_2, #pill_1, #pill_2 {
+      overflow: hidden !important;
+    }
+
+    /* Hover only. Press is a pointerdown class: :active on touch lands late
+       and can stick. */
+    @media (hover: hover) and (pointer: fine) {
+      .casora-act-more:hover { background: var(--casora-actions-more-fill); }
+      .casora-act-pill:hover { background: var(--casora-actions-pill-bg-hover); }
+    }

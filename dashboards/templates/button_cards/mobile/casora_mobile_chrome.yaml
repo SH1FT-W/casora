@@ -1,0 +1,235 @@
+casora_mobile_chrome:
+  show_icon: false
+  show_name: false
+  show_label: false
+  show_state: false
+
+  tap_action: { action: none }
+  hold_action: { action: none }
+  double_tap_action: { action: none }
+
+  variables:
+    show_notifications: true
+    # Whoever renders the capsule decides. The phone turns this on regardless
+    # of who manages the dashboard - at this width there is no sidebar and no
+    # hamburger, so the capsule is the only way through to Casora.
+    show_edit: false
+    show_assist: true
+    notification_config: null
+
+  custom_fields:
+    bell:
+      card:
+        type: custom:button-card
+        template: casora_notifications_button
+        variables:
+          shown: '[[[ return variables.show_notifications !== false ]]]'
+          notification_config: '[[[ return variables.notification_config ]]]'
+
+    assist:
+      card:
+        type: custom:button-card
+        template: casora_assist_button
+        variables:
+          shown: >
+            [[[
+              return variables.show_assist !== false
+                && ((hass && hass.config && hass.config.components) || []).includes('conversation');
+            ]]]
+
+    edit:
+      card:
+        type: custom:button-card
+        template: casora_settings_button
+        variables:
+          shown: '[[[ return !!variables.show_edit ]]]'
+
+  styles:
+    card:
+      - display: >
+          [[[
+            const n = (variables.show_notifications !== false ? 1 : 0) + (variables.show_edit ? 1 : 0)
+              + (variables.show_assist !== false && ((hass && hass.config && hass.config.components) || []).includes('conversation') ? 1 : 0);
+            return n ? 'flex' : 'none';
+          ]]]
+      - align-items: center
+      - justify-content: center
+      - padding: >
+          [[[
+            const n = (variables.show_notifications !== false ? 1 : 0) + (variables.show_edit ? 1 : 0)
+              + (variables.show_assist !== false && ((hass && hass.config && hass.config.components) || []).includes('conversation') ? 1 : 0);
+            return n > 1 ? '0 8px' : '0';
+          ]]]
+      - height: 40px
+      - width: >
+          [[[
+            const n = (variables.show_notifications !== false ? 1 : 0) + (variables.show_edit ? 1 : 0)
+              + (variables.show_assist !== false && ((hass && hass.config && hass.config.components) || []).includes('conversation') ? 1 : 0);
+            return n > 1 ? 'max-content' : '40px';
+          ]]]
+      - border-radius: >
+          [[[
+            const n = (variables.show_notifications !== false ? 1 : 0) + (variables.show_edit ? 1 : 0)
+              + (variables.show_assist !== false && ((hass && hass.config && hass.config.components) || []).includes('conversation') ? 1 : 0);
+            return n > 1 ? '20px' : '50%';
+          ]]]
+      - background: none
+      - border: none !important
+      - overflow: visible
+      - position: relative
+      - "--casora-bell-fill": transparent
+      - "--casora-chrome-fill": transparent
+      - "--casora-chrome-fill-hover": rgba(255,255,255,0.10)
+      - "--casora-settings-fill": transparent
+      - "--casora-assist-fill": transparent
+      - "--casora-assist-size": 17px
+      # Full capsule height, so an active button fills the pill end to end.
+      - "--casora-chrome-btn-size": 40px
+      - "--casora-bell-size": 17.5px
+      - "--casora-bell-count-top": 6px
+      - "--casora-bell-count-right": 4px
+      - "--casora-settings-size": 21px
+
+    grid:
+      - display: flex
+      - flex-direction: row
+      - align-items: center
+      - justify-items: center
+      - gap: 1px
+
+    custom_fields:
+      bell:
+        - display: '[[[ return variables.show_notifications !== false ? "flex" : "none" ]]]'
+        - align-items: center
+        - justify-content: center
+        - margin: 0
+        - padding: 0
+        - overflow: visible
+      assist:
+        - display: >
+            [[[
+              return variables.show_assist !== false
+                && ((hass && hass.config && hass.config.components) || []).includes('conversation') ? 'flex' : 'none';
+            ]]]
+        - align-items: center
+        - justify-content: center
+        - margin: 0
+        - padding: 0
+        - overflow: visible
+      edit:
+        - display: '[[[ return variables.show_edit ? "flex" : "none" ]]]'
+        - "--casora-chrome-sep": >
+            [[[
+              const before = (variables.show_notifications !== false ? 1 : 0)
+                + (variables.show_assist !== false && ((hass && hass.config && hass.config.components) || []).includes('conversation') ? 1 : 0);
+              return before ? 'block' : 'none';
+            ]]]
+        - margin-left: >
+            [[[
+              const before = (variables.show_notifications !== false ? 1 : 0)
+                + (variables.show_assist !== false && ((hass && hass.config && hass.config.components) || []).includes('conversation') ? 1 : 0);
+              return before ? '3px' : '0';
+            ]]]
+        - position: relative
+        - align-items: center
+        - justify-content: center
+        - padding: 0
+        - overflow: visible
+
+  extra_styles: |
+
+    /* ha-card is overflow:visible so the count can sit proud of the circle,
+       which also stopped it clipping button-card's ripple - a square layer
+       filling the card's box, so the hover read as a box behind the disc. */
+    :host{
+      --button-card-ripple-color: transparent !important;
+      --button-card-ripple-hover-color: transparent !important;
+      --ha-ripple-color: transparent !important;
+      --ha-ripple-hover-color: transparent !important;
+      --mdc-ripple-press-opacity: 0 !important;
+    }
+    :host ha-ripple,
+    :host mwc-ripple{ display: none !important; }
+    :host{
+      display: block !important;
+      pointer-events: auto !important;
+    }
+
+    /* Measured off iOS's own capsule. Three layers, none on ha-card, which HA and
+       the theme restyle: the glass, the content, then the edge light, which
+       brightens the glass behind it rather than painting white over it. */
+    :host{
+      --casora-card-hover-filter: none;
+      --casora-hover-filter: none;
+    }
+    :host ha-card{
+      position: relative !important;
+      border-radius: 20px !important;
+      background: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      box-shadow: none !important;
+      filter: none !important;
+      border: none !important;
+      overflow: visible !important;
+      isolation: isolate;
+    }
+    :host ha-card::before{
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      background-color: var(--casora-pill-fill, rgba(255,255,255,0.10));
+      backdrop-filter: var(--casora-pill-backdrop, blur(12px) saturate(1.4));
+      -webkit-backdrop-filter: var(--casora-pill-backdrop, blur(12px) saturate(1.4));
+      box-shadow: var(--casora-pill-rim, inset 0 0.5px 0 rgba(255,255,255,0.10), inset 0 -0.5px 0 rgba(255,255,255,0.10)),
+        -0.5px 0 0 var(--casora-pill-edge, rgba(0,0,0,0.50)), 0.5px 0 0 var(--casora-pill-edge, rgba(0,0,0,0.50));
+      pointer-events: none;
+    }
+    :host ha-card::after{
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      border-radius: inherit;
+      backdrop-filter: var(--casora-pill-highlight, brightness(1.45));
+      -webkit-backdrop-filter: var(--casora-pill-highlight, brightness(1.45));
+      padding: 1px;
+      box-sizing: border-box;
+      -webkit-mask: linear-gradient(to bottom, #000 0, rgba(0,0,0,.45) 13%, transparent 31%, transparent 69%, rgba(0,0,0,.45) 87%, #000 100%), linear-gradient(#000 0 0), linear-gradient(#000 0 0) content-box;
+      -webkit-mask-composite: source-in, source-out;
+      mask: linear-gradient(to bottom, #000 0, rgba(0,0,0,.45) 13%, transparent 31%, transparent 69%, rgba(0,0,0,.45) 87%, #000 100%), linear-gradient(#000 0 0), linear-gradient(#000 0 0) content-box;
+      mask-composite: intersect, subtract;
+      pointer-events: none;
+    }
+
+    /* A filled button is flat. The capsule carries the glass; a button lit
+       white on top of it should read as one solid shape, not as a disc with
+       the capsule's sheen and blur showing through its edge. */
+    :host ha-card > .custom-field ha-card,
+    :host ha-card button-card{
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      background-image: none !important;
+    }
+
+    :host #edit::before{
+      content: "";
+      display: var(--casora-chrome-sep, none);
+      position: absolute;
+      left: -2.5px;
+      top: 13px;
+      width: 1px;
+      height: 18px;
+      background: var(--casora-pill-divider, rgba(60,60,67,0.36));
+      pointer-events: none;
+    }
+
+    /* The badge hangs outside the capsule, so nothing on the way may clip. */
+    :host #container,
+    :host .button-card-content,
+    :host #customfields,
+    :host .custom-field,
+    :host .vertical,
+    :host .ellipsis{ overflow: visible !important; }

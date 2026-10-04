@@ -1,0 +1,366 @@
+# Media Card
+casora_media:
+  entity_picture: |
+    [[[
+      if (variables.has_artwork && variables.art_url) return variables.art_url;
+      const icon = variables?.icon;
+      if (icon === 'ps5') {
+        if (variables.is_active) {
+          return `${window.casoraIconUrl('ps5')}#s=${encodeURIComponent(entity.last_changed || '')}`;
+        }
+        return window.casoraIconUrl('ps5_off');
+      }
+      if (icon) return window.casoraIconUrl(icon);
+      return window.casoraIconUrl('speaker');
+    ]]]
+  extra_styles: |
+    #img-cell {
+      background: var(--casora-media-icon-bg, var(--casora-icon-circle-bg, rgba(0,0,0,0.20))) !important;
+      width: var(--casora-icon-circle-size, 44px) !important;
+      height: var(--casora-icon-circle-size, 44px) !important;
+      /* Forces a square whichever rule wins on each axis. */
+      aspect-ratio: 1 / 1 !important;
+    }
+
+    :host #img-cell img {
+      width: var(--casora-media-icon-size, var(--casora-icon-mask-scale, 60%)) !important;
+      height: var(--casora-media-icon-size, var(--casora-icon-mask-scale, 60%)) !important;
+      max-width: var(--casora-media-icon-size, var(--casora-icon-mask-scale, 60%)) !important;
+      max-height: var(--casora-media-icon-size, var(--casora-icon-mask-scale, 60%)) !important;
+      aspect-ratio: 1 / 1 !important;
+      object-fit: var(--casora-media-icon-fit, contain) !important;
+      transition: opacity 0.3s ease, width 0.3s ease, height 0.3s ease !important;
+    }
+  hold_action:
+    action: more-info
+    entity: '[[[ return entity?.entity_id ]]]'
+  icon_tap_action:
+    action: |
+      [[[
+        const s = String(entity?.state || '').toLowerCase();
+        if (s === 'unavailable' || s === 'unknown') return 'none';
+        const feats = Number(entity?.attributes?.supported_features || 0);
+        return (s === 'off' ? (feats & 128) : (feats & 256)) ? 'call-service' : 'none';
+      ]]]
+    service: |
+      [[[
+        return String(entity?.state || '').toLowerCase() === 'off'
+          ? 'media_player.turn_on'
+          : 'media_player.turn_off';
+      ]]]
+    service_data: |
+      [[[ return { entity_id: entity?.entity_id }; ]]]
+  show_empty: false
+  show_entity_picture: true
+  show_icon: false
+  show_last_changed: false
+  state_display: |-
+    [[[
+      const sRaw = String(entity?.state || "");
+      const s    = sRaw.toLowerCase();
+      const a    = entity?.attributes || {};
+      const cap  = (x) => (x ? x.charAt(0).toUpperCase() + x.slice(1) : "");
+      const esc  = (t) => String(t ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .trim();
+      if (s === "playing") {
+        const id       = entity?.entity_id || "";
+        const friendly = (a.friendly_name || "").toLowerCase();
+        const type   = String(a.media_content_type || "").toLowerCase();
+        const title  = (a.media_title || a.title || "").trim();
+        const artist =
+          (a.media_artist || a.artist || a.media_album_artist || "").trim();
+        const app    = (a.app_name || "").trim();
+        const source = (a.source || a.media_channel || "").trim();
+        const isMusic =
+          type === "music" ||
+          id.includes("spotify") ||
+          (!!artist && !["movie","video","tvshow"].includes(type));
+        let label = "";
+        if (isMusic) {
+          if (artist && title) label = `${artist} - ${title}`;
+          else label = title || artist || app || source || 'Wiedergabe';
+        } else {
+          label = title || app || source || 'Wiedergabe';
+        }
+        const isSonos = id.includes("sonos") || friendly.includes("sonos");
+        const bareInputs = ["tv","hdmi","arc","hdmi arc","optical","line-in","line in"];
+        let looksLikeBareInput = false;
+        if (isSonos) {
+          const tLow = title.toLowerCase();
+          const sLow = source.toLowerCase();
+          if (
+            title && (
+              bareInputs.includes(tLow) ||
+              (source && tLow === sLow)
+            )
+          ) {
+            looksLikeBareInput = true;
+          }
+        }
+        const hasRichMeta =
+          !!(a.media_artist || a.media_album_artist || a.media_series_title || a.media_episode_title);
+        const mediaTypes = ["music","movie","video","tvshow","game"];
+        const fromRichApp =
+          /youtube|netflix|hulu|disney|max|prime|spotify|apple tv|apple music|paramount|peacock/i
+            .test(app);
+        const isRichPlayback = !looksLikeBareInput && (
+          hasRichMeta ||
+          mediaTypes.includes(type) ||
+          fromRichApp
+        );
+        if (!isRichPlayback) return esc(label) || 'Wiedergabe';
+        return `<span class="casora-media-state">${esc(label)}</span>`;
+      }
+      const M = { on: 'An', off: 'Aus', idle: 'Inaktiv', paused: 'Pausiert', playing: 'Wiedergabe', buffering: 'Lädt', standby: 'Standby', unavailable: 'Nicht verfügbar', unknown: 'Unbekannt' };
+      if (M[s]) return M[s];
+      return s ? cap(s) : "Aus";
+    ]]]
+  styles:
+    card:
+    - --casora-progress-track-color: rgba(0,0,0,0.12)
+    - --casora-media-icon-size: '[[[ return variables.has_artwork ? "100%" : "var(--casora-icon-mask-scale, 60%)"; ]]]'
+    - --casora-media-icon-fit: '[[[ return variables.has_artwork ? "cover" : "contain"; ]]]'
+    - --casora-icon-mask-image: |
+        [[[
+          const icon = variables.icon;
+          if (icon === 'ps5') return `url('${window.casoraIconUrl(variables.is_active ? 'ps5' : 'ps5_off')}')`;
+          return `url('${window.casoraIconUrl(icon || 'speaker')}')`;
+        ]]]
+    - --casora-media-icon-bg: |
+        [[[
+          if (variables.has_artwork) return 'rgba(255,255,255,0.10)';
+          if (!variables.is_active) return 'var(--casora-icon-circle-bg, rgba(0,0,0,0.20))';
+          if (variables.icon === 'ps5') return 'rgba(10,10,10,0.85)';
+          return 'var(--casora-icon-color-current)';
+        ]]]
+    - --casora-icon-circle-shadow: |
+        [[[
+          if (!variables.has_artwork) return '0 2px 6px rgba(0,0,0,0.04)';
+          return '0 3px 12px rgba(0,0,0,0.15)';
+        ]]]
+  tap_action:
+    action: |
+      [[[
+        return window.casoraPopupAction ? window.casoraPopupAction() : 'more-info';
+      ]]]
+    entity: '[[[ return entity?.entity_id ]]]'
+    haptic: light
+    casora_popup:
+      content: |-
+        [[[
+          const UI = window._casoraUI;
+          if (!UI || !entity) return { type: 'vertical-stack', cards: [] };
+          const id = entity?.entity_id;
+          const reg = hass.entities || {};
+          const devId = reg[id]?.device_id;
+          const areaId = reg[id]?.area_id || (devId ? hass.devices?.[devId]?.area_id : null);
+          const roomName = variables.room_name || (areaId ? hass.areas?.[areaId]?.name : null) || null;
+
+          const uiCard = {
+            type: 'custom:button-card',
+            entity: id,
+            triggers_update: [id].concat(variables.volume_entity ? [variables.volume_entity] : []),
+            variables: { room_name: roomName, icon: variables.icon || null, volume_entity: variables.volume_entity || null },
+            card_mod: { style:
+              '\n:host { --ha-card-backdrop-filter: none !important; --ha-card-background: transparent !important; --card-background-color: transparent !important; --ha-card-box-shadow: none !important; --ha-card-border-width: 0px !important; }'
+              + '\nha-card::before, ha-card::after, #card::before, #card::after, #container::before, #container::after { display: none !important; }'
+              + '\nha-card { will-change: auto !important; }'
+              + '\n@media (max-width: 600px) { ha-card { padding-left: 14px !important; padding-right: 14px !important; } }'
+            },
+            tap_action: { action: 'none' },
+            hold_action: { action: 'none' },
+            show_icon: false, show_name: false, show_label: false, show_state: false,
+            styles: {
+              card: [
+                { background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' },
+                { padding: '6px 26px 22px 26px' },
+              ],
+              grid: [
+                { 'grid-template-areas': '"body"' },
+                { 'grid-template-columns': '1fr' },
+              ],
+              custom_fields: { body: [{ 'justify-self': 'stretch' }, { 'min-width': '0' }] },
+            },
+            custom_fields: { body: "[[[\n  const UI = window._casoraUI;\n  if (!UI || !entity) return '';\n  const T = UI.tokens;\n  const esc = UI.esc;\n  const id = entity?.entity_id;\n  const a = entity?.attributes || {};\n  const st = entity?.state;\n  const F = a.supported_features || 0;\n  const has = (b) => (F & b) === b;\n  /* Popup-Standard (24.09.2026): part = hero | ctl (breit), ohne part alles. */\n  const P = variables.part;\n  const svc = (service, data) => esc(JSON.stringify({ domain: 'media_player', service: service, data: data || {}, target: { entity_id: id } }));\n  const ic = (n) => (typeof window.casoraIconUrl === 'function') ? window.casoraIconUrl(n) : '/casora_assets/icons/' + n + '.svg';\n  const mask = (n, size, color) => '<div style=\"width:' + size + 'px;height:' + size + 'px;background-color:' + (color || 'currentColor') + ';'\n    + \"-webkit-mask:url('\" + ic(n) + \"') center / contain no-repeat;mask:url('\" + ic(n) + \"') center / contain no-repeat;\\\"></div>\";\n\n  const off = st === 'off' || st === 'unavailable' || st === 'unknown';\n  const active = st === 'playing' || st === 'paused' || st === 'buffering';\n  const stateMap = { playing: 'Wiedergabe', paused: 'Pausiert', buffering: 'L\u00e4dt', idle: 'Inaktiv', on: 'An', off: 'Aus', standby: 'Standby', unavailable: 'Nicht verf\u00fcgbar', unknown: 'Unbekannt' };\n  const stateTxt = stateMap[st] || st;\n\n  const title  = active ? (a.media_title || a.app_name || a.source || stateTxt) : stateTxt;\n  const artist = a.media_artist || a.media_album_artist || a.media_series_title || '';\n  const subBits = [];\n  if (active) {\n    if (artist) subBits.push(artist);\n    else if (a.media_album_name) subBits.push(a.media_album_name);\n    if (a.app_name && a.app_name !== title) subBits.push(a.app_name);\n    if (st === 'paused') subBits.push('Pausiert');\n  } else if (!off && a.source) subBits.push(a.source);\n\n  const pic = active ? (a.entity_picture_local || a.entity_picture) : null;\n  const devIcon = { playstation: 'ps5' }[variables.icon] || variables.icon || 'media';\n\n  let out = '<style>ha-card.disabled{pointer-events:auto!important;}'\n    + '.hm-wrap{font-family:' + T.font + ';display:flex;flex-direction:column;align-items:center;text-align:center;}'\n    + '.hm-lbl{font-size:15px;color:' + T.ink2 + ';margin-bottom:14px;}'\n    + '.hm-art{width:min(240px, 62vw);aspect-ratio:1/1;border-radius:16px;overflow:hidden;position:relative;'\n    +   'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));display:grid;place-items:center;'\n    +   'box-shadow:0 18px 40px -18px rgba(0,0,0,.85);' + (active && st !== 'playing' ? 'transform:scale(.92);' : '') + 'transition:transform .4s cubic-bezier(.36,0,.16,1);}'\n    + '.hm-art::after{content:\"\";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);pointer-events:none;}'\n    + '.hm-art img{width:100%;height:100%;object-fit:cover;display:block;}'\n    + '.hm-t{font-size:22px;font-weight:600;letter-spacing:-0.02em;color:' + T.ink + ';margin-top:18px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'\n    + '.hm-s{font-size:15px;color:' + T.ink2 + ';margin-top:3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:19px;}'\n    + '.hm-prog{width:100%;margin-top:16px;}'\n    + '.hm-track{height:5px;border-radius:999px;background:' + T.fill2 + ';overflow:hidden;}'\n    + '.hm-fill{height:100%;border-radius:999px;background:' + T.ink + ';}'\n    + '.hm-times{display:flex;justify-content:space-between;font-size:12px;color:' + T.ink3 + ';margin-top:5px;font-variant-numeric:tabular-nums;}'\n    + '.hm-ctl{display:flex;align-items:center;justify-content:center;gap:26px;margin-top:14px;color:' + T.ink + ';}'\n    + '.hm-b{border-radius:999px;display:grid;place-items:center;cursor:pointer;line-height:0;flex:none;'\n    +   'transition:background-color .16s ease, transform .12s ease;user-select:none;-webkit-user-select:none;}'\n    + '.hm-b > *{pointer-events:none;}'\n    + '.hm-b.sm{width:52px;height:52px;}'\n    + '.hm-b.lg{width:68px;height:68px;background:' + T.ink + ';color:var(--casora-popup-ui-on-ink, #000);}'\n    + '.hm-b.dis{opacity:.3;pointer-events:none;}'\n    + '.hm-b:active{transform:scale(.92);}'\n    + '@media (hover:hover){.hm-b.sm:hover{background:var(--casora-popup-seg-fill, rgba(255,255,255,0.12));}}'\n    + '.hm-vol{display:flex;align-items:center;gap:12px;width:100%;margin-top:22px;color:' + T.ink2 + ';'\n    +   'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);padding:8px 10px;box-sizing:border-box;}'\n    + '.hm-vol .hm-b{width:40px;height:40px;}'\n    + '.hm-vol .hm-hit{flex:1;padding:14px 0;margin:-14px 0;cursor:pointer;touch-action:none;}'\n    + '.hm-vol .hm-track{height:6px;pointer-events:none;}'\n    + '.hm-vol .hm-hit.drag .hm-fill{transition:none;}'\n    + '.hm-vol .hm-fill{background:' + T.ink + ';}'\n    + '.hm-vol .pct{font-size:13px;min-width:36px;text-align:right;font-variant-numeric:tabular-nums;color:' + T.ink2 + ';}'\n    + '.hm-src-l{align-self:flex-start;font-size:15px;font-weight:600;letter-spacing:-0.01em;color:' + T.ink + ';margin:22px 4px 8px;}'\n    + '.hm-src{display:flex;gap:7px;overflow-x:auto;touch-action:pan-y;overscroll-behavior-x:contain;width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px;}'\n    + '.hm-src::-webkit-scrollbar{display:none;}'\n    + '.hm-src .hui-sg{flex:none;font-size:14px;font-weight:500;padding:10px 14px;border-radius:999px;white-space:nowrap;cursor:pointer;'\n    +   'background:var(--casora-popup-seg-fill, rgba(255,255,255,0.16));color:' + T.ink + ';}'\n    + '.hm-src .hui-sg.on{background:' + T.ink + ';color:var(--casora-popup-ui-on-ink, #000);}'\n    + '.hm-pw{width:100%;margin-top:22px;}'\n    + '</style>';\n\n  out += '<div class=\"hm-wrap\"' + (P === 'ctl' ? ' style=\"max-width:520px;margin:0 auto;\"' : '') + '>';\n  if (!P || P === 'hero') {\n  if (variables.room_name) out += '<div class=\"hm-lbl\">' + esc(variables.room_name) + '</div>';\n  out += '<div class=\"hm-art\">' + (pic\n      ? '<img src=\"' + esc(pic) + '\" alt=\"\" onerror=\"this.remove()\">'\n      : mask(devIcon, 88, off ? T.ink3 : T.ink2)) + '</div>';\n  out += '<div class=\"hm-t\">' + esc(title) + '</div>';\n  out += '<div class=\"hm-s\">' + esc(subBits.join(' \u00b7 ')) + '</div>';\n\n  /* Fortschritt: Balken l\u00e4uft per CSS bis zum Ende, Re-Render bei jedem Statuswechsel */\n  const dur = parseFloat(a.media_duration);\n  if (active && dur > 0) {\n    let pos = parseFloat(a.media_position) || 0;\n    if (st === 'playing' && a.media_position_updated_at) {\n      pos += (Date.now() - new Date(a.media_position_updated_at).getTime()) / 1000;\n    }\n    pos = Math.max(0, Math.min(dur, pos));\n    const pct = (pos / dur * 100).toFixed(2);\n    const mmss = (s) => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };\n    const anim = st === 'playing'\n      ? 'animation:hm-run ' + (dur - pos).toFixed(1) + 's linear forwards;' : '';\n    out += '<style>@keyframes hm-run{from{width:' + pct + '%}to{width:100%}}</style>'\n      + '<div class=\"hm-prog\"><div class=\"hm-track\"><div class=\"hm-fill\" style=\"width:' + pct + '%;' + anim + '\"></div></div>'\n      + '<div class=\"hm-times\"><span>' + (st === 'playing' ? '' : mmss(pos)) + '</span><span>' + mmss(dur) + '</span></div></div>';\n  }\n\n  }\n  if ((!P || P === 'ctl') && !off && (has(16) || has(32) || has(1) || has(16384))) {\n    const playing = st === 'playing';\n    const ppSvc = playing ? (has(1) ? 'media_pause' : 'media_stop') : 'media_play';\n    out += '<div class=\"hm-ctl\">'\n      + '<div class=\"hm-b sm' + (has(16) && active ? '' : ' dis') + '\" data-casora-svc=\"' + svc('media_previous_track') + '\">' + mask('skip_previous', 40) + '</div>'\n      + '<div class=\"hm-b lg\" data-casora-svc=\"' + svc(ppSvc) + '\">' + mask(playing ? 'pause' : 'play', 28, '#000') + '</div>'\n      + '<div class=\"hm-b sm' + (has(32) && active ? '' : ' dis') + '\" data-casora-svc=\"' + svc('media_next_track') + '\">' + mask('skip_next', 40) + '</div>'\n      + '</div>';\n  }\n\n  /* Lautst\u00e4rke: eigener Wert oder \u2013 falls der Player keinen meldet (Apple TV) \u2013\n     gespiegelter Wert aus variables.volume_entity (z.B. JBL-Bar per Automation) */\n  const vEnt = variables.volume_entity && states[variables.volume_entity];\n  const vMirror = vEnt && !isNaN(parseFloat(vEnt.state)) ? parseFloat(vEnt.state) / (parseFloat(vEnt.attributes?.max) || 100) : null;\n  const volLvl = a.volume_level != null ? a.volume_level : vMirror;\n  if ((!P || P === 'ctl') && !off && has(4) && volLvl != null) {\n    const v = Math.round(volLvl * 100);\n    const muted = !!a.is_volume_muted;\n    const clamp = (x) => Math.max(0, Math.min(1, Math.round(x * 100) / 100));\n    out += '<div class=\"hm-vol\">'\n      + (has(8)\n          ? '<div class=\"hm-b\" data-casora-svc=\"' + svc('volume_mute', { is_volume_muted: !muted }) + '\">' + mask(muted ? 'mute' : 'unmute', 20) + '</div>'\n          : '')\n      + '<div class=\"hm-b\" data-casora-svc=\"' + svc('volume_set', { volume_level: clamp(volLvl - 0.05) }) + '\">'\n      +   '<svg width=\"18\" height=\"18\" viewBox=\"0 0 20 20\"><path d=\"M4 10H16\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\"/></svg></div>'\n      + '<div class=\"hm-hit\" ontouchstart=\"event.stopPropagation();var h=this,tr=h.firstElementChild,b=tr.getBoundingClientRect();var pc=function(x){return Math.max(0,Math.min(100,Math.round((x-b.left)/b.width*100)));};var paint=function(p){tr.firstElementChild.style.width=p+&quot;%&quot;;var l=h.parentNode.querySelector(&quot;.pct&quot;);if(l)l.textContent=p+&quot; %&quot;;};var send=function(p){document.querySelector(&quot;home-assistant&quot;).hass.callService(&quot;media_player&quot;,&quot;volume_set&quot;,{volume_level:p/100},{entity_id:&quot;' + id + '&quot;});};h.classList.add(&quot;drag&quot;);h._p=pc(event.touches[0].clientX);paint(h._p);\" ontouchmove=\"event.stopPropagation();if(event.cancelable)event.preventDefault();var h=this,tr=h.firstElementChild,b=tr.getBoundingClientRect();var pc=function(x){return Math.max(0,Math.min(100,Math.round((x-b.left)/b.width*100)));};var paint=function(p){tr.firstElementChild.style.width=p+&quot;%&quot;;var l=h.parentNode.querySelector(&quot;.pct&quot;);if(l)l.textContent=p+&quot; %&quot;;};var send=function(p){document.querySelector(&quot;home-assistant&quot;).hass.callService(&quot;media_player&quot;,&quot;volume_set&quot;,{volume_level:p/100},{entity_id:&quot;' + id + '&quot;});};h._p=pc(event.touches[0].clientX);paint(h._p);\" ontouchend=\"event.stopPropagation();if(event.cancelable)event.preventDefault();var h=this,tr=h.firstElementChild,b=tr.getBoundingClientRect();var pc=function(x){return Math.max(0,Math.min(100,Math.round((x-b.left)/b.width*100)));};var paint=function(p){tr.firstElementChild.style.width=p+&quot;%&quot;;var l=h.parentNode.querySelector(&quot;.pct&quot;);if(l)l.textContent=p+&quot; %&quot;;};var send=function(p){document.querySelector(&quot;home-assistant&quot;).hass.callService(&quot;media_player&quot;,&quot;volume_set&quot;,{volume_level:p/100},{entity_id:&quot;' + id + '&quot;});};h.classList.remove(&quot;drag&quot;);window._hmVT=Date.now();if(h._p!=null)send(h._p);\" ontouchcancel=\"this.classList.remove(&quot;drag&quot;)\" onclick=\"event.stopPropagation();if(Date.now()-(window._hmVT||0)<700)return;var h=this,tr=h.firstElementChild,b=tr.getBoundingClientRect();var pc=function(x){return Math.max(0,Math.min(100,Math.round((x-b.left)/b.width*100)));};var paint=function(p){tr.firstElementChild.style.width=p+&quot;%&quot;;var l=h.parentNode.querySelector(&quot;.pct&quot;);if(l)l.textContent=p+&quot; %&quot;;};var send=function(p){document.querySelector(&quot;home-assistant&quot;).hass.callService(&quot;media_player&quot;,&quot;volume_set&quot;,{volume_level:p/100},{entity_id:&quot;' + id + '&quot;});};var p=pc(event.clientX);paint(p);send(p);\">'\n      + '<div class=\"hm-track\"><div class=\"hm-fill\" style=\"width:' + (muted ? 0 : v) + '%\"></div></div></div>'\n      + '<div class=\"hm-b\" data-casora-svc=\"' + svc('volume_set', { volume_level: clamp(volLvl + 0.05) }) + '\">'\n      +   '<svg width=\"18\" height=\"18\" viewBox=\"0 0 20 20\"><path d=\"M4 10H16M10 4V16\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\"/></svg></div>'\n      + '<div class=\"pct\">' + (muted ? 'Stumm' : v + ' %') + '</div>'\n      + '</div>';\n  }\n\n  out += '</div>';\n  return out;\n]]]" },
+          };
+          /* Apps/Quellen: statisch beim Öffnen gebaut, damit Positions-Updates des
+             Players die Leiste nicht neu rendern (sonst springt/bricht das Wischen ab). */
+          const a = entity?.attributes || {};
+          const st = entity?.state;
+          const offNow = st === 'off' || st === 'unavailable' || st === 'unknown';
+          const srcs = Array.isArray(a.source_list) ? a.source_list : [];
+          const cards = [uiCard];
+          if (!offNow && ((a.supported_features || 0) & 2048) && srcs.length) {
+            const esc = UI.esc, T = UI.tokens;
+            const cur = a.app_name || a.source;
+            const svc = (src) => esc(JSON.stringify({ domain: 'media_player', service: 'select_source', data: { source: src }, target: { entity_id: id } }));
+            const list = cur && srcs.includes(cur) ? [cur].concat(srcs.filter((x) => x !== cur)) : srcs;
+            const html = '<style>ha-card.disabled{pointer-events:auto!important;}'
+              + '.hm-src-l{font-family:' + T.font + ';font-size:15px;font-weight:600;letter-spacing:-0.01em;color:' + T.ink + ';margin:22px 4px 8px;text-align:left;}'
+              + '.hm-src{width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:none;padding-bottom:2px;}'
+              + '.hm-src .trk{display:flex;gap:7px;width:max-content;}'
+              + '.hm-src::-webkit-scrollbar{display:none;}'
+              + '.hm-src .hui-sg{flex:none;font-family:' + T.font + ';font-size:14px;font-weight:500;padding:10px 14px;border-radius:999px;white-space:nowrap;cursor:pointer;'
+              +   'background:var(--casora-popup-seg-fill, rgba(255,255,255,0.16));color:' + T.ink + ';transition:background-color .16s ease;}'
+              + '.hm-src .hui-sg.on{background:' + T.ink + ';color:var(--casora-popup-ui-on-ink, #000);}'
+              + '.hm-src .hui-sg:active{background:var(--casora-popup-seg-fill-hover, rgba(255,255,255,0.28));}'
+              + '</style>'
+              + '<div class="hm-src-l">' + (srcs.length > 6 ? 'Apps' : 'Quelle') + '</div>'
+              + '<div class="hm-src" ontouchstart="event.stopPropagation();var w=this;cancelAnimationFrame(w._raf);var t=event.touches[0];w._sx=t.clientX;w._sy=t.clientY;w._sl=w.scrollLeft;w._h=null;w._js=false;w._lx=t.clientX;w._lt=event.timeStamp;w._v=0;w._m=w.scrollWidth-w.clientWidth;" ontouchmove="event.stopPropagation();var w=this,t=event.touches[0];var dx=t.clientX-w._sx,dy=t.clientY-w._sy;if(w._h===null&&(Math.abs(dx)>6||Math.abs(dy)>6))w._h=Math.abs(dx)>Math.abs(dy);if(!w._h)return;if(!w._js&&Math.abs(dx)>40&&w.scrollLeft===w._sl&&w._m>0&&!((dx>0&&w._sl<=0)||(dx<0&&w._sl>=w._m))){w._js=true;w._sx=t.clientX;w._sl=w.scrollLeft;dx=0;}if(!w._js)return;if(event.cancelable)event.preventDefault();w.scrollLeft=w._sl-dx;var dt=Math.max(1,event.timeStamp-w._lt);w._v=0.8*((w._lx-t.clientX)/dt)+0.2*w._v;w._lx=t.clientX;w._lt=event.timeStamp;" ontouchend="event.stopPropagation();var w=this;if(!w._js)return;var v=w._v*16,last=performance.now();var step=function(now){var f=Math.min(3,(now-last)/16);last=now;w.scrollLeft+=v*f;v*=Math.pow(0.95,f);if(Math.abs(v)>0.2)w._raf=requestAnimationFrame(step);};w._raf=requestAnimationFrame(step);" ontouchcancel="event.stopPropagation()">'
+              + '<div class="trk">' + list.map((s) => '<div class="hui-sg' + (s === cur ? ' on' : '') + '" data-casora-svc="' + svc(s) + '">' + esc(String(s).replace(/ /g, ' ')) + '</div>').join('') + '</div>'
+              + '</div>';
+            cards.push(Object.assign({}, uiCard, {
+              entity: undefined, triggers_update: [], variables: {},
+              styles: Object.assign({}, uiCard.styles, { card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0 26px' }] }),
+              custom_fields: { body: html },
+            }));
+          }
+          cards.push(Object.assign({}, uiCard, {
+            styles: Object.assign({}, uiCard.styles, { card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0 26px 22px 26px' }] }),
+            custom_fields: { body: "[[[\n  const UI = window._casoraUI;\n  if (!UI || !entity) return '';\n  const id = entity?.entity_id;\n  const a = entity?.attributes || {};\n  const st = entity?.state;\n  const F = a.supported_features || 0;\n  const has = (b) => (F & b) === b;\n  const off = st === 'off' || st === 'unavailable' || st === 'unknown';\n  const rows = [];\n  const isTvLike = ['tv', 'receiver'].includes(a.device_class) || /apple_tv/.test(id);\n  if (isTvLike && off && has(128) && st !== 'unavailable') {\n    rows.push({ icon: 'mdi:power', iconTone: 'good', label: 'Einschalten', svc: { domain: 'media_player', service: 'turn_on', target: { entity_id: id } } });\n  } else if (isTvLike && !off && has(256)) {\n    rows.push({ icon: 'mdi:power', iconTone: 'bad', label: 'Ausschalten', svc: { domain: 'media_player', service: 'turn_off', target: { entity_id: id } } });\n  }\n  rows.push({ icon: 'mdi:tune-variant', label: 'Weitere Einstellungen', entity: id });\n  /* Apple Music \u00f6ffnen (24.09.2026): nur bei HomePod, Apple TV, Sonos \u2013 als Zeile in der Einstellungen-Karte.\n     Die Zeile tr\u00e4gt data-casora-music; ge\u00f6ffnet wird \u00fcber die Capture-Listener in casora-notify-local.js. */\n  if (/homepod|apple_tv|sonos/.test(id)) rows.splice(rows.length - 1, 0, { icon: 'mdi:music', iconTone: '#FA2D48', label: 'Apple Music \u00f6ffnen' });\n  let g = UI.group(rows);\n  const mi = g.indexOf('>Apple Music \u00f6ffnen<');\n  const rs = mi > -1 ? g.lastIndexOf('<div class=\"hui-row', mi) : -1;\n  if (rs > -1) g = g.slice(0, rs) + '<div data-casora-music=\"1\" class=\"hui-row hui-tap' + g.slice(rs + '<div class=\"hui-row'.length);\n  return '<div style=\"margin-top:22px\">' + g + '</div>';\n]]]" },
+          }));
+          uiCard.styles.card = [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '6px 26px 0 26px' }];
+          /* Popup-Standard (24.09.2026): ab 761 px Titel/Cover mittig, Wiedergabe + Lautstärke mittig darunter,
+             dann links Ein/Aus + Einstellungen, rechts Apps/Quellen. */
+          if (window.innerWidth > 760) {
+            const padC = (c, pad) => Object.assign({}, c, { styles: Object.assign({}, c.styles, { card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: pad }] }) });
+            const pc = (part, pad) => padC(Object.assign({}, uiCard, { variables: Object.assign({}, uiCard.variables, { part: part }) }), pad);
+            const setCard = cards[cards.length - 1], srcCard = cards.length > 2 ? cards[1] : null;
+            const bottom = srcCard
+              ? { type: 'grid', columns: 2, square: false, cards: [padC(setCard, '0 12px 22px 26px'), padC(srcCard, '0 26px 22px 12px')] }
+              : padC(setCard, '0 26px 22px 26px');
+            return { type: 'vertical-stack', cards: [pc('hero', '6px 26px 0 26px'), pc('ctl', '0 26px'), bottom] };
+          }
+          return { type: 'vertical-stack', cards: cards };
+        ]]]
+      dismissable: true
+      popup_styles:
+      - style: all
+        styles: |
+          /* The pane stays - these are control sheets. Only the close control
+             keeps what it gained: a surface of its own, and room above it so
+             the fill is not against the top edge of the sheet. */
+          .header { padding-top: var(--casora-popup-header-gap, 10px); }
+          /* Equal inset on both axes: the bar's own padding plus the
+             close control's 2px optical nudge has to come to the same
+             number as the padding above it, or the circle sits further
+             from the left edge than it does from the top. */
+          --casora-popup-header-gap: 14px;
+            --casora-popup-gutter-wide: 20px;
+          /* The chrome arrives with the first plate instead of being there
+             on frame one while everything under it fades in. */
+          --casora-popup-chrome-enter:
+            casora-popup-chrome-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+          .header-title { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+          .header-close {
+            border-radius: 50%;
+            background: var(--casora-popup-row-fill, rgba(255, 255, 255, 0.10));
+            backdrop-filter: var(--casora-popup-plate-backdrop, blur(24px) saturate(180%));
+            -webkit-backdrop-filter: var(--casora-popup-plate-backdrop, blur(24px) saturate(180%));
+            box-shadow: var(--casora-popup-plate-shadow, none);
+          }
+          /* The sheet is full height, so short content floats mid-screen. On
+             a phone the card has to fill it for the grid's `1fr` row to have
+             any slack to hand the toggle - otherwise the rows bunch under it
+             instead of sitting at the bottom.
+             Flex, not percentages: .content is `flex: 1 1 auto` inside a
+             surface with only a max-height, so `min-height: 100%` here had no
+             definite height to resolve against and computed to nothing. A
+             flex chain gives every link a real height without one. */
+          @media (max-width: 768px) {
+            /* The root cause, and why two attempts at the chain below did
+               nothing: .surface is capped with max-height, never given one.
+               A flex item in a content-sized container is itself
+               content-sized, so every percentage under it resolved to
+               nothing and the grid's `1fr` row had no slack to hand out.
+               Same expression as its own max-height, as a height. */
+            .surface {
+              height: calc(100svh - var(--casora-popup-top, 112px) - 8px
+                           - var(--safe-area-inset-bottom, 0px));
+            }
+            .content { display: flex; flex-direction: column; }
+            /* A viewport unit, not a percentage. Every attempt to make this
+               work by giving each link a definite height failed in the real
+               DOM even though the chain measures correct in isolation - so
+               the height is taken from the viewport directly and nothing has
+               to resolve against a parent at all. 112 is the surface's top
+               offset, 58 the header row, 8 the bottom gap. */
+            .content .container {
+              flex: 1 1 auto;
+              min-height: calc(100svh - var(--casora-popup-top, 112px)
+                               - 58px - 8px
+                               - var(--safe-area-inset-bottom, 0px));
+              display: flex; flex-direction: column; box-sizing: border-box;
+            }
+            /* The direct child AND anything HA wraps the card in: measured in
+               isolation this chain resolves and the tiles land 8px off the
+               bottom, so the only way it can still fail is a link in the real
+               DOM that this does not name. */
+            .content .container > *,
+            .content .container hui-card,
+            .content .container > * > * {
+              flex: 1 1 auto; min-height: 0;
+              display: flex; flex-direction: column;
+            }
+          }
+          /* One measure for a control-plus-list popup, whatever the count.
+             The rows are short and a wider sheet only stretches them; cover
+             is the same shape and holds the same width. */
+          --popup-min-width: 900px;
+          --popup-max-width: 920px;
+      title: |
+        [[[
+          const n = String(this._config?.name || '').trim();
+          return (n.startsWith('[[[') ? '' : n) || entity?.attributes?.friendly_name || 'Medien';
+        ]]]
+  template:
+  - casora_entity
+  variables:
+    art_url: |
+      [[[
+        const a = entity?.attributes || {};
+        const isYouTube = String(a.app_name || '').toLowerCase().includes('youtube');
+        const pic = isYouTube
+          ? (states['sensor.youtube_watching']?.attributes?.thumbnail || a.entity_picture || '')
+          : (a.entity_picture || '');
+        if (!pic) return '';
+        return pic.startsWith('/') ? window.location.origin + pic : pic;
+      ]]]
+    has_artwork: |
+      [[[
+        if (String(entity?.state || "").toLowerCase() !== "playing") return false;
+        const a = entity?.attributes || {};
+        const id = entity?.entity_id || '';
+        const type = String(a.media_content_type || '').toLowerCase();
+        const app = String(a.app_name || '').trim();
+        const title = (a.media_title || a.title || '').trim();
+        const source = (a.source || a.media_channel || '').trim();
+        const isSonos = id.includes('sonos') || (a.friendly_name || '').toLowerCase().includes('sonos');
+        const bareInputs = ['tv','hdmi','arc','hdmi arc','optical','line-in','line in'];
+        let looksLikeBareInput = false;
+        if (isSonos && title) {
+          const tLow = title.toLowerCase();
+          looksLikeBareInput = bareInputs.includes(tLow) || (!!source && tLow === source.toLowerCase());
+        }
+        const isYouTube = app.toLowerCase().includes('youtube');
+        const pic = isYouTube
+          ? (states['sensor.youtube_watching']?.attributes?.thumbnail || a.entity_picture || '')
+          : (a.entity_picture || '');
+        const hasRichMeta = !!(a.media_series_title || a.media_episode_title);
+        const fromRichApp = /youtube|netflix|hulu|disney|max|prime|spotify|apple tv|apple music|paramount|peacock/i.test(app);
+        return !!pic && !looksLikeBareInput && (hasRichMeta || ['music','movie','video','tvshow','game'].includes(type) || fromRichApp);
+      ]]]
+    icon: ''
+    icon_never_masked: '[[[ return variables.icon === "ps5"; ]]]'
+    is_active: |
+      [[[
+        const s = String(entity?.state || '').toLowerCase();
+        if (s === 'playing') return true;
+        const extra = Array.isArray(variables.active_states) ? variables.active_states.map(v => String(v).toLowerCase()) : [];
+        return extra.includes(s);
+      ]]]
+    mobile_filter_category: media

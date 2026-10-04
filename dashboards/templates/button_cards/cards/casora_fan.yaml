@@ -1,0 +1,77 @@
+casora_fan:
+  template:
+    - casora_entity
+
+  show_entity_picture: true
+  show_icon: true
+  show_name: true
+  show_state: true
+  name: Fan
+
+  tap_action:
+    action: more-info
+    entity: '[[[ return entity?.entity_id ]]]'
+
+  hold_action:
+    action: more-info
+    entity: '[[[ return entity?.entity_id ]]]'
+
+  icon_tap_action:
+    action: toggle
+
+  icon_hold_action:
+    action: more-info
+    entity: '[[[ return entity?.entity_id ]]]'
+
+  styles:
+    card:
+      - --casora-fan-animation: >
+          [[[
+            const s = String(entity?.state || '').toLowerCase();
+            const isOn = s === 'on';
+            const prev = this._casoraPrevFan;
+            this._casoraPrevFan = isOn;
+            const justOn  = isOn  && prev === false;
+            const justOff = !isOn && prev === true;
+            if (isOn) {
+              return justOn
+                ? 'casora-fan-spin 1.5s ease-in 1, casora-fan-spin 0.9s linear 1.5s infinite'
+                : 'casora-fan-spin 0.9s linear infinite';
+            }
+            if (justOff) return 'casora-fan-coast 1.5s ease-out 1 forwards';
+            return 'none';
+          ]]]
+
+    entity_picture:
+      - width: 100%
+      - height: 100%
+      - object-fit: contain
+      - opacity: 0.8
+      - transition: opacity 0.2s ease, filter 0.2s ease
+      - cursor: pointer
+
+    img_cell:
+      - background: transparent
+      - box-shadow: none !important
+      - transition: filter 0.2s ease
+      - cursor: pointer
+
+  variables:
+    mobile_filter_category: climate
+    icon: fan
+
+  extra_styles: |
+    #img-cell img {
+      transform-origin: 50% 50% !important;
+      animation: var(--casora-fan-animation, none) !important;
+      animation-play-state: var(--hsr-anim-paused, running) !important;
+    }
+
+    @keyframes casora-fan-spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    @keyframes casora-fan-coast {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }

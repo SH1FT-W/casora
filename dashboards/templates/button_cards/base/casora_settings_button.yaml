@@ -1,0 +1,275 @@
+casora_settings_button:
+  show_icon: false
+
+  variables:
+    shown: false
+    assist_available: false
+
+  tap_action:
+    action: javascript
+    javascript: |
+      [[[
+        const OPEN = 'casora-settings-menu';
+        const gone = document.querySelector('.' + OPEN);
+        if (gone) { if (gone._close) gone._close(); return; }
+
+        const host = this;
+        const PHONE = window.matchMedia(
+          '(max-width: 767px), (max-height: 500px)').matches;
+        const lift = function (on) {
+          if (PHONE) return;
+          if (on) {
+            host.style.setProperty('--casora-settings-fill', '#fff');
+            host.style.setProperty('--casora-settings-ink', '#1c1c20');
+          } else {
+            host.style.removeProperty('--casora-settings-fill');
+            host.style.removeProperty('--casora-settings-ink');
+          }
+        };
+        lift(true);
+
+        const card = host.shadowRoot && host.shadowRoot.querySelector('ha-card');
+        let r = (card || host).getBoundingClientRect();
+        for (let up = host, i = 0; up && i < 6; i++) {
+          const rootNode = up.getRootNode && up.getRootNode();
+          up = rootNode && rootNode.host;
+          const tpl = up && up._config && up._config.template;
+          if (tpl && [].concat(tpl).indexOf('casora_mobile_chrome') >= 0) {
+            const cap = up.shadowRoot && up.shadowRoot.querySelector('ha-card');
+            if (cap) r = cap.getBoundingClientRect();
+            break;
+          }
+        }
+
+        // document.body, or button-card's .ellipsis wrapper clips it.
+        const menu = document.createElement('div');
+        menu.className = OPEN;
+        menu.setAttribute('role', 'menu');
+        Object.assign(menu.style, {
+          position: 'fixed', zIndex: '99999', padding: '6px', minWidth: '168px',
+          boxSizing: 'border-box',
+        });
+        if (window.casoraMenuGlass) {
+          window.casoraMenuGlass.apply(menu);
+          if (window.casoraMenuGlass.lockScroll) window.casoraMenuGlass.lockScroll(menu);
+        }
+
+        let overflowAssist = false;
+        if (variables.assist_available) {
+          for (let up = host, i = 0; up && i < 6; i++) {
+            const rn = up.getRootNode && up.getRootNode();
+            up = rn && rn.host;
+            const t = up && up._config && up._config.template;
+            if (t && [].concat(t).indexOf('casora_room') >= 0) {
+              const slot = up.shadowRoot && up.shadowRoot.getElementById('assist');
+              try {
+                overflowAssist = !!slot && getComputedStyle(slot).display === 'none';
+              } catch (e) {}
+              break;
+            }
+          }
+        }
+
+        const ITEMS = [
+          { label: 'Refresh', icon: 'mdi:refresh',
+            run: function () { window.location.reload(); } },
+          { label: 'Edit dashboard', icon: 'mdi:pencil', run: function () {
+            const seg = (window.location.pathname || '').split('/').filter(Boolean);
+            const view = seg.length > 1 ? seg[1] : '';
+            const dash = seg.length ? seg[0] : '';
+            // Must match PANEL_URL in custom_components/casora/const.py
+            window.location.assign('/casora-studio' + (view ? '/' + view : '')
+              + (dash ? '?dash=' + encodeURIComponent(dash) : ''));
+          } },
+        ];
+
+        if (overflowAssist) {
+          ITEMS.unshift({ label: 'Assist', glyph: 'assist-fill', run: function () {
+            const root = document.querySelector('home-assistant') || host;
+            root.dispatchEvent(new CustomEvent('hass-action', {
+              bubbles: true, composed: true,
+              detail: { config: { tap_action: { action: 'assist' } }, action: 'tap' },
+            }));
+          } });
+        }
+
+        const mkItem = function (spec) {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.setAttribute('role', 'menuitem');
+        Object.assign(item.style, {
+          display: 'flex', alignItems: 'center', gap: '14px',
+          width: '100%', textAlign: 'left', border: '0',
+          background: 'transparent', color: '#fff', font: 'inherit',
+          fontSize: '14px', fontWeight: '500', letterSpacing: '-0.01em',
+          lineHeight: '1.35', padding: '9px 13px',
+          // Concentric: the panel's radius less the 6px it sits inside.
+          borderRadius: 'calc(var(--casora-menu-radius, 28px) - 6px)',
+          cursor: 'default', outline: 'none'
+        });
+        const gl = document.createElement(spec.glyph ? 'span' : 'ha-icon');
+        if (spec.glyph) {
+          const u = (typeof window.casoraIconUrl === 'function'
+            ? window.casoraIconUrl(spec.glyph)
+            : '/casora_assets/icons/' + spec.glyph + '.svg');
+          gl.style.background = 'rgba(255,255,255,0.92)';
+          gl.style.setProperty('-webkit-mask', 'url("' + u + '") no-repeat center / contain');
+          gl.style.setProperty('mask', 'url("' + u + '") no-repeat center / contain');
+        } else {
+          gl.setAttribute('icon', spec.icon);
+        }
+        Object.assign(gl.style, {
+          width: '21px', height: '21px',
+          color: 'rgba(255,255,255,0.92)', flex: 'none',
+        });
+        // A custom property never lands through Object.assign.
+        gl.style.setProperty('--mdc-icon-size', '21px');
+        const tx = document.createElement('span');
+        tx.textContent = spec.label;
+        tx.style.whiteSpace = 'nowrap';
+        item.appendChild(gl);
+        item.appendChild(tx);
+        const lit = function (on) {
+          item.style.background = on ? 'rgba(255,255,255,0.18)' : 'transparent';
+        };
+        item.onmouseenter = function () { lit(true); };
+        item.onmouseleave = function () { lit(false); };
+        item.onfocus = function () { lit(true); };
+        item.onblur = function () { lit(false); };
+        item.onclick = function () { menu._close(); spec.run(); };
+        return item;
+        };
+
+        ITEMS.forEach(function (spec) { menu.appendChild(mkItem(spec)); });
+        document.body.appendChild(menu);
+
+        const w = menu.offsetWidth;
+        menu.style.top = (window.casoraMenuGlass && window.casoraMenuGlass.dropTop
+          ? window.casoraMenuGlass.dropTop(r, 10)
+          : Math.round(r.bottom + 10)) + 'px';
+        menu.style.left = Math.round(Math.max(12, Math.min(r.right - w, window.innerWidth - w - 12))) + 'px';
+        if (window.casoraMenuGlass) window.casoraMenuGlass.enter(menu);
+
+        const onKey = function (e) { if (e.key === 'Escape') menu._close(); };
+        const onAway = function (e) {
+          const t = e.composedPath ? e.composedPath()[0] : e.target;
+          if (!menu.contains(t)) menu._close();
+        };
+        menu._close = function () {
+          lift(false);
+          window.removeEventListener('keydown', onKey, true);
+          document.removeEventListener('pointerdown', onAway, true);
+          window.removeEventListener('scroll', menu._close, true);
+          window.removeEventListener('resize', menu._close);
+          if (window.casoraMenuGlass) {
+            window.casoraMenuGlass.exit(menu, function () {
+              if (menu.parentNode) menu.remove();
+            });
+          } else if (menu.parentNode) { menu.remove(); }
+        };
+
+        setTimeout(function () {
+          window.addEventListener('keydown', onKey, true);
+          document.addEventListener('pointerdown', onAway, true);
+          window.addEventListener('scroll', menu._close, true);
+          window.addEventListener('resize', menu._close);
+        }, 0);
+      ]]]
+
+  hold_action: { action: none }
+  double_tap_action: { action: none }
+
+  custom_fields:
+    glyph: >
+      [[[
+        return `
+          <svg class="casora-settings" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="3"  cy="12" r="2.5"></circle>
+            <circle cx="12" cy="12" r="2.5"></circle>
+            <circle cx="21" cy="12" r="2.5"></circle>
+          </svg>
+        `;
+      ]]]
+
+  styles:
+    card:
+      - --casora-settings-vis: '[[[ return variables.shown ? "grid" : "none" ]]]'
+      - padding: 0
+      - background: transparent
+      - box-shadow: none !important
+      - border: none !important
+      - cursor: pointer
+    custom_fields:
+      glyph:
+        - display: grid
+        - place-items: center
+        - line-height: 0
+
+  extra_styles: |
+
+    /* ha-card is overflow:visible so the count can sit proud of the circle,
+       which also stopped it clipping button-card's ripple - a square layer
+       filling the card's box, so the hover read as a box behind the disc. */
+    :host{
+      --button-card-ripple-color: transparent !important;
+      --button-card-ripple-hover-color: transparent !important;
+      --ha-ripple-color: transparent !important;
+      --ha-ripple-hover-color: transparent !important;
+      --mdc-ripple-press-opacity: 0 !important;
+    }
+    :host ha-ripple,
+    :host mwc-ripple{ display: none !important; }
+    :host{
+      display: grid !important;
+      place-items: center !important;
+      width: var(--casora-chrome-btn-size, 34px) !important;
+      height: var(--casora-chrome-btn-size, 34px) !important;
+      color: #fff !important;
+      pointer-events: auto !important;
+    }
+
+    /* MUST match .np-head-wave in casora_now_playing_header exactly: same size,
+       same flat fill, blur but no rim. --casora-settings-fill is set while the
+       menu is open, so the button inverts the way the waveform does. */
+    :host ha-card{
+      /* The var is set by styles.card, which lands on ha-card - so it has to be
+         read here. Reading it from :host always fell back to none, because a
+         custom property set on a child is invisible to its parent. */
+      display: var(--casora-settings-vis, none) !important;
+      position: relative !important;
+      width: var(--casora-chrome-btn-size, 34px) !important;
+      height: var(--casora-chrome-btn-size, 34px) !important;
+      border-radius: 50% !important;
+      place-items: center !important;
+      background: var(--casora-settings-fill, var(--casora-chrome-fill, rgba(0,0,0,0.40))) !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      box-shadow: none !important;
+      transition: background 180ms cubic-bezier(.32,.72,0,1) !important;
+    }
+
+    /* button-card wraps custom fields in .vertical > .ellipsis, and .ellipsis is
+       bottom-aligned AND clips - it was cutting the top pixel off the glyph. */
+    :host .vertical,
+    :host .ellipsis,
+    :host .custom-field,
+    :host .custom-field-glyph{ overflow: visible !important; }
+
+    :host .casora-settings{
+      position: absolute !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      width: var(--casora-settings-size, 14px) !important;
+      height: var(--casora-settings-size, 14px) !important;
+      display: block !important;
+      fill: var(--casora-settings-ink, #fff) !important;
+      pointer-events: none !important;
+      transition: fill 180ms cubic-bezier(.32,.72,0,1) !important;
+    }
+
+    @media (hover: hover) and (pointer: fine){
+      :host ha-card:hover{
+        background: var(--casora-settings-fill, var(--casora-chrome-fill-hover, rgba(0,0,0,0.55))) !important;
+      }
+    }

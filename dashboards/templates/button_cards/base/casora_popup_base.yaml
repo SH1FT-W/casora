@@ -1,0 +1,35 @@
+casora_popup_base:
+  # window.casoraIconUrl load-race guard - see casora_default.yaml for why.
+  variables:
+    casora_icon_url_guard:
+      force_eval: true
+      value: |
+        [[[
+          if (typeof window.casoraIconUrl !== 'function') {
+            window.casoraIconUrl = (name) =>
+              (window.CASORA_ICONS && window.CASORA_ICONS[name]) ||
+              `/casora_assets/icons/${name}.svg`;
+          }
+          return true;
+        ]]]
+
+  tap_action:
+    haptic: light
+    action: |
+      [[[
+        return window.casoraPopupAction ? window.casoraPopupAction() : 'more-info';
+      ]]]
+    entity: "[[[ return entity?.entity_id; ]]]"
+    casora_popup:
+      title: ""
+      dismissable: true
+  icon_tap_action:
+    haptic: light
+    action: |
+      [[[
+        return window.casoraPopupAction ? window.casoraPopupAction() : 'more-info';
+      ]]]
+    entity: "[[[ return entity?.entity_id; ]]]"
+    casora_popup:
+      title: ""
+      dismissable: true

@@ -1,0 +1,103 @@
+casora_badge_presence:
+  template: [casora_badge_base]
+
+  variables:
+    enabled: true
+
+  show_state: false
+  show_label: false
+  show_entity_picture: >
+    [[[ return !!entity?.attributes?.entity_picture; ]]]
+  show_icon: >
+    [[[ return !entity?.attributes?.entity_picture; ]]]
+
+  extra_styles: >
+    [[[
+      const v = variables?.enabled;
+      const enabled = (v === undefined || v === null) ? true :
+        (typeof v === 'boolean') ? v :
+        (typeof v === 'number') ? v !== 0 :
+        !['false','0','no','off','disabled'].includes(String(v).trim().toLowerCase());
+
+      const hasEnt  = !!entity?.entity_id;
+      const stRaw   = String(entity?.state ?? '').trim();
+      const st      = stRaw.toLowerCase().replace(/_/g,' ');
+      const hide    = !enabled || !hasEnt || !stRaw || ['unknown','unavailable','none'].includes(st);
+
+      return `:host{display:${hide ? 'none' : 'inline-block'} !important;order:var(--casora-badge-order-people,3);}`;
+    ]]]
+
+  styles:
+    card:
+      - display: >
+          [[[
+            const v = variables?.enabled;
+            const enabled = (v === undefined || v === null) ? true :
+              (typeof v === 'boolean') ? v :
+              (typeof v === 'number') ? v !== 0 :
+              !['false','0','no','off','disabled'].includes(String(v).trim().toLowerCase());
+
+            const hasEnt  = !!entity?.entity_id;
+            const stRaw   = String(entity?.state ?? '').trim();
+            const st      = stRaw.toLowerCase().replace(/_/g,' ');
+            const hide    = !enabled || !hasEnt || !stRaw || ['unknown','unavailable','none'].includes(st);
+
+            return hide ? 'none' : 'inline-grid';
+          ]]]
+      - --presence-filter: >
+          [[[
+            const s = String(entity?.state || '').toLowerCase().replace(/_/g, ' ');
+            const on = (s === 'home' || s === 'just arrived');
+            return on ? 'none' : 'grayscale(1) contrast(.96) brightness(.94)';
+          ]]]
+      - --presence-opacity: >
+          [[[
+            const s = String(entity?.state || '').toLowerCase().replace(/_/g, ' ');
+            return (s === 'home' || s === 'just arrived') ? '1' : '.88';
+          ]]]
+      - --badge-title-color: >
+          [[[
+            const s = String(entity?.state || '').toLowerCase().replace(/_/g, ' ');
+            return (s === 'home' || s === 'just arrived')
+              ? 'var(--primary-text-color)'
+              : 'var(--badge-title-inactive)';
+          ]]]
+      - --badge-sub-color: >
+          [[[
+            const s = String(entity?.state || '').toLowerCase().replace(/_/g, ' ');
+            return (s === 'home' || s === 'just arrived')
+              ? 'var(--secondary-text-color)'
+              : 'color-mix(in oklab, var(--secondary-text-color) 70%, transparent)';
+          ]]]
+    icon:
+      - filter: var(--presence-filter)
+      - -webkit-filter: var(--presence-filter)
+      - opacity: var(--presence-opacity)
+      - color: var(--badge-title-color)
+    entity_picture:
+      - filter: var(--presence-filter)
+      - -webkit-filter: var(--presence-filter)
+      - opacity: var(--presence-opacity)
+
+  name: >
+    [[[
+      const friendly = (entity?.attributes?.friendly_name || 'Person').split(' ')[0];
+      const raw = String(entity?.state || 'Unknown');
+      const s = raw.toLowerCase().replace(/_/g, ' ');
+      const status =
+        s === 'home'           ? 'Home' :
+        s === 'not home' || s === 'away' ? 'Away' :
+        s === 'just arrived'   ? 'Just Arrived' :
+        s === 'just left'      ? 'Just Left' :
+        s === 'extended away'  ? 'Extended Away' :
+                                  raw;
+
+      const esc = (t) => String(t || '').replaceAll('"','&quot;');
+
+      return `
+        <div class="badge-wrap">
+          <div class="badge-title">${esc(friendly)}</div>
+          <div class="badge-sub">${esc(status)}</div>
+        </div>
+      `;
+    ]]]

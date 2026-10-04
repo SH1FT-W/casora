@@ -1,0 +1,40 @@
+# Casora - configuration.yaml reference
+# ============================================================================
+# If you installed the Casora integration, you need only the `packages:` and
+# `frontend: themes:` lines below. Casora builds the dashboard itself and
+# registers its own resources, so the `lovelace:` block at the end is not for
+# you: it belongs to the hand-written YAML setup in docs/ADVANCED.md.
+# ============================================================================
+
+homeassistant:
+  packages: !include_dir_named packages
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+template: !include sensors.yaml
+
+# Hand-written YAML only. Delete this block if the integration is installed:
+# Casora registers the dashboard itself, and serving it twice conflicts.
+lovelace:
+  mode: storage
+  dashboards:
+    dashboard-casora:
+      mode: yaml
+      title: "Casora"
+      icon: mdi:home
+      show_in_sidebar: true
+      filename: dashboards/casora/casora.yaml
+    dashboard-casora-mobile:
+      mode: yaml
+      title: "Casora Mobile"
+      icon: mdi:cellphone
+      show_in_sidebar: false
+      filename: dashboards/casora/casora_mobile.yaml

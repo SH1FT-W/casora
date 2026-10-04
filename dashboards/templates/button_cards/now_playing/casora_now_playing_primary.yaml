@@ -1,0 +1,1187 @@
+# Now Playing panel (art/title/progress/transport) for one src record from window._casoraNPSources; purely presentational so the same record can also drive a chip.
+casora_now_playing_primary:
+  custom_fields:
+    art: <div class="np-art-img"></div>
+    ctl:
+      card:
+        template: casora_now_playing_controls
+        type: custom:button-card
+        variables:
+          compact: '[[[ return !!variables.compact_controls; ]]]'
+          src: |
+            [[[
+              return (variables.np_count || 1) <= 2 ? variables.hold_src : null;
+            ]]]
+  double_tap_action:
+    action: none
+  extra_styles: |
+    :host{
+      display: block;
+      /* :host must track ha-card's capped width - the glass rim is :host::after (inset:0), so a flat 100% host let the rim draw wider than ha-card's own max-width on wide tracks. margin-left:auto keeps the pair right-aligned. */
+      /* !important: button-card inline-clamps the host to max-width:fit-content whenever styles.card carries a width key (see casora_mobile_now_playing.yaml), beating a plain :host rule. */
+      width: var(--np-tile-width, 100%) !important;
+      max-width: var(--np-max-w, calc(var(--casora-u-np, 10px) * 40)) !important;
+      margin-left: auto;
+      --np-shadow: none;
+
+      /* Artwork can't shrink below the text column height, or the column drives card height and breaks the equal insets - so column height is trimmed and the freed space goes to padding. */
+      /* min(natural, slot): --np-slot-h is the stack's budget split between the live
+         tiles, so one or two keep their natural size and the rest shrink exactly
+         enough to fit. The 999px fallback is the mobile row, which sets no slot. */
+      --np-pad-v: min(calc(var(--casora-u-np, 10px) * 1.6), calc(var(--np-slot-h, 999px) * 0.134));
+      /* 2px less than --np-pad-v - top/bottom read as slightly heavier than left at the same value, tuned down on request. */
+      --np-pad-tb: min(calc(var(--casora-u-np, 10px) * 1.4), calc(var(--np-slot-h, 999px) * 0.117));
+      --np-art-size: min(calc(var(--casora-u-np, 10px) * 9.4), calc(var(--np-slot-h, 999px) - 2 * var(--np-pad-tb)));
+      --np-row-gap: calc(var(--casora-u-np, 10px) * 1);
+      --np-track-gap: calc(var(--casora-u-np, 10px) * 0.8);
+      /* Desktop's title/sub read as loud as the entity grid's own tile names despite living in a peripheral,
+         ambient corner widget — sized down a step so it reads as glanceable status, not a second headline. */
+      /* Also min(): past five tiles the text column, not the artwork, is what
+         would drive the card past its slot. */
+      --np-title-size: min(calc(var(--casora-u-np, 10px) * 1.5), calc(var(--np-slot-h, 999px) * 0.30));
+      --np-sub-size: min(calc(var(--casora-u-np, 10px) * 1.3), calc(var(--np-slot-h, 999px) * 0.26));
+    }
+
+    /* Minimise/expand motion, lifted from casora_badge_base's entrance with the origin moved to the header's waveform toggle.
+       Lives on ha-card because it's the element carrying the backdrop-filter — animating any ancestor moves the backdrop root up and the tile spends the animation sampling an empty layer (see casora_badge_base's `translate` note).
+       Uses translate/scale (not transform) so --np-swap's WAAPI transform animations compose instead of clobbering these mid-swap. */
+    :host{
+      --np-enter-t: calc(1 - var(--np-min, 0));
+      --np-enter-p: var(--np-min, 0);
+      /* Was a 30px shift, a 20px lift and a 0.22 depth with a 0.07 squash -
+         a droplet flying to the toggle. The refined motion is a uniform scale
+         in place, so the shift and the squash are gone and the depth is what
+         reads as a settle rather than a flight. Reduced motion takes this path
+         on its own, so it has to say the same thing as the keyframes. */
+      --np-enter-shift: 0px;
+      --np-enter-lift: 0px;
+      --np-enter-depth: 0.08;
+      --np-enter-squash: 0;
+      --np-enter-dur: calc(0.34s + var(--np-enter-t) * 0.14s);
+      --np-enter-fade: calc(0.20s + var(--np-enter-t) * 0.05s);
+      --np-enter-ease: cubic-bezier(0.34, 1.26, 0.44, 1);
+    }
+
+    ha-card{
+      /* Real CSS enforcement of --np-max-w (see styles.card comment for why). */
+      max-width: var(--np-max-w, calc(var(--casora-u-np, 10px) * 40)) !important;
+      transform-origin: 100% 0%;
+      translate:
+        calc(var(--np-enter-p) * var(--np-enter-shift))
+        calc(var(--np-enter-p) * var(--np-enter-lift));
+      scale:
+        calc(1 - var(--np-enter-p) * (var(--np-enter-depth) - var(--np-enter-squash)))
+        calc(1 - var(--np-enter-p) * (var(--np-enter-depth) + var(--np-enter-squash)));
+      opacity: calc(var(--np-enter-t, 1) * var(--np-has-src, 1));
+      /* Empty tile shouldn't stay tappable - it still occupies its slot until the row drops it. */
+      pointer-events: var(--np-src-ptr, auto);
+      cursor: pointer;
+      transition: none !important;
+      /* translate/scale/opacity above are the RESTING state only - the WAAPI spring (driven by the shell's --np-min) owns the motion, so they're deliberately excluded from this transition list. */
+      transition-property: backdrop-filter, -webkit-backdrop-filter !important;
+      transition-duration: .15s !important;
+      transition-timing-function: ease !important;
+    }
+
+    /* Only :host::after gets this copy - #container::before is inside ha-card and already inherits its scale as an ancestor, so adding the same transform again would square it. */
+    :host::after{
+      transform-origin: 100% 0%;
+      translate:
+        calc(var(--np-enter-p) * var(--np-enter-shift))
+        calc(var(--np-enter-p) * var(--np-enter-lift));
+      scale:
+        calc(1 - var(--np-enter-p) * (var(--np-enter-depth) - var(--np-enter-squash)))
+        calc(1 - var(--np-enter-p) * (var(--np-enter-depth) + var(--np-enter-squash)));
+      /* No transition: shell drives this via the same WAAPI keyframes (pseudoElement) as ha-card, so rim/specular spring together. */
+    }
+
+    ha-ripple, mwc-ripple { display: none !important; }
+
+    :host{
+      --casora-card-hover-shadow: var(--np-shadow);
+      --casora-card-hover-filter: none;
+    }
+
+    /* Poster - same declarative binding the bloom above uses (--np-art), just sharp instead of blurred. */
+    .np-art-img{
+      position: absolute;
+      inset: 0;
+      background-image: var(--np-art, none);
+      background-size: cover;
+      background-position: center;
+      background-color: rgba(255,255,255,0.08);
+    }
+
+    #art::after{
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      box-shadow: inset 0 0 0 0.5px rgba(255,255,255,0.12);
+    }
+
+    /* Artwork bloom */
+    ha-card::before{
+      content: '';
+      position: absolute;
+      inset: -40%;
+      z-index: 0;
+      background-image: var(--np-art, none);
+      background-size: cover;
+      background-position: center;
+      filter: blur(52px) saturate(150%);
+      opacity: calc(var(--np-has-art, 0) * var(--np-bloom-strength, 0.30));
+      transform: translateZ(0);
+      pointer-events: none;
+      transition: opacity .45s ease;
+    }
+
+    /* Readability scrim. --np-scrim-mult (set alongside --casora-badge-body-tint above) scales it down in light mode. */
+    ha-card::after{
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(105deg,
+        rgba(0,0,0,calc(var(--np-has-art, 0) * 0.42 * var(--np-scrim-mult, 1))) 0%,
+        rgba(0,0,0,calc(var(--np-has-art, 0) * 0.16 * var(--np-scrim-mult, 1))) 62%,
+        rgba(0,0,0,calc(var(--np-has-art, 0) * 0.30 * var(--np-scrim-mult, 1))) 100%);
+      pointer-events: none;
+    }
+
+    /* Glass surface */
+    :host::after{
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: var(--np-inner-radius, calc(var(--casora-u-np, 10px) * 2.6));
+      z-index: 6;
+      --np-rim-side:      var(--casora-badge-rim-side-blur, 2px) var(--casora-badge-rim-side-spread, -1px) rgba(0,0,0,var(--casora-badge-rim-side, 0.98));
+      --np-rim-bottom:    0 1px 1px -1px rgba(0,0,0,var(--casora-badge-rim-bottom, 0.14));
+      --np-rim-top:       0 -1px 1px -1px rgba(0,0,0,var(--casora-badge-rim-top, 0.12));
+      /* ── BOTTOM DROP SHADOW ── the same token the dropdowns float on, so the
+         tile and a menu opened beside it cannot read as two different heights.
+         Tune the whole shadow with --np-elevation, or `none` to remove it. */
+      --np-rim-elevation: var(--np-elevation,
+        var(--casora-elevation-floating, 0 8px 20px rgba(0,0,0,0.13)));
+      box-shadow:
+        var(--casora-badge-rim-side-offset, 1px) 0 var(--np-rim-side),
+        calc(-1 * var(--casora-badge-rim-side-offset, 1px)) 0 var(--np-rim-side),
+        var(--np-rim-bottom),
+        var(--np-rim-top),
+        var(--np-rim-elevation);
+      /* --np-has-src as well, exactly as ha-card does it. This pseudo is on the
+         HOST, outside the card, so the card fading out left the rim and its
+         drop shadow still painting. One tile per panel never showed it; a stack
+         of seven with six empty drew six empty rectangles. */
+      opacity: calc(var(--np-glass, 1) * var(--np-enter-t, 1) * var(--np-has-src, 1));
+    }
+
+    /* Specular ring + inner hairline - ONE pseudo-element. These used to be two separate #container::before
+       rule blocks; an element can only have one ::before, so CSS was merging them property-by-property, and
+       the second block's mismatched border-radius (17px, vs. --np-inner-radius elsewhere) silently won over
+       the first — which is exactly why the hairline's straight edge stopped short of the card's actual
+       (26px) rounded corner instead of tracing it. Merged so both layers share the real radius, and the
+       hairline's box-shadow now rides the same top-to-bottom mask as the ring — which is also the fix for
+       "the highlight should fade out as it curves around the corner" rather than cutting off. */
+    #container::before{
+      content: '';
+      position: absolute;
+      /* Inset tracks --np-pad-tb/--np-pad-v (not hardcoded) so this reaches the card's true edge as padding changes; right stays literal -16px matching the padding shorthand. */
+      inset: calc(-1 * var(--np-pad-tb, var(--np-pad-v, 16px))) -16px
+             calc(-1 * var(--np-pad-tb, var(--np-pad-v, 16px))) calc(-1 * var(--np-pad-v, 16px));
+      border-radius: var(--np-inner-radius, calc(var(--casora-u-np, 10px) * 2.6));
+      pointer-events: none;
+      z-index: 5;
+      padding: var(--casora-badge-ring-thickness, 1.3px);
+      backdrop-filter: var(--casora-badge-ring-backdrop, brightness(var(--casora-badge-ring-boost, 1.5)) saturate(var(--casora-badge-ring-sat, 1.8)));
+      -webkit-backdrop-filter: var(--casora-badge-ring-backdrop, brightness(var(--casora-badge-ring-boost, 1.5)) saturate(var(--casora-badge-ring-sat, 1.8)));
+      mix-blend-mode: screen;
+      box-shadow:
+        inset 0 0.5px 0 rgba(255,255,255,0.34),
+        inset 0 0 0 0.5px rgba(255,255,255,0.10),
+        inset 0 -0.5px 0 rgba(255,255,255,0.10);
+      -webkit-mask:
+        linear-gradient(to bottom,
+          rgba(0,0,0,.5) 0%,
+          rgba(0,0,0,0.15) 32%,
+          rgba(0,0,0,0) 45%,
+          rgba(0,0,0,0) 55%,
+          rgba(0,0,0,0.07) 68%,
+          rgba(0,0,0,0.05) 100%),
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: source-in, xor;
+              mask-composite: intersect, exclude;
+      opacity: var(--np-glass, 1);
+      transform: translateZ(0);
+      backface-visibility: hidden;
+    }
+
+    #container{
+      position: relative;
+      z-index: 2;
+      /* button-card's shadow DOM makes this a flex/grid child of ha-card (default min-width:auto refuses to shrink below content) - without this, an unwrapped long title could grow ha-card past its max-width caps. */
+      min-width: 0;
+    }
+
+    /* Hover tint */
+    #container::after{
+      content: '';
+      position: absolute;
+      inset: calc(-1 * var(--np-pad-tb, var(--np-pad-v, 16px))) -16px
+             calc(-1 * var(--np-pad-tb, var(--np-pad-v, 16px))) calc(-1 * var(--np-pad-v, 16px));
+      border-radius: var(--np-inner-radius, calc(var(--casora-u-np, 10px) * 2.6));
+      pointer-events: none;
+      z-index: 5;
+      background: rgba(255,255,255,0.05);
+      opacity: 0;
+      transition: opacity .40s ease;
+    }
+
+    @media (hover: hover) {
+      ha-card:hover #container::after{
+        opacity: 0.6;
+        transition: opacity .18s ease;
+      }
+    }
+
+    .np-meta{
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      min-width: 0;
+    }
+
+    .np-title{
+      font-size: var(--np-title-size, 16px);
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      line-height: 1.15;
+      color: var(--primary-text-color, #fff);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      /* overflow clips at the padding box, or descenders lose their tails. */
+      padding-block: 0.16em;
+      margin-block: -0.16em;
+    }
+
+    .np-sub{
+      font-size: var(--np-sub-size, 14px);
+      font-weight: 400;
+      letter-spacing: -0.1px;
+      line-height: 1.18;
+      color: rgba(255,255,255,0.62);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-block: 0.16em;
+      margin-block: -0.16em;
+    }
+
+    .np-track{
+      margin-top: var(--np-track-gap, 12px);
+      height: calc(var(--casora-u-np, 10px) * 0.4);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.16);
+      overflow: hidden;
+    }
+
+    .np-fill{
+      height: 100%;
+      width: 100%;
+      border-radius: 999px;
+      background: var(--np-accent, #67f5a0);
+      transform-origin: left center;
+    }
+
+    .np-line{
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .np-line > .np-title,
+    .np-line > .np-sub{
+      display: inline-block;
+      max-width: none;
+    }
+
+    /* Right fade only at rest - left fade animates in separately below (avoids dimming the first char before it's actually scrolled). */
+    .np-line.np-scroll{
+      -webkit-mask-image: linear-gradient(90deg,
+        #000 0px, #000 calc(100% - 18px), transparent 100%);
+      mask-image: linear-gradient(90deg,
+        #000 0px, #000 calc(100% - 18px), transparent 100%);
+      animation: np-marquee-fade var(--np-marquee-dur, 12s) linear infinite;
+      animation-delay: var(--np-mq-delay, 0s);
+    }
+
+    /* Offsets (0-12%, 24-100%) match np-marquee's own pause window below - keep them synced if either changes. */
+    @keyframes np-marquee-fade{
+      0%, 12%{
+        -webkit-mask-image: linear-gradient(90deg,
+          #000 0px, #000 0px, #000 calc(100% - 18px), transparent 100%);
+        mask-image: linear-gradient(90deg,
+          #000 0px, #000 0px, #000 calc(100% - 18px), transparent 100%);
+      }
+      24%, 100%{
+        -webkit-mask-image: linear-gradient(90deg,
+          transparent 0px, #000 7px, #000 calc(100% - 18px), transparent 100%);
+        mask-image: linear-gradient(90deg,
+          transparent 0px, #000 7px, #000 calc(100% - 18px), transparent 100%);
+      }
+    }
+
+    .np-marquee-clone{
+      display: inline-block;
+    }
+
+    .np-line.np-scroll > .np-title,
+    .np-line.np-scroll > .np-sub{
+      animation: np-marquee var(--np-marquee-dur, 12s) linear infinite;
+    }
+
+    .np-line.np-scroll > .np-title,
+    .np-line.np-scroll > .np-sub{
+      animation-delay: var(--np-mq-delay, 0s);
+    }
+
+    @keyframes np-marquee{
+      0%,  12% { transform: translateX(0); }
+      100%     { transform: translateX(calc(-1 * var(--np-mq, 0px))); }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .np-line.np-scroll > .np-title,
+      .np-line.np-scroll > .np-sub{ animation: none !important; }
+      .np-line.np-scroll{
+        animation: none !important;
+        -webkit-mask-image: none;
+        mask-image: none;
+      }
+      .np-marquee-clone{ display: none; }
+    }
+
+    @keyframes np-advance { to { transform: scaleX(1); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .np-fill{ animation: none !important; }
+    }
+
+    /* Tablet (touch, 768-1400px) - desktop/mouse keeps the larger :host defaults above. */
+    @media (min-width: 768px) and (max-width: 1400px) and (min-height: 501px) and (pointer: coarse),
+           (min-width: 768px) and (max-width: 1400px) and (min-height: 501px) and (hover: none) {
+      :host{
+        --np-art-size: min(78px, calc(var(--np-slot-h, 999px) - 2 * var(--np-pad-tb)));
+        --np-title-size: min(14px, calc(var(--np-slot-h, 999px) * 0.30));
+        --np-sub-size: min(12px, calc(var(--np-slot-h, 999px) * 0.26));
+        --np-pad-v: min(12px, calc(var(--np-slot-h, 999px) * 0.134));
+        /* Must be restated per breakpoint: --np-pad-tb is set unconditionally on :host, so it does
+           NOT fall back to this block's --np-pad-v. Left it at the desktop 14px against a 12px left
+           inset, i.e. top/bottom 2px LARGER than the left — the one place the intended relationship
+           was inverted. 12px squares the artwork's inset on all three sides. */
+        --np-pad-tb: min(12px, calc(var(--np-slot-h, 999px) * 0.117));
+        --np-track-gap: 8px;
+      }
+    }
+
+    /* Mobile */
+    @media (max-width: 600px){
+      :host{
+        /* 108 not 100: art must stay ≥ text column height (~107px with 44px transport) or the column drives card height. */
+        --np-art-size: 108px;
+        --np-title-size: 16px;
+        --np-sub-size: 14px;
+        --np-pad-v: 16px;
+        --np-row-gap: 7px;
+        --np-track-gap: 9px;
+        /* Lower than desktop: tiles are usually darker than the wallpaper, so full elevation reads as haze. */
+        --np-elevation: 0 1px 6px rgba(0,0,0,0.10);
+        /* Phone slots are sized by the row itself, so the desktop cap and right-align both come off here. */
+        max-width: 100% !important;
+        margin-left: 0;
+      }
+    }
+
+    /* Phone landscape. Without this the tile fell through EVERY breakpoint - 932px wide fails the
+       mobile query's max-width:600px, and 430px tall fails the tablet query's min-height:501px — so
+       it silently used the desktop defaults (94px art, 16px padding, 15px title) on the shortest
+       viewport there is. Same condition the theme uses for phone landscape.
+       --np-pad-tb is restated deliberately: it is set unconditionally on :host, so it does NOT
+       inherit this block's --np-pad-v (see the note on the desktop declaration). */
+    @media (hover: none) and (pointer: coarse) and (orientation: landscape) and (max-height: 600px) {
+      :host{
+        --np-art-size: 112px;
+        --np-title-size: 16px;
+        --np-sub-size: 14px;
+        --np-pad-v: 12px;
+        --np-pad-tb: 10px;
+        --np-row-gap: 5px;
+        --np-track-gap: 6px;
+        --np-elevation: 0 1px 6px rgba(0,0,0,0.10);
+        /* Slot width is owned by the row, as on portrait mobile. */
+        max-width: 100% !important;
+        margin-left: 0;
+      }
+    }
+  hold_action:
+    action: call-service
+    haptic: medium
+    service: input_text.set_value
+    service_data:
+      entity_id: input_text.casora_now_playing_pinned
+      value: ''
+  name: |
+    [[[
+      const s = variables.hold_src;
+      if (!s) return '';
+
+      const esc = (t) => String(t ?? '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      const bits = s.kind === 'player'
+        ? [s.subtitle]
+        : [s.source, s.subtitle];
+      const sub = bits.map(x => String(x || '').trim()).filter(Boolean).join(' · ');
+
+      let bar = '';
+      if ((variables.np_count || 1) <= 3
+        && Number.isFinite(s.dur) && s.dur > 0 && Number.isFinite(s.pos)) {
+        const elapsed = s.playing && s.posAt ? (Date.now() - s.posAt) / 1000 : 0;
+        const now = Math.min(s.dur, Math.max(0, s.pos + elapsed));
+        const frac = Math.max(0, Math.min(1, now / s.dur));
+        const remain = Math.max(0, s.dur - now);
+        const anim = s.playing && remain > 0
+          ? `animation: np-advance ${remain.toFixed(1)}s linear forwards;`
+          : '';
+        bar = `<div class="np-track"><div class="np-fill" style="transform: scaleX(${frac.toFixed(5)}); ${anim}"></div></div>`;
+      }
+
+      return `
+        <div class="np-meta">
+          <div class="np-line"><span class="np-title">${esc(s.title)}</span></div>
+          ${sub ? `<div class="np-line"><span class="np-sub">${esc(sub)}</span></div>` : ''}
+          ${bar}
+        </div>
+      `;
+    ]]]
+  show_icon: false
+  show_label: false
+  show_name: true
+  show_state: false
+  styles:
+    card:
+    - --np-bloom-strength: var(--np-bloom-desktop, 0.30)
+    - --np-glass: |
+        [[[
+          return variables.glass === false ? 0 : 1;
+        ]]]
+    - --casora-card-hover-shadow: var(--np-shadow)
+    - --casora-card-hover-filter: none
+    - --np-marquee-scan: |
+        [[[
+          const el = this;
+          const scan = () => {
+            const root = el.shadowRoot;
+            if (!root) return;
+            const lines = root.querySelectorAll('.np-line');
+            if (!lines.length) return;
+            // Seamless one-direction loop: a second copy offset by GAP_PX; animating to -(singleWidth+GAP) lands it exactly where the original started.
+            const SPEED_PX_S = 26;
+            const GAP_PX = 48;
+            const MIN_DUR_S = 4;
+            // Plain CSS keyframe shape (not WAAPI offsets) so pause time scales with title length.
+            const PAUSE_FRACTION = 0.12;
+            lines.forEach((ln) => {
+              // Measures the original (first child) alone - scrollWidth would double-count if a clone from a previous pass already exists.
+              const original = ln.firstElementChild;
+              if (!original) return;
+              const singleWidth = original.getBoundingClientRect().width;
+              const over = singleWidth - ln.clientWidth;
+              const clone = ln.children[1] || null;
+
+              if (over > 4) {
+                const loopDist = singleWidth + GAP_PX;
+                const dur = Math.max(MIN_DUR_S, (loopDist / SPEED_PX_S) / (1 - PAUSE_FRACTION));
+                ln.style.setProperty('--np-mq', loopDist.toFixed(0) + 'px');
+                ln.style.setProperty('--np-marquee-dur', dur.toFixed(2) + 's');
+                // Set per line: edge-fade (on the line) and translateX (on the text) must share duration+delay to stay in lockstep.
+                ln.style.setProperty('--np-mq-delay',
+                  ln.querySelector('.np-sub') ? '1.2s' : '0s');
+                ln.classList.add('np-scroll');
+                if (!clone) {
+                  const dupe = original.cloneNode(true);
+                  dupe.classList.add('np-marquee-clone');
+                  dupe.setAttribute('aria-hidden', 'true');
+                  dupe.style.marginLeft = GAP_PX + 'px';
+                  ln.appendChild(dupe);
+                }
+              } else {
+                ln.style.removeProperty('--np-mq');
+                ln.style.removeProperty('--np-marquee-dur');
+                ln.style.removeProperty('--np-mq-delay');
+                ln.classList.remove('np-scroll');
+                if (clone) clone.remove();
+              }
+            });
+            if (!el._npMqObs && window.ResizeObserver) {
+              const target = root.getElementById('container');
+              if (target) {
+                el._npMqObs = new ResizeObserver(() => requestAnimationFrame(scan));
+                try { el._npMqObs.observe(target); } catch (e) {}
+              }
+            }
+          };
+          // Bounded wait: field may not be in the shadow DOM yet the frame after render (same pattern as the artwork layers).
+          let tries = 0;
+          const wait = () => {
+            if (el.shadowRoot?.querySelector('.np-line')) { scan(); return; }
+            if (++tries < 30) requestAnimationFrame(wait);
+          };
+          requestAnimationFrame(wait);
+          return 1;
+        ]]]
+    - --np-has-src: |
+        [[[
+          return variables.hold_src ? 1 : 0;
+        ]]]
+    - --np-src-ptr: |
+        [[[
+          const open = states[variables.minimized_entity]?.state !== 'on';
+          return (variables.hold_src && open) ? 'auto' : 'none';
+        ]]]
+    - --np-art: |
+        [[[
+          const s = variables.hold_src;
+          const hold = window._casoraNPArtHold = window._casoraNPArtHold || {};
+          const warm = window._casoraNPArtWarm = window._casoraNPArtWarm || new Map();
+          const k = s ? ((s.entity || '') + '|' + (s.key || s.kind || '')) : '';
+          const cur = s?.art || null;
+          const id = s ? ((s.title || '') + '|' + (s.subtitle || '')) : '';
+          const el = this;
+
+          const artk = (u) => {
+            const t = String(u || '');
+            const q = t.indexOf('?');
+            if (q < 0) return t + '|' + id;
+            const rest = t.slice(q + 1).split('&')
+              .filter((p) => p.slice(0, 6) !== 'token=' && p.slice(0, 8) !== 'authSig=')
+              .sort().join('&');
+            return t.slice(0, q) + (rest ? '?' + rest : '') + '|' + id;
+          };
+
+          const touch = (p) => {
+            const rec = warm.get(p);
+            if (rec) { warm.delete(p); warm.set(p, rec); }
+            return rec;
+          };
+          // LRU rather than insertion order, so the cover on screen is never the one evicted.
+          const trim = () => {
+            while (warm.size > 24) {
+              const p = warm.keys().next().value;
+              const rec = warm.get(p);
+              warm.delete(p);
+              if (rec && rec.obj) { try { URL.revokeObjectURL(rec.obj); } catch (e) {} }
+            }
+          };
+          const rotates = (u) => {
+            try {
+              const p = new URL(u, location.origin);
+              return p.origin === location.origin &&
+                (p.searchParams.has('token') || p.searchParams.has('authSig'));
+            } catch (e) { return false; }
+          };
+
+          const claim = (u) => {
+            const p = artk(u);
+            let rec = touch(p);
+            if (!rec) { rec = {}; warm.set(p, rec); trim(); }
+            if (rec.obj || rec.busy || rec.tried === u) return rec;
+            rec.tried = u;
+            if (!rotates(u)) {
+              try {
+                const im = new Image();
+                im.decoding = 'async';
+                im.src = u;
+                rec.img = im;
+                im.decode?.().catch(() => {});
+              } catch (e) {}
+              return rec;
+            }
+            rec.busy = true;
+            fetch(u, { credentials: 'same-origin' })
+              .then((r) => (r.ok ? r.blob() : Promise.reject(r.status)))
+              .then((b) => {
+                const obj = URL.createObjectURL(b);
+                const publish = () => {
+                  rec.busy = false;
+                  rec.obj = obj;
+                  const card = el.shadowRoot?.querySelector('ha-card');
+                  if (card) card.style.setProperty('--np-art', 'url("' + obj + '")');
+                };
+                // Decoded first, or the swap off the token url is a repaint with nothing to show.
+                try {
+                  const im = new Image();
+                  im.decoding = 'async';
+                  im.src = obj;
+                  rec.img = im;
+                  if (im.decode) im.decode().then(publish, publish); else publish();
+                } catch (e) { publish(); }
+              })
+              .catch(() => { rec.busy = false; });
+            return rec;
+          };
+
+          let u = null;
+          if (cur) {
+            const rec = claim(cur);
+            // Until the blob lands, paint the CURRENT url - it is the only one HA will serve.
+            u = (rec && rec.obj) || cur;
+            if (k) hold[k] = { id: id, url: u };
+          } else if (k) {
+            const prev = hold[k];
+            // Transient null between polls - hold the last good art, but only for this track.
+            u = (prev && prev.id === id) ? prev.url : null;
+          }
+
+          return u ? `url("${u}")` : 'none';
+        ]]]
+    - --np-has-art: |
+        [[[
+          const s = variables.hold_src;
+          const hold = window._casoraNPArtHold || {};
+          const k = s ? ((s.entity || '') + '|' + (s.key || s.kind || '')) : '';
+          const id = s ? ((s.title || '') + '|' + (s.subtitle || '')) : '';
+          const rec = k ? hold[k] : null;
+          return ((rec && rec.id === id && rec.url) || s?.art) ? 1 : 0;
+        ]]]
+    - --np-swap: |
+        [[[
+          // hold_src (not src) avoids reading a one-poll-cycle blip as an exit+arrival bounce; store keyed by slot_id survives element rebuild (see slot_id note above).
+          window._casoraNPSlotState = window._casoraNPSlotState || {};
+          const store = variables.slot_id
+            ? (window._casoraNPSlotState[variables.slot_id] = window._casoraNPSlotState[variables.slot_id] || {})
+            : this;
+
+          const key  = variables.hold_src?.key || '';
+          const prev = store._npKey;
+          const horizontal = variables.entry_direction === 'horizontal';
+
+          // Container-owned motion: record the key so state stays coherent, but never animate.
+          if (variables.swap_motion === false) {
+            store._npKey = key;
+            return key ? 1 : 0;
+          }
+
+          if (prev !== key) {
+            const isExit  = !key;
+            const isFirst = !prev && !isExit;
+            // Boot timestamp distinguishes "already playing before page load" from "genuinely new arrival": store._npKey resets every page load, so !prev alone can't tell them apart. Only gates isFirst - exits/promotions/reassignments are untouched.
+            window._casoraNPBootAt = window._casoraNPBootAt || Date.now();
+            const booting = (Date.now() - window._casoraNPBootAt) < 2500;
+            const skipFirst = isFirst && (!horizontal || booting);
+
+            if (!skipFirst && !isExit) {
+              const c0 = this;
+              if (c0) {
+                if (horizontal) {
+                  c0.style.transformOrigin = '50% 50%';
+                  c0.style.transform = 'translateX(40px)';
+                } else {
+                  c0.style.transformOrigin = '100% 0%';
+                  c0.style.transform = 'scale(0.16)';
+                }
+                c0.style.opacity = '0';
+              }
+            }
+
+            requestAnimationFrame(() => {
+              const card = this;
+              // isConnected guard: mobile rebuilds this element on track changes (see slot_id note above), so a rebuild landing before this rAF fires would otherwise animate a disconnected ghost. Skipping lets the rebuilt element's own fresh eval retry the entrance correctly.
+              if (!card || !card.isConnected) return;
+              store._npKey = key;
+              try { store._npBodyAnim?.cancel(); } catch (e) {}
+
+              const clearStamp = () => {
+                card.style.removeProperty('transform');
+                card.style.removeProperty('opacity');
+              };
+
+              if (skipFirst) { clearStamp(); return; }
+
+              if (isExit) {
+                clearStamp();
+                if (horizontal) {
+                  card.style.transformOrigin = '50% 50%';
+                  store._npBodyAnim = card.animate(
+                    [
+                      { opacity: 1, transform: 'translateX(0px)' },
+                      { opacity: 0, transform: 'translateX(40px)' },
+                    ],
+                    { duration: 320, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'both' }
+                  );
+                } else {
+                  card.style.transformOrigin = '50% 0%';
+                  store._npBodyAnim = card.animate(
+                    [
+                      { opacity: 1, transform: 'scale(1, 1)' },
+                      { opacity: 0, transform: 'scale(0.78, 0.06)' },
+                    ],
+                    { duration: 320, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'both' }
+                  );
+                }
+
+                store._npBodyAnim.finished
+                  .then(() => { try { store._npBodyAnim?.cancel(); } catch (e) {} })
+                  .catch(() => {});
+                return;
+              }
+
+              // One small overshoot and settle - two overshoots read as wobble.
+              const R = 26;
+
+              clearStamp();
+
+              if (horizontal) {
+                const rectScope = String(variables.slot_id || '')
+                  .replace(/\|np\d+$/, '');
+                const priorRect = (window._casoraNPRowRects || {})[rectScope + '|' + key];
+                if (priorRect && tr.width > 4 && tr.height > 4) {
+                  const sx = priorRect.width  / tr.width;
+                  const sy = priorRect.height / tr.height;
+                  const dx = (priorRect.left + priorRect.width  / 2) - (tr.left + tr.width  / 2);
+                  const dy = (priorRect.top  + priorRect.height / 2) - (tr.top  + tr.height / 2);
+                  card.style.transformOrigin = '50% 50%';
+                  store._npBodyAnim = card.animate(
+                    [
+                      { transform: `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`, opacity: 1 },
+                      { transform: 'translate(0px, 0px) scale(1, 1)', opacity: 1 },
+                    ],
+                    { duration: 460, easing: 'cubic-bezier(0.25, 0.9, 0.3, 1)', fill: 'both' }
+                  );
+                  store._npBodyAnim.finished
+                    .then(() => { try { store._npBodyAnim?.cancel(); } catch (e) {} })
+                    .catch(() => {});
+                  return;
+                }
+
+                card.style.transformOrigin = '50% 50%';
+                store._npBodyAnim = card.animate(
+                  [
+                    { opacity: 0, transform: 'translateX(40px)' },
+                    { opacity: 1, transform: 'translateX(-4px)', offset: 0.75 },
+                    { opacity: 1, transform: 'translateX(0px)' },
+                  ],
+                  { duration: 460, easing: 'cubic-bezier(0.25, 0.9, 0.3, 1)', fill: 'both' }
+                );
+                store._npBodyAnim.finished
+                  .then(() => { try { store._npBodyAnim?.cancel(); } catch (e) {} })
+                  .catch(() => {});
+                return;
+              }
+
+              card.style.opacity = '0';
+              const artUrl = variables.hold_src?.art;
+              const reveal = () => {
+                card.style.transformOrigin = '50% 50%';
+                card.style.removeProperty('opacity');
+                store._npBodyAnim = card.animate(
+                  [
+                    { opacity: 0 },
+                    { opacity: 1 },
+                  ],
+                  { duration: 420, easing: 'ease-out', fill: 'both' }
+                );
+                store._npBodyAnim.finished
+                  .then(() => { try { store._npBodyAnim?.cancel(); } catch (e) {} })
+                  .catch(() => {});
+              };
+              if (artUrl) {
+                let artDone = false;
+                const proceed = () => { if (artDone) return; artDone = true; reveal(); };
+                const img = new Image();
+                img.onload = proceed;
+                img.onerror = proceed;
+                img.src = artUrl;
+                setTimeout(proceed, 400);
+              } else {
+                reveal();
+              }
+            });
+          }
+
+          // Publishes this slot's resting rect so a future reassignment knows where to FLIP from.
+          if (horizontal && key) {
+            requestAnimationFrame(() => {
+              const el = this;
+              if (!el) return;
+              const r = el.getBoundingClientRect();
+              if (r.width > 4 && r.height > 4) {
+                window._casoraNPRowRects = window._casoraNPRowRects || {};
+                window._casoraNPRowRects[
+                  String(variables.slot_id || '').replace(/\|np\d+$/, '')
+                  + '|' + key] = r;
+              }
+            });
+          }
+
+
+          return key ? 1 : 0;
+        ]]]
+    - --np-accent: |
+        [[[
+          const k = variables.hold_src?.kind;
+          if (k === 'activity') return 'var(--casora-color-blue, #0A84FF)';
+          return 'var(--casora-color-teal, #00c3d0)';
+        ]]]
+    - --casora-badge-body-tint: |
+        [[[
+          const isDark = typeof hass?.themes?.darkMode === 'boolean'
+            ? hass.themes.darkMode
+            : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const v = isDark ? '0.25' : '0.05';
+          // Also sets --np-scrim-mult here (avoids a second hass.themes read): ha-card::after's readability scrim needs its own dark-mode scaling, uncoupled from this tint.
+          try { this.style.setProperty('--np-scrim-mult', isDark ? '1' : '0.55'); } catch (e) {}
+          return v;
+        ]]]
+    - background: |
+        color-mix(in srgb,
+          rgba(0,0,0,calc(var(--casora-badge-body-tint, 0.25) + (var(--np-inner-glass, 1) * 0.05)))
+            calc(var(--np-has-art, 0) * 100%),
+          var(--badge-background, rgba(10,12,14,0.65))) !important
+    - -webkit-backdrop-filter: |
+        blur(calc(var(--np-inner-glass, 1) * 22px)) saturate(calc(1 + (0.2 * var(--np-has-art, 0) * var(--np-inner-glass, 1)))) !important
+    - backdrop-filter: |
+        blur(calc(var(--np-inner-glass, 1) * 22px)) saturate(calc(1 + (0.2 * var(--np-has-art, 0) * var(--np-inner-glass, 1)))) !important
+    - border-radius: var(--np-inner-radius, calc(var(--casora-u-np, 10px) * 2.6))
+    - --np-art-radius: calc(var(--casora-u-np, 10px) * 1.5)
+    - border: none !important
+    - padding: var(--np-pad-tb, var(--np-pad-v, 12px)) calc(var(--casora-u-np, 10px) * 1.6) var(--np-pad-tb, var(--np-pad-v, 12px)) var(--np-pad-v, 12px) !important
+    - min-height: calc(var(--np-art-size, 100px) + (2 * var(--np-pad-tb, var(--np-pad-v, 12px))))
+    - height: |
+        [[[
+          return variables.entry_direction === 'horizontal'
+            ? 'calc(var(--np-art-size, 100px) + (2 * var(--np-pad-tb, var(--np-pad-v, 12px))))'
+            : 'auto';
+        ]]]
+    - -webkit-text-size-adjust: 100%
+    - text-size-adjust: 100%
+    - width: var(--np-tile-width, 100%) !important
+    - min-width: 0
+    - --np-max-w: |
+        [[[
+          return variables.entry_direction === 'horizontal' ? '100%' : 'calc(var(--casora-u-np, 10px) * 40)';
+        ]]]
+    - justify-self: stretch !important
+    - isolation: isolate
+    - overflow: hidden !important
+    - box-shadow: var(--np-shadow)
+    custom_fields:
+      art:
+      - grid-area: art
+      - align-self: center
+      - justify-self: start
+      - border-radius: var(--np-art-radius, 10px)
+      - line-height: 0
+      - width: var(--np-art-size, 100px)
+      - height: var(--np-art-size, 100px)
+      - overflow: hidden
+      - position: relative
+      - cursor: pointer
+      ctl:
+      - grid-area: ctl
+      - justify-self: center
+      - align-self: center
+    grid:
+    - display: grid !important
+    - grid-template-areas: '"art meta" "art ctl"'
+    - grid-template-columns: max-content minmax(0, 1fr)
+    - grid-template-rows: |
+        [[[
+          const c = variables.hold_src?.controls;
+          const hasControls = !!(c && (c.toggle || c.next || c.prev))
+            && (variables.np_count || 1) <= 2;
+          return hasControls ? 'max-content max-content' : 'max-content 0px';
+        ]]]
+    - column-gap: calc(var(--casora-u-np, 10px) * 1.4)
+    - row-gap: |
+        [[[
+          const c = variables.hold_src?.controls;
+          return (c && (c.toggle || c.next || c.prev)) && (variables.np_count || 1) <= 2
+            ? 'var(--np-row-gap, 8px)' : '0px';
+        ]]]
+    - align-items: center !important
+    - align-content: center !important
+    name:
+    - grid-area: meta
+    - align-self: |
+        [[[
+          const c = variables.hold_src?.controls;
+          const hasControls = !!(c && (c.toggle || c.next || c.prev))
+            && (variables.np_count || 1) <= 2;
+          return hasControls ? 'end' : 'center';
+        ]]]
+    - min-width: 0
+    - overflow: hidden
+    - text-align: left
+    - justify-self: stretch
+  tap_action:
+    action: |
+      [[[
+        const _s = variables.src;
+        if (!_s || !_s.entity) return 'more-info';
+        return window.casoraPopupAction ? window.casoraPopupAction() : 'more-info';
+      ]]]
+    casora_popup:
+      content: |
+        [[[
+          const _src = variables.src;
+          const _ent = (_src && _src.entity) ? states[_src.entity] : null;
+          if (!_ent) return { type: 'vertical-stack', cards: [] };
+          /* Symbol je Player automatisch; eigene Angaben (icon, volume_entity) unter media.players in den Einstellungen. */
+          const _mp = ((window.CASORA_SETTINGS || {}).media || {}).players || {};
+          const _t = ((_ent.attributes?.friendly_name || '') + ' ' + _ent.entity_id + ' ' + (_ent.attributes?.device_class || '')).toLowerCase();
+          const _meta = Object.assign({ icon: /apple.?tv/.test(_t) ? 'apple_tv' : /homepod/.test(_t) ? 'homepod'
+            : /playstation|ps5|xbox/.test(_t) ? 'playstation' : /\btv\b|fernseher|qled|oled|bravia/.test(_t) ? 'tv' : 'speaker' }, _mp[_ent.entity_id] || {});
+          return ((entity, variables) => {
+          const UI = window._casoraUI;
+          if (!UI || !entity) return { type: 'vertical-stack', cards: [] };
+          const id = entity?.entity_id;
+          const reg = hass.entities || {};
+          const devId = reg[id]?.device_id;
+          const areaId = reg[id]?.area_id || (devId ? hass.devices?.[devId]?.area_id : null);
+          const roomName = variables.room_name || (areaId ? hass.areas?.[areaId]?.name : null) || null;
+
+          const uiCard = {
+            type: 'custom:button-card',
+            entity: id,
+            triggers_update: [id].concat(variables.volume_entity ? [variables.volume_entity] : []),
+            variables: { room_name: roomName, icon: variables.icon || null, volume_entity: variables.volume_entity || null },
+            card_mod: { style:
+              '\n:host { --ha-card-backdrop-filter: none !important; --ha-card-background: transparent !important; --card-background-color: transparent !important; --ha-card-box-shadow: none !important; --ha-card-border-width: 0px !important; }'
+              + '\nha-card::before, ha-card::after, #card::before, #card::after, #container::before, #container::after { display: none !important; }'
+              + '\nha-card { will-change: auto !important; }'
+              + '\n@media (max-width: 600px) { ha-card { padding-left: 14px !important; padding-right: 14px !important; } }'
+            },
+            tap_action: { action: 'none' },
+            hold_action: { action: 'none' },
+            show_icon: false, show_name: false, show_label: false, show_state: false,
+            styles: {
+              card: [
+                { background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' },
+                { padding: '6px 26px 22px 26px' },
+              ],
+              grid: [
+                { 'grid-template-areas': '"body"' },
+                { 'grid-template-columns': '1fr' },
+              ],
+              custom_fields: { body: [{ 'justify-self': 'stretch' }, { 'min-width': '0' }] },
+            },
+            custom_fields: { body: "[[[\n  const UI = window._casoraUI;\n  if (!UI || !entity) return '';\n  const T = UI.tokens;\n  const esc = UI.esc;\n  const id = entity?.entity_id;\n  const a = entity?.attributes || {};\n  const st = entity?.state;\n  const F = a.supported_features || 0;\n  const has = (b) => (F & b) === b;\n  /* Popup-Standard (24.09.2026): part = hero | ctl (breit), ohne part alles. */\n  const P = variables.part;\n  const svc = (service, data) => esc(JSON.stringify({ domain: 'media_player', service: service, data: data || {}, target: { entity_id: id } }));\n  const ic = (n) => (typeof window.casoraIconUrl === 'function') ? window.casoraIconUrl(n) : '/casora_assets/icons/' + n + '.svg';\n  const mask = (n, size, color) => '<div style=\"width:' + size + 'px;height:' + size + 'px;background-color:' + (color || 'currentColor') + ';'\n    + \"-webkit-mask:url('\" + ic(n) + \"') center / contain no-repeat;mask:url('\" + ic(n) + \"') center / contain no-repeat;\\\"></div>\";\n\n  const off = st === 'off' || st === 'unavailable' || st === 'unknown';\n  const active = st === 'playing' || st === 'paused' || st === 'buffering';\n  const stateMap = { playing: 'Wiedergabe', paused: 'Pausiert', buffering: 'L\u00e4dt', idle: 'Inaktiv', on: 'An', off: 'Aus', standby: 'Standby', unavailable: 'Nicht verf\u00fcgbar', unknown: 'Unbekannt' };\n  const stateTxt = stateMap[st] || st;\n\n  const title  = active ? (a.media_title || a.app_name || a.source || stateTxt) : stateTxt;\n  const artist = a.media_artist || a.media_album_artist || a.media_series_title || '';\n  const subBits = [];\n  if (active) {\n    if (artist) subBits.push(artist);\n    else if (a.media_album_name) subBits.push(a.media_album_name);\n    if (a.app_name && a.app_name !== title) subBits.push(a.app_name);\n    if (st === 'paused') subBits.push('Pausiert');\n  } else if (!off && a.source) subBits.push(a.source);\n\n  const pic = active ? (a.entity_picture_local || a.entity_picture) : null;\n  const devIcon = { playstation: 'ps5' }[variables.icon] || variables.icon || 'media';\n\n  let out = '<style>ha-card.disabled{pointer-events:auto!important;}'\n    + '.hm-wrap{font-family:' + T.font + ';display:flex;flex-direction:column;align-items:center;text-align:center;}'\n    + '.hm-lbl{font-size:15px;color:' + T.ink2 + ';margin-bottom:14px;}'\n    + '.hm-art{width:min(240px, 62vw);aspect-ratio:1/1;border-radius:16px;overflow:hidden;position:relative;'\n    +   'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));display:grid;place-items:center;'\n    +   'box-shadow:0 18px 40px -18px rgba(0,0,0,.85);' + (active && st !== 'playing' ? 'transform:scale(.92);' : '') + 'transition:transform .4s cubic-bezier(.36,0,.16,1);}'\n    + '.hm-art::after{content:\"\";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);pointer-events:none;}'\n    + '.hm-art img{width:100%;height:100%;object-fit:cover;display:block;}'\n    + '.hm-t{font-size:22px;font-weight:600;letter-spacing:-0.02em;color:' + T.ink + ';margin-top:18px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'\n    + '.hm-s{font-size:15px;color:' + T.ink2 + ';margin-top:3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:19px;}'\n    + '.hm-prog{width:100%;margin-top:16px;}'\n    + '.hm-track{height:5px;border-radius:999px;background:' + T.fill2 + ';overflow:hidden;}'\n    + '.hm-fill{height:100%;border-radius:999px;background:' + T.ink + ';}'\n    + '.hm-times{display:flex;justify-content:space-between;font-size:12px;color:' + T.ink3 + ';margin-top:5px;font-variant-numeric:tabular-nums;}'\n    + '.hm-ctl{display:flex;align-items:center;justify-content:center;gap:26px;margin-top:14px;color:' + T.ink + ';}'\n    + '.hm-b{border-radius:999px;display:grid;place-items:center;cursor:pointer;line-height:0;flex:none;'\n    +   'transition:background-color .16s ease, transform .12s ease;user-select:none;-webkit-user-select:none;}'\n    + '.hm-b > *{pointer-events:none;}'\n    + '.hm-b.sm{width:52px;height:52px;}'\n    + '.hm-b.lg{width:68px;height:68px;background:' + T.ink + ';color:var(--casora-popup-ui-on-ink, #000);}'\n    + '.hm-b.dis{opacity:.3;pointer-events:none;}'\n    + '.hm-b:active{transform:scale(.92);}'\n    + '@media (hover:hover){.hm-b.sm:hover{background:var(--casora-popup-seg-fill, rgba(255,255,255,0.12));}}'\n    + '.hm-vol{display:flex;align-items:center;gap:12px;width:100%;margin-top:22px;color:' + T.ink2 + ';'\n    +   'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);padding:8px 10px;box-sizing:border-box;}'\n    + '.hm-vol .hm-b{width:40px;height:40px;}'\n    + '.hm-vol .hm-hit{flex:1;padding:14px 0;margin:-14px 0;cursor:pointer;touch-action:none;}'\n    + '.hm-vol .hm-track{height:6px;pointer-events:none;}'\n    + '.hm-vol .hm-hit.drag .hm-fill{transition:none;}'\n    + '.hm-vol .hm-fill{background:' + T.ink + ';}'\n    + '.hm-vol .pct{font-size:13px;min-width:36px;text-align:right;font-variant-numeric:tabular-nums;color:' + T.ink2 + ';}'\n    + '.hm-src-l{align-self:flex-start;font-size:15px;font-weight:600;letter-spacing:-0.01em;color:' + T.ink + ';margin:22px 4px 8px;}'\n    + '.hm-src{display:flex;gap:7px;overflow-x:auto;touch-action:pan-y;overscroll-behavior-x:contain;width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px;}'\n    + '.hm-src::-webkit-scrollbar{display:none;}'\n    + '.hm-src .hui-sg{flex:none;font-size:14px;font-weight:500;padding:10px 14px;border-radius:999px;white-space:nowrap;cursor:pointer;'\n    +   'background:var(--casora-popup-seg-fill, rgba(255,255,255,0.16));color:' + T.ink + ';}'\n    + '.hm-src .hui-sg.on{background:' + T.ink + ';color:var(--casora-popup-ui-on-ink, #000);}'\n    + '.hm-pw{width:100%;margin-top:22px;}'\n    + '</style>';\n\n  out += '<div class=\"hm-wrap\"' + (P === 'ctl' ? ' style=\"max-width:520px;margin:0 auto;\"' : '') + '>';\n  if (!P || P === 'hero') {\n  if (variables.room_name) out += '<div class=\"hm-lbl\">' + esc(variables.room_name) + '</div>';\n  out += '<div class=\"hm-art\">' + (pic\n      ? '<img src=\"' + esc(pic) + '\" alt=\"\" onerror=\"this.remove()\">'\n      : mask(devIcon, 88, off ? T.ink3 : T.ink2)) + '</div>';\n  out += '<div class=\"hm-t\">' + esc(title) + '</div>';\n  out += '<div class=\"hm-s\">' + esc(subBits.join(' \u00b7 ')) + '</div>';\n\n  /* Fortschritt: Balken l\u00e4uft per CSS bis zum Ende, Re-Render bei jedem Statuswechsel */\n  const dur = parseFloat(a.media_duration);\n  if (active && dur > 0) {\n    let pos = parseFloat(a.media_position) || 0;\n    if (st === 'playing' && a.media_position_updated_at) {\n      pos += (Date.now() - new Date(a.media_position_updated_at).getTime()) / 1000;\n    }\n    pos = Math.max(0, Math.min(dur, pos));\n    const pct = (pos / dur * 100).toFixed(2);\n    const mmss = (s) => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };\n    const anim = st === 'playing'\n      ? 'animation:hm-run ' + (dur - pos).toFixed(1) + 's linear forwards;' : '';\n    out += '<style>@keyframes hm-run{from{width:' + pct + '%}to{width:100%}}</style>'\n      + '<div class=\"hm-prog\"><div class=\"hm-track\"><div class=\"hm-fill\" style=\"width:' + pct + '%;' + anim + '\"></div></div>'\n      + '<div class=\"hm-times\"><span>' + (st === 'playing' ? '' : mmss(pos)) + '</span><span>' + mmss(dur) + '</span></div></div>';\n  }\n\n  }\n  if ((!P || P === 'ctl') && !off && (has(16) || has(32) || has(1) || has(16384))) {\n    const playing = st === 'playing';\n    const ppSvc = playing ? (has(1) ? 'media_pause' : 'media_stop') : 'media_play';\n    out += '<div class=\"hm-ctl\">'\n      + '<div class=\"hm-b sm' + (has(16) && active ? '' : ' dis') + '\" data-casora-svc=\"' + svc('media_previous_track') + '\">' + mask('skip_previous', 40) + '</div>'\n      + '<div class=\"hm-b lg\" data-casora-svc=\"' + svc(ppSvc) + '\">' + mask(playing ? 'pause' : 'play', 28, '#000') + '</div>'\n      + '<div class=\"hm-b sm' + (has(32) && active ? '' : ' dis') + '\" data-casora-svc=\"' + svc('media_next_track') + '\">' + mask('skip_next', 40) + '</div>'\n      + '</div>';\n  }\n\n  /* Lautst\u00e4rke: eigener Wert oder \u2013 falls der Player keinen meldet (Apple TV) \u2013\n     gespiegelter Wert aus variables.volume_entity (z.B. JBL-Bar per Automation) */\n  const vEnt = variables.volume_entity && states[variables.volume_entity];\n  const vMirror = vEnt && !isNaN(parseFloat(vEnt.state)) ? parseFloat(vEnt.state) / (parseFloat(vEnt.attributes?.max) || 100) : null;\n  const volLvl = a.volume_level != null ? a.volume_level : vMirror;\n  if ((!P || P === 'ctl') && !off && has(4) && volLvl != null) {\n    const v = Math.round(volLvl * 100);\n    const muted = !!a.is_volume_muted;\n    const clamp = (x) => Math.max(0, Math.min(1, Math.round(x * 100) / 100));\n    out += '<div class=\"hm-vol\">'\n      + (has(8)\n          ? '<div class=\"hm-b\" data-casora-svc=\"' + svc('volume_mute', { is_volume_muted: !muted }) + '\">' + mask(muted ? 'mute' : 'unmute', 20) + '</div>'\n          : '')\n      + '<div class=\"hm-b\" data-casora-svc=\"' + svc('volume_set', { volume_level: clamp(volLvl - 0.05) }) + '\">'\n      +   '<svg width=\"18\" height=\"18\" viewBox=\"0 0 20 20\"><path d=\"M4 10H16\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\"/></svg></div>'\n      + '<div class=\"hm-hit\" ontouchstart=\"event.stopPropagation();var h=this,tr=h.firstElementChild,b=tr.getBoundingClientRect();var pc=function(x){return Math.max(0,Math.min(100,Math.round((x-b.left)/b.width*100)));};var paint=function(p){tr.firstElementChild.style.width=p+&quot;%&quot;;var l=h.parentNode.querySelector(&quot;.pct&quot;);if(l)l.textContent=p+&quot; %&quot;;};var send=function(p){document.querySelector(&quot;home-assistant&quot;).hass.callService(&quot;media_player&quot;,&quot;volume_set&quot;,{volume_level:p/100},{entity_id:&quot;' + id + '&quot;});};h.classList.add(&quot;drag&quot;);h._p=pc(event.touches[0].clientX);paint(h._p);\" ontouchmove=\"event.stopPropagation();if(event.cancelable)event.preventDefault();var h=this,tr=h.firstElementChild,b=tr.getBoundingClientRect();var pc=function(x){return Math.max(0,Math.min(100,Math.round((x-b.left)/b.width*100)));};var paint=function(p){tr.firstElementChild.style.width=p+&quot;%&quot;;var l=h.parentNode.querySelector(&quot;.pct&quot;);if(l)l.textContent=p+&quot; %&quot;;};var send=function(p){document.querySelector(&quot;home-assistant&quot;).hass.callService(&quot;media_player&quot;,&quot;volume_set&quot;,{volume_level:p/100},{entity_id:&quot;' + id + '&quot;});};h._p=pc(event.touches[0].clientX);paint(h._p);\" ontouchend=\"event.stopPropagation();if(event.cancelable)event.preventDefault();var h=this,tr=h.firstElementChild,b=tr.getBoundingClientRect();var pc=function(x){return Math.max(0,Math.min(100,Math.round((x-b.left)/b.width*100)));};var paint=function(p){tr.firstElementChild.style.width=p+&quot;%&quot;;var l=h.parentNode.querySelector(&quot;.pct&quot;);if(l)l.textContent=p+&quot; %&quot;;};var send=function(p){document.querySelector(&quot;home-assistant&quot;).hass.callService(&quot;media_player&quot;,&quot;volume_set&quot;,{volume_level:p/100},{entity_id:&quot;' + id + '&quot;});};h.classList.remove(&quot;drag&quot;);window._hmVT=Date.now();if(h._p!=null)send(h._p);\" ontouchcancel=\"this.classList.remove(&quot;drag&quot;)\" onclick=\"event.stopPropagation();if(Date.now()-(window._hmVT||0)<700)return;var h=this,tr=h.firstElementChild,b=tr.getBoundingClientRect();var pc=function(x){return Math.max(0,Math.min(100,Math.round((x-b.left)/b.width*100)));};var paint=function(p){tr.firstElementChild.style.width=p+&quot;%&quot;;var l=h.parentNode.querySelector(&quot;.pct&quot;);if(l)l.textContent=p+&quot; %&quot;;};var send=function(p){document.querySelector(&quot;home-assistant&quot;).hass.callService(&quot;media_player&quot;,&quot;volume_set&quot;,{volume_level:p/100},{entity_id:&quot;' + id + '&quot;});};var p=pc(event.clientX);paint(p);send(p);\">'\n      + '<div class=\"hm-track\"><div class=\"hm-fill\" style=\"width:' + (muted ? 0 : v) + '%\"></div></div></div>'\n      + '<div class=\"hm-b\" data-casora-svc=\"' + svc('volume_set', { volume_level: clamp(volLvl + 0.05) }) + '\">'\n      +   '<svg width=\"18\" height=\"18\" viewBox=\"0 0 20 20\"><path d=\"M4 10H16M10 4V16\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\"/></svg></div>'\n      + '<div class=\"pct\">' + (muted ? 'Stumm' : v + ' %') + '</div>'\n      + '</div>';\n  }\n\n  out += '</div>';\n  return out;\n]]]" },
+          };
+          /* Apps/Quellen: statisch beim Öffnen gebaut, damit Positions-Updates des
+             Players die Leiste nicht neu rendern (sonst springt/bricht das Wischen ab). */
+          const a = entity?.attributes || {};
+          const st = entity?.state;
+          const offNow = st === 'off' || st === 'unavailable' || st === 'unknown';
+          const srcs = Array.isArray(a.source_list) ? a.source_list : [];
+          const cards = [uiCard];
+          if (!offNow && ((a.supported_features || 0) & 2048) && srcs.length) {
+            const esc = UI.esc, T = UI.tokens;
+            const cur = a.app_name || a.source;
+            const svc = (src) => esc(JSON.stringify({ domain: 'media_player', service: 'select_source', data: { source: src }, target: { entity_id: id } }));
+            const list = cur && srcs.includes(cur) ? [cur].concat(srcs.filter((x) => x !== cur)) : srcs;
+            const html = '<style>ha-card.disabled{pointer-events:auto!important;}'
+              + '.hm-src-l{font-family:' + T.font + ';font-size:15px;font-weight:600;letter-spacing:-0.01em;color:' + T.ink + ';margin:22px 4px 8px;text-align:left;}'
+              + '.hm-src{width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:none;padding-bottom:2px;}'
+              + '.hm-src .trk{display:flex;gap:7px;width:max-content;}'
+              + '.hm-src::-webkit-scrollbar{display:none;}'
+              + '.hm-src .hui-sg{flex:none;font-family:' + T.font + ';font-size:14px;font-weight:500;padding:10px 14px;border-radius:999px;white-space:nowrap;cursor:pointer;'
+              +   'background:var(--casora-popup-seg-fill, rgba(255,255,255,0.16));color:' + T.ink + ';transition:background-color .16s ease;}'
+              + '.hm-src .hui-sg.on{background:' + T.ink + ';color:var(--casora-popup-ui-on-ink, #000);}'
+              + '.hm-src .hui-sg:active{background:var(--casora-popup-seg-fill-hover, rgba(255,255,255,0.28));}'
+              + '</style>'
+              + '<div class="hm-src-l">' + (srcs.length > 6 ? 'Apps' : 'Quelle') + '</div>'
+              + '<div class="hm-src" ontouchstart="event.stopPropagation();var w=this;cancelAnimationFrame(w._raf);var t=event.touches[0];w._sx=t.clientX;w._sy=t.clientY;w._sl=w.scrollLeft;w._h=null;w._js=false;w._lx=t.clientX;w._lt=event.timeStamp;w._v=0;w._m=w.scrollWidth-w.clientWidth;" ontouchmove="event.stopPropagation();var w=this,t=event.touches[0];var dx=t.clientX-w._sx,dy=t.clientY-w._sy;if(w._h===null&&(Math.abs(dx)>6||Math.abs(dy)>6))w._h=Math.abs(dx)>Math.abs(dy);if(!w._h)return;if(!w._js&&Math.abs(dx)>40&&w.scrollLeft===w._sl&&w._m>0&&!((dx>0&&w._sl<=0)||(dx<0&&w._sl>=w._m))){w._js=true;w._sx=t.clientX;w._sl=w.scrollLeft;dx=0;}if(!w._js)return;if(event.cancelable)event.preventDefault();w.scrollLeft=w._sl-dx;var dt=Math.max(1,event.timeStamp-w._lt);w._v=0.8*((w._lx-t.clientX)/dt)+0.2*w._v;w._lx=t.clientX;w._lt=event.timeStamp;" ontouchend="event.stopPropagation();var w=this;if(!w._js)return;var v=w._v*16,last=performance.now();var step=function(now){var f=Math.min(3,(now-last)/16);last=now;w.scrollLeft+=v*f;v*=Math.pow(0.95,f);if(Math.abs(v)>0.2)w._raf=requestAnimationFrame(step);};w._raf=requestAnimationFrame(step);" ontouchcancel="event.stopPropagation()">'
+              + '<div class="trk">' + list.map((s) => '<div class="hui-sg' + (s === cur ? ' on' : '') + '" data-casora-svc="' + svc(s) + '">' + esc(String(s).replace(/ /g, ' ')) + '</div>').join('') + '</div>'
+              + '</div>';
+            cards.push(Object.assign({}, uiCard, {
+              entity: undefined, triggers_update: [], variables: {},
+              styles: Object.assign({}, uiCard.styles, { card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0 26px' }] }),
+              custom_fields: { body: html },
+            }));
+          }
+          cards.push(Object.assign({}, uiCard, {
+            styles: Object.assign({}, uiCard.styles, { card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0 26px 22px 26px' }] }),
+            custom_fields: { body: "[[[\n  const UI = window._casoraUI;\n  if (!UI || !entity) return '';\n  const id = entity?.entity_id;\n  const a = entity?.attributes || {};\n  const st = entity?.state;\n  const F = a.supported_features || 0;\n  const has = (b) => (F & b) === b;\n  const off = st === 'off' || st === 'unavailable' || st === 'unknown';\n  const rows = [];\n  const isTvLike = ['tv', 'receiver'].includes(a.device_class) || /apple_tv/.test(id);\n  if (isTvLike && off && has(128) && st !== 'unavailable') {\n    rows.push({ icon: 'mdi:power', iconTone: 'good', label: 'Einschalten', svc: { domain: 'media_player', service: 'turn_on', target: { entity_id: id } } });\n  } else if (isTvLike && !off && has(256)) {\n    rows.push({ icon: 'mdi:power', iconTone: 'bad', label: 'Ausschalten', svc: { domain: 'media_player', service: 'turn_off', target: { entity_id: id } } });\n  }\n  rows.push({ icon: 'mdi:tune-variant', label: 'Weitere Einstellungen', entity: id });\n  /* Apple Music \u00f6ffnen (24.09.2026): nur bei HomePod, Apple TV, Sonos \u2013 als Zeile in der Einstellungen-Karte.\n     Die Zeile tr\u00e4gt data-casora-music; ge\u00f6ffnet wird \u00fcber die Capture-Listener in casora-notify-local.js. */\n  if (/homepod|apple_tv|sonos/.test(id)) rows.splice(rows.length - 1, 0, { icon: 'mdi:music', iconTone: '#FA2D48', label: 'Apple Music \u00f6ffnen' });\n  let g = UI.group(rows);\n  const mi = g.indexOf('>Apple Music \u00f6ffnen<');\n  const rs = mi > -1 ? g.lastIndexOf('<div class=\"hui-row', mi) : -1;\n  if (rs > -1) g = g.slice(0, rs) + '<div data-casora-music=\"1\" class=\"hui-row hui-tap' + g.slice(rs + '<div class=\"hui-row'.length);\n  return '<div style=\"margin-top:22px\">' + g + '</div>';\n]]]" },
+          }));
+          uiCard.styles.card = [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '6px 26px 0 26px' }];
+          /* Popup-Standard (24.09.2026): ab 761 px Titel/Cover mittig, Wiedergabe + Lautstärke mittig darunter,
+             dann links Ein/Aus + Einstellungen, rechts Apps/Quellen. */
+          if (window.innerWidth > 760) {
+            const padC = (c, pad) => Object.assign({}, c, { styles: Object.assign({}, c.styles, { card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: pad }] }) });
+            const pc = (part, pad) => padC(Object.assign({}, uiCard, { variables: Object.assign({}, uiCard.variables, { part: part }) }), pad);
+            const setCard = cards[cards.length - 1], srcCard = cards.length > 2 ? cards[1] : null;
+            const bottom = srcCard
+              ? { type: 'grid', columns: 2, square: false, cards: [padC(setCard, '0 12px 22px 26px'), padC(srcCard, '0 26px 22px 12px')] }
+              : padC(setCard, '0 26px 22px 26px');
+            return { type: 'vertical-stack', cards: [pc('hero', '6px 26px 0 26px'), pc('ctl', '0 26px'), bottom] };
+          }
+          return { type: 'vertical-stack', cards: cards };
+        })(_ent, Object.assign({}, variables, _meta, { room_name: null }));
+        ]]]
+      dismissable: true
+      popup_styles:
+      - style: all
+        styles: |
+          /* The pane stays - these are control sheets. Only the close control
+             keeps what it gained: a surface of its own, and room above it so
+             the fill is not against the top edge of the sheet. */
+          .header { padding-top: var(--casora-popup-header-gap, 10px); }
+          /* Equal inset on both axes: the bar's own padding plus the
+             close control's 2px optical nudge has to come to the same
+             number as the padding above it, or the circle sits further
+             from the left edge than it does from the top. */
+          --casora-popup-header-gap: 14px;
+            --casora-popup-gutter-wide: 20px;
+          /* The chrome arrives with the first plate instead of being there
+             on frame one while everything under it fades in. */
+          --casora-popup-chrome-enter:
+            casora-popup-chrome-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;
+          .header-title { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+          .header-close {
+            border-radius: 50%;
+            background: var(--casora-popup-row-fill, rgba(255, 255, 255, 0.10));
+            backdrop-filter: var(--casora-popup-plate-backdrop, blur(24px) saturate(180%));
+            -webkit-backdrop-filter: var(--casora-popup-plate-backdrop, blur(24px) saturate(180%));
+            box-shadow: var(--casora-popup-plate-shadow, none);
+          }
+          /* The sheet is full height, so short content floats mid-screen. On
+             a phone the card has to fill it for the grid's `1fr` row to have
+             any slack to hand the toggle - otherwise the rows bunch under it
+             instead of sitting at the bottom.
+             Flex, not percentages: .content is `flex: 1 1 auto` inside a
+             surface with only a max-height, so `min-height: 100%` here had no
+             definite height to resolve against and computed to nothing. A
+             flex chain gives every link a real height without one. */
+          @media (max-width: 768px) {
+            /* The root cause, and why two attempts at the chain below did
+               nothing: .surface is capped with max-height, never given one.
+               A flex item in a content-sized container is itself
+               content-sized, so every percentage under it resolved to
+               nothing and the grid's `1fr` row had no slack to hand out.
+               Same expression as its own max-height, as a height. */
+            .surface {
+              height: calc(100svh - var(--casora-popup-top, 112px) - 8px
+                           - var(--safe-area-inset-bottom, 0px));
+            }
+            .content { display: flex; flex-direction: column; }
+            /* A viewport unit, not a percentage. Every attempt to make this
+               work by giving each link a definite height failed in the real
+               DOM even though the chain measures correct in isolation - so
+               the height is taken from the viewport directly and nothing has
+               to resolve against a parent at all. 112 is the surface's top
+               offset, 58 the header row, 8 the bottom gap. */
+            .content .container {
+              flex: 1 1 auto;
+              min-height: calc(100svh - var(--casora-popup-top, 112px)
+                               - 58px - 8px
+                               - var(--safe-area-inset-bottom, 0px));
+              display: flex; flex-direction: column; box-sizing: border-box;
+            }
+            /* The direct child AND anything HA wraps the card in: measured in
+               isolation this chain resolves and the tiles land 8px off the
+               bottom, so the only way it can still fail is a link in the real
+               DOM that this does not name. */
+            .content .container > *,
+            .content .container hui-card,
+            .content .container > * > * {
+              flex: 1 1 auto; min-height: 0;
+              display: flex; flex-direction: column;
+            }
+          }
+          /* One measure for a control-plus-list popup, whatever the count.
+             The rows are short and a wider sheet only stretches them; cover
+             is the same shape and holds the same width. */
+          --popup-min-width: 900px;
+          --popup-max-width: 920px;
+      title: '[[[ const e = states[variables.src?.entity]; return e?.attributes?.friendly_name || ''Medien''; ]]]'
+    entity: '[[[ return variables.src?.entity || null; ]]]'
+    haptic: light
+  template:
+  - casora_default
+  variables:
+    compact_controls: false
+    entry_direction: corner
+    extra_count: 0
+    glass: true
+    hold_src:
+      force_eval: true
+      value: |
+        [[[
+          const horizontal = variables.entry_direction === 'horizontal';
+
+          if (!horizontal) return variables.src;
+
+          window._casoraNPSlotState = window._casoraNPSlotState || {};
+          const store = variables.slot_id
+            ? (window._casoraNPSlotState[variables.slot_id] = window._casoraNPSlotState[variables.slot_id] || {})
+            : this;
+
+          const el = this;
+          const scheduleRecheck = (ms) => {
+            try { clearTimeout(store._npRecheckTimer); } catch (e) {}
+            store._npRecheckTimer = setTimeout(() => {
+              try {
+                // Forcing a render with no state change takes BOTH steps, and neither alone works:
+                //  1. button-card defines `set hass` with no getter, so the old `if (el.hass)`
+                //     guard always read undefined and fell through to a bare requestUpdate().
+                //  2. button-card's shouldUpdate() only passes on a _config change, a timer tick,
+                //     or _hasAnEntityChanged - so a hass clone carrying identical states is
+                //     rejected, and a bare requestUpdate() never reaches render().
+                // _config is a reactive @state(), so marking it dirty is what actually gets the
+                // templates re-evaluated. This is the path a paused tile depends on to lapse: it
+                // emits no state change of its own, so nothing else will re-run the collector.
+                const h = el._hass || el.hass;
+                if (h) el.hass = Object.assign({}, h);
+                if (typeof el.requestUpdate === 'function') el.requestUpdate('_config', undefined);
+              } catch (e) {}
+              try { window._casoraNPMobileRecheck?.(states); } catch (e) {}
+            }, ms + 30);
+          };
+
+          const live = variables.src;
+          const finish = (result) => {
+            try { window._casoraNPSyncMobileRow?.(el, states); } catch (e) {}
+            if (result && result.state === 'paused') {
+              const until = Number(result.pauseUntil) || 0;
+              const left = until ? (until - Date.now()) : 0;
+              scheduleRecheck(until ? Math.min(30000, Math.max(1000, left + 150)) : 20000);
+            }
+            return result;
+          };
+
+          if (live) {
+            store._npHoldSrc = live;
+            store._npHoldAt = 0;
+            return finish(live);
+          }
+
+          if (!store._npHoldSrc) return finish(null);
+          if (!store._npHoldAt) store._npHoldAt = Date.now();
+          const heldFor = Date.now() - store._npHoldAt;
+          if (heldFor < 500) {
+            scheduleRecheck(500 - heldFor);
+            return finish(store._npHoldSrc);
+          }
+          store._npHoldSrc = null;
+          return finish(null);
+        ]]]
+    minimized_entity: null
+    np_count: 1
+    slot_id: null
+    src: null
+    swap_motion: true

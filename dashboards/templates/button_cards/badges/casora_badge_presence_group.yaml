@@ -1,0 +1,179 @@
+# Presence Group Badge
+casora_badge_presence_group:
+  template: [casora_badge_base]
+
+  entity: input_select.casora_expanded_row
+
+  variables:
+    enabled: true
+    entity_1: null
+    entity_2: null
+    entity_3: null
+    entity_4: null
+
+  show_state: false
+  show_label: false
+  show_icon: true
+  icon: mdi:home-account
+
+  tap_action:
+    action: call-service
+    service: input_select.select_option
+    service_data:
+      entity_id: input_select.casora_expanded_row
+      option: >
+        [[[
+          return states['input_select.casora_expanded_row']?.state === 'presence' ? 'none' : 'presence';
+        ]]]
+
+  hold_action:
+    action: none
+
+  double_tap_action:
+    action: none
+
+  extra_styles: >
+    [[[
+      const _d = (() => {
+        const v = variables?.enabled;
+        const enabled = (v === undefined || v === null) ? true :
+          (typeof v === 'boolean') ? v :
+          (typeof v === 'number') ? v !== 0 :
+          !['false','0','no','off','disabled'].includes(String(v).trim().toLowerCase());
+      
+        const hasAny = !!(variables?.entity_1 || variables?.entity_2 || variables?.entity_3 || variables?.entity_4);
+        return (enabled && hasAny) ? 'inline-grid' : 'none';
+      })();
+      const _hide = String(_d).trim() === 'none';
+      return `:host{display:${_hide ? 'none' : 'inline-block'} !important;order:var(--casora-badge-order-people,3);}` + `
+    #img-cell, .img-cell{ position: relative; }
+
+    #img-cell #icon, .img-cell #icon{
+      color: transparent !important;
+      opacity: 0 !important;
+      --icon-primary-color: var(--casora-badge-icon-color) !important;
+      --paper-item-icon-color: var(--casora-badge-icon-color) !important;
+      --state-icon-color: var(--casora-badge-icon-color) !important;
+      --card-mod-icon-color: var(--casora-badge-icon-color) !important;
+    }
+
+    #img-cell::before,
+    .img-cell::before{
+      content: '';
+      position: absolute;
+      inset: 2px;
+      z-index: 5;
+      background-color: var(--casora-badge-icon-color, var(--primary-text-color)) !important;
+
+      -webkit-mask: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3C%21--Generator%3A%20Apple%20Native%20CoreSVG%20341--%3E%0A%3C%21DOCTYPE%20svg%0APUBLIC%20%22-%2F%2FW3C%2F%2FDTD%20SVG%201.1%2F%2FEN%22%0A%20%20%20%20%20%20%20%22http%3A%2F%2Fwww.w3.org%2FGraphics%2FSVG%2F1.1%2FDTD%2Fsvg11.dtd%22%3E%0A%3Csvg%20version%3D%221.1%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20viewBox%3D%220%200%2020.0742%2021.082%22%3E%0A%20%3Cg%3E%0A%20%20%3Crect%20height%3D%2221.082%22%20opacity%3D%220%22%20width%3D%2220.0742%22%20x%3D%220%22%20y%3D%220%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M2.00391%2021.0703L17.7188%2021.0703C18.9727%2021.0703%2019.7227%2020.4844%2019.7227%2019.5117C19.7227%2016.4883%2015.9375%2012.3164%209.85547%2012.3164C3.78516%2012.3164%200%2016.4883%200%2019.5117C0%2020.4844%200.75%2021.0703%202.00391%2021.0703ZM9.86719%2010.2188C12.375%2010.2188%2014.5547%207.96875%2014.5547%205.03906C14.5547%202.14453%2012.375%200%209.86719%200C7.35938%200%205.17969%202.19141%205.17969%205.0625C5.17969%207.96875%207.34766%2010.2188%209.86719%2010.2188Z%22%20fill%3D%22white%22%20fill-opacity%3D%220.85%22%2F%3E%0A%20%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A') no-repeat center / auto 85%;
+      mask: url('data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3C%21--Generator%3A%20Apple%20Native%20CoreSVG%20341--%3E%0A%3C%21DOCTYPE%20svg%0APUBLIC%20%22-%2F%2FW3C%2F%2FDTD%20SVG%201.1%2F%2FEN%22%0A%20%20%20%20%20%20%20%22http%3A%2F%2Fwww.w3.org%2FGraphics%2FSVG%2F1.1%2FDTD%2Fsvg11.dtd%22%3E%0A%3Csvg%20version%3D%221.1%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20viewBox%3D%220%200%2020.0742%2021.082%22%3E%0A%20%3Cg%3E%0A%20%20%3Crect%20height%3D%2221.082%22%20opacity%3D%220%22%20width%3D%2220.0742%22%20x%3D%220%22%20y%3D%220%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M2.00391%2021.0703L17.7188%2021.0703C18.9727%2021.0703%2019.7227%2020.4844%2019.7227%2019.5117C19.7227%2016.4883%2015.9375%2012.3164%209.85547%2012.3164C3.78516%2012.3164%200%2016.4883%200%2019.5117C0%2020.4844%200.75%2021.0703%202.00391%2021.0703ZM9.86719%2010.2188C12.375%2010.2188%2014.5547%207.96875%2014.5547%205.03906C14.5547%202.14453%2012.375%200%209.86719%200C7.35938%200%205.17969%202.19141%205.17969%205.0625C5.17969%207.96875%207.34766%2010.2188%209.86719%2010.2188Z%22%20fill%3D%22white%22%20fill-opacity%3D%220.85%22%2F%3E%0A%20%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A') no-repeat center / auto 85%;
+
+      transform: translateZ(0);
+    }
+      `;
+    ]]]
+
+
+  styles:
+    card:
+      - background: >
+          [[[
+            return entity?.state === 'presence'
+              ? 'var(--badge-active-color, rgba(255,255,255,0.85))'
+              : 'var(--badge-background, rgba(10,12,14,0.65))';
+          ]]]
+      - display: >
+          [[[
+            const v = variables?.enabled;
+            const enabled = (v === undefined || v === null) ? true :
+              (typeof v === 'boolean') ? v :
+              (typeof v === 'number') ? v !== 0 :
+              !['false','0','no','off','disabled'].includes(String(v).trim().toLowerCase());
+
+            const hasAny = !!(variables?.entity_1 || variables?.entity_2 || variables?.entity_3 || variables?.entity_4);
+            return (enabled && hasAny) ? 'inline-grid' : 'none';
+          ]]]
+      - --badge-title-color: >
+          [[[
+            return entity?.state === 'presence' ? 'rgba(0,0,0,0.85)' : 'var(--primary-text-color)';
+          ]]]
+      - --badge-sub-color: >
+          [[[
+            return entity?.state === 'presence' ? 'rgba(0,0,0,0.6)' : 'var(--secondary-text-color)';
+          ]]]
+      - --casora-badge-presence-away-color: >
+          [[[
+            return entity?.state === 'presence'
+              ? 'var(--casora-color-yellow-dark, #F4C403)'
+              : 'var(--casora-color-yellow, #FFCC00)';
+          ]]]
+      - --casora-badge-icon-inactive: >
+          [[[
+            return entity?.state === 'presence'
+              ? 'var(--badge-title-inactive-selected, rgba(0,0,0,0.7))'
+              : 'var(--badge-title-inactive)';
+          ]]]
+      - --casora-badge-icon-color: >
+          [[[
+            const isHome = (eid) => {
+              if (!eid) return false;
+              const s = String(hass.states[eid]?.state || '').toLowerCase().replace(/_/g, ' ');
+              return s === 'home' || s === 'just arrived';
+            };
+            const entities = [variables?.entity_1, variables?.entity_2, variables?.entity_3, variables?.entity_4].filter(Boolean);
+            const homeCount = entities.filter(isHome).length;
+            if (homeCount === entities.length) return 'var(--casora-badge-presence-home-color)';
+            if (homeCount === 0)               return 'var(--casora-badge-icon-inactive, var(--badge-title-inactive))';
+            return 'var(--casora-badge-presence-away-color)';
+          ]]]
+      - --icon-primary-color: var(--casora-badge-icon-color)
+      - --paper-item-icon-color: var(--casora-badge-icon-color)
+      - --state-icon-color: var(--casora-badge-icon-color)
+      - --card-mod-icon-color: var(--casora-badge-icon-color)
+
+    icon:
+      - color: transparent
+
+  name: >
+    [[[
+      const entities = [
+        variables?.entity_1, variables?.entity_2,
+        variables?.entity_3, variables?.entity_4
+      ].filter(Boolean);
+
+      if (!entities.length) return '';
+
+      const getState = (eid) =>
+        String(hass.states[eid]?.state || '').toLowerCase().replace(/_/g, ' ');
+      const T = window._casoraT || ((k, en, v) => String(en).replace(/\{(\w+)\}/g,
+        (m, p) => (v && Object.prototype.hasOwnProperty.call(v, p) ? String(v[p]) : m)));
+      const L = (k, en) => { const v = hass?.localize?.(k); return (v && v !== k) ? v : en; };
+      const getName = (eid) =>
+        String(hass.states[eid]?.attributes?.friendly_name || '').split(' ')[0]
+        || T('presence.person', 'Person');
+      const isHome = (eid) => { const s = getState(eid); return s === 'home' || s === 'just arrived'; };
+
+      const homeCount   = entities.filter(isHome).length;
+      const awayEntities = entities.filter(e => !isHome(e));
+
+      let title, status;
+      if (entities.length === 1) {
+        title  = getName(entities[0]);
+        status = isHome(entities[0])
+          ? L('component.person.entity_component._.state.home', 'Home')
+          : L('component.person.entity_component._.state.not_home', 'Away');
+      } else {
+        title = T('presence.group.title', 'People');
+        if (homeCount === entities.length)  status = T('presence.all_home', 'All Home');
+        else if (homeCount === 0)           status = T('presence.all_away', 'All Away');
+        else status = T('presence.n_away', '{n} Away', { n: awayEntities.length });
+      }
+
+      const esc = (t) => String(t || '').replaceAll('"', '&quot;');
+      return `
+        <div class="badge-wrap">
+          <div class="badge-title">${esc(title)}</div>
+          <div class="badge-sub">${esc(status)}</div>
+        </div>
+      `;
+    ]]]

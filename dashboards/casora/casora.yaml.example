@@ -1,0 +1,694 @@
+# /config/dashboards/casora/casora.yaml.example
+# Casora Dashboard - Example Configuration
+# ============================================================================
+# Copy or rename this file to casora.yaml and customize the entity IDs to match
+# your Home Assistant setup. Search for "YOUR_" to find all placeholders.
+#
+# REQUIRED: Replace all entity IDs with your own entities
+# OPTIONAL: Adjust room names, add/remove rooms, customize features
+# ============================================================================
+
+button_card_templates: !include_dir_merge_named /config/dashboards/templates/button_cards
+
+# Kiosk Mode (optional - requires kiosk-mode HACS integration)
+# Uncomment and customize if you want to hide certain UI elements
+# kiosk_mode:
+#   hide_header: true
+#   hide_sidebar: false
+#   hide_dialog_light_settings_actions: true
+#   hide_dialog_logbook: true
+#   hide_dialog_attributes: false
+#   mobile_settings:
+#     hide_header: true
+#     hide_sidebar: false
+#   user_settings:
+#     - users:
+#         - "tablet"
+#       hide_header: true
+#       hide_sidebar: false
+#       hide_dialog_logbook: true
+#       hide_dialog_light_settings_actions: true
+#       hide_dialog_header_breadcrumb_navigation: true
+#       hide_dialog_header_history: true
+#       hide_dialog_attributes: false
+# Casora hides the header itself, so hide_header works on a plain install and is
+# what the switch in Casora writes. Add ?casora_header=1 to the URL to get
+# it back for one page load.
+#
+# The hide_dialog_* keys need the kiosk-mode HACS integration; without it they
+# are simply ignored, and Casora only offers them once it is installed.
+kiosk_mode:
+  hide_header: true
+  hide_sidebar: false
+  hide_dialog_light_settings_actions: true
+  hide_dialog_logbook: true
+
+views:
+  # ------------------------------------------------------
+  # HOME
+  # ------------------------------------------------------
+  # The main overview room - typically shows whole-home controls
+  # and media player status across all rooms
+  # ------------------------------------------------------
+  - type: custom:grid-layout
+    title: home
+    path: home
+    layout: !include /config/dashboards/templates/includes/casora_screen_layout.yaml
+    cards:
+      # ROOM HERO CARD
+      - type: custom:button-card
+        template: casora_room
+        name: Home
+        variables:
+          # Image Configuration
+          # Demo images are included in www/casora/rooms/ — replace with your own photos when ready.
+          # Place your images at: /config/www/casora/rooms/home.jpg (light mode)
+          #                       /config/www/casora/rooms/home-night.jpg (dark mode)
+          image: home-demo
+          # Define all room images here once and reuse them across rooms via the YAML anchor.
+          # This preloads backgrounds so room transitions are instant.
+          preload_rooms: &room_images
+            - home-demo
+            - livingroom-demo
+            - kitchen-demo
+            - bedroom-demo
+
+          # Climate (shows group badge + expandable sub-badges for temp/humidity/quality)
+          # climate_entity_1: climate.YOUR_THERMOSTAT
+          # climate_entity_2: climate.YOUR_THERMOSTAT_2   # optional, up to 3
+
+          # Sensors — setting any one of these makes the climate badge appear
+          # temp_sensor_1: sensor.YOUR_HOME_TEMPERATURE
+          # temp_sensor_2: sensor.YOUR_TEMPERATURE_2      # optional additional temp sensors
+          # temp_sensor_3: sensor.YOUR_TEMPERATURE_3
+          # temp_sensor_4: sensor.YOUR_TEMPERATURE_4
+          # temp_sensor_5: sensor.YOUR_TEMPERATURE_5
+          # humidity_sensor: sensor.YOUR_HUMIDITY
+          # quality_sensor: sensor.YOUR_AIR_QUALITY
+
+          # Air Quality Popup (optional - shown when tapping the air quality badge)
+          # Requires quality_sensor above
+          # aqi_room_name: Home
+          # aqi_entity_pm25: sensor.YOUR_PM25
+          # aqi_entity_pm10: sensor.YOUR_PM10
+          # aqi_entity_voc: sensor.YOUR_VOC
+          # aqi_entity_co2: sensor.YOUR_CO2
+          # aqi_entity_temp: sensor.YOUR_AQI_TEMP
+          # aqi_entity_humidity: sensor.YOUR_AQI_HUMIDITY
+
+          # Lights Badge (optional - shows a light group badge)
+          light_group_entity: light.YOUR_HOME_LIGHT_GROUP
+          # light_entity_1: light.YOUR_ROOM_LIGHT_GROUP_1
+          # light_entity_2: light.YOUR_ROOM_LIGHT_GROUP_2
+          # light_entity_3: light.YOUR_ROOM_LIGHT_GROUP_3
+          # light_entity_4: light.YOUR_ROOM_LIGHT_GROUP_4
+
+          # Weather Widget
+          weather_entity: weather.YOUR_WEATHER            # e.g., weather.home, weather.pirateweather
+          weather_temp_sensor: sensor.YOUR_OUTDOOR_TEMP   # e.g., sensor.outdoor_temperature
+
+          # temp_unit: 'C'   # only needed for Celsius; comfort thresholds default to 'F'
+
+          # Presence Badges (optional - requires person/status sensors)
+          # Shows a group badge on the hero card; tap to expand individual badges
+          # presence_entity_1: sensor.YOUR_PERSON_1_STATUS  # optional, up to 4
+          # presence_entity_2: sensor.YOUR_PERSON_2_STATUS
+          # presence_entity_3: sensor.YOUR_PERSON_3_STATUS
+          # presence_entity_4: sensor.YOUR_PERSON_4_STATUS
+
+          # Media Player Badges (shows what's playing across rooms)
+          media_player_1: media_player.YOUR_ENTITY        # e.g., media_player.spotify
+          media_player_2: media_player.YOUR_ENTITY        # e.g., media_player.living_room_apple_tv
+          media_player_3: media_player.YOUR_ENTITY        # e.g., media_player.bedroom_apple_tv
+          media_player_4: media_player.YOUR_ENTITY        # e.g., media_player.kitchen
+          # media_player_5: media_player.YOUR_ENTITY      # optional fifth player
+
+          # Now Playing Panel (optional alternative to the media badge row)
+          # Set show_now_playing: true to use the panel instead of the media
+          # badge row above — casora_room suppresses the badges automatically,
+          # so the same session never appears twice.
+          # It reuses the media_player_N entities above.
+          # show_now_playing: true
+          # now_playing_panel: '0'   # '0' = free-floating tiles, '1' = glass panel with header
+          #
+          # Extra source types the panel understands beyond media_player:
+          # psn_1: sensor.YOUR_PSN_SESSION                # PlayStation / game activity sensor
+          #
+          # PC gaming via Discord rich presence (discord_game integration).
+          # The first two are required together; the tile shows "PC" beneath the game name.
+          # discord_online: sensor.YOUR_DISCORD_USER     # any presence but offline counts
+          # discord_game: sensor.YOUR_DISCORD_GAME       # state = game name
+          # discord_image: sensor.YOUR_DISCORD_GAME_IMAGE_LARGE
+          # discord_details: sensor.YOUR_DISCORD_GAME_DETAILS
+          # discord_label: PC                            # second row; default "PC"
+          #
+          # PC gaming via Steam (steam_online integration). steam_game is the gate;
+          # requires your Steam profile's game details to be Public.
+          # steam_game: sensor.YOUR_STEAM_GAME           # state = game name
+          # steam_online: sensor.YOUR_STEAM_ACCOUNT      # optional presence guard
+          # steam_image: sensor.YOUR_STEAM_GAME_IMAGE
+          # steam_label: Steam
+          #
+          # Discord reports Steam games too — this picks the survivor when both
+          # name the same game: discord (default) | steam | both.
+          # duplicate_game: discord
+
+          # Energy Badges (optional - adds an Energy group badge; tap to expand)
+          # Whole-home totals shown in the room's energy popup:
+          # energy_power_entity: sensor.YOUR_HOME_CURRENT_CONSUMPTION
+          # energy_usage_today: sensor.YOUR_HOME_DAILY_CONSUMPTION
+          # energy_usage_month: sensor.YOUR_HOME_MONTHLY_CONSUMPTION
+          # energy_cost_today: sensor.YOUR_HOME_DAILY_COST      # optional
+          # energy_cost_month: sensor.YOUR_HOME_MONTHLY_COST    # optional
+          #
+          # One sub-badge per energy_entity_N (up to 6). On Home these are
+          # per-room figures; the energy_popup_*_N keys point each badge at
+          # that room's popup instead of the whole-house one.
+          #
+          # With unit: cost the gauge ring still colors itself from
+          # energy_popup_power_N, so the icon tracks live draw.
+          # energy_entity_1: sensor.YOUR_ROOM_1_MONTHLY_COST
+          # energy_label_1: Bedroom
+          # energy_unit_1: cost                                 # auto (W/kW) | kwh | cost
+          # energy_popup_name_1: Bedroom
+          # energy_popup_power_1: sensor.YOUR_ROOM_1_CURRENT_CONSUMPTION
+          # energy_popup_today_1: sensor.YOUR_ROOM_1_DAILY_CONSUMPTION
+          # energy_popup_month_1: sensor.YOUR_ROOM_1_MONTHLY_CONSUMPTION
+          # energy_popup_cost_today_1: sensor.YOUR_ROOM_1_DAILY_COST
+          # energy_popup_cost_month_1: sensor.YOUR_ROOM_1_MONTHLY_COST
+
+          # Security Badges (optional - adds a Security group badge; tap to expand)
+          # On Home, security_locks aggregates every lock into one "Locks" badge
+          # that opens the shared lock group popup. Rooms below instead use a
+          # single security_entity_N per lock.
+          # security_lock_entity: lock.YOUR_FRONT_DOOR
+          # security_locks:
+          #   - lock.YOUR_FRONT_DOOR
+          #   - lock.YOUR_BACK_DOOR
+          # security_lock_batteries:
+          #   lock.YOUR_FRONT_DOOR: sensor.YOUR_LOCK_BATTERY          # optional
+          # security_door_sensors:
+          #   lock.YOUR_FRONT_DOOR: binary_sensor.YOUR_DOOR_CONTACT   # optional
+          #
+          # Any mix of lock / binary_sensor / camera / alarm_control_panel /
+          # cover (up to 8) — the badge picks its icon and wording from the
+          # entity's domain.
+          # security_entity_1: camera.YOUR_DOORBELL
+          # security_label_1: Doorbell
+
+      # MOBILE NAVBAR
+      - !include /config/dashboards/templates/includes/casora_navbar_tablet.yaml
+
+      # ENTITY CARDS
+      - type: custom:casora-smart-row
+        cards:
+          # Thermostat
+          - type: custom:button-card
+            template: casora_thermostat
+            entity: climate.YOUR_HOME_THERMOSTAT          # e.g., climate.home
+            name: Thermostat
+            variables:
+              temp_sensor: sensor.YOUR_HOME_TEMPERATURE
+
+          # Front Door Lock (tap opens the Lock/Security popup)
+          - type: custom:button-card
+            template:
+              - casora_lock
+              - casora_popup_lock
+            entity: lock.YOUR_LOCK_1                      # e.g., lock.front_door
+            name: Doors
+            variables:
+              room_name: Home
+              locks:
+                - lock.YOUR_LOCK_1
+                - lock.YOUR_LOCK_2
+              # battery_entities:
+              #   lock.YOUR_LOCK_1: sensor.YOUR_LOCK_1_BATTERY    # optional
+              #   lock.YOUR_LOCK_2: sensor.YOUR_LOCK_2_BATTERY    # optional
+              # door_sensors:
+              #   lock.YOUR_LOCK_1: binary_sensor.YOUR_DOOR_1_SENSOR    # optional
+              #   lock.YOUR_LOCK_2: binary_sensor.YOUR_DOOR_2_SENSOR    # optional
+
+          # All Lights (whole-home light group; tap opens the Light popup with
+          # per-room filtering)
+          - type: custom:button-card
+            template: casora_light
+            entity: light.YOUR_HOME_LIGHT_GROUP            # e.g., light.all
+            name: All Lights
+
+          # Camera (tap for the live view, hold for more-info)
+          - type: custom:button-card
+            template: casora_camera
+            entity: camera.YOUR_CAMERA                    # e.g., camera.front_door
+            name: Front Door
+            variables:
+              icon: doorbell
+              battery_entity: sensor.YOUR_CAMERA_BATTERY   # optional
+
+          # Battery Status (shows battery levels for multiple devices in a popup)
+          - type: custom:button-card
+            template: casora_battery
+            name: Battery Status
+            entity: sensor.YOUR_PRIMARY_BATTERY           # any battery entity to display on the card
+            variables:
+              room_name: Home                             # popup header label
+              batteries:
+                - sensor.YOUR_LOCK_BATTERY
+                - sensor.YOUR_DOORBELL_BATTERY
+                - sensor.YOUR_MOTION_SENSOR_BATTERY
+                # Add any additional battery sensors here
+              # Each battery's ring icon and label are read from its device in
+              # the registry, so nothing else is normally needed. Override any
+              # that come out wrong:
+              # device_icons:
+              #   sensor.YOUR_DOORBELL_BATTERY: doorbell  # /casora_assets/icons name, or mdi:cctv
+              # device_names:
+              #   sensor.YOUR_DOORBELL_BATTERY: Doorbell
+              # battery_entities:                         # force the icon/name source entity
+              #   lock.YOUR_LOCK: sensor.YOUR_LOCK_BATTERY
+
+          # Network Speed (shows WAN download/upload, ping, and sub-interface stats)
+          - type: custom:button-card
+            entity: sensor.YOUR_WAN_DOWNLOAD_SPEED        # e.g., sensor.router_wan_download_speed
+            template: casora_network
+            name: Network
+            variables:
+              room_name: Home
+              entity_upload: sensor.YOUR_WAN_UPLOAD_SPEED
+              entity_status: binary_sensor.YOUR_INTERNET_STATUS  # e.g., binary_sensor.router_internet
+              entity_ping: sensor.YOUR_PING                      # e.g., sensor.ping_cloudflare_rtt
+              entity_stat_1: sensor.YOUR_WIRED_DOWNLOAD_SPEED    # optional sub-stats
+              entity_stat_2: sensor.YOUR_WIRED_UPLOAD_SPEED
+              entity_stat_3: sensor.YOUR_WIFI_DOWNLOAD_SPEED
+              entity_stat_4: sensor.YOUR_WIFI_UPLOAD_SPEED
+
+          # Energy Usage (whole-home power consumption with today/month totals)
+          - type: custom:button-card
+            entity: sensor.YOUR_HOME_POWER                # e.g., sensor.home_current_consumption
+            template: casora_energy
+            name: Energy Usage
+            variables:
+              room_name: Home
+              entity_power: sensor.YOUR_HOME_POWER
+              entity_usage_today: sensor.YOUR_ENERGY_TODAY          # optional kWh today
+              entity_usage_month: sensor.YOUR_ENERGY_MONTH          # optional kWh this month
+              entity_cost_today: sensor.YOUR_ENERGY_COST_TODAY      # optional cost today
+              entity_cost_month: sensor.YOUR_ENERGY_COST_MONTH      # optional cost this month
+
+          # Updates (shows pending Home Assistant / integration updates)
+          - type: custom:button-card
+            template: casora_updates
+            entity: sensor.YOUR_UPDATES                   # e.g., sensor.pending_updates
+            name: Available Updates
+
+
+          # Curtains (whole-home cover group; tap opens the Cover/Shades popup)
+          - type: custom:button-card
+            template:
+              - casora_cover
+              - casora_popup_cover
+            entity: cover.YOUR_LIVING_ROOM_CURTAIN
+            name: Curtains
+            variables:
+              room_name: Home
+              covers:
+                - cover.YOUR_LIVING_ROOM_CURTAIN
+                - cover.YOUR_BEDROOM_CURTAIN
+
+          # Motion Overview Card (optional)
+          # Shows active room name when motion is detected, "Clear" when none.
+          # - type: custom:button-card
+          #   template: casora_motion
+          #   variables:
+          #     default_name: Home
+          #     sensor_1: binary_sensor.YOUR_LIVING_ROOM_MOTION
+          #     label_1: Living Room
+          #     sensor_2: binary_sensor.YOUR_BEDROOM_MOTION
+          #     label_2: Bedroom
+          #     sensor_3: binary_sensor.YOUR_KITCHEN_MOTION
+          #     label_3: Kitchen
+
+  # ------------------------------------------------------
+  # LIVING ROOM
+  # ------------------------------------------------------
+  - type: custom:grid-layout
+    title: living-room
+    path: living-room
+    layout: !include /config/dashboards/templates/includes/casora_screen_layout.yaml
+    cards:
+      # ROOM HERO CARD
+      - type: custom:button-card
+        template: casora_room
+        name: Living Room
+        variables:
+          image: livingroom-demo
+          preload_rooms: *room_images
+
+          # Climate (optional)
+          # climate_entity_1: climate.YOUR_LIVING_ROOM_CLIMATE
+
+          # Sensors
+          # temp_sensor_1: sensor.YOUR_LIVING_ROOM_TEMP
+          # temp_sensor_2: sensor.YOUR_TEMP_2
+          # humidity_sensor: sensor.YOUR_LIVING_ROOM_HUMIDITY
+          # quality_sensor: sensor.YOUR_AIR_QUALITY
+
+          # Air Quality Popup (optional)
+          # aqi_room_name: Living Room
+          # aqi_entity_pm25: sensor.YOUR_PM25
+          # aqi_entity_pm10: sensor.YOUR_PM10
+          # aqi_entity_voc: sensor.YOUR_VOC
+          # aqi_entity_co2: sensor.YOUR_CO2
+          # aqi_entity_temp: sensor.YOUR_AQI_TEMP
+          # aqi_entity_humidity: sensor.YOUR_AQI_HUMIDITY
+
+          # Light Badge (optional)
+          # light_entity_1: light.YOUR_LIVING_ROOM_LIGHTS
+
+          # Weather Widget (optional)
+          # weather_entity: weather.YOUR_WEATHER
+          # weather_temp_sensor: sensor.YOUR_OUTDOOR_TEMP
+
+          # Media Player Badges (optional)
+          # media_player_1: media_player.YOUR_LIVING_ROOM_PLAYER
+
+          # Energy Badges (optional). One badge, one number: the room's
+          # running cost. Daily and kWh figures stay in the popup.
+          # energy_power_entity: sensor.YOUR_LIVING_ROOM_CURRENT_CONSUMPTION
+          # energy_usage_today: sensor.YOUR_LIVING_ROOM_DAILY_CONSUMPTION
+          # energy_usage_month: sensor.YOUR_LIVING_ROOM_MONTHLY_CONSUMPTION
+          # energy_cost_today: sensor.YOUR_LIVING_ROOM_DAILY_COST     # optional
+          # energy_cost_month: sensor.YOUR_LIVING_ROOM_MONTHLY_COST   # optional
+          # energy_entity_1: sensor.YOUR_LIVING_ROOM_MONTHLY_COST
+          # energy_label_1: This Month
+          # energy_unit_1: cost
+
+          # Security Badges (optional) — a room lists its own entities directly
+          # instead of the aggregated Locks badge used on Home.
+          # security_entity_1: lock.YOUR_FRONT_DOOR
+          # security_label_1: Front Door
+          # security_entity_2: camera.YOUR_DOORBELL
+          # security_label_2: Doorbell
+
+      # MOBILE NAVBAR
+      - !include /config/dashboards/templates/includes/casora_navbar_tablet.yaml
+
+      # ENTITY CARDS
+      - type: custom:casora-smart-row
+        cards:
+          - type: custom:button-card
+            template: casora_thermostat
+            entity: climate.YOUR_LIVING_ROOM_CLIMATE
+            name: Thermostat
+            variables:
+              temp_sensor: sensor.YOUR_LIVING_ROOM_TEMP
+
+          - type: custom:button-card
+            template: casora_light
+            entity: light.YOUR_LIVING_ROOM_LIGHTS
+            name: Lights
+            variables:
+              icon: light
+              # The popup opens on the whole-home group with this room selected.
+              # popup_group: none   # keep it to this card's lights instead
+
+          - type: custom:button-card
+            template: casora_media
+            entity: media_player.YOUR_LIVING_ROOM_APPLE_TV
+            name: Apple TV
+            variables:
+              icon: apple_tv
+              show_progress: true
+              progress_entity: media_player.YOUR_LIVING_ROOM_APPLE_TV
+
+          - type: custom:button-card
+            template: casora_media
+            entity: media_player.YOUR_LIVING_ROOM_TV
+            name: TV
+            variables:
+              icon: tv
+              show_toggle: true
+
+          - type: custom:button-card
+            template: casora_media
+            entity: media_player.YOUR_LIVING_ROOM_SPEAKER
+            name: Sonos
+            variables:
+              icon: speaker
+
+          # Active Energy (room-level power monitoring)
+          - type: custom:button-card
+            entity: sensor.YOUR_LIVING_ROOM_POWER
+            template: casora_energy
+            name: Active Energy
+            variables:
+              room_name: Living Room
+              entity_power: sensor.YOUR_LIVING_ROOM_POWER
+              entity_usage_today: sensor.YOUR_LIVING_ROOM_ENERGY_TODAY    # optional
+              entity_usage_month: sensor.YOUR_LIVING_ROOM_ENERGY_MONTH    # optional
+              entity_cost_today: sensor.YOUR_LIVING_ROOM_COST_TODAY       # optional
+              entity_cost_month: sensor.YOUR_LIVING_ROOM_COST_MONTH       # optional
+
+          - type: custom:button-card
+            template: casora_cover
+            entity: cover.YOUR_LIVING_ROOM_CURTAIN
+            name: Curtain
+            variables:
+              icon: curtain-open
+
+          - type: custom:button-card
+            template: casora_fan
+            entity: fan.YOUR_LIVING_ROOM_FAN
+            name: Fan
+            variables:
+              icon: fan
+
+          # Plant Monitor (optional - requires plant integration + sensors)
+          - type: custom:button-card
+            template: casora_plant
+            entity: plant.YOUR_PLANT                      # e.g., plant.rubber_tree
+            name: Rubber Tree
+            variables:
+              sensors:
+                - sensor.YOUR_PLANT_MOISTURE
+                - sensor.YOUR_PLANT_ILLUMINANCE
+                - sensor.YOUR_PLANT_TEMPERATURE
+                - sensor.YOUR_PLANT_AIR_HUMIDITY
+                - sensor.YOUR_PLANT_CONDUCTIVITY
+
+  # ------------------------------------------------------
+  # KITCHEN
+  # ------------------------------------------------------
+  - type: custom:grid-layout
+    title: kitchen
+    path: kitchen
+    layout: !include /config/dashboards/templates/includes/casora_screen_layout.yaml
+    cards:
+      # ROOM HERO CARD
+      - type: custom:button-card
+        template: casora_room
+        name: Kitchen
+        variables:
+          image: kitchen-demo
+          preload_rooms: *room_images
+
+          # Climate (optional)
+          # climate_entity_1: climate.YOUR_KITCHEN_CLIMATE
+
+          # Sensors
+          # temp_sensor_1: sensor.YOUR_KITCHEN_TEMP
+          # humidity_sensor: sensor.YOUR_KITCHEN_HUMIDITY
+          # quality_sensor: sensor.YOUR_AIR_QUALITY
+
+          # Air Quality Popup (optional)
+          # aqi_room_name: Kitchen
+          # aqi_entity_pm25: sensor.YOUR_PM25
+          # aqi_entity_pm10: sensor.YOUR_PM10
+          # aqi_entity_voc: sensor.YOUR_VOC
+          # aqi_entity_co2: sensor.YOUR_CO2
+          # aqi_entity_temp: sensor.YOUR_AQI_TEMP
+          # aqi_entity_humidity: sensor.YOUR_AQI_HUMIDITY
+
+          # weather_entity: weather.YOUR_WEATHER
+          # weather_temp_sensor: sensor.YOUR_OUTDOOR_TEMP
+
+          # Light Badge (optional)
+          # light_entity_1: light.YOUR_KITCHEN_LIGHTS
+
+          # Media Player Badges (optional)
+          # media_player_1: media_player.YOUR_KITCHEN_PLAYER
+
+      # MOBILE NAVBAR
+      - !include /config/dashboards/templates/includes/casora_navbar_tablet.yaml
+
+      # ENTITY CARDS
+      - type: custom:casora-smart-row
+        cards:
+          - type: custom:button-card
+            template: casora_vacuum
+            entity: vacuum.YOUR_VACUUM
+            name: Robot Vacuum
+            variables:
+              icon: vacuum
+
+          - type: custom:button-card
+            template: casora_light
+            entity: light.YOUR_KITCHEN_LIGHTS
+            name: Lights
+            variables:
+              icon: light
+
+          - type: custom:button-card
+            template: casora_media
+            entity: media_player.YOUR_KITCHEN_SPEAKER
+            name: Speaker
+            variables:
+              icon: speaker
+
+          - type: custom:button-card
+            template: casora_media
+            entity: media_player.YOUR_KITCHEN_HOMEPOD     # optional second speaker
+            name: HomePod
+            variables:
+              icon: homepod
+              show_progress: true
+
+  # ------------------------------------------------------
+  # BEDROOM
+  # ------------------------------------------------------
+  - type: custom:grid-layout
+    title: bedroom
+    path: bedroom
+    layout: !include /config/dashboards/templates/includes/casora_screen_layout.yaml
+    cards:
+      # ROOM HERO CARD
+      - type: custom:button-card
+        template: casora_room
+        name: Bedroom
+        variables:
+          image: bedroom-demo
+          preload_rooms: *room_images
+
+          # Climate (optional)
+          # climate_entity_1: climate.YOUR_BEDROOM_CLIMATE
+
+          # Sensors
+          # temp_sensor_1: sensor.YOUR_BEDROOM_TEMP
+          # humidity_sensor: sensor.YOUR_BEDROOM_HUMIDITY
+          # quality_sensor: sensor.YOUR_BEDROOM_AIR_QUALITY
+
+          # Air Quality Popup (optional)
+          # aqi_room_name: Bedroom
+          # aqi_entity_pm25: sensor.YOUR_PM25
+          # aqi_entity_pm10: sensor.YOUR_PM10
+          # aqi_entity_voc: sensor.YOUR_VOC
+          # aqi_entity_co2: sensor.YOUR_CO2
+          # aqi_entity_temp: sensor.YOUR_AQI_TEMP
+          # aqi_entity_humidity: sensor.YOUR_AQI_HUMIDITY
+
+          # weather_entity: weather.YOUR_WEATHER
+          # weather_temp_sensor: sensor.YOUR_OUTDOOR_TEMP
+
+          # Light Badge (optional)
+          # light_entity_1: light.YOUR_BEDROOM_LIGHTS
+
+          # Media Player Badges (optional)
+          # media_player_1: media_player.YOUR_BEDROOM_PLAYER
+
+      # MOBILE NAVBAR
+      - !include /config/dashboards/templates/includes/casora_navbar_tablet.yaml
+
+      # ENTITY CARDS
+      - type: custom:casora-smart-row
+        cards:
+          - type: custom:button-card
+            template: casora_thermostat
+            entity: climate.YOUR_BEDROOM_CLIMATE
+            name: Thermostat
+            variables:
+              temp_sensor: sensor.YOUR_BEDROOM_TEMP
+
+          - type: custom:button-card
+            template: casora_light
+            entity: light.YOUR_BEDROOM_LIGHTS
+            name: Lights
+            variables:
+              icon: light
+
+          - type: custom:button-card
+            template: casora_media
+            entity: media_player.YOUR_BEDROOM_APPLE_TV
+            name: Apple TV
+            variables:
+              icon: apple_tv
+              show_progress: true
+              progress_entity: media_player.YOUR_BEDROOM_APPLE_TV
+
+          - type: custom:button-card
+            template: casora_media
+            entity: media_player.YOUR_BEDROOM_TV
+            name: TV
+            variables:
+              icon: tv
+              show_toggle: true
+
+          - type: custom:button-card
+            template: casora_media
+            entity: media_player.YOUR_BEDROOM_SPEAKER
+            name: Speaker
+            variables:
+              icon: speaker
+
+          # Active Energy (room-level power monitoring)
+          - type: custom:button-card
+            entity: sensor.YOUR_BEDROOM_POWER
+            template: casora_energy
+            name: Active Energy
+            variables:
+              room_name: Bedroom
+              entity_power: sensor.YOUR_BEDROOM_POWER
+              entity_usage_today: sensor.YOUR_BEDROOM_ENERGY_TODAY    # optional
+              entity_usage_month: sensor.YOUR_BEDROOM_ENERGY_MONTH    # optional
+              entity_cost_today: sensor.YOUR_BEDROOM_COST_TODAY       # optional
+              entity_cost_month: sensor.YOUR_BEDROOM_COST_MONTH       # optional
+
+          - type: custom:button-card
+            template: casora_fan
+            entity: fan.YOUR_BEDROOM_FAN
+            name: Fan
+            variables:
+              icon: fan
+
+          - type: custom:button-card
+            template: casora_cover
+            entity: cover.YOUR_BEDROOM_CURTAIN
+            name: Curtain
+            variables:
+              icon: curtain-open
+
+          - type: custom:button-card
+            template: casora_air_purifier
+            entity: fan.YOUR_AIR_PURIFIER
+            name: Air Purifier
+            variables:
+              icon: purifier
+
+          - type: custom:button-card
+            template: casora_humidifier
+            entity: humidifier.YOUR_HUMIDIFIER
+            name: Humidifier
+            variables:
+              icon: humidifier
+
+          # Plant Monitor (optional - requires plant integration + sensors)
+          - type: custom:button-card
+            template: casora_plant
+            entity: plant.YOUR_PLANT                      # e.g., plant.monstera
+            name: Monstera
+            variables:
+              sensors:
+                - sensor.YOUR_PLANT_MOISTURE
+                - sensor.YOUR_PLANT_ILLUMINANCE
+                - sensor.YOUR_PLANT_TEMPERATURE
+                - sensor.YOUR_PLANT_AIR_HUMIDITY
+                - sensor.YOUR_PLANT_CONDUCTIVITY

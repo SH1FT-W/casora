@@ -1,0 +1,398 @@
+# /config/dashboards/casora/casora_mobile.yaml.example
+# Casora Mobile Dashboard - Example Configuration
+# ============================================================================
+# Copy or rename this file to casora_mobile.yaml and customize the entity IDs
+# to match your Home Assistant setup. Search for "YOUR_" to find all
+# placeholders.
+#
+# This file is intentionally ENTITIES-ONLY: every behavior (filters, popups,
+# the collapsing header, room chips) lives in the shared template files —
+# this is the only file you need to edit to get the mobile dashboard running.
+#
+# STRUCTURE (top to bottom):
+#   BACKGROUND     room photo + sampled gradient (no configuration needed)
+#   HEADER         large title + weather widget
+#   BADGE ROW      the filter pills (Climate / Lights / People / Media / ...)
+#   FILTERS        one casora-filter-overlay per category (no config needed —
+#                  they auto-collect matching cards from your room sections)
+#   ROOM POPUPS    one overlay per room; `room:` must exactly match that
+#                  room's section header `name:` below
+#   SUB BADGE ROW  home climate chips + per-room sensor chips (room_chips)
+#   NOW PLAYING    active media tiles
+#   FAVORITES      hand-picked cards, always first on the dashboard
+#   ROOM SECTIONS  a header + card row per room — add/remove rooms freely
+#
+# ADDING A ROOM — three steps, all driven by the room's name:
+#   1. Copy a section header + smart-row pair and give the header a unique
+#      `name:` (e.g. "Guest Room").
+#   2. Add a matching `- type: custom:casora-filter-overlay` with `room:` set to
+#      that exact name. Nothing else — the filter key is derived from it.
+#   3. Make sure the room's SLUG is an option on input_select.casora_mobile_filter
+#      (Casora Studio adds it when it saves; by hand: Settings → Helpers). The
+#      slug is the name lowercased with all non-alphanumerics stripped,
+#      prefixed with "room_":
+#         "Guest Room" -> room_guestroom      "Kid's Room" -> room_kidsroom
+#      Without it the header renders but tapping it does nothing.
+# Optionally add a room_chips entry for its sensor chips.
+#
+# Step 3 is the only place you type the slug, and the only unavoidable one —
+# Home Assistant helpers can't be created from a dashboard file, and the filter
+# needs a real input_select state to hold the active room. The header and the
+# overlay both derive the key themselves. (`room_key:` on the header remains as
+# an override for names that don't slug cleanly; you shouldn't need it.)
+# ============================================================================
+
+button_card_templates: !include_dir_merge_named /config/dashboards/templates/button_cards
+
+# Recommended — requires the kiosk-mode HACS integration.
+# Casora hides the header itself; the kiosk-mode HACS integration is not needed
+# for this. Add ?casora_header=1 to the URL to get it back for one page load.
+kiosk_mode:
+  mobile_settings:
+    hide_header: true
+    hide_sidebar: false
+
+views:
+  - type: custom:grid-layout
+    title: Home
+    path: home
+    layout: !include /config/dashboards/templates/includes/casora_mobile_layout.yaml
+    cards:
+
+      # BACKGROUND — no configuration needed. Uses the same room photo the
+      # desktop dashboard loads from /config/www/casora/rooms/ (light + -night
+      # variants), anchored to the top, with the gradient below it colored by
+      # sampling the photo itself.
+      - type: custom:button-card
+        template: casora_mobile_bg
+
+      # SMART ROW — everything below is a child of this row.
+      - type: custom:casora-smart-row
+        sort: false
+        scroll_mode: true
+        cards:
+
+          # ── HEADER ── "Home" title + weather
+          - type: custom:button-card
+            template: casora_mobile_weather
+            variables:
+              weather_entity: weather.YOUR_WEATHER          # e.g. weather.home
+              weather_temp_sensor: sensor.YOUR_OUTDOOR_TEMP # e.g. sensor.outdoor_temperature
+
+          # ── BADGE ROW ── the filter badges. A badges only appears when its
+          # entities are configured; delete any block you don't use.
+          - type: custom:button-card
+            template: casora_mobile_filter_badges
+            variables:
+
+              # CLIMATE (temp_sensor_1 required; _2.._5 optional extra sensors —
+              # with more than one, the pill shows a min–max range)
+              temp_sensor_1: sensor.YOUR_HOME_TEMPERATURE
+              # temp_sensor_2: sensor.YOUR_TEMPERATURE_2
+              # temp_sensor_3: sensor.YOUR_TEMPERATURE_3
+              # temp_sensor_4: sensor.YOUR_TEMPERATURE_4
+              # temp_sensor_5: sensor.YOUR_TEMPERATURE_5
+              humidity_sensor: sensor.YOUR_HUMIDITY
+              quality_sensor: sensor.YOUR_AIR_QUALITY
+              climate_entity_1: climate.YOUR_THERMOSTAT
+              # climate_entity_2: climate.YOUR_THERMOSTAT_2
+
+              # LIGHTS (a group of all lights + per-room groups)
+              light_group_entity: light.YOUR_ALL_LIGHTS_GROUP
+              light_entity_1: light.YOUR_ROOM_LIGHT_GROUP_1
+              # light_entity_2: light.YOUR_ROOM_LIGHT_GROUP_2
+              # light_entity_3: light.YOUR_ROOM_LIGHT_GROUP_3
+
+              # PEOPLE (status sensors, e.g. from the person integration)
+              presence_entity_1: sensor.YOUR_PERSON_1_STATUS
+              # presence_entity_2: sensor.YOUR_PERSON_2_STATUS
+
+              # MEDIA (any mix of media players; all optional, up to 5)
+              media_player_1: media_player.YOUR_MEDIA_PLAYER_1
+              # media_player_2: media_player.YOUR_MEDIA_PLAYER_2
+              # media_player_3: media_player.YOUR_MEDIA_PLAYER_3
+              # media_player_4: media_player.YOUR_MEDIA_PLAYER_4
+              # media_player_5: media_player.YOUR_MEDIA_PLAYER_5
+              # Optional PSN / PC activity:
+              # psn_1: sensor.YOUR_PSN_SESSION
+              # psn_2: sensor.YOUR_PSN_SESSION_2
+              # discord_online: sensor.YOUR_DISCORD_STATUS
+              # discord_game: sensor.YOUR_DISCORD_GAME
+              # steam_online: sensor.YOUR_STEAM_ACCOUNT
+              # steam_game: sensor.YOUR_STEAM_GAME
+
+              # SECURITY (locks — the pill shows a combined locked/unlocked state)
+              security_lock_entity: lock.YOUR_LOCK
+              # security_lock_entity_2: lock.YOUR_LOCK_2
+
+              # ENERGY (whole-home current consumption)
+              energy_power_entity: sensor.YOUR_HOME_POWER
+
+          # ── CATEGORY FILTER POPUPS ── no configuration needed: each popup
+          # auto-collects the matching cards from your room sections below.
+          - type: custom:casora-filter-overlay
+            filter_category: climate
+          - type: custom:casora-filter-overlay
+            filter_category: lights
+          - type: custom:casora-filter-overlay
+            filter_category: media
+          - type: custom:casora-filter-overlay
+            filter_category: security
+          - type: custom:casora-filter-overlay
+            filter_category: energy
+
+          # ── PRESENCE FILTER ── the only popup with manual cards (its cards
+          # exist nowhere else on the dashboard).
+          - type: custom:casora-filter-overlay
+            filter_category: presence
+            sections:
+              - cards:
+                  - type: custom:button-card
+                    template: casora_presence
+                    entity: sensor.YOUR_PERSON_1_STATUS
+                    variables:
+                      person_name: YOUR_NAME
+                      person_entity: person.YOUR_PERSON_1
+                  # - type: custom:button-card
+                  #   template: casora_presence
+                  #   entity: sensor.YOUR_PERSON_2_STATUS
+                  #   variables:
+                  #     person_name: YOUR_NAME_2
+                  #     person_entity: person.YOUR_PERSON_2
+
+          # ── ROOM POPUPS ── opened by tapping a room's header. `room:` must
+          # EXACTLY match the section header `name:` below; the room's sensor
+          # chips are configured under `room_chips:` on the SUB BADGE ROW.
+          - type: custom:casora-filter-overlay
+            room: Living Room
+
+          - type: custom:casora-filter-overlay
+            room: Bedroom
+
+          # The Scenes page. Uncomment together with the SCENES section below.
+          # - type: custom:casora-filter-overlay
+          #   room: Scenes
+
+          # ── SUB BADGE ROW ── home-wide climate chips (shown in the Climate
+          # popup) + per-room chips (shown in each room popup).
+          - type: custom:button-card
+            template: casora_mobile_sensor_chips
+            variables:
+              # CLIMATE (whole-home chips)
+              temp_entity: sensor.YOUR_HOME_TEMPERATURE
+              humidity_entity: sensor.YOUR_HUMIDITY
+              entity_quality: sensor.YOUR_AIR_QUALITY
+              aqi_room_name: Home
+              # aqi_sensors:                      # optional AQI popup detail
+              #   - sensor.YOUR_PM25
+              #   - sensor.YOUR_PM10
+              #   - sensor.YOUR_VOC
+              #   - sensor.YOUR_CO2
+
+              # ROOM CHIPS — keys must match the room popup filter_category
+              # values above. Any chip whose entity is omitted simply hides.
+              room_chips:
+                room_livingroom:
+                  temp_entity: sensor.YOUR_LIVING_ROOM_TEMPERATURE
+                  # humidity_entity: sensor.YOUR_LIVING_ROOM_HUMIDITY
+                  # entity_quality: sensor.YOUR_LIVING_ROOM_AIR_QUALITY
+                  # aqi_room_name: Living Room
+                  lights_entity: light.YOUR_LIVING_ROOM_LIGHT_GROUP
+                  # motion_entity: binary_sensor.YOUR_LIVING_ROOM_MOTION
+                room_bedroom:
+                  temp_entity: sensor.YOUR_BEDROOM_TEMPERATURE
+                  lights_entity: light.YOUR_BEDROOM_LIGHT_GROUP
+
+          # ── NOW PLAYING ── the row of media tiles on the dashboard, and the
+          # column inside the Media popup. Every active source gets a tile.
+          # Note: these use `psn_1` / `psn_2`, NOT the `psn_entity_N` names the
+          # badge row above uses.
+          - type: custom:button-card
+            template: casora_mobile_now_playing
+            variables:
+              media_player_1: media_player.YOUR_MEDIA_PLAYER_1
+              # media_player_2: media_player.YOUR_MEDIA_PLAYER_2
+              # media_player_3: media_player.YOUR_MEDIA_PLAYER_3
+              # media_player_4: media_player.YOUR_MEDIA_PLAYER_4
+              # media_player_5: media_player.YOUR_MEDIA_PLAYER_5
+              # Game activity (e.g. PlayStation)
+              # psn_1: sensor.YOUR_PSN_SESSION
+              # psn_2: sensor.YOUR_PSN_SESSION_2
+              # PC gaming via Discord rich presence — the same two sensors the
+              # badge row above takes as discord_online_entity / discord_game_entity,
+              # under the names this row uses. The first two are required together.
+              # discord_online: sensor.YOUR_DISCORD_USER
+              # discord_game: sensor.YOUR_DISCORD_GAME
+              # discord_image: sensor.YOUR_DISCORD_GAME_IMAGE_LARGE
+              # discord_details: sensor.YOUR_DISCORD_GAME_DETAILS
+              # discord_label: PC
+              # PC gaming via Steam — steam_game is the gate; needs a Public
+              # game-details setting on your Steam profile.
+              # steam_game: sensor.YOUR_STEAM_GAME
+              # steam_online: sensor.YOUR_STEAM_ACCOUNT
+              # steam_image: sensor.YOUR_STEAM_GAME_IMAGE
+              # steam_label: Steam
+              # duplicate_game: discord   # discord | steam | both
+
+          # ── SCENES ── optional. A horizontally scrolling strip of scene chips
+          # above Favorites, with the header caret opening the full Scenes page.
+          # Chips highlight while their scene is actually applied, and the row
+          # hides whenever a category filter is active.
+          #
+          # Omit `scenes:` to show every scene that is not hidden in your
+          # entity registry; keep it to pick an exact set and order.
+          # Uncomment to enable, and add the Scenes overlay alongside the room
+          # popups above.
+          #
+          # - type: custom:button-card
+          #   template: casora_mobile_header
+          #   name: Scenes
+          #
+          # - type: custom:button-card
+          #   template: casora_scene_row
+          #   variables:
+          #     scenes:
+          #       - scene.YOUR_SCENE
+          #       - scene.YOUR_OTHER_SCENE
+          #     # Optional. Colors a scene's icon while that scene is active;
+          #     # anything unlisted uses the default yellow. Takes any CSS
+          #     # color, including theme tokens.
+          #     scene_colors:
+          #       scene.YOUR_SCENE: var(--casora-color-teal)
+          #       scene.YOUR_OTHER_SCENE: "#af52de"
+
+          # ── FAVORITES ── hand-picked cards, always the first section.
+          - type: custom:button-card
+            template: casora_mobile_header
+            name: Favorites
+
+          - type: custom:casora-smart-row
+            scroll_mode: true
+            cards:
+
+              - type: custom:button-card
+                template: casora_thermostat
+                entity: climate.YOUR_THERMOSTAT
+                name: Thermostat
+                variables:
+                  temp_sensor: sensor.YOUR_HOME_TEMPERATURE
+
+              - type: custom:button-card
+                template: casora_light
+                entity: light.YOUR_ALL_LIGHTS_GROUP
+                name: All Lights
+                variables:
+                  icon: light
+                  show_toggle: true
+
+              - type: custom:button-card
+                template:
+                  - casora_lock
+                  - casora_popup_lock
+                entity: lock.YOUR_LOCK
+                name: Doors
+                variables:
+                  room_name: Home
+                  locks:
+                    - lock.YOUR_LOCK_1
+                    - lock.YOUR_LOCK_2
+                  # battery_entities:
+                  #   lock.YOUR_LOCK_1: sensor.YOUR_LOCK_1_BATTERY
+                  #   lock.YOUR_LOCK_2: sensor.YOUR_LOCK_2_BATTERY
+                  # door_sensors:
+                  #   lock.YOUR_LOCK: binary_sensor.YOUR_DOOR_1_SENSOR
+                  #   lock.YOUR_LOCK: binary_sensor.YOUR_DOOR_2_SENSOR
+
+          # ══════════════════════════════════════════════════════════════════
+          # ROOM SECTIONS — one header + card row per room.
+          #   name:       shown as the section title; MUST match the room
+          #               popup's `room:` above for the popup to work. The
+          #               input_select key that opens the popup is derived from
+          #               it automatically ("Living Room" -> room_livingroom).
+          #   mobile_filter_categories: which filter pills this room's cards
+          #               can appear under.
+          # Card templates available: casora_thermostat, casora_light,
+          # casora_media, casora_energy, casora_cover, casora_fan, casora_lock,
+          # casora_camera, casora_vacuum, casora_plant, casora_air_purifier,
+          # casora_humidifier, casora_battery, casora_network, casora_updates,
+          # casora_motion, casora_presence, casora_entity_actions.
+          # ══════════════════════════════════════════════════════════════════
+
+          # ── LIVING ROOM ──
+          - type: custom:button-card
+            template: casora_mobile_header
+            name: Living Room
+            variables:
+              mobile_filter_categories: [climate, lights, media, energy, security]
+
+          - type: custom:casora-smart-row
+            scroll_mode: true
+            cards:
+
+              - type: custom:button-card
+                template: casora_thermostat
+                entity: climate.YOUR_THERMOSTAT
+                name: Thermostat
+                variables:
+                  temp_sensor: sensor.YOUR_LIVING_ROOM_TEMPERATURE
+
+              - type: custom:button-card
+                template: casora_light
+                entity: light.YOUR_LIVING_ROOM_LIGHT_GROUP
+                name: Lights
+                variables:
+                  icon: light
+                  show_toggle: true
+                  # The popup opens on the whole-home group with this room selected.
+                  # popup_group: none   # keep it to this card's lights instead
+
+              - type: custom:button-card
+                template: casora_media
+                entity: media_player.YOUR_MEDIA_PLAYER_1
+                name: Apple TV
+                variables:
+                  icon: apple_tv         # icons: apple_tv, tv, speaker, homepod, ps5, ...
+                  show_progress: true
+
+              # - type: custom:button-card
+              #   template: casora_cover
+              #   entity: cover.YOUR_CURTAIN
+              #   name: Curtain
+              #   variables:
+              #     icon: curtain-open
+              #     show_toggle: true
+
+              # - type: custom:button-card
+              #   template: casora_fan
+              #   entity: fan.YOUR_FAN
+              #   name: Fan
+              #   variables:
+              #     icon: fan
+              #     show_toggle: true
+
+          # ── BEDROOM ──
+          - type: custom:button-card
+            template: casora_mobile_header
+            name: Bedroom
+            variables:
+              mobile_filter_categories: [climate, lights, media]
+
+          - type: custom:casora-smart-row
+            scroll_mode: true
+            cards:
+
+              - type: custom:button-card
+                template: casora_light
+                entity: light.YOUR_BEDROOM_LIGHT_GROUP
+                name: Lights
+                variables:
+                  icon: light
+                  show_toggle: true
+
+              - type: custom:button-card
+                template: casora_media
+                entity: media_player.YOUR_MEDIA_PLAYER_2
+                name: TV
+                variables:
+                  icon: tv
+                  show_toggle: true

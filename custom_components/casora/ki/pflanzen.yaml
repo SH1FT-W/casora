@@ -1,0 +1,123 @@
+# Casora: Pflanzen-Doktor (Dienst casora.pflanzen_doktor).
+# Variablen: plant, ai_entity. Ergebnis per Event casora_plant_ai_result.
+- event: casora_plant_ai_result
+  event_data:
+    plant: '{{ plant }}'
+    status: running
+- variables:
+    ents: '{{ device_entities(device_id(plant)) }}'
+    sens: '{{ device_entities(device_id(plant)) | select(''match'', ''sensor\.'') | reject(''search'', ''ppfd|integral'')
+      | list }}'
+    room_lux: '{% set pe = device_entities(device_id(plant)) %}{% set a = area_id(plant) or area_id(pe | select(''match'',
+      ''sensor\.'') | first) %}{% set ns = namespace(l=[]) %}{% for e in area_entities(a) | select(''match'', ''sensor\.'')
+      | select(''is_state_attr'', ''device_class'', ''illuminance'') %}{% if e not in pe and ''trend'' not in e and (device_entities(device_id(e))
+      | select(''match'', ''plant\.'') | list | count) == 0 %}{% set ns.l = ns.l + [e] %}{% endif %}{% endfor %}{{ ns.l }}'
+- action: recorder.get_statistics
+  response_variable: d
+  continue_on_error: true
+  data:
+    start_time: '{{ (now() - timedelta(days=7)).strftime(''%Y-%m-%d %H:%M:%S'') }}'
+    statistic_ids: '{{ sens + room_lux }}'
+    period: day
+    types:
+    - mean
+    - min
+    - max
+- variables:
+    kontext: 'Pflanze: {{ state_attr(plant, ''friendly_name'') }}{% if state_attr(plant, ''species'') %} (Art: {{ state_attr(plant,
+      ''species'') }}){% endif %}
+
+      Standort: {{ area_name(plant) or area_name(sens[0]) or ''unbekannt'' }} (Balkon/Terrasse/Garten = draußen, sonst drinnen)
+
+      Heute: {{ now().strftime(''%d.%m.%Y'') }}
+
+      Status laut Integration: {% for k in [''moisture_status'',''temperature_status'',''illuminance_status'',''humidity_status'',''vpd_status'',''conductivity_status'']
+      %}{% if state_attr(plant, k) %}{{ k | replace(''_status'','''') }}={{ state_attr(plant, k) }} {% endif %}{% endfor %};
+      Probleme: {{ state_attr(plant, ''problems'') or ''keine'' }}
+
+      Grenzwerte: {% for e in ents | select(''match'', ''number\.'') %}{% if ''faktor'' not in e and ''dli'' not in e %}{{
+      e.split(''.'')[1] | replace(plant.split(''.'')[1] ~ ''_'', '''') }}={{ states(e) }}{{ state_attr(e, ''unit_of_measurement'')
+      or '''' }} {% endif %}{% endfor %}
+
+      Messwerte 7 Tage (je Tag Ø/min/max):
+
+      {% for s in sens %}- {{ s.split(''.'')[1] | replace(plant.split(''.'')[1] ~ ''_'', '''') }} (jetzt {{ states(s) }} {{
+      state_attr(s, ''unit_of_measurement'') or '''' }}): {% for r in (d.statistics[s] if d is defined and d.statistics is
+      defined and s in d.statistics else []) %}{{ (as_datetime(r.start) | as_local).strftime(''%d.%m.'') }} {% if r.mean is
+      defined and r.mean is not none %}{{ r.mean | round(1) }}/{{ r.min | round(1) }}/{{ r.max | round(1) }}{% else %}–{%
+      endif %}; {% endfor %}
+
+      {% endfor %}Raumhelligkeit laut Präsenz-/Bewegungsmelder im selben Raum (Lux, je Tag Ø/min/max):
+
+      {% for s in room_lux %}- {{ state_attr(s, ''friendly_name'') }} (jetzt {{ states(s) }} lx): {% for r in (d.statistics[s]
+      if d is defined and d.statistics is defined and s in d.statistics else []) %}{{ (as_datetime(r.start) | as_local).strftime(''%d.%m.'')
+      }} {% if r.mean is defined and r.mean is not none %}{{ r.mean | round(0) }}/{{ r.min | round(0) }}/{{ r.max | round(0)
+      }}{% else %}–{% endif %}; {% endfor %}
+
+      {% else %}- kein Raumsensor
+
+      {% endfor %}'
+- action: ai_task.generate_data
+  continue_on_error: true
+  response_variable: r
+  data:
+    entity_id: '{{ ai_entity }}'
+    task_name: Casora Pflanzen-Doktor {{ state_attr(plant, 'friendly_name') }}
+    instructions: 'Du bist ein erfahrener Pflanzenpfleger. Prüfe die Messdaten dieser Zimmer- bzw. Terrassenpflanze und gib
+      einen konkreten Pflegetipp. Antworte auf {{ sprache | default(''Deutsch'') }}, knapp.
+
+
+      {{ kontext }}
+
+
+      Berücksichtige die Art (aus dem Namen), die Jahreszeit, Standort (drinnen/draußen) und Trends (z. B. Boden trocknet
+      schnell aus, Licht).
+
+      Licht bewerte vor allem über die Raumhelligkeit der Präsenzmelder (Tagesmaximum und -mittel in Lux), ergänzend über
+      die Beleuchtungsstärke am Pflanzensensor. Der Melder hängt nicht direkt an der Pflanze, gib die Lichteinschätzung daher
+      als Tendenz an.
+
+      WICHTIG: DLI (Tageslichtsumme) ist bei diesen Sensoren unzuverlässig. Du darfst DLI als Info erwähnen, er ist aber KEIN
+      Kriterium: DLI darf den zustand nicht verschlechtern und kein Grund für beobachten/handeln oder einen Tipp sein. Die
+      Grenzwerte der Integration sind Standardwerte und können für die Art unpassend sein – bewerte nach Art, nicht blind
+      nach Grenzwerten.
+
+      zustand: gut, beobachten oder handeln.
+
+      fazit: ein Satz. punkte: 2–4 Beobachtungen mit Zahlen. tipps: 1–3 konkrete Pflegetipps (gießen wann/wie viel, Standort,
+      Düngen, Überwintern).'
+    structure:
+      zustand:
+        required: true
+        selector:
+          select:
+            options:
+            - gut
+            - beobachten
+            - handeln
+      fazit:
+        required: true
+        selector:
+          text: {}
+      punkte:
+        selector:
+          text:
+            multiple: true
+      tipps:
+        selector:
+          text:
+            multiple: true
+- if:
+  - condition: template
+    value_template: '{{ r is defined and r.data is defined and r.data is mapping }}'
+  then:
+  - event: casora_plant_ai_result
+    event_data:
+      plant: '{{ plant }}'
+      status: done
+      result: '{{ r.data }}'
+  else:
+  - event: casora_plant_ai_result
+    event_data:
+      plant: '{{ plant }}'
+      status: error

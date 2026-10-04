@@ -1,0 +1,3111 @@
+# Room
+casora_room:
+  classes:
+    card:
+    - casora-room
+  custom_fields:
+    assist:
+      card:
+        template: casora_assist_button
+        type: custom:button-card
+        variables:
+          shown: '[[[ return variables.show_assist !== false && ((hass && hass.config && hass.config.components) || []).includes("conversation") ]]]'
+    badges:
+      card:
+        card_mod:
+          style: |
+            ha-card {
+              overflow: visible !important;
+            }
+        cards:
+        - template: casora_badge_security_group
+          type: custom:button-card
+          variables:
+            alarm_entity: '[[[ return variables.security_entity_1 ]]]'
+            doors_entity: '[[[ return variables.security_entity_2 ]]]'
+            enabled: '[[[ return (variables.show_security!==false&&(!!variables.security_lock_entity||!!variables.security_entity_1||!!(variables.security_locks||[]).length||!!(variables.security_cameras||[]).length)) ]]]'
+            lock_entity: '[[[ return variables.security_lock_entity ]]]'
+            lock_entity_2: '[[[ return variables.security_lock_entity_2 ]]]'
+            locks: '[[[ return variables.security_locks || [] ]]]'
+        - template: casora_badge_climate_group
+          type: custom:button-card
+          variables:
+            climate_entity: '[[[ return variables.climate_entity_1 ]]]'
+            climate_entity_2: '[[[ return variables.climate_entity_2 ]]]'
+            climate_entity_3: '[[[ return variables.climate_entity_3 ]]]'
+            enabled: '[[[ return (variables.show_climate!==false&&(!!variables.climate_entity_1||!!variables.temp_sensor_1||!!variables.humidity_sensor||!!variables.quality_sensor)) && !variables.show_climate_inline ]]]'
+            humidity_sensor: '[[[ return variables.humidity_sensor ]]]'
+            quality_sensor: '[[[ return variables.quality_sensor ]]]'
+            temp_sensor: '[[[ return variables.temp_sensor_1 ]]]'
+            temp_sensor_2: '[[[ return variables.temp_sensor_2 ]]]'
+            temp_sensor_3: '[[[ return variables.temp_sensor_3 ]]]'
+            temp_sensor_4: '[[[ return variables.temp_sensor_4 ]]]'
+            temp_sensor_5: '[[[ return variables.temp_sensor_5 ]]]'
+            temp_unit: '[[[ return variables.temp_unit ]]]'
+        - entity: '[[[ return variables.temp_sensor_1 ]]]'
+          template: casora_badge_temp
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return !!((variables.show_climate!==false&&(!!variables.climate_entity_1||!!variables.temp_sensor_1||!!variables.humidity_sensor||!!variables.quality_sensor)) && variables.show_climate_inline && variables.temp_sensor_1) ]]]'
+            entity_humidity: '[[[ return variables.aqi_entity_humidity ]]]'
+            entity_quality: '[[[ return variables.quality_sensor ]]]'
+            entity_temp: '[[[ return variables.aqi_entity_temp ]]]'
+            gauge: true
+            gauge_keep_bg: true
+            room_name: '[[[ return variables.aqi_room_name || this._config?.name || hass?.config?.location_name || "" ]]]'
+            sensors: |-
+              [[[
+                return [variables.aqi_entity_pm25,variables.aqi_entity_pm10,variables.aqi_entity_voc,variables.aqi_entity_co2].filter(Boolean);
+              ]]]
+            temp_unit: '[[[ return variables.temp_unit ]]]'
+        - entity: '[[[ return variables.humidity_sensor ]]]'
+          template: casora_badge_humidity
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return !!((variables.show_climate!==false&&(!!variables.climate_entity_1||!!variables.temp_sensor_1||!!variables.humidity_sensor||!!variables.quality_sensor)) && variables.show_climate_inline && variables.humidity_sensor) ]]]'
+            entity_humidity: '[[[ return variables.aqi_entity_humidity ]]]'
+            entity_quality: '[[[ return variables.quality_sensor ]]]'
+            entity_temp: '[[[ return variables.aqi_entity_temp ]]]'
+            gauge: true
+            gauge_keep_bg: true
+            room_name: '[[[ return variables.aqi_room_name || this._config?.name || hass?.config?.location_name || "" ]]]'
+            sensors: |-
+              [[[
+                return [variables.aqi_entity_pm25,variables.aqi_entity_pm10,variables.aqi_entity_voc,variables.aqi_entity_co2].filter(Boolean);
+              ]]]
+        - entity: '[[[ return variables.quality_sensor ]]]'
+          template: casora_badge_air_quality
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return !!((variables.show_climate!==false&&(!!variables.climate_entity_1||!!variables.temp_sensor_1||!!variables.humidity_sensor||!!variables.quality_sensor)) && variables.show_climate_inline && variables.quality_sensor) ]]]'
+            entity_humidity: '[[[ return variables.aqi_entity_humidity ]]]'
+            entity_quality: '[[[ return variables.quality_sensor ]]]'
+            entity_temp: '[[[ return variables.aqi_entity_temp ]]]'
+            gauge: true
+            gauge_keep_bg: true
+            room_name: '[[[ return variables.aqi_room_name || this._config?.name || hass?.config?.location_name || "" ]]]'
+            sensors: |-
+              [[[
+                return [variables.aqi_entity_pm25,variables.aqi_entity_pm10,variables.aqi_entity_voc,variables.aqi_entity_co2].filter(Boolean);
+              ]]]
+        - template: casora_badge_light_group
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ]]]'
+            entity_1: '[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ? variables.light_entity_1 : null ]]]'
+            entity_10: '[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ? variables.light_entity_10 : null ]]]'
+            entity_2: '[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ? variables.light_entity_2 : null ]]]'
+            entity_3: '[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ? variables.light_entity_3 : null ]]]'
+            entity_4: '[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ? variables.light_entity_4 : null ]]]'
+            entity_5: '[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ? variables.light_entity_5 : null ]]]'
+            entity_6: '[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ? variables.light_entity_6 : null ]]]'
+            entity_7: '[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ? variables.light_entity_7 : null ]]]'
+            entity_8: '[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ? variables.light_entity_8 : null ]]]'
+            entity_9: '[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ? variables.light_entity_9 : null ]]]'
+            light_group_entity: '[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ? variables.light_group_entity : null ]]]'
+        - template: casora_badge_presence_group
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_people!==false && !!variables.presence_entity_1 && !!variables.presence_entity_2 ]]]'
+            entity_1: '[[[ return variables.presence_entity_1 ]]]'
+            entity_2: '[[[ return variables.presence_entity_2 ]]]'
+            entity_3: '[[[ return variables.presence_entity_3 ]]]'
+            entity_4: '[[[ return variables.presence_entity_4 ]]]'
+        - entity: '[[[ return variables.presence_entity_1 ]]]'
+          template: casora_badge_presence
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_people!==false && !!(!!variables.presence_entity_1 && variables.presence_entity_1 && !variables.presence_entity_2) ]]]'
+        - template: casora_badge_media_group
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return (variables.show_media!==false&&!variables.show_now_playing&&!!variables.media_player_1) ]]]'
+            entity_1: '[[[ return !!variables.media_player_1 ? variables.media_player_1 : null ]]]'
+            entity_10: '[[[ return !!variables.media_player_7 ? variables.media_player_7 : null ]]]'
+            entity_11: '[[[ return !!variables.media_player_8 ? variables.media_player_8 : null ]]]'
+            entity_12: '[[[ return !!variables.media_player_9 ? variables.media_player_9 : null ]]]'
+            entity_13: '[[[ return !!variables.media_player_10 ? variables.media_player_10 : null ]]]'
+            entity_2: '[[[ return !!variables.media_player_2 ? variables.media_player_2 : null ]]]'
+            entity_3: '[[[ return !!variables.media_player_3 ? variables.media_player_3 : null ]]]'
+            entity_4: '[[[ return !!variables.media_player_4 ? variables.media_player_4 : null ]]]'
+            entity_6: '[[[ return !!variables.psn_1 ? variables.psn_1 : null ]]]'
+            entity_7: '[[[ return !!variables.psn_2 ? variables.psn_2 : null ]]]'
+            entity_8: '[[[ return !!variables.media_player_5 ? variables.media_player_5 : null ]]]'
+            entity_9: '[[[ return !!variables.media_player_6 ? variables.media_player_6 : null ]]]'
+            pause_timeout_minutes: '[[[ return variables.pause_timeout_minutes ]]]'
+            pc_count: '[[[ const P = window._casoraPCSources?.(states, variables) || {}; return (P.discord ? 1 : 0) + (P.steam ? 1 : 0) ]]]'
+        - entity: '[[[ return variables.energy_power_entity ]]]'
+          template: casora_badge_energy_group
+          type: custom:button-card
+          variables:
+            enabled: |
+              [[[
+                return window._casoraEnergyOn
+                  ? window._casoraEnergyOn(variables)
+                  : (variables.show_energy!==false && !!variables.energy_power_entity);
+              ]]]
+            entity_cost_month: '[[[ return variables.energy_cost_month ]]]'
+            entity_cost_today: '[[[ return variables.energy_cost_today ]]]'
+            entity_power: '[[[ return variables.energy_power_entity ]]]'
+            entity_usage_month: '[[[ return variables.energy_usage_month ]]]'
+            entity_usage_today: '[[[ return variables.energy_usage_today ]]]'
+            home_power_entity: '[[[ return variables.energy_home_power_entity || variables.energy_power_entity ]]]'
+            power_entity: '[[[ return variables.energy_power_entity ]]]'
+            room_name: '[[[ return variables.room_name || variables.aqi_room_name ]]]'
+        - template: casora_badge_scene_group
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_scenes === true && !!(variables.scene_entities || []).length ]]]'
+            scene_entities: '[[[ return variables.scene_entities || [] ]]]'
+        layout:
+          align-items: center
+          grid-auto-columns: max-content
+          grid-auto-flow: column
+          grid-column-gap: var(--badge-gap-current, var(--badge-gap, 10px))
+          grid-template-columns: none
+          justify-content: start
+          justify-items: start
+        layout_type: custom:grid-layout
+        type: custom:layout-card
+    badges_climate:
+      card:
+        cards:
+        - entity: '[[[ return variables.temp_sensor_1 ]]]'
+          template: casora_badge_temp
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return (variables.show_climate!==false&&(!!variables.climate_entity_1||!!variables.temp_sensor_1||!!variables.humidity_sensor||!!variables.quality_sensor)) && !!variables.temp_sensor_1 ]]]'
+            entity_humidity: '[[[ return variables.aqi_entity_humidity ]]]'
+            entity_quality: '[[[ return variables.quality_sensor ]]]'
+            entity_temp: '[[[ return variables.aqi_entity_temp ]]]'
+            gauge: true
+            gauge_keep_bg: true
+            room_name: '[[[ return variables.aqi_room_name || this._config?.name || hass?.config?.location_name || "" ]]]'
+            sensors: |-
+              [[[
+                return [variables.aqi_entity_pm25,variables.aqi_entity_pm10,variables.aqi_entity_voc,variables.aqi_entity_co2].filter(Boolean);
+              ]]]
+            temp_unit: '[[[ return variables.temp_unit ]]]'
+        - entity: '[[[ return variables.humidity_sensor ]]]'
+          template: casora_badge_humidity
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return (variables.show_climate!==false&&(!!variables.climate_entity_1||!!variables.temp_sensor_1||!!variables.humidity_sensor||!!variables.quality_sensor)) && !!variables.humidity_sensor ]]]'
+            entity_humidity: '[[[ return variables.aqi_entity_humidity ]]]'
+            entity_quality: '[[[ return variables.quality_sensor ]]]'
+            entity_temp: '[[[ return variables.aqi_entity_temp ]]]'
+            gauge: true
+            gauge_keep_bg: true
+            room_name: '[[[ return variables.aqi_room_name || this._config?.name || hass?.config?.location_name || "" ]]]'
+            sensors: |-
+              [[[
+                return [variables.aqi_entity_pm25,variables.aqi_entity_pm10,variables.aqi_entity_voc,variables.aqi_entity_co2].filter(Boolean);
+              ]]]
+        - entity: '[[[ return variables.quality_sensor ]]]'
+          template: casora_badge_air_quality
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return (variables.show_climate!==false&&(!!variables.climate_entity_1||!!variables.temp_sensor_1||!!variables.humidity_sensor||!!variables.quality_sensor)) && !!variables.quality_sensor ]]]'
+            entity_humidity: '[[[ return variables.aqi_entity_humidity ]]]'
+            entity_quality: '[[[ return variables.quality_sensor ]]]'
+            entity_temp: '[[[ return variables.aqi_entity_temp ]]]'
+            gauge: true
+            gauge_keep_bg: true
+            room_name: '[[[ return variables.aqi_room_name || this._config?.name || hass?.config?.location_name || "" ]]]'
+            sensors: |-
+              [[[
+                return [variables.aqi_entity_pm25,variables.aqi_entity_pm10,variables.aqi_entity_voc,variables.aqi_entity_co2].filter(Boolean);
+              ]]]
+        layout:
+          align-items: center
+          grid-auto-columns: max-content
+          grid-auto-flow: column
+          grid-column-gap: var(--badge-gap-current, var(--badge-gap, 10px))
+          grid-template-columns: none
+          justify-content: start
+          justify-items: start
+        layout_type: custom:grid-layout
+        type: custom:layout-card
+    badges_energy:
+      card:
+        cards:
+        - entity: '[[[ return variables.energy_entity_1 ]]]'
+          template: casora_badge_energy
+          type: custom:button-card
+          variables:
+            color: '[[[ return variables.energy_color_1 ]]]'
+            cost_entity: '[[[ return variables.energy_cost_1 ]]]'
+            enabled: '[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables) : !!variables.energy_power_entity) && !!variables.energy_entity_1 ]]]'
+            entity_cost_month: '[[[ return variables.energy_popup_power_1 ? variables.energy_popup_cost_month_1 : variables.energy_cost_month ]]]'
+            entity_cost_today: '[[[ return variables.energy_popup_power_1 ? variables.energy_popup_cost_today_1 : variables.energy_cost_today ]]]'
+            entity_power: '[[[ return variables.energy_popup_power_1 || variables.energy_power_entity ]]]'
+            entity_usage_month: '[[[ return variables.energy_popup_power_1 ? variables.energy_popup_month_1 : variables.energy_usage_month ]]]'
+            entity_usage_today: '[[[ return variables.energy_popup_power_1 ? variables.energy_popup_today_1 : variables.energy_usage_today ]]]'
+            gauge_max: '[[[ return variables.energy_gauge_max_1 ]]]'
+            label: '[[[ return variables.energy_label_1 ]]]'
+            room_name: '[[[ return variables.energy_popup_power_1 ? (variables.energy_popup_name_1 || variables.energy_label_1) : variables.room_name || variables.aqi_room_name ]]]'
+            unit: '[[[ return variables.energy_unit_1 ]]]'
+        - entity: '[[[ return variables.energy_entity_2 ]]]'
+          template: casora_badge_energy
+          type: custom:button-card
+          variables:
+            color: '[[[ return variables.energy_color_2 ]]]'
+            cost_entity: '[[[ return variables.energy_cost_2 ]]]'
+            enabled: '[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables) : !!variables.energy_power_entity) && !!variables.energy_entity_2 ]]]'
+            entity_cost_month: '[[[ return variables.energy_popup_power_2 ? variables.energy_popup_cost_month_2 : variables.energy_cost_month ]]]'
+            entity_cost_today: '[[[ return variables.energy_popup_power_2 ? variables.energy_popup_cost_today_2 : variables.energy_cost_today ]]]'
+            entity_power: '[[[ return variables.energy_popup_power_2 || variables.energy_power_entity ]]]'
+            entity_usage_month: '[[[ return variables.energy_popup_power_2 ? variables.energy_popup_month_2 : variables.energy_usage_month ]]]'
+            entity_usage_today: '[[[ return variables.energy_popup_power_2 ? variables.energy_popup_today_2 : variables.energy_usage_today ]]]'
+            gauge_max: '[[[ return variables.energy_gauge_max_2 ]]]'
+            label: '[[[ return variables.energy_label_2 ]]]'
+            room_name: '[[[ return variables.energy_popup_power_2 ? (variables.energy_popup_name_2 || variables.energy_label_2) : variables.room_name || variables.aqi_room_name ]]]'
+            unit: '[[[ return variables.energy_unit_2 ]]]'
+        - entity: '[[[ return variables.energy_entity_3 ]]]'
+          template: casora_badge_energy
+          type: custom:button-card
+          variables:
+            color: '[[[ return variables.energy_color_3 ]]]'
+            cost_entity: '[[[ return variables.energy_cost_3 ]]]'
+            enabled: '[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables) : !!variables.energy_power_entity) && !!variables.energy_entity_3 ]]]'
+            entity_cost_month: '[[[ return variables.energy_popup_power_3 ? variables.energy_popup_cost_month_3 : variables.energy_cost_month ]]]'
+            entity_cost_today: '[[[ return variables.energy_popup_power_3 ? variables.energy_popup_cost_today_3 : variables.energy_cost_today ]]]'
+            entity_power: '[[[ return variables.energy_popup_power_3 || variables.energy_power_entity ]]]'
+            entity_usage_month: '[[[ return variables.energy_popup_power_3 ? variables.energy_popup_month_3 : variables.energy_usage_month ]]]'
+            entity_usage_today: '[[[ return variables.energy_popup_power_3 ? variables.energy_popup_today_3 : variables.energy_usage_today ]]]'
+            gauge_max: '[[[ return variables.energy_gauge_max_3 ]]]'
+            label: '[[[ return variables.energy_label_3 ]]]'
+            room_name: '[[[ return variables.energy_popup_power_3 ? (variables.energy_popup_name_3 || variables.energy_label_3) : variables.room_name || variables.aqi_room_name ]]]'
+            unit: '[[[ return variables.energy_unit_3 ]]]'
+        - entity: '[[[ return variables.energy_entity_4 ]]]'
+          template: casora_badge_energy
+          type: custom:button-card
+          variables:
+            color: '[[[ return variables.energy_color_4 ]]]'
+            cost_entity: '[[[ return variables.energy_cost_4 ]]]'
+            enabled: '[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables) : !!variables.energy_power_entity) && !!variables.energy_entity_4 ]]]'
+            entity_cost_month: '[[[ return variables.energy_popup_power_4 ? variables.energy_popup_cost_month_4 : variables.energy_cost_month ]]]'
+            entity_cost_today: '[[[ return variables.energy_popup_power_4 ? variables.energy_popup_cost_today_4 : variables.energy_cost_today ]]]'
+            entity_power: '[[[ return variables.energy_popup_power_4 || variables.energy_power_entity ]]]'
+            entity_usage_month: '[[[ return variables.energy_popup_power_4 ? variables.energy_popup_month_4 : variables.energy_usage_month ]]]'
+            entity_usage_today: '[[[ return variables.energy_popup_power_4 ? variables.energy_popup_today_4 : variables.energy_usage_today ]]]'
+            gauge_max: '[[[ return variables.energy_gauge_max_4 ]]]'
+            label: '[[[ return variables.energy_label_4 ]]]'
+            room_name: '[[[ return variables.energy_popup_power_4 ? (variables.energy_popup_name_4 || variables.energy_label_4) : variables.room_name || variables.aqi_room_name ]]]'
+            unit: '[[[ return variables.energy_unit_4 ]]]'
+        - entity: '[[[ return variables.energy_entity_5 ]]]'
+          template: casora_badge_energy
+          type: custom:button-card
+          variables:
+            color: '[[[ return variables.energy_color_5 ]]]'
+            cost_entity: '[[[ return variables.energy_cost_5 ]]]'
+            enabled: '[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables) : !!variables.energy_power_entity) && !!variables.energy_entity_5 ]]]'
+            entity_cost_month: '[[[ return variables.energy_popup_power_5 ? variables.energy_popup_cost_month_5 : variables.energy_cost_month ]]]'
+            entity_cost_today: '[[[ return variables.energy_popup_power_5 ? variables.energy_popup_cost_today_5 : variables.energy_cost_today ]]]'
+            entity_power: '[[[ return variables.energy_popup_power_5 || variables.energy_power_entity ]]]'
+            entity_usage_month: '[[[ return variables.energy_popup_power_5 ? variables.energy_popup_month_5 : variables.energy_usage_month ]]]'
+            entity_usage_today: '[[[ return variables.energy_popup_power_5 ? variables.energy_popup_today_5 : variables.energy_usage_today ]]]'
+            gauge_max: '[[[ return variables.energy_gauge_max_5 ]]]'
+            label: '[[[ return variables.energy_label_5 ]]]'
+            room_name: '[[[ return variables.energy_popup_power_5 ? (variables.energy_popup_name_5 || variables.energy_label_5) : variables.room_name || variables.aqi_room_name ]]]'
+            unit: '[[[ return variables.energy_unit_5 ]]]'
+        - entity: '[[[ return variables.energy_entity_6 ]]]'
+          template: casora_badge_energy
+          type: custom:button-card
+          variables:
+            color: '[[[ return variables.energy_color_6 ]]]'
+            cost_entity: '[[[ return variables.energy_cost_6 ]]]'
+            enabled: '[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables) : !!variables.energy_power_entity) && !!variables.energy_entity_6 ]]]'
+            entity_cost_month: '[[[ return variables.energy_popup_power_6 ? variables.energy_popup_cost_month_6 : variables.energy_cost_month ]]]'
+            entity_cost_today: '[[[ return variables.energy_popup_power_6 ? variables.energy_popup_cost_today_6 : variables.energy_cost_today ]]]'
+            entity_power: '[[[ return variables.energy_popup_power_6 || variables.energy_power_entity ]]]'
+            entity_usage_month: '[[[ return variables.energy_popup_power_6 ? variables.energy_popup_month_6 : variables.energy_usage_month ]]]'
+            entity_usage_today: '[[[ return variables.energy_popup_power_6 ? variables.energy_popup_today_6 : variables.energy_usage_today ]]]'
+            gauge_max: '[[[ return variables.energy_gauge_max_6 ]]]'
+            label: '[[[ return variables.energy_label_6 ]]]'
+            room_name: '[[[ return variables.energy_popup_power_6 ? (variables.energy_popup_name_6 || variables.energy_label_6) : variables.room_name || variables.aqi_room_name ]]]'
+            unit: '[[[ return variables.energy_unit_6 ]]]'
+        layout:
+          align-items: center
+          grid-auto-columns: max-content
+          grid-auto-flow: column
+          grid-column-gap: var(--badge-gap-current, var(--badge-gap, 10px))
+          grid-template-columns: none
+          justify-content: start
+          justify-items: start
+        layout_type: custom:grid-layout
+        type: custom:layout-card
+    badges_lights:
+      card:
+        cards:
+        - entity: |
+            [[[
+              const g = variables.light_entity_1 || variables.light_group_entity;
+              const m = g ? hass.states[g]?.attributes?.entity_id : null;
+              const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+              return expand ? (m[0] || null) : (variables.light_entity_1 || null);
+            ]]]
+          template: casora_badge_light
+          type: custom:button-card
+          variables:
+            enabled: |
+              [[[
+                const g = variables.light_entity_1 || variables.light_group_entity;
+                const m = g ? hass.states[g]?.attributes?.entity_id : null;
+                const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+                if (expand) return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!m[0];
+                return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!variables.light_entity_1;
+              ]]]
+        - entity: |
+            [[[
+              const g = variables.light_entity_1 || variables.light_group_entity;
+              const m = g ? hass.states[g]?.attributes?.entity_id : null;
+              const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+              return expand ? (m[1] || null) : (variables.light_entity_2 || null);
+            ]]]
+          template: casora_badge_light
+          type: custom:button-card
+          variables:
+            enabled: |
+              [[[
+                const g = variables.light_entity_1 || variables.light_group_entity;
+                const m = g ? hass.states[g]?.attributes?.entity_id : null;
+                const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+                if (expand) return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!m[1];
+                return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!variables.light_entity_2;
+              ]]]
+        - entity: |
+            [[[
+              const g = variables.light_entity_1 || variables.light_group_entity;
+              const m = g ? hass.states[g]?.attributes?.entity_id : null;
+              const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+              return expand ? (m[2] || null) : (variables.light_entity_3 || null);
+            ]]]
+          template: casora_badge_light
+          type: custom:button-card
+          variables:
+            enabled: |
+              [[[
+                const g = variables.light_entity_1 || variables.light_group_entity;
+                const m = g ? hass.states[g]?.attributes?.entity_id : null;
+                const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+                if (expand) return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!m[2];
+                return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!variables.light_entity_3;
+              ]]]
+        - entity: |
+            [[[
+              const g = variables.light_entity_1 || variables.light_group_entity;
+              const m = g ? hass.states[g]?.attributes?.entity_id : null;
+              const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+              return expand ? (m[3] || null) : (variables.light_entity_4 || null);
+            ]]]
+          template: casora_badge_light
+          type: custom:button-card
+          variables:
+            enabled: |
+              [[[
+                const g = variables.light_entity_1 || variables.light_group_entity;
+                const m = g ? hass.states[g]?.attributes?.entity_id : null;
+                const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+                if (expand) return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!m[3];
+                return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!variables.light_entity_4;
+              ]]]
+        - entity: |
+            [[[
+              const g = variables.light_entity_1 || variables.light_group_entity;
+              const m = g ? hass.states[g]?.attributes?.entity_id : null;
+              const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+              return expand ? (m[4] || null) : (variables.light_entity_5 || null);
+            ]]]
+          template: casora_badge_light
+          type: custom:button-card
+          variables:
+            enabled: |
+              [[[
+                const g = variables.light_entity_1 || variables.light_group_entity;
+                const m = g ? hass.states[g]?.attributes?.entity_id : null;
+                const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+                if (expand) return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!m[4];
+                return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!variables.light_entity_5;
+              ]]]
+        - entity: |
+            [[[
+              const g = variables.light_entity_1 || variables.light_group_entity;
+              const m = g ? hass.states[g]?.attributes?.entity_id : null;
+              const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+              return expand ? (m[5] || null) : (variables.light_entity_6 || null);
+            ]]]
+          template: casora_badge_light
+          type: custom:button-card
+          variables:
+            enabled: |
+              [[[
+                const g = variables.light_entity_1 || variables.light_group_entity;
+                const m = g ? hass.states[g]?.attributes?.entity_id : null;
+                const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+                if (expand) return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!m[5];
+                return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!variables.light_entity_6;
+              ]]]
+        - entity: |
+            [[[
+              const g = variables.light_entity_1 || variables.light_group_entity;
+              const m = g ? hass.states[g]?.attributes?.entity_id : null;
+              const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+              return expand ? (m[6] || null) : (variables.light_entity_7 || null);
+            ]]]
+          template: casora_badge_light
+          type: custom:button-card
+          variables:
+            enabled: |
+              [[[
+                const g = variables.light_entity_1 || variables.light_group_entity;
+                const m = g ? hass.states[g]?.attributes?.entity_id : null;
+                const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+                if (expand) return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!m[6];
+                return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!variables.light_entity_7;
+              ]]]
+        - entity: |
+            [[[
+              const g = variables.light_entity_1 || variables.light_group_entity;
+              const m = g ? hass.states[g]?.attributes?.entity_id : null;
+              const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+              return expand ? (m[8] || null) : (variables.light_entity_8 || null);
+            ]]]
+          template: casora_badge_light
+          type: custom:button-card
+          variables:
+            enabled: |
+              [[[
+                const g = variables.light_entity_1 || variables.light_group_entity;
+                const m = g ? hass.states[g]?.attributes?.entity_id : null;
+                const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+                if (expand) return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!m[8];
+                return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!variables.light_entity_8;
+              ]]]
+        - entity: |
+            [[[
+              const g = variables.light_entity_1 || variables.light_group_entity;
+              const m = g ? hass.states[g]?.attributes?.entity_id : null;
+              const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+              return expand ? (m[9] || null) : (variables.light_entity_9 || null);
+            ]]]
+          template: casora_badge_light
+          type: custom:button-card
+          variables:
+            enabled: |
+              [[[
+                const g = variables.light_entity_1 || variables.light_group_entity;
+                const m = g ? hass.states[g]?.attributes?.entity_id : null;
+                const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+                if (expand) return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!m[9];
+                return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!variables.light_entity_9;
+              ]]]
+        - entity: |
+            [[[
+              const g = variables.light_entity_1 || variables.light_group_entity;
+              const m = g ? hass.states[g]?.attributes?.entity_id : null;
+              const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+              return expand ? (m[10] || null) : (variables.light_entity_10 || null);
+            ]]]
+          template: casora_badge_light
+          type: custom:button-card
+          variables:
+            enabled: |
+              [[[
+                const g = variables.light_entity_1 || variables.light_group_entity;
+                const m = g ? hass.states[g]?.attributes?.entity_id : null;
+                const expand = Array.isArray(m) && m.length > 0 && !variables.light_entity_2;
+                if (expand) return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!m[10];
+                return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) && !!variables.light_entity_10;
+              ]]]
+        layout:
+          align-items: center
+          grid-auto-columns: max-content
+          grid-auto-flow: column
+          grid-column-gap: var(--badge-gap-current, var(--badge-gap, 10px))
+          grid-template-columns: none
+          justify-content: start
+          justify-items: start
+        layout_type: custom:grid-layout
+        type: custom:layout-card
+    badges_media:
+      card:
+        custom_fields:
+          activity1:
+            card:
+              entity: '[[[ return variables.psn_1 ]]]'
+              template: casora_badge_activity
+              type: custom:button-card
+              variables:
+                enabled: '[[[ return !!variables.psn_1 ]]]'
+          activity2:
+            card:
+              entity: '[[[ return variables.psn_2 ]]]'
+              template: casora_badge_activity
+              type: custom:button-card
+              variables:
+                enabled: '[[[ return !!variables.psn_2 ]]]'
+          activity_discord:
+            card:
+              entity: '[[[ return variables.discord_image ]]]'
+              entity_picture: |
+                [[[
+                  const P = window._casoraPCSources?.(states, variables);
+                  if (P?.discord?.img) this._discordImgUrl = P.discord.img;
+                  return this._discordImgUrl || null;
+                ]]]
+              name: |
+                [[[
+                  const esc = (s) => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+                  const P = window._casoraPCSources?.(states, variables);
+                  const row = P?.discord;
+                  const title = row ? row.label : 'Discord';
+                  const sub = row ? (row.details ? `${row.game} — ${row.details}` : row.game) : 'Online';
+                  return `<div class="badge-wrap"><div class="badge-title">${esc(title)}</div><div class="badge-sub">${esc(sub)}</div></div>`;
+                ]]]
+              styles:
+                card:
+                - --casora-badge-opacity: |
+                    [[[
+                      const P = window._casoraPCSources?.(states, variables);
+                      return P?.discord ? '1' : '0';
+                    ]]]
+                - --casora-badge-ptr: |
+                    [[[
+                      const P = window._casoraPCSources?.(states, variables);
+                      return P?.discord ? 'auto' : 'none';
+                    ]]]
+                - --bg-url: |
+                    [[[
+                      const P = window._casoraPCSources?.(states, variables);
+                      if (P?.discord?.img) this._discordImgUrlBg = `url("${P.discord.img}")`;
+                      return this._discordImgUrlBg || 'none';
+                    ]]]
+              template: casora_badge_activity
+              type: custom:button-card
+              variables:
+                enabled: |
+                  [[[
+                    const P = window._casoraPCSources?.(states, variables);
+                    return !!P?.discord;
+                  ]]]
+          activity_steam:
+            card:
+              entity: '[[[ return variables.steam_image ]]]'
+              entity_picture: |
+                [[[
+                  const P = window._casoraPCSources?.(states, variables);
+                  if (P?.steam?.img) this._steamImgUrl = P.steam.img;
+                  return this._steamImgUrl || null;
+                ]]]
+              name: |
+                [[[
+                  const esc = (s) => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+                  const P = window._casoraPCSources?.(states, variables);
+                  const row = P?.steam;
+                  const title = row ? row.label : 'Steam';
+                  const sub = row ? (row.details ? `${row.game} — ${row.details}` : row.game) : 'Online';
+                  return `<div class="badge-wrap"><div class="badge-title">${esc(title)}</div><div class="badge-sub">${esc(sub)}</div></div>`;
+                ]]]
+              styles:
+                card:
+                - --casora-badge-opacity: |
+                    [[[
+                      const P = window._casoraPCSources?.(states, variables);
+                      return P?.steam ? '1' : '0';
+                    ]]]
+                - --casora-badge-ptr: |
+                    [[[
+                      const P = window._casoraPCSources?.(states, variables);
+                      return P?.steam ? 'auto' : 'none';
+                    ]]]
+                - --bg-url: |
+                    [[[
+                      const P = window._casoraPCSources?.(states, variables);
+                      if (P?.steam?.img) this._steamImgUrlBg = `url("${P.steam.img}")`;
+                      return this._steamImgUrlBg || 'none';
+                    ]]]
+              template: casora_badge_activity
+              type: custom:button-card
+              variables:
+                enabled: |
+                  [[[
+                    const P = window._casoraPCSources?.(states, variables);
+                    return !!P?.steam;
+                  ]]]
+          mp1:
+            card:
+              template: casora_badge_media_player
+              type: custom:button-card
+              variables:
+                enabled: '[[[ return !!variables.media_player_1 ]]]'
+                entity: '[[[ return variables.media_player_1 ]]]'
+                pause_timeout_minutes: '[[[ return variables.pause_timeout_minutes ]]]'
+          mp10:
+            card:
+              template: casora_badge_media_player
+              type: custom:button-card
+              variables:
+                enabled: '[[[ return !!variables.media_player_10 ]]]'
+                entity: '[[[ return variables.media_player_10 ]]]'
+                pause_timeout_minutes: '[[[ return variables.pause_timeout_minutes ]]]'
+          mp2:
+            card:
+              template: casora_badge_media_player
+              type: custom:button-card
+              variables:
+                enabled: '[[[ return !!variables.media_player_2 ]]]'
+                entity: '[[[ return variables.media_player_2 ]]]'
+                pause_timeout_minutes: '[[[ return variables.pause_timeout_minutes ]]]'
+          mp3:
+            card:
+              template: casora_badge_media_player
+              type: custom:button-card
+              variables:
+                enabled: '[[[ return !!variables.media_player_3 ]]]'
+                entity: '[[[ return variables.media_player_3 ]]]'
+                pause_timeout_minutes: '[[[ return variables.pause_timeout_minutes ]]]'
+          mp4:
+            card:
+              template: casora_badge_media_player
+              type: custom:button-card
+              variables:
+                enabled: '[[[ return !!variables.media_player_4 ]]]'
+                entity: '[[[ return variables.media_player_4 ]]]'
+                pause_timeout_minutes: '[[[ return variables.pause_timeout_minutes ]]]'
+          mp5:
+            card:
+              template: casora_badge_media_player
+              type: custom:button-card
+              variables:
+                enabled: '[[[ return !!variables.media_player_5 ]]]'
+                entity: '[[[ return variables.media_player_5 ]]]'
+                pause_timeout_minutes: '[[[ return variables.pause_timeout_minutes ]]]'
+          mp6:
+            card:
+              template: casora_badge_media_player
+              type: custom:button-card
+              variables:
+                enabled: '[[[ return !!variables.media_player_6 ]]]'
+                entity: '[[[ return variables.media_player_6 ]]]'
+                pause_timeout_minutes: '[[[ return variables.pause_timeout_minutes ]]]'
+          mp7:
+            card:
+              template: casora_badge_media_player
+              type: custom:button-card
+              variables:
+                enabled: '[[[ return !!variables.media_player_7 ]]]'
+                entity: '[[[ return variables.media_player_7 ]]]'
+                pause_timeout_minutes: '[[[ return variables.pause_timeout_minutes ]]]'
+          mp8:
+            card:
+              template: casora_badge_media_player
+              type: custom:button-card
+              variables:
+                enabled: '[[[ return !!variables.media_player_8 ]]]'
+                entity: '[[[ return variables.media_player_8 ]]]'
+                pause_timeout_minutes: '[[[ return variables.pause_timeout_minutes ]]]'
+          mp9:
+            card:
+              template: casora_badge_media_player
+              type: custom:button-card
+              variables:
+                enabled: '[[[ return !!variables.media_player_9 ]]]'
+                entity: '[[[ return variables.media_player_9 ]]]'
+                pause_timeout_minutes: '[[[ return variables.pause_timeout_minutes ]]]'
+        extra_styles: |
+          [[[
+            const step = 22;
+
+            const PC = window._casoraPCSources?.(states, variables) || {};
+
+            const fields = [
+              ['mp1',  !!variables.media_player_1  && variables.media_player_1],
+              ['mp2',  !!variables.media_player_2  && variables.media_player_2],
+              ['mp3',  !!variables.media_player_3  && variables.media_player_3],
+              ['mp4',  !!variables.media_player_4  && variables.media_player_4],
+              ['mp5',  !!variables.media_player_5  && variables.media_player_5],
+              ['mp6',  !!variables.media_player_6  && variables.media_player_6],
+              ['mp7',  !!variables.media_player_7  && variables.media_player_7],
+              ['mp8',  !!variables.media_player_8  && variables.media_player_8],
+              ['mp9',  !!variables.media_player_9  && variables.media_player_9],
+              ['mp10', !!variables.media_player_10 && variables.media_player_10],
+              ['activity1', !!variables.psn_1],
+              ['activity2', !!variables.psn_2],
+              ['activity_discord', !!PC.discord],
+              ['activity_steam', !!PC.steam]
+            ];
+
+            let i = 0;
+            let stagger = '';
+            for (const [id, shown] of fields) {
+              if (!shown) continue;
+              stagger += '#' + id + '{--casora-badge-enter-delay:' + (i * step) + 'ms;}';
+              i++;
+            }
+
+            return (
+              'ha-card{' +
+                'will-change: auto !important;' +
+                'isolation: auto !important;' +
+                'contain: none !important;' +
+              '}' +
+              '#container{' +
+                'will-change: auto !important;' +
+                'isolation: auto !important;' +
+              '}' +
+              stagger +
+              '#mp1, #mp2, #mp3, #mp4, #mp5, #mp6, #mp7, #mp8, #mp9, #mp10,' +
+              '#activity1, #activity2, #activity_discord, #activity_steam{' +
+                'overflow: var(--casora-field-ovf, visible) !important;' +
+              '}'
+            );
+          ]]]
+        hold_action:
+          action: none
+        show_entity_picture: false
+        show_icon: false
+        show_label: false
+        show_name: false
+        show_state: false
+        styles:
+          card:
+          - background: transparent !important
+          - box-shadow: none !important
+          - backdrop-filter: none !important
+          - -webkit-backdrop-filter: none !important
+          - padding: 0 !important
+          - margin-top: 3px !important
+          - border-radius: 0 !important
+          - border: none !important
+          - overflow: visible !important
+          - width: max-content !important
+          custom_fields:
+            activity1:
+            - max-width: |
+                [[[
+                  if (!!!variables.psn_1 || !variables.psn_1) return '0px';
+                  return '450px';
+                ]]]
+            - margin-right: |
+                [[[
+                  if (!!!variables.psn_1 || !variables.psn_1) return '0px';
+                  const s = states[variables.psn_1]; if (!s) return '0px';
+                  const st = String(s.state || '').toLowerCase();
+                  const a = s.attributes || {};
+                  if (['playing','buffering','paused'].includes(st)) return 'var(--badge-gap-current, var(--badge-gap, 10px))';
+                  const title = String(a.media_title || a.title || '').trim();
+                  const artist = String(a.media_artist || a.artist || a.media_album_artist || '').trim();
+                  const app = String(a.app_name || a.source || '').trim();
+                  return (title || artist || app) ? 'var(--badge-gap-current, var(--badge-gap, 10px))' : '0px';
+                ]]]
+            - transition: |
+                [[[
+                  return 'none';
+                ]]]
+            activity2:
+            - max-width: |
+                [[[
+                  if (!!!variables.psn_2 || !variables.psn_2) return '0px';
+                  return '450px';
+                ]]]
+            - margin-right: |
+                [[[
+                  if (!!!variables.psn_2 || !variables.psn_2) return '0px';
+                  const s = states[variables.psn_2]; if (!s) return '0px';
+                  const st = String(s.state || '').toLowerCase();
+                  const a = s.attributes || {};
+                  if (['playing','buffering','paused'].includes(st)) return 'var(--badge-gap-current, var(--badge-gap, 10px))';
+                  const title = String(a.media_title || a.title || '').trim();
+                  const artist = String(a.media_artist || a.artist || a.media_album_artist || '').trim();
+                  const app = String(a.app_name || a.source || '').trim();
+                  return (title || artist || app) ? 'var(--badge-gap-current, var(--badge-gap, 10px))' : '0px';
+                ]]]
+            - transition: |
+                [[[
+                  return 'none';
+                ]]]
+            activity_discord:
+            - max-width: |
+                [[[
+                  if (!variables.discord_user
+                      && (!variables.discord_online || !variables.discord_game)) return '0px';
+                  return '450px';
+                ]]]
+            - margin-right: |
+                [[[
+                  const P = window._casoraPCSources?.(states, variables);
+                  return P?.discord ? 'var(--badge-gap-current, var(--badge-gap, 10px))' : '0px';
+                ]]]
+            - transition: |
+                [[[
+                  return 'none';
+                ]]]
+            activity_steam:
+            - max-width: |
+                [[[
+                  if (!variables.steam_account && !variables.steam_game) return '0px';
+                  return '450px';
+                ]]]
+            - margin-right: |
+                [[[
+                  const P = window._casoraPCSources?.(states, variables);
+                  return P?.steam ? 'var(--badge-gap-current, var(--badge-gap, 10px))' : '0px';
+                ]]]
+            - transition: |
+                [[[
+                  return 'none';
+                ]]]
+            mp1:
+            - max-width: |
+                [[[
+                  if (!!!variables.media_player_1 || !variables.media_player_1) return '0px';
+                  return '450px';
+                ]]]
+            - margin-right: |
+                [[[
+                  if (!!!variables.media_player_1 || !variables.media_player_1) return '0px';
+                  const s = states[variables.media_player_1]; if (!s) return '0px';
+                  const st = String(s.state || '');
+                  if (['unavailable','unknown','off','standby'].includes(st)) return '0px';
+                  const a = s.attributes || {};
+                  if (!String(a.media_title||'').trim() && !String(a.media_artist||a.artist||a.media_album_artist||'').trim()) return '0px';
+                  if (st === 'paused') { const t = Number(variables.pause_timeout_minutes ?? 10); if (t > 0 && (new Date() - new Date(s.last_changed)) / 60000 > t) return '0px'; }
+                  return 'var(--badge-gap-current, var(--badge-gap, 10px))';
+                ]]]
+            - transition: |
+                [[[
+                  return 'none';
+                ]]]
+            mp10:
+            - max-width: |
+                [[[
+                  if (!!!variables.media_player_10 || !variables.media_player_10) return '0px';
+                  return '450px';
+                ]]]
+            - margin-right: |
+                [[[
+                  if (!!!variables.media_player_10 || !variables.media_player_10) return '0px';
+                  const s = states[variables.media_player_10]; if (!s) return '0px';
+                  const st = String(s.state || '');
+                  if (['unavailable','unknown','off','standby'].includes(st)) return '0px';
+                  const a = s.attributes || {};
+                  if (!String(a.media_title||'').trim() && !String(a.media_artist||a.artist||a.media_album_artist||'').trim()) return '0px';
+                  if (st === 'paused') { const t = Number(variables.pause_timeout_minutes ?? 10); if (t > 0 && (new Date() - new Date(s.last_changed)) / 60000 > t) return '0px'; }
+                  const _ck=e=>{const a2=states[e]?.attributes||{};return`${String(a2.media_title||'').trim()}|${String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim()}`};
+                  const _ia=e=>{if(!e)return false;const s2=states[e];if(!s2)return false;const st2=String(s2.state||'');if(['unavailable','unknown','off','standby'].includes(st2))return false;const a2=s2.attributes||{};if(!String(a2.media_title||'').trim()&&!String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim())return false;if(['playing','buffering','on','idle'].includes(st2))return true;if(st2==='paused'){const t=Number(variables.pause_timeout_minutes??10);return t<=0||((new Date()-new Date(s2.last_changed))/60000)<=t;}return false;};
+                  const _myKey=`${String(a.media_title||'').trim()}|${String(a.media_artist||a.artist||a.media_album_artist||'').trim()}`;
+                  if([!!variables.media_player_1&&variables.media_player_1,!!variables.media_player_2&&variables.media_player_2,!!variables.media_player_3&&variables.media_player_3,!!variables.media_player_4&&variables.media_player_4,!!variables.media_player_5&&variables.media_player_5,!!variables.media_player_6&&variables.media_player_6,!!variables.media_player_7&&variables.media_player_7,!!variables.media_player_8&&variables.media_player_8,!!variables.media_player_9&&variables.media_player_9].filter(Boolean).filter(_ia).some(e=>_ck(e)===_myKey))return'0px';
+                  return 'var(--badge-gap-current, var(--badge-gap, 10px))';
+                ]]]
+            - transition: |
+                [[[
+                  return 'none';
+                ]]]
+            mp2:
+            - max-width: |
+                [[[
+                  if (!!!variables.media_player_2 || !variables.media_player_2) return '0px';
+                  return '450px';
+                ]]]
+            - margin-right: |
+                [[[
+                  if (!!!variables.media_player_2 || !variables.media_player_2) return '0px';
+                  const s = states[variables.media_player_2]; if (!s) return '0px';
+                  const st = String(s.state || '');
+                  if (['unavailable','unknown','off','standby'].includes(st)) return '0px';
+                  const a = s.attributes || {};
+                  if (!String(a.media_title||'').trim() && !String(a.media_artist||a.artist||a.media_album_artist||'').trim()) return '0px';
+                  if (st === 'paused') { const t = Number(variables.pause_timeout_minutes ?? 10); if (t > 0 && (new Date() - new Date(s.last_changed)) / 60000 > t) return '0px'; }
+                  const _ck=e=>{const a2=states[e]?.attributes||{};return`${String(a2.media_title||'').trim()}|${String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim()}`};
+                  const _ia=e=>{if(!e)return false;const s2=states[e];if(!s2)return false;const st2=String(s2.state||'');if(['unavailable','unknown','off','standby'].includes(st2))return false;const a2=s2.attributes||{};if(!String(a2.media_title||'').trim()&&!String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim())return false;if(['playing','buffering','on','idle'].includes(st2))return true;if(st2==='paused'){const t=Number(variables.pause_timeout_minutes??10);return t<=0||((new Date()-new Date(s2.last_changed))/60000)<=t;}return false;};
+                  const _myKey=`${String(a.media_title||'').trim()}|${String(a.media_artist||a.artist||a.media_album_artist||'').trim()}`;
+                  if([!!variables.media_player_1&&variables.media_player_1].filter(Boolean).filter(_ia).some(e=>_ck(e)===_myKey))return'0px';
+                  return 'var(--badge-gap-current, var(--badge-gap, 10px))';
+                ]]]
+            - transition: |
+                [[[
+                  return 'none';
+                ]]]
+            mp3:
+            - max-width: |
+                [[[
+                  if (!!!variables.media_player_3 || !variables.media_player_3) return '0px';
+                  return '450px';
+                ]]]
+            - margin-right: |
+                [[[
+                  if (!!!variables.media_player_3 || !variables.media_player_3) return '0px';
+                  const s = states[variables.media_player_3]; if (!s) return '0px';
+                  const st = String(s.state || '');
+                  if (['unavailable','unknown','off','standby'].includes(st)) return '0px';
+                  const a = s.attributes || {};
+                  if (!String(a.media_title||'').trim() && !String(a.media_artist||a.artist||a.media_album_artist||'').trim()) return '0px';
+                  if (st === 'paused') { const t = Number(variables.pause_timeout_minutes ?? 10); if (t > 0 && (new Date() - new Date(s.last_changed)) / 60000 > t) return '0px'; }
+                  const _ck=e=>{const a2=states[e]?.attributes||{};return`${String(a2.media_title||'').trim()}|${String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim()}`};
+                  const _ia=e=>{if(!e)return false;const s2=states[e];if(!s2)return false;const st2=String(s2.state||'');if(['unavailable','unknown','off','standby'].includes(st2))return false;const a2=s2.attributes||{};if(!String(a2.media_title||'').trim()&&!String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim())return false;if(['playing','buffering','on','idle'].includes(st2))return true;if(st2==='paused'){const t=Number(variables.pause_timeout_minutes??10);return t<=0||((new Date()-new Date(s2.last_changed))/60000)<=t;}return false;};
+                  const _myKey=`${String(a.media_title||'').trim()}|${String(a.media_artist||a.artist||a.media_album_artist||'').trim()}`;
+                  if([!!variables.media_player_1&&variables.media_player_1,!!variables.media_player_2&&variables.media_player_2].filter(Boolean).filter(_ia).some(e=>_ck(e)===_myKey))return'0px';
+                  return 'var(--badge-gap-current, var(--badge-gap, 10px))';
+                ]]]
+            - transition: |
+                [[[
+                  return 'none';
+                ]]]
+            mp4:
+            - max-width: |
+                [[[
+                  if (!!!variables.media_player_4 || !variables.media_player_4) return '0px';
+                  return '450px';
+                ]]]
+            - margin-right: |
+                [[[
+                  if (!!!variables.media_player_4 || !variables.media_player_4) return '0px';
+                  const s = states[variables.media_player_4]; if (!s) return '0px';
+                  const st = String(s.state || '');
+                  if (['unavailable','unknown','off','standby'].includes(st)) return '0px';
+                  const a = s.attributes || {};
+                  if (!String(a.media_title||'').trim() && !String(a.media_artist||a.artist||a.media_album_artist||'').trim()) return '0px';
+                  if (st === 'paused') { const t = Number(variables.pause_timeout_minutes ?? 10); if (t > 0 && (new Date() - new Date(s.last_changed)) / 60000 > t) return '0px'; }
+                  const _ck=e=>{const a2=states[e]?.attributes||{};return`${String(a2.media_title||'').trim()}|${String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim()}`};
+                  const _ia=e=>{if(!e)return false;const s2=states[e];if(!s2)return false;const st2=String(s2.state||'');if(['unavailable','unknown','off','standby'].includes(st2))return false;const a2=s2.attributes||{};if(!String(a2.media_title||'').trim()&&!String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim())return false;if(['playing','buffering','on','idle'].includes(st2))return true;if(st2==='paused'){const t=Number(variables.pause_timeout_minutes??10);return t<=0||((new Date()-new Date(s2.last_changed))/60000)<=t;}return false;};
+                  const _myKey=`${String(a.media_title||'').trim()}|${String(a.media_artist||a.artist||a.media_album_artist||'').trim()}`;
+                  if([!!variables.media_player_1&&variables.media_player_1,!!variables.media_player_2&&variables.media_player_2,!!variables.media_player_3&&variables.media_player_3].filter(Boolean).filter(_ia).some(e=>_ck(e)===_myKey))return'0px';
+                  return 'var(--badge-gap-current, var(--badge-gap, 10px))';
+                ]]]
+            - transition: |
+                [[[
+                  return 'none';
+                ]]]
+            mp5:
+            - max-width: |
+                [[[
+                  if (!!!variables.media_player_5 || !variables.media_player_5) return '0px';
+                  return '450px';
+                ]]]
+            - margin-right: |
+                [[[
+                  if (!!!variables.media_player_5 || !variables.media_player_5) return '0px';
+                  const s = states[variables.media_player_5]; if (!s) return '0px';
+                  const st = String(s.state || '');
+                  if (['unavailable','unknown','off','standby'].includes(st)) return '0px';
+                  const a = s.attributes || {};
+                  if (!String(a.media_title||'').trim() && !String(a.media_artist||a.artist||a.media_album_artist||'').trim()) return '0px';
+                  if (st === 'paused') { const t = Number(variables.pause_timeout_minutes ?? 10); if (t > 0 && (new Date() - new Date(s.last_changed)) / 60000 > t) return '0px'; }
+                  const _ck=e=>{const a2=states[e]?.attributes||{};return`${String(a2.media_title||'').trim()}|${String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim()}`};
+                  const _ia=e=>{if(!e)return false;const s2=states[e];if(!s2)return false;const st2=String(s2.state||'');if(['unavailable','unknown','off','standby'].includes(st2))return false;const a2=s2.attributes||{};if(!String(a2.media_title||'').trim()&&!String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim())return false;if(['playing','buffering','on','idle'].includes(st2))return true;if(st2==='paused'){const t=Number(variables.pause_timeout_minutes??10);return t<=0||((new Date()-new Date(s2.last_changed))/60000)<=t;}return false;};
+                  const _myKey=`${String(a.media_title||'').trim()}|${String(a.media_artist||a.artist||a.media_album_artist||'').trim()}`;
+                  if([!!variables.media_player_1&&variables.media_player_1,!!variables.media_player_2&&variables.media_player_2,!!variables.media_player_3&&variables.media_player_3,!!variables.media_player_4&&variables.media_player_4].filter(Boolean).filter(_ia).some(e=>_ck(e)===_myKey))return'0px';
+                  return 'var(--badge-gap-current, var(--badge-gap, 10px))';
+                ]]]
+            - transition: |
+                [[[
+                  return 'none';
+                ]]]
+            mp6:
+            - max-width: |
+                [[[
+                  if (!!!variables.media_player_6 || !variables.media_player_6) return '0px';
+                  return '450px';
+                ]]]
+            - margin-right: |
+                [[[
+                  if (!!!variables.media_player_6 || !variables.media_player_6) return '0px';
+                  const s = states[variables.media_player_6]; if (!s) return '0px';
+                  const st = String(s.state || '');
+                  if (['unavailable','unknown','off','standby'].includes(st)) return '0px';
+                  const a = s.attributes || {};
+                  if (!String(a.media_title||'').trim() && !String(a.media_artist||a.artist||a.media_album_artist||'').trim()) return '0px';
+                  if (st === 'paused') { const t = Number(variables.pause_timeout_minutes ?? 10); if (t > 0 && (new Date() - new Date(s.last_changed)) / 60000 > t) return '0px'; }
+                  const _ck=e=>{const a2=states[e]?.attributes||{};return`${String(a2.media_title||'').trim()}|${String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim()}`};
+                  const _ia=e=>{if(!e)return false;const s2=states[e];if(!s2)return false;const st2=String(s2.state||'');if(['unavailable','unknown','off','standby'].includes(st2))return false;const a2=s2.attributes||{};if(!String(a2.media_title||'').trim()&&!String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim())return false;if(['playing','buffering','on','idle'].includes(st2))return true;if(st2==='paused'){const t=Number(variables.pause_timeout_minutes??10);return t<=0||((new Date()-new Date(s2.last_changed))/60000)<=t;}return false;};
+                  const _myKey=`${String(a.media_title||'').trim()}|${String(a.media_artist||a.artist||a.media_album_artist||'').trim()}`;
+                  if([!!variables.media_player_1&&variables.media_player_1,!!variables.media_player_2&&variables.media_player_2,!!variables.media_player_3&&variables.media_player_3,!!variables.media_player_4&&variables.media_player_4,!!variables.media_player_5&&variables.media_player_5].filter(Boolean).filter(_ia).some(e=>_ck(e)===_myKey))return'0px';
+                  return 'var(--badge-gap-current, var(--badge-gap, 10px))';
+                ]]]
+            - transition: |
+                [[[
+                  return 'none';
+                ]]]
+            mp7:
+            - max-width: |
+                [[[
+                  if (!!!variables.media_player_7 || !variables.media_player_7) return '0px';
+                  return '450px';
+                ]]]
+            - margin-right: |
+                [[[
+                  if (!!!variables.media_player_7 || !variables.media_player_7) return '0px';
+                  const s = states[variables.media_player_7]; if (!s) return '0px';
+                  const st = String(s.state || '');
+                  if (['unavailable','unknown','off','standby'].includes(st)) return '0px';
+                  const a = s.attributes || {};
+                  if (!String(a.media_title||'').trim() && !String(a.media_artist||a.artist||a.media_album_artist||'').trim()) return '0px';
+                  if (st === 'paused') { const t = Number(variables.pause_timeout_minutes ?? 10); if (t > 0 && (new Date() - new Date(s.last_changed)) / 60000 > t) return '0px'; }
+                  const _ck=e=>{const a2=states[e]?.attributes||{};return`${String(a2.media_title||'').trim()}|${String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim()}`};
+                  const _ia=e=>{if(!e)return false;const s2=states[e];if(!s2)return false;const st2=String(s2.state||'');if(['unavailable','unknown','off','standby'].includes(st2))return false;const a2=s2.attributes||{};if(!String(a2.media_title||'').trim()&&!String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim())return false;if(['playing','buffering','on','idle'].includes(st2))return true;if(st2==='paused'){const t=Number(variables.pause_timeout_minutes??10);return t<=0||((new Date()-new Date(s2.last_changed))/60000)<=t;}return false;};
+                  const _myKey=`${String(a.media_title||'').trim()}|${String(a.media_artist||a.artist||a.media_album_artist||'').trim()}`;
+                  if([!!variables.media_player_1&&variables.media_player_1,!!variables.media_player_2&&variables.media_player_2,!!variables.media_player_3&&variables.media_player_3,!!variables.media_player_4&&variables.media_player_4,!!variables.media_player_5&&variables.media_player_5,!!variables.media_player_6&&variables.media_player_6].filter(Boolean).filter(_ia).some(e=>_ck(e)===_myKey))return'0px';
+                  return 'var(--badge-gap-current, var(--badge-gap, 10px))';
+                ]]]
+            - transition: |
+                [[[
+                  return 'none';
+                ]]]
+            mp8:
+            - max-width: |
+                [[[
+                  if (!!!variables.media_player_8 || !variables.media_player_8) return '0px';
+                  return '450px';
+                ]]]
+            - margin-right: |
+                [[[
+                  if (!!!variables.media_player_8 || !variables.media_player_8) return '0px';
+                  const s = states[variables.media_player_8]; if (!s) return '0px';
+                  const st = String(s.state || '');
+                  if (['unavailable','unknown','off','standby'].includes(st)) return '0px';
+                  const a = s.attributes || {};
+                  if (!String(a.media_title||'').trim() && !String(a.media_artist||a.artist||a.media_album_artist||'').trim()) return '0px';
+                  if (st === 'paused') { const t = Number(variables.pause_timeout_minutes ?? 10); if (t > 0 && (new Date() - new Date(s.last_changed)) / 60000 > t) return '0px'; }
+                  const _ck=e=>{const a2=states[e]?.attributes||{};return`${String(a2.media_title||'').trim()}|${String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim()}`};
+                  const _ia=e=>{if(!e)return false;const s2=states[e];if(!s2)return false;const st2=String(s2.state||'');if(['unavailable','unknown','off','standby'].includes(st2))return false;const a2=s2.attributes||{};if(!String(a2.media_title||'').trim()&&!String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim())return false;if(['playing','buffering','on','idle'].includes(st2))return true;if(st2==='paused'){const t=Number(variables.pause_timeout_minutes??10);return t<=0||((new Date()-new Date(s2.last_changed))/60000)<=t;}return false;};
+                  const _myKey=`${String(a.media_title||'').trim()}|${String(a.media_artist||a.artist||a.media_album_artist||'').trim()}`;
+                  if([!!variables.media_player_1&&variables.media_player_1,!!variables.media_player_2&&variables.media_player_2,!!variables.media_player_3&&variables.media_player_3,!!variables.media_player_4&&variables.media_player_4,!!variables.media_player_5&&variables.media_player_5,!!variables.media_player_6&&variables.media_player_6,!!variables.media_player_7&&variables.media_player_7].filter(Boolean).filter(_ia).some(e=>_ck(e)===_myKey))return'0px';
+                  return 'var(--badge-gap-current, var(--badge-gap, 10px))';
+                ]]]
+            - transition: |
+                [[[
+                  return 'none';
+                ]]]
+            mp9:
+            - max-width: |
+                [[[
+                  if (!!!variables.media_player_9 || !variables.media_player_9) return '0px';
+                  return '450px';
+                ]]]
+            - margin-right: |
+                [[[
+                  if (!!!variables.media_player_9 || !variables.media_player_9) return '0px';
+                  const s = states[variables.media_player_9]; if (!s) return '0px';
+                  const st = String(s.state || '');
+                  if (['unavailable','unknown','off','standby'].includes(st)) return '0px';
+                  const a = s.attributes || {};
+                  if (!String(a.media_title||'').trim() && !String(a.media_artist||a.artist||a.media_album_artist||'').trim()) return '0px';
+                  if (st === 'paused') { const t = Number(variables.pause_timeout_minutes ?? 10); if (t > 0 && (new Date() - new Date(s.last_changed)) / 60000 > t) return '0px'; }
+                  const _ck=e=>{const a2=states[e]?.attributes||{};return`${String(a2.media_title||'').trim()}|${String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim()}`};
+                  const _ia=e=>{if(!e)return false;const s2=states[e];if(!s2)return false;const st2=String(s2.state||'');if(['unavailable','unknown','off','standby'].includes(st2))return false;const a2=s2.attributes||{};if(!String(a2.media_title||'').trim()&&!String(a2.media_artist||a2.artist||a2.media_album_artist||'').trim())return false;if(['playing','buffering','on','idle'].includes(st2))return true;if(st2==='paused'){const t=Number(variables.pause_timeout_minutes??10);return t<=0||((new Date()-new Date(s2.last_changed))/60000)<=t;}return false;};
+                  const _myKey=`${String(a.media_title||'').trim()}|${String(a.media_artist||a.artist||a.media_album_artist||'').trim()}`;
+                  if([!!variables.media_player_1&&variables.media_player_1,!!variables.media_player_2&&variables.media_player_2,!!variables.media_player_3&&variables.media_player_3,!!variables.media_player_4&&variables.media_player_4,!!variables.media_player_5&&variables.media_player_5,!!variables.media_player_6&&variables.media_player_6,!!variables.media_player_7&&variables.media_player_7,!!variables.media_player_8&&variables.media_player_8].filter(Boolean).filter(_ia).some(e=>_ck(e)===_myKey))return'0px';
+                  return 'var(--badge-gap-current, var(--badge-gap, 10px))';
+                ]]]
+            - transition: |
+                [[[
+                  return 'none';
+                ]]]
+          grid:
+          - display: flex !important
+          - flex-direction: row !important
+          - flex-wrap: nowrap !important
+          - gap: 0 !important
+          - align-items: flex-start !important
+          - justify-content: flex-start !important
+          - overflow: visible !important
+          - padding: 0 !important
+          - margin: 0 !important
+          - width: max-content !important
+        tap_action:
+          action: none
+        type: custom:button-card
+    badges_presence:
+      card:
+        cards:
+        - entity: '[[[ return variables.presence_entity_1 ]]]'
+          template: casora_badge_presence
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_people!==false && !!variables.presence_entity_1 && !!variables.presence_entity_1 ]]]'
+        - entity: '[[[ return variables.presence_entity_2 ]]]'
+          template: casora_badge_presence
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_people!==false && !!variables.presence_entity_1 && !!variables.presence_entity_2 ]]]'
+        - entity: '[[[ return variables.presence_entity_3 ]]]'
+          template: casora_badge_presence
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_people!==false && !!variables.presence_entity_1 && !!variables.presence_entity_3 ]]]'
+        - entity: '[[[ return variables.presence_entity_4 ]]]'
+          template: casora_badge_presence
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_people!==false && !!variables.presence_entity_1 && !!variables.presence_entity_4 ]]]'
+        layout:
+          align-items: center
+          grid-auto-columns: max-content
+          grid-auto-flow: column
+          grid-column-gap: var(--badge-gap-current, var(--badge-gap, 10px))
+          grid-template-columns: none
+          justify-content: start
+          justify-items: start
+        layout_type: custom:grid-layout
+        type: custom:layout-card
+    badges_scenes:
+      card:
+        cards:
+        - entity: '[[[ return (variables.scene_entities || [])[0] || null ]]]'
+          template: casora_badge_scene
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_scenes === true && !!(variables.scene_entities || [])[0] ]]]'
+        - entity: '[[[ return (variables.scene_entities || [])[1] || null ]]]'
+          template: casora_badge_scene
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_scenes === true && !!(variables.scene_entities || [])[1] ]]]'
+        - entity: '[[[ return (variables.scene_entities || [])[2] || null ]]]'
+          template: casora_badge_scene
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_scenes === true && !!(variables.scene_entities || [])[2] ]]]'
+        - entity: '[[[ return (variables.scene_entities || [])[3] || null ]]]'
+          template: casora_badge_scene
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_scenes === true && !!(variables.scene_entities || [])[3] ]]]'
+        - entity: '[[[ return (variables.scene_entities || [])[4] || null ]]]'
+          template: casora_badge_scene
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_scenes === true && !!(variables.scene_entities || [])[4] ]]]'
+        - entity: '[[[ return (variables.scene_entities || [])[5] || null ]]]'
+          template: casora_badge_scene
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_scenes === true && !!(variables.scene_entities || [])[5] ]]]'
+        - entity: '[[[ return (variables.scene_entities || [])[6] || null ]]]'
+          template: casora_badge_scene
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_scenes === true && !!(variables.scene_entities || [])[6] ]]]'
+        - entity: '[[[ return (variables.scene_entities || [])[7] || null ]]]'
+          template: casora_badge_scene
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_scenes === true && !!(variables.scene_entities || [])[7] ]]]'
+        - entity: '[[[ return (variables.scene_entities || [])[8] || null ]]]'
+          template: casora_badge_scene
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_scenes === true && !!(variables.scene_entities || [])[8] ]]]'
+        - entity: '[[[ return (variables.scene_entities || [])[9] || null ]]]'
+          template: casora_badge_scene
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return variables.show_scenes === true && !!(variables.scene_entities || [])[9] ]]]'
+        layout:
+          align-items: center
+          grid-auto-columns: max-content
+          grid-auto-flow: column
+          grid-column-gap: var(--badge-gap-current, var(--badge-gap, 10px))
+          grid-template-columns: none
+          justify-content: start
+          justify-items: start
+        layout_type: custom:grid-layout
+        type: custom:layout-card
+    badges_security:
+      card:
+        cards:
+        - entity: '[[[ return variables.security_lock_entity ]]]'
+          template: casora_badge_lock_group
+          type: custom:button-card
+          variables:
+            battery_entities: '[[[ return variables.security_lock_batteries || {} ]]]'
+            door_sensors: '[[[ return variables.security_door_sensors || {} ]]]'
+            enabled: '[[[ return (variables.show_security!==false&&(!!variables.security_lock_entity||!!variables.security_entity_1||!!(variables.security_locks||[]).length||!!(variables.security_cameras||[]).length)) && !!variables.security_locks ]]]'
+            label: '[[[ return variables.security_locks_label ]]]'
+            locks: '[[[ return variables.security_locks || [] ]]]'
+            room_name: '[[[ return variables.room_name || variables.aqi_room_name ]]]'
+        - entity: '[[[ return (variables.security_cameras || [])[0] ]]]'
+          template: casora_badge_camera_group
+          type: custom:button-card
+          variables:
+            cameras: '[[[ return variables.security_cameras || [] ]]]'
+            enabled: '[[[ return (variables.show_security!==false&&(!!variables.security_lock_entity||!!variables.security_entity_1||!!(variables.security_locks||[]).length||!!(variables.security_cameras||[]).length)) && !!(variables.security_cameras || []).length ]]]'
+            label: '[[[ return variables.security_cameras_label ]]]'
+            room_name: '[[[ return variables.room_name || variables.aqi_room_name ]]]'
+        - entity: '[[[ return variables.security_entity_1 ]]]'
+          template: casora_badge_security
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return (variables.show_security!==false&&(!!variables.security_lock_entity||!!variables.security_entity_1||!!(variables.security_locks||[]).length||!!(variables.security_cameras||[]).length)) && !!variables.security_entity_1 ]]]'
+            label: '[[[ return variables.security_label_1 ]]]'
+        - entity: '[[[ return variables.security_entity_2 ]]]'
+          template: casora_badge_contact_group
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return (variables.show_security!==false&&(!!variables.security_lock_entity||!!variables.security_entity_1||!!(variables.security_locks||[]).length||!!(variables.security_cameras||[]).length)) && !!variables.security_entity_2 ]]]'
+            label: '[[[ return variables.security_label_2 ]]]'
+        - entity: '[[[ return variables.security_entity_3 ]]]'
+          template: casora_badge_contact_group
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return (variables.show_security!==false&&(!!variables.security_lock_entity||!!variables.security_entity_1||!!(variables.security_locks||[]).length||!!(variables.security_cameras||[]).length)) && !!variables.security_entity_3 ]]]'
+            label: '[[[ return variables.security_label_3 ]]]'
+        - entity: '[[[ return variables.security_entity_4 ]]]'
+          template: casora_badge_security
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return (variables.show_security!==false&&(!!variables.security_lock_entity||!!variables.security_entity_1||!!(variables.security_locks||[]).length||!!(variables.security_cameras||[]).length)) && !!variables.security_entity_4 ]]]'
+            label: '[[[ return variables.security_label_4 ]]]'
+        - entity: '[[[ return variables.security_entity_5 ]]]'
+          template: casora_badge_security
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return (variables.show_security!==false&&(!!variables.security_lock_entity||!!variables.security_entity_1||!!(variables.security_locks||[]).length||!!(variables.security_cameras||[]).length)) && !!variables.security_entity_5 ]]]'
+            label: '[[[ return variables.security_label_5 ]]]'
+        - entity: '[[[ return variables.security_entity_6 ]]]'
+          template: casora_badge_security
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return (variables.show_security!==false&&(!!variables.security_lock_entity||!!variables.security_entity_1||!!(variables.security_locks||[]).length||!!(variables.security_cameras||[]).length)) && !!variables.security_entity_6 ]]]'
+            label: '[[[ return variables.security_label_6 ]]]'
+        - entity: '[[[ return variables.security_entity_7 ]]]'
+          template: casora_badge_security
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return (variables.show_security!==false&&(!!variables.security_lock_entity||!!variables.security_entity_1||!!(variables.security_locks||[]).length||!!(variables.security_cameras||[]).length)) && !!variables.security_entity_7 ]]]'
+            label: '[[[ return variables.security_label_7 ]]]'
+        - entity: '[[[ return variables.security_entity_8 ]]]'
+          template: casora_badge_security
+          type: custom:button-card
+          variables:
+            enabled: '[[[ return (variables.show_security!==false&&(!!variables.security_lock_entity||!!variables.security_entity_1||!!(variables.security_locks||[]).length||!!(variables.security_cameras||[]).length)) && !!variables.security_entity_8 ]]]'
+            label: '[[[ return variables.security_label_8 ]]]'
+        layout:
+          align-items: center
+          grid-auto-columns: max-content
+          grid-auto-flow: column
+          grid-column-gap: var(--badge-gap-current, var(--badge-gap, 10px))
+          grid-template-columns: none
+          justify-content: start
+          justify-items: start
+        layout_type: custom:grid-layout
+        type: custom:layout-card
+    menu:
+      card:
+        template: casora_menu_icon
+        type: custom:button-card
+    navigation:
+      card:
+        card:
+          routes:
+          - icon: mdi:home-variant
+            label: Home
+            url: /dashboard-casora/home
+          - icon: mdi:home-variant
+            label: Wohnzimmer
+            url: /dashboard-casora/wohnzimmer
+          - icon: mdi:home-variant
+            label: Küche
+            url: /dashboard-casora/kueche
+          - icon: mdi:home-variant
+            label: Büro
+            url: /dashboard-casora/buero
+          - icon: mdi:home-variant
+            label: Schlafzimmer
+            url: /dashboard-casora/schlafzimmer
+          - icon: mdi:home-variant
+            label: Badezimmer
+            url: /dashboard-casora/badezimmer
+          - icon: mdi:home-variant
+            label: Flur
+            url: /dashboard-casora/flur
+          - icon: mdi:home-variant
+            label: Waschküche
+            url: /dashboard-casora/hwr
+          - icon: mdi:home-variant
+            label: Terrasse
+            url: /dashboard-casora/terrasse
+          scene_exclude: []
+          type: custom:casora-nav
+          variant: tablet
+        conditions:
+        - condition: screen
+          media_query: '(min-width: 769px) and (min-height: 501px) and (hover: hover) and (pointer: fine)'
+        type: conditional
+    notifications:
+      card:
+        template: casora_notifications_button
+        type: custom:button-card
+        variables:
+          shown: '[[[ return variables.show_notifications !== false ]]]'
+    now_playing:
+      card:
+        template: casora_now_playing
+        type: custom:button-card
+        variables:
+          discord_details: '[[[ return variables.discord_details ]]]'
+          discord_game: '[[[ return variables.discord_game ]]]'
+          discord_image: '[[[ return variables.discord_image ]]]'
+          discord_label: '[[[ return variables.discord_label ]]]'
+          discord_online: '[[[ return variables.discord_online ]]]'
+          discord_user: '[[[ return variables.discord_user ]]]'
+          duplicate_game: '[[[ return variables.duplicate_game ]]]'
+          enabled: '[[[ return variables.show_media!==false && !!variables.show_now_playing ]]]'
+          media_player_1: '[[[ return variables.media_player_1 ]]]'
+          media_player_10: '[[[ return variables.media_player_10 ]]]'
+          media_player_2: '[[[ return variables.media_player_2 ]]]'
+          media_player_3: '[[[ return variables.media_player_3 ]]]'
+          media_player_4: '[[[ return variables.media_player_4 ]]]'
+          media_player_5: '[[[ return variables.media_player_5 ]]]'
+          media_player_6: '[[[ return variables.media_player_6 ]]]'
+          media_player_7: '[[[ return variables.media_player_7 ]]]'
+          media_player_8: '[[[ return variables.media_player_8 ]]]'
+          media_player_9: '[[[ return variables.media_player_9 ]]]'
+          pause_timeout_minutes: '[[[ return variables.pause_timeout_minutes ]]]'
+          psn_1: '[[[ return variables.psn_1 ]]]'
+          psn_2: '[[[ return variables.psn_2 ]]]'
+          show_discord: |
+            [[[
+              return !!(variables.discord_user
+                || (variables.discord_online && variables.discord_game));
+            ]]]
+          show_media_player_1: '[[[ return !!variables.media_player_1 ]]]'
+          show_media_player_10: '[[[ return !!variables.media_player_10 ]]]'
+          show_media_player_2: '[[[ return !!variables.media_player_2 ]]]'
+          show_media_player_3: '[[[ return !!variables.media_player_3 ]]]'
+          show_media_player_4: '[[[ return !!variables.media_player_4 ]]]'
+          show_media_player_5: '[[[ return !!variables.media_player_5 ]]]'
+          show_media_player_6: '[[[ return !!variables.media_player_6 ]]]'
+          show_media_player_7: '[[[ return !!variables.media_player_7 ]]]'
+          show_media_player_8: '[[[ return !!variables.media_player_8 ]]]'
+          show_media_player_9: '[[[ return !!variables.media_player_9 ]]]'
+          show_psn_1: '[[[ return !!variables.psn_1 ]]]'
+          show_psn_2: '[[[ return !!variables.psn_2 ]]]'
+          show_steam: '[[[ return !!(variables.steam_account || variables.steam_game) ]]]'
+          start_minimized: '[[[ return !!variables.start_minimized ]]]'
+          steam_account: '[[[ return variables.steam_account ]]]'
+          steam_game: '[[[ return variables.steam_game ]]]'
+          steam_image: '[[[ return variables.steam_image ]]]'
+          steam_label: '[[[ return variables.steam_label ]]]'
+          steam_online: '[[[ return variables.steam_online ]]]'
+    settings:
+      card:
+        template: casora_settings_button
+        type: custom:button-card
+        variables:
+          assist_available: |
+            [[[
+              return variables.show_assist !== false
+                && ((hass && hass.config && hass.config.components) || []).includes("conversation");
+            ]]]
+          shown: '[[[ return !!variables.casora_ui_managed ]]]'
+    temperature:
+      card:
+        entity: |
+          [[[
+            return window.casoraWx ? window.casoraWx(variables, 'entity') : (variables.weather_entity || '');
+          ]]]
+        template: casora_weather
+        type: custom:button-card
+        variables:
+          hero_mode: true
+          weather_temp_sensor: |
+            [[[
+              return window.casoraWx ? window.casoraWx(variables, 'temp') : (variables.weather_temp_sensor || '');
+            ]]]
+    time:
+      card:
+        template: casora_time
+        type: custom:button-card
+        variables:
+          time_entity: '[[[ return variables.time_entity || "sensor.time" ]]]'
+          time_suffix: '[[[ return variables.time_suffix || "" ]]]'
+          use_12h: '[[[ if (variables.use_12h === true || variables.use_12h === false) return variables.use_12h; const tf = hass.locale && hass.locale.time_format; if (tf === ''12'') return true; if (tf === ''24'') return false; try { return new Intl.DateTimeFormat((hass.locale && hass.locale.language) || hass.language || ''en'', { hour: ''numeric'' }).resolvedOptions().hour12 === true; } catch (e) { return false; } ]]]'
+    weather:
+      card:
+        entity: |
+          [[[
+            return window.casoraWx ? window.casoraWx(variables, 'entity') : (variables.weather_entity || '');
+          ]]]
+        template: casora_weather
+        type: custom:button-card
+        variables:
+          weather_temp_sensor: |
+            [[[
+              return window.casoraWx ? window.casoraWx(variables, 'temp') : (variables.weather_temp_sensor || '');
+            ]]]
+  double_tap_action:
+    action: none
+  extra_styles: |-
+    /* Same exemption themes/casora/casora.yaml gives .casora-entity cards via
+       :host(.casora-entity){ contain: none !important; } — this card doesn't
+       carry that class, but contain establishes a backdrop root just like
+       transform/filter/isolation, and it sits above every Now Playing tile. */
+    :host{
+      contain: none !important;
+    }
+    ha-card{
+      contain: none !important;
+    }
+
+    #mp1, #mp2, #mp3, #mp4,
+    #activity1, #activity2 {
+      overflow: visible;
+    }
+
+    #badges,
+    #badges_climate,
+    #badges_presence,
+    #badges_media,
+    #badges_lights,
+    #badges_security,
+    #badges_energy,
+    #badges_scenes {
+      overflow-x: visible !important;
+      overflow-y: visible !important;
+      overscroll-behavior-x: contain !important;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    #badges::-webkit-scrollbar,
+    #badges_climate::-webkit-scrollbar,
+    #badges_presence::-webkit-scrollbar,
+    #badges_media::-webkit-scrollbar,
+    #badges_lights,
+    #badges_security,
+    #badges_energy::-webkit-scrollbar,
+    #badges_scenes::-webkit-scrollbar {
+      display: none;
+    }
+
+    @media (max-width: 767px) and (orientation: portrait) {
+      :host .button-card-main {
+        padding-top: var(--hero-top) !important;
+      }
+
+      #badges,
+      #badges_climate,
+      #badges_presence,
+      #badges_media,
+      #badges_lights,
+      #badges_security,
+      #badges_energy,
+    #badges_scenes {
+        overflow-x: auto !important;
+        width: calc(100% + 2 * var(--hero-gutter) - var(--casora-header-badge-nudge, 0px)) !important;
+        max-width: none !important;
+        margin-left: calc(-1 * var(--hero-gutter) + var(--casora-header-badge-nudge, 0px)) !important;
+        padding-left: var(--hero-gutter) !important;
+        padding-right: var(--hero-gutter) !important;
+        box-sizing: border-box !important;
+      }
+
+      #badges_media {
+        padding-left: calc(var(--hero-gutter) + var(--casora-header-media-badge-nudge-current, 0px)) !important;
+      }
+    }
+
+    @media (hover: none) and (pointer: coarse) and (orientation: landscape) and (max-height: 600px) {
+      #badges,
+      #badges_climate,
+      #badges_presence,
+      #badges_media,
+      #badges_lights,
+      #badges_security,
+      #badges_energy,
+    #badges_scenes {
+        max-width: calc(100vw - (2 * var(--casora-entity-col-width-landscape, 200px)) - 8px - var(--casora-tiles-right-pad-landscape, 0px) - var(--hero-gutter, 18px) - var(--casora-landscape-badge-stop-pad, 60px)) !important;
+        overflow-x: auto !important;
+        box-sizing: border-box !important;
+      }
+    }
+
+    #time {
+      display: none;
+    }
+
+    @media (min-width: 769px) and (hover: hover) and (pointer: fine) {
+      #time {
+        display: var(--casora-time-nav-open, block);
+        top: calc(env(safe-area-inset-top, 0px) + var(--casora-chrome-row-center-desktop, 56px)
+          - (var(--casora-chrome-font-size, 18px) / 2));
+        left: var(--casora-time-left, calc(var(--hero-gutter) + var(--hero-room-name-margin-left-current, 0px)));
+      }
+    }
+
+    @media (min-width: 600px) and (max-width: 767px) and (min-height: 501px) {
+      #time {
+        display: var(--casora-time-nav-open, block);
+        top: calc(env(safe-area-inset-top, 0px) + var(--casora-nav-top-current, 46px) - var(--casora-time-nudge-small-tablet, 43px));
+        left: var(--casora-time-left, calc(var(--hero-gutter) + var(--hero-room-name-margin-left-current, 0px)));
+      }
+    }
+
+    /* Tablet - Time: leading rail, optical center on the navbar label row. */
+    @media (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (orientation: landscape) and (pointer: coarse),
+           (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (orientation: landscape) and (hover: none) {
+      #time {
+        display: var(--casora-time-nav-open, block);
+        top: calc(env(safe-area-inset-top, 0px) + var(--casora-chrome-row-top-tablet, 30px) + var(--casora-time-row-offset-tablet, 12px));
+        left: var(--hero-gutter);
+        right: auto;
+      }
+    }
+
+    @media (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (orientation: portrait) and (pointer: coarse),
+           (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (orientation: portrait) and (hover: none) {
+      #time {
+        display: var(--casora-time-nav-open, block);
+        top: calc(env(safe-area-inset-top, 0px) + var(--casora-chrome-row-top-tablet-portrait, 32px) + var(--casora-time-row-offset-tablet, 12px));
+        left: var(--hero-gutter);
+        right: auto;
+      }
+    }
+
+    /* Now Playing Text - Hidden on Tablet */
+    /* The settings button and the Now Playing waveform share this row, so one
+       number moves both and they cannot drift apart. Desktop is measured off the
+       nav label (y 16, height 26, center 29) less half a 34px button. */
+    :host {
+      --casora-chrome-btn-size: 34px;
+      --casora-chrome-btn-top: calc(var(--casora-chrome-row-center-desktop, 56px)
+        - (var(--casora-chrome-btn-size, 34px) / 2));
+    }
+
+    @media (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (orientation: landscape) and (pointer: coarse),
+           (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (orientation: landscape) and (hover: none) {
+      :host {
+        --casora-chrome-btn-top: calc(var(--casora-chrome-row-top-tablet, 30px)
+          + (var(--casora-nav-pill-height-tablet, 46px) / 2)
+          - (var(--casora-chrome-btn-size, 34px) / 2));
+      }
+    }
+
+    /* Portrait sits the pill 2px lower, so the buttons follow it. Without this
+       the row fell back to the desktop center and every button sat 9px low. */
+    @media (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (orientation: portrait) and (pointer: coarse),
+           (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (orientation: portrait) and (hover: none) {
+      :host {
+        --casora-chrome-btn-top: calc(var(--casora-chrome-row-top-tablet-portrait, 32px)
+          + (var(--casora-nav-pill-height-tablet, 46px) / 2)
+          - (var(--casora-chrome-btn-size, 34px) / 2));
+      }
+
+      /* Portrait alone cannot fit the waveform beside the pill, so it gives up
+         its seat in the row and takes the one below. Assist is already in the
+         dots menu on every tablet - see the block after this one. */
+      #now_playing { --casora-np-head-inset: 0px !important; }
+    }
+
+    /* A tablet keeps Assist in the dots menu in BOTH orientations. Landscape has
+       the width for it, but a control that moves when the iPad is turned is
+       worse than one that lives in one place. The row collapses the way a UIKit
+       toolbar does; the bell then closes Assist's gap and the waveform's own
+       reserve drops a step with it. !important because every one of these is
+       stamped inline from styles.custom_fields.
+       --casora-chrome-side-reserve-tablet* in the theme counts what is left;
+       changing what shows here means changing those. */
+    @media (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (pointer: coarse),
+           (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (hover: none) {
+      #assist { display: none !important; }
+
+      #notifications {
+        transform: translateX(calc(-1 * var(--casora-chrome-dots-step, 46px))) !important;
+      }
+
+      #now_playing {
+        --casora-np-head-inset: calc(var(--casora-chrome-dots-step, 46px)
+          + var(--casora-chrome-bell-step, 46px)) !important;
+      }
+    }
+
+    /* Portrait again, last: its waveform is not in the row at all, so it
+       reserves nothing. Same weight as the block above, so order settles it. */
+    @media (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (orientation: portrait) and (pointer: coarse),
+           (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (orientation: portrait) and (hover: none) {
+      #now_playing { --casora-np-head-inset: 0px !important; }
+    }
+
+    #now_playing {
+      --np-vp: 0;
+      pointer-events: none;
+    }
+
+    /* The container is only a positioning box: right-anchored and up to 560px
+       wide, it reaches across chrome it does not draw. Left capturing pointer
+       events it swallowed every click on the settings button beside it whenever
+       media was playing - and did nothing when nothing was. Only what it
+       actually paints should be clickable, so the box stays transparent to
+       pointers and its content opts back in. This does not depend on z-index. */
+    #now_playing { pointer-events: none !important; }
+    #now_playing > * { pointer-events: auto; }
+
+    @media (min-width: 769px) and (hover: hover) and (pointer: fine) {
+      #now_playing {
+        --np-vp: 1;
+        pointer-events: auto;
+        top: calc(env(safe-area-inset-top, 0px) + var(--casora-chrome-btn-top, 12px));
+        right: calc(var(--hero-gutter) + var(--hero-room-name-margin-left-current, 0px));
+        max-width: min(560px, 34vw);
+      }
+    }
+
+    /* Tablet - Now Playing */
+    @media (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (orientation: landscape) and (pointer: coarse),
+           (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (orientation: landscape) and (hover: none) {
+      #now_playing {
+        --np-vp: 1;
+        pointer-events: auto;
+        top: calc(env(safe-area-inset-top, 0px) + var(--casora-chrome-btn-top, 12px));
+        right: var(--hero-gutter);
+        max-width: min(480px, 52vw);
+      }
+    }
+
+    @media (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (orientation: portrait) and (pointer: coarse),
+           (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (orientation: portrait) and (hover: none) {
+      #now_playing {
+        --np-vp: 1;
+        pointer-events: auto;
+        top: calc(env(safe-area-inset-top, 0px)
+          + var(--casora-now-playing-top-tablet-portrait,
+              calc(var(--casora-chrome-row-top-tablet-portrait, 32px)
+                + var(--casora-nav-pill-height-tablet, 46px) + 8px)));
+        right: var(--hero-gutter);
+        max-width: min(420px, 60vw);
+      }
+    }
+  hold_action:
+    action: none
+  styles:
+    card:
+    - --casora-chrome-dots-step: '[[[ return variables.casora_ui_managed ? "46px" : "0px" ]]]'
+    - --casora-chrome-bell-step: '[[[ return variables.show_notifications === false ? "0px" : "46px" ]]]'
+    - --casora-badge-order-climate: |
+        [[[
+          const o = variables.badge_order;
+          if (!Array.isArray(o)) return 1;
+          const i = o.indexOf('climate');
+          return i < 0 ? o.length + 1 : i + 1;
+        ]]]
+    - --casora-badge-order-lights: |
+        [[[
+          const o = variables.badge_order;
+          if (!Array.isArray(o)) return 2;
+          const i = o.indexOf('lights');
+          return i < 0 ? o.length + 2 : i + 1;
+        ]]]
+    - --casora-badge-order-people: |
+        [[[
+          const o = variables.badge_order;
+          if (!Array.isArray(o)) return 3;
+          const i = o.indexOf('people');
+          return i < 0 ? o.length + 3 : i + 1;
+        ]]]
+    - --casora-badge-order-media: |
+        [[[
+          const o = variables.badge_order;
+          if (!Array.isArray(o)) return 4;
+          const i = o.indexOf('media');
+          return i < 0 ? o.length + 4 : i + 1;
+        ]]]
+    - --casora-badge-order-security: |
+        [[[
+          const o = variables.badge_order;
+          if (!Array.isArray(o)) return 5;
+          const i = o.indexOf('security');
+          return i < 0 ? o.length + 5 : i + 1;
+        ]]]
+    - --casora-badge-order-energy: |
+        [[[
+          const o = variables.badge_order;
+          if (!Array.isArray(o)) return 6;
+          const i = o.indexOf('energy');
+          return i < 0 ? o.length + 6 : i + 1;
+        ]]]
+    - --casora-font-set: |
+        [[[
+          const STACKS = {
+            inter:   '"Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+            hanken:  '"Hanken Grotesk", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+            jakarta: '"Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+            system:  '-apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, sans-serif'
+          };
+          const link = (id, href) => {
+            let l = document.getElementById(id);
+            if (l && l.getAttribute('href') === href) return;
+            if (!l) { l = document.createElement('link'); l.id = id; l.rel = 'stylesheet'; document.head.appendChild(l); }
+            l.href = href;
+          };
+          const key = String(variables.font || '').trim().toLowerCase();
+          let want = STACKS[key] || '';
+          if (key === 'custom') {
+            /* Eigene Schrift (z. B. gekaufte Gilroy), im Studio hochgeladen – CSS schreibt fonts.py. */
+            const fam = String(variables.font_family || '').replace(/["'<>;{}\\]/g, '').trim();
+            link('casora-font-custom', '/local/casora/fonts/casora-fonts.css');
+            want = fam ? '"' + fam + '", ' + STACKS.inter : '';
+          }
+          /* Casoras Schriften immer bereitstellen – auch die Designs setzen sie (Inter, Hanken Grotesk). */
+          link('casora-font-faces', '/casora_assets/fonts/hanken-grotesk.css');
+          const ID = 'casora-font-v1';
+          let el = document.getElementById(ID);
+          if (!want) { if (el) el.remove(); return '0'; }
+          if (!el) {
+            el = document.createElement('style');
+            el.id = ID;
+            document.head.appendChild(el);
+          }
+          const css = 'html{--primary-font-family:' + want + ' !important;}';
+          if (el.textContent !== css) el.textContent = css;
+          return '1';
+        ]]]
+    - --casora-perf-set: |
+        [[[
+          const p = window._casoraPerf;
+          return p ? p.dashboard(variables.performance) : '0';
+        ]]]
+    - --casora-badge-enter-ease: |
+        [[[
+          const st = states['input_select.casora_expanded_row']?.state;
+          return (st && st !== 'none')
+            ? 'cubic-bezier(0.34, 1.26, 0.44, 1)'
+            : 'cubic-bezier(0.4, 0, 0.2, 1)';
+        ]]]
+    - height: calc(100svh - var(--casora-extras-h, 0px))
+    - padding-top: |
+        [[[
+          const mm = (q) => (window.matchMedia ? window.matchMedia(q).matches : false);
+          const isPhonePortrait =
+            (mm('(pointer: coarse)') || mm('(hover: none)')) &&
+            mm('(max-width: 767px)') &&
+            mm('(orientation: portrait)');
+
+          if (isPhonePortrait) return 'calc(var(--hero-top) - 20px)';
+          return 'var(--hero-top)';
+        ]]]
+    - padding-left: var(--hero-gutter)
+    - padding-right: var(--hero-gutter)
+    - padding-bottom: |
+        [[[
+          const mm = (q) => (window.matchMedia ? window.matchMedia(q).matches : false);
+          const isPhonePortrait =
+            (mm('(pointer: coarse)') || mm('(hover: none)')) &&
+            mm('(max-width: 767px)') &&
+            mm('(orientation: portrait)');
+
+          return isPhonePortrait
+            ? `calc(env(safe-area-inset-bottom, 0px) + var(--casora-entity-mobile-bottom-gap, 20px))`
+            : `calc(130px + env(safe-area-inset-bottom))`;
+        ]]]
+    - box-shadow: none !important
+    - --hero-img-scale: 1.08
+    - --hero-img: |
+        [[[
+          const isDark =
+            typeof hass?.themes?.darkMode === 'boolean'
+              ? hass.themes.darkMode
+              : window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+          const base = variables.image || 'default';
+          const picked = isDark ? (variables.image_night || `${base}-night`) : base;
+          return `url("/casora_assets/rooms/${picked}.jpg")`;
+        ]]]
+    - --hero-img-pos: |
+        [[[
+          return variables.image_position || 'center center';
+        ]]]
+    - --casora-time-nav-open: |
+        [[[
+          const navOpen = states['input_boolean.casora_mobile_navigation']?.state === 'on';
+          return navOpen ? 'none' : 'block';
+        ]]]
+    - --casora-time-reserve: |
+        [[[
+          const w = window?.innerWidth || 1024;
+          const h = window?.innerHeight || 800;
+          const isTablet = (w >= 768 && w <= 1400 && h > 500);
+          return isTablet ? '140px' : '160px';
+        ]]]
+    - --casora-room-nav: |
+        [[[
+          const k = variables.image || 'default';
+          const prev = window._casoraRoomNav;
+          if (!prev || prev.key !== k) {
+            window._casoraRoomNav = { key: k };
+            const isActive = eid => {
+              if (!eid) return false;
+              const s = hass.states[eid];
+              if (!s) return false;
+              const st = (s.state || '').toLowerCase();
+              if (['playing','buffering','on'].includes(st)) return true;
+              if (st === 'paused') {
+                const a = s.attributes || {};
+                const hasContent = !!(
+                  String(a.media_title || '').trim() ||
+                  String(a.media_artist || a.artist || a.media_album_artist || '').trim()
+                );
+                if (!hasContent) return false;
+                const timeout = Number(variables.pause_timeout_minutes ?? 10);
+                if (timeout <= 0) return true;
+                return ((new Date() - new Date(s.last_changed)) / 60000) <= timeout;
+              }
+              return false;
+            };
+            const mediaEids = [
+              !!variables.media_player_1 && variables.media_player_1,
+              !!variables.media_player_2 && variables.media_player_2,
+              !!variables.media_player_3 && variables.media_player_3,
+              !!variables.media_player_4 && variables.media_player_4,
+              !!variables.media_player_5 && variables.media_player_5,
+              !!variables.media_player_6 && variables.media_player_6,
+              !!variables.media_player_7 && variables.media_player_7,
+              !!variables.media_player_8 && variables.media_player_8,
+              !!variables.media_player_9 && variables.media_player_9,
+              !!variables.media_player_10 && variables.media_player_10,
+              !!variables.psn_1 && variables.psn_1,
+              !!variables.psn_2 && variables.psn_2,
+            ].filter(Boolean);
+            const _pc = window._casoraPCSources?.(hass.states, variables) || {};
+            const pcActive = !!(_pc.discord || _pc.steam);
+            const opt = (!variables.show_now_playing &&
+              (mediaEids.some(isActive) || pcActive)) ? 'media' : 'none';
+            hass.callService('input_select', 'select_option', {
+              entity_id: 'input_select.casora_expanded_row',
+              option: opt
+            });
+          }
+          return k;
+        ]]]
+    custom_fields:
+      assist:
+      - display: '[[[ return variables.show_assist !== false && ((hass && hass.config && hass.config.components) || []).includes("conversation") ? "block" : "none" ]]]'
+      - position: fixed
+      - top: var(--casora-chrome-btn-top, 12px)
+      - right: var(--hero-gutter)
+      - left: auto
+      - transform: |
+          [[[
+            const rest = variables.casora_ui_managed ? '46px' : '0px';
+            return `translateX(calc(-1 * var(--casora-chrome-shift, ${rest})))`;
+          ]]]
+      - transition: transform 420ms cubic-bezier(0.32, 0.72, 0, 1)
+      - width: var(--casora-chrome-btn-size, 34px)
+      - height: var(--casora-chrome-btn-size, 34px)
+      - z-index: 21
+      - pointer-events: auto
+      badges:
+      - grid-area: badges
+      - --casora-converge-init: |
+          [[[
+            if (!window._casoraEnterPReg) {
+              window._casoraEnterPReg = true;
+              try {
+                CSS.registerProperty({
+                  name: '--casora-badge-enter-p',
+                  syntax: '<number>',
+                  inherits: true,
+                  initialValue: '0'
+                });
+              } catch (e) {}
+            }
+            if (!window._casoraMediaAnim) {
+              window._casoraMediaAnim = function (rootEl) {
+                try {
+                  const row = rootEl.querySelector('#badges_media');
+                  if (!row) return;
+                  const SPRING = 'cubic-bezier(0.32, 0.72, 0, 1)';
+                  const OUT    = 'cubic-bezier(0.4, 0, 0.2, 1)';
+                  const dig = (el, out, d) => {
+                    if (!el || d > 8) return out;
+                    for (const c of Array.from(el.children || [])) {
+                      const t = c.localName === 'button-card' && c._config && c._config.template;
+                      if (t) { out.push(c); continue; }
+                      if (c.shadowRoot) dig(c.shadowRoot, out, d + 1);
+                      dig(c, out, d + 1);
+                    }
+                    return out;
+                  };
+                  requestAnimationFrame(() => {
+                    for (const b of dig(row, [], 0)) {
+                      const f = b.parentElement;
+                      if (!f || !f.id) continue;
+                      const op = parseFloat(
+                        getComputedStyle(b).getPropertyValue('--casora-badge-opacity')) || 0;
+                      const vis = op > 0;
+                      if (b._casoraVis === vis) continue;
+                      const first = b._casoraVis === undefined;
+                      b._casoraVis = vis;
+                      if (b._casoraA) { b._casoraA.cancel(); b._casoraA = null; }
+                      if (f._casoraA) { f._casoraA.cancel(); f._casoraA = null; }
+                      const gap = parseFloat(getComputedStyle(f).marginRight) || 10;
+                      if (first) {
+                        // No animation on the first pass; just settle state.
+                        b.style.setProperty('--casora-badge-enter-p', vis ? '0' : '1');
+                        continue;
+                      }
+                      if (vis) {
+                        f.style.maxWidth = 'none';
+                        void row.offsetWidth;
+                        const w = b.offsetWidth || 0;
+                        f.style.maxWidth = '';
+                        f.style.setProperty('--casora-field-ovf', 'hidden');
+                        f._casoraA = f.animate(
+                          [{ maxWidth: '0px', marginRight: '0px' },
+                           { maxWidth: w + 'px', marginRight: gap + 'px' }],
+                          { duration: 420, easing: SPRING, fill: 'none' });
+                        f._casoraA.onfinish = () => { f.style.removeProperty('--casora-field-ovf'); };
+                        b.style.setProperty('--casora-badge-enter-p', '1');
+                        b._casoraA = b.animate(
+                          [{ '--casora-badge-enter-p': 1 }, { '--casora-badge-enter-p': 0 }],
+                          { duration: 460, easing: SPRING, fill: 'forwards' });
+                      } else {
+                        const w = f.offsetWidth || 0;
+                        b._casoraA = b.animate(
+                          [{ '--casora-badge-enter-p': 0 }, { '--casora-badge-enter-p': 1 }],
+                          { duration: 320, easing: OUT, fill: 'forwards' });
+                        b._casoraA.onfinish = () => {
+                          f._casoraA = f.animate(
+                            [{ maxWidth: w + 'px', marginRight: gap + 'px' },
+                             { maxWidth: '0px', marginRight: '0px' }],
+                            { duration: 380, easing: SPRING, fill: 'forwards' });
+                        };
+                      }
+                    }
+                  });
+                } catch (e) {}
+              };
+            }
+            if (!window._casoraConverge) {
+              window._casoraConverge = function (rootEl, rowId, groupTpl, useRects, cold) {
+                try {
+                  const row = rootEl.querySelector('#' + rowId);
+                  const top = rootEl.querySelector('#badges');
+                  if (!row || !top) return;
+                  if (!cold && getComputedStyle(row).getPropertyValue('--casora-row-fade').trim() !== '1') return;
+                  const dig = (el, out, d) => {
+                    if (!el || d > 8) return out;
+                    for (const c of Array.from(el.children || [])) {
+                      const t = c.localName === 'button-card' && c._config && c._config.template;
+                      if (t) { out.push(c); continue; }
+                      if (c.shadowRoot) dig(c.shadowRoot, out, d + 1);
+                      dig(c, out, d + 1);
+                    }
+                    return out;
+                  };
+                  const isTpl = (c) => {
+                    const t = c._config && c._config.template;
+                    return Array.isArray(t) ? t.indexOf(groupTpl) >= 0 : t === groupTpl;
+                  };
+                  const group = dig(top, [], 0).filter(isTpl)[0];
+                  if (!group) return;
+                  const cx = (el) => {
+                    if (useRects) {
+                      const r = el.getBoundingClientRect();
+                      return r.width ? r.left + r.width / 2 : null;
+                    }
+                    return el.offsetWidth ? el.offsetLeft + el.offsetWidth / 2 : null;
+                  };
+                  const gx = cx(group);
+                  if (gx === null) return;
+                  for (const b of dig(row, [], 0)) {
+                    // A cold pass must not read a badge it already moved.
+                    if (cold && b.style.getPropertyValue('--casora-badge-converge-x')) continue;
+                    const bx = cx(b);
+                    if (bx === null) continue;
+                    b.style.setProperty('--casora-badge-converge-x',
+                      (gx - bx).toFixed(1) + 'px');
+                  }
+                } catch (e) {}
+              };
+            }
+            return '0';
+          ]]]
+      - justify-self: start !important
+      - align-self: start !important
+      - place-self: start !important
+      - text-align: left !important
+      - margin-left: |
+          calc(
+            var(--hero-room-name-margin-left-current, 0px) +
+            var(--casora-header-badge-nudge, 0px))
+      - margin-right: auto !important
+      - width: max-content
+      - max-width: 100%
+      - margin-top: var(--hero-header-gap-current, 6px)
+      - margin-bottom: 0
+      - padding-left: 0
+      - pointer-events: auto
+      - touch-action: pan-x
+      - overscroll-behavior-x: contain
+      - height: auto !important
+      - display: |
+          [[[
+            return (states['input_boolean.casora_mobile_navigation']?.state === 'on')
+              ? 'none'
+              : 'block';
+          ]]]
+      badges_climate:
+      - grid-area: badges_climate
+      - justify-self: start !important
+      - align-self: start !important
+      - place-self: start !important
+      - text-align: left !important
+      - margin-left: |
+          calc(
+            var(--hero-room-name-margin-left-current, 0px) +
+            var(--casora-header-badge-nudge, 0px))
+      - margin-right: auto !important
+      - width: max-content
+      - max-width: 100%
+      - margin-top: |
+          [[[
+            if (!(variables.show_climate!==false&&(!!variables.climate_entity_1||!!variables.temp_sensor_1||!!variables.humidity_sensor||!!variables.quality_sensor)) || variables.show_climate_inline) return '0';
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';
+            return states['input_select.casora_expanded_row']?.state === 'climate'
+              ? 'var(--casora-badge-subrow-gap-current, 6px)' : '0';
+          ]]]
+      - margin-bottom: 0
+      - padding-left: 0
+      - pointer-events: auto
+      - height: auto !important
+      - opacity: |
+          [[[
+            if (!(variables.show_climate!==false&&(!!variables.climate_entity_1||!!variables.temp_sensor_1||!!variables.humidity_sensor||!!variables.quality_sensor)) || variables.show_climate_inline) return 0;
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;
+            return states['input_select.casora_expanded_row']?.state === 'climate' ? 1 : 0;
+          ]]]
+      - display: |
+          [[[
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 'none';
+            if (!(variables.show_climate!==false&&(!!variables.climate_entity_1||!!variables.temp_sensor_1||!!variables.humidity_sensor||!!variables.quality_sensor)) || variables.show_climate_inline) return 'none';
+            return 'block';
+          ]]]
+      - max-height: |
+          [[[
+            if (!(variables.show_climate!==false&&(!!variables.climate_entity_1||!!variables.temp_sensor_1||!!variables.humidity_sensor||!!variables.quality_sensor)) || variables.show_climate_inline) return '0';
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';
+            return states['input_select.casora_expanded_row']?.state === 'climate' ? '200px' : '0';
+          ]]]
+      - overflow-x: auto
+      - overflow-y: hidden
+      - touch-action: pan-x
+      - overscroll-behavior-x: contain
+      - --casora-row-fade: |
+          [[[
+            if (!(variables.show_climate!==false&&(!!variables.climate_entity_1||!!variables.temp_sensor_1||!!variables.humidity_sensor||!!variables.quality_sensor)) || variables.show_climate_inline) return 0;
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;
+            return states['input_select.casora_expanded_row']?.state === 'climate' ? 1 : 0;
+          ]]]
+      - --casora-converge-climate: |
+          [[[
+            const st = states['input_select.casora_expanded_row']?.state;
+            const token = st + '|' + (window.innerWidth || 0);
+            if (this._casoraCvClimate !== token) {
+              this._casoraCvClimate = token;
+              const rootEl = this.shadowRoot;
+              if (st === 'climate' && rootEl) {
+                const go = (r) => {
+                  if (typeof window._casoraConverge === 'function') {
+                    window._casoraConverge(rootEl, 'badges_climate', 'casora_badge_climate_group', r);
+                  }
+                };
+                  requestAnimationFrame(() => go(false));
+                setTimeout(() => go(true), 700);
+              }
+            }
+            return '0';
+          ]]]
+      - transition: |
+          [[[
+            if (!this._casoraClimateRowMountTime) this._casoraClimateRowMountTime = Date.now();
+            if (Date.now() - this._casoraClimateRowMountTime < 400) return 'none';
+
+            const currentState = states['input_select.casora_expanded_row']?.state;
+            const isExpanded = currentState === 'climate';
+
+            if (isExpanded) return 'max-height 0s, margin-top 0s';
+            const isSwitching = currentState !== 'none';
+            return isSwitching
+              ? 'none'
+              : 'opacity 0s 0.32s, visibility 0s 0.32s, max-height 0s 0.34s, margin-top 0s 0.34s';
+          ]]]
+      - visibility: |
+          [[[
+            return states['input_select.casora_expanded_row']?.state === 'climate' ? 'visible' : 'hidden';
+          ]]]
+      - pointer-events: |
+          [[[
+            return states['input_select.casora_expanded_row']?.state === 'climate' ? 'auto' : 'none';
+          ]]]
+      badges_energy:
+      - grid-area: badges_energy
+      - justify-self: start !important
+      - align-self: start !important
+      - place-self: start !important
+      - text-align: left !important
+      - margin-left: |
+          calc(
+            var(--hero-room-name-margin-left-current, 0px) +
+            var(--casora-header-badge-nudge, 0px))
+      - margin-right: auto !important
+      - width: max-content
+      - max-width: 100%
+      - margin-top: |
+          [[[
+            if (window._casoraEnergyOn ? !window._casoraEnergyOn(variables) : (variables.show_energy===false || !!!variables.energy_power_entity)) return '0';
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';
+            return states['input_select.casora_expanded_row']?.state === 'energy'
+              ? 'var(--casora-badge-subrow-gap-current, 6px)' : '0';
+          ]]]
+      - margin-bottom: 0
+      - padding-left: 0
+      - pointer-events: auto
+      - height: auto !important
+      - opacity: |
+          [[[
+            if (window._casoraEnergyOn ? !window._casoraEnergyOn(variables) : (variables.show_energy===false || !!!variables.energy_power_entity)) return 0;
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;
+            return states['input_select.casora_expanded_row']?.state === 'energy' ? 1 : 0;
+          ]]]
+      - display: |
+          [[[
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 'none';
+            if (window._casoraEnergyOn ? !window._casoraEnergyOn(variables) : (variables.show_energy===false || !!!variables.energy_power_entity)) return 'none';
+            return 'block';
+          ]]]
+      - max-height: |
+          [[[
+            if (window._casoraEnergyOn ? !window._casoraEnergyOn(variables) : (variables.show_energy===false || !!!variables.energy_power_entity)) return '0';
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';
+            return states['input_select.casora_expanded_row']?.state === 'energy' ? '200px' : '0';
+          ]]]
+      - overflow-x: auto
+      - overflow-y: hidden
+      - touch-action: pan-x
+      - overscroll-behavior-x: contain
+      - --casora-row-fade: |
+          [[[
+            if (window._casoraEnergyOn ? !window._casoraEnergyOn(variables) : (variables.show_energy===false || !!!variables.energy_power_entity)) return 0;
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;
+            return states['input_select.casora_expanded_row']?.state === 'energy' ? 1 : 0;
+          ]]]
+      - --casora-converge-energy: |
+          [[[
+            const st = states['input_select.casora_expanded_row']?.state;
+            const token = st + '|' + (window.innerWidth || 0);
+            if (this._casoraCvEnergy !== token) {
+              this._casoraCvEnergy = token;
+              const rootEl = this.shadowRoot;
+              if (st === 'energy' && rootEl) {
+                const go = (r) => {
+                  if (typeof window._casoraConverge === 'function') {
+                    window._casoraConverge(rootEl, 'badges_energy', 'casora_badge_energy_group', r);
+                  }
+                };
+                  requestAnimationFrame(() => go(false));
+                setTimeout(() => go(true), 700);
+              }
+            }
+            return '0';
+          ]]]
+      - transition: |
+          [[[
+            if (!this._casoraEnergyRowMountTime) this._casoraEnergyRowMountTime = Date.now();
+            if (Date.now() - this._casoraEnergyRowMountTime < 400) return 'none';
+
+            const currentState = states['input_select.casora_expanded_row']?.state;
+            const isExpanded = currentState === 'energy';
+
+            if (isExpanded) return 'max-height 0s, margin-top 0s';
+            const isSwitching = currentState !== 'none';
+            return isSwitching
+              ? 'none'
+              : 'opacity 0s 0.32s, visibility 0s 0.32s, max-height 0s 0.34s, margin-top 0s 0.34s';
+          ]]]
+      - visibility: |
+          [[[
+            return states['input_select.casora_expanded_row']?.state === 'energy' ? 'visible' : 'hidden';
+          ]]]
+      - pointer-events: |
+          [[[
+            return states['input_select.casora_expanded_row']?.state === 'energy' ? 'auto' : 'none';
+          ]]]
+      badges_lights:
+      - grid-area: badges_lights
+      - justify-self: start !important
+      - align-self: start !important
+      - place-self: start !important
+      - text-align: left !important
+      - margin-left: |
+          calc(
+            var(--hero-room-name-margin-left-current, 0px) +
+            var(--casora-header-badge-nudge, 0px))
+      - margin-right: auto !important
+      - width: max-content
+      - max-width: 100%
+      - margin-top: |
+          [[[
+            if (!(variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity))) return '0';
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';
+            return states['input_select.casora_expanded_row']?.state === 'lights'
+              ? 'var(--casora-badge-subrow-gap-current, 6px)' : '0';
+          ]]]
+      - margin-bottom: 0
+      - padding-left: 0
+      - pointer-events: auto
+      - height: auto !important
+      - opacity: |
+          [[[
+            if (!(variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity))) return 0;
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;
+            return states['input_select.casora_expanded_row']?.state === 'lights' ? 1 : 0;
+          ]]]
+      - display: |
+          [[[
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 'none';
+            if (!(variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity))) return 'none';
+            return 'block';
+          ]]]
+      - max-height: |
+          [[[
+            if (!(variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity))) return '0';
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';
+            return states['input_select.casora_expanded_row']?.state === 'lights' ? '200px' : '0';
+          ]]]
+      - overflow-x: auto
+      - overflow-y: hidden
+      - touch-action: pan-x
+      - overscroll-behavior-x: contain
+      - --casora-row-fade: |
+          [[[
+            if (!(variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity))) return 0;
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;
+            return states['input_select.casora_expanded_row']?.state === 'lights' ? 1 : 0;
+          ]]]
+      - --casora-converge-lights: |
+          [[[
+            const st = states['input_select.casora_expanded_row']?.state;
+            const token = st + '|' + (window.innerWidth || 0);
+            if (this._casoraCvLights !== token) {
+              this._casoraCvLights = token;
+              const rootEl = this.shadowRoot;
+              if (st === 'lights' && rootEl) {
+                const go = (r) => {
+                  if (typeof window._casoraConverge === 'function') {
+                    window._casoraConverge(rootEl, 'badges_lights', 'casora_badge_light_group', r);
+                  }
+                };
+                  requestAnimationFrame(() => go(false));
+                setTimeout(() => go(true), 700);
+              }
+            }
+            return '0';
+          ]]]
+      - transition: |
+          [[[
+            if (!this._casoraLightsRowMountTime) this._casoraLightsRowMountTime = Date.now();
+            if (Date.now() - this._casoraLightsRowMountTime < 400) return 'none';
+
+            const currentState = states['input_select.casora_expanded_row']?.state;
+            const isExpanded = currentState === 'lights';
+
+            if (isExpanded) return 'max-height 0s, margin-top 0s';
+            const isSwitching = currentState !== 'none';
+            return isSwitching
+              ? 'none'
+              : 'opacity 0s 0.32s, visibility 0s 0.32s, max-height 0s 0.34s, margin-top 0s 0.34s';
+          ]]]
+      - visibility: |
+          [[[
+            return states['input_select.casora_expanded_row']?.state === 'lights' ? 'visible' : 'hidden';
+          ]]]
+      - pointer-events: |
+          [[[
+            return states['input_select.casora_expanded_row']?.state === 'lights' ? 'auto' : 'none';
+          ]]]
+      badges_media:
+      - grid-area: badges_media
+      - justify-self: start !important
+      - align-self: start !important
+      - place-self: start !important
+      - text-align: left !important
+      - margin-top: |
+          [[[
+            if (!(variables.show_media!==false&&!variables.show_now_playing&&!!variables.media_player_1)) return '0';
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';
+            return states['input_select.casora_expanded_row']?.state === 'media'
+              ? 'var(--casora-badge-subrow-gap-current, 6px)' : '0';
+          ]]]
+      - margin-right: auto !important
+      - margin-left: |
+          calc(
+            var(--hero-room-name-margin-left-current, 0px) +
+            var(--casora-header-badge-nudge, 0px) +
+            var(--casora-header-media-badge-nudge-current, 0px))
+      - padding-left: 0
+      - padding-top: 0px !important
+      - padding-bottom: 0px !important
+      - height: auto !important
+      - opacity: |
+          [[[
+            if (!(variables.show_media!==false&&!variables.show_now_playing&&!!variables.media_player_1)) return 0;
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;
+            return states['input_select.casora_expanded_row']?.state === 'media' ? 1 : 0;
+          ]]]
+      - min-height: 0 !important
+      - width: max-content
+      - max-width: 100%
+      - display: |
+          [[[
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 'none';
+            if (!(variables.show_media!==false&&!variables.show_now_playing&&!!variables.media_player_1)) return 'none';
+            return 'block';
+          ]]]
+      - max-height: |
+          [[[
+            if (!(variables.show_media!==false&&!variables.show_now_playing&&!!variables.media_player_1)) return '0';
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';
+            return states['input_select.casora_expanded_row']?.state === 'media' ? '500px' : '0';
+          ]]]
+      - overflow-x: auto
+      - overflow-y: hidden
+      - touch-action: pan-x
+      - overscroll-behavior-x: contain
+      - --casora-row-fade: |
+          [[[
+            if (!(variables.show_media!==false&&!variables.show_now_playing&&!!variables.media_player_1)) return 0;
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;
+            return states['input_select.casora_expanded_row']?.state === 'media' ? 1 : 0;
+          ]]]
+      - --casora-width-media: |
+          [[[
+            let sig = '';
+            for (let i = 1; i <= 10; i++) {
+              const e = variables['media_player_' + i];
+              if (!e) continue;
+              const s = states[e];
+              sig += (s ? s.state + '~' + String(s.attributes?.media_title || '') : '') + '|';
+            }
+            for (const k of ['psn_1','psn_2','discord_game','steam_account','steam_game','steam_online']) {
+              const e = variables[k];
+              const s = e ? states[e] : null;
+              sig += (s ? s.state + '~' + String(s.attributes?.media_title || '') : '') + '|';
+            }
+            const prev = this._casoraFlipSigMedia;
+            if (prev !== sig) {
+              this._casoraFlipSigMedia = sig;
+              // Skip the very first run: nothing has moved yet.
+              if (prev !== undefined && this.shadowRoot
+                  && typeof window._casoraMediaAnim === 'function') {
+                window._casoraMediaAnim(this.shadowRoot);
+              }
+            }
+            return '0';
+          ]]]
+      - --casora-converge-media: |
+          [[[
+            const st = states['input_select.casora_expanded_row']?.state;
+            const token = st + '|' + (window.innerWidth || 0);
+            if (this._casoraCvMedia !== token) {
+              this._casoraCvMedia = token;
+              const rootEl = this.shadowRoot;
+              if (st === 'media' && rootEl) {
+                const go = (r) => {
+                  if (typeof window._casoraConverge === 'function') {
+                    window._casoraConverge(rootEl, 'badges_media', 'casora_badge_media_group', r);
+                  }
+                };
+                setTimeout(() => go(true), 700);
+              }
+            }
+            if (!this._casoraCvMediaCold && this.shadowRoot) {
+              this._casoraCvMediaCold = 1;
+              const el = this.shadowRoot;
+              setTimeout(() => {
+                if (typeof window._casoraConverge === 'function') {
+                  window._casoraConverge(el, 'badges_media', 'casora_badge_media_group', true, true);
+                }
+              }, 1200);
+            }
+            return '0';
+          ]]]
+      - transition: |
+          [[[
+            if (!this._casoraMediaRowMountTime) this._casoraMediaRowMountTime = Date.now();
+            if (Date.now() - this._casoraMediaRowMountTime < 400) return 'none';
+
+            const currentState = states['input_select.casora_expanded_row']?.state;
+            const isExpanded = currentState === 'media';
+
+            if (isExpanded) {
+              if (!window.casoraPageLoadTime) window.casoraPageLoadTime = Date.now();
+              if (Date.now() - window.casoraPageLoadTime < 3000) return 'none';
+
+              const lastChanged = states['input_select.casora_expanded_row']?.last_changed;
+              const msSince = lastChanged ? (Date.now() - new Date(lastChanged).getTime()) : Infinity;
+              return msSince < 1500
+                ? 'max-height 0s, margin-top 0s'
+                : 'none';
+            }
+
+            const isSwitching = currentState !== 'none';
+
+            return isSwitching
+              ? 'none'
+              : 'opacity 0s 0.32s, visibility 0s 0.32s, max-height 0s 0.34s, margin-top 0s 0.34s';
+          ]]]
+      - visibility: |
+          [[[
+            return states['input_select.casora_expanded_row']?.state === 'media' ? 'visible' : 'hidden';
+          ]]]
+      - pointer-events: |
+          [[[
+            return states['input_select.casora_expanded_row']?.state === 'media' ? 'auto' : 'none';
+          ]]]
+      badges_presence:
+      - grid-area: badges_presence
+      - justify-self: start !important
+      - align-self: start !important
+      - place-self: start !important
+      - text-align: left !important
+      - margin-left: |
+          calc(
+            var(--hero-room-name-margin-left-current, 0px) +
+            var(--casora-header-badge-nudge, 0px))
+      - margin-right: auto !important
+      - width: max-content
+      - max-width: 100%
+      - margin-top: |
+          [[[
+            if (variables.show_people===false || !!!variables.presence_entity_1) return '0';
+            if (variables.presence_entity_1 && !variables.presence_entity_2) return '0';
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';
+            return states['input_select.casora_expanded_row']?.state === 'presence'
+              ? 'var(--casora-badge-subrow-gap-current, 6px)' : '0';
+          ]]]
+      - margin-bottom: 0
+      - padding-left: 0
+      - height: auto !important
+      - opacity: |
+          [[[
+            if (variables.show_people===false || !!!variables.presence_entity_1) return 0;
+            if (variables.presence_entity_1 && !variables.presence_entity_2) return 0;
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;
+            return states['input_select.casora_expanded_row']?.state === 'presence' ? 1 : 0;
+          ]]]
+      - display: |
+          [[[
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 'none';
+            if (variables.show_people===false || !!!variables.presence_entity_1) return 'none';
+            if (variables.presence_entity_1 && !variables.presence_entity_2) return 'none';
+            return 'block';
+          ]]]
+      - max-height: |
+          [[[
+            if (variables.show_people===false || !!!variables.presence_entity_1) return '0';
+            if (variables.presence_entity_1 && !variables.presence_entity_2) return '0';
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';
+            return states['input_select.casora_expanded_row']?.state === 'presence' ? '200px' : '0';
+          ]]]
+      - overflow-x: auto
+      - overflow-y: hidden
+      - touch-action: pan-x
+      - overscroll-behavior-x: contain
+      - --casora-row-fade: |
+          [[[
+            if (variables.show_people===false || !!!variables.presence_entity_1) return 0;
+            if (variables.presence_entity_1 && !variables.presence_entity_2) return 0;
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;
+            return states['input_select.casora_expanded_row']?.state === 'presence' ? 1 : 0;
+          ]]]
+      - --casora-converge-presence: |
+          [[[
+            const st = states['input_select.casora_expanded_row']?.state;
+            const token = st + '|' + (window.innerWidth || 0);
+            if (this._casoraCvPresence !== token) {
+              this._casoraCvPresence = token;
+              const rootEl = this.shadowRoot;
+              if (st === 'presence' && rootEl) {
+                const go = (r) => {
+                  if (typeof window._casoraConverge === 'function') {
+                    window._casoraConverge(rootEl, 'badges_presence', 'casora_badge_presence_group', r);
+                  }
+                };
+                  requestAnimationFrame(() => go(false));
+                setTimeout(() => go(true), 700);
+              }
+            }
+            return '0';
+          ]]]
+      - transition: |
+          [[[
+            if (!this._casoraPresenceRowMountTime) this._casoraPresenceRowMountTime = Date.now();
+            if (Date.now() - this._casoraPresenceRowMountTime < 400) return 'none';
+
+            const currentState = states['input_select.casora_expanded_row']?.state;
+            const isExpanded = currentState === 'presence';
+
+            if (isExpanded) return 'max-height 0s, margin-top 0s';
+            const isSwitching = currentState !== 'none';
+            return isSwitching
+              ? 'none'
+              : 'opacity 0s 0.32s, visibility 0s 0.32s, max-height 0s 0.34s, margin-top 0s 0.34s';
+          ]]]
+      - visibility: |
+          [[[
+            return states['input_select.casora_expanded_row']?.state === 'presence' ? 'visible' : 'hidden';
+          ]]]
+      - pointer-events: |
+          [[[
+            return states['input_select.casora_expanded_row']?.state === 'presence' ? 'auto' : 'none';
+          ]]]
+      badges_scenes:
+      - grid-area: badges_scenes
+      - justify-self: start !important
+      - align-self: start !important
+      - place-self: start !important
+      - text-align: left !important
+      - margin-left: |
+          calc(
+            var(--hero-room-name-margin-left-current, 0px) +
+            var(--casora-header-badge-nudge, 0px))
+      - margin-right: auto !important
+      - width: max-content
+      - max-width: 100%
+      - margin-top: |
+          [[[
+            if (variables.show_scenes !== true || !(variables.scene_entities || []).length) return '0';
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';
+            return states['input_select.casora_expanded_row']?.state === 'scenes'
+              ? 'var(--casora-badge-subrow-gap-current, 6px)' : '0';
+          ]]]
+      - margin-bottom: 0
+      - padding-left: 0
+      - pointer-events: auto
+      - height: auto !important
+      - opacity: |
+          [[[
+            if (variables.show_scenes !== true || !(variables.scene_entities || []).length) return 0;
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;
+            return states['input_select.casora_expanded_row']?.state === 'scenes' ? 1 : 0;
+          ]]]
+      - display: |
+          [[[
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 'none';
+            if (variables.show_scenes !== true || !(variables.scene_entities || []).length) return 'none';
+            return 'block';
+          ]]]
+      - max-height: |
+          [[[
+            if (variables.show_scenes !== true || !(variables.scene_entities || []).length) return '0';
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';
+            return states['input_select.casora_expanded_row']?.state === 'scenes' ? '200px' : '0';
+          ]]]
+      - overflow-x: auto
+      - overflow-y: hidden
+      - touch-action: pan-x
+      - overscroll-behavior-x: contain
+      - --casora-row-fade: |
+          [[[
+            if (variables.show_scenes !== true || !(variables.scene_entities || []).length) return 0;
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;
+            return states['input_select.casora_expanded_row']?.state === 'scenes' ? 1 : 0;
+          ]]]
+      - --casora-converge-scenes: |
+          [[[
+            const st = states['input_select.casora_expanded_row']?.state;
+            const token = st + '|' + (window.innerWidth || 0);
+            if (this._casoraCvScenes !== token) {
+              this._casoraCvScenes = token;
+              const rootEl = this.shadowRoot;
+              if (st === 'scenes' && rootEl) {
+                const go = (r) => {
+                  if (typeof window._casoraConverge === 'function') {
+                    window._casoraConverge(rootEl, 'badges_scenes', 'casora_badge_scene_group', r);
+                  }
+                };
+                  requestAnimationFrame(() => go(false));
+                setTimeout(() => go(true), 700);
+              }
+            }
+            return '0';
+          ]]]
+      - transition: |
+          [[[
+            if (!this._casoraScenesRowMountTime) this._casoraScenesRowMountTime = Date.now();
+            if (Date.now() - this._casoraScenesRowMountTime < 400) return 'none';
+
+            const currentState = states['input_select.casora_expanded_row']?.state;
+            const isExpanded = currentState === 'scenes';
+
+            if (isExpanded) return 'max-height 0s, margin-top 0s';
+            const isSwitching = currentState !== 'none';
+            return isSwitching
+              ? 'none'
+              : 'opacity 0s 0.32s, visibility 0s 0.32s, max-height 0s 0.34s, margin-top 0s 0.34s';
+          ]]]
+      - visibility: |
+          [[[
+            return states['input_select.casora_expanded_row']?.state === 'scenes' ? 'visible' : 'hidden';
+          ]]]
+      - pointer-events: |
+          [[[
+            return states['input_select.casora_expanded_row']?.state === 'scenes' ? 'auto' : 'none';
+          ]]]
+      badges_security:
+      - grid-area: badges_security
+      - justify-self: start !important
+      - align-self: start !important
+      - place-self: start !important
+      - text-align: left !important
+      - margin-left: |
+          calc(
+            var(--hero-room-name-margin-left-current, 0px) +
+            var(--casora-header-badge-nudge, 0px))
+      - margin-right: auto !important
+      - width: max-content
+      - max-width: 100%
+      - margin-top: |
+          [[[
+            if (!(variables.show_security!==false&&(!!variables.security_lock_entity||!!variables.security_entity_1||!!(variables.security_locks||[]).length||!!(variables.security_cameras||[]).length))) return '0';
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';
+            return states['input_select.casora_expanded_row']?.state === 'security'
+              ? 'var(--casora-badge-subrow-gap-current, 6px)' : '0';
+          ]]]
+      - margin-bottom: 0
+      - padding-left: 0
+      - pointer-events: auto
+      - height: auto !important
+      - opacity: |
+          [[[
+            if (!(variables.show_security!==false&&(!!variables.security_lock_entity||!!variables.security_entity_1||!!(variables.security_locks||[]).length||!!(variables.security_cameras||[]).length))) return 0;
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;
+            return states['input_select.casora_expanded_row']?.state === 'security' ? 1 : 0;
+          ]]]
+      - display: |
+          [[[
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 'none';
+            if (!(variables.show_security!==false&&(!!variables.security_lock_entity||!!variables.security_entity_1||!!(variables.security_locks||[]).length||!!(variables.security_cameras||[]).length))) return 'none';
+            return 'block';
+          ]]]
+      - max-height: |
+          [[[
+            if (!(variables.show_security!==false&&(!!variables.security_lock_entity||!!variables.security_entity_1||!!(variables.security_locks||[]).length||!!(variables.security_cameras||[]).length))) return '0';
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';
+            return states['input_select.casora_expanded_row']?.state === 'security' ? '200px' : '0';
+          ]]]
+      - overflow-x: auto
+      - overflow-y: hidden
+      - touch-action: pan-x
+      - overscroll-behavior-x: contain
+      - --casora-row-fade: |
+          [[[
+            if (!(variables.show_security!==false&&(!!variables.security_lock_entity||!!variables.security_entity_1||!!(variables.security_locks||[]).length||!!(variables.security_cameras||[]).length))) return 0;
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;
+            return states['input_select.casora_expanded_row']?.state === 'security' ? 1 : 0;
+          ]]]
+      - --casora-converge-security: |
+          [[[
+            const st = states['input_select.casora_expanded_row']?.state;
+            const token = st + '|' + (window.innerWidth || 0);
+            if (this._casoraCvSecurity !== token) {
+              this._casoraCvSecurity = token;
+              const rootEl = this.shadowRoot;
+              if (st === 'security' && rootEl) {
+                const go = (r) => {
+                  if (typeof window._casoraConverge === 'function') {
+                    window._casoraConverge(rootEl, 'badges_security', 'casora_badge_security_group', r);
+                  }
+                };
+                  requestAnimationFrame(() => go(false));
+                setTimeout(() => go(true), 700);
+              }
+            }
+            return '0';
+          ]]]
+      - transition: |
+          [[[
+            if (!this._casoraSecurityRowMountTime) this._casoraSecurityRowMountTime = Date.now();
+            if (Date.now() - this._casoraSecurityRowMountTime < 400) return 'none';
+
+            const currentState = states['input_select.casora_expanded_row']?.state;
+            const isExpanded = currentState === 'security';
+
+            if (isExpanded) return 'max-height 0s, margin-top 0s';
+            const isSwitching = currentState !== 'none';
+            return isSwitching
+              ? 'none'
+              : 'opacity 0s 0.32s, visibility 0s 0.32s, max-height 0s 0.34s, margin-top 0s 0.34s';
+          ]]]
+      - visibility: |
+          [[[
+            return states['input_select.casora_expanded_row']?.state === 'security' ? 'visible' : 'hidden';
+          ]]]
+      - pointer-events: |
+          [[[
+            return states['input_select.casora_expanded_row']?.state === 'security' ? 'auto' : 'none';
+          ]]]
+      menu:
+      - position: fixed
+      - top: 8px
+      - left: |
+          [[[
+            const w = window?.innerWidth || 1024;
+            const h = window?.innerHeight || 800;
+
+            if (w <= 767 || h <= 500) {
+              return 'calc(var(--hero-gutter) - 11px)';
+            }
+
+            return 'calc(var(--hero-gutter) - 6px)';
+          ]]]
+      - width: 40px
+      - height: 40px
+      - z-index: 10
+      - pointer-events: auto
+      - cursor: pointer
+      navigation:
+      - position: fixed
+      - top: 46px
+      - left: 0
+      - right: 0
+      - z-index: 50
+      - overflow: visible
+      - pointer-events: auto
+      - touch-action: none
+      - --mdc-ripple-press-opacity: 0
+      - -webkit-tap-highlight-color: transparent
+      - filter: none
+      notifications:
+      - display: '[[[ return variables.show_notifications === false ? "none" : "block" ]]]'
+      - position: fixed
+      - top: var(--casora-chrome-btn-top, 12px)
+      - right: var(--hero-gutter)
+      - left: auto
+      - transform: |
+          [[[
+            const rest = (variables.casora_ui_managed ? 46 : 0) + (variables.show_assist !== false && ((hass && hass.config && hass.config.components) || []).includes("conversation") ? 46 : 0);
+            return `translateX(calc(-1 * var(--casora-chrome-shift, ${rest}px)))`;
+          ]]]
+      - transition: transform 420ms cubic-bezier(0.32, 0.72, 0, 1)
+      - width: var(--casora-chrome-btn-size, 34px)
+      - height: var(--casora-chrome-btn-size, 34px)
+      - z-index: 21
+      - pointer-events: auto
+      now_playing:
+      - --casora-np-head-inset: |
+          [[[
+            const STEP = 46;
+            const dots = variables.casora_ui_managed ? STEP : 0;
+            const assist = variables.show_assist !== false && ((hass && hass.config && hass.config.components) || []).includes("conversation") ? STEP : 0;
+            const bell = variables.show_notifications === false ? 0 : STEP;
+            return 'max(0px, calc(' + (dots + assist + bell) + 'px'
+              + ' - var(--hero-room-name-margin-left-current, 0px)))';
+          ]]]
+      - position: fixed
+      - z-index: 12
+      - text-align: left !important
+      - min-width: 0
+      - margin: 0
+      - display: |
+          [[[
+            if (!variables.show_now_playing) return 'none';
+            if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 'none';
+            return 'block';
+          ]]]
+      - overflow: visible
+      settings:
+      - display: '[[[ return variables.casora_ui_managed ? "block" : "none" ]]]'
+      - position: fixed
+      - top: var(--casora-chrome-btn-top, 12px)
+      - right: var(--hero-gutter)
+      - left: auto
+      - transform: translateX(calc(-1 * var(--casora-chrome-shift, 0px)))
+      - transition: transform 420ms cubic-bezier(0.32, 0.72, 0, 1)
+      - width: var(--casora-chrome-btn-size, 34px)
+      - height: var(--casora-chrome-btn-size, 34px)
+      - z-index: 20
+      - pointer-events: auto
+      temperature:
+      - grid-area: temperature
+      - display: |
+          [[[
+            const w = window?.innerWidth || 1024;
+            const h = window?.innerHeight || 800;
+            const isMobileSize = w <= 767 || h <= 500;
+            const wx = window.casoraWx ? window.casoraWx(variables, 'entity') : (variables.weather_entity || '');
+            return (!isMobileSize && !!wx) ? 'block' : 'none';
+          ]]]
+      - position: absolute
+      - top: |
+          calc(
+            var(--hero-top)
+            + var(--hero-temp-reserve, 22px)
+            + var(--hero-header-gap-current, 6px)
+            - var(--hero-weather-hero-height, 48px)
+            + var(--weather-hero-widget-position-nudge, -12px))
+      - left: |
+          calc(
+            var(--hero-gutter)
+            + var(--hero-room-name-margin-left-current, 0px)
+            + var(--casora-header-temp-nudge, 0px))
+      - z-index: 5
+      - pointer-events: auto
+      - cursor: pointer
+      - overflow: visible
+      - color: var(--primary-text-color)
+      - background: transparent !important
+      - background-color: transparent !important
+      time:
+      - display: |
+          [[[
+            return (variables.casora_ui_managed && !variables.time_entity) ? 'none' : 'block';
+          ]]]
+      - position: fixed
+      - z-index: 10
+      - pointer-events: auto
+      - --mdc-ripple-press-opacity: 0
+      - -webkit-tap-highlight-color: transparent
+      - --ha-card-padding: 0px
+      weather:
+      - grid-area: weather
+      - display: |
+          [[[
+            const mm = (q) => (window.matchMedia ? window.matchMedia(q).matches : false);
+            const isPhonePortrait =
+              (mm('(pointer: coarse)') || mm('(hover: none)')) &&
+              mm('(max-width: 767px)') &&
+              mm('(orientation: portrait)');
+            const wx = window.casoraWx ? window.casoraWx(variables, 'entity') : (variables.weather_entity || '');
+            const wxt = window.casoraWx ? window.casoraWx(variables, 'temp') : (variables.weather_temp_sensor || '');
+            const hasData = !!(wx || wxt);
+            const ok = !!wx && hasData;
+            return (isPhonePortrait && ok) ? 'block' : 'none';
+          ]]]
+      - position: absolute
+      - top: |
+          calc(
+            var(--hero-top)
+            + var(--hero-room-name-size-current, 38px) * var(--hero-room-name-line-height-current, 1.1)
+            - var(--hero-weather-title-size, 16px)
+            - var(--hero-weather-sub-size, 13px) * 1.1
+            - 1px
+            + var(--weather-mobile-badge-nudge, 0px))
+      - left: var(--hero-gutter, var(--page-gutter-mobile, 11px))
+      - right: calc(var(--hero-gutter, var(--page-gutter-mobile, 11px)) + 6px)
+      - z-index: 10
+      - text-align: right
+      - justify-self: end
+      - margin: 0
+      - width: auto
+      - max-width: none
+      - overflow: visible
+      - pointer-events: auto
+    grid: []
+    name:
+    - grid-area: n
+    - color: var(--primary-text-color)
+    - opacity: 1
+    - font-size: var(--hero-room-name-size-current, clamp(48px, 6vw + 12px, 100px))
+    - letter-spacing: var(--hero-room-name-letter-spacing-current, -2px)
+    - font-weight: 700
+    - justify-self: start
+    - padding-left: 0
+    - line-height: var(--hero-room-name-line-height-current, 1.2)
+    - margin-left: var(--hero-room-name-margin-left-current, 0px)
+    - overflow: visible
+  tap_action:
+    action: none
+  template:
+  - casora_default
+  - casora_shared
+  variables:
+    aqi_entity_co2: null
+    aqi_entity_humidity: null
+    aqi_entity_pm10: null
+    aqi_entity_pm25: null
+    aqi_entity_temp: null
+    aqi_entity_voc: null
+    aqi_room_name: null
+    badge_order: null
+    casora_notify_config:
+      force_eval: true
+      value: |
+        [[[
+          // Stash regardless: on a cold load this runs before casora-core.js,
+          // and the module picks the stash up when it initializes. Without it
+          // a layout that renders once - the phone - never applied its
+          // switches at all.
+          window._casoraNotifyCfg = variables;
+          if (window._casoraNotify) window._casoraNotify.configureFrom(variables);
+          return true;
+        ]]]
+    climate_entity_1: null
+    climate_entity_2: null
+    climate_entity_3: null
+    energy_cost_1: null
+    energy_cost_2: null
+    energy_cost_3: null
+    energy_cost_4: null
+    energy_cost_5: null
+    energy_cost_6: null
+    energy_cost_month: null
+    energy_cost_today: null
+    energy_entity_1: null
+    energy_entity_2: null
+    energy_entity_3: null
+    energy_entity_4: null
+    energy_entity_5: null
+    energy_entity_6: null
+    energy_label_1: null
+    energy_label_2: null
+    energy_label_3: null
+    energy_label_4: null
+    energy_label_5: null
+    energy_label_6: null
+    energy_popup_cost_month_1: null
+    energy_popup_cost_month_2: null
+    energy_popup_cost_month_3: null
+    energy_popup_cost_month_4: null
+    energy_popup_cost_month_5: null
+    energy_popup_cost_month_6: null
+    energy_popup_cost_today_1: null
+    energy_popup_cost_today_2: null
+    energy_popup_cost_today_3: null
+    energy_popup_cost_today_4: null
+    energy_popup_cost_today_5: null
+    energy_popup_cost_today_6: null
+    energy_popup_month_1: null
+    energy_popup_month_2: null
+    energy_popup_month_3: null
+    energy_popup_month_4: null
+    energy_popup_month_5: null
+    energy_popup_month_6: null
+    energy_popup_name_1: null
+    energy_popup_name_2: null
+    energy_popup_name_3: null
+    energy_popup_name_4: null
+    energy_popup_name_5: null
+    energy_popup_name_6: null
+    energy_popup_power_1: null
+    energy_popup_power_2: null
+    energy_popup_power_3: null
+    energy_popup_power_4: null
+    energy_popup_power_5: null
+    energy_popup_power_6: null
+    energy_popup_today_1: null
+    energy_popup_today_2: null
+    energy_popup_today_3: null
+    energy_popup_today_4: null
+    energy_popup_today_5: null
+    energy_popup_today_6: null
+    energy_power_entity: null
+    energy_unit_1: null
+    energy_unit_2: null
+    energy_unit_3: null
+    energy_unit_4: null
+    energy_unit_5: null
+    energy_unit_6: null
+    energy_usage_month: null
+    energy_usage_today: null
+    font: null
+    humidity_sensor: null
+    image: null
+    image_night: null
+    image_position: null
+    light_entity_1: null
+    light_entity_10: null
+    light_entity_2: null
+    light_entity_3: null
+    light_entity_4: null
+    light_entity_5: null
+    light_entity_6: null
+    light_entity_7: null
+    light_entity_8: null
+    light_entity_9: null
+    light_group_entity: null
+    media_player_1: null
+    media_player_10: null
+    media_player_2: null
+    media_player_3: null
+    media_player_4: null
+    media_player_5: null
+    media_player_6: null
+    media_player_7: null
+    media_player_8: null
+    media_player_9: null
+    notification_appliance_timers: null
+    notification_appliances: null
+    notification_battery_hold_minutes: null
+    notification_battery_threshold: null
+    notification_co2_ppm: null
+    notification_open_minutes: null
+    notification_read_entity: null
+    notify_air: true
+    notify_alarm: true
+    notify_appliances: true
+    notify_battery: true
+    notify_doorbell: true
+    notify_doors: true
+    notify_locks: true
+    notify_people: true
+    notify_plants: true
+    notify_restart: true
+    notify_safety: true
+    notify_updates: true
+    notify_vacuum: true
+    pause_timeout_minutes: 10
+    presence_entity_1: null
+    presence_entity_2: null
+    presence_entity_3: null
+    presence_entity_4: null
+    psn_1: null
+    psn_2: null
+    quality_sensor: null
+    room_name: null
+    scene_entities: []
+    security_cameras: null
+    security_cameras_label: null
+    security_door_sensors: null
+    security_entity_1: null
+    security_entity_2: null
+    security_entity_3: null
+    security_entity_4: null
+    security_entity_5: null
+    security_entity_6: null
+    security_entity_7: null
+    security_entity_8: null
+    security_label_1: null
+    security_label_2: null
+    security_label_3: null
+    security_label_4: null
+    security_label_5: null
+    security_label_6: null
+    security_label_7: null
+    security_label_8: null
+    security_lock_batteries: null
+    security_lock_entity: null
+    security_lock_entity_2: null
+    security_locks: null
+    security_locks_label: null
+    show_assist: true
+    show_climate: true
+    show_climate_inline: false
+    show_energy: true
+    show_lights: true
+    show_media: true
+    show_notifications: true
+    show_now_playing: false
+    show_people: true
+    show_scenes: false
+    show_security: true
+    temp_sensor_1: null
+    temp_sensor_2: null
+    temp_sensor_3: null
+    temp_sensor_4: null
+    temp_sensor_5: null
+    temp_unit: F
+    weather_entity: null
+    weather_temp_sensor: null

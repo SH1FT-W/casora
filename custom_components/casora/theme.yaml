@@ -1,0 +1,1665 @@
+# Casora
+
+Casora Standard: &casora_theme
+  modes:
+    light:
+      # ------------------------------------------------------------------------
+      # Surfaces, backgrounds, text
+      # ------------------------------------------------------------------------
+
+      primary-background-color: rgb(50,50,50)
+      secondary-background-color: rgb(40,40,40)
+      ha-card-background: rgba(0,0,0,0.2)
+      ha-card-background-active: rgba(255,255,255,0.3)
+      badge-background: rgba(26,28,30,0.65)
+      text-primary-color: rgba(255,255,255,0.95)
+      secondary-text-color: rgba(240,240,240,0.9)
+      disabled-text-color: rgba(245,245,245,0.65)
+      sidebar-background-color: var(--ha-card-background)
+      sidebar-icon-color: var(--text-primary-color)
+      sidebar-text-color: "#E4E4E4"
+      hero-img-brightness-mobile: 0.99
+
+      # ------------------------------------------------------------------------
+      # Mobile wallpaper
+      # ------------------------------------------------------------------------
+
+      casora-mobile-hero-img: var(--casora-mobile-hero-img-day)
+      casora-mobile-hero-photo-contrast: 0.75
+      casora-mobile-hero-photo-saturate: 0.90
+      casora-mobile-hero-photo-brightness: 1.00
+      casora-mobile-hero-mesh-a: var(--casora-sampled-day-mesh-a, transparent)
+      casora-mobile-hero-mesh-b: var(--casora-sampled-day-mesh-b, transparent)
+      casora-mobile-hero-tint-top: rgba(26,22,18,0)
+      casora-mobile-hero-tint-bot: rgba(26,22,18,0.07)
+      casora-mobile-hero-c-handoff: "var(--casora-sampled-day-handoff, #90857b)"
+      casora-mobile-hero-c-upper: "var(--casora-sampled-day-upper, #807870)"
+      casora-mobile-hero-c-mid: "var(--casora-sampled-day-mid, #706a64)"
+      casora-mobile-hero-c-lower: "var(--casora-sampled-day-lower, #615d59)"
+      casora-mobile-hero-c-base: "var(--casora-sampled-day-base, #524f4d)"
+      casora-mobile-hero-floor: "var(--casora-sampled-day-base, #524f4d)"
+
+      # ------------------------------------------------------------------------
+      # Entity tiles
+      # ------------------------------------------------------------------------
+
+      casora-entity-background: rgba(0,0,0,0.40)
+      casora-entity-background-active: rgba(255,255,255,1)
+      casora-entity-active-tint: rgba(255,255,255,0.94)
+      casora-entity-active-tint-mobile: rgba(255,255,255,1.0)
+      casora-entity-hover-tint: rgba(255,255,255,0.55)
+      casora-entity-name: rgba(255,255,255,0.98)
+      casora-entity-name-active: rgba(0,0,0,0.88)
+      casora-entity-state: rgba(255,255,255,0.65)
+      casora-entity-state-opacity: 1
+      casora-entity-state-active: rgba(0,0,0,0.55)
+      casora-entity-state-active-color: rgba(0,0,0,0.55)
+      casora-toggle-inactive-opacity: 0.85
+
+      # ------------------------------------------------------------------------
+      # Nav, popups, controls
+      # ------------------------------------------------------------------------
+
+      casora-nav-bg: rgba(20,20,20,0.3)
+      casora-nav-border: transparent
+      casora-nav-active-fill: rgba(255,255,255,0.25)
+
+
+      casora-popup-tiles-text-primary: 'rgba(255,255,255,0.98)'
+      casora-popup-tiles-text-secondary: 'rgba(255,255,255,0.75)'
+      casora-popup-tiles-text-muted: 'rgba(255,255,255,0.52)'
+      casora-popup-tile-hover: rgba(220,220,220,0.13)
+      casora-popup-progress-track: rgba(255,255,255,0.14)
+
+      casora-card-specular-start: transparent
+      casora-card-specular-mid: transparent
+      casora-card-specular-end: transparent
+
+      casora-popup-divider: rgba(0,0,0,0.08)
+      casora-control-off: rgba(0,0,0,0.1)
+      casora-control-on: rgba(255,255,255,0.2)
+      thermostat-card-off: var(--casora-control-off)
+      thermostat-card-on: var(--casora-control-on)
+
+      casora-toggle-active-opacity: 0.80
+      casora-toggle-track-fill: rgba(0,0,0,0.75)
+
+      casora-progress-track-color: rgba(0,0,0,0.12)
+
+      # ------------------------------------------------------------------------
+      # Components and system
+      # ------------------------------------------------------------------------
+
+      ha-card-box-shadow: var(--ha-card-box-shadow-light)
+      dialog-box-shadow: transparent
+      mdc-dialog-scrim-color: rgba(0,0,0,0.40)
+      button-card-box-shadow: none
+      button-card-box-shadow-mobile: none
+      button-card-box-shadow-active: 0 2px 10px rgba(0,0,0,0.16), 0 0 3px rgba(0,0,0,0.08)
+      button-card-box-shadow-active-mobile: none
+      button-card-box-shadow-hover: none
+      button-card-box-shadow-hover-mobile: none
+
+      ha-color-fill-primary-normal-resting: var(--casora-nav-bg)
+      ha-color-fill-primary-quiet-resting: rgba(100,100,100,0.25)
+      ha-color-fill-primary-quiet-hover: rgba(100,100,100,0.3)
+      ha-color-form-background: var(--ha-card-background)
+      ha-color-form-background-disabled: var(--ha-card-background)
+      ha-color-form-background-hover: var(--ha-card-background)
+      ha-color-text-secondary: var(--secondary-text-color)
+      ha-color-fill-neutral-quiet-resting: transparent
+      wa-color-text-quiet: var(--secondary-text-color)
+      ha-tooltip-text-color: black
+
+      mdc-text-field-fill-color: rgba(0,0,0,0.06)
+      mdc-select-fill-color: rgba(0,0,0,0.06)
+      mdc-theme-surface: var(--ha-card-background)
+      md-list-container-color: var(--ha-card-background)
+      dialog-background-color: var(--ha-card-background)
+      casora-dialog-bg: rgba(0,0,5,0.5)
+      ha-dialog-background: var(--casora-dialog-bg)
+      ha-dialog-surface-background: var(--casora-dialog-bg)
+
+      # ------------------------------------------------------------------------
+      # Performance mode stand-ins
+      # ------------------------------------------------------------------------
+
+      casora-perf-dialog-fill: rgb(26,28,34)
+      casora-perf-scrim-fill: rgba(0,0,0,0.42)
+      casora-perf-tiles-fill: rgba(255,255,255,0.10)
+
+    dark:
+      # ------------------------------------------------------------------------
+      # Surfaces, backgrounds, text
+      # ------------------------------------------------------------------------
+
+      primary-background-color: rgb(40,40,40)
+      secondary-background-color: rgb(20,20,20)
+      ha-card-background: rgba(0,0,0,0.4)
+      ha-card-background-active: rgba(240,240,240,0.07)
+      badge-background: rgba(10,12,14,0.65)
+      text-primary-color: rgba(255,255,255,0.98)
+      secondary-text-color: rgba(240,240,240,0.9)
+      disabled-text-color: rgba(208,208,208,0.5)
+      sidebar-background-color: var(--ha-card-background)
+      sidebar-icon-color: var(--text-primary-color)
+      sidebar-text-color: "#a8a8a8"
+      hero-img-brightness-mobile: 0.96
+
+      # ------------------------------------------------------------------------
+      # Mobile wallpaper
+      # ------------------------------------------------------------------------
+
+      casora-mobile-hero-img: var(--casora-mobile-hero-img-night)
+      casora-mobile-hero-photo-contrast: 0.75
+      casora-mobile-hero-photo-saturate: 0.90
+      casora-mobile-hero-photo-brightness: 1.00
+      casora-mobile-hero-mesh-a: var(--casora-sampled-night-mesh-a, transparent)
+      casora-mobile-hero-mesh-b: var(--casora-sampled-night-mesh-b, transparent)
+      casora-mobile-hero-tint-top: rgba(0,0,0,0.09)
+      casora-mobile-hero-tint-bot: rgba(0,0,0,0.15)
+      casora-mobile-hero-c-handoff: "var(--casora-sampled-night-handoff, #595d68)"
+      casora-mobile-hero-c-upper: "var(--casora-sampled-night-upper, #4e5159)"
+      casora-mobile-hero-c-mid: "var(--casora-sampled-night-mid, #42444a)"
+      casora-mobile-hero-c-lower: "var(--casora-sampled-night-lower, #37383c)"
+      casora-mobile-hero-c-base: "var(--casora-sampled-night-base, #2b2c2e)"
+      casora-mobile-hero-floor: "var(--casora-sampled-night-base, #2b2c2e)"
+
+      # ------------------------------------------------------------------------
+      # Entity tiles
+      # ------------------------------------------------------------------------
+
+      casora-entity-background: rgba(0,0,0,0.40)
+      casora-entity-background-active: rgba(255,255,255,0.80)
+      casora-entity-active-tint: rgba(255,255,255,0.76)
+      casora-entity-active-tint-mobile: rgba(255,255,255,0.80)
+      casora-entity-hover-tint: rgba(255,255,255,0.45)
+      casora-hover-overlay-opacity: 0.035
+      casora-entity-name: rgba(255,255,255,0.95)
+      casora-entity-name-active: rgba(0,0,0,0.88)
+      casora-entity-state: rgba(255,255,255,0.65)
+      casora-entity-state-opacity: 1
+      casora-entity-state-active: rgba(0,0,0,0.55)
+      casora-entity-state-active-color: rgba(0,0,0,0.55)
+
+      # ------------------------------------------------------------------------
+      # Nav, popups, controls
+      # ------------------------------------------------------------------------
+
+      casora-nav-bg: rgba(0,0,0,0.3)
+      casora-nav-border: transparent
+      casora-nav-active-fill: rgba(200,200,200,0.25)
+
+      casora-popup-tiles-text-primary: 'rgba(255,255,255,0.95)'
+      casora-popup-tiles-text-secondary: 'rgba(255,255,255,0.75)'
+      casora-popup-tiles-text-muted: 'rgba(255,255,255,0.52)'
+      casora-popup-tile-hover: rgba(255,255,255,0.09)
+      casora-popup-progress-track: rgba(255,255,255,0.09)
+
+      casora-card-specular-start: transparent
+      casora-card-specular-mid: transparent
+      casora-card-specular-end: transparent
+
+      casora-popup-divider: rgba(255,255,255,0.07)
+      casora-control-off: rgba(0,0,0,0.2)
+      casora-control-on: rgba(255,255,255,0.2)
+      thermostat-card-off: var(--casora-control-off)
+      thermostat-card-on: var(--casora-control-on)
+
+      casora-toggle-inactive-opacity: 0.85
+      casora-toggle-active-opacity: 0.88
+      casora-toggle-track-fill: rgba(0,0,0,0.75)
+
+      casora-progress-track-color: rgba(0,0,0,0.12)
+
+      # ------------------------------------------------------------------------
+      # Components and system
+      # ------------------------------------------------------------------------
+
+      ha-card-box-shadow: var(--ha-card-box-shadow-dark)
+      dialog-box-shadow: "inset 0 0 28px rgba(0,0,0,0.25)"
+      mdc-dialog-scrim-color: rgba(0,0,0,0.3)
+      button-card-box-shadow: none
+      button-card-box-shadow-mobile: none
+      button-card-box-shadow-active: 0 2px 12px rgba(0,0,0,0.28), 0 0 3px rgba(0,0,0,0.14)
+      button-card-box-shadow-active-mobile: none
+      button-card-box-shadow-hover: none
+      button-card-box-shadow-hover-mobile: none
+
+      casora-dialog-bg: rgba(0,0,0,0.6)
+      ha-dialog-background: var(--casora-dialog-bg)
+      ha-dialog-surface-background: var(--casora-dialog-bg)
+
+      # ------------------------------------------------------------------------
+      # Performance mode stand-ins
+      # ------------------------------------------------------------------------
+
+      casora-perf-dialog-fill: rgb(16,18,23)
+      casora-perf-scrim-fill: rgba(0,0,0,0.52)
+      casora-perf-tiles-fill: rgba(255,255,255,0.09)
+
+      ha-color-fill-primary-normal-resting: var(--casora-nav-bg)
+      ha-color-fill-primary-quiet-resting: rgba(100,100,100,0.25)
+      ha-color-fill-primary-quiet-hover: rgba(100,100,100,0.3)
+      ha-color-form-background: var(--ha-card-background)
+      ha-color-form-background-disabled: var(--ha-card-background)
+      ha-color-form-background-hover: var(--ha-card-background)
+      ha-color-text-secondary: var(--secondary-text-color)
+      ha-color-fill-neutral-quiet-resting: transparent
+      wa-color-text-quiet: var(--secondary-text-color)
+
+      mdc-text-field-fill-color: var(--primary-background-color)
+      mdc-select-fill-color: var(--primary-background-color)
+      mdc-theme-surface: var(--ha-card-background)
+      md-list-container-color: var(--ha-card-background)
+      dialog-background-color: var(--ha-card-background)
+
+
+  # ============================================================================
+  # Appearance
+  # ============================================================================
+
+  # ----------------------------------------------------------------------------
+  # Typography
+  # ----------------------------------------------------------------------------
+
+  # Swap this one line to try a different face; everything else follows it.
+  primary-font-family: '"Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif'
+  ha-font-family-body: var(--primary-font-family)
+  ha-card-header-font-family: var(--primary-font-family)
+
+  # ----------------------------------------------------------------------------
+  # Base palette
+  # ----------------------------------------------------------------------------
+
+  casora-color-blue: "#0088FF"
+  casora-color-teal:        '#00C3D0'   # primary / interactive / climate active
+  casora-color-mint:        '#00C8B3'   # security
+  casora-color-mint-dark:   '#00DAC3'   # security
+  casora-color-yellow:      '#FFCC00'   # warning / lights on / warm
+  casora-color-yellow-dark: '#F4C403'   # selected/active pills only
+  casora-color-green:       '#30D158'   # good / online / healthy
+  casora-color-orange:      '#FF9230'   # caution / high usage / hot
+  casora-color-red:         '#FF4245'   # critical / danger / offline
+  casora-color-ice:         '#3cd3fe'   # cold temps / high humidity
+  casora-color-amber:       '#ffb254'   # humidity dry / warm amber
+  casora-color-deep-blue:   '#0091ff'   # extreme cold temperature
+  casora-color-deep-orange: '#ff6b30'   # battery very-low
+  casora-color-pink:        '#ff4d70'   # media playing
+  casora-color-neutral:     '#CDCDCF'   # idle / inactive states
+  casora-color-purple:      '#9333ea'   # movie
+
+  # Chart
+  casora-series-1:          '#64D2FF'   # download / power
+  casora-series-2:          '#BF5AF2'   # upload
+  casora-color-gold:        '#e5a00d'   # show
+
+  # ----------------------------------------------------------------------------
+  # Core colors
+  # ----------------------------------------------------------------------------
+
+  primary-color: '#00c0e8'
+  accent-color: var(--casora-color-teal)
+  divider-color: transparent
+  app-theme-color: rgb(0,0,0)
+  state-inactive-color: "#d1d1d1"
+  primary-text-color: "#ffffff"
+  icon-primary-color: currentColor
+  scrollbar-thumb-color: rgba(255,255,255,0.15)
+  lumo-body-text-color: var(--primary-text-color)
+  clear-background-color: var(--ha-card-background)
+  paper-item-icon-color: currentColor
+  rgb-card-background-color: rgb(10,10,10)
+
+  ha-color-on-primary-normal: var(--primary-color)
+  ha-color-on-neutral-normal: var(--primary-text-color)
+  ha-color-red-40: "#d6314a"
+  ha-color-primary-95: "#9c9c9c"
+  ha-color-neutral-90: transparent
+  state-vacuum-cleaning-color: "#ffffff"
+
+  # ----------------------------------------------------------------------------
+  # Status colors
+  # ----------------------------------------------------------------------------
+
+  # Global
+  casora-icon-circle-bg: rgba(0,0,0,0.20)
+
+  # Light
+  casora-badge-light-color:             var(--casora-color-yellow)
+
+  # Climate / Thermostat
+  casora-badge-climate-color:           var(--casora-color-teal)
+  casora-puck-cool-color:               var(--casora-color-teal)
+  casora-puck-heat-color: var(--casora-color-red)
+
+  # Temperature
+  casora-badge-climate-very-cold-color: var(--casora-color-ice)
+  casora-badge-temp-very-cold-color:    var(--casora-color-deep-blue)
+  casora-badge-temp-cool-color:         var(--casora-color-ice)
+  casora-badge-temp-comfortable-color:  var(--casora-color-green)
+  casora-badge-temp-warm-color:         var(--casora-color-yellow)
+  casora-badge-temp-hot-color:          var(--casora-color-orange)
+  casora-badge-temp-very-hot-color:     var(--casora-color-red)
+
+  # Air Quality
+  casora-badge-air-quality-excellent-color: var(--casora-color-green)
+  casora-badge-air-quality-good-color:      var(--casora-color-green)
+  casora-badge-air-quality-moderate-color:  var(--casora-color-yellow)
+  casora-badge-air-quality-poor-color:      var(--casora-color-orange)
+  casora-badge-air-quality-bad-color:       var(--casora-color-red)
+
+  # Humidity
+  casora-badge-humidity-dry-color:  var(--casora-color-amber)
+  casora-badge-humidity-high-color: var(--casora-color-ice)
+
+  # Presence
+  casora-badge-presence-home-color: var(--casora-color-green)
+  casora-badge-presence-away-color: var(--casora-color-yellow)
+
+  # Security
+  casora-security-accent: var(--casora-color-teal)
+  casora-badge-alert-color: var(--casora-color-orange)
+  casora-badge-security-color: var(--casora-security-accent)
+
+  # Network
+  casora-badge-network-online-color:        var(--casora-color-green)
+  casora-badge-network-offline-color:       var(--casora-color-red)
+  casora-badge-network-idle-color:          var(--casora-color-neutral)
+  casora-badge-network-low-color:           var(--casora-color-green)
+  casora-badge-network-active-color:        var(--casora-color-yellow)
+  casora-badge-network-high-color:          var(--casora-color-orange)
+
+  # Energy
+  casora-badge-energy-color:           var(--casora-color-green)
+  casora-badge-energy-low-color:       var(--casora-color-green)
+  casora-badge-energy-medium-color:    var(--casora-color-yellow)
+  casora-badge-energy-high-color:      var(--casora-color-orange)
+  casora-badge-energy-very-high-color: var(--casora-color-red)
+
+  # Battery
+
+  # Plant Health
+  casora-badge-plant-healthy-color:    var(--casora-color-green)
+  casora-badge-plant-struggling-color: var(--casora-color-orange)
+
+  # ----------------------------------------------------------------------------
+  # Popup colors
+  # ----------------------------------------------------------------------------
+
+  casora-popup-primary-color: var(--casora-color-teal)
+  casora-popup-yellow-color:  var(--casora-color-yellow)
+  casora-popup-green-color:   var(--casora-color-green)
+  casora-popup-orange-color:  var(--casora-color-orange)
+  casora-popup-red-color:     var(--casora-color-red)
+
+  casora-tooltip-bg: rgba(233,233,236,0.96)
+  casora-tooltip-fg: '#1c1c1e'
+
+  casora-battery-yellow: var(--casora-color-yellow)
+
+  # ----------------------------------------------------------------------------
+  # Entity state colors
+  # ----------------------------------------------------------------------------
+
+  state-icon-active-color: rgb(100,180,255)
+  state-icon-color: rgba(255,255,255,0.4)
+  state-on-color: rgb(100,180,255)
+  state-off-color: rgba(255,255,255,0.3)
+  state-light-on-color: rgb(255,210,100)
+  state-light-off-color: rgba(255,255,255,0.3)
+  state-climate-heat-color: rgb(255,140,60)
+  state-climate-cool-color: rgb(100,180,255)
+  state-climate-auto-color: rgb(100,200,130)
+  state-climate-idle-color: rgba(255,255,255,0.3)
+  state-alarm-armed-color: rgb(100,200,130)
+  state-alarm-disarmed-color: rgba(255,255,255,0.3)
+  state-alarm-pending-color: rgb(255,180,60)
+  state-alarm-triggered-color: rgb(255,80,80)
+  state-lock-locked-color: rgb(100,200,130)
+  state-lock-unlocked-color: rgb(255,100,100)
+  state-binary_sensor-active-color: rgb(255,180,60)
+  state-binary_sensor-inactive-color: rgba(255,255,255,0.3)
+  state-sensor-battery-high-color: rgb(100,200,130)
+  state-sensor-battery-low-color: rgb(255,80,80)
+  state-media_player-active-color: rgb(100,180,255)
+  state-media_player-inactive-color: rgba(255,255,255,0.3)
+  state-vacuum-active-color: rgb(100,180,255)
+  state-vacuum-inactive-color: rgba(255,255,255,0.3)
+
+  # ----------------------------------------------------------------------------
+  # Component colors
+  # ----------------------------------------------------------------------------
+
+  # Sliders
+  paper-slider-knob-color: rgb(100,180,255)
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: rgb(100,180,255)
+  paper-slider-secondary-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: rgba(255,255,255,0.12)
+  paper-slider-font-color: "#000000"
+  ha-slider-background: none
+  mush-control-border-radius: 9999px
+
+  # Labels / badges
+  label-badge-background-color: "#23232e"
+  label-badge-text-color: "#f1f1f1"
+  label-badge-red: rgb(255,80,80)
+  label-badge-green: rgb(100,200,130)
+  label-badge-blue: rgb(100,180,255)
+  label-badge-yellow: rgb(255,200,60)
+
+  # Chips
+  chip-background-color: rgba(255,255,255,0.08)
+  chip-text-color: rgba(255,255,255,0.75)
+
+  # Switches (Legacy)
+  switch-checked-color: rgb(100,180,255)
+  switch-checked-button-color: white
+  switch-checked-track-color: rgba(100,180,255,0.45)
+  switch-unchecked-color: rgba(255,255,255,0.25)
+  switch-unchecked-button-color: rgba(255,255,255,0.6)
+  switch-unchecked-track-color: rgba(255,255,255,0.12)
+
+  # Switches
+  ha-switch-checked-background-color: var(--accent-color)
+  ha-switch-checked-border-color: rgb(100,180,255)
+  ha-switch-checked-thumb-background-color: white
+  ha-switch-checked-thumb-border-color: white
+  ha-switch-thumb-background-color: rgba(255,255,255,0.6)
+  ha-switch-thumb-border-color: rgba(255,255,255,0.6)
+  ha-switch-background-color: rgba(255,255,255,0.2)
+
+  # Tables / markdown / history
+  table-row-background-color: rgba(255,255,255,0.03)
+  table-row-alternative-background-color: rgba(255,255,255,0.06)
+  data-table-background-color: transparent
+  markdown-code-background-color: rgba(255,255,255,0.08)
+  trace-line-color: rgb(100,180,255)
+  history-filling-color: rgba(100,180,255,0.15)
+
+  # Energy dashboard
+  energy-grid-consumption-color: rgb(100,180,255)
+  energy-grid-return-color: rgb(100,200,130)
+  energy-solar-color: rgb(255,200,60)
+  energy-battery-in-color: rgb(180,130,255)
+  energy-battery-out-color: rgb(255,140,60)
+  energy-gas-color: rgb(255,120,100)
+
+  # ----------------------------------------------------------------------------
+  # Glass material
+  # ----------------------------------------------------------------------------
+
+  # Entity tile
+  casora-tile-glass-rim: >-
+    inset 0 1px 0 -0.5px rgba(255,255,255,0.10),
+    0 2px 8px rgba(0,0,0,0.10)
+
+  # Desktop and tablet only; the phone pins itself back to the flat rim above.
+  casora-tile-glass-rim-desktop: >-
+    inset 0 1px 0 rgba(255,255,255,0.20),
+    inset 0 -1px 0 rgba(255,255,255,0.08),
+    0 2px 8px rgba(0,0,0,0.10)
+
+  # Wie im abgestimmten Produktiv-Theme (30.09.2026): jede Karte eigene Ebene.
+  # Achtung: 'filter, transform' macht jede Karte zur Backdrop-Wurzel (kein Blur darin).
+  casora-card-will-change: filter, transform
+
+  # How far the phone's top capsule and everything under it sit below the safe area.
+  casora-mobile-chrome-drop: 4px
+
+  # The top corner capsule, shared by the phone dashboard and the panel. Measured off iOS's own.
+  casora-pill-fill: rgba(255,255,255,0.10)
+  casora-pill-backdrop: blur(12px) saturate(1.4)
+  # Apple's edge light brightens what is behind it rather than adding white, so it keeps the color.
+  casora-pill-rim: >-
+    inset 0 0.5px 0 rgba(255,255,255,0.10),
+    inset 0 -0.5px 0 rgba(255,255,255,0.10),
+    inset 0 3px 4px -3px rgba(255,255,255,0.14),
+    inset 0 -3px 4px -3px rgba(255,255,255,0.10)
+  casora-pill-edge: rgba(0,0,0,0.50)
+  casora-pill-divider: rgba(60,60,67,0.36)
+
+  casora-glass-background: rgba(255,255,255,0.10)
+  casora-glass-backdrop: blur(24px) saturate(180%)
+  casora-glass-rim: >-
+    inset 0 1px .5px -0.5px rgba(255,255,255,0.55),
+    inset 0 -1px .5px -0.5px rgba(255,255,255,0.48),
+    inset 0 3px 6px -3px rgba(255,255,255,0.20),
+    inset 0 -3px 6px -3px rgba(255,255,255,0.12),
+    2px 0 3px -2px rgba(0,0,0,0.45),
+    -2px 0 3px -2px rgba(0,0,0,0.45),
+    0 2px 8px rgba(0,0,0,0.18)
+
+  casora-badge-glass-rim: none
+  casora-badge-art-floor: rgba(160,160,160,0.28)
+  casora-badge-rim-side: 0.98
+  casora-badge-rim-side-spread: -1px
+  casora-badge-rim-side-blur: 1px
+  casora-badge-glow-top-tight: 0.35
+  casora-badge-glow-top-soft: 0.10
+  casora-badge-glow-bottom-tight: 0.16
+  casora-badge-glow-bottom-soft: 0.12
+
+  # Status pill
+  casora-glass-pill-fill: rgba(255,255,255,0.12)
+  casora-glass-pill-backdrop: none
+  casora-glass-pill-glow-top-tight: 1
+  casora-glass-pill-glow-top-soft: 0.20
+  casora-glass-pill-glow-bottom-tight: 0.58
+  casora-glass-pill-glow-bottom-soft: 0.30
+  casora-glass-pill-ring-tint: 0%
+  casora-glass-pill-ring-tint-tight: 0%
+
+  casora-glass-pill-corner-tint: 100%
+  casora-glass-pill-corner-alpha: 0.22
+  casora-glass-pill-corner-bloom-alpha: 0
+  casora-glass-pill-dispersion-deg: 10
+  casora-glass-pill-cap-shade: 0
+  casora-glass-pill-corner-angle: 115deg
+  casora-glass-pill-corner-falloff: 0.50
+  casora-glass-pill-accent-fill: 30%
+  casora-glass-pill-fill-l: 0.82
+  casora-glass-pill-fill-c: 0.24
+  casora-glass-pill-accent-sheen: 11%
+
+  # Media poster
+  casora-media-poster-glow-top: linear-gradient(to bottom, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.12) 10%, rgba(255,255,255,0) 58%)
+  casora-media-poster-glow-bottom: linear-gradient(to top, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.07) 10%, rgba(255,255,255,0) 45%)
+  casora-media-poster-highlight: >-
+    inset 0 1px 1px -0.5px rgba(255,255,255,0.15),
+    inset 0 -1px 1px -0.5px rgba(255,255,255,0.05)
+  
+  # Popup bottom tiles
+  casora-popup-tiles-fill: rgba(255,255,255,0.08)
+  casora-popup-tiles-backdrop: none
+  casora-popup-tiles-glow-top-tight: 0.24
+  casora-popup-tiles-glow-top-soft: 0.15
+  casora-popup-tiles-glow-bottom-tight: 0.10
+  casora-popup-tiles-glow-bottom-soft: 0.07
+
+  # ----------------------------------------------------------------------------
+  # Shadows
+  # ----------------------------------------------------------------------------
+
+  ha-shadow-light: none
+  ha-shadow-light-hover: none
+  ha-shadow-light-mobile: none
+  ha-shadow-dark: none
+  ha-shadow-dark-hover: none
+  ha-shadow-dark-mobile: none
+  ha-card-box-shadow-light: none
+  ha-card-box-shadow-dark: none
+
+  # ----------------------------------------------------------------------------
+  # Hero image
+  # ----------------------------------------------------------------------------
+
+  hero-tint: rgba(55,55,55,0.50)
+  hero-img-blur: 4px
+  hero-img-scale: 1.08
+  hero-img-saturate: 1.02
+  hero-img-brightness: 0.985
+  hero-img-saturate-from: 1.0
+  hero-img-brightness-from: 0.97
+
+  # Mobile wallpaper
+  casora-mobile-hero-img-day: url("/casora_assets/rooms/home-demo.jpg")
+  casora-mobile-hero-img-night: url("/casora_assets/rooms/home-demo-night.jpg")
+
+  casora-mobile-hero-height: 85%
+  casora-mobile-hero-x: 50%
+  casora-mobile-hero-y: 0%
+  casora-mobile-hero-blur: 4px
+
+  casora-mobile-hero-wash-mid: 31%
+  casora-mobile-hero-wash-end: 82%
+
+  casora-mobile-hero-mesh-a-size: 91% 32%
+  casora-mobile-hero-mesh-a-pos: 50% 65%
+  casora-mobile-hero-mesh-b-size: 116% 48%
+  casora-mobile-hero-mesh-b-pos: 51% 90%
+
+  casora-mobile-hero-fade-start-landscape: 76%
+  casora-mobile-hero-p-handoff-landscape: 96%
+  casora-mobile-hero-p-upper-landscape: 97%
+  casora-mobile-hero-p-mid-landscape: 98%
+  casora-mobile-hero-p-lower-landscape: 99%
+  casora-mobile-hero-wash-mid-landscape: 30%
+  casora-mobile-hero-wash-end-landscape: 58%
+
+  casora-mobile-hero-mesh-a-landscape: transparent
+  casora-mobile-hero-mesh-b-landscape: transparent
+
+  casora-mobile-hero-fade-start: 57%
+  casora-mobile-hero-angle: 180deg
+  casora-mobile-hero-p-handoff: 84%
+  casora-mobile-hero-p-upper: 87%
+  casora-mobile-hero-p-mid: 91%
+  casora-mobile-hero-p-lower: 95%
+  # Farbschleier je Tag/Nacht (übernommen aus dem Handy-Look, 28.09.2026)
+  casora-mobile-hero-mesh-a-alpha-day: 0.46
+  casora-mobile-hero-mesh-b-alpha-day: 0.29
+  casora-mobile-hero-mesh-a-alpha-night: 0.18
+  casora-mobile-hero-mesh-b-alpha-night: 0.39
+  casora-mobile-hero-p-base: 100%
+
+  # ----------------------------------------------------------------------------
+  # Sidebar
+  # ----------------------------------------------------------------------------
+
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--primary-text-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+
+  # ----------------------------------------------------------------------------
+  # Forms and inputs
+  # ----------------------------------------------------------------------------
+
+  input-fill-color: rgba(255,255,255,0.06)
+  input-ink-color: rgba(255,255,255,0.8)
+  input-label-ink-color: rgba(255,255,255,0.6)
+  input-idle-line-color: rgba(255,255,255,0.12)
+  input-hover-line-color: rgba(100,180,255,0.5)
+  input-disabled-fill-color: rgba(255,255,255,0.03)
+  input-disabled-ink-color: rgba(255,255,255,0.37)
+  input-dropdown-icon-color: rgba(255,255,255,0.54)
+
+  # ----------------------------------------------------------------------------
+  # Code editor
+  # ----------------------------------------------------------------------------
+
+  codemirror-keyword: rgb(180,130,255)
+  codemirror-number: rgb(100,200,130)
+  codemirror-string: rgb(255,200,100)
+  codemirror-comment: rgba(255,255,255,0.3)
+  codemirror-atom: rgb(100,180,255)
+  codemirror-property: rgb(255,140,100)
+  code-editor-background-color: "#161616"
+
+
+  # ============================================================================
+  # Layout and sizing
+  # ============================================================================
+
+  # ----------------------------------------------------------------------------
+  # Fluid scale
+  # ----------------------------------------------------------------------------
+
+  # Desktop
+  casora-u: clamp(10px, 0.575vw, 11.5px)
+
+  # Badges
+  casora-u-badge: clamp(10px, 0.42vw, 11.5px)
+
+  # Now Playing
+  casora-u-np: clamp(10px, 0.575vw, 11.5px)
+
+  # Weather
+  casora-u-weather: clamp(10px, 0.575vw, 12px)
+
+  # Fonts
+  casora-chrome-font-size: calc(var(--casora-u-badge, 10px) * 1.8)
+  casora-chrome-font-weight: 600
+  casora-chrome-letter-spacing: calc(0.2px - (var(--casora-u-badge, 10px) - 10px) * 0.1333)
+
+  # ----------------------------------------------------------------------------
+  # Hero and header layout
+  # ----------------------------------------------------------------------------
+
+  # Page gutters
+  page-gutter-desktop: 6vw
+  page-gutter-tablet: 3vw
+  page-gutter-mobile: 16px
+
+  # Scene tiles
+  casora-scene-tile-h: 62px
+  casora-scene-tile-radius: 26px
+  casora-scene-grid-row-gap: 11px
+  casora-scene-grid-col-gap: 11px
+
+  # Header top
+  header-top-desktop: clamp(300px, 36vh, 620px)
+  header-top-tablet: clamp(180px, 38vh, 370px)
+  header-top-tablet-portrait: clamp(260px, 28vh, 400px)
+  header-top-mobile: clamp(30px, 16vh, 70px)
+  header-top-mobile-nudge: -10px
+
+  # Header height
+  casora-header-cap-desktop: clamp(260px, 30vh, 380px)
+  casora-header-cap-tablet: clamp(230px, 28vh, 340px)
+  casora-header-cap-mobile: clamp(240px, 34vh, 360px)
+  casora-header-cap-landscape: clamp(170px, 44vh, 240px)
+
+  # Header adjustments
+  casora-header-temp-nudge: 3px
+  casora-header-badge-nudge: -4px
+  casora-header-media-badge-nudge-desktop: 3px
+  casora-header-media-badge-nudge-mobile: 2px
+  casora-tiles-top-portrait-nudge: 245px
+
+  # ----------------------------------------------------------------------------
+  # Hero typography
+  # ----------------------------------------------------------------------------
+
+  # Temperature formatting
+  hero-header-gap-desktop: calc(var(--casora-u-weather, 10px) * 0.8)
+  hero-header-gap-tablet: 8px
+  hero-header-gap-mobile: 8px
+  hero-temp-font-size-desktop: calc(var(--casora-u-weather, 10px) * 1.8)
+  hero-temp-font-size-tablet: 16px
+  hero-temp-font-size-mobile: 14px
+
+  # Hero title sizing
+  hero-title-size-desktop: clamp(75px, 4.6vw + 8px, calc(var(--casora-u, 10px) * 10.5))
+  hero-title-size-tablet: clamp(68px, 5.5vw + 8px, 90px)
+  hero-title-size-mobile: clamp(38px, 4vw + 2px, 64px)
+  hero-title-size-landscape: clamp(28px, 4.6vw + 4px, 40px)
+
+  hero-title-line-height-desktop: 1.18
+  hero-title-line-height-tablet: 1.18
+  hero-title-line-height-mobile: 1.1
+  hero-title-line-height-landscape: 1.10
+
+  hero-title-letter-spacing-desktop: calc(-2px - (var(--casora-u, 10px) - 10px) * 0.25)
+  hero-title-letter-spacing-tablet: -1.5px
+  hero-title-letter-spacing-mobile: -1.2px
+  hero-title-letter-spacing-landscape: -1px
+
+  hero-title-margin-left-desktop: -2px
+  hero-title-margin-left-tablet: 2px
+  hero-title-margin-left-mobile: 2px
+  hero-title-margin-left-landscape: 2px
+
+  # ----------------------------------------------------------------------------
+  # Weather
+  # ----------------------------------------------------------------------------
+
+  weather-icon-size-mobile: 26px
+  weather-icon-size-tablet: 30px
+  weather-icon-size-desktop: calc(var(--casora-u-weather, 10px) * 3)
+  weather-mobile-badge-nudge: -2px
+  weather-hero-digit-align: 0px
+  weather-hero-widget-position-nudge: calc(var(--casora-u-weather, 10px) * -2.2)
+
+  # ----------------------------------------------------------------------------
+  # Entity tiles
+  # ----------------------------------------------------------------------------
+
+  casora-entity-picture-inactive-opacity: 0.95
+  casora-entity-picture-inactive-filter: brightness(0.9) saturate(0.8)
+
+  casora-sidebar-fill: rgba(0,0,0,0.42)
+  casora-sidebar-backdrop: blur(20px) saturate(1.2)
+  casora-sidebar-scrim: rgba(0,0,0,0.24)
+
+  casora-elevation-floating: 0 8px 20px rgba(0,0,0,0.13)
+  casora-elevation-floating-phone: 0 10px 26px rgba(0,0,0,0.18)
+
+  casora-hover-overlay-opacity: 0.06
+  casora-entity-text-shadow: none
+  casora-entity-height-h: clamp(160px, 18svh, 200px)
+  casora-entity-aspect-desktop: 1.487
+  casora-entity-height-desktop: clamp(200px, 18svh, 220px)
+  casora-entity-col-width-desktop: clamp(290px, calc(var(--casora-u, 10px) * 29), 319px)
+  casora-entity-inner-pad-desktop: calc(var(--casora-u, 10px) * 2)
+  casora-entity-name-font-desktop: calc(var(--casora-u, 10px) * 1.8)
+  casora-entity-state-font-desktop: calc(var(--casora-u, 10px) * 1.5)
+  casora-entity-icon-size-desktop: calc(var(--casora-u, 10px) * 3.4)
+  casora-tile-peek-tablet: 60px
+  casora-entity-height-tablet: var(--casora-entity-height-h)
+  casora-entity-col-width-tablet: 220px
+  casora-entity-col-width-tablet-portrait: calc((100vw - var(--casora-rail-left, 3vw) - var(--casora-tile-peek-tablet, 60px) - 24px) / 3)
+  casora-entity-col-width-tablet-landscape: calc((100vw - var(--casora-rail-left, 3vw) - var(--casora-tile-peek-tablet, 60px) - 40px) / 5)
+  casora-entity-col-width-tablet-landscape-sm: calc((100vw - var(--casora-rail-left, 3vw) - var(--casora-tile-peek-tablet, 60px) - 32px) / 4)
+
+  casora-entity-row-pad-bottom: 40px
+  casora-entity-col-width-tablet-lg: 260px
+  casora-entity-icon-size-tablet-lg: 32px
+  casora-entity-name-font-tablet-lg: 16px
+  casora-entity-state-font-tablet-lg: 14px
+
+  casora-icon-circle-ratio: 0.22
+  casora-icon-circle-ratio-tablet: 0.2375
+  casora-entity-height-mobile: 110px
+  casora-entity-col-width-mobile: 180px
+  casora-entity-name-font-mobile: 14px
+  casora-entity-state-font-mobile: 14px
+  casora-entity-height-landscape: 120px
+  casora-entity-col-width-landscape: 160px
+
+  # ----------------------------------------------------------------------------
+  # Badges
+  # ----------------------------------------------------------------------------
+
+  # Global
+  badge-blur: 10px
+  badge-br: 9999px
+  badge-active-color: rgba(255,255,255,0.85)
+  badge-title-inactive: rgba(255,255,255,0.85)
+  badge-title-inactive-selected: rgba(0,0,0,0.7)
+
+  # Desktop
+  badge-gap: calc(var(--casora-u-badge, 10px) * 1)
+  badge-col-gap: calc(var(--casora-u-badge, 10px) * 0.4)
+  badge-padding: calc(var(--casora-u-badge, 10px) * 0.4) calc(var(--casora-u-badge, 10px) * 1.5) calc(var(--casora-u-badge, 10px) * 0.4) calc(var(--casora-u-badge, 10px) * 0.9)
+  badge-min-height: calc(var(--casora-u-badge, 10px) * 5)
+  badge-icon-size: calc(var(--casora-u-badge, 10px) * 3)
+  badge-font-size: calc(var(--casora-u-badge, 10px) * 1.5)
+  badge-btn-size: calc(var(--casora-u-badge, 10px) * 2.2)
+
+  # Tablet
+  badge-gap-tablet: 10px
+  badge-col-gap-tablet: 4px
+  badge-padding-tablet: 7px 14px 8px 7px
+  badge-min-height-tablet: 40px
+  badge-icon-size-tablet: 26px
+  badge-font-size-tablet: 13px
+  badge-btn-size-tablet: 20px
+
+  # Mobile
+  badge-gap-mobile: 10px
+  badge-col-gap-mobile: 4px
+  badge-padding-mobile: 4px 14px 4px 7px
+  badge-min-height-mobile: 43px
+  badge-icon-size-mobile: 26px
+  badge-font-size-mobile: 13px
+  badge-btn-size-mobile: 18px
+
+  # Mobile Landscape
+  badge-gap-landscape: 10px
+  badge-col-gap-landscape: 4px
+  badge-padding-landscape: 4px 12px 4px 5px
+  badge-min-height-landscape: 38px
+  badge-icon-size-landscape: 24px
+  badge-font-size-landscape: 12px
+  badge-btn-size-landscape: 16px
+
+  # Media badges
+  badge-media-icon-size: calc(var(--casora-u-badge, 10px) * 3.8)
+  badge-media-icon-size-tablet: 36px
+  badge-media-icon-size-mobile: 33px
+  badge-media-icon-size-landscape: 28px
+
+  badge-media-btn-size: calc(var(--casora-u-badge, 10px) * 4)
+  badge-media-btn-size-tablet: 40px
+  badge-media-btn-size-mobile: 34px
+  badge-media-btn-size-landscape: 30px
+
+  badge-media-btn-icon-size: calc(var(--casora-u-badge, 10px) * 2.8)
+  badge-media-btn-icon-size-tablet: 24px
+  badge-media-btn-icon-size-mobile: 20px
+  badge-media-btn-icon-size-landscape: 18px
+
+  badge-media-max-width-desktop: calc(var(--casora-u-badge, 10px) * 64)
+  badge-media-max-width-tablet: 520px
+  badge-media-pad-v-tablet: 7px
+  badge-media-max-width-mobile: 100%
+
+  # ----------------------------------------------------------------------------
+  # Navigation
+  # ----------------------------------------------------------------------------
+
+  # Navigation sizing / spacing
+  casora-nav-margin-desktop: 8vw
+  casora-nav-margin-tablet: 4.3vw
+  casora-nav-gap-desktop: 50px
+  casora-nav-gap-tablet: 45px
+  casora-nav-top-desktop: 60px
+  casora-nav-top-tablet: 55px
+
+  # Uhr, Raumleiste und Knöpfe auf einer Linie (Mitte 56px, wie im abgestimmten Handy-/Desktop-Look).
+  casora-chrome-row-center-desktop: 56px
+
+  casora-nav-indicator-duration: 0.42s
+  casora-nav-indicator-lead: 0.07s
+  casora-nav-indicator-ease: cubic-bezier(0.32, 0.72, 0, 1)
+
+  # Kein fester Wert: am Tablet gilt der Standard aus dem Code (30px), am Desktop setzt 01-basis 33px –
+  # ein Theme-Wert würde das am Dokument überschreiben und die Raumleiste aus der Linie schieben.
+  casora-chrome-row-top-tablet-portrait: 32px
+
+  casora-chrome-btn-step: 46px
+  casora-chrome-row-gap: 16px
+  casora-now-playing-top-tablet-portrait: "calc(var(--casora-chrome-row-top-tablet-portrait, 32px) + var(--casora-nav-pill-height-tablet, 46px) + 8px)"
+
+  casora-nav-pill-height-tablet: 46px
+  casora-nav-pill-inset-y-tablet: 4px
+  casora-nav-route-gap-tablet: 4px
+  casora-nav-label-pad-x-tablet: 16px
+
+  casora-nav-underline-thickness: 2px
+  casora-nav-underline-gap: 4px
+
+  # Navigation popup styling
+
+
+  # ============================================================================
+  # Internals
+  # ============================================================================
+
+  # ----------------------------------------------------------------------------
+  # Web Awesome and Home Assistant tokens
+  # ----------------------------------------------------------------------------
+
+  # Web Awesome
+  wa-color-neutral-fill-normal: "#ffffff14"
+  wa-color-surface-border: rgba(255,255,255,0.1)
+  wa-color-neutral-fill-quiet: var(--primary-color)
+  wa-color-neutral-border-loud: var(--casora-nav-border)
+  wa-color-neutral-border-normal: var(--casora-nav-border)
+  wa-color-neutral-border-quiet: var(--casora-nav-border)
+  wa-color-neutral-on-loud: rgba(255,255,255,0.95)
+  wa-color-neutral-on-normal: rgba(255,255,255,0.95)
+  wa-color-fill-loud: var(--primary-text-color)
+  wa-color-brand-fill-loud: var(--primary-color)
+  wa-color-neutral-fill-loud: var(--primary-text-color)
+  wa-color-on-normal: var(--primary-text-color)
+  wa-color-on-quiet: var(--primary-text-color)
+  wa-color-neutral-on-quiet: var(--primary-text-color)
+  wa-color-text-normal: var(--primary-text-color)
+
+  # HA / MDC system
+  ha-border-radius-lg: 12px
+  ha-border-radius-sm: 30px
+  ha-card-features-border-radius: 30px
+  border-end-end-radius: 30px
+  wa-border-radius-m: 24px
+  wa-border-radius-s: 30px
+  wa-shadow-m: var(--ha-card-box-shadow)
+
+  mdc-button-outline-color: rgba(255,255,255,0.15)
+  mdc-theme-primary: rgb(100,180,255)
+  mdc-shape-small: 30px
+
+  # ----------------------------------------------------------------------------
+  # Dialogs and cards
+  # ----------------------------------------------------------------------------
+
+  # App Header
+  app-header-background-color: rgba(76,80,84,0.3)
+  app-header-backdrop-filter: blur(10px)
+  casora-toolbar-backdrop: blur(15px)
+  app-header-edit-background-color: rgba(0,0,0,0.2)
+  app-header-border-bottom: none
+
+  # Dialogs
+  casora-surface-backdrop: blur(28px) saturate(200%)
+  ha-dialog-surface-backdrop-filter: blur(22px) saturate(1.2)
+  ha-dialog-surface-background: var(--ha-dialog-background)
+  casora-scrim-backdrop: blur(6px) saturate(1.35)
+  ha-dialog-scrim-backdrop-filter: none
+  casora-stacked-scrim: transparent
+  casora-stacked-scrim-backdrop: none
+  ha-dialog-border-radius: 28px
+  casora-popup-top: 112px
+  dialog-surface-margin-top: 85px
+
+  # Cards
+  card-background-color: var(--secondary-background-color)
+  paper-listbox-background-color: var(--primary-background-color)
+  ha-card-header-color: var(--primary-text-color)
+  paper-card-background-color: var(--ha-card-background)
+  ha-card-box-shadow: none
+  ha-card-backdrop-filter: blur(22px) saturate(1.2)
+  ha-card-border-color: transparent
+  ha-card-border-radius: 28px
+  ha-card-border-width: 0
+  md-list-item-container-shape: 28px
+  stack-card-gap: 0px
+  horizontal-stack-card-gap: 10px
+
+  # ----------------------------------------------------------------------------
+  # Popups
+  # ----------------------------------------------------------------------------
+
+  casora-popup-tile-hover-scale: '1.004'
+  casora-popup-tile-hover-duration: '0.15s'
+
+  # ----------------------------------------------------------------------------
+  # Layout engine
+  # ----------------------------------------------------------------------------
+
+  card-mod-theme: "Casora Standard"
+
+  card-mod-root-yaml: |
+    .: |
+      /* Scroll-Verhalten nur für die Dashboard-Ansicht – der Rest von HA scrollt normal. */
+      @media (max-width: 767px) and (orientation: portrait) {
+        #view,
+        hui-view,
+        hui-view-container {
+          overflow-y: visible !important;
+          touch-action: pan-y !important;
+        }
+      }
+
+      #view,
+      hui-view,
+      hui-view-container {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+      }
+
+      :host, ha-app-layout {
+        --casora-header-offset: var(--app-header-height, var(--header-height, 0px));
+        color-scheme: light dark;
+      }
+      @media (prefers-color-scheme: light) {
+        :host, ha-app-layout {
+          color-scheme: light;
+        }
+      }
+
+      body.kiosk-mode,
+      ha-panel-lovelace.kiosk-mode,
+      ha-panel-lovelace[is-kiosk],
+      ha-app-layout.kiosk-mode,
+      ha-app-layout[is-kiosk] {
+        --casora-header-offset: 0px !important;
+      }
+
+      :not(.edit-mode) > hui-view::after,
+      :not(.edit-mode) > hui-view:after {
+        display: none !important;
+      }
+
+      layout-card{
+        --layout-margin: 0px !important;
+        --layout-padding: 0px !important;
+        --layout-height: auto !important;
+        --layout-overflow: visible !important;
+        --ha-card-backdrop-filter: none;
+        --ha-card-background: transparent;
+        --ha-card-box-shadow: none;
+        --ha-card-border-color: transparent;
+        --ha-card-border-width: 0px;
+      }
+
+      grid-layout {
+        --masonry-view-card-margin: 0px;
+      }
+
+      ha-app-layout {
+        --casora-card-hover-shadow: var(--casora-button-card-box-shadow-hover-current, var(--button-card-box-shadow-hover, var(--ha-shadow-light-hover)));
+        --casora-card-hover-filter: var(--casora-hover-filter, brightness(1.01));
+      }
+
+
+
+      layout-card$ #container{
+        height: auto !important;
+        min-height: 0 !important;
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+      }
+
+      layout-card$ #container > *{
+        min-height: 0 !important;
+      }
+
+      ha-dropdown {
+        --wa-color-surface-raised: var(--ha-card-background) !important;
+      }
+
+      ha-dropdown::part(menu) {
+        backdrop-filter: blur(20px) saturate(1.02) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.02) !important;
+      }
+
+      .mdc-data-table {
+        border-radius: 0px !important;
+      }
+
+      :host {
+        --page-gutter: var(--page-gutter-desktop);
+        --casora-rail-left: var(--page-gutter-desktop);
+        --content-rail: var(--casora-rail-left);
+        --hero-top: var(--header-top-desktop);
+        --hero-gutter: var(--page-gutter-desktop);
+        --hero-header-gap-current: var(--hero-header-gap-desktop, 6px);
+        --casora-badge-subrow-gap-current: var(--casora-badge-subrow-gap-desktop, 14px);
+        --hero-temp-font-size: var(--hero-temp-font-size-desktop, 18px);
+        --casora-header-stack-h-current: var(--casora-header-cap-desktop, clamp(260px, 30vh, 380px));
+        --casora-header-media-badge-nudge-current: var(--casora-header-media-badge-nudge-desktop, 3px);
+        --casora-nav-margin-current: var(--casora-nav-margin-desktop, 8vw);
+        --casora-nav-gap-current: var(--casora-nav-gap-desktop, 50px);
+        --casora-nav-top-current: var(--casora-nav-top-desktop, 60px);
+        --hero-room-name-size-current: var(--hero-title-size-desktop, clamp(75px, 4.6vw + 8px, 105px));
+        --hero-room-name-line-height-current: var(--hero-title-line-height-desktop, 1.18);
+        --hero-room-name-letter-spacing-current: var(--hero-title-letter-spacing-desktop, -2px);
+        --hero-room-name-margin-left-current: var(--hero-title-margin-left-desktop, -2px);
+        --badge-media-max-width-current: var(--badge-media-max-width-desktop, 720px);
+        --badge-gap-current: var(--badge-gap, 22px);
+        --badge-col-gap-current: var(--badge-col-gap, 8px);
+        --badge-padding-current: var(--badge-padding, 6px 20px 6px 13px);
+        --badge-min-height-current: var(--badge-min-height, 64px);
+        --badge-icon-size-current: var(--badge-icon-size, 38px);
+        --badge-font-size-current: var(--badge-font-size, 18px);
+        --badge-btn-size-current: var(--badge-btn-size, 27px);
+        --badge-media-icon-size-current: var(--badge-media-icon-size, 48px);
+        --badge-media-btn-size-current: var(--badge-media-btn-size, 50px);
+        --badge-media-btn-icon-size-current: var(--badge-media-btn-icon-size, 34px);
+        --casora-entity-col-width-current: var(--casora-entity-col-width-desktop, 280px);
+        --casora-entity-height-current: var(--casora-entity-height-desktop, 180px);
+        --casora-entity-row-pad-bottom-current: var(--casora-entity-row-pad-bottom, 40px);
+        --casora-entity-row-pad-end-current: var(--casora-entity-row-pad-end, var(--casora-rail-left, 6vw));
+        --casora-entity-rows-current: var(--casora-entity-rows-desktop, repeat(1, auto));
+        --casora-entity-justify-current: var(--casora-entity-justify-desktop, flex-start);
+        --casora-entity-right-inset-current: var(--casora-entity-right-inset-desktop, 0px);
+        --casora-entity-left-inset-current: var(--casora-rail-left, var(--page-gutter, 8vw));
+        --casora-entity-shadow-pad-right-current: var(--casora-entity-shadow-pad-right-desktop, 0px);
+        --casora-entity-overflow-y-current: var(--casora-entity-overflow-y-desktop, hidden);
+        --casora-entity-inner-pad-current: var(--casora-entity-inner-pad-desktop, 20px);
+        --casora-entity-name-font-current: var(--casora-entity-name-font-desktop, 18px);
+        --casora-entity-state-font-current: var(--casora-entity-state-font-desktop, 15px);
+        --casora-entity-icon-size-current: var(--casora-entity-icon-size-desktop, 34px);
+        --casora-button-card-box-shadow-current: var(--button-card-box-shadow);
+        --casora-button-card-box-shadow-active-current: var(--button-card-box-shadow-active);
+        --casora-button-card-box-shadow-hover-current: var(--button-card-box-shadow-hover);
+      }
+
+      /* Tablet */
+      @media (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (hover: none) and (pointer: coarse) {
+        :host {
+          --page-gutter: var(--page-gutter-tablet);
+          --casora-rail-left: var(--page-gutter-tablet);
+          --content-rail: var(--casora-rail-left);
+          --hero-top: var(--header-top-tablet);
+          --hero-gutter: var(--page-gutter-tablet);
+          --hero-header-gap-current: var(--hero-header-gap-tablet, 6px);
+          --casora-badge-subrow-gap-current: var(--casora-badge-subrow-gap-tablet, 14px);
+          --hero-temp-font-size: var(--hero-temp-font-size-tablet, 16px);
+          --casora-header-stack-h-current: var(--casora-header-cap-tablet, clamp(230px, 28vh, 340px));
+          --casora-nav-margin-current: var(--casora-nav-margin-tablet, 4.3vw);
+          --casora-nav-gap-current: var(--casora-nav-gap-tablet, 45px);
+          --casora-nav-top-current: var(--casora-nav-top-tablet, 55px);
+          --hero-room-name-size-current: var(--hero-title-size-tablet, clamp(36px, 4.2vw + 6px, 64px));
+          --hero-room-name-line-height-current: var(--hero-title-line-height-tablet, 1.18);
+          --hero-room-name-letter-spacing-current: var(--hero-title-letter-spacing-tablet, -1.5px);
+          --hero-room-name-margin-left-current: var(--hero-title-margin-left-tablet, -1px);
+          --badge-media-max-width-current: var(--badge-media-max-width-tablet, 600px);
+          --badge-gap-current: var(--badge-gap-tablet, var(--badge-gap, 22px));
+          --badge-col-gap-current: var(--badge-col-gap-tablet, var(--badge-col-gap, 8px));
+          --badge-padding-current: var(--badge-padding-tablet, var(--badge-padding, 6px 20px 6px 13px));
+          --badge-min-height-current: var(--badge-min-height-tablet, var(--badge-min-height, 64px));
+          --badge-icon-size-current: var(--badge-icon-size-tablet, var(--badge-icon-size, 38px));
+          --badge-font-size-current: var(--badge-font-size-tablet, var(--badge-font-size, 18px));
+          --badge-btn-size-current: var(--badge-btn-size-tablet, var(--badge-btn-size, 27px));
+          --badge-media-icon-size-current: var(--badge-media-icon-size-tablet, var(--badge-media-icon-size, 48px));
+          --badge-media-btn-size-current: var(--badge-media-btn-size-tablet, var(--badge-media-btn-size, 50px));
+          --badge-media-btn-icon-size-current: var(--badge-media-btn-icon-size-tablet, var(--badge-media-btn-icon-size, 30px));
+          --casora-entity-col-width-current: var(--casora-entity-col-width-tablet, 210px);
+          --casora-entity-height-current: var(--casora-entity-height-tablet, 150px);
+          --casora-entity-row-pad-bottom-current: var(--casora-entity-row-pad-bottom-tablet, 20px);
+          --casora-entity-row-pad-end-current: var(--casora-entity-row-pad-end-tablet, var(--casora-rail-left, 3vw));
+          --casora-entity-overflow-y-current: var(--casora-entity-overflow-y-tablet, var(--casora-entity-overflow-y-desktop, hidden));
+          --casora-entity-inner-pad-current: var(--casora-entity-inner-pad-tablet, 18px);
+          --casora-entity-name-font-current: var(--casora-entity-name-font-tablet, 15px);
+          --casora-entity-state-font-current: var(--casora-entity-state-font-tablet, 13px);
+          --casora-entity-icon-size-current: var(--casora-entity-icon-size-tablet, 28px);
+          --casora-icon-circle-ratio: var(--casora-icon-circle-ratio-tablet, 0.2375);
+          --casora-entity-right-inset-current: 0px;
+          --casora-button-card-box-shadow-current: var(--button-card-box-shadow);
+          --casora-button-card-box-shadow-active-current: var(--button-card-box-shadow-active);
+          --casora-button-card-box-shadow-hover-current: var(--button-card-box-shadow-hover);
+        }
+      }
+
+      /* 13" iPad gets a tile between the small-tablet and desktop sizes. */
+      @media (min-width: 1024px) and (max-width: 1600px) and (min-height: 1024px) and (hover: none) and (pointer: coarse) {
+        :host {
+          --casora-entity-col-width-current: var(--casora-entity-col-width-tablet-lg, 260px);
+          --casora-entity-icon-size-current: var(--casora-entity-icon-size-tablet-lg, 32px);
+          --casora-entity-name-font-current: var(--casora-entity-name-font-tablet-lg, 16px);
+          --casora-entity-state-font-current: var(--casora-entity-state-font-tablet-lg, 14px);
+        }
+      }
+
+      /* Landscape tablets: solve tile width for a fixed peek rather than
+         leaving the next card's sliver to integer division. */
+      @media (min-width: 768px) and (max-width: 1600px) and (min-height: 501px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+        :host {
+          --casora-entity-col-width-current: var(--casora-entity-col-width-tablet-landscape);
+        }
+      }
+
+      /* Only the smallest landscape tablets fit four; everything else keeps five. */
+      @media (min-width: 768px) and (max-width: 1179px) and (min-height: 501px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+        :host {
+          --casora-entity-col-width-current: var(--casora-entity-col-width-tablet-landscape-sm);
+        }
+      }
+
+      /* Tablet Portrait */
+      @media (min-width: 768px) and (max-width: 1600px) and (orientation: portrait) and (min-height: 501px) and (hover: none) and (pointer: coarse) {
+        :host {
+          --hero-top: var(--header-top-tablet-portrait);
+        }
+      }
+
+      /* Mobile Portrait */
+      @media (max-width: 767px) and (orientation: portrait) {
+        :host {
+          --page-gutter: var(--page-gutter-mobile);
+          --casora-rail-left: var(--page-gutter-mobile);
+          --content-rail: var(--casora-rail-left);
+          --hero-top: calc(var(--header-top-mobile) - var(--header-top-mobile-nudge, 0px));
+          --casora-tiles-top-portrait: calc(var(--hero-top) + var(--casora-tiles-top-portrait-nudge, 0px));
+          --hero-gutter: var(--page-gutter-mobile);
+          --hero-header-gap-current: var(--hero-header-gap-mobile, 5px);
+          --hero-temp-font-size: var(--hero-temp-font-size-mobile, 14px);
+          --casora-header-stack-h-current: var(--casora-header-cap-mobile, clamp(240px, 34vh, 360px));
+          --hero-room-name-size-current: var(--hero-title-size-mobile, clamp(38px, 4vw + 2px, 64px));
+          --hero-room-name-line-height-current: var(--hero-title-line-height-mobile, 1.20);
+          --hero-room-name-letter-spacing-current: var(--hero-title-letter-spacing-mobile, -1.2px);
+          --hero-room-name-margin-left-current: var(--hero-title-margin-left-mobile, 2px);
+          --casora-header-media-badge-nudge-current: var(--casora-header-media-badge-nudge-mobile, 0px);
+          --badge-media-max-width-current: var(--badge-media-max-width-mobile, 100%);
+          --badge-gap-current: var(--badge-gap-mobile, var(--badge-gap, 10px));
+          --badge-col-gap-current: var(--badge-col-gap-mobile, var(--badge-col-gap, 4px));
+          --badge-padding-current: var(--badge-padding-mobile, var(--badge-padding, 4px 10px 4px 7px));
+          --badge-min-height-current: var(--badge-min-height-mobile, var(--badge-min-height, 50px));
+          --badge-icon-size-current: var(--badge-icon-size-mobile, var(--badge-icon-size, 30px));
+          --badge-font-size-current: var(--badge-font-size-mobile, var(--badge-font-size, 15px));
+          --badge-btn-size-current: var(--badge-btn-size-mobile, var(--badge-btn-size, 22px));
+          --badge-media-icon-size-current: var(--badge-media-icon-size-mobile, var(--badge-media-icon-size, 32px));
+          --badge-media-btn-size-current: var(--badge-media-btn-size-mobile, var(--badge-media-btn-size, 34px));
+          --badge-media-btn-icon-size-current: var(--badge-media-btn-icon-size-mobile, var(--badge-media-btn-icon-size, 20px));
+          --casora-entity-col-width-current: var(--casora-entity-col-width-mobile, 180px);
+          --casora-entity-height-current: var(--casora-entity-height-mobile, 115px);
+          /* Compact tile row height: 38px icon circle + 2 * 14px card padding.
+             A large tile is two of these plus the grid's 8px gap = 140px. */
+          --casora-tile-row-h-current: var(--casora-tile-row-h-mobile, 66px);
+          --casora-entity-inner-pad-current: var(--casora-entity-inner-pad-mobile, 12px);
+          --casora-entity-name-font-current: var(--casora-entity-name-font-mobile, 15px);
+          --casora-entity-state-font-current: var(--casora-entity-state-font-mobile, 13px);
+          --casora-entity-icon-size-current: var(--casora-entity-icon-size-mobile, 26px);
+          --casora-button-card-box-shadow-current: var(--button-card-box-shadow-mobile);
+          --casora-button-card-box-shadow-active-current: var(--button-card-box-shadow-active-mobile);
+          --casora-button-card-box-shadow-hover-current: var(--button-card-box-shadow-hover-mobile);
+        }
+
+        app-header ha-menu-button,
+        app-toolbar ha-menu-button{
+          display: none !important;
+        }
+      }
+
+      /* Mobile Landscape */
+      @media (hover: none) and (pointer: coarse) and (orientation: landscape) and (max-height: 600px) {
+        :host {
+          --page-gutter: var(--page-gutter-mobile);
+          --casora-rail-left: var(--page-gutter-mobile);
+          --content-rail: var(--casora-rail-left);
+          --hero-gutter: 18px;
+          --hero-top: calc(env(safe-area-inset-top, 0px) + 96px + var(--casora-hero-top-landscape-nudge, 0px));
+          --casora-tiles-top-landscape: calc(var(--hero-top) + var(--casora-tiles-top-landscape-nudge, 0px));
+          --casora-entity-col-width-current: var(--casora-entity-col-width-landscape, 200px);
+          --casora-entity-height-current: var(--casora-entity-height-landscape, 110px);
+          --casora-tile-row-h-current: var(--casora-tile-row-h-landscape, 66px);
+          --casora-entity-inner-pad-current: var(--casora-entity-inner-pad-landscape, 12px);
+          --casora-entity-name-font-current: var(--casora-entity-name-font-landscape, 13px);
+          --casora-entity-state-font-current: var(--casora-entity-state-font-landscape, 12px);
+          --casora-entity-icon-size-current: var(--casora-entity-icon-size-landscape, 24px);
+          --casora-landscape-left-rail: clamp(240px, 34vw, 320px);
+          --casora-landscape-badge-stop-pad: 12px;
+          --badge-media-max-width-current: calc(var(--casora-landscape-left-rail) - var(--casora-landscape-badge-stop-pad));
+          --casora-header-stack-h-current: var(--casora-header-cap-landscape, clamp(170px, 44vh, 240px));
+          --hero-room-name-size-current: var(--hero-title-size-landscape, clamp(28px, 4.6vw + 4px, 40px));
+          --hero-room-name-line-height-current: var(--hero-title-line-height-landscape, 1.12);
+          --hero-room-name-letter-spacing-current: var(--hero-title-letter-spacing-landscape, -1px);
+          --hero-room-name-margin-left-current: var(--hero-title-margin-left-landscape, var(--hero-room-name-margin-left-current, 0px));
+          --badge-gap-current: var(--badge-gap-landscape, var(--badge-gap-mobile, var(--badge-gap, 10px)));
+          --badge-col-gap-current: var(--badge-col-gap-landscape, var(--badge-col-gap-mobile, var(--badge-col-gap, 4px)));
+          --badge-padding-current: var(--badge-padding-landscape, var(--badge-padding-mobile, var(--badge-padding, 1px 14px 1px 6px)));
+          --badge-min-height-current: var(--badge-min-height-landscape, var(--badge-min-height-mobile, var(--badge-min-height, 43px)));
+          --badge-icon-size-current: var(--badge-icon-size-landscape, var(--badge-icon-size-mobile, var(--badge-icon-size, 30px)));
+          --badge-font-size-current: var(--badge-font-size-landscape, var(--badge-font-size-mobile, var(--badge-font-size, 13px)));
+          --badge-btn-size-current: var(--badge-btn-size-landscape, var(--badge-btn-size-mobile, var(--badge-btn-size, 18px)));
+          --badge-media-icon-size-current: var(--badge-media-icon-size-landscape, var(--badge-media-icon-size-mobile, var(--badge-media-icon-size, 28px)));
+          --badge-media-btn-size-current: var(--badge-media-btn-size-landscape, var(--badge-media-btn-size-mobile, var(--badge-media-btn-size, 30px)));
+          --badge-media-btn-icon-size-current: var(--badge-media-btn-icon-size-landscape, var(--badge-media-btn-icon-size-mobile, var(--badge-media-btn-icon-size, 18px)));
+          --casora-button-card-box-shadow-current: var(--button-card-box-shadow-mobile);
+          --casora-button-card-box-shadow-active-current: var(--button-card-box-shadow-active-mobile);
+          --casora-button-card-box-shadow-hover-current: var(--button-card-box-shadow-hover-mobile);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .m__run, .eq .b { animation: none !important; }
+      }
+
+      .casora-entities,
+      .casora-entities > div {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .casora-entities::-webkit-scrollbar,
+      .casora-entities > div::-webkit-scrollbar {
+        width: 0 !important;
+        height: 0 !important;
+        background: transparent !important;
+      }
+
+      app-header,
+      app-toolbar {
+        background: transparent;
+        backdrop-filter: var(--casora-toolbar-backdrop, blur(15px));
+        -webkit-backdrop-filter: var(--casora-toolbar-backdrop, blur(15px));
+      }
+
+      ha-card {
+        transition: filter .2s ease, opacity .2s ease;
+      }
+
+      @media (min-width: 768px) and (max-width: 1249px) and (hover: none){
+        :host {
+          --casora-time-opacity: 1;
+        }
+      }
+    layout-card.casora-entities$grid-layout$.: |
+      /* Mobile portrait: row-grouped stagger (60ms per row) */
+      @media (max-width: 767px) and (orientation: portrait) {
+        #root > :nth-child(1), #root > :nth-child(2)  { --casora-entity-anim-delay: 0s;    }
+        #root > :nth-child(3), #root > :nth-child(4)  { --casora-entity-anim-delay: 0.06s; }
+        #root > :nth-child(5), #root > :nth-child(6)  { --casora-entity-anim-delay: 0.12s; }
+        #root > :nth-child(7), #root > :nth-child(8)  { --casora-entity-anim-delay: 0.18s; }
+        #root > :nth-child(9), #root > :nth-child(10) { --casora-entity-anim-delay: 0.24s; }
+      }
+      /* Desktop: individual left-to-right stagger (40ms per card) */
+      @media (hover: hover) and (pointer: fine) {
+        #root > :nth-child(1)  { --casora-entity-anim-delay-d: 0s;    }
+        #root > :nth-child(2)  { --casora-entity-anim-delay-d: 0.04s; }
+        #root > :nth-child(3)  { --casora-entity-anim-delay-d: 0.08s; }
+        #root > :nth-child(4)  { --casora-entity-anim-delay-d: 0.12s; }
+        #root > :nth-child(5)  { --casora-entity-anim-delay-d: 0.16s; }
+        #root > :nth-child(6)  { --casora-entity-anim-delay-d: 0.20s; }
+        #root > :nth-child(7)  { --casora-entity-anim-delay-d: 0.24s; }
+        #root > :nth-child(8)  { --casora-entity-anim-delay-d: 0.28s; }
+        #root > :nth-child(9)  { --casora-entity-anim-delay-d: 0.32s; }
+        #root > :nth-child(10) { --casora-entity-anim-delay-d: 0.36s; }
+      }
+
+    ha-more-info-dialog: |
+      :host {
+        --casora-button-card-box-shadow-hover-current: none;
+        --casora-hover-filter: brightness(1);
+      }
+
+      ha-adaptive-dialog {
+        --wa-color-fill-loud: var(--primary-text-color, white);
+        --wa-color-neutral-fill-loud: var(--primary-text-color, white);
+        --wa-color-on-normal: var(--primary-text-color, white);
+        --wa-color-on-quiet: var(--primary-text-color, white);
+        --wa-color-neutral-on-quiet: var(--primary-text-color, white);
+        --wa-color-text-normal: var(--primary-text-color, white);
+        color: var(--primary-text-color, white);
+      }
+
+      .content-wrapper {
+        color: var(--primary-text-color, white);
+      }
+
+      @media (max-width: 767px) {
+        :host {
+          --dialog-box-shadow: none;
+        }
+      }
+
+      @media (prefers-color-scheme: light) {
+        :host {
+          --primary-text-color: rgba(0,0,0,0.88);
+          --secondary-text-color: rgba(0,0,0,0.55);
+          --ha-color-text-secondary: rgba(0,0,0,0.55);
+          --wa-color-text-quiet: rgba(0,0,0,0.55);
+          --ha-card-background: rgba(0,0,0,0.07);
+          --ha-color-fill-primary-quiet-resting: rgba(0,0,0,0.07);
+          --ha-color-fill-primary-quiet-hover: rgba(0,0,0,0.10);
+          --md-list-container-color: rgba(0,0,0,0.07);
+          color: rgba(0,0,0,0.88);
+        }
+        ha-adaptive-dialog {
+          --wa-color-fill-loud: rgba(0,0,0,0.88);
+          --wa-color-neutral-fill-loud: rgba(0,0,0,0.88);
+          --wa-color-on-normal: rgba(0,0,0,0.88);
+          --wa-color-on-quiet: rgba(0,0,0,0.55);
+          --wa-color-neutral-on-quiet: rgba(0,0,0,0.55);
+          --wa-color-text-normal: rgba(0,0,0,0.88);
+          --wa-color-text-quiet: rgba(0,0,0,0.55);
+          color: rgba(0,0,0,0.88);
+        }
+        .content-wrapper {
+          color: rgba(0,0,0,0.88);
+        }
+      }
+
+    ha-adaptive-dialog: |
+      wa-drawer,
+      wa-dialog {
+        --wa-color-fill-loud: var(--primary-text-color, white);
+        --wa-color-neutral-fill-loud: var(--primary-text-color, white);
+        --wa-color-on-normal: var(--primary-text-color, white);
+        --wa-color-on-quiet: var(--primary-text-color, white);
+        --wa-color-neutral-on-quiet: var(--primary-text-color, white);
+        --wa-color-text-normal: var(--primary-text-color, white);
+        color: var(--primary-text-color, white);
+      }
+
+      @media (prefers-color-scheme: light) {
+        wa-drawer,
+        wa-dialog {
+          --wa-color-fill-loud: rgba(0,0,0,0.88);
+          --wa-color-neutral-fill-loud: rgba(0,0,0,0.88);
+          --wa-color-on-normal: rgba(0,0,0,0.88);
+          --wa-color-on-quiet: rgba(0,0,0,0.55);
+          --wa-color-neutral-on-quiet: rgba(0,0,0,0.55);
+          --wa-color-text-normal: rgba(0,0,0,0.88);
+          --wa-color-text-quiet: rgba(0,0,0,0.55);
+          color: rgba(0,0,0,0.88);
+        }
+      }
+
+      @media (max-width: 767px) and (prefers-color-scheme: light) {
+        wa-drawer {
+          --wa-color-surface-raised: rgba(20,20,30,0.65) !important;
+          --wa-color-surface: rgba(20,20,30,0.65) !important;
+          background: rgba(20,20,30,0.65) !important;
+          background-color: rgba(20,20,30,0.65) !important;
+        }
+      }
+
+    more-info-light: |
+      ha-card:hover,
+      ha-card:focus-within {
+        box-shadow: none !important;
+        filter: none !important;
+      }
+
+    ha-app-layout: |
+      @media (max-width: 767px) and (orientation: portrait) {
+        #view {
+          overflow-y: visible !important;
+          overscroll-behavior: none !important;
+          scrollbar-width: none !important;
+        }
+
+        #view::-webkit-scrollbar {
+          display: none !important;
+        }
+      }
+
+    ha-drawer: |
+      .sidebar-shell {
+        background-color: var(--sidebar-background-color) !important;
+        backdrop-filter: var(--casora-sidebar-backdrop);
+        -webkit-backdrop-filter: var(--casora-sidebar-backdrop);
+        border-right: none !important;
+        box-shadow: none !important;
+      }
+
+  card-mod-sidebar-yaml: |
+    .: |
+      :host {
+        background: none !important;
+        box-shadow: none !important;
+        border: 0 !important;
+        outline: none !important;
+      }
+
+      .menu {
+        border-bottom: 0 !important;
+        box-shadow: none !important;
+      }
+
+      ha-md-list-item,
+      ha-md-list-item.selected::before,
+      ha-list-item-button,
+      ha-list-item-button.selected::before {
+        border-radius: var(--ha-card-border-radius) !important;
+        --ha-list-item-focus-radius: var(--ha-card-border-radius) !important;
+      }
+
+      @media (hover: none) {
+        ha-md-list-item,
+        ha-list-item-button {
+          --md-list-item-hover-state-layer-opacity: 0 !important;
+          --ha-ripple-hover-opacity: 0 !important;
+        }
+      }
+
+  card-mod-drawer-yaml: |
+    .: |
+      .mdc-drawer, .sidebar-shell {
+        background-color: var(--sidebar-background-color) !important;
+        border-inline-end: none !important;
+        box-shadow: none !important;
+      }
+    wa-drawer$: |
+      dialog {
+        backdrop-filter: var(--casora-sidebar-backdrop) !important;
+        -webkit-backdrop-filter: var(--casora-sidebar-backdrop) !important;
+      }
+
+  card-mod-sidebar: |
+    :host {
+      background: none !important;
+      backdrop-filter: var(--ha-card-backdrop-filter);
+    }
+
+  card-mod-view-yaml: |
+    hui-view:
+      $: |
+        :host {
+          background: none !important;
+        }
+        @media (max-width: 767px) and (orientation: portrait) {
+          :host {
+            overscroll-behavior: none !important;
+          }
+        }
+
+    ha-card:
+      $: |
+        :host {
+          --mdc-ripple-press-opacity: 0 !important;
+          --mdc-ripple-hover-opacity: 0 !important;
+          --mdc-ripple-focus-opacity: 0 !important;
+          --mdc-ripple-color: transparent !important;
+          -webkit-tap-highlight-color: transparent !important;
+        }
+
+  card-mod-card: |
+    ha-card {
+      background: var(--ha-card-background, rgba(0,0,0,0.2));
+      border-radius: var(--ha-card-border-radius, 16px);
+      transition: filter .22s ease, transform .12s ease, box-shadow .24s ease !important;
+      will-change: var(--casora-card-will-change, auto);
+    }
+
+    :host(.casora-room) ha-card {
+      will-change: auto !important;
+      transition: none !important;
+    }
+
+    @media (hover:hover) {
+      :host(:not(.casora-room)) ha-card:hover {
+        box-shadow: var(--casora-card-hover-shadow, var(--button-card-box-shadow-hover, var(--ha-shadow-light-hover))) !important;
+      }
+      :host(:not(.casora-room)) ha-card:hover,
+      :host(:not(.casora-room)) ha-card:focus-within {
+        filter: var(--casora-card-hover-filter, brightness(1.01)) !important;
+      }
+    }
+
+    @media (hover:none) {
+      :host(:not(.casora-room)) ha-card:active {
+        filter: var(--casora-card-hover-filter, brightness(1.01)) !important;
+        box-shadow: var(--casora-card-hover-shadow, var(--button-card-box-shadow-hover, var(--ha-shadow-light-hover))) !important;
+      }
+    }
+
+    :host(.casora-entity) {
+      position: relative !important;
+      z-index: 0 !important;
+      display: block !important;
+      border-radius: var(--ha-card-border-radius, 28px) !important;
+      overflow: visible !important;
+      contain: none !important;
+    }
+
+    :host(.casora-entity) ha-card {
+      position: relative !important;
+      z-index: 0 !important;
+      border-radius: inherit !important;
+      overflow: hidden !important;
+      background-clip: padding-box;
+    }
+
+    :host(.casora-entity) ha-card:active {
+      transform: translateY(.5px);
+      backface-visibility: hidden;
+      will-change: transform;
+    }
+
+    :host(.casora-hero),
+    :host(.casora-hero) ha-card,
+    :host(.casora-hero) .button-card-main,
+    :host(.casora-hero) .button-card-content{
+      direction: ltr !important;
+      text-align: left !important;
+    }
+
+    /* Energy dashboard */
+    .mdc-data-table,
+    .mdc-data-table__row,
+    .mdc-data-table__header-cell,
+    ha-sankey-chart {
+      background: none !important;
+    }
+
+  # ----------------------------------------------------------------------------
+  # View backgrounds
+  # ----------------------------------------------------------------------------
+
+  uix-theme: "Casora Standard"
+
+  uix-drawer: |
+    .mdc-drawer, .sidebar-shell {
+      background-color: var(--sidebar-background-color) !important;
+      backdrop-filter: var(--casora-sidebar-backdrop);
+      -webkit-backdrop-filter: var(--casora-sidebar-backdrop);
+      border-right: none !important;
+      box-shadow: none !important;
+    }
+
+  uix-view-background: |
+    .uix-bg-image {
+      filter: var(--casora-view-photo-filter, blur(4px) saturate(1.02) brightness(0.985));
+    }
+    @media (max-width: 767px) {
+      .uix-bg-image {
+        filter: saturate(var(--hero-img-saturate-mobile, 1.00)) brightness(var(--hero-img-brightness-mobile, 0.99));
+      }
+    }

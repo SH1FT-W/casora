@@ -1,0 +1,81 @@
+casora_light:
+  template:
+    - casora_entity
+    - casora_popup_light
+
+  show_icon: false
+  show_last_changed: false
+
+
+  hold_action:
+    haptic: medium
+    action: >
+      [[[
+        return window.casoraPopupAction ? window.casoraPopupAction() : 'more-info';
+      ]]]
+
+  icon_tap_action:
+    action: call-service
+    service: script.turn_on
+    service_data:
+      entity_id: script.casora_light_smart_toggle
+      variables:
+        light_entity: '[[[ return entity?.entity_id ]]]'
+
+  state_display: >
+    [[[
+      const memsOf = (eid) => {
+        const m = states[eid]?.attributes?.entity_id;
+        return Array.isArray(m) ? m.filter(x => typeof x === "string" && x.startsWith("light.")) : [];
+      };
+      const units = (eid, seen) => {
+        if (!eid || seen.has(eid)) return [];
+        const mems = memsOf(eid);
+        // No members, or no member is itself a group -> one physical light.
+        if (!mems.length || !mems.some(m => memsOf(m).length)) return [eid];
+        seen.add(eid);
+        return mems.flatMap(m => units(m, seen));
+      };
+
+      const seen = new Set();
+      const all = [...new Set(units(entity?.entity_id, seen))];
+      const onCount = all.filter(eid => states[eid]?.state === "on").length;
+
+      return onCount === 0 ? "All Off"
+           : onCount === all.length ? "All On"
+           : `${onCount} On`;
+    ]]]
+
+  variables:
+    mobile_filter_category: lights
+    icon: light
+    show_toggle: false
+    toggle_service: script.turn_on
+    toggle_service_data: |
+      [[[
+        return {
+          entity_id: 'script.casora_light_smart_toggle',
+          variables: {
+            light_entity: entity.entity_id
+          }
+        };
+      ]]]
+
+  styles:
+    card:
+      # light.svg carries ~6% baked viewBox padding, so 60% * 1.06.
+      - --casora-icon-mask-scale: 63.6%
+
+    entity_picture:
+      - width: 100%
+      - height: 100%
+      - object-fit: contain
+      - opacity: 0.8
+      - transition: opacity 0.2s ease, filter 0.2s ease, transform 0.15s ease
+      - cursor: pointer
+
+    img_cell:
+      - background: transparent
+      - box-shadow: none !important
+      - transition: filter 0.2s ease
+      - cursor: pointer

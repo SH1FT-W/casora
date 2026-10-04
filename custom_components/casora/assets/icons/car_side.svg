@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Casora: Auto, Seitenansicht (eigenes Icon, 23.09.2026, 2. Version) -->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 16">
+ <path fill="#000" fill-rule="evenodd" d="M2.5 13C1.7 13 1 12.3 1 11.5V9.6C1 8.6 1.7 7.8 2.7 7.6L7.2 6.8L10.6 3.6C11.3 2.9 12.2 2.5 13.2 2.5H18.2C19.3 2.5 20.3 3 21 3.8L23.4 6.7L25.4 7.2C26.4 7.4 27 8.2 27 9.2V11.5C27 12.3 26.3 13 25.5 13Z M11.4 4.6C11.8 4.2 12.4 4 13 4H15.3V6.8H9.4Z M16.8 4H18.2C18.8 4 19.4 4.3 19.8 4.7L21.6 6.8H16.8Z M4.3 13A3.3 3.3 0 0 1 10.9 13Z M17.3 13A3.3 3.3 0 0 1 23.9 13Z"/>
+ <circle cx="7.6" cy="13" r="2.5" fill="#000"/>
+ <circle cx="20.6" cy="13" r="2.5" fill="#000"/>
+</svg>

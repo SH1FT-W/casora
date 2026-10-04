@@ -1,0 +1,65 @@
+type: vertical-stack
+cards:
+
+  # Tablet Portrait
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: input_boolean.casora_mobile_navigation
+        state: "off"
+      - condition: screen
+        media_query: "(orientation: portrait) and (min-width: 768px) and (max-width: 1600px) and (hover: none) and (pointer: coarse)"
+
+    card:
+      type: custom:casora-nav
+      variant: tablet
+      routes: &casora_tablet_routes
+        - url: /dashboard-casora/home
+          label: Home
+          icon: mdi:home-variant
+
+        - url: /dashboard-casora/living-room
+          label: Living Room
+          icon: mdi:sofa
+          badge:
+            show: >
+              [[[
+                const _s = hass.states['input_text.casora_motion_living_room']?.state?.trim();
+                return hass.states['input_boolean.casora_motion_badges']?.state === 'on'
+                  && !!_s && hass.states[_s]?.state === 'on';
+              ]]]
+            color: '#ffd700'
+
+        - url: /dashboard-casora/kitchen
+          label: Kitchen
+          icon: mdi:fridge
+
+        - url: /dashboard-casora/bedroom
+          label: Bedroom
+          icon: mdi:bed-king
+          badge:
+            show: >
+              [[[
+                const _s = hass.states['input_text.casora_motion_bedroom']?.state?.trim();
+                return hass.states['input_boolean.casora_motion_badges']?.state === 'on'
+                  && !!_s && hass.states[_s]?.state === 'on';
+              ]]]
+            color: '#ffd700'
+
+        - label: Scenes
+          icon: mdi:layers
+          menu: scenes
+
+  # Tablet Landscape
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: input_boolean.casora_mobile_navigation
+        state: "off"
+      - condition: screen
+        media_query: "(orientation: landscape) and (min-width: 600px) and (max-width: 1600px) and (pointer: coarse) and (hover: none)"
+
+    card:
+      type: custom:casora-nav
+      variant: tablet
+      routes: *casora_tablet_routes

@@ -1,0 +1,25 @@
+casora_air_device:
+  template: [casora_entity]
+
+  # show_icon: true is required for icon_tap_action to work
+  show_icon: true
+  show_name: true
+  show_state: true
+
+  tap_action:
+    action: more-info
+    entity: '[[[ return entity?.entity_id ]]]'
+
+  hold_action:
+    action: more-info
+    entity: '[[[ return entity?.entity_id ]]]'
+
+  icon_tap_action:
+    action: toggle
+
+  icon_hold_action:
+    action: more-info
+    entity: '[[[ return entity?.entity_id ]]]'
+
+  variables:
+    mobile_filter_category: climate

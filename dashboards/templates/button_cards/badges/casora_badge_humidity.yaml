@@ -1,0 +1,140 @@
+casora_badge_humidity:
+  template: [casora_badge_base, casora_popup_base, casora_climate_popup]
+
+  variables:
+    enabled: true
+    room_name: null
+    entity_quality: null
+    entity_temp: null
+    entity_humidity: null
+    sensors: null
+
+  icon: mdi:water-percent
+
+  extra_styles: >
+    [[[
+      const SVG_URL = window.casoraIconUrl('humidity');
+
+      const ev = variables?.enabled;
+      const enabled = (ev === undefined || ev === null) ? true :
+        (typeof ev === 'boolean') ? ev :
+        (typeof ev === 'number') ? ev !== 0 :
+        !['false','0','no','off','disabled'].includes(String(ev).trim().toLowerCase());
+
+      const hasEnt  = !!entity?.entity_id;
+      const stRaw   = String(entity?.state ?? '').trim();
+      const st      = stRaw.toLowerCase();
+      const v       = parseFloat(stRaw);
+      const hide    = !enabled || !hasEnt || !stRaw || ['unknown','unavailable','none'].includes(st) || Number.isNaN(v);
+
+      let gaugeCSS = '';
+      if (variables?.gauge && !hide) {
+        const gf  = Math.max(0.05, Math.min(1, v / 100));
+        const arc = Math.round(gf * 270);
+        const rr = 13.5, C = 16, W = 3;
+        const pt = (deg) => {
+          const a = deg * Math.PI / 180;
+          return `${(C + rr * Math.sin(a)).toFixed(3)} ${(C - rr * Math.cos(a)).toFixed(3)}`;
+        };
+        const arcPath = (a0, a1) =>
+          `M ${pt(a0)} A ${rr} ${rr} 0 ${(a1 - a0) > 180 ? 1 : 0} 1 ${pt(a1)}`;
+        let paths = '';
+        if (arc < 269) paths += `<path d='${arcPath(225 + arc, 495)}' stroke='white' stroke-opacity='0.30' stroke-width='${W}' stroke-linecap='round' fill='none'/>`;
+        paths += `<path d='${arcPath(225, 225 + arc)}' stroke='white' stroke-width='${W}' stroke-linecap='round' fill='none'/>`;
+
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'>${paths}</svg>`;
+        const maskUrl = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+        gaugeCSS = `
+          #img-cell::before, .img-cell::before {
+            background-color: var(--casora-badge-icon-fg, var(--casora-icon-color, var(--primary-text-color))) !important;
+          }
+
+          #img-cell::after, .img-cell::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 9999px;
+            background: var(--casora-icon-color, #fff);
+            -webkit-mask: ${maskUrl} no-repeat center / 100% 100%;
+            mask: ${maskUrl} no-repeat center / 100% 100%;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+          }
+
+          ha-card.button-card-main, ha-card.button-card-main:hover, ha-card.button-card-main:active,
+          :host(:hover) ha-card, :host(:active) ha-card {
+            background: transparent !important;
+            box-shadow: none !important;
+            filter: none !important;
+            -webkit-filter: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+          }
+          ha-ripple, mwc-ripple { display: none !important; }
+        `;
+      }
+
+      return `
+        :host{display:${hide ? 'none' : 'inline-block'} !important;order:var(--casora-badge-order-climate,1);}
+        #img-cell, .img-cell { position: relative; }
+        #img-cell #icon, .img-cell #icon { color: transparent !important; opacity: 0 !important; }
+        #img-cell::before, .img-cell::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-color: var(--casora-icon-color, var(--primary-text-color));
+          -webkit-mask: url('${SVG_URL}') no-repeat center / var(--casora-badge-icon-scale, 85%) var(--casora-badge-icon-scale, 85%);
+          mask: url('${SVG_URL}') no-repeat center / var(--casora-badge-icon-scale, 85%) var(--casora-badge-icon-scale, 85%);
+          transform: translateZ(0);
+        }
+      ` + gaugeCSS;
+    ]]]
+
+  styles:
+    card:
+      - display: >
+          [[[
+            const ev = variables?.enabled;
+            const enabled = (ev === undefined || ev === null) ? true :
+              (typeof ev === 'boolean') ? ev :
+              (typeof ev === 'number') ? ev !== 0 :
+              !['false','0','no','off','disabled'].includes(String(ev).trim().toLowerCase());
+
+            const hasEnt  = !!entity?.entity_id;
+            const stRaw   = String(entity?.state ?? '').trim();
+            const st      = stRaw.toLowerCase();
+            const v       = parseFloat(stRaw);
+            const hide    = !enabled || !hasEnt || !stRaw || ['unknown','unavailable','none'].includes(st) || Number.isNaN(v);
+
+            return hide ? 'none' : 'inline-grid';
+          ]]]
+      - --casora-icon-color: >
+          [[[
+            const v = parseFloat(entity?.state);
+            if (isNaN(v)) return 'var(--disabled-text-color)';
+            if (v <= 29.99) return 'var(--casora-badge-humidity-dry-color)';
+            if (v >= 61)    return 'var(--casora-badge-humidity-high-color)';
+            return 'var(--casora-badge-climate-color)';
+          ]]]
+    icon:
+      - color: transparent
+
+  name: >
+    [[[
+      const v = parseFloat(entity?.state);
+      let label = 'Unknown';
+      if (!isNaN(v)) {
+        if (v <= 29.99)   label = 'Very Dry';
+        else if (v >= 61) label = 'High';
+        else              label = 'Good';
+      }
+
+      const esc = (t) => String(t || '').replaceAll('"','&quot;');
+      const vStr = !isNaN(v) ? ` · ${Math.round(v)}%` : '';
+
+      return `
+        <div class="badge-wrap">
+          <div class="badge-title">Humidity</div>
+          <div class="badge-sub">${esc(label)}${vStr}</div>
+        </div>
+      `;
+    ]]]

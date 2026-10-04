@@ -1,0 +1,92 @@
+casora_lock:
+  template: [casora_entity]
+
+  show_entity_picture: true
+  show_icon: true
+  show_label: false
+
+  variables:
+    mobile_filter_category: security
+    show_toggle: true
+    icon_locked: lock-fill
+    icon_unlocked: lock-open-fill
+
+  entity_picture: |
+    [[[
+      if (entity.state === 'unlocked') return window.casoraIconUrl(variables.icon_unlocked || 'lock-open-fill');
+      if (entity.state === 'unlocking') return window.casoraIconUrl('lock-unlocking-fill');
+      return window.casoraIconUrl(variables.icon_locked || 'lock-fill');
+    ]]]
+
+  state_display: |
+    [[[
+      if (!entity) return "";
+      return hass.formatEntityState(entity) || entity.state;
+    ]]]
+
+  tap_action:
+    action: more-info
+    entity: '[[[ return entity?.entity_id ]]]'
+
+  hold_action:
+    action: more-info
+    entity: '[[[ return entity?.entity_id ]]]'
+
+  icon_tap_action:
+    action: call-service
+    service: |
+      [[[
+        const s = (entity?.state || '').toLowerCase();
+        return ['unlocked', 'unlocking', 'open', 'opening'].includes(s)
+          ? 'lock.lock'
+          : 'lock.unlock';
+      ]]]
+    service_data:
+      entity_id: '[[[ return entity?.entity_id ]]]'
+
+  icon_hold_action:
+    action: more-info
+    entity: '[[[ return entity?.entity_id ]]]'
+
+  state:
+    - value: unlocked
+      styles:
+        card:
+          - "--casora-active-overlay-opacity": "1"
+          - --casora-entity-overlay-tint: var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))
+          - "--casora-active-overlay-dur": "0s"
+          - --casora-entity-top-gradient: none
+          - box-shadow: var(--button-card-box-shadow-active, var(--button-card-box-shadow)) !important
+          - --casora-icon-color-current: "var(--casora-popup-primary-color, #00c3d0)"
+          - --casora-icon-svg-url: "[[[ return `url('${window.casoraIconUrl(variables.icon_unlocked || 'lock-open-fill')}')`; ]]]"
+          - --casora-icon-use-mask: "1"
+          - --casora-icon-circle-bg: var(--casora-icon-color-current)
+        name:
+          - color: var(--casora-entity-name-active, var(--primary-text-color))
+        state:
+          - color: var(--casora-entity-state-active-color)
+        img_cell:
+          - opacity: "1 !important"
+          - filter: none !important
+          - background: "var(--casora-popup-primary-color, #00c3d0) !important"
+        entity_picture:
+          - opacity: "1 !important"
+          - filter: none !important
+    - value: unlocking
+      styles:
+        state:
+          - color: var(--casora-entity-state, rgba(255,255,255,0.65))
+
+  styles:
+    card:
+      - --casora-icon-mask-scale: 63.6%
+      - --casora-icon-mask-image: |
+          [[[
+            if (entity.state === 'unlocked') return `url('${window.casoraIconUrl(variables.icon_unlocked || 'lock-open-fill')}')`;
+            if (entity.state === 'unlocking') return `url('${window.casoraIconUrl('lock-unlocking-fill')}')`;
+            return `url('${window.casoraIconUrl(variables.icon_locked || 'lock-fill')}')`;
+          ]]]
+    img_cell:
+      - color: var(--casora-entity-name-active, var(--primary-text-color)) !important
+    icon:
+      - color: var(--casora-entity-name-active, var(--primary-text-color)) !important

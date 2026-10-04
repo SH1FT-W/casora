@@ -1,0 +1,317 @@
+#!/usr/bin/env node
+// Parallel-Läufer fürs Qualitäts-Gate: führt die Tests EINES Test-HA-Zustands mit mehreren
+// Browsern gleichzeitig aus (E2E t01–t19, Regressionstests, Klick-Durchlauf je Viewport/Teil)
+// und schreibt je Schritt dasselbe Protokoll und dieselbe Ergebniszeile wie früher der
+// serielle Lauf in dev/qa/gate.sh.
+//
+//   node dev/qa/pool.mjs --state arbeit --e2e --regress --crawler quick --dash qa-arbeit \
+//        --jobs 4 --logs .qa/logs/<commit> --results <steps.tsv> [--dry-run]
+//
+// Was gleichzeitig laufen darf, regeln Abhängigkeiten („nach“) und Sperren:
+//   ui       – gemeinsamer HA-Zustand: UI-Helfer (input_select.casora_expanded_row, Overlays …),
+//              Mock-Szenario, im Browser untergeschobene Zustände (fakeStates) und das Antippen
+//              im Dashboard. Immer nur ein Teil mit dieser Sperre gleichzeitig.
+//   dash     – legt Dashboards an/löscht sie (t02/t03/t07) bzw. wertet „neue Dashboards“ aus (t19).
+//   settings – Casora-Einstellungen lesen/vergleichen (t18) bzw. schreiben (t19).
+//   allein   – läuft ganz allein (unbekannte neue E2E-Tests, Regressionstests mit
+//              „// @parallel: allein“, z. B. erststart: legt qa-start an).
+// Regressionstests: „// @parallel: ui|frei|allein“ in den ersten Zeilen; ohne Angabe „ui“, wenn
+// der Test ein Dashboard öffnet oder Zustände unterschiebt (dashboard(…)/fakeStates(…)), sonst frei.
+// Klick-Durchlauf: je Viewport ein Studio-Teil (frei) und ein Dashboard-Teil (ui), danach
+// „alles.mjs --merge“ zu einem Bericht (gleiches Format wie früher).
+//
+// Reihenfolge: längster Restpfad bzw. größter Rückstau einer Sperre zuerst. Gemessene Zeiten
+// landen in .qa/zeiten.json und dienen beim nächsten Lauf (und im Probelauf) als Schätzung.
+// Rückgabe 0 = alle Schritte ok, 1 = mindestens ein Schritt fehlgeschlagen, 2 = Aufruf falsch.
+import fs from 'node:fs';
+import path from 'node:path';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const argv = process.argv.slice(2);
+const flag = (n) => argv.includes('--' + n);
+const opt = (n, d) => { const i = argv.indexOf('--' + n); return i >= 0 && argv[i + 1] !== undefined ? argv[i + 1] : d; };
+const STATE = opt('state', '');
+const JOBS = Math.max(1, Number(opt('jobs', 4)) || 1);
+const DRY = flag('dry-run');
+const LOGS = opt('logs', '');
+const RESULTS = opt('results', '');
+const CRAWLER = opt('crawler', '');           // quick | full | ''
+const DASH = opt('dash', '');
+// --t0 <epoch s>: Startzeit des Gates – Fortschrittszeilen zeigen dann auch die Gate-Uhr (@m:ss).
+const GATE0 = Number(opt('t0', 0)) * 1000;
+const clock = () => (GATE0 ? ` @${Math.floor((Date.now() - GATE0) / 60000)}:${String(Math.floor((Date.now() - GATE0) / 1000) % 60).padStart(2, '0')}` : '');
+const NODE = process.env.NODE && fs.existsSync(process.env.NODE) ? process.env.NODE : process.execPath;
+if (!STATE || (!DRY && !LOGS)) { console.error('Aufruf: pool.mjs --state <zustand> [--e2e] [--regress] [--crawler quick|full] [--dash url] [--jobs n] --logs <ordner> [--results datei] [--dry-run]'); process.exit(2); }
+if (CRAWLER && !/^(quick|full)$/.test(CRAWLER)) { console.error('--crawler quick|full'); process.exit(2); }
+
+// ── Schätzungen (Sekunden) ─────────────────────────────────────────────────────────────
+// Aus den seriellen Läufen vom 30.09.2026 (e2e 310 s, Regress arbeit 105 s, Klick-Durchlauf
+// schnell 383 s / voll 949 s) auf die Teile verteilt; gemessene Werte ersetzen sie.
+const EST = {
+  t01_finder: 10, t02_import_hemma1: 27, t03_neues_dashboard: 36, t04_handy: 14, t05_assistent: 19,
+  t06_lokal: 8, t07_import_hemma2: 25, t08_menue_handy_en: 20, t09_rundlauf: 25, t10_drucker_vorlage: 25,
+  t11_solar: 8, t12_auto: 8, t13_kachelfelder: 14, t14_abfall: 17, t15_sauger: 14, t16_fbh: 12,
+  t17_ki: 9, t18_persoenliches: 9, t19_umzug: 15,
+  'quick/desktop-studio': 110, 'quick/desktop-dashboard': 90, 'quick/phone-studio': 70, 'quick/phone-dashboard': 90,
+  'full/desktop-studio': 330, 'full/desktop-dashboard': 170, 'full/tablet-studio': 90, 'full/tablet-dashboard': 110,
+  'full/phone-webkit-studio': 40, 'full/phone-webkit-dashboard': 80, 'full/phone-studio': 40, 'full/phone-dashboard': 80,
+  regress: 12, erststart: 40,
+};
+const ZEITEN = path.join(REPO, '.qa', 'zeiten.json');
+let measured = {};
+try { measured = JSON.parse(fs.readFileSync(ZEITEN, 'utf8')); } catch (e) { /* noch keine Messung */ }
+// key: Schlüssel in .qa/zeiten.json (<zustand>/<teil>), base: Schlüssel in EST.
+const est = (key, base, fallback) => measured[key] || EST[base] || fallback;
+
+// ── E2E: Abhängigkeiten und Sperren ────────────────────────────────────────────────────
+// t03 legt test-neu an; t04/t08 lesen es, t05 und t10 speichern es, t06/t14 lesen danach –
+// Leser und Schreiber von test-neu nie gleichzeitig (Speichern lädt offene Ansichten neu),
+// Reihenfolge wie in alle.sh. t10 schaltet das Mock-Szenario, t14 tippt eine Kachel an (ui).
+const E2E_RULES = {
+  t01_finder: {}, t11_solar: {}, t12_auto: {}, t09_rundlauf: {}, t13_kachelfelder: {},
+  t15_sauger: {}, t16_fbh: {}, t17_ki: {},
+  t02_import_hemma1: { locks: ['dash'] },
+  t07_import_hemma2: { after: ['t02_import_hemma1'], locks: ['dash'] },
+  t03_neues_dashboard: { locks: ['dash'] },
+  t04_handy: { after: ['t03_neues_dashboard'] },
+  t08_menue_handy_en: { after: ['t03_neues_dashboard'] },
+  t05_assistent: { after: ['t04_handy', 't08_menue_handy_en'] },
+  t06_lokal: { after: ['t05_assistent'] },
+  t10_drucker_vorlage: { after: ['t06_lokal'], locks: ['ui'] },
+  t14_abfall: { after: ['t10_drucker_vorlage'], locks: ['ui'] },
+  t18_persoenliches: { locks: ['settings'] },
+  t19_umzug: { locks: ['dash', 'settings'] },
+  t21_kachelart: { locks: ['ui'] },
+};
+const E2E_FAIL = /\bFEHLER\b|FEHLT|ABWEICHUNG|TimeoutError|Uncaught/;
+
+const steps = [];
+const tasks = [];
+const notes = [];
+const addTask = (step, t) => { t.step = step; t.after = t.after || []; t.locks = t.locks || []; t.key = STATE + '/' + t.id; step.tasks.push(t); tasks.push(t); };
+
+if (flag('e2e')) {
+  const alle = fs.readFileSync(path.join(REPO, 'dev/e2e/alle.sh'), 'utf8');
+  const list = ((alle.match(/for t in ([^;]*)/) || [])[1] || '').trim().split(/\s+/).filter(Boolean);
+  const step = { id: 'e2e-' + STATE, group: 'e2e', kind: 'e2e', tasks: [] };
+  steps.push(step);
+  for (const t of list) {
+    const r = E2E_RULES[t];
+    if (!r) notes.push(`E2E ${t}: keine Regel in pool.mjs (E2E_RULES) – läuft sicherheitshalber allein`);
+    addTask(step, { id: t, label: t, cmd: [NODE, t + '.mjs'], cwd: path.join(REPO, 'dev/e2e'), env: {},
+      after: (r && r.after || []).filter((d) => list.includes(d)), locks: r ? (r.locks || []) : [], alone: !r, est: est(STATE + '/' + t, t, 15) });
+  }
+}
+
+const header = (f, re) => (fs.readFileSync(f, 'utf8').split('\n').slice(0, 8).join('\n').match(re) || [])[1];
+if (flag('regress')) {
+  const dir = path.join(REPO, 'dev/qa/regress');
+  const step = { id: 'regress-' + STATE, group: 'regress', kind: 'regress', tasks: [] };
+  steps.push(step);
+  for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.mjs') && x !== 'lib.mjs').sort()) {
+    const file = path.join(dir, f);
+    // wie test_state in gate.sh: „// @zustand: …“ in den ersten 5 Zeilen, ohne Angabe frisch
+    const z = (fs.readFileSync(file, 'utf8').split('\n').slice(0, 5).join('\n').match(/^\/\/ @zustand: *([a-z]*)/m) || [])[1] || 'frisch';
+    if (z !== STATE) continue;
+    const src = fs.readFileSync(file, 'utf8');
+    const par = header(file, /^\/\/ @parallel: *([a-z]+)/m) || (/\bdashboard\(|\bfakeStates\(/.test(src) ? 'ui' : 'frei');
+    const id = f.replace(/\.mjs$/, '');
+    addTask(step, { id, label: 'dev/qa/regress/' + f, cmd: [NODE, file], cwd: REPO,
+      env: { CASORA_LOCAL: '', ...(STATE === 'arbeit' ? { CASORA_QA_DASH: DASH || 'qa-arbeit' } : {}) },
+      locks: par === 'ui' ? ['ui'] : [], alone: par === 'allein', est: est(STATE + '/' + id, id, EST.regress) });
+  }
+  step.footer = `${step.tasks.length} Regressionstests im Zustand ${STATE}`;
+}
+
+const QA_OUT = process.env.CASORA_OUT || '/tmp/casora-qa';
+if (CRAWLER) {
+  const vps = CRAWLER === 'quick' ? ['desktop', 'phone'] : ['desktop', 'tablet', 'phone-webkit', 'phone'];
+  const partsDir = path.join(QA_OUT, 'teile', STATE);
+  const step = { id: 'crawler-' + STATE, group: 'crawler', kind: 'crawler', tasks: [], partsDir, dirs: [] };
+  steps.push(step);
+  for (const vp of vps) for (const part of ['studio', 'dashboard']) {
+    const id = `${vp}-${part}`;
+    const out = path.join(partsDir, id);
+    step.dirs.push(out);
+    addTask(step, { id, label: `Teil ${vp}/${part}`, cwd: REPO, env: { CASORA_OUT: out },
+      cmd: [NODE, path.join(REPO, 'dev/qa/alles.mjs'), ...(CRAWLER === 'quick' ? ['--quick'] : []), ...(DASH ? ['--dash', DASH] : []), '--viewports', vp, '--only', part],
+      locks: part === 'dashboard' ? ['ui'] : [], est: est(`${STATE}/${CRAWLER}/${id}`, `${CRAWLER}/${id}`, 60) });
+  }
+}
+
+// ── Planung ────────────────────────────────────────────────────────────────────────────
+const byStepId = (s, id) => s.tasks.find((t) => t.id === id);
+for (const t of tasks) t.deps = t.after.map((id) => byStepId(t.step, id)).filter(Boolean);
+for (const t of tasks) t.dependents = tasks.filter((x) => x.deps.includes(t));
+const cpMemo = new Map();
+const cp = (t) => { if (!cpMemo.has(t)) cpMemo.set(t, t.est + Math.max(0, ...t.dependents.map(cp))); return cpMemo.get(t); };
+
+// Nächster startbarer Teil (oder null). running: laufende Teile, done: Set fertiger Teile.
+function pick(pending, running, done, free) {
+  if (free <= 0 || running.some((r) => r.alone)) return null;
+  const ready = pending.filter((t) => t.deps.every((d) => done.has(d)));
+  // Wartet ein „allein“-Teil, erst leerlaufen lassen, dann ihn allein starten.
+  const alone = ready.find((t) => t.alone);
+  if (alone) return running.length ? null : alone;
+  const held = new Set(running.flatMap((r) => r.locks));
+  const ok = ready.filter((t) => !t.locks.some((l) => held.has(l)));
+  if (!ok.length) return null;
+  const backlog = (l) => pending.filter((x) => x.locks.includes(l)).reduce((s, x) => s + x.est, 0);
+  const prio = (t) => Math.max(cp(t), ...t.locks.filter((l) => l === 'ui').map(backlog));
+  // Gleichstand (z. B. alle ui-Teile mit demselben Rückstau): längerer Restpfad zuerst.
+  const better = (x, y) => prio(x) > prio(y) || (prio(x) === prio(y) && cp(x) > cp(y));
+  return ok.reduce((a, b) => (better(b, a) ? b : a));
+}
+
+function simulate() {
+  const pending = tasks.slice(), running = [], done = new Set(), sched = [];
+  let now = 0;
+  const workers = Array.from({ length: JOBS }, () => null);
+  while (pending.length || running.length) {
+    let t;
+    while ((t = pick(pending, running, done, JOBS - running.length))) {
+      pending.splice(pending.indexOf(t), 1);
+      const w = workers.indexOf(null); workers[w] = t;
+      running.push(Object.assign(t, { simStart: now, simEnd: now + t.est, worker: w + 1 }));
+      sched.push(t);
+    }
+    if (!running.length) { notes.push('Planung hängt (Abhängigkeiten im Kreis?)'); break; }
+    running.sort((a, b) => a.simEnd - b.simEnd);
+    const fin = running.shift();
+    now = fin.simEnd; done.add(fin); workers[fin.worker - 1] = null;
+  }
+  const stepEnd = (s) => Math.max(0, ...s.tasks.map((t) => t.simEnd || 0)) + (s.kind === 'crawler' ? 2 : 0);
+  return { sched, total: Math.max(0, ...steps.map(stepEnd)), serial: tasks.reduce((s, t) => s + t.est, 0) };
+}
+
+if (DRY) {
+  const { sched, total, serial } = simulate();
+  if (!tasks.length) { console.log(`    (keine Tests im Zustand ${STATE})`); process.exit(0); }
+  console.log(`    ${JOBS} parallel · geschätzt ~${total} s statt ~${serial} s nacheinander`
+    + (Object.keys(measured).length ? ' (Schätzung aus .qa/zeiten.json)' : ' (Schätzung aus den seriellen Protokollen)'));
+  for (const t of sched.sort((a, b) => a.simStart - b.simStart || a.worker - b.worker)) {
+    const extra = [t.deps.length ? 'nach ' + t.deps.map((d) => d.id.replace(/_.*/, '')).join(',') : '',
+      t.locks.length ? 'Sperre ' + t.locks.join('+') : '', t.alone ? 'allein' : ''].filter(Boolean).join(' · ');
+    console.log(`    [${t.worker}] ${String(t.simStart).padStart(4)}–${String(t.simEnd).padEnd(4)} ${t.step.group.padEnd(8)} ${t.id.padEnd(32)} ${extra}`);
+  }
+  notes.forEach((n) => console.log('    Hinweis: ' + n));
+  if (opt('est-file', '')) fs.appendFileSync(opt('est-file', ''), total + '\n');
+  process.exit(0);
+}
+
+// ── Ausführung ─────────────────────────────────────────────────────────────────────────
+if (!tasks.length) process.exit(0);
+if (!process.env.CASORA_TOKENS) {
+  const { login } = await import('./token.mjs');
+  process.env.CASORA_TOKENS = JSON.stringify(await login());
+}
+const PARTS = path.join(LOGS, 'teile');
+fs.mkdirSync(PARTS, { recursive: true });
+for (const s of steps) if (s.partsDir) fs.rmSync(s.partsDir, { recursive: true, force: true });
+notes.forEach((n) => console.log('    Hinweis: ' + n));
+
+// Wie früher: nach E2E sahen Regress/Klick-Durchlauf das Mock-Szenario aus t10. Jetzt laufen
+// sie gleichzeitig – darum das Szenario vorab setzen (t10 setzt es noch einmal).
+if (STATE === 'arbeit' && flag('e2e') && (flag('regress') || CRAWLER)) {
+  try {
+    const { tokens } = await import('./ws.mjs');
+    const { access_token } = await tokens();
+    const r = await fetch((process.env.CASORA_URL || 'http://localhost:8124') + '/api/services/casora_mock/scenario', {
+      method: 'POST', headers: { Authorization: 'Bearer ' + access_token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: process.env.SZENARIO || 'drucker_druckt' }) });
+    console.log(`    Mock-Szenario ${process.env.SZENARIO || 'drucker_druckt'} vorab: ${r.status}`);
+  } catch (e) { console.log('    Mock-Szenario vorab nicht gesetzt: ' + e.message); }
+}
+
+const T0 = Date.now();
+const sec = (ms) => Math.round(ms / 1000);
+function run(t) {
+  return new Promise((resolve) => {
+    const logFile = path.join(PARTS, `${t.step.id}__${t.id}.log`);
+    const fd = fs.openSync(logFile, 'w');
+    const chunks = [];
+    t.start = Date.now();
+    const p = spawn(t.cmd[0], t.cmd.slice(1), { cwd: t.cwd, env: { ...process.env, ...t.env }, stdio: ['ignore', 'pipe', 'pipe'] });
+    const onData = (b) => { chunks.push(b); fs.writeSync(fd, b); };
+    p.stdout.on('data', onData); p.stderr.on('data', onData);
+    const finish = (rc) => {
+      fs.closeSync(fd);
+      t.end = Date.now(); t.rc = rc; t.out = Buffer.concat(chunks).toString('utf8'); t.logFile = logFile;
+      if (t.step.kind === 'e2e') t.ok = rc === 0 && !E2E_FAIL.test(t.out);
+      else if (t.step.kind === 'crawler') t.ok = rc === 0 || rc === 1; // 1 = Befunde, zählt die Zusammenführung
+      else t.ok = rc === 0;
+      resolve(t);
+    };
+    p.on('error', (e) => { chunks.push(Buffer.from(String(e.stack || e) + '\n')); finish(127); });
+    p.on('close', (code, sig) => finish(code === null ? (sig ? 128 : 1) : code));
+  });
+}
+
+function runPost(cmd, env) {
+  return new Promise((resolve) => {
+    const chunks = [];
+    const p = spawn(cmd[0], cmd.slice(1), { cwd: REPO, env: { ...process.env, ...env }, stdio: ['ignore', 'pipe', 'pipe'] });
+    p.stdout.on('data', (b) => chunks.push(b)); p.stderr.on('data', (b) => chunks.push(b));
+    p.on('error', (e) => resolve({ rc: 127, out: String(e) }));
+    p.on('close', (code) => resolve({ rc: code === null ? 1 : code, out: Buffer.concat(chunks).toString('utf8') }));
+  });
+}
+
+let failed = false;
+async function finishStep(s) {
+  const start = Math.min(...s.tasks.map((t) => t.start)), lines = [];
+  let ok = s.tasks.every((t) => t.ok);
+  for (const t of s.tasks) {
+    lines.push(`=== ${t.label}   (${sec(t.end - t.start)} s, ab +${sec(t.start - T0)} s)`);
+    lines.push(t.out.replace(/\n$/, ''));
+    if (!t.ok) lines.push(s.kind === 'e2e' ? `>>> FEHLER ${t.id}` : `>>> FEHLER ${t.label} (Rückgabe ${t.rc})`);
+  }
+  if (s.footer) lines.push(s.footer);
+  if (s.kind === 'crawler') {
+    const m = await runPost([NODE, path.join(REPO, 'dev/qa/alles.mjs'), '--merge', '--seconds', String(sec(Date.now() - start)), ...s.dirs], { CASORA_OUT: QA_OUT });
+    lines.push('=== Zusammenführen', m.out.replace(/\n$/, ''));
+    if (m.rc !== 0) ok = false;
+  }
+  const dt = sec(Date.now() - start);
+  const log = path.join(LOGS, s.id + '.log');
+  fs.writeFileSync(log, lines.join('\n') + '\n');
+  const rc = ok ? 0 : 1;
+  if (!ok) failed = true;
+  process.stdout.write(`▸ ${s.id.padEnd(28)} ` + (ok ? `ok (${dt}s)${clock()}\n` : `FEHLER (${dt}s)${clock()} – ${log}\n`
+    + lines.join('\n').split('\n').slice(-8).map((l) => '    ' + l).join('\n') + '\n'));
+  if (RESULTS) fs.appendFileSync(RESULTS, `${s.id}\t${s.group}\t${rc}\t${dt}\t${log}\n`);
+}
+
+const pending = tasks.slice(), running = [], done = new Set(), stepJobs = [];
+await new Promise((resolveAll) => {
+  const pump = () => {
+    let t;
+    while ((t = pick(pending, running, done, JOBS - running.length))) {
+      pending.splice(pending.indexOf(t), 1);
+      running.push(t);
+      run(t).then((x) => {
+        running.splice(running.indexOf(x), 1); done.add(x);
+        console.log(`    · ${x.step.id} ${x.id.padEnd(30)} ${x.ok ? 'ok    ' : 'FEHLER'} ${String(sec(x.end - x.start)).padStart(4)} s  (+${sec(x.start - T0)}…${sec(x.end - T0)} s)${clock()}`);
+        if (x.step.tasks.every((y) => done.has(y))) stepJobs.push(finishStep(x.step));
+        if (!pending.length && !running.length) resolveAll(); else pump();
+      });
+    }
+    if (!running.length && pending.length) { console.log('    Planung hängt – Rest nacheinander'); pending.forEach((p) => { p.deps = []; p.locks = []; p.alone = false; }); pump(); }
+  };
+  pump();
+});
+await Promise.all(stepJobs);
+
+// ── Zeiten ─────────────────────────────────────────────────────────────────────────────
+const wall = sec(Date.now() - T0), sum = tasks.reduce((s, t) => s + (t.end - t.start), 0);
+const zlines = [`Zustand ${STATE}: ${JOBS} parallel, Wandzeit ${wall} s, Summe der Teile ${sec(sum)} s (Faktor ${(sum / 1000 / Math.max(1, wall)).toFixed(1)})`];
+for (const t of tasks.slice().sort((a, b) => a.start - b.start)) {
+  zlines.push(`  +${String(sec(t.start - T0)).padStart(4)}…${String(sec(t.end - T0)).padEnd(4)} ${String(sec(t.end - t.start)).padStart(4)} s  ${t.step.group.padEnd(8)} ${t.id}${t.locks.length ? '  [' + t.locks.join('+') + ']' : ''}`);
+  if (t.ok) measured[t.step.kind === 'crawler' ? `${STATE}/${CRAWLER}/${t.id}` : t.key] = Math.max(1, sec(t.end - t.start)); // nur echte Läufe als Schätzung
+}
+fs.writeFileSync(path.join(LOGS, `zeiten-${STATE}.log`), zlines.join('\n') + '\n');
+console.log('    ' + zlines[0] + ` – ${path.join(LOGS, `zeiten-${STATE}.log`)}`);
+try { fs.mkdirSync(path.dirname(ZEITEN), { recursive: true }); fs.writeFileSync(ZEITEN, JSON.stringify(measured, null, 1)); } catch (e) { /* nur Schätzhilfe */ }
+process.exit(failed ? 1 : 0);

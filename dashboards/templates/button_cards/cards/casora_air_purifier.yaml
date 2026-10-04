@@ -1,0 +1,20 @@
+casora_air_purifier:
+  template: [casora_air_device]
+
+  variables:
+    icon: purifier
+
+  styles:
+    entity_picture:
+      - width: 100%
+      - height: 100%
+      - object-fit: contain
+      - opacity: 0.8
+      - transition: opacity 0.2s ease, filter 0.2s ease, transform 0.15s ease
+      - cursor: pointer
+
+    img_cell:
+      - background: transparent
+      - box-shadow: none !important
+      - transition: filter 0.2s ease
+      - cursor: pointer

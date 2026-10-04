@@ -1,0 +1,177 @@
+casora_motion:
+  template:
+    - casora_entity
+
+  show_name: true
+  show_state: true
+  show_entity_picture: true
+
+  entity: |
+    [[[
+      return (
+        variables.sensor_1 ||
+        variables.sensor_2 ||
+        variables.sensor_3 ||
+        variables.sensor_4 ||
+        variables.sensor_5 ||
+        variables.sensor_6 ||
+        null
+      );
+    ]]]
+
+  variables:
+    default_name: Motion
+    sensor_1: null
+    label_1: null
+    sensor_2: null
+    label_2: null
+    sensor_3: null
+    label_3: null
+    sensor_4: null
+    label_4: null
+    sensor_5: null
+    label_5: null
+    sensor_6: null
+    label_6: null
+
+  tap_action:
+    action: more-info
+    entity: |
+      [[[
+        const sensors = [
+          { id: variables.sensor_1, label: variables.label_1 },
+          { id: variables.sensor_2, label: variables.label_2 },
+          { id: variables.sensor_3, label: variables.label_3 },
+          { id: variables.sensor_4, label: variables.label_4 },
+          { id: variables.sensor_5, label: variables.label_5 },
+          { id: variables.sensor_6, label: variables.label_6 },
+        ].filter(s => s.id);
+        const active = sensors.find(s => states[s.id]?.state === 'on');
+        if (active) return active.id;
+
+        if (sensors.length > 0) {
+          return sensors.slice().sort((a, b) =>
+            new Date(states[b.id]?.last_changed || 0) - new Date(states[a.id]?.last_changed || 0)
+          )[0].id;
+        }
+        return entity?.entity_id || null;
+      ]]]
+
+  hold_action:
+    action: more-info
+
+  icon_tap_action:
+    action: more-info
+    entity: |
+      [[[
+        const sensors = [
+          { id: variables.sensor_1, label: variables.label_1 },
+          { id: variables.sensor_2, label: variables.label_2 },
+          { id: variables.sensor_3, label: variables.label_3 },
+          { id: variables.sensor_4, label: variables.label_4 },
+          { id: variables.sensor_5, label: variables.label_5 },
+          { id: variables.sensor_6, label: variables.label_6 },
+        ].filter(s => s.id);
+        const active = sensors.find(s => states[s.id]?.state === 'on');
+        if (active) return active.id;
+        if (sensors.length > 0) {
+          return sensors.slice().sort((a, b) =>
+            new Date(states[b.id]?.last_changed || 0) - new Date(states[a.id]?.last_changed || 0)
+          )[0].id;
+        }
+        return entity?.entity_id || null;
+      ]]]
+
+  entity_picture: |
+    [[[
+      return window.casoraIconUrl('motion');
+    ]]]
+
+  name: |
+    [[[
+      const sensors = [
+        { id: variables.sensor_1, label: variables.label_1 },
+        { id: variables.sensor_2, label: variables.label_2 },
+        { id: variables.sensor_3, label: variables.label_3 },
+        { id: variables.sensor_4, label: variables.label_4 },
+        { id: variables.sensor_5, label: variables.label_5 },
+        { id: variables.sensor_6, label: variables.label_6 },
+      ].filter(s => s.id);
+      if (sensors.length === 0) return variables.default_name || 'Motion';
+      const active = sensors.find(s => states[s.id]?.state === 'on');
+      return active ? active.label : (variables.default_name || 'Motion');
+    ]]]
+
+  state_display: |
+    [[[
+      const sensors = [
+        variables.sensor_1, variables.sensor_2, variables.sensor_3,
+        variables.sensor_4, variables.sensor_5, variables.sensor_6,
+      ].filter(Boolean);
+      if (sensors.length > 0) {
+        return sensors.some(id => states[id]?.state === 'on') ? 'Detected' : 'Clear';
+      }
+      return entity?.state === 'on' ? 'Detected' : 'Clear';
+    ]]]
+
+  state:
+    - operator: template
+      value: |
+        [[[
+          const sensors = [
+            variables.sensor_1, variables.sensor_2, variables.sensor_3,
+            variables.sensor_4, variables.sensor_5, variables.sensor_6,
+          ].filter(Boolean);
+          if (sensors.length === 0) return false;
+          return sensors.some(id => states[id]?.state === 'on');
+        ]]]
+      styles:
+        card:
+          - "--casora-active-overlay-opacity": "1"
+          - --casora-entity-overlay-tint: var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))
+          - "--casora-active-overlay-dur": "0s"
+          - --casora-entity-top-gradient: none
+          - box-shadow: var(--button-card-box-shadow-active, var(--button-card-box-shadow)) !important
+        name:
+          - color: var(--casora-entity-name-active, var(--primary-text-color))
+        state:
+          - color: var(--casora-entity-name-active, var(--primary-text-color))
+          - opacity: '1'
+        icon:
+          - color: var(--casora-entity-name-active, var(--primary-text-color))
+        img_cell:
+          - opacity: "1 !important"
+          - filter: none !important
+          - background: "var(--casora-popup-primary-color, #00c3d0) !important"
+        entity_picture:
+          - opacity: "1 !important"
+          - filter: none !important
+
+  styles:
+    card:
+      - --casora-icon-mask-image: "[[[ return `url('${window.casoraIconUrl('motion')}')`; ]]]"
+    state:
+      - color: |
+          [[[
+            const sensors = [
+              variables.sensor_1, variables.sensor_2, variables.sensor_3,
+              variables.sensor_4, variables.sensor_5, variables.sensor_6,
+            ].filter(Boolean);
+            const active = sensors.length > 0
+              ? sensors.some(id => states[id]?.state === 'on')
+              : entity?.state === 'on';
+            return active
+              ? 'var(--casora-entity-name-active, var(--primary-text-color))'
+              : 'var(--casora-entity-state, var(--secondary-text-color))';
+          ]]]
+      - opacity: |
+          [[[
+            const sensors = [
+              variables.sensor_1, variables.sensor_2, variables.sensor_3,
+              variables.sensor_4, variables.sensor_5, variables.sensor_6,
+            ].filter(Boolean);
+            const active = sensors.length > 0
+              ? sensors.some(id => states[id]?.state === 'on')
+              : entity?.state === 'on';
+            return active ? '1' : '0.55';
+          ]]]

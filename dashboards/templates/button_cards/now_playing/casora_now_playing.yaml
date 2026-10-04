@@ -1,0 +1,694 @@
+# Now Playing panel - replaces the Media badge; shows every active source, primary = most recently started.
+
+casora_now_playing:
+  custom_fields:
+    np_head:
+      card:
+        template: casora_now_playing_header
+        type: custom:button-card
+        variables:
+          minimized_entity: '[[[ return variables.minimized_entity; ]]]'
+          open: |
+            [[[
+              const v = variables?.enabled;
+              const on = (v === undefined || v === null) ? true :
+                (typeof v === 'boolean') ? v :
+                !['false','0','no','off','disabled'].includes(String(v).trim().toLowerCase());
+              if (typeof window._casoraNP !== 'function') return 0;
+              return (on && window._casoraNP(states, Object.assign({}, variables, { pinned_key: states[variables.pin_entity]?.state || '' })).length) ? 1 : 0;
+            ]]]
+          playing: '[[[ return !!(variables.settled || [])[0]?.playing; ]]]'
+    np_main:
+      card:
+        custom_fields:
+          s1:
+            card:
+              template: casora_now_playing_primary
+              type: custom:button-card
+              variables:
+                minimized_entity: '[[[ return variables.minimized_entity; ]]]'
+                np_count: '[[[ return (variables.settled || []).length || 1; ]]]'
+                slot_id: |
+                  [[[ return (window._casoraNPCfgKey
+                    ? window._casoraNPCfgKey(variables) : '') + '|np1'; ]]]
+                src: '[[[ return (variables.settled || [])[0] || null; ]]]'
+          s2:
+            card:
+              template: casora_now_playing_primary
+              type: custom:button-card
+              variables:
+                minimized_entity: '[[[ return variables.minimized_entity; ]]]'
+                np_count: '[[[ return (variables.settled || []).length || 1; ]]]'
+                slot_id: |
+                  [[[ return (window._casoraNPCfgKey
+                    ? window._casoraNPCfgKey(variables) : '') + '|np2'; ]]]
+                src: '[[[ return (variables.settled || [])[1] || null; ]]]'
+          s3:
+            card:
+              template: casora_now_playing_primary
+              type: custom:button-card
+              variables:
+                minimized_entity: '[[[ return variables.minimized_entity; ]]]'
+                np_count: '[[[ return (variables.settled || []).length || 1; ]]]'
+                slot_id: |
+                  [[[ return (window._casoraNPCfgKey
+                    ? window._casoraNPCfgKey(variables) : '') + '|np3'; ]]]
+                src: '[[[ return (variables.settled || [])[2] || null; ]]]'
+          s4:
+            card:
+              template: casora_now_playing_primary
+              type: custom:button-card
+              variables:
+                minimized_entity: '[[[ return variables.minimized_entity; ]]]'
+                np_count: '[[[ return (variables.settled || []).length || 1; ]]]'
+                slot_id: |
+                  [[[ return (window._casoraNPCfgKey
+                    ? window._casoraNPCfgKey(variables) : '') + '|np4'; ]]]
+                src: '[[[ return (variables.settled || [])[3] || null; ]]]'
+          s5:
+            card:
+              template: casora_now_playing_primary
+              type: custom:button-card
+              variables:
+                minimized_entity: '[[[ return variables.minimized_entity; ]]]'
+                np_count: '[[[ return (variables.settled || []).length || 1; ]]]'
+                slot_id: |
+                  [[[ return (window._casoraNPCfgKey
+                    ? window._casoraNPCfgKey(variables) : '') + '|np5'; ]]]
+                src: '[[[ return (variables.settled || [])[4] || null; ]]]'
+          s6:
+            card:
+              template: casora_now_playing_primary
+              type: custom:button-card
+              variables:
+                minimized_entity: '[[[ return variables.minimized_entity; ]]]'
+                np_count: '[[[ return (variables.settled || []).length || 1; ]]]'
+                slot_id: |
+                  [[[ return (window._casoraNPCfgKey
+                    ? window._casoraNPCfgKey(variables) : '') + '|np6'; ]]]
+                src: '[[[ return (variables.settled || [])[5] || null; ]]]'
+          s7:
+            card:
+              template: casora_now_playing_primary
+              type: custom:button-card
+              variables:
+                minimized_entity: '[[[ return variables.minimized_entity; ]]]'
+                np_count: '[[[ return (variables.settled || []).length || 1; ]]]'
+                slot_id: |
+                  [[[ return (window._casoraNPCfgKey
+                    ? window._casoraNPCfgKey(variables) : '') + '|np7'; ]]]
+                src: '[[[ return (variables.settled || [])[6] || null; ]]]'
+        extra_styles: |
+          /* Belt-and-braces: theme's card-mod-card sets a background fallback var, so zero the var AND !important the property. */
+          :host,
+          ha-card{
+            background: none !important;
+            box-shadow: none !important;
+            border: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+          }
+
+          ha-card{
+            will-change: auto !important;
+            contain: none !important;
+          }
+
+          /* NOT a scroll container, and never becomes one. The stack is sized by
+             --np-slot-h (built in styles.card): the budget split between the live
+             tiles, each taking min(its natural size, its slot). One or two tiles
+             are full size and the stack packs tighter as sources arrive, so there
+             is nothing to scroll and nothing to clip. A max-height here would only
+             ever be the thing that traps a tile half off the bottom, which is
+             exactly what this replaced.
+             The side padding is the entrance animation's own --np-enter-shift, and
+             the negative margin hands that space back to the layout. */
+          #container{
+            overflow: visible;
+            padding: var(--np-stack-pad-y, 22px) var(--np-enter-shift, 30px);
+            margin: calc(-1 * var(--np-stack-pad-y, 22px)) calc(-1 * var(--np-enter-shift, 30px));
+          }
+        show_icon: false
+        show_label: false
+        show_name: false
+        show_state: false
+        styles:
+          card:
+          - --np-slot-h: |
+              [[[
+                const n = Math.max(1, (variables.settled || []).length);
+                const gaps = 9 * (n - 1);
+                return 'calc((var(--np-stack-budget, 320px) - ' + gaps + 'px) * '
+                  + (1 / n).toFixed(6) + ')';
+              ]]]
+          - --ha-card-background: transparent
+          - --ha-card-box-shadow: none
+          - --casora-card-hover-shadow: none
+          - --casora-card-hover-filter: none
+          - background: transparent !important
+          - box-shadow: none !important
+          - border: none !important
+          - padding: 0 !important
+          - margin: 0 !important
+          - width: 100% !important
+          - overflow: visible !important
+          custom_fields:
+            s1:
+            - --np-slot-has: '[[[ return (variables.settled || [])[0] ? 1 : 0; ]]]'
+            - max-height: calc(var(--np-slot-has, 0) * 900px)
+            - opacity: var(--np-slot-has, 0)
+            - transition: max-height 0s calc((1 - var(--np-slot-has, 0)) * 0.5s), opacity 0s calc((1 - var(--np-slot-has, 0)) * 0.5s), pointer-events 0s calc((1 - var(--np-slot-has, 0)) * 0.5s)
+            - pointer-events: '[[[ return (variables.settled || [])[0] ? "auto" : "none"; ]]]'
+            - overflow: visible
+            - width: 100%
+            s2:
+            - --np-slot-has: '[[[ return (variables.settled || [])[1] ? 1 : 0; ]]]'
+            - max-height: calc(var(--np-slot-has, 0) * 900px)
+            - opacity: var(--np-slot-has, 0)
+            - transition: max-height 0s calc((1 - var(--np-slot-has, 0)) * 0.5s), opacity 0s calc((1 - var(--np-slot-has, 0)) * 0.5s), pointer-events 0s calc((1 - var(--np-slot-has, 0)) * 0.5s)
+            - pointer-events: '[[[ return (variables.settled || [])[1] ? "auto" : "none"; ]]]'
+            - overflow: visible
+            - width: 100%
+            s3:
+            - --np-slot-has: '[[[ return (variables.settled || [])[2] ? 1 : 0; ]]]'
+            - max-height: calc(var(--np-slot-has, 0) * 900px)
+            - opacity: var(--np-slot-has, 0)
+            - transition: max-height 0s calc((1 - var(--np-slot-has, 0)) * 0.5s), opacity 0s calc((1 - var(--np-slot-has, 0)) * 0.5s), pointer-events 0s calc((1 - var(--np-slot-has, 0)) * 0.5s)
+            - pointer-events: '[[[ return (variables.settled || [])[2] ? "auto" : "none"; ]]]'
+            - overflow: visible
+            - width: 100%
+            s4:
+            - --np-slot-has: '[[[ return (variables.settled || [])[3] ? 1 : 0; ]]]'
+            - max-height: calc(var(--np-slot-has, 0) * 900px)
+            - opacity: var(--np-slot-has, 0)
+            - transition: max-height 0s calc((1 - var(--np-slot-has, 0)) * 0.5s), opacity 0s calc((1 - var(--np-slot-has, 0)) * 0.5s), pointer-events 0s calc((1 - var(--np-slot-has, 0)) * 0.5s)
+            - pointer-events: '[[[ return (variables.settled || [])[3] ? "auto" : "none"; ]]]'
+            - overflow: visible
+            - width: 100%
+            s5:
+            - --np-slot-has: '[[[ return (variables.settled || [])[4] ? 1 : 0; ]]]'
+            - max-height: calc(var(--np-slot-has, 0) * 900px)
+            - opacity: var(--np-slot-has, 0)
+            - transition: max-height 0s calc((1 - var(--np-slot-has, 0)) * 0.5s), opacity 0s calc((1 - var(--np-slot-has, 0)) * 0.5s), pointer-events 0s calc((1 - var(--np-slot-has, 0)) * 0.5s)
+            - pointer-events: '[[[ return (variables.settled || [])[4] ? "auto" : "none"; ]]]'
+            - overflow: visible
+            - width: 100%
+            s6:
+            - --np-slot-has: '[[[ return (variables.settled || [])[5] ? 1 : 0; ]]]'
+            - max-height: calc(var(--np-slot-has, 0) * 900px)
+            - opacity: var(--np-slot-has, 0)
+            - transition: max-height 0s calc((1 - var(--np-slot-has, 0)) * 0.5s), opacity 0s calc((1 - var(--np-slot-has, 0)) * 0.5s), pointer-events 0s calc((1 - var(--np-slot-has, 0)) * 0.5s)
+            - pointer-events: '[[[ return (variables.settled || [])[5] ? "auto" : "none"; ]]]'
+            - overflow: visible
+            - width: 100%
+            s7:
+            - --np-slot-has: '[[[ return (variables.settled || [])[6] ? 1 : 0; ]]]'
+            - max-height: calc(var(--np-slot-has, 0) * 900px)
+            - opacity: var(--np-slot-has, 0)
+            - transition: max-height 0s calc((1 - var(--np-slot-has, 0)) * 0.5s), opacity 0s calc((1 - var(--np-slot-has, 0)) * 0.5s), pointer-events 0s calc((1 - var(--np-slot-has, 0)) * 0.5s)
+            - pointer-events: '[[[ return (variables.settled || [])[6] ? "auto" : "none"; ]]]'
+            - overflow: visible
+            - width: 100%
+          grid:
+          - display: flex !important
+          - flex-direction: column !important
+          - gap: var(--np-stack-gap, 9px) !important
+          - justify-content: flex-start !important
+          - align-items: flex-end !important
+        tap_action:
+          action: none
+        type: custom:button-card
+        variables:
+          minimized_entity: '[[[ return variables.minimized_entity; ]]]'
+          settled: '[[[ return variables.settled || []; ]]]'
+  double_tap_action:
+    action: none
+  extra_styles: |
+    /* Tablet - Now Playing Padding */
+    @media (min-width: 768px) and (max-width: 1400px) and (min-height: 501px) and (pointer: coarse),
+           (min-width: 768px) and (max-width: 1400px) and (min-height: 501px) and (hover: none) {
+      #np_head {
+        padding-bottom: var(--casora-np-head-pad-tablet, 12px) !important;
+      }
+    }
+
+    :host{
+      --np-hold: calc((1 - var(--np-open, 0)) * 0.42s);
+      /* No shell to cast one, the same as casora_now_playing_primary. */
+      --np-shadow: none;
+      display: block;
+      width: 100%;
+      max-height: calc(var(--np-open, 0) * var(--np-vp, 1) * 640px);
+      opacity: var(--np-vp, 1);
+      visibility: var(--np-vis, visible);
+      transition:
+        opacity .30s ease,
+        max-height 0s var(--np-hold, 0s),
+        visibility 0s var(--np-hold, 0s);
+      overflow: visible;
+      pointer-events: var(--np-ptr, none);
+    }
+
+    :host{
+      --casora-card-hover-shadow: var(--np-shadow);
+      --casora-card-hover-filter: none;
+    }
+
+    ha-card{
+      cursor: default !important;
+      /* Theme's card-mod-card sets will-change:filter,transform on every ha-card, which establishes
+         a backdrop root and blocks nested tiles' blur — safe to opt out since this shell never
+         animates those. */
+      will-change: auto !important;
+      /* contain also establishes a backdrop root - same exemption the theme gives .casora-entity cards via contain: none !important. */
+      contain: none !important;
+    }
+
+    :host{
+      contain: none !important;
+    }
+
+
+    ha-ripple, mwc-ripple { display: none !important; }
+
+
+    @media (prefers-reduced-motion: reduce) {
+      :host{ transition: opacity .12s linear, max-height 0s var(--np-hold, 0s); }
+    }
+  hold_action:
+    action: none
+  show_icon: false
+  show_label: false
+  show_name: false
+  show_state: false
+  styles:
+    card:
+    - --casora-card-hover-shadow: var(--np-shadow)
+    - --casora-card-hover-filter: none
+    - --np-open: |
+        [[[
+          const v = variables?.enabled;
+          const on = (v === undefined || v === null) ? true :
+            (typeof v === 'boolean') ? v :
+            !['false','0','no','off','disabled'].includes(String(v).trim().toLowerCase());
+          const open = (on && typeof window._casoraNP === 'function'
+            && window._casoraNP(states, Object.assign({}, variables, { pinned_key: states[variables.pin_entity]?.state || '' })).length) ? 1 : 0;
+
+          if ((this._npPanelOpen ?? 0) !== open) {
+            const runDroplet = () => {
+              const card = this.shadowRoot?.querySelector('ha-card');
+              if (!card) return;
+              try { this._npPanelAnim?.cancel(); } catch (e) {}
+
+              this._npPanelAnim = card.animate(
+                open
+                  ? [{ opacity: 0 }, { opacity: 1 }]
+                  : [{ opacity: 1 }, { opacity: 0 }],
+                {
+                  duration: open ? 340 : 260,
+                  easing: open ? 'ease-out' : 'ease-in',
+                  fill: 'both',
+                }
+              );
+
+              this._npPanelAnim.finished
+                .then(() => { try { this._npPanelAnim?.cancel(); } catch (e) {} })
+                .catch(() => {});
+            };
+
+            if (this.shadowRoot?.querySelector('ha-card')) runDroplet();
+            else requestAnimationFrame(runDroplet);
+          }
+          this._npPanelOpen = open;
+
+
+          try {
+            this.style.setProperty('--np-open', String(open));
+            this.style.setProperty('--np-ptr', open ? 'auto' : 'none');
+            this.style.setProperty('--np-vis', open ? 'visible' : 'hidden');
+          } catch (e) {}
+          return open;
+        ]]]
+    - --np-inner-radius: calc(var(--casora-u-np, 10px) * 2.6)
+    - --np-tile-width: min(520px, 100%)
+    - --np-inner-glass: '1'
+    - --np-min-hold: |
+        [[[
+          const n = Math.max(1, (variables.settled || []).length);
+          // MUST match NP_OUT_STAGGER and NP_OUT_DUR in --np-min.
+          return 'calc(var(--np-min, 0) * ' + ((n - 1) * 20 + 180) + 'ms)';
+        ]]]
+    - --np-min: |
+        [[[
+          if (!this._npKickWired) {
+            this._npKickWired = true;
+            const el = this;
+            window._casoraNPKick = [() => window.casoraKick?.(el)];
+          }
+
+          const _mzs = states[variables.minimized_entity];
+          const _real = _mzs?.state === 'on' ? 1 : 0;
+          const minimized = window.casoraOptimistic
+            ? window.casoraOptimistic('np-min', _mzs, _real) : _real;
+
+          // First evaluation only records state - no morph on cold load; the shell's own droplet already owns first appearance.
+          if (this._npMinState === undefined) {
+            this._npMinState = minimized;
+            return minimized;
+          }
+          if (this._npMinState === minimized) return minimized;
+          this._npMinState = minimized;
+
+          const opening = minimized === 0;
+          const reduce = window.matchMedia
+            && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (reduce) return minimized;
+
+          const root = this.shadowRoot;
+          if (!root) return minimized;
+
+          const targets = [];
+          const push = (holder) => {
+            const bc = holder ? holder.querySelector('button-card') : null;
+            const sr = bc && bc.shadowRoot;
+            const card = sr ? sr.querySelector('ha-card') : null;
+            if (!card) return;
+            // A collapsed slot is height:0 - skip it or it steals a stagger slot from a visible tile.
+            if (card.getBoundingClientRect().height < 4) return;
+            targets.push({ host: bc, card: card, container: sr.getElementById('container') });
+          };
+
+          const stackHost = root.querySelector('#np_main button-card');
+          const stackRoot = stackHost && stackHost.shadowRoot;
+          if (stackRoot) {
+            for (let i = 1; i <= 7; i++) push(stackRoot.querySelector('#s' + i));
+          }
+          if (!targets.length) return minimized;
+
+          const n = targets.length;
+
+          const headEl = root.querySelector('#np_head');
+          const headInset = headEl
+            ? (parseFloat(getComputedStyle(headEl).paddingRight) || 0) : 0;
+
+          const spring = (t, zeta, omega) => {
+            if (t <= 0) return 0;
+            if (t >= 1) return 1;
+            const wd = omega * Math.sqrt(Math.max(1e-6, 1 - zeta * zeta));
+            return 1 - Math.exp(-zeta * omega * t) *
+              (Math.cos(wd * t) + ((zeta * omega) / wd) * Math.sin(wd * t));
+          };
+          const easeIn = (t) => t * t;
+
+          // Flip to false to put the original droplet back and compare.
+          const REFINED = true;
+          const M = REFINED ? {
+            droplet: false, scale0: 0.92, outScale: 0.96, zeta: 0.86,
+            inDur: 300, inStagger: 28, outDur: 180, outStagger: 20,
+          } : {
+            droplet: true, zeta: 0.74,
+            inDur: 360, inStagger: 40, outDur: 210, outStagger: 26,
+          };
+
+          const DROP = 40;
+          const SAMPLES = 26;
+          const NP_OUT_DUR = M.outDur;
+          const NP_OUT_STAGGER = M.outStagger;
+
+          targets.forEach((t, i) => {
+            const card = t.card;
+            const r = card.getBoundingClientRect();
+            const w = Math.max(r.width, 1);
+            const h = Math.max(r.height, 1);
+            if (w < 8 || h < 8) return;
+
+            const sx0 = Math.min(0.9, DROP / w);
+            const sy0 = Math.min(0.9, DROP / h);
+
+            const R = parseFloat(getComputedStyle(card).borderTopLeftRadius) || 26;
+            const rx0 = (DROP / 2) / sx0;
+            const ry0 = (DROP / 2) / sy0;
+
+            // Offset from the droplet's origin up onto the waveform toggle, so it is born at the button.
+            const dx = 10;
+            const dy = -20;
+            const originX = Math.max(0, w - headInset);
+
+            const extra = n > 1 ? (i / (n - 1)) : 0;
+            const zeta = M.zeta - ((M.droplet ? 0.09 : 0.03) * extra);
+
+            const kf = [];
+            for (let k = 0; k <= SAMPLES; k++) {
+              const u = k / SAMPLES;
+              if (!M.droplet) {
+                let sc, op;
+                if (opening) {
+                  const p = spring(u, zeta, 9);
+                  sc = M.scale0 + (1 - M.scale0) * p;
+                  op = Math.min(1, u / 0.32);
+                } else {
+                  const e = easeIn(u);
+                  sc = 1 - (1 - M.outScale) * e;
+                  op = Math.max(0, 1 - u);
+                }
+                kf.push({
+                  offset: u,
+                  easing: 'linear',
+                  transformOrigin: opening
+                    ? (originX.toFixed(1) + 'px 0%') : '50% 50%',
+                  translate: '0px 0px',
+                  scale: sc.toFixed(4),
+                  opacity: op.toFixed(3),
+                });
+                continue;
+              }
+
+              let px, py, op;
+              if (opening) {
+                px = spring(u, zeta, 9);
+                py = spring(Math.max(0, (u - 0.10) / 0.90), zeta + 0.04, 9);
+                op = Math.min(1, u / 0.26);
+              } else {
+                const e = (2.10 * u * u * u) - (1.10 * u * u);
+                px = 1 - e;
+                py = 1 - e;
+                op = Math.max(0, 1 - Math.pow(u, 1.6));
+              }
+              const sx = sx0 + (1 - sx0) * px;
+              const sy = sy0 + (1 - sy0) * py;
+              kf.push({
+                offset: u,
+                easing: 'linear',
+                transformOrigin: originX.toFixed(1) + 'px 0%',
+                translate: (dx * (1 - px)).toFixed(2) + 'px ' +
+                           (dy * (1 - px)).toFixed(2) + 'px',
+                scale: sx.toFixed(4) + ' ' + sy.toFixed(4),
+                borderRadius: (rx0 + (R - rx0) * px).toFixed(1) + 'px / ' +
+                              (ry0 + (R - ry0) * py).toFixed(1) + 'px',
+                opacity: op.toFixed(3),
+              });
+            }
+
+            const order = opening ? i : (n - 1 - i);
+            const delay = order * (opening ? M.inStagger : NP_OUT_STAGGER);
+            const dur = opening ? (M.inDur + extra * (M.droplet ? 50 : 20))
+                                : NP_OUT_DUR;
+
+            const run = (el, pseudo) => {
+              if (!el) return;
+              const opts = { duration: dur, delay: delay, fill: 'both' };
+              if (pseudo) opts.pseudoElement = pseudo;
+              let anim;
+              try { anim = el.animate(kf, opts); } catch (e) { return; }
+              anim.finished
+                .then(() => { try { anim.cancel(); } catch (e) {} })
+                .catch(() => {});
+            };
+
+            run(card, null);
+            run(t.host, '::after');
+          });
+
+          return minimized;
+        ]]]
+    - --np-glass-lift: 22%
+    - --np-glass-fill: |
+        color-mix(in srgb,
+          rgba(255,255,255,0.5) var(--np-glass-lift),
+          var(--casora-entity-background, rgba(0,0,0,0.40)))
+    - background: transparent !important
+    - -webkit-backdrop-filter: none !important
+    - backdrop-filter: none !important
+    - border-radius: var(--ha-card-border-radius, 28px) !important
+    - border: none !important
+    - box-shadow: var(--np-shadow)
+    - padding: 0 !important
+    - opacity: var(--np-open)
+    - margin: 0 !important
+    - width: 100% !important
+    - justify-self: end !important
+    - overflow: visible
+    - isolation: auto
+    custom_fields:
+      np_head:
+      - grid-area: np_head
+      - width: 100% !important
+      - min-width: 0
+      - display: flex
+      - align-items: flex-start
+      - justify-content: flex-end
+      - padding: 0 var(--casora-np-head-inset, 0px) 6px 0
+      - max-height: 34px
+      - overflow: visible
+      np_main:
+      - grid-area: np_main
+      - width: 100% !important
+      - min-width: 0
+      - display: flex
+      - justify-content: flex-end
+      - max-height: calc((1 - var(--np-min, 0)) * 900px)
+      - overflow: visible
+      - transition: max-height 0s var(--np-min-hold, 0s), pointer-events 0s var(--np-min-hold, 0s)
+      - pointer-events: |
+          [[[
+            return states[variables.minimized_entity]?.state === 'on' ? 'none' : 'auto';
+          ]]]
+    grid:
+    - display: grid !important
+    - grid-template-areas: '"np_head" "np_main"'
+    - grid-template-columns: minmax(0, 1fr)
+    - row-gap: 9px
+    - justify-items: end
+    - align-content: start !important
+  tap_action:
+    action: none
+  template:
+  - casora_default
+  variables:
+    discord_details: null
+    discord_game: null
+    discord_image: null
+    discord_label: PC
+    discord_online: null
+    discord_user: null
+    duplicate_game: discord
+    enabled: true
+    casora_np_init:
+      force_eval: true
+      value: |
+        [[[
+          // Start minimized. The collapse lives in a persistent helper shared by
+          // every room and every device, so "start" can only mean this page
+          // load: reassert it once, then leave the caret to own it for the rest
+          // of the session. Skipped when the helper is absent, so a config
+          // without the Casora package never calls a service on nothing.
+          if (variables.start_minimized && !window._casoraNPStartMin) {
+            window._casoraNPStartMin = 1;
+            const _mz = states[variables.minimized_entity];
+            if (_mz && _mz.state === 'off') {
+              hass.callService('input_boolean', 'turn_on', { entity_id: variables.minimized_entity });
+            }
+          }
+          // casora-core.js owns the collector - one definition, served by the
+          // integration. If it has not loaded, say so once and let the panel
+          // draw empty rather than throwing on every template below.
+          if (typeof window._casoraNP !== 'function' && !window._casoraNPNoCore) {
+            window._casoraNPNoCore = 1;
+            // Not immediately: a module resource is still loading while the
+            // first render evaluates this, so the bare check cried wolf on
+            // every cold load and then latched, leaving a stale error in the
+            // console for a file that had in fact arrived.
+            setTimeout(function () {
+              if (typeof window._casoraNP === 'function') return;
+              console.error('Casora: casora-core.js has not loaded, so Now Playing '
+                + 'cannot collect sources. Check the dashboard resource for it.');
+            }, 5000);
+          }
+          return true;
+        ]]]
+    media_player_1: null
+    media_player_10: null
+    media_player_2: null
+    media_player_3: null
+    media_player_4: null
+    media_player_5: null
+    media_player_6: null
+    media_player_7: null
+    media_player_8: null
+    media_player_9: null
+    minimized_entity: input_boolean.casora_now_playing_minimized
+    pause_timeout_minutes: 10
+    pin_entity: input_text.casora_now_playing_pinned
+    pinned_key: ''
+    psn_1: null
+    psn_2: null
+    settled:
+      force_eval: true
+      value: |
+        [[[
+          // NOT Object.assign({}, variables, {...}) - variables includes `settled` itself, so spreading
+          // it triggers button-card's "Detected a loop" error; read specific keys instead.
+          const V = { pause_timeout_minutes: variables.pause_timeout_minutes };
+          for (let i = 1; i <= 10; i++) {
+            V['show_media_player_' + i] = variables['show_media_player_' + i];
+            V['media_player_' + i] = variables['media_player_' + i];
+          }
+          for (let i = 1; i <= 2; i++) {
+            V['show_psn_' + i] = variables['show_psn_' + i];
+            V['psn_' + i] = variables['psn_' + i];
+          }
+          V.show_discord = variables.show_discord;
+          V.discord_user = variables.discord_user;
+          V.discord_image = variables.discord_image;
+          V.discord_game = variables.discord_game;
+          V.discord_online = variables.discord_online;
+          V.discord_details = variables.discord_details;
+          V.discord_label = variables.discord_label;
+          V.show_steam = variables.show_steam;
+          V.steam_account = variables.steam_account;
+          V.steam_online = variables.steam_online;
+          V.steam_game = variables.steam_game;
+          V.steam_image = variables.steam_image;
+          V.steam_label = variables.steam_label;
+          V.duplicate_game = variables.duplicate_game;
+          V.pinned_key = states[variables.pin_entity]?.state || '';
+
+          // Both live in casora-core.js. Without it there is nothing to collect,
+          // so draw empty rather than throwing on every consumer below.
+          if (typeof window._casoraNPDesktopSettle !== 'function') {
+            return typeof window._casoraNPView === 'function'
+              ? window._casoraNPView(states, V) : [];
+          }
+          const result = window._casoraNPDesktopSettle(states, V);
+          if (result.pending) {
+            // Mid-grace/departure-hold - nudge a re-render once it finishes, since nothing else would trigger it.
+            try { clearTimeout(window._casoraNPDesktopRecheckTimer); } catch (e) {}
+            window._casoraNPDesktopRecheckTimer = setTimeout(() => {
+              try {
+                if (this.hass) this.hass = Object.assign({}, this.hass);
+                else if (typeof this.requestUpdate === 'function') this.requestUpdate();
+              } catch (e) {}
+            }, 650);
+          }
+          return result.list;
+        ]]]
+    show_discord: false
+    show_media_player_1: false
+    show_media_player_10: false
+    show_media_player_2: false
+    show_media_player_3: false
+    show_media_player_4: false
+    show_media_player_5: false
+    show_media_player_6: false
+    show_media_player_7: false
+    show_media_player_8: false
+    show_media_player_9: false
+    show_psn_1: false
+    show_psn_2: false
+    show_steam: false
+    start_minimized: false
+    steam_account: null
+    steam_game: null
+    steam_image: null
+    steam_label: Steam
+    steam_online: null

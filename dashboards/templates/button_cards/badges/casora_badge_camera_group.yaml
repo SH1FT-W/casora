@@ -1,0 +1,88 @@
+casora_badge_camera_group:
+  template: [casora_badge_base, casora_popup_camera]
+
+  show_state: false
+  show_label: false
+  show_icon: true
+  icon: mdi:cctv
+
+  variables:
+    enabled: true
+    label: null
+    icon_size: null
+
+  styles:
+    card:
+      - display: >
+          [[[
+            const v = variables?.enabled;
+            const enabled = (v === undefined || v === null) ? true :
+              (typeof v === 'boolean') ? v :
+              (typeof v === 'number') ? v !== 0 :
+              !['false','0','no','off','disabled'].includes(String(v).trim().toLowerCase());
+            return enabled ? 'inline-grid' : 'none';
+          ]]]
+      - --casora-badge-icon-color: >
+          [[[
+            const cams = Array.isArray(variables?.cameras) ? variables.cameras.filter(Boolean) : [];
+            const dead = cams.filter(id => ['unavailable','unknown',''].includes(String(states[id]?.state ?? '').toLowerCase())).length;
+            return dead === 0
+              ? 'var(--casora-badge-security-color, #00c3d0)'
+              : 'var(--casora-badge-alert-color, #FF9230)';
+          ]]]
+      - --icon-primary-color: var(--casora-badge-icon-color)
+      - --paper-item-icon-color: var(--casora-badge-icon-color)
+      - --state-icon-color: var(--casora-badge-icon-color)
+
+    icon:
+      - color: var(--casora-badge-icon-color)
+
+  name: >
+    [[[
+      const esc = (t) => String(t ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const cams = Array.isArray(variables?.cameras) ? variables.cameras.filter(Boolean) : [];
+      const total = cams.length;
+      const dead = cams.filter(id => ['unavailable','unknown',''].includes(String(states[id]?.state ?? '').toLowerCase())).length;
+      const alert = window.casoraCameraAlert ? window.casoraCameraAlert(hass, states, cams, variables?.alert_window_minutes) : '';
+      const sub = total === 0 ? ''
+                : dead === total ? (total === 1 ? 'Offline' : 'All Offline')
+                : dead > 0 ? dead + ' Offline'
+                : alert || 'No Alerts';
+
+      return `
+        <div class="badge-wrap">
+          <div class="badge-title">${esc(variables?.label || 'Cameras')}</div>
+          ${sub ? `<div class="badge-sub">${esc(sub)}</div>` : ''}
+        </div>
+      `;
+    ]]]
+
+  extra_styles: >
+    [[[
+      const v = variables?.enabled;
+      const enabled = (v === undefined || v === null) ? true :
+        (typeof v === 'boolean') ? v :
+        (typeof v === 'number') ? v !== 0 :
+        !['false','0','no','off','disabled'].includes(String(v).trim().toLowerCase());
+      const URL = window.casoraIconUrl('doorbell');
+      const SIZE = variables?.icon_size || '72%';
+
+      return `:host{display:${enabled ? 'inline-block' : 'none'} !important;}
+        #img-cell, .img-cell{ position: relative; }
+
+        #img-cell #icon, .img-cell #icon{
+          color: transparent !important;
+          opacity: 0 !important;
+        }
+
+        #img-cell::before,
+        .img-cell::before{
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-color: var(--casora-badge-icon-color, var(--casora-badge-security-color, #00c3d0)) !important;
+          -webkit-mask: url('${URL}') no-repeat center / auto ${SIZE};
+          mask: url('${URL}') no-repeat center / auto ${SIZE};
+          transform: translateZ(0);
+        }`;
+    ]]]

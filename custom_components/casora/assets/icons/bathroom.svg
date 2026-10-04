@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="1 2 22 21">
+  <!-- Casora: Badewanne (Badezimmer), gefüllt im Stil der SF-Symbol-Raum-Icons -->
+  <path d="M5 11.2V6.4a2.4 2.4 0 0 1 4.6-1" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M8.4 6.6h3.2" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+  <rect x="2" y="11" width="20" height="2.6" rx="1.3" fill="white"/>
+  <path d="M3.6 14.6h16.8v1.1a4.6 4.6 0 0 1-4.6 4.6H8.2a4.6 4.6 0 0 1-4.6-4.6z" fill="white"/>
+  <rect x="6.2" y="19.4" width="2" height="2.8" rx="1" fill="white"/>
+  <rect x="15.8" y="19.4" width="2" height="2.8" rx="1" fill="white"/>
+</svg>

@@ -1,0 +1,129 @@
+casora_plant:
+  template:
+    - casora_entity
+    - casora_popup_plant
+
+  variables:
+    mobile_filter_category: unfiltered
+    icon: plant
+    low_threshold: 30
+    sensors: []
+    use_flower_card: false
+
+  hold_action:
+    action: more-info
+
+  state_display: |
+    [[[
+      if (!entity?.state || entity.state === 'unavailable') return '— %';
+
+      if (entity.state === 'ok') return 'Healthy';
+
+      const sensors = Array.isArray(variables.sensors) ? variables.sensors.filter(Boolean) : [];
+
+      if (sensors.length > 0 && entity.state === 'problem') {
+        const safeNum = (id) => {
+          const s = states[id]?.state;
+          if (!s || s === 'unavailable' || s === 'unknown') return null;
+          const n = parseFloat(s);
+          return isNaN(n) ? null : n;
+        };
+        const getSensorType = (eid) => {
+          const id = eid.toLowerCase();
+          if (id.includes('moisture'))                       return 'moisture';
+          if (id.includes('illumin') || id.includes('lux')) return 'illuminance';
+          if (id.includes('temp'))                           return 'temperature';
+          if (id.includes('conductiv'))                      return 'conductivity';
+          if (id.includes('humid'))                          return 'humidity';
+          return null;
+        };
+        const attrs    = entity.attributes || {};
+        const scorable = sensors.filter(id => { const t = getSensorType(id); return t && Object.prototype.hasOwnProperty.call(attrs, t + '_status'); });
+        const scored   = scorable.filter(id => safeNum(id) != null);
+
+        if (scorable.length > 0 && scored.length === 0) return 'Unavailable';
+
+        if (scored.length > 0) {
+          const bad   = scored.filter(id => { const v = attrs[getSensorType(id) + '_status']; return v && v !== 'ok' && v !== 'null'; }).length;
+          const ratio = (scored.length - bad) / scored.length;
+          if (ratio >= 1)   return 'Healthy';
+          if (ratio >= 0.8) return 'Needs care';
+          if (ratio >= 0.6) return 'Struggling';
+          if (ratio >= 0.4) return 'Poor';
+          return 'Critical';
+        }
+      }
+
+      if (entity.state === 'problem') return 'Needs Attention';
+
+      const val = parseFloat(entity.state);
+      if (!Number.isNaN(val)) return `${Math.round(val)} %`;
+
+      const attr = parseFloat(entity.attributes?.moisture);
+      if (!Number.isNaN(attr)) return `${Math.round(attr)} %`;
+      return '— %';
+    ]]]
+
+  state:
+    - operator: template
+      value: |
+        [[[
+          if (entity?.state === 'problem') return true;
+          if (entity?.state === 'ok') return false;
+
+          const sensors = Array.isArray(variables.sensors) ? variables.sensors.filter(Boolean) : [];
+          if (sensors.length > 0) {
+            const safeNum = (id) => {
+              const s = states[id]?.state;
+              if (!s || s === 'unavailable' || s === 'unknown') return null;
+              const n = parseFloat(s);
+              return isNaN(n) ? null : n;
+            };
+            const getSensorType = (eid) => {
+              const id = eid.toLowerCase();
+              if (id.includes('moisture'))                       return 'moisture';
+              if (id.includes('illumin') || id.includes('lux')) return 'illuminance';
+              if (id.includes('temp'))                           return 'temperature';
+              if (id.includes('conductiv'))                      return 'conductivity';
+              if (id.includes('humid'))                          return 'humidity';
+              return null;
+            };
+            const attrs = entity?.attributes || {};
+            const hasProblems = sensors.some(id => {
+              if (safeNum(id) == null) return false;
+              const type = getSensorType(id);
+              if (!type) return false;
+              const v = attrs[type + '_status'];
+              return v && v !== 'ok' && v !== 'null';
+            });
+            if (hasProblems) return true;
+          }
+
+          const threshold = Number(variables.low_threshold ?? 30);
+          const val = parseFloat(entity?.state);
+          if (Number.isFinite(val)) return val <= threshold;
+          const attr = parseFloat(entity?.attributes?.moisture);
+          return Number.isFinite(attr) && attr <= threshold;
+        ]]]
+      styles:
+        card:
+          - "--casora-active-overlay-opacity": "1"
+          - --casora-entity-overlay-tint: var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))
+          - "--casora-active-overlay-dur": "0s"
+          - --casora-entity-top-gradient: none
+          - box-shadow: var(--button-card-box-shadow-active, var(--button-card-box-shadow)) !important
+          - --casora-icon-color-current: "var(--casora-color-yellow, #FFCC00)"
+          - --casora-icon-svg-url: "[[[ return `url('${window.casoraIconUrl(variables.icon || 'plant')}')`; ]]]"
+          - --casora-icon-use-mask: "1"
+          - --casora-icon-circle-bg: var(--casora-icon-color-current)
+        name:
+          - color: var(--casora-entity-name-active, var(--primary-text-color))
+        state:
+          - color: var(--casora-entity-state-active-color)
+        img_cell:
+          - opacity: "1 !important"
+          - filter: none !important
+          - background: "var(--casora-color-yellow, #FFCC00) !important"
+        entity_picture:
+          - opacity: "1 !important"
+          - filter: none !important

@@ -1,0 +1,76 @@
+# Casora: Rezept der Woche (Dienst casora.rezept_neu; Zeitplan unter Einstellungen → KI).
+# Variablen: weather_entity, idea_sensor, ai_web_entity, cookidoo (bool), hinweise, sprache. Ergebnis per Event casora_recipe_result.
+- event: casora_recipe_result
+  event_data:
+    status: running
+- action: ai_task.generate_data
+  continue_on_error: true
+  response_variable: r
+  data:
+    entity_id: '{{ ai_web_entity }}'
+    task_name: Casora Rezept der Woche
+    instructions: 'Schlage ein Rezept für diese Woche vor{{ '', das es auf cookidoo.de (Thermomix) gibt'' if cookidoo else
+      '''' }}. Antworte auf {{ sprache | default(''Deutsch'') }}.
+
+
+      Heute ist {{ now().strftime(''%d.%m.%Y'') }} ({{ [''Winter'',''Winter'',''Frühling'',''Frühling'',''Frühling'',''Sommer'',''Sommer'',''Sommer'',''Herbst'',''Herbst'',''Herbst'',''Winter''][now().month
+      - 1] }}).
+
+      Wetter gerade: {{ states(weather_entity) if weather_entity else ''unbekannt'' }}{{ ('', '' ~ state_attr(weather_entity,
+      ''temperature'') ~ '' °C'') if weather_entity else '''' }}.
+
+      Letzter Vorschlag (nicht wiederholen): {{ states(idea_sensor) if idea_sensor else ''keiner'' }}.
+
+
+      Anforderungen:
+
+      {% if hinweise %}
+
+      - Hinweise des Haushalts: {{ hinweise }}
+
+      {% endif %}
+
+      - saisonal passend und alltagstauglich, höchstens etwa 45 Minuten Arbeitszeit
+
+      - ein Hauptgericht für 2–4 Personen
+
+      - Suche per web_search {{ ''auf cookidoo.de '' if cookidoo else '''' }}nach einem echten Rezept und gib dessen Link
+      an{{ '' (https://cookidoo.de/recipes/recipe/de-DE/...)'' if cookidoo else '''' }}. Wenn du keinen echten Link findest,
+      lass link leer; niemals einen Link erfinden.
+
+      - reason: ein kurzer Satz, warum es diese Woche passt
+
+      - ingredients: die 5–8 wichtigsten Zutaten, kurz (z. B. "500 g Kürbis")'
+    structure:
+      name:
+        required: true
+        selector:
+          text: {}
+      minutes:
+        description: Gesamtzeit in Minuten
+        required: true
+        selector:
+          number: {}
+      link:
+        selector:
+          text: {}
+      reason:
+        required: true
+        selector:
+          text: {}
+      ingredients:
+        selector:
+          text:
+            multiple: true
+- if:
+  - condition: template
+    value_template: '{{ r is defined and r.data is defined and r.data is mapping and r.data.name is defined }}'
+  then:
+  - event: casora_recipe_result
+    event_data:
+      status: done
+      result: '{{ r.data }}'
+  else:
+  - event: casora_recipe_result
+    event_data:
+      status: error
