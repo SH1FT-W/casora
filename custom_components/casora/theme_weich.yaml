@@ -103,7 +103,10 @@ Casora Weich:
   casora-security-alarm-color: var(--casora-color-red)
   casora-scene-badge-color: var(--casora-color-yellow)
   casora-scene-badge-color-active: var(--casora-color-yellow-dark)
-  casora-bell-badge: var(--casora-color-red)
+  # Kopfleiste D (1.0.7): Zähler und Punkt der Glocke in Karamell statt Rot
+  casora-bell-badge: var(--primary-color)
+  casora-bell-dot-fill: var(--primary-color)
+  casora-bell-count-ink: "#fff"
   casora-badge-energy-medium-color: var(--casora-color-green)
   casora-badge-energy-medium-row: var(--casora-color-green)
   casora-badge-energy-medium-selected: var(--casora-color-green)
@@ -190,15 +193,17 @@ Casora Weich:
   # Menüs (Navbar Räume/Szenen, ⋯-Menü, Raumleisten-Menü): Symbol im Ton auf 14-%-Kreis, Zeilen 44 hoch
   casora-menu-tone-mix: 100%
   casora-menu-ic-display: flex
-  casora-menu-ic-size: 30px
-  casora-menu-ic-fill: 14%
-  casora-menu-ic-col: 30px
+  # Kopfleiste D (1.0.7): Symbolkreise 32 mit leichter Tönung, Zeilen 44, Radius 24
+  casora-menu-ic-size: 32px
+  casora-menu-ic-fill: 12%
+  casora-menu-ic-col: 32px
   casora-menu-ic-gap: 12px
   casora-menu-row-h: 44px
   casora-menu-row-pad: 0 16px 0 7px
-  casora-menu-item-pad: 7px 16px 7px 7px
+  casora-menu-item-pad: 6px 16px 6px 8px
   casora-mnav-item-pad: 0 18px 0 7px
-  casora-menu-item-radius: 18px
+  casora-menu-item-radius: 16px
+  casora-menu-radius: 24px
   casora-menu-item-weight: 600
   casora-menu-item-dim: 1
   casora-menu-icons-filled: 1
@@ -212,8 +217,18 @@ Casora Weich:
   casora-mobile-title-ls: -1.1px
   casora-mobile-section-size: 17px
   casora-tile-row-h-mobile: 62px
-  # A-23: Kopf-Knöpfe 8 px Abstand (34 + 8)
-  casora-chrome-btn-step: 42px
+  # Kopfleiste D „Ruhig“ (1.0.7): Desktop-Kreise 40 mit 8 Abstand (mittig zur Raum-Leiste, die
+  # Mitte bleibt über casora-chrome-row-center-desktop), Handy-Kapsel 48 hoch, Trennstrich kürzer,
+  # Symbole etwas leichter, gleiche helle Fläche mit weichem Schatten (casora-chrome-shadow je Modus).
+  casora-chrome-btn-step: 48px
+  casora-chrome-btn-size-desktop: 40px
+  casora-np-head-size: 40px
+  casora-mchrome-h: 48px
+  casora-chrome-sep-top: 16px
+  casora-chrome-sep-h: 16px
+  casora-chrome-glyph-opacity: 0.82
+  casora-chrome-backdrop: var(--casora-pill-backdrop)
+  casora-pill-divider: color-mix(in srgb, var(--primary-text-color) 12%, transparent)
   # Updates-Popup „Mehr“: Überschrift „KI-Check“ wie „System“ (Funkel-Symbol 16 px macht die Zeile nicht höher)
   casora-upd-ai-head-pad: 4px 4px 10px
   casora-upd-ai-glyph-my: -1px
@@ -274,7 +289,7 @@ Casora Weich:
   # Aufgeklappt wie die offene Glocke: weißer Grund, dunkles Symbol (04.10.2026).
   casora-np-head-on: "#fff"
   casora-np-head-on-ink: "#000"
-  casora-np-head-play-ink: var(--casora-np-progress)
+  casora-np-head-play-ink: var(--casora-ton-ink)
   # Heizung = Wärme-Orange (Puck, Modus-Symbole); Temperaturleiste in der Weich-Palette statt iOS-Regenbogen
   casora-puck-heat-color: var(--casora-color-orange)
   casora-temp-gradient: "linear-gradient(90deg, #5B8FC9 0%, #4E9E95 32%, #E8B04A 62%, #DE8A4E 82%, #D35A4E 100%)"
@@ -394,9 +409,10 @@ Casora Weich:
       casora-notify-shadow: 0 1px 2px rgba(90,70,50,0.06), 0 14px 34px -12px rgba(90,70,50,0.26)
       casora-menu-pane-webkit: rgba(248,244,237,0.97)
       casora-menu-fg: rgba(46,39,33,0.95)
-      casora-menu-rim-top: rgba(255,255,255,0.7)
-      casora-menu-rim-bottom: rgba(255,255,255,0.4)
-      casora-menu-edge: rgba(120,100,80,0.10)
+      # Kopfleiste D (1.0.7): Menü ohne Randlinie und Glanzkante
+      casora-menu-rim-top: transparent
+      casora-menu-rim-bottom: transparent
+      casora-menu-edge: transparent
       casora-mnav-menu-bg: rgba(251,248,243,0.94)
       casora-mnav-over: rgba(246,241,233,0.96)
       casora-mnav-fg: var(--casora-text-2)
@@ -408,8 +424,9 @@ Casora Weich:
       casora-nav-border: rgba(120,100,80,0.10)
       casora-nav-active-fill: rgba(232,221,206,0.95)
       casora-pill-fill: rgba(251,248,243,0.80)
-      casora-pill-rim: inset 0 0 0 1px rgba(120,100,80,0.10), 0 8px 22px -14px rgba(90,64,40,0.30)
-      casora-pill-divider: rgba(120,100,80,0.16)
+      # Kopfleiste D (1.0.7): ohne Randlinie, nur weicher Schatten; Desktop-Kreise gleich
+      casora-pill-rim: 0 1px 2px rgba(90,70,50,0.05), 0 8px 24px -16px rgba(90,64,40,0.30)
+      casora-chrome-shadow: var(--casora-pill-rim)
       casora-popup-tiles-text-primary: 'rgba(58,50,43,0.95)'
       casora-popup-tiles-text-secondary: var(--casora-text-2)
       casora-popup-tiles-text-muted: var(--casora-text-2)
@@ -791,7 +808,8 @@ Casora Weich:
       casora-nav-active-fill: rgba(242,232,218,0.14)
       casora-pill-fill: rgba(46,42,38,0.80)
       # Dunkel ohne hellen Ring (Navbar Desktop, Leiste oben rechts), nur Schatten (04.10.2026)
-      casora-pill-rim: 0 8px 22px -14px rgba(0,0,0,0.50)
+      casora-pill-rim: 0 8px 24px -16px rgba(0,0,0,0.55)
+      casora-chrome-shadow: var(--casora-pill-rim)
       casora-popup-tiles-fill: rgba(255,240,220,0.05)
       casora-popup-tiles-text-primary: 'rgba(242,235,225,0.96)'
       casora-popup-tiles-text-secondary: var(--casora-text-2)
