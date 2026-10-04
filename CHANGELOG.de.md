@@ -15,6 +15,8 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   darunter, wie Räume mit mehreren Kontakten („Haustür“ / „Flur“ statt nur „Flur“).
 - Klima-Popup: Luftqualitätswerte heißen kurz wie Temperatur und Luftfeuchtigkeit („PM2.5“, „CO₂“)
   statt nach dem Gerät, und Namen mit Umlauten werden nicht mehr falsch großgeschrieben („LuftqualitäTsmonitor“).
+- Küche · Rezepte: Lange Rezeptnamen in der Speiseplan-Wochenleiste brechen auf zwei Zeilen um und enden
+  mit „…“, statt mitten im Wort abgeschnitten zu werden.
 
 ## 1.0.3 – 04.10.2026
 

@@ -1129,7 +1129,9 @@
     + '.hrk-h span{font-size:17px;font-weight:700;color:var(--casora-popup-tiles-text-primary, #2E2721);font-variant-numeric:tabular-nums;}'
     + '.hrk-d.now .hrk-h b, .hrk-d.now .hrk-h span{color:var(--casora-soft-icon-on, #276B64);}'
     + '.hrk-n{margin-top:auto;padding-top:10px;font-size:13px;font-weight:700;line-height:1.25;letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary, #2E2721);'
-    + 'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;}'
+    /* white-space:normal: button-card vererbt nowrap – dann brach der Name nie um und wurde
+       ohne „…“ abgeschnitten (Issue #3). Zwei Zeilen, danach Ellipse. */
+    + 'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;overflow-wrap:anywhere;}'
     + '.hrk-n.off{color:var(--casora-soft-sub, rgba(46,39,33,0.45));font-weight:500;}'
     + '.hrk-m{font-size:11.5px;font-weight:500;color:var(--casora-soft-sub, rgba(46,39,33,0.6));margin-top:2px;}</style>';
   R.weekHtml = function () {

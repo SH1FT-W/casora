@@ -15,6 +15,8 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   it, like rooms with several contacts (“Front door” / “Hallway” instead of only “Hallway”).
 - Climate popup: air quality readings get short names like temperature and humidity (“PM2.5”, “CO₂”)
   instead of the device name, and names with umlauts are no longer capitalized wrongly (“LuftqualitäTsmonitor”).
+- Kitchen · Recipes: long recipe names in the meal plan week strip wrap onto two lines and end with “…”
+  instead of being cut off mid-word.
 
 ## 1.0.3 – 04.10.2026
 
