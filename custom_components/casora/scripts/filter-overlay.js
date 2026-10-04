@@ -1160,6 +1160,7 @@
     // sichtbar erst beim zweiten Öffnen. Solange der Raum offen ist, kurz nachziehen.
     _settleRoom(n) {
       if (!this._showing || _activeOverlay !== this || !this._contentEl) return;
+      this._keepBlurUp();
       if (!this._autoSectionsDone) {
         this._ensureAutoSections();
         if (this._autoSectionsDone) this._sortSectionGrids();
@@ -1171,6 +1172,21 @@
       }
       const sbOk = !sb || sb.getBoundingClientRect().height > 0;
       if (n < 16 && (!this._autoSectionsDone || !sbOk)) setTimeout(() => this._settleRoom(n + 1), 300);
+    }
+
+    // #9: Der gezeigte Raum hat immer seine Hintergrundebene (Raumfoto + Schleier): eingehängt,
+    // sichtbar, mit Foto. Sonst schien die Startseite (Foto, Überschriften) durch die Raumkacheln.
+    _keepBlurUp() {
+      const b = this._blurLayerEl;
+      if (!this._showing || _activeOverlay !== this || !b) return;
+      if (!b.isConnected && this._appendTarget) { this._appendTarget.appendChild(b); _blurLayers.add(b); }
+      if (this._blurTwinEl && !this._blurTwinEl.isConnected) document.body.appendChild(this._blurTwinEl);
+      if (b.style.display === 'none' || b.style.opacity !== '1') {
+        b.style.transition = 'none';
+        b.style.display = 'block';
+        b.style.opacity = '1';
+      }
+      if (this._blurLayerRoomBg && b.style.background.indexOf('/casora_assets/rooms/') < 0) b.style.background = this._blurLayerRoomBg;
     }
 
     _ensureAutoSections() {
@@ -1889,6 +1905,10 @@
       const blurEl    = this._blurLayerEl;
       const overlayEl = this._overlayEl;
       if (!blurEl || !overlayEl) return;
+      // #9: Frames/Timer dieses Zeigens wirken nur, solange es noch dasselbe Overlay ist. Wird das
+      // Overlay dazwischen ab- und angehängt (Neuaufbau der Reihe), hat es eine neue Hintergrundebene;
+      // ein alter Frame setzte sonst „alle anderen Ebenen“ – also die neue eigene – auf unsichtbar.
+      const live = () => this._showing && this._blurLayerEl === blurEl;
 
       const prevOverlay = _activeOverlay;
       _activeOverlay = this;
@@ -2101,7 +2121,7 @@
       this._sortSectionGrids();
 
       requestAnimationFrame(() => {
-        if (!this._showing) return;
+        if (!live()) return;
         if (this._config?.room) setTimeout(() => this._settleRoom(0), 250);
 
         overlayEl.style.transform = 'translateY(0)';
@@ -2110,7 +2130,7 @@
 
         this._badgeShadowCards = [];
         const _tryBadgeShadows = (attempt) => {
-          if (!this._showing) return;
+          if (!live()) return;
           const badgeSR = this._badgeRowEl?.shadowRoot;
           if (!badgeSR) return;
           const badges = Array.from(badgeSR.querySelectorAll('button-card'));
@@ -2256,7 +2276,7 @@
 
         if (badgeAdopted || npAdopted) {
           requestAnimationFrame(() => {
-            if (!this._showing) return;
+            if (!live()) return;
             if (badgeAdopted && _movedBadgeRow?.owner === this &&
                 this._badgeRowWrapper?.parentNode === this._contentEl) {
               _alignAdoptedBadgeRow(this._badgeRowWrapper, this._badgeRowEl,
@@ -2281,7 +2301,7 @@
           blurEl.style.background = 'transparent';
           requestAnimationFrame(() => requestAnimationFrame(() => {
             blurEl.style.background = this._blurLayerRoomBg || 'var(--casora-filter-veil, rgba(0, 0, 0, 0.22))'; // casora-local-patch
-            if (!this._showing) return;
+            if (!live()) return;
             for (const el of _blurLayers) {
               if (el === blurEl) continue;
               el.style.transition = 'none';
@@ -2301,7 +2321,7 @@
 
         // Blur fades in, overlay fades in, entity sections slide up.
         requestAnimationFrame(() => {
-          if (!this._showing) return;
+          if (!live()) return;
 
           blurEl.style.transition    = `opacity 0.30s ease`;
           blurEl.style.opacity       = '1';
@@ -2338,7 +2358,8 @@
 
           // Entry settled - engage the scroll-linked header.
           setTimeout(() => {
-            if (this._showing && overlayEl) {
+            if (live() && overlayEl) {
+              this._keepBlurUp();
               overlayEl.style.transition = 'none';
               if (this._titleEl)          this._titleEl.style.transition = 'none';
               if (this._subBadgesWrapper) this._subBadgesWrapper.style.transition = 'none';
@@ -2349,7 +2370,7 @@
                 }
               }
               const tryEngage = () => {
-                if (!this._showing) return;
+                if (!live()) return;
                 if (_touchActive) { setTimeout(tryEngage, 120); return; }
                 this._engageScrollHeader();
               };

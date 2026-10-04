@@ -17,6 +17,9 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   instead of the device name, and names with umlauts are no longer capitalized wrongly (“LuftqualitäTsmonitor”).
 - Kitchen · Recipes: long recipe names in the meal plan week strip wrap onto two lines and end with “…”
   instead of being cut off mid-word.
+- Phone: opening a room from the bottom bar sometimes showed the blurred Home photo instead of the room
+  photo, with Home headings like “Favorites” showing through the tiles. The room background now always
+  appears, also when the page rebuilds the room while switching.
 
 ## 1.0.3 – 04.10.2026
 
