@@ -7,6 +7,11 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ## 1.0.5 – 04.10.2026
 
 ### Behoben
+- Glocke: Nach einem Neustart von Home Assistant stand „2 Updates verfügbar“ wieder als neu da,
+  obwohl genau diese Updates schon gelesen waren. Stehende Einträge (Updates, Neustart ausstehend,
+  Akku schwach, Sicherheits- und Wetterwarnungen, Pflanzen, Geräte, Gerätepflege) behalten bei
+  gleichem Inhalt den Zeitpunkt, an dem sie zuerst gesehen wurden. Neu sind sie erst wieder, wenn
+  etwas Neues dazukommt, etwa ein weiteres Update oder eine neuere Version.
 - Einkaufsliste: Öl zeigt jetzt eine Flasche statt der Ölkanne vom Auto.
 - Glocke: Ein „fertig“-Eintrag (Saugroboter, Waschmaschine, Trockner, Spüler, Drucker) verschwand
   manchmal beim erneuten Öffnen, obwohl nichts gelesen oder gelöscht war. Ein abgeschlossener Vorgang

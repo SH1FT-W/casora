@@ -625,6 +625,8 @@ if (typeof window.casoraClimateActive !== 'function') {
       var m = mid.getTime();
       rows.forEach(function (r) {
         if (String(r.id || '').indexOf('casora:plant:') !== 0) return;
+        // Zeitpunkt kommt hier aus dem Verlauf (neustartfest), nicht aus dem Sichtungs-Merker.
+        delete r.seen;
         var st = hass.states[r.entity];
         var lc = st && st.last_changed;
         var c = _plant[r.entity];

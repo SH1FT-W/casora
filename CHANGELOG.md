@@ -7,6 +7,11 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 1.0.5 – 04.10.2026
 
 ### Fixed
+- Bell: after a Home Assistant restart, "2 updates available" showed up as new again although
+  exactly these updates had already been read. Standing entries (updates, pending restart, low battery,
+  safety and weather warnings, plants, appliances, appliance care) now keep the time they were first
+  seen for the same content. They only count as new again when something new joins, such as another
+  update or a newer version.
 - Shopping list: oil now shows a bottle instead of the car oil can.
 - Bell: a "finished" entry (robot vacuum, washer, dryer, dishwasher, printer) sometimes disappeared when
   the bell was opened again, although nothing was read or cleared. A finished run now stays until the

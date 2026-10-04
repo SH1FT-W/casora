@@ -350,6 +350,8 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     r.label = low.length === 1 ? nm(low[0].st).replace(/\s+Battery$/i, '') + ' Akku schwach' : low.length + ' Geräte mit schwachem Akku';
     r.value = low.length === 1 && low[0].pct != null ? low[0].pct + '%' : null;
     r.entity = low.length === 1 ? low[0].st.entity_id : null;
+    // Stabiler Inhaltsschlüssel (casora-core settleSeen): Neustart macht den Eintrag nicht neu.
+    r.seen = low.map(function (x) { return { k: x.st.entity_id, t: Date.parse(x.st.last_changed || '') }; });
     out[idx] = r;
     return out;
   }
@@ -1257,6 +1259,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
             tone: (a.severity === 'Severe' || a.severity === 'Extreme') ? 'bad' : 'warn',
             entity: id,
             rank: 1,
+            seen: [id + '|' + warningType(st) + '|' + String(a.severity || '') + '|' + String(a.expires || '')],
           });
         });
       }
@@ -1325,6 +1328,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
             icon: x[3],
             tone: bad ? 'bad' : 'warn',
             entity: x[1],
+            seen: [x[0] + '|' + items.join(',')],
           });
         });
 

@@ -7914,6 +7914,59 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
   var _lowSince = {};
 
+  // Stehende Einträge über HA-Neustarts (1.0.5): Updates, Akku, Sicherheit, Pflanzen … nahmen
+  // last_changed als Zeitpunkt. Nach einem Neustart beginnt das neu, „2 Updates verfügbar“ stand
+  // wieder unter „Neu“. Zeilen mit `seen` (Liste von Inhaltsschlüsseln, je Schlüssel optional mit
+  // eigenem Zeitpunkt { k, t }) bekommen als Zeitpunkt den ersten Sichtungszeitpunkt ihres
+  // jüngsten Schlüssels. Gleicher Inhalt bleibt gelesen, ein neuer Schlüssel (neues Update, neue
+  // Version) macht die Zeile wieder neu. Verschwundene Schlüssel bleiben SEEN_GONE_MS gemerkt,
+  // damit Entitäten, die nach dem Neustart erst später laden, nicht als neu zählen.
+  var SEEN_KEY = 'casora_notify_seen_v1';
+  var SEEN_GONE_MS = 2 * 3600 * 1000;
+
+  function settleSeen(rows) {
+    var memo;
+    try { memo = JSON.parse(localStorage.getItem(SEEN_KEY) || '{}'); } catch (e) { memo = {}; }
+    if (!memo || typeof memo !== 'object' || Array.isArray(memo)) memo = {};
+    var before = JSON.stringify(memo);
+    var now = Date.now();
+    var live = {};
+    rows.forEach(function (r) {
+      if (!r || !r.id || !Array.isArray(r.seen) || !r.seen.length) return;
+      var m = memo[r.id];
+      if (!m || typeof m !== 'object') m = memo[r.id] = {};
+      var natural = Math.min(Number(r.when) || now, now);
+      var t = 0;
+      r.seen.forEach(function (x) {
+        var k = String(x && typeof x === 'object' ? x.k : x);
+        var own = x && typeof x === 'object' ? Number(x.t) : NaN;
+        live[r.id + '\n' + k] = 1;
+        var e = m[k];
+        if (!e || !isFinite(e.t)) e = m[k] = { t: isFinite(own) && own > 0 ? Math.min(own, now) : natural };
+        delete e.g;
+        if (e.t > t) t = e.t;
+      });
+      if (t) r.when = t;
+    });
+    Object.keys(memo).forEach(function (id) {
+      var m = memo[id];
+      if (!m || typeof m !== 'object') { delete memo[id]; return; }
+      Object.keys(m).forEach(function (k) {
+        if (live[id + '\n' + k]) return;
+        var e = m[k];
+        if (!e || !isFinite(e.t)) { delete m[k]; return; }
+        if (!e.g) e.g = now;
+        else if (now - e.g > SEEN_GONE_MS) delete m[k];
+      });
+      if (!Object.keys(m).length) delete memo[id];
+    });
+    var after = JSON.stringify(memo);
+    if (after !== before) {
+      try { localStorage.setItem(SEEN_KEY, after); } catch (e) { /* privat/voll */ }
+    }
+    return rows;
+  }
+
   function standing(hass) {
     var rows = [];
     var S = hass.states;
@@ -7951,6 +8004,11 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         tone: 'accent',
         entity: updates[0].entity_id,
         opens: ['casora_updates', 'casora_popup_updates'],
+        // Neue Version ändert nur last_updated, nicht last_changed.
+        seen: updates.map(function (st) {
+          return { k: st.entity_id + '@' + String((st.attributes || {}).latest_version || ''),
+            t: Date.parse(st.last_updated || st.last_changed || '') };
+        }),
       });
     }
 
@@ -7966,6 +8024,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         tone: 'warn',
         entity: restarts[0].entity_id,
         opens: ['casora_updates', 'casora_popup_updates'],
+        seen: restarts.map(function (st) {
+          return st.entity_id + '@' + String((st.attributes || {}).installed_version || '');
+        }),
       });
     }
 
@@ -8011,6 +8072,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         tone: 'bad',
         entity: low.length === 1 ? low[0].st.entity_id : null,
         opens: ['casora_battery', 'casora_popup_battery'],
+        seen: low.map(function (x) {
+          return { k: x.st.entity_id, t: Date.parse(x.st.last_changed || '') };
+        }),
       });
     }
 
@@ -8037,6 +8101,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           tone: 'bad',
           entity: id,
           rank: 1,
+          seen: [id + '|' + dc(st)],
         });
       });
     }
@@ -8177,7 +8242,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         var bare = id.slice(7);
         if (plants.some(function (n) { return bare.indexOf(n) === 0; })) return;
         var ppm = parseFloat(st.state);
-        if (!isFinite(ppm) || ppm < co2Limit) return;
+        // Nicht verfügbar (Neustart): Merker behalten, sonst begann der Wert danach als neu.
+        if (!isFinite(ppm)) {
+          if (isFinite(Number(co2Since[id]))) co2Now[id] = Number(co2Since[id]);
+          return;
+        }
+        if (ppm < co2Limit) return;
         var bad = ppm >= 2000;
         var crossed = Number(co2Since[id]);
         if (!isFinite(crossed)) crossed = Date.now();
@@ -8231,6 +8301,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           tone: 'warn',
           entity: id,
           opens: ['casora_plant', 'casora_popup_plant'],
+          // Tag im Schlüssel: jeden Morgen wieder neu, wie bisher.
+          seen: [id + '|' + first.sensor_type + ':' + first.status + '|' + midnight.getTime()],
         });
       });
     }
@@ -8256,6 +8328,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           icon: 'default',
           tone: 'accent',
           entity: a.entity,
+          seen: [a.entity],
         });
       });
     }
@@ -8265,7 +8338,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       if (Array.isArray(next)) rows = next;
     });
 
-    return rows;
+    return settleSeen(rows);
   }
 
   // ── Collection ─────────────────────────────────────────────────────────────
