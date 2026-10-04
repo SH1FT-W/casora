@@ -388,6 +388,31 @@
     try { const ls = localStorage.getItem('casora-room-groups'); if (ls) v = ls; } catch (_) {}
     return v !== 'off' && v !== 'false';
   }
+  // Kacheln eines Raums in Gruppen teilen: [{ key, cards }] in ROOM_GROUP_ORDER, oder null, wenn
+  // der Raum flach bleibt (zu wenige Kacheln oder nur eine Kategorie).
+  function _roomGroupSplit(cards) {
+    if (!Array.isArray(cards) || cards.length < ROOM_GROUP_MIN_TILES) return null;
+    const buckets = new Map();
+    for (const c of cards) {
+      const key = _roomGroupOf(c);
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key).push(c);
+    }
+    if (buckets.size < 2) return null;
+    return ROOM_GROUP_ORDER.filter((k) => buckets.has(k)).map((k) => ({ key: k, cards: buckets.get(k) }));
+  }
+  // Überschrift einer Gruppe in der Sprache des Dashboards.
+  function _roomGroupHeading(key) {
+    const label = ROOM_GROUP_LABEL[key] || key;
+    const shown = window.casoraTr ? window.casoraTr(label) : label;
+    // „Licht“ heißt sonst überall „Light“; als Gruppe schreibt Apple „Lights“ (04.10.2026).
+    return (key === 'lights' && shown === 'Light') ? 'Lights' : shown;
+  }
+  // Dieselbe Zuordnung für die Handy-Vorschau im Studio (casora-panel.js).
+  window.casoraRoomGroups = {
+    order: ROOM_GROUP_ORDER, label: ROOM_GROUP_LABEL, minTiles: ROOM_GROUP_MIN_TILES,
+    of: _roomGroupOf, split: _roomGroupSplit, heading: _roomGroupHeading,
+  };
 
   const H_SCROLL_IDS = new Set(['media_row', 'climate_row', 'rooms_row']);
 
@@ -1354,20 +1379,13 @@
         // (room.tiles, per syncPairTiles aufs Handy übernommen). Nach Kategorien gruppiert
         // wird nur auf Wunsch (siehe _roomGroupOn).
         // Nur eine Kategorie oder sehr wenige Kacheln: flach wie bisher („Geräte“).
-        const grouped = roomMode && _roomGroupOn(this._config) && roomCards.length >= ROOM_GROUP_MIN_TILES
-          && new Set(roomCards.map(_roomGroupOf)).size > 1;
-        if (grouped) {
-          const buckets = new Map();
-          for (const c of roomCards) {
-            const key = _roomGroupOf(c);
-            if (!buckets.has(key)) buckets.set(key, []);
-            buckets.get(key).push(c);
-          }
+        const groups = roomMode && _roomGroupOn(this._config) ? _roomGroupSplit(roomCards) : null;
+        if (groups) {
           let first = !this._contentEl.children.length;
-          for (const key of ROOM_GROUP_ORDER.filter((k) => buckets.has(k))) {
+          for (const { key, cards } of groups) {
             this._appendGroupHeader(key, first, i);
             first = false;
-            this._appendEntityGrid(buckets.get(key), this._contentEl, i);
+            this._appendEntityGrid(cards, this._contentEl, i);
             if (room.sort === false) this._contentEl.lastElementChild._casoraNoSort = true;
             i++;
           }
@@ -1411,10 +1429,7 @@
         'color:var(--casora-room-group-ink, var(--primary-text-color))', 'opacity:0.72',
         'box-sizing:border-box', 'white-space:nowrap', 'overflow:hidden', 'text-overflow:ellipsis',
       ].join(';');
-      const label = ROOM_GROUP_LABEL[key] || key;
-      const shown = window.casoraTr ? window.casoraTr(label) : label;
-      // „Licht“ heißt sonst überall „Light“; als Gruppe schreibt Apple „Lights“ (04.10.2026).
-      head.textContent = (key === 'lights' && shown === 'Light') ? 'Lights' : shown;
+      head.textContent = _roomGroupHeading(key);
       wrap.appendChild(head);
       this._contentEl.appendChild(wrap);
     }

@@ -8071,6 +8071,12 @@ class CasoraPanel extends HTMLElement {
         }
         .miniphone .mp-scenes.grid .mp-scene { width:100%; }
         .miniphone .mp-head.tappable { cursor:pointer; }
+        /* Raum-Kategorien wie am Handy (filter-overlay.js _appendGroupHeader): kleiner und ruhiger. */
+        .miniphone .mp-head.mp-group {
+          height:20px; font-size:15px; font-weight:600; letter-spacing:-0.2px;
+          opacity:0.72; margin-top:18px; margin-bottom:-2px;
+        }
+        .miniphone .mp-head.mp-group.first { margin-top:14px; }
         .miniphone .mp-head {
           display:flex; align-items:center; gap:4px; height:24px;
           color:#fff; font-size:var(--ph-head); font-weight:700;
@@ -9157,6 +9163,9 @@ class CasoraPanel extends HTMLElement {
         }
         .card.grouped > .chead + .subtitle { padding-top:4px; }
         :is(.card, .tile).grouped .subcard + .subcard { margin-top:10px; }
+        /* Feld mit eigener Erklärung, danach die nächste Karte derselben Gruppe: Abstand wie
+           in den iOS-Einstellungen, sonst klebt die Karte am Erklärtext darüber. */
+        :is(.card, .tile).grouped .subcard + .hint:has(+ .subcard) { padding-bottom:20px; }
         .subhead + .row { border-top:0; }
         .advbody > :first-child { border-top:0; }
         .row, .subhead, .advsum, .empty-note, .addmore {
@@ -21526,10 +21535,39 @@ class CasoraPanel extends HTMLElement {
         body.appendChild(sgroup);
       }
 
-      // Wie die Raumseite am Handy (filter-overlay.js): Kacheln in Studio-Reihenfolge,
-      // ohne Kategorie-Gruppen und ohne „Aktive zuerst“; nach den Szenen ein „Geräte“-Kopf.
+      // Wie die Raumseite am Handy (filter-overlay.js): Kacheln in Studio-Reihenfolge, ohne
+      // „Aktive zuerst“. Nach Kategorien gruppiert mit derselben Zuordnung (window.casoraRoomGroups),
+      // solange der Schalter room_groups an ist; sonst nach den Szenen ein „Geräte“-Kopf.
       const roomTiles = sec ? liveTiles(sec) : [];
-      if (roomTiles.length) {
+      const RG = window.casoraRoomGroups;
+      if (!RG && !this._roomGroupsLoading) {
+        this._roomGroupsLoading = true;
+        import("/casora_scripts/filter-overlay.js")
+          .then(() => { if (window.casoraRoomGroups) this._rebuildPreview(); })
+          .catch(() => {});
+      }
+      const rgRaw = [((home || {}).variables || {}).room_groups, sv.room_groups].find(isSet);
+      const rgOn = rgRaw !== false && rgRaw !== "false" && rgRaw !== "off";
+      const groups = RG && rgOn ? RG.split(roomTiles) : null;
+      if (groups) {
+        const de = /^de\b/i.test(String(((this._hass || {}).locale || {}).language
+          || (this._hass || {}).language || ""));
+        const EN = { lights: "Lights", climate: "Climate", security: "Security",
+          media: "Speakers & TVs", water: "Water", other: "Other" };
+        groups.forEach(({ key, cards }, gi) => {
+          const head = document.createElement("div");
+          head.className = "mp-head mp-group" + (gi || scenes.length || crow.children.length ? "" : " first");
+          head.dataset.stagger = "1";
+          head.dataset.roomGroup = key;
+          // Dieselbe Überschrift wie am Handy; ohne geladene Dashboard-Übersetzung Englisch.
+          const txt = window.casoraTr || de ? RG.heading(key) : (EN[key] || RG.heading(key));
+          head.appendChild(Object.assign(document.createElement("span"), { textContent: txt }));
+          body.appendChild(head);
+          const row = tileRow(cards, sec, false);
+          row.dataset.stagger = "1";
+          body.appendChild(row);
+        });
+      } else if (roomTiles.length) {
         if (scenes.length) {
           const head = document.createElement("div");
           head.className = "mp-head";
