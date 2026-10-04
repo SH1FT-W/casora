@@ -93,8 +93,25 @@ class CasoraSwipeCard extends HTMLElement {
         -webkit-user-select: none;
         user-select: none;
       }
+      /* 04.10.2026: clip-path schneidet nur das Bild, nicht den Scrollbereich. Die verschobenen
+         Nachbarkarten ragten deshalb unsichtbar in die Kachelreihe und änderten beim Blättern
+         deren Scrollbreite (Reihe sprang mit, am Stapelende übernahm sie nicht). #clip schneidet
+         seitlich knapp vor der Nachbarkarte ab (overflow-x: clip, kein Scrollcontainer), oben und
+         unten bleibt alles sichtbar, damit der Schatten der Kachel ganz bleibt. */
+      #clip {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: calc(var(--casora-swipe-gap, 64px) / -2 + 1px);
+        right: calc(var(--casora-swipe-gap, 64px) / -2 + 1px);
+        padding: 0 calc(var(--casora-swipe-gap, 64px) / 2 - 1px);
+        overflow-x: clip;
+        overflow-y: visible;
+        pointer-events: none;
+      }
       /* will-change nur während des Ziehens (setzt _attachGestures), nicht dauerhaft. */
       #track {
+        pointer-events: auto;
         display: flex;
         gap: var(--casora-swipe-gap, 64px);
         height: 100%;
@@ -150,7 +167,10 @@ class CasoraSwipeCard extends HTMLElement {
 
     const track = document.createElement('div');
     track.id = 'track';
-    root.appendChild(track);
+    const clip = document.createElement('div');
+    clip.id = 'clip';
+    clip.appendChild(track);
+    root.appendChild(clip);
     this._track = track;
 
     this._cards = this._config.cards.map((cfg) => {
