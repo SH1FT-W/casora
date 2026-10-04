@@ -80,7 +80,9 @@
       + 'justify-content:space-between;gap:18px;min-width:260px;box-sizing:border-box;padding:10px 12px 10px 22px;border-radius:999px;'
       + 'background:' + ROW + ';font-family:' + FONT + ';cursor:pointer;">'
       + '<div style="font-size:14.5px;font-weight:700;letter-spacing:-0.01em;color:' + INK + ';pointer-events:none;">'
-      + (on ? 'Deaktivieren' : 'Aktivieren') + '</div>'
+      // Schalter mit Gegenstand statt Befehl (Audit M11): „Deaktivieren“ neben einem
+      // eingeschalteten Schalter war mehrdeutig. Jetzt „Alarm“ – an = scharf.
+      + 'Alarm' + '</div>'
       + '<div role="switch" aria-checked="' + on + '" style="position:relative;width:44px;height:26px;border-radius:999px;flex:none;pointer-events:none;'
       + 'background:' + (on ? 'var(--casora-lps-switch-on, #B67A50)' : 'var(--casora-lps-switch-off, rgba(58,50,43,0.38))') + ';">'
       + '<div style="position:absolute;top:3px;left:' + (on ? '21px' : '3px') + ';width:20px;height:20px;border-radius:50%;'
