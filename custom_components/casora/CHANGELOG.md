@@ -31,12 +31,69 @@ Beta of the new Studio. The previous Studio stays one switch away.
 ### Fixed
 - Version numbers of pre-releases (1.1.0-beta.1) show in full in the Studio and in “New in Casora”.
 
+## 1.0.5 – 04.10.2026
+
+### Fixed
+- Shopping list: oil now shows a bottle instead of the car oil can.
+- Bell: a "finished" entry (robot vacuum, washer, dryer, dishwasher, printer) sometimes disappeared when
+  the bell was opened again, although nothing was read or cleared. A finished run now stays until the
+  24 hour window ends, even if the device changes state afterwards or the page is reloaded. The bell
+  waits for all extensions before it collects, and it detects the end of a cleaning run even when it is
+  the first change in the window, after a short device outage, or with a stateless logbook message in between.
+- Bell: the same door or window was listed twice (for example "Terrassentür ist offen" two times) when
+  contact, tilt sensor or combined sensor share a name and one of them has no area. One opening now
+  reports once. Contacts with the same name get the room in front when they are in different rooms, and
+  the device name or a number in the same room, so two identical rows never appear.
+- Bell: a running appliance with remaining time jumped back under "New" right after being read.
+- Bell: entries with the same time no longer swap places on refresh.
+- Studio, room background photo: uploading your own photo works reliably now, by click and by dragging it
+  onto the day or night slot. The new photo is selected right away and shows in the list and the preview
+  without reloading the page; the example photos stay in the list, and Save keeps it. Photos up to 16 MB
+  are accepted (before: 12 MB), PNG and WebP are stored as JPG so the dashboard finds them, large photos
+  are scaled down to 2560 px, and iPhone photos are turned upright. File names with umlauts or spaces work,
+  and the photo name is cleaned up instead of rejected. A night photo for a new name also serves by day
+  until a day photo is added. HEIC files get a clear message ("export as JPG"), and every error now says
+  what to do instead of showing a technical text. A replaced photo shows at once instead of the old one.
+### Improved
+- Soft look in dark: menus opened from the bottom bar no longer have the old light rim either.
+- Soft look on the phone: the bottom bar stands out clearly from the tiles (almost white in light, almost black in dark, without the old light rim).
+- Soft look: aquarium charts also turn calm when the tile brings its own bright color (for example from a Hemma move).
+- Soft look, light: a light linen veil now lies over the background photo (about 66 % at the top, fading
+  to nothing towards the bottom), so section headings, the title and the weather stay readable on any photo.
+  On the home page and room pages on desktop, tablet and phone, including the phone's room view. Text,
+  cards and the navigation bar are unchanged and sit above it. Dark, Standard and Glass are unchanged.
+- Updates popup: after installing an update that needs a restart, the open popup now rebuilds itself. The
+  row leaves the available updates, “Waiting for restart” appears and the heading offers “Restart now”,
+  without closing and reopening the popup. After the restart the section disappears again.
+- Phone: the “Scenes” button in the bottom bar now shows the same scenes, in the same order, as the scene
+  badge on desktop and tablet. With no selection at the badge it still shows all scenes. Existing phone
+  dashboards follow the badge right away; opening the Studio once writes the selection into the phone layout.
+
 ## 1.0.4 – 04.10.2026
 
 ### Improved
+- Soft look: the aquarium temperature chart uses a calm teal instead of bright cyan.
+- Media popup: the apps (sources) no longer sit in a single row that is cut off on the right. They wrap
+  and use the full width, sorted so every row is as full as possible, with the running app first. On
+  desktop and phone, rearranged when the size changes.
+- Soft look: the volume slider in the media popup is now filled in the Casora tone like the progress bar
+  instead of the media colour, in light and dark.
+- Soft look: while the player is open, its waveform button turns white like the open bell.
+- Soft look: the round media button next to the bell, messages and “…” (the minimised player's waveform)
+  now has the same background and shadow as those three buttons instead of a beige one, in light and dark.
+  While something plays, its waves are in the Casora tone like the play button and progress bar, otherwise
+  dark like the other icons.
+- Soft look: the progress bar of the media players (Now playing on desktop and phone, the mini player
+  next to the bell, the media popup and the Studio preview) is now always filled in the Casora tone, like
+  the play button, instead of the media colour. The light cover tint of the card stays.
 - Waste popup with the calendar turned on: the day card (next pickup or the tapped day) now sits at the top
   right above Bins, like in the calendar popup. On the phone it comes right below the header, followed by
   the bins and the calendar, and tapping a day gently scrolls up to the day card when it is out of view.
+- Waste: when the waste source cannot be reached (for example the collection service refuses the connection
+  and the waste calendar and pickup sensors are unavailable) and no pickup dates are known, the popup shows a
+  calm note “Waste calendar unreachable right now” naming the source instead of empty sections, the month
+  calendar stays visible without an empty day card, and the tile reads “Unreachable”. If only single sensors
+  are missing but dates are there, nothing changes.
 
 ### New
 - Look & Controls · Phone: a new “Room photo on the phone” slider sets how soft the room photo behind an
@@ -44,6 +101,27 @@ Beta of the new Studio. The previous Studio stays one switch away.
   scrolling follows it, and the Studio preview shows the room photo with the chosen softness right away.
 
 ### Fixed
+- Camera tiles that are offline no longer show “Live” for a few seconds after the dashboard loads.
+- Vacuum popup: while cleaning or returning, the large circle at the top showed only a small white
+  triangle instead of the vacuum symbol. The whole robot with its direction arrow now sits centred in the
+  circle, like the other popup headers.
+- Bell after a Home Assistant restart: open windows and doors showed “Open for 10 min” and appeared again
+  under New although they had been open for hours and were already read. Casora now remembers when each
+  door or window contact was opened and keeps that across restarts, so the duration stays right and a read
+  entry stays read.
+- Bell: two contacts with the same name (for example “Window” in the bedroom and in the utility room) both
+  read “Window is open” under New. The room now comes first in every section, like “Bedroom Window is open”,
+  also right after loading the page.
+- Desktop: a swipe stack in the tile row (for example plants/aquariums) no longer slides down by its own
+  height below the other tiles. The stack had collapsed to zero height since the 1.0.4 swipe fix and now
+  sits flush with the row again.
+- Bell: after a Home Assistant restart, locks, doors and people no longer show up as new entries ("Front door locked") just because they came back online.
+- Desktop and tablet: the tile row stays in one row again. Since the phone tile sizes were carried over from
+  Hemma, the room tiles on the desktop also carried “Size on phone: large”, and desktop and tablet read it
+  as well (large tile layout, row split into two rows with gaps, tiles slipping out of view). The size now
+  only counts on the phone dashboard; on the phone large tiles stay large.
+- Swipe tile: at the end of the stack the tile row scrolls on again, and while paging through the stack
+  the row stays put (tablet and desktop).
 - Media: a player that was already paused no longer shows up again for 10 minutes after every Home Assistant
   restart or short dropout. Casora remembers when it was really paused (same title), so the hide timer counts
   from there.

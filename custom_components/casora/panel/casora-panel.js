@@ -1617,7 +1617,17 @@ function phoneStale(pair) {
   if (renamed.length) syncPairRooms(trial);
   syncRoomChips(trial);
   const chips = chipsOf(trial.mobile) !== before;
-  return renamed.length || chips ? { renamed, chips } : null;
+  const scenes = phoneScenesStale(pair);
+  return renamed.length || chips || scenes ? { renamed, chips, scenes } : null;
+}
+
+// Szenen-Auswahl der Badge (Desktop/Tablet) fehlt an der Handy-Leiste? Dashboards von vor 1.0.5
+// trugen sie dort nicht; beim Öffnen des Studios gleicht _reconcilePhone sie an.
+function phoneScenesStale(pair) {
+  const src = ((((pair.desktop || {}).compact || {}).rooms || [])[0] || {}).variables || {};
+  const navs = (((pair.mobile || {}).chrome || {}).extraCards || []).filter((c) => c && c.type === MOBILE_NAV);
+  return navs.some((c) => SCENE_LIST_KEYS.some((k) =>
+    stable(scenePrefValue(k, src[k])) !== stable(scenePrefValue(k, c[k]))));
 }
 
 function extractPair(desktopCfg, mobileCfg, templates, editable) {
@@ -2444,7 +2454,8 @@ function applyScenePick(cfg, rooms) {
   }
   eachObject(cfg, (o) => {
     const nav = o.type === "custom:casora-nav";
-    if (nav || (o.type === FILTER_OVERLAY && o.room)) {
+    // Die Handy-Leiste („Szenen“) zeigt dieselbe Auswahl wie die Szenen-Badge (1.0.5).
+    if (nav || o.type === MOBILE_NAV || (o.type === FILTER_OVERLAY && o.room)) {
       (nav ? SCENE_KEYS : SCENE_LIST_KEYS).forEach((k) => {
         const x = val(k);
         if (x) o[k] = x; else delete o[k];
@@ -8790,6 +8801,8 @@ class CasoraPanel extends HTMLElement {
         .card.map.soft .mini-npsub { color:var(--casora-entity-state, rgba(255,255,255,0.62)); }
         .card.map.soft .mini-npctl path { fill:var(--casora-entity-name, #fff); }
         .card.map.soft .mini-npbar { background:var(--casora-progress-track-color, rgba(255,255,255,0.16)); }
+        /* Weich: Fortschritt in Ton wie der Wiedergabe-Knopf (Variante B, 04.10.2026). */
+        .card.map.soft .mini-npbar > span { background:var(--casora-np-progress, #B67A50); }
         @media (hover:hover) {
           .card.map.soft .miniroom [data-pv]:not(.mini-fill):not(.pvsel):hover,
           .card.map.soft .miniroom .pbadge[data-mk]:not(.pvsel):hover,
@@ -8836,6 +8849,7 @@ class CasoraPanel extends HTMLElement {
         .card.map.soft .miniphone .mp-npsub { color:var(--casora-entity-state, rgba(255,255,255,0.62)); }
         .card.map.soft .miniphone .mp-npbtn path { fill:var(--casora-entity-name, #fff); }
         .card.map.soft .miniphone .mp-npbar { background:var(--casora-progress-track-color, rgba(255,255,255,0.16)); }
+        .card.map.soft .miniphone .mp-npbar > span { background:var(--casora-np-progress, #B67A50); }
         .card.map.soft .miniphone.nophone::after { color:var(--casora-text-2, rgba(255,255,255,0.55)); }
         /* Handy-Leiste unten (Nachbildung aus casora-panel-addons.js) wie 04-navigation.js. */
         .card.map.soft .casora-mnav {
@@ -13938,10 +13952,12 @@ class CasoraPanel extends HTMLElement {
       const mlive = await this._ws({ type: "lovelace/config", url_path: pair.mobileUrl });
       const mcfg = expandAny(pair.mobile, { extras: omit(mlive, ["views", "button_card_templates"]),
         templates: mlive.button_card_templates });
+      applyScenePick(mcfg, rooms);
       await this._hass.callWS({ type: "lovelace/config/save", url_path: pair.mobileUrl, config: mcfg });
       pair.mobileRaw = clone(mcfg);
       if (res.renamed) this._log(`phone layout: ${res.renamed} renamed room(s) brought up to date`, "ok");
       if (stale.chips) this._log("phone layout: room badges brought up to date", "ok");
+      if (stale.scenes) this._log("phone Scenes: badge selection brought up to date", "ok");
       await this._syncFilterOptions();
     } catch (e) {
       this._log("phone layout not brought up to date: " + e.message, "warn");
@@ -19721,6 +19737,11 @@ class CasoraPanel extends HTMLElement {
     hint.className = "shothint";
     hint.textContent = "Choose a photo, or drop one onto a slot.";
     fs.appendChild(hint);
+    let pick = null;
+    let dropTo = null;
+    // Daneben fallen gelassen öffnet der Browser sonst das Bild selbst und verlässt das Studio.
+    shots.ondragover = (ev) => ev.preventDefault();
+    shots.ondrop = (ev) => ev.preventDefault();
 
     const preview = () => {
       const chosen = (this._imgs || []).find((i) => i.name === room.variables.image);
@@ -19734,14 +19755,14 @@ class CasoraPanel extends HTMLElement {
             + '<span class="shotover"><span class="shotglyph"></span>'
             + (url ? "Replace" : "Add " + label.toLowerCase()) + "</span>"
             + `<span class="cap">${label}</span>`;
-          w.onclick = () => this._pickFor(variant);
+          w.onclick = () => pick && pick(variant);
           w.ondragover = (ev) => { ev.preventDefault(); w.classList.add("over"); };
           w.ondragleave = () => w.classList.remove("over");
           w.ondrop = (ev) => {
             ev.preventDefault();
             w.classList.remove("over");
             const f = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
-            if (f) this._dropFor(f, variant);
+            if (f && dropTo) dropTo(f, variant);
           };
           shots.appendChild(w);
         });
@@ -19804,49 +19825,85 @@ class CasoraPanel extends HTMLElement {
 
     const file = document.createElement("input");
     file.type = "file";
-    file.accept = ".jpg,.jpeg,.png,.webp";
+    // Ohne HEIC in der Liste wandelt iOS Fotos beim Auswählen selbst in JPEG um.
+    file.accept = "image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp";
     file.hidden = true;
     fs.appendChild(file);
 
+    // Vom Server (code) bzw. vor dem Senden erkannte Fehler, in Klartext.
+    const MAX_MB = 16;
+    const why = {
+      too_large: `This photo is larger than ${MAX_MB} MB. Please choose a smaller one.`,
+      heic: "HEIC photos cannot be read here. Please export the photo as JPG.",
+      type: "This file is not a photo Casora can use. Please choose a JPG, PNG or WebP image.",
+      broken: "The photo could not be read. Please export it again as JPG.",
+      name: "Please choose another name for the photo.",
+      write: "Home Assistant could not save the photo.",
+    };
+    const looksHeic = (f) => /\.(heic|heif)$/i.test(f.name || "") || /hei[cf]/i.test(f.type || "");
+    const looksImage = (f) => /^image\//.test(f.type || "") || /\.(jpe?g|png|webp|hei[cf])$/i.test(f.name || "");
+
     const send = async (blob, variantValue) => {
-      const name = await this._ask({
+      if (!blob) return;
+      if (blob.size > MAX_MB * 1024 * 1024) return this._status(why.too_large, "err");
+      if (!looksImage(blob)) return this._status(why.type, "err");
+      const cur = room.variables.image || "";
+      // Mitgelieferte Beispielfotos (…-demo) lassen sich nicht überschreiben: dann der Raumname.
+      const suggest = cur && !/-demo$/.test(cur) ? cur : slug(room.name || room.path || "room");
+      const asked = await this._ask({
         title: "Image name",
         message: "Lowercase letters, digits and hyphens. Uploading the same name replaces it.",
-        value: room.variables.image || slug(room.name),
+        value: suggest,
         confirmLabel: "Upload",
+        validate: (v) => (/-(demo|night)$/.test(slug(v)) ? why.name : ""),
       });
-      if (!name) return;
+      if (!asked) return;
+      const name = slug(typeof asked === "string" ? asked : asked.value);
       const body = new FormData();
       body.append("name", name);
       body.append("variant", variantValue);
-      body.append("file", blob);
-      shots.classList.add("busy");
-      this._status("Uploading\u2026");
+      // Dateiname nur als Hinweis; der Server erkennt die Bildart am Inhalt.
+      body.append("file", blob, looksHeic(blob) ? "photo.heic" : "photo");
+      const busy = () => this.shadowRoot.querySelector(".shots");
+      const b0 = busy();
+      if (b0) b0.classList.add("busy");
+      this._status("Uploading…");
       try {
         const res = this._hass.fetchWithAuth
           ? await this._hass.fetchWithAuth("/api/casora/images", { method: "POST", body })
           : await fetch("/api/casora/images", { method: "POST", body });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || res.status);
+        let data = {};
+        try { data = await res.json(); } catch (e) { data = {}; }
+        if (!res.ok) {
+          const code = data.code || (res.status === 413 ? "too_large" : "");
+          const err = new Error(data.message || String(res.status));
+          err.nice = why[code] || "";
+          throw err;
+        }
         this._imgs = data.images || [];
-        room.variables.image = name;
-        this._status(`Uploaded ${name} (${variantValue})`, "ok");
-        this._log(`uploaded ${name} ${variantValue}`, "ok");
-        fill();
+        this._imgsLoaded = true;
+        room.variables.image = data.name || name;
+        this._markDirty();
+        this._status(`Uploaded ${room.variables.image} (${variantValue})`, "ok");
+        this._log(`uploaded ${room.variables.image} ${variantValue}`, "ok");
+        // Der Abschnitt kann während der Namensfrage neu gezeichnet worden sein: dann neu aufbauen.
+        if (sel.isConnected) fill(); else this._renderForm();
         this._setBackdrop();
       } catch (e) {
-        this._status("Upload failed: " + e.message, "err");
+        this._status(e.nice || ("Upload failed: " + e.message), "err");
         this._log("upload failed: " + e.message, "err");
       }
-      shots.classList.remove("busy");
+      const b1 = busy();
+      if (b1) b1.classList.remove("busy");
+      if (b0 && b0 !== b1) b0.classList.remove("busy");
     };
 
-    this._pickFor = (variantValue) => {
+    pick = (variantValue) => {
       file.value = "";
       file.onchange = () => { if (file.files && file.files[0]) send(file.files[0], variantValue); };
       file.click();
     };
-    this._dropFor = send;
+    dropTo = send;
 
     fill();
     this._images()

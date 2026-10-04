@@ -1194,7 +1194,7 @@
     [/pilz|champignon/, 'mdi:mushroom', '#AC8E68'],
     [/zitrone|limette|orange|apfel|birne|banane|beere|obst/, 'mdi:fruit-citrus', '#FFD60A'],
     [/wein\b|weißwein|rotwein/, 'mdi:bottle-wine', '#BF5AF2'],
-    [/öl\b|olivenöl|rapsöl/, 'mdi:oil', '#FFD60A'],
+    [/öl\b|olivenöl|rapsöl/, 'mdi:bottle-tonic-outline', '#FFD60A'],
     [/brühe|fond|gewürzpaste/, 'mdi:pot-steam', '#FF9F0A'],
     [/wasser/, 'mdi:water', '#64D2FF'],
     [/salz|pfeffer|curry|muskat|paprikapulver|zimt|kreuzkümmel|gewürz|chili/, 'mdi:shaker-outline', '#FF9F0A'],
@@ -2652,7 +2652,12 @@
         return x.localeCompare(y);
       });
     if (window._casoraUpdAiSweep) window._casoraUpdAiSweep();
-    if (!ids.length) return UI.group([{ icon: 'mdi:check', iconTone: 'rgba(0,0,0,0)', label: 'Keine Updates offen' }], null);
+    /* 1.0.5: Nichts mehr offen, aber ein Neustart steht aus – die Liste zeigt die Neustart-Zeilen
+       (Kopf darüber heißt dann „Wartet auf Neustart“ mit „Jetzt neu starten“). */
+    if (!ids.length) {
+      var rr = X.restartRows(states, h);
+      return rr.length ? UI.group(rr, null) : UI.group([{ icon: 'mdi:check', iconTone: 'rgba(0,0,0,0)', label: 'Keine Updates offen' }], null);
+    }
     /* Weich (E3): nur Name, neue Version und KI-Urteil als Punkt (08-weich-kompakt.js). */
     if (UI.soft && UI.soft() && window._casoraSoftUpd) {
       var sr = window._casoraSoftUpd.rows(states, ids);
@@ -2677,6 +2682,45 @@
         actionLive: { rules: X.RULES, text: 'Aktualisieren', color: TEAL },
       };
     }), null);
+  };
+
+  // ── Wartet auf Neustart (live, 1.0.5) ──
+  // Früher nur beim Öffnen gebaut: Wer im offenen Popup installierte, sah den Bereich erst nach
+  // erneutem Öffnen. Gleiche Erkennung wie headCount im Template: aus, Kurzfassung nennt
+  // „restart“, installierte = neueste Version.
+  X.needsRestart = function (e) {
+    if (!e || e.state !== 'off') return false;
+    var a = e.attributes || {};
+    return String(a.release_summary || '').toLowerCase().indexOf('restart') !== -1
+      && !!a.installed_version && a.installed_version === a.latest_version;
+  };
+  X.restartIds = function (states) {
+    return Object.keys(states).filter(function (id) { return id.indexOf('update.') === 0 && X.needsRestart(states[id]); })
+      .sort(function (a, b) {
+        var x = states[a].attributes.friendly_name || a, y = states[b].attributes.friendly_name || b;
+        return x.localeCompare(y);
+      });
+  };
+  X.restartRows = function (states, h) {
+    return X.restartIds(states).map(function (id) {
+      var a = states[id].attributes || {};
+      return { entity: id, iconTone: 'rgba(0,0,0,0)', image: h && h.logoOf ? h.logoOf(id) : null,
+        label: String(a.title || a.friendly_name || id).replace(/\s+Update$/i, ''),
+        sub: a.installed_version || null, value: 'Neustart erforderlich', valueTone: 'warn',
+        svc: { domain: 'homeassistant', service: 'restart' }, confirm: 'Neustart' };
+    });
+  };
+  // Eigener Bereich nur, solange daneben noch Updates offen sind – sonst stehen die Zeilen in der
+  // Liste selbst (X.list). Leer: '' (kein Abstand; der Bereich bringt seinen Abstand oben selbst mit).
+  X.restart = function (states, h) {
+    var UI = h.UI;
+    var pend = Object.keys(states).some(function (id) { return id.indexOf('update.') === 0 && states[id].state === 'on'; });
+    if (!pend) return '';
+    var rr = X.restartRows(states, h);
+    if (!rr.length) return '';
+    var soft = UI.soft && UI.soft();
+    return '<div style="padding-top:' + (soft ? 'var(--casora-popup-sec-gap, 22px)' : '18px') + '">'
+      + (soft ? UI.group(rr, 'Wartet auf Neustart') : h.headOut('Wartet auf Neustart') + UI.group(rr, null)) + '</div>';
   };
 
   // ── Übersprungen (auf-/zuklappbar, Standard zu) ──

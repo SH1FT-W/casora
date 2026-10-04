@@ -32,13 +32,74 @@ Beta des neuen Studios. Das bisherige Studio ist nur einen Schalter entfernt.
 ### Behoben
 - Versionsnummern von Vorabversionen (1.1.0-beta.1) stehen im Studio und in „Neu in Casora“ vollständig da.
 
+## 1.0.5 – 04.10.2026
+
+### Behoben
+- Einkaufsliste: Öl zeigt jetzt eine Flasche statt der Ölkanne vom Auto.
+- Glocke: Ein „fertig“-Eintrag (Saugroboter, Waschmaschine, Trockner, Spüler, Drucker) verschwand
+  manchmal beim erneuten Öffnen, obwohl nichts gelesen oder gelöscht war. Ein abgeschlossener Vorgang
+  bleibt jetzt stehen, bis das Zeitfenster von 24 Stunden abläuft, auch wenn das Gerät danach den
+  Zustand wechselt oder die Seite neu geladen wird. Die Glocke sammelt erst, wenn alle Erweiterungen
+  geladen sind, und erkennt das Reinigungsende auch, wenn es der erste Wechsel im Zeitfenster ist, nach
+  einem kurzen Verbindungsausfall des Geräts oder wenn im Logbuch eine Meldung ohne Zustand dazwischen steht.
+- Glocke: Dieselbe Tür oder dasselbe Fenster stand doppelt da (z. B. „Terrassentür ist offen“ zweimal),
+  wenn Kontakt, Kippsensor oder Kombi-Sensor gleich heißen und einer davon keinen Bereich hat. Jetzt meldet
+  eine Öffnung nur einmal. Gleichnamige Kontakte in verschiedenen Räumen bekommen den Raum davor, im selben
+  Raum den Gerätenamen oder eine Nummer, sodass nie zwei gleiche Zeilen entstehen.
+- Glocke: Ein laufendes Gerät mit Restzeit sprang nach dem Lesen sofort wieder unter „Neu“.
+- Glocke: Einträge mit gleicher Uhrzeit tauschten beim Aktualisieren nicht mehr ihre Reihenfolge.
+- Studio, Hintergrundbild eines Raums: Eigene Fotos hochladen klappt jetzt zuverlässig, per Klick und per
+  Ziehen auf den Tag- oder Nachtplatz. Das neue Foto ist sofort gewählt und steht ohne Neuladen in der Liste
+  und in der Vorschau; die Beispielfotos bleiben in der Liste, Speichern übernimmt es. Fotos bis 16 MB gehen
+  durch (vorher 12 MB), PNG und WebP werden als JPG abgelegt, damit das Dashboard sie findet, große Fotos
+  werden auf 2560 px verkleinert und iPhone-Fotos richtig gedreht. Dateinamen mit Umlauten oder Leerzeichen
+  gehen, der Fotoname wird bereinigt statt abgelehnt. Ein Nachtfoto unter neuem Namen gilt auch tagsüber,
+  bis ein Tagfoto dazukommt. HEIC-Dateien bekommen eine klare Meldung („als JPG exportieren“), und jeder
+  Fehler sagt jetzt, was zu tun ist, statt eines technischen Textes. Ein ersetztes Foto erscheint sofort
+  statt des alten.
+### Verbessert
+- Weich dunkel: Auch die Menüs aus der Leiste unten haben keinen hellen Rand mehr.
+- Weich am Handy: Die Leiste unten hebt sich klar von den Kacheln ab (hell fast weiß, dunkel fast schwarz, ohne den alten hellen Rand).
+- Weich: Aquarium-Diagramme werden auch dann ruhig, wenn die Kachel eine eigene grelle Farbe mitbringt (etwa aus dem Hemma-Umzug).
+- Weich, hell: Über dem Hintergrundfoto liegt jetzt ein heller Leinen-Schleier (oben etwa 66 %, nach unten
+  auslaufend), damit Abschnittsüberschriften, Titel und Wetter auf jedem Foto lesbar sind. Auf Startseite und
+  Raumseiten an Desktop, Tablet und Handy, auch in der Raumansicht am Handy. Schrift, Karten und
+  Navigationsleiste bleiben unverändert und liegen darüber. Dunkel, Standard und Glas bleiben wie bisher.
+- Updates-Popup: Nach dem Installieren eines Updates, das einen Neustart braucht, baut sich das offene
+  Popup jetzt selbst um. Die Zeile verschwindet aus den verfügbaren Updates, „Wartet auf Neustart“
+  erscheint und der Kopf bietet „Jetzt neu starten“, ohne das Popup zu schließen und neu zu öffnen.
+  Nach dem Neustart verschwindet der Bereich wieder.
+- Handy: Der Punkt „Szenen“ in der unteren Leiste zeigt jetzt dieselben Szenen in derselben Reihenfolge
+  wie die Szenen-Badge an Desktop und Tablet. Ist an der Badge nichts ausgewählt, stehen dort weiter alle
+  Szenen. Bestehende Handy-Dashboards folgen der Badge sofort; einmal das Studio öffnen trägt die Auswahl
+  ins Handy-Layout ein.
+
 ## 1.0.4 – 04.10.2026
 
 ### Verbessert
+- Weich: Das Temperatur-Diagramm im Aquarium-Popup ist in ruhigem Türkis statt in grellem Cyan.
+- Medien-Popup: Die Apps (Quellen) stehen nicht mehr in einer Reihe, die rechts abgeschnitten ist. Sie
+  brechen um und nutzen die ganze Breite, so angeordnet, dass jede Reihe möglichst voll ist, die laufende
+  App zuerst. Am Desktop und Handy, bei Größenänderung neu angeordnet.
+- Weich-Look: Der Lautstärke-Regler im Medien-Popup ist jetzt im Casora-Ton gefüllt wie der
+  Fortschrittsbalken statt in der Medienfarbe, hell und dunkel.
+- Weich: Solange der Player aufgeklappt ist, wird sein Wellen-Knopf weiß wie die geöffnete Glocke.
+- Weich-Look: Der runde Medien-Knopf neben Glocke, Mitteilungen und „…“ (die Wellen des minimierten
+  Players) hat jetzt denselben Grund und Schatten wie diese drei Knöpfe statt eines beigen, hell und dunkel.
+  Solange etwas läuft, sind die Wellen im Casora-Ton wie Wiedergabe-Knopf und Fortschrittsbalken, sonst
+  dunkel wie die anderen Symbole.
+- Weich-Look: Der Fortschrittsbalken der Mediaplayer („Aktuelle Wiedergabe“ am Desktop und Handy, der
+  Mini-Player neben der Glocke, das Medien-Popup und die Studio-Vorschau) ist jetzt immer im Casora-Ton
+  gefüllt, wie der Wiedergabe-Knopf, statt in der Medienfarbe. Die leichte Cover-Tönung der Karte bleibt.
 - Abfall-Popup mit eingeschaltetem Kalender: Die Tageskarte (nächste Abholung oder der angetippte Tag)
   steht jetzt rechts oben über „Tonnen“, wie im Kalender-Popup. Am Handy folgt sie direkt auf den Kopf,
   danach kommen Tonnen und Kalender, und beim Antippen eines Tages scrollt das Popup weich zur
   Tageskarte, wenn sie nicht zu sehen ist.
+- Abfall: Ist die Abfall-Quelle nicht erreichbar (etwa weil der Server des Entsorgers die Verbindung ablehnt
+  und Abfallkalender und Abholungs-Sensoren nicht verfügbar sind) und liegen keine Abholtermine vor, zeigt das
+  Popup statt leerer Abschnitte einen ruhigen Hinweis „Abfallkalender gerade nicht erreichbar“ mit dem Namen
+  der Quelle, der Monatskalender bleibt ohne leere Tageskarte sichtbar, und die Kachel zeigt „Nicht
+  erreichbar“. Fehlen nur einzelne Sensoren, aber Termine sind da, bleibt alles wie bisher.
 
 ### Neu
 - Design & Bedienung · Mobil: Ein neuer Regler „Raumfoto am Handy“ stellt ein, wie weich das Raumfoto
@@ -46,6 +107,27 @@ Beta des neuen Studios. Das bisherige Studio ist nur einen Schalter entfernt.
   28 px, der Schleier beim Scrollen geht mit, und die Studio-Vorschau zeigt das Raumfoto sofort so.
 
 ### Behoben
+- Kamera-Kacheln, die offline sind, zeigen nach dem Laden des Dashboards nicht mehr ein paar Sekunden lang „Live“.
+- Saugroboter-Popup: Während der Reinigung und auf dem Weg zurück zeigte der große Kreis oben nur ein
+  kleines weißes Dreieck statt des Saugroboter-Symbols. Jetzt steht der ganze Roboter mit Richtungspfeil
+  mittig im Kreis, wie bei den anderen Popup-Köpfen.
+- Glocke nach einem Home-Assistant-Neustart: Offene Fenster und Türen standen mit „Seit 10 Min.“ wieder
+  unter „Neu“, obwohl sie seit Stunden offen und schon gelesen waren. Casora merkt sich jetzt, seit wann
+  jeder Tür- und Fensterkontakt offen ist, auch über Neustarts hinweg. Die Dauer stimmt und Gelesenes
+  bleibt gelesen.
+- Glocke: Zwei Kontakte mit gleichem Namen (etwa „Fenster“ im Schlafzimmer und im HWR) hießen unter „Neu“
+  beide nur „Fenster ist offen“. Jetzt steht überall der Raum davor, etwa „Schlafzimmer Fenster ist offen“,
+  auch direkt nach dem Laden der Seite.
+- Desktop: Ein Wisch-Stapel in der Kachelreihe (etwa Pflanzen/Aquarien) rutscht nicht mehr um seine
+  eigene Höhe unter die übrigen Kacheln. Der Stapel war seit dem Wisch-Fix aus 1.0.4 auf null Höhe
+  zusammengefallen und steht jetzt wieder bündig in der Reihe.
+- Glocke: Nach einem Neustart von Home Assistant erscheinen Schlösser, Türen und Personen nicht mehr als neue Einträge („Wohnungstür verriegelt“), nur weil sie wieder erreichbar sind.
+- Desktop und Tablet: Die Kachelreihe bleibt wieder einreihig. Seit die Handy-Kachelgrößen aus Hemma
+  übernommen werden, trugen auch die Raum-Kacheln am Desktop „Größe in der Mobilansicht: groß“, und Desktop und Tablet
+  lasen das mit (Groß-Aufbau der Kachel, Reihe in zwei Reihen mit Lücken, Kacheln rutschten aus dem Bild).
+  Die Größe zählt jetzt nur im Handy-Dashboard; am Handy bleiben große Kacheln groß.
+- Swipe-Kachel: Am Stapelende scrollt die Kachelreihe wieder weiter, beim Blättern im Stapel bleibt die
+  Reihe stehen (Tablet und Desktop).
 - Medien: Ein schon pausierter Player taucht nach jedem Neustart von Home Assistant oder einem kurzen Ausfall
   nicht mehr 10 Minuten lang wieder auf. Casora merkt sich, wann er wirklich pausiert wurde (gleicher Titel),
   und die Ausblende-Zeit zählt ab dort.

@@ -4309,11 +4309,33 @@ window.casoraMenuGlass = {
   // Zweitonige Symbole (Apple-Stil, Zweitfläche mit geringer Deckkraft) zeigt der Ring
   // einfarbig: als Maske wurde die blasse Zweitfläche sonst ein Quadrat im Kreis.
   var MONO = {};
+  // Grober Rahmen (x0,y0,x1,y1) einer Liste von Pfaden aus den Zahlen ihrer d-Attribute.
+  function monoBox(tags) {
+    var b = null;
+    tags.forEach(function (t) {
+      var d = /\bd="([^"]*)"/.exec(t);
+      var n = d ? (d[1].match(/-?\d*\.?\d+/g) || []).map(parseFloat) : [];
+      for (var i = 0; i + 1 < n.length; i += 2) {
+        if (!b) b = [n[i], n[i + 1], n[i], n[i + 1]];
+        b[0] = Math.min(b[0], n[i]); b[1] = Math.min(b[1], n[i + 1]);
+        b[2] = Math.max(b[2], n[i]); b[3] = Math.max(b[3], n[i + 1]);
+      }
+    });
+    return b;
+  }
   function monoSvg(txt) {
     var low = 0, all = (txt.match(/<(path|circle|rect|ellipse|polygon)\b/g) || []).length;
+    // Liegt die blasse Zweitfläche neben statt hinter der Hauptfläche (Saugroboter beim Reinigen:
+    // Gerät blass, nur das Richtungsdreieck kräftig), ist sie Teil des Symbols und bleibt deckend.
+    // Sonst blieb im Ring nur das kleine Dreieck stehen.
+    var tags = txt.match(/<(path|circle|rect|ellipse|polygon)\b[^>]*>/g) || [];
+    var lowOf = function (t) { var m = /\b(?:fill-opacity|opacity)="([0-9.]+)"/.exec(t); var n = m ? parseFloat(m[1]) : 1; return n > 0 && n < 0.5; };
+    var bl = monoBox(tags.filter(lowOf));
+    var bh = monoBox(tags.filter(function (t) { return !lowOf(t) && !/\bopacity="0"/.test(t); }));
+    var apart = bl && bh && (bh[3] <= bl[1] || bl[3] <= bh[1] || bh[2] <= bl[0] || bl[2] <= bh[0]);
     var out = txt.replace(/\b(fill-opacity|opacity)="([0-9.]+)"/g, function (m, k, v) {
       var n = parseFloat(v);
-      if (n > 0 && n < 0.5) { low++; return k + '="0"'; }
+      if (n > 0 && n < 0.5) { low++; return k + (apart ? '="0.85"' : '="0"'); }
       return m;
     });
     // Nur Zweitflächen ausblenden – bleibt nichts Deckendes übrig, das Original behalten.
@@ -7799,6 +7821,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var id = entry.entity_id || '';
     var s = String(entry.state == null ? '' : entry.state);
     var name = entry.name || nameOf(st);
+    // Neustart oder kurzer Ausfall: unavailable/unknown → alter Zustand ist keine Neuigkeit
+    // (sonst nach jedem HA-Neustart „Schloss verriegelt“, „… hat das Haus verlassen“ usw.).
+    if (prev !== undefined && (/^(unavailable|unknown)$/.test(prev) || prev === s)) return null;
 
     if (id.indexOf('lock.') === 0) {
       var lk = { opens: ['casora_badge_lock_group', 'casora_popup_lock'] };
@@ -7844,7 +7869,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
     if (id.indexOf('vacuum.') === 0) {
       if (VACUUM_DONE[s] && VACUUM_BUSY[prev]) {
-        return { label: name + ' hat fertig gereinigt', icon: 'vacuum-charge', tone: 'good' };
+        return { label: name + ' hat fertig gereinigt', icon: 'vacuum-charge', tone: 'good', done: true };
       }
       if (s === 'error') return { label: name + ' braucht Aufmerksamkeit', icon: 'vacuum', tone: 'bad' };
       return null;
@@ -7860,7 +7885,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (appl) {
       var done = appl.done ? new RegExp('^' + appl.done + '$', 'i') : APPLIANCE_DONE;
       if (done.test(s) && APPLIANCE_BUSY.test(prev || '')) {
-        return { label: (appl.name || name) + ' fertig', icon: 'default', tone: 'good' };
+        return { label: (appl.name || name) + ' fertig', icon: 'default', tone: 'good', done: true };
       }
       return null;
     }
@@ -7868,6 +7893,24 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     return null;
   }
 
+
+  // Offen seit (1.0.5): die Integration merkt sich je Kontakt den echten Öffnungszeitpunkt
+  // (sensor.casora_media_paused, Attribut contacts) über Neustarts hinweg. Ohne Eintrag,
+  // bei geschlossenem Kontakt oder einem Merkwert nach last_changed zählt last_changed.
+  function openSince(st, states) {
+    if (!st) return undefined;
+    try {
+      var all = states || (hassOf() || {}).states || {};
+      var memo = all['sensor.casora_media_paused'];
+      var map = memo && memo.attributes && memo.attributes.contacts;
+      var e = map && st.entity_id ? map[st.entity_id] : null;
+      var t = e && e.since ? Date.parse(e.since) : NaN;
+      var lc = Date.parse(st.last_changed || '');
+      if (String(st.state) === 'on' && isFinite(t) && (!isFinite(lc) || t <= lc + 1000)) return e.since;
+    } catch (err) { /* fällt auf last_changed zurück */ }
+    return st.last_changed;
+  }
+  window._casoraOpenSince = openSince;
 
   var _lowSince = {};
 
@@ -8010,8 +8053,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         return id.indexOf('alarm_control_panel.') === 0 && /^armed_(away|vacation)$/.test(S[id].state);
       }) || (people.length > 0 && !people.some(function (id) { return S[id].state === 'home'; }));
       // Schloss mit eigenem Türsensor + Kontaktsensor an derselben Tür meldeten doppelt
-      // (Hemma 2.2.0): je Name nur eine Meldung.
-      var openSeen = {};
+      // (Hemma 2.2.0): eine Öffnung = eine Meldung. Sammeln, dann zusammenfassen (1.0.5).
+      var openList = [];
       ids.forEach(function (id) {
         if (id.indexOf('binary_sensor.') !== 0) return;
         var st = S[id];
@@ -8021,26 +8064,87 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           && kind !== 'opening') return;
         // Nur technisch „Tür“ (Tankerkönig-Status je Tankstelle …): keine Meldung (00-finden.js).
         if (notAnOpening(hass, id)) return;
-        var since = Date.parse(st.last_changed || '');
+        // Echter Öffnungszeitpunkt aus der Integration (1.0.5): nach einem HA-Neustart beginnt
+        // last_changed neu, die Glocke zeigte „Seit 10 Min.“ als neue Mitteilung. `when` ist
+        // zugleich der Gelesen-Schlüssel (Wasserstand), darum bleibt Gelesenes gelesen.
+        var since = Date.parse(openSince(st, S) || '');
         if (!isFinite(since)) return;
         var mins = Math.round((Date.now() - since) / 60000);
         if (mins < openMins) return;
-        var openName = tidyName(nameOf(st));
-        // Gleicher Name in verschiedenen Räumen („Fenster“ im Schlafzimmer und im HWR) sind
-        // verschiedene Fenster (04.10.2026): Schlüssel = Name + Bereich (Entität, sonst Gerät,
-        // sonst Raum im Dashboard). Schloss-Türsensor + Kontakt derselben Tür teilen den Bereich.
+        // Raum: Bereich der Entität, sonst des Geräts, sonst Raum im Dashboard. Verglichen wird
+        // immer der Raumname (vorher Bereichs-ID gegen Dashboard-Raumnamen: „wohnzimmer“ ≠
+        // „Wohnzimmer“, dieselbe Tür kam doppelt).
         var openReg = (hass.entities || {})[id] || {};
-        var openArea = openReg.area_id || ((hass.devices || {})[openReg.device_id] || {}).area_id || '';
-        if (!openArea && typeof window._casoraRoomOf === 'function') {
-          try { openArea = window._casoraRoomOf(id) || ''; } catch (e) { openArea = ''; }
+        var openDev = (hass.devices || {})[openReg.device_id] || null;
+        var openArea = openReg.area_id || (openDev && openDev.area_id) || '';
+        var openRoom = openArea ? (((hass.areas || {})[openArea] || {}).name || '') : '';
+        if (!openRoom && typeof window._casoraRoomOf === 'function') {
+          try { openRoom = window._casoraRoomOf(id) || ''; } catch (e) { openRoom = ''; }
         }
-        var openKey = openName + '|' + openArea;
-        if (openSeen[openKey]) return;
-        openSeen[openKey] = true;
+        openList.push({ id: id, st: st, since: since, mins: mins, name: tidyName(nameOf(st)),
+          room: openRoom, dev: openDev ? String(openDev.name_by_user || openDev.name || '') : '' });
+      });
+      // Kontakt + Kippsensor + Kombi-Sensor derselben Öffnung (00-finden.js, casoraOpenings):
+      // nur der Hauptsensor meldet, egal ob sie im selben Bereich liegen.
+      if (typeof window.casoraOpenings === 'function' && openList.length > 1) {
+        try {
+          var drop = {};
+          window.casoraOpenings(hass, openList.map(function (o) { return o.id; })).forEach(function (u) {
+            var mine = openList.filter(function (o) { return u.ids.indexOf(o.id) !== -1; });
+            if (mine.length < 2) return;
+            var keep = mine.filter(function (o) { return o.id === u.main; })[0] || mine[0];
+            mine.forEach(function (o) { if (o !== keep) drop[o.id] = true; });
+          });
+          openList = openList.filter(function (o) { return !drop[o.id]; });
+        } catch (e) { /* ohne Zusammenfassung weiter */ }
+      }
+      // Gleicher Name, gleicher (oder ein unbekannter) Raum und fast gleich lange offen: dieselbe
+      // Öffnung über zwei Sensoren (Schloss-Türsensor + Kontakt, Vorlage + Kontakt).
+      var SAME_OPENING_MS = 2 * 60000;
+      var merged = [];
+      openList.forEach(function (o) {
+        var twin = merged.filter(function (m) {
+          return m.name === o.name && Math.abs(m.since - o.since) <= SAME_OPENING_MS
+            && (!m.room || !o.room || m.room.toLowerCase() === o.room.toLowerCase());
+        })[0];
+        if (!twin) { merged.push(o); return; }
+        if (!twin.room && o.room) twin.room = o.room;
+      });
+      openList = merged;
+      // Raum vor den Namen („Schlafzimmer Fenster ist offen“), wenn der Name allein nichts sagt
+      // („Fenster“, „Tür“, „Tor“) oder zwei offene Kontakte gleich heißen. Bisher hängte das nur
+      // das lokale Modul an, das beim ersten Sammeln nach dem Laden noch fehlen kann: dann stand
+      // unter „Neu“ zweimal „Fenster ist offen“ (1.0.5).
+      var openNames = {};
+      openList.forEach(function (o) { openNames[o.name] = (openNames[o.name] || 0) + 1; });
+      openList.forEach(function (o) {
+        var title = o.name;
+        if (o.room && (openNames[o.name] > 1 || /^(Fenster|Tür|Tor)$/i.test(o.name))
+          && title.toLowerCase().indexOf(o.room.toLowerCase()) === -1) {
+          title = o.room + ' ' + title;
+        }
+        o.title = title;
+      });
+      // Gleicher Titel bleibt doch (gleicher Raum, verschiedene Öffnungen): Gerätename dahinter,
+      // sonst eine Nummer. Zwei gleiche Zeilen darf es nie geben.
+      var openTitles = {};
+      openList.forEach(function (o) { (openTitles[o.title] = openTitles[o.title] || []).push(o); });
+      Object.keys(openTitles).forEach(function (t) {
+        var same = openTitles[t];
+        if (same.length < 2) return;
+        var devs = same.map(function (o) { return o.dev; });
+        var byDev = devs.every(function (d, i) {
+          return d && d.toLowerCase() !== t.toLowerCase() && devs.indexOf(d) === i;
+        });
+        same.forEach(function (o, i) { o.title = byDev ? t + ' (' + o.dev + ')' : t + ' ' + (i + 1); });
+      });
+      openList.forEach(function (o) {
+        var st = o.st, id = o.id, mins = o.mins;
+        var title = o.title;
         rows.push({
           id: 'casora:open:' + id,
-          when: since,
-          label: openName + ' ist offen',
+          when: o.since,
+          label: title + ' ist offen',
           sub: 'Seit ' + (mins < 60 ? mins + ' Min.'
             : Math.round(mins / 60) + ' Std.'),
           ongoing: true,
@@ -8141,7 +8245,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         if (left == null) return;
         rows.push({
           id: 'casora:appliance:' + a.entity,
-          when: Date.now(),
+          // Start des Laufs statt „jetzt“: mit Date.now() war die Zeile bei jedem Sammeln neuer als
+          // der Gelesen-Stand und sprang nach dem Lesen sofort wieder unter „Neu“ (1.0.5).
+          when: Date.parse(st.last_changed || '') || Date.now(),
           label: (a.name || nameOf(st)) + (left > 0 ? ' läuft' : ' ist gleich fertig'),
           sub: left > 0
             ? (left < 60 ? left + ' Min. übrig'
@@ -8167,6 +8273,27 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var _rows = [];
   var _busy = null;
 
+  // Vorlauf vor dem Zeitfenster nur für den Vorzustand (1.0.5): der erste Logbuch-Eintrag im
+  // Fenster hatte sonst keinen, „cleaning → docked“ um die Fenstergrenze ging verloren.
+  var LOOKBACK_H = 6;
+  // Abgeschlossene Vorgänge (Sauger, Waschmaschine … fertig) bleiben stehen, bis das Zeitfenster
+  // abläuft, auch wenn ein späterer Neuaufbau sie nicht mehr herleitet (1.0.5).
+  var DONE_KEY = 'casora_notify_done_v1';
+  var DEAD = /^(unavailable|unknown)$/;
+
+  // Der Lader der lokalen Module (casora-local.js) läuft, ist aber noch nicht fertig: deren
+  // Erweiterungen (z. B. Saugroboter-Ende) fehlen dann noch.
+  function localPending() {
+    return !!window._casoraBootErrorGuard && !window._casoraLocalLoaded;
+  }
+
+  function doneMemo() {
+    try {
+      var v = JSON.parse(localStorage.getItem(DONE_KEY) || '[]');
+      return Array.isArray(v) ? v : [];
+    } catch (e) { return []; }
+  }
+
   function collect() {
     var hass = hassOf();
     if (!hass) return Promise.resolve(_rows);
@@ -8174,28 +8301,42 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
     var live = standing(hass);
     var ids = watched(hass);
-    var since = new Date(Date.now() - HOURS * 3600 * 1000).toISOString();
+    var sinceMs = Date.now() - HOURS * 3600 * 1000;
+    var from = new Date(sinceMs - LOOKBACK_H * 3600 * 1000).toISOString();
 
     var fetch = (ids.length && hass.callWS)
-      ? hass.callWS({ type: 'logbook/get_events', start_time: since, entity_ids: ids })
+      ? hass.callWS({ type: 'logbook/get_events', start_time: from, entity_ids: ids })
       : Promise.resolve([]);
 
     _busy = fetch.catch(function () { return []; }).then(function (entries) {
       var prev = {};
+      var real = {};
       var events = [];
       var asked = {};
       ids.forEach(function (id) { asked[id] = 1; });
       (entries || []).forEach(function (e) {
         var id = e.entity_id;
         if (!id || !asked[id]) return;
+        // Logbuch-Meldungen ohne Zustand (logbook.log, Automationen mit entity_id) sind kein
+        // Zustandswechsel. Bisher wurden sie zum Vorzustand '' und „cleaning → docked“ fiel aus.
+        if (e.state === undefined || e.state === null) return;
         var st = hass.states[id];
         var was = prev[id];
-        prev[id] = String(e.state == null ? '' : e.state);
-        var d = describe(e, st, was);
-        if (!d) return;
+        var cur = String(e.state);
+        prev[id] = cur;
+        // Kurzer Ausfall (unavailable/unknown) mitten im Ablauf: der letzte echte Zustand zählt.
+        // Gleich wie vorher = Neustart, keine Neuigkeit; anders = echter Wechsel im Ausfall
+        // (Sauger „returning → unavailable → docked“ ist fertig).
+        if (was !== undefined && DEAD.test(was) && real[id] !== undefined && !DEAD.test(cur)) {
+          was = real[id];
+        }
+        if (!DEAD.test(cur)) real[id] = cur;
         // `when` is epoch seconds, and float on some HA versions.
         var when = Math.round(Number(e.when) * 1000);
         if (!isFinite(when)) return;
+        if (when < sinceMs) return;
+        var d = describe(e, st, was);
+        if (!d) return;
         events.push({
           id: id + '@' + when,
           when: when,
@@ -8209,10 +8350,28 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           entity: id,
           opens: d.opens || null,
           once: d.once || null,
+          done: !!d.done,
         });
       });
 
-      events.sort(function (a, b) { return b.when - a.when; });
+      // Gemerkte „fertig“-Einträge, die der Neuaufbau nicht mehr liefert, bleiben im Fenster.
+      var have = {};
+      events.forEach(function (e) { have[e.id] = 1; });
+      doneMemo().forEach(function (m) {
+        if (!m || !m.id || have[m.id] || !(m.when >= sinceMs) || !asked[m.entity]) return;
+        have[m.id] = 1;
+        events.push(m);
+      });
+      if (!localPending()) {
+        try {
+          var memo = events.filter(function (e) { return e.done; })
+            .sort(function (a, b) { return b.when - a.when; });
+          localStorage.setItem(DONE_KEY, JSON.stringify(memo.slice(0, 20)));
+        } catch (e) { /* privat/voll */ }
+      }
+
+      // Gleiche Zeit: feste Reihenfolge (Kennung), sonst tauschten Zeilen beim Neuaufbau.
+      events.sort(function (a, b) { return (b.when - a.when) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0); });
 
       var kept = [];
       var perEntity = {};
@@ -8237,7 +8396,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       var room = Math.max(0, MAX_ROWS - live.length);
       _rows = live.concat(kept.slice(0, room))
         .sort(function (a, b) {
-          return ((b.rank || 0) - (a.rank || 0)) || (b.when - a.when);
+          return ((b.rank || 0) - (a.rank || 0)) || (b.when - a.when)
+            || (String(a.id) < String(b.id) ? -1 : String(a.id) > String(b.id) ? 1 : 0);
         });
       _busy = null;
       announce();
@@ -8877,8 +9037,13 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
   function boot() {
     var tick = function () { if (!document.hidden) collect(); };
+    var t0 = Date.now();
     var wait = setInterval(function () {
       if (!hassOf()) return;
+      // Erst sammeln, wenn die lokalen Erweiterungen da sind (höchstens 15 s warten): sonst
+      // stand z. B. „Saugroboter hat fertig gereinigt“ nach der Grundregel kurz in der Glocke
+      // und verschwand beim nächsten Sammeln mit Erweiterung wieder (1.0.5).
+      if (localPending() && Date.now() - t0 < 15000) return;
       clearInterval(wait);
       tick();
       setInterval(tick, POLL_MS);

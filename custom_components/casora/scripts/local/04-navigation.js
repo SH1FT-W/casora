@@ -92,7 +92,7 @@
       + '.hmn-bar.hmn-up{z-index:151;}'
       /* Raum-/Kategorie-Seiten scrollen in einer eigenen festen Ebene: Safaris Glas-Unschärfe erfasst sie nicht,
          die Kacheln lagen scharf auf der Leiste. Dort die Leiste fast deckend. */
-      + '.hmn-bar.hmn-over{background-color:var(--casora-mnav-over, rgba(30,33,38,0.9)) !important;}'
+      + '.hmn-bar.hmn-over{background-color:var(--casora-mnav-pane, var(--casora-mnav-over, rgba(30,33,38,0.9))) !important;}'
       + '.hmn-scrim.open{opacity:1;}'
       + '.hmn-scrim.out{transition-duration:220ms;}'
       + '.hmn-item .hmn-sub{display:block;font-size:12px;line-height:14px;color:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));margin-top:1px;}'
@@ -209,7 +209,7 @@
         if (self._idleIv) { clearInterval(self._idleIv); self._idleIv = null; document.removeEventListener('visibilitychange', self._onVis);
           ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(function (t) { window.removeEventListener(t, self._bump, true); }); } } }, 400);
     }
-    set hass(h) { this._hass = h; this._render(); }
+    set hass(h) { this._hass = h; this._render(); if (!this._scPre) { this._scPre = true; try { this._sceneCfg(); } catch (e) {} } }
     _haptic() { try { this.dispatchEvent(new CustomEvent('haptic', { detail: 'light', bubbles: true, composed: true })); } catch (e) {} }
     _set(opt) {
       if (!this._hass) return;
@@ -233,6 +233,12 @@
       bar.className = 'hmn-bar';
       /* Gleicher Glas-Look wie Casoras Punkte-Menü / Nav-Menüs (casoraMenuGlass), eigener Radius. */
       if (window.casoraMenuGlass) { window.casoraMenuGlass.apply(bar); bar.style.borderRadius = '30px'; }
+      /* Weich (04.10.2026, Variante B): Leiste hebt sich klar von den Kacheln ab, im Dunklen ohne hellen Rand.
+         Ohne die Theme-Variablen bleibt der Glas-Look von oben. */
+      bar.style.backgroundColor = 'var(--casora-mnav-pane, ' + (bar.style.backgroundColor || 'transparent') + ')';
+      bar.style.boxShadow = 'var(--casora-mnav-shadow, ' + (bar.style.boxShadow || 'none') + ')';
+      bar.style.backdropFilter = 'var(--casora-mnav-blur, ' + (bar.style.backdropFilter || 'none') + ')';
+      bar.style.webkitBackdropFilter = 'var(--casora-mnav-blur, ' + (bar.style.webkitBackdropFilter || 'none') + ')';
       var mk = function (key, icon, label) {
         var b = document.createElement('button');
         b.type = 'button'; b.className = 'hmn-btn'; b.setAttribute('data-k', key);
@@ -276,9 +282,16 @@
       var ago = function (ts) { var q = Date.parse(ts); if (isNaN(q)) return ''; var m = Math.max(0, Math.round((Date.now() - q) / 60000));
         return m < 1 ? 'Gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' T.'; };
       var list = [];
-      var ids = window.casoraNavScenes(h, this._cfg.scene_exclude);
+      /* Auswahl der Szenen-Badge (Desktop/Tablet), 1.0.5: das Studio schreibt sie beim Speichern an
+         die Leiste; ältere Handy-Dashboards ohne sie lesen sie aus dem Desktop-Dashboard (_deskScenes). */
+      var sc = this._sceneCfg();
+      var ids = window.casoraNavScenes(h, sc.scene_exclude);
+      if (Array.isArray(sc.scenes) && sc.scenes.length) {
+        var pick = sc.scenes.filter(function (id) { return h.states[id]; });
+        if (pick.length) ids = pick.filter(function (id) { return (sc.scene_exclude || []).indexOf(id) < 0; });
+      }
       /* Reihenfolge wie die Szenen-Badges (scene_order zuerst, dann alphabetisch) – 30.09.2026. */
-      var so = Array.isArray(this._cfg.scene_order) ? this._cfg.scene_order : [];
+      var so = Array.isArray(sc.scene_order) ? sc.scene_order : [];
       if (so.length) {
         var at = function (x) { var i = so.indexOf(x); return i < 0 ? 999 : i; };
         ids = ids.map(function (id, i) { return [id, i]; })
@@ -308,6 +321,29 @@
           run: function () { h.callService('scene', 'turn_on', { entity_id: id }); } });
       });
       return list;
+    }
+    /* Eigene Szenen-Schlüssel der Leiste, sonst die der Startseite des Desktop-Dashboards
+       (<name>-mobile → <name>): Heldenkarte der ersten Ansicht, dann casora_scene_row. Einmal je Seite. */
+    _sceneCfg() {
+      var c = this._cfg || {};
+      var has = function (o) { return o && ['scenes', 'scene_exclude', 'scene_order'].some(function (k) { return Array.isArray(o[k]) && o[k].length; }); };
+      if (has(c) || 'scene_order' in c || 'scene_exclude' in c) return c;
+      var D = window._casoraDeskScenes = window._casoraDeskScenes || {};
+      var seg = String(location.pathname || '').split('/')[1] || '';
+      var desk = /[-_]mobile$/i.test(seg) ? seg.replace(/[-_]mobile$/i, '') : '';
+      if (!desk || !this._hass || !this._hass.connection) return c;
+      if (D[desk] === undefined) {
+        D[desk] = null;
+        var self = this;
+        this._hass.connection.sendMessagePromise({ type: 'lovelace/config', url_path: desk }).then(function (cfg) {
+          var v0 = ((((cfg || {}).views || [])[0] || {}).cards || [])[0];
+          var t = ((cfg || {}).button_card_templates || {}).casora_scene_row;
+          var src = [v0 && v0.variables, t && t.variables].filter(has)[0] || {};
+          D[desk] = { scenes: src.scenes, scene_exclude: src.scene_exclude, scene_order: src.scene_order };
+          if (self._menu && self._menuKind === 'scenes') { self._closeMenu(); self._openMenu('scenes'); }
+        }, function () { D[desk] = {}; });
+      }
+      return D[desk] || c;
     }
     _openMenu(kind) {
       var self = this;

@@ -205,7 +205,11 @@ window._casoraStreamOk = function (hass, id) {
 /* Liefert die Kamera überhaupt ein Bild? (30.09.2026) Manche Kameras melden „idle“, obwohl
    ihr Dienst nicht läuft – Kachel zeigte „Live“, das Popup eine leere graue Fläche.
    Ergebnis 60 s gemerkt; ändert es sich, werden die Kacheln dieser Kamera neu gezeichnet. */
-window._casoraCamDead = window._casoraCamDead || {};
+/* Letztes Ergebnis über das Neuladen hinweg merken (04.10.2026): sonst zeigt eine offline Kamera
+   nach dem Laden erst „Live“ und springt nach der Prüfung auf „Offline“. */
+window._casoraCamDead = window._casoraCamDead || (function () {
+  try { return JSON.parse(localStorage.getItem('casora.camDead') || '{}') || {}; } catch (e) { return {}; }
+})();
 window._casoraCamReachable = function (hass, id) {
   var c = window._casoraCamCache || (window._casoraCamCache = {});
   if (c[id] && Date.now() - c[id].t < 60000) return c[id].p;
@@ -229,6 +233,7 @@ window._casoraCamReachable = function (hass, id) {
   p = p.then(function (ok) {
     var was = !!window._casoraCamDead[id];
     window._casoraCamDead[id] = !ok;
+    if (was !== !ok) { try { localStorage.setItem('casora.camDead', JSON.stringify(window._casoraCamDead)); } catch (e) {} }
     if (was !== !ok) {
       (function walk(root, d) {
         if (!root || d > 14) return;

@@ -258,16 +258,23 @@ Casora Weich:
   casora-np-hover: var(--casora-soft-row-hover)
   casora-np-sub: var(--casora-text-2)
   casora-np-track: var(--casora-soft-control-fill)
-  casora-np-fill: "linear-gradient(90deg, color-mix(in srgb, var(--casora-soft-media-hue) 50%, var(--casora-soft-slider-light, #fff)), var(--casora-soft-media-hue))"
+  # Fortschritt (Balken und Ring) immer in Ton wie der Wiedergabe-Knopf, nicht im Medien-Ton (Variante B, 04.10.2026).
+  # Gilt auch fürs Medien-Popup (07-weich-spezial.js) und die Studio-Vorschau; die Cover-Tönung der Karte bleibt.
+  casora-np-progress: var(--casora-soft-media-play, #B67A50)
+  casora-np-fill: var(--casora-np-progress)
   casora-np-glyph: var(--primary-text-color)
   casora-np-glyph-primary: var(--casora-ton-ink)
   casora-np-press: var(--primary-text-color)
   casora-np-ring-disc: var(--casora-soft-control-fill)
   casora-np-ring-track: var(--casora-popup-progress-track)
-  casora-np-ring-fill: var(--casora-soft-media-hue)
+  casora-np-ring-fill: var(--casora-np-progress)
+  # Wellen-Knopf neben Glocke/Mitteilungen/Mehr: Grund wie die drei anderen Knöpfe (auch aufgeklappt),
+  # Wellen im Ton wie Wiedergabe-Knopf und Balken, solange etwas läuft, sonst dunkel (Variante C, 04.10.2026).
   casora-np-head-ink: var(--casora-chrome-ink, rgba(255,255,255,0.90))
-  casora-np-head-on: var(--casora-nav-active-fill)
-  casora-np-head-on-ink: var(--casora-np-head-ink)
+  # Aufgeklappt wie die offene Glocke: weißer Grund, dunkles Symbol (04.10.2026).
+  casora-np-head-on: "#fff"
+  casora-np-head-on-ink: "#000"
+  casora-np-head-play-ink: var(--casora-np-progress)
   # Heizung = Wärme-Orange (Puck, Modus-Symbole); Temperaturleiste in der Weich-Palette statt iOS-Regenbogen
   casora-puck-heat-color: var(--casora-color-orange)
   casora-temp-gradient: "linear-gradient(90deg, #5B8FC9 0%, #4E9E95 32%, #E8B04A 62%, #DE8A4E 82%, #D35A4E 100%)"
@@ -357,6 +364,8 @@ Casora Weich:
       casora-icon-inactive-fallback-color: var(--casora-icon-fallback-color)
       # Handy-Kategorieansicht (filter-overlay.js): Schleier über dem Foto in Leinen statt Schwarz
       casora-filter-veil: rgba(244,239,231,0.42)
+      # Lesbarkeits-Schleier über dem Hintergrundfoto (nur hell): oben Leinen 66 %, nach unten 0 %
+      casora-wallpaper-veil-light: "linear-gradient(to bottom, rgba(244,239,231,0.66) 0%, rgba(244,239,231,0) 100%)"
 
       # Navigation, Popups, Bedienelemente
       casora-nav-bg: rgba(251,248,243,0.78)
@@ -370,6 +379,9 @@ Casora Weich:
       casora-hero-weather-glyph-filter: brightness(0) opacity(0.72)
       # Handy-Navbar (04-navigation.js): Creme statt dunklem Glas
       casora-mnav-bg: rgba(251,248,243,0.82)
+      casora-mnav-pane: rgba(255,255,255,0.93)
+      casora-mnav-blur: blur(60px) saturate(180%)
+      casora-mnav-shadow: 0 6px 22px rgba(60,40,20,0.16)
       # Menü-Glas (casoraMenuGlass: Navbar, ⋯-Menüs): Creme statt dunkel
       casora-menu-pane: rgba(251,248,243,0.96)
       # Mitteilungszentrum ohne Glas-Rand (Rim oben/unten), weicher Schatten wie die Karten
@@ -749,6 +761,13 @@ Casora Weich:
       casora-mobile-title-color: rgba(246,240,231,0.98)
       casora-filter-veil: rgba(28,24,21,0.30)
       casora-mnav-bg: rgba(46,42,38,0.72)
+      casora-mnav-pane: rgba(30,30,34,0.94)
+      # Menüs aus der Leiste (Räume, …) im Dunklen ohne helle Lichtkanten aus Hemma (04.10.2026).
+      casora-menu-rim-top: transparent
+      casora-menu-rim-bottom: transparent
+      casora-menu-edge: transparent
+      casora-mnav-blur: blur(60px) saturate(180%)
+      casora-mnav-shadow: 0 6px 22px rgba(0,0,0,0.38)
       casora-mnav-menu-bg: rgba(46,42,38,0.95)
       # Menü-Glas (Mitteilungen, ⋯-Menü) fast deckend, sonst scheint die Kopfzeile durch
       casora-menu-pane: rgba(46,42,38,0.96)

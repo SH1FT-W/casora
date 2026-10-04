@@ -396,7 +396,13 @@
     });
   ]]]`);
 
-  const chartColor = variables.chart_color || '#30D158';
+  /* Weich (04.10.2026): ruhiges Türkis statt des grellen Cyan (#00C3D0), wie die Weich-Kacheln. */
+  /* Weich: die grellen iOS-Farben (auch aus Hemma übernommene) in ruhige Weich-Töne übersetzen. */
+  const _aqCalm = { '#00c3d0': '#5E9E96', '#57fffc': '#5E9E96', '#64d2ff': '#5E9E96', '#30d158': '#6FA77A',
+    '#ff9230': '#DE8A4E', '#ff9f0a': '#DE8A4E', '#0a84ff': '#5B8FC9', '#bf5af2': '#9B7BB8' };
+  const _aqRaw = String(variables.chart_color || '#30D158');
+  const chartColor = (window._casoraSoft && window._casoraSoft())
+    ? (_aqCalm[_aqRaw.toLowerCase()] || _aqRaw) : _aqRaw;
   /* Verlauf im 2.1-Muster: Zeilen mit data-hp-metric schalten dieses Diagramm um (statt HA-More-Info). */
   const hpOk = typeof window._hpChartCfg === 'function';
   const reg1 = (eid, label, span, color) => {
@@ -3697,11 +3703,14 @@
         return null;
       }
       if (/^sensor\.\w*_letztes_reinigungsende$/.test(id)) {
-        if (!prev || prev === s || prev === 'unknown' || prev === 'unavailable' || s === 'unknown' || s === 'unavailable') return null;
-        var tEnd = new Date(s).getTime(), tPrev = new Date(prev).getTime(), tNow = Number(entry.when) * 1000;
+        // Ohne Vorzustand (erster Wechsel im Zeitfenster, 1.0.5) zählt der Wechsel trotzdem: ob das
+        // Ende neu ist, sagt der Abgleich mit der Logbuch-Zeit unten. Vorher verschwand die Zeile,
+        // sobald der vorige Wechsel aus dem Fenster fiel.
+        if (prev === s || prev === 'unknown' || prev === 'unavailable' || s === 'unknown' || s === 'unavailable') return null;
+        var tEnd = new Date(s).getTime(), tPrev = prev ? new Date(prev).getTime() : NaN, tNow = Number(entry.when) * 1000;
         if (isNaN(tEnd) || (!isNaN(tPrev) && tEnd <= tPrev)) return null;     // alter Wert nach Neustart/Reconnect
-        if (isFinite(tNow) && Math.abs(tNow - tEnd) > 30 * 60000) return null;  // Ende muss zum Eintrag passen
-        return { label: NAME + ' hat fertig gereinigt', icon: 'vacuum-charge', tone: 'good' };
+        if (!isFinite(tNow) || Math.abs(tNow - tEnd) > 30 * 60000) return null;  // Ende muss zum Eintrag passen
+        return { label: NAME + ' hat fertig gereinigt', icon: 'vacuum-charge', tone: 'good', done: true };
       }
       return undefined;
     },

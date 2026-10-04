@@ -46,7 +46,8 @@
         + '.hm-s{font-weight:500;color:' + SUB + ';}'
         + '.hm-prog{margin-top:18px;}'
         + '.hm-track{height:8px;background:' + CTL + ';}'
-        + '.hm-fill{background:' + MEDIA_FILL + ';}'
+        /* Fortschritt in Ton wie der Wiedergabe-Knopf (Variante B, 04.10.2026). */
+        + '.hm-fill{background:var(--casora-np-progress, ' + MEDIA_FILL + ');}'
         + '.hm-times{font-weight:600;color:' + SUB + ';margin-top:7px;}'
         + '.hm-ctl{gap:22px;margin-top:18px;}'
         + '.hm-b.sm{width:56px;height:56px;background:' + CTL + ';}'
@@ -58,7 +59,8 @@
         + '.hm-vol{min-height:66px;margin-top:24px;padding:8px 12px 8px 10px;border-radius:999px;background:' + ROW + ';color:' + SUB + ';}'
         + '.hm-vol .hm-b{width:44px;height:44px;background:' + CTL + ';}'
         + '.hm-vol .hm-track{height:10px;}'
-        + '.hm-vol .hm-fill{background:' + MEDIA_FILL + ';}'
+        /* Lautstärke im selben Casora-Ton wie der Fortschritt (1.0.5, 04.10.2026). */
+        + '.hm-vol .hm-fill{background:var(--casora-np-progress, ' + MEDIA_FILL + ');}'
         + '.hm-vol .pct{font-size:14px;font-weight:700;color:' + INK + ';min-width:44px;}'
         + srcRules()
         + '</style>';

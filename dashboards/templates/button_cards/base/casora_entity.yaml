@@ -17,6 +17,11 @@ casora_entity:
 
   variables:
     size: small  # small | large — phones only, see header
+    # Large only counts on a phone dashboard (url ends in -mobile). The field sits on the
+    # desktop tile too (Studio "Size on phone", mirrored to the phone); desktop and tablet
+    # dashboards ignore it and keep their normal tile geometry.
+    size_large: |
+      [[[ return String(variables.size || '').toLowerCase() === 'large' && /^\/[^/]*[-_]mobile(\/|$)/i.test(window.location.pathname); ]]]
     icon_never_masked: false  # skip the CSS mask-tint entirely; always show the raw entity_picture <img> (icon file must supply its own inactive-state art)
     active_entities: null  # optional entity (or list) that can drive this card's active state in addition to its own `entity:`
     active_entities_mode: any  # any (default) = active if ANY of active_entities is active; all = only when every one of them is
@@ -187,7 +192,7 @@ casora_entity:
       --casora-progress-arc-opacity: 1;
 
       /* Tile geometry. Only -mq is rewritten by the breakpoint; -lg never is.
-         styles.card picks between them off variables.size. */
+         styles.card picks between them off variables.size_large (phone dashboards only). */
       --casora-tile-areas-mq: "i" "n" "s";
       --casora-tile-cols-mq: 1fr;
       --casora-tile-rows-mq: 1fr min-content min-content;
@@ -778,27 +783,27 @@ casora_entity:
   styles:
     card:
       - --casora-tile-areas: |
-          [[[ return variables.size === 'large' ? 'var(--casora-tile-areas-lg)' : 'var(--casora-tile-areas-mq)'; ]]]
+          [[[ return variables.size_large ? 'var(--casora-tile-areas-lg)' : 'var(--casora-tile-areas-mq)'; ]]]
       - --casora-tile-cols: |
-          [[[ return variables.size === 'large' ? 'var(--casora-tile-cols-lg)' : 'var(--casora-tile-cols-mq)'; ]]]
+          [[[ return variables.size_large ? 'var(--casora-tile-cols-lg)' : 'var(--casora-tile-cols-mq)'; ]]]
       - --casora-tile-rows: |
-          [[[ return variables.size === 'large' ? 'var(--casora-tile-rows-lg)' : 'var(--casora-tile-rows-mq)'; ]]]
+          [[[ return variables.size_large ? 'var(--casora-tile-rows-lg)' : 'var(--casora-tile-rows-mq)'; ]]]
       - --casora-tile-gap: |
-          [[[ return variables.size === 'large' ? 'var(--casora-tile-gap-lg)' : 'var(--casora-tile-gap-mq)'; ]]]
+          [[[ return variables.size_large ? 'var(--casora-tile-gap-lg)' : 'var(--casora-tile-gap-mq)'; ]]]
       - --casora-tile-name-mb: |
-          [[[ return variables.size === 'large' ? 'var(--casora-tile-name-mb-lg)' : 'var(--casora-tile-name-mb-mq)'; ]]]
+          [[[ return variables.size_large ? 'var(--casora-tile-name-mb-lg)' : 'var(--casora-tile-name-mb-mq)'; ]]]
       - --casora-tile-align-content: |
-          [[[ return variables.size === 'large' ? 'var(--casora-tile-align-content-lg)' : 'var(--casora-tile-align-content-mq)'; ]]]
+          [[[ return variables.size_large ? 'var(--casora-tile-align-content-lg)' : 'var(--casora-tile-align-content-mq)'; ]]]
       - --casora-tile-icon-align: |
-          [[[ return variables.size === 'large' ? 'var(--casora-tile-icon-align-lg)' : 'var(--casora-tile-icon-align-mq)'; ]]]
+          [[[ return variables.size_large ? 'var(--casora-tile-icon-align-lg)' : 'var(--casora-tile-icon-align-mq)'; ]]]
       - --casora-tile-icon-mt: |
-          [[[ return variables.size === 'large' ? 'var(--casora-tile-icon-mt-lg)' : 'var(--casora-tile-icon-mt-mq)'; ]]]
+          [[[ return variables.size_large ? 'var(--casora-tile-icon-mt-lg)' : 'var(--casora-tile-icon-mt-mq)'; ]]]
       - --casora-tile-extras: |
-          [[[ return variables.size === 'large' ? 'var(--casora-tile-extras-lg)' : 'var(--casora-tile-extras-mq)'; ]]]
+          [[[ return variables.size_large ? 'var(--casora-tile-extras-lg)' : 'var(--casora-tile-extras-mq)'; ]]]
       - --casora-tile-radius: |
-          [[[ return variables.size === 'large' ? 'var(--casora-tile-radius-lg)' : 'var(--casora-tile-radius-mq)'; ]]]
+          [[[ return variables.size_large ? 'var(--casora-tile-radius-lg)' : 'var(--casora-tile-radius-mq)'; ]]]
       - --casora-tile-state-inset: |
-          [[[ return variables.size === 'large' ? 'var(--casora-tile-state-inset-lg)' : 'var(--casora-tile-state-inset-mq)'; ]]]
+          [[[ return variables.size_large ? 'var(--casora-tile-state-inset-lg)' : 'var(--casora-tile-state-inset-mq)'; ]]]
       - --delay: calc(round(down, var(--casora-position-index, 0), 2) / 2 * 0.06s)
       - --delay-d: calc(var(--casora-position-index, 0) * 0.04s)
       - --casora-entity-anim-name: |
