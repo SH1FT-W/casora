@@ -288,7 +288,10 @@ for (const src of ['hemma-zuhause', 'hemma-eins']) {
       p._casoraUmzugRun(a, byName);
       const url = await Promise.race([done, new Promise((res) => setTimeout(() => res(null), 90000))]);
       if (!url) return { err: 'Umzug nicht fertig' };
-      await new Promise((res) => setTimeout(res, 2500));  // Dateien übernehmen (carryFiles) läuft nach
+      // Dateien übernehmen (carryFiles) läuft nach und schreibt danach den Fertig-Hinweis („… bleibt“):
+      // auf den Hinweis warten statt fester 2,5 s – unter Last (paralleles Gate) dauert es länger.
+      const rowsText = () => [...p.shadowRoot.querySelectorAll('.frow')].map((r) => r.textContent).join(' | ');
+      for (let i = 0; i < 80 && !/snapshots/.test(rowsText()); i++) await new Promise((res) => setTimeout(res, 250));
       const cfg = await p._hass.callWS({ type: 'lovelace/config', url_path: url });
       const mob = await p._hass.callWS({ type: 'lovelace/config', url_path: url + '-mobile' }).catch(() => null);
       const T = cfg.button_card_templates || {};

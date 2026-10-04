@@ -16,7 +16,9 @@ import os from 'node:os';
 process.env.CASORA_OUT = process.env.CASORA_OUT || '/tmp/casora-qa';
 const { open, ready, shot } = await import('../e2e/harness.mjs');
 
-const aktiv = (() => { try { return fs.readFileSync(os.homedir() + '/casora-haus/aktiv', 'utf8').trim(); } catch (e) { return '?'; } })();
+// CASORA_ZUSTAND: Zustand eines Wegwerf-HA (dev/qa/wegwerf-ha.sh, paralleles Gate) – sonst der
+// aktive Zustand von casora-test aus ~/casora-haus/aktiv.
+const aktiv = process.env.CASORA_ZUSTAND || (() => { try { return fs.readFileSync(os.homedir() + '/casora-haus/aktiv', 'utf8').trim(); } catch (e) { return '?'; } })();
 const arg = (n, d) => { const i = process.argv.indexOf('--' + n); return i > 0 && process.argv[i + 1] ? process.argv[i + 1] : d; };
 const WANT = arg('state', 'stress');
 if (aktiv !== WANT && !process.argv.includes('--force')) {
