@@ -40,6 +40,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   Standard-Einrichtung), damit Home Assistant das Casora-Theme ab der ersten Sekunde kennt, und meldet seine
   Themes beim Laden als Allererstes an.
 ### Verbessert
+- Weich dunkel: Die Navigationsleiste am Desktop und die Leiste oben rechts (Glocke, Assist) haben keinen hellen Rand mehr.
 - Weich: Der runde Zurück-Knopf in Räumen und Bereichen hat keinen glänzenden Rand mehr, er ist flach wie die Leiste am Handy.
 - Weich dunkel: Auch die Menüs aus der Leiste unten haben keinen hellen Rand mehr.
 - Weich am Handy: Die Leiste unten hebt sich klar von den Kacheln ab (hell fast weiß, dunkel fast schwarz, ohne den alten hellen Rand).

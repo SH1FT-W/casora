@@ -788,7 +788,8 @@ Casora Weich:
       casora-nav-border: rgba(255,240,220,0.06)
       casora-nav-active-fill: rgba(242,232,218,0.14)
       casora-pill-fill: rgba(46,42,38,0.80)
-      casora-pill-rim: inset 0 0 0 1px rgba(255,240,220,0.06), 0 8px 22px -14px rgba(0,0,0,0.50)
+      # Dunkel ohne hellen Ring (Navbar Desktop, Leiste oben rechts), nur Schatten (04.10.2026)
+      casora-pill-rim: 0 8px 22px -14px rgba(0,0,0,0.50)
       casora-popup-tiles-fill: rgba(255,240,220,0.05)
       casora-popup-tiles-text-primary: 'rgba(242,235,225,0.96)'
       casora-popup-tiles-text-secondary: var(--casora-text-2)
