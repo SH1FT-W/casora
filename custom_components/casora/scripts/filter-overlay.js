@@ -352,6 +352,11 @@
 
   const H_SCROLL_IDS = new Set(['media_row', 'climate_row', 'rooms_row']);
 
+  // #8: Unschärfe des Raumfotos (Studio: Design & Bedienung → Mobil; casora_mobile_bg setzt die
+  // Variable). Standard 28 px wie bisher; der Schleier beim Scrollen skaliert mit (28 → 44 px).
+  const ROOM_PHOTO_BLUR = 'var(--casora-room-photo-blur, 28px)';
+  const ROOM_VEIL_BLUR  = `calc(${ROOM_PHOTO_BLUR} * 11 / 7)`;
+
   const _blurLayers = new Set();
   const _otherBlurUp = (ownBlurEl) => {
     for (const el of _blurLayers) {
@@ -987,7 +992,7 @@
           this._blurLayerRoomBg = `linear-gradient(var(--casora-filter-veil, rgba(8,10,14,0.32)), var(--casora-filter-veil, rgba(8,10,14,0.32))) center center / cover no-repeat, url("/casora_assets/rooms/${_pic}.jpg") center center / cover no-repeat`;
           Object.assign(blurLayer.style, {
             backdropFilter: 'none', webkitBackdropFilter: 'none',
-            background: this._blurLayerRoomBg, filter: 'blur(28px) saturate(1.05)',
+            background: this._blurLayerRoomBg, filter: `blur(${ROOM_PHOTO_BLUR}) saturate(1.05)`,
             top: '-96px', left: '-96px', right: 'auto', bottom: 'auto', // Blur-Rand (läuft transparent aus) außerhalb des Bildschirms;
             width: 'calc(100vw + 192px)', height: 'calc(100lvh + 192px)', // feste Bildschirmmaße, unabhängig vom Eltern-Element
             transform: 'translateZ(0)', webkitTransform: 'translateZ(0)',
@@ -1168,6 +1173,7 @@
     // sichtbar erst beim zweiten Öffnen. Solange der Raum offen ist, kurz nachziehen.
     _settleRoom(n) {
       if (!this._showing || _activeOverlay !== this || !this._contentEl) return;
+      this._keepBlurUp();
       if (!this._autoSectionsDone) {
         this._ensureAutoSections();
         if (this._autoSectionsDone) this._sortSectionGrids();
@@ -1179,6 +1185,21 @@
       }
       const sbOk = !sb || sb.getBoundingClientRect().height > 0;
       if (n < 16 && (!this._autoSectionsDone || !sbOk)) setTimeout(() => this._settleRoom(n + 1), 300);
+    }
+
+    // #9: Der gezeigte Raum hat immer seine Hintergrundebene (Raumfoto + Schleier): eingehängt,
+    // sichtbar, mit Foto. Sonst schien die Startseite (Foto, Überschriften) durch die Raumkacheln.
+    _keepBlurUp() {
+      const b = this._blurLayerEl;
+      if (!this._showing || _activeOverlay !== this || !b) return;
+      if (!b.isConnected && this._appendTarget) { this._appendTarget.appendChild(b); _blurLayers.add(b); }
+      if (this._blurTwinEl && !this._blurTwinEl.isConnected) document.body.appendChild(this._blurTwinEl);
+      if (b.style.display === 'none' || b.style.opacity !== '1') {
+        b.style.transition = 'none';
+        b.style.display = 'block';
+        b.style.opacity = '1';
+      }
+      if (this._blurLayerRoomBg && b.style.background.indexOf('/casora_assets/rooms/') < 0) b.style.background = this._blurLayerRoomBg;
     }
 
     _ensureAutoSections() {
@@ -1904,6 +1925,10 @@
       const blurEl    = this._blurLayerEl;
       const overlayEl = this._overlayEl;
       if (!blurEl || !overlayEl) return;
+      // #9: Frames/Timer dieses Zeigens wirken nur, solange es noch dasselbe Overlay ist. Wird das
+      // Overlay dazwischen ab- und angehängt (Neuaufbau der Reihe), hat es eine neue Hintergrundebene;
+      // ein alter Frame setzte sonst „alle anderen Ebenen“ – also die neue eigene – auf unsichtbar.
+      const live = () => this._showing && this._blurLayerEl === blurEl;
 
       const prevOverlay = _activeOverlay;
       _activeOverlay = this;
@@ -2116,7 +2141,7 @@
       this._sortSectionGrids();
 
       requestAnimationFrame(() => {
-        if (!this._showing) return;
+        if (!live()) return;
         if (this._config?.room) {
           setTimeout(() => this._settleRoom(0), 250);
           // Beim Öffnen sind die Kacheln oft noch nicht gezeichnet – dann zählt nur der Zustand der
@@ -2131,7 +2156,7 @@
 
         this._badgeShadowCards = [];
         const _tryBadgeShadows = (attempt) => {
-          if (!this._showing) return;
+          if (!live()) return;
           const badgeSR = this._badgeRowEl?.shadowRoot;
           if (!badgeSR) return;
           const badges = Array.from(badgeSR.querySelectorAll('button-card'));
@@ -2277,7 +2302,7 @@
 
         if (badgeAdopted || npAdopted) {
           requestAnimationFrame(() => {
-            if (!this._showing) return;
+            if (!live()) return;
             if (badgeAdopted && _movedBadgeRow?.owner === this &&
                 this._badgeRowWrapper?.parentNode === this._contentEl) {
               _alignAdoptedBadgeRow(this._badgeRowWrapper, this._badgeRowEl,
@@ -2302,7 +2327,7 @@
           blurEl.style.background = 'transparent';
           requestAnimationFrame(() => requestAnimationFrame(() => {
             blurEl.style.background = this._blurLayerRoomBg || 'var(--casora-filter-veil, rgba(0, 0, 0, 0.22))'; // casora-local-patch
-            if (!this._showing) return;
+            if (!live()) return;
             for (const el of _blurLayers) {
               if (el === blurEl) continue;
               el.style.transition = 'none';
@@ -2322,7 +2347,7 @@
 
         // Blur fades in, overlay fades in, entity sections slide up.
         requestAnimationFrame(() => {
-          if (!this._showing) return;
+          if (!live()) return;
 
           blurEl.style.transition    = `opacity 0.30s ease`;
           blurEl.style.opacity       = '1';
@@ -2359,7 +2384,8 @@
 
           // Entry settled - engage the scroll-linked header.
           setTimeout(() => {
-            if (this._showing && overlayEl) {
+            if (live() && overlayEl) {
+              this._keepBlurUp();
               overlayEl.style.transition = 'none';
               if (this._titleEl)          this._titleEl.style.transition = 'none';
               if (this._subBadgesWrapper) this._subBadgesWrapper.style.transition = 'none';
@@ -2370,7 +2396,7 @@
                 }
               }
               const tryEngage = () => {
-                if (!this._showing) return;
+                if (!live()) return;
                 if (_touchActive) { setTimeout(tryEngage, 120); return; }
                 this._engageScrollHeader();
               };
@@ -2508,7 +2534,16 @@
           // The scale pushes the blur's transparent edge bleed off-screen.
           'filter:blur(44px) saturate(1.02)', 'transform:scale(1.12)',
         ].join(';');
-        if (bgAfter) {
+        if (this._blurLayerRoomBg) {
+          // #8: Raum mit eigenem Foto: dasselbe Foto wie die Hintergrundebene, gleich gelegt
+          // (Rand außerhalb des Bildschirms), Unschärfe skaliert mit der Einstellung.
+          Object.assign(veilInner.style, {
+            top: '-96px', left: '-96px', right: 'auto', bottom: 'auto',
+            width: 'calc(100vw + 192px)', height: 'calc(100lvh + 192px)',
+            transform: 'none', filter: `blur(${ROOM_VEIL_BLUR}) saturate(1.02)`,
+            background: this._blurLayerRoomBg,
+          });
+        } else if (bgAfter) {
           veilInner.style.backgroundImage    = `linear-gradient(var(--casora-filter-veil, rgba(0,0,0,0.22)), var(--casora-filter-veil, rgba(0,0,0,0.22))), ${bgAfter.backgroundImage}`;
           veilInner.style.backgroundPosition = `0 0, ${bgAfter.backgroundPosition}`;
           veilInner.style.backgroundSize     = `100% 100%, ${bgAfter.backgroundSize}`;

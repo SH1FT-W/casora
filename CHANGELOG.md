@@ -11,6 +11,11 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   right above Bins, like in the calendar popup. On the phone it comes right below the header, followed by
   the bins and the calendar, and tapping a day gently scrolls up to the day card when it is out of view.
 
+### New
+- Look & Controls · Phone: a new “Room photo on the phone” slider sets how soft the room photo behind an
+  open room looks, from Sharp (0 px) to Very soft (40 px). The default stays 28 px, the veil while
+  scrolling follows it, and the Studio preview shows the room photo with the chosen softness right away.
+
 ### Fixed
 - The overview's name now looks the same everywhere: a name you gave it (also “Home” in German) stays
   exactly as you typed it in the navigation, room title, phone bar, phone header and Studio. Only the
@@ -35,6 +40,9 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   room”) no longer shows every scene on its room page, only the scenes of its area. The area now comes
   from the room's tiles instead of its name, a room renamed in the Studio remembers it, and a room whose
   area cannot be found shows no scenes rather than all of them. Works without saving the dashboard again.
+- Phone: opening a room from the bottom bar sometimes showed the blurred Home photo instead of the room
+  photo, with Home headings like “Favorites” showing through the tiles. The room background now always
+  appears, also when the page rebuilds the room while switching.
 
 ## 1.0.3 – 04.10.2026
 

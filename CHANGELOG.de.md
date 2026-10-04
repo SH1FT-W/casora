@@ -12,6 +12,11 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   danach kommen Tonnen und Kalender, und beim Antippen eines Tages scrollt das Popup weich zur
   Tageskarte, wenn sie nicht zu sehen ist.
 
+### Neu
+- Design & Bedienung · Mobil: Ein neuer Regler „Raumfoto am Handy“ stellt ein, wie weich das Raumfoto
+  hinter einem geöffneten Raum aussieht, von Scharf (0 px) bis Stark weich (40 px). Standard bleibt
+  28 px, der Schleier beim Scrollen geht mit, und die Studio-Vorschau zeigt das Raumfoto sofort so.
+
 ### Behoben
 - Der Name der Übersicht steht jetzt überall gleich: Ein selbst vergebener Name (auch „Home“ auf
   Deutsch) bleibt in Leiste, Raumtitel, Handy-Leiste, Handy-Kopf und Studio genau so stehen. Nur der
@@ -37,6 +42,9 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   Bereichs. Der Bereich kommt jetzt aus den Kacheln des Raums statt aus seinem Namen, ein im Studio
   umbenannter Raum merkt ihn sich, und ein Raum ohne auffindbaren Bereich zeigt keine Szenen statt aller.
   Wirkt ohne erneutes Speichern des Dashboards.
+- Handy: Beim Öffnen eines Raums über die untere Leiste lag manchmal das unscharfe Home-Foto statt des
+  Raumfotos dahinter, und Home-Überschriften wie „Favoriten“ schienen durch die Kacheln. Der
+  Raum-Hintergrund erscheint jetzt immer, auch wenn die Seite den Raum beim Wechsel neu aufbaut.
 
 ## 1.0.3 – 04.10.2026
 
@@ -131,6 +139,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - Die Updates-Kachel zeigt einen Download-Pfeil, wenn Updates da sind, und einen Neustart-Pfeil, wenn ein Neustart aussteht.
 - Klima-Popup: „Mehr“ steht unter den Messwerten.
 - Player: Die Spitze des Vor-Knopfs wird nicht mehr abgeschnitten.
+
 ### Geändert
 - Die E-Bike-Kachel arbeitet mit der Integration Bosch eBike (Bosch Smart System). Die Felder für ein eigenes
   Ladegerät und einen Live-Akkusensor sind weg.

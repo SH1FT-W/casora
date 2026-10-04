@@ -5138,6 +5138,9 @@
     },
     {
      "--casora-mobile-hero-src": "[[[\n  /* Foto der Startseite wie im Studio (Übersicht, auch nach dem Umzug): image/image_night\n     überstimmen das Theme-Bild. Ohne Foto gilt das Theme (--casora-mobile-hero-img-day/-night). */\n  const ID = 'casora-mobile-hero-src';\n  let el = document.getElementById(ID);\n  /* Ältere Handy-Layouts ohne image: die Vorlade-Liste beginnt mit dem Foto der Übersicht\n     (beim Anlegen und beim Umzug so geschrieben); das nächste Speichern im Studio setzt image. */\n  const pre = Array.isArray(variables.preload_rooms) ? variables.preload_rooms[0] : null;\n  const base = variables.image || (typeof pre === 'string' && /^[a-z0-9][a-z0-9_-]*$/i.test(pre) ? pre : null);\n  if (!base) {\n    if (el) { el.remove(); if (window.casoraWallpaperRefresh) window.casoraWallpaperRefresh(); }\n    return '0';\n  }\n  const dir = '/casora_assets/rooms/';\n  const night = variables.image_night || (base + '-night');\n  const css = ':root{--casora-mobile-hero-img-day:url(\"' + dir + encodeURI(String(base)) + '.jpg\") !important;'\n    + '--casora-mobile-hero-img-night:url(\"' + dir + encodeURI(String(night)) + '.jpg\") !important;}';\n  if (!el) { el = document.createElement('style'); el.id = ID; document.head.appendChild(el); }\n  if (el.textContent !== css) {\n    el.textContent = css;\n    if (window.casoraWallpaperRefresh) window.casoraWallpaperRefresh();\n  }\n  return '0';\n]]]\n"
+    },
+    {
+     "--casora-room-photo-blur-src": "[[[\n  /* #8: Unschärfe des Raumfotos hinter einem geöffneten Raum (Studio: Design & Bedienung → Mobil).\n     filter-overlay.js liest --casora-room-photo-blur; leer = 28 px wie bisher. */\n  const ID = 'casora-room-photo-blur';\n  const el = document.getElementById(ID);\n  const v = variables.room_photo_blur;\n  const n = Number(v);\n  if (v === null || v === undefined || v === '' || !isFinite(n) || n < 0) {\n    if (el) el.remove();\n    return '0';\n  }\n  const css = ':root{--casora-room-photo-blur:' + Math.min(n, 80) + 'px !important;}';\n  const s = el || document.head.appendChild(Object.assign(document.createElement('style'), { id: ID }));\n  if (s.textContent !== css) s.textContent = css;\n  return '0';\n]]]"
     }
    ]
   },
@@ -5148,7 +5151,8 @@
    "casora_shared"
   ],
   "variables": {
-   "preload_rooms": []
+   "preload_rooms": [],
+   "room_photo_blur": null
   }
  },
  "casora_mobile_chrome": {
