@@ -1419,7 +1419,9 @@
       }
     }
 
-    // Raum-Kategorien: kleine, ruhige Überschrift einer Gruppe (kleiner als „Szenen“/„Favoriten“).
+    // Raum-Kategorien: Überschrift einer Gruppe – seit dem Weich-Audit (M4, 05.10.2026) in derselben
+    // Stufe wie „Szenen“ (casora_mobile_header: Größe, 700, Titelfarbe, 24 px oben / 10 px unten),
+    // vorher kleiner und grau, das wirkte wie zwei Gliederungsebenen.
     _appendGroupHeader(key, first, animIdx) {
       const wrap = document.createElement('div');
       wrap.style.cssText = 'display:block;width:100%;box-sizing:border-box;opacity:0;';
@@ -1429,10 +1431,10 @@
       const right = `calc(var(--casora-rail-left, 16px) + ${LANDSCAPE_GUTTER_CALC} + 2px)`;
       const head = document.createElement('div');
       head.style.cssText = [
-        `padding:${first ? 14 : 18}px ${right} 8px ${left}`,
+        `padding:${first ? 14 : 24}px ${right} 10px ${left}`,
         'font-family:var(--casora-body-font, var(--primary-font-family, inherit))',
-        'font-size:15px', 'font-weight:600', 'letter-spacing:-0.2px', 'line-height:20px',
-        'color:var(--casora-room-group-ink, var(--primary-text-color))', 'opacity:0.72',
+        'font-size:var(--casora-mobile-section-size, 18px)', 'font-weight:700', 'letter-spacing:-0.3px', 'line-height:1.3',
+        'color:var(--casora-room-group-ink, var(--casora-mobile-title-color, var(--primary-text-color)))',
         'box-sizing:border-box', 'white-space:nowrap', 'overflow:hidden', 'text-overflow:ellipsis',
       ].join(';');
       head.textContent = _roomGroupHeading(key);
