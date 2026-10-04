@@ -294,6 +294,27 @@ window.casoraPriceKwh = function (v) {
     });
   }
 
+  // Abfall-Quelle nicht erreichbar (04.10.2026): Abfallkalender und/oder alle Tonnen-Sensoren
+  // stehen auf unavailable/unknown und es liegt kein einziger Termin vor (z. B. lehnt der Server
+  // des Entsorgers die Verbindung ab). Dann { source: Name der Quelle oder null }, sonst null.
+  // Sind nur einzelne Sensoren weg, aber Termine da, bleibt alles wie bisher.
+  function wasteDown(hass, W) {
+    var S = (hass && hass.states) || {};
+    if (!W || (!W.calendar && !W.bins.length)) return null;
+    var bad = function (id) { var s = S[id]; return !s || s.state === 'unavailable' || s.state === 'unknown'; };
+    var calDown = !!(W.calendar && bad(W.calendar));
+    var binsDown = W.bins.length > 0 && W.bins.every(function (b) { return bad(b.id); });
+    if (!calDown && !binsDown) return null;
+    // Kalender da, aber noch nicht geladen: erst abwarten, nicht vorschnell „nicht erreichbar“.
+    var TC = window._casoraTrashCal;
+    if (W.calendar && !calDown && !(TC && TC.id === W.calendar)) return null;
+    if (wasteDates(hass, W).some(function (x) { return x.dates.length; })) return null;
+    var cs = W.calendar && S[W.calendar];
+    var name = cs && cs.attributes && cs.attributes.friendly_name;
+    name = name ? String(name).replace(/^waste collection schedule\s*/i, '').trim() : '';
+    return { source: name || null };
+  }
+
   // Zählerstand einer Entität um Mitternacht (aus dem Verlauf, einmal pro Tag je
   // Entität). Gibt null zurück, solange die Abfrage läuft.
   var dayCache = {};
@@ -751,7 +772,7 @@ window.casoraPriceKwh = function (v) {
 
   window.casoraDevice = {
     deviceOf: deviceOf, entities: entities, map: map, companionPlug: companionPlug, byKey: byKey,
-    waste: waste, wasteDates: wasteDates, siblings: siblings, dayStart: dayStart, onHours: onHours, keyAny: keyAny, network: network,
+    waste: waste, wasteDates: wasteDates, wasteDown: wasteDown, siblings: siblings, dayStart: dayStart, onHours: onHours, keyAny: keyAny, network: network,
     contacts: contacts, outdoor: outdoor, openings: openings,
   };
 })();

@@ -13,6 +13,11 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - Waste popup with the calendar turned on: the day card (next pickup or the tapped day) now sits at the top
   right above Bins, like in the calendar popup. On the phone it comes right below the header, followed by
   the bins and the calendar, and tapping a day gently scrolls up to the day card when it is out of view.
+- Waste: when the waste source cannot be reached (for example the collection service refuses the connection
+  and the waste calendar and pickup sensors are unavailable) and no pickup dates are known, the popup shows a
+  calm note “Waste calendar unreachable right now” naming the source instead of empty sections, the month
+  calendar stays visible without an empty day card, and the tile reads “Unreachable”. If only single sensors
+  are missing but dates are there, nothing changes.
 
 ### New
 - Look & Controls · Phone: a new “Room photo on the phone” slider sets how soft the room photo behind an

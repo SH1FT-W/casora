@@ -1282,7 +1282,10 @@
   "Spülstopp": "Rinse hold",
   "Stromausfall": "Power failure",
   "Störung": "Fault",
-  "Wartung nötig": "Service needed"
+  "Wartung nötig": "Service needed",
+  "Abfallkalender gerade nicht erreichbar": "Waste calendar unreachable right now",
+  "Nicht erreichbar": "Unreachable",
+  "Die Abholtermine kommen wieder, sobald der Entsorger antwortet.": "Pickup dates will be back as soon as the collection service responds."
  },
  "patterns": [
   [
@@ -1301,7 +1304,10 @@
    "^Ø (.+)$",
    "Ø {1}"
   ],
-  ["^Abholung in (\\d+) Tagen$", "Pickup in {1} days"],
+  [
+   "^Abholung in (\\d+) Tagen$",
+   "Pickup in {1} days"
+  ],
   [
    "^(\\d+) von (\\d+) An$",
    "{1} of {2} on"
@@ -2307,6 +2313,10 @@
   [
    "^(.+) offen$",
    "{1} open"
+  ],
+  [
+   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
+   "Pickup dates will be back as soon as {1} responds."
   ]
  ]
 }
