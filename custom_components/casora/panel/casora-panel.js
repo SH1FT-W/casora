@@ -8788,6 +8788,8 @@ class CasoraPanel extends HTMLElement {
         .card.map.soft .mini-npsub { color:var(--casora-entity-state, rgba(255,255,255,0.62)); }
         .card.map.soft .mini-npctl path { fill:var(--casora-entity-name, #fff); }
         .card.map.soft .mini-npbar { background:var(--casora-progress-track-color, rgba(255,255,255,0.16)); }
+        /* Weich: Fortschritt in Ton wie der Wiedergabe-Knopf (Variante B, 04.10.2026). */
+        .card.map.soft .mini-npbar > span { background:var(--casora-np-progress, #B67A50); }
         @media (hover:hover) {
           .card.map.soft .miniroom [data-pv]:not(.mini-fill):not(.pvsel):hover,
           .card.map.soft .miniroom .pbadge[data-mk]:not(.pvsel):hover,
@@ -8834,6 +8836,7 @@ class CasoraPanel extends HTMLElement {
         .card.map.soft .miniphone .mp-npsub { color:var(--casora-entity-state, rgba(255,255,255,0.62)); }
         .card.map.soft .miniphone .mp-npbtn path { fill:var(--casora-entity-name, #fff); }
         .card.map.soft .miniphone .mp-npbar { background:var(--casora-progress-track-color, rgba(255,255,255,0.16)); }
+        .card.map.soft .miniphone .mp-npbar > span { background:var(--casora-np-progress, #B67A50); }
         .card.map.soft .miniphone.nophone::after { color:var(--casora-text-2, rgba(255,255,255,0.55)); }
         /* Handy-Leiste unten (Nachbildung aus casora-panel-addons.js) wie 04-navigation.js. */
         .card.map.soft .casora-mnav {

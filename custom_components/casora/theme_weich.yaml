@@ -258,13 +258,16 @@ Casora Weich:
   casora-np-hover: var(--casora-soft-row-hover)
   casora-np-sub: var(--casora-text-2)
   casora-np-track: var(--casora-soft-control-fill)
-  casora-np-fill: "linear-gradient(90deg, color-mix(in srgb, var(--casora-soft-media-hue) 50%, var(--casora-soft-slider-light, #fff)), var(--casora-soft-media-hue))"
+  # Fortschritt (Balken und Ring) immer in Ton wie der Wiedergabe-Knopf, nicht im Medien-Ton (Variante B, 04.10.2026).
+  # Gilt auch fürs Medien-Popup (07-weich-spezial.js) und die Studio-Vorschau; die Cover-Tönung der Karte bleibt.
+  casora-np-progress: var(--casora-soft-media-play, #B67A50)
+  casora-np-fill: var(--casora-np-progress)
   casora-np-glyph: var(--primary-text-color)
   casora-np-glyph-primary: var(--casora-ton-ink)
   casora-np-press: var(--primary-text-color)
   casora-np-ring-disc: var(--casora-soft-control-fill)
   casora-np-ring-track: var(--casora-popup-progress-track)
-  casora-np-ring-fill: var(--casora-soft-media-hue)
+  casora-np-ring-fill: var(--casora-np-progress)
   casora-np-head-ink: var(--casora-chrome-ink, rgba(255,255,255,0.90))
   casora-np-head-on: var(--casora-nav-active-fill)
   casora-np-head-on-ink: var(--casora-np-head-ink)
