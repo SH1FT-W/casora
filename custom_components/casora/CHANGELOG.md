@@ -14,7 +14,10 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - Phone: in a room, tiles that are on (a light, a running washer) move to the front again, as on the
   desktop. The rest keeps the order from the Studio.
 - Phone: a room shows its windows, doors and locks as badges, as in the room header on the desktop.
-  Existing phone layouts pick them up the next time the Studio saves.
+  Existing phone layouts pick them up when the dashboard is next opened in the Studio.
+- Renaming a room in the Studio now also renames it on the phone: header, room page, bottom bar, room
+  badges and the air quality title. Phone layouts brought over from Hemma are no longer left out, and a
+  room renamed earlier is brought up to date when the dashboard is next opened in the Studio.
 
 ## 1.0.3 – 04.10.2026
 

@@ -14,7 +14,10 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - Handy: Im Raum rücken eingeschaltete Kacheln (Licht, laufende Waschmaschine) wieder nach vorn wie am
   Desktop. Der Rest behält die Reihenfolge aus dem Studio.
 - Handy: Ein Raum zeigt seine Fenster, Türen und Schlösser als Badges wie im Raum-Kopf am Desktop.
-  Bestehende Handy-Layouts übernehmen sie beim nächsten Speichern im Studio.
+  Bestehende Handy-Layouts übernehmen sie, sobald das Dashboard das nächste Mal im Studio geöffnet wird.
+- Ein im Studio umbenannter Raum heißt jetzt auch am Handy neu: Kopf, Raumseite, Leiste, Raum-Badges
+  und der Titel der Luftqualität. Von Hemma übernommene Handy-Layouts bleiben nicht mehr außen vor, ein
+  früher umbenannter Raum wird beim nächsten Öffnen des Dashboards im Studio nachgezogen.
 
 ## 1.0.3 – 04.10.2026
 
