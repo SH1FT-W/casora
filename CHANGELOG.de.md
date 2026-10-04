@@ -6,6 +6,14 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 ## 1.0.5 – 04.10.2026
 
+### Neu
+- Nach einem Casora-Update merkt ein offenes Dashboard die neue Version selbst (wenn sich Home Assistant
+  nach dem Neustart wieder verbindet, wenn der Tab wieder sichtbar wird und alle 10 Minuten) und zeigt
+  unten einen ruhigen Hinweis: „Casora wurde aktualisiert“ mit „Neu laden“. Er erscheint einmal je Update
+  und lässt sich wegklicken. Neu laden entfernt vorher Casoras Dateien aus dem Browser-Cache, damit jedes
+  Gerät wirklich die neuen Dateien bekommt; der Cache von Home Assistant selbst bleibt unberührt.
+- Dashboard, „…“-Menü: neuer Eintrag „Neu laden (Cache leeren)“ mit derselben Funktion.
+
 ### Behoben
 - Einkaufsliste: Öl zeigt jetzt eine Flasche statt der Ölkanne vom Auto.
 - Glocke: Ein „fertig“-Eintrag (Saugroboter, Waschmaschine, Trockner, Spüler, Drucker) verschwand

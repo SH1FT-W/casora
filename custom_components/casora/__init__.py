@@ -21,6 +21,7 @@ from .raumklima import async_start as async_start_raumklima
 from .settings import async_setup_settings
 from .kachelart import async_setup_kachelart
 from .versions import async_setup_versions
+from .frontend_version import async_setup_frontend_version, set_frontend_stamp
 from .updates import async_setup_updates
 from .options import async_setup_options
 from .template_refresh import async_setup_template_refresh
@@ -94,11 +95,16 @@ async def _sync_script_resources(hass: HomeAssistant, scripts_dir: str, keep_hem
             if os.path.isfile(path):
                 found[n] = int(os.path.getmtime(path))
         # Der Lader reicht seine Version an die Module weiter: jüngste Änderung zählt.
+        # Seit 1.0.5 auch die der übrigen Casora-Skripte – so steht im ?v= des Laders der
+        # Stand des ganzen Dashboard-Codes, und der Hinweis „Casora wurde aktualisiert“
+        # (casora-core.js) vergleicht nur diese eine Zahl (frontend_version.py).
         mod_dir = os.path.join(scripts_dir, LOCAL_MODULES_DIR)
-        if LOCAL_LOADER in found and os.path.isdir(mod_dir):
-            for m in os.listdir(mod_dir):
-                if m.endswith(".js"):
-                    found[LOCAL_LOADER] = max(found[LOCAL_LOADER], int(os.path.getmtime(os.path.join(mod_dir, m))))
+        if LOCAL_LOADER in found:
+            found[LOCAL_LOADER] = max(found.values())
+            if os.path.isdir(mod_dir):
+                for m in os.listdir(mod_dir):
+                    if m.endswith(".js"):
+                        found[LOCAL_LOADER] = max(found[LOCAL_LOADER], int(os.path.getmtime(os.path.join(mod_dir, m))))
         return found
 
     stamps = await hass.async_add_executor_job(_present)
@@ -112,8 +118,12 @@ async def _sync_script_resources(hass: HomeAssistant, scripts_dir: str, keep_hem
 
     wanted = {n: f"{SCRIPTS_URL_BASE}/{n}?v={stamps[n]}" for n in names}
     res = _lovelace_resources(hass)
+    # Stand für casora/version. Im yaml-Modus trägt der Nutzer die Adressen selbst ein,
+    # dort gäbe der Hinweis nach „Neu laden“ keine Ruhe – also keiner.
+    writable = res is not None and hasattr(res, "async_create_item")
+    set_frontend_stamp(hass, stamps.get(LOCAL_LOADER) if writable else None)
 
-    if res is None or not hasattr(res, "async_create_item"):
+    if not writable:
         _LOGGER.warning(
             "Casora: Lovelace resources are not writable (yaml mode). Add these "
             "under lovelace: resources: as type module: %s",
@@ -327,6 +337,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_setup_settings(hass)
     async_setup_kachelart(hass)
     async_setup_versions(hass)
+    async_setup_frontend_version(hass)
     # Studio → „Updates“: Versionen und Versionshinweise (updates.py).
     async_setup_updates(hass)
     # Studio → „Einstellungen“: die Optionen der Integration auch im Studio (options.py).

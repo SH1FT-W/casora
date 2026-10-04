@@ -6,6 +6,14 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ## 1.0.5 – 04.10.2026
 
+### New
+- After a Casora update, an open dashboard notices the new version by itself (when Home Assistant
+  reconnects after the restart, when the tab becomes visible again, and every 10 minutes) and shows a
+  quiet hint at the bottom: "Casora was updated" with "Reload". It appears once per update and can be
+  closed. Reload first removes Casora's files from the browser cache, so every device really gets the
+  new files; Home Assistant's own cache stays untouched.
+- Dashboard, "…" menu: new entry "Reload (clear cache)" with the same function.
+
 ### Fixed
 - Shopping list: oil now shows a bottle instead of the car oil can.
 - Bell: a "finished" entry (robot vacuum, washer, dryer, dishwasher, printer) sometimes disappeared when
