@@ -7,6 +7,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ## 1.0.4 – 04.10.2026
 
 ### Verbessert
+- Weich: Solange der Player aufgeklappt ist, wird sein Wellen-Knopf weiß wie die geöffnete Glocke.
 - Weich-Look: Der runde Medien-Knopf neben Glocke, Mitteilungen und „…“ (die Wellen des minimierten
   Players) hat jetzt denselben Grund und Schatten wie diese drei Knöpfe statt eines beigen, hell und dunkel.
   Solange etwas läuft, sind die Wellen im Casora-Ton wie Wiedergabe-Knopf und Fortschrittsbalken, sonst

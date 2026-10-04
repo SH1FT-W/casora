@@ -271,8 +271,9 @@ Casora Weich:
   # Wellen-Knopf neben Glocke/Mitteilungen/Mehr: Grund wie die drei anderen Knöpfe (auch aufgeklappt),
   # Wellen im Ton wie Wiedergabe-Knopf und Balken, solange etwas läuft, sonst dunkel (Variante C, 04.10.2026).
   casora-np-head-ink: var(--casora-chrome-ink, rgba(255,255,255,0.90))
-  casora-np-head-on: var(--casora-chrome-fill)
-  casora-np-head-on-ink: var(--casora-np-head-ink)
+  # Aufgeklappt wie die offene Glocke: weißer Grund, dunkles Symbol (04.10.2026).
+  casora-np-head-on: "#fff"
+  casora-np-head-on-ink: "#000"
   casora-np-head-play-ink: var(--casora-np-progress)
   # Heizung = Wärme-Orange (Puck, Modus-Symbole); Temperaturleiste in der Weich-Palette statt iOS-Regenbogen
   casora-puck-heat-color: var(--casora-color-orange)

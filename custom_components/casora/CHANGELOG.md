@@ -7,6 +7,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 1.0.4 – 04.10.2026
 
 ### Improved
+- Soft look: while the player is open, its waveform button turns white like the open bell.
 - Soft look: the round media button next to the bell, messages and “…” (the minimised player's waveform)
   now has the same background and shadow as those three buttons instead of a beige one, in light and dark.
   While something plays, its waves are in the Casora tone like the play button and progress bar, otherwise
