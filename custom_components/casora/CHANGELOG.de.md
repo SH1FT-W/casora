@@ -11,6 +11,8 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   Deutsch) bleibt in Leiste, Raumtitel, Handy-Leiste, Handy-Kopf und Studio genau so stehen. Nur der
   Name, den Casora selbst angelegt hat, folgt der Sprache der Oberfläche.
 - Updates-Popup: Der Abstand unter „Verfügbare Updates“ verschwindet nach dem Öffnen nicht mehr.
+- Türen & Fenster (Weich): Auch ein Raum mit nur einem Kontakt zeigt jetzt den Gerätenamen mit dem Raum
+  darunter, wie Räume mit mehreren Kontakten („Haustür“ / „Flur“ statt nur „Flur“).
 
 ## 1.0.3 – 04.10.2026
 

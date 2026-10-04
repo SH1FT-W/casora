@@ -11,6 +11,8 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   exactly as you typed it in the navigation, room title, phone bar, phone header and Studio. Only the
   name Casora set up itself follows the interface language.
 - Updates popup: the gap below Available updates no longer disappears after opening.
+- Doors & windows (Soft): a room with just one contact now also shows the device name with the room below
+  it, like rooms with several contacts (“Front door” / “Hallway” instead of only “Hallway”).
 
 ## 1.0.3 – 04.10.2026
 
