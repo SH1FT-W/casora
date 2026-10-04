@@ -45,6 +45,13 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - Handy: Beim Öffnen eines Raums über die untere Leiste lag manchmal das unscharfe Home-Foto statt des
   Raumfotos dahinter, und Home-Überschriften wie „Favoriten“ schienen durch die Kacheln. Der
   Raum-Hintergrund erscheint jetzt immer, auch wenn die Seite den Raum beim Wechsel neu aufbaut.
+- Handy nach dem Umzug von Hemma: Kacheln, die in Hemma am Handy groß waren (Kameras, Saugroboter,
+  Haushaltsgeräte, Auto, eBike, Pflanzen, Medien, Rezept, Schloss …), sind wieder groß. Mit einer früheren
+  Version umgezogene Dashboards holen ihre Größen beim nächsten Öffnen im Studio einmalig aus der
+  Umzugs-Sicherung, mit kurzem Hinweis; danach selbst geänderte Größen bleiben.
+- Handy: Steht dieselbe Kachel zweimal in einem Raum, behält beim Speichern jede ihre eigenen
+  Einstellungen (etwa „Größe am Handy“), und Kacheln, die nur unter einer Bedingung erscheinen, bleiben
+  an ihrer Stelle, statt nach vorn zu rücken.
 
 ## 1.0.3 – 04.10.2026
 

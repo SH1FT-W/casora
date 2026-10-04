@@ -1804,6 +1804,7 @@
     "No dashboard uses them any more. Your photos and icons are copied to www/casora first. Included in the backup.": "Kein Dashboard nutzt sie mehr. Deine Fotos und Symbole kommen vorher nach www/casora. Sie kommen mit in die Sicherung."
   },
   "patterns": [
+    ["^Tile sizes on the phone taken over from Hemma \\((\\d+)\\)$", "Kachelgrößen vom Handy aus Hemma übernommen ({1})"],
     ["^(\\d+) Locks$", "{1} Schlösser"],
     ["^(\\d+) Doors open$", "{1} Türen offen"],
     ["^(\\d+) Gates open$", "{1} Tore offen"],
