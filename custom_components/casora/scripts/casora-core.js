@@ -4542,7 +4542,15 @@ window.casoraMenuGlass = {
           if (atest(ar) && (ar.and || []).every(atest)) apick = ar;
         }
         if (!apick) apick = aspec;
-        el.textContent = apick.text != null ? apick.text : '';
+        var atxt = apick.text != null ? apick.text : '';
+        var aat = el.querySelector('.hui-at');
+        if (aat) {
+          // 1.0.5: Knopf-Variante (.hui-actx) – Text, Symbol und Vorlese-Text getrennt setzen.
+          aat.textContent = atxt;
+          var aic = el.querySelector('.hui-ab ha-icon');
+          if (aic) aic.setAttribute('icon', apick.icon || aspec.icon || '');
+          el.setAttribute('aria-label', typeof window.casoraTr === 'function' ? window.casoraTr(atxt) : atxt);
+        } else el.textContent = atxt;
         if (apick.color) el.style.color = apick.color;
         el.classList.toggle('hui-busy', !!apick.busy);
         el.style.display = apick.text === '' ? 'none' : '';
@@ -6076,7 +6084,31 @@ window.casoraMenuGlass = {
       +   '--armed-x:0px;transform:translateX(var(--armed-x));'
       +   'transition:transform .36s cubic-bezier(.36,0,.16,1);}'
       + '.hui-row.armed .hui-inner{--armed-x:calc((var(--cf-w) + 16px) * -1);}'
-      + '@media (prefers-reduced-motion:reduce){.hui-cf,.hui-inner{transition:none;}}';
+      + '@media (prefers-reduced-motion:reduce){.hui-cf,.hui-inner{transition:none;}}'
+      /* 1.0.5: Aktion/Wert mit Knopf-Symbol (actionIcon/valueIcon, z. B. Updates): am Handy runder
+         Knopf statt Text, damit Name und Unterzeile Platz haben. Desktop/Tablet zeigen den Text. */
+      + '.hui-ab{display:none;}'
+      + '@media (max-width:760px){'
+      +   '.hui-actx{padding:0!important;margin:0!important;gap:0!important;flex:none;}'
+      +   '.hui-actx .hui-at,.hui-actx.hui-busy::before{display:none!important;}'
+      +   '.hui-actx .hui-ab{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;flex:none;}'
+      +   '.hui-actx .hui-ab ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;}'
+      +   '.hui-actx.hui-busy .hui-ab ha-icon,.hui-actx .hui-ab ha-icon[icon=""]{display:none;}'
+      +   '.hui-actx.hui-busy .hui-ab::before{content:"";width:16px;height:16px;box-sizing:border-box;border-radius:50%;'
+      +     'border:2px solid currentColor;border-right-color:transparent;opacity:.8;animation:hui-busy-spin 1.1s linear infinite;}'
+      + '}'
+      + '@media (prefers-reduced-motion:reduce){.hui-actx .hui-ab::before{animation:none!important;}}';
+
+  // Inhalt einer Aktion/eines Werts mit Knopf-Symbol: Text (Desktop) + runder Knopf (Handy).
+  function actxInner(text, iconName, bg) {
+    return '<span class="hui-at">' + esc(text) + '</span>'
+      + '<span class="hui-ab" aria-hidden="true" style="background:' + bg + ';">'
+      + '<ha-icon icon="' + esc(iconName || '') + '"></ha-icon></span>';
+  }
+  function actxLabel(text) {
+    var t = (typeof window.casoraTr === 'function') ? window.casoraTr(String(text)) : String(text);
+    return ' aria-label="' + esc(t) + '"';
+  }
 
   // Zeilen als einzelne Sand-Pillen statt einer Platte mit Trennlinien. Daten-Attribute,
   // Live-Felder und Klassen (hui-row/hui-tap/hui-cf …) wie im bisherigen group().
@@ -6199,13 +6231,15 @@ window.casoraMenuGlass = {
           aLive = ' data-casora-live="act" data-casora-ent="' + esc(r.entity) + '"'
             + ' data-casora-act="' + esc(JSON.stringify(r.actionLive)) + '"';
         }
-        out += '<div' + aLive + (armOnAction ? ' data-casora-arm=""' : '') + (r.actionBusy ? ' class="hui-busy"' : '')
+        var aCls = (r.actionBusy ? 'hui-busy' : '') + (r.actionIcon ? (r.actionBusy ? ' ' : '') + 'hui-actx' : '');
+        out += '<div' + aLive + (armOnAction ? ' data-casora-arm=""' : '') + (aCls ? ' class="' + aCls + '"' : '')
+          + (r.actionIcon ? (armOnAction ? ' role="button"' : '') + actxLabel(r.action) : '')
           + ' style="font-size:14px;font-weight:700;color:'
           + (r.actionBusy ? S.sub : (tone(r.actionTone) || T.blue)) + ';white-space:nowrap;'
           + (armOnAction
               ? 'pointer-events:auto;cursor:pointer;padding:8px 10px;margin:-8px -10px;'
               : 'pointer-events:none;')
-          + '">' + esc(r.action) + '</div>';
+          + '">' + (r.actionIcon ? actxInner(r.action, r.actionIcon, S.iconOff) : esc(r.action)) + '</div>';
       }
       if (r.value != null && r.value !== '') {
         var vlive = '';
@@ -6217,10 +6251,10 @@ window.casoraMenuGlass = {
             + '" data-casora-attr="' + esc(r.liveAttr) + '"'
             + ' data-casora-suffix="' + esc(r.liveSuffix || '') + '"';
         }
-        out += '<div' + vlive + ' style="font-size:14px;font-weight:600;'
+        out += '<div' + vlive + (r.valueIcon ? ' class="hui-actx"' + actxLabel(r.value) : '') + ' style="font-size:14px;font-weight:600;'
           + 'font-variant-numeric:tabular-nums;color:' + (alertTone(r.valueTone) || T.ink2)
           + ';white-space:nowrap;pointer-events:none;">'
-          + esc(r.value) + '</div>';
+          + (r.valueIcon ? actxInner(r.value, r.valueIcon, S.iconOff) : esc(r.value)) + '</div>';
       }
       if ((r.entity || r.tappable) && (!r.svc || armOnAction)) {
         out += '<svg class="hui-chev" width="7" height="12" viewBox="0 0 7 12" aria-hidden="true">'
@@ -6399,14 +6433,16 @@ window.casoraMenuGlass = {
           aLive = ' data-casora-live="act" data-casora-ent="' + esc(r.entity) + '"'
             + ' data-casora-act="' + esc(JSON.stringify(r.actionLive)) + '"';
         }
-        out += '<div' + aLive + (armOnAction ? ' data-casora-arm=""' : '') + (r.actionBusy ? ' class="hui-busy"' : '')
+        var aCls = (r.actionBusy ? 'hui-busy' : '') + (r.actionIcon ? (r.actionBusy ? ' ' : '') + 'hui-actx' : '');
+        out += '<div' + aLive + (armOnAction ? ' data-casora-arm=""' : '') + (aCls ? ' class="' + aCls + '"' : '')
+          + (r.actionIcon ? (armOnAction ? ' role="button"' : '') + actxLabel(r.action) : '')
           + ' style="font-size:var(--casora-popup-row-action-size, 16px);'
           + 'font-weight:500;color:'
           + (r.actionBusy ? T.ink2 : (tone(r.actionTone) || T.blue)) + ';white-space:nowrap;'
           + (armOnAction
               ? 'pointer-events:auto;cursor:pointer;padding:8px 10px;margin:-8px -10px;'
               : 'pointer-events:none;')
-          + '">' + esc(r.action) + '</div>';
+          + '">' + (r.actionIcon ? actxInner(r.action, r.actionIcon, T.fill2) : esc(r.action)) + '</div>';
       }
       if (r.value != null && r.value !== '') {
         var vlive = '';
@@ -6418,12 +6454,12 @@ window.casoraMenuGlass = {
             + '" data-casora-attr="' + esc(r.liveAttr) + '"'
             + ' data-casora-suffix="' + esc(r.liveSuffix || '') + '"';
         }
-        out += '<div' + vlive + ' style="font-size:var(--casora-popup-row-value-size, 17px);'
+        out += '<div' + vlive + (r.valueIcon ? ' class="hui-actx"' + actxLabel(r.value) : '') + ' style="font-size:var(--casora-popup-row-value-size, 17px);'
           + 'letter-spacing:-0.022em;color:'
           + (tone(r.valueTone) || T.ink2)
           + ';margin-inline-start:var(--casora-popup-value-gap, 0px)'
           + ';white-space:nowrap;pointer-events:none;">'
-          + esc(r.value) + '</div>';
+          + (r.valueIcon ? actxInner(r.value, r.valueIcon, T.fill2) : esc(r.value)) + '</div>';
       }
       if ((r.entity || r.tappable) && (!r.svc || armOnAction)) {
         out += '<svg class="hui-chev" width="7" height="12" viewBox="0 0 7 12" aria-hidden="true">'

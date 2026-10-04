@@ -238,7 +238,8 @@
         sub: (a.latest_version ? 'Neu: ' + a.latest_version : '') + (aiS(states) ? ' · KI: ' + t[0] : ''),
         _tone: t[1],
         action: a.in_progress ? 'Wird aktualisiert' : 'Aktualisieren', actionTone: 'accent', actionBusy: !!a.in_progress,
-        actionLive: { rules: (window._casoraUpdX && window._casoraUpdX.RULES) || [], text: 'Aktualisieren', color: TEAL },
+        actionIcon: 'mdi:download',
+        actionLive: { rules: (window._casoraUpdX && window._casoraUpdX.RULES) || [], text: 'Aktualisieren', icon: 'mdi:download', color: TEAL },
       };
     });
   };
