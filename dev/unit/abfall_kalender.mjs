@@ -42,15 +42,17 @@ assert.equal(c.custom_fields.cal, undefined);
 c = cfg({ waste: { calendar_popup: true } });
 const cal = c.custom_fields.cal;
 assert.ok(cal && cal.card, 'Option an: Kalender da');
-assert.deepEqual(Object.keys(cal.card.custom_fields), ['wmonth', 'wday']);
+assert.deepEqual(Object.keys(cal.card.custom_fields), ['wmonth']);
+// Issue #7: Tageskarte als eigener Abschnitt (breit rechts oben, Handy unter dem Kopf).
+assert.deepEqual(Object.keys(c.custom_fields.wday.card.custom_fields), ['wday']);
 assert.ok(cal.card.triggers_update.includes('sensor.bio') && cal.card.triggers_update.includes('sensor.papier'));
 const areas = c.styles.grid.find((g) => g['grid-template-areas'])['grid-template-areas'];
-assert.match(areas, /"cal right"/);
-assert.match(c.extra_styles, /"hero" "right" "cal"/, 'Handy: Tonnen vor dem Kalender');
+assert.match(areas, /"cal wday" "cal right"/, 'Breit: Tageskarte über den Tonnen');
+assert.match(c.extra_styles, /"hero" "wday" "right" "cal"/, 'Handy: Tageskarte, Tonnen, Kalender');
 
 // Monat: Abholtage mit Punkt in der Tonnenfarbe (Finder: Bio grün, Papier blau).
 const K = window._casoraCalendar;
-const run = (k) => { const t = cal.card.custom_fields[k]; return new Function('states', 'hass', 'variables', t.replace(/^\[\[\[\s*/, '').replace(/\s*\]\]\]$/, ''))(states, hass, cal.card.variables); };
+const run = (k) => { const t = cal.card.custom_fields[k] || c.custom_fields.wday.card.custom_fields[k]; return new Function('states', 'hass', 'variables', t.replace(/^\[\[\[\s*/, '').replace(/\s*\]\]\]$/, ''))(states, hass, cal.card.variables); };
 const month = run('wmonth');
 const cell = (html, d) => { const m = html.split('data-hcal="wday:' + ymd(d) + '"')[1]; return m ? m.split('data-hcal=')[0] : ''; };
 const bio = window.casoraDevice.waste(hass, vars).bins.find((b) => b.label === 'Bio').color;

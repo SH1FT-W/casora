@@ -378,12 +378,25 @@
     }
     return '<div class="hcal-' + k + '">' + K.html(k) + '</div>';
   };
-  /* Spalte fürs Abfall-Popup: Monat und gewählter Tag; beim Öffnen auf den nächsten Abholtag. */
-  K.wcol = function (variables, watch) {
+  /* Spalte fürs Abfall-Popup: Monat und gewählter Tag; beim Öffnen auf den nächsten Abholtag.
+     keys (Issue #7, 04.10.2026): nur einzelne Abschnitte, z. B. ['wmonth'] links und ['wday'] rechts. */
+  K.wcol = function (variables, watch, keys) {
     K.w.sel = null; K.w.month = null; K.w.tries = 0;
     var V = {};
     Object.keys(variables || {}).forEach(function (key) { if (key.indexOf('trash_') === 0) V[key] = variables[key]; });
-    return colCard(['wmonth', 'wday'], null, watch || [], V, 'wsec');
+    return colCard(keys || ['wmonth', 'wday'], null, watch || [], V, 'wsec');
+  };
+  /* Handy (Issue #7): nach dem Antippen eines Tages weich zur Tageskarte, falls sie außer Sicht ist. */
+  var wdayIntoView = function () {
+    if (!window.matchMedia || !window.matchMedia('(max-width: 760px)').matches) return;
+    var ha = document.querySelector('home-assistant');
+    var n = find(ha && ha.shadowRoot, '.hcal-wday').filter(function (x) { return x.getClientRects().length; })[0];
+    if (!n || !n.getBoundingClientRect) return;
+    var r = n.getBoundingClientRect(), vh = window.innerHeight || document.documentElement.clientHeight;
+    if (r.top >= 70 && r.bottom <= vh) return;
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    n.style.scrollMarginTop = '80px';
+    n.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
   };
 
   K.html = function (k, variables) {
@@ -540,6 +553,7 @@
       else { var wm0 = K.w.month || (K.w.sel ? parseYmd(K.w.sel) : wt); K.w.month = new Date(wm0.getFullYear(), wm0.getMonth() + Number(v), 1); }
     } else if (p[0] === 'wbin') { K.w.hide[v] = !K.w.hide[v]; }
     K.repaint();
+    if (p[0] === 'wday') wdayIntoView();
     if (p[0].charAt(0) === 'w') return;
     var ha = document.querySelector('home-assistant');
     K.load(ha && ha.hass, K._vars);
