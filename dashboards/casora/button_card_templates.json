@@ -8485,6 +8485,18 @@
     "g": [
      {
       "line-height": 0
+     },
+     {
+      "overflow": "visible"
+     },
+     {
+      "display": "flex"
+     },
+     {
+      "justify-content": "center"
+     },
+     {
+      "align-items": "center"
      }
     ]
    },
