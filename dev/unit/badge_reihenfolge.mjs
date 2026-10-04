@@ -98,6 +98,12 @@ rowCards.forEach((c) => assert.ok(HOST[c.template]
   assert.deepEqual(kinds.slice(0, 4), ['casora_badge_temp', 'casora_badge_humidity', 'casora_badge_air_quality', 'casora_badge_light']);
   ['casora_badge_temp', 'casora_badge_humidity', 'casora_badge_air_quality'].forEach((t) => assert.ok(order(t) !== null, t + ' sortiert über Klima'));
   assert.ok(!/order:/.test(String(T.casora_badge_light.extra_styles || '')), 'Licht-Chip ohne eigenes order');
+  // Issue #5: Schlösser und Kontakte des Raums (inline) stehen wie am Desktop vorn – über
+  // --casora-badge-order-security (-1), nicht über die Lage in der Kartenliste.
+  const sec = row.find((x) => x['--casora-badge-order-security'] !== undefined);
+  assert.equal(String(sec && sec['--casora-badge-order-security']), '-1', 'Raum-Reihe: Sicherheit vor Klima');
+  const secCards = chips.custom_fields.rooms_row.card.cards.filter((c) => /lock_group|badge_security|contact_group/.test(c.template));
+  assert.ok(secCards.length >= 2 && secCards.every((c) => c.variables && c.variables.inline === true), 'Raum-Reihe: Sicherheits-Badges inline (mit order)');
 }
 
 // ── Medien-Badge am Handy nur, wenn etwas läuft (wie am Desktop) ─────────────

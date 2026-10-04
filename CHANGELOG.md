@@ -13,6 +13,8 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - Updates popup: the gap below Available updates no longer disappears after opening.
 - Phone: in a room, tiles that are on (a light, a running washer) move to the front again, as on the
   desktop. The rest keeps the order from the Studio.
+- Phone: a room shows its windows, doors and locks as badges, as in the room header on the desktop.
+  Existing phone layouts pick them up the next time the Studio saves.
 
 ## 1.0.3 – 04.10.2026
 

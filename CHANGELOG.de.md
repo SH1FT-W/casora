@@ -13,6 +13,8 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - Updates-Popup: Der Abstand unter „Verfügbare Updates“ verschwindet nach dem Öffnen nicht mehr.
 - Handy: Im Raum rücken eingeschaltete Kacheln (Licht, laufende Waschmaschine) wieder nach vorn wie am
   Desktop. Der Rest behält die Reihenfolge aus dem Studio.
+- Handy: Ein Raum zeigt seine Fenster, Türen und Schlösser als Badges wie im Raum-Kopf am Desktop.
+  Bestehende Handy-Layouts übernehmen sie beim nächsten Speichern im Studio.
 
 ## 1.0.3 – 04.10.2026
 

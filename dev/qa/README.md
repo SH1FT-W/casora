@@ -150,6 +150,7 @@ Ansicht, `cards(page, vorlage)` liefert sichtbare Karten mit Lage und Text,
 | r21_tablet_seitenleiste | stress | Tablet quer mit angedockter HA-Seitenleiste: Raum-Kopf und erste Kachel lagen unter der Seitenleiste |
 | r24_umzug_wie_vorher | frisch | Umzug Hemma 1/2: Kacheln, Fotos, Wetter in jedem Raum, Beleuchtungs-Badge (nur Lichtgruppe), Original unverändert, keine Fehlerkarten |
 | r32_raumbild_handy | arbeit | Handy-Startseite zeigte das Theme-Bild statt des im Studio (oder beim Umzug) gewählten Fotos der Übersicht |
+| r34_handy_raum_kontakte | arbeit | Handy: Kontaktsensoren und Schlösser fehlten als Badges im Raum (Issue #5) |
 | r35_handy_raum_aktiv_vorn | arbeit | Handy: Raumseite sortierte aktive Kacheln nicht nach vorn (Issue #6) |
 | erststart | frisch | Erststart: Willkommen → Assistent (Hemma/YAML gefunden) bzw. Räume, sonst Studio; ⋯-Menü „Einrichtungsassistent …“ |
 

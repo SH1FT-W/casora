@@ -1101,8 +1101,16 @@ function syncBadgeSwitches(pair) {
   return off;
 }
 
+// Sicherheit des Raums (Issue #5): Fenster/Türen und Schlösser wie im Raum-Kopf am Desktop als
+// eigene Badges der Raumseite am Handy (casora_mobile_sensor_chips, rooms_row).
+const CHIPS_SECURITY_KEYS = ["room_name", "security_locks", "security_locks_label",
+  "security_door_sensors", "security_lock_batteries"]
+  .concat([1, 2, 3, 4, 5, 6, 7, 8].map((n) => "security_entity_" + n))
+  .concat([1, 2, 3, 4, 5, 6, 7, 8].map((n) => "security_label_" + n));
 const CHIPS_ROOM_KEYS = ["temp_entity", "humidity_entity", "entity_quality",
-  "aqi_room_name", "aqi_sensors", "lights_entity"];
+  "aqi_room_name", "aqi_sensors", "lights_entity"].concat(CHIPS_SECURITY_KEYS);
+const chipsHasSecurity = (c) => !!c && (!!(c.security_locks || []).length
+  || [1, 2, 3, 4, 5, 6, 7, 8].some((n) => !!c["security_entity_" + n]));
 
 function syncRoomChips(pair) {
   const rooms = ((pair.desktop || {}).compact || {}).rooms || [];
@@ -1135,9 +1143,28 @@ function syncRoomChips(pair) {
       const single = Array.from({ length: 10 }, (_, n) => V["light_entity_" + (n + 1)]).find(Boolean);
       set("lights_entity", V.light_group_entity || single);
     }
+    // Wie casora_room: Schlösser als eine Badge (Einzel- und Listenfeld zusammen), Kontakte und
+    // Alarm je Feld mit eigener Beschriftung. Kameras bleiben Kachel (Kamera-Kachel am Handy).
+    if (V.show_security !== false) {
+      const locks = [...new Set([V.security_lock_entity, V.security_lock_entity_2]
+        .concat(Array.isArray(V.security_locks) ? V.security_locks : []).filter(Boolean))];
+      set("security_locks", locks);
+      if (locks.length) {
+        set("security_locks_label", V.security_locks_label);
+        set("security_door_sensors", V.security_door_sensors);
+        set("security_lock_batteries", V.security_lock_batteries);
+      }
+      for (let n = 1; n <= 8; n++) {
+        const e = V["security_entity_" + n];
+        if (!e) continue;
+        set("security_entity_" + n, e);
+        set("security_label_" + n, V["security_label_" + n]);
+      }
+      if (chipsHasSecurity(next)) set("room_name", sec.name);
+    }
     chips[key] = next;
     if (next.temp_entity || next.humidity_entity || next.entity_quality
-      || next.lights_entity || next.motion_entity) filled++;
+      || next.lights_entity || next.motion_entity || chipsHasSecurity(next)) filled++;
   });
   // The row lays out for any entry at all, so an empty {} is a blank gap on the device.
   Object.keys(chips).forEach((k) => {
@@ -24050,7 +24077,7 @@ window.__casoraPanelInternals = {
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
-  linkPair, syncPairRooms, syncPairTiles, carryPhoneSizes, expandMobileConfig, extractMobileConfig,
+  linkPair, syncPairRooms, syncPairTiles, syncRoomChips, carryPhoneSizes, expandMobileConfig, extractMobileConfig,
   deriveEnergyRooms,
   CASORA_ACCENTS, accentLabel, swatchCss,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)
