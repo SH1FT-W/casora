@@ -16467,19 +16467,32 @@ class CasoraPanel extends HTMLElement {
             t.textContent = sub.label;
             fs.appendChild(t);
           }
-          const box = document.createElement("div");
-          box.className = "subcard";
-          mine.forEach((f) => renderField(f, box));
-          const notes = [...box.children].filter((n) => n.classList.contains("hint"));
-          notes.forEach((n) => n.remove());
-          fs.appendChild(box);
+          // Erklärung unter die Karte (wie iOS-Einstellungen). Haben mehrere Felder einer Gruppe
+          // je eine eigene Erklärung, bekommt jedes Feld seine Karte, sonst stünden alle Texte
+          // gesammelt unter dem letzten Regler (04.10.2026).
           const said = new Set();
-          notes.forEach((n) => {
-            const t = n.textContent;
-            if (said.has(t)) return;
-            said.add(t);
-            fs.appendChild(n);
-          });
+          const place = (fields) => {
+            const box = document.createElement("div");
+            box.className = "subcard";
+            fields.forEach((f) => renderField(f, box));
+            const notes = [...box.children].filter((n) => n.classList.contains("hint"));
+            notes.forEach((n) => n.remove());
+            fs.appendChild(box);
+            notes.forEach((n) => {
+              const t = n.textContent;
+              if (said.has(t)) return;
+              said.add(t);
+              fs.appendChild(n);
+            });
+          };
+          const withHint = mine.filter((f) => f.hint);
+          if (withHint.length > 1) {
+            let run = [];
+            mine.forEach((f) => { run.push(f); if (f.hint) { place(run); run = []; } });
+            if (run.length) place(run);
+          } else {
+            place(mine);
+          }
         });
       } else {
         plain.forEach((f) => renderField(f, fs));
