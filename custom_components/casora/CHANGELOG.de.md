@@ -18,6 +18,8 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - Ein im Studio umbenannter Raum heißt jetzt auch am Handy neu: Kopf, Raumseite, Leiste, Raum-Badges
   und der Titel der Luftqualität. Von Hemma übernommene Handy-Layouts bleiben nicht mehr außen vor, ein
   früher umbenannter Raum wird beim nächsten Öffnen des Dashboards im Studio nachgezogen.
+- Handy: Jede Badge gibt beim Antippen dasselbe leichte Feedback wie die Kacheln (vorher nicht bei
+  Sicherheit, Klima, Personen und Medien). In Weich ist das Luftqualitäts-Symbol im Badge-Kreis so groß wie die anderen.
 
 ## 1.0.3 – 04.10.2026
 
