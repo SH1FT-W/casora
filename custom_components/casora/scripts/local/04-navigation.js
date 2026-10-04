@@ -92,7 +92,7 @@
       + '.hmn-bar.hmn-up{z-index:151;}'
       /* Raum-/Kategorie-Seiten scrollen in einer eigenen festen Ebene: Safaris Glas-Unschärfe erfasst sie nicht,
          die Kacheln lagen scharf auf der Leiste. Dort die Leiste fast deckend. */
-      + '.hmn-bar.hmn-over{background-color:var(--casora-mnav-over, rgba(30,33,38,0.9)) !important;}'
+      + '.hmn-bar.hmn-over{background-color:var(--casora-mnav-pane, var(--casora-mnav-over, rgba(30,33,38,0.9))) !important;}'
       + '.hmn-scrim.open{opacity:1;}'
       + '.hmn-scrim.out{transition-duration:220ms;}'
       + '.hmn-item .hmn-sub{display:block;font-size:12px;line-height:14px;color:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));margin-top:1px;}'
