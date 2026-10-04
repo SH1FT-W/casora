@@ -32,6 +32,11 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   früher umbenannter Raum wird beim nächsten Öffnen des Dashboards im Studio nachgezogen.
 - Handy: Jede Badge gibt beim Antippen dasselbe leichte Feedback wie die Kacheln (vorher nicht bei
   Sicherheit, Klima, Personen und Medien). In Weich ist das Luftqualitäts-Symbol im Badge-Kreis so groß wie die anderen.
+- Handy: Ein im Studio umbenannter Raum (etwa „Wirtschaftsraum“ für den Home-Assistant-Bereich
+  „Hauswirtschaftsraum“) zeigt auf seiner Raumseite nicht mehr alle Szenen, sondern nur die seines
+  Bereichs. Der Bereich kommt jetzt aus den Kacheln des Raums statt aus seinem Namen, ein im Studio
+  umbenannter Raum merkt ihn sich, und ein Raum ohne auffindbaren Bereich zeigt keine Szenen statt aller.
+  Wirkt ohne erneutes Speichern des Dashboards.
 
 ## 1.0.3 – 04.10.2026
 

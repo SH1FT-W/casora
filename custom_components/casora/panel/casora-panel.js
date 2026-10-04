@@ -1475,6 +1475,7 @@ function syncPairRooms(pair) {
         const V = (roomOf.get(s) || {}).variables || {};
         if (V.image) card.image = V.image; else delete card.image;
         if (V.image_night) card.image_night = V.image_night; else delete card.image_night;
+        if (V.area) card.area = V.area; else delete card.area;
         return { card };
       });
     const firstOv = rest.findIndex(isOv);
@@ -16185,6 +16186,14 @@ class CasoraPanel extends HTMLElement {
             room.name = nv;
             setVar("room_name", nv);
             if (was && nv && (room.variables || {}).aqi_room_name === was) setVar("aqi_room_name", nv);
+            // HA-Bereich merken, der bisher über den Namen gefunden wurde: Die Raumseite am Handy
+            // filtert ihre Szenen danach, auch wenn der neue Name keinem Bereich mehr entspricht.
+            if (!home && was && nv !== was && !(room.variables || {}).area) {
+              const fold = (x) => String(x || "").trim().toLowerCase();
+              const A = (this._hass && this._hass.areas) || {};
+              const aid = Object.keys(A).find((id) => fold(A[id] && A[id].name) === fold(was));
+              if (aid) setVar("area", aid);
+            }
             this._renderTabs();
             // Kopf der mittleren Spalte (Raumansicht) trägt den Raumnamen.
             if (this.$("pane") && this.$("pane").classList.contains("stack")) {
