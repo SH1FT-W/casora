@@ -25,6 +25,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   scrolling follows it, and the Studio preview shows the room photo with the chosen softness right away.
 
 ### Fixed
+- Bell: after a Home Assistant restart, locks, doors and people no longer show up as new entries ("Front door locked") just because they came back online.
 - Swipe tile: at the end of the stack the tile row scrolls on again, and while paging through the stack
   the row stays put (tablet and desktop).
 - Media: a player that was already paused no longer shows up again for 10 minutes after every Home Assistant

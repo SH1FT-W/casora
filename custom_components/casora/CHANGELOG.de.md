@@ -26,6 +26,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   28 px, der Schleier beim Scrollen geht mit, und die Studio-Vorschau zeigt das Raumfoto sofort so.
 
 ### Behoben
+- Glocke: Nach einem Neustart von Home Assistant erscheinen Schlösser, Türen und Personen nicht mehr als neue Einträge („Wohnungstür verriegelt“), nur weil sie wieder erreichbar sind.
 - Swipe-Kachel: Am Stapelende scrollt die Kachelreihe wieder weiter, beim Blättern im Stapel bleibt die
   Reihe stehen (Tablet und Desktop).
 - Medien: Ein schon pausierter Player taucht nach jedem Neustart von Home Assistant oder einem kurzen Ausfall
