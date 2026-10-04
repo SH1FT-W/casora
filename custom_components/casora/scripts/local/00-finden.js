@@ -715,7 +715,9 @@ window.casoraPriceKwh = function (v) {
       var e = S[id] || {}, a = e.attributes || {};
       var s = String(e.state || '').toLowerCase(), dom = id.split('.')[0];
       var dc = String(a.device_class || '').toLowerCase();
-      var dead = !s || s === 'unknown' || s === 'unavailable';
+      var dead = !s || s === 'unknown' || s === 'unavailable'
+        /* Kamera meldet „bereit“, liefert aber kein Bild (z. B. Proxy) – wie offline (04.10.2026). */
+        || (dom === 'camera' && !!(window._casoraCamDead || {})[id]);
       if (dom === 'binary_sensor') {
         if (dc === 'motion' || dc === 'occupancy' || dc === 'presence') { if (s === 'on' && isAway()) up('alarm'); }
         else if (dc === 'door' || dc === 'window' || dc === 'garage_door' || dc === 'opening' || !dc) contacts.push(id);

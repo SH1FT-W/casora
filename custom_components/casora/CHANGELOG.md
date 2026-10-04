@@ -7,7 +7,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 1.0.6 – unreleased
 
 ### Fixed
-- Security badge: A camera reported as ready but delivering no picture (for example through a proxy) counted as fine in the badge while the camera card already showed "Offline". The badge now reports it as offline too.
+- Security badge: A camera reported as ready but delivering no picture (for example through a proxy) counted as fine in the badge while the camera card already showed "Offline". The badge now reports it as offline too, including the separate camera badge in a room.
 
 ## 1.0.5 – 04.10.2026
 
