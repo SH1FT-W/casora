@@ -3979,7 +3979,9 @@ window.casoraMenuGlass = {
     }
     :host([more-below]) .more { opacity: 1; }
     .content .container {
-      padding: 8px 8px 20px 8px;
+      /* Unten Luft bis zur Sheet-Kante, damit die letzte Zeile (samt Schatten) beim
+         Ende des Scrollens nicht an der Kante klebt (Weich-Audit M3: 36px). */
+      padding: 8px 8px var(--casora-popup-content-pad-bottom, 20px) 8px;
       -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
       outline: none !important;
     }

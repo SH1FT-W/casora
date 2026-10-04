@@ -49,6 +49,9 @@ Casora Weich:
   # Nicht in theme.yaml, aber vom Code mit Fallback gelesen (casora-core.js/smart-row.js):
   casora-popup-radius: 44px
   casora-popup-row-radius: 24px
+  # Lange Popups (Batterien, Jalousien): unten 36px Luft und ein Verlauf in Sheet-Farbe statt dunkel (Audit M3)
+  casora-popup-content-pad-bottom: 36px
+  casora-popup-more-fade: var(--casora-dialog-bg)
   casora-tile-radius-phone: 30px
 
   # --- Wenig Glas: Blur nur noch als Hauch ---
