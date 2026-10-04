@@ -17,6 +17,15 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   instead of the device name, and names with umlauts are no longer capitalized wrongly (“LuftqualitäTsmonitor”).
 - Kitchen · Recipes: long recipe names in the meal plan week strip wrap onto two lines and end with “…”
   instead of being cut off mid-word.
+- Phone: in a room, tiles that are on (a light, a running washer) move to the front again, as on the
+  desktop. The rest keeps the order from the Studio.
+- Phone: a room shows its windows, doors and locks as badges, as in the room header on the desktop.
+  Existing phone layouts pick them up when the dashboard is next opened in the Studio.
+- Renaming a room in the Studio now also renames it on the phone: header, room page, bottom bar, room
+  badges and the air quality title. Phone layouts brought over from Hemma are no longer left out, and a
+  room renamed earlier is brought up to date when the dashboard is next opened in the Studio.
+- Phone: every badge now gives the same light tap feedback as the tiles (before, Security, Climate,
+  People and Media did not). In Weich, the air quality symbol in the badge circle is as large as the others.
 
 ## 1.0.3 – 04.10.2026
 

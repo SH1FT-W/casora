@@ -1101,8 +1101,16 @@ function syncBadgeSwitches(pair) {
   return off;
 }
 
+// Sicherheit des Raums (Issue #5): Fenster/Türen und Schlösser wie im Raum-Kopf am Desktop als
+// eigene Badges der Raumseite am Handy (casora_mobile_sensor_chips, rooms_row).
+const CHIPS_SECURITY_KEYS = ["room_name", "security_locks", "security_locks_label",
+  "security_door_sensors", "security_lock_batteries"]
+  .concat([1, 2, 3, 4, 5, 6, 7, 8].map((n) => "security_entity_" + n))
+  .concat([1, 2, 3, 4, 5, 6, 7, 8].map((n) => "security_label_" + n));
 const CHIPS_ROOM_KEYS = ["temp_entity", "humidity_entity", "entity_quality",
-  "aqi_room_name", "aqi_sensors", "lights_entity"];
+  "aqi_room_name", "aqi_sensors", "lights_entity"].concat(CHIPS_SECURITY_KEYS);
+const chipsHasSecurity = (c) => !!c && (!!(c.security_locks || []).length
+  || [1, 2, 3, 4, 5, 6, 7, 8].some((n) => !!c["security_entity_" + n]));
 
 function syncRoomChips(pair) {
   const rooms = ((pair.desktop || {}).compact || {}).rooms || [];
@@ -1112,6 +1120,7 @@ function syncRoomChips(pair) {
   if (!entry) return 0;
   const card = entry.card;
   const chips = clone(((card.variables || {}).room_chips) || {});
+  const keys = phoneRoomKeys(pair.mobile);
   let filled = 0;
   ((pair.link || {}).links || []).forEach((link) => {
     if (link.overview || link.section === null) return;
@@ -1119,7 +1128,7 @@ function syncRoomChips(pair) {
     const sec = sections[link.section];
     if (!room || !sec || !sec.name) return;
     const V = room.variables || {};
-    const key = roomKeyOf(sec.name);
+    const key = phoneKeyOf(keys, sec.name);
     const next = { ...(chips[key] || {}) };
     CHIPS_ROOM_KEYS.forEach((k) => { delete next[k]; });
     const set = (k, v) => { if (!emptyVal(v)) next[k] = clone(v); };
@@ -1135,9 +1144,28 @@ function syncRoomChips(pair) {
       const single = Array.from({ length: 10 }, (_, n) => V["light_entity_" + (n + 1)]).find(Boolean);
       set("lights_entity", V.light_group_entity || single);
     }
+    // Wie casora_room: Schlösser als eine Badge (Einzel- und Listenfeld zusammen), Kontakte und
+    // Alarm je Feld mit eigener Beschriftung. Kameras bleiben Kachel (Kamera-Kachel am Handy).
+    if (V.show_security !== false) {
+      const locks = [...new Set([V.security_lock_entity, V.security_lock_entity_2]
+        .concat(Array.isArray(V.security_locks) ? V.security_locks : []).filter(Boolean))];
+      set("security_locks", locks);
+      if (locks.length) {
+        set("security_locks_label", V.security_locks_label);
+        set("security_door_sensors", V.security_door_sensors);
+        set("security_lock_batteries", V.security_lock_batteries);
+      }
+      for (let n = 1; n <= 8; n++) {
+        const e = V["security_entity_" + n];
+        if (!e) continue;
+        set("security_entity_" + n, e);
+        set("security_label_" + n, V["security_label_" + n]);
+      }
+      if (chipsHasSecurity(next)) set("room_name", sec.name);
+    }
     chips[key] = next;
     if (next.temp_entity || next.humidity_entity || next.entity_quality
-      || next.lights_entity || next.motion_entity) filled++;
+      || next.lights_entity || next.motion_entity || chipsHasSecurity(next)) filled++;
   });
   // The row lays out for any entry at all, so an empty {} is a blank gap on the device.
   Object.keys(chips).forEach((k) => {
@@ -1319,6 +1347,20 @@ const isScenesName = (n) => /^(scenes|szenen)$/i.test(String(n || "").trim());
 const isRoomOverlayCard = (c) => !!c && c.type === FILTER_OVERLAY
   && c.room !== undefined && !isScenesName(c.room);
 
+// Filter-Schlüssel je Raumname am Handy, wie ihn die Raumseite wählt (casora-filter-overlay:
+// filter_category, sonst aus dem Namen). Übernommene Hemma-Seiten tragen eigene Schlüssel
+// (room_kueche, room_hauswirtschaftsraum …) – Raum-Chips, Leiste und Filter-Optionen müssen
+// denselben nehmen, sonst findet die Raumseite ihre Badges nicht (Issue #4).
+function phoneRoomKeys(mobile) {
+  const out = {};
+  ((((mobile || {}).chrome || {}).items) || []).forEach((it) => {
+    const c = it && it.card;
+    if (isRoomOverlayCard(c)) out[String(c.room).trim()] = c.filter_category || roomKeyOf(c.room);
+  });
+  return out;
+}
+const phoneKeyOf = (keys, name) => (keys || {})[String(name == null ? "" : name).trim()] || roomKeyOf(name);
+
 // Gemeldet 04.10.2026: Am Handy stand auf der Startseite immer das Theme-Bild (home-demo),
 // auch wenn im Studio (oder nach dem Umzug) für Home ein anderes Foto gewählt war.
 function syncPhoneHomePhoto(pair) {
@@ -1351,6 +1393,7 @@ function syncPairRooms(pair) {
   const mobile = (pair.mobile || {}).compact;
   if (!mobile || !rooms.length || !(mobile.rooms || []).length) return out;
   pair.link = linkPair(pair.desktop, pair.mobile);
+  const keysBefore = phoneRoomKeys(pair.mobile);
 
   const renames = {};
   pair.link.links.forEach((l) => {
@@ -1425,6 +1468,9 @@ function syncPairRooms(pair) {
         const old = Object.keys(renames).find((o) => renames[o] === s.name);
         const had = byName.get(s.name) || (old !== undefined ? byName.get(old) : null);
         const card = had ? clone(had) : clone(proto);
+        // Umbenannt: Der Schlüssel folgt dem neuen Namen (wie Leiste und Filter-Optionen), auch
+        // wenn die Seite einen eigenen (Hemma-)Schlüssel des alten Namens trug.
+        if (!byName.get(s.name) && old !== undefined) delete card.filter_category;
         card.room = s.name;
         const V = (roomOf.get(s) || {}).variables || {};
         if (V.image) card.image = V.image; else delete card.image;
@@ -1442,14 +1488,57 @@ function syncPairRooms(pair) {
   const chipsCard = (items.find((it) => it.card && it.card.template === MOBILE_CHIPS) || {}).card;
   const rc = chipsCard && chipsCard.variables && chipsCard.variables.room_chips;
   if (rc && typeof rc === "object") {
+    const keysAfter = phoneRoomKeys(pair.mobile);
     Object.keys(renames).forEach((o) => {
-      const from = roomKeyOf(o), to = roomKeyOf(renames[o]);
+      const from = phoneKeyOf(keysBefore, o), to = phoneKeyOf(keysAfter, renames[o]);
       if (from !== to && rc[from] && !rc[to]) { rc[to] = rc[from]; delete rc[from]; }
     });
-    const live = new Set(mobile.rooms.map((s) => roomKeyOf(s.name)));
+    const live = new Set(mobile.rooms.map((s) => phoneKeyOf(keysAfter, s.name)));
     Object.keys(rc).forEach((k) => { if (!live.has(k)) delete rc[k]; });
   }
   return out;
+}
+
+// Was Casora beim Speichern ohnehin neu schreibt, gilt beim Rundlauf-Vergleich nicht als Verlust:
+// die Raumliste der Handy-Leiste (bei jedem Speichern aus den Abschnitten gebaut) und
+// „Favoriten“ als interner Name „Favorites“. Übernommene Hemma-Handy-Layouts unterschieden sich
+// nur darin – das Studio ließ sie deshalb ganz aus, umbenannte Räume blieben am Handy alt (Issue #4).
+function phoneCanon(cfg) {
+  const out = clone(cfg) || {};
+  const v = (out.views || [])[0];
+  if (!v) return out;
+  (v.cards || []).forEach((c) => { if (c && c.type === MOBILE_NAV) delete c.rooms; });
+  const kids = ((v.cards || [])[1] || {}).cards || [];
+  kids.forEach((c, i) => {
+    const next = kids[i + 1];
+    if (c && c.template === MOBILE_HEADER && next && next.type === SMART_ROW
+      && isFavoritesName(c.name) && !(c.variables || {}).favorites) c.name = MOBILE_FAVORITES;
+  });
+  return out;
+}
+
+const phoneRoundTrips = (back, cfg) => stable(back) === stable(cfg)
+  || stable(phoneCanon(back)) === stable(phoneCanon(cfg));
+
+// Steht am Handy noch etwas, das ein Speichern im Studio neu schreiben würde (umbenannter Raum,
+// Raum-Badges)? Rechnet auf einer Kopie, ändert nichts.
+function phoneStale(pair) {
+  if (!pair || pair.safe === false || !pair.link) return null;
+  const rooms = ((pair.desktop || {}).compact || {}).rooms || [];
+  const secs = ((pair.mobile || {}).compact || {}).rooms || [];
+  const renamed = pair.link.links.filter((l) => !l.overview && l.section !== null
+    && rooms[l.room] && rooms[l.room].name && secs[l.section] && secs[l.section].name !== rooms[l.room].name)
+    .map((l) => ({ from: secs[l.section].name, to: rooms[l.room].name }));
+  const trial = { ...pair, mobile: clone(pair.mobile), link: clone(pair.link) };
+  const chipsOf = (m) => {
+    const it = ((m.chrome || {}).items || []).find((x) => x.card && x.card.template === MOBILE_CHIPS);
+    return stable(((it && it.card.variables) || {}).room_chips || null);
+  };
+  const before = chipsOf(trial.mobile);
+  if (renamed.length) syncPairRooms(trial);
+  syncRoomChips(trial);
+  const chips = chipsOf(trial.mobile) !== before;
+  return renamed.length || chips ? { renamed, chips } : null;
 }
 
 function extractPair(desktopCfg, mobileCfg, templates, editable) {
@@ -13625,6 +13714,8 @@ class CasoraPanel extends HTMLElement {
         this._markDirty();
         this._status("");
       }
+      // Nur wenn beide Hälften verlustfrei sind (sonst ist Speichern ohnehin aus).
+      if (safe && this._pair && this._pair.safe !== false) await this._reconcilePhone(url_path);
 
       // After the round trip check, which compares the file as it was.
       if (this._state.surface !== "mobile") {
@@ -13689,7 +13780,7 @@ class CasoraPanel extends HTMLElement {
     pair.mobileRaw = mcfg;
 
     const back = expandPair(pair);
-    pair.safe = stable(back.mobile) === stable(mcfg);
+    pair.safe = phoneRoundTrips(back.mobile, mcfg);
     this._log(`paired with "${mpath}"  round trip ${pair.safe ? "identical" : "DIFFERS"}`,
       pair.safe ? "ok" : "err");
     if (!pair.safe) return pair;
@@ -13717,6 +13808,40 @@ class CasoraPanel extends HTMLElement {
       this._log("setting either of these here now writes both layouts");
     }
     return pair;
+  }
+
+  // Beim Laden (Issue #4/#5): Wurde ein Raum umbenannt oder fehlen Raum-Badges (Fenster/Türen,
+  // Schlösser) am Handy, schreibt das Studio gleich nur das Handy-Layout neu – wie es das nächste
+  // Speichern täte, ohne dass dafür etwas geändert werden muss. Am Desktop wird nur der Titel des
+  // Luftqualitäts-Popups (aqi_room_name, noch der alte Raumname) im Speicher nachgezogen; er geht
+  // mit dem nächsten Speichern mit.
+  async _reconcilePhone(url_path) {
+    const pair = this._pair;
+    let stale = null;
+    try { stale = phoneStale(pair); } catch (e) { this._log("phone check failed: " + e.message, "warn"); }
+    if (!stale) return;
+    const rooms = pair.desktop.compact.rooms;
+    stale.renamed.forEach((r) => {
+      const room = rooms.find((x) => x.name === r.to);
+      const V = room && room.variables;
+      if (V && V.aqi_room_name === r.from) V.aqi_room_name = r.to;
+    });
+    const lock = window.CASORA_STUDIO_SAVE_LOCK;
+    if (lock && new RegExp(lock).test(url_path || "") && !window.CASORA_STUDIO_SAVE_OK) return;
+    try {
+      const res = syncPairRooms(pair);
+      syncRoomChips(pair);
+      const mlive = await this._ws({ type: "lovelace/config", url_path: pair.mobileUrl });
+      const mcfg = expandAny(pair.mobile, { extras: omit(mlive, ["views", "button_card_templates"]),
+        templates: mlive.button_card_templates });
+      await this._hass.callWS({ type: "lovelace/config/save", url_path: pair.mobileUrl, config: mcfg });
+      pair.mobileRaw = clone(mcfg);
+      if (res.renamed) this._log(`phone layout: ${res.renamed} renamed room(s) brought up to date`, "ok");
+      if (stale.chips) this._log("phone layout: room badges brought up to date", "ok");
+      await this._syncFilterOptions();
+    } catch (e) {
+      this._log("phone layout not brought up to date: " + e.message, "warn");
+    }
   }
 
   _phoneReachable() {
@@ -14089,10 +14214,10 @@ class CasoraPanel extends HTMLElement {
     const cur = ((this._hass || {}).states || {})[ent];
     if (!cur) return;
     const have = (cur.attributes || {}).options || [];
+    const pk = this._pair && this._pair.safe !== false ? phoneRoomKeys(this._pair.mobile) : {};
     const keys = (((this._state || {}).compact || {}).rooms || [])
       .filter((r) => r && r.name && !isFav(r))
-      .map((r) => r.name)
-      .map(roomKeyOf);
+      .map((r) => phoneKeyOf(pk, r.name));
     // room_scenes is a category that happens to share the prefix, never a room.
     const kept = have.filter((o) => o === "room_scenes" || !/^room_/.test(o));
     const next = kept.concat(keys.filter((k) => kept.indexOf(k) < 0));
@@ -16053,11 +16178,13 @@ class CasoraPanel extends HTMLElement {
           }
           if (f.key === "__name") {
             if (v) keepRoomGlyph(room, v);
+            const was = room.name;
             // Übersicht: „Zuhause“/„Home“/leer ist der Standardname – gespeichert als „Home“.
             const home = isHomeRoom(room, this._state.compact.rooms);
             const nv = home ? setHomeName(room, v, this._hass) : storedRoomName(v, false);
             room.name = nv;
             setVar("room_name", nv);
+            if (was && nv && (room.variables || {}).aqi_room_name === was) setVar("aqi_room_name", nv);
             this._renderTabs();
             // Kopf der mittleren Spalte (Raumansicht) trägt den Raumnamen.
             if (this.$("pane") && this.$("pane").classList.contains("stack")) {
@@ -24050,7 +24177,7 @@ window.__casoraPanelInternals = {
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
-  linkPair, syncPairRooms, syncPairTiles, carryPhoneSizes, expandMobileConfig, extractMobileConfig,
+  linkPair, syncPairRooms, syncPairTiles, syncRoomChips, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, expandMobileConfig, extractMobileConfig,
   deriveEnergyRooms,
   CASORA_ACCENTS, accentLabel, swatchCss,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)

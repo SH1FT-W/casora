@@ -922,7 +922,8 @@
    ]
   },
   "tap_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "light"
   },
   "template": [
    "casora_badge_base",
@@ -930,7 +931,7 @@
   ]
  },
  "casora_badge_air_quality": {
-  "extra_styles": "[[[\n  const ev = variables?.enabled;\n  const enabled = (ev === undefined || ev === null) ? true :\n    (typeof ev === 'boolean') ? ev :\n    (typeof ev === 'number') ? ev !== 0 :\n    !['false','0','no','off','disabled'].includes(String(ev).trim().toLowerCase());\n\n  const hasEnt  = !!entity?.entity_id;\n  const stRaw   = String(entity?.state ?? '').trim();\n  const st      = stRaw.toLowerCase();\n  const hide    = !enabled || !hasEnt || !stRaw || ['unknown','unavailable','none'].includes(st);\n\n  /* Gemeinsames Level wie im Klima-Popup (Hemma 2.2.0, MIT): Text, Farbe und Symbol folgen ihm. */\n  const aq = (() => { const st0 = String(entity?.state ?? '').trim().toLowerCase().replace(/_/g, ' '); const base = { excellent: 0, ausgezeichnet: 0, good: 0.5, gut: 0.5, moderate: 1, fair: 1, 'mäßig': 1, poor: 2, schlecht: 2, bad: 3, 'very bad': 3, 'very poor': 3, 'extremely poor': 3, 'sehr schlecht': 3 }[st0]; const sns = Array.isArray(variables?.sensors) ? variables.sensors.filter(Boolean) : []; let worst = -1; sns.forEach((eid) => { const n = parseFloat(states[eid]?.state); if (isNaN(n)) return; const id = eid.toLowerCase(); const a = states[eid]?.attributes || {}; const dc = String(a.device_class || '').toLowerCase(); const idx = id.endsWith('_index') || String(a.unit_of_measurement || '').toLowerCase() === 'index'; const t = (id.includes('pm25') || id.includes('pm2_5') || dc === 'pm25') ? [12, 35.4, 55.4] : (id.includes('pm10') || dc === 'pm10') ? [54, 154, 254] : (id.includes('voc') || id.includes('volatile_organic') || dc.includes('volatile_organic')) ? (idx ? [6, 8, 9] : [100, 200, 300]) : (id.includes('no2') || id.includes('nitrogen_dioxide') || dc === 'nitrogen_dioxide') ? (idx ? [6, 8, 9] : [53, 100, 360]) : (id.includes('co2') || id.includes('carbon') || dc === 'carbon_dioxide') ? [1000, 1500, 2000] : null; if (!t) { worst = Math.max(worst, 0); return; } worst = Math.max(worst, n <= t[0] ? 0 : n <= t[1] ? 1 : n <= t[2] ? 2 : 3); }); return worst >= 0 ? { level: worst, fromSensors: true } : { level: base, fromSensors: false }; })();\n  const svgUrl = aq.level >= 2\n    ? window.casoraIconUrl('aqi-high')\n    : aq.level != null && aq.level <= 0.5\n      ? window.casoraIconUrl('aqi-low')\n      : window.casoraIconUrl('aqi-medium');\n\n  let gaugeCSS = '';\n  if (variables?.gauge && !hide) {\n    const gf  = { 0: 1, 0.5: 0.8, 1: 0.55, 2: 0.3, 3: 0.15 }[aq.level] ?? 0.5;\n    const arc = Math.round(gf * 270);\n    const rr = 13.5, C = 16, W = 3;\n    const pt = (deg) => {\n      const a = deg * Math.PI / 180;\n      return `${(C + rr * Math.sin(a)).toFixed(3)} ${(C - rr * Math.cos(a)).toFixed(3)}`;\n    };\n    const arcPath = (a0, a1) =>\n      `M ${pt(a0)} A ${rr} ${rr} 0 ${(a1 - a0) > 180 ? 1 : 0} 1 ${pt(a1)}`;\n    let paths = '';\n    if (arc < 269) paths += `<path d='${arcPath(225 + arc, 495)}' stroke='white' stroke-opacity='0.30' stroke-width='${W}' stroke-linecap='round' fill='none'/>`;\n    paths += `<path d='${arcPath(225, 225 + arc)}' stroke='white' stroke-width='${W}' stroke-linecap='round' fill='none'/>`;\n\n    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'>${paths}</svg>`;\n    const maskUrl = `url(\"data:image/svg+xml,${encodeURIComponent(svg)}\")`;\n    gaugeCSS = `\n      #img-cell::before, .img-cell::before {\n        background-color: color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), var(--casora-badge-icon-fg, var(--casora-icon-color, var(--primary-text-color)))) !important;\n        scale: var(--casora-badge-glyph-scale, none);\n      }\n\n      #img-cell::after, .img-cell::after {\n        content: '';\n        position: absolute;\n        inset: 0;\n        border-radius: 9999px;\n        background: var(--casora-icon-color, #fff);\n        opacity: calc(1 - var(--casora-badge-circle-on, 0));\n        -webkit-mask: ${maskUrl} no-repeat center / 100% 100%;\n        mask: ${maskUrl} no-repeat center / 100% 100%;\n        transform: translateZ(0);\n        -webkit-transform: translateZ(0);\n      }\n\n${variables?.gauge_keep_bg ? '#img-cell, .img-cell { --casora-badge-icon-scale: calc(54% + 31% * var(--casora-badge-circle-on, 0)); }' : `\n      ha-card.button-card-main, ha-card.button-card-main:hover, ha-card.button-card-main:active,\n      :host(:hover) ha-card, :host(:active) ha-card {\n        /* Weich: Pille wie die Haupt-Badges (Ring ist dort aus) – sonst stand weiße Schrift\n           direkt auf dem hellen Foto. Andere Designs: durchsichtig wie bisher. */\n        background: color-mix(in srgb, var(--badge-background, transparent) calc(var(--casora-badge-circle-on, 0) * 100%), transparent) !important;\n        box-shadow: var(--casora-badge-gauge-shadow, none) !important;\n        filter: none !important;\n        -webkit-filter: none !important;\n        -webkit-tap-highlight-color: transparent !important;\n      }\n      ha-ripple, mwc-ripple { display: none !important; }\n`}\n    `;\n  }\n\n  return `\n    :host{display:${hide ? 'none' : 'inline-block'} !important;order:var(--casora-badge-order-climate,2);}\n    #img-cell, .img-cell { position: relative; }\n    /* Weich (--casora-badge-circle-on: 1): volles Symbol (ha-state-icon) wie bei den Haupt-Badges –\n       die feine Strichgrafik im ::before wirkte im Kreis winzig und dünn. Andere Designs: wie bisher. */\n    #img-cell #icon, .img-cell #icon {\n      color: color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), transparent) !important;\n      --icon-primary-color: color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), transparent) !important;\n      --state-icon-color: color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), transparent) !important;\n      opacity: 0 !important;\n    }\n    /* Luftqualität: auch im Kreis die AQI-Punkte (aqi-low/-medium/-high) wie in Hemma, nicht das Luftreiniger-Symbol. */\n    #img-cell::before, .img-cell::before {\n      content: '';\n      opacity: 1;\n      position: absolute;\n      inset: 0;\n      background-color: color-mix(in srgb, var(--casora-badge-glyph, #fff) calc(var(--casora-badge-circle-on, 0) * 100%), var(--casora-icon-color, var(--primary-text-color)));\n      scale: var(--casora-badge-glyph-scale, none);\n      /* Im Weich-Kreis größer: die feinen AQI-Punkte wirken sonst blass. */\n      -webkit-mask: url('${svgUrl}') no-repeat center / calc(var(--casora-badge-icon-scale, 85%) * (1 + 0.15 * var(--casora-badge-circle-on, 0))) calc(var(--casora-badge-icon-scale, 85%) * (1 + 0.15 * var(--casora-badge-circle-on, 0)));\n      mask: url('${svgUrl}') no-repeat center / calc(var(--casora-badge-icon-scale, 85%) * (1 + 0.15 * var(--casora-badge-circle-on, 0))) calc(var(--casora-badge-icon-scale, 85%) * (1 + 0.15 * var(--casora-badge-circle-on, 0)));\n      transform: translateZ(0);\n    }\n  ` + gaugeCSS;\n]]]\n",
+  "extra_styles": "[[[\n  const ev = variables?.enabled;\n  const enabled = (ev === undefined || ev === null) ? true :\n    (typeof ev === 'boolean') ? ev :\n    (typeof ev === 'number') ? ev !== 0 :\n    !['false','0','no','off','disabled'].includes(String(ev).trim().toLowerCase());\n\n  const hasEnt  = !!entity?.entity_id;\n  const stRaw   = String(entity?.state ?? '').trim();\n  const st      = stRaw.toLowerCase();\n  const hide    = !enabled || !hasEnt || !stRaw || ['unknown','unavailable','none'].includes(st);\n\n  /* Gemeinsames Level wie im Klima-Popup (Hemma 2.2.0, MIT): Text, Farbe und Symbol folgen ihm. */\n  const aq = (() => { const st0 = String(entity?.state ?? '').trim().toLowerCase().replace(/_/g, ' '); const base = { excellent: 0, ausgezeichnet: 0, good: 0.5, gut: 0.5, moderate: 1, fair: 1, 'mäßig': 1, poor: 2, schlecht: 2, bad: 3, 'very bad': 3, 'very poor': 3, 'extremely poor': 3, 'sehr schlecht': 3 }[st0]; const sns = Array.isArray(variables?.sensors) ? variables.sensors.filter(Boolean) : []; let worst = -1; sns.forEach((eid) => { const n = parseFloat(states[eid]?.state); if (isNaN(n)) return; const id = eid.toLowerCase(); const a = states[eid]?.attributes || {}; const dc = String(a.device_class || '').toLowerCase(); const idx = id.endsWith('_index') || String(a.unit_of_measurement || '').toLowerCase() === 'index'; const t = (id.includes('pm25') || id.includes('pm2_5') || dc === 'pm25') ? [12, 35.4, 55.4] : (id.includes('pm10') || dc === 'pm10') ? [54, 154, 254] : (id.includes('voc') || id.includes('volatile_organic') || dc.includes('volatile_organic')) ? (idx ? [6, 8, 9] : [100, 200, 300]) : (id.includes('no2') || id.includes('nitrogen_dioxide') || dc === 'nitrogen_dioxide') ? (idx ? [6, 8, 9] : [53, 100, 360]) : (id.includes('co2') || id.includes('carbon') || dc === 'carbon_dioxide') ? [1000, 1500, 2000] : null; if (!t) { worst = Math.max(worst, 0); return; } worst = Math.max(worst, n <= t[0] ? 0 : n <= t[1] ? 1 : n <= t[2] ? 2 : 3); }); return worst >= 0 ? { level: worst, fromSensors: true } : { level: base, fromSensors: false }; })();\n  const svgUrl = aq.level >= 2\n    ? window.casoraIconUrl('aqi-high')\n    : aq.level != null && aq.level <= 0.5\n      ? window.casoraIconUrl('aqi-low')\n      : window.casoraIconUrl('aqi-medium');\n\n  let gaugeCSS = '';\n  if (variables?.gauge && !hide) {\n    const gf  = { 0: 1, 0.5: 0.8, 1: 0.55, 2: 0.3, 3: 0.15 }[aq.level] ?? 0.5;\n    const arc = Math.round(gf * 270);\n    const rr = 13.5, C = 16, W = 3;\n    const pt = (deg) => {\n      const a = deg * Math.PI / 180;\n      return `${(C + rr * Math.sin(a)).toFixed(3)} ${(C - rr * Math.cos(a)).toFixed(3)}`;\n    };\n    const arcPath = (a0, a1) =>\n      `M ${pt(a0)} A ${rr} ${rr} 0 ${(a1 - a0) > 180 ? 1 : 0} 1 ${pt(a1)}`;\n    let paths = '';\n    if (arc < 269) paths += `<path d='${arcPath(225 + arc, 495)}' stroke='white' stroke-opacity='0.30' stroke-width='${W}' stroke-linecap='round' fill='none'/>`;\n    paths += `<path d='${arcPath(225, 225 + arc)}' stroke='white' stroke-width='${W}' stroke-linecap='round' fill='none'/>`;\n\n    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'>${paths}</svg>`;\n    const maskUrl = `url(\"data:image/svg+xml,${encodeURIComponent(svg)}\")`;\n    gaugeCSS = `\n      #img-cell::before, .img-cell::before {\n        background-color: color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), var(--casora-badge-icon-fg, var(--casora-icon-color, var(--primary-text-color)))) !important;\n        scale: var(--casora-badge-glyph-scale, none);\n      }\n\n      #img-cell::after, .img-cell::after {\n        content: '';\n        position: absolute;\n        inset: 0;\n        border-radius: 9999px;\n        background: var(--casora-icon-color, #fff);\n        opacity: calc(1 - var(--casora-badge-circle-on, 0));\n        -webkit-mask: ${maskUrl} no-repeat center / 100% 100%;\n        mask: ${maskUrl} no-repeat center / 100% 100%;\n        transform: translateZ(0);\n        -webkit-transform: translateZ(0);\n      }\n\n${variables?.gauge_keep_bg ? '#img-cell, .img-cell { --casora-badge-icon-scale: calc(54% + 31% * var(--casora-badge-circle-on, 0)); }' : `\n      ha-card.button-card-main, ha-card.button-card-main:hover, ha-card.button-card-main:active,\n      :host(:hover) ha-card, :host(:active) ha-card {\n        /* Weich: Pille wie die Haupt-Badges (Ring ist dort aus) – sonst stand weiße Schrift\n           direkt auf dem hellen Foto. Andere Designs: durchsichtig wie bisher. */\n        background: color-mix(in srgb, var(--badge-background, transparent) calc(var(--casora-badge-circle-on, 0) * 100%), transparent) !important;\n        box-shadow: var(--casora-badge-gauge-shadow, none) !important;\n        filter: none !important;\n        -webkit-filter: none !important;\n        -webkit-tap-highlight-color: transparent !important;\n      }\n      ha-ripple, mwc-ripple { display: none !important; }\n`}\n    `;\n  }\n\n  return `\n    :host{display:${hide ? 'none' : 'inline-block'} !important;order:var(--casora-badge-order-climate,2);}\n    #img-cell, .img-cell { position: relative; }\n    /* Weich (--casora-badge-circle-on: 1): volles Symbol (ha-state-icon) wie bei den Haupt-Badges –\n       die feine Strichgrafik im ::before wirkte im Kreis winzig und dünn. Andere Designs: wie bisher. */\n    #img-cell #icon, .img-cell #icon {\n      color: color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), transparent) !important;\n      --icon-primary-color: color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), transparent) !important;\n      --state-icon-color: color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), transparent) !important;\n      opacity: 0 !important;\n    }\n    /* Luftqualität: auch im Kreis die AQI-Punkte (aqi-low/-medium/-high) wie in Hemma, nicht das Luftreiniger-Symbol. */\n    #img-cell::before, .img-cell::before {\n      content: '';\n      opacity: 1;\n      position: absolute;\n      inset: 0;\n      background-color: color-mix(in srgb, var(--casora-badge-glyph, #fff) calc(var(--casora-badge-circle-on, 0) * 100%), var(--casora-icon-color, var(--primary-text-color)));\n      scale: var(--casora-badge-glyph-scale, none);\n      /* Im Weich-Kreis größer: die feinen AQI-Punkte wirken sonst blass. Am Handy verkleinern die\n         Reihen das Symbol (--casora-badge-icon-scale 54 %), dann waren die Punkte neben Tropfen und\n         Thermometer winzig – im Kreis darum mindestens 96 % (Desktop bleibt bei 85 % × 1,15) (04.10.2026). */\n      -webkit-mask: url('${svgUrl}') no-repeat center / max(calc(var(--casora-badge-icon-scale, 85%) * (1 + 0.15 * var(--casora-badge-circle-on, 0))), calc(96% * var(--casora-badge-circle-on, 0))) max(calc(var(--casora-badge-icon-scale, 85%) * (1 + 0.15 * var(--casora-badge-circle-on, 0))), calc(96% * var(--casora-badge-circle-on, 0)));\n      mask: url('${svgUrl}') no-repeat center / max(calc(var(--casora-badge-icon-scale, 85%) * (1 + 0.15 * var(--casora-badge-circle-on, 0))), calc(96% * var(--casora-badge-circle-on, 0))) max(calc(var(--casora-badge-icon-scale, 85%) * (1 + 0.15 * var(--casora-badge-circle-on, 0))), calc(96% * var(--casora-badge-circle-on, 0)));\n      transform: translateZ(0);\n    }\n  ` + gaugeCSS;\n]]]\n",
   "icon": "mdi:air-filter",
   "name": "[[[\n  /* Gemeinsames Level wie im Klima-Popup (Hemma 2.2.0, MIT): Text, Farbe und Symbol folgen ihm. */\n  const aq = (() => { const st0 = String(entity?.state ?? '').trim().toLowerCase().replace(/_/g, ' '); const base = { excellent: 0, ausgezeichnet: 0, good: 0.5, gut: 0.5, moderate: 1, fair: 1, 'mäßig': 1, poor: 2, schlecht: 2, bad: 3, 'very bad': 3, 'very poor': 3, 'extremely poor': 3, 'sehr schlecht': 3 }[st0]; const sns = Array.isArray(variables?.sensors) ? variables.sensors.filter(Boolean) : []; let worst = -1; sns.forEach((eid) => { const n = parseFloat(states[eid]?.state); if (isNaN(n)) return; const id = eid.toLowerCase(); const a = states[eid]?.attributes || {}; const dc = String(a.device_class || '').toLowerCase(); const idx = id.endsWith('_index') || String(a.unit_of_measurement || '').toLowerCase() === 'index'; const t = (id.includes('pm25') || id.includes('pm2_5') || dc === 'pm25') ? [12, 35.4, 55.4] : (id.includes('pm10') || dc === 'pm10') ? [54, 154, 254] : (id.includes('voc') || id.includes('volatile_organic') || dc.includes('volatile_organic')) ? (idx ? [6, 8, 9] : [100, 200, 300]) : (id.includes('no2') || id.includes('nitrogen_dioxide') || dc === 'nitrogen_dioxide') ? (idx ? [6, 8, 9] : [53, 100, 360]) : (id.includes('co2') || id.includes('carbon') || dc === 'carbon_dioxide') ? [1000, 1500, 2000] : null; if (!t) { worst = Math.max(worst, 0); return; } worst = Math.max(worst, n <= t[0] ? 0 : n <= t[1] ? 1 : n <= t[2] ? 2 : 3); }); return worst >= 0 ? { level: worst, fromSensors: true } : { level: base, fromSensors: false }; })();\n  /* Messsensoren bestimmen das Level: dann dieselben Worte wie das Popup. Sonst HAs Zustandstext. */\n  const word = aq.fromSensors ? ['Ausgezeichnet', 'Mäßig', 'Schlecht', 'Sehr schlecht'][aq.level] : null;\n  // entity is undefined during HA startup — formatEntityState(undefined) throws (auch beim Sprachwechsel).\n  let fmt = '';\n  try { fmt = entity ? hass.formatEntityState(entity) : ''; } catch (e) { fmt = ''; }\n  const raw = word || fmt || entity?.state || 'Unbekannt';\n  const nice = raw.charAt(0).toUpperCase() + raw.slice(1);\n  const esc = (t) => String(t || '').replaceAll('\"','&quot;');\n  return `\n    <div class=\"badge-wrap\">\n      <div class=\"badge-title\">Luftqualität</div>\n      <div class=\"badge-sub\">${esc(nice)}</div>\n    </div>\n  `;\n]]]\n",
   "styles": {
@@ -1292,7 +1293,8 @@
    "service_data": {
     "entity_id": "input_select.casora_expanded_row",
     "option": "[[[\n  return states['input_select.casora_expanded_row']?.state === 'climate' ? 'none' : 'climate';\n]]]\n"
-   }
+   },
+   "haptic": "light"
   },
   "template": [
    "casora_badge_base"
@@ -1988,7 +1990,8 @@
    "service_data": {
     "entity_id": "input_select.casora_expanded_row",
     "option": "[[[\n  return states['input_select.casora_expanded_row']?.state === 'media' ? 'none' : 'media';\n]]]\n"
-   }
+   },
+   "haptic": "light"
   },
   "template": [
    "casora_badge_base"
@@ -2294,7 +2297,8 @@
   },
   "tap_action": {
    "action": "more-info",
-   "entity": "[[[ return variables.entity || entity?.entity_id ]]]"
+   "entity": "[[[ return variables.entity || entity?.entity_id ]]]",
+   "haptic": "light"
   },
   "template": [
    "casora_badge_base",
@@ -2427,7 +2431,8 @@
    "service_data": {
     "entity_id": "input_select.casora_expanded_row",
     "option": "[[[\n  return states['input_select.casora_expanded_row']?.state === 'presence' ? 'none' : 'presence';\n]]]\n"
-   }
+   },
+   "haptic": "light"
   },
   "template": [
    "casora_badge_base"
@@ -2698,7 +2703,8 @@
    "service_data": {
     "entity_id": "input_select.casora_expanded_row",
     "option": "[[[\n  return states['input_select.casora_expanded_row']?.state === 'security' ? 'none' : 'security';\n]]]\n"
-   }
+   },
+   "haptic": "light"
   },
   "template": [
    "casora_badge_base"
@@ -6912,6 +6918,100 @@
        },
        "template": "casora_badge_base",
        "type": "custom:button-card"
+      },
+      {
+       "type": "custom:button-card",
+       "template": "casora_badge_lock_group",
+       "entity": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return (c.security_locks || [])[0] || null; ]]]",
+       "variables": {
+        "enabled": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return !!(c.security_locks || []).length; ]]]",
+        "inline": true,
+        "locks": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_locks || []; ]]]",
+        "label": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_locks_label || null; ]]]",
+        "battery_entities": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_lock_batteries || {}; ]]]",
+        "door_sensors": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_door_sensors || {}; ]]]",
+        "room_name": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.room_name || c.aqi_room_name || ''; ]]]"
+       }
+      },
+      {
+       "type": "custom:button-card",
+       "template": "casora_badge_security",
+       "entity": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_entity_1 || null; ]]]",
+       "variables": {
+        "enabled": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return !!c.security_entity_1; ]]]",
+        "inline": true,
+        "label": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_label_1 || null; ]]]"
+       }
+      },
+      {
+       "type": "custom:button-card",
+       "template": "casora_badge_contact_group",
+       "entity": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_entity_2 || null; ]]]",
+       "variables": {
+        "enabled": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return !!c.security_entity_2; ]]]",
+        "inline": true,
+        "label": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_label_2 || null; ]]]"
+       }
+      },
+      {
+       "type": "custom:button-card",
+       "template": "casora_badge_contact_group",
+       "entity": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_entity_3 || null; ]]]",
+       "variables": {
+        "enabled": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return !!c.security_entity_3; ]]]",
+        "inline": true,
+        "label": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_label_3 || null; ]]]"
+       }
+      },
+      {
+       "type": "custom:button-card",
+       "template": "casora_badge_security",
+       "entity": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_entity_4 || null; ]]]",
+       "variables": {
+        "enabled": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return !!c.security_entity_4; ]]]",
+        "inline": true,
+        "label": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_label_4 || null; ]]]"
+       }
+      },
+      {
+       "type": "custom:button-card",
+       "template": "casora_badge_security",
+       "entity": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_entity_5 || null; ]]]",
+       "variables": {
+        "enabled": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return !!c.security_entity_5; ]]]",
+        "inline": true,
+        "label": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_label_5 || null; ]]]"
+       }
+      },
+      {
+       "type": "custom:button-card",
+       "template": "casora_badge_security",
+       "entity": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_entity_6 || null; ]]]",
+       "variables": {
+        "enabled": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return !!c.security_entity_6; ]]]",
+        "inline": true,
+        "label": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_label_6 || null; ]]]"
+       }
+      },
+      {
+       "type": "custom:button-card",
+       "template": "casora_badge_security",
+       "entity": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_entity_7 || null; ]]]",
+       "variables": {
+        "enabled": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return !!c.security_entity_7; ]]]",
+        "inline": true,
+        "label": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_label_7 || null; ]]]"
+       }
+      },
+      {
+       "type": "custom:button-card",
+       "template": "casora_badge_security",
+       "entity": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_entity_8 || null; ]]]",
+       "variables": {
+        "enabled": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return !!c.security_entity_8; ]]]",
+        "inline": true,
+        "label": "[[[ const f = states['input_select.casora_mobile_filter']?.state; const c = variables.room_chips?.[f] || {}; return c.security_label_8 || null; ]]]"
+       }
       }
      ],
      "layout": {
@@ -7151,6 +7251,9 @@
      },
      {
       "--casora-badge-order-climate": "0"
+     },
+     {
+      "--casora-badge-order-security": "-1"
      }
     ],
     "security_row": [
