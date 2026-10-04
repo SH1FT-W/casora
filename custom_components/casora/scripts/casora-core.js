@@ -7419,11 +7419,13 @@ window.casoraMenuGlass = {
 
   var COVER_KINDS = {
     curtain: { key: 'curtain', label: 'Vorhänge',     open: 'curtain-open',         closed: 'curtain-closed' },
-    blind:   { key: 'blind',   label: 'Jalousien',    open: 'blinds-vertical-open', closed: 'blinds-vertical-closed' },
+    // Jalousien mit denselben Lamellen-Symbolen wie die Kachel (cover_open/cover_closed) – vorher
+    // zeigte ein Popup Lamellen im Kopf, Vorhang am Regler und Fenster in den Zeilen (Audit M2).
+    blind:   { key: 'blind',   label: 'Jalousien',    open: 'cover_open',           closed: 'cover_closed' },
     shade:   { key: 'shade',   label: 'Rollos',       open: 'roller-shade-open',    closed: 'roller-shade-closed' },
     shutter: { key: 'shutter', label: 'Fensterläden', open: 'window-shade-open',    closed: 'window-shade-closed' },
     awning:  { key: 'awning',  label: 'Markisen',     open: 'window-shade-open',    closed: 'window-shade-closed' },
-    window:  { key: 'window',  label: 'Fenster',      open: 'window-shade-open',    closed: 'window-shade-closed' },
+    window:  { key: 'window',  label: 'Jalousien',    open: 'cover_open',           closed: 'cover_closed' },
     door:    { key: 'door',    label: 'Türen',        open: 'door-open',            closed: 'door-closed' },
     garage:  { key: 'garage',  label: 'Garage',       open: 'door-open',            closed: 'door-closed' },
     gate:    { key: 'gate',    label: 'Tore',         open: 'door-open',            closed: 'door-closed' },
@@ -7437,7 +7439,8 @@ window.casoraMenuGlass = {
     for (var i = 0; i < keys.length; i++) {
       if (n.indexOf(keys[i]) !== -1) return COVER_KINDS[keys[i]];
     }
-    return COVER_KINDS.curtain;
+    // Ohne Geräteklasse und ohne Hinweis im Namen: Jalousie wie die Kachel (vorher Vorhang).
+    return COVER_KINDS.blind;
   };
 
 
