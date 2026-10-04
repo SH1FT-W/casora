@@ -44,6 +44,9 @@ Beta of the new Studio. The previous Studio stays one switch away.
   scrolling follows it, and the Studio preview shows the room photo with the chosen softness right away.
 
 ### Fixed
+- Media: a player that was already paused no longer shows up again for 10 minutes after every Home Assistant
+  restart or short dropout. Casora remembers when it was really paused (same title), so the hide timer counts
+  from there.
 - The overview's name now looks the same everywhere: a name you gave it (also “Home” in German) stays
   exactly as you typed it in the navigation, room title, phone bar, phone header and Studio. Only the
   name Casora set up itself follows the interface language.
@@ -70,6 +73,12 @@ Beta of the new Studio. The previous Studio stays one switch away.
 - Phone: opening a room from the bottom bar sometimes showed the blurred Home photo instead of the room
   photo, with Home headings like “Favorites” showing through the tiles. The room background now always
   appears, also when the page rebuilds the room while switching.
+- Phone after moving from Hemma: tiles that were large on the phone in Hemma (cameras, robot vacuum,
+  appliances, car, eBike, plants, media, recipe, lock …) are large again. Dashboards moved with an earlier
+  version get their sizes back once from the move backup when they are next opened in the Studio, with a
+  short note; sizes you change yourself afterwards stay.
+- Phone: when a room has the same tile twice, each one keeps its own settings (such as Size on phone) on
+  saving, and tiles that only show under a condition stay in their place instead of moving to the front.
 
 ## 1.0.3 – 04.10.2026
 

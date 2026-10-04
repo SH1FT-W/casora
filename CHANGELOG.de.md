@@ -46,6 +46,9 @@ Beta des neuen Studios. Das bisherige Studio ist nur einen Schalter entfernt.
   28 px, der Schleier beim Scrollen geht mit, und die Studio-Vorschau zeigt das Raumfoto sofort so.
 
 ### Behoben
+- Medien: Ein schon pausierter Player taucht nach jedem Neustart von Home Assistant oder einem kurzen Ausfall
+  nicht mehr 10 Minuten lang wieder auf. Casora merkt sich, wann er wirklich pausiert wurde (gleicher Titel),
+  und die Ausblende-Zeit zählt ab dort.
 - Der Name der Übersicht steht jetzt überall gleich: Ein selbst vergebener Name (auch „Home“ auf
   Deutsch) bleibt in Leiste, Raumtitel, Handy-Leiste, Handy-Kopf und Studio genau so stehen. Nur der
   Name, den Casora selbst angelegt hat, folgt der Sprache der Oberfläche.
@@ -73,6 +76,13 @@ Beta des neuen Studios. Das bisherige Studio ist nur einen Schalter entfernt.
 - Handy: Beim Öffnen eines Raums über die untere Leiste lag manchmal das unscharfe Home-Foto statt des
   Raumfotos dahinter, und Home-Überschriften wie „Favoriten“ schienen durch die Kacheln. Der
   Raum-Hintergrund erscheint jetzt immer, auch wenn die Seite den Raum beim Wechsel neu aufbaut.
+- Handy nach dem Umzug von Hemma: Kacheln, die in Hemma am Handy groß waren (Kameras, Saugroboter,
+  Haushaltsgeräte, Auto, eBike, Pflanzen, Medien, Rezept, Schloss …), sind wieder groß. Mit einer früheren
+  Version umgezogene Dashboards holen ihre Größen beim nächsten Öffnen im Studio einmalig aus der
+  Umzugs-Sicherung, mit kurzem Hinweis; danach selbst geänderte Größen bleiben.
+- Handy: Steht dieselbe Kachel zweimal in einem Raum, behält beim Speichern jede ihre eigenen
+  Einstellungen (etwa „Größe am Handy“), und Kacheln, die nur unter einer Bedingung erscheinen, bleiben
+  an ihrer Stelle, statt nach vorn zu rücken.
 
 ## 1.0.3 – 04.10.2026
 

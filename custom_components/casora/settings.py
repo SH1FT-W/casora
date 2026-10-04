@@ -12,6 +12,7 @@ nicht ohne Anmeldung lesbar.
                           sonst Netzbezug aus HAs Energie-Dashboard, bei einer Preis-Entität deren ID)
   casora/settings/set  ← {"settings": {...}}                    (nur Admins)
   casora/backup/dashboard ← {"name", "url_path"[, "mobile_url_path", "title"] | "data"} → {"path"}       (nur Admins)
+  casora/backup/umzug_phones ← {["sources"]} → {"backups": [{file, url_path, title, time, mobile}]}  (nur Admins, nur lesen)
   casora/ki/merge_template ← {"name", "mine", "casora"} → {"template", "changes"}  (nur Admins)
   casora/ki/adapt_card ← {"card", "context"} → {"card", "changes"}  (nur Admins)
   casora/ki/models     → {"best": {...}|None, "all": [...]}      (nur Admins)
@@ -195,6 +196,59 @@ async def ws_backup(hass: HomeAssistant, connection: websocket_api.ActiveConnect
 
     await hass.async_add_executor_job(_write)
     connection.send_result(msg["id"], {"path": os.path.relpath(path, hass.config.config_dir)})
+
+
+UMZUG_FILE = r"^umzug_(\d{4}-\d{2}-\d{2}_\d{6})_(.+)\.json$"
+
+
+def read_umzug_phones(folder: str, sources: list[str] | None = None, limit: int = 8) -> list[dict[str, Any]]:
+    """Handy-Layouts aus den Umzugs-Sicherungen, je Quell-Dashboard die neueste.
+
+    Nur die Ansichten (ohne button_card_templates): das Studio braucht daraus die Kachelgrößen
+    („Size on phone“), die ältere Umzüge nicht an die Raum-Kacheln übertragen hatten.
+    """
+    import json
+    import os
+    import re
+
+    try:
+        names = sorted(os.listdir(folder), reverse=True)
+    except OSError:
+        return []
+    seen: set[str] = set()
+    out: list[dict[str, Any]] = []
+    for name in names:
+        m = re.match(UMZUG_FILE, name)
+        if not m or len(out) >= limit:
+            continue
+        try:
+            with open(os.path.join(folder, name), encoding="utf-8") as fh:
+                data = json.load(fh)
+        except (OSError, ValueError):
+            continue
+        mobile = data.get("mobile") if isinstance(data, dict) else None
+        url = str(data.get("url_path") or m.group(2)) if isinstance(data, dict) else m.group(2)
+        if not isinstance(mobile, dict) or not isinstance(mobile.get("views"), list) or url in seen:
+            continue
+        if sources and url not in sources:
+            continue
+        seen.add(url)
+        out.append({"file": name, "url_path": url, "title": data.get("title") or url, "time": m.group(1),
+                    "mobile": {k: v for k, v in mobile.items() if k != "button_card_templates"}})
+    return out
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({
+    vol.Required("type"): "casora/backup/umzug_phones",
+    vol.Optional("sources"): [str],
+})
+@websocket_api.async_response
+async def ws_umzug_phones(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    """Handy-Layouts der Umzugs-Sicherungen (nur lesen) → {"backups": [{file, url_path, title, time, mobile}]}."""
+    folder = hass.config.path("casora_sicherungen")
+    backups = await hass.async_add_executor_job(read_umzug_phones, folder, msg.get("sources"))
+    connection.send_result(msg["id"], {"backups": backups})
 
 
 def _json_obj(value: Any) -> Any:
@@ -576,6 +630,7 @@ def async_setup_settings(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_get)
     websocket_api.async_register_command(hass, ws_set)
     websocket_api.async_register_command(hass, ws_backup)
+    websocket_api.async_register_command(hass, ws_umzug_phones)
     websocket_api.async_register_command(hass, ws_merge_template)
     websocket_api.async_register_command(hass, ws_adapt_card)
     websocket_api.async_register_command(hass, ws_ai_models)

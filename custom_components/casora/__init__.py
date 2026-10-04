@@ -340,6 +340,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_setup_card_updates(hass)
     hass.data[DOMAIN]["raumklima"] = rk = async_start_raumklima(hass, entry)
     async_start_lueften_push(hass, entry, rk)
+    # Pausiert seit: überlebt Neustarts, damit alte Pausen nicht wieder auftauchen (media_pause.py).
+    from .media_pause import PauseTracker
+
+    hass.data[DOMAIN]["media_pause"] = pause = PauseTracker(hass)
+    await pause.async_start()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_options_changed))
 
@@ -361,4 +366,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     rk = hass.data.get(DOMAIN, {}).pop("raumklima", None)
     if rk:
         rk.stop()
+    pause = hass.data.get(DOMAIN, {}).pop("media_pause", None)
+    if pause:
+        pause.stop()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
