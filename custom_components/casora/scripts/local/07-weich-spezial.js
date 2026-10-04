@@ -46,7 +46,8 @@
         + '.hm-s{font-weight:500;color:' + SUB + ';}'
         + '.hm-prog{margin-top:18px;}'
         + '.hm-track{height:8px;background:' + CTL + ';}'
-        + '.hm-fill{background:' + MEDIA_FILL + ';}'
+        /* Fortschritt in Ton wie der Wiedergabe-Knopf (Variante B, 04.10.2026); Lautstärke bleibt im Medien-Ton. */
+        + '.hm-fill{background:var(--casora-np-progress, ' + MEDIA_FILL + ');}'
         + '.hm-times{font-weight:600;color:' + SUB + ';margin-top:7px;}'
         + '.hm-ctl{gap:22px;margin-top:18px;}'
         + '.hm-b.sm{width:56px;height:56px;background:' + CTL + ';}'

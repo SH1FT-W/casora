@@ -7,6 +7,9 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ## 1.0.4 – 04.10.2026
 
 ### Verbessert
+- Weich-Look: Der Fortschrittsbalken der Mediaplayer („Aktuelle Wiedergabe“ am Desktop und Handy, der
+  Mini-Player neben der Glocke, das Medien-Popup und die Studio-Vorschau) ist jetzt immer im Casora-Ton
+  gefüllt, wie der Wiedergabe-Knopf, statt in der Medienfarbe. Die leichte Cover-Tönung der Karte bleibt.
 - Abfall-Popup mit eingeschaltetem Kalender: Die Tageskarte (nächste Abholung oder der angetippte Tag)
   steht jetzt rechts oben über „Tonnen“, wie im Kalender-Popup. Am Handy folgt sie direkt auf den Kopf,
   danach kommen Tonnen und Kalender, und beim Antippen eines Tages scrollt das Popup weich zur
