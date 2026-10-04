@@ -4,6 +4,33 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.1.0-beta.1 – 04.10.2026
+
+Beta of the new Studio. The previous Studio stays one switch away.
+
+### New
+- **The preview is the editor:** the Studio opens on a large preview of the room. Click (on a phone: tap)
+  the title, a badge or a tile and its settings open right beside it in an inspector, on a phone in a
+  sheet from the bottom. Close it with the cross, Esc or a tap outside.
+- **Toolbar instead of sidebar:** Rooms (switch, add, rename, icon, move earlier or later, delete),
+  Elements (the room with all its sections, including what the preview does not show), Dashboard
+  (look and controls, weather, time, notifications, scenes, rewind, phone layout) and Home (home and
+  devices, bell and alerts, new dashboards, AI, outdoor values and price, ventilation, updates). An
+  available update shows in the toolbar.
+- **Nothing hides:** tiles that are switched off stay in the preview as dashed placeholders. A list
+  under the preview names everything the preview leaves out (tiles that are off, phone only or hidden
+  right now, badges that are off) and opens it with one click. Badges and tiles have their switch right
+  in the list.
+- **Sorting in the preview:** drag badges and tiles with the mouse, on a touchscreen after a long press;
+  a short swipe still scrolls. The separate edit mode for the order is gone, the grips in the list do
+  the same.
+- **Keyboard:** Tab reaches everything in the preview, Enter opens it and moves the focus into the
+  inspector, Alt with the arrow keys moves a badge or tile, Esc closes and returns the focus.
+- **Switch back:** “…” → “New Studio” turns the new Studio off for this browser and on again.
+
+### Fixed
+- Version numbers of pre-releases (1.1.0-beta.1) show in full in the Studio and in “New in Casora”.
+
 ## 1.0.4 – 04.10.2026
 
 ### Fixed

@@ -1,7 +1,9 @@
 
 // Casoras Version aus der Lader-URL (?v=<version>.<stempel>, __init__.py).
 const PANEL_VERSION = (() => {
-  try { return (new URL(import.meta.url).searchParams.get("v") || "").split(".").slice(0, 3).join(".") || "?"; } catch (e) { return "?"; }
+  // ?v=<version>.<stempel>: den Stempel hinten abtrennen – die Version kann selbst Punkte
+  // nach dem Zusatz tragen (1.1.0-beta.1).
+  try { return (new URL(import.meta.url).searchParams.get("v") || "").replace(/\.\d+$/, "") || "?"; } catch (e) { return "?"; }
 })();
 const TEMPLATES_URL = "/api/casora/templates";
 const TEMPLATES_URL_STATIC = "/casora_panel/casora-templates.json";

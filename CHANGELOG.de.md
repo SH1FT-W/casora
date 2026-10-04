@@ -4,6 +4,34 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.1.0-beta.1 – 04.10.2026
+
+Beta des neuen Studios. Das bisherige Studio ist nur einen Schalter entfernt.
+
+### Neu
+- **Die Vorschau ist der Editor:** Das Studio öffnet mit einer großen Vorschau des Raums. Klick (am Handy:
+  Antippen) auf den Titel, ein Badge oder eine Kachel, und die Einstellungen öffnen sich gleich daneben im
+  Inspektor, am Handy als Blatt von unten. Schließen mit dem Kreuz, Esc oder einem Tipp daneben.
+- **Werkzeugleiste statt Seitenleiste:** Räume (wechseln, hinzufügen, umbenennen, Symbol, nach vorne oder
+  hinten, löschen), Elemente (der Raum mit allen Abschnitten, auch was die Vorschau nicht zeigt), Dashboard
+  (Aussehen und Bedienung, Wetter, Uhrzeit, Benachrichtigungen, Szenen, Zeitreise, Handy-Ansicht) und
+  Zuhause (Haus und Geräte, Glocke und Meldungen, neue Dashboards, KI, Außenwerte und Strompreis, Lüften,
+  Updates). Ein verfügbares Update steht in der Leiste.
+- **Nichts verschwindet:** Ausgeschaltete Kacheln bleiben in der Vorschau als gestrichelte Platzhalter.
+  Eine Liste unter der Vorschau nennt alles, was die Vorschau nicht zeigt (ausgeschaltete, nur am Handy
+  oder gerade verborgene Kacheln, ausgeschaltete Badges), und öffnet es mit einem Klick. Badges und
+  Kacheln haben ihren Schalter direkt in der Zeile.
+- **Sortieren in der Vorschau:** Badges und Kacheln mit der Maus ziehen, am Touchscreen nach langem
+  Drücken; kurzes Wischen scrollt weiter. Der eigene Bearbeiten-Modus für die Reihenfolge entfällt, die
+  Griffe in der Liste tun dasselbe.
+- **Tastatur:** Tab erreicht alles in der Vorschau, Enter öffnet es und setzt den Fokus in den Inspektor,
+  Alt mit den Pfeiltasten verschiebt ein Badge oder eine Kachel, Esc schließt und gibt den Fokus zurück.
+- **Zurück zum bisherigen Studio:** „…“ → „Neues Studio“ schaltet das neue Studio für diesen Browser aus
+  und wieder ein.
+
+### Behoben
+- Versionsnummern von Vorabversionen (1.1.0-beta.1) stehen im Studio und in „Neu in Casora“ vollständig da.
+
 ## 1.0.4 – 04.10.2026
 
 ### Behoben

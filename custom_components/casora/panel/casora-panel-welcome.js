@@ -12,7 +12,8 @@
   const VERSION = (() => {
     try {
       const v = new URL(import.meta.url).searchParams.get("v") || "";
-      return v.split(".").slice(0, 3).join(".") || "0";
+      // Stempel hinten abtrennen; Vorabversionen behalten ihren Zusatz (1.1.0-beta.1).
+      return v.replace(/\.\d+$/, "") || "0";
     } catch (e) { return "0"; }
   })();
   const SEEN_KEY = "casora.seenVersion";
@@ -27,10 +28,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Mobil", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst – mit eigener Mobilansicht.",
-      n1t: "Pflanzen sagen, was sie brauchen", n1: "„Fühlt sich wohl“ oder „Braucht Wasser“, gleich auf Kachel, Popup und Mitteilung.",
-      n2t: "Waschmaschine und Trockner", n2: "Fortschritt, Fertig gegen, Wäsche noch drin und Statistik je Programm.",
-      n3t: "Sicherheit im Raum", n3: "Fenster, Türen und Schlösser einzeln in der Badge-Reihe, in Grün, Orange oder Rot.",
-      n4t: "Neues Zeichen", n4: "Dach und Räume im Casora-Ton, ein Fenster mit Licht.",
+      n1t: "Neues Studio", n1: "Die Vorschau ist jetzt der Editor: Titel, Badge oder Kachel antippen und gleich daneben einstellen.",
+      n2t: "Alles griffbereit", n2: "Räume, Elemente, Dashboard und Zuhause oben in der Leiste, Ausgeblendetes in einer eigenen Liste.",
+      n3t: "Maus, Touch und Tastatur", n3: "Badges und Kacheln direkt in der Vorschau ziehen, am Handy nach langem Drücken. Tab, Enter und Esc gehen auch.",
+      n4t: "Bisheriges Studio", n4: "Über „…“ → „Neues Studio“ jederzeit zurück zum gewohnten Aufbau.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +41,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen – with its own phone layout.",
-      n1t: "Plants say what they need", n1: "“Doing well” or “Needs water”, the same on tile, popup and notification.",
-      n2t: "Washer and dryer", n2: "Progress, finish time, laundry still inside and stats per program.",
-      n3t: "Security in the room", n3: "Windows, doors and locks as their own badges, in green, orange or red.",
-      n4t: "A new mark", n4: "Roof and rooms in Casora's warm tone, one window with the light on.",
+      n1t: "A new Studio", n1: "The preview is now the editor: tap the title, a badge or a tile and adjust it right beside it.",
+      n2t: "Everything at hand", n2: "Rooms, Elements, Dashboard and Home in the toolbar, anything hidden in its own list.",
+      n3t: "Mouse, touch and keyboard", n3: "Drag badges and tiles right in the preview, on a phone after a long press. Tab, Enter and Esc work too.",
+      n4t: "The previous Studio", n4: "Switch back any time under “…” → “New Studio”.",
     },
   };
 
@@ -56,10 +57,10 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:sprout-outline", "n1t", "n1"],
-    ["mdi:washing-machine", "n2t", "n2"],
-    ["mdi:shield-home-outline", "n3t", "n3"],
-    ["mdi:home-outline", "n4t", "n4"],
+    ["mdi:gesture-tap", "n1t", "n1"],
+    ["mdi:view-dashboard-edit-outline", "n2t", "n2"],
+    ["mdi:keyboard-outline", "n3t", "n3"],
+    ["mdi:swap-horizontal", "n4t", "n4"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

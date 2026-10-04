@@ -10,7 +10,8 @@
 // Umschaltbar über „…“ → „Neues Studio“ (pro Browser, localStorage casora.studio.b).
 (() => {
   const KEY = "casora.studio.b";
-  const DEFAULT_ON = false;
+  // Ab 1.1.0 Standard; das bisherige Studio bleibt über „…“ → „Neues Studio“ erreichbar.
+  const DEFAULT_ON = true;
 
   const ICON = {
     rooms: '<path d="M4 11V8a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v3M2 12a2 2 0 0 1 4 0v3h12v-3a2 2 0 0 1 4 0v5H2zM5 17v2M19 17v2"/>',
