@@ -6,9 +6,14 @@
 // Neuladen), hell = helle Flächen mit dunkler Schrift, Bedienelemente mit Kontrast > 3:1;
 // dunkel bleibt dunkel. Nur lesen – schreibende Aufrufe werden im Browser abgefangen.
 import { open, studio, studioDashboard, check, need, finish } from './lib.mjs';
+import { ws } from '../ws.mjs';
 
 const dash = await studioDashboard();
 await need('ein Dashboard fürs Studio', dash);
+
+// Ein Theme, das ein anderer Test per settheme in den Benutzerdaten (Server) hinterlassen hat,
+// ginge vor das hell/dunkel des Browsers – vorher zurücksetzen, sonst bleibt „HA hell“ dunkel.
+try { const c = await ws(); await c.cmd({ type: 'frontend/set_user_data', key: 'theme', value: null }); c.close?.(); } catch (e) { /* ohne Zugang: wie bisher */ }
 
 // Lesend: nichts darf gespeichert werden (das Umschalten von Hell/Dunkel bleibt im Browser).
 const readOnly = () => {

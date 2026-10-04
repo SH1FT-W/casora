@@ -38,7 +38,7 @@ await check('ohne fehlendes Gerät zeigt keine Kachel „Gerät fehlt“', befor
 // Die Hälfte der Kacheln (mind. Licht + Thermostat) verliert ihr Gerät.
 const gone = new Set();
 for (const t of TPLS) { const x = before.find((b) => b.tpl.includes(t)); if (x) gone.add(x.entity); }
-await fakeStates(page, Object.fromEntries([...gone].map((e) => [e, null])));
+await fakeStates(page, Object.fromEntries([...gone].map((e) => [e, null])), { sticky: true });
 await page.waitForTimeout(800);
 const after = await tiles();
 for (const t of after) {
