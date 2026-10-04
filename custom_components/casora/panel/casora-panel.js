@@ -20255,6 +20255,14 @@ class CasoraPanel extends HTMLElement {
     }
 
     const players = list("media_player_", 10).concat(list("psn_", 2));
+    // Seit wann wirklich pausiert (casora-core.js, _casoraPausedSince): ein Neustart setzt
+    // last_changed zurück, die Integration merkt sich den echten Zeitpunkt.
+    const pausedSince = (e) => {
+      if (typeof window._casoraPausedSince === "function") {
+        return window._casoraPausedSince(e, (this._hass || {}).states);
+      }
+      return e.last_changed;
+    };
     const mediaLive = (e) => {
       if (!e) return false;
       const state = String(e.state || "").toLowerCase();
@@ -20267,7 +20275,7 @@ class CasoraPanel extends HTMLElement {
       if (state === "paused") {
         const timeout = Number(V.pause_timeout_minutes ?? 10);
         if (timeout <= 0) return true;
-        return (Date.now() - new Date(e.last_changed).getTime()) / 60000 <= timeout;
+        return (Date.now() - new Date(pausedSince(e)).getTime()) / 60000 <= timeout;
       }
       return state === "idle";
     };

@@ -193,6 +193,9 @@
   },
   "entity": {
     "sensor": {
+      "media_paused": {
+        "name": "Casora Media paused"
+      },
       "lueften": {
         "name": "Casora Ventilation"
       },

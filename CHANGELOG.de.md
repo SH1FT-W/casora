@@ -18,6 +18,9 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   28 px, der Schleier beim Scrollen geht mit, und die Studio-Vorschau zeigt das Raumfoto sofort so.
 
 ### Behoben
+- Medien: Ein schon pausierter Player taucht nach jedem Neustart von Home Assistant oder einem kurzen Ausfall
+  nicht mehr 10 Minuten lang wieder auf. Casora merkt sich, wann er wirklich pausiert wurde (gleicher Titel),
+  und die Ausblende-Zeit zählt ab dort.
 - Der Name der Übersicht steht jetzt überall gleich: Ein selbst vergebener Name (auch „Home“ auf
   Deutsch) bleibt in Leiste, Raumtitel, Handy-Leiste, Handy-Kopf und Studio genau so stehen. Nur der
   Name, den Casora selbst angelegt hat, folgt der Sprache der Oberfläche.

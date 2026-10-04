@@ -1391,6 +1391,28 @@ window.casoraMenuGlass = {
     };
   }
 
+  // casora-paused-since:start
+  // Seit wann ein Player wirklich pausiert (04.10.2026). Nach einem HA-Neustart geht ein Player
+  // paused → unavailable → paused, last_changed beginnt neu. Die Integration merkt sich den echten
+  // Zeitpunkt (sensor.casora_media_paused, Attribut players); gilt er für denselben Titel, zählt
+  // die Ausblende-Zeit ab dort. Ohne Eintrag (neue Installation, anderer Titel): last_changed.
+  if (typeof window._casoraPausedSince !== 'function') {
+    window._casoraPausedSince = function (s, states) {
+      if (!s) return undefined;
+      try {
+        const all = states || (document.querySelector('home-assistant') || {}).hass?.states || {};
+        const map = all['sensor.casora_media_paused']?.attributes?.players;
+        const e = map && s.entity_id ? map[s.entity_id] : null;
+        const a = s.attributes || {};
+        const key = String(a.media_title || a.media_content_id || '').trim();
+        if (e && e.since && String(s.state) === 'paused' && String(e.title ?? '') === key
+            && Number.isFinite(Date.parse(e.since))) return e.since;
+      } catch (err) { /* fällt auf last_changed zurück */ }
+      return s.last_changed;
+    };
+  }
+  // casora-paused-since:end
+
   if (typeof window._casoraNPSources !== 'function') {
     window._casoraNPSources = function (states, V) {
       const norm = (x) => String(x ?? '').trim();
@@ -1451,7 +1473,7 @@ window.casoraMenuGlass = {
         else if (st === 'paused' && hasContent && hasControls) {
           if (pauseTimeout <= 0) active = true;
           else {
-            pauseUntil = ms(s.last_changed) + (pauseTimeout * 60000);
+            pauseUntil = ms(window._casoraPausedSince(s, states)) + (pauseTimeout * 60000);
             active = Date.now() <= pauseUntil;
           }
         }

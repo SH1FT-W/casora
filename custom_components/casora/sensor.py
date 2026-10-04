@@ -11,6 +11,7 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -45,6 +46,9 @@ NAMES = {
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     async_add_entities([KiSensor(key, entry) for key in FEATURES])
+    pause = hass.data[DOMAIN].get("media_pause")
+    if pause:
+        async_add_entities([MediaPauseSensor(pause)])
 
     rk = hass.data[DOMAIN]["raumklima"]
 
@@ -82,6 +86,35 @@ class VentSensor(SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         v = self.rk.vent
         return {"aussen": v["aussen"], "rooms": v["rooms"], "alerts": v["alerts"]}
+
+
+class MediaPauseSensor(SensorEntity):
+    """Pausiert seit je Media-Player (media_pause.py), für window._casoraPausedSince."""
+
+    _attr_should_poll = False
+    _attr_unique_id = f"{DOMAIN}_media_paused"
+    _attr_has_entity_name = True
+    _attr_translation_key = "media_paused"
+    _attr_icon = "mdi:pause-circle-outline"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    # Ändert sich bei jedem Pausieren – nicht in die Datenbank.
+    _unrecorded_attributes = frozenset({"players"})
+
+    def __init__(self, pause) -> None:
+        self.pause = pause
+        self.entity_id = "sensor.casora_media_paused"
+
+    async def async_added_to_hass(self) -> None:
+        self.pause.listeners.append(self.async_write_ha_state)
+        self.async_on_remove(lambda: self.pause.listeners.remove(self.async_write_ha_state))
+
+    @property
+    def native_value(self) -> int:
+        return len(self.pause.players)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return {"players": dict(self.pause.players)}
 
 
 class KiSensor(RestoreEntity, SensorEntity):

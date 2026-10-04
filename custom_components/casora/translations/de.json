@@ -193,6 +193,9 @@
   },
   "entity": {
     "sensor": {
+      "media_paused": {
+        "name": "Casora Medien pausiert"
+      },
       "lueften": {
         "name": "Casora Lüften"
       },
