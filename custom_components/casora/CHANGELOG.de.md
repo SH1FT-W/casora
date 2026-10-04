@@ -12,6 +12,14 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   App zuerst. Am Desktop und Handy, bei Größenänderung neu angeordnet.
 - Weich-Look: Der Lautstärke-Regler im Medien-Popup ist jetzt im Casora-Ton gefüllt wie der
   Fortschrittsbalken statt in der Medienfarbe, hell und dunkel.
+### Behoben
+- Glocke nach einem Home-Assistant-Neustart: Offene Fenster und Türen standen mit „Seit 10 Min.“ wieder
+  unter „Neu“, obwohl sie seit Stunden offen und schon gelesen waren. Casora merkt sich jetzt, seit wann
+  jeder Tür- und Fensterkontakt offen ist, auch über Neustarts hinweg. Die Dauer stimmt und Gelesenes
+  bleibt gelesen.
+- Glocke: Zwei Kontakte mit gleichem Namen (etwa „Fenster“ im Schlafzimmer und im HWR) hießen unter „Neu“
+  beide nur „Fenster ist offen“. Jetzt steht überall der Raum davor, etwa „Schlafzimmer Fenster ist offen“,
+  auch direkt nach dem Laden der Seite.
 
 ## 1.0.4 – 04.10.2026
 

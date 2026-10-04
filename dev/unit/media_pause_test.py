@@ -17,7 +17,7 @@ from datetime import datetime, timedelta, timezone
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT)
 
-from custom_components.casora.media_pause import PauseTracker, media_key, next_entry  # noqa: E402
+from custom_components.casora.media_pause import PauseTracker, is_contact, media_key, next_entry, next_open  # noqa: E402
 
 FAILS: list[str] = []
 
@@ -66,6 +66,12 @@ class St:
         self.last_changed = changed
 
 
+class Contact(St):
+    def __init__(self, eid, state, changed, dc="window"):
+        super().__init__(eid, state, None, changed)
+        self.attributes = {"device_class": dc}
+
+
 class Bus:
     def __init__(self):
         self.cb = None
@@ -80,7 +86,7 @@ class States:
         self.items = items
 
     def async_all(self, domain):
-        return list(self.items)
+        return [s for s in self.items if s.entity_id.startswith(domain + ".")]
 
 
 class Hass:
@@ -135,6 +141,57 @@ async def main():
     await tr4.async_start()
     check(tr4.players[EID] == {"since": later.isoformat(), "title": "Born to Run"}, "anderer Titel nach Neustart = neu")
 
+
+    # 3. Kontakte: offen seit überlebt Neustarts, Spieler bleiben unberührt.
+    win = "binary_sensor.window_a"
+    cdisk: dict = {}
+    hc = Hass([Contact(win, "off", t0 - timedelta(hours=1)), St(EID, "playing", "x", t0)])
+    tc = PauseTracker(hc, FakeStore(cdisk))
+    await tc.async_start()
+    check(tc.contacts == {} and tc.players == {}, "geschlossen: nichts gemerkt")
+    hc.bus.cb(Ev({"entity_id": win, "old_state": Contact(win, "off", t0), "new_state": Contact(win, "on", t0)}))
+    check(cdisk["data"]["contacts"][win]["since"] == t0.isoformat(), "Öffnen gespeichert")
+    # Gleicher Zustand (Attribut-Update, on → on): Zeitpunkt bleibt.
+    hc.bus.cb(Ev({"entity_id": win, "old_state": Contact(win, "on", t0),
+                  "new_state": Contact(win, "on", t0 + timedelta(minutes=5))}))
+    check(tc.contacts[win]["since"] == t0.isoformat(), "on → on: alter Zeitpunkt")
+    # Neustart zwei Stunden später: Kontakt beim Start schon wieder on.
+    later = t0 + timedelta(hours=2)
+    hc2 = Hass([Contact(win, "on", later)])
+    tc2 = PauseTracker(hc2, FakeStore(cdisk))
+    await tc2.async_start()
+    check(tc2.contacts[win]["since"] == t0.isoformat(), "Kontakt nach Neustart: alter Zeitpunkt")
+    # Neustart, Kontakt kommt erst nach Casora (unavailable → on).
+    hc3 = Hass([Contact(win, "unavailable", later)])
+    tc3 = PauseTracker(hc3, FakeStore(cdisk))
+    await tc3.async_start()
+    hc3.bus.cb(Ev({"entity_id": win, "old_state": Contact(win, "unavailable", later),
+                   "new_state": Contact(win, "on", later + timedelta(seconds=20))}))
+    check(tc3.contacts[win]["since"] == t0.isoformat(), "unavailable → on: alter Zeitpunkt")
+    # Neuer Öffnungsvorgang: zu, wieder auf = neuer Zeitpunkt.
+    t5 = later + timedelta(minutes=30)
+    hc3.bus.cb(Ev({"entity_id": win, "old_state": Contact(win, "on", later), "new_state": Contact(win, "off", t5)}))
+    check(win not in tc3.contacts, "Schließen löscht Eintrag")
+    hc3.bus.cb(Ev({"entity_id": win, "old_state": Contact(win, "off", t5),
+                   "new_state": Contact(win, "on", t5 + timedelta(minutes=1))}))
+    check(tc3.contacts[win]["since"] == (t5 + timedelta(minutes=1)).isoformat(), "neu geöffnet = neuer Zeitpunkt")
+    # Andere binary_sensor-Klassen (Bewegung) werden nicht gemerkt.
+    mot = "binary_sensor.motion"
+    hc3.bus.cb(Ev({"entity_id": mot, "old_state": Contact(mot, "off", t5, "motion"),
+                   "new_state": Contact(mot, "on", t5, "motion")}))
+    check(mot not in tc3.contacts, "Bewegung nicht gemerkt")
+    check(tc3.players == {}, "Kontakte berühren keine Player")
+
+
+# Reine Merklogik Kontakte
+check(next_open(None, "off", "on", T0) == {"since": T0}, "off → on merkt Zeitpunkt")
+check(next_open({"since": T0}, "on", "unavailable", T1) == {"since": T0}, "Ausfall behält Kontakt")
+check(next_open({"since": T0}, "unknown", "on", T2) == {"since": T0}, "unknown → on alter Zeitpunkt")
+check(next_open({"since": T0}, "off", "on", T2) == {"since": T2}, "neuer Öffnungsvorgang")
+check(next_open({"since": T0}, "on", "off", T2) is None, "off löscht")
+check(is_contact("binary_sensor.x", {"device_class": "garage_door"}), "garage_door ist Kontakt")
+check(not is_contact("binary_sensor.x", {"device_class": "motion"}), "motion ist kein Kontakt")
+check(not is_contact("cover.x", {"device_class": "window"}), "nur binary_sensor")
 
 asyncio.run(main())
 

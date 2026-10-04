@@ -12,6 +12,14 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   desktop and phone, rearranged when the size changes.
 - Soft look: the volume slider in the media popup is now filled in the Casora tone like the progress bar
   instead of the media colour, in light and dark.
+### Fixed
+- Bell after a Home Assistant restart: open windows and doors showed “Open for 10 min” and appeared again
+  under New although they had been open for hours and were already read. Casora now remembers when each
+  door or window contact was opened and keeps that across restarts, so the duration stays right and a read
+  entry stays read.
+- Bell: two contacts with the same name (for example “Window” in the bedroom and in the utility room) both
+  read “Window is open” under New. The room now comes first in every section, like “Bedroom Window is open”,
+  also right after loading the page.
 
 ## 1.0.4 – 04.10.2026
 
