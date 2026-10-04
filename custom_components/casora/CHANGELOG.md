@@ -28,6 +28,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   until a day photo is added. HEIC files get a clear message ("export as JPG"), and every error now says
   what to do instead of showing a technical text. A replaced photo shows at once instead of the old one.
 ### Improved
+- Soft look on the phone: the bottom bar stands out clearly from the tiles (almost white in light, almost black in dark, without the old light rim).
 - Soft look: aquarium charts also turn calm when the tile brings its own bright color (for example from a Hemma move).
 - Soft look, light: a light linen veil now lies over the background photo (about 66 % at the top, fading
   to nothing towards the bottom), so section headings, the title and the weather stay readable on any photo.

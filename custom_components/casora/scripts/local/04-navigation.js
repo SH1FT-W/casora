@@ -233,6 +233,12 @@
       bar.className = 'hmn-bar';
       /* Gleicher Glas-Look wie Casoras Punkte-Menü / Nav-Menüs (casoraMenuGlass), eigener Radius. */
       if (window.casoraMenuGlass) { window.casoraMenuGlass.apply(bar); bar.style.borderRadius = '30px'; }
+      /* Weich (04.10.2026, Variante B): Leiste hebt sich klar von den Kacheln ab, im Dunklen ohne hellen Rand.
+         Ohne die Theme-Variablen bleibt der Glas-Look von oben. */
+      bar.style.backgroundColor = 'var(--casora-mnav-pane, ' + (bar.style.backgroundColor || 'transparent') + ')';
+      bar.style.boxShadow = 'var(--casora-mnav-shadow, ' + (bar.style.boxShadow || 'none') + ')';
+      bar.style.backdropFilter = 'var(--casora-mnav-blur, ' + (bar.style.backdropFilter || 'none') + ')';
+      bar.style.webkitBackdropFilter = 'var(--casora-mnav-blur, ' + (bar.style.webkitBackdropFilter || 'none') + ')';
       var mk = function (key, icon, label) {
         var b = document.createElement('button');
         b.type = 'button'; b.className = 'hmn-btn'; b.setAttribute('data-k', key);

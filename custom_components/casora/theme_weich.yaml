@@ -379,6 +379,9 @@ Casora Weich:
       casora-hero-weather-glyph-filter: brightness(0) opacity(0.72)
       # Handy-Navbar (04-navigation.js): Creme statt dunklem Glas
       casora-mnav-bg: rgba(251,248,243,0.82)
+      casora-mnav-pane: rgba(255,255,255,0.93)
+      casora-mnav-blur: blur(60px) saturate(180%)
+      casora-mnav-shadow: 0 6px 22px rgba(60,40,20,0.16)
       # Menü-Glas (casoraMenuGlass: Navbar, ⋯-Menüs): Creme statt dunkel
       casora-menu-pane: rgba(251,248,243,0.96)
       # Mitteilungszentrum ohne Glas-Rand (Rim oben/unten), weicher Schatten wie die Karten
@@ -758,6 +761,9 @@ Casora Weich:
       casora-mobile-title-color: rgba(246,240,231,0.98)
       casora-filter-veil: rgba(28,24,21,0.30)
       casora-mnav-bg: rgba(46,42,38,0.72)
+      casora-mnav-pane: rgba(30,30,34,0.94)
+      casora-mnav-blur: blur(60px) saturate(180%)
+      casora-mnav-shadow: 0 6px 22px rgba(0,0,0,0.38)
       casora-mnav-menu-bg: rgba(46,42,38,0.95)
       # Menü-Glas (Mitteilungen, ⋯-Menü) fast deckend, sonst scheint die Kopfzeile durch
       casora-menu-pane: rgba(46,42,38,0.96)
