@@ -890,9 +890,10 @@ Casora Weich:
       casora-lps-icon-on-ink: "#FFFFFF"
       casora-lps-icon-off: rgba(255,240,220,0.08)
       casora-lps-icon-off-ink: rgba(242,235,225,0.55)
-      casora-lps-switch-off: rgba(0,0,0,0.45)
+      # Aus-Schalter warmgrau statt Schwarz, Knopf Creme statt Weiß (Audit M6: wirkte auf Dunkelbraun hart und kalt)
+      casora-lps-switch-off: rgba(242,235,225,0.18)
       casora-lps-switch-on: "#B67A50"
-      casora-lps-knob: "#FFFFFF"
+      casora-lps-knob: "#F2EBE1"
       casora-lps-chip: rgba(255,240,220,0.05)
       casora-lps-chip-ink: var(--secondary-text-color)
       casora-lps-chip-on: rgba(242,232,218,0.14)
