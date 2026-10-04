@@ -4,7 +4,7 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
-## 1.0.6 – unreleased
+## 1.0.6 – 04.10.2026
 
 ### Fixed
 - Security badge: A camera reported as ready but delivering no picture (for example through a proxy) counted as fine in the badge while the camera card already showed "Offline". The badge now reports it as offline too, including the separate camera badge in a room.

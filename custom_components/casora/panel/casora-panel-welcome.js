@@ -27,10 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Mobil", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst – mit eigener Mobilansicht.",
-      n1t: "Besser lesbar", n1: "Im hellen Look liegt ein ruhiger Schleier über dem Foto, Überschriften und Wetter sind immer gut zu lesen.",
-      n2t: "Apps auf einen Blick", n2: "Im Medien-Popup stehen alle Apps übersichtlich auf mehreren Reihen, die laufende vorn.",
-      n3t: "Glocke zuverlässiger", n3: "Fertig-Meldungen bleiben stehen, nach einem Neustart tauchen keine alten Einträge mehr auf.",
-      n4t: "Viele Fehler behoben", n4: "Handy-Layout, Kachelgrößen, Raumnamen, Kameras und vieles mehr. Alles im Changelog.",
+      n1t: "Räume nach Kategorien", n1: "Am Handy stehen die Geräte eines Raums unter Licht, Klima, Sicherheit und mehr, wie in Apples Home-App. Im Studio abschaltbar.",
+      n2t: "Mehr Luft im Raum", n2: "Am Handy haben Badges und Kacheln mehr Abstand, der Raum wirkt ruhiger.",
+      n3t: "Kameras ehrlich", n3: "Liefert eine Kamera kein Bild, zeigen auch die Sicherheits- und Kamera-Badges „Offline“.",
+      n4t: "Feinschliff", n4: "Kleine Verbesserungen und Fehlerbehebungen. Alles im Changelog.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen – with its own phone layout.",
-      n1t: "Easier to read", n1: "In the light look a calm veil sits over the photo, so headings and weather always stay readable.",
-      n2t: "Apps at a glance", n2: "The media popup lists all apps neatly over several rows, the one that is playing first.",
-      n3t: "A more reliable bell", n3: "Finished messages stay put, and old entries no longer come back after a restart.",
-      n4t: "Lots of fixes", n4: "Phone layout, tile sizes, room names, cameras and much more. All in the changelog.",
+      n1t: "Rooms by category", n1: "On the phone, a room's devices sit under Lights, Climate, Security and more, like in Apple's Home app. You can turn it off in the Studio.",
+      n2t: "More room to breathe", n2: "On the phone, badges and tiles have more space between them, so a room looks calmer.",
+      n3t: "Honest cameras", n3: "When a camera delivers no picture, the security and camera badges say \"Offline\" too.",
+      n4t: "Polish", n4: "Small improvements and fixes. All in the changelog.",
     },
   };
 
@@ -56,9 +56,9 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:eye-outline", "n1t", "n1"],
-    ["mdi:apps", "n2t", "n2"],
-    ["mdi:bell-check-outline", "n3t", "n3"],
+    ["mdi:view-grid-outline", "n1t", "n1"],
+    ["mdi:arrow-expand-vertical", "n2t", "n2"],
+    ["mdi:cctv", "n3t", "n3"],
     ["mdi:wrench-outline", "n4t", "n4"],
   ];
 
