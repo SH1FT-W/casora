@@ -106,6 +106,31 @@
     return '';
   };
 
+  // Karten, die vor diesem Modul gerendert haben, haben sich noch nicht angemeldet (die Module
+  // laden nach den Vorlagen). Einmal neu rendern lassen, dann ruft ihre Vorlage mount() auf.
+  var TPL = ['casora_mobile_now_playing', 'casora_room'];
+  function discover() {
+    try {
+      if (!soft()) return;
+      (function walk(r, d) {
+        if (!r || d > 14) return;
+        r.querySelectorAll('*').forEach(function (el) {
+          if (el.localName === 'button-card' && el._config) {
+            var t = [].concat(el._config.template || []);
+            if (TPL.some(function (n) { return t.indexOf(n) >= 0; })
+              && !entries.some(function (e) { return e.card === el; })) {
+              var h = el._hass || el.hass;
+              if (h) el.hass = Object.assign({}, h);
+              if (typeof el.requestUpdate === 'function') el.requestUpdate('_config', undefined);
+            }
+          }
+          if (el.shadowRoot) walk(el.shadowRoot, d + 1);
+        });
+      })(document, 0);
+    } catch (err) { /* nur Nachfassen */ }
+  }
+  [600, 2500, 6000, 15000].forEach(function (t) { setTimeout(discover, t); });
+
   function teardown(e) {
     if (e.host) { if (e.host.parentNode) e.host.parentNode.removeChild(e.host); e.host = null; }
     if (e.style) { if (e.style.parentNode) e.style.parentNode.removeChild(e.style); e.style = null; }
