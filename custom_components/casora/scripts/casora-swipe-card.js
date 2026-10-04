@@ -97,13 +97,15 @@ class CasoraSwipeCard extends HTMLElement {
          Nachbarkarten ragten deshalb unsichtbar in die Kachelreihe und änderten beim Blättern
          deren Scrollbreite (Reihe sprang mit, am Stapelende übernahm sie nicht). #clip schneidet
          seitlich knapp vor der Nachbarkarte ab (overflow-x: clip, kein Scrollcontainer), oben und
-         unten bleibt alles sichtbar, damit der Schatten der Kachel ganz bleibt. */
+         unten bleibt alles sichtbar, damit der Schatten der Kachel ganz bleibt.
+         #clip bleibt im Fluss (negative Ränder statt position:absolute): absolut hatte der
+         Host keinen Inhalt mehr und fiel am Desktop, wo die Reihe keine Höhe vorgibt, auf
+         0 px zusammen – die Kachelreihe richtet unten aus, der Stapel rutschte um seine
+         ganze Höhe nach unten. */
       #clip {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: calc(var(--casora-swipe-gap, 64px) / -2 + 1px);
-        right: calc(var(--casora-swipe-gap, 64px) / -2 + 1px);
+        position: relative;
+        height: 100%;
+        margin: 0 calc(var(--casora-swipe-gap, 64px) / -2 + 1px);
         padding: 0 calc(var(--casora-swipe-gap, 64px) / 2 - 1px);
         overflow-x: clip;
         overflow-y: visible;
