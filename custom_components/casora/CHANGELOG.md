@@ -31,6 +31,12 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   room renamed earlier is brought up to date when the dashboard is next opened in the Studio.
 - Phone: every badge now gives the same light tap feedback as the tiles (before, Security, Climate,
   People and Media did not). In Weich, the air quality symbol in the badge circle is as large as the others.
+- Phone after moving from Hemma: tiles that were large on the phone in Hemma (cameras, robot vacuum,
+  appliances, car, eBike, plants, media, recipe, lock …) are large again. Dashboards moved with an earlier
+  version get their sizes back once from the move backup when they are next opened in the Studio, with a
+  short note; sizes you change yourself afterwards stay.
+- Phone: when a room has the same tile twice, each one keeps its own settings (such as Size on phone) on
+  saving, and tiles that only show under a condition stay in their place instead of moving to the front.
 
 ## 1.0.3 – 04.10.2026
 

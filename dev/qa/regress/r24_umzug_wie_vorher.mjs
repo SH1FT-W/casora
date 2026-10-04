@@ -138,6 +138,48 @@ for (const src of ['hemma-zuhause', 'hemma-eins']) {
     const desk = new Set(r.desk);
     const lost = r.before.flat().filter((x) => /=large$/.test(x)).map((x) => x.replace(/=large$/, '')).filter((s) => !desk.has(s));
     await check('Hemma-Paar: große Kacheln auch an der Raum-Kachel (Studio „Größe am Handy“)', !lost.length, lost.slice(0, 4));
+
+    // Reparatur (gemeldet 04.10.2026): Umzüge vor 1.0.3 verloren die Größen beim ersten Speichern.
+    // Nachstellen: alle Größen aus dem neuen Paar entfernen. Beim Öffnen im Studio holt Casora sie
+    // einmalig aus der Umzugs-Sicherung (casora_sicherungen) zurück, mit Hinweis; danach nicht wieder.
+    const rep = await page.evaluate(async ({ url }) => {
+      const p = window.__panel(); const h = p._hass; const I = window.__casoraPanelInternals;
+      const strip = (o) => { if (Array.isArray(o)) return o.forEach(strip); if (!o || typeof o !== 'object') return;
+        if (o.variables && typeof o.variables === 'object' && 'size' in o.variables) delete o.variables.size;
+        Object.keys(o).forEach((k) => { if (k !== 'button_card_templates') strip(o[k]); }); };
+      for (const u of [url, url + '-mobile']) {
+        const cfg = await h.callWS({ type: 'lovelace/config', url_path: u });
+        strip(cfg.views);
+        await h.callWS({ type: 'lovelace/config/save', url_path: u, config: cfg });
+      }
+      // Der Umzugs-Merker wird nach dem Fertig-Bildschirm geschrieben – kurz warten.
+      for (let i = 0; i < 20; i++) {
+        const um = ((await h.callWS({ type: 'casora/settings/get' })).settings || {}).umzug || {};
+        if ((um.done || []).some((x) => x && x.target === url)) break;
+        await new Promise((r) => setTimeout(r, 250));
+      }
+      const open = async () => {
+        p._setDash(url); p._remember(url); await p._load();
+        await new Promise((r) => setTimeout(r, 900));
+        const st = p.shadowRoot.querySelector('#status');
+        return st ? st.textContent : '';
+      };
+      const inner = (t) => { let c = t; while (c && c.type === 'conditional' && c.card) c = c.card; return c || {}; };
+      const sig = (t0) => { const t = inner(t0); return [].concat(t.template || []).filter((x) => typeof x === 'string').join('+') + '|' + (t.entity || ''); };
+      const sizes = async () => ((I.extractAny(await h.callWS({ type: 'lovelace/config', url_path: url + '-mobile' })).compact || {}).rooms || [])
+        .map((s) => (s.tiles || []).filter((t) => inner(t).entity).map((t) => sig(t) + '=' + (String((inner(t).variables || {}).size || '') || '-')));
+      const stripped = await sizes();
+      const note1 = await open();
+      const after = await sizes();
+      const note2 = await open();
+      return { stripped, after, note1, note2 };
+    }, { url: r.url });
+    const flat = (x) => JSON.stringify(x);
+    await check('Reparatur: Größen vorher entfernt', !rep.stripped.flat().some((x) => /=large$/.test(x)), rep.stripped.flat().slice(0, 3));
+    await check('Reparatur: Größe am Handy wieder wie in Hemma', flat(rep.after) === flat(r.before),
+      rep.after.flat().filter((x, k) => x !== r.before.flat()[k]).slice(0, 4));
+    await check('Reparatur: Hinweis im Studio', /Hemma/.test(rep.note1 || ''), rep.note1);
+    await check('Reparatur: nur einmal', !/Hemma/.test(rep.note2 || ''), rep.note2);
   }
 }
 

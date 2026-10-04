@@ -953,6 +953,11 @@ function tileTwinKey(t) {
     const card = (t.custom_fields || {}).card || {};
     return stable([t.template, t.name || "", card.type || "", card.entity || ""]);
   }
+  // Bedingte Karte: nach der Kachel darin. Sonst hießen alle gleich („conditional“) – am Handy
+  // rückten sie beim Speichern alle an die Stelle der ersten (gemeldet 04.10.2026).
+  if (t.type === "conditional" && t.card && typeof t.card === "object") {
+    return stable(["conditional", tileTwinKey(t.card)]);
+  }
   return stable([t.template || t.type, t.entity || ""]);
 }
 
@@ -1191,13 +1196,29 @@ function syncPairTiles(pair) {
     const room = rooms[link.room];
     const sec = sections[link.section];
     if (!room || !sec) return;
+    // Gleiche Kacheln (Art + Entität) mehrfach im Raum: der Reihe nach zuordnen, die erste
+    // Handy-Kachel zur ersten im Raum usw. – sonst bekamen alle die Einstellungen (auch „Größe
+    // am Handy“) der letzten. Mehr am Handy als im Raum: die übrigen zur letzten, wie bisher.
     const byKey = new Map();
-    (room.tiles || []).forEach((t) => { if (t) byKey.set(tileTwinKey(t), t); });
+    (room.tiles || []).forEach((t, i) => {
+      if (!t) return;
+      const k = tileTwinKey(t);
+      if (!byKey.has(k)) byKey.set(k, []);
+      byKey.get(k).push(i);
+    });
+    const used = new Map();
+    const at = new Map();
     const onPhone = new Set();
     (sec.tiles || []).forEach((mt) => {
       if (!mt) return;
-      onPhone.add(tileTwinKey(mt));
-      const twin = byKey.get(tileTwinKey(mt));
+      const k = tileTwinKey(mt);
+      onPhone.add(k);
+      const list = byKey.get(k);
+      const n = used.get(k) || 0;
+      used.set(k, n + 1);
+      const ti = list ? list[Math.min(n, list.length - 1)] : -1;
+      const twin = ti >= 0 ? room.tiles[ti] : null;
+      if (twin) at.set(mt, ti);
       if (!twin) {
         const copied = (mt.variables || {}).casora_from_room;
         if (!(copied === undefined ? !!tileTypeOf(mt) : copied)) {
@@ -1215,7 +1236,7 @@ function syncPairTiles(pair) {
       synced++;
     });
 
-    (room.tiles || []).forEach((t) => {
+    (room.tiles || []).forEach((t, ti) => {
       // No entity means a tile nobody has finished setting up, except a hosted
       // card, whose entity is the card's business rather than the host's.
       // ownData: Kacheln, die ihre Daten selbst finden (Abfall, Updates, Solar-Tipp …) –
@@ -1229,6 +1250,7 @@ function syncPairTiles(pair) {
       const copy = clone(t);
       copy.variables = { ...(copy.variables || {}), casora_from_room: true };
       sec.tiles.push(copy);
+      at.set(copy, ti);
       added++;
     });
 
@@ -1245,14 +1267,11 @@ function syncPairTiles(pair) {
     });
     dropped += before - sec.tiles.length;
 
-    const rank = new Map();
-    (room.tiles || []).forEach((t, i) => {
-      if (t && !rank.has(tileTwinKey(t))) rank.set(tileTwinKey(t), i);
-    });
+    // Stelle der zugeordneten Raum-Kachel; Handy-eigene Kacheln ans Ende.
     const tail = (room.tiles || []).length;
     const was = sec.tiles;
     sec.tiles = was
-      .map((mt, i) => ({ mt, r: rank.has(tileTwinKey(mt)) ? rank.get(tileTwinKey(mt)) : tail, i }))
+      .map((mt, i) => ({ mt, r: at.has(mt) ? at.get(mt) : tail, i }))
       .sort((x, y) => x.r - y.r || x.i - y.i)
       .map((p) => p.mt);
     if (sec.tiles.some((mt, i) => mt !== was[i])) moved++;
@@ -1264,11 +1283,34 @@ function syncPairTiles(pair) {
 // geht beim Speichern aufs Handy (syncPairTiles, „Size on phone“). Hemma hatte sie nur im
 // Handy-Dashboard – sie kommt deshalb an die Raum-Kachel, sonst wäre am Handy alles klein
 // (Ersatz-Handy aus den Räumen, nächstes Speichern). Bedingte Karten tragen sie an der inneren
-// Kachel, wie smart-row sie liest. Gleiche Kacheln im Raum: der Reihe nach. Rückgabe: Anzahl.
-function carryPhoneSizes(dstate, mstate, link) {
+// Kachel, wie smart-row sie liest. Gleiche Kacheln im Raum: der Reihe nach. Verschachtelte Karten
+// (Swipe-Karte mit Kameras, auto-entities mit Pflanzen) behalten die Größe auch innen.
+// key: Zuordnung der Kacheln (Standard tileTwinKey). Rückgabe: Anzahl Kacheln.
+const innerTile = (t) => { let c = t, d = 0; while (c && c.type === "conditional" && c.card && d++ < 4) c = c.card; return c; };
+
+// Größe von einer Kachel auf ihren Zwilling, auch in verschachtelten Karten: gleicher Aufbau,
+// gleiche Art und Entität. Rückgabe: ob sich etwas änderte.
+function copySizeDeep(from, to) {
+  let changed = false;
+  (function walk(a, b, d) {
+    if (!a || !b || typeof a !== "object" || typeof b !== "object" || d > 12) return;
+    if (Array.isArray(a)) { if (Array.isArray(b)) a.forEach((x, i) => walk(x, b[i], d + 1)); return; }
+    if (Array.isArray(b)) return;
+    if (d > 0 && ((a.type || "") !== (b.type || "") || (a.entity || "") !== (b.entity || ""))) return;
+    const size = (a.variables || {}).size;
+    if (typeof size === "string" && size && (b.variables || {}).size !== size) {
+      b.variables = { ...(b.variables || {}), size };
+      changed = true;
+    }
+    Object.keys(a).forEach((k) => { if (k !== "variables") walk(a[k], b[k], d + 1); });
+  })(from, to, 0);
+  return changed;
+}
+
+function carryPhoneSizes(dstate, mstate, link, key) {
+  const keyOf = key || tileTwinKey;
   const rooms = (dstate.compact || {}).rooms || [];
   const sections = (mstate.compact || {}).rooms || [];
-  const inner = (t) => { let c = t, d = 0; while (c && c.type === "conditional" && c.card && d++ < 4) c = c.card; return c; };
   let carried = 0;
   ((link || linkPair(dstate, mstate)).links || []).forEach((l) => {
     const room = rooms[l.room];
@@ -1276,23 +1318,57 @@ function carryPhoneSizes(dstate, mstate, link) {
     if (!room || !sec) return;
     const twins = new Map();
     (room.tiles || []).forEach((t) => {
-      const h = inner(t);
+      const h = innerTile(t);
       if (!h || typeof h !== "object") return;
-      const k = tileTwinKey(h);
+      const k = keyOf(h);
       if (!twins.has(k)) twins.set(k, []);
       twins.get(k).push(h);
     });
     (sec.tiles || []).forEach((mt) => {
-      const h = inner(mt);
+      const h = innerTile(mt);
       if (!h || typeof h !== "object") return;
-      const twin = (twins.get(tileTwinKey(h)) || []).shift();
-      const size = (h.variables || {}).size;
-      if (!twin || typeof size !== "string" || !size || (twin.variables || {}).size === size) return;
-      twin.variables = { ...(twin.variables || {}), size };
-      carried++;
+      const twin = (twins.get(keyOf(h)) || []).shift();
+      if (twin && copySizeDeep(h, twin)) carried++;
     });
   });
   return carried;
+}
+
+// Gibt es irgendwo eine Größe (Kachel oder darin)?
+function hasTileSize(state) {
+  let hit = false;
+  (function walk(o, d) {
+    if (hit || !o || typeof o !== "object" || d > 14) return;
+    if (Array.isArray(o)) { o.forEach((x) => walk(x, d + 1)); return; }
+    const v = o.variables;
+    if (v && typeof v === "object" && typeof v.size === "string" && v.size) { hit = true; return; }
+    Object.keys(o).forEach((k) => { if (k !== "variables") walk(o[k], d + 1); });
+  })((((state || {}).compact || {}).rooms || []).map((r) => r.tiles || []), 0);
+  return hit;
+}
+
+// Reparatur für Umzüge vor 1.0.3: Größen aus dem gesicherten Hemma-Handy (backup, ein
+// extrahiertes Handy-Layout) an die Raum-Kacheln und an die Handy-Kacheln des Paars – je Raum
+// bzw. Abschnitt und Kachel der Reihe nach, wie beim Umzug. Eigene Vorlagen (own_kamera) zählen
+// wie Casoras (casora_kamera), Hemmas Helfer (sensor.hemma_…) wie ihre Casora-Nachfolger.
+// Rückgabe: { desk, phone } = Anzahl geänderter Kacheln.
+function restorePhoneSizes(pair, backup) {
+  const norm = (x) => (typeof x === "string" ? x.replace(/^own_/, "casora_") : x);
+  const key = (t) => tileTwinKey(t && typeof t === "object" ? {
+    ...t,
+    ...(t.template ? { template: Array.isArray(t.template) ? t.template.map(norm) : norm(t.template) } : {}),
+    ...(typeof t.entity === "string" ? { entity: t.entity.replace(/^([a-z_]+)\.hemma_/, "$1.casora_") } : {}),
+  } : t);
+  const desk = carryPhoneSizes(pair.desktop, backup, linkPair(pair.desktop, backup), key);
+  const toBackup = linkPair(pair.desktop, backup).links;
+  const toPhone = linkPair(pair.desktop, pair.mobile).links;
+  const links = [];
+  toBackup.forEach((l) => {
+    const p = toPhone.find((x) => x.room === l.room);
+    if (l.section !== null && p && p.section !== null) links.push({ room: p.section, section: l.section });
+  });
+  const phone = carryPhoneSizes({ compact: { rooms: (pair.mobile.compact || {}).rooms || [] } }, backup, { links }, key);
+  return { desk, phone };
 }
 
 // Rooms come and go on the wide side; the phone's sections have to follow.
@@ -13716,6 +13792,7 @@ class CasoraPanel extends HTMLElement {
       }
       // Nur wenn beide Hälften verlustfrei sind (sonst ist Speichern ohnehin aus).
       if (safe && this._pair && this._pair.safe !== false) await this._reconcilePhone(url_path);
+      if (safe && this._pair && this._pair.safe !== false) await this._restoreUmzugSizes(url_path);
 
       // After the round trip check, which compares the file as it was.
       if (this._state.surface !== "mobile") {
@@ -13738,6 +13815,11 @@ class CasoraPanel extends HTMLElement {
       this._renderForm();
       requestAnimationFrame(() => this._playEntrance());
       if (!this._saveBlocked) setTimeout(() => this._offerDraft(), 400);
+      if (this._sizeNote) {
+        const n = this._sizeNote;
+        this._sizeNote = 0;
+        setTimeout(() => this._status(`Tile sizes on the phone taken over from Hemma (${n})`, "ok"), 600);
+      }
     } catch (e) {
       this._draftOff = false;
       this._exitFlow();
@@ -13841,6 +13923,79 @@ class CasoraPanel extends HTMLElement {
       await this._syncFilterOptions();
     } catch (e) {
       this._log("phone layout not brought up to date: " + e.message, "warn");
+    }
+  }
+
+  // Umzug vor 1.0.3 (gemeldet 04.10.2026): Hemma trug „groß“ nur im Handy-Dashboard, der Umzug
+  // gab es nicht an die Raum-Kacheln weiter, und das erste Speichern im Studio machte am Handy
+  // alles klein. Einmal je umgezogenem Dashboard: Hat keine Raum- und keine Handy-Kachel eine
+  // Größe, kommen die Größen aus der Umzugs-Sicherung (casora_sicherungen/umzug_…json) und beide
+  // Hälften werden gespeichert. Der Merker (Einstellungen, umzug.sizes) verhindert ein zweites
+  // Mal – eigene spätere Änderungen bleiben.
+  async _restoreUmzugSizes(url_path) {
+    const h = this._hass;
+    const pair = this._pair;
+    if (!h || !h.user || !h.user.is_admin || !pair || pair.safe === false || this._saveBlocked || !pair.mobileUrl) return;
+    const lock = window.CASORA_STUDIO_SAVE_LOCK;
+    if (lock && new RegExp(lock).test(url_path || "") && !window.CASORA_STUDIO_SAVE_OK) return;
+    let cur;
+    try { cur = ((await h.callWS({ type: "casora/settings/get" })) || {}).settings || {}; } catch (e) { return; }
+    const um = cur.umzug || {};
+    if ([].concat(um.sizes || []).includes(url_path)) return;
+    const done = [].concat(um.done || []);
+    const srcOf = (x) => (typeof x === "string" ? x : x && x.src);
+    // Ziel bekannt ({src, target}); ältere Merker kannten nur die Quelle.
+    let sources = done.filter((x) => x && typeof x === "object" && x.target === url_path).map(srcOf);
+    if (!sources.length) sources = done.filter((x) => typeof x === "string" || (x && !x.target)).map(srcOf);
+    sources = sources.filter(Boolean);
+    if (!sources.length) return;
+    const mark = async () => {
+      try {
+        const now = ((await h.callWS({ type: "casora/settings/get" })) || {}).settings || {};
+        const u = now.umzug || {};
+        const sizes = [...new Set([].concat(u.sizes || [], [url_path]))];
+        await h.callWS({ type: "casora/settings/set", settings: { ...now, umzug: { ...u, sizes } } });
+      } catch (e) { /* nur Komfort */ }
+    };
+    if (hasTileSize(pair.desktop) || hasTileSize(pair.mobile)) { await mark(); return; }
+    let backups;
+    try {
+      backups = ((await h.callWS({ type: "casora/backup/umzug_phones", sources })) || {}).backups || [];
+    } catch (e) {
+      this._log("phone tile sizes: backup not read: " + e.message, "warn");
+      return;
+    }
+    // Abschnittsnamen wie beim Umzug übersetzt („Living Room“ → „Wohnzimmer“), damit sie die Räume finden.
+    const tn = (n) => (typeof n === "string" && n && n.indexOf("[[[") < 0 && window.casoraI18n ? window.casoraI18n.t(n) : n);
+    const rename = window.casoraRename || ((x) => x);
+    let best = null, bestN = 0;
+    backups.forEach((b) => {
+      try {
+        const st = extractMobileConfig(rename(clone(b.mobile)));
+        const list = (st.compact || {}).rooms || [];
+        list.forEach((r) => { if (r && r.name && !isFav(r)) r.name = storedRoomName(tn(r.name), isHomeRoom(r, list)); });
+        const n = restorePhoneSizes({ desktop: clone(pair.desktop), mobile: clone(pair.mobile) }, st).phone;
+        if (n > bestN) { best = st; bestN = n; }
+      } catch (e) { this._log("phone tile sizes: backup " + b.file + " not usable: " + e.message, "warn"); }
+    });
+    if (!best) { await mark(); return; }
+    try {
+      const r = restorePhoneSizes(pair, best);
+      const live = await this._ws({ type: "lovelace/config", url_path });
+      const mlive = await this._ws({ type: "lovelace/config", url_path: pair.mobileUrl });
+      const cfg = expandAny(this._state, { extras: omit(live, ["views", "button_card_templates"]),
+        templates: live.button_card_templates });
+      const mcfg = expandAny(pair.mobile, { extras: omit(mlive, ["views", "button_card_templates"]),
+        templates: mlive.button_card_templates });
+      await h.callWS({ type: "lovelace/config/save", url_path, config: cfg });
+      await h.callWS({ type: "lovelace/config/save", url_path: pair.mobileUrl, config: mcfg });
+      this._raw = clone(cfg);
+      pair.mobileRaw = clone(mcfg);
+      await mark();
+      this._log(`phone tile sizes from the Hemma backup: ${r.phone} phone tile(s), ${r.desk} room tile(s)`, "ok");
+      this._sizeNote = r.phone;
+    } catch (e) {
+      this._log("phone tile sizes not restored: " + e.message, "warn");
     }
   }
 
@@ -24177,7 +24332,7 @@ window.__casoraPanelInternals = {
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
-  linkPair, syncPairRooms, syncPairTiles, syncRoomChips, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, expandMobileConfig, extractMobileConfig,
+  linkPair, syncPairRooms, syncPairTiles, syncRoomChips, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, expandMobileConfig, extractMobileConfig,
   deriveEnergyRooms,
   CASORA_ACCENTS, accentLabel, swatchCss,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)

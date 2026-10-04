@@ -32,6 +32,13 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   früher umbenannter Raum wird beim nächsten Öffnen des Dashboards im Studio nachgezogen.
 - Handy: Jede Badge gibt beim Antippen dasselbe leichte Feedback wie die Kacheln (vorher nicht bei
   Sicherheit, Klima, Personen und Medien). In Weich ist das Luftqualitäts-Symbol im Badge-Kreis so groß wie die anderen.
+- Handy nach dem Umzug von Hemma: Kacheln, die in Hemma am Handy groß waren (Kameras, Saugroboter,
+  Haushaltsgeräte, Auto, eBike, Pflanzen, Medien, Rezept, Schloss …), sind wieder groß. Mit einer früheren
+  Version umgezogene Dashboards holen ihre Größen beim nächsten Öffnen im Studio einmalig aus der
+  Umzugs-Sicherung, mit kurzem Hinweis; danach selbst geänderte Größen bleiben.
+- Handy: Steht dieselbe Kachel zweimal in einem Raum, behält beim Speichern jede ihre eigenen
+  Einstellungen (etwa „Größe am Handy“), und Kacheln, die nur unter einer Bedingung erscheinen, bleiben
+  an ihrer Stelle, statt nach vorn zu rücken.
 
 ## 1.0.3 – 04.10.2026
 

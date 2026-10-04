@@ -17,6 +17,8 @@ const code = [
   one(/^const CUSTOM_TEMPLATE = .*$/m),
   grab(/^function stable\(/m),
   grab(/^function tileTwinKey\(/m),
+  one(/^const innerTile = .*$/m),
+  grab(/^function copySizeDeep\(/m),
   grab(/^function carryPhoneSizes\(/m),
   'return { carryPhoneSizes };',
 ].join('\n');
@@ -56,6 +58,27 @@ const phone2 = { compact: { rooms: [{ name: 'Favorites', tiles: [t('casora_camer
 carryPhoneSizes(desk2, phone2, { links: [{ room: 0, section: 0 }] });
 assert.equal(desk2.compact.rooms[0].tiles[0].card.variables.size, 'large', 'bedingte Raum-Kachel innen groß');
 assert.equal(desk2.compact.rooms[0].tiles[0].variables, undefined, 'nicht an die Hülle');
+
+// Verschachtelt (04.10.2026): Swipe-Karte mit zwei Kameras und auto-entities mit Pflanzen in
+// einer bedingten Karte – die Größe gilt auch für die Karten darin.
+const swipe = (sz) => ({ type: 'conditional', conditions: [], card: { type: 'custom:casora-swipe-card', ...(sz ? { variables: { size: sz } } : {}),
+  cards: [t('casora_camera', 'camera.a', sz ? { size: sz } : null), t('casora_camera', 'camera.b', sz ? { size: sz } : null)] } });
+const plants = (sz) => ({ type: 'conditional', conditions: [], card: { type: 'custom:auto-entities', ...(sz ? { variables: { size: sz } } : {}),
+  filter: { include: [{ entity_id: 'plant.y', options: t('casora_plant', 'plant.y', sz ? { size: sz, sensors: [] } : { sensors: [] }) }] } } });
+const desk4 = { compact: { rooms: [{ name: 'Home', path: 'home', tiles: [swipe(), plants(), t('casora_vacuum', 'vacuum.r')] },
+  { name: 'Waschküche', path: 'waschkueche', tiles: [t('casora_vacuum', 'vacuum.r')] }] } };
+const phone4 = { compact: { rooms: [{ name: 'Favorites', tiles: [swipe('large'), plants('large'), t('casora_vacuum', 'vacuum.r')] },
+  { name: 'Waschküche', tiles: [t('casora_vacuum', 'vacuum.r', { size: 'large' })] }] } };
+assert.equal(carryPhoneSizes(desk4, phone4, { links: [{ room: 0, section: 0 }, { room: 1, section: 1 }] }), 3);
+const h4 = desk4.compact.rooms[0].tiles;
+assert.equal(h4[0].card.variables.size, 'large', 'Swipe-Karte groß');
+assert.deepEqual(h4[0].card.cards.map((c) => c.variables.size), ['large', 'large'], 'Kameras in der Swipe-Karte groß');
+assert.equal(h4[1].card.variables.size, 'large', 'auto-entities groß');
+assert.equal(h4[1].card.filter.include[0].options.variables.size, 'large', 'Pflanze darin groß');
+assert.deepEqual(h4[1].card.filter.include[0].options.variables.sensors, [], 'übrige Variablen bleiben');
+// Dieselbe Entität: in den Favoriten klein, im Raum groß – je an ihrer Stelle.
+assert.equal(h4[2].variables, undefined, 'Saugroboter in der Übersicht bleibt klein');
+assert.equal(desk4.compact.rooms[1].tiles[0].variables.size, 'large', 'Saugroboter in der Waschküche groß');
 
 // Ohne Handy-Abschnitt (Raum nicht verknüpft): nichts ändern.
 const desk3 = { compact: { rooms: [{ name: 'Flur', path: 'flur', tiles: [t('casora_light', 'light.f')] }] } };
