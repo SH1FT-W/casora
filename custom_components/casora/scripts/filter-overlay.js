@@ -352,6 +352,11 @@
 
   const H_SCROLL_IDS = new Set(['media_row', 'climate_row', 'rooms_row']);
 
+  // #8: Unschärfe des Raumfotos (Studio: Design & Bedienung → Mobil; casora_mobile_bg setzt die
+  // Variable). Standard 28 px wie bisher; der Schleier beim Scrollen skaliert mit (28 → 44 px).
+  const ROOM_PHOTO_BLUR = 'var(--casora-room-photo-blur, 28px)';
+  const ROOM_VEIL_BLUR  = `calc(${ROOM_PHOTO_BLUR} * 11 / 7)`;
+
   const _blurLayers = new Set();
   const _otherBlurUp = (ownBlurEl) => {
     for (const el of _blurLayers) {
@@ -881,6 +886,14 @@
       this._hass = v;
       for (const el of this._cardEls) { try { el.hass = v; } catch (_) {} }
       const filter = v?.states?.['input_select.casora_mobile_filter']?.state;
+      // Offene Raumseite: schaltet eine Kachel um, rückt sie wie in der Reihe nach kurzer Pause
+      // nach vorn bzw. zurück (Issue #6).
+      // Kein Neustart der Wartezeit bei jedem Update: Im belebten Haus kommen ständig neue
+      // Zustände, dann würde nie sortiert.
+      if (this._config?.room && this._showing && this._contentEl && filter === this._config.filter_category
+        && !this._resortTimer) {
+        this._resortTimer = setTimeout(() => { this._resortTimer = null; if (this._showing) this._sortSectionGrids(); }, 2500);
+      }
 
       if (this._pendingBlurFade && filter === 'all' && prevFilter !== 'all') {
         setTimeout(() => {
@@ -979,7 +992,7 @@
           this._blurLayerRoomBg = `linear-gradient(var(--casora-filter-veil, rgba(8,10,14,0.32)), var(--casora-filter-veil, rgba(8,10,14,0.32))) center center / cover no-repeat, url("/casora_assets/rooms/${_pic}.jpg") center center / cover no-repeat`;
           Object.assign(blurLayer.style, {
             backdropFilter: 'none', webkitBackdropFilter: 'none',
-            background: this._blurLayerRoomBg, filter: 'blur(28px) saturate(1.05)',
+            background: this._blurLayerRoomBg, filter: `blur(${ROOM_PHOTO_BLUR}) saturate(1.05)`,
             top: '-96px', left: '-96px', right: 'auto', bottom: 'auto', // Blur-Rand (läuft transparent aus) außerhalb des Bildschirms;
             width: 'calc(100vw + 192px)', height: 'calc(100lvh + 192px)', // feste Bildschirmmaße, unabhängig vom Eltern-Element
             transform: 'translateZ(0)', webkitTransform: 'translateZ(0)',
@@ -1160,6 +1173,7 @@
     // sichtbar erst beim zweiten Öffnen. Solange der Raum offen ist, kurz nachziehen.
     _settleRoom(n) {
       if (!this._showing || _activeOverlay !== this || !this._contentEl) return;
+      this._keepBlurUp();
       if (!this._autoSectionsDone) {
         this._ensureAutoSections();
         if (this._autoSectionsDone) this._sortSectionGrids();
@@ -1171,6 +1185,21 @@
       }
       const sbOk = !sb || sb.getBoundingClientRect().height > 0;
       if (n < 16 && (!this._autoSectionsDone || !sbOk)) setTimeout(() => this._settleRoom(n + 1), 300);
+    }
+
+    // #9: Der gezeigte Raum hat immer seine Hintergrundebene (Raumfoto + Schleier): eingehängt,
+    // sichtbar, mit Foto. Sonst schien die Startseite (Foto, Überschriften) durch die Raumkacheln.
+    _keepBlurUp() {
+      const b = this._blurLayerEl;
+      if (!this._showing || _activeOverlay !== this || !b) return;
+      if (!b.isConnected && this._appendTarget) { this._appendTarget.appendChild(b); _blurLayers.add(b); }
+      if (this._blurTwinEl && !this._blurTwinEl.isConnected) document.body.appendChild(this._blurTwinEl);
+      if (b.style.display === 'none' || b.style.opacity !== '1') {
+        b.style.transition = 'none';
+        b.style.display = 'block';
+        b.style.opacity = '1';
+      }
+      if (this._blurLayerRoomBg && b.style.background.indexOf('/casora_assets/rooms/') < 0) b.style.background = this._blurLayerRoomBg;
     }
 
     _ensureAutoSections() {
@@ -1198,7 +1227,8 @@
         if (hsr && pending) {
           if (roomMode) {
             if (pending.name === roomMode) {
-              rooms.push({ ...pending, cards: (hsr._config?.cards || []).slice() });
+              // Wie die Reihe am Desktop: aktive Kacheln vorn, außer die Reihe sortiert nicht (sort: false).
+              rooms.push({ ...pending, cards: (hsr._config?.cards || []).slice(), sort: hsr._config?.sort !== false });
             }
           } else if (pending.name && !pending.fav) {
             const cards = (hsr._config?.cards || []).filter(
@@ -1222,14 +1252,18 @@
       if (roomMode) {
         const ENT = /^[a-z_]+\.[a-z0-9_]+$/;
         const add = (x) => { if (typeof x === 'string' && ENT.test(x) && !roomEntities.includes(x)) roomEntities.push(x); };
+        // Auch Entitäten in variables/verschachtelten Karten (Geräte-Kacheln, conditional).
+        const walk = (x, d) => { if (d > 6 || !x || typeof x !== 'object') return; if (Array.isArray(x)) { x.forEach((y) => walk(y, d + 1)); return; }
+          Object.keys(x).forEach((k) => { const y = x[k]; if (typeof y === 'string') { if (k === 'entity' || k === 'entity_id' || /^entity_|_entity(_\d+)?$/.test(k)) add(y); } else walk(y, d + 1); }); };
         rooms.forEach((r) => (r.cards || []).forEach((c) => add(c && c.entity)));
+        rooms.forEach((r) => walk(r.cards, 0));
       }
       if (roomMode && this._config.scenes !== false && window._casoraSC) {
         let sceneCount = 0;
         try {
           const c = this._config;
           sceneCount = window._casoraSC.list(this._hass?.states || {}, this._hass, {
-            room: roomMode, room_entities: roomEntities, scenes: c.scenes, scene_exclude: c.scene_exclude, scene_order: c.scene_order,
+            room: roomMode, area: c.area || null, room_entities: roomEntities, scenes: c.scenes, scene_exclude: c.scene_exclude, scene_order: c.scene_order,
           }).length;
         } catch (_) { sceneCount = 0; }
         if (sceneCount) {
@@ -1248,7 +1282,7 @@
             type:       'custom:button-card',
             template:   'casora_scene_row',
             full_width: true,
-            variables:  { layout: 'grid', room: roomMode, room_entities: roomEntities }, // casora-local-patch: 2-Spalten-Raster statt Scroll-Reihe
+            variables:  { layout: 'grid', room: roomMode, area: this._config.area || null, room_entities: roomEntities }, // casora-local-patch: 2-Spalten-Raster statt Scroll-Reihe
             styles:     { card: [{ '--casora-scene-row-gap': '18px' }, { '--casora-scene-grid-col-gap': '8px' }, { '--casora-scene-grid-row-gap': '8px' }] },
           }, this._contentEl, 0);
         }
@@ -1316,6 +1350,7 @@
             }, this._contentEl, i);
           }
           this._appendEntityGrid(roomCards, this._contentEl, i);
+          if (room.sort === false) this._contentEl.lastElementChild._casoraNoSort = true;
           i++;
         }
       }
@@ -1362,13 +1397,14 @@
 
     _sortSectionGrids() {
       if (!this._hass?.states || !this._contentEl) return;
-      // Casora (30.09.2026): Raumseiten behalten die Studio-Reihenfolge – kein „Aktive zuerst“.
-      // Kategorie-Seiten (Licht, Klima …) sammeln raumübergreifend und sortieren weiter.
-      if (this._config?.room) return;
+      // Raumseiten (04.10.2026, Issue #6): aktive Kacheln vorn wie in der Reihe am Desktop und am
+      // Handy-Home (casora-smart-row), innerhalb der Gruppen die Studio-Reihenfolge. Vorher blieb die
+      // Raumseite bewusst unsortiert (30.09.) – eingeschaltetes Licht stand dann z. B. ganz hinten.
+      // Ausnahme: Die Reihe des Raums sortiert nicht (sort: false).
       const ACTIVE = activeStates();
       for (const wrap of Array.from(this._contentEl.children)) {
         const grid = wrap._casoraGrid;
-        if (!grid) continue;
+        if (!grid || wrap._casoraNoSort) continue;
         const items = Array.from(grid.children).map(card => {
           const bc = card.tagName?.toLowerCase() === 'button-card' ? card
             : card.querySelector?.('button-card');
@@ -1889,6 +1925,10 @@
       const blurEl    = this._blurLayerEl;
       const overlayEl = this._overlayEl;
       if (!blurEl || !overlayEl) return;
+      // #9: Frames/Timer dieses Zeigens wirken nur, solange es noch dasselbe Overlay ist. Wird das
+      // Overlay dazwischen ab- und angehängt (Neuaufbau der Reihe), hat es eine neue Hintergrundebene;
+      // ein alter Frame setzte sonst „alle anderen Ebenen“ – also die neue eigene – auf unsichtbar.
+      const live = () => this._showing && this._blurLayerEl === blurEl;
 
       const prevOverlay = _activeOverlay;
       _activeOverlay = this;
@@ -2101,8 +2141,14 @@
       this._sortSectionGrids();
 
       requestAnimationFrame(() => {
-        if (!this._showing) return;
-        if (this._config?.room) setTimeout(() => this._settleRoom(0), 250);
+        if (!live()) return;
+        if (this._config?.room) {
+          setTimeout(() => this._settleRoom(0), 250);
+          // Beim Öffnen sind die Kacheln oft noch nicht gezeichnet – dann zählt nur der Zustand der
+          // Entität. Gezeichnet melden sie selbst, ob sie aktiv sind (Drucker fehlgeschlagen,
+          // Gerät läuft …): danach noch einmal sortieren (Issue #6).
+          setTimeout(() => { if (this._showing) this._sortSectionGrids(); }, 700);
+        }
 
         overlayEl.style.transform = 'translateY(0)';
         overlayEl.style.display   = 'block';
@@ -2110,7 +2156,7 @@
 
         this._badgeShadowCards = [];
         const _tryBadgeShadows = (attempt) => {
-          if (!this._showing) return;
+          if (!live()) return;
           const badgeSR = this._badgeRowEl?.shadowRoot;
           if (!badgeSR) return;
           const badges = Array.from(badgeSR.querySelectorAll('button-card'));
@@ -2256,7 +2302,7 @@
 
         if (badgeAdopted || npAdopted) {
           requestAnimationFrame(() => {
-            if (!this._showing) return;
+            if (!live()) return;
             if (badgeAdopted && _movedBadgeRow?.owner === this &&
                 this._badgeRowWrapper?.parentNode === this._contentEl) {
               _alignAdoptedBadgeRow(this._badgeRowWrapper, this._badgeRowEl,
@@ -2281,7 +2327,7 @@
           blurEl.style.background = 'transparent';
           requestAnimationFrame(() => requestAnimationFrame(() => {
             blurEl.style.background = this._blurLayerRoomBg || 'var(--casora-filter-veil, rgba(0, 0, 0, 0.22))'; // casora-local-patch
-            if (!this._showing) return;
+            if (!live()) return;
             for (const el of _blurLayers) {
               if (el === blurEl) continue;
               el.style.transition = 'none';
@@ -2301,7 +2347,7 @@
 
         // Blur fades in, overlay fades in, entity sections slide up.
         requestAnimationFrame(() => {
-          if (!this._showing) return;
+          if (!live()) return;
 
           blurEl.style.transition    = `opacity 0.30s ease`;
           blurEl.style.opacity       = '1';
@@ -2338,7 +2384,8 @@
 
           // Entry settled - engage the scroll-linked header.
           setTimeout(() => {
-            if (this._showing && overlayEl) {
+            if (live() && overlayEl) {
+              this._keepBlurUp();
               overlayEl.style.transition = 'none';
               if (this._titleEl)          this._titleEl.style.transition = 'none';
               if (this._subBadgesWrapper) this._subBadgesWrapper.style.transition = 'none';
@@ -2349,7 +2396,7 @@
                 }
               }
               const tryEngage = () => {
-                if (!this._showing) return;
+                if (!live()) return;
                 if (_touchActive) { setTimeout(tryEngage, 120); return; }
                 this._engageScrollHeader();
               };
@@ -2487,7 +2534,16 @@
           // The scale pushes the blur's transparent edge bleed off-screen.
           'filter:blur(44px) saturate(1.02)', 'transform:scale(1.12)',
         ].join(';');
-        if (bgAfter) {
+        if (this._blurLayerRoomBg) {
+          // #8: Raum mit eigenem Foto: dasselbe Foto wie die Hintergrundebene, gleich gelegt
+          // (Rand außerhalb des Bildschirms), Unschärfe skaliert mit der Einstellung.
+          Object.assign(veilInner.style, {
+            top: '-96px', left: '-96px', right: 'auto', bottom: 'auto',
+            width: 'calc(100vw + 192px)', height: 'calc(100lvh + 192px)',
+            transform: 'none', filter: `blur(${ROOM_VEIL_BLUR}) saturate(1.02)`,
+            background: this._blurLayerRoomBg,
+          });
+        } else if (bgAfter) {
           veilInner.style.backgroundImage    = `linear-gradient(var(--casora-filter-veil, rgba(0,0,0,0.22)), var(--casora-filter-veil, rgba(0,0,0,0.22))), ${bgAfter.backgroundImage}`;
           veilInner.style.backgroundPosition = `0 0, ${bgAfter.backgroundPosition}`;
           veilInner.style.backgroundSize     = `100% 100%, ${bgAfter.backgroundSize}`;

@@ -34,6 +34,17 @@ Beta des neuen Studios. Das bisherige Studio ist nur einen Schalter entfernt.
 
 ## 1.0.4 – 04.10.2026
 
+### Verbessert
+- Abfall-Popup mit eingeschaltetem Kalender: Die Tageskarte (nächste Abholung oder der angetippte Tag)
+  steht jetzt rechts oben über „Tonnen“, wie im Kalender-Popup. Am Handy folgt sie direkt auf den Kopf,
+  danach kommen Tonnen und Kalender, und beim Antippen eines Tages scrollt das Popup weich zur
+  Tageskarte, wenn sie nicht zu sehen ist.
+
+### Neu
+- Design & Bedienung · Mobil: Ein neuer Regler „Raumfoto am Handy“ stellt ein, wie weich das Raumfoto
+  hinter einem geöffneten Raum aussieht, von Scharf (0 px) bis Stark weich (40 px). Standard bleibt
+  28 px, der Schleier beim Scrollen geht mit, und die Studio-Vorschau zeigt das Raumfoto sofort so.
+
 ### Behoben
 - Der Name der Übersicht steht jetzt überall gleich: Ein selbst vergebener Name (auch „Home“ auf
   Deutsch) bleibt in Leiste, Raumtitel, Handy-Leiste, Handy-Kopf und Studio genau so stehen. Nur der
@@ -45,6 +56,23 @@ Beta des neuen Studios. Das bisherige Studio ist nur einen Schalter entfernt.
   statt nach dem Gerät, und Namen mit Umlauten werden nicht mehr falsch großgeschrieben („LuftqualitäTsmonitor“).
 - Küche · Rezepte: Lange Rezeptnamen in der Speiseplan-Wochenleiste brechen auf zwei Zeilen um und enden
   mit „…“, statt mitten im Wort abgeschnitten zu werden.
+- Handy: Im Raum rücken eingeschaltete Kacheln (Licht, laufende Waschmaschine) wieder nach vorn wie am
+  Desktop. Der Rest behält die Reihenfolge aus dem Studio.
+- Handy: Ein Raum zeigt seine Fenster, Türen und Schlösser als Badges wie im Raum-Kopf am Desktop.
+  Bestehende Handy-Layouts übernehmen sie, sobald das Dashboard das nächste Mal im Studio geöffnet wird.
+- Ein im Studio umbenannter Raum heißt jetzt auch am Handy neu: Kopf, Raumseite, Leiste, Raum-Badges
+  und der Titel der Luftqualität. Von Hemma übernommene Handy-Layouts bleiben nicht mehr außen vor, ein
+  früher umbenannter Raum wird beim nächsten Öffnen des Dashboards im Studio nachgezogen.
+- Handy: Jede Badge gibt beim Antippen dasselbe leichte Feedback wie die Kacheln (vorher nicht bei
+  Sicherheit, Klima, Personen und Medien). In Weich ist das Luftqualitäts-Symbol im Badge-Kreis so groß wie die anderen.
+- Handy: Ein im Studio umbenannter Raum (etwa „Wirtschaftsraum“ für den Home-Assistant-Bereich
+  „Hauswirtschaftsraum“) zeigt auf seiner Raumseite nicht mehr alle Szenen, sondern nur die seines
+  Bereichs. Der Bereich kommt jetzt aus den Kacheln des Raums statt aus seinem Namen, ein im Studio
+  umbenannter Raum merkt ihn sich, und ein Raum ohne auffindbaren Bereich zeigt keine Szenen statt aller.
+  Wirkt ohne erneutes Speichern des Dashboards.
+- Handy: Beim Öffnen eines Raums über die untere Leiste lag manchmal das unscharfe Home-Foto statt des
+  Raumfotos dahinter, und Home-Überschriften wie „Favoriten“ schienen durch die Kacheln. Der
+  Raum-Hintergrund erscheint jetzt immer, auch wenn die Seite den Raum beim Wechsel neu aufbaut.
 
 ## 1.0.3 – 04.10.2026
 
@@ -139,6 +167,7 @@ Beta des neuen Studios. Das bisherige Studio ist nur einen Schalter entfernt.
 - Die Updates-Kachel zeigt einen Download-Pfeil, wenn Updates da sind, und einen Neustart-Pfeil, wenn ein Neustart aussteht.
 - Klima-Popup: „Mehr“ steht unter den Messwerten.
 - Player: Die Spitze des Vor-Knopfs wird nicht mehr abgeschnitten.
+
 ### Geändert
 - Die E-Bike-Kachel arbeitet mit der Integration Bosch eBike (Bosch Smart System). Die Felder für ein eigenes
   Ladegerät und einen Live-Akkusensor sind weg.
