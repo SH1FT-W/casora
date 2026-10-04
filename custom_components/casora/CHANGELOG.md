@@ -31,6 +31,10 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   room renamed earlier is brought up to date when the dashboard is next opened in the Studio.
 - Phone: every badge now gives the same light tap feedback as the tiles (before, Security, Climate,
   People and Media did not). In Weich, the air quality symbol in the badge circle is as large as the others.
+- Phone: a room renamed in the Studio (for example “Utility room” for the Home Assistant area “Laundry
+  room”) no longer shows every scene on its room page, only the scenes of its area. The area now comes
+  from the room's tiles instead of its name, a room renamed in the Studio remembers it, and a room whose
+  area cannot be found shows no scenes rather than all of them. Works without saving the dashboard again.
 
 ## 1.0.3 – 04.10.2026
 

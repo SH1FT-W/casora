@@ -1231,14 +1231,18 @@
       if (roomMode) {
         const ENT = /^[a-z_]+\.[a-z0-9_]+$/;
         const add = (x) => { if (typeof x === 'string' && ENT.test(x) && !roomEntities.includes(x)) roomEntities.push(x); };
+        // Auch Entitäten in variables/verschachtelten Karten (Geräte-Kacheln, conditional).
+        const walk = (x, d) => { if (d > 6 || !x || typeof x !== 'object') return; if (Array.isArray(x)) { x.forEach((y) => walk(y, d + 1)); return; }
+          Object.keys(x).forEach((k) => { const y = x[k]; if (typeof y === 'string') { if (k === 'entity' || k === 'entity_id' || /^entity_|_entity(_\d+)?$/.test(k)) add(y); } else walk(y, d + 1); }); };
         rooms.forEach((r) => (r.cards || []).forEach((c) => add(c && c.entity)));
+        rooms.forEach((r) => walk(r.cards, 0));
       }
       if (roomMode && this._config.scenes !== false && window._casoraSC) {
         let sceneCount = 0;
         try {
           const c = this._config;
           sceneCount = window._casoraSC.list(this._hass?.states || {}, this._hass, {
-            room: roomMode, room_entities: roomEntities, scenes: c.scenes, scene_exclude: c.scene_exclude, scene_order: c.scene_order,
+            room: roomMode, area: c.area || null, room_entities: roomEntities, scenes: c.scenes, scene_exclude: c.scene_exclude, scene_order: c.scene_order,
           }).length;
         } catch (_) { sceneCount = 0; }
         if (sceneCount) {
@@ -1257,7 +1261,7 @@
             type:       'custom:button-card',
             template:   'casora_scene_row',
             full_width: true,
-            variables:  { layout: 'grid', room: roomMode, room_entities: roomEntities }, // casora-local-patch: 2-Spalten-Raster statt Scroll-Reihe
+            variables:  { layout: 'grid', room: roomMode, area: this._config.area || null, room_entities: roomEntities }, // casora-local-patch: 2-Spalten-Raster statt Scroll-Reihe
             styles:     { card: [{ '--casora-scene-row-gap': '18px' }, { '--casora-scene-grid-col-gap': '8px' }, { '--casora-scene-grid-row-gap': '8px' }] },
           }, this._contentEl, 0);
         }
