@@ -364,6 +364,8 @@ Casora Weich:
       casora-icon-inactive-fallback-color: var(--casora-icon-fallback-color)
       # Handy-Kategorieansicht (filter-overlay.js): Schleier über dem Foto in Leinen statt Schwarz
       casora-filter-veil: rgba(244,239,231,0.42)
+      # Lesbarkeits-Schleier über dem Hintergrundfoto (nur hell): oben Leinen 66 %, nach unten 0 %
+      casora-wallpaper-veil-light: "linear-gradient(to bottom, rgba(244,239,231,0.66) 0%, rgba(244,239,231,0) 100%)"
 
       # Navigation, Popups, Bedienelemente
       casora-nav-bg: rgba(251,248,243,0.78)

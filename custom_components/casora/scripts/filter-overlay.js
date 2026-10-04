@@ -989,7 +989,7 @@
           const _dark = typeof this._hass?.themes?.darkMode === 'boolean'
             ? this._hass.themes.darkMode : window.matchMedia('(prefers-color-scheme: dark)').matches;
           const _pic = _dark ? (this._config.image_night || _rp + '-night') : _rp;
-          this._blurLayerRoomBg = `linear-gradient(var(--casora-filter-veil, rgba(8,10,14,0.32)), var(--casora-filter-veil, rgba(8,10,14,0.32))) center center / cover no-repeat, url("/casora_assets/rooms/${_pic}.jpg") center center / cover no-repeat`;
+          this._blurLayerRoomBg = `var(--casora-wallpaper-veil-light, linear-gradient(transparent, transparent)) 0 96px / 100% 100lvh no-repeat, linear-gradient(var(--casora-filter-veil, rgba(8,10,14,0.32)), var(--casora-filter-veil, rgba(8,10,14,0.32))) center center / cover no-repeat, url("/casora_assets/rooms/${_pic}.jpg") center center / cover no-repeat`;
           Object.assign(blurLayer.style, {
             backdropFilter: 'none', webkitBackdropFilter: 'none',
             background: this._blurLayerRoomBg, filter: `blur(${ROOM_PHOTO_BLUR}) saturate(1.05)`,

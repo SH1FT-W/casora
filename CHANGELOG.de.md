@@ -4,6 +4,14 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.5 – 04.10.2026
+
+### Verbessert
+- Weich, hell: Über dem Hintergrundfoto liegt jetzt ein heller Leinen-Schleier (oben etwa 66 %, nach unten
+  auslaufend), damit Abschnittsüberschriften, Titel und Wetter auf jedem Foto lesbar sind. Auf Startseite und
+  Raumseiten an Desktop, Tablet und Handy, auch in der Raumansicht am Handy. Schrift, Karten und
+  Navigationsleiste bleiben unverändert und liegen darüber. Dunkel, Standard und Glas bleiben wie bisher.
+
 ## 1.0.4 – 04.10.2026
 
 ### Verbessert

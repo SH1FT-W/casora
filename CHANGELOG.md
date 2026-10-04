@@ -4,6 +4,14 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.0.5 – 04.10.2026
+
+### Improved
+- Soft look, light: a light linen veil now lies over the background photo (about 66 % at the top, fading
+  to nothing towards the bottom), so section headings, the title and the weather stay readable on any photo.
+  On the home page and room pages on desktop, tablet and phone, including the phone's room view. Text,
+  cards and the navigation bar are unchanged and sit above it. Dark, Standard and Glass are unchanged.
+
 ## 1.0.4 – 04.10.2026
 
 ### Improved
