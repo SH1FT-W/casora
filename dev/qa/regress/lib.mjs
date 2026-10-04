@@ -166,6 +166,7 @@ export async function studio(pg, dash) {
   // Tests arbeiten mit der Raumansicht – wie „Elemente“ einmal geöffnet.
   await pg.evaluate(() => { const p = window.__panel();
     if (p.classList.contains('bmode') && !p._bOpen) { p._bOpen = true; p._renderForm(); } });
+  console.log('  info   Studio ' + ((await isB(pg)) ? 'neu (B)' : 'bisher (A)'));
   await pg.waitForTimeout(2000);
 }
 
