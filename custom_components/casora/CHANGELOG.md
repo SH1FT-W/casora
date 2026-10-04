@@ -4,6 +4,15 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.0.5 – 04.10.2026
+
+### Improved
+- Media popup: the apps (sources) no longer sit in a single row that is cut off on the right. They wrap
+  and use the full width, sorted so every row is as full as possible, with the running app first. On
+  desktop and phone, rearranged when the size changes.
+- Soft look: the volume slider in the media popup is now filled in the Casora tone like the progress bar
+  instead of the media colour, in light and dark.
+
 ## 1.0.4 – 04.10.2026
 
 ### Improved
