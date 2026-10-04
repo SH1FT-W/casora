@@ -37,6 +37,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   loads it with `frontend: themes: !include_dir_merge_named themes`, as in the standard setup), so Home
   Assistant knows your Casora theme from the very first second, and registers its themes first thing while loading.
 ### Improved
+- Weich: The round back button in rooms and areas no longer has a shiny rim, it is flat like the phone bar.
 - Soft look in dark: menus opened from the bottom bar no longer have the old light rim either.
 - Soft look on the phone: the bottom bar stands out clearly from the tiles (almost white in light, almost black in dark, without the old light rim).
 - Soft look: aquarium charts also turn calm when the tile brings its own bright color (for example from a Hemma move).

@@ -2050,6 +2050,7 @@
           st.id = 'casora-back-glass-style';
           st.textContent =
             '.casora-back-glass::before{content:"";position:absolute;inset:0;' +
+            'display:var(--casora-back-rim, block);' +
             'border-radius:50%;padding:1.4px;' +
             // Subtle: the rim should melt into the background, not glint.
             'background:conic-gradient(from 0deg,' +
@@ -2064,6 +2065,7 @@
             'mask-composite:exclude;pointer-events:none;}' +
             // Side wraps: a crisp dark hairline, not a soft band.
             '.casora-back-glass::after{content:"";position:absolute;inset:-1px;' +
+            'display:var(--casora-back-rim, block);' +
             'border-radius:50%;padding:1px;' +
             'background:conic-gradient(from 0deg,' +
             'transparent 0deg 50deg,rgba(0,0,0,0.32) 80deg 100deg,' +
@@ -2085,8 +2087,8 @@
           `top:calc(env(safe-area-inset-top, 0px) + 4px + calc(12px * var(${LANDSCAPE_PHONE_VAR}, 0)))`,
           'width:40px', 'height:40px', 'border-radius:50%',
           'display:flex', 'align-items:center', 'justify-content:center',
-          'background-image:radial-gradient(140% 90% at 50% -20%,' +
-            'rgba(255,255,255,0.14), rgba(255,255,255,0.04) 45%, transparent 62%)',
+          'background-image:var(--casora-back-highlight, radial-gradient(140% 90% at 50% -20%,' +
+            'rgba(255,255,255,0.14), rgba(255,255,255,0.04) 45%, transparent 62%))',
           'background-color:var(--casora-chrome-fill, rgba(255,255,255,0.07))',
           'backdrop-filter:blur(10px) saturate(1.2)',
           '-webkit-backdrop-filter:blur(10px) saturate(1.2)',

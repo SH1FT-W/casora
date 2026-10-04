@@ -382,6 +382,8 @@ Casora Weich:
       # Handy-Navbar (04-navigation.js): Creme statt dunklem Glas
       casora-mnav-bg: rgba(251,248,243,0.82)
       casora-mnav-pane: rgba(255,255,255,0.93)
+      casora-back-rim: none
+      casora-back-highlight: none
       casora-mnav-blur: blur(60px) saturate(180%)
       casora-mnav-shadow: 0 6px 22px rgba(60,40,20,0.16)
       # Menü-Glas (casoraMenuGlass: Navbar, ⋯-Menüs): Creme statt dunkel
@@ -768,6 +770,8 @@ Casora Weich:
       casora-filter-veil: rgba(28,24,21,0.30)
       casora-mnav-bg: rgba(46,42,38,0.72)
       casora-mnav-pane: rgba(30,30,34,0.94)
+      casora-back-rim: none
+      casora-back-highlight: none
       # Menüs aus der Leiste (Räume, …) im Dunklen ohne helle Lichtkanten aus Hemma (04.10.2026).
       casora-menu-rim-top: transparent
       casora-menu-rim-bottom: transparent
