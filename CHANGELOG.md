@@ -4,7 +4,12 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
-## 1.0.6 – 04.10.2026
+## 1.0.7 – unreleased
+
+### Improved
+- Soft look, "Now playing": instead of the sideways carousel (phone) and the media pills under the badges (desktop and tablet), all players now sit in one quiet card, one row per player with cover, title, "Artist · Device", a thin progress bar that keeps running and a round play/pause button. Tapping a row opens the media popup as before. On desktop and tablet the rows stand side by side and wrap to a new line instead of scrolling sideways, so the cut-off shadow under the old player is gone too. Standard and Glass keep their look. The Studio phone preview shows the new list as well.
+- Soft look, phone navigation bar: a compact capsule with icons only; the active destination becomes a pill in the accent colour with its name (Home, the open room or Scenes). All destinations, the room and scene menus and the room switch work as before. Standard and Glass keep the bar with labels. The Studio phone preview follows.
+
 
 ### New
 - Phone, room page: tiles are grouped by category, like in Apple's Home app: Lights, Climate (heating, floor heating, air purifier, fan, blinds), Security, Speakers & TVs, Water and Other, each with a small heading. Within a group the Studio order stays. Rooms with up to 3 tiles or only one kind of device stay as before, without headings. Studio → Look & Controls → Phone: "Group rooms by category on the phone" (on by default) switches it off per dashboard. The phone preview in the Studio shows the groups too and follows the switch right away.

@@ -4,7 +4,12 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
-## 1.0.6 – 04.10.2026
+## 1.0.7 – unreleased
+
+### Verbessert
+- Weich, „Aktuelle Wiedergabe“: Statt des seitlich scrollenden Karussells (Handy) und der Medien-Pillen unter den Badges (Desktop und Tablet) stehen alle Player jetzt in einer ruhigen Karte, je Player eine Zeile mit Cover, Titel, „Interpret · Gerät“, dünnem, mitlaufendem Fortschritt und rundem Play/Pause-Knopf. Antippen einer Zeile öffnet wie bisher das Medien-Popup. Am Desktop und Tablet stehen die Zeilen nebeneinander und brechen um, statt seitlich zu scrollen; damit ist auch die abgeschnittene Schattenkante unter dem bisherigen Player weg. Standard und Glas bleiben unverändert. Die Studio-Vorschau am Handy zeigt die neue Liste ebenfalls.
+- Weich, Navigationsleiste am Handy: kompakte Kapsel nur mit Symbolen; das aktive Ziel wird zur Pille in der Akzentfarbe mit seinem Namen (Zuhause, der offene Raum oder Szenen). Alle Ziele, die Raum- und Szenen-Menüs und der Raumwechsel funktionieren wie bisher. Standard und Glas behalten die Leiste mit Beschriftung. Die Studio-Vorschau am Handy zieht mit.
+
 
 ### Neu
 - Handy, Raumseite: Die Kacheln sind nach Kategorien gruppiert wie in Apples Home-App: Licht, Klima (Heizung, Fußbodenheizung, Luftreiniger, Ventilator, Jalousien), Sicherheit, Lautsprecher und TVs, Wasser und Sonstiges, jeweils mit kleiner Überschrift. Innerhalb einer Gruppe bleibt die Studio-Reihenfolge. Räume mit höchstens 3 Kacheln oder nur einer Geräteart bleiben wie bisher ohne Überschriften. Studio → Design & Bedienung → Mobil: „Räume am Handy nach Kategorien gliedern“ (Standard an) schaltet es je Dashboard aus. Auch in der Studio-Vorschau am Handy erscheinen die Gruppen und folgen dem Schalter sofort.

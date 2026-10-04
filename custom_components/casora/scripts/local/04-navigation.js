@@ -107,7 +107,18 @@
       + '.hmn-item.on ha-icon{color:color-mix(in srgb, var(--casora-mi-tone, transparent) var(--casora-menu-tone-mix, 0%), var(--casora-color-teal, #00C3D0));}'
       + '.hmn-item.on .hmn-svg{background:color-mix(in srgb, var(--casora-mi-tone, transparent) var(--casora-menu-tone-mix, 0%), var(--casora-color-teal, #00C3D0));}'
 
-      + '.hmn-item:active{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));}';
+      + '.hmn-item:active{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));}'
+      /* Weich (1.0.7, Entwurf B „Nur Symbole“): kompakte Kapsel nur mit Symbolen; das aktive Ziel
+         wird zur Ton-Pille mit Wort. Klasse hmn-ic setzt _render(), solange das Weich-Design aktiv ist. */
+      + '.hmn-bar.hmn-ic{width:auto;max-width:calc(100vw - 32px);gap:2px;}'
+      + '.hmn-bar.hmn-ic .hmn-btn{flex:none;width:58px;flex-direction:row;gap:8px;padding:0;}'
+      + '.hmn-bar.hmn-ic .hmn-btn>span{display:none;}'
+      + '.hmn-bar.hmn-ic .hmn-btn.on{width:auto;min-width:58px;padding:0 20px 0 16px;'
+      +   'background:var(--casora-mnav-pill, var(--primary-color, #B67A50));color:var(--casora-mnav-pill-ink, #fff);}'
+      + '.hmn-bar.hmn-ic .hmn-btn.on>span{display:block;font-size:14.5px;font-weight:600;padding:0;letter-spacing:-0.01em;max-width:150px;}'
+      + '.hmn-bar.hmn-ic .hmn-btn.on ha-icon,.hmn-bar.hmn-ic .hmn-btn.on .hmn-svg{color:var(--casora-mnav-pill-ink, #fff);flex:none;}'
+      + '.hmn-bar.hmn-ic .hmn-btn:not(.on):active{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));}'
+      + '.hmn-bar.hmn-ic .hmn-btn.on:active{filter:brightness(.94);}';
     document.head.appendChild(st);
   };
 
@@ -126,6 +137,7 @@
       var t = r ? r.text : (own || T('Home'));
       if (r && r.literal) s.setAttribute('data-no-i18n', ''); else s.removeAttribute('data-no-i18n');
       if (s.textContent !== t) s.textContent = t;
+      if (this._bHome.getAttribute('aria-label') !== t) this._bHome.setAttribute('aria-label', t);
     }
     getCardSize() { return 1; }
     connectedCallback() {
@@ -244,6 +256,7 @@
         b.type = 'button'; b.className = 'hmn-btn'; b.setAttribute('data-k', key);
         b.innerHTML = self._iconHtml(icon) + '<span>' + (window.casoraTr || function (x) { return x; })(label) + '</span>';
         b._icon = icon;
+        b.setAttribute('aria-label', (window.casoraTr || function (x) { return x; })(label));
         b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); self._haptic(); self._tap(key, b); });
         bar.appendChild(b);
         return b;
@@ -419,6 +432,7 @@
       }
       var room = /^room_/.test(cur) && cur !== 'room_scenes';
       this._bar.classList.toggle('hmn-over', !!cur && cur !== 'all');
+      this._bar.classList.toggle('hmn-ic', !!(window._casoraSoft && window._casoraSoft()));
       var mk = this._menu ? this._menuKind : null;
       this._homeText();
       this._bHome.classList.toggle('on', !room && cur !== 'room_scenes' && !mk);
@@ -435,9 +449,11 @@
       }
       var rl = ar ? (ar.label || ar.name) : T('Räume'), ls = this._bRooms.lastElementChild;
       if (ls && ls.textContent !== rl) ls.textContent = rl;
+      if (this._bRooms.getAttribute('aria-label') !== rl) this._bRooms.setAttribute('aria-label', rl);
       /* Wie "Räume" laufend nachziehen: beim ersten Aufbau kann die Übersetzung noch fehlen. */
       var ss = this._bScenes.lastElementChild, st = T('Szenen');
       if (ss && ss.textContent !== st) ss.textContent = st;
+      if (this._bScenes.getAttribute('aria-label') !== st) this._bScenes.setAttribute('aria-label', st);
       if (cur !== this._lastCur) {
         /* Auch Raumwechsel über andere Wege (Raum-Chips, Header) zählen als "meine", wenn hier gerade getippt wurde. */
         if (this._tapAt && Date.now() - this._tapAt < 4000) this._mine = cur;
