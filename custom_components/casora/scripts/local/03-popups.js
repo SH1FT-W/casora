@@ -1194,7 +1194,7 @@
     [/pilz|champignon/, 'mdi:mushroom', '#AC8E68'],
     [/zitrone|limette|orange|apfel|birne|banane|beere|obst/, 'mdi:fruit-citrus', '#FFD60A'],
     [/wein\b|weißwein|rotwein/, 'mdi:bottle-wine', '#BF5AF2'],
-    [/öl\b|olivenöl|rapsöl/, 'mdi:oil', '#FFD60A'],
+    [/öl\b|olivenöl|rapsöl/, 'mdi:bottle-tonic-outline', '#FFD60A'],
     [/brühe|fond|gewürzpaste/, 'mdi:pot-steam', '#FF9F0A'],
     [/wasser/, 'mdi:water', '#64D2FF'],
     [/salz|pfeffer|curry|muskat|paprikapulver|zimt|kreuzkümmel|gewürz|chili/, 'mdi:shaker-outline', '#FF9F0A'],

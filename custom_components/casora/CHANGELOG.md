@@ -7,6 +7,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 1.0.5 – 04.10.2026
 
 ### Fixed
+- Shopping list: oil now shows a bottle instead of the car oil can.
 - Bell: a "finished" entry (robot vacuum, washer, dryer, dishwasher, printer) sometimes disappeared when
   the bell was opened again, although nothing was read or cleared. A finished run now stays until the
   24 hour window ends, even if the device changes state afterwards or the page is reloaded. The bell
