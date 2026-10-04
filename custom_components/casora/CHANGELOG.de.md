@@ -4,6 +4,13 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.5 – 04.10.2026
+
+### Behoben
+- Saugroboter-Popup: Während der Reinigung und auf dem Weg zurück zeigte der große Kreis oben nur ein
+  kleines weißes Dreieck statt des Saugroboter-Symbols. Jetzt steht der ganze Roboter mit Richtungspfeil
+  mittig im Kreis, wie bei den anderen Popup-Köpfen.
+
 ## 1.0.4 – 04.10.2026
 
 ### Verbessert
