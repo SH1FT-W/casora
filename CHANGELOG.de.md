@@ -9,6 +9,9 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ### Behoben
 - Sicherheits-Badge: Eine Kamera, die zwar als bereit gemeldet wird, aber kein Bild liefert (z. B. über einen Proxy), zählte im Badge als in Ordnung, während die Kamerakarte schon „Offline“ zeigte. Der Badge meldet sie jetzt ebenfalls als offline, auch der eigene Kamera-Badge im Raum.
 
+### Verbessert
+- Raumansicht am Handy (Weich): mehr Luft zwischen der Badge-Reihe unter dem Raumnamen und der ersten Kachelreihe (40 px statt 24 px), die Badges kleben nicht mehr an den Kacheln. Einstellbar über die Theme-Variable `casora-room-badges-gap-mobile`.
+
 ## 1.0.5 – 04.10.2026
 
 ### Neu

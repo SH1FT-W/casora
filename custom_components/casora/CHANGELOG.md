@@ -9,6 +9,9 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ### Fixed
 - Security badge: A camera reported as ready but delivering no picture (for example through a proxy) counted as fine in the badge while the camera card already showed "Offline". The badge now reports it as offline too, including the separate camera badge in a room.
 
+### Improved
+- Phone room view (Soft look): more room between the badge row under the room name and the first row of tiles (40 px instead of 24 px), so the badges no longer sit right on top of the tiles. Adjustable via the theme variable `casora-room-badges-gap-mobile`.
+
 ## 1.0.5 – 04.10.2026
 
 ### New

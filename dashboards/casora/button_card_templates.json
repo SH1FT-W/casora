@@ -7243,7 +7243,7 @@
       "padding-right": "0 !important"
      },
      {
-      "margin": "0 0 24px 0 !important"
+      "margin": "0 0 var(--casora-room-badges-gap-mobile, 24px) 0 !important"
      },
      {
       "width": "100%"
