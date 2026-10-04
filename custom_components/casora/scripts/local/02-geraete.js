@@ -3699,11 +3699,14 @@
         return null;
       }
       if (/^sensor\.\w*_letztes_reinigungsende$/.test(id)) {
-        if (!prev || prev === s || prev === 'unknown' || prev === 'unavailable' || s === 'unknown' || s === 'unavailable') return null;
-        var tEnd = new Date(s).getTime(), tPrev = new Date(prev).getTime(), tNow = Number(entry.when) * 1000;
+        // Ohne Vorzustand (erster Wechsel im Zeitfenster, 1.0.5) zählt der Wechsel trotzdem: ob das
+        // Ende neu ist, sagt der Abgleich mit der Logbuch-Zeit unten. Vorher verschwand die Zeile,
+        // sobald der vorige Wechsel aus dem Fenster fiel.
+        if (prev === s || prev === 'unknown' || prev === 'unavailable' || s === 'unknown' || s === 'unavailable') return null;
+        var tEnd = new Date(s).getTime(), tPrev = prev ? new Date(prev).getTime() : NaN, tNow = Number(entry.when) * 1000;
         if (isNaN(tEnd) || (!isNaN(tPrev) && tEnd <= tPrev)) return null;     // alter Wert nach Neustart/Reconnect
-        if (isFinite(tNow) && Math.abs(tNow - tEnd) > 30 * 60000) return null;  // Ende muss zum Eintrag passen
-        return { label: NAME + ' hat fertig gereinigt', icon: 'vacuum-charge', tone: 'good' };
+        if (!isFinite(tNow) || Math.abs(tNow - tEnd) > 30 * 60000) return null;  // Ende muss zum Eintrag passen
+        return { label: NAME + ' hat fertig gereinigt', icon: 'vacuum-charge', tone: 'good', done: true };
       }
       return undefined;
     },
