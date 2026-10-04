@@ -66,7 +66,11 @@ Zeitplan je Zustand in `zeiten-<zustand>.log`), Zusammenfassung am Ende, Rückga
 ## Aufruf
 
 ```sh
-dev/qa/gate.sh                 # vollständig – nur das zählt für Release/Karten-Update
+dev/qa/gate.sh                 # vollständig, Zustände parallel auf Wegwerf-HAs – zählt für Release/Karten-Update
+dev/qa/gate.sh --seriell       # vollständig wie früher nacheinander auf casora-test – zählt ebenfalls
+dev/qa/gate.sh --gezielt       # nur betroffene Zustände (Diff seit letztem grünen vollen Gate) – keine Freigabe
+dev/qa/gate.sh --gezielt=abc123 --dry-run   # Plan gegen einen bestimmten Commit zeigen
+dev/qa/gate.sh --has 2         # höchstens 2 Wegwerf-HAs gleichzeitig (Standard nach freiem Docker-Speicher)
 dev/qa/gate.sh --dry-run       # Plan zeigen (mit Parallel-Plan und Zeitschätzung), nichts ausführen
 dev/qa/gate.sh --jobs 2        # höchstens 2 Browser/Tests gleichzeitig (Standard 4)
 dev/qa/gate.sh --quick         # ohne Stress-Zustand und vollen Klick-Durchlauf
@@ -74,8 +78,23 @@ dev/qa/gate.sh --only static   # nur ein Schritt: static | unit | e2e | regress 
 dev/qa/gate.sh --no-switch     # Test-HA nicht umschalten, nur Tests des aktiven Zustands
 ```
 
-Das Gate übernimmt das Test-HA (schaltet Zustände, startet neu). Laufen gerade andere Tests
-dagegen, erst absprechen oder `--only static`/`--only unit` nutzen.
+**Parallel (Standard)**: je Zustand ein eigener Docker-Container `casora-gate-<name>`
+(`dev/qa/wegwerf-ha.sh`, Kopie aus `~/casora-haus/zustaende/`, Daten unter `~/casora-agents/gate/`):
+arbeit :8301, stress :8302, frisch :8303. Nach den frisch-Tests (~2 min) wird aus dessen Speicher ein
+weiteres HA (:8305) für den längsten Zustand, das dessen Pool als zusätzliche „Bahn“ zuarbeitet
+(`pool.mjs --ha-later`; eigene Sperren je HA, E2E bleibt auf dem ersten): mit 3 HAs für arbeit, mit 4 HAs
+(arbeit hat dann von Anfang an ein zweites HA :8304) für stress. Mit nur 2 HAs läuft stress nach frisch.
+Je HA unter Last gemessen ~550–600 MB (`GATE_HA_MB`, Standard 600); Docker hat hier 3,8 GB.
+Die Container werden am Ende immer entfernt (auch bei Abbruch). casora-test bleibt unberührt.
+Speicherverlauf: `.qa/logs/<commit>/speicher.log`. Ausgabezeilen tragen `[arbeit]`/`[stress]`/`[frisch]`.
+
+**Gezielt** (`--gezielt`): ordnet jede seit dem letzten grünen vollen Gate geänderte Datei Zuständen
+zu (Theme/Panel/Vorlagen → arbeit, Umzug/Assistent/Python → frisch + arbeit, Stresshaus → stress,
+Regressionstest → sein `@zustand`, Doku/Changelog/Unit → nur statisch + Unit; Überlauf-Stichworte
+im Diff → zusätzlich stress; Unbekanntes → alles) und zeigt den Plan vorher. Zählt nie als Freigabe.
+
+`--seriell` übernimmt das Test-HA casora-test (schaltet Zustände, startet neu). Laufen gerade
+andere Tests dagegen, erst absprechen oder `--only static`/`--only unit` nutzen.
 Anmeldung: automatisch über `dev/qa/token.mjs` (Zugang aus `CASORA_USER`/`CASORA_PASS`
 oder `~/casora-haus/ZUGANG.txt`, nichts davon im Repo).
 

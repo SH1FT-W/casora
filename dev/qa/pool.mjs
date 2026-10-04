@@ -20,6 +20,11 @@
 // Klick-Durchlauf: je Viewport ein Studio-Teil (frei) und ein Dashboard-Teil (ui), danach
 // „alles.mjs --merge“ zu einem Bericht (gleiches Format wie früher).
 //
+// Mehrere Test-HAs desselben Zustands („Bahnen“, paralleles Gate): --ha url1,url2 – jede Bahn hat
+// eigene Sperren und eigene Anmeldung; E2E läuft immer auf der ersten Bahn (t03→t04→… bauen
+// aufeinander auf), Regress- und Klick-Teile auf der ersten freien. --ha-later url=datei: Bahn,
+// die erst dazukommt, sobald <datei> existiert (z. B. das frisch-HA nach seinen Tests).
+//
 // Reihenfolge: längster Restpfad bzw. größter Rückstau einer Sperre zuerst. Gemessene Zeiten
 // landen in .qa/zeiten.json und dienen beim nächsten Lauf (und im Probelauf) als Schätzung.
 // Rückgabe 0 = alle Schritte ok, 1 = mindestens ein Schritt fehlgeschlagen, 2 = Aufruf falsch.
@@ -41,6 +46,14 @@ const CRAWLER = opt('crawler', '');           // quick | full | ''
 const DASH = opt('dash', '');
 // --t0 <epoch s>: Startzeit des Gates – Fortschrittszeilen zeigen dann auch die Gate-Uhr (@m:ss).
 const GATE0 = Number(opt('t0', 0)) * 1000;
+const BASE0 = process.env.CASORA_URL || 'http://localhost:8124';
+const LANES = opt('ha', BASE0).split(',').filter(Boolean).map((url) => ({ url, up: false }));
+for (const x of opt('ha-later', '').split(',').filter(Boolean)) {
+  const i = x.indexOf('=');
+  if (i > 0) LANES.push({ url: x.slice(0, i), up: false, flag: x.slice(i + 1) });
+}
+LANES.forEach((l, i) => { l.n = i + 1; });
+const MULTI = LANES.length > 1;
 const clock = () => (GATE0 ? ` @${Math.floor((Date.now() - GATE0) / 60000)}:${String(Math.floor((Date.now() - GATE0) / 1000) % 60).padStart(2, '0')}` : '');
 const NODE = process.env.NODE && fs.existsSync(process.env.NODE) ? process.env.NODE : process.execPath;
 if (!STATE || (!DRY && !LOGS)) { console.error('Aufruf: pool.mjs --state <zustand> [--e2e] [--regress] [--crawler quick|full] [--dash url] [--jobs n] --logs <ordner> [--results datei] [--dry-run]'); process.exit(2); }
@@ -100,7 +113,7 @@ if (flag('e2e')) {
   for (const t of list) {
     const r = E2E_RULES[t];
     if (!r) notes.push(`E2E ${t}: keine Regel in pool.mjs (E2E_RULES) – läuft sicherheitshalber allein`);
-    addTask(step, { id: t, label: t, cmd: [NODE, t + '.mjs'], cwd: path.join(REPO, 'dev/e2e'), env: {},
+    addTask(step, { id: t, label: t, cmd: [NODE, t + '.mjs'], cwd: path.join(REPO, 'dev/e2e'), env: { CASORA_OUT: process.env.CASORA_E2E_OUT || '' }, pin: 1,
       after: (r && r.after || []).filter((d) => list.includes(d)), locks: r ? (r.locks || []) : [], alone: !r, est: est(STATE + '/' + t, t, 15) });
   }
 }
@@ -148,10 +161,11 @@ for (const t of tasks) t.dependents = tasks.filter((x) => x.deps.includes(t));
 const cpMemo = new Map();
 const cp = (t) => { if (!cpMemo.has(t)) cpMemo.set(t, t.est + Math.max(0, ...t.dependents.map(cp))); return cpMemo.get(t); };
 
-// Nächster startbarer Teil (oder null). running: laufende Teile, done: Set fertiger Teile.
-function pick(pending, running, done, free) {
+// Nächster startbarer Teil für eine Bahn (oder null). running: laufende Teile DIESER Bahn,
+// done: Set fertiger Teile, lane: Nummer der Bahn (Teile mit pin nur auf ihrer Bahn).
+function pick(pending, running, done, free, lane = 1) {
   if (free <= 0 || running.some((r) => r.alone)) return null;
-  const ready = pending.filter((t) => t.deps.every((d) => done.has(d)));
+  const ready = pending.filter((t) => t.deps.every((d) => done.has(d)) && (!t.pin || t.pin === lane));
   // Wartet ein „allein“-Teil, erst leerlaufen lassen, dann ihn allein starten.
   const alone = ready.find((t) => t.alone);
   if (alone) return running.length ? null : alone;
@@ -170,12 +184,17 @@ function simulate() {
   let now = 0;
   const workers = Array.from({ length: JOBS }, () => null);
   while (pending.length || running.length) {
-    let t;
-    while ((t = pick(pending, running, done, JOBS - running.length))) {
-      pending.splice(pending.indexOf(t), 1);
-      const w = workers.indexOf(null); workers[w] = t;
-      running.push(Object.assign(t, { simStart: now, simEnd: now + t.est, worker: w + 1 }));
-      sched.push(t);
+    let t, more = true;
+    while (more) {
+      more = false;
+      for (const l of LANES) {
+        t = pick(pending, running.filter((r) => r.lane === l.n), done, JOBS - running.length, l.n);
+        if (!t) continue;
+        pending.splice(pending.indexOf(t), 1);
+        const w = workers.indexOf(null); workers[w] = t;
+        running.push(Object.assign(t, { simStart: now, simEnd: now + t.est, worker: w + 1, lane: l.n }));
+        sched.push(t); more = true;
+      }
     }
     if (!running.length) { notes.push('Planung hängt (Abhängigkeiten im Kreis?)'); break; }
     running.sort((a, b) => a.simEnd - b.simEnd);
@@ -189,11 +208,11 @@ function simulate() {
 if (DRY) {
   const { sched, total, serial } = simulate();
   if (!tasks.length) { console.log(`    (keine Tests im Zustand ${STATE})`); process.exit(0); }
-  console.log(`    ${JOBS} parallel · geschätzt ~${total} s statt ~${serial} s nacheinander`
+  console.log(`    ${JOBS} parallel${MULTI ? ` auf ${LANES.length} Test-HAs` : ''} · geschätzt ~${total} s statt ~${serial} s nacheinander`
     + (Object.keys(measured).length ? ' (Schätzung aus .qa/zeiten.json)' : ' (Schätzung aus den seriellen Protokollen)'));
   for (const t of sched.sort((a, b) => a.simStart - b.simStart || a.worker - b.worker)) {
     const extra = [t.deps.length ? 'nach ' + t.deps.map((d) => d.id.replace(/_.*/, '')).join(',') : '',
-      t.locks.length ? 'Sperre ' + t.locks.join('+') : '', t.alone ? 'allein' : ''].filter(Boolean).join(' · ');
+      t.locks.length ? 'Sperre ' + t.locks.join('+') : '', t.alone ? 'allein' : '', MULTI ? 'HA ' + t.lane : ''].filter(Boolean).join(' · ');
     console.log(`    [${t.worker}] ${String(t.simStart).padStart(4)}–${String(t.simEnd).padEnd(4)} ${t.step.group.padEnd(8)} ${t.id.padEnd(32)} ${extra}`);
   }
   notes.forEach((n) => console.log('    Hinweis: ' + n));
@@ -203,9 +222,21 @@ if (DRY) {
 
 // ── Ausführung ─────────────────────────────────────────────────────────────────────────
 if (!tasks.length) process.exit(0);
-if (!process.env.CASORA_TOKENS) {
-  const { login } = await import('./token.mjs');
-  process.env.CASORA_TOKENS = JSON.stringify(await login());
+// Anmeldung je Bahn (eigenes HA = eigene Benutzerdatenbank). Die erste Bahn übernimmt
+// CASORA_TOKENS aus der Umgebung, wenn sie das HA aus CASORA_URL ist.
+function loginLane(url) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    const p = spawn(NODE, [path.join(REPO, 'dev/qa/token.mjs')], { env: { ...process.env, CASORA_URL: url }, stdio: ['ignore', 'pipe', 'inherit'] });
+    p.stdout.on('data', (b) => chunks.push(b));
+    p.on('close', (code) => (code === 0 ? resolve(Buffer.concat(chunks).toString('utf8').trim()) : reject(new Error('Anmeldung an ' + url + ' fehlgeschlagen'))));
+  });
+}
+async function laneUp(l) {
+  l.tokens = (l.n === 1 && l.url === BASE0 && process.env.CASORA_TOKENS) || await loginLane(l.url);
+  await presetScenario(l);
+  l.up = true;
+  if (MULTI) console.log(`    Test-HA ${l.n} bereit: ${l.url}${clock()}`);
 }
 const PARTS = path.join(LOGS, 'teile');
 fs.mkdirSync(PARTS, { recursive: true });
@@ -214,16 +245,20 @@ notes.forEach((n) => console.log('    Hinweis: ' + n));
 
 // Wie früher: nach E2E sahen Regress/Klick-Durchlauf das Mock-Szenario aus t10. Jetzt laufen
 // sie gleichzeitig – darum das Szenario vorab setzen (t10 setzt es noch einmal).
-if (STATE === 'arbeit' && flag('e2e') && (flag('regress') || CRAWLER)) {
+// Mit mehreren Bahnen auf jeder (die zweite Bahn bekommt kein t10).
+async function presetScenario(l) {
+  if (!(STATE === 'arbeit' && flag('e2e') && (flag('regress') || CRAWLER))) return;
   try {
-    const { tokens } = await import('./ws.mjs');
-    const { access_token } = await tokens();
-    const r = await fetch((process.env.CASORA_URL || 'http://localhost:8124') + '/api/services/casora_mock/scenario', {
-      method: 'POST', headers: { Authorization: 'Bearer ' + access_token, 'Content-Type': 'application/json' },
+    const { refresh_token } = JSON.parse(l.tokens);
+    const tok = await fetch(l.url + '/auth/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token, client_id: l.url + '/' }) }).then((r) => r.json());
+    const r = await fetch(l.url + '/api/services/casora_mock/scenario', {
+      method: 'POST', headers: { Authorization: 'Bearer ' + tok.access_token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: process.env.SZENARIO || 'drucker_druckt' }) });
-    console.log(`    Mock-Szenario ${process.env.SZENARIO || 'drucker_druckt'} vorab: ${r.status}`);
+    console.log(`    Mock-Szenario ${process.env.SZENARIO || 'drucker_druckt'} vorab${MULTI ? ' (HA ' + l.n + ')' : ''}: ${r.status}`);
   } catch (e) { console.log('    Mock-Szenario vorab nicht gesetzt: ' + e.message); }
 }
+for (const l of LANES) if (!l.flag) await laneUp(l);
 
 const T0 = Date.now();
 const sec = (ms) => Math.round(ms / 1000);
@@ -233,7 +268,9 @@ function run(t) {
     const fd = fs.openSync(logFile, 'w');
     const chunks = [];
     t.start = Date.now();
-    const p = spawn(t.cmd[0], t.cmd.slice(1), { cwd: t.cwd, env: { ...process.env, ...t.env }, stdio: ['ignore', 'pipe', 'pipe'] });
+    const env = { ...process.env, ...t.env, CASORA_URL: t.laneObj.url, CASORA_TOKENS: t.laneObj.tokens };
+    if (env.CASORA_OUT === '') delete env.CASORA_OUT;
+    const p = spawn(t.cmd[0], t.cmd.slice(1), { cwd: t.cwd, env, stdio: ['ignore', 'pipe', 'pipe'] });
     const onData = (b) => { chunks.push(b); fs.writeSync(fd, b); };
     p.stdout.on('data', onData); p.stderr.on('data', onData);
     const finish = (rc) => {
@@ -264,7 +301,7 @@ async function finishStep(s) {
   const start = Math.min(...s.tasks.map((t) => t.start)), lines = [];
   let ok = s.tasks.every((t) => t.ok);
   for (const t of s.tasks) {
-    lines.push(`=== ${t.label}   (${sec(t.end - t.start)} s, ab +${sec(t.start - T0)} s)`);
+    lines.push(`=== ${t.label}   (${sec(t.end - t.start)} s, ab +${sec(t.start - T0)} s${MULTI ? ', Test-HA ' + t.lane : ''})`);
     lines.push(t.out.replace(/\n$/, ''));
     if (!t.ok) lines.push(s.kind === 'e2e' ? `>>> FEHLER ${t.id}` : `>>> FEHLER ${t.label} (Rückgabe ${t.rc})`);
   }
@@ -285,33 +322,64 @@ async function finishStep(s) {
 }
 
 const pending = tasks.slice(), running = [], done = new Set(), stepJobs = [];
+let timer = null;
 await new Promise((resolveAll) => {
   const pump = () => {
-    let t;
-    while ((t = pick(pending, running, done, JOBS - running.length))) {
-      pending.splice(pending.indexOf(t), 1);
-      running.push(t);
-      run(t).then((x) => {
-        running.splice(running.indexOf(x), 1); done.add(x);
-        console.log(`    · ${x.step.id} ${x.id.padEnd(30)} ${x.ok ? 'ok    ' : 'FEHLER'} ${String(sec(x.end - x.start)).padStart(4)} s  (+${sec(x.start - T0)}…${sec(x.end - T0)} s)${clock()}`);
-        if (x.step.tasks.every((y) => done.has(y))) stepJobs.push(finishStep(x.step));
-        if (!pending.length && !running.length) resolveAll(); else pump();
-      });
+    let t, more = true;
+    while (more) {
+      more = false;
+      // Bahn mit den wenigsten laufenden Teilen zuerst.
+      const lanes = LANES.filter((l) => l.up).sort((a, b) => running.filter((r) => r.lane === a.n).length - running.filter((r) => r.lane === b.n).length);
+      for (const l of lanes) {
+        t = pick(pending, running.filter((r) => r.lane === l.n), done, JOBS - running.length, l.n);
+        if (!t) continue;
+        pending.splice(pending.indexOf(t), 1);
+        t.lane = l.n; t.laneObj = l;
+        running.push(t); more = true;
+        run(t).then((x) => {
+          running.splice(running.indexOf(x), 1); done.add(x);
+          console.log(`    · ${x.step.id} ${x.id.padEnd(30)} ${x.ok ? 'ok    ' : 'FEHLER'} ${String(sec(x.end - x.start)).padStart(4)} s  (+${sec(x.start - T0)}…${sec(x.end - T0)} s)${MULTI ? ' HA ' + x.lane : ''}${clock()}`);
+          if (x.step.tasks.every((y) => done.has(y))) stepJobs.push(finishStep(x.step));
+          if (!pending.length && !running.length) { clearInterval(timer); resolveAll(); } else pump();
+        });
+        break;
+      }
     }
-    if (!running.length && pending.length) { console.log('    Planung hängt – Rest nacheinander'); pending.forEach((p) => { p.deps = []; p.locks = []; p.alone = false; }); pump(); }
+    if (!running.length && pending.length) { console.log('    Planung hängt – Rest nacheinander'); pending.forEach((p) => { p.deps = []; p.locks = []; p.alone = false; p.pin = 0; }); pump(); }
   };
+  // Später dazukommende Bahnen: sobald ihre Datei da ist, anmelden und mitarbeiten lassen.
+  const late = LANES.filter((l) => l.flag);
+  if (late.length) {
+    timer = setInterval(() => {
+      for (const l of late) {
+        if (l.up || l.joining || !fs.existsSync(l.flag)) continue;
+        if (!pending.length) continue;
+        l.joining = true;
+        laneUp(l).then(pump, (e) => console.log(`    Test-HA ${l.n} nicht nutzbar: ${e.message}`));
+      }
+    }, 2000);
+  }
   pump();
 });
+clearInterval(timer);
 await Promise.all(stepJobs);
 
 // ── Zeiten ─────────────────────────────────────────────────────────────────────────────
 const wall = sec(Date.now() - T0), sum = tasks.reduce((s, t) => s + (t.end - t.start), 0);
 const zlines = [`Zustand ${STATE}: ${JOBS} parallel, Wandzeit ${wall} s, Summe der Teile ${sec(sum)} s (Faktor ${(sum / 1000 / Math.max(1, wall)).toFixed(1)})`];
 for (const t of tasks.slice().sort((a, b) => a.start - b.start)) {
-  zlines.push(`  +${String(sec(t.start - T0)).padStart(4)}…${String(sec(t.end - T0)).padEnd(4)} ${String(sec(t.end - t.start)).padStart(4)} s  ${t.step.group.padEnd(8)} ${t.id}${t.locks.length ? '  [' + t.locks.join('+') + ']' : ''}`);
+  zlines.push(`  +${String(sec(t.start - T0)).padStart(4)}…${String(sec(t.end - T0)).padEnd(4)} ${String(sec(t.end - t.start)).padStart(4)} s  ${MULTI ? 'HA' + t.lane + ' ' : ''}${t.step.group.padEnd(8)} ${t.id}${t.locks.length ? '  [' + t.locks.join('+') + ']' : ''}`);
   if (t.ok) measured[t.step.kind === 'crawler' ? `${STATE}/${CRAWLER}/${t.id}` : t.key] = Math.max(1, sec(t.end - t.start)); // nur echte Läufe als Schätzung
 }
 fs.writeFileSync(path.join(LOGS, `zeiten-${STATE}.log`), zlines.join('\n') + '\n');
 console.log('    ' + zlines[0] + ` – ${path.join(LOGS, `zeiten-${STATE}.log`)}`);
-try { fs.mkdirSync(path.dirname(ZEITEN), { recursive: true }); fs.writeFileSync(ZEITEN, JSON.stringify(measured, null, 1)); } catch (e) { /* nur Schätzhilfe */ }
+// Mehrere Zustände schreiben gleichzeitig: frisch einlesen, nur die eigenen Schlüssel ersetzen.
+try {
+  let cur = {};
+  try { cur = JSON.parse(fs.readFileSync(ZEITEN, 'utf8')); } catch (e) { /* neu */ }
+  for (const [k, v] of Object.entries(measured)) if (k.startsWith(STATE + '/')) cur[k] = v;
+  fs.mkdirSync(path.dirname(ZEITEN), { recursive: true });
+  fs.writeFileSync(ZEITEN + '.' + process.pid, JSON.stringify(cur, null, 1));
+  fs.renameSync(ZEITEN + '.' + process.pid, ZEITEN);
+} catch (e) { /* nur Schätzhilfe */ }
 process.exit(failed ? 1 : 0);
