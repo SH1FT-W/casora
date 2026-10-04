@@ -37,6 +37,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   28 px, der Schleier beim Scrollen geht mit, und die Studio-Vorschau zeigt das Raumfoto sofort so.
 
 ### Behoben
+- Kamera-Kacheln, die offline sind, zeigen nach dem Laden des Dashboards nicht mehr ein paar Sekunden lang „Live“.
 - Saugroboter-Popup: Während der Reinigung und auf dem Weg zurück zeigte der große Kreis oben nur ein
   kleines weißes Dreieck statt des Saugroboter-Symbols. Jetzt steht der ganze Roboter mit Richtungspfeil
   mittig im Kreis, wie bei den anderen Popup-Köpfen.

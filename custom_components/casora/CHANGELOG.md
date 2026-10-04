@@ -36,6 +36,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   scrolling follows it, and the Studio preview shows the room photo with the chosen softness right away.
 
 ### Fixed
+- Camera tiles that are offline no longer show “Live” for a few seconds after the dashboard loads.
 - Vacuum popup: while cleaning or returning, the large circle at the top showed only a small white
   triangle instead of the vacuum symbol. The whole robot with its direction arrow now sits centred in the
   circle, like the other popup headers.
