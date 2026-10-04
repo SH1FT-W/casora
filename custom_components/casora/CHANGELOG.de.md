@@ -11,6 +11,11 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   steht jetzt rechts oben über „Tonnen“, wie im Kalender-Popup. Am Handy folgt sie direkt auf den Kopf,
   danach kommen Tonnen und Kalender, und beim Antippen eines Tages scrollt das Popup weich zur
   Tageskarte, wenn sie nicht zu sehen ist.
+- Abfall: Ist die Abfall-Quelle nicht erreichbar (etwa weil der Server des Entsorgers die Verbindung ablehnt
+  und Abfallkalender und Abholungs-Sensoren nicht verfügbar sind) und liegen keine Abholtermine vor, zeigt das
+  Popup statt leerer Abschnitte einen ruhigen Hinweis „Abfallkalender gerade nicht erreichbar“ mit dem Namen
+  der Quelle, der Monatskalender bleibt ohne leere Tageskarte sichtbar, und die Kachel zeigt „Nicht
+  erreichbar“. Fehlen nur einzelne Sensoren, aber Termine sind da, bleibt alles wie bisher.
 
 ### Neu
 - Design & Bedienung · Mobil: Ein neuer Regler „Raumfoto am Handy“ stellt ein, wie weich das Raumfoto
