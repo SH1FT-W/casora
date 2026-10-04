@@ -13,6 +13,8 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - Updates-Popup: Der Abstand unter „Verfügbare Updates“ verschwindet nach dem Öffnen nicht mehr.
 - Türen & Fenster (Weich): Auch ein Raum mit nur einem Kontakt zeigt jetzt den Gerätenamen mit dem Raum
   darunter, wie Räume mit mehreren Kontakten („Haustür“ / „Flur“ statt nur „Flur“).
+- Klima-Popup: Luftqualitätswerte heißen kurz wie Temperatur und Luftfeuchtigkeit („PM2.5“, „CO₂“)
+  statt nach dem Gerät, und Namen mit Umlauten werden nicht mehr falsch großgeschrieben („LuftqualitäTsmonitor“).
 
 ## 1.0.3 – 04.10.2026
 

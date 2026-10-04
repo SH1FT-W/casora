@@ -13,6 +13,8 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - Updates popup: the gap below Available updates no longer disappears after opening.
 - Doors & windows (Soft): a room with just one contact now also shows the device name with the room below
   it, like rooms with several contacts (“Front door” / “Hallway” instead of only “Hallway”).
+- Climate popup: air quality readings get short names like temperature and humidity (“PM2.5”, “CO₂”)
+  instead of the device name, and names with umlauts are no longer capitalized wrongly (“LuftqualitäTsmonitor”).
 
 ## 1.0.3 – 04.10.2026
 
