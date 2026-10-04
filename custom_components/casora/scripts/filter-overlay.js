@@ -1412,7 +1412,9 @@
         'box-sizing:border-box', 'white-space:nowrap', 'overflow:hidden', 'text-overflow:ellipsis',
       ].join(';');
       const label = ROOM_GROUP_LABEL[key] || key;
-      head.textContent = window.casoraTr ? window.casoraTr(label) : label;
+      const shown = window.casoraTr ? window.casoraTr(label) : label;
+      // „Licht“ heißt sonst überall „Light“; als Gruppe schreibt Apple „Lights“ (04.10.2026).
+      head.textContent = (key === 'lights' && shown === 'Light') ? 'Lights' : shown;
       wrap.appendChild(head);
       this._contentEl.appendChild(wrap);
     }
