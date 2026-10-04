@@ -5,7 +5,8 @@
 // Alt+Pfeil verschieben und eine Kachel über ihren Zeilen-Schalter ausschalten, ⌘S sichert; nach
 // neuem Laden stehen Reihenfolge und Platzhalter wieder so da. Handy (WebKit): Kachel unter
 // „Elemente“ ausschalten, „Fertig“ sichert ins Dashboard (Konfiguration in HA geprüft).
-// Schreibt ins Prüf-Dashboard (qa-arbeit bzw. das erste Casora-Dashboard) – nur im Test-HA.
+// Schreibt ins Prüf-Dashboard (qa-arbeit bzw. das erste Casora-Dashboard) – nur im Test-HA; am Ende
+// wird der vorherige Stand beider Dashboards zurückgeschrieben.
 import { open, studio, casoraDashboard, check, need, finish, usePage } from './lib.mjs';
 import { ws } from '../ws.mjs';
 
@@ -23,6 +24,14 @@ const offCount = async () => {
   c.close();
   return n;
 };
+// Vorher-Stand merken und am Ende (auch bei Fehlern) zurückschreiben.
+const URLS = [dash.url, dash.phone && dash.phone.url].filter(Boolean);
+const saved0 = {};
+{ const c = await ws(); for (const u of URLS) saved0[u] = await c.cmd({ type: 'lovelace/config', url_path: u }); c.close(); }
+const restore = async () => { const c = await ws();
+  for (const u of URLS) await c.cmd({ type: 'lovelace/config/save', url_path: u, config: saved0[u] }); c.close(); };
+const needR = async (label, ok, info) => { if (!ok) await restore(); return need(label, ok, info); };
+
 const order = (H) => H(() => { const p = window.__panel();
   return p._bVisibleBadges().map((e) => String(e.dataset.mk).replace(/^b:/, '').split(':')[0]).filter((v, k, a) => a.indexOf(v) === k); });
 
@@ -48,7 +57,7 @@ const room = await H(async () => {
   }
   return null;
 });
-await need('Raum mit drei Badges und zwei Kacheln', room);
+await needR('Raum mit drei Badges und zwei Kacheln', room);
 
 await H(() => window.__panel()._bVisibleBadges()[0].focus());
 await o.page.keyboard.press('Alt+ArrowRight');
@@ -114,7 +123,7 @@ const row = await H(() => { const p = window.__panel();
   const e = [...p.shadowRoot.querySelectorAll('.inspector *')].find((x) => x.getClientRects().length && x.children.length === 0
     && /^(Kacheln|Tiles)$/.test(x.textContent.trim()) && !x.closest('.segopt'));
   if (e) e.setAttribute('data-qa', 'kacheln'); return !!e; });
-await need('WebKit Handy: Zeile „Kacheln“ in Elemente', row);
+await needR('WebKit Handy: Zeile „Kacheln“ in Elemente', row);
 await o.page.locator('[data-qa=kacheln]').tap();
 await o.page.waitForTimeout(1300);
 const sw2 = await H(() => { const p = window.__panel();
@@ -122,7 +131,7 @@ const sw2 = await H(() => { const p = window.__panel();
     .filter((x) => x.getClientRects().length && x.getAttribute('aria-checked') === 'true' && x.closest('.thead'));
   if (t[0]) { t[0].scrollIntoView({ block: 'center' }); t[0].setAttribute('data-qa', 'kschalter2'); }
   return { n: t.length, all: [...p.shadowRoot.querySelectorAll('#pane .sw')].filter((x) => x.getClientRects().length).length }; });
-await need('WebKit Handy: Kachel-Schalter im Blatt', sw2.n > 0, sw2);
+await needR('WebKit Handy: Kachel-Schalter im Blatt', sw2.n > 0, sw2);
 const hp0 = await H(() => window.__panel()._bHidden().tiles.filter((x) => x.why === 'Hidden').length);
 await o.page.locator('[data-qa=kschalter2]').tap();
 await o.page.waitForTimeout(1200);
@@ -131,11 +140,14 @@ await check('WebKit Handy: Schalter im Blatt blendet eine Kachel aus', hp1 === h
 await o.page.locator('.bclose').tap();
 await o.page.waitForTimeout(900);
 const done = o.page.locator('#donebtn');
-await need('„Fertig“ sichtbar', await done.isVisible().catch(() => false));
+await needR('„Fertig“ sichtbar', await done.isVisible().catch(() => false));
 await done.tap();
 await o.page.waitForFunction(() => { const p = window.__panel && window.__panel(); return !p || !p._isDirty || !p._isDirty(); }, null, { timeout: 30000 }).catch(() => {});
 await o.page.waitForTimeout(3000);
 const n1 = await offCount();
 // Handy-Ansicht und Desktop teilen den Schalter: je Dashboard eine ausgeschaltete Kachel mehr.
 await check('WebKit Handy: „Fertig“ sichert die ausgeschaltete Kachel ins Dashboard', n1 > n0, { n0, n1 });
+await restore();
+const back0 = await offCount();
+await check('Vorher-Stand wiederhergestellt', back0 === n0 || back0 < n1, { n0, back0 });
 await finish();
