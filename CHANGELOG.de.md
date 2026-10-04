@@ -6,6 +6,12 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 ## 1.0.4 – 04.10.2026
 
+### Verbessert
+- Abfall-Popup mit eingeschaltetem Kalender: Die Tageskarte (nächste Abholung oder der angetippte Tag)
+  steht jetzt rechts oben über „Tonnen“, wie im Kalender-Popup. Am Handy folgt sie direkt auf den Kopf,
+  danach kommen Tonnen und Kalender, und beim Antippen eines Tages scrollt das Popup weich zur
+  Tageskarte, wenn sie nicht zu sehen ist.
+
 ### Behoben
 - Der Name der Übersicht steht jetzt überall gleich: Ein selbst vergebener Name (auch „Home“ auf
   Deutsch) bleibt in Leiste, Raumtitel, Handy-Leiste, Handy-Kopf und Studio genau so stehen. Nur der

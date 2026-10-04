@@ -6,6 +6,11 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ## 1.0.4 – 04.10.2026
 
+### Improved
+- Waste popup with the calendar turned on: the day card (next pickup or the tapped day) now sits at the top
+  right above Bins, like in the calendar popup. On the phone it comes right below the header, followed by
+  the bins and the calendar, and tapping a day gently scrolls up to the day card when it is out of view.
+
 ### Fixed
 - The overview's name now looks the same everywhere: a name you gave it (also “Home” in German) stays
   exactly as you typed it in the navigation, room title, phone bar, phone header and Studio. Only the
