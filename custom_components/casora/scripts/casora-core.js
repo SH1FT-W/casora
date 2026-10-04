@@ -7872,6 +7872,24 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   }
 
 
+  // Offen seit (1.0.5): die Integration merkt sich je Kontakt den echten Öffnungszeitpunkt
+  // (sensor.casora_media_paused, Attribut contacts) über Neustarts hinweg. Ohne Eintrag,
+  // bei geschlossenem Kontakt oder einem Merkwert nach last_changed zählt last_changed.
+  function openSince(st, states) {
+    if (!st) return undefined;
+    try {
+      var all = states || (hassOf() || {}).states || {};
+      var memo = all['sensor.casora_media_paused'];
+      var map = memo && memo.attributes && memo.attributes.contacts;
+      var e = map && st.entity_id ? map[st.entity_id] : null;
+      var t = e && e.since ? Date.parse(e.since) : NaN;
+      var lc = Date.parse(st.last_changed || '');
+      if (String(st.state) === 'on' && isFinite(t) && (!isFinite(lc) || t <= lc + 1000)) return e.since;
+    } catch (err) { /* fällt auf last_changed zurück */ }
+    return st.last_changed;
+  }
+  window._casoraOpenSince = openSince;
+
   var _lowSince = {};
 
   function standing(hass) {
@@ -8015,6 +8033,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       // Schloss mit eigenem Türsensor + Kontaktsensor an derselben Tür meldeten doppelt
       // (Hemma 2.2.0): je Name nur eine Meldung.
       var openSeen = {};
+      var openList = [];
       ids.forEach(function (id) {
         if (id.indexOf('binary_sensor.') !== 0) return;
         var st = S[id];
@@ -8024,7 +8043,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           && kind !== 'opening') return;
         // Nur technisch „Tür“ (Tankerkönig-Status je Tankstelle …): keine Meldung (00-finden.js).
         if (notAnOpening(hass, id)) return;
-        var since = Date.parse(st.last_changed || '');
+        // Echter Öffnungszeitpunkt aus der Integration (1.0.5): nach einem HA-Neustart beginnt
+        // last_changed neu, die Glocke zeigte „Seit 10 Min.“ als neue Mitteilung. `when` ist
+        // zugleich der Gelesen-Schlüssel (Wasserstand), darum bleibt Gelesenes gelesen.
+        var since = Date.parse(openSince(st, S) || '');
         if (!isFinite(since)) return;
         var mins = Math.round((Date.now() - since) / 60000);
         if (mins < openMins) return;
@@ -8034,16 +8056,32 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         // sonst Raum im Dashboard). Schloss-Türsensor + Kontakt derselben Tür teilen den Bereich.
         var openReg = (hass.entities || {})[id] || {};
         var openArea = openReg.area_id || ((hass.devices || {})[openReg.device_id] || {}).area_id || '';
-        if (!openArea && typeof window._casoraRoomOf === 'function') {
-          try { openArea = window._casoraRoomOf(id) || ''; } catch (e) { openArea = ''; }
+        var openRoom = openArea ? (((hass.areas || {})[openArea] || {}).name || '') : '';
+        if (!openRoom && typeof window._casoraRoomOf === 'function') {
+          try { openRoom = window._casoraRoomOf(id) || ''; } catch (e) { openRoom = ''; }
         }
-        var openKey = openName + '|' + openArea;
+        var openKey = openName + '|' + (openArea || openRoom);
         if (openSeen[openKey]) return;
         openSeen[openKey] = true;
+        openList.push({ id: id, st: st, since: since, mins: mins, name: openName, room: openRoom });
+      });
+      // Raum vor den Namen („Schlafzimmer Fenster ist offen“), wenn der Name allein nichts sagt
+      // („Fenster“, „Tür“, „Tor“) oder zwei offene Kontakte gleich heißen. Bisher hängte das nur
+      // das lokale Modul an, das beim ersten Sammeln nach dem Laden noch fehlen kann: dann stand
+      // unter „Neu“ zweimal „Fenster ist offen“ (1.0.5).
+      var openNames = {};
+      openList.forEach(function (o) { openNames[o.name] = (openNames[o.name] || 0) + 1; });
+      openList.forEach(function (o) {
+        var st = o.st, id = o.id, mins = o.mins;
+        var title = o.name;
+        if (o.room && (openNames[o.name] > 1 || /^(Fenster|Tür|Tor)$/i.test(o.name))
+          && title.toLowerCase().indexOf(o.room.toLowerCase()) === -1) {
+          title = o.room + ' ' + title;
+        }
         rows.push({
           id: 'casora:open:' + id,
-          when: since,
-          label: openName + ' ist offen',
+          when: o.since,
+          label: title + ' ist offen',
           sub: 'Seit ' + (mins < 60 ? mins + ' Min.'
             : Math.round(mins / 60) + ' Std.'),
           ongoing: true,

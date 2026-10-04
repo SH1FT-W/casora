@@ -26,7 +26,8 @@ for (const s of [
 const hass = { states, callWS: () => Promise.resolve([]),
   entities: { 'binary_sensor.fenster_schlafzimmer': { device_id: 'd1' }, 'binary_sensor.fenster_hwr': { area_id: 'hwr' },
     'binary_sensor.haustuer_schloss_tuer': { device_id: 'schloss' }, 'binary_sensor.haustuer_kontakt': { device_id: 'kontakt' } },
-  devices: { d1: { area_id: 'schlafzimmer' }, schloss: { area_id: 'flur' }, kontakt: { area_id: 'flur' } } };
+  devices: { d1: { area_id: 'schlafzimmer' }, schloss: { area_id: 'flur' }, kontakt: { area_id: 'flur' } },
+  areas: { schlafzimmer: { name: 'Schlafzimmer' }, hwr: { name: 'HWR' }, flur: { name: 'Flur' } } };
 
 const store = {};
 globalThis.window = globalThis;
@@ -44,7 +45,7 @@ new Function(mod)();
 
 const rows = await window._casoraNotify.refresh();
 const open = rows.filter((r) => /ist offen$/.test(r.label));
-assert.deepEqual(open.map((r) => r.label).sort(), ['Fenster ist offen', 'Fenster ist offen', 'Haustür ist offen', 'Terrassentür ist offen'],
+assert.deepEqual(open.map((r) => r.label).sort(), ['HWR Fenster ist offen', 'Haustür ist offen', 'Schlafzimmer Fenster ist offen', 'Terrassentür ist offen'],
   'Haustür nur einmal, Terrassentür und beide „Fenster“ (verschiedene Räume) eigene Meldung: ' + JSON.stringify(open.map((r) => r.label)));
 // Antippen öffnet „Türen & Fenster“ (Kontakte), nicht das Schloss-Popup (04.10.2026).
 for (const r of open) {

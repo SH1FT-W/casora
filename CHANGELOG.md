@@ -4,6 +4,17 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.0.5 – 04.10.2026
+
+### Fixed
+- Bell after a Home Assistant restart: open windows and doors showed “Open for 10 min” and appeared again
+  under New although they had been open for hours and were already read. Casora now remembers when each
+  door or window contact was opened and keeps that across restarts, so the duration stays right and a read
+  entry stays read.
+- Bell: two contacts with the same name (for example “Window” in the bedroom and in the utility room) both
+  read “Window is open” under New. The room now comes first in every section, like “Bedroom Window is open”,
+  also right after loading the page.
+
 ## 1.0.4 – 04.10.2026
 
 ### Improved

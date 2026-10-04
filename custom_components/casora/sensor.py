@@ -89,7 +89,8 @@ class VentSensor(SensorEntity):
 
 
 class MediaPauseSensor(SensorEntity):
-    """Pausiert seit je Media-Player (media_pause.py), für window._casoraPausedSince."""
+    """Pausiert seit je Media-Player und offen seit je Kontakt (media_pause.py),
+    für window._casoraPausedSince und window._casoraOpenSince."""
 
     _attr_should_poll = False
     _attr_unique_id = f"{DOMAIN}_media_paused"
@@ -98,7 +99,7 @@ class MediaPauseSensor(SensorEntity):
     _attr_icon = "mdi:pause-circle-outline"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     # Ändert sich bei jedem Pausieren – nicht in die Datenbank.
-    _unrecorded_attributes = frozenset({"players"})
+    _unrecorded_attributes = frozenset({"players", "contacts"})
 
     def __init__(self, pause) -> None:
         self.pause = pause
@@ -114,7 +115,7 @@ class MediaPauseSensor(SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        return {"players": dict(self.pause.players)}
+        return {"players": dict(self.pause.players), "contacts": dict(self.pause.contacts)}
 
 
 class KiSensor(RestoreEntity, SensorEntity):
