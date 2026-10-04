@@ -23,6 +23,9 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   to nothing towards the bottom), so section headings, the title and the weather stay readable on any photo.
   On the home page and room pages on desktop, tablet and phone, including the phone's room view. Text,
   cards and the navigation bar are unchanged and sit above it. Dark, Standard and Glass are unchanged.
+- Updates popup: after installing an update that needs a restart, the open popup now rebuilds itself. The
+  row leaves the available updates, “Waiting for restart” appears and the heading offers “Restart now”,
+  without closing and reopening the popup. After the restart the section disappears again.
 
 ## 1.0.4 – 04.10.2026
 

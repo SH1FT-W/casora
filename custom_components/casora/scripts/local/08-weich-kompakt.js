@@ -203,14 +203,15 @@
     var watchB = [C.backupLast, C.backupState, AI];
     var f = {};
     f.hero = { card: K.secCard(all.concat(watchB), call('_casoraSoftUpd', 'hero', C), states) };
-    if (fl.restart) f.restart = fl.restart;
+    /* 1.0.5: „Wartet auf Neustart“ steht live im Kopf (sec 'hero'), nicht als eigenes Feld – ein
+       leeres Rasterfeld kostete einen Abstand, und beim Öffnen gebaut fehlte es nach der Installation. */
     if (fl.upd) f.upd = fl.upd;
     var warn = U.hasWarn(states);
     if (warn && fl.ai) f.ai = fl.ai;
     var sysIds = (C.system || []).map(function (s) { return s[0]; }).concat(['update.hacs_update', 'update.casora_update', C.backupNext]);
     var Cm = Object.assign({}, C, { aiInMore: !warn });
     f.more = { card: K.secCard(all.concat(watchB, sysIds), call('_casoraSoftUpd', 'more', Cm), states) };
-    var lay = K.layout({ fields: f, top: ['hero', 'restart'], left: ['upd'], right: ['ai', 'more'], moveLeft: [] });
+    var lay = K.layout({ fields: f, top: ['hero'], left: ['upd'], right: ['ai', 'more'], moveLeft: [] });
     return lay;
   };
   var logoOf = function (states, id) {
@@ -277,8 +278,11 @@
           : 'KI: ' + (n === 1 ? 'unkritisch' : 'alle unkritisch');
       }
       var head = n === 0 ? 'Alles aktuell' : n === 1 ? '1 Update verfügbar' : n + ' Updates verfügbar';
+      var X0 = window._casoraUpdX;
+      var rest = X0 && X0.restart ? X0.restart(states, { UI: UI, headOut: function (t) { return UI.label(t); },
+        logoOf: function (id) { return logoOf(states, id); } }) : '';
       return UI.line(head, [busy ? (busy === 1 ? 'Wird installiert' : busy + ' werden installiert') : null, ki, backup],
-        { tone: n ? null : 'good' });
+        { tone: n ? null : 'good' }) + (rest ? '<div style="text-align:left;">' + rest + '</div>' : '');
     }
     if (part === 'more') {
       var X = window._casoraUpdX, secs = [];
