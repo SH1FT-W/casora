@@ -379,7 +379,7 @@ Casora Weich:
       casora-hero-weather-glyph-filter: brightness(0) opacity(0.72)
       # Handy-Navbar (04-navigation.js): Creme statt dunklem Glas
       casora-mnav-bg: rgba(251,248,243,0.82)
-      casora-mnav-pane: rgba(255,255,255,0.93)
+      casora-mnav-pane: rgba(251,248,243,0.94)
       casora-mnav-blur: blur(60px) saturate(180%)
       casora-mnav-shadow: 0 6px 22px rgba(60,40,20,0.16)
       # Menü-Glas (casoraMenuGlass: Navbar, ⋯-Menüs): Creme statt dunkel
