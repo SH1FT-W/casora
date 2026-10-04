@@ -19705,6 +19705,11 @@ class CasoraPanel extends HTMLElement {
     hint.className = "shothint";
     hint.textContent = "Choose a photo, or drop one onto a slot.";
     fs.appendChild(hint);
+    let pick = null;
+    let dropTo = null;
+    // Daneben fallen gelassen öffnet der Browser sonst das Bild selbst und verlässt das Studio.
+    shots.ondragover = (ev) => ev.preventDefault();
+    shots.ondrop = (ev) => ev.preventDefault();
 
     const preview = () => {
       const chosen = (this._imgs || []).find((i) => i.name === room.variables.image);
@@ -19718,14 +19723,14 @@ class CasoraPanel extends HTMLElement {
             + '<span class="shotover"><span class="shotglyph"></span>'
             + (url ? "Replace" : "Add " + label.toLowerCase()) + "</span>"
             + `<span class="cap">${label}</span>`;
-          w.onclick = () => this._pickFor(variant);
+          w.onclick = () => pick && pick(variant);
           w.ondragover = (ev) => { ev.preventDefault(); w.classList.add("over"); };
           w.ondragleave = () => w.classList.remove("over");
           w.ondrop = (ev) => {
             ev.preventDefault();
             w.classList.remove("over");
             const f = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
-            if (f) this._dropFor(f, variant);
+            if (f && dropTo) dropTo(f, variant);
           };
           shots.appendChild(w);
         });
@@ -19788,49 +19793,85 @@ class CasoraPanel extends HTMLElement {
 
     const file = document.createElement("input");
     file.type = "file";
-    file.accept = ".jpg,.jpeg,.png,.webp";
+    // Ohne HEIC in der Liste wandelt iOS Fotos beim Auswählen selbst in JPEG um.
+    file.accept = "image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp";
     file.hidden = true;
     fs.appendChild(file);
 
+    // Vom Server (code) bzw. vor dem Senden erkannte Fehler, in Klartext.
+    const MAX_MB = 16;
+    const why = {
+      too_large: `This photo is larger than ${MAX_MB} MB. Please choose a smaller one.`,
+      heic: "HEIC photos cannot be read here. Please export the photo as JPG.",
+      type: "This file is not a photo Casora can use. Please choose a JPG, PNG or WebP image.",
+      broken: "The photo could not be read. Please export it again as JPG.",
+      name: "Please choose another name for the photo.",
+      write: "Home Assistant could not save the photo.",
+    };
+    const looksHeic = (f) => /\.(heic|heif)$/i.test(f.name || "") || /hei[cf]/i.test(f.type || "");
+    const looksImage = (f) => /^image\//.test(f.type || "") || /\.(jpe?g|png|webp|hei[cf])$/i.test(f.name || "");
+
     const send = async (blob, variantValue) => {
-      const name = await this._ask({
+      if (!blob) return;
+      if (blob.size > MAX_MB * 1024 * 1024) return this._status(why.too_large, "err");
+      if (!looksImage(blob)) return this._status(why.type, "err");
+      const cur = room.variables.image || "";
+      // Mitgelieferte Beispielfotos (…-demo) lassen sich nicht überschreiben: dann der Raumname.
+      const suggest = cur && !/-demo$/.test(cur) ? cur : slug(room.name || room.path || "room");
+      const asked = await this._ask({
         title: "Image name",
         message: "Lowercase letters, digits and hyphens. Uploading the same name replaces it.",
-        value: room.variables.image || slug(room.name),
+        value: suggest,
         confirmLabel: "Upload",
+        validate: (v) => (/-(demo|night)$/.test(slug(v)) ? why.name : ""),
       });
-      if (!name) return;
+      if (!asked) return;
+      const name = slug(typeof asked === "string" ? asked : asked.value);
       const body = new FormData();
       body.append("name", name);
       body.append("variant", variantValue);
-      body.append("file", blob);
-      shots.classList.add("busy");
-      this._status("Uploading\u2026");
+      // Dateiname nur als Hinweis; der Server erkennt die Bildart am Inhalt.
+      body.append("file", blob, looksHeic(blob) ? "photo.heic" : "photo");
+      const busy = () => this.shadowRoot.querySelector(".shots");
+      const b0 = busy();
+      if (b0) b0.classList.add("busy");
+      this._status("Uploading…");
       try {
         const res = this._hass.fetchWithAuth
           ? await this._hass.fetchWithAuth("/api/casora/images", { method: "POST", body })
           : await fetch("/api/casora/images", { method: "POST", body });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || res.status);
+        let data = {};
+        try { data = await res.json(); } catch (e) { data = {}; }
+        if (!res.ok) {
+          const code = data.code || (res.status === 413 ? "too_large" : "");
+          const err = new Error(data.message || String(res.status));
+          err.nice = why[code] || "";
+          throw err;
+        }
         this._imgs = data.images || [];
-        room.variables.image = name;
-        this._status(`Uploaded ${name} (${variantValue})`, "ok");
-        this._log(`uploaded ${name} ${variantValue}`, "ok");
-        fill();
+        this._imgsLoaded = true;
+        room.variables.image = data.name || name;
+        this._markDirty();
+        this._status(`Uploaded ${room.variables.image} (${variantValue})`, "ok");
+        this._log(`uploaded ${room.variables.image} ${variantValue}`, "ok");
+        // Der Abschnitt kann während der Namensfrage neu gezeichnet worden sein: dann neu aufbauen.
+        if (sel.isConnected) fill(); else this._renderForm();
         this._setBackdrop();
       } catch (e) {
-        this._status("Upload failed: " + e.message, "err");
+        this._status(e.nice || ("Upload failed: " + e.message), "err");
         this._log("upload failed: " + e.message, "err");
       }
-      shots.classList.remove("busy");
+      const b1 = busy();
+      if (b1) b1.classList.remove("busy");
+      if (b0 && b0 !== b1) b0.classList.remove("busy");
     };
 
-    this._pickFor = (variantValue) => {
+    pick = (variantValue) => {
       file.value = "";
       file.onchange = () => { if (file.files && file.files[0]) send(file.files[0], variantValue); };
       file.click();
     };
-    this._dropFor = send;
+    dropTo = send;
 
     fill();
     this._images()

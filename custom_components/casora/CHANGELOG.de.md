@@ -19,6 +19,15 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   Raum den Gerätenamen oder eine Nummer, sodass nie zwei gleiche Zeilen entstehen.
 - Glocke: Ein laufendes Gerät mit Restzeit sprang nach dem Lesen sofort wieder unter „Neu“.
 - Glocke: Einträge mit gleicher Uhrzeit tauschten beim Aktualisieren nicht mehr ihre Reihenfolge.
+- Studio, Hintergrundbild eines Raums: Eigene Fotos hochladen klappt jetzt zuverlässig, per Klick und per
+  Ziehen auf den Tag- oder Nachtplatz. Das neue Foto ist sofort gewählt und steht ohne Neuladen in der Liste
+  und in der Vorschau; die Beispielfotos bleiben in der Liste, Speichern übernimmt es. Fotos bis 16 MB gehen
+  durch (vorher 12 MB), PNG und WebP werden als JPG abgelegt, damit das Dashboard sie findet, große Fotos
+  werden auf 2560 px verkleinert und iPhone-Fotos richtig gedreht. Dateinamen mit Umlauten oder Leerzeichen
+  gehen, der Fotoname wird bereinigt statt abgelehnt. Ein Nachtfoto unter neuem Namen gilt auch tagsüber,
+  bis ein Tagfoto dazukommt. HEIC-Dateien bekommen eine klare Meldung („als JPG exportieren“), und jeder
+  Fehler sagt jetzt, was zu tun ist, statt eines technischen Textes. Ein ersetztes Foto erscheint sofort
+  statt des alten.
 ### Verbessert
 - Weich, hell: Über dem Hintergrundfoto liegt jetzt ein heller Leinen-Schleier (oben etwa 66 %, nach unten
   auslaufend), damit Abschnittsüberschriften, Titel und Wetter auf jedem Foto lesbar sind. Auf Startseite und

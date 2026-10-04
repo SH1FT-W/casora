@@ -18,6 +18,14 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   the device name or a number in the same room, so two identical rows never appear.
 - Bell: a running appliance with remaining time jumped back under "New" right after being read.
 - Bell: entries with the same time no longer swap places on refresh.
+- Studio, room background photo: uploading your own photo works reliably now, by click and by dragging it
+  onto the day or night slot. The new photo is selected right away and shows in the list and the preview
+  without reloading the page; the example photos stay in the list, and Save keeps it. Photos up to 16 MB
+  are accepted (before: 12 MB), PNG and WebP are stored as JPG so the dashboard finds them, large photos
+  are scaled down to 2560 px, and iPhone photos are turned upright. File names with umlauts or spaces work,
+  and the photo name is cleaned up instead of rejected. A night photo for a new name also serves by day
+  until a day photo is added. HEIC files get a clear message ("export as JPG"), and every error now says
+  what to do instead of showing a technical text. A replaced photo shows at once instead of the old one.
 ### Improved
 - Soft look, light: a light linen veil now lies over the background photo (about 66 % at the top, fading
   to nothing towards the bottom), so section headings, the title and the weather stay readable on any photo.
