@@ -396,7 +396,9 @@
     });
   ]]]`);
 
-  const chartColor = variables.chart_color || '#30D158';
+  /* Weich (04.10.2026): ruhiges Türkis statt des grellen Cyan (#00C3D0), wie die Weich-Kacheln. */
+  const chartColor = (window._casoraSoft && window._casoraSoft() && (!variables.chart_color || /^#00c3d0$/i.test(variables.chart_color)))
+    ? '#5E9E96' : (variables.chart_color || '#30D158');
   /* Verlauf im 2.1-Muster: Zeilen mit data-hp-metric schalten dieses Diagramm um (statt HA-More-Info). */
   const hpOk = typeof window._hpChartCfg === 'function';
   const reg1 = (eid, label, span, color) => {
