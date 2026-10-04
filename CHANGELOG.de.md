@@ -13,6 +13,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - Sicherheits-Badge: Eine Kamera, die zwar als bereit gemeldet wird, aber kein Bild liefert (z. B. über einen Proxy), zählte im Badge als in Ordnung, während die Kamerakarte schon „Offline“ zeigte. Der Badge meldet sie jetzt ebenfalls als offline, auch der eigene Kamera-Badge im Raum.
 
 ### Verbessert
+- Dashboard, „…“-Menü: „Aktualisieren“ und „Neu laden (Cache leeren)“ sind jetzt ein Eintrag „Aktualisieren“, der beim Neuladen immer auch Casoras Zwischenspeicher leert.
 - Raumansicht am Handy (Weich): mehr Luft zwischen der Badge-Reihe unter dem Raumnamen und der ersten Kachelreihe (40 px statt 24 px), die Badges kleben nicht mehr an den Kacheln. Einstellbar über die Theme-Variable `casora-room-badges-gap-mobile`.
 - Medien-Popup an Desktop und Tablet (Apple TV und andere Player mit Apps): Die linke Spalte (Ausschalten, Apple Music öffnen, Weitere Einstellungen) hat jetzt eine eigene Überschrift „Gerät“ im selben Stil wie „Apps“ rechts, beide Spalten beginnen auf gleicher Höhe.
 
