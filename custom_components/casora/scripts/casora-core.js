@@ -9,6 +9,34 @@
   (document.head || document.documentElement).appendChild(l);
 })();
 
+// casora-room-name:start
+// Name der Übersicht (04.10.2026): Übersetzt wird nur ein Name, den Casora selbst angelegt hat
+// (variables.casora_auto_name, z. B. 'home') und der noch unverändert ist ('Home'/'Zuhause'/leer).
+// Jeder andere Name steht genau so da, wie er gespeichert ist – auch „Home“ auf Deutsch, auch
+// ohne Markierung (ältere Dashboards). Eine Regel für Leiste, Raumtitel, Handy-Leiste und
+// Handy-Kopf; das Studio rechnet mit derselben Regel (casora-panel.js, isDefaultHome).
+// Rückgabe {text, literal, auto}: literal = casora-i18n darf den Text nicht übersetzen.
+(function () {
+  if (window.casoraRoomName) return;
+  var WORDS = { home: ['Home', 'Zuhause'] };
+  var norm = function (x) { return String(x == null ? '' : x).trim().toLowerCase(); };
+  var isWord = function (n) {
+    return Object.keys(WORDS).some(function (k) { return WORDS[k].some(function (w) { return norm(w) === norm(n); }); });
+  };
+  window.casoraRoomName = function (name, vars, lang) {
+    var v = vars || {};
+    var n = String(name == null ? '' : name).trim();
+    var w = WORDS[v.casora_auto_name];
+    if (w && v.name_literal !== true && (!n || w.some(function (x) { return norm(x) === norm(n); }))) {
+      var text = lang ? (String(lang).indexOf('de') === 0 ? w[1] : w[0])
+        : (window.casoraTr ? window.casoraTr(w[0]) : w[0]);
+      return { text: text, literal: false, auto: true };
+    }
+    return { text: n, literal: v.name_literal === true || (!!n && isWord(n)), auto: false };
+  };
+})();
+// casora-room-name:end
+
 // Gefüllte Symbolfamilie in Menüs (Fix-Runde 1, A-21): Setzt ein Design
 // --casora-menu-icons-filled: 1, zeigen die Menüs Kontur-Symbole in ihrer gefüllten Form
 // (mdi: …-outline → ohne Suffix; eigene Sätze wie ios: …-fill bzw. …-inverse, nur wenn es
@@ -2595,10 +2623,14 @@ window.casoraMenuGlass = {
 
         const label = document.createElement('span');
         label.className = 'label';
-        // route.literal: eigener Name der Übersicht (Studio: name_literal) – wie der Raumtitel
-        // unübersetzt, sonst stünde oben „Zuhause“ und im Titel „Home“ (04.10.2026).
-        if (route.literal) label.setAttribute('data-no-i18n', '');
-        label.textContent = window.casoraTr && !route.literal ? window.casoraTr(route.label || '') : (route.label || '');
+        // Name der Übersicht nach casoraRoomName: übersetzt nur mit route.auto (von Casora angelegt,
+        // unverändert); „Home“ ohne Markierung steht wie gespeichert – wie Raumtitel und Handy-Leiste.
+        const nm = window.casoraRoomName
+          ? window.casoraRoomName(route.label, { casora_auto_name: route.auto, name_literal: route.literal === true }) : null;
+        const lit = nm ? nm.literal : !!route.literal;
+        if (lit) label.setAttribute('data-no-i18n', '');
+        label.textContent = nm && nm.auto ? nm.text
+          : (window.casoraTr && !lit ? window.casoraTr(route.label || '') : (route.label || ''));
         btn.appendChild(label);
 
         const badge = document.createElement('span');

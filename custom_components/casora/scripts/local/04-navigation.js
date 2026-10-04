@@ -119,7 +119,12 @@
       var s = this._bHome && this._bHome.querySelector(':scope > span');
       if (!s) return;
       var own = this._cfg && typeof this._cfg.home_label === 'string' ? this._cfg.home_label.trim() : '';
-      var t = own || T('Home');
+      /* Regel wie überall (casoraRoomName): übersetzt nur mit home_auto (von Casora angelegt,
+         unverändert); ohne Markierung steht „Home“ wie gespeichert (04.10.2026). */
+      var r = window.casoraRoomName ? window.casoraRoomName(own || 'Home',
+        { casora_auto_name: !own && this._cfg && this._cfg.home_auto ? 'home' : undefined, name_literal: !!own }) : null;
+      var t = r ? r.text : (own || T('Home'));
+      if (r && r.literal) s.setAttribute('data-no-i18n', ''); else s.removeAttribute('data-no-i18n');
       if (s.textContent !== t) s.textContent = t;
     }
     getCardSize() { return 1; }

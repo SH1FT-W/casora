@@ -612,9 +612,10 @@ function mobileFromRooms(mobile, templates, rooms) {
 
 // A sibling is the same stem plus -mobile, never any other mobile dashboard.
 // rooms (Desktop-Räume, optional): Der Handy-Titel der Startseite folgt dem Namen der
-// Übersicht – ein eigener Name („Unser Haus“, auch „Home“ auf Deutsch mit name_literal)
-// geht als home_name/name_literal an casora_mobile_weather; der Standard bleibt „Home“
-// (übersetzt „Zuhause“). Ohne rooms (Handy allein geöffnet) bleibt der Titel unberührt.
+// Übersicht. Von Casora angelegt und unverändert (isDefaultHome): home_auto – übersetzt
+// („Zuhause“/„Home“). Jeder andere Name („Unser Haus“, „Home“ auf Deutsch) geht als
+// home_name/name_literal an casora_mobile_weather und als home_label an die Handy-Leiste.
+// Ohne rooms (Handy allein geöffnet) bleibt der Titel unberührt.
 function markPhoneManaged(cfg, showBell, showAssist, rooms) {
   const home = Array.isArray(rooms) ? (rooms.find((r) => r && r.path === "home") || rooms[0]) : null;
   (function walk(cards) {
@@ -624,8 +625,8 @@ function markPhoneManaged(cfg, showBell, showAssist, rooms) {
       // Desktop-Leiste – ein eigener Name steht als home_label (wie getippt), ohne ihn
       // zeigt die Leiste den Standard „Home“/„Zuhause“ nach Sprache.
       if (c.type === MOBILE_NAV && Array.isArray(rooms)) {
-        if (home && home.name && !isDefaultHome(home, rooms)) c.home_label = home.name;
-        else delete c.home_label;
+        if (home && home.name && !isDefaultHome(home, rooms)) { c.home_label = home.name; delete c.home_auto; }
+        else { delete c.home_label; if (home && isDefaultHome(home, rooms)) c.home_auto = true; else delete c.home_auto; }
       }
       if (c.template === "casora_mobile_weather") {
         c.variables = { ...(c.variables || {}), casora_ui_managed: true };
@@ -636,11 +637,13 @@ function markPhoneManaged(cfg, showBell, showAssist, rooms) {
         if (Array.isArray(rooms)) {
           if (home && home.name && !isDefaultHome(home, rooms)) {
             c.variables.home_name = home.name;
-            if (isLiteralName(home)) c.variables.name_literal = true;
-            else delete c.variables.name_literal;
+            c.variables.name_literal = true;
+            delete c.variables.home_auto;
           } else {
             delete c.variables.home_name;
             delete c.variables.name_literal;
+            if (home && isDefaultHome(home, rooms)) c.variables.home_auto = true;
+            else delete c.variables.home_auto;
           }
         }
       }
@@ -709,9 +712,11 @@ const CHIPS_ALIAS_OF = (() => {
 const sameRoomName = (a, b) =>
   String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
 
-// Der Übersichtsraum (Pfad „home“, sonst der erste Raum) heißt auf Deutsch „Zuhause“,
-// sonst „Home“ – in der HA-Sprache. Gespeichert wird der Standard als „Home“; nur ein
-// eigener Name („Unser Haus“) wird gespeichert und angezeigt, wie er ist.
+// Name der Übersicht (Pfad „home“, sonst der erste Raum), Regel seit 04.10.2026 – dieselbe wie
+// window.casoraRoomName im Dashboard (casora-core.js): Übersetzt („Zuhause“ auf Deutsch, sonst
+// „Home“) wird nur ein Name, den Casora selbst angelegt hat (variables.casora_auto_name: "home",
+// gesetzt von Assistent, neuem Dashboard, Umzug) und der unverändert ist. Ein eingetippter oder
+// geänderter Name – und jeder Name ohne Markierung (ältere Dashboards) – steht, wie er ist.
 const HOME_ROOM_NAME = "Home";
 const isDefaultHomeName = (n) => /^(home|zuhause)?$/i.test(String(n == null ? "" : n).trim());
 const haLang = (hass) => {
@@ -724,10 +729,20 @@ const shotLang = (url, hass) => (url && haLang(hass).indexOf("de") === 0 ? url.r
 // rooms: die Raumliste – ohne Pfad „home“ ist der erste Raum die Übersicht.
 const isHomeRoom = (room, rooms) => !!room && (room.path === "home"
   || (Array.isArray(rooms) && rooms[0] === room && !rooms.some((r) => r && r.path === "home")));
-// Selbst eingetippter Name der Übersicht (variables.name_literal): steht, wie er ist –
-// auch „Home“ auf einem deutschen HA. Ohne Merker gilt „Home“/„Zuhause“ als Standard.
+const AUTO_HOME = "home";
+// Selbst eingetippter Name (variables.name_literal, seit 04.10.2026 nur noch zusätzlich): steht, wie er ist.
 const isLiteralName = (room) => !!(room && room.variables && room.variables.name_literal);
-const isDefaultHome = (room, rooms) => isHomeRoom(room, rooms) && isDefaultHomeName(room.name) && !isLiteralName(room);
+// Von Casora angelegt (Markierung casora_auto_name) und nicht als eigener Name gemerkt.
+const isAutoHome = (room) => !!(room && room.variables && room.variables.casora_auto_name === AUTO_HOME && !isLiteralName(room));
+const isDefaultHome = (room, rooms) => isHomeRoom(room, rooms) && isAutoHome(room) && isDefaultHomeName(room.name);
+// Casora legt die Übersicht an: Standardname „Home“ + Markierung (übersetzt beim Anzeigen).
+const markAutoHome = (room) => {
+  room.variables = room.variables || {};
+  room.variables.casora_auto_name = AUTO_HOME;
+  delete room.variables.name_literal;
+  room.name = HOME_ROOM_NAME;
+  return room;
+};
 // Anzeigename eines Raums (Liste, Editor, Vorschau, Versionen).
 const roomLabel = (room, rooms, hass) => {
   if (!room) return "";
@@ -736,14 +751,16 @@ const roomLabel = (room, rooms, hass) => {
 };
 // Zu speichernder Name: der Standard der Übersicht immer als „Home“ (sprachunabhängig).
 const storedRoomName = (name, home) => (home && isDefaultHomeName(name) ? HOME_ROOM_NAME : name);
-// Name der Übersicht setzen: Leer oder genau das angezeigte Standardwort = Standard;
-// alles andere (auch „Home“ auf Deutsch) wird als eigener Name gemerkt.
+// Name der Übersicht setzen: Leer = Casoras Standard (wieder übersetzt). Das angezeigte
+// Standardwort unverändert stehen lassen behält die Markierung; alles andere (auch „Home“
+// auf Deutsch, auch bei einer Übersicht ohne Markierung) wird als eigener Name gemerkt.
 const setHomeName = (room, name, hass) => {
   const v = String(name || "").trim();
-  const literal = !!v && v !== homeRoomWord(hass);
   room.variables = room.variables || {};
-  if (literal) { room.name = v; room.variables.name_literal = true; }
-  else { room.name = storedRoomName(v, true); delete room.variables.name_literal; }
+  if (!v || (isAutoHome(room) && v === homeRoomWord(hass))) return markAutoHome(room).name;
+  room.name = v;
+  room.variables.name_literal = true;
+  delete room.variables.casora_auto_name;
   return room.name;
 };
 
@@ -2413,6 +2430,8 @@ function blankRoom(name, path, image) {
   const variables = { image: image };
   if (firstRunPerf) variables.performance = firstRunPerf;
   if (firstRunFont) variables.font = firstRunFont;
+  // Casoras eigene Übersicht („Home“, Pfad home): markiert, damit sie übersetzt wird.
+  if (path === "home" && name === HOME_ROOM_NAME) variables.casora_auto_name = AUTO_HOME;
   return {
     title: path,
     path: path,
@@ -2803,9 +2822,10 @@ function retargetRoutes(root, urlPath, rooms, extras) {
       node.routes = rooms
         .map((r) => {
           const route = { url: `/${urlPath}/${r.path}`, label: r.name, icon: roomIcon(r.name) };
-          // Selbst eingetippter Name (name_literal, z. B. „Home“ auf Deutsch): die Leiste zeigt ihn
-          // wie der Raumtitel, ohne Übersetzung (04.10.2026).
-          if ((r.variables || {}).name_literal) route.literal = true;
+          // Name der Übersicht wie Raumtitel und Handy-Leiste (casoraRoomName): route.auto nur, wenn
+          // Casora ihn angelegt hat und er unverändert ist; ein eigener Name steht ohne Übersetzung.
+          if (isDefaultHome(r, rooms)) route.auto = AUTO_HOME;
+          else if ((r.variables || {}).name_literal || (isHomeRoom(r, rooms) && isDefaultHomeName(r.name))) route.literal = true;
           const m = (r.variables || {}).motion_entity;
           // The global helper is a mute switch: absent means nothing to mute.
           if (m) route.badge = { show: "[[[ const b = states['input_boolean.casora_motion_badges'];"
@@ -12853,6 +12873,8 @@ class CasoraPanel extends HTMLElement {
       // Handy: der Abschnitt „Favoriten“ heißt intern immer „Favorites“ (übersetzt beim Anzeigen) –
       // übersetzt gespeichert schlug der Rundlauf fehl und das Handy-Layout wurde neu gebaut.
       if (r.name && !isFav(r)) r.name = storedRoomName(tn(r.name), isHomeRoom(r, list));
+      // Umzug: Hemmas Standard-Übersicht („Home“/„Zuhause“) gilt als von Casora angelegt.
+      if (isHomeRoom(r, list) && r.name === HOME_ROOM_NAME && !isFav(r)) markAutoHome(r);
       if (r.title) r.title = tn(r.title);
       eachObject(r.tiles, (o) => { if (o.type === "custom:button-card" && typeof o.name === "string") o.name = tn(o.name); });
     });
@@ -14623,7 +14645,10 @@ class CasoraPanel extends HTMLElement {
       return this._status("A room with this name already exists.", "err");
     }
     const imgs = await this._images().catch(() => []);
-    rooms.push(blankRoom(name.trim(), path, roomPhoto(name, path, imgs)));
+    const added = blankRoom(name.trim(), path, roomPhoto(name, path, imgs));
+    // Selbst eingetippt: nie Casoras übersetzter Standardname, auch wenn er „Home“ heißt.
+    delete added.variables.casora_auto_name;
+    rooms.push(added);
     const fresh = rooms[rooms.length - 1];
     if (picked.icon) {
       fresh.variables = fresh.variables || {};
@@ -24024,7 +24049,7 @@ window.__casoraPanelInternals = {
   findType, tileTypeAny, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
-  isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, badgeOrderOf, BADGE_ORDER_IDS,
+  isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
   linkPair, syncPairRooms, syncPairTiles, carryPhoneSizes, expandMobileConfig, extractMobileConfig,
   deriveEnergyRooms,
   CASORA_ACCENTS, accentLabel, swatchCss,

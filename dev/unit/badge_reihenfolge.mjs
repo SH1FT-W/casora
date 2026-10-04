@@ -23,7 +23,9 @@ const code = [
   one(/^const MOBILE_NAV = .*$/m),
   one(/^const isDefaultHomeName = .*$/m),
   one(/^const isHomeRoom = [^;]*;/ms),
+  one(/^const AUTO_HOME = .*$/m),
   one(/^const isLiteralName = .*$/m),
+  one(/^const isAutoHome = .*$/m),
   one(/^const isDefaultHome = .*$/m),
   grab(/^function markPhoneManaged\(/m),
 ].join('\n');
@@ -113,8 +115,13 @@ const cfg = () => ({ views: [{ cards: [{ type: 'custom:casora-mobile-nav', home_
 const nav = (c) => c.views[0].cards[0];
 const named = [{ path: 'home', name: 'Unser Haus', variables: {} }, { path: 'kueche', name: 'Küche', variables: {} }];
 assert.equal(nav(markPhoneManaged(cfg(), true, true, named)).home_label, 'Unser Haus', 'eigener Name → home_label');
-const std = [{ path: 'home', name: 'Home', variables: {} }];
+// Seit 04.10.2026: nur Casoras markierter Standardname wird übersetzt (home_auto), ohne
+// Markierung steht „Home“ wie gespeichert.
+const std = [{ path: 'home', name: 'Home', variables: { casora_auto_name: 'home' } }];
 assert.equal(nav(markPhoneManaged(cfg(), true, true, std)).home_label, undefined, 'Standardname → kein home_label');
+assert.equal(nav(markPhoneManaged(cfg(), true, true, std)).home_auto, true, 'Standardname → home_auto');
+const old = [{ path: 'home', name: 'Home', variables: {} }];
+assert.equal(nav(markPhoneManaged(cfg(), true, true, old)).home_label, 'Home', 'ohne Markierung → wie gespeichert');
 const lit = [{ path: 'home', name: 'Home', variables: { name_literal: true } }];
 assert.equal(nav(markPhoneManaged(cfg(), true, true, lit)).home_label, 'Home', 'getipptes „Home“ bleibt „Home“');
 assert.equal(nav(markPhoneManaged(cfg())).home_label, 'Alt', 'Handy allein geöffnet: unberührt');

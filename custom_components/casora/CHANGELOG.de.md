@@ -4,6 +4,14 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.4 – 04.10.2026
+
+### Behoben
+- Der Name der Übersicht steht jetzt überall gleich: Ein selbst vergebener Name (auch „Home“ auf
+  Deutsch) bleibt in Leiste, Raumtitel, Handy-Leiste, Handy-Kopf und Studio genau so stehen. Nur der
+  Name, den Casora selbst angelegt hat, folgt der Sprache der Oberfläche.
+- Updates-Popup: Der Abstand unter „Verfügbare Updates“ verschwindet nach dem Öffnen nicht mehr.
+
 ## 1.0.3 – 04.10.2026
 
 ### Neu
@@ -50,7 +58,8 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - Swipe-Kacheln (z. B. Pflanzen) werfen keinen eckigen Schatten mehr: der Stapel schneidet den Kartenschatten nicht mehr an einer rechteckigen Kante ab.
 - Handy: Antippen der Sicherheits-Badge zeigt wieder ihre Unter-Badges (Schlösser, Kameras, Kontakte), wie bei Klima und Licht.
 - Updates-Popup: Markenlogos in den Zeilen haben abgerundete Ecken wie ein App-Symbol, eckige Logos wirken im Kreis ruhig.
-- Die obere Navigation zeigt die Übersicht unter dem selbst eingetippten Namen (z. B. Home) wie der Raumtitel, statt ihn zu übersetzen.
+- Die obere Navigation zeigt die Übersicht unter dem selbst eingetippten Namen (z. B. Home) wie der
+  Raumtitel, statt ihn zu übersetzen.
 - Energie-Badge im Raum: Räume, die früher automatisch nur einen Leistungssensor eines Geräts bekamen, zeigen einmalig die Summe aller Geräte im Raum; ein Geräte-Gesamtsensor zählt allein, sonst jeder Kanal (nichts doppelt).
 - Pflanzen-Popup: Die Lichtzeile war orange markiert, obwohl die Pflanzen-Integration Licht gar nicht bewertet.
 - Keine Fehlermeldung mehr, wenn Home Assistant bei offenem Dashboard neu startet.

@@ -31,6 +31,12 @@ const code = [
   grab(/^function withoutRoutes\(/m),
   grab(/^function refreshTemplates\(/m),
   'const roomIcon = () => "mdi:home-variant";',
+  one(/^const isDefaultHomeName = .*$/m),
+  one(/^const isHomeRoom = [^;]*;/ms),
+  one(/^const AUTO_HOME = .*$/m),
+  one(/^const isLiteralName = .*$/m),
+  one(/^const isAutoHome = .*$/m),
+  one(/^const isDefaultHome = .*$/m),
   grab(/^function retargetRoutes\(/m),
   'return { fingerprintOf, refreshTemplates, retargetRoutes, templatePrint, hashStr, stable };',
 ].join('\n');

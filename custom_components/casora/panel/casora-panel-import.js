@@ -274,6 +274,8 @@
           // Hemmas Beispiel hatte temp_unit: 'F' – ohne Angabe folgt die Vorlage der Einheit von HA.
           delete vars.temp_unit;
           Object.assign(room.variables, vars);
+          // Hemmas Standard-Übersicht gilt als von Casora angelegt: wird übersetzt (04.10.2026).
+          if (I.markAutoHome && I.isHomeRoom(lr, legacyRooms) && nm === I.HOME_ROOM_NAME) I.markAutoHome(room);
           lr.tiles.forEach((t) => {
             const pick = choices && choices.get ? choices.get(t) : undefined;
             if (pick === "skip") return;

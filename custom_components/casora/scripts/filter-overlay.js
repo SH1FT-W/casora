@@ -634,6 +634,9 @@
     ].join(';');
     // Übersicht: „Zuhause“ (Quelltext Deutsch), in anderen Sprachen per casoraTr („Home“).
     title.textContent = window.casoraTr ? window.casoraTr('Zuhause') : 'Zuhause';
+    // Der kleine Titel übernimmt den fertigen Text des Handy-Kopfs (#name, schon nach
+    // casoraRoomName aufgelöst) – nicht noch einmal übersetzen, sonst „Home“ → „Zuhause“.
+    title.setAttribute('data-no-i18n', '');
     title.addEventListener('click', () => {
       const se = _dashHeader?.scrollEl;
       if (se === window) window.scrollTo({ top: 0, behavior: 'smooth' });

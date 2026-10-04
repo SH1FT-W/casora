@@ -7332,7 +7332,7 @@
   "hold_action": {
    "action": "none"
   },
-  "name": "[[[\n  const f = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  if (f === 'all') {\n    /* Titel = Name der Übersicht (Studio: variables.home_name, gesetzt nur bei eigenem Namen);\n       Standard bleibt „Home“ und wird übersetzt („Zuhause“). Fix-Runde 1, 01.10.2026. */\n    const own = String(variables.home_name || '').trim();\n    return own || 'Home';\n  }\n  const labels = {climate:'Klima',lights:'Beleuchtung',presence:'Personen',media:'Medien',security:'Sicherheit',energy:'Energie'};\n  return labels[f] || 'Zuhause';\n]]]\n",
+  "name": "[[[\n  const f = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  if (f === 'all') {\n    /* Titel = Name der Übersicht (Studio: variables.home_name bei eigenem Namen). Übersetzt nur\n       mit home_auto (von Casora angelegt, unverändert) – Regel casoraRoomName, 04.10.2026. */\n    const own = String(variables.home_name || '').trim();\n    const r = window.casoraRoomName ? window.casoraRoomName(own || 'Home',\n      { casora_auto_name: !own && variables.home_auto === true ? 'home' : undefined, name_literal: !!own || variables.name_literal === true }) : null;\n    return r ? r.text : (own || 'Home');\n  }\n  const labels = {climate:'Klima',lights:'Beleuchtung',presence:'Personen',media:'Medien',security:'Sicherheit',energy:'Energie'};\n  return labels[f] || 'Zuhause';\n]]]\n",
   "show_entity_picture": false,
   "show_icon": false,
   "show_label": false,
@@ -7377,7 +7377,7 @@
      "position": "relative"
     },
     {
-     "--casora-name-literal": "[[[\n  /* Selbst eingetippter Name der Übersicht (name_literal) – nicht übersetzen, z. B. „Home“ auf Deutsch.\n     Nur auf der Startseite (Filter „all“); Filter-Titel wie „Klima“ übersetzt casora-i18n weiter. */\n  const f = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  const lit = variables.name_literal === true && f === 'all' && !!String(variables.home_name || '').trim();\n  const n = this.shadowRoot && this.shadowRoot.getElementById('name');\n  if (n) {\n    if (lit) {\n      n.setAttribute('data-no-i18n', '');\n      const want = String(variables.home_name).trim();\n      if (n.textContent !== want) n.textContent = want;\n    } else n.removeAttribute('data-no-i18n');\n  }\n  return lit ? '1' : '0';\n]]]\n"
+     "--casora-name-literal": "[[[\n  /* Name der Übersicht nach casoraRoomName (04.10.2026): ohne home_auto nicht übersetzen, z. B.\n     „Home“ auf Deutsch. Nur auf der Startseite (Filter „all“); Filter-Titel wie „Klima“ übersetzt\n     casora-i18n weiter. */\n  const f = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  const own = String(variables.home_name || '').trim();\n  const r = window.casoraRoomName ? window.casoraRoomName(own || 'Home',\n    { casora_auto_name: !own && variables.home_auto === true ? 'home' : undefined, name_literal: !!own || variables.name_literal === true }) : null;\n  const lit = f === 'all' && (r ? r.literal : (variables.name_literal === true && !!own));\n  const n = this.shadowRoot && this.shadowRoot.getElementById('name');\n  if (n) {\n    if (lit) {\n      n.setAttribute('data-no-i18n', '');\n      const want = r ? r.text : own;\n      if (n.textContent !== want) n.textContent = want;\n    } else n.removeAttribute('data-no-i18n');\n  }\n  return lit ? '1' : '0';\n]]]\n"
     }
    ],
    "custom_fields": {
@@ -7481,7 +7481,8 @@
    "weather_entity": null,
    "weather_temp_sensor": null,
    "home_name": null,
-   "name_literal": false
+   "name_literal": false,
+   "home_auto": false
   }
  },
  "casora_motion": {
@@ -11876,7 +11877,7 @@
      "--casora-badge-rows": "[[[\n  const root = this.shadowRoot;\n  if (root && typeof window._casoraBadgeRows === 'function') window._casoraBadgeRows(root);\n  return '0';\n]]]\n"
     },
     {
-     "--casora-name-literal": "[[[\n  /* Selbst eingetippter Raumname (Studio: name_literal) – nicht übersetzen, z. B. „Home“ auf Deutsch. */\n  const lit = variables.name_literal === true;\n  const n = this.shadowRoot && this.shadowRoot.getElementById('name');\n  if (n) {\n    if (lit) {\n      n.setAttribute('data-no-i18n', '');\n      const want = String(this._config && this._config.name || '');\n      if (want && !want.startsWith('[[[') && n.textContent !== want) n.textContent = want;\n    } else n.removeAttribute('data-no-i18n');\n  }\n  return lit ? '1' : '0';\n]]]"
+     "--casora-name-literal": "[[[\n  /* Raumname nach casoraRoomName (04.10.2026): übersetzt nur, was Casora angelegt hat und\n     unverändert ist (variables.casora_auto_name); „Home“ ohne Markierung steht, wie gespeichert. */\n  const lit = window.casoraRoomName\n    ? window.casoraRoomName(this._config && this._config.name, variables).literal\n    : variables.name_literal === true;\n  const n = this.shadowRoot && this.shadowRoot.getElementById('name');\n  if (n) {\n    if (lit) {\n      n.setAttribute('data-no-i18n', '');\n      const want = String(this._config && this._config.name || '');\n      if (want && !want.startsWith('[[[') && n.textContent !== want) n.textContent = want;\n    } else n.removeAttribute('data-no-i18n');\n  }\n  return lit ? '1' : '0';\n]]]"
     },
     {
      "--casora-badge-order-security": "[[[\n  // Standard wie das Studio (BADGE_ORDER_IDS): gespeicherte Reihenfolge zuerst, was fehlt, danach.\n  const D = ['security', 'climate', 'lights', 'people', 'energy', 'scenes', 'media'];\n  const o = (Array.isArray(variables.badge_order) ? variables.badge_order : []).filter((x) => D.includes(x));\n  D.forEach((x) => { if (!o.includes(x)) o.push(x); });\n  return o.indexOf('security') + 1;\n]]]\n"

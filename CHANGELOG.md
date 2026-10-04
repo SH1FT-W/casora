@@ -4,6 +4,14 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.0.4 – 04.10.2026
+
+### Fixed
+- The overview's name now looks the same everywhere: a name you gave it (also “Home” in German) stays
+  exactly as you typed it in the navigation, room title, phone bar, phone header and Studio. Only the
+  name Casora set up itself follows the interface language.
+- Updates popup: the gap below Available updates no longer disappears after opening.
+
 ## 1.0.3 – 04.10.2026
 
 ### New
@@ -49,7 +57,8 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - Swipe tiles (e.g. plants) no longer cast a square shadow: the stack no longer clips the card shadow at a rectangular edge.
 - Phone: tapping the security badge shows its sub badges again (locks, cameras, contacts), like climate and lights.
 - Updates popup: brand logos in the rows get rounded corners like an app icon, so square logos look calm inside the circle.
-- The top navigation shows the overview under the name you typed (e.g. Home), like the room title, instead of translating it.
+- The top navigation shows the overview under the name you typed (e.g. Home), like the room title,
+  instead of translating it.
 - Room energy badge: rooms that earlier got just one device power sensor automatically now show the sum of all devices in the room once; a device total sensor counts alone, otherwise every channel counts (no double counting).
 - Plant popup: the light row was marked orange although the plant integration doesn't rate light.
 - No error message when Home Assistant restarts while the dashboard is open.
