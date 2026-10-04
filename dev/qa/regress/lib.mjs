@@ -184,10 +184,27 @@ export async function cards(pg, template) {
 
 // Der Home-Assistant-Oberfläche lokal andere Zustände unterschieben (nur dieser Browser,
 // nichts geht an HA): patch = { entity_id: { state, attributes? } | null (fehlt) }.
-export async function fakeStates(pg, patch) {
-  await pg.evaluate((p) => {
+// sticky: true hält den Patch auch über echte state_changed-Ereignisse hinweg (HA schickt bei
+// jedem Ereignis die volle Zustandsliste neu – ohne sticky kehrt ein „entferntes“ Gerät zurück,
+// sobald im Haus irgendein Zustand wechselt, z. B. durch parallel laufende Tests).
+export async function fakeStates(pg, patch, { sticky = false } = {}) {
+  await pg.evaluate(({ p, sticky }) => {
     const ha = document.querySelector('home-assistant');
     const hass = ha.hass;
+    if (sticky && typeof ha._updateHass === 'function') {
+      const apply = (st) => {
+        const out = { ...st };
+        for (const [id, v] of Object.entries(p)) {
+          if (v === null) { delete out[id]; continue; }
+          const old = out[id] || { entity_id: id, attributes: {}, context: { id: 'qa' } };
+          out[id] = { ...old, state: v.state, attributes: { ...old.attributes, ...(v.attributes || {}) } };
+        }
+        return out;
+      };
+      const orig = ha.__qaOrigUpdateHass || ha._updateHass;
+      ha.__qaOrigUpdateHass = orig;
+      ha._updateHass = function (obj) { return orig.call(this, obj && obj.states ? { ...obj, states: apply(obj.states) } : obj); };
+    }
     const states = { ...hass.states };
     for (const [id, v] of Object.entries(p)) {
       if (v === null) { delete states[id]; continue; } // Entität „fehlt“
@@ -200,6 +217,6 @@ export async function fakeStates(pg, patch) {
     const next = { ...hass, states };
     // Sonst: alle Karten bekommen den neuen hass wie bei einem echten state_changed.
     window.__pierce('*').forEach((el) => { if ('hass' in el && el.hass === hass) { try { el.hass = next; } catch (e) { /* nur lesen */ } } });
-  }, patch);
+  }, { p: patch, sticky });
   await pg.waitForTimeout(1200);
 }

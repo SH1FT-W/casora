@@ -26,6 +26,9 @@ const rowsIn = (o, out = []) => {
 const c = await ws();
 let made = false;
 async function cleanup() {
+  // settheme (Weich dunkel, unten) landet in den Benutzerdaten auf dem Server und bliebe für
+  // spätere Tests stehen (r20 sah dann ein dunkles Studio trotz HA hell) – zurücksetzen.
+  try { await c.cmd({ type: 'frontend/set_user_data', key: 'theme', value: null }); } catch (e) { /* egal */ }
   if (!made || process.env.R39_KEEP) return;
   const list = await c.cmd({ type: 'lovelace/dashboards/list' });
   for (const d of list.filter((x) => x.url_path === DASH || x.url_path === DASH + '-mobile')) {
