@@ -4,6 +4,13 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.0.5 – 04.10.2026
+
+### Fixed
+- Updates popup: after installing an update that needs a restart, the open popup now rebuilds itself. The
+  row leaves the available updates, “Waiting for restart” appears and the heading offers “Restart now”,
+  without closing and reopening the popup. After the restart the section disappears again.
+
 ## 1.0.4 – 04.10.2026
 
 ### Improved
