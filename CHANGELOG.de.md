@@ -33,10 +33,12 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - Weich dunkel: Auch die Menüs aus der Leiste unten haben keinen hellen Rand mehr.
 - Weich am Handy: Die Leiste unten hebt sich klar von den Kacheln ab (hell fast weiß, dunkel fast schwarz, ohne den alten hellen Rand).
 - Weich: Aquarium-Diagramme werden auch dann ruhig, wenn die Kachel eine eigene grelle Farbe mitbringt (etwa aus dem Hemma-Umzug).
-- Weich, hell: Über dem Hintergrundfoto liegt jetzt ein heller Leinen-Schleier (oben etwa 66 %, nach unten
-  auslaufend), damit Abschnittsüberschriften, Titel und Wetter auf jedem Foto lesbar sind. Auf Startseite und
-  Raumseiten an Desktop, Tablet und Handy, auch in der Raumansicht am Handy. Schrift, Karten und
-  Navigationsleiste bleiben unverändert und liegen darüber. Dunkel, Standard und Glas bleiben wie bisher.
+- Weich: Über dem Hintergrundfoto liegt jetzt ein Lesbarkeits-Schleier in der Grundfarbe, hell in Leinen,
+  dunkel im dunklen Grundton, damit Abschnittsüberschriften, Titel, Badges und Wetter auf jedem Foto lesbar
+  sind. Am Handy (Startseite, Räume, Raumansicht) oben etwa 66 % und nach unten auslaufend. An Desktop und
+  Tablet liegt er nur links hinter Titel, Badges und Überschriften (links etwa 65 %, nach rechts auslaufend),
+  das Foto rechts bleibt klar. Schrift, Karten und Navigationsleiste bleiben unverändert und liegen darüber.
+  Standard und Glas bleiben wie bisher.
 - Updates-Popup: Nach dem Installieren eines Updates, das einen Neustart braucht, baut sich das offene
   Popup jetzt selbst um. Die Zeile verschwindet aus den verfügbaren Updates, „Wartet auf Neustart“
   erscheint und der Kopf bietet „Jetzt neu starten“, ohne das Popup zu schließen und neu zu öffnen.

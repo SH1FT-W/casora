@@ -31,10 +31,12 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - Soft look in dark: menus opened from the bottom bar no longer have the old light rim either.
 - Soft look on the phone: the bottom bar stands out clearly from the tiles (almost white in light, almost black in dark, without the old light rim).
 - Soft look: aquarium charts also turn calm when the tile brings its own bright color (for example from a Hemma move).
-- Soft look, light: a light linen veil now lies over the background photo (about 66 % at the top, fading
-  to nothing towards the bottom), so section headings, the title and the weather stay readable on any photo.
-  On the home page and room pages on desktop, tablet and phone, including the phone's room view. Text,
-  cards and the navigation bar are unchanged and sit above it. Dark, Standard and Glass are unchanged.
+- Soft look: a readability veil in the base colour now lies over the background photo, linen in light mode
+  and the dark base tone in dark mode, so section headings, the title, badges and the weather stay readable
+  on any photo. On the phone (home page, rooms, room view) it is about 66 % at the top, fading towards the
+  bottom. On desktop and tablet it only sits on the left behind the title, badges and headings (about 65 %
+  on the left, fading to the right), so the photo stays clear on the right. Text, cards and the navigation
+  bar are unchanged and sit above it. Standard and Glass are unchanged.
 - Updates popup: after installing an update that needs a restart, the open popup now rebuilds itself. The
   row leaves the available updates, “Waiting for restart” appears and the heading offers “Restart now”,
   without closing and reopening the popup. After the restart the section disappears again.
