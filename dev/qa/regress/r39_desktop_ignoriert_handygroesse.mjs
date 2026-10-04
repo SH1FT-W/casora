@@ -87,8 +87,6 @@ try {
       if (!row) return null;
       return [...row.shadowRoot.querySelectorAll('#container > .card-wrapper')]
         .filter((w) => w.style.display !== 'none' && w.getBoundingClientRect().width > 0)
-        // Aquarium-Stapel (auto-entities) sitzt am Desktop schon ohne Größe tiefer – eigener Fall.
-        .filter((w) => !JSON.stringify(row._config.cards[+w.dataset.idx] || {}).includes('auto-entities'))
         .map((w) => {
           // Wrapper und Karte darin: eine Karte, die aus ihrem Platz rutscht, zählt mit.
           const a = w.getBoundingClientRect();
