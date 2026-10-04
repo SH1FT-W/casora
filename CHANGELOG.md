@@ -13,6 +13,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - Security badge: A camera reported as ready but delivering no picture (for example through a proxy) counted as fine in the badge while the camera card already showed "Offline". The badge now reports it as offline too, including the separate camera badge in a room.
 
 ### Improved
+- Aquarium popup: the German heading of the leak and temperature sensor batteries now reads "Sensoren" instead of "Fühler".
 - Dashboard, "…" menu: "Refresh" and "Reload (clear cache)" are now one "Refresh" entry that always clears Casora's cache when it reloads.
 - Phone room view (Soft look): more room between the badge row under the room name and the first row of tiles (40 px instead of 24 px), so the badges no longer sit right on top of the tiles. Adjustable via the theme variable `casora-room-badges-gap-mobile`.
 - Media popup on desktop and tablet (Apple TV and other players with apps): the left column (Turn off, Open Apple Music, More settings) now has its own heading "Device" in the same style as "Apps" on the right, so both columns start at the same height.

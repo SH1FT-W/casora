@@ -653,7 +653,7 @@
       rows.push({ icon: 'mdi:battery-outline', iconTone: !isNaN(b) && b <= 20 ? 'warn' : 'good', label: x[1],
         value: isNaN(b) ? '—' : Math.round(b) + ' %', valueTone: !isNaN(b) && b <= 20 ? 'warn' : null, entity: x[0] });
     });
-    return rows.length ? window._casoraAqWrap(window._casoraUI.group(rows, 'Fühler').replace(/data-casora-mi="/g, 'data-hp-metric="')) : '';`);
+    return rows.length ? window._casoraAqWrap(window._casoraUI.group(rows, 'Sensoren').replace(/data-casora-mi="/g, 'data-hp-metric="')) : '';`);
     /* Jeder Teil läuft als eigene Funktion; H.more fasst sie zusammen. */
     f2.more = HH.moreCard(watch, 'const __p = [' + parts.map((p) => '(() => {' + p + '\n})()').join(',\n') + '];\n'
       + 'return window._casoraHH ? window._casoraHH.more("aquarium", __p) : "";', cfg.temp);
