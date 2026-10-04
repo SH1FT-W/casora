@@ -4,7 +4,7 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
-## 1.0.5 – 04.10.2026
+## 1.0.4 – 04.10.2026
 
 ### Verbessert
 - Medien-Popup: Die Apps (Quellen) stehen nicht mehr in einer Reihe, die rechts abgeschnitten ist. Sie
@@ -12,18 +12,6 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   App zuerst. Am Desktop und Handy, bei Größenänderung neu angeordnet.
 - Weich-Look: Der Lautstärke-Regler im Medien-Popup ist jetzt im Casora-Ton gefüllt wie der
   Fortschrittsbalken statt in der Medienfarbe, hell und dunkel.
-### Behoben
-- Glocke nach einem Home-Assistant-Neustart: Offene Fenster und Türen standen mit „Seit 10 Min.“ wieder
-  unter „Neu“, obwohl sie seit Stunden offen und schon gelesen waren. Casora merkt sich jetzt, seit wann
-  jeder Tür- und Fensterkontakt offen ist, auch über Neustarts hinweg. Die Dauer stimmt und Gelesenes
-  bleibt gelesen.
-- Glocke: Zwei Kontakte mit gleichem Namen (etwa „Fenster“ im Schlafzimmer und im HWR) hießen unter „Neu“
-  beide nur „Fenster ist offen“. Jetzt steht überall der Raum davor, etwa „Schlafzimmer Fenster ist offen“,
-  auch direkt nach dem Laden der Seite.
-
-## 1.0.4 – 04.10.2026
-
-### Verbessert
 - Weich: Solange der Player aufgeklappt ist, wird sein Wellen-Knopf weiß wie die geöffnete Glocke.
 - Weich-Look: Der runde Medien-Knopf neben Glocke, Mitteilungen und „…“ (die Wellen des minimierten
   Players) hat jetzt denselben Grund und Schatten wie diese drei Knöpfe statt eines beigen, hell und dunkel.
@@ -48,6 +36,13 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   28 px, der Schleier beim Scrollen geht mit, und die Studio-Vorschau zeigt das Raumfoto sofort so.
 
 ### Behoben
+- Glocke nach einem Home-Assistant-Neustart: Offene Fenster und Türen standen mit „Seit 10 Min.“ wieder
+  unter „Neu“, obwohl sie seit Stunden offen und schon gelesen waren. Casora merkt sich jetzt, seit wann
+  jeder Tür- und Fensterkontakt offen ist, auch über Neustarts hinweg. Die Dauer stimmt und Gelesenes
+  bleibt gelesen.
+- Glocke: Zwei Kontakte mit gleichem Namen (etwa „Fenster“ im Schlafzimmer und im HWR) hießen unter „Neu“
+  beide nur „Fenster ist offen“. Jetzt steht überall der Raum davor, etwa „Schlafzimmer Fenster ist offen“,
+  auch direkt nach dem Laden der Seite.
 - Desktop: Ein Wisch-Stapel in der Kachelreihe (etwa Pflanzen/Aquarien) rutscht nicht mehr um seine
   eigene Höhe unter die übrigen Kacheln. Der Stapel war seit dem Wisch-Fix aus 1.0.4 auf null Höhe
   zusammengefallen und steht jetzt wieder bündig in der Reihe.
