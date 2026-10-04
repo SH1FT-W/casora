@@ -37,6 +37,9 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - Updates popup: after installing an update that needs a restart, the open popup now rebuilds itself. The
   row leaves the available updates, “Waiting for restart” appears and the heading offers “Restart now”,
   without closing and reopening the popup. After the restart the section disappears again.
+- Phone: the “Scenes” button in the bottom bar now shows the same scenes, in the same order, as the scene
+  badge on desktop and tablet. With no selection at the badge it still shows all scenes. Existing phone
+  dashboards follow the badge right away; opening the Studio once writes the selection into the phone layout.
 
 ## 1.0.4 – 04.10.2026
 
