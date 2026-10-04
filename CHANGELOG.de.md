@@ -4,6 +4,22 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.5 – 04.10.2026
+
+### Behoben
+- Glocke: Ein „fertig“-Eintrag (Saugroboter, Waschmaschine, Trockner, Spüler, Drucker) verschwand
+  manchmal beim erneuten Öffnen, obwohl nichts gelesen oder gelöscht war. Ein abgeschlossener Vorgang
+  bleibt jetzt stehen, bis das Zeitfenster von 24 Stunden abläuft, auch wenn das Gerät danach den
+  Zustand wechselt oder die Seite neu geladen wird. Die Glocke sammelt erst, wenn alle Erweiterungen
+  geladen sind, und erkennt das Reinigungsende auch, wenn es der erste Wechsel im Zeitfenster ist, nach
+  einem kurzen Verbindungsausfall des Geräts oder wenn im Logbuch eine Meldung ohne Zustand dazwischen steht.
+- Glocke: Dieselbe Tür oder dasselbe Fenster stand doppelt da (z. B. „Terrassentür ist offen“ zweimal),
+  wenn Kontakt, Kippsensor oder Kombi-Sensor gleich heißen und einer davon keinen Bereich hat. Jetzt meldet
+  eine Öffnung nur einmal. Gleichnamige Kontakte in verschiedenen Räumen bekommen den Raum davor, im selben
+  Raum den Gerätenamen oder eine Nummer, sodass nie zwei gleiche Zeilen entstehen.
+- Glocke: Ein laufendes Gerät mit Restzeit sprang nach dem Lesen sofort wieder unter „Neu“.
+- Glocke: Einträge mit gleicher Uhrzeit tauschten beim Aktualisieren nicht mehr ihre Reihenfolge.
+
 ## 1.0.4 – 04.10.2026
 
 ### Verbessert

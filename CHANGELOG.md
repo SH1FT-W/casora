@@ -4,6 +4,21 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.0.5 – 04.10.2026
+
+### Fixed
+- Bell: a "finished" entry (robot vacuum, washer, dryer, dishwasher, printer) sometimes disappeared when
+  the bell was opened again, although nothing was read or cleared. A finished run now stays until the
+  24 hour window ends, even if the device changes state afterwards or the page is reloaded. The bell
+  waits for all extensions before it collects, and it detects the end of a cleaning run even when it is
+  the first change in the window, after a short device outage, or with a stateless logbook message in between.
+- Bell: the same door or window was listed twice (for example "Terrassentür ist offen" two times) when
+  contact, tilt sensor or combined sensor share a name and one of them has no area. One opening now
+  reports once. Contacts with the same name get the room in front when they are in different rooms, and
+  the device name or a number in the same room, so two identical rows never appear.
+- Bell: a running appliance with remaining time jumped back under "New" right after being read.
+- Bell: entries with the same time no longer swap places on refresh.
+
 ## 1.0.4 – 04.10.2026
 
 ### Improved
