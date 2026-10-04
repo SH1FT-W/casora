@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 
 from .assets import CasoraAssetsView
 from .scripts_view import CasoraScriptsView
-from .helfer import async_setup_helfer, async_unload_helfer
+from .helfer import async_setup_helfer, async_setup_theme, async_unload_helfer, remove_theme_file
 from .lueften_push import async_start as async_start_lueften_push
 from .raumklima import async_start as async_start_raumklima
 from .settings import async_setup_settings
@@ -215,6 +215,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Register the panel assets and the sidebar entry."""
+    # Theme zuerst: Die Oberfläche läuft schon, und ein offenes Dashboard verbindet sich neu,
+    # während Casora noch lädt. Ohne Casora-Theme zeichnet es so lange im falschen Look.
+    await async_setup_theme(hass)
     # Optionen des früheren Update-Servers (Schlüssel/Adresse/Token) still entfernen – vor dem
     # Update-Listener, damit das kein Neuladen auslöst.
     if any(k in entry.options for k in LEGACY_OPTIONS):
@@ -352,6 +355,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _options_changed(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Integration entfernt: die Theme-Kopie im Theme-Ordner mit entfernen."""
+    await hass.async_add_executor_job(remove_theme_file, hass.config.config_dir)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

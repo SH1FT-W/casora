@@ -27,6 +27,10 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   and the photo name is cleaned up instead of rejected. A night photo for a new name also serves by day
   until a day photo is added. HEIC files get a clear message ("export as JPG"), and every error now says
   what to do instead of showing a technical text. A replaced photo shows at once instead of the old one.
+- After a Home Assistant restart, an open dashboard no longer shows the old glass look for a few seconds
+  until Casora has loaded. Casora now keeps a copy of its themes in the themes folder (when configuration.yaml
+  loads it with `frontend: themes: !include_dir_merge_named themes`, as in the standard setup), so Home
+  Assistant knows your Casora theme from the very first second, and registers its themes first thing while loading.
 ### Improved
 - Soft look in dark: menus opened from the bottom bar no longer have the old light rim either.
 - Soft look on the phone: the bottom bar stands out clearly from the tiles (almost white in light, almost black in dark, without the old light rim).
