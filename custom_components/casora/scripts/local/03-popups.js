@@ -52,6 +52,15 @@
     return !!(it && it.status === 'done' && (it.level === 'breaking' || it.level === 'action') && !it.ack);
   };
 
+  /* 1.0.5: Aktion mit Handy-Knopf (casora-core .hui-actx): Text, Symbol und Vorlese-Text getrennt setzen. */
+  var setAct = function (a, txt, icon) {
+    var at = a.querySelector('.hui-at');
+    if (!at) { a.textContent = txt; return; }
+    at.textContent = txt;
+    var ic = a.querySelector('.hui-ab ha-icon');
+    if (ic && icon) ic.setAttribute('icon', icon);
+    a.setAttribute('aria-label', typeof window.casoraTr === 'function' ? window.casoraTr(txt) : txt);
+  };
   /* Die Update-Zeilen baut das Popup einmal beim Öffnen, deshalb wird die
      Sperre direkt im DOM gesetzt/aufgehoben: data-casora-mi (öffnet den
      HA-Installationsdialog) und das Live-Label werden geparkt, die Zeile
@@ -81,9 +90,9 @@
       if (block && !isB) {
         a.setAttribute('data-casora-live-blocked', a.getAttribute('data-casora-live'));
         a.removeAttribute('data-casora-live');
-        a.setAttribute('data-casora-txt', a.textContent);
+        a.setAttribute('data-casora-txt', (a.querySelector('.hui-at') || a).textContent);
         a.setAttribute('data-casora-col', a.style.color);
-        a.textContent = 'Freigeben';
+        setAct(a, 'Freigeben', 'mdi:lock-open-variant-outline');
         a.style.color = 'var(--casora-popup-ui-warn, #FF9F0A)';
         if (row.hasAttribute('data-casora-mi')) { row.setAttribute('data-casora-mi-blocked', row.getAttribute('data-casora-mi')); row.removeAttribute('data-casora-mi'); }
         row.setAttribute('data-casora-arm', '');
@@ -98,7 +107,7 @@
       } else if (!block && isB) {
         a.setAttribute('data-casora-live', a.getAttribute('data-casora-live-blocked'));
         a.removeAttribute('data-casora-live-blocked');
-        a.textContent = a.getAttribute('data-casora-txt') || 'Aktualisieren';
+        setAct(a, a.getAttribute('data-casora-txt') || 'Aktualisieren', 'mdi:download');
         a.style.color = a.getAttribute('data-casora-col') || '';
         if (row.hasAttribute('data-casora-mi-blocked')) { row.setAttribute('data-casora-mi', row.getAttribute('data-casora-mi-blocked')); row.removeAttribute('data-casora-mi-blocked'); }
         row.removeAttribute('data-casora-arm');
@@ -2640,9 +2649,9 @@
   X.RULES = [
     /* Laufend (04.10.2026): war fast unsichtbar (Füllfarbe) – jetzt Zweitfarbe mit kleinem Kreis (busy, casora-core .hui-busy). */
     { attr: 'in_progress', text: 'Wird aktualisiert', busy: true, color: 'var(--casora-soft-sub, var(--casora-popup-tiles-text-secondary, rgba(255,255,255,0.56)))' },
-    { attr: 'state', eq: 'off', and: [{ attr: 'skipped_version' }], text: 'Übersprungen', color: INK3 },
-    { attr: 'state', eq: 'off', and: [{ attr: 'release_summary', has: 'restart' }], text: 'Neustart erforderlich', color: ORG },
-    { attr: 'state', eq: 'off', text: 'Installiert', color: 'var(--casora-popup-ui-good, #30D158)' },
+    { attr: 'state', eq: 'off', and: [{ attr: 'skipped_version' }], text: 'Übersprungen', icon: 'mdi:skip-next', color: INK3 },
+    { attr: 'state', eq: 'off', and: [{ attr: 'release_summary', has: 'restart' }], text: 'Neustart erforderlich', icon: 'mdi:restart', color: ORG },
+    { attr: 'state', eq: 'off', text: 'Installiert', icon: 'mdi:check', color: 'var(--casora-popup-ui-good, #30D158)' },
   ];
   X.list = function (states, h) {
     var UI = h.UI;
@@ -2679,7 +2688,9 @@
         label: String(a.title || a.friendly_name || id).replace(/\s+Update$/i, ''),
         sub: [ver, sum].filter(Boolean),
         action: a.in_progress ? 'Wird aktualisiert' : 'Aktualisieren', actionTone: 'accent', actionBusy: !!a.in_progress,
-        actionLive: { rules: X.RULES, text: 'Aktualisieren', color: TEAL },
+        /* 1.0.5: am Handy runder Download-Knopf statt Text (casora-core .hui-actx). */
+        actionIcon: 'mdi:download',
+        actionLive: { rules: X.RULES, text: 'Aktualisieren', icon: 'mdi:download', color: TEAL },
       };
     }), null);
   };
@@ -2706,7 +2717,7 @@
       var a = states[id].attributes || {};
       return { entity: id, iconTone: 'rgba(0,0,0,0)', image: h && h.logoOf ? h.logoOf(id) : null,
         label: String(a.title || a.friendly_name || id).replace(/\s+Update$/i, ''),
-        sub: a.installed_version || null, value: 'Neustart erforderlich', valueTone: 'warn',
+        sub: a.installed_version || null, value: 'Neustart erforderlich', valueTone: 'warn', valueIcon: 'mdi:restart',
         svc: { domain: 'homeassistant', service: 'restart' }, confirm: 'Neustart' };
     });
   };

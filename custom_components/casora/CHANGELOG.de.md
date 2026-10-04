@@ -43,6 +43,10 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   Popup jetzt selbst um. Die Zeile verschwindet aus den verfügbaren Updates, „Wartet auf Neustart“
   erscheint und der Kopf bietet „Jetzt neu starten“, ohne das Popup zu schließen und neu zu öffnen.
   Nach dem Neustart verschwindet der Bereich wieder.
+- Updates-Popup am Handy: „Aktualisieren“ rechts in jeder Update-Zeile ist jetzt ein runder
+  Download-Knopf. Der Name hat dadurch mehr Platz, neue Version und KI-Urteil passen in eine Zeile.
+  Antippen wirkt wie bisher. Während des Aktualisierens dreht sich ein Kreis, „Neustart erforderlich“
+  zeigt ein Neustart-Symbol. Desktop und Tablet zeigen weiter den Text.
 - Handy: Der Punkt „Szenen“ in der unteren Leiste zeigt jetzt dieselben Szenen in derselben Reihenfolge
   wie die Szenen-Badge an Desktop und Tablet. Ist an der Badge nichts ausgewählt, stehen dort weiter alle
   Szenen. Bestehende Handy-Dashboards folgen der Badge sofort; einmal das Studio öffnen trägt die Auswahl
