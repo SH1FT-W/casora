@@ -255,7 +255,7 @@ async function panelCall(page, code) {
 async function studioMode(page, mode) {
   await page.evaluate((m) => {
     const p = window.__panel();
-    // Der Umschalter kippt bei jedem Klick – nur klicken, wenn die Vorschau noch falsch steht.
+    // Nur klicken, wenn die Vorschau noch falsch steht (das aktive Segment bleibt bei Klick aktiv).
     if (!!p._miniDark !== (m === 'night')) {
       const b = p.shadowRoot.querySelector(`#modeseg [data-mode="${m}"]`);
       if (b) b.click();

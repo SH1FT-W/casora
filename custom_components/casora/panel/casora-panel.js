@@ -17975,7 +17975,12 @@ class CasoraPanel extends HTMLElement {
       onPick(val);
     };
     if (opts && opts.toggle) {
-      seg.onclick = () => pick(choices.find((b) => !b.classList.contains("on")));
+      // Klick auf ein Segment wählt genau dieses (das aktive bleibt aktiv, Weich-Audit K13);
+      // nur ein Klick daneben auf die Leiste schaltet um.
+      seg.onclick = (e) => {
+        const hit = e && e.target && e.target.closest ? e.target.closest(".segopt") : null;
+        pick(hit && choices.includes(hit) ? hit : choices.find((b) => !b.classList.contains("on")));
+      };
     } else {
       choices.forEach((b) => { b.onclick = () => pick(b); });
     }
