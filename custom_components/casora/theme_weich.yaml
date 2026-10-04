@@ -762,6 +762,10 @@ Casora Weich:
       casora-filter-veil: rgba(28,24,21,0.30)
       casora-mnav-bg: rgba(46,42,38,0.72)
       casora-mnav-pane: rgba(30,30,34,0.94)
+      # Menüs aus der Leiste (Räume, …) im Dunklen ohne helle Lichtkanten aus Hemma (04.10.2026).
+      casora-menu-rim-top: transparent
+      casora-menu-rim-bottom: transparent
+      casora-menu-edge: transparent
       casora-mnav-blur: blur(60px) saturate(180%)
       casora-mnav-shadow: 0 6px 22px rgba(0,0,0,0.38)
       casora-mnav-menu-bg: rgba(46,42,38,0.95)

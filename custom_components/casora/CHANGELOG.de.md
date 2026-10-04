@@ -30,6 +30,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   Fehler sagt jetzt, was zu tun ist, statt eines technischen Textes. Ein ersetztes Foto erscheint sofort
   statt des alten.
 ### Verbessert
+- Weich dunkel: Auch die Menüs aus der Leiste unten haben keinen hellen Rand mehr.
 - Weich am Handy: Die Leiste unten hebt sich klar von den Kacheln ab (hell fast weiß, dunkel fast schwarz, ohne den alten hellen Rand).
 - Weich: Aquarium-Diagramme werden auch dann ruhig, wenn die Kachel eine eigene grelle Farbe mitbringt (etwa aus dem Hemma-Umzug).
 - Weich, hell: Über dem Hintergrundfoto liegt jetzt ein heller Leinen-Schleier (oben etwa 66 %, nach unten
