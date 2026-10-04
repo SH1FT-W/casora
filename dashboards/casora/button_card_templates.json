@@ -5142,6 +5142,9 @@
     },
     {
      "--casora-room-photo-blur-src": "[[[\n  /* #8: Unschärfe des Raumfotos hinter einem geöffneten Raum (Studio: Design & Bedienung → Mobil).\n     filter-overlay.js liest --casora-room-photo-blur; leer = 28 px wie bisher. */\n  const ID = 'casora-room-photo-blur';\n  const el = document.getElementById(ID);\n  const v = variables.room_photo_blur;\n  const n = Number(v);\n  if (v === null || v === undefined || v === '' || !isFinite(n) || n < 0) {\n    if (el) el.remove();\n    return '0';\n  }\n  const css = ':root{--casora-room-photo-blur:' + Math.min(n, 80) + 'px !important;}';\n  const s = el || document.head.appendChild(Object.assign(document.createElement('style'), { id: ID }));\n  if (s.textContent !== css) s.textContent = css;\n  return '0';\n]]]"
+    },
+    {
+     "--casora-room-groups-src": "[[[\n  /* Raumseite am Handy nach Kategorien gliedern (Studio: Design & Bedienung → Handy).\n     filter-overlay.js liest --casora-room-groups; leer = an. */\n  const ID = 'casora-room-groups';\n  const el = document.getElementById(ID);\n  const v = variables.room_groups;\n  if (v !== false && v !== 'false') {\n    if (el) el.remove();\n    return '0';\n  }\n  const css = ':root{--casora-room-groups:off !important;}';\n  const s = el || document.head.appendChild(Object.assign(document.createElement('style'), { id: ID }));\n  if (s.textContent !== css) s.textContent = css;\n  return '0';\n]]]"
     }
    ]
   },
@@ -5153,7 +5156,8 @@
   ],
   "variables": {
    "preload_rooms": [],
-   "room_photo_blur": null
+   "room_photo_blur": null,
+   "room_groups": null
   }
  },
  "casora_mobile_chrome": {

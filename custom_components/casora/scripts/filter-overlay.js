@@ -338,17 +338,56 @@
     return null;
   }
 
-  const ROOM_SECTION_ORDER = ['climate', 'lights', 'media', 'security', 'energy', 'presence'];
-  const ROOM_SECTION_OTHER = 'other';
-  const ROOM_SECTION_LABEL = {
-    climate:  'Klima',
-    lights:   'Beleuchtung',
-    media:    'Medien',
-    security: 'Sicherheit',
-    energy:   'Energie',
-    presence: 'Personen',
-    other:    'Sonstiges',
+  // ── Raum-Kategorien (04.10.2026) ──────────────────────────────────────────────────────────────
+  // Handy-Raumseite nach Kategorien gruppiert wie Apples Home-App (iOS 18): kleine, ruhige
+  // Überschrift je Gruppe, darunter das Zweierraster. Reihenfolge der Gruppen folgt Casoras
+  // Kachelregel (Beleuchtung → Heizung/FBH → Luftreiniger → Jalousie → … → Medien → Pflanzen) statt
+  // Apples „Klima zuerst“; Jalousien liegen wie bei Apple (Fenster/Rollos zählen dort zu Klima) in
+  // Klima. Innerhalb einer Gruppe bleibt die Studio-Reihenfolge.
+  // Standard an. Schalter: Studio → Design & Bedienung → Handy (room_groups, setzt über
+  // casora_mobile_bg --casora-room-groups: off), Raumseiten-Option group_by_category (true/false),
+  // je Gerät überschreibbar per localStorage 'casora-room-groups' (on | off).
+  const ROOM_GROUP_ORDER = ['lights', 'climate', 'security', 'media', 'water', 'other'];
+  const ROOM_GROUP_LABEL = {
+    lights: 'Licht', climate: 'Klima', security: 'Sicherheit',
+    media: 'Lautsprecher und TVs', water: 'Wasser', other: 'Sonstiges',
   };
+  // Räume mit weniger Kacheln bleiben ungruppiert (Überschriften wären mehr als Inhalt).
+  const ROOM_GROUP_MIN_TILES = 4;
+  const ROOM_GROUP_BY_TEMPLATE = {
+    casora_light: 'lights',
+    casora_thermostat: 'climate', casora_air_purifier: 'climate', casora_air_device: 'climate',
+    casora_fan: 'climate', casora_humidifier: 'climate', casora_vent: 'climate', casora_cover: 'climate',
+    casora_lock: 'security', casora_alarm: 'security', casora_camera: 'security', casora_cameras: 'security',
+    casora_doorbell: 'security', casora_motion: 'security',
+    casora_media: 'media', casora_game: 'media',
+  };
+  const ROOM_GROUP_BY_DOMAIN = {
+    light: 'lights',
+    climate: 'climate', fan: 'climate', humidifier: 'climate', cover: 'climate',
+    lock: 'security', alarm_control_panel: 'security', camera: 'security',
+    media_player: 'media', remote: 'media',
+    valve: 'water', water_heater: 'water',
+  };
+  function _roomGroupOf(cfg) {
+    const t = cfg?.template;
+    for (const n of (Array.isArray(t) ? t : [t])) {
+      if (n && ROOM_GROUP_BY_TEMPLATE[n]) return ROOM_GROUP_BY_TEMPLATE[n];
+    }
+    const ent = String(cfg?.entity || '');
+    const dom = ent.split('.')[0];
+    if (/bewaesser|bewässer|irrigation|sprinkler|garden_water|gartenwasser/i.test(ent)) return 'water';
+    if (dom === 'binary_sensor' && /door|window|tuer|tür|fenster|kontakt|contact/i.test(ent)) return 'security';
+    return ROOM_GROUP_BY_DOMAIN[dom] || 'other';
+  }
+  function _roomGroupOn(cfg) {
+    let v = '';
+    try { v = getComputedStyle(document.documentElement).getPropertyValue('--casora-room-groups').trim(); } catch (_) {}
+    if (cfg?.group_by_category === true) v = 'on';
+    if (cfg?.group_by_category === false) v = 'off';
+    try { const ls = localStorage.getItem('casora-room-groups'); if (ls) v = ls; } catch (_) {}
+    return v !== 'off' && v !== 'false';
+  }
 
   const H_SCROLL_IDS = new Set(['media_row', 'climate_row', 'rooms_row']);
 
@@ -1313,32 +1352,23 @@
 
         // Casora (30.09.2026): Die Raumseite zeigt die Kacheln in der Studio-Reihenfolge
         // (room.tiles, per syncPairTiles aufs Handy übernommen). Nach Kategorien gruppiert
-        // wird nur noch auf ausdrücklichen Wunsch (group_by_category: true).
-        if (roomMode && this._config.group_by_category === true) {
+        // wird nur auf Wunsch (siehe _roomGroupOn).
+        // Nur eine Kategorie oder sehr wenige Kacheln: flach wie bisher („Geräte“).
+        const grouped = roomMode && _roomGroupOn(this._config) && roomCards.length >= ROOM_GROUP_MIN_TILES
+          && new Set(roomCards.map(_roomGroupOf)).size > 1;
+        if (grouped) {
           const buckets = new Map();
           for (const c of roomCards) {
-            const cat = _cardCategory(c);
-            const key = ROOM_SECTION_LABEL[cat] ? cat : ROOM_SECTION_OTHER;
+            const key = _roomGroupOf(c);
             if (!buckets.has(key)) buckets.set(key, []);
             buckets.get(key).push(c);
           }
-          const keys = ROOM_SECTION_ORDER.filter((k) => buckets.has(k));
-          if (buckets.has(ROOM_SECTION_OTHER)) keys.push(ROOM_SECTION_OTHER);
-          for (const key of keys) {
-            if (ROOM_SECTION_LABEL[key]) {
-              this._appendRevealCard({
-                type:       'custom:button-card',
-                template:   'casora_mobile_header',
-                full_width: true,
-                name:       ROOM_SECTION_LABEL[key],
-                variables:  { hide_caret: true, mobile_filter_categories: null },
-                styles:     {
-                  card:          [{ padding: `18px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})` }],
-                  custom_fields: { arrow: [{ display: 'none' }] },
-                },
-              }, this._contentEl, i);
-            }
+          let first = !this._contentEl.children.length;
+          for (const key of ROOM_GROUP_ORDER.filter((k) => buckets.has(k))) {
+            this._appendGroupHeader(key, first, i);
+            first = false;
             this._appendEntityGrid(buckets.get(key), this._contentEl, i);
+            if (room.sort === false) this._contentEl.lastElementChild._casoraNoSort = true;
             i++;
           }
         } else {
@@ -1363,6 +1393,28 @@
       if (this._hass) {
         for (const el of this._cardEls) { try { el.hass = this._hass; } catch (_) {} }
       }
+    }
+
+    // Raum-Kategorien: kleine, ruhige Überschrift einer Gruppe (kleiner als „Szenen“/„Favoriten“).
+    _appendGroupHeader(key, first, animIdx) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'display:block;width:100%;box-sizing:border-box;opacity:0;';
+      wrap._animIndex = animIdx;
+      wrap.setAttribute('data-casora-room-group', key);
+      const left = `calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC} + 2px)`;
+      const right = `calc(var(--casora-rail-left, 16px) + ${LANDSCAPE_GUTTER_CALC} + 2px)`;
+      const head = document.createElement('div');
+      head.style.cssText = [
+        `padding:${first ? 14 : 18}px ${right} 8px ${left}`,
+        'font-family:var(--casora-body-font, var(--primary-font-family, inherit))',
+        'font-size:15px', 'font-weight:600', 'letter-spacing:-0.2px', 'line-height:20px',
+        'color:var(--casora-room-group-ink, var(--primary-text-color))', 'opacity:0.72',
+        'box-sizing:border-box', 'white-space:nowrap', 'overflow:hidden', 'text-overflow:ellipsis',
+      ].join(';');
+      const label = ROOM_GROUP_LABEL[key] || key;
+      head.textContent = window.casoraTr ? window.casoraTr(label) : label;
+      wrap.appendChild(head);
+      this._contentEl.appendChild(wrap);
     }
 
     _ensureFavoritesPopupSection() {
