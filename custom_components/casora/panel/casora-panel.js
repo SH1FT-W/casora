@@ -21653,7 +21653,9 @@ class CasoraPanel extends HTMLElement {
         : "Drag to reorder";
       el.onpointerdown = (ev) => {
         if (ev.button) return;
-        if (ev.pointerType === "touch" && isPhone(this)) return;
+        // Studio B (casora-panel-b.js): am Touchscreen nach langem Drücken ziehen.
+        const bTouch = ev.pointerType === "touch" && this.classList.contains("bmode");
+        if (ev.pointerType === "touch" && isPhone(this) && !bTouch) return;
         if (this._smartSortOn()) return;
         const row = el.parentNode;
         if (!row || room.tiles.length < 2) return;
@@ -21668,6 +21670,7 @@ class CasoraPanel extends HTMLElement {
         const rects = cards.map((c) => c.getBoundingClientRect());
         const startX = ev.clientX, startY = ev.clientY;
         let moved = false, target = me, shown = me;
+        const holdT = bTouch ? setTimeout(() => { this._bHold = true; el.classList.add("blift"); }, 320) : null;
 
         const shiftTo = (t) => {
           if (t === shown) return;
@@ -21685,6 +21688,11 @@ class CasoraPanel extends HTMLElement {
         const onMove = (e2) => {
           const dx = e2.clientX - startX, dy = e2.clientY - startY;
           if (!moved) {
+            if (bTouch && !this._bHold) {
+              // Vor dem langen Drücken bewegt: das ist Scrollen, kein Ziehen.
+              if (Math.abs(dx) > 8 || Math.abs(dy) > 8) onUp();
+              return;
+            }
             if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
             moved = true;
             this._tileDragged = true;
@@ -21707,6 +21715,9 @@ class CasoraPanel extends HTMLElement {
           window.removeEventListener("pointermove", onMove);
           window.removeEventListener("pointerup", onUp);
           window.removeEventListener("pointercancel", onUp);
+          if (holdT) clearTimeout(holdT);
+          this._bHold = false;
+          el.classList.remove("blift");
           el.classList.remove("mdrag");
           row.classList.remove("mfree");
           if (!moved) return;
@@ -22094,7 +22105,8 @@ class CasoraPanel extends HTMLElement {
     const SPEC = { desktop: [960, Math.round(960 / 1.55)], tablet: [700, 486],
       phone: [390, 844] };
     const applySize = (animate) => {
-      if (isPhone(this)) return;
+      // Studio B (casora-panel-b.js) zeigt die Vorschau auch am Handy – als Arbeitsfläche.
+      if (isPhone(this) && !this.classList.contains("bmode")) return;
       const [natW, natH] = SPEC[this._miniSize];
       const availW = slot.offsetWidth - MAP_SHADOW_ROOM;
       let budget = 0;
@@ -22115,7 +22127,8 @@ class CasoraPanel extends HTMLElement {
         budget = Math.max(240, free) - MAP_SHADOW_ROOM;
       } else if (isNarrow(this)) {
         // The page scrolls here, so nothing else bounds the height: an unbounded phone frame took the whole column width.
-        budget = Math.max(240, Math.round(window.innerHeight * 0.6)) - MAP_SHADOW_ROOM;
+        budget = Math.max(240, Math.round(window.innerHeight
+          * (this.classList.contains("bmode") ? 0.78 : 0.6))) - MAP_SHADOW_ROOM;
       }
       if (this._miniSize === "phone") budget = Math.round(budget * 0.88);
       const ratio = natH / natW;

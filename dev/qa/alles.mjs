@@ -521,9 +521,11 @@ async function crawlPreviewBadges(ctx, where) {
         const st = await Q(ctx, () => {
           const r = window.__qa.pierce('.miniroom .mini-subs').filter((e) => e.classList.contains('on'));
           const n = r.reduce((a, e) => a + e.querySelectorAll('.pbadge').length, 0);
-          return { n, dialogs: window.__qa.dialogs().length };
+          // Neues Studio (B): Antippen öffnet den Editor des Badges im Inspektor – das zählt als „geöffnet“.
+          const P = window.__qa.pierce('casora-panel')[0];
+          return { n, dialogs: window.__qa.dialogs().length, insp: !!(P && P.classList.contains('binsp')) };
         });
-        if (st.n || st.dialogs) return '';
+        if (st.n || st.dialogs || st.insp) return '';
         // Badge ohne Unter-Badges: das Studio sagt es selbst (title „Noch keine Unter-Badges“ /
         // „No sub-badges yet“) – dann ist „klappt nicht auf“ gewollt (im Dashboard öffnet sie z. B. ein Popup).
         const none = await Q(ctx, (id) => /Noch keine Unter-Badges|No sub-badges yet/i.test((window.__qa.byTag(id) || {}).title || ''), now.tag).catch(() => false);

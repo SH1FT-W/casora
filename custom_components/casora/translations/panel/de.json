@@ -1,6 +1,16 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "Hidden right now": "Gerade verborgen",
+    "{n} hidden": "{n} ausgeblendet",
+    "Move earlier": "Nach vorne",
+    "Move later": "Nach hinten",
+    "Update": "Update",
+    "Create a phone layout for a phone preview": "Für eine Handy-Vorschau ein Mobil-Layout anlegen",
+    "Elements": "Elemente",
+    "New Studio": "Neues Studio",
+    "All dashboards": "Alle Dashboards",
+    "Studio": "Studio",
     "For the energy analysis, the solar tip and costs in device popups. Between 0 and 2 €/kWh. Empty: the grid price from the Energy dashboard.": "Für die Energie-Auswertung, den Solar-Tipp und die Kosten in Geräte-Popups. Zwischen 0 und 2 €/kWh. Leer: der Netzbezugspreis aus dem Energie-Dashboard.",
     "From the Energy dashboard: {v} €/kWh": "Aus dem Energie-Dashboard: {v} €/kWh",
     "Device name": "Gerätename",

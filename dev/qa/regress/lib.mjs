@@ -162,8 +162,16 @@ export async function studio(pg, dash) {
   const ok = () => pg.waitForFunction(() => { const p = window.__panel();
     return !p._flowMode && p._state && p._state.compact && p._state.compact.rooms; }, null, { timeout: 30000 });
   await ok().catch(async () => { await load(); await ok(); });
+  // Neues Studio (B): Editoren liegen im Inspektor, der erst bei einer Auswahl aufgeht. Die
+  // Tests arbeiten mit der Raumansicht – wie „Elemente“ einmal geöffnet.
+  await pg.evaluate(() => { const p = window.__panel();
+    if (p.classList.contains('bmode') && !p._bOpen) { p._bOpen = true; p._renderForm(); } });
   await pg.waitForTimeout(2000);
 }
+
+// Läuft das Studio im neuen Aufbau (Vorschau ist der Editor)?
+export const isB = (pg) => pg.evaluate(() => { const p = window.__panel && window.__panel();
+  return !!(p && p.classList.contains('bmode')); });
 
 // Dashboard-Ansicht öffnen und warten, bis die Kacheln stehen.
 export async function dashboard(pg, url, min = 5) {
