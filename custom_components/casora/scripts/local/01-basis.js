@@ -238,7 +238,10 @@ window._casoraCamReachable = function (hass, id) {
       (function walk(root, d) {
         if (!root || d > 14) return;
         root.querySelectorAll('*').forEach(function (el) {
-          if (el.tagName === 'BUTTON-CARD' && el._config && el._config.entity === id && typeof el.requestUpdate === 'function') {
+          var cv = el._config && el._config.variables && el._config.variables.cameras;
+          /* Sicherheits-Badges führen Kameras in variables.cameras – sie zählen „offline“ mit (04.10.2026). */
+          var hasCam = cv && (Array.isArray(cv) ? cv.indexOf(id) !== -1 : cv === id);
+          if (el.tagName === 'BUTTON-CARD' && el._config && (el._config.entity === id || hasCam) && typeof el.requestUpdate === 'function') {
             try { el._casoraCamTick = (el._casoraCamTick || 0) + 1; el.requestUpdate('_config', null); } catch (e) {}
           }
           if (el.shadowRoot) walk(el.shadowRoot, d + 1);
