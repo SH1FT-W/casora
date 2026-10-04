@@ -25,6 +25,10 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   scrolling follows it, and the Studio preview shows the room photo with the chosen softness right away.
 
 ### Fixed
+- Desktop and tablet: the tile row stays in one row again. Since the phone tile sizes were carried over from
+  Hemma, the room tiles on the desktop also carried “Size on phone: large”, and desktop and tablet read it
+  as well (large tile layout, row split into two rows with gaps, tiles slipping out of view). The size now
+  only counts on the phone dashboard; on the phone large tiles stay large.
 - Swipe tile: at the end of the stack the tile row scrolls on again, and while paging through the stack
   the row stays put (tablet and desktop).
 - Media: a player that was already paused no longer shows up again for 10 minutes after every Home Assistant

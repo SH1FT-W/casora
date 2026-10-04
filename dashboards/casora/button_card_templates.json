@@ -3737,37 +3737,37 @@
   "styles": {
    "card": [
     {
-     "--casora-tile-areas": "[[[ return variables.size === 'large' ? 'var(--casora-tile-areas-lg)' : 'var(--casora-tile-areas-mq)'; ]]]\n"
+     "--casora-tile-areas": "[[[ return variables.size_large ? 'var(--casora-tile-areas-lg)' : 'var(--casora-tile-areas-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-cols": "[[[ return variables.size === 'large' ? 'var(--casora-tile-cols-lg)' : 'var(--casora-tile-cols-mq)'; ]]]\n"
+     "--casora-tile-cols": "[[[ return variables.size_large ? 'var(--casora-tile-cols-lg)' : 'var(--casora-tile-cols-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-rows": "[[[ return variables.size === 'large' ? 'var(--casora-tile-rows-lg)' : 'var(--casora-tile-rows-mq)'; ]]]\n"
+     "--casora-tile-rows": "[[[ return variables.size_large ? 'var(--casora-tile-rows-lg)' : 'var(--casora-tile-rows-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-gap": "[[[ return variables.size === 'large' ? 'var(--casora-tile-gap-lg)' : 'var(--casora-tile-gap-mq)'; ]]]\n"
+     "--casora-tile-gap": "[[[ return variables.size_large ? 'var(--casora-tile-gap-lg)' : 'var(--casora-tile-gap-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-name-mb": "[[[ return variables.size === 'large' ? 'var(--casora-tile-name-mb-lg)' : 'var(--casora-tile-name-mb-mq)'; ]]]\n"
+     "--casora-tile-name-mb": "[[[ return variables.size_large ? 'var(--casora-tile-name-mb-lg)' : 'var(--casora-tile-name-mb-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-align-content": "[[[ return variables.size === 'large' ? 'var(--casora-tile-align-content-lg)' : 'var(--casora-tile-align-content-mq)'; ]]]\n"
+     "--casora-tile-align-content": "[[[ return variables.size_large ? 'var(--casora-tile-align-content-lg)' : 'var(--casora-tile-align-content-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-icon-align": "[[[ return variables.size === 'large' ? 'var(--casora-tile-icon-align-lg)' : 'var(--casora-tile-icon-align-mq)'; ]]]\n"
+     "--casora-tile-icon-align": "[[[ return variables.size_large ? 'var(--casora-tile-icon-align-lg)' : 'var(--casora-tile-icon-align-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-icon-mt": "[[[ return variables.size === 'large' ? 'var(--casora-tile-icon-mt-lg)' : 'var(--casora-tile-icon-mt-mq)'; ]]]\n"
+     "--casora-tile-icon-mt": "[[[ return variables.size_large ? 'var(--casora-tile-icon-mt-lg)' : 'var(--casora-tile-icon-mt-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-extras": "[[[ return variables.size === 'large' ? 'var(--casora-tile-extras-lg)' : 'var(--casora-tile-extras-mq)'; ]]]\n"
+     "--casora-tile-extras": "[[[ return variables.size_large ? 'var(--casora-tile-extras-lg)' : 'var(--casora-tile-extras-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-radius": "[[[ return variables.size === 'large' ? 'var(--casora-tile-radius-lg)' : 'var(--casora-tile-radius-mq)'; ]]]\n"
+     "--casora-tile-radius": "[[[ return variables.size_large ? 'var(--casora-tile-radius-lg)' : 'var(--casora-tile-radius-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-state-inset": "[[[ return variables.size === 'large' ? 'var(--casora-tile-state-inset-lg)' : 'var(--casora-tile-state-inset-mq)'; ]]]\n"
+     "--casora-tile-state-inset": "[[[ return variables.size_large ? 'var(--casora-tile-state-inset-lg)' : 'var(--casora-tile-state-inset-mq)'; ]]]\n"
     },
     {
      "--delay": "calc(round(down, var(--casora-position-index, 0), 2) / 2 * 0.06s)"
@@ -4086,6 +4086,7 @@
    "show_toggle": false,
    "show_when": "always",
    "size": "small",
+   "size_large": "[[[ return String(variables.size || '').toLowerCase() === 'large' && /^\\/[^/]*[-_]mobile(\\/|$)/i.test(window.location.pathname); ]]]\n",
    "toggle_entity": null,
    "toggle_service": null,
    "toggle_service_data": null
@@ -14186,7 +14187,7 @@
    "casora_entity"
   ],
   "variables": {
-   "has_controls": "[[[\n  if (variables.size === 'large') return true;\n  return !window.matchMedia('(max-width: 767px) and (orientation: portrait), (max-height: 500px) and (orientation: portrait), (max-height: 600px) and (orientation: landscape)').matches;\n]]]\n",
+   "has_controls": "[[[\n  if (variables.size === 'large' && /^\\/[^/]*[-_]mobile(\\/|$)/i.test(window.location.pathname)) return true;\n  return !window.matchMedia('(max-width: 767px) and (orientation: portrait), (max-height: 500px) and (orientation: portrait), (max-height: 600px) and (orientation: landscape)').matches;\n]]]\n",
    "mobile_filter_category": "climate",
    "show_toggle": "[[[ return variables.has_controls; ]]]\n",
    "size": "small",

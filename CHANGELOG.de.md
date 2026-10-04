@@ -26,6 +26,10 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   28 px, der Schleier beim Scrollen geht mit, und die Studio-Vorschau zeigt das Raumfoto sofort so.
 
 ### Behoben
+- Desktop und Tablet: Die Kachelreihe bleibt wieder einreihig. Seit die Handy-Kachelgrößen aus Hemma
+  übernommen werden, trugen auch die Raum-Kacheln am Desktop „Größe in der Mobilansicht: groß“, und Desktop und Tablet
+  lasen das mit (Groß-Aufbau der Kachel, Reihe in zwei Reihen mit Lücken, Kacheln rutschten aus dem Bild).
+  Die Größe zählt jetzt nur im Handy-Dashboard; am Handy bleiben große Kacheln groß.
 - Swipe-Kachel: Am Stapelende scrollt die Kachelreihe wieder weiter, beim Blättern im Stapel bleibt die
   Reihe stehen (Tablet und Desktop).
 - Medien: Ein schon pausierter Player taucht nach jedem Neustart von Home Assistant oder einem kurzen Ausfall
