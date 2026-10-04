@@ -34,6 +34,11 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   bis ein Tagfoto dazukommt. HEIC-Dateien bekommen eine klare Meldung („als JPG exportieren“), und jeder
   Fehler sagt jetzt, was zu tun ist, statt eines technischen Textes. Ein ersetztes Foto erscheint sofort
   statt des alten.
+- Nach einem Neustart von Home Assistant zeigt ein offenes Dashboard nicht mehr für einige Sekunden den alten
+  Glas-Look, bis Casora geladen ist. Casora legt eine Kopie seiner Themes in den Theme-Ordner (wenn
+  configuration.yaml ihn mit `frontend: themes: !include_dir_merge_named themes` lädt, wie in der
+  Standard-Einrichtung), damit Home Assistant das Casora-Theme ab der ersten Sekunde kennt, und meldet seine
+  Themes beim Laden als Allererstes an.
 ### Verbessert
 - Weich dunkel: Auch die Menüs aus der Leiste unten haben keinen hellen Rand mehr.
 - Weich am Handy: Die Leiste unten hebt sich klar von den Kacheln ab (hell fast weiß, dunkel fast schwarz, ohne den alten hellen Rand).
