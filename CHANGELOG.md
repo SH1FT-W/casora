@@ -4,13 +4,6 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
-## 1.0.5 – 04.10.2026
-
-### Fixed
-- Desktop: a swipe stack in the tile row (for example plants/aquariums) no longer slides down by its own
-  height below the other tiles. The stack had collapsed to zero height since the 1.0.4 swipe fix and now
-  sits flush with the row again.
-
 ## 1.0.4 – 04.10.2026
 
 ### Improved
@@ -36,6 +29,9 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   scrolling follows it, and the Studio preview shows the room photo with the chosen softness right away.
 
 ### Fixed
+- Desktop: a swipe stack in the tile row (for example plants/aquariums) no longer slides down by its own
+  height below the other tiles. The stack had collapsed to zero height since the 1.0.4 swipe fix and now
+  sits flush with the row again.
 - Bell: after a Home Assistant restart, locks, doors and people no longer show up as new entries ("Front door locked") just because they came back online.
 - Desktop and tablet: the tile row stays in one row again. Since the phone tile sizes were carried over from
   Hemma, the room tiles on the desktop also carried “Size on phone: large”, and desktop and tablet read it
