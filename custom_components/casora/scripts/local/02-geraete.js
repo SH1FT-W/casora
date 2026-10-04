@@ -397,8 +397,12 @@
   ]]]`);
 
   /* Weich (04.10.2026): ruhiges Türkis statt des grellen Cyan (#00C3D0), wie die Weich-Kacheln. */
-  const chartColor = (window._casoraSoft && window._casoraSoft() && (!variables.chart_color || /^#00c3d0$/i.test(variables.chart_color)))
-    ? '#5E9E96' : (variables.chart_color || '#30D158');
+  /* Weich: die grellen iOS-Farben (auch aus Hemma übernommene) in ruhige Weich-Töne übersetzen. */
+  const _aqCalm = { '#00c3d0': '#5E9E96', '#57fffc': '#5E9E96', '#64d2ff': '#5E9E96', '#30d158': '#6FA77A',
+    '#ff9230': '#DE8A4E', '#ff9f0a': '#DE8A4E', '#0a84ff': '#5B8FC9', '#bf5af2': '#9B7BB8' };
+  const _aqRaw = String(variables.chart_color || '#30D158');
+  const chartColor = (window._casoraSoft && window._casoraSoft())
+    ? (_aqCalm[_aqRaw.toLowerCase()] || _aqRaw) : _aqRaw;
   /* Verlauf im 2.1-Muster: Zeilen mit data-hp-metric schalten dieses Diagramm um (statt HA-More-Info). */
   const hpOk = typeof window._hpChartCfg === 'function';
   const reg1 = (eid, label, span, color) => {
