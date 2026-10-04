@@ -7,7 +7,7 @@
 // Erwartet: Desktop (1440) – dieselbe Reihe mit großen Kacheln bleibt einreihig, alle Kacheln
 // gleich hoch, gleiche Abstände, nichts unter dem Bildrand. Handy (390) – dieselben Kacheln sind
 // groß (doppelt so hoch wie eine kleine).
-import { open, check, need, finish, usePage, BASE } from './lib.mjs';
+import { open, check, need, finish, usePage, BASE, atFinish } from './lib.mjs';
 import { ws } from '../ws.mjs';
 
 const DASH = 'qa-groesse';
@@ -36,6 +36,7 @@ async function cleanup() {
   }
   made = false;
 }
+atFinish(cleanup);  // auch wenn need() abbricht
 let desk = null, mob = null;
 try {
   desk = await c.cmd({ type: 'lovelace/config', url_path: 'qa-arbeit' });
@@ -129,16 +130,23 @@ try {
     await page.waitForTimeout(6000);
     const filter = (f) => page.evaluate((v) => window.dispatchEvent(new CustomEvent('ll-custom', { detail: { casora_filter: v } })), f);
     // Höhen der Kacheln im offenen Raum-Overlay (Reihenfolge wie in der Konfiguration).
-    const measure = () => {
+    // Große Kacheln über ihre Entität erkennen: mit Raum-Kategorien (1.0.6) verteilt sich der Raum
+    // auf mehrere Raster (Licht, Klima, Medien …), die Position im Raster ist nicht mehr der Index.
+    const bigEnts = BIG.map((i) => wzm.cards[i] && wzm.cards[i].entity);
+    const measure = (bigEnts) => {
       const up = (e) => e.parentElement || (e.getRootNode() && e.getRootNode().host) || null;
       const inOverlay = (x) => { for (let e = x; e; e = up(e)) if (e.hasAttribute && e.hasAttribute('data-casora-filter-overlay')) return true; return false; };
-      // Raum-Overlay: Kacheln als Raster (filter-overlay) oder als smart-row.
-      const grid = window.__pierce('.casora-entity-grid').find((g) => inOverlay(g) && g.getBoundingClientRect().width > 0 && g.children.length >= 6);
-      const row = !grid && window.__pierce('casora-smart-row').find((r) => inOverlay(r) && r.getBoundingClientRect().width > 0 && r._config && r._config.cards.length >= 6);
-      const els = grid ? [...grid.children] : row ? [...row.shadowRoot.querySelectorAll('#container > .card-wrapper')] : [];
+      const entOf = (w) => { const bc = w.localName === 'button-card' ? w : w.querySelector && w.querySelector('button-card'); return (bc && bc._config && bc._config.entity) || null; };
+      // Raum-Overlay: Kacheln als Raster (filter-overlay, je Kategorie eines) oder als smart-row.
+      const grids = window.__pierce('.casora-entity-grid').filter((g) => inOverlay(g) && g.getBoundingClientRect().width > 0);
+      const gridEls = grids.flatMap((g) => [...g.children]);
+      const row = gridEls.length < 6 && window.__pierce('casora-smart-row').find((r) => inOverlay(r) && r.getBoundingClientRect().width > 0 && r._config && r._config.cards.length >= 6);
+      const els = row ? [...row.shadowRoot.querySelectorAll('#container > .card-wrapper')] : gridEls;
       const out = els.map((w, i) => {
         const b = w.getBoundingClientRect();
-        return { i: grid ? i : +w.dataset.idx, h: Math.round(b.height), shown: w.style.display !== 'none' && b.width > 0 };
+        const e = row ? null : entOf(w);
+        return { i: row ? +w.dataset.idx : i, e, big: row ? null : bigEnts.includes(e),
+          h: Math.round(b.height), shown: w.style.display !== 'none' && b.width > 0 };
       });
       return out.filter((x) => x.shown).length >= 6 ? out : null;
     };
@@ -146,15 +154,16 @@ try {
     for (let k = 0; k < 5 && !m; k++) {
       if (k) { await filter('all'); await page.waitForTimeout(1500); }
       await filter('room_wohnzimmer');
-      m = await page.waitForFunction(measure, null, { timeout: 8000 }).then((h) => h.jsonValue(), () => null);
+      m = await page.waitForFunction(measure, bigEnts, { timeout: 8000 }).then((h) => h.jsonValue(), () => null);
     }
     await need('Handy: Wohnzimmer-Overlay mit Kacheln', m, m);
     await page.waitForTimeout(2500);
-    m = await page.evaluate(measure);
+    m = await page.evaluate(measure, bigEnts);
+    const isBig = (x) => (x.big === null ? BIG.includes(x.i) : x.big);
     const shown = m.filter((x) => x.shown);
     const small = Math.min(...shown.map((x) => x.h));
-    const bigOnes = shown.filter((x) => BIG.includes(x.i));
-    const rest = shown.filter((x) => !BIG.includes(x.i));
+    const bigOnes = shown.filter(isBig);
+    const rest = shown.filter((x) => !isBig(x));
     await check('Handy: große Kacheln doppelt so hoch', bigOnes.length === BIG.length && bigOnes.every((x) => x.h >= small * 1.8), m);
     await check('Handy: übrige Kacheln klein', rest.every((x) => x.h <= small * 1.2), m);
     await browser.close();

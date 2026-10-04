@@ -13,7 +13,7 @@
 //  6. Maus-Ziehen und Mausrad/Trackpad seitwärts wie Touch; Mausrad senkrecht blättert nicht
 // Messprotokoll (JSON) zusätzlich nach $CASORA_OUT/r30_swipe_gesten.json.
 import fs from 'node:fs';
-import { open, check, need, finish, usePage, BASE } from './lib.mjs';
+import { open, check, need, finish, usePage, BASE, atFinish } from './lib.mjs';
 import { ws } from '../ws.mjs';
 
 const DASH = 'qa-swipe';
@@ -48,6 +48,7 @@ async function cleanup() {
   }
   made = false;
 }
+atFinish(cleanup);  // auch wenn need() abbricht
 let desk = null, mob = null;
 try {
   desk = await c.cmd({ type: 'lovelace/config', url_path: 'qa-arbeit' });
@@ -96,6 +97,12 @@ const PAGE_HELPERS = () => {
       const r = s.getBoundingClientRect();
       return r.width > 0 && r.y > 60 && r.bottom <= innerHeight && (!overlay || inOverlay(s)) && hits(s);
     }) || null;
+    // Raum-Overlay mit Kategorien (1.0.6): der Stapel liegt in seiner Gruppe (Klima) und damit
+    // oft unter dem Bildrand – ins Bild scrollen, der nächste Durchlauf wählt ihn dann.
+    if (!window.__sw && overlay) {
+      const s = window.__pierce('casora-swipe-card').find((x) => x.getBoundingClientRect().width > 0 && inOverlay(x));
+      if (s) s.scrollIntoView({ block: 'center' });
+    }
     return !!window.__sw;
   };
   // Desktop/Tablet: Reihe so scrollen, dass der Stapel mittig liegt (Platz nach beiden Seiten).

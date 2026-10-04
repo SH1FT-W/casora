@@ -369,7 +369,13 @@
     media_player: 'media', remote: 'media',
     valve: 'water', water_heater: 'water',
   };
-  function _roomGroupOf(cfg) {
+  function _roomGroupOf(cfg, depth = 0) {
+    // Hüllen ohne eigenes Gerät (Swipe-Stapel, bedingte Karte): Kategorie der ersten inneren
+    // Karte, sonst Sonstiges. Vorher landete ein Thermostat-Stapel immer ganz unten in Sonstiges.
+    if (cfg && !cfg.template && !cfg.entity && depth < 4) {
+      const inner = cfg.card || (Array.isArray(cfg.cards) ? cfg.cards.find(Boolean) : null);
+      if (inner && typeof inner === 'object') return _roomGroupOf(inner, depth + 1);
+    }
     const t = cfg?.template;
     for (const n of (Array.isArray(t) ? t : [t])) {
       if (n && ROOM_GROUP_BY_TEMPLATE[n]) return ROOM_GROUP_BY_TEMPLATE[n];

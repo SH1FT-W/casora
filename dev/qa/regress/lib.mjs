@@ -63,7 +63,14 @@ export async function need(label, ok, info) {
   await finish();
 }
 
+// Aufräumen, das auch bei need() (beendet sofort) laufen muss, z. B. Prüf-Dashboards löschen
+// oder Benutzerdaten zurücksetzen. Sonst sahen spätere Tests auf demselben HA die Reste
+// (04.10.2026: r39 brach per need() ab, das dunkle Weich-Theme blieb stehen, r32 sah Nachtbilder).
+const finishers = [];
+export function atFinish(fn) { finishers.push(fn); }
+
 export async function finish() {
+  while (finishers.length) { try { await finishers.shift()(); } catch (e) { /* weiter */ } }
   for (const b of browsers) { try { await b.close(); } catch (e) { /* schon zu */ } }
   if (!checks) { fails++; console.log('  FEHLER keine Prüfung gelaufen'); }
   if (fails) console.log(`FAIL ${NAME} – ${fails} von ${checks} Prüfungen` + (firstShot ? ` (Bild: ${firstShot})` : ''));
