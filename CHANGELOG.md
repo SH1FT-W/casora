@@ -7,6 +7,10 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 1.0.4 – 04.10.2026
 
 ### Improved
+- Soft look: the round media button next to the bell, messages and “…” (the minimised player's waveform)
+  now has the same background and shadow as those three buttons instead of a beige one, in light and dark.
+  While something plays, its waves are in the Casora tone like the play button and progress bar, otherwise
+  dark like the other icons.
 - Soft look: the progress bar of the media players (Now playing on desktop and phone, the mini player
   next to the bell, the media popup and the Studio preview) is now always filled in the Casora tone, like
   the play button, instead of the media colour. The light cover tint of the card stays.
@@ -26,6 +30,10 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ### Fixed
 - Bell: after a Home Assistant restart, locks, doors and people no longer show up as new entries ("Front door locked") just because they came back online.
+- Desktop and tablet: the tile row stays in one row again. Since the phone tile sizes were carried over from
+  Hemma, the room tiles on the desktop also carried “Size on phone: large”, and desktop and tablet read it
+  as well (large tile layout, row split into two rows with gaps, tiles slipping out of view). The size now
+  only counts on the phone dashboard; on the phone large tiles stay large.
 - Swipe tile: at the end of the stack the tile row scrolls on again, and while paging through the stack
   the row stays put (tablet and desktop).
 - Media: a player that was already paused no longer shows up again for 10 minutes after every Home Assistant

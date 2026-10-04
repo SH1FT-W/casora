@@ -3737,37 +3737,37 @@
   "styles": {
    "card": [
     {
-     "--casora-tile-areas": "[[[ return variables.size === 'large' ? 'var(--casora-tile-areas-lg)' : 'var(--casora-tile-areas-mq)'; ]]]\n"
+     "--casora-tile-areas": "[[[ return variables.size_large ? 'var(--casora-tile-areas-lg)' : 'var(--casora-tile-areas-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-cols": "[[[ return variables.size === 'large' ? 'var(--casora-tile-cols-lg)' : 'var(--casora-tile-cols-mq)'; ]]]\n"
+     "--casora-tile-cols": "[[[ return variables.size_large ? 'var(--casora-tile-cols-lg)' : 'var(--casora-tile-cols-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-rows": "[[[ return variables.size === 'large' ? 'var(--casora-tile-rows-lg)' : 'var(--casora-tile-rows-mq)'; ]]]\n"
+     "--casora-tile-rows": "[[[ return variables.size_large ? 'var(--casora-tile-rows-lg)' : 'var(--casora-tile-rows-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-gap": "[[[ return variables.size === 'large' ? 'var(--casora-tile-gap-lg)' : 'var(--casora-tile-gap-mq)'; ]]]\n"
+     "--casora-tile-gap": "[[[ return variables.size_large ? 'var(--casora-tile-gap-lg)' : 'var(--casora-tile-gap-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-name-mb": "[[[ return variables.size === 'large' ? 'var(--casora-tile-name-mb-lg)' : 'var(--casora-tile-name-mb-mq)'; ]]]\n"
+     "--casora-tile-name-mb": "[[[ return variables.size_large ? 'var(--casora-tile-name-mb-lg)' : 'var(--casora-tile-name-mb-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-align-content": "[[[ return variables.size === 'large' ? 'var(--casora-tile-align-content-lg)' : 'var(--casora-tile-align-content-mq)'; ]]]\n"
+     "--casora-tile-align-content": "[[[ return variables.size_large ? 'var(--casora-tile-align-content-lg)' : 'var(--casora-tile-align-content-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-icon-align": "[[[ return variables.size === 'large' ? 'var(--casora-tile-icon-align-lg)' : 'var(--casora-tile-icon-align-mq)'; ]]]\n"
+     "--casora-tile-icon-align": "[[[ return variables.size_large ? 'var(--casora-tile-icon-align-lg)' : 'var(--casora-tile-icon-align-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-icon-mt": "[[[ return variables.size === 'large' ? 'var(--casora-tile-icon-mt-lg)' : 'var(--casora-tile-icon-mt-mq)'; ]]]\n"
+     "--casora-tile-icon-mt": "[[[ return variables.size_large ? 'var(--casora-tile-icon-mt-lg)' : 'var(--casora-tile-icon-mt-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-extras": "[[[ return variables.size === 'large' ? 'var(--casora-tile-extras-lg)' : 'var(--casora-tile-extras-mq)'; ]]]\n"
+     "--casora-tile-extras": "[[[ return variables.size_large ? 'var(--casora-tile-extras-lg)' : 'var(--casora-tile-extras-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-radius": "[[[ return variables.size === 'large' ? 'var(--casora-tile-radius-lg)' : 'var(--casora-tile-radius-mq)'; ]]]\n"
+     "--casora-tile-radius": "[[[ return variables.size_large ? 'var(--casora-tile-radius-lg)' : 'var(--casora-tile-radius-mq)'; ]]]\n"
     },
     {
-     "--casora-tile-state-inset": "[[[ return variables.size === 'large' ? 'var(--casora-tile-state-inset-lg)' : 'var(--casora-tile-state-inset-mq)'; ]]]\n"
+     "--casora-tile-state-inset": "[[[ return variables.size_large ? 'var(--casora-tile-state-inset-lg)' : 'var(--casora-tile-state-inset-mq)'; ]]]\n"
     },
     {
      "--delay": "calc(round(down, var(--casora-position-index, 0), 2) / 2 * 0.06s)"
@@ -4086,6 +4086,7 @@
    "show_toggle": false,
    "show_when": "always",
    "size": "small",
+   "size_large": "[[[ return String(variables.size || '').toLowerCase() === 'large' && /^\\/[^/]*[-_]mobile(\\/|$)/i.test(window.location.pathname); ]]]\n",
    "toggle_entity": null,
    "toggle_service": null,
    "toggle_service_data": null
@@ -9017,7 +9018,7 @@
   "double_tap_action": {
    "action": "none"
   },
-  "extra_styles": ":host{\n  display: block;\n  overflow: visible;\n  --casora-card-hover-shadow: none;\n  --casora-card-hover-filter: none;\n}\n\nha-ripple, mwc-ripple { display: none !important; }\n\nha-card.button-card-main,\n#container,\n.button-card-content,\n#customfields,\n#caret{\n  overflow: visible !important;\n}\n\n#caret.ellipsis{\n  overflow: visible !important;\n  text-overflow: clip !important;\n}\n\n.np-head-wave{\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: calc(var(--np-wave-u, 8px) * 0.34);\n  flex: none;\n  /* MUST match casora_menu_icon's settings button exactly - same size, same\n      fill, no rim and no backdrop-filter. Flat, the way the reference draws\n      them; the glass rim read as a raised bubble at this diameter and the\n      two buttons stopped looking like one control set. */\n  width: 34px;\n  height: 34px;\n  box-sizing: border-box;\n  border-radius: 50%;\n  /* Inverts when the panel it controls is open, the same rule the settings\n     button follows: fill says active, geometry never changes.\n     --np-head-min is 1 while collapsed, 0 while expanded. */\n  background: color-mix(in srgb, var(--casora-np-head-on, #fff) calc((1 - var(--np-head-min, 0)) * 100%),\n                        var(--casora-chrome-fill, rgba(0,0,0,0.40)));\n  /* No backdrop-filter, deliberately. A translucent fill plus a blur renders\n     differently depending on the backdrop root its ancestors create, and\n     this sits inside #now_playing while the settings button sits straight\n     over the photo - two identical declarations, two different results. A\n     flat fill cannot disagree. MUST match casora_settings_button. */\n  /* Bars sized from their own unit so they clear the rim as they animate. */\n  --np-wave-u: calc(var(--casora-u, 10px) * 0.66);\n  opacity: var(--np-head-open, 0);\n  transform: scale(calc(0.4 + (0.6 * var(--np-head-open, 0))));\n  transform-origin: center;\n  transition:\n    opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1),\n    background-color 0.34s cubic-bezier(0.32, 0.72, 0, 1),\n    transform 0.46s cubic-bezier(0.34, 1.42, 0.5, 1);\n  transition-delay: calc((1 - var(--np-head-open, 0)) * 0.42s);\n}\n\n.np-wave-bar{\n  /* One width in both states. It used to vary with --np-head-min - first\n     thinner when inverted, then thicker once I compensated - so it was never\n     the same bar twice. This is the inverted width, kept for both. */\n  width: calc(var(--np-wave-u, 8px) * 0.25 + 0.7px);\n  height: calc(var(--np-wave-u, 8px) * 1.2);\n  border-radius: 1px;\n  transform-origin: center;\n  background: color-mix(in srgb, var(--casora-np-head-on-ink, #1c1c20) calc((1 - var(--np-head-min, 0)) * 100%),\n                        var(--casora-np-head-ink, rgba(255,255,255,0.90)));\n  transition: width 0.34s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.34s cubic-bezier(0.32, 0.72, 0, 1);\n  animation: np-wave-bounce 1.53s ease-in-out infinite;\n  /* Stopped, not paused. animation-play-state froze each bar wherever its\n     own cycle had reached - every bar has a different duration and delay -\n     so a stopped waveform sometimes held all five near scaleY(0.42) and the\n     short ones shrank to a few px, reading as the settings button's dots.\n     With no animation the bars sit at the staggered heights below, which is\n     unmistakably an equaliser. */\n  animation-name: var(--np-head-anim, none);\n}\n\n.np-wave-bar:nth-child(1){ height: calc(var(--np-wave-u, 8px) * 0.8); animation-duration: 1.19s;  animation-delay: 0.05s; }\n.np-wave-bar:nth-child(2){ height: calc(var(--np-wave-u, 8px) * 1.3); animation-duration: 1.615s; animation-delay: 0.15s; }\n.np-wave-bar:nth-child(3){ height: calc(var(--np-wave-u, 8px) * 1.7); animation-duration: 1.02s;  animation-delay: 0s;    }\n.np-wave-bar:nth-child(4){ height: calc(var(--np-wave-u, 8px) * 1.2); animation-duration: 1.785s; animation-delay: 0.2s;  }\n.np-wave-bar:nth-child(5){ height: calc(var(--np-wave-u, 8px) * 0.8); animation-duration: 1.36s;  animation-delay: 0.1s;  }\n\n/* Rests at full height at both ends so it leaves and rejoins the stopped\n   pose without a jump, and a frozen frame can never be the short one. */\n@keyframes np-wave-bounce{\n  0%, 100% { transform: scaleY(1); }\n  50%      { transform: scaleY(0.42); }\n}\n\n@media (prefers-reduced-motion: reduce) {\n  .np-head-wave, .np-wave-bar{ transition: none; animation: none !important; }\n  .np-head-wave{ transform: none; }\n}\n",
+  "extra_styles": ":host{\n  display: block;\n  overflow: visible;\n  --casora-card-hover-shadow: none;\n  --casora-card-hover-filter: none;\n}\n\nha-ripple, mwc-ripple { display: none !important; }\n\nha-card.button-card-main,\n#container,\n.button-card-content,\n#customfields,\n#caret{\n  overflow: visible !important;\n}\n\n#caret.ellipsis{\n  overflow: visible !important;\n  text-overflow: clip !important;\n}\n\n.np-head-wave{\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: calc(var(--np-wave-u, 8px) * 0.34);\n  flex: none;\n  /* MUST match casora_menu_icon's settings button exactly - same size, same\n      fill, no rim and no backdrop-filter. Flat, the way the reference draws\n      them; the glass rim read as a raised bubble at this diameter and the\n      two buttons stopped looking like one control set. */\n  width: 34px;\n  height: 34px;\n  box-sizing: border-box;\n  border-radius: 50%;\n  /* Inverts when the panel it controls is open, the same rule the settings\n     button follows: fill says active, geometry never changes.\n     --np-head-min is 1 while collapsed, 0 while expanded. */\n  background: color-mix(in srgb, var(--casora-np-head-on, #fff) calc((1 - var(--np-head-min, 0)) * 100%),\n                        var(--casora-chrome-fill, rgba(0,0,0,0.40)));\n  /* No backdrop-filter, deliberately. A translucent fill plus a blur renders\n     differently depending on the backdrop root its ancestors create, and\n     this sits inside #now_playing while the settings button sits straight\n     over the photo - two identical declarations, two different results. A\n     flat fill cannot disagree. MUST match casora_settings_button. */\n  /* Bars sized from their own unit so they clear the rim as they animate. */\n  --np-wave-u: calc(var(--casora-u, 10px) * 0.66);\n  opacity: var(--np-head-open, 0);\n  transform: scale(calc(0.4 + (0.6 * var(--np-head-open, 0))));\n  transform-origin: center;\n  transition:\n    opacity 0.32s cubic-bezier(0.32, 0.72, 0, 1),\n    background-color 0.34s cubic-bezier(0.32, 0.72, 0, 1),\n    transform 0.46s cubic-bezier(0.34, 1.42, 0.5, 1);\n  transition-delay: calc((1 - var(--np-head-open, 0)) * 0.42s);\n}\n\n.np-wave-bar{\n  /* One width in both states. It used to vary with --np-head-min - first\n     thinner when inverted, then thicker once I compensated - so it was never\n     the same bar twice. This is the inverted width, kept for both. */\n  width: calc(var(--np-wave-u, 8px) * 0.25 + 0.7px);\n  height: calc(var(--np-wave-u, 8px) * 1.2);\n  border-radius: 1px;\n  transform-origin: center;\n  background: color-mix(in srgb, var(--casora-np-head-on-ink, #1c1c20) calc((1 - var(--np-head-min, 0)) * 100%),\n                        var(--casora-np-head-ink, rgba(255,255,255,0.90)));\n  /* A look can tint the bars while something plays (--casora-np-head-play-ink, Soft: the\n     Casora tone like the play button and progress bar). Unset, both sides are the same ink. */\n  background: color-mix(in srgb,\n    var(--casora-np-head-play-ink, color-mix(in srgb, var(--casora-np-head-on-ink, #1c1c20) calc((1 - var(--np-head-min, 0)) * 100%), var(--casora-np-head-ink, rgba(255,255,255,0.90))))\n      calc(var(--np-head-tone, 0) * 100%),\n    color-mix(in srgb, var(--casora-np-head-on-ink, #1c1c20) calc((1 - var(--np-head-min, 0)) * 100%), var(--casora-np-head-ink, rgba(255,255,255,0.90))));\n  transition: width 0.34s cubic-bezier(0.32, 0.72, 0, 1), background-color 0.34s cubic-bezier(0.32, 0.72, 0, 1);\n  animation: np-wave-bounce 1.53s ease-in-out infinite;\n  /* Stopped, not paused. animation-play-state froze each bar wherever its\n     own cycle had reached - every bar has a different duration and delay -\n     so a stopped waveform sometimes held all five near scaleY(0.42) and the\n     short ones shrank to a few px, reading as the settings button's dots.\n     With no animation the bars sit at the staggered heights below, which is\n     unmistakably an equaliser. */\n  animation-name: var(--np-head-anim, none);\n}\n\n.np-wave-bar:nth-child(1){ height: calc(var(--np-wave-u, 8px) * 0.8); animation-duration: 1.19s;  animation-delay: 0.05s; }\n.np-wave-bar:nth-child(2){ height: calc(var(--np-wave-u, 8px) * 1.3); animation-duration: 1.615s; animation-delay: 0.15s; }\n.np-wave-bar:nth-child(3){ height: calc(var(--np-wave-u, 8px) * 1.7); animation-duration: 1.02s;  animation-delay: 0s;    }\n.np-wave-bar:nth-child(4){ height: calc(var(--np-wave-u, 8px) * 1.2); animation-duration: 1.785s; animation-delay: 0.2s;  }\n.np-wave-bar:nth-child(5){ height: calc(var(--np-wave-u, 8px) * 0.8); animation-duration: 1.36s;  animation-delay: 0.1s;  }\n\n/* Rests at full height at both ends so it leaves and rejoins the stopped\n   pose without a jump, and a frozen frame can never be the short one. */\n@keyframes np-wave-bounce{\n  0%, 100% { transform: scaleY(1); }\n  50%      { transform: scaleY(0.42); }\n}\n\n@media (prefers-reduced-motion: reduce) {\n  .np-head-wave, .np-wave-bar{ transition: none; animation: none !important; }\n  .np-head-wave{ transform: none; }\n}\n",
   "hold_action": {
    "action": "none"
   },
@@ -9044,6 +9045,9 @@
     },
     {
      "--np-head-anim": "[[[\n  const anim = variables.playing ? 'np-wave-bounce' : 'none';\n  try { this.style.setProperty('--np-head-anim', anim); } catch (e) {}\n  return anim;\n]]]\n"
+    },
+    {
+     "--np-head-tone": "[[[\n  const tone = variables.playing ? 1 : 0;\n  try { this.style.setProperty('--np-head-tone', String(tone)); } catch (e) {}\n  return tone;\n]]]\n"
     },
     {
      "background": "none !important"
@@ -14186,7 +14190,7 @@
    "casora_entity"
   ],
   "variables": {
-   "has_controls": "[[[\n  if (variables.size === 'large') return true;\n  return !window.matchMedia('(max-width: 767px) and (orientation: portrait), (max-height: 500px) and (orientation: portrait), (max-height: 600px) and (orientation: landscape)').matches;\n]]]\n",
+   "has_controls": "[[[\n  if (variables.size === 'large' && /^\\/[^/]*[-_]mobile(\\/|$)/i.test(window.location.pathname)) return true;\n  return !window.matchMedia('(max-width: 767px) and (orientation: portrait), (max-height: 500px) and (orientation: portrait), (max-height: 600px) and (orientation: landscape)').matches;\n]]]\n",
    "mobile_filter_category": "climate",
    "show_toggle": "[[[ return variables.has_controls; ]]]\n",
    "size": "small",

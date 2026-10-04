@@ -1156,8 +1156,14 @@
         const card = this._helpers.createCardElement(cardCfg);
         if (!card) continue;
         if (this._hass) { try { card.hass = this._hass; } catch (_) {} }
-        const cardSize = window.casoraCardSize?.(cardCfg)
-          || (String(cardCfg?.variables?.size || '').toLowerCase() === 'large' ? 'large' : 'small');
+        // „Size on phone“ (variables.size) zählt nur im Handy-Dashboard, wie in smart-row.
+        let sizeCfg = cardCfg;
+        if (!/^\/[^/]*[-_]mobile(\/|$)/i.test(window.location.pathname) && cardCfg?.variables?.size !== undefined) {
+          const { size, ...rest } = cardCfg.variables;
+          sizeCfg = { ...cardCfg, variables: rest };
+        }
+        const cardSize = window.casoraCardSize?.(sizeCfg)
+          || (String(sizeCfg?.variables?.size || '').toLowerCase() === 'large' ? 'large' : 'small');
         if (cardSize === 'large') card.dataset.casoraSize = 'large';
         grid.appendChild(card);
         this._cardEls.push(card);

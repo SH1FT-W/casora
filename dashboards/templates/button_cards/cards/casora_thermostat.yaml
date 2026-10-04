@@ -9,7 +9,8 @@ casora_thermostat:
     size: small
     has_controls: |
       [[[
-        if (variables.size === 'large') return true;
+        // Large counts on a phone dashboard only (see casora_entity size_large).
+        if (variables.size === 'large' && /^\/[^/]*[-_]mobile(\/|$)/i.test(window.location.pathname)) return true;
         return !window.matchMedia('(max-width: 767px) and (orientation: portrait), (max-height: 500px) and (orientation: portrait), (max-height: 600px) and (orientation: landscape)').matches;
       ]]]
     mobile_filter_category: climate

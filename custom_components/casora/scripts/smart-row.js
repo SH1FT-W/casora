@@ -161,8 +161,15 @@ const ROW_TEMPLATE_FLAGS = {
 // A header is generic, so the category it labels comes from its name.
 const HEADER_CATEGORIES = { scenes: 'unfiltered' };
 
-const getCardSize = (rawCfg) => {
-  const cfg = resolveCardConfig(rawCfg);
+// variables.size is the Studio's "Size on phone": it sits on the desktop tile too
+// (mirrored to the phone on save), so only a phone row may read it. Desktop and
+// tablet rows drop it and keep only what a template itself declares large.
+const getCardSize = (rawCfg, phone) => {
+  let cfg = resolveCardConfig(rawCfg);
+  if (!phone && cfg?.variables?.size !== undefined) {
+    const { size, ...rest } = cfg.variables;
+    cfg = { ...cfg, variables: rest };
+  }
   return window.casoraCardSize?.(cfg) ||
     (String(cfg?.variables?.size || '').toLowerCase() === 'large' ? 'large' : 'small');
 };
@@ -954,7 +961,7 @@ class CasoraSmartRow extends HTMLElement {
       if (cardFlag(cfg, 'full_width')) wrapper.dataset.fullwidth = '1';
       if (isRawCard(cfg)) wrapper.dataset.raw = '1';
       if (cardFlag(cfg, 'collapsed_spacer')) wrapper.dataset.collapsedSpacer = '1';
-      if (getCardSize(cfg) === 'large') {
+      if (getCardSize(cfg, this._scrollMode) === 'large') {
         wrapper.dataset.size = 'large';
         this._scheduleLargeFill(wrapper);
       }
