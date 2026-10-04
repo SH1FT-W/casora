@@ -11,6 +11,8 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   Deutsch) bleibt in Leiste, Raumtitel, Handy-Leiste, Handy-Kopf und Studio genau so stehen. Nur der
   Name, den Casora selbst angelegt hat, folgt der Sprache der Oberfläche.
 - Updates-Popup: Der Abstand unter „Verfügbare Updates“ verschwindet nach dem Öffnen nicht mehr.
+- Handy: Im Raum rücken eingeschaltete Kacheln (Licht, laufende Waschmaschine) wieder nach vorn wie am
+  Desktop. Der Rest behält die Reihenfolge aus dem Studio.
 
 ## 1.0.3 – 04.10.2026
 

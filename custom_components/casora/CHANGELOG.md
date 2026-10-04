@@ -11,6 +11,8 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   exactly as you typed it in the navigation, room title, phone bar, phone header and Studio. Only the
   name Casora set up itself follows the interface language.
 - Updates popup: the gap below Available updates no longer disappears after opening.
+- Phone: in a room, tiles that are on (a light, a running washer) move to the front again, as on the
+  desktop. The rest keeps the order from the Studio.
 
 ## 1.0.3 – 04.10.2026
 

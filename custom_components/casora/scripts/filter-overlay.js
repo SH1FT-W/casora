@@ -881,6 +881,14 @@
       this._hass = v;
       for (const el of this._cardEls) { try { el.hass = v; } catch (_) {} }
       const filter = v?.states?.['input_select.casora_mobile_filter']?.state;
+      // Offene Raumseite: schaltet eine Kachel um, rückt sie wie in der Reihe nach kurzer Pause
+      // nach vorn bzw. zurück (Issue #6).
+      // Kein Neustart der Wartezeit bei jedem Update: Im belebten Haus kommen ständig neue
+      // Zustände, dann würde nie sortiert.
+      if (this._config?.room && this._showing && this._contentEl && filter === this._config.filter_category
+        && !this._resortTimer) {
+        this._resortTimer = setTimeout(() => { this._resortTimer = null; if (this._showing) this._sortSectionGrids(); }, 2500);
+      }
 
       if (this._pendingBlurFade && filter === 'all' && prevFilter !== 'all') {
         setTimeout(() => {
@@ -1198,7 +1206,8 @@
         if (hsr && pending) {
           if (roomMode) {
             if (pending.name === roomMode) {
-              rooms.push({ ...pending, cards: (hsr._config?.cards || []).slice() });
+              // Wie die Reihe am Desktop: aktive Kacheln vorn, außer die Reihe sortiert nicht (sort: false).
+              rooms.push({ ...pending, cards: (hsr._config?.cards || []).slice(), sort: hsr._config?.sort !== false });
             }
           } else if (pending.name && !pending.fav) {
             const cards = (hsr._config?.cards || []).filter(
@@ -1316,6 +1325,7 @@
             }, this._contentEl, i);
           }
           this._appendEntityGrid(roomCards, this._contentEl, i);
+          if (room.sort === false) this._contentEl.lastElementChild._casoraNoSort = true;
           i++;
         }
       }
@@ -1362,13 +1372,14 @@
 
     _sortSectionGrids() {
       if (!this._hass?.states || !this._contentEl) return;
-      // Casora (30.09.2026): Raumseiten behalten die Studio-Reihenfolge – kein „Aktive zuerst“.
-      // Kategorie-Seiten (Licht, Klima …) sammeln raumübergreifend und sortieren weiter.
-      if (this._config?.room) return;
+      // Raumseiten (04.10.2026, Issue #6): aktive Kacheln vorn wie in der Reihe am Desktop und am
+      // Handy-Home (casora-smart-row), innerhalb der Gruppen die Studio-Reihenfolge. Vorher blieb die
+      // Raumseite bewusst unsortiert (30.09.) – eingeschaltetes Licht stand dann z. B. ganz hinten.
+      // Ausnahme: Die Reihe des Raums sortiert nicht (sort: false).
       const ACTIVE = activeStates();
       for (const wrap of Array.from(this._contentEl.children)) {
         const grid = wrap._casoraGrid;
-        if (!grid) continue;
+        if (!grid || wrap._casoraNoSort) continue;
         const items = Array.from(grid.children).map(card => {
           const bc = card.tagName?.toLowerCase() === 'button-card' ? card
             : card.querySelector?.('button-card');
@@ -2102,7 +2113,13 @@
 
       requestAnimationFrame(() => {
         if (!this._showing) return;
-        if (this._config?.room) setTimeout(() => this._settleRoom(0), 250);
+        if (this._config?.room) {
+          setTimeout(() => this._settleRoom(0), 250);
+          // Beim Öffnen sind die Kacheln oft noch nicht gezeichnet – dann zählt nur der Zustand der
+          // Entität. Gezeichnet melden sie selbst, ob sie aktiv sind (Drucker fehlgeschlagen,
+          // Gerät läuft …): danach noch einmal sortieren (Issue #6).
+          setTimeout(() => { if (this._showing) this._sortSectionGrids(); }, 700);
+        }
 
         overlayEl.style.transform = 'translateY(0)';
         overlayEl.style.display   = 'block';
