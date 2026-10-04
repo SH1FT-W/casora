@@ -270,7 +270,6 @@ footer .fine { flex-basis: 100%; }
     <nav class="nav-links" aria-label="Sections">
       <a class="opt" href="#layouts">Layouts</a>
       <a class="opt" href="#popups">Popups</a>
-      <a class="opt" href="#new">New</a>
       <a href="#studio">Studio</a>
       <a class="opt" href="#privacy">Privacy</a>
       <a href="https://github.com/SH1FT-W/casora">GitHub</a>
@@ -291,7 +290,7 @@ footer .fine { flex-basis: 100%; }
         <a class="btn" href="#install">Install with HACS</a>
         <a class="btn ghost" href="https://github.com/SH1FT-W/casora/blob/main/docs/guide.md">Read the guide</a>
       </div>
-      <p class="meta">Version 1.0.3 &middot; Home Assistant 2026.9 or newer &middot; Free and open source</p>
+      <p class="meta"><span id="casora-version">Version 1.0.5</span> &middot; Home Assistant 2026.9 or newer &middot; Free and open source</p>
       <div class="hero-shot shot lg">
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="images/readme-hero-dark.webp">
@@ -417,24 +416,6 @@ footer .fine { flex-basis: 100%; }
     </div>
   </section>
 
-  <!-- New in 1.0.3 -->
-  <section id="new">
-    <div class="wrap">
-      <div class="head center">
-        <p class="eyebrow">New in 1.0.3</p>
-        <h2>Small things.<br>Every day.</h2>
-        <p class="lead">Laundry, security and energy where you look for them, and AI that runs only when you say so.</p>
-      </div>
-      <div class="news">
-        <div class="tile"><p class="k">Laundry</p><h3>Know when it's done.</h3><p>Progress, finish time, program and phase, then "Done &middot; laundry inside" until you tap Unloaded. Works with the maker's integration, WashData or a smart plug.</p></div>
-        <div class="tile"><p class="k">Security</p><h3>Right in the room.</h3><p>Locks, alarm, doors, windows and cameras as badges of their own, green, orange or red by state.</p></div>
-        <div class="tile"><p class="k">Energy</p><h3>Your price, found.</h3><p>Casora takes the grid price from Home Assistant's Energy dashboard, so costs show up without typing a number.</p></div>
-        <div class="tile"><p class="k">AI</p><h3>On your schedule.</h3><p>Every AI feature can be off, automatic or run at a time you pick. New installs start with everything off.</p></div>
-        <div class="tile"><p class="k">Updates</p><h3>Betas, if you like.</h3><p>One switch offers pre-releases early. With HACS, you turn on betas in HACS.</p></div>
-        <div class="tile"><p class="k">From Hemma</p><h3>Your work moves along.</h3><p>Your own JS modules, customised popups and tiles you built yourself are kept when you move.</p></div>
-      </div>
-    </div>
-  </section>
 
   <!-- Studio -->
   <section class="tint" id="studio">
@@ -626,6 +607,17 @@ document.querySelectorAll('[data-copy]').forEach(function (b) {
     }, function () {});
   });
 });
+</script>
+<script>
+  // Version line follows the latest GitHub release; the text above is the fallback.
+  fetch('https://api.github.com/repos/SH1FT-W/casora/releases/latest')
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (j) {
+      var v = j && String(j.tag_name || '').replace(/^v/, '');
+      var el = document.getElementById('casora-version');
+      if (v && el) el.textContent = 'Version ' + v;
+    })
+    .catch(function () {});
 </script>
 </body>
 </html>
