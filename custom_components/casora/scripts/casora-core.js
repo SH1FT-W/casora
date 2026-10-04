@@ -9377,3 +9377,172 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     },
   };
 })();
+
+// „Casora wurde aktualisiert“ (1.0.5): Nach einem Update liefen offene Tabs, Wand-Tablets und
+// Handys weiter mit dem alten Code, bis jemand von Hand neu lud – teils aus dem Cache sogar danach.
+// Der Lader casora-local.js trägt ?v=<jüngste Änderung aller Casora-Skripte> (window.casoraLoadedStamp),
+// die Integration kennt den aktuellen Stand (WS casora/version, frontend_version.py). Geprüft wird
+// beim Wiederverbinden nach einem HA-Neustart, wenn der Tab sichtbar wird, und alle 10 Minuten.
+// Weicht der Stand ab, erscheint unten mittig ein ruhiger Hinweis mit „Neu laden“ – einmal je
+// neuem Stand, wegklickbar. „Neu laden“ (auch im ⋯-Menü) löscht vorher Casoras Dateien aus dem
+// Cache Storage der Seite; HAs Service Worker und seine übrigen Einträge bleiben unberührt.
+// casora-update-check:start
+(function () {
+  if (window.casoraUpdateNeeded) return;
+  var DIGITS = /^\d+$/;
+  // loaded: Stempel aus der Lader-URL; server: Antwort von casora/version; dismissed: weggeklickter Stand.
+  window.casoraUpdateNeeded = function (loaded, server, dismissed) {
+    var now = server && server.stamp != null ? String(server.stamp) : '';
+    var was = loaded != null ? String(loaded) : '';
+    if (!DIGITS.test(now) || !DIGITS.test(was)) return false;   // alter Server, yaml-Modus, Lader ohne ?v=
+    if (now === was) return false;
+    if (dismissed != null && String(dismissed) === now) return false;
+    return true;
+  };
+  // Nur Casoras eigene Adressen: /casora_scripts, /casora_assets, /casora_panel … und /local/casora.
+  window.casoraIsOwnUrl = function (url) {
+    var path;
+    try { path = new URL(url, 'http://x').pathname; } catch (e) { return false; }
+    return /^\/(casora_[a-z0-9_]+|local\/casora)\//i.test(path);
+  };
+})();
+// casora-update-check:end
+(function () {
+  if (window.casoraHardReload) return;
+  var KEY = 'casora.updateDismissed';
+  var EVERY = 10 * 60000;
+
+  window.casoraHardReload = function () {
+    var gone = false;
+    var go = function () { if (gone) return; gone = true; try { window.location.reload(); } catch (e) {} };
+    setTimeout(go, 3000);   // ein hängender Cache darf das Neuladen nicht aufhalten
+    var p = Promise.resolve();
+    try {
+      if (window.caches && typeof caches.keys === 'function') {
+        p = caches.keys().then(function (names) {
+          return Promise.all(names.map(function (n) {
+            return caches.open(n).then(function (c) {
+              return c.keys().then(function (reqs) {
+                return Promise.all(reqs.filter(function (r) { return window.casoraIsOwnUrl(r.url); })
+                  .map(function (r) { return c.delete(r); }));
+              });
+            });
+          }));
+        });
+      }
+    } catch (e) { /* ohne Cache Storage einfach neu laden */ }
+    p.catch(function () {}).then(go);
+  };
+
+  var tr = function (s) { return window.casoraTr ? window.casoraTr(s) : s; };
+  var dismissed = function () { try { return localStorage.getItem(KEY); } catch (e) { return null; } };
+  var shownFor = null;
+
+  function hide(el) {
+    if (!el || !el.parentNode) return;
+    el.style.transition = 'opacity 160ms ease, transform 180ms ease';
+    el.style.opacity = '0';
+    el.style.transform = 'translate(-50%, 8px)';
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 200);
+  }
+
+  function show(stamp) {
+    if (shownFor === stamp && document.getElementById('casora-update-hint')) return;
+    var old = document.getElementById('casora-update-hint');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    shownFor = stamp;
+    var el = document.createElement('div');
+    el.id = 'casora-update-hint';
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-live', 'polite');
+    Object.assign(el.style, {
+      position: 'fixed', left: '50%', zIndex: '99998', boxSizing: 'border-box',
+      bottom: 'calc(16px + var(--casora-mobile-nav-space, env(safe-area-inset-bottom, 0px)))',
+      display: 'flex', alignItems: 'center', gap: '6px', width: 'max-content',
+      maxWidth: 'calc(100vw - 32px)', padding: '6px 6px 6px 18px', minHeight: '52px',
+      font: 'inherit', fontSize: '14px', lineHeight: '1.3',
+      opacity: '0', transform: 'translate(-50%, 8px)',
+    });
+    if (window.casoraMenuGlass) window.casoraMenuGlass.apply(el);
+    el.style.borderRadius = '26px';
+    var fg = 'var(--casora-menu-fg, #fff)';
+
+    var txt = document.createElement('span');
+    txt.textContent = tr('Casora wurde aktualisiert');
+    Object.assign(txt.style, { flex: '1 1 auto', minWidth: '0', fontWeight: '500', marginRight: '6px', color: fg,
+      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' });
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = tr('Neu laden');
+    Object.assign(btn.style, {
+      flex: 'none', border: '0', cursor: 'pointer', font: 'inherit', fontSize: '14px', fontWeight: '600',
+      height: '40px', padding: '0 16px', borderRadius: '20px', color: fg,
+      background: 'color-mix(in srgb, ' + fg + ' 14%, transparent)',
+    });
+    btn.onclick = function (e) {
+      e.preventDefault(); e.stopPropagation();
+      btn.disabled = true; btn.style.opacity = '.6';
+      window.casoraHardReload();
+    };
+
+    var x = document.createElement('button');
+    x.type = 'button';
+    x.setAttribute('aria-label', tr('Schließen'));
+    Object.assign(x.style, {
+      flex: 'none', border: '0', cursor: 'pointer', width: '40px', height: '40px', borderRadius: '20px',
+      display: 'grid', placeItems: 'center', background: 'transparent', color: fg, opacity: '.7', padding: '0',
+    });
+    var ico = document.createElement('ha-icon');
+    ico.setAttribute('icon', 'mdi:close');
+    ico.style.setProperty('--mdc-icon-size', '20px');
+    x.appendChild(ico);
+    x.onclick = function (e) {
+      e.preventDefault(); e.stopPropagation();
+      try { localStorage.setItem(KEY, stamp); } catch (err) { /* dann nur für diesen Tab */ }
+      hide(el);
+    };
+
+    el.appendChild(txt); el.appendChild(btn); el.appendChild(x);
+    document.body.appendChild(el);
+    requestAnimationFrame(function () {
+      el.style.transition = 'opacity 220ms cubic-bezier(0.32,0.72,0,1), transform 260ms cubic-bezier(0.32,0.72,0,1)';
+      el.style.opacity = '1';
+      el.style.transform = 'translate(-50%, 0)';
+    });
+  }
+
+  var busy = false, last = 0, conn = null;
+  function hass() { var h = document.querySelector('home-assistant'); return h && h.hass; }
+
+  function check(force) {
+    var h = hass();
+    watch(h);
+    if (busy || !h || typeof h.callWS !== 'function') return;
+    if (h.connection && h.connection.connected === false) return;
+    if (!force && Date.now() - last < 30000) return;
+    var loaded = window.casoraLoadedStamp;
+    if (!loaded) return;
+    busy = true; last = Date.now();
+    Promise.resolve(h.callWS({ type: 'casora/version' })).then(function (r) {
+      if (window.casoraUpdateNeeded(loaded, r, dismissed())) show(String(r.stamp));
+    }, function () { /* ältere Integration oder HA startet noch */ }).then(function () { busy = false; });
+  }
+
+  // Nach einem HA-Neustart verbindet sich die Seite neu; die Integration ist dann evtl. noch nicht
+  // fertig eingerichtet – darum zweimal nachsehen.
+  function watch(h) {
+    var c = h && h.connection;
+    if (!c || c === conn || typeof c.addEventListener !== 'function') return;
+    conn = c;
+    c.addEventListener('ready', function () {
+      setTimeout(function () { check(true); }, 5000);
+      setTimeout(function () { check(true); }, 45000);
+    });
+  }
+
+  setTimeout(function () { check(true); }, 15000);
+  setInterval(function () { check(true); }, EVERY);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) check(false); });
+  window.casoraUpdateCheck = function () { check(true); };
+})();

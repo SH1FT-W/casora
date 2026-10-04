@@ -76,6 +76,9 @@ const MODULES = [
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());
+// Stand, mit dem diese Seite geladen wurde – casora-core vergleicht ihn mit casora/version
+// („Casora wurde aktualisiert“). Seit 1.0.5 enthält er auch die übrigen Casora-Skripte.
+if (new URL(import.meta.url).searchParams.get('v')) window.casoraLoadedStamp = v;
 const urls = MODULES.map((m) => new URL('./local/' + m + '.js?v=' + v, import.meta.url).href);
 
 /* Alle Module sofort parallel anfordern, danach der Reihe nach ausführen. */
