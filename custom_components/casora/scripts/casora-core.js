@@ -4309,11 +4309,33 @@ window.casoraMenuGlass = {
   // Zweitonige Symbole (Apple-Stil, Zweitfläche mit geringer Deckkraft) zeigt der Ring
   // einfarbig: als Maske wurde die blasse Zweitfläche sonst ein Quadrat im Kreis.
   var MONO = {};
+  // Grober Rahmen (x0,y0,x1,y1) einer Liste von Pfaden aus den Zahlen ihrer d-Attribute.
+  function monoBox(tags) {
+    var b = null;
+    tags.forEach(function (t) {
+      var d = /\bd="([^"]*)"/.exec(t);
+      var n = d ? (d[1].match(/-?\d*\.?\d+/g) || []).map(parseFloat) : [];
+      for (var i = 0; i + 1 < n.length; i += 2) {
+        if (!b) b = [n[i], n[i + 1], n[i], n[i + 1]];
+        b[0] = Math.min(b[0], n[i]); b[1] = Math.min(b[1], n[i + 1]);
+        b[2] = Math.max(b[2], n[i]); b[3] = Math.max(b[3], n[i + 1]);
+      }
+    });
+    return b;
+  }
   function monoSvg(txt) {
     var low = 0, all = (txt.match(/<(path|circle|rect|ellipse|polygon)\b/g) || []).length;
+    // Liegt die blasse Zweitfläche neben statt hinter der Hauptfläche (Saugroboter beim Reinigen:
+    // Gerät blass, nur das Richtungsdreieck kräftig), ist sie Teil des Symbols und bleibt deckend.
+    // Sonst blieb im Ring nur das kleine Dreieck stehen.
+    var tags = txt.match(/<(path|circle|rect|ellipse|polygon)\b[^>]*>/g) || [];
+    var lowOf = function (t) { var m = /\b(?:fill-opacity|opacity)="([0-9.]+)"/.exec(t); var n = m ? parseFloat(m[1]) : 1; return n > 0 && n < 0.5; };
+    var bl = monoBox(tags.filter(lowOf));
+    var bh = monoBox(tags.filter(function (t) { return !lowOf(t) && !/\bopacity="0"/.test(t); }));
+    var apart = bl && bh && (bh[3] <= bl[1] || bl[3] <= bh[1] || bh[2] <= bl[0] || bl[2] <= bh[0]);
     var out = txt.replace(/\b(fill-opacity|opacity)="([0-9.]+)"/g, function (m, k, v) {
       var n = parseFloat(v);
-      if (n > 0 && n < 0.5) { low++; return k + '="0"'; }
+      if (n > 0 && n < 0.5) { low++; return k + (apart ? '="0.85"' : '="0"'); }
       return m;
     });
     // Nur Zweitflächen ausblenden – bleibt nichts Deckendes übrig, das Original behalten.
