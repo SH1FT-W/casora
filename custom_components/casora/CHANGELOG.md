@@ -4,13 +4,6 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
-## 1.0.5 – 04.10.2026
-
-### Fixed
-- Vacuum popup: while cleaning or returning, the large circle at the top showed only a small white
-  triangle instead of the vacuum symbol. The whole robot with its direction arrow now sits centred in the
-  circle, like the other popup headers.
-
 ## 1.0.4 – 04.10.2026
 
 ### Improved
@@ -42,6 +35,9 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   scrolling follows it, and the Studio preview shows the room photo with the chosen softness right away.
 
 ### Fixed
+- Vacuum popup: while cleaning or returning, the large circle at the top showed only a small white
+  triangle instead of the vacuum symbol. The whole robot with its direction arrow now sits centred in the
+  circle, like the other popup headers.
 - Bell after a Home Assistant restart: open windows and doors showed “Open for 10 min” and appeared again
   under New although they had been open for hours and were already read. Casora now remembers when each
   door or window contact was opened and keeps that across restarts, so the duration stays right and a read
