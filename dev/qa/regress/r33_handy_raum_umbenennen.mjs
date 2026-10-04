@@ -1,3 +1,4 @@
+// @parallel: ui   (benennt Räume um wie r38 – gleichzeitig auf einem Test-HA störten sie sich, 04.10.2026)
 // @zustand: arbeit
 // Gemeldet (Issue #4, 04.10.2026): Ein im Studio umbenannter Raum behielt am Handy den alten Namen
 // (Kopf, Leiste, Raumseite, room_chips), am Desktop blieb aqi_room_name alt. Ursache: Übernommene
