@@ -7,6 +7,10 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 1.0.4 – 04.10.2026
 
 ### Improved
+- Soft look: the round media button next to the bell, messages and “…” (the minimised player's waveform)
+  now has the same background and shadow as those three buttons instead of a beige one, in light and dark.
+  While something plays, its waves are in the Casora tone like the play button and progress bar, otherwise
+  dark like the other icons.
 - Soft look: the progress bar of the media players (Now playing on desktop and phone, the mini player
   next to the bell, the media popup and the Studio preview) is now always filled in the Casora tone, like
   the play button, instead of the media colour. The light cover tint of the card stays.
