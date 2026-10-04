@@ -11,6 +11,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 ### Verbessert
 - Raumansicht am Handy (Weich): mehr Luft zwischen der Badge-Reihe unter dem Raumnamen und der ersten Kachelreihe (40 px statt 24 px), die Badges kleben nicht mehr an den Kacheln. Einstellbar über die Theme-Variable `casora-room-badges-gap-mobile`.
+- Medien-Popup an Desktop und Tablet (Apple TV und andere Player mit Apps): Die linke Spalte (Ausschalten, Apple Music öffnen, Weitere Einstellungen) hat jetzt eine eigene Überschrift „Gerät“ im selben Stil wie „Apps“ rechts, beide Spalten beginnen auf gleicher Höhe.
 
 ## 1.0.5 – 04.10.2026
 

@@ -11,6 +11,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ### Improved
 - Phone room view (Soft look): more room between the badge row under the room name and the first row of tiles (40 px instead of 24 px), so the badges no longer sit right on top of the tiles. Adjustable via the theme variable `casora-room-badges-gap-mobile`.
+- Media popup on desktop and tablet (Apple TV and other players with apps): the left column (Turn off, Open Apple Music, More settings) now has its own heading "Device" in the same style as "Apps" on the right, so both columns start at the same height.
 
 ## 1.0.5 – 04.10.2026
 
