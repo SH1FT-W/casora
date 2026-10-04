@@ -8,7 +8,7 @@
 A calm, photo-backed dashboard for Home Assistant that sets itself up.<br/>
 Shape the rest room by room in a visual studio. No YAML.</p>
 
-[![Version](https://img.shields.io/badge/version-1.0.3-94603B?style=flat-square&labelColor=3A322B)](CHANGELOG.md)
+[![Version](https://img.shields.io/github/v/release/SH1FT-W/casora?label=version&style=flat-square&color=94603B&labelColor=3A322B)](CHANGELOG.md)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.9%2B-94603B?style=flat-square&labelColor=3A322B&logo=homeassistant&logoColor=white)](https://www.home-assistant.io)
 [![HACS](https://img.shields.io/badge/HACS-custom-94603B?style=flat-square&labelColor=3A322B)](https://hacs.xyz)
 [![License](https://img.shields.io/badge/license-MIT-94603B?style=flat-square&labelColor=3A322B)](LICENSE)
@@ -34,15 +34,6 @@ Shape the rest room by room in a visual studio. No YAML.</p>
 - **It stays at home.** No cloud, no account, no telemetry. AI features are optional and use the provider you already set up.
 
 Casora recognises robot vacuums, washers and dryers, dishwashers, 3D printers, home batteries, cars, waste collection, calendars and your network, and gives each its own tile and popup. Room photos for 31 room types, by day and by night, are included.
-
-### New in 1.0.3
-
-- **Laundry at a glance.** The washer and dryer popup shows progress, finish time, program and phase, and says "Done · laundry inside" until you tap *Unloaded*. Recent runs and stats per program come along. Casora prefers the maker's integration (Home Connect, Miele, SmartThings, LG ThinQ and others), then WashData, then a smart plug.
-- **Security in the room.** Locks, alarm, door and window contacts and cameras can show as badges of their own in each room, green, orange or red by state (Studio → room → Badges → *Separate security badges*).
-- **Your electricity price, found for you.** Casora takes the grid price from Home Assistant's Energy dashboard. A price set in Casora's settings still wins.
-- **AI on your schedule.** Every AI feature gets its own schedule: off, automatic or a day and time you pick. The update check runs daily instead of hourly, and AI answers in your Home Assistant language. On a new install, everything starts switched off.
-- **Beta versions, if you like.** A switch under Updates offers pre-releases early. With HACS, turn on betas in HACS instead.
-- **Moving keeps your own work.** When you move from Hemma, your own JS modules stay loaded, customised popups are recognised, and a tile you built yourself becomes a tile type of its own while Casora's tile keeps getting updates.
 
 ## A look around
 
