@@ -7799,6 +7799,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var id = entry.entity_id || '';
     var s = String(entry.state == null ? '' : entry.state);
     var name = entry.name || nameOf(st);
+    // Neustart oder kurzer Ausfall: unavailable/unknown → alter Zustand ist keine Neuigkeit
+    // (sonst nach jedem HA-Neustart „Schloss verriegelt“, „… hat das Haus verlassen“ usw.).
+    if (prev !== undefined && (/^(unavailable|unknown)$/.test(prev) || prev === s)) return null;
 
     if (id.indexOf('lock.') === 0) {
       var lk = { opens: ['casora_badge_lock_group', 'casora_popup_lock'] };
