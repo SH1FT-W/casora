@@ -27,10 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Mobil", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst – mit eigener Mobilansicht.",
-      n1t: "Pflanzen sagen, was sie brauchen", n1: "„Fühlt sich wohl“ oder „Braucht Wasser“, gleich auf Kachel, Popup und Mitteilung.",
-      n2t: "Waschmaschine und Trockner", n2: "Fortschritt, Fertig gegen, Wäsche noch drin und Statistik je Programm.",
-      n3t: "Sicherheit im Raum", n3: "Fenster, Türen und Schlösser einzeln in der Badge-Reihe, in Grün, Orange oder Rot.",
-      n4t: "Neues Zeichen", n4: "Dach und Räume im Casora-Ton, ein Fenster mit Licht.",
+      n1t: "Besser lesbar", n1: "Im hellen Look liegt ein ruhiger Schleier über dem Foto, Überschriften und Wetter sind immer gut zu lesen.",
+      n2t: "Apps auf einen Blick", n2: "Im Medien-Popup stehen alle Apps übersichtlich auf mehreren Reihen, die laufende vorn.",
+      n3t: "Glocke zuverlässiger", n3: "Fertig-Meldungen bleiben stehen, nach einem Neustart tauchen keine alten Einträge mehr auf.",
+      n4t: "Viele Fehler behoben", n4: "Handy-Layout, Kachelgrößen, Raumnamen, Kameras und vieles mehr. Alles im Changelog.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen – with its own phone layout.",
-      n1t: "Plants say what they need", n1: "“Doing well” or “Needs water”, the same on tile, popup and notification.",
-      n2t: "Washer and dryer", n2: "Progress, finish time, laundry still inside and stats per program.",
-      n3t: "Security in the room", n3: "Windows, doors and locks as their own badges, in green, orange or red.",
-      n4t: "A new mark", n4: "Roof and rooms in Casora's warm tone, one window with the light on.",
+      n1t: "Easier to read", n1: "In the light look a calm veil sits over the photo, so headings and weather always stay readable.",
+      n2t: "Apps at a glance", n2: "The media popup lists all apps neatly over several rows, the one that is playing first.",
+      n3t: "A more reliable bell", n3: "Finished messages stay put, and old entries no longer come back after a restart.",
+      n4t: "Lots of fixes", n4: "Phone layout, tile sizes, room names, cameras and much more. All in the changelog.",
     },
   };
 
@@ -56,10 +56,10 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:sprout-outline", "n1t", "n1"],
-    ["mdi:washing-machine", "n2t", "n2"],
-    ["mdi:shield-home-outline", "n3t", "n3"],
-    ["mdi:home-outline", "n4t", "n4"],
+    ["mdi:eye-outline", "n1t", "n1"],
+    ["mdi:apps", "n2t", "n2"],
+    ["mdi:bell-check-outline", "n3t", "n3"],
+    ["mdi:wrench-outline", "n4t", "n4"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.
