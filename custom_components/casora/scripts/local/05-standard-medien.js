@@ -819,3 +819,71 @@ window._hpMultiTap = function (ev, kind) {
     return window._casoraStd && left.length && right.length ? window._casoraStd(card, { left: left, right: right }) : card;
   };
 })();
+
+// ── Medien-Popup: Apps umbrechen und Reihen füllen (04.10.2026, 1.0.5) ───────
+// Die Apps/Quellen standen in einer Reihe und waren rechts abgeschnitten. Jetzt
+// brechen sie um: die laufende App zuerst, dann First-Fit-Decreasing über die
+// gemessenen Chip-Breiten, damit jede Reihe möglichst voll wird.
+// window._casoraApps.order(breiten, platz, abstand, laufend) → Reihen mit Indizes (rein, testbar)
+// window._casoraApps.mount(img): aus dem onload des Platzhalter-Bilds in der Vorlage;
+// misst, ordnet in Reihen und blendet erst dann ein. Bei Größenänderung neu.
+(function () {
+  if (window._casoraApps) return;
+  var A = window._casoraApps = {};
+  A.order = function (widths, cap, gap, cur) {
+    gap = gap || 0;
+    var rows = [], fill = [];
+    var put = function (i) {
+      var w = widths[i];
+      for (var r = 0; r < rows.length; r++) {
+        if (fill[r] + gap + w <= cap + 0.5) { rows[r].push(i); fill[r] += gap + w; return; }
+      }
+      rows.push([i]); fill.push(w);
+    };
+    var rest = [];
+    for (var i = 0; i < widths.length; i++) if (i !== cur) rest.push(i);
+    if (cur != null && cur >= 0 && cur < widths.length) { rows.push([cur]); fill.push(widths[cur]); }
+    // Stabil absteigend: gleich breite Chips behalten ihre Reihenfolge.
+    rest.sort(function (x, y) { return (widths[y] - widths[x]) || (x - y); });
+    rest.forEach(put);
+    return rows;
+  };
+  var pack = function (box) {
+    var trk = box.querySelector('.trk');
+    if (!trk) return;
+    var cw = trk.offsetWidth;
+    if (!cw) return;
+    if (box._casoraW === cw && box.classList.contains('pk')) return;
+    var chips = box._casoraChips || (box._casoraChips = Array.prototype.slice.call(trk.querySelectorAll('.hui-sg')));
+    if (!chips.length) return;
+    // Zum Messen alle in eine Reihe ohne Umbruch (die Chip-Breite hängt nicht vom Platz ab).
+    trk.classList.add('ms');
+    chips.forEach(function (c) { trk.appendChild(c); });
+    Array.prototype.slice.call(trk.querySelectorAll('.rw')).forEach(function (r) { r.remove(); });
+    var s = trk.getBoundingClientRect().width / cw || 1;
+    var widths = chips.map(function (c) { return c.getBoundingClientRect().width / s; });
+    var gap = parseFloat(getComputedStyle(trk).columnGap) || 0;
+    var cur = -1;
+    chips.forEach(function (c, i) { if (cur < 0 && c.classList.contains('on')) cur = i; });
+    A.order(widths, cw, gap, cur).forEach(function (r) {
+      var row = document.createElement('div');
+      row.className = 'rw';
+      r.forEach(function (i) { row.appendChild(chips[i]); });
+      trk.appendChild(row);
+    });
+    trk.classList.remove('ms');
+    box._casoraW = cw;
+    box.classList.add('pk');
+  };
+  A.mount = function (img) {
+    var box = img && img.parentNode;
+    if (!box) return;
+    pack(box);
+    if (window.ResizeObserver && !box._casoraRo) {
+      box._casoraRo = new ResizeObserver(function () { pack(box); });
+      box._casoraRo.observe(box);
+    }
+    // Sicherheitsnetz: nie unsichtbar bleiben, auch wenn das Messen scheitert.
+    setTimeout(function () { box.classList.add('pk'); }, 600);
+  };
+})();

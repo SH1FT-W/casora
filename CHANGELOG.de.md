@@ -4,6 +4,15 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.5 – 04.10.2026
+
+### Verbessert
+- Medien-Popup: Die Apps (Quellen) stehen nicht mehr in einer Reihe, die rechts abgeschnitten ist. Sie
+  brechen um und nutzen die ganze Breite, so angeordnet, dass jede Reihe möglichst voll ist, die laufende
+  App zuerst. Am Desktop und Handy, bei Größenänderung neu angeordnet.
+- Weich-Look: Der Lautstärke-Regler im Medien-Popup ist jetzt im Casora-Ton gefüllt wie der
+  Fortschrittsbalken statt in der Medienfarbe, hell und dunkel.
+
 ## 1.0.4 – 04.10.2026
 
 ### Verbessert
