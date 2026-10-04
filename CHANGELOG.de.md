@@ -7,6 +7,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ## 1.0.4 – 04.10.2026
 
 ### Verbessert
+- Weich: Das Temperatur-Diagramm im Aquarium-Popup ist in ruhigem Türkis statt in grellem Cyan.
 - Medien-Popup: Die Apps (Quellen) stehen nicht mehr in einer Reihe, die rechts abgeschnitten ist. Sie
   brechen um und nutzen die ganze Breite, so angeordnet, dass jede Reihe möglichst voll ist, die laufende
   App zuerst. Am Desktop und Handy, bei Größenänderung neu angeordnet.

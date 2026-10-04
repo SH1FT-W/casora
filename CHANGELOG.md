@@ -7,6 +7,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 1.0.4 – 04.10.2026
 
 ### Improved
+- Soft look: the aquarium temperature chart uses a calm teal instead of bright cyan.
 - Media popup: the apps (sources) no longer sit in a single row that is cut off on the right. They wrap
   and use the full width, sorted so every row is as full as possible, with the running app first. On
   desktop and phone, rearranged when the size changes.
