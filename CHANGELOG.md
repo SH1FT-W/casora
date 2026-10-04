@@ -18,6 +18,11 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
   the device name or a number in the same room, so two identical rows never appear.
 - Bell: a running appliance with remaining time jumped back under "New" right after being read.
 - Bell: entries with the same time no longer swap places on refresh.
+### Improved
+- Soft look, light: a light linen veil now lies over the background photo (about 66 % at the top, fading
+  to nothing towards the bottom), so section headings, the title and the weather stay readable on any photo.
+  On the home page and room pages on desktop, tablet and phone, including the phone's room view. Text,
+  cards and the navigation bar are unchanged and sit above it. Dark, Standard and Glass are unchanged.
 
 ## 1.0.4 – 04.10.2026
 

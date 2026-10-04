@@ -19,6 +19,11 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
   Raum den Gerätenamen oder eine Nummer, sodass nie zwei gleiche Zeilen entstehen.
 - Glocke: Ein laufendes Gerät mit Restzeit sprang nach dem Lesen sofort wieder unter „Neu“.
 - Glocke: Einträge mit gleicher Uhrzeit tauschten beim Aktualisieren nicht mehr ihre Reihenfolge.
+### Verbessert
+- Weich, hell: Über dem Hintergrundfoto liegt jetzt ein heller Leinen-Schleier (oben etwa 66 %, nach unten
+  auslaufend), damit Abschnittsüberschriften, Titel und Wetter auf jedem Foto lesbar sind. Auf Startseite und
+  Raumseiten an Desktop, Tablet und Handy, auch in der Raumansicht am Handy. Schrift, Karten und
+  Navigationsleiste bleiben unverändert und liegen darüber. Dunkel, Standard und Glas bleiben wie bisher.
 
 ## 1.0.4 – 04.10.2026
 
