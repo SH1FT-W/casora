@@ -17454,10 +17454,11 @@ class CasoraPanel extends HTMLElement {
         sw.style.background = item.swatch;
         d.appendChild(sw);
       }
-      if (item.glyph) {
+      if (item.glyph || item.glyphUrl) {
         const g = document.createElement("span");
         g.className = "roomglyph menuglyph" + (item.plainGlyph ? " plain" : "");
-        g.style.setProperty("--i", "url('" + iconUrl(item.glyph) + "')");
+        // glyphUrl: fertige Bild-URL (z. B. das Symbol eines Badges aus der Vorschau).
+        g.style.setProperty("--i", "url('" + (item.glyphUrl || iconUrl(item.glyph)) + "')");
         d.appendChild(g);
       } else if (item.haIcon) {
         const g = document.createElement("ha-icon");
@@ -18363,7 +18364,23 @@ class CasoraPanel extends HTMLElement {
       const cn = customTileName(tile, this._hass && this._hass.states);
       if (cn) return cn.name;
     }
-    return tile.name || (type && type.label) || "Tile";
+    if (tile.name || (type && type.label)) return tile.name || type.label;
+    // Sammel-/Bedingungskarte ohne eigenen Typ: wie in der Kachelliste die Art der inneren Karte.
+    const cd = condContainerDesc(shellT);
+    return (cd && cd.label) || "Tile";
+  }
+
+  // Symbol einer Kachel wie in der Kachelliste (Name aus ICON_DATA, sonst „tile“).
+  _tileGlyphFor(key) {
+    const room = this._state && this._state.compact.rooms[this._room];
+    const shellT = ((room && room.tiles) || []).find((t) => this._tileKey(t) === key);
+    if (!shellT) return "tile";
+    const tile = tileView(shellT);
+    const type = tileTypeAny(tile) || RAW_TILE;
+    const cd = condContainerDesc(shellT);
+    const known = (n) => (n && n !== "default" && ICON_DATA[n] ? n : null);
+    return known((tile.variables || {}).icon) || known(tile.icon) || known(TILE_ICON[type.id])
+      || known(cd && cd.type && TILE_ICON[cd.type.id]) || "tile";
   }
 
   // Light the same object on both sides. Called with null to clear.

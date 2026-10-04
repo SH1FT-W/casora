@@ -39,6 +39,11 @@
       transition:padding-right .26s var(--ease, ease);
     }
     :host(.bmode.split.narrow:not(.flow)) .stage { display:flex; }
+    /* Tablet: der Umschalter Desktop/Tablet/Mobil lag unter der Kopfzeile (z-index) und ließ
+       sich nicht antippen – unter die Kopfzeile rücken. „N ausgeblendet“ bleibt hinter der
+       Vorschau, falls es dort steht (die schmale Ansicht sortiert die Bühne per order). */
+    :host(.bmode.split.narrow:not(.flow)) .canvas { padding-top:76px; }
+    :host(.bmode.narrow) .canvas > .bhid { order:3; }
     :host(.bmode.split.binsp:not(.flow):not(.bpage)) .main { padding-right:calc(var(--b-insp-w, 388px) + 14px); }
     :host(.bmode.split.binsp:not(.flow):not(.bpage)) { --b-insp-w:min(388px, 42vw); }
     :host(.bmode.split:not(.flow)) .inspector {
@@ -48,11 +53,18 @@
       border-radius:22px; clip-path:inset(0 round 22px); flex:none;
       box-shadow:0 2px 6px rgba(0,0,0,.10), 0 26px 64px rgba(0,0,0,.26);
       display:none;
+      /* Absolut positioniert zählt align-self: „flex-start“ (aus dem bisherigen Studio) machte den
+         Inspektor so hoch wie sein Inhalt – lange Listen ragten dann über die Kopfzeile
+         und verdeckten „Fertig“. Gestreckt füllt er den Platz und scrollt innen. */
+      align-self:stretch;
     }
     :host(.bmode.binsp.split:not(.flow)) .inspector { display:flex; animation:bInspIn .22s var(--ease, ease); }
     :host(.bmode.bpage.split:not(.flow)) { --b-insp-w:min(760px, calc(100% - 28px)); }
     :host(.bmode.bpage.split:not(.flow)) .main { padding-right:0; }
     :host(.bmode.bpage.split:not(.flow)) .inspector { top:calc(var(--top-h, 64px) + 4px) !important; margin:0 !important; }
+    /* Seiten (Einstellungen, Updates, Zeitreise) liegen über der Vorschau: deren Umschalter
+       Desktop/Tablet/Mobil ragte sonst halb über den Rand. */
+    :host(.bmode.bpage.split:not(.flow)) .stage .segrow { visibility:hidden; }
     @keyframes bInspIn { from { opacity:0; transform:translateX(18px); } }
     @media (prefers-reduced-motion: reduce) { :host(.bmode) .inspector { animation:none !important; } }
     :host(.bmode) .inspector .insphead { padding-right:52px; }
@@ -104,6 +116,7 @@
       background:var(--chip, rgba(127,127,127,.14)); color:var(--ink-2, inherit);
     }
     :host(.bmode) .bhid svg { width:16px; height:16px; }
+    :host(.bmode) .segrow .bhid { margin:0; height:36px; padding:0 14px; box-sizing:border-box; }
     :host(.bmode.phone) .bhid { position:fixed; left:50%; transform:translateX(-50%); bottom:calc(84px + env(safe-area-inset-bottom, 0px));
       z-index:19; margin:0; white-space:nowrap; box-shadow:0 6px 18px rgba(0,0,0,.16);
       background:var(--bar-solid, var(--casora-studio-bar-solid, rgba(242,242,247,.96))); }
@@ -200,6 +213,23 @@
       });
     };
 
+    // Größen-Umschalter (Desktop/Tablet/Mobil) nach einer Größe von hier nachziehen: sonst stand
+    // am Handy „Tablet“ markiert über der Handy-Vorschau, und „Tablet“ antippen tat nichts.
+    const wireSeg = P._wireSeg;
+    P._wireSeg = function (seg, attr, initial, onPick, opts) {
+      if (seg && seg.id === "sizeseg") this._bSizeWire = [seg, attr, onPick, opts];
+      return wireSeg.apply(this, arguments);
+    };
+    P._bSyncSize = function () {
+      try { if (this._syncSizeOpts) this._syncSizeOpts(); } catch (e) { /* ohne */ }
+      const w = this._bSizeWire;
+      if (w && w[0].isConnected) this._wireSeg(w[0], w[1], this._miniSize, w[2], w[3]);
+      else {
+        const sg = this.shadowRoot && this.shadowRoot.getElementById("sizeseg");
+        if (sg && sg._moveThumb) requestAnimationFrame(() => sg._moveThumb(false));
+      }
+    };
+
     P._bPage = function () { return !!(this._csOpen || this._cuOpen || this._cvOpen); };
 
     P._bApply = function () {
@@ -212,7 +242,11 @@
         root.appendChild(st);
       }
       const on = this._bOn() && !this._flowMode;
+      const wasOn = this.classList.contains("bmode");
       this.classList.toggle("bmode", on);
+      // Nach einem Ablauf (am Handy z. B. Updates, Zeitreise) war B kurz aus: die Vorschau kann
+      // inzwischen neu gebaut sein – Platzhalter, „N ausgeblendet“ und Tastatur neu anbringen.
+      if (on && !wasOn) requestAnimationFrame(() => this._bDecorate());
       if (on) { this._editTiles = false; this._editBadges = false; }
       const page = on && this._bPage();
       if (page) this.classList.remove("contentpage");
@@ -230,7 +264,7 @@
       if (sig !== this._bSig) {
         this._bSig = sig;
         if (on && phone && typeof this._phoneReachable === "function" && this._phoneReachable()
-          && this._miniSize !== "phone") this._miniSize = "phone";
+          && this._miniSize !== "phone") { this._miniSize = "phone"; this._bSyncSize(); }
         if (this._state) requestAnimationFrame(() => { this._rebuildPreview(); this._bRefit(); });
       }
     };
@@ -258,7 +292,10 @@
           tools.appendChild(b);
           return b;
         };
-        mk("rooms", "rooms", "Rooms", (b) => this._roomTitleMenu(b), "broom");
+        const rb = mk("rooms", "rooms", "Rooms", (b) => this._roomTitleMenu(b), "broom");
+        // Raumnamen sind keine Casora-Texte: „Home“ stand sonst als „Zuhause“ neben dem
+        // gleichnamigen Knopf für die Einstellungen aller Dashboards.
+        rb.querySelector(".blabel").setAttribute("data-no-i18n", "");
         mk("list", "list", "Elements", () => this._bShowList());
         mk("dash", "dash", "Dashboard", (b) => this._bDashMenu(b));
         mk("home", "home", "Home", (b) => this._bHomeMenu(b));
@@ -344,15 +381,30 @@
       this._bFocusInspector();
     };
 
+    // „Kachel hinzufügen“ (Platz in der Vorschau, am Handy „+“): Kachelliste im Inspektor und
+    // gleich die Typauswahl. Der Platz der Vorschau rief bisher scrollIntoView auf – das schob
+    // im neuen Aufbau die ganze Seite samt Vorschau aus dem Bild. Hier scrollt nur der Inspektor.
     P._bAddTile = function () {
       this._bLeavePages();
-      const slot = this.shadowRoot.querySelector(".card.map .mtile.ghost");
-      if (slot) { slot.click(); return; }
       this._group = "tiles";
       this._sel = null;
       this._stackOpenReq = "tiles";
       this._bOpen = true;
       this._renderForm();
+      requestAnimationFrame(() => {
+        const pane = this.shadowRoot.getElementById("pane");
+        const bar = pane && pane.querySelector(".addbar.tileadd");
+        const add = bar && bar.querySelector("button.scadd");
+        if (!add) return;
+        const insp = this.shadowRoot.querySelector(".inspector");
+        for (let sc = bar.parentElement; sc && sc !== insp; sc = sc.parentElement) {
+          if (sc.scrollHeight <= sc.clientHeight + 1 || !/(auto|scroll)/.test(getComputedStyle(sc).overflowY)) continue;
+          const r = bar.getBoundingClientRect(), rs = sc.getBoundingClientRect();
+          sc.scrollTop += r.top - rs.top - Math.max(0, (rs.height - r.height) / 2);
+          break;
+        }
+        setTimeout(() => { if (add.isConnected) add.click(); }, 120);
+      });
     };
 
     P._bLeavePages = function () {
@@ -363,6 +415,9 @@
 
     P._bClose = function () {
       if (this._openCombo) this._openCombo();
+      // Offene Anfrage „Kacheln aufklappen“ (Kachel hinzufügen) hielt den Inspektor sonst offen:
+      // am Handy ließ sich das Blatt danach weder per ✕ noch per Esc schließen.
+      this._stackOpenReq = null;
       this._bLeavePages();
       this._bOpen = false;
       if (this._sel) {
@@ -388,12 +443,14 @@
       });
     };
 
+    // Symbole wie in der Seitenleiste des bisherigen Studios (Abschnitte bzw. Einstellungsseiten).
     const SECS = [
-      ["General", "Look & Controls"], ["Weather", "Weather"], ["Time", "Time"],
-      ["Notifications", "Notifications"], ["Scenes", "Scenes"],
+      ["General", "Look & Controls", "settings"], ["Weather", "Weather", "weather"], ["Time", "Time", "clock"],
+      ["Notifications", "Notifications", "bell"], ["Scenes", "Scenes", "scenes"],
     ];
     P._bDashMenu = function (anchor) {
-      const items = SECS.map(([k, l]) => ({ id: "sec:" + k, label: l, group: "This dashboard", quiet: true }));
+      const items = SECS.map(([k, l, g]) => ({ id: "sec:" + k, label: l, glyph: g, plainGlyph: true,
+        group: "This dashboard", quiet: true }));
       if (typeof this._cvFromMenu === "function" && this._dashUrl) {
         items.push({ id: "versions", label: "Rewind", icon: "clock", group: "This dashboard", quiet: true });
       }
@@ -413,11 +470,12 @@
     };
 
     const PAGES = [
-      ["home", "Home & Devices"], ["alerts", "Bell & Alerts"], ["dashboards", "New Dashboards"],
-      ["ai", "AI"], ["outdoor", "Outdoor & Price"], ["vent", "Ventilation"],
+      ["home", "Home & Devices", "home"], ["alerts", "Bell & Alerts", "bell"], ["dashboards", "New Dashboards", "tile"],
+      ["ai", "AI", "assist"], ["outdoor", "Outdoor & Price", "temp-medium"], ["vent", "Ventilation", "fan"],
     ];
     P._bHomeMenu = function (anchor) {
-      const items = PAGES.map(([id, l]) => ({ id: "page:" + id, label: l, group: "All dashboards", quiet: true }));
+      const items = PAGES.map(([id, l, g]) => ({ id: "page:" + id, label: l, glyph: g, plainGlyph: true,
+        group: "All dashboards", quiet: true }));
       if (typeof this._cuFromMenu === "function") {
         items.push({ id: "updates", label: "Updates", icon: "update", group: "All dashboards", quiet: true });
       }
@@ -446,13 +504,19 @@
         if (V.enabled === false) why = "Hidden";
         else if (V.surfaces === "phone") why = "Phone only";
         else {
-          const el = map.querySelector('.mtile[data-jump="' + CSS.escape(key) + '"]:not(.bghost)');
+          // data-mk trägt den Schlüssel dieses Raums; data-jump zeigt in der Handy-Vorschau auf
+          // die Kachel des Mobil-Layouts (anderer Schlüssel) – sonst galt dort alles als verborgen.
+          const el = map.querySelector('.mtile[data-mk="t:' + CSS.escape(key) + '"]:not(.bghost)')
+            || map.querySelector('.mtile[data-jump="' + CSS.escape(key) + '"]:not(.bghost)');
           if (!el || el.style.display === "none") why = "Hidden right now";
         }
-        if (why) out.tiles.push({ key, why, label: this._tileLabelFor(key) || t.name || key });
+        if (why) out.tiles.push({ key, why, label: this._tileLabelFor(key) || t.name || key,
+          glyph: this._tileGlyphFor ? this._tileGlyphFor(key) : "tile" });
       });
       map.querySelectorAll(".pbadge.ghost").forEach((el) => {
-        out.badges.push({ el, label: (el.textContent || "").trim() });
+        const g = el.querySelector(".pglyph");
+        const m = g && /url\(["']?(.*?)["']?\)/.exec(g.style.getPropertyValue("--i") || "");
+        out.badges.push({ el, label: (el.textContent || "").trim(), glyphUrl: m ? m[1] : null });
       });
       return out;
     };
@@ -490,10 +554,11 @@
       map.querySelectorAll("[data-mk], [data-pv], .mtile.ghost, .pbadge.ghost, .mini-tab").forEach((el) => {
         if (el.tabIndex < 0 || !el.hasAttribute("tabindex")) el.tabIndex = 0;
         el.setAttribute("role", "button");
-        if (!el.getAttribute("aria-label")) {
-          const t = (el.title || el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 80);
-          if (t) el.setAttribute("aria-label", t);
-        }
+        // Name aus dem sichtbaren Text: der Tooltip ist teils ein Hinweis („Intelligente
+        // Sortierung ist an …“) und taugt nicht als Name für Screenreader.
+        const nm = el.querySelector(".mname, .plabel, .bgn");
+        const t = ((nm && nm.textContent) || el.textContent || el.title || "").trim().replace(/\s+/g, " ").slice(0, 80);
+        if (t && el.getAttribute("aria-label") !== t) el.setAttribute("aria-label", t);
       });
       if (!map._bWired) {
         map._bWired = true;
@@ -501,7 +566,10 @@
         map.addEventListener("pointerdown", (ev) => this._bBadgeDown(ev), true);
         // Nach einem Ziehen löst das Loslassen keinen Klick aus.
         map.addEventListener("click", (ev) => {
-          if (this._bDragged) { ev.stopPropagation(); ev.preventDefault(); }
+          if (this._bDragged) { ev.stopPropagation(); ev.preventDefault(); return; }
+          // Platz „Kachel hinzufügen“: eigener Ablauf ohne Seiten-Scrollen (_bAddTile).
+          const slot = ev.target.closest && ev.target.closest(".mtile.ghost:not(.bghost)");
+          if (slot) { ev.stopPropagation(); ev.preventDefault(); this._bFrom = slot; this._bAddTile(); }
         }, true);
         // Touch: nach langem Drücken scrollt die Seite nicht mehr, das Ziehen hat Vorrang.
         map.addEventListener("touchmove", (ev) => { if (this._bHold) ev.preventDefault(); }, { passive: false });
@@ -527,8 +595,10 @@
         chip.onclick = () => {
           const h = this._bHidden();
           const items = [
-            ...h.tiles.map((x) => ({ id: "t:" + x.key, label: x.label + " · " + tr(x.why), group: tr("Tiles"), quiet: true })),
-            ...h.badges.map((x, i) => ({ id: "b:" + i, label: x.label, group: tr("Badges"), quiet: true })),
+            ...h.tiles.map((x) => ({ id: "t:" + x.key, label: tr(x.label) + " · " + tr(x.why), group: tr("Tiles"),
+              quiet: true, glyph: x.glyph, plainGlyph: true })),
+            ...h.badges.map((x, i) => ({ id: "b:" + i, label: x.label, group: tr("Badges"), quiet: true,
+              glyph: x.glyphUrl ? null : "badge", glyphUrl: x.glyphUrl || null, plainGlyph: true })),
           ];
           this._menuAt(chip, items, (id) => {
             if (id.indexOf("t:") === 0) return this._select({ group: "tiles", key: id.slice(2) });
@@ -536,8 +606,17 @@
             if (b && b.el && b.el.isConnected) b.el.click();
           });
         };
+      }
+      // Desktop/Tablet: neben dem Umschalter Desktop/Tablet/Mobil. Unter der Vorschau lag der
+      // Knopf bei großer Vorschau halb unter dem Fensterrand (die Bühne scrollt nicht).
+      // Handy: unten über der Leiste (CSS, fixed).
+      const row = !this.classList.contains("phone") && canvas.querySelector(".segrow");
+      if (row) { if (chip.parentElement !== row) row.appendChild(chip); }
+      else {
         const pl = canvas.querySelector(".plinth");
-        if (pl) pl.after(chip); else canvas.appendChild(chip);
+        if (chip.parentElement !== canvas || (pl && chip.previousElementSibling !== pl)) {
+          if (pl) pl.after(chip); else canvas.appendChild(chip);
+        }
       }
       chip.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"'
         + ' stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.8 8.4 2 12 2 12s4 7 10 7c1.6 0 3-.4 4.3-1"/></svg>';
@@ -778,7 +857,7 @@
       if (Array.isArray(items) && items.some((x) => x && x.id === "hints") && !items.some((x) => x && x.id === "studio_b")) {
         const at = items.findIndex((x) => x && x.id === "hints");
         items = items.slice();
-        items.splice(at, 0, { id: "studio_b", label: "New Studio", checked: this._bOn() });
+        items.splice(at, 0, { id: "studio_b", label: "New Studio", glyph: "tile", plainGlyph: true, checked: this._bOn() });
         const pick = onPick;
         onPick = (id) => (id === "studio_b" ? this._bSetOn(!this._bOn()) : pick(id));
       }
@@ -792,9 +871,9 @@
         const at = items.findIndex((x) => x && x.id === "rename");
         items = items.slice();
         items.splice(at + 1, 0,
-          { id: "bmove:-1", label: "Move earlier", icon: "move", group: "This Room", quiet: true,
+          { id: "bmove:-1", label: "Move earlier", glyph: "arrow-up", plainGlyph: true, group: "This Room", quiet: true,
             disabled: i <= 0 || home(i) || home(i - 1) },
-          { id: "bmove:1", label: "Move later", icon: "move", group: "This Room", quiet: true,
+          { id: "bmove:1", label: "Move later", glyph: "arrow-down", plainGlyph: true, group: "This Room", quiet: true,
             disabled: i >= rooms.length - 1 || home(i) });
         const pick = onPick;
         onPick = (id) => {
