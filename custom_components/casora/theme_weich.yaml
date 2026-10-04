@@ -101,6 +101,8 @@ Casora Weich:
   casora-security-ok-color: var(--casora-color-green)
   casora-security-warn-color: var(--casora-color-orange)
   casora-security-alarm-color: var(--casora-color-red)
+  # Schloss-Kachel/Popup-Ring entriegelt: dieselbe Warnfarbe wie Badge „1 entriegelt“ (Standard/Glas: Türkis)
+  casora-lock-unlocked-color: var(--casora-security-warn-color)
   casora-scene-badge-color: var(--casora-color-yellow)
   casora-scene-badge-color-active: var(--casora-color-yellow-dark)
   casora-bell-badge: var(--casora-color-red)
