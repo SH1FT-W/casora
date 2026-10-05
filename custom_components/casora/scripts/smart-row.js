@@ -428,17 +428,23 @@ class CasoraSmartRow extends HTMLElement {
   _casoraFade(can, m) {
     const dots = this.shadowRoot && this.shadowRoot.getElementById('dots');
     const host = this.getBoundingClientRect();
-    const INSET = 20, FADE = 150;
+    // SHADOW = Innenabstand der maskierten Hülle (CSS unten, data-casora-fade): die Maske schneidet
+    // an der Hüllen-Box ab, ohne diesen Rand endete der Kachelschatten dort hart (eckige Box).
+    const INSET = 20, FADE = 150, SHADOW = 48;
     const R = host.right - INSET, L = host.left + INSET;
     const left = this.scrollLeft > 2;
     this._casoraFaded = true;
     for (const w of this._wrappers) {
-      const r = w.getBoundingClientRect();
+      // Gemessen wird immer die Kachel selbst (ohne Schattenrand), sonst kippt die Entscheidung
+      // mit dem eigenen Innenabstand hin und her.
+      const b = w.getBoundingClientRect();
+      const p = w.dataset.casoraFade && b.width ? SHADOW : 0;
+      const r = { left: b.left + p, right: b.right - p, width: Math.max(0, b.width - 2 * p) };
       let g = '';
       if (can && r.width && r.right > R - FADE && r.left < R) {
-        g = `linear-gradient(to right, #000 ${Math.round(R - FADE - r.left)}px, transparent ${Math.round(R - r.left)}px)`;
+        g = `linear-gradient(to right, #000 ${Math.round(R - FADE - r.left + SHADOW)}px, transparent ${Math.round(R - r.left + SHADOW)}px)`;
       } else if (can && left && r.width && r.left < L + FADE && r.right > L) {
-        g = `linear-gradient(to right, transparent ${Math.round(L - r.left)}px, #000 ${Math.round(L + FADE - r.left)}px)`;
+        g = `linear-gradient(to right, transparent ${Math.round(L - r.left + SHADOW)}px, #000 ${Math.round(L + FADE - r.left + SHADOW)}px)`;
       }
       // Nur bei echter Änderung schreiben: der MutationObserver (style) würde sonst jede Runde neu auslösen.
       if (g) { if (w.dataset.casoraFade !== g) { w.dataset.casoraFade = g; w.style.setProperty('-webkit-mask-image', g); w.style.setProperty('mask-image', g); } }
@@ -1530,6 +1536,18 @@ class CasoraSmartRow extends HTMLElement {
       /* Variante „more“: Reihe blättert nicht frei, ausgeblendete Kacheln fehlen ganz. */
       :host([casora-row-mode="more"]) { overflow-x: hidden; scroll-snap-type: none; }
       .card-wrapper[data-casora-page-off] { display: none !important; }
+      /* „fade“: die maskierte Hülle bekommt rundum Platz für den Kachelschatten (gleich großer
+         negativer Außenabstand, Layout bleibt gleich). Die Maske reicht so über den Schatten,
+         der nicht mehr an der Box abbricht. Klicks nimmt nur die Kachel, nicht der Rand. */
+      :host([casora-row-mode="fade"]) .card-wrapper[data-casora-fade] {
+        box-sizing: content-box;
+        padding: 48px;
+        margin: -48px;
+        /* Einrasten weiter an der Kachelkante, nicht am Schattenrand. */
+        scroll-margin: -48px;
+        pointer-events: none;
+      }
+      :host([casora-row-mode="fade"]) .card-wrapper[data-casora-fade] > * { pointer-events: auto; }
       #more { display: none; }
       :host([casora-row-mode="more"]) #more[data-on] {
         display: flex;
