@@ -27,10 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Mobil", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst – mit eigener Mobilansicht.",
-      n1t: "Räume nach Kategorien", n1: "Am Handy stehen die Geräte eines Raums unter Licht, Klima, Sicherheit und mehr, wie in Apples Home-App. Im Studio abschaltbar.",
-      n2t: "Mehr Luft im Raum", n2: "Am Handy haben Badges und Kacheln mehr Abstand, der Raum wirkt ruhiger.",
-      n3t: "Kameras ehrlich", n3: "Liefert eine Kamera kein Bild, zeigen auch die Sicherheits- und Kamera-Badges „Offline“.",
-      n4t: "Feinschliff", n4: "Kleine Verbesserungen und Fehlerbehebungen. Alles im Changelog.",
+      n1t: "Ruhiger Player", n1: "„Aktuelle Wiedergabe“ zeigt alle Player als ruhige Liste, die Welle oben rechts öffnet sie am Desktop.",
+      n2t: "Neue Leisten", n2: "Navigation am Handy nur mit Symbolen wie am Desktop, die Knöpfe oben rechts ruhiger und heller.",
+      n3t: "Sicherheit aus einem Guss", n3: "Kachel, Badge, Popup und Glocke zeigen für jeden Zustand dieselbe Farbe, dasselbe Wort und dasselbe Symbol.",
+      n4t: "Flüssiger und genauer", n4: "Wischen am Touchpad ohne Haken, einheitliche Akku-Stufen, Abfallfarben, Saugroboter meldet erst am echten Ende. Alles im Changelog.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen – with its own phone layout.",
-      n1t: "Rooms by category", n1: "On the phone, a room's devices sit under Lights, Climate, Security and more, like in Apple's Home app. You can turn it off in the Studio.",
-      n2t: "More room to breathe", n2: "On the phone, badges and tiles have more space between them, so a room looks calmer.",
-      n3t: "Honest cameras", n3: "When a camera delivers no picture, the security and camera badges say \"Offline\" too.",
-      n4t: "Polish", n4: "Small improvements and fixes. All in the changelog.",
+      n1t: "A calmer player", n1: "\"Now playing\" lists all players calmly, and the wave at the top right opens the list on desktop.",
+      n2t: "New bars", n2: "The phone navigation uses icons like the desktop, and the buttons at the top right are calmer and lighter.",
+      n3t: "Security in one piece", n3: "Tile, badge, popup and bell show the same colour, word and symbol for every state.",
+      n4t: "Smoother and more precise", n4: "Trackpad swiping without snags, one battery scale, waste colours, and the robot vacuum reports done only at the real end. All in the changelog.",
     },
   };
 
@@ -56,10 +56,10 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:view-grid-outline", "n1t", "n1"],
-    ["mdi:arrow-expand-vertical", "n2t", "n2"],
-    ["mdi:cctv", "n3t", "n3"],
-    ["mdi:wrench-outline", "n4t", "n4"],
+    ["mdi:play-circle-outline", "n1t", "n1"],
+    ["mdi:dock-bottom", "n2t", "n2"],
+    ["mdi:shield-check-outline", "n3t", "n3"],
+    ["mdi:gesture-swipe-horizontal", "n4t", "n4"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.
