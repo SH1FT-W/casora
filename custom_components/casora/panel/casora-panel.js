@@ -8910,8 +8910,8 @@ class CasoraPanel extends HTMLElement {
         .card.map.soft .miniphone.nophone::after { color:var(--casora-text-2, rgba(255,255,255,0.55)); }
         /* Handy-Leiste unten (Nachbildung aus casora-panel-addons.js) wie 04-navigation.js. */
         .card.map.soft .casora-mnav {
-          background:var(--casora-mnav-bg, rgba(40,40,44,0.55));
-          box-shadow:var(--casora-pill-rim, 0 10px 30px -10px rgba(0,0,0,0.55));
+          background:var(--casora-mnav-pane, var(--casora-mnav-bg, rgba(40,40,44,0.55)));
+          box-shadow:var(--casora-mnav-shadow, var(--casora-pill-rim, 0 10px 30px -10px rgba(0,0,0,0.55)));
         }
         .card.map.soft .casora-mnav span.b { color:var(--casora-mnav-fg, rgba(255,255,255,0.72)); }
         .card.map.soft .casora-mnav span.b.on {
@@ -8920,14 +8920,16 @@ class CasoraPanel extends HTMLElement {
           font-weight:var(--casora-mnav-label-on-weight, 500);
         }
         .card.map.soft .casora-mnav span.b.on :is(ha-icon, i) { color:var(--casora-mnav-icon-on, var(--casora-color-teal, #00C3D0)); }
-        /* Weich 1.0.7 (wie 04-navigation.js, Entwurf B): nur Symbole, das aktive Ziel als Ton-Pille mit Wort. */
+        /* Weich 1.0.7 (wie 04-navigation.js, Entwurf B): nur Symbole, das aktive Ziel als Pille mit Wort
+           (in Weich heller Sand wie die Desktop-Raumleiste). */
         .card.map.soft .casora-mnav { width:auto; gap:2px; }
         .card.map.soft .casora-mnav span.b { flex:none; width:58px; flex-direction:row; gap:8px; }
+        .card.map.soft .casora-mnav span.b:not(.on) { opacity:var(--casora-mnav-idle-opacity, 1); }
         .card.map.soft .casora-mnav span.b > span { display:none; }
         .card.map.soft .casora-mnav span.b.on {
           width:auto; padding:0 20px 0 16px;
           background:var(--casora-mnav-pill, var(--primary-color, #B67A50));
-          color:var(--casora-mnav-pill-ink, #fff); font-weight:600;
+          color:var(--casora-mnav-pill-ink, #fff); font-weight:var(--casora-mnav-pill-weight, 600);
         }
         .card.map.soft .casora-mnav span.b.on > span { display:block; font-size:14.5px; max-width:150px; letter-spacing:-0.01em; }
         .card.map.soft .casora-mnav span.b.on :is(ha-icon, i) { color:var(--casora-mnav-pill-ink, #fff); }

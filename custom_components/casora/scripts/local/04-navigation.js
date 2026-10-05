@@ -103,19 +103,24 @@
       +   'border:0;border-radius:var(--casora-menu-item-radius, 20px);background:transparent;color:var(--casora-mnav-fg-on, #fff);font:inherit;font-size:15px;font-weight:var(--casora-menu-item-weight, inherit);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;}'
       + '.hmn-item ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;line-height:0;color:color-mix(in srgb, var(--casora-mi-tone, transparent) var(--casora-menu-tone-mix, 0%), var(--casora-mnav-fg-icon, rgba(255,255,255,0.8)));}'
       + '.hmn-item.on{background:var(--casora-mnav-on-fill, rgba(255,255,255,0.14));}'
+      /* Schriftstärke der Menüzeilen: Weich wie die Menüs der Desktop-Raumleiste (normal, aktiv 500). */
+      + '.hmn-item{font-weight:var(--casora-mnav-item-weight, var(--casora-menu-item-weight, inherit));}'
+      + '.hmn-item.on{font-weight:var(--casora-mnav-item-on-weight, var(--casora-mnav-item-weight, var(--casora-menu-item-weight, inherit)));}'
       + '.hmn-item .hmn-svg{width:20px;height:20px;display:block;background:color-mix(in srgb, var(--casora-mi-tone, transparent) var(--casora-menu-tone-mix, 0%), var(--casora-mnav-fg-icon, rgba(255,255,255,0.8)));-webkit-mask:var(--hmn-svg) center/contain no-repeat;mask:var(--hmn-svg) center/contain no-repeat;}'
       + '.hmn-item.on ha-icon{color:color-mix(in srgb, var(--casora-mi-tone, transparent) var(--casora-menu-tone-mix, 0%), var(--casora-color-teal, #00C3D0));}'
       + '.hmn-item.on .hmn-svg{background:color-mix(in srgb, var(--casora-mi-tone, transparent) var(--casora-menu-tone-mix, 0%), var(--casora-color-teal, #00C3D0));}'
 
       + '.hmn-item:active{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));}'
       /* Weich (1.0.7, Entwurf B „Nur Symbole“): kompakte Kapsel nur mit Symbolen; das aktive Ziel
-         wird zur Ton-Pille mit Wort. Klasse hmn-ic setzt _render(), solange das Weich-Design aktiv ist. */
+         wird zur Pille mit Wort (Farbe aus --casora-mnav-pill, in Weich der helle Sand der Desktop-Raumleiste).
+         Klasse hmn-ic setzt _render(), solange das Weich-Design aktiv ist. */
       + '.hmn-bar.hmn-ic{width:auto;max-width:calc(100vw - 32px);gap:2px;}'
       + '.hmn-bar.hmn-ic .hmn-btn{flex:none;width:58px;flex-direction:row;gap:8px;padding:0;}'
       + '.hmn-bar.hmn-ic .hmn-btn>span{display:none;}'
+      + '.hmn-bar.hmn-ic .hmn-btn:not(.on){opacity:var(--casora-mnav-idle-opacity, 1);}'
       + '.hmn-bar.hmn-ic .hmn-btn.on{width:auto;min-width:58px;padding:0 20px 0 16px;'
       +   'background:var(--casora-mnav-pill, var(--primary-color, #B67A50));color:var(--casora-mnav-pill-ink, #fff);}'
-      + '.hmn-bar.hmn-ic .hmn-btn.on>span{display:block;font-size:14.5px;font-weight:600;padding:0;letter-spacing:-0.01em;max-width:150px;}'
+      + '.hmn-bar.hmn-ic .hmn-btn.on>span{display:block;font-size:14.5px;font-weight:var(--casora-mnav-pill-weight, 600);padding:0;letter-spacing:-0.01em;max-width:150px;}'
       + '.hmn-bar.hmn-ic .hmn-btn.on ha-icon,.hmn-bar.hmn-ic .hmn-btn.on .hmn-svg{color:var(--casora-mnav-pill-ink, #fff);flex:none;}'
       + '.hmn-bar.hmn-ic .hmn-btn:not(.on):active{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));}'
       + '.hmn-bar.hmn-ic .hmn-btn.on:active{filter:brightness(.94);}';
@@ -364,6 +369,10 @@
       this._menuKind = kind;
       m.className = 'hmn-menu';
       if (window.casoraMenuGlass) window.casoraMenuGlass.apply(m);
+      /* Weich: Fläche und Schatten wie die Menüs der Desktop-Raumleiste. Ohne die Theme-Variablen
+         bleibt der Glas-Look von oben. */
+      m.style.backgroundColor = 'var(--casora-mnav-menu-pane, ' + (m.style.backgroundColor || 'transparent') + ')';
+      m.style.setProperty('--casora-menu-shadow', 'var(--casora-mnav-menu-shadow, var(--casora-elevation-floating-phone, 0 10px 26px rgba(0,0,0,0.18)))');
       this._items(kind).forEach(function (it) {
         var b = document.createElement('button');
         b.type = 'button'; b.className = 'hmn-item' + (it.on ? ' on' : '');
