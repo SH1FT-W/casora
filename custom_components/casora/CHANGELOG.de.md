@@ -4,7 +4,7 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
-## 1.0.7 – unreleased
+## 1.0.7 – 05.10.2026
 
 ### Verbessert
 - Weich, Kachelreihe am Desktop und Tablet: Liegen rechts noch Kacheln, blendet die angeschnittene Kachel weich zum Rand aus, darunter zeigen kleine Seitenpunkte, wie viel noch kommt (antippbar). Einstellbar über die Theme-Variable `casora-row-overflow` (`fade`, `arrows` oder `more`).

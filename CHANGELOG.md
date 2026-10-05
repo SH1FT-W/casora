@@ -4,7 +4,7 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
-## 1.0.7 – unreleased
+## 1.0.7 – 05.10.2026
 
 ### Improved
 - Weich, tile row on desktop and tablet: when more tiles lie to the right, the cut tile fades softly into the edge, and small page dots below show how much follows (tappable). Set with the theme variable `casora-row-overflow` (`fade`, `arrows` or `more`).
