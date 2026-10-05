@@ -1,4 +1,5 @@
 // @zustand: arbeit
+// @parallel: allein   (setzt Badge-Einstellungen nur im Browser; speichert ein paralleler Test ein Dashboard, holt die Seite die echten Werte neu)
 // Gemeldet (05.10.2026): Im Raum am Handy fehlten Energie und Sicherheit (Türen/Fenster), die am
 // Tablet im Raum-Kopf stehen. Die Handy-Raumseite hatte eine eigene, abgespeckte Badge-Reihe aus
 // room_chips (nur beim Speichern im Studio befüllt); Einzel-Anzeige (show_*_inline) galt dort nicht.

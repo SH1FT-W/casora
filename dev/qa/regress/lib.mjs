@@ -172,6 +172,21 @@ export async function studio(pg, dash) {
   await pg.waitForTimeout(2000);
 }
 
+// Studio-Schritte, die ein Neuladen des Studios abbrechen kann („Execution context was destroyed“):
+// Das Studio lädt neu, wenn kurz vorher ein Dashboard gespeichert wurde (zu Beginn des Gates durch
+// das Anlegen der Prüf-Dashboards). Dann Studio neu öffnen und den Schritt einmal wiederholen –
+// ein echter Messfehler fällt beim zweiten Mal genauso auf.
+export async function studioRetry(pg, dash, step) {
+  try { return await step(); } catch (e) {
+    if (!/context was destroyed|navigation/i.test(String(e && e.message))) throw e;
+    console.log('  (Studio hat neu geladen – Schritt wird wiederholt)');
+    await pg.waitForLoadState('domcontentloaded').catch(() => {});
+    await pg.addScriptTag({ content: PIERCE }).catch(() => {});
+    await studio(pg, dash);
+    return step();
+  }
+}
+
 // Dashboard-Ansicht öffnen und warten, bis die Kacheln stehen.
 export async function dashboard(pg, url, min = 5) {
   await ready(pg, '/' + url, `() => window.__pierce('button-card').length >= ${min}`, 60000);
