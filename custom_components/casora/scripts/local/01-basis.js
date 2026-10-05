@@ -1703,3 +1703,115 @@ window._casoraFadeRow = function (row) {
   setTimeout(later, 600);
   later();
 };
+
+// ── Handy-Startseite: Abstand Kopfleiste → „Zuhause“ nach langer Pause (05.10.2026) ─────────
+// Gemeldet: Nach längerer Zeit im Hintergrund stand die Zeile „Zuhause / Wetter“ am Handy rund
+// 150 px zu tief unter der Kopfleiste; Aktualisieren behob es. Im Test (WebKit: Viewport-
+// Wechsel, verstecken/zeigen, pageshow, Verbindungsabbruch) ließ es sich nicht nachstellen.
+// Darum hier robust: Den natürlichen Abstand des Kopfs zum Seitenanfang einmal merken; nach
+// Rückkehr (pageshow, sichtbar nach ≥ 20 s im Hintergrund) neu messen; Größenwechsel merken nur neu. Ist der Kopf
+// mehr als 40 px tiefer, erst alles neu berechnen lassen (resize-Ereignis), hilft das nicht,
+// die Seite neu laden. Was dabei auffiel, steht in localStorage „casora.gapTrace“ (Diagnose).
+(function () {
+  if (window._casoraGapGuard) return;
+  window._casoraGapGuard = true;
+  var MQ = window.matchMedia('(max-width: 767px) and (orientation: portrait)');
+  var natural = null, hiddenAt = 0, backAt = 0, busy = false;
+  function isHead(e) {
+    var t = e._config && e._config.template;
+    return [].concat(t || []).indexOf('casora_mobile_weather') > -1;
+  }
+  function findHead() {
+    var hit = null;
+    (function walk(r, d) {
+      if (hit || !r || d > 14 || !r.querySelectorAll) return;
+      var list = r.querySelectorAll('button-card');
+      for (var i = 0; i < list.length; i++) if (isHead(list[i])) { hit = list[i]; return; }
+      var all = r.querySelectorAll('*');
+      for (var j = 0; j < all.length && !hit; j++) if (all[j].shadowRoot) walk(all[j].shadowRoot, d + 1);
+    })(document, 0);
+    return hit;
+  }
+  function viewOf(el) {
+    var n = el;
+    for (var i = 0; i < 30 && n; i++) {
+      if (n.tagName === 'HUI-VIEW') return n;
+      n = n.parentElement || (n.getRootNode && n.getRootNode().host) || null;
+    }
+    return null;
+  }
+  function measure() {
+    if (!MQ.matches || !/-mobile\//.test(location.pathname)) return null;
+    var h = findHead(), v = h && viewOf(h);
+    if (!h || !v) return null;
+    var hr = h.getBoundingClientRect(), vr = v.getBoundingClientRect();
+    if (!hr.height || !vr.height) return null;
+    return { gap: Math.round(hr.top - vr.top), head: h, view: v };
+  }
+  function trace(m, why) {
+    try {
+      var out = { at: new Date().toISOString(), why: why, natural: natural, gap: m.gap,
+        ih: window.innerHeight, vv: window.visualViewport ? Math.round(window.visualViewport.height) : null, chain: [] };
+      var n = m.head;
+      for (var i = 0; i < 12 && n && n !== m.view; i++) {
+        var s = n.previousElementSibling, sib = [];
+        while (s) { var r = s.getBoundingClientRect(); if (r.height > 4) sib.push((s.tagName || '') + ':' + Math.round(r.height)); s = s.previousElementSibling; }
+        var cs = getComputedStyle(n);
+        out.chain.push((n.tagName || '') + ' mt=' + cs.marginTop + ' pt=' + cs.paddingTop + (sib.length ? ' vor=' + sib.join(',') : ''));
+        n = n.parentElement || (n.getRootNode && n.getRootNode().host) || null;
+      }
+      var all = JSON.parse(localStorage.getItem('casora.gapTrace') || '[]');
+      all.push(out);
+      localStorage.setItem('casora.gapTrace', JSON.stringify(all.slice(-5)));
+    } catch (e) {}
+  }
+  function check(why) {
+    if (busy) return;
+    var m = measure();
+    if (!m) return;
+    if (natural == null) { natural = m.gap; return; }
+    if (m.gap <= natural + 40) { if (m.gap < natural) natural = m.gap; return; }
+    busy = true;
+    trace(m, why);
+    window.dispatchEvent(new Event('resize'));
+    setTimeout(function () {
+      var m2 = measure();
+      busy = false;
+      if (!m2 || m2.gap <= natural + 40) return;
+      trace(m2, why + ':reload');
+      // Nicht mitten in einer Bedienung: offenes Popup oder Raum lässt die Seite stehen.
+      if (window.casoraPopup && window.casoraPopup.surface) return;
+      // Nie in einer Schleife: höchstens ein Neuladen pro Minute.
+      try { if (Date.now() - Number(sessionStorage.getItem('casora.gapReload') || 0) < 60000) return; } catch (e) {}
+      try { sessionStorage.setItem('casora.gapReload', String(Date.now())); } catch (e) {}
+      location.reload();
+    }, 900);
+  }
+  // Erste Messung, wenn die Seite steht (einmal nach dem Laden, nur Startseite ohne Filter).
+  var tries = 0;
+  var iv = setInterval(function () {
+    if (++tries > 40 || natural != null) { clearInterval(iv); return; }
+    if (document.hidden) return;
+    var m = measure();
+    if (m) natural = m.gap;
+  }, 1500);
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { hiddenAt = Date.now(); return; }
+    if (hiddenAt && Date.now() - hiddenAt >= 20000) { backAt = Date.now(); setTimeout(function () { check('visible'); }, 1500); }
+  });
+  window.addEventListener('pageshow', function (e) { if (e.persisted) { backAt = Date.now(); setTimeout(function () { check('pageshow'); }, 1500); } });
+  // Größe/Drehung ändern den Abstand zu Recht (Schriftgröße, Querformat): dann nur neu merken,
+  // nie neu laden. Gilt für window- und visualViewport-resize, solange die Seite sichtbar ist.
+  var rt = null;
+  function remeasure() {
+    if (document.hidden) return;
+    clearTimeout(rt);
+    rt = setTimeout(function () {
+      // Kurz nach der Rückkehr entscheidet check(), nicht das Neu-Merken (iOS meldet dabei oft ein resize).
+      if (busy || Date.now() - backAt < 6000) return;
+      var m = measure(); if (m) natural = m.gap;
+    }, 1500);
+  }
+  window.addEventListener('resize', remeasure);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', remeasure);
+})();

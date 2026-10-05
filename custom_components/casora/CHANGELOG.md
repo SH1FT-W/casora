@@ -29,6 +29,17 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - Wording: "OK" instead of "Ok", the Studio shows "1 On" like the dashboard.
 - Studio: clicking the day or night segment that is already active no longer switches it.
 - Waste popup with the month calendar (Soft look, desktop and tablet): both columns now end flush. The month fills the height of the right column (today, bins, putting out), and its plate starts on the same line as the day card next to it. The phone layout is unchanged.
+- Soft look, Studio phone preview: climate and security badges show the same symbols as on the phone (home thermometer, orange shield when something needs attention) in a coloured circle, temperatures as "21°", and blinds tiles show slats instead of a curtain.
+- Soft look, Studio popup preview: the label "Popup · …" above the preview is clearly readable in light mode.
+- Soft look, Studio → Look & Controls → Design: the three designs stand side by side, names on one line, "Legacy" as a small tag below.
+- Soft look, phone popups such as Thermostat or Energy: the sheet is only as tall as its content instead of always reaching the top.
+- Phone tiles: shorter texts that no longer get cut off ("No sensor" for energy and solar tip without a sensor, "Recipe" as the recipe tile name).
+- Soft look, weather in the title: filled weather symbol in the title colour instead of a thin grey outline.
+- Soft look, weather popup: the headings "Next hours", "7 days" and the chart title sit above their surfaces like in the other popups.
+- Soft look, network popup: all network symbols in the network colour (blue); the "On" of a Wi-Fi is no longer green.
+- Soft look, tablet in portrait: the title block sits just above the tiles instead of in the middle, so there is no large empty area between title and tiles.
+- Soft look, phone room page: scrolled tiles and scenes no longer show through behind the small room title; it gets a linen surface that fades in with the title (light and dark).
+- Phone home page: after a long time in the background the gap between the top bar and the "Home" line could be about 150 px too large. Casora now measures it again on return and fixes the layout on its own (reloading once if needed).
 
 ## 1.0.6 – 04.10.2026
 

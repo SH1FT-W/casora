@@ -207,7 +207,10 @@ customElements.whenDefined("casora-panel").then(() => {
       const st = document.createElement("style");
       st.id = "casora-look-css";
       st.textContent = ""
-        + ".casora-looks{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:12px;padding:12px 0 14px}"
+        // M10 (Weich-Audit): drei Designs nebeneinander statt 2er-Raster mit Lücke, Namen einzeilig.
+        + ".casora-looks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:12px 0 14px}"
+        + ".casora-lookcard b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"
+        + ".casora-looktag{display:block;margin-top:-4px;font-size:11px;font-weight:500;letter-spacing:.02em;opacity:.6}"
         + ".casora-lookcard{appearance:none;border:0;margin:0;padding:0;background:none;box-shadow:none;cursor:pointer;"
         + "display:flex;flex-direction:column;gap:7px;text-align:left;color:var(--ink,#fff);min-width:0}"
         + ".casora-lookcard:hover{filter:none}"
@@ -244,8 +247,11 @@ customElements.whenDefined("casora-panel").then(() => {
       shot.className = "casora-lookshot";
       if (img) shot.style.backgroundImage = "url('" + img + "')";
       const b = document.createElement("b");
-      b.textContent = label;
+      // „Hemma Glas (Legacy)“: Name einzeilig, der Zusatz in Klammern als kleines Etikett darunter.
+      const m = /^(.*?)\s*\(([^)]*)\)\s*$/.exec(label || "");
+      b.textContent = m ? m[1] : label;
       c.append(shot, b);
+      if (m) { const tg = document.createElement("span"); tg.className = "casora-looktag"; tg.textContent = m[2]; c.append(tg); }
       c.onclick = async () => {
         if (name === now) return;
         cards.forEach((x) => { x.disabled = true; });

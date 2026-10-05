@@ -57,6 +57,8 @@ Casora Weich:
   # Chip-Reihen am Handy (Raum-Chips Temperatur/Luftfeuchtigkeit/Licht, Klima/Sicherheit/Energie):
   # Pillen mit gleichmäßig 8 px Abstand (Standard ohne Pillen: 16 px).
   casora-mobile-chip-gap: 8px
+  # K11 (Weich-Audit): Tablet hoch – Titelblock tief über den Kacheln (casora_shared)
+  header-top-portrait: calc(100vh - 450px)
   wa-border-radius-m: 28px
   ha-border-radius-lg: 18px
   # Nicht in theme.yaml, aber vom Code mit Fallback gelesen (casora-core.js/smart-row.js):
@@ -412,12 +414,15 @@ Casora Weich:
       casora-nav-bg: rgba(251,248,243,0.78)
       casora-nav-label-color: rgba(58,50,43,0.92)
       casora-mobile-title-color: rgba(58,50,43,0.95)
+      casora-room-head-fill: rgba(244,239,231,0.94)  # H3 (Weich-Audit): Fläche unter „‹ Raumname“
       casora-chrome-ink: rgba(58,50,43,0.88)
       casora-chrome-fill: rgba(251,248,243,0.80)
       casora-chrome-fill-hover: rgba(240,233,223,0.95)
       # Weisse <img>-Glyphen der Kopfzeilen-Knöpfe (Glocke, Assist) dunkel färben
       casora-chrome-glyph-filter: brightness(0) opacity(0.78)
-      casora-hero-weather-glyph-filter: brightness(0) opacity(0.72)
+      # K5 (Weich-Audit): gefüllte Glyphe in Titelfarbe statt blasser Kontur
+      casora-hero-weather-glyph-filter: brightness(0) sepia(0.35) opacity(0.9)
+      casora-weather-glyph-fill: "1"
       # Handy-Navbar (04-navigation.js): Creme statt dunklem Glas
       casora-mnav-bg: rgba(251,248,243,0.82)
       casora-mnav-pane: rgba(255,255,255,0.93)
@@ -748,6 +753,7 @@ Casora Weich:
       casora-studio-icon-neutral: "#9A8672"
 
     dark:
+      casora-weather-glyph-fill: "1"  # K5 (Weich-Audit)
       # Flächen + Text: warmes Anthrazit, Leinen-Schrift
       primary-background-color: rgb(36,33,30)
       secondary-background-color: rgb(28,26,24)
@@ -809,6 +815,7 @@ Casora Weich:
       casora-chrome-fill: rgba(46,42,38,0.80)
       casora-chrome-fill-hover: rgba(66,60,54,0.92)
       casora-mobile-title-color: rgba(246,240,231,0.98)
+      casora-room-head-fill: rgba(36,33,30,0.94)  # H3 (Weich-Audit)
       casora-filter-veil: rgba(28,24,21,0.30)
       casora-mnav-bg: rgba(46,42,38,0.72)
       casora-mnav-pane: rgba(30,30,34,0.94)
