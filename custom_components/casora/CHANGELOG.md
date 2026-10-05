@@ -28,6 +28,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - Air purifier: modes such as "auto" or "sleep" read "Auto" and "Sleep" when Home Assistant has no translation.
 - Wording: "OK" instead of "Ok", the Studio shows "1 On" like the dashboard.
 - Studio: clicking the day or night segment that is already active no longer switches it.
+- Waste popup with the month calendar (Soft look, desktop and tablet): both columns now end flush. The month fills the height of the right column (today, bins, putting out), and its plate starts on the same line as the day card next to it. The phone layout is unchanged.
 
 ## 1.0.6 – 04.10.2026
 
