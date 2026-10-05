@@ -109,23 +109,23 @@ await check('„fertig“ bleibt stehen, wenn der Neuaufbau ihn nicht mehr herle
   assert.ok(labels(reload).includes('Robot hat fertig gereinigt'), 'nach Neuladen: ' + JSON.stringify(labels(reload)));
 });
 
-await check('Saugroboter-Ende-Sensor: erster Wechsel im Fenster zählt', async () => {
+await check('Saugroboter-Ende-Sensor: Ende nach dem Beginn zählt sofort, alter Wert nicht', async () => {
+  // Seit 1.0.7 entscheidet die Glocke selbst (vacuumRuns), die Erweiterung in 02-geraete.js
+  // setzt nur noch den Zeilenumbruch.
   for (const k of Object.keys(store)) delete store[k];
   const END = 'sensor.robot_letztes_reinigungsende';
-  const states = { ...vacStates(), [END]: st(END, iso(20 * MIN), { device_class: 'timestamp', friendly_name: 'Robot Letztes Reinigungsende' }) };
+  const endAt = (ms) => ({ ...vacStates(), [END]: st(END, iso(ms), { device_class: 'timestamp', friendly_name: 'Robot Letztes Reinigungsende' }) });
   delete window._casoraNotifyVac;
   window.CASORA_NOTIFY_EXTENSIONS = [];
-  hass = { states };
   new Function(vacMod)();
-  logbook = [ev(VAC, 'cleaning', 90 * MIN), ev(VAC, 'returning', 25 * MIN), ev(VAC, 'docked', 20 * MIN), ev(END, iso(20 * MIN), 20 * MIN)];
-  const rows = await fresh(states).refresh();
-  assert.deepEqual(labels(rows), ['Saugroboter hat fertig gereinigt'], JSON.stringify(labels(rows)));
-  // Alter Wert nach Neustart (Ende liegt Stunden vor dem Eintrag): nichts.
-  logbook = [ev(END, iso(10 * 60 * MIN), 30 * MIN)];
+  assert.deepEqual(window.CASORA_NOTIFY_EXTENSIONS, [], 'keine eigene Sauger-Regel mehr');
+  logbook = [ev(VAC, 'cleaning', 90 * MIN), ev(VAC, 'returning', 5 * MIN), ev(VAC, 'docked', 3 * MIN)];
+  const rows = await fresh(endAt(3 * MIN)).refresh();
+  assert.deepEqual(labels(rows), ['Robot hat fertig gereinigt'], JSON.stringify(labels(rows)));
+  // Alter Wert (Ende liegt vor dem Beginn): erst nach der Ruhezeit.
   for (const k of Object.keys(store)) delete store[k];
-  const rows2 = await fresh(states).refresh();
+  const rows2 = await fresh(endAt(10 * 60 * MIN)).refresh();
   assert.deepEqual(labels(rows2), [], JSON.stringify(labels(rows2)));
-  window.CASORA_NOTIFY_EXTENSIONS = [];
 });
 
 await check('Laufendes Gerät springt nach dem Lesen nicht wieder unter „Neu“', async () => {

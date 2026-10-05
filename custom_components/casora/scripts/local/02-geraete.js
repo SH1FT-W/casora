@@ -3680,48 +3680,13 @@
 })();
 
 
-// ── Benachrichtigungen: Saugroboter + Zeilenumbruch (23.09.2026) ─────────────
-// 1) Casora meldet „… hat fertig gereinigt“ bei jedem Andocken nach „cleaning“ – also auch bei
-//    jeder Zwischen-Moppwäsche. Stattdessen zählt nur das echte Reinigungsende
-//    (sensor.*_letztes_reinigungsende springt dann auf einen neuen Zeitpunkt).
-// 2) Titel in der Glocke dürfen zwei Zeilen haben statt mit „…“ abgeschnitten zu werden.
+// ── Benachrichtigungen: Zeilenumbruch (23.09.2026) ───────────────────────────────
+// Titel in der Glocke dürfen zwei Zeilen haben statt mit „…“ abgeschnitten zu werden.
+// Ob ein Saugroboter fertig ist oder nur zwischendurch an der Station steht, entscheidet seit
+// 1.0.7 die Glocke selbst für alle Hersteller (vacuumRuns in casora-core.js).
 (function () {
   if (window._casoraNotifyVac) return;
   window._casoraNotifyVac = true;
-  var NAME = 'Saugroboter';
-  var endSensors = function (hass) {
-    return Object.keys(hass.states).filter(function (id) { return /^sensor\.\w*_letztes_reinigungsende$/.test(id); });
-  };
-  var ext = {
-    watch: function (hass) { return endSensors(hass); },
-    describe: function (entry, st, prev) {
-      var id = entry.entity_id || '';
-      var s = String(entry.state == null ? '' : entry.state);
-      if (id.indexOf('vacuum.') === 0) {
-        // Andocken allein ist kein Ende – aber nur, wenn es einen Ende-Sensor gibt (Roborock).
-        // Andere Sauger (z. B. Dreame) fallen auf die Standardlogik zurück (cleaning → docked).
-        var base = id.replace(/^vacuum\./, '');
-        var hass = (document.querySelector('home-assistant') || {}).hass;
-        var hasEnd = hass && endSensors(hass).some(function (e) { return e.indexOf(base) !== -1; });
-        if ((s === 'docked' || s === 'idle') && hasEnd) return null;
-        if (s === 'docked' || s === 'idle') return undefined;
-        if (s === 'error') return { label: NAME + ' braucht Aufmerksamkeit', icon: 'vacuum', tone: 'bad' };
-        return null;
-      }
-      if (/^sensor\.\w*_letztes_reinigungsende$/.test(id)) {
-        // Ohne Vorzustand (erster Wechsel im Zeitfenster, 1.0.5) zählt der Wechsel trotzdem: ob das
-        // Ende neu ist, sagt der Abgleich mit der Logbuch-Zeit unten. Vorher verschwand die Zeile,
-        // sobald der vorige Wechsel aus dem Fenster fiel.
-        if (prev === s || prev === 'unknown' || prev === 'unavailable' || s === 'unknown' || s === 'unavailable') return null;
-        var tEnd = new Date(s).getTime(), tPrev = prev ? new Date(prev).getTime() : NaN, tNow = Number(entry.when) * 1000;
-        if (isNaN(tEnd) || (!isNaN(tPrev) && tEnd <= tPrev)) return null;     // alter Wert nach Neustart/Reconnect
-        if (!isFinite(tNow) || Math.abs(tNow - tEnd) > 30 * 60000) return null;  // Ende muss zum Eintrag passen
-        return { label: NAME + ' hat fertig gereinigt', icon: 'vacuum-charge', tone: 'good', done: true };
-      }
-      return undefined;
-    },
-  };
-  window.CASORA_NOTIFY_EXTENSIONS = [ext].concat(window.CASORA_NOTIFY_EXTENSIONS || []);
 
   var css = document.createElement('style');
   css.id = 'casora-notify-wrap';

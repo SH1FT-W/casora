@@ -328,6 +328,11 @@
   "Mopp nicht angebracht": "Mop not attached",
   "Moppwäsche": "Mop wash",
   "Moppwäsche gestört": "Mop wash fault",
+  "Pause · wäscht Mopp": "Paused · washing mop",
+  "Pause · saugt ab": "Paused · emptying bin",
+  "Pause · trocknet": "Paused · drying mop",
+  "Pause · lädt": "Paused · charging",
+  "Pause · an der Station": "Paused · at the dock",
   "Muss gedüngt werden": "Needs fertilizing",
   "NO₂ erkannt – lüften": "NO₂ detected – ventilate",
   "Nachfüllen & Pflege": "Refill & care",
@@ -1494,6 +1499,10 @@
   [
    "^(.+) hat fertig gereinigt$",
    "{1} finished cleaning"
+  ],
+  [
+   "^(.+) reinigt$",
+   "{1} cleaning"
   ],
   [
    "^(.+) ist auf der Arbeit$",
