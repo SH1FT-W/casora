@@ -404,7 +404,9 @@ Casora Weich:
       casora-chrome-fill-hover: rgba(240,233,223,0.95)
       # Weisse <img>-Glyphen der Kopfzeilen-Knöpfe (Glocke, Assist) dunkel färben
       casora-chrome-glyph-filter: brightness(0) opacity(0.78)
-      casora-hero-weather-glyph-filter: brightness(0) opacity(0.72)
+      # K5 (Weich-Audit): gefüllte Glyphe in Titelfarbe statt blasser Kontur
+      casora-hero-weather-glyph-filter: brightness(0) sepia(0.35) opacity(0.9)
+      casora-weather-glyph-fill: "1"
       # Handy-Navbar (04-navigation.js): Creme statt dunklem Glas
       casora-mnav-bg: rgba(251,248,243,0.82)
       casora-mnav-pane: rgba(255,255,255,0.93)
@@ -734,6 +736,7 @@ Casora Weich:
       casora-studio-icon-neutral: "#9A8672"
 
     dark:
+      casora-weather-glyph-fill: "1"  # K5 (Weich-Audit)
       # Flächen + Text: warmes Anthrazit, Leinen-Schrift
       primary-background-color: rgb(36,33,30)
       secondary-background-color: rgb(28,26,24)
