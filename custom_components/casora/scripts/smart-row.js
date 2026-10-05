@@ -364,11 +364,15 @@ class CasoraSmartRow extends HTMLElement {
     const settle = () => {
       clearTimeout(this._casoraScrollT);
       this._casoraScrollT = 0;
+      if (this.hasAttribute('casora-scrolling')) this.removeAttribute('casora-scrolling');
       if (!this._casoraScrolling) return;
       this._casoraScrolling = false;
       edges();
     };
     this.addEventListener('scroll', () => {
+      // Kein Hover beim Wischen: am Touchpad steht der Zeiger über der Reihe, jede durchlaufende
+      // Kachel startete ihren Hover-Übergang (Anheben, Schatten) mitten in der Bewegung.
+      if (!this.hasAttribute('casora-scrolling')) this.setAttribute('casora-scrolling', '');
       if (!this._casoraScrolling && this._casoraFaded) {
         this._casoraScrolling = true;
         // Nur die Maske weg, data-casora-fade (Schattenrand) bleibt: das Attribut ändert die Box
@@ -1595,6 +1599,8 @@ class CasoraSmartRow extends HTMLElement {
       /* „fade“: die maskierte Hülle bekommt rundum Platz für den Kachelschatten (gleich großer
          negativer Außenabstand, Layout bleibt gleich). Die Maske reicht so über den Schatten,
          der nicht mehr an der Box abbricht. Klicks nimmt nur die Kachel, nicht der Rand. */
+      :host([casora-scrolling]) .card-wrapper,
+      :host([casora-scrolling]) .card-wrapper * { pointer-events: none !important; }
       :host([casora-row-mode="fade"]) .card-wrapper[data-casora-fade] {
         box-sizing: content-box;
         padding: 48px;
