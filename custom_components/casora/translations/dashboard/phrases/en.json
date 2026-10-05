@@ -1307,9 +1307,19 @@
   "Alle Akkus OK": "All batteries OK",
   "1 Akku schwach": "1 battery low",
   "Akku fast leer": "Battery almost empty",
-  "Läuft gerade": "Now playing"
+  "Läuft gerade": "Now playing",
+  "Scharf": "Armed",
+  "Alarm unscharf": "Alarm disarmed"
  },
  "patterns": [
+  [
+   "^(.+) unscharf$",
+   "{1} disarmed"
+  ],
+  [
+   "^(.+) scharf · (.+)$",
+   "{1} armed · {2}"
+  ],
   [
    "^Wartet seit (.+)$",
    "Waiting for {1}"
