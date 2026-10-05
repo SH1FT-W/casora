@@ -66,7 +66,7 @@ Zeitplan je Zustand in `zeiten-<zustand>.log`), Zusammenfassung am Ende, Rückga
 ## Aufruf
 
 ```sh
-dev/qa/gate.sh                 # vollständig, einzeln (Standard): Zustände nacheinander, ein Test nach dem anderen – zählt für Release
+dev/qa/gate.sh                 # vollständig (Standard): Zustände nacheinander, je Zustand 2 Tests gleichzeitig – zählt für Release
 dev/qa/gate.sh --parallel      # vollständig, Zustände gleichzeitig auf Wegwerf-HAs (schneller, wackelt unter Last) – zählt ebenfalls
 dev/qa/gate.sh --gezielt       # nur betroffene Zustände (Diff seit letztem grünen vollen Gate) – keine Freigabe
 dev/qa/gate.sh --gezielt=abc123 --dry-run   # Plan gegen einen bestimmten Commit zeigen

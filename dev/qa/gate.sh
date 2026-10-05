@@ -1,8 +1,8 @@
 #!/bin/bash
 # Qualitäts-Gate vor jedem Release und jedem Karten-Update (siehe dev/qa/README.md).
 #
-#   dev/qa/gate.sh                 alles einzeln (Standard seit 05.10.2026): Zustände nacheinander auf
-#                                  casora-test (:8124, dev/haus.sh), ein Test nach dem anderen (~30 Min., stabil)
+#   dev/qa/gate.sh                 Standard seit 05.10.2026: Zustände nacheinander auf casora-test
+#                                  (:8124, dev/haus.sh), je Zustand 2 Tests gleichzeitig (~30 Min.); --jobs 1 = ganz einzeln
 #   dev/qa/gate.sh --parallel      arbeit, stress und frisch GLEICHZEITIG auf eigenen Wegwerf-Test-HAs
 #                                  (dev/qa/wegwerf-ha.sh, Ports 8301–8305), 4 Tests je Zustand (~10 Min.)
 #   dev/qa/gate.sh --seriell       wie Standard (bleibt für alte Aufrufe)
@@ -53,9 +53,10 @@ while [ $# -gt 0 ]; do
   shift
 done
 case "$ONLY" in ""|static|unit|e2e|regress|crawler) ;; *) echo "--only: static|unit|e2e|regress|crawler" >&2; exit 2 ;; esac
-# Standard (05.10.2026): einzeln – Zustände nacheinander auf casora-test, ein Test nach dem anderen.
+# Standard (05.10.2026): Zustände nacheinander auf casora-test, je Zustand zwei Tests gleichzeitig
+# (einzeln dauerte ~48 Min., zwei gleichzeitig ~30 Min.; --jobs 1 für ganz einzeln).
 # Gleichzeitig (--parallel) ist schneller, wackelt aber unter Last (Docker 3,8 GB).
-[ -n "$JOBS" ] || { [ $PAR = 1 ] && JOBS=4 || JOBS=1; }
+[ -n "$JOBS" ] || { [ $PAR = 1 ] && JOBS=4 || JOBS=2; }
 case "$JOBS" in ''|*[!0-9]*|0) echo "--jobs: Zahl ≥ 1" >&2; exit 2 ;; esac
 case "$HAS" in ''|2|3|4) ;; *) echo "--has: 2, 3 oder 4" >&2; exit 2 ;; esac
 [ $NOSWITCH = 1 ] && PAR=0
