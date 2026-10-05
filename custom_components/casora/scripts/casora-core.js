@@ -7841,6 +7841,142 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var VACUUM_BUSY = { cleaning: 1, returning: 1 };
   var VACUUM_DONE = { docked: 1, idle: 1 };
 
+  // ── Saugroboter: Zwischenstopp oder fertig? (1.0.7) ───────────────────────────────────────
+  // Viele Sauger fahren mitten in der Reinigung zur Station (Mopp waschen, absaugen, laden) und
+  // melden dabei „docked“. Früher war jedes Andocken nach „cleaning“ ein „fertig“. Jetzt gilt für
+  // alle Hersteller dieselbe Regel, live wie beim Rückbau aus dem Logbuch:
+  //   1. Verrät die Integration einen Zwischenstopp (Status „washing_the_mop“, „emptying“,
+  //      „drying“, „charging“ bei Fortschritt unter 100 % …), ist das kein Ende, sondern eine
+  //      laufende Zeile „Pause · wäscht Mopp“.
+  //   2. Eindeutiges Ende (Fortschritt 100 % aus dieser Reinigung, „Letztes Reinigungsende“ nach
+  //      dem Beginn, Status „completed/finished“) zählt sofort.
+  //   3. Sonst ist der Sauger erst nach VAC_QUIET_MS Ruhe an der Station fertig. Fährt er vorher
+  //      wieder los, bleibt es dieselbe Reinigung. Meldezeit ist das Andocken.
+  var VAC_QUIET_MS = 10 * 60 * 1000;
+  // Ein Zwischenstopp hält höchstens so lange, danach gilt die Ruhe-Regel (Status hängt fest).
+  var VAC_PAUSE_MAX_MS = 3 * 3600 * 1000;
+  var VAC_PAUSE_KEY = 'casora_notify_vacpause_v1';
+  var VAC_FINISHED = /^(complete|completed|finished|done|task_complete|clean(ing)?_(complete|completed|finished|done))$/;
+
+  function vacNorm(x) {
+    return String(x == null ? '' : x).trim().toLowerCase().replace(/[\s-]+/g, '_');
+  }
+
+  // Grund des Zwischenstopps aus einem Status-Text oder null. charging nur mit Fortschritt < 100.
+  function vacPauseWord(s, partial) {
+    if (!s || VAC_FINISHED.test(s)) return null;
+    if (/wash|mop_?clean|self_?clean/.test(s)) return 'wäscht Mopp';
+    if (/empt|evacuat|dust_?collect|collecting_dust/.test(s)) return 'saugt ab';
+    if (/dry/.test(s)) return 'trocknet';
+    if (/charg/.test(s) && !/complete|problem|error|disconnect/.test(s)) return partial ? 'lädt' : null;
+    if (/^(returning|going|back)_to_(dock_)?(wash|empty|base)|remote|manual|^(cleaning|spot|zoned|segment|room|mopping|sweeping|vacuuming)/.test(s)) return 'an der Station';
+    return null;
+  }
+
+  // Zugehörige Sensoren: Saugroboter-Popup (translation_keys, Station als Geschwister-Gerät),
+  // sonst gleiches Gerät oder gleicher Entitäts-Präfix.
+  function vacSide(hass, id) {
+    var S = hass.states || {};
+    var out = { status: null, progress: null, lastEnd: null };
+    try {
+      var VC = window._casoraVac;
+      if (VC && VC.resolve && S[id]) {
+        var c = VC.resolve(S[id], {}, S, hass);
+        out.status = c.status || null; out.progress = c.progress || null; out.lastEnd = c.lastEnd || null;
+      }
+    } catch (e) { /* Rückfall unten */ }
+    if (out.status && out.progress && out.lastEnd) return out;
+    var reg = hass.entities || {};
+    var dev = reg[id] && reg[id].device_id;
+    var base = id.replace(/^vacuum\./, '');
+    var mine = Object.keys(S).filter(function (e) {
+      if (e.indexOf('sensor.') !== 0) return false;
+      if (dev && reg[e] && reg[e].device_id === dev) return true;
+      return e.indexOf('sensor.' + base + '_') === 0;
+    });
+    var pick = function (re, test) {
+      return mine.filter(function (e) {
+        var r = reg[e] || {};
+        return re.test(e + ' ' + (r.translation_key || '')) && (!test || test(S[e]));
+      })[0] || null;
+    };
+    var isTime = function (st) { return isFinite(Date.parse(st && st.state)); };
+    var isNum = function (st) { return st && isFinite(parseFloat(st.state)); };
+    out.lastEnd = out.lastEnd || pick(/last_clean(ing)?_end|clean(ing)?_end_time|letztes_reinigungsende/, isTime);
+    out.progress = out.progress || pick(/clean_percent|clean(ing)?_progress|progress|fortschritt/, isNum);
+    out.status = out.status || pick(/(^|_)(status|state|task_status|zustand)(\s|$)|_status\s/, function (st) {
+      return st && !isNum(st) && !isTime(st);
+    });
+    return out;
+  }
+
+  function vacPauseMemo() {
+    try {
+      var v = JSON.parse(localStorage.getItem(VAC_PAUSE_KEY) || '{}');
+      return v && typeof v === 'object' ? v : {};
+    } catch (e) { return {}; }
+  }
+
+  // Zustand jetzt: { done, pause, word, partial }.
+  function vacNow(hass, id, start) {
+    var S = hass.states || {};
+    var side = vacSide(hass, id);
+    var st = S[id] || {};
+    var a = st.attributes || {};
+    var fresh = function (e) {
+      var t = Date.parse((S[e] || {}).last_changed || '');
+      return isFinite(t) && t >= start - 60000;
+    };
+    var pct = side.progress && S[side.progress] ? parseFloat(S[side.progress].state) : NaN;
+    var pctFresh = isFinite(pct) && fresh(side.progress);
+    var end = side.lastEnd && S[side.lastEnd] ? Date.parse(S[side.lastEnd].state) : NaN;
+    var texts = [side.status && S[side.status] && S[side.status].state, a.status, a.task_status, a.state_detail]
+      .map(vacNorm).filter(function (s) { return s && !DEAD.test(s); });
+    var finished = (pctFresh && pct >= 100)
+      || (isFinite(end) && end >= start - 60000)
+      || texts.some(function (s) { return VAC_FINISHED.test(s); });
+    if (finished) return { done: true };
+    // 0 % heißt meist „zurückgesetzt“ (auch nach einem Neustart frisch), kein halber Lauf.
+    var partial = pctFresh && pct > 0 && pct < 100;
+    var word = null;
+    texts.some(function (s) { word = vacPauseWord(s, partial); return !!word; });
+    if (!word && partial) word = 'an der Station';
+    return { done: false, pause: !!word, word: word, pct: pctFresh ? pct : null };
+  }
+
+  // timeline: [{ when (ms), state }] eines Saugers, aufsteigend, ohne unavailable/unknown.
+  // Liefert { done: [{ when, start }], pause: { when, start, word } | null, paused: [Andockzeiten] }.
+  function vacuumRuns(hass, id, timeline, now) {
+    var memo = (vacPauseMemo()[id] || []);
+    var res = { done: [], pause: null, paused: [] };
+    var run = null;
+    (timeline || []).forEach(function (e) {
+      var s = e.state;
+      if (VACUUM_BUSY[s]) {
+        if (!run) { run = { start: e.when, dock: null }; return; }
+        if (run.dock == null) return;
+        // Wieder los: innerhalb der Ruhezeit oder bei gemerktem Zwischenstopp dieselbe Reinigung.
+        if (e.when - run.dock < VAC_QUIET_MS || memo.indexOf(run.dock) !== -1) { run.dock = null; return; }
+        res.done.push({ when: run.dock, start: run.start });
+        run = { start: e.when, dock: null };
+      } else if (VACUUM_DONE[s]) {
+        if (run && run.dock == null) run.dock = e.when;
+      }
+    });
+    if (!run || run.dock == null) return res;
+    var last = timeline[timeline.length - 1];
+    if (!last || !VACUUM_DONE[last.state]) return res;
+    var info = vacNow(hass, id, run.start);
+    if (info.done) { res.done.push({ when: run.dock, start: run.start }); return res; }
+    if (info.pause && now - run.dock < VAC_PAUSE_MAX_MS) {
+      res.pause = { when: run.dock, start: run.start, word: info.word };
+      res.paused.push(run.dock);
+      return res;
+    }
+    if (now - run.dock >= VAC_QUIET_MS) res.done.push({ when: run.dock, start: run.start });
+    return res;
+  }
+
   // Every category is on unless a dashboard turns it off.
   function on(type) {
     var t = window.CASORA_NOTIFY_TYPES;
@@ -8009,9 +8145,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     }
 
     if (id.indexOf('vacuum.') === 0) {
-      if (VACUUM_DONE[s] && VACUUM_BUSY[prev]) {
-        return { label: name + ' hat fertig gereinigt', icon: 'vacuum-charge', tone: 'good', done: true };
-      }
+      // Fertig entscheidet vacuumRuns() über den ganzen Ablauf (Zwischenstopps), nicht das Andocken.
       if (s === 'error') return { label: name + ' braucht Aufmerksamkeit', icon: 'vacuum', tone: 'bad' };
       return null;
     }
@@ -8528,6 +8662,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       var real = {};
       var events = [];
       var asked = {};
+      var vacLine = {};
       ids.forEach(function (id) { asked[id] = 1; });
       (entries || []).forEach(function (e) {
         var id = e.entity_id;
@@ -8549,6 +8684,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         // `when` is epoch seconds, and float on some HA versions.
         var when = Math.round(Number(e.when) * 1000);
         if (!isFinite(when)) return;
+        if (id.indexOf('vacuum.') === 0 && !DEAD.test(cur)) (vacLine[id] = vacLine[id] || []).push({ when: when, state: cur });
         if (when < sinceMs) return;
         var d = describe(e, st, was);
         if (!d) return;
@@ -8569,11 +8705,48 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         });
       });
 
+      // Saugroboter: Ablauf als Ganzes (Zwischenstopps), siehe vacuumRuns().
+      var vacPause = {};
+      var vacOld = vacPauseMemo();
+      Object.keys(vacLine).forEach(function (id) {
+        var line = vacLine[id].slice().sort(function (a, b) { return a.when - b.when; });
+        var cur = hass.states[id];
+        var lc = Date.parse((cur && cur.last_changed) || '');
+        // Der Live-Zustand kann neuer sein als das Logbuch.
+        if (cur && !DEAD.test(cur.state) && isFinite(lc) && line.length
+          && line[line.length - 1].state !== cur.state && lc > line[line.length - 1].when) {
+          line.push({ when: lc, state: String(cur.state) });
+        }
+        var r = vacuumRuns(hass, id, line, Date.now());
+        var name = nameOf(cur);
+        r.done.forEach(function (d) {
+          if (d.when < sinceMs) return;
+          events.push({ id: id + '@' + d.when, when: d.when, label: name + ' hat fertig gereinigt',
+            sub: null, icon: 'vacuum-charge', tone: 'good', sec: false, entity: id, opens: null, once: null, done: true });
+        });
+        if (r.pause) {
+          live.push({ id: 'casora:vacuum:' + id, when: r.pause.start, label: name + ' reinigt',
+            sub: 'Pause · ' + r.pause.word, icon: 'vacuum', tone: 'accent', entity: id });
+        }
+        var keep = (vacOld[id] || []).filter(function (t) { return t >= sinceMs - LOOKBACK_H * 3600 * 1000; });
+        r.paused.forEach(function (t) { if (keep.indexOf(t) === -1) keep.push(t); });
+        if (keep.length) vacPause[id] = keep.slice(-20);
+      });
+      try {
+        if (Object.keys(vacLine).length || Object.keys(vacOld).length) {
+          Object.keys(vacOld).forEach(function (id) { if (!vacLine[id] && !vacPause[id]) vacPause[id] = vacOld[id]; });
+          localStorage.setItem(VAC_PAUSE_KEY, JSON.stringify(vacPause));
+        }
+      } catch (e) { /* privat/voll */ }
+
       // Gemerkte „fertig“-Einträge, die der Neuaufbau nicht mehr liefert, bleiben im Fenster.
+      // Sauger nicht, wenn das Logbuch den Beginn dieser Reinigung noch enthält: dann ist der
+      // Ablauf oben neu bewertet (alte „fertig“ von Zwischenstopps fallen damit weg).
       var have = {};
       events.forEach(function (e) { have[e.id] = 1; });
       doneMemo().forEach(function (m) {
         if (!m || !m.id || have[m.id] || !(m.when >= sinceMs) || !asked[m.entity]) return;
+        if ((vacLine[m.entity] || []).some(function (x) { return VACUUM_BUSY[x.state] && x.when < m.when; })) return;
         have[m.id] = 1;
         events.push(m);
       });
