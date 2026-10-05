@@ -4317,10 +4317,15 @@ window.casoraMenuGlass = {
       :host([soft]) { --casora-soft-sheet-gap: var(--casora-soft-sheet-top, 44px); }
       :host([soft]) .surface {
         border-radius: var(--casora-soft-sheet-radius, 32px) var(--casora-soft-sheet-radius, 32px) 0 0;
-        height: min(var(--casora-sheet-height, 100dvh), calc(100dvh - env(safe-area-inset-top, 0px) - var(--casora-soft-sheet-gap)));
-        min-height: min(var(--casora-sheet-min, 100dvh), calc(100dvh - env(safe-area-inset-top, 0px) - var(--casora-soft-sheet-gap)));
+        /* K9 (Weich-Audit): Höhe nach Inhalt, höchstens bis unter den Streifen oben. Ein Popup
+           mit festem Wunsch (--casora-sheet-height/-min) behält ihn. !important, weil viele Vorlagen
+           in ihrem Popup-CSS die volle Höhe (100svh …) für .surface setzen. */
+        height: var(--casora-sheet-height, auto) !important;
+        min-height: min(var(--casora-sheet-min, 0px), calc(100dvh - env(safe-area-inset-top, 0px) - var(--casora-soft-sheet-gap)));
         max-height: calc(100dvh - env(safe-area-inset-top, 0px) - var(--casora-soft-sheet-gap));
       }
+      /* K9: dieselben Vorlagen strecken den Inhalt per min-height (100svh …) auf volle Höhe. */
+      :host([soft]) .content .container { min-height: 0 !important; }
       /* Runde 2: Die Fläche (.glass) ist absolut positioniert und lag über dem statischen Greifer. */
       :host([soft]) .grab { padding: 8px 0 0; position: relative; z-index: 1; }
       :host([soft]) .grab span { width: 36px; height: 5px; border-radius: 3px; }
