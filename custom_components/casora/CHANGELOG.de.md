@@ -4,6 +4,16 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.10 – 05.10.2026
+
+### Neu
+- Wiedergabe im Casora-Look (Welle oben, Handy-Liste, Medien-Zeile im Raum): Spielen mehrere Player denselben Titel desselben Interpreten, stehen sie in einer Zeile, z. B. „HomePod Küche + Büro · NICKLAS“, ab drei Playern „HomePod Küche + 2“. Play und Pause steuern alle Player der Zeile zusammen, Antippen öffnet das Popup des ersten.
+- Wiedergabe ausblenden: Eine Zeile nach links wischen (Finger oder Maus) zeigt „Ausblenden“. Die Wiedergabe verschwindet dann nur auf diesem Gerät, bis der Player etwas anderes spielt. Sind alle ausgeblendet, verschwindet auch die Welle oben.
+
+### Behoben
+- Wiedergabe: Pausierte Player verschwinden nach der Pausen-Frist jetzt von selbst. Bisher blieben sie in Welle und Listen stehen, bis irgendein anderer Player wechselte, und die Anzeige sprang dann plötzlich um. Außerdem gewann am Handy manchmal eine ältere Fassung der Wiedergabe-Logik aus der Vorlage; jetzt gilt überall dieselbe.
+- Szenen „Zuletzt aktiv“: Tage werden nach Kalendertag gezählt. Eine Szene von gestern Abend heißt jetzt „Gestern“ statt ab 36 Stunden „Vor 2 Tagen“ (#12, Refs #11).
+
 ## 1.0.9 – 05.10.2026
 
 ### Neu

@@ -4,6 +4,16 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.0.10 – 05.10.2026
+
+### New
+- Playback in the Casora look (wave at the top, phone list, media row in rooms): when several players play the same title by the same artist, they share one row, e.g. "HomePod Kitchen + Office · NICKLAS", from three players "HomePod Kitchen + 2". Play and pause control all players of the row, tapping opens the popup of the first one.
+- Hide a playback: swiping a row to the left (finger or mouse) shows "Hide". The playback then disappears on this device only, until the player plays something else. When all are hidden, the wave at the top disappears too.
+
+### Fixed
+- Playback: paused players now disappear on their own once the pause timeout is reached. They used to stay in the wave and lists until some other player changed, and then the display jumped all at once. On the phone an older version of the playback logic from the template sometimes won; now the same one applies everywhere.
+- Scenes "last active": days are counted by calendar day. A scene from last night now says "Yesterday" instead of "2 days ago" after 36 hours (#12, refs #11).
+
 ## 1.0.9 – 05.10.2026
 
 ### New

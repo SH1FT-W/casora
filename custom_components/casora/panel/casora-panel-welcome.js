@@ -27,9 +27,9 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Mobil", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst – mit eigener Mobilansicht.",
-      n1t: "Klarer Hintergrund am Handy", n1: "Im Casora-Look liegt der Schleier nur noch oben hinter Titel, Badges und „Favoriten“. Darunter bleibt das Foto klar bis ganz unten, hell wie dunkel.",
-      n2t: "Räume am Handy wie am Tablet", n2: "Die Raumseite am Handy zeigt dieselben Badges wie der Raum am Desktop und Tablet: Sicherheit, Klima, Licht, Energie und mehr, in derselben Reihenfolge. Das gilt sofort für alle Dashboards, ohne Speichern.",
-      n3t: "Neues Luftqualitäts-Symbol", n3: "Ein Wind-Symbol, das bei schlechterer Luft mehr Partikel zeigt, gut lesbar neben Temperatur und Luftfeuchte.",
+      n1t: "Gleiche Musik, eine Zeile", n1: "Spielen mehrere Player dasselbe, steht es einmal da, z. B. „HomePod Küche + Büro“. Play und Pause steuern alle zusammen.",
+      n2t: "Wiedergabe ausblenden", n2: "Nach links wischen und „Ausblenden“ tippen: Die Wiedergabe verschwindet auf diesem Gerät, bis etwas anderes läuft.",
+      n3t: "Wiedergabe immer aktuell", n3: "Beendete oder lange pausierte Player verschwinden jetzt von selbst, statt stehen zu bleiben."
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -39,9 +39,9 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen – with its own phone layout.",
-      n1t: "Clearer background on the phone", n1: "In the Casora look the veil now only sits at the top behind the title, badges and \"Favorites\". Below it the photo stays clear all the way down, in light and dark.",
-      n2t: "Rooms on the phone like on the tablet", n2: "The room page on the phone shows the same badges as the room on desktop and tablet: security, climate, lights, energy and more, in the same order. This applies to all dashboards right away, no saving needed.",
-      n3t: "New air quality icon", n3: "A wind icon that shows more particles the worse the air gets, easy to read next to temperature and humidity.",
+      n1t: "Same music, one row", n1: "When several players play the same thing, it shows once, e.g. \"HomePod Kitchen + Office\". Play and pause control all of them.",
+      n2t: "Hide a playback", n2: "Swipe left and tap \"Hide\": the playback disappears on this device until something else plays.",
+      n3t: "Playback always up to date", n3: "Players that stopped or stayed paused for a while now disappear on their own instead of lingering."
     },
   };
 
@@ -54,9 +54,9 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:cellphone", "n1t", "n1"],
-    ["mdi:view-grid-outline", "n2t", "n2"],
-    ["mdi:weather-windy", "n3t", "n3"],
+    ["mdi:speaker-multiple", "n1t", "n1"],
+    ["mdi:gesture-swipe-left", "n2t", "n2"],
+    ["mdi:music-note", "n3t", "n3"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.
