@@ -3442,7 +3442,7 @@
     "value": "[[[\n  const w = parseFloat(entity?.state);\n  if (!Number.isFinite(w)) { this._casoraEnergyActive = false; return false; }\n  const on  = Number(variables.high_threshold ?? 500);\n  const off = Number(variables.release_threshold ?? on * 0.8);\n  const now = this._casoraEnergyActive === true ? (w >= off) : (w >= on);\n  this._casoraEnergyActive = now;\n  return now;\n]]]\n"
    }
   ],
-  "state_display": "[[[\n  const _c = variables.entity_power || entity?.entity_id;\n  const id = ((id) => { const s = id && states[id]; const a = (s && s.attributes) || {}; return !!s && (a.device_class === 'power' || /^[kMG]?W$/.test(String(a.unit_of_measurement || ''))); })(_c) ? _c : null;\n  if (!id) return 'Kein Sensor gewählt';\n  const _u = String(states[id]?.attributes?.unit_of_measurement || 'W');\n  const w = parseFloat(states[id]?.state) * (_u === 'kW' ? 1000 : _u === 'MW' ? 1e6 : _u === 'GW' ? 1e9 : 1);\n  if (!Number.isFinite(w)) return 'Nicht verfügbar';\n  /* Kleine negative Werte sind Messrauschen am Zähler (Popup: „Inaktiv“), echte sind Einspeisung. */\n  const _f = (x) => x >= 1000 ? (x / 1000).toLocaleString(window.casoraLocale ? window.casoraLocale() : 'de', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kW' : Math.round(x) + ' W';\n  if (w < 0) return w > -20 ? '0 W' : 'Einspeisung ' + _f(-w);\n  return _f(w);\n]]]\n",
+  "state_display": "[[[\n  const _c = variables.entity_power || entity?.entity_id;\n  const id = ((id) => { const s = id && states[id]; const a = (s && s.attributes) || {}; return !!s && (a.device_class === 'power' || /^[kMG]?W$/.test(String(a.unit_of_measurement || ''))); })(_c) ? _c : null;\n  // K4 (Weich-Audit): kurz, die Handy-Kachel kürzte „Kein Sensor ge…“.\n  if (!id) return 'Kein Sensor';\n  const _u = String(states[id]?.attributes?.unit_of_measurement || 'W');\n  const w = parseFloat(states[id]?.state) * (_u === 'kW' ? 1000 : _u === 'MW' ? 1e6 : _u === 'GW' ? 1e9 : 1);\n  if (!Number.isFinite(w)) return 'Nicht verfügbar';\n  /* Kleine negative Werte sind Messrauschen am Zähler (Popup: „Inaktiv“), echte sind Einspeisung. */\n  const _f = (x) => x >= 1000 ? (x / 1000).toLocaleString(window.casoraLocale ? window.casoraLocale() : 'de', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kW' : Math.round(x) + ' W';\n  if (w < 0) return w > -20 ? '0 W' : 'Einspeisung ' + _f(-w);\n  return _f(w);\n]]]\n",
   "template": [
    "casora_entity",
    "casora_popup_energy"
@@ -10539,6 +10539,7 @@
    "casora_entity",
    "casora_popup_recipe"
   ],
+  "name": "[[[\n  /* K4 (Weich-Audit): kurzer deutscher Kachelname statt des langen Entitätsnamens\n     („Casora Recipe of the week“ wurde zu „Casora Reci…“). Eigener Name der Kachel gewinnt. */\n  return window.casoraTr ? window.casoraTr('Rezept') : 'Rezept';\n]]]",
   "triggers_update": [
    "sensor.casora_rezept_der_woche"
   ],

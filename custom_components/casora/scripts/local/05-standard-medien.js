@@ -616,7 +616,8 @@ window._hpMultiTap = function (ev, kind) {
     if (!entity) {
       var fb = false;
       try { fb = getComputedStyle(document.documentElement).getPropertyValue('--casora-tile-fallback-name').trim() === '1'; } catch (e) {}
-      if (fb) return 'Noch nicht eingerichtet';
+      // K4 (Weich-Audit): kurz wie bei Energie, „Noch nicht ein…“ wurde gekürzt.
+      if (fb) return 'Kein Sensor';
     }
     var ids = devices(states || {});
     var tips = [];
