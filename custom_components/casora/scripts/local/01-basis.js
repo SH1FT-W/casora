@@ -238,9 +238,12 @@ window._casoraCamReachable = function (hass, id) {
       (function walk(root, d) {
         if (!root || d > 14) return;
         root.querySelectorAll('*').forEach(function (el) {
-          var cv = el._config && el._config.variables && el._config.variables.cameras;
-          /* Sicherheits-Badges führen Kameras in variables.cameras – sie zählen „offline“ mit (04.10.2026). */
-          var hasCam = cv && (Array.isArray(cv) ? cv.indexOf(id) !== -1 : cv === id);
+          /* Jede Karte, deren Konfiguration die Kamera nennt (Kachel, Sicherheits-/Kamera-Badges,
+             Raumkarte mit security_cameras), zeichnet neu – verschachtelte Badges ziehen mit. */
+          var hasCam = false;
+          if (el._config && el._config.entity !== id) {
+            try { hasCam = JSON.stringify(el._config).indexOf('"' + id + '"') !== -1; } catch (e) {}
+          }
           if (el.tagName === 'BUTTON-CARD' && el._config && (el._config.entity === id || hasCam) && typeof el.requestUpdate === 'function') {
             try { el._casoraCamTick = (el._casoraCamTick || 0) + 1; el.requestUpdate('_config', null); } catch (e) {}
           }
@@ -253,6 +256,32 @@ window._casoraCamReachable = function (hass, id) {
   c[id] = { t: Date.now(), p: p };
   return p;
 };
+/* Als offline gemerkte Kameras regelmäßig neu prüfen (05.10.2026): geprüft wurde nur beim Zeichnen
+   einer Kamera-Kachel. Ansichten, die eine Kamera nur in Badges zeigen, behielten so ein altes
+   „offline“ aus dem Speicher, auch wenn die Kamera längst wieder ein Bild liefert. Nur die als
+   offline gemerkten werden abgefragt, das hält die Last klein. */
+if (!window._casoraCamRecheck) {
+  window._casoraCamRecheck = function () {
+    try {
+      var ha = document.querySelector('home-assistant');
+      var hass = ha && ha.hass;
+      if (!hass || !hass.states) return;
+      Object.keys(window._casoraCamDead || {}).forEach(function (id) {
+        if (!window._casoraCamDead[id]) return;
+        var st = hass.states[id];
+        if (!st) return;
+        var s = String(st.state || '').toLowerCase();
+        if (s === 'unavailable' || s === 'unknown') return;
+        window._casoraCamReachable(hass, id);
+      });
+    } catch (e) {}
+  };
+  setTimeout(window._casoraCamRecheck, 4000);
+  setInterval(window._casoraCamRecheck, 60000);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') setTimeout(window._casoraCamRecheck, 1500);
+  });
+}
 window._casoraColGap = window._casoraColGap || function (keys) {
   var css = '';
   for (var b = 1; b < keys.length; b++) {
