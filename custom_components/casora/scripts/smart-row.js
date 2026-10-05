@@ -352,10 +352,16 @@ class CasoraSmartRow extends HTMLElement {
     });
     this.addEventListener('dragstart', (e) => { if (drag && drag.moved) e.preventDefault(); });
 
-    this.addEventListener('scroll', () => this._casoraEdges(), { passive: true });
-    window.addEventListener('resize', () => this._casoraEdges());
+    // Höchstens einmal pro Bild messen: _casoraEdges liest die Lage aller Kacheln und schreibt
+    // Masken – je Scroll-Ereignis aufgerufen ruckelte das Wischen (05.10.2026).
+    const edges = () => {
+      if (this._casoraEdgesRaf) return;
+      this._casoraEdgesRaf = requestAnimationFrame(() => { this._casoraEdgesRaf = 0; this._casoraEdges(); });
+    };
+    this.addEventListener('scroll', edges, { passive: true });
+    window.addEventListener('resize', edges);
     if (window.ResizeObserver) {
-      this._casoraRo = new ResizeObserver(() => this._casoraEdges());
+      this._casoraRo = new ResizeObserver(edges);
       this._casoraRo.observe(this);
       const box = this.shadowRoot && this.shadowRoot.getElementById('container');
       if (box) { this._casoraRoBox = true; this._casoraRo.observe(box); }
