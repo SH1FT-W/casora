@@ -387,6 +387,10 @@
       if (this._bar) this._bar.classList.add('hmn-up');
       requestAnimationFrame(function () { sc.classList.add('open'); });
       document.body.appendChild(m);
+      /* Erst die Leiste neu zeichnen, dann messen: in Weich (hmn-ic) wird die getippte Taste beim Öffnen
+         zur breiten Ton-Pille mit Wort und die Kapsel zentriert sich neu – mit den alten Maßen saß das
+         Menü bis zu 35 px neben der Taste (05.10.2026). */
+      this._render();
       /* Über dem eigenen Knopf ausrichten, am Bildschirmrand begrenzen; Breite = Inhalt. */
       var btn = kind === 'rooms' ? this._bRooms : this._bScenes;
       var r = btn.getBoundingClientRect(), w = m.offsetWidth;
@@ -402,7 +406,6 @@
         if (on) m.scrollTop = Math.max(0, on.offsetTop - (m.clientHeight - rowH) / 2);
       }
       requestAnimationFrame(function () { m.classList.add('open'); });
-      this._render();
       this._away = function (e) {
         /* Ganzen Pfad prüfen: ein Tipp aufs Icon endet im Shadow-DOM von ha-icon, btn.contains() sähe ihn als "außen" –
            dann schloss pointerdown das Menü und der folgende click öffnete es sofort wieder (kein Toggle). */
