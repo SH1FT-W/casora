@@ -1,9 +1,11 @@
 #!/bin/bash
 # Qualitäts-Gate vor jedem Release und jedem Karten-Update (siehe dev/qa/README.md).
 #
-#   dev/qa/gate.sh                 alles: arbeit, stress und frisch GLEICHZEITIG auf eigenen
-#                                  Wegwerf-Test-HAs (dev/qa/wegwerf-ha.sh, Ports 8301–8305)
-#   dev/qa/gate.sh --seriell       wie früher nacheinander auf casora-test (:8124, dev/haus.sh)
+#   dev/qa/gate.sh                 alles einzeln (Standard seit 05.10.2026): Zustände nacheinander auf
+#                                  casora-test (:8124, dev/haus.sh), ein Test nach dem anderen (~30 Min., stabil)
+#   dev/qa/gate.sh --parallel      arbeit, stress und frisch GLEICHZEITIG auf eigenen Wegwerf-Test-HAs
+#                                  (dev/qa/wegwerf-ha.sh, Ports 8301–8305), 4 Tests je Zustand (~10 Min.)
+#   dev/qa/gate.sh --seriell       wie Standard (bleibt für alte Aufrufe)
 #   dev/qa/gate.sh --gezielt[=C]   nur die Zustände, die die Änderungen seit dem letzten grünen
 #                                  vollen Gate (oder Commit C) betreffen – zählt NICHT als Freigabe
 #   dev/qa/gate.sh --has N         höchstens N Wegwerf-HAs gleichzeitig (2–4; Standard: nach Speicher)
@@ -29,10 +31,11 @@ NODE="${NODE:-/opt/homebrew/opt/node@22/bin/node}"
 [ -x "$NODE" ] || NODE="$(command -v node)"
 PY="uv run --python 3.14"
 
-QUICK=0; ONLY=""; DRY=0; NOSWITCH=0; JOBS="${GATE_JOBS:-4}"; PAR=1; GEZIELT=0; GBASE=""; HAS="${GATE_HAS:-}"
+QUICK=0; ONLY=""; DRY=0; NOSWITCH=0; JOBS="${GATE_JOBS:-}"; PAR=0; GEZIELT=0; GBASE=""; HAS="${GATE_HAS:-}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --seriell) PAR=0 ;;
+    --parallel) PAR=1 ;;
     --gezielt) GEZIELT=1 ;;
     --gezielt=*) GEZIELT=1; GBASE="${1#--gezielt=}" ;;
     --has) HAS="$2"; shift ;;
@@ -50,6 +53,9 @@ while [ $# -gt 0 ]; do
   shift
 done
 case "$ONLY" in ""|static|unit|e2e|regress|crawler) ;; *) echo "--only: static|unit|e2e|regress|crawler" >&2; exit 2 ;; esac
+# Standard (05.10.2026): einzeln – Zustände nacheinander auf casora-test, ein Test nach dem anderen.
+# Gleichzeitig (--parallel) ist schneller, wackelt aber unter Last (Docker 3,8 GB).
+[ -n "$JOBS" ] || { [ $PAR = 1 ] && JOBS=4 || JOBS=1; }
 case "$JOBS" in ''|*[!0-9]*|0) echo "--jobs: Zahl ≥ 1" >&2; exit 2 ;; esac
 case "$HAS" in ''|2|3|4) ;; *) echo "--has: 2, 3 oder 4" >&2; exit 2 ;; esac
 [ $NOSWITCH = 1 ] && PAR=0
