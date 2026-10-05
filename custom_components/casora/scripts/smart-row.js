@@ -1755,6 +1755,11 @@ class CasoraSmartRow extends HTMLElement {
         #container > .card-wrapper[data-size="large"] { grid-row: span 2; }
         /* Passes the track height down for the card's own height:100%. */
         #container > .card-wrapper > * { display: block; height: 100%; }
+        /* Bedingte Karte (conditional): HA legt die Kachel in ein inline-hui-card, dort
+           griff height:100% nicht und die Kachel nahm ihre Eigenhöhe (Alarm-Kachel 4-9 px
+           höher als die Spur, der Abstand darunter schrumpfte). Höhe bis zur Kachel durchreichen. */
+        #container > .card-wrapper > hui-conditional-card > hui-card,
+        #container > .card-wrapper > hui-conditional-card > hui-card > * { display: block; height: 100%; }
         /* And holds a pasted card to it. Safari leaks past overflow alone. */
         #container > .card-wrapper[data-raw="1"] {
           overflow: hidden;
