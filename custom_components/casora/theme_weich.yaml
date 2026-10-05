@@ -319,6 +319,25 @@ Casora Weich:
   casora-mnav-icon-on: var(--primary-color)
   casora-mnav-label-on: var(--casora-ton-ink)
   casora-mnav-label-on-weight: 600
+  # Handy-Leiste wie die Desktop-Raumleiste (Variante A, 05.10.2026): Fläche, Schatten, Unschärfe und
+  # Aktivfeld kommen direkt aus den Desktop-Variablen, damit beide zusammen bleiben. Aktives Ziel als
+  # heller Sand mit normaler Schrift statt Ton-Pille; inaktive Symbole wie die Desktop-Beschriftung.
+  casora-mnav-pill: var(--casora-nav-active-fill)
+  casora-mnav-pill-ink: var(--casora-nav-label-color)
+  casora-mnav-pill-weight: var(--casora-chrome-font-weight, 500)
+  casora-mnav-fg: var(--casora-nav-label-color)
+  casora-mnav-idle-opacity: var(--casora-nav-label-inactive-opacity, 0.84)
+  casora-mnav-pane: var(--casora-pill-fill)
+  casora-mnav-shadow: var(--casora-pill-rim)
+  casora-mnav-blur: var(--casora-pill-backdrop)
+  # Menüs aus der Leiste (Räume, Szenen) wie die Menüs der Desktop-Raumleiste: gleiche Fläche und
+  # Schatten, normale Schrift, aktiver Eintrag in hellem Sand.
+  casora-mnav-menu-pane: var(--casora-menu-pane)
+  casora-mnav-menu-shadow: var(--casora-elevation-floating, 0 8px 20px rgba(0,0,0,0.13))
+  casora-mnav-on-fill: var(--casora-nav-active-fill)
+  casora-mnav-fg-on: var(--casora-menu-fg, #fff)
+  casora-mnav-item-weight: 400
+  casora-mnav-item-on-weight: 500
   # A-07: Kachelabstand Desktop/Tablet (war 16), Handy-Raster (Standard 8) – minimal enger
   casora-tile-row-gap-desktop: 12px
   casora-tile-row-gap-mobile: 8px
@@ -423,11 +442,8 @@ Casora Weich:
       casora-weather-glyph-fill: "1"
       # Handy-Navbar (04-navigation.js): Creme statt dunklem Glas
       casora-mnav-bg: rgba(251,248,243,0.82)
-      casora-mnav-pane: rgba(255,255,255,0.93)
       casora-back-rim: none
       casora-back-highlight: none
-      casora-mnav-blur: blur(60px) saturate(180%)
-      casora-mnav-shadow: 0 6px 22px rgba(60,40,20,0.16)
       # Menü-Glas (casoraMenuGlass: Navbar, ⋯-Menüs): Creme statt dunkel
       casora-menu-pane: rgba(251,248,243,0.96)
       # Mitteilungszentrum ohne Glas-Rand (Rim oben/unten), weicher Schatten wie die Karten
@@ -440,11 +456,8 @@ Casora Weich:
       casora-menu-edge: transparent
       casora-mnav-menu-bg: rgba(251,248,243,0.94)
       casora-mnav-over: rgba(246,241,233,0.96)
-      casora-mnav-fg: var(--casora-text-2)
-      casora-mnav-fg-on: rgba(46,39,33,0.95)
       casora-mnav-fg-sub: var(--casora-text-2)
       casora-mnav-fg-icon: var(--casora-text-2)
-      casora-mnav-on-fill: rgba(232,221,206,0.95)
       casora-mnav-press-fill: rgba(220,205,186,0.95)
       casora-nav-border: rgba(120,100,80,0.10)
       casora-nav-active-fill: rgba(232,221,206,0.95)
@@ -816,22 +829,18 @@ Casora Weich:
       casora-room-head-fill: rgba(36,33,30,0.94)  # H3 (Weich-Audit)
       casora-filter-veil: rgba(28,24,21,0.30)
       casora-mnav-bg: rgba(46,42,38,0.72)
-      casora-mnav-pane: rgba(30,30,34,0.94)
       casora-back-rim: none
       casora-back-highlight: none
       # Menüs aus der Leiste (Räume, …) im Dunklen ohne helle Lichtkanten aus Hemma (04.10.2026).
       casora-menu-rim-top: transparent
       casora-menu-rim-bottom: transparent
       casora-menu-edge: transparent
-      casora-mnav-blur: blur(60px) saturate(180%)
-      casora-mnav-shadow: 0 6px 22px rgba(0,0,0,0.38)
       casora-mnav-menu-bg: rgba(46,42,38,0.95)
       # Menü-Glas (Mitteilungen, ⋯-Menü) fast deckend, sonst scheint die Kopfzeile durch
       casora-menu-pane: rgba(46,42,38,0.96)
       casora-notify-shadow: 0 14px 34px -12px rgba(0,0,0,0.60)
       casora-menu-pane-webkit: rgba(42,38,34,0.96)
       casora-mnav-over: rgba(40,36,32,0.94)
-      casora-mnav-on-fill: rgba(242,232,218,0.14)
       casora-nav-border: rgba(255,240,220,0.06)
       casora-nav-active-fill: rgba(242,232,218,0.14)
       casora-pill-fill: rgba(46,42,38,0.80)
