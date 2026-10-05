@@ -84,26 +84,15 @@ rowCards.forEach((c) => assert.ok(HOST[c.template]
   || (c.variables?.inline === true && String(T[c.template].extra_styles || '').includes(INLINE_SEC)),
   'Badge ohne Reihenfolge: ' + c.template));
 
-// ── Handy-Raum: Chips Temperatur, Luftfeuchtigkeit, Luftqualität, dann Licht, Bewegung ──
-// Gemeldet 04.10.2026 (1.0.2): Licht stand vorn. Die Klima-Chips sortieren über
-// --casora-badge-order-climate (Standard 2), Licht und Bewegung haben kein order (0) –
-// die Raum-Reihe setzt Klima deshalb auf 0, wie Hemma.
+// ── Handy-Raum: Reihenfolge wie der Raum-Kopf am Desktop ──────────────────────
+// Bis 1.0.9 hatte die Raumseite am Handy eigene Regeln (Klima 0, Sicherheit -1; gemeldet
+// 04.10.2026). Seit 05.10.2026 zeichnet sie dieselbe Reihe wie casora_room und übernimmt dessen
+// --casora-badge-order-* (badge_order des Raums) – Einzelheiten: dev/unit/handy_raum_badges.mjs.
 {
-  const chips = T.casora_mobile_sensor_chips;
-  const row = chips.styles.custom_fields.rooms_row;
-  const v = row.find((x) => x['--casora-badge-order-climate'] !== undefined);
-  assert.equal(String(v && v['--casora-badge-order-climate']), '0', 'Raum-Reihe: Klima-Chips vor Licht');
-  const order = (t) => { const m = /order:var\(--casora-badge-order-climate,\s*(\d+)\)/.exec(String(T[t].extra_styles || '')); return m ? m[1] : null; };
-  const kinds = chips.custom_fields.rooms_row.card.cards.map((c) => c.template);
-  assert.deepEqual(kinds.slice(0, 4), ['casora_badge_temp', 'casora_badge_humidity', 'casora_badge_air_quality', 'casora_badge_light']);
-  ['casora_badge_temp', 'casora_badge_humidity', 'casora_badge_air_quality'].forEach((t) => assert.ok(order(t) !== null, t + ' sortiert über Klima'));
-  assert.ok(!/order:/.test(String(T.casora_badge_light.extra_styles || '')), 'Licht-Chip ohne eigenes order');
-  // Issue #5: Schlösser und Kontakte des Raums (inline) stehen wie am Desktop vorn – über
-  // --casora-badge-order-security (-1), nicht über die Lage in der Kartenliste.
-  const sec = row.find((x) => x['--casora-badge-order-security'] !== undefined);
-  assert.equal(String(sec && sec['--casora-badge-order-security']), '-1', 'Raum-Reihe: Sicherheit vor Klima');
-  const secCards = chips.custom_fields.rooms_row.card.cards.filter((c) => /lock_group|badge_security|contact_group/.test(c.template));
-  assert.ok(secCards.length >= 2 && secCards.every((c) => c.variables && c.variables.inline === true), 'Raum-Reihe: Sicherheits-Badges inline (mit order)');
+  const row = T.casora_mobile_sensor_chips.styles.custom_fields.rooms_row;
+  const keys = (list) => list.map((x) => Object.keys(x)[0]).filter((k) => k.startsWith('--casora-badge-order-')).sort();
+  assert.deepEqual(keys(row), keys(T.casora_room.styles.card), 'Raum-Reihe am Handy: alle Reihenfolge-Werte des Raum-Kopfs');
+  assert.ok(!row.some((x) => String(Object.values(x)[0]) === '-1'), 'keine Handy-eigene Sonder-Reihenfolge mehr');
 }
 
 // ── Medien-Badge am Handy nur, wenn etwas läuft (wie am Desktop) ─────────────

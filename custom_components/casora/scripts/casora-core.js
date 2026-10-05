@@ -9600,31 +9600,62 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     return current;
   }
 
+  // Raumseite am Handy (05.10.2026): aufgeklappte Unter-Reihe einer Sammel-Badge („security“,
+  // „climate“ …) – wie input_select.casora_expanded_row am Desktop, aber je Gerät. Dazu ein
+  // Zähler, der steigt, wenn neue Raum-Badges vom Server da sind (casoraPhoneRoom). Beides
+  // reist als Attribut des Filter-Helfers (casora_row, casora_tok) zu den Karten – die
+  // Handy-Badges hängen an diesem Helfer und zeichnen so neu.
+  var row = null, tok = 0;
+
+  function notify(v) {
+    listeners.slice().forEach(function (fn) { try { fn(v); } catch (e) {} });
+  }
+
   function set(v) {
     v = String(v == null ? 'all' : v) || 'all';
     if (get() === v) return v;
     current = v;
+    row = null;
     try { localStorage.setItem(KEY, v); } catch (e) {}
-    listeners.slice().forEach(function (fn) { try { fn(v); } catch (e) {} });
+    notify(v);
     return v;
   }
 
+  function setRow(r) {
+    r = r ? String(r) : null;
+    if (row === r) return row;
+    row = r;
+    notify(get());
+    return row;
+  }
+
+  function bump() { tok++; notify(get()); }
+
   // One hass object arrives per update and is handed to every card, so the
-  // rewrite is memoised on it rather than repeated down the tree.
-  var lastIn = null, lastVal = null, lastOut = null;
+  // rewrite is memoised on it rather than repeated down the tree. Der umgeschriebene
+  // Zustand selbst bleibt dasselbe Objekt, solange sich nichts daran ändert – sonst zeichneten
+  // alle Karten am Filter-Helfer bei jedem Update im Haus neu.
+  var lastIn = null, lastVal = null, lastOut = null, lastRow = null, lastTok = 0;
+  var entIn = null, entKey = null, entOut = null;
 
   function apply(hass) {
     if (!hass || !hass.states) return hass;
     var ent = hass.states[ENTITY];
     if (!ent) return hass;                    // no helper: nothing to stand in for
     var v = get();
-    if (ent.state === v) return hass;
-    if (hass === lastIn && v === lastVal) return lastOut;
+    if (ent.state === v && !row && !tok) return hass;
+    if (hass === lastIn && v === lastVal && row === lastRow && tok === lastTok) return lastOut;
+    var key = v + '|' + (row || '') + '|' + tok;
+    if (ent !== entIn || key !== entKey) {
+      var next = Object.assign({}, ent, { state: v });
+      if (row || tok) next.attributes = Object.assign({}, ent.attributes, { casora_row: row, casora_tok: tok });
+      entIn = ent; entKey = key; entOut = next;
+    }
     var states = Object.assign({}, hass.states);
-    states[ENTITY] = Object.assign({}, ent, { state: v });
+    states[ENTITY] = entOut;
     var out = Object.assign({}, hass);
     out.states = states;
-    lastIn = hass; lastVal = v; lastOut = out;
+    lastIn = hass; lastVal = v; lastOut = out; lastRow = row; lastTok = tok;
     return out;
   }
 
@@ -9657,6 +9688,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   // tap_action cannot call a function directly.
   window.addEventListener('ll-custom', function (ev) {
     var d = ev.detail || {};
+    // Sammel-Badge auf der Raumseite am Handy: Unter-Reihe auf/zu (nur dieses Gerät).
+    if (d.casora_phone_row) {
+      ev.stopPropagation();
+      setRow(row === d.casora_phone_row ? null : d.casora_phone_row);
+      return;
+    }
     if (!('casora_filter' in d)) return;
     ev.stopPropagation();
     var v = set(d.casora_filter);
@@ -9668,6 +9705,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     ENTITY: ENTITY,
     get: get,
     set: set,
+    row: function () { return row; },
+    setRow: setRow,
+    bump: bump,
     apply: apply,
     share: share,
     onChange: function (fn) {
@@ -9675,6 +9715,150 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       return function () {
         listeners = listeners.filter(function (x) { return x !== fn; });
       };
+    },
+  };
+})();
+
+// Raum-Badges am Handy wie im Raum-Kopf am Desktop/Tablet (05.10.2026). Die Raumseite am Handy
+// (casora_mobile_sensor_chips, rooms_row) zeichnet dieselbe Badge-Reihe wie casora_room; die
+// Variablen dazu stehen nur im Desktop-Dashboard des Paars. Sie kommen zur Laufzeit vom Server
+// (WS casora/phone_room_badges, phone_badges.py) – so gilt das auch für nie im Studio gespeicherte
+// und aus Hemma umgezogene Dashboards, ohne dass jemand speichern muss. Ohne Antwort (älterer
+// Server, Desktop-Dashboard fehlt, Raum nicht zugeordnet) bleibt der Auszug, den das Studio beim
+// Speichern in room_chips schreibt (Klima, Licht, Sicherheit), in Desktop-Form gebracht.
+// Eigene Einstellungen fürs Handy: Schalter in room_chips[<raum>] (PHONE_OVERRIDE) gehen vor.
+// Gleiche Regeln im Studio (casora-panel.js, phoneRoomBadgeVars) – dev/unit/handy_raum_badges.mjs
+// vergleicht beide.
+(function () {
+  if (window.casoraPhoneRoom) return;
+  var OVERRIDE = ['show_climate', 'show_lights', 'show_people', 'show_media', 'show_security', 'show_energy',
+    'show_climate_inline', 'show_security_inline', 'show_people_inline', 'badge_order'];
+  var AQI = ['aqi_entity_pm25', 'aqi_entity_pm10', 'aqi_entity_voc', 'aqi_entity_co2'];
+  var LS = 'casora.phoneRooms.';
+  var cache = {}, busy = {}, subscribed = false;
+
+  // room_chips-Auszug (Studio bis 1.0.9) → Variablen wie casora_room.
+  function legacy(c) {
+    var o = {};
+    if (!c || typeof c !== 'object') return o;
+    if (c.temp_entity) o.temp_sensor_1 = c.temp_entity;
+    if (c.humidity_entity) o.humidity_sensor = c.humidity_entity;
+    if (c.entity_quality) o.quality_sensor = c.entity_quality;
+    (Array.isArray(c.aqi_sensors) ? c.aqi_sensors : []).slice(0, 4).forEach(function (e, i) { if (e) o[AQI[i]] = e; });
+    if (c.lights_entity) o.light_group_entity = c.lights_entity;
+    if (Array.isArray(c.security_locks) && c.security_locks.length) o.security_locks = c.security_locks.slice();
+    ['security_locks_label', 'security_door_sensors', 'security_lock_batteries'].forEach(function (k) {
+      if (c[k] != null && c[k] !== '') o[k] = c[k];
+    });
+    for (var n = 1; n <= 8; n++) {
+      if (c['security_entity_' + n]) o['security_entity_' + n] = c['security_entity_' + n];
+      if (c['security_label_' + n]) o['security_label_' + n] = c['security_label_' + n];
+    }
+    return o;
+  }
+
+  function anyBadge(o) {
+    var some = function (p, n) { for (var i = 1; i <= n; i++) if (o[p + i]) return true; return false; };
+    var list = function (v) { return Array.isArray(v) && v.some(Boolean); };
+    var energy = typeof window._casoraEnergyOn === 'function' ? window._casoraEnergyOn(o)
+      : (o.show_energy !== false && (!!o.energy_power_entity || list(o.energy_entities)));
+    return (o.show_climate !== false && !!(o.climate_entity_1 || o.temp_sensor_1 || o.humidity_sensor || o.quality_sensor))
+      || (o.show_lights !== false && !!(o.light_entity_1 || o.light_group_entity))
+      || (o.show_people !== false && !!o.presence_entity_1)
+      || (o.show_security !== false && !!(o.security_lock_entity || some('security_entity_', 8)
+        || list(o.security_locks) || list(o.security_cameras)))
+      || !!energy
+      || (o.show_media !== false && !o.show_now_playing && !!o.media_player_1);
+  }
+
+  // desk: Variablen des Desktop-Raums (oder null), chip: room_chips[<raum>], name: Raumname.
+  function merge(desk, chip, name) {
+    var o = Object.assign({}, desk || legacy(chip));
+    if (chip && typeof chip === 'object') {
+      OVERRIDE.forEach(function (k) { if (chip[k] !== undefined && chip[k] !== null) o[k] = chip[k]; });
+    }
+    // Szenen haben auf der Raumseite am Handy einen eigenen Bereich (keine Badge).
+    o.show_scenes = false;
+    o._name = name || (chip && (chip.room_name || chip.aqi_room_name)) || o.room_name || o.aqi_room_name || '';
+    o._any = anyBadge(o) || !!(chip && chip.motion_entity);
+    return o;
+  }
+
+  function urlNow() {
+    var seg = String(location.pathname || '').split('/').filter(Boolean)[0] || '';
+    return /[-_]mobile$/i.test(seg) ? seg : null;
+  }
+  function hassOf() { var ha = document.querySelector('home-assistant'); return ha && ha.hass; }
+  function readLS(u) {
+    try { var r = JSON.parse(localStorage.getItem(LS + u) || 'null'); return r && typeof r === 'object' ? { rooms: r, at: 0 } : null; }
+    catch (e) { return null; }
+  }
+  function writeLS(u, rooms) { try { localStorage.setItem(LS + u, JSON.stringify(rooms)); } catch (e) {} }
+
+  function subscribe(h) {
+    if (subscribed || !h || !h.connection || typeof h.connection.subscribeEvents !== 'function') return;
+    subscribed = true;
+    try {
+      // Desktop im Studio gespeichert: gleich neu holen, nicht erst nach einer Minute.
+      Promise.resolve(h.connection.subscribeEvents(function () {
+        var u = urlNow();
+        if (u) load(u);
+      }, 'lovelace_updated')).catch(function () {});
+    } catch (e) {}
+  }
+
+  function load(u) {
+    var h = hassOf();
+    if (!u || busy[u] || !h || typeof h.callWS !== 'function') return;
+    if (h.connection && h.connection.connected === false) return;
+    busy[u] = true;
+    subscribe(h);
+    Promise.resolve(h.callWS({ type: 'casora/phone_room_badges', url_path: u })).then(function (r) {
+      var rooms = (r && r.rooms && typeof r.rooms === 'object') ? r.rooms : {};
+      var was = JSON.stringify((cache[u] || {}).rooms || null);
+      cache[u] = { rooms: rooms, at: Date.now() };
+      writeLS(u, rooms);
+      if (was !== JSON.stringify(rooms) && window._casoraFilter && window._casoraFilter.bump) window._casoraFilter.bump();
+    }, function () {
+      // Älterer Server ohne den Befehl: beim room_chips-Auszug bleiben, nicht dauernd fragen.
+      cache[u] = cache[u] || { rooms: null };
+      cache[u].at = Date.now();
+    }).then(function () { busy[u] = false; });
+  }
+
+  function ensure(u) {
+    if (!u) return;
+    if (!cache[u]) cache[u] = readLS(u) || { rooms: null, at: 0 };
+    if (Date.now() - (cache[u].at || 0) > 60000) load(u);
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    var u = urlNow();
+    if (!document.hidden && u && cache[u]) cache[u].at = 0;
+  });
+
+  window.casoraPhoneRoom = {
+    OVERRIDE: OVERRIDE,
+    legacy: legacy,
+    merge: merge,
+    // Variablen der Raumseite <key> (Filterwert „room_…“) oder null.
+    vars: function (key, chips) {
+      if (typeof key !== 'string' || key.indexOf('room_') !== 0) return null;
+      var u = urlNow();
+      ensure(u);
+      var rooms = u && cache[u] ? cache[u].rooms : null;
+      var e = rooms && rooms[key] ? rooms[key] : null;
+      var chip = chips && typeof chips === 'object' && chips[key] && typeof chips[key] === 'object' ? chips[key] : null;
+      if (!e && !chip) return null;
+      return merge(e ? (e.vars || {}) : null, chip, e ? e.name : null);
+    },
+    refresh: function () { var u = urlNow(); if (u) load(u); },
+    // Was der Server liefert (rooms aus casora/phone_room_badges), z. B. für Prüfungen ohne Speichern.
+    prime: function (rooms) {
+      var u = urlNow();
+      if (!u) return;
+      cache[u] = { rooms: rooms || {}, at: Date.now() };
+      if (window._casoraFilter && window._casoraFilter.bump) window._casoraFilter.bump();
     },
   };
 })();

@@ -1549,7 +1549,9 @@ window._casoraBadgeRows = function (root) {
   var rows = root.querySelectorAll('#badges, #badges_climate, #badges_presence, #badges_media, '
     + '#badges_lights, #badges_security, #badges_energy, #badges_scenes, '
     // Handy (casora_mobile_filter_badges / casora_mobile_sensor_chips): dieselben weichen Ränder.
-    + '#climate_row, #security_row, #energy_row, #rooms_row');
+    + '#climate_row, #security_row, #energy_row, #rooms_row, '
+    // Raumseite am Handy: Unter-Reihen der Sammel-Badges (wie am Desktop, 05.10.2026).
+    + '#room_sub_climate, #room_sub_security, #room_sub_lights, #room_sub_presence, #room_sub_energy, #room_sub_media');
   if (!rows.length) {
     // Erstes Zeichnen: die Felder stehen erst nach dem Rendern im Schatten-DOM.
     // Höchstens 20 Versuche (6 s) – Karten ohne Badge-Reihen sollen nicht ewig nachfragen.

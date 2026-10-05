@@ -25,6 +25,7 @@ from .frontend_version import async_setup_frontend_version, set_frontend_stamp
 from .updates import async_setup_updates
 from .options import async_setup_options
 from .template_refresh import async_setup_template_refresh
+from .phone_badges import async_setup_phone_badges
 from .card_updates import async_setup_card_updates, async_unload_card_updates
 from .update_source import LEGACY_OPTIONS
 from .ki import KiRunner
@@ -349,6 +350,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_setup_hemma_cleanup(hass)
     # Nach einem Update: unveränderte Vorlagen der Dashboards erneuern (template_refresh.py).
     async_setup_template_refresh(hass)
+    # Handy-Raumseite: Raum-Badges wie am Desktop, Variablen zur Laufzeit (phone_badges.py).
+    async_setup_phone_badges(hass)
     # Karten-Updates: Vorlagen-Fixes aus „karten-…“-Releases (card_updates.py).
     async_setup_card_updates(hass)
     hass.data[DOMAIN]["raumklima"] = rk = async_start_raumklima(hass, entry)

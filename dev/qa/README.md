@@ -172,6 +172,7 @@ Ansicht, `cards(page, vorlage)` liefert sichtbare Karten mit Lage und Text,
 | r33_handy_raum_umbenennen | arbeit | Umbenannter Raum blieb am Handy alt, Hemma-Handy-Layouts wurden nie abgeglichen (Issue #4) |
 | r34_handy_raum_kontakte | arbeit | Handy: Kontaktsensoren und Schlösser fehlten als Badges im Raum (Issue #5) |
 | r35_handy_raum_aktiv_vorn | arbeit | Handy: Raumseite sortierte aktive Kacheln nicht nach vorn (Issue #6) |
+| r44_handy_raum_wie_desktop | arbeit | Handy-Raumseite zeigte andere Badges als der Raum-Kopf am Desktop (Energie/Sicherheit fehlten, Einzel-Anzeige galt nicht); prüft auch Handy-Schalter, Unter-Reihe je Gerät und Studio-Vorschau |
 | erststart | frisch | Erststart: Willkommen → Assistent (Hemma/YAML gefunden) bzw. Räume, sonst Studio; ⋯-Menü „Einrichtungsassistent …“ |
 
 Hinweise zu einzelnen Tests: Im Zustand **frisch** gibt es kein Casora-Dashboard; das Studio

@@ -1119,6 +1119,41 @@ const CHIPS_ROOM_KEYS = ["temp_entity", "humidity_entity", "entity_quality",
 const chipsHasSecurity = (c) => !!c && (!!(c.security_locks || []).length
   || [1, 2, 3, 4, 5, 6, 7, 8].some((n) => !!c["security_entity_" + n]));
 
+// Raumseite am Handy = Raum-Kopf am Desktop (05.10.2026): dieselben Regeln wie
+// window.casoraPhoneRoom.merge im Dashboard (casora-core.js) – dev/unit/handy_raum_badges.mjs
+// vergleicht beide. desk: Variablen des Desktop-Raums (null → Auszug aus room_chips),
+// chip: room_chips[<raum>]; dort gesetzte Schalter (PHONE_ROOM_OVERRIDE) gelten nur am Handy.
+const PHONE_ROOM_OVERRIDE = BADGE_SWITCH_KEYS.concat(["show_climate_inline", "show_security_inline",
+  "show_people_inline", "badge_order"]);
+function phoneRoomLegacyVars(c) {
+  const o = {};
+  if (!c || typeof c !== "object") return o;
+  if (c.temp_entity) o.temp_sensor_1 = c.temp_entity;
+  if (c.humidity_entity) o.humidity_sensor = c.humidity_entity;
+  if (c.entity_quality) o.quality_sensor = c.entity_quality;
+  (Array.isArray(c.aqi_sensors) ? c.aqi_sensors : []).slice(0, 4).forEach((e, i) => { if (e) o[CHIPS_AQI_FROM_ROOM[i]] = e; });
+  if (c.lights_entity) o.light_group_entity = c.lights_entity;
+  if (Array.isArray(c.security_locks) && c.security_locks.length) o.security_locks = c.security_locks.slice();
+  ["security_locks_label", "security_door_sensors", "security_lock_batteries"].forEach((k) => {
+    if (c[k] != null && c[k] !== "") o[k] = c[k];
+  });
+  for (let n = 1; n <= 8; n++) {
+    if (c["security_entity_" + n]) o["security_entity_" + n] = c["security_entity_" + n];
+    if (c["security_label_" + n]) o["security_label_" + n] = c["security_label_" + n];
+  }
+  return o;
+}
+function phoneRoomBadgeVars(desk, chip, name) {
+  const o = { ...(desk || phoneRoomLegacyVars(chip)) };
+  if (chip && typeof chip === "object") {
+    PHONE_ROOM_OVERRIDE.forEach((k) => { if (chip[k] !== undefined && chip[k] !== null) o[k] = chip[k]; });
+  }
+  // Szenen haben auf der Raumseite am Handy einen eigenen Bereich (keine Badge).
+  o.show_scenes = false;
+  o._name = name || (chip && (chip.room_name || chip.aqi_room_name)) || o.room_name || o.aqi_room_name || "";
+  return o;
+}
+
 function syncRoomChips(pair) {
   const rooms = ((pair.desktop || {}).compact || {}).rooms || [];
   const sections = ((pair.mobile || {}).compact || {}).rooms || [];
@@ -7950,6 +7985,10 @@ class CasoraPanel extends HTMLElement {
           scrollbar-width:none; -ms-overflow-style:none;
         }
         .miniphone .mp-chips::-webkit-scrollbar { display:none; }
+        /* Raumseite: Badge-Reihe wie am Desktop, Unter-Reihe der Sammel-Badge darunter. */
+        .miniphone .mp-roombadges { gap:8px; }
+        .miniphone .mp-roomsubs { gap:8px; margin-top:6px; }
+        .miniphone .mp-roomsubs[hidden] { display:none; }
         .miniphone .mp-chip {
           flex:0 0 auto; display:flex; align-items:center; gap:9px;
         }
@@ -21597,50 +21636,77 @@ class CasoraPanel extends HTMLElement {
       const link = (((this._pair || {}).link || {}).links || []).find((l) => l.section === secIdx);
       const wideIdx = link && !link.overview ? link.room : null;
 
+      // Raum-Badges wie im Raum-Kopf am Desktop (05.10.2026) und wie das echte Handy
+      // (casora_mobile_sensor_chips/rooms_row mit window.casoraPhoneRoom): dieselben Badges,
+      // Texte, Reihenfolge (badge_order) und Einzel-/Sammel-Anzeige (show_*_inline); Szenen
+      // stehen darunter in ihrem eigenen Bereich. Sammel-Badges klappen ihre Unter-Reihe auf.
       const chipsV = (cardOf(MOBILE_CHIPS) || {}).variables || {};
-      const e = (chipsV.room_chips || {})[roomKeyOf(roomPop)] || {};
-      const rm = this._miniModel({ variables: {
-        temp_sensor_1: e.temp_entity, humidity_sensor: e.humidity_entity,
-        quality_sensor: e.entity_quality, temp_unit: chipsV.temp_unit,
-        light_group_entity: e.lights_entity,
-      } }, { phone: true });
+      const e = (chipsV.room_chips || {})[phoneKeyOf(phoneRoomKeys(st), roomPop)] || null;
+      const wideRoom = wideIdx !== null
+        ? ((((this._pair || {}).desktop || {}).compact || {}).rooms || [])[wideIdx] : null;
+      const rv = phoneRoomBadgeVars(wideRoom ? (wideRoom.variables || {}) : null, e,
+        wideRoom ? wideRoom.name : roomPop);
+      const rorder = badgeOrderOf(rv.badge_order);
+      const rank = (id) => { const i = rorder.indexOf(String(id).split(":")[0]); return i < 0 ? 99 : i; };
+      const rm = this._miniModel({ variables: rv }).filter((b) => b.id !== "scenes")
+        .sort((a, b) => rank(a.id) - rank(b.id));
+      if (this._phoneRoomOpen && !rm.some((b) => b.id === this._phoneRoomOpen && (b.subs || []).length)) {
+        this._phoneRoomOpen = null;
+      }
       const crow = document.createElement("div");
-      crow.className = "mp-chips";
+      crow.className = "mp-chips mp-roombadges";
       crow.dataset.jump = "badges";
       crow.dataset.stagger = "0";
-      const clim = rm.find((b) => b.id === "climate");
-      ((clim && clim.subs) || []).forEach((sb) => {
-        const el = this._paintChip(sb);
-        if (wideIdx !== null) {
-          el.dataset.mk = "b:climate";
-          el.dataset.mproom = String(wideIdx);
+      const csub = document.createElement("div");
+      csub.className = "mp-chips mp-roomsubs";
+      csub.dataset.stagger = "0";
+      const drawSubs = () => {
+        csub.innerHTML = "";
+        const open = rm.find((b) => b.id === this._phoneRoomOpen);
+        ((open && open.subs) || []).forEach((sb) => csub.appendChild(this._paintBadge(sb, true)));
+        csub.hidden = !csub.children.length;
+      };
+      const pickRoom = (el) => {
+        const pick = selKeyOf(el.dataset.mk);
+        if (!pick) return;
+        const want = el.dataset.mproom;
+        if (want !== undefined && Number(want) !== this._room) {
+          this._room = Number(want);
+          this._renderTabs();
         }
+        this._select(pick);
+      };
+      rm.forEach((b) => {
+        // Klima einzeln: Messring wie casora_badge_temp/-humidity/-air_quality am Handy.
+        const el = String(b.id).indexOf("climate:") === 0 ? this._paintChip(b) : this._paintBadge(b, false);
+        el.classList.toggle("open", this._phoneRoomOpen === b.id);
+        if (wideIdx !== null) {
+          el.dataset.mk = "b:" + b.id;
+          el.dataset.mproom = String(wideIdx);
+        } else delete el.dataset.mk;
+        el.onclick = (ev) => {
+          ev.stopPropagation();
+          if ((b.subs || []).length) {
+            this._phoneRoomOpen = this._phoneRoomOpen === b.id ? null : b.id;
+            crow.querySelectorAll(".open").forEach((x) => x.classList.remove("open"));
+            if (this._phoneRoomOpen) el.classList.add("open");
+            drawSubs();
+          }
+          pickRoom(el);
+        };
         crow.appendChild(el);
       });
-      const bareChip = (b, mk) => {
-        const el = this._paintChip({ ...b, bare: true });
-        if (mk && wideIdx !== null) {
-          el.dataset.mk = mk;
-          el.dataset.mproom = String(wideIdx);
-        }
-        crow.appendChild(el);
-      };
-      const lit = rm.find((b) => b.id === "lights");
-      if (lit) {
-        const S = this._hass.states;
-        const mems = ((S[e.lights_entity] || {}).attributes || {}).entity_id;
-        const eids = Array.isArray(mems) && mems.length ? mems : [e.lights_entity];
-        const n = eids.filter((id) => (S[id] || {}).state === "on").length;
-        bareChip({ icon: "light", label: "Lights", glyphHeight: "90%",
-          color: n ? lit.color : "var(--badge-title-inactive, rgba(255,255,255,0.55))",
-          text: n === 0 ? "All Off" : n === eids.length ? "All On" : n + " On" }, "b:lights");
-      }
-      if (e.motion_entity) {
+      // Bewegung (nur Handy, room_chips[<raum>].motion_entity) steht hinter den Badges.
+      if (e && e.motion_entity) {
         const ms = (this._hass.states[e.motion_entity] || {}).state;
-        bareChip({ icon: "motion", label: "Motion", glyphHeight: "70%", color: "#fff",
-          text: ms === "on" ? "Detected" : ms === "off" ? "Not Detected" : "Unavailable" }, null);
+        crow.appendChild(this._paintChip({ icon: "motion", label: "Motion", glyphHeight: "70%", color: "#fff", bare: true,
+          text: ms === "on" ? "Detected" : ms === "off" ? "Not Detected" : "Unavailable" }));
       }
-      if (crow.children.length) body.appendChild(crow);
+      drawSubs();
+      if (crow.children.length) {
+        body.appendChild(crow);
+        body.appendChild(csub);
+      }
 
       const scenes = this._scenesMode() !== "off" ? this._sceneListForRoom(roomPop) : [];
       if (scenes.length) {
@@ -24683,7 +24749,7 @@ window.__casoraPanelInternals = {
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
-  linkPair, syncPairRooms, syncPairTiles, syncRoomChips, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, expandMobileConfig, extractMobileConfig,
+  linkPair, syncPairRooms, syncPairTiles, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, expandMobileConfig, extractMobileConfig,
   deriveEnergyRooms,
   CASORA_ACCENTS, accentLabel, swatchCss,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)
