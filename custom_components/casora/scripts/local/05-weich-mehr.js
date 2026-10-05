@@ -181,6 +181,8 @@
   };
 
   var N = window._casoraSoftNet = {};
+  // K10 (Weich-Audit): eine Farbe je Gerätetyp – Netzwerk ist Blau. Zustand nur über Warn-/Fehlerfarbe.
+  var NET_TONE = 'var(--casora-tone-media, #5B8FC9)';
   N.build = function (ctx) {
     var UI = window._casoraUI, states = ctx.states, hass = ctx.hass, v = ctx.variables || {}, ids = ctx.ids || {};
     if (!UI || !UI.more) return null;
@@ -248,9 +250,9 @@
         if (!states[w.sw]) return;
         var on = raw(states, w.sw) === 'on';
         var cl = num(states, w.clients);
-        rows.push({ icon: 'wifi', iconTone: on ? 'accent' : null, label: w.label,
+        rows.push({ icon: 'wifi', iconTone: on ? NET_TONE : null, label: w.label,
           sub: on ? (cl != null ? Math.round(cl) + ' Clients' : 'Aktiv') : 'Ausgeschaltet',
-          action: on ? 'An' : 'Aus', actionTone: on ? 'good' : null,
+          action: on ? 'An' : 'Aus', actionTone: null,
           svc: { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: w.sw } },
           confirm: on ? 'Ausschalten' : undefined });
       });
@@ -259,7 +261,7 @@
     if (part === 'nd') {
       var drows = (C.devices || []).filter(function (d) { return states[d.state] || states[d.restart]; }).map(function (d) {
         var i = devInfo(states, d);
-        return { entity: d.state || d.restart, icon: d.icon, iconTone: i.tone, label: d.label,
+        return { entity: d.state || d.restart, icon: d.icon, iconTone: i.tone === 'good' ? NET_TONE : i.tone, label: d.label,
           value: i.word, valueTone: i.tone === 'good' ? null : i.tone,
           // Aktive Zeile bei Handlungsbedarf (offline, Update, Problem) wie Pflanzen-/Batterie-Popup.
           active: i.tone !== 'good' };
@@ -284,22 +286,22 @@
       var sd = num(states, C.stDown), su = num(states, C.stUp);
       if ((sd != null || su != null) && C.stDown !== C.dl) {
         var w2 = ok(raw(states, C.stLast)) ? ago(raw(states, C.stLast)) : null;
-        irows.push({ entity: C.stDown, icon: 'mdi:speedometer', iconTone: 'accent', label: 'Speedtest',
+        irows.push({ entity: C.stDown, icon: 'mdi:speedometer', iconTone: NET_TONE, label: 'Speedtest',
           value: fN(sd, hass) + ' ↓  ' + fN(su, hass) + ' ↑', sub: ['Mbit/s', w2].filter(Boolean).join(' · ') });
       }
       var isp = raw(states, C.isp), wan = raw(states, C.wanName);
       if (ok(isp)) {
-        irows.push({ entity: C.isp, icon: 'mdi:web', iconTone: '#5E5CE6', label: 'Anbieter',
+        irows.push({ entity: C.isp, icon: 'mdi:web', iconTone: NET_TONE, label: 'Anbieter',
           value: isp.replace(/\s+(AG|GmbH|SE|KG|Inc\.?|Ltd\.?)$/i, ''), sub: ok(wan) ? wan.replace(/\s*\(.*\)\s*$/, '') : null });
       }
       var ip4 = raw(states, C.ip4), ip6 = raw(states, C.ip6);
       if (ok(ip4) || ok(ip6)) {
-        irows.push({ entity: ok(ip4) ? C.ip4 : C.ip6, icon: 'mdi:ip-network-outline', iconTone: '#64D2FF',
+        irows.push({ entity: ok(ip4) ? C.ip4 : C.ip6, icon: 'mdi:ip-network-outline', iconTone: NET_TONE,
           label: 'Öffentliche IP', value: ok(ip4) ? ip4 : '', sub: ok(ip6) ? ip6 : null });
       }
       var lat = (C.latency || []).map(function (l) { return { n: l[1], v: num(states, l[0]), id: l[0] }; }).filter(function (l) { return l.v != null; });
       if (lat.length) {
-        irows.push({ entity: lat[0].id, icon: 'mdi:timer-outline', iconTone: 'good', label: 'Latenz',
+        irows.push({ entity: lat[0].id, icon: 'mdi:timer-outline', iconTone: NET_TONE, label: 'Latenz',
           value: lat.map(function (l) { return Math.round(l.v) + ' ms'; }).join(' / '),
           sub: lat.map(function (l) { return l.n; }).join(' / '), liveAttr: 'state', liveSuffix: ' ms' });
       }
@@ -324,7 +326,7 @@
         var line1 = (!d.state ? 'Online' : ok(i.st) ? (NET_STATE[i.st] || i.st) : 'Unbekannt') + (i.online && up ? ' seit ' + up : '');
         var line2 = [i.upd ? 'Firmware-Update verfügbar' : null, cpu != null ? 'CPU ' + Math.round(cpu) + ' %' : null,
           mem != null ? 'RAM ' + Math.round(mem) + ' %' : null, tmp != null ? Math.round(tmp) + ' °C' : null].filter(Boolean).join(' · ');
-        var r = { entity: d.state || d.restart, icon: d.icon, iconTone: i.tone, label: d.label, sub: [line1, line2].filter(Boolean) };
+        var r = { entity: d.state || d.restart, icon: d.icon, iconTone: i.tone === 'good' ? NET_TONE : i.tone, label: d.label, sub: [line1, line2].filter(Boolean) };
         if (d.restart && states[d.restart]) {
           r.action = 'Neu starten'; r.confirm = true;
           r.svc = { domain: 'button', service: 'press', target: { entity_id: d.restart } };
