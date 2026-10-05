@@ -37,7 +37,6 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - Soft look, weather in the title: filled weather symbol in the title colour instead of a thin grey outline.
 - Soft look, weather popup: the headings "Next hours", "7 days" and the chart title sit above their surfaces like in the other popups.
 - Soft look, network popup: all network symbols in the network colour (blue); the "On" of a Wi-Fi is no longer green.
-- Soft look, tablet in portrait: the title block sits just above the tiles instead of in the middle, so there is no large empty area between title and tiles.
 - Soft look, phone room page: scrolled tiles and scenes no longer show through behind the small room title; it gets a linen surface that fades in with the title (light and dark).
 - Phone home page: after a long time in the background the gap between the top bar and the "Home" line could be about 150 px too large. Casora now measures it again on return and fixes the layout on its own (reloading once if needed).
 
