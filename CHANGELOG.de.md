@@ -6,6 +6,10 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 ## 1.0.9 – 05.10.2026
 
+### Neu
+- Handy-Raumseite wie am Desktop und Tablet: Die Badges oben auf der Raumseite am Handy sind jetzt dieselben wie im Raum-Kopf am Desktop/Tablet: Sicherheit, Klima, Licht, Personen, Energie und Medien, mit denselben Texten, in derselben Reihenfolge und mit derselben Einstellung „einzeln oder gesammelt“. Antippen einer Sammel-Badge klappt ihre Einzelnen darunter auf (nur auf diesem Gerät). Bisher zeigte das Handy eine eigene, kleinere Auswahl: ohne Energie, Klima als einzelne Messwerte, Türen und Fenster nur teilweise. Das greift für alle Dashboards automatisch mit dem Update, ohne Speichern im Studio, auch für aus Hemma umgezogene. Die Handy-Vorschau im Studio zeigt dasselbe.
+- Luftqualität im Badge (Casora-Look): neues Wind-Symbol; bei mäßiger Luft kommen zwei, bei schlechter vier Partikel dazu. Der Kreis hat wieder die normale Stufenfarbe.
+
 ### Verbessert
 - Handy, Casora-Look (hell und dunkel): Der Schleier über dem Hintergrundfoto kommt jetzt von oben und reicht bis knapp unter „Favoriten“, damit Titel, Badges und die erste Überschrift gut lesbar sind. Darunter bleibt das Foto klar bis ganz unten, ohne Leinen- bzw. Anthrazit-Fläche am unteren Rand. In 1.0.8 war der Schleier bei „Favoriten“ schon fast weg und unten lag dafür ein heller Verlauf. Die Raumseiten am Handy bekommen denselben Verlauf von oben.
 

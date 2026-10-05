@@ -6,6 +6,10 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ## 1.0.9 – 05.10.2026
 
+### New
+- Phone room page like desktop and tablet: the badges at the top of the phone room page are now the same as in the room header on desktop/tablet: security, climate, lights, people, energy and media, with the same texts, in the same order and with the same "separate or grouped" setting. Tapping a group badge opens its members below it (on this device only). The phone used to show its own, smaller selection: no energy, climate as separate readings, doors and windows only partly. This applies to all dashboards automatically with the update, without saving in the Studio, including ones moved over from Hemma. The phone preview in the Studio shows the same.
+- Air quality badge (Casora look): new wind icon; moderate air adds two particles, poor air four. The circle is back to the normal level colour.
+
 ### Improved
 - Phone, Casora look (light and dark): the veil over the background photo now comes from the top and reaches just below "Favorites", so the title, badges and first heading are easy to read. Below it the photo stays clear all the way down, with no linen or anthracite area at the bottom. In 1.0.8 the veil had almost faded out at "Favorites" and a light fade sat at the bottom instead. Room pages on the phone get the same fade from the top.
 
