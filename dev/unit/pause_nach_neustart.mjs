@@ -10,13 +10,15 @@ const core = read('custom_components/casora/scripts/casora-core.js');
 const a = core.indexOf('  // casora-paused-since:start');
 const b = core.indexOf('  // casora-paused-since:end');
 assert.ok(a > 0 && b > a, 'Helfer gefunden');
-const np0 = core.indexOf("  if (typeof window._casoraNPSources !== 'function') {");
+// Seit 05.10.2026 ersetzt casora-core.js Ersatzfassungen der Handy-Vorlage (_casoraNPOwn).
+const np0 = core.indexOf("  if (window._casoraNPOwn('_casoraNPSources')) {");
 const np1 = core.indexOf('\n  }\n', core.indexOf('    };\n', core.indexOf('return out', np0)));
 assert.ok(np0 > 0 && np1 > np0, 'Now-Playing-Quellen gefunden');
 
 globalThis.window = globalThis;
 globalThis.location = { origin: 'http://ha' };
 globalThis.document = { querySelector: () => null };
+globalThis._casoraNPOwn = () => true;
 new Function(core.slice(a, b))();
 new Function(core.slice(np0, np1 + 4))();
 

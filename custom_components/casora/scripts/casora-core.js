@@ -1499,7 +1499,16 @@ window.casoraMenuGlass = {
   }
   // casora-paused-since:end
 
-  if (typeof window._casoraNPSources !== 'function') {
+  // Die Handy-Vorlage (casora_mobile_now_playing, casora_np_init) bringt Ersatzfassungen von
+  // _casoraNPSources/_casoraNPView/_casoraNP/_casoraNPPlan mit, falls dieses Skript fehlt. Rendert
+  // sie vor diesem Skript, setzte sich bisher IHRE ältere Fassung durch (eine Merkliste für alle
+  // Karten, keine Pausen-Frist, kein Ausblenden; 05.10.2026 am Handy gesehen). Die Fassungen hier
+  // sind die gültigen: eine Ersatzfassung wird ersetzt, die eigene (Merker _casoraCore) bleibt.
+  window._casoraNPOwn = function (n) { const f = window[n]; return typeof f !== 'function' || !f._casoraCore; };
+  const npFallbackSeen = ['_casoraNPSources', '_casoraNPView', '_casoraNP', '_casoraNPPlan']
+    .some((n) => typeof window[n] === 'function' && !window[n]._casoraCore);
+
+  if (window._casoraNPOwn('_casoraNPSources')) {
     window._casoraNPSources = function (states, V) {
       const norm = (x) => String(x ?? '').trim();
       const low  = (x) => norm(x).toLowerCase();
@@ -1595,6 +1604,8 @@ window.casoraMenuGlass = {
           entity: eid,
           art: art,
           title: title || norm(a.friendly_name) || 'Medien',
+          // Echter Medientitel (ohne Ersatz durch den Gerätenamen) – Weich gruppiert danach.
+          mtitle: title,
           subtitle: artist,
           source: norm(a.app_name || a.source || a.friendly_name),
           started: ms(s.last_changed),
@@ -1752,6 +1763,7 @@ window.casoraMenuGlass = {
       }
       return out;
     };
+    window._casoraNPSources._casoraCore = true;
   }
 
   if (typeof window._casoraNPCfgKey !== 'function') {
@@ -1775,7 +1787,7 @@ window.casoraMenuGlass = {
     };
   }
 
-  if (typeof window._casoraNPView !== 'function') {
+  if (window._casoraNPOwn('_casoraNPView')) {
     window._casoraNPView = function (states, V) {
       const live = window._casoraNP(states, V);
       const st = window._casoraNPStore(V, 'hold');
@@ -1787,10 +1799,11 @@ window.casoraMenuGlass = {
       }
       return live;
     };
+    window._casoraNPView._casoraCore = true;
   }
 
   // Memoised per render pass - avoids re-running the sweep for every consumer.
-  if (typeof window._casoraNP !== 'function') {
+  if (window._casoraNPOwn('_casoraNP')) {
     window._casoraNP = function (states, V) {
       const artSig = (u) => {
         const t = String(u || '');
@@ -1802,12 +1815,17 @@ window.casoraMenuGlass = {
         return t.slice(0, q) + (rest ? '?' + rest : '');
       };
       const parts = [];
+      // Echter Pausen-Beginn (sensor.casora_media_paused): verschiebt die Ausblende-Frist, gehört
+      // also in die Signatur – und wird so auch von button-card mitverfolgt.
+      const pausedMap = states['sensor.casora_media_paused']?.attributes?.players || null;
+      parts.push('pt:' + String(V.pause_timeout_minutes ?? ''));
       for (let i = 1; i <= 10; i++) {
         const e = V['show_media_player_' + i] && V['media_player_' + i];
         if (e) {
           const s = states[e]; const a = s?.attributes || {};
-          parts.push(e + s?.state + (a.media_title || '') +
-            (a.media_position_updated_at || '') +
+          const ps = pausedMap && pausedMap[e];
+          parts.push(e + s?.state + (a.media_title || '') + '\u0001' + (a.media_artist || a.artist || '') +
+            (a.media_position_updated_at || '') + (ps ? '\u0001' + (ps.since || '') + (ps.title ?? '') : '') +
             artSig(a.entity_picture || a.media_image_url || a.media_album_cover_url || a.image_url));
         }
       }
@@ -1845,12 +1863,132 @@ window.casoraMenuGlass = {
       parts.push('pin:' + String(V.pinned_key || ''));
       const sig = parts.join('|');
       const c = window._casoraNPStore(V, 'memo');
-      if (c.sig === sig) return c.list;
-      c.sig = sig;
-      c.list = window._casoraNPSources(states, V);
-      return c.list;
+      // Die Liste hängt auch von der Uhr ab: ein pausierter Player fällt nach der Frist heraus,
+      // ohne dass sich ein Zustand ändert. Früher hielt der Memo ihn dann bis zur nächsten
+      // Zustandsänderung fest (05.10.2026: beendete Player blieben stehen) – jetzt verfällt
+      // der Memo zur Frist, und ein Wecker lässt die Karten genau dann neu rechnen.
+      if (c.sig !== sig || (c.until && Date.now() >= c.until)) {
+        c.sig = sig;
+        c.list = window._casoraNPSources(states, V);
+        c.until = 0;
+        c.list.forEach((r) => { if (r && r.pauseUntil > 0 && (!c.until || r.pauseUntil < c.until)) c.until = r.pauseUntil; });
+        if (c.until && typeof window._casoraNPArm === 'function') window._casoraNPArm(c.until);
+        c.vis = null;
+      }
+      // Weich: auf diesem Gerät ausgeblendete Wiedergaben weglassen – für jede Ansicht gleich
+      // (Welle und ihre Sichtbarkeit, Menü, Handy-Liste, Raum-Zeile).
+      const H = window._casoraNPHidden;
+      if (!H || !(typeof window._casoraSoft === 'function' && window._casoraSoft())) return c.list;
+      const vk = H.ver();
+      if (c.vis && c.visKey === vk) return c.vis;
+      c.vis = H.filter(c.list, V);
+      c.visKey = H.ver();
+      return c.vis;
+    };
+    window._casoraNP._casoraCore = true;
+  }
+
+  // casora-np-hidden:start
+  // Weich (05.10.2026): Wiedergaben „ausblenden“ – nur auf diesem Gerät (localStorage), je Player
+  // mit dem Titel, der gerade lief. Spielt der Player etwas anderes oder endet die Wiedergabe
+  // (fällt aus der Liste), gilt der Eintrag nicht mehr. Ereignis „casora-np-changed“ an window:
+  // die Ansichten rechnen neu (auch, wenn eine Pausen-Frist abläuft – _casoraNPArm).
+  if (typeof window._casoraNPHidden !== 'object' || !window._casoraNPHidden) {
+    const KEY = 'casora.np.hidden';
+    const DAY = 86400000;
+    let map = null, ver = 0;
+    const load = () => {
+      if (map) return map;
+      map = {};
+      try {
+        const raw = JSON.parse(window.localStorage.getItem(KEY) || '{}');
+        if (raw && typeof raw === 'object') map = raw;
+      } catch (e) { map = {}; }
+      return map;
+    };
+    const save = () => {
+      ver++;
+      try {
+        if (Object.keys(map).length) window.localStorage.setItem(KEY, JSON.stringify(map));
+        else window.localStorage.removeItem(KEY);
+      } catch (e) { /* privates Fenster: gilt bis zum Neuladen */ }
+    };
+    // Was „dieselbe Wiedergabe“ ist: Titel und Interpret.
+    const what = (r) => String((r && r.title) || '').trim().toLowerCase() + '\u0001'
+      + String((r && r.subtitle) || '').trim().toLowerCase();
+    const ident = (r) => String((r && (r.entity || r.key)) || '');
+    // Entitäten, die diese Einstellung überhaupt liefern kann: nur für die darf ein fehlender
+    // Eintrag „Wiedergabe beendet“ heißen (andere Karten haben andere Player).
+    const scope = (V) => {
+      const s = new Set();
+      if (!V) return s;
+      for (let i = 1; i <= 10; i++) if (V['show_media_player_' + i] && V['media_player_' + i]) s.add(V['media_player_' + i]);
+      for (let i = 1; i <= 2; i++) if (V['show_psn_' + i] && V['psn_' + i]) s.add(V['psn_' + i]);
+      if (V.show_discord) [V.discord_image, V.discord_game, V.discord_user].forEach((x) => { if (x) s.add(x); });
+      if (V.show_steam) [V.steam_image, V.steam_game, V.steam_account].forEach((x) => { if (x) s.add(x); });
+      return s;
+    };
+    window._casoraNPHidden = {
+      ver: () => ver,
+      // list ohne Ausgeblendetes; räumt dabei Einträge ab, deren Wiedergabe vorbei ist.
+      filter(list, V) {
+        const m = load();
+        const ids = Object.keys(m);
+        if (!ids.length) return list;
+        const now = Date.now();
+        const inScope = scope(V);
+        let dirty = false;
+        const out = [];
+        const seen = new Set();
+        (list || []).forEach((r) => {
+          const id = ident(r);
+          const h = m[id];
+          if (!h) { out.push(r); return; }
+          seen.add(id);
+          if (h.w !== what(r)) { delete m[id]; dirty = true; out.push(r); return; }
+        });
+        ids.forEach((id) => {
+          const h = m[id];
+          if (!h) return;
+          if ((inScope.has(id) && !seen.has(id)) || !(now - (h.at || 0) < 7 * DAY)) { delete m[id]; dirty = true; }
+        });
+        if (dirty) save();
+        return out;
+      },
+      // recs: Einträge aus _casoraNP (bei einer Gruppe alle Player der Gruppe).
+      hide(recs) {
+        const m = load();
+        [].concat(recs || []).forEach((r) => { const id = ident(r); if (id) m[id] = { w: what(r), at: Date.now() }; });
+        save();
+        window._casoraNPChanged && window._casoraNPChanged('hide');
+      },
+      clear() { load(); map = {}; save(); window._casoraNPChanged && window._casoraNPChanged('hide'); },
+      _reset() { map = null; ver++; },
     };
   }
+
+  if (typeof window._casoraNPChanged !== 'function') {
+    window._casoraNPChanged = function (why) {
+      try { window.dispatchEvent(new CustomEvent('casora-np-changed', { detail: { why: why || '' } })); } catch (e) { /* egal */ }
+    };
+  }
+
+  // Ein Wecker für die früheste Pausen-Frist: dann rechnen alle Wiedergabe-Ansichten neu.
+  if (typeof window._casoraNPArm !== 'function') {
+    const A = { at: 0, id: 0 };
+    window._casoraNPArm = function (t) {
+      const now = Date.now();
+      if (!(t > now - 1000)) return;
+      if (A.id && A.at && A.at <= t) return;
+      if (A.id) clearTimeout(A.id);
+      A.at = t;
+      A.id = setTimeout(() => { A.id = 0; A.at = 0; window._casoraNPChanged('expire'); }, Math.max(50, t - now + 250));
+    };
+  }
+  // casora-np-hidden:end
+
+  // Ersatzfassungen der Handy-Vorlage abgelöst: Karten, die schon damit gerechnet haben, neu rechnen.
+  if (npFallbackSeen) setTimeout(() => window._casoraNPChanged('core'), 0);
 
 
 
@@ -2026,7 +2164,7 @@ window.casoraMenuGlass = {
     }
 
 
-    if (typeof window._casoraNPPlan !== 'function') {
+    if (window._casoraNPOwn('_casoraNPPlan')) {
       window._casoraNPPlan = function (states, V) {
         const EXIT_MS = 480;
         // Cap on waiting for artwork before opening an arrival anyway.
@@ -2187,6 +2325,7 @@ window.casoraMenuGlass = {
         live.forEach((r) => { if (r && r.key) byKey[r.key] = r; });
         return S.slotKeys.map((k) => (k ? (byKey[k] || S.exitSrc[k] || null) : null));
       };
+      window._casoraNPPlan._casoraCore = true;
     }
 
 

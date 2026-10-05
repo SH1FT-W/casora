@@ -124,7 +124,7 @@
   var CSS = ''
     // Die Liste liegt im Menü: Abstände wie die Zeilen des Mitteilungsmenüs.
     + '.w{padding:0 6px 8px}'
-    + '.l .r{padding:10px 10px 10px 8px}'
+    + '.l .rc{padding:10px 10px 10px 8px}'
     + '.l .r.hs:before{left:74px;right:12px}';
 
   var menu = null, body = null, wrap = null, head = null;
@@ -158,7 +158,9 @@
     var NP = window._casoraNPSoft;
     if (!NP || !NP.paint) return;
     var built = NP.paint(pe, wrap, l, h.states, { panel: true });
-    var label = l.length === 1 ? T('Läuft gerade') : T(l.length + ' Wiedergaben');
+    // Gruppen zählen (gleicher Titel auf mehreren Playern = eine Wiedergabe).
+    var n = NP.group ? NP.group(l).length : l.length;
+    var label = n === 1 ? T('Läuft gerade') : T(n + ' Wiedergaben');
     if (head.textContent !== label) head.textContent = label;
     if (built !== null) place();
   }
@@ -260,6 +262,16 @@
       setTimeout(function () { if (m.parentNode) m.remove(); }, 360);
     } else GLASS.exit(m, function () { if (m.parentNode) m.remove(); });
   }
+
+  // Ausblenden oder abgelaufene Pausen-Frist (casora-core.js): Karten neu rechnen lassen – die
+  // Sichtbarkeit der Welle (variables.open) nutzt dieselbe gefilterte Liste – und das Menü nachziehen.
+  window.addEventListener('casora-np-changed', function () {
+    cards.forEach(function (c) {
+      if (!c.card.isConnected) return;
+      try { if (window.casoraKick) window.casoraKick(c.card); } catch (e) { /* egal */ }
+    });
+    if (menu) paint(true);
+  });
 
   W.toggle = function (anchor) {
     if (menu) { close(); return; }
