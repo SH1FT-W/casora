@@ -7,7 +7,7 @@
 // Player wechselte (dann sprang die Anzeige auf einmal um), und nichts rechnete zur Frist neu.
 // Erwartet (Casora-Look, Desktop): (1) Welle erscheint nach Start ohne Neuladen und verschwindet
 // nach Stopp, je in ~2 s. (2) Eine abgelaufene Pause verschwindet von selbst. (3) Zwei Player mit
-// gleichem Titel und Interpret = eine Zeile „Interpret · Lautsprecher Küche + Bad“, Kopf „Läuft
+// gleichem Titel und Interpret = eine Zeile „Lautsprecher Küche + Bad · Interpret“, Kopf „Läuft
 // gerade“, Play/Pause steuert beide. (4) Nach links wischen gibt „Ausblenden“ frei; Ausblenden
 // entfernt die Zeile, und sind alle ausgeblendet, verschwindet die Welle. (5) Ein neuer Titel bringt
 // den Player zurück. (6) Handy: dieselbe Gruppe als eine Zeile, Ausblenden blendet die Liste aus.
@@ -120,7 +120,7 @@ await page.mouse.click(w.x, w.y);
 await page.waitForTimeout(900);
 let m = await menu();
 await check('Gruppe: eine Zeile im Welle-Menü', m && m.rows.length === 1 && m.rows[0].n === 2, m);
-await check('Gruppe: Unterzeile „QA Band · Lautsprecher Küche + Bad“', m && m.rows[0] && /QA Band · Lautsprecher (Küche \+ Bad|Bad \+ Küche)$/.test(m.rows[0].s), m && m.rows[0]);
+await check('Gruppe: Unterzeile „Lautsprecher Küche + Bad · QA Band“', m && m.rows[0] && /^Lautsprecher (Küche \+ Bad|Bad \+ Küche) · QA Band$/.test(m.rows[0].s), m && m.rows[0]);
 await check('Gruppe: Kopf zählt Gruppen („Läuft gerade“)', m && m.head === 'Läuft gerade', m && m.head);
 
 const pbtn = await page.evaluate(() => {

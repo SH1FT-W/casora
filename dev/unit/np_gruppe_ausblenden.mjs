@@ -36,7 +36,7 @@ let g = NP.group([rec('mp1', 'media_player.a', 'Lied', 'Band'), rec('mp3', 'medi
   rec('mp2', 'media_player.b', 'Lied', 'Band', false)]);
 assert.deepEqual(J(g.map((x) => x.recs.map((r) => r.key))), [['mp1', 'mp2'], ['mp3']]);
 assert.equal(g[0].key, 'mp1');
-assert.equal(NP.subline(g[0], states), 'Band · HomePod Küche + Büro');
+assert.equal(NP.subline(g[0], states), 'HomePod Küche + Büro · Band');
 // Fortschritt vom spielenden Player: der zweite spielt, der erste ist pausiert.
 g = NP.group([rec('mp1', 'media_player.a', 'Lied', 'Band', false), rec('mp2', 'media_player.b', 'Lied', 'Band', true)]);
 assert.equal(g[0].live.key, 'mp2');

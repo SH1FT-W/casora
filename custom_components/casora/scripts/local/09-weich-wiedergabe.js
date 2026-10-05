@@ -291,7 +291,8 @@
   function subline(g, states) {
     var artist = String(g.lead.subtitle || '').trim();
     var dev = names(g.recs.map(function (r) { return device(r, states); }));
-    var sub = [artist, dev].filter(Boolean);
+    // Gruppe: Player zuerst – bei langer Zeile wird sonst gerade das „+ …“ abgeschnitten.
+    var sub = (g.recs.length > 1 ? [dev, artist] : [artist, dev]).filter(Boolean);
     if (sub.length === 2 && sub[0] === sub[1]) sub.pop();
     return sub.join(' · ');
   }
