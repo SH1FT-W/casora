@@ -8872,6 +8872,55 @@ class CasoraPanel extends HTMLElement {
           font-weight:var(--casora-mnav-label-on-weight, 500);
         }
         .card.map.soft .casora-mnav span.b.on :is(ha-icon, i) { color:var(--casora-mnav-icon-on, var(--casora-color-teal, #00C3D0)); }
+        /* Weich 1.0.7 (wie 04-navigation.js, Entwurf B): nur Symbole, das aktive Ziel als Ton-Pille mit Wort. */
+        .card.map.soft .casora-mnav { width:auto; gap:2px; }
+        .card.map.soft .casora-mnav span.b { flex:none; width:58px; flex-direction:row; gap:8px; }
+        .card.map.soft .casora-mnav span.b > span { display:none; }
+        .card.map.soft .casora-mnav span.b.on {
+          width:auto; padding:0 20px 0 16px;
+          background:var(--casora-mnav-pill, var(--primary-color, #B67A50));
+          color:var(--casora-mnav-pill-ink, #fff); font-weight:600;
+        }
+        .card.map.soft .casora-mnav span.b.on > span { display:block; font-size:14.5px; max-width:150px; letter-spacing:-0.01em; }
+        .card.map.soft .casora-mnav span.b.on :is(ha-icon, i) { color:var(--casora-mnav-pill-ink, #fff); }
+        /* Weich 1.0.7 (wie 09-weich-wiedergabe.js, Entwurf A): Aktuelle Wiedergabe als ruhige Liste –
+           eine Karte, je Player eine Zeile mit Cover, Titel, Unterzeile, Fortschritt und Play/Pause. */
+        .card.map.soft .miniphone .mp-nprow {
+          flex-direction:column; gap:0; overflow:visible; scroll-snap-type:none;
+          margin:0; padding:4px 0; border-radius:26px;
+          background:var(--casora-np-list-surface, var(--ha-card-background, rgba(251,248,243,0.88)));
+          box-shadow:var(--button-card-box-shadow-mobile, none);
+        }
+        .card.map.soft .miniphone .mp-nprow > .mp-np.mp-np {
+          flex:none; min-width:0; max-width:none; scroll-snap-align:none; position:relative;
+          grid-template-areas:"art meta ctl"; grid-template-columns:max-content minmax(0, 1fr) max-content;
+          grid-template-rows:auto; row-gap:0; column-gap:14px; min-height:0; padding:12px 14px 12px 12px;
+          border-radius:0; background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+        }
+        .card.map.soft .miniphone .mp-nprow > .mp-np + .mp-np::before {
+          content:""; position:absolute; top:0; left:78px; right:16px; height:1px;
+          background:var(--casora-pill-divider, rgba(120,100,80,0.16));
+        }
+        .card.map.soft .miniphone .mp-nprow .mp-npart {
+          width:52px; height:52px; border-radius:14px;
+          background-color:var(--casora-np-art-fill, var(--casora-soft-control-fill, rgba(140,115,90,0.14)));
+        }
+        .card.map.soft .miniphone .mp-nprow .mp-nptext { align-self:center; }
+        .card.map.soft .miniphone .mp-nprow .mp-nptitle { color:var(--primary-text-color, #3A322B); }
+        .card.map.soft .miniphone .mp-nprow .mp-npsub { color:var(--secondary-text-color, rgba(98,87,76,0.92)); font-size:13px; }
+        .card.map.soft .miniphone .mp-nprow .mp-npbar { height:3px; background:var(--casora-np-track, rgba(140,115,90,0.14)); }
+        .card.map.soft .miniphone .mp-nprow .mp-nptransport { grid-area:ctl; gap:0; }
+        .card.map.soft .miniphone .mp-nprow .mp-npbtn:not([data-slot="toggle"]) { display:none; }
+        .card.map.soft .miniphone .mp-nprow .mp-npbtn[data-slot="toggle"] {
+          width:44px; height:44px; border-radius:50%; display:grid; place-items:center;
+          background:var(--casora-soft-media-play, var(--primary-color, #B67A50));
+          box-shadow:var(--casora-soft-media-play-shadow, none);
+        }
+        .card.map.soft .miniphone .mp-nprow .mp-npbtn[data-slot="toggle"] path { fill:#fff; }
+        .card.map.soft .miniphone .mp-nprow .mp-np.paused .mp-npbtn[data-slot="toggle"] {
+          background:var(--casora-np-track, rgba(140,115,90,0.14)); box-shadow:none;
+        }
+        .card.map.soft .miniphone .mp-nprow .mp-np.paused .mp-npbtn[data-slot="toggle"] path { fill:var(--primary-text-color, #3A322B); }
 
         .card {
           width:100%; box-sizing:border-box;
@@ -21330,7 +21379,7 @@ class CasoraPanel extends HTMLElement {
         const hasCtl = ctl.toggle || ctl.next || ctl.prev;
 
         const np = document.createElement("div");
-        np.className = "mp-np" + (hasCtl ? "" : " noctl") + (npArt(nps) ? "" : " noart");
+        np.className = "mp-np" + (hasCtl ? "" : " noctl") + (npArt(nps) ? "" : " noart") + (nps.playing ? "" : " paused");
         np.dataset.jump = "Now Playing";
         if (NP_ACCENT[nps.kind]) np.style.setProperty("--np-accent", NP_ACCENT[nps.kind]);
         const art = document.createElement("span");
@@ -21368,6 +21417,7 @@ class CasoraPanel extends HTMLElement {
             if (!shown) return;
             const b = document.createElement("span");
             b.className = "mp-npbtn";
+            b.dataset.slot = slot;
             b.innerHTML = npGlyphSvg(
               slot === "toggle" ? (playing ? "pause" : "play") : slot, h);
             row.appendChild(b);

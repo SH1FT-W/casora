@@ -4,6 +4,13 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.7 – unreleased
+
+### Verbessert
+- Weich, „Aktuelle Wiedergabe“: Statt des seitlich scrollenden Karussells (Handy) und der Medien-Pillen unter den Badges (Desktop und Tablet) stehen alle Player jetzt in einer ruhigen Karte, je Player eine Zeile mit Cover, Titel, „Interpret · Gerät“, dünnem, mitlaufendem Fortschritt und rundem Play/Pause-Knopf. Antippen einer Zeile öffnet wie bisher das Medien-Popup. Am Desktop und Tablet stehen die Zeilen nebeneinander und brechen um, statt seitlich zu scrollen; damit ist auch die abgeschnittene Schattenkante unter dem bisherigen Player weg. Standard und Glas bleiben unverändert. Die Studio-Vorschau am Handy zeigt die neue Liste ebenfalls.
+- Weich, Navigationsleiste am Handy: kompakte Kapsel nur mit Symbolen; das aktive Ziel wird zur Pille in der Akzentfarbe mit seinem Namen (Zuhause, der offene Raum oder Szenen). Alle Ziele, die Raum- und Szenen-Menüs und der Raumwechsel funktionieren wie bisher. Standard und Glas behalten die Leiste mit Beschriftung. Die Studio-Vorschau am Handy zieht mit.
+- Weich, Knöpfe oben rechts: gleicher Aufbau, gleiche Knöpfe und gleiche Einträge im ⋯-Menü wie bisher, ruhigere Optik. Die Kapsel am Handy ist 48 px hoch, die Kreise am Desktop sind 40 px groß mit 8 px Abstand und bleiben mittig zur Raum-Leiste; beide haben dieselbe helle Fläche mit weichem Schatten, ohne Randlinie und Glanzkante. Die Symbole sind etwas leichter, der Trennstrich kürzer und zarter, Zähler und Punkt der Glocke Karamell statt Rot, und die Medien-Welle (wenn etwas spielt) steht in einem passenden Kreis in Ton-Tinte. Casoras Menüs bekommen 44-px-Zeilen, leicht getönte Symbolkreise und 24 px Radius. Hell und dunkel; Standard und Glas bleiben unverändert.
+
 ## 1.0.6 – 04.10.2026
 
 ### Neu

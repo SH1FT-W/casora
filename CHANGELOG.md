@@ -4,6 +4,13 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.0.7 – unreleased
+
+### Improved
+- Soft look, "Now playing": instead of the sideways carousel (phone) and the media pills under the badges (desktop and tablet), all players now sit in one quiet card, one row per player with cover, title, "Artist · Device", a thin progress bar that keeps running and a round play/pause button. Tapping a row opens the media popup as before. On desktop and tablet the rows stand side by side and wrap to a new line instead of scrolling sideways, so the cut-off shadow under the old player is gone too. Standard and Glass keep their look. The Studio phone preview shows the new list as well.
+- Soft look, phone navigation bar: a compact capsule with icons only; the active destination becomes a pill in the accent colour with its name (Home, the open room or Scenes). All destinations, the room and scene menus and the room switch work as before. Standard and Glass keep the bar with labels. The Studio phone preview follows.
+- Soft look, buttons at the top right: same layout, buttons and "…" menu entries as before, calmer look. The phone capsule is 48 px high, the desktop circles are 40 px with 8 px spacing and stay centred on the room bar; both share the same light surface with a soft shadow and no outline or sheen. Icons are a little lighter, the divider is shorter and softer, the bell's count and dot are caramel instead of red, and the media wave (when something plays) sits in a matching circle in the accent ink. Casora's menus get 44 px rows, lightly tinted icon circles and a 24 px radius. Light and dark; Standard and Glass are unchanged.
+
 ## 1.0.6 – 04.10.2026
 
 ### New
