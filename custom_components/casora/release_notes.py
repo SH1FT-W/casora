@@ -473,3 +473,22 @@ def summarize(md: str, limit: int = 3) -> str:
             s = re.sub(r"[*_`]|\[([^\]]*)\]\([^)]*\)", lambda m: m.group(1) or "", s)
             return (s[:137] + "…") if len(s) > 140 else s
     return ""
+
+
+def notes_for_ai(releases: list[dict], installed: Any, lang: Any = "en", limit: int = 20000) -> str:
+    """Release-Texte aller Casora-Versionen nach installed, älteste zuerst, als Klartext für die
+    KI-Update-Prüfung (ki/update.yaml) – sie muss GitHub dann nicht selbst abrufen.
+
+    Länger als limit: die neuesten Versionen bleiben ganz, ältere fallen weg."""
+    rows = sorted((e for e in from_github(releases, lang)
+                   if e.get("notes_md") and newer(e["version"], installed)),
+                  key=lambda e: version_key(e["version"]))
+    parts: list[str] = []
+    size = 0
+    for e in reversed(rows):
+        block = f"## {e['version']}\n{e['notes_md'].strip()}"
+        if parts and size + len(block) > limit:
+            break
+        parts.insert(0, block[:limit])
+        size += len(block) + 2
+    return "\n\n".join(parts)

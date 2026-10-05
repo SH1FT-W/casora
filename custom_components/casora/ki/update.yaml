@@ -43,6 +43,9 @@
           \ %} Release-URL: {{ url or 'keine' }} {% if summ %}Kurzfassung der Integration: {{ summ }}{% endif %} {% if ns.m\
           \ %}Passende installierte Integration: {{ ns.m }} ({{ integration_entities(ns.m) | count }} Entitäten, z. B.: {{\
           \ integration_entities(ns.m)[:40] | join(', ') }}){% endif %}"
+    - variables:
+        notizen: "{% set url = state_attr(repeat.item, 'release_url') or '' %}{{ casora_notes | default('') if casora_repo\
+          \ | default('') and casora_repo in url else '' }}"
     - event: casora_update_ai_result
       event_data:
         entity_id: '{{ eid }}'
@@ -68,11 +71,19 @@
 
           {{ kontext }}
 
+          {% if notizen %}RELEASE-NOTES (vollständig, alle Versionen nach der installierten; nur Versionen bis einschließlich
+          {{ v_to }} zählen)
+
+          {{ notizen }}
+
+          {% endif %}
+
 
           VORGEHEN
 
-          - Lies die Release-Notes (web_fetch auf die Release-URL; bei Home Assistant Core den Blogpost und dort den Abschnitt
-          "Backward-incompatible changes"; sonst per web_search).
+          - {% if notizen %}Die Release-Notes stehen oben unter RELEASE-NOTES, kein Abruf nötig. Werte nur sie aus.{% else
+          %}Lies die Release-Notes (web_fetch auf die Release-URL; bei Home Assistant Core den Blogpost und dort den Abschnitt
+          "Backward-incompatible changes"; sonst per web_search).{% endif %}
 
           - Überspringt das Update Versionen (z. B. 2026.8 → 2026.10 oder v6.3 → v7.1), berücksichtige ALLE Zwischenversionen.
 
