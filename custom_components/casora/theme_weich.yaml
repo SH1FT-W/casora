@@ -49,6 +49,9 @@ Casora Weich:
   # Nicht in theme.yaml, aber vom Code mit Fallback gelesen (casora-core.js/smart-row.js):
   casora-popup-radius: 44px
   casora-popup-row-radius: 24px
+  # Lange Popups (Batterien, Jalousien): unten 36px Luft und ein Verlauf in Sheet-Farbe statt dunkel (Audit M3)
+  casora-popup-content-pad-bottom: 36px
+  casora-popup-more-fade: var(--casora-dialog-bg)
   casora-tile-radius-phone: 30px
 
   # --- Wenig Glas: Blur nur noch als Hauch ---
@@ -101,6 +104,8 @@ Casora Weich:
   casora-security-ok-color: var(--casora-color-green)
   casora-security-warn-color: var(--casora-color-orange)
   casora-security-alarm-color: var(--casora-color-red)
+  # Schloss-Kachel/Popup-Ring entriegelt: dieselbe Warnfarbe wie Badge „1 entriegelt“ (Standard/Glas: Türkis)
+  casora-lock-unlocked-color: var(--casora-security-warn-color)
   casora-scene-badge-color: var(--casora-color-yellow)
   casora-scene-badge-color-active: var(--casora-color-yellow-dark)
   casora-bell-badge: var(--casora-color-red)
@@ -138,6 +143,8 @@ Casora Weich:
   casora-nav-more-hover: var(--casora-mnav-press-fill, var(--casora-nav-active-fill))
   casora-nav-more-ink: var(--casora-nav-label-color)
   casora-nav-chevron: var(--casora-text-2)
+  # Kachelreihe (smart-row): Pfeil links/rechts, solange dort noch Kacheln liegen (Audit H2)
+  casora-row-arrows: block
   # A-04/A-05: Badges mit Symbolkreis, kleiner, Ruhe-Schatten S1
   casora-badge-circle-mix: 100%
   casora-badge-circle-on: 1
@@ -886,9 +893,10 @@ Casora Weich:
       casora-lps-icon-on-ink: "#FFFFFF"
       casora-lps-icon-off: rgba(255,240,220,0.08)
       casora-lps-icon-off-ink: rgba(242,235,225,0.55)
-      casora-lps-switch-off: rgba(0,0,0,0.45)
+      # Aus-Schalter warmgrau statt Schwarz, Knopf Creme statt Weiß (Audit M6: wirkte auf Dunkelbraun hart und kalt)
+      casora-lps-switch-off: rgba(242,235,225,0.18)
       casora-lps-switch-on: "#B67A50"
-      casora-lps-knob: "#FFFFFF"
+      casora-lps-knob: "#F2EBE1"
       casora-lps-chip: rgba(255,240,220,0.05)
       casora-lps-chip-ink: var(--secondary-text-color)
       casora-lps-chip-on: rgba(242,232,218,0.14)

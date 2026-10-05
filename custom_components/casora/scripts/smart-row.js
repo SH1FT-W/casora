@@ -864,6 +864,21 @@ class CasoraSmartRow extends HTMLElement {
     fade.setAttribute('aria-hidden', 'true');
     fade.innerHTML = '<i class="l"></i><i class="r"></i>';
     track.appendChild(fade);
+    // Pfeile (Weich-Audit H2, 05.10.2026): Am Rand abgeschnittene Kacheln sahen kaputt aus –
+    // ein Pfeil zeigt, dass es weitergeht, und blättert um eine Seite. Sichtbar nur, wenn das
+    // Theme --casora-row-arrows setzt (Weich) und in diese Richtung noch Kacheln liegen.
+    const arrows = document.createElement('div');
+    arrows.id = 'arrows';
+    arrows.innerHTML = '<button class="l" type="button" tabindex="-1" data-casora-nodrag></button><button class="r" type="button" tabindex="-1" data-casora-nodrag></button>';
+    arrows.querySelectorAll('button').forEach((b) => {
+      const dir = b.classList.contains('l') ? -1 : 1;
+      b.setAttribute('aria-label', dir < 0 ? 'Zurück' : 'Weiter');
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.scrollBy({ left: dir * Math.max(200, this.clientWidth * 0.7), behavior: 'smooth' });
+      });
+    });
+    track.appendChild(arrows);
     this.shadowRoot.appendChild(track);
     this._container = container;
     this._bootSetup();
@@ -1282,7 +1297,50 @@ class CasoraSmartRow extends HTMLElement {
         width: max-content;
         min-width: 100%;
       }
-      #track > #container, #track > #fade { grid-area: 1 / 1; }
+      #track > #container, #track > #fade, #track > #arrows { grid-area: 1 / 1; }
+      #arrows {
+        display: var(--casora-row-arrows, none);
+        position: sticky;
+        left: 0;
+        z-index: 3;
+        width: var(--hsr-view, 100%);
+        pointer-events: none;
+      }
+      #arrows > button {
+        position: absolute;
+        /* Mitte der Kacheln: Spur oben 20px, unten der Zeilenabstand */
+        top: calc(20px + (100% - 20px - var(--casora-entity-row-pad-bottom-current, 40px)) / 2);
+        width: 44px;
+        height: 44px;
+        margin: -22px 0 0;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background: var(--casora-row-arrow-fill, var(--casora-nav-more-fill, rgba(255, 255, 255, 0.92)));
+        box-shadow: var(--button-card-box-shadow, 0 6px 18px rgba(0, 0, 0, 0.16));
+        cursor: pointer;
+        pointer-events: auto;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0.2s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #arrows > button::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        width: 20px;
+        height: 20px;
+        background-color: var(--casora-row-arrow-ink, var(--casora-nav-chevron, rgba(58, 50, 43, 0.7)));
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 5.5l6.5 6.5L9 18.5' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 5.5l6.5 6.5L9 18.5' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+      }
+      #arrows > .l { left: 16px; }
+      #arrows > .l::before { transform: rotate(180deg); }
+      #arrows > .r { right: 16px; }
+      :host([casora-more-l]) #arrows > .l,
+      :host([casora-more-r]) #arrows > .r { opacity: 1; visibility: visible; }
       #fade {
         position: sticky;
         left: 0;
@@ -1416,7 +1474,7 @@ class CasoraSmartRow extends HTMLElement {
         .card-wrapper { flex: unset; width: auto; scroll-snap-align: none; will-change: auto; }
         /* Handy: die Reihe blättert nicht, sie ist ein Raster im Fluss – kein Rand. */
         #track { display: block; width: auto; min-width: 0; }
-        #fade { display: none; }
+        #fade, #arrows { display: none; }
         ${this._sortEnabled ? `
         /* Child combinator load-bearing - see the collapsed-spacer rule below. */
         #container > .card-wrapper[data-size="large"] { grid-row: span 2; }

@@ -1319,9 +1319,14 @@
       var plate = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
         + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);'
         + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);padding:18px 20px;font-family:' + T.font + ';text-align:left;';
+      /* Weich (Audit K6): Hauptaktion in Ton wie die übrigen Aktionsknöpfe, Nebenaktionen sandfarben –
+         vorher türkisgrüne Pillen, die es sonst nirgends gibt. */
+      var softBtn = !!(window._casoraSoft && window._casoraSoft());
       var btn = function (label, attr, primary) {
         return '<span ' + attr + ' style="display:inline-flex;align-items:center;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;'
-          + (primary ? (window._casoraHH && window._casoraHH.on() ? 'color:var(--casora-popup-ui-on-action, #fff);background:var(--casora-popup-ui-action, #276B64);'
+          + (softBtn ? (primary ? 'color:#fff;background:var(--casora-soft-primary, #B67A50);'
+            : 'color:' + T.ink + ';background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));')
+          : primary ? (window._casoraHH && window._casoraHH.on() ? 'color:var(--casora-popup-ui-on-action, #fff);background:var(--casora-popup-ui-action, #276B64);'
             : 'color:#000;background:var(--casora-color-teal, #00C3D0);') : 'color:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));background:var(--casora-popup-ui-action-tint, rgba(0,195,208,0.14));')
           + '">' + label + '</span>';
       };
@@ -1348,7 +1353,7 @@
         out += '<div style="font-size:20px;font-weight:600;color:' + T.ink + ';margin-top:6px;">Claude sucht ein Rezept …</div>';
       } else if (has) {
         var m = mins(a.minuten);
-        out += '<div style="font-size:' + (n ? '20' : '24') + 'px;font-weight:600;letter-spacing:-0.02em;color:' + T.ink + ';margin-top:4px;">' + esc(s.state) + '</div>'
+        out += '<div style="font-size:' + (n ? '20' : '24') + 'px;font-weight:' + (softBtn ? 700 : 600) + ';letter-spacing:-0.02em;color:' + T.ink + ';margin-top:4px;">' + esc(s.state) + '</div>'
           + '<div style="font-size:14px;color:' + T.ink2 + ';margin-top:4px;">' + [m, 'Thermomix'].filter(Boolean).join(' · ') + '</div>'
           + (a.warum ? '<div style="font-size:14px;line-height:1.45;color:' + T.ink + ';margin-top:10px;white-space:normal;">' + esc(a.warum) + '</div>' : '');
       } else {

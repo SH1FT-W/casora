@@ -1319,7 +1319,13 @@
       // nächsten Öffnen), sondern erneut versuchen (_settleRoom, nächstes Öffnen).
       if (!rooms.length && roomMode) return;
       this._autoSectionsDone = true;
-      if (!rooms.length) return;
+      if (!rooms.length) {
+        // Kategorie ohne Kacheln (z. B. Energie ohne zugeordnete Geräte): Hinweis statt leerer
+        // Seite (Weich-Audit M5). Bringen die Favoriten doch Kacheln, nimmt
+        // _ensureFavoritesPopupSection den Hinweis wieder heraus.
+        if (this._config.filter_category) this._appendEmptyHint();
+        return;
+      }
       let i = 0;
 
       // Casora (30.09.2026): Entitäten der Raum-Kacheln – daraus findet die Szenenliste den
@@ -1419,7 +1425,9 @@
       }
     }
 
-    // Raum-Kategorien: kleine, ruhige Überschrift einer Gruppe (kleiner als „Szenen“/„Favoriten“).
+    // Raum-Kategorien: Überschrift einer Gruppe – seit dem Weich-Audit (M4, 05.10.2026) in derselben
+    // Stufe wie „Szenen“ (casora_mobile_header: Größe, 700, Titelfarbe, 24 px oben / 10 px unten),
+    // vorher kleiner und grau, das wirkte wie zwei Gliederungsebenen.
     _appendGroupHeader(key, first, animIdx) {
       const wrap = document.createElement('div');
       wrap.style.cssText = 'display:block;width:100%;box-sizing:border-box;opacity:0;';
@@ -1429,15 +1437,37 @@
       const right = `calc(var(--casora-rail-left, 16px) + ${LANDSCAPE_GUTTER_CALC} + 2px)`;
       const head = document.createElement('div');
       head.style.cssText = [
-        `padding:${first ? 14 : 18}px ${right} 8px ${left}`,
+        `padding:${first ? 14 : 24}px ${right} 10px ${left}`,
         'font-family:var(--casora-body-font, var(--primary-font-family, inherit))',
-        'font-size:15px', 'font-weight:600', 'letter-spacing:-0.2px', 'line-height:20px',
-        'color:var(--casora-room-group-ink, var(--primary-text-color))', 'opacity:0.72',
+        'font-size:var(--casora-mobile-section-size, 18px)', 'font-weight:700', 'letter-spacing:-0.3px', 'line-height:1.3',
+        'color:var(--casora-room-group-ink, var(--casora-mobile-title-color, var(--primary-text-color)))',
         'box-sizing:border-box', 'white-space:nowrap', 'overflow:hidden', 'text-overflow:ellipsis',
       ].join(';');
       head.textContent = _roomGroupHeading(key);
       wrap.appendChild(head);
       this._contentEl.appendChild(wrap);
+    }
+
+    _appendEmptyHint() {
+      if (this._emptyHintEl?.isConnected) return;
+      const tr = (t) => (window.casoraTr ? window.casoraTr(t) : t);
+      const el = document.createElement('div');
+      el.setAttribute('data-casora-empty-hint', '');
+      el.setAttribute('data-no-i18n', '');
+      el.style.cssText = [
+        'box-sizing:border-box', 'width:100%', 'text-align:center',
+        `padding:40px calc(var(--casora-rail-left, 16px) + ${LANDSCAPE_GUTTER_CALC}) 24px`,
+        'font-family:var(--casora-body-font, var(--primary-font-family, inherit))',
+      ].join(';');
+      const h = document.createElement('div');
+      h.style.cssText = 'font-size:16px;font-weight:700;letter-spacing:-0.2px;color:var(--casora-mobile-title-color, var(--primary-text-color));';
+      h.textContent = tr('Hier gibt es noch keine Geräte');
+      const sub = document.createElement('div');
+      sub.style.cssText = 'margin-top:4px;font-size:13px;font-weight:500;color:var(--casora-text-2, var(--secondary-text-color));';
+      sub.textContent = tr('Im Casora Studio einem Raum zuordnen');
+      el.append(h, sub);
+      this._contentEl.appendChild(el);
+      this._emptyHintEl = el;
     }
 
     _ensureFavoritesPopupSection() {
@@ -1459,6 +1489,7 @@
         (c) => _cardCategory(c) === this._config.filter_category);
       this._favPopupDone = true; // attempted, so don't rescan on every open
       if (!cards.length) return;
+      if (this._emptyHintEl) { this._emptyHintEl.remove(); this._emptyHintEl = null; }
       const frag = document.createDocumentFragment();
       this._appendRevealCard({
         type:      'custom:button-card',

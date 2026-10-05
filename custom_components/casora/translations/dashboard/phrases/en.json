@@ -1290,7 +1290,15 @@
   "Nicht erreichbar": "Unreachable",
   "Die Abholtermine kommen wieder, sobald der Entsorger antwortet.": "Pickup dates will be back as soon as the collection service responds.",
   "Lautsprecher und TVs": "Speakers & TVs",
-  "Sonstiges": "Other"
+  "Sonstiges": "Other",
+  "Schlaf": "Sleep",
+  "Eco": "Eco",
+  "Smart": "Smart",
+  "Turbo": "Turbo",
+  "Boost": "Boost",
+  "Natur": "Nature",
+  "Hier gibt es noch keine Geräte": "No devices here yet",
+  "Im Casora Studio einem Raum zuordnen": "Assign them to a room in Casora Studio"
  },
  "patterns": [
   [
