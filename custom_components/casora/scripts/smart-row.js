@@ -392,16 +392,22 @@ class CasoraSmartRow extends HTMLElement {
     }
     if (mode !== 'fade' && this._casoraFaded) {
       this._casoraFaded = false;
-      this._wrappers.forEach((w) => { w.style.removeProperty('-webkit-mask-image'); w.style.removeProperty('mask-image'); });
+      this._wrappers.forEach((w) => { delete w.dataset.casoraFade; w.style.removeProperty('-webkit-mask-image'); w.style.removeProperty('mask-image'); });
     }
     if (mode === 'more') this._casoraPaging();
-    if (mode === 'more' && !this._casoraMo && this._container && window.MutationObserver) {
+    // Auch bei „fade“: rückt eine Kachel nach vorn (Sortieren nach Zustand), trägt sie sonst ihre
+    // Randmaske mit und der Verlauf steht mitten in der Reihe (05.10.2026).
+    if ((mode === 'more' || mode === 'fade') && !this._casoraMo && this._container && window.MutationObserver) {
       // Sortieren/Ein-/Ausblenden ändert style an den Hüllen – dann neu aufteilen.
       this._casoraMo = new MutationObserver(() => {
         if (this._casoraMoRaf) return;
         this._casoraMoRaf = requestAnimationFrame(() => { this._casoraMoRaf = null; this._casoraEdges(); });
       });
       this._casoraMo.observe(this._container, { subtree: true, attributes: true, attributeFilter: ['style'] });
+      // Nach dem Verschieben (FLIP-Übergang) noch einmal an der Endposition messen.
+      const settle = () => this._casoraEdges();
+      this._container.addEventListener('transitionend', settle);
+      this._container.addEventListener('animationend', settle);
     }
     const can = getComputedStyle(this).overflowX !== 'visible';
     const m = this.scrollWidth - this.clientWidth;
@@ -434,8 +440,9 @@ class CasoraSmartRow extends HTMLElement {
       } else if (can && left && r.width && r.left < L + FADE && r.right > L) {
         g = `linear-gradient(to right, transparent ${Math.round(L - r.left)}px, #000 ${Math.round(L + FADE - r.left)}px)`;
       }
-      if (g) { w.style.setProperty('-webkit-mask-image', g); w.style.setProperty('mask-image', g); }
-      else if (w.style.maskImage || w.style.webkitMaskImage) { w.style.removeProperty('-webkit-mask-image'); w.style.removeProperty('mask-image'); }
+      // Nur bei echter Änderung schreiben: der MutationObserver (style) würde sonst jede Runde neu auslösen.
+      if (g) { if (w.dataset.casoraFade !== g) { w.dataset.casoraFade = g; w.style.setProperty('-webkit-mask-image', g); w.style.setProperty('mask-image', g); } }
+      else if (w.style.maskImage || w.style.webkitMaskImage) { delete w.dataset.casoraFade; w.style.removeProperty('-webkit-mask-image'); w.style.removeProperty('mask-image'); }
     }
     if (!dots) return;
     const n = can && m > 2 ? Math.min(8, Math.ceil(this.scrollWidth / Math.max(1, this.clientWidth))) : 0;
