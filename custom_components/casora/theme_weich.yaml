@@ -410,20 +410,18 @@ Casora:
       state-icon-color: rgba(58,50,43,0.40)
       state-off-color: rgba(58,50,43,0.30)
 
-      # Handy-Hintergrund: Foto bleibt bis unten klar und läuft erst ganz unten in Leinen aus
-      # (05.10.2026: vorher lag ab dem oberen Drittel ein Leinen-Verlauf über dem ganzen Foto).
-      casora-mobile-hero-tint-top: rgba(244,239,231,0.08)
-      casora-mobile-hero-tint-bot: rgba(244,239,231,0)
+      # Handy-Hintergrund: Leinen-Schleier von oben bis knapp unter „Favoriten“ (Lesbarkeit von Titel,
+      # Badges und Überschrift), darunter das Foto klar bis ganz unten – kein Leinen unten (05.10.2026, 1.0.9).
+      casora-mobile-hero-tint-top: rgba(244,239,231,0.62)
+      casora-mobile-hero-tint-bot: rgba(244,239,231,0.50)
+      casora-mobile-hero-wash-mid: 34%
+      casora-mobile-hero-wash-end: 50%
+      casora-mobile-hero-height: 100%
       casora-mobile-hero-c-handoff: rgba(244,239,231,0)
       casora-mobile-hero-c-upper: rgba(244,239,231,0)
       casora-mobile-hero-c-mid: rgba(244,239,231,0)
-      casora-mobile-hero-c-lower: "#F2ECE3"
-      # Das Foto endet bei casora-mobile-hero-height (85 %): Leinen muss davor deckend sein.
-      casora-mobile-hero-p-handoff: 60%
-      casora-mobile-hero-p-upper: 66%
-      casora-mobile-hero-p-mid: 72%
-      casora-mobile-hero-p-lower: 84%
-      casora-mobile-hero-c-base: "#F4EFE7"
+      casora-mobile-hero-c-lower: rgba(244,239,231,0)
+      casora-mobile-hero-c-base: rgba(244,239,231,0)
       casora-mobile-hero-floor: "#F4EFE7"
 
       # Kacheln: inaktiv Sand, aktiv Creme mit warmem Schatten
@@ -447,9 +445,9 @@ Casora:
       casora-icon-inactive-fallback-color: var(--casora-icon-fallback-color)
       # Handy-Kategorieansicht (filter-overlay.js): Schleier über dem Foto in Leinen statt Schwarz
       casora-filter-veil: rgba(244,239,231,0.10)
-      # Lesbarkeits-Schleier über dem Hintergrundfoto: oben Leinen 66 %, bis etwa „Favoriten“ (34 %) auf 0 %
-      # (05.10.2026: lief vorher bis ganz unten, das Foto wirkte am Handy hell durchgehend milchig)
-      casora-wallpaper-veil-light: "linear-gradient(to bottom, rgba(244,239,231,0.66) 0%, rgba(244,239,231,0) 34%)"
+      # Lesbarkeits-Schleier über dem Raumfoto am Handy: von oben bis knapp unter die erste Überschrift
+      # kräftig, dann bis 50 % auf 0 – darunter klares Foto (1.0.9)
+      casora-wallpaper-veil-light: "linear-gradient(to bottom, rgba(244,239,231,0.66) 0%, rgba(244,239,231,0.52) 34%, rgba(244,239,231,0) 50%)"
       # Desktop/Tablet: nur links hinter Titel, Badges und Überschriften, nach rechts auslaufend
       casora-wallpaper-veil-light-wide: "linear-gradient(to right, rgba(244,239,231,0.65) 0%, rgba(244,239,231,0.30) 45%, rgba(244,239,231,0) 75%)"
 
@@ -816,13 +814,17 @@ Casora:
       casora-icon-circle-bg: rgba(255,240,220,0.08)
 
       # Handy-Hintergrund: Foto läuft in warmes Anthrazit aus
-      casora-mobile-hero-tint-top: rgba(28,24,21,0.10)
-      casora-mobile-hero-tint-bot: rgba(28,24,21,0.28)
-      casora-mobile-hero-c-handoff: "#3A342E"
-      casora-mobile-hero-c-upper: "#332E29"
-      casora-mobile-hero-c-mid: "#2D2925"
-      casora-mobile-hero-c-lower: "#282521"
-      casora-mobile-hero-c-base: "#24211E"
+      # Wie hell (1.0.9): Anthrazit-Schleier von oben bis knapp unter „Favoriten“, darunter Foto bis ganz unten
+      casora-mobile-hero-tint-top: rgba(28,24,21,0.58)
+      casora-mobile-hero-tint-bot: rgba(28,24,21,0.46)
+      casora-mobile-hero-wash-mid: 34%
+      casora-mobile-hero-wash-end: 50%
+      casora-mobile-hero-height: 100%
+      casora-mobile-hero-c-handoff: rgba(36,33,30,0)
+      casora-mobile-hero-c-upper: rgba(36,33,30,0)
+      casora-mobile-hero-c-mid: rgba(36,33,30,0)
+      casora-mobile-hero-c-lower: rgba(36,33,30,0)
+      casora-mobile-hero-c-base: rgba(36,33,30,0)
       casora-mobile-hero-floor: "#24211E"
 
       # Kacheln: inaktiv Anthrazit, aktiv warme Creme
@@ -837,7 +839,7 @@ Casora:
       casora-camera-plain-text: var(--casora-entity-state)   # Runde 2: Kamera ohne Bild wie jeder Kachelstatus
       # Lesbarkeits-Schleier wie hell, in der dunklen Grundfarbe: Handy oben 66 % nach unten 0 %,
       # Desktop/Tablet links 65 % nach rechts 0 %
-      casora-wallpaper-veil-light: "linear-gradient(to bottom, rgba(36,33,30,0.66) 0%, rgba(36,33,30,0) 100%)"
+      casora-wallpaper-veil-light: "linear-gradient(to bottom, rgba(36,33,30,0.66) 0%, rgba(36,33,30,0.52) 34%, rgba(36,33,30,0) 50%)"
       casora-wallpaper-veil-light-wide: "linear-gradient(to right, rgba(36,33,30,0.65) 0%, rgba(36,33,30,0.30) 45%, rgba(36,33,30,0) 75%)"
       casora-entity-state-active: rgba(112,76,48,0.96)
       casora-entity-state-active-color: rgba(112,76,48,0.96)

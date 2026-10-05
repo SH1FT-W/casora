@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.0.9 – 05.10.2026
+
+### Improved
+- Phone, Casora look (light and dark): the veil over the background photo now comes from the top and reaches just below "Favorites", so the title, badges and first heading are easy to read. Below it the photo stays clear all the way down, with no linen or anthracite area at the bottom. In 1.0.8 the veil had almost faded out at "Favorites" and a light fade sat at the bottom instead. Room pages on the phone get the same fade from the top.
+
 ## 1.0.8 – 05.10.2026
 
 ### New

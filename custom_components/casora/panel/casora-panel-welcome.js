@@ -27,10 +27,8 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Mobil", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst – mit eigener Mobilansicht.",
-      n1t: "Größeres Wetter", n1: "Am Desktop und Tablet steht das Wetter größer über dem Raum, mit Zustand, Hoch, Tief und Regen. Im Studio unter Wetter abschaltbar.",
-      n2t: "Neue Theme-Namen", n2: "Casoras Look heißt jetzt „Casora“, die klassischen Looks „Hemma 1“ und „Hemma 2“. Deine Wahl zieht von selbst mit.",
-      n3t: "Kameras ohne Fehlalarm", n3: "Offline zeigt Casora nur noch, wenn Home Assistant die Kamera so meldet. Langsame Kameras stehen nicht mehr fälschlich als offline da.",
-      n4t: "Kleinigkeiten", n4: "Am Handy (hell) bleibt das Foto unter den Favoriten klar, das Luftqualitäts-Symbol ist besser lesbar, der Saugroboter meldet „fertig“ nur noch einmal. Alles im Changelog.",
+      n1t: "Klarer Hintergrund am Handy", n1: "Im Casora-Look liegt der Schleier nur noch oben hinter Titel, Badges und „Favoriten“. Darunter bleibt das Foto klar bis ganz unten, hell wie dunkel.",
+      n2t: "Besser lesbar", n2: "„Favoriten“ und die Überschriften auf den Raumseiten stehen wieder auf ruhigem Grund statt direkt auf dem Foto.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +38,8 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen – with its own phone layout.",
-      n1t: "Bigger weather", n1: "On desktop and tablet the weather above the room is larger, with condition, high, low and rain. Can be turned off in the Studio under Weather.",
-      n2t: "New theme names", n2: "Casora's look is now called \"Casora\", the classic looks \"Hemma 1\" and \"Hemma 2\". Your choice moves along by itself.",
-      n3t: "Cameras without false alarms", n3: "Casora only shows offline when Home Assistant reports the camera that way. Slow cameras no longer show up as offline by mistake.",
-      n4t: "Small things", n4: "On the phone (light) the photo stays clear below Favorites, the air quality icon is easier to read, and the robot vacuum reports \"done\" only once. All in the changelog.",
+      n1t: "Clearer background on the phone", n1: "In the Casora look the veil now only sits at the top behind the title, badges and \"Favorites\". Below it the photo stays clear all the way down, in light and dark.",
+      n2t: "Easier to read", n2: "\"Favorites\" and the headings on room pages sit on a calm background again instead of directly on the photo.",
     },
   };
 
@@ -56,10 +52,8 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:weather-partly-cloudy", "n1t", "n1"],
-    ["mdi:palette-outline", "n2t", "n2"],
-    ["mdi:cctv", "n3t", "n3"],
-    ["mdi:tune-variant", "n4t", "n4"],
+    ["mdi:cellphone", "n1t", "n1"],
+    ["mdi:format-text", "n2t", "n2"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

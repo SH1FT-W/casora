@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.9 – 05.10.2026
+
+### Verbessert
+- Handy, Casora-Look (hell und dunkel): Der Schleier über dem Hintergrundfoto kommt jetzt von oben und reicht bis knapp unter „Favoriten“, damit Titel, Badges und die erste Überschrift gut lesbar sind. Darunter bleibt das Foto klar bis ganz unten, ohne Leinen- bzw. Anthrazit-Fläche am unteren Rand. In 1.0.8 war der Schleier bei „Favoriten“ schon fast weg und unten lag dafür ein heller Verlauf. Die Raumseiten am Handy bekommen denselben Verlauf von oben.
+
 ## 1.0.8 – 05.10.2026
 
 ### Neu
