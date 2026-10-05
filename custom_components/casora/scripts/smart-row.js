@@ -373,13 +373,9 @@ class CasoraSmartRow extends HTMLElement {
       // Kein Hover beim Wischen: am Touchpad steht der Zeiger über der Reihe, jede durchlaufende
       // Kachel startete ihren Hover-Übergang (Anheben, Schatten) mitten in der Bewegung.
       if (!this.hasAttribute('casora-scrolling')) this.setAttribute('casora-scrolling', '');
-      // Maus/Touchpad (ohne Einrasten): der Verlauf bleibt beim Wischen fest am Rand und wird je
-      // Bild mitgeführt. Nur bei Touch mit Einrasten pausiert er (Boxwechsel ließ WebKit nachrasten).
-      if (this._casoraLiveFade === undefined) {
-        try { this._casoraLiveFade = window.matchMedia('(pointer: fine)').matches; } catch (e) { this._casoraLiveFade = false; }
-      }
-      if (this._casoraLiveFade) { edges(); }
-      else if (!this._casoraScrolling && this._casoraFaded) {
+      // Beim Wischen kein Verlauf: ein mitgeführter Verlauf musste die Randkachel samt Glasfläche
+      // jedes Bild neu zeichnen und ließ leichte Ruckler zurück. Er kommt zurück, sobald die Reihe ruht.
+      if (!this._casoraScrolling && this._casoraFaded) {
         this._casoraScrolling = true;
         // Nur die Maske weg, data-casora-fade (Schattenrand) bleibt: das Attribut ändert die Box
         // der Hülle, mitten im Wischen hieß das neues Layout und in WebKit Nachrasten (05.10.2026).
