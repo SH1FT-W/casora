@@ -147,7 +147,14 @@
       return now - e.gone < 120000;
     });
     if (!entries.length) { clearInterval(timer); timer = 0; return; }
-    entries.forEach(function (e) { if (e.card.isConnected) render(e); });
+    // Jede Sekunde nur die Balken laufender Wiedergaben weiterschieben. Früher baute der Takt die
+    // ganze Liste neu (Breite messen, Stil schreiben) – das kostete jede Sekunde ein Neuberechnen
+    // der Seite und ließ das Wischen der Kachelreihe hängen (05.10.2026). Neu gezeichnet wird,
+    // wenn die Vorlage nach einer Zustandsänderung mount() aufruft.
+    entries.forEach(function (e) {
+      if (!e.card.isConnected || !e.rows) return;
+      for (var k in e.rows) { var r = e.rows[k]; if (r && r.bar && r.playing) { progress(e); return; } }
+    });
   }
 
   // Verfügbare Breite der Raumkarten-Zeile: vom Anfang der Medien-Zeile bis zum Kartenrand.

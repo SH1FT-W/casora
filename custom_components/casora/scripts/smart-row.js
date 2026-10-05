@@ -428,7 +428,10 @@ class CasoraSmartRow extends HTMLElement {
     // Randmaske mit und der Verlauf steht mitten in der Reihe (05.10.2026).
     if ((mode === 'more' || mode === 'fade') && !this._casoraMo && this._container && window.MutationObserver) {
       // Sortieren/Ein-/Ausblenden ändert style an den Hüllen – dann neu aufteilen.
-      this._casoraMo = new MutationObserver(() => {
+      this._casoraMo = new MutationObserver((recs) => {
+        // Nur die Hüllen der Reihe (Sortieren, Ein-/Ausblenden). Die Karten darin ändern ihren Stil
+        // bei jeder Zustandsänderung in HA – darauf neu zu messen, ließ die Reihe hängen (05.10.2026).
+        if (!recs.some((r) => r.target.parentNode === this._container)) return;
         if (this._casoraMoRaf) return;
         this._casoraMoRaf = requestAnimationFrame(() => { this._casoraMoRaf = null; this._casoraEdges(); });
       });
