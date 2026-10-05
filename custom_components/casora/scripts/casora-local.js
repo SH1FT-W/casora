@@ -74,6 +74,7 @@ const MODULES = [
   '08-weich-kompakt',
   '08-weich-szenen',
   '09-weich-wiedergabe',
+  '10-weich-welle',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());

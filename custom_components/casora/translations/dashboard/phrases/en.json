@@ -1305,7 +1305,8 @@
   "Fast leer": "Almost empty",
   "Alle Akkus OK": "All batteries OK",
   "1 Akku schwach": "1 battery low",
-  "Akku fast leer": "Battery almost empty"
+  "Akku fast leer": "Battery almost empty",
+  "Läuft gerade": "Now playing"
  },
  "patterns": [
   [
@@ -2353,6 +2354,10 @@
   [
    "^(.+) Akku schwach$",
    "{1} battery low"
+  ],
+  [
+   "^(\\d+) Wiedergaben$",
+   "{1} playing"
   ]
  ]
 }

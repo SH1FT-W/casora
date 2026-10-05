@@ -8812,6 +8812,36 @@ class CasoraPanel extends HTMLElement {
         .card.map.soft .mini-npbar { background:var(--casora-progress-track-color, rgba(255,255,255,0.16)); }
         /* Weich: Fortschritt in Ton wie der Wiedergabe-Knopf (Variante B, 04.10.2026). */
         .card.map.soft .mini-npbar > span { background:var(--casora-np-progress, #B67A50); }
+        /* Weich 1.0.7 (wie 10-weich-welle.js, Entwurf A): offene Welle = ein Menü unter ihr, je Player
+           eine Zeile mit Cover, Titel, Unterzeile, Fortschritt und rundem Play/Pause-Knopf. */
+        .card.map.soft .mz-np { gap:0; max-height:none; overflow:visible; }
+        .card.map.soft .mini-nptile { --np-pt:calc(var(--np-pl) * 0.7); --np-art:calc(var(--np-max) * 0.15); --np-ar:calc(var(--np-max) * 0.04); }
+        .card.map.soft .mini-nphead { padding-bottom:calc(var(--np-gap) * 2); }
+        .card.map.soft .mini-nptile, .card.map.soft .mini-nptile.noctl {
+          position:relative; grid-template-areas:"art meta ctl";
+          grid-template-columns:max-content minmax(0, 1fr) max-content; grid-template-rows:auto; row-gap:0;
+          border-radius:0; box-shadow:none;
+          background:var(--casora-menu-pane, var(--casora-entity-background, rgba(0,0,0,0.40)));
+        }
+        .card.map.soft .mini-nphead + .mini-nptile {
+          border-top-left-radius:var(--np-r); border-top-right-radius:var(--np-r);
+        }
+        .card.map.soft .mini-nptile:last-child {
+          border-bottom-left-radius:var(--np-r); border-bottom-right-radius:var(--np-r);
+          box-shadow:var(--casora-notify-shadow, none);
+        }
+        .card.map.soft .mini-nptile + .mini-nptile::before {
+          content:""; position:absolute; top:0; right:var(--np-pr);
+          left:calc(var(--np-pl) + var(--np-art) + var(--np-cg));
+          height:1px; background:var(--casora-pill-divider, rgba(120,100,80,0.16));
+        }
+        .card.map.soft .mini-npctl span:not([data-slot="toggle"]) { display:none; }
+        .card.map.soft .mini-npctl span[data-slot="toggle"] {
+          display:grid; place-items:center; width:calc(var(--np-art) * 0.72); height:calc(var(--np-art) * 0.72);
+          border-radius:50%; background:var(--casora-soft-media-play, var(--casora-np-progress, #B67A50));
+        }
+        .card.map.soft .mini-npctl span[data-slot="toggle"] svg { height:45%; }
+        .card.map.soft .mini-npctl span[data-slot="toggle"] path { fill:#fff; }
         @media (hover:hover) {
           .card.map.soft .miniroom [data-pv]:not(.mini-fill):not(.pvsel):hover,
           .card.map.soft .miniroom .pbadge[data-mk]:not(.pvsel):hover,
@@ -20871,6 +20901,7 @@ class CasoraPanel extends HTMLElement {
       ["next", c.next, "var(--np-gs)"]].forEach(([slot, shown, h]) => {
       if (!shown) return;
       const b = document.createElement("span");
+      b.dataset.slot = slot;
       b.innerHTML = npGlyphSvg(
         slot === "toggle" ? (s.playing ? "pause" : "play") : slot, h);
       row.appendChild(b);

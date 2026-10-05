@@ -55,6 +55,8 @@
     + 'background:var(--cnp-card);border-radius:26px;box-shadow:var(--cnp-shadow);padding:4px 0;box-sizing:border-box;'
     + '-webkit-backdrop-filter:var(--casora-np-list-backdrop, none);backdrop-filter:var(--casora-np-list-backdrop, none)}'
     + '.l.d{display:grid;border-radius:28px;padding:4px 6px}'
+    // Im Panel hinter der Medien-Welle trägt das Menü die Fläche: keine eigene Karte.
+    + '.l.pn{background:none;box-shadow:none;border-radius:0;padding:0;-webkit-backdrop-filter:none;backdrop-filter:none}'
     + '.l *{box-sizing:border-box}'
     + '.r{display:flex;align-items:center;gap:14px;padding:12px 14px 12px 12px;position:relative;min-width:0;cursor:pointer;'
     + 'border-radius:22px;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;outline:none}'
@@ -216,8 +218,28 @@
       if (avail && avail < 560) { desk = false; cols = 1; }
     }
 
+    var html = paint(e, e.host.shadowRoot.querySelector('.w'), show ? list : [], states, { desk: desk, cols: cols, key: [colW, avail] });
+    if (html !== null) {
+      if (e.kind === 'room') {
+        // Feste Breite statt max-content: die Zeilen sollen umbrechen, nicht seitlich scrollen.
+        e.host.style.cssText = !html ? 'display:none'
+          : desk ? 'display:block;width:' + (cols * colW + 12) + 'px;max-width:' + (avail || 9999) + 'px;padding:2px 0 10px'
+            : 'display:block;width:' + (avail || 320) + 'px;padding:2px 0 10px';
+      } else {
+        e.host.style.cssText = !html ? 'display:none'
+          : 'display:block;width:100%;box-sizing:border-box;padding:0 max(env(safe-area-inset-right), var(--casora-rail-left, 16px)) 14px max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px))';
+      }
+    }
+  }
+
+  // Zeilen in w zeichnen (auch für das Panel hinter der Medien-Welle, 10-weich-welle.js).
+  // opt: desk/cols = nebeneinander (Raumkarte), panel = ohne eigene Kartenfläche (liegt im Menü).
+  // Gibt das neue HTML zurück, wenn neu gebaut wurde, sonst null (nur der Fortschritt lief weiter).
+  function paint(e, w, list, states, opt) {
+    opt = opt || {};
+    var desk = !!opt.desk, cols = opt.cols || 1;
     var rows = {};
-    var items = !show ? [] : list.map(function (rec) {
+    var items = list.map(function (rec) {
       var dur = Number(rec.dur), pos = Number(rec.pos);
       var hasBar = rec.kind === 'player' && isFinite(dur) && dur > 0 && isFinite(pos);
       rows[rec.key] = { pos: pos, dur: dur, at: Number(rec.posAt) || 0, playing: !!rec.playing, bar: hasBar };
@@ -228,40 +250,33 @@
     e.rows = rows;
     e.list = list;
     // Signatur ohne Fortschritt: der Balken läuft über progress(), ohne die Zeilen neu zu bauen.
-    var sig = JSON.stringify([items, desk, cols, colW, avail]);
-    var w = e.host.shadowRoot.querySelector('.w');
-    if (e.sig !== sig) {
-      e.sig = sig;
-      var html = items.map(function (it, i) {
-        var key = it[0], title = it[1], sub = it[2], artU = it[3], playing = it[4], tog = it[5], hasBar = it[6], kind = it[7];
-        var cls = 'r';
-        if (desk) { if (i % cols) cls += ' vs'; if (i >= cols) cls += ' hs'; } else if (i) cls += ' hs';
-        var art = artU ? ' style="background-image:url(&quot;' + esc(artU) + '&quot;)"' : '';
-        return '<div class="' + cls + '" data-k="' + esc(key) + '" role="button" tabindex="0" aria-label="' + esc(title) + '">'
-          + '<div class="cv"' + art + '>' + (artU ? '' : svg(kind === 'player' ? P.note : P.game, 24)) + '</div>'
-          + '<div class="m"><div class="t">' + esc(title) + '</div>'
-          + '<div class="s">' + esc(sub) + '</div>'
-          + '<div class="b' + (hasBar ? '' : ' n') + '"><i style="width:' + pct(rows[key]) + '%"></i></div></div>'
-          + (tog
-            ? '<button type="button" class="p' + (playing ? '' : ' o') + '" aria-label="' + esc(T(playing ? 'Pausieren' : 'Abspielen')) + '">'
-              + svg(playing ? P.pause : P.play, 22) + '</button>'
-            : '')
-          + '</div>';
-      }).join('');
-      if (html) {
-        html = '<div class="l' + (desk ? ' d' : '') + '"' + (desk ? ' style="grid-template-columns:repeat(' + cols + ',minmax(0,1fr))"' : '') + '>' + html + '</div>';
-      }
-      w.innerHTML = html;
-      if (e.kind === 'room') {
-        // Feste Breite statt max-content: die Zeilen sollen umbrechen, nicht seitlich scrollen.
-        e.host.style.cssText = !html ? 'display:none'
-          : desk ? 'display:block;width:' + (cols * colW + 12) + 'px;max-width:' + (avail || 9999) + 'px;padding:2px 0 10px'
-            : 'display:block;width:' + (avail || 320) + 'px;padding:2px 0 10px';
-      } else {
-        e.host.style.cssText = !html ? 'display:none'
-          : 'display:block;width:100%;box-sizing:border-box;padding:0 max(env(safe-area-inset-right), var(--casora-rail-left, 16px)) 14px max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px))';
-      }
-    } else progress(e);
+    var sig = JSON.stringify([items, desk, cols, !!opt.panel, opt.key || 0]);
+    if (!w) return null;
+    e.w = w;
+    if (e.sig === sig) { progress(e); return null; }
+    e.sig = sig;
+    var html = items.map(function (it, i) {
+      var key = it[0], title = it[1], sub = it[2], artU = it[3], playing = it[4], tog = it[5], hasBar = it[6], kind = it[7];
+      var cls = 'r';
+      if (desk) { if (i % cols) cls += ' vs'; if (i >= cols) cls += ' hs'; } else if (i) cls += ' hs';
+      var art = artU ? ' style="background-image:url(&quot;' + esc(artU) + '&quot;)"' : '';
+      return '<div class="' + cls + '" data-k="' + esc(key) + '" role="button" tabindex="0" aria-label="' + esc(title) + '">'
+        + '<div class="cv"' + art + '>' + (artU ? '' : svg(kind === 'player' ? P.note : P.game, 24)) + '</div>'
+        + '<div class="m"><div class="t">' + esc(title) + '</div>'
+        + '<div class="s">' + esc(sub) + '</div>'
+        + '<div class="b' + (hasBar ? '' : ' n') + '"><i style="width:' + pct(rows[key]) + '%"></i></div></div>'
+        + (tog
+          ? '<button type="button" class="p' + (playing ? '' : ' o') + '" aria-label="' + esc(T(playing ? 'Pausieren' : 'Abspielen')) + '">'
+            + svg(playing ? P.pause : P.play, 22) + '</button>'
+          : '')
+        + '</div>';
+    }).join('');
+    if (html) {
+      html = '<div class="l' + (desk ? ' d' : '') + (opt.panel ? ' pn' : '') + '"'
+        + (desk ? ' style="grid-template-columns:repeat(' + cols + ',minmax(0,1fr))"' : '') + '>' + html + '</div>';
+    }
+    w.innerHTML = html;
+    return html;
   }
 
   function pct(r) {
@@ -271,7 +286,7 @@
   }
 
   function progress(e) {
-    var w = e.host && e.host.shadowRoot && e.host.shadowRoot.querySelector('.w');
+    var w = e.w || (e.host && e.host.shadowRoot && e.host.shadowRoot.querySelector('.w'));
     if (!w) return;
     Array.prototype.forEach.call(w.querySelectorAll('.r'), function (row) {
       var r = e.rows[row.getAttribute('data-k')];
@@ -282,6 +297,7 @@
 
   // Die bisherige (unsichtbare) Karte zu einer Zeile – ihr Tipp öffnet das gewohnte Popup.
   function original(e, key) {
+    if (e.kind === 'wave') return e.original ? e.original(key) : null;
     var tg = target(e), root = tg && tg.shadowRoot;
     if (!root) return null;
     if (e.kind === 'room') {
@@ -307,6 +323,7 @@
 
   function open(e, key) {
     var rec = (e.list || []).filter(function (r) { return r.key === key; })[0];
+    if (e.onOpen) e.onOpen(key);
     var orig = original(e, key);
     var hc = orig && orig.shadowRoot && orig.shadowRoot.querySelector('ha-card');
     if (hc) {
@@ -385,4 +402,10 @@
       act(ev);
     });
   }
+
+  // Für das Panel hinter der Medien-Welle (10-weich-welle.js): dieselben Zeilen, dieselbe Bedienung.
+  // e: { kind: 'wave', card, original(key) → Kachel, onOpen(key) }.
+  M.CSS = CSS;
+  M.paint = paint;
+  M.bind = bind;
 })();
