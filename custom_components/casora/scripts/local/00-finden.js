@@ -199,12 +199,19 @@ window.casoraPriceKwh = function (v) {
   // ── Abfall (Waste Collection Schedule o. Ä.) ──────────────────────────────
   // Tonnen-Sensoren und Abfallkalender werden erkannt; eigene Angaben kommen aus
   // den Kartenvariablen (trash_*) oder CASORA_SETTINGS.waste und haben Vorrang.
+  // [Muster, Farbe, Weich-Schlüssel, Weich-Ersatzfarbe]. Im Weich-Look kommt die Farbe aus
+  // --casora-waste-<Schlüssel> (theme_weich.yaml, 05.10.2026), wie bisher im Popup; Restmüll
+  // deckend statt halb durchsichtig, und die Kachel bekam am Abholtag ein graues Symbol auf
+  // grauem Kreis. Problemstoffe haben nur im Weich-Look eine eigene Farbe (Rot); sonst bleibt
+  // alles wie bisher (Farbe null = Orange, Kalender-Abgleich über den Namen).
   var WASTE_KINDS = [
-    [/bio|organ|kompost|green waste/i, '#30D158'],
-    [/papier|paper|pappe|karton|cardboard/i, '#0A84FF'],
-    [/wertstoff|gelb|plastik|plastic|verpack|recycl/i, '#FFCC00'],
-    [/glas|glass/i, '#00C3D0'],
-    [/rest|residual|general|haus|black/i, '#8E8E93'],
+    [/bio|organ|kompost|green waste/i, '#30D158', 'bio', '#6AAE78'],
+    [/papier|paper|pappe|karton|cardboard/i, '#0A84FF', 'paper', '#5B8FC9'],
+    [/wertstoff|gelb|plastik|plastic|verpack|recycl/i, '#FFCC00', 'yellow', '#E8B04A'],
+    [/glas|glass/i, '#00C3D0', 'glass', '#4E9E95'],
+    [/sperr|bulky/i, null, 'bulky', '#DE8A4E'],
+    [/problem|schadstoff|sonderm|gift|hazard/i, null, 'hazard', '#D35A4E'],
+    [/rest|residual|general|haus|black/i, '#8E8E93', 'rest', '#8F7E6D'],
   ];
   function isWasteSensor(hass, eid) {
     if (eid.indexOf('sensor.') !== 0) return false;
@@ -225,17 +232,25 @@ window.casoraPriceKwh = function (v) {
     var named = V.trash_sensors || cfg.sensors || null;   // {entity_id: label} oder [entity_id]
     var ids = named ? (Array.isArray(named) ? named : Object.keys(named))
       : Object.keys(S).filter(function (eid) { return isWasteSensor(hass, eid); }).sort();
+    var weich = !!(window._casoraSoft && window._casoraSoft());
     var bins = ids.filter(function (id) { return S[id]; }).map(function (id) {
       var label = (named && !Array.isArray(named) && named[id]) || wasteLabel(hass, id);
       var kind = WASTE_KINDS.filter(function (k) { return k[0].test(label) || k[0].test(id); })[0];
-      var color = kind ? kind[1] : '#FF9F0A';
+      var color = kind && kind[1] ? kind[1] : '#FF9F0A';
       var st = S[id];
       var days = parseInt(st.state, 10);
       if (isNaN(days)) days = parseInt(st.attributes && st.attributes.daysTo, 10);
       var r = parseInt(color.slice(1, 3), 16), g = parseInt(color.slice(3, 5), 16), b = parseInt(color.slice(5, 7), 16);
+      var tint = 'rgba(' + r + ',' + g + ',' + b + ',0.25)';
+      if (weich) {
+        color = 'var(--casora-waste-' + (kind ? kind[2] : 'other') + ', ' + (kind ? kind[3] : '#DE8A4E') + ')';
+        // Kachel am Abholtag: voller Tonnenkreis mit hellem Symbol wie die Weich-Symbole
+        // (casora_trash setzt dazu --casora-icon-off-ink auf --casora-waste-glyph).
+        tint = color;
+      }
       return {
-        id: id, label: label, color: color, tint: 'rgba(' + r + ',' + g + ',' + b + ',0.25)',
-        re: kind ? kind[0] : new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'),
+        id: id, label: label, color: color, tint: tint,
+        re: kind && kind[1] ? kind[0] : new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'),
         days: isNaN(days) ? null : days,
       };
     });

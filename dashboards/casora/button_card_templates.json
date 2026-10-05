@@ -14358,6 +14358,9 @@
       },
       {
        "--casora-icon-circle-bg": "[[[\n  const W = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, variables) : null;\n  if (!W || W.days !== 0 || !W.next) return 'rgba(255,255,255,0.10)';\n  return W.next.tint;\n]]]\n"
+      },
+      {
+       "--casora-icon-off-ink": "[[[\n  /* Weich (05.10.2026): am Abholtag steht das Symbol hell auf dem vollen Tonnenkreis.\n     --casora-icon-off-ink wirkt nur im Weich-Look (--casora-icon-off-mix), sonst bleibt alles gleich. */\n  const W = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass, variables) : null;\n  if (!W || W.days !== 0 || !W.next) return 'var(--casora-soft-glyph-off, transparent)';\n  return 'var(--casora-waste-glyph, var(--casora-soft-glyph-off, transparent))';\n]]]\n"
       }
      ],
      "entity_picture": [
