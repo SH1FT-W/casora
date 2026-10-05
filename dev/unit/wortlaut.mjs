@@ -16,3 +16,16 @@ const en = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/tr
 assert.ok(en.exact['Keine Aktiv'] && en.patterns.some((p) => p[0] === '^(\\d+) Aktiv$') && en.patterns.some((p) => p[0] === '^(\\d+) An$'),
   'englische Übersetzung für die großen Formen');
 console.log('ok wortlaut');
+
+// Akku-Stufen (05.10.2026, Nachauftrag K1 „Batterie states überarbeiten“): eine Regel überall –
+// OK / Schwach (≤ 20 %) / Fast leer (≤ 10 %) aus window.casoraBattery. Kachel „N Schwach“ (Zahl +
+// Zustandswort groß wie „1 An“), Popup-Kopf „N Akkus schwach“ / „Alle Akkus OK“, Glocke ebenso.
+const bat = JSON.stringify(T.casora_battery);
+assert.ok(bat.includes("' Schwach'") && bat.includes("'OK'") && bat.includes('casoraBattery'), 'Batterien-Kachel: „OK“ / „N Schwach“ über casoraBattery');
+const core = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-core.js', import.meta.url), 'utf8');
+assert.ok(/WORD: \{ ok: 'OK', low: 'Schwach', crit: 'Fast leer', charging: 'Lädt'/.test(core), 'casoraBattery: Stufenwörter');
+assert.ok(core.includes("' Akkus schwach'"), 'Glocke: „N Akkus schwach“');
+const soft = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/08-weich-kompakt.js', import.meta.url), 'utf8');
+assert.ok(soft.includes("'Alle Akkus OK'") && soft.includes("' Akkus schwach'"), 'Batterien-Popup (Weich): Kopfzeile');
+assert.ok(en.exact['Alle Akkus OK'] && en.patterns.some((p) => p[0] === '^(\\d+) Schwach$'), 'englische Akku-Wörter');
+console.log('ok akku-wortlaut');

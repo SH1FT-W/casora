@@ -786,8 +786,8 @@
         if (c.bat && states[c.bat]) {
           var b = ok(states[c.bat]) ? Math.round(num(states[c.bat].state)) : null;
           /* battery_low meldet schon bei 89 % "on", daher nur die Prozentzahl. */
-          var low = b != null && b <= 20;
-          dev.push({ icon: 'mdi:battery', iconTone: low ? 'warn' : 'good', label: 'Akku', value: b != null ? b + ' %' : '—', valueTone: low ? 'warn' : null });
+          var tn = b == null ? null : window.casoraBattery ? window.casoraBattery.tone(window.casoraBattery.level(b)) : b <= 20 ? 'warn' : null;
+          dev.push({ icon: 'mdi:battery', iconTone: tn || 'good', label: 'Akku', value: b != null ? b + ' %' : '—', valueTone: tn });
         }
         if (c.valve && states[c.valve]) {
           var VS = { success: 'Angepasst', none: 'Nicht angepasst', ready_to_calibrate: 'Bereit zur Anpassung', calibration_in_progress: 'Läuft …', error: 'Fehler' };

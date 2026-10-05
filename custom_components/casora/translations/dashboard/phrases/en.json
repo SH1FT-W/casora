@@ -1300,7 +1300,11 @@
   "Hier gibt es noch keine Geräte": "No devices here yet",
   "Im Casora Studio einem Raum zuordnen": "Assign them to a room in Casora Studio",
   "weitere": "more",
-  "Zum Anfang": "Back to start"
+  "Zum Anfang": "Back to start",
+  "Fast leer": "Almost empty",
+  "Alle Akkus OK": "All batteries OK",
+  "1 Akku schwach": "1 battery low",
+  "Akku fast leer": "Battery almost empty"
  },
  "patterns": [
   [
@@ -2332,6 +2336,22 @@
   [
    "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
    "Pickup dates will be back as soon as {1} responds."
+  ],
+  [
+   "^(\\d+) Akkus schwach$",
+   "{1} batteries low"
+  ],
+  [
+   "^(\\d+) Schwach$",
+   "{1} Low"
+  ],
+  [
+   "^(.+) Akku fast leer$",
+   "{1} battery almost empty"
+  ],
+  [
+   "^(.+) Akku schwach$",
+   "{1} battery low"
   ]
  ]
 }
