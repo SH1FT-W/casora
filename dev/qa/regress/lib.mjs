@@ -29,6 +29,9 @@ const browsers = [];
 // Browser öffnen (Optionen wie harness.open, zusätzlich lang: 'en' für englische Oberfläche).
 export async function open(opts = {}) {
   const o = await H.open(opts);
+  // Die Welle öffnet ihre Liste im Casora-Look von selbst (1.0.11); Tests, die das Antippen prüfen,
+  // brauchen den alten Anfangszustand. Wer das automatische Öffnen prüft: open({ welleAuto: true }).
+  if (!opts.welleAuto) await o.context.addInitScript(() => { window.CASORA_QA_NO_WELLE_AUTO = true; });
   if (opts.lang) await o.context.addInitScript((l) => localStorage.setItem('selectedLanguage', JSON.stringify(l)), opts.lang);
   browsers.push(o.browser);
   page = o.page;

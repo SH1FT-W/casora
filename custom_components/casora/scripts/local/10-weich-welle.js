@@ -85,11 +85,56 @@
       return now - c.gone < 120000;
     });
     cards.forEach(function (c) { if (c.card.isConnected) mark(c); });
+    if (!menu) autoOpen();
     if (menu) {
       if (!W.on() || !pe.src || !pe.src.card.isConnected) close();
       else paint(false);
     }
     if (!cards.length && !menu) { clearInterval(timer); timer = 0; }
+  }
+
+  // ── Offen oder zu merken (05.10.2026) ──
+  // Läuft etwas, ist die Liste offen – auch nach dem Neuladen. Klappt man sie selbst zu (Welle, daneben
+  // tippen, Escape), bleibt sie auf diesem Gerät zu, bis eine neue Wiedergabe startet. Schließt sie sich
+  // von selbst (nichts läuft mehr, Seitenwechsel), zählt das nicht als „zu“.
+  var KEY = 'casora.welle.offen';
+  function memo() { try { return JSON.parse(localStorage.getItem(KEY) || 'null') || {}; } catch (e) { return {}; } }
+  function remember(open, sig) { try { localStorage.setItem(KEY, JSON.stringify({ open: !!open, sig: sig || '' })); } catch (e) { /* privat */ } }
+  function playSig(c) {
+    return list(c).map(function (r) { return r.key + '=' + (r.mtitle || r.title || ''); }).sort().join('|');
+  }
+  function busyElsewhere() {
+    var pop = window.casoraPopup && window.casoraPopup.element;
+    if (pop && pop.hasAttribute('open')) return true;
+    try { if (window._casoraNotify && window._casoraNotify.isOpen) return true; } catch (e) { /* egal */ }
+    return !!document.querySelector('.casora-notify-menu');
+  }
+  function autoOpen() {
+    // Tests, die das Antippen der Welle prüfen, schalten das automatische Öffnen ab.
+    if (window.CASORA_QA_NO_WELLE_AUTO || !W.on() || busyElsewhere()) return;
+    for (var i = 0; i < cards.length; i++) {
+      var c = cards[i];
+      if (!c.card.isConnected) continue;
+      var sig = playSig(c);
+      if (!sig) continue;
+      var m = memo();
+      if (m.open === false) {
+        // Zugeklappt: nur eine neue Wiedergabe (Player/Titel, den es beim Zuklappen nicht gab) öffnet wieder.
+        var was = String(m.sig || '').split('|');
+        if (!sig.split('|').some(function (x) { return was.indexOf(x) < 0; })) return;
+      }
+      var hd = header(c), wv = hd && hd.shadowRoot && hd.shadowRoot.querySelector('.np-head-wave');
+      var r = (wv || hd) && (wv || hd).getBoundingClientRect();
+      if (!r || !r.width || !r.height) continue;   // Welle noch nicht sichtbar
+      if (open(wv || hd)) remember(true);
+      return;
+    }
+  }
+  // Selbst zugeklappt: merken, was gerade lief.
+  function userClose() {
+    var src = pe.src;
+    remember(false, src ? playSig(src) : '');
+    close();
   }
 
   // Was gerade läuft – dieselbe Regel wie die Sichtbarkeit der Welle (casora_now_playing_header,
@@ -229,13 +274,13 @@
     return true;
   }
 
-  function onKey(e) { if (e.key === 'Escape') close(); }
+  function onKey(e) { if (e.key === 'Escape') userClose(); }
   function onAway(e) {
     var path = (e.composedPath && e.composedPath()) || [e.target];
     if (!menu || path.indexOf(menu) !== -1) return;
     // Tipp auf die Welle selbst: deren Aktion schließt (toggle).
     if (pe.card && path.indexOf(pe.card) !== -1) return;
-    close();
+    userClose();
   }
   function onResize() {
     if (!menu) return;
@@ -274,12 +319,12 @@
   });
 
   W.toggle = function (anchor) {
-    if (menu) { close(); return; }
+    if (menu) { userClose(); return; }
     // Ein anderes Menü (Mitteilungen, Einstellungen) zuerst schließen, wie die Glocke es tut.
     try { if (window._casoraNotify) window._casoraNotify.close(); } catch (e) { /* egal */ }
     var pop = window.casoraPopup && window.casoraPopup.element;
     if (pop && pop.hasAttribute('open')) { window.casoraPopup.close(); return; }
-    open(anchor);
+    if (open(anchor)) remember(true);
   };
   W.close = close;
   Object.defineProperty(W, 'isOpen', { get: function () { return !!menu; } });
