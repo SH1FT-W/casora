@@ -1585,6 +1585,7 @@
       this._backBtn?.remove();
       this._backBtn = null;
       if (this._compactHeaderEl) { this._compactHeaderEl.remove(); this._compactHeaderEl = null; }
+      if (this._headFillEl) { this._headFillEl.remove(); this._headFillEl = null; }
       if (this._gradientBlurEl)  { this._gradientBlurEl.remove();  this._gradientBlurEl  = null; }
       if (_movedBadgeRow && _movedBadgeRow.owner === this) _restoreBadgeRow();
       const npWasMoved = !!this._npSaved;
@@ -2220,6 +2221,23 @@
         'opacity:0', 'transform:translateY(5px)', 'pointer-events:none',
       ].join(';');
       compactEl.textContent = titleText;
+      // H3 (Weich-Audit): Weich legt unter den kleinen Raumtitel eine Leinenfläche, die nach unten
+      // ausläuft – gescrollte Kacheln und Szenen liefen sonst sichtbar hinter „‹ Raumname“ durch.
+      // Sie blendet mit dem Titel ein (gleiche Deckkraft). Andere Designs: unverändert.
+      if (window._casoraSoft && window._casoraSoft()) {
+        const fill = document.createElement('div');
+        fill.style.cssText = [
+          'position:fixed', 'left:0', 'right:0', 'top:0', 'z-index:60', 'pointer-events:none', 'opacity:0',
+          `height:calc(env(safe-area-inset-top, 0px) + ${COMPACT_BAR_HEIGHT + 22}px)`,
+          'background:linear-gradient(to bottom, var(--casora-room-head-fill, rgba(244,239,231,0.94)) 0%,'
+            + ' var(--casora-room-head-fill, rgba(244,239,231,0.94)) calc(100% - 22px),'
+            + ' transparent 100%)',
+        ].join(';');
+        // In der Ebene des Raums (wie der Zurück-Knopf, z-index 61), damit sie den Knopf nicht abdeckt.
+        (this._overlayEl || this._appendTarget || document.body).appendChild(fill);
+        this._headFillEl?.remove();
+        this._headFillEl = fill;
+      }
       compactEl.addEventListener('click', () => {
         this._overlayEl?.scrollTo({ top: 0, behavior: 'smooth' });
       });
@@ -2689,6 +2707,7 @@
         // Rises gently into place from below.
         hdr.style.transform   = `translateY(${(1 - cp) * 5}px)`;
         hdr.style.pointerEvents = cp > 0.5 ? 'auto' : 'none';
+        if (this._headFillEl) this._headFillEl.style.opacity = String(cp);
         popupBarOn = popupBarOn ? p >= 0.45 : p >= 0.55;
         grad.style.opacity    = popupBarOn ? '1' : '0';
         barEdge.style.opacity = popupBarOn ? '1' : '0';
@@ -2770,6 +2789,7 @@
       this._backBtn = null;
       // Scroll-header teardown, as in _dismiss.
       if (this._compactHeaderEl) { this._compactHeaderEl.remove(); this._compactHeaderEl = null; }
+      if (this._headFillEl) { this._headFillEl.remove(); this._headFillEl = null; }
       if (this._gradientBlurEl)  { this._gradientBlurEl.remove();  this._gradientBlurEl  = null; }
       // Restored instantly, never animated, so it reads as a fixed anchor.
       if (_movedBadgeRow && _movedBadgeRow.owner === this) _restoreBadgeRow();

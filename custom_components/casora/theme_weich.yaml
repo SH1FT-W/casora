@@ -401,6 +401,7 @@ Casora Weich:
       casora-nav-bg: rgba(251,248,243,0.78)
       casora-nav-label-color: rgba(58,50,43,0.92)
       casora-mobile-title-color: rgba(58,50,43,0.95)
+      casora-room-head-fill: rgba(244,239,231,0.94)  # H3 (Weich-Audit): Fläche unter „‹ Raumname“
       casora-chrome-ink: rgba(58,50,43,0.88)
       casora-chrome-fill: rgba(251,248,243,0.80)
       casora-chrome-fill-hover: rgba(240,233,223,0.95)
@@ -800,6 +801,7 @@ Casora Weich:
       casora-chrome-fill: rgba(46,42,38,0.80)
       casora-chrome-fill-hover: rgba(66,60,54,0.92)
       casora-mobile-title-color: rgba(246,240,231,0.98)
+      casora-room-head-fill: rgba(36,33,30,0.94)  # H3 (Weich-Audit)
       casora-filter-veil: rgba(28,24,21,0.30)
       casora-mnav-bg: rgba(46,42,38,0.72)
       casora-mnav-pane: rgba(30,30,34,0.94)
