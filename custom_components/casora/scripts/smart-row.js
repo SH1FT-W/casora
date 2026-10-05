@@ -371,9 +371,10 @@ class CasoraSmartRow extends HTMLElement {
     this.addEventListener('scroll', () => {
       if (!this._casoraScrolling && this._casoraFaded) {
         this._casoraScrolling = true;
+        // Nur die Maske weg, data-casora-fade (Schattenrand) bleibt: das Attribut ändert die Box
+        // der Hülle, mitten im Wischen hieß das neues Layout und in WebKit Nachrasten (05.10.2026).
         for (const w of this._wrappers) {
           if (!w.dataset.casoraFade) continue;
-          delete w.dataset.casoraFade;
           w.style.removeProperty('-webkit-mask-image');
           w.style.removeProperty('mask-image');
         }
@@ -381,7 +382,12 @@ class CasoraSmartRow extends HTMLElement {
       clearTimeout(this._casoraScrollT);
       this._casoraScrollT = setTimeout(settle, 140);
     }, { passive: true });
-    this.addEventListener('scrollend', settle, { passive: true });
+    // scrollend kommt in Chromium nach jedem einzelnen Rad-Schritt: kurz warten, ob weitergewischt
+    // wird, sonst wird zwischen zwei Schritten jedes Mal neu gemessen und maskiert.
+    this.addEventListener('scrollend', () => {
+      clearTimeout(this._casoraScrollT);
+      this._casoraScrollT = setTimeout(settle, 80);
+    }, { passive: true });
     window.addEventListener('resize', edges);
     if (window.ResizeObserver) {
       this._casoraRo = new ResizeObserver(edges);
@@ -437,7 +443,11 @@ class CasoraSmartRow extends HTMLElement {
       });
       this._casoraMo.observe(this._container, { subtree: true, attributes: true, attributeFilter: ['style'] });
       // Nach dem Verschieben (FLIP-Übergang) noch einmal an der Endposition messen.
-      const settle = () => this._casoraEdges();
+      // Höchstens einmal pro Bild: Hover-Übergänge der Kacheln enden beim Wischen laufend.
+      const settle = () => {
+        if (this._casoraMoRaf) return;
+        this._casoraMoRaf = requestAnimationFrame(() => { this._casoraMoRaf = null; this._casoraEdges(); });
+      };
       this._container.addEventListener('transitionend', settle);
       this._container.addEventListener('animationend', settle);
     }
@@ -479,8 +489,9 @@ class CasoraSmartRow extends HTMLElement {
         g = `linear-gradient(to right, transparent ${Math.round(L - r.left + SHADOW)}px, #000 ${Math.round(L + FADE - r.left + SHADOW)}px)`;
       }
       // Nur bei echter Änderung schreiben: der MutationObserver (style) würde sonst jede Runde neu auslösen.
-      if (g) { if (w.dataset.casoraFade !== g) { w.dataset.casoraFade = g; w.style.setProperty('-webkit-mask-image', g); w.style.setProperty('mask-image', g); } }
-      else if (w.style.maskImage || w.style.webkitMaskImage) { delete w.dataset.casoraFade; w.style.removeProperty('-webkit-mask-image'); w.style.removeProperty('mask-image'); }
+      // Neu schreiben auch, wenn das Wischen die Maske entfernt hat (Attribut blieb stehen).
+      if (g) { if (w.dataset.casoraFade !== g || !(w.style.getPropertyValue('mask-image') || w.style.getPropertyValue('-webkit-mask-image'))) { w.dataset.casoraFade = g; w.style.setProperty('-webkit-mask-image', g); w.style.setProperty('mask-image', g); } }
+      else if (w.dataset.casoraFade || w.style.maskImage || w.style.webkitMaskImage) { delete w.dataset.casoraFade; w.style.removeProperty('-webkit-mask-image'); w.style.removeProperty('mask-image'); }
     }
     if (!dots) return;
     const n = can && m > 2 ? Math.min(8, Math.ceil(this.scrollWidth / Math.max(1, this.clientWidth))) : 0;
@@ -1037,7 +1048,17 @@ class CasoraSmartRow extends HTMLElement {
       b.setAttribute('aria-label', dir < 0 ? 'Zurück' : 'Weiter');
       b.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.scrollBy({ left: dir * Math.max(200, this.clientWidth * 0.7), behavior: 'smooth' });
+        // Ohne Einrasten (Maus/Touchpad) selbst an einer Kachelkante landen.
+        const step = dir * Math.max(200, this.clientWidth * 0.7);
+        const host = this.getBoundingClientRect().left + (parseFloat(getComputedStyle(this).scrollPaddingLeft) || 0);
+        const want = this.scrollLeft + step;
+        let left = want, best = Infinity;
+        for (const w of this._casoraShown()) {
+          const pad = w.dataset.casoraFade ? 48 : 0;
+          const x = this.scrollLeft + w.getBoundingClientRect().left + pad - host;
+          if (Math.abs(x - want) < best) { best = Math.abs(x - want); left = x; }
+        }
+        this.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
       });
     });
     track.appendChild(arrows);
@@ -1461,13 +1482,16 @@ class CasoraSmartRow extends HTMLElement {
         touch-action: pan-x;
         overscroll-behavior-x: auto;
         overscroll-behavior-y: none;
-        scroll-snap-type: x proximity;
         overflow-anchor: none;
         scrollbar-width: none;
         -ms-overflow-style: none;
         direction: ltr;
       }
       :host::-webkit-scrollbar { display: none; }
+      /* Einrasten nur bei Touch. Mit Touchpad/Mausrad zog proximity-Snap die Reihe bei jedem
+         Wischschritt zur letzten Kachelkante zurück (Chromium) bzw. hielt sie fest und rastete
+         nach dem Loslassen nach (WebKit) – das Wischen fühlte sich hakelig an (05.10.2026). */
+      @media (pointer: coarse) { :host { scroll-snap-type: x proximity; } }
       /* Weicher Rand, wo noch Kacheln liegen (30.09.2026) – bewusst OHNE mask-image auf der
          Reihe: eine Maske macht sie zur Backdrop-Wurzel, dann blurren die Glas-Kacheln darin
          nicht mehr den Hintergrund. Stattdessen liegen zwei Schleier (#fade .l/.r) über den
