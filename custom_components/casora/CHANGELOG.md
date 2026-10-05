@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.0.7 – unreleased
+
+### Improved
+- Waste tile and popup (Soft look): on pickup day the tile now shows the bin's colour as a full circle with a light symbol. Before, Residual waste was a grey symbol on a grey circle and almost disappeared, especially in dark mode. All waste types use the popup colours everywhere (tile, popup, 4 week calendar, calendar dots), Residual waste as a solid warm taupe per mode instead of a see-through brown. Hazardous waste gets its own red instead of the same orange as bulky waste. Adjustable via the theme variables `casora-waste-rest`, `casora-waste-bio`, `casora-waste-paper`, `casora-waste-yellow`, `casora-waste-glass`, `casora-waste-bulky`, `casora-waste-hazard`, `casora-waste-other` and `casora-waste-glyph`. Other looks are unchanged.
+
 ## 1.0.6 – 04.10.2026
 
 ### New

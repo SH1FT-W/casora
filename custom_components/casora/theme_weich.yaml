@@ -23,6 +23,19 @@ Casora Weich:
   casora-color-red: "#D35A4E"
   casora-color-deep-orange: "#C8693F"
   casora-color-pink: "#D16E7E"
+  # --- Abfallarten (Tonnen-Symbol, Kalenderpunkte, Kachel am Abholtag), 05.10.2026 ---
+  # Wie im Abfall-Popup (Weich-Farben der Tonnen), jetzt auch für Kachel und Kalender.
+  # Restmüll war dort ein halb durchsichtiges Braungrau; hier deckend je Modus (siehe
+  # modes), damit Kreis und Symbol auf jedem Grund gleich aussehen. Sperrmüll und
+  # Problemstoffe bekommen eigene Farben statt beide Orange.
+  casora-waste-bio: var(--casora-color-green)
+  casora-waste-paper: var(--casora-color-blue)
+  casora-waste-glass: var(--casora-color-teal)
+  casora-waste-yellow: var(--casora-color-yellow)
+  casora-waste-bulky: var(--casora-color-orange)
+  casora-waste-hazard: var(--casora-color-red)
+  casora-waste-other: var(--casora-color-orange)
+  casora-waste-glyph: "#FFFFFF"
   casora-color-neutral: "#C9BFB2"
   primary-color: "#B67A50"          # Ton/Terrakotta als HA-Akzent
   state-light-on-color: rgb(232,176,74)
@@ -555,6 +568,7 @@ Casora Weich:
       casora-soft-icon-off: var(--casora-icon-circle-bg)
       casora-soft-glyph: "#FFFFFF"
       casora-soft-glyph-off: rgba(58,50,43,0.55)
+      casora-waste-rest: "#8F7E6D"
       casora-soft-close-ink: var(--casora-popup-tiles-text-secondary)
       casora-soft-seg-on: var(--casora-entity-background-active)
       casora-soft-seg-on-ink: var(--casora-entity-name-active)
@@ -918,6 +932,7 @@ Casora Weich:
       casora-soft-icon-off: var(--casora-icon-circle-bg)
       casora-soft-glyph: "#FFFFFF"
       casora-soft-glyph-off: rgba(242,235,225,0.55)
+      casora-waste-rest: "#6A5948"
       casora-soft-close-ink: var(--casora-popup-tiles-text-secondary)
       casora-soft-seg-on: var(--casora-entity-background-active)
       casora-soft-seg-on-ink: var(--casora-entity-name-active)

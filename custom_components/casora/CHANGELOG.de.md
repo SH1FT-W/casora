@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.7 – unreleased
+
+### Verbessert
+- Abfall-Kachel und Abfall-Popup (Weich-Look): Am Abholtag zeigt die Kachel jetzt die Farbe der Tonne als vollen Kreis mit hellem Symbol. Bisher war Restmüll ein graues Symbol auf grauem Kreis und ging vor allem im Dunkelmodus fast unter. Alle Abfallarten nutzen überall die Popup-Farben (Kachel, Popup, Monatskalender, Kalenderpunkte), Restmüll als deckendes warmes Taupe je Modus statt eines halb durchsichtigen Brauns. Problemstoffe bekommen ein eigenes Rot statt desselben Oranges wie Sperrmüll. Einstellbar über die Theme-Variablen `casora-waste-rest`, `casora-waste-bio`, `casora-waste-paper`, `casora-waste-yellow`, `casora-waste-glass`, `casora-waste-bulky`, `casora-waste-hazard`, `casora-waste-other` und `casora-waste-glyph`. Andere Looks bleiben unverändert.
+
 ## 1.0.6 – 04.10.2026
 
 ### Neu
