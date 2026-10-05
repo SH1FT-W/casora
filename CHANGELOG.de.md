@@ -37,7 +37,6 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - Weich, Wetter im Titel: gefülltes Wettersymbol in Titelfarbe statt dünner grauer Kontur.
 - Weich, Wetter-Popup: Die Überschriften „Nächste Stunden“, „7 Tage“ und der Diagrammtitel stehen wie in den übrigen Popups über ihrer Fläche.
 - Weich, Netzwerk-Popup: alle Netzwerk-Symbole in der Netzwerkfarbe (Blau), das „An“ eines WLANs ist nicht mehr grün.
-- Weich, Tablet hochkant: Der Titelblock steht knapp über den Kacheln statt in der Mitte, dazwischen bleibt keine große leere Fläche mehr.
 - Weich, Raumseite am Handy: Gescrollte Kacheln und Szenen scheinen nicht mehr hinter dem kleinen Raumtitel durch; er bekommt eine Leinenfläche, die mit dem Titel einblendet (hell und dunkel).
 - Handy-Startseite: Nach längerer Zeit im Hintergrund konnte der Abstand zwischen Kopfleiste und Zeile „Zuhause“ rund 150 px zu groß sein. Casora misst ihn bei der Rückkehr neu und richtet das Layout selbst (notfalls mit einmaligem Neuladen).
 

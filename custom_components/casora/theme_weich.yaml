@@ -57,8 +57,6 @@ Casora Weich:
   # Chip-Reihen am Handy (Raum-Chips Temperatur/Luftfeuchtigkeit/Licht, Klima/Sicherheit/Energie):
   # Pillen mit gleichmäßig 8 px Abstand (Standard ohne Pillen: 16 px).
   casora-mobile-chip-gap: 8px
-  # K11 (Weich-Audit): Tablet hoch – Titelblock tief über den Kacheln (casora_shared)
-  header-top-portrait: calc(100vh - 450px)
   wa-border-radius-m: 28px
   ha-border-radius-lg: 18px
   # Nicht in theme.yaml, aber vom Code mit Fallback gelesen (casora-core.js/smart-row.js):
