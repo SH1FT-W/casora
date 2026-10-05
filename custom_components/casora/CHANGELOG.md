@@ -7,11 +7,26 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 1.0.7 – unreleased
 
 ### Improved
+- Weich, tile row on desktop and tablet: when more tiles lie to the right, the cut tile fades softly into the edge, and small page dots below show how much follows (tappable). Set with the theme variable `casora-row-overflow` (`fade`, `arrows` or `more`).
+- Battery readings are the same everywhere: OK, Low (20 % or less), Almost empty (10 % or less), Charging and Unknown, with the same words and colours on the batteries tile and popup, the bell, locks, aquarium, robot vacuum and thermostat. The bell turns orange or red by the weakest battery instead of always red.
+- Weich, popups: content cards no longer lift under the mouse, long popups keep more room at the bottom and fade out in the popup colour.
+- Weich, blinds popup: head, slider and rows use the same slat icon as the tile.
+- Weich, phone room page: category headings as large as "Scenes"; an empty category shows a hint instead of staying blank.
+- Weich dark: switches that are off are warm grey with a cream knob instead of almost black.
+- Alarm popup: mode list at full width, the switch reads "Alarm" (on = armed).
+- Plant popup: lists plant readings only, no unrelated sensors.
+- Recipe popup (Weich): buttons in tone and sand, a stronger title.
 - Weich, tile row on desktop and tablet: when a tile moves to the front, the soft fade stays at the edge of the row instead of travelling with the tile.
 - Soft look, "Now playing": instead of the sideways carousel (phone) and the media pills under the badges (desktop and tablet), all players now sit in one quiet card, one row per player with cover, title, "Artist · Device", a thin progress bar that keeps running and a round play/pause button. Tapping a row opens the media popup as before. On desktop and tablet the rows stand side by side and wrap to a new line instead of scrolling sideways, so the cut-off shadow under the old player is gone too. Standard and Glass keep their look. The Studio phone preview shows the new list as well.
 - Soft look, phone navigation bar: a compact capsule with icons only; the active destination becomes a pill in the accent colour with its name (Home, the open room or Scenes). All destinations, the room and scene menus and the room switch work as before. Standard and Glass keep the bar with labels. The Studio phone preview follows.
 - Soft look, buttons at the top right: same layout, buttons and "…" menu entries as before, calmer look. The phone capsule is 48 px high, the desktop circles are 40 px with 8 px spacing and stay centred on the room bar; both share the same light surface with a soft shadow and no outline or sheen. Icons are a little lighter, the divider is shorter and softer, the bell's count and dot are caramel instead of red, and the media wave (when something plays) sits in a matching circle in the accent ink. Casora's menus get 44 px rows, lightly tinted icon circles and a 24 px radius. Light and dark; Standard and Glass are unchanged.
 - Waste tile and popup (Soft look): on pickup day the tile now shows the bin's colour as a full circle with a light symbol. Before, Residual waste was a grey symbol on a grey circle and almost disappeared, especially in dark mode. All waste types use the popup colours everywhere (tile, popup, 4 week calendar, calendar dots), Residual waste as a solid warm taupe per mode instead of a see-through brown. Hazardous waste gets its own red instead of the same orange as bulky waste. Adjustable via the theme variables `casora-waste-rest`, `casora-waste-bio`, `casora-waste-paper`, `casora-waste-yellow`, `casora-waste-glass`, `casora-waste-bulky`, `casora-waste-hazard`, `casora-waste-other` and `casora-waste-glyph`. Other looks are unchanged.
+
+### Fixed
+- Lock: tile, badge and popup say "Unlocked" or "Locked" everywhere, unlocked in the warning colour, and the popup switch matches the tile switch.
+- Air purifier: modes such as "auto" or "sleep" read "Auto" and "Sleep" when Home Assistant has no translation.
+- Wording: "OK" instead of "Ok", the Studio shows "1 On" like the dashboard.
+- Studio: clicking the day or night segment that is already active no longer switches it.
 
 ## 1.0.6 – 04.10.2026
 

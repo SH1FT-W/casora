@@ -7,11 +7,26 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ## 1.0.7 – unreleased
 
 ### Verbessert
+- Weich, Kachelreihe am Desktop und Tablet: Liegen rechts noch Kacheln, blendet die angeschnittene Kachel weich zum Rand aus, darunter zeigen kleine Seitenpunkte, wie viel noch kommt (antippbar). Einstellbar über die Theme-Variable `casora-row-overflow` (`fade`, `arrows` oder `more`).
+- Akku-Anzeigen überall einheitlich: OK, Schwach (20 % oder weniger), Fast leer (10 % oder weniger), Lädt und Unbekannt, mit denselben Wörtern und Farben in Batterien-Kachel und -Popup, Glocke, Schloss, Aquarium, Saugroboter und Thermostat. Die Glocke färbt nach dem schwächsten Akku orange oder rot statt immer rot.
+- Weich, Popups: Inhaltskarten heben sich unter dem Mauszeiger nicht mehr an, lange Popups haben unten mehr Luft und blenden in der Popup-Farbe aus.
+- Weich, Jalousie-Popup: Kopf, Regler und Zeilen zeigen dasselbe Lamellen-Symbol wie die Kachel.
+- Weich, Handy-Raumseite: Kategorie-Überschriften so groß wie „Szenen“; eine leere Kategorie zeigt einen Hinweis statt leer zu bleiben.
+- Weich dunkel: ausgeschaltete Schalter warmgrau mit cremefarbenem Knopf statt fast schwarz.
+- Alarm-Popup: Modusliste in voller Breite, der Schalter heißt „Alarm“ (an = scharf).
+- Pflanzen-Popup: zeigt nur noch Pflanzen-Messwerte, keine fremden Sensoren mehr.
+- Rezept-Popup (Weich): Knöpfe in Ton und Sand, Titel kräftiger.
 - Weich, Kachelreihe am Desktop und Tablet: Rückt eine Kachel nach vorn, bleibt der weiche Verlauf am Rand der Reihe und wandert nicht mehr mit der Kachel mit.
 - Weich, „Aktuelle Wiedergabe“: Statt des seitlich scrollenden Karussells (Handy) und der Medien-Pillen unter den Badges (Desktop und Tablet) stehen alle Player jetzt in einer ruhigen Karte, je Player eine Zeile mit Cover, Titel, „Interpret · Gerät“, dünnem, mitlaufendem Fortschritt und rundem Play/Pause-Knopf. Antippen einer Zeile öffnet wie bisher das Medien-Popup. Am Desktop und Tablet stehen die Zeilen nebeneinander und brechen um, statt seitlich zu scrollen; damit ist auch die abgeschnittene Schattenkante unter dem bisherigen Player weg. Standard und Glas bleiben unverändert. Die Studio-Vorschau am Handy zeigt die neue Liste ebenfalls.
 - Weich, Navigationsleiste am Handy: kompakte Kapsel nur mit Symbolen; das aktive Ziel wird zur Pille in der Akzentfarbe mit seinem Namen (Zuhause, der offene Raum oder Szenen). Alle Ziele, die Raum- und Szenen-Menüs und der Raumwechsel funktionieren wie bisher. Standard und Glas behalten die Leiste mit Beschriftung. Die Studio-Vorschau am Handy zieht mit.
 - Weich, Knöpfe oben rechts: gleicher Aufbau, gleiche Knöpfe und gleiche Einträge im ⋯-Menü wie bisher, ruhigere Optik. Die Kapsel am Handy ist 48 px hoch, die Kreise am Desktop sind 40 px groß mit 8 px Abstand und bleiben mittig zur Raum-Leiste; beide haben dieselbe helle Fläche mit weichem Schatten, ohne Randlinie und Glanzkante. Die Symbole sind etwas leichter, der Trennstrich kürzer und zarter, Zähler und Punkt der Glocke Karamell statt Rot, und die Medien-Welle (wenn etwas spielt) steht in einem passenden Kreis in Ton-Tinte. Casoras Menüs bekommen 44-px-Zeilen, leicht getönte Symbolkreise und 24 px Radius. Hell und dunkel; Standard und Glas bleiben unverändert.
 - Abfall-Kachel und Abfall-Popup (Weich-Look): Am Abholtag zeigt die Kachel jetzt die Farbe der Tonne als vollen Kreis mit hellem Symbol. Bisher war Restmüll ein graues Symbol auf grauem Kreis und ging vor allem im Dunkelmodus fast unter. Alle Abfallarten nutzen überall die Popup-Farben (Kachel, Popup, Monatskalender, Kalenderpunkte), Restmüll als deckendes warmes Taupe je Modus statt eines halb durchsichtigen Brauns. Problemstoffe bekommen ein eigenes Rot statt desselben Oranges wie Sperrmüll. Einstellbar über die Theme-Variablen `casora-waste-rest`, `casora-waste-bio`, `casora-waste-paper`, `casora-waste-yellow`, `casora-waste-glass`, `casora-waste-bulky`, `casora-waste-hazard`, `casora-waste-other` und `casora-waste-glyph`. Andere Looks bleiben unverändert.
+
+### Behoben
+- Schloss: Kachel, Badge und Popup sagen überall „Entriegelt“ bzw. „Verriegelt“, entriegelt in der Warnfarbe, und der Schalter im Popup steht wie der Kachel-Schalter.
+- Luftreiniger: Modi wie „auto“ oder „sleep“ erscheinen als „Auto“ und „Schlaf“, wenn Home Assistant keine Übersetzung liefert.
+- Wortwahl: „OK“ statt „Ok“, im Studio „1 An“ wie im Dashboard.
+- Studio: Ein Klick auf das schon aktive Tag- oder Nacht-Feld schaltet nicht mehr um.
 
 ## 1.0.6 – 04.10.2026
 
