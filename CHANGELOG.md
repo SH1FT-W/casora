@@ -13,10 +13,14 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ### Changed
 - The themes have new names: Casora's own look is now called "Casora" in your profile (was "Casora Weich"), the two classic looks "Hemma 2" (was "Casora Standard") and "Hemma 1" (was "Casora Glass"). A saved choice moves along by itself on the first start, including the choice in each browser.
 - Alarm in the Casora look: "Active · Away" instead of "Active · Out", matching the Alarmo mode.
+- Phone, Casora look light: the linen veil over the background photo now only runs from the top to about "Favorites"; below it the photo stays clear and only fades softly into linen at the very bottom. It used to cover the photo from top to bottom and everything looked milky. Room pages on the phone are clearer as well.
+- Air quality badge (Casora look): seven large dots instead of the fine dotted graphic, growing with the pollution level, on a slightly darker circle. The old icon was hard to make out in the small circle, especially on yellow.
 - AI update check: for Casora updates the AI gets the release notes handed over instead of fetching them from GitHub itself, which often ended in "release notes not available".
 
 ### Fixed
 - Cameras: a camera now only counts as offline when Home Assistant reports it unavailable. Casora used to also fetch a snapshot; with slow cameras (for example Reolink, snapshots taking over 10 seconds) Home Assistant gave up, and tile, badges and popup showed "Offline" while the camera was running. The popup even covered a working live view with it.
+- Robot vacuum: "finished cleaning" sometimes showed up twice in the bell after a clean with stops at the dock (mop washing), for example after a Home Assistant restart in the middle of a clean. Now each clean gets exactly one entry, at the last return to the dock.
+- "Doors & windows" popup in the Casora look (light): the white rows had a square grey shadow at their bottom corners. The shadow now runs softly around the rounded corners.
 
 ## 1.0.7 – 05.10.2026
 

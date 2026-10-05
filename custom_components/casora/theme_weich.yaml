@@ -410,13 +410,19 @@ Casora:
       state-icon-color: rgba(58,50,43,0.40)
       state-off-color: rgba(58,50,43,0.30)
 
-      # Handy-Hintergrund: Foto läuft in Leinen aus statt in gesampeltes Grau
+      # Handy-Hintergrund: Foto bleibt bis unten klar und läuft erst ganz unten in Leinen aus
+      # (05.10.2026: vorher lag ab dem oberen Drittel ein Leinen-Verlauf über dem ganzen Foto).
       casora-mobile-hero-tint-top: rgba(244,239,231,0.08)
-      casora-mobile-hero-tint-bot: rgba(244,239,231,0.30)
-      casora-mobile-hero-c-handoff: "#E9DFD1"
-      casora-mobile-hero-c-upper: "#EDE5D9"
-      casora-mobile-hero-c-mid: "#F0E9DF"
+      casora-mobile-hero-tint-bot: rgba(244,239,231,0)
+      casora-mobile-hero-c-handoff: rgba(244,239,231,0)
+      casora-mobile-hero-c-upper: rgba(244,239,231,0)
+      casora-mobile-hero-c-mid: rgba(244,239,231,0)
       casora-mobile-hero-c-lower: "#F2ECE3"
+      # Das Foto endet bei casora-mobile-hero-height (85 %): Leinen muss davor deckend sein.
+      casora-mobile-hero-p-handoff: 60%
+      casora-mobile-hero-p-upper: 66%
+      casora-mobile-hero-p-mid: 72%
+      casora-mobile-hero-p-lower: 84%
       casora-mobile-hero-c-base: "#F4EFE7"
       casora-mobile-hero-floor: "#F4EFE7"
 
@@ -440,9 +446,10 @@ Casora:
       casora-icon-fallback-color: rgba(120,100,80,0.80)
       casora-icon-inactive-fallback-color: var(--casora-icon-fallback-color)
       # Handy-Kategorieansicht (filter-overlay.js): Schleier über dem Foto in Leinen statt Schwarz
-      casora-filter-veil: rgba(244,239,231,0.42)
-      # Lesbarkeits-Schleier über dem Hintergrundfoto (hell und dunkel): oben Leinen 66 %, nach unten 0 %
-      casora-wallpaper-veil-light: "linear-gradient(to bottom, rgba(244,239,231,0.66) 0%, rgba(244,239,231,0) 100%)"
+      casora-filter-veil: rgba(244,239,231,0.10)
+      # Lesbarkeits-Schleier über dem Hintergrundfoto: oben Leinen 66 %, bis etwa „Favoriten“ (34 %) auf 0 %
+      # (05.10.2026: lief vorher bis ganz unten, das Foto wirkte am Handy hell durchgehend milchig)
+      casora-wallpaper-veil-light: "linear-gradient(to bottom, rgba(244,239,231,0.66) 0%, rgba(244,239,231,0) 34%)"
       # Desktop/Tablet: nur links hinter Titel, Badges und Überschriften, nach rechts auslaufend
       casora-wallpaper-veil-light-wide: "linear-gradient(to right, rgba(244,239,231,0.65) 0%, rgba(244,239,231,0.30) 45%, rgba(244,239,231,0) 75%)"
 

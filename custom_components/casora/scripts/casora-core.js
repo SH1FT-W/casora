@@ -8761,6 +8761,26 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       // Gleiche Zeit: feste Reihenfolge (Kennung), sonst tauschten Zeilen beim Neuaufbau.
       events.sort(function (a, b) { return (b.when - a.when) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0); });
 
+      // Saugroboter: je Reinigung nur ein „fertig“ (1.0.8). Ein Zwischenstopp, der einmal als
+      // fertig galt (z. B. gemerkter Eintrag), stand sonst neben dem echten Ende – zweimal
+      // „hat fertig gereinigt“ im Abstand weniger Minuten. Verschiedene Reinigungen liegen nur
+      // vor, wenn der Sauger dazwischen mindestens VAC_QUIET_MS an der Station stand.
+      var vacNewer = {};
+      events = events.filter(function (e) {
+        if (!e.done || String(e.entity).indexOf('vacuum.') !== 0) return true;
+        var newer = vacNewer[e.entity];
+        vacNewer[e.entity] = e.when;
+        if (newer == null) return true;
+        var line = (vacLine[e.entity] || []).slice().sort(function (a, b) { return a.when - b.when; });
+        var gap = line.some(function (x, i) {
+          if (!VACUUM_DONE[x.state] || x.when < e.when || x.when >= newer) return false;
+          var next = line.slice(i + 1).filter(function (y) { return VACUUM_BUSY[y.state]; })[0];
+          return !next || next.when - x.when >= VAC_QUIET_MS;
+        });
+        if (!gap) vacNewer[e.entity] = newer;
+        return gap;
+      });
+
       var kept = [];
       var perEntity = {};
       var onlyOnce = {};

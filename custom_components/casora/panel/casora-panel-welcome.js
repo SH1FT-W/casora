@@ -30,7 +30,7 @@
       n1t: "Größeres Wetter", n1: "Am Desktop und Tablet steht das Wetter größer über dem Raum, mit Zustand, Hoch, Tief und Regen. Im Studio unter Wetter abschaltbar.",
       n2t: "Neue Theme-Namen", n2: "Casoras Look heißt jetzt „Casora“, die klassischen Looks „Hemma 1“ und „Hemma 2“. Deine Wahl zieht von selbst mit.",
       n3t: "Kameras ohne Fehlalarm", n3: "Offline zeigt Casora nur noch, wenn Home Assistant die Kamera so meldet. Langsame Kameras stehen nicht mehr fälschlich als offline da.",
-      n4t: "Kleinigkeiten", n4: "Alarm sagt „Abwesend“, die Uhr ist etwas größer, die KI-Update-Prüfung liest Casoras Release-Notes zuverlässig. Alles im Changelog.",
+      n4t: "Kleinigkeiten", n4: "Am Handy (hell) bleibt das Foto unter den Favoriten klar, das Luftqualitäts-Symbol ist besser lesbar, der Saugroboter meldet „fertig“ nur noch einmal. Alles im Changelog.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -43,7 +43,7 @@
       n1t: "Bigger weather", n1: "On desktop and tablet the weather above the room is larger, with condition, high, low and rain. Can be turned off in the Studio under Weather.",
       n2t: "New theme names", n2: "Casora's look is now called \"Casora\", the classic looks \"Hemma 1\" and \"Hemma 2\". Your choice moves along by itself.",
       n3t: "Cameras without false alarms", n3: "Casora only shows offline when Home Assistant reports the camera that way. Slow cameras no longer show up as offline by mistake.",
-      n4t: "Small things", n4: "The alarm says \"Away\", the clock is a little larger, the AI update check reads Casora's release notes reliably. Everything in the changelog.",
+      n4t: "Small things", n4: "On the phone (light) the photo stays clear below Favorites, the air quality icon is easier to read, and the robot vacuum reports \"done\" only once. All in the changelog.",
     },
   };
 

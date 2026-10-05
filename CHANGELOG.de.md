@@ -13,10 +13,14 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ### Geändert
 - Die Themes haben neue Namen: Casoras eigener Look heißt im Profil jetzt „Casora“ (vorher „Casora Weich“), die beiden klassischen Looks „Hemma 2“ (vorher „Casora Standard“) und „Hemma 1“ (vorher „Casora Glass“). Eine gespeicherte Wahl zieht beim ersten Start von selbst mit, auch die eigene Wahl im Browser.
 - Alarm im Casora-Look: „Aktiv · Abwesend“ statt „Aktiv · Unterwegs“, passend zum Modus in Alarmo.
+- Handy, Casora-Look hell: Der Leinen-Schleier über dem Hintergrundfoto reicht nur noch von oben bis etwa „Favoriten“, darunter bleibt das Foto klar und läuft erst ganz unten weich in Leinen aus. Bisher lag er von oben bis unten über dem Foto, alles wirkte milchig. Auch die Raumseiten am Handy sind dadurch klarer.
+- Luftqualität im Badge (Casora-Look): sieben große Punkte statt der feinen Punktgrafik, die Punkte wachsen mit der Belastung, der Kreis ist etwas dunkler. Das alte Symbol war im kleinen Kreis kaum zu erkennen, vor allem auf Gelb.
 - KI-Update-Prüfung: Für Casora-Updates bekommt die KI die Release-Notes direkt mit, statt sie selbst bei GitHub abzurufen. Bisher kam dort oft „Release-Notes nicht abrufbar“.
 
 ### Behoben
 - Kameras: Eine Kamera gilt nur noch als offline, wenn Home Assistant sie als nicht verfügbar meldet. Bisher hat Casora zusätzlich ein Standbild abgerufen; bei langsamen Kameras (zum Beispiel Reolink, Standbild bis über 10 Sekunden) brach Home Assistant ab und Kachel, Badges und Popup zeigten „Offline“, obwohl die Kamera lief. Das Popup legte das sogar über ein laufendes Live-Bild.
+- Saugroboter: „hat fertig gereinigt“ stand nach einer Reinigung mit Zwischenstopps (Mopp waschen) manchmal zweimal in der Glocke, etwa nach einem Home-Assistant-Neustart mitten in der Reinigung. Jetzt bleibt je Reinigung genau eine Meldung, zur letzten Rückkehr an die Station.
+- Popup „Türen & Fenster“ im Casora-Look hell: Die weißen Zeilen hatten unten an den Ecken einen eckigen grauen Schatten. Der Schatten läuft jetzt weich um die runden Ecken.
 
 ## 1.0.7 – 05.10.2026
 
