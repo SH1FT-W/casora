@@ -4518,6 +4518,10 @@ window.casoraMenuGlass = {
   }
   // Aus-Zustand (Heizung aus, Gerät aus, nicht erreichbar …): Sand-Ring wie „Alle aus“ im Licht-Popup.
   function ringOff(src, hass) {
+    // Sicherheits-Badges (05.10.2026): der Ring trägt immer die Stufenfarbe der Badge (Grün auch bei
+    // verriegelt/geschlossen, Orange bei offline) statt Sand – sonst zeigte das Popup eine andere Farbe.
+    if (src && src._config && /casora_badge_(security|contact_group|camera_group|lock_group)\b/.test([].concat(src._config.template || []).join(' '))
+      && window.casoraSecurityLevel) return false;
     var so = src && src._stateObj;
     var id = so && so.entity_id;
     if (!id) return false;
@@ -7668,6 +7672,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   if (dom === 'alarm_control_panel') {
     var MODE = { armed_home: 'shield_check', armed_away: 'shield_lock', armed_night: 'shield_moon',
       armed_vacation: 'shield_vacation', armed_custom_bypass: 'shield_bypass' };
+    /* Weich (05.10.2026): unscharf = durchgestrichenes Schild wie die Alarm-Kachel. */
+    if (st === 'disarmed' && window._casoraSoft && window._casoraSoft()) return 'shield_off';
     return MODE[st] || ((st === 'disarmed' || st === 'triggered') ? 'shield_alarm' : 'shield_check');
   }
   if (dom === 'binary_sensor' || dom === 'cover') {
@@ -7991,6 +7997,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (id.indexOf('alarm_control_panel.') === 0) {
       var word = ALARM_WORD[s];
       if (!word) return null;
+      /* Weich: dieselben Wörter wie Kachel, Badge und Popup (casoraSecurityWord, 00-finden.js). */
+      if (window._casoraSoft && window._casoraSoft() && window.casoraSecurityWord && window.casoraSecurityWord(id, s))
+        word = 'Alarm ' + window.casoraSecurityWord(id, s).replace(/^./, function (c) { return c.toLowerCase(); });
       return {
         label: word,
         icon: window.casoraSecurityIcon(id, s, st && st.attributes),
@@ -8731,10 +8740,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       /* Sicherheit ruhig (Variante 1): nur was Aufmerksamkeit braucht hat Farbe –
          Rot = Gefahr (ausgelöst, offen bei Abwesenheit), Orange = Hinweis (offen, entriegelt,
          unscharf); Erledigtes (verriegelt, scharf) neutral in Sand statt durchgehend Rot. */
+      /* 05.10.2026: dieselben Stufenfarben wie Badges, Kacheln und Popups (--casora-security-*,
+         00-finden.js); ohne diese Variablen wie bisher. */
       if (r.sec) {
-        return r.tone === 'bad' ? 'var(--casora-notify-sec-alert, var(--casora-tone-alert))'
-          : r.tone === 'warn' ? 'var(--casora-notify-sec-warn, var(--casora-color-orange, #DE8A4E))'
-          : 'var(--casora-notify-sec-neutral, var(--casora-tone-settings, var(--casora-color-sand)))';
+        return r.tone === 'bad' ? 'var(--casora-notify-sec-alert, var(--casora-security-alarm-color, var(--casora-tone-alert)))'
+          : r.tone === 'warn' ? 'var(--casora-notify-sec-warn, var(--casora-security-warn-color, var(--casora-color-orange, #DE8A4E)))'
+          : 'var(--casora-notify-sec-neutral, var(--casora-security-ok-color, var(--casora-tone-settings, var(--casora-color-sand))))';
       }
       var t = r.tone === 'bad' ? 'alert'
         : /^plant/.test(ic) ? 'energy'

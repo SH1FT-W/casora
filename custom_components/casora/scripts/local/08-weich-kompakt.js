@@ -314,7 +314,9 @@
     var st = raw(states, ent);
     return UI.group(modes.map(function (m) {
       var on = st === m.id;
-      return { icon: on ? 'shield_check' : m.icon, iconTone: on ? 'good' : null, label: m.label, sub: m.description,
+      // Symbol des Modus wie Alarm-Kachel, Badge und Mitteilungen (05.10.2026); nur der aktive Modus
+      // trägt die Stufenfarbe „ok“, die übrigen sind Auswahl (Sand) statt Petrol.
+      return { icon: m.icon, iconTone: on ? 'good' : 'rgba(0,0,0,0)', label: m.label, sub: m.description,
         selected: on, svc: { domain: 'alarm_control_panel', service: 'alarm_' + m.id.replace('armed_', 'arm_'), data: { entity_id: ent } } };
     }), 'Modus');
   };

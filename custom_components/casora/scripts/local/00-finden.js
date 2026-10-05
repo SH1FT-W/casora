@@ -756,6 +756,28 @@ window.casoraPriceKwh = function (v) {
   window.casoraSecurityAway = securityAway;
   window.casoraSecurityLevel = securityLevel;
 
+  // ── Sicherheit: ein Wort und eine Farbe je Zustand (Weich, 05.10.2026) ────────
+  // Kachel, Badges, Popups und Mitteilungen sagen im Weich-Look für denselben Zustand
+  // dasselbe Wort und nehmen dieselbe Stufenfarbe. null = kein eigenes Wort (Aufrufer
+  // behält seinen Text). Standard/Glas fragen diese Helfer nicht ab.
+  var ALARM_MODE = { armed_home: 'Zuhause', armed_away: 'Abwesend', armed_night: 'Nacht',
+    armed_vacation: 'Urlaub', armed_custom_bypass: 'Bypass' };
+  var SEC_WORD = {
+    alarm_control_panel: { disarmed: 'Unscharf', triggered: 'Ausgelöst' },
+    lock: { locked: 'Verriegelt', unlocked: 'Entriegelt', jammed: 'Klemmt', open: 'Geöffnet' },
+  };
+  window.casoraSecurityWord = function (id, s) {
+    var dom = String(id || '').split('.')[0];
+    var st = String(s == null ? '' : s).toLowerCase();
+    if (dom === 'alarm_control_panel' && ALARM_MODE[st]) return 'Scharf · ' + ALARM_MODE[st];
+    return (SEC_WORD[dom] || {})[st] || null;
+  };
+  window.casoraSecurityAlarmMode = function (s) { return ALARM_MODE[String(s || '').toLowerCase()] || null; };
+  // Stufenfarbe als CSS-Wert; fallback = bisherige Farbe (Standard/Glas setzen die Variable nicht).
+  window.casoraSecurityColor = function (lv, fallback) {
+    return 'var(--casora-security-' + (lv || 'ok') + '-color' + (fallback ? ', ' + fallback : '') + ')';
+  };
+
   // ── Außensensor nach Geräteklasse (Wetter-Popup, 27.09.2026) ──────────────────
   // „outdoor/außen“ im Namen oder ein Außenbereich; Luftdruck ist ohnehin draußen gleich.
   var OUTDOOR = /outdoor|aussen|außen|outside|draussen|draußen|garten|terrasse|balkon|garden|terrace|balcony/i;

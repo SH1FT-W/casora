@@ -1152,6 +1152,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         var an = entry.name || (api && api.nameOf ? api.nameOf(st) : '') || 'Alarm';
         // Symbole wie die Alarm-Badge je Zustand (03.10.2026), sec = ruhiges Farbsystem im Mitteilungszentrum.
         var ic = window.casoraSecurityIcon ? window.casoraSecurityIcon(id, s, st && st.attributes) : 'lock-fill';
+        // Weich (05.10.2026): dieselben Wörter wie Kachel, Badge und Popup (casoraSecurityWord).
+        var sw = window._casoraSoft && window._casoraSoft() && window.casoraSecurityWord ? window.casoraSecurityWord(id, s) : null;
+        if (sw) return { label: an + ' ' + sw.replace(/^./, function (c) { return c.toLowerCase(); }), icon: ic, tone: s === 'triggered' ? 'bad' : s === 'disarmed' ? 'warn' : 'good', sec: true };
         if (MODE[s]) return { label: an + ' umgeschaltet auf ' + MODE[s], icon: ic, tone: 'good', sec: true };
         if (s === 'disarmed') return { label: an + ' ausgeschaltet', icon: ic, tone: 'warn', sec: true };
         if (s === 'triggered') return { label: an + ' ausgelöst', icon: ic, tone: 'bad', sec: true };
