@@ -10,6 +10,19 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - Weich, „Aktuelle Wiedergabe“: Statt des seitlich scrollenden Karussells (Handy) und der Medien-Pillen unter den Badges (Desktop und Tablet) stehen alle Player jetzt in einer ruhigen Karte, je Player eine Zeile mit Cover, Titel, „Interpret · Gerät“, dünnem, mitlaufendem Fortschritt und rundem Play/Pause-Knopf. Antippen einer Zeile öffnet wie bisher das Medien-Popup. Am Desktop und Tablet stehen die Zeilen nebeneinander und brechen um, statt seitlich zu scrollen; damit ist auch die abgeschnittene Schattenkante unter dem bisherigen Player weg. Standard und Glas bleiben unverändert. Die Studio-Vorschau am Handy zeigt die neue Liste ebenfalls.
 - Weich, Navigationsleiste am Handy: kompakte Kapsel nur mit Symbolen; das aktive Ziel wird zur Pille in der Akzentfarbe mit seinem Namen (Zuhause, der offene Raum oder Szenen). Alle Ziele, die Raum- und Szenen-Menüs und der Raumwechsel funktionieren wie bisher. Standard und Glas behalten die Leiste mit Beschriftung. Die Studio-Vorschau am Handy zieht mit.
 - Weich, Knöpfe oben rechts: gleicher Aufbau, gleiche Knöpfe und gleiche Einträge im ⋯-Menü wie bisher, ruhigere Optik. Die Kapsel am Handy ist 48 px hoch, die Kreise am Desktop sind 40 px groß mit 8 px Abstand und bleiben mittig zur Raum-Leiste; beide haben dieselbe helle Fläche mit weichem Schatten, ohne Randlinie und Glanzkante. Die Symbole sind etwas leichter, der Trennstrich kürzer und zarter, Zähler und Punkt der Glocke Karamell statt Rot, und die Medien-Welle (wenn etwas spielt) steht in einem passenden Kreis in Ton-Tinte. Casoras Menüs bekommen 44-px-Zeilen, leicht getönte Symbolkreise und 24 px Radius. Hell und dunkel; Standard und Glas bleiben unverändert.
+- Weich, Studio-Handyvorschau: Klima- und Sicherheits-Badge zeigen dieselben Symbole wie am Handy (Haus-Thermometer, orangefarbenes Schild bei Handlungsbedarf) im farbigen Kreis, Temperaturen als „21°“, Jalousie-Kacheln Lamellen statt Vorhang.
+- Weich, Studio-Popup-Vorschau: Das Etikett „Popup · …“ über der Vorschau ist im hellen Modus gut lesbar.
+- Weich, Studio → Design & Bedienung → Design: Die drei Designs stehen nebeneinander, Namen einzeilig, „Legacy“ als kleines Etikett darunter.
+- Weich, Handy-Popups wie Thermostat oder Energie: Das Sheet ist nur so hoch wie sein Inhalt, statt immer bis oben zu reichen.
+- Handy-Kacheln: kürzere Texte, die nicht mehr abgeschnitten werden („Kein Sensor“ bei Energie und Solar-Tipp ohne Sensor, „Rezept“ als Name der Rezept-Kachel).
+- Weich, Wetter im Titel: gefülltes Wettersymbol in Titelfarbe statt dünner grauer Kontur.
+- Weich, Wetter-Popup: Die Überschriften „Nächste Stunden“, „7 Tage“ und der Diagrammtitel stehen wie in den übrigen Popups über ihrer Fläche.
+- Weich, Netzwerk-Popup: alle Netzwerk-Symbole in der Netzwerkfarbe (Blau), das „An“ eines WLANs ist nicht mehr grün.
+- Weich, Tablet hochkant: Der Titelblock steht knapp über den Kacheln statt in der Mitte, dazwischen bleibt keine große leere Fläche mehr.
+
+### Behoben
+- Weich, Raumseite am Handy: Gescrollte Kacheln und Szenen scheinen nicht mehr hinter dem kleinen Raumtitel durch; er bekommt eine Leinenfläche, die mit dem Titel einblendet (hell und dunkel).
+- Handy-Startseite: Nach längerer Zeit im Hintergrund konnte der Abstand zwischen Kopfleiste und Zeile „Zuhause“ rund 150 px zu groß sein. Casora misst ihn bei der Rückkehr neu und richtet das Layout selbst (notfalls mit einmaligem Neuladen).
 
 ## 1.0.6 – 04.10.2026
 
