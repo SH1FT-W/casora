@@ -153,18 +153,25 @@ const drag = async (from, dx) => {
   await page.waitForTimeout(450);
 };
 const isOpen = async () => { const h = await hdBox(); return !!h && h.rc < h.row - 40; };
-await drag(row.x + row.width - 60, -176);
-let hb = await hdBox();
+// Unter Last (Gate mit mehreren Browsern) kommt ein Wischen direkt nach dem Schließen manchmal nicht an:
+// bis 1,5 s auf die freigelegte Pille warten, sonst einmal neu wischen. Bleibt sie zu, schlägt der Test fehl.
+const swipeOpen = async () => {
+  for (let n = 0; n < 2; n++) {
+    await drag(row.x + row.width - 60, -176);
+    for (let i = 0; i < 6; i++) { const h = await hdBox(); if (h && h.o > 0.9 && h.rc < h.row - 40) return h; await page.waitForTimeout(250); }
+  }
+  return hdBox();
+};
+let hb = await swipeOpen();
 await check('Wischen nach links: „Ausblenden“ sichtbar, Zeile eingerückt', hb && hb.o > 0.9 && hb.text === 'Ausblenden' && hb.rc < hb.row - 40, hb);
 await check('Menü bleibt nach dem Wischen offen', !!(await menu()));
 await drag(row.x + 60, 176);
 await check('Nach rechts wischen schließt „Ausblenden“', !(await isOpen()) && !!(await menu()));
-await drag(row.x + row.width - 60, -176);
+await swipeOpen();
 await page.mouse.click(row.x + 40, row.y - 14);
 await page.waitForTimeout(450);
 await check('Tippen woanders schließt „Ausblenden“ (Menü bleibt offen)', !(await isOpen()) && !!(await menu()));
-await drag(row.x + row.width - 60, -176);
-hb = await hdBox();
+hb = await swipeOpen();
 await need('„Ausblenden“ freigelegt', hb && hb.o > 0.9, hb);
 await page.mouse.click(hb.x, hb.y);
 dt = await until(async () => !(await menu()), true);
