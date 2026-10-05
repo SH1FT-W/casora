@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.11 – 05.10.2026
+
+### Verbessert
+- Welle (Casora-Look, Desktop/Tablet): Läuft etwas, öffnet sich die Liste unter der Welle von selbst, auch nach dem Neuladen. Klappt man sie selbst zu (Welle, daneben tippen, Escape), bleibt sie auf diesem Gerät zu, auch nach dem Neuladen, bis eine neue Wiedergabe startet. Schließt sie sich von selbst, weil nichts mehr läuft, zählt das nicht als zugeklappt.
+
 ## 1.0.10 – 05.10.2026
 
 ### Neu

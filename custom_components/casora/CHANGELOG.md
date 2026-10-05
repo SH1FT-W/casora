@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.0.11 – 05.10.2026
+
+### Improved
+- Wave (Casora look, desktop/tablet): when something plays, the list below the wave opens by itself, also after reloading. If you close it yourself (wave, tapping beside it, Escape), it stays closed on this device, also after reloading, until a new playback starts. Closing by itself because nothing plays any more does not count as closed.
+
 ## 1.0.10 – 05.10.2026
 
 ### New

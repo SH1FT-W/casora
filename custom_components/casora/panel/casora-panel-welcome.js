@@ -27,9 +27,8 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Mobil", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst – mit eigener Mobilansicht.",
-      n1t: "Gleiche Musik, eine Zeile", n1: "Spielen mehrere Player dasselbe, steht es einmal da, z. B. „HomePod Küche + Büro“. Play und Pause steuern alle zusammen.",
-      n2t: "Wiedergabe ausblenden", n2: "Nach links wischen und „Ausblenden“ tippen: Die Wiedergabe verschwindet auf diesem Gerät, bis etwas anderes läuft.",
-      n3t: "Wiedergabe immer aktuell", n3: "Beendete oder lange pausierte Player verschwinden jetzt von selbst, statt stehen zu bleiben."
+      n1t: "Wiedergabe gleich sichtbar", n1: "Läuft etwas, öffnet sich die Liste unter der Welle von selbst – auch nach dem Neuladen.",
+      n2t: "Zu bleibt zu", n2: "Klappst du die Liste zu, bleibt sie auf diesem Gerät zu, bis eine neue Wiedergabe startet."
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -39,9 +38,8 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen – with its own phone layout.",
-      n1t: "Same music, one row", n1: "When several players play the same thing, it shows once, e.g. \"HomePod Kitchen + Office\". Play and pause control all of them.",
-      n2t: "Hide a playback", n2: "Swipe left and tap \"Hide\": the playback disappears on this device until something else plays.",
-      n3t: "Playback always up to date", n3: "Players that stopped or stayed paused for a while now disappear on their own instead of lingering."
+      n1t: "Playback right away", n1: "When something plays, the list below the wave opens by itself, also after reloading.",
+      n2t: "Closed stays closed", n2: "If you close the list, it stays closed on this device until a new playback starts."
     },
   };
 
@@ -54,9 +52,8 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:speaker-multiple", "n1t", "n1"],
-    ["mdi:gesture-swipe-left", "n2t", "n2"],
-    ["mdi:music-note", "n3t", "n3"],
+    ["mdi:playlist-music", "n1t", "n1"],
+    ["mdi:pin-outline", "n2t", "n2"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.
