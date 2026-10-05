@@ -2992,9 +2992,18 @@ const warmPhoto = (url) => {
   if (img.decode) img.decode().catch(() => {});
 };
 
+// H5 (Weich-Audit): dieselben MDI-Symbole wie die echten Weich-Badges am Handy
+// (casora_badge_climate_group: mdi:home-thermometer, casora_badge_security_group: mdi:shield-alert/-check).
+const SOFT_BADGE_ICON = {
+  climate: "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M19%208C20.11%208%2021%208.9%2021%2010V16.76C21.61%2017.31%2022%2018.11%2022%2019C22%2020.66%2020.66%2022%2019%2022C17.34%2022%2016%2020.66%2016%2019C16%2018.11%2016.39%2017.31%2017%2016.76V10C17%208.9%2017.9%208%2019%208M19%209C18.45%209%2018%209.45%2018%2010V11H20V10C20%209.45%2019.55%209%2019%209M5%2020V12H2L12%203L16.4%206.96C15.54%207.69%2015%208.78%2015%2010V16C14.37%2016.83%2014%2017.87%2014%2019L14.1%2020H5Z%22/%3E%3C/svg%3E",
+  alert: "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%2C1L3%2C5V11C3%2C16.55%206.84%2C21.74%2012%2C23C17.16%2C21.74%2021%2C16.55%2021%2C11V5M11%2C7H13V13H11M11%2C15H13V17H11%22/%3E%3C/svg%3E",
+  ok: "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M10%2C17L6%2C13L7.41%2C11.59L10%2C14.17L16.59%2C7.58L18%2C9M12%2C1L3%2C5V11C3%2C16.55%206.84%2C21.74%2012%2C23C17.16%2C21.74%2021%2C16.55%2021%2C11V5L12%2C1Z%22/%3E%3C/svg%3E",
+};
 const iconUrl = (name) => {
   const n = String(name || "").trim();
   if (isIconPath(n)) return n;
+  // H5: fertige SVG-Daten (z. B. die MDI-Symbole der Weich-Badges) unverändert durchreichen.
+  if (/^data:image\/svg\+xml/.test(n)) return n;
   const k = !n || n === ICON_DEFAULT ? "default" : n;
   return ICON_DATA[k] || ICON_DATA.default;
 };
@@ -8756,6 +8765,15 @@ class CasoraPanel extends HTMLElement {
         .card.map.soft .mini-name { font-weight:var(--casora-hero-title-weight, 640); }
         .card.map.soft .mini-wglyph { filter:var(--casora-hero-weather-glyph-filter, none); }
         .card.map.soft .mini-none { color:var(--casora-text-2, var(--secondary-text-color)); }
+        /* H5: Symbolkreis der Weich-Badges (weißes Symbol im Gerätefarbkreis). */
+        .card.map.soft .pring {
+          flex:none; display:grid; place-items:center; border-radius:50%;
+          width:calc(var(--bgl) * 1.75); height:calc(var(--bgl) * 1.75);
+          background:var(--sc, var(--casora-color-teal, #00C3D0));
+        }
+        .card.map.soft .pbadge.dim .pring { opacity:.55; }
+        .card.map.soft .pring .pglyph { background-color:#fff; width:var(--bgl); flex-basis:var(--bgl);
+          -webkit-mask-size:auto calc(var(--bgl) * 0.92); mask-size:auto calc(var(--bgl) * 0.92); }
         .card.map.soft .pbadge,
         .card.map.soft .pbadge.sub,
         .card.map.soft .pbadge:not(.sub):hover:not(:disabled) {
@@ -20223,7 +20241,9 @@ class CasoraPanel extends HTMLElement {
     // Ohne eigene Wahl: Einheitensystem von Home Assistant (nach Land eingerichtet).
     const celsius = V.temp_unit ? V.temp_unit === "C"
       : ((this._hass && this._hass.config && this._hass.config.unit_system) || {}).temperature !== "°F";
-    const unit = celsius ? "°C" : "°";
+    // H5: Weich zeigt wie das echte Handy „21°“ (ohne C).
+    const soft = typeof softLook === "function" && softLook();
+    const unit = celsius && !soft ? "°C" : "°";
     const out = [];
 
     const CLIMATE = "var(--casora-badge-climate-color, var(--casora-color-teal, #00C3D0))";
@@ -20319,8 +20339,8 @@ class CasoraPanel extends HTMLElement {
           return !["off", "unavailable", "unknown"].includes(s.state);
         });
         out.push({
-          id: "climate", label: "Climate", icon: "mdi-fan", color: CLIMATE, subs,
-          spin: hvacOn,
+          id: "climate", label: "Climate", icon: soft ? SOFT_BADGE_ICON.climate : "mdi-fan", color: CLIMATE, subs,
+          spin: hvacOn && !soft,
           text: span || (t != null ? Math.round(t) + unit : null)
             || (h != null ? Math.round(h) + "%" : null) || "\u2014",
         });
@@ -20498,7 +20518,11 @@ class CasoraPanel extends HTMLElement {
           .forEach((sb, i) => out.push({ ...sb, id: "security:" + i, subs: [] }));
       } else {
         out.push({
-          id: "security", label: "Security", icon: parts.length || sec.triggered ? "lock-open-fill" : "lock-fill", color: TEAL,
+          // H5: Weich wie das echte Handy – Schild (Warnung/OK), bei Handlungsbedarf orange.
+          id: "security", label: "Security",
+          icon: soft ? ((parts.length || sec.triggered) ? SOFT_BADGE_ICON.alert : SOFT_BADGE_ICON.ok)
+            : (parts.length || sec.triggered ? "lock-open-fill" : "lock-fill"),
+          color: soft && (parts.length || sec.triggered) ? "var(--casora-color-orange, #FF9F0A)" : TEAL,
           text: secText,
           subs: lockSubs.concat(camSubs, entSubs),
         });
@@ -21967,6 +21991,14 @@ class CasoraPanel extends HTMLElement {
       t.textContent = b.text;
       col.appendChild(t);
     }
+    // H5 (Weich-Audit): Weich-Badges tragen das Symbol weiß im farbigen Kreis wie am Dashboard.
+    if (!b.pic && softLook()) {
+      const ring = document.createElement("span");
+      ring.className = "pring";
+      ring.style.setProperty("--sc", b.color);
+      ring.appendChild(g);
+      g = ring;
+    }
     el.appendChild(g); el.appendChild(col);
     return el;
   }
@@ -22100,11 +22132,18 @@ class CasoraPanel extends HTMLElement {
           const tv = tile.variables || {};
           const isOpen = !!ent && /^(open|opening)$/i.test(ent.state);
           const isUnlocked = !!ent && /^(unlocked|unlocking|open|opening)$/i.test(ent.state);
-          const picked = (kind === "cover" || kind === "cover_group")
-            ? (isOpen ? (tv.icon_open || "curtain-open") : (tv.icon_closed || "curtain-closed"))
-            : (kind === "lock" || kind === "lock_group")
-              ? (isUnlocked ? (tv.icon_unlocked || "lock-open-fill") : (tv.icon_locked || "lock-fill"))
+          const isCover = kind === "cover" || kind === "cover_group";
+          const isLock = kind === "lock" || kind === "lock_group";
+          // H5 (Weich-Audit): ohne eigenes Symbol zuerst die Vorlagenkette fragen (casoraTileIconUrl,
+          // wie das Dashboard) – vorher stand hier immer der Vorhang, am Handy aber Lamellen.
+          const picked = isCover ? (isOpen ? tv.icon_open : tv.icon_closed)
+            : isLock ? (isUnlocked ? tv.icon_unlocked : tv.icon_locked)
               : (tv.icon || tile.icon);
+          // Weich: Lamellen wie am Handy, außer das Gerät ist ausdrücklich ein Vorhang.
+          const lamellen = softLook() && !(ent && ent.attributes && ent.attributes.device_class === "curtain");
+          const fallback = isCover ? (lamellen ? (isOpen ? "blinds-horizontal-open" : "blinds-horizontal-closed")
+            : (isOpen ? "curtain-open" : "curtain-closed"))
+            : isLock ? (isUnlocked ? "lock-open-fill" : "lock-fill") : null;
           const derived = type && type.glyphFromEntity
             ? type.glyphFromEntity[String(tile.entity || "").split(".")[0]]
             : null;
@@ -22112,7 +22151,7 @@ class CasoraPanel extends HTMLElement {
           const cIcon = !picked && window.casoraTileIconUrl
             && window.casoraTileIconUrl(tile, ent, this._hass, this._state && this._state.templates);
           g.style.setProperty("--i",
-            "url('" + (cIcon || iconUrl(picked || derived || TILE_ICON[kind] || "tile")) + "')");
+            "url('" + (cIcon || iconUrl(picked || fallback || derived || TILE_ICON[kind] || "tile")) + "')");
           // casora_fan spins its glyph while the fan runs.
           g.classList.toggle("spin", kind === "fan" && active);
           circle.style.setProperty("--sc", kind === "plant" && active
