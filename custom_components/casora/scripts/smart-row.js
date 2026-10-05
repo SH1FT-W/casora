@@ -1484,7 +1484,11 @@ class CasoraSmartRow extends HTMLElement {
         overflow-y: clip;
         -webkit-overflow-scrolling: touch;
         touch-action: pan-x;
-        overscroll-behavior-x: auto;
+        /* contain statt auto: am Anfang der Reihe lief das Touchpad-Wischen nach links (samt
+           Ausrollen) sonst an die Seite weiter und startete die Zurück-Geste des Browsers
+           (Safari/Chrome am Mac) – die Reihe hing am Ende des Zurückwischens (05.10.2026).
+           Nach rechts gibt es meist keine Vorwärts-Seite, darum fiel es nur rückwärts auf. */
+        overscroll-behavior-x: contain;
         overscroll-behavior-y: none;
         overflow-anchor: none;
         scrollbar-width: none;
