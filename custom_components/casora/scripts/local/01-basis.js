@@ -1183,6 +1183,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         var ic = window.casoraSecurityIcon ? window.casoraSecurityIcon(id, s, st && st.attributes) : 'lock-fill';
         // Weich (05.10.2026): dieselben Wörter wie Kachel, Badge und Popup (casoraSecurityWord).
         var sw = window._casoraSoft && window._casoraSoft() && window.casoraSecurityWord ? window.casoraSecurityWord(id, s) : null;
+        if (sw && s === 'triggered') sw = 'ausgelöst';
         if (sw) return { label: an + ' ' + sw.replace(/^./, function (c) { return c.toLowerCase(); }), icon: ic, tone: s === 'triggered' ? 'bad' : s === 'disarmed' ? 'warn' : 'good', sec: true };
         if (MODE[s]) return { label: an + ' umgeschaltet auf ' + MODE[s], icon: ic, tone: 'good', sec: true };
         if (s === 'disarmed') return { label: an + ' ausgeschaltet', icon: ic, tone: 'warn', sec: true };

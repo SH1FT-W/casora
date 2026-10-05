@@ -760,16 +760,18 @@ window.casoraPriceKwh = function (v) {
   // Kachel, Badges, Popups und Mitteilungen sagen im Weich-Look für denselben Zustand
   // dasselbe Wort und nehmen dieselbe Stufenfarbe. null = kein eigenes Wort (Aufrufer
   // behält seinen Text). Standard/Glas fragen diese Helfer nicht ab.
-  var ALARM_MODE = { armed_home: 'Zuhause', armed_away: 'Abwesend', armed_night: 'Nacht',
-    armed_vacation: 'Urlaub', armed_custom_bypass: 'Bypass' };
+  // Freundliche Wörter statt „Scharf · Bypass“ (05.10.2026): aktiv/aus, Bypass heißt „Teilweise“
+  // (einzelne Sensoren sind ausgenommen), Abwesend heißt „Unterwegs“.
+  var ALARM_MODE = { armed_home: 'Zuhause', armed_away: 'Unterwegs', armed_night: 'Nacht',
+    armed_vacation: 'Urlaub', armed_custom_bypass: 'Teilweise' };
   var SEC_WORD = {
-    alarm_control_panel: { disarmed: 'Unscharf', triggered: 'Ausgelöst' },
+    alarm_control_panel: { disarmed: 'Aus', triggered: 'Alarm!' },
     lock: { locked: 'Verriegelt', unlocked: 'Entriegelt', jammed: 'Klemmt', open: 'Geöffnet' },
   };
   window.casoraSecurityWord = function (id, s) {
     var dom = String(id || '').split('.')[0];
     var st = String(s == null ? '' : s).toLowerCase();
-    if (dom === 'alarm_control_panel' && ALARM_MODE[st]) return 'Scharf · ' + ALARM_MODE[st];
+    if (dom === 'alarm_control_panel' && ALARM_MODE[st]) return 'Aktiv · ' + ALARM_MODE[st];
     return (SEC_WORD[dom] || {})[st] || null;
   };
   window.casoraSecurityAlarmMode = function (s) { return ALARM_MODE[String(s || '').toLowerCase()] || null; };

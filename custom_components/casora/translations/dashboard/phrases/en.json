@@ -1,5 +1,8 @@
 {
  "exact": {
+  "Teilweise": "Partial",
+  "Alarm!": "Alarm!",
+  "ausgelöst": "triggered",
   "Abholung heute": "Pickup today",
   "Abholung morgen · heute Abend raus": "Pickup tomorrow · put out tonight",
   "Abholung": "Pickup",
