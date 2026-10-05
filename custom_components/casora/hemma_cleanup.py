@@ -73,7 +73,9 @@ HACS_NAMES = ("willsanderson/hemma",)
 # Hemmas Skripte und seine Schrift (Casora bringt eigene Schriften mit).
 HEMMA_RESOURCE_PREFIXES = ("/hemma_scripts/", "/local/hemma/scripts/", "/local/hemma/fonts/")
 THEMES_HEMMA = "themes/hemma"
-CASORA_DEFAULT_THEME = "Casora Weich"
+CASORA_DEFAULT_THEME = "Casora"
+# Casoras eigene Legacy-Looks – heißen wie Hemma, sind aber kein Hemma-Theme.
+CASORA_HEMMA_LOOKS = ("hemma 1", "hemma 2")
 # Hemma-Helfer, deren Wert Casora übernimmt (wie carryHelpers im Umzug, casora-panel-umzug.js).
 CARRY = ("input_boolean.dashboard_redirect", "input_boolean.motion_badges", "input_boolean.now_playing_minimized",
          "input_text.now_playing_pinned", "input_select.thermostat_mode", "input_number.thermostat_target_temperature",
@@ -970,7 +972,7 @@ async def async_remove(hass: HomeAssistant, remove_dashboards: list[str] | None,
                   "deleted_files": [p["file"] for p in applied if p["ok"] and p["delete"]],
                   "carried": carried, "manual": manual, "error": "; ".join(errs) or None})
 
-    # g) Theme „Hemma“ (themes/hemma). War es Standard, übernimmt Casora Weich.
+    # g) Theme „Hemma“ (themes/hemma). War es Standard, übernimmt Casora.
     if extras["themes"]:
         errs = []
 
@@ -988,7 +990,7 @@ async def async_remove(hass: HomeAssistant, remove_dashboards: list[str] | None,
             errs.append(str(err))
         for key, mode in (("frontend_default_theme", None), ("frontend_default_dark_theme", "dark")):
             cur = hass.data.get(key)
-            if cur and str(cur).lower().startswith("hemma"):
+            if cur and str(cur).lower().startswith("hemma") and str(cur).lower() not in CASORA_HEMMA_LOOKS:
                 data = {"name": CASORA_DEFAULT_THEME, **({"mode": mode} if mode else {})}
                 try:
                     await hass.services.async_call("frontend", "set_theme", data, blocking=True)

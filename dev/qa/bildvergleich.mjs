@@ -6,7 +6,7 @@
 //        --neu http://localhost:8196 [--neu-dir .] --out /pfad/bildvergleich [--jobs 8]
 //
 // Weitere Schalter:
-//   --theme "Casora Weich"   HA-Theme beider Seiten (Standard Casora Weich), immer hell und dunkel
+//   --theme "Casora"   HA-Theme beider Seiten (Standard Casora), immer hell und dunkel
 //   --dash a,b               Desktop-Dashboards (Handy = <url>-mobile); Standard: alle Casora-Dashboards
 //                            außer Fixture/Importkopien (dashboard-hemma*, *importiert*)
 //   --vp desktop,tablet,handy  Viewports (Standard alle drei)
@@ -85,7 +85,7 @@ const SIDES = {
 };
 if (!SIDES.alt.url) { console.error('--alt <url> fehlt'); process.exit(2); }
 const JOBS = Number(arg('jobs', 8));
-const THEME = arg('theme', 'Casora Weich');
+const THEME = arg('theme', 'Casora');
 const MAXPOP = Number(arg('popups', 16));
 const VPS = arg('vp', 'desktop,tablet,handy').split(',');
 const FARBE = 40;           // Kanal-Abstand, ab dem ein Pixel als verändert gilt (Kantenglättung bleibt darunter)

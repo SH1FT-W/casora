@@ -143,7 +143,7 @@ customElements.whenDefined("casora-panel").then(() => {
   const P = customElements.get("casora-panel").prototype;
   if (P.__casoraLookRow) return;
   P.__casoraLookRow = true;
-  const GLASS = "Casora Glass";
+  const GLASS = "Hemma 1";
   // Die Studio-Vorschau zeichnet ihre Kacheln selbst; im Glas-Design bekommen sie die
   // Werte aus theme_glass.yaml (durchscheinend, aktiv hell getönt, weiße Schrift).
   const GLASS_CSS = ""

@@ -43,7 +43,7 @@ Casora checks the requirements when you first open the Studio and links you to a
 
 The first time you open Casora Studio, it greets you with a short welcome. The setup assistant then walks you through these pages. **Back** works on every page, and nothing is created until the end.
 
-1. **Choose your look.** *Casora* is the default: warm linen, soft shadows and big round corners. The two classic looks from Hemma are offered as *Hemma (Legacy)* and *Hemma Glass (Legacy)*. The look is applied the moment you pick it. More in [Looks and fonts](#looks-and-fonts).
+1. **Choose your look.** *Casora* is the default: warm linen, soft shadows and big round corners. The two classic looks from Hemma are offered as *Hemma 2 (Legacy)* and *Hemma 1 (Legacy)*. The look is applied the moment you pick it. More in [Looks and fonts](#looks-and-fonts).
 2. **Choose your font.** *Inter* is Casora's font. *Hanken Grotesk* is a little rounder, and *System font* uses the device's own (SF Pro on Apple devices). Each option shows a large specimen.
 3. **Smooth on every screen.** *Automatic* lets each device choose for itself, *All effects* keeps glass, blur and depth everywhere, and *Reduced effects* uses clear panels for older tablets. With *Automatic*, older wall tablets switch to reduced effects on their own.
 4. **Existing dashboard found.** This page only appears if Casora finds something to bring along: a Hemma dashboard (*Take over from Hemma*, see [Moving from Hemma](#moving-from-hemma)) or a Casora dashboard in YAML (*Import YAML dashboard*). Each is shown as a live preview. *Start from scratch* continues with the steps below.
@@ -80,9 +80,9 @@ These are the same options as in Home Assistant under Settings → Devices & ser
 
 | Look | What it is |
 |---|---|
-| **Casora** | The default. Warm linen and sand, large corners, soft shadows, in light and dark. Its theme is called *Casora Weich* in your Home Assistant profile. |
-| **Hemma (Legacy)** | The original dark glass over your room photos, exactly as before. |
-| **Hemma Glass (Legacy)** | Clear glass tiles that let the room shine through. |
+| **Casora** | The default. Warm linen and sand, large corners, soft shadows, in light and dark. Its theme has the same name in your Home Assistant profile. |
+| **Hemma 2 (Legacy)** | The original dark glass over your room photos, exactly as before. |
+| **Hemma 1 (Legacy)** | Clear glass tiles that let the room shine through. |
 
 All three follow Home Assistant's light and dark mode. You can change the look later under Studio → **Look & Controls → Design**. Older Hemma dashboards keep their look under Casora's themes.
 
@@ -219,7 +219,7 @@ Restart Home Assistant if you haven't yet. After the restart the Studio shows wh
 UIX or button-card is probably missing, or card-mod is installed alongside UIX. Open Casora Studio: it checks the requirements and links you to anything missing. Then reload the browser. If you're using the Companion app, clear the frontend cache.
 
 **The look isn't quite right.**
-Make sure your Home Assistant profile uses one of Casora's themes. Casora's own look is called *Casora Weich* there; the Studio shows a hint if another theme is active.
+Make sure your Home Assistant profile uses one of Casora's themes. Casora's own look is called *Casora* there; the Studio shows a hint if another theme is active.
 
 **A popup has no charts.**
 Install apexcharts-card (it's optional).

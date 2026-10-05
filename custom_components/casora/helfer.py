@@ -37,9 +37,10 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 HELPER_DOMAINS = ("input_boolean", "input_text", "input_select", "input_number", "input_datetime")
-THEME_NAMES = ("Casora Standard",)
-# Frühere Namen desselben Themes: ein so gespeichertes Standard-Theme wird einmal umgestellt.
-THEME_RENAMED = {"Casora": "Casora Standard"}
+THEME_NAMES = ("Hemma 2",)
+# Frühere Namen (05.10.2026, Weich ist der Casora-Look): ein so gespeichertes Standard-Theme
+# wird einmal umgestellt. „Casora“ hieß vor 0.4.0 das heutige Hemma 2 und ist jetzt Weich.
+THEME_RENAMED = {"Casora Weich": "Casora", "Casora Standard": "Hemma 2", "Casora Glass": "Hemma 1"}
 EXPANDED_ROW = "input_select.casora_expanded_row"
 RESTART_DONE = ("input_boolean.casora_restart_done_1", "input_boolean.casora_restart_done_2")
 PLAYING = ("playing", "buffering")

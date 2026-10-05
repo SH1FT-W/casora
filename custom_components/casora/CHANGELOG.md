@@ -4,6 +4,20 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.0.8 – 05.10.2026
+
+### New
+- Bigger weather above the room title on desktop and tablet (Casora look): temperature and icon are clearly larger, with two lines next to them showing the condition and "H 17° · L 9° · 20% rain" from the daily forecast. Without a daily forecast the second line is left out. In the Studio under Weather, "Show details" turns this off and shows only temperature and icon. The phone stays as it is, and so do Hemma 1 and Hemma 2.
+- The clock at the top left is slightly larger in the Casora look (16 instead of 15 px).
+
+### Changed
+- The themes have new names: Casora's own look is now called "Casora" in your profile (was "Casora Weich"), the two classic looks "Hemma 2" (was "Casora Standard") and "Hemma 1" (was "Casora Glass"). A saved choice moves along by itself on the first start, including the choice in each browser.
+- Alarm in the Casora look: "Active · Away" instead of "Active · Out", matching the Alarmo mode.
+- AI update check: for Casora updates the AI gets the release notes handed over instead of fetching them from GitHub itself, which often ended in "release notes not available".
+
+### Fixed
+- Cameras: a camera now only counts as offline when Home Assistant reports it unavailable. Casora used to also fetch a snapshot; with slow cameras (for example Reolink, snapshots taking over 10 seconds) Home Assistant gave up, and tile, badges and popup showed "Offline" while the camera was running. The popup even covered a working live view with it.
+
 ## 1.0.7 – 05.10.2026
 
 ### Improved

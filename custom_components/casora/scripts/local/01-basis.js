@@ -202,14 +202,13 @@ window._casoraStreamOk = function (hass, id) {
   c[id] = { t: Date.now(), p: p };
   return p;
 };
-/* Liefert die Kamera überhaupt ein Bild? (30.09.2026) Manche Kameras melden „idle“, obwohl
-   ihr Dienst nicht läuft – Kachel zeigte „Live“, das Popup eine leere graue Fläche.
-   Ergebnis 60 s gemerkt; ändert es sich, werden die Kacheln dieser Kamera neu gezeichnet. */
-/* Letztes Ergebnis über das Neuladen hinweg merken (04.10.2026): sonst zeigt eine offline Kamera
-   nach dem Laden erst „Live“ und springt nach der Prüfung auf „Offline“. */
-window._casoraCamDead = window._casoraCamDead || (function () {
-  try { return JSON.parse(localStorage.getItem('casora.camDead') || '{}') || {}; } catch (e) { return {}; }
-})();
+/* Liefert die Kamera überhaupt ein Bild? Nur noch als Antwort für das Popup (Hinweis statt leerer
+   grauer Fläche), nicht mehr für „offline“ (05.10.2026): langsame Kameras (Reolink E1 Zoom: Standbild
+   2–10 s, sonst bricht HA mit 500 ab) standen sonst immer wieder als offline da, obwohl sie liefen.
+   Offline ist eine Kamera jetzt nur, wenn Home Assistant sie als nicht verfügbar meldet.
+   _casoraCamDead bleibt als leere Liste für Karten, die es noch abfragen. */
+window._casoraCamDead = {};
+try { localStorage.removeItem('casora.camDead'); } catch (e) {}
 window._casoraCamReachable = function (hass, id) {
   var c = window._casoraCamCache || (window._casoraCamCache = {});
   if (c[id] && Date.now() - c[id].t < 60000) return c[id].p;
@@ -230,58 +229,9 @@ window._casoraCamReachable = function (hass, id) {
     if (!r.ok || !/^image\//.test(r.headers.get('content-type') || '')) return false;
     return r.blob().then(function (b) { return flat(b).then(function (f) { return !f; }); });
   }, function () { return false; });
-  p = p.then(function (ok) {
-    var was = !!window._casoraCamDead[id];
-    window._casoraCamDead[id] = !ok;
-    if (was !== !ok) { try { localStorage.setItem('casora.camDead', JSON.stringify(window._casoraCamDead)); } catch (e) {} }
-    if (was !== !ok) {
-      (function walk(root, d) {
-        if (!root || d > 14) return;
-        root.querySelectorAll('*').forEach(function (el) {
-          /* Jede Karte, deren Konfiguration die Kamera nennt (Kachel, Sicherheits-/Kamera-Badges,
-             Raumkarte mit security_cameras), zeichnet neu – verschachtelte Badges ziehen mit. */
-          var hasCam = false;
-          if (el._config && el._config.entity !== id) {
-            try { hasCam = JSON.stringify(el._config).indexOf('"' + id + '"') !== -1; } catch (e) {}
-          }
-          if (el.tagName === 'BUTTON-CARD' && el._config && (el._config.entity === id || hasCam) && typeof el.requestUpdate === 'function') {
-            try { el._casoraCamTick = (el._casoraCamTick || 0) + 1; el.requestUpdate('_config', null); } catch (e) {}
-          }
-          if (el.shadowRoot) walk(el.shadowRoot, d + 1);
-        });
-      })(document, 0);
-    }
-    return ok;
-  });
   c[id] = { t: Date.now(), p: p };
   return p;
 };
-/* Als offline gemerkte Kameras regelmäßig neu prüfen (05.10.2026): geprüft wurde nur beim Zeichnen
-   einer Kamera-Kachel. Ansichten, die eine Kamera nur in Badges zeigen, behielten so ein altes
-   „offline“ aus dem Speicher, auch wenn die Kamera längst wieder ein Bild liefert. Nur die als
-   offline gemerkten werden abgefragt, das hält die Last klein. */
-if (!window._casoraCamRecheck) {
-  window._casoraCamRecheck = function () {
-    try {
-      var ha = document.querySelector('home-assistant');
-      var hass = ha && ha.hass;
-      if (!hass || !hass.states) return;
-      Object.keys(window._casoraCamDead || {}).forEach(function (id) {
-        if (!window._casoraCamDead[id]) return;
-        var st = hass.states[id];
-        if (!st) return;
-        var s = String(st.state || '').toLowerCase();
-        if (s === 'unavailable' || s === 'unknown') return;
-        window._casoraCamReachable(hass, id);
-      });
-    } catch (e) {}
-  };
-  setTimeout(window._casoraCamRecheck, 4000);
-  setInterval(window._casoraCamRecheck, 60000);
-  document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'visible') setTimeout(window._casoraCamRecheck, 1500);
-  });
-}
 window._casoraColGap = window._casoraColGap || function (keys) {
   var css = '';
   for (var b = 1; b < keys.length; b++) {

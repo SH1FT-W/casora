@@ -153,8 +153,8 @@ These are the only files you edit to map Casora to your devices/entities. All be
 
 ### 6) Enable the Casora theme
 
-- Profile → Theme → choose **Casora Weich**, Casora's own look (the setup assistant in Casora Studio does this for you and calls it **Casora**)
-- The two classic glass looks are still there as legacy themes: **Casora Standard** (shown in the Studio as *Hemma (Legacy)*) and **Casora Glass** (*Hemma Glass (Legacy)*)
+- Profile → Theme → choose **Casora**, Casora's own look (the setup assistant in Casora Studio does this for you)
+- The two classic glass looks are still there as legacy themes: **Hemma 2** (the dark glass over your room photos) and **Hemma 1** (clear glass tiles). They used to be called *Casora Standard* and *Casora Glass*, and Casora's own look *Casora Weich*; a saved choice moves along by itself
   *(You may need to reload themes or restart after copying.)*
 
 ### 7) Add your room images + icons

@@ -4,7 +4,7 @@
 // Erwartet: Tipp auf die Welle öffnet das Panel unter der Welle mit je Player einer Zeile, der
 // Helfer bleibt unberührt, der Stapel bleibt verborgen; Play/Pause ruft media_play_pause; Tipp
 // daneben und Escape schließen; endet die letzte Wiedergabe, schließt das Panel sich selbst.
-// Nur im Browser: Design „Casora Weich“, Wiedergabe in der Raumkarte und Player werden untergeschoben,
+// Nur im Browser: Design „Casora“, Wiedergabe in der Raumkarte und Player werden untergeschoben,
 // Dienstaufrufe für media_player werden abgefangen.
 import { open, casoraDashboard, dashboard, fakeStates, check, need, finish } from './lib.mjs';
 
@@ -12,7 +12,7 @@ const dash = await casoraDashboard((d) => /"casora_room"/.test(JSON.stringify(d.
 await need('Casora-Dashboard mit Raumkarte', dash);
 
 const IDS = ['media_player.qa_welle_1', 'media_player.qa_welle_2', 'media_player.qa_welle_3'];
-const { page, context } = await open({ width: 1440, height: 900, dark: false, theme: 'Casora Weich', scale: 1 });
+const { page, context } = await open({ width: 1440, height: 900, dark: false, theme: 'Casora', scale: 1 });
 // Wiedergabe in den Raumkarten einschalten, mit drei eigenen Playern (nur in diesem Browser).
 await context.addInitScript((ids) => {
   const fix = (o) => {

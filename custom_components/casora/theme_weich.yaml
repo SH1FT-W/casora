@@ -1,8 +1,8 @@
-# Casora Weich – Entwurf „Hell & weich“ (theme_weich.yaml).
+# Casora (früher Casora Weich) – Entwurf „Hell & weich“ (theme_weich.yaml).
 # Nur die Abweichungen vom Casora-Theme; helfer.py legt sie beim Laden darüber (wie theme_glass.yaml).
 # Idee: Leinen/Sand statt dunkles Glas, kaum Blur, große Rundungen, warme weiche Schatten.
 # Dunkel: warmes Anthrazit (#24211E) statt kaltem Schwarz, aktive Kacheln in Creme.
-Casora Weich:
+Casora:
   # --- Schrift: Inter (Plus Jakarta Sans entfernt, 02.10.2026) ---
   primary-font-family: '"Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif'
   # Raumtitel wie im Entwurf: kräftiger und enger
@@ -86,8 +86,8 @@ Casora Weich:
   # --- Hero-Foto: weicher, minimal entsättigt ---
   hero-img-blur: 5px
   hero-img-saturate: 0.94
-  card-mod-theme: Casora Weich
-  uix-theme: Casora Weich
+  card-mod-theme: Casora
+  uix-theme: Casora
   # Popup-Aufbau wie im Weich-Entwurf (Ring, Titel, zwei Spalten). Lesen die Popups per
   # getComputedStyle(documentElement); Standard und Glas setzen ihn nicht.
   # Popup-Bausteine (_casoraUI, casora-popup) in der Weich-Gestaltung: Ring-Kopf, Sand-Pillen,
@@ -146,8 +146,8 @@ Casora Weich:
   casora-entity-name-font-mobile: 14px
   casora-entity-state-font-mobile: 12px
   casora-entity-text-line-height: 1.3
-  # A-11: Uhr ruhiger
-  casora-clock-font-size: 15px
+  # A-11: Uhr ruhiger; 05.10.2026 minimal größer (15 → 16) passend zum größeren Hero-Wetter
+  casora-clock-font-size: 16px
   casora-clock-letter-spacing: 0px
   casora-clock-transform: none
   # A-09: Raumleiste 14/600, Pfeil-Kreis, Verlauf endet vor dem Pfeil
@@ -355,6 +355,25 @@ Casora Weich:
   hero-weather-temp-size: 24px
   weather-icon-size-desktop: 26px
   weather-icon-size-tablet: 24px
+  # Hero-Wetter Desktop/Tablet größer (Stufe C, 05.10.2026): Temperatur 34/30, Symbol 29/26, daneben
+  # zweizeilig Zustand (14/12,5) und „H · T · Regen“ aus der Tagesvorhersage (12/10,5). Nur im
+  # Casora-Look; ohne diese Variablen (Hemma 1/2) bleibt es bei Temperatur 24 + Symbol (casora_weather).
+  # Studio → Wetter → „Details anzeigen“ schaltet die Textspalte ab (Größen bleiben).
+  casora-hero-weather-details: "1"
+  casora-hero-weather-temp-size-desktop: 34px
+  casora-hero-weather-temp-size-tablet: 30px
+  casora-hero-weather-icon-desktop: 29px
+  casora-hero-weather-icon-tablet: 26px
+  casora-hero-weather-cond-size-desktop: 14px
+  casora-hero-weather-cond-size-tablet: 12.5px
+  casora-hero-weather-sub-size-desktop: 12px
+  casora-hero-weather-sub-size-tablet: 10.5px
+  casora-hero-weather-glyph-gap: 5px
+  casora-hero-weather-text-gap-desktop: 9px
+  casora-hero-weather-text-gap-tablet: 8px
+  # Der Wetter-Slot hängt oben fest; der höhere Inhalt (34 statt 26 px) wächst nach oben statt
+  # Richtung Titel (Standard in theme.yaml: Faktor −2,2).
+  weather-hero-widget-position-nudge: calc(var(--casora-u-weather, 10px) * -2.2 - 8px)
 
   modes:
     light:

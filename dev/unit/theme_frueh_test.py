@@ -38,7 +38,7 @@ def check(cond, msg):
 
 
 themes = _load_theme()
-check({"Casora Standard", "Casora Glass", "Casora Weich"} <= set(themes), "alle drei Casora-Themes geladen")
+check({"Hemma 2", "Hemma 1", "Casora"} <= set(themes), "alle drei Casora-Themes geladen")
 
 with tempfile.TemporaryDirectory() as d:
     cfg = os.path.join(d, "configuration.yaml")
@@ -76,11 +76,11 @@ with tempfile.TemporaryDirectory() as d:
     check(not os.path.exists(path), "Datei beim Entfernen gelöscht")
 
 # 5. Anmeldung ersetzt eine ältere Kopie (aus dem Theme-Ordner geladen), sonst nichts
-old = dict(themes["Casora Weich"], **{"primary-color": "#000000"})
-store = {"Casora Weich": old, "Eigenes": {"primary-color": "#123456"}}
+old = dict(themes["Casora"], **{"primary-color": "#000000"})
+store = {"Casora": old, "Eigenes": {"primary-color": "#123456"}}
 hass = SimpleNamespace(data={"frontend_themes": store})
 check(_inject_theme(hass, themes) is True, "ältere Kopie → neu angemeldet")
-check(store["Casora Weich"] == themes["Casora Weich"], "aktueller Stand ersetzt die Kopie")
+check(store["Casora"] == themes["Casora"], "aktueller Stand ersetzt die Kopie")
 check(store["Eigenes"] == {"primary-color": "#123456"}, "fremdes Theme unberührt")
 check(_inject_theme(hass, themes) is False, "gleicher Stand → kein erneutes themes_updated")
 

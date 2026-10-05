@@ -107,7 +107,7 @@ await check('Schrift hell', m.textLum > 0.8, m.textLum);
 await check('Dunkel: Umschalter und Rückgängig sichtbar', m.segs.every((s) => s.k > 3) && m.undo > 3, m);
 await o.browser.close();
 
-// ── Vorschau im Look „Casora Weich“ ──
+// ── Vorschau im Look „Casora“ ──
 // Gemeldet: In HA hell + Weich zeigte die Dashboard-Vorschau rechts die dunkle Fassung
 // (weißer Raumtitel, dunkle Badge-Pillen, dunkle Kacheln mit weißer Schrift), das echte
 // Dashboard dagegen dunkle Schrift auf hellen Leinen-Kacheln. Erwartet: Vorschau-Kachel hell
@@ -132,7 +132,7 @@ const preview = () => {
   };
 };
 const weich = (pg, dark) => pg.evaluate((d) => document.querySelector('home-assistant').dispatchEvent(new CustomEvent('settheme',
-  { detail: { theme: 'Casora Weich', dark: d }, bubbles: true, composed: true })), dark);
+  { detail: { theme: 'Casora', dark: d }, bubbles: true, composed: true })), dark);
 const settle = async (pg, want) => {
   for (let i = 0; i < 40; i++) {
     const v = await pg.evaluate(preview);

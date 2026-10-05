@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Baut custom_components/casora/theme_glass.yaml – „Casora Glass“.
+"""Baut custom_components/casora/theme_glass.yaml – „Hemma 1“.
 
 Quelle ist Hemmas Glass-Theme aus Hemma 1.4.1 (themes/hemma/hemma_glass.yaml, MIT,
 Will Sanderson). Übernommen wird nur, was Glass gegenüber dem normalen 1.4.1-Theme
@@ -49,7 +49,7 @@ ren = lambda s: s.replace("hemma", "casora").replace("Hemma", "Casora").strip() 
 def main(glass_path, hemma_path):
     g = yaml.safe_load(open(glass_path, encoding="utf-8"))["Hemma Glass"]
     h = yaml.safe_load(open(hemma_path, encoding="utf-8"))["Hemma"]
-    c = yaml.safe_load(open(BASE, encoding="utf-8"))["Casora Standard"]
+    c = yaml.safe_load(open(BASE, encoding="utf-8"))["Hemma 2"]
     out = {}
     for sect in ["top"] + list(g.get("modes", {})):
         gs = {k: v for k, v in g.items() if k != "modes"} if sect == "top" else g["modes"][sect]
@@ -60,7 +60,7 @@ def main(glass_path, hemma_path):
             if hs.get(k) == v or k in SKIP or f"{k}@{sect}" in SKIP:
                 continue
             if k in NAME_KEYS:
-                res[k] = "Casora Glass"
+                res[k] = "Hemma 1"
                 continue
             nk = ren(k)
             if nk in base or k in KEEP_REFERENCED:
@@ -75,12 +75,12 @@ def main(glass_path, hemma_path):
     doc = dict(top)
     if out:
         doc["modes"] = out
-    head = ("# Casora Glass – erzeugt von tools/build-glass-theme.py, nicht von Hand bearbeiten.\n"
+    head = ("# Hemma 1 – erzeugt von tools/build-glass-theme.py, nicht von Hand bearbeiten.\n"
             "# Nur die Abweichungen vom Casora-Theme; helfer.py legt sie beim Laden darüber.\n"
             "# Herkunft: Hemma 1.4.1 hemma_glass.yaml (MIT, Will Sanderson), auf Hemma 2 übertragen.\n")
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(head)
-        yaml.safe_dump({"Casora Glass": doc}, f, allow_unicode=True, sort_keys=False, width=1000)
+        yaml.safe_dump({"Hemma 1": doc}, f, allow_unicode=True, sort_keys=False, width=1000)
     n = len(top) + sum(len(v) for v in out.values())
     print(f"{OUT}: {n} Werte")
 

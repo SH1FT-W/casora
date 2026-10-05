@@ -2834,7 +2834,7 @@
 // ── Licht-Popup „soft“ (Weich, 01.10.2026) ──────────────────────────────────
 // Aufbau wie im Weich-Entwurf: Ring + Titel + Unterzeile, links Helligkeit,
 // Lichtfarbe und Szenen, rechts die Leuchten des Raums. Nur aktiv, wenn das
-// Theme --casora-popup-layout: soft setzt (Casora Weich); Standard und Glas
+// Theme --casora-popup-layout: soft setzt (Casora); Hemma 2 und Hemma 1
 // behalten den bisherigen Aufbau. Die Vorlage casora_popup_light ruft nur
 // window._casoraLightSoft.cards(...) auf, Raumdaten kommen aus _casoraLPC.
 // Eingaben laufen über die Fenster-Listener unten (Touch mit Schwelle +

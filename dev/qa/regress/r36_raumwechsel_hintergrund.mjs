@@ -13,7 +13,7 @@ import { open, casoraDashboard, dashboard, check, need, finish, shot } from './l
 
 const dash = await casoraDashboard();
 await need('Casora-Dashboard mit Handy-Gegenstück', dash && dash.phone);
-const m = await open({ width: 390, height: 844, mobile: true, safari: true, dark: false, theme: 'Casora Weich' });
+const m = await open({ width: 390, height: 844, mobile: true, safari: true, dark: false, theme: 'Casora' });
 const pg = m.page;
 await dashboard(pg, dash.phone.url, 3);
 

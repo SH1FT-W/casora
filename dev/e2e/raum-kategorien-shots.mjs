@@ -15,7 +15,7 @@ fs.mkdirSync(OUTDIR, { recursive: true });
 
 async function shoot(room, mode, variant) {
   const { browser, context, page } = await open({ width: 390, height: 844, mobile: true, safari: true,
-    dark: mode === 'dunkel', scale: 2, theme: 'Casora Weich' });
+    dark: mode === 'dunkel', scale: 2, theme: 'Casora' });
   await context.addInitScript((v) => {
     if (v) localStorage.setItem('casora-room-groups', v); else localStorage.removeItem('casora-room-groups');
     localStorage.setItem('casora_mobile_filter', 'all');

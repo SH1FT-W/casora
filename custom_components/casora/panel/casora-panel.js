@@ -37,17 +37,19 @@ const SETUP_ENTITIES = [
   "script.casora_light_smart_toggle", "script.casora_thermostat_overlay_toggle",
 ];
 // Weich ist seit 01.10.2026 DAS Casora-Design; Standard und Glas laufen als Legacy weiter.
-const CASORA_THEME = "Casora Weich";
-const CASORA_LEGACY = "Casora Standard";
+const CASORA_THEME = "Casora";
+const CASORA_LEGACY = "Hemma 2";
+// Frühere Theme-Namen (05.10.2026 umbenannt) → heutiger Name; helfer.py THEME_RENAMED.
+const THEME_RENAMED = { "Casora Weich": "Casora", "Casora Standard": "Hemma 2", "Casora Glass": "Hemma 1" };
 // The looks offered on first run. Each ships in theme.yaml; the photo is the preview.
 // aliases: weitere Namen, unter denen dasselbe Theme registriert ist (Übergang von Hemma).
 // shot: echter Dashboard-Screenshot je Modus als Vorschau.
 const CASORA_THEMES = [
-  { name: CASORA_THEME, label: "Casora", sub: "Warm linen, soft shadows, big round corners.",
+  { name: CASORA_THEME, aliases: ["Casora Weich"], label: "Casora", sub: "Warm linen, soft shadows, big round corners.",
     shot: { light: "/casora_assets/themes/weich-light.webp", dark: "/casora_assets/themes/weich-dark.webp" } },
-  { name: CASORA_LEGACY, aliases: ["Casora", "Hemma"], label: "Hemma (Legacy)", sub: "The original dark glass over your room photos.",
+  { name: CASORA_LEGACY, aliases: ["Casora Standard", "Hemma"], label: "Hemma 2 (Legacy)", sub: "The original dark glass over your room photos.",
     legacy: true, shot: { light: "/casora_assets/themes/hemma-light.webp", dark: "/casora_assets/themes/hemma-dark.webp" } },
-  { name: "Casora Glass", label: "Hemma Glass (Legacy)", sub: "Clear glass tiles that let the room shine through.",
+  { name: "Hemma 1", aliases: ["Casora Glass"], label: "Hemma 1 (Legacy)", sub: "Clear glass tiles that let the room shine through.",
     legacy: true, shot: { light: "/casora_assets/themes/glass-light.webp", dark: "/casora_assets/themes/glass-dark.webp" } },
 ];
 const isCasoraTheme = (n) => !!n && CASORA_THEMES.some((x) => x.name === n || (x.aliases || []).includes(n));
@@ -1694,7 +1696,7 @@ const MAP = (key, label, over, domains) => ({ key, label, type: "map", over, dom
 
 // Icon-Farbsystem des Studios – eine Tabelle für Seitenleiste, Rubriken und Unterseiten,
 // dieselbe Zuordnung wie im Dashboard. Jede Rubrik hat eine Rolle; die Farbe je Rolle legt
-// das Theme fest (--casora-studio-icon-<rolle>, bisher nur Casora Weich). Fehlt das Token
+// das Theme fest (--casora-studio-icon-<rolle>, bisher nur Casora). Fehlt das Token
 // (Standard, Glas), bleibt die bisherige Farbe aus der zweiten Spalte.
 //   light   Gelb    Licht, Szenen, Stimmung
 //   main    Türkis  Klima, Jalousie, Bedienung, Allgemeines
@@ -1880,6 +1882,10 @@ const SECTIONS = [
       E("weather_entity", "Source", ["weather"]),
       { ...E("weather_temp_sensor", "Temperature override", ["sensor"]), classes: ["temperature"],
         noAdd: true, placeholder: "Automatic: from the source" },
+      // Hero-Wetter im Casora-Look (casora_weather, --casora-hero-weather-details): Zustand und
+      // „H · T · Regen“ neben der Temperatur. Geht als weather_details an casora_room (hero_details).
+      { key: "weather_details", label: "Show details", type: "bool", boolDefault: true, always: true,
+        hint: "Condition, high/low and rain next to the temperature on desktop and tablet." },
     ],
   },
   {
@@ -3387,7 +3393,7 @@ const CASORA_ACCENTS = [
 ].map(([label, key, hex]) => ({
   label, key, hex, id: "var(--casora-color-" + key + ", " + hex + ")",
 }));
-// Aktives HA-Theme (vom Panel bei jedem hass-Update gesetzt). Casora Weich legt
+// Aktives HA-Theme (vom Panel bei jedem hass-Update gesetzt). Casora legt
 // casora-color-purple bewusst auf ein dunkles Rot – dort heißt der Eintrag danach.
 let ACCENT_THEME = "";
 // Weich-Look: theme_weich.yaml setzt casora-popup-layout: soft (Standard und Glas nicht).
@@ -3407,7 +3413,7 @@ const swatchOf = (v) => {
   const inVar = raw.match(/^var\(\s*--[\w-]+\s*,\s*(.+?)\s*\)$/);
   return inVar ? inVar[1] : raw;
 };
-// Zum Malen (Punkt, Farbfeld, Menü): der Wert des aktiven Themes – so zeigt Casora Weich
+// Zum Malen (Punkt, Farbfeld, Menü): der Wert des aktiven Themes – so zeigt Casora
 // seine gedämpften Farben statt der Standardwerte (#FFCC00 …) aus dem Fallback. Gelesen am
 // Dokument, weil das Studio einzelne Farben (Blau, Türkis) für sich selbst umlegt.
 const swatchCss = (v) => {
@@ -5180,14 +5186,15 @@ class CasoraPanel extends HTMLElement {
       this._syncSoftLook();
     }
     this._syncMenuBtn();
-    // The theme was renamed Casora → Casora Standard: a browser that picked the
-    // old name moves along once, keeping its light/dark choice.
+    // Themes renamed (THEME_RENAMED): a browser that picked an old name moves
+    // along once, keeping its light/dark choice.
     if (!this._themeMoved) {
       this._themeMoved = true;
       try {
         const sel = JSON.parse(localStorage.getItem("selectedTheme") || "null");
-        if (sel && sel.theme === "Casora" && hass.themes && hass.themes.themes && hass.themes.themes[CASORA_LEGACY]) {
-          const detail = { theme: CASORA_LEGACY };
+        const to = sel && THEME_RENAMED[sel.theme];
+        if (to && hass.themes && hass.themes.themes && hass.themes.themes[to]) {
+          const detail = { theme: to };
           if (typeof sel.dark === "boolean") detail.dark = sel.dark;
           setTimeout(() => this.dispatchEvent(new CustomEvent("settheme", { detail, bubbles: true, composed: true })), 0);
         }
@@ -8764,6 +8771,11 @@ class CasoraPanel extends HTMLElement {
         }
         .card.map.soft .mini-name { font-weight:var(--casora-hero-title-weight, 640); }
         .card.map.soft .mini-wglyph { filter:var(--casora-hero-weather-glyph-filter, none); }
+        .mini-wcond { display:none; }
+        .card.map.soft .mini-wcond {
+          display:block; margin-left:3px; font-size:calc(var(--wx) * 0.46); font-weight:600;
+          letter-spacing:0; white-space:nowrap;
+        }
         .card.map.soft .mini-none { color:var(--casora-text-2, var(--secondary-text-color)); }
         /* H5: Symbolkreis der Weich-Badges (weißes Symbol im Gerätefarbkreis). */
         .card.map.soft .pring {
@@ -12429,7 +12441,8 @@ class CasoraPanel extends HTMLElement {
     // Real screenshots of each mode, in the look picked one step earlier.
     let look = this._lookPick;
     if (!look) { try { look = (JSON.parse(localStorage.getItem("selectedTheme") || "null") || {}).theme; } catch (e) { look = null; } }
-    const set = look === "Casora Glass" ? "glass" : look === "Casora Weich" ? "weich" : "std";
+    look = THEME_RENAMED[look] || look;
+    const set = look === "Hemma 1" ? "glass" : look === CASORA_THEME ? "weich" : "std";
     const shot = (mode) => shotLang("/casora_assets/themes/perf-" + set + "-" + mode + "-" + (dark ? "dark" : "light") + ".webp", this._hass);
     const grid = document.createElement("div");
     grid.className = "themegrid perfgrid";
@@ -13754,7 +13767,7 @@ class CasoraPanel extends HTMLElement {
   }
 
   // Casora sieht nur mit seinem Theme richtig aus. Hat niemand ein anderes Theme
-  // gewählt, wird Casora Weich Standard-Theme (hell und dunkel) – eine eigene Wahl bleibt.
+  // gewählt, wird Casora Standard-Theme (hell und dunkel) – eine eigene Wahl bleibt.
   async _ensureTheme() {
     const t = this._hass && this._hass.themes;
     if (!t || !t.themes || !t.themes[CASORA_THEME]) return "missing";
@@ -22535,6 +22548,16 @@ class CasoraPanel extends HTMLElement {
       g.alt = "";
       g.src = file ? "/casora_assets/weather/" + file + ".svg" : iconUrl("weather");
       wx.appendChild(g);
+      // Wetter → „Details anzeigen“: Zustand neben der Temperatur wie im Hero (nur Casora-Look,
+      // per CSS an .card.map.soft gebunden; Hoch/Tief/Regen braucht die Vorhersage und fehlt hier).
+      const lc = cond && this._hass.localize ? this._hass.localize("component.weather.entity_component._.state." + cond) : "";
+      if (V.weather_details !== false && lc) {
+        const ct = document.createElement("span");
+        ct.className = "mini-wcond";
+        ct.setAttribute("data-no-i18n", "");
+        ct.textContent = lc;
+        wx.appendChild(ct);
+      }
     }
     q(".mini-name").textContent = this._roomLabel(room) || "Room";
     q(".mini-name").toggleAttribute("data-no-i18n", !!(room.name || room.path));

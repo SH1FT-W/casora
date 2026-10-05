@@ -1,6 +1,6 @@
 # Casora
 
-Casora Standard: &casora_theme
+Hemma 2: &casora_theme
   modes:
     light:
       # ------------------------------------------------------------------------
@@ -1021,7 +1021,7 @@ Casora Standard: &casora_theme
   # Layout engine
   # ----------------------------------------------------------------------------
 
-  card-mod-theme: "Casora Standard"
+  card-mod-theme: "Hemma 2"
 
   card-mod-root-yaml: |
     .: |
@@ -1643,7 +1643,7 @@ Casora Standard: &casora_theme
   # View backgrounds
   # ----------------------------------------------------------------------------
 
-  uix-theme: "Casora Standard"
+  uix-theme: "Hemma 2"
 
   uix-drawer: |
     .mdc-drawer, .sidebar-shell {

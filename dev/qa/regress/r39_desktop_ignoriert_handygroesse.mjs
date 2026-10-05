@@ -75,7 +75,7 @@ desk.views = desk.views.map((v) => (v.path === 'home' ? hhome : v));
 }
 
 try {
-  // ── Desktop (Look „Casora Weich“, wie gemeldet): Reihe einreihig, gleiche Höhe, gleiche Abstände, im Bild ──
+  // ── Desktop (Look „Casora“, wie gemeldet): Reihe einreihig, gleiche Höhe, gleiche Abstände, im Bild ──
   for (const [view, min] of [['home', 4], ['wohnzimmer', 6]]) {
     const { page, browser, context } = await open({ width: 1440, height: 900 });
     await context.addInitScript(() => localStorage.setItem('dockedSidebar', JSON.stringify('always_hidden')));
@@ -85,7 +85,7 @@ try {
     await page.addScriptTag({ content: PIERCE });
     await page.waitForFunction(() => document.querySelector('home-assistant') && document.querySelector('home-assistant').hass, null, { timeout: 60000 });
     await page.evaluate(() => document.querySelector('home-assistant').dispatchEvent(new CustomEvent('settheme',
-      { detail: { theme: 'Casora Weich', dark: true }, bubbles: true, composed: true })));
+      { detail: { theme: 'Casora', dark: true }, bubbles: true, composed: true })));
     const tiles = (min) => {
       const row = window.__pierce('casora-smart-row').find((r) => r.getBoundingClientRect().width > 0 && r._config && r._config.sort !== false && r._config.cards.length >= min);
       if (!row) return null;
