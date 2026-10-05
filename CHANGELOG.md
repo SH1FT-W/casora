@@ -11,6 +11,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - Hide a playback: swiping a row to the left (finger or mouse) shows "Hide". The playback then disappears on this device only, until the player plays something else. When all are hidden, the wave at the top disappears too.
 
 ### Fixed
+- Playback after loading: in the Casora look, clearing the cache or reloading briefly flashed the old player (desktop: tile stack below the wave, phone: media row) until the extra scripts had loaded. The templates now recognise the Casora look from the theme on the first render and hide the old player right away.
 - Playback: paused players now disappear on their own once the pause timeout is reached. They used to stay in the wave and lists until some other player changed, and then the display jumped all at once. On the phone an older version of the playback logic from the template sometimes won; now the same one applies everywhere.
 - Scenes "last active": days are counted by calendar day. A scene from last night now says "Yesterday" instead of "2 days ago" after 36 hours (#12, refs #11).
 

@@ -11,6 +11,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - Wiedergabe ausblenden: Eine Zeile nach links wischen (Finger oder Maus) zeigt „Ausblenden“. Die Wiedergabe verschwindet dann nur auf diesem Gerät, bis der Player etwas anderes spielt. Sind alle ausgeblendet, verschwindet auch die Welle oben.
 
 ### Behoben
+- Wiedergabe nach dem Laden: Im Casora-Look blitzte nach Cache leeren oder Neuladen kurz der alte Player auf (Desktop: Kachel-Stapel unter der Welle, Handy: Medien-Zeile), bis die Zusatz-Skripte nachgeladen waren. Die Vorlagen erkennen den Casora-Look jetzt schon beim ersten Zeichnen am Theme und blenden den alten Player gleich aus.
 - Wiedergabe: Pausierte Player verschwinden nach der Pausen-Frist jetzt von selbst. Bisher blieben sie in Welle und Listen stehen, bis irgendein anderer Player wechselte, und die Anzeige sprang dann plötzlich um. Außerdem gewann am Handy manchmal eine ältere Fassung der Wiedergabe-Logik aus der Vorlage; jetzt gilt überall dieselbe.
 - Szenen „Zuletzt aktiv“: Tage werden nach Kalendertag gezählt. Eine Szene von gestern Abend heißt jetzt „Gestern“ statt ab 36 Stunden „Vor 2 Tagen“ (#12, Refs #11).
 

@@ -6334,7 +6334,7 @@
    "custom_fields": {
     "media_row": [
      {
-      "display": "[[[\n  const filter = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  if (filter === 'media') return 'block';\n  if (filter !== 'all') return 'none';\n  const npList = (typeof window._casoraNPView === 'function')\n    ? (typeof window._casoraNPView === \"function\" ? window._casoraNPView(states, variables.cfg) : [])\n    : [];\n  return npList.length ? 'block' : 'none';\n]]]\n"
+      "display": "[[[\n  /* Casora-Look: die Liste aus 09-weich-wiedergabe.js ersetzt die Medien-Zeile – schon beim ersten\n     Zeichnen ausblenden, sonst blitzt bis zum Nachladen der Skripte der alte Player auf (05.10.2026). */\n  if (getComputedStyle(document.documentElement).getPropertyValue('--casora-popup-layout').trim() === 'soft') return 'none';\n  const filter = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  if (filter === 'media') return 'block';\n  if (filter !== 'all') return 'none';\n  const npList = (typeof window._casoraNPView === 'function')\n    ? (typeof window._casoraNPView === \"function\" ? window._casoraNPView(states, variables.cfg) : [])\n    : [];\n  return npList.length ? 'block' : 'none';\n]]]\n"
      },
      {
       "overflow-x": "auto"
@@ -6384,7 +6384,7 @@
     ],
     "np_rail": [
      {
-      "display": "block"
+      "display": "[[[\n  /* Casora-Look: ersetzt durch 09-weich-wiedergabe.js (siehe media_row). */\n  return getComputedStyle(document.documentElement).getPropertyValue('--casora-popup-layout').trim() === 'soft' ? 'none' : 'block';\n]]]\n"
      },
      {
       "--npm-open": "[[[\n  return (states['input_select.casora_mobile_filter']?.state === 'media') ? 1 : 0;\n]]]\n"
@@ -9973,7 +9973,7 @@
       "min-width": 0
      },
      {
-      "display": "flex"
+      "display": "[[[\n  /* Casora-Look am Desktop/Tablet: die Welle (10-weich-welle.js) ersetzt den Stapel. Schon beim ersten\n     Zeichnen ausblenden – sonst blitzt bis zum Nachladen der Skripte der alte Player auf (05.10.2026). */\n  const soft = getComputedStyle(document.documentElement).getPropertyValue('--casora-popup-layout').trim() === 'soft';\n  const phone = window.matchMedia('(max-width: 767px), (max-height: 500px)').matches;\n  return soft && !phone ? 'none' : 'flex';\n]]]\n"
      },
      {
       "justify-content": "flex-end"
