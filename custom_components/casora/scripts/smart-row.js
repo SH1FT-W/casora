@@ -365,26 +365,15 @@ class CasoraSmartRow extends HTMLElement {
       clearTimeout(this._casoraScrollT);
       this._casoraScrollT = 0;
       if (this.hasAttribute('casora-scrolling')) this.removeAttribute('casora-scrolling');
-      if (!this._casoraScrolling) return;
-      this._casoraScrolling = false;
       edges();
     };
     this.addEventListener('scroll', () => {
       // Kein Hover beim Wischen: am Touchpad steht der Zeiger über der Reihe, jede durchlaufende
       // Kachel startete ihren Hover-Übergang (Anheben, Schatten) mitten in der Bewegung.
       if (!this.hasAttribute('casora-scrolling')) this.setAttribute('casora-scrolling', '');
-      // Beim Wischen kein Verlauf: ein mitgeführter Verlauf musste die Randkachel samt Glasfläche
-      // jedes Bild neu zeichnen und ließ leichte Ruckler zurück. Er kommt zurück, sobald die Reihe ruht.
-      if (!this._casoraScrolling && this._casoraFaded) {
-        this._casoraScrolling = true;
-        // Nur die Maske weg, data-casora-fade (Schattenrand) bleibt: das Attribut ändert die Box
-        // der Hülle, mitten im Wischen hieß das neues Layout und in WebKit Nachrasten (05.10.2026).
-        for (const w of this._wrappers) {
-          if (!w.dataset.casoraFade) continue;
-          w.style.removeProperty('-webkit-mask-image');
-          w.style.removeProperty('mask-image');
-        }
-      }
+      // Der Verlauf sitzt fest auf der Reihe (_casoraFade): beim Wischen wird nichts neu
+      // gezeichnet, nur an den Enden wechselt er einmal (links/rechts ein oder aus).
+      edges();
       clearTimeout(this._casoraScrollT);
       this._casoraScrollT = setTimeout(settle, 140);
     }, { passive: true });
@@ -434,6 +423,9 @@ class CasoraSmartRow extends HTMLElement {
     if (mode !== 'fade' && this._casoraFaded) {
       this._casoraFaded = false;
       this._wrappers.forEach((w) => { delete w.dataset.casoraFade; w.style.removeProperty('-webkit-mask-image'); w.style.removeProperty('mask-image'); });
+      this._casoraHostFade = '';
+      this.style.removeProperty('-webkit-mask-image');
+      this.style.removeProperty('mask-image');
     }
     if (mode === 'more') this._casoraPaging();
     // Auch bei „fade“: rückt eine Kachel nach vorn (Sortieren nach Zustand), trägt sie sonst ihre
@@ -464,7 +456,7 @@ class CasoraSmartRow extends HTMLElement {
     if (this.style.getPropertyValue('--hsr-view') !== vw) this.style.setProperty('--hsr-view', vw);
     this.toggleAttribute('casora-more-l', can && this.scrollLeft > 2);
     this.toggleAttribute('casora-more-r', can && m > 2 && this.scrollLeft < m - 2);
-    if (mode === 'fade' && !this._casoraScrolling) this._casoraFade(can, m);
+    if (mode === 'fade') this._casoraFade(can, m);
     if (this._casoraRo && !this._casoraRoBox) {
       const box = this.shadowRoot && this.shadowRoot.getElementById('container');
       if (box) { this._casoraRoBox = true; this._casoraRo.observe(box); }
@@ -475,29 +467,35 @@ class CasoraSmartRow extends HTMLElement {
   // nicht auf der Reihe – sonst verlören alle Glas-Kacheln ihre Unschärfe), plus Seitenpunkte.
   _casoraFade(can, m) {
     const dots = this.shadowRoot && this.shadowRoot.getElementById('dots');
-    const host = this.getBoundingClientRect();
-    // SHADOW = Innenabstand der maskierten Hülle (CSS unten, data-casora-fade): die Maske schneidet
-    // an der Hüllen-Box ab, ohne diesen Rand endete der Kachelschatten dort hart (eckige Box).
-    const INSET = 20, FADE = 150, SHADOW = 48;
-    const R = host.right - INSET, L = host.left + INSET;
-    const left = this.scrollLeft > 2;
+    // Variante „fade“: der Verlauf sitzt als Maske fest auf der Reihe (wie ein Fenster, unter dem die
+    // Kacheln durchlaufen). Früher lag er auf der jeweiligen Randkachel und musste beim Wischen jedes
+    // Bild neu berechnet und samt Glasfläche neu gezeichnet werden (05.10.2026). Die Weich-Kacheln
+    // sind fast deckend, dass ihre Unschärfe nun nur den Inhalt der Reihe sieht, fällt nicht auf.
+    const INSET = 20, FADE = 150;
+    const l = can && this.scrollLeft > 2;
+    const r = can && m > 2 && this.scrollLeft < m - 2;
+    const g = (l || r)
+      ? 'linear-gradient(to right, '
+        + (l ? `transparent ${INSET}px, #000 ${INSET + FADE}px` : '#000 0')
+        + ', '
+        + (r ? `#000 calc(100% - ${INSET + FADE}px), transparent calc(100% - ${INSET}px)` : '#000 100%')
+        + ')'
+      : '';
     this._casoraFaded = true;
-    for (const w of this._wrappers) {
-      // Gemessen wird immer die Kachel selbst (ohne Schattenrand), sonst kippt die Entscheidung
-      // mit dem eigenen Innenabstand hin und her.
-      const b = w.getBoundingClientRect();
-      const p = w.dataset.casoraFade && b.width ? SHADOW : 0;
-      const r = { left: b.left + p, right: b.right - p, width: Math.max(0, b.width - 2 * p) };
-      let g = '';
-      if (can && r.width && r.right > R - FADE && r.left < R) {
-        g = `linear-gradient(to right, #000 ${Math.round(R - FADE - r.left + SHADOW)}px, transparent ${Math.round(R - r.left + SHADOW)}px)`;
-      } else if (can && left && r.width && r.left < L + FADE && r.right > L) {
-        g = `linear-gradient(to right, transparent ${Math.round(L - r.left + SHADOW)}px, #000 ${Math.round(L + FADE - r.left + SHADOW)}px)`;
+    if (this._casoraHostFade !== g) {
+      this._casoraHostFade = g;
+      if (g) { this.style.setProperty('-webkit-mask-image', g); this.style.setProperty('mask-image', g); }
+      else { this.style.removeProperty('-webkit-mask-image'); this.style.removeProperty('mask-image'); }
+    }
+    // Reste der alten Kachelmasken einmal entfernen.
+    if (!this._casoraHostFadeClean) {
+      this._casoraHostFadeClean = true;
+      for (const w of this._wrappers) {
+        if (!w.dataset.casoraFade && !w.style.maskImage && !w.style.webkitMaskImage) continue;
+        delete w.dataset.casoraFade;
+        w.style.removeProperty('-webkit-mask-image');
+        w.style.removeProperty('mask-image');
       }
-      // Nur bei echter Änderung schreiben: der MutationObserver (style) würde sonst jede Runde neu auslösen.
-      // Neu schreiben auch, wenn das Wischen die Maske entfernt hat (Attribut blieb stehen).
-      if (g) { if (w.dataset.casoraFade !== g || !(w.style.getPropertyValue('mask-image') || w.style.getPropertyValue('-webkit-mask-image'))) { w.dataset.casoraFade = g; w.style.setProperty('-webkit-mask-image', g); w.style.setProperty('mask-image', g); } }
-      else if (w.dataset.casoraFade || w.style.maskImage || w.style.webkitMaskImage) { delete w.dataset.casoraFade; w.style.removeProperty('-webkit-mask-image'); w.style.removeProperty('mask-image'); }
     }
     if (!dots) return;
     const n = can && m > 2 ? Math.min(8, Math.ceil(this.scrollWidth / Math.max(1, this.clientWidth))) : 0;
