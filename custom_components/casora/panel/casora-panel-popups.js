@@ -25,7 +25,7 @@
     + ".cp-layer{position:absolute;z-index:6;left:0;right:0;top:0;display:flex;flex-direction:column;align-items:center;"
     + "pointer-events:none;box-sizing:border-box;padding:0 12px}"
     + ".cp-layer>*{pointer-events:auto}"
-    + ".cp-bar{flex:none;display:flex;align-items:center;gap:6px;margin:0 auto 12px;max-width:100%;padding:4px 4px 4px 14px;"
+    + ".cp-bar{position:relative;z-index:3;flex:none;display:flex;align-items:center;gap:6px;margin:0 auto 12px;max-width:100%;padding:4px 4px 4px 14px;"
     + "border-radius:999px;background:var(--casora-studio-link-tint, rgba(94,92,230,.28));box-shadow:inset 0 0 0 .5px var(--casora-studio-link-line, rgba(160,158,255,.5));"
     + "-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}"
     + ".cp-bar b{font-size:var(--t-foot);font-weight:600;color:var(--ink,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"
@@ -34,7 +34,9 @@
     + "border-radius:50%;background:rgba(255,255,255,.14);box-shadow:none;color:var(--ink,#fff);cursor:pointer;flex:none}"
     + ".cp-bar button:hover{background:rgba(255,255,255,.24);filter:none}"
     + ".cp-bar svg{width:15px;height:15px}"
-    + ":host(.is-light) .cp-bar{background:var(--casora-studio-link-tint, rgba(94,92,230,.14));box-shadow:inset 0 0 0 .5px var(--casora-studio-link-line, rgba(94,92,230,.35))}"
+    // M9: hell stand das Etikett durchscheinend auf der abgedunkelten Vorschau – dunkle Schrift auf
+    // dunklem Grund. Jetzt eine helle, deckende Pille.
+    + ":host(.is-light) .cp-bar{background:var(--casora-studio-card, rgba(251,248,243,.94));box-shadow:0 2px 10px rgba(40,30,20,.18),inset 0 0 0 .5px rgba(40,30,20,.08)}"
     + ":host(.is-light) .cp-bar button{background:var(--casora-studio-chip, rgba(118,118,128,.14))}:host(.is-light) .cp-bar button:hover{background:var(--casora-studio-chip-hi, rgba(118,118,128,.24))}"
     + ":host(.is-light) .cp-note{background:rgba(255,255,255,.9);box-shadow:0 0 0 .5px rgba(0,0,0,.08)}"
     + ".cp-box{flex:1 1 auto;min-height:0;width:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;"
