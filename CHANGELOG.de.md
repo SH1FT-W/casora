@@ -28,6 +28,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - Luftreiniger: Modi wie „auto“ oder „sleep“ erscheinen als „Auto“ und „Schlaf“, wenn Home Assistant keine Übersetzung liefert.
 - Wortwahl: „OK“ statt „Ok“, im Studio „1 An“ wie im Dashboard.
 - Studio: Ein Klick auf das schon aktive Tag- oder Nacht-Feld schaltet nicht mehr um.
+- Abfall-Popup mit Monatskalender (Weich, Desktop und Tablet): beide Spalten enden jetzt bündig. Der Monat füllt die Höhe der rechten Spalte (Heute, Tonnen, Rausstellen), und seine Platte beginnt auf derselben Linie wie die Tageskarte daneben. Am Handy bleibt alles wie bisher.
 
 ## 1.0.6 – 04.10.2026
 
