@@ -9,6 +9,92 @@
   (document.head || document.documentElement).appendChild(l);
 })();
 
+// casora-battery:start
+// Akku-Stufen (05.10.2026): eine Regel für Kachel, Popup, Glocke, Unter-Symbol, Schloss,
+// Aquarium, Saugroboter und Thermostat. Stufen: ok | low (Schwach) | crit (Fast leer)
+// | charging (Lädt) | unknown. Schwellen: Schwach ≤ LOW (Benachrichtigungs-Schwelle,
+// Standard 20 %), Fast leer ≤ CRIT (10 %). Binärsensoren (battery, battery_low): on = Schwach.
+// Textzustände einiger Integrationen: low = Schwach, critical/empty = Fast leer, sonst OK.
+(function () {
+  if (window.casoraBattery) return;
+  var num = function (v) { var n = parseFloat(v); return isFinite(n) ? n : null; };
+  var B = {
+    get LOW() { var n = Number(window.CASORA_NOTIFY_BATTERY); return isFinite(n) && n > 0 ? n : 20; },
+    get CRIT() { return Math.min(10, B.LOW); },
+    WORD: { ok: 'OK', low: 'Schwach', crit: 'Fast leer', charging: 'Lädt', unknown: 'Unbekannt' },
+    // Farbe der Stufe: OK bleibt ruhig (kein Akzent), nur Schwach/Fast leer färben.
+    TONE: { ok: null, low: 'warn', crit: 'bad', charging: 'var(--casora-ton-ink, #94603B)', unknown: null },
+    COLOR: {
+      ok: 'var(--casora-battery-ok, var(--casora-color-green, #6AAE78))',
+      low: 'var(--casora-battery-low, var(--casora-color-orange, #DE8A4E))',
+      crit: 'var(--casora-battery-crit, var(--casora-color-red, #D35A4E))',
+      charging: 'var(--casora-battery-charging, var(--casora-ton-ink, #94603B))',
+      unknown: 'var(--casora-text-3, rgba(128,128,128,0.6))',
+    },
+    pct: function (st) {
+      if (st == null) return null;
+      if (typeof st === 'number') return isFinite(st) ? st : null;
+      if (typeof st === 'string') return num(st);
+      return String(st.entity_id || '').indexOf('binary_sensor.') === 0 ? null : num(st.state);
+    },
+    // level(Zustand | Zahl, {charging, low}) – low überschreibt die Schwelle (z. B. Kartenvariable).
+    level: function (st, o) {
+      o = o || {};
+      if (o.charging) return 'charging';
+      var low = isFinite(Number(o.low)) && o.low !== null && o.low !== '' ? Number(o.low) : B.LOW;
+      var crit = Math.min(B.CRIT, low);
+      var n = B.pct(st);
+      if (n != null) return n <= crit ? 'crit' : n <= low ? 'low' : 'ok';
+      var raw = String(st && typeof st === 'object' ? st.state : st || '').trim().toLowerCase();
+      var bin = st && typeof st === 'object' && String(st.entity_id || '').indexOf('binary_sensor.') === 0;
+      if (bin) return raw === 'on' ? 'low' : raw === 'off' ? 'ok' : 'unknown';
+      if (raw === 'critical' || raw === 'empty') return 'crit';
+      if (raw === 'low') return 'low';
+      if (raw === 'charging') return 'charging';
+      if (raw === 'normal' || raw === 'high' || raw === 'medium' || raw === 'full' || raw === 'ok') return 'ok';
+      return 'unknown';
+    },
+    word: function (lv) { return B.WORD[lv] || B.WORD.unknown; },
+    tone: function (lv) { return B.TONE[lv] === undefined ? null : B.TONE[lv]; },
+    color: function (lv) { return B.COLOR[lv] || B.COLOR.unknown; },
+    // „Akku 45 %“ bzw. das Stufenwort, wenn es keine Zahl gibt.
+    text: function (st, o) {
+      var n = B.pct(st);
+      return n != null ? Math.round(n) + ' %' : B.word(B.level(st, o));
+    },
+    icon: function (lv, n) {
+      if (lv === 'charging') return 'mdi:battery-charging';
+      if (lv === 'crit') return 'mdi:battery-alert-variant-outline';
+      if (lv === 'low') return 'mdi:battery-low';
+      if (n == null) return 'mdi:battery';
+      return n >= 95 ? 'mdi:battery' : 'mdi:battery-' + Math.max(10, Math.round(n / 10) * 10);
+    },
+    // Alle Akkus der Batterien-Kachel/-Popups (gleiche Auswahl wie bisher: persönliche Geräte
+    // und der Solarspeicher bleiben draußen, eine Kartenliste hat Vorrang). → {all, low, crit, min}
+    scan: function (states, vars, hass) {
+      var S = states || {};
+      var v = vars || {};
+      var PERSONAL = /iphone|ipad|\bwatch\b|ebike|e-bike|drive_unit|performance_line/i;
+      var dcOf = function (e) { return e && e.attributes && e.attributes.device_class; };
+      var given = v.batteries || v.entity_filter;
+      var list = Array.isArray(given) && given.some(function (id) { return dcOf(S[id]) === 'battery'; }) ? given : null;
+      var ex = window.casoraDevice && hass ? window.casoraDevice.byKey(hass, 'anker_solix', 'state_of_charge', 'sensor') : null;
+      var all = (list ? list.map(function (id) { return S[id]; }).filter(Boolean)
+        : Object.keys(S).map(function (id) { return S[id]; }).filter(function (e) {
+          return e.entity_id !== ex && !PERSONAL.test(e.entity_id + ' ' + ((e.attributes || {}).friendly_name || ''));
+        })).filter(function (e) {
+        return dcOf(e) === 'battery' && e.state !== 'unavailable' && e.state !== 'unknown' && num(e.state) != null;
+      });
+      var low = all.filter(function (e) { return B.level(e) !== 'ok'; });
+      var crit = low.filter(function (e) { return B.level(e) === 'crit'; });
+      var min = all.reduce(function (m, e) { return !m || num(e.state) < num(m.state) ? e : m; }, null);
+      return { all: all, low: low, crit: crit, min: min, worst: crit.length ? 'crit' : low.length ? 'low' : 'ok' };
+    },
+  };
+  window.casoraBattery = B;
+})();
+// casora-battery:end
+
 // casora-room-name:start
 // Name der Übersicht (04.10.2026): Übersetzt wird nur ein Name, den Casora selbst angelegt hat
 // (variables.casora_auto_name, z. B. 'home') und der noch unverändert ist ('Home'/'Zuhause'/leer).
@@ -8086,7 +8172,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         pct = parseFloat(st.state);
         // Unavailable is no news: hold the clock rather than start it over.
         if (!isFinite(pct)) return;
-        isLow = pct <= lowPct;
+        isLow = window.casoraBattery ? window.casoraBattery.level(pct) !== 'ok' : pct <= lowPct;
       } else if (id.indexOf('binary_sensor.') === 0) {
         if (st.state !== 'on' && st.state !== 'off') return;
         isLow = st.state === 'on';
@@ -8105,12 +8191,13 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       rows.push({
         id: 'casora:battery',
         when: newest(low.map(function (x) { return x.st; })) || Date.now(),
+        // Akku-Stufen (05.10.2026): Wort und Farbe nach der schwächsten Batterie.
         label: low.length === 1
-          ? nameOf(low[0].st).replace(/\s+Battery$/i, '') + ' Akku schwach'
-          : low.length + ' Geräte mit schwachem Akku',
-        value: low.length === 1 && low[0].pct != null ? low[0].pct + '%' : null,
+          ? nameOf(low[0].st).replace(/\s+Battery$/i, '') + (low[0].pct != null && low[0].pct <= (window.casoraBattery ? window.casoraBattery.CRIT : 10) ? ' Akku fast leer' : ' Akku schwach')
+          : low.length + ' Akkus schwach',
+        value: low.length === 1 && low[0].pct != null ? Math.round(low[0].pct) + ' %' : null,
         icon: 'battery',
-        tone: 'bad',
+        tone: low.some(function (x) { return x.pct != null && x.pct <= (window.casoraBattery ? window.casoraBattery.CRIT : 10); }) ? 'bad' : 'warn',
         entity: low.length === 1 ? low[0].st.entity_id : null,
         opens: ['casora_battery', 'casora_popup_battery'],
         seen: low.map(function (x) {

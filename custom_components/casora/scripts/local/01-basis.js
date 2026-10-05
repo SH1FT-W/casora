@@ -332,7 +332,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     Object.keys(S).forEach(function (id) {
       if (ex.indexOf(id) !== -1) return;
       var st = S[id], n = null, isLow = false;
-      if (id.indexOf('sensor.') === 0 && dcOf(st) === 'battery') { n = parseFloat(st.state); isLow = isFinite(n) && n <= lowPct; }
+      if (id.indexOf('sensor.') === 0 && dcOf(st) === 'battery') { n = parseFloat(st.state); isLow = isFinite(n) && n <= lowPct; if (!isFinite(n)) n = null; }
       else if (id.indexOf('binary_sensor.') === 0 && dcOf(st) === 'battery') {
         var bd = reg[id] && reg[id].device_id;
         if (bd && pctDev[bd]) return;
@@ -350,8 +350,12 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     low.sort(function (a, b) { return (a.pct == null ? -1 : a.pct) - (b.pct == null ? -1 : b.pct); });
     var nm = function (st) { return (api && api.nameOf ? api.nameOf(st) : ((st.attributes || {}).friendly_name || st.entity_id)); };
     var r = Object.assign({}, out[idx]);
-    r.label = low.length === 1 ? nm(low[0].st).replace(/\s+Battery$/i, '') + ' Akku schwach' : low.length + ' Geräte mit schwachem Akku';
-    r.value = low.length === 1 && low[0].pct != null ? low[0].pct + '%' : null;
+    // Akku-Stufen (05.10.2026, window.casoraBattery): ≤ 10 % „fast leer“ und rot, sonst „schwach“ und orange.
+    var crit = window.casoraBattery ? window.casoraBattery.CRIT : 10;
+    var isCrit = function (x) { return x.pct != null && x.pct <= crit; };
+    r.label = low.length === 1 ? nm(low[0].st).replace(/\s+Battery$/i, '') + (isCrit(low[0]) ? ' Akku fast leer' : ' Akku schwach') : low.length + ' Akkus schwach';
+    r.value = low.length === 1 && low[0].pct != null ? Math.round(low[0].pct) + ' %' : null;
+    r.tone = low.some(isCrit) ? 'bad' : 'warn';
     r.entity = low.length === 1 ? low[0].st.entity_id : null;
     // Stabiler Inhaltsschlüssel (casora-core settleSeen): Neustart macht den Eintrag nicht neu.
     r.seen = low.map(function (x) { return { k: x.st.entity_id, t: Date.parse(x.st.last_changed || '') }; });

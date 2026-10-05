@@ -253,7 +253,9 @@
   if (dead(V.leak_entity)) warn.push('Lecksensor offline');
   [[V.leak_battery, 'Akku Lecksensor'], [V.temp_battery, 'Akku Temperaturfühler']].forEach((b) => {
     const n = num(b[0]);
-    if (n != null && n <= 20) warn.push(b[1] + ' ' + Math.round(n) + ' %');
+    // Akku-Stufen (casoraBattery): Schwach und Fast leer sind ein Hinweis, kein Aquarium-Alarm.
+    const lv = n == null ? 'ok' : (window.casoraBattery ? window.casoraBattery.level(n) : (n) <= 10 ? 'crit' : (n) <= 20 ? 'low' : 'ok');
+    if (lv === 'low' || lv === 'crit') warn.push(b[1] + ' ' + Math.round(n) + ' %');
   });
   /* Bluetooth-Lampen fallen ständig kurz aus (Fluval: ~20×/Tag, meist < 5 min, max. ~19 min).
      Erst nach 7 min am Stück zählt es als Problem (23.09., vorher 5 min); gleiche Schwelle im Helfer *_prufen. */
@@ -543,12 +545,12 @@
       rows.push({ icon: 'mdi:water-alert', iconTone: wet ? 'bad' : 'good', label: 'Lecksensor',
         sub: !isNaN(b) ? 'Akku ' + Math.round(b) + ' %' : null,
         value: ls === 'unavailable' ? 'Offline' : wet ? 'Wasser erkannt!' : 'Trocken',
-        valueTone: wet ? 'bad' : (!isNaN(b) && b <= 20 ? 'warn' : null), entity: c.leakBat || c.leak });
+        valueTone: wet ? 'bad' : (!isNaN(b) ? (window.casoraBattery ? window.casoraBattery.tone((window.casoraBattery ? window.casoraBattery.level(b) : (b) <= 10 ? 'crit' : (b) <= 20 ? 'low' : 'ok')) : null) : null), entity: c.leakBat || c.leak });
     }
     if (c.tempBat && states[c.tempBat]) {
       const b = parseFloat(states[c.tempBat].state);
       rows.push({ icon: 'mdi:thermometer', iconTone: 'accent', label: 'Temperaturfühler',
-        value: isNaN(b) ? '—' : 'Akku ' + Math.round(b) + ' %', valueTone: !isNaN(b) && b <= 20 ? 'warn' : null, entity: c.tempBat });
+        value: isNaN(b) ? '—' : 'Akku ' + Math.round(b) + ' %', valueTone: !isNaN(b) ? (window.casoraBattery ? window.casoraBattery.tone((window.casoraBattery ? window.casoraBattery.level(b) : (b) <= 10 ? 'crit' : (b) <= 20 ? 'low' : 'ok')) : null) : null, entity: c.tempBat });
     }
     return rows.length ? window._casoraAqWrap(window._casoraUI.group(rows, 'Sensoren').replace(/data-casora-mi="/g, 'data-hp-metric="')) : '';
   ]]]`);
@@ -650,8 +652,10 @@
     [[c.leakBat, 'Akku Lecksensor'], [c.tempBat, 'Akku Temperaturfühler']].forEach((x) => {
       if (!x[0] || !states[x[0]]) return;
       const b = parseFloat(states[x[0]].state);
-      rows.push({ icon: 'mdi:battery-outline', iconTone: !isNaN(b) && b <= 20 ? 'warn' : 'good', label: x[1],
-        value: isNaN(b) ? '—' : Math.round(b) + ' %', valueTone: !isNaN(b) && b <= 20 ? 'warn' : null, entity: x[0] });
+      const lv = isNaN(b) ? 'unknown' : (window.casoraBattery ? window.casoraBattery.level(b) : (b) <= 10 ? 'crit' : (b) <= 20 ? 'low' : 'ok');
+      const tn = (window.casoraBattery ? window.casoraBattery.tone(lv) : null);
+      rows.push({ icon: window.casoraBattery ? window.casoraBattery.icon(lv, isNaN(b) ? null : b) : 'mdi:battery-outline', iconTone: tn || 'good', label: x[1],
+        value: isNaN(b) ? '—' : Math.round(b) + ' %', valueTone: tn, entity: x[0] });
     });
     return rows.length ? window._casoraAqWrap(window._casoraUI.group(rows, 'Sensoren').replace(/data-casora-mi="/g, 'data-hp-metric="')) : '';`);
     /* Jeder Teil läuft als eigene Funktion; H.more fasst sie zusammen. */
@@ -3427,8 +3431,10 @@
           value: dead0 ? 'Offline' : po0 ? 'An' : 'Aus', valueTone: dead0 || !po0 ? 'bad' : null,
           svc: dead0 ? null : { domain: 'switch', service: po0 ? 'turn_off' : 'turn_on', target: { entity_id: c.plug } }, confirm: po0 ? 'Ausschalten' : null }], 'Strom');
       }
-      if (bat != null) rb.push({ icon: on(c.charging) ? 'mdi:battery-charging' : 'mdi:battery', iconTone: bat < 20 ? 'bad' : 'good', label: 'Akku',
-        sub: on(c.charging) ? 'Lädt' : null, value: Math.round(bat) + ' %', bar: bat / 100, barTone: bat < 20 ? 'bad' : 'good', entity: c.battery });
+      // Akku-Stufen (casoraBattery): ≤ 10 % rot, ≤ 20 % orange – auch beim Laden bleibt der Balken ehrlich.
+      var blv = (window.casoraBattery ? window.casoraBattery.level(bat) : (bat) <= 10 ? 'crit' : (bat) <= 20 ? 'low' : 'ok'), btn = (window.casoraBattery ? window.casoraBattery.tone(blv) : null);
+      if (bat != null) rb.push({ icon: on(c.charging) ? 'mdi:battery-charging' : 'mdi:battery', iconTone: btn || 'good', label: 'Akku',
+        sub: on(c.charging) ? 'Lädt' : null, value: Math.round(bat) + ' %', valueTone: btn, bar: bat / 100, barTone: btn || 'good', entity: c.battery });
       var sw = c.plug && states[c.plug];
       if (sw) {
         var po = sw.state === 'on', dead = sw.state === 'unavailable';
