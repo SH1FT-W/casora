@@ -358,7 +358,30 @@ class CasoraSmartRow extends HTMLElement {
       if (this._casoraEdgesRaf) return;
       this._casoraEdgesRaf = requestAnimationFrame(() => { this._casoraEdgesRaf = 0; this._casoraEdges(); });
     };
-    this.addEventListener('scroll', edges, { passive: true });
+    // Während des Wischens keine Masken: eine Maske auf einer Kachel mit Glas-Unschärfe muss jedes
+    // Bild neu gezeichnet werden und ließ das Wischen ruckeln. Erst wenn die Reihe ruht, kommt der
+    // Verlauf zurück (scrollend, sonst 140 ms ohne Scroll-Ereignis).
+    const settle = () => {
+      clearTimeout(this._casoraScrollT);
+      this._casoraScrollT = 0;
+      if (!this._casoraScrolling) return;
+      this._casoraScrolling = false;
+      edges();
+    };
+    this.addEventListener('scroll', () => {
+      if (!this._casoraScrolling && this._casoraFaded) {
+        this._casoraScrolling = true;
+        for (const w of this._wrappers) {
+          if (!w.dataset.casoraFade) continue;
+          delete w.dataset.casoraFade;
+          w.style.removeProperty('-webkit-mask-image');
+          w.style.removeProperty('mask-image');
+        }
+      }
+      clearTimeout(this._casoraScrollT);
+      this._casoraScrollT = setTimeout(settle, 140);
+    }, { passive: true });
+    this.addEventListener('scrollend', settle, { passive: true });
     window.addEventListener('resize', edges);
     if (window.ResizeObserver) {
       this._casoraRo = new ResizeObserver(edges);
@@ -422,7 +445,7 @@ class CasoraSmartRow extends HTMLElement {
     if (this.style.getPropertyValue('--hsr-view') !== vw) this.style.setProperty('--hsr-view', vw);
     this.toggleAttribute('casora-more-l', can && this.scrollLeft > 2);
     this.toggleAttribute('casora-more-r', can && m > 2 && this.scrollLeft < m - 2);
-    if (mode === 'fade') this._casoraFade(can, m);
+    if (mode === 'fade' && !this._casoraScrolling) this._casoraFade(can, m);
     if (this._casoraRo && !this._casoraRoBox) {
       const box = this.shadowRoot && this.shadowRoot.getElementById('container');
       if (box) { this._casoraRoBox = true; this._casoraRo.observe(box); }
