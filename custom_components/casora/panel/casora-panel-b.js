@@ -211,6 +211,8 @@
       background:var(--bar-solid, var(--casora-studio-bar-solid, rgb(242,242,247)));
       box-shadow:0 -10px 40px rgba(0,0,0,.25);
     }
+    /* Dunkel: --bar-solid gibt es nur hell – das Blatt blieb hellgrau, Überschriften und ✕ weiß darauf. */
+    :host(.bmode.phone:not(.is-light)) .inspector { background:var(--pane-solid, #1d1f25); }
     :host(.bmode.phone.binsp) .inspector { display:flex !important; animation:bSheetIn .24s var(--ease, ease); }
     :host(.bmode.phone) .inspector .sheet { overflow-y:auto; max-height:calc(84dvh - 70px); }
     :host(.bmode.phone) .inspector::before {
