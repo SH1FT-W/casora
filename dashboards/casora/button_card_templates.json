@@ -249,7 +249,8 @@
   ],
   "variables": {
    "icon": "purifier",
-   "casora_default_name": "Luftreiniger"
+   "casora_default_name": "Luftreiniger",
+   "show_toggle": "[[[\n  /* D-22 (Weich): Schalter bei allen schaltbaren Einzelgeräten – der Luftreiniger hatte als einziges keinen. */\n  return !!(window._casoraSoft && window._casoraSoft()) && ['fan', 'switch', 'humidifier'].includes(String(entity?.entity_id || '').split('.')[0]);\n]]]\n"
   }
  },
  "casora_alarm": {
