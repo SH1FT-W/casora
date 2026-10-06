@@ -408,6 +408,8 @@
 
   var num = function (v) { var n = parseFloat(v); return isNaN(n) ? null : n; };
   var ok = function (s) { return s && s.state !== 'unknown' && s.state !== 'unavailable'; };
+  /* Zahl aus einem Zustand oder null – auch bei Text wie „none“ (sonst würfe fmt(null)). */
+  var nv = function (s) { return s && ok(s) ? num(s.state) : null; };
   var fmt = function (n) { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 }); };
   /* Temperatur-Einheit von Home Assistant (°C/°F) – die Werte kommen schon darin (06.10.2026). */
   var TU = function () {
@@ -624,7 +626,7 @@
           sub: sub, subTone: heat.length ? 'warn' : null, center: true });
       }
       var cur = F.curTemp(c, states);
-      var hum = c.hum && states[c.hum] && ok(states[c.hum]) ? Math.round(num(states[c.hum].state)) + ' % Luftfeuchtigkeit' : null;
+      var hum = c.hum && nv(states[c.hum]) != null ? Math.round(nv(states[c.hum])) + ' % Luftfeuchtigkeit' : null;
       return UI.hero({ label: window._casoraHH && window._casoraHH.on() ? null : (c.trv ? 'Temperatur am Heizkörper' : 'Raumtemperatur'), value: cur != null ? fmt(cur) : '—', unit: cur != null ? TU() : null,
         sub: [F.status(c, states), hum].filter(Boolean).join(' · '), subTone: F.heating(c, states) ? 'warn' : null, center: true });
     }
@@ -685,7 +687,7 @@
         var s = states[r.id];
         var t = F.curTemp(r, states), h = F.heating(r, states);
         var sub = F.status(r, states);
-        if (r.trv && r.bat && states[r.bat] && ok(states[r.bat])) sub += ' · Akku ' + Math.round(num(states[r.bat].state)) + ' %';
+        if (r.trv && r.bat && nv(states[r.bat]) != null) sub += ' · Akku ' + Math.round(nv(states[r.bat])) + ' %';
         return { icon: r.trv ? 'mdi:radiator' : 'mdi:heating-coil',
           iconTone: h ? 'var(--casora-tone-heat, var(--casora-color-red, #FF453A))' : (s && s.state !== 'off' && s.state !== 'unavailable' ? 'accent' : 'rgba(255,255,255,0.18)'),
           label: r.name, sub: sub, value: t != null ? fmt(t) + ' ' + TU() : null, entity: r.id,
@@ -762,7 +764,7 @@
     if (name === 'det') {
       var rows = [];
       if (c.trv) {
-        var dm = c.demand && states[c.demand] && ok(states[c.demand]) ? Math.round(num(states[c.demand].state)) : null;
+        var dm = c.demand && nv(states[c.demand]) != null ? Math.round(nv(states[c.demand])) : null;
         if (dm != null) rows.push({ icon: 'mdi:valve', iconTone: dm > 0 ? 'var(--casora-tone-heat, var(--casora-color-red, #FF453A))' : 'rgba(255,255,255,0.18)', label: 'Ventilöffnung', value: dm + ' %' });
         if (c.opMode && states[c.opMode]) {
           var OM = { pause: 'Pause', manual: 'Manuell', schedule: 'Zeitplan', automatic: 'Automatik', auto: 'Automatik' };
@@ -775,9 +777,9 @@
           var cf = states[c.cfh].state === 'on';
           rows.push({ icon: 'mdi:fire', iconTone: cf ? 'var(--casora-tone-heat, var(--casora-color-red, #FF453A))' : 'rgba(255,255,255,0.18)', label: 'Wärmeanforderung', value: cf ? 'Aktiv' : 'Keine', valueTone: cf ? 'warn' : null });
         }
-        if (c.next && states[c.next] && ok(states[c.next])) rows.push({ icon: 'mdi:clock-outline', label: 'Nächste Solltemperatur', value: fmt(num(states[c.next].state)) + ' ' + TU() });
+        if (c.next && nv(states[c.next]) != null) rows.push({ icon: 'mdi:clock-outline', label: 'Nächste Solltemperatur', value: fmt(nv(states[c.next])) + ' ' + TU() });
         if (c.dip && states[c.dip]) {
-          var dv = c.dipVal && states[c.dipVal] && ok(states[c.dipVal]) ? fmt(num(states[c.dipVal].state)) + ' ' + TU() : null;
+          var dv = c.dipVal && nv(states[c.dipVal]) != null ? fmt(nv(states[c.dipVal])) + ' ' + TU() : null;
           var dr = toggleRow(c.dip, 'mdi:thermometer-chevron-down', 'Temperaturabsenkung', dv ? 'Absenkung um ' + dv : null, states); if (dr) rows.push(dr);
         }
         /* Nur zeigen, wenn aktiv. Heizpause ist außerhalb der Heizsaison normal, daher neutral. */
@@ -789,7 +791,7 @@
       if (c.trv) {
         var dev = [];
         if (c.bat && states[c.bat]) {
-          var b = ok(states[c.bat]) ? Math.round(num(states[c.bat].state)) : null;
+          var b = nv(states[c.bat]) != null ? Math.round(nv(states[c.bat])) : null;
           /* battery_low meldet schon bei 89 % "on", daher nur die Prozentzahl. */
           var tn = b == null ? null : window.casoraBattery ? window.casoraBattery.tone(window.casoraBattery.level(b)) : b <= 20 ? 'warn' : null;
           dev.push({ icon: 'mdi:battery', iconTone: tn || 'good', label: 'Akku', value: b != null ? b + ' %' : '—', valueTone: tn });
