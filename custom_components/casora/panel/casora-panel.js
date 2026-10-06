@@ -23759,15 +23759,8 @@ class CasoraPanel extends HTMLElement {
 
   async _newScene() {
     const path = "/config/scene/edit/new";
-    const app = !!(window.externalApp || (window.webkit && window.webkit.messageHandlers
-      && window.webkit.messageHandlers.getExternalAuth));
-    if (!app) {
-      const tab = window.open(path, "_blank");
-      if (tab) {
-        window.addEventListener("focus", () => { if (this._state) this._renderForm(); }, { once: true });
-        return;
-      }
-    }
+    // Im selben Fenster wie jede HA-Seite (ein neuer Tab verlor den Weg zurück); ungesicherte
+    // Änderungen werden vorher gespeichert, Zurück führt wieder ins Studio.
     const dirty = this._isDirty();
     const ok = await this._ask({
       title: "Leave Casora?",
