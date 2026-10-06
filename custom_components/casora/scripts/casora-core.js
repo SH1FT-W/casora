@@ -4664,6 +4664,23 @@ window.casoraMenuGlass = {
     }
     // Thermostat-Kachel ohne Symbol (Puck): Thermometer wie im Entwurf, damit jeder Kopf einen Ring hat.
     if (!glyph && /thermostat|climate\./.test(key)) glyph = '<ha-icon icon="mdi:thermometer"></ha-icon>';
+    // D-10: Alarm-Kopf in derselben Stufe wie die aktive Modus-Zeile (scharf = ok mit Schild-Haken,
+    // nur ausgelöst = Gefahr) – vorher pauschal Rot mit „!“. Gleiche Entität wie das Popup.
+    if (/\bcasora_alarm\b|alarm_control_panel\./.test(key) && window.casoraSecurityLevel && window.casoraSecurityColor
+        && typeof window.casoraIconUrl === 'function') {
+      var hA = src._hass || (document.querySelector('home-assistant') || {}).hass;
+      var SA = (hA && hA.states) || {};
+      var vA = src._config.variables && src._config.variables.alarm_entity;
+      var aid = /^alarm_control_panel\./.test(ent) ? ent
+        : (typeof vA === 'string' && SA[vA] ? vA : (SA['alarm_control_panel.alarmo'] ? 'alarm_control_panel.alarmo' : null));
+      if (aid && SA[aid]) {
+        var AIC = { disarmed: 'shield_off', armed_home: 'shield_check', armed_away: 'shield_lock', armed_night: 'shield_moon',
+          armed_vacation: 'shield_vacation', armed_custom_bypass: 'shield_bypass', triggered: 'shield_alarm' };
+        return { hue: window.casoraSecurityColor(window.casoraSecurityLevel(hA, [aid])),
+          html: '<span class="g" style="--g:url(\'' + monoUrl(window.casoraIconUrl(AIC[SA[aid].state] || 'shield_marked'), onGlyph).replace(/['"\\]/g, '') + '\')"></span>',
+          off: false };
+      }
+    }
     if (!glyph) return null;
     // Kachel meldet selbst Ruhe (z. B. NINA „Keine Warnung“ setzt _casoraRingQuiet): Sand wie die Kachel.
     var idle = src._casoraRingQuiet === true;
