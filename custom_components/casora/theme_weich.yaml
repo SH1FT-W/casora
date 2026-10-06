@@ -382,7 +382,8 @@ Casora:
       secondary-background-color: rgb(236,229,218)
       primary-text-color: "#3A322B"
       text-primary-color: rgba(58,50,43,0.95)
-      secondary-text-color: rgba(98,87,76,0.92)
+      # D-11: deckend – auf der leicht durchscheinenden Kachel kam „Aus“ sonst nur auf ~3,7 : 1
+      secondary-text-color: "#62574C"
       # Fix-Runde 1 A-13: genau ein Text-2- und ein Text-3-Wert; alle Varianten verweisen darauf
       casora-text-2: var(--secondary-text-color)
       casora-text-3: rgba(58,50,43,0.45)
@@ -407,7 +408,8 @@ Casora:
       hero-img-brightness-mobile: 1.02
       casora-icon-circle-bg: rgba(140,115,90,0.12)
       scrollbar-thumb-color: rgba(90,70,50,0.18)
-      state-icon-color: rgba(58,50,43,0.40)
+      # D-11: Symbole inaktiver Kacheln mindestens 3 : 1 (0.40 lag bei ~2 : 1)
+      state-icon-color: rgba(58,50,43,0.62)
       state-off-color: rgba(58,50,43,0.30)
 
       # Handy-Hintergrund: Leinen-Schleier von oben bis knapp unter „Favoriten“ (Lesbarkeit von Titel,
