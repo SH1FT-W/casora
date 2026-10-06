@@ -494,7 +494,8 @@ Casora:
       casora-popup-tiles-text-muted: var(--casora-text-2)
       # Popup-Bausteine (_casoraUI, casora-core.js): Platten in Creme statt dunklem Glas,
       # Status- und Aktionsfarben dunkler, damit sie auf Creme lesbar bleiben.
-      casora-popup-row-fill: rgba(255,253,249,0.80)
+      # D-01: deckend (gleiche Mischfarbe wie vorher auf der Popup-Fläche) – sonst schimmert die Seite durch
+      casora-popup-row-fill: rgb(254,252,247)
       casora-popup-row-hover: rgba(140,115,90,0.06)
       casora-sheet-row-fill: var(--casora-popup-row-fill)
       casora-sheet-chart-fill: var(--casora-popup-row-fill)
@@ -551,8 +552,8 @@ Casora:
       dialog-box-shadow: 0 40px 90px -30px rgba(90,65,40,0.40), 0 10px 28px rgba(90,70,50,0.10)
       mdc-dialog-scrim-color: rgba(60,48,38,0.26)
 
-      # Dialoge fast deckend (wenig Glas)
-      casora-dialog-bg: rgba(250,246,240,0.97)
+      # Dialoge deckend (D-01: bei 0.97 schimmerten Navbar und Seite im Sheet durch)
+      casora-dialog-bg: rgb(250,246,240)
       ha-dialog-background: var(--casora-dialog-bg)
       ha-dialog-surface-background: var(--casora-dialog-bg)
       ha-color-fill-primary-quiet-resting: rgba(140,115,90,0.10)
@@ -880,7 +881,7 @@ Casora:
       casora-popup-tiles-text-secondary: var(--casora-text-2)
       casora-popup-tiles-text-muted: var(--casora-text-2)
       # Popup-Platten: warmes Anthrazit statt kaltem Blauschwarz
-      casora-popup-row-fill: rgba(62,56,50,0.78)
+      casora-popup-row-fill: rgb(58,52,46)
       casora-popup-row-hover: rgba(255,240,220,0.05)
       casora-sheet-row-fill: var(--casora-popup-row-fill)
       casora-sheet-chart-fill: var(--casora-popup-row-fill)
@@ -924,8 +925,8 @@ Casora:
       dialog-box-shadow: 0 40px 90px -30px rgba(0,0,0,0.70), inset 0 1px 0 rgba(255,240,220,0.05)
       mdc-dialog-scrim-color: rgba(14,12,10,0.45)
 
-      # Dialoge fast deckend
-      casora-dialog-bg: rgba(42,38,34,0.97)
+      # Dialoge deckend (D-01)
+      casora-dialog-bg: rgb(42,38,34)
       ha-dialog-background: var(--casora-dialog-bg)
       ha-dialog-surface-background: var(--casora-dialog-bg)
       casora-perf-dialog-fill: rgb(42,38,34)
