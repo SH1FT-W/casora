@@ -9276,6 +9276,10 @@ class CasoraPanel extends HTMLElement {
         /* Three actions (Later · Discard · Restore): each keeps its whole label. */
         :host(:not(.phone)) .askacts:has(.askalt) button { flex:0 0 auto; white-space:nowrap; }
         :host(:not(.phone)) .askacts:has(.askalt) button:not(.ghost) { padding:0 18px; }
+        /* Deutsch sind die drei Beschriftungen länger als der Dialog („Wiederherstellen“ ragte hinaus):
+           Dialog etwas breiter, und reicht es trotzdem nicht, brechen die Knöpfe um. */
+        :host(:not(.phone)) .askstack:has(.askacts .askalt):not(.wide) { width:min(440px, 94vw); }
+        :host(:not(.phone)) .askacts:has(.askalt) { flex-wrap:wrap; }
         .askchoice {
           display:flex; align-items:center; justify-content:space-between;
           gap:12px; margin-top:10px;
