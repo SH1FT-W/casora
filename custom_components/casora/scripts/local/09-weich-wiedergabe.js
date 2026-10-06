@@ -317,7 +317,12 @@
       var art = lead.art || (g.recs.filter(function (r) { return r.art; })[0] || {}).art || '';
       rows[g.key] = { pos: pos, dur: dur, at: Number(rec.posAt) || 0, playing: !!rec.playing, bar: hasBar };
       groups[g.key] = g.recs;
-      return [g.key, lead.title, subline(g, states), art, playing, tog, hasBar, lead.kind, g.recs.length];
+      // D-15: ohne Medientitel steht der Gerätename schon als Titel – die Unterzeile wiederholt ihn nicht,
+      // sondern nennt die App (falls nicht ebenfalls der Name) bzw. „Spielt“/„Pausiert“.
+      var sb = subline(g, states), tl = String(lead.title || '').trim();
+      if (tl && sb) sb = sb.split(' \u00b7 ').filter(function (x) { return x && x !== tl; }).join(' \u00b7 ');
+      if (!sb) { var src = String(lead.source || '').trim(); sb = src && src !== tl ? src : T(playing ? 'Spielt' : 'Pausiert'); }
+      return [g.key, lead.title, sb, art, playing, tog, hasBar, lead.kind, g.recs.length];
     });
     e.rows = rows;
     e.groups = groups;

@@ -154,12 +154,27 @@ Casora:
   # A-09: Raumleiste 14/600, Pfeil-Kreis, Verlauf endet vor dem Pfeil
   casora-nav-label-size-tablet: 14px
   casora-nav-label-pad-x-tablet: 14px
-  casora-nav-fade-solid: 104px
-  casora-nav-fade-clear: 40px
+  # D-14: breitere Ausblendung + Einrasten auf Raumanfänge – keine Wortreste („ur“) neben dem Pfeil
+  casora-nav-fade-solid: 124px
+  casora-nav-fade-clear: 72px
+  casora-nav-snap: x mandatory
+  casora-nav-snap-align: start
+  casora-nav-snap-pad: 48px
+  # links harte Kante direkt hinter dem Pfeil: der eingerastete Raum steht ganz da, der vorige ist ganz weg
+  casora-nav-fade-clear-l: 48px
+  casora-nav-fade-solid-l: 49px
+  casora-nav-focus-ring: inset 0 0 0 2px var(--casora-ton-ink)   # D-09: Tastatur-Fokus sichtbar
   casora-nav-more-fill: var(--casora-nav-active-fill)
   casora-nav-more-hover: var(--casora-mnav-press-fill, var(--casora-nav-active-fill))
   casora-nav-more-ink: var(--casora-nav-label-color)
   casora-nav-chevron: var(--casora-text-2)
+  casora-back-hit: -2px   # D-03: Zurück-Knopf sichtbar 40 px, Trefferfläche 44 px
+  casora-lpc-pill-pad-m: 14px 15px   # D-03: Raumfilter im Licht-Popup am Handy 44 px hoch (vorher 39)
+  casora-lpc-row-inset: 14px   # D-17: Raumfilter beginnt auf der Inhaltskante der Zeilen darunter
+  casora-climate-seg-h: 58px   # D-06: Modusknöpfe im Thermostat so hoch wie die Zeilen daneben
+  casora-weather-precip-fs: 12px   # D-18: Regen-% im Wetter-Popup 12 statt 11 px
+  casora-mobile-np-title-size: 17px   # D-12: „Aktuelle Wiedergabe“ so groß wie „Favoriten“
+  casora-category-title-weight: 800   # D-12: Kategorie-Titel („Klima“) wie Seitentitel „Zuhause“
   # Kachelreihe (smart-row): Pfeil links/rechts, solange dort noch Kacheln liegen (Audit H2)
   casora-row-arrows: block
   # Wie die Reihe zeigt, dass es weitergeht: arrows (Pfeile) | fade (Ausblenden + Punkte) | more („+N weitere“)
@@ -173,7 +188,7 @@ Casora:
   badge-padding: calc(var(--casora-u-badge, 10px) * 0.5) calc(var(--casora-u-badge, 10px) * 1.6) calc(var(--casora-u-badge, 10px) * 0.5) calc(var(--casora-u-badge, 10px) * 0.6)
   badge-min-height: calc(var(--casora-u-badge, 10px) * 4.1)
   badge-font-size: calc(var(--casora-u-badge, 10px) * 1.4)
-  badge-sub-scale: 0.86
+  badge-sub-scale: 0.88   # D-12: Badge-Unterzeile am Handy 11 px (war 10,75)
   badge-sub-delta: 0px
   badge-col-gap-tablet: 8px
   badge-padding-tablet: 5px 14px 5px 5px
@@ -228,6 +243,7 @@ Casora:
   casora-menu-item-radius: 16px
   casora-menu-radius: 24px
   casora-menu-item-weight: 600
+  casora-menu-item-size: 15px   # D-12: ⋯-Menü in derselben Größe wie das Räume-Menü
   casora-menu-item-dim: 1
   casora-menu-icons-filled: 1
   # A-19: Mitteilungen – Zeilen wie Popup-Zeilen, Aktion in Ton
@@ -337,8 +353,9 @@ Casora:
   casora-mnav-menu-shadow: var(--casora-elevation-floating, 0 8px 20px rgba(0,0,0,0.13))
   casora-mnav-on-fill: var(--casora-nav-active-fill)
   casora-mnav-fg-on: var(--casora-menu-fg, #fff)
-  casora-mnav-item-weight: 400
-  casora-mnav-item-on-weight: 500
+  # D-12: Räume-Menü wie das ⋯-Menü (15 px / 600, aktiv 700) statt 15/400
+  casora-mnav-item-weight: 600
+  casora-mnav-item-on-weight: 700
   # A-07: Kachelabstand Desktop/Tablet (war 16), Handy-Raster (Standard 8) – minimal enger
   casora-tile-row-gap-desktop: 12px
   casora-tile-row-gap-mobile: 8px
@@ -383,7 +400,8 @@ Casora:
       secondary-background-color: rgb(236,229,218)
       primary-text-color: "#3A322B"
       text-primary-color: rgba(58,50,43,0.95)
-      secondary-text-color: rgba(98,87,76,0.92)
+      # D-11: deckend – auf der leicht durchscheinenden Kachel kam „Aus“ sonst nur auf ~3,7 : 1
+      secondary-text-color: "#62574C"
       # Fix-Runde 1 A-13: genau ein Text-2- und ein Text-3-Wert; alle Varianten verweisen darauf
       casora-text-2: var(--secondary-text-color)
       casora-text-3: rgba(58,50,43,0.45)
@@ -408,7 +426,8 @@ Casora:
       hero-img-brightness-mobile: 1.02
       casora-icon-circle-bg: rgba(140,115,90,0.12)
       scrollbar-thumb-color: rgba(90,70,50,0.18)
-      state-icon-color: rgba(58,50,43,0.40)
+      # D-11: Symbole inaktiver Kacheln mindestens 3 : 1 (0.40 lag bei ~2 : 1)
+      state-icon-color: rgba(58,50,43,0.62)
       state-off-color: rgba(58,50,43,0.30)
 
       # Handy-Hintergrund: Leinen-Schleier von oben bis knapp unter „Favoriten“ (Lesbarkeit von Titel,
@@ -495,7 +514,8 @@ Casora:
       casora-popup-tiles-text-muted: var(--casora-text-2)
       # Popup-Bausteine (_casoraUI, casora-core.js): Platten in Creme statt dunklem Glas,
       # Status- und Aktionsfarben dunkler, damit sie auf Creme lesbar bleiben.
-      casora-popup-row-fill: rgba(255,253,249,0.80)
+      # D-01: deckend (gleiche Mischfarbe wie vorher auf der Popup-Fläche) – sonst schimmert die Seite durch
+      casora-popup-row-fill: rgb(254,252,247)
       casora-popup-row-hover: rgba(140,115,90,0.06)
       casora-sheet-row-fill: var(--casora-popup-row-fill)
       casora-sheet-chart-fill: var(--casora-popup-row-fill)
@@ -523,7 +543,8 @@ Casora:
       casora-glass-pill-fill: rgba(140,115,90,0.12)
       casora-cam-ctl-ink: var(--casora-popup-tiles-text-primary)
       casora-cam-ctl-label: var(--casora-popup-tiles-text-secondary)
-      casora-weather-precip: "#2F6F9A"
+      # D-18: dunkler (mit 12 px aus casora-weather-precip-fs) – Regen-% lag knapp unter 4,5 : 1
+      casora-weather-precip: "#285F84"
       # Fest weiß gesetzte Popup-Schrift (z. B. Aquarien) über die Popup-Schriftstufen
       casora-sheet-ink: var(--casora-popup-tiles-text-primary)
       casora-sheet-ink-2: var(--casora-popup-tiles-text-secondary)
@@ -552,8 +573,8 @@ Casora:
       dialog-box-shadow: 0 40px 90px -30px rgba(90,65,40,0.40), 0 10px 28px rgba(90,70,50,0.10)
       mdc-dialog-scrim-color: rgba(60,48,38,0.26)
 
-      # Dialoge fast deckend (wenig Glas)
-      casora-dialog-bg: rgba(250,246,240,0.97)
+      # Dialoge deckend (D-01: bei 0.97 schimmerten Navbar und Seite im Sheet durch)
+      casora-dialog-bg: rgb(250,246,240)
       ha-dialog-background: var(--casora-dialog-bg)
       ha-dialog-surface-background: var(--casora-dialog-bg)
       ha-color-fill-primary-quiet-resting: rgba(140,115,90,0.10)
@@ -671,7 +692,8 @@ Casora:
       casora-soft-cam-fail: "#24211E"                        # Kamera-Fehlerfläche statt Schwarz (B-06)
       casora-soft-placeholder: var(--casora-soft-control-fill) # Bild-Platzhalter (Drucker-Kamera) statt Schiefergrau
       casora-soft-media-hue: var(--casora-color-pink)        # Medien-Popup: Fortschritt und Lautstärke rosa-rot (Wunsch 02.10.2026)
-      casora-soft-primary: var(--casora-lps-switch-on)       # Hauptaktion (Start, Wiedergabe) in Ton wie die Schalter
+      # Hauptaktion (Start, Wiedergabe) in dunklem Ton: Weiß auf #B67A50 hatte nur 3,6 : 1, auf #94603B 5,3 : 1 (D-04)
+      casora-soft-primary: "#94603B"
       casora-soft-primary-ink: "#FFFFFF"
 
       # --- Fix-Runde 1 C: Casora Studio hell – Leinen-Grund, Creme-Gruppen, Espresso-Schrift, Sand-Felder ---
@@ -881,7 +903,7 @@ Casora:
       casora-popup-tiles-text-secondary: var(--casora-text-2)
       casora-popup-tiles-text-muted: var(--casora-text-2)
       # Popup-Platten: warmes Anthrazit statt kaltem Blauschwarz
-      casora-popup-row-fill: rgba(62,56,50,0.78)
+      casora-popup-row-fill: rgb(58,52,46)
       casora-popup-row-hover: rgba(255,240,220,0.05)
       casora-sheet-row-fill: var(--casora-popup-row-fill)
       casora-sheet-chart-fill: var(--casora-popup-row-fill)
@@ -925,8 +947,8 @@ Casora:
       dialog-box-shadow: 0 40px 90px -30px rgba(0,0,0,0.70), inset 0 1px 0 rgba(255,240,220,0.05)
       mdc-dialog-scrim-color: rgba(14,12,10,0.45)
 
-      # Dialoge fast deckend
-      casora-dialog-bg: rgba(42,38,34,0.97)
+      # Dialoge deckend (D-01)
+      casora-dialog-bg: rgb(42,38,34)
       ha-dialog-background: var(--casora-dialog-bg)
       ha-dialog-surface-background: var(--casora-dialog-bg)
       casora-perf-dialog-fill: rgb(42,38,34)
@@ -1115,5 +1137,5 @@ Casora:
       casora-soft-cam-fail: "#24211E"
       casora-soft-placeholder: var(--casora-soft-control-fill)
       casora-soft-media-hue: var(--casora-color-pink)
-      casora-soft-primary: var(--casora-lps-switch-on)
+      casora-soft-primary: "#94603B"   # D-04 wie hell
       casora-soft-primary-ink: "#FFFFFF"

@@ -781,16 +781,13 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     var ha = function () { return document.querySelector('home-assistant'); };
     var A = window._casoraAssist = {
       msgs: [], convId: null, busy: false,
-      /* Vorschläge je nach Tageszeit (beim Öffnen des Popups gewählt) */
-      SUGGEST: {
-        morgen: ['Wie warm ist es im Wohnzimmer?', 'Was steht auf der Einkaufsliste?', 'Ist die Wohnungstür abgeschlossen?', 'Starte den Saugroboter'],
-        tag:    ['Welche Lichter sind an?', 'Wie warm ist es im Büro?', 'Wie warm ist das Meerwasseraquarium?', 'Ist die Wohnungstür abgeschlossen?'],
-        abend:  ['Welche Fenster sind offen?', 'Welche Lichter sind an?', 'Was steht auf der Einkaufsliste?', 'Ist die Wohnungstür abgeschlossen?'],
-        nacht:  ['Ist die Wohnungstür abgeschlossen?', 'Welche Fenster sind offen?', 'Sind noch Lichter an?', 'Schalte alle Lichter aus'],
-      },
+      /* Vorschläge aus dem eigenen Haus (D-ASSIST, 06.10.2026): casoraAssistIdeas (00-finden.js) nimmt
+         nur Fragen zu Geräten, die es gibt – erst was zu tun ist, dann Tageszeit, dann Allgemeines.
+         Handy 4, Desktop 6. Gewählt beim Öffnen des Popups. */
       suggest: function () {
-        var h = new Date().getHours();
-        return A.SUGGEST[h >= 5 && h < 11 ? 'morgen' : h >= 11 && h < 17 ? 'tag' : h >= 17 && h < 22 ? 'abend' : 'nacht'];
+        var h = ha(), hass = h && h.hass;
+        var max = window.matchMedia && window.matchMedia('(max-width: 600px)').matches ? 4 : 6;
+        try { return window.casoraAssistIdeas ? window.casoraAssistIdeas(hass, { max: max }) : []; } catch (e) { return []; }
       },
       el: function (sel) { var h = ha(); var p = find(h && h.shadowRoot ? h.shadowRoot : document, 'casora-popup')[0]; return p ? find(p.shadowRoot, sel)[0] : null; },
       paint: function () {
@@ -847,12 +844,15 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           /* HA-App ohne HTTPS: native Spracheingabe der App nutzen (Mikrofon läuft dort nativ, nicht im WebView) */
           var ext = h.hass.auth && h.hass.auth.external;
           if (ext && ext.config && ext.config.hasAssist && ext.fireMessage) {
-            var pid = '01k0vke3tp7v9t16gt3075d5ec'; /* bevorzugte Pipeline (OpenAI) */
+            /* Bevorzugte Pipeline des Hauses (keine feste ID): aus assist_pipeline/pipeline/list,
+               sonst ohne Angabe – dann nimmt die App selbst die bevorzugte. */
             try { window.casoraPopup && window.casoraPopup.close(); } catch (e) {}
-            ext.fireMessage({ type: 'assist/show', payload: { pipeline_id: pid, start_listening: true } });
+            var show = function (pid) { ext.fireMessage({ type: 'assist/show', payload: pid ? { pipeline_id: pid, start_listening: true } : { start_listening: true } }); };
+            conn.sendMessagePromise({ type: 'assist_pipeline/pipeline/list' })
+              .then(function (r) { show(r && r.preferred_pipeline); }, function () { show(null); });
             return;
           }
-          A.msgs.push({ t: 'Das Mikrofon funktioniert nur über HTTPS – bitte Home Assistant über die Tailscale-Adresse (https://…ts.net) öffnen.', err: true }); A.paint(); return;
+          A.msgs.push({ t: 'Das Mikrofon funktioniert nur über HTTPS – bitte Home Assistant über eine https-Adresse öffnen.', err: true }); A.paint(); return;
         }
         /* Audio-Ausgabe im Tipp-Moment freischalten (iOS spielt sonst die Antwort nicht ab) */
         try {
@@ -965,6 +965,14 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         if (!window.casoraPopup) return false;
         var T = (window._casoraUI && window._casoraUI.tokens) || {};
         var ink = T.ink || '#fff', ink2 = T.ink2 || 'rgba(255,255,255,0.56)', ink3 = T.ink3 || 'rgba(255,255,255,0.42)';
+        var soft = !!(window._casoraSoft && window._casoraSoft());
+        var tr = window.casoraTr || function (x) { return x; };
+        var ideas = A.suggest();
+        var slot = window.casoraAssistIdeas ? window.casoraAssistIdeas.slot(new Date().getHours()) : '';
+        var SLOT = { morgen: 'Vorschläge für den Morgen', tag: 'Vorschläge für heute', abend: 'Vorschläge für den Abend', nacht: 'Vorschläge für die Nacht' };
+        var TONE = { light: 'var(--casora-tone-light, var(--casora-color-yellow, #FFCC00))', security: 'var(--casora-color-orange, #FF9F0A)',
+          climate: 'var(--casora-color-teal, #00C3D0)', energy: 'var(--casora-tone-energy, var(--casora-color-green, #34C759))',
+          media: 'var(--casora-tone-media, var(--casora-color-blue, #0A84FF))', general: 'var(--casora-color-sand, #9A8672)' };
         var tap = function (fn) {
           return ' ontouchstart="window._hasTy=event.touches[0].clientY;" ontouchend="if(Math.abs(event.changedTouches[0].clientY-(window._hasTy||0))>10)return;if(event.cancelable)event.preventDefault();event.stopPropagation();window._hasT=Date.now();' + fn + '"'
             + ' onclick="event.stopPropagation();if(Date.now()-(window._hasT||0)<700)return;' + fn + '"';
@@ -985,6 +993,15 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           + '.has-chips{display:flex;flex-wrap:wrap;gap:7px;}'
           /* Weich: Sand-Pille wie alle Knöpfe – die helle Segmentfläche war im hellen Design kaum zu sehen. */
           + '.has-chip{font-size:14px;padding:9px 13px;border-radius:999px;cursor:pointer;background:var(--casora-soft-control-fill,var(--casora-popup-seg-fill,rgba(255,255,255,0.16)));}'
+          + '.has-chip > *{pointer-events:none;}.has-chip-i,.has-chips-l{display:none;}'
+          /* D-ASSIST (Weich): 44 px hoch, 15 px/600 wie die übrigen Chips, Symbol im Farbkreis der Kategorie,
+             mittig wie „Wie kann ich helfen?“, darüber eine kleine Zeile „Vorschläge für den Abend“. */
+          + (soft ? '.has-chips{justify-content:center;gap:8px;}'
+            + '.has-chips-l{display:block;flex:0 0 100%;text-align:center;font-size:13px;font-weight:600;color:' + ink2 + ';margin:0 0 2px;}'
+            + '.has-chip{display:inline-flex;align-items:center;gap:9px;min-height:44px;box-sizing:border-box;padding:0 16px 0 6px;font-size:15px;font-weight:600;letter-spacing:-0.01em;color:' + ink + ';}'
+            + '.has-chip-i{display:grid;place-items:center;width:32px;height:32px;flex:none;border-radius:50%;background:var(--t);color:#fff;}'
+            + '.has-chip:focus-visible{outline:2px solid var(--casora-ton-ink,currentColor);outline-offset:2px;}'
+            + '@media (hover:hover){.has-chip:hover{background:var(--casora-soft-row-hover,rgba(140,115,90,0.11));}}' : '')
           + '.has-bar{display:flex;align-items:center;gap:8px;contain:layout style;}'
           + '.has-in{flex:1;min-width:0;height:48px;border:none;outline:none;border-radius:999px;padding:0 18px;font-size:16px;font-family:inherit;color:' + ink + ';'
           + '-webkit-user-select:text;user-select:text;pointer-events:auto;touch-action:manipulation;-webkit-appearance:none;appearance:none;'
@@ -999,11 +1016,19 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           + '@keyframes hasp{0%{box-shadow:0 0 0 0 rgba(255,59,48,.55)}100%{box-shadow:0 0 0 14px rgba(255,59,48,0)}}'
           + '.has-new{align-self:flex-end;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:' + ink + ';cursor:pointer;padding:8px 14px 8px 11px;border-radius:999px;background:var(--casora-soft-control-fill,var(--casora-popup-seg-fill,rgba(255,255,255,0.16)));line-height:1;}'
           + '.has-new > *{pointer-events:none;}'
+          + (soft ? '.has-new{min-height:44px;box-sizing:border-box;padding:0 16px 0 12px;font-weight:600;}' : '')   /* D-03: 44 px */
           + '</style>'
           + '<div class="has" data-casora-nodismiss="">'
           + '<div class="has-new"' + tap('window._casoraAssist.reset()') + '><ha-icon icon="mdi:plus" style="--mdc-icon-size:18px;width:18px;height:18px;display:flex;"></ha-icon>Neues Gespräch</div>'
           + '<div class="has-log"></div>'
-          + '<div class="has-chips">' + A.suggest().map(function (q) { q = (window.casoraTr || function (x) { return x; })(q); /* Assist bekommt die Frage in der UI-Sprache */ return '<div class="has-chip"' + tap('window._casoraAssist.send(' + JSON.stringify(q).replace(/"/g, '&quot;') + ')') + '>' + esc(q) + '</div>'; }).join('') + '</div>'
+          + '<div class="has-chips">' + (ideas.length ? '<div class="has-chips-l">' + esc(tr(SLOT[slot] || '')) + '</div>' : '') + ideas.map(function (it) {
+            var q = tr(it.q); /* Assist bekommt die Frage in der UI-Sprache */
+            var send = 'window._casoraAssist.send(' + JSON.stringify(q).replace(/"/g, '&quot;') + ')';
+            return '<div class="has-chip" role="button" tabindex="0"' + tap(send)
+              + ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();' + send + '}">'
+              + '<span class="has-chip-i" style="--t:' + (TONE[it.tone] || TONE.general) + ';"><ha-icon icon="' + esc(it.icon) + '" style="--mdc-icon-size:18px;width:18px;height:18px;display:flex;"></ha-icon></span>'
+              + '<span>' + esc(q) + '</span></div>';
+          }).join('') + '</div>'
           + '<div class="has-bar">'
           + '<input class="has-in" type="text" enterkeyhint="send" autocomplete="off" autocapitalize="sentences" placeholder="Frag Assist …"'
           + ' ontouchstart="event.stopPropagation();" ontouchend="event.stopPropagation();if(document.activeElement!==this&&this.getRootNode().activeElement!==this){this.focus();}"'

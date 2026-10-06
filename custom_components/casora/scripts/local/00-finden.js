@@ -1099,3 +1099,143 @@ window.casoraPriceKwh = function (v) {
 
   window.casoraLaundryFind = { classify: classify, forEntity: forEntity, all: all, plugs: plugs, sources: SOURCES };
 })();
+
+// ── Assist-Vorschläge aus dem eigenen Haus (D-ASSIST, 06.10.2026) ────────────
+// Früher feste Sätze je Tageszeit („Wie warm ist das Aquarium?“) – in einem anderen Haus
+// liefen sie ins Leere. Jetzt Bausteine, die nur erscheinen, wenn es passende Geräte gibt;
+// Raumnamen kommen aus den HA-Bereichen. Reihenfolge: erst was gerade zu tun ist (Fenster/Tür
+// offen, entriegelt, Licht an), dann die Tageszeit, dann Allgemeines. Kein Zufall – gleiche
+// Lage, gleiche Vorschläge. Sätze auf Deutsch; Englisch über phrases/en.json (casoraTr).
+//   casoraAssistIdeas(hass, { hour, max }) → [{ q, icon, tone }]
+//   casoraAssistIdeas.slot(hour)            → 'morgen' | 'tag' | 'abend' | 'nacht'
+// tone: light | security | climate | energy | media | general (Farbe des Symbolkreises).
+// Test: dev/unit/assist_vorschlaege.mjs
+(function () {
+  if (window.casoraAssistIdeas) return;
+  var OUTSIDE = /outdoor|aussen|außen|outside|draussen|draußen|garten|terrasse|balkon|garden|terrace|balcony/i;
+  function slot(h) { return h >= 5 && h < 10 ? 'morgen' : h >= 10 && h < 17 ? 'tag' : h >= 17 && h < 22 ? 'abend' : 'nacht'; }
+  // „im Wohnzimmer“, aber „in der Küche“: weibliche Raumwörter am ersten Wort erkennen.
+  function inRoom(name) {
+    var w = String(name || '').trim().split(/\s+/)[0].toLowerCase();
+    var fem = /(e|ung|ei|heit|keit|ion|tät|kammer|statt|halle)$/.test(w);
+    return (fem ? 'in der ' : 'im ') + String(name).trim();
+  }
+  function ideas(hass, o) {
+    o = o || {};
+    var S = (hass && hass.states) || {}, R = (hass && hass.entities) || {}, D = (hass && hass.devices) || {}, A = (hass && hass.areas) || {};
+    var hour = o.hour != null ? o.hour : new Date().getHours();
+    var max = o.max || 4;
+    var dead = function (s) { return !s || s.state === 'unavailable' || s.state === 'unknown'; };
+    // Sichtbare Entitäten einer Domäne (ohne versteckte, Diagnose- und Konfig-Entitäten)
+    var ids = Object.keys(S).filter(function (id) {
+      var e = R[id];
+      return !(e && (e.hidden || e.hidden_by || e.entity_category || e.disabled_by));
+    });
+    var dom = function (d) { return ids.filter(function (id) { return id.indexOf(d + '.') === 0; }); };
+    var attr = function (id) { return (S[id] && S[id].attributes) || {}; };
+    var areaOf = function (id) {
+      var e = R[id]; if (!e) return null;
+      var a = e.area_id || ((D[e.device_id] || {}).area_id) || null;
+      return a && A[a] ? a : null;
+    };
+    var lights = dom('light').filter(function (id) { return !dead(S[id]) && !Array.isArray(attr(id).entity_id); });
+    var lightsOn = lights.filter(function (id) { return S[id].state === 'on'; });
+    var notOpening = window.casoraNotAnOpening || function () { return false; };
+    var contacts = dom('binary_sensor').filter(function (id) {
+      var dc = attr(id).device_class;
+      return (dc === 'window' || dc === 'door' || dc === 'garage_door') && !notOpening(hass, id) && !dead(S[id]);
+    });
+    var windows = contacts.filter(function (id) { return attr(id).device_class === 'window'; });
+    var doors = contacts.filter(function (id) { return attr(id).device_class !== 'window'; });
+    var isOn = function (id) { return S[id].state === 'on'; };
+    var locks = dom('lock').filter(function (id) { return !dead(S[id]); });
+    var unlocked = locks.filter(function (id) { return S[id].state === 'unlocked' || S[id].state === 'open'; });
+    var alarms = dom('alarm_control_panel').filter(function (id) { return !dead(S[id]); });
+    var covers = dom('cover').filter(function (id) {
+      return !dead(S[id]) && ['garage', 'gate', 'door', 'damper'].indexOf(attr(id).device_class) < 0 && !Array.isArray(attr(id).entity_id);
+    });
+    var media = dom('media_player').filter(function (id) { return !dead(S[id]); });
+    var vacuums = dom('vacuum').filter(function (id) { return !dead(S[id]); });
+    var power = dom('sensor').filter(function (id) { return attr(id).device_class === 'power' && !dead(S[id]); });
+    var weather = dom('weather').filter(function (id) { return !dead(S[id]); });
+    var shopping = dom('todo').filter(function (id) { return /shopping|einkauf/i.test(id + ' ' + (attr(id).friendly_name || '')); });
+
+    // Räume nach Gewicht (Lichter, Klima, Medien, Jalousien) – der Hauptraum zuerst, bei Gleichstand nach Name.
+    var weight = {};
+    lights.concat(dom('climate'), media, covers).forEach(function (id) { var a = areaOf(id); if (a) weight[a] = (weight[a] || 0) + 1; });
+    var rank = function (list) {
+      return list.filter(function (a, i) { return a && list.indexOf(a) === i; }).sort(function (x, y) {
+        return (weight[y] || 0) - (weight[x] || 0) || String(A[x].name).localeCompare(String(A[y].name));
+      });
+    };
+    var warmRooms = rank(dom('climate').filter(function (id) { return !dead(S[id]) && attr(id).current_temperature != null; }).map(areaOf)
+      .concat(dom('sensor').filter(function (id) { return attr(id).device_class === 'temperature' && !dead(S[id]); }).map(areaOf)))
+      .filter(function (a) { return !OUTSIDE.test(A[a].name || ''); });
+    var dimOn = rank(lightsOn.filter(function (id) { var m = attr(id).supported_color_modes; return !m || m.join(',') !== 'onoff'; }).map(areaOf));
+    var dimAny = rank(lights.filter(function (id) { var m = attr(id).supported_color_modes; return !m || m.join(',') !== 'onoff'; }).map(areaOf));
+    var washerRuns = false;
+    try {
+      var LF = window.casoraLaundryFind;
+      washerRuns = !!(LF && LF.all(hass, 'washer').some(function (c) {
+        var run = c.f && c.f.running && S[c.f.running];
+        if (run) return run.state === 'on';
+        var st = c.state && S[c.state] ? String(S[c.state].state).toLowerCase() : '';
+        return /^(run|running|wash|washing|main_wash|rinse|rinsing|spin|spinning|läuft|in_betrieb|active)$/.test(st);
+      }));
+    } catch (e) { washerRuns = false; }
+    var wasteSoon = false;
+    try {
+      var W = window.casoraDevice && window.casoraDevice.waste(hass, {});
+      wasteSoon = !!(W && W.bins.length && W.days != null && W.days <= 1);
+    } catch (e) { wasteSoon = false; }
+
+    var Q = {
+      windows: { q: 'Welche Fenster sind offen?', icon: 'mdi:window-open-variant', tone: 'security' },
+      doors: { q: 'Welche Türen sind offen?', icon: 'mdi:door-open', tone: 'security' },
+      locked: { q: 'Ist alles abgeschlossen?', icon: 'mdi:lock-outline', tone: 'security' },
+      lightsOn: { q: 'Welche Lichter sind an?', icon: 'mdi:lightbulb-group-outline', tone: 'light' },
+      allOff: { q: 'Schalte alle Lichter aus', icon: 'mdi:lightbulb-off-outline', tone: 'light' },
+      arm: { q: 'Alarm scharf schalten', icon: 'mdi:shield-lock-outline', tone: 'security' },
+      weather: { q: 'Wie wird das Wetter heute?', icon: 'mdi:weather-partly-cloudy', tone: 'general' },
+      waste: { q: 'Muss heute eine Tonne raus?', icon: 'mdi:trash-can-outline', tone: 'general' },
+      coversUp: { q: 'Öffne die Jalousien', icon: 'mdi:blinds-open', tone: 'general' },
+      coversDown: { q: 'Schließe die Jalousien', icon: 'mdi:blinds', tone: 'general' },
+      power: { q: 'Wie viel Strom brauchen wir gerade?', icon: 'mdi:flash-outline', tone: 'energy' },
+      washer: { q: 'Läuft die Waschmaschine noch?', icon: 'mdi:washing-machine', tone: 'general' },
+      vacuum: { q: 'Starte den Saugroboter', icon: 'mdi:robot-vacuum', tone: 'general' },
+      playing: { q: 'Was läuft gerade?', icon: 'mdi:music-note-outline', tone: 'media' },
+      shopping: { q: 'Was steht auf der Einkaufsliste?', icon: 'mdi:cart-outline', tone: 'general' },
+    };
+    var warm = warmRooms[0] ? { q: 'Wie warm ist es ' + inRoom(A[warmRooms[0]].name) + '?', icon: 'mdi:thermometer', tone: 'climate' } : null;
+    var dimRoom = dimOn[0] || dimAny[0];
+    var dim = dimRoom ? { q: 'Dimme das Licht ' + inRoom(A[dimRoom].name), icon: 'mdi:lightbulb-on-50', tone: 'light' } : null;
+    var night = slot(hour) === 'nacht';
+
+    // 1) Handlungsbedarf
+    var now = [];
+    if (windows.some(isOn)) now.push(Q.windows);
+    if (unlocked.length) now.push(Q.locked);
+    if (doors.some(isOn)) now.push(Q.doors);
+    if (lightsOn.length) now.push(night ? Q.allOff : Q.lightsOn);
+    if (night && alarms.some(function (id) { return S[id].state === 'disarmed'; })) now.push(Q.arm);
+    // 2) Tageszeit
+    var part = {
+      morgen: [weather.length && Q.weather, wasteSoon && Q.waste, covers.length && covers.every(function (id) { return S[id].state === 'closed'; }) && Q.coversUp, warm],
+      tag: [power.length && Q.power, washerRuns && Q.washer, vacuums.some(function (id) { return S[id].state === 'docked'; }) && Q.vacuum, warm],
+      abend: [covers.some(function (id) { return S[id].state === 'open'; }) && Q.coversDown, media.some(function (id) { return S[id].state === 'playing'; }) && Q.playing, dim, windows.length && Q.windows],
+      nacht: [locks.length && Q.locked, windows.length && Q.windows, alarms.some(function (id) { return S[id].state === 'disarmed'; }) && Q.arm],
+    }[slot(hour)];
+    // 3) Allgemein (nur was es im Haus gibt)
+    var general = [warm, weather.length && Q.weather, locks.length && Q.locked, windows.length && Q.windows,
+      shopping.length && Q.shopping, lights.length && Q.lightsOn, power.length && Q.power, dim];
+    var out = [], seen = {};
+    now.concat(part, general).forEach(function (x) {
+      if (!x || seen[x.q] || out.length >= max) return;
+      seen[x.q] = 1; out.push(x);
+    });
+    return out;
+  }
+  ideas.slot = slot;
+  ideas.inRoom = inRoom;
+  window.casoraAssistIdeas = ideas;
+})();

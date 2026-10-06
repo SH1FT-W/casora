@@ -1471,7 +1471,8 @@
       h.textContent = tr('Hier gibt es noch keine Geräte');
       const sub = document.createElement('div');
       sub.style.cssText = 'margin-top:4px;font-size:13px;font-weight:500;color:var(--casora-text-2, var(--secondary-text-color));';
-      sub.textContent = tr('Im Casora Studio einem Raum zuordnen');
+      // D-20 (Weich): vollständiger Satz – es fehlte, was zugeordnet werden soll.
+      sub.textContent = tr(window._casoraSoft && window._casoraSoft() ? 'Geräte im Casora Studio einem Raum zuordnen' : 'Im Casora Studio einem Raum zuordnen');
       el.append(h, sub);
       this._contentEl.appendChild(el);
       this._emptyHintEl = el;
@@ -2139,7 +2140,8 @@
       titleEl.style.cssText = [
         'display:block', 'width:100%', 'box-sizing:border-box',
         `padding-bottom:${TITLE_PAD_BOT}px`,
-        `font-size:${TITLE_FONT_PX}px`, 'font-weight:700', 'color:var(--casora-mobile-title-color, #ffffff)',
+        // D-12: Weich setzt das Gewicht wie beim Seitentitel „Zuhause“ (800); sonst wie bisher 700.
+        `font-size:${TITLE_FONT_PX}px`, 'font-weight:var(--casora-category-title-weight, 700)', 'color:var(--casora-mobile-title-color, #ffffff)',
         'letter-spacing:-0.5px', 'pointer-events:none',
         'transform-origin:left center',
       ].join(';');
@@ -2208,7 +2210,11 @@
           '-webkit-backdrop-filter:blur(10px) saturate(1.2)',
           'cursor:pointer', 'z-index:61',
         ].join(';');
+        // D-03: Trefferfläche 44 px (Weich setzt --casora-back-hit: -2px; sichtbar bleibt 40 px) und Name für Bildschirmleser
+        back.setAttribute('role', 'button');
+        back.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Zurück') : 'Zurück');
         back.innerHTML =
+          '<span style="position:absolute;inset:var(--casora-back-hit, 0);border-radius:50%;"></span>' +
           '<svg width="14" height="24" viewBox="0 0 14 24" fill="none" style="margin-right:2px">' +
           '<path d="M12 2.5 L2.8 12 L12 21.5" style="stroke:var(--casora-chrome-ink, #fff)" stroke-width="3" ' +
           'stroke-linecap="round" stroke-linejoin="round"/></svg>';

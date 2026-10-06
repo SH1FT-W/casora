@@ -753,8 +753,10 @@
   /* Viele Segmente (Startzeit, Saugstufe): Breite nach Text statt gleich breit, damit nichts abgeschnitten wird. */
   H.dense = function (html, wrap) {
     /* wrap: Umbruch statt gleich breiter Spalten (Saugroboter: „Saugen & wischen“ wurde sonst abgeschnitten). */
-    if (wrap) return '<style>.hh-wrap .hui-seg{grid-template-columns:repeat(auto-fill, minmax(124px, 1fr))!important;}'
-      + '.hh-wrap .hui-sg{padding:0 10px;}</style><div class="hh-wrap">' + html + '</div>';
+    /* D-07: Reihen füllen die volle Breite (vorher blieben leere Rasterspalten rechts), jedes Feld
+       mindestens so breit wie sein Text – Desktop alle in einer Reihe, am Handy 3 + 2. */
+    if (wrap) return '<style>.hh-wrap .hui-seg{display:flex!important;flex-wrap:wrap;}'
+      + '.hh-wrap .hui-sg{flex:1 1 0;min-width:max-content;padding:0 14px;overflow:visible;}</style><div class="hh-wrap">' + html + '</div>';
     return '<style>.hh-dense .hui-sg{flex:0 1 auto;min-width:0;padding:0 16px;}</style><div class="hh-dense">' + html + '</div>';
   };
   /* Weiße Glas-Töne (rgba(255,255,255,…)) wären auf Creme unsichtbar: im Weich-Design als gedimmter Kreis. */
@@ -3206,22 +3208,26 @@
         if (area != null) sub.push(U.f(area, 1) + ' m²');
         if (mins != null) sub.push(U.dur(mins));
       } else {
-        if (bat != null) sub.push('Akku ' + Math.round(bat) + ' %' + (on(c.charging) ? ' · lädt' : ''));
+        /* D-08: Teile einzeln übersetzen (der ganze Satz traf keinen Eintrag) und „Uhr“ nur auf Deutsch. */
+        var trV = window.casoraTr || function (x) { return x; };
+        var deV = !window.casoraLocale || /^de/i.test(String(window.casoraLocale()));
+        if (bat != null) sub.push(trV('Akku ' + Math.round(bat) + ' %') + (on(c.charging) ? ' · ' + trV('lädt') : ''));
         var le = U.str(states, c.lastEnd);
-        if (le) sub.push('zuletzt ' + U.day(new Date(le)).replace(/^(Heute|Gestern)$/, function (x) { return x.toLowerCase(); }) + ', ' + U.clock(new Date(le)) + ' Uhr');
+        var lastW = trV('zuletzt');
+        if (le) sub.push(lastW + ' ' + trV(U.day(new Date(le))).replace(/^(Heute|Gestern|Today|Yesterday)$/, function (x) { return x.toLowerCase(); }) + ', ' + U.clock(new Date(le)) + (deV ? ' Uhr' : ''));
       }
       var todo = V.todo(c, states);
       if (!s.run && todo.length && todo[0].level === 2) { sub.push(todo[0].label); tone = 'bad'; }
       var value = s.label, unit = null;
       if ((s.run || s.paused) && pct != null) { value = String(Math.round(pct)); unit = '% · ' + s.label; }
       /* Weich (Entschlacken): „Akku 93 % · zuletzt Sa. 11:18, 20 m²“ – die Fläche der letzten Reinigung gehört dazu. */
-      if (SF && !(s.run || s.paused) && area != null && sub.length && /^zuletzt /.test(sub[sub.length - 1])) sub[sub.length - 1] += ', ' + U.f(area, 1) + ' m²';
+      if (SF && !(s.run || s.paused) && area != null && sub.length && sub[sub.length - 1].indexOf(lastW + ' ') === 0) sub[sub.length - 1] += ', ' + U.f(area, 1) + ' m²';
       var out = UI.hero({ value: value, unit: unit, sub: sub.join(' · ') || null, subTone: tone, center: true });
       /* Große Tasten: Zum Dock · Start/Pause · Orten */
       var svc = function (service) { return esc(JSON.stringify({ domain: 'vacuum', service: service, data: {}, target: { entity_id: c.st } })); };
       var mdi = function (n, sz, col) { return '<ha-icon icon="' + n + '" style="--mdc-icon-size:' + sz + 'px;width:' + sz + 'px;height:' + sz + 'px;display:block;color:' + (col || 'currentColor') + ';"></ha-icon>'; };
       var docked = !s.run && !s.paused;
-      var main = s.run ? { s: svc('pause'), i: 'mdi:pause', l: 'Pause' } : { s: svc('start'), i: 'mdi:play', l: s.paused ? 'Weiter' : 'Start' };
+      var main = s.run ? { s: svc('pause'), i: 'mdi:pause', l: 'Pause' } : { s: svc('start'), i: 'mdi:play', l: s.paused ? 'Fortsetzen' : 'Start' };
       /* Weich: drei runde Pillen mit Symbol und Text, die Hauptaktion gefüllt. */
       if (SF) {
         var pill = function (cls, s0, ic, l) {
@@ -3393,7 +3399,8 @@
         var nm = String((states[b].attributes || {}).friendly_name || b);
         /* Gerätenamen vorn weglassen: „<Roboter> Intensiv“ → „Intensiv“. */
         var bd = hass && hass.entities && hass.entities[b] && hass.devices && hass.devices[hass.entities[b].device_id];
-        [bd && bd.name_by_user, bd && bd.name].forEach(function (dn) {
+        /* D-07: auch der Name des Saugers selbst (ohne Geräteeintrag stand „<Roboter> Intensiv“ da). */
+        [bd && bd.name_by_user, bd && bd.name, ((states[c.st] || {}).attributes || {}).friendly_name].forEach(function (dn) {
           if (dn && nm.length > dn.length && nm.toLowerCase().indexOf(String(dn).toLowerCase() + ' ') === 0) nm = nm.slice(dn.length + 1);
         });
         return { icon: 'mdi:play-circle-outline', iconTone: 'accent', label: nm, sub: 'Programm aus der Roborock-App',

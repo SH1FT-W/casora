@@ -2892,6 +2892,13 @@ window.casoraMenuGlass = {
           this._activate(route, btn);
         });
 
+        // D-09: mit der Tastatur angesprungenen Raum in Sicht holen (stand sonst außerhalb der Leiste).
+        btn.addEventListener('focus', () => {
+          let kb = false;
+          try { kb = btn.matches(':focus-visible'); } catch (e) { kb = false; }
+          if (kb) btn.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+        });
+
         scroller.appendChild(btn);
         this._els.push({ btn: btn, label: label, badge: badge, route: route });
       });
@@ -3123,6 +3130,17 @@ window.casoraMenuGlass = {
       if (this._bar) {
         this._bar.classList.toggle('more-l-on', max > 2 && sc.scrollLeft > 2);
         this._bar.classList.toggle('more-r-on', max > 2 && sc.scrollLeft < max - 2);
+      }
+      // D-14 (Weich, --casora-nav-fade-clear-l gesetzt): die linke Kante sitzt am Anfang des ersten
+      // ganz sichtbaren Raums – auch am Ende der Leiste, wo das Einrasten nicht mehr greift (sonst „r“ von „Flur“).
+      let edge = 0;
+      try { edge = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--casora-nav-fade-clear-l')) || 0; } catch (e) { edge = 0; }
+      if (edge > 0 && this._els) {
+        const x0 = sc.getBoundingClientRect().left;
+        const first = this._els.map((el) => el.btn.getBoundingClientRect().left - x0).filter((x) => x >= edge - 1)[0];
+        const at = first != null && sc.scrollLeft > 2 ? Math.max(edge, Math.round(first)) : null;
+        if (at != null) { sc.style.setProperty('--casora-nav-fade-clear-l', at + 'px'); sc.style.setProperty('--casora-nav-fade-solid-l', (at + 1) + 'px'); }
+        else { sc.style.removeProperty('--casora-nav-fade-clear-l'); sc.style.removeProperty('--casora-nav-fade-solid-l'); }
       }
     }
 
@@ -3382,6 +3400,9 @@ window.casoraMenuGlass = {
         }
 
         .scroller::-webkit-scrollbar { height: 0; width: 0; }
+        /* D-14: Weich rastet auf Raumanfänge ein (neben dem Pfeil keine Wortreste); sonst wie bisher. */
+        .scroller { scroll-snap-type: var(--casora-nav-snap, none); scroll-padding-inline: var(--casora-nav-snap-pad, 0px); }
+        .route { scroll-snap-align: var(--casora-nav-snap-align, none); }
 
         /* Überlänge: Namen laufen weich aus statt hart abgeschnitten (JS setzt die Klassen).
            01.10.2026: Verlauf breiter (72 px, vorher 48) – am Rand war kaum zu sehen, dass es
@@ -3394,12 +3415,12 @@ window.casoraMenuGlass = {
           mask-image: linear-gradient(to right, black 0, black calc(100% - var(--casora-nav-fade-solid, 72px)), transparent calc(100% - var(--casora-nav-fade-clear, 8px)));
         }
         .scroller.fade-l {
-          -webkit-mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear, 8px), black var(--casora-nav-fade-solid, 72px), black 100%);
-          mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear, 8px), black var(--casora-nav-fade-solid, 72px), black 100%);
+          -webkit-mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear-l, var(--casora-nav-fade-clear, 8px)), black var(--casora-nav-fade-solid-l, var(--casora-nav-fade-solid, 72px)), black 100%);
+          mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear-l, var(--casora-nav-fade-clear, 8px)), black var(--casora-nav-fade-solid-l, var(--casora-nav-fade-solid, 72px)), black 100%);
         }
         .scroller.fade-l.fade-r {
-          -webkit-mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear, 8px), black var(--casora-nav-fade-solid, 72px), black calc(100% - var(--casora-nav-fade-solid, 72px)), transparent calc(100% - var(--casora-nav-fade-clear, 8px)));
-          mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear, 8px), black var(--casora-nav-fade-solid, 72px), black calc(100% - var(--casora-nav-fade-solid, 72px)), transparent calc(100% - var(--casora-nav-fade-clear, 8px)));
+          -webkit-mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear-l, var(--casora-nav-fade-clear, 8px)), black var(--casora-nav-fade-solid-l, var(--casora-nav-fade-solid, 72px)), black calc(100% - var(--casora-nav-fade-solid, 72px)), transparent calc(100% - var(--casora-nav-fade-clear, 8px)));
+          mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear-l, var(--casora-nav-fade-clear, 8px)), black var(--casora-nav-fade-solid-l, var(--casora-nav-fade-solid, 72px)), black calc(100% - var(--casora-nav-fade-solid, 72px)), transparent calc(100% - var(--casora-nav-fade-clear, 8px)));
         }
         .more {
           position: absolute;
@@ -3489,6 +3510,8 @@ window.casoraMenuGlass = {
         }
 
         .route:focus-visible { outline: none; }
+        /* D-09: sichtbarer Fokus (Weich: Ton-Ring über --casora-nav-focus-ring; sonst wie bisher ohne). */
+        .route:focus-visible { box-shadow: var(--casora-nav-focus-ring, none); border-radius: 999px; }
 
         .label {
           position: relative;
@@ -4412,6 +4435,8 @@ window.casoraMenuGlass = {
       -webkit-backdrop-filter: none;
     }
     :host([soft]) .header-close svg { width: 18px; height: 18px; }
+    /* D-02: sichtbar 38 px, Trefferfläche 44 px (unsichtbarer Rand rundum) */
+    :host([soft]) .header-close::before { content: ""; position: absolute; inset: -3px; border-radius: 50%; }
     .soft-empty[hidden] { display: none; }
     /* Gerät der Kachel fehlt (Entität gibt es nicht mehr): nur der Hinweis, kein halber Inhalt. */
     :host([missing]) .content .container, :host([missing]) .extra { display: none !important; }
@@ -4654,6 +4679,23 @@ window.casoraMenuGlass = {
     }
     // Thermostat-Kachel ohne Symbol (Puck): Thermometer wie im Entwurf, damit jeder Kopf einen Ring hat.
     if (!glyph && /thermostat|climate\./.test(key)) glyph = '<ha-icon icon="mdi:thermometer"></ha-icon>';
+    // D-10: Alarm-Kopf in derselben Stufe wie die aktive Modus-Zeile (scharf = ok mit Schild-Haken,
+    // nur ausgelöst = Gefahr) – vorher pauschal Rot mit „!“. Gleiche Entität wie das Popup.
+    if (/\bcasora_alarm\b|alarm_control_panel\./.test(key) && window.casoraSecurityLevel && window.casoraSecurityColor
+        && typeof window.casoraIconUrl === 'function') {
+      var hA = src._hass || (document.querySelector('home-assistant') || {}).hass;
+      var SA = (hA && hA.states) || {};
+      var vA = src._config.variables && src._config.variables.alarm_entity;
+      var aid = /^alarm_control_panel\./.test(ent) ? ent
+        : (typeof vA === 'string' && SA[vA] ? vA : (SA['alarm_control_panel.alarmo'] ? 'alarm_control_panel.alarmo' : null));
+      if (aid && SA[aid]) {
+        var AIC = { disarmed: 'shield_off', armed_home: 'shield_check', armed_away: 'shield_lock', armed_night: 'shield_moon',
+          armed_vacation: 'shield_vacation', armed_custom_bypass: 'shield_bypass', triggered: 'shield_alarm' };
+        return { hue: window.casoraSecurityColor(window.casoraSecurityLevel(hA, [aid])),
+          html: '<span class="g" style="--g:url(\'' + monoUrl(window.casoraIconUrl(AIC[SA[aid].state] || 'shield_marked'), onGlyph).replace(/['"\\]/g, '') + '\')"></span>',
+          off: false };
+      }
+    }
     if (!glyph) return null;
     // Kachel meldet selbst Ruhe (z. B. NINA „Keine Warnung“ setzt _casoraRingQuiet): Sand wie die Kachel.
     var idle = src._casoraRingQuiet === true;
@@ -4874,7 +4916,7 @@ window.casoraMenuGlass = {
             '<div class="header" hidden>' +
               '<div class="header-bar">' +
                 '<section class="header-nav">' +
-                  '<button class="header-close" type="button" aria-label="Close">' +
+                  '<button class="header-close" type="button" aria-label="Schließen">' +
                     '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
                       '<path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"></path>' +
                     '</svg>' +
@@ -5012,6 +5054,8 @@ window.casoraMenuGlass = {
       this._headerTitle.textContent = cfg.title || '';
       this._headerEyebrow.textContent = cfg.eyebrow || '';
       this._headerClose.hidden = cfg.close === false;
+      /* D-02: Bildschirmleser-Name in der Oberflächensprache (war fest „Close“) */
+      this._headerClose.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Schließen') : 'Schließen');
       // Weich: Ring aus der auslösenden Kachel. Gemerkt wird die Kachel, nicht das Ergebnis –
       // Farbe und Symbol werden bei jedem Öffnen und nach einem Theme-Wechsel neu gelesen.
       // Ein neues Popup ohne angetippte Kachel bekommt keinen fremden Ring.
@@ -9026,12 +9070,13 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   function announce() {
     var n = unread();
     var text = n > 99 ? '99+' : String(n);
-    var inBadge = COUNT_IN_BADGE && !isPhone();
-    var show = (n > 0 && inBadge) ? 'grid' : 'none';
     // Weich (--casora-bell-dot: 1): schlichte Glocke + eigener Punkt statt bell-badge –
     // sonst zeigt die Glocke zwei Punkte (den aus der Grafik und den eigenen).
     var dotMode = false;
     try { dotMode = getComputedStyle(document.documentElement).getPropertyValue('--casora-bell-dot').trim() === '1'; } catch (e) { /* ohne Stil eben bell-badge */ }
+    // D-21: in Weich überall derselbe Punkt (Desktop zeigte eine schwer lesbare Zahl, das Handy einen Punkt).
+    var inBadge = COUNT_IN_BADGE && !isPhone() && !dotMode;
+    var show = (n > 0 && inBadge) ? 'grid' : 'none';
     var badged = !inBadge && n > 0;
     var src = iconUrl(badged && !dotMode ? 'bell-badge' : 'bell');
     bells().forEach(function (el) {
@@ -9481,7 +9526,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     });
     var clear = document.createElement('button');
     clear.type = 'button';
-    clear.textContent = 'Alles gelesen';
+    clear.textContent = window.casoraTr ? window.casoraTr('Alles gelesen') : 'Alles gelesen';
     Object.assign(clear.style, {
       border: '0', background: 'transparent', font: 'inherit', fontSize: '14px',
       fontWeight: '500', letterSpacing: '-0.01em', cursor: 'pointer', padding: '0',
@@ -9492,7 +9537,22 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     head.appendChild(clear);
     head.style.justifyContent = 'flex-end';
     head.style.padding = '11px calc(var(--casora-popup-row-pad-x, 16px) + 8px) 5px';
-    if (unread()) inner.appendChild(head);
+    /* Weich (D-03/D-21): Kopfzeile „Benachrichtigungen“ links, „Alles gelesen“ rechts mit
+       44 px Trefferfläche (vorher reiner Textlink, 17 px hoch). Standard/Glas unverändert. */
+    var softBell = false;
+    try { softBell = getComputedStyle(document.documentElement).getPropertyValue('--casora-popup-layout').trim() === 'soft'; } catch (e) {}
+    if (softBell) {
+      var ttl = document.createElement('div');
+      ttl.textContent = window.casoraTr ? window.casoraTr('Benachrichtigungen') : 'Benachrichtigungen';
+      Object.assign(ttl.style, { marginRight: 'auto', fontSize: '15px', fontWeight: '700', letterSpacing: '-0.01em',
+        color: 'var(--casora-popup-tiles-text-primary, var(--primary-text-color))' });
+      head.insertBefore(ttl, clear);
+      Object.assign(clear.style, { minHeight: '44px', padding: '0 12px', margin: '0 -12px', display: unread() ? 'inline-flex' : 'none',
+        alignItems: 'center', borderRadius: '999px', fontWeight: '600' });
+      head.style.alignItems = 'center';
+      head.style.padding = '6px calc(var(--casora-popup-row-pad-x, 16px) + 8px) 0';
+    }
+    if (unread() || softBell) inner.appendChild(head);
 
     var body = document.createElement('div');
     Object.assign(body.style, {

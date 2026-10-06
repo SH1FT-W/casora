@@ -247,7 +247,6 @@
   "Hört zu …": "Listening …",
   "In der Cookidoo-App auf \"Meine Woche\" planen": "Plan it in the Cookidoo app under \"My Week\"",
   "Info-Licht am Boden": "Floor info light",
-  "Ist die Wohnungstür abgeschlossen?": "Is the front door locked?",
   "Jetzt lüften": "Ventilate now",
   "Jetzt prüfen": "Check now",
   "KI prüft noch …": "AI is still checking …",
@@ -393,6 +392,7 @@
   "Scharfschaltung läuft": "Arming",
   "Schlafzimmer Fenster ist offen": "Bedroom window is open",
   "Schließen": "Close",
+  "Zurück": "Back",
   "Schließt": "Closing",
   "Schließt bei Temperatursturz": "Closes on a temperature drop",
   "Schließt sich…": "Closing…",
@@ -403,7 +403,6 @@
   "Sensordaten nicht verfügbar": "Sensor data unavailable",
   "Sensoren temporär deaktiviert": "Sensors temporarily disabled",
   "Service fällig": "Service due",
-  "Sind noch Lichter an?": "Are any lights on?",
   "Sirene an": "Siren on",
   "Sirene auslösen?": "Sound the siren?",
   "Solaranteil heute": "Solar share today",
@@ -471,7 +470,6 @@
   "Welche Fenster sind offen?": "Which windows are open?",
   "Welche Lichter sind an?": "Which lights are on?",
   "Weniger als 1 Min. übrig": "Less than 1 min left",
-  "Wie warm ist es im Büro?": "How warm is it in the office?",
   "Windig & bewölkt": "Windy & cloudy",
   "Wird übernommen": "Applying",
   "Wird abgebrochen": "Cancelling",
@@ -949,7 +947,6 @@
   "Zu niedrig": "Too low",
   "Claude prüft Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad der letzten 7 Tage.": "Claude reviews heating time, room temperatures, heating with open windows and the bathroom radiator over the last 7 days.",
   "Code eingeben…": "Enter code…",
-  "Das Mikrofon funktioniert nur über HTTPS – bitte Home Assistant über die Tailscale-Adresse (https://…ts.net) öffnen.": "The microphone only works over HTTPS – please open Home Assistant via its HTTPS address.",
   "Dashboard bearbeiten": "Edit dashboard",
   "Deine Region": "Your region",
   "Details in der Bambu-App": "Details in the Bambu app",
@@ -1102,8 +1099,6 @@
   "Wasserkasten fehlt": "Water tank missing",
   "Wetterwarnung aufgehoben": "Weather warning lifted",
   "Wie kann ich helfen?": "How can I help?",
-  "Wie warm ist das Meerwasseraquarium?": "How warm is the saltwater aquarium?",
-  "Wie warm ist es im Wohnzimmer?": "How warm is it in the living room?",
   "Wieder anzeigen": "Show again",
   "Zum Freigeben oben in der Update-Zeile auf „Freigeben“ tippen und bestätigen.": "To approve, tap “Approve” in the update row above and confirm.",
   "KI: alle unkritisch": "AI: all uncritical",
@@ -1327,7 +1322,31 @@
   "Akku fast leer": "Battery almost empty",
   "Läuft gerade": "Now playing",
   "Scharf": "Armed",
-  "Alarm unscharf": "Alarm disarmed"
+  "Alarm unscharf": "Alarm disarmed",
+  "Welche Türen sind offen?": "Which doors are open?",
+  "Ist alles abgeschlossen?": "Is everything locked?",
+  "Alarm scharf schalten": "Arm the alarm",
+  "Wie wird das Wetter heute?": "What's the weather like today?",
+  "Muss heute eine Tonne raus?": "Does a bin need to go out today?",
+  "Öffne die Jalousien": "Open the blinds",
+  "Schließe die Jalousien": "Close the blinds",
+  "Wie viel Strom brauchen wir gerade?": "How much power are we using right now?",
+  "Läuft die Waschmaschine noch?": "Is the washing machine still running?",
+  "Was läuft gerade?": "What's playing right now?",
+  "Vorschläge für den Morgen": "Suggestions for the morning",
+  "Vorschläge für heute": "Suggestions for today",
+  "Vorschläge für den Abend": "Suggestions for the evening",
+  "Vorschläge für die Nacht": "Suggestions for the night",
+  "lädt": "charging",
+  "Zum Dock": "Dock",
+  "Smart wählt Saugstärke und Wischen je Raum selbst.": "Smart picks suction and mopping for each room by itself.",
+  "Kein Bild": "No image",
+  "Zu": "Close",
+  "Auf": "Open",
+  "Position": "Position",
+  "Spielt": "Playing",
+  "Geräte im Casora Studio einem Raum zuordnen": "Assign devices to a room in Casora Studio",
+  "Das Mikrofon funktioniert nur über HTTPS – bitte Home Assistant über eine https-Adresse öffnen.": "The microphone only works over HTTPS – please open Home Assistant via an https address."
  },
  "patterns": [
   [
@@ -2425,6 +2444,14 @@
   [
    "^(\\d+) % Regen$",
    "{1}% rain"
+  ],
+  [
+   "^Wie warm ist es (?:im|in der) (.+)\\?$",
+   "How warm is it in the {1}?"
+  ],
+  [
+   "^Dimme das Licht (?:im|in der) (.+)$",
+   "Dim the lights in the {1}"
   ]
  ]
 }

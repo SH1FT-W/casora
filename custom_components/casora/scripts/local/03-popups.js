@@ -818,6 +818,13 @@
     if (/casora_popup_fbh/.test(key)) return 'mdi:heating-coil';
     return typeof prevRing === 'function' ? prevRing(src, key) : null;
   };
+  /* D-19: Thermostat-Kachel zeigt die Heizschlange (casoraIconUrl('heating_coil')) – der Popup-Kopf
+     dasselbe Symbol statt eines Thermometers (wie bei der Jalousie, Audit M2). */
+  var prevRingUrl = window.casoraRingUrl;
+  window.casoraRingUrl = function (src, key) {
+    if (/\bcasora_thermostat\b|casora_popup_fbh/.test(key) && typeof window.casoraIconUrl === 'function') return window.casoraIconUrl('heating_coil');
+    return typeof prevRingUrl === 'function' ? prevRingUrl(src, key) : null;
+  };
 
   /* ── Popup-Karte ── */
   window._casoraFbhPopup = function (entity, variables, states, hass) {
