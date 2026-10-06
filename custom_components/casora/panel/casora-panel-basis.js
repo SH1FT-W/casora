@@ -321,10 +321,18 @@
     const measuring = (id) => numeric(id) || ["unavailable", "unknown"].includes(String((S[id] || {}).state));
     // 04.10.2026: alle Leistungssensoren im Bereich (Steckdosen, Geräte) – ohne Sensor für den
     // ganzen Raum zeigt die Badge ihre Summe (energy_entities), das Popup jeden einzeln.
+    // 06.10.2026: powercalc-Sensoren ohne eigenen Bereich (kein Gerät) gehören in den Raum ihrer
+    // Quelle (Attribut source_entity), z. B. der Eigenverbrauch eines Shelly.
+    const powerArea = (id) => {
+      const a = areaName(id);
+      if (a || (R[id] || {}).platform !== "powercalc") return a;
+      const src = ((S[id] || {}).attributes || {}).source_entity;
+      return src && src !== id ? areaName(src) : null;
+    };
     const pickPowerAll = (room) => Object.keys(S).sort().filter((id) => {
       if (!id.startsWith("sensor.") || !isPower(id) || !measuring(id)) return false;
       const e = R[id];
-      if (!e || e.hidden || e.entity_category || e.disabled_by || norm(areaName(id)) !== norm(room.name)) return false;
+      if (!e || e.hidden || e.entity_category || e.disabled_by || norm(powerArea(id)) !== norm(room.name)) return false;
       const dev = D[e.device_id] || {};
       const label = [id, (S[id].attributes || {}).friendly_name, dev.name_by_user, dev.name].join(" ");
       return !NOT_ROOM_POWER.test(label) && !NOT_ELECTRIC.test(label);
@@ -347,25 +355,42 @@
     };
     out.slice(1).forEach((room) => {
       room.temp = pickSensor("temperature", room); room.hum = pickSensor("humidity", room);
-      // Ein Sensor für den ganzen Raum geht vor; sonst ein einzelner Sensor wie bisher,
-      // mehrere als Liste (Summe).
+      // Ein Sensor für den ganzen Raum geht vor; sonst die Geräte als Liste (Summe).
       const whole = pickPowerWhole(room);
       // Je Gerät zählt: ein Geräte-Gesamtsensor (z. B. *_device_power) allein; sonst alle
       // Kanäle (switch_0, switch_1 …); sonst ein Sensor – „Leistung Durchschnitt“ o. Ä. zählt
-      // nie doppelt. Gleichnamige Geräte im Raum gelten als eins (WashData spiegelt die
-      // Steckdose der Waschmaschine als eigenes Gerät gleichen Namens).
-      const groups = new Map();
-      (whole ? [] : pickPowerAll(room)).forEach((id) => {
-        const d = (R[id] || {}).device_id;
-        const dv = d ? (D[d] || {}) : {};
-        const key = d ? (norm(dv.name_by_user || dv.name || "") || d) : "\u0000" + id;
+      // nie doppelt.
+      // 06.10.2026: Geräte nach device_id, nie nach Namen – zwei gleich benannte Spots sind zwei
+      // Verbraucher. Eigenverbrauch von powercalc (Plattform powercalc, z. B. *_device_power am
+      // Shelly) misst etwas anderes als der Last-Kanal und zählt zusätzlich.
+      const groups = new Map(), extra = [];
+      const all0 = whole ? [] : pickPowerAll(room);
+      all0.forEach((id) => {
+        const e = R[id] || {};
+        if (e.platform === "powercalc") { extra.push(id); return; }
+        const key = e.device_id || "\u0000" + id;
         if (!groups.has(key)) groups.set(key, []);
         groups.get(key).push(id);
       });
       const all = [];
       groups.forEach((ids) => all.push(...perDevice(ids)));
-      room.power = whole || (all.length === 1 ? all[0] : null);
-      room.powers = all.length > 1 ? all.slice(0, 12) : [];
+      extra.forEach((id) => { if (!all.includes(id)) all.push(id); });
+      // Bis 1.0.11 (gleichnamige Geräte als eins, ein Sensor je Gerät): nur zum Erkennen
+      // automatisch eingetragener Listen, die seitdem niemand verändert hat.
+      const old = new Map();
+      all0.forEach((id) => {
+        const d = (R[id] || {}).device_id;
+        const dv = d ? (D[d] || {}) : {};
+        const key = d ? (norm(dv.name_by_user || dv.name || "") || d) : "\u0000" + id;
+        if (!old.has(key)) old.set(key, []);
+        old.get(key).push(id);
+      });
+      const oldAll = [];
+      old.forEach((ids) => oldAll.push(...perDevice(ids)));
+      room.power = whole || null;
+      room.powers = whole ? [] : all.slice(0, 12);
+      room.powersOld = whole ? [whole] : oldAll.slice(0, 12);
+      room.powersAny = all0;
     });
     const INDOOR = /innen|indoor|durchschnitt|average|mittel|wohnung|zuhause|haus/i;
     const houseSensor = (dc) => Object.keys(S).find((id) => id.startsWith("sensor.") && ((S[id].attributes || {}).device_class) === dc
@@ -400,6 +425,7 @@
       put(v, "climate_entity_", climate, 3);
       if (room.temp) v.temp_sensor_1 = room.temp;
       if (room.hum) v.humidity_sensor = room.hum;
+      // Sensor für den ganzen Raum: energy_power_entity; Geräte (auch ein einzelnes): Liste.
       if (room.power) v.energy_power_entity = room.power;
       else if ((room.powers || []).length) v.energy_entities = room.powers.slice();
       put(v, "media_player_", media, 10);
@@ -489,7 +515,21 @@
     });
   }
 
-  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, openings, isCombo };
+  // 06.10.2026: Leistungssensoren eines Raums, wie die Automatik sie wählt – fürs Studio
+  // (Liste ergänzen, Warnung „im Raum messen weitere Sensoren“). whole: Sensor für den ganzen
+  // Raum; list: Geräte; old: was Casora bis 1.0.11 eingetragen hätte; any: alle Leistungssensoren
+  // im Bereich (vor 1.0.3 trug Casora den ersten davon ein).
+  function energyProbe(hass, name) {
+    if (!hass) return null;
+    fillBadges(hass, [{ name, vars: {}, only: ["energy"] }]);
+    const p = fillMemo && fillMemo.hass === hass ? fillMemo.p : null;
+    const room = p && p.rooms.slice(1).find((r) => norm(r.name) === norm(name));
+    if (!room) return null;
+    return { whole: room.power || null, list: (room.powers || []).slice(), old: (room.powersOld || []).slice(),
+      any: (room.powersAny || []).slice() };
+  }
+
+  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, openings, isCombo };
 
   // KI kostet: Casora schätzt vor dem ersten Einsatz grob, was es über den API-Schlüssel
   // kostet (Zeichen → Token, Listenpreise je Modellfamilie in USD pro 1 Mio. Token) und fragt nach.

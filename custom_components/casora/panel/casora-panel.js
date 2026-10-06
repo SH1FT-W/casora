@@ -2312,38 +2312,55 @@ function energySubsAuto(rooms) {
 // der Umzug tragen sie über casoraBasis.fillBadges ein, bestehende ergänzt das Studio beim
 // Laden (Vorschau sofort, im Dashboard ab dem nächsten Speichern). show_energy: false bleibt.
 // casora_energy_auto: von Casora eingetragen – wer den Sensor danach entfernt, bekommt ihn
-// nicht wieder.
+// nicht wieder (seit 06.10.2026 über energy_exclude, siehe unten).
 const ENERGY_VAR = /^energy_(power_entity|entities|entity_\d+|usage_today|usage_month|cost_today|cost_month)$/;
 function fillRoomEnergy(hass, rooms) {
   const B = typeof window !== "undefined" && window.casoraBasis;
   if (!B || !B.fillBadges || !hass) return 0;
-  // 04.10.2026: Räume, die bisher automatisch den ersten von mehreren Gerätesensoren bekamen
-  // (kein Sensor für den ganzen Raum), zeigen jetzt die Summe aller – einmal je Raum
-  // (casora_energy_sum), eine spätere eigene Wahl bleibt.
+  // 06.10.2026: Liste je Raum (energy_entities). Das Altfeld energy_power_entity wird zur Liste
+  // mit einem Eintrag. casora_energy_auto: 2 = Automatik ergänzt neue Sensoren, nimmt nie
+  // etwas weg und lässt Ausgeschlossene (energy_exclude) draußen. true = bis 1.0.11 automatisch
+  // eingetragen: unverändert → neu gewählt (alle Geräte, je Gerät alle Messungen); von Hand
+  // verändert → bleibt, wie es ist (casora_energy_auto: false).
+  const arr = (v) => (Array.isArray(v) ? v.filter(Boolean) : []);
+  const same = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
+  const devOf = (id) => ((hass.entities || {})[id] || {}).device_id || null;
   let up = 0;
   (rooms || []).forEach((r, i) => {
     const V = r && r.variables;
-    if (i === 0 || !V || r.path === "home" || V.show_energy === false || V.casora_energy_sum
-      || !V.energy_power_entity || (Array.isArray(V.energy_entities) && V.energy_entities.length)) return;
-    const probe = {};
-    try { B.fillBadges(hass, [{ name: r.name, vars: probe, only: ["energy"] }]); } catch (e) { return; }
-    const all = probe.energy_entities;
-    // 04.10.2026: Altfall vor 1.0.3 ohne Markierung: der eingetragene Sensor gehört zu einem
-    // Gerät im Bereich (kein Sensor für den ganzen Raum – dann gäbe es keine Liste), und im
-    // Bereich messen weitere Geräte. Nicht nur, wenn er zufällig der erste der Liste ist.
-    if (!Array.isArray(all) || all.length < 2) return;
-    const ent = (id) => (hass.entities || {})[id] || {};
-    const devKey = (id) => {
-      const d = ent(id).device_id;
-      if (!d) return null;
-      const dv = (hass.devices || {})[d] || {};
-      return String(dv.name_by_user || dv.name || "").trim().toLowerCase() || d;
-    };
-    const own = devKey(V.energy_power_entity);
-    if (!own || !all.some((id) => devKey(id) === own) || !all.some((id) => devKey(id) !== own)) return;
-    V.energy_entities = all;
+    if (i === 0 || !V || r.path === "home" || V.show_energy === false) return;
+    const has = arr(V.energy_entities), alt = V.energy_power_entity || null;
+    if (!has.length && !alt) return;
+    const ex = arr(V.energy_exclude);
+    let pr = null;
+    try { pr = B.energyProbe ? B.energyProbe(hass, r.name) : null; } catch (e) { pr = null; }
+    const auto = pr ? (pr.whole ? [pr.whole] : pr.list) : [];
+    let next = null;
+    if (V.casora_energy_auto === 2) {
+      // Neu Hinzugekommenes ergänzen – nie einen Raumsensor zu den Geräten (doppelt).
+      if (pr && (!pr.whole || !has.length)) next = (has.length ? has : (alt ? [alt] : [])).concat(auto);
+    } else if (V.casora_energy_auto && !pr) {
+      if (!has.length) next = [alt];
+    } else if (V.casora_energy_auto) {
+      const cur = has.length ? has : [alt];
+      const untouched = pr && (same(cur, pr.old) || (!has.length && (alt === pr.whole || (pr.any || pr.list).includes(alt))));
+      if (untouched && auto.length) { next = auto; V.casora_energy_auto = 2; }
+      else { V.casora_energy_auto = false; if (!has.length) next = [alt]; }
+    } else if (!has.length) {
+      // Altfall vor 1.0.3 ohne Markierung (04.10.2026): der Sensor gehört zu einem Gerät im
+      // Bereich, und dort messen weitere Geräte – dann zählen alle (je Gerät nach device_id).
+      const own = devOf(alt);
+      if (!V.casora_energy_sum && pr && !pr.whole && own && pr.list.some((id) => devOf(id) === own)
+        && pr.list.some((id) => devOf(id) !== own)) { next = pr.list; V.casora_energy_sum = true; }
+      else next = [alt];
+    }
+    if (!next) return;
+    next = next.filter((id, k) => id && next.indexOf(id) === k && !ex.includes(id));
+    if (!next.length) return;
+    const changed = !same(next, has) || !!alt;
+    if (!changed) return;
+    V.energy_entities = next;
     delete V.energy_power_entity;
-    V.casora_energy_sum = true;
     up++;
   });
   const list = (rooms || []).filter((r, i) => i > 0 && r && r.path !== "home" && r.variables
@@ -2356,7 +2373,10 @@ function fillRoomEnergy(hass, rooms) {
   } catch (e) { return up; }
   let n = 0;
   list.forEach((r, i) => {
-    if ((got[i] || []).includes("energy")) { r.variables.casora_energy_auto = true; n++; }
+    if (!(got[i] || []).includes("energy")) return;
+    const V = r.variables, ex = arr(V.energy_exclude);
+    if (Array.isArray(V.energy_entities) && ex.length) V.energy_entities = V.energy_entities.filter((id) => !ex.includes(id));
+    V.casora_energy_auto = 2; n++;
   });
   return n + up;
 }
@@ -2391,7 +2411,9 @@ function deriveEnergyRooms(rooms) {
     V["energy_label_" + n] = r.name || r.path;
     V["energy_unit_" + n] = "cost";
     V["energy_popup_name_" + n] = r.name || r.path;
-    if (RV.energy_power_entity) V["energy_popup_power_" + n] = RV.energy_power_entity;
+    const own = Array.isArray(RV.energy_entities) ? RV.energy_entities.filter(Boolean) : [];
+    if (own.length === 1) V["energy_popup_power_" + n] = own[0];
+    else if (RV.energy_power_entity && !own.length) V["energy_popup_power_" + n] = RV.energy_power_entity;
     if (RV.energy_usage_today) V["energy_popup_today_" + n] = RV.energy_usage_today;
     if (RV.energy_usage_month) V["energy_popup_month_" + n] = RV.energy_usage_month;
     if (RV.energy_cost_today) V["energy_popup_cost_today_" + n] = RV.energy_cost_today;
@@ -9499,6 +9521,10 @@ class CasoraPanel extends HTMLElement {
           font-size:var(--t-caption); padding:2px 0 12px;
         }
         .hint + .fieldwarn { padding-top:0; margin-top:-8px; }
+        .fieldwarn .linkbtn, .hint .linkbtn {
+          background:none; border:0; padding:0 8px 0 0; font:inherit; cursor:pointer;
+          color:var(--casora-studio-accent, var(--casora-color-teal, #00C3D0)); font-weight:600;
+        }
 
         textarea {
           font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:var(--t-caption);
@@ -16632,13 +16658,26 @@ class CasoraPanel extends HTMLElement {
         }
 
         if (f.type === "list") {
-          row.appendChild(this._chipPicker(cur, f.domains || ["sensor"], (items) => {
+          // 06.10.2026: Energie-Geräte – abgewählt = ausgeschlossen (energy_exclude), damit die
+          // Automatik den Sensor nicht wieder einträgt; wieder gewählt = nicht mehr ausgeschlossen.
+          const energy = f.key === "energy_entities";
+          const exOf = () => (Array.isArray(room.variables.energy_exclude) ? room.variables.energy_exclude.filter(Boolean) : []);
+          const writeList = (items) => {
+            if (energy) {
+              const prev = Array.isArray(room.variables.energy_entities) ? room.variables.energy_entities
+                : (room.variables.energy_power_entity ? [room.variables.energy_power_entity] : []);
+              const ex = exOf().concat(prev.filter((id) => !items.includes(id))).filter((id, k, a) => !items.includes(id) && a.indexOf(id) === k);
+              setVar("energy_exclude", ex.length ? ex : undefined, f);
+            }
             setVar(f.key, items, f);
             this._renderForm();
-          }, f.empty, { classes: f.classes, placeholder: f.placeholder }));
+          };
+          row.appendChild(this._chipPicker(cur, f.domains || ["sensor"], writeList,
+            f.empty, { classes: f.classes, placeholder: f.placeholder }));
           addDrop(row, f);
           fs.appendChild(row);
           addHint();
+          if (energy) this._energyListNotes(room, fs, writeList, exOf);
           return;
         }
 
@@ -19095,6 +19134,48 @@ class CasoraPanel extends HTMLElement {
     return true;
   }
 
+  // 06.10.2026: unter „Geräte (zusammengezählt)“: was ausgeschlossen ist (zurückholbar) und
+  // welche Leistungssensoren im Raum nicht in der Summe stehen.
+  _energyListNotes(room, fs, writeList, exOf) {
+    const V = room.variables;
+    const list = Array.isArray(V.energy_entities) ? V.energy_entities.filter(Boolean) : [];
+    const ex = exOf();
+    const B = window.casoraBasis;
+    let pr = null;
+    try { pr = B && B.energyProbe && this._hass ? B.energyProbe(this._hass, room.name || room.title || "") : null; } catch (e) { pr = null; }
+    const name = (id) => this._prettyEntity(id);
+    if (V.energy_power_entity && list.length) {
+      const w = document.createElement("div");
+      w.className = "fieldwarn";
+      w.textContent = "This list counts. Room power above is ignored.";
+      fs.appendChild(w);
+    }
+    const missing = pr && !pr.whole ? pr.list.filter((id) => !list.includes(id) && !ex.includes(id)) : [];
+    if (missing.length && (list.length || V.energy_power_entity)) {
+      const w = document.createElement("div");
+      w.className = "fieldwarn energy-missing";
+      w.textContent = "Not added up yet: " + missing.map(name).join(", ") + " ";
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "linkbtn"; b.textContent = "Add all";
+      b.onclick = () => writeList((list.length ? list : [V.energy_power_entity]).concat(missing));
+      w.appendChild(b);
+      fs.appendChild(w);
+    }
+    if (ex.length) {
+      const h = document.createElement("div");
+      h.className = "hint energy-excluded";
+      h.textContent = "Left out, Casora does not add these again: ";
+      ex.forEach((id) => {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "linkbtn"; b.title = id;
+        b.textContent = "+ " + name(id);
+        b.onclick = () => writeList(list.concat([id]));
+        h.appendChild(b);
+      });
+      fs.appendChild(h);
+    }
+  }
+
   _chipPicker(values, domains, onChange, emptyText, opts) {
     const wrap = document.createElement("div");
     wrap.className = "chipwrap";
@@ -21055,7 +21136,7 @@ class CasoraPanel extends HTMLElement {
     }
 
     // Ohne Raumsensor: Summe der Geräte (energy_entities), wie die Badge im Dashboard.
-    const devs = V.energy_power_entity ? [] : (Array.isArray(V.energy_entities) ? V.energy_entities.filter(Boolean) : []);
+    const devs = Array.isArray(V.energy_entities) ? V.energy_entities.filter(Boolean) : [];
     const toW = (id) => {
       const n = num(id);
       if (n == null) return null;
@@ -21063,8 +21144,13 @@ class CasoraPanel extends HTMLElement {
       return u === "kW" ? n * 1000 : u === "MW" ? n * 1e6 : u === "mW" ? n / 1000 : n;
     };
     const devW = devs.map(toW).filter((n) => n != null);
-    const watts = V.energy_power_entity ? num(V.energy_power_entity)
+    let watts = V.energy_power_entity ? num(V.energy_power_entity)
       : (devW.length ? devW.reduce((a, b) => a + b, 0) : null);
+    // 06.10.2026: dieselbe Rechnung wie im Dashboard (Liste vor Altfeld, Ausschlüsse, kW → W).
+    if (window._casoraPowerSum && devs.length && room.path !== "home") {
+      const R = window._casoraPowerSum(V, this._hass.states || {});
+      if (R.ids.length) watts = Number.isFinite(R.sum) ? R.sum : null;
+    }
     const energyOn = on("show_energy") && !!(
       V.energy_power_entity || devs.length || V.energy_usage_today || V.energy_usage_month
       || V.energy_cost_today || V.energy_cost_month

@@ -1836,9 +1836,13 @@
     "Values carried over: {1}": "Werte übernommen: {1}",
     "Hemma theme removed": "Hemma-Theme entfernt",
     "Hemma theme not removed": "Hemma-Theme nicht entfernt",
-    "No dashboard uses them any more. Your photos and icons are copied to www/casora first. Included in the backup.": "Kein Dashboard nutzt sie mehr. Deine Fotos und Symbole kommen vorher nach www/casora. Sie kommen mit in die Sicherung."
+    "No dashboard uses them any more. Your photos and icons are copied to www/casora first. Included in the backup.": "Kein Dashboard nutzt sie mehr. Deine Fotos und Symbole kommen vorher nach www/casora. Sie kommen mit in die Sicherung.",
+    "This list counts. Room power above is ignored.": "Diese Liste gilt. Leistung im Raum oben wird ignoriert.",
+    "Add all": "Alle aufnehmen",
+    "Left out, Casora does not add these again:": "Ausgeschlossen, Casora trägt sie nicht wieder ein:"
   },
   "patterns": [
+    ["^Not added up yet: (.+)$", "Noch nicht in der Summe: {1}"],
     ["^Tile sizes on the phone taken over from Hemma \\((\\d+)\\)$", "Kachelgrößen vom Handy aus Hemma übernommen ({1})"],
     ["^(\\d+) Locks$", "{1} Schlösser"],
     ["^(\\d+) Doors open$", "{1} Türen offen"],
