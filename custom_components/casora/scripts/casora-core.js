@@ -5190,7 +5190,8 @@ window.casoraMenuGlass = {
       this._extra = root.querySelector('.extra');
       this._softEmpty = root.querySelector('.soft-empty');
       this._softEmpty.addEventListener('click', () => {
-        // Leerzustand: ins Casora Studio, dort wird der Kachel ein Gerät zugeordnet.
+        // Leerzustand: ins Casora Studio, dort wird der Kachel ein Gerät zugeordnet (nur Admins).
+        if (!window.casoraIsAdmin()) return;
         this.close();
         history.pushState(null, '', '/casora-studio');
         window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));
@@ -5363,11 +5364,13 @@ window.casoraMenuGlass = {
       if (!box) return;
       var tr = function (t) { return window.casoraTr ? window.casoraTr(t) : t; };
       var row = function (title, sub) {
-        box.innerHTML = '<div class="se-row" role="button" tabindex="0">'
+        // Nicht-Admins: keine Zeile, die ins Studio führt (sie können es nicht öffnen) – ohne Pfeil.
+        var admin = window.casoraIsAdmin();
+        box.innerHTML = '<div class="se-row"' + (admin ? ' role="button" tabindex="0"' : ' style="cursor:default;"') + '>'
           + '<div class="se-ic"><ha-icon icon="mdi:link-variant-off"></ha-icon></div>'
           + '<div class="se-tx"><b></b><small></small></div>'
-          + '<svg class="se-chev" width="7" height="12" viewBox="0 0 7 12" aria-hidden="true"><path d="M1 1L6 6L1 11" fill="none" '
-          + 'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
+          + (admin ? '<svg class="se-chev" width="7" height="12" viewBox="0 0 7 12" aria-hidden="true"><path d="M1 1L6 6L1 11" fill="none" '
+          + 'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '') + '</div>';
         box.querySelector('b').textContent = tr(title);
         box.querySelector('small').textContent = tr(sub);
         box._kind = title;
@@ -5375,7 +5378,8 @@ window.casoraMenuGlass = {
       if (this._missingId) {
         // Gerät fehlt: sofort und in jedem Design (nicht nur Weich), der Inhalt bleibt verborgen.
         clearTimeout(this._emptyT1); clearTimeout(this._emptyT2);
-        row('Gerät fehlt', 'Im Casora Studio neu zuordnen');
+        // Studio-Hinweis nur für Admins – andere können dort nichts zuordnen.
+        row('Gerät fehlt', window.casoraIsAdmin() ? 'Im Casora Studio neu zuordnen' : 'Gerade nicht verfügbar');
         box.title = this._missingId;
         box.hidden = false;
         this.setAttribute('missing', '');
@@ -5384,7 +5388,8 @@ window.casoraMenuGlass = {
       }
       this.removeAttribute('missing');
       box.removeAttribute('title');
-      if (box._kind && box._kind !== 'Noch kein Gerät zugeordnet') { box.textContent = ''; box._kind = null; }
+      var emptyKind = window.casoraIsAdmin() ? 'Noch kein Gerät zugeordnet' : 'Noch nicht eingerichtet';
+      if (box._kind && box._kind !== emptyKind) { box.textContent = ''; box._kind = null; }
       if (fresh) {
         clearTimeout(this._emptyT1); clearTimeout(this._emptyT2);
         box.hidden = true; this.removeAttribute('soft-empty');
@@ -5401,7 +5406,7 @@ window.casoraMenuGlass = {
         if (ex && !ex.hidden) used += ex.getBoundingClientRect().height;
       } catch (e) { used = 99; }
       var empty = this.hasAttribute('soft') && used < 12;
-      if (empty && !box.firstChild) row('Noch kein Gerät zugeordnet', 'Im Casora Studio dieser Kachel ein Gerät zuweisen');
+      if (empty && !box.firstChild) row(emptyKind, emptyKind === 'Noch nicht eingerichtet' ? '' : 'Im Casora Studio dieser Kachel ein Gerät zuweisen');
       box.hidden = !empty;
       this.toggleAttribute('soft-empty', empty);
     }
@@ -5840,6 +5845,13 @@ window.casoraMenuGlass = {
     if (_el.parentNode !== host) host.appendChild(_el);
     return _el;
   }
+
+  // Hinweise „im Casora Studio zuordnen“ nur für Admins (nur sie öffnen das Studio). Unbekannt: wie bisher.
+  window.casoraIsAdmin = function () {
+    var ha = document.querySelector('home-assistant');
+    var u = ha && ha.hass && ha.hass.user;
+    return !u || u.is_admin !== false;
+  };
 
   window.casoraPopupAction = function () {
     return window.casoraPopup ? 'fire-dom-event' : 'more-info';
@@ -9547,6 +9559,19 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     }).catch(function () { return null; });
   }
 
+  function cardSynth(names, entityId) {
+    var h = hassOf();
+    var tpl = (names || []).filter(function (n) { return !/badge|chip/.test(n); })[0];
+    if (!h || !tpl || !entityId || !h.states[entityId]) return null;
+    var el = document.createElement('button-card');
+    try { el.setConfig({ type: 'custom:button-card', template: tpl, entity: entityId }); } catch (e) { return null; }
+    el.hass = h;
+    el.style.cssText = 'position:fixed;left:-9999px;top:0;'
+      + 'width:1px;height:1px;opacity:0;pointer-events:none;';
+    document.body.appendChild(el);
+    return el;
+  }
+
   function tapCard(card, done) {
     if (!card || typeof card._handleAction !== 'function' || !card._config) {
       return done(false);
@@ -9606,6 +9631,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     tapCard(own || cardWithTemplate(names, fallbackEntity), function (hit) {
       if (hit) return;
       cardFromConfig(names, fallbackEntity).then(function (el) {
+        // Keine Kachel im Dashboard (z. B. Pflanze ohne Pflanzen-Kachel): eine unsichtbare Kachel der
+        // ersten Vorlage für genau diese Entität – dasselbe Casora-Popup statt HAs Dialog („problem“).
+        if (!el) el = cardSynth(names, fallbackEntity);
         if (!el) return fall();
         // One frame for button-card to evaluate its config before the tap.
         setTimeout(function () {
