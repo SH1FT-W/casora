@@ -539,7 +539,9 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     if (!isOurs(type) || !body) return;
     const hass = panel._hass;
     const fields = entityFields(type);
-    if (!fields.length && tile.entity) return;
+    // Ohne Zusatzfelder nur, wenn die Kachel ein Gerät braucht – nicht bei Kacheln, die ihre Daten
+    // selbst finden (Solar-Tipp, Raumklima, Auto, E-Bike, Rezept).
+    if (!fields.length && (tile.entity || type.ownData || type.noEntity)) return;
     const row = document.createElement("div");
     row.className = "hint casora-ai";
     row.dataset.noI18n = "";
@@ -557,7 +559,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     btn.onclick = async () => {
       const vars = tile.variables || {};
       const missing = fields.filter((f) => !vars[f.key] && !found(f, tile, hass));
-      const withMain = !tile.entity && !type.noEntity;
+      const withMain = !tile.entity && !type.noEntity && !type.ownData;
       if (!missing.length && !withMain) { txt.textContent = t(hass).all; return; }
       btn.disabled = true;
       txt.textContent = t(hass).busy;

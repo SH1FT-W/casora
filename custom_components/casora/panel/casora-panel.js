@@ -24427,7 +24427,8 @@ class CasoraPanel extends HTMLElement {
       return (e && e.attributes && e.attributes.friendly_name) || null;
     };
     const entCombo = this._combo(tile.entity || "", this._entityList(type.domains, type.classes),
-      type.entityPlaceholder || pickHint(type.domains),
+      // Kacheln, die ihre Daten selbst finden (Solar-Tipp, Abfall, Auto …): das Gerät ist freiwillig.
+      type.entityPlaceholder || (type.ownData ? "Automatic" : pickHint(type.domains)),
       (v) => {
         const prev = tile.entity;
         const was = glyphNow();
