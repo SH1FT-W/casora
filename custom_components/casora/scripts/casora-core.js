@@ -9149,9 +9149,42 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (!hit) return false;
     if (!entityId) return true;
     var v = cfg.variables || {};
+    // Auch Listen in Variablen (locks: [...] einer Schloss-Gruppe) zählen (B-NOTI).
     return cfg.entity === entityId
-      || Object.keys(v).some(function (k) { return v[k] === entityId; });
+      || Object.keys(v).some(function (k) { return v[k] === entityId || (Array.isArray(v[k]) && v[k].indexOf(entityId) !== -1); });
   }
+
+  // ── Glocke = Kachel (B-NOTI, 06.10.2026) ──────────────────────────────────
+  // Die Kachel, die man für diese Entität antippen würde: sichtbare button-card mit genau dieser
+  // Entität und eigenem Casora-Popup, eine Kachel vor einer Badge. So öffnet die Glocke dasselbe
+  // Popup (mit Ring und Kopf) wie der Tipp auf die Kachel.
+  function tileFor(entityId) {
+    if (!entityId) return null;
+    var best = null, bestRank = 99;
+    (function walk(root, depth) {
+      if (!root || depth > 14 || !root.querySelectorAll) return;
+      root.querySelectorAll('button-card').forEach(function (el) {
+        var c = el._config;
+        if (!c || !c.tap_action || !c.tap_action.casora_popup) return;
+        // Eigene Entität vor Variable (alarm_entity der Alarm-Kachel) vor Liste (locks einer Gruppe).
+        var v = c.variables || {}, how = c.entity === entityId ? 0 : -1;
+        if (how < 0) Object.keys(v).forEach(function (k) {
+          if (v[k] === entityId) how = how < 0 || how > 1 ? 1 : how;
+          else if (Array.isArray(v[k]) && v[k].indexOf(entityId) !== -1 && how < 0) how = 2;
+        });
+        if (how < 0) return;
+        var badge = templatesOf(c).some(function (n) { return /badge|chip/.test(n); });
+        var shown = el.getClientRects && el.getClientRects().length > 0;
+        var rank = how + (badge ? 3 : 0) + (shown ? 0 : 6);
+        if (rank < bestRank) { best = el; bestRank = rank; }
+      });
+      root.querySelectorAll('*').forEach(function (el) { if (el.shadowRoot) walk(el.shadowRoot, depth + 1); });
+    })(document, 0);
+    return best;
+  }
+  // Geräte, die ihre eigene Kachel haben: ohne passende Kachel nie das Popup irgendeiner anderen
+  // Karte gleicher Vorlage öffnen (vorher: Schloss-Eintrag → Popup einer anderen Tür).
+  var OWN_TILE = /^(lock|alarm_control_panel|vacuum|lawn_mower|cover|climate|media_player|camera|light|fan|humidifier|water_heater)\./;
 
   function cardWithTemplate(names, entityId) {
     var out = null;
@@ -9167,7 +9200,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       })(document, 0);
     };
     if (entityId) scan(entityId);
-    if (!out) scan(null);
+    if (!out && !OWN_TILE.test(entityId || '')) scan(null);
     return out;
   }
 
@@ -9187,7 +9220,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       })((cfg.views || []).reduce(function (a, v) {
         return a.concat(v.cards || []);
       }, []));
-      if (!found && entityId) {
+      if (!found && entityId && !OWN_TILE.test(entityId)) {
         (function walk(cards) {
           (cards || []).forEach(function (c) {
             if (found || !c || typeof c !== 'object') return;
@@ -9227,7 +9260,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       if (act && act.casora_popup && window.casoraPopup) {
         // Only ours gets intercepted; anything else stays HA's to handle.
         ev.stopPropagation();
-        window.casoraPopup.open(act.casora_popup);
+        // src: die Kachel liefert im Weich-Look Ring und Kopf – wie beim echten Antippen.
+        window.casoraPopup.open(Object.assign({}, act.casora_popup, { src: card }));
         return finish(true);
       }
       finish(false);
@@ -9246,6 +9280,13 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     setTimeout(function () { finish(false); }, 400);
   }
 
+  // Für 01-basis (Einträge ohne opens): erst die sichtbare Kachel, wie beim Antippen.
+  window._casoraTapTile = function (entityId, done) {
+    var t = tileFor(entityId);
+    if (!t) return done(false);
+    tapCard(t, done);
+  };
+
   function openTarget(what, fallbackEntity) {
     // dataset stringifies an array, so a retagged row arrives comma-joined.
     var names = Array.isArray(what) ? what
@@ -9255,8 +9296,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var fall = function () {
       if (fallbackEntity && window.casoraPopup) window.casoraPopup.moreInfo(fallbackEntity);
     };
-    if (!names.length) return fall();
-    tapCard(cardWithTemplate(names, fallbackEntity), function (hit) {
+    var own = tileFor(fallbackEntity);
+    if (!names.length && !own) return fall();
+    tapCard(own || cardWithTemplate(names, fallbackEntity), function (hit) {
       if (hit) return;
       cardFromConfig(names, fallbackEntity).then(function (el) {
         if (!el) return fall();

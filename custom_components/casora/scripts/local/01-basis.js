@@ -365,27 +365,44 @@ window._casoraColGap = window._casoraColGap || function (keys) {
   // Entität gesucht (auch hinter conditional/auto-entities) und deren
   // 2.1-Popup geöffnet. Keine Karte gefunden -> Engine-Verhalten bleibt.
   function findCardCfg(cfg, entityId) {
-    var hit = null;
+    var hit = null, badge = null;
     var hasPopup = function (c) {
       var t = c && c.template;
       return !!(c && c.type === 'custom:button-card' && t && c.entity === entityId);
     };
+    var isBadge = function (c) { return [].concat(c.template || []).some(function (n) { return /badge|chip/.test(String(n)); }); };
     (function walk(o) {
       if (hit || !o || typeof o !== 'object') return;
       if (Array.isArray(o)) { o.forEach(walk); return; }
-      if (hasPopup(o)) { hit = o; return; }
-      ['cards', 'card', 'filter', 'include', 'options'].forEach(function (k) { if (o[k]) walk(o[k]); });
+      // Eine Kachel vor einer Badge derselben Entität (wie beim Antippen der Kachel, B-NOTI).
+      if (hasPopup(o)) { if (!isBadge(o)) { hit = o; return; } if (!badge) badge = o; }
+      // Auch Filter-Overlays (sections) und Karten in custom_fields.
+      ['cards', 'card', 'filter', 'include', 'options', 'sections'].forEach(function (k) { if (o[k]) walk(o[k]); });
+      if (o.custom_fields && typeof o.custom_fields === 'object') walk(Object.keys(o.custom_fields).map(function (k) { return o.custom_fields[k]; }));
     })((cfg && cfg.views) || []);
-    return hit;
+    return hit || badge;
   }
 
-  function openViaCard(entityId, done, explicitCfg) {
+  function openViaCard(entityId, done, explicitCfg, noTile) {
     var ha = document.querySelector('home-assistant');
     var h = ha && ha.hass;
     if (!h || !h.callWS || !window.casoraPopup) return done(false);
+    // Glocke = Kachel (B-NOTI): steht die Kachel im Dashboard, genau sie antippen – gleiches Popup,
+    // gleicher Ring und Kopf. Sonst wie bisher über die Konfiguration.
+    if (!explicitCfg && !noTile && window._casoraTapTile) {
+      return window._casoraTapTile(entityId, function (ok) { if (ok) done(true); else openViaCard(entityId, done, null, true); });
+    }
     var seg = (location.pathname || '').split('/').filter(Boolean);
     h.callWS({ type: 'lovelace/config', url_path: seg[0] || 'lovelace' }).then(function (cfg) {
       var found = explicitCfg || findCardCfg(cfg, entityId);
+      // Keine eigene Karte (Alarm/Schloss stecken oft nur als Badge in der Raumkarte): die Kachel-Vorlage
+      // der Domäne – dasselbe Popup wie deren Kachel statt HAs Dialog (B-NOTI).
+      var tpl = !found && { lock: 'casora_lock', alarm_control_panel: 'casora_alarm', vacuum: 'casora_vacuum',
+        cover: 'casora_cover', climate: 'casora_thermostat', media_player: 'casora_media', light: 'casora_light' }[String(entityId).split('.')[0]];
+      if (tpl && cfg && cfg.button_card_templates && cfg.button_card_templates[tpl] && h.states[entityId]) {
+        found = { type: 'custom:button-card', template: tpl, entity: entityId,
+          name: (h.states[entityId].attributes && h.states[entityId].attributes.friendly_name) || entityId };
+      }
       if (!found) return done(false);
       var el = document.createElement('button-card');
       try { el.setConfig(JSON.parse(JSON.stringify(found))); } catch (e) { return done(false); }
@@ -403,7 +420,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         var take = function (ev) {
           var c = ev.detail && ev.detail.config;
           var act = c && c.tap_action;
-          if (act && act.casora_popup) { ev.stopPropagation(); window.casoraPopup.open(act.casora_popup); return fin(true); }
+          if (act && act.casora_popup) { ev.stopPropagation(); window.casoraPopup.open(Object.assign({}, act.casora_popup, { src: el })); return fin(true); }
           fin(false);
         };
         el.addEventListener('hass-action', take, true);
