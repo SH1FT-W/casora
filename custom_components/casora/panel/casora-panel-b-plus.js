@@ -488,6 +488,9 @@
     P._bChanged = function (snap) {
       const d = this._bDiff(snap.s[0], this._state.compact);
       const now = Date.now();
+      // Die Handy-Vorschau baut ihre Kachelreihe nicht bei jedem Zeichnen neu: eine neue Kachel
+      // fehlte dort bis zum nächsten Raumwechsel (Nutzertest: „taucht in der Vorschau nicht auf“).
+      if (isPhone(this) && /^tile/.test(d.kind) && this._rebuildPreview) requestAnimationFrame(() => this._rebuildPreview());
       const soft = d.kind === "edit" || d.kind === "roomname";
       // Tippen in einem Feld ergibt viele kleine Schritte: eine Meldung, „Rückgängig“ nimmt alle zurück.
       if (!soft || !this._bGroup || !this._bGroup.soft || now - this._bGroup.t > 2500) this._bGroup = { snap, soft };
