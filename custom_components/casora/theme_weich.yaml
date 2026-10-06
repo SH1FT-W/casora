@@ -154,9 +154,9 @@ Casora:
   casora-nav-label-size-tablet: 14px
   casora-nav-label-pad-x-tablet: 14px
   # D-14: breitere Ausblendung + Einrasten auf Raumanfänge – keine Wortreste („ur“) neben dem Pfeil
-  casora-nav-fade-solid: 112px
-  casora-nav-fade-clear: 60px
-  casora-nav-snap: x proximity
+  casora-nav-fade-solid: 124px
+  casora-nav-fade-clear: 72px
+  casora-nav-snap: x mandatory
   casora-nav-snap-align: start
   casora-nav-snap-pad: 52px
   casora-nav-focus-ring: inset 0 0 0 2px var(--casora-ton-ink)   # D-09: Tastatur-Fokus sichtbar
