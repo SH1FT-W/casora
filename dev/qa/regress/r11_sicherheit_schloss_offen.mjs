@@ -35,7 +35,7 @@ const own = await page.evaluate(() => {
 const opened = own.length ? own : locks;
 await fakeStates(page, Object.fromEntries(opened.map((e) => [e, { state: 'unlocked' }])));
 const auf = await read();
-const bad = auf.filter((c) => /Gesichert|Secured?\b/i.test(c.text));
+const bad = auf.filter((c) => /Gesichert|Alles sicher|All secure|Secured?\b/i.test(c.text));
 await check(`kein „Gesichert“ bei offenem Schloss (${opened.join(', ')})`, !bad.length, bad.map((c) => c.t.join('+') + ': ' + c.text));
 await check('Badge ändert sich, wenn ein Schloss aufgeht', JSON.stringify(zu.map((c) => c.text)) !== JSON.stringify(auf.map((c) => c.text)),
   { zu: zu.map((c) => c.text), auf: auf.map((c) => c.text) });
