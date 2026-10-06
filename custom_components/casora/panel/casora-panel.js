@@ -2272,6 +2272,9 @@ const NOT_CASORA_KEY = "casora_panel_not_casora_v1";
 // zweimal. Jetzt nur Unbekannte sofort, die übrigen höchstens alle 12 Stunden im Hintergrund.
 const DASH_VERDICT_KEY = "casora_panel_dash_verdict_v2";
 const DASH_VERDICT_TTL = 12 * 3600 * 1000;
+// „Nein“ kürzer: ein inzwischen zu Casora gewordenes Dashboard (z. B. aus einem anderen Browser)
+// soll nicht einen halben Tag aus der Auswahl fehlen.
+const DASH_VERDICT_TTL_NO = 3600 * 1000;
 
 const hashStr = (str) => {
   let h = 0x811c9dc5;
@@ -11374,7 +11377,8 @@ class CasoraPanel extends HTMLElement {
 
   _verdictFresh(url_path) {
     const at = this._verdictAt && this._verdictAt.get(url_path);
-    return !!at && Date.now() - at < DASH_VERDICT_TTL && Date.now() >= at;
+    const ttl = this._casoraVerdict && this._casoraVerdict.get(url_path) === false ? DASH_VERDICT_TTL_NO : DASH_VERDICT_TTL;
+    return !!at && Date.now() - at < ttl && Date.now() >= at;
   }
 
   _shownDashboards(all) {

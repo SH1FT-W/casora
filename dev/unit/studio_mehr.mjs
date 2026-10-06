@@ -147,4 +147,7 @@ for (const name of ['casora_room', 'casora_mobile_sensor_chips']) {
 { const p = read('panel/casora-panel.js');
   assert.ok(/this\._pairWait = seq;\n\s+let pair;\n\s+try \{ pair = await this\._loadPair/.test(p), '_load sperrt bis _loadPair fertig');
   assert.ok(p.includes('if (!s || this._pairWait) return false;'), '_save fragt die Sperre'); }
+// R-12: „kein Casora“ wird nach 1 h neu geprüft (statt 12 h).
+{ const p = read('panel/casora-panel.js');
+  assert.ok(p.includes('const DASH_VERDICT_TTL_NO = 3600 * 1000;') && p.includes('=== false ? DASH_VERDICT_TTL_NO : DASH_VERDICT_TTL'), 'Nein-Urteil kürzer'); }
 console.log('studio_mehr: ok');
