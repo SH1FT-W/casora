@@ -2003,7 +2003,8 @@
     "Applies to: this dashboard": "Gilt für: dieses Dashboard",
     "Applies to: this dashboard – the design to all dashboards": "Gilt für: dieses Dashboard – das Design für alle Dashboards",
     "Applies to: all dashboards": "Gilt für: alle Dashboards",
-    "The design applies to all dashboards": "Das Design gilt für alle Dashboards"
+    "The design applies to all dashboards": "Das Design gilt für alle Dashboards",
+    "Applies to: this room": "Gilt für: diesen Raum"
   },
   "patterns": [
     ["^Phone differs in (\\d+) settings$", "Handy weicht bei {1} Einstellungen ab"],

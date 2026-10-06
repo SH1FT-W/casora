@@ -1,5 +1,5 @@
 // Studio: Orientierung und Wege (UX-Runde 06.10.2026) ohne Browser.  node dev/unit/studio_ux.mjs
-// Geltungsbereich je Ansicht („Gilt für: …“), Untertitel der Reiter.
+// Geltungsbereich je Ansicht („Gilt für: …“), Weg im Inspektor-Kopf, Untertitel der Reiter.
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -25,6 +25,14 @@ assert.equal(sc({ page: 'rewind' }), 'dash', 'Zeitreise: dieses Dashboard');
 assert.equal(sc({ arrange: true }), 'dash', 'Räume ordnen: dieses Dashboard');
 assert.equal(sc({}), '', 'nichts offen: keine Zeile');
 assert.ok(/\{room\}/.test(U.SCOPE.room) && /all dashboards/.test(U.SCOPE.design), 'Texte');
+
+// ── V-07: Weg über dem Titel ────────────────────────────────────────────────────────
+const pa = (o) => U.pathOf({ dashSection, room: 'Wohnzimmer', ...o });
+assert.deepEqual(pa({ sel: { group: 'tiles', key: 'x' } }), ['Wohnzimmer', 'Tiles']);
+assert.deepEqual(pa({ sel: { group: 'badges', key: 'Climate' } }), ['Wohnzimmer', 'Badges']);
+assert.deepEqual(pa({ sel: { group: 'rooms', key: 'Appearance' } }), ['Wohnzimmer']);
+assert.deepEqual(pa({ sel: { group: 'rooms', key: 'Weather' } }), [], 'Dashboard-Abschnitt: nur „Gilt für“');
+assert.deepEqual(pa({ sel: { group: 'tiles', key: 'x' }, page: 'settings' }), [], 'Seite: kein Weg');
 
 // ── V-02: Untertitel ────────────────────────────────────────────────────────────────
 assert.ok(/\{room\}/.test(U.SUB.list) && /this dashboard/.test(U.SUB.dash) && /all dashboards/.test(U.SUB.home));

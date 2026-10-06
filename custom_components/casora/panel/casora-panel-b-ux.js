@@ -4,6 +4,7 @@
 // Nutzertests an Orientierung vermisst haben:
 // - Drei Ebenen sichtbar: Leiste von klein (Raum) nach groß (alle Dashboards), „Gilt für: …“
 //   in Menüs und im Inspektor
+// - Inspektor-Kopf mit Weg („Wohnzimmer › Kacheln“) und Geltungsbereich, auch im Handy-Blatt
 // - Untertitel der Reiter (Inhalt, Dashboard, Einstellungen) als Hinweis und im Inhalt-Blatt
 // - Wörterbuch: Badges und Popups mit einem Halbsatz erklärt
 // Datenmodell, Speichern und Rückgängig bleiben die des Panels – hier wird nur angeschlossen.
@@ -39,12 +40,24 @@
   }
   const SCOPE = {
     room: "Applies to: {room}",
+    thisroom: "Applies to: this room",
     dash: "Applies to: this dashboard",
     design: "Applies to: this dashboard – the design to all dashboards",
     all: "Applies to: all dashboards",
   };
 
-  W.__casoraStudioUx = { SUB, WHAT, SCOPE, scopeOf };
+  // Weg über dem Titel (V-07): wo liegt das Geöffnete? Nur bei Teilen eines Raums – Dashboard
+  // und Einstellungen sagt schon die Zeile „Gilt für“. Ergebnis: Liste von Wörtern (ohne Titel).
+  function pathOf(ctx) {
+    const sel = ctx.sel;
+    if (!sel || ctx.page) return [];
+    if (sel.group === "tiles") return [ctx.room, "Tiles"];
+    if (sel.group === "badges") return [ctx.room, "Badges"];
+    if (sel.group === "rooms" && scopeOf(ctx) === "room") return [ctx.room];
+    return [];
+  }
+
+  W.__casoraStudioUx = { SUB, WHAT, SCOPE, scopeOf, pathOf };
   if (typeof customElements === "undefined" || !W.document) return;
 
   const CSS = `
@@ -54,7 +67,7 @@
     .insphead .uxpath { position:absolute !important; inset:auto !important; left:var(--uxl, 0px) !important; right:0 !important;
       top:calc(100% + 1px) !important; display:block !important; height:auto !important;
       font-size:12.5px; line-height:1.3; font-weight:500; color:var(--ink-2, rgba(127,127,127,.95));
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none; text-shadow:none; }
+      white-space:normal; overflow:hidden; pointer-events:none; text-shadow:none; }
     :host(.bmode.phone) .inspector .insphead .uxpath { color:color-mix(in srgb, var(--ink) 55%, transparent) !important; }
     /* Halbsatz unter „Badges“ / „Popups“ */
     .uxwhat { display:block; margin-top:1px; font-size:12.5px; line-height:1.3; font-weight:500; letter-spacing:0;
@@ -122,6 +135,12 @@
       if (!this._state || !(this._bOpen || (this._bPage && this._bPage()))) return "";
       const sc = this._uxScope();
       if (sc === "room" && !this._sel) return fill(tr(SUB.list), { room: this._uxRoomName() });
+      // Teil eines Raums: „Wohnzimmer › Kacheln · Gilt für: diesen Raum“.
+      const I = W.__casoraPanelInternals || {};
+      const page = this._csOpen || this._cuOpen || this._cvOpen;
+      const path = pathOf({ sel: this._sel, page, room: this._uxRoomName(),
+        dashSection: (k) => !!(I.SECTIONS || []).find((x) => x.group === "rooms" && x.label === k && x.scope === "dashboard") });
+      if (path.length) return path.map((x, i) => (i ? tr(x) : x)).join(" \u203a ") + " \u00b7 " + tr(SCOPE.thisroom);
       return this._uxScopeText(sc);
     };
     P._uxHead = function () {
@@ -132,7 +151,10 @@
       const rows = [...head.querySelectorAll(":scope > .navrow")];
       const row = rows.reverse().find((r) => r.style.display !== "none" && getComputedStyle(r).display !== "none");
       head.querySelectorAll(".uxpath").forEach((n) => { if (!text || n.parentElement !== row) n.remove(); });
-      rows.forEach((r) => r.classList.toggle("uxrow", !!text && r === row));
+      rows.forEach((r) => {
+        r.classList.toggle("uxrow", !!text && r === row);
+        if (!(text && r === row)) r.style.removeProperty("margin-bottom");
+      });
       head.classList.toggle("uxhas", !!text && !!row);
       if (!text || !row) return;
       let line = row.querySelector(":scope > .uxpath");
@@ -148,6 +170,8 @@
       const h = row.querySelector("h3");
       const l = h && h.getClientRects().length ? Math.max(0, Math.round(h.getBoundingClientRect().left - row.getBoundingClientRect().left)) : 0;
       line.style.setProperty("--uxl", l + "px");
+      // Zweizeilig (schmales Blatt): Platz darunter nach der echten Höhe.
+      row.style.setProperty("margin-bottom", Math.max(20, line.offsetHeight + 6) + "px", "important");
     };
 
     // Handy: Überschriften im Inhalt-Blatt mit Untertitel.
