@@ -215,13 +215,15 @@ def room_badges(desktop_cfg: dict, mobile_cfg: dict) -> dict[str, dict]:
 
 # ─── WebSocket ────────────────────────────────────────────────────────────────
 
-async def _load(hass, url_path: str) -> dict | None:
+async def _load(hass, url_path: str, admin: bool = True) -> dict | None:
     from homeassistant.components.lovelace.const import LOVELACE_DATA
 
     data = hass.data.get(LOVELACE_DATA)
     dash = (data.dashboards if data else {}).get(url_path)
     if dash is None:
         return None
+    if not admin and (getattr(dash, "config", None) or {}).get("require_admin"):
+        return None  # Admin-Dashboard: Nicht-Admins bekommen nichts daraus
     try:
         cfg = await dash.async_load(False)
     except Exception:  # noqa: BLE001 – leer oder kaputt: nichts zu holen
@@ -229,15 +231,15 @@ async def _load(hass, url_path: str) -> dict | None:
     return cfg if isinstance(cfg, dict) else None
 
 
-async def async_room_badges(hass, mobile_url: str) -> dict:
+async def async_room_badges(hass, mobile_url: str, admin: bool = True) -> dict:
     empty = {"desktop": None, "rooms": {}}
     if not mobile_url or not re.search(r"[-_]mobile$", mobile_url, re.I):
         return empty
-    mobile = await _load(hass, mobile_url)
+    mobile = await _load(hass, mobile_url, admin)
     if not mobile or not is_mobile(mobile):
         return empty
     desk_url = desktop_url_of(mobile_url)
-    desktop = await _load(hass, desk_url)
+    desktop = await _load(hass, desk_url, admin)
     if not desktop or is_mobile(desktop):
         return empty
     return {"desktop": desk_url, "rooms": room_badges(desktop, mobile)}
@@ -260,7 +262,7 @@ def async_setup_phone_badges(hass) -> None:
     })
     @websocket_api.async_response
     async def ws_room_badges(hass, connection, msg) -> None:
-        connection.send_result(msg["id"], await async_room_badges(hass, msg["url_path"]))
+        connection.send_result(msg["id"], await async_room_badges(hass, msg["url_path"], connection.user.is_admin))
 
     websocket_api.async_register_command(hass, ws_room_badges)
     dom["phone_badges_ws"] = True

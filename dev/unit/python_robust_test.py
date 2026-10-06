@@ -13,6 +13,7 @@ B-PY-14: Kamera-/Pflanzen-KI ohne eingerichtete KI → Fehler mit Grund, kein Au
 B-PY-15: Heizungs-Coach nennt die Temperatur-Einheit von HA (°F), nicht fest °C.
 B-PY-17: zwei gleichzeitige Vorlagen-Abrufe schreiben nicht in dieselbe .tmp-Datei.
 B-PY-18: HACS' Liste im Speicher wird im Event-Loop gelesen, nicht in einem Hintergrund-Thread.
+SEC-05:  casora/phone_room_badges liefert Nicht-Admins nichts aus Admin-Dashboards.
 """
 
 from __future__ import annotations
@@ -328,7 +329,39 @@ async def t_py18():
     check("B-PY-18: HACS-Liste im Event-Loop gelesen", seen == [True] and got and got["id"] == "5", repr((seen, got)))
 
 
+async def t_sec05():
+    from homeassistant.components.lovelace.const import LOVELACE_DATA
+
+    from custom_components.casora import phone_badges as pb
+
+    def dash(cfg, admin):
+        async def load(force):
+            return cfg
+        return SimpleNamespace(async_load=load, config={"require_admin": admin})
+
+    mobile = {"views": [{"path": "home", "type": "custom:x"}], "casora_mobile": True}
+    desk = {"views": [{"path": "wohnen", "title": "Wohnen"}]}
+    calls = []
+    real = pb.is_mobile, pb.room_badges
+    pb.is_mobile = lambda c: c is mobile
+    pb.room_badges = lambda d, m: calls.append(1) or {"room_wohnen": ["light.x"]}
+    try:
+        for admin_dash in (False, True):
+            hass = SimpleNamespace(data={LOVELACE_DATA: SimpleNamespace(dashboards={
+                "haus-mobile": dash(mobile, admin_dash), "haus": dash(desk, admin_dash)})})
+            as_admin = await pb.async_room_badges(hass, "haus-mobile", True)
+            as_user = await pb.async_room_badges(hass, "haus-mobile", False)
+            if admin_dash:
+                check("SEC-05: Admin-Dashboard für Admin", as_admin["rooms"] == {"room_wohnen": ["light.x"]}, repr(as_admin))
+                check("SEC-05: Admin-Dashboard für Nicht-Admin leer", as_user == {"desktop": None, "rooms": {}}, repr(as_user))
+            else:
+                check("SEC-05: normales Dashboard für alle", as_user["rooms"] == {"room_wohnen": ["light.x"]}, repr(as_user))
+    finally:
+        pb.is_mobile, pb.room_badges = real
+
+
 async def main():
+    await t_sec05()
     await t_py18()
     t_py17()
     await t_py15()
