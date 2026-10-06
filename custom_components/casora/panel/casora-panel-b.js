@@ -534,7 +534,16 @@
       if (on && !root.querySelector(".bscrim")) {
         const s = document.createElement("div");
         s.className = "bscrim";
-        s.onclick = () => this._bClose();
+        s.onclick = (ev) => {
+          // „Fertig“, Rückgängig und „…“ liegen sichtbar über der Abdunkelung: ein Tipp darauf
+          // schließt das Blatt und löst den Knopf gleich aus (bisher brauchte „Fertig“ zwei Tipps).
+          s.style.pointerEvents = "none";
+          const hit = root.elementFromPoint ? root.elementFromPoint(ev.clientX, ev.clientY) : null;
+          s.style.pointerEvents = "";
+          const btn = hit && hit.closest && hit.closest(".navpill button");
+          this._bClose();
+          if (btn && !btn.disabled) btn.click();
+        };
         shell.appendChild(s);
       }
       if (on && !root.querySelector(".bbar")) {
