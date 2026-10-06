@@ -2075,7 +2075,12 @@
     "Edit badge": "Badge bearbeiten",
     "Room name and photo": "Raumname und Foto",
     "Choose a photo": "Foto wählen",
-    "Upload your own": "Eigenes hochladen"
+    "Upload your own": "Eigenes hochladen",
+    "Next steps": "Als Nächstes",
+    "Hide for good": "Für immer ausblenden",
+    "Your own photo for {room}": "Eigenes Foto für {room}",
+    "Save your first scene": "Erste Szene speichern",
+    "Open it on your phone": "Auf dem Handy öffnen"
   },
   "patterns": [
     ["^Phone differs in (\\d+) settings$", "Handy weicht bei {1} Einstellungen ab"],

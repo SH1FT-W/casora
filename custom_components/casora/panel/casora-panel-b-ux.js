@@ -18,6 +18,8 @@
 //   Foto-Bereich zwei sichtbare Knöpfe „Foto wählen“ und „Eigenes hochladen“
 // - Tablet: Beschriftungen der Werkzeugleiste stufenweise kürzen (erst Suche, dann
 //   „Einstellungen“), statt bei Platzmangel gleich alle wegzulassen
+// - Nach der Einführung drei kleine nächste Schritte im Inhalt-Blatt (Foto, Szene, Handy),
+//   die sich selbst abhaken; ✕ blendet sie für immer aus
 // - Untertitel der Reiter (Inhalt, Dashboard, Einstellungen) als Hinweis und im Inhalt-Blatt
 // - Wörterbuch: Badges und Popups mit einem Halbsatz erklärt
 // Datenmodell, Speichern und Rückgängig bleiben die des Panels – hier wird nur angeschlossen.
@@ -185,6 +187,18 @@
     :host(.bmode.uxs2) .btool[data-b="home"] .blabel, :host(.bmode.uxs2) .btool[data-b="rooms"] .blabel { display:none; }
     /* Ganz eng: das „+“ der Leiste weicht (Platz „Kachel hinzufügen“ in der Vorschau bleibt). */
     :host(.bmode.btight) .btools .btool.uxplus { display:none; }
+    /* Als Nächstes (nach der Einführung) */
+    .uxnext { position:relative; margin:0 0 12px; padding:12px 14px 8px; border-radius:var(--r-l, 16px);
+      background:var(--casora-studio-slab-card, var(--card-tint, rgba(127,127,127,.08))); box-shadow:inset 0 0 0 1px var(--hair, rgba(127,127,127,.18)); }
+    .uxnext h4 { margin:0 30px 6px 2px; font-size:14px; font-weight:650; }
+    .uxnext .uxnx { position:absolute; top:8px; right:8px; width:28px; height:28px; border:0; border-radius:50%; padding:0; cursor:pointer;
+      background:var(--chip, rgba(127,127,127,.14)); color:var(--ink-2, inherit); font-size:15px; line-height:28px; box-shadow:none; }
+    .uxnext .uxns { display:flex; align-items:center; gap:10px; width:100%; min-height:38px; padding:4px 2px; border:0; background:none; box-shadow:none;
+      font:inherit; font-size:14px; text-align:left; cursor:pointer; color:var(--ink, inherit); }
+    .uxnext .uxns i { flex:none; width:18px; height:18px; border-radius:50%; box-shadow:inset 0 0 0 1.6px var(--ink-3, rgba(127,127,127,.7));
+      display:grid; place-items:center; font-style:normal; font-size:12px; font-weight:800; }
+    .uxnext .uxns.done { color:var(--ink-2, rgba(127,127,127,.95)); text-decoration:line-through; }
+    .uxnext .uxns.done i { background:var(--casora-studio-done, var(--accent, #94603B)); box-shadow:none; color:#fff; }
     /* Tastenkürzel */
     .uxkeys { display:grid; grid-template-columns:auto 1fr; gap:8px 14px; margin:2px 4px 6px; font-size:14px; align-items:center; }
     .uxkeys kbd { font:inherit; font-size:12.5px; font-weight:650; padding:2px 7px; border-radius:7px; white-space:nowrap; justify-self:start;
@@ -326,6 +340,7 @@
       this._uxTileEditor();
       this._uxRoomVis();
       this._uxPhotoBtns();
+      this._uxNext();
     };
 
     // ── Menüs: „Gilt für: …“ oben (V-01) ───────────────────────────────
@@ -1063,6 +1078,88 @@
       this.classList.add("btight");
       return r;
     });
+
+    // ── Als Nächstes: drei kleine Schritte (V-14) ─────────────────────────
+    const NEXT = "casora.studio.next";
+    const lsGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+    const lsSet = (k, v) => { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* nur jetzt */ } };
+    const nextDone = () => { try { return JSON.parse(lsGet(NEXT + ".done") || "{}") || {}; } catch (e) { return {}; } };
+    P._uxNextTick = function (k) {
+      if (lsGet(NEXT) !== "on") return;
+      const d = nextDone();
+      if (d[k]) return;
+      d[k] = true;
+      lsSet(NEXT + ".done", JSON.stringify(d));
+      // Alles erledigt: die Karte hat ihren Zweck erfüllt.
+      if (d.photo && d.scene && d.phone) lsSet(NEXT, "off");
+      this._uxNext();
+    };
+    // Nur wer die Einführung bis zum Ende ansieht, bekommt die Karte (nicht, wer sie überspringt).
+    wrap("_bIntro", (orig) => function () {
+      const r = orig.apply(this, arguments);
+      const box = this.shadowRoot.querySelector(".bintro");
+      const next = box && box.querySelector(".bnext");
+      if (next && !next._ux) {
+        next._ux = true;
+        next.addEventListener("click", () => {
+          if (next.textContent === tr("Got it") && lsGet(NEXT) === null) lsSet(NEXT, "on");
+        }, true);
+      }
+      return r;
+    });
+    wrap("_bSceneCreated", (orig) => function () { const r = orig.apply(this, arguments); try { this._uxNextTick("scene"); } catch (e) { /* egal */ } return r; });
+    wrap("_mQr", (orig) => function () { try { this._uxNextTick("phone"); } catch (e) { /* egal */ } return orig.apply(this, arguments); });
+    wrap("_markDirty", (orig) => function () {
+      const r = orig.apply(this, arguments);
+      try {
+        if (lsGet(NEXT) === "on" && this._state) {
+          const sig = JSON.stringify(rooms$(this).map((x) => [(x.variables || {}).image, (x.variables || {}).image_night]));
+          if (this._uxImgSig && sig !== this._uxImgSig) this._uxNextTick("photo");
+          this._uxImgSig = sig;
+        }
+      } catch (e) { /* egal */ }
+      return r;
+    });
+    P._uxNext = function () {
+      const pane = this.shadowRoot.getElementById("pane");
+      const old = pane && pane.querySelector(".uxnext");
+      const want = lsGet(NEXT) === "on" && on(this) && this._state && this._bOpen && !this._sel && !(this._bPage && this._bPage()) && !this._bRooms;
+      if (!want) { if (old) old.remove(); return; }
+      if (!this._uxImgSig) this._uxImgSig = JSON.stringify(rooms$(this).map((x) => [(x.variables || {}).image, (x.variables || {}).image_night]));
+      const d = nextDone();
+      const card = old || document.createElement("section");
+      card.className = "uxnext";
+      card.setAttribute("data-no-i18n", "");
+      card.innerHTML = "";
+      const h = document.createElement("h4");
+      h.textContent = tr("Next steps");
+      const x = document.createElement("button");
+      x.type = "button";
+      x.className = "uxnx";
+      x.textContent = "\u2715";
+      x.title = tr("Hide for good");
+      x.setAttribute("aria-label", tr("Hide for good"));
+      x.onclick = () => { lsSet(NEXT, "off"); card.remove(); };
+      card.append(h, x);
+      const step = (k, label, run) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "uxns" + (d[k] ? " done" : "");
+        b.innerHTML = "<i></i><span></span>";
+        b.querySelector("i").textContent = d[k] ? "\u2713" : "";
+        b.querySelector("span").textContent = label;
+        b.onclick = run;
+        card.appendChild(b);
+      };
+      step("photo", fill(tr("Your own photo for {room}"), { room: this._uxRoomName() }), () => {
+        this._bOpen = true; this._select({ group: "rooms", key: "Appearance", label: "Appearance" });
+      });
+      if (typeof this._bSceneFromState === "function" && this._hass && this._hass.user && this._hass.user.is_admin) {
+        step("scene", tr("Save your first scene"), () => this._bSceneFromState());
+      } else if (!d.scene) d.scene = true;
+      step("phone", tr("Open it on your phone"), () => this._mQr && this._mQr());
+      if (!old) pane.insertBefore(card, pane.firstChild);
+    };
 
     // ── Anschließen ─────────────────────────────────────────────────────
     const after = (name) => wrap(name, (orig) => function () {
