@@ -11128,6 +11128,28 @@ class CasoraPanel extends HTMLElement {
       this._gOn(document, "visibilitychange", this._onVisible);
       // bfcache restores skip visibilitychange entirely on some browsers.
       this._gOn(window, "pageshow", this._onVisible);
+      // Zurück im Tab (oder Fenster): in HA neu angelegte oder entfernte Szenen gleich zeigen –
+      // die Liste entstand beim letzten Zeichnen, nicht live.
+      const sceneSig = () => {
+        const st = (this._hass && this._hass.states) || {};
+        const reg = (this._hass && this._hass.entities) || {};
+        return Object.keys(st).filter((id) => id.startsWith("scene.")).sort()
+          .map((id) => id + (reg[id] && (reg[id].hidden || reg[id].disabled_by) ? "-" : "")).join(",");
+      };
+      const scenesBack = () => {
+        if (document.visibilityState === "hidden") { this._sceneSigSeen = sceneSig(); return; }
+        const sig = sceneSig();
+        const was = this._sceneSigSeen;
+        this._sceneSigSeen = sig;
+        if (was === undefined || was === sig || !this._state || this._flowMode) return;
+        this._renderForm();
+        this._rebuildPreview();
+      };
+      // Nach langer Pause verbindet HA erst neu: ein zweiter Blick etwas später.
+      const back = () => { scenesBack(); if (document.visibilityState !== "hidden") setTimeout(scenesBack, 2000); };
+      this._gOn(document, "visibilitychange", back);
+      this._gOn(window, "blur", () => { this._sceneSigSeen = sceneSig(); });
+      this._gOn(window, "focus", () => setTimeout(back, 300));
     }
     if (this.parentElement && window.ResizeObserver) {
       if (this._slotObs) this._slotObs.disconnect();
