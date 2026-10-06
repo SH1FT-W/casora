@@ -336,6 +336,7 @@
         var sic = (st.attributes && st.attributes.icon) || 'mdi:palette-outline';
         if (window.casoraFilledIcon) sic = window.casoraFilledIcon(sic);
         list.push({ icon: sic, label: (st.attributes && st.attributes.friendly_name) || id,
+          color: window.casoraSceneColor ? window.casoraSceneColor(id) : null,
           run: function () { h.callService('scene', 'turn_on', { entity_id: id }); } });
       });
       return list;
@@ -379,6 +380,8 @@
         b.title = String(it.label || '');
         var ic = self._iconHtml(it.icon);
         if (window.casoraMenuGlass && window.casoraMenuGlass.iconHtml) ic = window.casoraMenuGlass.iconHtml(ic, kind === 'scenes' ? 'light' : 'general');
+        /* Szene mit Studio-Farbe: Symbolton in dieser Farbe (B-SZENE). */
+        if (it.color) ic = ic.replace(/^<span class="casora-mi"[^>]*>/, '<span class="casora-mi" style="--casora-mi-tone:' + String(it.color).replace(/["<>;{}]/g, '') + '">');
         b.innerHTML = ic + '<span>' + (window.casoraTr || function (x) { return x; })(it.label) + (it.sub ? '<span class="hmn-sub">' + it.sub + '</span>' : '') + '</span>';
         b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); self._haptic(); self._closeMenu(); it.run(); });
         m.appendChild(b);

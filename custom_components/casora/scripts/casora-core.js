@@ -3153,6 +3153,8 @@ window.casoraMenuGlass = {
               || id.replace('scene.', '').replace(/_/g, ' '),
             icon: window.casoraFilledIcon((hass.states[id].attributes || {}).icon || 'mdi:layers'),
             active: SC.isActive ? !!SC.isActive(id, hass.states) : false,
+            // Studio-Farbe der Szene fürs Symbol (B-SZENE); Weich färbt Menüsymbole über --casora-mi-tone.
+            color: window.casoraSceneColor ? window.casoraSceneColor(id) : null,
             run: () => SC.apply(id, this._transition()),
           }));
         }
@@ -3228,7 +3230,7 @@ window.casoraMenuGlass = {
 
       const build = () => {
         const items = this._menuItems(route);
-        const sig = items.map((i) => [i.id, i.label, i.icon, i.active].join('\u0001')).join('\u0002');
+        const sig = items.map((i) => [i.id, i.label, i.icon, i.active, i.color || ''].join('\u0001')).join('\u0002');
         if (sig === menu._sig) return;
         menu._sig = sig;
         menu.textContent = '';
@@ -3266,8 +3268,10 @@ window.casoraMenuGlass = {
             maxWidth: '100%',
           });
 
-          row.appendChild(window.casoraMenuGlass.icon(ico,
-            (route.menu === 'scenes' || !route.popup) ? 'light' : 'general', 'currentColor'));
+          const mi = window.casoraMenuGlass.icon(ico,
+            (route.menu === 'scenes' || !route.popup) ? 'light' : 'general', 'currentColor');
+          if (it.color) mi.style.setProperty('--casora-mi-tone', it.color);
+          row.appendChild(mi);
           row.appendChild(txt);
 
           row.onclick = (e) => {

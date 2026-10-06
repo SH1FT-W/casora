@@ -46,6 +46,23 @@ window._casoraLovelaceCfg = function () {
   }
   return (ll && ll.lovelace && ll.lovelace.config) || null;
 };
+/* Szenenfarbe aus dem Studio (06.10.2026, B-SZENE): das Studio schreibt sie beim Speichern in
+   casora_scene_row.variables.scene_colors des Dashboards – die gilt (auch nach Zurücksetzen).
+   Ohne diese Vorlage (YAML-Dashboards): was Leiste/Szenenreihe gemeldet haben (_casoraSC.iconColors).
+   Ergebnis ist ein CSS-Wert (meist var(--casora-color-…, #hex)) oder null. */
+window.casoraSceneColor = function (id) {
+  if (!id) return null;
+  var map = null;
+  try {
+    var cfg = window._casoraLovelaceCfg && window._casoraLovelaceCfg();
+    var row = cfg && cfg.button_card_templates && cfg.button_card_templates.casora_scene_row;
+    if (row && row.variables && 'scene_colors' in row.variables) map = row.variables.scene_colors || {};
+  } catch (e) { map = null; }
+  if (Array.isArray(map)) map = Object.assign.apply(null, [{}].concat(map.filter(function (x) { return x && typeof x === 'object'; })));
+  if (!map) map = (window._casoraSC && window._casoraSC.iconColors) || {};
+  var c = map[id];
+  return c ? String(c).replace(/["<>;{}]/g, '') : null;
+};
 /* Leistung fürs Energie-Badge, wenn die Badge selbst keinen Sensor bekommt (03.10.2026):
    Handy-Badge-Reihe und Räume, in denen Energie nur über Verbrauch/Kosten/Geräte an ist,
    zeigten nur „Energie“ ohne Wert und waren dadurch niedriger. Reihenfolge: die
