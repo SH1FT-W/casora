@@ -499,6 +499,7 @@
     });
     P._mShowChanges = function (anchor) {
       this._mCss();
+      if (this._bToastHide) this._bToastHide();
       const lines = this._mChanges();
       const box = document.createElement("div");
       const h = document.createElement("h4");
@@ -710,6 +711,7 @@
     P._mSearch = function () {
       if (!this._state) return;
       this._mCss();
+      if (this._bToastHide) this._bToastHide();
       this._mPopClose();
       if (this._openCombo) this._openCombo();
       const root = this.shadowRoot;
