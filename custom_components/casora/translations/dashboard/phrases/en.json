@@ -1360,7 +1360,8 @@
   "Nicht in der Summe": "Not added up",
   "Keine Leistung": "Not power",
   "Steckt hinter": "Behind",
-  "1 Gerät ohne Wert": "1 device without a value"
+  "1 Gerät ohne Wert": "1 device without a value",
+  "Schloss offen": "Lock open"
  },
  "patterns": [
   [
@@ -2482,6 +2483,14 @@
   [
    "^Nicht in der Summe · Steckt hinter (.+)$",
    "Not added up · behind {1}"
+  ],
+  [
+   "^(\\d+) Schlösser offen$",
+   "{1} locks open"
+  ],
+  [
+   "^(\\d+) offline$",
+   "{1} offline"
   ]
  ]
 }
