@@ -19655,9 +19655,16 @@ class CasoraPanel extends HTMLElement {
   // classes: Liste für alle Domains oder {domain: [...]} je Domain. Ohne device_class
   // zählt ein Sensor nur, wenn seine Einheit zur gesuchten Art passt (CLASS_UNITS).
   _entityList(domains, classes) {
+    // Jedes Gerätefeld eines Raums fragt beim Zeichnen dieselben Listen ab – je Stand von
+    // hass.states nur einmal durch alle Entitäten gehen (war über die Hälfte der Zeichenzeit).
+    const states = this._hass.states;
+    if (!this._entMemo || this._entMemo.states !== states) this._entMemo = { states, map: new Map() };
+    const memoKey = JSON.stringify([domains, classes || null]);
+    const hit = this._entMemo.map.get(memoKey);
+    if (hit) return hit.slice();
     const perDomain = classes && !Array.isArray(classes) ? classes : null;
     const all = Array.isArray(classes) && classes.length ? classes : null;
-    return Object.keys(this._hass.states)
+    const out = Object.keys(this._hass.states)
       .filter((e) => domains.includes(e.split(".")[0]))
       .filter((e) => {
         const want = perDomain ? perDomain[e.split(".")[0]] : all;
@@ -19668,6 +19675,8 @@ class CasoraPanel extends HTMLElement {
         return !!unit && want.some((c) => (CLASS_UNITS[c] || NO_UNIT).test(unit));
       })
       .sort();
+    this._entMemo.map.set(memoKey, out);
+    return out.slice();
   }
 
   // Auswahlliste für Badge-Felder: Geräte des Raums zuerst, dann nach Namen;
