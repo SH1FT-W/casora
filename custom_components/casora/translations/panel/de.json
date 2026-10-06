@@ -801,7 +801,7 @@
     "Search tile types": "Kacheltyp suchen",
     "No clear match – please choose": "Keine eindeutige Zuordnung – bitte wählen",
     "Casora could not tell which device this tile is for. Pick one, or add the tile without a device.": "Casora konnte nicht sicher erkennen, welches Gerät gemeint ist. Wähle eines aus oder füge die Kachel ohne Gerät hinzu.",
-    "Applies to all dashboards right away – separate from Save. The preview shows the chosen design; Undo switches back.": "Gilt sofort für alle Dashboards. „Rückgängig“ holt das vorige Design zurück.",
+    "The design applies to all dashboards right away; the other settings here only to this dashboard. Undo switches the design back.": "Das Design gilt sofort für alle Dashboards, die übrigen Einstellungen hier nur für dieses. „Rückgängig“ holt das vorige Design zurück.",
     "Photo": "Foto",
     "Tiles moved": "Kacheln verschoben",
     "Tile settings": "Kacheleinstellungen",
