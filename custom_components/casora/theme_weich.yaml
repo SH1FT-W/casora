@@ -169,6 +169,8 @@ Casora:
   casora-lpc-row-inset: 14px   # D-17: Raumfilter beginnt auf der Inhaltskante der Zeilen darunter
   casora-climate-seg-h: 58px   # D-06: Modusknöpfe im Thermostat so hoch wie die Zeilen daneben
   casora-weather-precip-fs: 12px   # D-18: Regen-% im Wetter-Popup 12 statt 11 px
+  casora-mobile-np-title-size: 17px   # D-12: „Aktuelle Wiedergabe“ so groß wie „Favoriten“
+  casora-category-title-weight: 800   # D-12: Kategorie-Titel („Klima“) wie Seitentitel „Zuhause“
   # Kachelreihe (smart-row): Pfeil links/rechts, solange dort noch Kacheln liegen (Audit H2)
   casora-row-arrows: block
   # Wie die Reihe zeigt, dass es weitergeht: arrows (Pfeile) | fade (Ausblenden + Punkte) | more („+N weitere“)
@@ -182,7 +184,7 @@ Casora:
   badge-padding: calc(var(--casora-u-badge, 10px) * 0.5) calc(var(--casora-u-badge, 10px) * 1.6) calc(var(--casora-u-badge, 10px) * 0.5) calc(var(--casora-u-badge, 10px) * 0.6)
   badge-min-height: calc(var(--casora-u-badge, 10px) * 4.1)
   badge-font-size: calc(var(--casora-u-badge, 10px) * 1.4)
-  badge-sub-scale: 0.86
+  badge-sub-scale: 0.88   # D-12: Badge-Unterzeile am Handy 11 px (war 10,75)
   badge-sub-delta: 0px
   badge-col-gap-tablet: 8px
   badge-padding-tablet: 5px 14px 5px 5px
@@ -237,6 +239,7 @@ Casora:
   casora-menu-item-radius: 16px
   casora-menu-radius: 24px
   casora-menu-item-weight: 600
+  casora-menu-item-size: 15px   # D-12: ⋯-Menü in derselben Größe wie das Räume-Menü
   casora-menu-item-dim: 1
   casora-menu-icons-filled: 1
   # A-19: Mitteilungen – Zeilen wie Popup-Zeilen, Aktion in Ton
@@ -346,8 +349,9 @@ Casora:
   casora-mnav-menu-shadow: var(--casora-elevation-floating, 0 8px 20px rgba(0,0,0,0.13))
   casora-mnav-on-fill: var(--casora-nav-active-fill)
   casora-mnav-fg-on: var(--casora-menu-fg, #fff)
-  casora-mnav-item-weight: 400
-  casora-mnav-item-on-weight: 500
+  # D-12: Räume-Menü wie das ⋯-Menü (15 px / 600, aktiv 700) statt 15/400
+  casora-mnav-item-weight: 600
+  casora-mnav-item-on-weight: 700
   # A-07: Kachelabstand Desktop/Tablet (war 16), Handy-Raster (Standard 8) – minimal enger
   casora-tile-row-gap-desktop: 12px
   casora-tile-row-gap-mobile: 8px

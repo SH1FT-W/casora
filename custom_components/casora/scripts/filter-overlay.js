@@ -2133,7 +2133,8 @@
       titleEl.style.cssText = [
         'display:block', 'width:100%', 'box-sizing:border-box',
         `padding-bottom:${TITLE_PAD_BOT}px`,
-        `font-size:${TITLE_FONT_PX}px`, 'font-weight:700', 'color:var(--casora-mobile-title-color, #ffffff)',
+        // D-12: Weich setzt das Gewicht wie beim Seitentitel „Zuhause“ (800); sonst wie bisher 700.
+        `font-size:${TITLE_FONT_PX}px`, 'font-weight:var(--casora-category-title-weight, 700)', 'color:var(--casora-mobile-title-color, #ffffff)',
         'letter-spacing:-0.5px', 'pointer-events:none',
         'transform-origin:left center',
       ].join(';');
