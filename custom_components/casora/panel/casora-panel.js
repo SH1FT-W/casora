@@ -4048,6 +4048,20 @@ function condContainerDesc(t) {
   return { type, label: type ? type.label : titleCase(ct.replace(/^custom:/, "").replace(/-/g, " ")), how };
 }
 
+// Geräteauswahl in der Übersicht: nach Raum wie im Studio (areaOrder = HA-Bereich je Raum),
+// dann übrige Bereiche alphabetisch, ohne Bereich zuletzt; innerhalb eines Raums wie bewertet.
+// dev/unit/studio_mehr.mjs
+function homePickOrder(cands, areaOrder, areas) {
+  const rank = (c) => {
+    const id = Object.keys(areas || {}).find((k) => (areas[k] || {}).name === c.area) || null;
+    const i = id ? areaOrder.indexOf(id) : -1;
+    return i >= 0 ? [0, i, ""] : c.area ? [1, 0, c.area] : [2, 0, ""];
+  };
+  return cands.map((c, n) => ({ c, n, r: rank(c) }))
+    .sort((x, y) => x.r[0] - y.r[0] || x.r[1] - y.r[1] || x.r[2].localeCompare(y.r[2]) || x.n - y.n)
+    .map((x) => x.c);
+}
+
 // Bedingungen als bearbeitbare Zeilen: {mode: all|any|none, rows: [{entity, op, value}]}.
 // Was sich so nicht darstellen lässt (Bildschirm, Nutzer, tiefer verschachtelt), gibt null.
 const COND_SIMPLE = (c) => {
@@ -20162,14 +20176,20 @@ class CasoraPanel extends HTMLElement {
   async _addTileAsk(room, type) {
     const all = this._tileCandidates(type, room);
     const sure = all.length > 0 && !!all[0].sure;
-    const cands = all.slice(0, sure ? 3 : 5);
+    let cands = all.slice(0, sure ? 3 : 5);
+    // Zuhause (Übersicht ohne HA-Bereich): Geräte aus allen Räumen – nach Raum geordnet wie die
+    // Räume im Studio, Geräte ohne Bereich zuletzt, und etwas mehr Auswahl (Nutzertest 06.10.2026).
+    const rooms = ((this._state || {}).compact || {}).rooms || [];
+    const overview = !sure && isHomeRoom(room, rooms) && !this._roomArea(room);
+    if (overview) cands = homePickOrder(all.slice(0, 8), rooms.map((r) => this._roomArea(r)), (this._hass || {}).areas || {});
     const tile = newTile(type);
     if (cands.length) {
       const tr = trLabel;
       const res = await this._ask({
         // Nutzertest: „Keine eindeutige Zuordnung“ klang nach Fehler – als einfache Frage stellen.
         title: sure ? tr("Matching device found") : tr("Which device should the tile show?"),
-        message: !sure
+        message: overview ? tr("The overview can show devices from every room – sorted by room here. Pick one or add the tile without a device.")
+          : !sure
           ? tr("Pick one – or add the tile without a device and choose it later.")
           : cands.length > 1
             ? tr("Casora suggests this device for the new tile. Pick another one or add the tile without a device.")
@@ -25429,7 +25449,7 @@ window.__casoraPanelInternals = {
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
   linkPair, syncPairRooms, syncPairTiles, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, expandMobileConfig, extractMobileConfig,
-  deriveEnergyRooms, roomVisibility, MENU_ICONS, SECTIONS, tileTwinKey,
+  deriveEnergyRooms, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
   CASORA_ACCENTS, accentLabel, swatchCss,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)
 };
