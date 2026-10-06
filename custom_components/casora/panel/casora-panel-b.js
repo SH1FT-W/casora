@@ -848,16 +848,25 @@
     });
     before("_pvPick", function () { if (this.classList.contains("bmode")) this._bOpen = true; });
     before("_openRoomSec", function () { if (this.classList.contains("bmode")) this._bOpen = true; });
+    // Hat dieser Durchlauf die Vorschau selbst neu gebaut? (Desktop: ja, beim Raumwechsel.)
+    const renderForm0 = P._renderForm;
+    P._renderForm = function () {
+      const tok = this._mapSwap;
+      const r = renderForm0.apply(this, arguments);
+      this._bSwapped = this._mapSwap !== tok;
+      return r;
+    };
     before("_renderForm", function () {
       // „Kachel hinzufügen“ in der Vorschau will die Liste offen haben.
       if (this._stackOpenReq && this.classList.contains("bmode")) this._bOpen = true;
     });
     after("_renderForm", function () {
       this._bApply();
-      // Raumwechsel: am Handy zeichnet _renderForm die Vorschau nicht von selbst neu.
+      // Raumwechsel: am Handy zeichnet _renderForm die Vorschau nicht von selbst neu. Am Desktop
+      // hat es das gerade getan – ein zweites Mal im nächsten Bild war doppelte Arbeit.
       if (this.classList.contains("bmode") && this._bRoomSeen !== this._room) {
         this._bRoomSeen = this._room;
-        requestAnimationFrame(() => this._syncPreview());
+        if (!this._bSwapped) requestAnimationFrame(() => this._syncPreview());
       }
     });
     after("_swapMap", function () {
