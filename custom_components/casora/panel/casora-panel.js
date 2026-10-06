@@ -17983,7 +17983,8 @@ class CasoraPanel extends HTMLElement {
     menu.style.left = left + "px";
     // Das 3-Punkte-Menü darf so hoch werden, wie Platz ist – es soll nicht scrollen.
     // Abzüglich des 10-px-Abstands zum Knopf: so bleiben unten wie oben mindestens 12 px Rand.
-    menu.style.maxHeight = Math.max(120, Math.min(dashMenu ? 2000 : phone ? 600 : 560, (drop ? below : above) - 10)) + "px";
+    // Am Desktop bis 760 px: das Raummenü (elf Räume + Aktionen) endete bei 560 px mitten in einer Zeile.
+    menu.style.maxHeight = Math.max(120, Math.min(dashMenu ? 2000 : phone ? 600 : 760, (drop ? below : above) - 10)) + "px";
     if (drop) { menu.style.top = r.bottom + 10 + "px"; menu.style.bottom = "auto"; }
     else { menu.style.bottom = window.innerHeight - r.top + 10 + "px"; menu.style.top = "auto"; }
     playMenuIn(menu, drop, !lead && left + width > r.right - 2);
