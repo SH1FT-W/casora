@@ -394,7 +394,7 @@ async def ws_merge_template(hass: HomeAssistant, connection: websocket_api.Activ
         return
     try:
         tpl = _apply_ops(msg["casora"], ops)
-    except (ValueError, IndexError, KeyError, TypeError) as err:
+    except (ValueError, IndexError, KeyError, TypeError, AttributeError) as err:
         connection.send_error(msg["id"], "bad_ops", f"Die Änderungen der KI passen nicht zur Vorlage ({err})")
         return
     changes = (res or {}).get("changes") or []

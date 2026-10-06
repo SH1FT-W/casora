@@ -4,6 +4,7 @@
 
 B-PY-04: zwei gleichzeitige Auffrisch-Läufe (Start + Karten-Update) laufen nacheinander.
 B-PY-05: Konfigurieren-Dialog: „Ungültige Zeit“ nur unter Zeitplan-Feldern.
+B-PY-06: unpassende KI-Änderung beim Umzug („Vorlage anpassen“) → verständliche Meldung statt Absturz.
 """
 
 from __future__ import annotations
@@ -66,7 +67,38 @@ async def t_py05():
         config_flow.build_options, config_flow.options_schema = real_b, real_s
 
 
+async def t_py06():
+    from custom_components.casora import ki, settings
+
+    sent = {}
+    conn = SimpleNamespace(user=SimpleNamespace(is_admin=True), send_error=lambda i, code, text: sent.update(code=code, text=text),
+                           send_result=lambda i, r: sent.update(code="ok"))
+    hass = SimpleNamespace(config_entries=SimpleNamespace(async_entries=lambda d: [object()]),
+                           config=SimpleNamespace(language="de"))
+    jobs = []
+    hass.async_create_background_task = lambda coro, *a, **k: jobs.append(coro)
+
+    async def ask(*a, **k):
+        return {"ops": '[{"op": "set", "path": "variables/liste/0/stil/farbe", "value": "rot"}]', "changes": []}
+
+    real = ki.ai_models, ki.ask_ai
+    ki.ai_models = lambda h: [{"ok": True, "entity_id": "ai_task.x"}]
+    ki.ask_ai = ask
+    try:
+        settings.ws_merge_template(hass, conn, {
+            "id": 1, "name": "t", "mine": {}, "casora": {"variables": {"liste": ["text"]}}})
+        for j in jobs:
+            try:
+                await j
+            except Exception as err:  # noqa: BLE001
+                sent.update(code="absturz", text=repr(err))
+    finally:
+        ki.ai_models, ki.ask_ai = real
+    check("B-PY-06: Meldung „passen nicht zur Vorlage“", sent.get("code") == "bad_ops", repr(sent))
+
+
 async def main():
+    await t_py06()
     await t_py04()
     await t_py05()
 
