@@ -261,7 +261,22 @@ footer .fine { flex-basis: 100%; }
   .copy { margin-left: auto; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } }
+
+/* Zweisprachig: Browsersprache entscheidet, Schalter oben rechts merkt sich die Wahl */
+html[lang="de"] .en, html[lang="en"] .de { display: none !important; }
+.lang { flex: none; display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.lang button { font: inherit; font-size: 12px; font-weight: 600; border: 0; background: none; color: var(--ink-2); padding: 4px 10px; cursor: pointer; }
+.lang button.on { background: var(--ink); color: var(--bg); }
+@media (max-width: 640px) { .nav .wrap { gap: 12px; } }
 </style>
+<script>
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem("sh1ftw-lang"); } catch (e) {}
+    var pref = saved || ((navigator.languages && navigator.languages[0]) || navigator.language || "en");
+    document.documentElement.lang = /^de/i.test(pref) ? "de" : "en";
+  })();
+</script>
 </head>
 <body>
 
@@ -272,10 +287,13 @@ footer .fine { flex-basis: 100%; }
       <a class="opt" href="#layouts">Layouts</a>
       <a class="opt" href="#popups">Popups</a>
       <a href="#studio">Studio</a>
-      <a class="opt" href="#privacy">Privacy</a>
+      <a class="opt" href="#privacy"><span class="en">Privacy</span><span class="de">Datenschutz</span></a>
       <a href="https://github.com/SH1FT-W/casora">GitHub</a>
     </nav>
-    <a class="btn small" href="#install">Install</a>
+    <a class="btn small" href="#install"><span class="en">Install</span><span class="de">Installieren</span></a>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-l="de">DE</button><button type="button" data-l="en">EN</button>
+    </div>
   </div>
 </header>
 
@@ -284,14 +302,14 @@ footer .fine { flex-basis: 100%; }
   <!-- Hero -->
   <section class="hero">
     <div class="wrap">
-      <p class="eyebrow">For Home Assistant</p>
-      <h1>Your home.<br>At ease.</h1>
-      <p class="lead">A calm, photo-backed dashboard that <strong>sets itself up</strong>. Shape the rest room by room in a visual studio. No YAML.</p>
+      <p class="eyebrow"><span class="en">For Home Assistant</span><span class="de">Für Home Assistant</span></p>
+      <h1><span class="en">Your home.<br>At ease.</span><span class="de">Dein Zuhause.<br>Ganz entspannt.</span></h1>
+      <p class="lead"><span class="en">A calm, photo-backed dashboard that <strong>sets itself up</strong>. Shape the rest room by room in a visual studio. No YAML.</span><span class="de">Ein ruhiges Dashboard mit Raumfotos, das sich <strong>selbst einrichtet</strong>. Den Rest gestaltest du Raum für Raum in einem visuellen Studio. Ohne YAML.</span></p>
       <div class="cta">
-        <a class="btn" href="#install">Install with HACS</a>
-        <a class="btn ghost" href="https://github.com/SH1FT-W/casora/blob/main/docs/guide.md">Read the guide</a>
+        <a class="btn" href="#install"><span class="en">Install with HACS</span><span class="de">Mit HACS installieren</span></a>
+        <a class="btn ghost" href="https://github.com/SH1FT-W/casora/blob/main/docs/guide.md"><span class="en">Read the guide</span><span class="de">Zur Anleitung</span></a>
       </div>
-      <p class="meta"><span id="casora-version">Version 1.0.5</span> &middot; Home Assistant 2026.9 or newer &middot; Free and open source</p>
+      <p class="meta"><span id="casora-version">Version 1.0.5</span> &middot; <span class="en">Home Assistant 2026.9 or newer &middot; Free and open source</span><span class="de">Home Assistant 2026.9 oder neuer &middot; Kostenlos und Open Source</span></p>
       <div class="hero-shot shot lg">
         <picture>
           <source media="(prefers-color-scheme: dark)" srcset="images/readme-hero-dark.webp">
@@ -306,11 +324,14 @@ footer .fine { flex-basis: 100%; }
     <div class="wrap">
       <div class="split">
         <div>
-          <p class="eyebrow">Setup</p>
-          <h2>It already knows your home.</h2>
-          <p class="lead">Casora reads Home Assistant's device registry, puts every device into its room and groups what belongs together. Your first dashboard is ready before you have touched a single tile.</p>
-          <div class="chips" aria-label="Devices Casora recognises">
+          <p class="eyebrow"><span class="en">Setup</span><span class="de">Einrichtung</span></p>
+          <h2><span class="en">It already knows your home.</span><span class="de">Es kennt dein Zuhause schon.</span></h2>
+          <p class="lead"><span class="en">Casora reads Home Assistant's device registry, puts every device into its room and groups what belongs together. Your first dashboard is ready before you have touched a single tile.</span><span class="de">Casora liest die Geräteliste von Home Assistant, ordnet jedes Gerät seinem Raum zu und fasst zusammen, was zusammengehört. Dein erstes Dashboard steht, bevor du eine einzige Kachel angefasst hast.</span></p>
+          <div class="chips en" aria-label="Devices Casora recognises">
             <span class="chip">Lights</span><span class="chip">Climate</span><span class="chip">Blinds</span><span class="chip">Locks</span><span class="chip">Media</span><span class="chip">Cameras</span><span class="chip">Robot vacuums</span><span class="chip">Washers and dryers</span><span class="chip">3D printers</span><span class="chip">Home batteries</span><span class="chip">Cars</span><span class="chip">Waste collection</span><span class="chip">Calendars</span><span class="chip">Network</span>
+          </div>
+          <div class="chips de" aria-label="Geräte, die Casora erkennt">
+            <span class="chip">Licht</span><span class="chip">Klima</span><span class="chip">Jalousien</span><span class="chip">Schlösser</span><span class="chip">Medien</span><span class="chip">Kameras</span><span class="chip">Saugroboter</span><span class="chip">Waschmaschine und Trockner</span><span class="chip">3D-Drucker</span><span class="chip">Heimspeicher</span><span class="chip">Autos</span><span class="chip">Müllabfuhr</span><span class="chip">Kalender</span><span class="chip">Netzwerk</span>
           </div>
         </div>
         <div class="shot">
@@ -321,9 +342,9 @@ footer .fine { flex-basis: 100%; }
         </div>
       </div>
       <div class="facts">
-        <div class="fact"><b>0</b><span>lines of YAML to get started. Everything is set up in the Studio.</span></div>
-        <div class="fact"><b>31</b><span>room types with their own photos, for day and for night.</span></div>
-        <div class="fact"><b>30</b><span>versions kept for every dashboard, ready to restore.</span></div>
+        <div class="fact"><b>0</b><span class="en">lines of YAML to get started. Everything is set up in the Studio.</span><span class="de">Zeilen YAML für den Start. Alles wird im Studio eingerichtet.</span></div>
+        <div class="fact"><b>31</b><span class="en">room types with their own photos, for day and for night.</span><span class="de">Raumtypen mit eigenen Fotos, für Tag und Nacht.</span></div>
+        <div class="fact"><b>30</b><span class="en">versions kept for every dashboard, ready to restore.</span><span class="de">Versionen je Dashboard, jederzeit wiederherstellbar.</span></div>
       </div>
     </div>
   </section>
@@ -332,9 +353,9 @@ footer .fine { flex-basis: 100%; }
   <section id="layouts">
     <div class="wrap">
       <div class="head center">
-        <p class="eyebrow">Desktop, tablet, phone</p>
-        <h2>One home.<br>Three screens.</h2>
-        <p class="lead">Every screen gets a layout made for it. Not a shrunken copy.</p>
+        <p class="eyebrow"><span class="en">Desktop, tablet, phone</span><span class="de">Desktop, Tablet, Handy</span></p>
+        <h2><span class="en">One home.<br>Three screens.</span><span class="de">Ein Zuhause.<br>Drei Bildschirme.</span></h2>
+        <p class="lead"><span class="en">Every screen gets a layout made for it. Not a shrunken copy.</span><span class="de">Jeder Bildschirm bekommt ein eigenes Layout. Keine verkleinerte Kopie.</span></p>
       </div>
       <div class="shot lg">
         <picture>
@@ -343,9 +364,9 @@ footer .fine { flex-basis: 100%; }
         </picture>
       </div>
       <div class="trio" style="margin-top:20px">
-        <div class="tile"><p class="k">Desktop</p><h3>Room by room.</h3><p>A full photo of each room, with its devices right below and every room one tap away.</p></div>
-        <div class="tile"><p class="k">Wall tablet</p><h3>Made for the hallway.</h3><p>Large tiles, readable from across the room, and a look that stays calm all day.</p></div>
-        <div class="tile"><p class="k">Phone</p><h3>Your favourites first.</h3><p>A layout of its own, with the things you use most at the top and a navigation bar under your thumb.</p></div>
+        <div class="tile"><p class="k">Desktop</p><h3><span class="en">Room by room.</span><span class="de">Raum für Raum.</span></h3><p><span class="en">A full photo of each room, with its devices right below and every room one tap away.</span><span class="de">Ein großes Foto für jeden Raum, die Geräte direkt darunter und jeder Raum nur einen Tipp entfernt.</span></p></div>
+        <div class="tile"><p class="k"><span class="en">Wall tablet</span><span class="de">Wandtablet</span></p><h3><span class="en">Made for the hallway.</span><span class="de">Gemacht für den Flur.</span></h3><p><span class="en">Large tiles, readable from across the room, and a look that stays calm all day.</span><span class="de">Große Kacheln, auch von der anderen Seite des Raums lesbar, und eine Optik, die den ganzen Tag ruhig bleibt.</span></p></div>
+        <div class="tile"><p class="k"><span class="en">Phone</span><span class="de">Handy</span></p><h3><span class="en">Your favourites first.</span><span class="de">Deine Favoriten zuerst.</span></h3><p><span class="en">A layout of its own, with the things you use most at the top and a navigation bar under your thumb.</span><span class="de">Ein eigenes Layout, mit dem, was du am meisten nutzt, ganz oben und einer Navigationsleiste unter dem Daumen.</span></p></div>
       </div>
     </div>
   </section>
@@ -355,8 +376,8 @@ footer .fine { flex-basis: 100%; }
     <div class="wrap">
       <div class="head center">
         <p class="eyebrow">Popups</p>
-        <h2>Tap a tile.<br>See the whole story.</h2>
-        <p class="lead">Lights, climate, energy, locks, blinds, plants, washers and dryers each open a popup of their own. Controls on the left, devices on the right, the rarely used tucked away under <strong>More</strong>.</p>
+        <h2><span class="en">Tap a tile.<br>See the whole story.</span><span class="de">Kachel antippen.<br>Alles auf einen Blick.</span></h2>
+        <p class="lead"><span class="en">Lights, climate, energy, locks, blinds, plants, washers and dryers each open a popup of their own. Controls on the left, devices on the right, the rarely used tucked away under <strong>More</strong>.</span><span class="de">Licht, Klima, Energie, Schlösser, Jalousien, Pflanzen, Waschmaschine und Trockner öffnen jeweils ein eigenes Popup. Links die Steuerung, rechts die Geräte, Seltenes liegt unter <strong>Mehr</strong>.</span></p>
       </div>
       <div class="pops">
         <figure>
@@ -366,7 +387,7 @@ footer .fine { flex-basis: 100%; }
               <img src="images/casora-popup-lights-light.webp" width="1600" height="1000" loading="lazy" alt="The lighting popup: every light in the home, grouped by room, with brightness at a glance.">
             </picture>
           </div>
-          <figcaption class="cap">Every light in the home, grouped by room.</figcaption>
+          <figcaption class="cap"><span class="en">Every light in the home, grouped by room.</span><span class="de">Jedes Licht im Haus, nach Räumen sortiert.</span></figcaption>
         </figure>
         <figure>
           <div class="shot">
@@ -375,7 +396,7 @@ footer .fine { flex-basis: 100%; }
               <img src="images/casora-popup-climate-light.webp" width="1600" height="1000" loading="lazy" alt="A climate popup with temperature and humidity over the day and the room's devices.">
             </picture>
           </div>
-          <figcaption class="cap">Room climate, with a day of readings.</figcaption>
+          <figcaption class="cap"><span class="en">Room climate, with a day of readings.</span><span class="de">Raumklima, mit den Werten des ganzen Tages.</span></figcaption>
         </figure>
         <figure>
           <div class="shot">
@@ -384,7 +405,7 @@ footer .fine { flex-basis: 100%; }
               <img src="images/casora-popup-energy-light.webp" width="1600" height="1000" loading="lazy" alt="The energy popup: current power, a chart of the last hours, and consumption and cost for today and this month.">
             </picture>
           </div>
-          <figcaption class="cap">Power now, today and this month, with cost.</figcaption>
+          <figcaption class="cap"><span class="en">Power now, today and this month, with cost.</span><span class="de">Leistung jetzt, heute und im Monat, mit Kosten.</span></figcaption>
         </figure>
         <figure>
           <div class="shot">
@@ -393,7 +414,7 @@ footer .fine { flex-basis: 100%; }
               <img src="images/casora-popup-laundry-light.webp" width="1600" height="1000" loading="lazy" alt="The washer popup: progress, finish time, program and phase, with recent cycles beside it.">
             </picture>
           </div>
-          <figcaption class="cap">A running wash: progress, finish time, program.</figcaption>
+          <figcaption class="cap"><span class="en">A running wash: progress, finish time, program.</span><span class="de">Eine laufende Wäsche: Fortschritt, Endzeit, Programm.</span></figcaption>
         </figure>
         <figure>
           <div class="shot">
@@ -402,7 +423,7 @@ footer .fine { flex-basis: 100%; }
               <img src="images/casora-popup-security-light.webp" width="1600" height="1000" loading="lazy" alt="The doors and windows popup: which doors and windows are open, closed or tilted.">
             </picture>
           </div>
-          <figcaption class="cap">Doors and windows, open ones first.</figcaption>
+          <figcaption class="cap"><span class="en">Doors and windows, open ones first.</span><span class="de">Türen und Fenster, offene zuerst.</span></figcaption>
         </figure>
         <figure>
           <div class="shot">
@@ -411,7 +432,7 @@ footer .fine { flex-basis: 100%; }
               <img src="images/casora-popup-plants-light.webp" width="1600" height="1000" loading="lazy" alt="The plant popup: soil moisture over seven days, the readings and the plant doctor.">
             </picture>
           </div>
-          <figcaption class="cap">What a plant needs, in plain words.</figcaption>
+          <figcaption class="cap"><span class="en">What a plant needs, in plain words.</span><span class="de">Was eine Pflanze braucht, in klaren Worten.</span></figcaption>
         </figure>
       </div>
     </div>
@@ -423,8 +444,8 @@ footer .fine { flex-basis: 100%; }
     <div class="wrap">
       <div class="head center">
         <p class="eyebrow">Casora Studio</p>
-        <h2>Design it.<br>Don't code it.</h2>
-        <p class="lead">A visual editor in the Home Assistant sidebar. Rooms, tiles, badges and popups, changed in place with a live preview for desktop, tablet and phone.</p>
+        <h2><span class="en">Design it.<br>Don't code it.</span><span class="de">Gestalten.<br>Nicht programmieren.</span></h2>
+        <p class="lead"><span class="en">A visual editor in the Home Assistant sidebar. Rooms, tiles, badges and popups, changed in place with a live preview for desktop, tablet and phone.</span><span class="de">Ein visueller Editor in der Seitenleiste von Home Assistant. Räume, Kacheln, Badges und Popups änderst du direkt, mit Live-Vorschau für Desktop, Tablet und Handy.</span></p>
       </div>
       <div class="shot lg">
         <picture>
@@ -440,7 +461,7 @@ footer .fine { flex-basis: 100%; }
               <img src="images/casora-studio-phone-light.webp" width="1600" height="1000" loading="lazy" alt="The Studio previewing the phone layout.">
             </picture>
           </div>
-          <div class="txt"><h3>See it before you save.</h3><p>Switch the preview between desktop, tablet and phone. Nothing is written until you click Save, and a draft survives a reload.</p></div>
+          <div class="txt"><h3><span class="en">See it before you save.</span><span class="de">Erst sehen, dann speichern.</span></h3><p><span class="en">Switch the preview between desktop, tablet and phone. Nothing is written until you click Save, and a draft survives a reload.</span><span class="de">Schalte die Vorschau zwischen Desktop, Tablet und Handy um. Gespeichert wird erst, wenn du auf Speichern klickst, und ein Entwurf übersteht auch ein Neuladen.</span></p></div>
         </article>
         <article class="card">
           <div class="img">
@@ -449,7 +470,7 @@ footer .fine { flex-basis: 100%; }
               <img src="images/casora-versions-light.webp" width="1600" height="1000" loading="lazy" alt="The versions timeline in the Studio.">
             </picture>
           </div>
-          <div class="txt"><h3>Go back in time.</h3><p>Every save becomes a version. Preview any earlier one and restore it with a click. Nothing is ever lost.</p></div>
+          <div class="txt"><h3><span class="en">Go back in time.</span><span class="de">Zurück in der Zeit.</span></h3><p><span class="en">Every save becomes a version. Preview any earlier one and restore it with a click. Nothing is ever lost.</span><span class="de">Jedes Speichern wird zu einer Version. Sieh dir jede frühere an und stell sie mit einem Klick wieder her. Nichts geht verloren.</span></p></div>
         </article>
         <article class="card">
           <div class="img">
@@ -458,7 +479,7 @@ footer .fine { flex-basis: 100%; }
               <img src="images/casora-assistant-light.webp" width="1600" height="1000" loading="lazy" alt="The device assistant suggesting where new devices should go.">
             </picture>
           </div>
-          <div class="txt"><h3>New devices find their place.</h3><p>The device assistant spots what is new in your home and suggests the room and the tile. You decide.</p></div>
+          <div class="txt"><h3><span class="en">New devices find their place.</span><span class="de">Neue Geräte finden ihren Platz.</span></h3><p><span class="en">The device assistant spots what is new in your home and suggests the room and the tile. You decide.</span><span class="de">Der Geräte-Assistent erkennt, was neu bei dir ist, und schlägt Raum und Kachel vor. Du entscheidest.</span></p></div>
         </article>
       </div>
     </div>
@@ -468,21 +489,21 @@ footer .fine { flex-basis: 100%; }
   <section id="look">
     <div class="wrap">
       <div class="head center">
-        <p class="eyebrow">The look</p>
-        <h2>Soft by day.<br>Warm by night.</h2>
-        <p class="lead">Warm linen, generous corners and gentle shadows. Casora follows Home Assistant between light and dark, and uses Inter throughout.</p>
+        <p class="eyebrow"><span class="en">The look</span><span class="de">Die Optik</span></p>
+        <h2><span class="en">Soft by day.<br>Warm by night.</span><span class="de">Sanft am Tag.<br>Warm am Abend.</span></h2>
+        <p class="lead"><span class="en">Warm linen, generous corners and gentle shadows. Casora follows Home Assistant between light and dark, and uses Inter throughout.</span><span class="de">Warmes Leinen, großzügige Ecken und sanfte Schatten. Casora folgt Home Assistant zwischen hell und dunkel und nutzt durchgehend Inter.</span></p>
       </div>
       <div class="duo">
         <figure style="margin:0">
           <div class="shot"><img src="images/casora-desktop-light.webp" width="1600" height="1000" loading="lazy" alt="Casora's home view in light mode."></div>
-          <figcaption class="cap">Light</figcaption>
+          <figcaption class="cap"><span class="en">Light</span><span class="de">Hell</span></figcaption>
         </figure>
         <figure style="margin:0">
           <div class="shot"><img src="images/casora-desktop-dark.webp" width="1600" height="1000" loading="lazy" alt="Casora's home view in dark mode."></div>
-          <figcaption class="cap">Dark</figcaption>
+          <figcaption class="cap"><span class="en">Dark</span><span class="de">Dunkel</span></figcaption>
         </figure>
       </div>
-      <p class="note center" style="margin-top:28px">Prefer the classic glass look? It is still there, as a legacy option.</p>
+      <p class="note center" style="margin-top:28px"><span class="en">Prefer the classic glass look? It is still there, as a legacy option.</span><span class="de">Lieber die klassische Glas-Optik? Die gibt es weiterhin, als ältere Option.</span></p>
     </div>
   </section>
 
@@ -491,13 +512,18 @@ footer .fine { flex-basis: 100%; }
     <div class="wrap">
       <div class="split flip">
         <div>
-          <p class="eyebrow">Coming from Hemma</p>
-          <h2>Moving feels like an update.</h2>
-          <p class="lead">Casora finds your Hemma dashboards and carries over rooms, tiles, the phone layout and your own cards. Your old dashboard stays untouched.</p>
-          <ol class="steps">
+          <p class="eyebrow"><span class="en">Coming from Hemma</span><span class="de">Umstieg von Hemma</span></p>
+          <h2><span class="en">Moving feels like an update.</span><span class="de">Der Umzug fühlt sich an wie ein Update.</span></h2>
+          <p class="lead"><span class="en">Casora finds your Hemma dashboards and carries over rooms, tiles, the phone layout and your own cards. Your old dashboard stays untouched.</span><span class="de">Casora findet deine Hemma-Dashboards und übernimmt Räume, Kacheln, das Handy-Layout und deine eigenen Karten. Dein altes Dashboard bleibt unverändert.</span></p>
+          <ol class="steps en">
             <li><b>Make a backup</b> in Home Assistant, just to be safe.</li>
             <li><b>Install Casora</b> and open the Studio. It lists everything that will move.</li>
             <li><b>Choose for each tile you changed:</b> keep yours, take Casora's, or let AI merge the two.</li>
+          </ol>
+          <ol class="steps de">
+            <li><b>Leg ein Backup an</b> in Home Assistant, sicher ist sicher.</li>
+            <li><b>Installiere Casora</b> und öffne das Studio. Es zeigt alles, was umzieht.</li>
+            <li><b>Entscheide für jede geänderte Kachel:</b> deine behalten, Casoras nehmen oder beide per KI zusammenführen.</li>
           </ol>
         </div>
         <div class="shot">
@@ -514,37 +540,37 @@ footer .fine { flex-basis: 100%; }
   <section id="install">
     <div class="wrap">
       <div class="head center">
-        <p class="eyebrow">Install</p>
-        <h2>Three steps.<br>Then it's yours.</h2>
+        <p class="eyebrow"><span class="en">Install</span><span class="de">Installation</span></p>
+        <h2><span class="en">Three steps.<br>Then it's yours.</span><span class="de">Drei Schritte.<br>Dann gehört es dir.</span></h2>
       </div>
       <div class="install">
         <div class="panel">
-          <h3>With HACS</h3>
-          <p class="muted">The setup assistant takes it from there.</p>
+          <h3><span class="en">With HACS</span><span class="de">Mit HACS</span></h3>
+          <p class="muted"><span class="en">The setup assistant takes it from there.</span><span class="de">Den Rest übernimmt der Einrichtungsassistent.</span></p>
           <ol class="steps">
-            <li>In HACS, add a <b>custom repository</b> of type <b>Integration</b>:
-              <div class="repo"><code id="repo">https://github.com/SH1FT-W/casora</code><button class="copy" type="button" data-copy="repo">Copy</button></div>
+            <li><span class="en">In HACS, add a <b>custom repository</b> of type <b>Integration</b>:</span><span class="de">Füge in HACS ein <b>benutzerdefiniertes Repository</b> vom Typ <b>Integration</b> hinzu:</span>
+              <div class="repo"><code id="repo">https://github.com/SH1FT-W/casora</code><button class="copy" type="button" data-copy="repo"><span class="en">Copy</span><span class="de">Kopieren</span></button></div>
             </li>
-            <li><b>Download Casora</b> and restart Home Assistant.</li>
-            <li>Add the <b>Casora</b> integration under Settings, Devices &amp; services, then open <b>Casora Studio</b> in the sidebar.</li>
+            <li><span class="en"><b>Download Casora</b> and restart Home Assistant.</span><span class="de"><b>Lade Casora herunter</b> und starte Home Assistant neu.</span></li>
+            <li><span class="en">Add the <b>Casora</b> integration under Settings, Devices &amp; services, then open <b>Casora Studio</b> in the sidebar.</span><span class="de">Füge die Integration <b>Casora</b> unter Einstellungen, Geräte &amp; Dienste hinzu und öffne dann <b>Casora Studio</b> in der Seitenleiste.</span></li>
           </ol>
-          <p class="note">Updates arrive through HACS like any other integration. Casora saves a version of your dashboards first and never restarts Home Assistant on its own.</p>
+          <p class="note"><span class="en">Updates arrive through HACS like any other integration. Casora saves a version of your dashboards first and never restarts Home Assistant on its own.</span><span class="de">Updates kommen wie bei jeder anderen Integration über HACS. Casora speichert vorher eine Version deiner Dashboards und startet Home Assistant nie von selbst neu.</span></p>
         </div>
         <div class="panel">
-          <h3>What you need</h3>
-          <p class="muted">Casora checks this for you on first start.</p>
+          <h3><span class="en">What you need</span><span class="de">Was du brauchst</span></h3>
+          <p class="muted"><span class="en">Casora checks this for you on first start.</span><span class="de">Casora prüft das beim ersten Start für dich.</span></p>
           <ul class="req">
-            <li><span class="name">Home Assistant 2026.9+</span><span class="tag">Required</span></li>
-            <li><span class="name"><a href="https://github.com/Lint-Free-Technology/uix">UI eXtension (UIX)</a></span><span class="tag">From HACS</span></li>
-            <li><span class="name"><a href="https://github.com/custom-cards/button-card">button-card</a></span><span class="tag">From HACS</span></li>
-            <li><span class="name"><a href="https://github.com/RomRider/apexcharts-card">apexcharts-card</a></span><span class="tag opt">Optional</span></li>
-            <li><span class="name">An AI task in Home Assistant</span><span class="tag opt">Optional</span></li>
+            <li><span class="name">Home Assistant 2026.9+</span><span class="tag"><span class="en">Required</span><span class="de">Nötig</span></span></li>
+            <li><span class="name"><a href="https://github.com/Lint-Free-Technology/uix">UI eXtension (UIX)</a></span><span class="tag"><span class="en">From HACS</span><span class="de">Aus HACS</span></span></li>
+            <li><span class="name"><a href="https://github.com/custom-cards/button-card">button-card</a></span><span class="tag"><span class="en">From HACS</span><span class="de">Aus HACS</span></span></li>
+            <li><span class="name"><a href="https://github.com/RomRider/apexcharts-card">apexcharts-card</a></span><span class="tag opt"><span class="en">Optional</span><span class="de">Optional</span></span></li>
+            <li><span class="name"><span class="en">An AI task in Home Assistant</span><span class="de">Eine KI-Aufgabe in Home Assistant</span></span><span class="tag opt"><span class="en">Optional</span><span class="de">Optional</span></span></li>
           </ul>
-          <p class="note">Use UIX instead of card-mod, not both. Helpers, scripts, resources and the theme are created by Casora itself.</p>
+          <p class="note"><span class="en">Use UIX instead of card-mod, not both. Helpers, scripts, resources and the theme are created by Casora itself.</span><span class="de">Nutze UIX statt card-mod, nicht beides. Helfer, Skripte, Ressourcen und das Theme legt Casora selbst an.</span></p>
         </div>
         <div class="panel manual">
-          <h3>Without HACS</h3>
-          <p class="muted">Download the <a href="https://github.com/SH1FT-W/casora/releases">latest release</a>, copy its <code>custom_components/casora</code> folder into <code>/config/custom_components/</code>, restart Home Assistant and add the Casora integration. New versions then show up under Settings, Updates.</p>
+          <h3><span class="en">Without HACS</span><span class="de">Ohne HACS</span></h3>
+          <p class="muted"><span class="en">Download the <a href="https://github.com/SH1FT-W/casora/releases">latest release</a>, copy its <code>custom_components/casora</code> folder into <code>/config/custom_components/</code>, restart Home Assistant and add the Casora integration. New versions then show up under Settings, Updates.</span><span class="de">Lade das <a href="https://github.com/SH1FT-W/casora/releases">neueste Release</a> herunter, kopiere den Ordner <code>custom_components/casora</code> nach <code>/config/custom_components/</code>, starte Home Assistant neu und füge die Integration Casora hinzu. Neue Versionen erscheinen dann unter Einstellungen, Updates.</span></p>
         </div>
       </div>
     </div>
@@ -554,19 +580,22 @@ footer .fine { flex-basis: 100%; }
   <section class="tint" id="privacy">
     <div class="wrap">
       <div class="head">
-        <p class="eyebrow">Privacy</p>
-        <h2>It stays at home.</h2>
+        <p class="eyebrow"><span class="en">Privacy</span><span class="de">Datenschutz</span></p>
+        <h2><span class="en">It stays at home.</span><span class="de">Alles bleibt zu Hause.</span></h2>
       </div>
       <div class="three">
-        <div><div class="rule"></div><h3>No cloud.</h3><p>Casora runs entirely inside your Home Assistant. No account, no analytics, no telemetry.</p></div>
-        <div><div class="rule"></div><h3>Your data, your backups.</h3><p>Dashboards, versions and settings live on your own instance and are part of its regular backups.</p></div>
-        <div><div class="rule"></div><h3>AI only if you ask.</h3><p>AI features stay off until you turn them on, and then use the provider you already set up in Home Assistant.</p></div>
+        <div><div class="rule"></div><h3><span class="en">No cloud.</span><span class="de">Keine Cloud.</span></h3><p><span class="en">Casora runs entirely inside your Home Assistant. No account, no analytics, no telemetry.</span><span class="de">Casora läuft komplett in deinem Home Assistant. Kein Konto, keine Analyse, keine Telemetrie.</span></p></div>
+        <div><div class="rule"></div><h3><span class="en">Your data, your backups.</span><span class="de">Deine Daten, deine Backups.</span></h3><p><span class="en">Dashboards, versions and settings live on your own instance and are part of its regular backups.</span><span class="de">Dashboards, Versionen und Einstellungen liegen auf deiner eigenen Instanz und sind Teil ihrer normalen Backups.</span></p></div>
+        <div><div class="rule"></div><h3><span class="en">AI only if you ask.</span><span class="de">KI nur, wenn du willst.</span></h3><p><span class="en">AI features stay off until you turn them on, and then use the provider you already set up in Home Assistant.</span><span class="de">KI-Funktionen bleiben aus, bis du sie einschaltest, und nutzen dann den Anbieter, den du in Home Assistant schon eingerichtet hast.</span></p></div>
       </div>
       <div class="ai">
-        <h3>Optional, and quietly useful.</h3>
-        <p class="muted" style="margin-top:8px">With an AI task set up, Casora adds a few helpers to the dashboard. Each one shows its cost estimate first, and each has its own schedule: off, automatic or a time you pick.</p>
-        <div class="chips">
+        <h3><span class="en">Optional, and quietly useful.</span><span class="de">Optional und still nützlich.</span></h3>
+        <p class="muted" style="margin-top:8px"><span class="en">With an AI task set up, Casora adds a few helpers to the dashboard. Each one shows its cost estimate first, and each has its own schedule: off, automatic or a time you pick.</span><span class="de">Mit einer eingerichteten KI-Aufgabe ergänzt Casora das Dashboard um ein paar Helfer. Jeder zeigt vorher seine geschätzten Kosten und hat einen eigenen Zeitplan: aus, automatisch oder zu einer Uhrzeit deiner Wahl.</span></p>
+        <div class="chips en">
           <span class="chip">Energy coach</span><span class="chip">Heating coach</span><span class="chip">Ventilation coach</span><span class="chip">Camera description</span><span class="chip">Plant doctor</span><span class="chip">Aquarium doctor</span><span class="chip">Bike check</span><span class="chip">Update check</span><span class="chip">Recipe of the week</span>
+        </div>
+        <div class="chips de">
+          <span class="chip">Energie-Coach</span><span class="chip">Heizungs-Coach</span><span class="chip">Lüftungs-Coach</span><span class="chip">Kamera-Beschreibung</span><span class="chip">Pflanzen-Doktor</span><span class="chip">Aquarium-Doktor</span><span class="chip">E-Bike-Check</span><span class="chip">Update-Check</span><span class="chip">Rezept der Woche</span>
         </div>
       </div>
     </div>
@@ -576,10 +605,10 @@ footer .fine { flex-basis: 100%; }
   <section class="credits">
     <div class="wrap">
       <p class="eyebrow">Credits</p>
-      <p>Casora is built on <a href="https://github.com/willsanderson/Hemma">Hemma</a> by <a href="https://github.com/willsanderson">Will Sanderson</a>, which grew out of <a href="https://github.com/iamtherufus/Homio">Homio</a> by <a href="https://github.com/iamtherufus">@iamtherufus</a>. Thank you both.</p>
+      <p><span class="en">Casora is built on <a href="https://github.com/willsanderson/Hemma">Hemma</a> by <a href="https://github.com/willsanderson">Will Sanderson</a>, which grew out of <a href="https://github.com/iamtherufus/Homio">Homio</a> by <a href="https://github.com/iamtherufus">@iamtherufus</a>. Thank you both.</span><span class="de">Casora baut auf <a href="https://github.com/willsanderson/Hemma">Hemma</a> von <a href="https://github.com/willsanderson">Will Sanderson</a> auf, das aus <a href="https://github.com/iamtherufus/Homio">Homio</a> von <a href="https://github.com/iamtherufus">@iamtherufus</a> entstanden ist. Danke euch beiden.</span></p>
       <div class="cta">
-        <a class="btn" href="#install">Install Casora</a>
-        <a class="btn ghost" href="https://github.com/SH1FT-W/casora">View on GitHub</a>
+        <a class="btn" href="#install"><span class="en">Install Casora</span><span class="de">Casora installieren</span></a>
+        <a class="btn ghost" href="https://github.com/SH1FT-W/casora"><span class="en">View on GitHub</span><span class="de">Auf GitHub ansehen</span></a>
       </div>
     </div>
   </section>
@@ -590,24 +619,43 @@ footer .fine { flex-basis: 100%; }
   <div class="wrap">
     <a class="brand" href="#top"><img src="images/icon.png" alt="" width="28" height="28">Casora</a>
     <nav aria-label="Links">
-      <a href="https://github.com/SH1FT-W/casora/blob/main/docs/guide.md">Guide</a>
+      <a href="https://github.com/SH1FT-W/casora/blob/main/docs/guide.md"><span class="en">Guide</span><span class="de">Anleitung</span></a>
       <a href="https://github.com/SH1FT-W/casora/blob/main/CHANGELOG.md">Changelog</a>
       <a href="https://github.com/SH1FT-W/casora">GitHub</a>
-      <a href="https://github.com/SH1FT-W/casora/blob/main/LICENSE">MIT License</a>
+      <a href="https://github.com/SH1FT-W/casora/blob/main/LICENSE"><span class="en">MIT License</span><span class="de">MIT-Lizenz</span></a>
     </nav>
-    <p class="fine">Casora is an independent project and is not affiliated with Home Assistant or Nabu Casa. The original Hemma copyright notice is kept.</p>
+    <p class="fine"><span class="en">Casora is an independent project and is not affiliated with Home Assistant or Nabu Casa. The original Hemma copyright notice is kept.</span><span class="de">Casora ist ein unabhängiges Projekt und gehört nicht zu Home Assistant oder Nabu Casa. Der ursprüngliche Hemma-Copyright-Hinweis bleibt erhalten.</span></p>
   </div>
 </footer>
 
 <script>
 document.querySelectorAll('[data-copy]').forEach(function (b) {
+  var label = b.innerHTML;
   b.addEventListener('click', function () {
     var t = document.getElementById(b.dataset.copy).textContent;
     (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () {
-      b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1600);
+      b.innerHTML = '<span class="en">Copied</span><span class="de">Kopiert</span>';
+      setTimeout(function () { b.innerHTML = label; }, 1600);
     }, function () {});
   });
 });
+</script>
+<script>
+  (function () {
+    var titles = { en: "Casora for Home Assistant", de: "Casora für Home Assistant" };
+    function apply(l) {
+      document.documentElement.lang = l;
+      document.title = titles[l];
+      document.querySelectorAll(".lang button").forEach(function (b) { b.classList.toggle("on", b.dataset.l === l); });
+    }
+    document.querySelectorAll(".lang button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        try { localStorage.setItem("sh1ftw-lang", b.dataset.l); } catch (e) {}
+        apply(b.dataset.l);
+      });
+    });
+    apply(document.documentElement.lang);
+  })();
 </script>
 <script>
   // Version line follows the latest GitHub release; the text above is the fallback.
