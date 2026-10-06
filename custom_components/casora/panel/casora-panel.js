@@ -18694,7 +18694,19 @@ class CasoraPanel extends HTMLElement {
   // Geräteauswahl wie in HA: Name, darunter „Raum · Gerät“, rechts der Zustand. Den Gerätenamen
   // vorn im Namen lässt sie weg, wenn er ohnehin in der zweiten Zeile steht („Thermometer Bad
   // Temperatur“ → „Temperatur“, darunter „Bad · Thermometer Bad“).
+  // Je HA-Stand gemerkt: Auswahllisten fragen jede Entität beim Filtern, Gruppieren und Zeichnen
+  // mehrfach ab (formatEntityState ist teuer) – bei jedem Tastendruck für alle.
   _entMeta(id) {
+    const h0 = this._hass || {};
+    if (!this._entMetaMemo || this._entMetaMemo.h !== h0) this._entMetaMemo = { h: h0, m: new Map() };
+    const hit = this._entMetaMemo.m.get(id);
+    if (hit) return hit;
+    const out = this._entMetaRaw(id);
+    this._entMetaMemo.m.set(id, out);
+    return out;
+  }
+
+  _entMetaRaw(id) {
     const h = this._hass || {};
     const st = h.states && h.states[id];
     const reg = h.entities && h.entities[id];
