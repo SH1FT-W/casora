@@ -1331,7 +1331,10 @@
   "lädt": "charging",
   "Zum Dock": "Dock",
   "Smart wählt Saugstärke und Wischen je Raum selbst.": "Smart picks suction and mopping for each room by itself.",
-  "Kein Bild": "No image"
+  "Kein Bild": "No image",
+  "Zu": "Close",
+  "Auf": "Open",
+  "Position": "Position"
  },
  "patterns": [
   [
