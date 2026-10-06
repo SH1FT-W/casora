@@ -2807,7 +2807,10 @@ const ROOM_GLYPHS = {
   "studio": "music",
   "bathroom": "bathroom", "bath": "bathroom", "guest toilet": "bathroom", "toilet": "bathroom",
   "laundry": "laundry-room", "laundry room": "laundry-room", "utility room": "laundry-room",
-  "terrace": "plant", "balcony": "plant", "conservatory": "plant",
+  "terrace": "terrace", "balcony": "terrace", "conservatory": "plant",
+  // D-23: eigene Symbole statt Haus für Garage, Briefkasten, Keller, Dachboden, System
+  "garage": "garage", "carport": "car", "mailbox": "mailbox", "basement": "stairs", "cellar": "stairs",
+  "attic": "attic", "loft": "attic", "system": "settings",
   "kids room": "kids-room", "kids' room": "kids-room", "children's room": "kids-room",
   "kids": "kids-room", "kidsroom": "kids-room", "playroom": "kids-room", "play room": "kids-room",
   "favorites": "favorites",
@@ -2821,13 +2824,15 @@ const ROOM_GLYPHS = {
   "kino": "tv", "heimkino": "tv",
   "flur": "door-open", "diele": "door-open", "eingang": "door-open",
   "waschküche": "laundry-room", "hauswirtschaftsraum": "laundry-room", "hwr": "laundry-room",
-  "terrasse": "plant", "garten": "plant", "balkon": "plant", "draußen": "plant",
+  "terrasse": "terrace", "garten": "plant", "balkon": "terrace", "draußen": "plant",
+  "briefkasten": "mailbox", "keller": "stairs", "dachboden": "attic", "speicher": "attic",
   "favoriten": "favorites",
 };
 
 const ROOM_ICON_CHOICES = [
   "home", "living-room", "kitchen", "bedroom", "kids-room", "chair", "desktop",
-  "tv", "console", "media", "music", "door-closed", "door-open", "bathroom", "laundry-room", "plant", "fridge",
+  "tv", "console", "media", "music", "door-closed", "door-open", "bathroom", "laundry-room", "plant", "terrace", "fridge",
+  "garage", "car", "mailbox", "stairs", "attic", "settings",
   "lamp", "pendant-light", "light", "fan", "thermostat", "energy",
   "network", "vacuum", "person", "favorites", "scenes", "default",
 ];
@@ -2835,6 +2840,7 @@ const ROOM_ICON_CHOICES = [
 const ROOM_ICON_LABEL = {
   "living-room": "Living Room", "door-closed": "Door", "pendant-light": "Pendant",
   "desktop": "Desk", "default": "No Icon", "kids-room": "Kids Room",
+  "stairs": "Basement", "attic": "Attic", "mailbox": "Mailbox", "terrace": "Terrace", "settings": "System",
 };
 
 const titleCase = (s) => String(s).replace(/-/g, " ")
