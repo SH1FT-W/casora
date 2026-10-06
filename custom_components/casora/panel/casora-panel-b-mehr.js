@@ -600,7 +600,8 @@
     P._mKeys = function () {
       if (this._mKeyed) return;
       this._mKeyed = true;
-      document.addEventListener("keydown", (ev) => {
+      // Über _gOn: beim Verlassen des Panels wieder abgemeldet (sonst hält document die alte Instanz).
+      this._gOn(document, "keydown", (ev) => {
         if (!this.isConnected || !this._state || !on(this)) return;
         const k = String(ev.key || "").toLowerCase();
         const mod = ev.metaKey || ev.ctrlKey;

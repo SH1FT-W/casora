@@ -140,4 +140,7 @@ for (const name of ['casora_room', 'casora_mobile_sensor_chips']) {
   assert.ok(!/(?<![\w.$(,])(variables|_rv)\.show_(lights|climate|people|media|security|energy|scenes)\b(?!:)/.test(
     s.replace(/window\.casoraSeen\((variables|_rv),'\w+',user,\1\.show_\w+\):\1\.show_\w+/g, '')), name + ': jeder Badge-Schalter über casoraSeen');
 }
+// R-06: Tastenkürzel über _gOn (beim Verlassen des Panels abgemeldet), nicht dauerhaft an document.
+{ const src = read('panel/casora-panel-b-mehr.js'); const keys = src.slice(src.indexOf('P._mKeys = function'), src.indexOf('// ── Suche ──', src.indexOf('P._mKeys = function')));
+  assert.ok(/this\._gOn\(document, "keydown"/.test(keys) && !/document\.addEventListener/.test(keys), '_mKeys über _gOn'); }
 console.log('studio_mehr: ok');
