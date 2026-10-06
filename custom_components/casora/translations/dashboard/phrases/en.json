@@ -1362,7 +1362,14 @@
   "Steckt hinter": "Behind",
   "1 Gerät ohne Wert": "1 device without a value",
   "Schloss offen": "Lock open",
-  "Alles sicher": "All secure"
+  "Alles sicher": "All secure",
+  "Wirklich ausschalten?": "Really turn off?",
+  "Wirklich einschalten?": "Really turn on?",
+  "Wirklich schließen?": "Really close?",
+  "Wirklich aufschließen?": "Really unlock?",
+  "Wirklich abschließen?": "Really lock?",
+  "Aufschließen": "Unlock",
+  "Abschließen": "Lock"
  },
  "patterns": [
   [

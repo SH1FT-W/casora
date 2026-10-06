@@ -178,6 +178,8 @@ Ansicht, `cards(page, vorlage)` liefert sichtbare Karten mit Lage und Text,
 | rf03_speichern_zeitreise | arbeit | Rückgängig, „Ungespeicherte Änderungen wiederherstellen“ nach Verlassen, ⌘S, Zeitreise zum Stand davor |
 | rf04_energie_ausschliessen | arbeit | Energie-Badge: Gerät per × ausschließen bleibt nach neuem Laden draußen (energy_exclude) |
 | rf05_handy_ausgeblendet | arbeit | Im Studio ausgeblendete Kachel (enabled: false) blieb auf der Handy-Raumseite sichtbar |
+| rf06_wer_sieht_das | arbeit | „Wer sieht das?“ (Kachel, Badge, Raum) und „Vor dem Schalten fragen“ wirken im Dashboard (Desktop + Handy-Raumseite) |
+| rb11_studio_mehr | arbeit | Studio: Suche (⌘K, Alltagswörter), Änderungsliste am Titel, Wiederholen, Raum ausblenden, Wer sieht das, QR, Zeitreise anheften, Mobil-Vorschau Wiedergabe (F-13) |
 | erststart | frisch | Erststart: Willkommen → Assistent (Hemma/YAML gefunden) bzw. Räume, sonst Studio; ⋯-Menü „Einrichtungsassistent …“ |
 
 Hinweise zu einzelnen Tests: Im Zustand **frisch** gibt es kein Casora-Dashboard; das Studio
