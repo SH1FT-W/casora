@@ -3,7 +3,7 @@
 // Neues Studio (B): Alles aus der früheren Seitenleiste bleibt über die Werkzeugleiste erreichbar.
 // Erwartet: Dashboard-Menü öffnet Design & Bedienung, Wetter, Uhrzeit, Benachrichtigungen und
 // Szenen; das Titelmenü (Dashboard-Name) wechselt Dashboards und enthält Umbenennen, Symbol,
-// Zeitreise und Löschen (UX-03), „…“ diese nicht mehr; Einstellungen-Menü alle Einstellungsseiten
+// Löschen (UX-03), „…“ diese nicht mehr; Zeitreise als Uhr neben Rückgängig; Einstellungen-Menü alle Einstellungsseiten
 // und Updates; das Raummenü wechselt Räume, verschiebt sie und öffnet „Räume ordnen“;
 // „…“ → „Neues Studio“ schaltet zurück zum bisherigen Studio und wieder an. Es wird nichts gespeichert.
 import { open, studio, casoraDashboard, check, need, finish } from './lib.mjs';
@@ -32,9 +32,12 @@ await close();
 await page.locator('#roomtitle').click();
 await page.waitForTimeout(600);
 const tm = await menu();
-await check('Titelmenü: Dashboard erstellen, Umbenennen, Symbol, Zeitreise, Löschen',
-  ['Dashboard erstellen', 'Umbenennen', 'Symbol', 'Zeitreise', 'Löschen'].every((x) => tm.some((t) => t.replace(/^✓/, '').indexOf(x) === 0)), tm);
-await page.locator('.combo-opt', { hasText: 'Zeitreise' }).first().click();
+await check('Titelmenü: Dashboard erstellen, Umbenennen, Symbol, Löschen',
+  ['Dashboard erstellen', 'Umbenennen', 'Symbol', 'Löschen'].every((x) => tm.some((t) => t.replace(/^✓/, '').indexOf(x) === 0)), tm);
+// Zeitreise hat seit 06.10.2026 einen festen Platz: die Uhr neben Rückgängig (nicht mehr im Titelmenü).
+await page.keyboard.press('Escape');
+await page.waitForTimeout(400);
+await page.locator('#brewind').click();
 await page.waitForTimeout(2000);
 const z = await H(() => { const p = window.__panel(); return { cv: !!p._cvOpen, open: p.classList.contains('binsp') }; });
 await check('Zeitreise öffnet als Seite', z.cv && z.open, z);
