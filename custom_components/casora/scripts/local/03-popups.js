@@ -2683,9 +2683,11 @@
         ? a.installed_version + ' → ' + a.latest_version : (a.installed_version || a.latest_version || null);
       // release_summary ist Markdown/HTML (je nach Integration): erste Textzeile ohne
       // Auszeichnung (#, **, `, [Text](Link), Listenpunkt), gekürzt.
-      var sum = String(a.release_summary || '').replace(/<[^>]+>/g, '').split('\n').map(function (l) {
+      // Erst Entities auflösen, dann Tags entfernen – sonst würde aus &lt;img …&gt; echtes Markup.
+      var sum = String(a.release_summary || '').replace(/&(amp|lt|gt|quot);/g, function (m, x) { return { amp: '&', lt: '<', gt: '>', quot: '"' }[x]; })
+        .replace(/<[^>]+>/g, '').split('\n').map(function (l) {
         return l.replace(/^\s*(#{1,6}\s+|[-*+]\s+|\d+[.)]\s+|>\s*)/, '').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-          .replace(/\*\*|__|`/g, '').replace(/&(amp|lt|gt|quot);/g, function (m, x) { return { amp: '&', lt: '<', gt: '>', quot: '"' }[x]; }).trim();
+          .replace(/\*\*|__|`/g, '').trim();
       }).filter(Boolean)[0];
       if (sum && sum.length > 90) sum = sum.slice(0, 88).replace(/\s+\S*$/, '') + ' …';
       return {
