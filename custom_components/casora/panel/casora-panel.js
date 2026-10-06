@@ -10605,6 +10605,11 @@ class CasoraPanel extends HTMLElement {
         }
         .shot.empty .shotover { opacity:1; background:transparent; color:var(--ink-3); }
         .shot:hover .shotover, .shot.over .shotover { opacity:1; color:var(--ink); }
+        /* Touch hat kein Zeigen: „Ersetzen“ steht dort immer sichtbar über dem Foto. */
+        @media (hover: none) {
+          .shot:not(.empty) .shotover { opacity:1; color:#fff; background:rgba(0,0,0,0.34); }
+          .shot:not(.empty) .cap { opacity:0; }
+        }
         .shot.over { box-shadow:inset 0 0 0 2px var(--accent); }
         .shotglyph {
           width:22px; height:22px; background-color:currentColor;
@@ -11123,6 +11128,28 @@ class CasoraPanel extends HTMLElement {
       this._gOn(document, "visibilitychange", this._onVisible);
       // bfcache restores skip visibilitychange entirely on some browsers.
       this._gOn(window, "pageshow", this._onVisible);
+      // Zurück im Tab (oder Fenster): in HA neu angelegte oder entfernte Szenen gleich zeigen –
+      // die Liste entstand beim letzten Zeichnen, nicht live.
+      const sceneSig = () => {
+        const st = (this._hass && this._hass.states) || {};
+        const reg = (this._hass && this._hass.entities) || {};
+        return Object.keys(st).filter((id) => id.startsWith("scene.")).sort()
+          .map((id) => id + (reg[id] && (reg[id].hidden || reg[id].disabled_by) ? "-" : "")).join(",");
+      };
+      const scenesBack = () => {
+        if (document.visibilityState === "hidden") { this._sceneSigSeen = sceneSig(); return; }
+        const sig = sceneSig();
+        const was = this._sceneSigSeen;
+        this._sceneSigSeen = sig;
+        if (was === undefined || was === sig || !this._state || this._flowMode) return;
+        this._renderForm();
+        this._rebuildPreview();
+      };
+      // Nach langer Pause verbindet HA erst neu: ein zweiter Blick etwas später.
+      const back = () => { scenesBack(); if (document.visibilityState !== "hidden") setTimeout(scenesBack, 2000); };
+      this._gOn(document, "visibilitychange", back);
+      this._gOn(window, "blur", () => { this._sceneSigSeen = sceneSig(); });
+      this._gOn(window, "focus", () => setTimeout(back, 300));
     }
     if (this.parentElement && window.ResizeObserver) {
       if (this._slotObs) this._slotObs.disconnect();
@@ -14865,6 +14892,9 @@ class CasoraPanel extends HTMLElement {
       const ok = !this._saveBlocked && await this._save();
       if (btn) btn.disabled = false;
       if (!ok) return;
+      // Das Dashboard lädt danach neu: „Gespeichert“ kurz zeigen, bevor das Studio geht.
+      this._status("Saved", "ok");
+      await new Promise((r) => setTimeout(r, 700));
     }
     this._leaving = true;
     this._openDash(true);
@@ -20094,11 +20124,12 @@ class CasoraPanel extends HTMLElement {
           : cands.length > 1
             ? tr("Casora suggests this device for the new tile. Pick another one or add the tile without a device.")
             : tr("Casora suggests this device for the new tile."),
-        picks: cands.map((c) => ({
-          id: c.id, title: c.name,
-          sub: c.area ? c.area + (c.sameArea ? " · " + tr("this room") : "") : tr("No area"),
-          detail: c.id,
-        })),
+        picks: cands.map((c) => {
+          const sub = c.area ? c.area + (c.sameArea ? " · " + tr("this room") : "") : tr("No area");
+          // Die technische ID nur, wenn Name und Bereich allein zwei Geräte nicht unterscheiden.
+          const twin = cands.some((o) => o !== c && o.name === c.name && (o.area || "") === (c.area || ""));
+          return { id: c.id, title: c.name, sub, detail: twin ? c.id : undefined };
+        }),
         confirmLabel: tr("Use"),
         altLabel: tr("Without device"),
       });
@@ -20547,7 +20578,12 @@ class CasoraPanel extends HTMLElement {
       if (!looksImage(blob)) return this._status(why.type, "err");
       const cur = room.variables.image || "";
       // Mitgelieferte Beispielfotos (…-demo) lassen sich nicht überschreiben: dann der Raumname.
-      const suggest = cur && !/-demo$/.test(cur) ? cur : slug(room.name || room.path || "room");
+      // Ebenso ein Foto, das einem anderen Raum gehört oder wie er heißt – sonst ersetzte der
+      // Upload dort das Bild (z. B. „terrasse“ im Büro vorbelegt).
+      const others = (((this._state || {}).compact || {}).rooms || []).filter((r) => r !== room);
+      const foreign = others.some((r) => (r.variables || {}).image === cur || r.path === cur
+        || slug(r.name || "") === cur);
+      const suggest = cur && !/-demo$/.test(cur) && !foreign ? cur : slug(room.name || room.path || "room");
       const asked = await this._ask({
         title: "Image name",
         message: "Lowercase letters, digits and hyphens. Uploading the same name replaces it.",
@@ -20587,6 +20623,8 @@ class CasoraPanel extends HTMLElement {
         // Der Abschnitt kann während der Namensfrage neu gezeichnet worden sein: dann neu aufbauen.
         if (sel.isConnected) fill(); else this._renderForm();
         this._setBackdrop();
+        // Gleicher Name, neues Foto: die Vorschau sofort neu zeichnen (sonst blieb das alte stehen).
+        this._rebuildPreview();
       } catch (e) {
         this._status(e.nice || ("Upload failed: " + e.message), "err");
         this._log("upload failed: " + e.message, "err");

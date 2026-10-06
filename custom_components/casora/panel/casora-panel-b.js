@@ -534,7 +534,16 @@
       if (on && !root.querySelector(".bscrim")) {
         const s = document.createElement("div");
         s.className = "bscrim";
-        s.onclick = () => this._bClose();
+        s.onclick = (ev) => {
+          // „Fertig“, Rückgängig und „…“ liegen sichtbar über der Abdunkelung: ein Tipp darauf
+          // schließt das Blatt und löst den Knopf gleich aus (bisher brauchte „Fertig“ zwei Tipps).
+          s.style.pointerEvents = "none";
+          const hit = root.elementFromPoint ? root.elementFromPoint(ev.clientX, ev.clientY) : null;
+          s.style.pointerEvents = "";
+          const btn = hit && hit.closest && hit.closest(".navpill button");
+          this._bClose();
+          if (btn && !btn.disabled) btn.click();
+        };
         shell.appendChild(s);
       }
       if (on && !root.querySelector(".bbar")) {
@@ -600,6 +609,9 @@
     // gleich die Typauswahl. Der Platz der Vorschau rief bisher scrollIntoView auf – das schob
     // im neuen Aufbau die ganze Seite samt Vorschau aus dem Bild. Hier scrollt nur der Inspektor.
     P._bAddTile = function () {
+      // Handy: nur die Typauswahl über der Vorschau – nicht zusätzlich das Blatt mit der
+      // Kachelliste dahinter (zwei Fenster übereinander). Nach der Wahl öffnet die neue Kachel.
+      if (this.classList.contains("phone") && this._state) return this._bAddTilePhone();
       this._bLeavePages();
       this._group = "tiles";
       this._sel = null;
@@ -620,6 +632,23 @@
         }
         setTimeout(() => { if (add.isConnected) add.click(); }, 120);
       });
+    };
+
+    P._bAddTilePhone = function () {
+      this._bLeavePages();
+      this._stackOpenReq = null;
+      this._bOpen = false;
+      this._sel = null;
+      this._group = "tiles";
+      this._renderForm();
+      const pane = this.shadowRoot.getElementById("pane");
+      const add = pane && pane.querySelector(".addbar.tileadd button.scadd");
+      const plus = this.shadowRoot.querySelector(".bbar .bplus");
+      const room = this._state.compact.rooms[this._room];
+      if (!add || !room) return;
+      this._bAfterAdd = { room, n: (room.tiles || []).length };
+      this._bMenuAnchor = plus;
+      try { add.click(); } finally { this._bMenuAnchor = null; }
     };
 
     P._bLeavePages = function () {
@@ -1069,6 +1098,15 @@
     after("_renderForm", function () {
       this._bApply();
       this._bRoomsPaint();
+      // Handy-„+“: die eben hinzugefügte Kachel gleich im Editor öffnen.
+      const aa = this._bAfterAdd;
+      if (aa && aa.room === (this._state && this._state.compact.rooms[this._room])
+        && (aa.room.tiles || []).length > aa.n) {
+        this._bAfterAdd = null;
+        const t = aa.room.tiles[aa.room.tiles.length - 1];
+        const key = this._tileKey(t);
+        requestAnimationFrame(() => this._select({ group: "tiles", key, label: t.name || key }));
+      }
       // UX-08: „Kachel entfernen“ unten im Editor – dieselbe Aktion wie im „…“-Menü.
       if (this.classList.contains("bmode") && this._sel && this._sel.group === "tiles") {
         const box = this.shadowRoot.querySelector("#pane #band-tiles .tile.sel");
@@ -1102,6 +1140,8 @@
     // „…“-Menü: Eintrag „Neues Studio“ zum Umschalten.
     const menuAt = P._menuAt;
     P._menuAt = function (anchor, items, onPick, mopts) {
+      // Typauswahl vom „+“ der unteren Leiste: am „+“ öffnen, nicht am verborgenen Knopf im Blatt.
+      if (this._bMenuAnchor && anchor && !anchor.getClientRects().length) anchor = this._bMenuAnchor;
       // UX-03: Umbenennen, Symbol, Zeitreise, Mobil-Layout und Löschen stehen im neuen Studio im Titelmenü.
       if (this.classList.contains("bmode") && Array.isArray(items) && items.some((x) => x && x.id === "hints")) {
         const DOC = ["renamedash", "icondash", "delete", "addmobile", "casora_versions"];
