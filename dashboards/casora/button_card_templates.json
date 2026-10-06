@@ -5147,6 +5147,9 @@
     },
     {
      "--casora-room-groups-src": "[[[\n  /* Raumseite am Handy nach Kategorien gliedern (Studio: Design & Bedienung → Handy).\n     filter-overlay.js liest --casora-room-groups; leer = an. */\n  const ID = 'casora-room-groups';\n  const el = document.getElementById(ID);\n  const v = variables.room_groups;\n  if (v !== false && v !== 'false') {\n    if (el) el.remove();\n    return '0';\n  }\n  const css = ':root{--casora-room-groups:off !important;}';\n  const s = el || document.head.appendChild(Object.assign(document.createElement('style'), { id: ID }));\n  if (s.textContent !== css) s.textContent = css;\n  return '0';\n]]]"
+    },
+    {
+     "--casora-font-set": "[[[\n  const STACKS = {\n    inter:   '\"Inter\", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',\n    hanken:  '\"Hanken Grotesk\", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',\n    jakarta: '\"Inter\", -apple-system, BlinkMacSystemFont, system-ui, sans-serif',\n    system:  '-apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, sans-serif'\n  };\n  const link = (id, href) => {\n    let l = document.getElementById(id);\n    if (l && l.getAttribute('href') === href) return;\n    if (!l) { l = document.createElement('link'); l.id = id; l.rel = 'stylesheet'; document.head.appendChild(l); }\n    l.href = href;\n  };\n  const key = String(variables.font || '').trim().toLowerCase();\n  let want = STACKS[key] || '';\n  if (key === 'custom') {\n    /* Eigene Schrift (z. B. gekaufte Gilroy), im Studio hochgeladen – CSS schreibt fonts.py. */\n    const fam = String(variables.font_family || '').replace(/[\"'<>;{}\\\\]/g, '').trim();\n    link('casora-font-custom', '/local/casora/fonts/casora-fonts.css');\n    want = fam ? '\"' + fam + '\", ' + STACKS.inter : '';\n  }\n  /* Casoras Schriften immer bereitstellen – auch die Designs setzen sie (Inter, Hanken Grotesk). */\n  link('casora-font-faces', '/casora_assets/fonts/hanken-grotesk.css');\n  const ID = 'casora-font-v1';\n  let el = document.getElementById(ID);\n  if (!want) { if (el) el.remove(); return '0'; }\n  if (!el) {\n    el = document.createElement('style');\n    el.id = ID;\n    document.head.appendChild(el);\n  }\n  const css = 'html{--primary-font-family:' + want + ' !important;}';\n  if (el.textContent !== css) el.textContent = css;\n  return '1';\n]]]"
     }
    ]
   },
@@ -5159,7 +5162,9 @@
   "variables": {
    "preload_rooms": [],
    "room_photo_blur": null,
-   "room_groups": null
+   "room_groups": null,
+   "font": null,
+   "font_family": null
   }
  },
  "casora_mobile_chrome": {
@@ -14627,6 +14632,7 @@
    "energy_usage_month": null,
    "energy_usage_today": null,
    "font": null,
+   "font_family": null,
    "casora_notify_config": {
     "force_eval": true,
     "value": "[[[\n  // Stash regardless: on a cold load this runs before casora-core.js,\n  // and the module picks the stash up when it initializes. Without it\n  // a layout that renders once - the phone - never applied its\n  // switches at all.\n  window._casoraNotifyCfg = variables;\n  if (window._casoraNotify) window._casoraNotify.configureFrom(variables);\n  return true;\n]]]\n"
