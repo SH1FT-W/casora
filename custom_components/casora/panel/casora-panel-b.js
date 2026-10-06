@@ -117,6 +117,10 @@
     /* Der Inspektor liegt in B schon unter der Kopfzeile: kein zusätzlicher Abstand oben (Tablet),
        sonst stand das ✕ abgesetzt über Zurück/Titel. */
     :host(.bmode.split.narrow:not(.flow):not(.phone)) .inspector { padding-top:0; }
+    /* Seiten (Einstellungen, Updates, Zeitreise): die ausgeblendete Listen-Kopfzeile darunter ließ
+       die Regel „Listenkopf am Tablet aus“ greifen – die Seite stand ohne Titel da. */
+    :host(.bmode.split.narrow:not(.flow):not(.phone)) .insphead:has(> .cs-head, > .cu-head, > .cv-head) { display:flex !important; }
+    :host(.bmode.split.narrow:not(.flow):not(.phone)) .inspector:has(> .insphead > .cs-head, > .insphead > .cu-head, > .insphead > .cv-head) { padding-top:0 !important; }
 
     /* Arbeitsfläche: Elemente zeigen, dass sie anklickbar sind. */
     :host(.bmode) .card.map [data-mk], :host(.bmode) .card.map [data-pv],
