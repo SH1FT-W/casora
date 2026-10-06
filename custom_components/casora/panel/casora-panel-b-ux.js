@@ -807,7 +807,7 @@
       }
       if (mg) move.push(mg);
       if (!move.length) return;
-      const det = this._uxFold("vis", "Visible & safe", move, "uxvis");
+      const det = this._uxFold("vis", "Visibility", move, "uxvis");
       // Vor „Popup“ (erste vorhandene Aufklapp-Gruppe), sonst ans Ende.
       const adv = body.querySelector(":scope > .adv");
       if (adv) adv.before(det); else body.appendChild(det);
@@ -880,7 +880,7 @@
       if (!who || !room || app.querySelector(".uxroomvis") || (I.isHomeRoom && I.isHomeRoom(room, rooms$(this)))) return;
       const head = document.createElement("div");
       head.className = "subhead uxroomvis";
-      head.textContent = tr("Visible & safe");
+      head.textContent = tr("Visibility");
       head.setAttribute("data-no-i18n", "");
       who.before(head);
       const row = document.createElement("div");

@@ -964,6 +964,7 @@
       }
       return this._mUsersP || Promise.resolve([]);
     };
+    const WHO_ONLY_HIDES = "Only hides it – no access protection. Anyone with an account can still control the devices in Home Assistant.";
     const namesOf = (ids, users) => ids.map((id) => (users.find((u) => u.id === id) || {}).name || tr("Unknown user"));
     // Zeile „Wer sieht das?“: Wert „Alle“ bzw. „Nur für: …“, Antippen öffnet die Auswahl.
     P._mWhoRow = function (host, get, set, what) {
@@ -983,12 +984,18 @@
       const note = document.createElement("div");
       note.className = "mnote";
       note.setAttribute("data-no-i18n", "");
-      box.append(row, note);
+      // Ehrlich sagen, was es ist: nur Ausblenden im Dashboard, kein Zugriffsschutz.
+      const warn = document.createElement("div");
+      warn.className = "hint mwhowarn";
+      warn.setAttribute("data-no-i18n", "");
+      warn.textContent = tr(WHO_ONLY_HIDES);
+      box.append(row, note, warn);
       const paint = (users) => {
         const ids = get();
         btn.querySelector(".mvt").textContent = ids.length ? tr("Only some people") : tr("Everyone");
         note.textContent = ids.length ? tr("Only for:") + " " + namesOf(ids, users || []).join(", ") : "";
         note.hidden = !ids.length;
+        warn.hidden = !ids.length;
       };
       paint([]);
       this._mUsers().then(paint);
@@ -1004,7 +1011,7 @@
       const pick = new Set(cur);
       const ok = await this._ask({
         title: tr("Who sees this?"),
-        message: tr(what) + " – " + tr("Pick the people who should see it. Nobody ticked means everyone. Admins always see everything here in the Studio."),
+        message: tr(what) + " – " + tr("Pick the people who should see it. Nobody ticked means everyone. Admins always see everything here in the Studio.") + " " + tr(WHO_ONLY_HIDES),
         confirmLabel: tr("Done"),
         extend: ({ box, acts }) => {
           box.classList.add("mwhosheet");
