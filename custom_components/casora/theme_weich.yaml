@@ -487,7 +487,8 @@ Casora:
       casora-menu-pane: rgba(251,248,243,0.96)
       # Mitteilungszentrum ohne Glas-Rand (Rim oben/unten), weicher Schatten wie die Karten
       casora-notify-shadow: 0 1px 2px rgba(90,70,50,0.06), 0 14px 34px -12px rgba(90,70,50,0.26)
-      casora-menu-pane-webkit: rgba(248,244,237,0.97)
+      # D-01: am Handy (WebKit) ganz deckend – 0,97 ließ Text dahinter durchscheinen (Nutzertest 06.10.2026)
+      casora-menu-pane-webkit: rgb(248,244,237)
       casora-menu-fg: rgba(46,39,33,0.95)
       # Kopfleiste D (1.0.7): Menü ohne Randlinie und Glanzkante
       casora-menu-rim-top: transparent
@@ -885,7 +886,7 @@ Casora:
       # Menü-Glas (Mitteilungen, ⋯-Menü) fast deckend, sonst scheint die Kopfzeile durch
       casora-menu-pane: rgba(46,42,38,0.96)
       casora-notify-shadow: 0 14px 34px -12px rgba(0,0,0,0.60)
-      casora-menu-pane-webkit: rgba(42,38,34,0.96)
+      casora-menu-pane-webkit: rgb(42,38,34)
       casora-mnav-over: rgba(40,36,32,0.94)
       casora-nav-border: rgba(255,240,220,0.06)
       casora-nav-active-fill: rgba(242,232,218,0.14)
