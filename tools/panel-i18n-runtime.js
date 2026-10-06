@@ -34,12 +34,27 @@
     return compiled.t;
   }
 
+  // Ergebnis je Text für die aktuelle Sprache: dieselben Texte kommen bei jedem Neuzeichnen
+  // wieder, die Muster (reguläre Ausdrücke) liefen sonst jedes Mal für jeden Text durch.
+  let memo = null;
+
   // Übersetzung für einen sichtbaren Text, oder null, wenn keine vorliegt.
   function tr(text) {
     const key = text.trim();
     if (!key || !/[A-Za-z]{2}/.test(key)) return null;
     const t = table();
     if (!t) return null;
+    if (!memo || memo.lang !== lang || memo.m.size > 5000) memo = { lang, m: new Map() };
+    if (memo.m.has(key)) {
+      const hit = memo.m.get(key);
+      return hit == null ? null : text.replace(key, hit);
+    }
+    const v = lookup(t, key);
+    memo.m.set(key, v);
+    return v == null ? null : text.replace(key, v);
+  }
+
+  function lookup(t, key) {
     let v = Object.prototype.hasOwnProperty.call(t.exact, key) ? t.exact[key] : null;
     if (v == null) {
       // Muster: {1}, {2} … sind die Gruppen des Ausdrucks; sie werden selbst
@@ -58,7 +73,7 @@
       if (lang !== "en" && key.length < 200) missing.add(key);
       return null;
     }
-    return text.replace(key, v);
+    return v;
   }
 
   function skipped(node) {
@@ -69,8 +84,9 @@
     return false;
   }
 
-  function doText(n) {
-    if (skipped(n)) return;
+  // skip: schon bekannt (beim Durchgehen vom Elternteil geerbt), sonst selbst nachsehen.
+  function doText(n, skip) {
+    if (skip === undefined ? skipped(n) : skip) return;
     // Hat das Panel den Text selbst geändert, ist das der neue Originaltext.
     if (!orig.has(n) || n.nodeValue !== wrote.get(n)) orig.set(n, n.nodeValue);
     const o = orig.get(n);
@@ -105,9 +121,11 @@
     }
   }
 
-  function walk(node) {
+  // skip: Texte darunter nicht übersetzen – für den Startknoten einmal über die Vorfahren
+  // ermittelt und dann vererbt (vorher lief jeder Textknoten selbst bis zur Wurzel hoch).
+  function walk(node, skip) {
     if (!node) return;
-    if (node.nodeType === 3) { doText(node); return; }
+    if (node.nodeType === 3) { doText(node, skip); return; }
     if (node.nodeType !== 1 && node.nodeType !== 11) return;
     if (node.nodeType === 1) {
       // Eingabefelder: nie den Wert, aber Platzhalter/Titel/aria-label schon.
@@ -118,14 +136,16 @@
       if (SKIP.has(node.tagName) && node.tagName !== "PRE") return;
       doAttrs(node);
     }
-    for (let c = node.firstChild; c; c = c.nextSibling) walk(c);
+    let s = skip === undefined ? (node.nodeType === 1 && skipped(node)) : skip;
+    if (!s && node.nodeType === 1) s = SKIP.has(node.tagName) || node.isContentEditable || node.hasAttribute("data-no-i18n");
+    for (let c = node.firstChild; c; c = c.nextSibling) walk(c, s);
   }
 
   function flush() {
     queued = false;
     const nodes = [...dirty];
     dirty.clear();
-    nodes.forEach(walk);
+    nodes.forEach((n) => walk(n));
   }
 
   // Gleich nach dem Einfügen übersetzen (Mikrotask), nicht erst im nächsten Frame:
