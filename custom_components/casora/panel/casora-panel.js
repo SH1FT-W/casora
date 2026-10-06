@@ -20102,11 +20102,12 @@ class CasoraPanel extends HTMLElement {
           : cands.length > 1
             ? tr("Casora suggests this device for the new tile. Pick another one or add the tile without a device.")
             : tr("Casora suggests this device for the new tile."),
-        picks: cands.map((c) => ({
-          id: c.id, title: c.name,
-          sub: c.area ? c.area + (c.sameArea ? " · " + tr("this room") : "") : tr("No area"),
-          detail: c.id,
-        })),
+        picks: cands.map((c) => {
+          const sub = c.area ? c.area + (c.sameArea ? " · " + tr("this room") : "") : tr("No area");
+          // Die technische ID nur, wenn Name und Bereich allein zwei Geräte nicht unterscheiden.
+          const twin = cands.some((o) => o !== c && o.name === c.name && (o.area || "") === (c.area || ""));
+          return { id: c.id, title: c.name, sub, detail: twin ? c.id : undefined };
+        }),
         confirmLabel: tr("Use"),
         altLabel: tr("Without device"),
       });
