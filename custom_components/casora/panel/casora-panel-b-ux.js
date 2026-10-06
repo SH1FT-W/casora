@@ -11,6 +11,9 @@
 //   Kachelart; die bisherige Typauswahl bleibt als „Andere Kachelart …“
 // - Kachel-Editor gestuft: oben Gerät, Name, Symbol, An/Aus; „Sichtbar & sicher“ und „Popup“
 //   zugeklappt mit Zusammenfassung rechts (aufgeklappt bleibt, was man einmal geöffnet hat)
+// - Sichtbarkeit an einer Stelle: Satz „Wer sieht das, wo, mit Rückfrage“, Auge an eingeschränkten
+//   Kacheln in der Vorschau, „Ansehen als …“ (anderer HA-Benutzer), Raum ausblenden in der
+//   Darstellung und „Lieber nur ausblenden“ vor dem Löschen eines Raums
 // - Untertitel der Reiter (Inhalt, Dashboard, Einstellungen) als Hinweis und im Inhalt-Blatt
 // - Wörterbuch: Badges und Popups mit einem Halbsatz erklärt
 // Datenmodell, Speichern und Rückgängig bleiben die des Panels – hier wird nur angeschlossen.
@@ -147,6 +150,23 @@
     .adv.open .advsum .uxsum { display:none; }
     .tile > .tbody > .adv.uxvis .advbody > .subcard { margin:0 0 10px; padding:0; background:none; box-shadow:none; }
     .tile > .tbody > .adv.uxvis .advbody > .row:first-child { padding-top:2px; }
+    /* Sichtbar & sicher: Satz oben in der Gruppe, Auge an eingeschränkten Kacheln */
+    .uxvissent { font-size:13px; line-height:1.4; color:var(--ink-2, rgba(127,127,127,.95)); margin:2px 0 8px; }
+    :host(.bmode) .card.map .mtile.uxlim { position:relative; }
+    :host(.bmode) .card.map .mtile.uxlim::after { content:""; position:absolute; top:7px; right:7px; width:14px; height:14px; border-radius:50%;
+      background-color:currentColor; opacity:.5; pointer-events:none;
+      -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center / contain no-repeat;
+      mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center / contain no-repeat; }
+    /* Ansehen als … */
+    :host(.bmode) .card.map .uxashide { display:none !important; }
+    .uxas { display:inline-flex; align-items:center; gap:7px; height:36px; padding:0 14px; border:0; border-radius:999px; cursor:pointer;
+      font:inherit; font-size:var(--t-foot, 13.5px); font-weight:600; background:var(--chip, rgba(127,127,127,.14)); color:var(--ink-2, inherit); box-sizing:border-box; }
+    .uxas svg { width:16px; height:16px; flex:none; }
+    .uxas.on { background:var(--accent-tint, rgba(148,96,59,.16)); color:var(--accent, #94603B); }
+    :host(.bmode.phone) .uxas { width:36px; padding:0; justify-content:center; }
+    :host(.bmode.phone) .uxas .uxaslab { display:none; }
+    .uxasnote { margin:8px auto 0; padding:6px 12px; border-radius:999px; font-size:13px; font-weight:600; width:max-content; max-width:90%;
+      background:var(--accent-tint, rgba(148,96,59,.16)); color:var(--accent, #94603B); }
     /* Tastenkürzel */
     .uxkeys { display:grid; grid-template-columns:auto 1fr; gap:8px 14px; margin:2px 4px 6px; font-size:14px; align-items:center; }
     .uxkeys kbd { font:inherit; font-size:12.5px; font-weight:650; padding:2px 7px; border-radius:7px; white-space:nowrap; justify-self:start;
@@ -286,6 +306,7 @@
       this._uxMore();
       this._uxAddBtn();
       this._uxTileEditor();
+      this._uxRoomVis();
     };
 
     // ── Menüs: „Gilt für: …“ oben (V-01) ───────────────────────────────
@@ -766,6 +787,173 @@
         pop.querySelector(".advsum").appendChild(v);
       }
     };
+
+    // ── Sichtbar & sicher (V-10) ──────────────────────────────────────────
+    const usersOf = (shell) => {
+      const c = shell && Array.isArray(shell.visibility) ? shell.visibility.find((x) => x && x.condition === "user" && Array.isArray(x.users)) : null;
+      return c ? c.users : [];
+    };
+    // Ein Satz: wer, wo, Rückfrage.
+    P._uxVisSentence = function (shell) {
+      const inner = (shell && shell.type === "conditional" && shell.card) || shell || {};
+      const V = inner.variables || {}, SV = (shell && shell.variables) || {};
+      const ids = usersOf(shell);
+      const names = ids.map((id) => ((this._mUsersCache || []).find((u) => u.id === id) || {}).name).filter(Boolean);
+      const surf = SV.surfaces || V.surfaces;
+      const who = ids.length ? fill(tr("Visible only to {names}"), { names: names.join(", ") || tr("some people") }) : tr("Everyone sees this tile");
+      const where = surf === "phone" ? tr("on the phone only") : surf === "desktop" ? tr("on the desktop only") : tr("on desktop and phone");
+      let out = who + " – " + where + ".";
+      if (V.confirm_toggle === true) out += " " + tr("The dashboard asks before switching.");
+      if (shell && shell.type === "conditional") out += " " + tr("It only shows when its condition is met.");
+      return out;
+    };
+    wrap("_uxTileEditor", (orig) => function () {
+      const r = orig.apply(this, arguments);
+      const det = this.shadowRoot.querySelector("#pane #band-tiles .tile.sel .adv.uxvis");
+      const room = room$(this);
+      const shell = det && room && (room.tiles || []).find((t) => this._tileKey(t) === this._sel.key);
+      if (det && shell) {
+        const body = det.querySelector(".advbody");
+        let p0 = body.querySelector(":scope > .uxvissent");
+        if (!p0) { p0 = document.createElement("div"); p0.className = "uxvissent"; p0.setAttribute("data-no-i18n", ""); body.insertBefore(p0, body.firstChild); }
+        p0.textContent = this._uxVisSentence(shell);
+        // Namen der Benutzer kommen nach: dann Satz und Zusammenfassung noch einmal.
+        if (!this._mUsersCache && this._mUsers && !this._uxUsersAsked) {
+          this._uxUsersAsked = true;
+          this._mUsers().then((u) => { this._mUsersCache = u; this._uxUsersAsked = false; if (u && u.length) this._uxTileEditor(); });
+        }
+      }
+      return r;
+    });
+
+    // Raum (Darstellung): „Wer sieht das?“ und „Raum vorübergehend ausblenden“ unter einer Überschrift.
+    P._uxRoomVis = function () {
+      const pane = this.shadowRoot.getElementById("pane");
+      const app = pane && pane.querySelector('[data-k="Appearance"]');
+      const room = room$(this);
+      const who = app && app.querySelector(".mwho");
+      const I = W.__casoraPanelInternals || {};
+      if (!who || !room || app.querySelector(".uxroomvis") || (I.isHomeRoom && I.isHomeRoom(room, rooms$(this)))) return;
+      const head = document.createElement("div");
+      head.className = "subhead uxroomvis";
+      head.textContent = tr("Visible & safe");
+      head.setAttribute("data-no-i18n", "");
+      who.before(head);
+      const row = document.createElement("div");
+      row.className = "row";
+      const l = document.createElement("label");
+      l.textContent = tr("Hide this room for now");
+      l.setAttribute("data-no-i18n", "");
+      const hidden = !!(room.variables || {}).casora_hidden;
+      const sw = this._boolSwitch(hidden, false, (v) => this._mHideRoom && this._mHideRoom(this._room, v), tr("Hide this room for now"));
+      row.append(l, sw);
+      const h = document.createElement("div");
+      h.className = "hint";
+      h.setAttribute("data-no-i18n", "");
+      h.textContent = tr("It disappears from the dashboard and comes back exactly as it is – nothing gets deleted.");
+      who.after(row, h);
+    };
+
+    // Vorschau: Auge an Kacheln, die nicht alle überall sehen, und „Ansehen als …“.
+    P._uxMarkPreview = function () {
+      const map = this.shadowRoot.querySelector(".card.map");
+      const room = room$(this);
+      if (!map || !room) return;
+      const as = this._uxAs || null;
+      const tiles = room.tiles || [];
+      map.querySelectorAll(".mtile[data-mk^='t:'], .mtile[data-jump]").forEach((el) => {
+        const key = el.dataset.mk ? el.dataset.mk.slice(2) : el.dataset.jump;
+        const t = tiles.find((x) => this._tileKey(x) === key);
+        if (!t) { el.classList.remove("uxlim", "uxashide"); return; }
+        const inner = (t.type === "conditional" && t.card) || t;
+        const V = inner.variables || {}, SV = t.variables || {};
+        const ids = usersOf(t);
+        const lim = !!(ids.length || SV.surfaces || V.surfaces || V.confirm_toggle === true || t.type === "conditional");
+        el.classList.toggle("uxlim", lim && !el.classList.contains("bghost"));
+        if (lim && !el.dataset.uxtip) { el.dataset.uxtip = "1"; el.title = this._uxVisSentence(t); }
+        el.classList.toggle("uxashide", !!as && ids.length > 0 && ids.indexOf(as) < 0);
+      });
+      const bu = (room.variables || {}).casora_badge_users || {};
+      map.querySelectorAll('.pbadge[data-mk^="b:"]').forEach((el) => {
+        const bid = String(el.dataset.mk).replace(/^b:/, "").split(":")[0];
+        const ids = Array.isArray(bu[bid]) ? bu[bid] : [];
+        el.classList.toggle("uxashide", !!as && ids.length > 0 && ids.indexOf(as) < 0);
+      });
+      // Raum für diesen Menschen nicht sichtbar: ein Satz über der Vorschau.
+      const canvas = this.shadowRoot.querySelector(".canvas");
+      let note = canvas && canvas.querySelector(".uxasnote");
+      const ru = (room.variables || {}).casora_users || [];
+      const user = as && (this._mUsersCache || []).find((u) => u.id === as);
+      const roomHidden = !!as && ((ru.length && ru.indexOf(as) < 0) || (room.variables || {}).casora_hidden);
+      if (roomHidden && canvas) {
+        if (!note) { note = document.createElement("div"); note.className = "uxasnote"; note.setAttribute("data-no-i18n", ""); const pl = canvas.querySelector(".plinth"); if (pl) pl.before(note); else canvas.appendChild(note); }
+        note.textContent = fill(tr("{name} does not see this room"), { name: user ? user.name : "" });
+      } else if (note) note.remove();
+    };
+    P._uxAsChip = function () {
+      const canvas = this.shadowRoot.querySelector(".canvas");
+      const row = canvas && canvas.querySelector(".segrow");
+      if (!row || !(this._hass && this._hass.user && this._hass.user.is_admin)) return;
+      let chip = row.querySelector(".uxas");
+      if (!chip) {
+        chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "uxas";
+        chip.setAttribute("aria-haspopup", "menu");
+        chip.setAttribute("data-no-i18n", "");
+        chip.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 20a6.5 6.5 0 0 0-3-5.5"/></svg><span class="uxaslab"></span>';
+        chip.onclick = async () => {
+          const users = this._mUsers ? await this._mUsers() : [];
+          this._mUsersCache = users;
+          const me = this._hass.user.id;
+          const items = [{ id: "", label: tr("Me (everything)"), checked: !this._uxAs }]
+            .concat(users.filter((u) => u.id !== me).map((u) => ({ id: u.id, label: u.name, checked: this._uxAs === u.id })));
+          this._menuAt(chip, items, (id) => { this._uxAs = id || null; this._uxPaintAs(); });
+        };
+        const hid = row.querySelector(".bhid");
+        if (hid) hid.before(chip); else row.appendChild(chip);
+      }
+      this._uxPaintAs();
+    };
+    P._uxPaintAs = function () {
+      const chip = this.shadowRoot.querySelector(".canvas .segrow .uxas");
+      const user = this._uxAs && (this._mUsersCache || []).find((u) => u.id === this._uxAs);
+      if (chip) {
+        const t = fill(tr("View as: {name}"), { name: user ? user.name : tr("Me") });
+        chip.querySelector(".uxaslab").textContent = t;
+        chip.title = t + " – " + tr("how the dashboard looks for another Home Assistant user");
+        chip.setAttribute("aria-label", t);
+        chip.classList.toggle("on", !!user);
+      }
+      this._uxMarkPreview();
+    };
+    wrap("_bDecorate", (orig) => function () {
+      const r = orig.apply(this, arguments);
+      try { if (on(this)) { this._uxCss(); this._uxAsChip(); this._uxMarkPreview(); } } catch (e) { console.warn("Casora Studio:", e); }
+      return r;
+    });
+
+    // „Raum löschen“: zuerst „Lieber nur ausblenden“ – oft ist nur „im Winter weg“ gemeint.
+    wrap("_roomMenuAction", (orig) => async function (id, i) {
+      const rooms = rooms$(this);
+      const r = rooms[i];
+      const I = W.__casoraPanelInternals || {};
+      if (id !== "delete" || !on(this) || !r || !this._mHideRoom || (I.isHomeRoom && I.isHomeRoom(r, rooms))
+        || (this._roomDeleteBlock && this._roomDeleteBlock(i))) return orig.apply(this, arguments);
+      const res = await this._ask({
+        title: fill(tr("Delete “{room}”?"), { room: this._roomLabel(r) }),
+        message: tr("Deleted for good when you save. Only not needed for a while? Hide it – it comes back exactly as it is."),
+        confirmLabel: tr("Just hide it"),
+        altLabel: tr("Delete"),
+        extend: ({ acts }) => { const a = acts.querySelector(".askalt"); if (a) a.classList.add("danger"); },
+      });
+      if (!res) return undefined;
+      if (res === true) return this._mHideRoom(i, true);
+      // Löschen: die eigene Rückfrage des Panels ist schon beantwortet.
+      const ask = this._ask;
+      this._ask = () => Promise.resolve(true);
+      try { return await orig.call(this, id, i); } finally { this._ask = ask; }
+    });
 
     // ── Anschließen ─────────────────────────────────────────────────────
     const after = (name) => wrap(name, (orig) => function () {
