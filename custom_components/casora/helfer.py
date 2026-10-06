@@ -189,10 +189,19 @@ def _load_theme() -> dict:
     base = themes.get(THEME_NAMES[0])
     if not base:
         return themes
+    # casora-theme-base: dieser Look baut auf einem anderen Look auf (Nebel auf Casora/Weich)
+    # statt direkt auf dem Grund-Theme – er wird erst danach zusammengesetzt.
+    later = []
     for fn in sorted(os.listdir(_DIR)):
         if fn.startswith("theme_") and fn.endswith(".yaml"):
             for name, over in (load_yaml(os.path.join(_DIR, fn)) or {}).items():
-                themes[name] = _overlay(base, over)
+                parent = over.get("casora-theme-base") if isinstance(over, dict) else None
+                if parent:
+                    later.append((name, parent, {k: v for k, v in over.items() if k != "casora-theme-base"}))
+                else:
+                    themes[name] = _overlay(base, over)
+    for name, parent, over in later:
+        themes[name] = _overlay(themes.get(parent, base), over)
     return themes
 
 

@@ -37,6 +37,7 @@ Casora:
   casora-waste-other: var(--casora-color-orange)
   casora-waste-glyph: "#FFFFFF"
   casora-color-neutral: "#C9BFB2"
+  casora-soft-grey-mark: rgba(120,100,80,0.8)   # iOS-Grau aus Daten (Tonnen, Diagramme) im Look-Ton
   primary-color: "#B67A50"          # Ton/Terrakotta als HA-Akzent
   state-light-on-color: rgb(232,176,74)
   state-on-color: rgb(78,158,149)
