@@ -4,7 +4,7 @@
 // Erwartet: (1) Badge per Alt+Pfeil verschieben, „Rückgängig“ in der Werkzeugleiste stellt die
 // Reihenfolge wieder her und nichts ist mehr ungespeichert. (2) Wieder verschieben, Studio ohne
 // Speichern verlassen und zurückkehren: Das Studio bietet „Wiederherstellen“ an, danach ist die
-// Änderung wieder da (ungespeichert). (3) ⌘S sichert sie in HA. (4) Zeitreise (Dashboard-Menü):
+// Änderung wieder da (ungespeichert). (3) ⌘S sichert sie in HA. (4) Zeitreise (Uhr neben Rückgängig):
 // den Stand davor wählen, „Diesen Stand wiederherstellen“ + bestätigen – HA hat wieder die
 // alte Reihenfolge. Schreibt ins Prüf-Dashboard – am Ende wird der vorherige Stand zurückgeschrieben.
 import { open, studio, ready, casoraDashboard, check, need, finish, usePage, atFinish, BASE } from './lib.mjs';
@@ -78,12 +78,10 @@ try {
   const before = viewOf(saved0[dash.url]);
   await check('HA: neue Badge-Reihenfolge gespeichert', viewOf(await cfgOf(dash.url)) !== before);
 
-  // (4) Zeitreise zum Stand davor
-  await pg.locator('.top button.roomtitle').click();
-  await pg.waitForTimeout(800);
-  const zr = await H(() => { const e = window.__pierce('.combo-opt').find((x) => x.getClientRects().length && /^(Zeitreise|Rewind)/.test(x.textContent.replace('✓', '').trim()));
+  // (4) Zeitreise zum Stand davor – Knopf mit der Uhr neben Rückgängig (vorher im Titelmenü).
+  const zr = await H(() => { const e = window.__pierce('#brewind').find((x) => x.getClientRects().length);
     if (!e) return null; const b = e.getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; });
-  await need('Menüpunkt „Zeitreise“', zr);
+  await need('Knopf „Zeitreise“ neben Rückgängig', zr);
   await pg.mouse.click(zr.x, zr.y);
   await pg.waitForTimeout(2500);
   // Einträge der Liste: „hh:mm …“ mit Beschreibung; der erste ist „Jetzt“, der zweite der Stand davor.

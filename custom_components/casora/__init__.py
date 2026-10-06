@@ -278,6 +278,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f'import "./casora-panel-addons.js?v={v}";\n'
             f'import "./casora-panel-welcome.js?v={v}";\n'
             f'import "./casora-panel-b.js?v={v}";\n'
+            f'import "./casora-panel-b-plus.js?v={v}";\n'
         )
         path = os.path.join(panel_dir, "casora-studio.js")
         try:

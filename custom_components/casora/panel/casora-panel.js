@@ -2011,7 +2011,10 @@ const SECTIONS = [
     scope: "dashboard", col: "a",
     blurb: "The scene buttons of this dashboard.",
     toggleFn: "scenes",
-    fields: [],
+    // Wie bei den übrigen Badges (F-02): eigener Name des Szenen-Badges (casora_badge_scene_group, title).
+    fields: [
+      { ...T("scenes_title", "Name on the badge"), always: true, ord: -1, placeholder: "Scenes" },
+    ],
   },
   {
     label: "Now Playing", icon: "music", iconColor: studioIcon("nowplaying"), group: "rooms",
@@ -2115,6 +2118,10 @@ const SECTIONS = [
       { ...LIST("security_cameras", "Cameras", ["camera"]), unitLabel: "Cameras", ord: 6 },
       { ...T("security_cameras_label", "Heading"), unitLabel: "Camera group heading",
         advanced: true, needs: "security_cameras", ord: 7 },
+      // Unterzeile des Sammelbadges (casora_badge_security_group, Variable summary): ohne Wert „Kurz“.
+      { key: "security_summary", label: "Summary", type: "select", options: ["", "detailed"], always: true, ord: 7.5,
+        optionLabels: { "": "Short", detailed: "Detailed" },
+        hint: "Short shows icons with a count, Detailed lists everything." },
       { key: "show_security_inline", label: "Separate security badges", type: "bool",
         boolDefault: false, always: true, ord: 8,
         hint: "Shows locks, alarm, doors, windows and cameras as their own badges." },
@@ -4122,7 +4129,8 @@ function tileEntityGone(tile, states) {
 
 function tileMissingEntity(tile, type) {
   if (!tile || !type || tile.entity) return false;
-  if (type.noEntity || type.raw || type.user || !(type.domains || []).length) return false;
+  // ownData: findet seine Daten selbst (Abfall, Auto, Solar-Tipp …) – kein „Gerät fehlt“ (F-10).
+  if (type.noEntity || type.ownData || type.raw || type.user || !(type.domains || []).length) return false;
   const looks = (v) => typeof v === "string" && ENTITY_ID.test(v);
   return !Object.values(tile.variables || {}).some((v) => looks(v)
     || (Array.isArray(v) && v.some(looks)));
@@ -9272,6 +9280,10 @@ class CasoraPanel extends HTMLElement {
         /* Three actions (Later · Discard · Restore): each keeps its whole label. */
         :host(:not(.phone)) .askacts:has(.askalt) button { flex:0 0 auto; white-space:nowrap; }
         :host(:not(.phone)) .askacts:has(.askalt) button:not(.ghost) { padding:0 18px; }
+        /* Deutsch sind die drei Beschriftungen länger als der Dialog („Wiederherstellen“ ragte hinaus):
+           Dialog etwas breiter, und reicht es trotzdem nicht, brechen die Knöpfe um. */
+        :host(:not(.phone)) .askstack:has(.askacts .askalt):not(.wide) { width:min(440px, 94vw); }
+        :host(:not(.phone)) .askacts:has(.askalt) { flex-wrap:wrap; }
         .askchoice {
           display:flex; align-items:center; justify-content:space-between;
           gap:12px; margin-top:10px;
@@ -14500,9 +14512,10 @@ class CasoraPanel extends HTMLElement {
     const n = pair && pair.safe !== false ? (pair.conflicts || []).length : 0;
     pill.hidden = !n;
     if (n) {
-      pill.querySelector(".s-long").textContent = n + (n === 1 ? " Difference" : " Differences");
+      // Ruhig und verständlich: was verglichen wird, nicht nur „N Unterschiede“ in Orange.
+      pill.querySelector(".s-long").textContent = n === 1 ? "Phone differs in 1 setting" : "Phone differs in " + n + " settings";
       pill.querySelector(".s-short").textContent = String(n);
-      pill.title = "Your desktop and phone layouts don't match";
+      pill.title = "Desktop and phone are set differently here – tap to choose what applies";
       pill.onclick = () => this._reviewDifferences();
     }
     this._placeCanvasHead();
@@ -14524,9 +14537,10 @@ class CasoraPanel extends HTMLElement {
 
     const s = this._flowScreen({
       icon: "alert", tone: "warn", quiet,
-      title: "Desktop and Phone Don't Match",
-      lede: "These settings are shared by your desktop and phone layouts, but "
-        + "they're set differently. Choose what to keep.",
+      title: "Match Desktop and Phone",
+      lede: "Desktop and phone share these settings, but they are set differently right now – "
+        + "for example a different light. Choose for each row what should apply on both. "
+        + "Nothing changes until you choose, and you can also do this later.",
     });
     const shown = (v, key) => (v === undefined || v === null || v === "" ? "Not set"
       : typeof v === "string" ? this._prettyEntity(v)
@@ -14561,7 +14575,7 @@ class CasoraPanel extends HTMLElement {
              { id: "clear", label: c.kind === "onlyDesktop" ? "Remove From Desktop" : "Remove From Phone" }];
         const r = this._flowRow(group, {
           title: this._fieldLabelFor(c.key) || c.key,
-          sub: "Desktop: " + shown(c.desktop, c.key) + "   ·   Phone: " + shown(c.mobile, c.key),
+          sub: trLabel("Desktop") + ": " + shown(c.desktop, c.key) + "   ·   " + trLabel("Phone") + ": " + shown(c.mobile, c.key),
           chevron: true,
           onTap: () => this._menuAt(r.row, choices, (id) => {
             if (id === "desktop") apply(c, c.desktop, "from Desktop");
@@ -14574,12 +14588,12 @@ class CasoraPanel extends HTMLElement {
     });
     const note = document.createElement("p");
     note.className = "ffoot";
-    note.textContent = "Use Desktop Settings keeps the desktop value wherever both are set, "
+    note.textContent = "“Like the desktop everywhere” keeps the desktop value wherever both are set "
       + "and fills in whichever layout is missing one.";
     s.body.appendChild(note);
 
-    this._flowButton(s.acts, "Not Now", () => this._flowBack(), true);
-    this._flowButton(s.acts, "Use Desktop Settings", () => {
+    this._flowButton(s.acts, "Later", () => this._flowBack(), true);
+    this._flowButton(s.acts, "Like the desktop everywhere", () => {
       list.forEach((c) => apply(c, c.kind === "onlyMobile" ? c.mobile : c.desktop, "Use Desktop Settings"));
       settled();
     });
@@ -18938,7 +18952,9 @@ class CasoraPanel extends HTMLElement {
     if (!sel || sel.group !== g.id) return grp;
     if (g.id === "tiles") {
       const shellT = ((room && room.tiles) || []).find((t) => this._tileKey(t) === sel.key);
-      const tile = shellT && tileView(shellT);
+      // Eben entfernte Kachel: der Bereich heißt wieder „Kacheln“, nicht wie die gelöschte (F-01).
+      if (!shellT) return grp;
+      const tile = tileView(shellT);
       const type = tile && tileTypeAny(tile);
       // A tile whose template the panel does not know still has a name.
       if (!type) return { ...grp, label: sel.label || grp.label };
@@ -20118,9 +20134,10 @@ class CasoraPanel extends HTMLElement {
     if (cands.length) {
       const tr = trLabel;
       const res = await this._ask({
-        title: sure ? tr("Matching device found") : tr("No clear match – please choose"),
+        // Nutzertest: „Keine eindeutige Zuordnung“ klang nach Fehler – als einfache Frage stellen.
+        title: sure ? tr("Matching device found") : tr("Which device should the tile show?"),
         message: !sure
-          ? tr("Casora could not tell which device this tile is for. Pick one, or add the tile without a device.")
+          ? tr("Pick one – or add the tile without a device and choose it later.")
           : cands.length > 1
             ? tr("Casora suggests this device for the new tile. Pick another one or add the tile without a device.")
             : tr("Casora suggests this device for the new tile."),
@@ -21106,6 +21123,17 @@ class CasoraPanel extends HTMLElement {
       if (sec.doorsTilted) parts.push(nn(sec.doorsTilted, "Door tilted", "Doors tilted"));
       if (sec.lockDead) parts.push(nn(sec.lockDead, "Lock offline", "Locks offline"));
       if (sec.camDead) parts.push(nn(sec.camDead, "Camera offline", "Cameras offline"));
+      // Weich/Nebel: dieselbe Unterzeile wie das Dashboard (00-finden.js, Kurz = Symbole mit Zahl).
+      let secSum = null;
+      if (soft && typeof window.casoraSecuritySummary === "function") {
+        const al = alarms.map((e) => sOf(e)).find((x) => x && !/^(disarmed|unavailable|unknown)$/.test(x)) || "";
+        try {
+          secSum = window.casoraSecuritySummary({ ...sec,
+            insecure: sec.triggered || sec.disarmed || !!(sec.locks || sec.doors || sec.windows || sec.doorsTilted
+              || sec.windowsTilted || sec.gates),
+            problem: !!(sec.lockDead || sec.camDead) }, { summary: V.security_summary || "short", alarmState: al });
+        } catch (e) { secSum = null; }
+      }
       const secText = sec.triggered ? "Triggered" : !parts.length ? "Secured"
         : parts.length === 1 ? parts[0] : parts.map(trLabel).join(" · ");
       const [lockSubs, camSubs, entSubs] = [
@@ -21181,7 +21209,8 @@ class CasoraPanel extends HTMLElement {
           icon: soft ? ((parts.length || sec.triggered) ? SOFT_BADGE_ICON.alert : SOFT_BADGE_ICON.ok)
             : (parts.length || sec.triggered ? "lock-open-fill" : "lock-fill"),
           color: soft && (parts.length || sec.triggered) ? "var(--casora-color-orange, #FF9F0A)" : TEAL,
-          text: secText,
+          text: secSum ? secSum.text : secText,
+          html: secSum && V.security_summary !== "detailed" ? secSum.html : null,
           subs: lockSubs.concat(camSubs, entSubs),
         });
       }
@@ -22686,7 +22715,8 @@ class CasoraPanel extends HTMLElement {
     if (b.text) {
       const t = document.createElement("span");
       t.className = "ptext";
-      t.textContent = b.text;
+      // Sicherheit „Kurz“: Symbole mit Zahl (HTML aus casoraSecuritySummary, Texte darin maskiert).
+      if (b.html) { t.innerHTML = b.html; t.setAttribute("data-no-i18n", ""); } else t.textContent = b.text;
       col.appendChild(t);
     }
     // H5 (Weich-Audit): Weich-Badges tragen das Symbol weiß im farbigen Kreis wie am Dashboard.
@@ -22891,6 +22921,10 @@ class CasoraPanel extends HTMLElement {
       if (gone || tileMissingEntity(tile, type)) {
         el.classList.add("missingdev");
         el.querySelector(".mstate").textContent = "Device missing";
+      } else if (type && type.ownData && !tile.entity
+        && /^(|Not set|Unknown|Unavailable|—)$/.test(el.querySelector(".mstate").textContent.trim())) {
+        // Das Dashboard sucht die Daten zur Laufzeit selbst: neutral statt „nicht festgelegt“.
+        el.querySelector(".mstate").textContent = "Automatic";
       }
       const ring = tileProgressOn(tile, ent);
       if (ring) {
@@ -23740,15 +23774,8 @@ class CasoraPanel extends HTMLElement {
 
   async _newScene() {
     const path = "/config/scene/edit/new";
-    const app = !!(window.externalApp || (window.webkit && window.webkit.messageHandlers
-      && window.webkit.messageHandlers.getExternalAuth));
-    if (!app) {
-      const tab = window.open(path, "_blank");
-      if (tab) {
-        window.addEventListener("focus", () => { if (this._state) this._renderForm(); }, { once: true });
-        return;
-      }
-    }
+    // Im selben Fenster wie jede HA-Seite (ein neuer Tab verlor den Weg zurück); ungesicherte
+    // Änderungen werden vorher gespeichert, Zurück führt wieder ins Studio.
     const dirty = this._isDirty();
     const ok = await this._ask({
       title: "Leave Casora?",
@@ -24564,7 +24591,8 @@ class CasoraPanel extends HTMLElement {
       const e = id && this._hass && this._hass.states[id];
       return (e && e.attributes && e.attributes.friendly_name) || null;
     };
-    const entCombo = this._combo(tile.entity || "", this._entityList(type.domains, type.classes),
+    // Geräte dieses Raums zuerst, ohne Konfigurations-/Diagnose-Knöpfe („Identifizieren“, „Neustart“).
+    const entCombo = this._combo(tile.entity || "", this._rankedEntityList(type.domains, type.classes, room, tile.entity),
       // Kacheln, die ihre Daten selbst finden (Solar-Tipp, Abfall, Auto …): das Gerät ist freiwillig.
       type.entityPlaceholder || (type.ownData ? "Automatic" : pickHint(type.domains)),
       (v) => {
