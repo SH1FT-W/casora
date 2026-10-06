@@ -50,7 +50,12 @@ rsync -a --delete --exclude __pycache__ --exclude panel/casora-studio.js "$REPO/
 rsync -a --exclude __pycache__ --exclude stress.json "$REPO/dev/casora_mock/" "$CFG/custom_components/casora_mock/"
 # demo: neutrales Demo-Haus (wie dev/haus.sh demo) – Fixture aus dev/demo/demo_fixture.py, nie die Test-Fixture.
 if [ "$Z" = demo ]; then
-  (cd /tmp && python3 "$REPO/dev/demo/demo_fixture.py" "$CFG/custom_components/casora_mock/fixture.json" >/dev/null)
+  # Fixture und Wortliste sind nicht im Repo – in einem Worktree liegen sie im Haupt-Checkout.
+  MAIN="$(cd "$(git -C "$REPO" rev-parse --git-common-dir)/.." && pwd)"
+  F="$REPO/dev/casora_mock/fixture.json"; [ -f "$F" ] || F="$MAIN/dev/casora_mock/fixture.json"
+  W="$REPO/dev/demo/privat.json"; [ -f "$W" ] || W="$MAIN/dev/demo/privat.json"
+  [ -f "$W" ] || { echo "wegwerf-ha: dev/demo/privat.json fehlt – demo abgebrochen" >&2; exit 1; }
+  (cd /tmp && CASORA_MOCK_FIXTURE="$F" CASORA_DEMO_PRIVAT="$W" python3 "$REPO/dev/demo/demo_fixture.py" "$CFG/custom_components/casora_mock/fixture.json" >/dev/null)
 fi
 if [ "$Z" = stress ]; then
   python3 "$REPO/dev/stress/stress_fixture.py" "$CFG/custom_components/casora_mock/stress.json" >/dev/null
