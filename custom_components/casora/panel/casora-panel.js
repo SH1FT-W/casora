@@ -6448,6 +6448,8 @@ class CasoraPanel extends HTMLElement {
         :is(#pane.stack, #pane.sheet) #band-rooms .card.shut > .chead:has(> .count:not(:empty)) { row-gap:0; }
         :is(#pane.stack, #pane.sheet) #band-rooms .card.shut > .chead:has(> .count:not(:empty)) :is(.sicon, .plus, .sw, .fold) { grid-row:1 / 3; }
         #pane.stack #band-rooms .card.off > .chead .plus { display:none; }
+        /* Ausgeschaltet lässt sich nichts aufklappen: kein Pfeil, der ein Öffnen verspricht. */
+        :is(#pane.stack, #pane.sheet) #band-rooms .card.off > .chead .fold { visibility:hidden; }
         #pane.stack #band-rooms .col > .card { border-radius:var(--r-group); margin-bottom:12px; }
         #pane.stack #band-rooms .col > .card::before { content:none; }
         /* Überall 12 px zwischen den Abschnitten. */
