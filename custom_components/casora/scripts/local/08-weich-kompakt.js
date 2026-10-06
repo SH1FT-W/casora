@@ -333,7 +333,10 @@
     var hint = busy ? '' : on ? (one ? 'Tippen zum Entriegeln' : 'Tippen, um alle zu entriegeln') : (one ? 'Tippen zum Verriegeln' : 'Tippen, um alle zu verriegeln');
     var ic = (typeof window.casoraIconUrl === 'function') ? window.casoraIconUrl(on ? 'lock-fill' : 'lock-open-fill') : '';
     return '<div class="lkbar" role="switch" aria-checked="' + open + '" style="display:flex;align-items:center;gap:14px;min-height:66px;box-sizing:border-box;'
-      + 'padding:10px 14px 10px 14px;border-radius:var(--casora-popup-row-radius, 24px);background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));'
+      /* D-06: eine Zeilenart – entriegelt (aktiv) hell und erhoben wie die aktive Geräte-Zeile darunter, sonst Sand. */
+      + 'padding:10px 14px 10px 14px;border-radius:var(--casora-popup-row-radius, 24px);background:'
+      + (open ? 'var(--casora-entity-background-active, var(--casora-soft-row-fill, rgba(140,115,90,0.07)));box-shadow:var(--button-card-box-shadow-active-mobile, none);'
+        : 'var(--casora-soft-row-fill, rgba(140,115,90,0.07));')
       + 'font-family:var(--primary-font-family, system-ui);text-align:left;line-height:normal;cursor:pointer;">'
       + '<div style="width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;background:'
       + (open ? 'var(--casora-lock-unlocked-color, var(--casora-lps-switch-on, #B67A50))' : 'var(--casora-soft-icon-off, rgba(140,115,90,0.12))') + ';">'
@@ -346,6 +349,6 @@
       + (open ? 'var(--casora-lps-switch-on, #B67A50)' : 'var(--casora-lps-switch-off, rgba(58,50,43,0.38))') + ';transition:background .2s ease;">'
       + '<div style="position:absolute;top:3px;left:' + (open ? '21px' : '3px') + ';width:20px;height:20px;border-radius:50%;'
       + 'background:var(--casora-lps-knob, #fff);box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:left .2s ease;"></div></div></div>'
-      + '<style>@keyframes lktg-pl{0%,100%{opacity:1}50%{opacity:.35}}@media (hover:hover){.lkbar:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11)) !important;}}</style>';
+      + '<style>@keyframes lktg-pl{0%,100%{opacity:1}50%{opacity:.35}}@media (hover:hover){.lkbar[aria-checked="false"]:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11)) !important;}}</style>';
   };
 })();
