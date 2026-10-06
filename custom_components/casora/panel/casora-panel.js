@@ -10710,6 +10710,14 @@ class CasoraPanel extends HTMLElement {
         :host .casora-ai .editbtn:hover, :host .cp-show:hover, :host .bhid:hover { background:var(--chip-hi); filter:none; }
         :host .delbtn { background:var(--casora-studio-danger, #d70015); color:#fff; }
 
+        /* Hauptknopf in Abläufen, Dialogen und der Zeitreise wie „Fertig“ (Weich/Nebel: Ton statt Schwarz).
+           Ohne Studio-Farbe im Theme (Standard, Glas) bleibt es beim bisherigen --fill. */
+        :host .flowfoot button:not(.ghost):not(.danger), :host .askacts button:not(.ghost):not(.danger),
+        :host .cv-act > button:not(.ghost) {
+          background:var(--casora-studio-done, var(--fill)); color:var(--casora-studio-on-done, var(--on-fill));
+        }
+        :host(.phone) .flowfoot button:not(.ghost), :host(.phone) .askacts button { min-height:var(--k-btn); }
+
         /* Aufklapper: immer eine volle Zeile mit Pfeil, gleiche Höhe in und außerhalb von Karten (S-07). */
         :host .advsum {
           min-height:44px; font-size:var(--t-callout); font-weight:500; color:var(--ink-2); gap:8px;
