@@ -862,8 +862,14 @@
         return;
       }
       this._bPlusCss();
-      if (this._bOpen && isPhone(this)) this._bClose();
       const phone = isPhone(this);
+      // Handy: das Blatt verdeckte Vorschau und untere Leiste – erst schließen, dann zeigen.
+      if (phone && this.classList.contains("binsp") && !this._bIntroClosed) {
+        this._bIntroClosed = true;
+        this._bClose();
+        setTimeout(() => this._bIntro(force), 380);
+        return;
+      }
       const vis = (sel) => [...root.querySelectorAll(sel)].find((e) => { const r = e.getBoundingClientRect(); return r.width > 4 && r.height > 4; }) || null;
       const steps = [
         { at: () => vis(".stage .plinth") || vis(".card.map"),
@@ -889,7 +895,12 @@
       root.appendChild(box);
       const spot = box.querySelector(".bspot"), coach = box.querySelector(".bcoach");
       let i = 0;
-      const show = () => {
+      const show = (again) => {
+        // Handy: geht währenddessen das Blatt auf (Startablauf), verdeckt es Vorschau und Leiste.
+        if (phone && this.classList.contains("binsp") && again !== false) {
+          this._bClose();
+          return void setTimeout(() => show(false), 280);
+        }
         const s = steps[i];
         const el = s.at();
         const r = el && el.getClientRects().length ? el.getBoundingClientRect() : null;
@@ -923,9 +934,11 @@
       window.addEventListener("keydown", this._bIntroKey, true);
       box.querySelector(".bskip").onclick = () => this._bIntroEnd();
       box.querySelector(".bnext").onclick = () => { if (++i >= steps.length) this._bIntroEnd(); else show(); };
+      box._bShow = show;
       box.addEventListener("click", (ev) => { if (ev.target === box) ev.stopPropagation(); });
       show();
-      requestAnimationFrame(show);
+      requestAnimationFrame(() => show());
+      setTimeout(() => show(), 700);
     };
     P._bIntroEnd = function () {
       ls(INTRO, "1");
