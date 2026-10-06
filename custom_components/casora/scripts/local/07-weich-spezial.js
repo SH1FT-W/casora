@@ -105,6 +105,14 @@
   AL.act = function (ent, service) {
     return ' role="button" tabindex="0" data-casora-alarm="' + esc(JSON.stringify({ e: ent, s: service })) + '"';
   };
+  // Zwei Formen kommen an: {e, s} vom Haupt-Knopf und {domain, service, data:{entity_id}} aus den
+  // Modus-Zeilen (UI.group, nur Attribut umbenannt). Ohne Angleichen fehlte bei Modus-Zeilen der Dienst.
+  AL.spec = function (sp) {
+    if (!sp || typeof sp !== 'object') return null;
+    var s = sp.s || sp.service, e = sp.e || (sp.data && sp.data.entity_id) || (sp.target && sp.target.entity_id);
+    if (Array.isArray(e)) e = e[0];
+    return s && e ? { e: e, s: s } : null;
+  };
   // Code-Feld (nur wenn die nächste Aktion einen Code braucht).
   AL.code = function (I) {
     var need = I.st === 'disarmed' ? I.needArm : I.needDis;
@@ -194,6 +202,7 @@
       if (ev.type === 'touchend') lastTouch = Date.now();
       if (Date.now() - (window._casoraPopupOpenedAt || 0) < 600) return;
       var spec; try { spec = JSON.parse(el.dataset.casoraAlarm); } catch (e) { return; }
+      spec = AL.spec(spec); if (!spec) return;
       var ha = document.querySelector('home-assistant'); var hass = ha && ha.hass; if (!hass) return;
       var I = AL.info(spec.e, hass.states);
       var need = spec.s === 'alarm_disarm' ? I.needDis : I.needArm;
