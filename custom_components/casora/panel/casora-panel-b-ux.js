@@ -7,6 +7,8 @@
 // - Inspektor-Kopf mit Weg („Wohnzimmer › Kacheln“) und Geltungsbereich, auch im Handy-Blatt
 // - „…“ heißt „Hilfe & Extras“: Einführung, Tastenkürzel, Assistenten, Import, Hilfe; alles über
 //   das Dashboard steht im Titelmenü; am Handy Rückgängig und Zeitreise oben sichtbar
+// - Hinzufügen vom Gerät her: „Was soll auf das Dashboard?“ – Gerät suchen, Casora wählt die
+//   Kachelart; die bisherige Typauswahl bleibt als „Andere Kachelart …“
 // - Untertitel der Reiter (Inhalt, Dashboard, Einstellungen) als Hinweis und im Inhalt-Blatt
 // - Wörterbuch: Badges und Popups mit einem Halbsatz erklärt
 // Datenmodell, Speichern und Rückgängig bleiben die des Panels – hier wird nur angeschlossen.
@@ -59,7 +61,44 @@
     return [];
   }
 
-  W.__casoraStudioUx = { SUB, WHAT, SCOPE, scopeOf, pathOf };
+  // ── Hinzufügen vom Gerät her (V-04) ────────────────────────────────────────────────
+  // Kachelart je Domain (wie der Geräte-Assistent, casora-panel-assist.js); Rest: „Gerät mit Tasten“.
+  const BY_DOMAIN = { light: "light", climate: "thermostat", media_player: "media", fan: "fan", cover: "cover", lock: "lock",
+    vacuum: "vacuum", humidifier: "humidifier", camera: "casora_camera", alarm_control_panel: "casora_alarm", switch: "casora_switch",
+    input_boolean: "entity_actions", script: "entity_actions", scene: "entity_actions", button: "entity_actions",
+    input_button: "entity_actions", remote: "entity_actions" };
+  const ADD_DOMAINS = Object.keys(BY_DOMAIN);
+  // Alltagswörter je Kachelart – „Licht“ findet auch „Stehlampe“.
+  const WORDS = { light: "licht lampe leuchte light lamp", cover: "jalousie rollladen rollo markise blind", thermostat: "heizung thermostat klima heating",
+    media: "fernseher tv musik lautsprecher speaker", lock: "schloss tür tuer lock", vacuum: "sauger staubsauger saugroboter vacuum",
+    casora_switch: "schalter steckdose switch plug", fan: "ventilator lüfter fan", casora_camera: "kamera camera", casora_alarm: "alarm sicherheit" };
+  function typeFor(entity, typeIds, suggested) {
+    if (suggested && typeIds.has(suggested)) return suggested;
+    const t = BY_DOMAIN[String(entity || "").split(".")[0]];
+    if (t && typeIds.has(t)) return t;
+    return typeIds.has("entity_actions") ? "entity_actions" : null;
+  }
+  const foldTx = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ß/g, "ss");
+  // Geräte-Treffer: jedes Wort muss in Name, Bereich oder Art vorkommen; vorn im Namen zählt mehr,
+  // Neues (ohne Kachel) und Vorschläge des Assistenten vor Vorhandenem.
+  function rankDevices(list, q, max) {
+    const toks = foldTx(q).split(/\s+/).filter(Boolean);
+    const out = [];
+    list.forEach((c, i) => {
+      const name = foldTx(c.name), all = name + " " + foldTx(c.area) + " " + foldTx(c.kind) + " " + foldTx(c.words);
+      let sc = 0;
+      for (const t of toks) {
+        if (all.indexOf(t) < 0) return;
+        sc += name.indexOf(t) === 0 ? 30 : name.indexOf(" " + t) >= 0 ? 20 : name.indexOf(t) >= 0 ? 10 : 4;
+      }
+      sc += (c.fresh ? 6 : 0) + (c.suggested ? 4 : 0) + (c.here ? 3 : 0);
+      out.push({ c, sc, i });
+    });
+    out.sort((a, b) => b.sc - a.sc || a.i - b.i);
+    return out.slice(0, max || 40).map((x) => x.c);
+  }
+
+  W.__casoraStudioUx = { SUB, WHAT, SCOPE, scopeOf, pathOf, typeFor, rankDevices, BY_DOMAIN };
   if (typeof customElements === "undefined" || !W.document) return;
 
   const CSS = `
@@ -90,6 +129,16 @@
     :host(.bmode.phone:not(.flow)) .toprow > .navpill > button#undo:disabled { opacity:.38; }
     :host(.bmode.phone:not(.flow)) .toprow > .navpill > button#brewind svg,
     :host(.bmode.phone:not(.flow)) .toprow > .navpill > button#undo svg { width:20px; height:20px; }
+    /* Hinzufügen vom Gerät her */
+    .uxadd .uxaddh { padding:14px 16px 0; font-size:15px; }
+    .uxadd .uxaddh b { font-weight:650; }
+    .uxadd .mres { min-height:120px; }
+    .uxadd .uxmore { display:flex; flex-wrap:wrap; gap:6px; padding:8px 10px 12px; border-top:.5px solid var(--hair, rgba(127,127,127,.22)); }
+    .uxadd .uxlink { border:0; border-radius:999px; padding:6px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer;
+      background:var(--wash-fill, rgba(118,118,128,.12)); color:var(--ink-2, inherit); box-shadow:none; }
+    .uxadd .uxlink:hover { color:var(--ink, inherit); }
+    .btools .btool.uxplus { padding:0 8px; }
+    :host(.phone) .uxadd .mbox { max-height:82vh; }
     /* Tastenkürzel */
     .uxkeys { display:grid; grid-template-columns:auto 1fr; gap:8px 14px; margin:2px 4px 6px; font-size:14px; align-items:center; }
     .uxkeys kbd { font:inherit; font-size:12.5px; font-weight:650; padding:2px 7px; border-radius:7px; white-space:nowrap; justify-self:start;
@@ -225,6 +274,7 @@
       this._uxPhoneHeads();
       this._uxWhat();
       this._uxMore();
+      this._uxAddBtn();
     };
 
     // ── Menüs: „Gilt für: …“ oben (V-01) ───────────────────────────────
@@ -355,6 +405,249 @@
       if (more.title !== t) { more.title = t; more.setAttribute("aria-label", t); }
       // Handy: Zeitreise-Knopf neben Rückgängig (casora-panel-b-plus.js legt ihn an).
       if (this._bRewindBtn) this._bRewindBtn();
+    };
+
+    // ── Hinzufügen vom Gerät her (V-04) ─────────────────────────────────
+    // Alle Geräte, die eine Kachel tragen können: [{entity, name, area, roomIndex, type, kind, fresh, suggested}]
+    P._uxDevices = function () {
+      const h = this._hass || {};
+      const I = W.__casoraPanelInternals || {};
+      const R = h.entities || {}, D = h.devices || {}, S = h.states || {}, A = h.areas || {};
+      const rooms = rooms$(this);
+      const types = (I.TILE_TYPES || []).filter((t) => !t.hidden);
+      const typeIds = new Set(types.map((t) => t.id));
+      const label = (id) => { const t = types.find((x) => x.id === id); return t ? tr(t.label) : ""; };
+      const A2 = W.casoraAssist;
+      const used = A2 && A2.usedEntities ? A2.usedEntities(rooms, h) : new Set();
+      // Vorschläge des Geräte-Assistenten: Geräte ohne Kachel, mit erkannter Art (Drucker, Waschmaschine …).
+      let sugg = [];
+      try { sugg = A2 && A2.suggest ? A2.suggest(h, rooms.map((r) => ({ name: r.name, tiles: r.tiles || [] })), types) : []; } catch (e) { sugg = []; }
+      const byEntity = new Map(sugg.map((x) => [x.entity, x]));
+      const areaOf = (id) => { const e = R[id]; return (e && (e.area_id || (D[e.device_id] || {}).area_id)) || null; };
+      const roomOfArea = new Map();
+      rooms.forEach((r, i) => { const a = this._roomArea ? this._roomArea(r) : null; if (a && !roomOfArea.has(a)) roomOfArea.set(a, i); });
+      const out = [];
+      const seen = new Set();
+      const push = (id, name, suggested) => {
+        if (seen.has(id) || !S[id]) return;
+        const e = R[id];
+        if (e && (e.hidden || e.entity_category || e.disabled_by)) return;
+        const type = typeFor(id, typeIds, suggested);
+        if (!type) return;
+        seen.add(id);
+        const aid = areaOf(id);
+        const ri = aid && roomOfArea.has(aid) ? roomOfArea.get(aid) : -1;
+        out.push({ entity: id, name: name || (S[id].attributes || {}).friendly_name || id, area: aid && A[aid] ? A[aid].name : "",
+          roomIndex: ri, type, kind: label(type), fresh: !used.has(id), suggested: !!suggested, here: ri === this._room,
+          words: WORDS[type] || "" });
+      };
+      sugg.forEach((x) => push(x.entity, x.name, x.type));
+      Object.keys(S).forEach((id) => { if (ADD_DOMAINS.indexOf(id.split(".")[0]) >= 0) push(id, "", byEntity.has(id) ? byEntity.get(id).type : null); });
+      return out;
+    };
+
+    // Die bisherige Typauswahl („Andere Kachelart …“) – unverändert aus casora-panel-b.js.
+    const addTile0 = P._bAddTile;
+    P._uxAddByType = function () { return addTile0.apply(this, arguments); };
+    P._bAddTile = function () {
+      if (!on(this) || !this._state) return addTile0.apply(this, arguments);
+      return this._uxAdd();
+    };
+
+    P._uxAdd = function () {
+      if (!this._state) return;
+      if (this._mCss) this._mCss();
+      this._uxCss();
+      if (this._openCombo) this._openCombo();
+      if (this._mPopClose) this._mPopClose();
+      if (this._bToastHide) this._bToastHide();
+      const root = this.shadowRoot;
+      if (root.querySelector(".uxadd")) { root.querySelector(".uxadd input").focus(); return; }
+      // Immer nur ein Blatt: am Handy schließt das Inhalt-Blatt, bevor dieses aufgeht.
+      if (this.classList.contains("phone") && this.classList.contains("binsp")) this._bClose();
+      const phone = this.classList.contains("phone");
+      const from = root.activeElement;
+      const room = room$(this);
+      const roomName = this._uxRoomName();
+      const I = W.__casoraPanelInternals || {};
+      const overview = !!(room && I.isHomeRoom && I.isHomeRoom(room, rooms$(this)) && !(this._roomArea && this._roomArea(room)));
+      const all = this._uxDevices();
+      const box = document.createElement("div");
+      box.className = "msearch uxadd";
+      box.innerHTML = '<div class="mbox" role="dialog" aria-modal="true"><div class="uxaddh"><b></b></div><div class="mfield">'
+        + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>'
+        + '<input type="text" enterkeyhint="go" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="uxres" aria-autocomplete="list">'
+        + '<span class="mesc">esc</span></div><div class="mres" id="uxres" role="listbox"></div><div class="uxmore"></div></div>';
+      box.setAttribute("data-no-i18n", "");
+      box.querySelector(".uxaddh b").textContent = tr("What should go on the dashboard?");
+      box.querySelector(".mbox").setAttribute("aria-label", tr("What should go on the dashboard?"));
+      const input = box.querySelector("input");
+      input.placeholder = tr("Search a device, e.g. floor lamp");
+      input.setAttribute("aria-label", tr("Search a device"));
+      if (phone) box.querySelector(".mesc").remove();
+      const res = box.querySelector(".mres");
+      let list = [], at = 0;
+      const close = (refocus) => {
+        document.removeEventListener("keydown", esc, true);
+        box.remove();
+        if (refocus && from && from.focus) from.focus();
+      };
+      const pick = (c) => { close(false); this._uxAddDevice(c); };
+      const mark = () => {
+        res.querySelectorAll(".mrow").forEach((b, k) => { b.classList.toggle("on", k === at); b.setAttribute("aria-selected", k === at ? "true" : "false"); });
+        input.setAttribute("aria-activedescendant", "uxopt" + at);
+        const cur = res.querySelector("#uxopt" + at);
+        if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: "nearest" });
+      };
+      const head = (t) => { const d = document.createElement("div"); d.className = "mhead"; d.textContent = t; res.appendChild(d); };
+      const row = (c, k) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "mrow" + (k === at ? " on" : "");
+        b.id = "uxopt" + k;
+        b.setAttribute("role", "option");
+        b.innerHTML = '<span class="mtx"><b></b><span class="msub"></span></span><span class="mkind"></span>';
+        b.querySelector("b").textContent = c.name;
+        const where = c.area || tr("No area");
+        b.querySelector(".msub").textContent = c.fresh ? where : where + " \u00b7 " + tr("already has a tile");
+        b.querySelector(".mkind").textContent = c.kind;
+        // Für Profis: die Entitäts-ID beim Zeigen.
+        b.title = c.entity;
+        b.onpointermove = () => { if (at !== k) { at = k; mark(); } };
+        b.onclick = () => pick(c);
+        res.appendChild(b);
+      };
+      const paint = () => {
+        res.innerHTML = "";
+        const q = input.value.trim();
+        if (q) {
+          list = rankDevices(all, q, 40);
+          at = Math.min(at, Math.max(0, list.length - 1));
+          if (!list.length) {
+            const e = document.createElement("div");
+            e.className = "mempty";
+            e.textContent = tr("No device found. Try another word, or pick a tile type below.");
+            res.appendChild(e);
+          }
+          list.forEach(row);
+        } else {
+          // Leer: was neu ist und noch keine Kachel hat – im Raum bzw. in der Übersicht nach Raum.
+          const fresh = all.filter((c) => c.fresh && c.suggested);
+          if (overview) {
+            list = [];
+            const order = rooms$(this).map((r, i) => i);
+            const groups = new Map();
+            fresh.forEach((c) => { const k = c.roomIndex; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(c); });
+            const keys = [...groups.keys()].sort((a, b) => (a < 0 ? 999 : order.indexOf(a)) - (b < 0 ? 999 : order.indexOf(b)));
+            keys.forEach((k) => { groups.get(k).slice(0, 6).forEach((c) => list.push(c)); });
+            let last = null;
+            list.forEach((c, k) => {
+              const t = c.roomIndex >= 0 ? fill(tr("New in {room} – no tile yet"), { room: this._roomLabel(rooms$(this)[c.roomIndex]) })
+                : tr("Without a room – no tile yet");
+              if (t !== last) { last = t; head(t); }
+              row(c, k);
+            });
+          } else {
+            list = fresh.filter((c) => c.roomIndex === this._room).slice(0, 12);
+            head(fill(tr("New in {room} – no tile yet"), { room: roomName }));
+            list.forEach(row);
+          }
+          if (!list.length) {
+            const e = document.createElement("div");
+            e.className = "mempty";
+            e.textContent = fill(tr("Every device in {room} already has a tile. Search for one above."), { room: roomName });
+            res.appendChild(e);
+          }
+          at = Math.min(at, Math.max(0, list.length - 1));
+        }
+        mark();
+      };
+      // Unten klein: die übrigen Wege (Typauswahl bleibt erreichbar).
+      const more = box.querySelector(".uxmore");
+      const extra = (label, run, ok) => {
+        if (ok === false) return;
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "uxlink";
+        b.textContent = tr(label);
+        b.onclick = () => { close(false); run(); };
+        more.appendChild(b);
+      };
+      extra("Other tile type…", () => this._uxAddByType());
+      extra("Scene from the current state…", () => this._bSceneFromState(), typeof this._bSceneFromState === "function"
+        && !!(this._hass && this._hass.user && this._hass.user.is_admin));
+      extra("Badge…", () => { this._bLeavePages && this._bLeavePages(); this._sel = null; this._group = "badges"; this._stackOpenReq = "badges"; this._bOpen = true; this._renderForm(); });
+      extra("Custom card (YAML)…", () => { const r = room$(this); if (r && this._addCustomCard) this._addCustomCard(r); });
+      input.addEventListener("input", () => { at = 0; paint(); });
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+          ev.preventDefault();
+          if (!list.length) return;
+          at = (at + (ev.key === "ArrowDown" ? 1 : -1) + list.length) % list.length;
+          mark();
+        } else if (ev.key === "Enter") {
+          ev.preventDefault();
+          if (list[at]) pick(list[at]);
+        }
+      });
+      const esc = (ev) => { if (ev.key === "Escape") { ev.preventDefault(); ev.stopPropagation(); close(true); } };
+      document.addEventListener("keydown", esc, true);
+      box.addEventListener("pointerdown", (ev) => { if (ev.target === box) close(true); });
+      root.appendChild(box);
+      paint();
+      // Am Handy nicht gleich die Tastatur: erst sehen, was neu ist.
+      if (!phone) setTimeout(() => input.focus(), 20);
+    };
+
+    // Gerät gewählt: Kachelart steht fest; liegt das Gerät in einem anderen Raum, kurz fragen wohin.
+    P._uxAddDevice = async function (c) {
+      const rooms = rooms$(this);
+      let ri = this._room;
+      if (c.roomIndex >= 0 && c.roomIndex !== ri) {
+        const res = await this._ask({
+          title: tr("Where should the tile go?"),
+          picks: [
+            { id: "dev", title: fill(tr("In {room}"), { room: this._roomLabel(rooms[c.roomIndex]) }), sub: tr("Where the device is") },
+            { id: "cur", title: fill(tr("In {room}"), { room: this._roomLabel(rooms[ri]) }), sub: tr("The room open now") },
+          ],
+          confirmLabel: tr("Add"),
+        });
+        if (!res || !res.pick) return;
+        if (res.pick === "dev") ri = c.roomIndex;
+      }
+      const room = rooms[ri];
+      const I = W.__casoraPanelInternals || {};
+      const type = (I.TILE_TYPES || []).find((t) => t.id === c.type);
+      if (!room || !type) return;
+      const tile = I.newTile ? I.newTile(type) : { type: "custom:button-card", template: type.template, entity: "", name: tr(type.label) };
+      if (this._fillTile) this._fillTile(tile, type, c.entity); else tile.entity = c.entity;
+      // Der Name ohne den Raum („Stehlampe Schlafzimmer“ im Schlafzimmer → „Stehlampe“).
+      const B = W.casoraBasis;
+      tile.name = B && B.shortName ? B.shortName(c.name, this._roomLabel(room)) : c.name;
+      if (ri !== this._room) {
+        this._room = ri;
+        this._renderTabs();
+      }
+      room.tiles = room.tiles || [];
+      if (this.classList.contains("phone")) this._bAfterAdd = { room, n: room.tiles.length };
+      room.tiles.push(tile);
+      this._markDirty();
+      this._renderForm();
+      this._rebuildPreview && requestAnimationFrame(() => this._rebuildPreview());
+    };
+    P._uxAddBtn = function () {
+      const tools = this.shadowRoot.querySelector(".btools");
+      if (!tools || tools.querySelector('[data-b="add"]')) return;
+      const list = tools.querySelector('[data-b="list"]');
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "btool uxplus";
+      b.dataset.b = "add";
+      b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+      b.title = tr("Add a tile");
+      b.setAttribute("aria-label", tr("Add a tile"));
+      b.onclick = () => { this._bFrom = b; this._bAddTile(); };
+      if (list) list.after(b); else tools.appendChild(b);
     };
 
     // ── Anschließen ─────────────────────────────────────────────────────

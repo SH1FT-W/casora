@@ -1,5 +1,6 @@
 // Studio: Orientierung und Wege (UX-Runde 06.10.2026) ohne Browser.  node dev/unit/studio_ux.mjs
-// Geltungsbereich je Ansicht („Gilt für: …“), Weg im Inspektor-Kopf, Untertitel der Reiter.
+// Geltungsbereich je Ansicht („Gilt für: …“), Weg im Inspektor-Kopf, Kachelart vom Gerät her,
+// Geräte-Suche, Untertitel der Reiter.
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -33,6 +34,25 @@ assert.deepEqual(pa({ sel: { group: 'badges', key: 'Climate' } }), ['Wohnzimmer'
 assert.deepEqual(pa({ sel: { group: 'rooms', key: 'Appearance' } }), ['Wohnzimmer']);
 assert.deepEqual(pa({ sel: { group: 'rooms', key: 'Weather' } }), [], 'Dashboard-Abschnitt: nur „Gilt für“');
 assert.deepEqual(pa({ sel: { group: 'tiles', key: 'x' }, page: 'settings' }), [], 'Seite: kein Weg');
+
+// ── V-04: Kachelart vom Gerät her, Geräte-Suche ────────────────────────────────────
+const ids = new Set(['light', 'thermostat', 'media', 'cover', 'casora_switch', 'entity_actions', 'casora_washer']);
+assert.equal(U.typeFor('light.stehlampe', ids), 'light');
+assert.equal(U.typeFor('climate.bad', ids), 'thermostat');
+assert.equal(U.typeFor('switch.kaffee', ids), 'casora_switch');
+assert.equal(U.typeFor('script.gute_nacht', ids), 'entity_actions', 'Skript: Gerät mit Tasten');
+assert.equal(U.typeFor('sensor.waschmaschine_status', ids, 'casora_washer'), 'casora_washer', 'Vorschlag des Assistenten zählt');
+assert.equal(U.typeFor('vacuum.x', new Set(['light'])), null, 'ohne passende Art: nichts');
+const devs = [
+  { name: 'Deckenlicht', area: 'Küche', kind: 'Licht', words: 'licht lampe', fresh: false },
+  { name: 'Stehlampe', area: 'Schlafzimmer', kind: 'Licht', words: 'licht lampe', fresh: true },
+  { name: 'Lampe Flur', area: 'Flur', kind: 'Licht', words: 'licht lampe', fresh: true },
+];
+assert.deepEqual(U.rankDevices(devs, 'steh').map((d) => d.name), ['Stehlampe'], 'Anfang des Namens');
+assert.equal(U.rankDevices(devs, 'lampe')[0].name, 'Lampe Flur', 'Name beginnt mit dem Wort');
+assert.equal(U.rankDevices(devs, 'schlafzimmer licht')[0].name, 'Stehlampe', 'Bereich und Art finden mit');
+const twins = [{ name: 'Spot A', area: '', kind: 'Licht', words: 'licht', fresh: false }, { name: 'Spot B', area: '', kind: 'Licht', words: 'licht', fresh: true }];
+assert.equal(U.rankDevices(twins, 'licht')[0].name, 'Spot B', 'Neues (ohne Kachel) vor Vorhandenem');
 
 // ── V-02: Untertitel ────────────────────────────────────────────────────────────────
 assert.ok(/\{room\}/.test(U.SUB.list) && /this dashboard/.test(U.SUB.dash) && /all dashboards/.test(U.SUB.home));
