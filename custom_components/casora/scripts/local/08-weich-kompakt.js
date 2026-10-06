@@ -343,8 +343,11 @@
       + '<div style="width:19px;height:19px;background-color:' + (open ? '#fff' : 'var(--casora-soft-glyph-off, rgba(58,50,43,0.55))') + ';'
       + "-webkit-mask:url('" + ic + "') center / contain no-repeat;mask:url('" + ic + "') center / contain no-repeat;"
       + (busy ? 'animation:lktg-pl 1.2s ease-in-out infinite;' : '') + '"></div></div>'
-      + '<div style="flex:1;min-width:0;"><div style="font-size:14.5px;font-weight:700;letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary, #3A322B);">' + esc(word) + '</div>'
-      + (hint ? '<div style="font-size:12.5px;font-weight:500;color:var(--casora-soft-sub, rgba(58,50,43,0.6));margin-top:1px;">' + esc(hint) + '</div>' : '') + '</div>'
+      /* D-06: auf der hellen aktiven Fläche Schrift wie die aktive Geräte-Zeile (dunkel auch im dunklen Design). */
+      + '<div style="flex:1;min-width:0;"><div style="font-size:14.5px;font-weight:700;letter-spacing:-0.01em;color:'
+      + (open ? 'var(--casora-entity-name-active, var(--casora-popup-tiles-text-primary, #3A322B))' : 'var(--casora-popup-tiles-text-primary, #3A322B)') + ';">' + esc(word) + '</div>'
+      + (hint ? '<div style="font-size:12.5px;font-weight:500;color:' + (open ? 'var(--casora-entity-state-active-color, var(--casora-soft-sub, rgba(58,50,43,0.6)))' : 'var(--casora-soft-sub, rgba(58,50,43,0.6))')
+        + ';margin-top:1px;">' + esc(hint) + '</div>' : '') + '</div>'
       + '<div style="position:relative;width:44px;height:26px;border-radius:999px;flex:none;background:'
       + (open ? 'var(--casora-lps-switch-on, #B67A50)' : 'var(--casora-lps-switch-off, rgba(58,50,43,0.38))') + ';transition:background .2s ease;">'
       + '<div style="position:absolute;top:3px;left:' + (open ? '21px' : '3px') + ';width:20px;height:20px;border-radius:50%;'
