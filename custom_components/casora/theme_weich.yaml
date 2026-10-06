@@ -155,14 +155,8 @@ Casora:
   casora-nav-label-size-tablet: 14px
   casora-nav-label-pad-x-tablet: 14px
   # D-14: breitere Ausblendung + Einrasten auf Raumanfänge – keine Wortreste („ur“) neben dem Pfeil
-  casora-nav-fade-solid: 124px
-  casora-nav-fade-clear: 72px
-  casora-nav-snap: x mandatory
-  casora-nav-snap-align: start
-  casora-nav-snap-pad: 48px
-  # links harte Kante direkt hinter dem Pfeil: der eingerastete Raum steht ganz da, der vorige ist ganz weg
-  casora-nav-fade-clear-l: 48px
-  casora-nav-fade-solid-l: 49px
+  casora-nav-fade-solid: 104px
+  casora-nav-fade-clear: 40px
   # D-09 (06.10.2026): kein Ring – nur bei Tastatur ist die Schrift unterstrichen
   casora-nav-focus-line: var(--casora-ton-ink)
   casora-nav-more-fill: var(--casora-nav-active-fill)
