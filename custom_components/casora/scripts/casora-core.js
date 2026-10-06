@@ -3509,6 +3509,8 @@ window.casoraMenuGlass = {
             fontWeight: it.active ? '500' : '400',
             color: 'var(--casora-menu-fg, #fff)', opacity: it.active ? '1' : 'var(--casora-menu-item-dim, .86)',
             cursor: 'default', outline: 'none', boxSizing: 'border-box',
+            // Aktive Szene hinterlegt wie im Handy-Menü (Weich: --casora-mnav-on-fill); ohne Token wie bisher.
+            background: it.active ? 'var(--casora-mnav-on-fill, transparent)' : 'transparent',
           });
 
           const ico = document.createElement('ha-icon');
@@ -3538,6 +3540,14 @@ window.casoraMenuGlass = {
             e.preventDefault();
             e.stopPropagation();
             try { it.run(); } catch (_) {}
+            // Rückmeldung (Nutzertest 06.10.2026: Menü schloss, nichts sichtbar): die getippte Zeile kurz
+            // hinterlegen, dann schließen.
+            if (route.menu === 'scenes' || !route.popup) {
+              row.style.background = 'var(--casora-mnav-on-fill, transparent)';
+              row.style.opacity = '1';
+              setTimeout(close, 350);
+              return;
+            }
             close();
           };
           menu.appendChild(row);

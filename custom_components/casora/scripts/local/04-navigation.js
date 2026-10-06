@@ -127,8 +127,20 @@
     document.head.appendChild(st);
   };
 
+  var PRELOADED = {};
   class CasoraMobileNav extends HTMLElement {
-    setConfig(cfg) { this._cfg = cfg || {}; this._rooms = cfg.rooms || []; this._homeText(); }
+    setConfig(cfg) { this._cfg = cfg || {}; this._rooms = cfg.rooms || []; this._homeText(); this._preload(); }
+    /* Raum-Symbole vorab laden (Nutzertest 06.10.2026): beim ersten Öffnen des Räume-Menüs standen sonst
+       kurz leere Kreise da, bis die SVGs (mask-image) aus dem Netz kamen. */
+    _preload() {
+      var self = this;
+      setTimeout(function () {
+        (self._rooms || []).forEach(function (r) {
+          var ic; try { ic = self._roomIcon(r); } catch (e) { return; }
+          if (ic && ic.charAt(0) === '/' && !PRELOADED[ic]) { PRELOADED[ic] = new Image(); PRELOADED[ic].src = ic; }
+        });
+      }, 0);
+    }
     /* Home-Knopf heißt wie die Übersicht: eigener Name (home_label, vom Studio gesetzt) wie getippt,
        sonst „Home“ übersetzt („Zuhause“) – wie die Pille der Desktop-Leiste. */
     _homeText() {
@@ -372,7 +384,9 @@
       if (window.casoraMenuGlass) window.casoraMenuGlass.apply(m);
       /* Weich: Fläche und Schatten wie die Menüs der Desktop-Raumleiste. Ohne die Theme-Variablen
          bleibt der Glas-Look von oben. */
-      m.style.backgroundColor = 'var(--casora-mnav-menu-pane, ' + (m.style.backgroundColor || 'transparent') + ')';
+      /* Handy-WebKit: die deckende Fläche aus casoraMenuGlass behalten (D-01) – sonst schien die Seite durch. */
+      var bg0 = m.style.backgroundColor || 'transparent';
+      if (bg0.indexOf('menu-pane-webkit') < 0) m.style.backgroundColor = 'var(--casora-mnav-menu-pane, ' + bg0 + ')';
       m.style.setProperty('--casora-menu-shadow', 'var(--casora-mnav-menu-shadow, var(--casora-elevation-floating-phone, 0 10px 26px rgba(0,0,0,0.18)))');
       this._items(kind).forEach(function (it) {
         var b = document.createElement('button');
