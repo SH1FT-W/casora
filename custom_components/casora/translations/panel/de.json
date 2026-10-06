@@ -1205,6 +1205,8 @@
     "Status sensor": "Status-Sensor",
     "Stop button": "Stopp-Taste",
     "Tank name": "Beckenname",
+    "Tile name": "Name der Kachel",
+    "Heading in the popup. Empty: the tile's name.": "Überschrift im Popup. Leer: der Name der Kachel.",
     "Thermometer battery": "Akku Temperaturfühler",
     "Time remaining": "Restzeit",
     "Warning sensors": "Warnungs-Sensoren",

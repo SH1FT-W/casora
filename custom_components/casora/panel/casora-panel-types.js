@@ -111,7 +111,8 @@ window.CASORA_TILE_TYPES = [
   { id: "casora_aquarium", label: "Aquarium", template: "casora_aquarium_tank", domains: ["sensor"], classes: ["temperature"],
     entityLabel: "Water temperature", icon: "fish", fields: [
       ICON,
-      { key: "tank_name", label: "Tank name", type: "text" },
+      { key: "tank_name", label: "Tank name", type: "text", placeholder: "Tile name",
+        hint: "Heading in the popup. Empty: the tile's name." },
       { key: "light_entity", label: "Light", domains: ["light"], advanced: true, group: "Popup" },
       { key: "status_entity", label: "Status sensor", domains: ["sensor"], advanced: true },
       { key: "leak_entity", label: "Leak sensor", domains: ["binary_sensor"], classes: ["moisture"], advanced: true },
