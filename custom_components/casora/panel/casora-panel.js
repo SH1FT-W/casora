@@ -16966,6 +16966,17 @@ class CasoraPanel extends HTMLElement {
               const aid = Object.keys(A).find((id) => fold(A[id] && A[id].name) === fold(was));
               if (aid) setVar("area", aid);
             }
+            // Zurück auf den gespeicherten Namen: was das Umbenennen nebenbei gemerkt hat, auch
+            // zurück – sonst blieb „Raumeinstellungen geändert“ als Geistereintrag in der Liste.
+            const saved = this._savedRoom ? this._savedRoom(room) : null;
+            if (saved && saved.name === nv && room.variables) {
+              const SV = saved.variables || {};
+              ["room_name", "aqi_room_name", "area"].forEach((k) => {
+                if (SV[k] === undefined) delete room.variables[k]; else room.variables[k] = SV[k];
+              });
+              // Festgehaltenes Symbol (keepRoomGlyph) weg, wenn es genau das automatische ist.
+              if (SV.room_icon === undefined && room.variables.room_icon === autoRoomGlyph(nv)) delete room.variables.room_icon;
+            }
             this._renderTabs();
             // Kopf der mittleren Spalte (Raumansicht) trägt den Raumnamen.
             if (this.$("pane") && this.$("pane").classList.contains("stack")) {

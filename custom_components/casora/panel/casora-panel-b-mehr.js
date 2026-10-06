@@ -197,53 +197,171 @@
   // ctx: { roomName(room), tileName(tile) } – Ergebnis: Zeilen zum Anzeigen.
   const BADGE_VAR = /^(show_|badge|climate|temp|humid|aqi|light|security|lock|contact|camera|energy|people|person|media|now_playing|motion|window|door|co2|power|quality|presence)/;
   const OWN_VAR = /^(casora_hidden|casora_users|casora_badge_users|casora_ui_managed|image|image_night|room_name)$/;
-  function changeLines(before, after, ctx) {
+  // Jede Zeile trägt ihre eigene Rücknahme: fix(x, b) setzt in x (Kopie des jetzigen Stands,
+  // flach wie before/after) genau diesen Teil auf den gespeicherten Stand b zurück. Ob das sauber
+  // geht, prüft revertLine über den Fingerabdruck (alle anderen Zeilen bleiben, diese verschwindet).
+  // Umbenennen setzt nebenbei room_name/aqi_room_name/area und hält das bisherige Raumsymbol
+  // fest (room_icon, wenn es vorher keins gab) – das gehört zur Umbenennung.
+  const RENAME_VAR = /^(room_name|aqi_room_name|area)$/;
+  const BADGE_TITLE = { climate: "Climate", lights: "Lights", people: "People", media: "Media", security: "Security", energy: "Energy" };
+  const setv = (V, k, v) => { if (v === undefined) delete V[k]; else V[k] = JSON.parse(J(v)); };
+  function changeItems(before, after, ctx) {
     const out = [];
+    const add = (text, fix, key) => out.push({ text, fix, key: key || text });
     const rn = (r) => (ctx && ctx.roomName ? ctx.roomName(r) : (r && (r.name || r.path)) || "");
     const tn = (t) => (ctx && ctx.tileName ? ctx.tileName(t) : (t && t.name) || tr("Tile"));
     const R0 = ((before && before[0]) || {}).rooms || [], R1 = ((after && after[0]) || {}).rooms || [];
     const key = (r) => r.path || r.name || "";
     const M0 = new Map(R0.map((r) => [key(r), r])), M1 = new Map(R1.map((r) => [key(r), r]));
-    R1.forEach((r) => { if (!M0.has(key(r))) out.push(tr("Room added") + ": " + rn(r)); });
-    R0.forEach((r) => { if (!M1.has(key(r))) out.push(tr("Room deleted") + ": " + rn(r)); });
-    if (J(R0.filter((r) => M1.has(key(r))).map(key)) !== J(R1.filter((r) => M0.has(key(r))).map(key))) out.push(tr("Room order changed"));
+    const rooms = (x) => ((x && x[0]) || {}).rooms || [];
+    const roomOf = (x, k) => rooms(x).find((r) => key(r) === k);
+    const vars = (r) => (r.variables = r.variables || {});
+    R1.forEach((r) => {
+      if (!M0.has(key(r))) add(tr("Room added") + ": " + rn(r), (x) => { const l = rooms(x); const i = l.findIndex((y) => key(y) === key(r)); if (i >= 0) l.splice(i, 1); });
+    });
+    R0.forEach((r, bi) => {
+      if (!M1.has(key(r))) add(tr("Room deleted") + ": " + rn(r), (x) => { const l = rooms(x); if (!roomOf(x, key(r))) l.splice(Math.min(bi, l.length), 0, JSON.parse(J(r))); });
+    });
+    if (J(R0.filter((r) => M1.has(key(r))).map(key)) !== J(R1.filter((r) => M0.has(key(r))).map(key))) {
+      add(tr("Room order changed"), (x, b) => {
+        const l = rooms(x), base = rooms(b).map(key);
+        const slots = [], common = [];
+        l.forEach((r, i) => { if (base.indexOf(key(r)) >= 0) { slots.push(i); common.push(r); } });
+        common.sort((p, q) => base.indexOf(key(p)) - base.indexOf(key(q)));
+        slots.forEach((s, i) => { l[s] = common[i]; });
+      });
+    }
+    // Einstellungen, die das Studio in jedem Raum ablegt (z. B. Uhrzeit, 12-Stunden-Uhr): eine Zeile
+    // statt einer je Raum (Nutzertest: „15 Änderungen“ für einen Schalter).
+    const common = R1.filter((r) => M0.has(key(r)));
+    const changedIn = new Map();
+    common.forEach((r) => {
+      const V0 = M0.get(key(r)).variables || {}, V1 = r.variables || {};
+      new Set(Object.keys(V0).concat(Object.keys(V1))).forEach((k) => {
+        if (OWN_VAR.test(k) || RENAME_VAR.test(k) || J(V0[k]) === J(V1[k])) return;
+        if (!changedIn.has(k)) changedIn.set(k, []);
+        changedIn.get(k).push(J(V1[k]));
+      });
+    });
+    const wide = new Set();
+    changedIn.forEach((vals, k) => {
+      if (vals.length >= 2 && vals.length >= common.length * 0.8 && vals.every((v) => v === vals[0])) wide.add(k);
+    });
     R1.forEach((r) => {
       const o = M0.get(key(r));
       if (!o) return;
+      const k = key(r);
       const n = rn(r);
       const V0 = o.variables || {}, V1 = r.variables || {};
-      if ((o.name || "") !== (r.name || "")) out.push(tr("Room renamed") + ": " + rn(o) + " → " + n);
-      if (!!V0.casora_hidden !== !!V1.casora_hidden) out.push(tr(V1.casora_hidden ? "Room hidden" : "Room shown again") + ": " + n);
-      if (J(V0.casora_users || []) !== J(V1.casora_users || []) || J(V0.casora_badge_users || {}) !== J(V1.casora_badge_users || {})) {
-        out.push(tr("Who sees it changed") + ": " + n);
+      const here = (x) => roomOf(x, k);
+      const was = (b) => roomOf(b, k) || {};
+      const copyVars = (re) => (x, b) => {
+        const t = here(x); if (!t) return;
+        const B = was(b).variables || {}, V = vars(t);
+        new Set(Object.keys(B).concat(Object.keys(V))).forEach((v) => { if (re(v)) setv(V, v, B[v]); });
+      };
+      const renamed = (o.name || "") !== (r.name || "");
+      const ofRename = (v) => RENAME_VAR.test(v) || (v === "room_icon" && V0.room_icon === undefined);
+      if (renamed) {
+        add(tr("Room renamed") + ": " + rn(o) + " → " + n, (x, b) => {
+          const t = here(x); if (!t) return;
+          if (was(b).name === undefined) delete t.name; else t.name = was(b).name;
+          copyVars(ofRename)(x, b);
+        });
       }
-      if (J(V0.image) !== J(V1.image) || J(V0.image_night) !== J(V1.image_night)) out.push(tr("Photo changed") + ": " + n);
+      if (!!V0.casora_hidden !== !!V1.casora_hidden) {
+        add(tr(V1.casora_hidden ? "Room hidden" : "Room shown again") + ": " + n, copyVars((v) => v === "casora_hidden"));
+      }
+      if (J(V0.casora_users || []) !== J(V1.casora_users || []) || J(V0.casora_badge_users || {}) !== J(V1.casora_badge_users || {})) {
+        add(tr("Who sees it changed") + ": " + n, copyVars((v) => v === "casora_users" || v === "casora_badge_users"));
+      }
+      if (J(V0.image) !== J(V1.image) || J(V0.image_night) !== J(V1.image_night)) {
+        add(tr("Photo changed") + ": " + n, copyVars((v) => v === "image" || v === "image_night"));
+      }
       // Kacheln: gleiche zählen sich weg, der Rest ist neu, entfernt oder (paarweise) geändert.
-      const a = (o.tiles || []).map(J), b = (r.tiles || []).map(J);
+      const a = (o.tiles || []).map(J), bb = (r.tiles || []).map(J);
       const pool = new Map();
       a.forEach((x, i) => { if (!pool.has(x)) pool.set(x, []); pool.get(x).push(i); });
       const added = [];
-      b.forEach((x, i) => { const l = pool.get(x); if (l && l.length) l.shift(); else added.push(r.tiles[i]); });
+      bb.forEach((x, i) => { const l = pool.get(x); if (l && l.length) l.shift(); else added.push(r.tiles[i]); });
       const removed = [];
       pool.forEach((l) => l.forEach((i) => removed.push(o.tiles[i])));
       removed.sort((x, y) => o.tiles.indexOf(x) - o.tiles.indexOf(y));
+      const tiles = (x) => { const t = here(x); return t ? (t.tiles = t.tiles || []) : null; };
+      const findT = (l, t) => l.findIndex((y) => J(y) === J(t));
       const both = Math.min(added.length, removed.length);
-      for (let i = 0; i < both; i++) out.push(tr("Tile changed") + ": " + tn(added[i]) + " · " + n);
-      added.slice(both).forEach((t) => out.push(tr("Tile added") + ": " + tn(t) + " · " + n));
-      removed.slice(both).forEach((t) => out.push(tr("Tile removed") + ": " + tn(t) + " · " + n));
-      if (!added.length && !removed.length && J(a) !== J(b)) out.push(tr("Tile order changed") + ": " + n);
-      let badges = false, other = false;
-      new Set(Object.keys(V0).concat(Object.keys(V1))).forEach((k) => {
-        if (OWN_VAR.test(k) || J(V0[k]) === J(V1[k])) return;
-        if (BADGE_VAR.test(k)) badges = true; else other = true;
+      for (let i = 0; i < both; i++) {
+        const nu = added[i], old = removed[i];
+        // Nur ein- oder ausgeschaltet: so sagen (statt „Kachel geändert“).
+        const sansOn = (t) => { const c = JSON.parse(J(t)); delete c.enabled; return J(c); };
+        const onoff = sansOn(nu) === sansOn(old) ? (nu.enabled === false ? "Tile turned off" : "Tile turned on") : "Tile changed";
+        add(tr(onoff) + ": " + tn(nu) + " · " + n, (x) => { const l = tiles(x); const j = l ? findT(l, nu) : -1; if (j >= 0) l[j] = JSON.parse(J(old)); });
+      }
+      added.slice(both).forEach((t) => add(tr("Tile added") + ": " + tn(t) + " · " + n,
+        (x) => { const l = tiles(x); const j = l ? findT(l, t) : -1; if (j >= 0) l.splice(j, 1); }));
+      removed.slice(both).forEach((t) => add(tr("Tile removed") + ": " + tn(t) + " · " + n,
+        (x) => { const l = tiles(x); if (l) l.splice(Math.min(o.tiles.indexOf(t), l.length), 0, JSON.parse(J(t))); }));
+      if (!added.length && !removed.length && J(a) !== J(bb)) {
+        add(tr("Tile order changed") + ": " + n, (x, b) => { const t = here(x); if (t) t.tiles = JSON.parse(J(was(b).tiles || [])); });
+      }
+      const badgeKeys = [], otherKeys = [];
+      new Set(Object.keys(V0).concat(Object.keys(V1))).forEach((v) => {
+        if (OWN_VAR.test(v) || wide.has(v) || J(V0[v]) === J(V1[v])) return;
+        if (renamed && ofRename(v)) return;
+        if (BADGE_VAR.test(v) && !RENAME_VAR.test(v)) badgeKeys.push(v); else otherKeys.push(v);
       });
-      if (badges) out.push(tr("Badges changed") + ": " + n);
-      const shell = (x) => J([x._hero, x._row, x._view, x._extraCards, x._header]);
-      if (other || shell(o) !== shell(r)) out.push(tr("Room settings changed") + ": " + n);
+      if (badgeKeys.length) {
+        // Nur ein Badge-Name geändert: wortgenau („Klima → Luft“), sonst allgemein.
+        const m = badgeKeys.length === 1 && /^(climate|lights|people|media|security|energy)_title$/.exec(badgeKeys[0]);
+        const bid = m && m[1];
+        const txt = bid ? tr("Badge renamed") + ": " + (V0[bid + "_title"] || tr(BADGE_TITLE[bid])) + " → " + (V1[bid + "_title"] || tr(BADGE_TITLE[bid])) + " · " + n
+          : tr("Badges changed") + ": " + n;
+        add(txt, copyVars((v) => badgeKeys.indexOf(v) >= 0));
+      }
+      const SHELL = ["_hero", "_row", "_view", "_extraCards", "_header"];
+      const shell = (x) => J(SHELL.map((f) => x[f]));
+      if (otherKeys.length || shell(o) !== shell(r)) {
+        add(tr("Room settings changed") + ": " + n, (x, b) => {
+          copyVars((v) => otherKeys.indexOf(v) >= 0)(x, b);
+          const t = here(x), B = was(b);
+          if (t) SHELL.forEach((f) => { if (B[f] === undefined) delete t[f]; else t[f] = JSON.parse(J(B[f])); });
+        });
+      }
     });
-    if (J((before || []).slice(1, 4)) !== J((after || []).slice(1, 4))) out.push(tr("Dashboard settings changed"));
-    if (!out.length && J((before || [])[4]) !== J((after || [])[4])) out.push(tr("Phone layout changed"));
+    const dash = J((before || []).slice(1, 4)) !== J((after || []).slice(1, 4));
+    if (dash || wide.size) {
+      add(tr("Dashboard settings changed"), (x, b) => {
+        for (let i = 1; i < 4; i++) x[i] = JSON.parse(J((b || [])[i]));
+        rooms(x).forEach((r) => {
+          const B = (roomOf(b, key(r)) || {}).variables || {};
+          wide.forEach((v) => { if (r.variables) setv(r.variables, v, B[v]); });
+        });
+      });
+    }
+    if (!out.length && J((before || [])[4]) !== J((after || [])[4])) out.push({ text: tr("Phone layout changed"), key: "phone", fix: (x, b) => { x[4] = JSON.parse(J((b || [])[4])); } });
     return out;
+  }
+  function changeLines(before, after, ctx) { return changeItems(before, after, ctx).map((x) => x.text); }
+  // Eine Zeile zurücknehmen: liefert den neuen Stand oder { why } – dann bleiben die übrigen
+  // Änderungen sonst nicht unberührt, und die Zeile wird ausgegraut statt still zu viel zu tun.
+  function revertLine(before, after, index, ctx) {
+    const items = changeItems(before, after, ctx);
+    const it = items[index];
+    if (!it) return { why: "gone" };
+    const x = JSON.parse(J(after));
+    const clean = (y) => {
+      // Leere variables, die es vorher nicht gab, wieder weg (sonst bleibt der Stand „geändert“).
+      const B = new Map((((before || [])[0] || {}).rooms || []).map((r) => [r.path || r.name || "", r]));
+      (((y || [])[0] || {}).rooms || []).forEach((r) => {
+        const o = B.get(r.path || r.name || "");
+        if (o && o.variables === undefined && r.variables && !Object.keys(r.variables).length) delete r.variables;
+      });
+    };
+    try { it.fix(x, before); clean(x); } catch (e) { return { why: "error" }; }
+    const want = items.filter((_, i) => i !== index).map((y) => y.text).sort();
+    const got = changeLines(before, x, ctx).slice().sort();
+    if (J(got) !== J(want)) return { why: "linked" };
+    return { state: x };
   }
 
   // ── Suche: Treffer ordnen ────────────────────────────────────────────────────────
@@ -269,7 +387,7 @@
     return scored.slice(0, max || 30).map((x) => x.it);
   }
 
-  W.__casoraStudioMehr = { qrMatrix, qrSvg, changeLines, searchRank, fold };
+  W.__casoraStudioMehr = { qrMatrix, qrSvg, changeLines, changeItems, revertLine, searchRank, fold };
   if (typeof customElements === "undefined" || !W.document) return;
 
   // Symbole der Menüs (Strichzeichnungen wie MENU_ICONS des Panels).
@@ -303,6 +421,17 @@
     :host(.bmode.phone) #msearch .mlab, :host(.bmode.phone) #msearch .mkb { display:none; }
     /* „Bearbeitet · 3 Änderungen“ am Titel öffnet die Änderungsliste */
     .toprow > .bedited.mlink { cursor:pointer; border-radius:8px; padding:2px 6px; margin-left:-12px !important; }
+    /* Als zweite Zeile unter dem Titel, nicht daneben: sonst rückten beim ersten Ändern alle
+       Knöpfe der Kopfzeile nach rechts (Nutzertest: Fehlklick). Am Handy so ebenfalls sichtbar. */
+    :host(.bmode.bdirty:not(.flow)) .toprow { position:relative; }
+    :host(.bmode.bdirty:not(.flow):not(.btight)) .toprow > .bedited.mlink,
+    :host(.bmode.bdirty.phone:not(.flow)) .toprow > .bedited.mlink {
+      display:inline-flex; position:absolute; top:calc(100% - 4px); margin:0 !important; z-index:3;
+      font-size:12px; font-weight:600; line-height:1.2; color:var(--accent, #94603B); background:var(--bg, transparent); }
+    :host(.bmode.bdirty.phone:not(.flow)) .toprow > .bedited.mlink { top:calc(100% - 10px); padding:4px 10px; border-radius:999px;
+      color:#f5f5f7; background:rgba(28,28,30,.72); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+      box-shadow:0 1px 4px rgba(0,0,0,.18); }
+    :host(.is-light.bmode.bdirty.phone:not(.flow)) .toprow > .bedited.mlink { color:#1d1d1f; background:rgba(255,255,255,.86); }
     .toprow > .bedited.mlink:hover { background:var(--wash-fill, rgba(118,118,128,.12)); color:var(--ink, inherit); }
     .toprow > .bedited.mlink:focus-visible { outline:2px solid var(--accent, #B67A50); outline-offset:1px; }
     /* Aufklapp-Liste */
@@ -315,6 +444,13 @@
     .mpop ul { margin:0; padding:0; list-style:none; }
     .mpop li { padding:7px 4px; font-size:14px; line-height:1.35; border-top:.5px solid var(--hair, rgba(127,127,127,.2)); overflow-wrap:anywhere; }
     .mpop li:first-child { border-top:0; }
+    /* Änderungsliste: je Zeile „Zurücknehmen“ (ausgegraut mit Grund, wenn es nicht sauber geht) */
+    .mpop li.mline { display:grid; grid-template-columns:1fr auto; align-items:center; column-gap:10px; }
+    .mpop li.mline .mwhy { grid-column:1 / -1; font-size:12px; color:var(--ink-2, #8a8a8e); margin-top:2px; }
+    .mpop .mback { flex:none; min-height:32px; padding:4px 12px; border:0; border-radius:999px; font:inherit; font-size:13px; font-weight:600;
+      color:var(--accent, #94603B); background:var(--accent-tint, rgba(148,96,59,.12)); box-shadow:none; cursor:pointer; white-space:nowrap; }
+    .mpop .mback:disabled { color:var(--ink-2, #8a8a8e); background:var(--wash-fill, rgba(118,118,128,.10)); cursor:default; }
+    :host(.phone) .mpop .mback { min-height:36px; }
     .mpop .mnone { color:var(--ink-2, #8a8a8e); font-size:14px; padding:6px 4px; }
     .mpop .macts { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
     .mpop .macts button { min-width:0; white-space:nowrap; }
@@ -412,8 +548,16 @@
       if (st.length && this._state && !this._mRedoing) {
         this._mRedo = (this._mRedo || []).concat([this._snap()]).slice(-50);
       }
+      const quiet = this._mRedoing || this._bQuietUndo || !st.length;
+      const was = quiet ? null : this._mChanges();
       const r = orig.apply(this, arguments);
       this._mPaintRedo();
+      // „Rückgängig gemacht“ sagt jetzt, was: die Zeile, die aus der Änderungsliste verschwand.
+      if (was && was.length && on(this) && this._bToast) {
+        const left = this._mChanges().slice();
+        const gone = was.filter((x) => { const i = left.indexOf(x); if (i >= 0) { left.splice(i, 1); return false; } return true; });
+        if (gone.length === 1) setTimeout(() => this._bToast(tr("Undone") + ": " + gone[0], { ms: 2600 }), 0);
+      }
       return r;
     });
     P._redo = function () {
@@ -459,10 +603,43 @@
     };
 
     // ── Änderungen ───────────────────────────────────────────────────────────
-    P._mChanges = function () {
+    const flat = (sn) => sn.s.concat([sn.m || null]);
+    P._mCtx = function () { return { roomName: (r) => this._roomLabel(r), tileName }; };
+    P._mItems = function () {
       if (!this._state || !this._mBase || !(this._isDirty && this._isDirty())) return [];
-      const flat = (sn) => sn.s.concat([sn.m || null]);
-      try { return changeLines(flat(this._mBase), flat(this._snap()), { roomName: (r) => this._roomLabel(r), tileName }); } catch (e) { return []; }
+      try { return changeItems(flat(this._mBase), flat(this._snap()), this._mCtx()); } catch (e) { return []; }
+    };
+    // Gespeicherter Stand eines Raums (für das Zurückbenennen im Raum-Namensfeld).
+    P._savedRoom = function (room) {
+      const R = (this._mBase && this._mBase.s && this._mBase.s[0] && this._mBase.s[0].rooms) || [];
+      return (room && R.find((r) => r.path === room.path)) || null;
+    };
+    P._mChanges = function () { return this._mItems().map((x) => x.text); };
+    // Eine Zeile der Liste zurücknehmen (Teil-Wiederherstellung aus dem gespeicherten Stand).
+    // Läuft über den Rückgängig-Weg: ⌘Z holt die Änderung danach wieder.
+    P._mRevertPlan = function (i) {
+      if (!this._state || !this._mBase) return { why: "gone" };
+      try { return revertLine(flat(this._mBase), flat(this._snap()), i, this._mCtx()); } catch (e) { return { why: "error" }; }
+    };
+    P._mRevert = function (i) {
+      const text = (this._mItems()[i] || {}).text;
+      const plan = this._mRevertPlan(i);
+      if (!plan.state) return false;
+      const now = this._snap();
+      const p = this._pair;
+      const target = { s: plan.state.slice(0, 4), m: p && p.safe !== false ? plan.state[4] : null };
+      this._undoStack = (this._undoStack || []).concat([target]);
+      this._mRedoing = true;
+      this._bQuietUndo = true;
+      try { this._undo(); } finally { this._mRedoing = false; this._bQuietUndo = false; }
+      this._undoStack = (this._undoStack || []).concat([now]).slice(-50);
+      this._mRedo = [];
+      this._bQuiet = true;
+      try { this._markDirty(); } finally { this._bQuiet = false; }
+      this._mPaintRedo();
+      this._mPaintChanges();
+      if (this._bToast && text) this._bToast(tr("Taken back") + ": " + text, { ms: 2600 });
+      return true;
     };
     const countText = (n) => (n === 1 ? tr("1 change") : tr("{n} changes").replace("{n}", n));
     // „— Bearbeitet“ am Titel (casora-panel-b.js) wird „Bearbeitet · 3 Änderungen“ und öffnet die Liste.
@@ -473,7 +650,10 @@
         const e = this.shadowRoot.querySelector(".toprow > .bedited");
         if (!e) return;
         const n = this._mChanges().length;
-        e.textContent = tr("Edited") + (n ? " · " + countText(n) : "");
+        e.textContent = tr("Edited") + (n ? " · " + countText(n) : "") + " ›";
+        // Unter dem Titelknopf (Desktop: Raumtitel, Handy: Dashboard-Titel) ausrichten.
+        const tb = this.shadowRoot.querySelector(isPhone(this) ? "#navtitle" : "#roomtitle");
+        if (tb && tb.offsetParent) e.style.left = Math.max(0, tb.offsetLeft - (isPhone(this) ? 6 : 0)) + "px";
         if (!e._mWired) {
           e._mWired = true;
           e.classList.add("mlink");
@@ -501,15 +681,43 @@
       this._mCss();
       clearTimeout(this._bSoftT);
       if (this._bToastHide) this._bToastHide();
-      const lines = this._mChanges();
+      const items = this._mItems();
       const box = document.createElement("div");
       const h = document.createElement("h4");
-      h.textContent = lines.length ? countText(lines.length) : tr("No unsaved changes");
+      h.textContent = items.length ? countText(items.length) : tr("No unsaved changes");
       box.appendChild(h);
-      if (lines.length) {
+      if (items.length) {
         const ul = document.createElement("ul");
-        lines.slice(0, 14).forEach((l) => { const li = document.createElement("li"); li.textContent = l; ul.appendChild(li); });
-        if (lines.length > 14) { const li = document.createElement("li"); li.textContent = tr("{n} more").replace("{n}", lines.length - 14); ul.appendChild(li); }
+        items.slice(0, 14).forEach((it, i) => {
+          const li = document.createElement("li");
+          li.className = "mline";
+          const t = document.createElement("span");
+          t.className = "mtxt";
+          t.textContent = it.text;
+          li.appendChild(t);
+          const plan = this._mRevertPlan(i);
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "mback";
+          b.textContent = tr("Take back");
+          b.setAttribute("aria-label", tr("Take back") + ": " + it.text);
+          if (!plan.state) {
+            // Ehrlich ausgrauen statt still mehr zurückzunehmen als diese Zeile.
+            b.disabled = true;
+            const why = document.createElement("small");
+            why.className = "mwhy";
+            why.textContent = tr("Tied to another change – use Undo.");
+            li.appendChild(why);
+          }
+          b.onclick = () => {
+            if (!this._mRevert(i)) return;
+            // Liste offen lassen und neu zeichnen: man sieht, was übrig bleibt.
+            if (this._mItems().length) this._mShowChanges(anchor); else this._mPopClose();
+          };
+          li.insertBefore(b, li.children[1] || null);
+          ul.appendChild(li);
+        });
+        if (items.length > 14) { const li = document.createElement("li"); li.textContent = tr("{n} more").replace("{n}", items.length - 14); ul.appendChild(li); }
         box.appendChild(ul);
       }
       const acts = document.createElement("div");
@@ -527,7 +735,10 @@
       const mac = isMac();
       mk(tr("Undo"), mac ? "⌘Z" : "Ctrl+Z", !(this._undoStack || []).length, () => this._undo());
       mk(tr("Redo"), mac ? "⇧⌘Z" : "Ctrl+Y", !(this._mRedo || []).length, () => this._redo());
-      if (lines.length) mk(tr("Save"), mac ? "⌘S" : "Ctrl+S", false, () => this._save(), "");
+      if (items.length) mk(tr("Save"), mac ? "⌘S" : "Ctrl+S", false, () => this._save(), "");
+      // Fokus auf „Speichern“, nicht auf das erste „Zurücknehmen“ (Enter nähme sonst etwas zurück).
+      const sv = acts.querySelector("button:not(.ghost)");
+      if (sv) sv.setAttribute("data-autofocus", "");
       box.appendChild(acts);
       this._mPop(anchor, box, "mchg");
     };
@@ -554,7 +765,7 @@
       setTimeout(() => { root.addEventListener("pointerdown", away, true); }, 0);
       document.addEventListener("keydown", key, true);
       this._mPopOff = () => { root.removeEventListener("pointerdown", away, true); document.removeEventListener("keydown", key, true); pop.remove(); };
-      const f = pop.querySelector("button:not([disabled])");
+      const f = pop.querySelector("[data-autofocus]") || pop.querySelector("button:not([disabled])");
       if (f && !isPhone(this)) setTimeout(() => f.focus({ preventScroll: true }), 30);
       return pop;
     };
