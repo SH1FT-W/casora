@@ -810,12 +810,15 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           /* HA-App ohne HTTPS: native Spracheingabe der App nutzen (Mikrofon läuft dort nativ, nicht im WebView) */
           var ext = h.hass.auth && h.hass.auth.external;
           if (ext && ext.config && ext.config.hasAssist && ext.fireMessage) {
-            var pid = '01k0vke3tp7v9t16gt3075d5ec'; /* bevorzugte Pipeline (OpenAI) */
+            /* Bevorzugte Pipeline des Hauses (keine feste ID): aus assist_pipeline/pipeline/list,
+               sonst ohne Angabe – dann nimmt die App selbst die bevorzugte. */
             try { window.casoraPopup && window.casoraPopup.close(); } catch (e) {}
-            ext.fireMessage({ type: 'assist/show', payload: { pipeline_id: pid, start_listening: true } });
+            var show = function (pid) { ext.fireMessage({ type: 'assist/show', payload: pid ? { pipeline_id: pid, start_listening: true } : { start_listening: true } }); };
+            conn.sendMessagePromise({ type: 'assist_pipeline/pipeline/list' })
+              .then(function (r) { show(r && r.preferred_pipeline); }, function () { show(null); });
             return;
           }
-          A.msgs.push({ t: 'Das Mikrofon funktioniert nur über HTTPS – bitte Home Assistant über die Tailscale-Adresse (https://…ts.net) öffnen.', err: true }); A.paint(); return;
+          A.msgs.push({ t: 'Das Mikrofon funktioniert nur über HTTPS – bitte Home Assistant über eine https-Adresse öffnen.', err: true }); A.paint(); return;
         }
         /* Audio-Ausgabe im Tipp-Moment freischalten (iOS spielt sonst die Antwort nicht ab) */
         try {

@@ -937,7 +937,6 @@
   "Zu niedrig": "Too low",
   "Claude prüft Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad der letzten 7 Tage.": "Claude reviews heating time, room temperatures, heating with open windows and the bathroom radiator over the last 7 days.",
   "Code eingeben…": "Enter code…",
-  "Das Mikrofon funktioniert nur über HTTPS – bitte Home Assistant über die Tailscale-Adresse (https://…ts.net) öffnen.": "The microphone only works over HTTPS – please open Home Assistant via its HTTPS address.",
   "Dashboard bearbeiten": "Edit dashboard",
   "Deine Region": "Your region",
   "Details in der Bambu-App": "Details in the Bambu app",
@@ -1336,7 +1335,8 @@
   "Auf": "Open",
   "Position": "Position",
   "Spielt": "Playing",
-  "Geräte im Casora Studio einem Raum zuordnen": "Assign devices to a room in Casora Studio"
+  "Geräte im Casora Studio einem Raum zuordnen": "Assign devices to a room in Casora Studio",
+  "Das Mikrofon funktioniert nur über HTTPS – bitte Home Assistant über eine https-Adresse öffnen.": "The microphone only works over HTTPS – please open Home Assistant via an https address."
  },
  "patterns": [
   [

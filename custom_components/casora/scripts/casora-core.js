@@ -9446,7 +9446,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     });
     var clear = document.createElement('button');
     clear.type = 'button';
-    clear.textContent = 'Alles gelesen';
+    clear.textContent = window.casoraTr ? window.casoraTr('Alles gelesen') : 'Alles gelesen';
     Object.assign(clear.style, {
       border: '0', background: 'transparent', font: 'inherit', fontSize: '14px',
       fontWeight: '500', letterSpacing: '-0.01em', cursor: 'pointer', padding: '0',
@@ -9463,7 +9463,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     try { softBell = getComputedStyle(document.documentElement).getPropertyValue('--casora-popup-layout').trim() === 'soft'; } catch (e) {}
     if (softBell) {
       var ttl = document.createElement('div');
-      ttl.textContent = 'Benachrichtigungen';
+      ttl.textContent = window.casoraTr ? window.casoraTr('Benachrichtigungen') : 'Benachrichtigungen';
       Object.assign(ttl.style, { marginRight: 'auto', fontSize: '15px', fontWeight: '700', letterSpacing: '-0.01em',
         color: 'var(--casora-popup-tiles-text-primary, var(--primary-text-color))' });
       head.insertBefore(ttl, clear);
