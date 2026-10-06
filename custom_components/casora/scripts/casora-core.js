@@ -549,6 +549,53 @@ window.casoraMenuGlass = {
   };
 })();
 
+// 06.10.2026: Leistung eines Raums aus mehreren Sensoren – eine Rechnung für Badge, Popup
+// und Studio. Die Liste (energy_entities) gilt; nur das Altfeld energy_power_entity zählt als
+// Liste mit einem Eintrag. Doppelte entity_ids einmal, energy_exclude nie, ein Sensor hinter
+// einer Messsteckdose der Liste (energy_parent: {sensor: steckdose}) nicht doppelt. Nur
+// Leistung (device_class power oder W/kW/mW/MW), kW → W; unknown/unavailable werden
+// übersprungen und gezählt. items: {id, w, skip} mit skip '' | 'off' | 'nopower' | 'parent'.
+(function () {
+  if (window._casoraPowerSum) return;
+  var FACTOR = { W: 1, kW: 1000, MW: 1e6, mW: 0.001 };
+  window._casoraPowerIds = function (V) {
+    V = V || {};
+    var arr = function (v) { return Array.isArray(v) ? v.filter(Boolean) : (v ? [v] : []); };
+    var list = arr(V.energy_entities);
+    if (!list.length) list = arr(V.energy_power_entity);
+    var ex = arr(V.energy_exclude);
+    var seen = {};
+    return list.filter(function (id) {
+      if (seen[id] || ex.indexOf(id) >= 0) return false;
+      seen[id] = 1;
+      return true;
+    });
+  };
+  window._casoraPowerSum = function (V, states) {
+    V = V || {}; states = states || {};
+    var ids = window._casoraPowerIds(V);
+    var parent = (V.energy_parent && typeof V.energy_parent === 'object' && !Array.isArray(V.energy_parent)) ? V.energy_parent : {};
+    var sum = 0, used = 0, skipped = 0;
+    var items = ids.map(function (id) {
+      var s = states[id], a = (s && s.attributes) || {};
+      var unit = String(a.unit_of_measurement || (a.device_class === 'power' ? 'W' : ''));
+      var it = { id: id, w: null, skip: '', unit: unit, raw: s ? s.state : null };
+      if (parent[id] && parent[id] !== id && ids.indexOf(parent[id]) >= 0) { it.skip = 'parent'; it.parent = parent[id]; }
+      else if (s && a.device_class && a.device_class !== 'power') it.skip = 'nopower';
+      else if (s && !a.device_class && !FACTOR[unit]) it.skip = 'nopower';
+      else {
+        var n = s ? parseFloat(s.state) : NaN;
+        if (!s || !isFinite(n)) it.skip = 'off';
+        else it.w = n * (FACTOR[unit] || 1);
+      }
+      if (it.skip) skipped++;
+      else { sum += it.w; used++; }
+      return it;
+    });
+    return { ids: ids, items: items, sum: used ? sum : NaN, used: used, skipped: skipped };
+  };
+})();
+
 // ── Performance mode ─────────────────────────────────────────────────────────
 (function () {
   if (window._casoraPerf) return;
