@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 
 from .const import DOMAIN, PANEL_TITLE
-from .options import OptionsError, build_options, options_schema
+from .options import PLAN_KEYS, OptionsError, build_options, options_schema
 
 
 class CasoraConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -49,6 +49,7 @@ class CasoraOptionsFlow(OptionsFlow):
                 return self.async_create_entry(
                     data=build_options(self.hass, dict(self.config_entry.options), user_input))
             except OptionsError as err:
-                errors[err.path or "base"] = "invalid_plan" if err.path else "invalid"
+                # „Ungültige Zeit“ nur unter einem Zeitplan-Feld, sonst „Ungültige Eingabe“.
+                errors[err.path or "base"] = "invalid_plan" if err.path in PLAN_KEYS else "invalid"
         schema = options_schema(self.hass, user_input or self.config_entry.options)
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)

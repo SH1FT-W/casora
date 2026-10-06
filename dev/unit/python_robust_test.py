@@ -3,6 +3,7 @@
   uv run --python 3.14 --with homeassistant python dev/unit/python_robust_test.py
 
 B-PY-04: zwei gleichzeitige Auffrisch-Läufe (Start + Karten-Update) laufen nacheinander.
+B-PY-05: Konfigurieren-Dialog: „Ungültige Zeit“ nur unter Zeitplan-Feldern.
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ from types import SimpleNamespace
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT)
 
-from custom_components.casora import template_refresh  # noqa: E402
+from custom_components.casora import config_flow, options, template_refresh  # noqa: E402
 
 fails: list[str] = []
 
@@ -46,8 +47,28 @@ async def t_py04():
     check("B-PY-04: Auffrischen läuft nacheinander", log == ["start", "ende", "start", "ende"], repr(log))
 
 
+async def t_py05():
+    got = {}
+    flow = object.__new__(config_flow.CasoraOptionsFlow)
+    flow.hass = None
+    type(flow).config_entry = property(lambda self: SimpleNamespace(options={}))
+    flow.async_show_form = lambda **k: got.update(k["errors"]) or k
+    real_b, real_s = config_flow.build_options, config_flow.options_schema
+    config_flow.options_schema = lambda *a: None
+    try:
+        for path in ("strompreis", options.PLAN_KEYS[0]):
+            got.clear()
+            config_flow.build_options = lambda *a, p=path: (_ for _ in ()).throw(options.OptionsError("x", p))
+            await flow.async_step_init({"x": 1})
+            want = "invalid_plan" if path in options.PLAN_KEYS else "invalid"
+            check(f"B-PY-05: Feld {path} → {want}", got == {path: want}, repr(got))
+    finally:
+        config_flow.build_options, config_flow.options_schema = real_b, real_s
+
+
 async def main():
     await t_py04()
+    await t_py05()
 
 
 asyncio.run(main())
