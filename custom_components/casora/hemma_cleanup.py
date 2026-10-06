@@ -216,8 +216,12 @@ def _hacs_from_storage(config_dir: str) -> dict | None:
     return None
 
 
-def hacs_repo(hass: HomeAssistant, config_dir: str) -> dict | None:
-    """Hemma als HACS-Paket: {id, full_name, source} oder None."""
+_NO_LIVE = object()
+
+
+def _hacs_live(hass: HomeAssistant) -> dict | None | object:
+    """Hemma in HACS' Liste im Speicher; _NO_LIVE, wenn HACS nicht geladen ist. Im Event-Loop aufrufen –
+    HACS ändert die Liste dort."""
     hacs = hass.data.get("hacs")
     repos = getattr(getattr(hacs, "repositories", None), "list_all", None)
     if repos is not None:
@@ -230,7 +234,21 @@ def hacs_repo(hass: HomeAssistant, config_dir: str) -> dict | None:
             return None
         except Exception:  # noqa: BLE001 - dann die gespeicherte Liste
             pass
-    return _hacs_from_storage(config_dir)
+    return _NO_LIVE
+
+
+def hacs_repo(hass: HomeAssistant, config_dir: str) -> dict | None:
+    """Hemma als HACS-Paket: {id, full_name, source} oder None."""
+    live = _hacs_live(hass)
+    return _hacs_from_storage(config_dir) if live is _NO_LIVE else live
+
+
+async def async_hacs_repo(hass: HomeAssistant, config_dir: str) -> dict | None:
+    """Wie hacs_repo: HACS' Liste im Event-Loop lesen, nur die gespeicherte Datei im Executor."""
+    live = _hacs_live(hass)
+    if live is _NO_LIVE:
+        return await hass.async_add_executor_job(_hacs_from_storage, config_dir)
+    return live
 
 
 def _resources(hass: HomeAssistant):
@@ -757,7 +775,6 @@ async def async_status(hass: HomeAssistant) -> dict:
         plan = plan_files(config_dir, shipped, targets)
         return {
             "installed": os.path.isdir(_hemma_dir(config_dir)),
-            "hacs": hacs_repo(hass, config_dir),
             "www_hemma": os.path.isdir(os.path.join(config_dir, WWW_HEMMA)),
             "complete": all(w in ("same", "shipped") for w in plan.values()),
             "plan": plan,
@@ -765,6 +782,7 @@ async def async_status(hass: HomeAssistant) -> dict:
         }
 
     fs = await hass.async_add_executor_job(_fs)
+    fs["hacs"] = await async_hacs_repo(hass, config_dir)
     plan = fs["plan"]
     extras = await _extras(hass)
     return {
@@ -834,7 +852,7 @@ async def async_remove(hass: HomeAssistant, remove_dashboards: list[str] | None,
         complete = await hass.async_add_executor_job(files_complete, config_dir, shipped)
     delete_www = not keep_files and www_deletable(complete, refs, removed_urls, other_local)
     entries = hemma_entries(hass)
-    hacs = await hass.async_add_executor_job(hacs_repo, hass, config_dir)
+    hacs = await async_hacs_repo(hass, config_dir)
     extras = await _extras(hass)
     storage_cfg = {}
     for eid in extras["storage_helpers"]:

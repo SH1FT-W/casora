@@ -12,6 +12,7 @@ B-PY-13: ein gelöschter Karten-Update-Anhang blockiert die übrigen Karten-Upda
 B-PY-14: Kamera-/Pflanzen-KI ohne eingerichtete KI → Fehler mit Grund, kein Aufruf mit „None“.
 B-PY-15: Heizungs-Coach nennt die Temperatur-Einheit von HA (°F), nicht fest °C.
 B-PY-17: zwei gleichzeitige Vorlagen-Abrufe schreiben nicht in dieselbe .tmp-Datei.
+B-PY-18: HACS' Liste im Speicher wird im Event-Loop gelesen, nicht in einem Hintergrund-Thread.
 """
 
 from __future__ import annotations
@@ -307,7 +308,28 @@ def t_py17():
     check("B-PY-17: Bundle nach zwei gleichzeitigen Abrufen heil", ok and not errs and not left, repr((errs, left)))
 
 
+async def t_py18():
+    import threading
+
+    from custom_components.casora import hemma_cleanup
+
+    seen = []
+
+    class Repos:
+        @property
+        def list_all(self):
+            seen.append(threading.current_thread() is threading.main_thread())
+            return [SimpleNamespace(data=SimpleNamespace(full_name="willsanderson/Hemma", id=5, installed=True, domain="hemma"))]
+
+    loop = asyncio.get_running_loop()
+    hass = SimpleNamespace(data={"hacs": SimpleNamespace(repositories=Repos())},
+                           async_add_executor_job=lambda fn, *a: loop.run_in_executor(None, fn, *a))
+    got = await hemma_cleanup.async_hacs_repo(hass, "/nirgends")
+    check("B-PY-18: HACS-Liste im Event-Loop gelesen", seen == [True] and got and got["id"] == "5", repr((seen, got)))
+
+
 async def main():
+    await t_py18()
     t_py17()
     await t_py15()
     await t_py14()
