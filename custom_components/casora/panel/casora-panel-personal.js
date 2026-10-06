@@ -291,8 +291,9 @@
         // Abfall
         g = group("waste", { header: "Waste collection",
           footer: "Without bins here, Casora uses every Waste Collection Schedule sensor." });
-        mapRows(S.waste.sensors).forEach(([id, label]) => {
-          row(g, "Bin", [
+        // Überschrift nur über der ersten Zeile – nicht „Tonne“ vor jeder Tonne.
+        mapRows(S.waste.sensors).forEach(([id, label], i) => {
+          row(g, i ? "" : "Bin", [
             ent(id, ["sensor"], (v) => { setMap(S.waste.sensors, id, v, S.waste.sensors[id]); render(); }),
             txt(label, "Name", (v) => { S.waste.sensors[id] = v; }, true),
             del(() => { delete S.waste.sensors[id]; }),
@@ -351,7 +352,7 @@
           cb.onchange = () => { if (cb.checked) delete c.tile; else c.tile = false; };
           tog.appendChild(cb);
           tog.appendChild(document.createTextNode("On tile"));
-          row(g, "Calendar", [
+          row(g, i ? "" : "Calendar", [
             ent(c.entity, ["calendar"], (v) => { c.entity = v; }),
             txt(c.name, "Name", (v) => { c.name = v; }, true), col, tog,
             del(() => { S.calendars.splice(i, 1); }),
@@ -444,19 +445,19 @@
         // Glocke
         g = group("notify", { header: "Notifications",
           footer: "For all dashboards. Which messages a dashboard shows is set in the Studio under Notifications." });
-        mapRows(S.notify.zone_phrases).forEach(([zone, phrase]) => {
-          row(g, "Zone wording", [
+        mapRows(S.notify.zone_phrases).forEach(([zone, phrase], i) => {
+          row(g, i ? "" : "Zone wording", [
             txt(zone, "Zone", (v) => { setMap(S.notify.zone_phrases, zone, v, S.notify.zone_phrases[zone]); zone = v; }, true),
             txt(phrase, "e.g. at the office", (v) => { S.notify.zone_phrases[zone] = v; }),
             del(() => { delete S.notify.zone_phrases[zone]; }),
-          ], "“is at the office” instead of “is at Office”");
+          ], i ? undefined : "“is at the office” instead of “is at Office”");
         });
         addRow(g, "Add zone wording", () => { S.notify.zone_phrases[""] = ""; });
         row(g, "Mailbox", [ent(S.notify.mail, ["binary_sensor", "input_boolean"], (v) => { S.notify.mail = v; }, null,
           { binary_sensor: ["door", "window", "opening", "garage_door", "motion", "occupancy", "presence", "vibration", "moving", "tamper"] })],
           "Shows a hint when new mail arrives");
         S.notify.battery_exclude.forEach((id, i) => {
-          row(g, "No battery warning", [
+          row(g, i ? "" : "No battery warning", [
             ent(id, ["sensor"], (v) => { S.notify.battery_exclude[i] = v; }, null, ["battery"]),
             del(() => { S.notify.battery_exclude.splice(i, 1); }),
           ]);
