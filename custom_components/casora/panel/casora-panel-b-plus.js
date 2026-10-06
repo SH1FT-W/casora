@@ -916,6 +916,9 @@
         coach.style.top = Math.round(top) + "px";
         box.querySelector(".bnext").focus({ preventScroll: true });
       };
+      // Esc auch, wenn der Fokus nicht im Studio steht (z. B. nach einem Klick daneben).
+      this._bIntroKey = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); this._bIntroEnd(); } };
+      window.addEventListener("keydown", this._bIntroKey, true);
       box.querySelector(".bskip").onclick = () => this._bIntroEnd();
       box.querySelector(".bnext").onclick = () => { if (++i >= steps.length) this._bIntroEnd(); else show(); };
       box.addEventListener("click", (ev) => { if (ev.target === box) ev.stopPropagation(); });
@@ -924,6 +927,7 @@
     };
     P._bIntroEnd = function () {
       ls(INTRO, "1");
+      if (this._bIntroKey) { window.removeEventListener("keydown", this._bIntroKey, true); this._bIntroKey = null; }
       const box = this.shadowRoot.querySelector(".bintro");
       if (!box) return;
       if (reduced() || !box.animate) return box.remove();
@@ -933,6 +937,7 @@
     // ── Szene aus dem jetzigen Zustand ───────────────────────────────
     P._bSceneClose = function () {
       const el = this.shadowRoot.querySelector(".bsfs");
+      if (this._bSceneKey) { window.removeEventListener("keydown", this._bSceneKey, true); this._bSceneKey = null; }
       if (!el) return;
       const back = this._bSceneFrom;
       this._bSceneFrom = null;
@@ -1057,6 +1062,8 @@
         this._bSceneCreated(cfg);
       };
       root.appendChild(el);
+      this._bSceneKey = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); this._bSceneClose(); } };
+      window.addEventListener("keydown", this._bSceneKey, true);
       paintList();
       requestAnimationFrame(() => $(".bsin").focus({ preventScroll: true }));
     };
