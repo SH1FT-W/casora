@@ -11,6 +11,7 @@ B-PY-08: Neustart-Schalter: die Liste der Abmelder wächst nicht mit jedem Einsc
 B-PY-13: ein gelöschter Karten-Update-Anhang blockiert die übrigen Karten-Updates nicht.
 B-PY-14: Kamera-/Pflanzen-KI ohne eingerichtete KI → Fehler mit Grund, kein Aufruf mit „None“.
 B-PY-15: Heizungs-Coach nennt die Temperatur-Einheit von HA (°F), nicht fest °C.
+B-PY-17: zwei gleichzeitige Vorlagen-Abrufe schreiben nicht in dieselbe .tmp-Datei.
 """
 
 from __future__ import annotations
@@ -255,7 +256,59 @@ async def t_py15():
     check("B-PY-15: Soll/Ist in °F", "Soll 70 °F, Ist 68 °F" in text and "°C" not in text, text)
 
 
+def t_py17():
+    import json
+    import tempfile
+    import threading
+    import time
+
+    from custom_components.casora import templates
+
+    cfg = tempfile.mkdtemp()
+    for rel in (templates.SOURCE, templates.SOURCE_MOBILE):
+        os.makedirs(os.path.dirname(os.path.join(cfg, rel)), exist_ok=True)
+        open(os.path.join(cfg, rel), "w").write("x")
+    os.makedirs(os.path.join(cfg, templates.TEMPLATE_DIR), exist_ok=True)
+    os.makedirs(os.path.dirname(os.path.join(cfg, templates.BUNDLE)), exist_ok=True)
+    big = {"templates": {f"t{i}": {"x": "y" * 200} for i in range(3000)}, "scaffold": {"a": 1}, "mobile": {}}
+    real_build, real_dump = templates._build, templates.json.dump
+
+    def slow_dump(obj, fh, **k):
+        # Halb schreiben, warten, Rest schreiben – so überschneiden sich zwei Läufe sicher.
+        text = json.dumps(obj, **k)
+        fh.write(text[: len(text) // 2])
+        fh.flush()
+        time.sleep(0.05)
+        fh.write(text[len(text) // 2:])
+
+    templates._build = lambda *a: big
+    templates.json.dump = slow_dump
+    errs = []
+
+    def run():
+        try:
+            templates.rebuild_if_stale(cfg)
+        except Exception as e:  # noqa: BLE001
+            errs.append(e)
+
+    try:
+        ts = [threading.Thread(target=run) for _ in range(2)]
+        for t in ts:
+            t.start()
+        for t in ts:
+            t.join()
+    finally:
+        templates._build, templates.json.dump = real_build, real_dump
+    try:
+        ok = len(json.load(open(os.path.join(cfg, templates.BUNDLE)))["templates"]) == 3000
+    except ValueError as e:
+        ok, errs = False, errs + [e]
+    left = [f for f in os.listdir(os.path.dirname(os.path.join(cfg, templates.BUNDLE))) if f.endswith(".tmp")]
+    check("B-PY-17: Bundle nach zwei gleichzeitigen Abrufen heil", ok and not errs and not left, repr((errs, left)))
+
+
 async def main():
+    t_py17()
     await t_py15()
     await t_py14()
     await t_py13()
