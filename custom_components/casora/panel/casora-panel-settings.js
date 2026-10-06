@@ -180,13 +180,18 @@
       if (cs.loaded && (this._csDirty() || Date.now() - cs.at < 60000)) return false;
       const hass = this._hass;
       let stored = false, data = {};
+      cs.readErr = null;
       try {
         const r = await hass.callWS({ type: "casora/settings/get" });
         stored = !!r.stored;
         data = r.settings || {};
         // Preis aus HAs Energie-Dashboard: Hinweis am leeren Strompreis-Feld.
         cs.energyPrice = { kwh: r.energy_price_kwh, entity: r.energy_price_entity || null };
-      } catch (e) { /* ältere Integration: nur Datei */ }
+      } catch (e) {
+        // Ältere Integration: nur Datei. Jeder andere Lesefehler sperrt das Speichern – settings/set
+        // ersetzt alles, ein leeres Formular hätte sonst alle Einstellungen gelöscht.
+        if (!(e && e.code === "unknown_command")) cs.readErr = (e && e.message) || String(e);
+      }
       cs.fromFile = false;
       if (!stored) {
         const f = await PERS().fileSettings();
@@ -220,7 +225,22 @@
       const done = [];
       try {
         if (settingsDirty(cs)) {
-          const clean = PERS().prune(cs.S) || {};
+          if (cs.readErr) throw new Error(t("The settings could not be read. Reload the page, then try again."));
+          // Frisch lesen und nur die hier geänderten Bereiche übernehmen: was inzwischen woanders
+          // gespeichert wurde (Umzug, Willkommen, anderer Browser), bleibt erhalten.
+          let fresh = null;
+          try { fresh = (await this._hass.callWS({ type: "casora/settings/get" })).settings || {}; }
+          catch (e) { if (!(e && e.code === "unknown_command")) throw e; }
+          let clean = PERS().prune(cs.S) || {};
+          if (fresh) {
+            const was = JSON.parse(cs.S0 || "{}");
+            const merged = Object.assign({}, fresh);
+            new Set([...Object.keys(clean), ...Object.keys(was)]).forEach((k) => {
+              if (JSON.stringify(clean[k]) === JSON.stringify(was[k])) return;
+              if (clean[k] === undefined) delete merged[k]; else merged[k] = clean[k];
+            });
+            clean = PERS().prune(merged) || merged;
+          }
           const r = await this._hass.callWS({ type: "casora/settings/set", settings: clean });
           window.CASORA_SETTINGS = (r && r.settings) || clean;
           takeSettings(cs, window.CASORA_SETTINGS, true);
@@ -767,7 +787,10 @@
       this._csRepaint();
       if (restart && r.restart_required) {
         // „Jetzt neu starten“ war schon die Bestätigung – nicht noch einmal fragen.
-        try { await this._hass.callService("homeassistant", "restart", {}); } catch (e) { this._status(t("The restart didn't work."), "err"); }
+        try { await this._hass.callService("homeassistant", "restart", {}); } catch (e) {
+          // Der Neustart trennt die Verbindung (Code 3) – das ist kein Fehler.
+          if (!(e && (e.code === 3 || !e.message))) this._status(t("The restart didn't work."), "err");
+        }
       }
     };
 

@@ -253,6 +253,8 @@
       const I = window.__casoraPanelInternals;
       const s = this._flowScreen({ icon: "rooms", title: "Importing Your Dashboard", lede: "This only takes a moment.", closable: false });
       let created = null;
+      let saved = false;
+      let mobileMade = null;
       const prog = this._flowProgress(s.body, ["Reading the card templates", "Building your rooms", "Saving " + title, "Adding the phone layout"]);
       try {
         const bundle = await this._bundleOnce();
@@ -349,17 +351,22 @@
             I.applyMotion(mcfg, rooms);
             I.applyKiosk(mcfg, rooms);
             I.markPhoneManaged(mcfg);
-            await this._hass.callWS({ type: "lovelace/dashboards/create", url_path: url_path + "-mobile", title: title + " Mobile", icon: "mdi:cellphone", show_in_sidebar: false, require_admin: false });
+            mobileMade = await this._hass.callWS({ type: "lovelace/dashboards/create", url_path: url_path + "-mobile", title: title + " Mobile", icon: "mdi:cellphone", show_in_sidebar: false, require_admin: false });
             await this._hass.callWS({ type: "lovelace/config/save", url_path: url_path + "-mobile", config: mcfg });
             paired = true;
           } catch (e) {
+            // Leeres Handy-Dashboard nicht liegen lassen.
+            if (mobileMade && mobileMade.id) { try { await this._hass.callWS({ type: "lovelace/dashboards/delete", dashboard_id: mobileMade.id }); } catch (_) { /* bleibt stehen */ } }
             this._log && this._log("phone layout not created: " + e.message, "warn");
           }
         }
         prog.at(4);
-        await this._flowRelist();
+        saved = true;
+        // Neu auflisten darf scheitern – das fertige Dashboard bleibt trotzdem.
+        try { await this._flowRelist(); } catch (_) { /* Liste kommt beim nächsten Laden */ }
         this._flowDone({ url_path, title, rooms, paired, fromYaml: true });
       } catch (e) {
+        if (saved) { this._flowError && this._flowError(e.message); return; }
         // Halb angelegtes Dashboard wieder entfernen, damit „nichts gespeichert“ stimmt.
         if (created) { try { await this._hass.callWS({ type: "lovelace/dashboards/delete", dashboard_id: created }); } catch (_) { /* bleibt stehen */ } }
         const fail = this._flowScreen({ icon: "alert", tone: "warn", title: "Dashboard Not Created", lede: "Nothing was saved. Check the name and address, then try again." });

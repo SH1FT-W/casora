@@ -5160,6 +5160,8 @@ class CasoraPanel extends HTMLElement {
   // Not the constructor: an element may not gain an attribute there.
   connectedCallback() {
     if (!this._built) this.style.backgroundColor = STUDIO_GROUND;
+    // Wieder eingehängt (selten – HA baut das Panel sonst neu): globale Listener zurück.
+    if (this._gOff) { this._gOff = false; (this._gList || []).forEach(([t, ty, fn, o]) => t.addEventListener(ty, fn, o)); }
   }
 
   // Leaving the Studio inside HA (sidebar, back): the draft is written now, not a beat later.
@@ -5168,6 +5170,17 @@ class CasoraPanel extends HTMLElement {
       clearTimeout(this._draftTimer);
       this._writeDraft();
     }
+    // HA erzeugt das Panel bei jedem Besuch neu: die alte Instanz meldet sich bei window/document ab,
+    // sonst bleibt sie samt Vorlagen im Speicher, läuft bei Resize mit und fragt beim Neuladen
+    // irgendeiner HA-Seite noch nach ungespeicherten Änderungen.
+    if (!this._gOff) { this._gOff = true; (this._gList || []).forEach(([t, ty, fn, o]) => t.removeEventListener(ty, fn, o)); }
+  }
+
+  // Globaler Listener, den disconnectedCallback wieder abmeldet.
+  _gOn(target, type, fn, opts) {
+    if (!target) return;
+    (this._gList = this._gList || []).push([target, type, fn, opts]);
+    if (!this._gOff) target.addEventListener(type, fn, opts);
   }
 
   _wireInspector() {
@@ -10906,7 +10919,7 @@ class CasoraPanel extends HTMLElement {
         queued = true;
         requestAnimationFrame(() => { queued = false; this._syncCollapse(); });
       };
-      window.addEventListener("scroll", this._onScroll, true);
+      this._gOn(window, "scroll", this._onScroll, true);
     }
     const shellEl = this.shadowRoot.querySelector(".shell");
     if (shellEl && !this._shellScroll) {
@@ -10923,9 +10936,9 @@ class CasoraPanel extends HTMLElement {
         }).observe(this.shadowRoot.querySelector(".main"));
       }
     }
-    window.addEventListener("resize", remeasureAll);
+    this._gOn(window, "resize", remeasureAll);
     if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", remeasureAll);
+      this._gOn(window.visualViewport, "resize", remeasureAll);
     }
     // Nothing fires a resize when a hidden page comes back.
     if (!this._onVisible) {
@@ -10941,9 +10954,9 @@ class CasoraPanel extends HTMLElement {
         requestAnimationFrame(remeasure);
         [60, 200, 500].forEach((ms) => setTimeout(remeasure, ms));
       };
-      document.addEventListener("visibilitychange", this._onVisible);
+      this._gOn(document, "visibilitychange", this._onVisible);
       // bfcache restores skip visibilitychange entirely on some browsers.
-      window.addEventListener("pageshow", this._onVisible);
+      this._gOn(window, "pageshow", this._onVisible);
     }
     if (this.parentElement && window.ResizeObserver) {
       if (this._slotObs) this._slotObs.disconnect();
@@ -11029,7 +11042,7 @@ class CasoraPanel extends HTMLElement {
     this.$("roomtitle").onclick = () => (this._titleIsDash()
       ? this._dashSwitchMenu(this.$("roomtitle")) : this._roomTitleMenu(this.$("roomtitle")));
     this.shadowRoot.querySelector(".railscrim").onclick = () => this._toggleRail(false);
-    document.addEventListener("keydown", (ev) => {
+    this._gOn(document, "keydown", (ev) => {
       if (ev.key === "Escape" && this.classList.contains("railopen")) this._toggleRail(false);
       if (ev.key === "Escape" && this.classList.contains("peek") && !this._openCombo) this._togglePeek(false);
     });
@@ -11050,13 +11063,13 @@ class CasoraPanel extends HTMLElement {
       this._restoreScroll(snap);
     });
     // ⌘S / Strg+S sichert, ohne das Studio zu verlassen (der Knopf dafür ist in „Fertig“ aufgegangen).
-    document.addEventListener("keydown", (ev) => {
+    this._gOn(document, "keydown", (ev) => {
       if (!(ev.metaKey || ev.ctrlKey) || ev.shiftKey || ev.altKey || String(ev.key).toLowerCase() !== "s") return;
       if (!this.isConnected || !this._state || !this._isDirty() || this._saveBlocked || this._saving) return;
       ev.preventDefault();
       this._save();
     });
-    document.addEventListener("keydown", (ev) => {
+    this._gOn(document, "keydown", (ev) => {
       if (!(ev.metaKey || ev.ctrlKey) || ev.shiftKey || ev.altKey || String(ev.key).toLowerCase() !== "z") return;
       if (!this.isConnected || !(this._undoStack || []).length) return;
       const t = ev.composedPath ? ev.composedPath()[0] : ev.target;
@@ -13910,6 +13923,9 @@ class CasoraPanel extends HTMLElement {
   async _load() {
     const url_path = this._dashUrl;
     if (!url_path) return;
+    // Laufnummer: ein schneller Wechsel zu einem anderen Dashboard macht diesen Lauf ungültig.
+    const seq = this._loadSeq = (this._loadSeq || 0) + 1;
+    const stale = () => seq !== this._loadSeq;
     // What is unsaved in the dashboard being left is kept before its state goes.
     clearTimeout(this._draftTimer);
     if (this._state && this._isDirty()) this._writeDraft();
@@ -13922,6 +13938,7 @@ class CasoraPanel extends HTMLElement {
     this._status("");
     try {
       const cfg = await this._ws({ type: "lovelace/config", url_path });
+      if (stale()) return;
 
       if (isMobileConfig(cfg)) {
         const wide = this._widePathOf(url_path);
@@ -13937,7 +13954,9 @@ class CasoraPanel extends HTMLElement {
       this._pair = null;
       this._state = extractAny(cfg);
       this._stateUrl = url_path;
-      this._pair = await this._loadPair(url_path, cfg);
+      const pair = await this._loadPair(url_path, cfg);
+      if (stale()) return;
+      this._pair = pair;
       if (this._pair) this._state = this._pair.desktop;
       const nUser = syncUserTileTypes(cfg.button_card_templates,
         (this._state.compact || {}).rooms, null, cfg[FINGERPRINT_KEY]);
@@ -14019,7 +14038,9 @@ class CasoraPanel extends HTMLElement {
       }
       // Nur wenn beide Hälften verlustfrei sind (sonst ist Speichern ohnehin aus).
       if (safe && this._pair && this._pair.safe !== false) await this._reconcilePhone(url_path);
+      if (stale()) return;
       if (safe && this._pair && this._pair.safe !== false) await this._restoreUmzugSizes(url_path);
+      if (stale()) return;
 
       // After the round trip check, which compares the file as it was.
       if (this._state.surface !== "mobile") {
@@ -14389,8 +14410,15 @@ class CasoraPanel extends HTMLElement {
     }
     const s = this._state;
     if (!s) return false;
+    // Kann das Studio dieses Dashboard nicht verlustfrei nachbauen, speichert kein Weg – auch
+    // nicht Assistent, „Neue Szene“ oder die Einstellungen, die _save() direkt aufrufen.
+    if (this._saveBlocked) {
+      this._status("This dashboard has content the editor would not preserve. Saving is disabled.", "err");
+      return false;
+    }
     let ok = false;
-    const url_path = this._dashUrl;
+    // Der Stand gehört zu dem Dashboard, aus dem er geladen wurde – nicht zu einem, das gerade lädt.
+    const url_path = this._stateUrl || this._dashUrl;
 
     let templates = s.templates;
     let extras = s.extras;
@@ -14469,6 +14497,8 @@ class CasoraPanel extends HTMLElement {
       }
     }
 
+    // Fingerabdruck dessen, was gespeichert wird: Änderungen während des Speicherns bleiben „ungespeichert“.
+    const savedPrint = this._print();
     const built = expandAny(s, { scaffold, extras, templates });
 
     let cfg = built;
@@ -14575,7 +14605,7 @@ class CasoraPanel extends HTMLElement {
         pair.mobileRaw = clone(mcfg);
         this._log(`saved phone layout  ${JSON.stringify(mcfg).length.toLocaleString()} bytes`, "ok");
       }
-      this._clean = this._print();
+      this._clean = savedPrint;
       this._dropDraft(url_path);
       this._resetUndo(true);
       this._markDirty();
@@ -14820,13 +14850,13 @@ class CasoraPanel extends HTMLElement {
   _wireLeaveGuard() {
     if (this._leaveGuard) return;
     this._leaveGuard = (ev) => {
-      if (this._leaving || !this._isDirty()) return;
+      if (this._leaving || !this.isConnected || !this._isDirty()) return;
       // A last copy right away, then the browser's own "leave page?" question.
       this._writeDraft();
       ev.preventDefault();
       ev.returnValue = "";
     };
-    window.addEventListener("beforeunload", this._leaveGuard);
+    this._gOn(window, "beforeunload", this._leaveGuard);
   }
 
   _placeRooms(strip) {
@@ -18754,7 +18784,7 @@ class CasoraPanel extends HTMLElement {
         this._histPopping = true;
         try { this._phoneBack(); } finally { this._histPopping = false; }
       };
-      window.addEventListener("popstate", this._onPhonePop);
+      this._gOn(window, "popstate", this._onPhonePop);
     }
     const want = this._phoneDepth();
     const have = this._histDepth || 0;
@@ -19494,6 +19524,12 @@ class CasoraPanel extends HTMLElement {
 
     // A fixed menu would drift away from its input, so dismiss on scroll.
     const dismiss = () => {
+      // Feld nicht mehr da (Formular neu gezeichnet): abmelden statt bei jedem Scrollen weiterzulaufen.
+      if (wrap._was && !wrap.isConnected && !menu.parentNode) {
+        window.removeEventListener("scroll", dismiss, true);
+        window.removeEventListener("resize", dismiss);
+        return;
+      }
       if (!menu.parentNode) return;
       // The iOS keyboard scrolls and resizes the page as the field focuses; follow it instead of closing.
       if (this.shadowRoot.activeElement === input) { place(); return; }
@@ -19501,6 +19537,7 @@ class CasoraPanel extends HTMLElement {
     };
     window.addEventListener("scroll", dismiss, true);
     window.addEventListener("resize", dismiss);
+    requestAnimationFrame(() => { if (wrap.isConnected) wrap._was = true; });
 
     return { wrap, input };
   }
@@ -20405,7 +20442,7 @@ class CasoraPanel extends HTMLElement {
     this._sceneDismiss = () => this._closeSceneMenu();
     this.shadowRoot.addEventListener("click", this._sceneDismiss);
     this._sceneKey = (e) => { if (e.key === "Escape") this._closeSceneMenu(); };
-    window.addEventListener("keydown", this._sceneKey);
+    this._gOn(window, "keydown", this._sceneKey);
   }
 
   _closeSceneMenu() {
@@ -21501,7 +21538,9 @@ class CasoraPanel extends HTMLElement {
     trow.appendChild(h1);
 
     const wtemp = went && this._hass.states[wv.weather_temp_sensor];
-    const deg = wtemp ? Math.round(Number(wtemp.state))
+    // Sensor nicht verfügbar: wie am Desktop auf die Temperatur des Wetters zurückfallen.
+    const sensed = wtemp ? Number(wtemp.state) : NaN;
+    const deg = Number.isFinite(sensed) ? Math.round(sensed)
       : (went ? Math.round(Number(went.attributes.temperature)) : null);
     if (deg !== null && !Number.isNaN(deg)) {
       const w = document.createElement("span");
@@ -23057,7 +23096,7 @@ class CasoraPanel extends HTMLElement {
     if (stageEl) this._sizeObs.observe(stageEl);
     if (!this._winResize) {
       this._winResize = () => this._applyMapSize && this._applyMapSize();
-      window.addEventListener("resize", this._winResize);
+      this._gOn(window, "resize", this._winResize);
     }
 
     return wrap;

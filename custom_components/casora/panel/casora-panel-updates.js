@@ -337,6 +337,8 @@
       try {
         await this._hass.callService("homeassistant", "restart", {});
       } catch (e) {
+        // Der Neustart trennt die Verbindung (Code 3) – das ist kein Fehler.
+        if (e && (e.code === 3 || !e.message)) return;
         this._cuErr = t("The restart didn't work.") + " " + (e.message || e);
         this._cuRepaint();
       }

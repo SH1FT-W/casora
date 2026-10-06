@@ -1,6 +1,7 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "The settings could not be read. Reload the page, then try again.": "Die Einstellungen ließen sich nicht lesen. Lade die Seite neu und versuche es dann noch einmal.",
     "Search by name, room or ID": "Nach Name, Raum oder ID suchen",
     "Without room": "Ohne Raum",
     "Hidden right now": "Gerade verborgen",
