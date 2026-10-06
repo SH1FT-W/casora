@@ -229,6 +229,12 @@
     /* Im Blatt liegt nichts über einem Foto: Kopfzeile in Textfarbe statt Weiß mit Schatten. */
     :host(.bmode.phone) .inspector .insphead, :host(.bmode.phone) .inspector .insphead * ,
     :host(.bmode.phone) .inspector .detailbar h3 { color:var(--ink) !important; text-shadow:none !important; }
+    /* Gruppenüberschriften („Zuhause“, „Dashboard“): Casora Weich zeichnet sie hell fürs Foto –
+       im Blatt standen sie weiß auf Leinen. */
+    :host(.bmode.phone) .inspector .sidehead.phonehead {
+      color:color-mix(in srgb, var(--ink) 78%, transparent) !important; text-shadow:none !important; }
+    :host(.bmode.phone) .inspector .sidehead.phonehead small {
+      color:color-mix(in srgb, var(--ink) 48%, transparent) !important; }
     :host(.bmode.phone) .inspector .insphead .back {
       background:var(--chip, rgba(127,127,127,.16)) !important; box-shadow:none !important;
       backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
