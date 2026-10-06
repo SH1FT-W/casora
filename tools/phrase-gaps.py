@@ -3,6 +3,7 @@
 
     python3 tools/phrase-gaps.py            # Liste der Lücken
     python3 tools/phrase-gaps.py --json     # als JSON (für Nachbearbeitung)
+    python3 tools/phrase-gaps.py --max 70   # Gate: Rückgabe 1, wenn es mehr Lücken werden
 
 Liest String-Literale aus den Kachel-Vorlagen (panel/casora-templates.json) und den
 Dashboard-Skripten (scripts/local/*.js, casora-core.js) und prüft sie wie die
@@ -132,6 +133,12 @@ def main() -> int:
         for k in sorted(gaps):
             print(f"{k}\t{', '.join(sorted(gaps[k]))[:90]}")
         print(f"— {len(gaps)} Lücke(n)", file=sys.stderr)
+    if "--max" in sys.argv:
+        limit = int(sys.argv[sys.argv.index("--max") + 1])
+        if len(gaps) > limit:
+            print(f"FEHLER: {len(gaps)} Übersetzungslücken, erlaubt höchstens {limit} – neue deutsche Texte "
+                  "brauchen einen Eintrag in phrases/en.json", file=sys.stderr)
+            return 1
     return 0
 
 

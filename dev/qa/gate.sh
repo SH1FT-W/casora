@@ -208,6 +208,10 @@ static_steps() {
   step vorlagen-js      static  "\"\$NODE\" dev/qa/check-templates.mjs dashboards/casora/button_card_templates.json custom_components/casora/panel/casora-templates.json"
   step json             static  json_valid
   [ -f tools/privacy-check.py ] && step privacy static "python3 tools/privacy-check.py"
+  # Übersetzungen (T-06, 06.10.2026): Studio-Schlüssel vollständig; Dashboard-Lücken dürfen nur
+  # weniger werden – PHRASE_GAPS_MAX beim Schließen von Lücken mit senken.
+  step i18n             static  "python3 tools/i18ncheck.py"
+  step phrase-gaps      static  "python3 tools/phrase-gaps.py --max \${PHRASE_GAPS_MAX:-70} >/dev/null"
   step changelog        static  "python3 tools/sync-changelog.py --check"
   [ $DRY = 1 ] && echo "2) Unit-Tests (dev/unit)"
   step unit             unit    unit_tests
