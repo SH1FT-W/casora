@@ -449,14 +449,19 @@
   // den jemand ausgeschaltet hat (show_… = false).
   // targets: [{ name, vars, home, only }] – vars wird ergänzt; only (Set/Array): nur diese
   // Bereiche (Geräte-Assistent). Rückgabe je Ziel die ergänzten Bereiche.
+  // Plan und Badges hängen nur vom HA-Stand ab: beim Laden fragt das Studio je Raum einzeln
+  // (fillRoomEnergy) – für denselben hass nur einmal planen (vorher einmal je Raum).
+  let fillMemo = null;
   function fillBadges(hass, targets) {
     const list = [].concat(targets || []);
     if (!hass || !list.length) return list.map(() => []);
     let vars = {}, p = null;
-    try {
+    if (fillMemo && fillMemo.hass === hass) ({ vars, p } = fillMemo);
+    else try {
       const areas = Object.values(hass.areas || {}).map((x) => x && x.name).filter(Boolean);
       p = plan(hass, areas, Object.assign({}, DEFAULTS));
       vars = badgesOf(hass, p);
+      fillMemo = { hass, vars, p };
     } catch (e) { return list.map(() => []); }
     const set = (v) => v != null && v !== "" && !(Array.isArray(v) && !v.length);
     return list.map((t) => {
