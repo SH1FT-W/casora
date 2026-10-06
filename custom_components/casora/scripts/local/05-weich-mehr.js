@@ -471,6 +471,8 @@
           value: Math.round(sT / (sT + nT) * 100) + ' %', sub: 'Solar ' + fN(sT, hass) + ' kWh · Netz ' + fN(nT, hass) + ' kWh' });
       }
       var exp = num(states, C.export), expTot = num(states, C.exportTotal);
+      // Zähler in Wh, kWh oder MWh – unten durch 1000 in kWh.
+      if (expTot != null) expTot *= ({ kWh: 1000, MWh: 1e6 }[(states[C.exportTotal].attributes || {}).unit_of_measurement] || 1);
       if (exp != null || expTot != null) {
         arows.push({ entity: C.export || C.exportTotal, icon: 'mdi:transmission-tower-export', iconTone: '#30D158', label: 'Einspeisung',
           value: fW(exp, hass), sub: expTot != null ? 'Gesamt ' + fN(expTot / 1000, hass) + ' kWh' : null });
