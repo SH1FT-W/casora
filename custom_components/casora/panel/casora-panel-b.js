@@ -65,6 +65,10 @@
     /* Seiten (Einstellungen, Updates, Zeitreise) liegen über der Vorschau: deren Umschalter
        Desktop/Tablet/Mobil ragte sonst halb über den Rand. */
     :host(.bmode.bpage.split:not(.flow)) .stage .segrow { visibility:hidden; }
+    /* S-05: Die Vorschau steht in der Mitte der freien Höhe (oben Umschalter, darunter nichts
+       Leeres mehr) – auch wenn der Inspektor sie schmaler macht. */
+    :host(.bmode.split:not(.flow):not(.phone)) .stage > .canvas { align-self:stretch; box-sizing:border-box; }
+    :host(.bmode.split:not(.flow):not(.phone)) .canvas > .plinth { margin-top:auto; margin-bottom:auto; }
     @keyframes bInspIn { from { opacity:0; transform:translateX(18px); } }
     @media (prefers-reduced-motion: reduce) { :host(.bmode) .inspector { animation:none !important; } }
     :host(.bmode) .inspector .insphead { padding-right:52px; }

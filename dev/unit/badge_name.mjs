@@ -20,6 +20,11 @@ for (const [tpl, key] of Object.entries(MAP)) {
     assert.ok(Object.prototype.hasOwnProperty.call(T[host].variables || {}, key), host + ' deklariert ' + key);
   }
 }
+// Raumseite am Handy: casora_mobile_sensor_chips reicht den Namen aus den Raum-Variablen (casora_rv) weiter.
+{
+  const s = JSON.stringify(T.casora_mobile_sensor_chips);
+  for (const key of Object.values(MAP)) assert.ok(s.includes('return _rv.' + key + ' '), 'Handy-Raumseite reicht ' + key + ' weiter');
+}
 // Das Studio bietet das Feld je Badge an.
 const panel = fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel.js', import.meta.url), 'utf8');
 for (const key of Object.values(MAP)) assert.ok(panel.includes('T("' + key + '", "Name on the badge")'), 'Studio-Feld ' + key);

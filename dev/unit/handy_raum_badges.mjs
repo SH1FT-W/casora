@@ -40,6 +40,7 @@ const fnOf = (name) => {
 const studio = new Function([
   one(/^const BADGE_SWITCH_KEYS = .*$/m),
   one(/^const CHIPS_AQI_FROM_ROOM = [^;]*;/ms),
+  one(/^const BADGE_TITLE_KEYS = .*$/m),
   one(/^const PHONE_ROOM_OVERRIDE = [^;]*;/ms),
   fnOf('phoneRoomLegacyVars'), fnOf('phoneRoomBadgeVars'),
   'return { phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE };'].join('\n'))();

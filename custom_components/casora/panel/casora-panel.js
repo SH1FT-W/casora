@@ -846,6 +846,7 @@ const holderValue = (h) => {
 
 function mobileHoldersOf(mstate, key, templates) {
   const wanted = mobileTargetsFor(key, templates);
+  if (BADGE_TITLE_KEYS.indexOf(key) !== -1 && wanted.indexOf("casora_mobile_filter_badges") === -1) wanted.push("casora_mobile_filter_badges");
   const alias = CHIPS_ALIAS_OF[key];
   if (alias) wanted.push(MOBILE_CHIPS);
   const out = [];
@@ -924,6 +925,8 @@ function syncHomeShared(pair) {
     if (emptyVal(V[k])) return;
     n += pairWriteMobile(pair, link.room, k, V[k]);
   });
+  // Badge-Namen gibt es nur vom Desktop aus: ein gelöschter Name gilt am Handy sofort als gelöscht.
+  BADGE_TITLE_KEYS.forEach((k) => { if (emptyVal(V[k])) n += pairWriteMobile(pair, link.room, k, undefined); });
   return n;
 }
 
@@ -1121,8 +1124,10 @@ const CHIPS_SECURITY_KEYS = ["room_name", "security_locks", "security_locks_labe
   "security_door_sensors", "security_lock_batteries"]
   .concat([1, 2, 3, 4, 5, 6, 7, 8].map((n) => "security_entity_" + n))
   .concat([1, 2, 3, 4, 5, 6, 7, 8].map((n) => "security_label_" + n));
+// „Name auf dem Badge“ (06.10.2026): eigene Badge-Namen, auch für die Raumseite am Handy.
+const BADGE_TITLE_KEYS = ["climate_title", "lights_title", "people_title", "media_title", "security_title", "energy_title"];
 const CHIPS_ROOM_KEYS = ["temp_entity", "humidity_entity", "entity_quality",
-  "aqi_room_name", "aqi_sensors", "lights_entity"].concat(CHIPS_SECURITY_KEYS);
+  "aqi_room_name", "aqi_sensors", "lights_entity"].concat(CHIPS_SECURITY_KEYS, BADGE_TITLE_KEYS);
 const chipsHasSecurity = (c) => !!c && (!!(c.security_locks || []).length
   || [1, 2, 3, 4, 5, 6, 7, 8].some((n) => !!c["security_entity_" + n]));
 
@@ -1148,6 +1153,7 @@ function phoneRoomLegacyVars(c) {
     if (c["security_entity_" + n]) o["security_entity_" + n] = c["security_entity_" + n];
     if (c["security_label_" + n]) o["security_label_" + n] = c["security_label_" + n];
   }
+  BADGE_TITLE_KEYS.forEach((k) => { if (c[k]) o[k] = c[k]; });
   return o;
 }
 function phoneRoomBadgeVars(desk, chip, name) {
@@ -1212,6 +1218,7 @@ function syncRoomChips(pair) {
       }
       if (chipsHasSecurity(next)) set("room_name", sec.name);
     }
+    BADGE_TITLE_KEYS.forEach((k) => set(k, V[k]));
     chips[key] = next;
     if (next.temp_entity || next.humidity_entity || next.entity_quality
       || next.lights_entity || next.motion_entity || chipsHasSecurity(next)) filled++;

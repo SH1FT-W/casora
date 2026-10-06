@@ -9893,6 +9893,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       if (c['security_entity_' + n]) o['security_entity_' + n] = c['security_entity_' + n];
       if (c['security_label_' + n]) o['security_label_' + n] = c['security_label_' + n];
     }
+    // „Name auf dem Badge“ (Studio, 06.10.2026)
+    ['climate_title', 'lights_title', 'people_title', 'media_title', 'security_title', 'energy_title'].forEach(function (k) {
+      if (c[k]) o[k] = c[k];
+    });
     return o;
   }
 
