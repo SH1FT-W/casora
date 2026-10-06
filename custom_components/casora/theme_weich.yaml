@@ -671,7 +671,8 @@ Casora:
       casora-soft-cam-fail: "#24211E"                        # Kamera-Fehlerfläche statt Schwarz (B-06)
       casora-soft-placeholder: var(--casora-soft-control-fill) # Bild-Platzhalter (Drucker-Kamera) statt Schiefergrau
       casora-soft-media-hue: var(--casora-color-pink)        # Medien-Popup: Fortschritt und Lautstärke rosa-rot (Wunsch 02.10.2026)
-      casora-soft-primary: var(--casora-lps-switch-on)       # Hauptaktion (Start, Wiedergabe) in Ton wie die Schalter
+      # Hauptaktion (Start, Wiedergabe) in dunklem Ton: Weiß auf #B67A50 hatte nur 3,6 : 1, auf #94603B 5,3 : 1 (D-04)
+      casora-soft-primary: "#94603B"
       casora-soft-primary-ink: "#FFFFFF"
 
       # --- Fix-Runde 1 C: Casora Studio hell – Leinen-Grund, Creme-Gruppen, Espresso-Schrift, Sand-Felder ---
@@ -1115,5 +1116,5 @@ Casora:
       casora-soft-cam-fail: "#24211E"
       casora-soft-placeholder: var(--casora-soft-control-fill)
       casora-soft-media-hue: var(--casora-color-pink)
-      casora-soft-primary: var(--casora-lps-switch-on)
+      casora-soft-primary: "#94603B"   # D-04 wie hell
       casora-soft-primary-ink: "#FFFFFF"
