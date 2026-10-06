@@ -2201,7 +2201,11 @@
           '-webkit-backdrop-filter:blur(10px) saturate(1.2)',
           'cursor:pointer', 'z-index:61',
         ].join(';');
+        // D-03: Trefferfläche 44 px (Weich setzt --casora-back-hit: -2px; sichtbar bleibt 40 px) und Name für Bildschirmleser
+        back.setAttribute('role', 'button');
+        back.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Zurück') : 'Zurück');
         back.innerHTML =
+          '<span style="position:absolute;inset:var(--casora-back-hit, 0);border-radius:50%;"></span>' +
           '<svg width="14" height="24" viewBox="0 0 14 24" fill="none" style="margin-right:2px">' +
           '<path d="M12 2.5 L2.8 12 L12 21.5" style="stroke:var(--casora-chrome-ink, #fff)" stroke-width="3" ' +
           'stroke-linecap="round" stroke-linejoin="round"/></svg>';
