@@ -7959,6 +7959,13 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     return (st && st.attributes && st.attributes.device_class) || '';
   }
 
+  /* Kalendertage seit „vor m Minuten“ (#11): vor 36 Stunden ist gestern, nicht „vor 2 Tagen“.
+     Für alle „vor X T.“/„vor X Tagen“ der Module (statt Math.round(m / 1440)). */
+  window.casoraDaysAgo = function (m) {
+    var now = new Date(Date.now()), then = new Date(Date.now() - Math.max(0, Number(m) || 0) * 60000);
+    return Math.max(1, Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      - new Date(then.getFullYear(), then.getMonth(), then.getDate())) / 86400000));
+  };
   function ago(ms) {
     var s = Math.max(0, (Date.now() - ms) / 1000);
     if (s < 60) return 'Gerade eben';

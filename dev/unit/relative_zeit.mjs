@@ -28,3 +28,19 @@ assert.equal(since(new RealDate(NOW - 23.6 * H).toISOString()), '1 Tag', '23,6 S
 assert.equal(since(new RealDate(NOW - 36 * H).toISOString()), '1 Tag', 'Dauer 36 Std. → 1 Tag');
 assert.equal(since(new RealDate(NOW - 5 * H).toISOString()), '5 Std.');
 console.log('ok relative_zeit');
+
+// Alle übrigen „vor X T.“/„vor X Tagen“ der Module rechnen über window.casoraDaysAgo (Kalendertage).
+{
+  const core = read('casora-core.js');
+  const def = pick(core, /  window\.casoraDaysAgo = function \(m\) \{[\s\S]*?\n  \};/);
+  const w = {};
+  new Function('window', 'Date', def)(w, FakeDate);
+  assert.equal(w.casoraDaysAgo(36 * 60), 1, '36 Std. → 1 Tag (gestern)');
+  assert.equal(w.casoraDaysAgo(24 * 60), 1);
+  assert.equal(w.casoraDaysAgo(60 * 60), 2, '60 Std. (vorgestern 9 Uhr) → 2');
+  for (const f of ['04-navigation.js', '02-geraete.js', '03-popups.js', '05-standard-medien.js', '08-weich-szenen.js', '08-weich-kompakt.js']) {
+    const s = read('local/' + f);
+    assert.ok(!/[^:] Math\.round\(m \/ 1440\)/.test(s.replace(/window\.casoraDaysAgo \? window\.casoraDaysAgo\(m\) : Math\.round\(m \/ 1440\)/g, '')), f + ': noch 24-h-Rundung');
+  }
+}
+console.log('ok tage_ueberall');
