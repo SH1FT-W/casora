@@ -10605,6 +10605,11 @@ class CasoraPanel extends HTMLElement {
         }
         .shot.empty .shotover { opacity:1; background:transparent; color:var(--ink-3); }
         .shot:hover .shotover, .shot.over .shotover { opacity:1; color:var(--ink); }
+        /* Touch hat kein Zeigen: „Ersetzen“ steht dort immer sichtbar über dem Foto. */
+        @media (hover: none) {
+          .shot:not(.empty) .shotover { opacity:1; color:#fff; background:rgba(0,0,0,0.34); }
+          .shot:not(.empty) .cap { opacity:0; }
+        }
         .shot.over { box-shadow:inset 0 0 0 2px var(--accent); }
         .shotglyph {
           width:22px; height:22px; background-color:currentColor;
@@ -20547,7 +20552,12 @@ class CasoraPanel extends HTMLElement {
       if (!looksImage(blob)) return this._status(why.type, "err");
       const cur = room.variables.image || "";
       // Mitgelieferte Beispielfotos (…-demo) lassen sich nicht überschreiben: dann der Raumname.
-      const suggest = cur && !/-demo$/.test(cur) ? cur : slug(room.name || room.path || "room");
+      // Ebenso ein Foto, das einem anderen Raum gehört oder wie er heißt – sonst ersetzte der
+      // Upload dort das Bild (z. B. „terrasse“ im Büro vorbelegt).
+      const others = (((this._state || {}).compact || {}).rooms || []).filter((r) => r !== room);
+      const foreign = others.some((r) => (r.variables || {}).image === cur || r.path === cur
+        || slug(r.name || "") === cur);
+      const suggest = cur && !/-demo$/.test(cur) && !foreign ? cur : slug(room.name || room.path || "room");
       const asked = await this._ask({
         title: "Image name",
         message: "Lowercase letters, digits and hyphens. Uploading the same name replaces it.",
@@ -20587,6 +20597,8 @@ class CasoraPanel extends HTMLElement {
         // Der Abschnitt kann während der Namensfrage neu gezeichnet worden sein: dann neu aufbauen.
         if (sel.isConnected) fill(); else this._renderForm();
         this._setBackdrop();
+        // Gleicher Name, neues Foto: die Vorschau sofort neu zeichnen (sonst blieb das alte stehen).
+        this._rebuildPreview();
       } catch (e) {
         this._status(e.nice || ("Upload failed: " + e.message), "err");
         this._log("upload failed: " + e.message, "err");
