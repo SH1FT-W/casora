@@ -16020,6 +16020,9 @@ class CasoraPanel extends HTMLElement {
   }
 
   _renderForm() {
+    // Panelbreite messen, bevor der Aufbau das Layout verändert (isPhone() merkt sie sich für
+    // diese Aufgabe) – mitten im Aufbau gemessen erzwang das erste Feld ein volles Layout.
+    panelW(this);
     this._disarmRow();
     const room = this._state && this._state.compact.rooms[this._room];
     this._markDirty();
