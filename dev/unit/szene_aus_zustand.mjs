@@ -29,8 +29,8 @@ assert.deepEqual(S.sceneState(blau), { state: 'on', brightness: 255, color_mode:
 assert.equal(S.describe(blau, t, 'de'), '100 %, blau');
 
 // Licht aus: nur der Zustand.
-assert.deepEqual(S.sceneState(st('light.flur', 'off', { brightness: null, color_mode: null })), { state: 'off' });
-assert.equal(S.describe(st('light.flur', 'off'), t, 'de'), 'Aus');
+assert.deepEqual(S.sceneState(st('light.nachtlicht', 'off', { brightness: null, color_mode: null })), { state: 'off' });
+assert.equal(S.describe(st('light.nachtlicht', 'off'), t, 'de'), 'Aus');
 
 // Rollladen: Position und Neigung; „opening“ wird zu „open“.
 assert.deepEqual(S.sceneState(st('cover.jalousie', 'opening', { current_position: 40, current_tilt_position: 10, device_class: 'blind' })),

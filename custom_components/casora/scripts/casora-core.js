@@ -9481,6 +9481,63 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       || Object.keys(v).some(function (k) { return v[k] === entityId || (Array.isArray(v[k]) && v[k].indexOf(entityId) !== -1); });
   }
 
+  // ── „Wer sieht das?“ auch auf Umwegen (R-01) ─────────────────────────────
+  // Die Einschränkung ist HAs Bedingung „user“ (bzw. view.visible) – nur Ausblenden. Casora holt
+  // eine so ausgeblendete Kachel aber nicht selbst wieder hervor (Glocke, Sammel-Popups): Steht die
+  // Entität im Dashboard nur in Karten/Ansichten, die für diesen Benutzer ausgeblendet sind, gilt sie
+  // als verborgen. Kommt sie gar nicht vor, ist sie nicht eingeschränkt.
+  function hiddenForUser(cfg, entityId, uid) {
+    if (!cfg || !entityId) return false;
+    var hides = function (x) {
+      return Array.isArray(x.visibility) && x.visibility.some(function (v) {
+        // users: [] = für alle ausgeblendet (Raum vorübergehend weg) – keine Frage, wer es sieht.
+        return v && v.condition === 'user' && Array.isArray(v.users) && v.users.length > 0 && !(uid && v.users.indexOf(uid) !== -1);
+      });
+    };
+    var names = function (c) {
+      if (c.entity === entityId || (c.entity && c.entity.entity === entityId)) return true;
+      var v = c.variables || {};
+      if (Object.keys(v).some(function (k) { return v[k] === entityId || (Array.isArray(v[k]) && v[k].indexOf(entityId) !== -1); })) return true;
+      return Array.isArray(c.entities) && c.entities.some(function (e) { return e === entityId || (e && e.entity === entityId); });
+    };
+    var seen = false, open = false;
+    (cfg.views || []).forEach(function (view) {
+      var off = !!view && Array.isArray(view.visible) && view.visible.length > 0
+        && !view.visible.some(function (u) { return u && uid && u.user === uid; });
+      (function walk(v, hid) {
+        if (open || !v || typeof v !== 'object') return;
+        if (Array.isArray(v)) { v.forEach(function (x) { walk(x, hid); }); return; }
+        hid = hid || hides(v);
+        if (v.type && names(v)) { seen = true; if (!hid) { open = true; return; } }
+        Object.keys(v).forEach(function (k) { if (k !== 'visibility' && k !== 'variables') walk(v[k], hid); });
+      })(view, off);
+    });
+    return seen && !open;
+  }
+  function hiddenNote() {
+    var ha = document.querySelector('home-assistant');
+    if (!ha) return;
+    var t = 'Dieses Gerät ist für dich ausgeblendet';
+    var ev = new Event('hass-notification', { bubbles: true, composed: true });
+    ev.detail = { message: typeof window.casoraTr === 'function' ? window.casoraTr(t) : t };
+    ha.dispatchEvent(ev);
+  }
+  // go() öffnet wie gewohnt; ist die Entität für diesen Benutzer ausgeblendet, nur ein Hinweis
+  // (kein Popup, kein HA-Dialog) und blocked().
+  function userGuard(entityId, go, blocked) {
+    var h = hassOf();
+    if (!entityId || !h || !h.callWS) return go();
+    var seg = (location.pathname || '').split('/').filter(Boolean);
+    h.callWS({ type: 'lovelace/config', url_path: seg[0] || 'lovelace' }).then(function (cfg) {
+      return hiddenForUser(cfg, entityId, h.user && h.user.id);
+    }, function () { return false; }).then(function (hid) {
+      if (!hid) return go();
+      hiddenNote();
+      if (blocked) blocked();
+    });
+  }
+  window.casoraUserGuard = userGuard;
+
   // ── Glocke = Kachel (B-NOTI, 06.10.2026) ──────────────────────────────────
   // Die Kachel, die man für diese Entität antippen würde: sichtbare button-card mit genau dieser
   // Entität und eigenem Casora-Popup, eine Kachel vor einer Badge. So öffnet die Glocke dasselbe
@@ -9628,6 +9685,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   };
 
   function openTarget(what, fallbackEntity) {
+    userGuard(fallbackEntity, function () { openTargetNow(what, fallbackEntity); });
+  }
+  function openTargetNow(what, fallbackEntity) {
     // dataset stringifies an array, so a retagged row arrives comma-joined.
     var names = Array.isArray(what) ? what
       : (what ? String(what).split(',').map(function (n) { return n.trim(); })

@@ -25,6 +25,10 @@ const EXPECT = [
   ['Einzelne Sensoren ausgenommen', 'Some sensors excluded'],
   ['Alarm scharf – Bypass', 'Alarm armed – Bypass'],
   ['Alarmanlage umgeschaltet auf Bypass', 'Alarmanlage switched to Bypass'],
+  // R-04: Countdown-Unterzeile im Weich-Alarm-Popup (Zahl steht in eigenem <span>)
+  ['Zuhause · scharf in <span class="cal-n"></span> s', 'Home · armed in <span class="cal-n"></span> s'],
+  ['wird scharf …', 'arming …'],
+  ['Alarm in <span class="cal-n"></span> s', 'Alarm in <span class="cal-n"></span> s'],
 ];
 for (const [de, en] of EXPECT) assert.equal(tr(de), en, de);
 console.log('ok phrasen_en');

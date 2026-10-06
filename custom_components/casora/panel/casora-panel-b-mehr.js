@@ -600,7 +600,8 @@
     P._mKeys = function () {
       if (this._mKeyed) return;
       this._mKeyed = true;
-      document.addEventListener("keydown", (ev) => {
+      // Über _gOn: beim Verlassen des Panels wieder abgemeldet (sonst hält document die alte Instanz).
+      this._gOn(document, "keydown", (ev) => {
         if (!this.isConnected || !this._state || !on(this)) return;
         const k = String(ev.key || "").toLowerCase();
         const mod = ev.metaKey || ev.ctrlKey;
@@ -834,8 +835,12 @@
           const q = document.createElement("div");
           q.className = "mqr";
           q.innerHTML = '<div class="mcode"></div><div class="murl" data-no-i18n></div><p class="mhint"></p>';
-          q.querySelector(".mcode").innerHTML = code;
-          q.querySelector(".mcode svg").setAttribute("aria-label", tr("QR code for this dashboard"));
+          // Ohne Code (Adresse zu lang) nur Link und „Link kopieren“ zeigen.
+          const mc = q.querySelector(".mcode");
+          mc.innerHTML = code;
+          const svg = mc.querySelector("svg");
+          if (svg) svg.setAttribute("aria-label", tr("QR code for this dashboard"));
+          else mc.remove();
           q.querySelector(".murl").textContent = link.url;
           q.querySelector(".mhint").textContent = tr("Scan it with the phone's camera. The phone has to reach Home Assistant – on the same Wi-Fi or through your external address. No password is included.");
           box.insertBefore(q, acts);
@@ -959,6 +964,7 @@
       }
       return this._mUsersP || Promise.resolve([]);
     };
+    const WHO_ONLY_HIDES = "Only hides it – no access protection. Anyone with an account can still control the devices in Home Assistant.";
     const namesOf = (ids, users) => ids.map((id) => (users.find((u) => u.id === id) || {}).name || tr("Unknown user"));
     // Zeile „Wer sieht das?“: Wert „Alle“ bzw. „Nur für: …“, Antippen öffnet die Auswahl.
     P._mWhoRow = function (host, get, set, what) {
@@ -978,12 +984,18 @@
       const note = document.createElement("div");
       note.className = "mnote";
       note.setAttribute("data-no-i18n", "");
-      box.append(row, note);
+      // Ehrlich sagen, was es ist: nur Ausblenden im Dashboard, kein Zugriffsschutz.
+      const warn = document.createElement("div");
+      warn.className = "hint mwhowarn";
+      warn.setAttribute("data-no-i18n", "");
+      warn.textContent = tr(WHO_ONLY_HIDES);
+      box.append(row, note, warn);
       const paint = (users) => {
         const ids = get();
         btn.querySelector(".mvt").textContent = ids.length ? tr("Only some people") : tr("Everyone");
         note.textContent = ids.length ? tr("Only for:") + " " + namesOf(ids, users || []).join(", ") : "";
         note.hidden = !ids.length;
+        warn.hidden = !ids.length;
       };
       paint([]);
       this._mUsers().then(paint);
@@ -999,7 +1011,7 @@
       const pick = new Set(cur);
       const ok = await this._ask({
         title: tr("Who sees this?"),
-        message: tr(what) + " – " + tr("Pick the people who should see it. Nobody ticked means everyone. Admins always see everything here in the Studio."),
+        message: tr(what) + " – " + tr("Pick the people who should see it. Nobody ticked means everyone. Admins always see everything here in the Studio.") + " " + tr(WHO_ONLY_HIDES),
         confirmLabel: tr("Done"),
         extend: ({ box, acts }) => {
           box.classList.add("mwhosheet");

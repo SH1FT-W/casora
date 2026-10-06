@@ -67,6 +67,15 @@ with tempfile.TemporaryDirectory() as d:
     with open(bad, "wb") as h:
         h.write(b"\xff\xd8\xffkein bild")
     check("kaputtes Bild -> None", A.webp_variant(bad, cache, False) is None)
+    marks = [f for f in os.listdir(cache) if os.path.getsize(os.path.join(cache, f)) == 0]
+    check("kaputtes Bild: Fehlschlag gemerkt (leere Datei)", len(marks) == 1, marks)
+    opened = []
+    real_open = Image.open
+    Image.open = lambda *a, **k: opened.append(a) or real_open(*a, **k)
+    try:
+        check("zweiter Abruf: None ohne neuen Versuch", A.webp_variant(bad, cache, False) is None and not opened, opened)
+    finally:
+        Image.open = real_open
     check("fehlende Datei -> None", A.webp_variant(os.path.join(d, "fehlt.jpg"), cache, False) is None)
 
 print("FEHLER:", fails) if fails else print("alle ok")

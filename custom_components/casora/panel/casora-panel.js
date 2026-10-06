@@ -2272,6 +2272,9 @@ const NOT_CASORA_KEY = "casora_panel_not_casora_v1";
 // zweimal. Jetzt nur Unbekannte sofort, die übrigen höchstens alle 12 Stunden im Hintergrund.
 const DASH_VERDICT_KEY = "casora_panel_dash_verdict_v2";
 const DASH_VERDICT_TTL = 12 * 3600 * 1000;
+// „Nein“ kürzer: ein inzwischen zu Casora gewordenes Dashboard (z. B. aus einem anderen Browser)
+// soll nicht einen halben Tag aus der Auswahl fehlen.
+const DASH_VERDICT_TTL_NO = 3600 * 1000;
 
 const hashStr = (str) => {
   let h = 0x811c9dc5;
@@ -11374,7 +11377,8 @@ class CasoraPanel extends HTMLElement {
 
   _verdictFresh(url_path) {
     const at = this._verdictAt && this._verdictAt.get(url_path);
-    return !!at && Date.now() - at < DASH_VERDICT_TTL && Date.now() >= at;
+    const ttl = this._casoraVerdict && this._casoraVerdict.get(url_path) === false ? DASH_VERDICT_TTL_NO : DASH_VERDICT_TTL;
+    return !!at && Date.now() - at < ttl && Date.now() >= at;
   }
 
   _shownDashboards(all) {
@@ -14241,7 +14245,10 @@ class CasoraPanel extends HTMLElement {
       this._pair = null;
       this._state = extractAny(cfg);
       this._stateUrl = url_path;
-      const pair = await this._loadPair(url_path, cfg);
+      // Bis die Handy-Hälfte da ist, speichert nichts (⌘S hier schriebe nur die Desktop-Hälfte).
+      this._pairWait = seq;
+      let pair;
+      try { pair = await this._loadPair(url_path, cfg); } finally { if (this._pairWait === seq) this._pairWait = 0; }
       if (stale()) return;
       this._pair = pair;
       if (this._pair) this._state = this._pair.desktop;
@@ -14701,7 +14708,7 @@ class CasoraPanel extends HTMLElement {
       return false;
     }
     const s = this._state;
-    if (!s) return false;
+    if (!s || this._pairWait) return false;
     // Kann das Studio dieses Dashboard nicht verlustfrei nachbauen, speichert kein Weg – auch
     // nicht Assistent, „Neue Szene“ oder die Einstellungen, die _save() direkt aufrufen.
     if (this._saveBlocked) {

@@ -310,7 +310,7 @@
   // Ohne „Aktiv“-Etikett: die aktive Zeile ist hell hinterlegt (r.selected), live über das
   // Vorlagenfeld (triggers_update der Inhaltskarte).
   window._casoraSoftAlarm = function (ent, modes, states) {
-    // Entwurf 06.10.2026: Bedienung a|b|c in 07-weich-spezial.js (window._casoraAlarmSoft).
+    // Weich-Bedienung des Alarm-Popups steht in 07-weich-spezial.js (window._casoraAlarmSoft).
     if (window._casoraAlarmSoft && window._casoraAlarmSoft.modes) return window._casoraAlarmSoft.modes(ent, modes, states);
     var UI = window._casoraUI; if (!UI) return '';
     var st = raw(states, ent);

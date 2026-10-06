@@ -55,7 +55,9 @@ def webp_variant(src: str, cache_dir: str, phone: bool) -> str | None:
     name = f"{key}-{st.st_mtime_ns:x}-{st.st_size:x}-{'p' if phone else 'd'}.webp"
     out = os.path.join(cache_dir, name)
     if os.path.isfile(out):
-        return out if os.path.getsize(out) < st.st_size else None
+        # Leere Datei = Umwandlung schlug schon einmal fehl: nicht bei jedem Abruf neu rechnen.
+        size = os.path.getsize(out)
+        return out if 0 < size < st.st_size else None
     try:
         from PIL import Image  # noqa: PLC0415
     except ImportError:
@@ -71,7 +73,7 @@ def webp_variant(src: str, cache_dir: str, phone: bool) -> str | None:
             img.save(buf, "WEBP", quality=WEBP_QUALITY, method=4)
     except Exception:  # noqa: BLE001 - dann eben das Original
         _LOGGER.debug("Casora: keine WebP-Fassung für %s", src, exc_info=True)
-        return None
+        buf = None
     with _lock:
         os.makedirs(cache_dir, exist_ok=True)
         # Ältere Fassungen desselben Fotos (ersetzt) entfernen.
@@ -83,9 +85,10 @@ def webp_variant(src: str, cache_dir: str, phone: bool) -> str | None:
                     pass
         tmp = out + f".{threading.get_ident()}.part"
         with open(tmp, "wb") as handle:
-            handle.write(buf.getvalue())
+            handle.write(buf.getvalue() if buf is not None else b"")
         os.replace(tmp, out)
-    return out if os.path.getsize(out) < st.st_size else None
+    size = os.path.getsize(out)
+    return out if 0 < size < st.st_size else None
 
 
 class CasoraAssetsView(HomeAssistantView):
