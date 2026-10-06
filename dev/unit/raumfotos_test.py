@@ -91,5 +91,20 @@ with tempfile.TemporaryDirectory() as d:
     except I.UploadError as err:
         check("Textdatei: Code type", err.code == "type", err.code)
 
+# SEC-01: neue Namen bekommen einen zufälligen Anhang (Fotos sind ohne Anmeldung abrufbar),
+# vorhandene Namen und schon private Namen bleiben.
+with tempfile.TemporaryDirectory() as cfg:
+    path = lambda *p: os.path.join(cfg, *p)  # noqa: E731
+    neu = I.private_name(path, "kueche")
+    check("SEC-01: neuer Name nicht erratbar", I.PRIVATE_TAIL.search(neu) is not None and neu.startswith("kueche-")
+          and I.SAFE_NAME.match(neu) is not None, neu)
+    check("SEC-01: zwei neue Namen verschieden", I.private_name(path, "kueche") != neu)
+    check("SEC-01: privater Name bleibt", I.private_name(path, neu) == neu)
+    os.makedirs(path(I.ROOMS_DIR))
+    open(path(I.ROOMS_DIR, "bad-night.jpg"), "wb").close()
+    check("SEC-01: vorhandener Name bleibt (Nachtfoto findet sein Tagfoto)", I.private_name(path, "bad") == "bad")
+    lang = I.private_name(path, "x" * 64)
+    check("SEC-01: langer Name bleibt gültig", I.SAFE_NAME.match(lang) is not None, lang)
+
 print("FAIL" if fails else "PASS", "raumfotos_test")
 sys.exit(1 if fails else 0)
