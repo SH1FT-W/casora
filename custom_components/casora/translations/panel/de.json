@@ -787,6 +787,8 @@
     "Mailbox, battery exceptions and more for every dashboard": "Einstellungen für alle Dashboards",
     "Rewind": "Zeitreise",
     "Changed": "Geändert",
+    "{n} rooms changed": "{n} Räume geändert",
+    "{n} more rooms changed": "{n} weitere Räume geändert",
     "Restore unsaved changes from {t}?": "Ungespeicherte Änderungen von {t} wiederherstellen?",
     "The dashboard was saved elsewhere since then. Restoring puts your unsaved version over it.": "Das Dashboard wurde seitdem anderswo gespeichert. Beim Wiederherstellen ersetzt deine ungespeicherte Fassung diesen Stand.",
     "These changes were not saved before the page was left.": "Diese Änderungen wurden vor dem Verlassen der Seite nicht gespeichert.",

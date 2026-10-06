@@ -253,7 +253,12 @@
     const told = s.changed.filter((n) => (det[n] || []).length);
     told.slice(0, 2).forEach((n) => bits.push(rn(n) + ": " + det[n].map(word).join(", ")));
     const rest = s.changed.filter((n) => told.slice(0, 2).indexOf(n) < 0);
-    if (rest.length) bits.push(t("Changed") + ": " + rest.slice(0, 3).map(rn).join(", ") + (rest.length > 3 ? " +" + (rest.length - 3) : ""));
+    // Mehrere Räume: die Zahl vorn („3 Räume geändert: Büro, Flur, Küche …“) statt „+5“ am Ende.
+    if (rest.length === 1) bits.push(t("Changed") + ": " + rn(rest[0]));
+    else if (rest.length) {
+      bits.push(t(told.length ? "{n} more rooms changed" : "{n} rooms changed").replace("{n}", rest.length)
+        + ": " + rest.slice(0, 3).map(rn).join(", ") + (rest.length > 3 ? " …" : ""));
+    }
     if (s.general) bits.push(t("Dashboard settings"));
     if (s.phone && !bits.length) bits.push(t("Phone layout"));
     const txt = bits.length ? bits.join(" · ") : t("Saved");
