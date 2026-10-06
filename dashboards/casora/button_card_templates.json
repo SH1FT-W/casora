@@ -254,6 +254,7 @@
   }
  },
  "casora_alarm": {
+  "entity": "[[[\n  /* Ohne zugeordnete Entität: dieselbe Alarmanlage wie das Popup (alarm_entity, Standard Alarmo) –\n     vorher „Noch nicht eingerichtet“ auf der Kachel, im Popup aber „Aktiv · Zuhause“. */\n  const id = variables?.alarm_entity;\n  return id && states[id] ? id : null;\n]]]\n",
   "entity_picture": "[[[\n  const iconMap = {\n    disarmed: 'shield_off',\n    armed_home: 'shield_check',\n    armed_away: 'shield_lock',\n    armed_night: 'shield_moon',\n    armed_vacation: 'shield_vacation',\n    armed_custom_bypass: 'shield_bypass',\n    triggered: 'shield_alarm',\n  };\n  return window.casoraIconUrl(iconMap[entity?.state] || 'shield_marked');\n]]]\n",
   "icon_hold_action": {
    "action": "more-info",
