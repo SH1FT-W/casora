@@ -1,6 +1,17 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "Pinned": "Angeheftet",
+    "Name…": "Benennen …",
+    "Pin": "Anheften",
+    "Unpin": "Lösen",
+    "Name this version": "Stand benennen",
+    "e.g. Before the remodel": "z. B. Vor dem Umbau",
+    "At most 20 versions can be pinned.": "Höchstens 20 Stände lassen sich anheften.",
+    "That didn't work.": "Das hat nicht geklappt.",
+    "Pinned – kept for good": "Angeheftet – bleibt dauerhaft",
+    "Unpinned": "Gelöst",
+    "Name saved": "Name gespeichert",
     "Tiles and badges the preview does not show right now – tap to see them": "Kacheln und Badges, die die Vorschau gerade nicht zeigt – antippen, um sie zu sehen",
     "Which device should the tile show?": "Welches Gerät soll die Kachel zeigen?",
     "Pick one – or add the tile without a device and choose it later.": "Wähl eins aus – oder füge die Kachel ohne Gerät hinzu und wähle es später.",

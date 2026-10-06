@@ -121,4 +121,19 @@ assert.match(vsrc, /await this\._hass\.callWS\(\{ type: "casora\/versions\/snap"
 const py = fs.readFileSync(new URL('../../custom_components/casora/versions.py', import.meta.url), 'utf8');
 assert.ok(/SUMMARY_MAX = (\d+)/.exec(py) && Number(/SUMMARY_MAX = (\d+)/.exec(py)[1]) >= 2000, 'Zusammenfassung darf lang sein');
 
+// Benannte und angeheftete Stände (06.10.2026): nie in eine Gruppe, angeheftete oben,
+// „Jetzt“ ist der aktuelle Stand, nicht der erste Eintrag.
+{
+  const list = [
+    { id: 'c', ts: '2026-10-03T12:01:00+02:00', kind: 'save', summary: '', current: true },
+    { id: 'b', ts: '2026-10-03T12:00:30+02:00', kind: 'save', summary: '', name: 'Vor dem Umbau', pinned: true },
+    { id: 'a', ts: '2026-10-03T12:00:00+02:00', kind: 'save', summary: '' },
+  ];
+  const g = V.groupVersions(list);
+  assert.equal(g.length, 3, 'benannter Stand bleibt für sich');
+  const o = V.pinnedFirst(g);
+  assert.deepEqual(o.map((v) => v.id), ['b', 'c', 'a'], 'angeheftet oben');
+  assert.equal(V.nowOf(o).id, 'c', 'Jetzt = aktueller Stand');
+}
+
 console.log('zeitreise: ok');

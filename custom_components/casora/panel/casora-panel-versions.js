@@ -36,6 +36,12 @@
     + ".cv-tx b{display:block;font-size:var(--t-callout);font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}"
     + ".cv-tx span{display:block;font-size:var(--t-foot);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"
     + ".cv-now{flex:none;padding:3px 9px;border-radius:999px;font-size:var(--t-caption);font-weight:600;background:var(--casora-studio-good-tint, rgba(52,199,89,.22));color:var(--casora-studio-good, #34c759)}"
+    + ".cv-pin{display:inline-grid;vertical-align:-2px;margin-left:6px;width:14px;height:14px;color:var(--ink-2)}.cv-pin svg{width:14px;height:14px}"
+    + ".cv-item{display:flex;align-items:center}.cv-item+.cv-item{box-shadow:inset 0 .5px 0 var(--hair,rgba(255,255,255,.1))}"
+    + ".cv-item .cv-row{flex:1 1 auto;min-width:0}"
+    + ".cv-more{appearance:none;flex:none;width:40px;height:40px;margin:0 6px 0 0;padding:0;border:0;border-radius:50%;background:none;box-shadow:none;"
+    + "color:var(--ink-2);font:inherit;font-size:20px;line-height:1;cursor:pointer}.cv-more:hover{background:rgba(127,127,127,.12)}"
+    + ".cv-tags{display:flex;gap:8px}.cv-tags button{flex:1 1 0}"
     + ".cv-empty{padding:28px 18px;text-align:center;font-size:var(--t-callout);line-height:1.45;color:var(--ink-2)}"
     + ".cv-act{display:flex;flex-direction:column;gap:8px;margin-top:16px;padding:4px 0}"
     // Ein älterer Stand ist gewählt: Die Knöpfe stehen fest am unteren Rand der Spalte, wie die
@@ -214,7 +220,8 @@
       // im Studio – sie bleiben für sich (sonst verschwände z. B. „Angelegt“ in einer Gruppe).
       let origin = false;
       try { origin = !!(v.summary && JSON.parse(v.summary).origin); } catch (e) { origin = false; }
-      const plain = (!v.kind || v.kind === "save") && !origin;
+      // Benannte und angeheftete Stände bleiben ebenfalls für sich.
+      const plain = (!v.kind || v.kind === "save") && !origin && !v.name && !v.pinned;
       // ts kommt als ISO-Text (versions.py) – erst in Millisekunden, sonst ist der Abstand NaN
       // und nichts wird je zusammengefasst.
       const gap = g ? Date.parse(g.last.ts) - Date.parse(v.ts) : NaN;
@@ -265,8 +272,20 @@
     return v.grouped ? txt + " (" + t("{n} saves").replace("{n}", v.grouped) + ")" : txt;
   }
 
+  // Angeheftete Stände oben (je neueste zuerst), darunter die Zeitleiste.
+  const pinnedFirst = (list) => list.filter((v) => v.pinned).concat(list.filter((v) => !v.pinned));
+  // Der Stand „Jetzt“ – nicht einfach der erste Eintrag, oben können angeheftete stehen.
+  const nowOf = (list) => list.find((v) => v.current) || list.find((v) => !v.pinned) || list[0];
+  const PIN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    + '<path d="M9 4h6l-1 5 3 3v2H7v-2l3-3zM12 14v6"/></svg>';
+  // Zeile: Name (falls vergeben) groß, darunter Uhrzeit und was sich geändert hat.
+  const rowInner = (v, time) => '<span class="cv-dot"></span><span class="cv-tx"><b>'
+    + (v.name ? esc(v.name) : esc(time)) + (v.pinned ? '<i class="cv-pin" title="' + esc(t("Pinned")) + '">' + PIN_SVG + "</i>" : "")
+    + "</b><span>" + (v.name ? esc(time) + " · " : "") + esc(describe(v)) + "</span></span>"
+    + (v.current ? '<span class="cv-now">' + esc(t("Now")) + "</span>" : "");
+
   // Für die Unit-Tests (dev/unit/zeitreise.mjs).
-  window.__casoraVersionsInternals = { summarize, roomDiff, mergeSummaries, groupVersions, describe };
+  window.__casoraVersionsInternals = { summarize, roomDiff, mergeSummaries, groupVersions, describe, pinnedFirst, nowOf };
 
   customElements.whenDefined("casora-panel").then(() => {
     const P = customElements.get("casora-panel").prototype;
@@ -465,7 +484,10 @@
       if (!act) return;
       act.replaceChildren();
       const peek = this._cvPeek;
-      if (!peek) return;
+      const sel = (this._cvList || []).find((x) => x.id === this._cvSel);
+      // Benennen und Anheften für jeden gewählten Stand, auch „Jetzt“.
+      const tags = sel ? this._cvTagButtons(sel, () => this._cvRender(true)) : null;
+      if (!peek) { if (tags) act.append(tags); return; }
       const locked = isLocked(this._dashUrl);
       const go = document.createElement("button");
       go.type = "button";
@@ -476,12 +498,54 @@
       back.type = "button";
       back.className = "ghost";
       back.textContent = t("Back to Now");
-      back.onclick = () => this._cvShow((this._cvList || [])[0]);
+      back.onclick = () => this._cvShow(nowOf(this._cvList || []));
       const note = document.createElement("div");
       note.className = "cv-note";
       note.textContent = locked ? t("This dashboard is locked against saving from the Studio.")
         : t("What is saved now stays in the list, so you can always go back.");
       act.append(go, back, note);
+      if (tags) act.append(tags);
+    };
+
+    // „Benennen…“ und „Anheften“/„Lösen“ für einen Stand; after zeichnet die Liste neu.
+    P._cvTagButtons = function (v, after) {
+      const box = document.createElement("div");
+      box.className = "cv-tags";
+      const name = document.createElement("button");
+      name.type = "button";
+      name.className = "ghost";
+      name.textContent = t(v.name ? "Rename…" : "Name…");
+      name.onclick = () => this._cvName(v, after);
+      const pin = document.createElement("button");
+      pin.type = "button";
+      pin.className = "ghost";
+      pin.textContent = t(v.pinned ? "Unpin" : "Pin");
+      pin.onclick = () => this._cvLabel(v, { pinned: !v.pinned }, after);
+      box.append(name, pin);
+      return box;
+    };
+    P._cvName = async function (v, after) {
+      const name = await this._ask({ title: t("Name this version"), value: v.name || "",
+        placeholder: t("e.g. Before the remodel"), confirmLabel: t("Save") });
+      if (name === null || name === undefined || name === false) return;
+      // Ein Name heftet den Stand gleich an – sonst räumt das Aufräumen ihn irgendwann weg.
+      const patch = { name: String(name).trim() };
+      if (patch.name && !v.pinned) patch.pinned = true;
+      await this._cvLabel(v, patch, after);
+    };
+    P._cvLabel = async function (v, patch, after) {
+      try {
+        await this._hass.callWS(Object.assign({ type: "casora/versions/label", url_path: this._dashUrl, version: v.id }, patch));
+      } catch (e) {
+        const msg = e && e.code === "too_many" ? t("At most 20 versions can be pinned.") : t("That didn't work.") + " " + ((e && e.message) || "");
+        if (this._bToast) this._bToast(msg, { kind: "err" }); else this._cvError(msg);
+        return;
+      }
+      if ("name" in patch) { if (patch.name) v.name = patch.name; else delete v.name; }
+      if ("pinned" in patch) { if (patch.pinned) v.pinned = true; else delete v.pinned; }
+      this._cvList = null;
+      if (this._bToast) this._bToast(t(patch.pinned === true ? "Pinned – kept for good" : patch.pinned === false ? "Unpinned" : "Name saved"), { ms: 2000 });
+      if (after) after();
     };
 
     P._cvRestore = async function (v) {
@@ -557,7 +621,7 @@
           return;
         }
         if (!this._cvOpen || pane.firstChild !== wrap) return;
-        list = groupVersions(list);
+        list = pinnedFirst(groupVersions(list));
         this._cvList = list;
       }
       if (!list.length) {
@@ -570,7 +634,7 @@
       let day = null, box = null;
       list.forEach((v) => {
         const d = new Date(v.ts);
-        const label = fmtDay(this, d);
+        const label = v.pinned ? t("Pinned") : fmtDay(this, d);
         if (label !== day) {
           day = label;
           const h = document.createElement("div");
@@ -587,14 +651,13 @@
         r.className = "cv-row";
         r.dataset.id = v.id;
         r.setAttribute("data-no-i18n", "");
-        r.innerHTML = '<span class="cv-dot"></span><span class="cv-tx"><b>' + esc(fmtTime(this, d)) + "</b><span>"
-          + esc(describe(v)) + "</span></span>" + (v.current ? '<span class="cv-now">' + esc(t("Now")) + "</span>" : "");
+        r.innerHTML = rowInner(v, v.pinned ? fmtFull(this, d) : fmtTime(this, d));
         r.onclick = () => this._cvShow(v);
         box.appendChild(r);
       });
       wrap.appendChild(act);
       const keep = list.find((x) => x.id === this._cvSel);
-      this._cvShow(keep || list[0]);
+      this._cvShow(keep || nowOf(list));
     };
 
     P._cvOpenPage = function () {
@@ -743,7 +806,7 @@
         lede: t("Every save is kept here. Restoring puts the dashboard back to that version.") });
       let list = [];
       try {
-        list = groupVersions((await this._hass.callWS({ type: "casora/versions/list", url_path: this._dashUrl })).versions || []);
+        list = pinnedFirst(groupVersions((await this._hass.callWS({ type: "casora/versions/list", url_path: this._dashUrl })).versions || []));
       } catch (e) {
         this._flowError(t("Rewind could not be loaded.") + " " + e.message);
       }
@@ -759,19 +822,37 @@
       let day = null, box = null;
       list.forEach((v) => {
         const d = new Date(v.ts);
-        const label = fmtDay(this, d);
+        const label = v.pinned ? t("Pinned") : fmtDay(this, d);
         if (label !== day) {
           day = label;
           const h = document.createElement("div"); h.className = "cv-day"; h.textContent = label;
           h.setAttribute("data-no-i18n", ""); wrap.appendChild(h);
           box = document.createElement("div"); box.className = "cv-list"; wrap.appendChild(box);
         }
+        const item = document.createElement("div");
+        item.className = "cv-item";
         const r = document.createElement("button");
         r.type = "button"; r.className = "cv-row"; r.setAttribute("data-no-i18n", "");
-        r.innerHTML = '<span class="cv-dot"></span><span class="cv-tx"><b>' + esc(fmtTime(this, d)) + "</b><span>"
-          + esc(describe(v)) + "</span></span>" + (v.current ? '<span class="cv-now">' + esc(t("Now")) + "</span>" : "");
+        r.dataset.id = v.id;
+        r.innerHTML = rowInner(v, v.pinned ? fmtFull(this, d) : fmtTime(this, d));
         if (!v.current) r.onclick = async () => { this._exitFlow(true); await this._cvRestore(v); };
-        box.appendChild(r);
+        // „…“: Benennen und Anheften, ohne den Stand gleich wiederherzustellen.
+        const more = document.createElement("button");
+        more.type = "button"; more.className = "cv-more"; more.textContent = "\u2026";
+        more.setAttribute("aria-label", t("More"));
+        more.onclick = (ev) => {
+          ev.stopPropagation();
+          this._menuAt(more, [
+            { id: "name", label: v.name ? "Rename…" : "Name…", icon: "pencil" },
+            { id: "pin", label: v.pinned ? "Unpin" : "Pin" },
+          ], (id) => {
+            const again = () => this._cvSheet();
+            if (id === "name") this._cvName(v, again);
+            else if (id === "pin") this._cvLabel(v, { pinned: !v.pinned }, again);
+          });
+        };
+        item.append(r, more);
+        box.appendChild(item);
       });
       this._flowCancel(s.acts);
     };
