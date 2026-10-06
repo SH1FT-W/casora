@@ -114,12 +114,32 @@ def install_zip(data: bytes, target: str, backups: str, backup_name: str) -> Non
             os.makedirs(backups, exist_ok=True)
             if os.path.isdir(target):
                 shutil.make_archive(os.path.join(backups, backup_name), "zip", target)
-            old = target + ".alt"
-            shutil.rmtree(old, ignore_errors=True)
-            if os.path.isdir(target):
-                os.replace(target, old)
-            shutil.copytree(new, target)
-            shutil.rmtree(old, ignore_errors=True)
+            # Erst vollständig neben das Ziel kopieren (Speicher voll, Rechte …: das Ziel bleibt
+            # unberührt), dann nur noch umbenennen.
+            staged = target + ".neu"
+            shutil.rmtree(staged, ignore_errors=True)
+            try:
+                shutil.copytree(new, staged)
+            except BaseException:
+                shutil.rmtree(staged, ignore_errors=True)
+                raise
+            swap_in(staged, target)
+
+
+def swap_in(staged: str, target: str) -> None:
+    """Fertig kopierte Fassung an die Stelle von target setzen; scheitert das, kommt die alte zurück."""
+    old = target + ".alt"
+    shutil.rmtree(old, ignore_errors=True)
+    had = os.path.isdir(target)
+    if had:
+        os.replace(target, old)
+    try:
+        os.replace(staged, target)
+    except BaseException:
+        if had and not os.path.exists(target):
+            os.replace(old, target)
+        raise
+    shutil.rmtree(old, ignore_errors=True)
 
 
 def _read_hacs(path: str) -> bool:

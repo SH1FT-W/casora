@@ -4,6 +4,7 @@
 
 B-PY-01: nach „Installieren“ und Neuladen der Integration (Optionen geändert) bietet die neu
           angelegte Entität dieselbe Version nicht noch einmal an.
+B-PY-02: bricht das Kopieren der neuen Fassung ab (Speicher voll), bleibt die laufende heil.
 """
 
 from __future__ import annotations
@@ -89,6 +90,34 @@ async def main():
     await ent2.async_update()
     check("B-PY-01: nach Prüfung kein erneutes Angebot", ent2.latest_version == ent2.installed_version == "9.0.1",
           f"{ent2.installed_version} → {ent2.latest_version}")
+
+    # ── B-PY-02 ─────────────────────────────────────────────────────────
+    t2 = os.path.join(tmp, "b2", "custom_components", "casora")
+    os.makedirs(t2)
+    with open(os.path.join(t2, "manifest.json"), "w") as fh:
+        json.dump({"version": "1.0.0"}, fh)
+    real = update.shutil.copytree
+
+    def voll(src, dst, *a, **k):
+        os.makedirs(dst)
+        with open(os.path.join(dst, "halb.txt"), "w") as fh:
+            fh.write("x")
+        raise OSError(28, "No space left on device")
+
+    update.shutil.copytree = voll
+    try:
+        update.install_zip(make_zip("9.0.1"), t2, os.path.join(tmp, "b2", "sich"), "casora_1.0.0_x")
+        raised = False
+    except OSError:
+        raised = True
+    finally:
+        update.shutil.copytree = real
+    with open(os.path.join(t2, "manifest.json")) as fh:
+        still = json.load(fh).get("version")
+    left = sorted(os.listdir(os.path.dirname(t2)))
+    check("B-PY-02: Fehler wird gemeldet", raised)
+    check("B-PY-02: laufende Fassung unverändert", still == "1.0.0" and not os.path.exists(os.path.join(t2, "halb.txt")), still)
+    check("B-PY-02: keine halben Ordner neben casora", left == ["casora"], repr(left))
 
 
 asyncio.run(main())
