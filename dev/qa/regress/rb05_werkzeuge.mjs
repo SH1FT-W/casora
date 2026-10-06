@@ -5,7 +5,7 @@
 // Szenen; das Titelmenü (Dashboard-Name) wechselt Dashboards und enthält Umbenennen, Symbol,
 // Löschen (UX-03), „…“ diese nicht mehr; Zeitreise als Uhr neben Rückgängig; Einstellungen-Menü alle Einstellungsseiten
 // und Updates; das Raummenü wechselt Räume, verschiebt sie und öffnet „Räume ordnen“;
-// „…“ → „Neues Studio“ schaltet zurück zum bisherigen Studio und wieder an. Es wird nichts gespeichert.
+// „…“ › Hilfe › „Bisheriges Studio öffnen“ und „…“ › „Neues Studio öffnen“ schalten hin und zurück. Es wird nichts gespeichert.
 import { open, studio, casoraDashboard, check, need, finish } from './lib.mjs';
 
 const dash = await casoraDashboard();
@@ -84,17 +84,20 @@ const nm = await H(() => { const p = window.__panel(); return p._roomLabel(p._st
 await check('Raum-Knopf nennt den offenen Raum', lab === nm, { lab, nm });
 
 // Umschalten: altes Studio und zurück
+// V-08: im neuen Studio unter „…“ › Hilfe „Bisheriges Studio öffnen“, zurück über „…“ › „Neues Studio öffnen“.
 await page.locator('#more').click();
 await page.waitForTimeout(500);
-await page.locator('.combo-opt', { hasText: /Neues Studio|New Studio/ }).first().click();
+await page.locator('.combo-opt', { hasText: /^\s*(Hilfe|Help)/ }).first().click();
+await page.waitForTimeout(600);
+await page.locator('.combo-opt', { hasText: /Bisheriges Studio|previous Studio/ }).first().click();
 await page.waitForTimeout(1500);
 const a = await H(() => { const p = window.__panel(); const r = p.shadowRoot;
   return { b: p.classList.contains('bmode'), side: !!(r.querySelector('.sidelist') && r.querySelector('.sidelist').getClientRects().length),
     key: localStorage.getItem('casora.studio.b') }; });
-await check('„Neues Studio“ aus → bisheriges Studio mit Seitenleiste', !a.b && a.side && a.key === '0', a);
+await check('„Bisheriges Studio öffnen“ → bisheriges Studio mit Seitenleiste', !a.b && a.side && a.key === '0', a);
 await page.locator('#more').click();
 await page.waitForTimeout(500);
-await page.locator('.combo-opt', { hasText: /Neues Studio|New Studio/ }).first().click();
+await page.locator('.combo-opt', { hasText: /Neues Studio öffnen|Open the new Studio/ }).first().click();
 await page.waitForTimeout(1500);
 const b = await H(() => window.__panel().classList.contains('bmode'));
 await check('„Neues Studio“ wieder an', b);

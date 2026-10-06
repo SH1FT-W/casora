@@ -3,7 +3,7 @@
 // Neues Studio (B, ab 1.1.0-beta.1): Update-Hinweis und Umschalter. Erwartet: Nach dem Update von
 // einer älteren Version zeigt „Neu in Casora“ die volle Version (1.1.0-beta.1, nicht
 // „1.1.0-beta“) mit ihren Neuerungen; das Studio nennt dieselbe Version. Wer über
-// „…“ → „Neues Studio“ zum bisherigen Studio wechselt, behält das nach neuem Laden (pro Browser).
+// „…“ › Hilfe › „Bisheriges Studio öffnen“ zum bisherigen Studio wechselt, behält das nach neuem Laden (pro Browser).
 // Es wird nichts gespeichert.
 import fs from 'node:fs';
 import { open, studio, casoraDashboard, check, need, finish, usePage } from './lib.mjs';
@@ -38,7 +38,9 @@ await check('Studio nennt v' + version, ver === 'v' + version, ver);
 await H(() => { const p = window.__panel(); if (p._bClose) p._bClose(); });
 await o.page.locator('#more').click();
 await o.page.waitForTimeout(500);
-await o.page.locator('.combo-opt', { hasText: /Neues Studio|New Studio/ }).first().click();
+await o.page.locator('.combo-opt', { hasText: /^\s*(Hilfe|Help)/ }).first().click();
+await o.page.waitForTimeout(600);
+await o.page.locator('.combo-opt', { hasText: /Bisheriges Studio|previous Studio/ }).first().click();
 await o.page.waitForTimeout(1500);
 await o.page.reload();
 await studio(o.page, dash.url);

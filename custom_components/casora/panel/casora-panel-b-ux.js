@@ -3,6 +3,7 @@
 // Ergänzt das neue Studio (casora-panel-b.js, -b-plus.js, -b-mehr.js) um das, was die
 // Nutzertests an Orientierung vermisst haben:
 // - Untertitel der Reiter (Inhalt, Dashboard, Einstellungen) als Hinweis und im Inhalt-Blatt
+// - Wörterbuch: Badges und Popups mit einem Halbsatz erklärt
 // Datenmodell, Speichern und Rückgängig bleiben die des Panels – hier wird nur angeschlossen.
 (() => {
   const W = typeof window !== "undefined" ? window : globalThis;
@@ -16,7 +17,10 @@
     home: "Home, bell, AI and updates – for all dashboards",
   };
 
-  W.__casoraStudioUx = { SUB };
+  // Fachwörter mit Halbsatz (V-08): in der Inhalt-Liste unter „Badges“ und „Popups“.
+  const WHAT = { Badges: "The small facts at the top of the room", Popups: "The window that opens when you tap a tile" };
+
+  W.__casoraStudioUx = { SUB, WHAT };
   if (typeof customElements === "undefined" || !W.document) return;
 
   const CSS = `
@@ -28,6 +32,10 @@
       font-size:12.5px; line-height:1.3; font-weight:500; color:var(--ink-2, rgba(127,127,127,.95));
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none; text-shadow:none; }
     :host(.bmode.phone) .inspector .insphead .uxpath { color:color-mix(in srgb, var(--ink) 55%, transparent) !important; }
+    /* Halbsatz unter „Badges“ / „Popups“ */
+    .uxwhat { display:block; margin-top:1px; font-size:12.5px; line-height:1.3; font-weight:500; letter-spacing:0;
+      color:var(--ink-2, rgba(127,127,127,.95)); white-space:normal; text-shadow:none; }
+    :host(.bmode.phone) .inspector .uxwhat { color:color-mix(in srgb, var(--ink) 55%, transparent) !important; }
   `;
 
   customElements.whenDefined("casora-panel").then(() => {
@@ -108,12 +116,30 @@
       }
     };
 
+    // Badges und Popups: ein Halbsatz unter dem Wort (Liste am Desktop und Blatt am Handy).
+    P._uxWhat = function () {
+      const pane = this.shadowRoot.getElementById("pane");
+      if (!pane) return;
+      pane.querySelectorAll(".grouphead.stackhead > h3, .card.grouprow > .chead > h2").forEach((h) => {
+        if (h.querySelector(".uxwhat")) return;
+        const t = [...h.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim();
+        const k = Object.keys(WHAT).find((x) => x === t || tr(x) === t);
+        if (!k) return;
+        const s = document.createElement("small");
+        s.className = "uxwhat";
+        s.setAttribute("data-no-i18n", "");
+        s.textContent = tr(WHAT[k]);
+        h.appendChild(s);
+      });
+    };
+
     P._uxPaint = function () {
       if (!this.shadowRoot) return;
       this._uxCss();
       this._uxTips();
       this._uxHead();
       this._uxPhoneHeads();
+      this._uxWhat();
     };
 
     // ── Anschließen ─────────────────────────────────────────────────────

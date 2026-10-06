@@ -7,10 +7,11 @@
 // Datenmodell, Speichern („Fertig“), Rückgängig, Umzug und Vorlagen bleiben unverändert –
 // dieses Modul ordnet nur an, was das Panel ohnehin zeichnet.
 //
-// Umschaltbar über „…“ → „Neues Studio“ (pro Browser, localStorage casora.studio.b).
+// Umschaltbar über „…“ › Hilfe › „Bisheriges Studio öffnen“ bzw. im bisherigen Studio „…“ ›
+// „Neues Studio öffnen“ (pro Browser, localStorage casora.studio.b).
 (() => {
   const KEY = "casora.studio.b";
-  // Ab 1.1.0 Standard; das bisherige Studio bleibt über „…“ → „Neues Studio“ erreichbar.
+  // Ab 1.1.0 Standard; das bisherige Studio bleibt über „…“ › Hilfe erreichbar.
   const DEFAULT_ON = true;
 
   const ICON = {
@@ -1138,7 +1139,9 @@
       if (r && typeof r.then === "function") r.then(() => this._bApply());
     }));
 
-    // „…“-Menü: Eintrag „Neues Studio“ zum Umschalten.
+    // Umschalten zwischen den beiden Studios (V-08): im neuen Studio unter „…“ › Hilfe
+    // „Bisheriges Studio öffnen“, im bisherigen Studio im „…“ „Neues Studio öffnen“.
+    // „Neues Studio“ mit Haken klang, als gäbe es ein besseres altes.
     const menuAt = P._menuAt;
     P._menuAt = function (anchor, items, onPick, mopts) {
       // Typauswahl vom „+“ der unteren Leiste: am „+“ öffnen, nicht am verborgenen Knopf im Blatt.
@@ -1148,12 +1151,19 @@
         const DOC = ["renamedash", "icondash", "delete", "addmobile", "casora_versions"];
         items = items.filter((x) => !(x && DOC.indexOf(x.id) >= 0));
       }
-      if (Array.isArray(items) && items.some((x) => x && x.id === "hints") && !items.some((x) => x && x.id === "studio_b")) {
+      if (Array.isArray(items) && !this._bOn() && items.some((x) => x && x.id === "hints") && !items.some((x) => x && x.id === "studio_b")) {
         const at = items.findIndex((x) => x && x.id === "hints");
         items = items.slice();
-        items.splice(at, 0, { id: "studio_b", label: "New Studio", glyph: "tile", plainGlyph: true, checked: this._bOn() });
+        items.splice(at, 0, { id: "studio_b", label: "Open the new Studio", glyph: "tile", plainGlyph: true });
         const pick = onPick;
-        onPick = (id) => (id === "studio_b" ? this._bSetOn(!this._bOn()) : pick(id));
+        onPick = (id) => (id === "studio_b" ? this._bSetOn(true) : pick(id));
+      }
+      // Hilfe-Untermenü (welcome … issue): zurück zum bisherigen Studio.
+      if (Array.isArray(items) && this._bOn() && items.some((x) => x && x.id === "welcome") && items.some((x) => x && x.id === "issue")
+        && !items.some((x) => x && x.id === "studio_b")) {
+        items = items.concat([{ id: "studio_b", label: "Open the previous Studio", glyph: "tile", plainGlyph: true, group: "studio", quiet: true }]);
+        const pick = onPick;
+        onPick = (id) => (id === "studio_b" ? this._bSetOn(false) : pick(id));
       }
       // Raummenü in B: Räume sortieren (die Raumliste der Seitenleiste fehlt hier).
       if (this.classList.contains("bmode") && Array.isArray(items)

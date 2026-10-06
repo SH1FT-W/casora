@@ -12619,7 +12619,7 @@ class CasoraPanel extends HTMLElement {
     };
     const title = (d) => d.title || d.url_path;
     if (moves.length) {
-      card("move", "Take Over from Hemma", "Rooms, tiles and phone layout come along. The original stays unchanged.",
+      card("move", "Take Over an Existing Dashboard (e.g. Hemma)", "Rooms, tiles and phone layout come along. The original stays unchanged.",
         moves.map(title), live("/" + moves[0].url_path + "/home"));
     }
     if (yaml.length) {
