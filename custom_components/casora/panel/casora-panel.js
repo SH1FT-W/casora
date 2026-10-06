@@ -9343,7 +9343,8 @@ class CasoraPanel extends HTMLElement {
         .advsum:hover:not(:disabled) { color:var(--ink); filter:none; }
         .advsum:active:not(:disabled) { transform:none; }
         .advsum svg { width:13px; height:13px; flex:0 0 13px; transition:transform .22s var(--ease); }
-        .advsum .advplus { margin-left:auto; width:22px; height:22px; flex:0 0 22px; }
+        .advsum .advplus { margin-left:auto; width:auto; height:26px; flex:0 0 auto; padding:0 10px 0 8px; gap:4px;
+          border-radius:13px; font-size:var(--t-foot); font-weight:600; }
         .advsum .advplus svg { width:13px; height:13px; transition:none; }
         .adv.open .advsum .advplus svg { transform:none; }
         .adv.open .advsum svg { transform:rotate(90deg); }
@@ -16911,7 +16912,8 @@ class CasoraPanel extends HTMLElement {
           ap.type = "button";
           ap.title = "Add an option";
           ap.setAttribute("aria-label", "Add an option");
-          ap.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+          // Mit Wort: ein einzelnes „+“ neben „Erweitert“ war nicht zu deuten.
+          ap.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>Add</span>';
           ap.onclick = (ev) => {
             ev.stopPropagation();
             const take = (raw) => { this._advOpen.add(key); reveal(raw); };
