@@ -1024,8 +1024,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           + '<div class="has-log"></div>'
           + '<div class="has-chips">' + (ideas.length ? '<div class="has-chips-l">' + esc(tr(SLOT[slot] || '')) + '</div>' : '') + ideas.map(function (it) {
             var q = tr(it.q); /* Assist bekommt die Frage in der UI-Sprache */
-            var send = 'window._casoraAssist.send(' + JSON.stringify(q).replace(/"/g, '&quot;') + ')';
-            return '<div class="has-chip" role="button" tabindex="0"' + tap(send)
+            /* Frage als data-Attribut (voll maskiert), nicht als Code im Handler – Bereichsnamen sind frei wählbar */
+            var send = 'window._casoraAssist.send(this.dataset.q)';
+            return '<div class="has-chip" role="button" tabindex="0" data-q="' + esc(q) + '"' + tap(send)
               + ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();' + send + '}">'
               + '<span class="has-chip-i" style="--t:' + (TONE[it.tone] || TONE.general) + ';"><ha-icon icon="' + esc(it.icon) + '" style="--mdc-icon-size:18px;width:18px;height:18px;display:flex;"></ha-icon></span>'
               + '<span>' + esc(q) + '</span></div>';

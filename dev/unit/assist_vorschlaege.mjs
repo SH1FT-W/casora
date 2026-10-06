@@ -105,4 +105,9 @@ for (const h of [3, 8, 12, 19, 23]) for (const st of [base, { ...base, 'light.ku
 for (const q of all) assert.ok(en.exact[q] || pats.some(([re]) => re.test(q)), 'ohne Englisch: ' + q);
 for (const s of ['morgen', 'tag', 'abend', 'nacht']) assert.ok(en.exact[{ morgen: 'Vorschläge für den Morgen', tag: 'Vorschläge für heute', abend: 'Vorschläge für den Abend', nacht: 'Vorschläge für die Nacht' }[s]]);
 
+// R-07: Die Frage (enthält Bereichsnamen) steht maskiert in data-q, nicht als Code im onclick.
+{ const b = src('custom_components/casora/scripts/local/01-basis.js');
+  assert.ok(b.includes('data-q="\' + esc(q) + \'"') && b.includes("send(this.dataset.q)"), 'Chip sendet aus data-q');
+  assert.ok(!/_casoraAssist\.send\(' \+ JSON\.stringify/.test(b), 'keine Frage als Code im Handler'); }
+
 console.log('assist_vorschlaege: ok (' + all.size + ' Sätze)');
