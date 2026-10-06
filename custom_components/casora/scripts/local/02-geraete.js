@@ -1030,8 +1030,9 @@
     if (m < 1) return 'gerade eben';
     if (m < 60) return 'vor ' + m + ' Min.';
     var h = Math.round(m / 60);
-    if (h < 24) return 'vor ' + h + ' Std.';
-    var dd = Math.round(h / 24);
+    // Kalendertage statt 24-h-Blöcke: vor 36 Stunden ist noch „gestern“ (#11).
+    var dd = Math.round((new Date(new Date().setHours(0, 0, 0, 0)) - new Date(new Date(d.getTime()).setHours(0, 0, 0, 0))) / 86400000);
+    if (h < 24 || dd < 1) return 'vor ' + h + ' Std.';
     return dd === 1 ? 'gestern' : 'vor ' + dd + ' Tagen';
   };
   var HASS = function () { var h = document.querySelector('home-assistant'); return (h && h.hass) || null; };

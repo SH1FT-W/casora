@@ -7961,8 +7961,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var m = Math.round(s / 60);
     if (m < 60) return 'vor ' + m + ' Min.';
     var h = Math.round(m / 60);
-    if (h < 24) return 'vor ' + h + ' Std.';
-    var d = Math.round(h / 24);
+    // Kalendertage statt 24-h-Blöcke: vor 36 Stunden ist noch „Gestern“ (#11).
+    var d = Math.round((new Date(new Date().setHours(0, 0, 0, 0)) - new Date(new Date(ms).setHours(0, 0, 0, 0))) / 86400000);
+    if (h < 24 || d < 1) return 'vor ' + h + ' Std.';
     return d === 1 ? 'Gestern' : 'vor ' + d + ' Tagen';
   }
 

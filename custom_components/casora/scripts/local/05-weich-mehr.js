@@ -24,12 +24,18 @@
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return null;
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
-    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' T.';
+    // Kalendertage statt 24-h-Blöcke (#11): vor 36 Stunden ist „vor 1 T.“, nicht „vor 2 T.“.
+    var dd = Math.round((new Date(new Date().setHours(0, 0, 0, 0)) - new Date(new Date(t).setHours(0, 0, 0, 0))) / 86400000);
+    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 || dd < 1 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + dd + ' T.';
   };
   var since = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return null;
     var h = Math.max(0, (Date.now() - t) / 3600000);
-    return h < 24 ? Math.round(h) + ' Std.' : Math.round(h / 24) + (Math.round(h / 24) === 1 ? ' Tag' : ' Tagen');
+    // Dauer: unter 1 Std. in Minuten (nicht „0 Std.“), ab gerundet 24 Std. ganze Tage (nicht „24 Std.“).
+    if (h < 1) return Math.max(1, Math.round(h * 60)) + ' Min.';
+    if (Math.round(h) < 24) return Math.round(h) + ' Std.';
+    var days = Math.max(1, Math.floor(h / 24));
+    return days + (days === 1 ? ' Tag' : ' Tagen');
   };
 
   // ── Gemeinsame Karten ─────────────────────────────────────────────────────
