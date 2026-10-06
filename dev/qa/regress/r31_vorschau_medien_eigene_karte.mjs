@@ -16,7 +16,9 @@ await studio(page, dash.url);
 const H = (fn, arg) => page.evaluate(fn, arg);
 
 const P = 'media_player.qa_medien_beispiel';
-await fakeStates(page, { [P]: { state: 'off', attributes: { friendly_name: 'Beispiel Player' } } });
+// sticky: Das Mock-HA schickt laufend neue Zustände; ohne sticky waren die untergeschobenen nach
+// Sekunden wieder weg und die Prüfung kam unter Last zu spät (T-07, 06.10.2026).
+await fakeStates(page, { [P]: { state: 'off', attributes: { friendly_name: 'Beispiel Player' } } }, { sticky: true });
 
 // Raum ohne Medien-Wiedergabe: Medien eingerichtet, Player aus.
 const room = await H((pl) => {
@@ -32,56 +34,54 @@ const room = await H((pl) => {
   p._renderForm();
   return r.path;
 }, P);
-await page.waitForTimeout(2000);
 const badges = () => H(() => window.__pierce('.mini-badges .pbadge').filter((b) => b.getBoundingClientRect().width > 0)
   .map((b) => ({ ghost: b.classList.contains('ghost'), id: b.dataset.mk || '', text: b.innerText.replace(/\s+/g, ' ').trim() })));
+// Warten, bis die Badge-Reihe den erwarteten Stand zeigt (höchstens ms) – statt fester Pausen.
+const badgesUntil = async (ok, ms = 8000) => {
+  let r = [];
+  for (const t0 = Date.now(); Date.now() - t0 < ms; await page.waitForTimeout(200)) { r = await badges(); if (r.length && ok(r)) return r; }
+  return r;
+};
 const isMedia = (b) => /^(Medien|Media)\b/.test(b.text);
+// Erwartet: keine Medien-Badge. Erst warten, bis die Reihe steht (sonst wäre „leer“ ein Scheinerfolg).
+await badgesUntil((r) => r.length > 0, 8000);
+await page.waitForTimeout(500);
 let row = await badges();
 await check(`${room}: Medien eingerichtet, nichts läuft – keine Medien-Badge, auch nicht gestrichelt`,
   !row.some(isMedia), row.map((b) => (b.ghost ? '[gestrichelt] ' : '') + b.text).join(' | '));
 
 // Läuft etwas: echte Badge.
-// Untergeschobene Zustände überschreibt das Mock-HA nach einigen Sekunden wieder; unter Last (Gate)
-// kam die Prüfung dann zu spät. Bis zu dreimal unterschieben und neu zeichnen.
-for (let n = 0; n < 3; n++) {
-  await fakeStates(page, { [P]: { state: 'playing', attributes: { media_title: 'Beispiel-Titel' } } });
-  await H(() => window.__panel()._renderForm());
-  await page.waitForTimeout(1200);
-  row = await badges();
-  if (row.some((b) => isMedia(b) && !b.ghost)) break;
-}
+await fakeStates(page, { [P]: { state: 'playing', attributes: { media_title: 'Beispiel-Titel' } } }, { sticky: true });
+await H(() => window.__panel()._renderForm());
+row = await badgesUntil((r) => r.some((b) => isMedia(b) && !b.ghost));
 await check('Wiedergabe läuft – Medien-Badge sichtbar (nicht gestrichelt)', row.some((b) => isMedia(b) && !b.ghost),
   row.map((b) => b.text).join(' | '));
 
 // Ausgeschaltet: gestrichelt (Weg zurück zum Schalter).
 await H(() => { const p = window.__panel(); p._state.compact.rooms[p._room].variables.show_media = false; p._renderForm(); });
-await page.waitForTimeout(1500);
-row = await badges();
+row = await badgesUntil((r) => r.some((b) => isMedia(b) && b.ghost));
 await check('Medien ausgeschaltet – gestrichelt', row.some((b) => isMedia(b) && b.ghost), row.map((b) => b.text).join(' | '));
 
 // Nicht eingerichtet: gestrichelt.
 await H(() => { const p = window.__panel(); const v = p._state.compact.rooms[p._room].variables;
   delete v.show_media; delete v.media_player_1; p._renderForm(); });
-await page.waitForTimeout(1500);
-row = await badges();
+row = await badgesUntil((r) => r.some((b) => isMedia(b) && b.ghost));
 await check('Medien nicht eingerichtet – gestrichelt', row.some((b) => isMedia(b) && b.ghost), row.map((b) => b.text).join(' | '));
 await shot('vorschau-medien');
 
 // Energie (03.10.2026): Raum mit Leistungssensor – Badge auch bei 0 W; ohne Messung keine
 // echte Badge (gestrichelt = nicht eingerichtet, Antippen führt hin).
 const W = 'sensor.qa_raum_leistung_beispiel';
-await fakeStates(page, { [W]: { state: '0', attributes: { device_class: 'power', unit_of_measurement: 'W', friendly_name: 'Beispiel Steckdose' } } });
+await fakeStates(page, { [W]: { state: '0', attributes: { device_class: 'power', unit_of_measurement: 'W', friendly_name: 'Beispiel Steckdose' } } }, { sticky: true });
 await H((w) => { const p = window.__panel(); const v = p._state.compact.rooms[p._room].variables;
   ['energy_usage_today', 'energy_usage_month', 'energy_cost_today', 'energy_cost_month'].forEach((k) => delete v[k]);
   delete v.show_energy; v.energy_power_entity = w; p._renderForm(); }, W);
-await page.waitForTimeout(1500);
-row = await badges();
 const isEnergy = (b) => /^(Energie|Energy)\b/.test(b.text);
+row = await badgesUntil((r) => r.some((b) => isEnergy(b) && !b.ghost && /0\s*W/.test(b.text)));
 await check('Leistungssensor mit 0 W – Energie-Badge sichtbar', row.some((b) => isEnergy(b) && !b.ghost && /0\s*W/.test(b.text)),
   row.map((b) => b.text).join(' | '));
 await H(() => { const p = window.__panel(); const v = p._state.compact.rooms[p._room].variables; delete v.energy_power_entity; delete v.energy_entities; p._renderForm(); });
-await page.waitForTimeout(1500);
-row = await badges();
+row = await badgesUntil((r) => !r.some((b) => isEnergy(b) && !b.ghost), 4000);
 await check('ohne Leistungsmessung – keine echte Energie-Badge', !row.some((b) => isEnergy(b) && !b.ghost), row.map((b) => b.text).join(' | '));
 
 // Eigene Karten in der Kachelliste.
@@ -97,9 +97,10 @@ const heads = await H(() => {
   p._renderForm();
   return { fn: p._hass.states[ent].attributes.friendly_name };
 });
-await page.waitForTimeout(1500);
-const list = await H(() => window.__pierce('.tile.shut .grow').slice(0, 4).map((g) => ({
+const readList = () => H(() => window.__pierce('.tile.shut .grow').slice(0, 4).map((g) => ({
   name: (g.querySelector('.tname') || {}).textContent.trim(), kind: ((g.querySelector('.kind') || {}).textContent || '').trim() })));
+let list = [];
+for (const t0 = Date.now(); Date.now() - t0 < 8000 && list.length < 4; await page.waitForTimeout(200)) list = await readList();
 const want = [['Eigene Karte', ''], ['QA Titel', 'Eigene Karte'], [heads.fn, 'Eigene Karte'], ['QA Notiz', 'Eigene Karte']];
 await check('Kachelliste: Name oben, „Eigene Karte“ darunter (ohne Namen nur einmal)',
   want.every(([n, k], i) => list[i] && list[i].name === n && list[i].kind === k), JSON.stringify(list));
