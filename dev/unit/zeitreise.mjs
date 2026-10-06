@@ -136,4 +136,34 @@ assert.ok(/SUMMARY_MAX = (\d+)/.exec(py) && Number(/SUMMARY_MAX = (\d+)/.exec(py
   assert.equal(V.nowOf(o).id, 'c', 'Jetzt = aktueller Stand');
 }
 
+// V-06 (06.10.2026): Alltagssätze, höchstens drei, „+N weitere“; Einstellungen als Nebeneffekt fallen weg.
+{
+  const s = { added: ['Garten'], removed: ['Wohnzimmer'], changed: ['Küche', 'Bad', 'Flur'],
+    detail: { 'Küche': ['photo', 'settings'], 'Bad': ['tiles+2'], 'Flur': ['settings'] }, general: true };
+  const txt = V.describe({ kind: 'save', summary: JSON.stringify(s) });
+  const parts = txt.split(' · ');
+  assert.equal(parts.length, 4, 'drei Sätze und „+N more“: ' + txt);
+  assert.equal(parts[0], '{room} deleted'.replace('{room}', 'Wohnzimmer'), 'Löschen zuerst: ' + txt);
+  assert.ok(parts.includes('Room Garten added') && parts.includes('Photo of Küche changed'), txt);
+  assert.match(parts[3], /^\+3 more$/, 'Rest gezählt: ' + txt);
+  assert.ok(!/settings|Settings/.test(txt), 'keine „Einstellungen“: ' + txt);
+  const only = V.describe({ kind: 'save', summary: JSON.stringify({ added: [], removed: [], changed: ['Flur'], detail: { Flur: ['settings'] } }) });
+  assert.equal(only, 'Flur changed', 'nur Einstellungen: der Raum als geändert');
+  const one = V.describe({ kind: 'save', summary: JSON.stringify({ added: [], removed: [], changed: ['Bad'], detail: { Bad: ['tiles-1'] } }) });
+  assert.equal(one, 'Tile removed in Bad');
+}
+// V-06: Was beim Wiederherstellen verloren geht (Änderungen vom Stand bis jetzt, Klartext der Änderungsliste).
+{
+  new Function('window', fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel-b-mehr.js', import.meta.url), 'utf8'))(window);
+  const then = clone(base);
+  const now = clone(base);
+  now.compact.rooms[1].name = 'Kochecke';
+  now.compact.rooms[2].tiles.push(tile('Spiegel', 'light.f2'));
+  const lines = V.lossLines(then, saved(now), { roomName: (r) => r.name });
+  assert.ok(lines.some((l) => /Küche → Kochecke/.test(l)), 'Umbenennung genannt: ' + lines);
+  assert.ok(lines.some((l) => /Spiegel/.test(l)), 'neue Kachel genannt: ' + lines);
+  assert.ok(!lines.some((l) => /Badges|Home/.test(l)), 'keine abgeleiteten Energie-Badges: ' + lines);
+  assert.deepEqual(V.lossLines(base, saved(base), {}), [], 'nichts geändert: nichts verloren');
+}
+
 console.log('zeitreise: ok');

@@ -203,6 +203,8 @@
       const path = pathOf({ sel: this._sel, page, room: this._uxRoomName(),
         dashSection: (k) => !!(I.SECTIONS || []).find((x) => x.group === "rooms" && x.label === k && x.scope === "dashboard") });
       if (path.length) return path.map((x, i) => (i ? tr(x) : x)).join(" \u203a ") + " \u00b7 " + tr(SCOPE.thisroom);
+      // Zeitreise (V-06): „Frühere Stände · Gilt für: dieses Dashboard“.
+      if (this._cvOpen) return tr("Earlier versions") + " \u00b7 " + this._uxScopeText(sc);
       return this._uxScopeText(sc);
     };
     P._uxHead = function () {
