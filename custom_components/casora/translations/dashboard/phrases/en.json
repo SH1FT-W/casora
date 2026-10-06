@@ -368,6 +368,9 @@
   "Prüfen": "Check",
   "Prüft …": "Checking …",
   "Prüfung fehlgeschlagen": "Check failed",
+  "Kühlt": "Cooling",
+  "Entfeuchten": "Dry",
+  "Nur Lüfter": "Fan only",
   "Keine KI eingerichtet (Einstellungen → KI-Aufgaben)": "No AI set up (Settings → AI tasks)",
   "Auswertung fehlgeschlagen.": "Analysis failed.",
   "Qualität": "Quality",
@@ -1961,6 +1964,10 @@
   [
    "^Bereit · (.+)$",
    "Ready · {1}"
+  ],
+  [
+   "^Automatik · (.+)$",
+   "Auto · {1}"
   ],
   [
    "^Lädt · (.+)$",

@@ -18,3 +18,15 @@ assert.equal(toggle(ent('off', { hvac_modes: ['off', 'heat', 'cool'] }), 'cool')
 const puck = JSON.stringify(tpl);
 assert.ok(!puck.includes("const nextMode = ['cool','heat'].includes(entity?.state)"), 'Symbol-Tipp: alte Regel weg');
 console.log('ok B-TPL-01');
+
+// B-TPL-02: Kachel-Text im Modus Auto nicht „Aus“; ohne temperature kein „undefined°“.
+{
+  globalThis.window = globalThis;
+  const disp = (e, act = {}) => { window.casoraClimateActive = () => act; return new Function('entity', 'states', 'variables', body(tpl.state_display))(e, {}, {}); };
+  assert.equal(disp(ent('auto')), 'Automatik · 21°');
+  assert.equal(disp(ent('heat_cool', { temperature: undefined, target_temp_low: 20, target_temp_high: 24 })), 'Automatik · 20–24°');
+  assert.equal(disp(ent('heat', { temperature: undefined }), { heating: true }), 'Heizt', 'ohne Ziel kein undefined');
+  assert.equal(disp(ent('heat'), { heating: true }), 'Heizt auf 21°');
+  assert.equal(disp(ent('off')), 'Aus');
+}
+console.log('ok B-TPL-02');
