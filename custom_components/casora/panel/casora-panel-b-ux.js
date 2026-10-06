@@ -14,6 +14,8 @@
 // - Sichtbarkeit an einer Stelle: Satz „Wer sieht das, wo, mit Rückfrage“, Auge an eingeschränkten
 //   Kacheln in der Vorschau, „Ansehen als …“ (anderer HA-Benutzer), Raum ausblenden in der
 //   Darstellung und „Lieber nur ausblenden“ vor dem Löschen eines Raums
+// - Anklickbares zeigt sich: beim Zeigen ein Etikett („Foto ändern“, „Kachel bearbeiten“); im
+//   Foto-Bereich zwei sichtbare Knöpfe „Foto wählen“ und „Eigenes hochladen“
 // - Untertitel der Reiter (Inhalt, Dashboard, Einstellungen) als Hinweis und im Inhalt-Blatt
 // - Wörterbuch: Badges und Popups mit einem Halbsatz erklärt
 // Datenmodell, Speichern und Rückgängig bleiben die des Panels – hier wird nur angeschlossen.
@@ -163,10 +165,18 @@
       font:inherit; font-size:var(--t-foot, 13.5px); font-weight:600; background:var(--chip, rgba(127,127,127,.14)); color:var(--ink-2, inherit); box-sizing:border-box; }
     .uxas svg { width:16px; height:16px; flex:none; }
     .uxas.on { background:var(--accent-tint, rgba(148,96,59,.16)); color:var(--accent, #94603B); }
-    :host(.bmode.phone) .uxas { width:36px; padding:0; justify-content:center; }
-    :host(.bmode.phone) .uxas .uxaslab { display:none; }
+    /* Handy: kein Platz neben dem Umschalter – „Ansehen als“ gibt es am Desktop und Tablet. */
+    :host(.bmode.phone) .uxas { display:none; }
     .uxasnote { margin:8px auto 0; padding:6px 12px; border-radius:999px; font-size:13px; font-weight:600; width:max-content; max-width:90%;
       background:var(--accent-tint, rgba(148,96,59,.16)); color:var(--accent, #94603B); }
+    /* Etikett beim Zeigen in der Vorschau */
+    .uxhov { position:fixed; z-index:40; pointer-events:none; padding:3px 9px; border-radius:999px; font-size:12px; font-weight:650;
+      white-space:nowrap; background:rgba(28,24,21,.82); color:#fff; box-shadow:0 2px 8px rgba(0,0,0,.18); opacity:0; transition:opacity .12s; }
+    .uxhov.on { opacity:1; }
+    /* Foto: sichtbare Knöpfe statt nur Zeigen */
+    .uxphoto { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 2px; }
+    .uxphoto button { border:0; border-radius:10px; padding:8px 12px; font:inherit; font-size:var(--t-foot, 14px); font-weight:600; cursor:pointer;
+      background:var(--chip, rgba(127,127,127,.14)); color:var(--ink, inherit); box-shadow:none; }
     /* Tastenkürzel */
     .uxkeys { display:grid; grid-template-columns:auto 1fr; gap:8px 14px; margin:2px 4px 6px; font-size:14px; align-items:center; }
     .uxkeys kbd { font:inherit; font-size:12.5px; font-weight:650; padding:2px 7px; border-radius:7px; white-space:nowrap; justify-self:start;
@@ -307,6 +317,7 @@
       this._uxAddBtn();
       this._uxTileEditor();
       this._uxRoomVis();
+      this._uxPhotoBtns();
     };
 
     // ── Menüs: „Gilt für: …“ oben (V-01) ───────────────────────────────
@@ -929,7 +940,7 @@
     };
     wrap("_bDecorate", (orig) => function () {
       const r = orig.apply(this, arguments);
-      try { if (on(this)) { this._uxCss(); this._uxAsChip(); this._uxMarkPreview(); } } catch (e) { console.warn("Casora Studio:", e); }
+      try { if (on(this)) { this._uxCss(); this._uxAsChip(); this._uxMarkPreview(); this._uxHover(); } } catch (e) { console.warn("Casora Studio:", e); }
       return r;
     });
 
@@ -954,6 +965,67 @@
       this._ask = () => Promise.resolve(true);
       try { return await orig.call(this, id, i); } finally { this._ask = ask; }
     });
+
+    // ── Anklickbares zeigt sich (V-12) ────────────────────────────────────
+    const HOV = { photo: "Change the photo", room: "Room name and photo", weather: "Weather", time: "Time", np: "Now Playing" };
+    P._uxHover = function () {
+      const map = this.shadowRoot.querySelector(".card.map");
+      if (!map || map._uxHov) return;
+      map._uxHov = true;
+      const tag = () => {
+        let t = this.shadowRoot.querySelector(".uxhov");
+        if (!t) { t = document.createElement("div"); t.className = "uxhov"; t.setAttribute("aria-hidden", "true"); t.setAttribute("data-no-i18n", ""); this.shadowRoot.appendChild(t); }
+        return t;
+      };
+      const hide = () => { const t = this.shadowRoot.querySelector(".uxhov"); if (t) t.classList.remove("on"); };
+      map.addEventListener("pointerover", (ev) => {
+        if (ev.pointerType !== "mouse" || this.classList.contains("phone") || !on(this)) return;
+        const el = ev.target.closest && ev.target.closest("[data-mk], [data-pv]");
+        if (!el) return hide();
+        const mk = el.dataset.mk || "", pv = el.dataset.pv || "";
+        let text = "";
+        if (el.classList.contains("bghost")) text = tr("Hidden tile – edit");
+        else if (el.classList.contains("ghost") && el.classList.contains("mtile")) text = tr("Add a tile");
+        else if (mk.indexOf("t:") === 0) text = tr("Edit tile");
+        else if (mk.indexOf("b:") === 0) text = tr("Edit badge");
+        else if (HOV[pv]) text = tr(HOV[pv]);
+        if (!text) return hide();
+        const r = el.getBoundingClientRect();
+        if (r.width < 24 || r.height < 14) return hide();
+        const t = tag();
+        t.textContent = text;
+        // Oben links im Teil, bei kleinen Teilen (Badges) darüber.
+        const small = r.height < 44;
+        t.style.left = Math.round(r.left + (small ? 0 : 8)) + "px";
+        t.style.top = Math.round(small ? r.top - 24 : r.top + 8) + "px";
+        t.classList.add("on");
+      });
+      map.addEventListener("pointerleave", hide);
+      map.addEventListener("pointerdown", hide);
+    };
+    // Foto-Bereich der Darstellung: zwei sichtbare Knöpfe.
+    P._uxPhotoBtns = function () {
+      const pane = this.shadowRoot.getElementById("pane");
+      const shots = pane && pane.querySelector('[data-k="Appearance"] .shots');
+      if (!shots || (shots.nextElementSibling && shots.nextElementSibling.classList.contains("uxphoto"))) return;
+      const box = document.createElement("div");
+      box.className = "uxphoto";
+      const mk = (label, run) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = tr(label);
+        b.setAttribute("data-no-i18n", "");
+        b.onclick = run;
+        box.appendChild(b);
+      };
+      mk("Choose a photo", () => {
+        const row = shots.previousElementSibling;
+        const c = row && (row.querySelector(".combo input") || row.querySelector(".combo"));
+        if (c) { c.focus && c.focus(); c.click(); }
+      });
+      mk("Upload your own", () => { const d = shots.querySelector(".shot"); if (d) d.click(); });
+      shots.after(box);
+    };
 
     // ── Anschließen ─────────────────────────────────────────────────────
     const after = (name) => wrap(name, (orig) => function () {

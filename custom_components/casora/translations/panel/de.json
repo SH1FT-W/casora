@@ -2069,7 +2069,13 @@
     "how the dashboard looks for another Home Assistant user": "so sieht das Dashboard für einen anderen Home-Assistant-Benutzer aus",
     "Delete “{room}”?": "„{room}“ löschen?",
     "Deleted for good when you save. Only not needed for a while? Hide it – it comes back exactly as it is.": "Beim Speichern endgültig gelöscht. Nur eine Weile nicht gebraucht? Blende ihn aus – er kommt genau so wieder.",
-    "Just hide it": "Lieber nur ausblenden"
+    "Just hide it": "Lieber nur ausblenden",
+    "Hidden tile – edit": "Ausgeblendete Kachel – bearbeiten",
+    "Edit tile": "Kachel bearbeiten",
+    "Edit badge": "Badge bearbeiten",
+    "Room name and photo": "Raumname und Foto",
+    "Choose a photo": "Foto wählen",
+    "Upload your own": "Eigenes hochladen"
   },
   "patterns": [
     ["^Phone differs in (\\d+) settings$", "Handy weicht bei {1} Einstellungen ab"],
