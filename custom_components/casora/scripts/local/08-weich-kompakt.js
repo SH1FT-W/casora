@@ -328,13 +328,14 @@
   // Zustand links und Schalter rechts. Die ganze Karte schaltet (tap_action der Vorlage).
   window._casoraSoftLock = function (s, one) {
     var on = s === 'locked' || s === 'locking';
-    // Schalter wie die Kachel: an = entriegelt (die Kachel ist dann hervorgehoben, Badge „1 entriegelt“).
+    // Zeile hervorgehoben, wenn entriegelt (wie die Kachel, Badge „1 entriegelt“). Der Schalter selbst
+    // folgt dem Zustandswort: an = verriegelt (Nutzertest 06.10.2026: „Verriegelt“ mit Schalter aus wirkte verkehrt).
     var open = !on;
     var busy = s === 'locking' || s === 'unlocking';
     var word = s === 'locking' ? 'Wird verriegelt …' : s === 'unlocking' ? 'Wird entriegelt …' : on ? 'Verriegelt' : 'Entriegelt';
     var hint = busy ? '' : on ? (one ? 'Tippen zum Entriegeln' : 'Tippen, um alle zu entriegeln') : (one ? 'Tippen zum Verriegeln' : 'Tippen, um alle zu verriegeln');
     var ic = (typeof window.casoraIconUrl === 'function') ? window.casoraIconUrl(on ? 'lock-fill' : 'lock-open-fill') : '';
-    return '<div class="lkbar" role="switch" aria-checked="' + open + '" style="display:flex;align-items:center;gap:14px;min-height:66px;box-sizing:border-box;'
+    return '<div class="lkbar" role="switch" aria-checked="' + on + '" style="display:flex;align-items:center;gap:14px;min-height:66px;box-sizing:border-box;'
       /* D-06: eine Zeilenart – entriegelt (aktiv) hell und erhoben wie die aktive Geräte-Zeile darunter, sonst Sand. */
       + 'padding:10px 14px 10px 14px;border-radius:var(--casora-popup-row-radius, 24px);background:'
       + (open ? 'var(--casora-entity-background-active, var(--casora-soft-seg-on, #FFFDF9));box-shadow:var(--button-card-box-shadow-active-mobile, var(--casora-soft-seg-on-shadow, none));'
@@ -351,9 +352,9 @@
       + (hint ? '<div style="font-size:12.5px;font-weight:500;color:' + (open ? 'var(--casora-entity-state-active-color, var(--casora-soft-sub, rgba(58,50,43,0.6)))' : 'var(--casora-soft-sub, rgba(58,50,43,0.6))')
         + ';margin-top:1px;">' + esc(hint) + '</div>' : '') + '</div>'
       + '<div style="position:relative;width:44px;height:26px;border-radius:999px;flex:none;background:'
-      + (open ? 'var(--casora-lps-switch-on, #B67A50)' : 'var(--casora-lps-switch-off, rgba(58,50,43,0.38))') + ';transition:background .2s ease;">'
-      + '<div style="position:absolute;top:3px;left:' + (open ? '21px' : '3px') + ';width:20px;height:20px;border-radius:50%;'
+      + (on ? 'var(--casora-lps-switch-on, #B67A50)' : 'var(--casora-lps-switch-off, rgba(58,50,43,0.38))') + ';transition:background .2s ease;">'
+      + '<div style="position:absolute;top:3px;left:' + (on ? '21px' : '3px') + ';width:20px;height:20px;border-radius:50%;'
       + 'background:var(--casora-lps-knob, #fff);box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:left .2s ease;"></div></div></div>'
-      + '<style>@keyframes lktg-pl{0%,100%{opacity:1}50%{opacity:.35}}@media (hover:hover){.lkbar[aria-checked="false"]:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11)) !important;}}</style>';
+      + '<style>@keyframes lktg-pl{0%,100%{opacity:1}50%{opacity:.35}}@media (hover:hover){.lkbar[aria-checked="true"]:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11)) !important;}}</style>';
   };
 })();
