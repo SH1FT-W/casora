@@ -7,7 +7,8 @@ import { open, casoraDashboard, studio, check, need, finish } from './lib.mjs';
 
 const dash = await casoraDashboard((d) => (d.config.views || []).some((v) => String(v.title || '').length >= 24));
 await need('Casora-Dashboard mit langen Raumnamen', dash);
-const { page } = await open({ width: 1440, height: 900 });
+// Die Seitenleiste mit der Raumliste gibt es nur im bisherigen Studio (A); das neue (B) ist Standard.
+const { page } = await open({ width: 1440, height: 900, studio: 'a' });
 await studio(page, dash.url);
 
 const r = await page.evaluate(() => {
