@@ -717,6 +717,11 @@ async def heating_hours(hass: HomeAssistant, rooms: list[dict], days: int = 7) -
     return out
 
 
+def _temp_unit(hass: HomeAssistant) -> str:
+    """Temperatur-Einheit von Home Assistant (°C oder °F) – die Werte kommen schon darin."""
+    return str(getattr(getattr(hass.config, "units", None), "temperature_unit", None) or "°C")
+
+
 async def heating_context(hass: HomeAssistant, entry: ConfigEntry) -> tuple[str | None, float]:
     rooms = heating_rooms(hass)
     if not rooms:
@@ -731,12 +736,13 @@ async def heating_context(hass: HomeAssistant, entry: ConfigEntry) -> tuple[str 
             f"{_local(r['start']).strftime('%d.%m.')} {_fmt(r.get('mean'))}/{_fmt(r.get('min'))}/{_fmt(r.get('max'))}"
             for r in st.get(sid, []) if r.get("mean") is not None)
 
+    tu = _temp_unit(hass)
     lines = []
     for r in rooms:
         c = hass.states.get(r["id"])
         h, w = hrs.get(r["id"], (0.0, 0.0))
         cur = hass.states.get(r["t"]).state if r["t"] and hass.states.get(r["t"]) else c.attributes.get("current_temperature")
-        line = (f"- {r['n']}: Modus {c.state}, Soll {c.attributes.get('temperature')} °C, Ist {cur} °C, "
+        line = (f"- {r['n']}: Modus {c.state}, Soll {c.attributes.get('temperature')} {tu}, Ist {cur} {tu}, "
                 f"Heizdauer 7 Tage {_fmt(h)} h")
         if r["win"]:
             line += f", davon bei offenem Fenster/Tür {_fmt(w)} h"
@@ -745,7 +751,7 @@ async def heating_context(hass: HomeAssistant, entry: ConfigEntry) -> tuple[str 
         lines.append(line)
     total = sum(v[0] for v in hrs.values())
     text = (f"Heute: {dt_util.now().strftime('%d.%m.%Y')}. Heizung mit Regler je Raum.\n"
-            f"Außentemperatur je Tag (Ø/min/max °C): {series(outdoor) if outdoor else 'kein Außensensor'}\n"
+            f"Außentemperatur je Tag (Ø/min/max {tu}): {series(outdoor) if outdoor else 'kein Außensensor'}\n"
             "Räume:\n" + "\n".join(lines))
     return text, total
 
@@ -821,6 +827,7 @@ async def vent_context(hass: HomeAssistant, entry: ConfigEntry) -> tuple[str | N
         return sum(xs) / len(xs) if xs else None
 
     to, ro = vals(out_t, "mean"), vals(out_rh, "mean")
+    tu = _temp_unit(hass)
     lines = []
     for r in rooms:
         hm, hx = vals(r["rh"], "mean"), vals(r["rh"], "max")
@@ -842,8 +849,8 @@ async def vent_context(hass: HomeAssistant, entry: ConfigEntry) -> tuple[str | N
     now_t = hass.states.get(out_t).state if out_t and hass.states.get(out_t) else "?"
     now_rh = hass.states.get(out_rh).state if out_rh and hass.states.get(out_rh) else "?"
     text = (f"Heute: {dt_util.now().strftime('%d.%m.%Y')}. Auswertung der letzten 7 Tage (Stundenwerte).\n"
-            f"Außen: Temperatur Ø {_fmt(avg(to))} °C (min {_fmt(min(to) if to else None)}, max {_fmt(max(to) if to else None)}), "
-            f"rel. Feuchte Ø {_fmt(avg(ro), 0)} %. Jetzt: {now_t} °C, {now_rh} %.\n"
+            f"Außen: Temperatur Ø {_fmt(avg(to))} {tu} (min {_fmt(min(to) if to else None)}, max {_fmt(max(to) if to else None)}), "
+            f"rel. Feuchte Ø {_fmt(avg(ro), 0)} %. Jetzt: {now_t} {tu}, {now_rh} %.\n"
             "Räume:\n" + "\n".join(lines))
     return text, [r["n"] for r in rooms]
 
@@ -923,11 +930,12 @@ async def aquarium_context(hass: HomeAssistant, data: dict) -> str:
     daily = "; ".join(
         f"{_local(r['start']).strftime('%d.%m.')} {_fmt(r.get('mean'), 2)}/{_fmt(r.get('min'), 2)}/{_fmt(r.get('max'), 2)}"
         for r in days.get(temp, []) if r.get("mean") is not None)
-    lines.append(f"Wassertemperatur je Tag Ø/min/max (°C): {daily or 'keine Statistik'}")
+    tu = (getattr(hass.states.get(temp), "attributes", {}) or {}).get("unit_of_measurement") or _temp_unit(hass)
+    lines.append(f"Wassertemperatur je Tag Ø/min/max ({tu}): {daily or 'keine Statistik'}")
     hourly = ", ".join(f"{_local(r['start']).strftime('%H')} Uhr {_fmt(r.get('mean'), 2)}"
                        for r in hours.get(temp, []) if r.get("mean") is not None)
     if hourly:
-        lines.append(f"Stundenmittel der letzten 24 h (°C): {hourly}")
+        lines.append(f"Stundenmittel der letzten 24 h ({tu}): {hourly}")
     if devices:
         lines.append("Technik:")
         for d in devices:

@@ -10,6 +10,7 @@ B-PY-07: beim Entladen/Entfernen verschwinden casora.einrichten und casora.umste
 B-PY-08: Neustart-Schalter: die Liste der Abmelder wächst nicht mit jedem Einschalten.
 B-PY-13: ein gelöschter Karten-Update-Anhang blockiert die übrigen Karten-Updates nicht.
 B-PY-14: Kamera-/Pflanzen-KI ohne eingerichtete KI → Fehler mit Grund, kein Aufruf mit „None“.
+B-PY-15: Heizungs-Coach nennt die Temperatur-Einheit von HA (°F), nicht fest °C.
 """
 
 from __future__ import annotations
@@ -233,7 +234,29 @@ async def t_py14():
           and fired[1][1].get("plant") == "plant.y", repr(fired[1:]))
 
 
+async def t_py15():
+    from custom_components.casora import ki
+
+    clim = SimpleNamespace(state="heat", attributes={"temperature": 70, "current_temperature": 68})
+    hass = SimpleNamespace(config=SimpleNamespace(units=SimpleNamespace(temperature_unit="°F")),
+                           states=SimpleNamespace(get=lambda eid: clim if eid == "climate.a" else None))
+
+    async def none(*a, **k):
+        return {}
+
+    real = ki.heating_rooms, ki.heating_hours, ki._stats, ki._outdoor
+    ki.heating_rooms = lambda h: [{"id": "climate.a", "n": "Bad", "t": None, "win": []}]
+    ki.heating_hours, ki._stats = none, none
+    ki._outdoor = lambda *a: None
+    try:
+        text, _ = await ki.heating_context(hass, SimpleNamespace(options={}))
+    finally:
+        ki.heating_rooms, ki.heating_hours, ki._stats, ki._outdoor = real
+    check("B-PY-15: Soll/Ist in °F", "Soll 70 °F, Ist 68 °F" in text and "°C" not in text, text)
+
+
 async def main():
+    await t_py15()
     await t_py14()
     await t_py13()
     await t_py08()
