@@ -73,6 +73,11 @@ assert.equal(M.searchRank(items, 'kuche')[0].label, 'Küche', 'Umlaute egal, Rau
 assert.deepEqual(M.searchRank(items, 'licht').map((x) => x.label), ['Deckenlicht', 'Beleuchtung']);
 assert.deepEqual(M.searchRank(items, 'licht küche').map((x) => x.label), ['Deckenlicht', 'Beleuchtung']);
 assert.equal(M.searchRank(items, '').length, 0);
+// ⌘K: „12“, „12-Stunden“, „24h“ finden das Uhr-Format (Nutzertest 2, T3)
+{ const src = read('panel/casora-panel-b-mehr.js'); const m = /\["Time", "Time", "([^"]+)"\]/.exec(src);
+  assert.ok(m, 'Suchwörter Uhrzeit');
+  const its = [{ kind: 'setting', label: 'Uhrzeit', words: m[1] }, { kind: 'setting', label: 'Wetter', words: 'wetter temperatur' }];
+  for (const q of ['12', '12-Stunden', '24h', '12 stunden', 'Uhrformat']) assert.equal((M.searchRank(its, q)[0] || {}).label, 'Uhrzeit', q); }
 
 // ── Panel: Raum-Sichtbarkeit, Geräteauswahl der Übersicht ───────────────────────────
 const src = read('panel/casora-panel.js');

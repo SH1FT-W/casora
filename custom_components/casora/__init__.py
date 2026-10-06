@@ -361,12 +361,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await pause.async_start()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_options_changed))
+    hass.data[DOMAIN]["options_seen"] = dict(entry.options)
 
     return True
 
 
+# Optionen, die zur Laufzeit gelesen werden (lueften_push.py liest entry.options bei jedem Takt):
+# Speichern braucht dafür kein Neuladen der Integration.
+LIVE_OPTIONS = frozenset({"lueften_push", "lueften_personen"})
+
+
+def live_only(old: dict, new: dict) -> bool:
+    """True, wenn sich nur Optionen geändert haben, die ohne Neuladen wirken."""
+    keys = {k for k in set(old) | set(new) if old.get(k) != new.get(k)}
+    return bool(keys) and keys <= LIVE_OPTIONS
+
+
 async def _options_changed(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    await hass.config_entries.async_reload(entry.entry_id)
+    data = hass.data.setdefault(DOMAIN, {})
+    seen = data.get("options_seen")
+    data["options_seen"] = dict(entry.options)
+    if seen is not None and live_only(seen, dict(entry.options)):
+        return
+    # Beim Neuladen bleibt die Studio-Seite registriert: Wer gerade im Studio „Speichern“ drückt,
+    # landete sonst auf einem anderen Dashboard (HA entfernt die Seite kurz).
+    data["reloading"] = True
+    try:
+        await hass.config_entries.async_reload(entry.entry_id)
+    finally:
+        hass.data.setdefault(DOMAIN, {}).pop("reloading", None)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -376,7 +399,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Remove the sidebar entry."""
-    async_remove_panel(hass, PANEL_URL, warn_if_unknown=False)
+    if not hass.data.get(DOMAIN, {}).get("reloading"):
+        async_remove_panel(hass, PANEL_URL, warn_if_unknown=False)
     async_unload_helfer(hass)
     async_unload_card_updates(hass)
     # Sonst blieben sie bis zum Neustart aufrufbar, auch nach dem Entfernen von Casora.

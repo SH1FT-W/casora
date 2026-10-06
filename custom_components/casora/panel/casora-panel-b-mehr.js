@@ -831,7 +831,7 @@
     // ── Suche ───────────────────────────────────────────────────────────────
     const SECS = [
       ["General", "Look & Controls", "design theme look aussehen stil farbe farben schrift hell dunkel kopfzeile knöpfe"],
-      ["Weather", "Weather", "wetter temperatur vorhersage"], ["Time", "Time", "uhrzeit uhr datum"],
+      ["Weather", "Weather", "wetter temperatur vorhersage"], ["Time", "Time", "uhrzeit uhr datum uhrformat format 12 12h 12-stunden 12-stunden-uhr 24 24h 24-stunden stunden am pm"],
       ["Notifications", "Notifications", "glocke benachrichtigungen hinweise meldungen push"], ["Scenes", "Scenes", "szenen stimmung"],
       ["Now Playing", "Now Playing", "musik wiedergabe medien player"],
       ["Appearance", "Appearance", "raumname foto bild hintergrund hintergrundbild bewegungsmelder raum"],
