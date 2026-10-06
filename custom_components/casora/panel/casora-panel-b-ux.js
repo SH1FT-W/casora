@@ -413,6 +413,16 @@
       }
       return orig.call(this, anchor, items, onPick, mopts);
     });
+    // Handy: im Raummenü stehen die Aktionen für diesen Raum oben – bei vielen Räumen lagen
+    // „Raum ausblenden“ und „Umbenennen“ sonst unter der Liste, erst nach Scrollen erreichbar.
+    wrap("_menuAt", (orig) => function (anchor, items, onPick, mopts) {
+      if (on(this) && this.classList.contains("phone") && Array.isArray(items)
+        && items.some((x) => x && x.id === "rename" && x.group === "This Room") && items.filter((x) => x && /^go:/.test(x.id || "")).length > 6) {
+        const mine = items.filter((x) => x && x.group === "This Room");
+        items = mine.concat(items.filter((x) => !(x && x.group === "This Room")));
+      }
+      return orig.call(this, anchor, items, onPick, mopts);
+    });
     P._uxDropOpt = function (labels) {
       const menus = this.shadowRoot.querySelectorAll(".combo-menu");
       const menu = menus[menus.length - 1];
