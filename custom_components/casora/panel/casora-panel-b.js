@@ -406,7 +406,11 @@
         st.textContent = B_CSS;
         root.appendChild(st);
       }
-      const on = this._bOn() && !this._flowMode;
+      // Dialog-Abläufe (Geräte-Assistent, YAML-Import) liegen über dem Studio: dahinter bleibt der
+      // Aufbau von B stehen – sonst erschien verschwommen das bisherige Studio mit Seitenleiste.
+      // Vollbild-Abläufe und das Handy schalten B wie bisher ab.
+      const sheet = this._flowMode === "sheet" && !this.classList.contains("phone");
+      const on = this._bOn() && (!this._flowMode || sheet);
       const wasOn = this.classList.contains("bmode");
       // UX-01: hochkant und schmal → Inspektor unten statt rechts.
       const pw = this.clientWidth || 0, ph = window.innerHeight || 0;
