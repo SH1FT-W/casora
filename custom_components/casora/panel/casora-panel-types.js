@@ -272,10 +272,24 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     }
     return [];
   }
+  // Seiten einer Swipe-Karte – auch wenn sie in einer Bedingung steckt oder auto-entities ihre
+  // Seiten sammelt (Luftreiniger, Aquarien). Sonst 0. Bisher standen gesammelte Seiten in der
+  // Vorschau einzeln nebeneinander und kamen und gingen mit jedem Schalten (Blinken).
+  const isSwipe = (c) => !!c && /swipe|carousel/.test(String(c.type || ""));
+  function swipePages(card, states) {
+    let c = card, n = 0;
+    while (c && c.type === "conditional" && c.card && n++ < 4) c = c.card;
+    if (!c || typeof c !== "object") return 0;
+    if (isSwipe(c) && Array.isArray(c.cards)) return c.cards.filter((x) => shown(x, states).length).length;
+    if (c.type === "custom:auto-entities" && isSwipe(c.card)) return shown(c, states).length;
+    return 0;
+  }
   window.casoraPreviewUnwrap = (tile, hass) => {
     if (!tile || tile.type === "custom:button-card" || !tile.type) return {};
     const cards = shown(tile, (hass && hass.states) || {});
     if (!cards.length) return { hidden: true };
+    const pages = swipePages(tile, (hass && hass.states) || {});
+    if (pages) return { inner: cards[0], pages };
     // Swipe-Karte: eine Kachel wie am Dashboard, dazu Seitenpunkte für die übrigen.
     if (cards.length === 1 && tile.type !== "conditional" && Array.isArray(tile.cards)) {
       const pages = tile.cards.filter((c) => shown(c, (hass && hass.states) || {}).length).length;
