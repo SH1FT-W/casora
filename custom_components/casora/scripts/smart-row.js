@@ -294,7 +294,16 @@ class CasoraSmartRow extends HTMLElement {
   // Ziehen mit der Maus (ab 6 px, der Klick danach wird geschluckt) und ein weicher
   // Rand auf der Seite, auf der noch Kacheln liegen (#fade, siehe _css). Touch bleibt nativ.
   _casoraMouseScroll() {
-    if (this._casoraMs) { this._casoraEdges(); return; }
+    if (this._casoraMs) {
+      // Wieder eingehängt: was disconnectedCallback abgemeldet hat, neu anmelden.
+      if (this._casoraEdgesFn) window.addEventListener('resize', this._casoraEdgesFn);
+      if (this._casoraRo) {
+        this._casoraRo.observe(this);
+        const box = this.shadowRoot && this.shadowRoot.getElementById('container');
+        if (box) this._casoraRo.observe(box);
+      }
+      this._casoraEdges(); return;
+    }
     this._casoraMs = true;
     const scrolls = () => getComputedStyle(this).overflowX !== 'visible'
       && this.scrollWidth - this.clientWidth > 1;
@@ -383,6 +392,8 @@ class CasoraSmartRow extends HTMLElement {
       clearTimeout(this._casoraScrollT);
       this._casoraScrollT = setTimeout(settle, 80);
     }, { passive: true });
+    // Gemerkt, damit disconnectedCallback ihn abmelden kann (sonst hielte window die Reihe fest).
+    this._casoraEdgesFn = edges;
     window.addEventListener('resize', edges);
     if (window.ResizeObserver) {
       this._casoraRo = new ResizeObserver(edges);
@@ -605,6 +616,8 @@ class CasoraSmartRow extends HTMLElement {
     if (this._vizRetry1) { clearTimeout(this._vizRetry1); this._vizRetry1 = null; }
     if (this._vizRetry2) { clearTimeout(this._vizRetry2); this._vizRetry2 = null; }
     if (this._vizSweep)  { clearTimeout(this._vizSweep);  this._vizSweep  = null; }
+    if (this._casoraEdgesFn) window.removeEventListener('resize', this._casoraEdgesFn);
+    if (this._casoraRo) this._casoraRo.disconnect();
   }
 
   static getConfigElement() { return document.createElement('div'); }
