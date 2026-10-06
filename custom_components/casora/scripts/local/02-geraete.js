@@ -753,8 +753,10 @@
   /* Viele Segmente (Startzeit, Saugstufe): Breite nach Text statt gleich breit, damit nichts abgeschnitten wird. */
   H.dense = function (html, wrap) {
     /* wrap: Umbruch statt gleich breiter Spalten (Saugroboter: „Saugen & wischen“ wurde sonst abgeschnitten). */
-    if (wrap) return '<style>.hh-wrap .hui-seg{grid-template-columns:repeat(auto-fill, minmax(124px, 1fr))!important;}'
-      + '.hh-wrap .hui-sg{padding:0 10px;}</style><div class="hh-wrap">' + html + '</div>';
+    /* D-07: Reihen füllen die volle Breite (vorher blieben leere Rasterspalten rechts), jedes Feld
+       mindestens so breit wie sein Text – Desktop alle in einer Reihe, am Handy 3 + 2. */
+    if (wrap) return '<style>.hh-wrap .hui-seg{display:flex!important;flex-wrap:wrap;}'
+      + '.hh-wrap .hui-sg{flex:1 1 0;min-width:max-content;padding:0 14px;overflow:visible;}</style><div class="hh-wrap">' + html + '</div>';
     return '<style>.hh-dense .hui-sg{flex:0 1 auto;min-width:0;padding:0 16px;}</style><div class="hh-dense">' + html + '</div>';
   };
   /* Weiße Glas-Töne (rgba(255,255,255,…)) wären auf Creme unsichtbar: im Weich-Design als gedimmter Kreis. */
@@ -3385,7 +3387,8 @@
         var nm = String((states[b].attributes || {}).friendly_name || b);
         /* Gerätenamen vorn weglassen: „<Roboter> Intensiv“ → „Intensiv“. */
         var bd = hass && hass.entities && hass.entities[b] && hass.devices && hass.devices[hass.entities[b].device_id];
-        [bd && bd.name_by_user, bd && bd.name].forEach(function (dn) {
+        /* D-07: auch der Name des Saugers selbst (ohne Geräteeintrag stand „<Roboter> Intensiv“ da). */
+        [bd && bd.name_by_user, bd && bd.name, ((states[c.st] || {}).attributes || {}).friendly_name].forEach(function (dn) {
           if (dn && nm.length > dn.length && nm.toLowerCase().indexOf(String(dn).toLowerCase() + ' ') === 0) nm = nm.slice(dn.length + 1);
         });
         return { icon: 'mdi:play-circle-outline', iconTone: 'accent', label: nm, sub: 'Programm aus der Roborock-App',
