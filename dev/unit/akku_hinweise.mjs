@@ -66,6 +66,19 @@ assert.equal(r.level, 1);
 r = run(ohneBat, { battery_hints: 'never' }, S);
 assert.equal(r.level, 0);
 
+// Nur die eigene Ansicht zählt: Batterien-Kachel auf Home, Aquarium im Raum ohne Batterien-Kachel → Hinweis bleibt.
+const zweiSeiten = { views: [{ path: 'home', cards: [tile(['casora_battery'])] }, { path: 'wohnzimmer', cards: [tile('casora_aquarium_tank')] }] };
+assert.equal(H.view(zweiSeiten, '/casora/wohnzimmer').path, 'wohnzimmer');
+assert.equal(H.view(zweiSeiten, '/casora/1').path, 'wohnzimmer');
+assert.equal(H.view(zweiSeiten, '/casora').path, 'home');
+window.location = { pathname: '/casora/wohnzimmer' };
+r = run(zweiSeiten, {}, S);
+assert.equal(r.level, 1, 'Raum ohne Batterien-Kachel: Akku-Hinweis bleibt');
+window.location = { pathname: '/casora/home' };
+r = run(zweiSeiten, {}, S);
+assert.equal(r.level, 0, 'Home mit Batterien-Kachel: Aquarium ruhig');
+delete window.location;
+
 // Ausgelöstes Leck ist kein Akku-Hinweis – bleibt Alarm, auch mit Batterien-Kachel.
 const nass = Object.assign({}, S, { 'binary_sensor.leck': { entity_id: 'binary_sensor.leck', state: 'on', attributes: {} } });
 r = run(withBat, {}, nass);

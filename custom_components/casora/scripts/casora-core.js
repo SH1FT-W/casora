@@ -97,24 +97,31 @@
 
 // casora-battery-hints:start
 // Akku-Hinweise auf Geräte-Kacheln (06.10.2026): ein schwacher Fühler-Akku soll eine Kachel
-// (z. B. Aquarium) nicht orange/aktiv machen, wenn dasselbe Dashboard schon eine
-// Batterien-Kachel hat – sonst steht dieselbe Meldung zweimal auf der Seite.
+// (z. B. Aquarium) nicht orange/aktiv machen, wenn dieselbe Seite (Ansicht) schon eine
+// Batterien-Kachel hat – sonst steht dieselbe Meldung zweimal. In Räumen ohne Batterien-Kachel bleibt der Hinweis.
 // Kachel-Variable battery_hints: auto (Standard) | always | never.
 //   on(mode, cfg) → true = Akku-Hinweise zählen für Unterzeile und Aktiv-Zustand.
-//   hasTile(cfg)   → steht irgendwo im Dashboard eine Batterien-Kachel (casora_battery)?
+//   hasTile(cfg, view) → steht auf dieser Ansicht eine Batterien-Kachel (casora_battery)? Ohne view: ganzes Dashboard.
 // Im Popup bleibt der Akkuwert immer sichtbar; andere Hinweise (Leck, Temperatur) bleiben.
 (function () {
   if (window.casoraBatteryHints) return;
   var TILE = 'casora_battery';
-  var cache = { cfg: null, hit: false };
+  var cache = { cfg: null, view: null, hit: false };
   var H = {
     mode: function (v) {
       var m = String(v == null ? '' : v).trim().toLowerCase();
       return m === 'always' || m === 'never' ? m : 'auto';
     },
-    hasTile: function (cfg) {
+    // Aktuelle Ansicht aus der Adresse (/<dashboard>/<ansicht>): Pfad oder Index, sonst die erste.
+    view: function (cfg, path) {
+      var views = (cfg && cfg.views) || [];
+      var seg = String(path == null ? (window.location && window.location.pathname) || '' : path).split('/').filter(Boolean)[1];
+      for (var i = 0; i < views.length; i++) if (seg != null && (views[i].path === seg || String(i) === seg)) return views[i];
+      return views[0] || null;
+    },
+    hasTile: function (cfg, view) {
       if (!cfg || typeof cfg !== 'object') return false;
-      if (cache.cfg === cfg) return cache.hit;
+      if (cache.cfg === cfg && cache.view === (view || null)) return cache.hit;
       var hit = false;
       (function walk(x, d) {
         if (hit || !x || typeof x !== 'object' || d > 16) return;
@@ -123,8 +130,8 @@
         if (tpl.indexOf(TILE) > -1 && !(x.variables && x.variables.enabled === false)) { hit = true; return; }
         // Vorlagen-Sammlung des Dashboards nicht durchsuchen – dort steht die Vorlage selbst.
         for (var k in x) if (k !== 'button_card_templates' && x[k] && typeof x[k] === 'object') walk(x[k], d + 1);
-      })(cfg.views || cfg, 0);
-      cache = { cfg: cfg, hit: hit };
+      })(view || cfg.views || cfg, 0);
+      cache = { cfg: cfg, view: view || null, hit: hit };
       return hit;
     },
     on: function (mode, cfg) {
@@ -132,7 +139,7 @@
       if (m === 'always') return true;
       if (m === 'never') return false;
       if (cfg === undefined) cfg = window._casoraLovelaceCfg ? window._casoraLovelaceCfg() : null;
-      return !H.hasTile(cfg);
+      return !H.hasTile(cfg, cfg && cfg.views ? H.view(cfg) : null);
     },
   };
   window.casoraBatteryHints = H;
