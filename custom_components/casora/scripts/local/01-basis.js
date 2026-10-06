@@ -996,7 +996,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           + '.has-chip > *{pointer-events:none;}.has-chip-i,.has-chips-l{display:none;}'
           /* D-ASSIST (Weich): 44 px hoch, 15 px/600 wie die übrigen Chips, Symbol im Farbkreis der Kategorie,
              darüber eine kleine Zeile „Vorschläge für den Abend“. Linksbündig wie das Eingabefeld darunter
-             (Daniel 06.10.2026: mittig wirkte unruhig, jede Pille begann woanders). */
+             (06.10.2026: mittig wirkte unruhig, jede Pille begann woanders). */
           + (soft ? '.has-chips{justify-content:flex-start;gap:8px;}'
             + '.has-chips-l{display:block;flex:0 0 100%;text-align:left;padding-left:4px;font-size:13px;font-weight:600;color:' + ink2 + ';margin:0 0 2px;}'
             + '.has-chip{display:inline-flex;align-items:center;gap:9px;min-height:44px;box-sizing:border-box;padding:0 16px 0 6px;font-size:15px;font-weight:600;letter-spacing:-0.01em;color:' + ink + ';}'
