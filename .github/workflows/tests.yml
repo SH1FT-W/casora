@@ -1,0 +1,78 @@
+# Prüft jeden Push und Pull Request ohne Home-Assistant-Container (ca. 3–5 Min., mit Cache weniger):
+# Syntax, Kartenvorlagen, Übersetzungen, Datenschutz, Unit-Tests (Node + Python) und die
+# pytest-Integrationstests (dev/pytest). Die Browser-Tests (E2E/Regress) bleiben im lokalen Gate.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  statisch-und-unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: custom_components/casora/manifest.json
+
+      - name: JavaScript-Syntax
+        run: |
+          set -e
+          for f in custom_components/casora/panel/*.js custom_components/casora/scripts/*.js \
+                   custom_components/casora/scripts/local/*.js; do
+            node --check "$f"
+          done
+
+      - name: Kartenvorlagen ([[[ … ]]] ohne Fehler)
+        run: node dev/qa/check-templates.mjs dashboards/casora/button_card_templates.json custom_components/casora/panel/casora-templates.json
+
+      - name: Vorlagen-Bündel aktuell
+        run: |
+          python3 tools/build-templates.py
+          git diff --exit-code custom_components/casora/panel/casora-templates.json
+
+      - name: Übersetzungen
+        run: |
+          python3 tools/i18ncheck.py
+          python3 tools/phrase-gaps.py --max 70 > /dev/null
+
+      - name: Datenschutz (keine persönlichen Daten)
+        run: python3 tools/privacy-check.py
+
+      - name: Unit-Tests (Node)
+        run: |
+          bad=0
+          for f in dev/unit/*.mjs; do
+            # Helfer mit Pflicht-Argumenten überspringen (wie dev/qa/gate.sh)
+            if head -n 6 "$f" | grep -qE "node dev/unit/[^ ]+\.mjs <"; then continue; fi
+            echo "::group::$f"; node "$f" || { echo "::error file=$f::Unit-Test fehlgeschlagen"; bad=1; }; echo "::endgroup::"
+          done
+          exit $bad
+
+      - name: Unit-Tests (Python)
+        run: |
+          bad=0
+          for f in dev/unit/*_test.py; do
+            withs="$(head -n 30 "$f" | grep -o -- '--with [A-Za-z0-9_.=<>-]*' | sort -u | tr '\n' ' ')"
+            echo "::group::$f $withs"; uv run --python 3.14 $withs python "$f" || { echo "::error file=$f::Unit-Test fehlgeschlagen"; bad=1; }; echo "::endgroup::"
+          done
+          exit $bad
+
+      - name: Integrationstests (pytest-homeassistant-custom-component)
+        run: uv run --python 3.14 --with pytest-homeassistant-custom-component pytest dev/pytest -q -p no:cacheprovider
