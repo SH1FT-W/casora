@@ -3,7 +3,7 @@
 //  1. Ganz neu (kein Casora-Dashboard, Begrüßung nie gesehen): „Willkommen bei Casora“ mit
 //     Funktionsliste und „Los geht’s“. Mit Hemma (Zustand „frisch“) führt „Los geht’s“ direkt in den
 //     Einrichtungsassistenten: Look → Schrift → Effekte → „Vorhandenes Dashboard gefunden“
-//     (Von Hemma übernehmen … Neu beginnen; Umzug und Zurück). Keine Startseite dazwischen.
+//     (Bestehendes Dashboard übernehmen … Neu beginnen; Umzug und Zurück). Keine Startseite dazwischen.
 //  2. Nichts zum Mitnehmen (im Browser nachgestellt: keine Hemma-/YAML-Kandidaten): „Los geht’s“
 //     führt ohne Assistent direkt zu „Räume wählen“ (neues Dashboard), Zurück zur Begrüßung.
 //     Schon begrüßt: gleich „Räume wählen“ bzw. mit Hemma gleich der Assistent.
@@ -167,14 +167,14 @@ if (stepsOk && await reached(FOUND, 'nach den Effekten „Vorhandenes Dashboard 
   await page.waitForTimeout(1500);
   const fs = await found();
   const ks = fs.map((c) => c.k);
-  check(ks[0] === 'move' && ks[ks.length - 1] === 'new', 'Wahl „Von Hemma übernehmen“ … „Neu beginnen“', ks.join(','));
+  check(ks[0] === 'move' && ks[ks.length - 1] === 'new', 'Wahl „Bestehendes Dashboard übernehmen“ … „Neu beginnen“', ks.join(','));
   const mv = fs.find((c) => c.k === 'move') || {};
-  check(/^Von Hemma übernehmen/.test(mv.text || '') && mv.on, '„Von Hemma übernehmen“ vorgewählt', mv.text);
+  check(/^Bestehendes Dashboard übernehmen/.test(mv.text || '') && mv.on, '„Bestehendes Dashboard übernehmen (z. B. Hemma)“ vorgewählt', mv.text);
   check(moves.every((t) => (mv.text || '').includes(t)), 'gefundene Hemma-Dashboards mit Namen', mv.text);
   await page.waitForTimeout(2000);
   await snap('assistent-gefunden');
   await foot(/^Weiter$/);
-  await reached(/umziehen|Umzug/, 'Von Hemma übernehmen → Umzug');
+  await reached(/umziehen|Umzug/, 'Bestehendes Dashboard übernehmen → Umzug');
   await back();
   await reached(FOUND, 'Umzug: Zurück → Wahl');
   await H(() => window.__pierce('.foundcard[data-k="new"]')[0].click());

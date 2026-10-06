@@ -173,7 +173,7 @@ export async function studio(pg, dash) {
     return !p._flowMode && p._state && p._state.compact && p._state.compact.rooms; }, null, { timeout: 30000 });
   await ok().catch(async () => { await load(); await ok(); });
   // Neues Studio (B): Editoren liegen im Inspektor, der erst bei einer Auswahl aufgeht. Die
-  // Tests arbeiten mit der Raumansicht – wie „Elemente“ einmal geöffnet.
+  // Tests arbeiten mit der Raumansicht – wie „Inhalt“ einmal geöffnet.
   await pg.evaluate(() => { const p = window.__panel();
     if (p.classList.contains('bmode') && !p._bOpen) { p._bOpen = true; p._renderForm(); } });
   console.log('  info   Studio ' + ((await isB(pg)) ? 'neu (B)' : 'bisher (A)'));

@@ -3,7 +3,7 @@
 // Neues Studio (B): Was die Vorschau nicht zeigt, darf nicht unerreichbar werden. Erwartet:
 // Eine ausgeschaltete Kachel steht als gestrichelter Platzhalter in der Reihe und in der Liste
 // „N ausgeblendet“ unter der Vorschau; ein Klick darauf öffnet ihren Editor. In der Liste
-// „Elemente“ haben Badges und Kacheln ihren Schalter in der Zeile. Es wird nichts gespeichert.
+// „Inhalt“ haben Badges und Kacheln ihren Schalter in der Zeile. Es wird nichts gespeichert.
 import { open, studio, casoraDashboard, check, need, finish } from './lib.mjs';
 
 const dash = await casoraDashboard();
@@ -12,7 +12,7 @@ const { page } = await open({ width: 1440, height: 900, dark: false, studio: 'b'
 await studio(page, dash.url);
 const H = (fn, a) => page.evaluate(fn, a);
 
-// Raum mit mindestens zwei sichtbaren Kacheln, Liste „Elemente“ offen, Kacheln aufgeklappt.
+// Raum mit mindestens zwei sichtbaren Kacheln, Liste „Inhalt“ offen, Kacheln aufgeklappt.
 const pick = await H(async () => {
   const p = window.__panel(), I = window.__casoraPanelInternals;
   const rooms = p._state.compact.rooms;

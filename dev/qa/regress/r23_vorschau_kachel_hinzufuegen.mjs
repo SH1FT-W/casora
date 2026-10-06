@@ -2,7 +2,8 @@
 // @parallel: allein   (öffnet das Studio)
 // Gewünscht: „Kachel hinzufügen“ in der Studio-Vorschau öffnet gleich die Typauswahl, statt nur
 // zur Kachel-Liste zu springen (vorher schloss weiches Scrollen das Menü sofort wieder), und zwar
-// direkt an seinem Knopf.
+// direkt an seinem Knopf. Im neuen Studio öffnet der Platz zuerst die Geräteauswahl (V-04); deren
+// „Andere Kachelart …“ führt zur selben Typauswahl.
 import { open, studioDashboard, studio, check, need, finish } from './lib.mjs';
 
 const dash = await studioDashboard();
@@ -15,7 +16,14 @@ for (const [label, opts] of [['Chromium', {}], ['WebKit', { safari: true }]]) {
   await need(`${label}: Platz „Kachel hinzufügen“ in der Vorschau`, el);
   const r = await el.boundingBox();
   await page.mouse.click(r.x + r.width / 2, r.y + r.height / 2);
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(900);
+  // Neues Studio (V-04): zuerst „Was soll auf das Dashboard?“ – die Typauswahl liegt unter „Andere Kachelart …“.
+  const sheet = await page.evaluate(() => { const b = window.__pierce('.uxadd .uxlink')[0]; return b ? b.textContent : null; });
+  if (sheet !== null) {
+    await check(`${label}: Blatt „Was soll auf das Dashboard?“ mit „Andere Kachelart …“`, /Andere Kachelart|Other tile type/.test(sheet), sheet);
+    await page.evaluate(() => window.__pierce('.uxadd .uxlink')[0].click());
+    await page.waitForTimeout(1500);
+  } else await page.waitForTimeout(600);
   const menu = await page.evaluate(() => window.__pierce('.combo-menu').some((m) => m.getClientRects().length
     && getComputedStyle(m).visibility !== 'hidden' && +getComputedStyle(m).opacity > 0.1
     && m.querySelectorAll('.combo-opt').length >= 5));

@@ -4,7 +4,7 @@
 // Erwartet: Ohne eigene Wahl im Browser startet das neue Studio. Desktop (Chromium): Badge per
 // Alt+Pfeil verschieben und eine Kachel über ihren Zeilen-Schalter ausschalten, ⌘S sichert; nach
 // neuem Laden stehen Reihenfolge und Platzhalter wieder so da. Handy (WebKit): Kachel unter
-// „Elemente“ ausschalten, „Fertig“ sichert ins Dashboard (Konfiguration in HA geprüft).
+// „Inhalt“ ausschalten, „Fertig“ sichert ins Dashboard (Konfiguration in HA geprüft).
 // Schreibt ins Prüf-Dashboard (qa-arbeit bzw. das erste Casora-Dashboard) – nur im Test-HA; am Ende
 // wird der vorherige Stand beider Dashboards zurückgeschrieben.
 import { open, studio, casoraDashboard, check, need, finish, usePage } from './lib.mjs';
@@ -65,7 +65,7 @@ await o.page.waitForTimeout(1200);
 const moved = await order(H);
 await check('Alt+Pfeil verschiebt das Badge', moved.join() !== room.ids.join(), { vorher: room.ids, nachher: moved });
 
-// Kachel über den Zeilen-Schalter in „Elemente“ ausschalten
+// Kachel über den Zeilen-Schalter in „Inhalt“ ausschalten
 await H(async () => { const p = window.__panel(); p._sel = null; p._bOpen = true; p._stackOpenReq = 'tiles'; p._renderForm();
   await new Promise((r) => setTimeout(r, 1200));
   const t = [...p.shadowRoot.querySelectorAll('#pane #band-tiles .tile > .thead .sw')]
@@ -118,12 +118,12 @@ const ph = await H(async (path) => { const p = window.__panel(); const rooms = p
 await check('WebKit Handy: neues Studio als Standard', ph.phone && ph.b, ph);
 await o.page.locator('.bbar [data-b=list]').tap();
 await o.page.waitForTimeout(1300);
-// Am Handy ist „Elemente“ eine Liste zum Hineintippen: „Kacheln“ öffnen.
+// Am Handy ist „Inhalt“ eine Liste zum Hineintippen: „Kacheln“ öffnen.
 const row = await H(() => { const p = window.__panel();
   const e = [...p.shadowRoot.querySelectorAll('.inspector *')].find((x) => x.getClientRects().length && x.children.length === 0
     && /^(Kacheln|Tiles)$/.test(x.textContent.trim()) && !x.closest('.segopt'));
   if (e) e.setAttribute('data-qa', 'kacheln'); return !!e; });
-await needR('WebKit Handy: Zeile „Kacheln“ in Elemente', row);
+await needR('WebKit Handy: Zeile „Kacheln“ in Inhalt', row);
 await o.page.locator('[data-qa=kacheln]').tap();
 await o.page.waitForTimeout(1300);
 const sw2 = await H(() => { const p = window.__panel();

@@ -12619,7 +12619,7 @@ class CasoraPanel extends HTMLElement {
     };
     const title = (d) => d.title || d.url_path;
     if (moves.length) {
-      card("move", "Take Over from Hemma", "Rooms, tiles and phone layout come along. The original stays unchanged.",
+      card("move", "Take Over an Existing Dashboard (e.g. Hemma)", "Rooms, tiles and phone layout come along. The original stays unchanged.",
         moves.map(title), live("/" + moves[0].url_path + "/home"));
     }
     if (yaml.length) {
@@ -25451,7 +25451,7 @@ class CasoraPanel extends HTMLElement {
 window.__casoraPanelInternals = {
   blankRoom, roomPhoto, slug, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
   applyScenePick, wrapCustomCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
-  findType, tileTypeAny, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
+  findType, tileTypeAny, newTile, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,

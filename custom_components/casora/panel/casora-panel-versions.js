@@ -34,7 +34,10 @@
     + ".cv-row[aria-current=true] .cv-dot{background:var(--casora-studio-good, #34c759);box-shadow:0 0 0 4px var(--casora-studio-good-tint, rgba(52,199,89,.25))}"
     + ".cv-tx{flex:1 1 auto;min-width:0}"
     + ".cv-tx b{display:block;font-size:var(--t-callout);font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}"
-    + ".cv-tx span{display:block;font-size:var(--t-foot);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"
+    + ".cv-tx span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:var(--t-foot);line-height:1.35;color:var(--ink-2);overflow:hidden}"
+    + ".cv-loss{margin:0 0 4px;padding:10px 12px;border-radius:12px;font-size:var(--t-foot);line-height:1.4;"
+    + "background:var(--casora-studio-chip,rgba(127,127,127,.12));color:var(--ink)}"
+    + ".cv-loss b{display:block;font-weight:650;margin-bottom:3px}.cv-loss ul{margin:0;padding-left:18px}.cv-loss li{margin:1px 0}"
     + ".cv-now{flex:none;padding:3px 9px;border-radius:999px;font-size:var(--t-caption);font-weight:600;background:var(--casora-studio-good-tint, rgba(52,199,89,.22));color:var(--casora-studio-good, #34c759)}"
     + ".cv-pin{display:inline-grid;vertical-align:-2px;margin-left:6px;width:14px;height:14px;color:var(--ink-2)}.cv-pin svg{width:14px;height:14px}"
     + ".cv-item{display:flex;align-items:center}.cv-item+.cv-item{box-shadow:inset 0 .5px 0 var(--hair,rgba(255,255,255,.1))}"
@@ -90,22 +93,23 @@
   // Was sich zwischen zwei gespeicherten Fassungen geändert hat – knapp, für die Liste.
   // first: erstes Speichern im Studio (noch keine Version) – die angelegte Fassung
   // unterscheidet sich dann in jedem Raum nur im Aufbau, nicht inhaltlich.
+  // Was das Speichern selbst an jedem Raum setzt, ist keine Änderung des Nutzers:
+  // die abgeleiteten Energie-Unterbadges von Zuhause (deriveEnergyRooms – setzt u. a.
+  // energy_subs_auto) und die Markierung casora_ui_managed. Beide Seiten gleich glätten.
+  const settle = (st) => {
+    const list = (st && st.compact && st.compact.rooms) || [];
+    if (!list.length) return st;
+    const rs = JSON.parse(JSON.stringify(list));
+    rs.forEach((r) => { if (r && r.variables) delete r.variables.casora_ui_managed; });
+    if (I().deriveEnergyRooms) { try { I().deriveEnergyRooms(rs); } catch (e) { /* ungeglättet */ } }
+    return Object.assign({}, st, { compact: Object.assign({}, st.compact, { rooms: rs }) });
+  };
+
   function summarize(before, after, mobileBefore, mobileAfter, first) {
     const out = { added: [], removed: [], changed: [], general: false, phone: false };
     const X = I().extractAny;
     let a = null, b = null;
     try { a = X && before ? X(before) : null; b = X && after ? X(after) : null; } catch (e) { a = b = null; }
-    // Was das Speichern selbst an jedem Raum setzt, ist keine Änderung des Nutzers:
-    // die abgeleiteten Energie-Unterbadges von Zuhause (deriveEnergyRooms – setzt u. a.
-    // energy_subs_auto) und die Markierung casora_ui_managed. Beide Seiten gleich glätten.
-    const settle = (st) => {
-      const list = (st && st.compact && st.compact.rooms) || [];
-      if (!list.length) return st;
-      const rs = JSON.parse(JSON.stringify(list));
-      rs.forEach((r) => { if (r && r.variables) delete r.variables.casora_ui_managed; });
-      if (I().deriveEnergyRooms) { try { I().deriveEnergyRooms(rs); } catch (e) { /* ungeglättet */ } }
-      return Object.assign({}, st, { compact: Object.assign({}, st.compact, { rooms: rs }) });
-    };
     a = settle(a); b = settle(b);
     const rooms = (s) => ((s && s.compact && s.compact.rooms) || []);
     const by = (list) => new Map(list.map((r) => [r.path, r]));
@@ -237,6 +241,40 @@
       : Object.assign({}, x.head, { summary: mergeSummaries(x.members), grouped: x.members.length })));
   }
 
+  // V-06: höchstens drei Sätze in Alltagssprache („Wohnzimmer gelöscht“, „Foto Küche geändert“,
+  // „+2 weitere“); Nebeneffekte wie „Einstellungen“ fallen weg, solange es Wichtigeres gibt.
+  const fillT = (k, o) => t(k).replace(/\{(\w+)\}/g, (m, x) => (o[x] !== undefined ? o[x] : m));
+  const SENT = {
+    name: (r) => fillT("{room} renamed", { room: r }),
+    photo: (r) => fillT("Photo of {room} changed", { room: r }),
+    badges: (r) => fillT("Badges in {room} changed", { room: r }),
+    moved: (r) => fillT("Tiles in {room} reordered", { room: r }),
+    tiles: (r) => fillT("Tiles in {room} changed", { room: r }),
+  };
+  const RANK = { photo: 2, "tiles+": 3, "tiles-": 3, name: 4, badges: 5, moved: 6, tiles: 6 };
+  function sentences(s) {
+    const rn = (n) => (n && I().isDefaultHomeName && I().isDefaultHomeName(n) ? I().homeRoomWord() : n);
+    const out = [];
+    s.removed.forEach((n) => out.push([0, fillT("{room} deleted", { room: rn(n) })]));
+    s.added.forEach((n) => out.push([1, fillT("Room {room} added", { room: rn(n) })]));
+    const det = s.detail || {};
+    s.changed.forEach((n) => {
+      const codes = (det[n] || []).filter((c) => c !== "settings");
+      if (!codes.length) { out.push([(det[n] || []).length ? 9 : 7, fillT("{room} changed", { room: rn(n) })]); return; }
+      codes.forEach((c) => {
+        const m = /^tiles([+-])(\d+)$/.exec(c);
+        if (m) {
+          const k = Number(m[2]);
+          const key = m[1] === "+" ? (k === 1 ? "Tile added in {room}" : "{n} tiles added in {room}")
+            : (k === 1 ? "Tile removed in {room}" : "{n} tiles removed in {room}");
+          out.push([RANK["tiles" + m[1]], fillT(key, { room: rn(n), n: k })]);
+        } else if (SENT[c]) out.push([RANK[c], SENT[c](rn(n))]);
+      });
+    });
+    if (s.general) out.push([8, t("Dashboard settings changed")]);
+    if (s.phone && !out.length) out.push([10, t("Phone layout changed")]);
+    return out.sort((a, b) => a[0] - b[0]).map((x) => x[1]);
+  }
   function describe(v) {
     if (v.kind === "restore") return t("Restored an earlier version");
     if (v.kind === "initial") return t("Starting point");
@@ -251,24 +289,11 @@
       update: "Templates refreshed after a Casora update" };
     if (s.origin && ORIGIN[s.origin]) bits.push(t(ORIGIN[s.origin]));
     ["added", "removed", "changed"].forEach((k) => { if (!Array.isArray(s[k])) s[k] = []; });
-    // Der Standardname der Übersicht („Home“) in der HA-Sprache („Zuhause“).
-    const rn = (n) => (n && I().isDefaultHomeName && I().isDefaultHomeName(n) ? I().homeRoomWord() : n);
-    s.added.forEach((n) => bits.push(t("New room") + ": " + rn(n)));
-    s.removed.forEach((n) => bits.push(t("Room removed") + ": " + rn(n)));
-    // Rooms with a known change say what it was: „Wohnbereich: Foto, Kacheln +1“.
-    const det = s.detail || {};
-    const told = s.changed.filter((n) => (det[n] || []).length);
-    told.slice(0, 2).forEach((n) => bits.push(rn(n) + ": " + det[n].map(word).join(", ")));
-    const rest = s.changed.filter((n) => told.slice(0, 2).indexOf(n) < 0);
-    // Mehrere Räume: die Zahl vorn („3 Räume geändert: Büro, Flur, Küche …“) statt „+5“ am Ende.
-    if (rest.length === 1) bits.push(t("Changed") + ": " + rn(rest[0]));
-    else if (rest.length) {
-      bits.push(t(told.length ? "{n} more rooms changed" : "{n} rooms changed").replace("{n}", rest.length)
-        + ": " + rest.slice(0, 3).map(rn).join(", ") + (rest.length > 3 ? " …" : ""));
-    }
-    if (s.general) bits.push(t("Dashboard settings"));
-    if (s.phone && !bits.length) bits.push(t("Phone layout"));
-    const txt = bits.length ? bits.join(" · ") : t("Saved");
+    const all = sentences(s);
+    const room = 3 - bits.length;
+    bits.push(...all.slice(0, room));
+    if (all.length > room) bits.push(t("+{n} more").replace("{n}", all.length - room));
+    const txt = bits.length ? bits.join(" \u00b7 ") : t("Saved");
     return v.grouped ? txt + " (" + t("{n} saves").replace("{n}", v.grouped) + ")" : txt;
   }
 
@@ -285,7 +310,25 @@
     + (v.current ? '<span class="cv-now">' + esc(t("Now")) + "</span>" : "");
 
   // Für die Unit-Tests (dev/unit/zeitreise.mjs).
-  window.__casoraVersionsInternals = { summarize, roomDiff, mergeSummaries, groupVersions, describe, pinnedFirst, nowOf };
+  // V-06: Was beim Wiederherstellen verloren geht – die Änderungen vom gewählten Stand bis jetzt,
+  // in denselben Sätzen wie die Änderungsliste (changeLines aus casora-panel-b-mehr.js).
+  function lossLines(thenState, nowState, ctx) {
+    const M = window.__casoraStudioMehr;
+    if (!M || !M.changeLines || !thenState || !nowState) return [];
+    // Abgeleitete Energie-Unterbadges (energy_subs_auto) folgen nur den Räumen – kein eigener Verlust.
+    const auto = (st) => {
+      const s2 = settle(st);
+      ((s2.compact || {}).rooms || []).forEach((r) => {
+        const V = r.variables || {};
+        if (V.energy_subs_auto === true) Object.keys(V).forEach((k) => { if (/^energy_(entity|label|unit|popup_[a-z_]+)_\d+$/.test(k)) delete V[k]; });
+      });
+      return s2;
+    };
+    const a = auto(thenState), b = auto(nowState);
+    try { return M.changeLines([a.compact], [b.compact], ctx); } catch (e) { return []; }
+  }
+
+  window.__casoraVersionsInternals = { summarize, roomDiff, mergeSummaries, groupVersions, describe, pinnedFirst, nowOf, lossLines, sentences };
 
   customElements.whenDefined("casora-panel").then(() => {
     const P = customElements.get("casora-panel").prototype;
@@ -503,8 +546,42 @@
       note.className = "cv-note";
       note.textContent = locked ? t("This dashboard is locked against saving from the Studio.")
         : t("What is saved now stays in the list, so you can always go back.");
+      const loss = this._cvLossBox(this._cvLossOf(peek.state));
+      if (loss) act.append(loss);
       act.append(go, back, note);
       if (tags) act.append(tags);
+    };
+
+    // Verlust gegenüber dem gespeicherten Jetzt (nicht dem ungespeicherten Entwurf).
+    P._cvLossOf = function (thenState) {
+      const base = this._mBase && this._mBase.s ? { compact: this._mBase.s[0] } : (this._state ? { compact: this._state.compact } : null);
+      return lossLines(thenState, base, { roomName: (r) => (this._roomLabel ? this._roomLabel(r) : r.name) });
+    };
+    P._cvLossBox = function (lines) {
+      const box = document.createElement("div");
+      box.className = "cv-loss";
+      box.setAttribute("data-no-i18n", "");
+      const b = document.createElement("b");
+      b.textContent = lines.length ? t("Restoring undoes these changes:") : t("Nothing changed since this version.");
+      box.appendChild(b);
+      if (lines.length) {
+        const ul = document.createElement("ul");
+        lines.slice(0, 5).forEach((l) => { const li = document.createElement("li"); li.textContent = l; ul.appendChild(li); });
+        if (lines.length > 5) { const li = document.createElement("li"); li.textContent = t("+{n} more").replace("{n}", lines.length - 5); ul.appendChild(li); }
+        box.appendChild(ul);
+      }
+      return box;
+    };
+    P._cvLossFor = async function (v) {
+      let data = (this._cvCache || {})[v.id];
+      if (!data) {
+        try { data = await this._hass.callWS({ type: "casora/versions/get", url_path: this._dashUrl, version: v.id }); } catch (e) { return null; }
+        this._cvCache = this._cvCache || {};
+        this._cvCache[v.id] = data;
+      }
+      let state = null;
+      try { state = I().extractAny(data.config); } catch (e) { state = null; }
+      return state ? this._cvLossOf(state) : null;
     };
 
     // „Benennen…“ und „Anheften“/„Lösen“ für einen Stand; after zeichnet die Liste neu.
@@ -558,10 +635,12 @@
         if (!ok) return;
         if (this._discardDraft) this._discardDraft();
       }
+      const lost = await this._cvLossFor(v);
       const ok = await this._ask({
         title: t("Restore this version?"),
         message: fmtFull(this, new Date(v.ts)) + " – " + t("The dashboard and its phone layout go back to this version."),
         confirmLabel: t("Restore"),
+        extend: lost ? ({ box, acts }) => box.insertBefore(this._cvLossBox(lost), acts) : undefined,
       });
       if (!ok) return;
       try {
@@ -802,7 +881,7 @@
     // Handy: schlichte Liste im Blatt, ohne Vorschau.
     P._cvSheet = async function () {
       css(this);
-      const s = this._flowScreen({ icon: "rewind", title: t("Rewind"),
+      const s = this._flowScreen({ icon: "rewind", title: t("Rewind – Earlier Versions"),
         lede: t("Every save is kept here. Restoring puts the dashboard back to that version.") });
       let list = [];
       try {

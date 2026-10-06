@@ -91,7 +91,8 @@ await check('Zeitreise-Knopf neben Rückgängig', rw);
 await page.locator('#roomtitle').click();
 await page.waitForTimeout(600);
 const menu = await H(() => [...window.__panel().shadowRoot.querySelectorAll('[role=menu], .menu')].filter((e) => e.getClientRects().length).map((e) => e.innerText).join(' '));
-await check('Titelmenü führt die Zeitreise nicht mehr doppelt', menu && !/Zeitreise/.test(menu), menu.slice(0, 200));
+// V-09 (07.10.2026): Das Titelmenü führt alles über das Dashboard – die Zeitreise wieder mit.
+await check('Titelmenü führt die Zeitreise (alles zum Dashboard)', menu && /Zeitreise/.test(menu), menu.slice(0, 200));
 await page.keyboard.press('Escape');
 await page.waitForTimeout(400);
 

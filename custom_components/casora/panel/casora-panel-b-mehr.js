@@ -651,7 +651,7 @@
       A("photo", "Change the photo", "foto ändern hintergrund hintergrundbild bild raumbild bild ändern",
         () => { this._bLeavePages && this._bLeavePages(); sel({ group: "rooms", key: "Appearance", label: "Appearance" }); }, !!here,
         here ? this._roomLabel(here) + " › " + tr("Appearance") : "");
-      A("addtile", "Add a tile", "kachel hinzufügen neu gerät", () => this._bAddTile(), true, way("Elements", "Tiles"));
+      A("addtile", "Add a tile", "kachel hinzufügen neu gerät", () => this._bAddTile(), true, way("Content", "Tiles"));
       A("scene", "Save the current state as a scene", "szene speichern stimmung licht merken aktueller zustand",
         () => this._bSceneFromState(), typeof this._bSceneFromState === "function" && !!(this._hass && this._hass.user && this._hass.user.is_admin),
         way("Dashboard", "Scenes"));
