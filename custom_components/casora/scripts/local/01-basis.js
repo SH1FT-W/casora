@@ -850,7 +850,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           r.src.connect(r.node); r.node.connect(ctx.destination);
           var msg = { type: 'assist_pipeline/run', start_stage: 'stt', end_stage: 'tts', input: { sample_rate: ctx.sampleRate } };
           if (A.convId) msg.conversation_id = A.convId;
-          var finish = function (t, err) {
+          var finish = r.finish = function (t, err) {
             if (r.done) return; r.done = true; A.busy = false;
             if (t) A.msgs.push({ t: t, err: !!err });
             A.paint();
@@ -899,6 +899,14 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         var r = A.rec; if (!r) return;
         r.ended = true; A.sendEnd(r);
         A.cleanupRec(r); A.busy = true; A.paint();
+        /* Sicherheitsnetz wie beim Text-Weg: kommt keine Antwort (Verbindung neu, Agent hängt),
+           bleibt die Eingabe nicht für immer gesperrt. */
+        setTimeout(function () {
+          if (r.done) return;
+          if (r.finish) r.finish('Zeitüberschreitung – bitte nochmal versuchen.', true);
+          else { r.done = true; A.busy = false; A.msgs.push({ t: 'Zeitüberschreitung – bitte nochmal versuchen.', err: true }); A.paint(); }
+          if (r.unsub) { try { r.unsub(); } catch (e) {} }
+        }, 45000);
       },
       cleanupRec: function (r) {
         r = r || A.rec; if (!r) return;
