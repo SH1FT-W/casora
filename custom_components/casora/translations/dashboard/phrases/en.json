@@ -2343,7 +2343,9 @@
   ],
   [
    "^Neu: (.+)$",
-   "New: {1}",
+   "New: {1}"
+  ],
+  [
    "^(\\d+) Termine heute$",
    "{1} events today"
   ],
