@@ -14598,8 +14598,7 @@ class CasoraPanel extends HTMLElement {
       }
     }
 
-    // Fingerabdruck dessen, was gespeichert wird: Änderungen während des Speicherns bleiben „ungespeichert“.
-    const savedPrint = this._print();
+    let savedPrint = null;
     const built = expandAny(s, { scaffold, extras, templates });
 
     let cfg = built;
@@ -14696,6 +14695,9 @@ class CasoraPanel extends HTMLElement {
     this._saving = true;
     this._markDirty();
     try {
+      // Fingerabdruck dessen, was jetzt gespeichert wird (inkl. der Abgleiche oben): was während der
+      // Netzwege danach geändert wird, bleibt „ungespeichert“ statt still verloren zu gehen.
+      savedPrint = this._print();
       await this._hass.callWS({ type: "lovelace/config/save", url_path, config: cfg });
       this._raw = clone(cfg);
       this._log(`saved  ${JSON.stringify(cfg).length.toLocaleString()} bytes`, "ok");
@@ -14706,7 +14708,7 @@ class CasoraPanel extends HTMLElement {
         pair.mobileRaw = clone(mcfg);
         this._log(`saved phone layout  ${JSON.stringify(mcfg).length.toLocaleString()} bytes`, "ok");
       }
-      this._clean = savedPrint;
+      this._clean = savedPrint || this._print();
       this._dropDraft(url_path);
       this._resetUndo(true);
       this._markDirty();

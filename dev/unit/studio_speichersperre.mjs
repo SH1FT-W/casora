@@ -3,7 +3,7 @@
 // Code-Audit 06.10.2026 (B-PA-01): Kann das Studio ein Dashboard nicht verlustfrei nachbauen, setzt es
 // _saveBlocked. Geräte-Assistent, „Neue Szene“ und die Einstellungen riefen _save() aber direkt auf und
 // überschrieben das Dashboard trotzdem. Hier ohne Browser: _save() selbst bricht ab und schreibt nichts.
-// Dazu B-PA-03: als gespeichert gilt der Stand beim Bauen, nicht der nach dem Warten aufs Netz.
+// Dazu B-PA-03: als gespeichert gilt der Stand beim Absenden, nicht der nach dem Warten aufs Netz.
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -28,8 +28,8 @@ assert.equal(writes.length, 0, 'gesperrt → kein Aufruf an HA');
 assert.equal(panel.msg && panel.msg[1], 'err', 'gesperrt → Hinweis');
 
 // Fingerabdruck vor dem Bauen, gesetzt als _clean nach dem Speichern.
-assert.ok(/const savedPrint = this\._print\(\);\s*\n\s*const built = expandAny/.test(src), 'Fingerabdruck direkt vor dem Bauen');
-assert.ok(/this\._clean = savedPrint;/.test(src), '_clean = Stand beim Bauen');
+assert.ok(/savedPrint = this\._print\(\);\s*\n\s*await this\._hass\.callWS\(\{ type: "lovelace\/config\/save", url_path, config: cfg \}\)/.test(src), "Fingerabdruck direkt vor dem Speichern");
+assert.ok(/this\._clean = savedPrint \|\| this\._print\(\);/.test(src), '_clean = Stand beim Absenden');
 // Gespeichert wird an das Dashboard, aus dem der Stand stammt.
 assert.ok(/const url_path = this\._stateUrl \|\| this\._dashUrl;/.test(body), 'Ziel = _stateUrl');
 console.log('ok studio_speichersperre');
