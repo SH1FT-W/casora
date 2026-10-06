@@ -2966,11 +2966,18 @@ const SIDE_W_KEY = "casora_panel_side_w";
 const PANEL_NARROW = 1000;
 const PANEL_TIGHT = 900;
 const PANEL_PHONE = 700;
+// Innerhalb einer Aufgabe liegt das Panel nicht anders: einmal messen statt bei jedem Feld
+// (jede Messung mitten im Aufbau erzwang ein Layout). Gilt bis zum Ende der Aufgabe.
+let panelWMemo = null;
 const panelW = (el) => {
   if (!el || !el.getBoundingClientRect) return window.innerWidth;
+  if (panelWMemo && panelWMemo.el === el && panelWMemo.iw === window.innerWidth) return panelWMemo.w;
   const left = Math.max(0, el.getBoundingClientRect().left);
   const w = Math.round(window.innerWidth - left);
-  return w > 40 ? w : window.innerWidth;
+  const out = w > 40 ? w : window.innerWidth;
+  if (!panelWMemo) queueMicrotask(() => { panelWMemo = null; });
+  panelWMemo = { el, iw: window.innerWidth, w: out };
+  return out;
 };
 const isNarrow = (el) => panelW(el) < PANEL_NARROW;
 // Handy quer (03.10.2026): niedrig und breit – geteilte Ansicht statt Handy-Ansicht, auch wenn
