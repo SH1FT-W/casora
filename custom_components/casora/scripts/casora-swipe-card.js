@@ -263,8 +263,10 @@ class CasoraSwipeCard extends HTMLElement {
   _startAutoSwipe() {
     clearInterval(this._autoTimer);
     const interval = Number(this._config?.auto_swipe_interval);
-    if (!interval || !this._cards || this._cards.length <= 1) return;
+    // Während des (asynchronen) Aufbaus wieder ausgehängt: nicht starten, sonst liefe es ewig weiter.
+    if (!interval || !this._cards || this._cards.length <= 1 || !this.isConnected) return;
     this._autoTimer = setInterval(() => {
+      if (!this.isConnected) { clearInterval(this._autoTimer); this._autoTimer = null; return; }
       if (this._dragging) return;
       this._goTo(this._index + 1);
     }, interval);
