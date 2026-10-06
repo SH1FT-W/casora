@@ -3203,7 +3203,7 @@
         /* D-08: Teile einzeln übersetzen (der ganze Satz traf keinen Eintrag) und „Uhr“ nur auf Deutsch. */
         var trV = window.casoraTr || function (x) { return x; };
         var deV = !window.casoraLocale || /^de/i.test(String(window.casoraLocale()));
-        if (bat != null) sub.push(trV('Akku') + ' ' + Math.round(bat) + ' %' + (on(c.charging) ? ' · ' + trV('lädt') : ''));
+        if (bat != null) sub.push(trV('Akku ' + Math.round(bat) + ' %') + (on(c.charging) ? ' · ' + trV('lädt') : ''));
         var le = U.str(states, c.lastEnd);
         var lastW = trV('zuletzt');
         if (le) sub.push(lastW + ' ' + trV(U.day(new Date(le))).replace(/^(Heute|Gestern|Today|Yesterday)$/, function (x) { return x.toLowerCase(); }) + ', ' + U.clock(new Date(le)) + (deV ? ' Uhr' : ''));
