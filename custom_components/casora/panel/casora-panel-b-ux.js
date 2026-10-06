@@ -5,6 +5,8 @@
 // - Drei Ebenen sichtbar: Leiste von klein (Raum) nach groß (alle Dashboards), „Gilt für: …“
 //   in Menüs und im Inspektor
 // - Inspektor-Kopf mit Weg („Wohnzimmer › Kacheln“) und Geltungsbereich, auch im Handy-Blatt
+// - „…“ heißt „Hilfe & Extras“: Einführung, Tastenkürzel, Assistenten, Import, Hilfe; alles über
+//   das Dashboard steht im Titelmenü; am Handy Rückgängig und Zeitreise oben sichtbar
 // - Untertitel der Reiter (Inhalt, Dashboard, Einstellungen) als Hinweis und im Inhalt-Blatt
 // - Wörterbuch: Badges und Popups mit einem Halbsatz erklärt
 // Datenmodell, Speichern und Rückgängig bleiben die des Panels – hier wird nur angeschlossen.
@@ -81,6 +83,17 @@
       color:var(--ink-2, rgba(127,127,127,.95)); border-bottom:.5px solid var(--hair, rgba(127,127,127,.2)); white-space:normal; }
     .combo-opt .uxsub { display:block; font-size:12px; line-height:1.25; font-weight:500; opacity:.62; margin-top:1px; white-space:normal; }
     .combo-opt:has(.uxsub) .lbl { display:flex; flex-direction:column; }
+    /* Handy: Rückgängig und Zeitreise sichtbar oben (V-09) */
+    :host(.bmode.phone:not(.flow)) .toprow > .navpill > button#undo,
+    :host(.bmode.phone:not(.flow)) .toprow > .navpill > button#brewind.has { display:inline-flex !important; align-items:center; justify-content:center;
+      width:36px; min-width:36px; padding:0; }
+    :host(.bmode.phone:not(.flow)) .toprow > .navpill > button#undo:disabled { opacity:.38; }
+    :host(.bmode.phone:not(.flow)) .toprow > .navpill > button#brewind svg,
+    :host(.bmode.phone:not(.flow)) .toprow > .navpill > button#undo svg { width:20px; height:20px; }
+    /* Tastenkürzel */
+    .uxkeys { display:grid; grid-template-columns:auto 1fr; gap:8px 14px; margin:2px 4px 6px; font-size:14px; align-items:center; }
+    .uxkeys kbd { font:inherit; font-size:12.5px; font-weight:650; padding:2px 7px; border-radius:7px; white-space:nowrap; justify-self:start;
+      background:var(--wash-fill, rgba(118,118,128,.14)); }
     :host(.bmode.phone) .inspector .uxwhat { color:color-mix(in srgb, var(--ink) 55%, transparent) !important; }
   `;
 
@@ -211,6 +224,7 @@
       this._uxHead();
       this._uxPhoneHeads();
       this._uxWhat();
+      this._uxMore();
     };
 
     // ── Menüs: „Gilt für: …“ oben (V-01) ───────────────────────────────
@@ -256,6 +270,92 @@
       }
       return r;
     });
+
+    // ── „…“ = Hilfe & Extras, Titelmenü = dieses Dashboard (V-09) ─────────
+    const isMac = () => /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
+    wrap("_menuAt", (orig) => function (anchor, items, onPick, mopts) {
+      if (on(this) && Array.isArray(items) && items.some((x) => x && x.id === "hints")) {
+        const phone = this.classList.contains("phone");
+        // Was oben sichtbar ist (Handy: Rückgängig, Zeitreise) und was zum Dashboard gehört
+        // (Dashboard öffnen → Titelmenü), steht hier nicht noch einmal.
+        const DROP = phone ? ["casora_versions", "open"] : ["casora_versions"];
+        items = items.filter((x) => !(x && DROP.indexOf(x.id) >= 0));
+        if (!phone && !items.some((x) => x && x.id === "uxkeys")) {
+          // Hinter „Hinweise“: „Kurze Einführung“ (casora-panel-b-plus.js) rückt davor.
+          const h = items.findIndex((x) => x && x.id === "hints");
+          items = items.slice();
+          items.splice(h + 1, 0, { id: "uxkeys", label: "Keyboard shortcuts", icon: "help", group: items[h].group });
+          const pick = onPick;
+          onPick = (id) => (id === "uxkeys" ? setTimeout(() => this._uxKeys(anchor), 60) : pick(id));
+        }
+        const r = orig.call(this, anchor, items, onPick, mopts);
+        // Handy: die Zeitreise fügt casora-panel-versions.js ganz innen an – sie steht oben neben
+        // Rückgängig und im Titelmenü, hier nicht noch einmal.
+        // Ebenso Rückgängig und Suchen (beides oben); Wiederholen und „N Änderungen“ bleiben.
+        if (phone) this._uxDropOpt(["Rewind…", "Rewind", "Undo", "Search…"]);
+        return r;
+      }
+      return orig.call(this, anchor, items, onPick, mopts);
+    });
+    P._uxDropOpt = function (labels) {
+      const menus = this.shadowRoot.querySelectorAll(".combo-menu");
+      const menu = menus[menus.length - 1];
+      if (!menu) return;
+      const want = new Set(labels.concat(labels.map(tr)));
+      menu.querySelectorAll(".combo-opt").forEach((o) => {
+        const l = o.querySelector(".lbl");
+        if (!l || !want.has(l.textContent.trim())) return;
+        const g = o.dataset.g;
+        o.remove();
+        if (!menu.querySelector('.combo-opt[data-g="' + g + '"]')) menu.querySelectorAll('.combo-head[data-g="' + g + '"], .combo-sep[data-g="' + g + '"]').forEach((n) => n.remove());
+      });
+    };
+    P._uxKeys = function (anchor) {
+      const m = isMac();
+      const K = [[m ? "⌘K" : "Ctrl+K", "Search"], [m ? "⌘Z" : "Ctrl+Z", "Undo"], [m ? "⇧⌘Z" : "Ctrl+Y", "Redo"],
+        [m ? "⌘S" : "Ctrl+S", "Save"], ["Esc", "Close"], ["Enter", "Edit the selected item"],
+        [m ? "⌥ ←/→" : "Alt+←/→", "Move a tile or badge"]];
+      const box = document.createElement("div");
+      const h = document.createElement("h4");
+      h.textContent = tr("Keyboard shortcuts");
+      const g = document.createElement("div");
+      g.className = "uxkeys";
+      K.forEach(([k, t]) => {
+        const a = document.createElement("kbd");
+        a.textContent = k;
+        const b = document.createElement("span");
+        b.textContent = tr(t);
+        g.append(a, b);
+      });
+      box.setAttribute("data-no-i18n", "");
+      box.append(h, g);
+      if (this._mPop) this._mPop(anchor || this.shadowRoot.getElementById("more"), box, "uxkeyspop");
+    };
+    // Titelmenü: Zeitreise (auch am Handy) und am Handy „Dashboard öffnen“.
+    wrap("_bDocItems", (orig) => function () {
+      const items = orig.apply(this, arguments);
+      if (!this._dashUrl || this._flowMode || !on(this)) return items;
+      const out = items.slice();
+      const at = out.findIndex((x) => x.id === "doc:qr" || x.id === "doc:addmobile" || x.id === "doc:delete");
+      const g = (out[0] && out[0].group) || "This dashboard";
+      const add = [];
+      if (typeof this._cvFromMenu === "function" && !out.some((x) => x.id === "doc:versions")) add.push({ id: "doc:versions", label: "Rewind", icon: "clock", group: g });
+      if (this.classList.contains("phone")) add.unshift({ id: "doc:open", label: "Open dashboard", icon: "open", group: g });
+      out.splice(at >= 0 ? at : out.length, 0, ...add);
+      return out;
+    });
+    wrap("_bDocPick", (orig) => function (id) {
+      if (id === "doc:open") { this._bRooms = false; if (this._openDash) this._openDash(true); return true; }
+      return orig.apply(this, arguments);
+    });
+    P._uxMore = function () {
+      const more = this.shadowRoot.getElementById("more");
+      if (!more) return;
+      const t = tr("Help & extras");
+      if (more.title !== t) { more.title = t; more.setAttribute("aria-label", t); }
+      // Handy: Zeitreise-Knopf neben Rückgängig (casora-panel-b-plus.js legt ihn an).
+      if (this._bRewindBtn) this._bRewindBtn();
+    };
 
     // ── Anschließen ─────────────────────────────────────────────────────
     const after = (name) => wrap(name, (orig) => function () {
