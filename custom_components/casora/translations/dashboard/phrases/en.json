@@ -1362,7 +1362,34 @@
   "Steckt hinter": "Behind",
   "1 Gerät ohne Wert": "1 device without a value",
   "Schloss offen": "Lock open",
-  "Alles sicher": "All secure"
+  "Alles sicher": "All secure",
+  "Auswertung der letzten 7 Tage": "Analysis of the past 7 days",
+  "Idee der Woche": "Idea of the week",
+  "Vorschlag von Claude": "Suggestion from Claude",
+  "Karte": "Map",
+  "Vom Hersteller, kommt verzögert": "From the manufacturer, arrives with a delay",
+  "der Entsorger": "the waste service",
+  "Mbit/s Download": "Mbit/s download",
+  "Mbit/s Upload": "Mbit/s upload",
+  "Download & Upload": "Download & upload",
+  "Download": "Download",
+  "Upload": "Upload",
+  "Sensor": "Sensor",
+  "Speedtest": "Speedtest",
+  "Standby": "Standby",
+  "Firmware": "Firmware",
+  "HACS": "HACS",
+  "Casora": "Casora",
+  "Cookidoo": "Cookidoo",
+  "Thermomix": "Thermomix",
+  "PowerTube": "PowerTube",
+  "PlayStation": "PlayStation",
+  "PlayStation Network": "PlayStation Network",
+  "1 Termin": "1 event",
+  "1 Kamera offline": "1 camera offline",
+  "1 Schloss offline": "1 lock offline",
+  "1 Tür gekippt": "1 door tilted",
+  "1 Tag": "1 day"
  },
  "patterns": [
   [
@@ -1962,8 +1989,16 @@
    "Last {1}"
   ],
   [
-   "^KI-Einschätzung · vor (\\d+) (Min\\.|Std\\.|T\\.)$",
-   "AI assessment · {1} {2} ago"
+   "^KI-Einschätzung · vor (\\d+) Min\\.$",
+   "AI assessment · {1} min ago"
+  ],
+  [
+   "^KI-Einschätzung · vor (\\d+) Std\\.$",
+   "AI assessment · {1} h ago"
+  ],
+  [
+   "^KI-Einschätzung · vor (\\d+) T\\.$",
+   "AI assessment · {1} d ago"
   ],
   [
    "^KI-Einschätzung · gerade eben$",
@@ -2488,6 +2523,26 @@
   [
    "^Nicht in der Summe · Steckt hinter (.+)$",
    "Not added up · behind {1}"
+  ],
+  [
+   "^Stand (.+) \\(verzögert\\)$",
+   "Updated {1} (delayed)"
+  ],
+  [
+   "^Stand (.+)$",
+   "Updated {1}"
+  ],
+  [
+   "^Nächste Inspektion (.+)$",
+   "Next inspection {1}"
+  ],
+  [
+   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
+   "Pickup dates will be back as soon as {1} responds."
+  ],
+  [
+   "^(\\d+) Termine$",
+   "{1} events"
   ]
  ]
 }
