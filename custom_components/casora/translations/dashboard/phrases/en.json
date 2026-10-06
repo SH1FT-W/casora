@@ -1355,7 +1355,12 @@
   "Position": "Position",
   "Spielt": "Playing",
   "Geräte im Casora Studio einem Raum zuordnen": "Assign devices to a room in Casora Studio",
-  "Das Mikrofon funktioniert nur über HTTPS – bitte Home Assistant über eine https-Adresse öffnen.": "The microphone only works over HTTPS – please open Home Assistant via an https address."
+  "Das Mikrofon funktioniert nur über HTTPS – bitte Home Assistant über eine https-Adresse öffnen.": "The microphone only works over HTTPS – please open Home Assistant via an https address.",
+  "In der Summe": "Added up",
+  "Nicht in der Summe": "Not added up",
+  "Keine Leistung": "Not power",
+  "Steckt hinter": "Behind",
+  "1 Gerät ohne Wert": "1 device without a value"
  },
  "patterns": [
   [
@@ -2461,6 +2466,22 @@
   [
    "^Dimme das Licht (?:im|in der) (.+)$",
    "Dim the lights in the {1}"
+  ],
+  [
+   "^In der Summe · (\\d+) von (\\d+)$",
+   "Added up · {1} of {2}"
+  ],
+  [
+   "^(\\d+) % der Summe$",
+   "{1} % of the total"
+  ],
+  [
+   "^(\\d+) Geräte ohne Wert$",
+   "{1} devices without a value"
+  ],
+  [
+   "^Nicht in der Summe · Steckt hinter (.+)$",
+   "Not added up · behind {1}"
   ]
  ]
 }

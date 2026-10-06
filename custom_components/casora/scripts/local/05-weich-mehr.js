@@ -385,12 +385,19 @@
       socMin: v.entity_soc_min, socMax: v.entity_soc_max,
     };
     var has = function (id) { return !!(id && states[id]); };
+    // 06.10.2026: Raum ohne eigenen Sensor – Summe der Geräte oben, darunter jeder Summand mit
+    // seinem Wert; übersprungene (nicht erreichbar, keine Leistung, hinter Messsteckdose) markiert.
+    var parts = !ctx.powerId && window._casoraPowerSum && Array.isArray(v.power_entities) && v.power_entities.some(Boolean)
+      ? { energy_entities: v.power_entities.filter(Boolean), energy_parent: v.power_parent || null } : null;
+    if (parts) { C.sum = parts; C.icons = v.power_icons || null; }
+    var sumIds = parts ? window._casoraPowerIds(parts) : [];
     var f = {};
-    f.hero = { card: secCard([C.home, C.grid, C.costToday, C.today, C.error], call('_casoraSoftEnergy', 'hero', C), states) };
+    f.hero = { card: secCard([C.home, C.grid, C.costToday, C.today, C.error].concat(sumIds), call('_casoraSoftEnergy', 'hero', C), states) };
     if (ctx.metricCard) f.metric = { card: chartCard(ctx.metricCard) };
     var fl = ctx.fields || {};
     if (typeof fl.use === 'string' && fl.use) f.use = UI.label('Verbrauch') + fl.use;
-    if (typeof fl.top === 'string' && fl.top) f.top = UI.label('Verbraucher') + fl.top;
+    if (parts) f.top = { card: secCard(sumIds, call('_casoraSoftEnergy', 'parts', C), states) };
+    else if (typeof fl.top === 'string' && fl.top) f.top = UI.label('Verbraucher') + fl.top;
     var inner = ctx.inner || {};
     var cj = 'const C = ' + JSON.stringify(C) + ';\n';
     if (solar && has(C.solar) && has(C.home) && inner.common && inner.flow) {
@@ -430,6 +437,12 @@
     if (part === 'hero') {
       var p = watt(states, C.home), grid = watt(states, C.grid);
       var bits = [];
+      if (C.sum && window._casoraPowerSum) {
+        var R0 = window._casoraPowerSum(C.sum, states);
+        p = isFinite(R0.sum) ? R0.sum : null;
+        var off0 = R0.items.filter(function (x) { return x.skip === 'off'; }).length;
+        if (off0) bits.push(off0 === 1 ? '1 Gerät ohne Wert' : off0 + ' Geräte ohne Wert');
+      }
       if (p != null && p < -20) bits.push('Einspeisung');
       if (C.solar && p != null && p > 0 && grid != null) {
         var aut = Math.max(0, Math.min(1, 1 - Math.max(grid, 0) / p));
@@ -447,6 +460,29 @@
       return UI.hero({ center: true, value: main == null ? '—' : main,
         sub: bits.join(' · ') || null,
         chip: bad ? { text: 'Solarbank-Fehler ' + err, tone: 'bad' } : null });
+    }
+    if (part === 'parts' && C.sum && window._casoraPowerSum) {
+      var R = window._casoraPowerSum(C.sum, states);
+      var nm = function (id) {
+        var a = (states[id] && states[id].attributes) || {};
+        var t = String(a.friendly_name || (hass && hass.entities && hass.entities[id] && hass.entities[id].name) || id);
+        return t.replace(/\s*(power|leistung)$/i, '').trim() || t;
+      };
+      var WHY = { off: 'Nicht erreichbar', nopower: 'Keine Leistung', parent: 'Steckt hinter' };
+      var used = R.items.filter(function (x) { return !x.skip; }).sort(function (a, b) { return b.w - a.w; });
+      var skipped = R.items.filter(function (x) { return x.skip; });
+      var rows = used.map(function (x) {
+        var pct = R.sum > 0 && x.w > 0 ? Math.round(x.w / R.sum * 100) : null;
+        return { entity: x.id, icon: (C.icons || {})[x.id] || 'plug', label: nm(x.id),
+          sub: pct ? pct + ' % der Summe' : null,
+          value: x.w > 0 && x.w < 10 ? (Math.round(x.w * 10) / 10).toLocaleString(LANG(hass)) + ' W' : fW(x.w, hass) };
+      }).concat(skipped.map(function (x) {
+        return { entity: x.id, icon: (C.icons || {})[x.id] || 'plug', iconTone: 'var(--casora-popup-ui-dim, rgba(58,50,43,0.25))',
+          label: nm(x.id), sub: 'Nicht in der Summe' + (x.skip === 'parent' ? ' · ' + WHY.parent + ' ' + nm(x.parent) : ''),
+          value: x.skip === 'parent' ? '—' : WHY[x.skip], valueTone: x.skip === 'off' ? 'warn' : null };
+      }));
+      var head = 'In der Summe' + (skipped.length ? ' · ' + used.length + ' von ' + R.items.length : '');
+      return rows.length ? UI.label(head) + UI.group(rows) : '';
     }
     if (part === 'more') {
       var secs = [];
