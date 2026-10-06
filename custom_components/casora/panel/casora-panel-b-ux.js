@@ -16,6 +16,8 @@
 //   Darstellung und „Lieber nur ausblenden“ vor dem Löschen eines Raums
 // - Anklickbares zeigt sich: beim Zeigen ein Etikett („Foto ändern“, „Kachel bearbeiten“); im
 //   Foto-Bereich zwei sichtbare Knöpfe „Foto wählen“ und „Eigenes hochladen“
+// - Tablet: Beschriftungen der Werkzeugleiste stufenweise kürzen (erst Suche, dann
+//   „Einstellungen“), statt bei Platzmangel gleich alle wegzulassen
 // - Untertitel der Reiter (Inhalt, Dashboard, Einstellungen) als Hinweis und im Inhalt-Blatt
 // - Wörterbuch: Badges und Popups mit einem Halbsatz erklärt
 // Datenmodell, Speichern und Rückgängig bleiben die des Panels – hier wird nur angeschlossen.
@@ -177,6 +179,12 @@
     .uxphoto { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 2px; }
     .uxphoto button { border:0; border-radius:10px; padding:8px 12px; font:inherit; font-size:var(--t-foot, 14px); font-weight:600; cursor:pointer;
       background:var(--chip, rgba(127,127,127,.14)); color:var(--ink, inherit); box-shadow:none; }
+    /* Tablet: stufenweise kürzen */
+    :host(.bmode.uxs1) #msearch .mlab, :host(.bmode.uxs1) #msearch .mkb { display:none; }
+    :host(.bmode.uxs1) #msearch { padding:0; width:34px; justify-content:center; }
+    :host(.bmode.uxs2) .btool[data-b="home"] .blabel, :host(.bmode.uxs2) .btool[data-b="rooms"] .blabel { display:none; }
+    /* Ganz eng: das „+“ der Leiste weicht (Platz „Kachel hinzufügen“ in der Vorschau bleibt). */
+    :host(.bmode.btight) .btools .btool.uxplus { display:none; }
     /* Tastenkürzel */
     .uxkeys { display:grid; grid-template-columns:auto 1fr; gap:8px 14px; margin:2px 4px 6px; font-size:14px; align-items:center; }
     .uxkeys kbd { font:inherit; font-size:12.5px; font-weight:650; padding:2px 7px; border-radius:7px; white-space:nowrap; justify-self:start;
@@ -1026,6 +1034,35 @@
       mk("Upload your own", () => { const d = shots.querySelector(".shot"); if (d) d.click(); });
       shots.after(box);
     };
+
+    // ── Tablet: Beschriftungen nach Platz (V-13) ───────────────────────────
+    // Wie _bFitTools (casora-panel-b.js) gemessen, aber in Stufen: 1 = Suche nur als Lupe,
+    // 2 = dazu Raum und Einstellungen nur als Symbol, 3 = alle nur als Symbol (btight).
+    P._uxTight = function () {
+      const tools = this.shadowRoot.querySelector(".btools");
+      const row = tools && tools.parentElement;
+      if (!row || !tools.getClientRects().length) return false;
+      const tr0 = tools.getBoundingClientRect();
+      let next = tools.nextElementSibling;
+      while (next && (!next.getClientRects().length || next.getBoundingClientRect().width < 2)) next = next.nextElementSibling;
+      const lab = row.querySelector("#roomtitle .rt-label");
+      const pill = [...this.shadowRoot.querySelectorAll(".navpill")].find((x) => x.getClientRects().length && x.getBoundingClientRect().left > tr0.left);
+      return row.scrollWidth > row.clientWidth + 1 || !!(next && next.getBoundingClientRect().left < tr0.right + 8)
+        || !!(lab && lab.scrollWidth > lab.clientWidth + 1) || !!(pill && pill.getBoundingClientRect().left < tr0.right + 20);
+    };
+    wrap("_bFitTools", (orig) => function () {
+      this.classList.remove("uxs1", "uxs2");
+      const r = orig.apply(this, arguments);
+      if (!this.classList.contains("btight") || this.classList.contains("phone")) return r;
+      for (const st of [["uxs1"], ["uxs1", "uxs2"]]) {
+        this.classList.remove("btight");
+        this.classList.add(...st);
+        if (!this._uxTight()) return r;
+      }
+      this.classList.remove("uxs1", "uxs2");
+      this.classList.add("btight");
+      return r;
+    });
 
     // ── Anschließen ─────────────────────────────────────────────────────
     const after = (name) => wrap(name, (orig) => function () {
