@@ -18948,7 +18948,9 @@ class CasoraPanel extends HTMLElement {
     if (!sel || sel.group !== g.id) return grp;
     if (g.id === "tiles") {
       const shellT = ((room && room.tiles) || []).find((t) => this._tileKey(t) === sel.key);
-      const tile = shellT && tileView(shellT);
+      // Eben entfernte Kachel: der Bereich heißt wieder „Kacheln“, nicht wie die gelöschte (F-01).
+      if (!shellT) return grp;
+      const tile = tileView(shellT);
       const type = tile && tileTypeAny(tile);
       // A tile whose template the panel does not know still has a name.
       if (!type) return { ...grp, label: sel.label || grp.label };
