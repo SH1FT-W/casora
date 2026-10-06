@@ -2229,6 +2229,11 @@ const LAST_DASH_KEY = "casora_panel_last_dashboard";
 // „Willkommen bei Casora“ gesehen (Browser-Merker; dazu casora/settings „welcome“).
 const WELCOME_KEY = "casora.welcomed";
 const NOT_CASORA_KEY = "casora_panel_not_casora_v1";
+// Urteil je Dashboard („ist Casora“ ja/nein) mit Prüfzeitpunkt. Jede Prüfung lädt die ganze
+// Dashboard-Konfiguration (je ~2,5 MB mit Vorlagen) – bisher bei jedem Öffnen für alle Dashboards
+// zweimal. Jetzt nur Unbekannte sofort, die übrigen höchstens alle 12 Stunden im Hintergrund.
+const DASH_VERDICT_KEY = "casora_panel_dash_verdict_v2";
+const DASH_VERDICT_TTL = 12 * 3600 * 1000;
 
 const hashStr = (str) => {
   let h = 0x811c9dc5;
@@ -11194,21 +11199,45 @@ class CasoraPanel extends HTMLElement {
   _verdicts() {
     if (!this._casoraVerdict) {
       this._casoraVerdict = new Map();
+      this._verdictAt = new Map();
       try {
-        JSON.parse(localStorage.getItem(NOT_CASORA_KEY) || "[]")
-          .forEach((u) => this._casoraVerdict.set(u, false));
+        const o = JSON.parse(localStorage.getItem(DASH_VERDICT_KEY) || "{}") || {};
+        Object.keys(o).forEach((u) => {
+          if (!Array.isArray(o[u])) return;
+          this._casoraVerdict.set(u, !!o[u][0]);
+          this._verdictAt.set(u, Number(o[u][1]) || 0);
+        });
+      } catch (e) { /* private mode */ }
+      // Die bisherige „kein Casora“-Liste hat Vorrang (ältere Fassungen schreiben nur sie);
+      // widerspricht sie dem neuen Merker, gilt „nein“ und die nächste Runde prüft nach.
+      try {
+        JSON.parse(localStorage.getItem(NOT_CASORA_KEY) || "[]").forEach((u) => {
+          if (this._casoraVerdict.get(u) === true) this._verdictAt.set(u, 0);
+          this._casoraVerdict.set(u, false);
+        });
       } catch (e) { /* private mode */ }
     }
     return this._casoraVerdict;
   }
 
-  _setVerdict(url_path, casora) {
+  // at: Prüfzeitpunkt; 0 = nicht sicher (Lesefehler) – die nächste Runde prüft erneut.
+  _setVerdict(url_path, casora, at) {
     const v = this._verdicts();
     v.set(url_path, casora);
+    this._verdictAt.set(url_path, at === undefined ? Date.now() : at);
     try {
       localStorage.setItem(NOT_CASORA_KEY,
         JSON.stringify([...v].filter(([, h]) => !h).map(([u]) => u)));
+      const o = {};
+      // Nur wirklich Geprüftes; Unsicheres (Lesefehler, alte Liste) bleibt in der alten Liste.
+      v.forEach((c, u) => { const t = this._verdictAt.get(u); if (t) o[u] = [c ? 1 : 0, t]; });
+      localStorage.setItem(DASH_VERDICT_KEY, JSON.stringify(o));
     } catch (e) { /* private mode */ }
+  }
+
+  _verdictFresh(url_path) {
+    const at = this._verdictAt && this._verdictAt.get(url_path);
+    return !!at && Date.now() - at < DASH_VERDICT_TTL && Date.now() >= at;
   }
 
   _shownDashboards(all) {
@@ -11216,21 +11245,26 @@ class CasoraPanel extends HTMLElement {
     return (all || []).filter((d) => d.mode === "storage" && v.get(d.url_path) !== false);
   }
 
+  // true/false; null = nicht lesbar (zählt wie „nein“, wird aber nicht als geprüft gemerkt).
   async _isCasoraDash(d) {
     try {
       const cfg = await this._hass.callWS({ type: "lovelace/config", url_path: d.url_path });
       return isMobileConfig(cfg)
         || (cfg.views || []).some((v) => ((v.cards || [])[0] || {}).template === "casora_room");
     } catch (e) {
-      return false;
+      return null;
     }
   }
 
   async _pruneDashboards(all) {
     for (const d of all) {
       if (d.url_path === this._dashUrl) continue;
-      const casora = await this._isCasoraDash(d);
-      this._setVerdict(d.url_path, casora);
+      // Vor Kurzem geprüft (auch gerade eben vor dem Laden): nicht erneut ganz herunterladen.
+      if (this._verdictFresh(d.url_path)) continue;
+      if (!this.isConnected) return;
+      const got = await this._isCasoraDash(d);
+      const casora = !!got;
+      this._setVerdict(d.url_path, casora, got === null ? 0 : undefined);
       const listed = (this._dashList || []).some((x) => x.url_path === d.url_path);
       if (casora === listed) continue;
       this._dashList = casora
@@ -11713,7 +11747,9 @@ class CasoraPanel extends HTMLElement {
       // Editor statt der Begrüßung.
       const v = this._verdicts();
       for (const d of all) {
-        if (!v.has(d.url_path)) this._setVerdict(d.url_path, await this._isCasoraDash(d));
+        if (v.has(d.url_path)) continue;
+        const got = await this._isCasoraDash(d);
+        this._setVerdict(d.url_path, !!got, got === null ? 0 : undefined);
       }
       list = this._shownDashboards(all);
       this._dashList = list;
@@ -11757,7 +11793,9 @@ class CasoraPanel extends HTMLElement {
 
     this._log(`${list.length} storage dashboard(s)`);
     await this._load();
-    this._pruneDashboards(all);
+    // Nachprüfen erst, wenn das Studio steht (lädt ggf. große Konfigurationen).
+    const later = window.requestIdleCallback || ((f) => setTimeout(f, 1500));
+    later(() => this._pruneDashboards(all), { timeout: 5000 });
   }
 
   // ── setup flow ────────────────────────────────────────────────────────────
