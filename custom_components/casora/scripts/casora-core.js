@@ -9427,7 +9427,22 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     head.appendChild(clear);
     head.style.justifyContent = 'flex-end';
     head.style.padding = '11px calc(var(--casora-popup-row-pad-x, 16px) + 8px) 5px';
-    if (unread()) inner.appendChild(head);
+    /* Weich (D-03/D-21): Kopfzeile „Benachrichtigungen“ links, „Alles gelesen“ rechts mit
+       44 px Trefferfläche (vorher reiner Textlink, 17 px hoch). Standard/Glas unverändert. */
+    var softBell = false;
+    try { softBell = getComputedStyle(document.documentElement).getPropertyValue('--casora-popup-layout').trim() === 'soft'; } catch (e) {}
+    if (softBell) {
+      var ttl = document.createElement('div');
+      ttl.textContent = 'Benachrichtigungen';
+      Object.assign(ttl.style, { marginRight: 'auto', fontSize: '15px', fontWeight: '700', letterSpacing: '-0.01em',
+        color: 'var(--casora-popup-tiles-text-primary, var(--primary-text-color))' });
+      head.insertBefore(ttl, clear);
+      Object.assign(clear.style, { minHeight: '44px', padding: '0 12px', margin: '0 -12px', display: unread() ? 'inline-flex' : 'none',
+        alignItems: 'center', borderRadius: '999px', fontWeight: '600' });
+      head.style.alignItems = 'center';
+      head.style.padding = '6px calc(var(--casora-popup-row-pad-x, 16px) + 8px) 0';
+    }
+    if (unread() || softBell) inner.appendChild(head);
 
     var body = document.createElement('div');
     Object.assign(body.style, {
