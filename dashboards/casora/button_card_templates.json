@@ -4813,7 +4813,7 @@
   }
  },
  "casora_lock": {
-  "entity_picture": "[[[\n  if ((variables.lock_state || entity?.state) === 'unlocked') return window.casoraIconUrl('lock-open-fill');\n  if ((variables.lock_state || entity?.state) === 'unlocking') return window.casoraIconUrl('lock-unlocking-fill');\n  return window.casoraIconUrl('lock-fill');\n]]]\n",
+  "entity_picture": "[[[\n  /* open (Falle gezogen) zeigt das offene Schloss wie unlocked, opening wie unlocking. */\n  if (['unlocked', 'open'].includes(variables.lock_state || entity?.state)) return window.casoraIconUrl('lock-open-fill');\n  if (['unlocking', 'opening'].includes(variables.lock_state || entity?.state)) return window.casoraIconUrl('lock-unlocking-fill');\n  return window.casoraIconUrl('lock-fill');\n]]]\n",
   "hold_action": {
    "action": "more-info",
    "entity": "[[[ return entity?.entity_id ]]]"
@@ -4914,7 +4914,7 @@
      "--casora-icon-mask-scale": "63.6%"
     },
     {
-     "--casora-icon-mask-image": "[[[\n  if ((variables.lock_state || entity?.state) === 'unlocked') return `url('${window.casoraIconUrl('lock-open-fill')}')`;\n  if ((variables.lock_state || entity?.state) === 'unlocking') return `url('${window.casoraIconUrl('lock-unlocking-fill')}')`;\n  return `url('${window.casoraIconUrl('lock-fill')}')`;\n]]]\n"
+     "--casora-icon-mask-image": "[[[\n  if (['unlocked', 'open'].includes(variables.lock_state || entity?.state)) return `url('${window.casoraIconUrl('lock-open-fill')}')`;\n  if (['unlocking', 'opening'].includes(variables.lock_state || entity?.state)) return `url('${window.casoraIconUrl('lock-unlocking-fill')}')`;\n  return `url('${window.casoraIconUrl('lock-fill')}')`;\n]]]\n"
     }
    ],
    "icon": [
