@@ -22135,8 +22135,15 @@ class CasoraPanel extends HTMLElement {
       return;
     }
 
-    if (!this._phoneFilter && wideV.show_media !== false && wideV.show_now_playing) {
-      const npall = this._npList(wideV);
+    // F-13: Am Handy zeigt die Karte „Aktuelle Wiedergabe“ des Mobil-Layouts (casora_mobile_now_playing)
+    // ihre eigenen Player, unabhängig vom Desktop-Schalter – die Vorschau zeigt sie genauso.
+    const mChrome = (this._state && this._state.surface === "mobile" ? this._state.chrome
+      : this._pair && this._pair.safe !== false && this._pair.mobile && this._pair.mobile.chrome) || null;
+    const mNp = ((mChrome && mChrome.items) || []).map((it) => it && it.card)
+      .find((c) => c && [].concat(c.template || []).includes("casora_mobile_now_playing"));
+    const npV = mNp ? { ...wideV, ...(mNp.variables || {}) } : wideV;
+    if (!this._phoneFilter && (mNp || (wideV.show_media !== false && wideV.show_now_playing))) {
+      const npall = this._npList(npV);
       if (npall.length) {
         const nphead = document.createElement("div");
         nphead.className = "mp-head";
