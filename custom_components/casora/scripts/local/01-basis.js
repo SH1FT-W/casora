@@ -995,9 +995,10 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           + '.has-chip{font-size:14px;padding:9px 13px;border-radius:999px;cursor:pointer;background:var(--casora-soft-control-fill,var(--casora-popup-seg-fill,rgba(255,255,255,0.16)));}'
           + '.has-chip > *{pointer-events:none;}.has-chip-i,.has-chips-l{display:none;}'
           /* D-ASSIST (Weich): 44 px hoch, 15 px/600 wie die übrigen Chips, Symbol im Farbkreis der Kategorie,
-             mittig wie „Wie kann ich helfen?“, darüber eine kleine Zeile „Vorschläge für den Abend“. */
-          + (soft ? '.has-chips{justify-content:center;gap:8px;}'
-            + '.has-chips-l{display:block;flex:0 0 100%;text-align:center;font-size:13px;font-weight:600;color:' + ink2 + ';margin:0 0 2px;}'
+             darüber eine kleine Zeile „Vorschläge für den Abend“. Linksbündig wie das Eingabefeld darunter
+             (Daniel 06.10.2026: mittig wirkte unruhig, jede Pille begann woanders). */
+          + (soft ? '.has-chips{justify-content:flex-start;gap:8px;}'
+            + '.has-chips-l{display:block;flex:0 0 100%;text-align:left;padding-left:4px;font-size:13px;font-weight:600;color:' + ink2 + ';margin:0 0 2px;}'
             + '.has-chip{display:inline-flex;align-items:center;gap:9px;min-height:44px;box-sizing:border-box;padding:0 16px 0 6px;font-size:15px;font-weight:600;letter-spacing:-0.01em;color:' + ink + ';}'
             + '.has-chip-i{display:grid;place-items:center;width:32px;height:32px;flex:none;border-radius:50%;background:var(--t);color:#fff;}'
             + '.has-chip:focus-visible{outline:2px solid var(--casora-ton-ink,currentColor);outline-offset:2px;}'
@@ -1194,7 +1195,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
 
       // Alarmanlage (25.09.): "Alarmo umgeschaltet auf Abwesend" statt "Alarm scharf – Abwesend".
       if (id.indexOf('alarm_control_panel.') === 0) {
-        var MODE = { armed_home: 'Zuhause', armed_away: 'Abwesend', armed_night: 'Nacht', armed_vacation: 'Urlaub', armed_custom_bypass: 'Teilweise' };
+        var MODE = { armed_home: 'Zuhause', armed_away: 'Abwesend', armed_night: 'Nacht', armed_vacation: 'Urlaub', armed_custom_bypass: 'Bypass' };
         var an = entry.name || (api && api.nameOf ? api.nameOf(st) : '') || 'Alarm';
         // Symbole wie die Alarm-Badge je Zustand (03.10.2026), sec = ruhiges Farbsystem im Mitteilungszentrum.
         var ic = window.casoraSecurityIcon ? window.casoraSecurityIcon(id, s, st && st.attributes) : 'lock-fill';

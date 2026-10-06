@@ -1,7 +1,17 @@
 {
  "exact": {
-  "Teilweise": "Partial",
   "Alarm!": "Alarm!",
+  "Scharf schalten": "Arm",
+  "Unscharf schalten": "Disarm",
+  "Alarm beenden": "Stop alarm",
+  "Oder Modus wählen": "Or choose a mode",
+  "Code eingeben": "Enter code",
+  "Code falsch": "Wrong code",
+  "Alarmanlage ausgeschaltet": "Alarm system off",
+  "Die Alarmanlage wurde ausgelöst": "The alarm went off",
+  "Verlass das Haus oder brich ab": "Leave the house or cancel",
+  "Jetzt unscharf schalten, sonst geht der Alarm los": "Disarm now, or the alarm will go off",
+  "Wird scharf …": "Arming …",
   "ausgelöst": "triggered",
   "Abholung heute": "Pickup today",
   "Abholung morgen · heute Abend raus": "Pickup tomorrow · put out tonight",
@@ -367,8 +377,7 @@
   "Prüfen": "Check",
   "Prüft …": "Checking …",
   "Prüfung fehlgeschlagen": "Check failed",
-  "Aktiviert (Teilweise)": "Armed (Partial)",
-  "Aktiviert · Teilweise": "Armed · Partial",
+  "Aktiviert · Bypass": "Armed · Bypass",
   "Einzelne Sensoren ausgenommen": "Some sensors excluded",
   "Alarm aus": "Alarm off",
   "Rezepte": "Recipes",
@@ -1566,7 +1575,7 @@
    "{1} switched to {2}"
   ],
   [
-   "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Teilweise)$",
+   "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
    "{1} active · {2}"
   ],
   [

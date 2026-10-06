@@ -67,27 +67,211 @@
     },
   };
 
-  // ── Alarm: großer An/Aus-Schalter (casora_popup_alarm u. a.) ──────────────
-  // Als Vorlagenfeld ausgewertet, damit auch der Dienst dem Zustand folgt
-  // (unscharf → Zuhause scharf, sonst → unscharf).
-  window._casoraAlarmSoftToggle = function (ent, states) {
-    var st = (states[ent] || {}).state || 'unknown';
-    var on = st !== 'disarmed';
-    var svc = esc(JSON.stringify(on
-      ? { domain: 'alarm_control_panel', service: 'alarm_disarm', data: { entity_id: ent } }
-      : { domain: 'alarm_control_panel', service: 'alarm_arm_home', data: { entity_id: ent } }));
-    return '<div style="display:flex;justify-content:center;"><div data-casora-svc="' + svc + '" style="display:flex;align-items:center;'
-      + 'justify-content:space-between;gap:18px;min-width:260px;box-sizing:border-box;padding:10px 12px 10px 22px;border-radius:999px;'
-      + 'background:' + ROW + ';font-family:' + FONT + ';cursor:pointer;">'
-      + '<div style="font-size:14.5px;font-weight:700;letter-spacing:-0.01em;color:' + INK + ';pointer-events:none;">'
-      // Schalter mit Gegenstand statt Befehl (Audit M11): „Deaktivieren“ neben einem
-      // eingeschalteten Schalter war mehrdeutig. Jetzt „Alarm“ – an = scharf.
-      + 'Alarm' + '</div>'
-      + '<div role="switch" aria-checked="' + on + '" style="position:relative;width:44px;height:26px;border-radius:999px;flex:none;pointer-events:none;'
-      + 'background:' + (on ? 'var(--casora-lps-switch-on, #B67A50)' : 'var(--casora-lps-switch-off, rgba(58,50,43,0.38))') + ';">'
-      + '<div style="position:absolute;top:3px;left:' + (on ? '21px' : '3px') + ';width:20px;height:20px;border-radius:50%;'
-      + 'background:var(--casora-lps-knob, #fff);box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div></div></div></div>';
+  // ── Alarm-Popup: Bedienung (Entwurf 06.10.2026, nur Weich) ──────────────────
+  // Daniel: ein An/Aus-Schalter passt nicht zum Scharfschalten. Drei Entwürfe, umschaltbar über
+  // localStorage casora-entwurf-alarm = a|b|c (Standard a):
+  //   a  großer Haupt-Knopf (Scharf/Unscharf/Abbrechen/Alarm beenden) + Modus-Zeilen darunter
+  //   b  eine Segment-Leiste Aus · Zuhause · Abwesend · Nacht · Urlaub · Bypass
+  //   c  nur Modus-Zeilen (erste Zeile „Aus“), der Kopf zeigt nur den Zustand
+  // Alle: Code-Feld, wenn Alarmo einen Code verlangt (code_format / code_arm_required), Countdown
+  // bei arming/pending aus dem Alarmo-Attribut delay, eigener Hinweis bei ausgelöst.
+  // Die Vorlage ruft _casoraAlarmSoftToggle (Feld „toggle“) und _casoraSoftAlarm (Feld „modes“).
+  var AL = window._casoraAlarmSoft = {};
+  AL.variant = function () {
+    var v = null;
+    try { v = localStorage.getItem('casora-entwurf-alarm'); } catch (e) { v = null; }
+    return v === 'b' || v === 'c' ? v : 'a';
   };
+  // Zahl im Countdown läuft per CSS (registrierte Ganzzahl-Eigenschaft) – kein Timer nötig.
+  try { if (window.CSS && CSS.registerProperty) CSS.registerProperty({ name: '--cal-n', syntax: '<integer>', inherits: true, initialValue: '0' }); } catch (e) { /* schon registriert */ }
+  var FEAT = { armed_home: 1, armed_away: 2, armed_night: 4, armed_custom_bypass: 16, armed_vacation: 32 };
+  var MODE_WORD = { armed_home: 'Zuhause', armed_away: 'Abwesend', armed_night: 'Nacht', armed_vacation: 'Urlaub', armed_custom_bypass: 'Bypass' };
+  var GOOD = 'var(--casora-security-ok-color, var(--casora-color-green, #5E9E6E))';
+  var WARN = 'var(--casora-security-warn-color, var(--casora-color-orange, #DE8A4E))';
+  var BAD = 'var(--casora-security-alarm-color, var(--casora-color-red, #D35A4E))';
+  var TON = 'var(--casora-ton-ink, #94603B)';
+  var icon = function (name, size, color) {
+    var u = (typeof window.casoraIconUrl === 'function') ? window.casoraIconUrl(name) : '';
+    return '<span style="display:inline-block;flex:none;width:' + size + 'px;height:' + size + 'px;background-color:' + color + ';'
+      + "-webkit-mask:url('" + u + "') center / contain no-repeat;mask:url('" + u + "') center / contain no-repeat;pointer-events:none;\"></span>";
+  };
+  AL.info = function (ent, states) {
+    var so = states[ent] || {}, a = so.attributes || {};
+    var st = so.state || 'unknown';
+    var feat = typeof a.supported_features === 'number' ? a.supported_features : 63;
+    var needArm = !!a.code_format && a.code_arm_required !== false;
+    var needDis = !!a.code_format;
+    var left = null;
+    if ((st === 'arming' || st === 'pending') && Number(a.delay) > 0 && so.last_changed) {
+      left = Math.max(0, Math.round(Number(a.delay) - (Date.now() - new Date(so.last_changed).getTime()) / 1000));
+    }
+    var target = MODE_WORD[a.next_state] || MODE_WORD[a.arm_mode] || null;
+    return { st: st, a: a, feat: feat, needArm: needArm, needDis: needDis, left: left, total: Number(a.delay) || 0, target: target,
+      armed: !!MODE_WORD[st], numeric: a.code_format === 'number' };
+  };
+  AL.ok = function (I, id) { return !FEAT[id] || (I.feat & FEAT[id]) === FEAT[id]; };
+  // Bedien-Element: data-casora-alarm statt data-casora-svc – der Code aus dem Feld wird beim Tippen ergänzt.
+  AL.act = function (ent, service) {
+    return ' role="button" tabindex="0" data-casora-alarm="' + esc(JSON.stringify({ e: ent, s: service })) + '"';
+  };
+  // Code-Feld (nur wenn die nächste Aktion einen Code braucht).
+  AL.code = function (I) {
+    var need = I.st === 'disarmed' ? I.needArm : I.needDis;
+    if (!need) return '';
+    return '<style>.cal-code input::placeholder{letter-spacing:0;font-weight:500;font-size:15px;color:' + SUB + ';}</style>'
+      + '<div class="cal-code" style="display:flex;justify-content:center;margin:0 0 12px;">'
+      + '<input type="password" autocomplete="off" ' + (I.numeric ? 'inputmode="numeric" pattern="[0-9]*" ' : '') + 'placeholder="Code eingeben" aria-label="Code"'
+      + ' ontouchstart="event.stopPropagation();" ontouchend="event.stopPropagation();if(this.getRootNode().activeElement!==this){this.focus();}"'
+      + ' onclick="event.stopPropagation();" onkeydown="event.stopPropagation();" onkeyup="event.stopPropagation();" onkeypress="event.stopPropagation();"'
+      + ' style="width:220px;height:48px;box-sizing:border-box;border:none;outline:none;border-radius:999px;text-align:center;'
+      + 'font:600 18px/1 ' + FONT + ';letter-spacing:.3em;color:' + INK + ';background:' + CTL + ';-webkit-appearance:none;appearance:none;"></div>';
+  };
+  // Countdown-Balken + Zahl (arming = bis scharf, pending = bis Alarm).
+  AL.count = function (I, color) {
+    if (I.left == null) return { bar: '', n: '' };
+    var pct = I.total ? Math.max(0, Math.min(100, 100 - I.left / I.total * 100)) : 0;
+    var k = 'cal' + Date.now().toString(36);
+    return {
+      bar: '<style>@keyframes ' + k + 'w{from{width:' + pct.toFixed(1) + '%}to{width:100%}}@keyframes ' + k + 'n{from{--cal-n:' + I.left + '}to{--cal-n:0}}'
+        + '.cal-n::after{counter-reset:caln var(--cal-n);content:counter(caln);}</style>'
+        + '<div style="height:6px;border-radius:3px;background:' + CTL + ';overflow:hidden;margin-top:10px;">'
+        + '<div style="height:100%;border-radius:3px;background:' + color + ';animation:' + k + 'w ' + I.left + 's linear forwards;"></div></div>',
+      n: '<span class="cal-n" style="font-variant-numeric:tabular-nums;animation:' + k + 'n ' + I.left + 's steps(' + Math.max(1, I.left) + ', end) forwards;"></span>',
+    };
+  };
+  // Hinweis-Karte für Countdown / ausgelöst (Entwürfe b und c; a zeigt es im Knopf).
+  AL.notice = function (ent, I) {
+    var cd = AL.count(I, I.st === 'pending' ? WARN : TON);
+    var box = function (bg, ink, title, sub, extra, svc, btn) {
+      return '<div style="width:440px;max-width:100%;margin:0 auto;box-sizing:border-box;padding:14px 16px;border-radius:var(--casora-popup-row-radius, 24px);'
+        + 'background:' + bg + ';font-family:' + FONT + ';text-align:left;">'
+        + '<div style="display:flex;align-items:center;gap:12px;">'
+        + '<div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:700;color:' + ink + ';">' + title + '</div>'
+        + (sub ? '<div style="font-size:13px;font-weight:500;color:' + ink + ';opacity:.8;margin-top:2px;">' + sub + '</div>' : '') + '</div>'
+        + (btn ? '<div' + AL.act(ent, svc) + ' style="flex:none;min-height:44px;display:flex;align-items:center;padding:0 18px;border-radius:999px;'
+          + 'background:' + (I.st === 'triggered' ? '#fff' : 'var(--casora-lps-seg-on, #FFFDF9)') + ';color:' + (I.st === 'triggered' ? BAD : INK) + ';font-size:14.5px;font-weight:700;cursor:pointer;">' + btn + '</div>' : '')
+        + '</div>' + extra + '</div>';
+    };
+    if (I.st === 'triggered') return box(BAD, '#fff', 'Alarm!', 'Die Alarmanlage wurde ausgelöst', '', 'alarm_disarm', 'Alarm beenden');
+    if (I.st === 'arming') return box(ROW, INK, (I.target ? I.target + ' wird' : 'Wird') + ' scharf' + (cd.n ? ' in ' + cd.n + ' s' : ' …'),
+      'Verlass das Haus oder brich ab', cd.bar, 'alarm_disarm', 'Abbrechen');
+    if (I.st === 'pending') return box('color-mix(in srgb, ' + WARN + ' 16%, transparent)', INK, 'Alarm' + (cd.n ? ' in ' + cd.n + ' s' : ' läuft an'),
+      'Jetzt unscharf schalten, sonst geht der Alarm los', cd.bar, 'alarm_disarm', 'Unscharf schalten');
+    return '';
+  };
+
+  // Feld „toggle“ (oben, mittig)
+  window._casoraAlarmSoftToggle = function (ent, states) {
+    var I = AL.info(ent, states), v = AL.variant();
+    if (v !== 'a') {
+      var n = AL.notice(ent, I);
+      return (AL.code(I) + n) ? '<div>' + AL.code(I) + n + '</div>' : '';
+    }
+    // a: Haupt-Knopf
+    var away = AL.ok(I, 'armed_away') ? 'armed_away' : (Object.keys(FEAT).filter(function (k) { return AL.ok(I, k); })[0] || 'armed_away');
+    var cd = AL.count(I, '#fff');
+    var b;
+    if (I.st === 'disarmed') b = { svc: 'alarm_' + away.replace('armed_', 'arm_'), bg: TON, ink: '#fff', ic: 'shield_lock', t: 'Scharf schalten', s: MODE_WORD[away] };
+    else if (I.st === 'triggered') b = { svc: 'alarm_disarm', bg: BAD, ink: '#fff', ic: 'shield_alarm', t: 'Alarm beenden', s: 'Die Alarmanlage wurde ausgelöst' };
+    else if (I.st === 'arming') b = { svc: 'alarm_disarm', bg: TON, ink: '#fff', ic: 'shield_off', t: 'Abbrechen',
+      s: (I.target ? I.target + ' · ' : '') + (cd.n ? 'scharf in ' + cd.n + ' s' : 'wird scharf …'), bar: true };
+    else if (I.st === 'pending') b = { svc: 'alarm_disarm', bg: WARN, ink: '#fff', ic: 'shield_off', t: 'Unscharf schalten',
+      s: cd.n ? 'Alarm in ' + cd.n + ' s' : 'Alarm läuft an', bar: true };
+    else b = { svc: 'alarm_disarm', bg: CTL, ink: INK, ic: 'shield_off', t: 'Unscharf schalten', s: null };
+    var bar = b.bar && cd.bar ? cd.bar.replace('background:' + CTL, 'background:rgba(255,255,255,0.28)').replace('margin-top:10px', 'margin-top:8px') : '';
+    return '<div>' + AL.code(I) + '<div style="display:flex;justify-content:center;"><div' + AL.act(ent, b.svc)
+      + ' style="display:flex;align-items:center;gap:14px;width:340px;max-width:100%;min-height:64px;box-sizing:border-box;padding:10px 22px 10px 16px;'
+      + 'border-radius:999px;background:' + b.bg + ';color:' + b.ink + ';font-family:' + FONT + ';text-align:left;cursor:pointer;'
+      + (b.bg === CTL ? '' : 'box-shadow:0 12px 26px -14px rgba(90,60,40,0.55);') + '">'
+      + '<div style="width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;background:' + (b.bg === CTL ? 'var(--casora-lps-seg-on, #FFFDF9)' : 'rgba(255,255,255,0.2)') + ';">'
+      + icon(b.ic, 22, b.bg === CTL ? INK : '#fff') + '</div>'
+      + '<div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:700;letter-spacing:-0.01em;">' + b.t + '</div>'
+      + (b.s ? '<div style="font-size:13px;font-weight:600;opacity:.82;margin-top:1px;">' + b.s + '</div>' : '')
+      + bar + '</div></div></div></div>';
+  };
+
+  // Feld „modes“ (unten, volle Breite)
+  window._casoraAlarmSoft.modes = function (ent, modes, states) {
+    var UI = window._casoraUI; if (!UI) return '';
+    var I = AL.info(ent, states), v = AL.variant();
+    var list = modes.filter(function (m) { return AL.ok(I, m.id); });
+    var aim = (I.st === 'arming' || I.st === 'pending') ? (I.a.next_state || I.a.arm_mode) : I.st;
+    var svcOf = function (id) { return id === 'disarmed' ? 'alarm_disarm' : 'alarm_' + id.replace('armed_', 'arm_'); };
+    var swap = function (html) { return String(html).replace(/data-casora-svc="/g, 'data-casora-alarm="'); };
+    if (v === 'b') {
+      var cells = [{ id: 'disarmed', label: 'Aus', icon: 'shield_off', description: 'Alarmanlage ausgeschaltet' }].concat(list);
+      var cur = cells.filter(function (c) { return c.id === aim; })[0];
+      return UI.label('Modus')
+        + '<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(86px, 1fr));gap:6px;padding:5px;border-radius:26px;background:' + ROW + ';font-family:' + FONT + ';">'
+        + cells.map(function (c) {
+          var on = c.id === aim, busy = on && (I.st === 'arming' || I.st === 'pending');
+          var tone = c.id === 'disarmed' ? INK : (I.st === 'triggered' ? BAD : GOOD);
+          return '<div' + AL.act(ent, svcOf(c.id)) + ' aria-pressed="' + on + '" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;'
+            + 'min-height:72px;padding:8px 4px;border-radius:21px;cursor:pointer;'
+            + (on ? 'background:var(--casora-lps-seg-on, #FFFDF9);box-shadow:var(--casora-lps-seg-on-shadow, none);' : '')
+            + (busy ? 'animation:calp 1.4s ease-in-out infinite;' : '') + '">'
+            + icon(c.icon, 22, on ? tone : 'var(--casora-soft-glyph-off, rgba(58,50,43,0.55))')
+            + '<div style="font-size:13.5px;font-weight:' + (on ? 700 : 600) + ';color:' + (on ? INK : SUB) + ';">' + esc(c.label) + '</div></div>';
+        }).join('') + '</div>'
+        + '<style>@keyframes calp{0%,100%{opacity:1}50%{opacity:.55}}</style>'
+        + (cur ? '<div style="text-align:center;font:500 13px/1.4 ' + FONT + ';color:' + SUB + ';margin-top:10px;">' + esc(cur.description) + '</div>' : '');
+    }
+    var rows = (v === 'c' ? [{ id: 'disarmed', label: 'Aus', icon: 'shield_off', description: 'Alarmanlage ausgeschaltet' }] : []).concat(list);
+    return swap(UI.group(rows.map(function (m) {
+      var on = aim === m.id;
+      return { icon: m.icon, iconTone: on ? (m.id === 'disarmed' ? 'rgba(0,0,0,0)' : 'good') : 'rgba(0,0,0,0)', label: m.label,
+        sub: on && (I.st === 'arming' || I.st === 'pending') ? 'Wird scharf …' : m.description,
+        selected: on, svc: { domain: 'alarm_control_panel', service: svcOf(m.id), data: { entity_id: ent } } };
+    }), v === 'a' && I.st === 'disarmed' ? 'Oder Modus wählen' : 'Modus'));
+  };
+
+  // Tippen auf data-casora-alarm: Dienst mit Code aus dem Feld; fehlt der Code, Feld fokussieren.
+  if (!window._casoraAlarmTap) {
+    window._casoraAlarmTap = true;
+    var tp = null, lastTouch = 0;
+    window.addEventListener('touchstart', function (ev) {
+      var t = ev.touches && ev.touches[0]; tp = t ? { x: t.clientX, y: t.clientY, moved: false } : null;
+    }, { capture: true, passive: true });
+    window.addEventListener('touchmove', function (ev) {
+      var t = ev.touches && ev.touches[0];
+      if (tp && t && (Math.abs(t.clientX - tp.x) > 10 || Math.abs(t.clientY - tp.y) > 10)) tp.moved = true;
+    }, { capture: true, passive: true });
+    var fire = function (ev) {
+      var moved = ev.type === 'touchend' && !!(tp && tp.moved);
+      if (ev.type === 'touchend') tp = null;
+      var path = (ev.composedPath && ev.composedPath()) || [ev.target], el = null;
+      for (var i = 0; i < path.length; i++) { if (path[i] && path[i].dataset && path[i].dataset.casoraAlarm) { el = path[i]; break; } }
+      if (!el) return;
+      ev.stopImmediatePropagation(); ev.stopPropagation(); if (ev.cancelable) ev.preventDefault();
+      if (moved) return;
+      if (ev.type === 'click' && Date.now() - lastTouch < 700) return;
+      if (ev.type === 'touchend') lastTouch = Date.now();
+      if (Date.now() - (window._casoraPopupOpenedAt || 0) < 600) return;
+      var spec; try { spec = JSON.parse(el.dataset.casoraAlarm); } catch (e) { return; }
+      var ha = document.querySelector('home-assistant'); var hass = ha && ha.hass; if (!hass) return;
+      var I = AL.info(spec.e, hass.states);
+      var need = spec.s === 'alarm_disarm' ? I.needDis : I.needArm;
+      var root = el.getRootNode && el.getRootNode();
+      var inp = root && root.querySelector ? root.querySelector('.cal-code input') : null;
+      var code = inp ? String(inp.value || '').trim() : '';
+      if (need && !code) {
+        if (inp) { inp.focus(); inp.animate && inp.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(0)' }], { duration: 260 }); }
+        return;
+      }
+      var data = { entity_id: spec.e }; if (code) data.code = code;
+      hass.callService('alarm_control_panel', spec.s, data).catch(function () {
+        if (inp) { inp.value = ''; inp.placeholder = 'Code falsch'; inp.focus(); }
+      });
+      if (inp) inp.value = '';
+    };
+    window.addEventListener('touchend', fire, true);
+    window.addEventListener('click', fire, true);
+    window.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'Enter' && ev.key !== ' ') return;
+      var t = ev.composedPath ? ev.composedPath()[0] : ev.target;
+      if (t && t.dataset && t.dataset.casoraAlarm) { ev.preventDefault(); t.click(); }
+    }, true);
+  }
 
   // ── Kamera ────────────────────────────────────────────────────────────────
   // Zusatz-CSS für casora_popup_camera (nur Weich): Knöpfe als Sand-Kreise mit Etikett,

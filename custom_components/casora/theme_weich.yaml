@@ -163,7 +163,9 @@ Casora:
   # links harte Kante direkt hinter dem Pfeil: der eingerastete Raum steht ganz da, der vorige ist ganz weg
   casora-nav-fade-clear-l: 48px
   casora-nav-fade-solid-l: 49px
-  casora-nav-focus-ring: inset 0 0 0 2px var(--casora-ton-ink)   # D-09: Tastatur-Fokus sichtbar
+  # D-09 (06.10.2026): kein Ring – nur bei Tastatur ist die Schrift unterstrichen
+  casora-nav-focus-line: var(--casora-ton-ink)
+  casora-nav-cap-line: rgba(120,100,80,0.14)   # Entwurf Raumleiste c: Trennlinie an den Pfeil-Kappen
   casora-nav-more-fill: var(--casora-nav-active-fill)
   casora-nav-more-hover: var(--casora-mnav-press-fill, var(--casora-nav-active-fill))
   casora-nav-more-ink: var(--casora-nav-label-color)

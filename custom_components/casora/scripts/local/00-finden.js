@@ -760,10 +760,10 @@ window.casoraPriceKwh = function (v) {
   // Kachel, Badges, Popups und Mitteilungen sagen im Weich-Look für denselben Zustand
   // dasselbe Wort und nehmen dieselbe Stufenfarbe. null = kein eigenes Wort (Aufrufer
   // behält seinen Text). Standard/Glas fragen diese Helfer nicht ab.
-  // Freundliche Wörter statt „Scharf · Bypass“ (05.10.2026): aktiv/aus, Bypass heißt „Teilweise“
+  // Freundliche Wörter statt „Scharf · Bypass“ (05.10.2026): aktiv/aus; Bypass heißt wieder „Bypass“ (Daniel 06.10.2026)
   // (einzelne Sensoren sind ausgenommen), Abwesend heißt „Abwesend“ (05.10.2026, vorher „Unterwegs“).
   var ALARM_MODE = { armed_home: 'Zuhause', armed_away: 'Abwesend', armed_night: 'Nacht',
-    armed_vacation: 'Urlaub', armed_custom_bypass: 'Teilweise' };
+    armed_vacation: 'Urlaub', armed_custom_bypass: 'Bypass' };
   var SEC_WORD = {
     alarm_control_panel: { disarmed: 'Aus', triggered: 'Alarm!' },
     lock: { locked: 'Verriegelt', unlocked: 'Entriegelt', jammed: 'Klemmt', open: 'Geöffnet' },

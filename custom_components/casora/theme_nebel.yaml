@@ -6,6 +6,7 @@ Casora Nebel:
   casora-color-neutral: '#B9C2CB'
   casora-soft-grey-mark: rgba(89,99,111,0.8)
   primary-color: '#3F7491'
+  casora-nav-cap-line: rgba(89,99,111,0.14)
   ha-card-border-radius: 26px
   casora-tile-radius-phone: 24px
   casora-scene-tile-radius: 24px
