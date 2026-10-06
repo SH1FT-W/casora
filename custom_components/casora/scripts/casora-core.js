@@ -8043,7 +8043,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     armed_away: 'Alarm scharf – Abwesend',
     armed_night: 'Alarm scharf – Nacht',
     armed_vacation: 'Alarm scharf – Urlaub',
-    armed_custom_bypass: 'Alarm scharf – Teilweise',
+    armed_custom_bypass: 'Alarm scharf – Bypass',
     disarmed: 'Alarm deaktiviert',
     triggered: 'Alarm ausgelöst',
   };

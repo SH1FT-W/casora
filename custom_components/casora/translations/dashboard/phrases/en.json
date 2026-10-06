@@ -1,6 +1,5 @@
 {
  "exact": {
-  "Teilweise": "Partial",
   "Alarm!": "Alarm!",
   "ausgelöst": "triggered",
   "Abholung heute": "Pickup today",
@@ -367,8 +366,7 @@
   "Prüfen": "Check",
   "Prüft …": "Checking …",
   "Prüfung fehlgeschlagen": "Check failed",
-  "Aktiviert (Teilweise)": "Armed (Partial)",
-  "Aktiviert · Teilweise": "Armed · Partial",
+  "Aktiviert · Bypass": "Armed · Bypass",
   "Einzelne Sensoren ausgenommen": "Some sensors excluded",
   "Alarm aus": "Alarm off",
   "Rezepte": "Recipes",
@@ -1566,7 +1564,7 @@
    "{1} switched to {2}"
   ],
   [
-   "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Teilweise)$",
+   "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
    "{1} active · {2}"
   ],
   [

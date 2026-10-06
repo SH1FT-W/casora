@@ -1195,7 +1195,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
 
       // Alarmanlage (25.09.): "Alarmo umgeschaltet auf Abwesend" statt "Alarm scharf – Abwesend".
       if (id.indexOf('alarm_control_panel.') === 0) {
-        var MODE = { armed_home: 'Zuhause', armed_away: 'Abwesend', armed_night: 'Nacht', armed_vacation: 'Urlaub', armed_custom_bypass: 'Teilweise' };
+        var MODE = { armed_home: 'Zuhause', armed_away: 'Abwesend', armed_night: 'Nacht', armed_vacation: 'Urlaub', armed_custom_bypass: 'Bypass' };
         var an = entry.name || (api && api.nameOf ? api.nameOf(st) : '') || 'Alarm';
         // Symbole wie die Alarm-Badge je Zustand (03.10.2026), sec = ruhiges Farbsystem im Mitteilungszentrum.
         var ic = window.casoraSecurityIcon ? window.casoraSecurityIcon(id, s, st && st.attributes) : 'lock-fill';
