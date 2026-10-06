@@ -1,6 +1,10 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "Summary": "Unterzeile",
+    "Short": "Kurz",
+    "Detailed": "Ausführlich",
+    "Short shows icons with a count, Detailed lists everything.": "Kurz zeigt Symbole mit Zahl, Ausführlich nennt alles.",
     "Casora Nebel": "Casora Nebel",
     "Cool light grey with a petrol accent, slightly crisper corners.": "Kühles Hellgrau mit Petrol-Akzent, etwas straffere Ecken.",
     "Name on the badge": "Name auf dem Badge",

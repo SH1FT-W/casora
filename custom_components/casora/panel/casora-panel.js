@@ -2115,6 +2115,10 @@ const SECTIONS = [
       { ...LIST("security_cameras", "Cameras", ["camera"]), unitLabel: "Cameras", ord: 6 },
       { ...T("security_cameras_label", "Heading"), unitLabel: "Camera group heading",
         advanced: true, needs: "security_cameras", ord: 7 },
+      // Unterzeile des Sammelbadges (casora_badge_security_group, Variable summary): ohne Wert „Kurz“.
+      { key: "security_summary", label: "Summary", type: "select", options: ["", "detailed"], always: true, ord: 7.5,
+        optionLabels: { "": "Short", detailed: "Detailed" },
+        hint: "Short shows icons with a count, Detailed lists everything." },
       { key: "show_security_inline", label: "Separate security badges", type: "bool",
         boolDefault: false, always: true, ord: 8,
         hint: "Shows locks, alarm, doors, windows and cameras as their own badges." },
@@ -21106,6 +21110,17 @@ class CasoraPanel extends HTMLElement {
       if (sec.doorsTilted) parts.push(nn(sec.doorsTilted, "Door tilted", "Doors tilted"));
       if (sec.lockDead) parts.push(nn(sec.lockDead, "Lock offline", "Locks offline"));
       if (sec.camDead) parts.push(nn(sec.camDead, "Camera offline", "Cameras offline"));
+      // Weich/Nebel: dieselbe Unterzeile wie das Dashboard (00-finden.js, Kurz = Symbole mit Zahl).
+      let secSum = null;
+      if (soft && typeof window.casoraSecuritySummary === "function") {
+        const al = alarms.map((e) => sOf(e)).find((x) => x && !/^(disarmed|unavailable|unknown)$/.test(x)) || "";
+        try {
+          secSum = window.casoraSecuritySummary({ ...sec,
+            insecure: sec.triggered || sec.disarmed || !!(sec.locks || sec.doors || sec.windows || sec.doorsTilted
+              || sec.windowsTilted || sec.gates),
+            problem: !!(sec.lockDead || sec.camDead) }, { summary: V.security_summary || "short", alarmState: al });
+        } catch (e) { secSum = null; }
+      }
       const secText = sec.triggered ? "Triggered" : !parts.length ? "Secured"
         : parts.length === 1 ? parts[0] : parts.map(trLabel).join(" · ");
       const [lockSubs, camSubs, entSubs] = [
@@ -21181,7 +21196,8 @@ class CasoraPanel extends HTMLElement {
           icon: soft ? ((parts.length || sec.triggered) ? SOFT_BADGE_ICON.alert : SOFT_BADGE_ICON.ok)
             : (parts.length || sec.triggered ? "lock-open-fill" : "lock-fill"),
           color: soft && (parts.length || sec.triggered) ? "var(--casora-color-orange, #FF9F0A)" : TEAL,
-          text: secText,
+          text: secSum ? secSum.text : secText,
+          html: secSum && V.security_summary !== "detailed" ? secSum.html : null,
           subs: lockSubs.concat(camSubs, entSubs),
         });
       }
@@ -22686,7 +22702,8 @@ class CasoraPanel extends HTMLElement {
     if (b.text) {
       const t = document.createElement("span");
       t.className = "ptext";
-      t.textContent = b.text;
+      // Sicherheit „Kurz“: Symbole mit Zahl (HTML aus casoraSecuritySummary, Texte darin maskiert).
+      if (b.html) { t.innerHTML = b.html; t.setAttribute("data-no-i18n", ""); } else t.textContent = b.text;
       col.appendChild(t);
     }
     // H5 (Weich-Audit): Weich-Badges tragen das Symbol weiß im farbigen Kreis wie am Dashboard.
