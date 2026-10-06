@@ -4129,7 +4129,8 @@ function tileEntityGone(tile, states) {
 
 function tileMissingEntity(tile, type) {
   if (!tile || !type || tile.entity) return false;
-  if (type.noEntity || type.raw || type.user || !(type.domains || []).length) return false;
+  // ownData: findet seine Daten selbst (Abfall, Auto, Solar-Tipp …) – kein „Gerät fehlt“ (F-10).
+  if (type.noEntity || type.ownData || type.raw || type.user || !(type.domains || []).length) return false;
   const looks = (v) => typeof v === "string" && ENTITY_ID.test(v);
   return !Object.values(tile.variables || {}).some((v) => looks(v)
     || (Array.isArray(v) && v.some(looks)));
@@ -22919,6 +22920,10 @@ class CasoraPanel extends HTMLElement {
       if (gone || tileMissingEntity(tile, type)) {
         el.classList.add("missingdev");
         el.querySelector(".mstate").textContent = "Device missing";
+      } else if (type && type.ownData && !tile.entity
+        && /^(|Not set|Unknown|Unavailable|—)$/.test(el.querySelector(".mstate").textContent.trim())) {
+        // Das Dashboard sucht die Daten zur Laufzeit selbst: neutral statt „nicht festgelegt“.
+        el.querySelector(".mstate").textContent = "Automatic";
       }
       const ring = tileProgressOn(tile, ent);
       if (ring) {
