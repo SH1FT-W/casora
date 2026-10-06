@@ -17,10 +17,10 @@ const dash = await casoraDashboard();
 await need('Casora-Dashboard mit Handy-Gegenstück', dash && dash.phone);
 
 // Raum umbenennen (Studio, Speicher wie „Speichern“) – liefert Raum und Bereich.
-const rename = async (pick, to) => {
+const rename = async (pick, to, tileEnts = {}) => {
   const s = await open();
   await studio(s.page, dash.url);
-  const r = await s.page.evaluate(async ([pick, to]) => {
+  const r = await s.page.evaluate(async ([pick, to, tileEnts]) => {
     const p = window.__panel(), I = window.__casoraPanelInternals, H = p._hass;
     const rooms = p._state.compact.rooms;
     const fold = (x) => String(x || '').trim().toLowerCase();
@@ -28,12 +28,16 @@ const rename = async (pick, to) => {
     let ri = -1, area = null;
     if (pick) ri = rooms.findIndex((x) => x.name === pick);
     else {
-      // Raum mit gleichnamigem Bereich, der eigene Szenen hat, aber nicht alle.
+      // Raum mit gleichnamigem Bereich, der eigene Szenen hat, aber nicht alle – und dessen
+      // Handy-Kacheln Entitäten dieses Bereichs tragen (wie im gemeldeten Fall). Nur darüber
+      // findet die Raumseite den Bereich nach dem Umbenennen wieder; ein Raum ohne Kacheln
+      // (hier umbenannt ohne gemerkten Bereich) zeigt richtigerweise keine Szenen.
       const scenes = Object.keys(H.states).filter((id) => id.startsWith('scene.'));
       ri = rooms.findIndex((x) => {
         if (I.isHomeRoom(x, rooms)) return false;
         const a = Object.values(H.areas || {}).find((y) => fold(y.name) === fold(x.name));
         if (!a) return false;
+        if (!(tileEnts[x.name] || []).some((e) => areaOf(e) === a.area_id)) return false;
         const n = scenes.filter((id) => areaOf(id) === a.area_id).length;
         if (n && n < scenes.length) { area = a.area_id; return true; }
         return false;
@@ -46,7 +50,7 @@ const rename = async (pick, to) => {
     p._markDirty && p._markDirty();
     const saved = await p._save();
     return { old, area, saved };
-  }, [pick, to]);
+  }, [pick, to, tileEnts]);
   await s.browser.close();
   return r;
 };
@@ -63,9 +67,16 @@ for (let i = 0; i < kids0.length - 1 && !LEER; i++) {
   if (!JSON.stringify(row.cards || []).match(/"[a-z_]+\.[a-z0-9_]+"/)) LEER = h.name;
 }
 const NEU2 = 'Qa Abstellraum';
+// Entitäten der Handy-Kacheln je Raum (auch in variables/verschachtelt).
+const TILE_ENTS = {};
+for (let i = 0; i < kids0.length - 1; i++) {
+  const h = kids0[i], row = kids0[i + 1];
+  if (h.template !== 'casora_mobile_header' || row.type !== 'custom:casora-smart-row') continue;
+  TILE_ENTS[h.name] = [...new Set(JSON.stringify(row.cards || []).match(/(?<=")[a-z_]+\.[a-z0-9_]+(?=")/g) || [])];
+}
 
-const r = await rename(null, NEU);
-await need('Raum mit gleichnamigem HA-Bereich und eigenen Szenen', r && r.area, r);
+const r = await rename(null, NEU, TILE_ENTS);
+await need('Raum mit gleichnamigem HA-Bereich, eigenen Szenen und Kacheln aus dem Bereich', r && r.area, r);
 await need('Studio hat gespeichert', r.saved !== false, r);
 const r2 = LEER ? await rename(LEER, NEU2) : null;
 
