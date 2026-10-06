@@ -1,5 +1,6 @@
 // Hemma-1-Import-Assistent: YAML-Dashboard (Raumkarte + layout-card) → neues Dashboard.
 import { open, ready, shot, BASE } from './harness.mjs';
+import { check, ende, echteFehler } from './ergebnis.mjs';
 
 const { browser, page, errors } = await open();
 await ready(page, '/casora-studio', () => { const p = window.__panel && window.__panel(); return p && p._state && p._hass; });
@@ -23,6 +24,7 @@ if (await page.getByText('Dashboard wählen').count()) {
 await page.getByText('Hemma-1-Dashboard gefunden').waitFor({ timeout: 20000 });
 const rooms = await page.evaluate(() => [...window.__pierce('.frow, [class*=frow]')].map((r) => r.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean).slice(0, 12));
 console.log('Schritt 1 – Räume:', rooms);
+check('Schritt 1 zeigt Räume', rooms.length > 0, rooms);
 await step('h1_1_uebersicht');
 
 await page.getByText('Weiter', { exact: true }).click();
@@ -67,6 +69,11 @@ const result = await page.evaluate(async () => {
   return out;
 });
 console.log('Ergebnis:', JSON.stringify(result, null, 1));
+check('Dashboards angelegt (Desktop + Handy)', result.length >= 2, result.map((r) => r.url));
+for (const r of result) {
+  check(r.url + ': Räume', r.views > 0, r.views);
+  check(r.url + ': keine fehlenden Vorlagen', !r.missingTemplates.length, r.missingTemplates);
+}
 const done = await page.evaluate(() => window.__pierce('.flowin')[0]?.textContent.replace(/\s+/g, ' '));
 console.log('Fertig-Text:', done);
 for (const r of result) {
@@ -76,7 +83,10 @@ for (const r of result) {
   const bad = await page.evaluate(() => window.__pierce('hui-error-card, hui-warning').map((e) => (e.shadowRoot?.textContent || e.textContent).replace(/\s+/g, ' ').slice(0, 160)));
   const btns = await page.evaluate(() => window.__pierce('button-card').length);
   console.log('Dashboard', r.url, '– button-cards:', btns, 'Fehlerkarten:', bad.length, bad.slice(0, 5));
+  check(r.url + ': Karten ohne Fehlerkarten', btns > 0 && !bad.length, { btns, bad: bad.slice(0, 3) });
   console.log('  📸', await shot(page, 'h1_5_' + r.url));
 }
 console.log('Browser-Fehler:', errors.filter((e) => !/404/.test(e)).slice(0, 5));
+check('keine Browser-Fehler', !echteFehler(errors).length, echteFehler(errors));
 await browser.close();
+ende();

@@ -3,6 +3,7 @@
 // wieder aufräumen (Kachel zurück, Vorlage weg).   CASORA_QA_DASH (Standard qa-arbeit)
 import assert from 'node:assert/strict';
 import { open, ready, BASE } from './harness.mjs';
+import { check, ende } from './ergebnis.mjs';
 
 const DASH = process.env.CASORA_QA_DASH || 'qa-arbeit';
 const { browser, page, errors } = await open({ width: 1440, height: 1000 });
@@ -131,5 +132,8 @@ assert.ok(!(desk3.button_card_templates || {})[NAME] && !JSON.stringify(desk3.vi
 
 const bad = errors.filter((e) => !/addEventListener|404|MIME type/.test(e));
 console.log('Browser-Fehler:', bad.slice(0, 6));
-console.log('ok t21_kachelart', NAME);
+// Die einzelnen Schritte prüft assert (Abbruch mit Rückgabe 1); hier nur noch das Ergebnis.
+check('alle Schritte durchlaufen (' + NAME + ')', true);
+check('keine Browser-Fehler', !bad.length, bad.slice(0, 6));
 await browser.close();
+ende();

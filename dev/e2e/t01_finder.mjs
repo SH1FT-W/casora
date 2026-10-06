@@ -1,6 +1,7 @@
 // Geräte-Finder: Drucker und Geschirrspüler finden ihre Entitäten ohne Variablen,
 // auch wenn alle Entitäts-IDs neutral umbenannt sind (nur translation_key zählt).
 import { open, ready, HAUS } from './harness.mjs';
+import { check, ende, echteFehler } from './ergebnis.mjs';
 
 const { browser, page, errors } = await open();
 await ready(page, '/dashboard-hemma/home', () => !!(window._casoraLocalLoaded && window._casoraDish && window._casoraPrint && window._casoraLaundry)); // Adresse des Test-Dashboards
@@ -35,4 +36,10 @@ const res = await page.evaluate((A) => {
 }, HAUS);
 console.log(JSON.stringify(res, null, 1));
 console.log('Browser-Fehler:', errors.length, errors.slice(0, 5));
+for (const [k, v] of Object.entries(res)) {
+  check(k + ': Felder gefunden', v.gefunden > 0, v);
+  check(k + ': gleich nach Umbenennung', !v.abweichend_nach_umbenennung.length, v.abweichend_nach_umbenennung);
+}
+check('keine Browser-Fehler', !echteFehler(errors).length, echteFehler(errors));
 await browser.close();
+ende();

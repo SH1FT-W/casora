@@ -99,6 +99,9 @@ const E2E_RULES = {
   t21_kachelart: { locks: ['ui'] },
 };
 const E2E_FAIL = /\bFEHLER\b|FEHLT|ABWEICHUNG|TimeoutError|Uncaught/;
+// Tests mit Ergebniszeile (dev/e2e/ergebnis.mjs, 06.10.2026): es zählen nur Rückgabe + „PASS“.
+// Ältere Tests ohne diese Zeile (t03, t05, t09, t10, t14, t16, t17) weiter über das Textmuster.
+const E2E_RESULT = /^(PASS|FAIL) t\d+/m;
 
 const steps = [];
 const tasks = [];
@@ -276,7 +279,7 @@ function run(t) {
     const finish = (rc) => {
       fs.closeSync(fd);
       t.end = Date.now(); t.rc = rc; t.out = Buffer.concat(chunks).toString('utf8'); t.logFile = logFile;
-      if (t.step.kind === 'e2e') t.ok = rc === 0 && !E2E_FAIL.test(t.out);
+      if (t.step.kind === 'e2e') t.ok = rc === 0 && (E2E_RESULT.test(t.out) ? /^PASS /m.test(t.out) : !E2E_FAIL.test(t.out));
       else if (t.step.kind === 'crawler') t.ok = rc === 0 || rc === 1; // 1 = Befunde, zählt die Zusammenführung
       else t.ok = rc === 0;
       resolve(t);

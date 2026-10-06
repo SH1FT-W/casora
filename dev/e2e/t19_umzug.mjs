@@ -1,6 +1,7 @@
 // Umzugsassistent: findet Hemma-Dashboards, wertet sie aus (Räume, Kacheln, angepasste
 // Vorlagen), zieht eines um und räumt danach auf (neue Dashboards, Merker).
 import { open, ready, PIERCE } from './harness.mjs';
+import { check, ende, echteFehler } from './ergebnis.mjs';
 
 const { browser, page, errors } = await open({ width: 1440, height: 1000 });
 await ready(page, '/casora-studio', () => { const p = window.__panel && window.__panel(); return p && p._hass && p._casoraUmzug && window.casoraUmzug; });
@@ -39,4 +40,9 @@ const res = await page.evaluate(async () => {
 });
 console.log(JSON.stringify(res, null, 1));
 console.log('Browser-Fehler:', errors.filter((e) => !/addEventListener|404/.test(e)));
+check('Hemma-Dashboards gefunden', res.gefunden.length > 0 && res.gefunden.every((g) => g.raeume > 0 && g.kacheln > 0), res.gefunden);
+check('ein Hemma-2-Dashboard umgezogen', !!(res.umzug && res.umzug.url && res.umzug.raeume > 0), res.umzug);
+check('Umzug gemerkt, kein neues Angebot', !!(res.umzug && res.umzug.gemerkt && res.umzug.keinNeuesAngebot), res.umzug);
+check('keine Browser-Fehler', !echteFehler(errors).length, echteFehler(errors));
 await browser.close();
+ende();

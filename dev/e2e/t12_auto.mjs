@@ -1,5 +1,6 @@
 // Auto: altes Präfix vs. nur Finder (ohne variables.car) liefern dieselben Werte.
 import { open, ready } from './harness.mjs';
+import { check, ende, echteFehler } from './ergebnis.mjs';
 const { browser, page } = await open();
 await ready(page, '/dashboard-hemma/home', () => !!(window._casoraCar && window._casoraCar.id)); // Adresse des Test-Dashboards
 const r = await page.evaluate(() => {
@@ -10,4 +11,8 @@ const r = await page.evaluate(() => {
     abweichend: bad.map((k) => k + ': ' + JSON.stringify(a[k]) + ' ≠ ' + JSON.stringify(b[k])), kachel: [C.tile('tiguan_r_line_20_l_tdi_scr_4motion', h.states), C.tile(null, h.states)] };
 });
 console.log(JSON.stringify(r, null, 1));
+check('Auto-Felder gefüllt', r.felder > 0 && r.gefuellt > 0, r);
+check('Präfix = Finder', !r.abweichend.length, r.abweichend);
+check('Kachel gleich', r.kachel[0] === r.kachel[1] && !!r.kachel[0], r.kachel);
 await browser.close();
+ende();

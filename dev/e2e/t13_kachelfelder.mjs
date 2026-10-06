@@ -1,6 +1,7 @@
 // Casora-Kacheln im Studio: Symbol in der Kachelliste, Editor-Felder, Finder-Platzhalter, „Mit KI ergänzen“.
 // Arbeitet nur im Speicher des Panels – es wird nichts gespeichert.
 import { open, ready, shot } from './harness.mjs';
+import { check, ende, echteFehler } from './ergebnis.mjs';
 const DASH = process.argv[2] || 'dashboard-hemma'; // Adresse des Test-Dashboards
 const { browser, page, errors } = await open();
 await ready(page, '/casora-studio', () => { const p = window.__panel && window.__panel(); return p && p._state && p._hass; });
@@ -21,6 +22,8 @@ const all = await H(() => {
 });
 console.log('Casora-Kacheln:', all.length);
 all.forEach((x) => console.log('  ' + x.room + ' · ' + (x.name || '–') + ' → ' + x.type + ' · felder ' + x.fields + ' · symbol ' + x.icon));
+check('Casora-Kacheln erkannt', all.length > 0, all.length);
+check('jede Casora-Kachel mit Symbol', all.every((x) => x.icon), all.filter((x) => !x.icon).map((x) => x.room + '/' + x.type));
 
 // 2) Raum mit Waschmaschine öffnen, Kachelliste prüfen
 const room = (all.find((x) => x.type === 'casora_washer') || all[0]).room;
@@ -38,6 +41,7 @@ const rows = await H(() => window.__pierce('.tilegrid .tile .thead').map((h) => 
 })));
 console.log('Kachelliste ' + room + ':');
 rows.forEach((r) => console.log('  ' + (r.icon ? '✓' : '✗ OHNE SYMBOL') + ' ' + r.name + '  ' + r.url));
+check('Kachelliste ' + room + ' mit Symbolen', rows.length > 0 && rows.every((r) => r.icon), rows.filter((r) => !r.icon).map((r) => r.name));
 await page.evaluate(() => window.__pierce('.tilegrid')[0]?.scrollIntoView({ block: 'center' }));
 console.log('  📸', await shot(page, 'k1_liste'));
 
@@ -46,6 +50,7 @@ const urls = [...new Set(rows.map((r) => (r.url.match(/url\('([^']+)'/) || [])[1
 for (const u of urls) {
   const s = await H(async (x) => (await fetch(x)).status, u);
   console.log('  ' + s + ' ' + u);
+  check('Symbol erreichbar ' + u, s === 200, s);
 }
 
 // 3) Waschmaschine öffnen: Felder + Platzhalter
@@ -60,8 +65,10 @@ const form = await H(() => window.__pierce('.row').filter((r) => r.offsetParent)
 }).filter(Boolean));
 console.log('Felder Waschmaschine:');
 form.forEach((f) => console.log('  ' + f));
+check('Editor-Felder der Waschmaschine', form.length > 3, form.length);
 const ai = await H(() => { const r = window.__pierce('.casora-ai')[0]; return r ? r.textContent.trim() : null; });
 console.log('KI-Zeile:', ai);
+check('KI-Zeile da', !!ai, ai);
 console.log('  📸', await shot(page, 'k2_waschmaschine'));
 
 // 4) KI-Knopf: Plug-Feld leeren und Finder abschalten, damit die KI etwas zu tun hat
@@ -82,7 +89,11 @@ const res = await H(async () => {
   return { vars: tile.variables, text: txt };
 });
 console.log('KI-Ergebnis:', JSON.stringify(res));
+check('KI-Knopf da', res !== 'kein Knopf', res);
 console.log('  📸', await shot(page, 'k3_ki'));
 console.log('Unübersetzt:', (await H(() => window.casoraI18nMissing())).slice(0, 20));
 console.log('Browser-Fehler:', errors.filter((e) => !/addEventListener|404/.test(e)).slice(0, 6));
+// MIME type: alte Hemma-Schrift-Ressource im Testzustand (wie t21).
+check('keine Browser-Fehler', !echteFehler(errors, /MIME type/).length, echteFehler(errors, /MIME type/));
 await browser.close();
+ende();
