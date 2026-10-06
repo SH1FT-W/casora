@@ -18,7 +18,7 @@ Casora Nebel:
       secondary-background-color: rgb(222,227,232)
       primary-text-color: '#2E3237'
       text-primary-color: rgba(46,50,55,0.95)
-      secondary-text-color: rgba(81,87,93,0.92)
+      secondary-text-color: '#51575D'
       casora-text-3: rgba(46,50,55,0.45)
       casora-ton-ink: '#2F6584'
       casora-color-sand: '#7B8591'
@@ -33,7 +33,7 @@ Casora Nebel:
       hero-wash: linear-gradient(90deg, rgba(234,237,241,0.78) 0%, rgba(234,237,241,0.38) 38%, rgba(234,237,241,0) 62%), linear-gradient(0deg, rgba(234,237,241,0.92) 0%, rgba(234,237,241,0.30) 34%, rgba(234,237,241,0) 55%)
       casora-icon-circle-bg: rgba(101,114,129,0.12)
       scrollbar-thumb-color: rgba(59,69,81,0.18)
-      state-icon-color: rgba(46,50,55,0.40)
+      state-icon-color: rgba(46,50,55,0.62)
       state-off-color: rgba(46,50,55,0.30)
       casora-mobile-hero-tint-top: rgba(234,237,241,0.62)
       casora-mobile-hero-tint-bot: rgba(234,237,241,0.50)
@@ -78,7 +78,7 @@ Casora Nebel:
       casora-pill-fill: rgba(245,247,249,0.80)
       casora-pill-rim: 0 1px 2px rgba(59,69,81,0.05), 0 8px 24px -16px rgba(51,64,79,0.30)
       casora-popup-tiles-text-primary: rgba(46,50,55,0.95)
-      casora-popup-row-fill: rgba(250,252,254,0.80)
+      casora-popup-row-fill: rgb(249,250,252)
       casora-popup-row-hover: rgba(101,114,129,0.06)
       casora-sheet-plate-shadow: 0 1px 2px rgba(59,69,81,0.05), 0 10px 28px -16px rgba(59,69,81,0.22)
       casora-popup-ui-fill: rgba(101,114,129,0.08)
@@ -108,7 +108,7 @@ Casora Nebel:
       button-card-box-shadow-hover-mobile: 0 6px 16px -10px rgba(59,69,81,0.18)
       dialog-box-shadow: 0 40px 90px -30px rgba(51,64,79,0.40), 0 10px 28px rgba(59,69,81,0.10)
       mdc-dialog-scrim-color: rgba(43,49,55,0.26)
-      casora-dialog-bg: rgba(242,245,248,0.97)
+      casora-dialog-bg: rgb(242,245,248)
       ha-color-fill-primary-quiet-resting: rgba(101,114,129,0.10)
       ha-color-fill-primary-quiet-hover: rgba(101,114,129,0.15)
       mdc-text-field-fill-color: rgba(101,114,129,0.08)
@@ -159,6 +159,7 @@ Casora Nebel:
       casora-soft-row-selected-shadow: 0 1px 2px rgba(59,69,81,0.05), 0 8px 22px -12px rgba(59,69,81,0.18)
       casora-soft-dot-ring: rgba(89,99,111,0.35)
       casora-soft-cam-fail: '#1F2123'
+      casora-soft-primary: '#3C6F93'
       casora-studio-ground: '#EAEDF1'
       casora-studio-backdrop: 'linear-gradient(to bottom, #EAEDF1, #E1E6EB)'
       casora-studio-ink: '#2E3237'
@@ -301,7 +302,7 @@ Casora Nebel:
       casora-pill-fill: rgba(40,42,44,0.80)
       casora-popup-tiles-fill: rgba(228,237,247,0.05)
       casora-popup-tiles-text-primary: rgba(229,233,238,0.96)
-      casora-popup-row-fill: rgba(53,56,59,0.78)
+      casora-popup-row-fill: rgb(49,52,55)
       casora-popup-row-hover: rgba(228,237,247,0.05)
       casora-popup-ui-fill: rgba(228,237,247,0.06)
       casora-popup-ui-fill-2: rgba(228,237,247,0.10)
@@ -319,7 +320,7 @@ Casora Nebel:
       button-card-box-shadow-active: 0 18px 40px -14px rgba(0,0,0,0.60), 0 0 0 1px rgba(228,237,247,0.05)
       dialog-box-shadow: 0 40px 90px -30px rgba(0,0,0,0.70), inset 0 1px 0 rgba(228,237,247,0.05)
       mdc-dialog-scrim-color: rgba(11,12,13,0.45)
-      casora-dialog-bg: rgba(36,38,40,0.97)
+      casora-dialog-bg: rgb(36,38,40)
       casora-perf-dialog-fill: rgb(36,38,40)
       casora-perf-scrim-fill: rgba(11,12,13,0.50)
       casora-perf-tiles-fill: rgba(228,237,247,0.06)
@@ -414,6 +415,7 @@ Casora Nebel:
       casora-studio-phone-pane-solid: 'linear-gradient(#242628, #242628)'
       casora-studio-icon-neutral: '#717A84'
       casora-soft-cam-fail: '#1F2123'
+      casora-soft-primary: '#3C6F93'
       primary-color: '#5E97B8'
       casora-mnav-pill-ink: var(--casora-ton-ink)
       casora-mnav-press-fill: rgba(94,151,184,0.36)
