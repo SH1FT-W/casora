@@ -165,7 +165,6 @@ Casora:
   casora-nav-fade-solid-l: 49px
   # D-09 (06.10.2026): kein Ring – nur bei Tastatur ist die Schrift unterstrichen
   casora-nav-focus-line: var(--casora-ton-ink)
-  casora-nav-cap-line: rgba(120,100,80,0.14)   # Entwurf Raumleiste c: Trennlinie an den Pfeil-Kappen
   casora-nav-more-fill: var(--casora-nav-active-fill)
   casora-nav-more-hover: var(--casora-mnav-press-fill, var(--casora-nav-active-fill))
   casora-nav-more-ink: var(--casora-nav-label-color)

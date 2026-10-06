@@ -3141,35 +3141,10 @@ window.casoraMenuGlass = {
         this._bar.classList.toggle('more-l-on', max > 2 && sc.scrollLeft > 2);
         this._bar.classList.toggle('more-r-on', max > 2 && sc.scrollLeft < max - 2);
       }
-      // Entwurf Raumleiste (Weich, 06.10.2026): a = nur ganze Räume, b = weiche breite Ausblendung,
-      // c = Pfeile als Kappen der Leiste. localStorage casora-entwurf-raumleiste, Standard a.
-      let rl = null;
-      if (window._casoraSoft && window._casoraSoft()) {
-        try { rl = localStorage.getItem('casora-entwurf-raumleiste'); } catch (e) { rl = null; }
-        if (rl !== 'a' && rl !== 'b' && rl !== 'c') rl = 'a';
-      }
-      if ((this.getAttribute('data-rl') || null) !== rl) { if (rl) this.setAttribute('data-rl', rl); else this.removeAttribute('data-rl'); }
-      if (rl === 'a' && this._els && this._bar) {
-        // Nur ganze Räume: was unter oder neben einem Pfeil nur halb zu sehen wäre, ist ausgeblendet.
-        const on = (side) => this._bar.classList.contains('more-' + side + '-on');
-        const ml = this._bar.querySelector('.more-l'), mr = this._bar.querySelector('.more-r');
-        const L = on('l') && ml ? ml.getBoundingClientRect().right + 4 : -1e9;
-        const R = on('r') && mr ? mr.getBoundingClientRect().left - 4 : 1e9;
-        this._els.forEach((el, i) => {
-          const r = el.btn.getBoundingClientRect();
-          const cut = r.left < L - 1 || r.right > R + 1;
-          el.btn.classList.toggle('rl-cut', cut);
-          // Die Hinterlegung des aktiven Raums geht mit ihm (sonst bliebe eine leere Pille am Pfeil).
-          if (i === this._activeIdx && this._indicator) this._indicator.classList.toggle('rl-cut', cut);
-        });
-      } else if (this._els) {
-        this._els.forEach((el) => el.btn.classList.remove('rl-cut'));
-        if (this._indicator) this._indicator.classList.remove('rl-cut');
-      }
       // D-14 (Weich, --casora-nav-fade-clear-l gesetzt): die linke Kante sitzt am Anfang des ersten
       // ganz sichtbaren Raums – auch am Ende der Leiste, wo das Einrasten nicht mehr greift (sonst „r“ von „Flur“).
       let edge = 0;
-      try { edge = rl ? 0 : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--casora-nav-fade-clear-l')) || 0; } catch (e) { edge = 0; }
+      try { edge = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--casora-nav-fade-clear-l')) || 0; } catch (e) { edge = 0; }
       if (edge > 0 && this._els) {
         const x0 = sc.getBoundingClientRect().left;
         const first = this._els.map((el) => el.btn.getBoundingClientRect().left - x0).filter((x) => x >= edge - 1)[0];
@@ -3457,25 +3432,6 @@ window.casoraMenuGlass = {
           -webkit-mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear-l, var(--casora-nav-fade-clear, 8px)), black var(--casora-nav-fade-solid-l, var(--casora-nav-fade-solid, 72px)), black calc(100% - var(--casora-nav-fade-solid, 72px)), transparent calc(100% - var(--casora-nav-fade-clear, 8px)));
           mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear-l, var(--casora-nav-fade-clear, 8px)), black var(--casora-nav-fade-solid-l, var(--casora-nav-fade-solid, 72px)), black calc(100% - var(--casora-nav-fade-solid, 72px)), transparent calc(100% - var(--casora-nav-fade-clear, 8px)));
         }
-        /* Entwurf Raumleiste (Weich, data-rl am Element, 06.10.2026) */
-        /* a: keine Masken, angeschnittene Räume ganz ausgeblendet (JS setzt .rl-cut) */
-        :host([data-rl="a"]) .scroller.fade-l, :host([data-rl="a"]) .scroller.fade-r { -webkit-mask-image: none; mask-image: none; }
-        :host([data-rl="a"]) .route { transition: opacity 0.16s ease; }
-        :host([data-rl="a"]) .route.rl-cut, :host([data-rl="a"]) .indicator.rl-cut { opacity: 0; pointer-events: none; }
-        /* b: breite weiche Ausblendung ohne Kante, Einrasten nur in der Nähe */
-        :host([data-rl="b"]) .scroller { scroll-snap-type: x proximity; }
-        :host([data-rl="b"]) .scroller.fade-r { -webkit-mask-image: linear-gradient(to right, black calc(100% - 150px), rgba(0,0,0,0.35) calc(100% - 82px), transparent calc(100% - 40px)); mask-image: linear-gradient(to right, black calc(100% - 150px), rgba(0,0,0,0.35) calc(100% - 82px), transparent calc(100% - 40px)); }
-        :host([data-rl="b"]) .scroller.fade-l { -webkit-mask-image: linear-gradient(to right, transparent 40px, rgba(0,0,0,0.35) 82px, black 150px); mask-image: linear-gradient(to right, transparent 40px, rgba(0,0,0,0.35) 82px, black 150px); }
-        :host([data-rl="b"]) .scroller.fade-l.fade-r { -webkit-mask-image: linear-gradient(to right, transparent 40px, rgba(0,0,0,0.35) 82px, black 150px, black calc(100% - 150px), rgba(0,0,0,0.35) calc(100% - 82px), transparent calc(100% - 40px)); mask-image: linear-gradient(to right, transparent 40px, rgba(0,0,0,0.35) 82px, black 150px, black calc(100% - 150px), rgba(0,0,0,0.35) calc(100% - 82px), transparent calc(100% - 40px)); }
-        /* c: Pfeile als Kappen der Leiste – Leinen-Fläche bis zum Rand mit feiner Trennlinie, die Räume enden kurz davor */
-        :host([data-rl="c"]) .scroller.fade-r { -webkit-mask-image: linear-gradient(to right, black calc(100% - 100px), transparent calc(100% - 48px)); mask-image: linear-gradient(to right, black calc(100% - 100px), transparent calc(100% - 48px)); }
-        :host([data-rl="c"]) .scroller.fade-l { -webkit-mask-image: linear-gradient(to right, transparent 48px, black 100px); mask-image: linear-gradient(to right, transparent 48px, black 100px); }
-        :host([data-rl="c"]) .scroller.fade-l.fade-r { -webkit-mask-image: linear-gradient(to right, transparent 48px, black 100px, black calc(100% - 100px), transparent calc(100% - 48px)); mask-image: linear-gradient(to right, transparent 48px, black 100px, black calc(100% - 100px), transparent calc(100% - 48px)); }
-        :host([data-rl="c"]) .more { top: 0; bottom: 0; height: auto; margin: 0; width: 44px; border-radius: 0; background: var(--casora-nav-cap-fill, var(--casora-nav-more-fill)); }
-        :host([data-rl="c"]) .more-l { left: 0; border-radius: 999px 0 0 999px; box-shadow: inset -1px 0 0 var(--casora-nav-cap-line, rgba(120,100,80,0.14)); }
-        :host([data-rl="c"]) .more-r { right: 0; border-radius: 0 999px 999px 0; box-shadow: inset 1px 0 0 var(--casora-nav-cap-line, rgba(120,100,80,0.14)); }
-        :host([data-rl="c"]) .more::before { inset: calc(50% - 10px) 12px; }
-
         .more {
           position: absolute;
           top: 50%;
