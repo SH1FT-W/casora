@@ -314,12 +314,21 @@
     }
 
     // ── Beim Speichern festhalten ─────────────────────────────────────────────
+    // Vorher-Stand für die Zusammenfassung: sie vergleicht Räume, Ansichten und Rest, nie die
+    // Vorlagen – die (~2,5 MB je Hälfte) nicht bei jedem Speichern tief kopieren.
+    const snapRaw = (r) => {
+      if (!r) return null;
+      const { button_card_templates: tpl, ...rest } = r;
+      const c = JSON.parse(JSON.stringify(rest));
+      if (tpl !== undefined) c.button_card_templates = tpl;
+      return c;
+    };
     const save = P._save;
     P._save = async function () {
       const url_path = this._dashUrl;
       const mobile_url = (this._pair && this._pair.mobileUrl) || null;
-      const before = this._raw ? JSON.parse(JSON.stringify(this._raw)) : null;
-      const mBefore = this._pair && this._pair.mobileRaw ? JSON.parse(JSON.stringify(this._pair.mobileRaw)) : null;
+      const before = snapRaw(this._raw);
+      const mBefore = this._pair ? snapRaw(this._pair.mobileRaw) : null;
       const blocked = isLocked(url_path);
       let first = false;
       if (url_path && this._hass && !blocked) {

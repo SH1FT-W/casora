@@ -81,6 +81,13 @@
       left:14px; right:14px; width:auto; top:auto !important; bottom:14px; height:var(--b-insp-h); }
     :host(.bmode.bstack.binsp.split:not(.flow):not(.phone):not(.bpage)) .inspector { animation-name:bStackIn; }
     @keyframes bStackIn { from { opacity:0; transform:translateY(24px); } }
+    /* Sofortige Rückmeldung beim Antippen (auch ohne Maus): wie das Zeigen am Desktop, in der
+       Handy-Vorschau leicht eingedrückt wie die Knöpfe des Studios. */
+    :host(.bmode) .miniroom .bpress:not(.pvsel):not(.mini-fill) { outline-color:rgba(255,255,255,0.55); }
+    :host(.bmode) .card.map.soft .miniroom .bpress:not(.pvsel):not(.mini-fill) {
+      outline-color:color-mix(in srgb, var(--primary-text-color) 45%, transparent);
+    }
+    :host(.bmode) .miniphone .bpress { transform:scale(0.97); }
     @media (prefers-reduced-motion: reduce) { :host(.bmode) .inspector { animation:none !important; } }
     :host(.bmode) .inspector .insphead { padding-right:52px; }
     /* Das ✕ hat in der Kopfzeile einen eigenen Platz: die Zeile (Zurück, Titel, Schalter) endet davor.
@@ -744,6 +751,18 @@
         map._bWired = true;
         map.addEventListener("keydown", (ev) => this._bMapKey(ev));
         map.addEventListener("pointerdown", (ev) => this._bBadgeDown(ev), true);
+        map.addEventListener("pointerdown", (ev) => {
+          const el = ev.target.closest && ev.target.closest("[data-mk], [data-pv]");
+          if (!el || ev.button) return;
+          el.classList.add("bpress");
+          const off = () => {
+            el.classList.remove("bpress");
+            window.removeEventListener("pointerup", off, true);
+            window.removeEventListener("pointercancel", off, true);
+          };
+          window.addEventListener("pointerup", off, true);
+          window.addEventListener("pointercancel", off, true);
+        }, true);
         // Nach einem Ziehen löst das Loslassen keinen Klick aus.
         map.addEventListener("click", (ev) => {
           if (this._bDragged) { ev.stopPropagation(); ev.preventDefault(); return; }
@@ -1010,6 +1029,14 @@
     });
     before("_pvPick", function () { if (this.classList.contains("bmode")) this._bOpen = true; });
     before("_openRoomSec", function () { if (this.classList.contains("bmode")) this._bOpen = true; });
+    // Hat dieser Durchlauf die Vorschau selbst neu gebaut? (Desktop: ja, beim Raumwechsel.)
+    const renderForm0 = P._renderForm;
+    P._renderForm = function () {
+      const tok = this._mapSwap;
+      const r = renderForm0.apply(this, arguments);
+      this._bSwapped = this._mapSwap !== tok;
+      return r;
+    };
     before("_renderForm", function () {
       // „Kachel hinzufügen“ in der Vorschau will die Liste offen haben.
       if (this._stackOpenReq && this.classList.contains("bmode")) this._bOpen = true;
@@ -1030,10 +1057,11 @@
           box.appendChild(b);
         }
       }
-      // Raumwechsel: am Handy zeichnet _renderForm die Vorschau nicht von selbst neu.
+      // Raumwechsel: am Handy zeichnet _renderForm die Vorschau nicht von selbst neu. Am Desktop
+      // hat es das gerade getan – ein zweites Mal im nächsten Bild war doppelte Arbeit.
       if (this.classList.contains("bmode") && this._bRoomSeen !== this._room) {
         this._bRoomSeen = this._room;
-        requestAnimationFrame(() => this._syncPreview());
+        if (!this._bSwapped) requestAnimationFrame(() => this._syncPreview());
       }
     });
     after("_swapMap", function () {

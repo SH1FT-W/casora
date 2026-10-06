@@ -2229,6 +2229,11 @@ const LAST_DASH_KEY = "casora_panel_last_dashboard";
 // „Willkommen bei Casora“ gesehen (Browser-Merker; dazu casora/settings „welcome“).
 const WELCOME_KEY = "casora.welcomed";
 const NOT_CASORA_KEY = "casora_panel_not_casora_v1";
+// Urteil je Dashboard („ist Casora“ ja/nein) mit Prüfzeitpunkt. Jede Prüfung lädt die ganze
+// Dashboard-Konfiguration (je ~2,5 MB mit Vorlagen) – bisher bei jedem Öffnen für alle Dashboards
+// zweimal. Jetzt nur Unbekannte sofort, die übrigen höchstens alle 12 Stunden im Hintergrund.
+const DASH_VERDICT_KEY = "casora_panel_dash_verdict_v2";
+const DASH_VERDICT_TTL = 12 * 3600 * 1000;
 
 const hashStr = (str) => {
   let h = 0x811c9dc5;
@@ -2972,11 +2977,18 @@ const SIDE_W_KEY = "casora_panel_side_w";
 const PANEL_NARROW = 1000;
 const PANEL_TIGHT = 900;
 const PANEL_PHONE = 700;
+// Innerhalb einer Aufgabe liegt das Panel nicht anders: einmal messen statt bei jedem Feld
+// (jede Messung mitten im Aufbau erzwang ein Layout). Gilt bis zum Ende der Aufgabe.
+let panelWMemo = null;
 const panelW = (el) => {
   if (!el || !el.getBoundingClientRect) return window.innerWidth;
+  if (panelWMemo && panelWMemo.el === el && panelWMemo.iw === window.innerWidth) return panelWMemo.w;
   const left = Math.max(0, el.getBoundingClientRect().left);
   const w = Math.round(window.innerWidth - left);
-  return w > 40 ? w : window.innerWidth;
+  const out = w > 40 ? w : window.innerWidth;
+  if (!panelWMemo) queueMicrotask(() => { panelWMemo = null; });
+  panelWMemo = { el, iw: window.innerWidth, w: out };
+  return out;
 };
 const isNarrow = (el) => panelW(el) < PANEL_NARROW;
 // Handy quer (03.10.2026): niedrig und breit – geteilte Ansicht statt Handy-Ansicht, auch wenn
@@ -11200,21 +11212,45 @@ class CasoraPanel extends HTMLElement {
   _verdicts() {
     if (!this._casoraVerdict) {
       this._casoraVerdict = new Map();
+      this._verdictAt = new Map();
       try {
-        JSON.parse(localStorage.getItem(NOT_CASORA_KEY) || "[]")
-          .forEach((u) => this._casoraVerdict.set(u, false));
+        const o = JSON.parse(localStorage.getItem(DASH_VERDICT_KEY) || "{}") || {};
+        Object.keys(o).forEach((u) => {
+          if (!Array.isArray(o[u])) return;
+          this._casoraVerdict.set(u, !!o[u][0]);
+          this._verdictAt.set(u, Number(o[u][1]) || 0);
+        });
+      } catch (e) { /* private mode */ }
+      // Die bisherige „kein Casora“-Liste hat Vorrang (ältere Fassungen schreiben nur sie);
+      // widerspricht sie dem neuen Merker, gilt „nein“ und die nächste Runde prüft nach.
+      try {
+        JSON.parse(localStorage.getItem(NOT_CASORA_KEY) || "[]").forEach((u) => {
+          if (this._casoraVerdict.get(u) === true) this._verdictAt.set(u, 0);
+          this._casoraVerdict.set(u, false);
+        });
       } catch (e) { /* private mode */ }
     }
     return this._casoraVerdict;
   }
 
-  _setVerdict(url_path, casora) {
+  // at: Prüfzeitpunkt; 0 = nicht sicher (Lesefehler) – die nächste Runde prüft erneut.
+  _setVerdict(url_path, casora, at) {
     const v = this._verdicts();
     v.set(url_path, casora);
+    this._verdictAt.set(url_path, at === undefined ? Date.now() : at);
     try {
       localStorage.setItem(NOT_CASORA_KEY,
         JSON.stringify([...v].filter(([, h]) => !h).map(([u]) => u)));
+      const o = {};
+      // Nur wirklich Geprüftes; Unsicheres (Lesefehler, alte Liste) bleibt in der alten Liste.
+      v.forEach((c, u) => { const t = this._verdictAt.get(u); if (t) o[u] = [c ? 1 : 0, t]; });
+      localStorage.setItem(DASH_VERDICT_KEY, JSON.stringify(o));
     } catch (e) { /* private mode */ }
+  }
+
+  _verdictFresh(url_path) {
+    const at = this._verdictAt && this._verdictAt.get(url_path);
+    return !!at && Date.now() - at < DASH_VERDICT_TTL && Date.now() >= at;
   }
 
   _shownDashboards(all) {
@@ -11222,21 +11258,26 @@ class CasoraPanel extends HTMLElement {
     return (all || []).filter((d) => d.mode === "storage" && v.get(d.url_path) !== false);
   }
 
+  // true/false; null = nicht lesbar (zählt wie „nein“, wird aber nicht als geprüft gemerkt).
   async _isCasoraDash(d) {
     try {
       const cfg = await this._hass.callWS({ type: "lovelace/config", url_path: d.url_path });
       return isMobileConfig(cfg)
         || (cfg.views || []).some((v) => ((v.cards || [])[0] || {}).template === "casora_room");
     } catch (e) {
-      return false;
+      return null;
     }
   }
 
   async _pruneDashboards(all) {
     for (const d of all) {
       if (d.url_path === this._dashUrl) continue;
-      const casora = await this._isCasoraDash(d);
-      this._setVerdict(d.url_path, casora);
+      // Vor Kurzem geprüft (auch gerade eben vor dem Laden): nicht erneut ganz herunterladen.
+      if (this._verdictFresh(d.url_path)) continue;
+      if (!this.isConnected) return;
+      const got = await this._isCasoraDash(d);
+      const casora = !!got;
+      this._setVerdict(d.url_path, casora, got === null ? 0 : undefined);
       const listed = (this._dashList || []).some((x) => x.url_path === d.url_path);
       if (casora === listed) continue;
       this._dashList = casora
@@ -11719,7 +11760,9 @@ class CasoraPanel extends HTMLElement {
       // Editor statt der Begrüßung.
       const v = this._verdicts();
       for (const d of all) {
-        if (!v.has(d.url_path)) this._setVerdict(d.url_path, await this._isCasoraDash(d));
+        if (v.has(d.url_path)) continue;
+        const got = await this._isCasoraDash(d);
+        this._setVerdict(d.url_path, !!got, got === null ? 0 : undefined);
       }
       list = this._shownDashboards(all);
       this._dashList = list;
@@ -11763,7 +11806,9 @@ class CasoraPanel extends HTMLElement {
 
     this._log(`${list.length} storage dashboard(s)`);
     await this._load();
-    this._pruneDashboards(all);
+    // Nachprüfen erst, wenn das Studio steht (lädt ggf. große Konfigurationen).
+    const later = window.requestIdleCallback || ((f) => setTimeout(f, 1500));
+    later(() => this._pruneDashboards(all), { timeout: 5000 });
   }
 
   // ── setup flow ────────────────────────────────────────────────────────────
@@ -15987,6 +16032,9 @@ class CasoraPanel extends HTMLElement {
   }
 
   _renderForm() {
+    // Panelbreite messen, bevor der Aufbau das Layout verändert (isPhone() merkt sie sich für
+    // diese Aufgabe) – mitten im Aufbau gemessen erzwang das erste Feld ein volles Layout.
+    panelW(this);
     this._disarmRow();
     const room = this._state && this._state.compact.rooms[this._room];
     this._markDirty();
@@ -18068,7 +18116,9 @@ class CasoraPanel extends HTMLElement {
       r.onclick = () => { done(); onPick(value); };
       return r;
     };
+    let drawTok = 0;
     const draw = () => {
+      const tok = ++drawTok;
       const needle = q.value.trim().toLowerCase();
       const hits = (list || []).filter((o) => !needle || String(o).toLowerCase().includes(needle)
         || String(name(o)).toLowerCase().includes(needle)
@@ -18076,30 +18126,50 @@ class CasoraPanel extends HTMLElement {
       listEl.innerHTML = "";
       const typed = q.value.trim();
       const groups = ents ? this._entGroups(hits.slice(0, 300)) : [["", hits.slice(0, 300)]];
+      const items = [];
       groups.forEach(([k, ids]) => {
-        if (groups.length > 1) {
+        if (groups.length > 1) items.push(() => {
           const hd = document.createElement("div");
           hd.className = "psheet-head2";
           hd.setAttribute("data-no-i18n", "");
           hd.textContent = k || trLabel("Without room");
-          listEl.appendChild(hd);
-        }
-        ids.forEach((o) => {
+          return hd;
+        });
+        ids.forEach((o) => items.push(() => {
           const nm = name(o);
           const em = meta(o);
-          if (em) listEl.appendChild(row(o, em.short, em.ctx || o, o === current));
-          else listEl.appendChild(row(o, nm, nm !== o && !label ? o : null, o === current));
-        });
+          if (em) return row(o, em.short, em.ctx || o, o === current);
+          return row(o, nm, nm !== o && !label ? o : null, o === current);
+        }));
       });
-      if (free !== false && typed && !(list || []).includes(typed) && (!hits.length || typed.includes("."))) {
-        listEl.appendChild(row(typed, "Use \u201c" + typed + "\u201d", null, false));
-      }
-      if (!hits.length && !typed) {
-        const e = document.createElement("div");
-        e.className = "psheet-empty";
-        e.textContent = "Nothing to choose";
-        listEl.appendChild(e);
-      }
+      const tail = () => {
+        if (free !== false && typed && !(list || []).includes(typed) && (!hits.length || typed.includes("."))) {
+          listEl.appendChild(row(typed, "Use \u201c" + typed + "\u201d", null, false));
+        }
+        if (!hits.length && !typed) {
+          const e = document.createElement("div");
+          e.className = "psheet-empty";
+          e.textContent = "Nothing to choose";
+          listEl.appendChild(e);
+        }
+      };
+      // Zuerst, was auf den Bildschirm passt; der Rest folgt in den nächsten Bildern. Bis zu 300
+      // Zeilen auf einmal bremsten am Handy jeden Tastendruck in der Suche.
+      let at = 0;
+      const pump = (n) => {
+        const frag = document.createDocumentFragment();
+        for (const end = Math.min(items.length, at + n); at < end; at++) frag.appendChild(items[at]());
+        listEl.appendChild(frag);
+      };
+      pump(40);
+      if (at >= items.length) { tail(); return; }
+      const more = () => {
+        if (tok !== drawTok || closed) return;
+        pump(80);
+        if (at < items.length) requestAnimationFrame(more);
+        else tail();
+      };
+      requestAnimationFrame(more);
     };
 
     const fit = () => {
@@ -18661,7 +18731,19 @@ class CasoraPanel extends HTMLElement {
   // Geräteauswahl wie in HA: Name, darunter „Raum · Gerät“, rechts der Zustand. Den Gerätenamen
   // vorn im Namen lässt sie weg, wenn er ohnehin in der zweiten Zeile steht („Thermometer Bad
   // Temperatur“ → „Temperatur“, darunter „Bad · Thermometer Bad“).
+  // Je HA-Stand gemerkt: Auswahllisten fragen jede Entität beim Filtern, Gruppieren und Zeichnen
+  // mehrfach ab (formatEntityState ist teuer) – bei jedem Tastendruck für alle.
   _entMeta(id) {
+    const h0 = this._hass || {};
+    if (!this._entMetaMemo || this._entMetaMemo.h !== h0) this._entMetaMemo = { h: h0, m: new Map() };
+    const hit = this._entMetaMemo.m.get(id);
+    if (hit) return hit;
+    const out = this._entMetaRaw(id);
+    this._entMetaMemo.m.set(id, out);
+    return out;
+  }
+
+  _entMetaRaw(id) {
     const h = this._hass || {};
     const st = h.states && h.states[id];
     const reg = h.entities && h.entities[id];
@@ -19342,7 +19424,18 @@ class CasoraPanel extends HTMLElement {
     const close = () => {
       active = -1;
       if (this._openCombo === close) { this._openCombo = null; this._openAnchor = null; }
+      listen(false);
       closeMenu(menu);
+    };
+    // Scrollen/Größe nur beobachten, solange die Liste offen ist. Vorher hing jedes Feld dauerhaft
+    // am Fenster – und hielt so nach jedem Neuzeichnen den ganzen alten Inspektor im Speicher.
+    let listening = false;
+    const listen = (on) => {
+      if (on === listening) return;
+      listening = on;
+      const f = on ? "addEventListener" : "removeEventListener";
+      window[f]("scroll", dismiss, true);
+      window[f]("resize", dismiss);
     };
 
     const place = () => {
@@ -19452,6 +19545,7 @@ class CasoraPanel extends HTMLElement {
         const host = comboHost();
         if (host !== this.$("overlay")) menu.style.zIndex = "400";
         host.appendChild(menu);
+        listen(true);
         playMenuIn(menu, place(), false);
       }
         else place();
@@ -19540,6 +19634,7 @@ class CasoraPanel extends HTMLElement {
         const host = comboHost();
         if (host !== this.$("overlay")) menu.style.zIndex = "400";
         host.appendChild(menu);
+        listen(true);
         playMenuIn(menu, place(), false);
       }
       else place();
@@ -19648,19 +19743,12 @@ class CasoraPanel extends HTMLElement {
     // A fixed menu would drift away from its input, so dismiss on scroll.
     const dismiss = () => {
       // Feld nicht mehr da (Formular neu gezeichnet): abmelden statt bei jedem Scrollen weiterzulaufen.
-      if (wrap._was && !wrap.isConnected && !menu.parentNode) {
-        window.removeEventListener("scroll", dismiss, true);
-        window.removeEventListener("resize", dismiss);
-        return;
-      }
+      if (!wrap.isConnected && !menu.parentNode) { listen(false); return; }
       if (!menu.parentNode) return;
       // The iOS keyboard scrolls and resizes the page as the field focuses; follow it instead of closing.
       if (this.shadowRoot.activeElement === input) { place(); return; }
       close();
     };
-    window.addEventListener("scroll", dismiss, true);
-    window.addEventListener("resize", dismiss);
-    requestAnimationFrame(() => { if (wrap.isConnected) wrap._was = true; });
 
     return { wrap, input };
   }
@@ -19668,10 +19756,27 @@ class CasoraPanel extends HTMLElement {
   // classes: Liste für alle Domains oder {domain: [...]} je Domain. Ohne device_class
   // zählt ein Sensor nur, wenn seine Einheit zur gesuchten Art passt (CLASS_UNITS).
   _entityList(domains, classes) {
+    // Jedes Gerätefeld eines Raums fragt beim Zeichnen dieselben Listen ab – je Stand von
+    // hass.states nur einmal durch alle Entitäten gehen (war über die Hälfte der Zeichenzeit).
+    const states = this._hass.states;
+    if (!this._entMemo || this._entMemo.states !== states) this._entMemo = { states, map: new Map() };
+    const memoKey = JSON.stringify([domains, classes || null]);
+    const hit = this._entMemo.map.get(memoKey);
+    if (hit) return hit.slice();
+    // Entitäten je Domain einmal je Stand einsortieren; jede Abfrage geht dann nur durch ihre Domains.
+    if (!this._entMemo.byDom) {
+      const by = new Map();
+      Object.keys(states).forEach((e) => {
+        const d = e.split(".")[0];
+        if (!by.has(d)) by.set(d, []);
+        by.get(d).push(e);
+      });
+      this._entMemo.byDom = by;
+    }
     const perDomain = classes && !Array.isArray(classes) ? classes : null;
     const all = Array.isArray(classes) && classes.length ? classes : null;
-    return Object.keys(this._hass.states)
-      .filter((e) => domains.includes(e.split(".")[0]))
+    const out = [...this._entMemo.byDom.keys()].filter((d) => domains.includes(d))
+      .flatMap((d) => this._entMemo.byDom.get(d))
       .filter((e) => {
         const want = perDomain ? perDomain[e.split(".")[0]] : all;
         if (!want || !want.length) return true;
@@ -19681,6 +19786,8 @@ class CasoraPanel extends HTMLElement {
         return !!unit && want.some((c) => (CLASS_UNITS[c] || NO_UNIT).test(unit));
       })
       .sort();
+    this._entMemo.map.set(memoKey, out);
+    return out.slice();
   }
 
   // Auswahlliste für Badge-Felder: Geräte des Raums zuerst, dann nach Namen;
@@ -20401,9 +20508,11 @@ class CasoraPanel extends HTMLElement {
     };
     dropTo = send;
 
+    // Liegt die Bilderliste schon vor, baut der zweite Durchlauf dasselbe noch einmal (je Neuzeichnen).
+    const had = this._imgs;
     fill();
     this._images()
-      .then(() => { fill(); this._setBackdrop(); })
+      .then((list) => { if (!had || list !== had) fill(); this._setBackdrop(); })
       .catch((e) => {
         this._log("could not list images: " + e.message, "warn");
         this._status("Image list unavailable. Restart Home Assistant to load the Casora image endpoint.", "warn");

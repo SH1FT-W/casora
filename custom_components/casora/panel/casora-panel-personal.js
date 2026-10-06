@@ -537,26 +537,35 @@
       "Now Playing": ["media", () => ["Player icons and volume controls for every dashboard", 0]],
       Notifications: ["notify", () => ["Mailbox, battery exceptions and more for every dashboard", 0]],
     };
+    // Die Studio-Szenenliste soll wissen, was überall ausgeblendet ist (einmal laden).
+    const readSettings = (panel) => {
+      if (panel._casoraSettingsRead || !panel._hass) return;
+      panel._casoraSettingsRead = panel._hass.callWS({ type: "casora/settings/get" })
+        .then((x) => (x && x.settings) || {}).catch(() => ({}));
+      panel._casoraSettingsRead.then((S) => {
+        const hide = ((S.scenes || {}).exclude || []).filter(Boolean);
+        const was = JSON.stringify(panel._casoraSceneHide || []);
+        panel._casoraSceneHide = hide;
+        if (was !== JSON.stringify(hide) && panel._state && !panel._flowMode) {
+          panel.shadowRoot.querySelectorAll(".casora-plink").forEach((x) => x.remove());
+          panel._renderForm();
+          panel._rebuildPreview();
+        }
+      });
+    };
+    // Schon beim Laden anfragen (parallel zur Dashboard-Konfiguration): kam die Antwort erst nach
+    // dem ersten Zeichnen, wurden Inspektor und Vorschau gleich ein zweites Mal gebaut.
+    const load = P._load;
+    P._load = function () {
+      try { readSettings(this); } catch (e) { /* ohne */ }
+      return load.apply(this, arguments);
+    };
     const renderForm = P._renderForm;
     P._renderForm = function () {
       const r = renderForm.apply(this, arguments);
       const pane = this.$("pane");
       if (!pane || !this._hass) return r;
-      // Die Studio-Szenenliste soll wissen, was überall ausgeblendet ist (einmal laden).
-      if (!this._casoraSettingsRead) {
-        this._casoraSettingsRead = this._hass.callWS({ type: "casora/settings/get" })
-          .then((x) => (x && x.settings) || {}).catch(() => ({}));
-        this._casoraSettingsRead.then((S) => {
-          const hide = ((S.scenes || {}).exclude || []).filter(Boolean);
-          const was = JSON.stringify(this._casoraSceneHide || []);
-          this._casoraSceneHide = hide;
-          if (was !== JSON.stringify(hide) && this._state && !this._flowMode) {
-            this.shadowRoot.querySelectorAll(".casora-plink").forEach((x) => x.remove());
-            this._renderForm();
-            this._rebuildPreview();
-          }
-        });
-      }
+      readSettings(this);
       Object.keys(LINKS).forEach((k) => {
         const card = pane.querySelector('section.card[data-k="' + k + '"]');
         if (!card || card.querySelector(".casora-plink")) return;
