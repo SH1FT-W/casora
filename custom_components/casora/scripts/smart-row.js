@@ -61,8 +61,25 @@ function rowLog() {
   console.info.apply(console, ['casora-row'].concat([].slice.call(arguments)));
 }
 
-function isCardDisabled(cfg, phone) {
+// Home Assistants Sichtbarkeit „user“ (visibility: [{condition: 'user', users: [...]}]): HA wertet
+// sie nur in hui-card aus, Casoras Reihe legt ihre Karten selbst an. Leere Liste = niemand
+// (ausgeblendeter Raum). Andere Bedingungen bleiben unbeachtet (gelten als erfüllt).
+function userHides(cfg, user) {
+  const list = cfg && Array.isArray(cfg.visibility) ? cfg.visibility : null;
+  if (!list) return false;
+  return list.some((v) => v && v.condition === 'user' && Array.isArray(v.users)
+    && !(user && user.id && v.users.indexOf(user.id) !== -1));
+}
+
+function currentUser() {
+  try { const h = document.querySelector('home-assistant'); return (h && h.hass && h.hass.user) || null; }
+  catch (e) { return null; }
+}
+
+function isCardDisabled(cfg, phone, user) {
+  if (userHides(cfg, user || currentUser())) return true;
   const c = resolveCardConfig(cfg);
+  if (c !== cfg && userHides(c, user || currentUser())) return true;
   const v = c && c.variables && c.variables.enabled;
   if (v === false || v === 'false' || v === 0 || v === '0') return true;
   const s = c && c.variables && c.variables.surfaces;
@@ -1125,7 +1142,7 @@ class CasoraSmartRow extends HTMLElement {
     if (!this._sortEnabled) {
       this._cards = this._config.cards.map((cfg) => {
         // Same rule as the sorted path below: an off card is never built.
-        if (isCardDisabled(cfg, this._scrollMode)) return null;
+        if (isCardDisabled(cfg, this._scrollMode, this._hass && this._hass.user)) return null;
         try {
           const card = this._helpers.createCardElement(cfg);
           card.hass = this._hass;
@@ -1142,7 +1159,7 @@ class CasoraSmartRow extends HTMLElement {
         wrapper.style.setProperty('--casora-position-index', String(i));
         if (cardFlag(this._config.cards[i], 'full_width')) wrapper.dataset.fullwidth = '1';
         if (cardFlag(this._config.cards[i], 'collapsed_spacer')) wrapper.dataset.collapsedSpacer = '1';
-        if (isCardDisabled(this._config.cards[i], this._scrollMode)) {
+        if (isCardDisabled(this._config.cards[i], this._scrollMode, this._hass && this._hass.user)) {
           wrapper.dataset.off = '1';
           wrapper.style.display = 'none';
           this._hiddenState[i] = true;
@@ -1180,7 +1197,7 @@ class CasoraSmartRow extends HTMLElement {
     for (let i = 0; i < this._config.cards.length; i++) {
       const cfg = this._config.cards[i];
       let card = null;
-      const off = isCardDisabled(cfg, this._scrollMode);
+      const off = isCardDisabled(cfg, this._scrollMode, this._hass && this._hass.user);
       if (!off) {
         try {
           card = this._helpers.createCardElement(cfg);

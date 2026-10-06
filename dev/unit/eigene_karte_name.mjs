@@ -23,6 +23,7 @@ const code = [
     src.indexOf('\n', src.indexOf('(c) => (isBareCard(c) ? wrapCustomCard(c)')) + 1),
   grab(/^function stable\(/m),
   grab(/^const omit = /m),
+  grab(/^function roomVisibility\(/m),
   grab(/^function extractConfig\(/m),
   grab(/^function expandConfig\(/m),
   'return { TILE_OWN_KEYS, customTileName, wrapCustomCard, extractConfig, expandConfig };',

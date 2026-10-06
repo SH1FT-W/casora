@@ -1,3 +1,25 @@
+// Casora Studio „Wer sieht das?“ (06.10.2026): Badges und Räume nur für bestimmte HA-Benutzer.
+// casoraSeen(vars, badge, user, wert) – liefert false, wenn die Badge für diesen Benutzer
+// ausgeblendet ist, sonst den Wert unverändert (in den Vorlagen statt variables.show_<badge>).
+(function () {
+  var hassUser = function () {
+    try { var h = document.querySelector('home-assistant'); return (h && h.hass && h.hass.user) || null; }
+    catch (e) { return null; }
+  };
+  var allowed = function (list, user) {
+    if (!Array.isArray(list) || !list.length) return true;
+    var u = user || hassUser();
+    return !!(u && u.id && list.indexOf(u.id) !== -1);
+  };
+  window.casoraSeen = function (vars, badge, user, val) {
+    var m = vars && vars.casora_badge_users;
+    var l = m && typeof m === 'object' ? m[badge] : null;
+    return allowed(l, user) ? val : false;
+  };
+  window.casoraSeesRoute = function (route) { return !route || allowed(route.users, null); };
+})();
+
+
 // Casoras Schriften (Inter, Hanken Grotesk) einmal fürs ganze Frontend:
 // Designs und die Schriftwahl setzen nur den Namen, die Dateien kommen von hier.
 (function () {
@@ -2796,7 +2818,8 @@ window.casoraMenuGlass = {
       }
       this._config  = config;
       this._variant = config.variant === 'tablet' ? 'tablet' : 'desktop';
-      this._routes  = config.routes.slice();
+      // „Wer sieht das?“ im Studio: Räume nur für bestimmte HA-Benutzer (route.users).
+      this._routes  = config.routes.filter(window.casoraSeesRoute || function () { return true; });
       this._sig     = JSON.stringify([this._variant, this._routes]);
       this._built   = false;
       this.shadowRoot.innerHTML = '';

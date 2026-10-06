@@ -293,7 +293,7 @@
     }
     _items(kind) {
       var self = this, h = this._hass, cur = this._cur();
-      if (kind === 'rooms') return this._rooms.map(function (r) {
+      if (kind === 'rooms') return this._rooms.filter(window.casoraSeesRoute || function () { return true; }).map(function (r) {
         return { icon: self._roomIcon(r), label: r.label || r.name, on: cur === r.key, run: function () { self._set(r.key); } };
       });
       /* Szenen: nur die Szenen aus window.casoraNavScenes (gemeinsame Liste oben), ohne "Alle Szenen" (24.09.2026). */
