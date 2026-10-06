@@ -164,25 +164,27 @@
       position:fixed; z-index:60; left:50%; bottom:calc(22px + env(safe-area-inset-bottom, 0px));
       display:flex; align-items:center; gap:6px; max-width:min(520px, calc(100vw - 32px)); box-sizing:border-box;
       padding:7px 7px 7px 16px; min-height:44px; border-radius:16px;
-      background:var(--casora-studio-toast, rgba(36,36,40,.94)); color:#fff;
+      /* Dieselben Farben wie die übrigen Meldungen des Studios (Theme: casora-studio-toast). */
+      background:var(--toast, rgba(255,255,255,.92)); color:var(--ink, #1c1c1e);
       font:inherit; font-size:var(--t-foot, 14px); font-weight:550; letter-spacing:0;
-      box-shadow:0 10px 34px rgba(0,0,0,.24); pointer-events:none;
+      box-shadow:var(--toast-rim, 0 0 0 .5px rgba(0,0,0,.08), 0 12px 30px rgba(0,0,0,.14)); pointer-events:none;
       opacity:0; transform:translate(-50%, 10px); transition:opacity .2s ease, transform .24s var(--ease, ease);
       -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px);
     }
     .btoast.on { opacity:1; transform:translate(-50%, 0); pointer-events:auto; }
     .btoast .btmsg { flex:1 1 auto; min-width:0; padding-right:6px; line-height:1.3; }
-    .btoast .btico { width:20px; height:20px; flex:none; display:grid; place-items:center; margin-left:-4px; color:#7ee08f; }
+    .btoast .btico { width:20px; height:20px; flex:none; display:grid; place-items:center; margin-left:-4px; color:var(--sw-on, #34C759); }
     .btoast .btico svg { width:18px; height:18px; }
     .btoast .btico:empty { display:none; }
     .btoast button { border:0; cursor:pointer; font:inherit; font-weight:650; color:inherit; background:none; }
-    .btoast .btact { padding:8px 12px; border-radius:11px; background:rgba(255,255,255,.14); white-space:nowrap; }
-    .btoast .btact:hover { background:rgba(255,255,255,.22); }
+    .btoast .btact { padding:8px 12px; border-radius:11px; background:var(--wash-fill, rgba(118,118,128,.14)); white-space:nowrap;
+      color:var(--casora-studio-done, var(--accent, #B67A50)); }
+    .btoast .btact:hover { background:var(--wash-press, rgba(118,118,128,.22)); }
     .btoast .btx { width:30px; height:30px; border-radius:50%; display:grid; place-items:center; opacity:.7; padding:0; }
     .btoast .btx svg { width:15px; height:15px; }
-    .btoast .btact:focus-visible, .btoast .btx:focus-visible { outline:2px solid #fff; outline-offset:1px; }
+    .btoast .btact:focus-visible, .btoast .btx:focus-visible { outline:2px solid var(--accent, #B67A50); outline-offset:1px; }
     .btoast .btact[hidden], .btoast .btx[hidden] { display:none; }
-    .btoast.err { background:var(--casora-studio-bad, #C9342C); }
+    .btoast.err { background:var(--casora-studio-bad, #C9342C); color:#fff; }
     .btoast.err .btico { color:#fff; }
     :host(.bmode.phone) .btoast { bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
     :host(.bmode.phone.binsp) .btoast { bottom:auto; top:calc(70px + env(safe-area-inset-top, 0px)); transform:translate(-50%, -10px); }
