@@ -1788,6 +1788,14 @@
    "{1} running"
   ],
   [
+   "^(\\d+) laufen$",
+   "{1} running"
+  ],
+  [
+   "^(\\d+) pausiert$",
+   "{1} paused"
+  ],
+  [
    "^(\\d+) offen$",
    "{1} open"
   ],
