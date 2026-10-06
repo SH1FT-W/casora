@@ -57,6 +57,18 @@ assert.equal(U.rankDevices(twins, 'licht')[0].name, 'Spot B', 'Neues (ohne Kache
 // ── V-02: Untertitel ────────────────────────────────────────────────────────────────
 assert.ok(/\{room\}/.test(U.SUB.list) && /this dashboard/.test(U.SUB.dash) && /all dashboards/.test(U.SUB.home));
 
+// Akku-Hinweise an der Aquarium-Kachel: Auswahl Automatisch (nicht gespeichert) / Immer / Nie.
+{
+  const t = read('panel/casora-panel-types.js');
+  const i = t.indexOf('id: "casora_aquarium"');
+  const f = t.slice(t.indexOf('key: "battery_hints"', i), t.indexOf('key: "battery_hints"', i) + 600);
+  assert.ok(i > 0 && /type: "select"/.test(f), 'Feld battery_hints als Auswahl an der Aquarium-Kachel');
+  assert.match(f, /options: \["", "always", "never"\]/, '„Automatisch“ = leer, wird nicht gespeichert');
+  const de0 = JSON.parse(read('translations/panel/de.json')).exact;
+  assert.equal(de0['Battery hints'], 'Akku-Hinweise');
+  ['Automatic', 'Always', 'Never'].forEach((k) => assert.ok(de0[k], 'deutsch: ' + k));
+}
+
 // Alle Texte des Moduls haben eine deutsche Fassung.
 const de = JSON.parse(read('translations/panel/de.json')).exact;
 const texts = [...Object.values(U.SUB), ...Object.values(U.SCOPE), ...Object.values(U.WHAT)];

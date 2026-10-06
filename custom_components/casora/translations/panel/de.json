@@ -2080,7 +2080,9 @@
     "Hide for good": "Für immer ausblenden",
     "Your own photo for {room}": "Eigenes Foto für {room}",
     "Save your first scene": "Erste Szene speichern",
-    "Open it on your phone": "Auf dem Handy öffnen"
+    "Open it on your phone": "Auf dem Handy öffnen",
+    "Battery hints": "Akku-Hinweise",
+    "Automatic: a weak battery does not highlight this tile when the dashboard already has a Batteries tile.": "Automatisch: Ein schwacher Akku hebt die Kachel nicht hervor, wenn das Dashboard schon eine Batterien-Kachel hat."
   },
   "patterns": [
     ["^Phone differs in (\\d+) settings$", "Handy weicht bei {1} Einstellungen ab"],

@@ -119,6 +119,12 @@ window.CASORA_TILE_TYPES = [
       { key: "leak_battery", label: "Leak sensor battery", domains: ["sensor"], classes: ["battery"], advanced: true },
       { key: "temp_battery", label: "Thermometer battery", domains: ["sensor"], classes: ["battery"],
         find: { dc: "battery", domain: "sensor" }, advanced: true },
+      // Akku-Hinweise (window.casoraBatteryHints, scripts/casora-core.js): „Automatisch“ wird nicht
+      // gespeichert – die Variable fehlt dann, wie bei bestehenden Dashboards.
+      { key: "battery_hints", label: "Battery hints", type: "select", advanced: true,
+        options: ["", "always", "never"], optionLabels: { "": "Automatic", always: "Always", never: "Never" },
+        when: (v) => !!(v.leak_battery || v.temp_battery || v.battery_hints),
+        hint: "Automatic: a weak battery does not highlight this tile when the dashboard already has a Batteries tile." },
       { key: "light_reachable", label: "Light reachable", domains: ["binary_sensor"], advanced: true,
         hint: "Warns when the light has been unreachable for 30 minutes." },
       // Lichtsteuerung und Dosierpumpe (1.0.3): frei gewählte Entitäten. Ältere Kacheln mit den
