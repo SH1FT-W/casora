@@ -245,7 +245,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _stamp() -> int:
         # Jüngste Änderung von Panel, Übersetzung und Lader – sonst liefert der Cache Altes.
         stamps = []
-        for name in ("casora-panel.js", "casora-panel-i18n.js", "casora-panel-addons.js", "casora-panel-types.js", "casora-panel-import.js", "casora-panel-assist.js", "casora-panel-welcome.js", "casora-panel-personal.js", "casora-panel-umzug.js", "casora-panel-basis.js", "casora-panel-versions.js", "casora-panel-updates.js", "casora-panel-settings.js", "casora-panel-popups.js", "casora-panel-kachelart.js", "casora-panel-b.js"):
+        for name in ("casora-panel.js", "casora-panel-i18n.js", "casora-panel-addons.js", "casora-panel-types.js", "casora-panel-import.js", "casora-panel-assist.js", "casora-panel-welcome.js", "casora-panel-personal.js", "casora-panel-umzug.js", "casora-panel-basis.js", "casora-panel-versions.js", "casora-panel-updates.js", "casora-panel-settings.js", "casora-panel-popups.js", "casora-panel-kachelart.js", "casora-panel-b.js", "casora-panel-b-plus.js", "casora-panel-b-mehr.js"):
             try:
                 stamps.append(int(os.path.getmtime(os.path.join(panel_dir, name))))
             except OSError:
@@ -279,6 +279,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f'import "./casora-panel-welcome.js?v={v}";\n'
             f'import "./casora-panel-b.js?v={v}";\n'
             f'import "./casora-panel-b-plus.js?v={v}";\n'
+            f'import "./casora-panel-b-mehr.js?v={v}";\n'
         )
         path = os.path.join(panel_dir, "casora-studio.js")
         try:
