@@ -14870,6 +14870,9 @@ class CasoraPanel extends HTMLElement {
       const ok = !this._saveBlocked && await this._save();
       if (btn) btn.disabled = false;
       if (!ok) return;
+      // Das Dashboard lädt danach neu: „Gespeichert“ kurz zeigen, bevor das Studio geht.
+      this._status("Saved", "ok");
+      await new Promise((r) => setTimeout(r, 700));
     }
     this._leaving = true;
     this._openDash(true);
