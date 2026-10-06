@@ -12490,7 +12490,7 @@ class CasoraPanel extends HTMLElement {
     const s = this._flowScreen({
       full: true, icon: "palette",
       title: "Choose Your Look",
-      lede: "Casora is designed around its theme. You can change it later in the Studio under Look & Controls → Design.",
+      lede: "Casora is designed around its theme. You can change it later in the Studio under Dashboard → Look & Controls.",
       // Erststart: zurück zur Begrüßung; aus dem Menü: Schließen zurück ins Studio.
       back: this._dashUrl ? null : () => this._welcomeScreen(),
       closable: !!this._dashUrl,
