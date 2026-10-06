@@ -112,3 +112,16 @@ console.log('ok B-JS-05');
   assert.equal(dir('en', 45), 'NE'); assert.equal(dir('en', 135), 'SE'); assert.equal(dir('de', 45), 'NO');
 }
 console.log('ok B-TPL-08');
+
+// B-TPL-03/04 (Nachtrag): Energie-Gruppenbadge und Weich-Energie-Popup rechnen kW → W.
+{
+  const name = T.casora_badge_energy_group.name;
+  assert.ok(name.includes('const power = eid ? _toW(eid) : _sum;'), 'Gruppenbadge: einzelner Sensor über _toW');
+  const run = (state, unit) => new Function('variables', 'entity', 'states', 'hass', name.replace(/^\s*\[\[\[/, '').replace(/\]\]\]\s*$/, ''))(
+    { entity_power: 'sensor.p' }, { entity_id: 'sensor.p' }, { 'sensor.p': st(state, unit) }, { locale: { language: 'de' } });
+  assert.match(run(2.5, 'kW'), /2,5 kW/);
+  assert.match(run(442, 'W'), /442 W/);
+  const w = mod('05-weich-mehr.js');
+  assert.ok(w.includes('var p = watt(states, C.home), grid = watt(states, C.grid);'), 'Weich-Popup: Leistung über watt()');
+}
+console.log('ok B-TPL-03/04 Nachtrag');
