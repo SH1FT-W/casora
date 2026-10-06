@@ -7,6 +7,7 @@ B-PY-05: Konfigurieren-Dialog: „Ungültige Zeit“ nur unter Zeitplan-Feldern.
 B-PY-06: unpassende KI-Änderung beim Umzug („Vorlage anpassen“) → verständliche Meldung statt Absturz.
 SEC-02:  casora.umstellen und casora.einrichten nur für Admins.
 B-PY-07: beim Entladen/Entfernen verschwinden casora.einrichten und casora.umstellen.
+B-PY-08: Neustart-Schalter: die Liste der Abmelder wächst nicht mit jedem Einschalten.
 """
 
 from __future__ import annotations
@@ -137,7 +138,38 @@ async def t_py07():
     check("B-PY-07: Dienste beim Entladen entfernt", {"einrichten", "umstellen"} <= set(removed), repr(removed))
 
 
+async def t_py08():
+    from custom_components.casora import helfer
+
+    handlers, cancelled, scheduled = [], [], []
+    hass = SimpleNamespace(bus=SimpleNamespace(async_listen=lambda ev, cb: handlers.append(cb) or (lambda: None)))
+    real = helfer._legacy_automation, helfer._any_playing, helfer.async_call_later
+    helfer._legacy_automation = lambda *a: False
+    helfer._any_playing = lambda h: False
+
+    def later(h, delay, fn):
+        scheduled.append(fn)
+        return lambda: cancelled.append(fn)
+
+    helfer.async_call_later = later
+    runtime = {"unsub": []}
+    try:
+        helfer._setup_automatik(hass, runtime)
+        n0 = len(runtime["unsub"])
+        eid = helfer.RESTART_DONE[0]
+        for _ in range(5):
+            handlers[0](SimpleNamespace(data={"entity_id": eid, "new_state": SimpleNamespace(state="on")}))
+    finally:
+        helfer._legacy_automation, helfer._any_playing, helfer.async_call_later = real
+    check("B-PY-08: Abmelder-Liste wächst nicht", len(runtime["unsub"]) == n0, f"{n0} → {len(runtime['unsub'])}")
+    check("B-PY-08: alter Zeitgeber wird ersetzt", len(scheduled) == 5 and len(cancelled) == 4)
+    for u in runtime["unsub"]:
+        u()
+    check("B-PY-08: Entladen bricht den offenen Zeitgeber ab", len(cancelled) == 5)
+
+
 async def main():
+    await t_py08()
     await t_py07()
     await t_sec02()
     await t_py06()
