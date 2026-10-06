@@ -13,7 +13,7 @@
 //  6. Maus-Ziehen und Mausrad/Trackpad seitwärts wie Touch; Mausrad senkrecht blättert nicht
 // Messprotokoll (JSON) zusätzlich nach $CASORA_OUT/r30_swipe_gesten.json.
 import fs from 'node:fs';
-import { open, check, need, finish, usePage, BASE, atFinish } from './lib.mjs';
+import { open, check, need, finish, usePage, BASE, atFinish, stable } from './lib.mjs';
 import { ws } from '../ws.mjs';
 
 const DASH = 'qa-swipe';
@@ -173,7 +173,8 @@ async function session({ label, url, safari, device, overlay }) {
   const { PIERCE } = await import('../../e2e/harness.mjs');
   await page.addScriptTag({ content: PIERCE });
   await page.waitForFunction(() => window.__pierce('casora-swipe-card').some((s) => s.getBoundingClientRect().width > 0), null, { timeout: 60000 });
-  await page.waitForTimeout(3000);
+  // Bis die Swipe-Kacheln stehen (Lage + Zahl), statt fest 3 s.
+  await stable(page, () => window.__pierce('casora-swipe-card').map((s) => { const r = s.getBoundingClientRect(); return [Math.round(r.x), Math.round(r.y), Math.round(r.width)]; }), null, { max: 5000, quiet: 900 });
   await page.evaluate(PAGE_HELPERS);
   const filter = (f) => page.evaluate((v) => window.dispatchEvent(new CustomEvent('ll-custom', { detail: { casora_filter: v } })), f);
   const pick = (ms) => page.waitForFunction((o) => window.__swPick(o), overlay, { timeout: ms }).then(() => true, () => false);

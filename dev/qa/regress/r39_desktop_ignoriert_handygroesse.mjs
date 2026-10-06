@@ -7,7 +7,7 @@
 // Erwartet: Desktop (1440) – dieselbe Reihe mit großen Kacheln bleibt einreihig, alle Kacheln
 // gleich hoch, gleiche Abstände, nichts unter dem Bildrand. Handy (390) – dieselben Kacheln sind
 // groß (doppelt so hoch wie eine kleine).
-import { open, check, need, finish, usePage, BASE, atFinish } from './lib.mjs';
+import { open, check, need, finish, usePage, BASE, atFinish, stable } from './lib.mjs';
 import { ws } from '../ws.mjs';
 
 const DASH = 'qa-groesse';
@@ -103,8 +103,7 @@ try {
         });
     };
     await page.waitForFunction(tiles, min, { timeout: 60000 }).catch(() => {});
-    await page.waitForTimeout(4000);
-    const t = await page.evaluate(tiles, min);
+    const t = await stable(page, tiles, min, { max: 6000 });
     await need(`Desktop ${view}: Kachelreihe da`, t && t.length >= min, t);
     const top = Math.min(...t.map((x) => x.y));
     const inView = t.filter((x) => x.x < 1440);
@@ -127,7 +126,8 @@ try {
     await page.goto(BASE + '/' + DASH + '-mobile/home', { waitUntil: 'domcontentloaded' });
     const { PIERCE } = await import('../../e2e/harness.mjs');
     await page.addScriptTag({ content: PIERCE });
-    await page.waitForTimeout(6000);
+    await page.waitForFunction(() => window.__pierce('button-card').length > 0, null, { timeout: 60000 }).catch(() => {});
+    await stable(page, () => window.__pierce('button-card').length, null, { max: 8000, quiet: 1500 });
     const filter = (f) => page.evaluate((v) => window.dispatchEvent(new CustomEvent('ll-custom', { detail: { casora_filter: v } })), f);
     // Höhen der Kacheln im offenen Raum-Overlay (Reihenfolge wie in der Konfiguration).
     // Große Kacheln über ihre Entität erkennen: mit Raum-Kategorien (1.0.6) verteilt sich der Raum
@@ -157,8 +157,7 @@ try {
       m = await page.waitForFunction(measure, bigEnts, { timeout: 8000 }).then((h) => h.jsonValue(), () => null);
     }
     await need('Handy: Wohnzimmer-Overlay mit Kacheln', m, m);
-    await page.waitForTimeout(2500);
-    m = await page.evaluate(measure, bigEnts);
+    m = await stable(page, measure, bigEnts, { max: 5000 });
     const isBig = (x) => (x.big === null ? BIG.includes(x.i) : x.big);
     const shown = m.filter((x) => x.shown);
     const small = Math.min(...shown.map((x) => x.h));
