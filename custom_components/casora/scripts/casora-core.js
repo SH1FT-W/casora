@@ -3131,6 +3131,17 @@ window.casoraMenuGlass = {
         this._bar.classList.toggle('more-l-on', max > 2 && sc.scrollLeft > 2);
         this._bar.classList.toggle('more-r-on', max > 2 && sc.scrollLeft < max - 2);
       }
+      // D-14 (Weich, --casora-nav-fade-clear-l gesetzt): die linke Kante sitzt am Anfang des ersten
+      // ganz sichtbaren Raums – auch am Ende der Leiste, wo das Einrasten nicht mehr greift (sonst „r“ von „Flur“).
+      let edge = 0;
+      try { edge = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--casora-nav-fade-clear-l')) || 0; } catch (e) { edge = 0; }
+      if (edge > 0 && this._els) {
+        const x0 = sc.getBoundingClientRect().left;
+        const first = this._els.map((el) => el.btn.getBoundingClientRect().left - x0).filter((x) => x >= edge - 1)[0];
+        const at = first != null && sc.scrollLeft > 2 ? Math.max(edge, Math.round(first)) : null;
+        if (at != null) { sc.style.setProperty('--casora-nav-fade-clear-l', at + 'px'); sc.style.setProperty('--casora-nav-fade-solid-l', (at + 1) + 'px'); }
+        else { sc.style.removeProperty('--casora-nav-fade-clear-l'); sc.style.removeProperty('--casora-nav-fade-solid-l'); }
+      }
     }
 
     _syncBadges() {
