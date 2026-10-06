@@ -19375,7 +19375,18 @@ class CasoraPanel extends HTMLElement {
     const close = () => {
       active = -1;
       if (this._openCombo === close) { this._openCombo = null; this._openAnchor = null; }
+      listen(false);
       closeMenu(menu);
+    };
+    // Scrollen/Größe nur beobachten, solange die Liste offen ist. Vorher hing jedes Feld dauerhaft
+    // am Fenster – und hielt so nach jedem Neuzeichnen den ganzen alten Inspektor im Speicher.
+    let listening = false;
+    const listen = (on) => {
+      if (on === listening) return;
+      listening = on;
+      const f = on ? "addEventListener" : "removeEventListener";
+      window[f]("scroll", dismiss, true);
+      window[f]("resize", dismiss);
     };
 
     const place = () => {
@@ -19485,6 +19496,7 @@ class CasoraPanel extends HTMLElement {
         const host = comboHost();
         if (host !== this.$("overlay")) menu.style.zIndex = "400";
         host.appendChild(menu);
+        listen(true);
         playMenuIn(menu, place(), false);
       }
         else place();
@@ -19573,6 +19585,7 @@ class CasoraPanel extends HTMLElement {
         const host = comboHost();
         if (host !== this.$("overlay")) menu.style.zIndex = "400";
         host.appendChild(menu);
+        listen(true);
         playMenuIn(menu, place(), false);
       }
       else place();
@@ -19681,19 +19694,12 @@ class CasoraPanel extends HTMLElement {
     // A fixed menu would drift away from its input, so dismiss on scroll.
     const dismiss = () => {
       // Feld nicht mehr da (Formular neu gezeichnet): abmelden statt bei jedem Scrollen weiterzulaufen.
-      if (wrap._was && !wrap.isConnected && !menu.parentNode) {
-        window.removeEventListener("scroll", dismiss, true);
-        window.removeEventListener("resize", dismiss);
-        return;
-      }
+      if (!wrap.isConnected && !menu.parentNode) { listen(false); return; }
       if (!menu.parentNode) return;
       // The iOS keyboard scrolls and resizes the page as the field focuses; follow it instead of closing.
       if (this.shadowRoot.activeElement === input) { place(); return; }
       close();
     };
-    window.addEventListener("scroll", dismiss, true);
-    window.addEventListener("resize", dismiss);
-    requestAnimationFrame(() => { if (wrap.isConnected) wrap._was = true; });
 
     return { wrap, input };
   }
