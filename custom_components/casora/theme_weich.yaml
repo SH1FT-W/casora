@@ -160,6 +160,7 @@ Casora:
   casora-nav-more-ink: var(--casora-nav-label-color)
   casora-nav-chevron: var(--casora-text-2)
   casora-back-hit: -2px   # D-03: Zurück-Knopf sichtbar 40 px, Trefferfläche 44 px
+  casora-lpc-pill-pad-m: 14px 15px   # D-03: Raumfilter im Licht-Popup am Handy 44 px hoch (vorher 39)
   # Kachelreihe (smart-row): Pfeil links/rechts, solange dort noch Kacheln liegen (Audit H2)
   casora-row-arrows: block
   # Wie die Reihe zeigt, dass es weitergeht: arrows (Pfeile) | fade (Ausblenden + Punkte) | more („+N weitere“)
