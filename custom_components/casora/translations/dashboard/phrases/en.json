@@ -1389,7 +1389,14 @@
   "1 Kamera offline": "1 camera offline",
   "1 Schloss offline": "1 lock offline",
   "1 Tür gekippt": "1 door tilted",
-  "1 Tag": "1 day"
+  "1 Tag": "1 day",
+  "Wirklich ausschalten?": "Really turn off?",
+  "Wirklich einschalten?": "Really turn on?",
+  "Wirklich schließen?": "Really close?",
+  "Wirklich aufschließen?": "Really unlock?",
+  "Wirklich abschließen?": "Really lock?",
+  "Aufschließen": "Unlock",
+  "Abschließen": "Lock"
  },
  "patterns": [
   [

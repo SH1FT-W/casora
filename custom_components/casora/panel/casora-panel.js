@@ -212,6 +212,9 @@ function extractConfig(lovelace) {
     if (stable(nav) !== navNorm) warnings.push(`view "${v.path}" nav stack differs from view[0]`);
     if (row.type !== "custom:casora-smart-row") warnings.push(`view "${v.path}" card[2] is ${row.type}`);
 
+    // „visible“ leitet das Speichern aus Ausblenden/„Wer sieht das?“ ab (roomVisibility) –
+    // dann nicht als eigene Ansichts-Einstellung mitschleppen.
+    const own = roomVisibility(hero.variables);
     rooms.push({
       title: v.title,
       path: v.path,
@@ -220,7 +223,7 @@ function extractConfig(lovelace) {
       tiles: hostBareTiles(clone(row.cards) || []),
       _hero: omit(hero, ["name", "variables"]),
       _row: omit(row, ["cards"]),
-      _view: omit(v, ["type", "layout", "title", "path", "cards"]),
+      _view: omit(v, own.set ? ["type", "layout", "title", "path", "cards", "visible"] : ["type", "layout", "title", "path", "cards"]),
       _extraCards: clone(cards.slice(3)),
     });
   });
@@ -235,6 +238,18 @@ function extractConfig(lovelace) {
   };
 }
 
+// Raum ausgeblendet (casora_hidden) bzw. nur für bestimmte HA-Benutzer (casora_users, IDs):
+// Home Assistants eigene Mechanik – Ansicht „visible“ am Desktop, „visibility“ mit der
+// Bedingung „user“ an Kopf und Kachelreihe am Handy (casora-smart-row wertet sie aus).
+// Ausgeblendet heißt: für niemanden (users: []). dev/unit/studio_mehr.mjs
+function roomVisibility(V) {
+  const v = V || {};
+  const users = Array.isArray(v.casora_users) ? v.casora_users.filter((u) => typeof u === "string" && u) : [];
+  if (v.casora_hidden === true) return { set: true, hidden: true, users: [], view: false, cond: [{ condition: "user", users: [] }] };
+  if (users.length) return { set: true, hidden: false, users, view: users.map((u) => ({ user: u })), cond: [{ condition: "user", users }] };
+  return { set: false, hidden: false, users: [], view: undefined, cond: null };
+}
+
 function expandConfig(compact, scaffold, extras, templates) {
   const views = (compact.rooms || []).map((room) => ({
     type: scaffold.view_type,
@@ -242,6 +257,7 @@ function expandConfig(compact, scaffold, extras, templates) {
     path: room.path,
     layout: clone(scaffold.layout),
     ...clone(room._view),
+    ...(roomVisibility(room.variables).set ? { visible: roomVisibility(room.variables).view } : {}),
     cards: [
       { ...clone(room._hero), name: room.name, variables: clone(room.variables) },
       clone(scaffold.nav),
@@ -344,8 +360,11 @@ function expandMobileConfig(compact, scaffold, extras, templates, chrome) {
     put(header, "name", clone(room.name));
     const hv = clone(room.variables);
     if (hv && Object.keys(hv).length) header.variables = hv;
+    const row = { ...clone(room._row), cards: clone(room.tiles) };
+    const vis = roomVisibility(room.variables).cond;
+    [header, row].forEach((c) => { if (vis) c.visibility = clone(vis); else delete c.visibility; });
     kids.push(header);
-    kids.push({ ...clone(room._row), cards: clone(room.tiles) });
+    kids.push(row);
   });
 
   // The phone's bottom nav lists the rooms: rebuilt from the sections on every
@@ -358,10 +377,12 @@ function expandMobileConfig(compact, scaffold, extras, templates, chrome) {
       overlayKey[String(c.room).trim()] = c.filter_category || roomKeyOf(c.room);
     }
   });
-  const navRooms = rooms.filter((r) => !isFav(r) && !/^(scenes|szenen)$/i.test(String(r.name || "").trim())).map((r) => ({
-    key: overlayKey[String(r.name || "").trim()] || roomKeyOf(r.name), name: r.name,
-    icon: roomIconSrc(((r.variables || {}).room_icon) || autoRoomGlyph(r.name)),
-  }));
+  const navRooms = rooms.filter((r) => !isFav(r) && !/^(scenes|szenen)$/i.test(String(r.name || "").trim())
+    && !roomVisibility(r.variables).hidden).map((r) => {
+    const who = roomVisibility(r.variables).users;
+    return { key: overlayKey[String(r.name || "").trim()] || roomKeyOf(r.name), name: r.name,
+      icon: roomIconSrc(((r.variables || {}).room_icon) || autoRoomGlyph(r.name)), ...(who.length ? { users: who.slice() } : {}) };
+  });
   const extra = (clone(chrome.extraCards) || []).map((c) => (c && c.type === MOBILE_NAV
     ? { ...c, rooms: navRooms } : c));
 
@@ -1284,6 +1305,8 @@ function syncPairTiles(pair) {
       const next = { ...clone(twin.variables || {}), ...keep };
       if (Object.keys(next).length) mt.variables = next; else delete mt.variables;
       if (twin.name !== undefined) mt.name = twin.name; else delete mt.name;
+      // „Wer sieht das?“ (visibility mit Bedingung „user“) gilt auch am Handy.
+      if (twin.visibility !== undefined) mt.visibility = clone(twin.visibility); else delete mt.visibility;
       synced++;
     });
 
@@ -1564,6 +1587,12 @@ function syncPairRooms(pair) {
     const icon = (room.variables || {}).room_icon;
     if (icon) s.variables = { ...(s.variables || {}), room_icon: icon };
     else if (s.variables && s.variables.room_icon !== undefined) delete s.variables.room_icon;
+    // Ausgeblendet und „Wer sieht das?“ gelten auf beiden Geräten (expandMobileConfig).
+    ["casora_hidden", "casora_users"].forEach((k) => {
+      const v = (room.variables || {})[k];
+      if (v !== undefined && v !== null && v !== false && !(Array.isArray(v) && !v.length)) s.variables = { ...(s.variables || {}), [k]: clone(v) };
+      else if (s.variables && s.variables[k] !== undefined) delete s.variables[k];
+    });
   });
 
   // Foto der Startseite am Handy = Foto der Übersicht im Studio (casora_mobile_bg trägt
@@ -3130,8 +3159,12 @@ function retargetRoutes(root, urlPath, rooms, extras) {
     if (Array.isArray(node.routes)) {
       const keep = extras === undefined ? node.routes.filter((r) => !r.url) : extras;
       node.routes = rooms
+        // Ausgeblendete Räume fehlen in der Navigation; „Wer sieht das?“ filtert casora-nav je Benutzer.
+        .filter((r) => !roomVisibility(r.variables).hidden)
         .map((r) => {
           const route = { url: `/${urlPath}/${r.path}`, label: r.name, icon: roomIcon(r.name) };
+          const who = roomVisibility(r.variables).users;
+          if (who.length) route.users = who.slice();
           // Name der Übersicht wie Raumtitel und Handy-Leiste (casoraRoomName): route.auto nur, wenn
           // Casora ihn angelegt hat und er unverändert ist; ein eigener Name steht ohne Übersetzung.
           if (isDefaultHome(r, rooms)) route.auto = AUTO_HOME;
@@ -4013,6 +4046,20 @@ function condContainerDesc(t) {
   const ct = String(c.type || "");
   const how = /auto-entities/.test(ct) ? "automatic" : /swipe|carousel/.test(ct) ? "carousel" : Array.isArray(c.cards) ? "group" : "";
   return { type, label: type ? type.label : titleCase(ct.replace(/^custom:/, "").replace(/-/g, " ")), how };
+}
+
+// Geräteauswahl in der Übersicht: nach Raum wie im Studio (areaOrder = HA-Bereich je Raum),
+// dann übrige Bereiche alphabetisch, ohne Bereich zuletzt; innerhalb eines Raums wie bewertet.
+// dev/unit/studio_mehr.mjs
+function homePickOrder(cands, areaOrder, areas) {
+  const rank = (c) => {
+    const id = Object.keys(areas || {}).find((k) => (areas[k] || {}).name === c.area) || null;
+    const i = id ? areaOrder.indexOf(id) : -1;
+    return i >= 0 ? [0, i, ""] : c.area ? [1, 0, c.area] : [2, 0, ""];
+  };
+  return cands.map((c, n) => ({ c, n, r: rank(c) }))
+    .sort((x, y) => x.r[0] - y.r[0] || x.r[1] - y.r[1] || x.r[2].localeCompare(y.r[2]) || x.n - y.n)
+    .map((x) => x.c);
 }
 
 // Bedingungen als bearbeitbare Zeilen: {mode: all|any|none, rows: [{entity, op, value}]}.
@@ -20129,14 +20176,20 @@ class CasoraPanel extends HTMLElement {
   async _addTileAsk(room, type) {
     const all = this._tileCandidates(type, room);
     const sure = all.length > 0 && !!all[0].sure;
-    const cands = all.slice(0, sure ? 3 : 5);
+    let cands = all.slice(0, sure ? 3 : 5);
+    // Zuhause (Übersicht ohne HA-Bereich): Geräte aus allen Räumen – nach Raum geordnet wie die
+    // Räume im Studio, Geräte ohne Bereich zuletzt, und etwas mehr Auswahl (Nutzertest 06.10.2026).
+    const rooms = ((this._state || {}).compact || {}).rooms || [];
+    const overview = !sure && isHomeRoom(room, rooms) && !this._roomArea(room);
+    if (overview) cands = homePickOrder(all.slice(0, 8), rooms.map((r) => this._roomArea(r)), (this._hass || {}).areas || {});
     const tile = newTile(type);
     if (cands.length) {
       const tr = trLabel;
       const res = await this._ask({
         // Nutzertest: „Keine eindeutige Zuordnung“ klang nach Fehler – als einfache Frage stellen.
         title: sure ? tr("Matching device found") : tr("Which device should the tile show?"),
-        message: !sure
+        message: overview ? tr("The overview can show devices from every room – sorted by room here. Pick one or add the tile without a device.")
+          : !sure
           ? tr("Pick one – or add the tile without a device and choose it later.")
           : cands.length > 1
             ? tr("Casora suggests this device for the new tile. Pick another one or add the tile without a device.")
@@ -22082,8 +22135,15 @@ class CasoraPanel extends HTMLElement {
       return;
     }
 
-    if (!this._phoneFilter && wideV.show_media !== false && wideV.show_now_playing) {
-      const npall = this._npList(wideV);
+    // F-13: Am Handy zeigt die Karte „Aktuelle Wiedergabe“ des Mobil-Layouts (casora_mobile_now_playing)
+    // ihre eigenen Player, unabhängig vom Desktop-Schalter – die Vorschau zeigt sie genauso.
+    const mChrome = (this._state && this._state.surface === "mobile" ? this._state.chrome
+      : this._pair && this._pair.safe !== false && this._pair.mobile && this._pair.mobile.chrome) || null;
+    const mNp = ((mChrome && mChrome.items) || []).map((it) => it && it.card)
+      .find((c) => c && [].concat(c.template || []).includes("casora_mobile_now_playing"));
+    const npV = mNp ? { ...wideV, ...(mNp.variables || {}) } : wideV;
+    if (!this._phoneFilter && (mNp || (wideV.show_media !== false && wideV.show_now_playing))) {
+      const npall = this._npList(npV);
       if (npall.length) {
         const nphead = document.createElement("div");
         nphead.className = "mp-head";
@@ -25396,7 +25456,7 @@ window.__casoraPanelInternals = {
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
   linkPair, syncPairRooms, syncPairTiles, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, expandMobileConfig, extractMobileConfig,
-  deriveEnergyRooms,
+  deriveEnergyRooms, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
   CASORA_ACCENTS, accentLabel, swatchCss,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)
 };

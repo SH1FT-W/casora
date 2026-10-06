@@ -330,8 +330,15 @@
   // Im Studio ausgeblendete Kachel (variables.enabled: false) bzw. „nur Desktop“ (surfaces) –
   // auf den Handy-Raum- und Kategorieseiten überspringen wie in casora-smart-row (isCardDisabled).
   function _cardOffOnPhone(cfg) {
+    // „Wer sieht das?“ (visibility mit Bedingung „user“) – wie casora-smart-row.
+    let user = null;
+    try { user = document.querySelector('home-assistant')?.hass?.user || null; } catch (e) { user = null; }
+    const hides = (x) => Array.isArray(x?.visibility) && x.visibility.some((v) => v && v.condition === 'user'
+      && Array.isArray(v.users) && !(user && user.id && v.users.includes(user.id)));
+    if (hides(cfg)) return true;
     let c = cfg, depth = 0;
     while (c?.type === 'conditional' && c.card && depth++ < 4) c = c.card;
+    if (c !== cfg && hides(c)) return true;
     const v = c?.variables?.enabled;
     if (v === false || v === 'false' || v === 0 || v === '0') return true;
     return c?.variables?.surfaces === 'desktop';

@@ -1,3 +1,136 @@
+// Casora Studio „Wer sieht das?“ (06.10.2026): Badges und Räume nur für bestimmte HA-Benutzer.
+// casoraSeen(vars, badge, user, wert) – liefert false, wenn die Badge für diesen Benutzer
+// ausgeblendet ist, sonst den Wert unverändert (in den Vorlagen statt variables.show_<badge>).
+(function () {
+  var hassUser = function () {
+    try { var h = document.querySelector('home-assistant'); return (h && h.hass && h.hass.user) || null; }
+    catch (e) { return null; }
+  };
+  var allowed = function (list, user) {
+    if (!Array.isArray(list) || !list.length) return true;
+    var u = user || hassUser();
+    return !!(u && u.id && list.indexOf(u.id) !== -1);
+  };
+  window.casoraSeen = function (vars, badge, user, val) {
+    var m = vars && vars.casora_badge_users;
+    var l = m && typeof m === 'object' ? m[badge] : null;
+    return allowed(l, user) ? val : false;
+  };
+  window.casoraSeesRoute = function (route) { return !route || allowed(route.users, null); };
+})();
+
+// Rückfrage vor dem Schalten je Kachel (Studio: „Vor dem Schalten fragen“, variables.confirm_toggle).
+// Fängt die Aktion des Schalters ab (hass-action, wie button-card sie schickt), fragt in einem
+// ruhigen Dialog und schickt sie erst nach „Ausschalten“/„Einschalten“ weiter. Popups, Mehr-Infos
+// und Casoras feste Rückfragen bleiben unberührt. dev/unit/rueckfrage_kachel.mjs
+(function () {
+  if (window.__casoraAskFirst) return;
+  window.__casoraAskFirst = true;
+  var T = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
+  var passed = typeof WeakSet === 'function' ? new WeakSet() : null;
+  var asksFirst = function (ev) {
+    var path = ev.composedPath ? ev.composedPath() : [];
+    for (var i = 0; i < path.length && i < 40; i++) {
+      var c = path[i] && path[i]._config;
+      if (c && c.variables && c.variables.confirm_toggle === true) return c;
+    }
+    var d = (ev.detail && ev.detail.config) || {};
+    return d.variables && d.variables.confirm_toggle === true ? d : null;
+  };
+  // Nur echtes Schalten: toggle, Dienstaufruf (nicht „none“) – kein Popup, keine Mehr-Infos.
+  var switching = function (d) {
+    var cfg = (d && d.config) || {};
+    var act = cfg[((d && d.action) || 'tap') + '_action'] || {};
+    if (act.casora_popup) return null;
+    var a = String(act.action || '');
+    if (a === 'toggle') return act;
+    if (a !== 'call-service' && a !== 'perform-action') return null;
+    var svc = String(act.perform_action || act.service || '');
+    return svc && svc !== 'none' ? act : null;
+  };
+  var word = function (act, cfg) {
+    var h = document.querySelector('home-assistant');
+    var states = (h && h.hass && h.hass.states) || {};
+    var tgt = act.target || act.data || act.service_data || {};
+    var id = [].concat(tgt.entity_id || act.entity || cfg.entity || [])[0] || '';
+    var st = states[id];
+    var name = (cfg.name && typeof cfg.name === 'string' && cfg.name.indexOf('[[[') < 0 && cfg.name)
+      || (st && st.attributes && st.attributes.friendly_name) || id;
+    var svc = String(act.perform_action || act.service || '');
+    var s = st ? String(st.state) : '';
+    var verb = /\.turn_on$|\.open_cover$/.test(svc) ? 'Einschalten'
+      : /\.turn_off$|\.close_cover$/.test(svc) ? 'Ausschalten'
+      : /\.unlock$/.test(svc) ? 'Aufschließen' : /\.lock$/.test(svc) ? 'Abschließen'
+      : (s === 'on' || s === 'open' || s === 'playing' || s === 'unlocked') ? 'Ausschalten' : 'Einschalten';
+    if (/^cover\./.test(id) && verb === 'Einschalten') verb = 'Öffnen';
+    if (/^cover\./.test(id) && verb === 'Ausschalten') verb = 'Schließen';
+    return { name: name, verb: verb };
+  };
+  var ask = function (w) {
+    return new Promise(function (resolve) {
+      var host = document.createElement('div');
+      host.className = 'casora-askfirst';
+      var ha = document.querySelector('home-assistant');
+      if (ha && ha.hass && ha.hass.themes && ha.hass.themes.darkMode) host.classList.add('dark');
+      var root = host.attachShadow ? host.attachShadow({ mode: 'open' }) : host;
+      root.innerHTML = '<style>'
+        + ':host{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:16px;'
+        + 'background:rgba(0,0,0,.28);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);'
+        + 'font-family:var(--casora-font, var(--ha-font-family-body, Inter, system-ui, sans-serif));animation:af .16s ease-out}'
+        + '@keyframes af{from{opacity:0}to{opacity:1}}'
+        + '.box{width:min(320px,100%);padding:22px 20px 16px;border-radius:24px;text-align:center;'
+        // Deckend (Casoras Karten sind oft Glas): hell/dunkel wie HA.
+        + 'background:var(--casora-askfirst-bg,#fff);color:var(--casora-askfirst-ink,#1c1c1e);'
+        + 'box-shadow:0 18px 48px rgba(0,0,0,.24)}'
+        + 'h2{margin:0 0 4px;font-size:17px;font-weight:650;line-height:1.3;overflow-wrap:anywhere}'
+        + 'p{margin:0 0 18px;font-size:14px;line-height:1.4;opacity:.7}'
+        + ':host(.dark){--casora-askfirst-bg:#2a2a2e;--casora-askfirst-ink:#f2f2f4}'
+        + '.row{display:flex;gap:10px}button{flex:1 1 0;min-height:44px;border:0;border-radius:14px;font:inherit;font-size:15px;'
+        + 'font-weight:600;cursor:pointer}'
+        + '.no{background:rgba(127,127,127,.16);color:inherit}'
+        + '.yes{background:var(--casora-accent,var(--primary-color,#94603B));color:#fff}'
+        + 'button:focus-visible{outline:2px solid var(--casora-accent,var(--primary-color,#94603B));outline-offset:2px}'
+        + '</style><div class="box" role="alertdialog" aria-modal="true"><h2></h2><p></p>'
+        + '<div class="row"><button type="button" class="no"></button><button type="button" class="yes"></button></div></div>';
+      root.querySelector('h2').textContent = w.name;
+      root.querySelector('p').textContent = T('Wirklich ' + w.verb.toLowerCase() + '?');
+      root.querySelector('.no').textContent = T('Abbrechen');
+      root.querySelector('.yes').textContent = T(w.verb);
+      var done = function (ok) {
+        document.removeEventListener('keydown', key, true);
+        host.remove();
+        resolve(ok);
+      };
+      var key = function (e) {
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(false); }
+      };
+      document.addEventListener('keydown', key, true);
+      host.addEventListener('click', function (e) { if (e.composedPath()[0] === host) done(false); });
+      root.querySelector('.no').onclick = function () { done(false); };
+      root.querySelector('.yes').onclick = function () { done(true); };
+      document.body.appendChild(host);
+      setTimeout(function () { var y = root.querySelector('.yes'); if (y) y.focus(); }, 30);
+    });
+  };
+  window.addEventListener('hass-action', function (ev) {
+    if (passed && passed.has(ev)) return;
+    var d = ev.detail || {};
+    var act = switching(d);
+    if (!act) return;
+    var owner = asksFirst(ev);
+    if (!owner) return;
+    ev.stopImmediatePropagation();
+    var target = (ev.composedPath && ev.composedPath()[0]) || ev.target;
+    ask(word(act, Object.assign({}, owner, d.config || {}))).then(function (ok) {
+      if (!ok || !target) return;
+      var again = new CustomEvent('hass-action', { detail: d, bubbles: true, composed: true });
+      if (passed) passed.add(again);
+      target.dispatchEvent(again);
+    });
+  }, true);
+  window.__casoraAskFirstParts = { switching: switching, word: word };
+})();
+
 // Casoras Schriften (Inter, Hanken Grotesk) einmal fürs ganze Frontend:
 // Designs und die Schriftwahl setzen nur den Namen, die Dateien kommen von hier.
 (function () {
@@ -2847,7 +2980,8 @@ window.casoraMenuGlass = {
       }
       this._config  = config;
       this._variant = config.variant === 'tablet' ? 'tablet' : 'desktop';
-      this._routes  = config.routes.slice();
+      // „Wer sieht das?“ im Studio: Räume nur für bestimmte HA-Benutzer (route.users).
+      this._routes  = config.routes.filter(window.casoraSeesRoute || function () { return true; });
       this._sig     = JSON.stringify([this._variant, this._routes]);
       this._built   = false;
       this.shadowRoot.innerHTML = '';

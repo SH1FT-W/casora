@@ -32,6 +32,7 @@ const code = [
   'const autoRoomGlyph = () => "home";',
   one(/^const isIconPath = .*$/m),
   one(/^const roomIconSrc = .*$/m),
+  grab(/^function roomVisibility\(/m),
   grab(/^function extractMobileConfig\(/m),
   grab(/^function expandMobileConfig\(/m),
   'return { extractMobileConfig, expandMobileConfig };',

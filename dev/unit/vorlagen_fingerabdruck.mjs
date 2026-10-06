@@ -37,6 +37,7 @@ const code = [
   one(/^const isLiteralName = .*$/m),
   one(/^const isAutoHome = .*$/m),
   one(/^const isDefaultHome = .*$/m),
+  grab(/^function roomVisibility\(/m),
   grab(/^function retargetRoutes\(/m),
   'return { fingerprintOf, refreshTemplates, retargetRoutes, templatePrint, hashStr, stable };',
 ].join('\n');

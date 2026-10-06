@@ -16,6 +16,10 @@ WebSocket (nur Admins):
   casora/versions/list    ← {"url_path"} → {"versions": [{id, ts, kind, summary, rooms, from, current}]}
   casora/versions/get     ← {"url_path", "version"} → {"config", "mobile"}
   casora/versions/restore ← {"url_path", "version"} → {"id"}
+  casora/versions/label   ← {"url_path", "version", "name"?, "pinned"?} → {"ok"}
+
+Benannte Stände tragen „name“, angeheftete „pinned“: Angeheftete zählen nicht zu den
+KEEP Ständen und werden beim Aufräumen nie gelöscht (höchstens PIN_MAX je Dashboard).
 """
 
 from __future__ import annotations
@@ -37,6 +41,8 @@ from .const import DOMAIN
 
 FOLDER = "casora_versionen"
 KEEP = 30
+PIN_MAX = 20
+NAME_MAX = 80
 # Zusammenfassung (JSON aus dem Studio): abgeschnitten wäre sie unlesbar und fiele ganz weg.
 SUMMARY_MAX = 4000
 TPL = "button_card_templates"
@@ -146,16 +152,45 @@ class _Store:
         })
         versions.insert(0, {"id": vid, "ts": now.isoformat(), "hash": h, "mobile_url": mobile_url,
                             "rooms": _rooms(cfg), **meta})
-        for old in versions[KEEP:]:
+        versions, dropped = _trim(versions)
+        for old in dropped:
             try:
                 os.remove(os.path.join(self.dir, old["id"] + ".json"))
             except OSError:
                 pass
-        versions = versions[:KEEP]
         self._write_json(self.index_path, {"url_path": url_path, "versions": versions})
-        if len(versions) == KEEP:
+        if dropped or len(versions) >= KEEP:
             self._gc()
         return vid
+
+    def label(self, vid: str, name: str | None, pinned: bool | None) -> None:
+        """Namen setzen (leer = entfernen) und/oder anheften bzw. lösen."""
+        with _LOCK:
+            data = {}
+            try:
+                with open(self.index_path, encoding="utf-8") as fh:
+                    data = json.load(fh)
+            except (OSError, ValueError):
+                pass
+            versions = data.get("versions", [])
+            entry = next((v for v in versions if v.get("id") == vid), None)
+            if entry is None:
+                raise ValueError("not found")
+            if name is not None:
+                name = name.strip()[:NAME_MAX]
+                if name:
+                    entry["name"] = name
+                else:
+                    entry.pop("name", None)
+            if pinned is not None:
+                if pinned and not entry.get("pinned") and sum(1 for v in versions if v.get("pinned")) >= PIN_MAX:
+                    raise OverflowError("too many pinned")
+                if pinned:
+                    entry["pinned"] = True
+                else:
+                    entry.pop("pinned", None)
+            data["versions"] = versions
+            self._write_json(self.index_path, data)
 
     def get(self, vid: str) -> dict:
         if not re.fullmatch(r"[0-9-]+", vid):
@@ -190,6 +225,20 @@ class _Store:
                     os.remove(f.path)
                 except OSError:
                     pass
+
+
+def _trim(versions: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Die neuesten KEEP nicht angehefteten Stände behalten, angeheftete immer."""
+    keep, dropped, loose = [], [], 0
+    for v in versions:
+        if v.get("pinned"):
+            keep.append(v)
+        elif loose < KEEP:
+            keep.append(v)
+            loose += 1
+        else:
+            dropped.append(v)
+    return keep, dropped
 
 
 def _rooms(cfg: dict | None) -> list[str]:
@@ -234,7 +283,7 @@ async def ws_snap(hass: HomeAssistant, connection: websocket_api.ActiveConnectio
 async def ws_list(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
     store = _Store(hass.config.path(FOLDER), msg["url_path"])
     versions = await hass.async_add_executor_job(store.index)
-    out = [{k: v.get(k) for k in ("id", "ts", "kind", "summary", "rooms", "from")} for v in versions]
+    out = [{k: v.get(k) for k in ("id", "ts", "kind", "summary", "rooms", "from", "name", "pinned")} for v in versions]
     # Ist der neueste Stand genau das, was gerade gespeichert ist?
     if versions:
         cfg = await _load(hass, msg["url_path"])
@@ -288,10 +337,34 @@ async def ws_restore(hass: HomeAssistant, connection: websocket_api.ActiveConnec
     connection.send_result(msg["id"], {"id": vid})
 
 
+@websocket_api.require_admin
+@websocket_api.websocket_command({
+    vol.Required("type"): "casora/versions/label",
+    vol.Required("url_path"): str,
+    vol.Required("version"): str,
+    vol.Optional("name"): vol.Any(str, None),
+    vol.Optional("pinned"): bool,
+})
+@websocket_api.async_response
+async def ws_label(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
+    store = _Store(hass.config.path(FOLDER), msg["url_path"])
+    name = msg.get("name")
+    try:
+        await hass.async_add_executor_job(store.label, msg["version"],
+                                          "" if "name" in msg and name is None else name, msg.get("pinned"))
+    except OverflowError:
+        connection.send_error(msg["id"], "too_many", f"at most {PIN_MAX} pinned versions")
+        return
+    except (OSError, ValueError) as err:
+        connection.send_error(msg["id"], "not_found", str(err))
+        return
+    connection.send_result(msg["id"], {"ok": True})
+
+
 @callback
 def async_setup_versions(hass: HomeAssistant) -> None:
     if hass.data.get(DOMAIN, {}).get("versions_ws"):
         return
-    for cmd in (ws_snap, ws_list, ws_get, ws_restore):
+    for cmd in (ws_snap, ws_list, ws_get, ws_restore, ws_label):
         websocket_api.async_register_command(hass, cmd)
     hass.data.setdefault(DOMAIN, {})["versions_ws"] = True
