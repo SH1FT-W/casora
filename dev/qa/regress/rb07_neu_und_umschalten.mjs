@@ -1,8 +1,8 @@
 // @zustand: arbeit
 // @parallel: ui
 // Neues Studio (B, ab 1.1.0-beta.1): Update-Hinweis und Umschalter. Erwartet: Nach dem Update von
-// einer älteren Version zeigt „Neu in Casora“ die volle Vorabversion (1.1.0-beta.1, nicht
-// „1.1.0-beta“) und das neue Studio als erste Neuerung; das Studio nennt dieselbe Version. Wer über
+// einer älteren Version zeigt „Neu in Casora“ die volle Version (1.1.0-beta.1, nicht
+// „1.1.0-beta“) mit ihren Neuerungen; das Studio nennt dieselbe Version. Wer über
 // „…“ → „Neues Studio“ zum bisherigen Studio wechselt, behält das nach neuem Laden (pro Browser).
 // Es wird nichts gespeichert.
 import fs from 'node:fs';
@@ -25,7 +25,10 @@ const pop = await o.page.waitForFunction(() => { const h = window.__pierce('#cw-
 await check('„Neu in Casora“ erscheint nach dem Update', !!pop, pop);
 await check('Titel nennt die volle Version ' + version, !!pop && pop.includes(version) && !new RegExp(version.replace(/[.]/g, '\\.') + '\\.').test(pop), pop);
 const items = await H(() => window.casoraWhatsNew && window.casoraWhatsNew('de'));
-await check('Erste Neuerung: das neue Studio, gleiche Version', !!items && /Studio/.test(items.items[0][0]) && items.version === version, items);
+// Nicht vom Inhalt des Release-Eintrags abhängen (wechselt mit jedem Release): nur gleiche Version
+// und mindestens eine Neuerung mit Titel und Text.
+await check('Neuerungen zur gleichen Version', !!items && items.version === version && Array.isArray(items.items)
+  && items.items.length > 0 && items.items.every((x) => x && x[0] && x[1]), items);
 await o.page.keyboard.press('Escape');
 await o.page.waitForTimeout(800);
 const ver = await H(() => { const v = window.__panel().shadowRoot.querySelector('.ver'); return v ? v.textContent.trim() : null; });
