@@ -69,9 +69,11 @@ const room = (name, extra) => ({ name, vars: { ...(extra || {}) } });
 const t = [room('Schlafzimmer'), room('Wohnzimmer'), room('Büro'), room('Küche'), room('Flur')];
 B.fillBadges(hass, t);
 const pw = (r) => r.vars.energy_power_entity || null;
-assert.equal(pw(t[0]), 'sensor.steckdose_nachttisch_leistung', 'Steckdose mit 0 W zählt');
+// 06.10.2026: Geräte stehen immer in der Liste (auch ein einzelnes), nur ein Raumsensor im Einzelfeld.
+const one = (r) => pw(r) || (r.vars.energy_entities || []).join(',') || null;
+assert.equal(one(t[0]), 'sensor.steckdose_nachttisch_leistung', 'Steckdose mit 0 W zählt');
 assert.equal(pw(t[1]), 'sensor.wohnzimmer_gesamt_leistung', 'Raum-Gesamtsensor vor der Steckdose');
-assert.equal(pw(t[2]), 'sensor.rechner_leistung', 'kW ohne Geräteklasse, auch gerade nicht erreichbar');
+assert.equal(one(t[2]), 'sensor.rechner_leistung', 'kW ohne Geräteklasse, auch gerade nicht erreichbar');
 assert.equal(pw(t[3]), null, 'Solar/Akku sind keine Raum-Messung');
 assert.equal(pw(t[4]), null, 'ohne Leistungssensor keine Energie-Badge');
 // Mehrere Geräte, kein Raumsensor: Liste statt erstem Sensor, je Gerät einer.
@@ -80,7 +82,7 @@ B.fillBadges(hass, ar);
 assert.equal(pw(ar[0]), null, 'mehrere Geräte: kein einzelner Sensor');
 assert.deepEqual(ar[0].vars.energy_entities, ['sensor.steckdose_drucker_leistung', 'sensor.steckdose_monitor_leistung'], 'alle Geräte, je Gerät ein Sensor');
 assert.equal(t[1].vars.energy_entities, undefined, 'Raumsensor geht vor: keine Liste');
-assert.equal(t[0].vars.energy_entities, undefined, 'ein einzelnes Gerät bleibt energy_power_entity');
+assert.deepEqual(t[0].vars.energy_entities, ['sensor.steckdose_nachttisch_leistung'], 'ein einzelnes Gerät: Liste mit einem Eintrag');
 // Eingetragene Liste bleibt, wird nicht ergänzt.
 const arOwn = [room('Arbeitszimmer', { energy_entities: ['sensor.steckdose_monitor_leistung'] })];
 assert.deepEqual(B.fillBadges(hass, arOwn)[0], [], 'eigene Liste bleibt');
@@ -94,7 +96,7 @@ assert.deepEqual(B.fillBadges(hass, arOwn)[0], [], 'eigene Liste bleibt');
   const S = { ...hass.states, 'sensor.haus': { state: '999', attributes: {} } };
   const sub = (vars) => /badge-sub">([^<]*)</.exec(nameFn(S, { locale: { language: 'de' } }, vars))[1];
   assert.equal(sub({ power_entities: ['sensor.steckdose_monitor_leistung', 'sensor.steckdose_drucker_leistung'] }), '240 W', 'Summe 40 W + 0,2 kW');
-  assert.equal(sub({ power_entity: 'sensor.fernseher_steckdose_power', power_entities: ['sensor.steckdose_monitor_leistung'] }), '85 W', 'eigener Sensor geht vor');
+  assert.equal(sub({ power_entity: 'sensor.fernseher_steckdose_power', power_entities: ['sensor.steckdose_monitor_leistung'] }), '40 W', 'die Liste geht vor (06.10.2026)');
   assert.equal(sub({}), '999 W', 'ohne alles weiter der Hausverbrauch');
   const rc = T.casora_room.custom_fields.badges.card.cards.find((c) => c.template === 'casora_badge_energy_group');
   assert.ok(/energy_entities/.test(rc.variables.power_entities), 'Raum gibt die Liste ans Popup (power_entities)');
@@ -116,8 +118,8 @@ const rooms = [
 ];
 assert.equal(fillRoomEnergy(hass, rooms), 1);
 assert.equal(rooms[0].variables.energy_power_entity, undefined, 'Home unverändert');
-assert.equal(rooms[1].variables.energy_power_entity, 'sensor.steckdose_nachttisch_leistung');
-assert.equal(rooms[1].variables.casora_energy_auto, true);
+assert.deepEqual(rooms[1].variables.energy_entities, ['sensor.steckdose_nachttisch_leistung']);
+assert.equal(rooms[1].variables.casora_energy_auto, 2);
 assert.equal(rooms[2].variables.energy_power_entity, undefined, 'Flur ohne Messung');
 assert.equal(rooms[3].variables.energy_power_entity, undefined, 'Büro ausgeschaltet');
 // Bestehendes Dashboard: Raum mit mehreren Geräten bekommt die Liste, einmal.
@@ -130,16 +132,19 @@ const rooms3 = [{ name: 'Home', path: 'home', variables: {} },
   { name: 'Arbeitszimmer', path: 'a', variables: { energy_power_entity: 'sensor.steckdose_drucker_leistung' } },
   { name: 'Arbeitszimmer', path: 'b', variables: { energy_power_entity: 'sensor.steckdose_monitor_leistung' } },
   { name: 'Wohnzimmer', path: 'wz', variables: { energy_power_entity: 'sensor.fernseher_steckdose_power' } }];
-assert.equal(fillRoomEnergy(hass, rooms3), 2);
+assert.equal(fillRoomEnergy(hass, rooms3), 3);
 assert.equal(rooms3[1].variables.energy_power_entity, undefined, 'erstes Gerät → Summe');
 assert.equal(rooms3[1].variables.energy_entities.length, 2);
 assert.equal(rooms3[1].variables.casora_energy_sum, true);
 // Altfall ohne Markierung: auch ein anderes Gerät des Bereichs als das erste wird zur Summe.
 assert.equal(rooms3[2].variables.energy_power_entity, undefined, 'Gerätesensor ohne Markierung → Summe');
 assert.equal(rooms3[2].variables.casora_energy_sum, true);
-assert.equal(rooms3[3].variables.energy_power_entity, 'sensor.fernseher_steckdose_power', 'Raum mit Gesamtsensor unverändert');
+assert.deepEqual(rooms3[3].variables.energy_entities, ['sensor.fernseher_steckdose_power'], 'eigene Wahl bleibt, als Liste mit einem Eintrag');
+assert.equal(rooms3[3].variables.energy_power_entity, undefined);
 rooms3[1].variables.energy_power_entity = 'sensor.steckdose_drucker_leistung'; delete rooms3[1].variables.energy_entities;
-assert.equal(fillRoomEnergy(hass, rooms3), 0, 'Umstellung nur einmal je Raum');
+assert.equal(fillRoomEnergy(hass, rooms3), 1, 'Umstellung zur Summe nur einmal je Raum');
+assert.deepEqual(rooms3[1].variables.energy_entities, ['sensor.steckdose_drucker_leistung'], 'danach eigene Wahl: bleibt (als Liste)');
+assert.equal(fillRoomEnergy(hass, rooms3), 0, 'danach nichts mehr');
 // Je Gerät: Gesamtsensor allein, sonst alle Kanäle – keine Doppelzählung, kein Kanal verloren.
 const hw = [room('Hauswirtschaft')];
 B.fillBadges(hass, hw);
@@ -149,12 +154,12 @@ assert.deepEqual(hw[0].vars.energy_entities, ['sensor.shelly_boiler_device_power
 const rooms4 = [{ name: 'Home', path: 'home', variables: {} },
   { name: 'Hauswirtschaft', path: 'hw', variables: { energy_power_entity: 'sensor.shelly_trockner_switch_0_power' } },
   { name: 'Schlafzimmer', path: 'sz', variables: { energy_power_entity: 'sensor.steckdose_nachttisch_leistung' } }];
-assert.equal(fillRoomEnergy(hass, rooms4), 1);
+assert.equal(fillRoomEnergy(hass, rooms4), 2);
 assert.equal(rooms4[1].variables.energy_entities.length, 3);
 assert.equal(rooms4[1].variables.casora_energy_sum, true);
-assert.equal(rooms4[2].variables.energy_power_entity, 'sensor.steckdose_nachttisch_leistung', 'einziges Gerät bleibt');
+assert.deepEqual(rooms4[2].variables.energy_entities, ['sensor.steckdose_nachttisch_leistung'], 'einziges Gerät bleibt (als Liste)');
 // Entfernt der Nutzer den Sensor, kommt er beim nächsten Laden nicht wieder.
-delete rooms[1].variables.energy_power_entity;
+delete rooms[1].variables.energy_entities;
 assert.equal(fillRoomEnergy(hass, rooms), 0);
-assert.equal(rooms[1].variables.energy_power_entity, undefined);
+assert.equal(rooms[1].variables.energy_entities, undefined);
 console.log('ok raum_energie');
