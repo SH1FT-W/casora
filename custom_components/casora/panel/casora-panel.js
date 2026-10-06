@@ -2026,6 +2026,7 @@ const SECTIONS = [
     label: "Climate", bid: "climate", icon: "fan", toggle: "show_climate",
     iconColor: studioIcon("badge-climate"), group: "badges",
     fields: [
+      { ...T("climate_title", "Name on the badge"), always: true, ord: -1, placeholder: "Climate" },
       { ...E("humidity_sensor", "Humidity", ["sensor"]), classes: ["humidity"], ord: 3 },
       { ...E("quality_sensor", "Air quality", ["sensor"]), classes: AIR_CLASSES, ord: 4 },
       { key: "temp_unit", label: "Unit", type: "select", options: ["", "F", "C"], auto: true, ord: 1,
@@ -2051,6 +2052,7 @@ const SECTIONS = [
     label: "Lights", bid: "lights", icon: "light", toggle: "show_lights",
     iconColor: studioIcon("badge-light"), group: "badges",
     fields: [
+      { ...T("lights_title", "Name on the badge"), always: true, ord: -1, placeholder: "Lights" },
       { ...E("light_group_entity", "Light group", ["light"]), ord: 1,
         hint: "Each light in the group becomes a sub-badge." },
     ],
@@ -2064,6 +2066,7 @@ const SECTIONS = [
   {
     label: "People", bid: "people", icon: "person", toggle: "show_people", iconColor: studioIcon("badge-people"), group: "badges",
     fields: [
+      { ...T("people_title", "Name on the badge"), always: true, ord: -1, placeholder: "People" },
       { key: "show_people_inline", label: "Separate people badges", type: "bool", boolDefault: false, always: true,
         hint: "Shows each person as their own badge instead of one People badge." },
     ],
@@ -2071,13 +2074,17 @@ const SECTIONS = [
   },
   {
     label: "Media", bid: "media", icon: "media", toggle: "show_media", iconColor: studioIcon("badge-media"), group: "badges",
-    fields: mediaSources(),
+    fields: [
+      { ...T("media_title", "Name on the badge"), always: true, ord: -1, placeholder: "Media" },
+      ...mediaSources(),
+    ],
     repeats: mediaRepeats(),
   },
   {
     label: "Security", bid: "security", icon: "lock-fill", toggle: "show_security",
     iconColor: studioIcon("badge-security"), group: "badges",
     fields: [
+      { ...T("security_title", "Name on the badge"), always: true, ord: -1, placeholder: "Security" },
       // Rooms set up before the group badges existed point at one lock directly.
       { ...E("security_lock_entity", "Lock", ["lock"]), noAdd: true, ord: 0 },
       { ...E("security_lock_entity_2", "Lock 2", ["lock"]), noAdd: true, ord: 0 },
@@ -2117,6 +2124,7 @@ const SECTIONS = [
     label: "Energy", bid: "energy", icon: "energy", toggle: "show_energy",
     iconColor: studioIcon("badge-energy"), group: "badges",
     fields: [
+      { ...T("energy_title", "Name on the badge"), always: true, ord: -1, placeholder: "Energy" },
       { ...E("energy_power_entity", "Room power", ["sensor"]), classes: ["power"], ord: 1,
         hint: "The number the Energy badge shows. Without it, the badge shows today's cost." },
       { ...LIST("energy_entities", "Devices (added up)", ["sensor"]), classes: ["power"], unitLabel: "Power sensors", ord: 1,
@@ -20951,6 +20959,11 @@ class CasoraPanel extends HTMLElement {
       out.push({ id: "scenes", label: "Scenes", icon: "scenes", color: studioIcon("scenes"),
         dim: !act, text: act ? act + " active" : "None active", subs });
     }
+    // „Name auf dem Badge“: eigener Name statt des Standardnamens, unübersetzt (wie im Dashboard).
+    out.forEach((b) => {
+      const own = String(V[b.id + "_title"] || "").trim();
+      if (own) { b.label = own; b.raw = true; }
+    });
     return out;
   }
 
@@ -23797,8 +23810,8 @@ class CasoraPanel extends HTMLElement {
     let kind = type.raw ? tileLabel(tile).replace(/^custom:/, "")
       : (tile.name && tile.name.trim() ? "" : type.label);
     let shown = tile.name || "(unnamed)";
-    // Bedingte Kachel ohne eigenen Namen: der Typ ist der Name. Sammelkarte: Typ + Art.
-    if (condIn && !(tile.name && tile.name.trim())) { shown = type.label; kind = ""; }
+    // Ohne eigenen Namen heißt die Kachel wie auf dem Dashboard: nach ihrer Art („3D-Drucker“).
+    if (!(tile.name && tile.name.trim()) && type.label && !type.raw) { shown = type.label; kind = ""; }
     let condKind = false;
     if (contDesc) { shown = contDesc.label; kind = contDesc.how ? tr0(contDesc.how) : ""; condKind = true; }
     // Eigene Karte: oben ihr Name (eigener oder aus der Karte gelesen), darunter die Art.
@@ -24137,7 +24150,7 @@ class CasoraPanel extends HTMLElement {
     if (type.label && !type.raw) nameIn.placeholder = newTile(type).name;
     nameIn.onchange = () => {
       tile.name = nameIn.value.trim();
-      nameEl.textContent = (tile.name || "(unnamed)") + " ";
+      nameEl.textContent = (tile.name || (type.label && !type.raw ? type.label : "") || "(unnamed)") + " ";
       this._syncPreview();
     };
     if (isCustom) {

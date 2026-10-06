@@ -1,6 +1,7 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "Name on the badge": "Name auf dem Badge",
     "The settings could not be read. Reload the page, then try again.": "Die Einstellungen ließen sich nicht lesen. Lade die Seite neu und versuche es dann noch einmal.",
     "Search by name, room or ID": "Nach Name, Raum oder ID suchen",
     "Without room": "Ohne Raum",
@@ -625,7 +626,7 @@
     "Sort active tiles to the front": "Aktive Kacheln nach vorne sortieren",
     "Suffix": "Suffix",
     "The cards along the bottom of the room.": "Die Kacheln unten im Raum.",
-    "The pills under the room name. On a phone, they filter the tiles.": "Die Badges unter dem Raumnamen.",
+    "The pills under the room name. On a phone, they filter the tiles.": "Die Badges unter dem Raumnamen. Am Handy filtern sie die Kacheln.",
     "This month": "Diesen Monat",
     "Tile": "Kachel",
     "Time sensor": "Zeitsensor",
@@ -755,7 +756,7 @@
     "Size on phone": "Größe in der Mobilansicht",
     "Alarm system": "Alarmanlage",
     "Separate people badges": "Personen als eigene Badges",
-    "Shows each person as their own badge instead of one People badge.": "Zeigt jede Person als eigene Badge statt einer gemeinsamen Personen-Badge.",
+    "Shows each person as their own badge instead of one People badge.": "Zeigt jede Person als eigenes Badge statt eines gemeinsamen Personen-Badges.",
     "Show as": "Anzeigen als",
     "Badge on Home": "Badge auf „Zuhause“",
     "Menu in the navigation bar": "Menü in der Navigationsleiste",
