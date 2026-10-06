@@ -99,7 +99,11 @@ async function run(o, tag, phone) {
   for (const k of ['General', 'Weather', 'Time', 'Notifications', 'Scenes']) {
     await look('Abschnitt ' + k, async () => { await tool('dash'); await page.waitForTimeout(400); await pick('sec:' + k); });
   }
-  await look('Zeitreise', async () => { await tool('dash'); await page.waitForTimeout(400); await pick('versions'); });
+  // Zeitreise steht seit UX-03 im Titelmenü (Dashboard-Name oben links).
+  const title = () => H(() => { const r = window.__panel().shadowRoot;
+    [...r.querySelectorAll('#roomtitle, #navtitle')].find((x) => x.getClientRects().length).click(); });
+  await look('Titelmenü', () => title(), true);
+  await look('Zeitreise', async () => { await title(); await page.waitForTimeout(400); await pick('doc:versions'); });
   await look('Zuhause-Menü', () => tool('home'), true);
   for (const k of ['home', 'alerts', 'dashboards', 'ai', 'outdoor', 'vent']) {
     await look('Seite ' + k, async () => { await tool('home'); await page.waitForTimeout(400); await pick('page:' + k); });

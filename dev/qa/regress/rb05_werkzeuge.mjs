@@ -1,10 +1,11 @@
 // @zustand: arbeit
 // @parallel: ui
 // Neues Studio (B): Alles aus der früheren Seitenleiste bleibt über die Werkzeugleiste erreichbar.
-// Erwartet: Dashboard-Menü öffnet Design & Bedienung, Wetter, Uhrzeit, Benachrichtigungen,
-// Szenen und die Zeitreise; Zuhause-Menü alle Einstellungsseiten und Updates; das Raummenü
-// wechselt Räume und verschiebt sie; „…“ → „Neues Studio“ schaltet zurück zum bisherigen Studio
-// und wieder an. Es wird nichts gespeichert.
+// Erwartet: Dashboard-Menü öffnet Design & Bedienung, Wetter, Uhrzeit, Benachrichtigungen und
+// Szenen; das Titelmenü (Dashboard-Name) wechselt Dashboards und enthält Umbenennen, Symbol,
+// Zeitreise und Löschen (UX-03), „…“ diese nicht mehr; Einstellungen-Menü alle Einstellungsseiten
+// und Updates; das Raummenü wechselt Räume, verschiebt sie und öffnet „Räume ordnen“;
+// „…“ → „Neues Studio“ schaltet zurück zum bisherigen Studio und wieder an. Es wird nichts gespeichert.
 import { open, studio, casoraDashboard, check, need, finish } from './lib.mjs';
 
 const dash = await casoraDashboard();
@@ -19,16 +20,20 @@ const close = () => H(() => window.__panel()._bClose());
 await page.locator('.btool[data-b=dash]').click();
 await page.waitForTimeout(600);
 const dm = await menu();
-await check('Dashboard-Menü: Design & Bedienung, Wetter, Uhrzeit, Benachrichtigungen, Szenen, Zeitreise',
-  ['Design & Bedienung', 'Wetter', 'Uhrzeit', 'Benachrichtigungen', 'Szenen', 'Zeitreise'].every((x) => dm.some((t) => t.replace(/^✓/, '').indexOf(x) === 0)), dm);
+await check('Dashboard-Menü: Design & Bedienung, Wetter, Uhrzeit, Benachrichtigungen, Szenen',
+  ['Design & Bedienung', 'Wetter', 'Uhrzeit', 'Benachrichtigungen', 'Szenen'].every((x) => dm.some((t) => t.replace(/^✓/, '').indexOf(x) === 0)), dm);
 await page.locator('.combo-opt', { hasText: 'Wetter' }).first().click();
 await page.waitForTimeout(1200);
 const w = await H(() => { const p = window.__panel(); return { open: p.classList.contains('binsp'), sel: p._sel && p._sel.key }; });
 await check('Wetter öffnet im Inspektor', w.open && w.sel === 'Weather', w);
 await close();
 
-await page.locator('.btool[data-b=dash]').click();
-await page.waitForTimeout(500);
+// Titelmenü: Dashboards und alles zu diesem Dashboard
+await page.locator('#roomtitle').click();
+await page.waitForTimeout(600);
+const tm = await menu();
+await check('Titelmenü: Dashboard erstellen, Umbenennen, Symbol, Zeitreise, Löschen',
+  ['Dashboard erstellen', 'Umbenennen', 'Symbol', 'Zeitreise', 'Löschen'].every((x) => tm.some((t) => t.replace(/^✓/, '').indexOf(x) === 0)), tm);
 await page.locator('.combo-opt', { hasText: 'Zeitreise' }).first().click();
 await page.waitForTimeout(2000);
 const z = await H(() => { const p = window.__panel(); return { cv: !!p._cvOpen, open: p.classList.contains('binsp') }; });
@@ -36,7 +41,17 @@ await check('Zeitreise öffnet als Seite', z.cv && z.open, z);
 await close();
 await page.waitForTimeout(600);
 
-// Zuhause-Menü
+// „…“: keine Dashboard-Einträge mehr
+await page.locator('#more').click();
+await page.waitForTimeout(500);
+const mm = await menu();
+await check('„…“ ohne Umbenennen/Löschen (stehen im Titelmenü)', !mm.some((t) => /^✓?(Umbenennen|Löschen)/.test(t)), mm);
+await page.keyboard.press('Escape');
+await page.waitForTimeout(400);
+
+// Einstellungen-Menü (für alle Dashboards)
+const hl = await H(() => window.__panel().shadowRoot.querySelector('.btool[data-b=home] .blabel').textContent.trim());
+await check('Knopf heißt „Einstellungen“', hl === 'Einstellungen', hl);
 await page.locator('.btool[data-b=home]').click();
 await page.waitForTimeout(600);
 const hm = await menu();
@@ -56,7 +71,7 @@ const r0 = await H(() => { const p = window.__panel(); p._room = 1; p._renderTab
 await page.locator('.btool[data-b=rooms]').click();
 await page.waitForTimeout(600);
 const rm = await menu();
-await check('Raummenü: Nach vorne / Nach hinten', rm.some((t) => /Nach hinten|Move later/.test(t)), rm);
+await check('Raummenü: Nach vorne / Nach hinten / Räume ordnen', rm.some((t) => /Nach hinten|Move later/.test(t)) && rm.some((t) => /Räume ordnen/.test(t)), rm);
 await page.locator('.combo-opt', { hasText: /Nach hinten|Move later/ }).first().click();
 await page.waitForTimeout(1000);
 const r1 = await H(() => { const p = window.__panel(); return { paths: p._state.compact.rooms.map((r) => r.path), room: p._room }; });
