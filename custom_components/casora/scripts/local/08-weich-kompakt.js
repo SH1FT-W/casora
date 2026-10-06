@@ -335,7 +335,7 @@
     return '<div class="lkbar" role="switch" aria-checked="' + open + '" style="display:flex;align-items:center;gap:14px;min-height:66px;box-sizing:border-box;'
       /* D-06: eine Zeilenart – entriegelt (aktiv) hell und erhoben wie die aktive Geräte-Zeile darunter, sonst Sand. */
       + 'padding:10px 14px 10px 14px;border-radius:var(--casora-popup-row-radius, 24px);background:'
-      + (open ? 'var(--casora-entity-background-active, var(--casora-soft-row-fill, rgba(140,115,90,0.07)));box-shadow:var(--button-card-box-shadow-active-mobile, none);'
+      + (open ? 'var(--casora-entity-background-active, var(--casora-soft-seg-on, #FFFDF9));box-shadow:var(--button-card-box-shadow-active-mobile, var(--casora-soft-seg-on-shadow, none));'
         : 'var(--casora-soft-row-fill, rgba(140,115,90,0.07));')
       + 'font-family:var(--primary-font-family, system-ui);text-align:left;line-height:normal;cursor:pointer;">'
       + '<div style="width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;background:'
