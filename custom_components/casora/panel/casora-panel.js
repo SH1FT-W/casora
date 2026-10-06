@@ -23281,7 +23281,9 @@ class CasoraPanel extends HTMLElement {
       let [natW, natH] = SPEC[this._miniSize];
       // SF-12: Desktop im Seitenverhältnis des Bildschirms, auf dem das Dashboard läuft (Fläche
       // rechts der HA-Seitenleiste), begrenzt auf 1,3 bis 1,78 – füllt die Höhe neben dem Inspektor.
-      if (this._miniSize === "desktop" && this.clientWidth > 0 && window.innerHeight > 0) {
+      // Nicht im gestapelten Aufbau (Tablet hochkant): dort teilt sich die Höhe mit dem Inspektor.
+      if (this._miniSize === "desktop" && !this.classList.contains("bstack")
+        && this.clientWidth > 0 && window.innerHeight > 0) {
         const r = Math.min(1.78, Math.max(1.3, this.clientWidth / window.innerHeight));
         natH = Math.round(natW / r);
       }
