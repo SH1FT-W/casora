@@ -47,7 +47,7 @@ def hass_with(**vals):
     st = States()
     for k, v in vals.items():
         st.set(k.replace("__", "."), v)
-    return SimpleNamespace(states=st)
+    return SimpleNamespace(states=st, data={})
 
 
 def room(k="bad", w=(), heat=()):
