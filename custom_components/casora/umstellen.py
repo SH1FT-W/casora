@@ -21,6 +21,7 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -124,8 +125,9 @@ async def async_setup_umstellen(hass: HomeAssistant) -> None:
             _LOGGER.info("Casora: Dashboards umgestellt %s, Sicherung in %s", result["dashboards"], backup)
         return result
 
-    hass.services.async_register(
-        DOMAIN, "umstellen", handle,
+    # Nur für Admins: schreibt alle Dashboards um und räumt die Entitäts-Registry auf.
+    async_register_admin_service(
+        hass, DOMAIN, "umstellen", handle,
         schema=vol.Schema({vol.Optional("probelauf", default=False): cv.boolean}),
         supports_response=SupportsResponse.OPTIONAL,
     )

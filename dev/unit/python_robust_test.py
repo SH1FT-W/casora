@@ -5,6 +5,7 @@
 B-PY-04: zwei gleichzeitige Auffrisch-Läufe (Start + Karten-Update) laufen nacheinander.
 B-PY-05: Konfigurieren-Dialog: „Ungültige Zeit“ nur unter Zeitplan-Feldern.
 B-PY-06: unpassende KI-Änderung beim Umzug („Vorlage anpassen“) → verständliche Meldung statt Absturz.
+SEC-02:  casora.umstellen und casora.einrichten nur für Admins.
 """
 
 from __future__ import annotations
@@ -97,7 +98,27 @@ async def t_py06():
     check("B-PY-06: Meldung „passen nicht zur Vorlage“", sent.get("code") == "bad_ops", repr(sent))
 
 
+async def t_sec02():
+    import inspect
+
+    from custom_components.casora import helfer, umstellen
+
+    got = []
+    real = umstellen.async_register_admin_service
+    umstellen.async_register_admin_service = lambda hass, dom, name, *a, **k: got.append(name)
+    try:
+        await umstellen.async_setup_umstellen(SimpleNamespace(services=SimpleNamespace(
+            async_register=lambda *a, **k: got.append("OHNE-ADMIN:" + a[1]), has_service=lambda *a: False)))
+    finally:
+        umstellen.async_register_admin_service = real
+    check("SEC-02: umstellen als Admin-Dienst", got == ["umstellen"], repr(got))
+    src = inspect.getsource(helfer)
+    check("SEC-02: einrichten als Admin-Dienst", 'async_register_admin_service(hass, DOMAIN, "einrichten"' in src
+          and 'hass.services.async_register(DOMAIN, "einrichten"' not in src)
+
+
 async def main():
+    await t_sec02()
     await t_py06()
     await t_py04()
     await t_py05()

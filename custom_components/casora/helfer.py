@@ -26,10 +26,13 @@ import os
 import re
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_STATE_CHANGED, UnitOfTemperature
 from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util.yaml import dump, load_yaml
 
 from .const import DOMAIN
@@ -427,7 +430,9 @@ async def async_setup_helfer(hass: HomeAssistant) -> None:
         return await async_einrichten(hass)
 
     if not hass.services.has_service(DOMAIN, "einrichten"):
-        hass.services.async_register(DOMAIN, "einrichten", _service, supports_response=SupportsResponse.OPTIONAL)
+        # Nur für Admins: legt Helfer an und schreibt in scripts.yaml.
+        async_register_admin_service(hass, DOMAIN, "einrichten", _service, vol.Schema({}, extra=vol.ALLOW_EXTRA),
+                                     SupportsResponse.OPTIONAL)
 
 
 @callback
