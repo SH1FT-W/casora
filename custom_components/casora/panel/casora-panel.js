@@ -2904,7 +2904,7 @@ const MENU_ICONS = {
 };
 
 // Das 3-Punkte-Menü: Einträge aus Panel und Modulen in drei feste, betitelte Gruppen –
-// dieses Dashboard, Neu, Zuhause. Der Wechsel zwischen Dashboards sitzt im Titel
+// dieses Dashboard, Neu, Einrichtung & Hilfe (hieß „Zuhause“ wie der erste Raum). Der Wechsel zwischen Dashboards sitzt im Titel
 // (_dashSwitchMenu). Unbekanntes (Rückgängig, Öffnen am Handy) bleibt vorn, wie es kam.
 // "create" ist nur noch die Markierung, an der die Module dieses Menü erkennen.
 const DASH_MENU = [
@@ -2912,8 +2912,8 @@ const DASH_MENU = [
   ["This dashboard", "addmobile", "phone"], ["This dashboard", "casora_versions", "clock"],
   ["This dashboard", "delete", "trash"],
   ["New", "casora_umzug", "move"], ["New", "import", "import"],
-  ["Your home", "casora_assist", "devices"],
-  ["Your home", "setup", "setup"], ["Your home", "hints", "hints"], ["Your home", "help", "help"],
+  ["Setup & Help", "casora_assist", "devices"],
+  ["Setup & Help", "setup", "setup"], ["Setup & Help", "hints", "hints"], ["Setup & Help", "help", "help"],
   ["Casora", "casora_updates", "update"],
 ];
 function orderDashMenu(items, drop) {
