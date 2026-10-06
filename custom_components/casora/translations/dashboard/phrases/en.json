@@ -1327,7 +1327,10 @@
   "Vorschläge für den Morgen": "Suggestions for the morning",
   "Vorschläge für heute": "Suggestions for today",
   "Vorschläge für den Abend": "Suggestions for the evening",
-  "Vorschläge für die Nacht": "Suggestions for the night"
+  "Vorschläge für die Nacht": "Suggestions for the night",
+  "lädt": "charging",
+  "Zum Dock": "Dock",
+  "Smart wählt Saugstärke und Wischen je Raum selbst.": "Smart picks suction and mopping for each room by itself."
  },
  "patterns": [
   [

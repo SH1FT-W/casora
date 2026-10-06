@@ -3200,22 +3200,26 @@
         if (area != null) sub.push(U.f(area, 1) + ' m²');
         if (mins != null) sub.push(U.dur(mins));
       } else {
-        if (bat != null) sub.push('Akku ' + Math.round(bat) + ' %' + (on(c.charging) ? ' · lädt' : ''));
+        /* D-08: Teile einzeln übersetzen (der ganze Satz traf keinen Eintrag) und „Uhr“ nur auf Deutsch. */
+        var trV = window.casoraTr || function (x) { return x; };
+        var deV = !window.casoraLocale || /^de/i.test(String(window.casoraLocale()));
+        if (bat != null) sub.push(trV('Akku') + ' ' + Math.round(bat) + ' %' + (on(c.charging) ? ' · ' + trV('lädt') : ''));
         var le = U.str(states, c.lastEnd);
-        if (le) sub.push('zuletzt ' + U.day(new Date(le)).replace(/^(Heute|Gestern)$/, function (x) { return x.toLowerCase(); }) + ', ' + U.clock(new Date(le)) + ' Uhr');
+        var lastW = trV('zuletzt');
+        if (le) sub.push(lastW + ' ' + trV(U.day(new Date(le))).replace(/^(Heute|Gestern|Today|Yesterday)$/, function (x) { return x.toLowerCase(); }) + ', ' + U.clock(new Date(le)) + (deV ? ' Uhr' : ''));
       }
       var todo = V.todo(c, states);
       if (!s.run && todo.length && todo[0].level === 2) { sub.push(todo[0].label); tone = 'bad'; }
       var value = s.label, unit = null;
       if ((s.run || s.paused) && pct != null) { value = String(Math.round(pct)); unit = '% · ' + s.label; }
       /* Weich (Entschlacken): „Akku 93 % · zuletzt Sa. 11:18, 20 m²“ – die Fläche der letzten Reinigung gehört dazu. */
-      if (SF && !(s.run || s.paused) && area != null && sub.length && /^zuletzt /.test(sub[sub.length - 1])) sub[sub.length - 1] += ', ' + U.f(area, 1) + ' m²';
+      if (SF && !(s.run || s.paused) && area != null && sub.length && sub[sub.length - 1].indexOf(lastW + ' ') === 0) sub[sub.length - 1] += ', ' + U.f(area, 1) + ' m²';
       var out = UI.hero({ value: value, unit: unit, sub: sub.join(' · ') || null, subTone: tone, center: true });
       /* Große Tasten: Zum Dock · Start/Pause · Orten */
       var svc = function (service) { return esc(JSON.stringify({ domain: 'vacuum', service: service, data: {}, target: { entity_id: c.st } })); };
       var mdi = function (n, sz, col) { return '<ha-icon icon="' + n + '" style="--mdc-icon-size:' + sz + 'px;width:' + sz + 'px;height:' + sz + 'px;display:block;color:' + (col || 'currentColor') + ';"></ha-icon>'; };
       var docked = !s.run && !s.paused;
-      var main = s.run ? { s: svc('pause'), i: 'mdi:pause', l: 'Pause' } : { s: svc('start'), i: 'mdi:play', l: s.paused ? 'Weiter' : 'Start' };
+      var main = s.run ? { s: svc('pause'), i: 'mdi:pause', l: 'Pause' } : { s: svc('start'), i: 'mdi:play', l: s.paused ? 'Fortsetzen' : 'Start' };
       /* Weich: drei runde Pillen mit Symbol und Text, die Hauptaktion gefüllt. */
       if (SF) {
         var pill = function (cls, s0, ic, l) {
