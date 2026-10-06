@@ -986,6 +986,8 @@
   };
   var barEnd = function () {
     if (!bar) return; var b = bar; bar = null;
+    // Popup inzwischen zu: nichts mehr einstellen.
+    if (!b.el.isConnected) return;
     var ha = document.querySelector('home-assistant');
     if (ha && ha.hass && b.v != null) ha.hass.callService('climate', 'set_temperature', { temperature: b.v }, { entity_id: b.c.id });
   };
@@ -995,6 +997,8 @@
     if (ev.cancelable) ev.preventDefault(); ev.stopPropagation(); bar.v = barVal(bar, t.clientX); barPaint(bar, bar.v);
   }, { capture: true, passive: false });
   window.addEventListener('touchend', function (ev) { if (bar) { ev.stopPropagation(); if (ev.cancelable) ev.preventDefault(); barEnd(); } }, { capture: true, passive: false });
+  // iOS bricht die Berührung ab (Systemgeste, Mitteilung): Ziehen beenden, ohne etwas einzustellen.
+  window.addEventListener('touchcancel', function () { bar = null; }, { capture: true, passive: true });
   window.addEventListener('mousedown', function (ev) { if (barStart(ev, ev.clientX)) ev.preventDefault(); }, true);
   window.addEventListener('mousemove', function (ev) { if (bar) { bar.v = barVal(bar, ev.clientX); barPaint(bar, bar.v); } }, true);
   window.addEventListener('mouseup', function () { barEnd(); }, true);
