@@ -20895,7 +20895,7 @@ class CasoraPanel extends HTMLElement {
             } else if (dom === "alarm_control_panel") {
               text = s === "disarmed" ? "Disarmed" : s === "triggered" ? "Triggered"
                 : s === "armed_home" ? "Armed (Home)" : s === "armed_away" ? "Armed (Away)"
-                : s === "armed_custom_bypass" ? "Armed (Partial)" : "Armed";
+                : s === "armed_custom_bypass" ? "Armed (Bypass)" : "Armed";
               icon = s === "disarmed" || s === "triggered" ? "shield_alarm" : "shield_check";
             } else if (dom === "camera") {
               text = s === "recording" ? "Recording" : s === "streaming" ? "Live" : "Secure";
