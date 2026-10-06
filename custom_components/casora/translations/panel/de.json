@@ -1,6 +1,8 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "Search by name, room or ID": "Nach Name, Raum oder ID suchen",
+    "Without room": "Ohne Raum",
     "Hidden right now": "Gerade verborgen",
     "{n} hidden": "{n} ausgeblendet",
     "Move earlier": "Nach vorne",

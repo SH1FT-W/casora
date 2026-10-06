@@ -9814,6 +9814,32 @@ class CasoraPanel extends HTMLElement {
         .combo.hasent > .entglyph > * { display:block; --mdc-icon-size:20px; }
         .combo.hasent.noent > .entglyph { display:none; }
         .combo.hasent:not(.noent) > input { padding-left:42px; }
+        /* Geräteauswahl wie in HA: Name und „Raum · Gerät“ im Feld, kompakt in einer Zeile. */
+        .combo.hasent > .entface {
+          position:absolute; left:42px; right:34px; top:0; bottom:0; display:none; flex-wrap:wrap; align-content:flex-start;
+          column-gap:8px; overflow:hidden; pointer-events:none; min-width:0; white-space:nowrap; font-size:inherit;
+        }
+        /* „Raum · Gerät“ steht ganz oder gar nicht: passt es nicht mehr, bricht es in die unsichtbare zweite Zeile um. */
+        .entface > * { height:100%; display:flex; align-items:center; }
+        .combo.hasent.hasface:not(.typing) > .entface { display:flex; }
+        .combo.hasent.hasface:not(.typing) > input { color:transparent; }
+        .combo.hasent.hasface:not(.typing) > input::selection { background:transparent; }
+        .entface > .fn { flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; color:var(--ink); display:block; line-height:var(--fh, 38px); }
+        .entface > .fc { flex:0 0 auto; color:var(--ink-3); font-size:.9em; }
+        :host(.phone) .row > .combo.hasent > .entface { left:46px; right:40px; --fh:46px; }
+        .combo-opt .entico { flex:0 0 22px; width:22px; height:22px; display:grid; place-items:center; color:var(--ink-2); }
+        .combo-opt .entico > * { display:block; --mdc-icon-size:20px; }
+        .combo-opt .entstate, .psheet-row .entstate {
+          flex:0 0 auto; max-width:40%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+          color:var(--ink-3); font-size:var(--t-foot); font-weight:400; font-variant-numeric:tabular-nums;
+        }
+        .combo-opt:has(.entstate) .tick { display:none; }
+        .combo-opt.sel:has(.entstate) { background:var(--wash-sel, var(--casora-studio-wash-sel, rgba(127,127,127,0.12))); }
+        .combo-opt:has(.entico) { padding-top:6px; padding-bottom:6px; gap:12px; }
+        .psheet-head2 {
+          padding:12px 12px 4px; font-size:var(--t-foot); font-weight:600;
+          color:var(--ink-3); background:inherit;
+        }
         :host(.phone) .row > .combo.hasent > .entglyph { left:14px; }
         :host(.phone) .row > .combo.hasent:not(.noent) > input { padding-left:46px; }
         .combo.hasicon > .glyph {
@@ -17842,6 +17868,9 @@ class CasoraPanel extends HTMLElement {
     sheet.appendChild(panel);
 
     const name = (o) => (label ? label(o) : this._prettyEntity(o));
+    // Entitäten wie in HA: Name, darunter Raum · Gerät, rechts der Zustand, nach Raum gruppiert.
+    const ents = !glyph && !label && (list || []).some((o) => String(o).indexOf(".") > 0);
+    const meta = (o) => (ents && this._hass && this._hass.states[o] ? this._entMeta(o) : null);
     const row = (value, text, sub, checked) => {
       const r = document.createElement("div");
       r.className = "psheet-row";
@@ -17871,6 +17900,14 @@ class CasoraPanel extends HTMLElement {
         l.appendChild(s);
       }
       r.appendChild(l);
+      const em = meta(value);
+      if (em && em.state) {
+        const sv = document.createElement("span");
+        sv.className = "entstate";
+        sv.setAttribute("data-no-i18n", "");
+        sv.textContent = em.state;
+        r.appendChild(sv);
+      }
       const t = document.createElement("span");
       t.className = "tick";
       t.textContent = checked ? "\u2713" : "";
@@ -17881,12 +17918,25 @@ class CasoraPanel extends HTMLElement {
     const draw = () => {
       const needle = q.value.trim().toLowerCase();
       const hits = (list || []).filter((o) => !needle || String(o).toLowerCase().includes(needle)
-        || String(name(o)).toLowerCase().includes(needle));
+        || String(name(o)).toLowerCase().includes(needle)
+        || (ents && meta(o) && meta(o).ctx.toLowerCase().includes(needle)));
       listEl.innerHTML = "";
       const typed = q.value.trim();
-      hits.slice(0, 300).forEach((o) => {
-        const nm = name(o);
-        listEl.appendChild(row(o, nm, nm !== o && !label ? o : null, o === current));
+      const groups = ents ? this._entGroups(hits.slice(0, 300)) : [["", hits.slice(0, 300)]];
+      groups.forEach(([k, ids]) => {
+        if (groups.length > 1) {
+          const hd = document.createElement("div");
+          hd.className = "psheet-head2";
+          hd.setAttribute("data-no-i18n", "");
+          hd.textContent = k || trLabel("Without room");
+          listEl.appendChild(hd);
+        }
+        ids.forEach((o) => {
+          const nm = name(o);
+          const em = meta(o);
+          if (em) listEl.appendChild(row(o, em.short, em.ctx || o, o === current));
+          else listEl.appendChild(row(o, nm, nm !== o && !label ? o : null, o === current));
+        });
       });
       if (free !== false && typed && !(list || []).includes(typed) && (!hits.length || typed.includes("."))) {
         listEl.appendChild(row(typed, "Use \u201c" + typed + "\u201d", null, false));
@@ -18453,6 +18503,46 @@ class CasoraPanel extends HTMLElement {
   _prettyEntity(v) {
     const e = v && String(v).includes(".") && this._hass && this._hass.states[v];
     return (e && e.attributes && e.attributes.friendly_name) || v;
+  }
+
+  // Geräteauswahl wie in HA: Name, darunter „Raum · Gerät“, rechts der Zustand. Den Gerätenamen
+  // vorn im Namen lässt sie weg, wenn er ohnehin in der zweiten Zeile steht („Thermometer Bad
+  // Temperatur“ → „Temperatur“, darunter „Bad · Thermometer Bad“).
+  _entMeta(id) {
+    const h = this._hass || {};
+    const st = h.states && h.states[id];
+    const reg = h.entities && h.entities[id];
+    const dev = reg && reg.device_id && h.devices && h.devices[reg.device_id];
+    const areaId = (reg && reg.area_id) || (dev && dev.area_id) || "";
+    const area = (areaId && h.areas && h.areas[areaId] && h.areas[areaId].name) || "";
+    const devName = (dev && (dev.name_by_user || dev.name)) || "";
+    const name = String(this._prettyEntity(id));
+    let short = name;
+    if (devName && name.length > devName.length + 1 && name.startsWith(devName + " ")) short = name.slice(devName.length + 1);
+    const ctx = [area, devName && devName !== name ? devName : ""].filter(Boolean).join(" \u00b7 ");
+    let state = "";
+    if (st) {
+      try { state = h.formatEntityState ? h.formatEntityState(st) : st.state; } catch (e) { state = st.state; }
+      // Rohwerte ohne Anzeige-Genauigkeit („21,3666666667 °C“) auf eine Nachkommastelle.
+      const n = Number(st.state);
+      if (st.state !== "" && Number.isFinite(n) && /[.,]\d{3,}/.test(String(state))) {
+        const u = st.attributes && st.attributes.unit_of_measurement;
+        state = n.toLocaleString(h.language || undefined, { maximumFractionDigits: 1 }) + (u ? (u === "%" ? "" : " ") + u : "");
+      }
+    }
+    return { name, short, ctx, area, areaId, device: devName, state: String(state || "") };
+  }
+
+  // Einträge nach Raum gruppieren (Reihenfolge wie geliefert, „Ohne Raum“ zuletzt).
+  _entGroups(ids) {
+    const by = new Map();
+    ids.forEach((o) => {
+      const k = String(o).indexOf(".") > 0 ? this._entMeta(o).area : "";
+      if (!by.has(k)) by.set(k, []);
+      by.get(k).push(o);
+    });
+    if (by.has("")) { const rest = by.get(""); by.delete(""); by.set("", rest); }
+    return [...by.entries()];
   }
 
   _boolSwitch(cur, boolDefault, onChange, label) {
@@ -19075,6 +19165,7 @@ class CasoraPanel extends HTMLElement {
     const pretty = (v) => {
       if (iconMode) return v ? iconName(v, lang) : "";
       const nm = this._prettyEntity(v);
+      if (entityish && nm !== v) return this._entMeta(v).short;
       return nameSeen.get(nm) > 1 && !isPhone(this) ? nm + " (" + v + ")" : nm;
     };
     const wrap = document.createElement("div");
@@ -19129,7 +19220,26 @@ class CasoraPanel extends HTMLElement {
         const st = current && this._hass && this._hass.states[current];
         wrap.classList.toggle("noent", !st);
         if (st) lead.appendChild(entityIconEl(this._hass, st));
+        const m = st ? this._entMeta(current) : null;
+        wrap.classList.toggle("hasface", !!m);
+        face.title = "";
+        if (m) {
+          fName.textContent = m.short;
+          fCtx.textContent = m.ctx;
+          input.title = m.name + (m.ctx ? " \u2013 " + m.ctx : "") + " (" + current + ")";
+        }
       };
+      // Name und „Raum · Gerät“ in einer Zeile – kompakt, aber gleichnamige Geräte bleiben unterscheidbar.
+      const face = document.createElement("span");
+      face.className = "entface";
+      face.setAttribute("aria-hidden", "true");
+      const fName = document.createElement("span");
+      fName.className = "fn";
+      const fCtx = document.createElement("span");
+      fCtx.className = "fc";
+      face.appendChild(fName);
+      face.appendChild(fCtx);
+      wrap.appendChild(face);
       wrap._paintEnt();
     }
 
@@ -19142,12 +19252,12 @@ class CasoraPanel extends HTMLElement {
       close();
     };
 
+    const optEls = () => [...menu.querySelectorAll(".combo-opt")];
     const paint = () => {
-      [...menu.children].forEach((el, i) => {
-        if (el.classList.contains("combo-opt")) el.classList.toggle("active", i === active);
-      });
-      if (active >= 0 && menu.children[active]) {
-        const r = menu.children[active];
+      const els = optEls();
+      els.forEach((el, i) => el.classList.toggle("active", i === active));
+      if (active >= 0 && els[active]) {
+        const r = els[active];
         if (r.offsetTop < menu.scrollTop) menu.scrollTop = r.offsetTop;
         else if (r.offsetTop + r.offsetHeight > menu.scrollTop + menu.clientHeight) {
           menu.scrollTop = r.offsetTop + r.offsetHeight - menu.clientHeight;
@@ -19163,8 +19273,19 @@ class CasoraPanel extends HTMLElement {
       const named = !fixed && !iconMode && (isPhone(this) || people || entityish);
       shown = list.filter((o) => !q || String(o).toLowerCase().includes(q)
         || (named && String(this._prettyEntity(o)).toLowerCase().includes(q))
+        || (entityish && this._entMeta(o).ctx.toLowerCase().includes(q))
         || (iconMode && iconName(o, lang).toLowerCase().includes(q)));
       menu.innerHTML = "";
+      // Entitäten nach Raum gruppiert, wie in HAs Auswahl.
+      let heads = null;
+      if (entityish && shown.length > 1) {
+        const groups = this._entGroups(shown.slice(0, 300));
+        if (groups.length > 1) {
+          heads = new Map();
+          shown = [];
+          groups.forEach(([k, ids]) => { heads.set(ids[0], k || t9("Without room")); shown.push(...ids); });
+        }
+      }
 
       if (!shown.length) {
         const e = document.createElement("div");
@@ -19186,6 +19307,13 @@ class CasoraPanel extends HTMLElement {
       }
 
       shown.slice(0, 300).forEach((o) => {
+        if (heads && heads.has(o)) {
+          const hd = document.createElement("div");
+          hd.className = "combo-head";
+          hd.setAttribute("data-no-i18n", "");
+          hd.textContent = heads.get(o);
+          menu.appendChild(hd);
+        }
         const d = document.createElement("div");
         d.className = "combo-opt" + (o === current ? " sel" : "");
         const tick = document.createElement("span");
@@ -19212,7 +19340,23 @@ class CasoraPanel extends HTMLElement {
         const label = document.createElement("span");
         label.className = "lbl";
         const nm = named ? this._prettyEntity(o) : o;
-        if (named && nm !== o) {
+        const em = entityish && nm !== o ? this._entMeta(o) : null;
+        if (em) {
+          // Wie HA: Symbol, Name, darunter Raum · Gerät; die Kennung steht im Tooltip.
+          const st = this._hass && this._hass.states[o];
+          if (st) {
+            const ic = document.createElement("span");
+            ic.className = "menuicon entico";
+            ic.appendChild(entityIconEl(this._hass, st));
+            d.insertBefore(ic, d.firstChild.nextSibling);
+          }
+          label.textContent = em.short;
+          const sub = document.createElement("span");
+          sub.className = "sub";
+          sub.textContent = em.ctx || (nameSeen.get(nm) > 1 ? o : "");
+          if (sub.textContent) label.appendChild(sub);
+          d.title = o;
+        } else if (named && nm !== o) {
           label.textContent = nm;
           const sub = document.createElement("span");
           sub.className = "sub";
@@ -19222,9 +19366,16 @@ class CasoraPanel extends HTMLElement {
           label.textContent = iconMode ? iconName(o, lang) : show(o);
         }
         d.appendChild(label);
+        if (em && em.state) {
+          const sv = document.createElement("span");
+          sv.className = "entstate";
+          sv.setAttribute("data-no-i18n", "");
+          sv.textContent = em.state;
+          d.appendChild(sv);
+        }
         // mousedown, because blur would close the menu before a click lands.
         d.onmousedown = (ev) => { ev.preventDefault(); commit(o); };
-        d.onmouseenter = () => { active = [...menu.children].indexOf(d); paint(); };
+        d.onmouseenter = () => { active = optEls().indexOf(d); paint(); };
         menu.appendChild(d);
       });
 
@@ -19280,7 +19431,8 @@ class CasoraPanel extends HTMLElement {
         input.readOnly = false;
         input.value = iconMode ? pretty(current) : current;
         if (iconMode) input.select();
-        if (entityish) { input.select(); input.placeholder = t9("Search by name or ID"); }
+        // Suche beginnt leer (wie in HA); der bisherige Name steht als Platzhalter.
+        if (entityish) { wrap.classList.add("typing"); input.value = ""; input.placeholder = current ? pretty(current) : t9("Search by name, room or ID"); }
         open(entityish);
       };
       input.onclick = () => {
@@ -19297,9 +19449,10 @@ class CasoraPanel extends HTMLElement {
       input.oninput = () => { open(); active = -1; paint(); };
       input.onblur = () => {
         setTimeout(close, 120);
+        wrap.classList.remove("typing");
         input.placeholder = placeholder || "";
         const typed = input.value.trim();
-        if (!typed && current && isPhone(this)) { input.value = pretty(current); return; }
+        if (!typed && current && (isPhone(this) || entityish)) { input.value = pretty(current); return; }
         // Symbol-Feld: ein getippter Name („Glühbirne“) meint sein Symbol.
         const byName = iconMode && typed && list.find((o) => iconName(o, lang).toLowerCase() === typed.toLowerCase());
         if (byName) { if (byName !== current) commit(byName); else input.value = pretty(current); }
