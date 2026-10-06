@@ -23266,7 +23266,13 @@ class CasoraPanel extends HTMLElement {
     const applySize = (animate) => {
       // Studio B (casora-panel-b.js) zeigt die Vorschau auch am Handy – als Arbeitsfläche.
       if (isPhone(this) && !this.classList.contains("bmode")) return;
-      const [natW, natH] = SPEC[this._miniSize];
+      let [natW, natH] = SPEC[this._miniSize];
+      // SF-12: Desktop im Seitenverhältnis des Bildschirms, auf dem das Dashboard läuft (Fläche
+      // rechts der HA-Seitenleiste), begrenzt auf 1,3 bis 1,78 – füllt die Höhe neben dem Inspektor.
+      if (this._miniSize === "desktop" && this.clientWidth > 0 && window.innerHeight > 0) {
+        const r = Math.min(1.78, Math.max(1.3, this.clientWidth / window.innerHeight));
+        natH = Math.round(natW / r);
+      }
       const availW = slot.offsetWidth - MAP_SHADOW_ROOM;
       let budget = 0;
       const stage = slot.closest(".stage");
@@ -23291,7 +23297,7 @@ class CasoraPanel extends HTMLElement {
       }
       if (this._miniSize === "phone") budget = Math.round(budget * 0.88);
       const ratio = natH / natW;
-      const frame = this._miniSize === "phone" ? ratio : MAP_TALLEST;
+      const frame = this._miniSize === "phone" ? ratio : Math.max(MAP_TALLEST, ratio);
       const w = fitWidth(availW, budget, Infinity, frame);
       if (w === null) return;
       const f = w / natW;
