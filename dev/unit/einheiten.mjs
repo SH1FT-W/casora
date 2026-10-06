@@ -42,3 +42,16 @@ console.log('ok B-JS-02');
   assert.equal(p, 2500, '2,5 kW → 2500 W für die Stufe');
 }
 console.log('ok B-TPL-03');
+
+// B-TPL-04: Energie-Badge – Wh-Zähler nicht 1000-fach zu groß, kW-Sensor nicht als W.
+{
+  const name = T.casora_badge_energy.name;
+  const body = name.replace(/^\[\[\[/, '').replace(/\]\]\]\s*$/, '');
+  const run = (state, unit, dc) => new Function('variables', 'entity', 'states', 'hass', body)(
+    {}, { entity_id: 'sensor.x', state: String(state), attributes: { unit_of_measurement: unit, device_class: dc } }, {}, { locale: { language: 'de' } });
+  assert.match(run(1500, 'Wh', 'energy'), /1,5 kWh/, 'Wh → kWh');
+  assert.match(run(12, 'kWh', 'energy'), />12 kWh</, 'kWh bleibt');
+  assert.match(run(2.5, 'kW', 'power'), /2,5 kW/, 'kW-Sensor → 2,5 kW');
+  assert.match(run(800, 'W', 'power'), />800 W</, 'W bleibt');
+}
+console.log('ok B-TPL-04');
