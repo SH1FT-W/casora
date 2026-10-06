@@ -383,14 +383,20 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     return hit || badge;
   }
 
-  function openViaCard(entityId, done, explicitCfg, noTile) {
+  function openViaCard(entityId, done, explicitCfg, noTile, checked) {
     var ha = document.querySelector('home-assistant');
     var h = ha && ha.hass;
     if (!h || !h.callWS || !window.casoraPopup) return done(false);
+    // „Wer sieht das?“ (R-01): für diesen Benutzer ausgeblendete Geräte nicht über Glocke oder
+    // Sammel-Popup öffnen – auch nicht als HA-Dialog (done(true), der Aufrufer fällt nicht zurück).
+    if (!checked && window.casoraUserGuard) {
+      return window.casoraUserGuard(entityId, function () { openViaCard(entityId, done, explicitCfg, noTile, true); },
+        function () { done(true); });
+    }
     // Glocke = Kachel (B-NOTI): steht die Kachel im Dashboard, genau sie antippen – gleiches Popup,
     // gleicher Ring und Kopf. Sonst wie bisher über die Konfiguration.
     if (!explicitCfg && !noTile && window._casoraTapTile) {
-      return window._casoraTapTile(entityId, function (ok) { if (ok) done(true); else openViaCard(entityId, done, null, true); });
+      return window._casoraTapTile(entityId, function (ok) { if (ok) done(true); else openViaCard(entityId, done, null, true, true); });
     }
     var seg = (location.pathname || '').split('/').filter(Boolean);
     h.callWS({ type: 'lovelace/config', url_path: seg[0] || 'lovelace' }).then(function (cfg) {
