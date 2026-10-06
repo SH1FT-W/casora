@@ -5021,6 +5021,8 @@ const selKeyOf = (mk) => {
     const id = s.slice(2);
     // The inline climate badges (climate:0..2) stand for the same card.
     const base = id.split(":")[0];
+    // Das Szenen-Badge gehört zu „Szenen“ (Dashboard-weit): öffnet dessen Editor wie die anderen Badges.
+    if (base === "scenes") return { group: "rooms", key: "Scenes", label: "Scenes" };
     const sec = SECTIONS.find((x) => x.group === "badges"
       && String(x.label).toLowerCase() === base);
     return sec ? { group: "badges", key: sec.label, label: sec.label } : null;
