@@ -168,6 +168,7 @@ Casora:
   casora-lpc-pill-pad-m: 14px 15px   # D-03: Raumfilter im Licht-Popup am Handy 44 px hoch (vorher 39)
   casora-lpc-row-inset: 14px   # D-17: Raumfilter beginnt auf der Inhaltskante der Zeilen darunter
   casora-climate-seg-h: 58px   # D-06: Modusknöpfe im Thermostat so hoch wie die Zeilen daneben
+  casora-weather-precip-fs: 12px   # D-18: Regen-% im Wetter-Popup 12 statt 11 px
   # Kachelreihe (smart-row): Pfeil links/rechts, solange dort noch Kacheln liegen (Audit H2)
   casora-row-arrows: block
   # Wie die Reihe zeigt, dass es weitergeht: arrows (Pfeile) | fade (Ausblenden + Punkte) | more („+N weitere“)
@@ -534,7 +535,8 @@ Casora:
       casora-glass-pill-fill: rgba(140,115,90,0.12)
       casora-cam-ctl-ink: var(--casora-popup-tiles-text-primary)
       casora-cam-ctl-label: var(--casora-popup-tiles-text-secondary)
-      casora-weather-precip: "#2F6F9A"
+      # D-18: dunkler (mit 12 px aus casora-weather-precip-fs) – Regen-% lag knapp unter 4,5 : 1
+      casora-weather-precip: "#285F84"
       # Fest weiß gesetzte Popup-Schrift (z. B. Aquarien) über die Popup-Schriftstufen
       casora-sheet-ink: var(--casora-popup-tiles-text-primary)
       casora-sheet-ink-2: var(--casora-popup-tiles-text-secondary)
