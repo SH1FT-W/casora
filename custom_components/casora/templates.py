@@ -7,6 +7,8 @@ dashboard. Rebuilding it here keeps the two in step no matter who edited what.
 
 from __future__ import annotations
 
+import gzip
+import hashlib
 import json
 import logging
 import os
@@ -215,9 +217,20 @@ class CasoraTemplatesView(HomeAssistantView):
         body = await hass.async_add_executor_job(_read)
         if body is None:
             return web.Response(status=404, text="no template bundle")
-        # No caching: the point of this view is that it is never behind.
-        return web.Response(
-            body=body.encode("utf-8"),
-            content_type="application/json",
-            headers={"Cache-Control": "no-store"},
-        )
+        # Never behind: der Browser fragt jedes Mal nach (no-cache), bekommt aber bei
+        # unverändertem Inhalt nur „304“ statt 2,4 MB – und sonst gepackt (~0,5 MB).
+        raw = body.encode("utf-8")
+        etag = '"' + hashlib.sha1(raw).hexdigest()[:20] + '"'
+        headers = {"Cache-Control": "private, no-cache", "ETag": etag, "Vary": "Accept-Encoding"}
+        if request.headers.get("If-None-Match") == etag:
+            return web.Response(status=304, headers=headers)
+        if "gzip" not in request.headers.get("Accept-Encoding", "").lower():
+            return web.Response(body=raw, content_type="application/json", headers=headers)
+        packed = self._packed.get(etag)
+        if packed is None:
+            packed = await hass.async_add_executor_job(lambda: gzip.compress(raw, 6, mtime=0))
+            self._packed = {etag: packed}
+        headers["Content-Encoding"] = "gzip"
+        return web.Response(body=packed, content_type="application/json", headers=headers)
+
+    _packed: dict[str, bytes] = {}

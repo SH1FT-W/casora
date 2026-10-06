@@ -1,5 +1,6 @@
 // Solarspeicher: Finder (translation_key) liefert dieselben Entitäten wie die alten festen IDs.
 import { open, ready, HAUS } from './harness.mjs';
+import { check, ende, echteFehler } from './ergebnis.mjs';
 const { browser, page } = await open();
 await ready(page, '/dashboard-hemma/home', () => !!(window.casoraDevice && window.casoraDevice.byKey)); // Adresse des Test-Dashboards
 const res = await page.evaluate((W) => {
@@ -10,4 +11,7 @@ const res = await page.evaluate((W) => {
   return { geprueft: Object.keys(want).length, abweichend: bad };
 }, HAUS.solar || {});
 console.log(JSON.stringify(res, null, 1));
+check('Solar-Entitäten geprüft', res.geprueft > 0, res);
+check('Finder = feste IDs', !res.abweichend.length, res.abweichend);
 await browser.close();
+ende();

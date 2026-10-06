@@ -9,12 +9,11 @@ from homeassistant.components.frontend import (
     async_register_built_in_panel,
     async_remove_panel,
 )
-from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .assets import CasoraAssetsView
-from .scripts_view import CasoraScriptsView
+from .scripts_view import CasoraPanelView, CasoraScriptsView
 from .helfer import async_setup_helfer, async_setup_theme, async_unload_helfer, remove_theme_file
 from .lueften_push import async_start as async_start_lueften_push
 from .raumklima import async_start as async_start_raumklima
@@ -241,13 +240,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     scripts_dir = hass.config.path(SCRIPTS_DIR)
 
-    try:
-        await hass.http.async_register_static_paths(
-            [StaticPathConfig(URL_BASE, panel_dir, False)]
-        )
-    except RuntimeError:
-        _LOGGER.debug("Casora: %s is already served", URL_BASE)
-
     await _sync_script_resources(hass, scripts_dir, keep_hemma=await async_hemma_present(hass))
 
     def _stamp() -> int:
@@ -302,6 +294,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.http.register_view(CasoraAssetsView(hass.config.path(ASSETS_DIR)))
         # Skripte gepackt und mit Cache (scripts_view.py) statt HAs statischer Route.
         hass.http.register_view(CasoraScriptsView(scripts_dir))
+        # Studio ebenso (statt statischer Route ohne gzip/Cache-Control).
+        hass.http.register_view(CasoraPanelView(panel_dir))
         hass.http.register_view(CasoraImagesView())
         hass.http.register_view(CasoraFontsView())
         hass.http.register_view(CasoraRoomIconsView())

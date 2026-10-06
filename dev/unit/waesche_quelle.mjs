@@ -139,3 +139,6 @@ assert.deepEqual([c.source, c.official, c.remaining, c.program, c.stop], ['home_
 const w = L.resolve({ entity_id: 'sensor.b1' }, {}, hass.states, hass);
 assert.deepEqual([w.source, w.official, w.unload, w.select, w.entry], ['washdata', false, 'button.b4', 'select.b3', 'entry_wd']);
 console.log('waesche_quelle: ok');
+// 02-geraete.js wartet im Browser bis zu 60 s auf ein Element (setInterval 250 ms × 240) –
+// in Node kommt es nie, Node bliebe so lange offen. Test ist fertig: sofort beenden (T-08).
+process.exit(0);

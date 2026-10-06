@@ -1362,10 +1362,21 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     root.querySelectorAll(sel).forEach(function (e) { out.push(e); });
     root.querySelectorAll('*').forEach(function (e) { if (e.shadowRoot) walk(e.shadowRoot, sel, out, d + 1); });
   }
-  var cache = { host: null, panel: null, at: 0 };
+  var cache = { host: null, panel: null, at: 0 }, t0 = Date.now();
   setInterval(function () {
     if (document.hidden) return;
-    if (Date.now() - cache.at > 3000 || !cache.host || !cache.host.isConnected) {
+    /* Casora (06.10.2026): Die Suche durch den ganzen Baum samt Shadow-DOM lief alle 3 s
+       auf jedem Gerät – am Handy der größte Leerlauf-Verbrauch. Ohne Maus wird nur eine
+       schon gefundene Leiste zurückgesetzt (nie gesucht); mit Maus neu suchen, wenn die
+       Leiste fehlt (in den ersten 20 s wie bisher sofort, danach höchstens alle 3 s) oder weg ist, sonst nur alle 30 s zur Sicherheit. */
+    if (!fine.matches) {
+      var h0 = cache.host, st0 = h0 && h0.shadowRoot && h0.shadowRoot.getElementById('casora-desk-pill');
+      if (st0) { st0.remove(); h0.style.left = ''; h0.style.width = ''; h0.removeAttribute('data-casora-narrow'); }
+      return;
+    }
+    var age = Date.now() - cache.at;
+    if (age > 30000 || (!cache.host && (age > 3000 || Date.now() - t0 < 20000)) || (cache.host && !cache.host.isConnected)
+        || (cache.panel && !cache.panel.isConnected)) {
       var h = [], p = [];
       walk(document, 'casora-nav-bar', h, 0);
       walk(document, 'ha-panel-lovelace', p, 0);
@@ -1374,7 +1385,6 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     var host = cache.host;
     if (!host || host._variant !== 'tablet' || !host.shadowRoot) return;
     var st = host.shadowRoot.getElementById('casora-desk-pill');
-    if (!fine.matches) { if (st) { st.remove(); host.style.left = ''; host.style.width = ''; host.removeAttribute('data-casora-narrow'); } return; }
     var left = cache.panel ? Math.max(0, Math.round(cache.panel.getBoundingClientRect().left)) : 0;
     var w = window.innerWidth - left;
     var max = Math.max(240, w - 2 * RESERVE);
@@ -1430,7 +1440,10 @@ window._casoraColGap = window._casoraColGap || function (keys) {
   }
   setInterval(function () {
     if (!fine.matches || document.hidden) return;
-    if (Date.now() - els.at > 4000 || !els.bar || !els.bar.isConnected) find();
+    /* Neu suchen nur, wenn Leiste/Uhr fehlen oder weg sind (höchstens alle 4 s), sonst alle 30 s. */
+    var age = Date.now() - els.at;
+    if (age > 30000 || (els.bar && !els.bar.isConnected)
+        || (age > 4000 && (!els.bar || !els.times.length || els.times.some(function (t) { return !t.isConnected; })))) find();
     var b = els.bar && els.bar.getBoundingClientRect();
     els.times.forEach(function (t) {
       if (!t.isConnected) return;

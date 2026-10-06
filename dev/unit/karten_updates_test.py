@@ -217,7 +217,7 @@ def part3(tmp: str, bundle: dict) -> None:
     hass = Hass(tmp, {})
     req = {"hass": hass}
     view = templates_mod.CasoraTemplatesView()
-    res = asyncio.run(view.get(types.SimpleNamespace(app=req)))
+    res = asyncio.run(view.get(types.SimpleNamespace(app=req, headers={})))
     served = json.loads(res.body.decode("utf-8"))
     check(served["templates"][k]["variables"]["casora_fix"] == "a", "/api/casora/templates ohne Überlagerung")
     check(served.get("scaffold") == bundle.get("scaffold"), "Gerüst des Bundles verloren")

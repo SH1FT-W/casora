@@ -22,7 +22,7 @@ from aiohttp import web
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
 
-from .const import SCRIPTS_URL_BASE
+from .const import SCRIPTS_URL_BASE, URL_BASE
 
 _YEAR = "public, max-age=31536000, immutable"
 _TYPES = {".js": "text/javascript", ".json": "application/json", ".css": "text/css"}
@@ -76,7 +76,8 @@ class CasoraScriptsView(HomeAssistantView):
             return web.Response(status=404, text="not found")
         mtime_ns, size, raw, packed = entry
 
-        v = request.query.get("v", "")
+        # Skripte: ?v=<Stempel>, Studio: ?v=<Version>.<Stempel> – zählt der Stempel am Ende.
+        v = request.query.get("v", "").rsplit(".", 1)[-1]
         fresh = v.isdigit() and int(v) >= mtime_ns // 1_000_000_000
         etag = f'"{mtime_ns:x}-{size:x}"'
         headers = {
@@ -90,3 +91,16 @@ class CasoraScriptsView(HomeAssistantView):
             headers["Content-Encoding"] = "gzip"
             return web.Response(body=packed, content_type=ctype, charset="utf-8", headers=headers)
         return web.Response(body=raw, content_type=ctype, charset="utf-8", headers=headers)
+
+
+class CasoraPanelView(CasoraScriptsView):
+    """Das Studio (/casora_panel) genauso: gepackt und mit Cache.
+
+    Casora (06.10.2026): Über HAs statische Route kamen rund 2 MB Studio-Code ungepackt
+    und ohne Cache-Control. Der Lader casora-studio.js hängt ?v=<Version>.<Stempel> an
+    jede Datei; eine Datei, die neuer ist als der Stempel, wird per ETag geprüft.
+    """
+
+    url = URL_BASE + "/{path:.*}"
+    name = "casora:panel"
+    requires_auth = False

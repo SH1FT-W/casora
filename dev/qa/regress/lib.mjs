@@ -207,6 +207,19 @@ export async function cards(pg, template) {
   }).filter((c) => c.w > 0 && c.h > 0 && (!tpl || c.t.includes(tpl))), template);
 }
 
+// Warten, bis ein Messwert sich nicht mehr ändert (quiet ms gleich), höchstens max ms – statt fester
+// Pausen nach dem Laden (T-08, 06.10.2026): schneller, wenn die Seite schnell steht, und unter Last
+// nicht zu früh. Liefert den letzten Messwert.
+export async function stable(pg, fn, arg, { max = 6000, quiet = 700, step = 175 } = {}) {
+  let last, since = Date.now(), v;
+  for (const t0 = Date.now(); Date.now() - t0 < max; await pg.waitForTimeout(step)) {
+    v = await pg.evaluate(fn, arg).catch(() => undefined);
+    const k = JSON.stringify(v);
+    if (k !== last) { last = k; since = Date.now(); } else if (v != null && Date.now() - since >= quiet) return v;
+  }
+  return v;
+}
+
 // Der Home-Assistant-Oberfläche lokal andere Zustände unterschieben (nur dieser Browser,
 // nichts geht an HA): patch = { entity_id: { state, attributes? } | null (fehlt) }.
 // sticky: true hält den Patch auch über echte state_changed-Ereignisse hinweg (HA schickt bei

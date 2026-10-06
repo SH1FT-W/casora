@@ -75,11 +75,22 @@ const measure = () => {
   };
 };
 
+// Warten auf den erwarteten Zustand statt fester Pausen (T-07/T-08, 06.10.2026): unter Last im Gate
+// war das Studio beim Messen manchmal noch nicht fertig gestylt. Liefert den letzten Messwert.
+const until = async (pg, fn, ok, ms = 15000) => {
+  let v;
+  for (const t0 = Date.now(); Date.now() - t0 < ms; await pg.waitForTimeout(250)) {
+    v = await pg.evaluate(fn).catch(() => null);
+    if (v && ok(v)) return v;
+  }
+  return v;
+};
+
 // ── HA hell ──
 let o = await open({ width: 1600, height: 1000, dark: false });
 await o.context.addInitScript(readOnly);
 await studio(o.page, dash);
-let m = await o.page.evaluate(measure);
+let m = await until(o.page, measure, (x) => x.light && x.sideLum > 0.7 && x.undo > 3 && x.segs.length >= 2);
 await check('HA hell → Studio hell (is-light)', m.light, m);
 await check('Seitenleiste hell', m.sideLum > 0.7, m.sideLum);
 await check('Inspektor hell', m.inspLum > 0.7, m.inspLum);
@@ -91,8 +102,7 @@ await check('Rückgängig-Symbol sichtbar (> 3:1)', m.undo > 3, m.undo);
 
 // Laufzeitwechsel: HA auf dunkel, ohne Neuladen.
 await o.page.evaluate(() => document.querySelector('home-assistant').dispatchEvent(new CustomEvent('settheme', { detail: { dark: true } })));
-await o.page.waitForTimeout(1200);
-m = await o.page.evaluate(measure);
+m = await until(o.page, measure, (x) => !x.light && x.sideLum < 0.1);
 await check('Umschalten auf dunkel ohne Neuladen', !m.light && m.sideLum < 0.1, m);
 await o.browser.close();
 
@@ -100,7 +110,7 @@ await o.browser.close();
 o = await open({ width: 1600, height: 1000, dark: true });
 await o.context.addInitScript(readOnly);
 await studio(o.page, dash);
-m = await o.page.evaluate(measure);
+m = await until(o.page, measure, (x) => !x.light && x.sideLum < 0.1 && x.undo > 3);
 await check('HA dunkel → Studio dunkel', !m.light, m);
 await check('Seitenleiste dunkel', m.sideLum < 0.1, m.sideLum);
 await check('Schrift hell', m.textLum > 0.8, m.textLum);
@@ -134,7 +144,7 @@ const preview = () => {
 const weich = (pg, dark) => pg.evaluate((d) => document.querySelector('home-assistant').dispatchEvent(new CustomEvent('settheme',
   { detail: { theme: 'Casora', dark: d }, bubbles: true, composed: true })), dark);
 const settle = async (pg, want) => {
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 60; i++) {
     const v = await pg.evaluate(preview);
     if (v.tileLum !== undefined && (want ? v.tileLum > 0.5 : v.tileLum < 0.2)) return v;
     await pg.waitForTimeout(250);
@@ -150,8 +160,9 @@ const phoneSize = (pg) => pg.evaluate(() => { const b = window.__panel().shadowR
 // Updates-Kachel ohne Updates fehlt), nacheinander die Räume öffnen, bis eine dabei ist.
 const offTile = async (pg) => {
   const has = () => !!window.__panel().shadowRoot.querySelector('.card.map .mtile:not(.ghost):not(.on)');
-  const wait = async () => { for (let j = 0; j < 12; j++) { if (await pg.evaluate(has)) return true; await pg.waitForTimeout(250); } return false; };
-  if (!process.env.R20_SKIP && await wait()) return { found: 'start' };
+  const wait = async (n = 12) => { for (let j = 0; j < n; j++) { if (await pg.evaluate(has)) return true; await pg.waitForTimeout(250); } return false; };
+  // Erste Ansicht: unter Last braucht die Vorschau länger – bis zu 10 s statt 3 s.
+  if (!process.env.R20_SKIP && await wait(40)) return { found: 'start' };
   const n = await pg.evaluate(() => window.__panel()._state.compact.rooms.length);
   for (let i = 1; i < n; i++) {
     await pg.evaluate((k) => { const p = window.__panel(); p._room = k; p._sel = null; p._renderTabs(); p._renderForm(); }, i);
