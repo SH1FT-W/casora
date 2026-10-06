@@ -1998,7 +1998,12 @@
     "Home, bell, AI and updates – for all dashboards": "Haus, Glocke, KI und Updates – für alle Dashboards",
     "Open the previous Studio": "Bisheriges Studio öffnen",
     "The small facts at the top of the room": "Die kleinen Infos oben im Raum",
-    "The window that opens when you tap a tile": "Das Fenster, wenn man eine Kachel antippt"
+    "The window that opens when you tap a tile": "Das Fenster, wenn man eine Kachel antippt",
+    "Applies to: {room}": "Gilt für: {room}",
+    "Applies to: this dashboard": "Gilt für: dieses Dashboard",
+    "Applies to: this dashboard – the design to all dashboards": "Gilt für: dieses Dashboard – das Design für alle Dashboards",
+    "Applies to: all dashboards": "Gilt für: alle Dashboards",
+    "The design applies to all dashboards": "Das Design gilt für alle Dashboards"
   },
   "patterns": [
     ["^Phone differs in (\\d+) settings$", "Handy weicht bei {1} Einstellungen ab"],

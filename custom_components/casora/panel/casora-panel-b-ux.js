@@ -2,6 +2,8 @@
 //
 // Ergänzt das neue Studio (casora-panel-b.js, -b-plus.js, -b-mehr.js) um das, was die
 // Nutzertests an Orientierung vermisst haben:
+// - Drei Ebenen sichtbar: Leiste von klein (Raum) nach groß (alle Dashboards), „Gilt für: …“
+//   in Menüs und im Inspektor
 // - Untertitel der Reiter (Inhalt, Dashboard, Einstellungen) als Hinweis und im Inhalt-Blatt
 // - Wörterbuch: Badges und Popups mit einem Halbsatz erklärt
 // Datenmodell, Speichern und Rückgängig bleiben die des Panels – hier wird nur angeschlossen.
@@ -20,7 +22,29 @@
   // Fachwörter mit Halbsatz (V-08): in der Inhalt-Liste unter „Badges“ und „Popups“.
   const WHAT = { Badges: "The small facts at the top of the room", Popups: "The window that opens when you tap a tile" };
 
-  W.__casoraStudioUx = { SUB, WHAT };
+  // Geltungsbereich (V-01): dieser Raum · dieses Dashboard · alle Dashboards.
+  // ctx: { sel: {group, key} | null, page: "settings" | "updates" | "rewind" | null, arrange, list,
+  //        dashSection(key) → true, wenn der Abschnitt zum ganzen Dashboard gehört }
+  function scopeOf(ctx) {
+    if (ctx.page === "settings" || ctx.page === "updates") return "all";
+    if (ctx.page === "rewind" || ctx.arrange) return "dash";
+    const sel = ctx.sel;
+    if (!sel) return ctx.list ? "room" : "";
+    if (sel.group === "tiles" || sel.group === "badges") return "room";
+    if (sel.group === "rooms") {
+      if (sel.key === "General") return "design";
+      return ctx.dashSection && ctx.dashSection(sel.key) ? "dash" : "room";
+    }
+    return "";
+  }
+  const SCOPE = {
+    room: "Applies to: {room}",
+    dash: "Applies to: this dashboard",
+    design: "Applies to: this dashboard – the design to all dashboards",
+    all: "Applies to: all dashboards",
+  };
+
+  W.__casoraStudioUx = { SUB, WHAT, SCOPE, scopeOf };
   if (typeof customElements === "undefined" || !W.document) return;
 
   const CSS = `
@@ -35,6 +59,15 @@
     /* Halbsatz unter „Badges“ / „Popups“ */
     .uxwhat { display:block; margin-top:1px; font-size:12.5px; line-height:1.3; font-weight:500; letter-spacing:0;
       color:var(--ink-2, rgba(127,127,127,.95)); white-space:normal; text-shadow:none; }
+    /* Leiter in der Werkzeugleiste: Raum | Dashboard | alle Dashboards */
+    .btools .btool[data-b="dash"], .btools .btool[data-b="home"] { position:relative; margin-left:13px; }
+    .btools .btool[data-b="dash"]::before, .btools .btool[data-b="home"]::before { content:""; position:absolute; left:-8px; top:9px; bottom:9px;
+      width:1px; background:var(--hair, rgba(127,127,127,.28)); pointer-events:none; }
+    /* „Gilt für: …“ oben im Menü */
+    .combo-menu > .combo-intro { padding:6px 12px 8px; margin:0 0 4px; font-size:12.5px; line-height:1.3; font-weight:500;
+      color:var(--ink-2, rgba(127,127,127,.95)); border-bottom:.5px solid var(--hair, rgba(127,127,127,.2)); white-space:normal; }
+    .combo-opt .uxsub { display:block; font-size:12px; line-height:1.25; font-weight:500; opacity:.62; margin-top:1px; white-space:normal; }
+    .combo-opt:has(.uxsub) .lbl { display:flex; flex-direction:column; }
     :host(.bmode.phone) .inspector .uxwhat { color:color-mix(in srgb, var(--ink) 55%, transparent) !important; }
   `;
 
@@ -75,9 +108,21 @@
     };
 
     // Grauer Satz unter dem Titel des Inspektors.
+    P._uxScope = function () {
+      const I = W.__casoraPanelInternals || {};
+      const page = this._csOpen ? "settings" : this._cuOpen ? "updates" : this._cvOpen ? "rewind" : null;
+      const list = !!this._bOpen && !this._sel && !page && !this._bRooms;
+      return scopeOf({ sel: this._sel, page, arrange: !!this._bRooms && !this._sel && !page, list,
+        dashSection: (k) => !!(I.SECTIONS || []).find((x) => x.group === "rooms" && x.label === k && x.scope === "dashboard") });
+    };
+    P._uxScopeText = function (sc) {
+      return SCOPE[sc] ? fill(tr(SCOPE[sc]), { room: this._uxRoomName() }) : "";
+    };
     P._uxHeadText = function () {
-      if (!this._state || !this._bOpen || this._sel || (this._bPage && this._bPage()) || this._bRooms) return "";
-      return fill(tr(SUB.list), { room: this._uxRoomName() });
+      if (!this._state || !(this._bOpen || (this._bPage && this._bPage()))) return "";
+      const sc = this._uxScope();
+      if (sc === "room" && !this._sel) return fill(tr(SUB.list), { room: this._uxRoomName() });
+      return this._uxScopeText(sc);
     };
     P._uxHead = function () {
       const root = this.shadowRoot;
@@ -110,6 +155,8 @@
       if (!this.classList.contains("phone")) return;
       const heads = [...this.shadowRoot.querySelectorAll("#pane .sidehead.phonehead, .inspector .sidehead.phonehead")];
       if (!heads.length) return;
+      // „nur dieses Dashboard“ → dieselbe Zeile wie überall: „Gilt für: dieses Dashboard“.
+      heads.slice(1).forEach((h) => { const sm = h.querySelector("small"); const t = tr(SCOPE.dash); if (sm && sm.textContent !== t) { sm.textContent = t; sm.setAttribute("data-no-i18n", ""); } });
       const first = heads[0];
       if (first && !first.querySelector("small")) {
         first.appendChild(Object.assign(document.createElement("small"), { textContent: fill(tr(SUB.list), { room: this._uxRoomName() }) }));
@@ -141,6 +188,50 @@
       this._uxPhoneHeads();
       this._uxWhat();
     };
+
+    // ── Menüs: „Gilt für: …“ oben (V-01) ───────────────────────────────
+    wrap("_menuAt", (orig) => function (anchor, items, onPick, mopts) {
+      let intro = "", subs = null;
+      if (on(this) && Array.isArray(items)) {
+        if (items.some((x) => x && /^sec:/.test(x.id || ""))) {
+          intro = tr(SCOPE.dash);
+          // Die Zeile oben sagt es schon – keine zweite Überschrift „Nur dieses Dashboard“.
+          items = items.map((x) => (x && /^sec:/.test(x.id || "") ? { ...x, quiet: true } : x));
+          subs = { General: "The design applies to all dashboards" };
+        } else if (items.some((x) => x && /^page:/.test(x.id || ""))) {
+          intro = tr(SCOPE.all);
+          items = items.map((x) => (x && (/^page:/.test(x.id || "") || x.id === "updates") ? { ...x, quiet: true } : x));
+        }
+      }
+      const r = orig.call(this, anchor, items, onPick, mopts);
+      if (intro) {
+        const menus = this.shadowRoot.querySelectorAll(".combo-menu");
+        const menu = menus[menus.length - 1];
+        if (menu && !menu.querySelector(".combo-intro")) {
+          const d = document.createElement("div");
+          d.className = "combo-intro";
+          d.setAttribute("data-no-i18n", "");
+          d.textContent = intro;
+          menu.insertBefore(d, menu.firstChild);
+          if (subs) Object.keys(subs).forEach((k) => {
+            const it = items.find((x) => x && x.id === "sec:" + k);
+            const opt = it && [...menu.querySelectorAll(".combo-opt")].find((o) => {
+              const l = o.querySelector(".lbl");
+              return l && (l.textContent === it.label || l.textContent === tr(it.label));
+            });
+            const lbl = opt && opt.querySelector(".lbl");
+            if (lbl && !lbl.querySelector(".uxsub")) {
+              const sm = document.createElement("span");
+              sm.className = "uxsub";
+              sm.setAttribute("data-no-i18n", "");
+              sm.textContent = tr(subs[k]);
+              lbl.appendChild(sm);
+            }
+          });
+        }
+      }
+      return r;
+    });
 
     // ── Anschließen ─────────────────────────────────────────────────────
     const after = (name) => wrap(name, (orig) => function () {
