@@ -55,3 +55,25 @@ console.log('ok B-TPL-03');
   assert.match(run(800, 'W', 'power'), />800 W</, 'W bleibt');
 }
 console.log('ok B-TPL-04');
+
+// B-JS-03: FBH-/Thermostat-Popup – Einheit und Standardbereich aus HA (°F), nicht fest °C / 5…30.
+{
+  const src = mod('03-popups.js');
+  const a = src.indexOf('(function () {\n  if (window._casoraFbh) return;');
+  const b = src.indexOf('\n})();', a);
+  const load = (unit) => {
+    const w = { addEventListener() {}, _casoraUI: { tokens: { font: 'x', ink: '#000', ink2: '#111', ink3: '#222' } } };
+    const doc = { querySelector: () => ({ hass: { config: { unit_system: { temperature: unit } } } }) };
+    new Function('window', 'document', src.slice(a, b + 6))(w, doc);
+    return w._casoraFbh;
+  };
+  const F = load('°F');
+  const states = { 'climate.bad': { state: 'heat', attributes: { temperature: 70, current_temperature: 68 } } };
+  assert.equal(F.status({ id: 'climate.bad' }, states), 'Bereit · 70,0 °F');
+  const html = F.stepper(['climate.bad'], 70, {}, 'Ziel', true);
+  assert.ok(html.includes('<span> °F</span>') && !html.includes('°C'), 'Stepper in °F');
+  const bar = JSON.parse(html.match(/data-fb-bar="([^"]+)"/)[1].replace(/&quot;/g, '"'));
+  assert.deepEqual([bar.lo, bar.hi], [41, 86], 'Standardbereich in °F');
+  assert.ok(load('°C').stepper(['climate.bad'], 21, {}, 'Ziel', true).includes('<span> °C</span>'), '°C bleibt °C');
+}
+console.log('ok B-JS-03');

@@ -409,6 +409,11 @@
   var num = function (v) { var n = parseFloat(v); return isNaN(n) ? null : n; };
   var ok = function (s) { return s && s.state !== 'unknown' && s.state !== 'unavailable'; };
   var fmt = function (n) { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 }); };
+  /* Temperatur-Einheit von Home Assistant (°C/°F) – die Werte kommen schon darin (06.10.2026). */
+  var TU = function () {
+    var ha = document.querySelector('home-assistant'), us = ha && ha.hass && ha.hass.config && ha.hass.config.unit_system;
+    return (us && us.temperature) || '°C';
+  };
   var esc = function (t) {
     return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
   };
@@ -483,7 +488,7 @@
   F.status = function (o, states) {
     var e = states[o.id]; if (!e) return '—';
     var t = num(e.attributes.temperature);
-    var tt = t != null ? fmt(t) + ' °C' : null;
+    var tt = t != null ? fmt(t) + ' ' + TU() : null;
     if (e.state === 'unavailable') return 'Nicht verfügbar';
     if (e.state === 'off') return 'Aus';
     if (F.heating(o, states)) return tt ? 'Heizt auf ' + tt : 'Heizt';
@@ -499,7 +504,7 @@
   F.stepper = function (targets, value, a, label, withBar) {
     var UI = window._casoraUI, T = UI.tokens;
     var step = num(a.target_temp_step) || 0.5;
-    var lo = num(a.min_temp) != null ? num(a.min_temp) : 5, hi = num(a.max_temp) != null ? num(a.max_temp) : 30;
+    var F_ = TU() === '°F', lo = num(a.min_temp) != null ? num(a.min_temp) : (F_ ? 41 : 5), hi = num(a.max_temp) != null ? num(a.max_temp) : (F_ ? 86 : 30);
     var tgt = { entity_id: targets.length === 1 ? targets[0] : targets };
     var dn = Math.max(lo, Math.round((value - step) / step) * step);
     var up = Math.min(hi, Math.round((value + step) / step) * step);
@@ -526,7 +531,7 @@
         + '.fb-st-v .n{font-weight:700;}' : '')
       + '</style><div class="fb-st">'
       + btn('<svg width="20" height="20" viewBox="0 0 20 20" style="display:block"><path d="M4 10H16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>', dn, value <= lo)
-      + '<div class="fb-st-v"><div class="l">' + esc(label) + '</div><div class="n">' + fmt(value) + '<span> °C</span></div></div>'
+      + '<div class="fb-st-v"><div class="l">' + esc(label) + '</div><div class="n">' + fmt(value) + '<span> ' + TU() + '</span></div></div>'
       + btn('<svg width="20" height="20" viewBox="0 0 20 20" style="display:block"><path d="M4 10H16M10 4V16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>', up, value >= hi)
       + '</div>';
     if (withBar) {
@@ -541,7 +546,7 @@
         + '</style>'
         + '<div class="fb-tb" data-fb-bar="' + esc(JSON.stringify({ lo: lo, hi: hi, st: step, id: targets[0] })) + '">'
         + '<div class="fb-tb-t"><div class="fb-tb-k" style="left:' + k + '%"></div></div>'
-        + '<div class="fb-tb-s"><span>' + fmt(lo) + ' °C</span><span>' + fmt(hi) + ' °C</span></div></div>';
+        + '<div class="fb-tb-s"><span>' + fmt(lo) + ' ' + TU() + '</span><span>' + fmt(hi) + ' ' + TU() + '</span></div></div>';
     }
     return out;
   };
@@ -615,12 +620,12 @@
         var sub = !active.length ? 'Alle Räume aus'
           : heat.length ? (heat.length === 1 ? '1 Raum heizt gerade' : heat.length + ' Räume heizen gerade')
           : (active.length === rooms.length ? 'An · alle Räume warm genug' : active.length + ' von ' + rooms.length + ' Räumen an');
-        return UI.hero({ label: window._casoraHH && window._casoraHH.on() ? null : 'Durchschnitt im Haus', value: v != null ? fmt(v) : '—', unit: v != null ? '°C' : null,
+        return UI.hero({ label: window._casoraHH && window._casoraHH.on() ? null : 'Durchschnitt im Haus', value: v != null ? fmt(v) : '—', unit: v != null ? TU() : null,
           sub: sub, subTone: heat.length ? 'warn' : null, center: true });
       }
       var cur = F.curTemp(c, states);
       var hum = c.hum && states[c.hum] && ok(states[c.hum]) ? Math.round(num(states[c.hum].state)) + ' % Luftfeuchtigkeit' : null;
-      return UI.hero({ label: window._casoraHH && window._casoraHH.on() ? null : (c.trv ? 'Temperatur am Heizkörper' : 'Raumtemperatur'), value: cur != null ? fmt(cur) : '—', unit: cur != null ? '°C' : null,
+      return UI.hero({ label: window._casoraHH && window._casoraHH.on() ? null : (c.trv ? 'Temperatur am Heizkörper' : 'Raumtemperatur'), value: cur != null ? fmt(cur) : '—', unit: cur != null ? TU() : null,
         sub: [F.status(c, states), hum].filter(Boolean).join(' · '), subTone: F.heating(c, states) ? 'warn' : null, center: true });
     }
 
@@ -683,7 +688,7 @@
         if (r.trv && r.bat && states[r.bat] && ok(states[r.bat])) sub += ' · Akku ' + Math.round(num(states[r.bat].state)) + ' %';
         return { icon: r.trv ? 'mdi:radiator' : 'mdi:heating-coil',
           iconTone: h ? 'var(--casora-tone-heat, var(--casora-color-red, #FF453A))' : (s && s.state !== 'off' && s.state !== 'unavailable' ? 'accent' : 'rgba(255,255,255,0.18)'),
-          label: r.name, sub: sub, value: t != null ? fmt(t) + ' °C' : null, entity: r.id,
+          label: r.name, sub: sub, value: t != null ? fmt(t) + ' ' + TU() : null, entity: r.id,
           /* Weich: eingeschalteter Raum/Heizkörper als aktive Zeile (heller Grund, Zustand in Ton) –
              wie die Thermostat-Kachel nach hvac_mode, nicht nur solange er gerade heizt. */
           active: !!(s && s.state !== 'off' && s.state !== 'unavailable' && s.state !== 'unknown') };
@@ -770,9 +775,9 @@
           var cf = states[c.cfh].state === 'on';
           rows.push({ icon: 'mdi:fire', iconTone: cf ? 'var(--casora-tone-heat, var(--casora-color-red, #FF453A))' : 'rgba(255,255,255,0.18)', label: 'Wärmeanforderung', value: cf ? 'Aktiv' : 'Keine', valueTone: cf ? 'warn' : null });
         }
-        if (c.next && states[c.next] && ok(states[c.next])) rows.push({ icon: 'mdi:clock-outline', label: 'Nächste Solltemperatur', value: fmt(num(states[c.next].state)) + ' °C' });
+        if (c.next && states[c.next] && ok(states[c.next])) rows.push({ icon: 'mdi:clock-outline', label: 'Nächste Solltemperatur', value: fmt(num(states[c.next].state)) + ' ' + TU() });
         if (c.dip && states[c.dip]) {
-          var dv = c.dipVal && states[c.dipVal] && ok(states[c.dipVal]) ? fmt(num(states[c.dipVal].state)) + ' °C' : null;
+          var dv = c.dipVal && states[c.dipVal] && ok(states[c.dipVal]) ? fmt(num(states[c.dipVal].state)) + ' ' + TU() : null;
           var dr = toggleRow(c.dip, 'mdi:thermometer-chevron-down', 'Temperaturabsenkung', dv ? 'Absenkung um ' + dv : null, states); if (dr) rows.push(dr);
         }
         /* Nur zeigen, wenn aktiv. Heizpause ist außerhalb der Heizsaison normal, daher neutral. */
