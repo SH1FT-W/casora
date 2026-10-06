@@ -89,3 +89,15 @@ for (const f of ['02-geraete.js', '03-popups.js', '05-standard-medien.js', '05-w
   assert.ok(src.includes("outUnit: unit('aussentemperatur') || '°C'") && src.includes("fmtN(r.out, 1) + ' ' + (r.outUnit || '°C')"), 'Auto: Außentemperatur mit Einheit');
 }
 console.log('ok B-JS-04');
+
+// B-JS-05: Kosten bei Haushaltsgeräten in der Währung von Home Assistant, nicht immer Euro.
+{
+  const src = mod('02-geraete.js');
+  const m = src.match(/  var eur = function \(n\) \{[\s\S]*?\n  \};/);
+  assert.ok(m, 'eur gefunden');
+  const make = (cur) => new Function('window', 'document', m[0] + ' return eur;')({}, { querySelector: () => ({ hass: { config: { currency: cur } } }) });
+  assert.match(make('CHF')(0.42), /CHF/);
+  assert.match(make(undefined)(0.42), /€/);
+  assert.match(make('XXXX-kaputt')(0.42), /€/, 'unbekannte Währung → Euro');
+}
+console.log('ok B-JS-05');

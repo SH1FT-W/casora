@@ -1006,7 +1006,12 @@
   };
   var f = function (n, d) { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: d, maximumFractionDigits: d }); };
   var kwh = function (n) { return f(n, n < 10 ? 2 : 1) + ' kWh'; };
-  var eur = function (n) { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { style: 'currency', currency: 'EUR' }); };
+  /* Währung von Home Assistant (CHF, USD …), sonst Euro. */
+  var eur = function (n) {
+    var ha = document.querySelector('home-assistant'), cur = (ha && ha.hass && ha.hass.config && ha.hass.config.currency) || 'EUR';
+    try { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { style: 'currency', currency: cur }); }
+    catch (e) { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { style: 'currency', currency: 'EUR' }); }
+  };
   var dur = function (min) {
     min = Math.max(0, Math.round(min));
     var h = Math.floor(min / 60), m = min % 60;
