@@ -7,6 +7,7 @@ B-PY-01: nach „Installieren“ und Neuladen der Integration (Optionen geänder
 B-PY-02: bricht das Kopieren der neuen Fassung ab (Speicher voll), bleibt die laufende heil.
 B-PY-03: bis zum Neustart bleibt die laufende Fassung im Ordner (Oberfläche passt zum Server-Code);
           eingespielt wird beim Beenden von HA, ein liegengebliebener Wartebereich wird verworfen.
+B-PY-16: die Entität wird ohne Warten auf GitHub angelegt, die erste Prüfung läuft im Hintergrund.
 """
 
 from __future__ import annotations
@@ -145,6 +146,20 @@ async def main():
     check("B-PY-02: Fehler wird gemeldet", raised)
     check("B-PY-02: laufende Fassung unverändert", still == "1.0.0" and not os.path.exists(os.path.join(t2, "halb.txt")), still)
     check("B-PY-02: keine halben Ordner neben casora", left == ["casora"], repr(left))
+
+    # ── B-PY-16 ─────────────────────────────────────────────────────────
+    added = []
+    h3 = Hass(os.path.join(tmp, "b16"))
+    await update.async_setup_entry(h3, SimpleNamespace(entry_id="e1", options={}), lambda ents, **k: added.append(k))
+    check("B-PY-16: kein update_before_add", added == [{}], repr(added))
+    tasks = []
+    h3.async_create_background_task = lambda coro, name: tasks.append(asyncio.ensure_future(coro))
+    e3 = update.CasoraUpdate(h3, SimpleNamespace(entry_id="e1", options={}))
+    e3.async_write_ha_state = lambda: None
+    await e3.async_added_to_hass()
+    check("B-PY-16: erste Prüfung als Hintergrundaufgabe", len(tasks) == 1)
+    await asyncio.gather(*tasks)
+    check("B-PY-16: Hintergrund-Prüfung findet das Update", e3.latest_version == "9.0.1", e3.latest_version)
 
 
 asyncio.run(main())

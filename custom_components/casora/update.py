@@ -209,7 +209,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         # Stromausfall): verwerfen – das Update wird dann einfach wieder angeboten.
         await hass.async_add_executor_job(shutil.rmtree, hass.config.path(STAGE_DIR), True)
     if not hacs:
-        async_add_entities([CasoraUpdate(hass, entry)], update_before_add=True)
+        # Nicht update_before_add: ohne Internet würde das den Start von Casora bis zu 20 s aufhalten.
+        async_add_entities([CasoraUpdate(hass, entry)])
 
 
 class CasoraUpdate(UpdateEntity):
@@ -234,6 +235,15 @@ class CasoraUpdate(UpdateEntity):
         self._installed_new: str | None = pending if pending and pending != VERSION else None
         if self._installed_new:
             self._attr_installed_version = self._attr_latest_version = self._installed_new
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        # Erste Prüfung im Hintergrund, danach wie gewohnt alle SCAN_INTERVAL.
+        self.hass.async_create_background_task(self._async_first_check(), "casora_update_first_check")
+
+    async def _async_first_check(self) -> None:
+        await self.async_update()
+        self.async_write_ha_state()
 
     async def async_update(self) -> None:
         data = self.hass.data.setdefault(DOMAIN, {})
