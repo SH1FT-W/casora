@@ -20496,9 +20496,11 @@ class CasoraPanel extends HTMLElement {
     };
     dropTo = send;
 
+    // Liegt die Bilderliste schon vor, baut der zweite Durchlauf dasselbe noch einmal (je Neuzeichnen).
+    const had = this._imgs;
     fill();
     this._images()
-      .then(() => { fill(); this._setBackdrop(); })
+      .then((list) => { if (!had || list !== had) fill(); this._setBackdrop(); })
       .catch((e) => {
         this._log("could not list images: " + e.message, "warn");
         this._status("Image list unavailable. Restart Home Assistant to load the Casora image endpoint.", "warn");
