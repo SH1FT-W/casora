@@ -148,6 +148,10 @@ unit_tests() {
     withs="$(head -n 30 "$f" | grep -o -- '--with [A-Za-z0-9_.=<>-]*' | sort -u | tr '\n' ' ')"
     echo "=== $f $withs"; $PY $withs python "$f" || { echo "FEHLER $f"; bad=1; }
   done
+  # Integrationstests mit pytest-homeassistant-custom-component (T-04): Setup/Unload/Migration.
+  if [ -d dev/pytest ]; then
+    echo "=== dev/pytest"; $PY --with pytest-homeassistant-custom-component pytest dev/pytest -q -p no:cacheprovider || { echo "FEHLER dev/pytest"; bad=1; }
+  fi
   return $bad
 }
 # Anmeldung: einmal je Zustand (jeder Zustand hat seine eigene HA-Benutzerdatenbank). Nach
