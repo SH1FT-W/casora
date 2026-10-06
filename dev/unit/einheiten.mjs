@@ -24,3 +24,21 @@ const st = (state, unit) => ({ state: String(state), attributes: unit ? { unit_o
   assert.equal(runW(st(1500, 'Wh')), 1.5, 'Weich: 1500 Wh');
 }
 console.log('ok B-JS-02');
+
+// B-TPL-03: Energie-Popup – Leistung in kW/MW wird in W umgerechnet (Hauptwert, Stufe, Solar/Akku/Netz).
+{
+  const c = tpl('casora_popup_energy');
+  const def = c.match(/const _sumW = \(id\) => \{[\s\S]*?n; \};/);
+  assert.ok(def, '_sumW gefunden');
+  const states = { p: st(2.5, 'kW'), w: st(800, 'W'), m: st(0.003, 'MW') };
+  const safeNum = (id) => parseFloat(states[id].state);
+  const sumW = new Function('safeNum', 'states', def[0] + ' return _sumW;')(safeNum, states);
+  assert.equal(sumW('p'), 2500); assert.equal(sumW('w'), 800); assert.equal(sumW('m'), 3000);
+  assert.ok(!/const power = powerId \? safeNum\(powerId\)/.test(c) && /const power = powerId \? _sumW\(powerId\)/.test(c), 'Hauptwert über _sumW');
+  for (const k of ['solarPowerId', 'battPowerId', 'netzPowerId']) assert.ok(c.includes(`const p = _sumW(${k});`) && !c.includes(`const p = safeNum(${k});`), k);
+  const inner = c.match(/const power = \(\(\) => \{ const n = safeNum\(powerId\);[\s\S]*?\}\)\(\);/);
+  assert.ok(inner, 'Stufe (_powerScore) rechnet um');
+  const p = new Function('safeNum', 'states', 'powerId', inner[0] + ' return power;')(safeNum, states, 'p');
+  assert.equal(p, 2500, '2,5 kW → 2500 W für die Stufe');
+}
+console.log('ok B-TPL-03');
