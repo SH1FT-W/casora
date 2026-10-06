@@ -9032,12 +9032,13 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   function announce() {
     var n = unread();
     var text = n > 99 ? '99+' : String(n);
-    var inBadge = COUNT_IN_BADGE && !isPhone();
-    var show = (n > 0 && inBadge) ? 'grid' : 'none';
     // Weich (--casora-bell-dot: 1): schlichte Glocke + eigener Punkt statt bell-badge –
     // sonst zeigt die Glocke zwei Punkte (den aus der Grafik und den eigenen).
     var dotMode = false;
     try { dotMode = getComputedStyle(document.documentElement).getPropertyValue('--casora-bell-dot').trim() === '1'; } catch (e) { /* ohne Stil eben bell-badge */ }
+    // D-21: in Weich überall derselbe Punkt (Desktop zeigte eine schwer lesbare Zahl, das Handy einen Punkt).
+    var inBadge = COUNT_IN_BADGE && !isPhone() && !dotMode;
+    var show = (n > 0 && inBadge) ? 'grid' : 'none';
     var badged = !inBadge && n > 0;
     var src = iconUrl(badged && !dotMode ? 'bell-badge' : 'bell');
     bells().forEach(function (el) {
