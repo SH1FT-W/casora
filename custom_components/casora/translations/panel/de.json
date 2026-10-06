@@ -776,7 +776,6 @@
     "Replace": "Ersetzen",
     "Room power": "Leistung im Raum",
     "Devices (added up)": "Geräte (zusammengezählt)",
-    "Power sensors": "Leistungssensoren",
     "Without a sensor for the whole room, the badge shows the sum of these. Its popup lists each one.": "Ohne Sensor für den ganzen Raum zeigt das Badge die Summe dieser Geräte, das Popup jedes einzeln.",
     "Sensor": "Sensor",
     "Show this tile on the dashboard": "Diese Kachel im Dashboard anzeigen",

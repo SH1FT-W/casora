@@ -84,6 +84,25 @@ def main() -> int:
                     % (name, key, SLOT.findall(value), SLOT.findall(en[key]))
                 )
 
+    # Doppelte Schlüssel (z. B. Reste aus dem Zusammenführen): JSON nimmt still den letzten.
+    tr_root = os.path.dirname(SRC)
+    for dirpath, _d, files in os.walk(tr_root):
+        for name in sorted(files):
+            if not name.endswith(".json"):
+                continue
+            path = os.path.join(dirpath, name)
+
+            def dup_hook(pairs, path=path):
+                seen = set()
+                for k, _v in pairs:
+                    if k in seen:
+                        errors.append("%s: duplicate key %r" % (os.path.relpath(path, ROOT), k))
+                    seen.add(k)
+                return dict(pairs)
+
+            with open(path, encoding="utf-8") as fh:
+                json.load(fh, object_pairs_hook=dup_hook)
+
     before = open(OUT, encoding="utf-8").read() if os.path.isfile(OUT) else None
     subprocess.run(
         [sys.executable, os.path.join(ROOT, "tools/build-i18n.py")],
