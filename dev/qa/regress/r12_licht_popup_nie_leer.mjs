@@ -1,7 +1,7 @@
 // @zustand: arbeit
 // Gemeldet: Das Licht-Popup war leer, wenn die Mitglieder der Lichtgruppe fehlten
 // (umbenannt/gelöscht). Erwartet: das Popup zeigt immer mindestens eine Zeile – notfalls
-// die Gruppe selbst. Fehlende Mitglieder werden nur im Browser „entfernt“.
+// die Gruppe selbst oder die Hinweiszeile „Gerät fehlt“ (nie nur der Kopf). Fehlende Mitglieder werden nur im Browser „entfernt“.
 import { open, casoraDashboard, dashboard, cards, fakeStates, check, need, finish } from './lib.mjs';
 
 const dash = await casoraDashboard((d) => /"casora_light"/.test(JSON.stringify(d.config)));
@@ -14,7 +14,8 @@ const light = async () => (await cards(page, 'casora_light'))[0];
 const popupRows = () => page.evaluate(() => {
   const pop = window.__pierce('casora-popup').find((p) => { const r = p.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
   if (!pop) return null;
-  const inner = window.__pierce('button-card, hui-tile-card, hui-entities-card', pop.shadowRoot || pop)
+  // Zeilen: Gerätezeilen oder – seit 1.0.3 – die Hinweiszeile „Gerät fehlt“ (.se-row) statt einer leeren Fläche.
+  const inner = window.__pierce('button-card, hui-tile-card, hui-entities-card, .se-row', pop.shadowRoot || pop)
     .filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
   return { rows: inner.length, text: (pop.shadowRoot || pop).textContent.replace(/\s+/g, ' ').trim().slice(0, 160) };
 });
