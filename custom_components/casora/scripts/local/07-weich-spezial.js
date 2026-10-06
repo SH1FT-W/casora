@@ -67,21 +67,12 @@
     },
   };
 
-  // ── Alarm-Popup: Bedienung (Entwurf 06.10.2026, nur Weich) ──────────────────
-  // Daniel: ein An/Aus-Schalter passt nicht zum Scharfschalten. Drei Entwürfe, umschaltbar über
-  // localStorage casora-entwurf-alarm = a|b|c (Standard a):
-  //   a  großer Haupt-Knopf (Scharf/Unscharf/Abbrechen/Alarm beenden) + Modus-Zeilen darunter
-  //   b  eine Segment-Leiste Aus · Zuhause · Abwesend · Nacht · Urlaub · Bypass
-  //   c  nur Modus-Zeilen (erste Zeile „Aus“), der Kopf zeigt nur den Zustand
-  // Alle: Code-Feld, wenn Alarmo einen Code verlangt (code_format / code_arm_required), Countdown
-  // bei arming/pending aus dem Alarmo-Attribut delay, eigener Hinweis bei ausgelöst.
+  // ── Alarm-Popup: Bedienung (06.10.2026, nur Weich) ──────────────────────────
+  // Statt An/Aus-Schalter: großer Haupt-Knopf (Scharf/Unscharf/Abbrechen/Alarm beenden) + Modus-Zeilen
+  // darunter. Code-Feld, wenn Alarmo einen Code verlangt (code_format /
+  // code_arm_required), Countdown bei arming/pending aus dem Alarmo-Attribut delay, Hinweis bei ausgelöst.
   // Die Vorlage ruft _casoraAlarmSoftToggle (Feld „toggle“) und _casoraSoftAlarm (Feld „modes“).
   var AL = window._casoraAlarmSoft = {};
-  AL.variant = function () {
-    var v = null;
-    try { v = localStorage.getItem('casora-entwurf-alarm'); } catch (e) { v = null; }
-    return v === 'b' || v === 'c' ? v : 'a';
-  };
   // Zahl im Countdown läuft per CSS (registrierte Ganzzahl-Eigenschaft) – kein Timer nötig.
   try { if (window.CSS && CSS.registerProperty) CSS.registerProperty({ name: '--cal-n', syntax: '<integer>', inherits: true, initialValue: '0' }); } catch (e) { /* schon registriert */ }
   var FEAT = { armed_home: 1, armed_away: 2, armed_night: 4, armed_custom_bypass: 16, armed_vacation: 32 };
@@ -139,35 +130,9 @@
       n: '<span class="cal-n" style="font-variant-numeric:tabular-nums;animation:' + k + 'n ' + I.left + 's steps(' + Math.max(1, I.left) + ', end) forwards;"></span>',
     };
   };
-  // Hinweis-Karte für Countdown / ausgelöst (Entwürfe b und c; a zeigt es im Knopf).
-  AL.notice = function (ent, I) {
-    var cd = AL.count(I, I.st === 'pending' ? WARN : TON);
-    var box = function (bg, ink, title, sub, extra, svc, btn) {
-      return '<div style="width:440px;max-width:100%;margin:0 auto;box-sizing:border-box;padding:14px 16px;border-radius:var(--casora-popup-row-radius, 24px);'
-        + 'background:' + bg + ';font-family:' + FONT + ';text-align:left;">'
-        + '<div style="display:flex;align-items:center;gap:12px;">'
-        + '<div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:700;color:' + ink + ';">' + title + '</div>'
-        + (sub ? '<div style="font-size:13px;font-weight:500;color:' + ink + ';opacity:.8;margin-top:2px;">' + sub + '</div>' : '') + '</div>'
-        + (btn ? '<div' + AL.act(ent, svc) + ' style="flex:none;min-height:44px;display:flex;align-items:center;padding:0 18px;border-radius:999px;'
-          + 'background:' + (I.st === 'triggered' ? '#fff' : 'var(--casora-lps-seg-on, #FFFDF9)') + ';color:' + (I.st === 'triggered' ? BAD : INK) + ';font-size:14.5px;font-weight:700;cursor:pointer;">' + btn + '</div>' : '')
-        + '</div>' + extra + '</div>';
-    };
-    if (I.st === 'triggered') return box(BAD, '#fff', 'Alarm!', 'Die Alarmanlage wurde ausgelöst', '', 'alarm_disarm', 'Alarm beenden');
-    if (I.st === 'arming') return box(ROW, INK, (I.target ? I.target + ' wird' : 'Wird') + ' scharf' + (cd.n ? ' in ' + cd.n + ' s' : ' …'),
-      'Verlass das Haus oder brich ab', cd.bar, 'alarm_disarm', 'Abbrechen');
-    if (I.st === 'pending') return box('color-mix(in srgb, ' + WARN + ' 16%, transparent)', INK, 'Alarm' + (cd.n ? ' in ' + cd.n + ' s' : ' läuft an'),
-      'Jetzt unscharf schalten, sonst geht der Alarm los', cd.bar, 'alarm_disarm', 'Unscharf schalten');
-    return '';
-  };
-
   // Feld „toggle“ (oben, mittig)
   window._casoraAlarmSoftToggle = function (ent, states) {
-    var I = AL.info(ent, states), v = AL.variant();
-    if (v !== 'a') {
-      var n = AL.notice(ent, I);
-      return (AL.code(I) + n) ? '<div>' + AL.code(I) + n + '</div>' : '';
-    }
-    // a: Haupt-Knopf
+    var I = AL.info(ent, states);
     var away = AL.ok(I, 'armed_away') ? 'armed_away' : (Object.keys(FEAT).filter(function (k) { return AL.ok(I, k); })[0] || 'armed_away');
     var cd = AL.count(I, '#fff');
     var b;
@@ -193,36 +158,17 @@
   // Feld „modes“ (unten, volle Breite)
   window._casoraAlarmSoft.modes = function (ent, modes, states) {
     var UI = window._casoraUI; if (!UI) return '';
-    var I = AL.info(ent, states), v = AL.variant();
+    var I = AL.info(ent, states);
     var list = modes.filter(function (m) { return AL.ok(I, m.id); });
     var aim = (I.st === 'arming' || I.st === 'pending') ? (I.a.next_state || I.a.arm_mode) : I.st;
     var svcOf = function (id) { return id === 'disarmed' ? 'alarm_disarm' : 'alarm_' + id.replace('armed_', 'arm_'); };
     var swap = function (html) { return String(html).replace(/data-casora-svc="/g, 'data-casora-alarm="'); };
-    if (v === 'b') {
-      var cells = [{ id: 'disarmed', label: 'Aus', icon: 'shield_off', description: 'Alarmanlage ausgeschaltet' }].concat(list);
-      var cur = cells.filter(function (c) { return c.id === aim; })[0];
-      return UI.label('Modus')
-        + '<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(86px, 1fr));gap:6px;padding:5px;border-radius:26px;background:' + ROW + ';font-family:' + FONT + ';">'
-        + cells.map(function (c) {
-          var on = c.id === aim, busy = on && (I.st === 'arming' || I.st === 'pending');
-          var tone = c.id === 'disarmed' ? INK : (I.st === 'triggered' ? BAD : GOOD);
-          return '<div' + AL.act(ent, svcOf(c.id)) + ' aria-pressed="' + on + '" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;'
-            + 'min-height:72px;padding:8px 4px;border-radius:21px;cursor:pointer;'
-            + (on ? 'background:var(--casora-lps-seg-on, #FFFDF9);box-shadow:var(--casora-lps-seg-on-shadow, none);' : '')
-            + (busy ? 'animation:calp 1.4s ease-in-out infinite;' : '') + '">'
-            + icon(c.icon, 22, on ? tone : 'var(--casora-soft-glyph-off, rgba(58,50,43,0.55))')
-            + '<div style="font-size:13.5px;font-weight:' + (on ? 700 : 600) + ';color:' + (on ? INK : SUB) + ';">' + esc(c.label) + '</div></div>';
-        }).join('') + '</div>'
-        + '<style>@keyframes calp{0%,100%{opacity:1}50%{opacity:.55}}</style>'
-        + (cur ? '<div style="text-align:center;font:500 13px/1.4 ' + FONT + ';color:' + SUB + ';margin-top:10px;">' + esc(cur.description) + '</div>' : '');
-    }
-    var rows = (v === 'c' ? [{ id: 'disarmed', label: 'Aus', icon: 'shield_off', description: 'Alarmanlage ausgeschaltet' }] : []).concat(list);
-    return swap(UI.group(rows.map(function (m) {
+    return swap(UI.group(list.map(function (m) {
       var on = aim === m.id;
       return { icon: m.icon, iconTone: on ? (m.id === 'disarmed' ? 'rgba(0,0,0,0)' : 'good') : 'rgba(0,0,0,0)', label: m.label,
         sub: on && (I.st === 'arming' || I.st === 'pending') ? 'Wird scharf …' : m.description,
         selected: on, svc: { domain: 'alarm_control_panel', service: svcOf(m.id), data: { entity_id: ent } } };
-    }), v === 'a' && I.st === 'disarmed' ? 'Oder Modus wählen' : 'Modus'));
+    }), I.st === 'disarmed' ? 'Oder Modus wählen' : 'Modus'));
   };
 
   // Tippen auf data-casora-alarm: Dienst mit Code aus dem Feld; fehlt der Code, Feld fokussieren.
