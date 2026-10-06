@@ -7123,6 +7123,11 @@ class CasoraPanel extends HTMLElement {
           color:var(--casora-studio-cap-sub, color-mix(in srgb, var(--ink) 52%, transparent));
         }
         .sidelist .siderow .sidesum > span + span::before { content:" · "; }
+        /* S-06: umbrechen statt „Design · Bildschirm · HA-…“ – zwischen den Teilen, nie mitten im Wort. */
+        .sidelist .siderow .sidesum { white-space:normal; text-overflow:clip; }
+        .sidelist .siderow .sidesum > span { display:inline-block; white-space:nowrap; margin-right:.3em; }
+        .sidelist .siderow .sidesum > span + span::before { content:none; }
+        .sidelist .siderow .sidesum > span:not(:last-child)::after { content:" ·"; }
         .sidelist .siderow.off .sidesum { opacity:.55; }
         /* Geöffneter Abschnitt: Unterbereiche eingerückt darunter (Sprung dorthin). */
         .sidelist .sidesubs { margin:0 0 4px; }
