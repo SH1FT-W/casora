@@ -327,6 +327,16 @@
   const activeStates     = () => window.CASORA_ACTIVE_STATES || EMPTY_SET;
   const filterCategories = () => window.CASORA_FILTER_CATEGORIES || {};
 
+  // Im Studio ausgeblendete Kachel (variables.enabled: false) bzw. „nur Desktop“ (surfaces) –
+  // auf den Handy-Raum- und Kategorieseiten überspringen wie in casora-smart-row (isCardDisabled).
+  function _cardOffOnPhone(cfg) {
+    let c = cfg, depth = 0;
+    while (c?.type === 'conditional' && c.card && depth++ < 4) c = c.card;
+    const v = c?.variables?.enabled;
+    if (v === false || v === 'false' || v === 0 || v === '0') return true;
+    return c?.variables?.surfaces === 'desktop';
+  }
+
   function _cardCategory(cfg) {
     const direct = cfg?.variables?.mobile_filter_category;
     if (direct !== null && direct !== undefined) return direct;
@@ -1311,11 +1321,11 @@
           if (roomMode) {
             if (pending.name === roomMode) {
               // Wie die Reihe am Desktop: aktive Kacheln vorn, außer die Reihe sortiert nicht (sort: false).
-              rooms.push({ ...pending, cards: (hsr._config?.cards || []).slice(), sort: hsr._config?.sort !== false });
+              rooms.push({ ...pending, cards: (hsr._config?.cards || []).filter((c) => !_cardOffOnPhone(c)), sort: hsr._config?.sort !== false });
             }
           } else if (pending.name && !pending.fav) {
             const cards = (hsr._config?.cards || []).filter(
-              (c) => _cardCategory(c) === this._config.filter_category);
+              (c) => !_cardOffOnPhone(c) && _cardCategory(c) === this._config.filter_category);
             if (cards.length) rooms.push({ ...pending, cards });
           }
           pending = null;
@@ -1494,7 +1504,7 @@
         }
       }
       const cards = (rowEl?._config?.cards || []).filter(
-        (c) => _cardCategory(c) === this._config.filter_category);
+        (c) => !_cardOffOnPhone(c) && _cardCategory(c) === this._config.filter_category);
       this._favPopupDone = true; // attempted, so don't rescan on every open
       if (!cards.length) return;
       if (this._emptyHintEl) { this._emptyHintEl.remove(); this._emptyHintEl = null; }

@@ -350,7 +350,9 @@
             if (Object.keys(own).length) mcfg.button_card_templates = Object.assign({}, mcfg.button_card_templates, I.clone(own));
             I.applyMotion(mcfg, rooms);
             I.applyKiosk(mcfg, rooms);
-            I.markPhoneManaged(mcfg);
+            // Mit den Räumen: Handy-Kopf und -Leiste zeigen die Übersicht wie der Desktop
+            // (Standardname übersetzt „Zuhause“/„Home“, eigener Name wie getippt) – sonst stand „Home“.
+            I.markPhoneManaged(mcfg, undefined, undefined, rooms);
             mobileMade = await this._hass.callWS({ type: "lovelace/dashboards/create", url_path: url_path + "-mobile", title: title + " Mobile", icon: "mdi:cellphone", show_in_sidebar: false, require_admin: false });
             await this._hass.callWS({ type: "lovelace/config/save", url_path: url_path + "-mobile", config: mcfg });
             paired = true;

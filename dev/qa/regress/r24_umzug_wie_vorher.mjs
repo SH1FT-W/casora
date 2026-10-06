@@ -68,6 +68,28 @@ for (const src of ['hemma-zuhause', 'hemma-eins']) {
   await check(src + ': Original unverändert', JSON.stringify(await c.cmd({ type: 'lovelace/config', url_path: src })) === orig);
   const list = (await c.cmd({ type: 'lovelace/dashboards/list' })).map((d) => d.url_path);
   await check(src + ': Handy-Layout angelegt', list.includes(r.url + '-mobile'));
+  // F-06 (06.10.2026): Nach dem Umzug von Hemma 1 zeigte das Handy „Home“ statt „Zuhause“ – der
+  // Handy-Titel (Kopf + Leiste) bekam die Übersicht nicht mit. Wie am Desktop: Standardname übersetzt.
+  {
+    const dcfg = await c.cmd({ type: 'lovelace/config', url_path: r.url });
+    const homeAuto = /"casora_auto_name":"home"/.test(JSON.stringify(dcfg.views[0] || {}));
+    const mcfg = await c.cmd({ type: 'lovelace/config', url_path: r.url + '-mobile' }).catch(() => null);
+    const find = (x, f, d = 0) => { if (!x || typeof x !== 'object' || d > 12) return null; if (f(x)) return x;
+      for (const y of Object.values(x)) { const h = find(y, f, d + 1); if (h) return h; } return null; };
+    const nav = find(mcfg, (o) => o.type === 'custom:casora-mobile-nav');
+    const head = find(mcfg, (o) => o.template === 'casora_mobile_weather');
+    if (homeAuto) await check(src + ': Handy-Titel der Übersicht folgt der Sprache (Kopf + Leiste)',
+      !!nav && nav.home_auto === true && !nav.home_label && !!head && (head.variables || {}).home_auto === true && !(head.variables || {}).home_name,
+      { nav: nav && { home_auto: nav.home_auto, home_label: nav.home_label }, head: head && head.variables });
+  }
+  // Nur für Vorher/Nachher-Bilder: Handy-Startseite nach dem Umzug (R24_SHOT=<Pfad>, nur Hemma 1).
+  if (process.env.R24_SHOT && r.legacy) {
+    const ph = await open({ width: 390, height: 844, mobile: true, safari: true, dark: false });
+    await dashboard(ph.page, r.url + '-mobile/' + ((((await c.cmd({ type: 'lovelace/config', url_path: r.url + '-mobile' })).views || [])[0] || {}).path || '0'), 3);
+    await ph.page.waitForTimeout(2500);
+    await ph.page.screenshot({ path: process.env.R24_SHOT });
+    await ph.browser.close();
+  }
   // Dashboard ansehen: keine Fehlerkarten; Übersicht mit Beleuchtungs-Badge, wenn Hemma Lichter eingetragen hatte.
   await dashboard(page, r.url + '/' + 'home');
   const seen = await page.evaluate(() => {
