@@ -1,6 +1,7 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "Tiles and badges the preview does not show right now – tap to see them": "Kacheln und Badges, die die Vorschau gerade nicht zeigt – antippen, um sie zu sehen",
     "Which device should the tile show?": "Welches Gerät soll die Kachel zeigen?",
     "Pick one – or add the tile without a device and choose it later.": "Wähl eins aus – oder füge die Kachel ohne Gerät hinzu und wähle es später.",
     "Phone differs in 1 setting": "Handy weicht bei 1 Einstellung ab",

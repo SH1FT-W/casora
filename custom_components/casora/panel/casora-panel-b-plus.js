@@ -746,6 +746,8 @@
             setTimeout(() => this._bIntro(false), 1400);
           }
           this._bWireSmartDrag();
+          // „N ausgeblendet“ erklärt sich beim Zeigen (Nutzertest: „sagt mir nicht, was ausgeblendet ist“).
+          root.querySelectorAll(".bhid").forEach((c) => { c.title = tr("Tiles and badges the preview does not show right now – tap to see them"); });
         }
       } catch (e) { console.warn("Casora Studio:", e); }
       return r;
