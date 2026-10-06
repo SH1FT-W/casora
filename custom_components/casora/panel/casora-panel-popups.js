@@ -36,7 +36,7 @@
     + ".cp-bar svg{width:15px;height:15px}"
     // M9: hell stand das Etikett durchscheinend auf der abgedunkelten Vorschau – dunkle Schrift auf
     // dunklem Grund. Jetzt eine helle, deckende Pille.
-    + ":host(.is-light) .cp-bar{background:var(--casora-studio-card, rgba(251,248,243,.94));box-shadow:0 2px 10px rgba(40,30,20,.18),inset 0 0 0 .5px rgba(40,30,20,.08)}"
+    + ":host(.is-light) .cp-bar{background:var(--casora-studio-card, rgba(251,248,243,.94));box-shadow:0 2px 10px color-mix(in srgb, var(--ink, #282014) 18%, transparent),inset 0 0 0 .5px color-mix(in srgb, var(--ink, #282014) 8%, transparent)}"
     + ":host(.is-light) .cp-bar button{background:var(--casora-studio-chip, rgba(118,118,128,.14))}:host(.is-light) .cp-bar button:hover{background:var(--casora-studio-chip-hi, rgba(118,118,128,.24))}"
     + ":host(.is-light) .cp-note{background:rgba(255,255,255,.9);box-shadow:0 0 0 .5px rgba(0,0,0,.08)}"
     + ".cp-box{flex:1 1 auto;min-height:0;width:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;"

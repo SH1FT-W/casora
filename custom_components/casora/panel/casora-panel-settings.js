@@ -44,7 +44,7 @@
     + ".cs-wrap .frow.casora-prow .rtext b{font-size:var(--t-foot)}"
     + ".cs-wrap .frow.casora-prow .rtext span{font-size:var(--t-caption)}"
     + ".cs-wrap .casora-pctl .combo>input,.cs-wrap .casora-pctl>input.fin,.cs-wrap .cs-num input"
-    + "{height:38px;box-sizing:border-box;font-size:var(--t-callout)}"
+    + "{height:var(--k-h, 38px);box-sizing:border-box;font-size:var(--t-callout)}"
     + ".cs-lede{margin:0 4px 14px;font-size:var(--t-foot);line-height:1.45;color:var(--ink-2)}"
     + ".cs-note{margin:0 0 14px;padding:10px 12px;border-radius:var(--r-m);background:var(--casora-studio-link-tint, rgba(10,132,255,.16));font-size:var(--t-foot);line-height:1.4}"
     + ".cs-err{margin:0 0 14px;padding:10px 12px;border-radius:var(--r-m);background:rgba(255,69,58,.16);color:var(--ink);font-size:var(--t-foot);line-height:1.4}"
@@ -60,7 +60,7 @@
     + "box-shadow:var(--toast-rim, var(--casora-studio-toast-rim, 0 0 0 .5px rgba(255,255,255,0.10), 0 14px 34px rgba(0,0,0,0.42)));"
     + "transition:opacity .22s ease, transform .34s cubic-bezier(.2,.9,.3,1.12), visibility 0s}"
     // Hell liegt die Leiste weiß auf weißer Karte – ein tieferer, weicher Schatten hebt sie ab.
-    + ":host(.is-light) .cs-bar{box-shadow:var(--toast-rim, 0 0 0 .5px rgba(0,0,0,0.08)), 0 18px 40px -12px rgba(60,40,20,0.28), 0 2px 8px rgba(60,40,20,0.08)}"
+    + ":host(.is-light) .cs-bar{box-shadow:var(--toast-rim, 0 0 0 .5px rgba(0,0,0,0.08)), 0 18px 40px -12px color-mix(in srgb, var(--ink, #3C2814) 28%, transparent), 0 2px 8px color-mix(in srgb, var(--ink, #3C2814) 8%, transparent)}"
     + ".cs-bar.cs-clean{opacity:0;visibility:hidden;pointer-events:none;transform:translateY(18px) scale(.98);"
     + "transition:opacity .18s ease, transform .22s ease, visibility 0s .22s}"
     + "@media (prefers-reduced-motion:reduce){.cs-bar,.cs-bar.cs-clean{transform:none;transition:opacity .15s}}"
@@ -73,7 +73,7 @@
     // Zeitpläne: Modus, Wochentag und Uhrzeit nebeneinander, am Handy untereinander.
     + ".cs-wrap .frow.cs-plan .casora-pctl>.combo{flex:1 1 150px}"
     + ".cs-num{display:flex;align-items:center;gap:8px}"
-    + ".cs-num input{width:110px;padding:7px 11px;border-radius:var(--r-s);border:none;background:var(--casora-studio-chip, rgba(118,118,128,.18));color:inherit;font:inherit;text-align:right}"
+    + ".cs-num input{width:110px;padding:7px 12px;border-radius:var(--r-m);border:none;background:var(--field, var(--casora-studio-field, rgba(118,118,128,.18)));color:inherit;font:inherit;text-align:right}"
     + ".cs-num span{font-size:var(--t-callout);color:var(--ink-2)}"
     + ".casora-pctl>button.ghost{padding:7px 13px;font-size:var(--t-foot)}"
     + ".frow .sw{margin-left:auto;flex:none}"

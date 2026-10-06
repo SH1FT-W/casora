@@ -49,6 +49,11 @@ const THEME_RENAMED = { "Casora Weich": "Casora", "Casora Standard": "Hemma 2", 
 const CASORA_THEMES = [
   { name: CASORA_THEME, aliases: ["Casora Weich"], label: "Casora", sub: "Warm linen, soft shadows, big round corners.",
     shot: { light: "/casora_assets/themes/weich-light.webp", dark: "/casora_assets/themes/weich-dark.webp" } },
+  // Casora Nebel (06.10.2026): kühl, Petrol-Akzent. ph: ruhiger Platzhalter hinter dem Bild, bis die
+  // Vorschaubilder (nebel-*.webp) mit dem Release kommen – ein fehlendes Bild lässt ihn einfach durchscheinen.
+  { name: "Casora Nebel", label: "Casora Nebel", sub: "Cool light grey with a petrol accent, slightly crisper corners.",
+    shot: { light: "/casora_assets/themes/nebel-light.webp", dark: "/casora_assets/themes/nebel-dark.webp" },
+    ph: { light: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23EEF1F3%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2226%22%20width%3D%22120%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%23D5DCE1%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23FFFFFF%22/%3E%3Crect%20x%3D%22116%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23FFFFFF%22/%3E%3Crect%20x%3D%2224%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%23FFFFFF%22/%3E%3Crect%20x%3D%22168%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%23FFFFFF%22/%3E%3Ccircle%20cx%3D%2246%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%233F7491%22/%3E%3Ccircle%20cx%3D%22190%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%233F7491%22%20opacity%3D%22.35%22/%3E%3C/svg%3E")', dark: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%231C2226%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2226%22%20width%3D%22120%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%2338434A%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%232A3237%22/%3E%3Crect%20x%3D%22116%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%232A3237%22/%3E%3Crect%20x%3D%2224%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%232A3237%22/%3E%3Crect%20x%3D%22168%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%232A3237%22/%3E%3Ccircle%20cx%3D%2246%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%235E9AB8%22/%3E%3Ccircle%20cx%3D%22190%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%235E9AB8%22%20opacity%3D%22.35%22/%3E%3C/svg%3E")' } },
   { name: CASORA_LEGACY, aliases: ["Casora Standard", "Hemma"], label: "Hemma 2 (Legacy)", sub: "The original dark glass over your room photos.",
     legacy: true, shot: { light: "/casora_assets/themes/hemma-light.webp", dark: "/casora_assets/themes/hemma-dark.webp" } },
   { name: "Hemma 1", aliases: ["Casora Glass"], label: "Hemma 1 (Legacy)", sub: "Clear glass tiles that let the room shine through.",
@@ -3449,7 +3454,7 @@ const softLook = () => {
     return getComputedStyle(document.documentElement).getPropertyValue("--casora-popup-layout").trim() === "soft";
   } catch (e) { return false; }
 };
-const accentLabel = (a) => (a.key === "purple" && ACCENT_THEME === CASORA_THEME ? "Dark red" : a.label);
+const accentLabel = (a) => (a.key === "purple" && (ACCENT_THEME === CASORA_THEME || ACCENT_THEME === "Casora Nebel") ? "Dark red" : a.label);
 const swatchOf = (v) => {
   const raw = String(v || "").trim();
   if (!raw) return null;
@@ -12474,7 +12479,7 @@ class CasoraPanel extends HTMLElement {
     grid.className = "themegrid";
     const cards = [];
     const paint = () => cards.forEach((c) => c.setAttribute("aria-checked", c.dataset.theme === pick ? "true" : "false"));
-    const card = (name, label, sub, img, rec) => {
+    const card = (name, label, sub, img, rec, ph) => {
       const c = document.createElement("button");
       c.type = "button";
       c.className = "themecard";
@@ -12483,7 +12488,7 @@ class CasoraPanel extends HTMLElement {
       const shot = document.createElement("span");
       shot.className = "themeshot" + (img ? "" : " plain");
       // A real screenshot of a Casora dashboard in this look, day or night as HA is set.
-      if (img) shot.style.backgroundImage = "url('" + img + "')";
+      if (img) shot.style.backgroundImage = "url('" + img + "')" + (ph ? ", " + ph : "");
       const meta = document.createElement("span");
       meta.className = "thememeta";
       const tx = document.createElement("span");
@@ -12504,7 +12509,8 @@ class CasoraPanel extends HTMLElement {
       grid.appendChild(c);
       cards.push(c);
     };
-    themes.forEach((x) => card(x.name, x.label, x.sub, x.shot && shotLang(dark ? x.shot.dark : x.shot.light, this._hass), !x.legacy));
+    themes.forEach((x) => card(x.name, x.label, x.sub, x.shot && shotLang(dark ? x.shot.dark : x.shot.light, this._hass), x.name === CASORA_THEME,
+      x.ph && (dark ? x.ph.dark : x.ph.light)));
     if (own) card(own, own, "Keep your current theme", null);
     s.body.appendChild(grid);
     s.box.classList.add("fwide");
@@ -12600,7 +12606,8 @@ class CasoraPanel extends HTMLElement {
     let look = this._lookPick;
     if (!look) { try { look = (JSON.parse(localStorage.getItem("selectedTheme") || "null") || {}).theme; } catch (e) { look = null; } }
     look = THEME_RENAMED[look] || look;
-    const set = look === "Hemma 1" ? "glass" : look === CASORA_THEME ? "weich" : "std";
+    // Nebel: bis eigene Bilder (perf-nebel-*) da sind, die Weich-Bilder – gleicher Aufbau.
+    const set = look === "Hemma 1" ? "glass" : (look === CASORA_THEME || look === "Casora Nebel") ? "weich" : "std";
     const shot = (mode) => shotLang("/casora_assets/themes/perf-" + set + "-" + mode + "-" + (dark ? "dark" : "light") + ".webp", this._hass);
     const grid = document.createElement("div");
     grid.className = "themegrid perfgrid";

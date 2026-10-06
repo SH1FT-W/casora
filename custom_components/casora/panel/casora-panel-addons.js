@@ -237,7 +237,7 @@ customElements.whenDefined("casora-panel").then(() => {
     let now = ours ? ours.name : (cur || "");
     const cards = [];
     const paint = () => cards.forEach((c) => c.setAttribute("aria-checked", c.dataset.theme === now ? "true" : "false"));
-    const add = (name, label, img) => {
+    const add = (name, label, img, ph) => {
       const c = document.createElement("button");
       c.type = "button";
       c.className = "casora-lookcard";
@@ -245,7 +245,7 @@ customElements.whenDefined("casora-panel").then(() => {
       c.setAttribute("role", "radio");
       const shot = document.createElement("span");
       shot.className = "casora-lookshot";
-      if (img) shot.style.backgroundImage = "url('" + img + "')";
+      if (img) shot.style.backgroundImage = "url('" + img + "')" + (ph ? ", " + ph : "");
       const b = document.createElement("b");
       // „Hemma Glas (Legacy)“: Name einzeilig, der Zusatz in Klammern als kleines Etikett darunter.
       const m = /^(.*?)\s*\(([^)]*)\)\s*$/.exec(label || "");
@@ -270,7 +270,8 @@ customElements.whenDefined("casora-panel").then(() => {
       cards.push(c);
     };
     const SL = (window.__casoraPanelInternals || {}).shotLang || ((u) => u);
-    themes.forEach((x) => add(x.name, tr(x.label), x.shot && SL(dark ? x.shot.dark : x.shot.light, this._hass)));
+    themes.forEach((x) => add(x.name, tr(x.label), x.shot && SL(dark ? x.shot.dark : x.shot.light, this._hass),
+      x.ph && (dark ? x.ph.dark : x.ph.light)));
     if (!ours && cur) add(cur, cur, null);
     paint();
     box.appendChild(grid);
