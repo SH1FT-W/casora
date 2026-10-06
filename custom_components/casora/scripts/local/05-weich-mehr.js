@@ -15,6 +15,12 @@
     var n = parseFloat(states[id].state);
     return isNaN(n) ? null : n;
   };
+  /* Leistung in Watt, auch wenn der Sensor kW/MW meldet (B-TPL-03). */
+  var watt = function (states, id) {
+    var n = num(states, id); if (n == null) return null;
+    var u = (states[id].attributes || {}).unit_of_measurement;
+    return u === 'kW' ? n * 1000 : u === 'MW' ? n * 1e6 : u === 'mW' ? n / 1000 : n;
+  };
   var raw = function (states, id) { return (id && states[id]) ? states[id].state : null; };
   var ok = function (s) { return s != null && s !== 'unknown' && s !== 'unavailable'; };
   var fN = function (v, hass) { return v == null ? '—' : (v >= 100 ? Math.round(v) : Math.round(v * 10) / 10).toLocaleString(LANG(hass)); };
@@ -422,7 +428,7 @@
     var UI = window._casoraUI;
     if (!UI) return '';
     if (part === 'hero') {
-      var p = num(states, C.home), grid = num(states, C.grid);
+      var p = watt(states, C.home), grid = watt(states, C.grid);
       var bits = [];
       if (p != null && p < -20) bits.push('Einspeisung');
       if (C.solar && p != null && p > 0 && grid != null) {
@@ -477,7 +483,7 @@
         arows.push({ entity: C.solarToday, icon: 'mdi:solar-power-variant', iconTone: '#FFD600', label: 'Solaranteil heute',
           value: Math.round(sT / (sT + nT) * 100) + ' %', sub: 'Solar ' + fN(sT, hass) + ' kWh · Netz ' + fN(nT, hass) + ' kWh' });
       }
-      var exp = num(states, C.export), expTot = num(states, C.exportTotal);
+      var exp = watt(states, C.export), expTot = num(states, C.exportTotal);
       // Zähler in Wh, kWh oder MWh – unten durch 1000 in kWh.
       if (expTot != null) expTot *= ({ kWh: 1000, MWh: 1e6 }[(states[C.exportTotal].attributes || {}).unit_of_measurement] || 1);
       if (exp != null || expTot != null) {
@@ -517,14 +523,14 @@
       }
       (Array.isArray(C.pv) ? C.pv : []).forEach(function (id, i) {
         if (!states[id]) return;
-        srows.push({ entity: id, icon: 'mdi:solar-panel', iconTone: '#FFD600', label: 'Modul ' + (i + 1), value: fW(num(states, id), hass) });
+        srows.push({ entity: id, icon: 'mdi:solar-panel', iconTone: '#FFD600', label: 'Modul ' + (i + 1), value: fW(watt(states, id), hass) });
       });
       var temp = num(states, C.temp);
       if (temp != null) {
         srows.push({ entity: C.temp, icon: 'mdi:thermometer', iconTone: temp >= 45 ? 'bad' : '#FF9F0A', label: 'Temperatur',
           value: Math.round(temp) + ' ' + ((states[C.temp].attributes || {}).unit_of_measurement || '°C') });
       }
-      var lt = num(states, C.loadTarget);
+      var lt = watt(states, C.loadTarget);
       if (lt != null) srows.push({ entity: C.loadTarget, icon: 'mdi:tune-vertical', iconTone: 'accent', label: 'Lastvorgabe', value: fW(lt, hass) });
       if (srows.length) secs.push(UI.group(srows, 'Solarbank'));
       return secs.length ? UI.more('energy', secs.map(function (x) { return '<div>' + x + '</div>'; }).join(''), { count: secs.length }) : '';
