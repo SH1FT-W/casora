@@ -62,6 +62,8 @@
     :host(.bmode.binsp.split:not(.flow)) .inspector { display:flex; animation:bInspIn .22s var(--ease, ease); }
     :host(.bmode.bpage.split:not(.flow)) { --b-insp-w:min(760px, calc(100% - 28px)); }
     :host(.bmode.bpage.split:not(.flow)) .main { padding-right:0; }
+    /* Dunkel liegt die Seite über dem Hausfoto der Vorschau: fast deckend, sonst schimmert es bunt durch. */
+    :host(.bmode.bpage.split:not(.flow):not(.is-light)) .inspector { background:var(--casora-studio-page-solid, rgba(22,23,28,0.95)) !important; }
     :host(.bmode.bpage.split:not(.flow)) .inspector { top:calc(var(--top-h, 64px) + 4px) !important; margin:0 !important; }
     /* Seiten (Einstellungen, Updates, Zeitreise) liegen über der Vorschau: deren Umschalter
        Desktop/Tablet/Mobil ragte sonst halb über den Rand. */
