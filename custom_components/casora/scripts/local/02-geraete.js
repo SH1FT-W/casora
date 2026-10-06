@@ -391,7 +391,7 @@
     const okText = 'Temperatur im Normalbereich';
     return window._casoraUI.hero({
       value: isNaN(n) ? '—' : n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
-      unit: '°C',
+      unit: (states[c.temp]?.attributes?.unit_of_measurement) || '°C', /* Einheit des Fühlers (°C/°F) */
       sub: ev.level ? ev.reasons.join(' · ') : okText,
       subTone: ev.level === 2 ? 'bad' : ev.level === 1 ? 'warn' : 'good',
       center: true,
@@ -537,7 +537,7 @@
     const rows = [];
     const tn = parseFloat(states[c.temp]?.state);
     rows.push({ icon: 'mdi:thermometer-water', iconTone: 'accent', label: 'Wassertemperatur',
-      value: isNaN(tn) ? '—' : tn.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' °C', entity: c.temp });
+      value: isNaN(tn) ? '—' : tn.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' ' + ((states[c.temp]?.attributes?.unit_of_measurement) || '°C'), entity: c.temp });
     if (c.leak && states[c.leak]) {
       const ls = states[c.leak].state;
       const wet = ls === 'on';
@@ -2599,13 +2599,15 @@
 
     if (kind === 'p_temp') {
       var rt = [];
+      /* Einheit des Sensors (°C/°F), sonst °C. */
+      var tu = function (id) { return (states[id] && states[id].attributes && states[id].attributes.unit_of_measurement) || '°C'; };
       var trow = function (id, tid, label, icon) {
         var v = U.num(states, id);
         if (v == null) return;
         var tg = U.num(states, tid);
         var heating = tg != null && tg > 0;
         rt.push({ icon: icon, iconTone: heating ? (Math.abs(tg - v) > 2 ? 'warn' : 'bad') : DIM, label: label,
-          sub: heating ? 'Ziel ' + Math.round(tg) + ' °C' : null, value: Math.round(v) + ' °C',
+          sub: heating ? 'Ziel ' + Math.round(tg) + ' ' + tu(tid) : null, value: Math.round(v) + ' ' + tu(id),
           bar: heating ? Math.max(0, Math.min(1, v / tg)) : null, barTone: 'warn', entity: id });
       };
       trow(c.noz, c.nozT, 'Düse', 'mdi:printer-3d-nozzle-heat-outline');
@@ -2640,7 +2642,7 @@
       if (hum != null) rows2.push({ icon: 'mdi:water-percent', iconTone: idx != null && idx <= 2 ? 'warn' : 'accent', label: 'Luftfeuchtigkeit im AMS',
         sub: idx != null ? 'Stufe ' + Math.round(idx) + ' von 5' + (idx <= 2 ? ' · Trockenmittel tauschen' : '') : null,
         value: Math.round(hum) + ' %', entity: c.amsHum });
-      if (at != null) rows2.push({ icon: 'mdi:thermometer', iconTone: DIM, label: 'Temperatur im AMS', value: U.f(at, 1) + ' °C' });
+      if (at != null) rows2.push({ icon: 'mdi:thermometer', iconTone: DIM, label: 'Temperatur im AMS', value: U.f(at, 1) + ' ' + ((states[c.amsTemp] && states[c.amsTemp].attributes.unit_of_measurement) || '°C') });
       if (window._casoraHH && window._casoraHH.on()) return rows2.length ? UI.group(rows2, 'Filament') : '';
       return rows2.length ? L.wrap(UI.group(rows2, 'Filament').replace(/data-casora-mi="/g, 'data-hp-metric="')) : '';
     }

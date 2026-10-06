@@ -1681,6 +1681,7 @@
     var s = function (k) { var id = C.id(p, k, 'sensor'); return id && states[id]; };
     var b = function (k) { var id = C.id(p, k, 'binary_sensor'); return id && states[id]; };
     var val = function (k) { var x = s(k); return ok(x) ? num(x.state) : null; };
+    var unit = function (k) { var x = s(k); return (x && x.attributes && x.attributes.unit_of_measurement) || null; };
     var on = function (k) { var x = b(k); return !!(x && x.state === 'on'); };
     var openDoors = DOORS.filter(function (d) { return on(d[0]); }).map(function (d) { return d[1]; });
     var openWins = WINS.filter(function (d) { return on(d[0]); }).map(function (d) { return d[1]; });
@@ -1698,7 +1699,7 @@
     return {
       range: val('reichweite_kombiniert'), tank: fuel != null ? fuel : soc, ev: fuel == null && soc != null, km: val('kilometerstand'),
       scr: val('scr_reichweite'), oil: val('olstand'), v12: val('12v_batteriespannung'),
-      out: val('aussentemperatur'), open: openDoors.concat(openWins), openDoors: openDoors, openWins: openWins, locked: locked,
+      out: val('aussentemperatur'), outUnit: unit('aussentemperatur') || '°C', open: openDoors.concat(openWins), openDoors: openDoors, openWins: openWins, locked: locked,
       brake: on('feststellbremse'),
       insp: s('nachste_inspektion'), inspKm: val('inspektionsdistanz'), oilDate: s('nachster_olwechsel'),
       shortKm: val('strecke_kurzzeit'), shortL: val('o_verbrauch_benzin_kurzzeit'), shortMin: val('fahrzeit_kurzzeit'),
@@ -1785,7 +1786,7 @@
           label: 'Fenster & Schiebedach', value: r.openWins.length ? 'Offen' : 'Zu' },
         { icon: 'mdi:car-brake-parking', iconTone: 'rgba(255,255,255,0.18)', label: 'Feststellbremse', value: r.brake ? 'Angezogen' : 'Gelöst' },
       ];
-      if (r.out != null) rows.push({ icon: 'mdi:thermometer', iconTone: 'rgba(255,255,255,0.18)', label: 'Außentemperatur', value: fmtN(r.out, 1) + ' °C' });
+      if (r.out != null) rows.push({ icon: 'mdi:thermometer', iconTone: 'rgba(255,255,255,0.18)', label: 'Außentemperatur', value: fmtN(r.out, 1) + ' ' + (r.outUnit || '°C') });
       if (r.open.length) rows.unshift({ icon: 'mdi:alert', iconTone: 'bad', label: 'Offen', sub: r.open.join(', '), valueTone: 'bad' });
       return UI.group(rows, 'Zustand');
     }

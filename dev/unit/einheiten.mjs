@@ -77,3 +77,15 @@ console.log('ok B-TPL-04');
   assert.ok(load('°C').stepper(['climate.bad'], 21, {}, 'Ziel', true).includes('<span> °C</span>'), '°C bleibt °C');
 }
 console.log('ok B-JS-03');
+
+// B-JS-04: Aquarium, 3D-Drucker, Auto-Außentemperatur, Lüften, Netzwerk-Temperatur – Einheit des
+// Sensors bzw. von HA; fest eingebautes „ °C“ nur noch als Rückfall.
+for (const f of ['02-geraete.js', '03-popups.js', '05-standard-medien.js', '05-weich-mehr.js']) {
+  const bad = mod(f).split('\n').filter((l) => /' °C'|'°C',|<span> °C</.test(l) && !/\|\| '°C'/.test(l));
+  assert.deepEqual(bad, [], f + ': fest eingebautes °C');
+}
+{
+  const src = mod('03-popups.js');
+  assert.ok(src.includes("outUnit: unit('aussentemperatur') || '°C'") && src.includes("fmtN(r.out, 1) + ' ' + (r.outUnit || '°C')"), 'Auto: Außentemperatur mit Einheit');
+}
+console.log('ok B-JS-04');

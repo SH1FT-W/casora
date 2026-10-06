@@ -325,7 +325,8 @@
         var up = ok(raw(states, d.uptime)) ? since(raw(states, d.uptime)) : null;
         var line1 = (!d.state ? 'Online' : ok(i.st) ? (NET_STATE[i.st] || i.st) : 'Unbekannt') + (i.online && up ? ' seit ' + up : '');
         var line2 = [i.upd ? 'Firmware-Update verfügbar' : null, cpu != null ? 'CPU ' + Math.round(cpu) + ' %' : null,
-          mem != null ? 'RAM ' + Math.round(mem) + ' %' : null, tmp != null ? Math.round(tmp) + ' °C' : null].filter(Boolean).join(' · ');
+          mem != null ? 'RAM ' + Math.round(mem) + ' %' : null,
+          tmp != null ? Math.round(tmp) + ' ' + (((states[d.temp] || {}).attributes || {}).unit_of_measurement || '°C') : null].filter(Boolean).join(' · ');
         var r = { entity: d.state || d.restart, icon: d.icon, iconTone: i.tone === 'good' ? NET_TONE : i.tone, label: d.label, sub: [line1, line2].filter(Boolean) };
         if (d.restart && states[d.restart]) {
           r.action = 'Neu starten'; r.confirm = true;
