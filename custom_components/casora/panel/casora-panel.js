@@ -24576,7 +24576,8 @@ class CasoraPanel extends HTMLElement {
       const e = id && this._hass && this._hass.states[id];
       return (e && e.attributes && e.attributes.friendly_name) || null;
     };
-    const entCombo = this._combo(tile.entity || "", this._entityList(type.domains, type.classes),
+    // Geräte dieses Raums zuerst, ohne Konfigurations-/Diagnose-Knöpfe („Identifizieren“, „Neustart“).
+    const entCombo = this._combo(tile.entity || "", this._rankedEntityList(type.domains, type.classes, room, tile.entity),
       // Kacheln, die ihre Daten selbst finden (Solar-Tipp, Abfall, Auto …): das Gerät ist freiwillig.
       type.entityPlaceholder || (type.ownData ? "Automatic" : pickHint(type.domains)),
       (v) => {
