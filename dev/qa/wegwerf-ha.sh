@@ -3,7 +3,7 @@
 # „casora-gate-<name>“ mit einer Kopie des Zustands aus ~/casora-haus/zustaende/ – casora-test
 # (:8124) und ~/casora-haus/config bleiben unberührt.
 #
-#   dev/qa/wegwerf-ha.sh start <name> <port> arbeit|frisch|stress   anlegen + starten (ohne Warten)
+#   dev/qa/wegwerf-ha.sh start <name> <port> arbeit|frisch|stress|demo   anlegen + starten (ohne Warten)
 #   dev/qa/wegwerf-ha.sh wait  <name> <port>                         warten, bis es bereit ist
 #   dev/qa/wegwerf-ha.sh weg   <name>                                Container + Daten entfernen
 #
@@ -37,7 +37,7 @@ esac
 
 P="$3"; Z="$4"
 case "$P" in ''|*[!0-9]*|8124|8123) echo "wegwerf-ha: Port $P nicht erlaubt" >&2; exit 2 ;; esac
-case "$Z" in arbeit|frisch|stress) ;; *) echo "wegwerf-ha: Zustand arbeit|frisch|stress" >&2; exit 2 ;; esac
+case "$Z" in arbeit|frisch|stress|demo) ;; *) echo "wegwerf-ha: Zustand arbeit|frisch|stress|demo" >&2; exit 2 ;; esac
 SRC="$Z"; [ "$Z" = stress ] && SRC=frisch
 TGZ="$HOME/casora-haus/zustaende/$SRC.tgz"
 [ -f "$TGZ" ] || { echo "wegwerf-ha: $TGZ fehlt" >&2; exit 1; }
@@ -48,6 +48,10 @@ tar -xzf "$TGZ" -C "$D"
 CFG="$D/config"
 rsync -a --delete --exclude __pycache__ --exclude panel/casora-studio.js "$REPO/custom_components/casora/" "$CFG/custom_components/casora/"
 rsync -a --exclude __pycache__ --exclude stress.json "$REPO/dev/casora_mock/" "$CFG/custom_components/casora_mock/"
+# demo: neutrales Demo-Haus (wie dev/haus.sh demo) – Fixture aus dev/demo/demo_fixture.py, nie die Test-Fixture.
+if [ "$Z" = demo ]; then
+  (cd /tmp && python3 "$REPO/dev/demo/demo_fixture.py" "$CFG/custom_components/casora_mock/fixture.json" >/dev/null)
+fi
 if [ "$Z" = stress ]; then
   python3 "$REPO/dev/stress/stress_fixture.py" "$CFG/custom_components/casora_mock/stress.json" >/dev/null
 else
