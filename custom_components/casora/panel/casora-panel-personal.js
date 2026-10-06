@@ -35,6 +35,15 @@
     + ".casora-pctl>.scpick .scval{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}"
     + ".casora-pctl>.scpick .swatch{width:16px;height:16px;flex-basis:16px}"
     + ".casora-tog{display:flex;align-items:center;gap:6px;font-size:var(--t-foot);opacity:.85;white-space:nowrap}"
+    // Schalter statt Browser-Häkchen – wie überall sonst im Studio.
+    + ".casora-tog{gap:8px}"
+    + ".casora-tog input[type=checkbox]{-webkit-appearance:none;appearance:none;position:relative;flex:none;width:36px;height:22px;margin:0;"
+    + "border-radius:11px;background:var(--sw-off, rgba(120,120,128,.24));cursor:pointer;transition:background .2s}"
+    + ".casora-tog input[type=checkbox]::before{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;"
+    + "background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}"
+    + ".casora-tog input[type=checkbox]:checked{background:var(--sw-on, #34c759)}"
+    + ".casora-tog input[type=checkbox]:checked::before{transform:translateX(14px)}"
+    + ".casora-tog input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}"
     + ".fgroup.casora-pfocus .flist{box-shadow:0 0 0 2px var(--casora-studio-done, #0a84ff);transition:box-shadow .3s}"
     + ".frow.casora-pmore .rtext b{color:var(--casora-studio-link, #0a84ff);font-weight:500}"
     + ".frow.casora-pmore .rchev{transform:rotate(90deg);transition:transform .2s}"
@@ -270,6 +279,7 @@
         l.className = "casora-tog";
         const cb = document.createElement("input");
         cb.type = "checkbox";
+        cb.setAttribute("role", "switch");
         cb.checked = value;
         cb.onchange = () => onChange(cb.checked);
         l.appendChild(cb);
@@ -281,8 +291,9 @@
         // Abfall
         g = group("waste", { header: "Waste collection",
           footer: "Without bins here, Casora uses every Waste Collection Schedule sensor." });
-        mapRows(S.waste.sensors).forEach(([id, label]) => {
-          row(g, "Bin", [
+        // Überschrift nur über der ersten Zeile – nicht „Tonne“ vor jeder Tonne.
+        mapRows(S.waste.sensors).forEach(([id, label], i) => {
+          row(g, i ? "" : "Bin", [
             ent(id, ["sensor"], (v) => { setMap(S.waste.sensors, id, v, S.waste.sensors[id]); render(); }),
             txt(label, "Name", (v) => { S.waste.sensors[id] = v; }, true),
             del(() => { delete S.waste.sensors[id]; }),
@@ -336,11 +347,12 @@
           tog.className = "casora-tog";
           const cb = document.createElement("input");
           cb.type = "checkbox";
+          cb.setAttribute("role", "switch");
           cb.checked = c.tile !== false;
           cb.onchange = () => { if (cb.checked) delete c.tile; else c.tile = false; };
           tog.appendChild(cb);
           tog.appendChild(document.createTextNode("On tile"));
-          row(g, "Calendar", [
+          row(g, i ? "" : "Calendar", [
             ent(c.entity, ["calendar"], (v) => { c.entity = v; }),
             txt(c.name, "Name", (v) => { c.name = v; }, true), col, tog,
             del(() => { S.calendars.splice(i, 1); }),
@@ -433,19 +445,19 @@
         // Glocke
         g = group("notify", { header: "Notifications",
           footer: "For all dashboards. Which messages a dashboard shows is set in the Studio under Notifications." });
-        mapRows(S.notify.zone_phrases).forEach(([zone, phrase]) => {
-          row(g, "Zone wording", [
+        mapRows(S.notify.zone_phrases).forEach(([zone, phrase], i) => {
+          row(g, i ? "" : "Zone wording", [
             txt(zone, "Zone", (v) => { setMap(S.notify.zone_phrases, zone, v, S.notify.zone_phrases[zone]); zone = v; }, true),
             txt(phrase, "e.g. at the office", (v) => { S.notify.zone_phrases[zone] = v; }),
             del(() => { delete S.notify.zone_phrases[zone]; }),
-          ], "“is at the office” instead of “is at Office”");
+          ], i ? undefined : "“is at the office” instead of “is at Office”");
         });
         addRow(g, "Add zone wording", () => { S.notify.zone_phrases[""] = ""; });
         row(g, "Mailbox", [ent(S.notify.mail, ["binary_sensor", "input_boolean"], (v) => { S.notify.mail = v; }, null,
           { binary_sensor: ["door", "window", "opening", "garage_door", "motion", "occupancy", "presence", "vibration", "moving", "tamper"] })],
           "Shows a hint when new mail arrives");
         S.notify.battery_exclude.forEach((id, i) => {
-          row(g, "No battery warning", [
+          row(g, i ? "" : "No battery warning", [
             ent(id, ["sensor"], (v) => { S.notify.battery_exclude[i] = v; }, null, ["battery"]),
             del(() => { S.notify.battery_exclude.splice(i, 1); }),
           ]);

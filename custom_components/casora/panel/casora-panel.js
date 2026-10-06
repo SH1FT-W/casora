@@ -1943,7 +1943,7 @@ const SECTIONS = [
     fields: [
       { key: "show_time", label: "Show clock", type: "bool", boolDefault: true, always: true, ord: -1 },
       // Immer sichtbar: ohne Eintrag nimmt die Uhr sensor.time, und das soll man sehen.
-      { ...E("time_entity", "Time sensor", ["sensor"]), always: true, placeholder: "Automatic: sensor.time" },
+      { ...E("time_entity", "Time sensor", ["sensor"]), always: true, placeholder: "Automatic" },
       { key: "use_12h", label: "12-hour clock", type: "bool", boolDefault: LOCALE_12H, always: true },
       { ...T("time_suffix", "Suffix"),
         auto: true, advanced: true, noAdd: true },
@@ -2071,7 +2071,7 @@ const SECTIONS = [
     repeats: [
       R("light", "Light", 10, [
         { ...E("light_entity_%", "Light %", ["light"]), ord: 2,
-          hint: "Replaces the group's lights as sub-badges." },
+          hint: "Replaces the group's lights as sub-badges.", hintOnce: true },
       ]),
     ],
   },
@@ -2184,6 +2184,8 @@ function sectionFields(sec) {
           label: f.label.replace("%", n),
           needs: f.needs ? f.needs.replace("%", n) : f.needs,
           labelOf: f.labelOf ? f.labelOf.replace("%", n) : f.labelOf,
+          // hintOnce: derselbe Hinweis nur unter dem ersten Feld, nicht unter Licht 1, 2, 3 …
+          hint: f.hintOnce && n > 1 ? undefined : f.hint,
           repeatN: n,
           unit: rep.id + "#" + n,
           unitLabel: rep.label + " " + n,
@@ -2926,7 +2928,7 @@ const MENU_ICONS = {
 };
 
 // Das 3-Punkte-Menü: Einträge aus Panel und Modulen in drei feste, betitelte Gruppen –
-// dieses Dashboard, Neu, Zuhause. Der Wechsel zwischen Dashboards sitzt im Titel
+// dieses Dashboard, Neu, Einrichtung & Hilfe (hieß „Zuhause“ wie der erste Raum). Der Wechsel zwischen Dashboards sitzt im Titel
 // (_dashSwitchMenu). Unbekanntes (Rückgängig, Öffnen am Handy) bleibt vorn, wie es kam.
 // "create" ist nur noch die Markierung, an der die Module dieses Menü erkennen.
 const DASH_MENU = [
@@ -2934,8 +2936,8 @@ const DASH_MENU = [
   ["This dashboard", "addmobile", "phone"], ["This dashboard", "casora_versions", "clock"],
   ["This dashboard", "delete", "trash"],
   ["New", "casora_umzug", "move"], ["New", "import", "import"],
-  ["Your home", "casora_assist", "devices"],
-  ["Your home", "setup", "setup"], ["Your home", "hints", "hints"], ["Your home", "help", "help"],
+  ["Setup & Help", "casora_assist", "devices"],
+  ["Setup & Help", "setup", "setup"], ["Setup & Help", "hints", "hints"], ["Setup & Help", "help", "help"],
   ["Casora", "casora_updates", "update"],
 ];
 function orderDashMenu(items, drop) {
@@ -5043,6 +5045,8 @@ const selKeyOf = (mk) => {
     const id = s.slice(2);
     // The inline climate badges (climate:0..2) stand for the same card.
     const base = id.split(":")[0];
+    // Das Szenen-Badge gehört zu „Szenen“ (Dashboard-weit): öffnet dessen Editor wie die anderen Badges.
+    if (base === "scenes") return { group: "rooms", key: "Scenes", label: "Scenes" };
     const sec = SECTIONS.find((x) => x.group === "badges"
       && String(x.label).toLowerCase() === base);
     return sec ? { group: "badges", key: sec.label, label: sec.label } : null;
@@ -6466,6 +6470,8 @@ class CasoraPanel extends HTMLElement {
         :is(#pane.stack, #pane.sheet) #band-rooms .card.shut > .chead:has(> .count:not(:empty)) { row-gap:0; }
         :is(#pane.stack, #pane.sheet) #band-rooms .card.shut > .chead:has(> .count:not(:empty)) :is(.sicon, .plus, .sw, .fold) { grid-row:1 / 3; }
         #pane.stack #band-rooms .card.off > .chead .plus { display:none; }
+        /* Ausgeschaltet lässt sich nichts aufklappen: kein Pfeil, der ein Öffnen verspricht. */
+        :is(#pane.stack, #pane.sheet) #band-rooms .card.off > .chead .fold { visibility:hidden; }
         #pane.stack #band-rooms .col > .card { border-radius:var(--r-group); margin-bottom:12px; }
         #pane.stack #band-rooms .col > .card::before { content:none; }
         /* Überall 12 px zwischen den Abschnitten. */
@@ -7139,6 +7145,11 @@ class CasoraPanel extends HTMLElement {
           color:var(--casora-studio-cap-sub, color-mix(in srgb, var(--ink) 52%, transparent));
         }
         .sidelist .siderow .sidesum > span + span::before { content:" · "; }
+        /* S-06: umbrechen statt „Design · Bildschirm · HA-…“ – zwischen den Teilen, nie mitten im Wort. */
+        .sidelist .siderow .sidesum { white-space:normal; text-overflow:clip; }
+        .sidelist .siderow .sidesum > span { display:inline-block; white-space:nowrap; margin-right:.3em; }
+        .sidelist .siderow .sidesum > span + span::before { content:none; }
+        .sidelist .siderow .sidesum > span:not(:last-child)::after { content:" ·"; }
         .sidelist .siderow.off .sidesum { opacity:.55; }
         /* Geöffneter Abschnitt: Unterbereiche eingerückt darunter (Sprung dorthin). */
         .sidelist .sidesubs { margin:0 0 4px; }
@@ -9359,7 +9370,8 @@ class CasoraPanel extends HTMLElement {
         .advsum:hover:not(:disabled) { color:var(--ink); filter:none; }
         .advsum:active:not(:disabled) { transform:none; }
         .advsum svg { width:13px; height:13px; flex:0 0 13px; transition:transform .22s var(--ease); }
-        .advsum .advplus { margin-left:auto; width:22px; height:22px; flex:0 0 22px; }
+        .advsum .advplus { margin-left:auto; width:auto; height:26px; flex:0 0 auto; padding:0 10px 0 8px; gap:4px;
+          border-radius:13px; font-size:var(--t-foot); font-weight:600; }
         .advsum .advplus svg { width:13px; height:13px; transition:none; }
         .adv.open .advsum .advplus svg { transform:none; }
         .adv.open .advsum svg { transform:rotate(90deg); }
@@ -16944,7 +16956,8 @@ class CasoraPanel extends HTMLElement {
           ap.type = "button";
           ap.title = "Add an option";
           ap.setAttribute("aria-label", "Add an option");
-          ap.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+          // Mit Wort: ein einzelnes „+“ neben „Erweitert“ war nicht zu deuten.
+          ap.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>Add</span>';
           ap.onclick = (ev) => {
             ev.stopPropagation();
             const take = (raw) => { this._advOpen.add(key); reveal(raw); };
@@ -18014,7 +18027,8 @@ class CasoraPanel extends HTMLElement {
     menu.style.left = left + "px";
     // Das 3-Punkte-Menü darf so hoch werden, wie Platz ist – es soll nicht scrollen.
     // Abzüglich des 10-px-Abstands zum Knopf: so bleiben unten wie oben mindestens 12 px Rand.
-    menu.style.maxHeight = Math.max(120, Math.min(dashMenu ? 2000 : phone ? 600 : 560, (drop ? below : above) - 10)) + "px";
+    // Am Desktop bis 760 px: das Raummenü (elf Räume + Aktionen) endete bei 560 px mitten in einer Zeile.
+    menu.style.maxHeight = Math.max(120, Math.min(dashMenu ? 2000 : phone ? 600 : 760, (drop ? below : above) - 10)) + "px";
     if (drop) { menu.style.top = r.bottom + 10 + "px"; menu.style.bottom = "auto"; }
     else { menu.style.bottom = window.innerHeight - r.top + 10 + "px"; menu.style.top = "auto"; }
     playMenuIn(menu, drop, !lead && left + width > r.right - 2);
@@ -23350,7 +23364,15 @@ class CasoraPanel extends HTMLElement {
     const applySize = (animate) => {
       // Studio B (casora-panel-b.js) zeigt die Vorschau auch am Handy – als Arbeitsfläche.
       if (isPhone(this) && !this.classList.contains("bmode")) return;
-      const [natW, natH] = SPEC[this._miniSize];
+      let [natW, natH] = SPEC[this._miniSize];
+      // SF-12: Desktop im Seitenverhältnis des Bildschirms, auf dem das Dashboard läuft (Fläche
+      // rechts der HA-Seitenleiste), begrenzt auf 1,3 bis 1,78 – füllt die Höhe neben dem Inspektor.
+      // Nicht im gestapelten Aufbau (Tablet hochkant): dort teilt sich die Höhe mit dem Inspektor.
+      if (this._miniSize === "desktop" && !this.classList.contains("bstack")
+        && this.clientWidth > 0 && window.innerHeight > 0) {
+        const r = Math.min(1.78, Math.max(1.3, this.clientWidth / window.innerHeight));
+        natH = Math.round(natW / r);
+      }
       const availW = slot.offsetWidth - MAP_SHADOW_ROOM;
       let budget = 0;
       const stage = slot.closest(".stage");
@@ -23375,7 +23397,7 @@ class CasoraPanel extends HTMLElement {
       }
       if (this._miniSize === "phone") budget = Math.round(budget * 0.88);
       const ratio = natH / natW;
-      const frame = this._miniSize === "phone" ? ratio : MAP_TALLEST;
+      const frame = this._miniSize === "phone" ? ratio : Math.max(MAP_TALLEST, ratio);
       const w = fitWidth(availW, budget, Infinity, frame);
       if (w === null) return;
       const f = w / natW;
@@ -24505,7 +24527,8 @@ class CasoraPanel extends HTMLElement {
       return (e && e.attributes && e.attributes.friendly_name) || null;
     };
     const entCombo = this._combo(tile.entity || "", this._entityList(type.domains, type.classes),
-      type.entityPlaceholder || pickHint(type.domains),
+      // Kacheln, die ihre Daten selbst finden (Solar-Tipp, Abfall, Auto …): das Gerät ist freiwillig.
+      type.entityPlaceholder || (type.ownData ? "Automatic" : pickHint(type.domains)),
       (v) => {
         const prev = tile.entity;
         const was = glyphNow();

@@ -62,6 +62,8 @@
     :host(.bmode.binsp.split:not(.flow)) .inspector { display:flex; animation:bInspIn .22s var(--ease, ease); }
     :host(.bmode.bpage.split:not(.flow)) { --b-insp-w:min(760px, calc(100% - 28px)); }
     :host(.bmode.bpage.split:not(.flow)) .main { padding-right:0; }
+    /* Dunkel liegt die Seite über dem Hausfoto der Vorschau: fast deckend, sonst schimmert es bunt durch. */
+    :host(.bmode.bpage.split:not(.flow):not(.is-light)) .inspector { background:var(--casora-studio-page-solid, rgba(22,23,28,0.95)) !important; }
     :host(.bmode.bpage.split:not(.flow)) .inspector { top:calc(var(--top-h, 64px) + 4px) !important; margin:0 !important; }
     /* Seiten (Einstellungen, Updates, Zeitreise) liegen über der Vorschau: deren Umschalter
        Desktop/Tablet/Mobil ragte sonst halb über den Rand. */
@@ -117,6 +119,10 @@
     /* Der Inspektor liegt in B schon unter der Kopfzeile: kein zusätzlicher Abstand oben (Tablet),
        sonst stand das ✕ abgesetzt über Zurück/Titel. */
     :host(.bmode.split.narrow:not(.flow):not(.phone)) .inspector { padding-top:0; }
+    /* Seiten (Einstellungen, Updates, Zeitreise): die ausgeblendete Listen-Kopfzeile darunter ließ
+       die Regel „Listenkopf am Tablet aus“ greifen – die Seite stand ohne Titel da. */
+    :host(.bmode.split.narrow:not(.flow):not(.phone)) .insphead:has(> .cs-head, > .cu-head, > .cv-head) { display:flex !important; }
+    :host(.bmode.split.narrow:not(.flow):not(.phone)) .inspector:has(> .insphead > .cs-head, > .insphead > .cu-head, > .insphead > .cv-head) { padding-top:0 !important; }
 
     /* Arbeitsfläche: Elemente zeigen, dass sie anklickbar sind. */
     :host(.bmode) .card.map [data-mk], :host(.bmode) .card.map [data-pv],
@@ -211,6 +217,8 @@
       background:var(--bar-solid, var(--casora-studio-bar-solid, rgb(242,242,247)));
       box-shadow:0 -10px 40px rgba(0,0,0,.25);
     }
+    /* Dunkel: --bar-solid gibt es nur hell – das Blatt blieb hellgrau, Überschriften und ✕ weiß darauf. */
+    :host(.bmode.phone:not(.is-light)) .inspector { background:var(--pane-solid, #1d1f25); }
     :host(.bmode.phone.binsp) .inspector { display:flex !important; animation:bSheetIn .24s var(--ease, ease); }
     :host(.bmode.phone) .inspector .sheet { overflow-y:auto; max-height:calc(84dvh - 70px); }
     :host(.bmode.phone) .inspector::before {
@@ -221,6 +229,12 @@
     /* Im Blatt liegt nichts über einem Foto: Kopfzeile in Textfarbe statt Weiß mit Schatten. */
     :host(.bmode.phone) .inspector .insphead, :host(.bmode.phone) .inspector .insphead * ,
     :host(.bmode.phone) .inspector .detailbar h3 { color:var(--ink) !important; text-shadow:none !important; }
+    /* Gruppenüberschriften („Zuhause“, „Dashboard“): Casora Weich zeichnet sie hell fürs Foto –
+       im Blatt standen sie weiß auf Leinen. */
+    :host(.bmode.phone) .inspector .sidehead.phonehead {
+      color:color-mix(in srgb, var(--ink) 78%, transparent) !important; text-shadow:none !important; }
+    :host(.bmode.phone) .inspector .sidehead.phonehead small {
+      color:color-mix(in srgb, var(--ink) 48%, transparent) !important; }
     :host(.bmode.phone) .inspector .insphead .back {
       background:var(--chip, rgba(127,127,127,.16)) !important; box-shadow:none !important;
       backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
@@ -400,7 +414,11 @@
         st.textContent = B_CSS;
         root.appendChild(st);
       }
-      const on = this._bOn() && !this._flowMode;
+      // Dialog-Abläufe (Geräte-Assistent, YAML-Import) liegen über dem Studio: dahinter bleibt der
+      // Aufbau von B stehen – sonst erschien verschwommen das bisherige Studio mit Seitenleiste.
+      // Vollbild-Abläufe und das Handy schalten B wie bisher ab.
+      const sheet = this._flowMode === "sheet" && !this.classList.contains("phone");
+      const on = this._bOn() && (!this._flowMode || sheet);
       const wasOn = this.classList.contains("bmode");
       // UX-01: hochkant und schmal → Inspektor unten statt rechts.
       const pw = this.clientWidth || 0, ph = window.innerHeight || 0;
@@ -551,7 +569,14 @@
       const tr0 = tools.getBoundingClientRect();
       let next = tools.nextElementSibling;
       while (next && (!next.getClientRects().length || next.getBoundingClientRect().width < 2)) next = next.nextElementSibling;
-      const tight = row.scrollWidth > row.clientWidth + 1 || (next && next.getBoundingClientRect().left < tr0.right + 8);
+      // Auch eng: der Dashboard-Name wird gekürzt („Test …“) oder die Knöpfe rechts
+      // (Rückgängig, Fertig) rücken bis an die Beschriftungen – Tablet hochkant.
+      const lab = row.querySelector("#roomtitle .rt-label");
+      const pill = [...this.shadowRoot.querySelectorAll(".navpill")].find((x) => x.getClientRects().length
+        && x.getBoundingClientRect().left > tr0.left);
+      const tight = row.scrollWidth > row.clientWidth + 1 || (next && next.getBoundingClientRect().left < tr0.right + 8)
+        || (lab && lab.scrollWidth > lab.clientWidth + 1)
+        || (pill && pill.getBoundingClientRect().left < tr0.right + 20);
       this.classList.toggle("btight", !!tight);
     };
 

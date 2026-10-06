@@ -111,7 +111,8 @@ window.CASORA_TILE_TYPES = [
   { id: "casora_aquarium", label: "Aquarium", template: "casora_aquarium_tank", domains: ["sensor"], classes: ["temperature"],
     entityLabel: "Water temperature", icon: "fish", fields: [
       ICON,
-      { key: "tank_name", label: "Tank name", type: "text" },
+      { key: "tank_name", label: "Tank name", type: "text", placeholder: "Tile name",
+        hint: "Heading in the popup. Empty: the tile's name." },
       { key: "light_entity", label: "Light", domains: ["light"], advanced: true, group: "Popup" },
       { key: "status_entity", label: "Status sensor", domains: ["sensor"], advanced: true },
       { key: "leak_entity", label: "Leak sensor", domains: ["binary_sensor"], classes: ["moisture"], advanced: true },
@@ -163,7 +164,7 @@ window.CASORA_TILE_TYPES = [
     icon: "attention2", color: "var(--casora-color-orange, #FF9F0A)", fields: [
       ICON,
       { key: "sensors", type: "list", label: "Warning sensors", domains: ["binary_sensor"], classes: ["safety"],
-        placeholder: "add warning sensor.", hint: "E.g. the NINA or DWD warnings for your town." },
+        placeholder: "Add a warning sensor", hint: "E.g. the NINA or DWD warnings for your town." },
       { ...TITLE, placeholder: "NINA warnings" },
     ] },
   { id: "casora_solar_tip", label: "Solar tip", template: "casora_solar_tip", domains: ["binary_sensor"], ownData: true,
@@ -272,10 +273,24 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     }
     return [];
   }
+  // Seiten einer Swipe-Karte – auch wenn sie in einer Bedingung steckt oder auto-entities ihre
+  // Seiten sammelt (Luftreiniger, Aquarien). Sonst 0. Bisher standen gesammelte Seiten in der
+  // Vorschau einzeln nebeneinander und kamen und gingen mit jedem Schalten (Blinken).
+  const isSwipe = (c) => !!c && /swipe|carousel/.test(String(c.type || ""));
+  function swipePages(card, states) {
+    let c = card, n = 0;
+    while (c && c.type === "conditional" && c.card && n++ < 4) c = c.card;
+    if (!c || typeof c !== "object") return 0;
+    if (isSwipe(c) && Array.isArray(c.cards)) return c.cards.filter((x) => shown(x, states).length).length;
+    if (c.type === "custom:auto-entities" && isSwipe(c.card)) return shown(c, states).length;
+    return 0;
+  }
   window.casoraPreviewUnwrap = (tile, hass) => {
     if (!tile || tile.type === "custom:button-card" || !tile.type) return {};
     const cards = shown(tile, (hass && hass.states) || {});
     if (!cards.length) return { hidden: true };
+    const pages = swipePages(tile, (hass && hass.states) || {});
+    if (pages) return { inner: cards[0], pages };
     // Swipe-Karte: eine Kachel wie am Dashboard, dazu Seitenpunkte für die übrigen.
     if (cards.length === 1 && tile.type !== "conditional" && Array.isArray(tile.cards)) {
       const pages = tile.cards.filter((c) => shown(c, (hass && hass.states) || {}).length).length;
@@ -525,7 +540,9 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     if (!isOurs(type) || !body) return;
     const hass = panel._hass;
     const fields = entityFields(type);
-    if (!fields.length && tile.entity) return;
+    // Ohne Zusatzfelder nur, wenn die Kachel ein Gerät braucht – nicht bei Kacheln, die ihre Daten
+    // selbst finden (Solar-Tipp, Raumklima, Auto, E-Bike, Rezept).
+    if (!fields.length && (tile.entity || type.ownData || type.noEntity)) return;
     const row = document.createElement("div");
     row.className = "hint casora-ai";
     row.dataset.noI18n = "";
@@ -543,7 +560,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     btn.onclick = async () => {
       const vars = tile.variables || {};
       const missing = fields.filter((f) => !vars[f.key] && !found(f, tile, hass));
-      const withMain = !tile.entity && !type.noEntity;
+      const withMain = !tile.entity && !type.noEntity && !type.ownData;
       if (!missing.length && !withMain) { txt.textContent = t(hass).all; return; }
       btn.disabled = true;
       txt.textContent = t(hass).busy;
