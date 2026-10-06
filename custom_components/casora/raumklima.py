@@ -191,7 +191,9 @@ def evaluate_rooms(hass: HomeAssistant, rooms: list[dict], out_t: str | None, ou
         elif need == 1:
             st, g = "bald", " · ".join(why)
         elif h_l == 2:
-            st, g = "feucht", f"Feuchte {round(rh)} % · draußen feuchter"
+            # „draußen feuchter“ nur, wenn Außenwerte das auch sagen.
+            st, g = "feucht", f"Feuchte {round(rh)} % · " + ("draußen feuchter" if aho is not None
+                                                             else "Außenwerte fehlen")
         else:
             st, g = "ok", ""
         result.append({

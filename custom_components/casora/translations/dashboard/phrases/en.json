@@ -2049,6 +2049,10 @@
    "Humidity {1}% · more humid outside"
   ],
   [
+   "^Feuchte (\\d+) % · Außenwerte fehlen$",
+   "Humidity {1}% · no outdoor values"
+  ],
+  [
    "^≈ (.+) frei · jetzt (.+)$",
    "≈ {1} spare · now {2}"
   ],

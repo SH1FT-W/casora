@@ -58,5 +58,14 @@ h = hass_with([st("sensor.rh", 50), st("sensor.t", 21), st("binary_sensor.f", "o
 _, rooms, _ = raumklima.evaluate_rooms(h, [ROOM], None, None, None)
 check("B-PY-09: ohne Merker last_changed", rooms[0]["offen_min"] == 3, rooms[0]["offen_min"])
 
+# B-PY-10: Bad 70 %, keine Außenwerte → kein „draußen feuchter“.
+h = hass_with([st("sensor.rh", 70), st("sensor.t", 21)])
+_, rooms, _ = raumklima.evaluate_rooms(h, [dict(ROOM, w=[])], None, None, None)
+check("B-PY-10: ohne Außenwerte kein „draußen feuchter“", rooms[0]["status"] == "feucht"
+      and rooms[0]["grund"] == "Feuchte 70 % · Außenwerte fehlen", rooms[0]["grund"])
+h = hass_with([st("sensor.rh", 70), st("sensor.t", 21), st("sensor.out_t", 20), st("sensor.out_rh", 95)])
+_, rooms, _ = raumklima.evaluate_rooms(h, [dict(ROOM, w=[])], "sensor.out_t", "sensor.out_rh", None)
+check("B-PY-10: mit feuchten Außenwerten wie bisher", rooms[0]["grund"] == "Feuchte 70 % · draußen feuchter", rooms[0]["grund"])
+
 print("\nALLES OK" if not fails else f"\n{len(fails)} FEHLER")
 sys.exit(1 if fails else 0)
