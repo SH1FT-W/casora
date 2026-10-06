@@ -1361,7 +1361,8 @@
   "Keine Leistung": "Not power",
   "Steckt hinter": "Behind",
   "1 Gerät ohne Wert": "1 device without a value",
-  "Schloss offen": "Lock open"
+  "Schloss offen": "Lock open",
+  "Alles sicher": "All secure"
  },
  "patterns": [
   [
@@ -2421,6 +2422,10 @@
    "{1}: {2}"
   ],
   [
+   "^(\\d+) Schlösser offen$",
+   "{1} locks open"
+  ],
+  [
    "^(.+) offen$",
    "{1} open"
   ],
@@ -2483,14 +2488,6 @@
   [
    "^Nicht in der Summe · Steckt hinter (.+)$",
    "Not added up · behind {1}"
-  ],
-  [
-   "^(\\d+) Schlösser offen$",
-   "{1} locks open"
-  ],
-  [
-   "^(\\d+) offline$",
-   "{1} offline"
   ]
  ]
 }

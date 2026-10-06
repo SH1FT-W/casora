@@ -105,7 +105,7 @@ assert.deepEqual(brief(window.casoraOpenings(house(), ALL)), brief(window.casora
   assert.deepEqual(sec(T[1].vars).sort(), ['binary_sensor.kuechenfenster_contact', 'binary_sensor.kuechenfenster_kipp'], 'Küche: Paar');
 }
 
-// ── Sicherheits-Badge: Text wie im Produktiv-Dashboard ──
+// ── Sicherheits-Badge: Text wie im Produktiv-Dashboard (Standard/Glas; „Schloss offen“ seit 06.10.2026) ──
 const tpl = JSON.parse(src('dashboards/casora/button_card_templates.json')).casora_badge_security_group;
 const body = (s) => s.trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, '');
 const nameFn = new Function('hass', 'states', 'entity', 'variables', 'user', body(tpl.name));
@@ -118,9 +118,9 @@ const sub = (h, variables) => {
   const V = { locks: ['lock.haustuer'], entities: ['binary_sensor.balkontuer_kombi', 'binary_sensor.kuechenfenster_contact', 'binary_sensor.kuechenfenster_kipp', 'binary_sensor.buerofenster', 'binary_sensor.haustuer', 'binary_sensor.flur_bewegung'] };
   assert.equal(sub(h, V), 'Gesichert');
   set(h, 'lock.haustuer', 'unlocked');
-  assert.equal(sub(h, V), '1 Schloss');
+  assert.equal(sub(h, V), 'Schloss offen');
   set(h, 'binary_sensor.buerofenster', 'on');
-  assert.equal(sub(h, V), '1 Schloss · Fenster offen', 'Schloss offen + Fenster offen');
+  assert.equal(sub(h, V), 'Schloss offen · Fenster offen', 'Schloss offen + Fenster offen');
   set(h, 'lock.haustuer', 'locked');
   assert.equal(sub(h, V), 'Fenster offen');
   set(h, 'binary_sensor.buerofenster', 'off');
@@ -139,7 +139,7 @@ const sub = (h, variables) => {
     attributes: { friendly_name: 'Fenster', entity_id: ['binary_sensor.buerofenster', 'binary_sensor.kuechenfenster_contact', 'binary_sensor.kuechenfenster_kipp'] } };
   set(h, 'binary_sensor.balkontuer_kombi', 'off', { tilt: false });
   set(h, 'lock.haustuer', 'unlocked');
-  assert.equal(sub(h, { locks: ['lock.haustuer'], entities: ['binary_sensor.fenster_gruppe'] }), '1 Schloss · 2 Fenster offen');
+  assert.equal(sub(h, { locks: ['lock.haustuer'], entities: ['binary_sensor.fenster_gruppe'] }), 'Schloss offen · 2 Fenster offen');
   // Kamera offline
   h.states['camera.flur'] = { entity_id: 'camera.flur', state: 'unavailable', attributes: {} };
   set(h, 'lock.haustuer', 'locked');
@@ -152,9 +152,9 @@ const sub = (h, variables) => {
   const h = house();
   const V = { locks: ['lock.haustuer'], entities: ['binary_sensor.buerofenster', 'binary_sensor.haustuer'] };
   set(h, 'lock.haustuer', 'unlocked'); set(h, 'binary_sensor.buerofenster', 'on');
-  assert.equal(sub(h, V), '1 Schloss · Fenster offen');
+  assert.equal(sub(h, V), 'Schloss offen · Fenster offen');
   set(h, 'binary_sensor.buerofenster', 'on', { tilt: true });
-  assert.equal(sub(h, V), '1 Schloss · Fenster gekippt');
+  assert.equal(sub(h, V), 'Schloss offen · Fenster gekippt');
   window.casoraOpenings = keep;
 }
 console.log('ok oeffnungen');

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Fenster gekippt: Rahmen mit Flügel, der oben nach innen geneigt ist (Kippstellung). -->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24.1661 26.0252">
+ <g>
+  <rect height="26.0252" opacity="0" width="24.1661" x="0" y="0"/>
+  <path d="M0 25.2444C0 25.6645 0.341212 26.0057 0.761232 26.0057L23.0436 26.0057C23.4636 26.0057 23.8048 25.6645 23.8048 25.2444C23.8048 24.8244 23.4636 24.4832 23.0436 24.4832L22.3041 24.4832L22.3041 1.36348C22.3041 0.555763 21.7386 0 20.8723 0L2.83086 0C1.97129 0 1.40576 0.555763 1.40576 1.36348L1.40576 24.4832L0.761232 24.4832C0.341212 24.4832 0 24.8244 0 25.2444ZM2.74141 24.4832L2.74141 1.67139C2.74141 1.46328 2.86836 1.32959 3.05088 1.32959L20.659 1.32959C20.8415 1.32959 20.9685 1.46328 20.9685 1.67139L20.9685 24.4832Z" fill="white" fill-opacity="0.85"/>
+  <path d="M4.6 23.6L7.4 5.2L16.4 5.2L19.2 23.6Z" fill="none" stroke="white" stroke-opacity="0.85" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M11.9 9.4L11.9 15.8" stroke="white" stroke-opacity="0.85" stroke-width="1.7" stroke-linecap="round"/>
+ </g>
+</svg>
