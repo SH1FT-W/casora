@@ -207,11 +207,6 @@ export async function cards(pg, template) {
   }).filter((c) => c.w > 0 && c.h > 0 && (!tpl || c.t.includes(tpl))), template);
 }
 
-// Der Home-Assistant-Oberfläche lokal andere Zustände unterschieben (nur dieser Browser,
-// nichts geht an HA): patch = { entity_id: { state, attributes? } | null (fehlt) }.
-// sticky: true hält den Patch auch über echte state_changed-Ereignisse hinweg (HA schickt bei
-// jedem Ereignis die volle Zustandsliste neu – ohne sticky kehrt ein „entferntes“ Gerät zurück,
-// sobald im Haus irgendein Zustand wechselt, z. B. durch parallel laufende Tests).
 // Warten, bis ein Messwert sich nicht mehr ändert (quiet ms gleich), höchstens max ms – statt fester
 // Pausen nach dem Laden (T-08, 06.10.2026): schneller, wenn die Seite schnell steht, und unter Last
 // nicht zu früh. Liefert den letzten Messwert.
@@ -225,6 +220,11 @@ export async function stable(pg, fn, arg, { max = 6000, quiet = 700, step = 175 
   return v;
 }
 
+// Der Home-Assistant-Oberfläche lokal andere Zustände unterschieben (nur dieser Browser,
+// nichts geht an HA): patch = { entity_id: { state, attributes? } | null (fehlt) }.
+// sticky: true hält den Patch auch über echte state_changed-Ereignisse hinweg (HA schickt bei
+// jedem Ereignis die volle Zustandsliste neu – ohne sticky kehrt ein „entferntes“ Gerät zurück,
+// sobald im Haus irgendein Zustand wechselt, z. B. durch parallel laufende Tests).
 export async function fakeStates(pg, patch, { sticky = false } = {}) {
   await pg.evaluate(({ p, sticky }) => {
     const ha = document.querySelector('home-assistant');
