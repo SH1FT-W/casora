@@ -158,7 +158,10 @@ Casora:
   casora-nav-fade-clear: 72px
   casora-nav-snap: x mandatory
   casora-nav-snap-align: start
-  casora-nav-snap-pad: 52px
+  casora-nav-snap-pad: 48px
+  # links harte Kante direkt hinter dem Pfeil: der eingerastete Raum steht ganz da, der vorige ist ganz weg
+  casora-nav-fade-clear-l: 48px
+  casora-nav-fade-solid-l: 49px
   casora-nav-focus-ring: inset 0 0 0 2px var(--casora-ton-ink)   # D-09: Tastatur-Fokus sichtbar
   casora-nav-more-fill: var(--casora-nav-active-fill)
   casora-nav-more-hover: var(--casora-mnav-press-fill, var(--casora-nav-active-fill))

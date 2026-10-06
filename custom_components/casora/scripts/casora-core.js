@@ -3400,12 +3400,12 @@ window.casoraMenuGlass = {
           mask-image: linear-gradient(to right, black 0, black calc(100% - var(--casora-nav-fade-solid, 72px)), transparent calc(100% - var(--casora-nav-fade-clear, 8px)));
         }
         .scroller.fade-l {
-          -webkit-mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear, 8px), black var(--casora-nav-fade-solid, 72px), black 100%);
-          mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear, 8px), black var(--casora-nav-fade-solid, 72px), black 100%);
+          -webkit-mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear-l, var(--casora-nav-fade-clear, 8px)), black var(--casora-nav-fade-solid-l, var(--casora-nav-fade-solid, 72px)), black 100%);
+          mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear-l, var(--casora-nav-fade-clear, 8px)), black var(--casora-nav-fade-solid-l, var(--casora-nav-fade-solid, 72px)), black 100%);
         }
         .scroller.fade-l.fade-r {
-          -webkit-mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear, 8px), black var(--casora-nav-fade-solid, 72px), black calc(100% - var(--casora-nav-fade-solid, 72px)), transparent calc(100% - var(--casora-nav-fade-clear, 8px)));
-          mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear, 8px), black var(--casora-nav-fade-solid, 72px), black calc(100% - var(--casora-nav-fade-solid, 72px)), transparent calc(100% - var(--casora-nav-fade-clear, 8px)));
+          -webkit-mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear-l, var(--casora-nav-fade-clear, 8px)), black var(--casora-nav-fade-solid-l, var(--casora-nav-fade-solid, 72px)), black calc(100% - var(--casora-nav-fade-solid, 72px)), transparent calc(100% - var(--casora-nav-fade-clear, 8px)));
+          mask-image: linear-gradient(to right, transparent var(--casora-nav-fade-clear-l, var(--casora-nav-fade-clear, 8px)), black var(--casora-nav-fade-solid-l, var(--casora-nav-fade-solid, 72px)), black calc(100% - var(--casora-nav-fade-solid, 72px)), transparent calc(100% - var(--casora-nav-fade-clear, 8px)));
         }
         .more {
           position: absolute;
