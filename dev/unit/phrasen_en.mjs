@@ -12,6 +12,8 @@ const EXPECT = [
   // B-TPL-05: zwei verschmolzene Muster
   ['3 Termine heute', '3 events today'],
   ['Neu: Casora 1.0.11', 'New: Casora 1.0.11'],
+  // B-TPL-09: Updates-Kachel
+  ['2 Verfügbar', '2 available'],
 ];
 for (const [de, en] of EXPECT) assert.equal(tr(de), en, de);
 console.log('ok phrasen_en');

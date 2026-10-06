@@ -1446,6 +1446,10 @@
    "indoor Ø {1}"
   ],
   [
+   "^(\\d+) Verfügbar$",
+   "{1} available"
+  ],
+  [
    "^Heute (.+) kWh Bezug$",
    "Today {1} kWh from grid"
   ],
