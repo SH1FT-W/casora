@@ -55,7 +55,8 @@ FIX = {
         "casora-entity-state-active": "rgba(46,98,128,0.96)",
         "casora-entity-state-active-color": "rgba(46,98,128,0.96)",
         # Aktiver Raum (Raumleiste, Handy-Navbar) und gewählte Chips: Petrol-Hauch statt Grau
-        "casora-nav-active-fill": "rgba(63,116,145,0.17)",
+        "casora-nav-active-fill": "rgba(63,116,145,0.22)",
+        "casora-mnav-pill-ink": "var(--casora-ton-ink)",
         "casora-mnav-press-fill": "rgba(63,116,145,0.24)",
         "casora-lps-chip-on": "rgba(63,116,145,0.16)",
         # Eingeschaltete Kacheln: kühles Weiß mit leichtem Petrol-Schein
@@ -69,7 +70,8 @@ FIX = {
         "casora-lps-switch-on": "#4E89AA",
         "casora-entity-state-active": "rgba(36,86,114,0.96)",
         "casora-entity-state-active-color": "rgba(36,86,114,0.96)",
-        "casora-nav-active-fill": "rgba(94,151,184,0.30)",
+        "casora-nav-active-fill": "rgba(94,151,184,0.32)",
+        "casora-mnav-pill-ink": "var(--casora-ton-ink)",
         "casora-mnav-press-fill": "rgba(94,151,184,0.36)",
         "casora-lps-chip-on": "rgba(94,151,184,0.28)",
     },
