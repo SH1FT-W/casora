@@ -79,7 +79,9 @@ await page.evaluate(async () => {
 });
 const pt = await page.evaluate(() => {
   const p = window.__panel();
-  const h = [...p.shadowRoot.querySelectorAll('*')].find((e) => !e.children.length && e.textContent.trim() === 'Badges'
+  // Eigener Text „Badges“ (darunter kann ein erklärender Halbsatz stehen, V-08).
+  const own = (e) => [...e.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim();
+  const h = [...p.shadowRoot.querySelectorAll('*')].find((e) => own(e) === 'Badges'
     && e.getBoundingClientRect().width > 0 && e.getBoundingClientRect().x > 500);
   if (!h) return null;
   const b = h.getBoundingClientRect(); return [b.x + 20, b.y + b.height / 2];

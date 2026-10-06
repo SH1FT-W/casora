@@ -87,7 +87,7 @@ await check('Raum-Knopf nennt den offenen Raum', lab === nm, { lab, nm });
 // V-08: im neuen Studio unter „…“ › Hilfe „Bisheriges Studio öffnen“, zurück über „…“ › „Neues Studio öffnen“.
 await page.locator('#more').click();
 await page.waitForTimeout(500);
-await page.locator('.combo-opt', { hasText: /^\s*(Hilfe|Help)/ }).first().click();
+await page.locator('.combo-opt', { hasText: /Hilfe …|Help…/ }).first().click();
 await page.waitForTimeout(600);
 await page.locator('.combo-opt', { hasText: /Bisheriges Studio|previous Studio/ }).first().click();
 await page.waitForTimeout(1500);

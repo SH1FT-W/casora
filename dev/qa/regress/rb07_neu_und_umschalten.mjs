@@ -38,7 +38,7 @@ await check('Studio nennt v' + version, ver === 'v' + version, ver);
 await H(() => { const p = window.__panel(); if (p._bClose) p._bClose(); });
 await o.page.locator('#more').click();
 await o.page.waitForTimeout(500);
-await o.page.locator('.combo-opt', { hasText: /^\s*(Hilfe|Help)/ }).first().click();
+await o.page.locator('.combo-opt', { hasText: /Hilfe …|Help…/ }).first().click();
 await o.page.waitForTimeout(600);
 await o.page.locator('.combo-opt', { hasText: /Bisheriges Studio|previous Studio/ }).first().click();
 await o.page.waitForTimeout(1500);
