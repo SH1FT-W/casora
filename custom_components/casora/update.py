@@ -182,7 +182,12 @@ class CasoraUpdate(UpdateEntity):
         self._attr_installed_version = VERSION
         self._attr_latest_version = VERSION
         self._release: dict[str, Any] | None = None
-        self._installed_new: str | None = None
+        # Schon installiert, aber noch nicht neu gestartet? Das merkt sich hass.data über ein
+        # Neuladen der Integration (Optionen geändert) hinweg – sonst böte HA dieselbe Version wieder an.
+        pending = (hass.data.get(DOMAIN) or {}).get(DATA_PENDING)
+        self._installed_new: str | None = pending if pending and pending != VERSION else None
+        if self._installed_new:
+            self._attr_installed_version = self._attr_latest_version = self._installed_new
 
     async def async_update(self) -> None:
         data = self.hass.data.setdefault(DOMAIN, {})
