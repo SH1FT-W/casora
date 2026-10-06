@@ -780,6 +780,55 @@ window.casoraPriceKwh = function (v) {
     return 'var(--casora-security-' + (lv || 'ok') + '-color' + (fallback ? ', ' + fallback : '') + ')';
   };
 
+  // ── Unterzeile des Sicherheits-Sammelbadges (Weich/Nebel, 06.10.2026) ─────────
+  // sec = Zählung aus casora_badge_security_group (triggered, disarmed, locks, doors, gates,
+  // windows, windowsTilted, doorsTilted, lockDead, camDead, insecure, problem).
+  // o.summary: 'short' (Standard) = kleine Symbole mit Zahl, 'detailed' = Liste in Worten.
+  // o.alarmState: Zustand der Alarmanlage (für „Aktiv · Abwesend“).
+  // Rückgabe { text, html }: text ist immer die Liste in Worten (auch für Tooltip/Vorlese-Text),
+  // html nur bei 'short' mit Meldungen, sonst null.
+  // Reihenfolge nach Wichtigkeit: Alarm aus, Tür, Tor, Schloss, Fenster offen, gekippt, offline.
+  window.casoraSecuritySummary = function (sec, o) {
+    var S = sec || {};
+    o = o || {};
+    var n = function (c, one, many) { return c === 1 ? one : c + ' ' + many; };
+    if (S.triggered) return { text: 'Alarm!', html: null };
+    if (!S.insecure && !S.problem) {
+      var al = String(o.alarmState || '').toLowerCase();
+      return { text: ALARM_MODE[al] ? 'Aktiv · ' + ALARM_MODE[al] : 'Alles sicher', html: null };
+    }
+    // [Wort, Symbol, Zahl, offline?]; Wörter mit Zahl stehen in phrases/en.json.
+    var L = [];
+    if (S.disarmed) L.push(['Alarm aus', null, 0]);
+    if (S.doors) L.push([n(S.doors, 'Tür offen', 'Türen offen'), 'door-open', S.doors]);
+    if (S.gates) L.push([n(S.gates, 'Tor offen', 'Tore offen'), 'garage', S.gates]);
+    if (S.locks) L.push([n(S.locks, 'Schloss offen', 'Schlösser offen'), 'lock-open', S.locks]);
+    if (S.windows) L.push([n(S.windows, 'Fenster offen', 'Fenster offen'), 'window-open', S.windows]);
+    if (S.windowsTilted) L.push([n(S.windowsTilted, 'Fenster gekippt', 'Fenster gekippt'), 'window-tilt', S.windowsTilted]);
+    if (S.doorsTilted) L.push([n(S.doorsTilted, 'Tür gekippt', 'Türen gekippt'), 'window-tilt', S.doorsTilted]);
+    if (S.lockDead) L.push([n(S.lockDead, 'Schloss offline', 'Schlösser offline'), 'lock', S.lockDead, true]);
+    if (S.camDead) L.push([n(S.camDead, 'Kamera offline', 'Kameras offline'), 'camera', S.camDead, true]);
+    var text = L.map(function (x) { return x[0]; }).join(' · ');
+    if (o.summary === 'detailed') return { text: text, html: null };
+    // Kurz: ein Symbol je Meldung; „gekippt“ hat ein eigenes Symbol, offline ist durchgestrichen.
+    // Tooltip und Vorlese-Text sagen, was gemeint ist („2 Fenster offen“) – Attribute übersetzt
+    // casora-i18n.js nicht von selbst, daher hier casoraTr.
+    var tr = function (t) { return typeof window.casoraTr === 'function' ? window.casoraTr(t) : t; };
+    var att = function (t) { return String(t).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); };
+    var url = function (k) { return typeof window.casoraIconUrl === 'function' ? window.casoraIconUrl(k) : '/casora_assets/icons/' + k + '.svg'; };
+    var items = L.map(function (x) {
+      if (!x[1]) return '<span class="cs-sum-item">' + x[0] + '</span>';
+      var lab = att(tr(x[0])), u = url(x[1]);
+      return '<span class="cs-sum-item" role="img" aria-label="' + lab + '" title="' + lab + '"'
+        + ' style="display:inline-flex;align-items:center;gap:3px;white-space:nowrap">'
+        + '<span aria-hidden="true" style="position:relative;display:inline-block;width:1.05em;height:1.05em;flex:none">'
+        + '<span style="position:absolute;inset:0;background-color:currentColor;-webkit-mask:url(\'' + u + '\') center / contain no-repeat;mask:url(\'' + u + '\') center / contain no-repeat;' + (x[3] ? 'opacity:.7;' : '') + '"></span>'
+        + (x[3] ? '<span style="position:absolute;left:-12%;top:50%;width:124%;height:1.6px;margin-top:-0.8px;border-radius:1px;background:currentColor;transform:rotate(-45deg)"></span>' : '')
+        + '</span><span aria-hidden="true" style="font-variant-numeric:tabular-nums;font-weight:700">' + x[2] + '</span></span>';
+    });
+    return { text: text, html: '<span class="cs-sum" style="display:inline-flex;align-items:center;gap:9px;height:1.25em;line-height:1;vertical-align:top">' + items.join('') + '</span>' };
+  };
+
   // ── Außensensor nach Geräteklasse (Wetter-Popup, 27.09.2026) ──────────────────
   // „outdoor/außen“ im Namen oder ein Außenbereich; Luftdruck ist ohnehin draußen gleich.
   var OUTDOOR = /outdoor|aussen|außen|outside|draussen|draußen|garten|terrasse|balkon|garden|terrace|balcony/i;

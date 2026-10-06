@@ -1360,7 +1360,9 @@
   "Nicht in der Summe": "Not added up",
   "Keine Leistung": "Not power",
   "Steckt hinter": "Behind",
-  "1 Gerät ohne Wert": "1 device without a value"
+  "1 Gerät ohne Wert": "1 device without a value",
+  "Schloss offen": "Lock open",
+  "Alles sicher": "All secure"
  },
  "patterns": [
   [
@@ -2418,6 +2420,10 @@
   [
    "^(Heute|Morgen|Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag): (.+)$",
    "{1}: {2}"
+  ],
+  [
+   "^(\\d+) Schlösser offen$",
+   "{1} locks open"
   ],
   [
    "^(.+) offen$",

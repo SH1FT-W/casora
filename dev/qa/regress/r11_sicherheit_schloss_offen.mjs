@@ -41,7 +41,8 @@ await check('Badge ändert sich, wenn ein Schloss aufgeht', JSON.stringify(zu.ma
   { zu: zu.map((c) => c.text), auf: auf.map((c) => c.text) });
 // 3) Schloss offen + ein Fenster offen (30.09.2026 gemeldet: „1 Schloss · Geöffnet“ – ein
 // Fenster-Gruppenhelfer ohne Geräteklasse landete als „Geöffnet“). Erwartet wie im
-// Produktiv-Dashboard: „1 Schloss · Fenster offen“ (bzw. „N Schlösser · … Fenster offen“).
+// Produktiv-Dashboard: „Schloss offen · Fenster offen“ (bzw. „N Schlösser offen · … Fenster offen“;
+// bis 06.10.2026 „1 Schloss“). Weich zeigt im Standard „Kurz“ Symbole – dann greift die Prüfung nicht.
 const win = await page.evaluate(() => {
   const S = document.querySelector('home-assistant').hass.states;
   return Object.keys(S).filter((e) => e.startsWith('binary_sensor.') && S[e].attributes.device_class === 'window'
@@ -60,7 +61,7 @@ if (win.length) {
   const grp = (await read()).filter((c) => c.t.includes('casora_badge_security_group'));
   await check('kein „Geöffnet“ in der Sicherheit-Badge', !grp.some((c) => /Geöffnet/.test(c.text)), grp.map((c) => c.text));
   await check('Wortlaut „Schloss · Fenster offen“ (wie Produktiv)',
-    !grp.length || grp.every((c) => !/Fenster/.test(c.text) || !/Schl(oss|össer)/.test(c.text) || /Schl(oss|össer)( · [^·]+)* · (\d+ )?Fenster offen/.test(c.text)),
+    !grp.length || grp.every((c) => !/Fenster/.test(c.text) || !/Schl(oss|össer)/.test(c.text) || /Schl(oss|össer)( offen)?( · [^·]+)* · (\d+ )?Fenster offen/.test(c.text)),
     grp.map((c) => c.text));
 }
 await finish();
