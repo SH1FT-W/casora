@@ -6,6 +6,7 @@ B-PY-04: zwei gleichzeitige Auffrisch-Läufe (Start + Karten-Update) laufen nach
 B-PY-05: Konfigurieren-Dialog: „Ungültige Zeit“ nur unter Zeitplan-Feldern.
 B-PY-06: unpassende KI-Änderung beim Umzug („Vorlage anpassen“) → verständliche Meldung statt Absturz.
 SEC-02:  casora.umstellen und casora.einrichten nur für Admins.
+B-PY-07: beim Entladen/Entfernen verschwinden casora.einrichten und casora.umstellen.
 """
 
 from __future__ import annotations
@@ -117,7 +118,27 @@ async def t_sec02():
           and 'hass.services.async_register(DOMAIN, "einrichten"' not in src)
 
 
+async def t_py07():
+    import custom_components.casora as integ
+
+    removed = []
+
+    async def _unload_platforms(entry, platforms):
+        return True
+
+    hass = SimpleNamespace(data={"casora": {}}, services=SimpleNamespace(async_remove=lambda d, n: removed.append(n)),
+                           config_entries=SimpleNamespace(async_unload_platforms=_unload_platforms))
+    real = integ.async_remove_panel
+    integ.async_remove_panel = lambda *a, **k: None
+    try:
+        await integ.async_unload_entry(hass, SimpleNamespace(entry_id="e1"))
+    finally:
+        integ.async_remove_panel = real
+    check("B-PY-07: Dienste beim Entladen entfernt", {"einrichten", "umstellen"} <= set(removed), repr(removed))
+
+
 async def main():
+    await t_py07()
     await t_sec02()
     await t_py06()
     await t_py04()

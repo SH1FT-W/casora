@@ -381,6 +381,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_remove_panel(hass, PANEL_URL, warn_if_unknown=False)
     async_unload_helfer(hass)
     async_unload_card_updates(hass)
+    # Sonst blieben sie bis zum Neustart aufrufbar, auch nach dem Entfernen von Casora.
+    for name in ("einrichten", "umstellen"):
+        hass.services.async_remove(DOMAIN, name)
     runner = hass.data.get(DOMAIN, {}).pop("ki", None)
     if runner:
         await runner.async_unload()
