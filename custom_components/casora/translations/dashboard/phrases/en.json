@@ -247,7 +247,6 @@
   "Hört zu …": "Listening …",
   "In der Cookidoo-App auf \"Meine Woche\" planen": "Plan it in the Cookidoo app under \"My Week\"",
   "Info-Licht am Boden": "Floor info light",
-  "Ist die Wohnungstür abgeschlossen?": "Is the front door locked?",
   "Jetzt lüften": "Ventilate now",
   "Jetzt prüfen": "Check now",
   "KI prüft noch …": "AI is still checking …",
@@ -394,7 +393,6 @@
   "Sensordaten nicht verfügbar": "Sensor data unavailable",
   "Sensoren temporär deaktiviert": "Sensors temporarily disabled",
   "Service fällig": "Service due",
-  "Sind noch Lichter an?": "Are any lights on?",
   "Sirene an": "Siren on",
   "Sirene auslösen?": "Sound the siren?",
   "Solaranteil heute": "Solar share today",
@@ -462,7 +460,6 @@
   "Welche Fenster sind offen?": "Which windows are open?",
   "Welche Lichter sind an?": "Which lights are on?",
   "Weniger als 1 Min. übrig": "Less than 1 min left",
-  "Wie warm ist es im Büro?": "How warm is it in the office?",
   "Windig & bewölkt": "Windy & cloudy",
   "Wird übernommen": "Applying",
   "Wird abgebrochen": "Cancelling",
@@ -1093,8 +1090,6 @@
   "Wasserkasten fehlt": "Water tank missing",
   "Wetterwarnung aufgehoben": "Weather warning lifted",
   "Wie kann ich helfen?": "How can I help?",
-  "Wie warm ist das Meerwasseraquarium?": "How warm is the saltwater aquarium?",
-  "Wie warm ist es im Wohnzimmer?": "How warm is it in the living room?",
   "Wieder anzeigen": "Show again",
   "Zum Freigeben oben in der Update-Zeile auf „Freigeben“ tippen und bestätigen.": "To approve, tap “Approve” in the update row above and confirm.",
   "KI: alle unkritisch": "AI: all uncritical",
@@ -1318,7 +1313,21 @@
   "Akku fast leer": "Battery almost empty",
   "Läuft gerade": "Now playing",
   "Scharf": "Armed",
-  "Alarm unscharf": "Alarm disarmed"
+  "Alarm unscharf": "Alarm disarmed",
+  "Welche Türen sind offen?": "Which doors are open?",
+  "Ist alles abgeschlossen?": "Is everything locked?",
+  "Alarm scharf schalten": "Arm the alarm",
+  "Wie wird das Wetter heute?": "What's the weather like today?",
+  "Muss heute eine Tonne raus?": "Does a bin need to go out today?",
+  "Öffne die Jalousien": "Open the blinds",
+  "Schließe die Jalousien": "Close the blinds",
+  "Wie viel Strom brauchen wir gerade?": "How much power are we using right now?",
+  "Läuft die Waschmaschine noch?": "Is the washing machine still running?",
+  "Was läuft gerade?": "What's playing right now?",
+  "Vorschläge für den Morgen": "Suggestions for the morning",
+  "Vorschläge für heute": "Suggestions for today",
+  "Vorschläge für den Abend": "Suggestions for the evening",
+  "Vorschläge für die Nacht": "Suggestions for the night"
  },
  "patterns": [
   [
@@ -2394,6 +2403,14 @@
   [
    "^(\\d+) % Regen$",
    "{1}% rain"
+  ],
+  [
+   "^Wie warm ist es (?:im|in der) (.+)\\?$",
+   "How warm is it in the {1}?"
+  ],
+  [
+   "^Dimme das Licht (?:im|in der) (.+)$",
+   "Dim the lights in the {1}"
   ]
  ]
 }
