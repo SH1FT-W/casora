@@ -835,8 +835,12 @@
           const q = document.createElement("div");
           q.className = "mqr";
           q.innerHTML = '<div class="mcode"></div><div class="murl" data-no-i18n></div><p class="mhint"></p>';
-          q.querySelector(".mcode").innerHTML = code;
-          q.querySelector(".mcode svg").setAttribute("aria-label", tr("QR code for this dashboard"));
+          // Ohne Code (Adresse zu lang) nur Link und „Link kopieren“ zeigen.
+          const mc = q.querySelector(".mcode");
+          mc.innerHTML = code;
+          const svg = mc.querySelector("svg");
+          if (svg) svg.setAttribute("aria-label", tr("QR code for this dashboard"));
+          else mc.remove();
           q.querySelector(".murl").textContent = link.url;
           q.querySelector(".mhint").textContent = tr("Scan it with the phone's camera. The phone has to reach Home Assistant – on the same Wi-Fi or through your external address. No password is included.");
           box.insertBefore(q, acts);
