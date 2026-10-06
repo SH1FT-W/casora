@@ -8548,6 +8548,9 @@ class CasoraPanel extends HTMLElement {
         }
         .miniroom.focusing .mz.infocus,
         .miniroom.focusing .mini-subs.infocus { z-index:21; }
+        /* Weich: der Rest der Vorschau tritt hell zurück (Leinen-Schleier) statt grau abzudunkeln. */
+        :host(.is-light) .card.map.soft .miniroom .mzscrim { background:rgba(246,241,234,0.62); }
+        :host(:not(.is-light)) .card.map.soft .miniroom .mzscrim { background:rgba(20,16,12,0.38); }
         .mz-tiles { margin:0 calc(var(--pad-x) * -1); }
         .mz-tiles .mini-tiles {
           padding-left:var(--pad-x); padding-right:var(--pad-x);
@@ -10641,6 +10644,71 @@ class CasoraPanel extends HTMLElement {
         :host(.tight) .row > .drop { margin-left:10px; }
         :host(.tight) .row > .drop.blank { display:none; }
         :host(.tight) .shots { padding-right:0; }
+
+        /* ── Baukasten (06.10.2026) ────────────────────────────────────────────────
+           Ein Satz Bedienelemente mit festen Maßen für alle Studio-Seiten:
+           Feld/Auswahl 40 px (Handy 46), Knöpfe 36 px (Handy 44), Entfernen 32 px (Handy 44),
+           Schalter 46 × 24 (Handy 62 × 27), Aufklapper 44 px (Handy 48).
+           Drei Radien: --r-s 8 (Kleines), --r-m 12 (Felder), --r-l 18 (Karten); Knöpfe als Pille. */
+        :host { --k-h:40px; --k-btn:36px; --k-hit:32px; }
+        :host(.phone) { --k-h:46px; --k-btn:44px; --k-hit:44px; }
+
+        /* Feld und Auswahl */
+        :host .row > select, :host .row > input:not([type=checkbox]):not([type=range]),
+        :host .row > .combo > input { height:var(--k-h); border-radius:var(--r-m); box-sizing:border-box; }
+        :host .combo.hasent > .entface { --fh:var(--k-h); }
+
+        /* Entfernen: ✕ im Feld (wie HA), gut sichtbar, auch am Handy (S-01, S-03).
+           Alle Felder bleiben gleich breit – rechts endet jede Zeile an derselben Kante. */
+        :host .row .drop:not(.blank) {
+          width:var(--k-hit); height:var(--k-hit); border-radius:50%; opacity:1;
+          background:transparent; color:var(--ink-3); box-shadow:none; cursor:pointer;
+        }
+        :host .row .drop:not(.blank) svg { width:14px; height:14px; }
+        :host .row .drop:not(.blank):is(:hover, :focus-visible) {
+          background:color-mix(in srgb, var(--casora-studio-danger, #d70015) 13%, transparent);
+          color:var(--casora-studio-danger, #d70015); filter:none;
+        }
+        :host(:not(.narrow)) .inspector .row:not(:has(> .sw)):not(:has(> .chipwrap)):is(:has(> .combo), :has(> input)) {
+          grid-template-columns:minmax(0,1fr);
+        }
+        :host(:not(.narrow)) .inspector .row:not(:has(> .sw)):not(:has(> .chipwrap)):is(:has(> .combo), :has(> input)) > .drop:not(.blank),
+        :host(.phone) .row:not(:has(> .chipwrap)):is(:has(> .combo), :has(> input)) > .drop:not(.blank) {
+          display:grid; grid-column:1; grid-row:2; justify-self:end; align-self:center;
+          position:relative; z-index:2; margin-right:4px;
+        }
+        :host(:not(.narrow)) .inspector .row:not(:has(> .sw)):not(:has(> .chipwrap)):has(> .combo) > .drop:not(.blank) { margin-right:30px; }
+        :host(.phone) .row:not(:has(> .chipwrap)):has(> .combo) > .drop:not(.blank) { margin-right:30px; }
+        :host .row:has(> .drop:not(.blank)) > .combo > input { padding-right:66px; }
+        :host(.phone) .row:has(> .drop:not(.blank)) > .combo > input { padding-right:76px; }
+        :host .row:has(> .drop:not(.blank)) > input { padding-right:42px; }
+        :host(.phone) .row:has(> .drop:not(.blank)) > input { padding-right:50px; }
+        :host .row:has(> .drop:not(.blank)) > .combo.hasent > .entface { right:66px; }
+        :host(.phone) .row:has(> .drop:not(.blank)) > .combo.hasent > .entface { right:76px; }
+
+        /* Schalter */
+        :host(:not(.phone)) .sw { width:46px; height:24px; flex:0 0 46px; }
+        :host(:not(.phone)) .sw::after { top:2px; left:2px; width:28px; height:20px; }
+        :host(:not(.phone)) .sw[aria-checked="true"]::after { transform:translateX(14px); }
+
+        /* Knöpfe: Haupt (Ton gefüllt), Zweit (Leinen gefüllt), Gefahr (rot). Alle als Pille, gleiche Höhe. */
+        :host .casora-ai .editbtn, :host .cp-show, :host .bhid {
+          height:var(--k-btn); min-height:var(--k-btn); padding:0 16px; border-radius:999px; box-sizing:border-box;
+          background:var(--chip); color:var(--ink); box-shadow:none; border:0;
+          font-size:var(--t-foot); font-weight:600; display:inline-flex; align-items:center; gap:7px;
+        }
+        :host .casora-ai .editbtn:hover, :host .cp-show:hover, :host .bhid:hover { background:var(--chip-hi); filter:none; }
+        :host .delbtn { background:var(--casora-studio-danger, #d70015); color:#fff; }
+
+        /* Aufklapper: immer eine volle Zeile mit Pfeil, gleiche Höhe in und außerhalb von Karten (S-07). */
+        :host .advsum {
+          min-height:44px; font-size:var(--t-callout); font-weight:500; color:var(--ink-2); gap:8px;
+        }
+        :host(.phone) .advsum.advsum { min-height:48px; font-size:var(--t-body); }
+        :host .tile > .tbody > .adv {
+          margin-top:12px; padding:0 14px; border-radius:var(--r-l);
+          background:var(--casora-studio-slab-card, var(--card-tint));
+        }
       </style>
       <div class="curtain" id="curtain"></div>
       <div class="bgwrap">
@@ -16374,7 +16442,7 @@ class CasoraPanel extends HTMLElement {
         unitSeen.add(u);
         cell.title = "Remove";
         cell.setAttribute("aria-label", "Remove");
-        cell.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14"/></svg>';
+        cell.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>';
         cell.onclick = (ev) => {
           if (ev && ev.stopPropagation) ev.stopPropagation();
           this._armRow(row, kindLabel(f) || f.label, () => {
