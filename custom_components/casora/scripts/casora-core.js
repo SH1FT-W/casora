@@ -95,6 +95,50 @@
 })();
 // casora-battery:end
 
+// casora-battery-hints:start
+// Akku-Hinweise auf Geräte-Kacheln (06.10.2026): ein schwacher Fühler-Akku soll eine Kachel
+// (z. B. Aquarium) nicht orange/aktiv machen, wenn dasselbe Dashboard schon eine
+// Batterien-Kachel hat – sonst steht dieselbe Meldung zweimal auf der Seite.
+// Kachel-Variable battery_hints: auto (Standard) | always | never.
+//   on(mode, cfg) → true = Akku-Hinweise zählen für Unterzeile und Aktiv-Zustand.
+//   hasTile(cfg)   → steht irgendwo im Dashboard eine Batterien-Kachel (casora_battery)?
+// Im Popup bleibt der Akkuwert immer sichtbar; andere Hinweise (Leck, Temperatur) bleiben.
+(function () {
+  if (window.casoraBatteryHints) return;
+  var TILE = 'casora_battery';
+  var cache = { cfg: null, hit: false };
+  var H = {
+    mode: function (v) {
+      var m = String(v == null ? '' : v).trim().toLowerCase();
+      return m === 'always' || m === 'never' ? m : 'auto';
+    },
+    hasTile: function (cfg) {
+      if (!cfg || typeof cfg !== 'object') return false;
+      if (cache.cfg === cfg) return cache.hit;
+      var hit = false;
+      (function walk(x, d) {
+        if (hit || !x || typeof x !== 'object' || d > 16) return;
+        if (Array.isArray(x)) { for (var i = 0; i < x.length && !hit; i++) walk(x[i], d + 1); return; }
+        var tpl = [].concat(x.template || []);
+        if (tpl.indexOf(TILE) > -1 && !(x.variables && x.variables.enabled === false)) { hit = true; return; }
+        // Vorlagen-Sammlung des Dashboards nicht durchsuchen – dort steht die Vorlage selbst.
+        for (var k in x) if (k !== 'button_card_templates' && x[k] && typeof x[k] === 'object') walk(x[k], d + 1);
+      })(cfg.views || cfg, 0);
+      cache = { cfg: cfg, hit: hit };
+      return hit;
+    },
+    on: function (mode, cfg) {
+      var m = H.mode(mode);
+      if (m === 'always') return true;
+      if (m === 'never') return false;
+      if (cfg === undefined) cfg = window._casoraLovelaceCfg ? window._casoraLovelaceCfg() : null;
+      return !H.hasTile(cfg);
+    },
+  };
+  window.casoraBatteryHints = H;
+})();
+// casora-battery-hints:end
+
 // casora-room-name:start
 // Name der Übersicht (04.10.2026): Übersetzt wird nur ein Name, den Casora selbst angelegt hat
 // (variables.casora_auto_name, z. B. 'home') und der noch unverändert ist ('Home'/'Zuhause'/leer).

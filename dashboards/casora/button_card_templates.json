@@ -781,6 +781,7 @@
    "casora_popup_aquarium_tank"
   ],
   "variables": {
+   "battery_hints": "auto",
    "chart_color": null,
    "devices": [],
    "dosing_labels": [],

@@ -251,7 +251,10 @@
   else if (st.includes('warnung')) warn.push('Temperaturwarnung');
   if (dead(entity?.entity_id)) warn.push('Temperaturfühler offline');
   if (dead(V.leak_entity)) warn.push('Lecksensor offline');
-  [[V.leak_battery, 'Akku Lecksensor'], [V.temp_battery, 'Akku Temperaturfühler']].forEach((b) => {
+  /* Akku-Hinweise (battery_hints, 06.10.2026): steht schon eine Batterien-Kachel auf dem Dashboard,
+     macht ein schwacher Fühler-Akku die Kachel nicht orange (Wert bleibt im Popup unter den Sensoren). */
+  const H = window.casoraBatteryHints;
+  if (!H || H.on(V.battery_hints)) [[V.leak_battery, 'Akku Lecksensor'], [V.temp_battery, 'Akku Temperaturfühler']].forEach((b) => {
     const n = num(b[0]);
     // Akku-Stufen (casoraBattery): Schwach und Fast leer sind ein Hinweis, kein Aquarium-Alarm.
     const lv = n == null ? 'ok' : (window.casoraBattery ? window.casoraBattery.level(n) : (n) <= 10 ? 'crit' : (n) <= 20 ? 'low' : 'ok');
@@ -369,6 +372,7 @@
     /* Für die Status-Zeile unter der Temperatur (gleiche Bewertung wie die Kachel) */
     V: { status_entity: variables.status_entity || null, leak_entity: variables.leak_entity || null,
          leak_battery: variables.leak_battery || null, temp_battery: variables.temp_battery || null,
+         battery_hints: variables.battery_hints || 'auto',
          light_entity: variables.light_entity || null, light_reachable: variables.light_reachable || null,
          devices: (variables.devices || []).map((d) => ({ entity: d.entity, label: d.label, alarm: !!d.alarm })) },
     labels: dose.map((d) => d.label),
