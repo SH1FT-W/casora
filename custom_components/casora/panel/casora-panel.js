@@ -18101,7 +18101,9 @@ class CasoraPanel extends HTMLElement {
       r.onclick = () => { done(); onPick(value); };
       return r;
     };
+    let drawTok = 0;
     const draw = () => {
+      const tok = ++drawTok;
       const needle = q.value.trim().toLowerCase();
       const hits = (list || []).filter((o) => !needle || String(o).toLowerCase().includes(needle)
         || String(name(o)).toLowerCase().includes(needle)
@@ -18109,30 +18111,50 @@ class CasoraPanel extends HTMLElement {
       listEl.innerHTML = "";
       const typed = q.value.trim();
       const groups = ents ? this._entGroups(hits.slice(0, 300)) : [["", hits.slice(0, 300)]];
+      const items = [];
       groups.forEach(([k, ids]) => {
-        if (groups.length > 1) {
+        if (groups.length > 1) items.push(() => {
           const hd = document.createElement("div");
           hd.className = "psheet-head2";
           hd.setAttribute("data-no-i18n", "");
           hd.textContent = k || trLabel("Without room");
-          listEl.appendChild(hd);
-        }
-        ids.forEach((o) => {
+          return hd;
+        });
+        ids.forEach((o) => items.push(() => {
           const nm = name(o);
           const em = meta(o);
-          if (em) listEl.appendChild(row(o, em.short, em.ctx || o, o === current));
-          else listEl.appendChild(row(o, nm, nm !== o && !label ? o : null, o === current));
-        });
+          if (em) return row(o, em.short, em.ctx || o, o === current);
+          return row(o, nm, nm !== o && !label ? o : null, o === current);
+        }));
       });
-      if (free !== false && typed && !(list || []).includes(typed) && (!hits.length || typed.includes("."))) {
-        listEl.appendChild(row(typed, "Use \u201c" + typed + "\u201d", null, false));
-      }
-      if (!hits.length && !typed) {
-        const e = document.createElement("div");
-        e.className = "psheet-empty";
-        e.textContent = "Nothing to choose";
-        listEl.appendChild(e);
-      }
+      const tail = () => {
+        if (free !== false && typed && !(list || []).includes(typed) && (!hits.length || typed.includes("."))) {
+          listEl.appendChild(row(typed, "Use \u201c" + typed + "\u201d", null, false));
+        }
+        if (!hits.length && !typed) {
+          const e = document.createElement("div");
+          e.className = "psheet-empty";
+          e.textContent = "Nothing to choose";
+          listEl.appendChild(e);
+        }
+      };
+      // Zuerst, was auf den Bildschirm passt; der Rest folgt in den nächsten Bildern. Bis zu 300
+      // Zeilen auf einmal bremsten am Handy jeden Tastendruck in der Suche.
+      let at = 0;
+      const pump = (n) => {
+        const frag = document.createDocumentFragment();
+        for (const end = Math.min(items.length, at + n); at < end; at++) frag.appendChild(items[at]());
+        listEl.appendChild(frag);
+      };
+      pump(40);
+      if (at >= items.length) { tail(); return; }
+      const more = () => {
+        if (tok !== drawTok || closed) return;
+        pump(80);
+        if (at < items.length) requestAnimationFrame(more);
+        else tail();
+      };
+      requestAnimationFrame(more);
     };
 
     const fit = () => {
