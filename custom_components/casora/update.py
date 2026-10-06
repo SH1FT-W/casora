@@ -5,11 +5,13 @@ bietet sie unter Einstellungen → Updates an, wie jede andere Integration. Verw
 Casora schon, übernimmt HACS das – dann legt Casora keine eigene Update-Entität an,
 sonst stünde dieselbe Version doppelt unter Updates.
 „Installieren“ lädt das Release, sichert die laufende Fassung nach /config/casora_sicherungen/ und legt die neue
-nach custom_components/casora. Danach ist ein Neustart nötig – den löst Casora nicht
-selbst aus, sondern meldet ihn als Reparatur-Hinweis.
+in einen Wartebereich (/config/casora_update_neu). Erst wenn Home Assistant beendet wird, tauscht
+Casora den Ordner custom_components/casora – so passen Oberfläche und Server-Code bis zum Neustart
+zusammen. Den Neustart löst Casora nicht selbst aus, sondern meldet ihn als Reparatur-Hinweis.
 """
 from __future__ import annotations
 
+import errno
 import io
 import json
 import logging
@@ -22,7 +24,8 @@ from typing import Any
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -60,6 +63,8 @@ DATA_LAST_CHECK = "update_last_check"
 DATA_PENDING = "update_pending"
 DATA_LAST_ERROR = "update_last_error"
 DATA_HACS = "update_via_hacs"
+DATA_STAGE_LISTENER = "update_stage_listener"
+STAGE_DIR = "casora_update_neu"
 HISTORY_KEY = f"{DOMAIN}.update_history"
 
 
@@ -84,6 +89,13 @@ async def async_record_install(hass: HomeAssistant, version: str, previous: str)
 
 def install_zip(data: bytes, target: str, backups: str, backup_name: str) -> None:
     """Release-Archiv auspacken: custom_components/casora daraus nach target, alte Fassung als Zip sichern."""
+    staged = target + ".neu"
+    stage_zip(data, target, backups, backup_name, staged)
+    swap_in(staged, target)
+
+
+def stage_zip(data: bytes, target: str, backups: str, backup_name: str, staged: str) -> None:
+    """Wie install_zip, legt die neue Fassung aber nur fertig nach staged (Tausch später mit swap_in)."""
     with zipfile.ZipFile(io.BytesIO(data)) as zf:
         # Das Archiv hat einen Wurzelordner „<owner>-<repo>-<sha>/“.
         prefix = next((n.split("custom_components/")[0] for n in zf.namelist()
@@ -116,14 +128,12 @@ def install_zip(data: bytes, target: str, backups: str, backup_name: str) -> Non
                 shutil.make_archive(os.path.join(backups, backup_name), "zip", target)
             # Erst vollständig neben das Ziel kopieren (Speicher voll, Rechte …: das Ziel bleibt
             # unberührt), dann nur noch umbenennen.
-            staged = target + ".neu"
             shutil.rmtree(staged, ignore_errors=True)
             try:
                 shutil.copytree(new, staged)
             except BaseException:
                 shutil.rmtree(staged, ignore_errors=True)
                 raise
-            swap_in(staged, target)
 
 
 def swap_in(staged: str, target: str) -> None:
@@ -134,7 +144,18 @@ def swap_in(staged: str, target: str) -> None:
     if had:
         os.replace(target, old)
     try:
-        os.replace(staged, target)
+        try:
+            os.replace(staged, target)
+        except OSError as err:
+            if err.errno != errno.EXDEV:
+                raise
+            # Wartebereich auf einem anderen Laufwerk (eigene Docker-Einbindung): kopieren.
+            try:
+                shutil.copytree(staged, target)
+            except BaseException:
+                shutil.rmtree(target, ignore_errors=True)
+                raise
+            shutil.rmtree(staged, ignore_errors=True)
     except BaseException:
         if had and not os.path.exists(target):
             os.replace(old, target)
@@ -181,7 +202,12 @@ async def async_hacs_managed(hass: HomeAssistant) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     # Mit HACS meldet HACS neue Versionen – eine zweite Update-Entität wäre doppelt.
     hacs = await async_hacs_managed(hass)
-    hass.data.setdefault(DOMAIN, {})[DATA_HACS] = hacs
+    data = hass.data.setdefault(DOMAIN, {})
+    data[DATA_HACS] = hacs
+    if not data.get(DATA_PENDING):
+        # Reste eines Wartebereichs, der beim letzten Beenden nicht mehr eingespielt wurde (Absturz,
+        # Stromausfall): verwerfen – das Update wird dann einfach wieder angeboten.
+        await hass.async_add_executor_job(shutil.rmtree, hass.config.path(STAGE_DIR), True)
     if not hacs:
         async_add_entities([CasoraUpdate(hass, entry)], update_before_add=True)
 
@@ -291,7 +317,9 @@ class CasoraUpdate(UpdateEntity):
         backups = self.hass.config.path("casora_sicherungen")
         stamp = dt_util.now().strftime("%Y-%m-%d_%H%M%S")
 
-        await self.hass.async_add_executor_job(install_zip, data, target, backups, f"casora_{VERSION}_{stamp}")
+        staged = self.hass.config.path(STAGE_DIR)
+        await self.hass.async_add_executor_job(stage_zip, data, target, backups, f"casora_{VERSION}_{stamp}", staged)
+        _swap_on_stop(self.hass, staged, target)
         self._installed_new = str(tag).lstrip("v")
         # Für „installiert am …“ im Studio; läuft bis zum Neustart noch die alte Fassung.
         await async_record_install(self.hass, self._installed_new, VERSION)
@@ -304,3 +332,21 @@ class CasoraUpdate(UpdateEntity):
             translation_placeholders={"version": self._installed_new},
         )
         self.async_write_ha_state()
+
+
+def _swap_on_stop(hass: HomeAssistant, staged: str, target: str) -> None:
+    """Die neue Fassung erst beim Beenden von HA einspielen – bis dahin liefert Casora weiter die
+    Oberfläche aus, die zum laufenden Server-Code passt. Einmal je Lauf anmelden."""
+    data = hass.data.setdefault(DOMAIN, {})
+    if data.get(DATA_STAGE_LISTENER):
+        return
+
+    async def _apply(_event: Event) -> None:
+        if not await hass.async_add_executor_job(os.path.isdir, staged):
+            return
+        try:
+            await hass.async_add_executor_job(swap_in, staged, target)
+        except OSError as err:
+            _LOGGER.error("Casora: neue Fassung nicht eingespielt (%s) – die bisherige bleibt aktiv", err)
+
+    data[DATA_STAGE_LISTENER] = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _apply)

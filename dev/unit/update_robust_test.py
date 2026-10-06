@@ -5,6 +5,8 @@
 B-PY-01: nach „Installieren“ und Neuladen der Integration (Optionen geändert) bietet die neu
           angelegte Entität dieselbe Version nicht noch einmal an.
 B-PY-02: bricht das Kopieren der neuen Fassung ab (Speicher voll), bleibt die laufende heil.
+B-PY-03: bis zum Neustart bleibt die laufende Fassung im Ordner (Oberfläche passt zum Server-Code);
+          eingespielt wird beim Beenden von HA, ein liegengebliebener Wartebereich wird verworfen.
 """
 
 from __future__ import annotations
@@ -45,6 +47,8 @@ class Hass:
     def __init__(self, cfg: str):
         self.data = {}
         self.config = SimpleNamespace(path=lambda *p: os.path.join(cfg, *p), config_dir=cfg, language="en")
+        self.on_stop = []
+        self.bus = SimpleNamespace(async_listen_once=lambda ev, cb: self.on_stop.append((ev, cb)) or (lambda: None))
 
     async def async_add_executor_job(self, fn, *args):
         return fn(*args)
@@ -83,13 +87,36 @@ async def main():
     await ent.async_update()
     check("vorher: 9.0.1 angeboten", ent.latest_version == "9.0.1" and ent.installed_version == update.VERSION)
     await ent.async_install(None, False)
+    with open(os.path.join(target, "manifest.json")) as fh:
+        before = json.load(fh).get("version")
+    check("B-PY-03: bis zum Neustart liegt die laufende Fassung im Ordner", before == update.VERSION, before)
+    check("B-PY-03: neue Fassung wartet im Wartebereich",
+          os.path.isfile(hass.config.path(update.STAGE_DIR, "neu.py")))
+    check("B-PY-03: genau ein Abmelder für das Beenden", len(hass.on_stop) == 1
+          and hass.on_stop[0][0] == update.EVENT_HOMEASSISTANT_STOP, repr(hass.on_stop))
     # Optionen geändert → Integration neu geladen → neue Entität, hass.data bleibt.
     ent2 = update.CasoraUpdate(hass, SimpleNamespace(entry_id="e1", options={}))
+    ent2.async_write_ha_state = lambda: None
     check("B-PY-01: neue Entität kennt die installierte Version sofort",
           ent2.installed_version == "9.0.1" and ent2.latest_version == "9.0.1", f"{ent2.installed_version}")
     await ent2.async_update()
     check("B-PY-01: nach Prüfung kein erneutes Angebot", ent2.latest_version == ent2.installed_version == "9.0.1",
           f"{ent2.installed_version} → {ent2.latest_version}")
+    await ent2.async_install(None, False)
+    check("B-PY-03: zweites Installieren meldet sich nicht doppelt an", len(hass.on_stop) == 1)
+    # Neuladen mit wartender Fassung: Wartebereich bleibt.
+    await update.async_setup_entry(hass, SimpleNamespace(entry_id="e1", options={}), lambda *a, **k: None)
+    check("B-PY-03: Neuladen verwirft den Wartebereich nicht", os.path.isdir(hass.config.path(update.STAGE_DIR)))
+    await hass.on_stop[0][1](None)
+    with open(os.path.join(target, "manifest.json")) as fh:
+        after = json.load(fh).get("version")
+    check("B-PY-03: beim Beenden eingespielt", after == "9.0.1" and os.path.isfile(os.path.join(target, "neu.py"))
+          and not os.path.exists(hass.config.path(update.STAGE_DIR)) and not os.path.exists(target + ".alt"), after)
+    # Nächster Start ohne wartende Version, aber mit Rest im Wartebereich (Absturz): verwerfen.
+    os.makedirs(hass.config.path(update.STAGE_DIR, "x"))
+    h2 = Hass(tmp)
+    await update.async_setup_entry(h2, SimpleNamespace(entry_id="e1", options={}), lambda *a, **k: None)
+    check("B-PY-03: Rest im Wartebereich beim Start verworfen", not os.path.exists(hass.config.path(update.STAGE_DIR)))
 
     # ── B-PY-02 ─────────────────────────────────────────────────────────
     t2 = os.path.join(tmp, "b2", "custom_components", "casora")

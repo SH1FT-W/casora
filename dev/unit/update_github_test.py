@@ -120,6 +120,8 @@ class Hass:
         self.data = {}
         self.config = SimpleNamespace(path=lambda *p: os.path.join(cfg, *p), config_dir=cfg, language="en")
         self.states = SimpleNamespace(get=lambda eid: None)
+        self.on_stop = []
+        self.bus = SimpleNamespace(async_listen_once=lambda ev, cb: self.on_stop.append(cb) or (lambda: None))
 
     async def async_add_executor_job(self, fn, *args):
         return fn(*args)
@@ -221,6 +223,9 @@ async def main():
         with open(os.path.join(target, "panel", "casora-studio.js"), "w") as fh:
             fh.write("// lader\n")
         await ent.async_install(None, False)
+        # Eingespielt wird erst beim Beenden von HA (B-PY-03).
+        for cb in hass.on_stop:
+            await cb(None)
         with open(os.path.join(target, "manifest.json")) as fh:
             check("Installiert aus dem zipball", json.load(fh)["version"] == "9.0.1")
         check("zipball anonym geladen", SEEN[-1]["path"].endswith("/zipball/v9.0.1") and SEEN[-1]["auth"] is None)
