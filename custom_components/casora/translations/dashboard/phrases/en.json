@@ -368,6 +368,7 @@
   "Prüfen": "Check",
   "Prüft …": "Checking …",
   "Prüfung fehlgeschlagen": "Check failed",
+  "Rezepte": "Recipes",
   "Kühlt": "Cooling",
   "Entfeuchten": "Dry",
   "Nur Lüfter": "Fan only",
@@ -1448,6 +1449,10 @@
   [
    "^(\\d+) Verfügbar$",
    "{1} available"
+  ],
+  [
+   "^Heute (.+) kWh$",
+   "Today {1} kWh"
   ],
   [
    "^Heute (.+) kWh Bezug$",

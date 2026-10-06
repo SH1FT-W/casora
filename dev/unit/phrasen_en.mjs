@@ -14,6 +14,9 @@ const EXPECT = [
   ['Neu: Casora 1.0.11', 'New: Casora 1.0.11'],
   // B-TPL-09: Updates-Kachel
   ['2 Verfügbar', '2 available'],
+  // B-TPL-10: Energie-Unterzeile und Rezept-Titel
+  ['Heute 3,2 kWh', 'Today 3,2 kWh'],
+  ['Küche · Rezepte', 'Kitchen · Recipes'],
 ];
 for (const [de, en] of EXPECT) assert.equal(tr(de), en, de);
 console.log('ok phrasen_en');
