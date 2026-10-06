@@ -216,6 +216,18 @@
       });
     };
 
+    // Abläufe (Assistent, Design, Umzug …) liegen über allem: B beim Öffnen und Schließen eines
+    // Ablaufs neu anwenden – sonst blieben am Handy Größen-Umschalter und Inspektor-Blatt mit ✕ sichtbar.
+    ["_flowOpen", "_exitFlow"].forEach((m) => {
+      const orig = P[m];
+      if (typeof orig !== "function") return;
+      P[m] = function () {
+        const r = orig.apply(this, arguments);
+        try { this._bApply(); } catch (e) { /* B bleibt, wie es ist */ }
+        return r;
+      };
+    });
+
     // Größen-Umschalter (Desktop/Tablet/Mobil) nach einer Größe von hier nachziehen: sonst stand
     // am Handy „Tablet“ markiert über der Handy-Vorschau, und „Tablet“ antippen tat nichts.
     const wireSeg = P._wireSeg;

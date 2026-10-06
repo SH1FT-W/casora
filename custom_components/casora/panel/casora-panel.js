@@ -8554,7 +8554,7 @@ class CasoraPanel extends HTMLElement {
         .miniroom.focusing .mz.infocus,
         .miniroom.focusing .mini-subs.infocus { z-index:21; }
         /* Weich: der Rest der Vorschau tritt hell zurück (Leinen-Schleier) statt grau abzudunkeln. */
-        :host(.is-light) .card.map.soft .miniroom .mzscrim { background:rgba(246,241,234,0.62); }
+        :host(.is-light) .card.map.soft .miniroom .mzscrim { background:rgba(246,241,234,0.5); }
         :host(:not(.is-light)) .card.map.soft .miniroom .mzscrim { background:rgba(20,16,12,0.38); }
         .mz-tiles { margin:0 calc(var(--pad-x) * -1); }
         .mz-tiles .mini-tiles {
