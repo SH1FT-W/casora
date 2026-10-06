@@ -4408,6 +4408,8 @@ window.casoraMenuGlass = {
       -webkit-backdrop-filter: none;
     }
     :host([soft]) .header-close svg { width: 18px; height: 18px; }
+    /* D-02: sichtbar 38 px, Trefferfläche 44 px (unsichtbarer Rand rundum) */
+    :host([soft]) .header-close::before { content: ""; position: absolute; inset: -3px; border-radius: 50%; }
     .soft-empty[hidden] { display: none; }
     /* Gerät der Kachel fehlt (Entität gibt es nicht mehr): nur der Hinweis, kein halber Inhalt. */
     :host([missing]) .content .container, :host([missing]) .extra { display: none !important; }
@@ -4870,7 +4872,7 @@ window.casoraMenuGlass = {
             '<div class="header" hidden>' +
               '<div class="header-bar">' +
                 '<section class="header-nav">' +
-                  '<button class="header-close" type="button" aria-label="Close">' +
+                  '<button class="header-close" type="button" aria-label="Schließen">' +
                     '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
                       '<path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"></path>' +
                     '</svg>' +
@@ -5008,6 +5010,8 @@ window.casoraMenuGlass = {
       this._headerTitle.textContent = cfg.title || '';
       this._headerEyebrow.textContent = cfg.eyebrow || '';
       this._headerClose.hidden = cfg.close === false;
+      /* D-02: Bildschirmleser-Name in der Oberflächensprache (war fest „Close“) */
+      this._headerClose.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Schließen') : 'Schließen');
       // Weich: Ring aus der auslösenden Kachel. Gemerkt wird die Kachel, nicht das Ergebnis –
       // Farbe und Symbol werden bei jedem Öffnen und nach einem Theme-Wechsel neu gelesen.
       // Ein neues Popup ohne angetippte Kachel bekommt keinen fremden Ring.
