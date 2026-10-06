@@ -6265,11 +6265,26 @@ window.casoraMenuGlass = {
     '#ff9230': '#DE8A4E', '#ff4245': '#D35A4E',
     '#bf5af2': '#4E9E95', '#af52de': '#4E9E95', '#9333ea': '#4E9E95', '#5e5ce6': '#4E9E95', '#00c3d0': '#4E9E95',
     '#ff453a': '#D35A4E', '#ff3b30': '#D35A4E', '#fa2d48': '#FA2D48', '#ff375f': '#5B8FC9',
-    '#8e8e93': 'rgba(120,100,80,0.8)', '#636366': 'rgba(120,100,80,0.8)',
   };
+  // Kaltes iOS-Grau → Grau des Looks (--casora-soft-grey-mark: Weich warm, Nebel kühl). Als
+  // fertiger Farbwert, nicht var(): ApexCharts (SVG) löst keine CSS-Variablen auf.
+  var greyAt = 0, greyVal = 'rgba(120,100,80,0.8)';
+  function softGrey() {
+    var now = Date.now();
+    if (now - greyAt > 400) {
+      greyAt = now;
+      try {
+        greyVal = getComputedStyle(document.documentElement)
+          .getPropertyValue('--casora-soft-grey-mark').trim() || 'rgba(120,100,80,0.8)';
+      } catch (e) { greyVal = 'rgba(120,100,80,0.8)'; }
+    }
+    return greyVal;
+  }
   function softColor(c) {
     if (typeof c !== 'string') return c;
-    return NEON[c.trim().toLowerCase()] || c;
+    var k = c.trim().toLowerCase();
+    if (k === '#8e8e93' || k === '#636366') return softGrey();
+    return NEON[k] || c;
   }
   window._casoraSoftColor = softColor;
   function softHue(fill) {
