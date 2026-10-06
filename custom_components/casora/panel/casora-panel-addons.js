@@ -277,7 +277,7 @@ customElements.whenDefined("casora-panel").then(() => {
     box.appendChild(grid);
     const hint = document.createElement("div");
     hint.className = "hint";
-    hint.textContent = "Applies to all dashboards right away – separate from Save. The preview shows the chosen design; Undo switches back.";
+    hint.textContent = "The design applies to all dashboards right away; the other settings here only to this dashboard. Undo switches the design back.";
     const head = card.querySelector(".chead");
     const at = head ? head.nextSibling : card.firstChild;
     card.insertBefore(hint, at);
