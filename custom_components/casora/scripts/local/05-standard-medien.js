@@ -641,7 +641,10 @@ window._hpMultiTap = function (ev, kind) {
     if (!st) {
       var hs0 = o.house && states[o.house];
       var hw0 = hs0 ? parseFloat(hs0.state) : NaN;
-      return UI.hero({ value: 'Noch nicht eingerichtet', sub: 'Im Casora Studio der Kachel den Solar-Tipp zuordnen.', center: true })
+      /* D-20: Untertitel nur der Zustand, die Anleitung als eigene Hinweiszeile (brach sonst zweizeilig um). */
+      return UI.hero({ value: 'Noch nicht eingerichtet', center: true })
+        + '<div style="font-family:var(--primary-font-family, system-ui);font-size:13px;font-weight:500;line-height:1.4;text-align:center;'
+        + 'color:var(--casora-soft-sub, var(--secondary-text-color));padding:10px 6px 0;">Im Casora Studio der Kachel den Solar-Tipp zuordnen.</div>'
         + (hs0 && !isNaN(hw0) ? '<div style="height:18px"></div>' + UI.group([{ icon: 'mdi:home-lightning-bolt-outline', iconTone: 'good', label: 'Hausverbrauch',
           value: Math.round(hw0) + ' ' + ((hs0.attributes || {}).unit_of_measurement || 'W') }], null) : '');
     }

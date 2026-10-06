@@ -1335,7 +1335,8 @@
   "Zu": "Close",
   "Auf": "Open",
   "Position": "Position",
-  "Spielt": "Playing"
+  "Spielt": "Playing",
+  "Geräte im Casora Studio einem Raum zuordnen": "Assign devices to a room in Casora Studio"
  },
  "patterns": [
   [

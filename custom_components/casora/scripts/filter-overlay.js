@@ -1464,7 +1464,8 @@
       h.textContent = tr('Hier gibt es noch keine Geräte');
       const sub = document.createElement('div');
       sub.style.cssText = 'margin-top:4px;font-size:13px;font-weight:500;color:var(--casora-text-2, var(--secondary-text-color));';
-      sub.textContent = tr('Im Casora Studio einem Raum zuordnen');
+      // D-20 (Weich): vollständiger Satz – es fehlte, was zugeordnet werden soll.
+      sub.textContent = tr(window._casoraSoft && window._casoraSoft() ? 'Geräte im Casora Studio einem Raum zuordnen' : 'Im Casora Studio einem Raum zuordnen');
       el.append(h, sub);
       this._contentEl.appendChild(el);
       this._emptyHintEl = el;
