@@ -143,4 +143,8 @@ for (const name of ['casora_room', 'casora_mobile_sensor_chips']) {
 // R-06: Tastenkürzel über _gOn (beim Verlassen des Panels abgemeldet), nicht dauerhaft an document.
 { const src = read('panel/casora-panel-b-mehr.js'); const keys = src.slice(src.indexOf('P._mKeys = function'), src.indexOf('// ── Suche ──', src.indexOf('P._mKeys = function')));
   assert.ok(/this\._gOn\(document, "keydown"/.test(keys) && !/document\.addEventListener/.test(keys), '_mKeys über _gOn'); }
+// R-14: Während die Handy-Hälfte lädt, speichert _save nicht (⌘S schriebe sonst nur die Desktop-Hälfte).
+{ const p = read('panel/casora-panel.js');
+  assert.ok(/this\._pairWait = seq;\n\s+let pair;\n\s+try \{ pair = await this\._loadPair/.test(p), '_load sperrt bis _loadPair fertig');
+  assert.ok(p.includes('if (!s || this._pairWait) return false;'), '_save fragt die Sperre'); }
 console.log('studio_mehr: ok');

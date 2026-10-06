@@ -14241,7 +14241,10 @@ class CasoraPanel extends HTMLElement {
       this._pair = null;
       this._state = extractAny(cfg);
       this._stateUrl = url_path;
-      const pair = await this._loadPair(url_path, cfg);
+      // Bis die Handy-Hälfte da ist, speichert nichts (⌘S hier schriebe nur die Desktop-Hälfte).
+      this._pairWait = seq;
+      let pair;
+      try { pair = await this._loadPair(url_path, cfg); } finally { if (this._pairWait === seq) this._pairWait = 0; }
       if (stale()) return;
       this._pair = pair;
       if (this._pair) this._state = this._pair.desktop;
@@ -14701,7 +14704,7 @@ class CasoraPanel extends HTMLElement {
       return false;
     }
     const s = this._state;
-    if (!s) return false;
+    if (!s || this._pairWait) return false;
     // Kann das Studio dieses Dashboard nicht verlustfrei nachbauen, speichert kein Weg – auch
     // nicht Assistent, „Neue Szene“ oder die Einstellungen, die _save() direkt aufrufen.
     if (this._saveBlocked) {
