@@ -345,7 +345,12 @@
     :host(.phone) .msearch .mbox { max-height:78vh; border-radius:24px; }
     /* Wer sieht das? / Rückfrage im Editor */
     .mwho { margin-top:4px; }
-    .mwho .mval { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; }
+    .mwho .mval { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; min-height:40px;
+      padding:8px 12px 8px 14px; border:0; border-radius:12px; box-shadow:none; text-align:left; cursor:pointer;
+      font:inherit; font-size:var(--t-body, 15px); font-weight:500; color:var(--ink, inherit);
+      background:var(--field-fill, var(--wash-fill, rgba(118,118,128,.12))); }
+    .mwho .mval svg { width:18px; height:18px; flex:none; opacity:.6; }
+    .mwho .mval .mvt { flex:1 1 auto; min-width:0; }
     .mwho .mnote { font-size:13px; line-height:1.35; color:var(--accent, #94603B); font-weight:600; margin:2px 0 0; }
     .mwhosheet .mu { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 2px;
       border-top:.5px solid var(--hair, rgba(127,127,127,.2)); font-size:15px; }
@@ -1037,6 +1042,11 @@
         const body = box && box.querySelector(".tbody");
         const shell = (room.tiles || []).find((t) => this._tileKey(t) === this._sel.key);
         if (body && shell && !body.querySelector(".mwho")) {
+          // Eigene Gruppe wie „Optionen“ (subcard), vor dem aufklappbaren „Popup“.
+          const group = document.createElement("div");
+          group.className = "subcard mgroup";
+          const subs = body.querySelectorAll(":scope > .subcard");
+          if (subs.length) subs[subs.length - 1].after(group); else body.appendChild(group);
           const inner = (shell.type === "conditional" && shell.card) || shell;
           // Nur Kacheln mit An/Aus-Schalter (Feld show_toggle) – dort fragt das Dashboard nach.
           const ty = I().tileTypeAny ? I().tileTypeAny(inner) : null;
@@ -1062,9 +1072,9 @@
             h.textContent = tr("A calm question before the switch on the tile turns it on or off – for the oven, the heating or the TV.")
               + (toggleOn ? "" : " " + tr("Needs “Show on/off switch” to be on."));
             h.setAttribute("data-no-i18n", "");
-            body.append(r, h);
+            group.append(r, h);
           }
-          this._mWhoRow(body, () => tileUsers(shell), (ids) => setTileUsers(shell, ids), "Tile");
+          this._mWhoRow(group, () => tileUsers(shell), (ids) => setTileUsers(shell, ids), "Tile");
         }
       }
       // Badges

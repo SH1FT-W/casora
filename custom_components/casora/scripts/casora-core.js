@@ -70,6 +70,8 @@
     return new Promise(function (resolve) {
       var host = document.createElement('div');
       host.className = 'casora-askfirst';
+      var ha = document.querySelector('home-assistant');
+      if (ha && ha.hass && ha.hass.themes && ha.hass.themes.darkMode) host.classList.add('dark');
       var root = host.attachShadow ? host.attachShadow({ mode: 'open' }) : host;
       root.innerHTML = '<style>'
         + ':host{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:16px;'
@@ -77,10 +79,12 @@
         + 'font-family:var(--casora-font, var(--ha-font-family-body, Inter, system-ui, sans-serif));animation:af .16s ease-out}'
         + '@keyframes af{from{opacity:0}to{opacity:1}}'
         + '.box{width:min(320px,100%);padding:22px 20px 16px;border-radius:24px;text-align:center;'
-        + 'background:var(--ha-card-background,var(--card-background-color,#fff));color:var(--primary-text-color,#1c1c1e);'
+        // Deckend (Casoras Karten sind oft Glas): hell/dunkel wie HA.
+        + 'background:var(--casora-askfirst-bg,#fff);color:var(--casora-askfirst-ink,#1c1c1e);'
         + 'box-shadow:0 18px 48px rgba(0,0,0,.24)}'
         + 'h2{margin:0 0 4px;font-size:17px;font-weight:650;line-height:1.3;overflow-wrap:anywhere}'
-        + 'p{margin:0 0 18px;font-size:14px;line-height:1.4;color:var(--secondary-text-color,#6b6b70)}'
+        + 'p{margin:0 0 18px;font-size:14px;line-height:1.4;opacity:.7}'
+        + ':host(.dark){--casora-askfirst-bg:#2a2a2e;--casora-askfirst-ink:#f2f2f4}'
         + '.row{display:flex;gap:10px}button{flex:1 1 0;min-height:44px;border:0;border-radius:14px;font:inherit;font-size:15px;'
         + 'font-weight:600;cursor:pointer}'
         + '.no{background:rgba(127,127,127,.16);color:inherit}'
