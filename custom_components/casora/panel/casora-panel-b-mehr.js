@@ -306,7 +306,7 @@
     .toprow > .bedited.mlink:hover { background:var(--wash-fill, rgba(118,118,128,.12)); color:var(--ink, inherit); }
     .toprow > .bedited.mlink:focus-visible { outline:2px solid var(--accent, #B67A50); outline-offset:1px; }
     /* Aufklapp-Liste */
-    .mpop { position:fixed; z-index:40; width:min(360px, calc(100vw - 32px)); max-height:min(70vh, 520px); overflow:auto;
+    .mpop { position:fixed; z-index:1000; width:min(360px, calc(100vw - 32px)); max-height:min(70vh, 520px); overflow:auto;
       padding:14px 14px 12px; border-radius:20px; box-shadow:0 2px 6px rgba(0,0,0,.10), 0 22px 56px rgba(0,0,0,.24); }
     .mpop, .msearch .mbox { color:var(--ink, inherit); background:var(--menu-glass, var(--casora-studio-menu-glass, rgba(30,33,38,.92)));
       -webkit-backdrop-filter:blur(28px) saturate(180%); backdrop-filter:blur(28px) saturate(180%); }
@@ -323,7 +323,7 @@
     :host(.phone) .mpop { left:8px !important; right:8px; top:auto !important; bottom:calc(10px + env(safe-area-inset-bottom, 0px));
       width:auto; max-height:72vh; border-radius:24px; }
     /* Suche */
-    .msearch { position:fixed; inset:0; z-index:45; display:flex; justify-content:center; align-items:flex-start;
+    .msearch { position:fixed; inset:0; z-index:1001; display:flex; justify-content:center; align-items:flex-start;
       padding:12vh 16px 16px; background:rgba(0,0,0,.18); }
     .msearch .mbox { width:min(580px, 100%); max-height:min(72vh, 620px); display:flex; flex-direction:column; overflow:hidden;
       border-radius:22px; box-shadow:0 2px 6px rgba(0,0,0,.10), 0 26px 64px rgba(0,0,0,.28); }
@@ -499,6 +499,7 @@
     });
     P._mShowChanges = function (anchor) {
       this._mCss();
+      clearTimeout(this._bSoftT);
       if (this._bToastHide) this._bToastHide();
       const lines = this._mChanges();
       const box = document.createElement("div");
@@ -711,6 +712,7 @@
     P._mSearch = function () {
       if (!this._state) return;
       this._mCss();
+      clearTimeout(this._bSoftT);
       if (this._bToastHide) this._bToastHide();
       this._mPopClose();
       if (this._openCombo) this._openCombo();
