@@ -19748,10 +19748,20 @@ class CasoraPanel extends HTMLElement {
     const memoKey = JSON.stringify([domains, classes || null]);
     const hit = this._entMemo.map.get(memoKey);
     if (hit) return hit.slice();
+    // Entitäten je Domain einmal je Stand einsortieren; jede Abfrage geht dann nur durch ihre Domains.
+    if (!this._entMemo.byDom) {
+      const by = new Map();
+      Object.keys(states).forEach((e) => {
+        const d = e.split(".")[0];
+        if (!by.has(d)) by.set(d, []);
+        by.get(d).push(e);
+      });
+      this._entMemo.byDom = by;
+    }
     const perDomain = classes && !Array.isArray(classes) ? classes : null;
     const all = Array.isArray(classes) && classes.length ? classes : null;
-    const out = Object.keys(this._hass.states)
-      .filter((e) => domains.includes(e.split(".")[0]))
+    const out = [...this._entMemo.byDom.keys()].filter((d) => domains.includes(d))
+      .flatMap((d) => this._entMemo.byDom.get(d))
       .filter((e) => {
         const want = perDomain ? perDomain[e.split(".")[0]] : all;
         if (!want || !want.length) return true;
