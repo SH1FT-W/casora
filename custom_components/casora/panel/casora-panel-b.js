@@ -68,8 +68,11 @@
     @keyframes bInspIn { from { opacity:0; transform:translateX(18px); } }
     @media (prefers-reduced-motion: reduce) { :host(.bmode) .inspector { animation:none !important; } }
     :host(.bmode) .inspector .insphead { padding-right:52px; }
+    /* Das ✕ hat in der Kopfzeile einen eigenen Platz: die Zeile (Zurück, Titel, Schalter) endet davor.
+       Die Kopfzeile des Editors setzt ihr eigenes Padding – deshalb am Inhalt, nicht am Rahmen. */
+    :host(.bmode.split:not(.flow):not(.phone)) .inspector .insphead > .navrow { margin-right:46px; }
     .bclose {
-      position:absolute; top:12px; right:12px; z-index:12; width:34px; height:34px; border-radius:50%;
+      position:absolute; top:16px; right:14px; z-index:12; width:34px; height:34px; border-radius:50%;
       border:0; padding:0; display:none; place-items:center; cursor:pointer;
       background:var(--chip, rgba(127,127,127,.16)); color:var(--ink, inherit);
     }
@@ -298,7 +301,7 @@
         rb.querySelector(".blabel").setAttribute("data-no-i18n", "");
         mk("list", "list", "Elements", () => this._bShowList());
         mk("dash", "dash", "Dashboard", (b) => this._bDashMenu(b));
-        mk("home", "home", "Home", (b) => this._bHomeMenu(b));
+        mk("home", "home", "Home & Devices", (b) => this._bHomeMenu(b));
         const upd = mk("upd", "upd", "Update", () => this._cuFromMenu && this._cuFromMenu(), "bupd");
         upd.setAttribute("aria-haspopup", "false");
         const title = row.querySelector("#roomtitle");
@@ -360,7 +363,7 @@
         mk("list", "list", "Elements", () => this._bShowList());
         mk("add", "plus", "Add a tile", () => this._bAddTile(), "bplus");
         mk("dash", "dash", "Dashboard", (b) => this._bDashMenu(b));
-        mk("home", "home", "Home", (b) => this._bHomeMenu(b));
+        mk("home", "home", "Home & Devices", (b) => this._bHomeMenu(b));
         shell.appendChild(bar);
       }
     };

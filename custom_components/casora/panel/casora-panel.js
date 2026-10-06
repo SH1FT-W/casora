@@ -8882,6 +8882,8 @@ class CasoraPanel extends HTMLElement {
         .card.map.soft .mtile.on .mname { color:var(--casora-entity-name-active, #1d1d1f); }
         .card.map.soft .mtile.on .mstate { color:var(--casora-entity-state-active, rgba(0,0,0,0.55)); }
         .card.map.soft .mtile:not(.on) .mcircle:not(.art) { background-color:var(--casora-icon-circle-bg, rgba(0,0,0,0.20)); }
+        /* Inaktive Symbole wie auf dem Dashboard (Weich: Ton statt Weiß auf hellem Kreis). */
+        .card.map.soft .mtile:not(.on) .mglyph { background-color:var(--ic, var(--casora-icon-inactive-fallback-color, #fff)); }
         .card.map.soft .mtile:not(.on) .mmore,
         .card.map.soft .mnum { color:var(--casora-entity-name, #fff); }
         /* Schalter aus: gefüllte Spur, weißer Knopf (casora-toggle-style: solid). */
@@ -14055,6 +14057,9 @@ class CasoraPanel extends HTMLElement {
       this._paintDashes();
       this._syncSizeOpts();
       this._renderReconcile();
+      // Die Handy-Vorschau gleicht das Mobil-Layout mit den Räumen ab (wie beim Speichern). Das gehört
+      // zum geladenen Stand – sonst stand im neuen Studio am Handy sofort „ungespeichert“ am Knopf.
+      if (!this._saveBlocked && this._pair && this._pair.safe !== false) { try { this._phoneState(); } catch (e) { /* Vorschau zeigt es */ } }
       this._clean = this._print();
       this._resetUndo(false);
       this._draftOff = false;
@@ -22427,8 +22432,10 @@ class CasoraPanel extends HTMLElement {
         return Number.isFinite(n) ? n : null;
       })();
       if (puck !== null) {
-        el.querySelector(".mglyph").outerHTML = '<span class="mnum"></span>';
-        el.querySelector(".mnum").textContent = String(puck);
+        // Wie das Dashboard (casora_thermostat: „Icon always wins“): Heizspirale statt Temperatur.
+        const g = el.querySelector(".mglyph");
+        g.style.setProperty("--i", "url('" + iconUrl("heating_coil") + "')");
+        if (!active) g.style.setProperty("--ic", "color-mix(in srgb, var(--casora-icon-off-ink, transparent) var(--casora-icon-off-mix, 0%), var(--casora-puck-heat-color, #FF4245))");
         circle.style.setProperty("--sc",
           mode === "cool" ? "var(--casora-puck-cool-color, var(--casora-color-teal, #00C3D0))"
           : mode === "heat" ? "var(--casora-puck-heat-color, var(--casora-color-yellow, #FFCC00))"
