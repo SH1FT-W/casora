@@ -2071,7 +2071,7 @@ const SECTIONS = [
     repeats: [
       R("light", "Light", 10, [
         { ...E("light_entity_%", "Light %", ["light"]), ord: 2,
-          hint: "Replaces the group's lights as sub-badges." },
+          hint: "Replaces the group's lights as sub-badges.", hintOnce: true },
       ]),
     ],
   },
@@ -2184,6 +2184,8 @@ function sectionFields(sec) {
           label: f.label.replace("%", n),
           needs: f.needs ? f.needs.replace("%", n) : f.needs,
           labelOf: f.labelOf ? f.labelOf.replace("%", n) : f.labelOf,
+          // hintOnce: derselbe Hinweis nur unter dem ersten Feld, nicht unter Licht 1, 2, 3 …
+          hint: f.hintOnce && n > 1 ? undefined : f.hint,
           repeatN: n,
           unit: rep.id + "#" + n,
           unitLabel: rep.label + " " + n,
