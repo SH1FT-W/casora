@@ -8756,6 +8756,11 @@ class CasoraPanel extends HTMLElement {
           mask:var(--i) center / contain no-repeat;
         }
         .mglyph.spin { animation:casora-mini-fan-spin 0.9s linear infinite; }
+        /* Swipe-Karte: Seitenpunkte oben rechts (erste Seite gefüllt). */
+        .mtile.swiped { position:relative; }
+        .mtile .mdots { position:absolute; top:calc(var(--tc, 24px) * 0.5); right:calc(var(--tc, 24px) * 0.45); display:flex; gap:3px; }
+        .mtile .mdots i { width:4px; height:4px; border-radius:50%; background:currentColor; opacity:.28; }
+        .mtile .mdots i:first-child { opacity:.75; }
         @keyframes casora-mini-fan-spin { to { transform:rotate(360deg); } }
         @media (prefers-reduced-motion: reduce) { .mglyph.spin { animation:none; } }
         .mnum {
@@ -22492,6 +22497,14 @@ class CasoraPanel extends HTMLElement {
       if (cu.hidden || cu.inner) {
         const el = cu.inner ? this._paintTile(cu.inner, ti, room) : document.createElement("div");
         if (cu.hidden) { el.className = "mtile"; el.style.display = "none"; }
+        if (cu.pages > 1) {
+          const dots = document.createElement("span");
+          dots.className = "mdots";
+          dots.setAttribute("aria-hidden", "true");
+          for (let i = 0; i < Math.min(cu.pages, 6); i++) dots.appendChild(document.createElement("i"));
+          el.classList.add("swiped");
+          el.appendChild(dots);
+        }
         el.dataset.mk = "t:" + this._tileKey(tile);
         el.dataset.jump = this._tileKey(tile);
         return el;
