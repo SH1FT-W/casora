@@ -116,7 +116,7 @@ const sub = (h, variables) => {
 {
   const h = house();
   const V = { locks: ['lock.haustuer'], entities: ['binary_sensor.balkontuer_kombi', 'binary_sensor.kuechenfenster_contact', 'binary_sensor.kuechenfenster_kipp', 'binary_sensor.buerofenster', 'binary_sensor.haustuer', 'binary_sensor.flur_bewegung'] };
-  assert.equal(sub(h, V), 'Gesichert');
+  assert.equal(sub(h, V), 'Alles sicher');
   set(h, 'lock.haustuer', 'unlocked');
   assert.equal(sub(h, V), 'Schloss offen');
   set(h, 'binary_sensor.buerofenster', 'on');
