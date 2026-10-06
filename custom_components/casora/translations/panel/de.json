@@ -2042,7 +2042,16 @@
     "Restoring undoes these changes:": "Damit gehen verloren:",
     "Nothing changed since this version.": "Seit diesem Stand hat sich nichts geändert.",
     "Earlier versions": "Frühere Stände",
-    "Rewind – Earlier Versions": "Zeitreise – frühere Stände"
+    "Rewind – Earlier Versions": "Zeitreise – frühere Stände",
+    "Visible & safe": "Sichtbar & sicher",
+    "Only {names}": "Nur {names}",
+    "phone only": "nur am Handy",
+    "desktop only": "nur am Desktop",
+    "everywhere": "überall",
+    "asks first": "fragt vorher",
+    "with a condition": "mit Bedingung",
+    "1 set": "1 festgelegt",
+    "{n} set": "{n} festgelegt"
   },
   "patterns": [
     ["^Phone differs in (\\d+) settings$", "Handy weicht bei {1} Einstellungen ab"],

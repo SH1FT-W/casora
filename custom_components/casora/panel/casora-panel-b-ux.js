@@ -9,6 +9,8 @@
 //   das Dashboard steht im Titelmenü; am Handy Rückgängig und Zeitreise oben sichtbar
 // - Hinzufügen vom Gerät her: „Was soll auf das Dashboard?“ – Gerät suchen, Casora wählt die
 //   Kachelart; die bisherige Typauswahl bleibt als „Andere Kachelart …“
+// - Kachel-Editor gestuft: oben Gerät, Name, Symbol, An/Aus; „Sichtbar & sicher“ und „Popup“
+//   zugeklappt mit Zusammenfassung rechts (aufgeklappt bleibt, was man einmal geöffnet hat)
 // - Untertitel der Reiter (Inhalt, Dashboard, Einstellungen) als Hinweis und im Inhalt-Blatt
 // - Wörterbuch: Badges und Popups mit einem Halbsatz erklärt
 // Datenmodell, Speichern und Rückgängig bleiben die des Panels – hier wird nur angeschlossen.
@@ -139,6 +141,12 @@
     .uxadd .uxlink:hover { color:var(--ink, inherit); }
     .btools .btool.uxplus { padding:0 8px; }
     :host(.phone) .uxadd .mbox { max-height:82vh; }
+    /* Kachel-Editor: zugeklappte Gruppen mit Zusammenfassung rechts */
+    .advsum .uxsum { margin-left:auto; padding-left:10px; min-width:0; max-width:62%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      font-weight:500; color:var(--ink-3, var(--ink-2, rgba(127,127,127,.9))); text-align:right; }
+    .adv.open .advsum .uxsum { display:none; }
+    .tile > .tbody > .adv.uxvis .advbody > .subcard { margin:0 0 10px; padding:0; background:none; box-shadow:none; }
+    .tile > .tbody > .adv.uxvis .advbody > .row:first-child { padding-top:2px; }
     /* Tastenkürzel */
     .uxkeys { display:grid; grid-template-columns:auto 1fr; gap:8px 14px; margin:2px 4px 6px; font-size:14px; align-items:center; }
     .uxkeys kbd { font:inherit; font-size:12.5px; font-weight:650; padding:2px 7px; border-radius:7px; white-space:nowrap; justify-self:start;
@@ -277,6 +285,7 @@
       this._uxWhat();
       this._uxMore();
       this._uxAddBtn();
+      this._uxTileEditor();
     };
 
     // ── Menüs: „Gilt für: …“ oben (V-01) ───────────────────────────────
@@ -650,6 +659,112 @@
       b.setAttribute("aria-label", tr("Add a tile"));
       b.onclick = () => { this._bFrom = b; this._bAddTile(); };
       if (list) list.after(b); else tools.appendChild(b);
+    };
+
+    // ── Kachel-Editor gestuft (V-11) ──────────────────────────────────────
+    const FOLD = "casora.studio.fold.";
+    const foldGet = (k) => { try { return localStorage.getItem(FOLD + k) === "1"; } catch (e) { return false; } };
+    const foldSet = (k, v) => { try { if (v) localStorage.setItem(FOLD + k, "1"); else localStorage.removeItem(FOLD + k); } catch (e) { /* nur jetzt */ } };
+    const labelOf = (row) => { const l = row && row.querySelector(":scope > label, :scope > .lab"); return l ? l.textContent.trim() : ""; };
+    const isLabel = (row, en) => { const t = labelOf(row); return t === en || t === tr(en); };
+    // Eine aufklappbare Gruppe wie „Popup“ (gleiche Optik), Inhalt = nodes. key merkt sich offen/zu.
+    P._uxFold = function (key, title, nodes, cls) {
+      const det = document.createElement("div");
+      det.className = "adv " + (cls || "");
+      const sum = document.createElement("button");
+      sum.className = "advsum";
+      sum.type = "button";
+      sum.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
+      const lab = document.createElement("span");
+      lab.textContent = tr(title);
+      lab.setAttribute("data-no-i18n", "");
+      const val = document.createElement("span");
+      val.className = "uxsum";
+      val.setAttribute("data-no-i18n", "");
+      sum.append(lab, val);
+      const body = document.createElement("div");
+      body.className = "advbody";
+      nodes.forEach((n) => body.appendChild(n));
+      det.append(sum, body);
+      const open = foldGet(key);
+      det.classList.toggle("open", open);
+      sum.setAttribute("aria-expanded", open ? "true" : "false");
+      sum.onclick = () => {
+        const now = !det.classList.contains("open");
+        foldSet(key, now);
+        if (this._openAdv) this._openAdv(det, sum, now, true);
+        else { det.classList.toggle("open", now); sum.setAttribute("aria-expanded", now ? "true" : "false"); }
+      };
+      return det;
+    };
+    // Zusammenfassung „Sichtbar & sicher“: wer, wo, Rückfrage (V-10 nennt es im Satz).
+    P._uxVisSummary = function (shell) {
+      const inner = (shell && shell.type === "conditional" && shell.card) || shell || {};
+      const V = inner.variables || {}, SV = (shell && shell.variables) || {};
+      const vis = Array.isArray(shell && shell.visibility) ? shell.visibility.find((x) => x && x.condition === "user" && Array.isArray(x.users)) : null;
+      const ids = vis ? vis.users : [];
+      const users = this._mUsersCache || [];
+      const names = ids.map((id) => (users.find((u) => u.id === id) || {}).name).filter(Boolean);
+      const surf = SV.surfaces || V.surfaces;
+      const parts = [];
+      parts.push(ids.length ? (names.length ? fill(tr("Only {names}"), { names: names.join(", ") }) : tr("Only some people")) : tr("Everyone"));
+      parts.push(surf === "phone" ? tr("phone only") : surf === "desktop" ? tr("desktop only") : tr("everywhere"));
+      if (V.confirm_toggle === true) parts.push(tr("asks first"));
+      if (shell && shell.type === "conditional") parts.push(tr("with a condition"));
+      return parts.join(" \u00b7 ");
+    };
+    P._uxTileEditor = function () {
+      if (!this._sel || this._sel.group !== "tiles") return;
+      const box = this.shadowRoot.querySelector("#pane #band-tiles .tile.sel");
+      const body = box && box.querySelector(":scope > .tbody");
+      if (!body) return;
+      // Schon gestuft (z. B. aus _bApply mitten im Zeichnen): später angefügte Gruppen
+      // („Vor dem Schalten fragen“/„Wer sieht das?“, casora-panel-b-mehr.js) noch hineinholen.
+      const room = room$(this);
+      const shell = room && (room.tiles || []).find((t) => this._tileKey(t) === this._sel.key);
+      const have = body.querySelector(":scope > .adv.uxvis");
+      if (have) {
+        const late = body.querySelector(":scope > .subcard.mgroup");
+        if (late) have.querySelector(".advbody").appendChild(late);
+        const v = have.querySelector(".uxsum");
+        if (v) v.textContent = this._uxVisSummary(shell);
+        return;
+      }
+      const mg = body.querySelector(":scope > .subcard.mgroup");
+      const optRows = [...body.querySelectorAll(":scope > .subcard > .row[data-opt]")];
+      const showOn = optRows.find((r) => isLabel(r, "Show on"));
+      const move = [];
+      if (showOn) {
+        // „Anzeigen auf“ samt seinem Hinweis (falls einer folgt).
+        const next = showOn.nextElementSibling && showOn.nextElementSibling.classList.contains("hint") ? showOn.nextElementSibling : null;
+        move.push(showOn);
+        if (next) move.push(next);
+      }
+      if (mg) move.push(mg);
+      if (!move.length) return;
+      const det = this._uxFold("vis", "Visible & safe", move, "uxvis");
+      // Vor „Popup“ (erste vorhandene Aufklapp-Gruppe), sonst ans Ende.
+      const adv = body.querySelector(":scope > .adv");
+      if (adv) adv.before(det); else body.appendChild(det);
+      // Leere Optionen-Karte samt Überschrift weg.
+      body.querySelectorAll(":scope > .subcard").forEach((c) => {
+        if (!c.children.length) { const t = c.previousElementSibling; if (t && t.classList.contains("subtitle")) t.remove(); c.remove(); }
+      });
+      const sum = () => { const v = det.querySelector(".uxsum"); if (v) v.textContent = this._uxVisSummary(shell); };
+      sum();
+      // Schalter darin ändern die Zusammenfassung sofort (die Auswahl „Wer sieht das?“ beim nächsten Zeichnen).
+      det.addEventListener("click", () => setTimeout(sum, 60));
+      if (this._mUsers) this._mUsers().then((u) => { this._mUsersCache = u; sum(); });
+      // „Popup“: Zusammenfassung rechts – Standard oder wie viel eigens gesetzt ist.
+      const pop = [...body.querySelectorAll(":scope > .adv:not(.uxvis)")].find((a) => { const s2 = a.querySelector(".advsum span"); return s2 && (s2.textContent === "Popup" || s2.textContent === tr("Popup")); });
+      if (pop && !pop.querySelector(".uxsum")) {
+        const n = [...pop.querySelectorAll(".advbody input")].filter((i) => i.type !== "checkbox" && i.value && i.value.trim()).length;
+        const v = document.createElement("span");
+        v.className = "uxsum";
+        v.setAttribute("data-no-i18n", "");
+        v.textContent = n ? (n === 1 ? tr("1 set") : fill(tr("{n} set"), { n })) : tr("Standard");
+        pop.querySelector(".advsum").appendChild(v);
+      }
     };
 
     // ── Anschließen ─────────────────────────────────────────────────────
