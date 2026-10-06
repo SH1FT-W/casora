@@ -276,6 +276,11 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     if (!tile || tile.type === "custom:button-card" || !tile.type) return {};
     const cards = shown(tile, (hass && hass.states) || {});
     if (!cards.length) return { hidden: true };
+    // Swipe-Karte: eine Kachel wie am Dashboard, dazu Seitenpunkte für die übrigen.
+    if (cards.length === 1 && tile.type !== "conditional" && Array.isArray(tile.cards)) {
+      const pages = tile.cards.filter((c) => shown(c, (hass && hass.states) || {}).length).length;
+      return { inner: cards[0], pages };
+    }
     return cards.length === 1 ? { inner: cards[0] } : { cards };
   };
 })();
@@ -372,9 +377,9 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       if (typeof v === "number" || /^-?\d+(\.\d+)?$/.test(String(v).trim())) return fallback();
       // Vorlage ohne ihr Modul gibt oft nur den Rohzustand zurück („off“) → übersetzen.
       if (String(v).trim() === String(ent.state)) return fallback();
-      const d = document.createElement("div");
-      d.innerHTML = String(v);
-      return d.textContent.trim() || null;
+      // DOMParser statt div: ein nicht eingehängtes div lädt <img> und führt onerror aus.
+      const d = new DOMParser().parseFromString(String(v), "text/html");
+      return ((d.body && d.body.textContent) || "").trim() || null;
     } catch (e) {
       return null;
     }

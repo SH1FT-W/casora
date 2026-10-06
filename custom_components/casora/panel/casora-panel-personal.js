@@ -11,12 +11,21 @@
     + ".frow.casora-prow .rtext{flex:1 1 100%;min-width:0}"
     + ".casora-pctl{display:flex;gap:8px;flex:1 1 100%;min-width:0;align-items:center;flex-wrap:wrap}"
     + ".casora-pctl>.combo{flex:1 1 260px;min-width:0;width:auto;max-width:none}"
-    + ".casora-pctl>input.fin{flex:1 1 160px;min-width:0;text-align:left;padding:7px 11px;border-radius:var(--r-s);"
-    + "background:var(--casora-studio-chip, rgba(118,118,128,.18));border:none;color:inherit;font:inherit}"
+    + ".casora-pctl>input.fin{flex:1 1 160px;min-width:0;text-align:left;padding:7px 12px;border-radius:var(--r-m);height:var(--k-h, 38px);box-sizing:border-box;"
+    + "background:var(--field, var(--casora-studio-field, rgba(118,118,128,.18)));border:none;color:inherit;font:inherit}"
     + ".casora-pctl>input.fin.casora-short{flex:0 1 130px}"
     + ".casora-pctl>input[type=color]{flex:0 0 38px;width:38px;height:32px;padding:0;border:none;border-radius:var(--r-s);background:none;cursor:pointer}"
-    + ".casora-x{flex:0 0 auto;width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;"
-    + "background:rgba(255,69,58,.16);color:var(--casora-studio-bad, #ff453a);font:600 var(--t-body)/32px system-ui;padding:0}"
+    // Entfernen wie im Baukasten: ✕ ohne Fläche, rot erst beim Zeigen; 32 px, am Handy 44 px.
+    + ".casora-x{flex:0 0 auto;width:var(--k-hit, 32px);height:var(--k-hit, 32px);border-radius:50%;border:none;cursor:pointer;"
+    + "background:transparent;color:var(--ink-3);display:grid;place-items:center;padding:0}"
+    + ".casora-x svg{width:14px;height:14px}"
+    + ".casora-x:is(:hover,:focus-visible){background:color-mix(in srgb, var(--casora-studio-danger, #d70015) 13%, transparent);color:var(--casora-studio-danger, #d70015)}"
+    // Felder heben sich von der Karte ab (am Handy ist --field so hell wie die Karte).
+    + ".frow.casora-prow .casora-pctl .combo>input,.frow.casora-prow .casora-pctl>input.fin{background:var(--casora-studio-field, var(--field));"
+    + "border:0;border-radius:var(--r-m);height:var(--k-h, 38px);box-sizing:border-box;color:var(--ink);font-size:var(--t-callout)}"
+    + ".frow.casora-prow .casora-pctl>input.fin{padding:0 12px}"
+    + ".frow.casora-prow .casora-pctl .combo.hasface:not(.typing)>input{color:transparent}"
+    + ".casora-pctl input[type=checkbox]{accent-color:var(--accent)}"
     + ".casora-chips{display:flex;flex-wrap:wrap;gap:6px}"
     + ".casora-chip{border:none;border-radius:999px;padding:6px 11px;cursor:pointer;font:500 var(--t-foot) system-ui;"
     + "background:var(--casora-studio-chip-hi, rgba(118,118,128,.24));color:inherit}"
@@ -33,7 +42,7 @@
     + ".casora-pnote{margin:0 0 14px;padding:10px 12px;border-radius:var(--r-m);background:var(--casora-studio-link-tint, rgba(10,132,255,.16));font-size:var(--t-foot);line-height:1.35}"
     // Hell: Blau und Rot in den dunkleren Apple-Tönen, damit Text ≥ 4,5:1 bleibt.
     + ":host(.is-light) .frow.casora-pmore .rtext b{color:var(--casora-studio-link, #0071e3)}"
-    + ":host(.is-light) .casora-x{background:rgba(255,59,48,.12);color:var(--casora-studio-bad, #d70015)}"
+
     + ":host(.is-light) .casora-chip{background:var(--casora-studio-chip, rgba(118,118,128,.12))}:host(.is-light) .casora-chip.on{background:var(--casora-studio-link, #0071e3)}"
     + ":host(.is-light) .fgroup.casora-pfocus .flist{box-shadow:0 0 0 2px var(--casora-studio-link, #0071e3)}"
     + ":host(.is-light) .casora-pnote{background:var(--casora-studio-link-tint, rgba(0,113,227,.10))}";
@@ -174,8 +183,9 @@
         const b = document.createElement("button");
         b.type = "button";
         b.className = "casora-x";
-        b.textContent = "–";
+        b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>';
         b.title = "Remove";
+        b.setAttribute("aria-label", "Remove");
         b.onclick = () => { onTap(); render(); };
         return b;
       };

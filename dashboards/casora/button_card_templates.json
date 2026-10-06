@@ -1244,7 +1244,7 @@
    "action": "none"
   },
   "icon": "[[[\n  const p = window.location.pathname;\n  // Weich: überall dasselbe Klima-Symbol wie auf der Startseite (kein Lüfter in den Räumen).\n  if (p.endsWith('/home') || (window._casoraSoft && window._casoraSoft())) return 'mdi:home-thermometer';\n  return 'mdi:fan';\n]]]\n",
-  "name": "[[[\n  const sensors = [\n    variables.temp_sensor,\n    variables.temp_sensor_2,\n    variables.temp_sensor_3,\n    variables.temp_sensor_4,\n    variables.temp_sensor_5\n  ].filter(s => !!s)\n    .map(s => parseFloat(states[s]?.state))\n    .filter(v => !isNaN(v));\n\n  let sub = '';\n  if (sensors.length > 0) {\n    const minT = Math.round(Math.min(...sensors));\n    const maxT = Math.round(Math.max(...sensors));\n    sub = minT === maxT ? `${minT}°` : `${minT}–${maxT}°`;\n  }\n\n  return `\n    <div class=\"badge-wrap\">\n      <div class=\"badge-title\">Klima</div>\n      ${sub ? `<div class=\"badge-sub\">${sub}</div>` : ''}\n    </div>\n  `;\n]]]\n",
+  "name": "[[[\n  const sensors = [\n    variables.temp_sensor,\n    variables.temp_sensor_2,\n    variables.temp_sensor_3,\n    variables.temp_sensor_4,\n    variables.temp_sensor_5\n  ].filter(s => !!s)\n    .map(s => parseFloat(states[s]?.state))\n    .filter(v => !isNaN(v));\n\n  let sub = '';\n  if (sensors.length > 0) {\n    const minT = Math.round(Math.min(...sensors));\n    const maxT = Math.round(Math.max(...sensors));\n    sub = minT === maxT ? `${minT}°` : `${minT}–${maxT}°`;\n  }\n\n  return `\n    <div class=\"badge-wrap\">\n      ${variables.title ? `<div class=\"badge-title\" data-no-i18n>${String(variables.title).replace(/[&<>\"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]))}</div>` : `<div class=\"badge-title\">Klima</div>`}\n      ${sub ? `<div class=\"badge-sub\">${sub}</div>` : ''}\n    </div>\n  `;\n]]]\n",
   "styles": {
    "card": [
     {
@@ -1490,7 +1490,7 @@
   "entity": "input_select.casora_expanded_row",
   "extra_styles": "[[[\n  const ev = variables?.enabled;\n  const enabled = (ev === undefined || ev === null) ? true :\n    (typeof ev === 'boolean') ? ev :\n    (typeof ev === 'number') ? ev !== 0 :\n    !['false','0','no','off','disabled'].includes(String(ev).trim().toLowerCase());\n  const URL = window.casoraIconUrl('energy');\n\n  return `:host{display:${enabled ? 'inline-block' : 'none'} !important;order:var(--casora-badge-order-energy,5);}\n    #img-cell, .img-cell{ position: relative; }\n\n    #img-cell #icon, .img-cell #icon{\n      color: transparent !important;\n      opacity: 0 !important;\n    }\n\n    #img-cell::before,\n    .img-cell::before{\n      content: '';\n      position: absolute;\n      inset: 0;\n      background-color: color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), var(--casora-badge-icon-color, var(--casora-badge-energy-color, #30D158))) !important;\n      scale: var(--casora-badge-glyph-scale, none);\n      -webkit-mask: url('${URL}') no-repeat center / auto 90%;\n      mask: url('${URL}') no-repeat center / auto 90%;\n      transform: translateZ(0);\n    }`;\n]]]\n",
   "icon": "mdi:lightning-bolt",
-  "name": "[[[\n  /* Ohne eigenen Sensor (Handy-Reihe, Räume nur mit Verbrauch/Kosten): Energie-Kachel bzw. Hausverbrauch. */\n  /* Raum ohne eigenen Sensor, aber mit mehreren Geräten (power_entities): ihre Summe, in W. */\n  const _list = Array.isArray(variables.power_entities) ? variables.power_entities.filter(Boolean) : [];\n  const _toW = (id) => { const s = states[id]; const n = s ? parseFloat(s.state) : NaN; if (!Number.isFinite(n)) return null;\n    const u = String((s.attributes || {}).unit_of_measurement || 'W'); return u === 'kW' ? n * 1000 : u === 'MW' ? n * 1e6 : u === 'mW' ? n / 1000 : n; };\n  const _vals = _list.map(_toW).filter((n) => n != null);\n  const _sum = _vals.length ? _vals.reduce((a, b) => a + b, 0) : NaN;\n  const eid = variables.home_power_entity || variables.power_entity || variables.entity_power\n    || (_list.length ? null : (window._casoraHousePower ? window._casoraHousePower() : null));\n  const power = eid ? _toW(eid) : _sum; /* auch ein einzelner Sensor in kW/MW → W (B-TPL-04) */\n  const sub = Number.isFinite(power)\n    ? (power >= 1000 ? (power / 1000).toLocaleString((hass&&hass.locale&&hass.locale.language)||'de', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kW' : Math.round(power) + ' W')\n    : '';\n  /* Immer zweizeilig wie die anderen Badges – ohne Wert ein Strich statt einer niedrigeren Badge. */\n  return `\n    <div class=\"badge-wrap\">\n      <div class=\"badge-title\">Energie</div>\n      <div class=\"badge-sub\">${sub || '–'}</div>\n    </div>\n  `;\n]]]\n",
+  "name": "[[[\n  /* Ohne eigenen Sensor (Handy-Reihe, Räume nur mit Verbrauch/Kosten): Energie-Kachel bzw. Hausverbrauch. */\n  /* Raum ohne eigenen Sensor, aber mit mehreren Geräten (power_entities): ihre Summe, in W. */\n  const _list = Array.isArray(variables.power_entities) ? variables.power_entities.filter(Boolean) : [];\n  const _toW = (id) => { const s = states[id]; const n = s ? parseFloat(s.state) : NaN; if (!Number.isFinite(n)) return null;\n    const u = String((s.attributes || {}).unit_of_measurement || 'W'); return u === 'kW' ? n * 1000 : u === 'MW' ? n * 1e6 : u === 'mW' ? n / 1000 : n; };\n  const _vals = _list.map(_toW).filter((n) => n != null);\n  const _sum = _vals.length ? _vals.reduce((a, b) => a + b, 0) : NaN;\n  const eid = variables.home_power_entity || variables.power_entity || variables.entity_power\n    || (_list.length ? null : (window._casoraHousePower ? window._casoraHousePower() : null));\n  const power = eid ? _toW(eid) : _sum; /* auch ein einzelner Sensor in kW/MW → W (B-TPL-04) */\n  const sub = Number.isFinite(power)\n    ? (power >= 1000 ? (power / 1000).toLocaleString((hass&&hass.locale&&hass.locale.language)||'de', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kW' : Math.round(power) + ' W')\n    : '';\n  /* Immer zweizeilig wie die anderen Badges – ohne Wert ein Strich statt einer niedrigeren Badge. */\n  return `\n    <div class=\"badge-wrap\">\n      ${variables.title ? `<div class=\"badge-title\" data-no-i18n>${String(variables.title).replace(/[&<>\"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]))}</div>` : `<div class=\"badge-title\">Energie</div>`}\n      <div class=\"badge-sub\">${sub || '–'}</div>\n    </div>\n  `;\n]]]\n",
   "show_icon": true,
   "show_label": false,
   "show_state": false,
@@ -1686,7 +1686,7 @@
   "icon_tap_action": {
    "action": "none"
   },
-  "name": "[[[\n  // Nur eine Lichtgruppe eingetragen (z. B. aus Hemma übernommen): ihre Lichter zählen.\n  const cfgEids0 = [\n    variables?.entity_1, variables?.entity_2, variables?.entity_3, variables?.entity_4,\n    variables?.entity_5, variables?.entity_6, variables?.entity_7, variables?.entity_8\n  ].filter(Boolean);\n  const grp = variables?.light_group_entity;\n  const grpMems = grp ? hass.states[grp]?.attributes?.entity_id : null;\n  const cfgEids = cfgEids0.length ? cfgEids0\n    : Array.isArray(grpMems) && grpMems.length ? grpMems.filter(x => typeof x === 'string' && x.startsWith('light.'))\n    : [grp].filter(Boolean);\n\n  const memsOf = (eid) => {\n    const m = hass.states[eid]?.attributes?.entity_id;\n    return Array.isArray(m) ? m.filter(x => typeof x === 'string' && x.startsWith('light.')) : [];\n  };\n  \n  const units = (eid, seen) => {\n    if (!eid || seen.has(eid)) return [];\n    const mems = memsOf(eid);\n    // No members, or no member is itself a group -> one physical light.\n    if (!mems.length || !mems.some(m => memsOf(m).length)) return [eid];\n    seen.add(eid);\n    return mems.flatMap(m => units(m, seen));\n  };\n\n  const seen = new Set();\n  const eids = [...new Set(cfgEids.flatMap(eid => units(eid, seen)))];\n\n  const onCount = eids.filter(eid => hass.states[eid]?.state === 'on').length;\n  const sub = onCount === 0 ? 'Aus'\n            : onCount === eids.length ? 'An'\n            : onCount === 1 ? '1 An'\n            : `${onCount} An`;\n\n  return `\n    <div class=\"badge-wrap\">\n      <div class=\"badge-title\">Beleuchtung</div>\n      <div class=\"badge-sub\">${sub}</div>\n    </div>\n  `;\n]]]\n",
+  "name": "[[[\n  // Nur eine Lichtgruppe eingetragen (z. B. aus Hemma übernommen): ihre Lichter zählen.\n  const cfgEids0 = [\n    variables?.entity_1, variables?.entity_2, variables?.entity_3, variables?.entity_4,\n    variables?.entity_5, variables?.entity_6, variables?.entity_7, variables?.entity_8\n  ].filter(Boolean);\n  const grp = variables?.light_group_entity;\n  const grpMems = grp ? hass.states[grp]?.attributes?.entity_id : null;\n  const cfgEids = cfgEids0.length ? cfgEids0\n    : Array.isArray(grpMems) && grpMems.length ? grpMems.filter(x => typeof x === 'string' && x.startsWith('light.'))\n    : [grp].filter(Boolean);\n\n  const memsOf = (eid) => {\n    const m = hass.states[eid]?.attributes?.entity_id;\n    return Array.isArray(m) ? m.filter(x => typeof x === 'string' && x.startsWith('light.')) : [];\n  };\n  \n  const units = (eid, seen) => {\n    if (!eid || seen.has(eid)) return [];\n    const mems = memsOf(eid);\n    // No members, or no member is itself a group -> one physical light.\n    if (!mems.length || !mems.some(m => memsOf(m).length)) return [eid];\n    seen.add(eid);\n    return mems.flatMap(m => units(m, seen));\n  };\n\n  const seen = new Set();\n  const eids = [...new Set(cfgEids.flatMap(eid => units(eid, seen)))];\n\n  const onCount = eids.filter(eid => hass.states[eid]?.state === 'on').length;\n  const sub = onCount === 0 ? 'Aus'\n            : onCount === eids.length ? 'An'\n            : onCount === 1 ? '1 An'\n            : `${onCount} An`;\n\n  return `\n    <div class=\"badge-wrap\">\n      ${variables.title ? `<div class=\"badge-title\" data-no-i18n>${String(variables.title).replace(/[&<>\"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]))}</div>` : `<div class=\"badge-title\">Beleuchtung</div>`}\n      <div class=\"badge-sub\">${sub}</div>\n    </div>\n  `;\n]]]\n",
   "show_icon": true,
   "show_label": false,
   "show_state": false,
@@ -1938,7 +1938,7 @@
    "action": "none"
   },
   "icon": "mdi:television-speaker",
-  "name": "[[[\n  const isActive = (eid) => {\n    if (!eid) return false;\n    const s = hass.states[eid];\n    if (!s) return false;\n    const st = String(s.state || '').toLowerCase();\n    if (['unavailable','unknown','off','standby'].includes(st)) return false;\n    if (['playing','buffering','on'].includes(st)) return true;\n    const a = s.attributes || {};\n    const hasContent = !!(\n      String(a.media_title || '').trim() ||\n      String(a.media_artist || a.artist || a.media_album_artist || '').trim()\n    );\n    if (!hasContent) return false;\n    if (st === 'paused') {\n      const timeout = Number(variables?.pause_timeout_minutes ?? 10);\n      if (timeout <= 0) return true;\n      return ((new Date() - new Date(window._casoraPausedSince?.(s, states) ?? s.last_changed)) / 60000) <= timeout;\n    }\n    return false;\n  };\n\n\n  const eids = [\n    variables?.entity_1, variables?.entity_2, variables?.entity_3, variables?.entity_4,\n    variables?.entity_5, variables?.entity_6, variables?.entity_7, variables?.entity_8,\n    variables?.entity_9, variables?.entity_10, variables?.entity_11, variables?.entity_12,\n    variables?.entity_13, variables?.entity_14\n  ].filter((e, i, arr) => e && arr.indexOf(e) === i);\n\n  const activeCount = eids.filter(e => isActive(e)).length + Number(variables?.pc_count || 0);\n  const sub = activeCount === 0 ? 'Nichts läuft' : activeCount === 1 ? '1 läuft' : `${activeCount} laufen`;\n\n  return `\n    <div class=\"badge-wrap\">\n      <div class=\"badge-title\">Medien</div>\n      <div class=\"badge-sub\">${sub}</div>\n    </div>\n  `;\n]]]\n",
+  "name": "[[[\n  const isActive = (eid) => {\n    if (!eid) return false;\n    const s = hass.states[eid];\n    if (!s) return false;\n    const st = String(s.state || '').toLowerCase();\n    if (['unavailable','unknown','off','standby'].includes(st)) return false;\n    if (['playing','buffering','on'].includes(st)) return true;\n    const a = s.attributes || {};\n    const hasContent = !!(\n      String(a.media_title || '').trim() ||\n      String(a.media_artist || a.artist || a.media_album_artist || '').trim()\n    );\n    if (!hasContent) return false;\n    if (st === 'paused') {\n      const timeout = Number(variables?.pause_timeout_minutes ?? 10);\n      if (timeout <= 0) return true;\n      return ((new Date() - new Date(window._casoraPausedSince?.(s, states) ?? s.last_changed)) / 60000) <= timeout;\n    }\n    return false;\n  };\n\n\n  const eids = [\n    variables?.entity_1, variables?.entity_2, variables?.entity_3, variables?.entity_4,\n    variables?.entity_5, variables?.entity_6, variables?.entity_7, variables?.entity_8,\n    variables?.entity_9, variables?.entity_10, variables?.entity_11, variables?.entity_12,\n    variables?.entity_13, variables?.entity_14\n  ].filter((e, i, arr) => e && arr.indexOf(e) === i);\n\n  const activeCount = eids.filter(e => isActive(e)).length + Number(variables?.pc_count || 0);\n  const sub = activeCount === 0 ? 'Nichts läuft' : activeCount === 1 ? '1 läuft' : `${activeCount} laufen`;\n\n  return `\n    <div class=\"badge-wrap\">\n      ${variables.title ? `<div class=\"badge-title\" data-no-i18n>${String(variables.title).replace(/[&<>\"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]))}</div>` : `<div class=\"badge-title\">Medien</div>`}\n      <div class=\"badge-sub\">${sub}</div>\n    </div>\n  `;\n]]]\n",
   "show_icon": true,
   "show_label": false,
   "show_state": false,
@@ -2379,7 +2379,7 @@
    "action": "none"
   },
   "icon": "mdi:home-account",
-  "name": "[[[\n  const entities = [\n    variables?.entity_1, variables?.entity_2,\n    variables?.entity_3, variables?.entity_4\n  ].filter(Boolean);\n\n  if (!entities.length) return '';\n\n  const getState = (eid) =>\n    String(hass.states[eid]?.state || '').toLowerCase().replace(/_/g, ' ');\n  const getName = (eid) =>\n    String(hass.states[eid]?.attributes?.friendly_name || '').split(' ')[0] || 'Person';\n  const isHome = (eid) => { const s = getState(eid); return s === 'home' || s === 'just arrived'; };\n\n  const homeCount   = entities.filter(isHome).length;\n  const awayEntities = entities.filter(e => !isHome(e));\n\n  let title, status;\n  if (entities.length === 1) {\n    title  = getName(entities[0]);\n    status = isHome(entities[0]) ? 'Zuhause' : 'Unterwegs';\n  } else {\n    title = 'Personen';\n    if (homeCount === entities.length)  status = 'Alle zuhause';\n    else if (homeCount === 0)           status = 'Alle unterwegs';\n    else                                status = `${awayEntities.length} unterwegs`;\n  }\n\n  const esc = (t) => String(t || '').replaceAll('\"', '&quot;');\n  return `\n    <div class=\"badge-wrap\">\n      <div class=\"badge-title\">${esc(title)}</div>\n      <div class=\"badge-sub\">${esc(status)}</div>\n    </div>\n  `;\n]]]",
+  "name": "[[[\n  const entities = [\n    variables?.entity_1, variables?.entity_2,\n    variables?.entity_3, variables?.entity_4\n  ].filter(Boolean);\n\n  if (!entities.length) return '';\n\n  const getState = (eid) =>\n    String(hass.states[eid]?.state || '').toLowerCase().replace(/_/g, ' ');\n  const getName = (eid) =>\n    String(hass.states[eid]?.attributes?.friendly_name || '').split(' ')[0] || 'Person';\n  const isHome = (eid) => { const s = getState(eid); return s === 'home' || s === 'just arrived'; };\n\n  const homeCount   = entities.filter(isHome).length;\n  const awayEntities = entities.filter(e => !isHome(e));\n\n  let title, status;\n  if (entities.length === 1) {\n    title  = getName(entities[0]);\n    status = isHome(entities[0]) ? 'Zuhause' : 'Unterwegs';\n  } else {\n    title = 'Personen';\n    if (homeCount === entities.length)  status = 'Alle zuhause';\n    else if (homeCount === 0)           status = 'Alle unterwegs';\n    else                                status = `${awayEntities.length} unterwegs`;\n  }\n\n  const esc = (t) => String(t || '').replaceAll('\"', '&quot;');\n  return `\n    <div class=\"badge-wrap\">\n      ${variables.title ? `<div class=\"badge-title\" data-no-i18n>${esc(variables.title)}</div>` : `<div class=\"badge-title\">${esc(title)}</div>`}\n      <div class=\"badge-sub\">${esc(status)}</div>\n    </div>\n  `;\n]]]",
   "show_icon": true,
   "show_label": false,
   "show_state": false,
@@ -2655,7 +2655,7 @@
    "action": "none"
   },
   "icon": "[[[\n  const _sec = (() => {\n    const arr = (v) => Array.isArray(v) ? v : (v ? [v] : []);\n    const st = (id) => String(states[id]?.state ?? '').toLowerCase();\n    const cams = arr(variables.cameras);\n    /* Gruppen-Helfer (z. B. „Fenster“ ohne Geräteklasse) zählen über ihre Mitglieder. */\n    const flat = (id) => (id.startsWith('binary_sensor.') && Array.isArray(states[id]?.attributes?.entity_id))\n      ? states[id].attributes.entity_id : [id];\n    const ids = [...new Set([variables.alarm_entity, variables.doors_entity, variables.windows_entity,\n      variables.lock_entity, variables.lock_entity_2, ...arr(variables.locks), ...arr(variables.entities), ...cams]\n      .filter((x) => typeof x === 'string' && x.includes('.')).flatMap(flat))];\n    const r = { triggered: false, disarmed: false, locks: 0, lockDead: 0, doors: 0, windows: 0, doorsTilted: 0, windowsTilted: 0, gates: 0, camDead: 0 };\n    for (const id of ids) {\n      const dom = id.split('.')[0], s = st(id), a = states[id]?.attributes || {};\n      const dc = String(a.device_class || '').toLowerCase();\n      const dead = !s || s === 'unavailable' || s === 'unknown';\n      if (dom === 'alarm_control_panel') { if (s === 'triggered') r.triggered = true; else if (s === 'disarmed') r.disarmed = true; }\n      else if (dom === 'lock') { if (dead) r.lockDead++; else if (s !== 'locked' && s !== 'locking') r.locks++; }\n      else if (dom === 'camera') { if (dead || window._casoraCamDead?.[id]) r.camDead++; }\n      else if (dom === 'cover') { if (['garage', 'gate', 'door'].includes(dc) && (s === 'open' || s === 'opening')) r.gates++; }\n    }\n    /* Türen/Fenster: Kontakt + Kippsensor (+ Kombi-Sensor) sind eine Öffnung (window.casoraOpenings). */\n    const bs = ids.filter((id) => id.startsWith('binary_sensor.'));\n    const units = window.casoraOpenings ? window.casoraOpenings(hass, bs) : bs.map((id) => {\n      const a = states[id]?.attributes || {}, dc = String(a.device_class || '').toLowerCase(), s = st(id);\n      if (!['door', 'window', 'garage_door', 'opening', ''].includes(dc)) return null;\n      const nm = id + ' ' + (a.friendly_name || '');\n      const on = s === 'on' || s === 'open';\n      return { state: !on ? 'closed' : (a.tilt === true || a.tilt === 'true' || /kipp|tilt/i.test(nm)) ? 'tilted' : 'open',\n        kind: dc === 'window' || (dc !== 'door' && dc !== 'garage_door' && /fenster|window/i.test(nm)) ? 'window' : 'door' };\n    }).filter(Boolean);\n    for (const u of units) {\n      const win = u.kind === 'window' || (u.main && u.main === variables.windows_entity);\n      if (u.state === 'tilted') { if (win) r.windowsTilted++; else r.doorsTilted++; }\n      else if (u.state === 'open') { if (win) r.windows++; else r.doors++; }\n    }\n    r.insecure = r.triggered || r.disarmed || !!(r.locks || r.doors || r.windows || r.doorsTilted || r.windowsTilted || r.gates);\n    r.problem = !!(r.camDead || r.lockDead);\n    return r;\n  })();\n  return _sec.triggered ? 'mdi:shield-alert-outline' : (_sec.insecure || _sec.problem) ? 'mdi:shield-alert' : 'mdi:shield-check';\n]]]\n",
-  "name": "[[[\n  const esc = (t) => String(t ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');\n  const _sec = (() => {\n    const arr = (v) => Array.isArray(v) ? v : (v ? [v] : []);\n    const st = (id) => String(states[id]?.state ?? '').toLowerCase();\n    const cams = arr(variables.cameras);\n    /* Gruppen-Helfer (z. B. „Fenster“ ohne Geräteklasse) zählen über ihre Mitglieder. */\n    const flat = (id) => (id.startsWith('binary_sensor.') && Array.isArray(states[id]?.attributes?.entity_id))\n      ? states[id].attributes.entity_id : [id];\n    const ids = [...new Set([variables.alarm_entity, variables.doors_entity, variables.windows_entity,\n      variables.lock_entity, variables.lock_entity_2, ...arr(variables.locks), ...arr(variables.entities), ...cams]\n      .filter((x) => typeof x === 'string' && x.includes('.')).flatMap(flat))];\n    const r = { triggered: false, disarmed: false, locks: 0, lockDead: 0, doors: 0, windows: 0, doorsTilted: 0, windowsTilted: 0, gates: 0, camDead: 0 };\n    for (const id of ids) {\n      const dom = id.split('.')[0], s = st(id), a = states[id]?.attributes || {};\n      const dc = String(a.device_class || '').toLowerCase();\n      const dead = !s || s === 'unavailable' || s === 'unknown';\n      if (dom === 'alarm_control_panel') { if (s === 'triggered') r.triggered = true; else if (s === 'disarmed') r.disarmed = true; }\n      else if (dom === 'lock') { if (dead) r.lockDead++; else if (s !== 'locked' && s !== 'locking') r.locks++; }\n      else if (dom === 'camera') { if (dead || window._casoraCamDead?.[id]) r.camDead++; }\n      else if (dom === 'cover') { if (['garage', 'gate', 'door'].includes(dc) && (s === 'open' || s === 'opening')) r.gates++; }\n    }\n    /* Türen/Fenster: Kontakt + Kippsensor (+ Kombi-Sensor) sind eine Öffnung (window.casoraOpenings). */\n    const bs = ids.filter((id) => id.startsWith('binary_sensor.'));\n    const units = window.casoraOpenings ? window.casoraOpenings(hass, bs) : bs.map((id) => {\n      const a = states[id]?.attributes || {}, dc = String(a.device_class || '').toLowerCase(), s = st(id);\n      if (!['door', 'window', 'garage_door', 'opening', ''].includes(dc)) return null;\n      const nm = id + ' ' + (a.friendly_name || '');\n      const on = s === 'on' || s === 'open';\n      return { state: !on ? 'closed' : (a.tilt === true || a.tilt === 'true' || /kipp|tilt/i.test(nm)) ? 'tilted' : 'open',\n        kind: dc === 'window' || (dc !== 'door' && dc !== 'garage_door' && /fenster|window/i.test(nm)) ? 'window' : 'door' };\n    }).filter(Boolean);\n    for (const u of units) {\n      const win = u.kind === 'window' || (u.main && u.main === variables.windows_entity);\n      if (u.state === 'tilted') { if (win) r.windowsTilted++; else r.doorsTilted++; }\n      else if (u.state === 'open') { if (win) r.windows++; else r.doors++; }\n    }\n    r.insecure = r.triggered || r.disarmed || !!(r.locks || r.doors || r.windows || r.doorsTilted || r.windowsTilted || r.gates);\n    r.problem = !!(r.camDead || r.lockDead);\n    return r;\n  })();\n  /* Wortlaut und Reihenfolge wie im Produktiv-Dashboard (Schlösser, Alarm, Türen, Fenster);\n     dazu Kipp-Stellung und Geräte, die nicht erreichbar sind. */\n  const n = (c, one, many) => c === 1 ? one : c + ' ' + many;\n  let sub = 'Gesichert';\n  if (_sec.triggered) sub = 'Ausgelöst';\n  else if (_sec.insecure || _sec.problem) {\n    const parts = [];\n    if (_sec.locks) parts.push(n(_sec.locks, '1 Schloss', 'Schlösser'));\n    if (_sec.disarmed) parts.push((window._casoraSoft && window._casoraSoft()) ? 'Alarm unscharf' : 'Alarm deaktiviert');\n    if (_sec.doors) parts.push(n(_sec.doors, 'Tür offen', 'Türen offen'));\n    if (_sec.gates) parts.push(n(_sec.gates, 'Tor offen', 'Tore offen'));\n    if (_sec.windows) parts.push(n(_sec.windows, 'Fenster offen', 'Fenster offen'));\n    if (_sec.windowsTilted) parts.push(n(_sec.windowsTilted, 'Fenster gekippt', 'Fenster gekippt'));\n    if (_sec.doorsTilted) parts.push(n(_sec.doorsTilted, 'Tür gekippt', 'Türen gekippt'));\n    if (_sec.lockDead) parts.push(n(_sec.lockDead, 'Schloss offline', 'Schlösser offline'));\n    if (_sec.camDead) parts.push(n(_sec.camDead, 'Kamera offline', 'Kameras offline'));\n    sub = parts.join(' · ');\n  }\n\n  return `\n    <div class=\"badge-wrap\">\n      <div class=\"badge-title\">Sicherheit</div>\n      <div class=\"badge-sub\">${esc(sub)}</div>\n    </div>\n  `;\n]]]\n",
+  "name": "[[[\n  const esc = (t) => String(t ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');\n  const _sec = (() => {\n    const arr = (v) => Array.isArray(v) ? v : (v ? [v] : []);\n    const st = (id) => String(states[id]?.state ?? '').toLowerCase();\n    const cams = arr(variables.cameras);\n    /* Gruppen-Helfer (z. B. „Fenster“ ohne Geräteklasse) zählen über ihre Mitglieder. */\n    const flat = (id) => (id.startsWith('binary_sensor.') && Array.isArray(states[id]?.attributes?.entity_id))\n      ? states[id].attributes.entity_id : [id];\n    const ids = [...new Set([variables.alarm_entity, variables.doors_entity, variables.windows_entity,\n      variables.lock_entity, variables.lock_entity_2, ...arr(variables.locks), ...arr(variables.entities), ...cams]\n      .filter((x) => typeof x === 'string' && x.includes('.')).flatMap(flat))];\n    const r = { triggered: false, disarmed: false, locks: 0, lockDead: 0, doors: 0, windows: 0, doorsTilted: 0, windowsTilted: 0, gates: 0, camDead: 0 };\n    for (const id of ids) {\n      const dom = id.split('.')[0], s = st(id), a = states[id]?.attributes || {};\n      const dc = String(a.device_class || '').toLowerCase();\n      const dead = !s || s === 'unavailable' || s === 'unknown';\n      if (dom === 'alarm_control_panel') { if (s === 'triggered') r.triggered = true; else if (s === 'disarmed') r.disarmed = true; }\n      else if (dom === 'lock') { if (dead) r.lockDead++; else if (s !== 'locked' && s !== 'locking') r.locks++; }\n      else if (dom === 'camera') { if (dead || window._casoraCamDead?.[id]) r.camDead++; }\n      else if (dom === 'cover') { if (['garage', 'gate', 'door'].includes(dc) && (s === 'open' || s === 'opening')) r.gates++; }\n    }\n    /* Türen/Fenster: Kontakt + Kippsensor (+ Kombi-Sensor) sind eine Öffnung (window.casoraOpenings). */\n    const bs = ids.filter((id) => id.startsWith('binary_sensor.'));\n    const units = window.casoraOpenings ? window.casoraOpenings(hass, bs) : bs.map((id) => {\n      const a = states[id]?.attributes || {}, dc = String(a.device_class || '').toLowerCase(), s = st(id);\n      if (!['door', 'window', 'garage_door', 'opening', ''].includes(dc)) return null;\n      const nm = id + ' ' + (a.friendly_name || '');\n      const on = s === 'on' || s === 'open';\n      return { state: !on ? 'closed' : (a.tilt === true || a.tilt === 'true' || /kipp|tilt/i.test(nm)) ? 'tilted' : 'open',\n        kind: dc === 'window' || (dc !== 'door' && dc !== 'garage_door' && /fenster|window/i.test(nm)) ? 'window' : 'door' };\n    }).filter(Boolean);\n    for (const u of units) {\n      const win = u.kind === 'window' || (u.main && u.main === variables.windows_entity);\n      if (u.state === 'tilted') { if (win) r.windowsTilted++; else r.doorsTilted++; }\n      else if (u.state === 'open') { if (win) r.windows++; else r.doors++; }\n    }\n    r.insecure = r.triggered || r.disarmed || !!(r.locks || r.doors || r.windows || r.doorsTilted || r.windowsTilted || r.gates);\n    r.problem = !!(r.camDead || r.lockDead);\n    return r;\n  })();\n  /* Wortlaut und Reihenfolge wie im Produktiv-Dashboard (Schlösser, Alarm, Türen, Fenster);\n     dazu Kipp-Stellung und Geräte, die nicht erreichbar sind. */\n  const n = (c, one, many) => c === 1 ? one : c + ' ' + many;\n  let sub = 'Gesichert';\n  if (_sec.triggered) sub = 'Ausgelöst';\n  else if (_sec.insecure || _sec.problem) {\n    const parts = [];\n    if (_sec.locks) parts.push(n(_sec.locks, '1 Schloss', 'Schlösser'));\n    if (_sec.disarmed) parts.push((window._casoraSoft && window._casoraSoft()) ? 'Alarm unscharf' : 'Alarm deaktiviert');\n    if (_sec.doors) parts.push(n(_sec.doors, 'Tür offen', 'Türen offen'));\n    if (_sec.gates) parts.push(n(_sec.gates, 'Tor offen', 'Tore offen'));\n    if (_sec.windows) parts.push(n(_sec.windows, 'Fenster offen', 'Fenster offen'));\n    if (_sec.windowsTilted) parts.push(n(_sec.windowsTilted, 'Fenster gekippt', 'Fenster gekippt'));\n    if (_sec.doorsTilted) parts.push(n(_sec.doorsTilted, 'Tür gekippt', 'Türen gekippt'));\n    if (_sec.lockDead) parts.push(n(_sec.lockDead, 'Schloss offline', 'Schlösser offline'));\n    if (_sec.camDead) parts.push(n(_sec.camDead, 'Kamera offline', 'Kameras offline'));\n    sub = parts.join(' · ');\n  }\n\n  return `\n    <div class=\"badge-wrap\">\n      ${variables.title ? `<div class=\"badge-title\" data-no-i18n>${String(variables.title).replace(/[&<>\"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]))}</div>` : `<div class=\"badge-title\">Sicherheit</div>`}\n      <div class=\"badge-sub\">${esc(sub)}</div>\n    </div>\n  `;\n]]]\n",
   "show_icon": true,
   "show_label": false,
   "show_state": false,
@@ -5395,7 +5395,8 @@
         "entities": "[[[ return [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) ]]]",
         "lock_entity": "[[[ return variables.security_lock_entity || variables.lock_entity || (variables.security_locks || [])[0] || null ]]]",
         "lock_entity_2": "[[[ return variables.security_lock_entity_2 || variables.lock_entity_2 || (variables.security_locks || [])[1] || null ]]]",
-        "locks": "[[[ return variables.security_locks || [] ]]]"
+        "locks": "[[[ return variables.security_locks || [] ]]]",
+        "title": "[[[ return variables.security_title ]]]"
        }
       },
       {
@@ -5418,7 +5419,8 @@
         "temp_sensor_4": "[[[ return variables.temp_sensor_4 ]]]",
         "temp_sensor_5": "[[[ return variables.temp_sensor_5 ]]]",
         "temp_unit": "C",
-        "climate_entity_3": "[[[ return variables.climate_entity_3 ]]]"
+        "climate_entity_3": "[[[ return variables.climate_entity_3 ]]]",
+        "title": "[[[ return variables.climate_title ]]]"
        }
       },
       {
@@ -5441,7 +5443,8 @@
         "entity_7": "[[[ return variables.light_entity_7 ]]]",
         "entity_8": "[[[ return variables.light_entity_8 ]]]",
         "entity_9": "[[[ return variables.light_entity_9 ]]]",
-        "entity_10": "[[[ return variables.light_entity_10 ]]]"
+        "entity_10": "[[[ return variables.light_entity_10 ]]]",
+        "title": "[[[ return variables.lights_title ]]]"
        }
       },
       {
@@ -5457,7 +5460,8 @@
         "entity_1": "[[[ return variables.presence_entity_1 ]]]",
         "entity_2": "[[[ return variables.presence_entity_2 ]]]",
         "entity_3": "[[[ return variables.presence_entity_3 ]]]",
-        "entity_4": "[[[ return variables.presence_entity_4 ]]]"
+        "entity_4": "[[[ return variables.presence_entity_4 ]]]",
+        "title": "[[[ return variables.people_title ]]]"
        }
       },
       {
@@ -5472,7 +5476,8 @@
         "enabled": true,
         "home_power_entity": "[[[ return variables.home_power_entity || variables.power_entity ]]]",
         "power_entity": "[[[ return variables.power_entity ]]]",
-        "row_entity": "input_select.casora_mobile_filter"
+        "row_entity": "input_select.casora_mobile_filter",
+        "title": "[[[ return variables.energy_title ]]]"
        }
       },
       {
@@ -5497,7 +5502,8 @@
         "entity_8": "[[[ return variables.media_player_5 || variables.media_entity_5 ]]]",
         "entity_9": "[[[ return variables.media_player_6 || variables.media_entity_6 ]]]",
         "pc_count": "[[[\n  const V = {\n    discord_online: variables.discord_online_entity,\n    discord_game: variables.discord_game_entity,\n    steam_online: variables.steam_online_entity,\n    steam_game: variables.steam_game_entity,\n    duplicate_game: variables.duplicate_game,\n  };\n  const P = window._casoraPCSources?.(states, V) || {};\n  return (P.discord ? 1 : 0) + (P.steam ? 1 : 0);\n]]]\n",
-        "entity_13": "[[[ return variables.media_player_10 ]]]"
+        "entity_13": "[[[ return variables.media_player_10 ]]]",
+        "title": "[[[ return variables.media_title ]]]"
        }
       }
      ],
@@ -5712,7 +5718,13 @@
    "casora_security_share": {
     "force_eval": true,
     "value": "[[[\n  // 04.10.2026: Die Unterreihe der Sicherheits-Badge (casora_mobile_sensor_chips) liest Schlösser,\n  // Kameras und Kontakte von hier, solange sie selbst keine eingetragen hat.\n  const K = [\"security_cameras\", \"security_cameras_label\", \"security_door_sensors\", \"security_lock_batteries\", \"security_lock_entity\", \"security_lock_entity_2\", \"security_locks\", \"security_locks_label\", \"security_entity_1\", \"security_entity_2\", \"security_entity_3\", \"security_entity_4\", \"security_entity_5\", \"security_entity_6\", \"security_entity_7\", \"security_entity_8\", \"security_label_1\", \"security_label_2\", \"security_label_3\", \"security_label_4\", \"security_label_5\", \"security_label_6\", \"security_label_7\", \"security_label_8\"];\n  const o = {};\n  K.forEach((k) => { if (variables[k] != null) o[k] = variables[k]; });\n  window._casoraMobileSec = o;\n  return '';\n]]]\n"
-   }
+   },
+   "climate_title": null,
+   "energy_title": null,
+   "lights_title": null,
+   "security_title": null,
+   "media_title": null,
+   "people_title": null
   }
  },
  "casora_mobile_header": {
@@ -6859,7 +6871,8 @@
         "entities": "[[[ const _rv = variables.casora_rv || {}; return [1,2,3,4,5,6,7,8].map((i) => _rv['security_entity_' + i]).filter(Boolean) ]]]",
         "lock_entity": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_lock_entity ]]]",
         "lock_entity_2": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_lock_entity_2 ]]]",
-        "locks": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_locks || [] ]]]"
+        "locks": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_locks || [] ]]]",
+        "title": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_title ]]]"
        },
        "tap_action": {
         "action": "fire-dom-event",
@@ -6988,7 +7001,8 @@
         "temp_sensor_3": "[[[ const _rv = variables.casora_rv || {}; return _rv.temp_sensor_3 ]]]",
         "temp_sensor_4": "[[[ const _rv = variables.casora_rv || {}; return _rv.temp_sensor_4 ]]]",
         "temp_sensor_5": "[[[ const _rv = variables.casora_rv || {}; return _rv.temp_sensor_5 ]]]",
-        "temp_unit": "[[[ const _rv = variables.casora_rv || {}; return _rv.temp_unit ]]]"
+        "temp_unit": "[[[ const _rv = variables.casora_rv || {}; return _rv.temp_unit ]]]",
+        "title": "[[[ const _rv = variables.casora_rv || {}; return _rv.climate_title ]]]"
        },
        "tap_action": {
         "action": "fire-dom-event",
@@ -7057,7 +7071,8 @@
         "entity_7": "[[[ const _rv = variables.casora_rv || {}; return (_rv.show_lights!==false&&(!!_rv.light_entity_1||!!_rv.light_group_entity)) ? _rv.light_entity_7 : null ]]]",
         "entity_8": "[[[ const _rv = variables.casora_rv || {}; return (_rv.show_lights!==false&&(!!_rv.light_entity_1||!!_rv.light_group_entity)) ? _rv.light_entity_8 : null ]]]",
         "entity_9": "[[[ const _rv = variables.casora_rv || {}; return (_rv.show_lights!==false&&(!!_rv.light_entity_1||!!_rv.light_group_entity)) ? _rv.light_entity_9 : null ]]]",
-        "light_group_entity": "[[[ const _rv = variables.casora_rv || {}; return (_rv.show_lights!==false&&(!!_rv.light_entity_1||!!_rv.light_group_entity)) ? _rv.light_group_entity : null ]]]"
+        "light_group_entity": "[[[ const _rv = variables.casora_rv || {}; return (_rv.show_lights!==false&&(!!_rv.light_entity_1||!!_rv.light_group_entity)) ? _rv.light_group_entity : null ]]]",
+        "title": "[[[ const _rv = variables.casora_rv || {}; return _rv.lights_title ]]]"
        },
        "tap_action": {
         "action": "fire-dom-event",
@@ -7073,7 +7088,8 @@
         "entity_1": "[[[ const _rv = variables.casora_rv || {}; return _rv.presence_entity_1 ]]]",
         "entity_2": "[[[ const _rv = variables.casora_rv || {}; return _rv.presence_entity_2 ]]]",
         "entity_3": "[[[ const _rv = variables.casora_rv || {}; return _rv.presence_entity_3 ]]]",
-        "entity_4": "[[[ const _rv = variables.casora_rv || {}; return _rv.presence_entity_4 ]]]"
+        "entity_4": "[[[ const _rv = variables.casora_rv || {}; return _rv.presence_entity_4 ]]]",
+        "title": "[[[ const _rv = variables.casora_rv || {}; return _rv.people_title ]]]"
        },
        "tap_action": {
         "action": "fire-dom-event",
@@ -7131,7 +7147,8 @@
         "entity_8": "[[[ const _rv = variables.casora_rv || {}; return !!_rv.media_player_5 ? _rv.media_player_5 : null ]]]",
         "entity_9": "[[[ const _rv = variables.casora_rv || {}; return !!_rv.media_player_6 ? _rv.media_player_6 : null ]]]",
         "pause_timeout_minutes": "[[[ const _rv = variables.casora_rv || {}; return _rv.pause_timeout_minutes ]]]",
-        "pc_count": "[[[ const _rv = variables.casora_rv || {}; const P = window._casoraPCSources?.(states, _rv) || {}; return (P.discord ? 1 : 0) + (P.steam ? 1 : 0) ]]]"
+        "pc_count": "[[[ const _rv = variables.casora_rv || {}; const P = window._casoraPCSources?.(states, _rv) || {}; return (P.discord ? 1 : 0) + (P.steam ? 1 : 0) ]]]",
+        "title": "[[[ const _rv = variables.casora_rv || {}; return _rv.media_title ]]]"
        },
        "tap_action": {
         "action": "fire-dom-event",
@@ -7154,7 +7171,8 @@
         "power_entity": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_power_entity ]]]",
         "power_entities": "[[[ const _rv = variables.casora_rv || {}; return Array.isArray(_rv.energy_entities) && _rv.energy_entities.length ? _rv.energy_entities : undefined ]]]",
         "room_name": "[[[ const _rv = variables.casora_rv || {}; return _rv.room_name || _rv.aqi_room_name ]]]",
-        "has_subs": "[[[ const _rv = variables.casora_rv || {}; for (let i = 1; i <= 8; i++) if (_rv['energy_entity_' + i]) return true; return false; ]]]"
+        "has_subs": "[[[ const _rv = variables.casora_rv || {}; for (let i = 1; i <= 8; i++) if (_rv['energy_entity_' + i]) return true; return false; ]]]",
+        "title": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_title ]]]"
        },
        "tap_action": {
         "action": "[[[ const _rv = variables.casora_rv || {}; let s = false; for (let i = 1; i <= 8; i++) if (_rv['energy_entity_' + i]) s = true; return s ? 'fire-dom-event' : (window.casoraPopupAction ? window.casoraPopupAction() : 'more-info'); ]]]",
@@ -12276,7 +12294,8 @@
         "entities": "[[[ return [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) ]]]",
         "lock_entity": "[[[ return variables.security_lock_entity ]]]",
         "lock_entity_2": "[[[ return variables.security_lock_entity_2 ]]]",
-        "locks": "[[[ return variables.security_locks || [] ]]]"
+        "locks": "[[[ return variables.security_locks || [] ]]]",
+        "title": "[[[ return variables.security_title ]]]"
        }
       },
       {
@@ -12400,7 +12419,8 @@
         "temp_sensor_3": "[[[ return variables.temp_sensor_3 ]]]",
         "temp_sensor_4": "[[[ return variables.temp_sensor_4 ]]]",
         "temp_sensor_5": "[[[ return variables.temp_sensor_5 ]]]",
-        "temp_unit": "[[[ return variables.temp_unit ]]]"
+        "temp_unit": "[[[ return variables.temp_unit ]]]",
+        "title": "[[[ return variables.climate_title ]]]"
        }
       },
       {
@@ -12464,7 +12484,8 @@
         "entity_7": "[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ? variables.light_entity_7 : null ]]]",
         "entity_8": "[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ? variables.light_entity_8 : null ]]]",
         "entity_9": "[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ? variables.light_entity_9 : null ]]]",
-        "light_group_entity": "[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ? variables.light_group_entity : null ]]]"
+        "light_group_entity": "[[[ return (variables.show_lights!==false&&(!!variables.light_entity_1||!!variables.light_group_entity)) ? variables.light_group_entity : null ]]]",
+        "title": "[[[ return variables.lights_title ]]]"
        }
       },
       {
@@ -12475,7 +12496,8 @@
         "entity_1": "[[[ return variables.presence_entity_1 ]]]",
         "entity_2": "[[[ return variables.presence_entity_2 ]]]",
         "entity_3": "[[[ return variables.presence_entity_3 ]]]",
-        "entity_4": "[[[ return variables.presence_entity_4 ]]]"
+        "entity_4": "[[[ return variables.presence_entity_4 ]]]",
+        "title": "[[[ return variables.people_title ]]]"
        }
       },
       {
@@ -12528,7 +12550,8 @@
         "entity_8": "[[[ return !!variables.media_player_5 ? variables.media_player_5 : null ]]]",
         "entity_9": "[[[ return !!variables.media_player_6 ? variables.media_player_6 : null ]]]",
         "pause_timeout_minutes": "[[[ return variables.pause_timeout_minutes ]]]",
-        "pc_count": "[[[ const P = window._casoraPCSources?.(states, variables) || {}; return (P.discord ? 1 : 0) + (P.steam ? 1 : 0) ]]]"
+        "pc_count": "[[[ const P = window._casoraPCSources?.(states, variables) || {}; return (P.discord ? 1 : 0) + (P.steam ? 1 : 0) ]]]",
+        "title": "[[[ return variables.media_title ]]]"
        }
       },
       {
@@ -12546,7 +12569,8 @@
         "power_entity": "[[[ return variables.energy_power_entity ]]]",
         "power_entities": "[[[ return Array.isArray(variables.energy_entities) && variables.energy_entities.length ? variables.energy_entities : undefined ]]]",
         "room_name": "[[[ return variables.room_name || variables.aqi_room_name ]]]",
-        "has_subs": "[[[ for (let i = 1; i <= 8; i++) if (variables['energy_entity_' + i]) return true; return false; ]]]"
+        "has_subs": "[[[ for (let i = 1; i <= 8; i++) if (variables['energy_entity_' + i]) return true; return false; ]]]",
+        "title": "[[[ return variables.energy_title ]]]"
        }
       },
       {
@@ -14698,7 +14722,13 @@
    "temp_sensor_5": null,
    "temp_unit": "",
    "weather_entity": null,
-   "weather_temp_sensor": null
+   "weather_temp_sensor": null,
+   "climate_title": null,
+   "energy_title": null,
+   "lights_title": null,
+   "security_title": null,
+   "media_title": null,
+   "people_title": null
   }
  },
  "casora_scene_core": {

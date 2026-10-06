@@ -67,6 +67,12 @@ export async function open({ width = 1440, height = 900, mobile = false, umzug =
     // Hemma-Fixture (alte, von Hand erweiterte Vorlagen) nie überschreiben – das Produkt hat keine Sperre.
     window.CASORA_STUDIO_SAVE_LOCK = '^dashboard-hemma(-mobile)?$';
   }, [tok, BASE, version, umzug, dark, theme]);
+  // CASORA_STUDIO=b|a: neues Studio (Vorschau ist der Editor) bzw. bisheriges erzwingen;
+  // ohne Angabe gilt der Standard des Panels. Option studio: 'a'|'b' überschreibt.
+  const studio = arguments[0] && arguments[0].studio || process.env.CASORA_STUDIO;
+  if (studio === 'a' || studio === 'b') {
+    await context.addInitScript((v) => localStorage.setItem('casora.studio.b', v), studio === 'b' ? '1' : '0');
+  }
   // serviceWorkers: 'block' lässt navigator.serviceWorker.register() nichts zurückgeben. Das
   // HA-Frontend registriert auf localhost aber /sw-modern.js und ruft dann
   // registration.addEventListener('updatefound') auf – das warf in jedem Lauf (Studio, Dashboard,

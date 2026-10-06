@@ -62,16 +62,17 @@ const measure = () => {
   const fg = (el) => { const bg = bgOf(el); const c = parse(getComputedStyle(el).color); c.a *= opac(el); return { bg, c: over(c, bg) }; };
   const q = (sel) => window.__pierce(sel).find((e) => e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden');
   const cr = (el) => { if (!el) return null; const { bg, c } = fg(el); return Math.round(ratio(c, bg) * 100) / 100; };
-  const side = q('.sidelist'), insp = q('.inspector');
+  // Neues Studio (B): statt der Seitenleiste trägt die Werkzeugleiste die Bedienung.
+  const side = q('.sidelist') || q('.btools'), insp = q('.inspector');
   return {
     light: P.classList.contains('is-light'),
     sideLum: side ? Math.round(lum(bgOf(side)) * 100) / 100 : null,
     inspLum: insp ? Math.round(lum(bgOf(insp)) * 100) / 100 : null,
     stageLum: q('.main') ? Math.round(lum(bgOf(q('.main'))) * 100) / 100 : null,
-    textLum: side ? Math.round(lum(parse(getComputedStyle(q('.sidelist .siderow, .sidelist .tab') || side).color)) * 100) / 100 : null,
+    textLum: side ? Math.round(lum(parse(getComputedStyle(q('.sidelist .siderow, .sidelist .tab, .btools .btool') || side).color)) * 100) / 100 : null,
     segs: window.__pierce('#sizeseg .segopt').filter((e) => e.getClientRects().length && !e.hidden).map((e) => ({ t: e.textContent.trim(), k: cr(e) })),
     undo: cr(q('#undo')),
-    rowText: cr(q('.sidelist .siderow .sidelabel, .sidelist .tab .tablabel')),
+    rowText: cr(q('.sidelist .siderow .sidelabel, .sidelist .tab .tablabel, .btools .btool .blabel')),
   };
 };
 

@@ -34,7 +34,7 @@
   // „Nicht mehr fragen“: für alle Geräte in den Casora-Einstellungen.
   async function offerOffForGood(hass) {
     try {
-      const cur = await settings(hass);
+      const cur = await settingsForWrite(hass);
       await hass.callWS({ type: "casora/settings/set",
         settings: Object.assign({}, cur, { umzug: Object.assign({}, cur.umzug || {}, { off: true }) }) });
       return true;
@@ -122,6 +122,11 @@
 
   async function settings(hass) {
     try { return (await hass.callWS({ type: "casora/settings/get" })).settings || {}; } catch (e) { return {}; }
+  }
+  // Zum Zurückschreiben: settings/set ersetzt alles – ein leerer Stand nach einem Lesefehler
+  // hätte alle anderen Einstellungen gelöscht. Hier wirft ein Lesefehler.
+  async function settingsForWrite(hass) {
+    return (await hass.callWS({ type: "casora/settings/get" })).settings || {};
   }
 
   // Umgezogene Dashboards: {src, target}; ältere Einträge sind nur der Pfad des Originals.
@@ -1340,7 +1345,7 @@
       // Merkt Original → neues Dashboard; nur fürs automatische Angebot (Menü zeigt es weiter).
       const remember = async (target) => {
         try {
-          const cur = await settings(hass);
+          const cur = await settingsForWrite(hass);
           const done = [].concat((cur.umzug || {}).done || [])
             .filter((x) => (typeof x === "string" ? x : x && x.src) !== c.url_path)
             .concat({ src: c.url_path, target: target || url_path });
