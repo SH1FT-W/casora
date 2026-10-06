@@ -17,6 +17,14 @@ const EXPECT = [
   // B-TPL-10: Energie-Unterzeile und Rezept-Titel
   ['Heute 3,2 kWh', 'Today 3,2 kWh'],
   ['Küche · Rezepte', 'Kitchen · Recipes'],
+  // B-ALARM: Teilweise statt Bypass, auch in der Glocke (Weich)
+  ['Alarm aktiv · Teilweise', 'Alarm active · Partial'],
+  ['Alarmanlage aktiv · Zuhause', 'Alarmanlage active · Home'],
+  ['Aktiviert (Teilweise)', 'Armed (Partial)'],
+  ['Aktiviert · Teilweise', 'Armed · Partial'],
+  ['Einzelne Sensoren ausgenommen', 'Some sensors excluded'],
+  ['Alarm scharf – Teilweise', 'Alarm armed – Partial'],
+  ['Alarmanlage umgeschaltet auf Teilweise', 'Alarmanlage switched to Partial'],
 ];
 for (const [de, en] of EXPECT) assert.equal(tr(de), en, de);
 console.log('ok phrasen_en');

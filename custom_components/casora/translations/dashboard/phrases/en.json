@@ -368,6 +368,10 @@
   "Prüfen": "Check",
   "Prüft …": "Checking …",
   "Prüfung fehlgeschlagen": "Check failed",
+  "Aktiviert (Teilweise)": "Armed (Partial)",
+  "Aktiviert · Teilweise": "Armed · Partial",
+  "Einzelne Sensoren ausgenommen": "Some sensors excluded",
+  "Alarm aus": "Alarm off",
   "Rezepte": "Recipes",
   "Kühlt": "Cooling",
   "Entfeuchten": "Dry",
@@ -1541,6 +1545,10 @@
   [
    "^(.+) umgeschaltet auf (.+)$",
    "{1} switched to {2}"
+  ],
+  [
+   "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Teilweise)$",
+   "{1} active · {2}"
   ],
   [
    "^Alarm scharf – (.+)$",
