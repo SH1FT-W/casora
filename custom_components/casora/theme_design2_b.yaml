@@ -1,0 +1,850 @@
+# Entwurf B „Nacht“: dunkel zuerst (auch im hellen Modus dunkel), Mondblau als Akzent.
+# Erzeugt aus theme_weich.yaml (gen_themes.py, Entwurf design2 06.10.2026) – nicht von Hand pflegen.
+Casora Nacht:
+  primary-font-family: '"Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif'
+  casora-hero-title-weight: 800
+  hero-title-letter-spacing-desktop: -3px
+  hero-title-letter-spacing-tablet: -2px
+  hero-title-letter-spacing-mobile: -1.6px
+  casora-color-blue: '#5B8FC9'
+  casora-color-teal: '#4E9E95'
+  casora-color-mint: '#5BA896'
+  casora-color-mint-dark: '#68B5A2'
+  casora-color-yellow: '#E8B04A'
+  casora-color-yellow-dark: '#DCA43E'
+  casora-color-green: '#6AAE78'
+  casora-color-orange: '#DE8A4E'
+  casora-color-red: '#D35A4E'
+  casora-color-deep-orange: '#C8693F'
+  casora-color-pink: '#D16E7E'
+  casora-waste-bio: var(--casora-color-green)
+  casora-waste-paper: var(--casora-color-blue)
+  casora-waste-glass: var(--casora-color-teal)
+  casora-waste-yellow: var(--casora-color-yellow)
+  casora-waste-bulky: var(--casora-color-orange)
+  casora-waste-hazard: var(--casora-color-red)
+  casora-waste-other: var(--casora-color-orange)
+  casora-waste-glyph: '#FFFFFF'
+  casora-color-neutral: '#5A6272'
+  primary-color: '#7FA2E8'
+  state-light-on-color: rgb(232,176,74)
+  state-on-color: rgb(78,158,149)
+  state-icon-active-color: rgb(78,158,149)
+  ha-card-border-radius: 32px
+  ha-dialog-border-radius: 36px
+  casora-scene-tile-radius: 30px
+  casora-scene-off-name: var(--casora-entity-name)
+  casora-scene-off-icon: var(--casora-soft-glyph-off)
+  casora-scene-icon-circle: 1
+  casora-scene-icon-box: 40px
+  casora-scene-glyph: 22px
+  casora-scene-name-weight: 700
+  casora-mobile-chip-gap: 8px
+  wa-border-radius-m: 28px
+  ha-border-radius-lg: 18px
+  casora-popup-radius: 44px
+  casora-popup-row-radius: 24px
+  casora-popup-content-pad-bottom: 36px
+  casora-popup-more-fade: var(--casora-dialog-bg)
+  casora-tile-radius-phone: 30px
+  ha-card-backdrop-filter: blur(10px) saturate(1.05)
+  ha-dialog-surface-backdrop-filter: blur(8px) saturate(1.05)
+  casora-surface-backdrop: blur(14px) saturate(115%)
+  casora-scrim-backdrop: blur(4px)
+  casora-glass-backdrop: blur(10px) saturate(110%)
+  casora-pill-backdrop: blur(8px) saturate(1.05)
+  casora-sidebar-backdrop: blur(10px)
+  badge-blur: 6px
+  casora-tile-glass-rim: none
+  casora-tile-glass-rim-desktop: none
+  casora-glass-rim: none
+  casora-pill-highlight: none
+  casora-pill-edge: transparent
+  hero-img-blur: 5px
+  hero-img-saturate: 0.94
+  card-mod-theme: Casora
+  uix-theme: Casora
+  casora-popup-layout: soft
+  casora-body-font: var(--primary-font-family)
+  casora-color-purple: '#A9473D'
+  casora-color-deep-blue: '#4A7DB5'
+  casora-color-gold: var(--casora-color-yellow-dark)
+  casora-color-ice: var(--casora-color-blue)
+  casora-color-amber: var(--casora-color-orange)
+  casora-badge-temp-comfortable-color: var(--casora-color-teal)
+  casora-badge-temp-warm-color: var(--casora-color-orange)
+  casora-security-accent: var(--casora-color-red)
+  casora-badge-alert-color: var(--casora-color-red)
+  casora-security-ok-color: var(--casora-color-green)
+  casora-security-warn-color: var(--casora-color-orange)
+  casora-security-alarm-color: var(--casora-color-red)
+  casora-lock-unlocked-color: var(--casora-security-warn-color)
+  casora-scene-badge-color: var(--casora-color-yellow)
+  casora-scene-badge-color-active: var(--casora-color-yellow-dark)
+  casora-bell-badge: var(--primary-color)
+  casora-bell-dot-fill: var(--primary-color)
+  casora-bell-count-ink: '#fff'
+  casora-badge-energy-medium-color: var(--casora-color-green)
+  casora-badge-energy-medium-row: var(--casora-color-green)
+  casora-badge-energy-medium-selected: var(--casora-color-green)
+  casora-energy-sub-yellow: var(--casora-color-yellow)
+  casora-energy-sub-blue: var(--casora-color-blue)
+  casora-energy-sub-purple: var(--casora-color-teal)
+  casora-energy-sub-red: var(--casora-color-red)
+  casora-energy-sub-green: var(--casora-color-green)
+  casora-energy-sub-orange: var(--casora-color-orange)
+  casora-energy-sub-teal: var(--casora-color-teal)
+  casora-entity-name-weight: 700
+  casora-entity-state-weight: 500
+  casora-entity-state-font-desktop: calc(var(--casora-u, 10px) * 1.45)
+  casora-entity-state-font-tablet: 12.5px
+  casora-entity-state-font-tablet-lg: 13px
+  casora-entity-name-font-mobile: 14px
+  casora-entity-state-font-mobile: 12px
+  casora-entity-text-line-height: 1.3
+  casora-clock-font-size: 16px
+  casora-clock-letter-spacing: 0px
+  casora-clock-transform: none
+  casora-nav-label-size-tablet: 14px
+  casora-nav-label-pad-x-tablet: 14px
+  casora-nav-fade-solid: 104px
+  casora-nav-fade-clear: 40px
+  casora-nav-more-fill: var(--casora-nav-active-fill)
+  casora-nav-more-hover: var(--casora-mnav-press-fill, var(--casora-nav-active-fill))
+  casora-nav-more-ink: var(--casora-nav-label-color)
+  casora-nav-chevron: var(--casora-text-2)
+  casora-row-arrows: block
+  casora-row-overflow: fade
+  casora-badge-circle-mix: 100%
+  casora-badge-circle-on: 1
+  casora-badge-glyph-scale: 0.58
+  badge-gap: calc(var(--casora-u-badge, 10px) * 0.8)
+  badge-col-gap: calc(var(--casora-u-badge, 10px) * 0.8)
+  badge-padding: calc(var(--casora-u-badge, 10px) * 0.5) calc(var(--casora-u-badge, 10px) * 1.6) calc(var(--casora-u-badge, 10px) * 0.5) calc(var(--casora-u-badge, 10px) * 0.6)
+  badge-min-height: calc(var(--casora-u-badge, 10px) * 4.1)
+  badge-font-size: calc(var(--casora-u-badge, 10px) * 1.4)
+  badge-sub-scale: 0.86
+  badge-sub-delta: 0px
+  badge-col-gap-tablet: 8px
+  badge-padding-tablet: 5px 14px 5px 5px
+  badge-min-height-tablet: 38px
+  badge-col-gap-mobile: 7px
+  badge-padding-mobile: 5px 14px 5px 5px
+  badge-min-height-mobile: 36px
+  badge-font-size-mobile: 12.5px
+  badge-icon-size-mobile: 29px
+  casora-badge-glass-rim: var(--button-card-box-shadow)
+  casora-badge-shadow-mobile: var(--button-card-box-shadow-mobile)
+  casora-badge-gauge-shadow: var(--button-card-box-shadow-mobile)
+  casora-badge-clip: none
+  casora-badge-off-tone: var(--casora-icon-circle-bg)
+  casora-badge-off-glyph: var(--casora-soft-glyph-off)
+  casora-badge-media-tone: var(--casora-tone-media)
+  casora-tone-light: var(--casora-color-yellow)
+  casora-tone-general: var(--casora-color-teal)
+  casora-tone-energy: var(--casora-color-green)
+  casora-tone-heat: var(--casora-color-orange)
+  casora-tone-alert: var(--casora-color-red)
+  casora-tone-media: var(--casora-color-blue)
+  casora-tone-settings: var(--casora-color-sand)
+  casora-series-1: var(--casora-tone-media)
+  casora-series-2: var(--casora-tone-general)
+  casora-menu-tone-mix: 100%
+  casora-menu-ic-display: flex
+  casora-menu-ic-size: 32px
+  casora-menu-ic-fill: 12%
+  casora-menu-ic-col: 32px
+  casora-menu-ic-gap: 12px
+  casora-menu-row-h: 44px
+  casora-menu-row-pad: 0 16px 0 7px
+  casora-menu-item-pad: 6px 16px 6px 8px
+  casora-mnav-item-pad: 0 18px 0 7px
+  casora-menu-item-radius: 16px
+  casora-menu-radius: 24px
+  casora-menu-item-weight: 600
+  casora-menu-item-dim: 1
+  casora-menu-icons-filled: 1
+  casora-notify-row-radius: 18px
+  casora-notify-pad: 0 8px 8px
+  casora-notify-pad-solo-top: 8px
+  casora-notify-action: var(--casora-ton-ink)
+  hero-title-size-mobile: 34px
+  casora-mobile-title-ls: -1.1px
+  casora-mobile-section-size: 17px
+  casora-tile-row-h-mobile: 62px
+  casora-chrome-btn-step: 48px
+  casora-chrome-btn-size-desktop: 40px
+  casora-np-head-size: 40px
+  casora-mchrome-h: 48px
+  casora-chrome-sep-top: 16px
+  casora-chrome-sep-h: 16px
+  casora-chrome-glyph-opacity: 0.82
+  casora-chrome-backdrop: var(--casora-pill-backdrop)
+  casora-pill-divider: color-mix(in srgb, var(--primary-text-color) 12%, transparent)
+  casora-upd-ai-head-pad: 4px 4px 10px
+  casora-upd-ai-glyph-my: -1px
+  casora-upd-ai-head-display: flex
+  casora-hero-badge-edge: 2px
+  casora-header-temp-nudge: 0px
+  casora-time-edge: 2px
+  casora-tile-fallback-name: 1
+  casora-empty-row-display: flex
+  casora-empty-row-fill: var(--casora-entity-background)
+  casora-empty-row-shadow: var(--button-card-box-shadow)
+  casora-icon-off-mix: 100%
+  casora-icon-off-ink: var(--casora-soft-glyph-off)
+  casora-tile-media-color: var(--casora-color-pink)
+  casora-tile-plant-color: var(--casora-tone-energy)
+  casora-puck-off-bg: var(--casora-icon-circle-bg)
+  casora-energy-series: var(--casora-tone-energy)
+  casora-bell-dot: 1
+  casora-col-lbl-gap: 0px
+  casora-np-surface: var(--casora-menu-pane)
+  casora-np-backdrop: var(--casora-glass-backdrop)
+  casora-np-rim: var(--ha-card-box-shadow)
+  casora-np-ring: 0
+  casora-np-chip-rim: none
+  casora-np-scrim: none
+  casora-np-bloom: 0
+  casora-np-art-fill: var(--casora-soft-control-fill)
+  casora-np-art-rim: none
+  casora-np-hover: var(--casora-soft-row-hover)
+  casora-np-sub: var(--casora-text-2)
+  casora-np-track: var(--casora-soft-control-fill)
+  casora-np-progress: var(--casora-soft-media-play,
+  casora-np-fill: var(--casora-np-progress)
+  casora-np-glyph: var(--primary-text-color)
+  casora-np-glyph-primary: var(--casora-ton-ink)
+  casora-np-press: var(--primary-text-color)
+  casora-np-ring-disc: var(--casora-soft-control-fill)
+  casora-np-ring-track: var(--casora-popup-progress-track)
+  casora-np-ring-fill: var(--casora-np-progress)
+  casora-np-head-ink: var(--casora-chrome-ink, rgba(255,255,255,0.90))
+  casora-np-head-on: '#fff'
+  casora-np-head-on-ink: '#000'
+  casora-np-head-play-ink: var(--casora-ton-ink)
+  casora-puck-heat-color: var(--casora-color-orange)
+  casora-temp-gradient: 'linear-gradient(90deg, #5B8FC9 0%, #4E9E95 32%, #E8B04A 62%, #DE8A4E 82%, #D35A4E 100%)'
+  casora-mnav-icon-on: var(--primary-color)
+  casora-mnav-label-on: var(--casora-ton-ink)
+  casora-mnav-label-on-weight: 600
+  casora-mnav-pill: var(--casora-nav-active-fill)
+  casora-mnav-pill-ink: var(--casora-nav-label-color)
+  casora-mnav-pill-weight: var(--casora-chrome-font-weight, 500)
+  casora-mnav-fg: var(--casora-nav-label-color)
+  casora-mnav-idle-opacity: var(--casora-nav-label-inactive-opacity, 0.84)
+  casora-mnav-pane: var(--casora-pill-fill)
+  casora-mnav-shadow: var(--casora-pill-rim)
+  casora-mnav-blur: var(--casora-pill-backdrop)
+  casora-mnav-menu-pane: var(--casora-menu-pane)
+  casora-mnav-menu-shadow: var(--casora-elevation-floating, 0 8px 20px rgba(0,0,0,0.13))
+  casora-mnav-on-fill: var(--casora-nav-active-fill)
+  casora-mnav-fg-on: var(--casora-menu-fg,
+  casora-mnav-item-weight: 400
+  casora-mnav-item-on-weight: 500
+  casora-tile-row-gap-desktop: 12px
+  casora-tile-row-gap-mobile: 8px
+  casora-room-badges-gap-mobile: 40px
+  casora-toggle-style: solid
+  casora-toggle-hover-filter: brightness(1.04)
+  casora-tile-rest-shadow-desktop: var(--button-card-box-shadow)
+  casora-tile-rest-shadow: var(--button-card-box-shadow-mobile)
+  casora-tile-hover-shadow: var(--button-card-box-shadow-hover)
+  casora-hover-overlay-opacity: 0
+  hero-weather-temp-size: 24px
+  weather-icon-size-desktop: 26px
+  weather-icon-size-tablet: 24px
+  casora-hero-weather-details: '1'
+  casora-hero-weather-temp-size-desktop: 34px
+  casora-hero-weather-temp-size-tablet: 30px
+  casora-hero-weather-icon-desktop: 29px
+  casora-hero-weather-icon-tablet: 26px
+  casora-hero-weather-cond-size-desktop: 14px
+  casora-hero-weather-cond-size-tablet: 12.5px
+  casora-hero-weather-sub-size-desktop: 12px
+  casora-hero-weather-sub-size-tablet: 10.5px
+  casora-hero-weather-glyph-gap: 5px
+  casora-hero-weather-text-gap-desktop: 9px
+  casora-hero-weather-text-gap-tablet: 8px
+  weather-hero-widget-position-nudge: calc(var(--casora-u-weather, 10px) * -2.2 - 8px)
+  modes:
+    light:
+      casora-weather-glyph-fill: '1'
+      primary-background-color: rgb(24,25,28)
+      secondary-background-color: rgb(19,20,22)
+      primary-text-color: '#E2E6F1'
+      text-primary-color: rgba(226,230,241,0.96)
+      secondary-text-color: rgba(181,188,204,0.85)
+      casora-text-2: var(--secondary-text-color)
+      casora-text-3: rgba(226,230,241,0.45)
+      casora-ton-ink: '#7498DF'
+      casora-color-sand: '#6B748A'
+      disabled-text-color: rgba(145,152,169,0.50)
+      sidebar-text-color: '#9EA6B7'
+      ha-card-background: rgba(30,32,36,0.90)
+      ha-card-background-active: rgba(222,231,253,0.08)
+      badge-background: rgba(30,32,36,0.84)
+      badge-title-inactive: rgba(226,230,241,0.90)
+      badge-active-color: rgba(219,226,241,0.94)
+      casora-badge-sub-opacity: 1
+      hero-tint: rgba(17,18,22,0.50)
+      hero-wash: linear-gradient(90deg, rgba(24,25,28,0.70) 0%, rgba(24,25,28,0.30) 38%, rgba(24,25,28,0) 62%), linear-gradient(0deg, rgba(24,25,28,0.92) 0%, rgba(24,25,28,0.30) 34%, rgba(24,25,28,0) 55%)
+      casora-icon-circle-bg: rgba(222,231,253,0.08)
+      casora-mobile-hero-tint-top: rgba(17,18,22,0.58)
+      casora-mobile-hero-tint-bot: rgba(17,18,22,0.46)
+      casora-mobile-hero-wash-mid: 34%
+      casora-mobile-hero-wash-end: 50%
+      casora-mobile-hero-height: 100%
+      casora-mobile-hero-c-handoff: rgba(24,25,28,0)
+      casora-mobile-hero-c-upper: rgba(24,25,28,0)
+      casora-mobile-hero-c-mid: rgba(24,25,28,0)
+      casora-mobile-hero-c-lower: rgba(24,25,28,0)
+      casora-mobile-hero-c-base: rgba(24,25,28,0)
+      casora-mobile-hero-floor: '#18191C'
+      casora-entity-background: rgba(33,35,40,0.86)
+      casora-entity-background-active: rgba(219,226,241,0.94)
+      casora-entity-active-tint: rgba(215,222,239,0.92)
+      casora-entity-active-tint-mobile: rgba(219,226,241,0.95)
+      casora-entity-hover-tint: rgba(215,222,239,0.40)
+      casora-entity-name: rgba(226,230,241,0.94)
+      casora-entity-name-active: rgba(23,25,31,0.92)
+      casora-entity-state: var(--casora-text-2)
+      casora-camera-plain-text: var(--casora-entity-state)
+      casora-wallpaper-veil-light: linear-gradient(to bottom, rgba(24,25,28,0.66) 0%, rgba(24,25,28,0.52) 34%, rgba(24,25,28,0) 50%)
+      casora-wallpaper-veil-light-wide: linear-gradient(to right, rgba(24,25,28,0.65) 0%, rgba(24,25,28,0.30) 45%, rgba(24,25,28,0) 75%)
+      casora-entity-state-active: rgba(52,92,170,0.96)
+      casora-entity-state-active-color: rgba(52,92,170,0.96)
+      casora-toggle-inactive-opacity: 1
+      casora-nav-bg: rgba(30,32,36,0.80)
+      casora-nav-label-color: rgba(226,230,241,0.95)
+      casora-chrome-ink: rgba(226,230,241,0.95)
+      casora-chrome-fill: rgba(30,32,36,0.80)
+      casora-chrome-fill-hover: rgba(43,45,51,0.92)
+      casora-mobile-title-color: rgba(232,236,245,0.98)
+      casora-room-head-fill: rgba(24,25,28,0.94)
+      casora-filter-veil: rgba(17,18,22,0.30)
+      casora-mnav-bg: rgba(30,32,36,0.72)
+      casora-back-rim: none
+      casora-back-highlight: none
+      casora-menu-rim-top: transparent
+      casora-menu-rim-bottom: transparent
+      casora-menu-edge: transparent
+      casora-mnav-menu-bg: rgba(30,32,36,0.95)
+      casora-menu-pane: rgba(30,32,36,0.96)
+      casora-notify-shadow: 0 14px 34px -12px rgba(0,0,0,0.60)
+      casora-menu-pane-webkit: rgba(27,29,32,0.96)
+      casora-mnav-over: rgba(25,27,31,0.94)
+      casora-nav-border: rgba(222,231,253,0.06)
+      casora-nav-active-fill: rgba(219,226,241,0.14)
+      casora-pill-fill: rgba(30,32,36,0.80)
+      casora-pill-rim: 0 8px 24px -16px rgba(0,0,0,0.55)
+      casora-chrome-shadow: var(--casora-pill-rim)
+      casora-popup-tiles-fill: rgba(222,231,253,0.05)
+      casora-popup-tiles-text-primary: rgba(226,230,241,0.96)
+      casora-popup-tiles-text-secondary: var(--casora-text-2)
+      casora-popup-tiles-text-muted: var(--casora-text-2)
+      casora-popup-row-fill: rgba(39,42,48,0.78)
+      casora-popup-row-hover: rgba(222,231,253,0.05)
+      casora-sheet-row-fill: var(--casora-popup-row-fill)
+      casora-sheet-chart-fill: var(--casora-popup-row-fill)
+      casora-sheet-plate-shadow: 0 14px 34px -18px rgba(0,0,0,0.55), 0 2px 8px -5px rgba(0,0,0,0.25)
+      casora-popup-ui-tertiary: var(--casora-popup-tiles-text-muted)
+      casora-popup-ui-fill: rgba(222,231,253,0.06)
+      casora-popup-ui-fill-2: rgba(222,231,253,0.10)
+      casora-popup-ui-divider: var(--casora-popup-divider)
+      casora-popup-ui-dim: rgba(222,231,253,0.16)
+      casora-upd-ai-neutral: rgba(219,226,241,0.78)
+      casora-popup-ui-action: '#7DC0B6'
+      casora-popup-ui-accent: var(--casora-popup-ui-action)
+      casora-popup-ui-on-action: '#121417'
+      casora-popup-ui-good: '#7CBF8A'
+      casora-popup-ui-warn: var(--casora-color-orange)
+      casora-popup-ui-bad: '#E8877B'
+      casora-popup-ui-action-tint: rgba(98,175,165,0.16)
+      casora-popup-slider-track: rgba(0,0,0,0.28)
+      casora-chart-label: var(--casora-text-3)
+      casora-chart-grid: rgba(222,231,253,0.08)
+      casora-sheet-ink: var(--casora-popup-tiles-text-primary)
+      casora-sheet-ink-2: var(--casora-popup-tiles-text-secondary)
+      casora-sheet-ink-3: var(--casora-popup-tiles-text-muted)
+      casora-popup-tile-hover: rgba(222,231,253,0.08)
+      casora-popup-progress-track: rgba(222,231,253,0.10)
+      casora-popup-divider: rgba(222,231,253,0.07)
+      casora-control-off: rgba(222,231,253,0.06)
+      casora-control-on: rgba(219,226,241,0.18)
+      casora-sidebar-fill: rgba(24,25,28,0.94)
+      app-header-background-color: rgba(24,25,28,0.85)
+      ha-card-box-shadow: 0 14px 34px -16px rgba(0,0,0,0.55)
+      button-card-box-shadow: 0 10px 26px -14px rgba(0,0,0,0.55)
+      button-card-box-shadow-mobile: 0 8px 18px -12px rgba(0,0,0,0.50)
+      button-card-box-shadow-active: 0 18px 40px -14px rgba(0,0,0,0.60), 0 0 0 1px rgba(222,231,253,0.05)
+      button-card-box-shadow-active-mobile: 0 10px 24px -12px rgba(0,0,0,0.55)
+      button-card-box-shadow-hover: 0 16px 34px -14px rgba(0,0,0,0.58)
+      button-card-box-shadow-hover-mobile: 0 8px 18px -12px rgba(0,0,0,0.50)
+      dialog-box-shadow: 0 40px 90px -30px rgba(0,0,0,0.70), inset 0 1px 0 rgba(222,231,253,0.05)
+      mdc-dialog-scrim-color: rgba(8,9,11,0.45)
+      casora-dialog-bg: rgba(27,29,32,0.97)
+      ha-dialog-background: var(--casora-dialog-bg)
+      ha-dialog-surface-background: var(--casora-dialog-bg)
+      casora-perf-dialog-fill: rgb(27,29,32)
+      casora-perf-scrim-fill: rgba(8,9,11,0.50)
+      casora-perf-tiles-fill: rgba(222,231,253,0.06)
+      casora-perf-tile-fill: rgb(33,35,40)
+      casora-perf-card-fill: rgb(30,32,36)
+      casora-perf-pill-fill: var(--casora-perf-card-fill)
+      casora-perf-badge-fill: var(--casora-perf-card-fill)
+      casora-perf-glass-fill: var(--casora-perf-card-fill)
+      casora-perf-sidebar-fill: rgb(24,25,28)
+      casora-lps-ring: var(--casora-color-yellow)
+      casora-lps-ring-ink: '#FFFFFF'
+      casora-lps-ring-halo: rgba(232,176,74,0.16)
+      casora-lps-ring-shadow: 0 14px 30px -10px rgba(0,0,0,0.55)
+      casora-lps-ring-off: rgba(222,231,253,0.08)
+      casora-lps-ring-off-ink: rgba(226,230,241,0.55)
+      casora-lps-ring-off-halo: rgba(222,231,253,0.04)
+      casora-lps-title: var(--primary-text-color)
+      casora-lps-sub: var(--secondary-text-color)
+      casora-lps-label: var(--secondary-text-color)
+      casora-lps-track: rgba(222,231,253,0.06)
+      casora-lps-fill: 'linear-gradient(90deg, #96B1E6, #E8B04A)'
+      casora-lps-fill-ink: '#11192C'
+      casora-lps-seg: rgba(222,231,253,0.06)
+      casora-lps-seg-ink: var(--secondary-text-color)
+      casora-lps-seg-on: rgba(219,226,241,0.94)
+      casora-lps-seg-on-ink: rgba(23,25,31,0.92)
+      casora-lps-seg-on-shadow: 0 10px 26px -14px rgba(0,0,0,0.55)
+      casora-lps-dot-warm: '#F2B45C'
+      casora-lps-dot-neutral: '#B8CAEE'
+      casora-lps-dot-cold: '#E7EEF4'
+      casora-lps-dot-ring: rgba(0,0,0,0)
+      casora-lps-row: rgba(222,231,253,0.05)
+      casora-lps-row-hover: rgba(222,231,253,0.08)
+      casora-lps-icon-on: var(--casora-color-yellow)
+      casora-lps-icon-on-ink: '#FFFFFF'
+      casora-lps-icon-off: rgba(222,231,253,0.08)
+      casora-lps-icon-off-ink: rgba(226,230,241,0.55)
+      casora-lps-switch-off: rgba(226,230,241,0.18)
+      casora-lps-switch-on: '#3669D0'
+      casora-lps-knob: '#E2E6F1'
+      casora-lps-chip: rgba(222,231,253,0.05)
+      casora-lps-chip-ink: var(--secondary-text-color)
+      casora-lps-chip-on: rgba(219,226,241,0.14)
+      casora-lps-chip-on-ink: var(--primary-text-color)
+      casora-lps-close-bg: rgba(222,231,253,0.06)
+      casora-lps-close-ink: var(--secondary-text-color)
+      casora-soft-surface: var(--casora-dialog-bg)
+      casora-soft-shadow: var(--dialog-box-shadow)
+      casora-soft-label: var(--casora-popup-tiles-text-secondary)
+      casora-soft-sub: var(--casora-popup-tiles-text-secondary)
+      casora-soft-row-fill: rgba(222,231,253,0.05)
+      casora-soft-row-hover: rgba(222,231,253,0.08)
+      casora-soft-row-press: rgba(222,231,253,0.11)
+      casora-soft-plate-fill: rgba(222,231,253,0.04)
+      casora-soft-control-fill: var(--casora-control-off)
+      casora-soft-icon-off: var(--casora-icon-circle-bg)
+      casora-soft-glyph: '#FFFFFF'
+      casora-soft-glyph-off: rgba(226,230,241,0.55)
+      casora-waste-rest: '#394151'
+      casora-soft-close-ink: var(--casora-popup-tiles-text-secondary)
+      casora-soft-seg-on: var(--casora-entity-background-active)
+      casora-soft-seg-on-ink: var(--casora-entity-name-active)
+      casora-soft-seg-on-shadow: var(--button-card-box-shadow)
+      casora-soft-slider-light: '#FFFFFF'
+      casora-soft-slider-mix: 55%
+      casora-soft-slider-ink: '#0D1320'
+      casora-soft-ring-halo: 20%
+      casora-soft-ring-glow: 45%
+      casora-soft-art-shadow: 0 12px 26px -14px rgba(0,0,0,0.60)
+      casora-soft-more-fade: rgba(27,29,32,0.90)
+      casora-soft-grabber: rgba(222,231,253,0.22)
+      casora-soft-ki: var(--casora-color-teal)
+      casora-soft-ki-ink: '#FFFFFF'
+      casora-soft-ki-shadow: 0 10px 22px -12px rgba(0,0,0,0.55)
+      casora-soft-media: var(--casora-tone-media)
+      casora-soft-media-play: var(--casora-lps-switch-on)
+      casora-soft-media-play-shadow: 0 14px 30px -12px rgba(0,0,0,0.55)
+      casora-soft-cam-radius: 28px
+      casora-soft-cam-shadow: 0 18px 40px -24px rgba(0,0,0,0.70)
+      casora-soft-cam-tile-shadow: 0 10px 24px -16px rgba(0,0,0,0.60)
+      casora-soft-mehr-fill: rgba(222,231,253,0.05)
+      casora-soft-mehr-hover: rgba(222,231,253,0.08)
+      casora-soft-mehr-press: rgba(222,231,253,0.11)
+      casora-soft-mehr-ink: var(--casora-popup-tiles-text-secondary)
+      casora-soft-mehr-count-fill: rgba(222,231,253,0.09)
+      casora-hh-bar-fill: var(--casora-color-teal)
+      casora-hh-bar-ink: '#10302C'
+      casora-hh-bar-track: var(--casora-soft-control-fill)
+      casora-soft-row-selected: rgba(222,231,253,0.13)
+      casora-soft-row-selected-shadow: 0 10px 26px -14px rgba(0,0,0,0.55)
+      casora-studio-backdrop: 'linear-gradient(to bottom, #181A1E, #131417)'
+      casora-studio-glow: rgba(142,171,228,0.07)
+      casora-studio-photo: 0.3
+      casora-studio-ink: '#E2E6F1'
+      casora-studio-ink-2: rgba(226,230,241,0.72)
+      casora-studio-ink-3: rgba(226,230,241,0.58)
+      casora-studio-cap: rgba(226,230,241,0.66)
+      casora-studio-cap-sub: rgba(226,230,241,0.58)
+      casora-studio-hair: rgba(222,231,253,0.12)
+      casora-studio-accent: '#7498DF'
+      casora-studio-done: '#7498DF'
+      casora-studio-on-done: '#161920'
+      casora-studio-on-accent: '#121417'
+      casora-studio-fill: '#E2E6F1'
+      casora-studio-on-fill: '#191B20'
+      casora-studio-pane: linear-gradient(to bottom, rgba(118,127,148,0.26), rgba(101,110,128,0.21) 46%, rgba(93,101,119,0.19))
+      casora-studio-pane-solid: 'linear-gradient(to bottom, #484C55, #3E424B 46%, #3A3D46)'
+      casora-studio-nested: rgba(222,231,253,0.08)
+      casora-studio-chip: rgba(222,231,253,0.13)
+      casora-studio-chip-hi: rgba(222,231,253,0.21)
+      casora-studio-chip-rim: rgba(222,231,253,0.16)
+      casora-studio-field-rim: rgba(222,231,253,0.13)
+      casora-studio-lift: linear-gradient(to bottom, rgba(65,69,80,0.62), rgba(53,57,66,0.68))
+      casora-studio-sw-off: rgba(117,124,139,0.44)
+      casora-studio-sw-on: '#3669D0'
+      casora-studio-card-tint: rgba(222,231,253,0.06)
+      casora-studio-scrim-top: rgba(17,19,23,0.55)
+      casora-studio-scrim-bot: rgba(17,19,23,0.72)
+      casora-studio-bar: rgba(22,24,28,0.80)
+      casora-studio-bar-solid: rgba(24,25,29,0.95)
+      casora-studio-bar-btn: rgba(222,231,253,0.16)
+      casora-studio-bar-btn-hi: rgba(222,231,253,0.24)
+      casora-studio-slab-rail: rgba(19,20,23,0.86)
+      casora-studio-slab-page: rgba(24,25,29,0.80)
+      casora-studio-slab-card: rgba(222,231,253,0.075)
+      casora-studio-slab-stage: rgba(21,23,26,0.88)
+      casora-studio-slab-stage-solid: rgba(19,20,23,0.95)
+      casora-studio-menu-glass: rgba(30,32,37,0.92)
+      casora-studio-psheet-pane: rgba(27,29,34,0.80)
+      casora-studio-wash-hover: rgba(222,231,253,0.07)
+      casora-studio-wash-press: rgba(222,231,253,0.11)
+      casora-studio-wash-sel: rgba(222,231,253,0.15)
+      casora-studio-wash-sel-hi: rgba(222,231,253,0.20)
+      casora-studio-wash-fill: rgba(222,231,253,0.14)
+      casora-studio-wash-faint: rgba(222,231,253,0.04)
+      casora-studio-wash-line: rgba(222,231,253,0.10)
+      casora-studio-wash-ring: rgba(222,231,253,0.30)
+      casora-studio-addfield: rgba(17,19,23,0.36)
+      casora-studio-addfield-hi: rgba(30,33,39,0.46)
+      casora-studio-sheet: '#1D1F24'
+      casora-studio-link: '#7498DF'
+      casora-studio-link-tint: rgba(116,152,223,0.14)
+      casora-studio-link-line: rgba(116,152,223,0.30)
+      casora-studio-ai: '#7DC0B6'
+      casora-studio-danger: '#B23A2F'
+      casora-studio-bad: '#E58377'
+      casora-studio-good: '#8CC79A'
+      casora-studio-good-tint: rgba(106,174,120,0.18)
+      casora-studio-warn: var(--casora-color-orange)
+      casora-studio-warn-tint: rgba(222,138,78,0.18)
+      casora-studio-ai-grad: 'linear-gradient(135deg, #4E9E95, #2F766E)'
+      casora-studio-auto-grad: 'linear-gradient(135deg, #7095DE, #2C5DBE)'
+      casora-studio-ai-shimmer: 'linear-gradient(100deg, #2F766E 20%, #9FD3CB 50%, #2F766E 80%)'
+      casora-studio-phone-pane: linear-gradient(rgba(18,20,23,0.66), rgba(18,20,23,0.66))
+      casora-studio-phone-done: '#7498DF'
+      casora-studio-phone-pane-solid: 'linear-gradient(#1B1D20, #1B1D20)'
+      casora-studio-icon-light: var(--casora-color-yellow)
+      casora-studio-icon-main: var(--casora-color-teal)
+      casora-studio-icon-energy: var(--casora-color-green)
+      casora-studio-icon-heat: var(--casora-color-orange)
+      casora-studio-icon-alert: var(--casora-color-red)
+      casora-studio-icon-info: var(--casora-color-blue)
+      casora-studio-icon-neutral: '#6B748A'
+      casora-hover-overlay-opacity: 0
+      casora-soft-icon-on: var(--casora-color-teal)
+      casora-soft-dot-cold: '#CFE0EE'
+      casora-soft-dot-ring: rgba(0,0,0,0)
+      casora-soft-cam-fail: '#18191C'
+      casora-soft-placeholder: var(--casora-soft-control-fill)
+      casora-soft-media-hue: var(--casora-color-pink)
+      casora-soft-primary: var(--casora-lps-switch-on)
+      casora-soft-primary-ink: '#FFFFFF'
+    dark:
+      casora-weather-glyph-fill: '1'
+      primary-background-color: rgb(24,25,28)
+      secondary-background-color: rgb(19,20,22)
+      primary-text-color: '#E2E6F1'
+      text-primary-color: rgba(226,230,241,0.96)
+      secondary-text-color: rgba(181,188,204,0.85)
+      casora-text-2: var(--secondary-text-color)
+      casora-text-3: rgba(226,230,241,0.45)
+      casora-ton-ink: '#7498DF'
+      casora-color-sand: '#6B748A'
+      disabled-text-color: rgba(145,152,169,0.50)
+      sidebar-text-color: '#9EA6B7'
+      ha-card-background: rgba(30,32,36,0.90)
+      ha-card-background-active: rgba(222,231,253,0.08)
+      badge-background: rgba(30,32,36,0.84)
+      badge-title-inactive: rgba(226,230,241,0.90)
+      badge-active-color: rgba(219,226,241,0.94)
+      casora-badge-sub-opacity: 1
+      hero-tint: rgba(17,18,22,0.50)
+      hero-wash: linear-gradient(90deg, rgba(24,25,28,0.70) 0%, rgba(24,25,28,0.30) 38%, rgba(24,25,28,0) 62%), linear-gradient(0deg, rgba(24,25,28,0.92) 0%, rgba(24,25,28,0.30) 34%, rgba(24,25,28,0) 55%)
+      casora-icon-circle-bg: rgba(222,231,253,0.08)
+      casora-mobile-hero-tint-top: rgba(17,18,22,0.58)
+      casora-mobile-hero-tint-bot: rgba(17,18,22,0.46)
+      casora-mobile-hero-wash-mid: 34%
+      casora-mobile-hero-wash-end: 50%
+      casora-mobile-hero-height: 100%
+      casora-mobile-hero-c-handoff: rgba(24,25,28,0)
+      casora-mobile-hero-c-upper: rgba(24,25,28,0)
+      casora-mobile-hero-c-mid: rgba(24,25,28,0)
+      casora-mobile-hero-c-lower: rgba(24,25,28,0)
+      casora-mobile-hero-c-base: rgba(24,25,28,0)
+      casora-mobile-hero-floor: '#18191C'
+      casora-entity-background: rgba(33,35,40,0.86)
+      casora-entity-background-active: rgba(219,226,241,0.94)
+      casora-entity-active-tint: rgba(215,222,239,0.92)
+      casora-entity-active-tint-mobile: rgba(219,226,241,0.95)
+      casora-entity-hover-tint: rgba(215,222,239,0.40)
+      casora-entity-name: rgba(226,230,241,0.94)
+      casora-entity-name-active: rgba(23,25,31,0.92)
+      casora-entity-state: var(--casora-text-2)
+      casora-camera-plain-text: var(--casora-entity-state)
+      casora-wallpaper-veil-light: linear-gradient(to bottom, rgba(24,25,28,0.66) 0%, rgba(24,25,28,0.52) 34%, rgba(24,25,28,0) 50%)
+      casora-wallpaper-veil-light-wide: linear-gradient(to right, rgba(24,25,28,0.65) 0%, rgba(24,25,28,0.30) 45%, rgba(24,25,28,0) 75%)
+      casora-entity-state-active: rgba(52,92,170,0.96)
+      casora-entity-state-active-color: rgba(52,92,170,0.96)
+      casora-toggle-inactive-opacity: 1
+      casora-nav-bg: rgba(30,32,36,0.80)
+      casora-nav-label-color: rgba(226,230,241,0.95)
+      casora-chrome-ink: rgba(226,230,241,0.95)
+      casora-chrome-fill: rgba(30,32,36,0.80)
+      casora-chrome-fill-hover: rgba(43,45,51,0.92)
+      casora-mobile-title-color: rgba(232,236,245,0.98)
+      casora-room-head-fill: rgba(24,25,28,0.94)
+      casora-filter-veil: rgba(17,18,22,0.30)
+      casora-mnav-bg: rgba(30,32,36,0.72)
+      casora-back-rim: none
+      casora-back-highlight: none
+      casora-menu-rim-top: transparent
+      casora-menu-rim-bottom: transparent
+      casora-menu-edge: transparent
+      casora-mnav-menu-bg: rgba(30,32,36,0.95)
+      casora-menu-pane: rgba(30,32,36,0.96)
+      casora-notify-shadow: 0 14px 34px -12px rgba(0,0,0,0.60)
+      casora-menu-pane-webkit: rgba(27,29,32,0.96)
+      casora-mnav-over: rgba(25,27,31,0.94)
+      casora-nav-border: rgba(222,231,253,0.06)
+      casora-nav-active-fill: rgba(219,226,241,0.14)
+      casora-pill-fill: rgba(30,32,36,0.80)
+      casora-pill-rim: 0 8px 24px -16px rgba(0,0,0,0.55)
+      casora-chrome-shadow: var(--casora-pill-rim)
+      casora-popup-tiles-fill: rgba(222,231,253,0.05)
+      casora-popup-tiles-text-primary: rgba(226,230,241,0.96)
+      casora-popup-tiles-text-secondary: var(--casora-text-2)
+      casora-popup-tiles-text-muted: var(--casora-text-2)
+      casora-popup-row-fill: rgba(39,42,48,0.78)
+      casora-popup-row-hover: rgba(222,231,253,0.05)
+      casora-sheet-row-fill: var(--casora-popup-row-fill)
+      casora-sheet-chart-fill: var(--casora-popup-row-fill)
+      casora-sheet-plate-shadow: 0 14px 34px -18px rgba(0,0,0,0.55), 0 2px 8px -5px rgba(0,0,0,0.25)
+      casora-popup-ui-tertiary: var(--casora-popup-tiles-text-muted)
+      casora-popup-ui-fill: rgba(222,231,253,0.06)
+      casora-popup-ui-fill-2: rgba(222,231,253,0.10)
+      casora-popup-ui-divider: var(--casora-popup-divider)
+      casora-popup-ui-dim: rgba(222,231,253,0.16)
+      casora-upd-ai-neutral: rgba(219,226,241,0.78)
+      casora-popup-ui-action: '#7DC0B6'
+      casora-popup-ui-accent: var(--casora-popup-ui-action)
+      casora-popup-ui-on-action: '#121417'
+      casora-popup-ui-good: '#7CBF8A'
+      casora-popup-ui-warn: var(--casora-color-orange)
+      casora-popup-ui-bad: '#E8877B'
+      casora-popup-ui-action-tint: rgba(98,175,165,0.16)
+      casora-popup-slider-track: rgba(0,0,0,0.28)
+      casora-chart-label: var(--casora-text-3)
+      casora-chart-grid: rgba(222,231,253,0.08)
+      casora-sheet-ink: var(--casora-popup-tiles-text-primary)
+      casora-sheet-ink-2: var(--casora-popup-tiles-text-secondary)
+      casora-sheet-ink-3: var(--casora-popup-tiles-text-muted)
+      casora-popup-tile-hover: rgba(222,231,253,0.08)
+      casora-popup-progress-track: rgba(222,231,253,0.10)
+      casora-popup-divider: rgba(222,231,253,0.07)
+      casora-control-off: rgba(222,231,253,0.06)
+      casora-control-on: rgba(219,226,241,0.18)
+      casora-sidebar-fill: rgba(24,25,28,0.94)
+      app-header-background-color: rgba(24,25,28,0.85)
+      ha-card-box-shadow: 0 14px 34px -16px rgba(0,0,0,0.55)
+      button-card-box-shadow: 0 10px 26px -14px rgba(0,0,0,0.55)
+      button-card-box-shadow-mobile: 0 8px 18px -12px rgba(0,0,0,0.50)
+      button-card-box-shadow-active: 0 18px 40px -14px rgba(0,0,0,0.60), 0 0 0 1px rgba(222,231,253,0.05)
+      button-card-box-shadow-active-mobile: 0 10px 24px -12px rgba(0,0,0,0.55)
+      button-card-box-shadow-hover: 0 16px 34px -14px rgba(0,0,0,0.58)
+      button-card-box-shadow-hover-mobile: 0 8px 18px -12px rgba(0,0,0,0.50)
+      dialog-box-shadow: 0 40px 90px -30px rgba(0,0,0,0.70), inset 0 1px 0 rgba(222,231,253,0.05)
+      mdc-dialog-scrim-color: rgba(8,9,11,0.45)
+      casora-dialog-bg: rgba(27,29,32,0.97)
+      ha-dialog-background: var(--casora-dialog-bg)
+      ha-dialog-surface-background: var(--casora-dialog-bg)
+      casora-perf-dialog-fill: rgb(27,29,32)
+      casora-perf-scrim-fill: rgba(8,9,11,0.50)
+      casora-perf-tiles-fill: rgba(222,231,253,0.06)
+      casora-perf-tile-fill: rgb(33,35,40)
+      casora-perf-card-fill: rgb(30,32,36)
+      casora-perf-pill-fill: var(--casora-perf-card-fill)
+      casora-perf-badge-fill: var(--casora-perf-card-fill)
+      casora-perf-glass-fill: var(--casora-perf-card-fill)
+      casora-perf-sidebar-fill: rgb(24,25,28)
+      casora-lps-ring: var(--casora-color-yellow)
+      casora-lps-ring-ink: '#FFFFFF'
+      casora-lps-ring-halo: rgba(232,176,74,0.16)
+      casora-lps-ring-shadow: 0 14px 30px -10px rgba(0,0,0,0.55)
+      casora-lps-ring-off: rgba(222,231,253,0.08)
+      casora-lps-ring-off-ink: rgba(226,230,241,0.55)
+      casora-lps-ring-off-halo: rgba(222,231,253,0.04)
+      casora-lps-title: var(--primary-text-color)
+      casora-lps-sub: var(--secondary-text-color)
+      casora-lps-label: var(--secondary-text-color)
+      casora-lps-track: rgba(222,231,253,0.06)
+      casora-lps-fill: 'linear-gradient(90deg, #96B1E6, #E8B04A)'
+      casora-lps-fill-ink: '#11192C'
+      casora-lps-seg: rgba(222,231,253,0.06)
+      casora-lps-seg-ink: var(--secondary-text-color)
+      casora-lps-seg-on: rgba(219,226,241,0.94)
+      casora-lps-seg-on-ink: rgba(23,25,31,0.92)
+      casora-lps-seg-on-shadow: 0 10px 26px -14px rgba(0,0,0,0.55)
+      casora-lps-dot-warm: '#F2B45C'
+      casora-lps-dot-neutral: '#B8CAEE'
+      casora-lps-dot-cold: '#E7EEF4'
+      casora-lps-dot-ring: rgba(0,0,0,0)
+      casora-lps-row: rgba(222,231,253,0.05)
+      casora-lps-row-hover: rgba(222,231,253,0.08)
+      casora-lps-icon-on: var(--casora-color-yellow)
+      casora-lps-icon-on-ink: '#FFFFFF'
+      casora-lps-icon-off: rgba(222,231,253,0.08)
+      casora-lps-icon-off-ink: rgba(226,230,241,0.55)
+      casora-lps-switch-off: rgba(226,230,241,0.18)
+      casora-lps-switch-on: '#3669D0'
+      casora-lps-knob: '#E2E6F1'
+      casora-lps-chip: rgba(222,231,253,0.05)
+      casora-lps-chip-ink: var(--secondary-text-color)
+      casora-lps-chip-on: rgba(219,226,241,0.14)
+      casora-lps-chip-on-ink: var(--primary-text-color)
+      casora-lps-close-bg: rgba(222,231,253,0.06)
+      casora-lps-close-ink: var(--secondary-text-color)
+      casora-soft-surface: var(--casora-dialog-bg)
+      casora-soft-shadow: var(--dialog-box-shadow)
+      casora-soft-label: var(--casora-popup-tiles-text-secondary)
+      casora-soft-sub: var(--casora-popup-tiles-text-secondary)
+      casora-soft-row-fill: rgba(222,231,253,0.05)
+      casora-soft-row-hover: rgba(222,231,253,0.08)
+      casora-soft-row-press: rgba(222,231,253,0.11)
+      casora-soft-plate-fill: rgba(222,231,253,0.04)
+      casora-soft-control-fill: var(--casora-control-off)
+      casora-soft-icon-off: var(--casora-icon-circle-bg)
+      casora-soft-glyph: '#FFFFFF'
+      casora-soft-glyph-off: rgba(226,230,241,0.55)
+      casora-waste-rest: '#394151'
+      casora-soft-close-ink: var(--casora-popup-tiles-text-secondary)
+      casora-soft-seg-on: var(--casora-entity-background-active)
+      casora-soft-seg-on-ink: var(--casora-entity-name-active)
+      casora-soft-seg-on-shadow: var(--button-card-box-shadow)
+      casora-soft-slider-light: '#FFFFFF'
+      casora-soft-slider-mix: 55%
+      casora-soft-slider-ink: '#0D1320'
+      casora-soft-ring-halo: 20%
+      casora-soft-ring-glow: 45%
+      casora-soft-art-shadow: 0 12px 26px -14px rgba(0,0,0,0.60)
+      casora-soft-more-fade: rgba(27,29,32,0.90)
+      casora-soft-grabber: rgba(222,231,253,0.22)
+      casora-soft-ki: var(--casora-color-teal)
+      casora-soft-ki-ink: '#FFFFFF'
+      casora-soft-ki-shadow: 0 10px 22px -12px rgba(0,0,0,0.55)
+      casora-soft-media: var(--casora-tone-media)
+      casora-soft-media-play: var(--casora-lps-switch-on)
+      casora-soft-media-play-shadow: 0 14px 30px -12px rgba(0,0,0,0.55)
+      casora-soft-cam-radius: 28px
+      casora-soft-cam-shadow: 0 18px 40px -24px rgba(0,0,0,0.70)
+      casora-soft-cam-tile-shadow: 0 10px 24px -16px rgba(0,0,0,0.60)
+      casora-soft-mehr-fill: rgba(222,231,253,0.05)
+      casora-soft-mehr-hover: rgba(222,231,253,0.08)
+      casora-soft-mehr-press: rgba(222,231,253,0.11)
+      casora-soft-mehr-ink: var(--casora-popup-tiles-text-secondary)
+      casora-soft-mehr-count-fill: rgba(222,231,253,0.09)
+      casora-hh-bar-fill: var(--casora-color-teal)
+      casora-hh-bar-ink: '#10302C'
+      casora-hh-bar-track: var(--casora-soft-control-fill)
+      casora-soft-row-selected: rgba(222,231,253,0.13)
+      casora-soft-row-selected-shadow: 0 10px 26px -14px rgba(0,0,0,0.55)
+      casora-studio-backdrop: 'linear-gradient(to bottom, #181A1E, #131417)'
+      casora-studio-glow: rgba(142,171,228,0.07)
+      casora-studio-photo: 0.3
+      casora-studio-ink: '#E2E6F1'
+      casora-studio-ink-2: rgba(226,230,241,0.72)
+      casora-studio-ink-3: rgba(226,230,241,0.58)
+      casora-studio-cap: rgba(226,230,241,0.66)
+      casora-studio-cap-sub: rgba(226,230,241,0.58)
+      casora-studio-hair: rgba(222,231,253,0.12)
+      casora-studio-accent: '#7498DF'
+      casora-studio-done: '#7498DF'
+      casora-studio-on-done: '#161920'
+      casora-studio-on-accent: '#121417'
+      casora-studio-fill: '#E2E6F1'
+      casora-studio-on-fill: '#191B20'
+      casora-studio-pane: linear-gradient(to bottom, rgba(118,127,148,0.26), rgba(101,110,128,0.21) 46%, rgba(93,101,119,0.19))
+      casora-studio-pane-solid: 'linear-gradient(to bottom, #484C55, #3E424B 46%, #3A3D46)'
+      casora-studio-nested: rgba(222,231,253,0.08)
+      casora-studio-chip: rgba(222,231,253,0.13)
+      casora-studio-chip-hi: rgba(222,231,253,0.21)
+      casora-studio-chip-rim: rgba(222,231,253,0.16)
+      casora-studio-field-rim: rgba(222,231,253,0.13)
+      casora-studio-lift: linear-gradient(to bottom, rgba(65,69,80,0.62), rgba(53,57,66,0.68))
+      casora-studio-sw-off: rgba(117,124,139,0.44)
+      casora-studio-sw-on: '#3669D0'
+      casora-studio-card-tint: rgba(222,231,253,0.06)
+      casora-studio-scrim-top: rgba(17,19,23,0.55)
+      casora-studio-scrim-bot: rgba(17,19,23,0.72)
+      casora-studio-bar: rgba(22,24,28,0.80)
+      casora-studio-bar-solid: rgba(24,25,29,0.95)
+      casora-studio-bar-btn: rgba(222,231,253,0.16)
+      casora-studio-bar-btn-hi: rgba(222,231,253,0.24)
+      casora-studio-slab-rail: rgba(19,20,23,0.86)
+      casora-studio-slab-page: rgba(24,25,29,0.80)
+      casora-studio-slab-card: rgba(222,231,253,0.075)
+      casora-studio-slab-stage: rgba(21,23,26,0.88)
+      casora-studio-slab-stage-solid: rgba(19,20,23,0.95)
+      casora-studio-menu-glass: rgba(30,32,37,0.92)
+      casora-studio-psheet-pane: rgba(27,29,34,0.80)
+      casora-studio-wash-hover: rgba(222,231,253,0.07)
+      casora-studio-wash-press: rgba(222,231,253,0.11)
+      casora-studio-wash-sel: rgba(222,231,253,0.15)
+      casora-studio-wash-sel-hi: rgba(222,231,253,0.20)
+      casora-studio-wash-fill: rgba(222,231,253,0.14)
+      casora-studio-wash-faint: rgba(222,231,253,0.04)
+      casora-studio-wash-line: rgba(222,231,253,0.10)
+      casora-studio-wash-ring: rgba(222,231,253,0.30)
+      casora-studio-addfield: rgba(17,19,23,0.36)
+      casora-studio-addfield-hi: rgba(30,33,39,0.46)
+      casora-studio-sheet: '#1D1F24'
+      casora-studio-link: '#7498DF'
+      casora-studio-link-tint: rgba(116,152,223,0.14)
+      casora-studio-link-line: rgba(116,152,223,0.30)
+      casora-studio-ai: '#7DC0B6'
+      casora-studio-danger: '#B23A2F'
+      casora-studio-bad: '#E58377'
+      casora-studio-good: '#8CC79A'
+      casora-studio-good-tint: rgba(106,174,120,0.18)
+      casora-studio-warn: var(--casora-color-orange)
+      casora-studio-warn-tint: rgba(222,138,78,0.18)
+      casora-studio-ai-grad: 'linear-gradient(135deg, #4E9E95, #2F766E)'
+      casora-studio-auto-grad: 'linear-gradient(135deg, #7095DE, #2C5DBE)'
+      casora-studio-ai-shimmer: 'linear-gradient(100deg, #2F766E 20%, #9FD3CB 50%, #2F766E 80%)'
+      casora-studio-phone-pane: linear-gradient(rgba(18,20,23,0.66), rgba(18,20,23,0.66))
+      casora-studio-phone-done: '#7498DF'
+      casora-studio-phone-pane-solid: 'linear-gradient(#1B1D20, #1B1D20)'
+      casora-studio-icon-light: var(--casora-color-yellow)
+      casora-studio-icon-main: var(--casora-color-teal)
+      casora-studio-icon-energy: var(--casora-color-green)
+      casora-studio-icon-heat: var(--casora-color-orange)
+      casora-studio-icon-alert: var(--casora-color-red)
+      casora-studio-icon-info: var(--casora-color-blue)
+      casora-studio-icon-neutral: '#6B748A'
+      casora-hover-overlay-opacity: 0
+      casora-soft-icon-on: var(--casora-color-teal)
+      casora-soft-dot-cold: '#CFE0EE'
+      casora-soft-dot-ring: rgba(0,0,0,0)
+      casora-soft-cam-fail: '#18191C'
+      casora-soft-placeholder: var(--casora-soft-control-fill)
+      casora-soft-media-hue: var(--casora-color-pink)
+      casora-soft-primary: var(--casora-lps-switch-on)
+      casora-soft-primary-ink: '#FFFFFF'
