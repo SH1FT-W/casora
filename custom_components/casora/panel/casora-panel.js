@@ -1943,7 +1943,7 @@ const SECTIONS = [
     fields: [
       { key: "show_time", label: "Show clock", type: "bool", boolDefault: true, always: true, ord: -1 },
       // Immer sichtbar: ohne Eintrag nimmt die Uhr sensor.time, und das soll man sehen.
-      { ...E("time_entity", "Time sensor", ["sensor"]), always: true, placeholder: "Automatic: sensor.time" },
+      { ...E("time_entity", "Time sensor", ["sensor"]), always: true, placeholder: "Automatic" },
       { key: "use_12h", label: "12-hour clock", type: "bool", boolDefault: LOCALE_12H, always: true },
       { ...T("time_suffix", "Suffix"),
         auto: true, advanced: true, noAdd: true },
