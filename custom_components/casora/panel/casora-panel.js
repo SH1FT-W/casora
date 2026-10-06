@@ -14215,7 +14215,6 @@ class CasoraPanel extends HTMLElement {
       this._renderTabs();
       this._renderForm();
       requestAnimationFrame(() => this._playEntrance());
-      if (this._phoneReachable()) (window.requestIdleCallback || ((f) => setTimeout(f, 1200)))(() => this._loadRoomGroups(), { timeout: 4000 });
       if (!this._saveBlocked) setTimeout(() => this._offerDraft(), 400);
       if (this._sizeNote) {
         const n = this._sizeNote;
@@ -21552,17 +21551,6 @@ class CasoraPanel extends HTMLElement {
     });
   }
 
-  // Raum-Gruppen der Handy-Vorschau (filter-overlay.js) – beim Laden im Leerlauf vorab holen,
-  // damit die erste Handy-Raumseite nicht zweimal gebaut wird. Neu gebaut wird nur, wenn eine
-  // Vorschau sie schon vermisst hat.
-  _loadRoomGroups() {
-    if (window.casoraRoomGroups || this._roomGroupsLoading) return;
-    this._roomGroupsLoading = true;
-    import("/casora_scripts/filter-overlay.js")
-      .then(() => { if (window.casoraRoomGroups && this._rgMissed) { this._rgMissed = false; this._rebuildPreview(); } })
-      .catch(() => {});
-  }
-
   _syncPreview() {
     this._markDirty();
     const mount = this.$("mapmount");
@@ -22178,7 +22166,12 @@ class CasoraPanel extends HTMLElement {
       // solange der Schalter room_groups an ist; sonst nach den Szenen ein „Geräte“-Kopf.
       const roomTiles = sec ? liveTiles(sec) : [];
       const RG = window.casoraRoomGroups;
-      if (!RG) { this._rgMissed = true; this._loadRoomGroups(); }
+      if (!RG && !this._roomGroupsLoading) {
+        this._roomGroupsLoading = true;
+        import("/casora_scripts/filter-overlay.js")
+          .then(() => { if (window.casoraRoomGroups) this._rebuildPreview(); })
+          .catch(() => {});
+      }
       const rgRaw = [((home || {}).variables || {}).room_groups, sv.room_groups].find(isSet);
       const rgOn = rgRaw !== false && rgRaw !== "false" && rgRaw !== "off";
       const groups = RG && rgOn ? RG.split(roomTiles) : null;
