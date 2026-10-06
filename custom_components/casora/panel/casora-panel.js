@@ -2011,7 +2011,10 @@ const SECTIONS = [
     scope: "dashboard", col: "a",
     blurb: "The scene buttons of this dashboard.",
     toggleFn: "scenes",
-    fields: [],
+    // Wie bei den übrigen Badges (F-02): eigener Name des Szenen-Badges (casora_badge_scene_group, title).
+    fields: [
+      { ...T("scenes_title", "Name on the badge"), always: true, ord: -1, placeholder: "Scenes" },
+    ],
   },
   {
     label: "Now Playing", icon: "music", iconColor: studioIcon("nowplaying"), group: "rooms",

@@ -681,6 +681,15 @@
       b.classList.toggle("has", !!this._dashUrl && typeof this._cvFromMenu === "function" && !!this._state);
     };
 
+    // Badge-Liste › „Szenen“ (F-02): im neuen Studio gibt es keine Raumansicht mit diesem Abschnitt –
+    // die Seite „Szenen“ öffnen wie über Dashboard › Szenen.
+    wrap("_openRoomSec", (orig) => function (label) {
+      if (!on(this) || !this._state) return orig.apply(this, arguments);
+      this._bOpen = true;
+      this._bFrom = this.shadowRoot.activeElement;
+      return this._select({ group: "rooms", key: label, label });
+    });
+
     // ── Esc schließt Blätter (z. B. „Desktop und Handy angleichen“) ────
     P._bPlusKeys = function () {
       if (this._bPlusKeyed) return;

@@ -2523,7 +2523,7 @@
   "icon_tap_action": {
    "action": "none"
   },
-  "name": "[[[\n\n  const rel = (iso) => {\n    const t = Date.parse(iso);\n    if (!isFinite(t)) return 'Noch nie';\n    const m = Math.round((Date.now() - t) / 60000);\n    if (m < 1) return 'Gerade eben';\n    if (m < 60) return 'Vor ' + m + ' Min.';\n    const h = Math.round(m / 60);\n    // Calendar days, not 24-hour blocks: 36 hours ago is still yesterday.\n    const day = (x) => { const o = new Date(x); return new Date(o.getFullYear(), o.getMonth(), o.getDate()); };\n    const d = Math.round((day(Date.now()) - day(t)) / 86400000);\n    if (h < 24 || d < 1) return 'Vor ' + h + ' Std.';\n    return d === 1 ? 'Gestern' : 'Vor ' + d + ' Tagen';\n  };\n\n  const ids = (variables.scene_entities || []).filter((id) => states[id]);\n  let last = null;\n  ids.forEach((id) => { const t = Date.parse(states[id].state); if (isFinite(t) && (!last || t > last.t)) last = { id: id, t: t }; });\n  const SC = window._casoraSC;\n  if (SC) SC.prefetch(ids, states);\n  const act = SC ? ids.filter((id) => SC.isActive(id, states)).length : 0;\n  const sub = act === 0 ? 'Keine Aktiv' : act + ' Aktiv';\n  const esc = (t) => String(t || '').replace(/[&<>\"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\n  return '<div class=\"badge-wrap\"><div class=\"badge-title\">Szenen</div><div class=\"badge-sub\">' + esc(sub) + '</div></div>';\n]]]\n",
+  "name": "[[[\n\n  const rel = (iso) => {\n    const t = Date.parse(iso);\n    if (!isFinite(t)) return 'Noch nie';\n    const m = Math.round((Date.now() - t) / 60000);\n    if (m < 1) return 'Gerade eben';\n    if (m < 60) return 'Vor ' + m + ' Min.';\n    const h = Math.round(m / 60);\n    // Calendar days, not 24-hour blocks: 36 hours ago is still yesterday.\n    const day = (x) => { const o = new Date(x); return new Date(o.getFullYear(), o.getMonth(), o.getDate()); };\n    const d = Math.round((day(Date.now()) - day(t)) / 86400000);\n    if (h < 24 || d < 1) return 'Vor ' + h + ' Std.';\n    return d === 1 ? 'Gestern' : 'Vor ' + d + ' Tagen';\n  };\n\n  const ids = (variables.scene_entities || []).filter((id) => states[id]);\n  let last = null;\n  ids.forEach((id) => { const t = Date.parse(states[id].state); if (isFinite(t) && (!last || t > last.t)) last = { id: id, t: t }; });\n  const SC = window._casoraSC;\n  if (SC) SC.prefetch(ids, states);\n  const act = SC ? ids.filter((id) => SC.isActive(id, states)).length : 0;\n  const sub = act === 0 ? 'Keine Aktiv' : act + ' Aktiv';\n  const esc = (t) => String(t || '').replace(/[&<>\"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c]));\n  // Eigener Name aus dem Studio („Name auf dem Badge“, scenes_title); sonst „Szenen“.\n  const title = variables.title ? '<div class=\"badge-title\" data-no-i18n>' + esc(variables.title) + '</div>' : '<div class=\"badge-title\">Szenen</div>';\n  return '<div class=\"badge-wrap\">' + title + '<div class=\"badge-sub\">' + esc(sub) + '</div></div>';\n]]]\n",
   "show_icon": true,
   "show_label": false,
   "show_state": false,
@@ -12586,7 +12586,8 @@
        "type": "custom:button-card",
        "variables": {
         "enabled": "[[[ return variables.show_scenes === true && !!(variables.scene_entities || []).length ]]]",
-        "scene_entities": "[[[ return variables.scene_entities || [] ]]]"
+        "scene_entities": "[[[ return variables.scene_entities || [] ]]]",
+        "title": "[[[ return variables.scenes_title ]]]"
        }
       }
      ],
