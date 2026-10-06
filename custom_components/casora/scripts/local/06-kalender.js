@@ -305,7 +305,9 @@
   var monthHtml = function (m, sel, pre, dots, legend) {
     var today = day0(new Date()), gs = gridStart(m);
     var isCur = m.getFullYear() === today.getFullYear() && m.getMonth() === today.getMonth();
-    var nav = '<div style="display:flex;align-items:center;gap:6px;">'
+    /* Abfall (05.10.2026): die Blätter-Knöpfe machen die Überschrift nicht höher als „Heute“
+       rechts daneben, sonst beginnt die Monatsplatte tiefer als die rechte Spalte. */
+    var nav = '<div style="display:flex;align-items:center;gap:6px;' + (pre === 'w' && SOFT() ? 'margin:-6px 0;' : '') + '">'
       + (isCur ? '' : '<span class="hcal-tb" data-hcal="' + pre + 'nav:0">Heute</span>')
       + '<span class="hcal-b" data-hcal="' + pre + 'nav:-1"><ha-icon icon="mdi:chevron-left"></ha-icon></span>'
       + '<span class="hcal-b" data-hcal="' + pre + 'nav:1"><ha-icon icon="mdi:chevron-right"></ha-icon></span></div>';
@@ -384,7 +386,20 @@
     K.w.sel = null; K.w.month = null; K.w.tries = 0;
     var V = {};
     Object.keys(variables || {}).forEach(function (key) { if (key.indexOf('trash_') === 0) V[key] = variables[key]; });
-    return colCard(keys || ['wmonth', 'wday'], null, watch || [], V, 'wsec');
+    var card = colCard(keys || ['wmonth', 'wday'], null, watch || [], V, 'wsec');
+    /* Zweispaltig (05.10.2026): der Monat steht links allein neben Tageskarte, Tonnen und
+       Rausstellen. Die Monatsplatte füllt die Spaltenhöhe, damit beide Spalten bündig enden;
+       die Wochenzeilen verteilen den Platz. Schmal (eine Spalte) bleibt alles wie bisher. */
+    if (keys && keys.length === 1 && keys[0] === 'wmonth') {
+      card.card_mod.style += ' @media (min-width: 761px) {'
+        + ' :host { height: 100%; } ha-card { height: 100%; }'
+        + ' #container { height: 100%; grid-template-rows: minmax(0, 1fr) !important; align-content: stretch !important; }'
+        + ' #wmonth, .hcal-wmonth, .hcal.hs { height: 100%; display: flex; flex-direction: column; min-height: 0; }'
+        + ' .hcal.hs .hcal-pl { flex: 1 1 auto; display: flex; flex-direction: column; }'
+        + ' .hcal.hs .hcal-g { flex: 1 1 auto; grid-template-rows: auto repeat(6, minmax(0, 1fr)); }'
+        + ' .hcal.hs .hcal-d { justify-content: center; } }';
+    }
+    return card;
   };
   /* Handy (Issue #7): nach dem Antippen eines Tages weich zur Tageskarte, falls sie außer Sicht ist. */
   var wdayIntoView = function () {
@@ -625,6 +640,8 @@ if (typeof window.casoraClimateActive !== 'function') {
       var m = mid.getTime();
       rows.forEach(function (r) {
         if (String(r.id || '').indexOf('casora:plant:') !== 0) return;
+        // Zeitpunkt kommt hier aus dem Verlauf (neustartfest), nicht aus dem Sichtungs-Merker.
+        delete r.seen;
         var st = hass.states[r.entity];
         var lc = st && st.last_changed;
         var c = _plant[r.entity];

@@ -41,10 +41,15 @@ await check(`${room}: Medien eingerichtet, nichts läuft – keine Medien-Badge,
   !row.some(isMedia), row.map((b) => (b.ghost ? '[gestrichelt] ' : '') + b.text).join(' | '));
 
 // Läuft etwas: echte Badge.
-await fakeStates(page, { [P]: { state: 'playing', attributes: { media_title: 'Beispiel-Titel' } } });
-await H(() => window.__panel()._renderForm());
-await page.waitForTimeout(1500);
-row = await badges();
+// Untergeschobene Zustände überschreibt das Mock-HA nach einigen Sekunden wieder; unter Last (Gate)
+// kam die Prüfung dann zu spät. Bis zu dreimal unterschieben und neu zeichnen.
+for (let n = 0; n < 3; n++) {
+  await fakeStates(page, { [P]: { state: 'playing', attributes: { media_title: 'Beispiel-Titel' } } });
+  await H(() => window.__panel()._renderForm());
+  await page.waitForTimeout(1200);
+  row = await badges();
+  if (row.some((b) => isMedia(b) && !b.ghost)) break;
+}
 await check('Wiedergabe läuft – Medien-Badge sichtbar (nicht gestrichelt)', row.some((b) => isMedia(b) && !b.ghost),
   row.map((b) => b.text).join(' | '));
 

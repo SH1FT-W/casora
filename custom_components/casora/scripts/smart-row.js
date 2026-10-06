@@ -352,10 +352,40 @@ class CasoraSmartRow extends HTMLElement {
     });
     this.addEventListener('dragstart', (e) => { if (drag && drag.moved) e.preventDefault(); });
 
-    this.addEventListener('scroll', () => this._casoraEdges(), { passive: true });
-    window.addEventListener('resize', () => this._casoraEdges());
+    // Höchstens einmal pro Bild messen: _casoraEdges liest die Lage aller Kacheln und schreibt
+    // Masken – je Scroll-Ereignis aufgerufen ruckelte das Wischen (05.10.2026).
+    const edges = () => {
+      if (this._casoraEdgesRaf) return;
+      this._casoraEdgesRaf = requestAnimationFrame(() => { this._casoraEdgesRaf = 0; this._casoraEdges(); });
+    };
+    // Während des Wischens keine Masken: eine Maske auf einer Kachel mit Glas-Unschärfe muss jedes
+    // Bild neu gezeichnet werden und ließ das Wischen ruckeln. Erst wenn die Reihe ruht, kommt der
+    // Verlauf zurück (scrollend, sonst 140 ms ohne Scroll-Ereignis).
+    const settle = () => {
+      clearTimeout(this._casoraScrollT);
+      this._casoraScrollT = 0;
+      if (this.hasAttribute('casora-scrolling')) this.removeAttribute('casora-scrolling');
+      edges();
+    };
+    this.addEventListener('scroll', () => {
+      // Kein Hover beim Wischen: am Touchpad steht der Zeiger über der Reihe, jede durchlaufende
+      // Kachel startete ihren Hover-Übergang (Anheben, Schatten) mitten in der Bewegung.
+      if (!this.hasAttribute('casora-scrolling')) this.setAttribute('casora-scrolling', '');
+      // Der Verlauf sitzt fest auf der Reihe (_casoraFade): beim Wischen wird nichts neu
+      // gezeichnet, nur an den Enden wechselt er einmal (links/rechts ein oder aus).
+      edges();
+      clearTimeout(this._casoraScrollT);
+      this._casoraScrollT = setTimeout(settle, 140);
+    }, { passive: true });
+    // scrollend kommt in Chromium nach jedem einzelnen Rad-Schritt: kurz warten, ob weitergewischt
+    // wird, sonst wird zwischen zwei Schritten jedes Mal neu gemessen und maskiert.
+    this.addEventListener('scrollend', () => {
+      clearTimeout(this._casoraScrollT);
+      this._casoraScrollT = setTimeout(settle, 80);
+    }, { passive: true });
+    window.addEventListener('resize', edges);
     if (window.ResizeObserver) {
-      this._casoraRo = new ResizeObserver(() => this._casoraEdges());
+      this._casoraRo = new ResizeObserver(edges);
       this._casoraRo.observe(this);
       const box = this.shadowRoot && this.shadowRoot.getElementById('container');
       if (box) { this._casoraRoBox = true; this._casoraRo.observe(box); }
@@ -363,7 +393,62 @@ class CasoraSmartRow extends HTMLElement {
     setTimeout(() => this._casoraEdges(), 1000);
   }
 
+  _casoraRowMode() {
+    let v = '';
+    try { v = localStorage.getItem('casora_row_overflow') || ''; } catch (e) { /* gesperrt */ }
+    const cs = getComputedStyle(this);
+    if (!v) v = cs.getPropertyValue('--casora-row-overflow').trim();
+    if (!v && cs.getPropertyValue('--casora-row-arrows').trim() === 'block') v = 'arrows';
+    return /^(arrows|fade|more)$/.test(v) ? v : '';
+  }
+
+  // Sichtbare Kacheln in Anzeigereihenfolge (ohne die von „more“ ausgeblendeten mitzuzählen).
+  _casoraShown() {
+    return this._wrappers
+      .map((w, i) => ({ w, i, o: Number(w.style.order || i) }))
+      .filter(({ w }) => w.style.display !== 'none')
+      .sort((a, b) => a.o - b.o || a.i - b.i)
+      .map(({ w }) => w);
+  }
+
   _casoraEdges() {
+    const mode = this._casoraRowMode();
+    if (this.getAttribute('casora-row-mode') !== mode) {
+      if (mode) this.setAttribute('casora-row-mode', mode); else this.removeAttribute('casora-row-mode');
+    }
+    if (mode !== 'more' && this._casoraPagingSig) {
+      this._casoraPagingSig = '';
+      this._wrappers.forEach((w) => w.removeAttribute('data-casora-page-off'));
+    }
+    if (mode !== 'fade' && this._casoraFaded) {
+      this._casoraFaded = false;
+      this._wrappers.forEach((w) => { delete w.dataset.casoraFade; w.style.removeProperty('-webkit-mask-image'); w.style.removeProperty('mask-image'); });
+      this._casoraHostFade = '';
+      this.style.removeProperty('-webkit-mask-image');
+      this.style.removeProperty('mask-image');
+    }
+    if (mode === 'more') this._casoraPaging();
+    // Auch bei „fade“: rückt eine Kachel nach vorn (Sortieren nach Zustand), trägt sie sonst ihre
+    // Randmaske mit und der Verlauf steht mitten in der Reihe (05.10.2026).
+    if ((mode === 'more' || mode === 'fade') && !this._casoraMo && this._container && window.MutationObserver) {
+      // Sortieren/Ein-/Ausblenden ändert style an den Hüllen – dann neu aufteilen.
+      this._casoraMo = new MutationObserver((recs) => {
+        // Nur die Hüllen der Reihe (Sortieren, Ein-/Ausblenden). Die Karten darin ändern ihren Stil
+        // bei jeder Zustandsänderung in HA – darauf neu zu messen, ließ die Reihe hängen (05.10.2026).
+        if (!recs.some((r) => r.target.parentNode === this._container)) return;
+        if (this._casoraMoRaf) return;
+        this._casoraMoRaf = requestAnimationFrame(() => { this._casoraMoRaf = null; this._casoraEdges(); });
+      });
+      this._casoraMo.observe(this._container, { subtree: true, attributes: true, attributeFilter: ['style'] });
+      // Nach dem Verschieben (FLIP-Übergang) noch einmal an der Endposition messen.
+      // Höchstens einmal pro Bild: Hover-Übergänge der Kacheln enden beim Wischen laufend.
+      const settle = () => {
+        if (this._casoraMoRaf) return;
+        this._casoraMoRaf = requestAnimationFrame(() => { this._casoraMoRaf = null; this._casoraEdges(); });
+      };
+      this._container.addEventListener('transitionend', settle);
+      this._container.addEventListener('animationend', settle);
+    }
     const can = getComputedStyle(this).overflowX !== 'visible';
     const m = this.scrollWidth - this.clientWidth;
     // Der weiche Rand ist so breit wie der sichtbare Teil der Reihe (nicht der Scrollbereich).
@@ -371,10 +456,102 @@ class CasoraSmartRow extends HTMLElement {
     if (this.style.getPropertyValue('--hsr-view') !== vw) this.style.setProperty('--hsr-view', vw);
     this.toggleAttribute('casora-more-l', can && this.scrollLeft > 2);
     this.toggleAttribute('casora-more-r', can && m > 2 && this.scrollLeft < m - 2);
+    if (mode === 'fade') this._casoraFade(can, m);
     if (this._casoraRo && !this._casoraRoBox) {
       const box = this.shadowRoot && this.shadowRoot.getElementById('container');
       if (box) { this._casoraRoBox = true; this._casoraRo.observe(box); }
     }
+  }
+
+  // Variante „fade“: nur die angeschnittene Kachel blendet zum Rand hin aus (Maske je Kachel,
+  // nicht auf der Reihe – sonst verlören alle Glas-Kacheln ihre Unschärfe), plus Seitenpunkte.
+  _casoraFade(can, m) {
+    const dots = this.shadowRoot && this.shadowRoot.getElementById('dots');
+    // Variante „fade“: der Verlauf sitzt als Maske fest auf der Reihe (wie ein Fenster, unter dem die
+    // Kacheln durchlaufen). Früher lag er auf der jeweiligen Randkachel und musste beim Wischen jedes
+    // Bild neu berechnet und samt Glasfläche neu gezeichnet werden (05.10.2026). Die Weich-Kacheln
+    // sind fast deckend, dass ihre Unschärfe nun nur den Inhalt der Reihe sieht, fällt nicht auf.
+    const INSET = 20, FADE = 150;
+    const l = can && this.scrollLeft > 2;
+    const r = can && m > 2 && this.scrollLeft < m - 2;
+    const g = (l || r)
+      ? 'linear-gradient(to right, '
+        + (l ? `transparent ${INSET}px, #000 ${INSET + FADE}px` : '#000 0')
+        + ', '
+        + (r ? `#000 calc(100% - ${INSET + FADE}px), transparent calc(100% - ${INSET}px)` : '#000 100%')
+        + ')'
+      : '';
+    this._casoraFaded = true;
+    if (this._casoraHostFade !== g) {
+      this._casoraHostFade = g;
+      if (g) { this.style.setProperty('-webkit-mask-image', g); this.style.setProperty('mask-image', g); }
+      else { this.style.removeProperty('-webkit-mask-image'); this.style.removeProperty('mask-image'); }
+    }
+    // Reste der alten Kachelmasken einmal entfernen.
+    if (!this._casoraHostFadeClean) {
+      this._casoraHostFadeClean = true;
+      for (const w of this._wrappers) {
+        if (!w.dataset.casoraFade && !w.style.maskImage && !w.style.webkitMaskImage) continue;
+        delete w.dataset.casoraFade;
+        w.style.removeProperty('-webkit-mask-image');
+        w.style.removeProperty('mask-image');
+      }
+    }
+    if (!dots) return;
+    const n = can && m > 2 ? Math.min(8, Math.ceil(this.scrollWidth / Math.max(1, this.clientWidth))) : 0;
+    const act = n > 1 ? Math.round((this.scrollLeft / m) * (n - 1)) : 0;
+    if (dots.childElementCount !== n) {
+      dots.innerHTML = '';
+      for (let i = 0; i < n; i++) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.tabIndex = -1;
+        b.setAttribute('data-casora-nodrag', '');
+        b.setAttribute('aria-label', String(i + 1));
+        b.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const max = this.scrollWidth - this.clientWidth;
+          this.scrollTo({ left: n > 1 ? (i / (n - 1)) * max : 0, behavior: 'smooth' });
+        });
+        dots.appendChild(b);
+      }
+    }
+    [...dots.children].forEach((b, i) => b.classList.toggle('on', i === act));
+  }
+
+  // Variante „more“: so viele ganze Kacheln, wie neben die „+N weitere“-Kachel passen.
+  // Antippen zeigt die nächsten; auf der letzten Seite führt sie zurück zum Anfang.
+  _casoraPaging() {
+    const more = this.shadowRoot && this.shadowRoot.getElementById('more');
+    if (!more || !this._container) return;
+    const shown = this._casoraShown();
+    const phone = getComputedStyle(this).overflowX === 'visible';
+    const cs = getComputedStyle(this._container);
+    const gap = parseFloat(cs.columnGap) || 8;
+    const rail = parseFloat(cs.paddingLeft) || 0;
+    const first = shown.find((w) => !w.hasAttribute('data-casora-page-off')) || shown[0];
+    const tile = first ? (first.offsetWidth || parseFloat(getComputedStyle(first).width) || 300) : 300;
+    const capW = 132;
+    const avail = this.clientWidth - rail - 24;
+    const all = shown.length;
+    let per = all;
+    if (!phone && all * tile + (all - 1) * gap > avail) per = Math.max(1, Math.floor((avail - capW) / (tile + gap)));
+    const pages = per >= all ? 1 : Math.ceil(all / per);
+    let page = Math.min(this._casoraPage || 0, pages - 1);
+    const sig = [phone, this.clientWidth, per, page, shown.map((w) => this._wrappers.indexOf(w)).join('.')].join('|');
+    if (sig === this._casoraPagingSig) return;
+    this._casoraPagingSig = sig;
+    this._casoraPage = page;
+    const tr = window.casoraTr || ((x) => x);
+    shown.forEach((w, i) => w.toggleAttribute('data-casora-page-off', pages > 1 && (i < page * per || i >= (page + 1) * per)));
+    if (pages <= 1) { more.removeAttribute('data-on'); return; }
+    const rest = all - (page + 1) * per;
+    more.setAttribute('data-on', rest > 0 ? 'next' : 'back');
+    this._casoraPageNext = rest > 0 ? page + 1 : 0;
+    more.firstChild.textContent = rest > 0 ? `+${rest}` : '';
+    more.lastChild.textContent = rest > 0 ? tr('weitere') : tr('Zum Anfang');
+    more.setAttribute('aria-label', rest > 0 ? `+${rest} ${tr('weitere')}` : tr('Zum Anfang'));
+    if (this.scrollLeft) this.scrollTo({ left: 0, behavior: 'instant' });
   }
 
   _probe() {
@@ -864,6 +1041,51 @@ class CasoraSmartRow extends HTMLElement {
     fade.setAttribute('aria-hidden', 'true');
     fade.innerHTML = '<i class="l"></i><i class="r"></i>';
     track.appendChild(fade);
+    // Pfeile (Weich-Audit H2, 05.10.2026): Am Rand abgeschnittene Kacheln sahen kaputt aus –
+    // ein Pfeil zeigt, dass es weitergeht, und blättert um eine Seite. Sichtbar nur, wenn das
+    // Theme --casora-row-arrows setzt (Weich) und in diese Richtung noch Kacheln liegen.
+    const arrows = document.createElement('div');
+    arrows.id = 'arrows';
+    arrows.innerHTML = '<button class="l" type="button" tabindex="-1" data-casora-nodrag></button><button class="r" type="button" tabindex="-1" data-casora-nodrag></button>';
+    arrows.querySelectorAll('button').forEach((b) => {
+      const dir = b.classList.contains('l') ? -1 : 1;
+      b.setAttribute('aria-label', dir < 0 ? 'Zurück' : 'Weiter');
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Ohne Einrasten (Maus/Touchpad) selbst an einer Kachelkante landen.
+        const step = dir * Math.max(200, this.clientWidth * 0.7);
+        const host = this.getBoundingClientRect().left + (parseFloat(getComputedStyle(this).scrollPaddingLeft) || 0);
+        const want = this.scrollLeft + step;
+        let left = want, best = Infinity;
+        for (const w of this._casoraShown()) {
+          const pad = w.dataset.casoraFade ? 48 : 0;
+          const x = this.scrollLeft + w.getBoundingClientRect().left + pad - host;
+          if (Math.abs(x - want) < best) { best = Math.abs(x - want); left = x; }
+        }
+        this.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+      });
+    });
+    track.appendChild(arrows);
+    // H2-Varianten (05.10.2026), wählbar per Theme --casora-row-overflow (arrows | fade | more)
+    // oder zum Ausprobieren localStorage casora_row_overflow:
+    //   fade – abgeschnittene Kachel blendet am Rand weich aus, darunter Seitenpunkte;
+    //   more – nur ganze Kacheln, die letzte Stelle zeigt „+N weitere“ und blättert weiter.
+    const dots = document.createElement('div');
+    dots.id = 'dots';
+    track.appendChild(dots);
+    const more = document.createElement('div');
+    more.id = 'more';
+    more.setAttribute('role', 'button');
+    more.setAttribute('data-casora-nodrag', '');
+    more.style.order = '99999';
+    more.innerHTML = '<b></b><span></span>';
+    more.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this._casoraPage = this._casoraPageNext || 0;
+      this._casoraPagingSig = '';
+      this._casoraEdges();
+    });
+    container.appendChild(more);
     this.shadowRoot.appendChild(track);
     this._container = container;
     this._bootSetup();
@@ -1262,15 +1484,22 @@ class CasoraSmartRow extends HTMLElement {
         overflow-y: clip;
         -webkit-overflow-scrolling: touch;
         touch-action: pan-x;
-        overscroll-behavior-x: auto;
+        /* contain statt auto: am Anfang der Reihe lief das Touchpad-Wischen nach links (samt
+           Ausrollen) sonst an die Seite weiter und startete die Zurück-Geste des Browsers
+           (Safari/Chrome am Mac) – die Reihe hing am Ende des Zurückwischens (05.10.2026).
+           Nach rechts gibt es meist keine Vorwärts-Seite, darum fiel es nur rückwärts auf. */
+        overscroll-behavior-x: contain;
         overscroll-behavior-y: none;
-        scroll-snap-type: x proximity;
         overflow-anchor: none;
         scrollbar-width: none;
         -ms-overflow-style: none;
         direction: ltr;
       }
       :host::-webkit-scrollbar { display: none; }
+      /* Einrasten nur bei Touch. Mit Touchpad/Mausrad zog proximity-Snap die Reihe bei jedem
+         Wischschritt zur letzten Kachelkante zurück (Chromium) bzw. hielt sie fest und rastete
+         nach dem Loslassen nach (WebKit) – das Wischen fühlte sich hakelig an (05.10.2026). */
+      @media (pointer: coarse) { :host { scroll-snap-type: x proximity; } }
       /* Weicher Rand, wo noch Kacheln liegen (30.09.2026) – bewusst OHNE mask-image auf der
          Reihe: eine Maske macht sie zur Backdrop-Wurzel, dann blurren die Glas-Kacheln darin
          nicht mehr den Hintergrund. Stattdessen liegen zwei Schleier (#fade .l/.r) über den
@@ -1282,7 +1511,145 @@ class CasoraSmartRow extends HTMLElement {
         width: max-content;
         min-width: 100%;
       }
-      #track > #container, #track > #fade { grid-area: 1 / 1; }
+      #track > #container, #track > #fade, #track > #arrows { grid-area: 1 / 1; }
+      #arrows {
+        display: var(--casora-row-arrows, none);
+        position: sticky;
+        left: 0;
+        z-index: 3;
+        width: var(--hsr-view, 100%);
+        pointer-events: none;
+      }
+      #arrows > button {
+        position: absolute;
+        /* Mitte der Kacheln: Spur oben 20px, unten der Zeilenabstand */
+        top: calc(20px + (100% - 20px - var(--casora-entity-row-pad-bottom-current, 40px)) / 2);
+        width: 44px;
+        height: 44px;
+        margin: -22px 0 0;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background: var(--casora-row-arrow-fill, var(--casora-nav-more-fill, rgba(255, 255, 255, 0.92)));
+        box-shadow: var(--button-card-box-shadow, 0 6px 18px rgba(0, 0, 0, 0.16));
+        cursor: pointer;
+        pointer-events: auto;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0.2s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #arrows > button::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        width: 20px;
+        height: 20px;
+        background-color: var(--casora-row-arrow-ink, var(--casora-nav-chevron, rgba(58, 50, 43, 0.7)));
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 5.5l6.5 6.5L9 18.5' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 5.5l6.5 6.5L9 18.5' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+      }
+      #arrows > .l { left: 16px; }
+      #arrows > .l::before { transform: rotate(180deg); }
+      #arrows > .r { right: 16px; }
+      :host([casora-more-l]) #arrows > .l,
+      :host([casora-more-r]) #arrows > .r { opacity: 1; visibility: visible; }
+      :host([casora-row-mode]:not([casora-row-mode="arrows"])) #arrows { display: none; }
+      /* Variante „fade“: Seitenpunkte mittig unter der Reihe, im unteren Zeilenabstand. */
+      #track > #dots { grid-area: 1 / 1; }
+      #dots {
+        display: none;
+        position: sticky;
+        left: 0;
+        z-index: 3;
+        width: var(--hsr-view, 100%);
+        align-self: end;
+        justify-content: center;
+        gap: 2px;
+        box-sizing: border-box;
+        padding-left: var(--hsr-rail);
+        height: var(--casora-entity-row-pad-bottom-current, 40px);
+        align-items: center;
+        pointer-events: none;
+      }
+      :host([casora-row-mode="fade"]) #dots { display: flex; }
+      #dots > button {
+        width: 18px;
+        height: 18px;
+        padding: 0;
+        border: none;
+        background: none;
+        cursor: pointer;
+        pointer-events: auto;
+        display: grid;
+        place-items: center;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #dots > button::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 3px;
+        background: var(--casora-row-dot, var(--casora-text-2, rgba(58, 50, 43, 0.6)));
+        opacity: 0.32;
+        transition: width 0.25s ease, opacity 0.25s ease;
+      }
+      #dots > button.on::before { width: 16px; opacity: 0.8; }
+      #dots > button.on { width: 26px; }
+      /* Variante „more“: Reihe blättert nicht frei, ausgeblendete Kacheln fehlen ganz. */
+      :host([casora-row-mode="more"]) { overflow-x: hidden; scroll-snap-type: none; }
+      .card-wrapper[data-casora-page-off] { display: none !important; }
+      /* „fade“: die maskierte Hülle bekommt rundum Platz für den Kachelschatten (gleich großer
+         negativer Außenabstand, Layout bleibt gleich). Die Maske reicht so über den Schatten,
+         der nicht mehr an der Box abbricht. Klicks nimmt nur die Kachel, nicht der Rand. */
+      :host([casora-scrolling]) .card-wrapper,
+      :host([casora-scrolling]) .card-wrapper * { pointer-events: none !important; }
+      :host([casora-row-mode="fade"]) .card-wrapper[data-casora-fade] {
+        box-sizing: content-box;
+        padding: 48px;
+        margin: -48px;
+        /* Einrasten weiter an der Kachelkante, nicht am Schattenrand. */
+        scroll-margin: -48px;
+        pointer-events: none;
+      }
+      :host([casora-row-mode="fade"]) .card-wrapper[data-casora-fade] > * { pointer-events: auto; }
+      #more { display: none; }
+      :host([casora-row-mode="more"]) #more[data-on] {
+        display: flex;
+        flex: 0 0 132px;
+        align-self: stretch;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        box-sizing: border-box;
+        border-radius: var(--ha-card-border-radius, 24px);
+        background: var(--casora-row-more-fill, var(--ha-card-background, var(--card-background-color)));
+        box-shadow: var(--button-card-box-shadow, none);
+        -webkit-backdrop-filter: var(--ha-card-backdrop-filter, none);
+        backdrop-filter: var(--ha-card-backdrop-filter, none);
+        color: var(--casora-text-1, var(--primary-text-color));
+        cursor: pointer;
+        pointer-events: auto;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        animation: hsr-more-in 0.3s ease both;
+      }
+      #more > b { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+      #more > span { font-size: 14px; font-weight: 500; color: var(--casora-text-2, var(--secondary-text-color)); display: flex; align-items: center; gap: 2px; }
+      #more > span::after {
+        content: "";
+        width: 14px;
+        height: 14px;
+        background-color: currentColor;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 5.5l6.5 6.5L9 18.5' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 5.5l6.5 6.5L9 18.5' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+      }
+      #more[data-on="back"] > b { display: none; }
+      #more[data-on="back"] > span { flex-direction: row-reverse; }
+      #more[data-on="back"] > span::after { transform: rotate(180deg); }
+      @keyframes hsr-more-in { from { opacity: 0; } to { opacity: 1; } }
       #fade {
         position: sticky;
         left: 0;
@@ -1416,12 +1783,17 @@ class CasoraSmartRow extends HTMLElement {
         .card-wrapper { flex: unset; width: auto; scroll-snap-align: none; will-change: auto; }
         /* Handy: die Reihe blättert nicht, sie ist ein Raster im Fluss – kein Rand. */
         #track { display: block; width: auto; min-width: 0; }
-        #fade { display: none; }
+        #fade, #arrows, #dots, #more { display: none !important; }
         ${this._sortEnabled ? `
         /* Child combinator load-bearing - see the collapsed-spacer rule below. */
         #container > .card-wrapper[data-size="large"] { grid-row: span 2; }
         /* Passes the track height down for the card's own height:100%. */
         #container > .card-wrapper > * { display: block; height: 100%; }
+        /* Bedingte Karte (conditional): HA legt die Kachel in ein inline-hui-card, dort
+           griff height:100% nicht und die Kachel nahm ihre Eigenhöhe (Alarm-Kachel 4-9 px
+           höher als die Spur, der Abstand darunter schrumpfte). Höhe bis zur Kachel durchreichen. */
+        #container > .card-wrapper > hui-conditional-card > hui-card,
+        #container > .card-wrapper > hui-conditional-card > hui-card > * { display: block; height: 100%; }
         /* And holds a pasted card to it. Safari leaks past overflow alone. */
         #container > .card-wrapper[data-raw="1"] {
           overflow: hidden;

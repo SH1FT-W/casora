@@ -160,7 +160,7 @@ const VP = {
   handy: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true,
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148' },
 };
-async function page(vp, { filter, dark = false, theme = 'Casora Weich' } = {}) {
+async function page(vp, { filter, dark = false, theme = 'Casora' } = {}) {
   const ctx = await browser.newContext({ ...VP[vp], colorScheme: dark ? 'dark' : 'light', locale: 'de-DE', timezoneId: 'Europe/Berlin', serviceWorkers: 'block' });
   const version = JSON.parse(fs.readFileSync(path.join(HERE, '../../custom_components/casora/manifest.json'), 'utf8')).version;
   await ctx.addInitScript(([tk, base, version, theme, dark, filter]) => {

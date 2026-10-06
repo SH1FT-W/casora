@@ -253,7 +253,9 @@
   if (dead(V.leak_entity)) warn.push('Lecksensor offline');
   [[V.leak_battery, 'Akku Lecksensor'], [V.temp_battery, 'Akku Temperaturfühler']].forEach((b) => {
     const n = num(b[0]);
-    if (n != null && n <= 20) warn.push(b[1] + ' ' + Math.round(n) + ' %');
+    // Akku-Stufen (casoraBattery): Schwach und Fast leer sind ein Hinweis, kein Aquarium-Alarm.
+    const lv = n == null ? 'ok' : (window.casoraBattery ? window.casoraBattery.level(n) : (n) <= 10 ? 'crit' : (n) <= 20 ? 'low' : 'ok');
+    if (lv === 'low' || lv === 'crit') warn.push(b[1] + ' ' + Math.round(n) + ' %');
   });
   /* Bluetooth-Lampen fallen ständig kurz aus (Fluval: ~20×/Tag, meist < 5 min, max. ~19 min).
      Erst nach 7 min am Stück zählt es als Problem (23.09., vorher 5 min); gleiche Schwelle im Helfer *_prufen. */
@@ -543,12 +545,12 @@
       rows.push({ icon: 'mdi:water-alert', iconTone: wet ? 'bad' : 'good', label: 'Lecksensor',
         sub: !isNaN(b) ? 'Akku ' + Math.round(b) + ' %' : null,
         value: ls === 'unavailable' ? 'Offline' : wet ? 'Wasser erkannt!' : 'Trocken',
-        valueTone: wet ? 'bad' : (!isNaN(b) && b <= 20 ? 'warn' : null), entity: c.leakBat || c.leak });
+        valueTone: wet ? 'bad' : (!isNaN(b) ? (window.casoraBattery ? window.casoraBattery.tone((window.casoraBattery ? window.casoraBattery.level(b) : (b) <= 10 ? 'crit' : (b) <= 20 ? 'low' : 'ok')) : null) : null), entity: c.leakBat || c.leak });
     }
     if (c.tempBat && states[c.tempBat]) {
       const b = parseFloat(states[c.tempBat].state);
       rows.push({ icon: 'mdi:thermometer', iconTone: 'accent', label: 'Temperaturfühler',
-        value: isNaN(b) ? '—' : 'Akku ' + Math.round(b) + ' %', valueTone: !isNaN(b) && b <= 20 ? 'warn' : null, entity: c.tempBat });
+        value: isNaN(b) ? '—' : 'Akku ' + Math.round(b) + ' %', valueTone: !isNaN(b) ? (window.casoraBattery ? window.casoraBattery.tone((window.casoraBattery ? window.casoraBattery.level(b) : (b) <= 10 ? 'crit' : (b) <= 20 ? 'low' : 'ok')) : null) : null, entity: c.tempBat });
     }
     return rows.length ? window._casoraAqWrap(window._casoraUI.group(rows, 'Sensoren').replace(/data-casora-mi="/g, 'data-hp-metric="')) : '';
   ]]]`);
@@ -650,10 +652,12 @@
     [[c.leakBat, 'Akku Lecksensor'], [c.tempBat, 'Akku Temperaturfühler']].forEach((x) => {
       if (!x[0] || !states[x[0]]) return;
       const b = parseFloat(states[x[0]].state);
-      rows.push({ icon: 'mdi:battery-outline', iconTone: !isNaN(b) && b <= 20 ? 'warn' : 'good', label: x[1],
-        value: isNaN(b) ? '—' : Math.round(b) + ' %', valueTone: !isNaN(b) && b <= 20 ? 'warn' : null, entity: x[0] });
+      const lv = isNaN(b) ? 'unknown' : (window.casoraBattery ? window.casoraBattery.level(b) : (b) <= 10 ? 'crit' : (b) <= 20 ? 'low' : 'ok');
+      const tn = (window.casoraBattery ? window.casoraBattery.tone(lv) : null);
+      rows.push({ icon: window.casoraBattery ? window.casoraBattery.icon(lv, isNaN(b) ? null : b) : 'mdi:battery-outline', iconTone: tn || 'good', label: x[1],
+        value: isNaN(b) ? '—' : Math.round(b) + ' %', valueTone: tn, entity: x[0] });
     });
-    return rows.length ? window._casoraAqWrap(window._casoraUI.group(rows, 'Fühler').replace(/data-casora-mi="/g, 'data-hp-metric="')) : '';`);
+    return rows.length ? window._casoraAqWrap(window._casoraUI.group(rows, 'Sensoren').replace(/data-casora-mi="/g, 'data-hp-metric="')) : '';`);
     /* Jeder Teil läuft als eigene Funktion; H.more fasst sie zusammen. */
     f2.more = HH.moreCard(watch, 'const __p = [' + parts.map((p) => '(() => {' + p + '\n})()').join(',\n') + '];\n'
       + 'return window._casoraHH ? window._casoraHH.more("aquarium", __p) : "";', cfg.temp);
@@ -3427,8 +3431,10 @@
           value: dead0 ? 'Offline' : po0 ? 'An' : 'Aus', valueTone: dead0 || !po0 ? 'bad' : null,
           svc: dead0 ? null : { domain: 'switch', service: po0 ? 'turn_off' : 'turn_on', target: { entity_id: c.plug } }, confirm: po0 ? 'Ausschalten' : null }], 'Strom');
       }
-      if (bat != null) rb.push({ icon: on(c.charging) ? 'mdi:battery-charging' : 'mdi:battery', iconTone: bat < 20 ? 'bad' : 'good', label: 'Akku',
-        sub: on(c.charging) ? 'Lädt' : null, value: Math.round(bat) + ' %', bar: bat / 100, barTone: bat < 20 ? 'bad' : 'good', entity: c.battery });
+      // Akku-Stufen (casoraBattery): ≤ 10 % rot, ≤ 20 % orange – auch beim Laden bleibt der Balken ehrlich.
+      var blv = (window.casoraBattery ? window.casoraBattery.level(bat) : (bat) <= 10 ? 'crit' : (bat) <= 20 ? 'low' : 'ok'), btn = (window.casoraBattery ? window.casoraBattery.tone(blv) : null);
+      if (bat != null) rb.push({ icon: on(c.charging) ? 'mdi:battery-charging' : 'mdi:battery', iconTone: btn || 'good', label: 'Akku',
+        sub: on(c.charging) ? 'Lädt' : null, value: Math.round(bat) + ' %', valueTone: btn, bar: bat / 100, barTone: btn || 'good', entity: c.battery });
       var sw = c.plug && states[c.plug];
       if (sw) {
         var po = sw.state === 'on', dead = sw.state === 'unavailable';
@@ -3674,48 +3680,13 @@
 })();
 
 
-// ── Benachrichtigungen: Saugroboter + Zeilenumbruch (23.09.2026) ─────────────
-// 1) Casora meldet „… hat fertig gereinigt“ bei jedem Andocken nach „cleaning“ – also auch bei
-//    jeder Zwischen-Moppwäsche. Stattdessen zählt nur das echte Reinigungsende
-//    (sensor.*_letztes_reinigungsende springt dann auf einen neuen Zeitpunkt).
-// 2) Titel in der Glocke dürfen zwei Zeilen haben statt mit „…“ abgeschnitten zu werden.
+// ── Benachrichtigungen: Zeilenumbruch (23.09.2026) ───────────────────────────────
+// Titel in der Glocke dürfen zwei Zeilen haben statt mit „…“ abgeschnitten zu werden.
+// Ob ein Saugroboter fertig ist oder nur zwischendurch an der Station steht, entscheidet seit
+// 1.0.7 die Glocke selbst für alle Hersteller (vacuumRuns in casora-core.js).
 (function () {
   if (window._casoraNotifyVac) return;
   window._casoraNotifyVac = true;
-  var NAME = 'Saugroboter';
-  var endSensors = function (hass) {
-    return Object.keys(hass.states).filter(function (id) { return /^sensor\.\w*_letztes_reinigungsende$/.test(id); });
-  };
-  var ext = {
-    watch: function (hass) { return endSensors(hass); },
-    describe: function (entry, st, prev) {
-      var id = entry.entity_id || '';
-      var s = String(entry.state == null ? '' : entry.state);
-      if (id.indexOf('vacuum.') === 0) {
-        // Andocken allein ist kein Ende – aber nur, wenn es einen Ende-Sensor gibt (Roborock).
-        // Andere Sauger (z. B. Dreame) fallen auf die Standardlogik zurück (cleaning → docked).
-        var base = id.replace(/^vacuum\./, '');
-        var hass = (document.querySelector('home-assistant') || {}).hass;
-        var hasEnd = hass && endSensors(hass).some(function (e) { return e.indexOf(base) !== -1; });
-        if ((s === 'docked' || s === 'idle') && hasEnd) return null;
-        if (s === 'docked' || s === 'idle') return undefined;
-        if (s === 'error') return { label: NAME + ' braucht Aufmerksamkeit', icon: 'vacuum', tone: 'bad' };
-        return null;
-      }
-      if (/^sensor\.\w*_letztes_reinigungsende$/.test(id)) {
-        // Ohne Vorzustand (erster Wechsel im Zeitfenster, 1.0.5) zählt der Wechsel trotzdem: ob das
-        // Ende neu ist, sagt der Abgleich mit der Logbuch-Zeit unten. Vorher verschwand die Zeile,
-        // sobald der vorige Wechsel aus dem Fenster fiel.
-        if (prev === s || prev === 'unknown' || prev === 'unavailable' || s === 'unknown' || s === 'unavailable') return null;
-        var tEnd = new Date(s).getTime(), tPrev = prev ? new Date(prev).getTime() : NaN, tNow = Number(entry.when) * 1000;
-        if (isNaN(tEnd) || (!isNaN(tPrev) && tEnd <= tPrev)) return null;     // alter Wert nach Neustart/Reconnect
-        if (!isFinite(tNow) || Math.abs(tNow - tEnd) > 30 * 60000) return null;  // Ende muss zum Eintrag passen
-        return { label: NAME + ' hat fertig gereinigt', icon: 'vacuum-charge', tone: 'good', done: true };
-      }
-      return undefined;
-    },
-  };
-  window.CASORA_NOTIFY_EXTENSIONS = [ext].concat(window.CASORA_NOTIFY_EXTENSIONS || []);
 
   var css = document.createElement('style');
   css.id = 'casora-notify-wrap';

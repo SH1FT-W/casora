@@ -9,6 +9,92 @@
   (document.head || document.documentElement).appendChild(l);
 })();
 
+// casora-battery:start
+// Akku-Stufen (05.10.2026): eine Regel für Kachel, Popup, Glocke, Unter-Symbol, Schloss,
+// Aquarium, Saugroboter und Thermostat. Stufen: ok | low (Schwach) | crit (Fast leer)
+// | charging (Lädt) | unknown. Schwellen: Schwach ≤ LOW (Benachrichtigungs-Schwelle,
+// Standard 20 %), Fast leer ≤ CRIT (10 %). Binärsensoren (battery, battery_low): on = Schwach.
+// Textzustände einiger Integrationen: low = Schwach, critical/empty = Fast leer, sonst OK.
+(function () {
+  if (window.casoraBattery) return;
+  var num = function (v) { var n = parseFloat(v); return isFinite(n) ? n : null; };
+  var B = {
+    get LOW() { var n = Number(window.CASORA_NOTIFY_BATTERY); return isFinite(n) && n > 0 ? n : 20; },
+    get CRIT() { return Math.min(10, B.LOW); },
+    WORD: { ok: 'OK', low: 'Schwach', crit: 'Fast leer', charging: 'Lädt', unknown: 'Unbekannt' },
+    // Farbe der Stufe: OK bleibt ruhig (kein Akzent), nur Schwach/Fast leer färben.
+    TONE: { ok: null, low: 'warn', crit: 'bad', charging: 'var(--casora-ton-ink, #94603B)', unknown: null },
+    COLOR: {
+      ok: 'var(--casora-battery-ok, var(--casora-color-green, #6AAE78))',
+      low: 'var(--casora-battery-low, var(--casora-color-orange, #DE8A4E))',
+      crit: 'var(--casora-battery-crit, var(--casora-color-red, #D35A4E))',
+      charging: 'var(--casora-battery-charging, var(--casora-ton-ink, #94603B))',
+      unknown: 'var(--casora-text-3, rgba(128,128,128,0.6))',
+    },
+    pct: function (st) {
+      if (st == null) return null;
+      if (typeof st === 'number') return isFinite(st) ? st : null;
+      if (typeof st === 'string') return num(st);
+      return String(st.entity_id || '').indexOf('binary_sensor.') === 0 ? null : num(st.state);
+    },
+    // level(Zustand | Zahl, {charging, low}) – low überschreibt die Schwelle (z. B. Kartenvariable).
+    level: function (st, o) {
+      o = o || {};
+      if (o.charging) return 'charging';
+      var low = isFinite(Number(o.low)) && o.low !== null && o.low !== '' ? Number(o.low) : B.LOW;
+      var crit = Math.min(B.CRIT, low);
+      var n = B.pct(st);
+      if (n != null) return n <= crit ? 'crit' : n <= low ? 'low' : 'ok';
+      var raw = String(st && typeof st === 'object' ? st.state : st || '').trim().toLowerCase();
+      var bin = st && typeof st === 'object' && String(st.entity_id || '').indexOf('binary_sensor.') === 0;
+      if (bin) return raw === 'on' ? 'low' : raw === 'off' ? 'ok' : 'unknown';
+      if (raw === 'critical' || raw === 'empty') return 'crit';
+      if (raw === 'low') return 'low';
+      if (raw === 'charging') return 'charging';
+      if (raw === 'normal' || raw === 'high' || raw === 'medium' || raw === 'full' || raw === 'ok') return 'ok';
+      return 'unknown';
+    },
+    word: function (lv) { return B.WORD[lv] || B.WORD.unknown; },
+    tone: function (lv) { return B.TONE[lv] === undefined ? null : B.TONE[lv]; },
+    color: function (lv) { return B.COLOR[lv] || B.COLOR.unknown; },
+    // „Akku 45 %“ bzw. das Stufenwort, wenn es keine Zahl gibt.
+    text: function (st, o) {
+      var n = B.pct(st);
+      return n != null ? Math.round(n) + ' %' : B.word(B.level(st, o));
+    },
+    icon: function (lv, n) {
+      if (lv === 'charging') return 'mdi:battery-charging';
+      if (lv === 'crit') return 'mdi:battery-alert-variant-outline';
+      if (lv === 'low') return 'mdi:battery-low';
+      if (n == null) return 'mdi:battery';
+      return n >= 95 ? 'mdi:battery' : 'mdi:battery-' + Math.max(10, Math.round(n / 10) * 10);
+    },
+    // Alle Akkus der Batterien-Kachel/-Popups (gleiche Auswahl wie bisher: persönliche Geräte
+    // und der Solarspeicher bleiben draußen, eine Kartenliste hat Vorrang). → {all, low, crit, min}
+    scan: function (states, vars, hass) {
+      var S = states || {};
+      var v = vars || {};
+      var PERSONAL = /iphone|ipad|\bwatch\b|ebike|e-bike|drive_unit|performance_line/i;
+      var dcOf = function (e) { return e && e.attributes && e.attributes.device_class; };
+      var given = v.batteries || v.entity_filter;
+      var list = Array.isArray(given) && given.some(function (id) { return dcOf(S[id]) === 'battery'; }) ? given : null;
+      var ex = window.casoraDevice && hass ? window.casoraDevice.byKey(hass, 'anker_solix', 'state_of_charge', 'sensor') : null;
+      var all = (list ? list.map(function (id) { return S[id]; }).filter(Boolean)
+        : Object.keys(S).map(function (id) { return S[id]; }).filter(function (e) {
+          return e.entity_id !== ex && !PERSONAL.test(e.entity_id + ' ' + ((e.attributes || {}).friendly_name || ''));
+        })).filter(function (e) {
+        return dcOf(e) === 'battery' && e.state !== 'unavailable' && e.state !== 'unknown' && num(e.state) != null;
+      });
+      var low = all.filter(function (e) { return B.level(e) !== 'ok'; });
+      var crit = low.filter(function (e) { return B.level(e) === 'crit'; });
+      var min = all.reduce(function (m, e) { return !m || num(e.state) < num(m.state) ? e : m; }, null);
+      return { all: all, low: low, crit: crit, min: min, worst: crit.length ? 'crit' : low.length ? 'low' : 'ok' };
+    },
+  };
+  window.casoraBattery = B;
+})();
+// casora-battery:end
+
 // casora-room-name:start
 // Name der Übersicht (04.10.2026): Übersetzt wird nur ein Name, den Casora selbst angelegt hat
 // (variables.casora_auto_name, z. B. 'home') und der noch unverändert ist ('Home'/'Zuhause'/leer).
@@ -1413,7 +1499,16 @@ window.casoraMenuGlass = {
   }
   // casora-paused-since:end
 
-  if (typeof window._casoraNPSources !== 'function') {
+  // Die Handy-Vorlage (casora_mobile_now_playing, casora_np_init) bringt Ersatzfassungen von
+  // _casoraNPSources/_casoraNPView/_casoraNP/_casoraNPPlan mit, falls dieses Skript fehlt. Rendert
+  // sie vor diesem Skript, setzte sich bisher IHRE ältere Fassung durch (eine Merkliste für alle
+  // Karten, keine Pausen-Frist, kein Ausblenden; 05.10.2026 am Handy gesehen). Die Fassungen hier
+  // sind die gültigen: eine Ersatzfassung wird ersetzt, die eigene (Merker _casoraCore) bleibt.
+  window._casoraNPOwn = function (n) { const f = window[n]; return typeof f !== 'function' || !f._casoraCore; };
+  const npFallbackSeen = ['_casoraNPSources', '_casoraNPView', '_casoraNP', '_casoraNPPlan']
+    .some((n) => typeof window[n] === 'function' && !window[n]._casoraCore);
+
+  if (window._casoraNPOwn('_casoraNPSources')) {
     window._casoraNPSources = function (states, V) {
       const norm = (x) => String(x ?? '').trim();
       const low  = (x) => norm(x).toLowerCase();
@@ -1509,6 +1604,8 @@ window.casoraMenuGlass = {
           entity: eid,
           art: art,
           title: title || norm(a.friendly_name) || 'Medien',
+          // Echter Medientitel (ohne Ersatz durch den Gerätenamen) – Weich gruppiert danach.
+          mtitle: title,
           subtitle: artist,
           source: norm(a.app_name || a.source || a.friendly_name),
           started: ms(s.last_changed),
@@ -1666,6 +1763,7 @@ window.casoraMenuGlass = {
       }
       return out;
     };
+    window._casoraNPSources._casoraCore = true;
   }
 
   if (typeof window._casoraNPCfgKey !== 'function') {
@@ -1689,7 +1787,7 @@ window.casoraMenuGlass = {
     };
   }
 
-  if (typeof window._casoraNPView !== 'function') {
+  if (window._casoraNPOwn('_casoraNPView')) {
     window._casoraNPView = function (states, V) {
       const live = window._casoraNP(states, V);
       const st = window._casoraNPStore(V, 'hold');
@@ -1701,10 +1799,11 @@ window.casoraMenuGlass = {
       }
       return live;
     };
+    window._casoraNPView._casoraCore = true;
   }
 
   // Memoised per render pass - avoids re-running the sweep for every consumer.
-  if (typeof window._casoraNP !== 'function') {
+  if (window._casoraNPOwn('_casoraNP')) {
     window._casoraNP = function (states, V) {
       const artSig = (u) => {
         const t = String(u || '');
@@ -1716,12 +1815,17 @@ window.casoraMenuGlass = {
         return t.slice(0, q) + (rest ? '?' + rest : '');
       };
       const parts = [];
+      // Echter Pausen-Beginn (sensor.casora_media_paused): verschiebt die Ausblende-Frist, gehört
+      // also in die Signatur – und wird so auch von button-card mitverfolgt.
+      const pausedMap = states['sensor.casora_media_paused']?.attributes?.players || null;
+      parts.push('pt:' + String(V.pause_timeout_minutes ?? ''));
       for (let i = 1; i <= 10; i++) {
         const e = V['show_media_player_' + i] && V['media_player_' + i];
         if (e) {
           const s = states[e]; const a = s?.attributes || {};
-          parts.push(e + s?.state + (a.media_title || '') +
-            (a.media_position_updated_at || '') +
+          const ps = pausedMap && pausedMap[e];
+          parts.push(e + s?.state + (a.media_title || '') + '\u0001' + (a.media_artist || a.artist || '') +
+            (a.media_position_updated_at || '') + (ps ? '\u0001' + (ps.since || '') + (ps.title ?? '') : '') +
             artSig(a.entity_picture || a.media_image_url || a.media_album_cover_url || a.image_url));
         }
       }
@@ -1759,12 +1863,132 @@ window.casoraMenuGlass = {
       parts.push('pin:' + String(V.pinned_key || ''));
       const sig = parts.join('|');
       const c = window._casoraNPStore(V, 'memo');
-      if (c.sig === sig) return c.list;
-      c.sig = sig;
-      c.list = window._casoraNPSources(states, V);
-      return c.list;
+      // Die Liste hängt auch von der Uhr ab: ein pausierter Player fällt nach der Frist heraus,
+      // ohne dass sich ein Zustand ändert. Früher hielt der Memo ihn dann bis zur nächsten
+      // Zustandsänderung fest (05.10.2026: beendete Player blieben stehen) – jetzt verfällt
+      // der Memo zur Frist, und ein Wecker lässt die Karten genau dann neu rechnen.
+      if (c.sig !== sig || (c.until && Date.now() >= c.until)) {
+        c.sig = sig;
+        c.list = window._casoraNPSources(states, V);
+        c.until = 0;
+        c.list.forEach((r) => { if (r && r.pauseUntil > 0 && (!c.until || r.pauseUntil < c.until)) c.until = r.pauseUntil; });
+        if (c.until && typeof window._casoraNPArm === 'function') window._casoraNPArm(c.until);
+        c.vis = null;
+      }
+      // Weich: auf diesem Gerät ausgeblendete Wiedergaben weglassen – für jede Ansicht gleich
+      // (Welle und ihre Sichtbarkeit, Menü, Handy-Liste, Raum-Zeile).
+      const H = window._casoraNPHidden;
+      if (!H || !(typeof window._casoraSoft === 'function' && window._casoraSoft())) return c.list;
+      const vk = H.ver();
+      if (c.vis && c.visKey === vk) return c.vis;
+      c.vis = H.filter(c.list, V);
+      c.visKey = H.ver();
+      return c.vis;
+    };
+    window._casoraNP._casoraCore = true;
+  }
+
+  // casora-np-hidden:start
+  // Weich (05.10.2026): Wiedergaben „ausblenden“ – nur auf diesem Gerät (localStorage), je Player
+  // mit dem Titel, der gerade lief. Spielt der Player etwas anderes oder endet die Wiedergabe
+  // (fällt aus der Liste), gilt der Eintrag nicht mehr. Ereignis „casora-np-changed“ an window:
+  // die Ansichten rechnen neu (auch, wenn eine Pausen-Frist abläuft – _casoraNPArm).
+  if (typeof window._casoraNPHidden !== 'object' || !window._casoraNPHidden) {
+    const KEY = 'casora.np.hidden';
+    const DAY = 86400000;
+    let map = null, ver = 0;
+    const load = () => {
+      if (map) return map;
+      map = {};
+      try {
+        const raw = JSON.parse(window.localStorage.getItem(KEY) || '{}');
+        if (raw && typeof raw === 'object') map = raw;
+      } catch (e) { map = {}; }
+      return map;
+    };
+    const save = () => {
+      ver++;
+      try {
+        if (Object.keys(map).length) window.localStorage.setItem(KEY, JSON.stringify(map));
+        else window.localStorage.removeItem(KEY);
+      } catch (e) { /* privates Fenster: gilt bis zum Neuladen */ }
+    };
+    // Was „dieselbe Wiedergabe“ ist: Titel und Interpret.
+    const what = (r) => String((r && r.title) || '').trim().toLowerCase() + '\u0001'
+      + String((r && r.subtitle) || '').trim().toLowerCase();
+    const ident = (r) => String((r && (r.entity || r.key)) || '');
+    // Entitäten, die diese Einstellung überhaupt liefern kann: nur für die darf ein fehlender
+    // Eintrag „Wiedergabe beendet“ heißen (andere Karten haben andere Player).
+    const scope = (V) => {
+      const s = new Set();
+      if (!V) return s;
+      for (let i = 1; i <= 10; i++) if (V['show_media_player_' + i] && V['media_player_' + i]) s.add(V['media_player_' + i]);
+      for (let i = 1; i <= 2; i++) if (V['show_psn_' + i] && V['psn_' + i]) s.add(V['psn_' + i]);
+      if (V.show_discord) [V.discord_image, V.discord_game, V.discord_user].forEach((x) => { if (x) s.add(x); });
+      if (V.show_steam) [V.steam_image, V.steam_game, V.steam_account].forEach((x) => { if (x) s.add(x); });
+      return s;
+    };
+    window._casoraNPHidden = {
+      ver: () => ver,
+      // list ohne Ausgeblendetes; räumt dabei Einträge ab, deren Wiedergabe vorbei ist.
+      filter(list, V) {
+        const m = load();
+        const ids = Object.keys(m);
+        if (!ids.length) return list;
+        const now = Date.now();
+        const inScope = scope(V);
+        let dirty = false;
+        const out = [];
+        const seen = new Set();
+        (list || []).forEach((r) => {
+          const id = ident(r);
+          const h = m[id];
+          if (!h) { out.push(r); return; }
+          seen.add(id);
+          if (h.w !== what(r)) { delete m[id]; dirty = true; out.push(r); return; }
+        });
+        ids.forEach((id) => {
+          const h = m[id];
+          if (!h) return;
+          if ((inScope.has(id) && !seen.has(id)) || !(now - (h.at || 0) < 7 * DAY)) { delete m[id]; dirty = true; }
+        });
+        if (dirty) save();
+        return out;
+      },
+      // recs: Einträge aus _casoraNP (bei einer Gruppe alle Player der Gruppe).
+      hide(recs) {
+        const m = load();
+        [].concat(recs || []).forEach((r) => { const id = ident(r); if (id) m[id] = { w: what(r), at: Date.now() }; });
+        save();
+        window._casoraNPChanged && window._casoraNPChanged('hide');
+      },
+      clear() { load(); map = {}; save(); window._casoraNPChanged && window._casoraNPChanged('hide'); },
+      _reset() { map = null; ver++; },
     };
   }
+
+  if (typeof window._casoraNPChanged !== 'function') {
+    window._casoraNPChanged = function (why) {
+      try { window.dispatchEvent(new CustomEvent('casora-np-changed', { detail: { why: why || '' } })); } catch (e) { /* egal */ }
+    };
+  }
+
+  // Ein Wecker für die früheste Pausen-Frist: dann rechnen alle Wiedergabe-Ansichten neu.
+  if (typeof window._casoraNPArm !== 'function') {
+    const A = { at: 0, id: 0 };
+    window._casoraNPArm = function (t) {
+      const now = Date.now();
+      if (!(t > now - 1000)) return;
+      if (A.id && A.at && A.at <= t) return;
+      if (A.id) clearTimeout(A.id);
+      A.at = t;
+      A.id = setTimeout(() => { A.id = 0; A.at = 0; window._casoraNPChanged('expire'); }, Math.max(50, t - now + 250));
+    };
+  }
+  // casora-np-hidden:end
+
+  // Ersatzfassungen der Handy-Vorlage abgelöst: Karten, die schon damit gerechnet haben, neu rechnen.
+  if (npFallbackSeen) setTimeout(() => window._casoraNPChanged('core'), 0);
 
 
 
@@ -1940,7 +2164,7 @@ window.casoraMenuGlass = {
     }
 
 
-    if (typeof window._casoraNPPlan !== 'function') {
+    if (window._casoraNPOwn('_casoraNPPlan')) {
       window._casoraNPPlan = function (states, V) {
         const EXIT_MS = 480;
         // Cap on waiting for artwork before opening an arrival anyway.
@@ -2101,6 +2325,7 @@ window.casoraMenuGlass = {
         live.forEach((r) => { if (r && r.key) byKey[r.key] = r; });
         return S.slotKeys.map((k) => (k ? (byKey[k] || S.exitSrc[k] || null) : null));
       };
+      window._casoraNPPlan._casoraCore = true;
     }
 
 
@@ -3979,7 +4204,9 @@ window.casoraMenuGlass = {
     }
     :host([more-below]) .more { opacity: 1; }
     .content .container {
-      padding: 8px 8px 20px 8px;
+      /* Unten Luft bis zur Sheet-Kante, damit die letzte Zeile (samt Schatten) beim
+         Ende des Scrollens nicht an der Kante klebt (Weich-Audit M3: 36px). */
+      padding: 8px 8px var(--casora-popup-content-pad-bottom, 20px) 8px;
       -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
       outline: none !important;
     }
@@ -4229,10 +4456,15 @@ window.casoraMenuGlass = {
       :host([soft]) { --casora-soft-sheet-gap: var(--casora-soft-sheet-top, 44px); }
       :host([soft]) .surface {
         border-radius: var(--casora-soft-sheet-radius, 32px) var(--casora-soft-sheet-radius, 32px) 0 0;
-        height: min(var(--casora-sheet-height, 100dvh), calc(100dvh - env(safe-area-inset-top, 0px) - var(--casora-soft-sheet-gap)));
-        min-height: min(var(--casora-sheet-min, 100dvh), calc(100dvh - env(safe-area-inset-top, 0px) - var(--casora-soft-sheet-gap)));
+        /* K9 (Weich-Audit): Höhe nach Inhalt, höchstens bis unter den Streifen oben. Ein Popup
+           mit festem Wunsch (--casora-sheet-height/-min) behält ihn. !important, weil viele Vorlagen
+           in ihrem Popup-CSS die volle Höhe (100svh …) für .surface setzen. */
+        height: var(--casora-sheet-height, auto) !important;
+        min-height: min(var(--casora-sheet-min, 0px), calc(100dvh - env(safe-area-inset-top, 0px) - var(--casora-soft-sheet-gap)));
         max-height: calc(100dvh - env(safe-area-inset-top, 0px) - var(--casora-soft-sheet-gap));
       }
+      /* K9: dieselben Vorlagen strecken den Inhalt per min-height (100svh …) auf volle Höhe. */
+      :host([soft]) .content .container { min-height: 0 !important; }
       /* Runde 2: Die Fläche (.glass) ist absolut positioniert und lag über dem statischen Greifer. */
       :host([soft]) .grab { padding: 8px 0 0; position: relative; z-index: 1; }
       :host([soft]) .grab span { width: 36px; height: 5px; border-radius: 3px; }
@@ -4425,6 +4657,10 @@ window.casoraMenuGlass = {
   }
   // Aus-Zustand (Heizung aus, Gerät aus, nicht erreichbar …): Sand-Ring wie „Alle aus“ im Licht-Popup.
   function ringOff(src, hass) {
+    // Sicherheits-Badges (05.10.2026): der Ring trägt immer die Stufenfarbe der Badge (Grün auch bei
+    // verriegelt/geschlossen, Orange bei offline) statt Sand – sonst zeigte das Popup eine andere Farbe.
+    if (src && src._config && /casora_badge_(security|contact_group|camera_group|lock_group)\b/.test([].concat(src._config.template || []).join(' '))
+      && window.casoraSecurityLevel) return false;
     var so = src && src._stateObj;
     var id = so && so.entity_id;
     if (!id) return false;
@@ -4542,7 +4778,15 @@ window.casoraMenuGlass = {
           if (atest(ar) && (ar.and || []).every(atest)) apick = ar;
         }
         if (!apick) apick = aspec;
-        el.textContent = apick.text != null ? apick.text : '';
+        var atxt = apick.text != null ? apick.text : '';
+        var aat = el.querySelector('.hui-at');
+        if (aat) {
+          // 1.0.5: Knopf-Variante (.hui-actx) – Text, Symbol und Vorlese-Text getrennt setzen.
+          aat.textContent = atxt;
+          var aic = el.querySelector('.hui-ab ha-icon');
+          if (aic) aic.setAttribute('icon', apick.icon || aspec.icon || '');
+          el.setAttribute('aria-label', typeof window.casoraTr === 'function' ? window.casoraTr(atxt) : atxt);
+        } else el.textContent = atxt;
         if (apick.color) el.style.color = apick.color;
         el.classList.toggle('hui-busy', !!apick.busy);
         el.style.display = apick.text === '' ? 'none' : '';
@@ -6076,7 +6320,31 @@ window.casoraMenuGlass = {
       +   '--armed-x:0px;transform:translateX(var(--armed-x));'
       +   'transition:transform .36s cubic-bezier(.36,0,.16,1);}'
       + '.hui-row.armed .hui-inner{--armed-x:calc((var(--cf-w) + 16px) * -1);}'
-      + '@media (prefers-reduced-motion:reduce){.hui-cf,.hui-inner{transition:none;}}';
+      + '@media (prefers-reduced-motion:reduce){.hui-cf,.hui-inner{transition:none;}}'
+      /* 1.0.5: Aktion/Wert mit Knopf-Symbol (actionIcon/valueIcon, z. B. Updates): am Handy runder
+         Knopf statt Text, damit Name und Unterzeile Platz haben. Desktop/Tablet zeigen den Text. */
+      + '.hui-ab{display:none;}'
+      + '@media (max-width:760px){'
+      +   '.hui-actx{padding:0!important;margin:0!important;gap:0!important;flex:none;}'
+      +   '.hui-actx .hui-at,.hui-actx.hui-busy::before{display:none!important;}'
+      +   '.hui-actx .hui-ab{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;flex:none;}'
+      +   '.hui-actx .hui-ab ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;}'
+      +   '.hui-actx.hui-busy .hui-ab ha-icon,.hui-actx .hui-ab ha-icon[icon=""]{display:none;}'
+      +   '.hui-actx.hui-busy .hui-ab::before{content:"";width:16px;height:16px;box-sizing:border-box;border-radius:50%;'
+      +     'border:2px solid currentColor;border-right-color:transparent;opacity:.8;animation:hui-busy-spin 1.1s linear infinite;}'
+      + '}'
+      + '@media (prefers-reduced-motion:reduce){.hui-actx .hui-ab::before{animation:none!important;}}';
+
+  // Inhalt einer Aktion/eines Werts mit Knopf-Symbol: Text (Desktop) + runder Knopf (Handy).
+  function actxInner(text, iconName, bg) {
+    return '<span class="hui-at">' + esc(text) + '</span>'
+      + '<span class="hui-ab" aria-hidden="true" style="background:' + bg + ';">'
+      + '<ha-icon icon="' + esc(iconName || '') + '"></ha-icon></span>';
+  }
+  function actxLabel(text) {
+    var t = (typeof window.casoraTr === 'function') ? window.casoraTr(String(text)) : String(text);
+    return ' aria-label="' + esc(t) + '"';
+  }
 
   // Zeilen als einzelne Sand-Pillen statt einer Platte mit Trennlinien. Daten-Attribute,
   // Live-Felder und Klassen (hui-row/hui-tap/hui-cf …) wie im bisherigen group().
@@ -6199,13 +6467,15 @@ window.casoraMenuGlass = {
           aLive = ' data-casora-live="act" data-casora-ent="' + esc(r.entity) + '"'
             + ' data-casora-act="' + esc(JSON.stringify(r.actionLive)) + '"';
         }
-        out += '<div' + aLive + (armOnAction ? ' data-casora-arm=""' : '') + (r.actionBusy ? ' class="hui-busy"' : '')
+        var aCls = (r.actionBusy ? 'hui-busy' : '') + (r.actionIcon ? (r.actionBusy ? ' ' : '') + 'hui-actx' : '');
+        out += '<div' + aLive + (armOnAction ? ' data-casora-arm=""' : '') + (aCls ? ' class="' + aCls + '"' : '')
+          + (r.actionIcon ? (armOnAction ? ' role="button"' : '') + actxLabel(r.action) : '')
           + ' style="font-size:14px;font-weight:700;color:'
           + (r.actionBusy ? S.sub : (tone(r.actionTone) || T.blue)) + ';white-space:nowrap;'
           + (armOnAction
               ? 'pointer-events:auto;cursor:pointer;padding:8px 10px;margin:-8px -10px;'
               : 'pointer-events:none;')
-          + '">' + esc(r.action) + '</div>';
+          + '">' + (r.actionIcon ? actxInner(r.action, r.actionIcon, S.iconOff) : esc(r.action)) + '</div>';
       }
       if (r.value != null && r.value !== '') {
         var vlive = '';
@@ -6217,10 +6487,10 @@ window.casoraMenuGlass = {
             + '" data-casora-attr="' + esc(r.liveAttr) + '"'
             + ' data-casora-suffix="' + esc(r.liveSuffix || '') + '"';
         }
-        out += '<div' + vlive + ' style="font-size:14px;font-weight:600;'
+        out += '<div' + vlive + (r.valueIcon ? ' class="hui-actx"' + actxLabel(r.value) : '') + ' style="font-size:14px;font-weight:600;'
           + 'font-variant-numeric:tabular-nums;color:' + (alertTone(r.valueTone) || T.ink2)
           + ';white-space:nowrap;pointer-events:none;">'
-          + esc(r.value) + '</div>';
+          + (r.valueIcon ? actxInner(r.value, r.valueIcon, S.iconOff) : esc(r.value)) + '</div>';
       }
       if ((r.entity || r.tappable) && (!r.svc || armOnAction)) {
         out += '<svg class="hui-chev" width="7" height="12" viewBox="0 0 7 12" aria-hidden="true">'
@@ -6399,14 +6669,16 @@ window.casoraMenuGlass = {
           aLive = ' data-casora-live="act" data-casora-ent="' + esc(r.entity) + '"'
             + ' data-casora-act="' + esc(JSON.stringify(r.actionLive)) + '"';
         }
-        out += '<div' + aLive + (armOnAction ? ' data-casora-arm=""' : '') + (r.actionBusy ? ' class="hui-busy"' : '')
+        var aCls = (r.actionBusy ? 'hui-busy' : '') + (r.actionIcon ? (r.actionBusy ? ' ' : '') + 'hui-actx' : '');
+        out += '<div' + aLive + (armOnAction ? ' data-casora-arm=""' : '') + (aCls ? ' class="' + aCls + '"' : '')
+          + (r.actionIcon ? (armOnAction ? ' role="button"' : '') + actxLabel(r.action) : '')
           + ' style="font-size:var(--casora-popup-row-action-size, 16px);'
           + 'font-weight:500;color:'
           + (r.actionBusy ? T.ink2 : (tone(r.actionTone) || T.blue)) + ';white-space:nowrap;'
           + (armOnAction
               ? 'pointer-events:auto;cursor:pointer;padding:8px 10px;margin:-8px -10px;'
               : 'pointer-events:none;')
-          + '">' + esc(r.action) + '</div>';
+          + '">' + (r.actionIcon ? actxInner(r.action, r.actionIcon, T.fill2) : esc(r.action)) + '</div>';
       }
       if (r.value != null && r.value !== '') {
         var vlive = '';
@@ -6418,12 +6690,12 @@ window.casoraMenuGlass = {
             + '" data-casora-attr="' + esc(r.liveAttr) + '"'
             + ' data-casora-suffix="' + esc(r.liveSuffix || '') + '"';
         }
-        out += '<div' + vlive + ' style="font-size:var(--casora-popup-row-value-size, 17px);'
+        out += '<div' + vlive + (r.valueIcon ? ' class="hui-actx"' + actxLabel(r.value) : '') + ' style="font-size:var(--casora-popup-row-value-size, 17px);'
           + 'letter-spacing:-0.022em;color:'
           + (tone(r.valueTone) || T.ink2)
           + ';margin-inline-start:var(--casora-popup-value-gap, 0px)'
           + ';white-space:nowrap;pointer-events:none;">'
-          + esc(r.value) + '</div>';
+          + (r.valueIcon ? actxInner(r.value, r.valueIcon, T.fill2) : esc(r.value)) + '</div>';
       }
       if ((r.entity || r.tappable) && (!r.svc || armOnAction)) {
         out += '<svg class="hui-chev" width="7" height="12" viewBox="0 0 7 12" aria-hidden="true">'
@@ -7381,11 +7653,13 @@ window.casoraMenuGlass = {
 
   var COVER_KINDS = {
     curtain: { key: 'curtain', label: 'Vorhänge',     open: 'curtain-open',         closed: 'curtain-closed' },
-    blind:   { key: 'blind',   label: 'Jalousien',    open: 'blinds-vertical-open', closed: 'blinds-vertical-closed' },
+    // Jalousien mit denselben Lamellen-Symbolen wie die Kachel (cover_open/cover_closed) – vorher
+    // zeigte ein Popup Lamellen im Kopf, Vorhang am Regler und Fenster in den Zeilen (Audit M2).
+    blind:   { key: 'blind',   label: 'Jalousien',    open: 'cover_open',           closed: 'cover_closed' },
     shade:   { key: 'shade',   label: 'Rollos',       open: 'roller-shade-open',    closed: 'roller-shade-closed' },
     shutter: { key: 'shutter', label: 'Fensterläden', open: 'window-shade-open',    closed: 'window-shade-closed' },
     awning:  { key: 'awning',  label: 'Markisen',     open: 'window-shade-open',    closed: 'window-shade-closed' },
-    window:  { key: 'window',  label: 'Fenster',      open: 'window-shade-open',    closed: 'window-shade-closed' },
+    window:  { key: 'window',  label: 'Jalousien',    open: 'cover_open',           closed: 'cover_closed' },
     door:    { key: 'door',    label: 'Türen',        open: 'door-open',            closed: 'door-closed' },
     garage:  { key: 'garage',  label: 'Garage',       open: 'door-open',            closed: 'door-closed' },
     gate:    { key: 'gate',    label: 'Tore',         open: 'door-open',            closed: 'door-closed' },
@@ -7399,7 +7673,8 @@ window.casoraMenuGlass = {
     for (var i = 0; i < keys.length; i++) {
       if (n.indexOf(keys[i]) !== -1) return COVER_KINDS[keys[i]];
     }
-    return COVER_KINDS.curtain;
+    // Ohne Geräteklasse und ohne Hinweis im Namen: Jalousie wie die Kachel (vorher Vorhang).
+    return COVER_KINDS.blind;
   };
 
 
@@ -7536,6 +7811,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   if (dom === 'alarm_control_panel') {
     var MODE = { armed_home: 'shield_check', armed_away: 'shield_lock', armed_night: 'shield_moon',
       armed_vacation: 'shield_vacation', armed_custom_bypass: 'shield_bypass' };
+    /* Weich (05.10.2026): unscharf = durchgestrichenes Schild wie die Alarm-Kachel. */
+    if (st === 'disarmed' && window._casoraSoft && window._casoraSoft()) return 'shield_off';
     return MODE[st] || ((st === 'disarmed' || st === 'triggered') ? 'shield_alarm' : 'shield_check');
   }
   if (dom === 'binary_sensor' || dom === 'cover') {
@@ -7703,6 +7980,142 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var VACUUM_BUSY = { cleaning: 1, returning: 1 };
   var VACUUM_DONE = { docked: 1, idle: 1 };
 
+  // ── Saugroboter: Zwischenstopp oder fertig? (1.0.7) ───────────────────────────────────────
+  // Viele Sauger fahren mitten in der Reinigung zur Station (Mopp waschen, absaugen, laden) und
+  // melden dabei „docked“. Früher war jedes Andocken nach „cleaning“ ein „fertig“. Jetzt gilt für
+  // alle Hersteller dieselbe Regel, live wie beim Rückbau aus dem Logbuch:
+  //   1. Verrät die Integration einen Zwischenstopp (Status „washing_the_mop“, „emptying“,
+  //      „drying“, „charging“ bei Fortschritt unter 100 % …), ist das kein Ende, sondern eine
+  //      laufende Zeile „Pause · wäscht Mopp“.
+  //   2. Eindeutiges Ende (Fortschritt 100 % aus dieser Reinigung, „Letztes Reinigungsende“ nach
+  //      dem Beginn, Status „completed/finished“) zählt sofort.
+  //   3. Sonst ist der Sauger erst nach VAC_QUIET_MS Ruhe an der Station fertig. Fährt er vorher
+  //      wieder los, bleibt es dieselbe Reinigung. Meldezeit ist das Andocken.
+  var VAC_QUIET_MS = 10 * 60 * 1000;
+  // Ein Zwischenstopp hält höchstens so lange, danach gilt die Ruhe-Regel (Status hängt fest).
+  var VAC_PAUSE_MAX_MS = 3 * 3600 * 1000;
+  var VAC_PAUSE_KEY = 'casora_notify_vacpause_v1';
+  var VAC_FINISHED = /^(complete|completed|finished|done|task_complete|clean(ing)?_(complete|completed|finished|done))$/;
+
+  function vacNorm(x) {
+    return String(x == null ? '' : x).trim().toLowerCase().replace(/[\s-]+/g, '_');
+  }
+
+  // Grund des Zwischenstopps aus einem Status-Text oder null. charging nur mit Fortschritt < 100.
+  function vacPauseWord(s, partial) {
+    if (!s || VAC_FINISHED.test(s)) return null;
+    if (/wash|mop_?clean|self_?clean/.test(s)) return 'wäscht Mopp';
+    if (/empt|evacuat|dust_?collect|collecting_dust/.test(s)) return 'saugt ab';
+    if (/dry/.test(s)) return 'trocknet';
+    if (/charg/.test(s) && !/complete|problem|error|disconnect/.test(s)) return partial ? 'lädt' : null;
+    if (/^(returning|going|back)_to_(dock_)?(wash|empty|base)|remote|manual|^(cleaning|spot|zoned|segment|room|mopping|sweeping|vacuuming)/.test(s)) return 'an der Station';
+    return null;
+  }
+
+  // Zugehörige Sensoren: Saugroboter-Popup (translation_keys, Station als Geschwister-Gerät),
+  // sonst gleiches Gerät oder gleicher Entitäts-Präfix.
+  function vacSide(hass, id) {
+    var S = hass.states || {};
+    var out = { status: null, progress: null, lastEnd: null };
+    try {
+      var VC = window._casoraVac;
+      if (VC && VC.resolve && S[id]) {
+        var c = VC.resolve(S[id], {}, S, hass);
+        out.status = c.status || null; out.progress = c.progress || null; out.lastEnd = c.lastEnd || null;
+      }
+    } catch (e) { /* Rückfall unten */ }
+    if (out.status && out.progress && out.lastEnd) return out;
+    var reg = hass.entities || {};
+    var dev = reg[id] && reg[id].device_id;
+    var base = id.replace(/^vacuum\./, '');
+    var mine = Object.keys(S).filter(function (e) {
+      if (e.indexOf('sensor.') !== 0) return false;
+      if (dev && reg[e] && reg[e].device_id === dev) return true;
+      return e.indexOf('sensor.' + base + '_') === 0;
+    });
+    var pick = function (re, test) {
+      return mine.filter(function (e) {
+        var r = reg[e] || {};
+        return re.test(e + ' ' + (r.translation_key || '')) && (!test || test(S[e]));
+      })[0] || null;
+    };
+    var isTime = function (st) { return isFinite(Date.parse(st && st.state)); };
+    var isNum = function (st) { return st && isFinite(parseFloat(st.state)); };
+    out.lastEnd = out.lastEnd || pick(/last_clean(ing)?_end|clean(ing)?_end_time|letztes_reinigungsende/, isTime);
+    out.progress = out.progress || pick(/clean_percent|clean(ing)?_progress|progress|fortschritt/, isNum);
+    out.status = out.status || pick(/(^|_)(status|state|task_status|zustand)(\s|$)|_status\s/, function (st) {
+      return st && !isNum(st) && !isTime(st);
+    });
+    return out;
+  }
+
+  function vacPauseMemo() {
+    try {
+      var v = JSON.parse(localStorage.getItem(VAC_PAUSE_KEY) || '{}');
+      return v && typeof v === 'object' ? v : {};
+    } catch (e) { return {}; }
+  }
+
+  // Zustand jetzt: { done, pause, word, partial }.
+  function vacNow(hass, id, start) {
+    var S = hass.states || {};
+    var side = vacSide(hass, id);
+    var st = S[id] || {};
+    var a = st.attributes || {};
+    var fresh = function (e) {
+      var t = Date.parse((S[e] || {}).last_changed || '');
+      return isFinite(t) && t >= start - 60000;
+    };
+    var pct = side.progress && S[side.progress] ? parseFloat(S[side.progress].state) : NaN;
+    var pctFresh = isFinite(pct) && fresh(side.progress);
+    var end = side.lastEnd && S[side.lastEnd] ? Date.parse(S[side.lastEnd].state) : NaN;
+    var texts = [side.status && S[side.status] && S[side.status].state, a.status, a.task_status, a.state_detail]
+      .map(vacNorm).filter(function (s) { return s && !DEAD.test(s); });
+    var finished = (pctFresh && pct >= 100)
+      || (isFinite(end) && end >= start - 60000)
+      || texts.some(function (s) { return VAC_FINISHED.test(s); });
+    if (finished) return { done: true };
+    // 0 % heißt meist „zurückgesetzt“ (auch nach einem Neustart frisch), kein halber Lauf.
+    var partial = pctFresh && pct > 0 && pct < 100;
+    var word = null;
+    texts.some(function (s) { word = vacPauseWord(s, partial); return !!word; });
+    if (!word && partial) word = 'an der Station';
+    return { done: false, pause: !!word, word: word, pct: pctFresh ? pct : null };
+  }
+
+  // timeline: [{ when (ms), state }] eines Saugers, aufsteigend, ohne unavailable/unknown.
+  // Liefert { done: [{ when, start }], pause: { when, start, word } | null, paused: [Andockzeiten] }.
+  function vacuumRuns(hass, id, timeline, now) {
+    var memo = (vacPauseMemo()[id] || []);
+    var res = { done: [], pause: null, paused: [] };
+    var run = null;
+    (timeline || []).forEach(function (e) {
+      var s = e.state;
+      if (VACUUM_BUSY[s]) {
+        if (!run) { run = { start: e.when, dock: null }; return; }
+        if (run.dock == null) return;
+        // Wieder los: innerhalb der Ruhezeit oder bei gemerktem Zwischenstopp dieselbe Reinigung.
+        if (e.when - run.dock < VAC_QUIET_MS || memo.indexOf(run.dock) !== -1) { run.dock = null; return; }
+        res.done.push({ when: run.dock, start: run.start });
+        run = { start: e.when, dock: null };
+      } else if (VACUUM_DONE[s]) {
+        if (run && run.dock == null) run.dock = e.when;
+      }
+    });
+    if (!run || run.dock == null) return res;
+    var last = timeline[timeline.length - 1];
+    if (!last || !VACUUM_DONE[last.state]) return res;
+    var info = vacNow(hass, id, run.start);
+    if (info.done) { res.done.push({ when: run.dock, start: run.start }); return res; }
+    if (info.pause && now - run.dock < VAC_PAUSE_MAX_MS) {
+      res.pause = { when: run.dock, start: run.start, word: info.word };
+      res.paused.push(run.dock);
+      return res;
+    }
+    if (now - run.dock >= VAC_QUIET_MS) res.done.push({ when: run.dock, start: run.start });
+    return res;
+  }
+
   // Every category is on unless a dashboard turns it off.
   function on(type) {
     var t = window.CASORA_NOTIFY_TYPES;
@@ -7859,6 +8272,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (id.indexOf('alarm_control_panel.') === 0) {
       var word = ALARM_WORD[s];
       if (!word) return null;
+      /* Weich: dieselben Wörter wie Kachel, Badge und Popup (casoraSecurityWord, 00-finden.js). */
+      if (window._casoraSoft && window._casoraSoft() && window.casoraSecurityWord && window.casoraSecurityWord(id, s))
+        word = 'Alarm ' + window.casoraSecurityWord(id, s).replace(/^./, function (c) { return c.toLowerCase(); });
       return {
         label: word,
         icon: window.casoraSecurityIcon(id, s, st && st.attributes),
@@ -7868,9 +8284,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     }
 
     if (id.indexOf('vacuum.') === 0) {
-      if (VACUUM_DONE[s] && VACUUM_BUSY[prev]) {
-        return { label: name + ' hat fertig gereinigt', icon: 'vacuum-charge', tone: 'good', done: true };
-      }
+      // Fertig entscheidet vacuumRuns() über den ganzen Ablauf (Zwischenstopps), nicht das Andocken.
       if (s === 'error') return { label: name + ' braucht Aufmerksamkeit', icon: 'vacuum', tone: 'bad' };
       return null;
     }
@@ -7914,6 +8328,59 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
   var _lowSince = {};
 
+  // Stehende Einträge über HA-Neustarts (1.0.5): Updates, Akku, Sicherheit, Pflanzen … nahmen
+  // last_changed als Zeitpunkt. Nach einem Neustart beginnt das neu, „2 Updates verfügbar“ stand
+  // wieder unter „Neu“. Zeilen mit `seen` (Liste von Inhaltsschlüsseln, je Schlüssel optional mit
+  // eigenem Zeitpunkt { k, t }) bekommen als Zeitpunkt den ersten Sichtungszeitpunkt ihres
+  // jüngsten Schlüssels. Gleicher Inhalt bleibt gelesen, ein neuer Schlüssel (neues Update, neue
+  // Version) macht die Zeile wieder neu. Verschwundene Schlüssel bleiben SEEN_GONE_MS gemerkt,
+  // damit Entitäten, die nach dem Neustart erst später laden, nicht als neu zählen.
+  var SEEN_KEY = 'casora_notify_seen_v1';
+  var SEEN_GONE_MS = 2 * 3600 * 1000;
+
+  function settleSeen(rows) {
+    var memo;
+    try { memo = JSON.parse(localStorage.getItem(SEEN_KEY) || '{}'); } catch (e) { memo = {}; }
+    if (!memo || typeof memo !== 'object' || Array.isArray(memo)) memo = {};
+    var before = JSON.stringify(memo);
+    var now = Date.now();
+    var live = {};
+    rows.forEach(function (r) {
+      if (!r || !r.id || !Array.isArray(r.seen) || !r.seen.length) return;
+      var m = memo[r.id];
+      if (!m || typeof m !== 'object') m = memo[r.id] = {};
+      var natural = Math.min(Number(r.when) || now, now);
+      var t = 0;
+      r.seen.forEach(function (x) {
+        var k = String(x && typeof x === 'object' ? x.k : x);
+        var own = x && typeof x === 'object' ? Number(x.t) : NaN;
+        live[r.id + '\n' + k] = 1;
+        var e = m[k];
+        if (!e || !isFinite(e.t)) e = m[k] = { t: isFinite(own) && own > 0 ? Math.min(own, now) : natural };
+        delete e.g;
+        if (e.t > t) t = e.t;
+      });
+      if (t) r.when = t;
+    });
+    Object.keys(memo).forEach(function (id) {
+      var m = memo[id];
+      if (!m || typeof m !== 'object') { delete memo[id]; return; }
+      Object.keys(m).forEach(function (k) {
+        if (live[id + '\n' + k]) return;
+        var e = m[k];
+        if (!e || !isFinite(e.t)) { delete m[k]; return; }
+        if (!e.g) e.g = now;
+        else if (now - e.g > SEEN_GONE_MS) delete m[k];
+      });
+      if (!Object.keys(m).length) delete memo[id];
+    });
+    var after = JSON.stringify(memo);
+    if (after !== before) {
+      try { localStorage.setItem(SEEN_KEY, after); } catch (e) { /* privat/voll */ }
+    }
+    return rows;
+  }
+
   function standing(hass) {
     var rows = [];
     var S = hass.states;
@@ -7951,6 +8418,11 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         tone: 'accent',
         entity: updates[0].entity_id,
         opens: ['casora_updates', 'casora_popup_updates'],
+        // Neue Version ändert nur last_updated, nicht last_changed.
+        seen: updates.map(function (st) {
+          return { k: st.entity_id + '@' + String((st.attributes || {}).latest_version || ''),
+            t: Date.parse(st.last_updated || st.last_changed || '') };
+        }),
       });
     }
 
@@ -7966,6 +8438,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         tone: 'warn',
         entity: restarts[0].entity_id,
         opens: ['casora_updates', 'casora_popup_updates'],
+        seen: restarts.map(function (st) {
+          return st.entity_id + '@' + String((st.attributes || {}).installed_version || '');
+        }),
       });
     }
 
@@ -7984,7 +8459,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         pct = parseFloat(st.state);
         // Unavailable is no news: hold the clock rather than start it over.
         if (!isFinite(pct)) return;
-        isLow = pct <= lowPct;
+        isLow = window.casoraBattery ? window.casoraBattery.level(pct) !== 'ok' : pct <= lowPct;
       } else if (id.indexOf('binary_sensor.') === 0) {
         if (st.state !== 'on' && st.state !== 'off') return;
         isLow = st.state === 'on';
@@ -8003,14 +8478,18 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       rows.push({
         id: 'casora:battery',
         when: newest(low.map(function (x) { return x.st; })) || Date.now(),
+        // Akku-Stufen (05.10.2026): Wort und Farbe nach der schwächsten Batterie.
         label: low.length === 1
-          ? nameOf(low[0].st).replace(/\s+Battery$/i, '') + ' Akku schwach'
-          : low.length + ' Geräte mit schwachem Akku',
-        value: low.length === 1 && low[0].pct != null ? low[0].pct + '%' : null,
+          ? nameOf(low[0].st).replace(/\s+Battery$/i, '') + (low[0].pct != null && low[0].pct <= (window.casoraBattery ? window.casoraBattery.CRIT : 10) ? ' Akku fast leer' : ' Akku schwach')
+          : low.length + ' Akkus schwach',
+        value: low.length === 1 && low[0].pct != null ? Math.round(low[0].pct) + ' %' : null,
         icon: 'battery',
-        tone: 'bad',
+        tone: low.some(function (x) { return x.pct != null && x.pct <= (window.casoraBattery ? window.casoraBattery.CRIT : 10); }) ? 'bad' : 'warn',
         entity: low.length === 1 ? low[0].st.entity_id : null,
         opens: ['casora_battery', 'casora_popup_battery'],
+        seen: low.map(function (x) {
+          return { k: x.st.entity_id, t: Date.parse(x.st.last_changed || '') };
+        }),
       });
     }
 
@@ -8037,6 +8516,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           tone: 'bad',
           entity: id,
           rank: 1,
+          seen: [id + '|' + dc(st)],
         });
       });
     }
@@ -8177,7 +8657,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         var bare = id.slice(7);
         if (plants.some(function (n) { return bare.indexOf(n) === 0; })) return;
         var ppm = parseFloat(st.state);
-        if (!isFinite(ppm) || ppm < co2Limit) return;
+        // Nicht verfügbar (Neustart): Merker behalten, sonst begann der Wert danach als neu.
+        if (!isFinite(ppm)) {
+          if (isFinite(Number(co2Since[id]))) co2Now[id] = Number(co2Since[id]);
+          return;
+        }
+        if (ppm < co2Limit) return;
         var bad = ppm >= 2000;
         var crossed = Number(co2Since[id]);
         if (!isFinite(crossed)) crossed = Date.now();
@@ -8231,6 +8716,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           tone: 'warn',
           entity: id,
           opens: ['casora_plant', 'casora_popup_plant'],
+          // Tag im Schlüssel: jeden Morgen wieder neu, wie bisher.
+          seen: [id + '|' + first.sensor_type + ':' + first.status + '|' + midnight.getTime()],
         });
       });
     }
@@ -8256,6 +8743,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           icon: 'default',
           tone: 'accent',
           entity: a.entity,
+          seen: [a.entity],
         });
       });
     }
@@ -8265,7 +8753,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       if (Array.isArray(next)) rows = next;
     });
 
-    return rows;
+    return settleSeen(rows);
   }
 
   // ── Collection ─────────────────────────────────────────────────────────────
@@ -8313,6 +8801,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       var real = {};
       var events = [];
       var asked = {};
+      var vacLine = {};
       ids.forEach(function (id) { asked[id] = 1; });
       (entries || []).forEach(function (e) {
         var id = e.entity_id;
@@ -8334,6 +8823,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         // `when` is epoch seconds, and float on some HA versions.
         var when = Math.round(Number(e.when) * 1000);
         if (!isFinite(when)) return;
+        if (id.indexOf('vacuum.') === 0 && !DEAD.test(cur)) (vacLine[id] = vacLine[id] || []).push({ when: when, state: cur });
         if (when < sinceMs) return;
         var d = describe(e, st, was);
         if (!d) return;
@@ -8354,11 +8844,48 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         });
       });
 
+      // Saugroboter: Ablauf als Ganzes (Zwischenstopps), siehe vacuumRuns().
+      var vacPause = {};
+      var vacOld = vacPauseMemo();
+      Object.keys(vacLine).forEach(function (id) {
+        var line = vacLine[id].slice().sort(function (a, b) { return a.when - b.when; });
+        var cur = hass.states[id];
+        var lc = Date.parse((cur && cur.last_changed) || '');
+        // Der Live-Zustand kann neuer sein als das Logbuch.
+        if (cur && !DEAD.test(cur.state) && isFinite(lc) && line.length
+          && line[line.length - 1].state !== cur.state && lc > line[line.length - 1].when) {
+          line.push({ when: lc, state: String(cur.state) });
+        }
+        var r = vacuumRuns(hass, id, line, Date.now());
+        var name = nameOf(cur);
+        r.done.forEach(function (d) {
+          if (d.when < sinceMs) return;
+          events.push({ id: id + '@' + d.when, when: d.when, label: name + ' hat fertig gereinigt',
+            sub: null, icon: 'vacuum-charge', tone: 'good', sec: false, entity: id, opens: null, once: null, done: true });
+        });
+        if (r.pause) {
+          live.push({ id: 'casora:vacuum:' + id, when: r.pause.start, label: name + ' reinigt',
+            sub: 'Pause · ' + r.pause.word, icon: 'vacuum', tone: 'accent', entity: id });
+        }
+        var keep = (vacOld[id] || []).filter(function (t) { return t >= sinceMs - LOOKBACK_H * 3600 * 1000; });
+        r.paused.forEach(function (t) { if (keep.indexOf(t) === -1) keep.push(t); });
+        if (keep.length) vacPause[id] = keep.slice(-20);
+      });
+      try {
+        if (Object.keys(vacLine).length || Object.keys(vacOld).length) {
+          Object.keys(vacOld).forEach(function (id) { if (!vacLine[id] && !vacPause[id]) vacPause[id] = vacOld[id]; });
+          localStorage.setItem(VAC_PAUSE_KEY, JSON.stringify(vacPause));
+        }
+      } catch (e) { /* privat/voll */ }
+
       // Gemerkte „fertig“-Einträge, die der Neuaufbau nicht mehr liefert, bleiben im Fenster.
+      // Sauger nicht, wenn das Logbuch den Beginn dieser Reinigung noch enthält: dann ist der
+      // Ablauf oben neu bewertet (alte „fertig“ von Zwischenstopps fallen damit weg).
       var have = {};
       events.forEach(function (e) { have[e.id] = 1; });
       doneMemo().forEach(function (m) {
         if (!m || !m.id || have[m.id] || !(m.when >= sinceMs) || !asked[m.entity]) return;
+        if ((vacLine[m.entity] || []).some(function (x) { return VACUUM_BUSY[x.state] && x.when < m.when; })) return;
         have[m.id] = 1;
         events.push(m);
       });
@@ -8372,6 +8899,26 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
       // Gleiche Zeit: feste Reihenfolge (Kennung), sonst tauschten Zeilen beim Neuaufbau.
       events.sort(function (a, b) { return (b.when - a.when) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0); });
+
+      // Saugroboter: je Reinigung nur ein „fertig“ (1.0.8). Ein Zwischenstopp, der einmal als
+      // fertig galt (z. B. gemerkter Eintrag), stand sonst neben dem echten Ende – zweimal
+      // „hat fertig gereinigt“ im Abstand weniger Minuten. Verschiedene Reinigungen liegen nur
+      // vor, wenn der Sauger dazwischen mindestens VAC_QUIET_MS an der Station stand.
+      var vacNewer = {};
+      events = events.filter(function (e) {
+        if (!e.done || String(e.entity).indexOf('vacuum.') !== 0) return true;
+        var newer = vacNewer[e.entity];
+        vacNewer[e.entity] = e.when;
+        if (newer == null) return true;
+        var line = (vacLine[e.entity] || []).slice().sort(function (a, b) { return a.when - b.when; });
+        var gap = line.some(function (x, i) {
+          if (!VACUUM_DONE[x.state] || x.when < e.when || x.when >= newer) return false;
+          var next = line.slice(i + 1).filter(function (y) { return VACUUM_BUSY[y.state]; })[0];
+          return !next || next.when - x.when >= VAC_QUIET_MS;
+        });
+        if (!gap) vacNewer[e.entity] = newer;
+        return gap;
+      });
 
       var kept = [];
       var perEntity = {};
@@ -8525,10 +9072,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       /* Sicherheit ruhig (Variante 1): nur was Aufmerksamkeit braucht hat Farbe –
          Rot = Gefahr (ausgelöst, offen bei Abwesenheit), Orange = Hinweis (offen, entriegelt,
          unscharf); Erledigtes (verriegelt, scharf) neutral in Sand statt durchgehend Rot. */
+      /* 05.10.2026: dieselben Stufenfarben wie Badges, Kacheln und Popups (--casora-security-*,
+         00-finden.js); ohne diese Variablen wie bisher. */
       if (r.sec) {
-        return r.tone === 'bad' ? 'var(--casora-notify-sec-alert, var(--casora-tone-alert))'
-          : r.tone === 'warn' ? 'var(--casora-notify-sec-warn, var(--casora-color-orange, #DE8A4E))'
-          : 'var(--casora-notify-sec-neutral, var(--casora-tone-settings, var(--casora-color-sand)))';
+        return r.tone === 'bad' ? 'var(--casora-notify-sec-alert, var(--casora-security-alarm-color, var(--casora-tone-alert)))'
+          : r.tone === 'warn' ? 'var(--casora-notify-sec-warn, var(--casora-security-warn-color, var(--casora-color-orange, #DE8A4E)))'
+          : 'var(--casora-notify-sec-neutral, var(--casora-security-ok-color, var(--casora-tone-settings, var(--casora-color-sand))))';
       }
       var t = r.tone === 'bad' ? 'alert'
         : /^plant/.test(ic) ? 'energy'
@@ -9190,31 +9739,62 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     return current;
   }
 
+  // Raumseite am Handy (05.10.2026): aufgeklappte Unter-Reihe einer Sammel-Badge („security“,
+  // „climate“ …) – wie input_select.casora_expanded_row am Desktop, aber je Gerät. Dazu ein
+  // Zähler, der steigt, wenn neue Raum-Badges vom Server da sind (casoraPhoneRoom). Beides
+  // reist als Attribut des Filter-Helfers (casora_row, casora_tok) zu den Karten – die
+  // Handy-Badges hängen an diesem Helfer und zeichnen so neu.
+  var row = null, tok = 0;
+
+  function notify(v) {
+    listeners.slice().forEach(function (fn) { try { fn(v); } catch (e) {} });
+  }
+
   function set(v) {
     v = String(v == null ? 'all' : v) || 'all';
     if (get() === v) return v;
     current = v;
+    row = null;
     try { localStorage.setItem(KEY, v); } catch (e) {}
-    listeners.slice().forEach(function (fn) { try { fn(v); } catch (e) {} });
+    notify(v);
     return v;
   }
 
+  function setRow(r) {
+    r = r ? String(r) : null;
+    if (row === r) return row;
+    row = r;
+    notify(get());
+    return row;
+  }
+
+  function bump() { tok++; notify(get()); }
+
   // One hass object arrives per update and is handed to every card, so the
-  // rewrite is memoised on it rather than repeated down the tree.
-  var lastIn = null, lastVal = null, lastOut = null;
+  // rewrite is memoised on it rather than repeated down the tree. Der umgeschriebene
+  // Zustand selbst bleibt dasselbe Objekt, solange sich nichts daran ändert – sonst zeichneten
+  // alle Karten am Filter-Helfer bei jedem Update im Haus neu.
+  var lastIn = null, lastVal = null, lastOut = null, lastRow = null, lastTok = 0;
+  var entIn = null, entKey = null, entOut = null;
 
   function apply(hass) {
     if (!hass || !hass.states) return hass;
     var ent = hass.states[ENTITY];
     if (!ent) return hass;                    // no helper: nothing to stand in for
     var v = get();
-    if (ent.state === v) return hass;
-    if (hass === lastIn && v === lastVal) return lastOut;
+    if (ent.state === v && !row && !tok) return hass;
+    if (hass === lastIn && v === lastVal && row === lastRow && tok === lastTok) return lastOut;
+    var key = v + '|' + (row || '') + '|' + tok;
+    if (ent !== entIn || key !== entKey) {
+      var next = Object.assign({}, ent, { state: v });
+      if (row || tok) next.attributes = Object.assign({}, ent.attributes, { casora_row: row, casora_tok: tok });
+      entIn = ent; entKey = key; entOut = next;
+    }
     var states = Object.assign({}, hass.states);
-    states[ENTITY] = Object.assign({}, ent, { state: v });
+    states[ENTITY] = entOut;
     var out = Object.assign({}, hass);
     out.states = states;
-    lastIn = hass; lastVal = v; lastOut = out;
+    lastIn = hass; lastVal = v; lastOut = out; lastRow = row; lastTok = tok;
     return out;
   }
 
@@ -9247,6 +9827,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   // tap_action cannot call a function directly.
   window.addEventListener('ll-custom', function (ev) {
     var d = ev.detail || {};
+    // Sammel-Badge auf der Raumseite am Handy: Unter-Reihe auf/zu (nur dieses Gerät).
+    if (d.casora_phone_row) {
+      ev.stopPropagation();
+      setRow(row === d.casora_phone_row ? null : d.casora_phone_row);
+      return;
+    }
     if (!('casora_filter' in d)) return;
     ev.stopPropagation();
     var v = set(d.casora_filter);
@@ -9258,6 +9844,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     ENTITY: ENTITY,
     get: get,
     set: set,
+    row: function () { return row; },
+    setRow: setRow,
+    bump: bump,
     apply: apply,
     share: share,
     onChange: function (fn) {
@@ -9267,4 +9856,317 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       };
     },
   };
+})();
+
+// Raum-Badges am Handy wie im Raum-Kopf am Desktop/Tablet (05.10.2026). Die Raumseite am Handy
+// (casora_mobile_sensor_chips, rooms_row) zeichnet dieselbe Badge-Reihe wie casora_room; die
+// Variablen dazu stehen nur im Desktop-Dashboard des Paars. Sie kommen zur Laufzeit vom Server
+// (WS casora/phone_room_badges, phone_badges.py) – so gilt das auch für nie im Studio gespeicherte
+// und aus Hemma umgezogene Dashboards, ohne dass jemand speichern muss. Ohne Antwort (älterer
+// Server, Desktop-Dashboard fehlt, Raum nicht zugeordnet) bleibt der Auszug, den das Studio beim
+// Speichern in room_chips schreibt (Klima, Licht, Sicherheit), in Desktop-Form gebracht.
+// Eigene Einstellungen fürs Handy: Schalter in room_chips[<raum>] (PHONE_OVERRIDE) gehen vor.
+// Gleiche Regeln im Studio (casora-panel.js, phoneRoomBadgeVars) – dev/unit/handy_raum_badges.mjs
+// vergleicht beide.
+(function () {
+  if (window.casoraPhoneRoom) return;
+  var OVERRIDE = ['show_climate', 'show_lights', 'show_people', 'show_media', 'show_security', 'show_energy',
+    'show_climate_inline', 'show_security_inline', 'show_people_inline', 'badge_order'];
+  var AQI = ['aqi_entity_pm25', 'aqi_entity_pm10', 'aqi_entity_voc', 'aqi_entity_co2'];
+  var LS = 'casora.phoneRooms.';
+  var cache = {}, busy = {}, subscribed = false;
+
+  // room_chips-Auszug (Studio bis 1.0.9) → Variablen wie casora_room.
+  function legacy(c) {
+    var o = {};
+    if (!c || typeof c !== 'object') return o;
+    if (c.temp_entity) o.temp_sensor_1 = c.temp_entity;
+    if (c.humidity_entity) o.humidity_sensor = c.humidity_entity;
+    if (c.entity_quality) o.quality_sensor = c.entity_quality;
+    (Array.isArray(c.aqi_sensors) ? c.aqi_sensors : []).slice(0, 4).forEach(function (e, i) { if (e) o[AQI[i]] = e; });
+    if (c.lights_entity) o.light_group_entity = c.lights_entity;
+    if (Array.isArray(c.security_locks) && c.security_locks.length) o.security_locks = c.security_locks.slice();
+    ['security_locks_label', 'security_door_sensors', 'security_lock_batteries'].forEach(function (k) {
+      if (c[k] != null && c[k] !== '') o[k] = c[k];
+    });
+    for (var n = 1; n <= 8; n++) {
+      if (c['security_entity_' + n]) o['security_entity_' + n] = c['security_entity_' + n];
+      if (c['security_label_' + n]) o['security_label_' + n] = c['security_label_' + n];
+    }
+    return o;
+  }
+
+  function anyBadge(o) {
+    var some = function (p, n) { for (var i = 1; i <= n; i++) if (o[p + i]) return true; return false; };
+    var list = function (v) { return Array.isArray(v) && v.some(Boolean); };
+    var energy = typeof window._casoraEnergyOn === 'function' ? window._casoraEnergyOn(o)
+      : (o.show_energy !== false && (!!o.energy_power_entity || list(o.energy_entities)));
+    return (o.show_climate !== false && !!(o.climate_entity_1 || o.temp_sensor_1 || o.humidity_sensor || o.quality_sensor))
+      || (o.show_lights !== false && !!(o.light_entity_1 || o.light_group_entity))
+      || (o.show_people !== false && !!o.presence_entity_1)
+      || (o.show_security !== false && !!(o.security_lock_entity || some('security_entity_', 8)
+        || list(o.security_locks) || list(o.security_cameras)))
+      || !!energy
+      || (o.show_media !== false && !o.show_now_playing && !!o.media_player_1);
+  }
+
+  // desk: Variablen des Desktop-Raums (oder null), chip: room_chips[<raum>], name: Raumname.
+  function merge(desk, chip, name) {
+    var o = Object.assign({}, desk || legacy(chip));
+    if (chip && typeof chip === 'object') {
+      OVERRIDE.forEach(function (k) { if (chip[k] !== undefined && chip[k] !== null) o[k] = chip[k]; });
+    }
+    // Szenen haben auf der Raumseite am Handy einen eigenen Bereich (keine Badge).
+    o.show_scenes = false;
+    o._name = name || (chip && (chip.room_name || chip.aqi_room_name)) || o.room_name || o.aqi_room_name || '';
+    o._any = anyBadge(o) || !!(chip && chip.motion_entity);
+    return o;
+  }
+
+  function urlNow() {
+    var seg = String(location.pathname || '').split('/').filter(Boolean)[0] || '';
+    return /[-_]mobile$/i.test(seg) ? seg : null;
+  }
+  function hassOf() { var ha = document.querySelector('home-assistant'); return ha && ha.hass; }
+  function readLS(u) {
+    try { var r = JSON.parse(localStorage.getItem(LS + u) || 'null'); return r && typeof r === 'object' ? { rooms: r, at: 0 } : null; }
+    catch (e) { return null; }
+  }
+  function writeLS(u, rooms) { try { localStorage.setItem(LS + u, JSON.stringify(rooms)); } catch (e) {} }
+
+  function subscribe(h) {
+    if (subscribed || !h || !h.connection || typeof h.connection.subscribeEvents !== 'function') return;
+    subscribed = true;
+    try {
+      // Desktop im Studio gespeichert: gleich neu holen, nicht erst nach einer Minute.
+      Promise.resolve(h.connection.subscribeEvents(function () {
+        var u = urlNow();
+        if (u) load(u);
+      }, 'lovelace_updated')).catch(function () {});
+    } catch (e) {}
+  }
+
+  function load(u) {
+    var h = hassOf();
+    if (!u || busy[u] || !h || typeof h.callWS !== 'function') return;
+    if (h.connection && h.connection.connected === false) return;
+    busy[u] = true;
+    subscribe(h);
+    Promise.resolve(h.callWS({ type: 'casora/phone_room_badges', url_path: u })).then(function (r) {
+      var rooms = (r && r.rooms && typeof r.rooms === 'object') ? r.rooms : {};
+      var was = JSON.stringify((cache[u] || {}).rooms || null);
+      cache[u] = { rooms: rooms, at: Date.now() };
+      writeLS(u, rooms);
+      if (was !== JSON.stringify(rooms) && window._casoraFilter && window._casoraFilter.bump) window._casoraFilter.bump();
+    }, function () {
+      // Älterer Server ohne den Befehl: beim room_chips-Auszug bleiben, nicht dauernd fragen.
+      cache[u] = cache[u] || { rooms: null };
+      cache[u].at = Date.now();
+    }).then(function () { busy[u] = false; });
+  }
+
+  function ensure(u) {
+    if (!u) return;
+    if (!cache[u]) cache[u] = readLS(u) || { rooms: null, at: 0 };
+    if (Date.now() - (cache[u].at || 0) > 60000) load(u);
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    var u = urlNow();
+    if (!document.hidden && u && cache[u]) cache[u].at = 0;
+  });
+
+  window.casoraPhoneRoom = {
+    OVERRIDE: OVERRIDE,
+    legacy: legacy,
+    merge: merge,
+    // Variablen der Raumseite <key> (Filterwert „room_…“) oder null.
+    vars: function (key, chips) {
+      if (typeof key !== 'string' || key.indexOf('room_') !== 0) return null;
+      var u = urlNow();
+      ensure(u);
+      var rooms = u && cache[u] ? cache[u].rooms : null;
+      var e = rooms && rooms[key] ? rooms[key] : null;
+      var chip = chips && typeof chips === 'object' && chips[key] && typeof chips[key] === 'object' ? chips[key] : null;
+      if (!e && !chip) return null;
+      return merge(e ? (e.vars || {}) : null, chip, e ? e.name : null);
+    },
+    refresh: function () { var u = urlNow(); if (u) load(u); },
+    // Was der Server liefert (rooms aus casora/phone_room_badges), z. B. für Prüfungen ohne Speichern.
+    prime: function (rooms) {
+      var u = urlNow();
+      if (!u) return;
+      cache[u] = { rooms: rooms || {}, at: Date.now() };
+      if (window._casoraFilter && window._casoraFilter.bump) window._casoraFilter.bump();
+    },
+  };
+})();
+
+// „Casora wurde aktualisiert“ (1.0.5): Nach einem Update liefen offene Tabs, Wand-Tablets und
+// Handys weiter mit dem alten Code, bis jemand von Hand neu lud – teils aus dem Cache sogar danach.
+// Der Lader casora-local.js trägt ?v=<jüngste Änderung aller Casora-Skripte> (window.casoraLoadedStamp),
+// die Integration kennt den aktuellen Stand (WS casora/version, frontend_version.py). Geprüft wird
+// beim Wiederverbinden nach einem HA-Neustart, wenn der Tab sichtbar wird, und alle 10 Minuten.
+// Weicht der Stand ab, erscheint unten mittig ein ruhiger Hinweis mit „Neu laden“ – einmal je
+// neuem Stand, wegklickbar. „Neu laden“ (auch im ⋯-Menü) löscht vorher Casoras Dateien aus dem
+// Cache Storage der Seite; HAs Service Worker und seine übrigen Einträge bleiben unberührt.
+// casora-update-check:start
+(function () {
+  if (window.casoraUpdateNeeded) return;
+  var DIGITS = /^\d+$/;
+  // loaded: Stempel aus der Lader-URL; server: Antwort von casora/version; dismissed: weggeklickter Stand.
+  window.casoraUpdateNeeded = function (loaded, server, dismissed) {
+    var now = server && server.stamp != null ? String(server.stamp) : '';
+    var was = loaded != null ? String(loaded) : '';
+    if (!DIGITS.test(now) || !DIGITS.test(was)) return false;   // alter Server, yaml-Modus, Lader ohne ?v=
+    if (now === was) return false;
+    if (dismissed != null && String(dismissed) === now) return false;
+    return true;
+  };
+  // Nur Casoras eigene Adressen: /casora_scripts, /casora_assets, /casora_panel … und /local/casora.
+  window.casoraIsOwnUrl = function (url) {
+    var path;
+    try { path = new URL(url, 'http://x').pathname; } catch (e) { return false; }
+    return /^\/(casora_[a-z0-9_]+|local\/casora)\//i.test(path);
+  };
+})();
+// casora-update-check:end
+(function () {
+  if (window.casoraHardReload) return;
+  var KEY = 'casora.updateDismissed';
+  var EVERY = 10 * 60000;
+
+  window.casoraHardReload = function () {
+    var gone = false;
+    var go = function () { if (gone) return; gone = true; try { window.location.reload(); } catch (e) {} };
+    setTimeout(go, 3000);   // ein hängender Cache darf das Neuladen nicht aufhalten
+    var p = Promise.resolve();
+    try {
+      if (window.caches && typeof caches.keys === 'function') {
+        p = caches.keys().then(function (names) {
+          return Promise.all(names.map(function (n) {
+            return caches.open(n).then(function (c) {
+              return c.keys().then(function (reqs) {
+                return Promise.all(reqs.filter(function (r) { return window.casoraIsOwnUrl(r.url); })
+                  .map(function (r) { return c.delete(r); }));
+              });
+            });
+          }));
+        });
+      }
+    } catch (e) { /* ohne Cache Storage einfach neu laden */ }
+    p.catch(function () {}).then(go);
+  };
+
+  var tr = function (s) { return window.casoraTr ? window.casoraTr(s) : s; };
+  var dismissed = function () { try { return localStorage.getItem(KEY); } catch (e) { return null; } };
+  var shownFor = null;
+
+  function hide(el) {
+    if (!el || !el.parentNode) return;
+    el.style.transition = 'opacity 160ms ease, transform 180ms ease';
+    el.style.opacity = '0';
+    el.style.transform = 'translate(-50%, 8px)';
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 200);
+  }
+
+  function show(stamp) {
+    if (shownFor === stamp && document.getElementById('casora-update-hint')) return;
+    var old = document.getElementById('casora-update-hint');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    shownFor = stamp;
+    var el = document.createElement('div');
+    el.id = 'casora-update-hint';
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-live', 'polite');
+    Object.assign(el.style, {
+      position: 'fixed', left: '50%', zIndex: '99998', boxSizing: 'border-box',
+      bottom: 'calc(16px + var(--casora-mobile-nav-space, env(safe-area-inset-bottom, 0px)))',
+      display: 'flex', alignItems: 'center', gap: '6px', width: 'max-content',
+      maxWidth: 'calc(100vw - 32px)', padding: '6px 6px 6px 18px', minHeight: '52px',
+      font: 'inherit', fontSize: '14px', lineHeight: '1.3',
+      opacity: '0', transform: 'translate(-50%, 8px)',
+    });
+    if (window.casoraMenuGlass) window.casoraMenuGlass.apply(el);
+    el.style.borderRadius = '26px';
+    var fg = 'var(--casora-menu-fg, #fff)';
+
+    var txt = document.createElement('span');
+    txt.textContent = tr('Casora wurde aktualisiert');
+    Object.assign(txt.style, { flex: '1 1 auto', minWidth: '0', fontWeight: '500', marginRight: '6px', color: fg,
+      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' });
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = tr('Neu laden');
+    Object.assign(btn.style, {
+      flex: 'none', border: '0', cursor: 'pointer', font: 'inherit', fontSize: '14px', fontWeight: '600',
+      height: '40px', padding: '0 16px', borderRadius: '20px', color: fg,
+      background: 'color-mix(in srgb, ' + fg + ' 14%, transparent)',
+    });
+    btn.onclick = function (e) {
+      e.preventDefault(); e.stopPropagation();
+      btn.disabled = true; btn.style.opacity = '.6';
+      window.casoraHardReload();
+    };
+
+    var x = document.createElement('button');
+    x.type = 'button';
+    x.setAttribute('aria-label', tr('Schließen'));
+    Object.assign(x.style, {
+      flex: 'none', border: '0', cursor: 'pointer', width: '40px', height: '40px', borderRadius: '20px',
+      display: 'grid', placeItems: 'center', background: 'transparent', color: fg, opacity: '.7', padding: '0',
+    });
+    var ico = document.createElement('ha-icon');
+    ico.setAttribute('icon', 'mdi:close');
+    ico.style.setProperty('--mdc-icon-size', '20px');
+    x.appendChild(ico);
+    x.onclick = function (e) {
+      e.preventDefault(); e.stopPropagation();
+      try { localStorage.setItem(KEY, stamp); } catch (err) { /* dann nur für diesen Tab */ }
+      hide(el);
+    };
+
+    el.appendChild(txt); el.appendChild(btn); el.appendChild(x);
+    document.body.appendChild(el);
+    requestAnimationFrame(function () {
+      el.style.transition = 'opacity 220ms cubic-bezier(0.32,0.72,0,1), transform 260ms cubic-bezier(0.32,0.72,0,1)';
+      el.style.opacity = '1';
+      el.style.transform = 'translate(-50%, 0)';
+    });
+  }
+
+  var busy = false, last = 0, conn = null;
+  function hass() { var h = document.querySelector('home-assistant'); return h && h.hass; }
+
+  function check(force) {
+    var h = hass();
+    watch(h);
+    if (busy || !h || typeof h.callWS !== 'function') return;
+    if (h.connection && h.connection.connected === false) return;
+    if (!force && Date.now() - last < 30000) return;
+    var loaded = window.casoraLoadedStamp;
+    if (!loaded) return;
+    busy = true; last = Date.now();
+    Promise.resolve(h.callWS({ type: 'casora/version' })).then(function (r) {
+      if (window.casoraUpdateNeeded(loaded, r, dismissed())) show(String(r.stamp));
+    }, function () { /* ältere Integration oder HA startet noch */ }).then(function () { busy = false; });
+  }
+
+  // Nach einem HA-Neustart verbindet sich die Seite neu; die Integration ist dann evtl. noch nicht
+  // fertig eingerichtet – darum zweimal nachsehen.
+  function watch(h) {
+    var c = h && h.connection;
+    if (!c || c === conn || typeof c.addEventListener !== 'function') return;
+    conn = c;
+    c.addEventListener('ready', function () {
+      setTimeout(function () { check(true); }, 5000);
+      setTimeout(function () { check(true); }, 45000);
+    });
+  }
+
+  setTimeout(function () { check(true); }, 15000);
+  setInterval(function () { check(true); }, EVERY);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) check(false); });
+  window.casoraUpdateCheck = function () { check(true); };
 })();

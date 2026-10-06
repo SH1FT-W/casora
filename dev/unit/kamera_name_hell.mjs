@@ -1,6 +1,6 @@
 // Kamera-/Türklingel-Kachel: Name auf dem abgedunkelten Standbild lesbar.
 //   node dev/unit/kamera_name_hell.mjs
-// Gemeldet (Umzugstest, Design „Casora Weich“ hell): Name dunkel auf fast schwarzem Standbild.
+// Gemeldet (Umzugstest, Design „Casora“ hell): Name dunkel auf fast schwarzem Standbild.
 // Gelöst über --casora-entity-name in casora_camera (Weich: mit Bild hell, ohne Bild/offline Theme-Farbe).
 // Eine zusätzliche feste Namensfarbe darf es nicht geben – sie überschrieb den Offline-Fall (Name weiß auf hellem Grund).
 import fs from 'node:fs';

@@ -52,6 +52,15 @@
     return !!(it && it.status === 'done' && (it.level === 'breaking' || it.level === 'action') && !it.ack);
   };
 
+  /* 1.0.5: Aktion mit Handy-Knopf (casora-core .hui-actx): Text, Symbol und Vorlese-Text getrennt setzen. */
+  var setAct = function (a, txt, icon) {
+    var at = a.querySelector('.hui-at');
+    if (!at) { a.textContent = txt; return; }
+    at.textContent = txt;
+    var ic = a.querySelector('.hui-ab ha-icon');
+    if (ic && icon) ic.setAttribute('icon', icon);
+    a.setAttribute('aria-label', typeof window.casoraTr === 'function' ? window.casoraTr(txt) : txt);
+  };
   /* Die Update-Zeilen baut das Popup einmal beim Öffnen, deshalb wird die
      Sperre direkt im DOM gesetzt/aufgehoben: data-casora-mi (öffnet den
      HA-Installationsdialog) und das Live-Label werden geparkt, die Zeile
@@ -81,9 +90,9 @@
       if (block && !isB) {
         a.setAttribute('data-casora-live-blocked', a.getAttribute('data-casora-live'));
         a.removeAttribute('data-casora-live');
-        a.setAttribute('data-casora-txt', a.textContent);
+        a.setAttribute('data-casora-txt', (a.querySelector('.hui-at') || a).textContent);
         a.setAttribute('data-casora-col', a.style.color);
-        a.textContent = 'Freigeben';
+        setAct(a, 'Freigeben', 'mdi:lock-open-variant-outline');
         a.style.color = 'var(--casora-popup-ui-warn, #FF9F0A)';
         if (row.hasAttribute('data-casora-mi')) { row.setAttribute('data-casora-mi-blocked', row.getAttribute('data-casora-mi')); row.removeAttribute('data-casora-mi'); }
         row.setAttribute('data-casora-arm', '');
@@ -98,7 +107,7 @@
       } else if (!block && isB) {
         a.setAttribute('data-casora-live', a.getAttribute('data-casora-live-blocked'));
         a.removeAttribute('data-casora-live-blocked');
-        a.textContent = a.getAttribute('data-casora-txt') || 'Aktualisieren';
+        setAct(a, a.getAttribute('data-casora-txt') || 'Aktualisieren', 'mdi:download');
         a.style.color = a.getAttribute('data-casora-col') || '';
         if (row.hasAttribute('data-casora-mi-blocked')) { row.setAttribute('data-casora-mi', row.getAttribute('data-casora-mi-blocked')); row.removeAttribute('data-casora-mi-blocked'); }
         row.removeAttribute('data-casora-arm');
@@ -777,8 +786,8 @@
         if (c.bat && states[c.bat]) {
           var b = ok(states[c.bat]) ? Math.round(num(states[c.bat].state)) : null;
           /* battery_low meldet schon bei 89 % "on", daher nur die Prozentzahl. */
-          var low = b != null && b <= 20;
-          dev.push({ icon: 'mdi:battery', iconTone: low ? 'warn' : 'good', label: 'Akku', value: b != null ? b + ' %' : '—', valueTone: low ? 'warn' : null });
+          var tn = b == null ? null : window.casoraBattery ? window.casoraBattery.tone(window.casoraBattery.level(b)) : b <= 20 ? 'warn' : null;
+          dev.push({ icon: 'mdi:battery', iconTone: tn || 'good', label: 'Akku', value: b != null ? b + ' %' : '—', valueTone: tn });
         }
         if (c.valve && states[c.valve]) {
           var VS = { success: 'Angepasst', none: 'Nicht angepasst', ready_to_calibrate: 'Bereit zur Anpassung', calibration_in_progress: 'Läuft …', error: 'Fehler' };
@@ -1310,9 +1319,14 @@
       var plate = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
         + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);'
         + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);padding:18px 20px;font-family:' + T.font + ';text-align:left;';
+      /* Weich (Audit K6): Hauptaktion in Ton wie die übrigen Aktionsknöpfe, Nebenaktionen sandfarben –
+         vorher türkisgrüne Pillen, die es sonst nirgends gibt. */
+      var softBtn = !!(window._casoraSoft && window._casoraSoft());
       var btn = function (label, attr, primary) {
         return '<span ' + attr + ' style="display:inline-flex;align-items:center;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;'
-          + (primary ? (window._casoraHH && window._casoraHH.on() ? 'color:var(--casora-popup-ui-on-action, #fff);background:var(--casora-popup-ui-action, #276B64);'
+          + (softBtn ? (primary ? 'color:#fff;background:var(--casora-soft-primary, #B67A50);'
+            : 'color:' + T.ink + ';background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));')
+          : primary ? (window._casoraHH && window._casoraHH.on() ? 'color:var(--casora-popup-ui-on-action, #fff);background:var(--casora-popup-ui-action, #276B64);'
             : 'color:#000;background:var(--casora-color-teal, #00C3D0);') : 'color:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));background:var(--casora-popup-ui-action-tint, rgba(0,195,208,0.14));')
           + '">' + label + '</span>';
       };
@@ -1339,7 +1353,7 @@
         out += '<div style="font-size:20px;font-weight:600;color:' + T.ink + ';margin-top:6px;">Claude sucht ein Rezept …</div>';
       } else if (has) {
         var m = mins(a.minuten);
-        out += '<div style="font-size:' + (n ? '20' : '24') + 'px;font-weight:600;letter-spacing:-0.02em;color:' + T.ink + ';margin-top:4px;">' + esc(s.state) + '</div>'
+        out += '<div style="font-size:' + (n ? '20' : '24') + 'px;font-weight:' + (softBtn ? 700 : 600) + ';letter-spacing:-0.02em;color:' + T.ink + ';margin-top:4px;">' + esc(s.state) + '</div>'
           + '<div style="font-size:14px;color:' + T.ink2 + ';margin-top:4px;">' + [m, 'Thermomix'].filter(Boolean).join(' · ') + '</div>'
           + (a.warum ? '<div style="font-size:14px;line-height:1.45;color:' + T.ink + ';margin-top:10px;white-space:normal;">' + esc(a.warum) + '</div>' : '');
       } else {
@@ -2640,9 +2654,9 @@
   X.RULES = [
     /* Laufend (04.10.2026): war fast unsichtbar (Füllfarbe) – jetzt Zweitfarbe mit kleinem Kreis (busy, casora-core .hui-busy). */
     { attr: 'in_progress', text: 'Wird aktualisiert', busy: true, color: 'var(--casora-soft-sub, var(--casora-popup-tiles-text-secondary, rgba(255,255,255,0.56)))' },
-    { attr: 'state', eq: 'off', and: [{ attr: 'skipped_version' }], text: 'Übersprungen', color: INK3 },
-    { attr: 'state', eq: 'off', and: [{ attr: 'release_summary', has: 'restart' }], text: 'Neustart erforderlich', color: ORG },
-    { attr: 'state', eq: 'off', text: 'Installiert', color: 'var(--casora-popup-ui-good, #30D158)' },
+    { attr: 'state', eq: 'off', and: [{ attr: 'skipped_version' }], text: 'Übersprungen', icon: 'mdi:skip-next', color: INK3 },
+    { attr: 'state', eq: 'off', and: [{ attr: 'release_summary', has: 'restart' }], text: 'Neustart erforderlich', icon: 'mdi:restart', color: ORG },
+    { attr: 'state', eq: 'off', text: 'Installiert', icon: 'mdi:check', color: 'var(--casora-popup-ui-good, #30D158)' },
   ];
   X.list = function (states, h) {
     var UI = h.UI;
@@ -2679,7 +2693,9 @@
         label: String(a.title || a.friendly_name || id).replace(/\s+Update$/i, ''),
         sub: [ver, sum].filter(Boolean),
         action: a.in_progress ? 'Wird aktualisiert' : 'Aktualisieren', actionTone: 'accent', actionBusy: !!a.in_progress,
-        actionLive: { rules: X.RULES, text: 'Aktualisieren', color: TEAL },
+        /* 1.0.5: am Handy runder Download-Knopf statt Text (casora-core .hui-actx). */
+        actionIcon: 'mdi:download',
+        actionLive: { rules: X.RULES, text: 'Aktualisieren', icon: 'mdi:download', color: TEAL },
       };
     }), null);
   };
@@ -2706,7 +2722,7 @@
       var a = states[id].attributes || {};
       return { entity: id, iconTone: 'rgba(0,0,0,0)', image: h && h.logoOf ? h.logoOf(id) : null,
         label: String(a.title || a.friendly_name || id).replace(/\s+Update$/i, ''),
-        sub: a.installed_version || null, value: 'Neustart erforderlich', valueTone: 'warn',
+        sub: a.installed_version || null, value: 'Neustart erforderlich', valueTone: 'warn', valueIcon: 'mdi:restart',
         svc: { domain: 'homeassistant', service: 'restart' }, confirm: 'Neustart' };
     });
   };
@@ -2818,7 +2834,7 @@
 // ── Licht-Popup „soft“ (Weich, 01.10.2026) ──────────────────────────────────
 // Aufbau wie im Weich-Entwurf: Ring + Titel + Unterzeile, links Helligkeit,
 // Lichtfarbe und Szenen, rechts die Leuchten des Raums. Nur aktiv, wenn das
-// Theme --casora-popup-layout: soft setzt (Casora Weich); Standard und Glas
+// Theme --casora-popup-layout: soft setzt (Casora); Hemma 2 und Hemma 1
 // behalten den bisherigen Aufbau. Die Vorlage casora_popup_light ruft nur
 // window._casoraLightSoft.cards(...) auf, Raumdaten kommen aus _casoraLPC.
 // Eingaben laufen über die Fenster-Listener unten (Touch mit Schwelle +

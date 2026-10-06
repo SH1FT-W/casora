@@ -202,14 +202,13 @@ window._casoraStreamOk = function (hass, id) {
   c[id] = { t: Date.now(), p: p };
   return p;
 };
-/* Liefert die Kamera überhaupt ein Bild? (30.09.2026) Manche Kameras melden „idle“, obwohl
-   ihr Dienst nicht läuft – Kachel zeigte „Live“, das Popup eine leere graue Fläche.
-   Ergebnis 60 s gemerkt; ändert es sich, werden die Kacheln dieser Kamera neu gezeichnet. */
-/* Letztes Ergebnis über das Neuladen hinweg merken (04.10.2026): sonst zeigt eine offline Kamera
-   nach dem Laden erst „Live“ und springt nach der Prüfung auf „Offline“. */
-window._casoraCamDead = window._casoraCamDead || (function () {
-  try { return JSON.parse(localStorage.getItem('casora.camDead') || '{}') || {}; } catch (e) { return {}; }
-})();
+/* Liefert die Kamera überhaupt ein Bild? Nur noch als Antwort für das Popup (Hinweis statt leerer
+   grauer Fläche), nicht mehr für „offline“ (05.10.2026): langsame Kameras (Reolink E1 Zoom: Standbild
+   2–10 s, sonst bricht HA mit 500 ab) standen sonst immer wieder als offline da, obwohl sie liefen.
+   Offline ist eine Kamera jetzt nur, wenn Home Assistant sie als nicht verfügbar meldet.
+   _casoraCamDead bleibt als leere Liste für Karten, die es noch abfragen. */
+window._casoraCamDead = {};
+try { localStorage.removeItem('casora.camDead'); } catch (e) {}
 window._casoraCamReachable = function (hass, id) {
   var c = window._casoraCamCache || (window._casoraCamCache = {});
   if (c[id] && Date.now() - c[id].t < 60000) return c[id].p;
@@ -230,23 +229,6 @@ window._casoraCamReachable = function (hass, id) {
     if (!r.ok || !/^image\//.test(r.headers.get('content-type') || '')) return false;
     return r.blob().then(function (b) { return flat(b).then(function (f) { return !f; }); });
   }, function () { return false; });
-  p = p.then(function (ok) {
-    var was = !!window._casoraCamDead[id];
-    window._casoraCamDead[id] = !ok;
-    if (was !== !ok) { try { localStorage.setItem('casora.camDead', JSON.stringify(window._casoraCamDead)); } catch (e) {} }
-    if (was !== !ok) {
-      (function walk(root, d) {
-        if (!root || d > 14) return;
-        root.querySelectorAll('*').forEach(function (el) {
-          if (el.tagName === 'BUTTON-CARD' && el._config && el._config.entity === id && typeof el.requestUpdate === 'function') {
-            try { el._casoraCamTick = (el._casoraCamTick || 0) + 1; el.requestUpdate('_config', null); } catch (e) {}
-          }
-          if (el.shadowRoot) walk(el.shadowRoot, d + 1);
-        });
-      })(document, 0);
-    }
-    return ok;
-  });
   c[id] = { t: Date.now(), p: p };
   return p;
 };
@@ -329,7 +311,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     Object.keys(S).forEach(function (id) {
       if (ex.indexOf(id) !== -1) return;
       var st = S[id], n = null, isLow = false;
-      if (id.indexOf('sensor.') === 0 && dcOf(st) === 'battery') { n = parseFloat(st.state); isLow = isFinite(n) && n <= lowPct; }
+      if (id.indexOf('sensor.') === 0 && dcOf(st) === 'battery') { n = parseFloat(st.state); isLow = isFinite(n) && n <= lowPct; if (!isFinite(n)) n = null; }
       else if (id.indexOf('binary_sensor.') === 0 && dcOf(st) === 'battery') {
         var bd = reg[id] && reg[id].device_id;
         if (bd && pctDev[bd]) return;
@@ -347,9 +329,15 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     low.sort(function (a, b) { return (a.pct == null ? -1 : a.pct) - (b.pct == null ? -1 : b.pct); });
     var nm = function (st) { return (api && api.nameOf ? api.nameOf(st) : ((st.attributes || {}).friendly_name || st.entity_id)); };
     var r = Object.assign({}, out[idx]);
-    r.label = low.length === 1 ? nm(low[0].st).replace(/\s+Battery$/i, '') + ' Akku schwach' : low.length + ' Geräte mit schwachem Akku';
-    r.value = low.length === 1 && low[0].pct != null ? low[0].pct + '%' : null;
+    // Akku-Stufen (05.10.2026, window.casoraBattery): ≤ 10 % „fast leer“ und rot, sonst „schwach“ und orange.
+    var crit = window.casoraBattery ? window.casoraBattery.CRIT : 10;
+    var isCrit = function (x) { return x.pct != null && x.pct <= crit; };
+    r.label = low.length === 1 ? nm(low[0].st).replace(/\s+Battery$/i, '') + (isCrit(low[0]) ? ' Akku fast leer' : ' Akku schwach') : low.length + ' Akkus schwach';
+    r.value = low.length === 1 && low[0].pct != null ? Math.round(low[0].pct) + ' %' : null;
+    r.tone = low.some(isCrit) ? 'bad' : 'warn';
     r.entity = low.length === 1 ? low[0].st.entity_id : null;
+    // Stabiler Inhaltsschlüssel (casora-core settleSeen): Neustart macht den Eintrag nicht neu.
+    r.seen = low.map(function (x) { return { k: x.st.entity_id, t: Date.parse(x.st.last_changed || '') }; });
     out[idx] = r;
     return out;
   }
@@ -1143,6 +1131,10 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         var an = entry.name || (api && api.nameOf ? api.nameOf(st) : '') || 'Alarm';
         // Symbole wie die Alarm-Badge je Zustand (03.10.2026), sec = ruhiges Farbsystem im Mitteilungszentrum.
         var ic = window.casoraSecurityIcon ? window.casoraSecurityIcon(id, s, st && st.attributes) : 'lock-fill';
+        // Weich (05.10.2026): dieselben Wörter wie Kachel, Badge und Popup (casoraSecurityWord).
+        var sw = window._casoraSoft && window._casoraSoft() && window.casoraSecurityWord ? window.casoraSecurityWord(id, s) : null;
+        if (sw && s === 'triggered') sw = 'ausgelöst';
+        if (sw) return { label: an + ' ' + sw.replace(/^./, function (c) { return c.toLowerCase(); }), icon: ic, tone: s === 'triggered' ? 'bad' : s === 'disarmed' ? 'warn' : 'good', sec: true };
         if (MODE[s]) return { label: an + ' umgeschaltet auf ' + MODE[s], icon: ic, tone: 'good', sec: true };
         if (s === 'disarmed') return { label: an + ' ausgeschaltet', icon: ic, tone: 'warn', sec: true };
         if (s === 'triggered') return { label: an + ' ausgelöst', icon: ic, tone: 'bad', sec: true };
@@ -1257,6 +1249,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
             tone: (a.severity === 'Severe' || a.severity === 'Extreme') ? 'bad' : 'warn',
             entity: id,
             rank: 1,
+            seen: [id + '|' + warningType(st) + '|' + String(a.severity || '') + '|' + String(a.expires || '')],
           });
         });
       }
@@ -1325,6 +1318,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
             icon: x[3],
             tone: bad ? 'bad' : 'warn',
             entity: x[1],
+            seen: [x[0] + '|' + items.join(',')],
           });
         });
 
@@ -1555,7 +1549,9 @@ window._casoraBadgeRows = function (root) {
   var rows = root.querySelectorAll('#badges, #badges_climate, #badges_presence, #badges_media, '
     + '#badges_lights, #badges_security, #badges_energy, #badges_scenes, '
     // Handy (casora_mobile_filter_badges / casora_mobile_sensor_chips): dieselben weichen Ränder.
-    + '#climate_row, #security_row, #energy_row, #rooms_row');
+    + '#climate_row, #security_row, #energy_row, #rooms_row, '
+    // Raumseite am Handy: Unter-Reihen der Sammel-Badges (wie am Desktop, 05.10.2026).
+    + '#room_sub_climate, #room_sub_security, #room_sub_lights, #room_sub_presence, #room_sub_energy, #room_sub_media');
   if (!rows.length) {
     // Erstes Zeichnen: die Felder stehen erst nach dem Rendern im Schatten-DOM.
     // Höchstens 20 Versuche (6 s) – Karten ohne Badge-Reihen sollen nicht ewig nachfragen.
@@ -1692,3 +1688,115 @@ window._casoraFadeRow = function (row) {
   setTimeout(later, 600);
   later();
 };
+
+// ── Handy-Startseite: Abstand Kopfleiste → „Zuhause“ nach langer Pause (05.10.2026) ─────────
+// Gemeldet: Nach längerer Zeit im Hintergrund stand die Zeile „Zuhause / Wetter“ am Handy rund
+// 150 px zu tief unter der Kopfleiste; Aktualisieren behob es. Im Test (WebKit: Viewport-
+// Wechsel, verstecken/zeigen, pageshow, Verbindungsabbruch) ließ es sich nicht nachstellen.
+// Darum hier robust: Den natürlichen Abstand des Kopfs zum Seitenanfang einmal merken; nach
+// Rückkehr (pageshow, sichtbar nach ≥ 20 s im Hintergrund) neu messen; Größenwechsel merken nur neu. Ist der Kopf
+// mehr als 40 px tiefer, erst alles neu berechnen lassen (resize-Ereignis), hilft das nicht,
+// die Seite neu laden. Was dabei auffiel, steht in localStorage „casora.gapTrace“ (Diagnose).
+(function () {
+  if (window._casoraGapGuard) return;
+  window._casoraGapGuard = true;
+  var MQ = window.matchMedia('(max-width: 767px) and (orientation: portrait)');
+  var natural = null, hiddenAt = 0, backAt = 0, busy = false;
+  function isHead(e) {
+    var t = e._config && e._config.template;
+    return [].concat(t || []).indexOf('casora_mobile_weather') > -1;
+  }
+  function findHead() {
+    var hit = null;
+    (function walk(r, d) {
+      if (hit || !r || d > 14 || !r.querySelectorAll) return;
+      var list = r.querySelectorAll('button-card');
+      for (var i = 0; i < list.length; i++) if (isHead(list[i])) { hit = list[i]; return; }
+      var all = r.querySelectorAll('*');
+      for (var j = 0; j < all.length && !hit; j++) if (all[j].shadowRoot) walk(all[j].shadowRoot, d + 1);
+    })(document, 0);
+    return hit;
+  }
+  function viewOf(el) {
+    var n = el;
+    for (var i = 0; i < 30 && n; i++) {
+      if (n.tagName === 'HUI-VIEW') return n;
+      n = n.parentElement || (n.getRootNode && n.getRootNode().host) || null;
+    }
+    return null;
+  }
+  function measure() {
+    if (!MQ.matches || !/-mobile\//.test(location.pathname)) return null;
+    var h = findHead(), v = h && viewOf(h);
+    if (!h || !v) return null;
+    var hr = h.getBoundingClientRect(), vr = v.getBoundingClientRect();
+    if (!hr.height || !vr.height) return null;
+    return { gap: Math.round(hr.top - vr.top), head: h, view: v };
+  }
+  function trace(m, why) {
+    try {
+      var out = { at: new Date().toISOString(), why: why, natural: natural, gap: m.gap,
+        ih: window.innerHeight, vv: window.visualViewport ? Math.round(window.visualViewport.height) : null, chain: [] };
+      var n = m.head;
+      for (var i = 0; i < 12 && n && n !== m.view; i++) {
+        var s = n.previousElementSibling, sib = [];
+        while (s) { var r = s.getBoundingClientRect(); if (r.height > 4) sib.push((s.tagName || '') + ':' + Math.round(r.height)); s = s.previousElementSibling; }
+        var cs = getComputedStyle(n);
+        out.chain.push((n.tagName || '') + ' mt=' + cs.marginTop + ' pt=' + cs.paddingTop + (sib.length ? ' vor=' + sib.join(',') : ''));
+        n = n.parentElement || (n.getRootNode && n.getRootNode().host) || null;
+      }
+      var all = JSON.parse(localStorage.getItem('casora.gapTrace') || '[]');
+      all.push(out);
+      localStorage.setItem('casora.gapTrace', JSON.stringify(all.slice(-5)));
+    } catch (e) {}
+  }
+  function check(why) {
+    if (busy) return;
+    var m = measure();
+    if (!m) return;
+    if (natural == null) { natural = m.gap; return; }
+    if (m.gap <= natural + 40) { if (m.gap < natural) natural = m.gap; return; }
+    busy = true;
+    trace(m, why);
+    window.dispatchEvent(new Event('resize'));
+    setTimeout(function () {
+      var m2 = measure();
+      busy = false;
+      if (!m2 || m2.gap <= natural + 40) return;
+      trace(m2, why + ':reload');
+      // Nicht mitten in einer Bedienung: offenes Popup oder Raum lässt die Seite stehen.
+      if (window.casoraPopup && window.casoraPopup.surface) return;
+      // Nie in einer Schleife: höchstens ein Neuladen pro Minute.
+      try { if (Date.now() - Number(sessionStorage.getItem('casora.gapReload') || 0) < 60000) return; } catch (e) {}
+      try { sessionStorage.setItem('casora.gapReload', String(Date.now())); } catch (e) {}
+      location.reload();
+    }, 900);
+  }
+  // Erste Messung, wenn die Seite steht (einmal nach dem Laden, nur Startseite ohne Filter).
+  var tries = 0;
+  var iv = setInterval(function () {
+    if (++tries > 40 || natural != null) { clearInterval(iv); return; }
+    if (document.hidden) return;
+    var m = measure();
+    if (m) natural = m.gap;
+  }, 1500);
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { hiddenAt = Date.now(); return; }
+    if (hiddenAt && Date.now() - hiddenAt >= 20000) { backAt = Date.now(); setTimeout(function () { check('visible'); }, 1500); }
+  });
+  window.addEventListener('pageshow', function (e) { if (e.persisted) { backAt = Date.now(); setTimeout(function () { check('pageshow'); }, 1500); } });
+  // Größe/Drehung ändern den Abstand zu Recht (Schriftgröße, Querformat): dann nur neu merken,
+  // nie neu laden. Gilt für window- und visualViewport-resize, solange die Seite sichtbar ist.
+  var rt = null;
+  function remeasure() {
+    if (document.hidden) return;
+    clearTimeout(rt);
+    rt = setTimeout(function () {
+      // Kurz nach der Rückkehr entscheidet check(), nicht das Neu-Merken (iOS meldet dabei oft ein resize).
+      if (busy || Date.now() - backAt < 6000) return;
+      var m = measure(); if (m) natural = m.gap;
+    }, 1500);
+  }
+  window.addEventListener('resize', remeasure);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', remeasure);
+})();

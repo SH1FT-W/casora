@@ -29,6 +29,9 @@ const browsers = [];
 // Browser öffnen (Optionen wie harness.open, zusätzlich lang: 'en' für englische Oberfläche).
 export async function open(opts = {}) {
   const o = await H.open(opts);
+  // Die Welle öffnet ihre Liste im Casora-Look von selbst (1.0.11); Tests, die das Antippen prüfen,
+  // brauchen den alten Anfangszustand. Wer das automatische Öffnen prüft: open({ welleAuto: true }).
+  if (!opts.welleAuto) await o.context.addInitScript(() => { window.CASORA_QA_NO_WELLE_AUTO = true; });
   if (opts.lang) await o.context.addInitScript((l) => localStorage.setItem('selectedLanguage', JSON.stringify(l)), opts.lang);
   browsers.push(o.browser);
   page = o.page;
@@ -63,7 +66,14 @@ export async function need(label, ok, info) {
   await finish();
 }
 
+// Aufräumen, das auch bei need() (beendet sofort) laufen muss, z. B. Prüf-Dashboards löschen
+// oder Benutzerdaten zurücksetzen. Sonst sahen spätere Tests auf demselben HA die Reste
+// (04.10.2026: r39 brach per need() ab, das dunkle Weich-Theme blieb stehen, r32 sah Nachtbilder).
+const finishers = [];
+export function atFinish(fn) { finishers.push(fn); }
+
 export async function finish() {
+  while (finishers.length) { try { await finishers.shift()(); } catch (e) { /* weiter */ } }
   for (const b of browsers) { try { await b.close(); } catch (e) { /* schon zu */ } }
   if (!checks) { fails++; console.log('  FEHLER keine Prüfung gelaufen'); }
   if (fails) console.log(`FAIL ${NAME} – ${fails} von ${checks} Prüfungen` + (firstShot ? ` (Bild: ${firstShot})` : ''));
@@ -173,6 +183,21 @@ export async function studio(pg, dash) {
 // Läuft das Studio im neuen Aufbau (Vorschau ist der Editor)?
 export const isB = (pg) => pg.evaluate(() => { const p = window.__panel && window.__panel();
   return !!(p && p.classList.contains('bmode')); });
+
+// Studio-Schritte, die ein Neuladen des Studios abbrechen kann („Execution context was destroyed“):
+// Das Studio lädt neu, wenn kurz vorher ein Dashboard gespeichert wurde (zu Beginn des Gates durch
+// das Anlegen der Prüf-Dashboards). Dann Studio neu öffnen und den Schritt einmal wiederholen –
+// ein echter Messfehler fällt beim zweiten Mal genauso auf.
+export async function studioRetry(pg, dash, step) {
+  try { return await step(); } catch (e) {
+    if (!/context was destroyed|navigation/i.test(String(e && e.message))) throw e;
+    console.log('  (Studio hat neu geladen – Schritt wird wiederholt)');
+    await pg.waitForLoadState('domcontentloaded').catch(() => {});
+    await pg.addScriptTag({ content: PIERCE }).catch(() => {});
+    await studio(pg, dash);
+    return step();
+  }
+}
 
 // Dashboard-Ansicht öffnen und warten, bis die Kacheln stehen.
 export async function dashboard(pg, url, min = 5) {

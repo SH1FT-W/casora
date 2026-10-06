@@ -4,37 +4,119 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
-## 1.1.0-beta.1 – 04.10.2026
+## 1.0.11 – 05.10.2026
 
-Beta des neuen Studios. Das bisherige Studio ist nur einen Schalter entfernt.
+### Verbessert
+- Welle (Casora-Look, Desktop/Tablet): Läuft etwas, öffnet sich die Liste unter der Welle von selbst, auch nach dem Neuladen. Klappt man sie selbst zu (Welle, daneben tippen, Escape), bleibt sie auf diesem Gerät zu, auch nach dem Neuladen, bis eine neue Wiedergabe startet. Schließt sie sich von selbst, weil nichts mehr läuft, zählt das nicht als zugeklappt.
+
+## 1.0.10 – 05.10.2026
 
 ### Neu
-- **Die Vorschau ist der Editor:** Das Studio öffnet mit einer großen Vorschau des Raums. Klick (am Handy:
-  Antippen) auf den Titel, ein Badge oder eine Kachel, und die Einstellungen öffnen sich gleich daneben im
-  Inspektor, am Handy als Blatt von unten. Schließen mit dem Kreuz, Esc oder einem Tipp daneben.
-- **Werkzeugleiste statt Seitenleiste:** Räume (wechseln, hinzufügen, umbenennen, Symbol, nach vorne oder
-  hinten, löschen), Elemente (der Raum mit allen Abschnitten, auch was die Vorschau nicht zeigt), Dashboard
-  (Aussehen und Bedienung, Wetter, Uhrzeit, Benachrichtigungen, Szenen, Zeitreise, Handy-Ansicht) und
-  Zuhause (Haus und Geräte, Glocke und Meldungen, neue Dashboards, KI, Außenwerte und Strompreis, Lüften,
-  Updates). Ein verfügbares Update steht in der Leiste.
-- **Nichts verschwindet:** Ausgeschaltete Kacheln bleiben in der Vorschau als gestrichelte Platzhalter.
-  Eine Liste unter der Vorschau nennt alles, was die Vorschau nicht zeigt (ausgeschaltete, nur am Handy
-  oder gerade verborgene Kacheln, ausgeschaltete Badges), und öffnet es mit einem Klick. Badges und
-  Kacheln haben ihren Schalter direkt in der Zeile.
-- **Sortieren in der Vorschau:** Badges und Kacheln mit der Maus ziehen, am Touchscreen nach langem
-  Drücken; kurzes Wischen scrollt weiter. Der eigene Bearbeiten-Modus für die Reihenfolge entfällt, die
-  Griffe in der Liste tun dasselbe.
-- **Tastatur:** Tab erreicht alles in der Vorschau, Enter öffnet es und setzt den Fokus in den Inspektor,
-  Alt mit den Pfeiltasten verschiebt ein Badge oder eine Kachel, Esc schließt und gibt den Fokus zurück.
-- **Zurück zum bisherigen Studio:** „…“ → „Neues Studio“ schaltet das neue Studio für diesen Browser aus
-  und wieder ein.
+- Wiedergabe im Casora-Look (Welle oben, Handy-Liste, Medien-Zeile im Raum): Spielen mehrere Player denselben Titel desselben Interpreten, stehen sie in einer Zeile, z. B. „HomePod Küche + Büro · NICKLAS“, ab drei Playern „HomePod Küche + 2“. Play und Pause steuern alle Player der Zeile zusammen, Antippen öffnet das Popup des ersten.
+- Wiedergabe ausblenden: Eine Zeile nach links wischen (Finger oder Maus) zeigt „Ausblenden“. Die Wiedergabe verschwindet dann nur auf diesem Gerät, bis der Player etwas anderes spielt. Sind alle ausgeblendet, verschwindet auch die Welle oben.
 
 ### Behoben
-- Versionsnummern von Vorabversionen (1.1.0-beta.1) stehen im Studio und in „Neu in Casora“ vollständig da.
+- Wiedergabe nach dem Laden: Im Casora-Look blitzte nach Cache leeren oder Neuladen kurz der alte Player auf (Desktop: Kachel-Stapel unter der Welle, Handy: Medien-Zeile), bis die Zusatz-Skripte nachgeladen waren. Die Vorlagen erkennen den Casora-Look jetzt schon beim ersten Zeichnen am Theme und blenden den alten Player gleich aus.
+- Wiedergabe: Pausierte Player verschwinden nach der Pausen-Frist jetzt von selbst. Bisher blieben sie in Welle und Listen stehen, bis irgendein anderer Player wechselte, und die Anzeige sprang dann plötzlich um. Außerdem gewann am Handy manchmal eine ältere Fassung der Wiedergabe-Logik aus der Vorlage; jetzt gilt überall dieselbe.
+- Szenen „Zuletzt aktiv“: Tage werden nach Kalendertag gezählt. Eine Szene von gestern Abend heißt jetzt „Gestern“ statt ab 36 Stunden „Vor 2 Tagen“ (#12, Refs #11).
+
+## 1.0.9 – 05.10.2026
+
+### Neu
+- Handy-Raumseite wie am Desktop und Tablet: Die Badges oben auf der Raumseite am Handy sind jetzt dieselben wie im Raum-Kopf am Desktop/Tablet: Sicherheit, Klima, Licht, Personen, Energie und Medien, mit denselben Texten, in derselben Reihenfolge und mit derselben Einstellung „einzeln oder gesammelt“. Antippen einer Sammel-Badge klappt ihre Einzelnen darunter auf (nur auf diesem Gerät). Bisher zeigte das Handy eine eigene, kleinere Auswahl: ohne Energie, Klima als einzelne Messwerte, Türen und Fenster nur teilweise. Das greift für alle Dashboards automatisch mit dem Update, ohne Speichern im Studio, auch für aus Hemma umgezogene. Die Handy-Vorschau im Studio zeigt dasselbe.
+- Luftqualität im Badge (Casora-Look): neues Wind-Symbol; bei mäßiger Luft kommen zwei, bei schlechter vier Partikel dazu. Der Kreis hat wieder die normale Stufenfarbe.
+
+### Verbessert
+- Handy, Casora-Look (hell und dunkel): Der Schleier über dem Hintergrundfoto kommt jetzt von oben und reicht bis knapp unter „Favoriten“, damit Titel, Badges und die erste Überschrift gut lesbar sind. Darunter bleibt das Foto klar bis ganz unten, ohne Leinen- bzw. Anthrazit-Fläche am unteren Rand. In 1.0.8 war der Schleier bei „Favoriten“ schon fast weg und unten lag dafür ein heller Verlauf. Die Raumseiten am Handy bekommen denselben Verlauf von oben.
+
+## 1.0.8 – 05.10.2026
+
+### Neu
+- Wetter über dem Raumtitel am Desktop und Tablet größer (Casora-Look): Temperatur und Symbol deutlich größer, daneben zweizeilig der Zustand und „H 17° · T 9° · 20 % Regen“ aus der Tagesvorhersage. Ohne Tagesvorhersage fällt die zweite Zeile weg. Im Studio unter Wetter lässt sich das mit „Details anzeigen“ abschalten, dann stehen nur Temperatur und Symbol da. Das Handy bleibt unverändert, Hemma 1 und Hemma 2 ebenso.
+- Die Uhr oben links ist im Casora-Look minimal größer (16 statt 15 px).
+
+### Geändert
+- Die Themes haben neue Namen: Casoras eigener Look heißt im Profil jetzt „Casora“ (vorher „Casora Weich“), die beiden klassischen Looks „Hemma 2“ (vorher „Casora Standard“) und „Hemma 1“ (vorher „Casora Glass“). Eine gespeicherte Wahl zieht beim ersten Start von selbst mit, auch die eigene Wahl im Browser.
+- Alarm im Casora-Look: „Aktiv · Abwesend“ statt „Aktiv · Unterwegs“, passend zum Modus in Alarmo.
+- Handy, Casora-Look hell: Der Leinen-Schleier über dem Hintergrundfoto reicht nur noch von oben bis etwa „Favoriten“, darunter bleibt das Foto klar und läuft erst ganz unten weich in Leinen aus. Bisher lag er von oben bis unten über dem Foto, alles wirkte milchig. Auch die Raumseiten am Handy sind dadurch klarer.
+- Luftqualität im Badge (Casora-Look): sieben große Punkte statt der feinen Punktgrafik, die Punkte wachsen mit der Belastung, der Kreis ist etwas dunkler. Das alte Symbol war im kleinen Kreis kaum zu erkennen, vor allem auf Gelb.
+- KI-Update-Prüfung: Für Casora-Updates bekommt die KI die Release-Notes direkt mit, statt sie selbst bei GitHub abzurufen. Bisher kam dort oft „Release-Notes nicht abrufbar“.
+
+### Behoben
+- Kameras: Eine Kamera gilt nur noch als offline, wenn Home Assistant sie als nicht verfügbar meldet. Bisher hat Casora zusätzlich ein Standbild abgerufen; bei langsamen Kameras (zum Beispiel Reolink, Standbild bis über 10 Sekunden) brach Home Assistant ab und Kachel, Badges und Popup zeigten „Offline“, obwohl die Kamera lief. Das Popup legte das sogar über ein laufendes Live-Bild.
+- Saugroboter: „hat fertig gereinigt“ stand nach einer Reinigung mit Zwischenstopps (Mopp waschen) manchmal zweimal in der Glocke, etwa nach einem Home-Assistant-Neustart mitten in der Reinigung. Jetzt bleibt je Reinigung genau eine Meldung, zur letzten Rückkehr an die Station.
+- Popup „Türen & Fenster“ im Casora-Look hell: Die weißen Zeilen hatten unten an den Ecken einen eckigen grauen Schatten. Der Schatten läuft jetzt weich um die runden Ecken.
+
+## 1.0.7 – 05.10.2026
+
+### Verbessert
+- Weich, Kachelreihe am Desktop und Tablet: Liegen rechts noch Kacheln, blendet die angeschnittene Kachel weich zum Rand aus, darunter zeigen kleine Seitenpunkte, wie viel noch kommt (antippbar). Einstellbar über die Theme-Variable `casora-row-overflow` (`fade`, `arrows` oder `more`).
+- Akku-Anzeigen überall einheitlich: OK, Schwach (20 % oder weniger), Fast leer (10 % oder weniger), Lädt und Unbekannt, mit denselben Wörtern und Farben in Batterien-Kachel und -Popup, Glocke, Schloss, Aquarium, Saugroboter und Thermostat. Die Glocke färbt nach dem schwächsten Akku orange oder rot statt immer rot.
+- Weich, Popups: Inhaltskarten heben sich unter dem Mauszeiger nicht mehr an, lange Popups haben unten mehr Luft und blenden in der Popup-Farbe aus.
+- Weich, Jalousie-Popup: Kopf, Regler und Zeilen zeigen dasselbe Lamellen-Symbol wie die Kachel.
+- Weich, Handy-Raumseite: Kategorie-Überschriften so groß wie „Szenen“; eine leere Kategorie zeigt einen Hinweis statt leer zu bleiben.
+- Weich dunkel: ausgeschaltete Schalter warmgrau mit cremefarbenem Knopf statt fast schwarz.
+- Alarm-Popup: Modusliste in voller Breite, der Schalter heißt „Alarm“ (an = scharf).
+- Pflanzen-Popup: zeigt nur noch Pflanzen-Messwerte, keine fremden Sensoren mehr.
+- Rezept-Popup (Weich): Knöpfe in Ton und Sand, Titel kräftiger.
+- Weich, Kachelreihe am Desktop und Tablet: Der weiche Verlauf sitzt jetzt fest am Rand der Reihe, die Kacheln laufen darunter durch; er wandert nicht mehr mit einer Kachel mit und zeigt keine harte Schattenkante. Das Wischen mit Touchpad oder Mausrad läuft wieder flüssig: Die Reihe rastet nicht mehr an Kachelkanten ein (in Chrome zog sie bei jedem Wischschritt zurück, in Safari hing sie und sprang nach dem Loslassen nach; bei Touch bleibt das sanfte Einrasten, die Pfeile landen weiter an einer Kachelkante), beim Zurückwischen läuft die Reihe am Anfang nicht mehr in die Zurück-Geste des Browsers und hängt dort nicht mehr, der Verlauf ändert mitten im Wischen nicht mehr den Aufbau der Kacheln, und die Reihe misst höchstens einmal pro Bild nach, nur noch beim Umsortieren statt bei jeder Zustandsänderung, und der Player „Aktuelle Wiedergabe“ schiebt pro Sekunde nur noch die Fortschrittsbalken weiter, statt die Liste neu zu bauen.
+- Weich, „Aktuelle Wiedergabe“: Statt des seitlich scrollenden Karussells (Handy) und der Medien-Pillen unter den Badges (Desktop und Tablet) stehen alle Player jetzt in einer ruhigen Karte, je Player eine Zeile mit Cover, Titel, „Interpret · Gerät“, dünnem, mitlaufendem Fortschritt und rundem Play/Pause-Knopf. Antippen einer Zeile öffnet wie bisher das Medien-Popup. Am Desktop und Tablet stehen die Zeilen nebeneinander und brechen um, statt seitlich zu scrollen; damit ist auch die abgeschnittene Schattenkante unter dem bisherigen Player weg. Standard und Glas bleiben unverändert. Die Studio-Vorschau am Handy zeigt die neue Liste ebenfalls.
+- Weich, Medien-Welle oben rechts (Desktop und Tablet): Ein Tipp auf die Welle öffnet jetzt ein ruhiges Menü darunter im Stil des Mitteilungsmenüs, statt den Stapel der Mini-Player-Kacheln aufzuklappen. Jeder Player ist eine Zeile genau wie in der Liste „Aktuelle Wiedergabe“: Cover, Titel, „Interpret · Gerät“, dünner, mitlaufender Fortschritt und runder Play/Pause-Knopf im Akzent-Ton. Lange Titel enden mit Auslassungspunkten, ohne Cover steht ein Noten-Symbol. Antippen einer Zeile öffnet wie bisher das große Medien-Popup; Tipp neben das Menü, erneut auf die Welle oder Escape schließt es. Endet die letzte Wiedergabe bei offenem Menü, blendet es sich selbst aus und die Welle verschwindet wie bisher. Hell und dunkel. Am Handy gibt es keine Welle, dort bleibt alles wie es ist; Standard und Glas behalten den Kachel-Stapel. Die Studio-Vorschau am Desktop zeigt die offene Welle als dieselbe Liste.
+- Weich, Navigationsleiste am Handy: kompakte Kapsel nur mit Symbolen; das aktive Ziel wird zur Pille in hellem Sand mit seinem Namen (Zuhause, der offene Raum oder Szenen), wie in der Raumleiste am Desktop. Fläche, Schatten und Unschärfe kommen von der Desktop-Raumleiste, die Raum- und Szenen-Menüs sehen aus wie ihre Menüs (gleiche Fläche, normale Schrift, aktiver Eintrag in hellem Sand). Alle Ziele, die Menüs und der Raumwechsel funktionieren wie bisher. Standard und Glas behalten die Leiste mit Beschriftung. Die Studio-Vorschau am Handy zieht mit.
+- Weich, Knöpfe oben rechts: gleicher Aufbau, gleiche Knöpfe und gleiche Einträge im ⋯-Menü wie bisher, ruhigere Optik. Die Kapsel am Handy ist 48 px hoch, die Kreise am Desktop sind 40 px groß mit 8 px Abstand und bleiben mittig zur Raum-Leiste; beide haben dieselbe helle Fläche mit weichem Schatten, ohne Randlinie und Glanzkante. Die Symbole sind etwas leichter, der Trennstrich kürzer und zarter, Zähler und Punkt der Glocke Karamell statt Rot, und die Medien-Welle (wenn etwas spielt) steht in einem passenden Kreis in Ton-Tinte. Casoras Menüs bekommen 44-px-Zeilen, leicht getönte Symbolkreise und 24 px Radius. Hell und dunkel; Standard und Glas bleiben unverändert.
+- Abfall-Kachel und Abfall-Popup (Weich-Look): Am Abholtag zeigt die Kachel jetzt die Farbe der Tonne als vollen Kreis mit hellem Symbol. Bisher war Restmüll ein graues Symbol auf grauem Kreis und ging vor allem im Dunkelmodus fast unter. Alle Abfallarten nutzen überall die Popup-Farben (Kachel, Popup, Monatskalender, Kalenderpunkte), Restmüll als deckendes warmes Taupe je Modus statt eines halb durchsichtigen Brauns. Problemstoffe bekommen ein eigenes Rot statt desselben Oranges wie Sperrmüll. Einstellbar über die Theme-Variablen `casora-waste-rest`, `casora-waste-bio`, `casora-waste-paper`, `casora-waste-yellow`, `casora-waste-glass`, `casora-waste-bulky`, `casora-waste-hazard`, `casora-waste-other` und `casora-waste-glyph`. Andere Looks bleiben unverändert.
+
+### Behoben
+- Saugroboter in der Glocke: Ein Sauger, der mitten in der Reinigung zur Station fährt (Mopp waschen, absaugen, laden), meldet nicht mehr bei jedem Andocken „hat fertig gereinigt“. Verrät die Integration den Grund (Status wie Moppwäsche, Absaugen, Trocknen oder Laden, Fortschritt unter 100 %), zeigt die Glocke stattdessen einen laufenden Eintrag „Pause · wäscht Mopp“. Ein eindeutiges Ende (Fortschritt 100 %, neues „Letztes Reinigungsende“, Status fertig) zählt sofort. Ohne solche Sensoren gilt der Sauger nach 10 Minuten Ruhe an der Station als fertig; fährt er vorher wieder los, ist es dieselbe Reinigung. Gilt für alle Hersteller, live und beim Neuaufbau der Glocke aus dem Logbuch; falsche Einträge früherer Zwischenstopps verschwinden.
+- Kameras: Eine Kamera, die eine Zeit lang kein Bild lieferte, blieb in Badges als „offline“ stehen, auch wenn sie längst wieder lief. Als offline gemerkte Kameras werden jetzt jede Minute und beim Zurückkehren zur Seite neu geprüft, alle Karten und Badges mit dieser Kamera zeichnen sich dann neu.
+- Handy-Kachelraster: Eine Kachel, die nur unter einer Bedingung erscheint (zum Beispiel die Alarm-Kachel bei „Abwesend“), war einige Pixel höher als die anderen kleinen Kacheln, der Abstand zur Kachel darunter schrumpfte. Sie hat jetzt in jedem Look genau die Reihenhöhe.
+- Weich, Sicherheit: Kacheln, Badges, Popups und Glocke zeigen für denselben Zustand dieselbe Farbe, dasselbe Wort und dasselbe Symbol. Grün = in Ordnung (verriegelt, geschlossen, Alarm aktiv), Orange = Hinweis (entriegelt, offen, Alarm aus, Kamera offline), Rot = Gefahr (Alarm ausgelöst, offen bei Abwesenheit). Der Alarm klingt freundlicher und heißt überall „Aktiv · Zuhause“, „Aktiv · Unterwegs“, „Aktiv · Teilweise“ (statt Bypass), „Aus“ und „Alarm!“, mit dem Modus-Symbol in Badge, Kachel, Popup und Glocke; die kleine Handy-Kachel zeigt nur den Modus („Unterwegs“), damit nichts gekürzt wird. Schloss- und Kontaktzeilen in den Popups und der Popup-Ring nehmen diese Farben statt Petrol oder Sand. Andere Looks bleiben unverändert.
+- Schloss: Kachel, Badge und Popup sagen überall „Entriegelt“ bzw. „Verriegelt“, entriegelt in der Warnfarbe, und der Schalter im Popup steht wie der Kachel-Schalter.
+- Luftreiniger: Modi wie „auto“ oder „sleep“ erscheinen als „Auto“ und „Schlaf“, wenn Home Assistant keine Übersetzung liefert.
+- Wortwahl: „OK“ statt „Ok“, im Studio „1 An“ wie im Dashboard.
+- Studio: Ein Klick auf das schon aktive Tag- oder Nacht-Feld schaltet nicht mehr um.
+- Abfall-Popup mit Monatskalender (Weich, Desktop und Tablet): beide Spalten enden jetzt bündig. Der Monat füllt die Höhe der rechten Spalte (Heute, Tonnen, Rausstellen), und seine Platte beginnt auf derselben Linie wie die Tageskarte daneben. Am Handy bleibt alles wie bisher.
+- Weich, Studio-Handyvorschau: Klima- und Sicherheits-Badge zeigen dieselben Symbole wie am Handy (Haus-Thermometer, orangefarbenes Schild bei Handlungsbedarf) im farbigen Kreis, Temperaturen als „21°“, Jalousie-Kacheln Lamellen statt Vorhang.
+- Weich, Studio-Popup-Vorschau: Das Etikett „Popup · …“ über der Vorschau ist im hellen Modus gut lesbar.
+- Weich, Studio → Design & Bedienung → Design: Die drei Designs stehen nebeneinander, Namen einzeilig, „Legacy“ als kleines Etikett darunter.
+- Weich, Handy-Popups wie Thermostat oder Energie: Das Sheet ist nur so hoch wie sein Inhalt, statt immer bis oben zu reichen.
+- Handy-Kacheln: kürzere Texte, die nicht mehr abgeschnitten werden („Kein Sensor“ bei Energie und Solar-Tipp ohne Sensor, „Rezept“ als Name der Rezept-Kachel).
+- Weich, Wetter im Titel: gefülltes Wettersymbol in Titelfarbe statt dünner grauer Kontur.
+- Weich, Wetter-Popup: Die Überschriften „Nächste Stunden“, „7 Tage“ und der Diagrammtitel stehen wie in den übrigen Popups über ihrer Fläche.
+- Weich, Netzwerk-Popup: alle Netzwerk-Symbole in der Netzwerkfarbe (Blau), das „An“ eines WLANs ist nicht mehr grün.
+- Weich, Raumseite am Handy: Gescrollte Kacheln und Szenen scheinen nicht mehr hinter dem kleinen Raumtitel durch; er bekommt eine Leinenfläche, die mit dem Titel einblendet (hell und dunkel).
+- Handy-Startseite: Nach längerer Zeit im Hintergrund konnte der Abstand zwischen Kopfleiste und Zeile „Zuhause“ rund 150 px zu groß sein. Casora misst ihn bei der Rückkehr neu und richtet das Layout selbst (notfalls mit einmaligem Neuladen).
+
+## 1.0.6 – 04.10.2026
+
+### Neu
+- Handy, Raumseite: Die Kacheln sind nach Kategorien gruppiert wie in Apples Home-App: Licht, Klima (Heizung, Fußbodenheizung, Luftreiniger, Ventilator, Jalousien), Sicherheit, Lautsprecher und TVs, Wasser und Sonstiges, jeweils mit kleiner Überschrift. Innerhalb einer Gruppe bleibt die Studio-Reihenfolge. Räume mit höchstens 3 Kacheln oder nur einer Geräteart bleiben wie bisher ohne Überschriften. Studio → Design & Bedienung → Mobil: „Räume am Handy nach Kategorien gliedern“ (Standard an) schaltet es je Dashboard aus. Auch in der Studio-Vorschau am Handy erscheinen die Gruppen und folgen dem Schalter sofort.
+
+### Behoben
+- Sicherheits-Badge: Eine Kamera, die zwar als bereit gemeldet wird, aber kein Bild liefert (z. B. über einen Proxy), zählte im Badge als in Ordnung, während die Kamerakarte schon „Offline“ zeigte. Der Badge meldet sie jetzt ebenfalls als offline, auch der eigene Kamera-Badge im Raum.
+
+### Verbessert
+- Aquarium-Popup: Der Abschnitt mit den Akkus von Leck- und Temperatursensor heißt jetzt „Sensoren“ statt „Fühler“.
+- Dashboard, „…“-Menü: „Aktualisieren“ und „Neu laden (Cache leeren)“ sind jetzt ein Eintrag „Aktualisieren“, der beim Neuladen immer auch Casoras Zwischenspeicher leert.
+- Raumansicht am Handy (Weich): mehr Luft zwischen der Badge-Reihe unter dem Raumnamen und der ersten Kachelreihe (40 px statt 24 px), die Badges kleben nicht mehr an den Kacheln. Einstellbar über die Theme-Variable `casora-room-badges-gap-mobile`.
+- Medien-Popup an Desktop und Tablet (Apple TV und andere Player mit Apps): Die linke Spalte (Ausschalten, Apple Music öffnen, Weitere Einstellungen) hat jetzt eine eigene Überschrift „Gerät“ im selben Stil wie „Apps“ rechts, beide Spalten beginnen auf gleicher Höhe.
 
 ## 1.0.5 – 04.10.2026
 
+### Neu
+- Nach einem Casora-Update merkt ein offenes Dashboard die neue Version selbst (wenn sich Home Assistant
+  nach dem Neustart wieder verbindet, wenn der Tab wieder sichtbar wird und alle 10 Minuten) und zeigt
+  unten einen ruhigen Hinweis: „Casora wurde aktualisiert“ mit „Neu laden“. Er erscheint einmal je Update
+  und lässt sich wegklicken. Neu laden entfernt vorher Casoras Dateien aus dem Browser-Cache, damit jedes
+  Gerät wirklich die neuen Dateien bekommt; der Cache von Home Assistant selbst bleibt unberührt.
+- Dashboard, „…“-Menü: neuer Eintrag „Neu laden (Cache leeren)“ mit derselben Funktion.
+
 ### Behoben
+- Glocke: Nach einem Neustart von Home Assistant stand „2 Updates verfügbar“ wieder als neu da,
+  obwohl genau diese Updates schon gelesen waren. Stehende Einträge (Updates, Neustart ausstehend,
+  Akku schwach, Sicherheits- und Wetterwarnungen, Pflanzen, Geräte, Gerätepflege) behalten bei
+  gleichem Inhalt den Zeitpunkt, an dem sie zuerst gesehen wurden. Neu sind sie erst wieder, wenn
+  etwas Neues dazukommt, etwa ein weiteres Update oder eine neuere Version.
 - Einkaufsliste: Öl zeigt jetzt eine Flasche statt der Ölkanne vom Auto.
 - Glocke: Ein „fertig“-Eintrag (Saugroboter, Waschmaschine, Trockner, Spüler, Drucker) verschwand
   manchmal beim erneuten Öffnen, obwohl nichts gelesen oder gelöscht war. Ein abgeschlossener Vorgang
@@ -57,18 +139,31 @@ Beta des neuen Studios. Das bisherige Studio ist nur einen Schalter entfernt.
   bis ein Tagfoto dazukommt. HEIC-Dateien bekommen eine klare Meldung („als JPG exportieren“), und jeder
   Fehler sagt jetzt, was zu tun ist, statt eines technischen Textes. Ein ersetztes Foto erscheint sofort
   statt des alten.
+- Nach einem Neustart von Home Assistant zeigt ein offenes Dashboard nicht mehr für einige Sekunden den alten
+  Glas-Look, bis Casora geladen ist. Casora legt eine Kopie seiner Themes in den Theme-Ordner (wenn
+  configuration.yaml ihn mit `frontend: themes: !include_dir_merge_named themes` lädt, wie in der
+  Standard-Einrichtung), damit Home Assistant das Casora-Theme ab der ersten Sekunde kennt, und meldet seine
+  Themes beim Laden als Allererstes an.
 ### Verbessert
+- Weich dunkel: Die Navigationsleiste am Desktop und die Leiste oben rechts (Glocke, Assist) haben keinen hellen Rand mehr.
+- Weich: Der runde Zurück-Knopf in Räumen und Bereichen hat keinen glänzenden Rand mehr, er ist flach wie die Leiste am Handy.
 - Weich dunkel: Auch die Menüs aus der Leiste unten haben keinen hellen Rand mehr.
 - Weich am Handy: Die Leiste unten hebt sich klar von den Kacheln ab (hell fast weiß, dunkel fast schwarz, ohne den alten hellen Rand).
 - Weich: Aquarium-Diagramme werden auch dann ruhig, wenn die Kachel eine eigene grelle Farbe mitbringt (etwa aus dem Hemma-Umzug).
-- Weich, hell: Über dem Hintergrundfoto liegt jetzt ein heller Leinen-Schleier (oben etwa 66 %, nach unten
-  auslaufend), damit Abschnittsüberschriften, Titel und Wetter auf jedem Foto lesbar sind. Auf Startseite und
-  Raumseiten an Desktop, Tablet und Handy, auch in der Raumansicht am Handy. Schrift, Karten und
-  Navigationsleiste bleiben unverändert und liegen darüber. Dunkel, Standard und Glas bleiben wie bisher.
+- Weich: Über dem Hintergrundfoto liegt jetzt ein Lesbarkeits-Schleier in der Grundfarbe, hell in Leinen,
+  dunkel im dunklen Grundton, damit Abschnittsüberschriften, Titel, Badges und Wetter auf jedem Foto lesbar
+  sind. Am Handy (Startseite, Räume, Raumansicht) oben etwa 66 % und nach unten auslaufend. An Desktop und
+  Tablet liegt er nur links hinter Titel, Badges und Überschriften (links etwa 65 %, nach rechts auslaufend),
+  das Foto rechts bleibt klar. Schrift, Karten und Navigationsleiste bleiben unverändert und liegen darüber.
+  Standard und Glas bleiben wie bisher.
 - Updates-Popup: Nach dem Installieren eines Updates, das einen Neustart braucht, baut sich das offene
   Popup jetzt selbst um. Die Zeile verschwindet aus den verfügbaren Updates, „Wartet auf Neustart“
   erscheint und der Kopf bietet „Jetzt neu starten“, ohne das Popup zu schließen und neu zu öffnen.
   Nach dem Neustart verschwindet der Bereich wieder.
+- Updates-Popup am Handy: „Aktualisieren“ rechts in jeder Update-Zeile ist jetzt ein runder
+  Download-Knopf. Der Name hat dadurch mehr Platz, neue Version und KI-Urteil passen in eine Zeile.
+  Antippen wirkt wie bisher. Während des Aktualisierens dreht sich ein Kreis, „Neustart erforderlich“
+  zeigt ein Neustart-Symbol. Desktop und Tablet zeigen weiter den Text.
 - Handy: Der Punkt „Szenen“ in der unteren Leiste zeigt jetzt dieselben Szenen in derselben Reihenfolge
   wie die Szenen-Badge an Desktop und Tablet. Ist an der Badge nichts ausgewählt, stehen dort weiter alle
   Szenen. Bestehende Handy-Dashboards folgen der Badge sofort; einmal das Studio öffnen trägt die Auswahl

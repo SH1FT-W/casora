@@ -12,7 +12,7 @@
 //   CASORA_SHOTS_ROOM=living-room   Raum für die Studio-Bilder
 //   CASORA_SHOTS_DESK_ROOM=bedroom  Raum fürs Desktop-Raumbild
 //   CASORA_SHOTS_CLOCK=0            Uhr nicht auf 9:41 stellen
-//   CASORA_SHOTS_THEME="Casora Weich"  Design der Bilder (Standard: Casora Weich, das Hauptdesign)
+//   CASORA_SHOTS_THEME="Casora"  Design der Bilder (Standard: Casora, das Hauptdesign)
 //   CASORA_URL=http://localhost:<port>  eigenes Wegwerf-HA mit dem Demo-Haus statt casora-test (8124);
 //                                   Wächter 1 gilt nur für 8124, Wächter 2 (kein Hemma-Dashboard) immer
 //
@@ -39,7 +39,7 @@ const MOBILE = DASH + '-mobile';
 const ROOM = process.env.CASORA_SHOTS_ROOM || 'living-room';
 // Raum fürs Desktop-Raumbild: im Demo-Haus hat das Schlafzimmer die ruhigste Kachelreihe.
 const DESK_ROOM = process.env.CASORA_SHOTS_DESK_ROOM || 'bedroom';
-const THEME = process.env.CASORA_SHOTS_THEME || 'Casora Weich';
+const THEME = process.env.CASORA_SHOTS_THEME || 'Casora';
 const MODES = (process.env.CASORA_SHOTS_MODES || 'light,dark').split(',').filter(Boolean);
 const ONLY = process.argv.slice(2);
 fs.mkdirSync(DIR, { recursive: true });
@@ -255,7 +255,7 @@ async function panelCall(page, code) {
 async function studioMode(page, mode) {
   await page.evaluate((m) => {
     const p = window.__panel();
-    // Der Umschalter kippt bei jedem Klick – nur klicken, wenn die Vorschau noch falsch steht.
+    // Nur klicken, wenn die Vorschau noch falsch steht (das aktive Segment bleibt bei Klick aktiv).
     if (!!p._miniDark !== (m === 'night')) {
       const b = p.shadowRoot.querySelector(`#modeseg [data-mode="${m}"]`);
       if (b) b.click();

@@ -11,7 +11,7 @@ const dash = await casoraDashboard(has);
 await need('Casora-Dashboard mit Updates-Kachel', dash);
 const view = dash.config.views.find((v) => /"casora_updates"/.test(JSON.stringify(v))) || dash.config.views[0];
 // Gemeldet im Weich-Look; Standard läuft über denselben Code (Liste/Bereich live) und wird mitgeprüft.
-for (const theme of ['Casora Weich', null]) {
+for (const theme of ['Casora', null]) {
 const tag = theme ? 'weich' : 'standard';
 console.log('  – ' + tag);
 const { page } = await open(theme ? { width: 1440, height: 900, theme, dark: false } : { width: 1440, height: 900 });

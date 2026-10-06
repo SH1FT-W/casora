@@ -9,7 +9,7 @@ import { open, usePage, casoraDashboard, studioDashboard, dashboard, check, need
 
 const dash = (await casoraDashboard()) || { url: await studioDashboard(), config: { views: [{}] } };
 await need('Dashboard', dash && dash.url);
-const { page } = await open({ width: 1440, height: 900, theme: 'Casora Weich', dark: false });
+const { page } = await open({ width: 1440, height: 900, theme: 'Casora', dark: false });
 usePage(page);
 await dashboard(page, dash.url + '/' + (dash.config.views[0].path || '0'), 1);
 await need('Rezept-Skript geladen', await page.evaluate(() => !!(window._casoraRecipe && window._casoraRecipe.weekHtml && window._casoraHH)));

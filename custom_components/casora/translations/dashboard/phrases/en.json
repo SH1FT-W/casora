@@ -1,13 +1,19 @@
 {
  "exact": {
+  "Teilweise": "Partial",
+  "Alarm!": "Alarm!",
+  "ausgelöst": "triggered",
   "Abholung heute": "Pickup today",
   "Abholung morgen · heute Abend raus": "Pickup tomorrow · put out tonight",
   "Abholung": "Pickup",
+  "Casora wurde aktualisiert": "Casora was updated",
   "Keine Abholung": "No pickup",
   "An": "On",
   "Aus": "Off",
   "an": "on",
   "aus": "off",
+  "Neu laden": "Reload",
+  "Neu laden (Cache leeren)": "Reload (clear cache)",
   "Offen": "Open",
   "offen": "open",
   "Geöffnet": "Open",
@@ -204,6 +210,7 @@
   "Fährt zur Moppwäsche": "Going to mop wash",
   "Gehärteter Stahl": "Hardened steel",
   "Gerade kein Überschuss": "No surplus right now",
+  "Kein Sensor": "No sensor",
   "Kein Überschuss": "No surplus",
   "Kein Sensor gewählt": "No sensor selected",
   "Jetzt nutzen": "Use it now",
@@ -321,6 +328,11 @@
   "Mopp nicht angebracht": "Mop not attached",
   "Moppwäsche": "Mop wash",
   "Moppwäsche gestört": "Mop wash fault",
+  "Pause · wäscht Mopp": "Paused · washing mop",
+  "Pause · saugt ab": "Paused · emptying bin",
+  "Pause · trocknet": "Paused · drying mop",
+  "Pause · lädt": "Paused · charging",
+  "Pause · an der Station": "Paused · at the dock",
   "Muss gedüngt werden": "Needs fertilizing",
   "NO₂ erkannt – lüften": "NO₂ detected – ventilate",
   "Nachfüllen & Pflege": "Refill & care",
@@ -581,6 +593,7 @@
   "Aufgabe": "Job",
   "Steuerung": "Controls",
   "Pausieren": "Pause",
+  "Abspielen": "Play",
   "Fortsetzen": "Resume",
   "Druckraumlicht": "Chamber light",
   "Kamera": "Camera",
@@ -1285,9 +1298,36 @@
   "Wartung nötig": "Service needed",
   "Abfallkalender gerade nicht erreichbar": "Waste calendar unreachable right now",
   "Nicht erreichbar": "Unreachable",
-  "Die Abholtermine kommen wieder, sobald der Entsorger antwortet.": "Pickup dates will be back as soon as the collection service responds."
+  "Die Abholtermine kommen wieder, sobald der Entsorger antwortet.": "Pickup dates will be back as soon as the collection service responds.",
+  "Lautsprecher und TVs": "Speakers & TVs",
+  "Sonstiges": "Other",
+  "Schlaf": "Sleep",
+  "Eco": "Eco",
+  "Smart": "Smart",
+  "Turbo": "Turbo",
+  "Boost": "Boost",
+  "Natur": "Nature",
+  "Hier gibt es noch keine Geräte": "No devices here yet",
+  "Im Casora Studio einem Raum zuordnen": "Assign them to a room in Casora Studio",
+  "weitere": "more",
+  "Zum Anfang": "Back to start",
+  "Fast leer": "Almost empty",
+  "Alle Akkus OK": "All batteries OK",
+  "1 Akku schwach": "1 battery low",
+  "Akku fast leer": "Battery almost empty",
+  "Läuft gerade": "Now playing",
+  "Scharf": "Armed",
+  "Alarm unscharf": "Alarm disarmed"
  },
  "patterns": [
+  [
+   "^(.+) unscharf$",
+   "{1} disarmed"
+  ],
+  [
+   "^(.+) scharf · (.+)$",
+   "{1} armed · {2}"
+  ],
   [
    "^Wartet seit (.+)$",
    "Waiting for {1}"
@@ -1459,6 +1499,10 @@
   [
    "^(.+) hat fertig gereinigt$",
    "{1} finished cleaning"
+  ],
+  [
+   "^(.+) reinigt$",
+   "{1} cleaning"
   ],
   [
    "^(.+) ist auf der Arbeit$",
@@ -2317,6 +2361,38 @@
   [
    "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
    "Pickup dates will be back as soon as {1} responds."
+  ],
+  [
+   "^(\\d+) Akkus schwach$",
+   "{1} batteries low"
+  ],
+  [
+   "^(\\d+) Schwach$",
+   "{1} Low"
+  ],
+  [
+   "^(.+) Akku fast leer$",
+   "{1} battery almost empty"
+  ],
+  [
+   "^(.+) Akku schwach$",
+   "{1} battery low"
+  ],
+  [
+   "^(\\d+) Wiedergaben$",
+   "{1} playing"
+  ],
+  [
+   "^H (-?\\d+)°$",
+   "H {1}°"
+  ],
+  [
+   "^T (-?\\d+)°$",
+   "L {1}°"
+  ],
+  [
+   "^(\\d+) % Regen$",
+   "{1}% rain"
   ]
  ]
 }

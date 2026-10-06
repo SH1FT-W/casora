@@ -338,16 +338,86 @@
     return null;
   }
 
-  const ROOM_SECTION_ORDER = ['climate', 'lights', 'media', 'security', 'energy', 'presence'];
-  const ROOM_SECTION_OTHER = 'other';
-  const ROOM_SECTION_LABEL = {
-    climate:  'Klima',
-    lights:   'Beleuchtung',
-    media:    'Medien',
-    security: 'Sicherheit',
-    energy:   'Energie',
-    presence: 'Personen',
-    other:    'Sonstiges',
+  // ── Raum-Kategorien (04.10.2026) ──────────────────────────────────────────────────────────────
+  // Handy-Raumseite nach Kategorien gruppiert wie Apples Home-App (iOS 18): kleine, ruhige
+  // Überschrift je Gruppe, darunter das Zweierraster. Reihenfolge der Gruppen folgt Casoras
+  // Kachelregel (Beleuchtung → Heizung/FBH → Luftreiniger → Jalousie → … → Medien → Pflanzen) statt
+  // Apples „Klima zuerst“; Jalousien liegen wie bei Apple (Fenster/Rollos zählen dort zu Klima) in
+  // Klima. Innerhalb einer Gruppe bleibt die Studio-Reihenfolge.
+  // Standard an. Schalter: Studio → Design & Bedienung → Handy (room_groups, setzt über
+  // casora_mobile_bg --casora-room-groups: off), Raumseiten-Option group_by_category (true/false),
+  // je Gerät überschreibbar per localStorage 'casora-room-groups' (on | off).
+  const ROOM_GROUP_ORDER = ['lights', 'climate', 'security', 'media', 'water', 'other'];
+  const ROOM_GROUP_LABEL = {
+    lights: 'Licht', climate: 'Klima', security: 'Sicherheit',
+    media: 'Lautsprecher und TVs', water: 'Wasser', other: 'Sonstiges',
+  };
+  // Räume mit weniger Kacheln bleiben ungruppiert (Überschriften wären mehr als Inhalt).
+  const ROOM_GROUP_MIN_TILES = 4;
+  const ROOM_GROUP_BY_TEMPLATE = {
+    casora_light: 'lights',
+    casora_thermostat: 'climate', casora_air_purifier: 'climate', casora_air_device: 'climate',
+    casora_fan: 'climate', casora_humidifier: 'climate', casora_vent: 'climate', casora_cover: 'climate',
+    casora_lock: 'security', casora_alarm: 'security', casora_camera: 'security', casora_cameras: 'security',
+    casora_doorbell: 'security', casora_motion: 'security',
+    casora_media: 'media', casora_game: 'media',
+  };
+  const ROOM_GROUP_BY_DOMAIN = {
+    light: 'lights',
+    climate: 'climate', fan: 'climate', humidifier: 'climate', cover: 'climate',
+    lock: 'security', alarm_control_panel: 'security', camera: 'security',
+    media_player: 'media', remote: 'media',
+    valve: 'water', water_heater: 'water',
+  };
+  function _roomGroupOf(cfg, depth = 0) {
+    // Hüllen ohne eigenes Gerät (Swipe-Stapel, bedingte Karte): Kategorie der ersten inneren
+    // Karte, sonst Sonstiges. Vorher landete ein Thermostat-Stapel immer ganz unten in Sonstiges.
+    if (cfg && !cfg.template && !cfg.entity && depth < 4) {
+      const inner = cfg.card || (Array.isArray(cfg.cards) ? cfg.cards.find(Boolean) : null);
+      if (inner && typeof inner === 'object') return _roomGroupOf(inner, depth + 1);
+    }
+    const t = cfg?.template;
+    for (const n of (Array.isArray(t) ? t : [t])) {
+      if (n && ROOM_GROUP_BY_TEMPLATE[n]) return ROOM_GROUP_BY_TEMPLATE[n];
+    }
+    const ent = String(cfg?.entity || '');
+    const dom = ent.split('.')[0];
+    if (/bewaesser|bewässer|irrigation|sprinkler|garden_water|gartenwasser/i.test(ent)) return 'water';
+    if (dom === 'binary_sensor' && /door|window|tuer|tür|fenster|kontakt|contact/i.test(ent)) return 'security';
+    return ROOM_GROUP_BY_DOMAIN[dom] || 'other';
+  }
+  function _roomGroupOn(cfg) {
+    let v = '';
+    try { v = getComputedStyle(document.documentElement).getPropertyValue('--casora-room-groups').trim(); } catch (_) {}
+    if (cfg?.group_by_category === true) v = 'on';
+    if (cfg?.group_by_category === false) v = 'off';
+    try { const ls = localStorage.getItem('casora-room-groups'); if (ls) v = ls; } catch (_) {}
+    return v !== 'off' && v !== 'false';
+  }
+  // Kacheln eines Raums in Gruppen teilen: [{ key, cards }] in ROOM_GROUP_ORDER, oder null, wenn
+  // der Raum flach bleibt (zu wenige Kacheln oder nur eine Kategorie).
+  function _roomGroupSplit(cards) {
+    if (!Array.isArray(cards) || cards.length < ROOM_GROUP_MIN_TILES) return null;
+    const buckets = new Map();
+    for (const c of cards) {
+      const key = _roomGroupOf(c);
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key).push(c);
+    }
+    if (buckets.size < 2) return null;
+    return ROOM_GROUP_ORDER.filter((k) => buckets.has(k)).map((k) => ({ key: k, cards: buckets.get(k) }));
+  }
+  // Überschrift einer Gruppe in der Sprache des Dashboards.
+  function _roomGroupHeading(key) {
+    const label = ROOM_GROUP_LABEL[key] || key;
+    const shown = window.casoraTr ? window.casoraTr(label) : label;
+    // „Licht“ heißt sonst überall „Light“; als Gruppe schreibt Apple „Lights“ (04.10.2026).
+    return (key === 'lights' && shown === 'Light') ? 'Lights' : shown;
+  }
+  // Dieselbe Zuordnung für die Handy-Vorschau im Studio (casora-panel.js).
+  window.casoraRoomGroups = {
+    order: ROOM_GROUP_ORDER, label: ROOM_GROUP_LABEL, minTiles: ROOM_GROUP_MIN_TILES,
+    of: _roomGroupOf, split: _roomGroupSplit, heading: _roomGroupHeading,
   };
 
   const H_SCROLL_IDS = new Set(['media_row', 'climate_row', 'rooms_row']);
@@ -1249,7 +1319,13 @@
       // nächsten Öffnen), sondern erneut versuchen (_settleRoom, nächstes Öffnen).
       if (!rooms.length && roomMode) return;
       this._autoSectionsDone = true;
-      if (!rooms.length) return;
+      if (!rooms.length) {
+        // Kategorie ohne Kacheln (z. B. Energie ohne zugeordnete Geräte): Hinweis statt leerer
+        // Seite (Weich-Audit M5). Bringen die Favoriten doch Kacheln, nimmt
+        // _ensureFavoritesPopupSection den Hinweis wieder heraus.
+        if (this._config.filter_category) this._appendEmptyHint();
+        return;
+      }
       let i = 0;
 
       // Casora (30.09.2026): Entitäten der Raum-Kacheln – daraus findet die Szenenliste den
@@ -1313,32 +1389,16 @@
 
         // Casora (30.09.2026): Die Raumseite zeigt die Kacheln in der Studio-Reihenfolge
         // (room.tiles, per syncPairTiles aufs Handy übernommen). Nach Kategorien gruppiert
-        // wird nur noch auf ausdrücklichen Wunsch (group_by_category: true).
-        if (roomMode && this._config.group_by_category === true) {
-          const buckets = new Map();
-          for (const c of roomCards) {
-            const cat = _cardCategory(c);
-            const key = ROOM_SECTION_LABEL[cat] ? cat : ROOM_SECTION_OTHER;
-            if (!buckets.has(key)) buckets.set(key, []);
-            buckets.get(key).push(c);
-          }
-          const keys = ROOM_SECTION_ORDER.filter((k) => buckets.has(k));
-          if (buckets.has(ROOM_SECTION_OTHER)) keys.push(ROOM_SECTION_OTHER);
-          for (const key of keys) {
-            if (ROOM_SECTION_LABEL[key]) {
-              this._appendRevealCard({
-                type:       'custom:button-card',
-                template:   'casora_mobile_header',
-                full_width: true,
-                name:       ROOM_SECTION_LABEL[key],
-                variables:  { hide_caret: true, mobile_filter_categories: null },
-                styles:     {
-                  card:          [{ padding: `18px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})` }],
-                  custom_fields: { arrow: [{ display: 'none' }] },
-                },
-              }, this._contentEl, i);
-            }
-            this._appendEntityGrid(buckets.get(key), this._contentEl, i);
+        // wird nur auf Wunsch (siehe _roomGroupOn).
+        // Nur eine Kategorie oder sehr wenige Kacheln: flach wie bisher („Geräte“).
+        const groups = roomMode && _roomGroupOn(this._config) ? _roomGroupSplit(roomCards) : null;
+        if (groups) {
+          let first = !this._contentEl.children.length;
+          for (const { key, cards } of groups) {
+            this._appendGroupHeader(key, first, i);
+            first = false;
+            this._appendEntityGrid(cards, this._contentEl, i);
+            if (room.sort === false) this._contentEl.lastElementChild._casoraNoSort = true;
             i++;
           }
         } else {
@@ -1365,6 +1425,51 @@
       }
     }
 
+    // Raum-Kategorien: Überschrift einer Gruppe – seit dem Weich-Audit (M4, 05.10.2026) in derselben
+    // Stufe wie „Szenen“ (casora_mobile_header: Größe, 700, Titelfarbe, 24 px oben / 10 px unten),
+    // vorher kleiner und grau, das wirkte wie zwei Gliederungsebenen.
+    _appendGroupHeader(key, first, animIdx) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'display:block;width:100%;box-sizing:border-box;opacity:0;';
+      wrap._animIndex = animIdx;
+      wrap.setAttribute('data-casora-room-group', key);
+      const left = `calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC} + 2px)`;
+      const right = `calc(var(--casora-rail-left, 16px) + ${LANDSCAPE_GUTTER_CALC} + 2px)`;
+      const head = document.createElement('div');
+      head.style.cssText = [
+        `padding:${first ? 14 : 24}px ${right} 10px ${left}`,
+        'font-family:var(--casora-body-font, var(--primary-font-family, inherit))',
+        'font-size:var(--casora-mobile-section-size, 18px)', 'font-weight:700', 'letter-spacing:-0.3px', 'line-height:1.3',
+        'color:var(--casora-room-group-ink, var(--casora-mobile-title-color, var(--primary-text-color)))',
+        'box-sizing:border-box', 'white-space:nowrap', 'overflow:hidden', 'text-overflow:ellipsis',
+      ].join(';');
+      head.textContent = _roomGroupHeading(key);
+      wrap.appendChild(head);
+      this._contentEl.appendChild(wrap);
+    }
+
+    _appendEmptyHint() {
+      if (this._emptyHintEl?.isConnected) return;
+      const tr = (t) => (window.casoraTr ? window.casoraTr(t) : t);
+      const el = document.createElement('div');
+      el.setAttribute('data-casora-empty-hint', '');
+      el.setAttribute('data-no-i18n', '');
+      el.style.cssText = [
+        'box-sizing:border-box', 'width:100%', 'text-align:center',
+        `padding:40px calc(var(--casora-rail-left, 16px) + ${LANDSCAPE_GUTTER_CALC}) 24px`,
+        'font-family:var(--casora-body-font, var(--primary-font-family, inherit))',
+      ].join(';');
+      const h = document.createElement('div');
+      h.style.cssText = 'font-size:16px;font-weight:700;letter-spacing:-0.2px;color:var(--casora-mobile-title-color, var(--primary-text-color));';
+      h.textContent = tr('Hier gibt es noch keine Geräte');
+      const sub = document.createElement('div');
+      sub.style.cssText = 'margin-top:4px;font-size:13px;font-weight:500;color:var(--casora-text-2, var(--secondary-text-color));';
+      sub.textContent = tr('Im Casora Studio einem Raum zuordnen');
+      el.append(h, sub);
+      this._contentEl.appendChild(el);
+      this._emptyHintEl = el;
+    }
+
     _ensureFavoritesPopupSection() {
       if (this._favPopupDone) return;
       const container = this._container;
@@ -1384,6 +1489,7 @@
         (c) => _cardCategory(c) === this._config.filter_category);
       this._favPopupDone = true; // attempted, so don't rescan on every open
       if (!cards.length) return;
+      if (this._emptyHintEl) { this._emptyHintEl.remove(); this._emptyHintEl = null; }
       const frag = document.createDocumentFragment();
       this._appendRevealCard({
         type:      'custom:button-card',
@@ -1479,6 +1585,7 @@
       this._backBtn?.remove();
       this._backBtn = null;
       if (this._compactHeaderEl) { this._compactHeaderEl.remove(); this._compactHeaderEl = null; }
+      if (this._headFillEl) { this._headFillEl.remove(); this._headFillEl = null; }
       if (this._gradientBlurEl)  { this._gradientBlurEl.remove();  this._gradientBlurEl  = null; }
       if (_movedBadgeRow && _movedBadgeRow.owner === this) _restoreBadgeRow();
       const npWasMoved = !!this._npSaved;
@@ -2050,6 +2157,7 @@
           st.id = 'casora-back-glass-style';
           st.textContent =
             '.casora-back-glass::before{content:"";position:absolute;inset:0;' +
+            'display:var(--casora-back-rim, block);' +
             'border-radius:50%;padding:1.4px;' +
             // Subtle: the rim should melt into the background, not glint.
             'background:conic-gradient(from 0deg,' +
@@ -2064,6 +2172,7 @@
             'mask-composite:exclude;pointer-events:none;}' +
             // Side wraps: a crisp dark hairline, not a soft band.
             '.casora-back-glass::after{content:"";position:absolute;inset:-1px;' +
+            'display:var(--casora-back-rim, block);' +
             'border-radius:50%;padding:1px;' +
             'background:conic-gradient(from 0deg,' +
             'transparent 0deg 50deg,rgba(0,0,0,0.32) 80deg 100deg,' +
@@ -2085,8 +2194,8 @@
           `top:calc(env(safe-area-inset-top, 0px) + 4px + calc(12px * var(${LANDSCAPE_PHONE_VAR}, 0)))`,
           'width:40px', 'height:40px', 'border-radius:50%',
           'display:flex', 'align-items:center', 'justify-content:center',
-          'background-image:radial-gradient(140% 90% at 50% -20%,' +
-            'rgba(255,255,255,0.14), rgba(255,255,255,0.04) 45%, transparent 62%)',
+          'background-image:var(--casora-back-highlight, radial-gradient(140% 90% at 50% -20%,' +
+            'rgba(255,255,255,0.14), rgba(255,255,255,0.04) 45%, transparent 62%))',
           'background-color:var(--casora-chrome-fill, rgba(255,255,255,0.07))',
           'backdrop-filter:blur(10px) saturate(1.2)',
           '-webkit-backdrop-filter:blur(10px) saturate(1.2)',
@@ -2112,6 +2221,23 @@
         'opacity:0', 'transform:translateY(5px)', 'pointer-events:none',
       ].join(';');
       compactEl.textContent = titleText;
+      // H3 (Weich-Audit): Weich legt unter den kleinen Raumtitel eine Leinenfläche, die nach unten
+      // ausläuft – gescrollte Kacheln und Szenen liefen sonst sichtbar hinter „‹ Raumname“ durch.
+      // Sie blendet mit dem Titel ein (gleiche Deckkraft). Andere Designs: unverändert.
+      if (window._casoraSoft && window._casoraSoft()) {
+        const fill = document.createElement('div');
+        fill.style.cssText = [
+          'position:fixed', 'left:0', 'right:0', 'top:0', 'z-index:60', 'pointer-events:none', 'opacity:0',
+          `height:calc(env(safe-area-inset-top, 0px) + ${COMPACT_BAR_HEIGHT + 22}px)`,
+          'background:linear-gradient(to bottom, var(--casora-room-head-fill, rgba(244,239,231,0.94)) 0%,'
+            + ' var(--casora-room-head-fill, rgba(244,239,231,0.94)) calc(100% - 22px),'
+            + ' transparent 100%)',
+        ].join(';');
+        // In der Ebene des Raums (wie der Zurück-Knopf, z-index 61), damit sie den Knopf nicht abdeckt.
+        (this._overlayEl || this._appendTarget || document.body).appendChild(fill);
+        this._headFillEl?.remove();
+        this._headFillEl = fill;
+      }
       compactEl.addEventListener('click', () => {
         this._overlayEl?.scrollTo({ top: 0, behavior: 'smooth' });
       });
@@ -2581,6 +2707,7 @@
         // Rises gently into place from below.
         hdr.style.transform   = `translateY(${(1 - cp) * 5}px)`;
         hdr.style.pointerEvents = cp > 0.5 ? 'auto' : 'none';
+        if (this._headFillEl) this._headFillEl.style.opacity = String(cp);
         popupBarOn = popupBarOn ? p >= 0.45 : p >= 0.55;
         grad.style.opacity    = popupBarOn ? '1' : '0';
         barEdge.style.opacity = popupBarOn ? '1' : '0';
@@ -2662,6 +2789,7 @@
       this._backBtn = null;
       // Scroll-header teardown, as in _dismiss.
       if (this._compactHeaderEl) { this._compactHeaderEl.remove(); this._compactHeaderEl = null; }
+      if (this._headFillEl) { this._headFillEl.remove(); this._headFillEl = null; }
       if (this._gradientBlurEl)  { this._gradientBlurEl.remove();  this._gradientBlurEl  = null; }
       // Restored instantly, never animated, so it reads as a fixed anchor.
       if (_movedBadgeRow && _movedBadgeRow.owner === this) _restoreBadgeRow();

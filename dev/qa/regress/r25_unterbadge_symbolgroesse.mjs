@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// Gemeldet (03.10.2026): Im Design „Casora Weich“ waren die Symbole der Klima-Unter-Badges
+// Gemeldet (03.10.2026): Im Design „Casora“ waren die Symbole der Klima-Unter-Badges
 // (Temperatur, Luftfeuchtigkeit) viel kleiner und dünner als die der Haupt-Badges; am Handy
 // standen die Unter-Badges zudem ohne Pille mit weißer Schrift direkt auf dem hellen Foto.
 // Erwartet (Desktop und Handy, Weich hell): Unter-Badges haben denselben Kreis, eine ähnlich
@@ -53,7 +53,7 @@ async function run(label, opts, url) {
   usePage(page);
   await dashboard(page, url);
   await page.evaluate(() => document.querySelector('home-assistant').dispatchEvent(new CustomEvent('settheme',
-    { detail: { theme: 'Casora Weich', dark: false }, bubbles: true, composed: true })));
+    { detail: { theme: 'Casora', dark: false }, bubbles: true, composed: true })));
   await page.waitForTimeout(5000);
   const g = (await cards(page, 'casora_badge_climate_group'))[0];
   await need(label + ': Klima-Badge', g);

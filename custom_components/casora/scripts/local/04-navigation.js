@@ -103,11 +103,27 @@
       +   'border:0;border-radius:var(--casora-menu-item-radius, 20px);background:transparent;color:var(--casora-mnav-fg-on, #fff);font:inherit;font-size:15px;font-weight:var(--casora-menu-item-weight, inherit);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;}'
       + '.hmn-item ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;line-height:0;color:color-mix(in srgb, var(--casora-mi-tone, transparent) var(--casora-menu-tone-mix, 0%), var(--casora-mnav-fg-icon, rgba(255,255,255,0.8)));}'
       + '.hmn-item.on{background:var(--casora-mnav-on-fill, rgba(255,255,255,0.14));}'
+      /* Schriftstärke der Menüzeilen: Weich wie die Menüs der Desktop-Raumleiste (normal, aktiv 500). */
+      + '.hmn-item{font-weight:var(--casora-mnav-item-weight, var(--casora-menu-item-weight, inherit));}'
+      + '.hmn-item.on{font-weight:var(--casora-mnav-item-on-weight, var(--casora-mnav-item-weight, var(--casora-menu-item-weight, inherit)));}'
       + '.hmn-item .hmn-svg{width:20px;height:20px;display:block;background:color-mix(in srgb, var(--casora-mi-tone, transparent) var(--casora-menu-tone-mix, 0%), var(--casora-mnav-fg-icon, rgba(255,255,255,0.8)));-webkit-mask:var(--hmn-svg) center/contain no-repeat;mask:var(--hmn-svg) center/contain no-repeat;}'
       + '.hmn-item.on ha-icon{color:color-mix(in srgb, var(--casora-mi-tone, transparent) var(--casora-menu-tone-mix, 0%), var(--casora-color-teal, #00C3D0));}'
       + '.hmn-item.on .hmn-svg{background:color-mix(in srgb, var(--casora-mi-tone, transparent) var(--casora-menu-tone-mix, 0%), var(--casora-color-teal, #00C3D0));}'
 
-      + '.hmn-item:active{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));}';
+      + '.hmn-item:active{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));}'
+      /* Weich (1.0.7, Entwurf B „Nur Symbole“): kompakte Kapsel nur mit Symbolen; das aktive Ziel
+         wird zur Pille mit Wort (Farbe aus --casora-mnav-pill, in Weich der helle Sand der Desktop-Raumleiste).
+         Klasse hmn-ic setzt _render(), solange das Weich-Design aktiv ist. */
+      + '.hmn-bar.hmn-ic{width:auto;max-width:calc(100vw - 32px);gap:2px;}'
+      + '.hmn-bar.hmn-ic .hmn-btn{flex:none;width:58px;flex-direction:row;gap:8px;padding:0;}'
+      + '.hmn-bar.hmn-ic .hmn-btn>span{display:none;}'
+      + '.hmn-bar.hmn-ic .hmn-btn:not(.on){opacity:var(--casora-mnav-idle-opacity, 1);}'
+      + '.hmn-bar.hmn-ic .hmn-btn.on{width:auto;min-width:58px;padding:0 20px 0 16px;'
+      +   'background:var(--casora-mnav-pill, var(--primary-color, #B67A50));color:var(--casora-mnav-pill-ink, #fff);}'
+      + '.hmn-bar.hmn-ic .hmn-btn.on>span{display:block;font-size:14.5px;font-weight:var(--casora-mnav-pill-weight, 600);padding:0;letter-spacing:-0.01em;max-width:150px;}'
+      + '.hmn-bar.hmn-ic .hmn-btn.on ha-icon,.hmn-bar.hmn-ic .hmn-btn.on .hmn-svg{color:var(--casora-mnav-pill-ink, #fff);flex:none;}'
+      + '.hmn-bar.hmn-ic .hmn-btn:not(.on):active{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));}'
+      + '.hmn-bar.hmn-ic .hmn-btn.on:active{filter:brightness(.94);}';
     document.head.appendChild(st);
   };
 
@@ -126,6 +142,7 @@
       var t = r ? r.text : (own || T('Home'));
       if (r && r.literal) s.setAttribute('data-no-i18n', ''); else s.removeAttribute('data-no-i18n');
       if (s.textContent !== t) s.textContent = t;
+      if (this._bHome.getAttribute('aria-label') !== t) this._bHome.setAttribute('aria-label', t);
     }
     getCardSize() { return 1; }
     connectedCallback() {
@@ -244,6 +261,7 @@
         b.type = 'button'; b.className = 'hmn-btn'; b.setAttribute('data-k', key);
         b.innerHTML = self._iconHtml(icon) + '<span>' + (window.casoraTr || function (x) { return x; })(label) + '</span>';
         b._icon = icon;
+        b.setAttribute('aria-label', (window.casoraTr || function (x) { return x; })(label));
         b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); self._haptic(); self._tap(key, b); });
         bar.appendChild(b);
         return b;
@@ -351,6 +369,10 @@
       this._menuKind = kind;
       m.className = 'hmn-menu';
       if (window.casoraMenuGlass) window.casoraMenuGlass.apply(m);
+      /* Weich: Fläche und Schatten wie die Menüs der Desktop-Raumleiste. Ohne die Theme-Variablen
+         bleibt der Glas-Look von oben. */
+      m.style.backgroundColor = 'var(--casora-mnav-menu-pane, ' + (m.style.backgroundColor || 'transparent') + ')';
+      m.style.setProperty('--casora-menu-shadow', 'var(--casora-mnav-menu-shadow, var(--casora-elevation-floating-phone, 0 10px 26px rgba(0,0,0,0.18)))');
       this._items(kind).forEach(function (it) {
         var b = document.createElement('button');
         b.type = 'button'; b.className = 'hmn-item' + (it.on ? ' on' : '');
@@ -374,6 +396,10 @@
       if (this._bar) this._bar.classList.add('hmn-up');
       requestAnimationFrame(function () { sc.classList.add('open'); });
       document.body.appendChild(m);
+      /* Erst die Leiste neu zeichnen, dann messen: in Weich (hmn-ic) wird die getippte Taste beim Öffnen
+         zur breiten Ton-Pille mit Wort und die Kapsel zentriert sich neu – mit den alten Maßen saß das
+         Menü bis zu 35 px neben der Taste (05.10.2026). */
+      this._render();
       /* Über dem eigenen Knopf ausrichten, am Bildschirmrand begrenzen; Breite = Inhalt. */
       var btn = kind === 'rooms' ? this._bRooms : this._bScenes;
       var r = btn.getBoundingClientRect(), w = m.offsetWidth;
@@ -389,7 +415,6 @@
         if (on) m.scrollTop = Math.max(0, on.offsetTop - (m.clientHeight - rowH) / 2);
       }
       requestAnimationFrame(function () { m.classList.add('open'); });
-      this._render();
       this._away = function (e) {
         /* Ganzen Pfad prüfen: ein Tipp aufs Icon endet im Shadow-DOM von ha-icon, btn.contains() sähe ihn als "außen" –
            dann schloss pointerdown das Menü und der folgende click öffnete es sofort wieder (kein Toggle). */
@@ -419,6 +444,7 @@
       }
       var room = /^room_/.test(cur) && cur !== 'room_scenes';
       this._bar.classList.toggle('hmn-over', !!cur && cur !== 'all');
+      this._bar.classList.toggle('hmn-ic', !!(window._casoraSoft && window._casoraSoft()));
       var mk = this._menu ? this._menuKind : null;
       this._homeText();
       this._bHome.classList.toggle('on', !room && cur !== 'room_scenes' && !mk);
@@ -435,9 +461,11 @@
       }
       var rl = ar ? (ar.label || ar.name) : T('Räume'), ls = this._bRooms.lastElementChild;
       if (ls && ls.textContent !== rl) ls.textContent = rl;
+      if (this._bRooms.getAttribute('aria-label') !== rl) this._bRooms.setAttribute('aria-label', rl);
       /* Wie "Räume" laufend nachziehen: beim ersten Aufbau kann die Übersetzung noch fehlen. */
       var ss = this._bScenes.lastElementChild, st = T('Szenen');
       if (ss && ss.textContent !== st) ss.textContent = st;
+      if (this._bScenes.getAttribute('aria-label') !== st) this._bScenes.setAttribute('aria-label', st);
       if (cur !== this._lastCur) {
         /* Auch Raumwechsel über andere Wege (Raum-Chips, Header) zählen als "meine", wenn hier gerade getippt wurde. */
         if (this._tapAt && Date.now() - this._tapAt < 4000) this._mine = cur;

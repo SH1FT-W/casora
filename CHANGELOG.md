@@ -4,36 +4,119 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
-## 1.1.0-beta.1 – 04.10.2026
+## 1.0.11 – 05.10.2026
 
-Beta of the new Studio. The previous Studio stays one switch away.
+### Improved
+- Wave (Casora look, desktop/tablet): when something plays, the list below the wave opens by itself, also after reloading. If you close it yourself (wave, tapping beside it, Escape), it stays closed on this device, also after reloading, until a new playback starts. Closing by itself because nothing plays any more does not count as closed.
+
+## 1.0.10 – 05.10.2026
 
 ### New
-- **The preview is the editor:** the Studio opens on a large preview of the room. Click (on a phone: tap)
-  the title, a badge or a tile and its settings open right beside it in an inspector, on a phone in a
-  sheet from the bottom. Close it with the cross, Esc or a tap outside.
-- **Toolbar instead of sidebar:** Rooms (switch, add, rename, icon, move earlier or later, delete),
-  Elements (the room with all its sections, including what the preview does not show), Dashboard
-  (look and controls, weather, time, notifications, scenes, rewind, phone layout) and Home (home and
-  devices, bell and alerts, new dashboards, AI, outdoor values and price, ventilation, updates). An
-  available update shows in the toolbar.
-- **Nothing hides:** tiles that are switched off stay in the preview as dashed placeholders. A list
-  under the preview names everything the preview leaves out (tiles that are off, phone only or hidden
-  right now, badges that are off) and opens it with one click. Badges and tiles have their switch right
-  in the list.
-- **Sorting in the preview:** drag badges and tiles with the mouse, on a touchscreen after a long press;
-  a short swipe still scrolls. The separate edit mode for the order is gone, the grips in the list do
-  the same.
-- **Keyboard:** Tab reaches everything in the preview, Enter opens it and moves the focus into the
-  inspector, Alt with the arrow keys moves a badge or tile, Esc closes and returns the focus.
-- **Switch back:** “…” → “New Studio” turns the new Studio off for this browser and on again.
+- Playback in the Casora look (wave at the top, phone list, media row in rooms): when several players play the same title by the same artist, they share one row, e.g. "HomePod Kitchen + Office · NICKLAS", from three players "HomePod Kitchen + 2". Play and pause control all players of the row, tapping opens the popup of the first one.
+- Hide a playback: swiping a row to the left (finger or mouse) shows "Hide". The playback then disappears on this device only, until the player plays something else. When all are hidden, the wave at the top disappears too.
 
 ### Fixed
-- Version numbers of pre-releases (1.1.0-beta.1) show in full in the Studio and in “New in Casora”.
+- Playback after loading: in the Casora look, clearing the cache or reloading briefly flashed the old player (desktop: tile stack below the wave, phone: media row) until the extra scripts had loaded. The templates now recognise the Casora look from the theme on the first render and hide the old player right away.
+- Playback: paused players now disappear on their own once the pause timeout is reached. They used to stay in the wave and lists until some other player changed, and then the display jumped all at once. On the phone an older version of the playback logic from the template sometimes won; now the same one applies everywhere.
+- Scenes "last active": days are counted by calendar day. A scene from last night now says "Yesterday" instead of "2 days ago" after 36 hours (#12, refs #11).
+
+## 1.0.9 – 05.10.2026
+
+### New
+- Phone room page like desktop and tablet: the badges at the top of the phone room page are now the same as in the room header on desktop/tablet: security, climate, lights, people, energy and media, with the same texts, in the same order and with the same "separate or grouped" setting. Tapping a group badge opens its members below it (on this device only). The phone used to show its own, smaller selection: no energy, climate as separate readings, doors and windows only partly. This applies to all dashboards automatically with the update, without saving in the Studio, including ones moved over from Hemma. The phone preview in the Studio shows the same.
+- Air quality badge (Casora look): new wind icon; moderate air adds two particles, poor air four. The circle is back to the normal level colour.
+
+### Improved
+- Phone, Casora look (light and dark): the veil over the background photo now comes from the top and reaches just below "Favorites", so the title, badges and first heading are easy to read. Below it the photo stays clear all the way down, with no linen or anthracite area at the bottom. In 1.0.8 the veil had almost faded out at "Favorites" and a light fade sat at the bottom instead. Room pages on the phone get the same fade from the top.
+
+## 1.0.8 – 05.10.2026
+
+### New
+- Bigger weather above the room title on desktop and tablet (Casora look): temperature and icon are clearly larger, with two lines next to them showing the condition and "H 17° · L 9° · 20% rain" from the daily forecast. Without a daily forecast the second line is left out. In the Studio under Weather, "Show details" turns this off and shows only temperature and icon. The phone stays as it is, and so do Hemma 1 and Hemma 2.
+- The clock at the top left is slightly larger in the Casora look (16 instead of 15 px).
+
+### Changed
+- The themes have new names: Casora's own look is now called "Casora" in your profile (was "Casora Weich"), the two classic looks "Hemma 2" (was "Casora Standard") and "Hemma 1" (was "Casora Glass"). A saved choice moves along by itself on the first start, including the choice in each browser.
+- Alarm in the Casora look: "Active · Away" instead of "Active · Out", matching the Alarmo mode.
+- Phone, Casora look light: the linen veil over the background photo now only runs from the top to about "Favorites"; below it the photo stays clear and only fades softly into linen at the very bottom. It used to cover the photo from top to bottom and everything looked milky. Room pages on the phone are clearer as well.
+- Air quality badge (Casora look): seven large dots instead of the fine dotted graphic, growing with the pollution level, on a slightly darker circle. The old icon was hard to make out in the small circle, especially on yellow.
+- AI update check: for Casora updates the AI gets the release notes handed over instead of fetching them from GitHub itself, which often ended in "release notes not available".
+
+### Fixed
+- Cameras: a camera now only counts as offline when Home Assistant reports it unavailable. Casora used to also fetch a snapshot; with slow cameras (for example Reolink, snapshots taking over 10 seconds) Home Assistant gave up, and tile, badges and popup showed "Offline" while the camera was running. The popup even covered a working live view with it.
+- Robot vacuum: "finished cleaning" sometimes showed up twice in the bell after a clean with stops at the dock (mop washing), for example after a Home Assistant restart in the middle of a clean. Now each clean gets exactly one entry, at the last return to the dock.
+- "Doors & windows" popup in the Casora look (light): the white rows had a square grey shadow at their bottom corners. The shadow now runs softly around the rounded corners.
+
+## 1.0.7 – 05.10.2026
+
+### Improved
+- Weich, tile row on desktop and tablet: when more tiles lie to the right, the cut tile fades softly into the edge, and small page dots below show how much follows (tappable). Set with the theme variable `casora-row-overflow` (`fade`, `arrows` or `more`).
+- Battery readings are the same everywhere: OK, Low (20 % or less), Almost empty (10 % or less), Charging and Unknown, with the same words and colours on the batteries tile and popup, the bell, locks, aquarium, robot vacuum and thermostat. The bell turns orange or red by the weakest battery instead of always red.
+- Weich, popups: content cards no longer lift under the mouse, long popups keep more room at the bottom and fade out in the popup colour.
+- Weich, blinds popup: head, slider and rows use the same slat icon as the tile.
+- Weich, phone room page: category headings as large as "Scenes"; an empty category shows a hint instead of staying blank.
+- Weich dark: switches that are off are warm grey with a cream knob instead of almost black.
+- Alarm popup: mode list at full width, the switch reads "Alarm" (on = armed).
+- Plant popup: lists plant readings only, no unrelated sensors.
+- Recipe popup (Weich): buttons in tone and sand, a stronger title.
+- Weich, tile row on desktop and tablet: the soft fade now sits fixed at the edge of the row and the tiles run underneath; it no longer travels with a tile and shows no hard shadow edge. Swiping with a trackpad or mouse wheel is smooth again: the row no longer snaps to tile edges (it pulled back on every swipe step in Chrome and stuck, then jumped after letting go in Safari; touch keeps the gentle snapping, the arrows still land on a tile edge), swiping back to the start no longer runs on into the browser's back gesture and gets stuck at the end, the fade no longer changes the tile layout mid swipe, and the row measures at most once per frame, only when tiles reorder instead of on every state change, and the "Now playing" list only moves its progress bars each second instead of rebuilding.
+- Soft look, "Now playing": instead of the sideways carousel (phone) and the media pills under the badges (desktop and tablet), all players now sit in one quiet card, one row per player with cover, title, "Artist · Device", a thin progress bar that keeps running and a round play/pause button. Tapping a row opens the media popup as before. On desktop and tablet the rows stand side by side and wrap to a new line instead of scrolling sideways, so the cut-off shadow under the old player is gone too. Standard and Glass keep their look. The Studio phone preview shows the new list as well.
+- Soft look, media wave at the top right (desktop and tablet): tapping the wave now opens a calm menu below it in the style of the notification menu instead of unfolding the stack of mini player tiles. Every player is one row exactly like the "Now playing" list: cover, title, "Artist · Device", a thin progress bar that keeps running and a round play/pause button in the accent colour. Long titles end with an ellipsis, a missing cover shows a note symbol. Tapping a row opens the large media popup as before; tapping beside the menu, the wave again or Escape closes it. When the last playback stops while the menu is open, it fades out by itself and the wave disappears as before. Light and dark. The phone has no wave and stays as it is; Standard and Glass keep the tile stack. The Studio desktop preview shows the open wave as the same list.
+- Soft look, phone navigation bar: a compact capsule with icons only; the active destination becomes a light sand pill with its name (Home, the open room or Scenes), like the desktop room bar. Surface, shadow and blur come from the desktop room bar, and the room and scene menus match its menus (same surface, regular text, active entry in light sand). All destinations, the menus and the room switch work as before. Standard and Glass keep the bar with labels. The Studio phone preview follows.
+- Soft look, buttons at the top right: same layout, buttons and "…" menu entries as before, calmer look. The phone capsule is 48 px high, the desktop circles are 40 px with 8 px spacing and stay centred on the room bar; both share the same light surface with a soft shadow and no outline or sheen. Icons are a little lighter, the divider is shorter and softer, the bell's count and dot are caramel instead of red, and the media wave (when something plays) sits in a matching circle in the accent ink. Casora's menus get 44 px rows, lightly tinted icon circles and a 24 px radius. Light and dark; Standard and Glass are unchanged.
+- Waste tile and popup (Soft look): on pickup day the tile now shows the bin's colour as a full circle with a light symbol. Before, Residual waste was a grey symbol on a grey circle and almost disappeared, especially in dark mode. All waste types use the popup colours everywhere (tile, popup, 4 week calendar, calendar dots), Residual waste as a solid warm taupe per mode instead of a see-through brown. Hazardous waste gets its own red instead of the same orange as bulky waste. Adjustable via the theme variables `casora-waste-rest`, `casora-waste-bio`, `casora-waste-paper`, `casora-waste-yellow`, `casora-waste-glass`, `casora-waste-bulky`, `casora-waste-hazard`, `casora-waste-other` and `casora-waste-glyph`. Other looks are unchanged.
+
+### Fixed
+- Robot vacuum in the bell: a robot that returns to the dock in the middle of a clean (to wash the mop, empty the bin or charge) no longer reports "finished cleaning" every time it docks. If the integration says why it stopped (status such as washing the mop, emptying, drying or charging, progress below 100 %), the bell shows a running entry "Paused · washing mop" instead. A clear end (progress 100 %, a new "last clean end" time, status completed) counts at once. Without such sensors the robot counts as finished after 10 minutes at rest on the dock; if it sets off again before that, it is the same clean. Works for every brand, live and when the bell is rebuilt from the logbook; wrong entries from earlier dock stops disappear.
+- Cameras: a camera that delivered no picture for a while stayed "offline" in badges even after it was back. Cameras remembered as offline are now checked again every minute and when you return to the page, and every card and badge with that camera redraws.
+- Phone tile grid: a tile shown only under a condition (for example the alarm tile while armed away) was a few pixels taller than the other small tiles, so the gap to the tile below shrank. It now has exactly the row height in every look.
+- Weich, security: tiles, badges, popups and the bell use the same colour, word and symbol for the same state. Green = all right (locked, closed, alarm on), orange = note (unlocked, open, alarm off, camera offline), red = danger (alarm triggered, open while away). The alarm reads friendlier and says "Active · Home", "Active · Away", "Active · Partial" (instead of bypass), "Off" and "Alarm!" everywhere, with the mode symbol on badge, tile, popup and bell; the small phone tile shows just the mode ("Away") so nothing is cut off. Lock and contact rows in the popups and the popup ring now take these colours instead of petrol or sand. Other looks are unchanged.
+- Lock: tile, badge and popup say "Unlocked" or "Locked" everywhere, unlocked in the warning colour, and the popup switch matches the tile switch.
+- Air purifier: modes such as "auto" or "sleep" read "Auto" and "Sleep" when Home Assistant has no translation.
+- Wording: "OK" instead of "Ok", the Studio shows "1 On" like the dashboard.
+- Studio: clicking the day or night segment that is already active no longer switches it.
+- Waste popup with the month calendar (Soft look, desktop and tablet): both columns now end flush. The month fills the height of the right column (today, bins, putting out), and its plate starts on the same line as the day card next to it. The phone layout is unchanged.
+- Soft look, Studio phone preview: climate and security badges show the same symbols as on the phone (home thermometer, orange shield when something needs attention) in a coloured circle, temperatures as "21°", and blinds tiles show slats instead of a curtain.
+- Soft look, Studio popup preview: the label "Popup · …" above the preview is clearly readable in light mode.
+- Soft look, Studio → Look & Controls → Design: the three designs stand side by side, names on one line, "Legacy" as a small tag below.
+- Soft look, phone popups such as Thermostat or Energy: the sheet is only as tall as its content instead of always reaching the top.
+- Phone tiles: shorter texts that no longer get cut off ("No sensor" for energy and solar tip without a sensor, "Recipe" as the recipe tile name).
+- Soft look, weather in the title: filled weather symbol in the title colour instead of a thin grey outline.
+- Soft look, weather popup: the headings "Next hours", "7 days" and the chart title sit above their surfaces like in the other popups.
+- Soft look, network popup: all network symbols in the network colour (blue); the "On" of a Wi-Fi is no longer green.
+- Soft look, phone room page: scrolled tiles and scenes no longer show through behind the small room title; it gets a linen surface that fades in with the title (light and dark).
+- Phone home page: after a long time in the background the gap between the top bar and the "Home" line could be about 150 px too large. Casora now measures it again on return and fixes the layout on its own (reloading once if needed).
+
+## 1.0.6 – 04.10.2026
+
+### New
+- Phone, room page: tiles are grouped by category, like in Apple's Home app: Lights, Climate (heating, floor heating, air purifier, fan, blinds), Security, Speakers & TVs, Water and Other, each with a small heading. Within a group the Studio order stays. Rooms with up to 3 tiles or only one kind of device stay as before, without headings. Studio → Look & Controls → Phone: "Group rooms by category on the phone" (on by default) switches it off per dashboard. The phone preview in the Studio shows the groups too and follows the switch right away.
+
+### Fixed
+- Security badge: A camera reported as ready but delivering no picture (for example through a proxy) counted as fine in the badge while the camera card already showed "Offline". The badge now reports it as offline too, including the separate camera badge in a room.
+
+### Improved
+- Aquarium popup: the German heading of the leak and temperature sensor batteries now reads "Sensoren" instead of "Fühler".
+- Dashboard, "…" menu: "Refresh" and "Reload (clear cache)" are now one "Refresh" entry that always clears Casora's cache when it reloads.
+- Phone room view (Soft look): more room between the badge row under the room name and the first row of tiles (40 px instead of 24 px), so the badges no longer sit right on top of the tiles. Adjustable via the theme variable `casora-room-badges-gap-mobile`.
+- Media popup on desktop and tablet (Apple TV and other players with apps): the left column (Turn off, Open Apple Music, More settings) now has its own heading "Device" in the same style as "Apps" on the right, so both columns start at the same height.
 
 ## 1.0.5 – 04.10.2026
 
+### New
+- After a Casora update, an open dashboard notices the new version by itself (when Home Assistant
+  reconnects after the restart, when the tab becomes visible again, and every 10 minutes) and shows a
+  quiet hint at the bottom: "Casora was updated" with "Reload". It appears once per update and can be
+  closed. Reload first removes Casora's files from the browser cache, so every device really gets the
+  new files; Home Assistant's own cache stays untouched.
+- Dashboard, "…" menu: new entry "Reload (clear cache)" with the same function.
+
 ### Fixed
+- Bell: after a Home Assistant restart, "2 updates available" showed up as new again although
+  exactly these updates had already been read. Standing entries (updates, pending restart, low battery,
+  safety and weather warnings, plants, appliances, appliance care) now keep the time they were first
+  seen for the same content. They only count as new again when something new joins, such as another
+  update or a newer version.
 - Shopping list: oil now shows a bottle instead of the car oil can.
 - Bell: a "finished" entry (robot vacuum, washer, dryer, dishwasher, printer) sometimes disappeared when
   the bell was opened again, although nothing was read or cleared. A finished run now stays until the
@@ -54,17 +137,29 @@ Beta of the new Studio. The previous Studio stays one switch away.
   and the photo name is cleaned up instead of rejected. A night photo for a new name also serves by day
   until a day photo is added. HEIC files get a clear message ("export as JPG"), and every error now says
   what to do instead of showing a technical text. A replaced photo shows at once instead of the old one.
+- After a Home Assistant restart, an open dashboard no longer shows the old glass look for a few seconds
+  until Casora has loaded. Casora now keeps a copy of its themes in the themes folder (when configuration.yaml
+  loads it with `frontend: themes: !include_dir_merge_named themes`, as in the standard setup), so Home
+  Assistant knows your Casora theme from the very first second, and registers its themes first thing while loading.
 ### Improved
+- Weich dark: The navigation bar on desktop and the top right bar (bell, Assist) no longer have a light rim.
+- Weich: The round back button in rooms and areas no longer has a shiny rim, it is flat like the phone bar.
 - Soft look in dark: menus opened from the bottom bar no longer have the old light rim either.
 - Soft look on the phone: the bottom bar stands out clearly from the tiles (almost white in light, almost black in dark, without the old light rim).
 - Soft look: aquarium charts also turn calm when the tile brings its own bright color (for example from a Hemma move).
-- Soft look, light: a light linen veil now lies over the background photo (about 66 % at the top, fading
-  to nothing towards the bottom), so section headings, the title and the weather stay readable on any photo.
-  On the home page and room pages on desktop, tablet and phone, including the phone's room view. Text,
-  cards and the navigation bar are unchanged and sit above it. Dark, Standard and Glass are unchanged.
+- Soft look: a readability veil in the base colour now lies over the background photo, linen in light mode
+  and the dark base tone in dark mode, so section headings, the title, badges and the weather stay readable
+  on any photo. On the phone (home page, rooms, room view) it is about 66 % at the top, fading towards the
+  bottom. On desktop and tablet it only sits on the left behind the title, badges and headings (about 65 %
+  on the left, fading to the right), so the photo stays clear on the right. Text, cards and the navigation
+  bar are unchanged and sit above it. Standard and Glass are unchanged.
 - Updates popup: after installing an update that needs a restart, the open popup now rebuilds itself. The
   row leaves the available updates, “Waiting for restart” appears and the heading offers “Restart now”,
   without closing and reopening the popup. After the restart the section disappears again.
+- Updates popup on the phone: “Update” on the right of each update row is now a round download button,
+  so the name gets more room and the new version and AI verdict fit on one line. Tapping it does the same
+  as before. While updating it shows a spinner, “Restart required” shows a restart symbol. Desktop and
+  tablet keep the text.
 - Phone: the “Scenes” button in the bottom bar now shows the same scenes, in the same order, as the scene
   badge on desktop and tablet. With no selection at the badge it still shows all scenes. Existing phone
   dashboards follow the badge right away; opening the Studio once writes the selection into the phone layout.

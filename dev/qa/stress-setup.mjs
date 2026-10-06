@@ -16,7 +16,9 @@ import os from 'node:os';
 process.env.CASORA_OUT = process.env.CASORA_OUT || '/tmp/casora-qa';
 const { open, ready, shot } = await import('../e2e/harness.mjs');
 
-const aktiv = (() => { try { return fs.readFileSync(os.homedir() + '/casora-haus/aktiv', 'utf8').trim(); } catch (e) { return '?'; } })();
+// CASORA_ZUSTAND: Zustand eines Wegwerf-HA (dev/qa/wegwerf-ha.sh, paralleles Gate) – sonst der
+// aktive Zustand von casora-test aus ~/casora-haus/aktiv.
+const aktiv = process.env.CASORA_ZUSTAND || (() => { try { return fs.readFileSync(os.homedir() + '/casora-haus/aktiv', 'utf8').trim(); } catch (e) { return '?'; } })();
 const arg = (n, d) => { const i = process.argv.indexOf('--' + n); return i > 0 && process.argv[i + 1] ? process.argv[i + 1] : d; };
 const WANT = arg('state', 'stress');
 if (aktiv !== WANT && !process.argv.includes('--force')) {
@@ -28,7 +30,16 @@ if (!/^qa-[a-z0-9-]+$/.test(NAME)) { console.error('--name muss mit „qa-“ be
 const { browser, page, errors } = await open();
 const PANEL = () => { const p = window.__panel && window.__panel(); return p && p._hass && p._state !== undefined; };
 await ready(page, '/casora-studio', PANEL);
-const H = (fn, arg) => page.evaluate(fn, arg);
+// Lädt die Seite gerade neu (z. B. Weiterleitung nach dem ersten Laden), geht der Aufruf verloren:
+// dann neu bereit machen und noch einmal (unter paralleler Last gesehen, 04.10.2026).
+const H = async (fn, arg) => {
+  for (let i = 0; ; i++) {
+    try { return await page.evaluate(fn, arg); } catch (e) {
+      if (i >= 2 || !/context was destroyed|navigation/i.test(String(e && e.message))) throw e;
+      await ready(page, '/casora-studio', PANEL);
+    }
+  }
+};
 
 // Alte Fassung weg (Dashboard + Handy-Layout).
 const removed = await H(async (name) => {

@@ -6,7 +6,7 @@
 // Erwartet in allen Studio-Listen (Seitenleiste, Raumliste, Einstellungs-Gruppen), hell und dunkel,
 // Desktop und Handy: gleiche linke Textkante je Liste (±1 px), Text mittig zum Symbol (±2 px),
 // jedes Symbol hat eine Grafik, kein Text ist ohne „…“ abgeschnitten.
-import { open, studioDashboard, studio, check, need, finish } from './lib.mjs';
+import { open, studioDashboard, studio, studioRetry, check, need, finish } from './lib.mjs';
 
 const dash = await studioDashboard();
 await need('ein Dashboard fürs Studio', dash);
@@ -74,8 +74,10 @@ for (const [label, opts] of [
   const pages = [['Raum', null]];
   if (!opts.mobile) pages.push(['Einstellungen Haus & Geräte', 'home'], ['Einstellungen KI', 'ai']);
   for (const [where, csPage] of pages) {
-    if (csPage) { await page.evaluate((p) => window.__panel()._csOpenPage(p), csPage); await page.waitForTimeout(1800); }
-    const a = await page.evaluate(audit);
+    const a = await studioRetry(page, dash, async () => {
+      if (csPage) { await page.evaluate((p) => window.__panel()._csOpenPage(p), csPage); await page.waitForTimeout(1800); }
+      return page.evaluate(audit);
+    });
     await check(`${label} · ${where}: gleiche Textkante`, !a.edges.length, a.edges.slice(0, 6));
     await check(`${label} · ${where}: Text mittig zum Symbol`, !a.center.length, a.center.slice(0, 6));
     await check(`${label} · ${where}: alle Symbole mit Grafik`, !a.icons.length, a.icons.slice(0, 6));

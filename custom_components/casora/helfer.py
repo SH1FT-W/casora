@@ -10,8 +10,9 @@ kopieren und configuration.yaml anpassen. Jetzt:
     sie ab), danach script.reload. Karten rufen sie per script.turn_on auf.
   • Automatik (Neustart-Knöpfe zurücksetzen, Medienzeile aufklappen) – hier
     in Python, ohne Automationen.
-  • Theme „Casora“ (und Alias „Hemma“) – direkt bei der Oberfläche angemeldet,
-    auch nach „Themes neu laden“.
+  • Themes „Casora …“ – direkt bei der Oberfläche angemeldet, auch nach „Themes
+    neu laden“, und als Kopie im Theme-Ordner (falls configuration.yaml ihn per
+    !include_dir_merge_named lädt), damit sie schon beim HA-Start bereitstehen.
 
 Was es schon gibt (z. B. aus einem alten Paket), bleibt unangetastet.
 Der Dienst casora.einrichten wiederholt das Ganze und meldet, was fehlt.
@@ -36,9 +37,10 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 HELPER_DOMAINS = ("input_boolean", "input_text", "input_select", "input_number", "input_datetime")
-THEME_NAMES = ("Casora Standard",)
-# Frühere Namen desselben Themes: ein so gespeichertes Standard-Theme wird einmal umgestellt.
-THEME_RENAMED = {"Casora": "Casora Standard"}
+THEME_NAMES = ("Hemma 2",)
+# Frühere Namen (05.10.2026, Weich ist der Casora-Look): ein so gespeichertes Standard-Theme
+# wird einmal umgestellt. „Casora“ hieß vor 0.4.0 das heutige Hemma 2 und ist jetzt Weich.
+THEME_RENAMED = {"Casora Weich": "Casora", "Casora Standard": "Hemma 2", "Casora Glass": "Hemma 1"}
 EXPANDED_ROW = "input_select.casora_expanded_row"
 RESTART_DONE = ("input_boolean.casora_restart_done_1", "input_boolean.casora_restart_done_2")
 PLAYING = ("playing", "buffering")
@@ -198,10 +200,69 @@ def _inject_theme(hass: HomeAssistant, themes: dict) -> bool:
         return False
     added = False
     for name, theme in themes.items():
-        if name not in store:
+        # Auch ersetzen: die Kopie im Theme-Ordner (unten) kann von einer älteren Version stammen.
+        if store.get(name) != theme:
             store[name] = theme
             added = True
     return added
+
+
+# Kopie im Theme-Ordner: HA lädt ihn schon beim Start der Oberfläche, lange bevor Casora
+# selbst geladen ist. Sonst zeichnet das Dashboard nach einem Neustart kurz ohne Casora-Theme.
+THEME_FILE = "casora-themes.yaml"
+_THEMES_INCLUDE = re.compile(r"^[ \t]+themes:[ \t]*!include_dir_merge_named[ \t]+['\"]?([^'\"\s#]+)", re.M)
+
+
+def _themes_dir(config_dir: str) -> str | None:
+    """Ordner aus „frontend: themes: !include_dir_merge_named <ordner>“, sonst None.
+    configuration.yaml wird nur gelesen, nie geändert."""
+    try:
+        with open(os.path.join(config_dir, "configuration.yaml"), encoding="utf-8") as f:
+            m = _THEMES_INCLUDE.search(f.read())
+    except OSError:
+        return None
+    if not m:
+        return None
+    path = os.path.normpath(os.path.join(config_dir, m.group(1)))
+    return path if os.path.isdir(path) else None
+
+
+def _theme_file_body(themes: dict) -> str:
+    import json
+
+    # JSON-Runde: keine YAML-Anker für geteilte Teile (Modi), nur schlichte Werte.
+    plain = json.loads(json.dumps(themes))
+    return ("# Von der Casora-Integration geschrieben und bei jedem Start aktualisiert – nicht bearbeiten.\n"
+            "# Damit kennt Home Assistant Casoras Themes schon beim Start. Löschen ist unschädlich.\n"
+            + dump(plain))
+
+
+def _write_theme_file(config_dir: str, themes: dict) -> str | None:
+    folder = _themes_dir(config_dir)
+    if not folder:
+        return None
+    path = os.path.join(folder, THEME_FILE)
+    body = _theme_file_body(themes)
+    try:
+        with open(path, encoding="utf-8") as f:
+            if f.read() == body:
+                return path
+    except OSError:
+        pass
+    tmp = path + ".casora.tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(body)
+    os.replace(tmp, path)
+    return path
+
+
+def remove_theme_file(config_dir: str) -> None:
+    folder = _themes_dir(config_dir)
+    if folder:
+        try:
+            os.remove(os.path.join(folder, THEME_FILE))
+        except OSError:
+            pass
 
 
 DEFAULT_KEYS = ("frontend_default_theme", "frontend_default_dark_theme")
@@ -254,6 +315,11 @@ async def _setup_theme(hass: HomeAssistant, runtime: dict) -> None:
             last.update({k: hass.data.get(k) for k in DEFAULT_KEYS})
 
     runtime["unsub"].append(hass.bus.async_listen("themes_updated", _updated))
+
+    try:
+        await hass.async_add_executor_job(_write_theme_file, hass.config.config_dir, themes)
+    except Exception as err:  # noqa: BLE001 – ohne Kopie greift nur der Weg oben
+        _LOGGER.debug("Casora: Theme-Datei nicht geschrieben: %s", err)
 
 
 # ── Automatik (früher Automationen im Paket) ─────────────────────────────────
@@ -322,6 +388,18 @@ async def async_einrichten(hass: HomeAssistant) -> dict[str, Any]:
     return result
 
 
+async def async_setup_theme(hass: HomeAssistant) -> None:
+    """Als Erstes beim Laden: Themes anmelden, bevor irgendetwas anderes wartet."""
+    runtime = hass.data.setdefault(DOMAIN, {}).setdefault("helfer", {"unsub": []})
+    if runtime.get("theme"):
+        return
+    runtime["theme"] = True
+    try:
+        await _setup_theme(hass, runtime)
+    except Exception:  # noqa: BLE001 – darf das Laden nie verhindern
+        _LOGGER.exception("Casora: Theme nicht angemeldet")
+
+
 async def async_setup_helfer(hass: HomeAssistant) -> None:
     """Beim Laden der Integration; einmal pro HA-Lauf."""
     runtime = hass.data.setdefault(DOMAIN, {}).setdefault("helfer", {"unsub": []})
@@ -335,7 +413,7 @@ async def async_setup_helfer(hass: HomeAssistant) -> None:
             _LOGGER.exception("Casora: Einrichtung fehlgeschlagen")
         _setup_automatik(hass, runtime)
 
-    await _setup_theme(hass, runtime)
+    await async_setup_theme(hass)
     # Helfer/Skripte erst, wenn HA läuft: dann sind alle YAML-Pakete geladen und
     # nichts wird doppelt angelegt.
     waiting: list = []

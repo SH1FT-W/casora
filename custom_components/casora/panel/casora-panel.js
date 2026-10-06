@@ -39,17 +39,19 @@ const SETUP_ENTITIES = [
   "script.casora_light_smart_toggle", "script.casora_thermostat_overlay_toggle",
 ];
 // Weich ist seit 01.10.2026 DAS Casora-Design; Standard und Glas laufen als Legacy weiter.
-const CASORA_THEME = "Casora Weich";
-const CASORA_LEGACY = "Casora Standard";
+const CASORA_THEME = "Casora";
+const CASORA_LEGACY = "Hemma 2";
+// Frühere Theme-Namen (05.10.2026 umbenannt) → heutiger Name; helfer.py THEME_RENAMED.
+const THEME_RENAMED = { "Casora Weich": "Casora", "Casora Standard": "Hemma 2", "Casora Glass": "Hemma 1" };
 // The looks offered on first run. Each ships in theme.yaml; the photo is the preview.
 // aliases: weitere Namen, unter denen dasselbe Theme registriert ist (Übergang von Hemma).
 // shot: echter Dashboard-Screenshot je Modus als Vorschau.
 const CASORA_THEMES = [
-  { name: CASORA_THEME, label: "Casora", sub: "Warm linen, soft shadows, big round corners.",
+  { name: CASORA_THEME, aliases: ["Casora Weich"], label: "Casora", sub: "Warm linen, soft shadows, big round corners.",
     shot: { light: "/casora_assets/themes/weich-light.webp", dark: "/casora_assets/themes/weich-dark.webp" } },
-  { name: CASORA_LEGACY, aliases: ["Casora", "Hemma"], label: "Hemma (Legacy)", sub: "The original dark glass over your room photos.",
+  { name: CASORA_LEGACY, aliases: ["Casora Standard", "Hemma"], label: "Hemma 2 (Legacy)", sub: "The original dark glass over your room photos.",
     legacy: true, shot: { light: "/casora_assets/themes/hemma-light.webp", dark: "/casora_assets/themes/hemma-dark.webp" } },
-  { name: "Casora Glass", label: "Hemma Glass (Legacy)", sub: "Clear glass tiles that let the room shine through.",
+  { name: "Hemma 1", aliases: ["Casora Glass"], label: "Hemma 1 (Legacy)", sub: "Clear glass tiles that let the room shine through.",
     legacy: true, shot: { light: "/casora_assets/themes/glass-light.webp", dark: "/casora_assets/themes/glass-dark.webp" } },
 ];
 const isCasoraTheme = (n) => !!n && CASORA_THEMES.some((x) => x.name === n || (x.aliases || []).includes(n));
@@ -1119,6 +1121,41 @@ const CHIPS_ROOM_KEYS = ["temp_entity", "humidity_entity", "entity_quality",
 const chipsHasSecurity = (c) => !!c && (!!(c.security_locks || []).length
   || [1, 2, 3, 4, 5, 6, 7, 8].some((n) => !!c["security_entity_" + n]));
 
+// Raumseite am Handy = Raum-Kopf am Desktop (05.10.2026): dieselben Regeln wie
+// window.casoraPhoneRoom.merge im Dashboard (casora-core.js) – dev/unit/handy_raum_badges.mjs
+// vergleicht beide. desk: Variablen des Desktop-Raums (null → Auszug aus room_chips),
+// chip: room_chips[<raum>]; dort gesetzte Schalter (PHONE_ROOM_OVERRIDE) gelten nur am Handy.
+const PHONE_ROOM_OVERRIDE = BADGE_SWITCH_KEYS.concat(["show_climate_inline", "show_security_inline",
+  "show_people_inline", "badge_order"]);
+function phoneRoomLegacyVars(c) {
+  const o = {};
+  if (!c || typeof c !== "object") return o;
+  if (c.temp_entity) o.temp_sensor_1 = c.temp_entity;
+  if (c.humidity_entity) o.humidity_sensor = c.humidity_entity;
+  if (c.entity_quality) o.quality_sensor = c.entity_quality;
+  (Array.isArray(c.aqi_sensors) ? c.aqi_sensors : []).slice(0, 4).forEach((e, i) => { if (e) o[CHIPS_AQI_FROM_ROOM[i]] = e; });
+  if (c.lights_entity) o.light_group_entity = c.lights_entity;
+  if (Array.isArray(c.security_locks) && c.security_locks.length) o.security_locks = c.security_locks.slice();
+  ["security_locks_label", "security_door_sensors", "security_lock_batteries"].forEach((k) => {
+    if (c[k] != null && c[k] !== "") o[k] = c[k];
+  });
+  for (let n = 1; n <= 8; n++) {
+    if (c["security_entity_" + n]) o["security_entity_" + n] = c["security_entity_" + n];
+    if (c["security_label_" + n]) o["security_label_" + n] = c["security_label_" + n];
+  }
+  return o;
+}
+function phoneRoomBadgeVars(desk, chip, name) {
+  const o = { ...(desk || phoneRoomLegacyVars(chip)) };
+  if (chip && typeof chip === "object") {
+    PHONE_ROOM_OVERRIDE.forEach((k) => { if (chip[k] !== undefined && chip[k] !== null) o[k] = chip[k]; });
+  }
+  // Szenen haben auf der Raumseite am Handy einen eigenen Bereich (keine Badge).
+  o.show_scenes = false;
+  o._name = name || (chip && (chip.room_name || chip.aqi_room_name)) || o.room_name || o.aqi_room_name || "";
+  return o;
+}
+
 function syncRoomChips(pair) {
   const rooms = ((pair.desktop || {}).compact || {}).rooms || [];
   const sections = ((pair.mobile || {}).compact || {}).rooms || [];
@@ -1696,7 +1733,7 @@ const MAP = (key, label, over, domains) => ({ key, label, type: "map", over, dom
 
 // Icon-Farbsystem des Studios – eine Tabelle für Seitenleiste, Rubriken und Unterseiten,
 // dieselbe Zuordnung wie im Dashboard. Jede Rubrik hat eine Rolle; die Farbe je Rolle legt
-// das Theme fest (--casora-studio-icon-<rolle>, bisher nur Casora Weich). Fehlt das Token
+// das Theme fest (--casora-studio-icon-<rolle>, bisher nur Casora). Fehlt das Token
 // (Standard, Glas), bleibt die bisherige Farbe aus der zweiten Spalte.
 //   light   Gelb    Licht, Szenen, Stimmung
 //   main    Türkis  Klima, Jalousie, Bedienung, Allgemeines
@@ -1861,6 +1898,11 @@ const SECTIONS = [
         min: 0, max: 40, step: 1, rangeDefault: 28, minText: "Sharp", maxText: "Very soft",
         auto: true, scope: "dashboard",
         hint: "How soft the room photo behind an open room looks. Sharp shows the room clearly." },
+      // Raumseite am Handy nach Kategorien gliedern (filter-overlay.js, --casora-room-groups).
+      // Geht wie room_photo_blur über casora_mobile_bg ans Handy; leer = an.
+      { key: "room_groups", sub: "phone", label: "Group rooms by category on the phone", type: "bool",
+        boolDefault: true, auto: true, scope: "dashboard",
+        hint: "Like Apple's Home app: Light, Climate, Security … each with a small heading. Off shows all devices under one heading." },
       { key: "performance", sub: "perf", label: "Performance mode", type: "select",
         auto: true, scope: "dashboard",
         options: ["", "auto", "on"],
@@ -1877,6 +1919,10 @@ const SECTIONS = [
       E("weather_entity", "Source", ["weather"]),
       { ...E("weather_temp_sensor", "Temperature override", ["sensor"]), classes: ["temperature"],
         noAdd: true, placeholder: "Automatic: from the source" },
+      // Hero-Wetter im Casora-Look (casora_weather, --casora-hero-weather-details): Zustand und
+      // „H · T · Regen“ neben der Temperatur. Geht als weather_details an casora_room (hero_details).
+      { key: "weather_details", label: "Show details", type: "bool", boolDefault: true, always: true,
+        hint: "Condition, high/low and rain next to the temperature on desktop and tablet." },
     ],
   },
   {
@@ -2989,9 +3035,18 @@ const warmPhoto = (url) => {
   if (img.decode) img.decode().catch(() => {});
 };
 
+// H5 (Weich-Audit): dieselben MDI-Symbole wie die echten Weich-Badges am Handy
+// (casora_badge_climate_group: mdi:home-thermometer, casora_badge_security_group: mdi:shield-alert/-check).
+const SOFT_BADGE_ICON = {
+  climate: "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M19%208C20.11%208%2021%208.9%2021%2010V16.76C21.61%2017.31%2022%2018.11%2022%2019C22%2020.66%2020.66%2022%2019%2022C17.34%2022%2016%2020.66%2016%2019C16%2018.11%2016.39%2017.31%2017%2016.76V10C17%208.9%2017.9%208%2019%208M19%209C18.45%209%2018%209.45%2018%2010V11H20V10C20%209.45%2019.55%209%2019%209M5%2020V12H2L12%203L16.4%206.96C15.54%207.69%2015%208.78%2015%2010V16C14.37%2016.83%2014%2017.87%2014%2019L14.1%2020H5Z%22/%3E%3C/svg%3E",
+  alert: "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%2C1L3%2C5V11C3%2C16.55%206.84%2C21.74%2012%2C23C17.16%2C21.74%2021%2C16.55%2021%2C11V5M11%2C7H13V13H11M11%2C15H13V17H11%22/%3E%3C/svg%3E",
+  ok: "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M10%2C17L6%2C13L7.41%2C11.59L10%2C14.17L16.59%2C7.58L18%2C9M12%2C1L3%2C5V11C3%2C16.55%206.84%2C21.74%2012%2C23C17.16%2C21.74%2021%2C16.55%2021%2C11V5L12%2C1Z%22/%3E%3C/svg%3E",
+};
 const iconUrl = (name) => {
   const n = String(name || "").trim();
   if (isIconPath(n)) return n;
+  // H5: fertige SVG-Daten (z. B. die MDI-Symbole der Weich-Badges) unverändert durchreichen.
+  if (/^data:image\/svg\+xml/.test(n)) return n;
   const k = !n || n === ICON_DEFAULT ? "default" : n;
   return ICON_DATA[k] || ICON_DATA.default;
 };
@@ -3375,7 +3430,7 @@ const CASORA_ACCENTS = [
 ].map(([label, key, hex]) => ({
   label, key, hex, id: "var(--casora-color-" + key + ", " + hex + ")",
 }));
-// Aktives HA-Theme (vom Panel bei jedem hass-Update gesetzt). Casora Weich legt
+// Aktives HA-Theme (vom Panel bei jedem hass-Update gesetzt). Casora legt
 // casora-color-purple bewusst auf ein dunkles Rot – dort heißt der Eintrag danach.
 let ACCENT_THEME = "";
 // Weich-Look: theme_weich.yaml setzt casora-popup-layout: soft (Standard und Glas nicht).
@@ -3395,7 +3450,7 @@ const swatchOf = (v) => {
   const inVar = raw.match(/^var\(\s*--[\w-]+\s*,\s*(.+?)\s*\)$/);
   return inVar ? inVar[1] : raw;
 };
-// Zum Malen (Punkt, Farbfeld, Menü): der Wert des aktiven Themes – so zeigt Casora Weich
+// Zum Malen (Punkt, Farbfeld, Menü): der Wert des aktiven Themes – so zeigt Casora
 // seine gedämpften Farben statt der Standardwerte (#FFCC00 …) aus dem Fallback. Gelesen am
 // Dokument, weil das Studio einzelne Farben (Blau, Türkis) für sich selbst umlegt.
 const swatchCss = (v) => {
@@ -5168,14 +5223,15 @@ class CasoraPanel extends HTMLElement {
       this._syncSoftLook();
     }
     this._syncMenuBtn();
-    // The theme was renamed Casora → Casora Standard: a browser that picked the
-    // old name moves along once, keeping its light/dark choice.
+    // Themes renamed (THEME_RENAMED): a browser that picked an old name moves
+    // along once, keeping its light/dark choice.
     if (!this._themeMoved) {
       this._themeMoved = true;
       try {
         const sel = JSON.parse(localStorage.getItem("selectedTheme") || "null");
-        if (sel && sel.theme === "Casora" && hass.themes && hass.themes.themes && hass.themes.themes[CASORA_LEGACY]) {
-          const detail = { theme: CASORA_LEGACY };
+        const to = sel && THEME_RENAMED[sel.theme];
+        if (to && hass.themes && hass.themes.themes && hass.themes.themes[to]) {
+          const detail = { theme: to };
           if (typeof sel.dark === "boolean") detail.dark = sel.dark;
           setTimeout(() => this.dispatchEvent(new CustomEvent("settheme", { detail, bubbles: true, composed: true })), 0);
         }
@@ -7931,6 +7987,10 @@ class CasoraPanel extends HTMLElement {
           scrollbar-width:none; -ms-overflow-style:none;
         }
         .miniphone .mp-chips::-webkit-scrollbar { display:none; }
+        /* Raumseite: Badge-Reihe wie am Desktop, Unter-Reihe der Sammel-Badge darunter. */
+        .miniphone .mp-roombadges { gap:8px; }
+        .miniphone .mp-roomsubs { gap:8px; margin-top:6px; }
+        .miniphone .mp-roomsubs[hidden] { display:none; }
         .miniphone .mp-chip {
           flex:0 0 auto; display:flex; align-items:center; gap:9px;
         }
@@ -8068,6 +8128,12 @@ class CasoraPanel extends HTMLElement {
         }
         .miniphone .mp-scenes.grid .mp-scene { width:100%; }
         .miniphone .mp-head.tappable { cursor:pointer; }
+        /* Raum-Kategorien wie am Handy (filter-overlay.js _appendGroupHeader): kleiner und ruhiger. */
+        .miniphone .mp-head.mp-group {
+          height:20px; font-size:15px; font-weight:600; letter-spacing:-0.2px;
+          opacity:0.72; margin-top:18px; margin-bottom:-2px;
+        }
+        .miniphone .mp-head.mp-group.first { margin-top:14px; }
         .miniphone .mp-head {
           display:flex; align-items:center; gap:4px; height:24px;
           color:#fff; font-size:var(--ph-head); font-weight:700;
@@ -8746,7 +8812,21 @@ class CasoraPanel extends HTMLElement {
         }
         .card.map.soft .mini-name { font-weight:var(--casora-hero-title-weight, 640); }
         .card.map.soft .mini-wglyph { filter:var(--casora-hero-weather-glyph-filter, none); }
+        .mini-wcond { display:none; }
+        .card.map.soft .mini-wcond {
+          display:block; margin-left:3px; font-size:calc(var(--wx) * 0.46); font-weight:600;
+          letter-spacing:0; white-space:nowrap;
+        }
         .card.map.soft .mini-none { color:var(--casora-text-2, var(--secondary-text-color)); }
+        /* H5: Symbolkreis der Weich-Badges (weißes Symbol im Gerätefarbkreis). */
+        .card.map.soft .pring {
+          flex:none; display:grid; place-items:center; border-radius:50%;
+          width:calc(var(--bgl) * 1.75); height:calc(var(--bgl) * 1.75);
+          background:var(--sc, var(--casora-color-teal, #00C3D0));
+        }
+        .card.map.soft .pbadge.dim .pring { opacity:.55; }
+        .card.map.soft .pring .pglyph { background-color:#fff; width:var(--bgl); flex-basis:var(--bgl);
+          -webkit-mask-size:auto calc(var(--bgl) * 0.92); mask-size:auto calc(var(--bgl) * 0.92); }
         .card.map.soft .pbadge,
         .card.map.soft .pbadge.sub,
         .card.map.soft .pbadge:not(.sub):hover:not(:disabled) {
@@ -8803,6 +8883,36 @@ class CasoraPanel extends HTMLElement {
         .card.map.soft .mini-npbar { background:var(--casora-progress-track-color, rgba(255,255,255,0.16)); }
         /* Weich: Fortschritt in Ton wie der Wiedergabe-Knopf (Variante B, 04.10.2026). */
         .card.map.soft .mini-npbar > span { background:var(--casora-np-progress, #B67A50); }
+        /* Weich 1.0.7 (wie 10-weich-welle.js, Entwurf A): offene Welle = ein Menü unter ihr, je Player
+           eine Zeile mit Cover, Titel, Unterzeile, Fortschritt und rundem Play/Pause-Knopf. */
+        .card.map.soft .mz-np { gap:0; max-height:none; overflow:visible; }
+        .card.map.soft .mini-nptile { --np-pt:calc(var(--np-pl) * 0.7); --np-art:calc(var(--np-max) * 0.15); --np-ar:calc(var(--np-max) * 0.04); }
+        .card.map.soft .mini-nphead { padding-bottom:calc(var(--np-gap) * 2); }
+        .card.map.soft .mini-nptile, .card.map.soft .mini-nptile.noctl {
+          position:relative; grid-template-areas:"art meta ctl";
+          grid-template-columns:max-content minmax(0, 1fr) max-content; grid-template-rows:auto; row-gap:0;
+          border-radius:0; box-shadow:none;
+          background:var(--casora-menu-pane, var(--casora-entity-background, rgba(0,0,0,0.40)));
+        }
+        .card.map.soft .mini-nphead + .mini-nptile {
+          border-top-left-radius:var(--np-r); border-top-right-radius:var(--np-r);
+        }
+        .card.map.soft .mini-nptile:last-child {
+          border-bottom-left-radius:var(--np-r); border-bottom-right-radius:var(--np-r);
+          box-shadow:var(--casora-notify-shadow, none);
+        }
+        .card.map.soft .mini-nptile + .mini-nptile::before {
+          content:""; position:absolute; top:0; right:var(--np-pr);
+          left:calc(var(--np-pl) + var(--np-art) + var(--np-cg));
+          height:1px; background:var(--casora-pill-divider, rgba(120,100,80,0.16));
+        }
+        .card.map.soft .mini-npctl span:not([data-slot="toggle"]) { display:none; }
+        .card.map.soft .mini-npctl span[data-slot="toggle"] {
+          display:grid; place-items:center; width:calc(var(--np-art) * 0.72); height:calc(var(--np-art) * 0.72);
+          border-radius:50%; background:var(--casora-soft-media-play, var(--casora-np-progress, #B67A50));
+        }
+        .card.map.soft .mini-npctl span[data-slot="toggle"] svg { height:45%; }
+        .card.map.soft .mini-npctl span[data-slot="toggle"] path { fill:#fff; }
         @media (hover:hover) {
           .card.map.soft .miniroom [data-pv]:not(.mini-fill):not(.pvsel):hover,
           .card.map.soft .miniroom .pbadge[data-mk]:not(.pvsel):hover,
@@ -8853,8 +8963,8 @@ class CasoraPanel extends HTMLElement {
         .card.map.soft .miniphone.nophone::after { color:var(--casora-text-2, rgba(255,255,255,0.55)); }
         /* Handy-Leiste unten (Nachbildung aus casora-panel-addons.js) wie 04-navigation.js. */
         .card.map.soft .casora-mnav {
-          background:var(--casora-mnav-bg, rgba(40,40,44,0.55));
-          box-shadow:var(--casora-pill-rim, 0 10px 30px -10px rgba(0,0,0,0.55));
+          background:var(--casora-mnav-pane, var(--casora-mnav-bg, rgba(40,40,44,0.55)));
+          box-shadow:var(--casora-mnav-shadow, var(--casora-pill-rim, 0 10px 30px -10px rgba(0,0,0,0.55)));
         }
         .card.map.soft .casora-mnav span.b { color:var(--casora-mnav-fg, rgba(255,255,255,0.72)); }
         .card.map.soft .casora-mnav span.b.on {
@@ -8863,6 +8973,57 @@ class CasoraPanel extends HTMLElement {
           font-weight:var(--casora-mnav-label-on-weight, 500);
         }
         .card.map.soft .casora-mnav span.b.on :is(ha-icon, i) { color:var(--casora-mnav-icon-on, var(--casora-color-teal, #00C3D0)); }
+        /* Weich 1.0.7 (wie 04-navigation.js, Entwurf B): nur Symbole, das aktive Ziel als Pille mit Wort
+           (in Weich heller Sand wie die Desktop-Raumleiste). */
+        .card.map.soft .casora-mnav { width:auto; gap:2px; }
+        .card.map.soft .casora-mnav span.b { flex:none; width:58px; flex-direction:row; gap:8px; }
+        .card.map.soft .casora-mnav span.b:not(.on) { opacity:var(--casora-mnav-idle-opacity, 1); }
+        .card.map.soft .casora-mnav span.b > span { display:none; }
+        .card.map.soft .casora-mnav span.b.on {
+          width:auto; padding:0 20px 0 16px;
+          background:var(--casora-mnav-pill, var(--primary-color, #B67A50));
+          color:var(--casora-mnav-pill-ink, #fff); font-weight:var(--casora-mnav-pill-weight, 600);
+        }
+        .card.map.soft .casora-mnav span.b.on > span { display:block; font-size:14.5px; max-width:150px; letter-spacing:-0.01em; }
+        .card.map.soft .casora-mnav span.b.on :is(ha-icon, i) { color:var(--casora-mnav-pill-ink, #fff); }
+        /* Weich 1.0.7 (wie 09-weich-wiedergabe.js, Entwurf A): Aktuelle Wiedergabe als ruhige Liste –
+           eine Karte, je Player eine Zeile mit Cover, Titel, Unterzeile, Fortschritt und Play/Pause. */
+        .card.map.soft .miniphone .mp-nprow {
+          flex-direction:column; gap:0; overflow:visible; scroll-snap-type:none;
+          margin:0; padding:4px 0; border-radius:26px;
+          background:var(--casora-np-list-surface, var(--ha-card-background, rgba(251,248,243,0.88)));
+          box-shadow:var(--button-card-box-shadow-mobile, none);
+        }
+        .card.map.soft .miniphone .mp-nprow > .mp-np.mp-np {
+          flex:none; min-width:0; max-width:none; scroll-snap-align:none; position:relative;
+          grid-template-areas:"art meta ctl"; grid-template-columns:max-content minmax(0, 1fr) max-content;
+          grid-template-rows:auto; row-gap:0; column-gap:14px; min-height:0; padding:12px 14px 12px 12px;
+          border-radius:0; background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+        }
+        .card.map.soft .miniphone .mp-nprow > .mp-np + .mp-np::before {
+          content:""; position:absolute; top:0; left:78px; right:16px; height:1px;
+          background:var(--casora-pill-divider, rgba(120,100,80,0.16));
+        }
+        .card.map.soft .miniphone .mp-nprow .mp-npart {
+          width:52px; height:52px; border-radius:14px;
+          background-color:var(--casora-np-art-fill, var(--casora-soft-control-fill, rgba(140,115,90,0.14)));
+        }
+        .card.map.soft .miniphone .mp-nprow .mp-nptext { align-self:center; }
+        .card.map.soft .miniphone .mp-nprow .mp-nptitle { color:var(--primary-text-color, #3A322B); }
+        .card.map.soft .miniphone .mp-nprow .mp-npsub { color:var(--secondary-text-color, rgba(98,87,76,0.92)); font-size:13px; }
+        .card.map.soft .miniphone .mp-nprow .mp-npbar { height:3px; background:var(--casora-np-track, rgba(140,115,90,0.14)); }
+        .card.map.soft .miniphone .mp-nprow .mp-nptransport { grid-area:ctl; gap:0; }
+        .card.map.soft .miniphone .mp-nprow .mp-npbtn:not([data-slot="toggle"]) { display:none; }
+        .card.map.soft .miniphone .mp-nprow .mp-npbtn[data-slot="toggle"] {
+          width:44px; height:44px; border-radius:50%; display:grid; place-items:center;
+          background:var(--casora-soft-media-play, var(--primary-color, #B67A50));
+          box-shadow:var(--casora-soft-media-play-shadow, none);
+        }
+        .card.map.soft .miniphone .mp-nprow .mp-npbtn[data-slot="toggle"] path { fill:#fff; }
+        .card.map.soft .miniphone .mp-nprow .mp-np.paused .mp-npbtn[data-slot="toggle"] {
+          background:var(--casora-np-track, rgba(140,115,90,0.14)); box-shadow:none;
+        }
+        .card.map.soft .miniphone .mp-nprow .mp-np.paused .mp-npbtn[data-slot="toggle"] path { fill:var(--primary-text-color, #3A322B); }
 
         .card {
           width:100%; box-sizing:border-box;
@@ -9154,6 +9315,9 @@ class CasoraPanel extends HTMLElement {
         }
         .card.grouped > .chead + .subtitle { padding-top:4px; }
         :is(.card, .tile).grouped .subcard + .subcard { margin-top:10px; }
+        /* Feld mit eigener Erklärung, danach die nächste Karte derselben Gruppe: Abstand wie
+           in den iOS-Einstellungen, sonst klebt die Karte am Erklärtext darüber. */
+        :is(.card, .tile).grouped .subcard + .hint:has(+ .subcard) { padding-bottom:20px; }
         .subhead + .row { border-top:0; }
         .advbody > :first-child { border-top:0; }
         .row, .subhead, .advsum, .empty-note, .addmore {
@@ -12318,7 +12482,8 @@ class CasoraPanel extends HTMLElement {
     // Real screenshots of each mode, in the look picked one step earlier.
     let look = this._lookPick;
     if (!look) { try { look = (JSON.parse(localStorage.getItem("selectedTheme") || "null") || {}).theme; } catch (e) { look = null; } }
-    const set = look === "Casora Glass" ? "glass" : look === "Casora Weich" ? "weich" : "std";
+    look = THEME_RENAMED[look] || look;
+    const set = look === "Hemma 1" ? "glass" : look === CASORA_THEME ? "weich" : "std";
     const shot = (mode) => shotLang("/casora_assets/themes/perf-" + set + "-" + mode + "-" + (dark ? "dark" : "light") + ".webp", this._hass);
     const grid = document.createElement("div");
     grid.className = "themegrid perfgrid";
@@ -13643,7 +13808,7 @@ class CasoraPanel extends HTMLElement {
   }
 
   // Casora sieht nur mit seinem Theme richtig aus. Hat niemand ein anderes Theme
-  // gewählt, wird Casora Weich Standard-Theme (hell und dunkel) – eine eigene Wahl bleibt.
+  // gewählt, wird Casora Standard-Theme (hell und dunkel) – eine eigene Wahl bleibt.
   async _ensureTheme() {
     const t = this._hass && this._hass.themes;
     if (!t || !t.themes || !t.themes[CASORA_THEME]) return "missing";
@@ -16464,19 +16629,32 @@ class CasoraPanel extends HTMLElement {
             t.textContent = sub.label;
             fs.appendChild(t);
           }
-          const box = document.createElement("div");
-          box.className = "subcard";
-          mine.forEach((f) => renderField(f, box));
-          const notes = [...box.children].filter((n) => n.classList.contains("hint"));
-          notes.forEach((n) => n.remove());
-          fs.appendChild(box);
+          // Erklärung unter die Karte (wie iOS-Einstellungen). Haben mehrere Felder einer Gruppe
+          // je eine eigene Erklärung, bekommt jedes Feld seine Karte, sonst stünden alle Texte
+          // gesammelt unter dem letzten Regler (04.10.2026).
           const said = new Set();
-          notes.forEach((n) => {
-            const t = n.textContent;
-            if (said.has(t)) return;
-            said.add(t);
-            fs.appendChild(n);
-          });
+          const place = (fields) => {
+            const box = document.createElement("div");
+            box.className = "subcard";
+            fields.forEach((f) => renderField(f, box));
+            const notes = [...box.children].filter((n) => n.classList.contains("hint"));
+            notes.forEach((n) => n.remove());
+            fs.appendChild(box);
+            notes.forEach((n) => {
+              const t = n.textContent;
+              if (said.has(t)) return;
+              said.add(t);
+              fs.appendChild(n);
+            });
+          };
+          const withHint = mine.filter((f) => f.hint);
+          if (withHint.length > 1) {
+            let run = [];
+            mine.forEach((f) => { run.push(f); if (f.hint) { place(run); run = []; } });
+            if (run.length) place(run);
+          } else {
+            place(mine);
+          }
         });
       } else {
         plain.forEach((f) => renderField(f, fs));
@@ -17951,7 +18129,12 @@ class CasoraPanel extends HTMLElement {
       onPick(val);
     };
     if (opts && opts.toggle) {
-      seg.onclick = () => pick(choices.find((b) => !b.classList.contains("on")));
+      // Klick auf ein Segment wählt genau dieses (das aktive bleibt aktiv, Weich-Audit K13);
+      // nur ein Klick daneben auf die Leiste schaltet um.
+      seg.onclick = (e) => {
+        const hit = e && e.target && e.target.closest ? e.target.closest(".segopt") : null;
+        pick(hit && choices.includes(hit) ? hit : choices.find((b) => !b.classList.contains("on")));
+      };
     } else {
       choices.forEach((b) => { b.onclick = () => pick(b); });
     }
@@ -20161,7 +20344,9 @@ class CasoraPanel extends HTMLElement {
     // Ohne eigene Wahl: Einheitensystem von Home Assistant (nach Land eingerichtet).
     const celsius = V.temp_unit ? V.temp_unit === "C"
       : ((this._hass && this._hass.config && this._hass.config.unit_system) || {}).temperature !== "°F";
-    const unit = celsius ? "°C" : "°";
+    // H5: Weich zeigt wie das echte Handy „21°“ (ohne C).
+    const soft = typeof softLook === "function" && softLook();
+    const unit = celsius && !soft ? "°C" : "°";
     const out = [];
 
     const CLIMATE = "var(--casora-badge-climate-color, var(--casora-color-teal, #00C3D0))";
@@ -20257,8 +20442,8 @@ class CasoraPanel extends HTMLElement {
           return !["off", "unavailable", "unknown"].includes(s.state);
         });
         out.push({
-          id: "climate", label: "Climate", icon: "mdi-fan", color: CLIMATE, subs,
-          spin: hvacOn,
+          id: "climate", label: "Climate", icon: soft ? SOFT_BADGE_ICON.climate : "mdi-fan", color: CLIMATE, subs,
+          spin: hvacOn && !soft,
           text: span || (t != null ? Math.round(t) + unit : null)
             || (h != null ? Math.round(h) + "%" : null) || "\u2014",
         });
@@ -20436,7 +20621,11 @@ class CasoraPanel extends HTMLElement {
           .forEach((sb, i) => out.push({ ...sb, id: "security:" + i, subs: [] }));
       } else {
         out.push({
-          id: "security", label: "Security", icon: parts.length || sec.triggered ? "lock-open-fill" : "lock-fill", color: TEAL,
+          // H5: Weich wie das echte Handy – Schild (Warnung/OK), bei Handlungsbedarf orange.
+          id: "security", label: "Security",
+          icon: soft ? ((parts.length || sec.triggered) ? SOFT_BADGE_ICON.alert : SOFT_BADGE_ICON.ok)
+            : (parts.length || sec.triggered ? "lock-open-fill" : "lock-fill"),
+          color: soft && (parts.length || sec.triggered) ? "var(--casora-color-orange, #FF9F0A)" : TEAL,
           text: secText,
           subs: lockSubs.concat(camSubs, entSubs),
         });
@@ -20809,6 +20998,7 @@ class CasoraPanel extends HTMLElement {
       ["next", c.next, "var(--np-gs)"]].forEach(([slot, shown, h]) => {
       if (!shown) return;
       const b = document.createElement("span");
+      b.dataset.slot = slot;
       b.innerHTML = npGlyphSvg(
         slot === "toggle" ? (s.playing ? "pause" : "play") : slot, h);
       row.appendChild(b);
@@ -21317,7 +21507,7 @@ class CasoraPanel extends HTMLElement {
         const hasCtl = ctl.toggle || ctl.next || ctl.prev;
 
         const np = document.createElement("div");
-        np.className = "mp-np" + (hasCtl ? "" : " noctl") + (npArt(nps) ? "" : " noart");
+        np.className = "mp-np" + (hasCtl ? "" : " noctl") + (npArt(nps) ? "" : " noart") + (nps.playing ? "" : " paused");
         np.dataset.jump = "Now Playing";
         if (NP_ACCENT[nps.kind]) np.style.setProperty("--np-accent", NP_ACCENT[nps.kind]);
         const art = document.createElement("span");
@@ -21355,6 +21545,7 @@ class CasoraPanel extends HTMLElement {
             if (!shown) return;
             const b = document.createElement("span");
             b.className = "mp-npbtn";
+            b.dataset.slot = slot;
             b.innerHTML = npGlyphSvg(
               slot === "toggle" ? (playing ? "pause" : "play") : slot, h);
             row.appendChild(b);
@@ -21464,50 +21655,77 @@ class CasoraPanel extends HTMLElement {
       const link = (((this._pair || {}).link || {}).links || []).find((l) => l.section === secIdx);
       const wideIdx = link && !link.overview ? link.room : null;
 
+      // Raum-Badges wie im Raum-Kopf am Desktop (05.10.2026) und wie das echte Handy
+      // (casora_mobile_sensor_chips/rooms_row mit window.casoraPhoneRoom): dieselben Badges,
+      // Texte, Reihenfolge (badge_order) und Einzel-/Sammel-Anzeige (show_*_inline); Szenen
+      // stehen darunter in ihrem eigenen Bereich. Sammel-Badges klappen ihre Unter-Reihe auf.
       const chipsV = (cardOf(MOBILE_CHIPS) || {}).variables || {};
-      const e = (chipsV.room_chips || {})[roomKeyOf(roomPop)] || {};
-      const rm = this._miniModel({ variables: {
-        temp_sensor_1: e.temp_entity, humidity_sensor: e.humidity_entity,
-        quality_sensor: e.entity_quality, temp_unit: chipsV.temp_unit,
-        light_group_entity: e.lights_entity,
-      } }, { phone: true });
+      const e = (chipsV.room_chips || {})[phoneKeyOf(phoneRoomKeys(st), roomPop)] || null;
+      const wideRoom = wideIdx !== null
+        ? ((((this._pair || {}).desktop || {}).compact || {}).rooms || [])[wideIdx] : null;
+      const rv = phoneRoomBadgeVars(wideRoom ? (wideRoom.variables || {}) : null, e,
+        wideRoom ? wideRoom.name : roomPop);
+      const rorder = badgeOrderOf(rv.badge_order);
+      const rank = (id) => { const i = rorder.indexOf(String(id).split(":")[0]); return i < 0 ? 99 : i; };
+      const rm = this._miniModel({ variables: rv }).filter((b) => b.id !== "scenes")
+        .sort((a, b) => rank(a.id) - rank(b.id));
+      if (this._phoneRoomOpen && !rm.some((b) => b.id === this._phoneRoomOpen && (b.subs || []).length)) {
+        this._phoneRoomOpen = null;
+      }
       const crow = document.createElement("div");
-      crow.className = "mp-chips";
+      crow.className = "mp-chips mp-roombadges";
       crow.dataset.jump = "badges";
       crow.dataset.stagger = "0";
-      const clim = rm.find((b) => b.id === "climate");
-      ((clim && clim.subs) || []).forEach((sb) => {
-        const el = this._paintChip(sb);
-        if (wideIdx !== null) {
-          el.dataset.mk = "b:climate";
-          el.dataset.mproom = String(wideIdx);
+      const csub = document.createElement("div");
+      csub.className = "mp-chips mp-roomsubs";
+      csub.dataset.stagger = "0";
+      const drawSubs = () => {
+        csub.innerHTML = "";
+        const open = rm.find((b) => b.id === this._phoneRoomOpen);
+        ((open && open.subs) || []).forEach((sb) => csub.appendChild(this._paintBadge(sb, true)));
+        csub.hidden = !csub.children.length;
+      };
+      const pickRoom = (el) => {
+        const pick = selKeyOf(el.dataset.mk);
+        if (!pick) return;
+        const want = el.dataset.mproom;
+        if (want !== undefined && Number(want) !== this._room) {
+          this._room = Number(want);
+          this._renderTabs();
         }
+        this._select(pick);
+      };
+      rm.forEach((b) => {
+        // Klima einzeln: Messring wie casora_badge_temp/-humidity/-air_quality am Handy.
+        const el = String(b.id).indexOf("climate:") === 0 ? this._paintChip(b) : this._paintBadge(b, false);
+        el.classList.toggle("open", this._phoneRoomOpen === b.id);
+        if (wideIdx !== null) {
+          el.dataset.mk = "b:" + b.id;
+          el.dataset.mproom = String(wideIdx);
+        } else delete el.dataset.mk;
+        el.onclick = (ev) => {
+          ev.stopPropagation();
+          if ((b.subs || []).length) {
+            this._phoneRoomOpen = this._phoneRoomOpen === b.id ? null : b.id;
+            crow.querySelectorAll(".open").forEach((x) => x.classList.remove("open"));
+            if (this._phoneRoomOpen) el.classList.add("open");
+            drawSubs();
+          }
+          pickRoom(el);
+        };
         crow.appendChild(el);
       });
-      const bareChip = (b, mk) => {
-        const el = this._paintChip({ ...b, bare: true });
-        if (mk && wideIdx !== null) {
-          el.dataset.mk = mk;
-          el.dataset.mproom = String(wideIdx);
-        }
-        crow.appendChild(el);
-      };
-      const lit = rm.find((b) => b.id === "lights");
-      if (lit) {
-        const S = this._hass.states;
-        const mems = ((S[e.lights_entity] || {}).attributes || {}).entity_id;
-        const eids = Array.isArray(mems) && mems.length ? mems : [e.lights_entity];
-        const n = eids.filter((id) => (S[id] || {}).state === "on").length;
-        bareChip({ icon: "light", label: "Lights", glyphHeight: "90%",
-          color: n ? lit.color : "var(--badge-title-inactive, rgba(255,255,255,0.55))",
-          text: n === 0 ? "All Off" : n === eids.length ? "All On" : n + " On" }, "b:lights");
-      }
-      if (e.motion_entity) {
+      // Bewegung (nur Handy, room_chips[<raum>].motion_entity) steht hinter den Badges.
+      if (e && e.motion_entity) {
         const ms = (this._hass.states[e.motion_entity] || {}).state;
-        bareChip({ icon: "motion", label: "Motion", glyphHeight: "70%", color: "#fff",
-          text: ms === "on" ? "Detected" : ms === "off" ? "Not Detected" : "Unavailable" }, null);
+        crow.appendChild(this._paintChip({ icon: "motion", label: "Motion", glyphHeight: "70%", color: "#fff", bare: true,
+          text: ms === "on" ? "Detected" : ms === "off" ? "Not Detected" : "Unavailable" }));
       }
-      if (crow.children.length) body.appendChild(crow);
+      drawSubs();
+      if (crow.children.length) {
+        body.appendChild(crow);
+        body.appendChild(csub);
+      }
 
       const scenes = this._scenesMode() !== "off" ? this._sceneListForRoom(roomPop) : [];
       if (scenes.length) {
@@ -21527,10 +21745,39 @@ class CasoraPanel extends HTMLElement {
         body.appendChild(sgroup);
       }
 
-      // Wie die Raumseite am Handy (filter-overlay.js): Kacheln in Studio-Reihenfolge,
-      // ohne Kategorie-Gruppen und ohne „Aktive zuerst“; nach den Szenen ein „Geräte“-Kopf.
+      // Wie die Raumseite am Handy (filter-overlay.js): Kacheln in Studio-Reihenfolge, ohne
+      // „Aktive zuerst“. Nach Kategorien gruppiert mit derselben Zuordnung (window.casoraRoomGroups),
+      // solange der Schalter room_groups an ist; sonst nach den Szenen ein „Geräte“-Kopf.
       const roomTiles = sec ? liveTiles(sec) : [];
-      if (roomTiles.length) {
+      const RG = window.casoraRoomGroups;
+      if (!RG && !this._roomGroupsLoading) {
+        this._roomGroupsLoading = true;
+        import("/casora_scripts/filter-overlay.js")
+          .then(() => { if (window.casoraRoomGroups) this._rebuildPreview(); })
+          .catch(() => {});
+      }
+      const rgRaw = [((home || {}).variables || {}).room_groups, sv.room_groups].find(isSet);
+      const rgOn = rgRaw !== false && rgRaw !== "false" && rgRaw !== "off";
+      const groups = RG && rgOn ? RG.split(roomTiles) : null;
+      if (groups) {
+        const de = /^de\b/i.test(String(((this._hass || {}).locale || {}).language
+          || (this._hass || {}).language || ""));
+        const EN = { lights: "Lights", climate: "Climate", security: "Security",
+          media: "Speakers & TVs", water: "Water", other: "Other" };
+        groups.forEach(({ key, cards }, gi) => {
+          const head = document.createElement("div");
+          head.className = "mp-head mp-group" + (gi || scenes.length || crow.children.length ? "" : " first");
+          head.dataset.stagger = "1";
+          head.dataset.roomGroup = key;
+          // Dieselbe Überschrift wie am Handy; ohne geladene Dashboard-Übersetzung Englisch.
+          const txt = window.casoraTr || de ? RG.heading(key) : (EN[key] || RG.heading(key));
+          head.appendChild(Object.assign(document.createElement("span"), { textContent: txt }));
+          body.appendChild(head);
+          const row = tileRow(cards, sec, false);
+          row.dataset.stagger = "1";
+          body.appendChild(row);
+        });
+      } else if (roomTiles.length) {
         if (scenes.length) {
           const head = document.createElement("div");
           head.className = "mp-head";
@@ -21875,6 +22122,14 @@ class CasoraPanel extends HTMLElement {
       t.textContent = b.text;
       col.appendChild(t);
     }
+    // H5 (Weich-Audit): Weich-Badges tragen das Symbol weiß im farbigen Kreis wie am Dashboard.
+    if (!b.pic && softLook()) {
+      const ring = document.createElement("span");
+      ring.className = "pring";
+      ring.style.setProperty("--sc", b.color);
+      ring.appendChild(g);
+      g = ring;
+    }
     el.appendChild(g); el.appendChild(col);
     return el;
   }
@@ -22008,11 +22263,18 @@ class CasoraPanel extends HTMLElement {
           const tv = tile.variables || {};
           const isOpen = !!ent && /^(open|opening)$/i.test(ent.state);
           const isUnlocked = !!ent && /^(unlocked|unlocking|open|opening)$/i.test(ent.state);
-          const picked = (kind === "cover" || kind === "cover_group")
-            ? (isOpen ? (tv.icon_open || "curtain-open") : (tv.icon_closed || "curtain-closed"))
-            : (kind === "lock" || kind === "lock_group")
-              ? (isUnlocked ? (tv.icon_unlocked || "lock-open-fill") : (tv.icon_locked || "lock-fill"))
+          const isCover = kind === "cover" || kind === "cover_group";
+          const isLock = kind === "lock" || kind === "lock_group";
+          // H5 (Weich-Audit): ohne eigenes Symbol zuerst die Vorlagenkette fragen (casoraTileIconUrl,
+          // wie das Dashboard) – vorher stand hier immer der Vorhang, am Handy aber Lamellen.
+          const picked = isCover ? (isOpen ? tv.icon_open : tv.icon_closed)
+            : isLock ? (isUnlocked ? tv.icon_unlocked : tv.icon_locked)
               : (tv.icon || tile.icon);
+          // Weich: Lamellen wie am Handy, außer das Gerät ist ausdrücklich ein Vorhang.
+          const lamellen = softLook() && !(ent && ent.attributes && ent.attributes.device_class === "curtain");
+          const fallback = isCover ? (lamellen ? (isOpen ? "blinds-horizontal-open" : "blinds-horizontal-closed")
+            : (isOpen ? "curtain-open" : "curtain-closed"))
+            : isLock ? (isUnlocked ? "lock-open-fill" : "lock-fill") : null;
           const derived = type && type.glyphFromEntity
             ? type.glyphFromEntity[String(tile.entity || "").split(".")[0]]
             : null;
@@ -22020,7 +22282,7 @@ class CasoraPanel extends HTMLElement {
           const cIcon = !picked && window.casoraTileIconUrl
             && window.casoraTileIconUrl(tile, ent, this._hass, this._state && this._state.templates);
           g.style.setProperty("--i",
-            "url('" + (cIcon || iconUrl(picked || derived || TILE_ICON[kind] || "tile")) + "')");
+            "url('" + (cIcon || iconUrl(picked || fallback || derived || TILE_ICON[kind] || "tile")) + "')");
           // casora_fan spins its glyph while the fan runs.
           g.classList.toggle("spin", kind === "fan" && active);
           circle.style.setProperty("--sc", kind === "plant" && active
@@ -22382,6 +22644,16 @@ class CasoraPanel extends HTMLElement {
       g.alt = "";
       g.src = file ? "/casora_assets/weather/" + file + ".svg" : iconUrl("weather");
       wx.appendChild(g);
+      // Wetter → „Details anzeigen“: Zustand neben der Temperatur wie im Hero (nur Casora-Look,
+      // per CSS an .card.map.soft gebunden; Hoch/Tief/Regen braucht die Vorhersage und fehlt hier).
+      const lc = cond && this._hass.localize ? this._hass.localize("component.weather.entity_component._.state." + cond) : "";
+      if (V.weather_details !== false && lc) {
+        const ct = document.createElement("span");
+        ct.className = "mini-wcond";
+        ct.setAttribute("data-no-i18n", "");
+        ct.textContent = lc;
+        wx.appendChild(ct);
+      }
     }
     q(".mini-name").textContent = this._roomLabel(room) || "Room";
     q(".mini-name").toggleAttribute("data-no-i18n", !!(room.name || room.path));
@@ -24509,7 +24781,7 @@ window.__casoraPanelInternals = {
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
-  linkPair, syncPairRooms, syncPairTiles, syncRoomChips, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, expandMobileConfig, extractMobileConfig,
+  linkPair, syncPairRooms, syncPairTiles, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, expandMobileConfig, extractMobileConfig,
   deriveEnergyRooms,
   CASORA_ACCENTS, accentLabel, swatchCss,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)

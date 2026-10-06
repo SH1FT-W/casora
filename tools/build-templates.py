@@ -22,6 +22,15 @@ overlay = json.load(open(SRC, encoding="utf-8"))
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from template_checks import fixed_ids  # noqa: E402
+from phone_room_badges import derive as derive_phone_room  # noqa: E402
+
+# Raumseite am Handy = Raum-Kopf am Desktop: casora_mobile_sensor_chips folgt casora_room
+# (tools/phone_room_badges.py) – auch in der Quelle, damit beide nie auseinanderlaufen.
+if derive_phone_room(overlay):
+    with open(SRC, "w", encoding="utf-8") as fh:
+        json.dump(overlay, fh, ensure_ascii=False, indent=1)
+        fh.write("\n")
+    print("casora_mobile_sensor_chips aus casora_room nachgezogen")
 
 bundle = json.load(open(OUT, encoding="utf-8"))
 personal = fixed_ids(overlay) + fixed_ids({k: v for k, v in bundle["templates"].items() if k not in overlay})

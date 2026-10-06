@@ -1,4 +1,5 @@
 // @zustand: arbeit
+// @parallel: ui   (speichert qa-arbeit zweimal – offene Dashboards anderer Tests laden dabei neu, r36 verlor so den Raum)
 // Gemeldet (04.10.2026, Casora 1.0.4): Studio → Raum → Darstellung → Hintergrundbild.
 // „Eigene Raumfotos hochladen schlägt fehl bzw. zeigt Fehler. Wenn es klappt, ist das neue Foto
 // nicht auswählbar, erst nach Neuladen der Seite.“

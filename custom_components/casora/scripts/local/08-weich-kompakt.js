@@ -30,9 +30,11 @@
 
   // ── Batterien ─────────────────────────────────────────────────────────────
   // Ring-Unterzeile mit der Zahl der schwachen Batterien und der niedrigsten, darunter
-  // „Niedriger Akkustand“ (≤ 20 %) und alle übrigen in zwei Spalten. Das 30-Tage-Diagramm
+  // „Akku schwach“ (≤ 20 %) und alle übrigen in zwei Spalten. Das 30-Tage-Diagramm
   // erscheint erst nach Antippen einer Zeile (nochmal antippen blendet es aus).
-  var LOW = 20;
+  // Stufen, Wörter und Farben aus window.casoraBattery (casora-core.js, 05.10.2026).
+  var BAT = function () { return window.casoraBattery; };
+  var lvOf = function (v) { return BAT() ? BAT().level(v) : v <= 10 ? 'crit' : v <= 20 ? 'low' : 'ok'; };
   var B = window._casoraSoftBat = {};
   B.build = function (ctx) {
     var UI = window._casoraUI, K = kit();
@@ -55,8 +57,8 @@
     }
     // Leere Bereiche gar nicht erst anlegen (eine leere Karte kostet sonst einen Rasterabstand).
     var R0 = rows(states, C);
-    if (R0.some(function (r) { return r.v <= LOW; })) f.low = { card: K.secCard(ids.concat(chg), call('_casoraSoftBat', 'low', C), states) };
-    if (R0.some(function (r) { return r.v > LOW; })) f.all = { card: K.secCard(ids.concat(chg), call('_casoraSoftBat', 'all', C), states) };
+    if (R0.some(function (r) { return lvOf(r.v) !== 'ok'; })) f.low = { card: K.secCard(ids.concat(chg), call('_casoraSoftBat', 'low', C), states) };
+    if (R0.some(function (r) { return lvOf(r.v) === 'ok'; })) f.all = { card: K.secCard(ids.concat(chg), call('_casoraSoftBat', 'all', C), states) };
     return K.layout({ fields: f, top: ['hero', 'chart', 'low', 'all'], left: [], right: [],
       fieldStyle: { chart: [{ 'margin-top': '-22px' }] } });
   };
@@ -84,12 +86,14 @@
     // Raum nicht doppelt, wenn er schon im Namen steht („Lecksensor Büro“).
     if (room && String(r.name || '').toLowerCase().indexOf(room.toLowerCase()) >= 0) room = null;
     var sub = [c ? 'Lädt' : null, room].filter(Boolean);
-    // Schwach: Batterie-Symbol in Rot (≤ 10 %) bzw. Orange; lädt: Blitz in Ton wie „Lädt“ (Wunsch 03.10.2026).
-    var low = !c && r.v <= LOW;
-    return { entity: r.id, icon: c ? 'mdi:battery-charging' : low ? (r.v <= 10 ? 'mdi:battery-alert-variant-outline' : 'mdi:battery-low') : (r.icon || 'battery'),
-      iconTone: c ? 'var(--casora-ton-ink, #94603B)' : low ? (r.v <= 10 ? 'bad' : 'warn') : undefined,
+    // Fast leer (≤ 10 %): Symbol + Zahl rot; Schwach (≤ 20 %): orange; lädt: Blitz in Ton wie „Lädt“.
+    // OK bleibt ruhig – Zahl ohne Farbe, Gerätesymbol wie gehabt.
+    var lv = c ? 'charging' : lvOf(r.v);
+    var tone = BAT() ? BAT().tone(lv) : null;
+    return { entity: r.id, icon: lv === 'ok' ? (r.icon || 'battery') : BAT() ? BAT().icon(lv, r.v) : 'mdi:battery-low',
+      iconTone: lv === 'ok' ? undefined : tone,
       label: r.name, sub: sub.length ? sub.join(' · ') : null, active: c, value: r.v + ' %',
-      valueTone: c ? 'good' : r.v <= 10 ? 'bad' : r.v <= LOW ? 'warn' : null };
+      valueTone: lv === 'charging' ? null : tone };
   };
   // Zeilen öffnen das Diagramm statt More-Info (data-hp-metric wie im Pflanzen-Popup).
   var tapWrap = function (html) {
@@ -132,17 +136,18 @@
   B.sec = function (part, C, states) {
     var UI = window._casoraUI; if (!UI) return '';
     var R = rows(states, C);
-    var low = R.filter(function (r) { return r.v <= LOW; });
+    var low = R.filter(function (r) { return lvOf(r.v) !== 'ok'; });
     if (part === 'hero') {
       var min = R[0];
-      return UI.line(low.length ? (low.length === 1 ? '1 Batterie schwach' : low.length + ' Batterien schwach') : 'Alles in Ordnung',
-        min ? ['Am niedrigsten: ' + min.name + ' ' + min.v + ' %'] : [], { tone: low.length ? 'warn' : null });
+      var crit = low.some(function (r) { return lvOf(r.v) === 'crit'; });
+      return UI.line(low.length ? (low.length === 1 ? '1 Akku schwach' : low.length + ' Akkus schwach') : 'Alle Akkus OK',
+        min ? ['Am niedrigsten: ' + min.name + ' ' + min.v + ' %'] : [], { tone: low.length ? (crit ? 'bad' : 'warn') : null });
     }
     if (part === 'low') {
-      return low.length ? SEL_CSS + tapWrap(UI.group(low.map(function (r) { return rowOf(states, r); }), 'Niedriger Akkustand')) : '';
+      return low.length ? SEL_CSS + tapWrap(UI.group(low.map(function (r) { return rowOf(states, r); }), 'Akku schwach')) : '';
     }
     if (part === 'all') {
-      var rest = R.filter(function (r) { return r.v > LOW; });
+      var rest = R.filter(function (r) { return lvOf(r.v) === 'ok'; });
       if (!rest.length) return '';
       // Eine Liste über zwei Spalten (schmal eine), nach Prozent sortiert.
       return SEL_CSS + '<style>.hp-batall .hui-plate{display:grid !important;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px 18px !important;}'
@@ -238,7 +243,8 @@
         sub: (a.latest_version ? 'Neu: ' + a.latest_version : '') + (aiS(states) ? ' · KI: ' + t[0] : ''),
         _tone: t[1],
         action: a.in_progress ? 'Wird aktualisiert' : 'Aktualisieren', actionTone: 'accent', actionBusy: !!a.in_progress,
-        actionLive: { rules: (window._casoraUpdX && window._casoraUpdX.RULES) || [], text: 'Aktualisieren', color: TEAL },
+        actionIcon: 'mdi:download',
+        actionLive: { rules: (window._casoraUpdX && window._casoraUpdX.RULES) || [], text: 'Aktualisieren', icon: 'mdi:download', color: TEAL },
       };
     });
   };
@@ -308,7 +314,9 @@
     var st = raw(states, ent);
     return UI.group(modes.map(function (m) {
       var on = st === m.id;
-      return { icon: on ? 'shield_check' : m.icon, iconTone: on ? 'good' : null, label: m.label, sub: m.description,
+      // Symbol des Modus wie Alarm-Kachel, Badge und Mitteilungen (05.10.2026); nur der aktive Modus
+      // trägt die Stufenfarbe „ok“, die übrigen sind Auswahl (Sand) statt Petrol.
+      return { icon: m.icon, iconTone: on ? 'good' : 'rgba(0,0,0,0)', label: m.label, sub: m.description,
         selected: on, svc: { domain: 'alarm_control_panel', service: 'alarm_' + m.id.replace('armed_', 'arm_'), data: { entity_id: ent } } };
     }), 'Modus');
   };
@@ -318,23 +326,25 @@
   // Zustand links und Schalter rechts. Die ganze Karte schaltet (tap_action der Vorlage).
   window._casoraSoftLock = function (s, one) {
     var on = s === 'locked' || s === 'locking';
+    // Schalter wie die Kachel: an = entriegelt (die Kachel ist dann hervorgehoben, Badge „1 entriegelt“).
+    var open = !on;
     var busy = s === 'locking' || s === 'unlocking';
     var word = s === 'locking' ? 'Wird verriegelt …' : s === 'unlocking' ? 'Wird entriegelt …' : on ? 'Verriegelt' : 'Entriegelt';
     var hint = busy ? '' : on ? (one ? 'Tippen zum Entriegeln' : 'Tippen, um alle zu entriegeln') : (one ? 'Tippen zum Verriegeln' : 'Tippen, um alle zu verriegeln');
     var ic = (typeof window.casoraIconUrl === 'function') ? window.casoraIconUrl(on ? 'lock-fill' : 'lock-open-fill') : '';
-    return '<div class="lkbar" role="switch" aria-checked="' + on + '" style="display:flex;align-items:center;gap:14px;min-height:66px;box-sizing:border-box;'
+    return '<div class="lkbar" role="switch" aria-checked="' + open + '" style="display:flex;align-items:center;gap:14px;min-height:66px;box-sizing:border-box;'
       + 'padding:10px 14px 10px 14px;border-radius:var(--casora-popup-row-radius, 24px);background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));'
       + 'font-family:var(--primary-font-family, system-ui);text-align:left;line-height:normal;cursor:pointer;">'
       + '<div style="width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;background:'
-      + (on ? 'var(--casora-lps-switch-on, #B67A50)' : 'var(--casora-soft-icon-off, rgba(140,115,90,0.12))') + ';">'
-      + '<div style="width:19px;height:19px;background-color:' + (on ? '#fff' : 'var(--casora-soft-glyph-off, rgba(58,50,43,0.55))') + ';'
+      + (open ? 'var(--casora-lock-unlocked-color, var(--casora-lps-switch-on, #B67A50))' : 'var(--casora-soft-icon-off, rgba(140,115,90,0.12))') + ';">'
+      + '<div style="width:19px;height:19px;background-color:' + (open ? '#fff' : 'var(--casora-soft-glyph-off, rgba(58,50,43,0.55))') + ';'
       + "-webkit-mask:url('" + ic + "') center / contain no-repeat;mask:url('" + ic + "') center / contain no-repeat;"
       + (busy ? 'animation:lktg-pl 1.2s ease-in-out infinite;' : '') + '"></div></div>'
       + '<div style="flex:1;min-width:0;"><div style="font-size:14.5px;font-weight:700;letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary, #3A322B);">' + esc(word) + '</div>'
       + (hint ? '<div style="font-size:12.5px;font-weight:500;color:var(--casora-soft-sub, rgba(58,50,43,0.6));margin-top:1px;">' + esc(hint) + '</div>' : '') + '</div>'
       + '<div style="position:relative;width:44px;height:26px;border-radius:999px;flex:none;background:'
-      + (on ? 'var(--casora-lps-switch-on, #B67A50)' : 'var(--casora-lps-switch-off, rgba(58,50,43,0.38))') + ';transition:background .2s ease;">'
-      + '<div style="position:absolute;top:3px;left:' + (on ? '21px' : '3px') + ';width:20px;height:20px;border-radius:50%;'
+      + (open ? 'var(--casora-lps-switch-on, #B67A50)' : 'var(--casora-lps-switch-off, rgba(58,50,43,0.38))') + ';transition:background .2s ease;">'
+      + '<div style="position:absolute;top:3px;left:' + (open ? '21px' : '3px') + ';width:20px;height:20px;border-radius:50%;'
       + 'background:var(--casora-lps-knob, #fff);box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:left .2s ease;"></div></div></div>'
       + '<style>@keyframes lktg-pl{0%,100%{opacity:1}50%{opacity:.35}}@media (hover:hover){.lkbar:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11)) !important;}}</style>';
   };

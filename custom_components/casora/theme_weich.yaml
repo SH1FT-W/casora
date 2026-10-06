@@ -1,8 +1,8 @@
-# Casora Weich – Entwurf „Hell & weich“ (theme_weich.yaml).
+# Casora (früher Casora Weich) – Entwurf „Hell & weich“ (theme_weich.yaml).
 # Nur die Abweichungen vom Casora-Theme; helfer.py legt sie beim Laden darüber (wie theme_glass.yaml).
 # Idee: Leinen/Sand statt dunkles Glas, kaum Blur, große Rundungen, warme weiche Schatten.
 # Dunkel: warmes Anthrazit (#24211E) statt kaltem Schwarz, aktive Kacheln in Creme.
-Casora Weich:
+Casora:
   # --- Schrift: Inter (Plus Jakarta Sans entfernt, 02.10.2026) ---
   primary-font-family: '"Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif'
   # Raumtitel wie im Entwurf: kräftiger und enger
@@ -23,6 +23,19 @@ Casora Weich:
   casora-color-red: "#D35A4E"
   casora-color-deep-orange: "#C8693F"
   casora-color-pink: "#D16E7E"
+  # --- Abfallarten (Tonnen-Symbol, Kalenderpunkte, Kachel am Abholtag), 05.10.2026 ---
+  # Wie im Abfall-Popup (Weich-Farben der Tonnen), jetzt auch für Kachel und Kalender.
+  # Restmüll war dort ein halb durchsichtiges Braungrau; hier deckend je Modus (siehe
+  # modes), damit Kreis und Symbol auf jedem Grund gleich aussehen. Sperrmüll und
+  # Problemstoffe bekommen eigene Farben statt beide Orange.
+  casora-waste-bio: var(--casora-color-green)
+  casora-waste-paper: var(--casora-color-blue)
+  casora-waste-glass: var(--casora-color-teal)
+  casora-waste-yellow: var(--casora-color-yellow)
+  casora-waste-bulky: var(--casora-color-orange)
+  casora-waste-hazard: var(--casora-color-red)
+  casora-waste-other: var(--casora-color-orange)
+  casora-waste-glyph: "#FFFFFF"
   casora-color-neutral: "#C9BFB2"
   primary-color: "#B67A50"          # Ton/Terrakotta als HA-Akzent
   state-light-on-color: rgb(232,176,74)
@@ -49,6 +62,9 @@ Casora Weich:
   # Nicht in theme.yaml, aber vom Code mit Fallback gelesen (casora-core.js/smart-row.js):
   casora-popup-radius: 44px
   casora-popup-row-radius: 24px
+  # Lange Popups (Batterien, Jalousien): unten 36px Luft und ein Verlauf in Sheet-Farbe statt dunkel (Audit M3)
+  casora-popup-content-pad-bottom: 36px
+  casora-popup-more-fade: var(--casora-dialog-bg)
   casora-tile-radius-phone: 30px
 
   # --- Wenig Glas: Blur nur noch als Hauch ---
@@ -70,8 +86,8 @@ Casora Weich:
   # --- Hero-Foto: weicher, minimal entsättigt ---
   hero-img-blur: 5px
   hero-img-saturate: 0.94
-  card-mod-theme: Casora Weich
-  uix-theme: Casora Weich
+  card-mod-theme: Casora
+  uix-theme: Casora
   # Popup-Aufbau wie im Weich-Entwurf (Ring, Titel, zwei Spalten). Lesen die Popups per
   # getComputedStyle(documentElement); Standard und Glas setzen ihn nicht.
   # Popup-Bausteine (_casoraUI, casora-popup) in der Weich-Gestaltung: Ring-Kopf, Sand-Pillen,
@@ -101,9 +117,14 @@ Casora Weich:
   casora-security-ok-color: var(--casora-color-green)
   casora-security-warn-color: var(--casora-color-orange)
   casora-security-alarm-color: var(--casora-color-red)
+  # Schloss-Kachel/Popup-Ring entriegelt: dieselbe Warnfarbe wie Badge „1 entriegelt“ (Standard/Glas: Türkis)
+  casora-lock-unlocked-color: var(--casora-security-warn-color)
   casora-scene-badge-color: var(--casora-color-yellow)
   casora-scene-badge-color-active: var(--casora-color-yellow-dark)
-  casora-bell-badge: var(--casora-color-red)
+  # Kopfleiste D (1.0.7): Zähler und Punkt der Glocke in Karamell statt Rot
+  casora-bell-badge: var(--primary-color)
+  casora-bell-dot-fill: var(--primary-color)
+  casora-bell-count-ink: "#fff"
   casora-badge-energy-medium-color: var(--casora-color-green)
   casora-badge-energy-medium-row: var(--casora-color-green)
   casora-badge-energy-medium-selected: var(--casora-color-green)
@@ -125,8 +146,8 @@ Casora Weich:
   casora-entity-name-font-mobile: 14px
   casora-entity-state-font-mobile: 12px
   casora-entity-text-line-height: 1.3
-  # A-11: Uhr ruhiger
-  casora-clock-font-size: 15px
+  # A-11: Uhr ruhiger; 05.10.2026 minimal größer (15 → 16) passend zum größeren Hero-Wetter
+  casora-clock-font-size: 16px
   casora-clock-letter-spacing: 0px
   casora-clock-transform: none
   # A-09: Raumleiste 14/600, Pfeil-Kreis, Verlauf endet vor dem Pfeil
@@ -138,6 +159,10 @@ Casora Weich:
   casora-nav-more-hover: var(--casora-mnav-press-fill, var(--casora-nav-active-fill))
   casora-nav-more-ink: var(--casora-nav-label-color)
   casora-nav-chevron: var(--casora-text-2)
+  # Kachelreihe (smart-row): Pfeil links/rechts, solange dort noch Kacheln liegen (Audit H2)
+  casora-row-arrows: block
+  # Wie die Reihe zeigt, dass es weitergeht: arrows (Pfeile) | fade (Ausblenden + Punkte) | more („+N weitere“)
+  casora-row-overflow: fade
   # A-04/A-05: Badges mit Symbolkreis, kleiner, Ruhe-Schatten S1
   casora-badge-circle-mix: 100%
   casora-badge-circle-on: 1
@@ -190,15 +215,17 @@ Casora Weich:
   # Menüs (Navbar Räume/Szenen, ⋯-Menü, Raumleisten-Menü): Symbol im Ton auf 14-%-Kreis, Zeilen 44 hoch
   casora-menu-tone-mix: 100%
   casora-menu-ic-display: flex
-  casora-menu-ic-size: 30px
-  casora-menu-ic-fill: 14%
-  casora-menu-ic-col: 30px
+  # Kopfleiste D (1.0.7): Symbolkreise 32 mit leichter Tönung, Zeilen 44, Radius 24
+  casora-menu-ic-size: 32px
+  casora-menu-ic-fill: 12%
+  casora-menu-ic-col: 32px
   casora-menu-ic-gap: 12px
   casora-menu-row-h: 44px
   casora-menu-row-pad: 0 16px 0 7px
-  casora-menu-item-pad: 7px 16px 7px 7px
+  casora-menu-item-pad: 6px 16px 6px 8px
   casora-mnav-item-pad: 0 18px 0 7px
-  casora-menu-item-radius: 18px
+  casora-menu-item-radius: 16px
+  casora-menu-radius: 24px
   casora-menu-item-weight: 600
   casora-menu-item-dim: 1
   casora-menu-icons-filled: 1
@@ -212,8 +239,18 @@ Casora Weich:
   casora-mobile-title-ls: -1.1px
   casora-mobile-section-size: 17px
   casora-tile-row-h-mobile: 62px
-  # A-23: Kopf-Knöpfe 8 px Abstand (34 + 8)
-  casora-chrome-btn-step: 42px
+  # Kopfleiste D „Ruhig“ (1.0.7): Desktop-Kreise 40 mit 8 Abstand (mittig zur Raum-Leiste, die
+  # Mitte bleibt über casora-chrome-row-center-desktop), Handy-Kapsel 48 hoch, Trennstrich kürzer,
+  # Symbole etwas leichter, gleiche helle Fläche mit weichem Schatten (casora-chrome-shadow je Modus).
+  casora-chrome-btn-step: 48px
+  casora-chrome-btn-size-desktop: 40px
+  casora-np-head-size: 40px
+  casora-mchrome-h: 48px
+  casora-chrome-sep-top: 16px
+  casora-chrome-sep-h: 16px
+  casora-chrome-glyph-opacity: 0.82
+  casora-chrome-backdrop: var(--casora-pill-backdrop)
+  casora-pill-divider: color-mix(in srgb, var(--primary-text-color) 12%, transparent)
   # Updates-Popup „Mehr“: Überschrift „KI-Check“ wie „System“ (Funkel-Symbol 16 px macht die Zeile nicht höher)
   casora-upd-ai-head-pad: 4px 4px 10px
   casora-upd-ai-glyph-my: -1px
@@ -274,7 +311,7 @@ Casora Weich:
   # Aufgeklappt wie die offene Glocke: weißer Grund, dunkles Symbol (04.10.2026).
   casora-np-head-on: "#fff"
   casora-np-head-on-ink: "#000"
-  casora-np-head-play-ink: var(--casora-np-progress)
+  casora-np-head-play-ink: var(--casora-ton-ink)
   # Heizung = Wärme-Orange (Puck, Modus-Symbole); Temperaturleiste in der Weich-Palette statt iOS-Regenbogen
   casora-puck-heat-color: var(--casora-color-orange)
   casora-temp-gradient: "linear-gradient(90deg, #5B8FC9 0%, #4E9E95 32%, #E8B04A 62%, #DE8A4E 82%, #D35A4E 100%)"
@@ -282,9 +319,30 @@ Casora Weich:
   casora-mnav-icon-on: var(--primary-color)
   casora-mnav-label-on: var(--casora-ton-ink)
   casora-mnav-label-on-weight: 600
+  # Handy-Leiste wie die Desktop-Raumleiste (Variante A, 05.10.2026): Fläche, Schatten, Unschärfe und
+  # Aktivfeld kommen direkt aus den Desktop-Variablen, damit beide zusammen bleiben. Aktives Ziel als
+  # heller Sand mit normaler Schrift statt Ton-Pille; inaktive Symbole wie die Desktop-Beschriftung.
+  casora-mnav-pill: var(--casora-nav-active-fill)
+  casora-mnav-pill-ink: var(--casora-nav-label-color)
+  casora-mnav-pill-weight: var(--casora-chrome-font-weight, 500)
+  casora-mnav-fg: var(--casora-nav-label-color)
+  casora-mnav-idle-opacity: var(--casora-nav-label-inactive-opacity, 0.84)
+  casora-mnav-pane: var(--casora-pill-fill)
+  casora-mnav-shadow: var(--casora-pill-rim)
+  casora-mnav-blur: var(--casora-pill-backdrop)
+  # Menüs aus der Leiste (Räume, Szenen) wie die Menüs der Desktop-Raumleiste: gleiche Fläche und
+  # Schatten, normale Schrift, aktiver Eintrag in hellem Sand.
+  casora-mnav-menu-pane: var(--casora-menu-pane)
+  casora-mnav-menu-shadow: var(--casora-elevation-floating, 0 8px 20px rgba(0,0,0,0.13))
+  casora-mnav-on-fill: var(--casora-nav-active-fill)
+  casora-mnav-fg-on: var(--casora-menu-fg, #fff)
+  casora-mnav-item-weight: 400
+  casora-mnav-item-on-weight: 500
   # A-07: Kachelabstand Desktop/Tablet (war 16), Handy-Raster (Standard 8) – minimal enger
   casora-tile-row-gap-desktop: 12px
   casora-tile-row-gap-mobile: 8px
+  # Handy-Raum: Abstand Badge-Reihe -> erste Kachelreihe (Standard 24px), 5x Kachelraster
+  casora-room-badges-gap-mobile: 40px
   # A-03: Kachel-Schalter wie im Licht-Popup (gefüllte Spur, weißer Knopf)
   casora-toggle-style: solid
   casora-toggle-hover-filter: brightness(1.04)
@@ -297,6 +355,25 @@ Casora Weich:
   hero-weather-temp-size: 24px
   weather-icon-size-desktop: 26px
   weather-icon-size-tablet: 24px
+  # Hero-Wetter Desktop/Tablet größer (Stufe C, 05.10.2026): Temperatur 34/30, Symbol 29/26, daneben
+  # zweizeilig Zustand (14/12,5) und „H · T · Regen“ aus der Tagesvorhersage (12/10,5). Nur im
+  # Casora-Look; ohne diese Variablen (Hemma 1/2) bleibt es bei Temperatur 24 + Symbol (casora_weather).
+  # Studio → Wetter → „Details anzeigen“ schaltet die Textspalte ab (Größen bleiben).
+  casora-hero-weather-details: "1"
+  casora-hero-weather-temp-size-desktop: 34px
+  casora-hero-weather-temp-size-tablet: 30px
+  casora-hero-weather-icon-desktop: 29px
+  casora-hero-weather-icon-tablet: 26px
+  casora-hero-weather-cond-size-desktop: 14px
+  casora-hero-weather-cond-size-tablet: 12.5px
+  casora-hero-weather-sub-size-desktop: 12px
+  casora-hero-weather-sub-size-tablet: 10.5px
+  casora-hero-weather-glyph-gap: 5px
+  casora-hero-weather-text-gap-desktop: 9px
+  casora-hero-weather-text-gap-tablet: 8px
+  # Der Wetter-Slot hängt oben fest; der höhere Inhalt (34 statt 26 px) wächst nach oben statt
+  # Richtung Titel (Standard in theme.yaml: Faktor −2,2).
+  weather-hero-widget-position-nudge: calc(var(--casora-u-weather, 10px) * -2.2 - 8px)
 
   modes:
     light:
@@ -333,14 +410,18 @@ Casora Weich:
       state-icon-color: rgba(58,50,43,0.40)
       state-off-color: rgba(58,50,43,0.30)
 
-      # Handy-Hintergrund: Foto läuft in Leinen aus statt in gesampeltes Grau
-      casora-mobile-hero-tint-top: rgba(244,239,231,0.08)
-      casora-mobile-hero-tint-bot: rgba(244,239,231,0.30)
-      casora-mobile-hero-c-handoff: "#E9DFD1"
-      casora-mobile-hero-c-upper: "#EDE5D9"
-      casora-mobile-hero-c-mid: "#F0E9DF"
-      casora-mobile-hero-c-lower: "#F2ECE3"
-      casora-mobile-hero-c-base: "#F4EFE7"
+      # Handy-Hintergrund: Leinen-Schleier von oben bis knapp unter „Favoriten“ (Lesbarkeit von Titel,
+      # Badges und Überschrift), darunter das Foto klar bis ganz unten – kein Leinen unten (05.10.2026, 1.0.9).
+      casora-mobile-hero-tint-top: rgba(244,239,231,0.62)
+      casora-mobile-hero-tint-bot: rgba(244,239,231,0.50)
+      casora-mobile-hero-wash-mid: 34%
+      casora-mobile-hero-wash-end: 50%
+      casora-mobile-hero-height: 100%
+      casora-mobile-hero-c-handoff: rgba(244,239,231,0)
+      casora-mobile-hero-c-upper: rgba(244,239,231,0)
+      casora-mobile-hero-c-mid: rgba(244,239,231,0)
+      casora-mobile-hero-c-lower: rgba(244,239,231,0)
+      casora-mobile-hero-c-base: rgba(244,239,231,0)
       casora-mobile-hero-floor: "#F4EFE7"
 
       # Kacheln: inaktiv Sand, aktiv Creme mit warmem Schatten
@@ -363,47 +444,51 @@ Casora Weich:
       casora-icon-fallback-color: rgba(120,100,80,0.80)
       casora-icon-inactive-fallback-color: var(--casora-icon-fallback-color)
       # Handy-Kategorieansicht (filter-overlay.js): Schleier über dem Foto in Leinen statt Schwarz
-      casora-filter-veil: rgba(244,239,231,0.42)
-      # Lesbarkeits-Schleier über dem Hintergrundfoto (nur hell): oben Leinen 66 %, nach unten 0 %
-      casora-wallpaper-veil-light: "linear-gradient(to bottom, rgba(244,239,231,0.66) 0%, rgba(244,239,231,0) 100%)"
+      casora-filter-veil: rgba(244,239,231,0.10)
+      # Lesbarkeits-Schleier über dem Raumfoto am Handy: von oben bis knapp unter die erste Überschrift
+      # kräftig, dann bis 50 % auf 0 – darunter klares Foto (1.0.9)
+      casora-wallpaper-veil-light: "linear-gradient(to bottom, rgba(244,239,231,0.66) 0%, rgba(244,239,231,0.52) 34%, rgba(244,239,231,0) 50%)"
+      # Desktop/Tablet: nur links hinter Titel, Badges und Überschriften, nach rechts auslaufend
+      casora-wallpaper-veil-light-wide: "linear-gradient(to right, rgba(244,239,231,0.65) 0%, rgba(244,239,231,0.30) 45%, rgba(244,239,231,0) 75%)"
 
       # Navigation, Popups, Bedienelemente
       casora-nav-bg: rgba(251,248,243,0.78)
       casora-nav-label-color: rgba(58,50,43,0.92)
       casora-mobile-title-color: rgba(58,50,43,0.95)
+      casora-room-head-fill: rgba(244,239,231,0.94)  # H3 (Weich-Audit): Fläche unter „‹ Raumname“
       casora-chrome-ink: rgba(58,50,43,0.88)
       casora-chrome-fill: rgba(251,248,243,0.80)
       casora-chrome-fill-hover: rgba(240,233,223,0.95)
       # Weisse <img>-Glyphen der Kopfzeilen-Knöpfe (Glocke, Assist) dunkel färben
       casora-chrome-glyph-filter: brightness(0) opacity(0.78)
-      casora-hero-weather-glyph-filter: brightness(0) opacity(0.72)
+      # K5 (Weich-Audit): gefüllte Glyphe in Titelfarbe statt blasser Kontur
+      casora-hero-weather-glyph-filter: brightness(0) sepia(0.35) opacity(0.9)
+      casora-weather-glyph-fill: "1"
       # Handy-Navbar (04-navigation.js): Creme statt dunklem Glas
       casora-mnav-bg: rgba(251,248,243,0.82)
-      casora-mnav-pane: rgba(255,255,255,0.93)
-      casora-mnav-blur: blur(60px) saturate(180%)
-      casora-mnav-shadow: 0 6px 22px rgba(60,40,20,0.16)
+      casora-back-rim: none
+      casora-back-highlight: none
       # Menü-Glas (casoraMenuGlass: Navbar, ⋯-Menüs): Creme statt dunkel
       casora-menu-pane: rgba(251,248,243,0.96)
       # Mitteilungszentrum ohne Glas-Rand (Rim oben/unten), weicher Schatten wie die Karten
       casora-notify-shadow: 0 1px 2px rgba(90,70,50,0.06), 0 14px 34px -12px rgba(90,70,50,0.26)
       casora-menu-pane-webkit: rgba(248,244,237,0.97)
       casora-menu-fg: rgba(46,39,33,0.95)
-      casora-menu-rim-top: rgba(255,255,255,0.7)
-      casora-menu-rim-bottom: rgba(255,255,255,0.4)
-      casora-menu-edge: rgba(120,100,80,0.10)
+      # Kopfleiste D (1.0.7): Menü ohne Randlinie und Glanzkante
+      casora-menu-rim-top: transparent
+      casora-menu-rim-bottom: transparent
+      casora-menu-edge: transparent
       casora-mnav-menu-bg: rgba(251,248,243,0.94)
       casora-mnav-over: rgba(246,241,233,0.96)
-      casora-mnav-fg: var(--casora-text-2)
-      casora-mnav-fg-on: rgba(46,39,33,0.95)
       casora-mnav-fg-sub: var(--casora-text-2)
       casora-mnav-fg-icon: var(--casora-text-2)
-      casora-mnav-on-fill: rgba(232,221,206,0.95)
       casora-mnav-press-fill: rgba(220,205,186,0.95)
       casora-nav-border: rgba(120,100,80,0.10)
       casora-nav-active-fill: rgba(232,221,206,0.95)
       casora-pill-fill: rgba(251,248,243,0.80)
-      casora-pill-rim: inset 0 0 0 1px rgba(120,100,80,0.10), 0 8px 22px -14px rgba(90,64,40,0.30)
-      casora-pill-divider: rgba(120,100,80,0.16)
+      # Kopfleiste D (1.0.7): ohne Randlinie, nur weicher Schatten; Desktop-Kreise gleich
+      casora-pill-rim: 0 1px 2px rgba(90,70,50,0.05), 0 8px 24px -16px rgba(90,64,40,0.30)
+      casora-chrome-shadow: var(--casora-pill-rim)
       casora-popup-tiles-text-primary: 'rgba(58,50,43,0.95)'
       casora-popup-tiles-text-secondary: var(--casora-text-2)
       casora-popup-tiles-text-muted: var(--casora-text-2)
@@ -540,6 +625,7 @@ Casora Weich:
       casora-soft-icon-off: var(--casora-icon-circle-bg)
       casora-soft-glyph: "#FFFFFF"
       casora-soft-glyph-off: rgba(58,50,43,0.55)
+      casora-waste-rest: "#8F7E6D"
       casora-soft-close-ink: var(--casora-popup-tiles-text-secondary)
       casora-soft-seg-on: var(--casora-entity-background-active)
       casora-soft-seg-on-ink: var(--casora-entity-name-active)
@@ -702,6 +788,7 @@ Casora Weich:
       casora-studio-icon-neutral: "#9A8672"
 
     dark:
+      casora-weather-glyph-fill: "1"  # K5 (Weich-Audit)
       # Flächen + Text: warmes Anthrazit, Leinen-Schrift
       primary-background-color: rgb(36,33,30)
       secondary-background-color: rgb(28,26,24)
@@ -727,13 +814,17 @@ Casora Weich:
       casora-icon-circle-bg: rgba(255,240,220,0.08)
 
       # Handy-Hintergrund: Foto läuft in warmes Anthrazit aus
-      casora-mobile-hero-tint-top: rgba(28,24,21,0.10)
-      casora-mobile-hero-tint-bot: rgba(28,24,21,0.28)
-      casora-mobile-hero-c-handoff: "#3A342E"
-      casora-mobile-hero-c-upper: "#332E29"
-      casora-mobile-hero-c-mid: "#2D2925"
-      casora-mobile-hero-c-lower: "#282521"
-      casora-mobile-hero-c-base: "#24211E"
+      # Wie hell (1.0.9): Anthrazit-Schleier von oben bis knapp unter „Favoriten“, darunter Foto bis ganz unten
+      casora-mobile-hero-tint-top: rgba(28,24,21,0.58)
+      casora-mobile-hero-tint-bot: rgba(28,24,21,0.46)
+      casora-mobile-hero-wash-mid: 34%
+      casora-mobile-hero-wash-end: 50%
+      casora-mobile-hero-height: 100%
+      casora-mobile-hero-c-handoff: rgba(36,33,30,0)
+      casora-mobile-hero-c-upper: rgba(36,33,30,0)
+      casora-mobile-hero-c-mid: rgba(36,33,30,0)
+      casora-mobile-hero-c-lower: rgba(36,33,30,0)
+      casora-mobile-hero-c-base: rgba(36,33,30,0)
       casora-mobile-hero-floor: "#24211E"
 
       # Kacheln: inaktiv Anthrazit, aktiv warme Creme
@@ -746,6 +837,10 @@ Casora Weich:
       casora-entity-name-active: rgba(40,34,29,0.92)
       casora-entity-state: var(--casora-text-2)
       casora-camera-plain-text: var(--casora-entity-state)   # Runde 2: Kamera ohne Bild wie jeder Kachelstatus
+      # Lesbarkeits-Schleier wie hell, in der dunklen Grundfarbe: Handy oben 66 % nach unten 0 %,
+      # Desktop/Tablet links 65 % nach rechts 0 %
+      casora-wallpaper-veil-light: "linear-gradient(to bottom, rgba(36,33,30,0.66) 0%, rgba(36,33,30,0.52) 34%, rgba(36,33,30,0) 50%)"
+      casora-wallpaper-veil-light-wide: "linear-gradient(to right, rgba(36,33,30,0.65) 0%, rgba(36,33,30,0.30) 45%, rgba(36,33,30,0) 75%)"
       casora-entity-state-active: rgba(112,76,48,0.96)
       casora-entity-state-active-color: rgba(112,76,48,0.96)
       casora-toggle-inactive-opacity: 1
@@ -759,26 +854,27 @@ Casora Weich:
       casora-chrome-fill: rgba(46,42,38,0.80)
       casora-chrome-fill-hover: rgba(66,60,54,0.92)
       casora-mobile-title-color: rgba(246,240,231,0.98)
+      casora-room-head-fill: rgba(36,33,30,0.94)  # H3 (Weich-Audit)
       casora-filter-veil: rgba(28,24,21,0.30)
       casora-mnav-bg: rgba(46,42,38,0.72)
-      casora-mnav-pane: rgba(30,30,34,0.94)
+      casora-back-rim: none
+      casora-back-highlight: none
       # Menüs aus der Leiste (Räume, …) im Dunklen ohne helle Lichtkanten aus Hemma (04.10.2026).
       casora-menu-rim-top: transparent
       casora-menu-rim-bottom: transparent
       casora-menu-edge: transparent
-      casora-mnav-blur: blur(60px) saturate(180%)
-      casora-mnav-shadow: 0 6px 22px rgba(0,0,0,0.38)
       casora-mnav-menu-bg: rgba(46,42,38,0.95)
       # Menü-Glas (Mitteilungen, ⋯-Menü) fast deckend, sonst scheint die Kopfzeile durch
       casora-menu-pane: rgba(46,42,38,0.96)
       casora-notify-shadow: 0 14px 34px -12px rgba(0,0,0,0.60)
       casora-menu-pane-webkit: rgba(42,38,34,0.96)
       casora-mnav-over: rgba(40,36,32,0.94)
-      casora-mnav-on-fill: rgba(242,232,218,0.14)
       casora-nav-border: rgba(255,240,220,0.06)
       casora-nav-active-fill: rgba(242,232,218,0.14)
       casora-pill-fill: rgba(46,42,38,0.80)
-      casora-pill-rim: inset 0 0 0 1px rgba(255,240,220,0.06), 0 8px 22px -14px rgba(0,0,0,0.50)
+      # Dunkel ohne hellen Ring (Navbar Desktop, Leiste oben rechts), nur Schatten (04.10.2026)
+      casora-pill-rim: 0 8px 24px -16px rgba(0,0,0,0.55)
+      casora-chrome-shadow: var(--casora-pill-rim)
       casora-popup-tiles-fill: rgba(255,240,220,0.05)
       casora-popup-tiles-text-primary: 'rgba(242,235,225,0.96)'
       casora-popup-tiles-text-secondary: var(--casora-text-2)
@@ -873,9 +969,10 @@ Casora Weich:
       casora-lps-icon-on-ink: "#FFFFFF"
       casora-lps-icon-off: rgba(255,240,220,0.08)
       casora-lps-icon-off-ink: rgba(242,235,225,0.55)
-      casora-lps-switch-off: rgba(0,0,0,0.45)
+      # Aus-Schalter warmgrau statt Schwarz, Knopf Creme statt Weiß (Audit M6: wirkte auf Dunkelbraun hart und kalt)
+      casora-lps-switch-off: rgba(242,235,225,0.18)
       casora-lps-switch-on: "#B67A50"
-      casora-lps-knob: "#FFFFFF"
+      casora-lps-knob: "#F2EBE1"
       casora-lps-chip: rgba(255,240,220,0.05)
       casora-lps-chip-ink: var(--secondary-text-color)
       casora-lps-chip-on: rgba(242,232,218,0.14)
@@ -895,6 +992,7 @@ Casora Weich:
       casora-soft-icon-off: var(--casora-icon-circle-bg)
       casora-soft-glyph: "#FFFFFF"
       casora-soft-glyph-off: rgba(242,235,225,0.55)
+      casora-waste-rest: "#6A5948"
       casora-soft-close-ink: var(--casora-popup-tiles-text-secondary)
       casora-soft-seg-on: var(--casora-entity-background-active)
       casora-soft-seg-on-ink: var(--casora-entity-name-active)

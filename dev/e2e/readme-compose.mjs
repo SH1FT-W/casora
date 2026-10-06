@@ -1,5 +1,5 @@
 // README-Bilder: setzt die Roh-Screenshots aus docs/images/casora-*-{light,dark}.webp zu
-// fertigen Schaubildern zusammen (Geräterahmen, Schatten, Leinen-/Dunkelbraun-Bühne im Look „Casora Weich“), hell und dunkel:
+// fertigen Schaubildern zusammen (Geräterahmen, Schatten, Leinen-/Dunkelbraun-Bühne im Look „Casora“), hell und dunkel:
 // docs/images/readme-<name>-<light|dark>.webp. Läuft komplett offline, braucht kein HA.
 //
 //   Ablauf nach neuen Roh-Bildern:
@@ -96,7 +96,7 @@ const SCENES = {
     ${browser(src('move', m), 700, { url: 'Move from Hemma', style: 'right:130px;top:505px' })}` },
 };
 
-// Bühne im Look „Casora Weich“ (Farben wie theme_weich.yaml und die Website):
+// Bühne im Look „Casora“ (Farben wie theme_weich.yaml und die Website):
 // hell Leinen/Sand mit einem Hauch Ton und Honig, dunkel warmes Dunkelbraun. Schatten warm
 // statt blau, Fensterleisten und Geräterahmen in derselben Familie.
 const THEME = {

@@ -1,7 +1,7 @@
-# Casora Glass – erzeugt von tools/build-glass-theme.py, nicht von Hand bearbeiten.
+# Hemma 1 – erzeugt von tools/build-glass-theme.py, nicht von Hand bearbeiten.
 # Nur die Abweichungen vom Casora-Theme; helfer.py legt sie beim Laden darüber.
 # Herkunft: Hemma 1.4.1 hemma_glass.yaml (MIT, Will Sanderson), auf Hemma 2 übertragen.
-Casora Glass:
+Hemma 1:
   ha-shadow-light: inset 0 0 0 1px rgba(255,255,255,0.03), inset 2.5px 2.5px 1.5px -3.5px rgba(255,255,255,0.2), inset -2.5px -2.5px 1.5px -3.5px rgba(255,255,255,0.2), inset 0 10px 18px -16px rgba(255,255,255,0.25), inset 0 -10px 18px -16px rgba(255,255,255,0.25)
   ha-shadow-light-hover: inset 0 0 0 1px rgba(255,255,255,0.03), inset 2.5px 2.5px 1.5px -3.5px rgba(255,255,255,0.2), inset -2.5px -2.5px 1.5px -3.5px rgba(255,255,255,0.2), inset 0 10px 18px -16px rgba(255,255,255,0.25), inset 0 -10px 18px -16px rgba(255,255,255,0.25), 0 8px 20px rgba(0,0,0,0.04)
   ha-shadow-light-mobile: inset 0 0 0 1px rgba(255,255,255,0.03), inset 3px 3px 1px -3px rgba(255,255,255,0.22), inset -3px -3px 1px -3px rgba(255,255,255,0.22), inset 0 10px 18px -16px rgba(255,255,255,0.35), inset 0 -10px 18px -16px rgba(255,255,255,0.35)
@@ -15,8 +15,8 @@ Casora Glass:
   casora-entity-picture-inactive-opacity: 0.98
   casora-entity-picture-inactive-filter: brightness(.98) saturate(0.9)
   casora-entity-text-shadow: 0 0 4px rgba(0,0,0,0.1)
-  card-mod-theme: Casora Glass
-  uix-theme: Casora Glass
+  card-mod-theme: Hemma 1
+  uix-theme: Hemma 1
   modes:
     light:
       ha-card-background: rgba(100,100,100,0.1)

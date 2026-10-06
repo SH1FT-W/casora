@@ -3,7 +3,7 @@
 // Gemeldet: In Einstellungen → „Haus & Geräte“ waren Beschriftungen, Werte und Felder sichtbar
 // größer als im Kachel-Editor (Beschriftung 17 statt 12,5 px, Eingabe 17 px/40 px hoch statt
 // 14 px/38 px, Gruppen mit 20 statt 14 px Radius). Erwartet: dieselben Maße (±1 px).
-import { open, studioDashboard, studio, check, need, finish } from './lib.mjs';
+import { open, studioDashboard, studio, studioRetry, check, need, finish } from './lib.mjs';
 
 const dash = await studioDashboard();
 await need('ein Dashboard fürs Studio', dash);
@@ -24,20 +24,23 @@ const measure = () => {
       group: m(q('.inspector .tile, .inspector .card:not(.map)')) };
 };
 
-// Kachel-Editor: erste Kachel des ersten Raums öffnen.
-const opened = await page.evaluate(() => {
-  const t = window.__panel().$('pane').querySelector('[data-k^="tile-"]');
-  if (t) (t.querySelector('.thead') || t).click();
-  return !!t;
+const { ed, st, opened } = await studioRetry(page, dash, async () => {
+  // Kachel-Editor: erste Kachel des ersten Raums öffnen.
+  const opened = await page.evaluate(() => {
+    const t = window.__panel().$('pane').querySelector('[data-k^="tile-"]');
+    if (t) (t.querySelector('.thead') || t).click();
+    return !!t;
+  });
+  await page.waitForTimeout(1500);
+  const ed = await page.evaluate(measure);
+
+  await page.evaluate(() => window.__panel()._csOpenPage('home'));
+  await page.waitForTimeout(2000);
+  const st = await page.evaluate(measure);
+  return { ed, st, opened };
 });
 await need('eine Kachel zum Öffnen', opened);
-await page.waitForTimeout(1500);
-const ed = await page.evaluate(measure);
 await need('Kachel-Editor mit Feld', ed.label && ed.input && ed.group, ed);
-
-await page.evaluate(() => window.__panel()._csOpenPage('home'));
-await page.waitForTimeout(2000);
-const st = await page.evaluate(measure);
 await need('Haus & Geräte mit Feld', st.label && st.input && st.group, st);
 
 const near = (a, b) => Math.abs(a - b) <= 1;

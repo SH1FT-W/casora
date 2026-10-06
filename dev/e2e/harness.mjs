@@ -38,9 +38,9 @@ export async function freshToken() {
 
 // dark: HA-Dunkelmodus (Standard an), locale: Browser-Sprache, args: Chromium-Startargumente
 // (z. B. --hide-scrollbars für Screenshots), scale: Pixeldichte (Standard 2, iPhone 3),
-// theme: HA-Theme dieses Browsers (Standard „Casora Standard“, wie die Tests es erwarten).
+// theme: HA-Theme dieses Browsers (Standard „Hemma 2“, wie die Tests es erwarten).
 export async function open({ width = 1440, height = 900, mobile = false, umzug = false, safari = false,
-  dark = true, locale = 'de-DE', args = [], touch, userAgent, scale = 2, theme = 'Casora Standard' } = {}) {
+  dark = true, locale = 'de-DE', args = [], touch, userAgent, scale = 2, theme = 'Hemma 2' } = {}) {
   const tok = await freshToken();
   // safari: WebKit statt Chromium (Safari-Eigenheiten nachstellen).
   const browser = await (safari ? webkit : chromium).launch(safari ? {} : { args });

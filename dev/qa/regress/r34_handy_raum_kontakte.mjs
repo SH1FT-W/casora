@@ -3,7 +3,8 @@
 // als Badge, am Desktop schon im Raum-Kopf. Der Studio-Abgleich (syncRoomChips) übertrug nur Klima
 // und Licht in room_chips, und casora_mobile_sensor_chips kannte keine Sicherheits-Badges je Raum.
 // Erwartet: (1) Der Abgleich schreibt Kontakte (security_entity_N samt Beschriftung) und Schlösser
-// des Raums in room_chips, (2) die Raumseite am Handy (WebKit 390×844) zeigt sie als Badges.
+// des Raums in room_chips, (2) die Raumseite am Handy (WebKit 390×844) zeigt sie als Badges – seit
+// 05.10.2026 wie der Raum-Kopf am Desktop (einzeln oder in der Sammel-Badge „Sicherheit“, r44).
 // Es wird nichts gespeichert: Studio nur im Speicher, am Handy nur die Karte im Browser umgestellt.
 import { open, usePage, studio, dashboard, casoraDashboard, check, need, finish } from './lib.mjs';
 
@@ -60,21 +61,37 @@ const set = await page.evaluate(async (chips) => {
 await need('Karte casora_mobile_sensor_chips am Handy', set);
 await page.evaluate((k) => window.dispatchEvent(new CustomEvent('ll-custom', { detail: { casora_filter: k } })), sync.key);
 await page.waitForTimeout(3500);
-const seen = await page.evaluate((contact) => {
+// Seit 05.10.2026 wie der Raum-Kopf am Desktop: einzeln (show_security_inline) als eigene Badge,
+// sonst in der Sammel-Badge „Sicherheit“ – Antippen klappt ihre Unter-Reihe mit dem Kontakt auf.
+const look = (field, contact) => page.evaluate(([field, contact]) => {
   const chips = window.__pierce('button-card').find((b) => [].concat((b._config || {}).template || []).includes('casora_mobile_sensor_chips'));
-  const row = chips && chips.shadowRoot && chips.shadowRoot.querySelector('#rooms_row');
-  if (!row) return { row: false };
+  const row = chips && chips.shadowRoot && chips.shadowRoot.querySelector('#' + field);
+  if (!row || getComputedStyle(row).display === 'none') return { row: false };
   const out = [];
   const walk = (root) => root.querySelectorAll('*').forEach((e) => {
     if (e.localName === 'button-card') {
       const r = e.getBoundingClientRect();
-      const ent = e._config && e._config.entity;
-      if (r.width > 0 && r.height > 0 && r.y < innerHeight) out.push({ t: [].concat(e._config.template || []).join('+'), ent });
+      if (r.width > 0 && r.height > 0) out.push({ t: [].concat(e._config.template || []).join('+'), ent: e._config && e._config.entity });
+      return;
     }
     if (e.shadowRoot) walk(e.shadowRoot);
   });
   walk(row);
-  return { row: true, badges: out, hit: out.some((b) => b.ent === contact) };
-}, sync.contact);
-await check(`Raumseite „${sync.room}“ am Handy zeigt den Kontakt ${sync.contact} als Badge`, seen.hit, seen);
+  return { row: true, badges: out, hit: out.some((b) => b.ent === contact),
+    group: out.some((b) => b.t.includes('casora_badge_security_group')) };
+}, [field, contact]);
+const seen = await look('rooms_row', sync.contact);
+let sub = null;
+if (!seen.hit && seen.group) {
+  await page.evaluate(() => {
+    const chips = window.__pierce('button-card').find((b) => [].concat((b._config || {}).template || []).includes('casora_mobile_sensor_chips'));
+    const g = window.__pierce('button-card', chips.shadowRoot.querySelector('#rooms_row'))
+      .find((b) => [].concat((b._config || {}).template || []).includes('casora_badge_security_group') && b.getBoundingClientRect().width > 0);
+    (g.shadowRoot.querySelector('ha-card') || g).click();
+  });
+  await page.waitForTimeout(2000);
+  sub = await look('room_sub_security', sync.contact);
+}
+await check(`Raumseite „${sync.room}“ am Handy zeigt den Kontakt ${sync.contact} als Badge (einzeln oder in „Sicherheit“)`,
+  seen.hit || !!(sub && sub.hit), { seen, sub });
 await finish();
