@@ -67,7 +67,7 @@
     + ".cu-new{margin:4px 0 6px}.cu-new h4{margin:2px 0 12px;font-size:var(--t-title);font-weight:700;letter-spacing:-.01em;color:var(--ink)}"
     + ".cu-new-it{margin:0 0 12px}.cu-new-it b{display:block;font-size:var(--t-callout);font-weight:600;color:var(--ink)}"
     + ".cu-new-it span{display:block;font-size:var(--t-callout);line-height:1.45;color:var(--ink-2)}"
-    + ".cu-more{appearance:none;border:0;background:none;padding:2px 0 10px;font:inherit;font-size:var(--t-callout);color:var(--casora-studio-link, #4aa3ff);cursor:pointer}"
+    + ".cu-more{appearance:none;border:0;background:none;padding:2px 0 10px;margin-right:18px;font:inherit;font-size:var(--t-callout);color:var(--casora-studio-link, #4aa3ff);cursor:pointer}"
     + ":host(.is-light) .cu-more{color:var(--casora-studio-link, #0a6fd8)}"
     + ".cu-notes li::marker{color:var(--ink-3,rgba(235,235,245,.5))}"
     + ".cu-notes p{margin:6px 0}.cu-notes strong{font-weight:600}"
