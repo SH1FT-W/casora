@@ -70,6 +70,13 @@
     :host(.bmode.split:not(.flow):not(.phone)) .stage > .canvas { align-self:stretch; box-sizing:border-box; }
     :host(.bmode.split:not(.flow):not(.phone)) .canvas > .plinth { margin-top:auto; margin-bottom:auto; }
     @keyframes bInspIn { from { opacity:0; transform:translateX(18px); } }
+    /* Sofortige Rückmeldung beim Antippen (auch ohne Maus): wie das Zeigen am Desktop, in der
+       Handy-Vorschau leicht eingedrückt wie die Knöpfe des Studios. */
+    :host(.bmode) .miniroom .bpress:not(.pvsel):not(.mini-fill) { outline-color:rgba(255,255,255,0.55); }
+    :host(.bmode) .card.map.soft .miniroom .bpress:not(.pvsel):not(.mini-fill) {
+      outline-color:color-mix(in srgb, var(--primary-text-color) 45%, transparent);
+    }
+    :host(.bmode) .miniphone .bpress { transform:scale(0.97); }
     @media (prefers-reduced-motion: reduce) { :host(.bmode) .inspector { animation:none !important; } }
     :host(.bmode) .inspector .insphead { padding-right:52px; }
     /* Das ✕ hat in der Kopfzeile einen eigenen Platz: die Zeile (Zurück, Titel, Schalter) endet davor.
@@ -583,6 +590,18 @@
         map._bWired = true;
         map.addEventListener("keydown", (ev) => this._bMapKey(ev));
         map.addEventListener("pointerdown", (ev) => this._bBadgeDown(ev), true);
+        map.addEventListener("pointerdown", (ev) => {
+          const el = ev.target.closest && ev.target.closest("[data-mk], [data-pv]");
+          if (!el || ev.button) return;
+          el.classList.add("bpress");
+          const off = () => {
+            el.classList.remove("bpress");
+            window.removeEventListener("pointerup", off, true);
+            window.removeEventListener("pointercancel", off, true);
+          };
+          window.addEventListener("pointerup", off, true);
+          window.addEventListener("pointercancel", off, true);
+        }, true);
         // Nach einem Ziehen löst das Loslassen keinen Klick aus.
         map.addEventListener("click", (ev) => {
           if (this._bDragged) { ev.stopPropagation(); ev.preventDefault(); return; }
