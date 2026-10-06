@@ -9413,6 +9413,19 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     }).catch(function () { return null; });
   }
 
+  function cardSynth(names, entityId) {
+    var h = hassOf();
+    var tpl = (names || []).filter(function (n) { return !/badge|chip/.test(n); })[0];
+    if (!h || !tpl || !entityId || !h.states[entityId]) return null;
+    var el = document.createElement('button-card');
+    try { el.setConfig({ type: 'custom:button-card', template: tpl, entity: entityId }); } catch (e) { return null; }
+    el.hass = h;
+    el.style.cssText = 'position:fixed;left:-9999px;top:0;'
+      + 'width:1px;height:1px;opacity:0;pointer-events:none;';
+    document.body.appendChild(el);
+    return el;
+  }
+
   function tapCard(card, done) {
     if (!card || typeof card._handleAction !== 'function' || !card._config) {
       return done(false);
@@ -9472,6 +9485,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     tapCard(own || cardWithTemplate(names, fallbackEntity), function (hit) {
       if (hit) return;
       cardFromConfig(names, fallbackEntity).then(function (el) {
+        // Keine Kachel im Dashboard (z. B. Pflanze ohne Pflanzen-Kachel): eine unsichtbare Kachel der
+        // ersten Vorlage für genau diese Entität – dasselbe Casora-Popup statt HAs Dialog („problem“).
+        if (!el) el = cardSynth(names, fallbackEntity);
         if (!el) return fall();
         // One frame for button-card to evaluate its config before the tap.
         setTimeout(function () {
