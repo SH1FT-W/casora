@@ -553,7 +553,14 @@
       const tr0 = tools.getBoundingClientRect();
       let next = tools.nextElementSibling;
       while (next && (!next.getClientRects().length || next.getBoundingClientRect().width < 2)) next = next.nextElementSibling;
-      const tight = row.scrollWidth > row.clientWidth + 1 || (next && next.getBoundingClientRect().left < tr0.right + 8);
+      // Auch eng: der Dashboard-Name wird gekürzt („Test …“) oder die Knöpfe rechts
+      // (Rückgängig, Fertig) rücken bis an die Beschriftungen – Tablet hochkant.
+      const lab = row.querySelector("#roomtitle .rt-label");
+      const pill = [...this.shadowRoot.querySelectorAll(".navpill")].find((x) => x.getClientRects().length
+        && x.getBoundingClientRect().left > tr0.left);
+      const tight = row.scrollWidth > row.clientWidth + 1 || (next && next.getBoundingClientRect().left < tr0.right + 8)
+        || (lab && lab.scrollWidth > lab.clientWidth + 1)
+        || (pill && pill.getBoundingClientRect().left < tr0.right + 20);
       this.classList.toggle("btight", !!tight);
     };
 
