@@ -3385,6 +3385,9 @@ window.casoraMenuGlass = {
         }
 
         .scroller::-webkit-scrollbar { height: 0; width: 0; }
+        /* D-14: Weich rastet auf Raumanfänge ein (neben dem Pfeil keine Wortreste); sonst wie bisher. */
+        .scroller { scroll-snap-type: var(--casora-nav-snap, none); scroll-padding-inline: var(--casora-nav-snap-pad, 0px); }
+        .route { scroll-snap-align: var(--casora-nav-snap-align, none); }
 
         /* Überlänge: Namen laufen weich aus statt hart abgeschnitten (JS setzt die Klassen).
            01.10.2026: Verlauf breiter (72 px, vorher 48) – am Rand war kaum zu sehen, dass es
