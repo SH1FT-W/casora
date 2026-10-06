@@ -177,6 +177,7 @@ Ansicht, `cards(page, vorlage)` liefert sichtbare Karten mit Lage und Text,
 | rf02_raum_ablauf | arbeit | Ablauf Raum über das Raum-Menü: hinzufügen, umbenennen, Symbol, „Nach vorne“, löschen – Ergebnis in HA und in der Navigation |
 | rf03_speichern_zeitreise | arbeit | Rückgängig, „Ungespeicherte Änderungen wiederherstellen“ nach Verlassen, ⌘S, Zeitreise zum Stand davor |
 | rf04_energie_ausschliessen | arbeit | Energie-Badge: Gerät per × ausschließen bleibt nach neuem Laden draußen (energy_exclude) |
+| rf05_handy_ausgeblendet | arbeit | Im Studio ausgeblendete Kachel (enabled: false) blieb auf der Handy-Raumseite sichtbar |
 | erststart | frisch | Erststart: Willkommen → Assistent (Hemma/YAML gefunden) bzw. Räume, sonst Studio; ⋯-Menü „Einrichtungsassistent …“ |
 
 Hinweise zu einzelnen Tests: Im Zustand **frisch** gibt es kein Casora-Dashboard; das Studio
