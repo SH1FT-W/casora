@@ -173,6 +173,10 @@ Ansicht, `cards(page, vorlage)` liefert sichtbare Karten mit Lage und Text,
 | r34_handy_raum_kontakte | arbeit | Handy: Kontaktsensoren und Schlösser fehlten als Badges im Raum (Issue #5) |
 | r35_handy_raum_aktiv_vorn | arbeit | Handy: Raumseite sortierte aktive Kacheln nicht nach vorn (Issue #6) |
 | r44_handy_raum_wie_desktop | arbeit | Handy-Raumseite zeigte andere Badges als der Raum-Kopf am Desktop (Energie/Sicherheit fehlten, Einzel-Anzeige galt nicht); prüft auch Handy-Schalter, Unter-Reihe je Gerät und Studio-Vorschau |
+| rf01_kachel_ablauf | arbeit | Ablauf Kachel: Kachelart hinzufügen, umbenennen, „Kachel entfernen“, ⌘S – Ergebnis in HA (Desktop + Mobil) und im Dashboard |
+| rf02_raum_ablauf | arbeit | Ablauf Raum über das Raum-Menü: hinzufügen, umbenennen, Symbol, „Nach vorne“, löschen – Ergebnis in HA und in der Navigation |
+| rf03_speichern_zeitreise | arbeit | Rückgängig, „Ungespeicherte Änderungen wiederherstellen“ nach Verlassen, ⌘S, Zeitreise zum Stand davor |
+| rf04_energie_ausschliessen | arbeit | Energie-Badge: Gerät per × ausschließen bleibt nach neuem Laden draußen (energy_exclude) |
 | erststart | frisch | Erststart: Willkommen → Assistent (Hemma/YAML gefunden) bzw. Räume, sonst Studio; ⋯-Menü „Einrichtungsassistent …“ |
 
 Hinweise zu einzelnen Tests: Im Zustand **frisch** gibt es kein Casora-Dashboard; das Studio
