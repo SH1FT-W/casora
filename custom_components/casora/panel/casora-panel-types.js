@@ -163,7 +163,7 @@ window.CASORA_TILE_TYPES = [
     icon: "attention2", color: "var(--casora-color-orange, #FF9F0A)", fields: [
       ICON,
       { key: "sensors", type: "list", label: "Warning sensors", domains: ["binary_sensor"], classes: ["safety"],
-        placeholder: "add warning sensor.", hint: "E.g. the NINA or DWD warnings for your town." },
+        placeholder: "Add a warning sensor", hint: "E.g. the NINA or DWD warnings for your town." },
       { ...TITLE, placeholder: "NINA warnings" },
     ] },
   { id: "casora_solar_tip", label: "Solar tip", template: "casora_solar_tip", domains: ["binary_sensor"], ownData: true,
