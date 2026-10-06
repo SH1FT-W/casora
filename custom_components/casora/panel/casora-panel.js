@@ -14504,9 +14504,10 @@ class CasoraPanel extends HTMLElement {
     const n = pair && pair.safe !== false ? (pair.conflicts || []).length : 0;
     pill.hidden = !n;
     if (n) {
-      pill.querySelector(".s-long").textContent = n + (n === 1 ? " Difference" : " Differences");
+      // Ruhig und verständlich: was verglichen wird, nicht nur „N Unterschiede“ in Orange.
+      pill.querySelector(".s-long").textContent = n === 1 ? "Phone differs in 1 setting" : "Phone differs in " + n + " settings";
       pill.querySelector(".s-short").textContent = String(n);
-      pill.title = "Your desktop and phone layouts don't match";
+      pill.title = "Desktop and phone are set differently here – tap to choose what applies";
       pill.onclick = () => this._reviewDifferences();
     }
     this._placeCanvasHead();
@@ -14528,9 +14529,10 @@ class CasoraPanel extends HTMLElement {
 
     const s = this._flowScreen({
       icon: "alert", tone: "warn", quiet,
-      title: "Desktop and Phone Don't Match",
-      lede: "These settings are shared by your desktop and phone layouts, but "
-        + "they're set differently. Choose what to keep.",
+      title: "Match Desktop and Phone",
+      lede: "Desktop and phone share these settings, but they are set differently right now – "
+        + "for example a different light. Choose for each row what should apply on both. "
+        + "Nothing changes until you choose, and you can also do this later.",
     });
     const shown = (v, key) => (v === undefined || v === null || v === "" ? "Not set"
       : typeof v === "string" ? this._prettyEntity(v)
@@ -14565,7 +14567,7 @@ class CasoraPanel extends HTMLElement {
              { id: "clear", label: c.kind === "onlyDesktop" ? "Remove From Desktop" : "Remove From Phone" }];
         const r = this._flowRow(group, {
           title: this._fieldLabelFor(c.key) || c.key,
-          sub: "Desktop: " + shown(c.desktop, c.key) + "   ·   Phone: " + shown(c.mobile, c.key),
+          sub: trLabel("Desktop") + ": " + shown(c.desktop, c.key) + "   ·   " + trLabel("Phone") + ": " + shown(c.mobile, c.key),
           chevron: true,
           onTap: () => this._menuAt(r.row, choices, (id) => {
             if (id === "desktop") apply(c, c.desktop, "from Desktop");
@@ -14578,12 +14580,12 @@ class CasoraPanel extends HTMLElement {
     });
     const note = document.createElement("p");
     note.className = "ffoot";
-    note.textContent = "Use Desktop Settings keeps the desktop value wherever both are set, "
+    note.textContent = "“Like the desktop everywhere” keeps the desktop value wherever both are set "
       + "and fills in whichever layout is missing one.";
     s.body.appendChild(note);
 
-    this._flowButton(s.acts, "Not Now", () => this._flowBack(), true);
-    this._flowButton(s.acts, "Use Desktop Settings", () => {
+    this._flowButton(s.acts, "Later", () => this._flowBack(), true);
+    this._flowButton(s.acts, "Like the desktop everywhere", () => {
       list.forEach((c) => apply(c, c.kind === "onlyMobile" ? c.mobile : c.desktop, "Use Desktop Settings"));
       settled();
     });
