@@ -15730,7 +15730,7 @@
   "variables": {
    "has_controls": "[[[\n  if (variables.size === 'large' && /^\\/[^/]*[-_]mobile(\\/|$)/i.test(window.location.pathname)) return true;\n  return !window.matchMedia('(max-width: 767px) and (orientation: portrait), (max-height: 500px) and (orientation: portrait), (max-height: 600px) and (orientation: landscape)').matches;\n]]]\n",
    "mobile_filter_category": "climate",
-   "show_toggle": "[[[ return variables.has_controls; ]]]\n",
+   "show_toggle": "[[[\n  /* D-22 (Weich): Schalter nur bei Einzelgeräten – eine Thermostat-Gruppe (z. B. Fußbodenheizung\n     mit mehreren Räumen) ohne Schalter, wie Beleuchtung und Jalousien. */\n  const _mem = entity?.attributes?.member_entities || entity?.attributes?.entity_id;\n  const _grp = Array.isArray(_mem) && _mem.length > 1;\n  if (_grp && window._casoraSoft && window._casoraSoft()) return false;\n  return variables.has_controls;\n]]]\n",
    "size": "small",
    "temp_sensor": null,
    "thermostat_toggle_helper": "input_boolean.casora_thermostat_overlay",
