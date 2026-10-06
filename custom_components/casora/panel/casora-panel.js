@@ -20134,9 +20134,10 @@ class CasoraPanel extends HTMLElement {
     if (cands.length) {
       const tr = trLabel;
       const res = await this._ask({
-        title: sure ? tr("Matching device found") : tr("No clear match – please choose"),
+        // Nutzertest: „Keine eindeutige Zuordnung“ klang nach Fehler – als einfache Frage stellen.
+        title: sure ? tr("Matching device found") : tr("Which device should the tile show?"),
         message: !sure
-          ? tr("Casora could not tell which device this tile is for. Pick one, or add the tile without a device.")
+          ? tr("Pick one – or add the tile without a device and choose it later.")
           : cands.length > 1
             ? tr("Casora suggests this device for the new tile. Pick another one or add the tile without a device.")
             : tr("Casora suggests this device for the new tile."),

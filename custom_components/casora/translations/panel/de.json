@@ -1,6 +1,8 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "Which device should the tile show?": "Welches Gerät soll die Kachel zeigen?",
+    "Pick one – or add the tile without a device and choose it later.": "Wähl eins aus – oder füge die Kachel ohne Gerät hinzu und wähle es später.",
     "Phone differs in 1 setting": "Handy weicht bei 1 Einstellung ab",
     "Desktop and phone are set differently here – tap to choose what applies": "Desktop und Handy sind hier verschieden eingestellt – antippen, um zu wählen, was gilt",
     "Match Desktop and Phone": "Desktop und Handy angleichen",
