@@ -368,6 +368,16 @@
   "Prüfen": "Check",
   "Prüft …": "Checking …",
   "Prüfung fehlgeschlagen": "Check failed",
+  "Aktiviert (Teilweise)": "Armed (Partial)",
+  "Aktiviert · Teilweise": "Armed · Partial",
+  "Einzelne Sensoren ausgenommen": "Some sensors excluded",
+  "Alarm aus": "Alarm off",
+  "Rezepte": "Recipes",
+  "Kühlt": "Cooling",
+  "Entfeuchten": "Dry",
+  "Nur Lüfter": "Fan only",
+  "Keine KI eingerichtet (Einstellungen → KI-Aufgaben)": "No AI set up (Settings → AI tasks)",
+  "Auswertung fehlgeschlagen.": "Analysis failed.",
   "Qualität": "Quality",
   "Reichweite jetzt": "Range now",
   "Reichweite voller Akku": "Range on a full battery",
@@ -1441,6 +1451,14 @@
    "indoor Ø {1}"
   ],
   [
+   "^(\\d+) Verfügbar$",
+   "{1} available"
+  ],
+  [
+   "^Heute (.+) kWh$",
+   "Today {1} kWh"
+  ],
+  [
    "^Heute (.+) kWh Bezug$",
    "Today {1} kWh from grid"
   ],
@@ -1527,6 +1545,10 @@
   [
    "^(.+) umgeschaltet auf (.+)$",
    "{1} switched to {2}"
+  ],
+  [
+   "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Teilweise)$",
+   "{1} active · {2}"
   ],
   [
    "^Alarm scharf – (.+)$",
@@ -1961,6 +1983,10 @@
    "Ready · {1}"
   ],
   [
+   "^Automatik · (.+)$",
+   "Auto · {1}"
+  ],
+  [
    "^Lädt · (.+)$",
    "Charging · {1}"
   ],
@@ -2047,6 +2073,10 @@
   [
    "^Feuchte (\\d+) % · draußen feuchter$",
    "Humidity {1}% · more humid outside"
+  ],
+  [
+   "^Feuchte (\\d+) % · Außenwerte fehlen$",
+   "Humidity {1}% · no outdoor values"
   ],
   [
    "^≈ (.+) frei · jetzt (.+)$",
@@ -2330,7 +2360,9 @@
   ],
   [
    "^Neu: (.+)$",
-   "New: {1}",
+   "New: {1}"
+  ],
+  [
    "^(\\d+) Termine heute$",
    "{1} events today"
   ],

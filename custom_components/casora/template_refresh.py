@@ -19,6 +19,7 @@ Das Studio zeigt beim nächsten Öffnen einen Hinweis (casora/templates/auto_not
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import logging
@@ -99,8 +100,22 @@ async def _casora_dashboards(hass: HomeAssistant) -> dict[str, tuple[Any, dict]]
     return out
 
 
+def _lock(hass: HomeAssistant) -> asyncio.Lock:
+    """Eine Sperre für Auffrischen und Hinweis-Speichern: beim Start laufen Auffrischen und
+    Karten-Updates gleichzeitig los, sonst gewinnt, wer zuletzt speichert."""
+    dom = hass.data.setdefault(DOMAIN, {})
+    if "template_refresh_lock" not in dom:
+        dom["template_refresh_lock"] = asyncio.Lock()
+    return dom["template_refresh_lock"]
+
+
 async def async_refresh_dashboards(hass: HomeAssistant) -> int:
     """Alle Casora-Dashboards auffrischen, die das aktuelle Bundle noch nicht gesehen haben."""
+    async with _lock(hass):
+        return await _async_refresh_dashboards(hass)
+
+
+async def _async_refresh_dashboards(hass: HomeAssistant) -> int:
     from .versions import _snap
 
     got = await hass.async_add_executor_job(_read_bundle, hass.config.config_dir)
@@ -193,11 +208,12 @@ async def async_refresh_dashboards(hass: HomeAssistant) -> int:
 async def ws_notice(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
     """Hinweis fürs Studio: {"notice": {count, dashboards, version, ts} | None}; ack löscht ihn."""
     store = _store(hass)
-    data = await store.async_load() or {}
-    notice = data.get("notice")
-    if msg["ack"] and notice:
-        data.pop("notice", None)
-        await store.async_save(data)
+    async with _lock(hass):
+        data = await store.async_load() or {}
+        notice = data.get("notice")
+        if msg["ack"] and notice:
+            data.pop("notice", None)
+            await store.async_save(data)
     connection.send_result(msg["id"], {"notice": notice})
 
 

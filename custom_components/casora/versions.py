@@ -24,6 +24,7 @@ import hashlib
 import json
 import os
 import re
+import threading
 from typing import Any
 
 import voluptuous as vol
@@ -39,6 +40,9 @@ KEEP = 30
 # Zusammenfassung (JSON aus dem Studio): abgeschnitten wäre sie unlesbar und fiele ganz weg.
 SUMMARY_MAX = 4000
 TPL = "button_card_templates"
+# Speichern und Aufräumen laufen im Executor, teils gleichzeitig (Start + Studio): nacheinander,
+# sonst löscht das Aufräumen eine Vorlage, die ein anderer Stand gerade wiederverwendet.
+_LOCK = threading.Lock()
 
 
 def _digest(obj: Any) -> str:
@@ -118,6 +122,11 @@ class _Store:
 
     def add(self, url_path: str, mobile_url: str | None, cfg: dict, mobile: dict | None,
             meta: dict) -> str | None:
+        with _LOCK:
+            return self._add(url_path, mobile_url, cfg, mobile, meta)
+
+    def _add(self, url_path: str, mobile_url: str | None, cfg: dict, mobile: dict | None,
+             meta: dict) -> str | None:
         os.makedirs(self.dir, exist_ok=True)
         os.makedirs(self.blobs, exist_ok=True)
         versions = self.index()

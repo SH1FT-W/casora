@@ -38,6 +38,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.util import dt as dt_util
 
+from .const import DOMAIN
 from .ki import OPT_OUT_RH, OPT_OUT_T, OUTDOOR, _area_id, _outdoor
 
 _LOGGER = logging.getLogger(__name__)
@@ -138,6 +139,15 @@ def find_rooms(hass: HomeAssistant) -> list[dict]:
     return sorted(out, key=lambda r: r["n"])
 
 
+def _open_since(hass: HomeAssistant, st) -> Any:
+    """Seit wann ist das Fenster offen? last_changed beginnt nach einem Neustart von vorn –
+    Casora merkt sich „offen seit“ über Neustarts (media_pause.contacts), das gilt dann."""
+    pause = (hass.data.get(DOMAIN) or {}).get("media_pause")
+    since = ((getattr(pause, "contacts", None) or {}).get(st.entity_id) or {}).get("since")
+    when = dt_util.parse_datetime(since) if since else None
+    return when if when is not None and when < st.last_changed else st.last_changed
+
+
 def evaluate_rooms(hass: HomeAssistant, rooms: list[dict], out_t: str | None, out_rh: str | None,
                    out_pm: str | None) -> tuple[dict, list[dict], list[str]]:
     to, rho, pm = _num(hass, out_t), _num(hass, out_rh), _num(hass, out_pm)
@@ -158,7 +168,7 @@ def evaluate_rooms(hass: HomeAssistant, rooms: list[dict], out_t: str | None, ou
         open_ws = [hass.states.get(w) for w in r["w"]]
         open_ws = [s for s in open_ws if s and s.state == "on"]
         wo = bool(open_ws)
-        om = int(round((now - min(s.last_changed for s in open_ws)).total_seconds() / 60)) if wo else None
+        om = int(round((now - min(_open_since(hass, s) for s in open_ws)).total_seconds() / 60)) if wo else None
         heizt = any((hass.states.get(c) and hass.states.get(c).attributes.get("hvac_action") == "heating")
                     for c in r["heat"])
         close = wo and om >= target and ((to is not None and to < 12) or heizt)
@@ -181,7 +191,9 @@ def evaluate_rooms(hass: HomeAssistant, rooms: list[dict], out_t: str | None, ou
         elif need == 1:
             st, g = "bald", " · ".join(why)
         elif h_l == 2:
-            st, g = "feucht", f"Feuchte {round(rh)} % · draußen feuchter"
+            # „draußen feuchter“ nur, wenn Außenwerte das auch sagen.
+            st, g = "feucht", f"Feuchte {round(rh)} % · " + ("draußen feuchter" if aho is not None
+                                                             else "Außenwerte fehlen")
         else:
             st, g = "ok", ""
         result.append({

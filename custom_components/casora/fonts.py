@@ -40,7 +40,9 @@ SAFE_FAMILY = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 _-]{0,47}$")
 
 def weight_of(filename: str) -> tuple[int, bool]:
     """Schnitt (100–900) und Kursiv aus dem Dateinamen."""
-    stem = os.path.splitext(os.path.basename(filename))[0].lower().replace(" ", "").replace("_", "").replace("-", "")
+    # „Familie__Datei.woff2“ (gleicher Dateiname in zwei Familien): nur der Dateiteil zählt.
+    base = os.path.basename(filename).split("__", 1)[-1]
+    stem = os.path.splitext(base)[0].lower().replace(" ", "").replace("_", "").replace("-", "")
     italic = "italic" in stem or "oblique" in stem
     for word, weight in WEIGHTS:
         if word in stem:
@@ -156,7 +158,11 @@ class CasoraFontsView(HomeAssistantView):
             os.makedirs(path, exist_ok=True)
             index = _read_index(path)
             have = index.setdefault(family, [])
+            others = {n for fam, names in index.items() if fam != family for n in names}
             for name, data in files:
+                if name in others:
+                    # Gleicher Dateiname in einer anderen Familie: nicht überschreiben.
+                    name = re.sub(r"[^A-Za-z0-9-]+", "-", family).strip("-") + "__" + name
                 with open(os.path.join(path, name), "wb") as fh:
                     fh.write(data)
                 if name not in have:
@@ -181,6 +187,8 @@ class CasoraFontsView(HomeAssistantView):
         def _remove() -> list[dict[str, Any]]:
             index = _read_index(path)
             for name in index.pop(family, []):
+                if name in {n for names in index.values() for n in names}:
+                    continue  # eine andere Familie nennt dieselbe Datei
                 try:
                     os.remove(os.path.join(path, name))
                 except OSError:

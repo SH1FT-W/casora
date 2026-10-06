@@ -23,7 +23,7 @@
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
-    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' T.';
+    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var OPEN = window._casoraUpdAiOpen = window._casoraUpdAiOpen || {};
 
@@ -408,7 +408,14 @@
 
   var num = function (v) { var n = parseFloat(v); return isNaN(n) ? null : n; };
   var ok = function (s) { return s && s.state !== 'unknown' && s.state !== 'unavailable'; };
+  /* Zahl aus einem Zustand oder null – auch bei Text wie „none“ (sonst würfe fmt(null)). */
+  var nv = function (s) { return s && ok(s) ? num(s.state) : null; };
   var fmt = function (n) { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 }); };
+  /* Temperatur-Einheit von Home Assistant (°C/°F) – die Werte kommen schon darin (06.10.2026). */
+  var TU = function () {
+    var ha = document.querySelector('home-assistant'), us = ha && ha.hass && ha.hass.config && ha.hass.config.unit_system;
+    return (us && us.temperature) || '°C';
+  };
   var esc = function (t) {
     return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
   };
@@ -483,7 +490,7 @@
   F.status = function (o, states) {
     var e = states[o.id]; if (!e) return '—';
     var t = num(e.attributes.temperature);
-    var tt = t != null ? fmt(t) + ' °C' : null;
+    var tt = t != null ? fmt(t) + ' ' + TU() : null;
     if (e.state === 'unavailable') return 'Nicht verfügbar';
     if (e.state === 'off') return 'Aus';
     if (F.heating(o, states)) return tt ? 'Heizt auf ' + tt : 'Heizt';
@@ -499,7 +506,7 @@
   F.stepper = function (targets, value, a, label, withBar) {
     var UI = window._casoraUI, T = UI.tokens;
     var step = num(a.target_temp_step) || 0.5;
-    var lo = num(a.min_temp) != null ? num(a.min_temp) : 5, hi = num(a.max_temp) != null ? num(a.max_temp) : 30;
+    var F_ = TU() === '°F', lo = num(a.min_temp) != null ? num(a.min_temp) : (F_ ? 41 : 5), hi = num(a.max_temp) != null ? num(a.max_temp) : (F_ ? 86 : 30);
     var tgt = { entity_id: targets.length === 1 ? targets[0] : targets };
     var dn = Math.max(lo, Math.round((value - step) / step) * step);
     var up = Math.min(hi, Math.round((value + step) / step) * step);
@@ -526,7 +533,7 @@
         + '.fb-st-v .n{font-weight:700;}' : '')
       + '</style><div class="fb-st">'
       + btn('<svg width="20" height="20" viewBox="0 0 20 20" style="display:block"><path d="M4 10H16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>', dn, value <= lo)
-      + '<div class="fb-st-v"><div class="l">' + esc(label) + '</div><div class="n">' + fmt(value) + '<span> °C</span></div></div>'
+      + '<div class="fb-st-v"><div class="l">' + esc(label) + '</div><div class="n">' + fmt(value) + '<span> ' + TU() + '</span></div></div>'
       + btn('<svg width="20" height="20" viewBox="0 0 20 20" style="display:block"><path d="M4 10H16M10 4V16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>', up, value >= hi)
       + '</div>';
     if (withBar) {
@@ -541,7 +548,7 @@
         + '</style>'
         + '<div class="fb-tb" data-fb-bar="' + esc(JSON.stringify({ lo: lo, hi: hi, st: step, id: targets[0] })) + '">'
         + '<div class="fb-tb-t"><div class="fb-tb-k" style="left:' + k + '%"></div></div>'
-        + '<div class="fb-tb-s"><span>' + fmt(lo) + ' °C</span><span>' + fmt(hi) + ' °C</span></div></div>';
+        + '<div class="fb-tb-s"><span>' + fmt(lo) + ' ' + TU() + '</span><span>' + fmt(hi) + ' ' + TU() + '</span></div></div>';
     }
     return out;
   };
@@ -615,12 +622,12 @@
         var sub = !active.length ? 'Alle Räume aus'
           : heat.length ? (heat.length === 1 ? '1 Raum heizt gerade' : heat.length + ' Räume heizen gerade')
           : (active.length === rooms.length ? 'An · alle Räume warm genug' : active.length + ' von ' + rooms.length + ' Räumen an');
-        return UI.hero({ label: window._casoraHH && window._casoraHH.on() ? null : 'Durchschnitt im Haus', value: v != null ? fmt(v) : '—', unit: v != null ? '°C' : null,
+        return UI.hero({ label: window._casoraHH && window._casoraHH.on() ? null : 'Durchschnitt im Haus', value: v != null ? fmt(v) : '—', unit: v != null ? TU() : null,
           sub: sub, subTone: heat.length ? 'warn' : null, center: true });
       }
       var cur = F.curTemp(c, states);
-      var hum = c.hum && states[c.hum] && ok(states[c.hum]) ? Math.round(num(states[c.hum].state)) + ' % Luftfeuchtigkeit' : null;
-      return UI.hero({ label: window._casoraHH && window._casoraHH.on() ? null : (c.trv ? 'Temperatur am Heizkörper' : 'Raumtemperatur'), value: cur != null ? fmt(cur) : '—', unit: cur != null ? '°C' : null,
+      var hum = c.hum && nv(states[c.hum]) != null ? Math.round(nv(states[c.hum])) + ' % Luftfeuchtigkeit' : null;
+      return UI.hero({ label: window._casoraHH && window._casoraHH.on() ? null : (c.trv ? 'Temperatur am Heizkörper' : 'Raumtemperatur'), value: cur != null ? fmt(cur) : '—', unit: cur != null ? TU() : null,
         sub: [F.status(c, states), hum].filter(Boolean).join(' · '), subTone: F.heating(c, states) ? 'warn' : null, center: true });
     }
 
@@ -680,10 +687,10 @@
         var s = states[r.id];
         var t = F.curTemp(r, states), h = F.heating(r, states);
         var sub = F.status(r, states);
-        if (r.trv && r.bat && states[r.bat] && ok(states[r.bat])) sub += ' · Akku ' + Math.round(num(states[r.bat].state)) + ' %';
+        if (r.trv && r.bat && nv(states[r.bat]) != null) sub += ' · Akku ' + Math.round(nv(states[r.bat])) + ' %';
         return { icon: r.trv ? 'mdi:radiator' : 'mdi:heating-coil',
           iconTone: h ? 'var(--casora-tone-heat, var(--casora-color-red, #FF453A))' : (s && s.state !== 'off' && s.state !== 'unavailable' ? 'accent' : 'rgba(255,255,255,0.18)'),
-          label: r.name, sub: sub, value: t != null ? fmt(t) + ' °C' : null, entity: r.id,
+          label: r.name, sub: sub, value: t != null ? fmt(t) + ' ' + TU() : null, entity: r.id,
           /* Weich: eingeschalteter Raum/Heizkörper als aktive Zeile (heller Grund, Zustand in Ton) –
              wie die Thermostat-Kachel nach hvac_mode, nicht nur solange er gerade heizt. */
           active: !!(s && s.state !== 'off' && s.state !== 'unavailable' && s.state !== 'unknown') };
@@ -729,7 +736,7 @@
       var btn = (running || !canRun) ? '' : '<span' + svc + ' style="display:inline-flex;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;margin-top:14px;'
         + (has ? 'color:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));background:var(--casora-popup-ui-action-tint, rgba(0,195,208,0.14));' : 'color:#000;background:var(--casora-color-teal, #00C3D0);') + '">' + (has ? 'Neu auswerten' : 'Jetzt auswerten') + '</span>';
       var ago = function (ts) { var t = Date.parse(ts); if (isNaN(t)) return ''; var m = Math.max(0, Math.round((Date.now() - t) / 60000));
-        return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' T.'; };
+        return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
       var hcHead = '<div style="font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, ' + T.ink + ');padding:0 4px 8px;display:flex;align-items:center;gap:6px;">'
         + ic('mdi:creation', 16, 'var(--casora-color-teal, #00C3D0)') + '<span style="flex:1 1 auto;text-align:left;">Heizungs-Coach</span>'
         + '<span style="font-size:13px;font-weight:500;color:' + T.ink3 + ';">' + (hrs ? fmt(hrs).replace(',0', '') + ' Std. geheizt (7 T.)' : '') + '</span></div>';
@@ -757,7 +764,7 @@
     if (name === 'det') {
       var rows = [];
       if (c.trv) {
-        var dm = c.demand && states[c.demand] && ok(states[c.demand]) ? Math.round(num(states[c.demand].state)) : null;
+        var dm = c.demand && nv(states[c.demand]) != null ? Math.round(nv(states[c.demand])) : null;
         if (dm != null) rows.push({ icon: 'mdi:valve', iconTone: dm > 0 ? 'var(--casora-tone-heat, var(--casora-color-red, #FF453A))' : 'rgba(255,255,255,0.18)', label: 'Ventilöffnung', value: dm + ' %' });
         if (c.opMode && states[c.opMode]) {
           var OM = { pause: 'Pause', manual: 'Manuell', schedule: 'Zeitplan', automatic: 'Automatik', auto: 'Automatik' };
@@ -770,9 +777,9 @@
           var cf = states[c.cfh].state === 'on';
           rows.push({ icon: 'mdi:fire', iconTone: cf ? 'var(--casora-tone-heat, var(--casora-color-red, #FF453A))' : 'rgba(255,255,255,0.18)', label: 'Wärmeanforderung', value: cf ? 'Aktiv' : 'Keine', valueTone: cf ? 'warn' : null });
         }
-        if (c.next && states[c.next] && ok(states[c.next])) rows.push({ icon: 'mdi:clock-outline', label: 'Nächste Solltemperatur', value: fmt(num(states[c.next].state)) + ' °C' });
+        if (c.next && nv(states[c.next]) != null) rows.push({ icon: 'mdi:clock-outline', label: 'Nächste Solltemperatur', value: fmt(nv(states[c.next])) + ' ' + TU() });
         if (c.dip && states[c.dip]) {
-          var dv = c.dipVal && states[c.dipVal] && ok(states[c.dipVal]) ? fmt(num(states[c.dipVal].state)) + ' °C' : null;
+          var dv = c.dipVal && nv(states[c.dipVal]) != null ? fmt(nv(states[c.dipVal])) + ' ' + TU() : null;
           var dr = toggleRow(c.dip, 'mdi:thermometer-chevron-down', 'Temperaturabsenkung', dv ? 'Absenkung um ' + dv : null, states); if (dr) rows.push(dr);
         }
         /* Nur zeigen, wenn aktiv. Heizpause ist außerhalb der Heizsaison normal, daher neutral. */
@@ -784,7 +791,7 @@
       if (c.trv) {
         var dev = [];
         if (c.bat && states[c.bat]) {
-          var b = ok(states[c.bat]) ? Math.round(num(states[c.bat].state)) : null;
+          var b = nv(states[c.bat]) != null ? Math.round(nv(states[c.bat])) : null;
           /* battery_low meldet schon bei 89 % "on", daher nur die Prozentzahl. */
           var tn = b == null ? null : window.casoraBattery ? window.casoraBattery.tone(window.casoraBattery.level(b)) : b <= 20 ? 'warn' : null;
           dev.push({ icon: 'mdi:battery', iconTone: tn || 'good', label: 'Akku', value: b != null ? b + ' %' : '—', valueTone: tn });
@@ -986,6 +993,8 @@
   };
   var barEnd = function () {
     if (!bar) return; var b = bar; bar = null;
+    // Popup inzwischen zu: nichts mehr einstellen.
+    if (!b.el.isConnected) return;
     var ha = document.querySelector('home-assistant');
     if (ha && ha.hass && b.v != null) ha.hass.callService('climate', 'set_temperature', { temperature: b.v }, { entity_id: b.c.id });
   };
@@ -995,6 +1004,8 @@
     if (ev.cancelable) ev.preventDefault(); ev.stopPropagation(); bar.v = barVal(bar, t.clientX); barPaint(bar, bar.v);
   }, { capture: true, passive: false });
   window.addEventListener('touchend', function (ev) { if (bar) { ev.stopPropagation(); if (ev.cancelable) ev.preventDefault(); barEnd(); } }, { capture: true, passive: false });
+  // iOS bricht die Berührung ab (Systemgeste, Mitteilung): Ziehen beenden, ohne etwas einzustellen.
+  window.addEventListener('touchcancel', function () { bar = null; }, { capture: true, passive: true });
   window.addEventListener('mousedown', function (ev) { if (barStart(ev, ev.clientX)) ev.preventDefault(); }, true);
   window.addEventListener('mousemove', function (ev) { if (bar) { bar.v = barVal(bar, ev.clientX); barPaint(bar, bar.v); } }, true);
   window.addEventListener('mouseup', function () { barEnd(); }, true);
@@ -1531,7 +1542,7 @@
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return null;
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
-    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' T.';
+    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var DOORS = [['tur_vorne_links', 'Fahrertür'], ['tur_vorne_rechts', 'Beifahrertür'], ['tur_hinten_links', 'Tür hinten links'], ['tur_hinten_rechts', 'Tür hinten rechts'], ['heckklappe', 'Heckklappe'], ['motorhaube', 'Motorhaube']];
   var WINS = [['fenster_vorne_links', 'Fenster vorne links'], ['fenster_vorne_rechts', 'Fenster vorne rechts'], ['fenster_hinten_links', 'Fenster hinten links'], ['fenster_hinten_rechts', 'Fenster hinten rechts'], ['schiebedach', 'Schiebedach']];
@@ -1670,6 +1681,7 @@
     var s = function (k) { var id = C.id(p, k, 'sensor'); return id && states[id]; };
     var b = function (k) { var id = C.id(p, k, 'binary_sensor'); return id && states[id]; };
     var val = function (k) { var x = s(k); return ok(x) ? num(x.state) : null; };
+    var unit = function (k) { var x = s(k); return (x && x.attributes && x.attributes.unit_of_measurement) || null; };
     var on = function (k) { var x = b(k); return !!(x && x.state === 'on'); };
     var openDoors = DOORS.filter(function (d) { return on(d[0]); }).map(function (d) { return d[1]; });
     var openWins = WINS.filter(function (d) { return on(d[0]); }).map(function (d) { return d[1]; });
@@ -1687,7 +1699,7 @@
     return {
       range: val('reichweite_kombiniert'), tank: fuel != null ? fuel : soc, ev: fuel == null && soc != null, km: val('kilometerstand'),
       scr: val('scr_reichweite'), oil: val('olstand'), v12: val('12v_batteriespannung'),
-      out: val('aussentemperatur'), open: openDoors.concat(openWins), openDoors: openDoors, openWins: openWins, locked: locked,
+      out: val('aussentemperatur'), outUnit: unit('aussentemperatur') || '°C', open: openDoors.concat(openWins), openDoors: openDoors, openWins: openWins, locked: locked,
       brake: on('feststellbremse'),
       insp: s('nachste_inspektion'), inspKm: val('inspektionsdistanz'), oilDate: s('nachster_olwechsel'),
       shortKm: val('strecke_kurzzeit'), shortL: val('o_verbrauch_benzin_kurzzeit'), shortMin: val('fahrzeit_kurzzeit'),
@@ -1774,7 +1786,7 @@
           label: 'Fenster & Schiebedach', value: r.openWins.length ? 'Offen' : 'Zu' },
         { icon: 'mdi:car-brake-parking', iconTone: 'rgba(255,255,255,0.18)', label: 'Feststellbremse', value: r.brake ? 'Angezogen' : 'Gelöst' },
       ];
-      if (r.out != null) rows.push({ icon: 'mdi:thermometer', iconTone: 'rgba(255,255,255,0.18)', label: 'Außentemperatur', value: fmtN(r.out, 1) + ' °C' });
+      if (r.out != null) rows.push({ icon: 'mdi:thermometer', iconTone: 'rgba(255,255,255,0.18)', label: 'Außentemperatur', value: fmtN(r.out, 1) + ' ' + (r.outUnit || '°C') });
       if (r.open.length) rows.unshift({ icon: 'mdi:alert', iconTone: 'bad', label: 'Offen', sub: r.open.join(', '), valueTone: 'bad' });
       return UI.group(rows, 'Zustand');
     }
@@ -1902,7 +1914,7 @@
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
-    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' T.';
+    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var deep = function (root, sel, out) {
     out = out || [];
@@ -1935,7 +1947,7 @@
     }
     var running = it.status === 'running';
     var col = it.alert ? 'var(--casora-popup-ui-warn, #FF9F0A)' : 'rgba(255,255,255,0.92)';
-    var text = running ? 'Claude schaut sich das Bild an …' : it.status === 'error' ? 'Kein Bild – die Kamera ist aus, schläft oder ist nicht erreichbar.' : it.text;
+    var text = running ? 'Claude schaut sich das Bild an …' : it.status === 'error' ? (it.error || 'Kein Bild – die Kamera ist aus, schläft oder ist nicht erreichbar.') : it.text;
     return '<div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:16px;'
       + 'background:var(--casora-glass-pill-fill, rgba(255,255,255,0.10));font-family:var(--primary-font-family, system-ui);text-align:left;">'
       + '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 18px;width:18px;height:18px;margin-top:1px;"><ha-icon icon="mdi:creation" style="--mdc-icon-size:18px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;line-height:0;color:var(--casora-color-teal, #00C3D0);"></ha-icon></span>'
@@ -2049,7 +2061,7 @@
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
-    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' T.';
+    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var deep = function (root, sel, out) {
     out = out || [];
@@ -2073,7 +2085,7 @@
     var z = it && Z[it.zustand];
     var body;
     if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">Claude wertet die letzten 7 Tage aus …</div>';
-    else if (it && it.status === 'error') body = '<div style="font-size:15px;color:' + T.ink + ';">Auswertung fehlgeschlagen.</div>';
+    else if (it && it.status === 'error') body = '<div style="font-size:15px;color:' + T.ink + ';">' + esc(it.error || 'Auswertung fehlgeschlagen.') + '</div>';
     else if (it && z) {
       body = '<div style="display:flex;align-items:center;justify-content:flex-start;gap:8px;">' + icon(z[2], 20, z[1])
         + '<span style="flex:1 1 auto;text-align:left;font-size:var(--casora-fs16,16px);font-weight:600;color:' + z[1] + ';">' + z[0] + '</span></div>'
@@ -2143,7 +2155,7 @@
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
-    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' T.';
+    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var deep = function (root, sel, out) {
     out = out || [];
@@ -2380,7 +2392,7 @@
         + ((a.punkte || []).length ? li(a.punkte, T.ink2) : '')
         + ((a.tipps || []).length ? '<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:' + T.ink3 + ';margin:12px 0 0;">Tipps</div>' + li(a.tipps, T.ink) : '');
       else body = '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink2 + ';white-space:normal;">Claude prüft Service, Verschleißteile nach Kilometern und die Akku-Pflege passend zur Jahreszeit.</div>';
-      var ago = function (ts) { var q = Date.parse(ts); if (isNaN(q)) return ''; var m = Math.max(0, Math.round((Date.now() - q) / 60000)); return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' T.'; };
+      var ago = function (ts) { var q = Date.parse(ts); if (isNaN(q)) return ''; var m = Math.max(0, Math.round((Date.now() - q) / 60000)); return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
       var svc = ' data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_ebike_check', { entities: B.ids(states) }))) + '"';
       var btn = running || !ready ? '' : '<span' + svc + ' style="display:inline-flex;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;margin-top:14px;'
         + (has ? 'color:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));background:var(--casora-popup-ui-action-tint, rgba(0,195,208,0.14));' : 'color:#000;background:var(--casora-color-teal, #00C3D0);') + '">' + (has ? 'Neu prüfen' : 'Jetzt prüfen') + '</span>';
@@ -2501,7 +2513,7 @@
   var agoMs = function (t) {
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.'
-      : Math.round(m / 1440) === 1 ? 'gestern' : 'vor ' + Math.round(m / 1440) + ' Tagen';
+      : (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) === 1 ? 'gestern' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' Tagen';
   };
   var nameOf = function (states, id) {
     var e = states[id]; if (!e) return id.replace(/^update\./, '');
@@ -2683,9 +2695,11 @@
         ? a.installed_version + ' → ' + a.latest_version : (a.installed_version || a.latest_version || null);
       // release_summary ist Markdown/HTML (je nach Integration): erste Textzeile ohne
       // Auszeichnung (#, **, `, [Text](Link), Listenpunkt), gekürzt.
-      var sum = String(a.release_summary || '').replace(/<[^>]+>/g, '').split('\n').map(function (l) {
+      // Erst Entities auflösen, dann Tags entfernen – sonst würde aus &lt;img …&gt; echtes Markup.
+      var sum = String(a.release_summary || '').replace(/&(amp|lt|gt|quot);/g, function (m, x) { return { amp: '&', lt: '<', gt: '>', quot: '"' }[x]; })
+        .replace(/<[^>]+>/g, '').split('\n').map(function (l) {
         return l.replace(/^\s*(#{1,6}\s+|[-*+]\s+|\d+[.)]\s+|>\s*)/, '').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-          .replace(/\*\*|__|`/g, '').replace(/&(amp|lt|gt|quot);/g, function (m, x) { return { amp: '&', lt: '<', gt: '>', quot: '"' }[x]; }).trim();
+          .replace(/\*\*|__|`/g, '').trim();
       }).filter(Boolean)[0];
       if (sum && sum.length > 90) sum = sum.slice(0, 88).replace(/\s+\S*$/, '') + ' …';
       return {
@@ -2871,7 +2885,7 @@
     if (m < 1) return tr('gerade eben');
     if (m < 60) return tr('vor ' + m + ' Min.');
     if (m < 1440) return tr('vor ' + Math.round(m / 60) + ' Std.');
-    return tr('vor ' + Math.round(m / 1440) + ' T.');
+    return tr('vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.');
   };
   // Raumname aus dem Leuchtennamen nehmen („Spot Terrasse“ → „Spot“), nie leer.
   var short = function (name, room) {

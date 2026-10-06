@@ -296,9 +296,13 @@ def main() -> int:
                 continue
             with open(os.path.join(PHRASES, name), encoding="utf-8") as fh:
                 data = json.load(fh)
+            bad = [p for p in data.get("patterns") or [] if not (isinstance(p, list) and len(p) == 2)]
+            if bad:
+                # Nicht still verwerfen: zwei verschmolzene Muster gingen sonst unbemerkt verloren.
+                raise SystemExit("%s: Muster muss [Regex, Text] sein: %s" % (name, json.dumps(bad[0], ensure_ascii=False)))
             phrases[name[: -len(".json")]] = {
                 "exact": {k: v for k, v in sorted((data.get("exact") or {}).items()) if isinstance(v, str)},
-                "patterns": [p for p in data.get("patterns") or [] if isinstance(p, list) and len(p) == 2],
+                "patterns": data.get("patterns") or [],
             }
 
     body = json.dumps(tables, ensure_ascii=False, indent=2, sort_keys=True)

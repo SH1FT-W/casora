@@ -16,7 +16,7 @@
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return null;
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
-    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' T.';
+    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var nameOf = function (id, states, room) {
     var st = states[id];
@@ -61,7 +61,11 @@
       }
       return '<div style="text-align:left;">' + UI.label('Szenen') + CSS + '<div class="zs-chips">' + ids.map(function (id) {
         var svc = { domain: 'scene', service: 'turn_on', data: V.trans > 0 ? { transition: V.trans } : {}, target: { entity_id: id } };
-        return '<div class="zs-chip' + (act.indexOf(id) > -1 ? ' on' : '') + '" role="button" data-casora-svc="' + esc(JSON.stringify(svc)) + '">'
+        /* Aktiver Chip in der Studio-Farbe der Szene (B-SZENE): Farbpunkt + leicht getönte Fläche. */
+        var on = act.indexOf(id) > -1, clr = on && window.casoraSceneColor ? window.casoraSceneColor(id) : null;
+        return '<div class="zs-chip' + (on ? ' on' : '') + '" role="button" data-casora-svc="' + esc(JSON.stringify(svc)) + '"'
+          + (clr ? ' style="background:color-mix(in srgb, ' + esc(clr) + ' 16%, var(--casora-lps-chip-on, #FFFDF9));"' : '') + '>'
+          + (clr ? '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px;background:' + esc(clr) + ';"></span>' : '')
           + esc(nameOf(id, states, V.room)) + '</div>';
       }).join('') + '</div></div>';
     }

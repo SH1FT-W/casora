@@ -21,7 +21,7 @@
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return null;
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
-    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' T.';
+    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   var kit = function () { return window._casoraSoftKit; };
   var call = function (obj, part, C) {

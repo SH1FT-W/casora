@@ -242,6 +242,7 @@ class KiSensor(RestoreEntity, SensorEntity):
             "id": cid, "status": e.get("status", "done"),
             "text": _cut(r.get("beschreibung"), 400) if r else "",
             "alert": bool(r.get("auffaellig")) if r else False,
+            "error": _cut(e.get("error"), 200) if e.get("error") else "",
             "at": dt_util.now().isoformat(),
         })
 
@@ -257,6 +258,7 @@ class KiSensor(RestoreEntity, SensorEntity):
             "fazit": _cut(r.get("fazit"), 300) if r else "",
             "punkte": _list(r.get("punkte"), 5) if r else [],
             "tipps": _list(r.get("tipps"), 4) if r else [],
+            "error": _cut(e.get("error"), 200) if e.get("error") else "",
             "at": dt_util.now().isoformat(),
         })
 

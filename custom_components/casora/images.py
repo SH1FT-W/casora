@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+import secrets
 from typing import Any
 
 from aiohttp import web
@@ -149,6 +150,20 @@ def clean_name(raw: str) -> str:
     return s[:64]
 
 
+PRIVATE_TAIL = re.compile(r"-[0-9a-f]{12}$")
+
+
+def private_name(path, name: str) -> str:
+    """Neuer Fotoname mit zufälligem Anhang („kueche-3fa9c2d1e0b4“); vorhandene Namen unverändert."""
+    if PRIVATE_TAIL.search(name):
+        return name
+    for folder in (ROOMS_DIR, LEGACY_ROOMS[0]):
+        for stem in (name, name + NIGHT_SUFFIX):
+            if any(os.path.isfile(path(folder, stem + ext)) for ext in EXTENSIONS):
+                return name
+    return name[:51] + "-" + secrets.token_hex(6)
+
+
 def _rooms_dir(hass: HomeAssistant) -> str:
     return hass.config.path(ROOMS_DIR)
 
@@ -255,6 +270,10 @@ class CasoraImagesView(HomeAssistantView):
             return _fail("too_large", f"file larger than {MAX_BYTES // (1024 * 1024)} MB", 413)
 
         directory = _rooms_dir(hass)
+        # Fotos liegen unter /local und /casora_assets ohne Anmeldung (ein <img> schickt kein Token).
+        # Ein neuer Name bekommt darum einen zufälligen Anhang, damit niemand „wohnzimmer.jpg“ erraten
+        # kann. Vorhandene Namen bleiben, sonst landete ein Nachtfoto nicht mehr beim Tagfoto.
+        name = await hass.async_add_executor_job(private_name, hass.config.path, name)
         try:
             written = await hass.async_add_executor_job(store, directory, name, payload, variant == "night")
         except UploadError as err:

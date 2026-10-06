@@ -26,10 +26,13 @@ import os
 import re
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_STATE_CHANGED, UnitOfTemperature
 from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util.yaml import dump, load_yaml
 
 from .const import DOMAIN
@@ -339,6 +342,9 @@ def _setup_automatik(hass: HomeAssistant, runtime: dict) -> None:
                       or _legacy_automation(hass, "casora_auto_clear_restart_done_2"))
     expand = not _legacy_automation(hass, "casora_auto_expand_media_row")
     state = {"playing": _any_playing(hass)}
+    # Je Neustart-Schalter höchstens ein Zeitgeber – sonst wüchse unsub mit jedem Einschalten.
+    timers: dict[str, Any] = {}
+    unsub.append(lambda: [t() for t in list(timers.values())])
 
     def _expand() -> None:
         row = hass.states.get(EXPANDED_ROW)
@@ -352,8 +358,15 @@ def _setup_automatik(hass: HomeAssistant, runtime: dict) -> None:
         new = event.data.get("new_state")
         if clear_done and eid in RESTART_DONE and new and new.state == "on":
             # Nach 3 s zurück – wie die frühere Automation.
-            unsub.append(async_call_later(hass, 3, lambda _now, e=eid: hass.async_create_task(
-                hass.services.async_call("input_boolean", "turn_off", {"entity_id": e}))))
+            if (prev := timers.pop(eid, None)) is not None:
+                prev()
+
+            @callback
+            def _off(_now, e=eid) -> None:
+                timers.pop(e, None)
+                hass.async_create_task(hass.services.async_call("input_boolean", "turn_off", {"entity_id": e}))
+
+            timers[eid] = async_call_later(hass, 3, _off)
         elif expand and eid.startswith("media_player."):
             now = _any_playing(hass)
             if now and not state["playing"]:
@@ -427,7 +440,9 @@ async def async_setup_helfer(hass: HomeAssistant) -> None:
         return await async_einrichten(hass)
 
     if not hass.services.has_service(DOMAIN, "einrichten"):
-        hass.services.async_register(DOMAIN, "einrichten", _service, supports_response=SupportsResponse.OPTIONAL)
+        # Nur für Admins: legt Helfer an und schreibt in scripts.yaml.
+        async_register_admin_service(hass, DOMAIN, "einrichten", _service, vol.Schema({}, extra=vol.ALLOW_EXTRA),
+                                     SupportsResponse.OPTIONAL)
 
 
 @callback

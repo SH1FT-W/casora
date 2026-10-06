@@ -3153,6 +3153,8 @@ window.casoraMenuGlass = {
               || id.replace('scene.', '').replace(/_/g, ' '),
             icon: window.casoraFilledIcon((hass.states[id].attributes || {}).icon || 'mdi:layers'),
             active: SC.isActive ? !!SC.isActive(id, hass.states) : false,
+            // Studio-Farbe der Szene fürs Symbol (B-SZENE); Weich färbt Menüsymbole über --casora-mi-tone.
+            color: window.casoraSceneColor ? window.casoraSceneColor(id) : null,
             run: () => SC.apply(id, this._transition()),
           }));
         }
@@ -3228,7 +3230,7 @@ window.casoraMenuGlass = {
 
       const build = () => {
         const items = this._menuItems(route);
-        const sig = items.map((i) => [i.id, i.label, i.icon, i.active].join('\u0001')).join('\u0002');
+        const sig = items.map((i) => [i.id, i.label, i.icon, i.active, i.color || ''].join('\u0001')).join('\u0002');
         if (sig === menu._sig) return;
         menu._sig = sig;
         menu.textContent = '';
@@ -3266,8 +3268,10 @@ window.casoraMenuGlass = {
             maxWidth: '100%',
           });
 
-          row.appendChild(window.casoraMenuGlass.icon(ico,
-            (route.menu === 'scenes' || !route.popup) ? 'light' : 'general', 'currentColor'));
+          const mi = window.casoraMenuGlass.icon(ico,
+            (route.menu === 'scenes' || !route.popup) ? 'light' : 'general', 'currentColor');
+          if (it.color) mi.style.setProperty('--casora-mi-tone', it.color);
+          row.appendChild(mi);
           row.appendChild(txt);
 
           row.onclick = (e) => {
@@ -7955,14 +7959,22 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     return (st && st.attributes && st.attributes.device_class) || '';
   }
 
+  /* Kalendertage seit „vor m Minuten“ (#11): vor 36 Stunden ist gestern, nicht „vor 2 Tagen“.
+     Für alle „vor X T.“/„vor X Tagen“ der Module (statt Math.round(m / 1440)). */
+  window.casoraDaysAgo = function (m) {
+    var now = new Date(Date.now()), then = new Date(Date.now() - Math.max(0, Number(m) || 0) * 60000);
+    return Math.max(1, Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      - new Date(then.getFullYear(), then.getMonth(), then.getDate())) / 86400000));
+  };
   function ago(ms) {
     var s = Math.max(0, (Date.now() - ms) / 1000);
     if (s < 60) return 'Gerade eben';
     var m = Math.round(s / 60);
     if (m < 60) return 'vor ' + m + ' Min.';
     var h = Math.round(m / 60);
-    if (h < 24) return 'vor ' + h + ' Std.';
-    var d = Math.round(h / 24);
+    // Kalendertage statt 24-h-Blöcke: vor 36 Stunden ist noch „Gestern“ (#11).
+    var d = Math.round((new Date(new Date().setHours(0, 0, 0, 0)) - new Date(new Date(ms).setHours(0, 0, 0, 0))) / 86400000);
+    if (h < 24 || d < 1) return 'vor ' + h + ' Std.';
     return d === 1 ? 'Gestern' : 'vor ' + d + ' Tagen';
   }
 
@@ -7972,7 +7984,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     armed_away: 'Alarm scharf – Abwesend',
     armed_night: 'Alarm scharf – Nacht',
     armed_vacation: 'Alarm scharf – Urlaub',
-    armed_custom_bypass: 'Alarm scharf – Bypass',
+    armed_custom_bypass: 'Alarm scharf – Teilweise',
     disarmed: 'Alarm deaktiviert',
     triggered: 'Alarm ausgelöst',
   };
@@ -9137,9 +9149,42 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (!hit) return false;
     if (!entityId) return true;
     var v = cfg.variables || {};
+    // Auch Listen in Variablen (locks: [...] einer Schloss-Gruppe) zählen (B-NOTI).
     return cfg.entity === entityId
-      || Object.keys(v).some(function (k) { return v[k] === entityId; });
+      || Object.keys(v).some(function (k) { return v[k] === entityId || (Array.isArray(v[k]) && v[k].indexOf(entityId) !== -1); });
   }
+
+  // ── Glocke = Kachel (B-NOTI, 06.10.2026) ──────────────────────────────────
+  // Die Kachel, die man für diese Entität antippen würde: sichtbare button-card mit genau dieser
+  // Entität und eigenem Casora-Popup, eine Kachel vor einer Badge. So öffnet die Glocke dasselbe
+  // Popup (mit Ring und Kopf) wie der Tipp auf die Kachel.
+  function tileFor(entityId) {
+    if (!entityId) return null;
+    var best = null, bestRank = 99;
+    (function walk(root, depth) {
+      if (!root || depth > 14 || !root.querySelectorAll) return;
+      root.querySelectorAll('button-card').forEach(function (el) {
+        var c = el._config;
+        if (!c || !c.tap_action || !c.tap_action.casora_popup) return;
+        // Eigene Entität vor Variable (alarm_entity der Alarm-Kachel) vor Liste (locks einer Gruppe).
+        var v = c.variables || {}, how = c.entity === entityId ? 0 : -1;
+        if (how < 0) Object.keys(v).forEach(function (k) {
+          if (v[k] === entityId) how = how < 0 || how > 1 ? 1 : how;
+          else if (Array.isArray(v[k]) && v[k].indexOf(entityId) !== -1 && how < 0) how = 2;
+        });
+        if (how < 0) return;
+        var badge = templatesOf(c).some(function (n) { return /badge|chip/.test(n); });
+        var shown = el.getClientRects && el.getClientRects().length > 0;
+        var rank = how + (badge ? 3 : 0) + (shown ? 0 : 6);
+        if (rank < bestRank) { best = el; bestRank = rank; }
+      });
+      root.querySelectorAll('*').forEach(function (el) { if (el.shadowRoot) walk(el.shadowRoot, depth + 1); });
+    })(document, 0);
+    return best;
+  }
+  // Geräte, die ihre eigene Kachel haben: ohne passende Kachel nie das Popup irgendeiner anderen
+  // Karte gleicher Vorlage öffnen (vorher: Schloss-Eintrag → Popup einer anderen Tür).
+  var OWN_TILE = /^(lock|alarm_control_panel|vacuum|lawn_mower|cover|climate|media_player|camera|light|fan|humidifier|water_heater)\./;
 
   function cardWithTemplate(names, entityId) {
     var out = null;
@@ -9155,7 +9200,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       })(document, 0);
     };
     if (entityId) scan(entityId);
-    if (!out) scan(null);
+    if (!out && !OWN_TILE.test(entityId || '')) scan(null);
     return out;
   }
 
@@ -9175,7 +9220,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       })((cfg.views || []).reduce(function (a, v) {
         return a.concat(v.cards || []);
       }, []));
-      if (!found && entityId) {
+      if (!found && entityId && !OWN_TILE.test(entityId)) {
         (function walk(cards) {
           (cards || []).forEach(function (c) {
             if (found || !c || typeof c !== 'object') return;
@@ -9215,7 +9260,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       if (act && act.casora_popup && window.casoraPopup) {
         // Only ours gets intercepted; anything else stays HA's to handle.
         ev.stopPropagation();
-        window.casoraPopup.open(act.casora_popup);
+        // src: die Kachel liefert im Weich-Look Ring und Kopf – wie beim echten Antippen.
+        window.casoraPopup.open(Object.assign({}, act.casora_popup, { src: card }));
         return finish(true);
       }
       finish(false);
@@ -9234,6 +9280,13 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     setTimeout(function () { finish(false); }, 400);
   }
 
+  // Für 01-basis (Einträge ohne opens): erst die sichtbare Kachel, wie beim Antippen.
+  window._casoraTapTile = function (entityId, done) {
+    var t = tileFor(entityId);
+    if (!t) return done(false);
+    tapCard(t, done);
+  };
+
   function openTarget(what, fallbackEntity) {
     // dataset stringifies an array, so a retagged row arrives comma-joined.
     var names = Array.isArray(what) ? what
@@ -9243,8 +9296,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var fall = function () {
       if (fallbackEntity && window.casoraPopup) window.casoraPopup.moreInfo(fallbackEntity);
     };
-    if (!names.length) return fall();
-    tapCard(cardWithTemplate(names, fallbackEntity), function (hit) {
+    var own = tileFor(fallbackEntity);
+    if (!names.length && !own) return fall();
+    tapCard(own || cardWithTemplate(names, fallbackEntity), function (hit) {
       if (hit) return;
       cardFromConfig(names, fallbackEntity).then(function (el) {
         if (!el) return fall();

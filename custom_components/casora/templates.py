@@ -12,6 +12,7 @@ import hashlib
 import json
 import logging
 import os
+import tempfile
 
 from aiohttp import web
 from homeassistant.components.http import HomeAssistantView
@@ -170,10 +171,20 @@ def rebuild_if_stale(config_dir: str) -> bool:
         _LOGGER.exception("Casora: could not rebuild the template bundle")
         return False
 
-    tmp = out + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as handle:
-        json.dump(bundle, handle, ensure_ascii=False, separators=(",", ":"))
-    os.replace(tmp, out)
+    # Eigener Zwischenname je Lauf: zwei gleichzeitige Abrufe (zwei Studio-Tabs) schrieben
+    # sonst in dieselbe .tmp-Datei.
+    fd, tmp = tempfile.mkstemp(prefix=os.path.basename(out) + ".", suffix=".tmp", dir=os.path.dirname(out))
+    os.chmod(tmp, 0o644)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            json.dump(bundle, handle, ensure_ascii=False, separators=(",", ":"))
+        os.replace(tmp, out)
+    except BaseException:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        raise
 
     _LOGGER.info("Casora: rebuilt the template bundle (%d templates)", len(bundle["templates"]))
     return True

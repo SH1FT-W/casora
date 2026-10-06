@@ -342,14 +342,15 @@
   // Handy-Raumseite nach Kategorien gruppiert wie Apples Home-App (iOS 18): kleine, ruhige
   // Überschrift je Gruppe, darunter das Zweierraster. Reihenfolge der Gruppen folgt Casoras
   // Kachelregel (Beleuchtung → Heizung/FBH → Luftreiniger → Jalousie → … → Medien → Pflanzen) statt
-  // Apples „Klima zuerst“; Jalousien liegen wie bei Apple (Fenster/Rollos zählen dort zu Klima) in
-  // Klima. Innerhalb einer Gruppe bleibt die Studio-Reihenfolge.
+  // Apples „Klima zuerst“. Jalousien sind kein Klima-Gerät (wie in den Badge-Filtern): eigene Gruppe
+  // „Jalousien“ nach Klima (06.10.2026); Garagen- und Hoftore zählen zu Sicherheit.
+  // Innerhalb einer Gruppe bleibt die Studio-Reihenfolge.
   // Standard an. Schalter: Studio → Design & Bedienung → Handy (room_groups, setzt über
   // casora_mobile_bg --casora-room-groups: off), Raumseiten-Option group_by_category (true/false),
   // je Gerät überschreibbar per localStorage 'casora-room-groups' (on | off).
-  const ROOM_GROUP_ORDER = ['lights', 'climate', 'security', 'media', 'water', 'other'];
+  const ROOM_GROUP_ORDER = ['lights', 'climate', 'covers', 'security', 'media', 'water', 'other'];
   const ROOM_GROUP_LABEL = {
-    lights: 'Licht', climate: 'Klima', security: 'Sicherheit',
+    lights: 'Licht', climate: 'Klima', covers: 'Jalousien', security: 'Sicherheit',
     media: 'Lautsprecher und TVs', water: 'Wasser', other: 'Sonstiges',
   };
   // Räume mit weniger Kacheln bleiben ungruppiert (Überschriften wären mehr als Inhalt).
@@ -357,14 +358,14 @@
   const ROOM_GROUP_BY_TEMPLATE = {
     casora_light: 'lights',
     casora_thermostat: 'climate', casora_air_purifier: 'climate', casora_air_device: 'climate',
-    casora_fan: 'climate', casora_humidifier: 'climate', casora_vent: 'climate', casora_cover: 'climate',
+    casora_fan: 'climate', casora_humidifier: 'climate', casora_vent: 'climate', casora_cover: 'covers',
     casora_lock: 'security', casora_alarm: 'security', casora_camera: 'security', casora_cameras: 'security',
     casora_doorbell: 'security', casora_motion: 'security',
     casora_media: 'media', casora_game: 'media',
   };
   const ROOM_GROUP_BY_DOMAIN = {
     light: 'lights',
-    climate: 'climate', fan: 'climate', humidifier: 'climate', cover: 'climate',
+    climate: 'climate', fan: 'climate', humidifier: 'climate', cover: 'covers',
     lock: 'security', alarm_control_panel: 'security', camera: 'security',
     media_player: 'media', remote: 'media',
     valve: 'water', water_heater: 'water',
@@ -377,11 +378,17 @@
       if (inner && typeof inner === 'object') return _roomGroupOf(inner, depth + 1);
     }
     const t = cfg?.template;
+    const ent = String(cfg?.entity || '');
+    const dom = ent.split('.')[0];
+    // Garagen-/Hoftor (cover mit device_class garage/gate) gehört zu Sicherheit, nicht zu Jalousien.
+    if (dom === 'cover') {
+      let dc = '';
+      try { dc = document.querySelector('home-assistant')?.hass?.states?.[ent]?.attributes?.device_class || ''; } catch (_) {}
+      if (dc === 'garage' || dc === 'gate') return 'security';
+    }
     for (const n of (Array.isArray(t) ? t : [t])) {
       if (n && ROOM_GROUP_BY_TEMPLATE[n]) return ROOM_GROUP_BY_TEMPLATE[n];
     }
-    const ent = String(cfg?.entity || '');
-    const dom = ent.split('.')[0];
     if (/bewaesser|bewässer|irrigation|sprinkler|garden_water|gartenwasser/i.test(ent)) return 'water';
     if (dom === 'binary_sensor' && /door|window|tuer|tür|fenster|kontakt|contact/i.test(ent)) return 'security';
     return ROOM_GROUP_BY_DOMAIN[dom] || 'other';

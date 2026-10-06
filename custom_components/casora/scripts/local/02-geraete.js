@@ -292,7 +292,7 @@
     if (!ready && !it) return '';
     const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
     const ago = (ts) => { const t = Date.parse(ts); if (isNaN(t)) return ''; const m = Math.max(0, Math.round((Date.now() - t) / 60000));
-      return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' T.'; };
+      return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
     const Z = { gut: ['Alles im grünen Bereich', 'var(--casora-popup-ui-good, #30D158)', 'mdi:check-circle'],
                 beobachten: ['Beobachten', 'var(--casora-popup-ui-warn, #FF9F0A)', 'mdi:eye-outline'],
                 handeln: ['Handeln', 'var(--casora-popup-ui-bad, #FF453A)', 'mdi:alert'] };
@@ -391,7 +391,7 @@
     const okText = 'Temperatur im Normalbereich';
     return window._casoraUI.hero({
       value: isNaN(n) ? '—' : n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
-      unit: '°C',
+      unit: (states[c.temp]?.attributes?.unit_of_measurement) || '°C', /* Einheit des Fühlers (°C/°F) */
       sub: ev.level ? ev.reasons.join(' · ') : okText,
       subTone: ev.level === 2 ? 'bad' : ev.level === 1 ? 'warn' : 'good',
       center: true,
@@ -537,7 +537,7 @@
     const rows = [];
     const tn = parseFloat(states[c.temp]?.state);
     rows.push({ icon: 'mdi:thermometer-water', iconTone: 'accent', label: 'Wassertemperatur',
-      value: isNaN(tn) ? '—' : tn.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' °C', entity: c.temp });
+      value: isNaN(tn) ? '—' : tn.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' ' + ((states[c.temp]?.attributes?.unit_of_measurement) || '°C'), entity: c.temp });
     if (c.leak && states[c.leak]) {
       const ls = states[c.leak].state;
       const wet = ls === 'on';
@@ -1006,7 +1006,12 @@
   };
   var f = function (n, d) { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: d, maximumFractionDigits: d }); };
   var kwh = function (n) { return f(n, n < 10 ? 2 : 1) + ' kWh'; };
-  var eur = function (n) { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { style: 'currency', currency: 'EUR' }); };
+  /* Währung von Home Assistant (CHF, USD …), sonst Euro. */
+  var eur = function (n) {
+    var ha = document.querySelector('home-assistant'), cur = (ha && ha.hass && ha.hass.config && ha.hass.config.currency) || 'EUR';
+    try { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { style: 'currency', currency: cur }); }
+    catch (e) { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { style: 'currency', currency: 'EUR' }); }
+  };
   var dur = function (min) {
     min = Math.max(0, Math.round(min));
     var h = Math.floor(min / 60), m = min % 60;
@@ -1025,8 +1030,9 @@
     if (m < 1) return 'gerade eben';
     if (m < 60) return 'vor ' + m + ' Min.';
     var h = Math.round(m / 60);
-    if (h < 24) return 'vor ' + h + ' Std.';
-    var dd = Math.round(h / 24);
+    // Kalendertage statt 24-h-Blöcke: vor 36 Stunden ist noch „gestern“ (#11).
+    var dd = Math.round((new Date(new Date().setHours(0, 0, 0, 0)) - new Date(new Date(d.getTime()).setHours(0, 0, 0, 0))) / 86400000);
+    if (h < 24 || dd < 1) return 'vor ' + h + ' Std.';
     return dd === 1 ? 'gestern' : 'vor ' + dd + ' Tagen';
   };
   var HASS = function () { var h = document.querySelector('home-assistant'); return (h && h.hass) || null; };
@@ -2599,13 +2605,15 @@
 
     if (kind === 'p_temp') {
       var rt = [];
+      /* Einheit des Sensors (°C/°F), sonst °C. */
+      var tu = function (id) { return (states[id] && states[id].attributes && states[id].attributes.unit_of_measurement) || '°C'; };
       var trow = function (id, tid, label, icon) {
         var v = U.num(states, id);
         if (v == null) return;
         var tg = U.num(states, tid);
         var heating = tg != null && tg > 0;
         rt.push({ icon: icon, iconTone: heating ? (Math.abs(tg - v) > 2 ? 'warn' : 'bad') : DIM, label: label,
-          sub: heating ? 'Ziel ' + Math.round(tg) + ' °C' : null, value: Math.round(v) + ' °C',
+          sub: heating ? 'Ziel ' + Math.round(tg) + ' ' + tu(tid) : null, value: Math.round(v) + ' ' + tu(id),
           bar: heating ? Math.max(0, Math.min(1, v / tg)) : null, barTone: 'warn', entity: id });
       };
       trow(c.noz, c.nozT, 'Düse', 'mdi:printer-3d-nozzle-heat-outline');
@@ -2640,7 +2648,7 @@
       if (hum != null) rows2.push({ icon: 'mdi:water-percent', iconTone: idx != null && idx <= 2 ? 'warn' : 'accent', label: 'Luftfeuchtigkeit im AMS',
         sub: idx != null ? 'Stufe ' + Math.round(idx) + ' von 5' + (idx <= 2 ? ' · Trockenmittel tauschen' : '') : null,
         value: Math.round(hum) + ' %', entity: c.amsHum });
-      if (at != null) rows2.push({ icon: 'mdi:thermometer', iconTone: DIM, label: 'Temperatur im AMS', value: U.f(at, 1) + ' °C' });
+      if (at != null) rows2.push({ icon: 'mdi:thermometer', iconTone: DIM, label: 'Temperatur im AMS', value: U.f(at, 1) + ' ' + ((states[c.amsTemp] && states[c.amsTemp].attributes.unit_of_measurement) || '°C') });
       if (window._casoraHH && window._casoraHH.on()) return rows2.length ? UI.group(rows2, 'Filament') : '';
       return rows2.length ? L.wrap(UI.group(rows2, 'Filament').replace(/data-casora-mi="/g, 'data-hp-metric="')) : '';
     }

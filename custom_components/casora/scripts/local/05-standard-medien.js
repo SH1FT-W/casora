@@ -17,7 +17,7 @@
   var ago = function (ts) {
     var t = Date.parse(ts); if (isNaN(t)) return '';
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
-    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' T.';
+    return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
   /* Status → Text, Ton, Rang (höher = dringender) */
   var ST = {
@@ -56,11 +56,16 @@
     return l.length <= 2 ? l.map(function (x) { return x.n; }).join(', ') : l.length + ' Räume';
   };
   /* Messwerte der Zeile; was der Grund schon nennt (CO₂/Feuchte), nicht doppelt. */
+  /* Temperaturen der Lüften-Auswertung kommen in der Einheit von HA (°C/°F). */
+  var tU = function () {
+    var ha = document.querySelector('home-assistant'), us = ha && ha.hass && ha.hass.config && ha.hass.config.unit_system;
+    return (us && us.temperature) || '°C';
+  };
   var vals = function (x) {
     var g = x.grund || '';
     return [x.rh != null && g.indexOf('Feuchte') < 0 ? fmt(x.rh) + ' %' : null,
       x.co2 != null && g.indexOf('CO₂') < 0 ? 'CO₂ ' + x.co2 + ' ppm' : null,
-      x.t != null ? fmt(x.t, 1) + ' °C' : null].filter(Boolean).join(' · ');
+      x.t != null ? fmt(x.t, 1) + ' ' + tU() : null].filter(Boolean).join(' · ');
   };
   var coachHtml = function (s, room) {
     var T = (window._casoraUI && window._casoraUI.tokens) || { ink: '#fff', ink2: 'rgba(255,255,255,0.7)', ink3: 'rgba(255,255,255,0.45)', font: 'system-ui' };
@@ -137,7 +142,7 @@
     }
     if (name === 'out') {
       var rows2 = [];
-      if (o.t != null) rows2.push({ icon: 'mdi:thermometer', iconTone: 'rgba(255,255,255,0.18)', label: 'Temperatur', value: fmt(o.t, 1) + ' °C' });
+      if (o.t != null) rows2.push({ icon: 'mdi:thermometer', iconTone: 'rgba(255,255,255,0.18)', label: 'Temperatur', value: fmt(o.t, 1) + ' ' + tU() });
       /* Weich (Entschlacken): ohne absolute Feuchte (g/m³); „hilft nicht“ nur, wenn es zutrifft. */
       var SFv = window._casoraHH && window._casoraHH.on();
       if (o.rh != null && SFv) rows2.push({ icon: 'mdi:water-percent', iconTone: 'rgba(255,255,255,0.18)', label: 'Luftfeuchtigkeit', value: fmt(o.rh) + ' %' });

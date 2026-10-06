@@ -298,7 +298,7 @@
       });
       /* Szenen: nur die Szenen aus window.casoraNavScenes (gemeinsame Liste oben), ohne "Alle Szenen" (24.09.2026). */
       var ago = function (ts) { var q = Date.parse(ts); if (isNaN(q)) return ''; var m = Math.max(0, Math.round((Date.now() - q) / 60000));
-        return m < 1 ? 'Gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' T.'; };
+        return m < 1 ? 'Gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
       var list = [];
       /* Auswahl der Szenen-Badge (Desktop/Tablet), 1.0.5: das Studio schreibt sie beim Speichern an
          die Leiste; ältere Handy-Dashboards ohne sie lesen sie aus dem Desktop-Dashboard (_deskScenes). */
@@ -336,6 +336,7 @@
         var sic = (st.attributes && st.attributes.icon) || 'mdi:palette-outline';
         if (window.casoraFilledIcon) sic = window.casoraFilledIcon(sic);
         list.push({ icon: sic, label: (st.attributes && st.attributes.friendly_name) || id,
+          color: window.casoraSceneColor ? window.casoraSceneColor(id) : null,
           run: function () { h.callService('scene', 'turn_on', { entity_id: id }); } });
       });
       return list;
@@ -379,6 +380,8 @@
         b.title = String(it.label || '');
         var ic = self._iconHtml(it.icon);
         if (window.casoraMenuGlass && window.casoraMenuGlass.iconHtml) ic = window.casoraMenuGlass.iconHtml(ic, kind === 'scenes' ? 'light' : 'general');
+        /* Szene mit Studio-Farbe: Symbolton in dieser Farbe (B-SZENE). */
+        if (it.color) ic = ic.replace(/^<span class="casora-mi"[^>]*>/, '<span class="casora-mi" style="--casora-mi-tone:' + String(it.color).replace(/["<>;{}]/g, '') + '">');
         b.innerHTML = ic + '<span>' + (window.casoraTr || function (x) { return x; })(it.label) + (it.sub ? '<span class="hmn-sub">' + it.sub + '</span>' : '') + '</span>';
         b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); self._haptic(); self._closeMenu(); it.run(); });
         m.appendChild(b);

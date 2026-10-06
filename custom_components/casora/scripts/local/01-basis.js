@@ -46,6 +46,23 @@ window._casoraLovelaceCfg = function () {
   }
   return (ll && ll.lovelace && ll.lovelace.config) || null;
 };
+/* Szenenfarbe aus dem Studio (06.10.2026, B-SZENE): das Studio schreibt sie beim Speichern in
+   casora_scene_row.variables.scene_colors des Dashboards – die gilt (auch nach Zurücksetzen).
+   Ohne diese Vorlage (YAML-Dashboards): was Leiste/Szenenreihe gemeldet haben (_casoraSC.iconColors).
+   Ergebnis ist ein CSS-Wert (meist var(--casora-color-…, #hex)) oder null. */
+window.casoraSceneColor = function (id) {
+  if (!id) return null;
+  var map = null;
+  try {
+    var cfg = window._casoraLovelaceCfg && window._casoraLovelaceCfg();
+    var row = cfg && cfg.button_card_templates && cfg.button_card_templates.casora_scene_row;
+    if (row && row.variables && 'scene_colors' in row.variables) map = row.variables.scene_colors || {};
+  } catch (e) { map = null; }
+  if (Array.isArray(map)) map = Object.assign.apply(null, [{}].concat(map.filter(function (x) { return x && typeof x === 'object'; })));
+  if (!map) map = (window._casoraSC && window._casoraSC.iconColors) || {};
+  var c = map[id];
+  return c ? String(c).replace(/["<>;{}]/g, '') : null;
+};
 /* Leistung fürs Energie-Badge, wenn die Badge selbst keinen Sensor bekommt (03.10.2026):
    Handy-Badge-Reihe und Räume, in denen Energie nur über Verbrauch/Kosten/Geräte an ist,
    zeigten nur „Energie“ ohne Wert und waren dadurch niedriger. Reihenfolge: die
@@ -348,27 +365,44 @@ window._casoraColGap = window._casoraColGap || function (keys) {
   // Entität gesucht (auch hinter conditional/auto-entities) und deren
   // 2.1-Popup geöffnet. Keine Karte gefunden -> Engine-Verhalten bleibt.
   function findCardCfg(cfg, entityId) {
-    var hit = null;
+    var hit = null, badge = null;
     var hasPopup = function (c) {
       var t = c && c.template;
       return !!(c && c.type === 'custom:button-card' && t && c.entity === entityId);
     };
+    var isBadge = function (c) { return [].concat(c.template || []).some(function (n) { return /badge|chip/.test(String(n)); }); };
     (function walk(o) {
       if (hit || !o || typeof o !== 'object') return;
       if (Array.isArray(o)) { o.forEach(walk); return; }
-      if (hasPopup(o)) { hit = o; return; }
-      ['cards', 'card', 'filter', 'include', 'options'].forEach(function (k) { if (o[k]) walk(o[k]); });
+      // Eine Kachel vor einer Badge derselben Entität (wie beim Antippen der Kachel, B-NOTI).
+      if (hasPopup(o)) { if (!isBadge(o)) { hit = o; return; } if (!badge) badge = o; }
+      // Auch Filter-Overlays (sections) und Karten in custom_fields.
+      ['cards', 'card', 'filter', 'include', 'options', 'sections'].forEach(function (k) { if (o[k]) walk(o[k]); });
+      if (o.custom_fields && typeof o.custom_fields === 'object') walk(Object.keys(o.custom_fields).map(function (k) { return o.custom_fields[k]; }));
     })((cfg && cfg.views) || []);
-    return hit;
+    return hit || badge;
   }
 
-  function openViaCard(entityId, done, explicitCfg) {
+  function openViaCard(entityId, done, explicitCfg, noTile) {
     var ha = document.querySelector('home-assistant');
     var h = ha && ha.hass;
     if (!h || !h.callWS || !window.casoraPopup) return done(false);
+    // Glocke = Kachel (B-NOTI): steht die Kachel im Dashboard, genau sie antippen – gleiches Popup,
+    // gleicher Ring und Kopf. Sonst wie bisher über die Konfiguration.
+    if (!explicitCfg && !noTile && window._casoraTapTile) {
+      return window._casoraTapTile(entityId, function (ok) { if (ok) done(true); else openViaCard(entityId, done, null, true); });
+    }
     var seg = (location.pathname || '').split('/').filter(Boolean);
     h.callWS({ type: 'lovelace/config', url_path: seg[0] || 'lovelace' }).then(function (cfg) {
       var found = explicitCfg || findCardCfg(cfg, entityId);
+      // Keine eigene Karte (Alarm/Schloss stecken oft nur als Badge in der Raumkarte): die Kachel-Vorlage
+      // der Domäne – dasselbe Popup wie deren Kachel statt HAs Dialog (B-NOTI).
+      var tpl = !found && { lock: 'casora_lock', alarm_control_panel: 'casora_alarm', vacuum: 'casora_vacuum',
+        cover: 'casora_cover', climate: 'casora_thermostat', media_player: 'casora_media', light: 'casora_light' }[String(entityId).split('.')[0]];
+      if (tpl && cfg && cfg.button_card_templates && cfg.button_card_templates[tpl] && h.states[entityId]) {
+        found = { type: 'custom:button-card', template: tpl, entity: entityId,
+          name: (h.states[entityId].attributes && h.states[entityId].attributes.friendly_name) || entityId };
+      }
       if (!found) return done(false);
       var el = document.createElement('button-card');
       try { el.setConfig(JSON.parse(JSON.stringify(found))); } catch (e) { return done(false); }
@@ -386,7 +420,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         var take = function (ev) {
           var c = ev.detail && ev.detail.config;
           var act = c && c.tap_action;
-          if (act && act.casora_popup) { ev.stopPropagation(); window.casoraPopup.open(act.casora_popup); return fin(true); }
+          if (act && act.casora_popup) { ev.stopPropagation(); window.casoraPopup.open(Object.assign({}, act.casora_popup, { src: el })); return fin(true); }
           fin(false);
         };
         el.addEventListener('hass-action', take, true);
@@ -850,7 +884,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           r.src.connect(r.node); r.node.connect(ctx.destination);
           var msg = { type: 'assist_pipeline/run', start_stage: 'stt', end_stage: 'tts', input: { sample_rate: ctx.sampleRate } };
           if (A.convId) msg.conversation_id = A.convId;
-          var finish = function (t, err) {
+          var finish = r.finish = function (t, err) {
             if (r.done) return; r.done = true; A.busy = false;
             if (t) A.msgs.push({ t: t, err: !!err });
             A.paint();
@@ -899,6 +933,14 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         var r = A.rec; if (!r) return;
         r.ended = true; A.sendEnd(r);
         A.cleanupRec(r); A.busy = true; A.paint();
+        /* Sicherheitsnetz wie beim Text-Weg: kommt keine Antwort (Verbindung neu, Agent hängt),
+           bleibt die Eingabe nicht für immer gesperrt. */
+        setTimeout(function () {
+          if (r.done) return;
+          if (r.finish) r.finish('Zeitüberschreitung – bitte nochmal versuchen.', true);
+          else { r.done = true; A.busy = false; A.msgs.push({ t: 'Zeitüberschreitung – bitte nochmal versuchen.', err: true }); A.paint(); }
+          if (r.unsub) { try { r.unsub(); } catch (e) {} }
+        }, 45000);
       },
       cleanupRec: function (r) {
         r = r || A.rec; if (!r) return;
@@ -1127,7 +1169,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
 
       // Alarmanlage (25.09.): "Alarmo umgeschaltet auf Abwesend" statt "Alarm scharf – Abwesend".
       if (id.indexOf('alarm_control_panel.') === 0) {
-        var MODE = { armed_home: 'Zuhause', armed_away: 'Abwesend', armed_night: 'Nacht', armed_vacation: 'Urlaub', armed_custom_bypass: 'Bypass' };
+        var MODE = { armed_home: 'Zuhause', armed_away: 'Abwesend', armed_night: 'Nacht', armed_vacation: 'Urlaub', armed_custom_bypass: 'Teilweise' };
         var an = entry.name || (api && api.nameOf ? api.nameOf(st) : '') || 'Alarm';
         // Symbole wie die Alarm-Badge je Zustand (03.10.2026), sec = ruhiges Farbsystem im Mitteilungszentrum.
         var ic = window.casoraSecurityIcon ? window.casoraSecurityIcon(id, s, st && st.attributes) : 'lock-fill';

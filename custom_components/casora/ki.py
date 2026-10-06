@@ -82,6 +82,7 @@ LEGACY: dict[str, tuple[str, str]] = {
 LEGACY_UPDATE_EVENTS = ("hemma_update_ai_prune", "hemma_update_ai_ack")
 
 SEQUENCES = ("kamera", "pflanzen", "update", "rezept")
+NO_AI = "Keine KI eingerichtet (Einstellungen → KI-Aufgaben)"
 OUTDOOR = re.compile(r"outdoor|aussen|außen|outside|draussen|draußen", re.I)
 WINDOW_CLASSES = {"window", "door", "garage_door", "opening"}
 WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
@@ -530,7 +531,7 @@ async def ask_ai(hass: HomeAssistant, entry: ConfigEntry, task: str, instruction
                  entity: str | None = None) -> dict | None:
     ent = entity or ai_entity(hass, entry, web)
     if not ent:
-        raise ValueError("Keine KI eingerichtet (Einstellungen → KI-Aufgaben)")
+        raise ValueError(NO_AI)
     data: dict[str, Any] = {"entity_id": ent, "task_name": task, "instructions": instructions, "structure": structure}
     if attachments:
         data["attachments"] = attachments
@@ -716,6 +717,11 @@ async def heating_hours(hass: HomeAssistant, rooms: list[dict], days: int = 7) -
     return out
 
 
+def _temp_unit(hass: HomeAssistant) -> str:
+    """Temperatur-Einheit von Home Assistant (°C oder °F) – die Werte kommen schon darin."""
+    return str(getattr(getattr(hass.config, "units", None), "temperature_unit", None) or "°C")
+
+
 async def heating_context(hass: HomeAssistant, entry: ConfigEntry) -> tuple[str | None, float]:
     rooms = heating_rooms(hass)
     if not rooms:
@@ -730,12 +736,13 @@ async def heating_context(hass: HomeAssistant, entry: ConfigEntry) -> tuple[str 
             f"{_local(r['start']).strftime('%d.%m.')} {_fmt(r.get('mean'))}/{_fmt(r.get('min'))}/{_fmt(r.get('max'))}"
             for r in st.get(sid, []) if r.get("mean") is not None)
 
+    tu = _temp_unit(hass)
     lines = []
     for r in rooms:
         c = hass.states.get(r["id"])
         h, w = hrs.get(r["id"], (0.0, 0.0))
         cur = hass.states.get(r["t"]).state if r["t"] and hass.states.get(r["t"]) else c.attributes.get("current_temperature")
-        line = (f"- {r['n']}: Modus {c.state}, Soll {c.attributes.get('temperature')} °C, Ist {cur} °C, "
+        line = (f"- {r['n']}: Modus {c.state}, Soll {c.attributes.get('temperature')} {tu}, Ist {cur} {tu}, "
                 f"Heizdauer 7 Tage {_fmt(h)} h")
         if r["win"]:
             line += f", davon bei offenem Fenster/Tür {_fmt(w)} h"
@@ -744,7 +751,7 @@ async def heating_context(hass: HomeAssistant, entry: ConfigEntry) -> tuple[str 
         lines.append(line)
     total = sum(v[0] for v in hrs.values())
     text = (f"Heute: {dt_util.now().strftime('%d.%m.%Y')}. Heizung mit Regler je Raum.\n"
-            f"Außentemperatur je Tag (Ø/min/max °C): {series(outdoor) if outdoor else 'kein Außensensor'}\n"
+            f"Außentemperatur je Tag (Ø/min/max {tu}): {series(outdoor) if outdoor else 'kein Außensensor'}\n"
             "Räume:\n" + "\n".join(lines))
     return text, total
 
@@ -820,6 +827,7 @@ async def vent_context(hass: HomeAssistant, entry: ConfigEntry) -> tuple[str | N
         return sum(xs) / len(xs) if xs else None
 
     to, ro = vals(out_t, "mean"), vals(out_rh, "mean")
+    tu = _temp_unit(hass)
     lines = []
     for r in rooms:
         hm, hx = vals(r["rh"], "mean"), vals(r["rh"], "max")
@@ -841,8 +849,8 @@ async def vent_context(hass: HomeAssistant, entry: ConfigEntry) -> tuple[str | N
     now_t = hass.states.get(out_t).state if out_t and hass.states.get(out_t) else "?"
     now_rh = hass.states.get(out_rh).state if out_rh and hass.states.get(out_rh) else "?"
     text = (f"Heute: {dt_util.now().strftime('%d.%m.%Y')}. Auswertung der letzten 7 Tage (Stundenwerte).\n"
-            f"Außen: Temperatur Ø {_fmt(avg(to))} °C (min {_fmt(min(to) if to else None)}, max {_fmt(max(to) if to else None)}), "
-            f"rel. Feuchte Ø {_fmt(avg(ro), 0)} %. Jetzt: {now_t} °C, {now_rh} %.\n"
+            f"Außen: Temperatur Ø {_fmt(avg(to))} {tu} (min {_fmt(min(to) if to else None)}, max {_fmt(max(to) if to else None)}), "
+            f"rel. Feuchte Ø {_fmt(avg(ro), 0)} %. Jetzt: {now_t} {tu}, {now_rh} %.\n"
             "Räume:\n" + "\n".join(lines))
     return text, [r["n"] for r in rooms]
 
@@ -922,11 +930,12 @@ async def aquarium_context(hass: HomeAssistant, data: dict) -> str:
     daily = "; ".join(
         f"{_local(r['start']).strftime('%d.%m.')} {_fmt(r.get('mean'), 2)}/{_fmt(r.get('min'), 2)}/{_fmt(r.get('max'), 2)}"
         for r in days.get(temp, []) if r.get("mean") is not None)
-    lines.append(f"Wassertemperatur je Tag Ø/min/max (°C): {daily or 'keine Statistik'}")
+    tu = (getattr(hass.states.get(temp), "attributes", {}) or {}).get("unit_of_measurement") or _temp_unit(hass)
+    lines.append(f"Wassertemperatur je Tag Ø/min/max ({tu}): {daily or 'keine Statistik'}")
     hourly = ", ".join(f"{_local(r['start']).strftime('%H')} Uhr {_fmt(r.get('mean'), 2)}"
                        for r in hours.get(temp, []) if r.get("mean") is not None)
     if hourly:
-        lines.append(f"Stundenmittel der letzten 24 h (°C): {hourly}")
+        lines.append(f"Stundenmittel der letzten 24 h ({tu}): {hourly}")
     if devices:
         lines.append("Technik:")
         for d in devices:
@@ -1185,10 +1194,21 @@ class KiRunner:
         # Antwortsprache wie Home Assistant (ki/*.yaml: „Antworte auf {{ sprache }}“).
         await script.async_run(run_variables={"sprache": answer_language(self.hass), **variables}, context=Context())
 
+    def _no_ai(self, feature: str, key: dict) -> bool:
+        """Keine KI eingerichtet: Fehler mit Grund melden, statt die KI-Aufgabe „None“ aufzurufen."""
+        if ai_entity(self.hass, self.entry):
+            return False
+        self.hass.bus.async_fire(FEATURES[feature]["event"], {**key, "status": "error", "error": NO_AI})
+        return True
+
     async def _camera(self, call: ServiceCall) -> None:
+        if self._no_ai("kamera", {"entity_id": call.data["entity_id"]}):
+            return
         self._bg(self._run("kamera", {"entity_id": call.data["entity_id"], "ai_entity": ai_entity(self.hass, self.entry)}))
 
     async def _plant(self, call: ServiceCall) -> None:
+        if self._no_ai("pflanzen", {"plant": call.data["plant"]}):
+            return
         self._bg(self._run("pflanzen", {"plant": call.data["plant"], "ai_entity": ai_entity(self.hass, self.entry)}))
 
     async def _aquarium(self, call: ServiceCall) -> None:
