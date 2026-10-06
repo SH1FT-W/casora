@@ -155,6 +155,7 @@ Casora:
   casora-nav-label-pad-x-tablet: 14px
   casora-nav-fade-solid: 104px
   casora-nav-fade-clear: 40px
+  casora-nav-focus-ring: inset 0 0 0 2px var(--casora-ton-ink)   # D-09: Tastatur-Fokus sichtbar
   casora-nav-more-fill: var(--casora-nav-active-fill)
   casora-nav-more-hover: var(--casora-mnav-press-fill, var(--casora-nav-active-fill))
   casora-nav-more-ink: var(--casora-nav-label-color)

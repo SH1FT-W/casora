@@ -2892,6 +2892,13 @@ window.casoraMenuGlass = {
           this._activate(route, btn);
         });
 
+        // D-09: mit der Tastatur angesprungenen Raum in Sicht holen (stand sonst außerhalb der Leiste).
+        btn.addEventListener('focus', () => {
+          let kb = false;
+          try { kb = btn.matches(':focus-visible'); } catch (e) { kb = false; }
+          if (kb) btn.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+        });
+
         scroller.appendChild(btn);
         this._els.push({ btn: btn, label: label, badge: badge, route: route });
       });
@@ -3485,6 +3492,8 @@ window.casoraMenuGlass = {
         }
 
         .route:focus-visible { outline: none; }
+        /* D-09: sichtbarer Fokus (Weich: Ton-Ring über --casora-nav-focus-ring; sonst wie bisher ohne). */
+        .route:focus-visible { box-shadow: var(--casora-nav-focus-ring, none); border-radius: 999px; }
 
         .label {
           position: relative;
