@@ -883,7 +883,7 @@
             : "Click a title, badge or tile in the preview. Its settings open on the right." },
         { at: () => (phone ? vis(".bbar") : vis(".btools")),
           title: "Everything in one place",
-          text: "Rooms, the list of all elements, the settings of this dashboard and the settings for all dashboards." },
+          text: "From small to large: rooms, the content of this room, the settings of this dashboard and the settings for all dashboards." },
         { at: () => vis(".navpill"),
           title: "Nothing gets lost",
           text: phone ? "Undo and Rewind are in the ··· menu. Done saves and opens your dashboard."

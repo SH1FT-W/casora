@@ -1,9 +1,9 @@
 // @zustand: arbeit
 // @parallel: ui
 // Neues Studio (B) am Handy, Chromium und WebKit. Erwartet: Die Vorschau ist sichtbar (nicht die
-// alte Liste), unten eine Leiste mit Räume, Elemente, Kachel hinzufügen, Dashboard, Zuhause.
+// alte Liste), unten eine Leiste mit Räume, Inhalt, Kachel hinzufügen, Dashboard, Zuhause.
 // Antippen einer Kachel öffnet ihren Editor als Blatt von unten, Abdunkelung und Schließen
-// machen es zu; „Elemente“ zeigt die Raumansicht im Blatt; „Zuhause“ öffnet Haus & Geräte.
+// machen es zu; „Inhalt“ zeigt die Raumansicht im Blatt; „Zuhause“ öffnet Haus & Geräte.
 // Es wird nichts gespeichert.
 import { open, studio, casoraDashboard, check, need, finish, usePage } from './lib.mjs';
 
@@ -50,7 +50,7 @@ for (const safari of [false, true]) {
   await o.page.locator('.bbar [data-b=list]').tap();
   await o.page.waitForTimeout(1200);
   const s2 = await H(() => { const p = window.__panel(); return { open: p.classList.contains('binsp'), stack: !p._sel }; });
-  await check(tag + ': „Elemente“ zeigt die Raumansicht im Blatt', s2.open && s2.stack, s2);
+  await check(tag + ': „Inhalt“ zeigt die Raumansicht im Blatt', s2.open && s2.stack, s2);
   // Abdunkelung oberhalb des Blatts antippen
   await o.page.mouse.click(196, 40);
   await o.page.waitForTimeout(900);

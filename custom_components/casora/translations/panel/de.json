@@ -103,7 +103,7 @@
     "Room deleted": "Raum gelöscht",
     "Room order changed": "Reihenfolge der Räume geändert",
     "Room renamed": "Raum umbenannt",
-    "Rooms, the list of all elements, the settings of this dashboard and the settings for all dashboards.": "Räume, die Liste aller Elemente, die Einstellungen dieses Dashboards und die für alle Dashboards.",
+    "From small to large: rooms, the content of this room, the settings of this dashboard and the settings for all dashboards.": "Vom Kleinen zum Großen: Räume, der Inhalt dieses Raums, die Einstellungen dieses Dashboards und die für alle Dashboards.",
     "Save scene": "Szene speichern",
     "Save the current state as a scene": "Aktuellen Zustand als Szene speichern",
     "Saved in Home Assistant. Pick a color now.": "In Home Assistant gespeichert. Wähl jetzt eine Farbe.",
@@ -162,7 +162,7 @@
     "Move later": "Nach hinten",
     "Update": "Update",
     "Create a phone layout for a phone preview": "Für eine Handy-Vorschau ein Mobil-Layout anlegen",
-    "Elements": "Elemente",
+    "Content": "Inhalt",
     "New Studio": "Neues Studio",
     "All dashboards": "Alle Dashboards",
     "For all dashboards": "Für alle Dashboards",
@@ -1992,7 +1992,10 @@
     "No dashboard uses them any more. Your photos and icons are copied to www/casora first. Included in the backup.": "Kein Dashboard nutzt sie mehr. Deine Fotos und Symbole kommen vorher nach www/casora. Sie kommen mit in die Sicherung.",
     "This list counts. Room power above is ignored.": "Diese Liste gilt. Leistung im Raum oben wird ignoriert.",
     "Add all": "Alle aufnehmen",
-    "Left out, Casora does not add these again:": "Ausgeschlossen, Casora trägt sie nicht wieder ein:"
+    "Left out, Casora does not add these again:": "Ausgeschlossen, Casora trägt sie nicht wieder ein:",
+    "Photo, badges, tiles and popups of {room}": "Foto, Badges, Kacheln und Popups von {room}",
+    "Look, weather, time, notifications and scenes – for this dashboard": "Design, Wetter, Uhr, Meldungen und Szenen – für dieses Dashboard",
+    "Home, bell, AI and updates – for all dashboards": "Haus, Glocke, KI und Updates – für alle Dashboards"
   },
   "patterns": [
     ["^Phone differs in (\\d+) settings$", "Handy weicht bei {1} Einstellungen ab"],

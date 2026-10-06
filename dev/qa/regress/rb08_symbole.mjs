@@ -1,7 +1,7 @@
 // @zustand: arbeit
 // @parallel: ui
 // Neues Studio (B): keine fehlenden Symbole (04.10.2026, „Icons fehlen“). Erwartet in jeder
-// Ansicht – Start, Räume-, Dashboard-, Zuhause- und „…“-Menü, Elemente, jeder Dashboard-Abschnitt,
+// Ansicht – Start, Räume-, Dashboard-, Zuhause- und „…“-Menü, Inhalt, jeder Dashboard-Abschnitt,
 // jede Einstellungsseite, Zeitreise, Updates, Liste „ausgeblendet“, Kachel- und Badge-Editoren –,
 // am Desktop (Chromium) und am Handy (WebKit):
 //  - jedes sichtbare ha-icon/ha-state-icon hat eine Grafik (Pfad mit Inhalt),
@@ -94,7 +94,7 @@ async function run(o, tag, phone) {
   await close();
   await look('Start', async () => {});
   await look('Räume-Menü', () => tool('rooms'), true);
-  await look('Elemente', () => tool('list'));
+  await look('Inhalt', () => tool('list'));
   await look('Dashboard-Menü', () => tool('dash'), true);
   for (const k of ['General', 'Weather', 'Time', 'Notifications', 'Scenes']) {
     await look('Abschnitt ' + k, async () => { await tool('dash'); await page.waitForTimeout(400); await pick('sec:' + k); });
