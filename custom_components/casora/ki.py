@@ -82,6 +82,7 @@ LEGACY: dict[str, tuple[str, str]] = {
 LEGACY_UPDATE_EVENTS = ("hemma_update_ai_prune", "hemma_update_ai_ack")
 
 SEQUENCES = ("kamera", "pflanzen", "update", "rezept")
+NO_AI = "Keine KI eingerichtet (Einstellungen → KI-Aufgaben)"
 OUTDOOR = re.compile(r"outdoor|aussen|außen|outside|draussen|draußen", re.I)
 WINDOW_CLASSES = {"window", "door", "garage_door", "opening"}
 WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
@@ -530,7 +531,7 @@ async def ask_ai(hass: HomeAssistant, entry: ConfigEntry, task: str, instruction
                  entity: str | None = None) -> dict | None:
     ent = entity or ai_entity(hass, entry, web)
     if not ent:
-        raise ValueError("Keine KI eingerichtet (Einstellungen → KI-Aufgaben)")
+        raise ValueError(NO_AI)
     data: dict[str, Any] = {"entity_id": ent, "task_name": task, "instructions": instructions, "structure": structure}
     if attachments:
         data["attachments"] = attachments
@@ -1185,10 +1186,21 @@ class KiRunner:
         # Antwortsprache wie Home Assistant (ki/*.yaml: „Antworte auf {{ sprache }}“).
         await script.async_run(run_variables={"sprache": answer_language(self.hass), **variables}, context=Context())
 
+    def _no_ai(self, feature: str, key: dict) -> bool:
+        """Keine KI eingerichtet: Fehler mit Grund melden, statt die KI-Aufgabe „None“ aufzurufen."""
+        if ai_entity(self.hass, self.entry):
+            return False
+        self.hass.bus.async_fire(FEATURES[feature]["event"], {**key, "status": "error", "error": NO_AI})
+        return True
+
     async def _camera(self, call: ServiceCall) -> None:
+        if self._no_ai("kamera", {"entity_id": call.data["entity_id"]}):
+            return
         self._bg(self._run("kamera", {"entity_id": call.data["entity_id"], "ai_entity": ai_entity(self.hass, self.entry)}))
 
     async def _plant(self, call: ServiceCall) -> None:
+        if self._no_ai("pflanzen", {"plant": call.data["plant"]}):
+            return
         self._bg(self._run("pflanzen", {"plant": call.data["plant"], "ai_entity": ai_entity(self.hass, self.entry)}))
 
     async def _aquarium(self, call: ServiceCall) -> None:

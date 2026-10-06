@@ -1935,7 +1935,7 @@
     }
     var running = it.status === 'running';
     var col = it.alert ? 'var(--casora-popup-ui-warn, #FF9F0A)' : 'rgba(255,255,255,0.92)';
-    var text = running ? 'Claude schaut sich das Bild an …' : it.status === 'error' ? 'Kein Bild – die Kamera ist aus, schläft oder ist nicht erreichbar.' : it.text;
+    var text = running ? 'Claude schaut sich das Bild an …' : it.status === 'error' ? (it.error || 'Kein Bild – die Kamera ist aus, schläft oder ist nicht erreichbar.') : it.text;
     return '<div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:16px;'
       + 'background:var(--casora-glass-pill-fill, rgba(255,255,255,0.10));font-family:var(--primary-font-family, system-ui);text-align:left;">'
       + '<span style="display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 18px;width:18px;height:18px;margin-top:1px;"><ha-icon icon="mdi:creation" style="--mdc-icon-size:18px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;line-height:0;color:var(--casora-color-teal, #00C3D0);"></ha-icon></span>'
@@ -2073,7 +2073,7 @@
     var z = it && Z[it.zustand];
     var body;
     if (running) body = '<div style="font-size:15px;color:' + T.ink + ';">Claude wertet die letzten 7 Tage aus …</div>';
-    else if (it && it.status === 'error') body = '<div style="font-size:15px;color:' + T.ink + ';">Auswertung fehlgeschlagen.</div>';
+    else if (it && it.status === 'error') body = '<div style="font-size:15px;color:' + T.ink + ';">' + esc(it.error || 'Auswertung fehlgeschlagen.') + '</div>';
     else if (it && z) {
       body = '<div style="display:flex;align-items:center;justify-content:flex-start;gap:8px;">' + icon(z[2], 20, z[1])
         + '<span style="flex:1 1 auto;text-align:left;font-size:var(--casora-fs16,16px);font-weight:600;color:' + z[1] + ';">' + z[0] + '</span></div>'

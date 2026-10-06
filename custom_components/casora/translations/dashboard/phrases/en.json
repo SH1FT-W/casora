@@ -368,6 +368,8 @@
   "Prüfen": "Check",
   "Prüft …": "Checking …",
   "Prüfung fehlgeschlagen": "Check failed",
+  "Keine KI eingerichtet (Einstellungen → KI-Aufgaben)": "No AI set up (Settings → AI tasks)",
+  "Auswertung fehlgeschlagen.": "Analysis failed.",
   "Qualität": "Quality",
   "Reichweite jetzt": "Range now",
   "Reichweite voller Akku": "Range on a full battery",

@@ -9,6 +9,7 @@ SEC-02:  casora.umstellen und casora.einrichten nur für Admins.
 B-PY-07: beim Entladen/Entfernen verschwinden casora.einrichten und casora.umstellen.
 B-PY-08: Neustart-Schalter: die Liste der Abmelder wächst nicht mit jedem Einschalten.
 B-PY-13: ein gelöschter Karten-Update-Anhang blockiert die übrigen Karten-Updates nicht.
+B-PY-14: Kamera-/Pflanzen-KI ohne eingerichtete KI → Fehler mit Grund, kein Aufruf mit „None“.
 """
 
 from __future__ import annotations
@@ -210,7 +211,30 @@ async def t_py13():
     check("B-PY-13: kaputtes Release abgelehnt", "karten-3" in cu._data["rejected"])
 
 
+async def t_py14():
+    from custom_components.casora import ki
+
+    fired, ran = [], []
+    runner = object.__new__(ki.KiRunner)
+    runner.hass = SimpleNamespace(bus=SimpleNamespace(async_fire=lambda ev, data: fired.append((ev, data))))
+    runner.entry = SimpleNamespace(options={})
+    runner._bg = lambda coro: (ran.append(1), coro.close())
+    real = ki.ai_entity
+    ki.ai_entity = lambda *a, **k: None
+    try:
+        await runner._camera(SimpleNamespace(data={"entity_id": "camera.x"}))
+        await runner._plant(SimpleNamespace(data={"plant": "plant.y"}))
+    finally:
+        ki.ai_entity = real
+    check("B-PY-14: kein KI-Ablauf gestartet", not ran)
+    check("B-PY-14: Kamera-Fehler mit Grund", fired and fired[0] == ("casora_cam_ai_result", {
+        "entity_id": "camera.x", "status": "error", "error": ki.NO_AI}), repr(fired[:1]))
+    check("B-PY-14: Pflanzen-Fehler mit Grund", len(fired) == 2 and fired[1][1].get("error") == ki.NO_AI
+          and fired[1][1].get("plant") == "plant.y", repr(fired[1:]))
+
+
 async def main():
+    await t_py14()
     await t_py13()
     await t_py08()
     await t_py07()
