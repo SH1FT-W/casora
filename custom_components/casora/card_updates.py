@@ -141,6 +141,9 @@ class CardUpdates:
                 except UpdateSourceError as err:
                     if err.code == "too_large":
                         raise PackageError("Paket zu groß") from err
+                    # Anhang gelöscht/gesperrt: nur dieses Release ablehnen, die übrigen weiter prüfen.
+                    if err.code in ("not_found", "forbidden"):
+                        raise PackageError("Paket-Datei nicht abrufbar") from err
                     raise
                 sha = asset.get("sha256") or ""
                 if sha and sha != hashlib.sha256(raw).hexdigest():

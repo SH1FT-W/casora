@@ -8,6 +8,7 @@ B-PY-06: unpassende KI-Änderung beim Umzug („Vorlage anpassen“) → verstä
 SEC-02:  casora.umstellen und casora.einrichten nur für Admins.
 B-PY-07: beim Entladen/Entfernen verschwinden casora.einrichten und casora.umstellen.
 B-PY-08: Neustart-Schalter: die Liste der Abmelder wächst nicht mit jedem Einschalten.
+B-PY-13: ein gelöschter Karten-Update-Anhang blockiert die übrigen Karten-Updates nicht.
 """
 
 from __future__ import annotations
@@ -168,7 +169,49 @@ async def t_py08():
     check("B-PY-08: Entladen bricht den offenen Zeitgeber ab", len(cancelled) == 5)
 
 
+async def t_py13():
+    import hashlib
+    import json
+
+    from custom_components.casora import card_updates, update_source
+
+    good = json.dumps({"id": "karten-2", "format": 1, "items": []}).encode()
+    rels = [{"tag": "karten-3", "url": "u3", "package": {"stamp": "3:a", "size": 10, "id": 3}},
+            {"tag": "karten-2", "url": "u2", "package": {"stamp": "2:a", "size": len(good), "id": 2,
+                                                         "sha256": hashlib.sha256(good).hexdigest()}}]
+
+    async def releases(h, prefix):
+        return rels
+
+    async def download(h, asset, limit):
+        if asset["id"] == 3:
+            raise update_source.UpdateSourceError("not_found", 404)
+        return good
+
+    cu = object.__new__(card_updates.CardUpdates)
+    cu.hass = None
+    cu._data = {"auto": False, "applied": [], "packages": {}, "rejected": {}}
+
+    async def _load():
+        return cu._data
+
+    cu._load = _load
+    real = card_updates.fetch_card_releases, card_updates.download_card
+    card_updates.fetch_card_releases, card_updates.download_card = releases, download
+    try:
+        await cu._fetch({})
+        err = None
+    except Exception as e:  # noqa: BLE001
+        err = e
+    finally:
+        card_updates.fetch_card_releases, card_updates.download_card = real
+    check("B-PY-13: kein Abbruch der ganzen Abfrage", err is None, repr(err))
+    check("B-PY-13: gültiges Paket trotzdem geladen", "karten-2" in cu._data["packages"], repr(cu._data))
+    check("B-PY-13: kaputtes Release abgelehnt", "karten-3" in cu._data["rejected"])
+
+
 async def main():
+    await t_py13()
     await t_py08()
     await t_py07()
     await t_sec02()
