@@ -1654,63 +1654,6 @@ window._casoraBadgeRows = function (root) {
   Array.prototype.forEach.call(rows, window._casoraFadeRow);
 };
 
-// „Da geht noch was“ (07.10.2026): Endet am Handy ein Badge genau am Bildschirmrand, sieht man
-// nicht, dass die Reihe weitergeht. Plan: Zugabe je Badge (px), damit ein Badge deutlich über den
-// Rand ragt – mindestens min px sichtbar und min px verdeckt. boxes: natürliche Kanten {l, r} in
-// Reihenfolge, edge: rechter Rand der sichtbaren Reihe. Ist schon ein Badge deutlich
-// angeschnitten (oder passt alles), null. Sonst werden die Badges bis zu dem, das überstehen soll,
-// gleichmäßig breiter, bis es want px über den Rand ragt (höchstens cap px je Badge).
-window._casoraPeekPlan = function (boxes, edge, o) {
-  o = o || {};
-  var MIN = o.min || 20, WANT = o.want || 24, CAP = o.cap || 24;
-  var cut = -1;
-  for (var i = 0; i < boxes.length; i++) if (boxes[i].r > edge + 0.5) { cut = i; break; }
-  if (cut < 0) return null;
-  var b = boxes[cut];
-  if (edge - b.l >= MIN && b.r - edge >= MIN) return null;
-  // Überstehen soll das angeschnittene Badge, wenn genug davon zu sehen ist, sonst das davor.
-  var k = edge - b.l >= MIN ? cut : cut - 1;
-  if (k < 0) return null;
-  var need = edge + WANT - boxes[k].r;
-  if (need <= 0) return null;
-  var each = Math.ceil(need / (k + 1));
-  if (each > CAP) return null;
-  return boxes.map(function (_, j) { return j <= k ? each : 0; });
-};
-
-// Den Plan an der Badge-Reihe des Handys anwenden (nur Casora-Look, nur am Handy, nur in
-// Ruhestellung). Die Badges selbst sind button-cards im Raster (layout-card); breiter heißt
-// min-width am Badge, der Inhalt bleibt links. Hemma 1/2 und Tablet/Desktop: unverändert.
-window._casoraBadgePeek = function (row) {
-  var list = row._casoraPeek || [];
-  var on = window.innerWidth <= 600 && !!(window._casoraSoft && window._casoraSoft());
-  if (!on || row.scrollLeft > 2) {
-    if (!on && list.length) { list.forEach(function (b) { b.style.minWidth = ''; }); row._casoraPeek = []; }
-    return;
-  }
-  var cards = [];
-  (function walk(el, d) {
-    var kids = (el.shadowRoot || el).children;
-    for (var i = 0; i < kids.length; i++) {
-      var k = kids[i];
-      if (k.localName === 'button-card') { cards.push(k); continue; }
-      if (d < 8) walk(k, d + 1);
-    }
-  })(row, 0);
-  list.forEach(function (b) { b.style.minWidth = ''; });
-  var boxes = cards.map(function (c) { var r = c.getBoundingClientRect(); return { c: c, l: r.left, r: r.right, w: r.width }; })
-    .filter(function (x) { return x.w > 0; }).sort(function (a, b) { return a.l - b.l; });
-  var rr = row.getBoundingClientRect();
-  var plan = boxes.length > 1 ? window._casoraPeekPlan(boxes, rr.left + row.clientLeft + row.clientWidth) : null;
-  row._casoraPeek = [];
-  if (!plan) return;
-  boxes.forEach(function (x, j) {
-    if (!plan[j]) return;
-    x.c.style.minWidth = (x.w + plan[j]) + 'px';
-    row._casoraPeek.push(x.c);
-  });
-};
-
 // Eine waagrecht scrollende Reihe verdrahten (weicher Rand data-cs-fade l/r, Mausrad,
 // Ziehen mit der Maus). Mehrfach aufrufen ist unschädlich: ab dem zweiten Mal wird nur
 // neu gemessen. Auch für die Raum-Chips im Licht-Popup (casora_popup_light, 03.10.2026);
@@ -1747,7 +1690,6 @@ window._casoraFadeRow = function (row) {
     return Math.ceil(right - r.left - row.clientLeft + row.scrollLeft + pad - row.clientWidth);
   };
   var edges = function () {
-    if (row.id === 'badges') window._casoraBadgePeek(row);
     var m = max();
     // Nur wenn auch die Kästen überstehen (sonst Rundung/Phantom-Breite, s. real()).
     if (m > 2 && real() <= 2) m = 0;
