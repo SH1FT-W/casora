@@ -1,6 +1,7 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "New users only see this once you switch them on here.": "Neue Benutzer sehen das erst, wenn du sie hier einschaltest.",
     "Violet": "Lila",
     "Controls": "Bedienung",
     "Design (for all dashboards) ›": "Design (für alle Dashboards) ›",

@@ -1412,7 +1412,13 @@
       also.className = "hint mwhoalso";
       also.setAttribute("data-no-i18n", "");
       also.hidden = true;
-      box.append(row, note, also, warn);
+      // Gespeichert wird, wer es sieht – ein später angelegter HA-Benutzer steht nicht in der Liste.
+      const fresh = document.createElement("div");
+      fresh.className = "hint mwhonew";
+      fresh.setAttribute("data-no-i18n", "");
+      fresh.textContent = tr("New users only see this once you switch them on here.");
+      fresh.hidden = true;
+      box.append(row, note, also, fresh, warn);
       const paint = (users) => {
         const ids = get();
         const more = ids.length && typeof elsewhere === "function" ? elsewhere(ids, users || []) : "";
@@ -1422,6 +1428,7 @@
         note.textContent = ids.length ? tr("Only for:") + " " + namesOf(ids, users || []).join(", ") : "";
         note.hidden = !ids.length;
         warn.hidden = !ids.length;
+        fresh.hidden = !ids.length;
       };
       paint([]);
       this._mUsers().then(paint);

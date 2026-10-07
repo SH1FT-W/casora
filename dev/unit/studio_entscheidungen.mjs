@@ -93,3 +93,15 @@ const need = (keys) => keys.forEach((k) => assert.ok(de[k], 'de.json: ' + k));
   }
   console.log('studio_entscheidungen: 4 Lila ok');
 }
+
+// 5) „Wer sieht das?“: Hinweis auf neue Benutzer, sobald jemand ausgeschaltet ist (Kachel, Badge, Raum)
+{
+  const mehr = read('panel/casora-panel-b-mehr.js');
+  const row = mehr.slice(mehr.indexOf('P._mWhoRow = function'), mehr.indexOf('P._mElsewhere = function'));
+  assert.ok(/fresh\.className = "hint mwhonew"/.test(row) && /tr\("New users only see this once you switch them on here\."\)/.test(row), 'Hinweiszeile');
+  assert.ok(/fresh\.hidden = !ids\.length;/.test(row), 'nur wenn jemand ausgeschaltet ist');
+  // Eine gemeinsame Zeile für Kachel, Badge und Raum
+  assert.equal((mehr.match(/this\._mWhoRow\(/g) || []).length, 3, 'Kachel, Badge, Raum nutzen _mWhoRow');
+  need(['New users only see this once you switch them on here.']);
+  console.log('studio_entscheidungen: 5 Wer sieht das ok');
+}
