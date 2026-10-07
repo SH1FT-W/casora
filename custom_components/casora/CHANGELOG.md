@@ -51,6 +51,7 @@ The biggest update since Casora 1.0. It brings a new Studio in which the preview
 
 #### Popups, energy and devices
 - **Light popup of a room:** new "All off" button. The popup of a single lamp shows all lights of the room.
+- **Light popup for the whole home (home page):** "All off" is here too and asks before turning everything off. Lights you cannot see stay untouched.
 - **Energy popup:** the biggest consumers (up to 5) show even without picking them in the Studio. Casora finds them itself and leaves out house, grid, solar and battery values. Every sensor in a room's sum is listed with its value.
 - **Assist suggestions from your home:** matched to the time of day, using your room names and starting with what needs attention right now (open window, lights on, door unlocked). Voice input uses your home's preferred Assist pipeline.
 - **Aquarium tile:** new "Battery hints" setting (Automatic, Always, Never). If there is already a Batteries tile, the aquarium tile no longer reports a weak sensor battery a second time. Leaks and temperature warnings are reported as before.
