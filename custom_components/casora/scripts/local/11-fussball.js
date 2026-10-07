@@ -510,7 +510,9 @@
       + '.cfb-r[data-z=rpo]::before,.cfb-lg i.rpo{background:var(--casora-color-deep-orange, #C8693F);}'
       + '.cfb-r[data-z=down]::before,.cfb-lg i.down{background:var(--casora-color-red, #D35A4E);}'
       + '.cfb-gap{text-align:center;color:' + T.ink3 + ';font-size:16px;line-height:10px;height:12px;}'
-      + '.cfb-more{align-self:flex-start;margin:6px 0 0 6px;font-size:13.5px;font-weight:600;color:' + T.ink + ';background:' + row + ';border-radius:999px;padding:8px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}'
+      + '.cfb-more{align-self:flex-start;margin:6px 0 0 6px;font-size:13.5px;font-weight:600;color:' + T.ink + ';background:' + row + ';border-radius:999px;display:inline-flex;align-items:center;box-sizing:border-box;min-height:44px;padding:0 18px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;transition:opacity .15s;}'
+      /* Trefferfläche 44 px; Tipp-Rückmeldung wie die Zeilen. */
+      + '.cfb-more:active{opacity:.6;}'
       + '.cfb-lg{display:flex;flex-wrap:wrap;gap:6px 14px;margin:12px 6px 0;font-size:12px;color:' + T.ink3 + ';}'
       + '.cfb-lg span{display:inline-flex;align-items:center;}'
       + '.cfb-lg i{display:inline-block;width:3px;height:10px;border-radius:2px;margin-right:6px;}'

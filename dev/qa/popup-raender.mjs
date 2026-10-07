@@ -14,6 +14,7 @@
 //     --handy-raeume [n]       am Handy zusätzlich jeden Raum öffnen (Raumseite) und dort alle Kacheln/Badges
 //                              antippen (n = höchstens so viele Räume; Standard alle). Anlass 07.10.2026:
 //                              Popups aus Räumen (Pflanze, Geräte, Swipe-Karten …) wurden am Handy nie gemessen.
+//     --espn-mock              ESPN-Abfragen (Fußball-Tabelle/Form) mit festen, erfundenen Antworten beantworten
 //     --json <datei>           Rohdaten schreiben
 //     --shots <ordner>         je Fund ein Bild (--alle-bilder: von jedem Popup)
 //
@@ -257,6 +258,8 @@ for (const scheme of schemes) for (const vn of views) {
   const V = VIEWS[vn];
   const o = await H.open({ ...V, dark: scheme === 'dunkel' });
   await o.context.addInitScript(() => { window.CASORA_QA_NO_WELLE_AUTO = true; });
+  // Fußball-Popup ohne Netz: feste ESPN-Antworten (dev/qa/fussball-espn.mjs).
+  if (process.argv.includes('--espn-mock')) await (await import('./fussball-espn.mjs')).espnRoute(o.context);
   const page = o.page;
   const dash = V.phone ? phoneDash : desk;
   const done = new Set(); const dead = new Set();

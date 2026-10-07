@@ -90,6 +90,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Zwei neutrale Waschmaschinen (WashData-artig und Home-Connect-artig), siehe waesche.py.
     from .waesche import extra as waesche_extra
     _merge(fixture, waesche_extra(dt_util.utcnow()), "Waschmaschinen A/B")
+    # Ein erfundener Team-Tracker-Sensor (Fußball-Kachel), siehe fussball.py.
+    from .fussball import extra as fussball_extra
+    _merge(fixture, fussball_extra(dt_util.utcnow()), "Team-Tracker-Sensor")
     _vacuum_map(fixture)
     fixture["_skip"] = await hass.async_add_executor_job(_skip_list)
     mock = CasoraMock(hass, entry, fixture, scenarios)
