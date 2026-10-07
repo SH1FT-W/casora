@@ -27,10 +27,8 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n1t: "Das neue Studio", n1: "Die Vorschau ist die Arbeitsfläche: antippen und gleich daneben einstellen. Speichern geht ohne Verlassen, langes Drücken probiert das echte Popup aus.",
-      n2t: "Erst fragen, dann schalten", n2: "Kacheln fragen auf Wunsch vor dem Schalten nach. Beim Scharfschalten nennt Casora offene Fenster, Türen und Schlösser.",
-      n3t: "Casora Nebel und Lila", n3: "Ein zweites Design in kühlem Grau mit Petrol-Akzent, dazu ein eigenes Lila für deine Szenen.",
-      n4t: "Kleine Helfer", n4: "Räume ausblenden statt löschen, eine Szene aus dem aktuellen Zustand speichern und das Dashboard per QR-Code aufs Handy holen."
+      n1t: "Fußball-Kachel", n1: "Folge deinem Verein über Team Tracker: nächstes Spiel, Live-Spielstand oder Endergebnis mit Wappen oder Flagge, auf Wunsch nur am Spieltag oder live.",
+      n2t: "Fußball-Popup", n2: "Ein Tipp zeigt beide Mannschaften, den Tabellenausschnitt rund um deinen Verein und die letzte Form."
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +38,8 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n1t: "The new Studio", n1: "The preview is where you work: tap and adjust right beside it. Save without leaving, and press and hold to try the real popup.",
-      n2t: "Ask first, then switch", n2: "Tiles can ask before they switch. When arming, Casora names open windows, doors and locks.",
-      n3t: "Casora Nebel and purple", n3: "A second look in cool grey with a petrol accent, plus a purple of its own for your scenes.",
-      n4t: "Little helpers", n4: "Hide rooms instead of deleting them, save a scene from the current state and open the dashboard on your phone with a QR code."
+      n1t: "Football tile", n1: "Follow your club with Team Tracker: next match, live score or final result with crest or flag, optionally only on match day or while live.",
+      n2t: "Football popup", n2: "One tap shows both teams, the table around your club and recent form."
     },
   };
 
@@ -56,10 +52,8 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:gesture-tap", "n1t", "n1"],
-    ["mdi:help-circle-outline", "n2t", "n2"],
-    ["mdi:palette-outline", "n3t", "n3"],
-    ["mdi:qrcode", "n4t", "n4"],
+    ["mdi:soccer", "n1t", "n1"],
+    ["mdi:format-list-numbered", "n2t", "n2"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.
