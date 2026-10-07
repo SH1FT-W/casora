@@ -1,6 +1,7 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "Violet": "Lila",
     "Controls": "Bedienung",
     "Design (for all dashboards) ›": "Design (für alle Dashboards) ›",
     "The design applies to all dashboards right away. Undo switches it back.": "Das Design gilt sofort für alle Dashboards. „Rückgängig“ holt das vorige Design zurück.",

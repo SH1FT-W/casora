@@ -1095,7 +1095,7 @@
       const PI = W.__casoraPanelInternals || {};
       const col = $(".bscol");
       col.setAttribute("data-no-i18n", "");
-      [{ id: "", label: tr("Standard") }].concat((PI.CASORA_ACCENTS || []).map((a) => ({ id: a.id, label: tr(PI.accentLabel ? PI.accentLabel(a) : a.label) })))
+      [{ id: "", label: tr("Standard") }].concat((PI.accentsShown ? PI.accentsShown() : (PI.CASORA_ACCENTS || [])).map((a) => ({ id: a.id, label: tr(PI.accentLabel ? PI.accentLabel(a) : a.label) })))
         .forEach((x) => { const o = document.createElement("option"); o.value = x.id; o.textContent = x.label; col.appendChild(o); });
       const paintCol = () => { $(".bsdot").style.background = (PI.swatchCss && PI.swatchCss(col.value || "var(--casora-color-yellow, #FFCC00)")) || "#FFCC00"; };
       col.onchange = paintCol;

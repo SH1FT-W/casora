@@ -71,3 +71,25 @@ const need = (keys) => keys.forEach((k) => assert.ok(de[k], 'de.json: ' + k));
   assert.ok(!de['Look & Controls'] && !de['Exception: the design applies to all dashboards'], 'alte Texte entfernt');
   console.log('studio_entscheidungen: 3 Design unter Einstellungen ok');
 }
+
+// 4) „Lila“ für Szenen im Casora-Look – eigener Schlüssel, purple bleibt Dunkelrot, unter Hemma nichts Neues
+{
+  const main = read('panel/casora-panel.js');
+  const weich = read('theme_weich.yaml');
+  const nebel = read('theme_nebel.yaml');
+  assert.ok(/\["Violet", "violet", "#7E6A9E", true\]/.test(main), 'eigener Eintrag „Lila“ (violet), nur Casora-Look');
+  assert.ok(/casora-color-purple: "#A9473D"/.test(weich), 'purple bleibt Dunkelrot');
+  assert.ok(/^ {2}casora-color-violet: "#7E6A9E"/m.test(weich) && /^ {6}casora-color-violet: "#[0-9A-F]{6}"/m.test(weich), 'Weich: Lila hell und dunkel');
+  assert.ok(!/casora-color-violet/.test(nebel), 'Nebel erbt es von Casora (Grundton nicht warm, bleibt)');
+  assert.ok(/const accentsShown = \(\) => CASORA_ACCENTS\.filter\(\(a\) => !a\.soft \|\| casoraLookTheme\(\)\);/.test(main), 'unter Hemma nicht gezeigt');
+  assert.ok(/casoraLookTheme = \(\) => ACCENT_THEME === CASORA_THEME \|\| ACCENT_THEME === "Casora Nebel"/.test(main), 'Casora und Nebel');
+  assert.equal((main.match(/accentsShown\(\)\.forEach/g) || []).length, 2, 'Szenenliste und Kachelfarbe nutzen die gezeigte Palette');
+  assert.ok(/PI\.accentsShown \? PI\.accentsShown\(\)/.test(read('panel/casora-panel-b-plus.js')), 'Szenen-Dialog: dieselbe Palette');
+  assert.ok(/P\.accentsShown \? P\.accentsShown\(\)/.test(read('panel/casora-panel-personal.js')), 'Einstellungen: dieselbe Palette');
+  assert.equal(de.Violet, 'Lila');
+  // Hemma-Themes unverändert ohne violet
+  for (const f of fs.readdirSync(new URL('../../custom_components/casora/', import.meta.url)).filter((x) => /^theme.*\.yaml$/.test(x) && !/weich|nebel/.test(x))) {
+    assert.ok(!/casora-color-violet/.test(read(f)), f + ' ohne Lila-Zusatz');
+  }
+  console.log('studio_entscheidungen: 4 Lila ok');
+}

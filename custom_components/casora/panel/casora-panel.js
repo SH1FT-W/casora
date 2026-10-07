@@ -3580,12 +3580,14 @@ const CASORA_ACCENTS = [
   ["Yellow", "yellow", "#FFCC00"], ["Amber", "amber", "#ffb254"],
   ["Orange", "orange", "#FF9230"], ["Red", "red", "#FF4245"],
   ["Pink", "pink", "#ff4d70"], ["Purple", "purple", "#9333ea"],
+  // Nur im Casora-Look (Weich/Nebel): dort ist „purple“ ein dunkles Rot, Szenen bekommen hier ihr Lila.
+  ["Violet", "violet", "#7E6A9E", true],
   ["Blue", "blue", "#0088FF"], ["Ice", "ice", "#3cd3fe"],
   ["Teal", "teal", "#00C3D0"], ["Mint", "mint", "#00C8B3"],
   ["Green", "green", "#30D158"], ["Gold", "gold", "#e5a00d"],
   ["Neutral", "neutral", "#CDCDCF"],
-].map(([label, key, hex]) => ({
-  label, key, hex, id: "var(--casora-color-" + key + ", " + hex + ")",
+].map(([label, key, hex, soft]) => ({
+  label, key, hex, id: "var(--casora-color-" + key + ", " + hex + ")", ...(soft ? { soft: true } : {}),
 }));
 // Aktives HA-Theme (vom Panel bei jedem hass-Update gesetzt). Casora legt
 // casora-color-purple bewusst auf ein dunkles Rot – dort heißt der Eintrag danach.
@@ -3598,7 +3600,10 @@ const softLook = () => {
     return getComputedStyle(document.documentElement).getPropertyValue("--casora-popup-layout").trim() === "soft";
   } catch (e) { return false; }
 };
-const accentLabel = (a) => (a.key === "purple" && (ACCENT_THEME === CASORA_THEME || ACCENT_THEME === "Casora Nebel") ? "Dark red" : a.label);
+const casoraLookTheme = () => ACCENT_THEME === CASORA_THEME || ACCENT_THEME === "Casora Nebel";
+const accentLabel = (a) => (a.key === "purple" && casoraLookTheme() ? "Dark red" : a.label);
+// Die Farben zur Auswahl: „Lila“ (violet) nur im Casora-Look – Hemma 1/2 haben ihr Lila schon (purple).
+const accentsShown = () => CASORA_ACCENTS.filter((a) => !a.soft || casoraLookTheme());
 const swatchOf = (v) => {
   const raw = String(v || "").trim();
   if (!raw) return null;
@@ -23947,7 +23952,7 @@ class CasoraPanel extends HTMLElement {
       pick.onclick = () => {
         const cur = map()[sc.id] || "";
         const items = [{ id: "", label: "Yellow (default)", checked: !cur }];
-        CASORA_ACCENTS.forEach((acc) => items.push({
+        accentsShown().forEach((acc) => items.push({
           id: acc.id, label: accentLabel(acc), swatch: swatchCss(acc.id), checked: cur === acc.id,
         }));
         this._menuAt(pick, items, (id) => {
@@ -25448,7 +25453,7 @@ class CasoraPanel extends HTMLElement {
         btn.onclick = () => {
           const items = [{ id: "", label: "From the entity's domain",
                            checked: !tile.variables || !tile.variables[f.key] }];
-          CASORA_ACCENTS.forEach((a) => items.push({
+          accentsShown().forEach((a) => items.push({
             id: a.id, label: accentLabel(a), swatch: swatchCss(a.id), group: "Casora",
             checked: cur2 === a.id,
           }));
@@ -25609,7 +25614,7 @@ window.__casoraPanelInternals = {
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
   linkPair, syncPairRooms, syncPairTiles, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, expandMobileConfig, extractMobileConfig,
   deriveEnergyRooms, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
-  CASORA_ACCENTS, accentLabel, swatchCss,
+  CASORA_ACCENTS, accentsShown, accentLabel, swatchCss,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)
 };
 
