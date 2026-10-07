@@ -167,7 +167,9 @@
   var pill = function (UI, text, svc, tone) {
     return '<span' + (svc ? ' data-casora-svc="' + UI.esc(JSON.stringify(svc)) + '"' : '')
       + ' style="display:inline-flex;align-items:center;gap:7px;cursor:' + (svc ? 'pointer' : 'default') + ';font-size:13px;font-weight:700;'
-      + 'padding:8px 14px;border-radius:999px;background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));color:'
+      + 'padding:8px 14px;border-radius:999px;background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));'
+      // Trefferfläche 44 px (07.10.2026): unsichtbarer Rand oben/unten, Fläche nur im Innern, Lage unverändert.
+      + (svc ? 'border-block:6px solid transparent;background-clip:padding-box;margin-block:-6px;' : '') + 'color:'
       + (tone || 'var(--casora-popup-ui-action, var(--casora-color-teal, #4E9E95))') + ';white-space:nowrap;">' + UI.esc(text) + '</span>';
   };
 

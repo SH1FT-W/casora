@@ -8217,6 +8217,9 @@ window.casoraMenuGlass = {
       + '.hui-sg{flex:0 1 auto;text-align:center;'
       +   'font-size:14px;font-weight:500;'
       +   'padding:11px 13px;border-radius:var(--casora-popup-seg-radius, 999px);'
+      // Trefferfläche 44 px (sichtbar 37 px): unsichtbarer Rand oben/unten, Fläche nur im Innern, Lage
+      // unverändert. Kein ::before – overflow:hidden (Auslassung) schnitte ihn ab.
+      +   'border-block:3.5px solid transparent;background-clip:padding-box;margin-block:-3.5px;'
       +   'background:var(--casora-popup-seg-fill, rgba(255,255,255,0.16));'
       +   'color:' + T.ink + ';'
       +   'cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
