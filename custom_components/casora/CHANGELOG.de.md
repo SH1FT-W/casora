@@ -50,6 +50,7 @@ Das größte Update seit Casora 1.0. Neu sind das Studio, in dem die Vorschau se
 - Ist alles zu, sagt das Sicherheits-Badge „Alles sicher“, bei Alarm „Alarm!“, statt „1 Schloss“ steht „Schloss offen“. Das gilt auch in Hemma 1 und Hemma 2.
 
 #### Popups, Energie und Geräte
+- **Kamera-Kachel „Status von“:** freiwillig je Kamera-Kachel eine zweite Entität (eine andere Kamera oder ein Verbindungssensor), die sagt, ob die Kamera erreichbar ist. Für ein Bild über einen Proxy (go2rtc, Frigate, Scrypted, ONVIF-Proxy), der „bereit“ meldet, obwohl die Kamera weg ist. Ist sie nicht verfügbar (ein Verbindungssensor auch bei „aus“), zeigt die Kachel „Offline“ und das Sicherheits-Badge „Kamera offline“. Bild und Popup kommen weiter von der Kamera der Kachel. Ohne diese Einstellung ändert sich nichts.
 - **Licht-Popup eines Raums:** neuer Knopf „Alles aus“. Das Popup einer einzelnen Lampe zeigt alle Leuchten des Raums.
 - **Licht-Popup für das ganze Haus (Startseite):** „Alles aus“ gibt es auch hier, mit Rückfrage vor dem Ausschalten. Lichter, die man nicht sieht, bleiben unberührt.
 - **Energie-Popup:** Die größten Verbraucher (bis zu 5) erscheinen auch ohne Zuordnung im Studio. Casora findet sie selbst und lässt Haus-, Netz-, Solar- und Akkuwerte weg. Jeder Sensor der Raumsumme steht mit seinem Wert im Popup.
@@ -97,6 +98,8 @@ Das größte Update seit Casora 1.0. Neu sind das Studio, in dem die Vorschau se
 
 ### Behoben
 
+- Studio-Vorschau auf Englisch: Raumnamen stehen so da wie im Dashboard („Küche“ wird zu „Kitchen“). In den Feldern des Studios behält ein Raum den Namen, den du eingegeben hast.
+- Mit Home Assistant 2026.10 fehlte auf iPhones bis iOS 17 die Unschärfe hinter Kacheln und Popups. Sie ist wieder da.
 - Glocke: Eine Tür oder ein Fenster mit Kontakt- und Kippsensor steht nur noch einmal in der Glocke, je nach Stellung „ist gekippt“ oder „ist offen“.
 - Automatisch einrichten: Eine Lichtgruppe des Raums mit einer Untergruppe ohne Bereich wird wieder für den Raum genommen statt einer einzelnen Lampe.
 - „Alles aus“ im Licht-Popup ist mit der Tastatur erreichbar und bedienbar.

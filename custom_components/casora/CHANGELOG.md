@@ -50,6 +50,7 @@ The biggest update since Casora 1.0. It brings a new Studio in which the preview
 - When everything is closed the security badge says "All secure", "Alarm!" when it goes off, and "Lock open" instead of "1 lock". This applies to Hemma 1 and Hemma 2 too.
 
 #### Popups, energy and devices
+- **Camera tile "Status from":** an optional second entity per camera tile (another camera or a connection sensor) that tells whether the camera is reachable, for a picture that comes through a proxy (go2rtc, Frigate, Scrypted, ONVIF proxy) and stays ready although the camera is gone. When it is unavailable (a connection sensor also when off), the tile shows "Offline" and the Security badge "Camera offline". Picture and popup stay with the tile's camera. Without this setting nothing changes.
 - **Light popup of a room:** new "All off" button. The popup of a single lamp shows all lights of the room.
 - **Light popup for the whole home (home page):** "All off" is here too and asks before turning everything off. Lights you cannot see stay untouched.
 - **Energy popup:** the biggest consumers (up to 5) show even without picking them in the Studio. Casora finds them itself and leaves out house, grid, solar and battery values. Every sensor in a room's sum is listed with its value.
@@ -97,6 +98,8 @@ The biggest update since Casora 1.0. It brings a new Studio in which the preview
 
 ### Fixed
 
+- Studio preview in English: room names read like on the dashboard ("Küche" becomes "Kitchen"). In the Studio's own fields a room keeps the name you typed.
+- With Home Assistant 2026.10, iPhones up to iOS 17 lost the blur behind tiles and popups. It is back.
 - Bell: a door or window with both a contact and a tilt sensor shows up only once, as "is tilted" or "is open" depending on its position.
 - Set up automatically: a room light group that contains a subgroup without an area is used for the room again instead of a single lamp.
 - "All off" in the light popup can be reached and used with the keyboard.
