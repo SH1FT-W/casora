@@ -27,9 +27,10 @@ Shape the rest room by room in a visual studio. No YAML.</p>
 ## Why Casora
 
 - **It already knows your home.** Casora reads Home Assistant's device registry, puts every device into its room and groups what belongs together.
-- **Design it, don't code it.** Casora Studio lives in the sidebar. Change rooms, tiles, badges and popups in place, with a live preview for desktop, tablet and phone.
+- **Design it, don't code it.** Casora Studio lives in the sidebar. Tap anything in the live preview for desktop, tablet and phone and change it right beside it. Press and hold to try the real popup.
 - **One home, three screens.** Desktop and wall tablet show each room with its photo. Phones get a layout of their own with your favourites first.
 - **A popup for every device.** Lights, climate, energy, locks, blinds, media, cameras, plants, washers and dryers each open a popup of their own.
+- **Ask first, then switch.** Any tile can ask before it switches. When you arm the alarm, Casora names open windows, doors and unlocked locks.
 - **Nothing is ever lost.** Every save becomes a version you can preview and restore.
 - **It stays at home.** No cloud, no account, no telemetry. AI features are optional and use the provider you already set up.
 
@@ -77,7 +78,7 @@ Casora recognises robot vacuums, washers and dryers, dishwashers, 3D printers, h
   <br/><sub><b>Assistants for the tedious part.</b> Pick a look, place new devices, move from Hemma, go back to any version.</sub>
 </p>
 
-The look is *Casora*: warm linen, generous corners and soft shadows, in light and dark, set in Inter. It follows Home Assistant's theme mode. The classic glass looks from Hemma are still there as legacy options.
+The look is *Casora*: warm linen, generous corners and soft shadows, in light and dark, set in Inter. *Casora Nebel* is the same calm design in cool grey with a petrol accent. It follows Home Assistant's theme mode. The classic glass looks from Hemma are still there as legacy options.
 
 ## Requirements
 
