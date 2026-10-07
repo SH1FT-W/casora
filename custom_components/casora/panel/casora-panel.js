@@ -49,8 +49,8 @@ const THEME_RENAMED = { "Casora Weich": "Casora", "Casora Standard": "Hemma 2", 
 const CASORA_THEMES = [
   { name: CASORA_THEME, aliases: ["Casora Weich"], label: "Casora", sub: "Warm linen, soft shadows, big round corners.",
     shot: { light: "/casora_assets/themes/weich-light.webp", dark: "/casora_assets/themes/weich-dark.webp" } },
-  // Casora Nebel (06.10.2026): kühl, Petrol-Akzent. ph: ruhiger Platzhalter hinter dem Bild, bis die
-  // Vorschaubilder (nebel-*.webp) mit dem Release kommen – ein fehlendes Bild lässt ihn einfach durchscheinen.
+  // Casora Nebel (06.10.2026): kühl, Petrol-Akzent. ph: ruhiger Platzhalter hinter dem Vorschaubild
+  // (nebel-*.webp), sichtbar, solange das Bild noch lädt.
   { name: "Casora Nebel", label: "Casora Nebel", sub: "Cool light grey with a petrol accent, slightly crisper corners.",
     shot: { light: "/casora_assets/themes/nebel-light.webp", dark: "/casora_assets/themes/nebel-dark.webp" },
     ph: { light: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23EEF1F3%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2226%22%20width%3D%22120%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%23D5DCE1%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23FFFFFF%22/%3E%3Crect%20x%3D%22116%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23FFFFFF%22/%3E%3Crect%20x%3D%2224%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%23FFFFFF%22/%3E%3Crect%20x%3D%22168%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%23FFFFFF%22/%3E%3Ccircle%20cx%3D%2246%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%233F7491%22/%3E%3Ccircle%20cx%3D%22190%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%233F7491%22%20opacity%3D%22.35%22/%3E%3C/svg%3E")', dark: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%231C2226%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2226%22%20width%3D%22120%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%2338434A%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%232A3237%22/%3E%3Crect%20x%3D%22116%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%232A3237%22/%3E%3Crect%20x%3D%2224%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%232A3237%22/%3E%3Crect%20x%3D%22168%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%232A3237%22/%3E%3Ccircle%20cx%3D%2246%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%235E9AB8%22/%3E%3Ccircle%20cx%3D%22190%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%235E9AB8%22%20opacity%3D%22.35%22/%3E%3C/svg%3E")' } },
@@ -13004,8 +13004,8 @@ class CasoraPanel extends HTMLElement {
     let look = this._lookPick;
     if (!look) { try { look = (JSON.parse(localStorage.getItem("selectedTheme") || "null") || {}).theme; } catch (e) { look = null; } }
     look = THEME_RENAMED[look] || look;
-    // Nebel: bis eigene Bilder (perf-nebel-*) da sind, die Weich-Bilder – gleicher Aufbau.
-    const set = look === "Hemma 1" ? "glass" : (look === CASORA_THEME || look === "Casora Nebel") ? "weich" : "std";
+    // Nebel hat eigene Bilder (perf-nebel-*), gleicher Aufbau wie Weich.
+    const set = look === "Hemma 1" ? "glass" : look === "Casora Nebel" ? "nebel" : look === CASORA_THEME ? "weich" : "std";
     const shot = (mode) => shotLang("/casora_assets/themes/perf-" + set + "-" + mode + "-" + (dark ? "dark" : "light") + ".webp", this._hass);
     const grid = document.createElement("div");
     grid.className = "themegrid perfgrid";
