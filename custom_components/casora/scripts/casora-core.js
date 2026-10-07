@@ -1053,6 +1053,81 @@ window.casoraMenuGlass = {
   };
 })();
 
+// 07.10.2026: Größte Verbraucher fürs Energie-Popup, wenn im Studio keine zugeordnet sind.
+// Regeln wie die Raum-Energie im Studio (casora-panel-basis.js): Leistungssensoren (device_class
+// power oder W/kW/mW/MW), nie ausgeblendet/versteckt/Diagnose, nie Solar, Akku, Netz/Zähler,
+// Tretleistung, Haus-/Raum-Summen oder Gruppen; je Gerät eine Messung (Geräte-Gesamtsensor, sonst
+// der Last-Kanal mit dem höchsten Wert, Eigenverbrauch von powercalc nur ohne anderen Kanal; nie
+// Mittel/Max). Nur gültige Werte über 0 W, kW → W, sortiert nach Leistung.
+// o: { exclude: [ids], area: Bereich oder null, max: 5, visible: fn(ids) → ids }.
+// Rückgabe: { top: [{ id, w }], ids: alle Kandidaten (zum Beobachten) }.
+(function () {
+  if (window._casoraAutoConsumers) return;
+  var FACTOR = { W: 1, kW: 1000, MW: 1e6, mW: 0.001 };
+  var NOT_POWER = /solar|pv\d?\b|photovolt|akku|batter|einspeis|netz|grid|smart.?meter|stromz(ä|ae)hler|z(ä|ae)hler|meter|phase|wechselrichter|inverter/i;
+  var NOT_ELECTRIC = /rider|fahrer|trett?leistung|cadence|trittfrequenz|drive.?unit|watt.?bike|ergometer/i;
+  var HOUSE = /gesamt|total|summe|(^|_)sum(_|$)|haus.?(leistung|verbrauch|last|bedarf)|(^|_)(bedarf|demand)(_|$)|house.?(power|load|consumption)|home.?(power|load|consumption)|wohnung.?(leistung|verbrauch)|raum.?(leistung|verbrauch)|room.?(power|consumption)|zimmer.?(leistung|verbrauch)|(^|_)(bezug|import|export)(_|$)/i;
+  var POWER_STAT = /mittel|durchschnitt|average|\bavg|_avg|mean|maxim|minim|(^|[_\s.])(max|min)([_\s]|$)|peak|spitze/i;
+  var DEVICE_TOTAL = /device.?power|total.?power|power.?total|ger(ä|ae)t.?(leistung|gesamt)|gesamt.?leistung/i;
+  window._casoraAutoConsumers = function (hass, states, o) {
+    o = o || {}; states = states || {};
+    var R = (hass && hass.entities) || {}, D = (hass && hass.devices) || {};
+    var ex = (o.exclude || []).filter(Boolean);
+    var areaOf = function (e) { return e.area_id || (e.device_id && D[e.device_id] && D[e.device_id].area_id) || null; };
+    var watt = function (id) {
+      var s = states[id], a = (s && s.attributes) || {};
+      var unit = String(a.unit_of_measurement || (a.device_class === 'power' ? 'W' : ''));
+      if (a.device_class && a.device_class !== 'power') return null;
+      if (!a.device_class && !FACTOR[unit]) return null;
+      if (a.device_class === 'power' && unit && !FACTOR[unit]) return null;
+      var n = s ? parseFloat(s.state) : NaN;
+      return isFinite(n) ? n * (FACTOR[unit] || 1) : null;
+    };
+    var groups = {}, order = [];
+    Object.keys(states).forEach(function (id) {
+      if (id.indexOf('sensor.') !== 0 || ex.indexOf(id) >= 0) return;
+      var s = states[id], a = s.attributes || {};
+      if (a.device_class !== 'power' && !/^(m|k|M)?W$/.test(String(a.unit_of_measurement || ''))) return;
+      if (a.device_class && a.device_class !== 'power') return;
+      var e = R[id];
+      if (!e || e.hidden || e.entity_category) return;
+      if (Array.isArray(a.entity_id) || e.platform === 'group' || e.platform === 'min_max') return;
+      var dv = (e.device_id && D[e.device_id]) || {};
+      var own = id + ' ' + (a.friendly_name || '');
+      var label = own + ' ' + (dv.name_by_user || '') + ' ' + (dv.name || '');
+      if (NOT_POWER.test(label) || NOT_ELECTRIC.test(label)) return;
+      // Haus-/Raumsummen: ohne Gerät mit solchem Namen, oder am Gerät, aber kein Geräte-Gesamtsensor.
+      if (HOUSE.test(own.replace(/[\s.]+/g, '_')) && !(e.device_id && DEVICE_TOTAL.test(own))) return;
+      if (o.area && areaOf(e) !== o.area) return;
+      var key = e.device_id || ('\u0000' + id);
+      if (!groups[key]) { groups[key] = []; order.push(key); }
+      groups[key].push(id);
+    });
+    var ids = [];
+    var picks = order.map(function (k) {
+      var list = groups[k];
+      ids = ids.concat(list);
+      var base = list.filter(function (id) { return !POWER_STAT.test(id + ' ' + ((states[id].attributes || {}).friendly_name || '')); });
+      if (!base.length) return null;
+      var load = base.filter(function (id) { return (R[id] || {}).platform !== 'powercalc'; });
+      var c = load.length ? load : base;
+      var total = c.filter(function (id) { return DEVICE_TOTAL.test(id + ' ' + ((states[id].attributes || {}).friendly_name || '')); })[0];
+      var best = null;
+      (total ? [total] : c).forEach(function (id) {
+        var w = watt(id);
+        if (w != null && (!best || w > best.w)) best = { id: id, w: w };
+      });
+      return best;
+    }).filter(function (x) { return x && x.w > 0; });
+    if (typeof o.visible === 'function') {
+      var vis = o.visible(picks.map(function (x) { return x.id; })) || [];
+      picks = picks.filter(function (x) { return vis.indexOf(x.id) >= 0; });
+    }
+    picks.sort(function (a, b) { return b.w - a.w; });
+    return { top: picks.slice(0, o.max || 5), ids: ids };
+  };
+})();
+
 // ── Performance mode ─────────────────────────────────────────────────────────
 (function () {
   if (window._casoraPerf) return;
@@ -9837,6 +9912,45 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     });
   }
   window.casoraUserGuard = userGuard;
+
+  // 07.10.2026: „Wer sieht das?“ für Listen, die Casora selbst zusammenstellt („Alles aus“ im
+  // Licht-Popup, Verbraucher im Energie-Popup). Die Dashboard-Konfiguration wird je Dashboard
+  // einmal geholt und eine Minute gemerkt. visibleIds: Promise der sichtbaren IDs.
+  // visibleIdsNow: sofort – null, solange die Konfiguration noch nicht da ist (lädt sie dann).
+  var cfgMemo = { url: null, at: 0, cfg: null, p: null };
+  function dashCfg() {
+    var h = hassOf();
+    var seg = (location.pathname || '').split('/').filter(Boolean);
+    var url = seg[0] || 'lovelace';
+    if (cfgMemo.url === url && (cfgMemo.p || Date.now() - cfgMemo.at < 60000)) return cfgMemo.p || Promise.resolve(cfgMemo.cfg);
+    if (!h || !h.callWS) return Promise.resolve(null);
+    cfgMemo.url = url; cfgMemo.cfg = null;
+    cfgMemo.p = h.callWS({ type: 'lovelace/config', url_path: url }).then(function (cfg) {
+      if (cfgMemo.url === url) { cfgMemo.cfg = cfg; cfgMemo.at = Date.now(); cfgMemo.p = null; }
+      return cfg;
+    }, function () { cfgMemo.p = null; cfgMemo.at = Date.now(); return null; });
+    return cfgMemo.p;
+  }
+  function visibleOf(cfg, ids) {
+    var h = hassOf(), uid = h && h.user && h.user.id;
+    return (ids || []).filter(function (id) { return !cfg || !hiddenForUser(cfg, id, uid); });
+  }
+  window.casoraVisibleIds = function (ids) {
+    return dashCfg().then(function (cfg) { return visibleOf(cfg, ids); });
+  };
+  window.casoraVisibleIdsNow = function (ids) {
+    var seg = (location.pathname || '').split('/').filter(Boolean);
+    var fresh = cfgMemo.url === (seg[0] || 'lovelace') && cfgMemo.at && !cfgMemo.p;
+    if (!fresh || Date.now() - cfgMemo.at >= 60000) dashCfg();
+    return fresh ? visibleOf(cfgMemo.cfg, ids) : null;
+  };
+  // Für Benutzer ohne Admin-Rechte schon beim Laden bzw. Wechsel des Dashboards holen, damit das
+  // Energie-Popup die Verbraucher gleich beim ersten Öffnen zeigen kann.
+  var warm = function () {
+    setTimeout(function () { if (window.casoraIsAdmin && !window.casoraIsAdmin()) window.casoraVisibleIdsNow([]); }, 2500);
+  };
+  window.addEventListener('location-changed', warm);
+  warm();
 
   // ── Glocke = Kachel (B-NOTI, 06.10.2026) ──────────────────────────────────
   // Die Kachel, die man für diese Entität antippen würde: sichtbare button-card mit genau dieser

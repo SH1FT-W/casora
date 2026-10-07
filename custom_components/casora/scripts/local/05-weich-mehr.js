@@ -394,10 +394,18 @@
     var f = {};
     f.hero = { card: secCard([C.home, C.grid, C.costToday, C.today, C.error].concat(sumIds), call('_casoraSoftEnergy', 'hero', C), states) };
     if (ctx.metricCard) f.metric = { card: chartCard(ctx.metricCard) };
-    var fl = ctx.fields || {};
+    var fl = ctx.fields || {}, autoTop = null;
     if (typeof fl.use === 'string' && fl.use) f.use = UI.label('Verbrauch') + fl.use;
     if (parts) f.top = { card: secCard(sumIds, call('_casoraSoftEnergy', 'parts', C), states) };
     else if (typeof fl.top === 'string' && fl.top) f.top = UI.label('Verbraucher') + fl.top;
+    else if (ctx.powerId && window._casoraAutoConsumers) {
+      // 07.10.2026: keine Verbraucher zugeordnet – Casora sucht die größten selbst (bis 5 nach
+      // Leistung). Popup eines Raums (Sensor mit Bereich, kein Haus-Sensor): nur dieser Bereich.
+      C.auto = { exclude: [C.home, C.solar, C.grid, C.charge, C.discharge, C.output, C.export, C.loadTarget]
+        .concat(C.pv).filter(Boolean), area: autoArea(ctx, v), max: 5 };
+      var cand = window._casoraAutoConsumers(ctx.hass, states, C.auto);
+      if (cand.ids.length) autoTop = f.top = { card: secCard([C.home].concat(cand.ids.slice(0, 60)), call('_casoraSoftEnergy', 'auto', C), states) };
+    }
     var inner = ctx.inner || {};
     var cj = 'const C = ' + JSON.stringify(C) + ';\n';
     if (solar && has(C.solar) && has(C.home) && inner.common && inner.flow) {
@@ -416,13 +424,35 @@
     }
     // Leerzustand (Runde 2): ohne Tageszähler, Verbraucher und Solar nicht nur das Diagramm,
     // sondern eine ruhige Zeile mit dem nächsten Schritt – wie „Noch kein Gerät zugeordnet“.
-    if (!f.use && !f.top && !f.flow && !f.more) {
+    if (!f.use && (!f.top || f.top === autoTop) && !f.flow && !f.more) {
       f.use = UI.group([{ icon: 'mdi:link-variant-off', iconTone: 'var(--casora-popup-ui-dim, rgba(255,255,255,0.18))',
         label: 'Noch keine Tageswerte', sub: (!window.casoraIsAdmin || window.casoraIsAdmin()) ? 'Im Casora Studio Zähler und Verbraucher zuordnen' : null }], 'Verbrauch');
     }
     return layout({ fields: f, top: ['hero', 'metric'], left: solar ? ['flow'] : ['top'],
       right: solar ? ['use', 'top', 'more'] : ['use', 'more'], moveLeft: ['top'],
       narrowOrder: ['flow', 'use', 'top', 'more'] });
+  };
+
+  // Bereich für die automatischen Verbraucher: der Raum des Popups (room_name = Bereichsname) oder
+  // der Bereich des Leistungssensors, wenn er keiner fürs ganze Haus ist; sonst das ganze Haus.
+  var HOUSE_NAME = /haus|house|home|wohnung|zuhause|gesamt|total|netz|grid|verbrauch|consumption|energie|energy/i;
+  var autoArea = function (ctx, v) {
+    var h = ctx.hass || {}, areas = h.areas || {}, norm = function (x) { return String(x || '').trim().toLowerCase(); };
+    var rn = norm(v.room_name);
+    if (rn) for (var k in areas) if (areas[k] && norm(areas[k].name) === rn) return k;
+    var e = (h.entities || {})[ctx.powerId];
+    if (!e) return null;
+    var a = e.area_id || (e.device_id && h.devices && h.devices[e.device_id] && h.devices[e.device_id].area_id) || null;
+    var nm = ctx.powerId + ' ' + ((ctx.states[ctx.powerId] || {}).attributes || {}).friendly_name;
+    return a && !HOUSE_NAME.test(nm) ? a : null;
+  };
+  E.autoArea = autoArea;
+  // Wer sieht das? Admins sehen alles; sonst nur, was die Dashboard-Konfiguration nicht verbirgt –
+  // solange sie noch lädt, nichts (sie ist meist schon vom Dashboard-Start da).
+  var autoVisible = function (ids) {
+    var now = window.casoraVisibleIdsNow ? window.casoraVisibleIdsNow(ids) : ids;
+    if (now) return now;
+    return (!window.casoraIsAdmin || window.casoraIsAdmin()) ? ids : [];
   };
 
   var money = function (v, cur, hass) {
@@ -460,6 +490,22 @@
       return UI.hero({ center: true, value: main == null ? '—' : main,
         sub: bits.join(' · ') || null,
         chip: bad ? { text: 'Solarbank-Fehler ' + err, tone: 'bad' } : null });
+    }
+    if (part === 'auto' && C.auto && window._casoraAutoConsumers) {
+      var A = window._casoraAutoConsumers(hass, states, Object.assign({}, C.auto, { visible: autoVisible }));
+      var home = watt(states, C.home);
+      var anm = function (id) {
+        var a = (states[id] && states[id].attributes) || {};
+        var t = String(a.friendly_name || (hass && hass.entities && hass.entities[id] && hass.entities[id].name) || id);
+        return t.replace(/\s*((aktuelle|momentane)\s+leistung|current\s+(power|consumption)|power|leistung)$/i, '').trim() || t;
+      };
+      var arows2 = A.top.map(function (x) {
+        var pct = home > 0 ? Math.round(x.w / home * 100) : null;
+        return { entity: x.id, icon: 'plug', label: anm(x.id),
+          sub: pct > 0 && pct <= 100 ? pct + ' % des aktuellen Verbrauchs' : null,
+          value: x.w < 10 ? (Math.round(x.w * 10) / 10).toLocaleString(LANG(hass)) + ' W' : fW(x.w, hass) };
+      });
+      return arows2.length ? UI.label('Verbraucher') + UI.group(arows2) : '';
     }
     if (part === 'parts' && C.sum && window._casoraPowerSum) {
       var R = window._casoraPowerSum(C.sum, states);
