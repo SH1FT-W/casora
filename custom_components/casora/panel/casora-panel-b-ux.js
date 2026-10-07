@@ -138,6 +138,9 @@
     :host(.bmode.phone:not(.flow)) .toprow > .navpill > button#brewind.has { display:inline-flex !important; align-items:center; justify-content:center;
       width:36px; min-width:36px; padding:0; }
     :host(.bmode.phone:not(.flow)) .toprow > .navpill > button#undo:disabled { opacity:.38; }
+    /* Solange „Speichern“ neben „Fertig“ steht, macht die Zeitreise Platz (bleibt im Menü „···“) –
+       sonst wurde der Dashboard-Name zu „Te…“ gekürzt. */
+    :host(.bmode.phone:not(.flow)) .toprow > .navpill:has(> #savenow:not([hidden])) > button#brewind.has { display:none !important; }
     :host(.bmode.phone:not(.flow)) .toprow > .navpill > button#brewind svg,
     :host(.bmode.phone:not(.flow)) .toprow > .navpill > button#undo svg { width:20px; height:20px; }
     /* Hinzufügen vom Gerät her */

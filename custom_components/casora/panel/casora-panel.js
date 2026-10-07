@@ -6083,6 +6083,14 @@ class CasoraPanel extends HTMLElement {
         .toprow > button#donebtn:hover:not(:disabled), .toprow > :where(.navpill) > button#donebtn:hover:not(:disabled) {
           background:var(--casora-studio-done, var(--casora-color-blue, #0A84FF)); filter:brightness(1.1);
         }
+        /* „Speichern“ neben „Fertig“: klein und ruhig, nur solange etwas ungespeichert ist. */
+        .toprow > :where(.navpill) > button#savenow {
+          display:inline-flex; align-items:center; gap:6px; padding:0 14px;
+          background:var(--chip); box-shadow:inset 0 0 0 1px var(--chip-rim); color:var(--ink); font-weight:600;
+        }
+        .toprow > :where(.navpill) > button#savenow[hidden] { display:none; }
+        .toprow > :where(.navpill) > button#savenow:hover:not(:disabled) { background:var(--chip-hi); filter:none; }
+        .toprow > :where(.navpill) > button#savenow svg { width:17px; height:17px; display:none; }
         #donebtn.dirty::after {
           content:""; position:absolute; top:4px; right:4px; width:8px; height:8px; border-radius:50%;
           background:var(--casora-color-yellow, #FFD60A); box-shadow:0 0 0 2px var(--casora-studio-done, var(--casora-color-blue, #0A84FF));
@@ -7656,6 +7664,12 @@ class CasoraPanel extends HTMLElement {
           background:none; color:var(--casora-studio-phone-done, var(--casora-color-blue, #0A84FF));
         }
         :host(.phone) #donebtn.dirty::after { box-shadow:none; top:6px; right:2px; }
+        /* Handy: nur das Symbol, damit nichts überlappt. */
+        :host(.phone) .toprow > :where(.navpill) > button#savenow {
+          width:36px; min-width:36px; height:44px; padding:0; justify-content:center; background:none; box-shadow:none;
+        }
+        :host(.phone) .toprow > :where(.navpill) > button#savenow span { display:none; }
+        :host(.phone) .toprow > :where(.navpill) > button#savenow svg { display:block; width:21px; height:21px; }
         :host(.phone) .toprow .spacer { display:none; }
         :host(.phone) .toprow > button#more, :host(.phone) .toprow > :where(.navpill) > button#more {
           width:40px; min-width:40px; height:44px; padding:0; color:var(--ink);
@@ -10120,6 +10134,7 @@ class CasoraPanel extends HTMLElement {
         :host(.flow) .rail, :host(.flow) .stage, :host(.flow) .inspector,
         :host(.flow) #tilespane, :host(.flow) .status, :host(.flow) #save,
         :host(.flow) #donebtn, :host(.flow) #more, :host(.flow) #brand { display:none; }
+        :host(.flow) .toprow > :where(.navpill) > button#savenow { display:none; }
         :host(.flow) .main { padding-right:0; }
         :host(.flow) .top {
           margin-left:0; background:none; box-shadow:none;
@@ -10973,6 +10988,7 @@ class CasoraPanel extends HTMLElement {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H12"/></svg>
         </button>
         <button id="save" class="ghost" disabled><span class="s-long">Save changes</span><span class="s-short">Save</span></button>
+        <button id="savenow" class="ghost savenow" type="button" title="Save – the Studio stays open" aria-label="Save" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></svg><span>Save</span></button>
         <button id="donebtn" class="ghost" title="Save and open the dashboard">Done</button>
         <span class="navsep" aria-hidden="true"></span>
         <button id="more" class="ghost icon" title="More" aria-label="More" aria-haspopup="menu">
@@ -11386,6 +11402,8 @@ class CasoraPanel extends HTMLElement {
       this._undo();
     });
     this.$("donebtn").onclick = () => this._done();
+    // „Speichern“ neben „Fertig“ (nur bei Änderungen): sichert wie ⌘S, das Studio bleibt offen.
+    this.$("savenow").onclick = () => this._saveNow();
     await this._refreshDashboards();
   }
 
@@ -15006,6 +15024,15 @@ class CasoraPanel extends HTMLElement {
     return !!this._clean && this._print() !== this._clean;
   }
 
+  // Speichern ohne das Studio zu verlassen – derselbe Weg wie ⌘S und „Speichern“ in der Änderungsliste.
+  async _saveNow() {
+    if (!this._state || !this._isDirty() || this._saveBlocked || this._saving) return false;
+    const ok = await this._save();
+    // Das neue Studio meldet „Gespeichert · N Änderungen“ selbst (casora-panel-b-mehr.js).
+    if (ok && !this.classList.contains("bmode")) this._status("Saved", "ok");
+    return ok;
+  }
+
   async _done() {
     const btn = this.$("donebtn");
     if (btn && btn.disabled) return;
@@ -15088,6 +15115,11 @@ class CasoraPanel extends HTMLElement {
     const dirty = !!this._clean && this._print() !== this._clean;
     b.classList.toggle("dirty", dirty);
     b.disabled = !!this._saveBlocked || !!this._saving || !dirty;
+    const now = this.$("savenow");
+    if (now) {
+      now.hidden = !dirty || !!this._saveBlocked;
+      now.disabled = !!this._saving;
+    }
     const done = this.$("donebtn");
     if (done) {
       done.classList.toggle("dirty", dirty);

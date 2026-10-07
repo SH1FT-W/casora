@@ -192,7 +192,15 @@
     .btoast .btx { width:30px; height:30px; border-radius:50%; display:grid; place-items:center; opacity:.7; padding:0; }
     .btoast .btx svg { width:15px; height:15px; }
     .btoast .btact:focus-visible, .btoast .btx:focus-visible { outline:2px solid var(--accent, #B67A50); outline-offset:1px; }
-    .btoast .btact[hidden], .btoast .btx[hidden] { display:none; }
+    .btoast .btact[hidden], .btoast .btx[hidden], .btoast .btsave[hidden] { display:none; }
+    /* „Jetzt speichern“: speichert das Dashboard, das Studio bleibt offen. */
+    .btoast .btsave { padding:8px 12px; border-radius:11px; white-space:nowrap;
+      background:var(--casora-studio-done, var(--accent, #B67A50)); color:var(--casora-studio-on-done, #fff); }
+    .btoast .btsave:hover { filter:brightness(1.08); }
+    /* Zwei Knöpfe (z. B. Rückgängig + Jetzt speichern): Knöpfe in eine eigene Zeile, der Text behält die Breite. */
+    .btoast.two { flex-wrap:wrap; row-gap:4px; padding-bottom:8px; }
+    .btoast.two .btmsg { flex:1 1 calc(100% - 40px); }
+    .btoast.two .btact { margin-left:auto; }
     .btoast.err { background:var(--casora-studio-bad, #C9342C); color:#fff; }
     .btoast.err .btico { color:#fff; }
     :host(.bmode.phone) .btoast { bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
@@ -373,7 +381,8 @@
     };
 
     // ── Meldung unten ────────────────────────────────────────────────
-    // msg ist schon übersetzt. o: { action: {label, run}, kind: "ok"|"err", ms, big, sub, icon: false }
+    // msg ist schon übersetzt. o: { action: {label, run}, save: true (Knopf „Jetzt speichern“, solange
+    // etwas ungespeichert ist), kind: "ok"|"err", ms, big, sub, icon: false }
     P._bToast = function (msg, o) {
       o = o || {};
       this._bPlusCss();
@@ -386,6 +395,7 @@
         el.setAttribute("aria-live", "polite");
         el.innerHTML = '<span class="btico"></span><span class="btmsg" data-no-i18n></span>'
           + '<button type="button" class="btact" data-no-i18n hidden></button>'
+          + '<button type="button" class="btsave" data-no-i18n hidden></button>'
           + '<button type="button" class="btx" hidden>' + svg("x", 2.4) + "</button>";
         el.querySelector(".btx").setAttribute("aria-label", tr("Close"));
         el.querySelector(".btx").onclick = () => this._bToastHide();
@@ -406,6 +416,14 @@
         act.textContent = o.action.label;
         act.onclick = () => { this._bToastHide(); try { o.action.run(); } catch (e) { console.warn("Casora Studio:", e); } };
       }
+      const sv = el.querySelector(".btsave");
+      const canSave = !!o.save && !!(this._isDirty && this._isDirty()) && !this._saveBlocked;
+      sv.hidden = !canSave;
+      if (canSave) {
+        sv.textContent = tr("Save now");
+        sv.onclick = () => { this._bToastHide(); if (this._saveNow) this._saveNow(); };
+      }
+      el.classList.toggle("two", canSave && !!o.action);
       el.querySelector(".btx").hidden = o.kind !== "err";
       el.classList.toggle("err", o.kind === "err");
       el.classList.toggle("big", !!o.big);
@@ -421,7 +439,7 @@
       }
       el.classList.add("on");
       clearTimeout(this._bToastT);
-      if (o.kind !== "err") this._bToastLater(o.ms || (o.action ? 6000 : o.big ? 4200 : 2600));
+      if (o.kind !== "err") this._bToastLater(o.ms || (o.action || canSave ? 6000 : o.big ? 4200 : 2600));
     };
     P._bToastLater = function (ms) {
       clearTimeout(this._bToastT);
@@ -525,7 +543,7 @@
           const first = !this._bToldDone;
           this._bToldDone = true;
           this._bToast(tr(d.kind === "roomname" ? "Room renamed" : "Change applied"),
-            { action: undo, sub: first ? tr("Done saves it to your dashboard.") : "" });
+            { action: undo, save: true, sub: first ? tr("Not saved yet – “Save now” or Done saves it.") : "" });
         }, 900);
         return;
       }
@@ -543,7 +561,7 @@
         const smart = this._smartSortOn && this._smartSortOn();
         this._bToast(tr("Tile order changed"), { action: undo, sub: smart ? tr("Smart Sort keeps active tiles in front in the preview.") : "" });
       } else if (d.kind === "room+") this._bToast(tr("Room added") + (d.label ? ": " + d.label : ""), { action: undo });
-      else if (d.kind === "room-") this._bToast(tr("Room deleted") + (d.label ? ": " + d.label : ""), { action: undo, sub: tr("Done removes it for good.") });
+      else if (d.kind === "room-") this._bToast(tr("Room deleted") + (d.label ? ": " + d.label : ""), { action: undo, save: true, sub: tr("Gone for good once you save.") });
       else if (d.kind === "roomorder") this._bToast(tr("Room order changed"), { action: undo });
     };
 
@@ -1211,9 +1229,10 @@
       }
       // Ehrlich: die Szene steht in HA, die Farbe gehört zum Dashboard und kommt erst mit „Fertig“
       // dorthin (Nutzertest 4: „gespeichert“ – Farbe fehlte im Dashboard bis „Fertig“).
-      this._bToast(tr("Scene saved") + ": " + cfg.name, { action: undo,
-        sub: tr(color ? "Scene saved in Home Assistant. The color is saved with the dashboard (“Done”)."
-          : "Scene saved in Home Assistant. Pick a color now – it is saved with the dashboard (“Done”).") });
+      // Die Farbe gehört zum Dashboard: „Jetzt speichern“ im Hinweis sichert sie, ohne das Studio zu verlassen.
+      this._bToast(tr("Scene saved") + ": " + cfg.name, { action: undo, save: true, ms: 9000,
+        sub: tr(color ? "Scene saved in Home Assistant. The color is saved with the dashboard."
+          : "Scene saved in Home Assistant. Pick a color now – it is saved with the dashboard.") });
       if (!id || !this._state) return;
       // Eigene Reihenfolge oder ausgeblendete Szenen: die neue gehört sichtbar dazu.
       const rooms = this._state.compact.rooms;

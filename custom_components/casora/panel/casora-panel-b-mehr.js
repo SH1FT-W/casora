@@ -1339,7 +1339,7 @@
       this._renderForm();
       if (this._bToast) {
         this._bToast(tr(hide ? "Room hidden" : "Room shown again") + ": " + this._roomLabel(r), {
-          sub: hide ? tr("It stays here with all its settings. Done hides it on the dashboard.") : "",
+          sub: hide ? tr("It stays here with all its settings. Saving hides it on the dashboard.") : "", save: true,
           action: { label: tr("Undo"), run: () => this._mHideRoom(i, !hide) },
         });
       }
@@ -1424,7 +1424,7 @@
       paint([]);
       this._mUsers().then(paint);
       btn.onclick = () => this._mWhoSheet(get(), what, (ids) => { set(ids); this._bQuiet = true; try { this._markDirty(); } finally { this._bQuiet = false; } this._syncPreview && this._syncPreview(); this._mUsers().then(paint);
-        if (this._bToast) this._bToast(ids.length ? tr("Only for:") + " " + namesOf(ids, this._mUsersCache || []).join(", ") : tr("Everyone sees it again"), { sub: tr("Done saves it to your dashboard.") });
+        if (this._bToast) this._bToast(ids.length ? tr("Only for:") + " " + namesOf(ids, this._mUsersCache || []).join(", ") : tr("Everyone sees it again"), { save: true, sub: tr("Not saved yet – “Save now” or Done saves it.") });
       });
       host.appendChild(box);
       return box;
@@ -1562,10 +1562,10 @@
               // Nutzertest 5 (H-T5): nach ~6 s war „Ausprobieren“ weg – länger stehen lassen, dazu der Knopf unten.
               if (try_) { try_.hidden = !v || !(canTry() || canAsk()); try_.textContent = tr(canTry() ? "Try it in the popup" : "Try the question"); }
               if (this._bToast) this._bToast(tr(v ? "The dashboard asks before switching" : "Switches right away again"),
-                target ? { ms: 15000, sub: tr("The popup in the preview asks too. Done saves it."),
+                target ? { ms: 15000, save: true, sub: tr("The popup in the preview asks too. Not saved yet."),
                   action: { label: tr("Try it"), run: () => { this._cpDismissed = null; const t = this._cpTarget(); if (t) this._cpOpen(t); } } }
-                  : v && canAsk() ? { ms: 15000, sub: tr("Done saves it to your dashboard."), action: { label: tr("Try it"), run: askNow } }
-                  : { sub: tr("Done saves it to your dashboard.") });
+                  : v && canAsk() ? { ms: 15000, save: true, sub: tr("Not saved yet – “Save now” or Done saves it."), action: { label: tr("Try it"), run: askNow } }
+                  : { save: true, sub: tr("Not saved yet – “Save now” or Done saves it.") });
             }, tr("Ask before switching"));
             r.append(l, sw);
             const h = document.createElement("div");
