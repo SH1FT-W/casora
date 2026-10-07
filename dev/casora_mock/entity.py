@@ -30,6 +30,9 @@ class MockEntity(Entity):
     def __init__(self, mock, eid: str) -> None:
         self.mock = mock
         self.entity_id = eid
+        # Schlüssel im Speicher bleibt die Fixture-ID: benennt ein Test die Entität in HA um
+        # (neue entity_id), behält sie Zustand und Attribute statt ohne Zustand dazustehen.
+        self._key = eid
         self._attr_unique_id = eid
         attrs = mock.store[eid][1]
         self._attr_name = attrs.get("friendly_name") or eid.split(".", 1)[1]
@@ -51,7 +54,7 @@ class MockEntity(Entity):
     # Zustand/Attribute 1:1 aus dem Speicher
     @property
     def state(self) -> Any:  # noqa: D102 – überschreibt bewusst @final der Basisklassen
-        return self.mock.store[self.entity_id][0]
+        return self.mock.store[self._key][0]
 
     @property
     def state_attributes(self) -> dict | None:
@@ -82,17 +85,17 @@ class MockEntity(Entity):
 
     @property
     def a(self) -> dict:
-        return self.mock.store[self.entity_id][1]
+        return self.mock.store[self._key][1]
 
     @property
     def s(self) -> str:
-        return self.mock.store[self.entity_id][0]
+        return self.mock.store[self._key][0]
 
     def put(self, state: str | None = None, **attrs) -> None:
-        self.mock.set(self.entity_id, state, **attrs)
+        self.mock.set(self._key, state, **attrs)
 
     async def async_added_to_hass(self) -> None:
-        self.mock.objs[self.entity_id] = self
+        self.mock.objs[self._key] = self
 
 
 # ── Schaltbare Typen ─────────────────────────────────────────────────────
@@ -319,7 +322,7 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
     class MButton(MockEntity, ButtonEntity):
         async def async_press(self) -> None:
             self.put(dt_util.utcnow().isoformat())
-            self.mock.on_button(self.entity_id)
+            self.mock.on_button(self._key)
 
     class MSelect(MockEntity, SelectEntity):
         def __init__(self, mock, eid):

@@ -77,6 +77,14 @@ const hass = {
 assert.deepEqual(S.areaEntities(hass, 'wz'),
   ['light.decke', 'light.band', 'cover.jalousie', 'media_player.tv', 'switch.steckdose', 'lock.tuer']);
 assert.deepEqual(S.areaEntities(hass, null), []);
+// Nicht erreichbar oder ganz ohne Zustand (Nutzertest 7): nicht still weglassen – der Dialog zeigt
+// sie ausgegraut. Verborgene und Konfig-Entitäten bleiben auch hier weg.
+hass.entities['light.ohne_zustand'] = { area_id: 'wz' };
+assert.deepEqual(S.areaUnavailable(hass, 'wz'), ['light.ohne_zustand', 'light.weg']);
+assert.deepEqual(S.areaUnavailable(hass, 'ku'), []);
+assert.deepEqual(S.areaUnavailable(hass, null), []);
+assert.ok(!S.areaEntities(hass, 'wz').includes('light.ohne_zustand'));
+delete hass.entities['light.ohne_zustand'];
 // Schloss nicht von selbst angehakt.
 assert.equal(S.checkedByDefault('lock.tuer'), false);
 assert.equal(S.checkedByDefault('light.decke'), true);

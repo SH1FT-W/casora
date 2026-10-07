@@ -127,6 +127,20 @@
     }).sort((x, y) => ORDER.indexOf(x.split(".")[0]) - ORDER.indexOf(y.split(".")[0]) || name(x).localeCompare(name(y)));
   }
 
+  // Geräte des Bereichs ohne festhaltbaren Zustand (nicht erreichbar, ohne Zustand): Der Dialog
+  // zeigt sie ausgegraut, statt sie still wegzulassen (Nutzertest 7: Szene hatte 1 von 2 Lichtern).
+  function areaUnavailable(hass, areaId) {
+    const H = hass || {};
+    const E = H.entities || {}, D = H.devices || {}, S = H.states || {};
+    return Object.keys(E).filter((id) => {
+      const e = E[id] || {};
+      if (!DOMAINS.has(id.split(".")[0]) || sceneState(S[id])) return false;
+      if (e.hidden || e.hidden_by || e.disabled_by || e.entity_category) return false;
+      const aid = e.area_id || (e.device_id ? (D[e.device_id] || {}).area_id : null);
+      return !!areaId && aid === areaId;
+    }).sort((x, y) => ORDER.indexOf(x.split(".")[0]) - ORDER.indexOf(y.split(".")[0]) || x.localeCompare(y));
+  }
+
   // Schlösser und Ventile nicht von selbst in eine Szene: eine Abend-Szene soll keine Tür öffnen.
   const checkedByDefault = (id) => !/^(lock|valve)\./.test(id);
   // Vorauswahl: nur die Lichter des Raums (Nutzertest: 14 Geräte mit Heizung und Jalousien
@@ -146,7 +160,7 @@
     return cfg;
   }
 
-  W.casoraSceneFromState = { sceneState, describe, areaEntities, buildScene, checkedByDefault, defaultChecked };
+  W.casoraSceneFromState = { sceneState, describe, areaEntities, areaUnavailable, buildScene, checkedByDefault, defaultChecked };
   if (typeof customElements === "undefined") return;
 
   const ICON = {
@@ -319,6 +333,8 @@
     .bsfs .bsslide.ct input { accent-color:#E9B26A; }
     @media (max-width: 520px) { .bsfs .bsctl { grid-template-columns:1fr; padding-left:44px; } }
     .bsfs .bsrow:hover { background:var(--chip, rgba(127,127,127,.08)); }
+    .bsfs .bsrow.bsgone { cursor:default; opacity:.6; }
+    .bsfs .bsrow.bsgone:hover { background:none; }
     .bsfs .bsrow input { width:20px; height:20px; flex:none; margin:0; accent-color:var(--casora-studio-done, var(--accent, #B67A50)); }
     .bsfs .bsrow ha-icon { --mdc-icon-size:22px; flex:none; color:var(--ink-3, rgba(127,127,127,.9)); }
     .bsfs .bsrow.lit ha-icon { color:#F5A623; }
@@ -1125,7 +1141,8 @@
         const ids = SF.areaEntities(H, sel.value);
         checked = new Set(SF.defaultChecked(ids));
         list.innerHTML = "";
-        if (!ids.length) {
+        const gone = SF.areaUnavailable(H, sel.value);
+        if (!ids.length && !gone.length) {
           const e = document.createElement("div");
           e.className = "bsnone";
           e.textContent = tr("No lights, blinds or other devices for scenes in this room.");
@@ -1172,6 +1189,30 @@
           }
           list.appendChild(wrapRow);
         });
+        gone.forEach((id) => {
+          const d = id.split(".")[0];
+          const row = document.createElement("div");
+          row.className = "bsrow bsgone";
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.disabled = true;
+          const ic = document.createElement("ha-icon");
+          ic.setAttribute("icon", (DOMAIN_ICON[d] || ["mdi:circle"])[1] || "mdi:circle");
+          const nm = document.createElement("span");
+          nm.className = "bsname";
+          nm.setAttribute("data-no-i18n", "");
+          const b = document.createElement("b");
+          const reg = (H.entities || {})[id];
+          b.textContent = (reg && reg.name) || ((S[id] || {}).attributes || {}).friendly_name || id;
+          const sub = document.createElement("span");
+          sub.textContent = tr("Not reachable – can't be part of the scene");
+          nm.appendChild(b); nm.appendChild(sub);
+          row.appendChild(cb); row.appendChild(ic); row.appendChild(nm);
+          const w = document.createElement("div");
+          w.className = "bsrowwrap";
+          w.appendChild(row);
+          list.appendChild(w);
+        });
         paintCount();
       };
       sel.onchange = paintList;
@@ -1181,7 +1222,7 @@
         const all = SF.areaEntities(H, sel.value);
         const none = checked.size === all.length;
         checked = new Set(none ? [] : all);
-        list.querySelectorAll(".bsrow input").forEach((cb, k) => { cb.checked = checked.has(all[k]); });
+        list.querySelectorAll(".bsrow:not(.bsgone) input").forEach((cb, k) => { cb.checked = checked.has(all[k]); });
         paintCount();
       };
       $(".bsno").onclick = () => this._bSceneClose();
