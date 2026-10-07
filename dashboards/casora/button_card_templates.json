@@ -1646,7 +1646,7 @@
    ]
   },
   "tap_action": {
-   "action": "[[[\n  /* Gruppe: Casora-Licht-Popup (casora_popup aus casora_popup_light) – vorher fehlte es, Tippen tat nichts. */\n  if (!window.casoraPopupAction || window.casoraPopupAction() !== 'fire-dom-event') return 'more-info';\n  const members = entity?.entity_id ? states[entity?.entity_id]?.attributes?.entity_id : null;\n  return Array.isArray(members) && members.length > 0 ? 'fire-dom-event' : 'more-info';\n]]]\n",
+   "action": "[[[\n  /* Casora-Licht-Popup (casora_popup aus casora_popup_light) für Gruppe und einzelnes Licht –\n     der Einzel-Chip öffnete bis 07.10.2026 HAs eigenen Dialog. Andere Geräte: HA-Dialog. */\n  if (!window.casoraPopupAction || window.casoraPopupAction() !== 'fire-dom-event') return 'more-info';\n  const id = entity?.entity_id || '';\n  const members = id ? states[id]?.attributes?.entity_id : null;\n  return (Array.isArray(members) && members.length > 0) || (id.startsWith('light.') && !!states[id]) ? 'fire-dom-event' : 'more-info';\n]]]\n",
    "entity": "[[[ return entity?.entity_id ]]]",
    "haptic": "light"
   },
