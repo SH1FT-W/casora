@@ -10518,12 +10518,22 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   function boot() {
     var tick = function () { if (!document.hidden) collect(); };
     var t0 = Date.now();
+    // Kommen die lokalen Module erst nach dem ersten Sammeln (langsames Laden, > 15 s), gleich
+    // neu sammeln statt bis zum nächsten Takt (60 s) zu warten: ohne 00-finden/01-basis stand
+    // eine Tür mit Kontakt + Kippsensor doppelt in der Glocke („… ist offen“ und „… Kippsensor
+    // ist offen“ statt einmal „… ist gekippt“). Läuft gerade ein Sammeln, danach.
+    window.addEventListener('casora-local-loaded', function () {
+      if (!hassOf()) return;
+      Promise.resolve(_busy).then(function () { return collect(); }).catch(function () {});
+    });
     var wait = setInterval(function () {
       if (!hassOf()) return;
       // Erst sammeln, wenn die lokalen Erweiterungen da sind (höchstens 15 s warten): sonst
       // stand z. B. „Saugroboter hat fertig gereinigt“ nach der Grundregel kurz in der Glocke
-      // und verschwand beim nächsten Sammeln mit Erweiterung wieder (1.0.5).
-      if (localPending() && Date.now() - t0 < 15000) return;
+      // und verschwand beim nächsten Sammeln mit Erweiterung wieder (1.0.5). Auch warten, wenn
+      // der Lader (casora-local.js) noch gar nicht gestartet ist – HA lädt die Ressourcen ohne
+      // feste Reihenfolge, dann fehlte sein Merker und die Glocke sammelte sofort (P2-01).
+      if (!window._casoraLocalLoaded && Date.now() - t0 < 15000) return;
       clearInterval(wait);
       tick();
       setInterval(tick, POLL_MS);
