@@ -518,8 +518,10 @@
     var out = '<style>'
       + '.fb-st{display:flex;align-items:center;justify-content:space-between;gap:12px;font-family:' + T.font + ';' + plate + 'padding:12px;}'
       + '.fb-st-b{width:52px;height:52px;flex:none;border-radius:999px;display:grid;place-items:center;cursor:pointer;line-height:0;color:' + T.ink + ';'
-      +   'background:var(--casora-popup-seg-fill, rgba(255,255,255,0.16));transition:background-color .16s ease;user-select:none;-webkit-user-select:none;}'
+      +   'background:var(--casora-popup-seg-fill, rgba(255,255,255,0.16));transition:background-color .16s ease,transform .12s ease;user-select:none;-webkit-user-select:none;}'
       + '.fb-st-b.dis{opacity:.3;cursor:default;}.fb-st-b svg{pointer-events:none;}'
+      /* Antippen sichtbar wie beim Licht-Popup (Helligkeit ±). */
+      + '.fb-st-b:not(.dis):active{transform:scale(.92);}'
       + '@media (hover:hover){.fb-st-b:not(.dis):hover{background:var(--casora-popup-seg-fill-hover, rgba(255,255,255,0.24));}}'
       + '.fb-st-v{text-align:center;pointer-events:none;}'
       + '.fb-st-v .l{font-size:13px;color:' + T.ink2 + ';}'
