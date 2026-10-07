@@ -1296,6 +1296,29 @@ function syncRoomChips(pair) {
   return filled;
 }
 
+// Eine Handy-Kachel wie ihre Raum-Kachel: Einstellungen, Name, „Wer sieht das?“. Bedingte Karten
+// auch mit ihrer Bedingung und der Kachel darin – sonst blieb am Handy die alte Bedingung stehen
+// (Alarm-Kachel am Desktop bei „Abwesend“ aus, am Handy sichtbar; gemeldet 06.10.2026).
+function syncTwinTile(twin, mt, depth) {
+  const keep = {};
+  MOBILE_ONLY_TILE_KEYS.forEach((k) => {
+    if (mt.variables && mt.variables[k] !== undefined) keep[k] = clone(mt.variables[k]);
+  });
+  const next = { ...clone(twin.variables || {}), ...keep };
+  if (Object.keys(next).length) mt.variables = next; else delete mt.variables;
+  if (twin.name !== undefined) mt.name = twin.name; else delete mt.name;
+  // „Wer sieht das?“ (visibility mit Bedingung „user“) gilt auch am Handy.
+  if (twin.visibility !== undefined) mt.visibility = clone(twin.visibility); else delete mt.visibility;
+  if (twin.type !== "conditional" || mt.type !== "conditional" || (depth || 0) > 3) return;
+  if (twin.conditions !== undefined) mt.conditions = clone(twin.conditions); else delete mt.conditions;
+  const a = twin.card, b = mt.card;
+  // Nur dieselbe Kachel darin (Art + Entität); Sammelkarten (Swipe, auto-entities) bleiben, wie sie sind.
+  if (!a || !b || typeof a !== "object" || typeof b !== "object") return;
+  if (a.type === "conditional" ? b.type === "conditional" : (a.template !== undefined && tileTwinKey(a) === tileTwinKey(b))) {
+    syncTwinTile(a, b, (depth || 0) + 1);
+  }
+}
+
 function syncPairTiles(pair) {
   const rooms = (pair.desktop.compact || {}).rooms || [];
   const sections = (pair.mobile.compact || {}).rooms || [];
@@ -1339,15 +1362,7 @@ function syncPairTiles(pair) {
         }
         return;
       }
-      const keep = {};
-      MOBILE_ONLY_TILE_KEYS.forEach((k) => {
-        if (mt.variables && mt.variables[k] !== undefined) keep[k] = clone(mt.variables[k]);
-      });
-      const next = { ...clone(twin.variables || {}), ...keep };
-      if (Object.keys(next).length) mt.variables = next; else delete mt.variables;
-      if (twin.name !== undefined) mt.name = twin.name; else delete mt.name;
-      // „Wer sieht das?“ (visibility mit Bedingung „user“) gilt auch am Handy.
-      if (twin.visibility !== undefined) mt.visibility = clone(twin.visibility); else delete mt.visibility;
+      syncTwinTile(twin, mt);
       synced++;
     });
 
@@ -25612,7 +25627,7 @@ window.__casoraPanelInternals = {
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
-  linkPair, syncPairRooms, syncPairTiles, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, expandMobileConfig, extractMobileConfig,
+  linkPair, syncPairRooms, syncPairTiles, syncTwinTile, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, expandMobileConfig, extractMobileConfig,
   deriveEnergyRooms, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
   CASORA_ACCENTS, accentsShown, accentLabel, swatchCss,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)
