@@ -7067,6 +7067,8 @@ window.casoraMenuGlass = {
       + '.hui-cf{font-weight:600;}'
       /* B-15: am Handy jede Unterzeile einzeilig mit Auslassung – gleich hohe Zeilen. */
       + '@media (max-width: 600px){.hui-srow .hui-sub{display:block!important;-webkit-line-clamp:1!important;white-space:nowrap!important;text-overflow:ellipsis!important;overflow:hidden!important;}.hui-srow .hui-sub2::before{content:none!important;}}'
+      /* Hinweis-Zeilen (r.subWrap, z. B. „Noch keine Tageswerte“): ganzer Satz statt „…“ (07.10.2026). */
+      + '.hui-srow .hui-sub.hui-wrap{display:block!important;white-space:normal!important;overflow:visible!important;-webkit-line-clamp:unset!important;text-overflow:clip!important;}'
       + '</style>';
     out += '<div class="hui-plate" style="display:flex;flex-direction:column;gap:8px;">';
     rows.forEach(function (r) {
@@ -7125,7 +7127,7 @@ window.casoraMenuGlass = {
               + ' data-casora-suffix="' + esc(r.subLive.suffix || '%') + '"';
           }
           var one = subs.length === 1;
-          out += '<div class="hui-sub' + (si ? ' hui-sub2' : '') + '"' + sLive
+          out += '<div class="hui-sub' + (si ? ' hui-sub2' : '') + (r.subWrap ? ' hui-wrap' : '') + '"' + sLive
             + ' style="font-size:12.5px;font-weight:500;line-height:1.3;'
             // subTone: nur die erste Unterzeile einfärben (z. B. „Lädt“ grün, der Raum bleibt gedämpft).
             + 'color:' + ((si === 0 && r.subTone && (tone(r.subTone) || r.subTone)) || S.sub) + ';overflow:hidden;'
@@ -7327,7 +7329,7 @@ window.casoraMenuGlass = {
           // Eine einzelne Unterzeile darf auf zwei Zeilen umbrechen statt mitten
           // im Satz abzubrechen („Fenster weit auf, nach Außentemp…“).
           var one = subs.length === 1;
-          out += '<div class="hui-sub' + (si ? ' hui-sub2' : '') + '"' + sLive
+          out += '<div class="hui-sub' + (si ? ' hui-sub2' : '') + (r.subWrap ? ' hui-wrap' : '') + '"' + sLive
             + ' style="font-size:var(--casora-popup-sub-size, 13px);'
             + 'color:var(--casora-popup-sub-color, ' + T.ink3 + ');overflow:hidden;'
             + (one

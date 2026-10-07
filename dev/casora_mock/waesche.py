@@ -58,7 +58,9 @@ def extra(now: datetime) -> dict:
            {"icon": "mdi:counter", "state_class": "total"}, unit="cycles"),
         _e("sensor.waschmaschine_a_energie_gesamt", "86.4", "energy_total", a, "Waschmaschine A Energie gesamt",
            {"state_class": "total_increasing"}, dc="energy", unit="kWh"),
-        _e("sensor.waschmaschine_a_aktuelle_leistung", "1840", "current_power", a, "Waschmaschine A Aktuelle Leistung",
+        # Spülen zieht ~160 W (Heizen wären ~2 kW) – das Haus meldet nur ~440 W, sonst stand im
+        # Energie-Popup ein Verbraucher über dem ganzen Haus (Nutzertest 07.10.2026).
+        _e("sensor.waschmaschine_a_aktuelle_leistung", "160", "current_power", a, "Waschmaschine A Aktuelle Leistung",
            {}, dc="power", unit="W"),
         _e("sensor.waschmaschine_a_empfohlene_einstellungen", "2", "suggestions", a,
            "Waschmaschine A Empfohlene Einstellungen", {"icon": "mdi:lightbulb-on-outline"}, category="diagnostic"),

@@ -428,7 +428,7 @@
     // sondern eine ruhige Zeile mit dem nächsten Schritt – wie „Noch kein Gerät zugeordnet“.
     if (!f.use && (!f.top || f.top === autoTop) && !f.flow && !f.more) {
       f.use = UI.group([{ icon: 'mdi:link-variant-off', iconTone: 'var(--casora-popup-ui-dim, rgba(255,255,255,0.18))',
-        label: 'Noch keine Tageswerte', sub: (!window.casoraIsAdmin || window.casoraIsAdmin()) ? 'Im Casora Studio Zähler und Verbraucher zuordnen' : null }], 'Verbrauch');
+        label: 'Noch keine Tageswerte', sub: (!window.casoraIsAdmin || window.casoraIsAdmin()) ? 'Welche Geräte hier zählen, legst du im Studio fest.' : null, subWrap: true }], 'Verbrauch');
     }
     return layout({ fields: f, top: ['hero', 'metric'], left: solar ? ['flow'] : ['top'],
       right: solar ? ['use', 'top', 'more'] : ['use', 'more'], moveLeft: ['top'],
