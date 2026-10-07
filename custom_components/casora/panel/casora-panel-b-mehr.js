@@ -1393,7 +1393,9 @@
             const sw = this._boolSwitch(V.confirm_toggle === true, false, (v) => {
               if (v) { inner.variables = inner.variables || {}; inner.variables.confirm_toggle = true; }
               else if (inner.variables) { delete inner.variables.confirm_toggle; if (!Object.keys(inner.variables).length) delete inner.variables; }
-              this._markDirty();
+              // Eigene Meldung unten – nicht vom allgemeinen „Übernommen“ überdecken lassen.
+              this._bQuiet = true;
+              try { this._markDirty(); } finally { this._bQuiet = false; }
               // Ausprobieren geht jetzt auch hier: das Popup unter der Vorschau fragt ebenfalls (Nutzertest 3).
               const tryIt = v && !isPhone(this) && typeof this._cpOpen === "function";
               if (this._bToast) this._bToast(tr(v ? "The dashboard asks before switching" : "Switches right away again"),
