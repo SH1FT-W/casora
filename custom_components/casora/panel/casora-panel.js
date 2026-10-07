@@ -21453,6 +21453,13 @@ class CasoraPanel extends HTMLElement {
               || sec.windowsTilted || sec.gates),
             problem: !!(sec.lockDead || sec.camDead) }, { summary: secMode, alarmState: al });
         } catch (e) { secSum = null; }
+        // Die Wörter kommen deutsch aus 00-finden.js (Dashboard-Quelltext). Das Dashboard übersetzt sie
+        // über casora-i18n.js; die Vorschau tut es hier selbst (07.10.2026: „Alles sicher“ blieb in der
+        // englischen Vorschau deutsch). Ohne geladene Übersetzung in fremder Sprache: eigener Text unten.
+        const deUi = /^de\b/i.test(String(((this._hass || {}).locale || {}).language || (this._hass || {}).language || ""));
+        if (secSum && typeof window.casoraTr === "function") {
+          secSum = { text: window.casoraTr(secSum.text), html: secSum.html ? window.casoraTr(secSum.html) : null };
+        } else if (secSum && !deUi) secSum = null;
       }
       const secText = sec.triggered ? "Triggered" : !parts.length ? "Secured"
         : parts.length === 1 ? parts[0] : parts.map(trLabel).join(" · ");
@@ -22685,7 +22692,7 @@ class CasoraPanel extends HTMLElement {
       if (groups) {
         const de = /^de\b/i.test(String(((this._hass || {}).locale || {}).language
           || (this._hass || {}).language || ""));
-        const EN = { lights: "Lights", climate: "Climate", security: "Security",
+        const EN = { lights: "Lights", climate: "Climate", covers: "Blinds", security: "Security",
           media: "Speakers & TVs", water: "Water", other: "Other" };
         groups.forEach(({ key, cards }, gi) => {
           const head = document.createElement("div");

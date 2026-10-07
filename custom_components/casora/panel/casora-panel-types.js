@@ -404,7 +404,10 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       // Vorlage ohne ihr Modul gibt oft nur den Rohzustand zurück („off“) → übersetzen.
       if (String(v).trim() === String(ent.state)) return fallback();
       // DOMParser statt div: ein nicht eingehängtes div lädt <img> und führt onerror aus.
-      const d = new DOMParser().parseFromString(String(v), "text/html");
+      // Vorlagentexte sind deutsch; das Dashboard übersetzt sie in button-card (casora-i18n.js),
+      // die Vorschau hier – sonst stand in englischer Oberfläche „3 Räume“ oder „Bereit“ (07.10.2026).
+      const tv = typeof window.casoraTr === "function" ? window.casoraTr(String(v)) : String(v);
+      const d = new DOMParser().parseFromString(tv, "text/html");
       return ((d.body && d.body.textContent) || "").trim() || null;
     } catch (e) {
       return null;
@@ -459,6 +462,9 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
 (() => {
   // Derselbe Finder wie im Dashboard (scripts/local/00-finden.js) – ohne DOM, nur Registry.
   if (!window.casoraDevice) import("/casora_scripts/local/00-finden.js").catch(() => {});
+  // Dashboard-Übersetzung (Deutsch → Benutzersprache) für Texte, die die Vorschau aus den
+  // Dashboard-Skripten übernimmt (z. B. Sicherheits-Unterzeile „Alles sicher“, 07.10.2026).
+  if (!window.casoraTr) import("/casora_scripts/casora-i18n.js").catch(() => {});
 
   const lang = (hass) => (((hass && ((hass.locale && hass.locale.language) || hass.language)) || "en").split("-")[0]);
   const T = {
