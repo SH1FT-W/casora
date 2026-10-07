@@ -1573,7 +1573,13 @@
       });
       if (!ok) return;
       let ids = users.map((u) => u.id).filter((id) => pick.has(id));
-      // Alle an (oder niemand – das hieße „keiner“, und das kann HA hier nicht) = alle sehen es.
+      // Niemand an: nichts ändern – gespeichert hieße das sonst „alle sehen es“ (Review 1.1.1).
+      // Für alle weg geht über „Kachel aus“ bzw. „Raum ausblenden“.
+      if (users.length && !ids.length) {
+        if (this._bToast) this._bToast(tr("Nobody switched on – nothing changed"), { sub: tr("To hide it from everyone, switch it off.") });
+        return;
+      }
+      // Alle an = alle sehen es (ohne Einschränkung, auch für später angelegte Benutzer).
       if (ids.length === users.length) ids = [];
       if (J(ids) !== J(cur)) done(ids);
     };
