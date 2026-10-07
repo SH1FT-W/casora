@@ -16,11 +16,11 @@ const act = body(T.casora_badge_light.tap_action.action);
 const run = (id, states, popup = 'fire-dom-event') =>
   new Function('window', 'entity', 'states', act)({ casoraPopupAction: () => popup }, id ? { entity_id: id } : null, states);
 const S = {
-  'light.flur': { state: 'on', attributes: { entity_id: ['light.a', 'light.b'] } },
+  'light.testlampe': { state: 'on', attributes: { entity_id: ['light.a', 'light.b'] } },
   'light.a': { state: 'on', attributes: {} },
   'switch.lampe': { state: 'on', attributes: {} },
 };
-assert.equal(run('light.flur', S), 'fire-dom-event', 'Gruppe: Casora-Popup');
+assert.equal(run('light.testlampe', S), 'fire-dom-event', 'Gruppe: Casora-Popup');
 assert.equal(run('light.a', S), 'fire-dom-event', 'einzelnes Licht: Casora-Popup');
 assert.equal(run('switch.lampe', S), 'more-info', 'kein Licht: HA-Dialog');
 assert.equal(run('light.fehlt', S), 'more-info', 'Licht fehlt: HA-Dialog');
