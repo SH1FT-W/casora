@@ -10729,6 +10729,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     // Sammel-Badge auf der Raumseite am Handy: Unter-Reihe auf/zu (nur dieses Gerät).
     if (d.casora_phone_row) {
       ev.stopPropagation();
+      // Öffnet derselbe Tipp ein Popup (Beleuchtung erbt es von casora_popup_light), bleibt die
+      // Unter-Reihe zu: sie klappte sonst unsichtbar hinter dem Popup auf, und nach dem Schließen
+      // war der ganze Inhalt ~110 px nach unten gerutscht (07.10.2026).
+      if (d.casora_popup && window.casoraPopup && window.casoraPopup.enabled) return;
       setRow(row === d.casora_phone_row ? null : d.casora_phone_row);
       return;
     }
