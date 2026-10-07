@@ -9166,6 +9166,34 @@ class CasoraPanel extends HTMLElement {
           background:var(--sc, var(--casora-color-teal, #00C3D0));
         }
         .card.map.soft .pbadge.dim .pring { opacity:.55; }
+        /* Vorschaumaß (1.1.0): Weich-Größen = echte Dashboard-Maße mal --sim-k (gesetzt in applySize).
+           Gemessen im Theme „Casora“: Desktop (feste Pixel, Titel clamp über die Bildschirmbreite)
+           und iPad 1024 px. Vorher waren es die Werte der dunklen Legacy-Looks: Kacheln zu klein,
+           Badges zu hoch – am Desktop passten 6 statt 4–5 Kacheln in die Reihe. */
+        .card.map.soft.size-desktop {
+          --tw:calc(290px * var(--sim-k, .6)); --th:calc(200px * var(--sim-k, .6)); --tg:calc(12px * var(--sim-k, .6));
+          --tc:calc(44px * var(--sim-k, .6)); --tt:calc(46px * var(--sim-k, .6));
+          --tn:calc(18px * var(--sim-k, .6)); --ts:calc(14.5px * var(--sim-k, .6));
+          --bmh:calc(43px * var(--sim-k, .6)); --bgl:calc(17.2px * var(--sim-k, .6));
+          --bl:calc(14px * var(--sim-k, .6)); --bv:calc(12.3px * var(--sim-k, .6));
+          --bpt:calc(5px * var(--sim-k, .6)); --bpb:calc(5px * var(--sim-k, .6));
+          --bpr:calc(16px * var(--sim-k, .6)); --bpl:calc(6px * var(--sim-k, .6));
+          --bcg:calc(8px * var(--sim-k, .6)); --bgap:calc(8px * var(--sim-k, .6));
+          --nm:calc(clamp(75px, var(--sim-vw, 16px) * 4.6 + 8px, 105px) * var(--sim-k, .6));
+          --hfill:26.5%; /* Titel bei 36 % der Höhe wie im Dashboard */
+        }
+        .card.map.soft.size-tablet {
+          --tw:calc(225.3px * var(--sim-k, .6836)); --th:calc(160px * var(--sim-k, .6836)); --tg:calc(12px * var(--sim-k, .6836));
+          --tc:calc(38px * var(--sim-k, .6836)); --tt:calc(36.8px * var(--sim-k, .6836));
+          --tn:calc(15px * var(--sim-k, .6836)); --ts:calc(14px * var(--sim-k, .6836));
+          --bmh:calc(42px * var(--sim-k, .6836)); --bgl:calc(14.9px * var(--sim-k, .6836));
+          --bl:calc(13px * var(--sim-k, .6836)); --bv:calc(13px * var(--sim-k, .6836));
+          --bpt:calc(5px * var(--sim-k, .6836)); --bpb:calc(5px * var(--sim-k, .6836));
+          --bpr:calc(14px * var(--sim-k, .6836)); --bpl:calc(5px * var(--sim-k, .6836));
+          --bcg:calc(8px * var(--sim-k, .6836)); --bgap:calc(10px * var(--sim-k, .6836));
+          --nm:calc(68px * var(--sim-k, .6836));
+        }
+        .card.map.soft.size-tablet:not(.portrait) { --hfill:32%; } /* Titel bei 42 % der Höhe */
         .card.map.soft .pring .pglyph { background-color:#fff; width:var(--bgl); flex-basis:var(--bgl);
           -webkit-mask-size:auto calc(var(--bgl) * 0.92); mask-size:auto calc(var(--bgl) * 0.92); }
         .card.map.soft .pbadge,
@@ -23808,6 +23836,15 @@ class CasoraPanel extends HTMLElement {
         && this.clientWidth > 0 && window.innerHeight > 0) {
         const r = Math.min(1.78, Math.max(1.3, this.clientWidth / window.innerHeight));
         natH = Math.round(natW / r);
+      }
+      // Vorschaumaß: Die Nachbildung steht für einen Bildschirm von simW px Breite (Desktop = die
+      // Fläche, auf der das Dashboard läuft – so breit wie das Studio; Tablet = iPad 1024 bzw. 768).
+      // --sim-k = Vorschau-px je Bildschirm-px; die Weich-Größen (.card.map.soft) rechnen damit
+      // aus den echten Dashboard-Maßen – die Vorschau ist dann das Dashboard, nur verkleinert.
+      if (this._miniSize !== "phone") {
+        const simW = this._miniSize === "desktop" ? Math.max(1025, this.clientWidth || 1440) : (upright ? 768 : 1024);
+        card.style.setProperty("--sim-k", (natW / simW).toFixed(4));
+        card.style.setProperty("--sim-vw", (simW / 100).toFixed(2) + "px");
       }
       const availW = slot.offsetWidth - MAP_SHADOW_ROOM;
       let budget = 0;
