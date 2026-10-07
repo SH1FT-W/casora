@@ -154,6 +154,11 @@ window.CASORA_TILE_TYPES = [
   { id: "casora_camera", label: "Camera", template: "casora_camera", domains: ["camera"], icon: "camera", fields: [
       ICON,
       TITLE_NAME,
+      // „Status von: …“ (1.1.1): Bild über einen Proxy meldet „bereit“, obwohl die Kamera weg ist.
+      // casora-core.js casoraCamOffline – Kachel, Sicherheits- und Kamera-Badge, Popup.
+      { key: "status_entity", label: "Status from", domains: ["camera", "binary_sensor"],
+        classes: { binary_sensor: ["connectivity"] }, advanced: true, placeholder: "This camera",
+        hint: "Optional. Another camera or a connection sensor that tells whether the camera is reachable, e.g. when the picture comes through a proxy (go2rtc, Frigate, Scrypted) that stays ready although the camera is gone. Picture and popup stay with this camera." },
       { key: "alert_window_minutes", label: "Recent activity (minutes)", type: "number", advanced: true, group: "Popup",
         placeholder: "5", hint: "A dot marks a camera with activity in this window." },
       { key: "show_stream_variants", label: "Show stream variants", type: "bool", advanced: true, group: "Popup",

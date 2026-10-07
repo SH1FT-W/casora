@@ -535,6 +535,75 @@
 })();
 // casora-room-name:end
 
+// casora-cam-status:start
+// Kamera „Status von: …“ (07.10.2026, 1.1.1): Freiwillig je Kamera-Kachel (variables.status_entity)
+// eine zweite Entität, die sagt, ob die Kamera erreichbar ist – eine andere camera.* oder ein
+// Verbindungssensor (binary_sensor, connectivity). Nötig, wenn das Bild über einen Proxy kommt
+// (go2rtc, Frigate, Scrypted, ONVIF-Proxy), der „bereit“ meldet, obwohl die Kamera dahinter weg ist.
+// Bild und Popup bleiben bei der Kachel-Kamera. Offline gilt sie, wenn die Status-Entität
+// unavailable/unknown ist, ein Verbindungssensor auch bei „off“. Ohne Einstellung: false – also
+// genau das bisherige Verhalten, nichts wird geraten.
+// Woher die Zuordnung kommt: die Kachel selbst (vars.status_entity), in der Studio-Vorschau
+// vars.casora_camera_status, sonst die Kamera-Kacheln des offenen Dashboards (alle Ansichten, Desktop und Handy) – so kennen Sicherheits- und Kamera-Badge
+// sie auch dort, wo die Kachel gerade nicht gezeichnet ist.
+// states: in Vorlagen das states von button-card (dann zeichnet die Karte bei Änderungen neu).
+(function () {
+  if (window.casoraCamOffline) return;
+  var ok = function (x) { return typeof x === 'string' && x.indexOf('.') > 0; };
+  var panel = null, cfgSeen = null, fromCfg = {};
+  var findPanel = function () {
+    if (panel && panel.isConnected) return panel;
+    panel = null;
+    try {
+      var main = document.querySelector('home-assistant').shadowRoot.querySelector('home-assistant-main');
+      var res = main && main.shadowRoot && main.shadowRoot.querySelector('partial-panel-resolver');
+      panel = (res && (res.querySelector('ha-panel-lovelace') || (res.shadowRoot && res.shadowRoot.querySelector('ha-panel-lovelace')))) || null;
+    } catch (e) { panel = null; }
+    return panel;
+  };
+  var mapFromConfig = function () {
+    var p = findPanel();
+    var cfg = p && p.lovelace && p.lovelace.config;
+    if (!cfg) return fromCfg;
+    if (cfg === cfgSeen) return fromCfg;
+    cfgSeen = cfg;
+    var out = {}, n = 0;
+    (function walk(o, d) {
+      if (!o || typeof o !== 'object' || d > 30 || n > 50000) return;
+      n++;
+      if (Array.isArray(o)) { for (var i = 0; i < o.length; i++) walk(o[i], d + 1); return; }
+      var v = o.variables;
+      if (v && typeof v === 'object' && ok(v.status_entity) && ok(o.entity) && o.entity.indexOf('camera.') === 0
+        && o.entity !== v.status_entity && !out[o.entity]) out[o.entity] = v.status_entity;
+      for (var k in o) if (k !== 'button_card_templates' && Object.prototype.hasOwnProperty.call(o, k)) walk(o[k], d + 1);
+    })(cfg.views, 0);
+    fromCfg = out;
+    return fromCfg;
+  };
+  window.casoraCamStatusOf = function (id, vars) {
+    if (!ok(id)) return null;
+    var v = vars || {};
+    if (ok(v.status_entity) && v.status_entity !== id && id.indexOf('camera.') === 0) return v.status_entity;
+    // Studio-Vorschau: Zuordnung aus dem ungespeicherten Stand (casora-panel.js camStatusMap).
+    var m = v.casora_camera_status && typeof v.casora_camera_status === 'object' ? v.casora_camera_status : null;
+    var s = m ? m[id] : mapFromConfig()[id];
+    return ok(s) && s !== id ? s : null;
+  };
+  window.casoraCamOffline = function (id, states, vars) {
+    var sid = window.casoraCamStatusOf(id, vars);
+    if (!sid) return false;
+    var S = states;
+    if (!S) { try { S = document.querySelector('home-assistant').hass.states; } catch (e) { S = null; } }
+    var e = S && S[sid];
+    // Status-Entität gibt es (noch) nicht: nicht raten, die Kamera gilt nicht als offline.
+    if (!e) return false;
+    var s = String(e.state == null ? '' : e.state).toLowerCase();
+    if (!s || s === 'unavailable' || s === 'unknown') return true;
+    return sid.indexOf('binary_sensor.') === 0 && s === 'off';
+  };
+})();
+// casora-cam-status:end
+
 // casora-webkit-blur:start
 // Unschärfe auf älteren iPhones (07.10.2026): HA 2026.10 hat bei ha-card, ha-dialog und dem
 // Bottom-Sheet die Safari-Schreibweise -webkit-backdrop-filter gestrichen. Safari bis iOS 17

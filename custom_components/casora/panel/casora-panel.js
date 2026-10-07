@@ -283,6 +283,21 @@ function confirmEntities(rooms) {
   return Array.from(out).sort();
 }
 
+// Kamera „Status von: …“ (1.1.1): je Kamera-Kachel die Status-Entität, für die Vorschau
+// (das Dashboard liest dieselbe Zuordnung aus seinen Kacheln, casora-core.js casoraCamOffline).
+function camStatusMap(rooms) {
+  const out = {};
+  (rooms || []).forEach((r) => (r.tiles || []).forEach((t) => {
+    const inner = (t && t.type === "conditional" && t.card) || t || {};
+    const id = inner.entity || (t && t.entity);
+    const sid = (inner.variables || {}).status_entity;
+    if (typeof id === "string" && id.indexOf("camera.") === 0 && typeof sid === "string" && sid && sid !== id && !out[id]) out[id] = sid;
+  }));
+  return out;
+}
+const camOffline = (id, states, map) => !!(window.casoraCamOffline
+  && window.casoraCamOffline(id, states, { casora_camera_status: map || {} }));
+
 // Eigener Kachelname je Entität mit Rückfrage (note4 Frage 4): Der Dialog im Popup nennt dann
 // „Garage“ wie die Kachel statt des Gerätenamens. Nur feste Namen (keine [[[ … ]]]-Ausdrücke).
 function confirmNames(rooms) {
@@ -15763,6 +15778,11 @@ class CasoraPanel extends HTMLElement {
     return roomLabel(r, (this._state && this._state.compact && this._state.compact.rooms) || [], this._hass);
   }
 
+  // Kamera „Status von: …“ (1.1.1) in der Vorschau: nach dem ungespeicherten Stand.
+  _camOff(id) {
+    return camOffline(id, this._hass && this._hass.states, camStatusMap(this._state && this._state.compact && this._state.compact.rooms));
+  }
+
   // Raumname in der Vorschau: wie das Dashboard ihn zeigt (übersetzt, siehe shownRoomName).
   _roomShown(r) {
     return shownRoomName(r, (this._state && this._state.compact && this._state.compact.rooms) || [], this._hass);
@@ -21475,7 +21495,7 @@ class CasoraPanel extends HTMLElement {
         lockDead: lockIds.filter(dead).length,
         doors: cnt("door", "open"), windows: cnt("window", "open"),
         doorsTilted: cnt("door", "tilted"), windowsTilted: cnt("window", "tilted"), gates,
-        camDead: cams.filter(dead).length,
+        camDead: cams.filter((e) => dead(e) || (this._camOff ? this._camOff(e) : false)).length,
       };
       const nn = (c, one, many) => (c === 1 ? one : c + " " + many);
       const parts = [];
@@ -21525,7 +21545,7 @@ class CasoraPanel extends HTMLElement {
           })()] : [],
           cams.length ? [(() => {
             const dead = cams.filter((e) =>
-              /^(unavailable|unknown|)$/i.test((st(e) || {}).state || "")).length;
+              /^(unavailable|unknown|)$/i.test((st(e) || {}).state || "") || (this._camOff ? this._camOff(e) : false)).length;
             return {
               icon: "doorbell", color: TEAL,
               label: V.security_cameras_label || (cams.length === 1 ? "Camera" : "Cameras"),
