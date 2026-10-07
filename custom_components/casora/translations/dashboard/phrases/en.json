@@ -1400,7 +1400,14 @@
   "Wirklich aufschließen?": "Really unlock?",
   "Wirklich abschließen?": "Really lock?",
   "Aufschließen": "Unlock",
-  "Abschließen": "Lock"
+  "Abschließen": "Lock",
+  "Achtung": "Heads up",
+  "Trotzdem scharf schalten?": "Arm anyway?",
+  "Trotzdem scharf schalten": "Arm anyway",
+  "1 Tür offen": "1 door open",
+  "1 Tor offen": "1 gate open",
+  "1 Fenster offen": "1 window open",
+  "1 Fenster gekippt": "1 window tilted"
  },
  "patterns": [
   [
@@ -1673,6 +1680,14 @@
   ],
   [
    "^(\\d+) entriegelt$",
+   "{1} unlocked"
+  ],
+  [
+   "^(\\d+) Schlösser entriegelt$",
+   "{1} locks unlocked"
+  ],
+  [
+   "^(.+) entriegelt$",
    "{1} unlocked"
   ],
   [
@@ -2041,7 +2056,7 @@
   ],
   [
    "^Nächster Dienst im (.+)\\.$",
-   "Next duty in {1}."
+   "Next turn in {1}."
   ],
   [
    "^Verriegelt · Stand vor (\\d+) Std\\.$",
