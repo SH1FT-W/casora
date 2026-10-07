@@ -93,7 +93,9 @@ function shown(rooms) {
   const hr = roomName(String(hv.home_name || '').trim() || 'Home', { casora_auto_name: !hv.home_name && hv.home_auto ? 'home' : undefined,
     name_literal: !!hv.home_name || hv.name_literal === true });
   const headRaw = headName({}, hv);
-  const headTxt = hr.literal ? headRaw : tr(headRaw);
+  // Wörtlicher Name kommt in <span data-no-i18n> (casora-i18n lässt ihn aus, 07.10.2026) – gezeigt wird der Text.
+  if (hr.literal && !/^<span data-no-i18n>[\s\S]*<\/span>$/.test(headRaw)) throw new Error('wörtlicher Kopf-Name ohne data-no-i18n: ' + headRaw);
+  const headTxt = (hr.literal ? headRaw : tr(headRaw)).replace(/^<span data-no-i18n>([\s\S]*)<\/span>$/, '$1');
   return { studio, bar, title, nav: navTxt, head: headTxt };
 }
 function findRoutes(o) {

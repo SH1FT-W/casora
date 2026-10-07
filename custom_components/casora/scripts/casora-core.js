@@ -278,23 +278,34 @@
       });
     });
     var locks = [], gates = 0, doors = 0, windows = 0, doorsT = 0, windowsT = 0;
+    // Namen der Öffnungen je Art (bis drei Öffnungen nennt die Rückfrage sie beim Namen, 07.10.2026).
+    var nm = { d: [], g: [], w: [], wt: [], dt: [] };
+    var nameOf = function (id) { return String(((S[id] || {}).attributes || {}).friendly_name || id).trim(); };
     flat.forEach(function (id) {
       var e = S[id] || {}, s = String(e.state || '').toLowerCase(), a = e.attributes || {};
       var dom = id.split('.')[0];
       if (dom === 'lock') { if (s === 'unlocked' || s === 'unlocking' || s === 'open' || s === 'opening') locks.push(a.friendly_name || id); }
       else if (dom === 'cover') {
-        if (['garage', 'gate', 'door'].indexOf(String(a.device_class || '').toLowerCase()) >= 0 && (s === 'open' || s === 'opening')) gates++;
+        if (['garage', 'gate', 'door'].indexOf(String(a.device_class || '').toLowerCase()) >= 0 && (s === 'open' || s === 'opening')) { gates++; nm.g.push(nameOf(id)); }
       }
     });
     var bs = flat.filter(function (id) { return id.indexOf('binary_sensor.') === 0; });
     var units = window.casoraOpenings ? window.casoraOpenings(hass, bs) : [];
     units.forEach(function (u) {
       var win = u.kind === 'window';
-      if (u.state === 'open') { if (win) windows++; else doors++; }
-      else if (u.state === 'tilted') { if (win) windowsT++; else doorsT++; }
+      if (u.state === 'open') { if (win) windows++; else doors++; nm[win ? 'w' : 'd'].push(nameOf(u.main)); }
+      else if (u.state === 'tilted') { if (win) windowsT++; else doorsT++; nm[win ? 'wt' : 'dt'].push(nameOf(u.main)); }
     });
     var n = function (c, one, many) { return c + ' ' + (c === 1 ? one : many); };
     var out = [];
+    // Bis drei Öffnungen mit Namen („Küchenfenster offen“, „Bad Fenster gekippt“), mehr als Zahl.
+    var all = nm.d.concat(nm.g, nm.w, nm.wt, nm.dt);
+    // Gleiche Namen („Fenster“, „Fenster“) sagen nichts – dann wie bisher die Anzahl.
+    if (all.length <= 3 && all.every(function (x, i) { return all.indexOf(x) === i; })) {
+      nm.d.concat(nm.g, nm.w).forEach(function (x) { out.push(x + ' offen'); });
+      nm.wt.concat(nm.dt).forEach(function (x) { out.push(x + ' gekippt'); });
+      doors = gates = windows = windowsT = doorsT = 0;
+    }
     if (doors) out.push(n(doors, 'Tür offen', 'Türen offen'));
     if (gates) out.push(n(gates, 'Tor offen', 'Tore offen'));
     if (windows) out.push(n(windows, 'Fenster offen', 'Fenster offen'));
@@ -7081,6 +7092,8 @@ window.casoraMenuGlass = {
       + '.hui-cf{font-weight:600;}'
       /* B-15: am Handy jede Unterzeile einzeilig mit Auslassung – gleich hohe Zeilen. */
       + '@media (max-width: 600px){.hui-srow .hui-sub{display:block!important;-webkit-line-clamp:1!important;white-space:nowrap!important;text-overflow:ellipsis!important;overflow:hidden!important;}.hui-srow .hui-sub2::before{content:none!important;}}'
+      /* Hinweis-Zeilen (r.subWrap, z. B. „Noch keine Tageswerte“): ganzer Satz statt „…“ (07.10.2026). */
+      + '.hui-srow .hui-sub.hui-wrap{display:block!important;white-space:normal!important;overflow:visible!important;-webkit-line-clamp:unset!important;text-overflow:clip!important;}'
       + '</style>';
     out += '<div class="hui-plate" style="display:flex;flex-direction:column;gap:8px;">';
     rows.forEach(function (r) {
@@ -7139,7 +7152,7 @@ window.casoraMenuGlass = {
               + ' data-casora-suffix="' + esc(r.subLive.suffix || '%') + '"';
           }
           var one = subs.length === 1;
-          out += '<div class="hui-sub' + (si ? ' hui-sub2' : '') + '"' + sLive
+          out += '<div class="hui-sub' + (si ? ' hui-sub2' : '') + (r.subWrap ? ' hui-wrap' : '') + '"' + sLive
             + ' style="font-size:12.5px;font-weight:500;line-height:1.3;'
             // subTone: nur die erste Unterzeile einfärben (z. B. „Lädt“ grün, der Raum bleibt gedämpft).
             + 'color:' + ((si === 0 && r.subTone && (tone(r.subTone) || r.subTone)) || S.sub) + ';overflow:hidden;'
@@ -7341,7 +7354,7 @@ window.casoraMenuGlass = {
           // Eine einzelne Unterzeile darf auf zwei Zeilen umbrechen statt mitten
           // im Satz abzubrechen („Fenster weit auf, nach Außentemp…“).
           var one = subs.length === 1;
-          out += '<div class="hui-sub' + (si ? ' hui-sub2' : '') + '"' + sLive
+          out += '<div class="hui-sub' + (si ? ' hui-sub2' : '') + (r.subWrap ? ' hui-wrap' : '') + '"' + sLive
             + ' style="font-size:var(--casora-popup-sub-size, 13px);'
             + 'color:var(--casora-popup-sub-color, ' + T.ink3 + ');overflow:hidden;'
             + (one
@@ -8231,6 +8244,9 @@ window.casoraMenuGlass = {
       + '.hui-sg{flex:0 1 auto;text-align:center;'
       +   'font-size:14px;font-weight:500;'
       +   'padding:11px 13px;border-radius:var(--casora-popup-seg-radius, 999px);'
+      // Trefferfläche 44 px (sichtbar 37 px): unsichtbarer Rand oben/unten, Fläche nur im Innern, Lage
+      // unverändert. Kein ::before – overflow:hidden (Auslassung) schnitte ihn ab.
+      +   'border-block:3.5px solid transparent;background-clip:padding-box;margin-block:-3.5px;'
       +   'background:var(--casora-popup-seg-fill, rgba(255,255,255,0.16));'
       +   'color:' + T.ink + ';'
       +   'cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
@@ -10740,6 +10756,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     // Sammel-Badge auf der Raumseite am Handy: Unter-Reihe auf/zu (nur dieses Gerät).
     if (d.casora_phone_row) {
       ev.stopPropagation();
+      // Öffnet derselbe Tipp ein Popup (Beleuchtung erbt es von casora_popup_light), bleibt die
+      // Unter-Reihe zu: sie klappte sonst unsichtbar hinter dem Popup auf, und nach dem Schließen
+      // war der ganze Inhalt ~110 px nach unten gerutscht (07.10.2026).
+      if (d.casora_popup && window.casoraPopup && window.casoraPopup.enabled) return;
       setRow(row === d.casora_phone_row ? null : d.casora_phone_row);
       return;
     }

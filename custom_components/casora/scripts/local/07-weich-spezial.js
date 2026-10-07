@@ -63,6 +63,9 @@
         + '.hm-vol .hm-fill{background:var(--casora-np-progress, ' + MEDIA_FILL + ');}'
         + '.hm-vol .pct{font-size:14px;font-weight:700;color:' + INK + ';min-width:44px;}'
         + srcRules()
+        /* Niedriges Querformat (iPad 1024×768): Cover kleiner, damit Tasten und Lautstärke ohne
+           Scrollen sichtbar bleiben – vorher lag die Lautstärke beim Abspielen unter dem Rand (07.10.2026). */
+        + '@media (min-width:761px) and (max-height:900px){.hm-art{width:min(240px, max(120px, calc(100vh - 640px)));}}'
         + '</style>';
     },
   };

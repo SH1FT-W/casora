@@ -1274,7 +1274,7 @@
   "Noch nicht eingerichtet": "Not set up yet",
   "Im Casora Studio der Kachel den Solar-Tipp zuordnen.": "Assign the solar tip to this tile in Casora Studio.",
   "Noch keine Tageswerte": "No daily values yet",
-  "Im Casora Studio Zähler und Verbraucher zuordnen": "Assign meters and consumers in Casora Studio",
+  "Welche Geräte hier zählen, legst du im Studio fest.": "You choose in the Studio which devices count here.",
   "waschen": "do laundry",
   "spülen": "run the dishwasher",
   "trocknen": "run the dryer",
@@ -2501,6 +2501,10 @@
   [
    "^(.+) offen$",
    "{1} open"
+  ],
+  [
+   "^(.+) gekippt$",
+   "{1} tilted"
   ],
   [
    "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",

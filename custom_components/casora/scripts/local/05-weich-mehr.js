@@ -167,7 +167,9 @@
   var pill = function (UI, text, svc, tone) {
     return '<span' + (svc ? ' data-casora-svc="' + UI.esc(JSON.stringify(svc)) + '"' : '')
       + ' style="display:inline-flex;align-items:center;gap:7px;cursor:' + (svc ? 'pointer' : 'default') + ';font-size:13px;font-weight:700;'
-      + 'padding:8px 14px;border-radius:999px;background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));color:'
+      + 'padding:8px 14px;border-radius:999px;background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));'
+      // Trefferfläche 44 px (07.10.2026): unsichtbarer Rand oben/unten, Fläche nur im Innern, Lage unverändert.
+      + (svc ? 'border-block:6px solid transparent;background-clip:padding-box;margin-block:-6px;' : '') + 'color:'
       + (tone || 'var(--casora-popup-ui-action, var(--casora-color-teal, #4E9E95))') + ';white-space:nowrap;">' + UI.esc(text) + '</span>';
   };
 
@@ -426,7 +428,7 @@
     // sondern eine ruhige Zeile mit dem nächsten Schritt – wie „Noch kein Gerät zugeordnet“.
     if (!f.use && (!f.top || f.top === autoTop) && !f.flow && !f.more) {
       f.use = UI.group([{ icon: 'mdi:link-variant-off', iconTone: 'var(--casora-popup-ui-dim, rgba(255,255,255,0.18))',
-        label: 'Noch keine Tageswerte', sub: (!window.casoraIsAdmin || window.casoraIsAdmin()) ? 'Im Casora Studio Zähler und Verbraucher zuordnen' : null }], 'Verbrauch');
+        label: 'Noch keine Tageswerte', sub: (!window.casoraIsAdmin || window.casoraIsAdmin()) ? 'Welche Geräte hier zählen, legst du im Studio fest.' : null, subWrap: true }], 'Verbrauch');
     }
     return layout({ fields: f, top: ['hero', 'metric'], left: solar ? ['flow'] : ['top'],
       right: solar ? ['use', 'top', 'more'] : ['use', 'more'], moveLeft: ['top'],

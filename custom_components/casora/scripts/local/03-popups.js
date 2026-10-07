@@ -733,7 +733,9 @@
       // bzw. casora.heizungs_coach). Vorher hing das fälschlich am eBike-Skript (01.10.2026).
       var hsv = hass && hass.services;
       var canRun = !hsv || !!(hsv[hsvc.domain] && hsv[hsvc.domain][hsvc.service]);
-      var btn = (running || !canRun) ? '' : '<span' + svc + ' style="display:inline-flex;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;margin-top:14px;'
+      var btn = (running || !canRun) ? '' : '<span' + svc + ' style="display:inline-flex;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;margin-top:11px;'
+      // Trefferfläche 44 px: unsichtbarer Rand (3 px, Fläche nur im Innern), Lage unverändert.
+      + 'border:3px solid transparent;background-clip:padding-box;margin-bottom:-3px;'
         + (has ? 'color:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));background:var(--casora-popup-ui-action-tint, rgba(0,195,208,0.14));' : 'color:#000;background:var(--casora-color-teal, #00C3D0);') + '">' + (has ? 'Neu auswerten' : 'Jetzt auswerten') + '</span>';
       var ago = function (ts) { var t = Date.parse(ts); if (isNaN(t)) return ''; var m = Math.max(0, Math.round((Date.now() - t) / 60000));
         return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
@@ -2102,7 +2104,9 @@
           + '<ul style="margin:0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + T.ink + ';white-space:normal;">' + it.tipps.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' : '');
     } else body = '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink2 + ';white-space:normal;">Claude prüft Bodenfeuchte, Licht, Temperatur und Luftfeuchte der letzten 7 Tage passend zur Art und gibt einen Pflegetipp.</div>';
     var svc = ' data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_pflanzen_doktor', { plant: pid }))) + '"';
-    var btn = running ? '' : '<span' + svc + ' style="display:inline-flex;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;margin-top:14px;'
+    var btn = running ? '' : '<span' + svc + ' style="display:inline-flex;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;margin-top:11px;'
+      // Trefferfläche 44 px: unsichtbarer Rand (3 px, Fläche nur im Innern), Lage unverändert.
+      + 'border:3px solid transparent;background-clip:padding-box;margin-bottom:-3px;'
       + (it ? 'color:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));background:var(--casora-popup-ui-action-tint, rgba(0,195,208,0.14));' : 'color:#000;background:var(--casora-color-teal, #00C3D0);') + '">'
       + (it ? 'Neu prüfen' : 'Jetzt prüfen') + '</span>';
     /* Weich (01.10.2026): KI-Karte mit Etikett und rundem Knopf aus den Bausteinen. */
@@ -2194,7 +2198,9 @@
           + '<ul style="margin:0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + T.ink + ';white-space:normal;">' + a.tipps.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' : '');
     }
     var svc = ' data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_energie_coach'))) + '"';
-    var btn = running ? '' : '<span' + svc + ' style="display:inline-flex;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;margin-top:14px;'
+    var btn = running ? '' : '<span' + svc + ' style="display:inline-flex;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;margin-top:11px;'
+      // Trefferfläche 44 px: unsichtbarer Rand (3 px, Fläche nur im Innern), Lage unverändert.
+      + 'border:3px solid transparent;background-clip:padding-box;margin-bottom:-3px;'
       + (has ? 'color:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));background:var(--casora-popup-ui-action-tint, rgba(0,195,208,0.14));' : 'color:#000;background:var(--casora-color-teal, #00C3D0);') + '">'
       + (has ? 'Neu auswerten' : 'Jetzt auswerten') + '</span>';
     return '<div style="font-family:' + T.font + ';text-align:left;">'
@@ -2401,7 +2407,9 @@
       else body = '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink2 + ';white-space:normal;">Claude prüft Service, Verschleißteile nach Kilometern und die Akku-Pflege passend zur Jahreszeit.</div>';
       var ago = function (ts) { var q = Date.parse(ts); if (isNaN(q)) return ''; var m = Math.max(0, Math.round((Date.now() - q) / 60000)); return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
       var svc = ' data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_ebike_check', { entities: B.ids(states) }))) + '"';
-      var btn = running || !ready ? '' : '<span' + svc + ' style="display:inline-flex;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;margin-top:14px;'
+      var btn = running || !ready ? '' : '<span' + svc + ' style="display:inline-flex;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;margin-top:11px;'
+      // Trefferfläche 44 px: unsichtbarer Rand (3 px, Fläche nur im Innern), Lage unverändert.
+      + 'border:3px solid transparent;background-clip:padding-box;margin-bottom:-3px;'
         + (has ? 'color:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));background:var(--casora-popup-ui-action-tint, rgba(0,195,208,0.14));' : 'color:#000;background:var(--casora-color-teal, #00C3D0);') + '">' + (has ? 'Neu prüfen' : 'Jetzt prüfen') + '</span>';
       return '<div style="font-family:' + T.font + ';text-align:left;">'
         + '<div style="background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);padding:16px 18px;'
@@ -3005,9 +3013,12 @@
     + '.lps-sg.on{background:var(--casora-popup-tiles-text-primary,#fff);color:var(--casora-popup-ui-on-ink,#000);box-shadow:none;}'
     + '.lps-dot{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1px var(--casora-soft-dot-ring,var(--casora-lps-dot-ring,transparent));}'
     + '.lps-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;}'
-    + '.lps-chip{padding:10px 16px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;'
+    + '.lps-chip{position:relative;padding:10px 16px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;'
     +   'background:var(--casora-lps-chip);color:var(--casora-lps-chip-ink);transition:background .2s ease;-webkit-tap-highlight-color:transparent;}'
     + '.lps-chip.on{background:var(--casora-lps-chip-on);color:var(--casora-lps-chip-on-ink);}'
+    // Trefferfläche 44 px (07.10.2026): unsichtbarer Rand nur nach oben/unten – nebeneinander
+    // stehende Chips überlappen so nicht (Abstand zwischen den Reihen 8 px = 2 × 4 px).
+    + '.lps-chip::before{content:"";position:absolute;left:0;right:0;top:-4px;bottom:-4px;}'
     + '.lps-rows{display:flex;flex-direction:column;gap:8px;}'
     + '.lps-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px var(--casora-popup-col-gap,26px);}'
     + '.lps-row{display:flex;align-items:center;gap:12px;min-height:58px;padding:10px 14px 10px 10px;border-radius:var(--casora-popup-row-radius,24px);'
@@ -3021,6 +3032,8 @@
     + '.lps-tx b{display:block;font-size:14.5px;font-weight:700;color:var(--casora-lps-title,var(--primary-text-color));overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
     + '.lps-tx small{display:block;font-size:12.5px;font-weight:500;color:var(--casora-lps-sub,var(--secondary-text-color));overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums;}'
     + '.lps-sw{position:relative;width:44px;height:26px;flex:none;border-radius:999px;background:var(--casora-lps-switch-off);cursor:pointer;transition:background .2s ease;}'
+    // Trefferfläche 44 px hoch (sichtbar bleibt 44×26), ::after ist der Knopf.
+    + '.lps-sw::before{content:"";position:absolute;left:0;right:0;top:-9px;bottom:-9px;}'
     + '.lps-sw::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:var(--casora-lps-knob);'
     +   'box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .2s ease;}'
     + '.lps-row.on .lps-sw{background:var(--casora-lps-switch-on);}'
@@ -3069,6 +3082,8 @@
     if (sc) {
       var s = stat(sc.lights, states);
       title = /^(beleuchtung|licht|lichter|lampen|zuhause)$/i.test(String(sc.name)) ? tr('Beleuchtung') : tr('Licht') + ' ' + sc.name;
+      // Einzelne Leuchte mit Raum (sc.room): Titel = Leuchte, sonst stand „Licht <Raum>“ über einer Lampe.
+      if (sc.room && sc.lights.length === 1) title = short(nameOf(sc.lights[0], states), sc.name);
       sub = subline(s, false); on = s.on > 0; id = sc.rid;
     } else {
       var ron = 0;
@@ -3080,7 +3095,7 @@
     return '<div class="lps-head">'
       + '<div class="lps-ring' + (on ? ' on' : '') + '" role="button" aria-label="' + esc(title) + '" data-lps-tap="' + attr({ a: 'scope', id: id }) + '">' + glyph('light') + '</div>'
       + '<div class="lps-t">' + esc(title) + '</div><div class="lps-s">' + statusLine(sub) + '</div>'
-      + (sc ? allOff(sc.lights, states) : '') + '</div>';
+      + (sc ? allOff(sc.room || sc.lights, states) : '') + '</div>';
   };
 
   /* „Alles aus“ (07.10.2026): schaltet alle Lichter dieses Raums aus – nur Licht, ohne Rückfrage
@@ -3150,7 +3165,7 @@
       }).join('') + '</div>';
     }
     var right = '<div class="lps-lbl">' + esc(tr('Leuchten im Raum')) + '</div><div class="lps-rows">'
-      + ids.map(function (id) { return lampRow(id, states, sc.name); }).join('') + '</div>';
+      + (sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids).map(function (id) { return lampRow(id, states, sc.name); }).join('') + '</div>';
     return '<div class="lps-cols' + (left ? '' : ' one') + '">' + (left ? '<div>' + left + '</div>' : '') + '<div>' + right + '</div></div>';
   };
   var word = function (v) { return v <= 0 ? tr('Aus') : v >= 100 ? tr('Volle Helligkeit') : tr('Gedimmt'); };

@@ -24,7 +24,7 @@ assert.ok(/if \(!window\.casoraIsAdmin\(\)\) return;\s*this\.close\(\);\s*histor
 assert.ok(core.includes("(admin ? '<svg class=\"se-chev\""), 'Pfeil nur für Admins');
 // Handy-Raum ohne Geräte, Energie ohne Tageswerte, Solar-Tipp ohne Gerät.
 assert.ok(read('scripts/filter-overlay.js').includes('if (admin) el.append(h, sub); else el.append(h);'));
-assert.ok(read('scripts/local/05-weich-mehr.js').includes("sub: (!window.casoraIsAdmin || window.casoraIsAdmin()) ? 'Im Casora Studio Zähler und Verbraucher zuordnen' : null"));
+assert.ok(read('scripts/local/05-weich-mehr.js').includes("sub: (!window.casoraIsAdmin || window.casoraIsAdmin()) ? 'Welche Geräte hier zählen, legst du im Studio fest.' : null, subWrap: true"));
 assert.ok(read('scripts/local/05-standard-medien.js').includes("((window.casoraIsAdmin && !window.casoraIsAdmin()) ? '' : '<div style=\"font-family"));
 // Englische Fassungen der neuen Texte vorhanden.
 const en = JSON.parse(read('translations/dashboard/phrases/en.json')).exact;
