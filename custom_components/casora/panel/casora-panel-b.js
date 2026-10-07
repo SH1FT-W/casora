@@ -153,6 +153,9 @@
     :host(.bmode) .card.map .pbadge.btarget { box-shadow:0 0 0 2px var(--accent, #B67A50); }
     :host(.bmode) .card.map .pbadge, :host(.bmode) .card.map .mtile { -webkit-user-select:none; user-select:none;
       -webkit-touch-callout:none; }
+    /* Lange gedrückt (Ausprobieren, casora-panel-popups.js): Loslassen öffnet das echte Popup. */
+    :host(.bmode) .card.map .mtile.btry { box-shadow:0 0 0 2px var(--casora-studio-done, var(--accent, #B67A50)), 0 6px 18px rgba(0,0,0,.2);
+      transform:scale(.97); transition:transform .18s ease, box-shadow .18s ease; }
     /* Wischen scrollt die Kachelreihe; gezogen wird erst nach langem Drücken. */
     :host(.bmode) .card.map .mtile { touch-action:pan-x pan-y; }
     .bhid { display:none; }
@@ -712,7 +715,7 @@
 
     // Symbole wie in der Seitenleiste des bisherigen Studios (Abschnitte bzw. Einstellungsseiten).
     const SECS = [
-      ["General", "Look & Controls", "settings"], ["Weather", "Weather", "weather"], ["Time", "Time", "clock"],
+      ["General", "Controls", "settings"], ["Weather", "Weather", "weather"], ["Time", "Time", "clock"],
       ["Notifications", "Notifications", "bell"], ["Scenes", "Scenes", "scenes"],
     ];
     P._bDashMenu = function (anchor) {
@@ -720,7 +723,12 @@
       // Dashboard selbst und stehen im Titelmenü (_bDocItems).
       const items = SECS.map(([k, l, g]) => ({ id: "sec:" + k, label: l, glyph: g, plainGlyph: true,
         group: "Only this dashboard" }));
+      // Das Design gilt für alle Dashboards und steht unter „Einstellungen“ – hier nur ein Verweis.
+      if (typeof this._casoraShowDesign === "function") {
+        items.push({ id: "design", label: "Design (for all dashboards) ›", glyph: "desktop", plainGlyph: true, group: "design", quiet: true });
+      }
       this._menuAt(anchor, items, (id) => {
+        if (id === "design") { this._bFrom = anchor; return this._casoraShowDesign(); }
         if (id.indexOf("sec:") === 0) {
           const key = id.slice(4);
           this._bLeavePages();
@@ -731,7 +739,7 @@
     };
 
     const PAGES = [
-      ["home", "Home & Devices", "home"], ["alerts", "Bell & Alerts", "bell"], ["dashboards", "New Dashboards", "tile"],
+      ["design", "Design", "desktop"], ["home", "Home & Devices", "home"], ["alerts", "Bell & Alerts", "bell"], ["dashboards", "New Dashboards", "tile"],
       ["ai", "AI", "assist"], ["outdoor", "Outdoor & Price", "temp-medium"], ["vent", "Ventilation", "fan"],
     ];
     P._bHomeMenu = function (anchor) {
@@ -849,6 +857,8 @@
         map.addEventListener("touchmove", (ev) => { if (this._bHold) ev.preventDefault(); }, { passive: false });
         map.addEventListener("contextmenu", (ev) => { if (this._bHold) ev.preventDefault(); });
       }
+      // Langes Drücken / Rechtsklick / Alt+Klick auf eine Kachel: echtes Popup zum Ausprobieren.
+      if (typeof this._tryWire === "function") this._tryWire(map);
       this._bHiddenChip(hid);
       this._bPhoneHint();
     };

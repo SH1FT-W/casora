@@ -18,6 +18,9 @@
 
   // Unterseiten: personal = Bereiche aus casora-panel-personal.js, sonst Optionen.
   const PAGES = [
+    // Design (Theme): gilt sofort für alle Dashboards, ohne „Einstellungen speichern“ (casora-panel-addons.js).
+    { id: "design", label: "Design", icon: "desktop", tone: "set-design", look: true,
+      lede: "How every Casora dashboard looks – the change applies right away." },
     { id: "home", label: "Home & Devices", icon: "home", tone: "set-home",
       personal: ["waste", "calendars", "contacts", "scenes", "media", "devices"],
       lede: "Waste collection, calendars, doors and windows, scenes and players – the same in every dashboard." },
@@ -491,6 +494,12 @@
       const page = pageOf(pageId);
       host.replaceChildren();
       host.appendChild(el("p", "cs-lede", t(page.lede)));
+      if (page.look) {
+        if (!(typeof this._casoraLookPicker === "function" && this._casoraLookPicker(host))) {
+          host.appendChild(el("p", "cs-lede", t("No Casora design is installed.")));
+        }
+        return;
+      }
       if (!cs || !cs.loaded) {
         host.appendChild(el("p", "cs-lede", t("Loading settings…")));
         return;
@@ -977,7 +986,9 @@
       wrap.dataset.page = page.id;
       const body = el("div");
       wrap.appendChild(body);
-      const bar = el("div", "cs-bar" + (this._csDirty() ? "" : " cs-clean"));
+      // Design gilt sofort (eigener Weg, casora-panel-addons.js) – ohne Leiste „Einstellungen speichern“.
+      const bar = el("div", "cs-bar" + (this._csDirty() && !page.look ? "" : " cs-clean"));
+      if (page.look) bar.style.display = "none";
       const state = el("span", "cs-state");
       const save = btn(t("Save settings"), () => this._csSave());
       save.className = "cs-save";
@@ -1220,6 +1231,8 @@
         s.box.insertBefore(lede, s.box.querySelector(".flowerr"));
       }
       fill();
+      // Design gilt sofort – dort kein „Einstellungen speichern“.
+      if (page.look) { this._csBar(); return; }
       const save = this._flowButton(s.acts, t("Save settings"), () => this._csSave());
       save.classList.add("cs-save");
       this._csBar();

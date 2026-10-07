@@ -1,7 +1,7 @@
 // @zustand: arbeit
 // @parallel: ui
 // Neues Studio (B): Alles aus der früheren Seitenleiste bleibt über die Werkzeugleiste erreichbar.
-// Erwartet: Dashboard-Menü öffnet Design & Bedienung, Wetter, Uhrzeit, Benachrichtigungen und
+// Erwartet: Dashboard-Menü öffnet Bedienung (Verweis „Design (für alle Dashboards)“), Wetter, Uhrzeit, Benachrichtigungen und
 // Szenen; das Titelmenü (Dashboard-Name) wechselt Dashboards und enthält Umbenennen, Symbol,
 // Löschen (UX-03), „…“ diese nicht mehr; Zeitreise als Uhr neben Rückgängig; Einstellungen-Menü alle Einstellungsseiten
 // und Updates; das Raummenü wechselt Räume, verschiebt sie und öffnet „Räume ordnen“;
@@ -20,8 +20,8 @@ const close = () => H(() => window.__panel()._bClose());
 await page.locator('.btool[data-b=dash]').click();
 await page.waitForTimeout(600);
 const dm = await menu();
-await check('Dashboard-Menü: Design & Bedienung, Wetter, Uhrzeit, Benachrichtigungen, Szenen',
-  ['Design & Bedienung', 'Wetter', 'Uhrzeit', 'Benachrichtigungen', 'Szenen'].every((x) => dm.some((t) => t.replace(/^✓/, '').indexOf(x) === 0)), dm);
+await check('Dashboard-Menü: Bedienung, Wetter, Uhrzeit, Benachrichtigungen, Szenen, Verweis aufs Design',
+  ['Bedienung', 'Design (für alle Dashboards)', 'Wetter', 'Uhrzeit', 'Benachrichtigungen', 'Szenen'].every((x) => dm.some((t) => t.replace(/^✓/, '').indexOf(x) === 0)), dm);
 await page.locator('.combo-opt', { hasText: 'Wetter' }).first().click();
 await page.waitForTimeout(1200);
 const w = await H(() => { const p = window.__panel(); return { open: p.classList.contains('binsp'), sel: p._sel && p._sel.key }; });
@@ -59,7 +59,7 @@ await page.locator('.btool[data-b=home]').click();
 await page.waitForTimeout(600);
 const hm = await menu();
 await check('Zuhause-Menü: alle Einstellungsseiten und Updates',
-  ['Haus & Geräte', 'Glocke & Meldungen', 'Neue Dashboards', 'KI', 'Außenwerte & Strompreis', 'Lüften', 'Updates'].every((x) => hm.some((t) => t.replace(/^✓/, '').indexOf(x) === 0)), hm);
+  ['Design', 'Haus & Geräte', 'Glocke & Meldungen', 'Neue Dashboards', 'KI', 'Außenwerte & Strompreis', 'Lüften', 'Updates'].every((x) => hm.some((t) => t.replace(/^✓/, '').indexOf(x) === 0)), hm);
 await page.locator('.combo-opt', { hasText: 'KI' }).first().click();
 await page.waitForTimeout(2500);
 const k = await H(() => { const p = window.__panel(); const i = p.shadowRoot.querySelector('.inspector');

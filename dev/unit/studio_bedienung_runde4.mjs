@@ -79,9 +79,9 @@ assert.ok(/t\.length > long\.length/.test(ux) && /finally \{\n\s*if \(lab && kee
 
 // Übersetzungen
 const de = JSON.parse(read('translations/panel/de.json')).exact;
-for (const key of ['Only together with “{line}” – use Undo for both.', 'Try it', 'The popup in the preview asks too. Done saves it.',
-  'Scene saved in Home Assistant. The color is saved with the dashboard (“Done”).',
-  'Scene saved in Home Assistant. Pick a color now – it is saved with the dashboard (“Done”).', 'Hidden on the dashboard', 'Show again']) {
+for (const key of ['Only together with “{line}” – use Undo for both.', 'Try it', 'The popup in the preview asks too. Not saved yet.',
+  'Scene saved in Home Assistant. The color is saved with the dashboard.',
+  'Scene saved in Home Assistant. Pick a color now – it is saved with the dashboard.', 'Hidden on the dashboard', 'Show again']) {
   assert.ok(de[key], 'de.json: ' + key);
 }
 console.log('studio_bedienung_runde4: ok');

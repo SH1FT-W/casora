@@ -100,6 +100,8 @@ Casora:
   casora-body-font: var(--primary-font-family)
   # A-12: Palette schließen – keine Neon-Reste, keine Zusatzfarben (Lila/Indigo/Gold)
   casora-color-purple: "#A9473D"        # extreme Warnung: dunkles Alarm-Rot statt Lila
+  # Lila nur für Szenen (keine Warnfarbe): gedämpftes Violett, eigener Schlüssel – purple bleibt Dunkelrot.
+  casora-color-violet: "#7E6A9E"
   casora-color-deep-blue: "#4A7DB5"     # sehr kalt: dunkles Kühl
   casora-color-gold: var(--casora-color-yellow-dark)
   casora-color-ice: var(--casora-color-blue)
@@ -808,6 +810,7 @@ Casora:
 
     dark:
       casora-weather-glyph-fill: "1"  # K5 (Weich-Audit)
+      casora-color-violet: "#9D8BC0"   # Szenen-Lila, auf Anthrazit etwas heller
       # Flächen + Text: warmes Anthrazit, Leinen-Schrift
       primary-background-color: rgb(36,33,30)
       secondary-background-color: rgb(28,26,24)
