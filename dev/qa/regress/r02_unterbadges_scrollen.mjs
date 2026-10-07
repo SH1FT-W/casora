@@ -27,6 +27,11 @@ async function openOverflowing(page, width) {
       g = (await cards(page, grp))[0];
       if (g.x + g.w / 2 > width || g.x < 0) { tried.push(grp + ': nicht ins Bild zu holen'); continue; }
     }
+    // Die Badge-Reihe selbst blättert und schneidet am Rand ab (z. B. lange Sicherheits-Zeile):
+    // Badge erst in der Reihe ganz ins Bild holen, sonst trifft der Klick die Raumkarte.
+    await page.evaluate((i) => window.__pierce('button-card')[i].scrollIntoView({ inline: 'nearest', block: 'nearest' }), g.i);
+    await page.waitForTimeout(500);
+    g = (await cards(page, grp))[0];
     await page.mouse.click(g.x + g.w / 2, g.y + g.h / 2);
     await page.waitForTimeout(1200);
     const subs = (await cards(page, sub)).filter((c) => c.y > g.y);

@@ -4,7 +4,8 @@
 // wie „3 Räume“ oder „Bereit“. Diese Wörter kommen deutsch aus den Dashboard-Skripten; das
 // Dashboard übersetzt sie, die Vorschau tat es nicht. Erwartet: „All secure“ in Vorschau (Desktop
 // und Handy) und Dashboard, kein bekanntes deutsches Wort mehr in der Vorschau.
-// Zustände werden nur im Browser untergeschoben (alles zu), Theme „Casora“.
+// Zustände werden nur im Browser untergeschoben (alles zu), Theme „Casora“. Raumnamen sind
+// Nutzerdaten und bleiben, wie angelegt; eigene Kachelnamen übersetzt die Vorschau wie das Dashboard.
 import { open, casoraDashboards, studio, dashboard, fakeStates, stable, check, need, finish } from './lib.mjs';
 
 const dash = (await casoraDashboards()).find((d) => !d.mobile);
@@ -26,11 +27,13 @@ const allClosed = async () => {
 // Sichtbare Texte, die die Dashboard-Übersetzung kennt (also deutsch geblieben sind), und alle Texte.
 const texts = (inPanel) => {
   const tr = window.casoraTr || ((x) => x); const left = new Set(), seen = new Set();
+  // Raumnamen legt der Nutzer an (im Haus „arbeit“ deutsch) – sie zählen nicht als deutsche Reste.
+  const rooms = new Set(inPanel ? ((window.__panel()._state || {}).compact || { rooms: [] }).rooms.map((r) => String(r.name || '').trim()) : []);
   (function walk(r) { const w = document.createTreeWalker(r, NodeFilter.SHOW_TEXT); let n;
     while ((n = w.nextNode())) { const v = n.data.trim(), p = n.parentNode;
       if (!v || !/[A-Za-z]/.test(v) || !p || /STYLE|SCRIPT/.test(p.nodeName)) continue;
       if (!(p.getBoundingClientRect && p.getBoundingClientRect().width > 0)) continue;
-      seen.add(v); if (tr(v) !== v || /[äöüÄÖÜß]/.test(v)) left.add(v); }
+      seen.add(v); if (!rooms.has(v) && (tr(v) !== v || /[äöüÄÖÜß]/.test(v))) left.add(v); }
     r.querySelectorAll('*').forEach((e) => { if (e.shadowRoot) walk(e.shadowRoot); }); })(inPanel ? window.__panel().shadowRoot : document);
   return { tr: typeof window.casoraTr, german: [...left], secure: seen.has('All secure'), alles: seen.has('Alles sicher') };
 };

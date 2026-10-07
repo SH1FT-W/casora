@@ -3,7 +3,9 @@
 import { open, ready, shot } from './harness.mjs';
 import { check, ende, echteFehler } from './ergebnis.mjs';
 const DASH = process.argv[2] || 'dashboard-hemma'; // Adresse des Test-Dashboards
-const { browser, page, errors } = await open();
+// Der Test geht über Seitenleiste und Raum-Reiter des bisherigen Studios (A); das neue Studio (B,
+// Standard seit 1.1.0) hat sie nicht – Kachel-Editor und Felder sind in beiden gleich.
+const { browser, page, errors } = await open({ studio: 'a' });
 await ready(page, '/casora-studio', () => { const p = window.__panel && window.__panel(); return p && p._state && p._hass; });
 const H = (fn, arg) => page.evaluate(fn, arg);
 await H(async (d) => { const p = window.__panel(); p._setDash(d); p._remember(d); await p._load(); }, DASH);
@@ -30,7 +32,8 @@ const room = (all.find((x) => x.type === 'casora_washer') || all[0]).room;
 await page.locator('.tablabel', { hasText: room }).first().click();
 await page.waitForTimeout(1200);
 // Raum-Abschnitte stehen gestapelt und eingeklappt im Bereich (Seitenleiste nur im schmalen Studio).
-const sec = page.locator('.grouphead.stackhead', { hasText: 'Kacheln' });
+// Nach der Überschrift (h3) wählen: der Badges-Kopf erwähnt in seiner Beschreibung auch „Kacheln“.
+const sec = page.locator('.grouphead.stackhead', { has: page.locator('h3', { hasText: /^\s*Kacheln\s*$/ }) });
 if (await sec.count()) await sec.first().click();
 else await page.locator('button.siderow', { hasText: 'Kacheln' }).first().click();
 await page.waitForTimeout(1500);

@@ -52,8 +52,13 @@ const want = await page.evaluate(() => {
 await need('Raumkarte mit Szenen-Badge und casoraNavScenes', want !== null);
 await need('mehr als zehn Szenen (Zustand „stress“)', want > 10, want);
 
-const grp = (await cards(page, 'casora_badge_scene_group'))[0];
+let grp = (await cards(page, 'casora_badge_scene_group'))[0];
 await need('Szenen-Badge sichtbar', grp);
+// Die Badge-Reihe blättert und schneidet am Rand ab: Szenen-Badge erst ganz ins Bild holen,
+// sonst trifft der Klick auf ihre Mitte die Raumkarte und die Reihe bleibt zu.
+await page.evaluate((i) => window.__pierce('button-card')[i].scrollIntoView({ inline: 'nearest', block: 'nearest' }), grp.i);
+await page.waitForTimeout(500);
+grp = (await cards(page, 'casora_badge_scene_group'))[0];
 await page.mouse.click(grp.x + grp.w / 2, grp.y + grp.h / 2);
 await page.waitForTimeout(1800);
 

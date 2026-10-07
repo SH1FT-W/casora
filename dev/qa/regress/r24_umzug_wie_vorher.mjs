@@ -180,11 +180,16 @@ for (const src of ['hemma-zuhause', 'hemma-eins']) {
         if ((um.done || []).some((x) => x && x.target === url)) break;
         await new Promise((r) => setTimeout(r, 250));
       }
+      // Alle Meldungen in der Zeit mitschreiben: die Statuszeile kann bis zum Nachsehen schon
+      // von einer späteren Meldung ersetzt sein (z. B. Vorlagen-Hinweis beim Laden).
       const open = async () => {
-        p._setDash(url); p._remember(url); await p._load();
-        await new Promise((r) => setTimeout(r, 900));
-        const st = p.shadowRoot.querySelector('#status');
-        return st ? st.textContent : '';
+        const seen = [], orig = p._status;
+        p._status = function (msg, kind) { if (msg) seen.push(String(msg)); return orig.call(this, msg, kind); };
+        try {
+          p._setDash(url); p._remember(url); await p._load();
+          await new Promise((r) => setTimeout(r, 1500));
+        } finally { p._status = orig; }
+        return seen.join(' | ');
       };
       const inner = (t) => { let c = t; while (c && c.type === 'conditional' && c.card) c = c.card; return c || {}; };
       const sig = (t0) => { const t = inner(t0); return [].concat(t.template || []).filter((x) => typeof x === 'string').join('+') + '|' + (t.entity || ''); };
