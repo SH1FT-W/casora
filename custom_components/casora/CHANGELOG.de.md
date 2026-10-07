@@ -85,7 +85,7 @@ Das größte Update seit Casora 1.0. Neu sind das Studio, in dem die Vorschau se
 - Schaltbare Einzelgeräte haben einen Schalter auf der Kachel, neu auch der Luftreiniger, Gruppen nicht.
 - Glocke: überall derselbe Punkt bei neuen Mitteilungen, das Menü hat eine Überschrift. Ein Tipp auf einen Eintrag öffnet dasselbe Popup wie der Tipp auf die Kachel.
 - Raumleiste am Computer: Mit der Tastatur sieht man, welcher Raum gewählt ist, nach einem Mausklick erscheint kein Rahmen mehr.
-- Handy: Endet ein Badge genau am Bildschirmrand, werden die Badges etwas breiter, damit man sieht, dass die Reihe weitergeht. Beim Wechsel in einen Raum stehen die Kacheln sofort an ihrem Platz.
+- Handy, Casora-Look: Die Badges auf der Startseite stehen wieder genau so eng wie in den Räumen (8 px) und sind so breit wie ihr Inhalt. Beim Wechsel in einen Raum stehen die Kacheln sofort an ihrem Platz.
 - Energie-Badge im Raum zählt alle Geräte (auch gleich benannte und den Eigenverbrauch eines Schaltaktors), nur Leistung, rechnet kW in W um und überspringt nicht erreichbare Sensoren. Ein abgewählter Sensor bleibt ausgeschlossen, „Alle aufnehmen“ zeigt, was noch nicht mitzählt.
 - Lüften: Nach einem Neustart zählt die Offen-Zeit eines Fensters weiter. Ohne Außensensor steht „Außenwerte fehlen“ statt „draußen feuchter“.
 - Temperaturen, Niederschlag und Kosten erscheinen in der Einheit bzw. Währung von Home Assistant oder des Sensors (z. B. °F, Zoll, CHF). Die KI-Coaches bekommen Temperaturen in der richtigen Einheit.

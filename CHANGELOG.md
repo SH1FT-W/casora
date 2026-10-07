@@ -85,7 +85,7 @@ The biggest update since Casora 1.0. It brings a new Studio in which the preview
 - Switchable single devices have a switch on the tile, now also the air purifier, groups do not.
 - Bell: the same dot for new notifications everywhere, and the menu has a heading. Tapping an entry opens the same popup as tapping the tile.
 - Room bar on a computer: with the keyboard you can see which room is selected, and a mouse click no longer leaves a frame.
-- Phone: if a badge ends exactly at the screen edge, the badges get a little wider so you can tell the row goes on. Switching rooms keeps the tiles in place.
+- Phone, Casora look: the badges on the home page sit as close together as in the rooms again (8 px) and are only as wide as their content. Switching rooms keeps the tiles in place.
 - The room energy badge counts every device (including devices with the same name and a relay's own consumption), only counts power, converts kW to W and skips unreachable sensors. A sensor you remove stays excluded, and "Add all" shows what is not counted yet.
 - Ventilation: after a restart a window's open time keeps counting. Without an outdoor sensor it says "no outdoor values" instead of "more humid outside".
 - Temperatures, precipitation and costs use the unit or currency of Home Assistant or the sensor (e.g. °F, inches, CHF). The AI coaches get temperatures in the right unit.

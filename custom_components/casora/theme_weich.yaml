@@ -183,6 +183,9 @@ Casora:
   casora-badge-glyph-scale: 0.58
   badge-gap: calc(var(--casora-u-badge, 10px) * 0.8)
   badge-col-gap: calc(var(--casora-u-badge, 10px) * 0.8)
+  # Handy: Badge-Reihe der Startseite mit demselben Abstand wie die Raum-Chips (vorher 10 px
+  # aus dem Grund-Theme, in den Räumen 8 px).
+  badge-gap-mobile: var(--casora-mobile-chip-gap, 8px)
   badge-padding: calc(var(--casora-u-badge, 10px) * 0.5) calc(var(--casora-u-badge, 10px) * 1.6) calc(var(--casora-u-badge, 10px) * 0.5) calc(var(--casora-u-badge, 10px) * 0.6)
   badge-min-height: calc(var(--casora-u-badge, 10px) * 4.1)
   badge-font-size: calc(var(--casora-u-badge, 10px) * 1.4)
