@@ -293,6 +293,10 @@ function confirmNames(rooms) {
     const name = typeof inner.name === "string" ? inner.name.trim() : "";
     if (v.confirm_toggle !== true || !name || name.indexOf("[[[") >= 0) return;
     [inner.entity || (t && t.entity), v.cover_entity].forEach((x) => { if (typeof x === "string" && x && !out[x]) out[x] = name; });
+    // Sammelkachel: schaltet das Popup alle Mitglieder auf einmal, heißt die Rückfrage wie die Kachel
+    // (Schlüssel „id1,id2“ sortiert, casora-core.js several) – einzeln bleibt es der Gerätename.
+    const all = [].concat(Array.isArray(v.covers) ? v.covers : [], Array.isArray(v.locks) ? v.locks : []).filter((x) => typeof x === "string" && x);
+    if (all.length > 1) { const k = Array.from(new Set(all)).sort().join(","); if (!out[k]) out[k] = name; }
   }));
   return out;
 }

@@ -159,6 +159,20 @@
       setTimeout(function () { var n = root.querySelector('.no'); if (n) n.focus(); }, 30);
     });
   };
+  // Mehrere Geräte auf einmal („Zu“ für beide Jalousien, Nutzertest 7): Titel = Name der Sammelkachel
+  // (casora_confirm_names unter „id1,id2“), sonst „2 Geräte“; darunter die Geräte (bis drei, dann „+N“).
+  var several = function (ids, w) {
+    ids = (ids || []).filter(function (x, i, a) { return typeof x === 'string' && x && a.indexOf(x) === i; });
+    if (ids.length < 2) return w;
+    var h = document.querySelector('home-assistant');
+    var states = (h && h.hass && h.hass.states) || {};
+    var names = window.__casoraConfirmNames || {};
+    var key = ids.slice().sort().join(',');
+    var fn = function (x) { var st = states[x]; return (st && st.attributes && st.attributes.friendly_name) || x; };
+    var list = ids.slice(0, 3).map(fn).join(', ') + (ids.length > 3 ? ' +' + (ids.length - 3) : '');
+    return { name: w.name, verb: w.verb, title: (typeof names[key] === 'string' && names[key]) || T(ids.length + ' Geräte'),
+      text: list + ' – ' + T('Wirklich ' + w.verb.toLowerCase() + '?') };
+  };
   // Entität einer Aktion (Ziel, Daten oder Karte).
   var entityOf = function (act, cfg) {
     var tgt = act.target || act.data || act.service_data || {};
@@ -187,7 +201,7 @@
     if (spec.service === 'turn_on' && st && st.state === 'on') return Promise.resolve(true);
     var act = { action: 'perform-action', perform_action: spec.domain + '.' + spec.service,
       target: { entity_id: id }, data: spec.data || {} };
-    return ask(word(act, { entity: id }));
+    return ask(several(ids, word(act, { entity: id })));
   };
   window.addEventListener('hass-action', function (ev) {
     if (passed && passed.has(ev)) return;

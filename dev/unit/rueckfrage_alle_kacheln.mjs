@@ -95,6 +95,33 @@ const tap = async (spec, yes) => {
   const r = await tap({ domain: 'light', service: 'turn_on', target: { entity_id: 'light.decke' }, data: { brightness_pct: 40 } }, false);
   assert.ok(r.ok && !r.asked.length, 'Helligkeit verstellen ist kein Schalten');
 }
+// Nutzertest 7 (H-T5): „Zu“ für beide Jalousien nennt die Sammelkachel und beide Geräte, nicht nur das erste.
+states['cover.beispiel_links'] = { state: 'open', attributes: { friendly_name: 'Jalousie Links', current_position: 100 } };
+states['cover.beispiel_rechts'] = { state: 'open', attributes: { friendly_name: 'Jalousie Rechts', current_position: 100 } };
+w.__casoraConfirmIds = ['cover.beispiel_links', 'cover.beispiel_rechts'];
+{
+  w.__casoraConfirmNames = { 'cover.beispiel_links,cover.beispiel_rechts': 'Jalousien' };
+  const r = await tap({ domain: 'cover', service: 'close_cover', target: { entity_id: ['cover.beispiel_rechts', 'cover.beispiel_links'] } }, false);
+  assert.ok(r.asked.includes('h2=Jalousien'), 'Titel = Sammelkachel: ' + r.asked);
+  assert.ok(r.asked.some((x) => x === 'p=Jalousie Rechts, Jalousie Links – Wirklich schließen?'), 'beide Geräte genannt: ' + r.asked);
+}
+{
+  w.__casoraConfirmNames = {};
+  const r = await tap({ domain: 'cover', service: 'close_cover', target: { entity_id: ['cover.beispiel_links', 'cover.beispiel_rechts'] } }, false);
+  assert.ok(r.asked.includes('h2=2 Geräte'), 'ohne Kachelnamen: Anzahl: ' + r.asked);
+}
+{
+  const r = await tap({ domain: 'cover', service: 'close_cover', target: { entity_id: 'cover.beispiel_links' } }, false);
+  assert.ok(r.asked.includes('h2=Jalousie Links') && r.asked.includes('p=Wirklich schließen?'), 'einzeln wie bisher: ' + r.asked);
+}
+{
+  const i = src.indexOf('function confirmNames(');
+  const cn = new Function(src.slice(i, src.indexOf('\n}', i) + 2) + '\nreturn confirmNames;')();
+  const names = cn([{ tiles: [{ template: ['casora_cover', 'casora_popup_cover'], entity: 'cover.beispiel_alle', name: 'Jalousien',
+    variables: { confirm_toggle: true, covers: ['cover.beispiel_rechts', 'cover.beispiel_links'] } }] }]);
+  assert.equal(names['cover.beispiel_links,cover.beispiel_rechts'], 'Jalousien', 'Studio legt den Sammelnamen ab');
+  assert.equal(names['cover.beispiel_links'], undefined, 'einzeln bleibt der Gerätename');
+}
 // Knöpfe (data-casora-svc) und Regler (data-casora-slider) gehen über die Rückfrage.
 assert.ok(/window\.casoraConfirmSpec\(spec\)\.then\(function \(ok\) \{ if \(ok\) go2\(\); \}\)/.test(core), 'Knöpfe');
 assert.ok(/casoraConfirmSpec\(\{ domain: spec\.domain, service: spec\.service, target: spec\.target, data: data \}\)/.test(core)
