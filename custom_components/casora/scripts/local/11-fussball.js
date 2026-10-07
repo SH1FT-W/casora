@@ -171,6 +171,15 @@
     if (i.phase === 'PRE' && i.date) return K.when(i.date, now) + (i.tbd ? '' : ' ' + hm(i.date)) + (small ? '' : ' · ' + vs(i, short));
     return 'Kein Spiel angesetzt';
   };
+  /* Zustandszeile der Kachel: immer einzeilig in der normalen Schriftgröße, damit der Name auf derselben
+     Höhe steht wie bei Licht & Co. (casoraStateFit würde am Desktop schrumpfen und notfalls zweizeilig
+     umbrechen – das schob den Namen nach oben). Zu lang: Gegner als Kürzel, sonst „…“. */
+  K.state = function (st, small, phone, now) {
+    var t = K.tile(st, now, small, phone);
+    if (!phone && t.length > 26) t = K.tile(st, now, false, true);
+    return '<span data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
+      + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(t) + '</span>';
+  };
   K.corner = function (st, now) {
     var i = K.info(st);
     if (!i) return '';

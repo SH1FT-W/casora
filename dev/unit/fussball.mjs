@@ -51,6 +51,11 @@ assert.equal(K.tile(live, null, true), '67′ · 1:2', 'kleine Handy-Kachel: Min
 assert.match(K.tile(sensor(), null, true), /^[A-Z][a-z] 20:45$/, 'klein vor dem Spiel: nur Tag und Anstoß (Gegner als Wappen)');
 assert.equal(K.tile(sensor(), null, false, true).endsWith(' · bei CAG'), true, 'Handy groß vor dem Spiel: Kürzel');
 assert.equal(K.tile(live, null, false, true), 'führt 2:1 bei CAG', 'Handy groß: Kürzel statt Name');
+// Zustandszeile einzeilig (Name bleibt auf der Höhe der anderen Kacheln); zu lang → Kürzel.
+const itaPre = sensor({ attrs: { opponent_name: 'Bosnia-Herzegovina', opponent_abbr: 'BIH', date: at(20, 20, 45).toISOString() } });
+assert.match(K.state(itaPre, false, false), /white-space:nowrap/);
+assert.match(K.state(itaPre, false, false), /bei BIH</, 'Desktop, langer Text: Kürzel');
+assert.match(K.state(sensor(), false, false), /bei Cagliari</, 'Desktop, kurz: voller Name');
 assert.match(K.corner(live), /cfb-pill live.*67′/);
 assert.equal(K.minute('HT'), 'Halbzeit');
 assert.equal(K.minute('FT-Pens'), 'Elfmeterschießen');

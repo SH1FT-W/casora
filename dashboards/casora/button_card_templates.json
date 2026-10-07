@@ -4439,7 +4439,7 @@
   "hidden": "[[[\n  const off = (v) => v === false || v === 'false' || v === 0 || v === '0';\n  if (off(variables?.enabled)) return true;\n  return !!window._casoraFootball?.hidden(entity, variables);\n]]]\n",
   "show_entity_picture": true,
   "show_icon": false,
-  "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? t;\n  /* Handy: Gegner als Kürzel (auch „groß“ ist nicht breiter, nur doppelt so hoch);\n     klein ohne Ecke – dort stehen Spielminute bzw. Endstand im Text. */\n  const phone = !!window.matchMedia?.('(max-width: 767px), (max-height: 600px)').matches;\n  const small = phone && !variables.size_large;\n  return fit(window._casoraFootball ? window._casoraFootball.tile(entity, null, small, phone) : '');\n]]]\n",
+  "state_display": "[[[\n  /* Handy: Gegner als Kürzel (auch „groß“ ist nicht breiter, nur doppelt so hoch);\n     klein ohne Ecke – dort stehen Spielminute bzw. Endstand im Text. */\n  const phone = !!window.matchMedia?.('(max-width: 767px), (max-height: 600px)').matches;\n  const small = phone && !variables.size_large;\n  return window._casoraFootball ? window._casoraFootball.state(entity, small, phone) : '';\n]]]\n",
   "styles": {
    "card": [
     {
