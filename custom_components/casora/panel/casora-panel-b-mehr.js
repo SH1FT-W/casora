@@ -566,7 +566,7 @@
   const BADGE_KEY = { climate: /^(climate_entity|temp_sensor|humidity_sensor|quality_sensor)/, lights: /^light_(entity|group)/,
     people: /^presence_entity/, media: /^(media_|now_playing_|psn_)/, security: /^security_/, energy: /^energy_(entity|power|cost)/ };
   const BADGE_WORDS = { climate: "klima temperatur luft feuchte", lights: "licht lampen beleuchtung", people: "personen anwesenheit leute",
-    media: "medien musik fernseher tv", security: "sicherheit schloss tür kamera alarm", energy: "energie strom verbrauch" };
+    media: "medien musik fernseher tv", security: "sicherheit schloss tür kamera alarm kurz ausführlich ausfuehrlich ausgeschrieben unterzeile symbole short detailed summary", energy: "energie strom verbrauch" };
 
   customElements.whenDefined("casora-panel").then(() => {
     const P = customElements.get("casora-panel").prototype;

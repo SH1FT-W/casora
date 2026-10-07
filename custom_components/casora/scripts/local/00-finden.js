@@ -829,6 +829,34 @@ window.casoraPriceKwh = function (v) {
     return { text: text, html: '<span class="cs-sum" style="display:inline-flex;align-items:center;gap:9px;height:1.25em;line-height:1;vertical-align:top">' + items.join('') + '</span>' };
   };
 
+  // ── Kurz oder ausführlich? (07.10.2026) ───────────────────────────────────────
+  // Einstellung security_summary je Raum: '' bzw. 'auto' (Standard) = auf der Startseite kurz
+  // (Symbole mit Zahl), in Räumen ausgeschrieben – dort gibt es meist nur ein Fenster, eine Tür;
+  // 'short' = immer kurz, 'detailed' = immer ausführlich. place: 'home' | 'room' (unbekannt = Raum).
+  window.casoraSecurityMode = function (summary, place) {
+    var s = String(summary || '').toLowerCase();
+    if (s === 'short' || s === 'detailed') return s;
+    return place === 'home' ? 'short' : 'detailed';
+  };
+
+  // Steht el (Karte im Dashboard) auf der Startseite? Wie isHomeRoom im Studio: die Ansicht mit
+  // Pfad „home“, sonst die erste. Sucht die umgebende Ansicht (hui-view: index + lovelace);
+  // true/false, null wenn keine gefunden (z. B. außerhalb eines Dashboards).
+  window.casoraOnHomeView = function (el) {
+    var n = el, guard = 0;
+    while (n && guard++ < 80) {
+      if (n.lovelace && typeof n.index === 'number') {
+        var views = (n.lovelace.config && n.lovelace.config.views) || [];
+        if (!views.length) return null;
+        var home = 0;
+        for (var i = 0; i < views.length; i++) if (views[i] && views[i].path === 'home') { home = i; break; }
+        return n.index === home;
+      }
+      n = n.parentNode || n.host || null;
+    }
+    return null;
+  };
+
   // ── Außensensor nach Geräteklasse (Wetter-Popup, 27.09.2026) ──────────────────
   // „outdoor/außen“ im Namen oder ein Außenbereich; Luftdruck ist ohnehin draußen gleich.
   var OUTDOOR = /outdoor|aussen|außen|outside|draussen|draußen|garten|terrasse|balkon|garden|terrace|balcony/i;

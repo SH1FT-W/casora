@@ -77,10 +77,10 @@ assert.equal(enTr('2 Schlösser offen'), '2 locks open');
 assert.equal(enTr('Aktiv · Abwesend'), 'Active · Away');
 for (const part of sum(all, { summary: 'detailed' }).text.split(' · ')) assert.ok(enTr(part), 'Englisch fehlt: ' + part);
 
-// Vorlage: Weich nutzt den Helfer mit variables.summary (Standard short), Standard/Glas sagen „Schloss offen“.
+// Vorlage: Weich nutzt den Helfer mit variables.summary (Standard auto, siehe sicherheit_kurz_auto), Standard/Glas sagen „Schloss offen“.
 const T = JSON.parse(read('dashboards/casora/button_card_templates.json'));
 const g = T.casora_badge_security_group;
-assert.equal(g.variables.summary, 'short');
+assert.equal(g.variables.summary, 'auto');
 assert.ok(g.name.includes('window.casoraSecuritySummary(_sec') && g.name.includes('variables.summary'));
 assert.ok(!g.name.includes('casora-entwurf-sicherheit'), 'Entwurfs-Umschalter entfernt');
 assert.ok(g.name.includes("'Schloss offen', 'Schlösser offen'") && !g.name.includes("'1 Schloss'"));
