@@ -1,6 +1,7 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "This badge has no popup – tap it to edit it.": "Dieses Badge hat kein Popup – antippen zum Bearbeiten.",
     "Not reachable – can't be part of the scene": "Nicht erreichbar – kann nicht in die Szene",
     "In the dashboard, active tiles come first": "Im Dashboard stehen aktive Kacheln vorn",
     "Your unsaved edits are discarded.": "Deine ungespeicherten Änderungen gehen dabei verloren.",

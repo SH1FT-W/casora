@@ -888,10 +888,13 @@
     // Vorrang: wer nach dem langen Drücken bewegt, sortiert – nur Loslassen ohne Bewegung probiert aus.
     const TRY_MS = 500;
     const TRY_HINT = "casora.studio.tryHint";
+    // Kacheln und Badges (Nutzertest 7: langes Drücken auf „Beleuchtung“ tat nichts – ohne
+    // Licht-Kachel ließ sich das Licht im Studio nicht einstellen).
     const tileEl = (t) => {
-      const el = t && t.closest && t.closest('.mtile[data-mk^="t:"]');
+      const el = t && t.closest && t.closest('.mtile[data-mk^="t:"], .pbadge[data-mk^="b:"]');
       return el && !el.classList.contains("ghost") ? el : null;
     };
+    const isBadge = (el) => String(el.dataset.mk || "").indexOf("b:") === 0;
     // Kachel zu einem Element der Vorschau: Raum der Vorschau zuerst, dann alle Räume, dann das Mobil-Layout.
     P._tryTileOf = function (el) {
       const keys = [String(el.dataset.mk || "").slice(2), el.dataset.jump].filter(Boolean);
@@ -912,20 +915,33 @@
       }
       return null;
     };
+    // Badge der Vorschau → Popup-Ziel wie in der Popup-Vorschau (nur Badges des gezeigten Raums).
+    P._tryBadgeOf = function (el) {
+      const bid = String(el.dataset.mk || "").replace(/^b:/, "").split(":")[0].toLowerCase();
+      if (!BADGE_TPL[bid]) return null;
+      if (el.dataset.mproom !== undefined && Number(el.dataset.mproom) !== this._room) return null;
+      const room = curRoom(this);
+      if (!room) return null;
+      const lbl = el.querySelector(".plabel");
+      const name = (lbl && lbl.textContent.trim()) || bid;
+      return { kind: "badge", bid, name, sig: "try|badge|" + room.path + "|" + bid };
+    };
     P._tryOpen = async function (el) {
-      const tile = this._tryTileOf(el);
+      const badge = isBadge(el);
+      const tile = badge ? null : this._tryTileOf(el);
       const toast = (m) => (this._bToast ? this._bToast(t(m), { icon: false }) : this._status(m));
-      if (!tile) return false;
+      const bt = badge ? this._tryBadgeOf(el) : null;
+      if (!tile && !bt) return false;
       const nm = el.querySelector(".mname");
-      const name = (tile.name && String(tile.name).trim()) || (nm && nm.textContent.trim()) || "";
+      const name = tile ? (tile.name && String(tile.name).trim()) || (nm && nm.textContent.trim()) || "" : bt.name;
       this._tryBusy = true;
       try {
         const ok = await this._cpReady();
         if (!ok || !window.casoraPopup) { toast("The popup can't be shown here – the button-card isn't installed."); return false; }
-        const target = { kind: "tile", key: this._tileKey(tile), tile, name, sig: "try|" + this._tileKey(tile) };
+        const target = bt || { kind: "tile", key: this._tileKey(tile), tile, name, sig: "try|" + this._tileKey(tile) };
         let cfg = null;
         try { cfg = await this._cpConfig(target); } catch (e) { cfg = null; }
-        if (!cfg || !cfg.content) { toast("This tile has no popup – tap it to edit it."); return false; }
+        if (!cfg || !cfg.content) { toast(badge ? "This badge has no popup – tap it to edit it." : "This tile has no popup – tap it to edit it."); return false; }
         // Vorschau-Popup (nur ansehen) schließen, damit nicht zwei übereinander liegen.
         if (this._cpLayer) this._cpClose(true);
         await window.casoraPopup.open(cfg);
@@ -933,11 +949,21 @@
         return true;
       } finally { this._tryBusy = false; }
     };
-    // Einmaliger Hinweis beim ersten Antippen einer Kachel.
+    // Hinweis beim ersten Antippen einer Kachel oder eines Badges – und noch einmal beim dritten,
+    // solange niemand lange gedrückt hat (Nutzertest 7: einmal übersehen, nie wieder gezeigt).
+    // „1“ = erledigt (ausprobiert oder zweimal gezeigt), „n<Zahl>“ = so oft angetippt.
     P._tryHint = function () {
-      let seen = false;
-      try { seen = !!localStorage.getItem(TRY_HINT); localStorage.setItem(TRY_HINT, "1"); } catch (e) { seen = true; }
-      if (seen || !this._bToast) return;
+      let show = false;
+      try {
+        const v = localStorage.getItem(TRY_HINT);
+        if (v !== "1") {
+          const m = /^n(\d+)$/.exec(v || "");
+          const n = (m ? Number(m[1]) : 0) + 1;
+          show = n === 1 || n >= 3;
+          localStorage.setItem(TRY_HINT, n >= 3 ? "1" : "n" + n);
+        }
+      } catch (e) { show = false; }
+      if (!show || !this._bToast) return;
       const touch = this.classList.contains("phone") || (window.matchMedia && window.matchMedia("(hover: none)").matches);
       setTimeout(() => this._bToast(t("Press and hold to try it"), { icon: false, ms: 5000,
         sub: touch ? t("The real popup opens – devices really switch.") : t("Or right-click. The real popup opens – devices really switch.") }), 450);
