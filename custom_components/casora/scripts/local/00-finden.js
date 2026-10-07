@@ -892,7 +892,57 @@ window.casoraPriceKwh = function (v) {
     return dcs.join(' ').indexOf('pressure') >= 0 ? cand[0] || null : null;
   }
 
+  // ── Saugroboter-Karte (07.10.2026) ───────────────────────────────────────────
+  // Bild- oder Kamera-Entität am Roboter (oder an seiner Station), die eine Karte ist:
+  // Roborock legt je Stockwerk ein image.* an (Name = Kartenname, ohne Schlüssel),
+  // Dreame/Valetudo/Map Extractor eine camera.*_map. Erkannt über Plattform, Schlüssel
+  // oder ID (map|karte), nie über Raumnamen. Aktive Karte zuerst (select mit
+  // Schlüssel selected_map nennt ihren Namen), dann erreichbare, sonst die erste.
+  var MAP_RE = /(^|_)(map|maps|karte|karten)(_|$)/;
+  function vacuumMap(hass, anchor) {
+    var S = (hass && hass.states) || {}, R = reg(hass);
+    if (!anchor) return null;
+    var list = deviceOf(hass, anchor) ? entities(hass, anchor, { siblings: true }) : [];
+    // Gerät mit Kartenwahl (select, Schlüssel selected_map): jedes Bild daran ist eine Karte.
+    var mapDev = {};
+    list.forEach(function (e) { if (e.domain === 'select' && e.key === 'selected_map') mapDev[e.device_id] = true; });
+    var isMap = function (e) {
+      if (e.domain !== 'image' && e.domain !== 'camera') return false;
+      var r = R[e.entity_id] || {};
+      if (e.domain === 'image' && (r.platform === 'roborock' || mapDev[e.device_id])) return true;
+      return MAP_RE.test(String(e.key || '')) || MAP_RE.test(e.entity_id.split('.')[1]);
+    };
+    var maps = list.filter(function (e) { return S[e.entity_id] && isMap(e); }).map(function (e) { return e.entity_id; });
+    // Ohne Geräte-Zuordnung (z. B. Map Extractor): camera./image.<roboter>_map.
+    if (!maps.length) {
+      var base = String(anchor).split('.')[1] || '';
+      maps = ['image.' + base + '_map', 'camera.' + base + '_map'].filter(function (id) { return base && S[id]; });
+    }
+    if (!maps.length) return null;
+    var sel = list.filter(function (e) { return e.domain === 'select' && e.key === 'selected_map' && S[e.entity_id]; })[0];
+    var cur = sel ? String(S[sel.entity_id].state || '').trim().toLowerCase() : '';
+    var nm = function (id) {
+      var r = R[id] || {}, a = (S[id] || {}).attributes || {};
+      return [String(r.name || ''), String(a.friendly_name || '')].map(function (x) { return x.trim().toLowerCase(); });
+    };
+    var dead = function (id) { var s = S[id].state; return s === 'unavailable' ? 1 : 0; };
+    var score = function (id) {
+      var n = nm(id);
+      var active = cur && cur !== 'unknown' && cur !== 'unavailable'
+        && n.some(function (x) { return x && (x === cur || x.slice(-(cur.length + 1)) === ' ' + cur); });
+      return (active ? 0 : 2) + dead(id);
+    };
+    return maps.slice().sort(function (a, b) { return score(a) - score(b); })[0];
+  }
+  // Fest eingetragene Karte, solange es sie gibt; sonst (leer oder gelöscht) die gefundene.
+  function vacuumMapFor(hass, anchor, chosen) {
+    var S = (hass && hass.states) || {};
+    if (chosen && S[chosen]) return chosen;
+    return vacuumMap(hass, anchor);
+  }
+
   window.casoraDevice = {
+    vacuumMap: vacuumMap, vacuumMapFor: vacuumMapFor,
     deviceOf: deviceOf, entities: entities, map: map, companionPlug: companionPlug, byKey: byKey,
     waste: waste, wasteDates: wasteDates, wasteDown: wasteDown, siblings: siblings, dayStart: dayStart, onHours: onHours, keyAny: keyAny, network: network,
     contacts: contacts, outdoor: outdoor, openings: openings,

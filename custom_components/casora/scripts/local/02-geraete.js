@@ -3044,6 +3044,8 @@
     var CD = window.casoraDevice;
     if (CD && id && hass) {
       var F = CD.map(hass, id, VFIND, { siblings: true });
+      /* Karte: eingetragene, solange es sie gibt; leer oder gelöscht → am Gerät suchen (07.10.2026). */
+      if (CD.vacuumMapFor) c.map = CD.vacuumMapFor(hass, id, VV.entity_map) || null;
       Object.keys(VFIND).forEach(function (key) {
         if (VOWN[key] && VV[VOWN[key]]) return;
         if (F[key] && states[F[key]]) c[key] = F[key];
@@ -3134,27 +3136,41 @@
     return t.length ? t[0].label + (t.length > 1 ? ' +' + (t.length - 1) : '') : '';
   };
 
-  /* Karte: transparente Ränder abschneiden und zentrieren (wie bisher, nur als Funktion) */
+  /* Karte: transparente Ränder abschneiden und zentrieren. Maße in Prozent der Fläche (feste
+     16:10), damit sie für jede Breite gelten (Handy/Tablet/Desktop, Drehen); gemerkt je Karte.
+     Das vorige Bild bleibt liegen, bis das neue geladen ist (Token/Update ohne Flackern). */
+  V._mapCss = V._mapCss || {};
+  V._mapUrl = V._mapUrl || {};
   V.fit = function (i) {
     var p = i.parentNode;
     if (!p) return;
+    var key = i.getAttribute('data-map') || '';
     var W = p.clientWidth, H = p.clientHeight;
+    var done = function () {
+      V._mapUrl[key] = i.getAttribute('src');
+      Array.prototype.slice.call(p.querySelectorAll('img[data-old]')).forEach(function (o) { o.remove(); });
+      i.style.opacity = '1';
+    };
     try {
-      var n = i.naturalWidth, h = i.naturalHeight, k = Math.min(1, 240 / n), cv = document.createElement('canvas');
-      cv.width = Math.round(n * k); cv.height = Math.round(h * k);
+      var n = i.naturalWidth, h = i.naturalHeight;
+      if (!n || !h || !W || !H) return done();
+      var k = Math.min(1, 240 / n), cv = document.createElement('canvas');
+      cv.width = Math.max(1, Math.round(n * k)); cv.height = Math.max(1, Math.round(h * k));
       var g = cv.getContext('2d');
       g.drawImage(i, 0, 0, cv.width, cv.height);
       var d = g.getImageData(0, 0, cv.width, cv.height).data, x0 = cv.width, y0 = cv.height, x1 = -1, y1 = -1;
       for (var y = 0; y < cv.height; y++) for (var z = 0; z < cv.width; z++) {
         if (d[(y * cv.width + z) * 4 + 3] > 8) { if (z < x0) x0 = z; if (z > x1) x1 = z; if (y < y0) y0 = y; if (y > y1) y1 = y; }
       }
-      if (x1 < x0) return;
+      if (x1 < x0) return done();
       var bx = x0 / k, by = y0 / k, bw = (x1 - x0 + 1) / k, bh = (y1 - y0 + 1) / k, s = Math.min(W / bw, H / bh) * 0.92;
-      var css = 'position:absolute;max-width:none;width:' + (n * s) + 'px;height:' + (h * s) + 'px;left:' + (W / 2 - (bx + bw / 2) * s)
-        + 'px;top:' + (H / 2 - (by + bh / 2) * s) + 'px;display:block;';
+      var pc = function (v, of) { return (v / of * 100).toFixed(3) + '%'; };
+      var css = 'position:absolute;max-width:none;width:' + pc(n * s, W) + ';height:' + pc(h * s, H) + ';left:' + pc(W / 2 - (bx + bw / 2) * s, W)
+        + ';top:' + pc(H / 2 - (by + bh / 2) * s, H) + ';display:block;';
       i.style.cssText = css;
-      V._mapCss = css; V._mapW = W;
+      V._mapCss[key] = css;
     } catch (e) {}
+    done();
   };
 
   /* Raumauswahl bleibt über Re-Render erhalten */
@@ -3261,13 +3277,18 @@
     if (kind === 'v_map') {
       var url = c.map && states[c.map] && (states[c.map].attributes || {}).entity_picture;
       if (!url) return '';
-      var mapCss = V._mapCss || 'width:100%;height:100%;object-fit:contain;display:block;';
+      var mapCss = V._mapCss[c.map] || 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;';
+      var prevUrl = V._mapUrl[c.map];
+      /* Bisheriges Bild unten liegen lassen, das neue erst nach dem Laden zeigen. */
+      var under = prevUrl && prevUrl !== url
+        ? '<img data-old="1" src="' + esc(prevUrl) + '" alt="" style="' + mapCss + '">' : '';
+      var fresh = !!under || !V._mapCss[c.map];
       /* Überschrift wie bei allen Abschnitten (24.09.: sonst sitzt die Karte höher als links die erste Überschrift). */
       return (SF ? HH.label('Karte') : '<div style="font-family:var(--primary-font-family,system-ui);font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);'
         + 'color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary,#fff));text-align:left;padding:0 4px 8px;">Karte</div>')
-        + '<div style="position:relative;width:100%;aspect-ratio:16/10;border-radius:var(--casora-popup-row-radius, 20px);overflow:hidden;'
+        + '<div class="cv-map" style="position:relative;width:100%;aspect-ratio:16/10;border-radius:var(--casora-popup-row-radius, 20px);overflow:hidden;'
         + 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));box-shadow:var(--casora-popup-plate-shadow, none);">'
-        + '<img src="' + esc(url) + '" alt="" style="' + mapCss + '" onload="window._casoraVac&&window._casoraVac.fit(this)" onerror="this.remove()"></div>';
+        + under + '<img data-map="' + esc(c.map) + '" src="' + esc(url) + '" alt="" style="' + mapCss + (fresh ? 'opacity:0;' : '') + '" onload="window._casoraVac&&window._casoraVac.fit(this)" onerror="this.remove()"></div>';
     }
 
     if (kind === 'v_attn') {

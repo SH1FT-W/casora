@@ -495,6 +495,8 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     const CD = window.casoraDevice;
     if (!CD || !f.find || !tile || !tile.entity || !hass) return null;
     try {
+      // Eigene Suche des Finders (z. B. Saugroboter-Karte: vacuumMap).
+      if (f.find.fn) return (typeof CD[f.find.fn] === "function" && CD[f.find.fn](hass, tile.entity)) || null;
       if (f.find.plug) {
         const p = CD.companionPlug(hass, tile.entity);
         return (p && p[f.find.plug]) || null;
@@ -505,6 +507,14 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       return null;
     }
   }
+  // Eingetragene Entität gibt es nicht (mehr): Hinweis, was stattdessen genommen wird.
+  window.casoraFieldMissing = (f, tile, hass, cur) => {
+    if (!f.find || !f.find.fn || !cur || typeof cur !== "string" || !hass || (hass.states || {})[cur]) return null;
+    const id = found(f, tile, hass);
+    const de = lang(hass) === "de";
+    if (!id) return de ? "Eingetragene Entität fehlt – keine Karte gefunden." : "The chosen entity is missing – no map found.";
+    return (de ? "Eingetragene Entität fehlt – automatisch: " : "The chosen entity is missing – automatic: ") + nameOf(hass, id);
+  };
   // Die gefundene Entität selbst (für das Vorbelegen neuer Kacheln im Studio).
   window.casoraFieldEntity = (f, tile, hass) => found(f, tile, hass);
   window.casoraFieldFound = (f, tile, hass) => {

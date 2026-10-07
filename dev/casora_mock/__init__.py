@@ -58,6 +58,20 @@ def _merge(fixture: dict, extra: dict, label: str = "Stresshaus aktiv") -> None:
     _LOGGER.warning("Casora Mock: %s (+%s Entitäten)", label, len(extra.get("entities", [])))
 
 
+def _vacuum_map(fixture: dict) -> None:
+    """Saugroboter ohne Karte bekommt eine (image.<sauger>_map, Bild aus entity.MAP_PNG),
+    damit das Popup die automatische Kartensuche zeigt."""
+    ents = fixture["entities"]
+    for v in [e for e in ents if e["entity_id"].startswith("vacuum.") and e.get("device")]:
+        if any(e["entity_id"].startswith("image.") and e.get("device") == v["device"] for e in ents):
+            continue
+        name = (v.get("attributes") or {}).get("friendly_name") or "Saugroboter"
+        ents.append({"entity_id": "image." + v["entity_id"].split(".", 1)[1] + "_map", "state": "2026-10-07T08:00:00+00:00",
+                     "attributes": {"friendly_name": name + " Karte"}, "platform": "casora_mock", "device": v["device"],
+                     "area": None, "original_name": "Karte", "name": None, "icon": None, "device_class": None,
+                     "unit": None, "hidden": False, "translation_key": "map", "entity_category": "diagnostic"})
+
+
 async def async_setup(hass: HomeAssistant, config) -> bool:
     if DOMAIN in config and not hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(
@@ -76,6 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Zwei neutrale Waschmaschinen (WashData-artig und Home-Connect-artig), siehe waesche.py.
     from .waesche import extra as waesche_extra
     _merge(fixture, waesche_extra(dt_util.utcnow()), "Waschmaschinen A/B")
+    _vacuum_map(fixture)
     fixture["_skip"] = await hass.async_add_executor_job(_skip_list)
     mock = CasoraMock(hass, entry, fixture, scenarios)
     hass.data[DOMAIN] = mock
