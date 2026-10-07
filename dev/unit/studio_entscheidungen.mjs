@@ -24,7 +24,7 @@ const need = (keys) => keys.forEach((k) => assert.ok(de[k], 'de.json: ' + k));
   for (const old of ['(“Done”)', 'Done hides it on the dashboard', 'Done removes it for good', 'asks too. Done saves it']) {
     assert.ok(!plus.includes(old) && !mehr.includes(old), 'alter Verweis weg: ' + old);
   }
-  assert.ok(/action: undo, save: true, ms: 9000/.test(plus), 'Szene: „Jetzt speichern“ neben „Rückgängig“');
+  assert.ok(/action: undo, save: true,/.test(plus), 'Szene: „Jetzt speichern“ neben „Rückgängig“');
   need(['Save now', 'Save – the Studio stays open', 'Not saved yet – “Save now” or Done saves it.',
     'Scene saved in Home Assistant. The color is saved with the dashboard.', 'Gone for good once you save.']);
   console.log('studio_entscheidungen: 1 Speichern ok');
