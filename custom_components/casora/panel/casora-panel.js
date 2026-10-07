@@ -19481,6 +19481,11 @@ class CasoraPanel extends HTMLElement {
     if (!strip._miniScroll) {
       strip._miniScroll = true;
       strip.addEventListener("scroll", edges, { passive: true });
+      // Hat man die Leiste schon selbst bewegt, holt der verspätete Durchlauf (450 ms, unter Last
+      // später) den offenen Raum nicht mehr zurück – das Wischen sprang sonst auf den Anfang
+      // (Tablet, Gate 07.10.2026).
+      const mine = () => { strip._userMoved = true; };
+      for (const ev of ["touchstart", "pointerdown", "wheel"]) strip.addEventListener(ev, mine, { passive: true });
       // Mausrad senkrecht blättert die Leiste seitwärts, an den Enden wieder die Seite.
       strip.addEventListener("wheel", (ev) => {
         if (ev.ctrlKey || Math.abs(ev.deltaX) >= Math.abs(ev.deltaY)) return;
@@ -19495,7 +19500,7 @@ class CasoraPanel extends HTMLElement {
     if (strip.scrollWidth <= strip.clientWidth + 1) { strip.scrollLeft = 0; edges(); return; }
     tabs.classList.add("clipped");  // start-aligned from here on, then measure
     const on = strip.querySelector(".mini-tab.on");
-    if (on) {
+    if (on && !strip._userMoved) {
       const sb = strip.getBoundingClientRect(), r = on.getBoundingClientRect();
       const mid = (r.left - sb.left + r.width / 2) * k() + strip.scrollLeft;
       strip.scrollLeft = Math.max(0, Math.round(mid - strip.clientWidth / 2));
