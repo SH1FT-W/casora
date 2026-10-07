@@ -1,4 +1,4 @@
-// @zustand: arbeit
+// @zustand: demo
 // @parallel: ui
 // Gemeldet (07.10.2026): Pflanzen-Popup am Handy (von der Startseite, Theme „Casora“ hell) war breiter
 // als der Bildschirm – Diagramm und Messwerte rechts abgeschnitten, Werte halb sichtbar. Ursache: ein
