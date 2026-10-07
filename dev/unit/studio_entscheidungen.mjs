@@ -47,3 +47,27 @@ const need = (keys) => keys.forEach((k) => assert.ok(de[k], 'de.json: ' + k));
     'This tile has no popup – tap it to edit it.']);
   console.log('studio_entscheidungen: 2 Ausprobieren ok');
 }
+
+// 3) „Design“ unter „Einstellungen“ (gilt für alle Dashboards), im Dashboard-Menü nur ein Verweis
+{
+  const set = read('panel/casora-panel-settings.js');
+  const b = read('panel/casora-panel-b.js');
+  const add = read('panel/casora-panel-addons.js');
+  const mehr = read('panel/casora-panel-b-mehr.js');
+  const main = read('panel/casora-panel.js');
+  assert.ok(/\{ id: "design", label: "Design",[^}]*look: true/.test(set), 'Einstellungen-Seite „Design“');
+  assert.ok(/if \(page\.look\) \{\s*if \(!\(typeof this\._casoraLookPicker === "function" && this\._casoraLookPicker\(host\)\)\)/.test(set), 'Seite zeichnet die Design-Auswahl');
+  assert.ok(/\["design", "Design", "desktop"\], \["home"/.test(b), 'Menü „Einstellungen“ beginnt mit Design');
+  assert.ok(/label: "Design \(for all dashboards\) ›"/.test(b) && /if \(id === "design"\) \{[^}]*_casoraShowDesign\(\)/.test(b), 'Dashboard-Menü: Verweis springt dorthin');
+  assert.ok(/\["General", "Controls", "settings"\]/.test(b) && /label: "General", title: "Controls"/.test(main), 'im Dashboard bleibt „Bedienung“');
+  assert.ok(!/section\.card\[data-k="General"\][\s\S]{0,400}casora-looks/.test(add), 'Design-Auswahl nicht mehr im Abschnitt „Bedienung“');
+  assert.ok(/\["design", "Design", "design theme look/.test(mehr) && /way\("Settings", "Design"\)/.test(mehr), '⌘K: Design unter Einstellungen');
+  // Felder unter „Bedienung“ gelten wirklich je Dashboard
+  const gen = main.slice(main.indexOf('label: "General", title: "Controls"'), main.indexOf('label: "Weather"'));
+  const keys = gen.match(/key: "[^"]+"/g) || [];
+  assert.ok(keys.length > 5 && (gen.match(/scope: "dashboard"/g) || []).length >= keys.length, 'alle Bedienung-Felder: dieses Dashboard');
+  need(['Controls', 'Design (for all dashboards) ›', 'How every Casora dashboard looks – the change applies right away.',
+    'The design applies to all dashboards right away. Undo switches it back.']);
+  assert.ok(!de['Look & Controls'] && !de['Exception: the design applies to all dashboards'], 'alte Texte entfernt');
+  console.log('studio_entscheidungen: 3 Design unter Einstellungen ok');
+}

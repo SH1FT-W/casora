@@ -190,14 +190,39 @@ customElements.whenDefined("casora-panel").then(() => {
     }
     return r;
   };
+  // Die Design-Auswahl gilt für alle Dashboards und steht darum unter „Einstellungen › Design“
+  // (casora-panel-settings.js). Im Abschnitt „Bedienung“ des Dashboards bleibt nur ein Verweis dorthin.
   const renderForm = P._renderForm;
   P._renderForm = function () {
     const r = renderForm.apply(this, arguments);
     paintLook(this);
     const card = this.$("pane") && this.$("pane").querySelector('section.card[data-k="General"]');
+    if (!card || card.querySelector(".casora-looklink")) return r;
+    const tr = (x) => (window.casoraI18n ? window.casoraI18n.t(x) : x);
+    const link = document.createElement("button");
+    link.type = "button";
+    link.className = "ghost casora-looklink";
+    link.style.cssText = "display:block;margin:2px 0 12px;padding:8px 0;min-height:0;height:auto;background:none;box-shadow:none;"
+      + "color:var(--casora-studio-link, var(--accent, #B67A50));font-weight:600;text-align:left";
+    link.setAttribute("data-no-i18n", "");
+    link.textContent = tr("Design (for all dashboards) ›");
+    link.onclick = () => this._casoraShowDesign();
+    const head = card.querySelector(".chead");
+    card.insertBefore(link, head ? head.nextSibling : card.firstChild);
+    return r;
+  };
+  // Zur Seite „Einstellungen › Design“ (Desktop: Seite, Handy: Blatt).
+  P._casoraShowDesign = function () {
+    if (this._bLeavePages) this._bLeavePages();
+    this._bOpen = true;
+    if (typeof this._csShow === "function") return this._csShow("design");
+  };
+  // Design-Auswahl (drei Karten mit Bild) in host zeichnen – für „Einstellungen › Design“.
+  P._casoraLookPicker = function (host) {
+    paintLook(this);
     const themes = ((window.__casoraPanelInternals || {}).CASORA_THEMES || [])
       .filter((x) => this._hass && this._hass.themes && (this._hass.themes.themes || {})[x.name]);
-    if (!card || card.querySelector(".casora-look") || !themes.length) return r;
+    if (!host || !themes.length) return false;
     const t = this._hass.themes;
     const cur = themeNow(this);
     const ours = themes.find((x) => x.name === cur || (x.aliases || []).includes(cur));
@@ -222,12 +247,8 @@ customElements.whenDefined("casora-panel").then(() => {
         + ".casora-lookcard:disabled{cursor:progress;opacity:.7}";
       this.shadowRoot.appendChild(st);
     }
-    const sub = document.createElement("div");
-    sub.className = "subtitle casora-look";
-    sub.dataset.sub = "look";
-    sub.textContent = "Design";
     const box = document.createElement("div");
-    box.className = "subcard";
+    box.className = "subcard casora-look";
     // Two small cards with a real screenshot each, like the setup assistant, instead of a
     // plain list: the choice is seen, not read.
     const grid = document.createElement("div");
@@ -277,15 +298,10 @@ customElements.whenDefined("casora-panel").then(() => {
     box.appendChild(grid);
     const hint = document.createElement("div");
     hint.className = "hint";
-    hint.textContent = "The design applies to all dashboards right away; the other settings here only to this dashboard. Undo switches the design back.";
-    const head = card.querySelector(".chead");
-    const at = head ? head.nextSibling : card.firstChild;
-    card.insertBefore(hint, at);
-    card.insertBefore(box, hint);
-    card.insertBefore(sub, box);
-    // Die Seitenleiste nennt die Unterbereiche – „Design“ kommt erst hier dazu.
-    if (typeof this._renderSidebar === "function") this._renderSidebar();
-    return r;
+    hint.textContent = tr("The design applies to all dashboards right away. Undo switches it back.");
+    // Die Seite heißt schon „Design“ – keine zweite Überschrift.
+    host.append(box, hint);
+    return true;
   };
 });
 

@@ -19,13 +19,14 @@ assert.equal(sc({ sel: { group: 'badges', key: 'Climate' } }), 'room', 'Badge: d
 assert.equal(sc({ sel: { group: 'rooms', key: 'Appearance' } }), 'room', 'Darstellung: dieser Raum');
 assert.equal(sc({ sel: { group: 'rooms', key: 'Now Playing' } }), 'room', 'Wiedergabe: dieser Raum');
 assert.equal(sc({ sel: { group: 'rooms', key: 'Weather' } }), 'dash', 'Wetter: dieses Dashboard');
-assert.equal(sc({ sel: { group: 'rooms', key: 'General' } }), 'design', 'Design & Bedienung sagt, was stimmt');
+// Seit 07.10.2026 steht das Design unter „Einstellungen“; „Bedienung“ gilt nur für dieses Dashboard.
+assert.equal(sc({ sel: { group: 'rooms', key: 'General' } }), 'dash', 'Bedienung: dieses Dashboard');
 assert.equal(sc({ page: 'settings' }), 'all', 'Einstellungen: alle Dashboards');
 assert.equal(sc({ page: 'updates' }), 'all');
 assert.equal(sc({ page: 'rewind' }), 'dash', 'Zeitreise: dieses Dashboard');
 assert.equal(sc({ arrange: true }), 'dash', 'Räume ordnen: dieses Dashboard');
 assert.equal(sc({}), '', 'nichts offen: keine Zeile');
-assert.ok(/\{room\}/.test(U.SCOPE.room) && /all dashboards/.test(U.SCOPE.design), 'Texte');
+assert.ok(/\{room\}/.test(U.SCOPE.room) && /all dashboards/.test(U.SCOPE.all) && !U.SCOPE.design, 'Texte');
 
 // ── V-07: Weg über dem Titel ────────────────────────────────────────────────────────
 const pa = (o) => U.pathOf({ dashSection, room: 'Wohnzimmer', ...o });

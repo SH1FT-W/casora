@@ -31,8 +31,8 @@
   // Untertitel der Reiter (V-02): ein Satz, was darin steckt.
   const SUB = {
     list: "Photo, badges, tiles and popups of {room}",
-    dash: "Look, weather, time, notifications and scenes – for this dashboard",
-    home: "Home, bell, AI and updates – for all dashboards",
+    dash: "Controls, weather, time, notifications and scenes – for this dashboard",
+    home: "Design, home, bell, AI and updates – for all dashboards",
   };
 
   // Fachwörter mit Halbsatz (V-08): in der Inhalt-Liste unter „Badges“ und „Popups“.
@@ -48,7 +48,6 @@
     if (!sel) return ctx.list ? "room" : "";
     if (sel.group === "tiles" || sel.group === "badges") return "room";
     if (sel.group === "rooms") {
-      if (sel.key === "General") return "design";
       return ctx.dashSection && ctx.dashSection(sel.key) ? "dash" : "room";
     }
     return "";
@@ -57,7 +56,6 @@
     room: "Applies to: {room}",
     thisroom: "Applies to: this room",
     dash: "Applies to: this dashboard",
-    design: "Applies to: this dashboard · exception: the design applies to all dashboards",
     all: "Applies to: all dashboards",
   };
 
@@ -374,8 +372,8 @@
           intro = tr(SCOPE.dash);
           // Die Zeile oben sagt es schon – keine zweite Überschrift „Nur dieses Dashboard“.
           items = items.map((x) => (x && /^sec:/.test(x.id || "") ? { ...x, quiet: true } : x));
-          // Ausnahme ausdrücklich so nennen – vorher wirkte es wie ein Widerspruch zur Zeile oben (Nutzertest T1).
-          subs = { General: "Exception: the design applies to all dashboards" };
+          // Das Design (gilt für alle Dashboards) steht seit 07.10.2026 unter „Einstellungen“; der Verweis
+          // „Design (für alle Dashboards) ›“ unten im Menü sagt es selbst – keine Ausnahme-Zeile mehr.
         } else if (items.some((x) => x && /^page:/.test(x.id || ""))) {
           intro = tr(SCOPE.all);
           items = items.map((x) => (x && (/^page:/.test(x.id || "") || x.id === "updates") ? { ...x, quiet: true } : x));

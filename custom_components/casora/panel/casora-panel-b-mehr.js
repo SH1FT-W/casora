@@ -925,13 +925,15 @@
 
     // ── Suche ───────────────────────────────────────────────────────────────
     const SECS = [
-      ["General", "Look & Controls", "design theme look aussehen stil farbe farben schrift hell dunkel kopfzeile knöpfe"],
+      // Das Design gilt für alle Dashboards (Einstellungen › Design, unten bei PAGES); hier bleibt die Bedienung.
+      ["General", "Controls", "bedienung kopfzeile knöpfe assist schrift leerlauf startseite tablet leistung dialoge"],
       ["Weather", "Weather", "wetter temperatur vorhersage"], ["Time", "Time", "uhrzeit uhr datum uhrformat format 12 12h 12-stunden 12-stunden-uhr 24 24h 24-stunden stunden am pm"],
       ["Notifications", "Notifications", "glocke benachrichtigungen hinweise meldungen push"], ["Scenes", "Scenes", "szenen stimmung"],
       ["Now Playing", "Now Playing", "musik wiedergabe medien player"],
       ["Appearance", "Appearance", "raumname foto bild hintergrund hintergrundbild bewegungsmelder raum"],
     ];
     const PAGES = [
+      ["design", "Design", "design theme look aussehen stil farbe farben hell dunkel weich glas nebel"],
       ["home", "Home & Devices", "haus geräte personen bereiche"], ["alerts", "Bell & Alerts", "glocke meldungen benachrichtigung push"],
       ["dashboards", "New Dashboards", "neue dashboards standard"], ["ai", "AI", "ki künstliche intelligenz assistent"],
       ["outdoor", "Outdoor & Price", "außen draußen strompreis"], ["vent", "Ventilation", "lüften lüftung fenster"],
@@ -947,14 +949,14 @@
       };
       const sel = (s) => requestAnimationFrame(() => { this._bOpen = true; this._select(s); });
       // Aktionen
-      // Weg dorthin („Dashboard › Design & Bedienung“) – so lernt man die Menüs nebenbei.
+      // Weg dorthin („Einstellungen › Design“) – so lernt man die Menüs nebenbei.
       const way = (...xs) => xs.filter(Boolean).map((x) => tr(x)).join(" › ");
       const here = rooms[this._room];
       const A = (id, label, words, run, ok, path) => { if (ok !== false) out.push({ kind: "action", id: "a:" + id, label: tr(label), words, run, path }); };
       A("rewind", "Rewind", "zeitreise rewind versionen version früher frueher frühere stände stand wiederherstellen verlauf backup sicherung history zurück",
         () => { this._bOpen = true; this._cvFromMenu(); }, typeof this._cvFromMenu === "function" && !!this._dashUrl, way("Clock next to Undo"));
       A("look", "Change the look", "look ändern design wechseln theme farben farbe aussehen stil weich schrift",
-        () => { this._bLeavePages && this._bLeavePages(); sel({ group: "rooms", key: "General", label: "General" }); }, true, way("Dashboard", "Look & Controls"));
+        () => { if (this._casoraShowDesign) this._casoraShowDesign(); }, typeof this._casoraShowDesign === "function", way("Settings", "Design"));
       A("photo", "Change the photo", "foto ändern hintergrund hintergrundbild bild raumbild bild ändern",
         () => { this._bLeavePages && this._bLeavePages(); sel({ group: "rooms", key: "Appearance", label: "Appearance" }); }, !!here,
         here ? this._roomLabel(here) + " › " + tr("Appearance") : "");

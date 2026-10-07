@@ -1844,6 +1844,7 @@ const STUDIO_ICON = {
   "badge-energy": ["energy", "var(--casora-badge-energy-color, var(--casora-color-green, #30D158))"],
   versions: ["energy", "var(--casora-color-green, #34C759)"],
   updates: ["info", "var(--casora-color-blue, #0A84FF)"],
+  "set-design": ["light", "var(--casora-color-pink, #ff4d70)"],
   "set-home": ["main", "var(--casora-color-teal, #00C3D0)"],
   "set-alerts": ["alert", "var(--casora-color-red, #FF453A)"],
   "set-dashboards": ["neutral", "var(--casora-color-indigo, #5E5CE6)"],
@@ -1930,9 +1931,10 @@ const SECTIONS = [
   },
   {
     // label bleibt Schlüssel (data-k, Auswahl, Faltzustand); title ist nur die Anzeige.
-    label: "General", title: "Look & Controls", icon: "settings", iconColor: studioIcon("general"),
+    // Das Design (gilt für alle Dashboards) steht unter „Einstellungen › Design“, hier die Bedienung dieses Dashboards.
+    label: "General", title: "Controls", icon: "settings", iconColor: studioIcon("general"),
     group: "rooms", scope: "dashboard",
-    blurb: "Design, header and buttons, font and speed.",
+    blurb: "Header and buttons, font and speed – for this dashboard.",
     subs: [
       { id: "chrome", label: "Screen" },
       // Die Detailfenster von Home Assistant (Mehr-Infos), nicht Casoras eigene Popups.
