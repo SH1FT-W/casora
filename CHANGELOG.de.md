@@ -4,6 +4,151 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.1.0 – 07.10.2026
+
+Das größte Update seit Casora 1.0. Neu sind das Studio, in dem die Vorschau selbst die Arbeitsfläche ist, und das zweite Design „Casora Nebel“. Dazu kommen über 20 neue Funktionen und rund 200 Verbesserungen und Fehlerbehebungen in Dashboard, Popups, Sicherheit und Energie.
+
+### Gut zu wissen
+- Ein installiertes Update wird erst eingespielt, wenn Home Assistant beendet bzw. neu gestartet wird. Bis dahin laufen Studio und Dashboards unverändert mit der bisherigen Version.
+- Neu hochgeladene Raumfotos sind jetzt geschützt (siehe Sicherheit). Ältere Raumfotos bitte einmal neu hochladen, damit sie es auch sind.
+- Einmal im Studio speichern: Danach übernimmt das Handy-Dashboard bei bedingten Kacheln (z. B. Alarm nur bei Abwesenheit) auch die Bedingung und die Einstellungen vom Desktop, und die gewählte Schrift gilt auch am Handy.
+- Das bisherige Studio bleibt erreichbar: „…“ › Hilfe › „Bisheriges Studio öffnen“.
+
+### Neu
+
+#### Studio
+- **Die Vorschau ist die Arbeitsfläche:** Titel, Badge oder Kachel anklicken (am Handy antippen), und die Einstellungen öffnen sich gleich daneben, am Handy als Blatt von unten. Badges und Kacheln ziehst du direkt in der Vorschau an ihren Platz, am Touchscreen nach langem Drücken. Der Kopf jedes Editors nennt den Weg („Wohnzimmer › Kacheln“).
+- **Werkzeugleiste statt Seitenleiste:** Räume, Inhalt (der Raum mit allen Abschnitten, auch dem, was die Vorschau nicht zeigt), Dashboard (nur dieses Dashboard) und Einstellungen (für alle Dashboards). Menüs und Editoren sagen oben „Gilt für: …“. Alles zum Dashboard (wechseln, neu, umbenennen, Symbol, Zeitreise, Handy-Layout, löschen) steckt im Titelmenü, „…“ heißt „Hilfe & Extras“.
+- **Ausprobieren:** Langes Drücken auf eine Kachel oder ein Badge (am Computer auch Rechtsklick oder Alt+Klick) öffnet das echte Popup wie im Dashboard, schon mit dem ungespeicherten Stand. Antippen bleibt Bearbeiten.
+- **Speichern ohne Verlassen:** „Speichern“ neben „Fertig“ (auch ⌘S / Strg+S) sichert und lässt das Studio offen. Meldungen, die auf das Speichern warten, haben einen Knopf „Jetzt speichern“.
+- **Rückmeldung und Wiederholen:** Nach jeder Änderung erscheint unten eine ruhige Meldung mit „Rückgängig“. Neu ist Wiederholen (⌘⇧Z / Strg+Y).
+- **Änderungsliste:** „Bearbeitet · 3 Änderungen ›“ unter dem Titel zeigt in klaren Sätzen, was beim Speichern rausgeht, z. B. „Raum umbenannt: Küche → Küche & Essen“ oder „Uhrzeit: 12-Stunden-Uhr an“. Jede Zeile lässt sich einzeln zurücknehmen und wiederholen.
+- **Suche (⌘K):** findet Räume, Kacheln, Badges, Szenen, Einstellungen und Aktionen, auch mit eigenen Wörtern („Verlauf“ findet die Zeitreise, „Hintergrund“ das Raumfoto), und zeigt den Weg dorthin. Geräte ohne Kachel lassen sich direkt aus der Suche hinzufügen.
+- **Kacheln vom Gerät her:** „+“ fragt „Was soll auf das Dashboard?“, zeigt zuerst die Geräte des Raums ohne Kachel und wählt die passende Kachelart selbst. Die bisherige Auswahl steht unter „Andere Kachelart …“. Eine neue Kachel öffnet gleich ihren Editor und leuchtet kurz auf.
+- **Geräteauswahl wie in Home Assistant:** Name, „Raum · Gerät“ und Zustand, nach Räumen gruppiert, mit Suche, am Handy als Blatt. Geräte heißen überall so, wie sie in Home Assistant benannt sind.
+- **Szene aus dem aktuellen Zustand:** Unter „Szene hinzufügen“ › „Aus aktuellem Zustand …“ hakst du die Geräte des Raums ab, stellst Helligkeit und Lichtfarbe direkt im Dialog ein, gibst einen Namen und eine Farbe und speicherst eine echte Home-Assistant-Szene. Nicht erreichbare Lichter stehen ausgegraut dabei.
+- **Sichtbarkeit („Wer sieht das?“):** Kacheln, Badges und Räume lassen sich für einzelne Home-Assistant-Benutzer ausblenden, am Desktop und am Handy. „Ansehen als …“ zeigt die Vorschau so, wie ein anderer Benutzer sie sieht. Das Studio sagt ehrlich, dass dies nur ausblendet und kein Zugriffsschutz ist.
+- **Vor dem Schalten fragen:** Für jede Kachel, die etwas schaltet oder fährt (Licht, Steckdose, Jalousie, Garagentor, Ventil, Szene, Skript, Knopf), kann das Dashboard vorher nachfragen. Das gilt für jeden Weg: Kachel, Symbol, Popup-Knöpfe und Positionsregler. Bei Sammelkacheln nennt die Frage alle Geräte, der Fokus liegt auf „Abbrechen“.
+- **Räume ausblenden statt löschen:** Ein ausgeblendeter Raum bleibt mit allen Einstellungen im Studio, ist am Auge zu erkennen und steht oben im Räume-Menü mit „Einblenden“. „Raum löschen“ bietet „Lieber nur ausblenden“ an.
+- **Räume ordnen:** per Ziehen oder „Alphabetisch sortieren“ statt Schritt für Schritt nach vorne.
+- **Zeitreise:** hat ihren festen Platz als Uhr neben Rückgängig. Stände stehen in Alltagssätzen („Wohnzimmer gelöscht“, „Foto Küche geändert“), lassen sich benennen und anheften (angeheftete werden nie aufgeräumt), und vor dem Wiederherstellen steht, was dabei verloren geht.
+- **Auf Handy öffnen:** ein QR-Code mit der Adresse des Dashboards, direkt im Studio erzeugt, ohne Passwort darin.
+- **Badges umbenennen:** Feld „Name auf dem Badge“ für Klima, Beleuchtung, Personen, Medien, Sicherheit, Energie und Szenen, auf Desktop und Handy.
+- **Kurze Einführung** beim ersten Öffnen (drei Hinweise, überspringbar, später unter „…“), danach drei kleine nächste Schritte (Foto, Szene, Handy), die sich selbst abhaken.
+- **Neue Raumsymbole** für Garage, Briefkasten, Keller, Dachboden und Terrasse/Balkon.
+- Kacheln mit einer Bedingung: Ist am Handy eine andere Bedingung gespeichert, sagt der Kachel-Editor das. Beim Speichern gilt die Desktop-Bedingung dann auch am Handy.
+
+#### Design
+- **Neues Design „Casora Nebel“:** derselbe Aufbau wie Casora, aber kühles Hellgrau statt Leinen und ein ruhiges Petrol-Blau als Akzent, hell und dunkel. Wählbar im Studio unter Einstellungen › Design und im Einrichtungsassistenten. Licht bleibt gelb, Heizung orange, Alarm rot.
+- **Lila für Szenen:** Casora und Casora Nebel haben ein eigenes Lila in der Farbauswahl. Die Farbnamen richten sich nach der Farbe, die das Design wirklich zeigt.
+- **Szenenfarben im ganzen Dashboard:** Läuft eine Szene, zeigen Szenen-Badges, Szenen-Popup und Szenen-Menüs (Desktop und Handy) ihre Farbe.
+
+#### Sicherheit und Alarm
+- **Rückfrage beim Scharfschalten:** Sind Fenster oder Türen offen oder Schlösser entriegelt, fragt Casora vor dem Scharfschalten nach und nennt bis zu drei davon beim Namen („Achtung: Küchenfenster offen, Haustür entriegelt“). Unscharf schalten fragt nie.
+- **Alarm-Popup (Casora-Look):** Ein großer Knopf sagt, was passiert („Scharf schalten · Abwesend“, „Unscharf schalten“, „Abbrechen“ mit Countdown, rot „Alarm beenden“), darunter die anderen Modi. Verlangt die Anlage einen Code, erscheint ein Code-Feld. Gezeigt werden nur Modi, die die Anlage kann.
+- **Sicherheits-Badge mit Symbolen:** Die Unterzeile zeigt kleine Symbole mit Zahl statt einer langen Liste, „Gekippt“ hat ein eigenes Symbol, nicht erreichbare Geräte sind durchgestrichen. Neue Einstellung: „Automatisch“ (Startseite kurz, Räume ausgeschrieben), „Immer kurz“ oder „Immer ausführlich“.
+- Ist alles zu, sagt das Sicherheits-Badge „Alles sicher“, bei Alarm „Alarm!“, statt „1 Schloss“ steht „Schloss offen“. Das gilt auch in Hemma 1 und Hemma 2.
+
+#### Popups, Energie und Geräte
+- **Licht-Popup eines Raums:** neuer Knopf „Alles aus“. Das Popup einer einzelnen Lampe zeigt alle Leuchten des Raums.
+- **Energie-Popup:** Die größten Verbraucher (bis zu 5) erscheinen auch ohne Zuordnung im Studio. Casora findet sie selbst und lässt Haus-, Netz-, Solar- und Akkuwerte weg. Jeder Sensor der Raumsumme steht mit seinem Wert im Popup.
+- **Assist-Vorschläge aus deinem Zuhause:** passend zur Tageszeit, mit deinen Raumnamen und zuerst dort, wo gerade etwas zu tun ist (offenes Fenster, Licht an, Tür entriegelt). Die Spracheingabe nutzt die bevorzugte Assist-Pipeline deines Hauses.
+- **Aquarium-Kachel:** neue Einstellung „Akku-Hinweise“ (Automatisch, Immer, Nie). Gibt es schon eine Batterien-Kachel, meldet die Aquarium-Kachel einen schwachen Fühler-Akku nicht noch einmal. Leck und Temperaturwarnung meldet sie wie bisher.
+- **Handy-Raumseite:** Jalousien und Rollläden haben eine eigene Gruppe „Jalousien“ statt unter „Klima“ zu stehen, Garagen- und Hoftore stehen unter „Sicherheit“.
+
+### Verbessert
+
+#### Studio
+- Überall „Handy“ statt „Mobil“, der Reiter „Elemente“ heißt „Inhalt“, und jeder Reiter erklärt beim Zeigen in einem Satz, was darin steckt. Das Design steht unter Einstellungen › Design, im Dashboard-Menü bleibt „Bedienung“.
+- Der Kachel-Editor zeigt das Wichtige oben, „Sichtbarkeit & Rückfrage“ und „Popup“ sind zugeklappt mit kurzer Zusammenfassung. Beschriftungen von Schaltern lassen sich mit anklicken.
+- Die Vorschau zeigt Kacheln so benannt wie das Dashboard, Kacheln ohne eigenen Namen nennen klein ihre Art (z. B. „3D-Drucker“), Kacheln, die ihre Daten selbst finden, zeigen „Automatisch“ statt „Gerät fehlt“.
+- Die Desktop-Vorschau hat das Seitenverhältnis deines Bildschirms. Swipe-Karten erscheinen als eine Kachel mit Seitenpunkten. Neue oder entfernte Kacheln stehen sofort in der Handy-Vorschau.
+- Tablet: Hochkant liegt der Editor unter der Vorschau, die Vorschau ist hochkant und mehr als doppelt so breit. Die Werkzeugleiste kürzt ihre Beschriftungen stufenweise, die Knöpfe bleiben an ihrem Platz, und nichts überlappt mit „Speichern“.
+- „Neu in …“ zeigt alle Geräte des Raums ohne Kachel, auch solche, die nur einem Bereich zugeordnet sind.
+- „Desktop und Handy angleichen“ meldet sich als ruhiger Hinweis in klaren Sätzen statt als oranges „2 Unterschiede“.
+- Am Handy ist das Studio dunkel, wenn Home Assistant dunkel ist. Überschriften, Zurück und Schließen sind lesbar, Einstellungsseiten sind deckend.
+- Einstellungen nutzen Schalter statt Häkchen, wiederholte Zeilen nennen ihre Überschrift nur einmal, Menüs am Desktop sind so hoch, dass das Raummenü ganz passt. „Einstellungen speichern“ ist klar von „Fertig“ getrennt.
+- Im Casora-Look stehen Bernstein, Eisblau und Gold nicht mehr zur Wahl, weil sie wie Orange, Blau und Gelb aussahen. Schon gewählte Farben bleiben.
+- Hinweise zum Einrichten („im Casora Studio zuordnen“) sehen nur Admins, alle anderen sehen „Noch nicht eingerichtet“.
+
+#### Dashboard und Popups
+- Popups sind ganz deckend, haben einheitliche Überschriften und Abstände, und die aktive Zeile sieht überall gleich aus.
+- Am Handy sind Knöpfe und Tippflächen überall mindestens 44 Pixel groß (Schließen, Zurück, Schalter, Szenen-Chips, Farb- und Quellen-Pillen, Kamera-Vollbild). Bildschirmleser hören „Schließen“ und „Zurück“ in deiner Sprache.
+- Besser lesbar im Casora-Look: dunklerer Start-Knopf, kräftigere ausgeschaltete Kacheln, gleiche Schriftgrößen für gleiche Rollen, am Tablet Kleingedrucktes mindestens 13 px.
+- Jalousie-Popup: Schnellwahl „Zu · 25 % · 50 % · 75 % · Auf“ mit genug Platz, Rollos, Fensterläden und Behänge stehen gemeinsam unter „Jalousien“.
+- Saugroboter-Popup: Modusknöpfe füllen die Breite, nichts wird abgeschnitten, Programme ohne den Gerätenamen davor, auf Englisch vollständig übersetzt.
+- Kamera ohne Bild zeigt eine ruhige Fläche mit Kamera-Symbol und „Kein Bild“ statt einer schwarzen Kachel mit „Live“.
+- Alarm-Popup: Der Kopf zeigt die Farbe des aktiven Modus (scharf = in Ordnung), Rot nur bei Alarm. Das Thermostat-Popup zeigt im Kopf dasselbe Symbol wie die Kachel.
+- Schaltbare Einzelgeräte haben einen Schalter auf der Kachel, neu auch der Luftreiniger, Gruppen nicht.
+- Glocke: überall derselbe Punkt bei neuen Mitteilungen, das Menü hat eine Überschrift. Ein Tipp auf einen Eintrag öffnet dasselbe Popup wie der Tipp auf die Kachel.
+- Raumleiste am Computer: Mit der Tastatur sieht man, welcher Raum gewählt ist, nach einem Mausklick erscheint kein Rahmen mehr.
+- Handy: Endet ein Badge genau am Bildschirmrand, werden die Badges etwas breiter, damit man sieht, dass die Reihe weitergeht. Beim Wechsel in einen Raum stehen die Kacheln sofort an ihrem Platz.
+- Energie-Badge im Raum zählt alle Geräte (auch gleich benannte und den Eigenverbrauch eines Schaltaktors), nur Leistung, rechnet kW in W um und überspringt nicht erreichbare Sensoren. Ein abgewählter Sensor bleibt ausgeschlossen, „Alle aufnehmen“ zeigt, was noch nicht mitzählt.
+- Lüften: Nach einem Neustart zählt die Offen-Zeit eines Fensters weiter. Ohne Außensensor steht „Außenwerte fehlen“ statt „draußen feuchter“.
+- Temperaturen, Niederschlag und Kosten erscheinen in der Einheit bzw. Währung von Home Assistant oder des Sensors (z. B. °F, Zoll, CHF). Die KI-Coaches bekommen Temperaturen in der richtigen Einheit.
+- „Vor 36 Stunden“ heißt „Gestern“, kurze Laufzeiten zeigen Minuten statt „0 Std.“.
+- Kamera- und Pflanzen-KI sagen ohne eingerichtete KI, woran es liegt („Keine KI eingerichtet“).
+
+#### Übersetzungen
+- Englisch: viele Lücken geschlossen, z. B. Termine, „Neu: …“, Updates („2 available“), Energie, Rezepte, Abfuhrtermine, Saugroboter, Alarm-Countdown, Windrichtungen (NE/SE), Müll-Dienst („Next turn“).
+- Medien-Badge: pausierte Wiedergabe heißt „1 pausiert“ statt „1 läuft“. Szenen-Badge: „Keine aktiv“. Thermostat-Kachel mit Dezimalkomma („19,5°“).
+
+### Behoben
+
+#### Dashboard und Popups
+- Heizungs-Popup: Plus, Minus und der Temperatur-Balken reagieren wieder (Touch und Maus). Bei „Aus“ ist die Zieltemperatur sichtbar, Einstellen schaltet auf Heizen.
+- Thermostat im Modus „Automatik“ zeigt „Automatik · 21°“ statt „Aus“, ein Tipp schaltet es aus statt auf manuelles Heizen. Fehlt eine Zieltemperatur, steht nie mehr „undefined°“.
+- Fußbodenheizung: Ein vom iPhone unterbrochenes Ziehen am Balken verstellt beim nächsten Wischen nichts mehr. Liefert ein Sensor keine Zahl, fehlt nur diese Zeile.
+- Alarm-Popup: Die Modus-Zeilen (Abwesend, Nacht, Urlaub, Bypass) schalten wieder. Eine Alarm-Kachel ohne zugeordnetes Gerät zeigt dieselbe Anlage wie ihr Popup.
+- Schlösser: Der Schalter steht bei „Verriegelt“ auf An, der Kopf nennt bei gemischtem Zustand „1 entriegelt“. Ein geöffnetes Schloss heißt „Offen“ mit offenem Symbol statt „Blockiert“. Am Tablet verdeckt der Schalter die Überschrift nicht mehr.
+- Jalousie-Popup: Die Markierung Zu/25/50/75/Auf folgt der echten Position.
+- Beleuchtung: Halten auf das Badge und Licht-Chips öffnen das Casora-Licht-Popup mit den echten Lichtern des Raums. Der gewählte Weißton und die gewählte Lichtfarbe sind hinterlegt.
+- Automatisch einrichten: Die Raum-Kachel „Beleuchtung“ nimmt nie mehr die Lichtgruppe des ganzen Hauses.
+- Glocke: Meldungen ohne passende Kachel (z. B. eine Pflanze) öffnen das Casora-Popup statt eines technischen Home-Assistant-Fensters.
+- Energie: „Einspeisung gesamt“, Zähler in Wh und Leistung in kW werden richtig angezeigt (z. B. 1,5 kWh statt 1500 kWh, 2,5 kW statt 3 W). Der Hinweis ohne Tageswerte ist vollständig lesbar.
+- Musik-Popup: Die Tasten springen beim Abspielen nicht mehr, am iPad quer sind Tasten und Lautstärke ohne Scrollen zu sehen.
+- Abfall-Popup: Die Pfeile zum Blättern im Monatskalender sind nicht mehr oben abgeschnitten.
+- Szenen ohne Editor-Konfiguration (YAML, Hue) zeigen nach dem Start kurz „Aktiv“.
+- Licht-Kachel: Ein eigener Popup-Titel wird im Popup angezeigt.
+- Symbole aus einem nicht installierten Symbolsatz zeigen ein Standardsymbol statt eines leeren Kreises.
+- Assist per Sprache: Kommt keine Antwort, ist die Eingabe nach 45 Sekunden wieder bedienbar.
+
+#### Handy
+- Eine im Studio ausgeblendete Kachel fehlt auch auf der Raumseite und den Kategorieseiten.
+- Wer gleich nach dem Laden einen Raum wählt, sieht ihn sofort. Nach dem Licht-Popup rutscht der Inhalt nicht mehr nach unten.
+- Der Titel der Startseite wechselt nicht mehr zwischen „Home“ und „Zuhause“. Nach einem Umzug von Hemma 1 heißt die Übersicht wie am Desktop.
+- Die Sicherheit-Seite lädt ohne Fehler. Glocken-Liste und Räume-Menü sind deckend.
+
+#### Studio
+- Kein Speicherweg (Assistent, neue Szene, Einstellungen) überschreibt mehr ein Dashboard, für das Speichern gesperrt ist. Nach einem Lesefehler schreibt das Studio nichts.
+- Änderungen, die während des Speicherns entstehen, bleiben als ungespeichert markiert. ⌘S während eines Dashboard-Wechsels speichert nicht mehr nur die halbe Fassung.
+- Einstellungen speichern (z. B. Lüften) wirft nicht mehr aus dem Studio, am Handy springt die Leiste danach richtig zurück.
+- „Diesen Stand wiederherstellen“ fragt nur einmal und ist auch über „…“ am Stand erreichbar.
+- Für dich ausgeblendete Geräte öffnen sich nicht mehr über die Glocke oder ein Sammel-Popup. „Ansehen als“ und das Sicherheits-Badge zählen nur, was diese Person sieht.
+- Ein Dashboard, das inzwischen zu Casora gehört, erscheint nach spätestens einer Stunde in der Auswahl. Neue oder entfernte Szenen erscheinen beim Zurückkehren in den Tab.
+- Hinter Geräte-Assistent und YAML-Import bleibt das neue Studio stehen. Dialoge mit drei Knöpfen ragen nicht mehr über den Rand.
+- Eine weiße Lampe heißt im Szenen-Dialog „weiß“ statt „rot“, das Studio sagt wie das Dashboard „An“ statt „Ein“.
+
+#### Updates und Hintergrund
+- Bricht das Einspielen eines Updates ab (z. B. Speicher voll), bleibt die laufende Version unverändert. Ein installiertes Update wird nicht erneut angeboten.
+- Ohne Internet startet Casora nicht mehr bis zu 20 Sekunden verzögert. Ist ein einzelnes Karten-Update nicht abrufbar, werden die übrigen trotzdem gefunden.
+- Liegt beim Start ein Karten-Update bereit, werden die Dashboards zuverlässig mit dem neuesten Stand gespeichert. Speichern zwei Dashboards gleichzeitig, geht unter „Versionen“ nichts mehr verloren.
+- Eigene Schriften mit gleichem Dateinamen in zwei Familien überschreiben sich nicht mehr.
+- Der Konfigurieren-Dialog sagt bei falschen Werten „Ungültige Eingabe“ statt „Ungültige Zeit“. Umzug „Vorlage anpassen“ meldet unpassende KI-Änderungen verständlich.
+
+### Sicherheit
+- Neu hochgeladene Raumfotos bekommen einen nicht erratbaren Dateinamen. So kann niemand ein Foto deiner Wohnung über eine einfache Adresse wie „wohnzimmer.jpg“ abrufen. Ältere Fotos einmal neu hochladen.
+- Die Dienste „Casora einrichten“ und „Casora umstellen“ dürfen nur Administratoren aufrufen. Nach dem Entfernen von Casora lassen sie sich nicht mehr aus alten Automationen starten.
+- Benutzer ohne Admin-Rechte können über die Handy-Raumbadges nicht mehr den Aufbau eines Dashboards lesen, das nur für Admins sichtbar ist.
+- Hinweistexte anderer Integrationen im Updates-Popup, Vorlagentexte und Raumnamen in Assist-Vorschlägen werden sicherer verarbeitet (Vorsorge, war nicht ausnutzbar).
+
+### Leistung
+- Das Studio öffnet sich viel schneller: erneut geöffnet am Handy nach etwa 2 statt 8 Sekunden, am Desktop nach 0,6 statt 2 Sekunden. Es lädt dafür nicht mehr jedes Mal alle Dashboards herunter.
+- Programmcode und Kartenvorlagen des Studios kommen gepackt (1,1 statt 4,6 MB) und bleiben im Browser gespeichert, bis Casora aktualisiert wird.
+- Am Handy reagieren die Editoren etwa doppelt so schnell, am Desktop liegen fast alle Aktionen unter 0,1 Sekunden. Ein Speicherleck ist behoben, das Studio wird bei langer Arbeit nicht mehr langsamer.
+- Raumfotos brauchen am Handy nur noch etwa ein Viertel der Daten, am Desktop ein Drittel (WebP, am Handy verkleinert). Deine Originalfotos bleiben unverändert.
+- Weniger Akku- und Rechenlast im Leerlauf, und Wand-Tablets werden über Tage nicht mehr träger, weil Kachelreihen und Swipe-Karten ihren Speicher wieder freigeben.
+
 ## 1.0.11 – 05.10.2026
 
 ### Verbessert

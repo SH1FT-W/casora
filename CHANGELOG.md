@@ -4,6 +4,151 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.1.0 – 07.10.2026
+
+The biggest update since Casora 1.0. It brings a new Studio in which the preview itself is where you work, and a second look, "Casora Nebel". On top of that come more than 20 new features and around 200 improvements and fixes across the dashboard, popups, security and energy.
+
+### Good to know
+- An installed update is applied when Home Assistant shuts down or restarts. Until then, the Studio and your dashboards keep running unchanged on the current version.
+- Newly uploaded room photos are now protected (see Security). Please upload older room photos once more so they are protected too.
+- Save once in the Studio: after that, the phone dashboard also takes over the condition and settings of conditional tiles (e.g. the alarm only while away) from the desktop, and the chosen font applies on the phone as well.
+- The previous Studio is still there: "…" › Help › "Open the previous Studio".
+
+### New
+
+#### Studio
+- **The preview is where you work:** click (on a phone: tap) the title, a badge or a tile and its settings open right beside it, on a phone as a sheet from the bottom. Drag badges and tiles into place right in the preview, on a touchscreen after a long press. Every editor header shows where it sits ("Living room › Tiles").
+- **Toolbar instead of sidebar:** Rooms, Content (the room with all its sections, including what the preview does not show), Dashboard (this dashboard only) and Settings (all dashboards). Menus and editors say "Applies to: …" at the top. Everything about the dashboard (switch, new, rename, icon, Rewind, phone layout, delete) is in the title menu, and "…" is "Help & extras".
+- **Try it:** pressing and holding a tile or badge (on a computer also right click or Alt+click) opens the real popup, just like on the dashboard, already with your unsaved changes. A tap still edits.
+- **Save without leaving:** "Save" next to "Done" (also ⌘S / Ctrl+S) saves and keeps the Studio open. Messages that wait for a save have a "Save now" button.
+- **Feedback and Redo:** after every change a calm message with "Undo" appears at the bottom. New: Redo (⌘⇧Z / Ctrl+Y).
+- **Change list:** "Edited · 3 changes ›" under the title lists in plain sentences what goes out on save, e.g. "Room renamed: Kitchen → Kitchen & Dining" or "Time: 12-hour clock on". Every line can be taken back and redone on its own.
+- **Search (⌘K):** finds rooms, tiles, badges, scenes, settings and actions, in your own words too ("history" finds Rewind, "background" the room photo), and shows the way there. Devices without a tile can be added straight from the search.
+- **Tiles start from the device:** "+" asks "What should go on the dashboard?", lists the room's devices without a tile first and picks the right tile type itself. The previous picker is under "Other tile type…". A new tile opens its editor right away and lights up briefly.
+- **Device picker like in Home Assistant:** name, "Room · Device" and state, grouped by room, with search, as a sheet on the phone. Devices are named everywhere the way they are named in Home Assistant.
+- **Scene from the current state:** under "Add scene" › "From the current state…" tick the room's devices, set brightness and light color right in the dialog, give it a name and a color and save a real Home Assistant scene. Lights that can't be reached are listed greyed out.
+- **Visibility ("Who sees this?"):** tiles, badges and rooms can be hidden for individual Home Assistant users, on desktop and phone. "View as…" shows the preview the way another user sees it. The Studio says plainly that this only hides things and is no access protection.
+- **Ask before switching:** for every tile that switches or moves something (light, plug, blind, garage door, valve, scene, script, button) the dashboard can ask first. This covers every way: tile, icon, popup buttons and position slider. For group tiles the question lists all devices, and the focus starts on "Cancel".
+- **Hide rooms instead of deleting them:** a hidden room keeps all its settings in the Studio, shows an eye and sits at the top of the rooms menu with "Show". "Delete room" offers "Just hide it".
+- **Arrange rooms:** drag them or use "Sort alphabetically" instead of moving them one step at a time.
+- **Rewind:** has a fixed place as the clock next to Undo. Versions read as plain sentences ("Living room deleted", "Photo of Kitchen changed"), can be named and pinned (pinned ones are never cleaned up), and before restoring you see what will be lost.
+- **Open on phone:** a QR code with the dashboard's address, made right in the Studio, with no password inside.
+- **Rename badges:** a "Name on the badge" field for climate, lights, people, media, security, energy and scenes, on desktop and phone.
+- **Quick tour** the first time you open the Studio (three hints, skippable, later under "…"), then three small next steps (photo, scene, phone) that tick themselves off.
+- **New room icons** for garage, mailbox, basement, attic and terrace/balcony.
+- Conditional tiles: if a different condition is stored on the phone, the tile editor says so. On save, the desktop condition then applies on the phone too.
+
+#### Look
+- **New look "Casora Nebel":** the same layout as Casora, but cool light grey instead of linen and a calm petrol blue accent, in light and dark. Pick it in the Studio under Settings › Design or in the setup assistant. Lights stay yellow, heating orange, alarms red.
+- **Purple for scenes:** Casora and Casora Nebel have their own purple in the color picker. Color names follow the color the look really shows.
+- **Scene colors across the dashboard:** when a scene is active, scene badges, the scenes popup and the scene menus (desktop and phone) show its color.
+
+#### Security and alarm
+- **Ask before arming:** if windows or doors are open or locks unlocked, Casora asks before arming and names up to three of them ("Heads up: Kitchen window open, Front door unlocked"). Disarming never asks.
+- **Alarm popup (Casora look):** one large button says what happens ("Arm · Away", "Disarm", "Cancel" with a countdown, red "Stop alarm"), with the other modes below. If the system needs a code, a code field appears. Only modes the system supports are shown.
+- **Security badge with icons:** the second line shows small icons with a count instead of a long list, "Tilted" has its own icon and unreachable devices are crossed out. New setting: "Automatic" (short on the home page, written out in rooms), "Always short" or "Always detailed".
+- When everything is closed the security badge says "All secure", "Alarm!" when it goes off, and "Lock open" instead of "1 lock". This applies to Hemma 1 and Hemma 2 too.
+
+#### Popups, energy and devices
+- **Light popup of a room:** new "All off" button. The popup of a single lamp shows all lights of the room.
+- **Energy popup:** the biggest consumers (up to 5) show even without picking them in the Studio. Casora finds them itself and leaves out house, grid, solar and battery values. Every sensor in a room's sum is listed with its value.
+- **Assist suggestions from your home:** matched to the time of day, using your room names and starting with what needs attention right now (open window, lights on, door unlocked). Voice input uses your home's preferred Assist pipeline.
+- **Aquarium tile:** new "Battery hints" setting (Automatic, Always, Never). If there is already a Batteries tile, the aquarium tile no longer reports a weak sensor battery a second time. Leaks and temperature warnings are reported as before.
+- **Phone room page:** blinds and shutters have their own "Blinds" group instead of sitting under "Climate", garage doors and gates appear under "Security".
+
+### Improved
+
+#### Studio
+- The "Elements" tab is now "Content", and every tab explains in one sentence what it holds when you point at it. The look is under Settings › Design, the dashboard menu keeps "Controls". (German: "Handy" instead of "Mobil" throughout.)
+- The tile editor shows the essentials first, "Visibility & ask first" and "Popup" fold away with a short summary. Switch labels can be clicked too.
+- The preview names tiles like the dashboard does, tiles without their own name show their kind in small print (e.g. "3D printer"), and tiles that find their own data show "Automatic" instead of "Device missing".
+- The desktop preview uses your screen's proportions. Swipe cards show as one tile with page dots. New or removed tiles appear in the phone preview right away.
+- Tablet: in portrait the editor sits below the preview, which is upright and more than twice as wide. The toolbar shortens its labels step by step, the buttons stay in place and nothing overlaps with "Save".
+- "New in …" lists every device in the room without a tile, including devices that only have an area.
+- "Match desktop and phone" is a calm note in plain sentences instead of an orange "2 differences".
+- On the phone the Studio is dark when Home Assistant is dark. Headings, Back and Close are readable, settings pages are opaque.
+- Settings use switches instead of checkboxes, repeated rows show their heading only once, and desktop menus are tall enough for the whole room menu. "Save settings" is clearly apart from "Done".
+- In the Casora look, Amber, Ice and Gold are no longer offered, because they looked like Orange, Blue and Yellow. Colors already chosen stay.
+- Setup hints ("assign in Casora Studio") are shown to admins only, everyone else sees "Not set up yet".
+
+#### Dashboard and popups
+- Popups are fully opaque, with the same headings and spacing everywhere, and the active row looks the same everywhere.
+- On the phone, buttons and tap targets are at least 44 pixels everywhere (Close, Back, switches, scene chips, color and source pills, camera full screen). Screen readers announce "Close" and "Back" in your language.
+- Easier to read in the Casora look: darker start button, stronger tiles that are off, the same font sizes for the same roles, and on tablets small print is at least 13 px.
+- Blinds popup: quick buttons "Close · 25 % · 50 % · 75 % · Open" with enough room, and shades, shutters and blinds share one "Blinds" group.
+- Robot vacuum popup: mode buttons fill the width, nothing is cut off, programs no longer repeat the device name, and the popup is fully translated into English.
+- A camera without a picture shows a calm tile with a camera icon and "No image" instead of a black tile saying "Live".
+- Alarm popup: the header uses the color of the active mode (armed = fine), red only when the alarm goes off. The thermostat popup shows the same icon as its tile.
+- Switchable single devices have a switch on the tile, now also the air purifier, groups do not.
+- Bell: the same dot for new notifications everywhere, and the menu has a heading. Tapping an entry opens the same popup as tapping the tile.
+- Room bar on a computer: with the keyboard you can see which room is selected, and a mouse click no longer leaves a frame.
+- Phone: if a badge ends exactly at the screen edge, the badges get a little wider so you can tell the row goes on. Switching rooms keeps the tiles in place.
+- The room energy badge counts every device (including devices with the same name and a relay's own consumption), only counts power, converts kW to W and skips unreachable sensors. A sensor you remove stays excluded, and "Add all" shows what is not counted yet.
+- Ventilation: after a restart a window's open time keeps counting. Without an outdoor sensor it says "no outdoor values" instead of "more humid outside".
+- Temperatures, precipitation and costs use the unit or currency of Home Assistant or the sensor (e.g. °F, inches, CHF). The AI coaches get temperatures in the right unit.
+- "36 hours ago" reads "Yesterday", short uptimes show minutes instead of "0 h".
+- Camera and plant AI say what is wrong when no AI is set up ("No AI set up").
+
+#### Translations
+- English: many gaps closed, e.g. events, "New: …", updates ("2 available"), energy, recipes, pickup dates, robot vacuum, arming countdown, wind directions (NE/SE) and waste duty ("Next turn").
+- Media badge: paused playback reads "1 paused" instead of "1 running". Scenes badge: "None active". Thermostat tile with your locale's decimal separator.
+
+### Fixed
+
+#### Dashboard and popups
+- Heating popup: plus, minus and the temperature bar respond again (touch and mouse). With "Off" the target temperature is shown, and changing it switches to Heat.
+- A thermostat in "Auto" shows "Auto · 21°" instead of "Off", and a tap turns it off instead of switching to manual heating. Without a target temperature, "undefined°" never appears.
+- Floor heating: if iOS interrupts dragging the bar, the next swipe no longer changes anything. If a sensor reports no number, only that row is hidden.
+- Alarm popup: the mode rows (Away, Night, Vacation, Bypass) work again. An alarm tile without an assigned device shows the same system as its popup.
+- Locks: the switch is on for "Locked", and with mixed states the header says "1 unlocked". An opened lock reads "Open" with an open lock icon instead of "Blocked". On tablets the switch no longer covers the heading.
+- Blinds popup: the Close/25/50/75/Open highlight follows the real position.
+- Lights: holding the badge and tapping light chips open the Casora light popup with the room's real lights. The chosen white tone and light color are highlighted.
+- Set up automatically: a room's "Lights" tile never uses the light group of the whole house.
+- Bell: notifications without a matching tile (e.g. a plant) open the Casora popup instead of a technical Home Assistant dialog.
+- Energy: "Feed-in total", meters in Wh and power in kW are shown correctly (e.g. 1.5 kWh instead of 1500 kWh, 2.5 kW instead of 3 W). The "no daily values yet" hint is fully readable.
+- Media popup: buttons no longer jump when playback starts, and on an iPad in landscape controls and volume are visible without scrolling.
+- Waste popup: the arrows for paging through the month calendar are no longer cut off at the top.
+- Scenes without an editor config (YAML, Hue) briefly show "Active" after starting.
+- Light tile: a custom popup title is shown in the popup.
+- Icons from an icon set that isn't installed show a default icon instead of an empty circle.
+- Voice Assist: if no answer arrives, input works again after 45 seconds.
+
+#### Phone
+- A tile hidden in the Studio is also left out of the room page and the category pages.
+- Picking a room right after loading opens it straight away. Content no longer jumps down after the light popup.
+- The home page title no longer flips between "Home" and "Zuhause". After moving from Hemma 1 the overview is named like on the desktop.
+- The security page loads without errors. The bell list and the rooms menu are opaque.
+
+#### Studio
+- No save path (assistant, new scene, settings) can overwrite a dashboard whose saving is locked any more. After a read error the Studio writes nothing.
+- Changes made while saving stay marked as unsaved. ⌘S while switching dashboards no longer saves only half of it.
+- Saving settings (e.g. Ventilation) no longer throws you out of the Studio, and on the phone the bar resets correctly afterwards.
+- "Restore this version" asks only once and is also in the "…" menu of a version.
+- Devices hidden for you no longer open from the bell or a group popup. "View as" and the security badge only count what that person can see.
+- A dashboard that has since become a Casora dashboard shows up in the list within an hour. New or removed scenes appear when you return to the tab.
+- The new Studio stays behind the device assistant and the YAML import. Dialogs with three buttons no longer overflow.
+- A white lamp reads "white" instead of "red" in the scene dialog.
+
+#### Updates and background
+- If installing an update fails (e.g. disk full), the running version stays intact. An installed update is not offered again.
+- Without internet, Casora no longer delays startup by up to 20 seconds. If a single card update can't be downloaded, the others are still found.
+- When a card update is waiting at startup, dashboards are reliably saved with the newest templates. When two dashboards save at the same time, nothing under "Versions" gets lost.
+- Custom fonts with the same file name in two families no longer overwrite each other.
+- The configure dialog says "Invalid input" instead of "Invalid time" for wrong values. Migration "Adapt template" explains AI changes that don't fit.
+
+### Security
+- Newly uploaded room photos get a file name that cannot be guessed, so nobody can fetch a photo of your home via a simple address like "livingroom.jpg". Upload older photos once more.
+- The "Casora set up" and "Casora migrate" actions can only be called by administrators. After removing Casora, old automations can no longer start them.
+- Users without admin rights can no longer read the layout of an admin-only dashboard through the phone room badges.
+- Release notes of other integrations in the updates popup, template texts and room names in Assist suggestions are handled more safely (precaution, was not exploitable).
+
+### Performance
+- The Studio opens much faster: reopened on a phone after about 2 instead of 8 seconds, on desktop after 0.6 instead of 2 seconds. It no longer downloads every dashboard each time.
+- The Studio's code and card templates are sent compressed (1.1 instead of 4.6 MB) and stay cached in the browser until Casora is updated.
+- On the phone the editors respond about twice as fast, and on desktop almost every action takes under 0.1 seconds. A memory leak is fixed, so the Studio no longer slows down during long sessions.
+- Room photos need only about a quarter of the data on phones and a third on desktop (WebP, scaled down for phones). Your original photos are not changed.
+- Less battery and CPU use while idle, and wall tablets no longer slow down over days, because tile rows and swipe cards release their memory.
+
 ## 1.0.11 – 05.10.2026
 
 ### Improved

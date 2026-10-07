@@ -90,8 +90,8 @@ check("beide Dateien: dieselben Versionen und Daten",
       [(e["version"], e["date"]) for e in real_en] == [(e["version"], e["date"]) for e in real_de],
       [e["version"] for e in real_en])
 check("jede Version hat Text in beiden Sprachen", all(e["notes_md"].strip() for e in real_en + real_de))
-DE_HEADS = {"Neu", "Verbessert", "Behoben", "Geändert", "Entfernt", "Qualität", "Übergang"}
-EN_HEADS = {"New", "Improved", "Fixed", "Changed", "Removed", "Quality", "Transition"}
+DE_HEADS = {"Neu", "Verbessert", "Behoben", "Geändert", "Entfernt", "Qualität", "Übergang", "Sicherheit", "Leistung", "Gut zu wissen"}
+EN_HEADS = {"New", "Improved", "Fixed", "Changed", "Removed", "Quality", "Transition", "Security", "Performance", "Good to know"}
 heads = lambda es: {h for e in es for h in re.findall(r"^### (.+)$", e["notes_md"], re.M)}  # noqa: E731
 check("CHANGELOG.md komplett englisch (Zwischenüberschriften)", heads(real_en) <= EN_HEADS, heads(real_en) - EN_HEADS)
 check("CHANGELOG.de.md komplett deutsch (Zwischenüberschriften)", heads(real_de) <= DE_HEADS, heads(real_de) - DE_HEADS)
