@@ -2041,7 +2041,7 @@
   ],
   [
    "^Nächster Dienst im (.+)\\.$",
-   "Next duty in {1}."
+   "Next turn in {1}."
   ],
   [
    "^Verriegelt · Stand vor (\\d+) Std\\.$",
