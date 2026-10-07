@@ -71,6 +71,22 @@ const setup = await H(({ ent, now }) => {
   return { section: sec.name };
 }, { ent: alarm, now });
 await need('Desktop-Kachel und Handy-Abschnitt gefunden', setup);
+// Wie frisch geladen: Das Studio merkt sich den gespeicherten Handy-Stand und zeigt an der Kachel den Hinweis.
+const hint = await H(async (ent) => {
+  const p = window.__panel(), I = window.__casoraPanelInternals;
+  p._pair.phoneConds = I.phoneCondSnapshot(p._pair);
+  const rooms = p._state.compact.rooms;
+  const ri = rooms.findIndex((r) => (r.tiles || []).some((x) => x && x.type === 'conditional' && x.card && x.card.entity === ent));
+  const tile = rooms[ri].tiles.find((x) => x && x.type === 'conditional' && x.card && x.card.entity === ent);
+  if (ri !== p._room) { p._room = ri; p._renderTabs(); p._renderForm(); }
+  p._bOpen = true;
+  p._select({ group: 'tiles', key: p._tileKey(tile), label: 'QA Alarm' });
+  await new Promise((r) => setTimeout(r, 1500));
+  const h = [...p.shadowRoot.querySelectorAll('#pane .condphone')].find((x) => x.getClientRects().length);
+  return h ? h.textContent : null;
+}, alarm);
+await shot('studio hinweis handy-bedingung');
+await check('Studio: Hinweis „Am Handy ist eine andere Bedingung gespeichert“', /Am Handy ist eine andere Bedingung/.test(hint || ''), hint);
 await check('Studio speichert', await saveStudio());
 const p2 = await phoneShell();
 await need('Bedingte Alarm-Kachel ist am Handy', p2, { alarm });

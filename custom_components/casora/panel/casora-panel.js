@@ -1319,6 +1319,38 @@ function syncTwinTile(twin, mt, depth) {
   }
 }
 
+// Bedingungen einer bedingten Kachel (alle Ebenen) als Vergleichswert.
+const condChain = (t) => { const out = []; for (let c = t, d = 0; c && c.type === "conditional" && d < 5; c = c.card, d++) out.push(c.conditions || null); return stable(out); };
+
+// Gespeicherter Stand am Handy: je bedingter Raum-Kachel die Bedingung ihres Handy-Zwillings
+// (Zuordnung wie syncPairTiles). Das Studio zeigt damit „Am Handy gilt eine andere Bedingung“.
+function phoneCondSnapshot(pair) {
+  const out = new Map();
+  const rooms = ((pair.desktop || {}).compact || {}).rooms || [];
+  const sections = ((pair.mobile || {}).compact || {}).rooms || [];
+  ((pair.link || {}).links || []).forEach((link) => {
+    const room = rooms[link.room], sec = sections[link.section];
+    if (link.section === null || !room || !sec) return;
+    const byKey = new Map();
+    (sec.tiles || []).forEach((mt) => {
+      if (!mt || mt.type !== "conditional") return;
+      const k = tileTwinKey(mt);
+      if (!byKey.has(k)) byKey.set(k, []);
+      byKey.get(k).push(mt);
+    });
+    const used = new Map();
+    (room.tiles || []).forEach((t) => {
+      if (!t || t.type !== "conditional") return;
+      const k = tileTwinKey(t), list = byKey.get(k);
+      if (!list) return;
+      const n = used.get(k) || 0;
+      used.set(k, n + 1);
+      if (n < list.length) out.set(t, condChain(list[n]));
+    });
+  });
+  return out;
+}
+
 function syncPairTiles(pair) {
   const rooms = (pair.desktop.compact || {}).rooms || [];
   const sections = (pair.mobile.compact || {}).rooms || [];
@@ -1776,6 +1808,7 @@ function extractPair(desktopCfg, mobileCfg, templates, editable) {
   };
   pair.link = linkPair(desktop, mobile);
   pair.conflicts = pairConflicts(pair);
+  pair.phoneConds = phoneCondSnapshot(pair);
   return pair;
 }
 
@@ -14942,6 +14975,7 @@ class CasoraPanel extends HTMLElement {
           `phone layout: ${sec.kept} section(s) without a room kept for tiles placed there by hand`, "warn");
         if (sec.moved) this._log("phone layout: sections put in the room order", "ok");
         const st = syncPairTiles(pair);
+        pair.phoneConds = phoneCondSnapshot(pair);
         if (st.synced) this._log(`phone layout: ${st.synced} tile(s) kept in step`, "ok");
         if (st.added) this._log(`phone layout: ${st.added} tile(s) copied across`, "ok");
         if (st.moved) this._log(`phone layout: ${st.moved} section(s) reordered to match`, "ok");
@@ -24714,8 +24748,19 @@ class CasoraPanel extends HTMLElement {
       const txt = condText(shell, this._hass);
       note.textContent = (window.casoraI18n ? window.casoraI18n.t("Shown only when:") : "Shown only when:") + " " + (txt || "–");
       body.appendChild(note);
+      // Handy-Zwilling mit anderer Bedingung (z. B. aus dem Umzug): Speichern übernimmt diese.
+      const phoneDiff = document.createElement("div");
+      phoneDiff.className = "hint condhint condphone";
+      phoneDiff.textContent = "A different condition is saved on the phone – saving applies this one there too.";
+      const markPhone = () => {
+        const was = this._pair && this._pair.phoneConds && this._pair.phoneConds.get(shell);
+        phoneDiff.hidden = !(was !== undefined && was !== condChain(shell));
+      };
+      markPhone();
+      body.appendChild(phoneDiff);
       this._condEditor(body, shell, () => {
         note.textContent = (window.casoraI18n ? window.casoraI18n.t("Shown only when:") : "Shown only when:") + " " + (condText(shell, this._hass) || "–");
+        markPhone();
       });
     }
 
@@ -25627,7 +25672,7 @@ window.__casoraPanelInternals = {
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
-  linkPair, syncPairRooms, syncPairTiles, syncTwinTile, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, expandMobileConfig, extractMobileConfig,
+  linkPair, syncPairRooms, syncPairTiles, syncTwinTile, phoneCondSnapshot, condChain, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, expandMobileConfig, extractMobileConfig,
   deriveEnergyRooms, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
   CASORA_ACCENTS, accentsShown, accentLabel, swatchCss,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)

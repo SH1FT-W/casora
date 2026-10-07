@@ -48,6 +48,20 @@ const pairOf = (desk, phone) => ({
   assert.equal(m[0].conditions[0].state.length, 2);
 }
 
+// Studio-Hinweis: gespeicherter Handy-Stand je bedingter Raum-Kachel; nach dem Abgleich gleich.
+{
+  const p = pairOf(
+    [cond(['triggered'], t('casora_alarm', 'alarm_control_panel.haus')), t('casora_lock', 'lock.tuer')],
+    [cond(['armed_away', 'triggered'], t('casora_alarm', 'alarm_control_panel.haus')), t('casora_lock', 'lock.tuer')],
+  );
+  const shell = p.desktop.compact.rooms[0].tiles[0];
+  const snap = I.phoneCondSnapshot(p);
+  assert.equal(snap.size, 1, 'nur bedingte Kacheln');
+  assert.notEqual(snap.get(shell), I.condChain(shell), 'Handy weicht ab');
+  I.syncPairTiles(p);
+  assert.equal(I.phoneCondSnapshot(p).get(shell), I.condChain(shell), 'nach dem Speichern gleich');
+}
+
 // Verschachtelt (Bedingung in Bedingung): beide Ebenen.
 {
   const p = pairOf(
