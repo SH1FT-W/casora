@@ -27,7 +27,8 @@ await check('Werkzeugleiste: „Inhalt“ mit Untertitel', /Inhalt/.test(list.t)
 await tool('dash');
 await page.waitForTimeout(500);
 const dm = await menuText();
-await check('Dashboard-Menü: „Gilt für: dieses Dashboard“, Design gilt für alle', /^Gilt für: dieses Dashboard/.test(dm) && /Design gilt für alle Dashboards/.test(dm), dm.slice(0, 120));
+// Seit 07.10.2026 steht das Design unter „Einstellungen“; das Dashboard-Menü verweist nur noch darauf.
+await check('Dashboard-Menü: „Gilt für: dieses Dashboard“, Verweis aufs Design für alle', /^Gilt für: dieses Dashboard/.test(dm) && /Design \(für alle Dashboards\)/.test(dm), dm.slice(0, 160));
 await page.keyboard.press('Escape');
 await tool('home');
 await page.waitForTimeout(500);

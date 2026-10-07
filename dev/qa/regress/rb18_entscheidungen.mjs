@@ -18,6 +18,10 @@ const URLS = [dash.url, dash.phone && dash.phone.url].filter(Boolean);
 const orig = {};
 { const c = await ws(); for (const u of URLS) orig[u] = await c.cmd({ type: 'lovelace/config', url_path: u }); c.close(); }
 atFinish(async () => { const c = await ws(); for (const u of URLS) await c.cmd({ type: 'lovelace/config/save', url_path: u, config: orig[u] }); c.close(); });
+// Ein Theme in den Benutzerdaten (Server, z. B. von einem früheren settheme) ginge vor das Theme des Browsers –
+// dann sähe „Hemma 2“ unten die Casora-Palette. Vor jedem Browser und am Ende leeren (wie r20/r39).
+const noUserTheme = async () => { try { const c = await ws(); await c.cmd({ type: 'frontend/set_user_data', key: 'theme', value: null }); c.close(); } catch (e) { /* ohne Zugang */ } };
+atFinish(noUserTheme);
 
 const W = (pg, ms) => pg.waitForTimeout(ms);
 const center = (pg, sel) => pg.evaluate((s) => { const e = window.__pierce(s).find((x) => x.getClientRects().length);
@@ -38,6 +42,7 @@ const closePopup = async (pg) => { await pg.evaluate(() => window.casoraPopup &&
 
 // ── Desktop ──────────────────────────────────────────────────────────────
 {
+  await noUserTheme();
   const { page } = await open({ width: 1600, height: 1000, dark: false, theme: 'Casora', studio: 'b' });
   await studio(page, dash.url);
   const P = (fn, a) => page.evaluate(fn, a);
@@ -160,6 +165,7 @@ const closePopup = async (pg) => { await pg.evaluate(() => window.casoraPopup &&
 
 // ── Handy ────────────────────────────────────────────────────────────────
 {
+  await noUserTheme();
   const { page } = await open({ width: 390, height: 844, mobile: true, dark: false, scale: 2, theme: 'Casora', studio: 'b' });
   await studio(page, dash.url);
   const P = (fn, a) => page.evaluate(fn, a);
@@ -198,6 +204,7 @@ const closePopup = async (pg) => { await pg.evaluate(() => window.casoraPopup &&
 
 // ── Hemma 2: kein zweites Lila ───────────────────────────────────────────
 {
+  await noUserTheme();
   const { page } = await open({ width: 1600, height: 1000, dark: false, theme: 'Hemma 2', studio: 'b' });
   await studio(page, dash.url);
   await page.evaluate(() => { const p = window.__panel(); p._bClose(); p._room = 0; p._renderTabs(); p._bOpen = true; p._select({ group: 'rooms', key: 'Scenes', label: 'Scenes' }); });
