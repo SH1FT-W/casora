@@ -535,6 +535,8 @@
     .mwho { margin-top:4px; }
     .mtry { display:block; margin:6px 0 2px; padding:8px 12px; border-radius:10px; font:inherit; font-weight:600; cursor:pointer; }
     .mtry[hidden] { display:none; }
+    .mwhofix { display:block; margin:4px 0 6px; padding:8px 12px; border-radius:10px; font:inherit; font-weight:600; cursor:pointer; }
+    .mwho .mwhofix[hidden] { display:none !important; }
     .mhi { animation: mhi 1.8s ease-out; border-radius:10px; }
     @keyframes mhi { 0%,40% { box-shadow:0 0 0 3px color-mix(in srgb, var(--accent, #94603B) 45%, transparent); } 100% { box-shadow:0 0 0 3px transparent; } }
     .mwho .mval { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; min-height:40px;
@@ -1415,7 +1417,8 @@
     const WHO_ONLY_HIDES = "Only hides it – no access protection. Anyone with an account can still control the devices in Home Assistant.";
     const namesOf = (ids, users) => ids.map((id) => (users.find((u) => u.id === id) || {}).name || tr("Unknown user"));
     // Zeile „Wer sieht das?“: Wert „Alle“ bzw. „Nur für: …“, Antippen öffnet die Auswahl.
-    P._mWhoRow = function (host, get, set, what, elsewhere) {
+    P._mWhoRow = function (host, get, set, what, elsewhere, opt) {
+      opt = opt || {};
       const box = document.createElement("div");
       box.className = "mwho";
       const row = document.createElement("div");
@@ -1442,18 +1445,35 @@
       also.className = "hint mwhoalso";
       also.setAttribute("data-no-i18n", "");
       also.hidden = true;
+      const alsoFix = document.createElement("button");
+      alsoFix.type = "button";
+      alsoFix.className = "mval ghost mwhofix";
+      alsoFix.setAttribute("data-no-i18n", "");
+      alsoFix.textContent = tr("Hide it there too");
+      alsoFix.hidden = true;
       // Gespeichert wird, wer es sieht – ein später angelegter HA-Benutzer steht nicht in der Liste.
       const fresh = document.createElement("div");
       fresh.className = "hint mwhonew";
       fresh.setAttribute("data-no-i18n", "");
       fresh.textContent = tr("New users only see this once you switch them on here.");
       fresh.hidden = true;
-      box.append(row, note, also, fresh, warn);
+      box.append(row, note, also, alsoFix, fresh, warn);
       const paint = (users) => {
         const ids = get();
         const more = ids.length && typeof elsewhere === "function" ? elsewhere(ids, users || []) : "";
         also.textContent = more;
         also.hidden = !more;
+        const fx = more && typeof opt.fix === "function" ? opt.fix(ids, users || []) : [];
+        alsoFix.hidden = !fx.length;
+        alsoFix.onclick = () => {
+          const list = opt.fix(get(), this._mUsersCache || users || []);
+          if (!list.length) return;
+          list.forEach((f) => f());
+          this._bQuiet = true; try { this._markDirty(); } finally { this._bQuiet = false; }
+          if (this._syncPreview) this._syncPreview();
+          if (this._bToast) this._bToast(tr("Hidden there too"), { save: true, sub: more });
+          this._mUsers().then(paint);
+        };
         btn.querySelector(".mvt").textContent = ids.length ? tr("Only some people") : tr("Everyone");
         note.textContent = ids.length ? tr("Only for:") + " " + namesOf(ids, users || []).join(", ") : "";
         note.hidden = !ids.length;
@@ -1465,7 +1485,8 @@
       btn.onclick = () => this._mWhoSheet(get(), what, (ids) => { set(ids); this._bQuiet = true; try { this._markDirty(); } finally { this._bQuiet = false; } this._syncPreview && this._syncPreview(); this._mUsers().then(paint);
         if (this._bToast) this._bToast(ids.length ? tr("Only for:") + " " + namesOf(ids, this._mUsersCache || []).join(", ") : tr("Everyone sees it again"), { save: true, sub: tr("Not saved yet – “Save now” or Done saves it.") });
       });
-      host.appendChild(box);
+      if (opt.before && opt.before.parentNode === host) host.insertBefore(box, opt.before);
+      else host.appendChild(box);
       return box;
     };
     // Wo sind diese Entitäten sonst noch zu sehen – für wen, den „ids“ ausblendet? Kacheln (mit ihrem
@@ -1473,11 +1494,18 @@
     // casora_entity_users). skip: die Stelle, um die es gerade geht. → Satz oder "".
     const SEC_KEYS = (V) => [].concat(Array.isArray(V.security_locks) ? V.security_locks : [], V.security_lock_entity || [], V.security_lock_entity_2 || [],
       Array.isArray(V.security_cameras) ? V.security_cameras : [], [1, 2, 3, 4, 5, 6, 7, 8].map((i) => V["security_entity_" + i]).filter(Boolean));
-    P._mElsewhere = function (ents, ids, users, skip) {
+    P._mElsewhere = function (ents, ids, users, skip) { return this._mElseScan(ents, ids, users, skip).text; };
+    // Dieselben Stellen als Änderungen: „Dort auch ausblenden“ (Nutzertest 7, P-T4) gibt ihnen dieselbe
+    // Auswahl – war dort schon eingeschränkt, bleibt nur, wer an beiden Stellen sehen darf.
+    P._mElsewhereFix = function (ents, ids, users, skip) { return this._mElseScan(ents, ids, users, skip).fixes; };
+    P._mElseScan = function (ents, ids, users, skip) {
+      const none = { text: "", fixes: [] };
       const want = new Set(ents.filter((x) => typeof x === "string" && x));
-      if (!want.size || !ids.length) return "";
+      if (!want.size || !ids.length) return none;
       const gone = users.filter((u) => ids.indexOf(u.id) < 0);
-      if (!gone.length) return "";
+      if (!gone.length) return none;
+      const fixes = [];
+      const narrow = (cur) => { const both = cur.length ? cur.filter((x) => ids.indexOf(x) >= 0) : ids.slice(); return both.length ? both : ids.slice(); };
       const rooms = rooms$(this);
       const eu = I().entityUsers ? I().entityUsers(rooms) : {};
       const allowed = (list, u) => !list.length || list.indexOf(u.id) >= 0;
@@ -1488,7 +1516,10 @@
           const inner = (t.type === "conditional" && t.card) || t;
           if (!want.has(inner.entity)) return;
           const hit = gone.filter((u) => allowed(tileUsers(t), u));
-          if (hit.length) { hit.forEach((u) => who.add(u.name)); places.push(this._roomLabel(r) + " (" + tileName(t) + ")"); }
+          if (hit.length) {
+            hit.forEach((u) => who.add(u.name)); places.push(this._roomLabel(r) + " (" + tileName(t) + ")");
+            fixes.push(() => setTileUsers(t, narrow(tileUsers(t))));
+          }
         });
         const V = r.variables || {};
         if (skip && skip.badge === ri) return;
@@ -1497,10 +1528,18 @@
         if (!sec.length) return;
         const bu = ((V.casora_badge_users || {}).security) || [];
         const hit = gone.filter((u) => allowed(bu, u) && sec.some((e) => allowed(eu[e] || [], u)));
-        if (hit.length) { hit.forEach((u) => who.add(u.name)); places.push(this._roomLabel(r) + " (" + tr("Security") + ")"); }
+        if (hit.length) {
+          hit.forEach((u) => who.add(u.name)); places.push(this._roomLabel(r) + " (" + tr("Security") + ")");
+          fixes.push(() => {
+            r.variables = r.variables || {};
+            const m = { ...(r.variables.casora_badge_users || {}) };
+            m.security = narrow(Array.isArray(m.security) ? m.security : []);
+            r.variables.casora_badge_users = m;
+          });
+        }
       });
-      if (!places.length) return "";
-      return fill(tr("{names} still sees it here: {places}"), { names: Array.from(who).join(", "), places: places.join(", ") });
+      if (!places.length) return none;
+      return { text: fill(tr("{names} still sees it here: {places}"), { names: Array.from(who).join(", "), places: places.join(", ") }), fixes, places };
     };
 
     P._mWhoSheet = async function (cur, what, done) {
@@ -1643,7 +1682,8 @@
             group.append(r, h, try_);
           }
           this._mWhoRow(group, () => tileUsers(shell), (ids) => setTileUsers(shell, ids), "Tile",
-            (ids, users) => this._mElsewhere([inner.entity], ids, users, { tile: shell }));
+            (ids, users) => this._mElsewhere([inner.entity], ids, users, { tile: shell }),
+            { fix: (ids, users) => this._mElsewhereFix([inner.entity], ids, users, { tile: shell }) });
         }
       }
       // Badges
@@ -1658,8 +1698,12 @@
           if (ids.length) m[bid] = ids; else delete m[bid];
           if (Object.keys(m).length) room.variables.casora_badge_users = m; else delete room.variables.casora_badge_users;
         };
+        // Oben unter dem Namen statt ganz am Ende eines langen Editors (Nutzertest 7, P-T4).
+        const nameRow = card.querySelector(":scope > .row");
+        const before = nameRow ? nameRow.nextSibling : card.children[1] || null;
         this._mWhoRow(card, get, set, "Badge", bid === "security"
-          ? (ids, users) => this._mElsewhere(SEC_KEYS(room.variables || {}), ids, users, { badge: this._room }) : null);
+          ? (ids, users) => this._mElsewhere(SEC_KEYS(room.variables || {}), ids, users, { badge: this._room }) : null,
+          { before, fix: bid === "security" ? (ids, users) => this._mElsewhereFix(SEC_KEYS(room.variables || {}), ids, users, { badge: this._room }) : null });
       });
       // Raum (Darstellung)
       const app = pane.querySelector('[data-k="Appearance"]');
