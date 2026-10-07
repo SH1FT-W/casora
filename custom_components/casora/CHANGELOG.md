@@ -139,6 +139,7 @@ The biggest update since Casora 1.0. It brings a new Studio in which the preview
 - When a card update is waiting at startup, dashboards are reliably saved with the newest templates. When two dashboards save at the same time, nothing under "Versions" gets lost.
 - Custom fonts with the same file name in two families no longer overwrite each other.
 - The configure dialog says "Invalid input" instead of "Invalid time" for wrong values. Migration "Adapt template" explains AI changes that don't fit.
+- Heating and floor heating tiles give short tap feedback like lights, and the target temperature plus and minus buttons visibly give way when pressed.
 
 ### Security
 - Newly uploaded room photos get a file name that cannot be guessed, so nobody can fetch a photo of your home via a simple address like "livingroom.jpg". Upload older photos once more.
