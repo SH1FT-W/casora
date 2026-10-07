@@ -70,8 +70,8 @@ const sec = await stable(page, () => window.__pierce('button-card')
   .filter((b) => [].concat((b._config || {}).template || []).includes('casora_badge_security_group') && b.getBoundingClientRect().width > 0)
   .map((b) => b.shadowRoot.querySelector('ha-card').innerText.replace(/\s+/g, ' ').trim()));
 await check('Dashboard: Sicherheit „All secure“', sec && sec.length && sec.every((t) => /All secure/.test(t)), sec);
-const navNames = await stable(page, () => window.__pierce('casora-nav').flatMap((n) => [...(n.shadowRoot || n).querySelectorAll('.route .label')])
-  .filter((l) => l.getBoundingClientRect().width > 0).map((l) => l.textContent.trim()));
+await page.waitForFunction(() => window.__pierce('.route .label').length > 0, null, { timeout: 15000 }).catch(() => {});
+const navNames = await stable(page, () => window.__pierce('.route .label').map((l) => l.textContent.trim()));
 await check('Raumnamen: Vorschau-Leiste = Dashboard-Leiste', navNames && navNames.length && prev
   && navNames.join('|') === prev.tabs.join('|'), { dashboard: navNames, vorschau: prev && prev.tabs });
 await finish();
