@@ -46,9 +46,11 @@ for (const s of ['', 'short', 'detailed']) for (const p of ['home', 'room']) {
 }
 
 // Startseite am Desktop: die umgebende Ansicht (hui-view mit index + lovelace), wie isHomeRoom im Studio.
-const viewOf = (views, index) => ({ lovelace: { config: { views } }, index, parentNode: null });
+const viewOf = (views, index) => ({ localName: 'hui-view', lovelace: { config: { views } }, index, parentNode: null });
 const cardIn = (view) => {
-  const shadow = { parentNode: null, host: { parentNode: view } };   // Karte in einem Shadow-Root
+  // Karte in einer layout-card (grid-layout hat auch lovelace + index = Kartenplatz) im Shadow-Root.
+  const grid = { localName: 'grid-layout', lovelace: view.lovelace, index: 3, parentNode: view };
+  const shadow = { parentNode: null, host: { parentNode: { parentNode: null, host: grid } } };
   return { parentNode: { parentNode: shadow } };
 };
 const homeFirst = [{ path: 'home' }, { path: 'wohnzimmer' }];

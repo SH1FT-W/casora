@@ -840,12 +840,14 @@ window.casoraPriceKwh = function (v) {
   };
 
   // Steht el (Karte im Dashboard) auf der Startseite? Wie isHomeRoom im Studio: die Ansicht mit
-  // Pfad „home“, sonst die erste. Sucht die umgebende Ansicht (hui-view: index + lovelace);
+  // Pfad „home“, sonst die erste. Sucht die umgebende Ansicht (hui-view: index + lovelace –
+  // layout-cards wie grid-layout haben beides auch, dort ist index der Kartenplatz);
   // true/false, null wenn keine gefunden (z. B. außerhalb eines Dashboards).
+  var VIEW_TAG = /^hui-([a-z]+-)?view$/;
   window.casoraOnHomeView = function (el) {
     var n = el, guard = 0;
-    while (n && guard++ < 80) {
-      if (n.lovelace && typeof n.index === 'number') {
+    while (n && guard++ < 120) {
+      if (n.lovelace && typeof n.index === 'number' && VIEW_TAG.test(n.localName || '')) {
         var views = (n.lovelace.config && n.lovelace.config.views) || [];
         if (!views.length) return null;
         var home = 0;
