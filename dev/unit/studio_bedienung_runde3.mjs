@@ -130,13 +130,21 @@ const state = (rooms) => ({ s: [{ rooms }, {}, {}, null], m: null });
   p._menuAt(null, rooms.map((r, i) => ({ id: 'go:' + i, label: r.name, group: 'Rooms' }))
     .concat([{ id: 'rename', group: 'This Room' }, { id: 'delete', group: 'This Room' }]), () => {});
   const it = p.menu.items;
-  assert.equal(it[0].id, 'mhidden', 'Hinweis oben in der Raumliste');
-  assert.equal(it[0].label, '1 room hidden ›');
+  // Seit Nutzertest 4: je ausgeblendetem Raum oben „… · Einblenden“ (ein Tipp), statt Umweg über „Räume ordnen“.
+  assert.equal(it[0].id, 'mshow:2', 'ausgeblendeter Raum oben in der Raumliste');
+  assert.ok(it[0].label.endsWith(' · Show again'), it[0].label);
   assert.ok(it.find((x) => x.id === 'go:2').label.endsWith('· Hidden'), 'Raum selbst bleibt gekennzeichnet');
-  p.menu.onPick('mhidden');
-  assert.equal(arrange, 1, 'führt zu „Räume ordnen“');
+  p.menu.onPick('mshow:2');
+  assert.ok(!rooms[2].variables.casora_hidden, 'ein Tipp blendet ein');
+  // viele ausgeblendet: Hinweis führt zu „Räume ordnen“
+  rooms.forEach((r, i) => { if (i) { r.variables = r.variables || {}; r.variables.casora_hidden = true; } });
+  if (rooms.length - 1 > 3) {
+    p._menuAt(null, rooms.map((r, i) => ({ id: 'go:' + i, label: r.name, group: 'Rooms' })).concat([{ id: 'rename', group: 'This Room' }]), () => {});
+    p.menu.onPick('mhidden');
+    assert.equal(arrange, 1, 'führt zu „Räume ordnen“');
+  }
+  rooms.forEach((r) => { if (r.variables) delete r.variables.casora_hidden; });
   // ohne ausgeblendeten Raum kein Hinweis
-  delete rooms[2].variables.casora_hidden;
   p._menuAt(null, rooms.map((r, i) => ({ id: 'go:' + i, label: r.name, group: 'Rooms' })).concat([{ id: 'rename', group: 'This Room' }]), () => {});
   assert.ok(!p.menu.items.some((x) => x.id === 'mhidden'));
 }

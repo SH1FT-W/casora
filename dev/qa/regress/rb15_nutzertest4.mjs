@@ -1,12 +1,14 @@
 // @zustand: arbeit
-// @parallel: ui
+// @parallel: allein
 // Nutzertest 4 (07.10.2026). Erwartet: Tippen direkt nach dem Klick auf die Suche landet im Suchfeld,
 // HA-Kürzel (a = Assist, e = Schnellsuche) öffnen im Studio nichts, ⌘K öffnet die Studio-Suche;
 // „Raum umbenannt“ lässt sich zurücknehmen, auch wenn danach im selben Raum anderes geändert wurde;
 // ein ausgeblendeter Raum steht im Hinweis „N ausgeblendet“ (antippen = einblenden) und ist am Raumknopf
 // und in der Vorschau-Leiste markiert; nach dem Einschalten der Rückfrage öffnet „Ausprobieren“ im
 // Toast das Popup; die Werkzeugleiste am iPad (quer/hochkant) überlappt nicht und hängt nicht vom
-// Raumnamen ab. Es wird nichts gespeichert.
+// Raumnamen ab. Handy: Einstellungen-Leiste nach dem Speichern zurückgesetzt (Lüften-Empfänger wird
+// dafür kurz gesetzt und wieder entfernt), Uhr-Hinweis sichtbar, Räume-Menü „… · Einblenden“.
+// Das Dashboard wird nicht gespeichert.
 import { open, studio, casoraDashboard, check, need, finish } from './lib.mjs';
 
 const dash = await casoraDashboard((d) => ((d.config || {}).views || []).length > 3);
@@ -122,6 +124,45 @@ for (const [w, h] of [[1024, 768], [768, 1024]]) {
   }
   await check(`${w}×${h}: nichts überlappt, Titel nicht abgeschnitten`, seen.every((x) => !x.ov.length && !x.cut), seen);
   await check(`${w}×${h}: Beschriftungen hängen nicht vom Raumnamen ab`, seen[0].cls === seen[1].cls, seen);
+}
+
+// 6) Handy (Gruppe E): Einstellungen-Leiste nach dem Speichern, Uhr-Hinweis, Räume-Menü „Einblenden“
+{
+  const o = await open({ width: 390, height: 844, mobile: true, dark: false, scale: 2 });
+  const pg = o.page;
+  const P = (fn, a) => pg.evaluate(fn, a);
+  await studio(pg, dash.url);
+  await P(() => window.__panel()._bClose());
+  await P(() => window.__panel()._csOpenPage('vent'));
+  await pg.waitForTimeout(1500);
+  const tapOn = async (sel) => { const at = await P((s) => { const e = window.__panel().shadowRoot.querySelector(s); if (!e) return null;
+    const r = e.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }, sel); if (at) await pg.touchscreen.tap(at[0], at[1]); return !!at; };
+  const had = await tapOn('.casora-chip');
+  await pg.waitForTimeout(400);
+  if (had) {
+    await tapOn('.cs-save');
+    await pg.waitForTimeout(3500);
+    const bar = await P(() => { const r = window.__panel().shadowRoot; return { st: r.querySelector('.cs-state').textContent, cls: r.querySelector('.cs-bar').className }; });
+    await check('Handy: nach „Einstellungen speichern“ keine „Ungespeicherten Änderungen“ mehr', /cs-clean/.test(bar.cls) && !/Ungespeichert/.test(bar.st), bar);
+    // zurück auf den Anfangszustand
+    await tapOn('.casora-chip');
+    await pg.waitForTimeout(300);
+    await P(() => window.__panel()._csSave());
+    await pg.waitForTimeout(2500);
+  }
+  await P(() => { const p = window.__panel(); p._bClose(); p._bOpen = true; p._select({ group: 'rooms', key: 'Time', label: 'Time' }); });
+  await pg.waitForTimeout(1000);
+  await check('Handy: Uhr-Hinweis „Handy-Layout hat keine Uhr“ sichtbar', await P(() => [...window.__panel().shadowRoot.querySelectorAll('.hint')]
+    .some((h) => /keine Uhr/.test(h.textContent) && h.getBoundingClientRect().height > 0)));
+  await P(() => { const p = window.__panel(); p._bClose(); const i = p._state.compact.rooms.findIndex((r, k) => k > 0 && r.path); p._mHideRoom(i, true); p._room = 0; p._renderTabs(); p._renderForm(); });
+  await pg.waitForTimeout(800);
+  await tapOn('.bbar [data-b="rooms"]');
+  await pg.waitForTimeout(600);
+  const show = await P(() => { const b = [...window.__panel().shadowRoot.querySelectorAll('[role=menu] [role=menuitem]')].find((x) => / · Einblenden/.test(x.textContent));
+    if (!b) return null; const r = b.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
+  if (show) await pg.touchscreen.tap(show[0], show[1]);
+  await pg.waitForTimeout(600);
+  await check('Handy: Räume-Menü blendet den Raum mit einem Tipp wieder ein', !!show && await P(() => !window.__panel()._state.compact.rooms.some((r) => (r.variables || {}).casora_hidden)));
 }
 
 await finish();

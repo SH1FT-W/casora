@@ -537,6 +537,9 @@
     P._csRepaint = function () {
       if (this._csOpen && split(this)) this._csRender();
       else if (this._csSheetPage && this._flowMode) this._csSheet(this._csSheetPage, null, true);
+      // Sonst (Handy im Studio: Seite als Blatt, kein split) zeichnet niemand neu – die Leiste blieb
+      // nach dem Speichern bei „Ungespeicherte Änderungen“ / „Speichern …“ stehen (Nutzertest 4, E-T3).
+      else this._csBar();
     };
 
     // Jede Änderung auf der Seite (auch im Auswahlmenü der Entitäten) → Leiste prüfen.

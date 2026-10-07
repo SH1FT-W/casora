@@ -1,6 +1,8 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "For desktop and tablet – the phone layout has no clock.": "Gilt für Desktop und Tablet – das Handy-Layout hat keine Uhr.",
+    "Version restored": "Stand wiederhergestellt",
     "Only together with “{line}” – use Undo for both.": "Geht nur zusammen mit „{line}“ – nimm beides mit „Rückgängig“ zurück.",
     "Scene saved in Home Assistant. The color is saved with the dashboard (“Done”).": "Szene in Home Assistant gespeichert. Die Farbe wird mit dem Dashboard gespeichert („Fertig“).",
     "Scene saved in Home Assistant. Pick a color now – it is saved with the dashboard (“Done”).": "Szene in Home Assistant gespeichert. Wähl jetzt eine Farbe – sie wird mit dem Dashboard gespeichert („Fertig“).",
@@ -10,7 +12,6 @@
     "Visibility & ask first": "Sichtbarkeit & Rückfrage",
     "Add tile for {name}": "Kachel für {name} hinzufügen",
     "Device": "Gerät",
-    "1 room hidden ›": "1 Raum ausgeblendet ›",
     "{n} rooms hidden ›": "{n} Räume ausgeblendet ›",
     "Home Assistant is loading it…": "Home Assistant lädt sie gerade …",
     "Saved in Home Assistant.": "In Home Assistant gespeichert.",

@@ -86,7 +86,7 @@ await H(() => { const p = window.__panel(); const rs = p._state.compact.rooms; c
 await H(() => window.__panel()._roomTitleMenu(window.__panel().shadowRoot.getElementById('roomtitle')));
 await page.waitForTimeout(500);
 const rm = await H(() => [...window.__panel().shadowRoot.querySelectorAll('[role=menu] .combo-opt, [role=menu] [role=menuitem]')].map((e) => e.innerText.trim()).join(' | '));
-await check('Raummenü nennt ausgeblendete Räume', /1 Raum ausgeblendet/.test(rm), rm.slice(0, 200));
+await check('Raummenü nennt ausgeblendete Räume', /· Einblenden/.test(rm), rm.slice(0, 200));
 await page.keyboard.press('Escape');
 
 // Szenen-Dialog: Farbe wählbar

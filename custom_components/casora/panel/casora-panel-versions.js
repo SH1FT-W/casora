@@ -658,6 +658,15 @@
       if (banner) banner.remove();
       await this._load();
       if (this.classList.contains("split")) this._cvOpenPage(true);
+      else {
+        // Handy: kein offenes Blatt vom Stand davor stehen lassen (Nutzertest 4, E-T9: verwaistes
+        // Einstellungsblatt) – die Vorschau zeigt den wiederhergestellten Stand.
+        if (this._cvOpen) this._cvClose();
+        if (this._bClose) this._bClose();
+      }
+      const what = v.name ? v.name : fmtFull(this, new Date(v.ts));
+      if (this._bToast) this._bToast(t("Version restored") + ": " + what, { ms: 3200 });
+      else if (this._status) this._status(t("Version restored") + ": " + what, "ok");
     };
 
     // ── Die Seite ────────────────────────────────────────────────────────────

@@ -93,3 +93,13 @@ console.log('studio_bedienung_runde4: ok');
   const n3 = clone(n2); const b3 = clone(n2); n3[0].rooms[0].tiles[0].variables = {};
   assert.deepEqual(changeLines(b3, n3, {}), ['Tile turned on: Jalousie · Bad']); }
 console.log('studio_bedienung_runde4: Kachel an/aus ok');
+
+// Nachtrag Gruppe E
+{ const set = read('panel/casora-panel-settings.js');
+  assert.ok(/else if \(this\._csSheetPage && this\._flowMode\)[^\n]*\n(\s*\/\/[^\n]*\n)*\s*else this\._csBar\(\);/.test(set), 'E-T3: Leiste nach dem Speichern auch am Handy zurückgesetzt');
+  assert.ok(panel.includes('hint: "For desktop and tablet – the phone layout has no clock."'), 'E-T3: Uhr-Hinweis am Schalter (Abschnittstext ist verdeckt)');
+  assert.ok(/mshow:/.test(mehr) && /this\._mHideRoom\(\+id\.slice\(6\), false\)/.test(mehr), 'E-T6: Räume-Menü blendet mit einem Tipp ein');
+  const ver = read('panel/casora-panel-versions.js');
+  assert.ok(ver.includes('if (this._bClose) this._bClose();') && ver.includes('t("Version restored")'), 'E-T9: Blatt zu, Bestätigung');
+  for (const key of ['Version restored', 'For desktop and tablet – the phone layout has no clock.']) assert.ok(de[key], 'de.json: ' + key); }
+console.log('studio_bedienung_runde4: Nachtrag E ok');

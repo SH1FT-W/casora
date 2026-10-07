@@ -1230,13 +1230,19 @@
             const r = m && rooms[+m[1]];
             return r && (r.variables || {}).casora_hidden ? { ...x, label: x.label + " · " + tr("Hidden") } : x;
           });
-          // Ausgeblendete Räume stehen sonst unauffällig in der Liste (Nutzertest): oben ein Hinweis,
-          // der zu „Räume ordnen“ führt – dort steht an jedem „Wieder einblenden“.
-          const nHid = rooms.filter((r) => (r.variables || {}).casora_hidden).length;
-          if (nHid && typeof this._bRoomsOpen === "function") {
-            const first = items.findIndex((x) => x && /^go:/.test(x.id || ""));
-            items.splice(first >= 0 ? first : 0, 0, { id: "mhidden", label: nHid === 1 ? tr("1 room hidden ›") : fill(tr("{n} rooms hidden ›"), { n: nHid }),
-              icon: "eyeoff", group: (items[first] || {}).group || "Rooms", quiet: true });
+          // Ausgeblendete Räume oben, je Raum „… · Einblenden“ mit einem Tipp (Nutzertest 4, E-T6: der Weg
+          // über „1 Raum ausgeblendet“ → Räume ordnen → Einblenden waren 7 Schritte). Viele: wie bisher
+          // ein Hinweis, der zu „Räume ordnen“ führt.
+          const hid = rooms.map((r, i) => ({ r, i })).filter((x) => (x.r.variables || {}).casora_hidden);
+          const nHid = hid.length;
+          const first = items.findIndex((x) => x && /^go:/.test(x.id || ""));
+          const grp = (items[first] || {}).group || "Rooms";
+          if (nHid && nHid <= 3) {
+            items.splice(first >= 0 ? first : 0, 0, ...hid.map((x) => ({ id: "mshow:" + x.i,
+              label: this._roomLabel(x.r) + " · " + tr("Show again"), icon: "eye", group: grp, quiet: true })));
+          } else if (nHid && typeof this._bRoomsOpen === "function") {
+            items.splice(first >= 0 ? first : 0, 0, { id: "mhidden", label: fill(tr("{n} rooms hidden ›"), { n: nHid }),
+              icon: "eyeoff", group: grp, quiet: true });
           }
           const at = items.findIndex((x) => x && x.id === "delete");
           const home = room && isHome(this, room);
@@ -1246,7 +1252,8 @@
           });
           const pick = onPick;
           onPick = (id) => (id === "mhide" ? this._mHideRoom(this._room, !hidden)
-            : id === "mhidden" ? setTimeout(() => this._bRoomsOpen(), 60) : pick(id));
+            : /^mshow:\d+$/.test(id) ? this._mHideRoom(+id.slice(6), false)
+              : id === "mhidden" ? setTimeout(() => this._bRoomsOpen(), 60) : pick(id));
         }
       }
       return orig.call(this, anchor, items, onPick, mopts);

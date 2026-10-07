@@ -2010,7 +2010,9 @@ const SECTIONS = [
       { key: "show_time", label: "Show clock", type: "bool", boolDefault: true, always: true, ord: -1 },
       // Immer sichtbar: ohne Eintrag nimmt die Uhr sensor.time, und das soll man sehen.
       { ...E("time_entity", "Time sensor", ["sensor"]), always: true, placeholder: "Automatic" },
-      { key: "use_12h", label: "12-hour clock", type: "bool", boolDefault: LOCALE_12H, always: true },
+      // Der Abschnittstext (blurb) ist im neuen Studio verdeckt – der Hinweis gehört an den Schalter (Nutzertest 4, E-T3).
+      { key: "use_12h", label: "12-hour clock", type: "bool", boolDefault: LOCALE_12H, always: true,
+        hint: "For desktop and tablet – the phone layout has no clock." },
       { ...T("time_suffix", "Suffix"),
         auto: true, advanced: true, noAdd: true },
     ],
