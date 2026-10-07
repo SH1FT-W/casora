@@ -58,10 +58,16 @@ async function create(name, how) {
     await waitFor('.bs-grid');
     await clickPrimary(/(anlegen|erstellen|^Create)/);
   }
-  await page.waitForFunction(async (n) => {
-    const l = await document.querySelector('home-assistant').hass.callWS({ type: 'lovelace/dashboards/list' });
-    return l.some((x) => x.url_path === n) && l.some((x) => x.url_path === n + '-mobile');
-  }, name, { timeout: 90000, polling: 1500 });
+  // Von hier aus abfragen: waitForFunction mit async-Funktion kehrt sofort zurück (Promise = „wahr“).
+  for (const t0 = Date.now(); ; ) {
+    const ok = await H(async (n) => {
+      const l = await document.querySelector('home-assistant').hass.callWS({ type: 'lovelace/dashboards/list' });
+      return l.some((x) => x.url_path === n) && l.some((x) => x.url_path === n + '-mobile');
+    }, name).catch(() => false);
+    if (ok) break;
+    if (Date.now() - t0 > 90000) throw new Error('Dashboard ' + name + ' nach 90 s nicht angelegt');
+    await page.waitForTimeout(1500);
+  }
   await page.waitForTimeout(1500);
 }
 

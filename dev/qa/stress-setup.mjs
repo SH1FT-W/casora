@@ -103,12 +103,22 @@ await H(() => window.__pierce('.bs-item[aria-checked=false]').forEach((b) => b.c
 console.log('Kacheln im Vorschlag:', tiles);
 await clickPrimary(/(anlegen|erstellen|^Create)/, '3/3 Anlegen');
 
-// 4) Warten, bis Dashboard und Handy-Layout da sind (statt fester Wartezeit).
-await page.waitForFunction(async (name) => {
-  const h = document.querySelector('home-assistant').hass;
-  const l = await h.callWS({ type: 'lovelace/dashboards/list' });
-  return l.some((x) => x.url_path === name) && l.some((x) => x.url_path === name + '-mobile');
-}, NAME, { timeout: 90000, polling: 1500 }).catch(() => console.warn('  Dashboard/Handy-Layout nach 90 s nicht vollständig'));
+// 4) Warten, bis Dashboard und Handy-Layout da sind (statt fester Wartezeit). Abgefragt wird von
+// hier aus: page.waitForFunction mit async-Funktion wartet nicht – Playwright hält das Promise für
+// „wahr“ und kehrt sofort zurück (so blieb im Gate unter Last nur die feste Pause, 06.10.2026).
+const t0 = Date.now();
+let done = false, step = '';
+while (!done && Date.now() - t0 < 180000) {
+  await page.waitForTimeout(1000);
+  ({ done, step } = await H(async (name) => {
+    const h = document.querySelector('home-assistant').hass;
+    const l = await h.callWS({ type: 'lovelace/dashboards/list' });
+    const p = window.__pierce('.fprog .cap').map((e) => e.textContent.trim()).filter(Boolean).pop() || '';
+    return { done: l.some((x) => x.url_path === name) && l.some((x) => x.url_path === name + '-mobile'), step: p.slice(0, 60) };
+  }, NAME).catch(() => ({ done: false, step: '?' })));
+}
+console.log(done ? `  Angelegt nach ${((Date.now() - t0) / 1000).toFixed(1)} s`
+  : `  Dashboard/Handy-Layout nach 180 s nicht vollständig (Assistent zeigt: „${step}“)`);
 await page.waitForTimeout(2000);
 
 console.log('  📸', await shot(page, NAME.replace(/-/g, '_') + '_setup_fertig'));

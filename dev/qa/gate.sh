@@ -217,6 +217,9 @@ static_steps() {
   step i18n             static  "python3 tools/i18ncheck.py"
   step phrase-gaps      static  "python3 tools/phrase-gaps.py --max \${PHRASE_GAPS_MAX:-70} >/dev/null"
   step changelog        static  "python3 tools/sync-changelog.py --check"
+  # Prüfskripte: page.waitForFunction(async …) wartet nie (Playwright hält das Promise für „wahr“) –
+  # so wurde qa-stress unter Last nicht angelegt (06.10.2026). Stattdessen selbst abfragen.
+  step qa-warten        static  "! grep -rnE 'waitForFunction\\(async' dev --include='*.mjs'"
   [ $DRY = 1 ] && echo "2) Unit-Tests (dev/unit)"
   step unit             unit    unit_tests
   return 0
