@@ -104,6 +104,7 @@ Das größte Update seit Casora 1.0. Neu sind das Studio, in dem die Vorschau se
 - Schlösser: Der Schalter steht bei „Verriegelt“ auf An, der Kopf nennt bei gemischtem Zustand „1 entriegelt“. Ein geöffnetes Schloss heißt „Offen“ mit offenem Symbol statt „Blockiert“. Am Tablet verdeckt der Schalter die Überschrift nicht mehr.
 - Jalousie-Popup: Die Markierung Zu/25/50/75/Auf folgt der echten Position.
 - Beleuchtung: Halten auf das Badge und Licht-Chips öffnen das Casora-Licht-Popup mit den echten Lichtern des Raums. Der gewählte Weißton und die gewählte Lichtfarbe sind hinterlegt.
+- Licht-Popup des ganzen Hauses: Die Leiste mit den Räumen flackert nicht mehr, wenn ein Raum mit mehreren Lichtern eingeschaltet wird.
 - Automatisch einrichten: Die Raum-Kachel „Beleuchtung“ nimmt nie mehr die Lichtgruppe des ganzen Hauses.
 - Glocke: Meldungen ohne passende Kachel (z. B. eine Pflanze) öffnen das Casora-Popup statt eines technischen Home-Assistant-Fensters.
 - Energie: „Einspeisung gesamt“, Zähler in Wh und Leistung in kW werden richtig angezeigt (z. B. 1,5 kWh statt 1500 kWh, 2,5 kW statt 3 W). Der Hinweis ohne Tageswerte ist vollständig lesbar.

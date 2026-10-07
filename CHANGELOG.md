@@ -104,6 +104,7 @@ The biggest update since Casora 1.0. It brings a new Studio in which the preview
 - Locks: the switch is on for "Locked", and with mixed states the header says "1 unlocked". An opened lock reads "Open" with an open lock icon instead of "Blocked". On tablets the switch no longer covers the heading.
 - Blinds popup: the Close/25/50/75/Open highlight follows the real position.
 - Lights: holding the badge and tapping light chips open the Casora light popup with the room's real lights. The chosen white tone and light color are highlighted.
+- Light popup for the whole home: the row of rooms no longer flickers when a room with several lights is turned on.
 - Set up automatically: a room's "Lights" tile never uses the light group of the whole house.
 - Bell: notifications without a matching tile (e.g. a plant) open the Casora popup instead of a technical Home Assistant dialog.
 - Energy: "Feed-in total", meters in Wh and power in kW are shown correctly (e.g. 1.5 kWh instead of 1500 kWh, 2.5 kW instead of 3 W). The "no daily values yet" hint is fully readable.
