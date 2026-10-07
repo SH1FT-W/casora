@@ -4367,10 +4367,21 @@ const TILE_MAIN_FIND = {
   casora_dryer: { keys: ["dryer_state", "washer_state"], domain: "sensor", like: /trockn|dryer/i },
   casora_dishwasher: { keys: ["sensor_operation_state", "operation_state"], domain: "sensor" },
   casora_3d_printer: { keys: ["print_status"], domain: "sensor" },
+  // Fußball: jeder Sensor der HACS-Integration Team Tracker (ohne Gerät, ohne translation_key);
+  // ohne Registry-Eintrag an den Attributen erkannt.
+  casora_football: { domain: "sensor", platform: "teamtracker" },
   casora_weather_warning: { keys: ["warning", "warnings"], domain: "binary_sensor", dc: "safety" },
   // Ein Aquarium ist kein beliebiges Thermometer (sonst: Außentemperatur des Autos).
   casora_aquarium: { domain: "sensor", dc: "temperature", strict: true,
     like: /aquari|becken|\btank\b|\breef\b|fluval|trigon|helialux|chihiros|juwel|terrari|schildkr|turtle/i },
+};
+// Integration statt Schlüssel (TILE_MAIN_FIND.platform). Team Tracker zusätzlich an seinen Attributen,
+// falls die Registry die Integration nicht nennt.
+const platformHit = (spec, reg, st) => {
+  if (!spec || !spec.platform) return false;
+  if (reg && reg.platform === spec.platform) return true;
+  const a = (st && st.attributes) || {};
+  return spec.platform === "teamtracker" && a.sport_path != null && "team_abbr" in a && "opponent_abbr" in a;
 };
 // Geräte, die erkennbar etwas anderes sind, schlägt eine fremde Kachel nur vor, wenn
 // sonst nichts passt: Name, Modell oder Hersteller des Geräts.
@@ -20399,7 +20410,7 @@ class CasoraPanel extends HTMLElement {
         if (spec.domain && dom !== spec.domain) return false;
         if (!doms.includes(dom)) return false;
         const e = R[id] || {};
-        const keyHit = (spec.keys || []).includes(e.translation_key);
+        const keyHit = (spec.keys || []).includes(e.translation_key) || platformHit(spec, e, S[id]);
         const dcHit = spec.dc && ((S[id].attributes || {}).device_class === spec.dc);
         if (!keyHit && !dcHit) return false;
         const text = id + " " + nameOf(id) + " " + devName(id);
@@ -20468,7 +20479,8 @@ class CasoraPanel extends HTMLElement {
       if (likeHit) score += 16;
       // Der Schlüssel der Integration ist sicherer als nur die Geräteklasse.
       const lr = laundryRank.has(id) ? laundryRank.get(id) : null;
-      const keyHit = lr !== null ? lr < 2 : !!spec && (spec.keys || []).includes((R[id] || {}).translation_key);
+      const keyHit = lr !== null ? lr < 2 : !!spec && ((spec.keys || []).includes((R[id] || {}).translation_key)
+        || platformHit(spec, R[id] || {}, S[id]));
       if (keyHit) score += 8;
       // Hersteller-Integration vor WashData.
       if (lr === 0) score += 1;

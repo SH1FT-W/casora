@@ -145,6 +145,19 @@
       if (dup >= 0) out.splice(dup, 1);
       out.push({ id, device: id, name, room: room ? room.name : null, area: (A[d.area_id] || {}).name || null, type, entity, reason, rank });
     });
+    // Fußball: Team-Tracker-Sensoren haben kein Gerät – je Team eine Fußball-Kachel, vorgeschlagen für die
+    // Startseite („Zuhause“). Erkannt an der Integration, sonst an den Attributen des Sensors.
+    if (typeIds.has("casora_football")) {
+      const R = hass.entities || {}, S = hass.states || {};
+      const home = rooms.find((r) => r.path === "home") || rooms[0] || null;
+      Object.keys(S).filter((eid) => /^sensor\./.test(eid)).sort().forEach((eid) => {
+        const r = R[eid] || {}, a = (S[eid] || {}).attributes || {};
+        const tt = r.platform === "teamtracker" || (a.sport_path != null && "team_abbr" in a && "opponent_abbr" in a);
+        if (!tt || r.hidden || r.disabled_by || used.has(eid) || r.device_id) return;
+        out.push({ id: eid, device: null, name: a.friendly_name || eid, room: home ? home.name : null, area: null,
+          type: "casora_football", entity: eid, reason: "key", rank: 9 });
+      });
+    }
     // Solar-Tipp und Raumklima kommen nicht von selbst dazu – nur über „Kachel hinzufügen“.
     // Räume in Dashboard-Reihenfolge, darin nach Name.
     const order = new Map(rooms.map((r, i) => [r.name, i]));

@@ -5172,6 +5172,7 @@ window.casoraMenuGlass = {
       -webkit-mask: var(--g) center / contain no-repeat; mask: var(--g) center / contain no-repeat;
     }
     :host([soft]) .header-ring ha-icon { --mdc-icon-size: 34px; display: flex; }
+    :host([soft]) .header-ring .im { width: 52px; height: 52px; object-fit: contain; }
     :host([soft]) .header-title {
       order: 1;
       font-size: 28px;
@@ -5410,6 +5411,11 @@ window.casoraMenuGlass = {
     // Kachel, die ihr sichtbares Symbol selbst zeichnet (Kalender: Rahmen mit heutiger Tageszahl
     // als Maske, #icon ist nur der schlichte Rahmen): ein Popup-Modul nennt dafür eine Bild-URL,
     // damit der Ring dasselbe Symbol zeigt wie die Kachel.
+    // Kachel mit farbigem Bild statt Symbol (Fußball: Vereinswappen): weißer Ring, Bild in Farbe.
+    var im = typeof window.casoraRingImage === 'function' ? window.casoraRingImage(src, key) : null;
+    if (typeof im === 'string' && /^(https?:|\/|data:image\/)/.test(im)) {
+      return { hue: 'var(--casora-football-crest-bg, #fff)', html: '<img class="im" alt="" src="' + im.replace(/["<>\\]/g, '') + '">', off: false };
+    }
     var ru = typeof window.casoraRingUrl === 'function' ? window.casoraRingUrl(src, key) : null;
     if (typeof ru === 'string' && ru) {
       ic = null;

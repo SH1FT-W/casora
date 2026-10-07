@@ -210,6 +210,21 @@ window.CASORA_TILE_TYPES = [
       { key: "show_toggle", label: "Toggle button", type: "bool", boolDefault: false },
       TITLE_NAME,
     ] },
+  // Fußball (07.10.2026): ein Team-Tracker-Sensor je Kachel. Team, Gegner, Liga und Wappen liest die Kachel
+  // aus dem Sensor (scripts/local/11-fussball.js); TILE_MAIN_FIND im Panel schlägt nur Team-Tracker-Sensoren vor.
+  { id: "casora_football", label: "Football", template: "casora_football", domains: ["sensor"], icon: "soccer",
+    color: "var(--casora-color-green, #30D158)", entityLabel: "Team (Team Tracker)",
+    entityPlaceholder: "A Team Tracker sensor", fields: [
+      { key: "show_when_match", label: "Show", type: "select", options: ["", "week", "matchday", "around", "live"],
+        optionLabels: { "": "Always", week: "When a match is within 7 days", matchday: "On match day",
+          around: "Around the match", live: "Only during the match" },
+        hint: "Hidden tiles come back by themselves; during a match the tile always shows." },
+      { key: "hours_before", label: "Hours before kick-off", type: "number", placeholder: "3",
+        when: (v) => v.show_when_match === "around" },
+      { key: "hours_after", label: "Hours after the final whistle", type: "number", placeholder: "3",
+        when: (v) => ["week", "matchday", "around"].includes(v.show_when_match) },
+      TITLE_NAME,
+    ] },
   // Aquarien-Übersicht (Hemma 1 und ältere Fassungen „…_aquarium“): bis zu drei Becken in einer Kachel. Nur fürs
   // Bearbeiten umgezogener Kacheln – neue Becken bekommen die Aquarium-Kachel (casora_aquarium_tank).
   { id: "casora_aquariums", label: "Aquariums", template: "casora_aquarium", hidden: true, domains: ["sensor"],
@@ -227,7 +242,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "3D_Printer", "dryer", "dishwasher", "fish", "camera", "attention2", "sun", "trash", "car", "car_side",
   "car_side_w2", "ebike", "chef-hat", "shield_check", "shield_lock", "shield_moon", "shield_off",
   "shield_alarm", "shield_bypass", "shield_vacation", "calendar", "calendar-day", "window-open",
-  "window-closed", "heating_coil", "wind", "rooms",
+  "window-closed", "heating_coil", "wind", "rooms", "soccer",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
 // Vorschau: bedingte Karten (type: conditional) so zeigen wie das Dashboard –

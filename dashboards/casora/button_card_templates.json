@@ -4430,6 +4430,64 @@
    "casora_default_name": "Ventilator"
   }
  },
+ "casora_football": {
+  "custom_fields": {
+   "fbc": "[[[\n  return window._casoraFootball ? window._casoraFootball.corner(entity) : '';\n]]]\n"
+  },
+  "entity_picture": "[[[\n  const i = window._casoraFootball?.info(entity);\n  return (i && i.team.logo) || window.casoraIconUrl(variables.icon || 'default');\n]]]\n",
+  "extra_styles": "/* Wappen in Farbe auf weißem Kreis; der Gegner sitzt klein unten rechts am Kreis. */\n#img-cell {\n  position: relative !important;\n  overflow: visible !important;\n  background: var(--casora-football-crest-bg, #fff) !important;\n  width: var(--casora-icon-circle-size, 44px) !important;\n  height: var(--casora-icon-circle-size, 44px) !important;\n  aspect-ratio: 1 / 1 !important;\n  box-shadow: 0 0 0 1px rgba(58,50,43,0.06) !important;\n}\n:host #img-cell img {\n  width: 64% !important;\n  height: 64% !important;\n  max-width: 64% !important;\n  max-height: 64% !important;\n  object-fit: contain !important;\n  -webkit-mask: none !important;\n  mask: none !important;\n}\n#img-cell::after {\n  content: '';\n  display: var(--casora-football-opp-show, none);\n  position: absolute;\n  right: -9px;\n  bottom: -5px;\n  width: 46%;\n  height: 46%;\n  border-radius: 50%;\n  background: var(--casora-football-crest-bg, #fff) var(--casora-football-opp) center / 66% no-repeat;\n  box-shadow: 0 0 0 2.5px var(--ha-card-background, var(--card-background-color, #fff));\n}\n.cfb-pill {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  font-size: 12.5px;\n  font-weight: 600;\n  line-height: 1;\n  white-space: nowrap;\n  color: var(--casora-soft-sub, var(--secondary-text-color));\n  background: var(--casora-soft-row-fill, rgba(127,127,127,0.12));\n  padding: 6px 11px;\n  border-radius: 999px;\n}\n.cfb-pill.live { color: #fff; background: var(--casora-color-red, #D35A4E); }\n.cfb-pill.live i { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: cfb-blink 1.4s ease-in-out infinite; }\n@keyframes cfb-blink { 50% { opacity: 0.3; } }\n@media (prefers-reduced-motion: reduce) { .cfb-pill.live i { animation: none; } }\n",
+  "hidden": "[[[\n  const off = (v) => v === false || v === 'false' || v === 0 || v === '0';\n  if (off(variables?.enabled)) return true;\n  return !!window._casoraFootball?.hidden(entity, variables);\n]]]\n",
+  "show_entity_picture": true,
+  "show_icon": false,
+  "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? t;\n  /* Kleine Handy-Kachel ohne Ecke: die Spielminute steht dann im Text. */\n  const small = !variables.size_large && window.matchMedia?.('(max-width: 767px), (max-height: 600px)').matches;\n  return fit(window._casoraFootball ? window._casoraFootball.tile(entity, null, small) : '');\n]]]\n",
+  "styles": {
+   "card": [
+    {
+     "--casora-football-opp": "[[[ const i = window._casoraFootball?.info(entity); return i && i.opp.logo && i.phase !== 'BYE' && i.phase !== 'NONE' ? `url(\"${i.opp.logo.replace(/[\"\\\\]/g, '')}\")` : 'none'; ]]]\n"
+    },
+    {
+     "--casora-football-opp-show": "[[[ const i = window._casoraFootball?.info(entity); return i && i.opp.logo && i.phase !== 'BYE' && i.phase !== 'NONE' ? 'block' : 'none'; ]]]\n"
+    }
+   ],
+   "custom_fields": {
+    "fbc": [
+     {
+      "position": "absolute"
+     },
+     {
+      "top": "calc(var(--casora-icon-center-y, 42px) - 13px)"
+     },
+     {
+      "right": "var(--casora-entity-inner-pad-current, var(--casora-entity-inner-pad-desktop, 20px))"
+     },
+     {
+      "z-index": "2"
+     },
+     {
+      "line-height": "0"
+     },
+     {
+      "display": "var(--casora-tile-extras, block)"
+     }
+    ]
+   },
+   "state": [
+    {
+     "text-transform": "none"
+    }
+   ]
+  },
+  "template": [
+   "casora_entity",
+   "casora_popup_football"
+  ],
+  "variables": {
+   "casora_default_name": "Fußball",
+   "show_when_match": "always",
+   "hours_before": 3,
+   "hours_after": 3
+  }
+ },
  "casora_game": {
   "show_empty": false,
   "state_display": "[[[\n  /* Ohne Gerät nicht leer bleiben (30.09.2026). */\n  if (!entity) return 'Gerät fehlt';\n  if (variables.is_active && variables.game) {\n    const esc = (t) => String(t ?? '')\n      .replaceAll(\"&\",\"&amp;\")\n      .replaceAll(\"<\",\"&lt;\")\n      .replaceAll(\">\",\"&gt;\")\n      .replaceAll('\"',\"&quot;\")\n      .trim();\n    return `<span class=\"casora-media-state\">${esc(variables.game)}</span>`;\n  }\n  if (!entity?.state) return \"\";\n  return (() => { try { return hass.formatEntityState(entity); } catch (e) { return ''; } })() || entity?.state;\n]]]\n",
@@ -11573,6 +11631,42 @@
      }
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst wie bisher. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', [])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own) return _own;\n  const n = String(this._config?.name || '').trim();\n  if (n && !n.startsWith('[[[')) return n;\n  return entity?.attributes?.member_entities ? 'Fußbodenheizung' : (entity?.attributes?.friendly_name || 'Heizung');\n]]]",
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+   }
+  }
+ },
+ "casora_popup_football": {
+  "icon_tap_action": {
+   "action": "[[[\n  return window.casoraPopupAction ? window.casoraPopupAction() : 'more-info';\n]]]\n",
+   "entity": "[[[ return entity?.entity_id ]]]",
+   "haptic": "light",
+   "casora_popup": {
+    "content": "[[[\n  return window._casoraFootball ? window._casoraFootball.popup(entity) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+    "dismissable": true,
+    "popup_styles": [
+     {
+      "style": "all",
+      "styles": "/* Eine Popup-Familie (01.10.2026): dieselbe Sheet-Fläche wie die Bedien-Popups –\n   Fläche, Blur, Schatten und Abdunklung aus dem Standard, Höhe folgt dem Inhalt,\n   Schließen-Kreuz mit demselben Abstand zur Sheet-Kante. */\n.header { padding-top: var(--casora-popup-header-gap, 10px); }\n--casora-popup-header-gap: 14px;\n/* Fußball: breit wie der Kalender, Tabelle und Form nebeneinander ab 761 px. */\n--popup-min-width: 900px;\n--popup-max-width: 920px;\n--casora-popup-gutter-wide: 34px;\n--casora-popup-gutter-phone: 22px;\n\n/* No chart here, so nothing to wait for: the widgets arrive as\n   soon as they are built. Read by each widget for itself, never by\n   a wrapper - an animated opacity on an ancestor flattens the frost\n   inside it. */\n--casora-popup-plate-enter:\n  casora-plate-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;\n@media (prefers-reduced-motion: reduce) {\n  --casora-popup-plate-enter: none;\n}\n\n--casora-popup-hero-label-size: 15px;\n--casora-popup-row-radius: 26px;\n/* Frosted, not opaque. The pane's blur used to sit under these, and\n   .content still nulls --ha-card-backdrop-filter for every card in\n   the popup, so the frost has to be asked for here. The fills drop\n   to let it read. */\n/* The theme lifts every ha-card with filter: brightness(1.01) on\n   hover. A filter on an ancestor makes every descendant's\n   backdrop-filter inert, so hovering the empty space around a\n   widget - the wrapper card - knocked the frost out of both of\n   them. Killed popup-wide; the plate re-declares its own shadow. */\n--casora-card-hover-filter: none;\n--casora-hover-filter: none;\n--casora-card-hover-shadow: none;\n\n--casora-popup-row-pad-x: 26px;\n--casora-popup-row-pad-y: 15px;\n--casora-popup-plate-backdrop: blur(24px) saturate(180%);\n--casora-popup-chart-fill: var(--casora-sheet-chart-fill, rgba(10, 12, 16, 0.68));\n--casora-popup-row-fill: var(--casora-sheet-row-fill, rgba(12, 14, 19, 0.62));\n/* Lifted, not slabbed: one wide soft pass carries the height, one\n   short contact pass keeps the edge from dissolving into the room. */\n--casora-popup-plate-shadow: var(--casora-sheet-plate-shadow,\n  0 18px 40px -22px rgba(0, 0, 0, 0.50),\n  0 2px 8px -5px rgba(0, 0, 0, 0.28));\n\n/* visionOS puts nothing bare on the room: the only chrome outside a\n   window is its close control, and that control is itself a glass\n   object. The title was printed twice - here and in the widget\n   eight pixels below - so it goes, clipped rather than removed so a\n   screen reader still gets it. */\n\n/* The chrome arrives with the first plate instead of being there\n   on frame one while everything under it fades in. */\n--casora-popup-chrome-enter:\n  casora-popup-chrome-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;\n.content { animation: none; }\n/* The title lives in the bar now, centered and level with the\n   close control, so it is no longer hidden. */\n.header-title { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }\n/* 48px is left alone: the base sizes it so the glyph's ink lands on\n   the same left margin as the widgets below. */\n.header-close {\n  border-radius: 50%;\n  background: var(--casora-popup-row-fill, rgba(255, 255, 255, 0.10));\n  backdrop-filter: var(--casora-popup-plate-backdrop, none);\n  -webkit-backdrop-filter: var(--casora-popup-plate-backdrop, none);\n  box-shadow: var(--casora-popup-plate-shadow, none);\n}\n\nha-adaptive-dialog, ha-dialog, wa-drawer {\n  --ha-card-backdrop-filter: none;\n  --ha-card-background: transparent;\n  --card-background-color: transparent;\n  --ha-card-box-shadow: none;\n  --ha-card-border-width: 0px;\n}\n\n/* Titel: mittig, solange er zwischen die Knöpfe passt; sonst ab rechts vom Schließen-Knopf (safe center), notfalls mit … am rechten Rand. Nie unter dem Schließen-Knopf. */\n.header-content { left: calc(var(--casora-popup-gutter, 26px) + 56px) !important; right: calc(var(--casora-popup-gutter, 26px) + 56px) !important; margin-inline: 0 !important; width: auto !important; max-width: none !important; overflow: visible !important; align-items: safe center !important; }\n.header-title { max-width: calc(100% + 56px) !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }\n\n/* Popup-Standard (24.09.2026): Info-Popup - Abschnittsüberschriften in der Karte. */\n--casora-lbl-in: block;\n--casora-lbl-out: none;\n"
+     }
+    ],
+    "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst Kachelname, sonst der Sensor. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', [])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own) return _own;\n  const n = String(this._config?.name || '').trim();\n  return (n.startsWith('[[[') ? '' : n) || entity?.attributes?.friendly_name || 'Fußball';\n]]]",
+    "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
+   }
+  },
+  "tap_action": {
+   "action": "[[[\n  return window.casoraPopupAction ? window.casoraPopupAction() : 'more-info';\n]]]\n",
+   "entity": "[[[ return entity?.entity_id ]]]",
+   "haptic": "light",
+   "casora_popup": {
+    "content": "[[[\n  return window._casoraFootball ? window._casoraFootball.popup(entity) : { type: 'vertical-stack', cards: [] };\n]]]\n",
+    "dismissable": true,
+    "popup_styles": [
+     {
+      "style": "all",
+      "styles": "/* Eine Popup-Familie (01.10.2026): dieselbe Sheet-Fläche wie die Bedien-Popups –\n   Fläche, Blur, Schatten und Abdunklung aus dem Standard, Höhe folgt dem Inhalt,\n   Schließen-Kreuz mit demselben Abstand zur Sheet-Kante. */\n.header { padding-top: var(--casora-popup-header-gap, 10px); }\n--casora-popup-header-gap: 14px;\n/* Fußball: breit wie der Kalender, Tabelle und Form nebeneinander ab 761 px. */\n--popup-min-width: 900px;\n--popup-max-width: 920px;\n--casora-popup-gutter-wide: 34px;\n--casora-popup-gutter-phone: 22px;\n\n/* No chart here, so nothing to wait for: the widgets arrive as\n   soon as they are built. Read by each widget for itself, never by\n   a wrapper - an animated opacity on an ancestor flattens the frost\n   inside it. */\n--casora-popup-plate-enter:\n  casora-plate-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;\n@media (prefers-reduced-motion: reduce) {\n  --casora-popup-plate-enter: none;\n}\n\n--casora-popup-hero-label-size: 15px;\n--casora-popup-row-radius: 26px;\n/* Frosted, not opaque. The pane's blur used to sit under these, and\n   .content still nulls --ha-card-backdrop-filter for every card in\n   the popup, so the frost has to be asked for here. The fills drop\n   to let it read. */\n/* The theme lifts every ha-card with filter: brightness(1.01) on\n   hover. A filter on an ancestor makes every descendant's\n   backdrop-filter inert, so hovering the empty space around a\n   widget - the wrapper card - knocked the frost out of both of\n   them. Killed popup-wide; the plate re-declares its own shadow. */\n--casora-card-hover-filter: none;\n--casora-hover-filter: none;\n--casora-card-hover-shadow: none;\n\n--casora-popup-row-pad-x: 26px;\n--casora-popup-row-pad-y: 15px;\n--casora-popup-plate-backdrop: blur(24px) saturate(180%);\n--casora-popup-chart-fill: var(--casora-sheet-chart-fill, rgba(10, 12, 16, 0.68));\n--casora-popup-row-fill: var(--casora-sheet-row-fill, rgba(12, 14, 19, 0.62));\n/* Lifted, not slabbed: one wide soft pass carries the height, one\n   short contact pass keeps the edge from dissolving into the room. */\n--casora-popup-plate-shadow: var(--casora-sheet-plate-shadow,\n  0 18px 40px -22px rgba(0, 0, 0, 0.50),\n  0 2px 8px -5px rgba(0, 0, 0, 0.28));\n\n/* visionOS puts nothing bare on the room: the only chrome outside a\n   window is its close control, and that control is itself a glass\n   object. The title was printed twice - here and in the widget\n   eight pixels below - so it goes, clipped rather than removed so a\n   screen reader still gets it. */\n\n/* The chrome arrives with the first plate instead of being there\n   on frame one while everything under it fades in. */\n--casora-popup-chrome-enter:\n  casora-popup-chrome-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both;\n.content { animation: none; }\n/* The title lives in the bar now, centered and level with the\n   close control, so it is no longer hidden. */\n.header-title { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }\n/* 48px is left alone: the base sizes it so the glyph's ink lands on\n   the same left margin as the widgets below. */\n.header-close {\n  border-radius: 50%;\n  background: var(--casora-popup-row-fill, rgba(255, 255, 255, 0.10));\n  backdrop-filter: var(--casora-popup-plate-backdrop, none);\n  -webkit-backdrop-filter: var(--casora-popup-plate-backdrop, none);\n  box-shadow: var(--casora-popup-plate-shadow, none);\n}\n\nha-adaptive-dialog, ha-dialog, wa-drawer {\n  --ha-card-backdrop-filter: none;\n  --ha-card-background: transparent;\n  --card-background-color: transparent;\n  --ha-card-box-shadow: none;\n  --ha-card-border-width: 0px;\n}\n\n/* Titel: mittig, solange er zwischen die Knöpfe passt; sonst ab rechts vom Schließen-Knopf (safe center), notfalls mit … am rechten Rand. Nie unter dem Schließen-Knopf. */\n.header-content { left: calc(var(--casora-popup-gutter, 26px) + 56px) !important; right: calc(var(--casora-popup-gutter, 26px) + 56px) !important; margin-inline: 0 !important; width: auto !important; max-width: none !important; overflow: visible !important; align-items: safe center !important; }\n.header-title { max-width: calc(100% + 56px) !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }\n\n/* Popup-Standard (24.09.2026): Info-Popup - Abschnittsüberschriften in der Karte. */\n--casora-lbl-in: block;\n--casora-lbl-out: none;\n"
+     }
+    ],
+    "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst Kachelname, sonst der Sensor. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', [])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own) return _own;\n  const n = String(this._config?.name || '').trim();\n  return (n.startsWith('[[[') ? '' : n) || entity?.attributes?.friendly_name || 'Fußball';\n]]]",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
    }
   }

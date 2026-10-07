@@ -1409,7 +1409,33 @@
   "1 Tor offen": "1 gate open",
   "1 Fenster offen": "1 window open",
   "1 Fenster gekippt": "1 window tilted",
-  "Licht aus": "Lights off"
+  "Licht aus": "Lights off",
+  "Kein Team-Tracker-Sensor": "Not a Team Tracker sensor",
+  "Kein Spiel geplant": "No match scheduled",
+  "Endstand": "Full time",
+  "Live": "Live",
+  "Halbzeit": "Half-time",
+  "Abpfiff": "Full time",
+  "Morgen": "Tomorrow",
+  "Heim": "Home",
+  "Gast": "Away",
+  "Tabelle": "Table",
+  "Form": "Form",
+  "Nächstes Spiel": "Next match",
+  "Letztes Spiel": "Last match",
+  "Testspiel": "Friendly",
+  "Abstieg": "Relegation",
+  "Relegation": "Relegation play-off",
+  "Gegner": "opponent",
+  "nächster Gegner": "next opponent",
+  "Ganze Tabelle": "Full table",
+  "Weniger zeigen": "Show less",
+  "Keine Spiele gefunden": "No matches found",
+  "Tabelle nicht erreichbar": "Table not available",
+  "Keine Tabelle für diesen Wettbewerb": "No table for this competition",
+  "Fußball": "Football",
+  "gegen": "vs",
+  "bei": "at"
  },
  "patterns": [
   [
@@ -2595,6 +2621,78 @@
   [
    "^(\\d+) an$",
    "{1} on"
+  ],
+  [
+   "^in (\\d+) Wochen$",
+   "in {1} weeks"
+  ],
+  [
+   "^in (\\d+) Monaten$",
+   "in {1} months"
+  ],
+  [
+   "^Platz (\\d+)$",
+   "Position {1}"
+  ],
+  [
+   "^(\\d+) Punkte$",
+   "{1} points"
+  ],
+  [
+   "^(\\S+ : \\S+) bei (.+)$",
+   "{1} at {2}"
+  ],
+  [
+   "^(\\S+ : \\S+) gegen (.+)$",
+   "{1} vs {2}"
+  ],
+  [
+   "^bei (.+)$",
+   "at {1}"
+  ],
+  [
+   "^gegen (.+)$",
+   "vs {1}"
+  ],
+  [
+   "^Heute (\\d\\d:\\d\\d)$",
+   "Today {1}"
+  ],
+  [
+   "^Morgen (\\d\\d:\\d\\d)$",
+   "Tomorrow {1}"
+  ],
+  [
+   "^Mo (\\d.*)$",
+   "Mon {1}"
+  ],
+  [
+   "^Di (\\d.*)$",
+   "Tue {1}"
+  ],
+  [
+   "^Mi (\\d.*)$",
+   "Wed {1}"
+  ],
+  [
+   "^Do (\\d.*)$",
+   "Thu {1}"
+  ],
+  [
+   "^Fr (\\d.*)$",
+   "Fri {1}"
+  ],
+  [
+   "^Sa (\\d.*)$",
+   "Sat {1}"
+  ],
+  [
+   "^So (\\d.*)$",
+   "Sun {1}"
+  ],
+  [
+   "^(\\d+) Monaten$",
+   "{1} months"
   ]
  ]
 }
