@@ -1098,7 +1098,8 @@
           nm.className = "bsname";
           nm.setAttribute("data-no-i18n", "");
           const b = document.createElement("b");
-          b.textContent = (so.attributes && so.attributes.friendly_name) || id;
+          const reg = (H.entities || {})[id];
+          b.textContent = (reg && reg.name) || (so.attributes && so.attributes.friendly_name) || id;
           const s = document.createElement("span");
           s.textContent = SF.describe(so, tr, lang, unit);
           nm.appendChild(b); nm.appendChild(s);

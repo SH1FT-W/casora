@@ -441,7 +441,8 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   const t = (hass) => T[lang(hass)] || T.en;
   const nameOf = (hass, id) => {
     const s = hass && hass.states && hass.states[id];
-    return (s && s.attributes && s.attributes.friendly_name) || id;
+    const r = hass && hass.entities && hass.entities[id];
+    return (r && r.name) || (s && s.attributes && s.attributes.friendly_name) || id;
   };
 
   function found(f, tile, hass) {
@@ -503,7 +504,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     return out.slice(0, 400).map((id) => {
       const s = S[id], e = R[id] || {};
       const d = D[e.device_id] || {};
-      return { id, name: (s.attributes && s.attributes.friendly_name) || id,
+      return { id, name: e.name || (s.attributes && s.attributes.friendly_name) || id,
         dc: (s.attributes && s.attributes.device_class) || "", device: d.name_by_user || d.name || "" };
     });
   }

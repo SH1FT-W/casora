@@ -513,9 +513,14 @@
         seen.add(id);
         const aid = areaOf(id);
         const ri = aid && roomOfArea.has(aid) ? roomOfArea.get(aid) : -1;
-        out.push({ entity: id, name: name || (S[id].attributes || {}).friendly_name || id, area: aid && A[aid] ? A[aid].name : "",
+        // Vom Nutzer vergebener Name aus der Entitäten-Registry zuerst („Stehlampe“ statt „Lightstrip“).
+        const own = e && typeof e.name === "string" && e.name.trim();
+        out.push({ entity: id, name: own || name || (S[id].attributes || {}).friendly_name || id, area: aid && A[aid] ? A[aid].name : "",
           roomIndex: ri, type, kind: label(type), fresh: !used.has(id), suggested: !!suggested, here: ri === this._room,
-          words: WORDS[type] || "" });
+          // Entität ohne Gerät, aber selbst einem Bereich zugeordnet: bewusst dorthin gelegt – zählt
+          // als „neu“ (Nutzertest: Liste „Neu in Schlafzimmer“ blieb leer).
+          loose: !!(e && !e.device_id && e.area_id),
+          words: (WORDS[type] || "") + " " + ((S[id].attributes || {}).friendly_name || "") });
       };
       sugg.forEach((x) => push(x.entity, x.name, x.type));
       Object.keys(S).forEach((id) => { if (ADD_DOMAINS.indexOf(id.split(".")[0]) >= 0) push(id, "", byEntity.has(id) ? byEntity.get(id).type : null); });
@@ -608,7 +613,7 @@
           list.forEach(row);
         } else {
           // Leer: was neu ist und noch keine Kachel hat – im Raum bzw. in der Übersicht nach Raum.
-          const fresh = all.filter((c) => c.fresh && c.suggested);
+          const fresh = all.filter((c) => c.fresh && (c.suggested || c.loose));
           if (overview) {
             list = [];
             const order = rooms$(this).map((r, i) => i);

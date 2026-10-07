@@ -892,7 +892,11 @@
       rooms.forEach((r, i) => (r.tiles || []).forEach((t) => {
         const key = this._tileKey(t);
         const inner = (t.type === "conditional" && t.card) || t;
-        out.push({ kind: "tile", id: "t:" + key, label: tileName(t), sub: this._roomLabel(r), path: this._roomLabel(r) + " › " + tr("Tiles"), here: i === this._room, words: String(inner.entity || "") + " kachel",
+        // Auch über den Anzeigenamen des Geräts (Registry-Name, sonst friendly_name) zu finden.
+        const H = this._hass || {}, eid = String(inner.entity || "");
+        const reg = (H.entities || {})[eid], st = (H.states || {})[eid];
+        const alias = [(reg && reg.name) || "", (st && st.attributes && st.attributes.friendly_name) || ""].join(" ");
+        out.push({ kind: "tile", id: "t:" + key, label: tileName(t), sub: this._roomLabel(r), path: this._roomLabel(r) + " › " + tr("Tiles"), here: i === this._room, words: eid + " " + alias + " kachel",
           run: () => { go(i); sel({ group: "tiles", key, label: tileName(t) }); setTimeout(() => this._bFlash && this._bFlash("t:" + key), 200); } });
       }));
       // Badges: im offenen Raum alle eingeschalteten, sonst nur eingerichtete
