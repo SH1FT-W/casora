@@ -4,6 +4,13 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.1.1 – 08.10.2026
+
+### Neu
+- **Fußball-Kachel:** folgt deinem Verein über die Integration Team Tracker (HACS). Die Kachel zeigt das nächste Spiel, den Live-Spielstand oder das Endergebnis mit Wappen oder Landesflagge, und die Ecke sagt auf einen Blick, ob das Spiel bevorsteht, läuft oder vorbei ist.
+- **Fußball-Popup:** ein Tipp öffnet das Spiel mit beiden Mannschaften, dem Tabellenausschnitt rund um deinen Verein (die ganze Tabelle einen Tipp entfernt) und der letzten Form. Nationalmannschaften zeigen ihre Flagge.
+- **Wann sie erscheint:** wähle, ob die Kachel immer zu sehen ist oder nur in der Spielwoche, am Spieltag, rund ums Spiel oder nur live. Im Studio ist sie der neue Kacheltyp „Fußball“, und der Einrichtungsassistent schlägt sie für Team-Tracker-Sensoren von selbst vor.
+
 ## 1.1.0 – 07.10.2026
 
 Das größte Update seit Casora 1.0. Neu sind das Studio, in dem die Vorschau selbst die Arbeitsfläche ist, und das zweite Design „Casora Nebel“. Dazu kommen über 20 neue Funktionen und rund 200 Verbesserungen und Fehlerbehebungen in Dashboard, Popups, Sicherheit und Energie.
