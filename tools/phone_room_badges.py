@@ -17,6 +17,7 @@ Bewusst anders als am Desktop:
     window._casoraFilter.setRow) statt über den gemeinsamen Helfer casora_expanded_row – sonst
     klappte ein Tippen am Wand-Tablet die Reihe am Handy auf und umgekehrt.
   - Bewegung (room_chips[<raum>].motion_entity, nur Handy) steht als letzte Badge dahinter.
+  - Sicherheit bekommt place: room (Unterzeile „Automatisch“ = ausgeschrieben wie im Raum).
 """
 
 from __future__ import annotations
@@ -85,6 +86,10 @@ def _row_cards(room: dict) -> list:
             }
         elif kind:
             c["tap_action"] = {"action": "fire-dom-event", "casora_phone_row": kind, "haptic": "light"}
+        if kind == "security":
+            # Die Raumseite am Handy liegt in der Ansicht „home“ – sie ist trotzdem ein Raum
+            # (Sicherheit „Automatisch“ = ausgeschrieben, 07.10.2026).
+            c.setdefault("variables", {})["place"] = "room"
         out.append(c)
     return out
 

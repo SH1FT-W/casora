@@ -2257,10 +2257,12 @@ const SECTIONS = [
       { ...LIST("security_cameras", "Cameras", ["camera"]), unitLabel: "Cameras", ord: 6 },
       { ...T("security_cameras_label", "Heading"), unitLabel: "Camera group heading",
         advanced: true, needs: "security_cameras", ord: 7 },
-      // Unterzeile des Sammelbadges (casora_badge_security_group, Variable summary): ohne Wert „Kurz“.
-      { key: "security_summary", label: "Summary", type: "select", options: ["", "detailed"], always: true, ord: 7.5,
-        optionLabels: { "": "Short", detailed: "Detailed" },
-        hint: "Short shows icons with a count, Detailed lists everything." },
+      // Unterzeile des Sammelbadges (casora_badge_security_group, Variable summary, 07.10.2026):
+      // ohne Wert „Automatisch“ = Startseite kurz, Räume ausgeschrieben. Bis dahin hieß leer „Kurz“ –
+      // nie veröffentlicht, und gewählt werden konnte nur „detailed“; das bleibt „Immer ausführlich“.
+      { key: "security_summary", label: "Summary", type: "select", options: ["", "detailed", "short"], always: true, ord: 7.5,
+        optionLabels: { "": "Automatic", detailed: "Always detailed", short: "Always short" },
+        hint: "Automatic: icons with a count on the home page, written out in rooms, where there is usually just one window or door." },
       { key: "show_security_inline", label: "Separate security badges", type: "bool",
         boolDefault: false, always: true, ord: 8,
         hint: "Shows locks, alarm, doors, windows and cameras as their own badges." },
@@ -21419,13 +21421,18 @@ class CasoraPanel extends HTMLElement {
       if (sec.camDead) parts.push(nn(sec.camDead, "Camera offline", "Cameras offline"));
       // Weich/Nebel: dieselbe Unterzeile wie das Dashboard (00-finden.js, Kurz = Symbole mit Zahl).
       let secSum = null;
+      // Kurz oder ausführlich wie im Dashboard: „Automatisch“ = Startseite kurz, Räume ausgeschrieben.
+      const secPlace = (opts && opts.place) || (typeof isHomeRoom === "function"
+        && isHomeRoom(room, ((this._state || {}).compact || {}).rooms) ? "home" : "room");
+      const secMode = typeof window.casoraSecurityMode === "function" ? window.casoraSecurityMode(V.security_summary, secPlace)
+        : (V.security_summary === "detailed" || V.security_summary === "short" ? V.security_summary : secPlace === "home" ? "short" : "detailed");
       if (soft && typeof window.casoraSecuritySummary === "function") {
         const al = alarms.map((e) => sOf(e)).find((x) => x && !/^(disarmed|unavailable|unknown)$/.test(x)) || "";
         try {
           secSum = window.casoraSecuritySummary({ ...sec,
             insecure: sec.triggered || sec.disarmed || !!(sec.locks || sec.doors || sec.windows || sec.doorsTilted
               || sec.windowsTilted || sec.gates),
-            problem: !!(sec.lockDead || sec.camDead) }, { summary: V.security_summary || "short", alarmState: al });
+            problem: !!(sec.lockDead || sec.camDead) }, { summary: secMode, alarmState: al });
         } catch (e) { secSum = null; }
       }
       const secText = sec.triggered ? "Triggered" : !parts.length ? "Secured"
@@ -21504,7 +21511,7 @@ class CasoraPanel extends HTMLElement {
             : (parts.length || sec.triggered ? "lock-open-fill" : "lock-fill"),
           color: soft && (parts.length || sec.triggered) ? "var(--casora-color-orange, #FF9F0A)" : TEAL,
           text: secSum ? secSum.text : secText,
-          html: secSum && V.security_summary !== "detailed" ? secSum.html : null,
+          html: secSum && secMode === "short" ? secSum.html : null,
           subs: lockSubs.concat(camSubs, entSubs),
         });
       }
@@ -22277,7 +22284,7 @@ class CasoraPanel extends HTMLElement {
     });
     const wideRoom = (wideHome.find((r) => r.path === "home") || wideHome[0] || {});
     const border = this._badgeOrder(wideRoom);
-    const model = this._miniModel({ variables: { ...bvv, ...wideV } }, { phone: true })
+    const model = this._miniModel({ variables: { ...bvv, ...wideV } }, { phone: true, place: "home" })
       .filter((b) => PHONE_FILTERS.indexOf(b.id) !== -1)
       .sort((a, b) => border.indexOf(a.id) - border.indexOf(b.id));
 
@@ -22564,7 +22571,7 @@ class CasoraPanel extends HTMLElement {
         wideRoom ? wideRoom.name : roomPop);
       const rorder = badgeOrderOf(rv.badge_order);
       const rank = (id) => { const i = rorder.indexOf(String(id).split(":")[0]); return i < 0 ? 99 : i; };
-      const rm = this._miniModel({ variables: rv }).filter((b) => b.id !== "scenes")
+      const rm = this._miniModel({ variables: rv }, { place: "room" }).filter((b) => b.id !== "scenes")
         .sort((a, b) => rank(a.id) - rank(b.id));
       if (this._phoneRoomOpen && !rm.some((b) => b.id === this._phoneRoomOpen && (b.subs || []).length)) {
         this._phoneRoomOpen = null;
