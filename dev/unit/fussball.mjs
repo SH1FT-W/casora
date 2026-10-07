@@ -48,7 +48,9 @@ const live = sensor({ state: 'IN', attrs: { team_score: '2', opponent_score: '1'
 assert.equal(K.tile(live), 'führt 2:1 bei Cagliari', 'live: kicker-Stil, eigenes Team zuerst nur mit „führt“');
 assert.equal(K.tile(sensor({ state: 'IN', attrs: { team_score: '0', opponent_score: '1', clock: "12'" } })), 'liegt 0:1 zurück bei Cagliari');
 assert.equal(K.tile(live, null, true), '67′ · 1:2', 'kleine Handy-Kachel: Minute, Heim:Gast');
-assert.equal(K.tile(sensor(), null, true).endsWith(' · bei CAG'), true, 'klein vor dem Spiel: Kürzel');
+assert.match(K.tile(sensor(), null, true), /^[A-Z][a-z] 20:45$/, 'klein vor dem Spiel: nur Tag und Anstoß (Gegner als Wappen)');
+assert.equal(K.tile(sensor(), null, false, true).endsWith(' · bei CAG'), true, 'Handy groß vor dem Spiel: Kürzel');
+assert.equal(K.tile(live, null, false, true), 'führt 2:1 bei CAG', 'Handy groß: Kürzel statt Name');
 assert.match(K.corner(live), /cfb-pill live.*67′/);
 assert.equal(K.minute('HT'), 'Halbzeit');
 assert.equal(K.minute('FT-Pens'), 'Elfmeterschießen');

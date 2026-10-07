@@ -135,25 +135,28 @@
 
   /* Kachel: Zustandszeile (kicker-Stil: eigenes Team zuerst nur mit Sieg/Niederlage/führt) und Ecke rechts oben.
      small: kleine Handy-Kachel ohne Ecke, nur Platz für ~15 Zeichen – Spielstand Heim:Gast (der Gegner
-     steht als Wappen am Symbol), dazu Minute bzw. Endstand; vor dem Spiel das Kürzel des Gegners. */
-  K.tile = function (st, now, small) {
+     steht als Wappen am Symbol), dazu Minute bzw. Endstand; vor dem Spiel nur Tag und Anstoß.
+     short: Handy (auch „groß“ – dort doppelt so hoch, aber nicht breiter): Gegner als Kürzel. */
+  K.tile = function (st, now, small, short) {
+    short = short || small;
     var i = K.info(st);
     if (!i) return st ? 'Kein Team-Tracker-Sensor' : '';
     var my = Number(i.team.score), th = Number(i.opp.score), my2 = i.team.score + ':' + i.opp.score;
-    if (i.phase === 'OFF') return (i.off === 'cancel' ? 'Abgesagt' : 'Verschoben') + ' · ' + vs(i, small);
+    if (i.phase === 'OFF') return (i.off === 'cancel' ? 'Abgesagt' : 'Verschoben') + ' · ' + vs(i, short);
     if (i.phase === 'IN' || i.phase === 'POST') {
-      if (i.team.score == null || i.opp.score == null) return vs(i, small);
+      if (i.team.score == null || i.opp.score == null) return vs(i, short);
       if (small) {
         var ha = homeAway(i);
         if (i.phase === 'IN') return (K.minute(i.clock) ? K.minute(i.clock) + ' · ' : '') + ha.txt;
         return ha.txt + ' · ' + (diffDays(i.date, now) === 0 ? 'Endstand' : K.day(i.date, now));
       }
-      if (i.phase === 'IN') return my > th ? 'führt ' + my2 + ' ' + vs(i) : my < th ? 'liegt ' + my2 + ' zurück ' + vs(i) : my2 + ' ' + vs(i);
-      if (i.team.pens != null && i.opp.pens != null) return (Number(i.team.pens) > Number(i.opp.pens) ? 'Sieg' : 'Niederlage') + ' i. E. ' + vs(i);
-      if (my === th) return my2 + ' ' + vs(i);
-      return my2 + (my > th ? '-Sieg ' : '-Niederlage ') + (i.aet ? 'n. V. ' : '') + vs(i);
+      var v = vs(i, short);
+      if (i.phase === 'IN') return my > th ? 'führt ' + my2 + ' ' + v : my < th ? 'liegt ' + my2 + ' zurück ' + v : my2 + ' ' + v;
+      if (i.team.pens != null && i.opp.pens != null) return (Number(i.team.pens) > Number(i.opp.pens) ? 'Sieg' : 'Niederlage') + ' i. E. ' + v;
+      if (my === th) return my2 + ' ' + v;
+      return my2 + (my > th ? '-Sieg ' : '-Niederlage ') + (i.aet ? 'n. V. ' : '') + v;
     }
-    if (i.phase === 'PRE' && i.date) return K.when(i.date, now) + (i.tbd ? '' : ' ' + hm(i.date)) + ' · ' + vs(i, small);
+    if (i.phase === 'PRE' && i.date) return K.when(i.date, now) + (i.tbd ? '' : ' ' + hm(i.date)) + (small ? '' : ' · ' + vs(i, short));
     return 'Kein Spiel angesetzt';
   };
   K.corner = function (st, now) {
