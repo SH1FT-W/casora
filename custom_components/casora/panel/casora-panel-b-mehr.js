@@ -762,7 +762,7 @@
       const ok = await orig.apply(this, arguments);
       if (ok && n && on(this) && this._bToast) {
         const time = new Date().toLocaleTimeString((this._hass && this._hass.language) || undefined, { hour: "2-digit", minute: "2-digit" });
-        this._bToast(tr("Saved") + " · " + countText(n), { sub: tr("In Rewind as the version from {t}").replace("{t}", time) });
+        this._bToast(tr("Saved") + " · " + countText(n), { ms: 4000, sub: tr("In Rewind as the version from {t}").replace("{t}", time) });
       }
       return ok;
     });

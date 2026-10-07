@@ -416,7 +416,7 @@
         el.querySelector(".btx").setAttribute("aria-label", tr("Close"));
         el.querySelector(".btx").onclick = () => this._bToastHide();
         el.addEventListener("pointerenter", () => { clearTimeout(this._bToastT); });
-        el.addEventListener("pointerleave", () => { if (el.classList.contains("on") && !el.classList.contains("err")) this._bToastLater(2200); });
+        el.addEventListener("pointerleave", () => { if (el.classList.contains("on") && !el.classList.contains("err")) this._bToastLater(el.dataset.long ? 6000 : 2200); });
         root.appendChild(el);
       }
       const same = el.classList.contains("on") && el.dataset.msg === msg && !o.action;
@@ -461,7 +461,10 @@
       }
       el.classList.add("on");
       clearTimeout(this._bToastT);
-      if (o.kind !== "err") this._bToastLater(o.ms || (o.action || canSave ? 6000 : o.big ? 4200 : 2600));
+      // Mit Knopf („Rückgängig“, „Jetzt speichern“) mindestens 12 s – Nutzertest 7: der zweite Tipp
+      // ging ins Leere, weil die Meldung schon weg war.
+      el.dataset.long = o.action || canSave ? "1" : "";
+      if (o.kind !== "err") this._bToastLater(o.action || canSave ? Math.max(o.ms || 0, 12000) : o.ms || (o.big ? 4200 : 2600));
     };
     P._bToastLater = function (ms) {
       clearTimeout(this._bToastT);
@@ -657,7 +660,7 @@
           ls(FIRST_SAVE, "1");
           this._bHoldUntil = Date.now() + 1500;
           this._bToast(tr("Saved"), { big: true, sub: tr("Your dashboard now shows exactly what you built here.") });
-        } else this._bToast(tr("Saved"));
+        } else this._bToast(tr("Saved"), { ms: 4000 });
       }
       return ok;
     });
@@ -1277,10 +1280,10 @@
       // Ehrlich: die Szene steht in HA, die Farbe gehört zum Dashboard und kommt erst mit „Fertig“
       // dorthin (Nutzertest 4: „gespeichert“ – Farbe fehlte im Dashboard bis „Fertig“).
       // Die Farbe gehört zum Dashboard: „Jetzt speichern“ im Hinweis sichert sie, ohne das Studio zu verlassen.
-      this._bToast(tr("Scene saved") + ": " + cfg.name, { action: undo, save: true, ms: 9000,
+      const sceneToast = () => this._bToast(tr("Scene saved") + ": " + cfg.name, { action: undo, save: true,
         sub: tr(color ? "Scene saved in Home Assistant. The color is saved with the dashboard."
           : "Scene saved in Home Assistant. Pick a color now – it is saved with the dashboard.") });
-      if (!id || !this._state) return;
+      if (!this._state) return sceneToast();
       // Eigene Reihenfolge oder ausgeblendete Szenen: die neue gehört sichtbar dazu.
       const rooms = this._state.compact.rooms;
       let touched = false;
@@ -1296,6 +1299,9 @@
         touched = true;
       }
       if (touched) { this._bQuiet = true; try { this._markDirty(); } finally { this._bQuiet = false; } }
+      // Erst jetzt melden: der Stand ist geändert, also steht „Jetzt speichern“ im Hinweis
+      // (Nutzertest 7: Knopf fehlte, die Farbe kam erst nach einem zweiten Speichern an).
+      sceneToast();
       this._bOpen = true;
       this._select({ group: "rooms", key: "Scenes", label: "Scenes" });
       setTimeout(() => {
