@@ -37,6 +37,18 @@
     return /^de\b/i.test(l);
   };
   K.name = function (n) { return german() && DE[n] ? DE[n] : (n || ''); };
+  /* Nationalteams: statt ESPNs Länderbild eigene Flaggen (mitgeliefert, MIT – assets/flags/LICENSE.md):
+     rund im weißen Kreis (Kachel, Gegner, Spielkasten, Ring), rechteckig frei in Tabelle und Form.
+     Erkannt am ESPN-Bildnamen (…/countries/500/ita.png) – Datenliste ESPN-Name=ISO-Code. */
+  var FLAG = pairs('afg=af|aia=ai|alb=al|alg=dz|and=ad|ang=ao|arg=ar|aru=aw|atg=ag|aus=au|aut=at|aze=az|bah=bs|ban=bd|bdi=bi|bel=be|ben=bj|ber=bm|bhr=bh|bih=ba|bka=bf|blr=by|blz=bz|bol=bo|bot=bw|bra=br|brb=bb|bul=bg|bvr=vg|cam=kh|can=ca|cay=ky|cgo=cg|cha=td|chi=cl|chn=cn|civ=ci|col=co|com=km|cpv=cv|crc=cr|crm=cm|cro=hr|cub=cu|cyp=cy|cze=cz|den=dk|dji=dj|dma=dm|dom=do|ecu=ec|egy=eg|eng=gb-eng|eqg=gq|eri=er|esp=es|est=ee|eth=et|fin=fi|fra=fr|fro=fo|gab=ga|gam=gm|geo=ge|ger=de|gha=gh|gib=gi|gnb=gw|gre=gr|grn=gd|gui=gn|guy=gy|hai=ht|hkg=hk|hon=hn|hun=hu|idn=id|ind=in|irl=ie|irn=ir|irq=iq|isl=is|isr=il|ita=it|jam=jm|jor=jo|jpn=jp|kaz=kz|ken=ke|kgz=kg|korn=kp|kors=kr|kosovo=xk|ksa=sa|kuw=kw|lao=la|lbr=lr|lby=ly|lca=lc|les=ls|lib=lb|lie=li|ltu=lt|lux=lu|lva=lv|mac=mo|mad=mg|mas=my|mda=md|mdv=mv|mex=mx|mgl=mn|mkd=mk|mli=ml|mlt=mt|mor=ma|moz=mz|mri=mu|msr=ms|mtg=me|mtn=mr|mwi=mw|mya=mm|nam=na|nca=ni|ned=nl|nep=np|nga=ng|nig=ne|nir=gb-nir|nor=no|nzl=nz|oma=om|pak=pk|pal=ps|pan=pa|par=py|per=pe|phi=ph|pol=pl|por=pt|qat=qa|rdc=cd|rom=ro|rsa=za|rwa=rw|sba=rs|sco=gb-sct|sen=sn|sey=sc|sin=sg|skn=kn|sle=sl|slv=sv|smr=sm|som=so|sri=lk|sud=sd|sui=ch|sur=sr|svk=sk|svn=si|swe=se|swz=sz|syr=sy|tan=tz|tca=tc|tha=th|tjk=tj|tkm=tm|tmp=tl|tog=tg|tri=tt|tun=tn|tur=tr|uae=ae|uga=ug|ukr=ua|uru=uy|usa=us|uzb=uz|ven=ve|vie=vn|vin=vc|vir=vi|wal=gb-wls|yem=ye|zam=zm');
+  K.flag = function (url) {
+    var m = /\/countries\/500\/([a-z_-]+)\.png/i.exec(String(url || ''));
+    return (m && FLAG[m[1].toLowerCase()]) || null;
+  };
+  K.img = function (url, shape) {
+    var f = K.flag(url);
+    return f ? '/casora_assets/flags/' + (shape === 'rect' ? 'rect' : 'round') + '/' + f + '.svg' : (url || '');
+  };
   /* Wettbewerb: Teil vor dem Komma („UEFA Champions League, League Phase“), ohne UEFA/FIFA. */
   K.comp = function (n) {
     var s = String(n || '').split(',')[0].trim();
@@ -444,6 +456,7 @@
     var onInk = soft ? 'var(--casora-soft-seg-on-ink, ' + T.ink + ')' : T.ink;
     var rad = 'var(--casora-popup-row-radius, 24px)';
     var crestBg = 'var(--casora-football-crest-bg, #fff)';
+    var hair = 'var(--casora-football-flag-hair, rgba(0,0,0,0.14))';
     var plate = soft ? '' : 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);';
     return '<style>'
       + '.cfb{font-family:' + T.font + ';text-align:left;color:' + T.ink + ';}'
@@ -451,15 +464,19 @@
       + '.cfb-mr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,auto) minmax(0,1fr);align-items:start;gap:10px;}'
       + '@media (min-width:761px){.cfb-mr{grid-template-columns:minmax(0,1fr) 200px minmax(0,1fr);}}'
       + '.cfb-sd{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;text-align:center;}'
-      + '.cfb-sd b{font-size:15px;font-weight:600;line-height:1.2;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere;}'
+      + '.cfb-sd b{font-size:15px;font-weight:600;line-height:1.2;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:break-word;hyphens:auto;-webkit-hyphens:auto;}'
       + '.cfb-sd small{font-size:12px;font-weight:500;color:' + T.ink3 + ';}'
       + '.cfb-cr{width:60px;height:60px;border-radius:50%;background:' + crestBg + ';display:grid;place-items:center;flex:none;box-shadow:0 0 0 1px var(--casora-football-crest-ring, rgba(58,50,43,0.06));}'
       + '.cfb-cr img{width:66%;height:66%;object-fit:contain;}'
-      + '.cfb-mid{text-align:center;max-width:140px;align-self:center;}'
+      + '.cfb-cr.fl img{width:73%;height:73%;border-radius:50%;box-shadow:0 0 0 .5px ' + hair + ';}'
+      + '.cfb-mid{text-align:center;max-width:104px;align-self:center;}'
       + '@media (min-width:761px){.cfb-mid{max-width:none;}}'
       + '.cfb-big{font-size:clamp(28px,4vw,36px);font-weight:800;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;line-height:1.1;white-space:nowrap;}'
       + '.cfb-big.live{color:var(--casora-color-red, #D35A4E);}'
-      + '.cfb-sub{font-size:13.5px;color:' + sub + ';margin-top:3px;text-wrap:balance;}'
+      + '.cfb-sub{font-size:13.5px;color:' + sub + ';margin-top:3px;}'
+      + '.cfb-sub span+span::before{content:" · ";}'
+      /* Schmal: Spielkasten mit weniger Rand, Unterzeile der Mitte untereinander statt „· Heute“ am Zeilenanfang. */
+      + '@media (max-width:520px){.cfb-m{padding:16px 14px 18px;}.cfb-mr{gap:6px;}.cfb-sub span{display:block;}.cfb-sub span+span::before{content:none;}}'
       + '.cfb-meta{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin-top:14px;}'
       + '.cfb-chip{font-size:12.5px;font-weight:500;color:' + sub + ';background:' + (soft ? 'var(--casora-soft-surface, #F8F5EF)' : 'rgba(255,255,255,0.08)') + ';padding:6px 11px;border-radius:999px;}'
       + '.cfb-t{display:flex;flex-direction:column;gap:6px;}'
@@ -469,6 +486,7 @@
       + '.cfb-r .k{color:' + sub + ';font-weight:600;text-align:center;}'
       + '.cfb-r.me .k,.cfb-r.me .c{color:inherit;opacity:.62;}'
       + '.cfb-r img{width:22px;height:22px;object-fit:contain;}'
+      + '.cfb-r img.fl,.cfb-f img.fl{width:20px;height:15px;justify-self:center;object-fit:cover;border-radius:3px;box-shadow:0 0 0 .5px ' + hair + ';}'
       + '.cfb-r .n{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
       + '.cfb-r .n em{font-style:normal;font-size:11px;font-weight:600;color:var(--primary-color, #B67A50);margin-left:7px;}'
       /* Schmal: das Etikett „nächster Gegner“ würde den Namen abschneiden – dort ein Punkt vor dem Namen. */
@@ -500,7 +518,15 @@
       + '.cfb-e{background:' + row + ';border-radius:' + rad + ';padding:16px;font-size:14px;font-weight:500;color:' + sub + ';}'
       + '</style>';
   };
-  var crest = function (url) { return '<div class="cfb-cr">' + (url ? '<img src="' + esc(url) + '" alt="" loading="lazy">' : '') + '</div>'; };
+  var crest = function (url) {
+    var fl = !!K.flag(url);
+    return '<div class="cfb-cr' + (fl ? ' fl' : '') + '">' + (url ? '<img src="' + esc(K.img(url, 'round')) + '" alt="" loading="lazy">' : '') + '</div>';
+  };
+  /* Kleines Bild in Tabelle und Form: Wappen frei, Flagge als Rechteck mit Haarlinie. */
+  var mini = function (url) {
+    if (!url) return '<span></span>';
+    return '<img' + (K.flag(url) ? ' class="fl"' : '') + ' src="' + esc(K.img(url, 'rect')) + '" alt="" loading="lazy">';
+  };
 
   K.html = function (k, st) {
     var i = K.info(st);
@@ -532,7 +558,7 @@
       /* Kein TV-Sender: ESPN nennt nur US-Sender. */
       return CSS() + '<div class="cfb"><div class="cfb-m">' + head(lbl, '', true) + '<div class="cfb-mr">'
         + '<div class="cfb-sd">' + crest(ha.hT.logo) + '<b><span data-no-i18n>' + esc(K.name(ha.hT.name)) + '</span></b><small>Heim</small></div>'
-        + '<div class="cfb-mid"><div class="cfb-big' + (i.phase === 'IN' ? ' live' : '') + '">' + esc(big) + '</div><div class="cfb-sub">' + esc(sub) + '</div></div>'
+        + '<div class="cfb-mid"><div class="cfb-big' + (i.phase === 'IN' ? ' live' : '') + '">' + esc(big) + '</div><div class="cfb-sub">' + String(sub).split(' · ').map(function (p) { return '<span>' + esc(p) + '</span>'; }).join('') + '</div></div>'
         + '<div class="cfb-sd">' + crest(ha.aT.logo) + '<b><span data-no-i18n>' + esc(K.name(ha.aT.name)) + '</span></b><small>Gast</small></div>'
         + '</div>' + (where ? '<div class="cfb-meta"><span class="cfb-chip">' + esc(where) + '</span></div>' : '') + '</div></div>';
     }
@@ -550,7 +576,7 @@
           var cls = 'cfb-r' + (r.id === i.team.id ? ' me' : '') + (opp ? ' opp' : '');
           var tag = opp ? '<em>' + (i.phase === 'IN' ? 'Gegner' : 'nächster Gegner') + '</em>' : '';
           return '<div class="' + cls + '"' + (r.zone ? ' data-z="' + r.zone + '"' : '') + '><span class="k">' + r.rank + '</span>'
-            + (r.logo ? '<img src="' + esc(r.logo) + '" alt="" loading="lazy">' : '<span></span>')
+            + mini(r.logo)
             + '<span class="n"><span data-no-i18n>' + esc(K.name(r.name)) + '</span>' + tag + '</span><span class="c">' + esc(r.gp) + '</span><span class="c">' + esc(r.gd) + '</span><span class="p">' + esc(r.pts) + '</span></div>';
         }).join('');
       var more = tab.rows.length > 10 ? '<div class="cfb-more" data-cfb="full">' + (K.full ? 'Weniger zeigen' : 'Ganze Tabelle') + '</div>' : '';
@@ -572,7 +598,7 @@
       return CSS() + '<div class="cfb">' + head('Form' + sum) + '<div class="cfb-fl">'
         + f.map(function (x) {
           return '<div class="cfb-f"><span class="cfb-res ' + esc(x.res) + '" data-no-i18n>' + (ab2[x.res] || '–') + '</span>'
-            + (x.logo ? '<img src="' + esc(x.logo) + '" alt="" loading="lazy">' : '<span></span>')
+            + mini(x.logo)
             + '<span class="o">' + (x.home ? 'gegen ' : 'bei ') + '<span data-no-i18n>' + esc(K.name(x.opp)) + '</span><small>' + esc([x.comp, x.date ? dm(x.date) : ''].filter(Boolean).join(' · ')) + '</small></span>'
             + '<span class="s">' + esc(x.my) + ' : ' + esc(x.their) + (x.pens ? '<small>i. E.</small>' : '') + '</span></div>';
         }).join('') + '</div></div>';
@@ -650,7 +676,7 @@
   window.casoraRingImage = function (src, key) {
     if (/\bcasora_(popup_)?football\b/.test(key)) {
       var st = src && src._stateObj, i = K.info(st);
-      if (i && i.team.logo) return i.team.logo;
+      if (i && i.team.logo) return K.img(i.team.logo, 'round');
     }
     return typeof ringPrev === 'function' ? ringPrev(src, key) : null;
   };

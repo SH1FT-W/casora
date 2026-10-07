@@ -5173,6 +5173,11 @@ window.casoraMenuGlass = {
     }
     :host([soft]) .header-ring ha-icon { --mdc-icon-size: 34px; display: flex; }
     :host([soft]) .header-ring .im { width: 52px; height: 52px; object-fit: contain; }
+    /* Runde Länderflagge (Fußball): etwas größer, mit Haarlinie. */
+    :host([soft]) .header-ring .im[src*="/flags/round/"] {
+      width: 56px; height: 56px; border-radius: 50%;
+      box-shadow: 0 0 0 .5px var(--casora-football-flag-hair, rgba(0,0,0,0.14));
+    }
     /* Wappen-Ring: Sand-Halo statt Gerätefarbe (Weiß hätte auf hellem Grund keinen Rand). */
     :host([soft]) .header-ring:has(> .im) {
       box-shadow: 0 0 0 10px var(--casora-soft-row-hover, rgba(140,115,90,0.11)),

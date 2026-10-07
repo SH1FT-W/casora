@@ -70,7 +70,7 @@ assert.equal(K.tile(fin({ team_score: '2', opponent_score: '1', clock: 'AET' }))
 const pens = fin({ team_score: '1(3)', opponent_score: '1(4)', clock: 'FT-Pens' });
 assert.equal(K.info(pens).team.score, '1');
 assert.equal(K.tile(pens), 'Niederlage i. E. bei Cagliari');
-assert.match(K.html('match', pens), /1 : 1<\/div><div class="cfb-sub">Endstand · i\. E\. 4:3 · Heute/, 'Heim:Gast, Elfmeter Heim zuerst');
+assert.match(K.html('match', pens), /1 : 1<\/div><div class="cfb-sub"><span>Endstand<\/span><span>i\. E\. 4:3<\/span><span>Heute<\/span>/, 'Heim:Gast, Elfmeter Heim zuerst');
 // Verschoben/abgesagt: ESPN meldet „post“ mit 0:0.
 const ppd = sensor({ state: 'POST', attrs: { team_score: '0', opponent_score: '0', clock: 'Postponed' } });
 assert.equal(K.info(ppd).phase, 'OFF');
@@ -191,6 +191,12 @@ const summary = {
   ] }],
 };
 const g = K.table(null, summary, '162');
+const ita = sensor({ attrs: { team_id: '162', team_logo: 'https://a.espncdn.com/i/teamlogos/countries/500/ita.png', opponent_id: '478',
+  opponent_logo: 'https://a.espncdn.com/i/teamlogos/countries/500/fra.png', league_path: 'all', event_id: '9' } });
+K.data[K.key(K.info(ita))] = { ts: Date.now(), table: g, form: [] };
+const gHtml = K.html('table', ita);
+assert.match(gHtml, /<img class="fl" src="\/casora_assets\/flags\/rect\/it\.svg"/, 'Tabelle: rechteckige Flagge');
+assert.match(K.html('match', ita), /class="cfb-cr fl"><img src="\/casora_assets\/flags\/round\/it\.svg"/, 'Spielkasten: runde Flagge im Kreis');
 assert.deepEqual(g.rows.map((r) => r.id), ['478', '162', '459', '465']);
 assert.equal(g.name, '', '„… Standings“ ist kein Gruppenname');
 assert.equal(K.groupName('2026-2027 Italian Serie A'), '');
@@ -212,6 +218,25 @@ assert.deepEqual([f[1].res, f[1].my, f[1].their], ['L', '0', '2'], 'Niederlage a
 assert.equal(f[2].friendly, true);
 assert.equal(f[2].comp, 'Testspiel');
 assert.equal(f[2].home, false);
+
+// ── Länderflaggen statt ESPN-Länderbildern (mitgeliefert, rund im Kreis / rechteckig in Listen) ──
+assert.equal(K.flag('https://a.espncdn.com/i/teamlogos/countries/500/ita.png'), 'it');
+assert.equal(K.flag('https://a.espncdn.com/i/teamlogos/countries/500/eng.png'), 'gb-eng');
+assert.equal(K.flag('https://a.espncdn.com/i/teamlogos/countries/500/rom.png'), 'ro', 'ESPN-Eigenname (rom) → ro');
+assert.equal(K.flag('https://a.espncdn.com/i/teamlogos/soccer/500/111.png'), null, 'Vereinswappen bleibt');
+assert.equal(K.img('https://a.espncdn.com/i/teamlogos/countries/500/fra.png', 'round'), '/casora_assets/flags/round/fr.svg');
+assert.equal(K.img('https://a.espncdn.com/i/teamlogos/countries/500/fra.png', 'rect'), '/casora_assets/flags/rect/fr.svg');
+assert.equal(K.img('https://a.espncdn.com/i/teamlogos/soccer/500/111.png', 'round'), 'https://a.espncdn.com/i/teamlogos/soccer/500/111.png');
+assert.equal(K.img('https://a.espncdn.com/i/teamlogos/countries/500/xyz.png', 'round'), 'https://a.espncdn.com/i/teamlogos/countries/500/xyz.png', 'unbekanntes Land: ESPN-Bild');
+// Jede zugeordnete Flagge liegt in beiden Formen bei.
+const modSrc = src('custom_components/casora/scripts/local/11-fussball.js');
+const isos = [...new Set(/var FLAG = pairs\('([^']+)'\)/.exec(modSrc)[1].split('|').map((p) => p.split('=')[1]))];
+assert.ok(isos.length > 150, 'Flaggenliste');
+for (const iso of isos) for (const shape of ['round', 'rect']) {
+  assert.ok(fs.existsSync(new URL('../../custom_components/casora/assets/flags/' + shape + '/' + iso + '.svg', import.meta.url)), shape + '/' + iso + '.svg fehlt');
+}
+const itaHtml = K.html('table', sensor());  // ohne Daten: lädt noch
+assert.match(itaHtml, /Wird geladen/);
 
 // ── Popup ──
 const S = sensor();
