@@ -107,7 +107,18 @@
     return out.slice(0, max || 40).map((x) => x.c);
   }
 
-  W.__casoraStudioUx = { SUB, WHAT, SCOPE, scopeOf, pathOf, typeFor, rankDevices, BY_DOMAIN };
+  // „Neu in <Raum>“ (Nutzertest 4, P 5a: nur 5 Einträge, die neue Stehlampe fehlte): alle Geräte des
+  // Raums ohne Kachel. Vorne die erkannten (Assistent) und bewusst in den Bereich gelegten, dann nach
+  // Art (Licht vor Tasten); die ersten `first` stehen sofort da, der Rest hinter „+N weitere“.
+  const NEW_ORDER = ["light", "cover", "thermostat", "fan", "media", "lock", "vacuum", "humidifier", "casora_camera", "casora_alarm", "casora_switch", "entity_actions"];
+  function newInRoom(all, ri, first) {
+    const rank = (c) => (c.suggested || c.loose ? 0 : 1) * 100 + (NEW_ORDER.indexOf(c.type) < 0 ? 50 : NEW_ORDER.indexOf(c.type));
+    const l = all.filter((c) => c.fresh && c.roomIndex === ri)
+      .map((c, i) => [c, i]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map((x) => x[0]);
+    const n = Math.max(first, l.filter((c) => c.suggested || c.loose).length);
+    return { shown: l.slice(0, n), rest: l.slice(n) };
+  }
+  W.__casoraStudioUx = { SUB, WHAT, SCOPE, scopeOf, pathOf, typeFor, rankDevices, BY_DOMAIN, newInRoom };
   if (typeof customElements === "undefined" || !W.document) return;
 
   const CSS = `
@@ -145,6 +156,9 @@
     .uxadd .uxaddh { padding:14px 16px 0; font-size:15px; }
     .uxadd .uxaddh b { font-weight:650; }
     .uxadd .mres { min-height:120px; }
+    .uxadd .uxmorerow { display:block; margin:2px 0 4px; padding:8px 10px; border:0; border-radius:12px; background:none; cursor:pointer;
+      font:inherit; font-size:14px; font-weight:600; color:var(--casora-studio-done, var(--accent, #B67A50)); text-align:left; }
+    .uxadd .uxmorerow:hover { background:var(--wash-fill, rgba(118,118,128,.12)); }
     .uxadd .uxmore { display:flex; flex-wrap:wrap; gap:6px; padding:8px 10px 12px; border-top:.5px solid var(--hair, rgba(127,127,127,.22)); }
     .uxadd .uxlink { border:0; border-radius:999px; padding:6px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer;
       background:var(--wash-fill, rgba(118,118,128,.12)); color:var(--ink-2, inherit); box-shadow:none; }
@@ -199,6 +213,19 @@
     :host(.bmode.uxs3:not(.phone)) .btools .btool:not(.broom):not(.uxplus) svg { width:16px; height:16px; }
     :host(.bmode.uxs3:not(.phone)) .btools .btool:not(.broom):not(.uxplus) .blabel { display:block !important; font-size:10px; line-height:1.1; letter-spacing:-.01em;
       font-weight:600; max-width:84px; }
+    /* Raumname statt Beschriftungen (uxsr): übrige Knöpfe nur als Symbol, enger gesetzt, damit der
+       Name möglichst viel Platz bekommt; der Raumknopf kürzt sich mit „…“. */
+    :host(.bmode.uxsr:not(.phone)) .btools { gap:0; margin-left:2px; flex:1 1 auto; }
+    :host(.bmode.uxsr:not(.phone)) .toprow > .roomtitle { flex-shrink:0; }
+    :host(.bmode.uxsrp:not(.phone)) .btools .btool.uxplus { display:none; }
+    /* Der leere Abstandhalter kostete zwei Lücken – die Leiste füllt selbst bis zur Lupe. */
+    :host(.bmode.uxsr:not(.phone)) .toprow > .spacer { display:none; }
+    :host(.bmode.uxsr:not(.phone)) .btools .btool:not(.broom) .blabel { display:none; }
+    :host(.bmode.uxsr:not(.phone)) .btools .btool:not(.broom) { padding:0 6px; flex:none; }
+    :host(.bmode.uxsr:not(.phone)) .btools .btool[data-b="dash"], :host(.bmode.uxsr:not(.phone)) .btools .btool[data-b="home"] { margin-left:9px; }
+    :host(.bmode.uxsr:not(.phone)) .btools .btool[data-b="dash"]::before, :host(.bmode.uxsr:not(.phone)) .btools .btool[data-b="home"]::before { left:-5px; }
+    :host(.bmode.uxsr:not(.phone)) .btools .btool.broom { min-width:0; flex:0 1 auto; padding:0 6px; gap:5px; }
+    :host(.bmode.uxsr:not(.phone)) .btools .btool.broom .blabel { display:block !important; max-width:none; min-width:0; }
     /* Ganz eng: das „+“ der Leiste weicht (Platz „Kachel hinzufügen“ in der Vorschau bleibt). */
     :host(.bmode.btight) .btools .btool.uxplus { display:none; }
     /* Als Nächstes (nach der Einführung) */
@@ -589,7 +616,7 @@
       input.setAttribute("aria-label", tr("Search a device"));
       if (phone) box.querySelector(".mesc").remove();
       const res = box.querySelector(".mres");
-      let list = [], at = 0;
+      let list = [], at = 0, moreOpen = false;
       const close = (refocus) => {
         document.removeEventListener("keydown", esc, true);
         box.remove();
@@ -651,9 +678,19 @@
               row(c, k);
             });
           } else {
-            list = fresh.filter((c) => c.roomIndex === this._room).slice(0, 12);
+            const part = newInRoom(all, this._room, 6);
+            list = moreOpen ? part.shown.concat(part.rest) : part.shown;
             head(fill(tr("New in {room} – no tile yet"), { room: roomName }));
             list.forEach(row);
+            if (part.rest.length && !moreOpen) {
+              const b = document.createElement("button");
+              b.type = "button";
+              b.className = "uxmorerow";
+              b.textContent = fill(tr("+{n} more"), { n: part.rest.length });
+              b.setAttribute("aria-expanded", "false");
+              b.onclick = () => { moreOpen = true; paint(); const r = res.querySelector("#uxopt" + part.shown.length); if (r) r.focus(); };
+              res.appendChild(b);
+            }
           }
           if (!list.length) {
             const e = document.createElement("div");
@@ -1138,8 +1175,16 @@
     // Gemessen wird mit dem längsten Raumnamen des Dashboards (Nutzertest 4: bei „Wohnzimmer“
     // verschwanden die Beschriftungen, bei „Flur“ standen sie da). Letzte Stufe: auch der Raumname
     // nur als Symbol – vorher lagen Lupe und Zahnrad hochkant übereinander.
+    // Vergleich 06.10. (#f7): Statt nur Symbolen (Stufe 2/3) zeigt der Raumknopf den Raumnamen,
+    // die übrigen Knöpfe nur ihr Symbol (uxsr). Passt der Name nicht ganz, kürzt er sich mit „…“
+    // (voller Name im Tooltip und für Screenreader). Erst wenn kaum etwas vom Namen bliebe: nur Symbole.
+    const roomFits = (self) => {
+      const rl = self.shadowRoot.querySelector('.btools [data-b="rooms"] .blabel');
+      if (self._uxTight()) return false;
+      return !rl || rl.clientWidth >= Math.min(48, rl.scrollWidth);
+    };
     wrap("_bFitTools", (orig) => function () {
-      this.classList.remove("uxs1", "uxs2", "uxs3");
+      this.classList.remove("uxs1", "uxs2", "uxs3", "uxsr", "uxsrp");
       const lab = this.shadowRoot.querySelector('.btools [data-b="rooms"] .blabel');
       const keep = lab ? lab.textContent : null;
       if (lab && this._state) {
@@ -1150,12 +1195,17 @@
       try {
         const r = orig.apply(this, arguments);
         if (!this.classList.contains("btight") || this.classList.contains("phone")) return r;
-        for (const st of [["uxs1"], ["uxs1", "uxs2"], ["uxs1", "uxs3"], ["uxs1", "uxs2", "uxs3"]]) {
-          this.classList.remove("btight", "uxs2", "uxs3");
-          this.classList.add(...st);
-          if (!this._uxTight()) return r;
-        }
-        this.classList.remove("uxs3");
+        this.classList.remove("btight");
+        this.classList.add("uxs1");
+        if (!this._uxTight()) return r;
+        // Weiter mit dem längsten Raumnamen gemessen (gleiche Leiste in jedem Raum, rb15);
+        // gekürzt mit „…“ ist erlaubt, solange genug vom Namen bleibt.
+        this.classList.add("uxsr");
+        // Name gekürzt: erst das „+“ weichen lassen (der Platz „Kachel hinzufügen“ bleibt in der Vorschau).
+        const rl = this.shadowRoot.querySelector('.btools [data-b="rooms"] .blabel');
+        if (rl && rl.scrollWidth > rl.clientWidth + 1) this.classList.add("uxsrp");
+        if (roomFits(this)) return r;
+        this.classList.remove("uxsr", "uxsrp");
         this.classList.add("btight", "uxs1", "uxs2");
         return r;
       } finally {

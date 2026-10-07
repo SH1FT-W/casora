@@ -74,7 +74,9 @@ assert.ok(mehr.includes('action: { label: tr("Try it")') && !mehr.includes('Try 
 
 // 6) Tablet-Leiste
 const ux = read('panel/casora-panel-b-ux.js');
-assert.ok(ux.includes('["uxs1", "uxs2", "uxs3"]') && ux.includes('this.classList.add("btight", "uxs1", "uxs2")'), 'Stufen bis ohne Raumnamen');
+// Vergleich 06.10. (#f7): nach der Lupe zeigt der Raumknopf den Namen (uxsr), die übrigen nur Symbole;
+// erst wenn vom Namen kaum etwas bliebe, nur Symbole.
+assert.ok(ux.includes('this.classList.add("uxsr")') && ux.includes('this.classList.add("btight", "uxs1", "uxs2")'), 'Stufen: Raumname, dann ohne Raumnamen');
 assert.ok(/t\.length > long\.length/.test(ux) && /finally \{\n\s*if \(lab && keep !== null\) lab\.textContent = keep;/.test(ux), 'gemessen mit längstem Raumnamen');
 
 // Übersetzungen

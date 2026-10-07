@@ -427,12 +427,18 @@
       el.querySelector(".btx").hidden = o.kind !== "err";
       el.classList.toggle("err", o.kind === "err");
       el.classList.toggle("big", !!o.big);
-      // Waagrecht über der Vorschau, nicht über dem Inspektor (Desktop).
+      // Waagrecht über der Vorschau, nicht über dem Inspektor (Desktop) – und immer ganz in der
+      // Studio-Fläche: am iPad mit HA-Seitenleiste ragte ein breiter Toast über die Leiste (note3 Frage 5).
       if (!isPhone(this)) {
         const map = root.querySelector(".stage") || root.querySelector(".card.map");
         const r = map && map.getBoundingClientRect();
-        el.style.left = r && r.width ? Math.round(r.left + r.width / 2) + "px" : "";
-      } else el.style.left = "";
+        const h = this.getBoundingClientRect();
+        if (h.width > 0) el.style.maxWidth = "min(520px, " + Math.max(200, Math.round(h.width - 32)) + "px)";
+        let c = r && r.width ? r.left + r.width / 2 : h.left + h.width / 2;
+        const half = el.offsetWidth / 2;
+        if (h.width > 0 && half) c = Math.max(h.left + 16 + half, Math.min(h.right - 16 - half, c));
+        el.style.left = h.width > 0 || (r && r.width) ? Math.round(c) + "px" : "";
+      } else { el.style.left = ""; el.style.maxWidth = ""; }
       if (!same) {
         el.classList.remove("on");
         void el.offsetWidth;

@@ -26,6 +26,7 @@ const code = [
   grab(/^function roomVisibility\(/m),
   grab(/^function entityUsers\(/m),
   grab(/^function confirmEntities\(/m),
+  grab(/^function confirmNames\(/m),
   grab(/^function extractConfig\(/m),
   grab(/^function expandConfig\(/m),
   'return { TILE_OWN_KEYS, customTileName, wrapCustomCard, extractConfig, expandConfig };',

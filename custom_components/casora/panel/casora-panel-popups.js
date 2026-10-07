@@ -227,8 +227,10 @@
       // liest die Liste aus den Raumvariablen; sonst setzt der Raum sie auf leer zurück).
       const ce = I().confirmEntities ? I().confirmEntities(this._state.compact.rooms) : [];
       window.__casoraConfirmIds = ce;
+      const cn = I().confirmNames ? I().confirmNames(this._state.compact.rooms) : {};
+      window.__casoraConfirmNames = cn;
       const cfg = target.kind === "tile" ? clone(target.tile)
-        : { ...clone(room._hero), name: room.name, variables: { ...clone(room.variables), casora_confirm_entities: ce.slice() } };
+        : { ...clone(room._hero), name: room.name, variables: { ...clone(room.variables), casora_confirm_entities: ce.slice(), casora_confirm_names: { ...cn } } };
       try { el.setConfig(cfg); } catch (e) { return null; }
       el.hass = this._hass;
       h.appendChild(el);

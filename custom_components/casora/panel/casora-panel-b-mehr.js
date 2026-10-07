@@ -206,6 +206,30 @@
   const RENAME_VAR = /^(room_name|aqi_room_name|area)$/;
   const BADGE_TITLE = { climate: "Climate", lights: "Lights", people: "People", media: "Media", security: "Security", energy: "Energy" };
   const setv = (V, k, v) => { if (v === undefined) delete V[k]; else V[k] = JSON.parse(J(v)); };
+  // Eine Dashboard-Einstellung in Worten (note1 Frage 6): „Uhrzeit: 12-Stunden-Uhr an“ statt
+  // „Dashboard-Einstellungen geändert“. Schlüssel → Abschnitt und Feld aus SECTIONS des Panels
+  // (ctx.sections, sonst window.__casoraPanelInternals.SECTIONS); unbekannt → null.
+  function settingText(k, v, ctx) {
+    const secs = (ctx && ctx.sections) || ((W.__casoraPanelInternals || {}).SECTIONS) || [];
+    for (const sec of secs) {
+      const f = (sec.fields || []).find((x) => x && x.key === k);
+      if (!f || !f.label) continue;
+      const head = tr(sec.title || sec.label) + ": " + tr(f.label);
+      if (f.type === "bool") {
+        let on = v === undefined || v === null || v === "" ? f.boolDefault !== false : v === true || v === "true" || v === 1;
+        if (f.invert) on = !on;
+        return head + " " + tr(on ? "On" : "Off").toLowerCase();
+      }
+      if (f.type === "select") {
+        const key = v === undefined || v === null ? "" : String(v);
+        const lab = f.optionLabels && f.optionLabels[key];
+        return lab ? head + " → " + tr(lab) : null;
+      }
+      if (f.type === "range" || f.type === "text") return v === undefined || v === null || v === "" ? null : head + " → " + String(v);
+      return null;
+    }
+    return null;
+  }
   function changeItems(before, after, ctx) {
     const out = [];
     const add = (text, fix, key) => out.push({ text, fix, key: key || text });
@@ -333,7 +357,11 @@
     });
     const dash = J((before || []).slice(1, 4)) !== J((after || []).slice(1, 4));
     if (dash || wide.size) {
-      add(tr("Dashboard settings changed"), (x, b) => {
+      // Nur eine oder zwei bekannte Einstellungen in allen Räumen: beim Namen nennen.
+      const one = R1.find((r) => M0.get(key(r))) || {};
+      const named = !dash && wide.size <= 2 ? [...wide].map((k) => settingText(k, (one.variables || {})[k], ctx)) : [];
+      const label = named.length && named.every(Boolean) ? named.join(" · ") : tr("Dashboard settings changed");
+      add(label, (x, b) => {
         for (let i = 1; i < 4; i++) x[i] = JSON.parse(J((b || [])[i]));
         rooms(x).forEach((r) => {
           const B = (roomOf(b, key(r)) || {}).variables || {};

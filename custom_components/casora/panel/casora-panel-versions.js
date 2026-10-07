@@ -537,7 +537,7 @@
       go.type = "button";
       go.textContent = t("Restore This Version");
       go.disabled = locked;
-      go.onclick = () => this._cvRestore(peek.v);
+      go.onclick = () => this._cvRestore(peek.v, { shown: true });
       const back = document.createElement("button");
       back.type = "button";
       back.className = "ghost";
@@ -646,24 +646,22 @@
       if (after) after();
     };
 
-    P._cvRestore = async function (v) {
-      if (this._state && this._isDirty && this._isDirty()) {
-        const ok = await this._ask({
-          title: t("Discard unsaved changes?"),
-          message: t("Your edits to the dashboard you were working on have not been saved."),
-          confirmLabel: t("Discard"), destructive: true,
-        });
-        if (!ok) return;
-        if (this._discardDraft) this._discardDraft();
-      }
-      const lost = await this._cvLossFor(v);
+    // Nur eine Rückfrage (Nutzertest 4, P 5c: vorher zwei Dialoge, der zweite mit derselben Liste):
+    // ungespeicherte Änderungen stehen im selben Dialog. o.shown: Die Verlustliste steht schon auf der
+    // Seite (Vorschau des Stands) – dann nicht noch einmal im Dialog.
+    P._cvRestore = async function (v, o) {
+      const dirty = !!(this._state && this._isDirty && this._isDirty());
+      const lost = o && o.shown ? null : await this._cvLossFor(v);
       const ok = await this._ask({
         title: t("Restore this version?"),
-        message: fmtFull(this, new Date(v.ts)) + " – " + t("The dashboard and its phone layout go back to this version."),
+        message: fmtFull(this, new Date(v.ts)) + " – " + t("The dashboard and its phone layout go back to this version.")
+          + (dirty ? " " + t("Your unsaved edits are discarded.") : ""),
         confirmLabel: t("Restore"),
+        destructive: dirty,
         extend: lost ? ({ box, acts }) => box.insertBefore(this._cvLossBox(lost), acts) : undefined,
       });
       if (!ok) return;
+      if (dirty && this._discardDraft) this._discardDraft();
       try {
         await this._hass.callWS({ type: "casora/versions/restore", url_path: this._dashUrl, version: v.id });
       } catch (e) {

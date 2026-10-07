@@ -219,7 +219,7 @@ function extractConfig(lovelace) {
       title: v.title,
       path: v.path,
       name: hero.name,
-      variables: omit(clone(hero.variables) || {}, ["casora_entity_users", "casora_confirm_entities"]),
+      variables: omit(clone(hero.variables) || {}, ["casora_entity_users", "casora_confirm_entities", "casora_confirm_names"]),
       tiles: hostBareTiles(clone(row.cards) || []),
       _hero: omit(hero, ["name", "variables"]),
       _row: omit(row, ["cards"]),
@@ -283,14 +283,31 @@ function confirmEntities(rooms) {
   return Array.from(out).sort();
 }
 
+// Eigener Kachelname je Entität mit Rückfrage (note4 Frage 4): Der Dialog im Popup nennt dann
+// „Garage“ wie die Kachel statt des Gerätenamens. Nur feste Namen (keine [[[ … ]]]-Ausdrücke).
+function confirmNames(rooms) {
+  const out = {};
+  (rooms || []).forEach((r) => (r.tiles || []).forEach((t) => {
+    const inner = (t && t.type === "conditional" && t.card) || t || {};
+    const v = inner.variables || {};
+    const name = typeof inner.name === "string" ? inner.name.trim() : "";
+    if (v.confirm_toggle !== true || !name || name.indexOf("[[[") >= 0) return;
+    [inner.entity || (t && t.entity), v.cover_entity].forEach((x) => { if (typeof x === "string" && x && !out[x]) out[x] = name; });
+  }));
+  return out;
+}
+
 function expandConfig(compact, scaffold, extras, templates) {
   const eu = entityUsers(compact.rooms);
   const euOn = Object.keys(eu).length > 0;
   const ce = confirmEntities(compact.rooms);
+  const cn = confirmNames(compact.rooms);
+  const cnOn = ce.length > 0 && Object.keys(cn).length > 0;
   const heroVars = (room) => {
     const v = clone(room.variables);
     if (!euOn && !ce.length) return v;
-    return { ...(v || {}), ...(euOn ? { casora_entity_users: clone(eu) } : {}), ...(ce.length ? { casora_confirm_entities: ce.slice() } : {}) };
+    return { ...(v || {}), ...(euOn ? { casora_entity_users: clone(eu) } : {}), ...(ce.length ? { casora_confirm_entities: ce.slice() } : {}),
+      ...(cnOn ? { casora_confirm_names: clone(cn) } : {}) };
   };
   const views = (compact.rooms || []).map((room) => ({
     type: scaffold.view_type,
@@ -3147,6 +3164,10 @@ const panelW = (el) => {
   return out;
 };
 const isNarrow = (el) => panelW(el) < PANEL_NARROW;
+// Tablet-Vorschau hochkant (note5 Frage 4): läuft das Studio auf einem Touch-Gerät im Hochformat
+// (iPad hochkant), zeigt „Tablet“ den Rahmen hochkant. Am Desktop (ohne Touch) bleibt er quer.
+const tabletPortrait = () => window.innerHeight > window.innerWidth
+  && ((navigator.maxTouchPoints || 0) > 0 || !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches));
 // Handy quer (03.10.2026): niedrig und breit – geteilte Ansicht statt Handy-Ansicht, auch wenn
 // die angedockte HA-Seitenleiste das Studio unter 700 px drückt (die Handy-Ansicht liegt fest
 // über die ganze Breite und rutschte dann unter die HA-Seitenleiste).
@@ -3651,7 +3672,12 @@ const softLook = () => {
 const casoraLookTheme = () => ACCENT_THEME === CASORA_THEME || ACCENT_THEME === "Casora Nebel";
 const accentLabel = (a) => (a.key === "purple" && casoraLookTheme() ? "Dark red" : a.label);
 // Die Farben zur Auswahl: „Lila“ (violet) nur im Casora-Look – Hemma 1/2 haben ihr Lila schon (purple).
-const accentsShown = () => CASORA_ACCENTS.filter((a) => !a.soft || casoraLookTheme());
+// Im Casora-Look (Weich/Nebel) sind Bernstein, Eis und Gold Zwillinge von Orange, Blau und Gelb
+// (theme_weich.yaml: keine Zusatzfarben) – dort nicht zur Wahl. keep: der gespeicherte Wert bleibt
+// sichtbar (und angehakt), auch wenn er ein Zwilling ist; gemalt wird er ohnehin wie bisher.
+const ACCENT_TWINS = ["amber", "ice", "gold"];
+const accentsShown = (keep) => CASORA_ACCENTS.filter((a) => (!a.soft || casoraLookTheme())
+  && (!casoraLookTheme() || ACCENT_TWINS.indexOf(a.key) < 0 || (keep && a.id === keep)));
 const swatchOf = (v) => {
   const raw = String(v || "").trim();
   if (!raw) return null;
@@ -7958,6 +7984,10 @@ class CasoraPanel extends HTMLElement {
           width:100%; flex:0 0 auto;
           display:flex; justify-content:center; align-items:flex-start;
         }
+        .maprowhint {
+          flex:0 0 auto; max-width:100%; padding:0 12px; box-sizing:border-box; text-align:center;
+          font-size:12px; line-height:16px; font-weight:500; color:var(--ink-2, var(--secondary-text-color, #8a8a8e));
+        }
         .card.map {
           transform:scale(var(--map-scale, .5));
           transition:none;
@@ -8013,6 +8043,8 @@ class CasoraPanel extends HTMLElement {
           height:var(--nav-h); border-radius:9999px; align-items:center;
           max-width:calc(100% - 2 * (var(--pad-x) + var(--nav-reserve))); overflow:hidden;
         }
+        /* Hochkant: die Leiste stößt an die drei Knöpfe rechts – Platz für sie freihalten. */
+        .card.map.size-tablet.portrait { --nav-reserve:92px; }
         .size-tablet .mini-tabs::before, .size-tablet .mini-tabs::after {
           content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
         }
@@ -9058,6 +9090,16 @@ class CasoraPanel extends HTMLElement {
           font-weight:400; letter-spacing:-0.006em; line-height:1.15;
           white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
         }
+        .mkind {
+          color:rgba(255,255,255,0.62); font-size:var(--ts);
+          font-weight:400; letter-spacing:-0.006em; line-height:1.15;
+          white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+        }
+        .mtile.on .mkind { color:rgba(0,0,0,0.55); }
+        .card.map.soft .mkind { color:var(--casora-entity-state, rgba(255,255,255,0.62)); }
+        .card.map.soft .mtile.on .mkind { color:var(--casora-entity-state-active, rgba(0,0,0,0.55)); }
+        /* Handy-Vorschau: kleine Kacheln haben nur Platz für Name und Zustand. */
+        .miniphone .mkind { display:none; }
         /* Nur der erste Buchstabe groß: „Nicht festgelegt“, nicht „Nicht Festgelegt“. */
         .mstate::first-letter { text-transform:uppercase; }
         .mtile.on .mname { color:#1d1d1f; }
@@ -23174,6 +23216,18 @@ class CasoraPanel extends HTMLElement {
         && window.casoraTileName(tile, ent, this._hass, this._state && this._state.templates);
       el.querySelector(".mname").textContent = tile.name || own || (type && type.label) || "Tile";
       if (own) el.querySelector(".mname").setAttribute("data-no-i18n", "");
+      // Vergleich 06.10. (#f9): Ohne eigenen Namen heißt die Kachel wie das Gerät („P1S“) – darunter klein
+      // die Kachelart („3D-Drucker“), damit man sie erkennt. Nur in der Vorschau, das Dashboard bleibt gleich.
+      // Heißt die Kachel schon wie ihre Art („Waschmaschine“), keine Doppelung.
+      const kindWord = type && type.label ? ((window.casoraI18n && window.casoraI18n.t) ? window.casoraI18n.t(type.label) : type.label) : "";
+      const same = (x) => String(x || "").trim().toLowerCase();
+      if (own && kindWord && same(own) !== same(kindWord) && same(own) !== same(type.label)) {
+        const k = document.createElement("span");
+        k.className = "mkind";
+        k.setAttribute("data-no-i18n", "");
+        k.textContent = kindWord;
+        el.querySelector(".mname").after(k);
+      }
       el.querySelector(".mstate").textContent =
         // Casora: Zustandstext wie im Dashboard (state_display der Vorlage).
         (window.casoraTileState && window.casoraTileState(tile, ent, this._hass, this._state && this._state.templates))
@@ -23695,14 +23749,25 @@ class CasoraPanel extends HTMLElement {
     slot.className = "mapslot";
     slot.appendChild(card);
     wrap.appendChild(slot);
+    // note5 Frage 1: Das Dashboard sortiert die Kachelreihe „Aktive zuerst“ (smart-row) – die Reihe
+    // im Dashboard sieht dann anders aus als die Bearbeitungs-Reihenfolge. Kleiner Hinweis darunter.
+    if (this._miniSize !== "phone" && this._smartSortOn() && (room.tiles || []).filter((t) => (t.variables || {}).enabled !== false).length > 1) {
+      const hint = document.createElement("div");
+      hint.className = "maprowhint";
+      hint.textContent = "In the dashboard, active tiles come first";
+      wrap.appendChild(hint);
+    }
 
 
-    const SPEC = { desktop: [960, Math.round(960 / 1.55)], tablet: [700, 486],
+    // tabletUp: iPad hochkant im gleichen Maßstab wie „tablet“ (700 ≈ 1024 px Bildschirm).
+    const SPEC = { desktop: [960, Math.round(960 / 1.55)], tablet: [700, 486], tabletUp: [525, 700],
       phone: [390, 844] };
     const applySize = (animate) => {
       // Studio B (casora-panel-b.js) zeigt die Vorschau auch am Handy – als Arbeitsfläche.
       if (isPhone(this) && !this.classList.contains("bmode")) return;
-      let [natW, natH] = SPEC[this._miniSize];
+      const upright = this._miniSize === "tablet" && tabletPortrait();
+      card.classList.toggle("portrait", upright);
+      let [natW, natH] = upright ? SPEC.tabletUp : SPEC[this._miniSize];
       // SF-12: Desktop im Seitenverhältnis des Bildschirms, auf dem das Dashboard läuft (Fläche
       // rechts der HA-Seitenleiste), begrenzt auf 1,3 bis 1,78 – füllt die Höhe neben dem Inspektor.
       // Nicht im gestapelten Aufbau (Tablet hochkant): dort teilt sich die Höhe mit dem Inspektor.
@@ -23727,7 +23792,8 @@ class CasoraPanel extends HTMLElement {
           ? parseFloat(ps.paddingTop || 0) + parseFloat(ps.paddingBottom || 0) : 0;
         const free = stage.offsetHeight - headH - pPad
           - parseFloat(cs.paddingTop || 0) - parseFloat(cs.paddingBottom || 0);
-        budget = Math.max(240, free) - MAP_SHADOW_ROOM;
+        const rowHint = wrap.querySelector(".maprowhint");
+        budget = Math.max(240, free - (rowHint ? rowHint.offsetHeight + 12 : 0)) - MAP_SHADOW_ROOM;
       } else if (isNarrow(this)) {
         // The page scrolls here, so nothing else bounds the height: an unbounded phone frame took the whole column width.
         budget = Math.max(240, Math.round(window.innerHeight
@@ -24001,7 +24067,7 @@ class CasoraPanel extends HTMLElement {
       pick.onclick = () => {
         const cur = map()[sc.id] || "";
         const items = [{ id: "", label: "Yellow (default)", checked: !cur }];
-        accentsShown().forEach((acc) => items.push({
+        accentsShown(cur).forEach((acc) => items.push({
           id: acc.id, label: accentLabel(acc), swatch: swatchCss(acc.id), checked: cur === acc.id,
         }));
         this._menuAt(pick, items, (id) => {
@@ -25513,7 +25579,7 @@ class CasoraPanel extends HTMLElement {
         btn.onclick = () => {
           const items = [{ id: "", label: "From the entity's domain",
                            checked: !tile.variables || !tile.variables[f.key] }];
-          accentsShown().forEach((a) => items.push({
+          accentsShown(cur2).forEach((a) => items.push({
             id: a.id, label: accentLabel(a), swatch: swatchCss(a.id), group: "Casora",
             checked: cur2 === a.id,
           }));
@@ -25667,7 +25733,7 @@ class CasoraPanel extends HTMLElement {
 // Casora: Bausteine des Panels für Casora-Erweiterungen (Import-Assistent, Geräte-Assistent).
 window.__casoraPanelInternals = {
   blankRoom, roomPhoto, slug, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
-  applyScenePick, confirmEntities, entityUsers, wrapCustomCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
+  applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
   findType, tileTypeAny, newTile, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,

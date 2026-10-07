@@ -166,6 +166,9 @@
     }
     :host(.bmode) .bhid svg { width:16px; height:16px; }
     :host(.bmode) .segrow .bhid { margin:0; height:36px; padding:0 14px; box-sizing:border-box; }
+    /* iPad quer mit HA-Seitenleiste und offenem Blatt: die Vorschau-Spalte ist schmal – die Zeile
+       Desktop/Tablet/Handy · Hell/Dunkel · Ansehen als … lief links unter die Seitenleiste. Umbrechen. */
+    :host(.bmode.split:not(.flow):not(.phone)) .stage .segrow { flex-wrap:wrap; row-gap:10px; column-gap:14px; max-width:100%; }
     :host(.bmode.phone) .bhid { position:fixed; left:50%; transform:translateX(-50%); bottom:calc(84px + env(safe-area-inset-bottom, 0px));
       z-index:19; margin:0; white-space:nowrap; box-shadow:0 6px 18px rgba(0,0,0,.16);
       background:var(--bar-solid, var(--casora-studio-bar-solid, rgba(242,242,247,.96))); }
