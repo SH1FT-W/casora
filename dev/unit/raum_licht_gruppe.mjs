@@ -65,4 +65,22 @@ const fav = p.rooms[0].items.find((x) => x.key === 'fav:light');
 assert.ok(fav, 'Übersicht: Favorit Beleuchtung');
 assert.equal(fav.tile.entity, 'light.beispiel_alle', 'Übersicht: Hausgruppe erlaubt');
 
+// Raumgruppe mit Untergruppe ohne Bereich (Review 1.1.1): „Bad“ = Untergruppe „Spiegel“ + Decke.
+// Die Lichter des Raums sind genau die Geräte der Gruppe – die Gruppe bleibt die Kachel.
+{
+  const h2 = { states: {}, entities: {}, devices: {}, areas: { bad: { area_id: 'bad', name: 'Bad' } } };
+  const l2 = (eid, area, members) => { h2.entities[eid] = { entity_id: eid, area_id: area, platform: 'template' };
+    h2.states[eid] = { entity_id: eid, state: 'off', attributes: { friendly_name: eid, ...(members ? { entity_id: members } : {}) } }; };
+  l2('light.beispiel_spiegel_1', 'bad'); l2('light.beispiel_spiegel_2', 'bad'); l2('light.beispiel_bad_decke', 'bad');
+  l2('light.beispiel_spiegel', null, ['light.beispiel_spiegel_1', 'light.beispiel_spiegel_2']);
+  l2('light.beispiel_bad', null, ['light.beispiel_spiegel', 'light.beispiel_bad_decke']);
+  // Hausgruppe mit einem fremden Licht bleibt ausgeschlossen.
+  l2('light.beispiel_flur', null); h2.entities['light.beispiel_flur'].area_id = null;
+  l2('light.beispiel_haus', null, ['light.beispiel_bad', 'light.beispiel_flur']);
+  const p2 = B.plan(h2, ['Bad'], { ...B.DEFAULTS });
+  const t2 = p2.rooms.find((r) => r.name === 'Bad').items.filter((x) => x.type === 'light').map((x) => x.tile);
+  assert.equal(t2.length, 1);
+  assert.equal(t2[0].entity, 'light.beispiel_bad', 'Bad: eigene Gruppe trotz Untergruppe ohne Bereich');
+}
+
 console.log('raum_licht_gruppe: ok');
