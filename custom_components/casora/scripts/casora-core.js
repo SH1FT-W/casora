@@ -535,6 +535,56 @@
 })();
 // casora-room-name:end
 
+// casora-webkit-blur:start
+// Unschärfe auf älteren iPhones (07.10.2026): HA 2026.10 hat bei ha-card, ha-dialog und dem
+// Bottom-Sheet die Safari-Schreibweise -webkit-backdrop-filter gestrichen. Safari bis iOS 17
+// kennt nur diese – ohne sie fehlt dort die Unschärfe hinter Kacheln und Popups, die die
+// Casora-Designs über --ha-card-backdrop-filter / --ha-dialog-surface-backdrop-filter setzen.
+// Hier kommt die Zeile mit denselben Variablen wie vor 2026.10 zurück. Ohne gesetzte Variable
+// bleibt es bei „none“; unter 2026.9 steht sie doppelt (gleicher Wert, keine Wirkung).
+(function () {
+  if (window.__casoraWebkitBlur || !window.customElements) return;
+  window.__casoraWebkitBlur = true;
+  var CSS = {
+    'ha-card': ':host{-webkit-backdrop-filter:var(--ha-card-backdrop-filter,none)}',
+    'ha-dialog': 'wa-dialog::part(dialog){-webkit-backdrop-filter:var(--ha-dialog-surface-backdrop-filter,none)}'
+      + 'wa-dialog::part(dialog)::backdrop{-webkit-backdrop-filter:var(--ha-dialog-scrim-backdrop-filter,var(--dialog-backdrop-filter,none))}',
+    'ha-bottom-sheet': 'wa-drawer::part(body){-webkit-backdrop-filter:var(--ha-bottom-sheet-surface-backdrop-filter,var(--ha-dialog-surface-backdrop-filter,none))}'
+      + 'wa-drawer::part(dialog)::backdrop{-webkit-backdrop-filter:var(--ha-bottom-sheet-scrim-backdrop-filter,var(--ha-dialog-scrim-backdrop-filter,var(--dialog-backdrop-filter,none)))}'
+  };
+  var add = function (tag) {
+    customElements.whenDefined(tag).then(function () {
+      try {
+        var C = customElements.get(tag);
+        var list = C && C.elementStyles;
+        if (!Array.isArray(list) || list.__casoraWebkit) return;
+        var sh = new CSSStyleSheet();
+        sh.replaceSync(CSS[tag]);
+        // Lit übernimmt elementStyles beim Anlegen jedes neuen Elements (adoptStyles).
+        list.push(sh);
+        list.__casoraWebkit = true;
+        window.__casoraWebkitSheets = window.__casoraWebkitSheets || {};
+        window.__casoraWebkitSheets[tag] = sh;
+        // Schon gezeichnete Elemente (Modul kam später als das Dashboard): einmal nachreichen.
+        setTimeout(function () {
+          var n = 0;
+          (function walk(root) {
+            var all = root.querySelectorAll('*');
+            for (var i = 0; i < all.length && n < 20000; i++, n++) {
+              var el = all[i], sr = el.shadowRoot;
+              if (!sr) continue;
+              if (el.localName === tag && sr.adoptedStyleSheets.indexOf(sh) < 0) sr.adoptedStyleSheets = sr.adoptedStyleSheets.concat([sh]);
+              walk(sr);
+            }
+          })(document);
+        }, 1500);
+      } catch (e) { /* ohne Constructable Stylesheets: wie bisher */ }
+    });
+  };
+  Object.keys(CSS).forEach(add);
+})();
+// casora-webkit-blur:end
+
 // Gefüllte Symbolfamilie in Menüs (Fix-Runde 1, A-21): Setzt ein Design
 // --casora-menu-icons-filled: 1, zeigen die Menüs Kontur-Symbole in ihrer gefüllten Form
 // (mdi: …-outline → ohne Suffix; eigene Sätze wie ios: …-fill bzw. …-inverse, nur wenn es
