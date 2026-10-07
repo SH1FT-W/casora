@@ -75,9 +75,14 @@ const pick = (H) => H(() => { const rs = window.__panel()._state.compact.rooms;
   await check('⌘K „12-Stunden“ findet die Uhrzeit', /Uhrzeit/.test(await R0(H, '.msearch .mrow') || ''), await R0(H, '.msearch .mrow'));
   await page.keyboard.press('Escape');
   // Dunkelmodus
+  // Dunkelmodus: folgt HA (hier ausdrücklich auf Dunkel gestellt; „Automatisch“ folgt dem System –
+  // ein fest auf Hell gestelltes Profil ignoriert die Browser-Emulation, wie HA selbst).
   await page.emulateMedia({ colorScheme: 'dark' });
-  await page.waitForTimeout(1200);
-  await check('Studio folgt dem Dunkelmodus', !(await H(() => window.__panel().classList.contains('is-light'))));
+  await H(() => document.querySelector('home-assistant').dispatchEvent(new CustomEvent('settheme', { detail: { dark: true } })));
+  await page.waitForTimeout(1500);
+  await check('Studio folgt dem Dunkelmodus', !(await H(() => window.__panel().classList.contains('is-light'))),
+    await H(() => document.querySelector('home-assistant').hass.themes.darkMode));
+  await H(() => document.querySelector('home-assistant').dispatchEvent(new CustomEvent('settheme', { detail: { dark: false } })));
   await H(() => { const p = window.__panel(); p._undoStack = []; p._resetUndo && p._resetUndo(); });
   await browser.close();
 }
