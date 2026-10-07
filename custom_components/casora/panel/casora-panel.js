@@ -19204,22 +19204,22 @@ class CasoraPanel extends HTMLElement {
       onChange(state === def ? undefined : state);
     };
     // Nutzertest 6 (P-T3): ein Klick auf die Beschriftung („12-Stunden-Uhr“) schaltete nicht. Sobald
-    // der Schalter in seiner Zeile steckt, schalten die reinen Text-Geschwister davor ihn mit.
+    // der Schalter in seiner Zeile steckt, schaltet die Beschriftung direkt davor ihn mit.
+    // Nur dieses eine Geschwister und nie in Zeilen mit eigenem Klick (Kachelkopf: Name klappt auf) –
+    // sonst blendete ein Tipp auf den Kachelnamen in der Liste die Kachel aus (Review 1.1.1).
     const wire = () => {
       const row = sw.parentElement;
       if (!row) return false;
-      let n = sw.previousElementSibling;
-      while (n) {
-        if (!n._swLabel && !n.matches("button, input, select, textarea, a, .drop, .hint")
-          && !n.querySelector("button, input, select, textarea, a, .sw")) {
-          n._swLabel = true;
-          n.classList.add("swlabel");
-          n.addEventListener("click", (ev) => {
-            if (ev.defaultPrevented || sw.disabled || !sw.isConnected) return;
-            sw.click();
-          });
-        }
-        n = n.previousElementSibling;
+      if (row.onclick) return true;
+      const n = sw.previousElementSibling;
+      if (n && !n._swLabel && !n.matches("button, input, select, textarea, a, .drop, .hint")
+        && !n.querySelector("button, input, select, textarea, a, .sw")) {
+        n._swLabel = true;
+        n.classList.add("swlabel");
+        n.addEventListener("click", (ev) => {
+          if (ev.defaultPrevented || sw.disabled || !sw.isConnected) return;
+          sw.click();
+        });
       }
       return true;
     };
