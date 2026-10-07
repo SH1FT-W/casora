@@ -3624,7 +3624,12 @@ const softLook = () => {
 const casoraLookTheme = () => ACCENT_THEME === CASORA_THEME || ACCENT_THEME === "Casora Nebel";
 const accentLabel = (a) => (a.key === "purple" && casoraLookTheme() ? "Dark red" : a.label);
 // Die Farben zur Auswahl: „Lila“ (violet) nur im Casora-Look – Hemma 1/2 haben ihr Lila schon (purple).
-const accentsShown = () => CASORA_ACCENTS.filter((a) => !a.soft || casoraLookTheme());
+// Im Casora-Look (Weich/Nebel) sind Bernstein, Eis und Gold Zwillinge von Orange, Blau und Gelb
+// (theme_weich.yaml: keine Zusatzfarben) – dort nicht zur Wahl. keep: der gespeicherte Wert bleibt
+// sichtbar (und angehakt), auch wenn er ein Zwilling ist; gemalt wird er ohnehin wie bisher.
+const ACCENT_TWINS = ["amber", "ice", "gold"];
+const accentsShown = (keep) => CASORA_ACCENTS.filter((a) => (!a.soft || casoraLookTheme())
+  && (!casoraLookTheme() || ACCENT_TWINS.indexOf(a.key) < 0 || (keep && a.id === keep)));
 const swatchOf = (v) => {
   const raw = String(v || "").trim();
   if (!raw) return null;
@@ -23991,7 +23996,7 @@ class CasoraPanel extends HTMLElement {
       pick.onclick = () => {
         const cur = map()[sc.id] || "";
         const items = [{ id: "", label: "Yellow (default)", checked: !cur }];
-        accentsShown().forEach((acc) => items.push({
+        accentsShown(cur).forEach((acc) => items.push({
           id: acc.id, label: accentLabel(acc), swatch: swatchCss(acc.id), checked: cur === acc.id,
         }));
         this._menuAt(pick, items, (id) => {
@@ -25492,7 +25497,7 @@ class CasoraPanel extends HTMLElement {
         btn.onclick = () => {
           const items = [{ id: "", label: "From the entity's domain",
                            checked: !tile.variables || !tile.variables[f.key] }];
-          accentsShown().forEach((a) => items.push({
+          accentsShown(cur2).forEach((a) => items.push({
             id: a.id, label: accentLabel(a), swatch: swatchCss(a.id), group: "Casora",
             checked: cur2 === a.id,
           }));

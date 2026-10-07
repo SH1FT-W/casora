@@ -262,7 +262,7 @@
         b.onclick = () => {
           const items = [];
           if (cur && !known(cur)) items.push({ id: cur, label: "Custom color", swatch: css(cur), checked: true });
-          (P.accentsShown ? P.accentsShown() : ACC).forEach((a) => items.push({ id: a.id, label: name(a.id), swatch: css(a.id), checked: cur === a.id }));
+          (P.accentsShown ? P.accentsShown(cur) : ACC).forEach((a) => items.push({ id: a.id, label: name(a.id), swatch: css(a.id), checked: cur === a.id }));
           if (!items.length || typeof self._menuAt !== "function") return;
           self._menuAt(b, items, (id) => {
             if (!id || id === cur) return;
