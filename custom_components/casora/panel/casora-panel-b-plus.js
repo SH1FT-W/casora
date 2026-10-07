@@ -128,6 +128,12 @@
 
   // Schlösser und Ventile nicht von selbst in eine Szene: eine Abend-Szene soll keine Tür öffnen.
   const checkedByDefault = (id) => !/^(lock|valve)\./.test(id);
+  // Vorauswahl: nur die Lichter des Raums (Nutzertest: 14 Geräte mit Heizung und Jalousien
+  // angehakt). Ohne Licht im Raum wie bisher alles außer Schlössern/Ventilen.
+  const defaultChecked = (ids) => {
+    const lights = (ids || []).filter((id) => /^light\./.test(id));
+    return lights.length ? lights : (ids || []).filter(checkedByDefault);
+  };
 
   // Konfiguration wie HAs Szenen-Editor sie schreibt (POST config/scene/config/<id>).
   function buildScene(name, ids, states, opts) {
@@ -139,7 +145,7 @@
     return cfg;
   }
 
-  W.casoraSceneFromState = { sceneState, describe, areaEntities, buildScene, checkedByDefault };
+  W.casoraSceneFromState = { sceneState, describe, areaEntities, buildScene, checkedByDefault, defaultChecked };
   if (typeof customElements === "undefined") return;
 
   const ICON = {
@@ -287,7 +293,12 @@
     .bsfs .bslisthead button { border:0; background:none; color:var(--casora-studio-done, var(--accent, #B67A50)); font:inherit; font-weight:650; cursor:pointer; padding:4px; }
     .bsfs .bslist { overflow-y:auto; padding:0 14px 6px; min-height:80px; }
     .bsfs .bsrow { display:flex; align-items:center; gap:12px; min-height:52px; padding:4px 8px; border-radius:12px; cursor:pointer; }
-    .bsfs .bsrow + .bsrow { box-shadow:inset 0 1px 0 var(--hair, rgba(127,127,127,.16)); }
+    .bsfs .bsrowwrap + .bsrowwrap { box-shadow:inset 0 1px 0 var(--hair, rgba(127,127,127,.16)); }
+    .bsfs .bsctl { display:grid; grid-template-columns:1fr 1fr; gap:4px 14px; padding:0 8px 8px 72px; }
+    .bsfs .bsslide { display:grid; gap:2px; font-size:12px; color:var(--ink-2, inherit); min-width:0; }
+    .bsfs .bsslide input { width:100%; margin:0; accent-color:var(--casora-studio-done, var(--accent, #B67A50)); }
+    .bsfs .bsslide.ct input { accent-color:#E9B26A; }
+    @media (max-width: 520px) { .bsfs .bsctl { grid-template-columns:1fr; padding-left:44px; } }
     .bsfs .bsrow:hover { background:var(--chip, rgba(127,127,127,.08)); }
     .bsfs .bsrow input { width:20px; height:20px; flex:none; margin:0; accent-color:var(--casora-studio-done, var(--accent, #B67A50)); }
     .bsfs .bsrow ha-icon { --mdc-icon-size:22px; flex:none; color:var(--ink-3, rgba(127,127,127,.9)); }
@@ -966,6 +977,49 @@
       el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: "ease" }).finished.then(done, done);
     };
 
+    // Kleine Regler je Licht im Szenen-Dialog: Helligkeit (0 % = aus) und, wenn möglich, Lichtfarbe
+    // warm–kalt. Schaltet das echte Licht sofort; die Zeile zeigt danach den neuen Zustand.
+    const lightControls = (self, id, after) => {
+      const so = (self._hass.states || {})[id];
+      const a = (so && so.attributes) || {};
+      const modes = a.supported_color_modes || [];
+      const dim = modes.some((m) => m !== "onoff");
+      const ct = modes.indexOf("color_temp") >= 0 && a.min_color_temp_kelvin && a.max_color_temp_kelvin;
+      if (!dim && !ct) return null;
+      const box = document.createElement("div");
+      box.className = "bsctl";
+      let t = null;
+      const send = (svc, data) => {
+        clearTimeout(t);
+        t = setTimeout(async () => {
+          try { await self._hass.callService("light", svc, { entity_id: id, ...data }); } catch (e) { console.warn("Casora Studio:", e); }
+          setTimeout(after, 500);
+        }, 180);
+      };
+      const slider = (label, cls, min, max, val, onset) => {
+        const l = document.createElement("label");
+        l.className = "bsslide " + cls;
+        const sp = document.createElement("span");
+        sp.textContent = label;
+        const r = document.createElement("input");
+        r.type = "range"; r.min = min; r.max = max; r.step = 1; r.value = val;
+        r.setAttribute("aria-label", label + " · " + ((a.friendly_name) || id));
+        r.oninput = () => onset(+r.value);
+        l.appendChild(sp); l.appendChild(r);
+        box.appendChild(l);
+        return r;
+      };
+      if (dim) {
+        const pct = so.state === "on" ? Math.max(1, Math.round(((a.brightness || 0) / 255) * 100)) : 0;
+        slider(tr("Brightness"), "bri", 0, 100, pct, (v) => send(v ? "turn_on" : "turn_off", v ? { brightness_pct: v } : {}));
+      }
+      if (ct) {
+        const k = a.color_temp_kelvin || Math.round((a.min_color_temp_kelvin + a.max_color_temp_kelvin) / 2);
+        slider(tr("Warm – cool"), "ct", a.min_color_temp_kelvin, a.max_color_temp_kelvin, k, (v) => send("turn_on", { color_temp_kelvin: v }));
+      }
+      return box;
+    };
+
     P._bSceneFromState = function () {
       const H = this._hass;
       if (!H || !(H.user && H.user.is_admin)) return;
@@ -1014,9 +1068,9 @@
         $(".bsgo").disabled = !n || !$(".bsin").value.trim();
       };
       const paintList = () => {
-        const S = H.states || {};
+        const S = (this._hass && this._hass.states) || H.states || {};
         const ids = SF.areaEntities(H, sel.value);
-        checked = new Set(ids.filter(SF.checkedByDefault));
+        checked = new Set(SF.defaultChecked(ids));
         list.innerHTML = "";
         if (!ids.length) {
           const e = document.createElement("div");
@@ -1027,6 +1081,8 @@
         ids.forEach((id) => {
           const so = S[id];
           const d = id.split(".")[0];
+          const wrapRow = document.createElement("div");
+          wrapRow.className = "bsrowwrap";
           const row = document.createElement("label");
           row.className = "bsrow";
           const lit = /^(on|open|playing|heat|cool|auto|heat_cool)$/.test(String(so.state));
@@ -1047,7 +1103,20 @@
           s.textContent = SF.describe(so, tr, lang, unit);
           nm.appendChild(b); nm.appendChild(s);
           row.appendChild(cb); row.appendChild(ic); row.appendChild(nm);
-          list.appendChild(row);
+          wrapRow.appendChild(row);
+          // Licht gleich hier einstellen (Nutzertest: zum Dimmen musste man aus dem Studio raus).
+          if (d === "light") {
+            const ctl = lightControls(this, id, () => {
+              const now = (this._hass.states || {})[id];
+              if (!now) return;
+              s.textContent = SF.describe(now, tr, lang, unit);
+              row.classList.toggle("lit", now.state === "on");
+              // Wer ein Licht einstellt, will es in der Szene haben.
+              if (!cb.checked) { cb.checked = true; checked.add(id); paintCount(); }
+            });
+            if (ctl) wrapRow.appendChild(ctl);
+          }
+          list.appendChild(wrapRow);
         });
         paintCount();
       };
@@ -1095,11 +1164,18 @@
         return Object.keys(S).find((id) => id.startsWith("scene.") && R[id] && String((S[id].attributes || {}).id) === cfg.id) || null;
       };
       let id = find();
-      for (let k = 0; !id && k < 40; k++) { await new Promise((r) => setTimeout(r, 200)); id = find(); }
+      for (let k = 0; !id && k < 60; k++) { await new Promise((r) => setTimeout(r, 200)); id = find(); }
       const undo = { label: tr("Undo"), run: async () => {
         try { await this._hass.callApi("DELETE", "config/scene/config/" + cfg.id); this._bToast(tr("Scene deleted")); } catch (e) { /* bleibt */ }
         if (this._state) this._renderForm();
       } };
+      if (!id) {
+        // HAs Szenen-API schreibt nach scenes.yaml und lädt neu – ohne „scene: !include scenes.yaml“
+        // in configuration.yaml kommt die Szene nie an. Bisher meldete das Studio trotzdem „gespeichert“.
+        this._bToast(tr("Home Assistant did not load the scene"), { kind: "err",
+          sub: tr("It is in scenes.yaml, but configuration.yaml has no line “scene: !include scenes.yaml”. Add that line, restart Home Assistant, and the scene appears.") });
+        return;
+      }
       this._bToast(tr("Scene saved") + ": " + cfg.name, { action: undo, sub: tr("Saved in Home Assistant. Pick a color now.") });
       if (!id || !this._state) return;
       // Eigene Reihenfolge oder ausgeblendete Szenen: die neue gehört sichtbar dazu.

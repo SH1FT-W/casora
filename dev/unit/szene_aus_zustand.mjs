@@ -89,4 +89,11 @@ assert.deepEqual(cfg, {
 });
 assert.match(S.buildScene('X', [], {}).id, /^\d{10,}$/);
 
+// Nutzertest 2 (T2): Vorauswahl nur Lichter; ohne Licht wie bisher (ohne Schloss/Ventil).
+assert.deepEqual(S.defaultChecked(['light.a', 'cover.j', 'climate.h', 'light.b']), ['light.a', 'light.b']);
+assert.deepEqual(S.defaultChecked(['cover.j', 'lock.t', 'media_player.m']), ['cover.j', 'media_player.m']);
+// Licht im Dialog einstellbar (Regler), und ohne „scene: !include scenes.yaml“ eine klare Meldung statt „gespeichert“.
+assert.ok(src.includes('const lightControls = (self, id, after) =>') && src.includes('brightness_pct: v') && src.includes('color_temp_kelvin: v'), 'Regler im Dialog');
+assert.ok(/if \(!id\) \{[\s\S]{0,400}tr\("Home Assistant did not load the scene"\)[\s\S]{0,80}kind: "err"/.test(src), 'Fehlermeldung ohne geladene Szene');
+
 console.log('ok szene_aus_zustand');
