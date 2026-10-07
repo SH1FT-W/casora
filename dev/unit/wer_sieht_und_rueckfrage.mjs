@@ -12,7 +12,7 @@ const read = (p) => fs.readFileSync(new URL('../../custom_components/casora/' + 
 const src = read('panel/casora-panel.js');
 const grab = (name) => { const i = src.indexOf('function ' + name + '('); assert.ok(i >= 0, name); return src.slice(i, src.indexOf('\n}', i) + 2); };
 const clone = (x) => (x === undefined ? undefined : JSON.parse(JSON.stringify(x)));
-const expand = new Function('clone', [grab('roomVisibility'), grab('entityUsers'), grab('confirmEntities'), grab('expandConfig'), 'return expandConfig;'].join('\n'))(clone);
+const expand = new Function('clone', [grab('roomVisibility'), grab('entityUsers'), grab('confirmEntities'), grab('confirmNames'), grab('expandConfig'), 'return expandConfig;'].join('\n'))(clone);
 const lockTile = { type: 'custom:button-card', template: 'casora_lock', entity: 'lock.tuer', visibility: [{ condition: 'user', users: ['admin'] }] };
 const pump = { type: 'custom:button-card', template: 'casora_switch', entity: 'switch.pumpe', variables: { confirm_toggle: true } };
 const rooms = [{ path: 'flur', name: 'Flur', variables: { security_lock_entity: 'lock.tuer' }, tiles: [lockTile, pump], _hero: { template: 'casora_room' }, _row: {}, _view: {} },
@@ -25,7 +25,7 @@ for (const v of out.views) {
 assert.equal(rooms[0].variables.casora_entity_users, undefined, 'nicht im Studio-Stand');
 const plain = expand({ rooms: [{ ...rooms[1] }] }, { view_type: 'panel', layout: {}, nav: {} }, {}, null);
 assert.ok(!('casora_entity_users' in plain.views[0].cards[0].variables) && !('casora_confirm_entities' in plain.views[0].cards[0].variables), 'ohne Grund nichts');
-assert.ok(src.includes('omit(clone(hero.variables) || {}, ["casora_entity_users", "casora_confirm_entities"])'), 'beim Laden wieder entfernt');
+assert.ok(src.includes('omit(clone(hero.variables) || {}, ["casora_entity_users", "casora_confirm_entities", "casora_confirm_names"])'), 'beim Laden wieder entfernt');
 
 // ── casora-core: casoraSeesEntity, casoraHasSec, Rückfrage im Popup ───────────────
 const core = read('scripts/casora-core.js');

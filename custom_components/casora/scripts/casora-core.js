@@ -32,6 +32,9 @@
     // Entitäten mit „Vor dem Schalten fragen“ (Rückfrage auch im Popup, unten).
     var c = vars.casora_confirm_entities;
     if (Array.isArray(c)) window.__casoraConfirmIds = c; else if (room) window.__casoraConfirmIds = [];
+    // Eigene Kachelnamen dazu: der Dialog im Popup nennt die Kachel, nicht das Gerät.
+    var cn = vars.casora_confirm_names;
+    if (cn && typeof cn === 'object') window.__casoraConfirmNames = cn; else if (room) window.__casoraConfirmNames = {};
     return entityUsers;
   };
   window.casoraSeesEntity = function (id, user, vars) {
@@ -85,7 +88,11 @@
     var tgt = act.target || act.data || act.service_data || {};
     var id = [].concat(tgt.entity_id || act.entity || cfg.entity || [])[0] || '';
     var st = states[id];
-    var name = (cfg.name && typeof cfg.name === 'string' && cfg.name.indexOf('[[[') < 0 && cfg.name)
+    // Kachelname vor Gerätename (note4 Frage 4): eigener Name der Kachel, sonst der Name der Kachel
+    // mit Rückfrage für diese Entität (casora_confirm_names – Popup-Schalter), sonst das Gerät.
+    var names = window.__casoraConfirmNames || {};
+    var own = cfg.name && typeof cfg.name === 'string' && cfg.name.indexOf('[[[') < 0 && cfg.name;
+    var name = (cfg.__byId ? (typeof names[id] === 'string' && names[id]) || own : own || (typeof names[id] === 'string' && names[id]))
       || (st && st.attributes && st.attributes.friendly_name) || id;
     var svc = String(act.perform_action || act.service || '');
     var s = st ? String(st.state) : '';
@@ -188,11 +195,11 @@
     var act = switching(d);
     if (!act) return;
     var owner = asksFirst(ev);
-    if (!owner && window.casoraAsksFirst(entityOf(act, d.config || {}))) owner = { entity: entityOf(act, d.config || {}) };
+    if (!owner && window.casoraAsksFirst(entityOf(act, d.config || {}))) owner = { entity: entityOf(act, d.config || {}), __byId: true };
     if (!owner) return;
     ev.stopImmediatePropagation();
     var target = (ev.composedPath && ev.composedPath()[0]) || ev.target;
-    ask(word(act, Object.assign({}, owner, d.config || {}))).then(function (ok) {
+    ask(word(act, Object.assign({}, owner, d.config || {}, owner.__byId ? { __byId: true } : {}))).then(function (ok) {
       if (!ok || !target) return;
       var again = new CustomEvent('hass-action', { detail: d, bubbles: true, composed: true });
       if (passed) passed.add(again);

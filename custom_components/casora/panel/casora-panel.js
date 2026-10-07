@@ -219,7 +219,7 @@ function extractConfig(lovelace) {
       title: v.title,
       path: v.path,
       name: hero.name,
-      variables: omit(clone(hero.variables) || {}, ["casora_entity_users", "casora_confirm_entities"]),
+      variables: omit(clone(hero.variables) || {}, ["casora_entity_users", "casora_confirm_entities", "casora_confirm_names"]),
       tiles: hostBareTiles(clone(row.cards) || []),
       _hero: omit(hero, ["name", "variables"]),
       _row: omit(row, ["cards"]),
@@ -283,14 +283,31 @@ function confirmEntities(rooms) {
   return Array.from(out).sort();
 }
 
+// Eigener Kachelname je Entität mit Rückfrage (note4 Frage 4): Der Dialog im Popup nennt dann
+// „Garage“ wie die Kachel statt des Gerätenamens. Nur feste Namen (keine [[[ … ]]]-Ausdrücke).
+function confirmNames(rooms) {
+  const out = {};
+  (rooms || []).forEach((r) => (r.tiles || []).forEach((t) => {
+    const inner = (t && t.type === "conditional" && t.card) || t || {};
+    const v = inner.variables || {};
+    const name = typeof inner.name === "string" ? inner.name.trim() : "";
+    if (v.confirm_toggle !== true || !name || name.indexOf("[[[") >= 0) return;
+    [inner.entity || (t && t.entity), v.cover_entity].forEach((x) => { if (typeof x === "string" && x && !out[x]) out[x] = name; });
+  }));
+  return out;
+}
+
 function expandConfig(compact, scaffold, extras, templates) {
   const eu = entityUsers(compact.rooms);
   const euOn = Object.keys(eu).length > 0;
   const ce = confirmEntities(compact.rooms);
+  const cn = confirmNames(compact.rooms);
+  const cnOn = ce.length > 0 && Object.keys(cn).length > 0;
   const heroVars = (room) => {
     const v = clone(room.variables);
     if (!euOn && !ce.length) return v;
-    return { ...(v || {}), ...(euOn ? { casora_entity_users: clone(eu) } : {}), ...(ce.length ? { casora_confirm_entities: ce.slice() } : {}) };
+    return { ...(v || {}), ...(euOn ? { casora_entity_users: clone(eu) } : {}), ...(ce.length ? { casora_confirm_entities: ce.slice() } : {}),
+      ...(cnOn ? { casora_confirm_names: clone(cn) } : {}) };
   };
   const views = (compact.rooms || []).map((room) => ({
     type: scaffold.view_type,
@@ -25616,7 +25633,7 @@ class CasoraPanel extends HTMLElement {
 // Casora: Bausteine des Panels für Casora-Erweiterungen (Import-Assistent, Geräte-Assistent).
 window.__casoraPanelInternals = {
   blankRoom, roomPhoto, slug, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
-  applyScenePick, confirmEntities, entityUsers, wrapCustomCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
+  applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
   findType, tileTypeAny, newTile, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
