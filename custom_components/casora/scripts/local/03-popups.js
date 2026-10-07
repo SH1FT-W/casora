@@ -2983,9 +2983,11 @@
     + '.lps-s i{font-style:normal;opacity:.6;}'
     /* Trennpunkt an einem Zeilenumbruch: ausgeblendet, dort steht ein Umbruch (_casoraSepScan). */
     + '.lps-s .hui-cut{display:none!important;}'
-    + '.lps-off{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:8px 16px 8px 13px;border-radius:999px;cursor:pointer;'
+    + '.lps-off{position:relative;display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:8px 16px 8px 13px;border-radius:999px;cursor:pointer;'
     +   'font-size:14px;font-weight:600;white-space:nowrap;background:var(--casora-lps-chip);color:var(--casora-lps-chip-ink);'
     +   'transition:background .2s ease,opacity .2s ease;-webkit-tap-highlight-color:transparent;}'
+    // Trefferfläche 44 px wie bei den Chips: unsichtbarer Rand nach oben/unten (sichtbar 33 hoch).
+    + '.lps-off::before{content:"";position:absolute;left:0;right:0;top:-6px;bottom:-6px;}'
     + '.lps-off .lps-g{width:17px;height:17px;}'
     + '.lps-off.dis{opacity:.45;cursor:default;}'
     + '@media (hover:hover){.lps-off:not(.dis):hover{filter:brightness(.98);}}'
