@@ -154,6 +154,8 @@
     .advsum .uxsum { margin-left:auto; padding-left:10px; min-width:0; max-width:62%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
       font-weight:500; color:var(--ink-3, var(--ink-2, rgba(127,127,127,.9))); text-align:right; }
     .adv.open .advsum .uxsum { display:none; }
+    /* „Sichtbarkeit & Rückfrage“ bleibt einzeilig; die Zusammenfassung daneben kürzt sich. */
+    .adv.uxvis .advsum > span:not(.uxsum) { white-space:nowrap; flex:none; }
     .tile > .tbody > .adv.uxvis .advbody > .subcard { margin:0 0 10px; padding:0; background:none; box-shadow:none; }
     .tile > .tbody > .adv.uxvis .advbody > .row:first-child { padding-top:2px; }
     /* Sichtbar & sicher: Satz oben in der Gruppe, Auge an eingeschränkten Kacheln */
@@ -185,6 +187,17 @@
     :host(.bmode.uxs1) #msearch .mlab, :host(.bmode.uxs1) #msearch .mkb { display:none; }
     :host(.bmode.uxs1) #msearch { padding:0; width:34px; justify-content:center; }
     :host(.bmode.uxs2) .btool[data-b="home"] .blabel, :host(.bmode.uxs2) .btool[data-b="rooms"] .blabel { display:none; }
+    /* Stufe 3 (Tablet, Nutzertest 3): Symbol mit kleiner Beschriftung darunter statt nur Symbol –
+       Raum, Inhalt, Dashboard und Einstellungen waren sonst nicht zu unterscheiden. */
+    :host(.bmode.uxs3:not(.phone)) .btools .btool:not(.broom):not(.uxplus) { flex-direction:column; justify-content:center; gap:1px;
+      height:40px; padding:0 3px; }
+    :host(.bmode.uxs3:not(.phone)) .btools { gap:2px; }
+    :host(.bmode.uxs3:not(.phone)) .btools .btool[data-b="dash"], :host(.bmode.uxs3:not(.phone)) .btools .btool[data-b="home"] { margin-left:7px; }
+    :host(.bmode.uxs3:not(.phone)) .btools .btool[data-b="dash"]::before, :host(.bmode.uxs3:not(.phone)) .btools .btool[data-b="home"]::before { left:-4px; }
+    :host(.bmode.uxs3:not(.phone)) .btools .btool.uxplus { display:none; }
+    :host(.bmode.uxs3:not(.phone)) .btools .btool:not(.broom):not(.uxplus) svg { width:16px; height:16px; }
+    :host(.bmode.uxs3:not(.phone)) .btools .btool:not(.broom):not(.uxplus) .blabel { display:block !important; font-size:10px; line-height:1.1; letter-spacing:-.01em;
+      font-weight:600; max-width:84px; }
     /* Ganz eng: das „+“ der Leiste weicht (Platz „Kachel hinzufügen“ in der Vorschau bleibt). */
     :host(.bmode.btight) .btools .btool.uxplus { display:none; }
     /* Als Nächstes (nach der Einführung) */
@@ -689,10 +702,11 @@
     };
 
     // Gerät gewählt: Kachelart steht fest; liegt das Gerät in einem anderen Raum, kurz fragen wohin.
-    P._uxAddDevice = async function (c) {
+    // o.direct (aus der Suche ⌘K): ohne Rückfrage in den Raum des Geräts, sonst in den offenen Raum.
+    P._uxAddDevice = async function (c, o) {
       const rooms = rooms$(this);
       let ri = this._room;
-      if (c.roomIndex >= 0 && c.roomIndex !== ri) {
+      if (o && o.direct) { if (c.roomIndex >= 0) ri = c.roomIndex; } else if (c.roomIndex >= 0 && c.roomIndex !== ri) {
         const res = await this._ask({
           title: tr("Where should the tile go?"),
           picks: [
@@ -804,6 +818,8 @@
       if (have) {
         const late = body.querySelector(":scope > .subcard.mgroup");
         if (late) have.querySelector(".advbody").appendChild(late);
+        const lab = have.querySelector(".advsum > span");
+        if (lab && [...have.querySelectorAll(".advbody label, .advbody .lab")].some((l) => /Ask before switching|Vor dem Schalten fragen/.test(l.textContent || ""))) lab.textContent = tr("Visibility & ask first");
         const v = have.querySelector(".uxsum");
         if (v) v.textContent = this._uxVisSummary(shell);
         return;
@@ -820,7 +836,9 @@
       }
       if (mg) move.push(mg);
       if (!move.length) return;
-      const det = this._uxFold("vis", "Visibility", move, "uxvis");
+      // Mit „Vor dem Schalten fragen“ sagt der Titel das (Nutzertest 3: unter „Sichtbarkeit“ nicht vermutet).
+      const asks = !!(mg && [...mg.querySelectorAll("label, .lab")].some((l) => /Ask before switching|Vor dem Schalten fragen/.test(l.textContent || "")));
+      const det = this._uxFold("vis", asks ? "Visibility & ask first" : "Visibility", move, "uxvis");
       // Vor „Popup“ (erste vorhandene Aufklapp-Gruppe), sonst ans Ende.
       const adv = body.querySelector(":scope > .adv");
       if (adv) adv.before(det); else body.appendChild(det);
@@ -980,7 +998,12 @@
           const me = this._hass.user.id;
           const items = [{ id: "", label: tr("Me (everything)"), checked: !this._uxAs }]
             .concat(users.filter((u) => u.id !== me).map((u) => ({ id: u.id, label: u.name, checked: this._uxAs === u.id })));
-          this._menuAt(chip, items, (id) => { this._uxAs = id || null; this._uxPaintAs(); });
+          this._menuAt(chip, items, (id) => {
+            this._uxAs = id || null;
+            // Badge-Texte (z. B. „1 Schloss“) neu zählen – nur, was dieser Mensch sieht.
+            if (this._rebuildPreview) this._rebuildPreview();
+            this._uxPaintAs();
+          });
         };
         const hid = row.querySelector(".bhid");
         if (hid) hid.before(chip); else row.appendChild(chip);
@@ -1090,7 +1113,8 @@
 
     // ── Tablet: Beschriftungen nach Platz (V-13) ───────────────────────────
     // Wie _bFitTools (casora-panel-b.js) gemessen, aber in Stufen: 1 = Suche nur als Lupe,
-    // 2 = dazu Raum und Einstellungen nur als Symbol, 3 = alle nur als Symbol (btight).
+    // 2 = dazu Raum und Einstellungen nur als Symbol, 3 = alle als Symbol mit kleiner Beschriftung
+    // darunter, 4 = alle nur als Symbol (btight).
     P._uxTight = function () {
       const tools = this.shadowRoot.querySelector(".btools");
       const row = tools && tools.parentElement;
@@ -1104,15 +1128,15 @@
         || !!(lab && lab.scrollWidth > lab.clientWidth + 1) || !!(pill && pill.getBoundingClientRect().left < tr0.right + 20);
     };
     wrap("_bFitTools", (orig) => function () {
-      this.classList.remove("uxs1", "uxs2");
+      this.classList.remove("uxs1", "uxs2", "uxs3");
       const r = orig.apply(this, arguments);
       if (!this.classList.contains("btight") || this.classList.contains("phone")) return r;
-      for (const st of [["uxs1"], ["uxs1", "uxs2"]]) {
-        this.classList.remove("btight");
+      for (const st of [["uxs1"], ["uxs1", "uxs2"], ["uxs1", "uxs3"]]) {
+        this.classList.remove("btight", "uxs2", "uxs3");
         this.classList.add(...st);
         if (!this._uxTight()) return r;
       }
-      this.classList.remove("uxs1", "uxs2");
+      this.classList.remove("uxs1", "uxs2", "uxs3");
       this.classList.add("btight");
       return r;
     });

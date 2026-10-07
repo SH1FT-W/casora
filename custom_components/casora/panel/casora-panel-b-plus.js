@@ -284,6 +284,12 @@
     .bsfs h2 { margin:0 0 6px; font-size:20px; font-weight:700; letter-spacing:-.01em; }
     .bsfs .bslede { margin:0; font-size:var(--t-foot, 14px); line-height:1.45; color:var(--ink-2, inherit); }
     .bsfs .bsform { padding:8px 22px 0; display:grid; gap:10px; }
+    .bsfs .bspair { display:grid; grid-template-columns:1fr 1fr; gap:10px; min-width:0; }
+    .bsfs .bspair > * { min-width:0; }
+    .bsfs .bscolwrap { position:relative; display:block; }
+    .bsfs .bscolwrap .bsdot { position:absolute; left:12px; top:50%; width:14px; height:14px; margin-top:-7px; border-radius:50%; pointer-events:none;
+      box-shadow:inset 0 0 0 1px rgba(0,0,0,.12); }
+    .bsfs .bscolwrap select { padding-left:34px; }
     .bsfs label.bsl { display:grid; gap:5px; font-size:13px; font-weight:600; color:var(--ink-2, inherit); }
     .bsfs input[type=text], .bsfs select { box-sizing:border-box; width:100%; height:44px; padding:0 12px; border-radius:12px;
       border:0; background:var(--field, rgba(127,127,127,.12)); color:inherit; font:inherit; font-size:16px; }
@@ -1032,7 +1038,14 @@
       const A = H.areas || {};
       const areaIds = Object.keys(A).sort((x, y) => String(A[x].name || x).localeCompare(String(A[y].name || y)));
       let area = (room && this._roomArea && this._roomArea(room)) || "";
-      if (!A[area]) area = areaIds.find((a) => SF.areaEntities(H, a).length) || areaIds[0] || "";
+      // Ohne eigenen Bereich (z. B. „Zuhause“): wo gerade Licht brennt, sonst der erste Bereich mit Geräten
+      // (Nutzertest: stand immer auf „Badezimmer“ – alphabetisch der erste).
+      if (!A[area]) {
+        const S0 = H.states || {};
+        const lit = (a) => SF.areaEntities(H, a).filter((id) => /^light\./.test(id) && (S0[id] || {}).state === "on").length;
+        const best = areaIds.map((a) => [a, lit(a)]).filter((x) => x[1] > 0).sort((x, y) => y[1] - x[1])[0];
+        area = (best && best[0]) || areaIds.find((a) => SF.areaEntities(H, a).length) || areaIds[0] || "";
+      }
       const lang = (H.locale && H.locale.language) || H.language || "en";
       const unit = (H.config && H.config.unit_system && H.config.unit_system.temperature) || "°C";
       const el = document.createElement("div");
@@ -1040,7 +1053,8 @@
       el.innerHTML = '<div class="bsscrim"></div><div class="bscard" role="dialog" aria-modal="true">'
         + '<div class="bshead"><h2></h2><p class="bslede"></p></div>'
         + '<div class="bsform"><label class="bsl"><span class="bslname"></span><input type="text" class="bsin" autocomplete="off" maxlength="60"></label>'
-        + '<label class="bsl"><span class="bslroom"></span><select class="bsroom"></select></label></div>'
+        + '<div class="bspair"><label class="bsl"><span class="bslroom"></span><select class="bsroom"></select></label>'
+        + '<label class="bsl"><span class="bslcol"></span><span class="bscolwrap"><span class="bsdot"></span><select class="bscol"></select></span></label></div></div>'
         + '<div class="bslisthead"><span class="bslcount" data-no-i18n></span><button type="button" class="bsall"></button></div>'
         + '<div class="bslist" role="group"></div><div class="bserr" hidden></div>'
         + '<div class="bsfoot"><button type="button" class="bsno"></button><button type="button" class="bsgo" disabled></button></div></div>';
@@ -1053,6 +1067,16 @@
       $(".bslroom").textContent = tr("Room");
       $(".bsno").textContent = tr("Cancel");
       $(".bsgo").textContent = tr("Save scene");
+      // Farbe gleich hier (Nutzertest: gab es nur nachträglich unter Dashboard › Szenen).
+      $(".bslcol").textContent = tr("Color");
+      const PI = W.__casoraPanelInternals || {};
+      const col = $(".bscol");
+      col.setAttribute("data-no-i18n", "");
+      [{ id: "", label: tr("Standard") }].concat((PI.CASORA_ACCENTS || []).map((a) => ({ id: a.id, label: tr(PI.accentLabel ? PI.accentLabel(a) : a.label) })))
+        .forEach((x) => { const o = document.createElement("option"); o.value = x.id; o.textContent = x.label; col.appendChild(o); });
+      const paintCol = () => { $(".bsdot").style.background = (PI.swatchCss && PI.swatchCss(col.value || "var(--casora-color-yellow, #FFCC00)")) || "#FFCC00"; };
+      col.onchange = paintCol;
+      paintCol();
       const sel = $(".bsroom");
       areaIds.forEach((a) => { const o = document.createElement("option"); o.value = a; o.textContent = A[a].name || a; sel.appendChild(o); });
       sel.value = area;
@@ -1149,7 +1173,9 @@
           return;
         }
         this._bSceneClose();
-        this._bSceneCreated(cfg);
+        // Gleich eine Rückmeldung – HA braucht einen Moment, bis die Szene geladen ist.
+        this._bToast(tr("Scene saved") + ": " + cfg.name, { sub: tr("Home Assistant is loading it…") });
+        this._bSceneCreated(cfg, col.value);
       };
       root.appendChild(el);
       this._bSceneKey = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); this._bSceneClose(); } };
@@ -1159,7 +1185,8 @@
     };
 
     // Neue Szene: warten, bis HA sie geladen hat, dann in der Liste zeigen und die Farbe wählen lassen.
-    P._bSceneCreated = async function (cfg) {
+    // color: im Dialog gewählte Farbe (leer = Standard); dann öffnet die Farbwahl nicht noch einmal.
+    P._bSceneCreated = async function (cfg, color) {
       const find = () => {
         const S = (this._hass && this._hass.states) || {}, R = (this._hass && this._hass.entities) || {};
         return Object.keys(S).find((id) => id.startsWith("scene.") && R[id] && String((S[id].attributes || {}).id) === cfg.id) || null;
@@ -1177,7 +1204,7 @@
           sub: tr("It is in scenes.yaml, but configuration.yaml has no line “scene: !include scenes.yaml”. Add that line, restart Home Assistant, and the scene appears.") });
         return;
       }
-      this._bToast(tr("Scene saved") + ": " + cfg.name, { action: undo, sub: tr("Saved in Home Assistant. Pick a color now.") });
+      this._bToast(tr("Scene saved") + ": " + cfg.name, { action: undo, sub: tr(color ? "Saved in Home Assistant." : "Saved in Home Assistant. Pick a color now.") });
       if (!id || !this._state) return;
       // Eigene Reihenfolge oder ausgeblendete Szenen: die neue gehört sichtbar dazu.
       const rooms = this._state.compact.rooms;
@@ -1188,6 +1215,11 @@
         if (Array.isArray(rv.scene_exclude) && rv.scene_exclude.indexOf(id) >= 0) { rv.scene_exclude = rv.scene_exclude.filter((x) => x !== id); touched = true; }
         if (Array.isArray(rv.scenes) && rv.scenes.length && rv.scenes.indexOf(id) < 0) { rv.scenes = rv.scenes.concat([id]); touched = true; }
       });
+      if (color) {
+        const next = { ...((rooms[0] && rooms[0].variables && rooms[0].variables.scene_colors) || {}), [id]: color };
+        rooms.forEach((r) => { (r.variables || (r.variables = {})).scene_colors = JSON.parse(JSON.stringify(next)); });
+        touched = true;
+      }
       if (touched) { this._bQuiet = true; try { this._markDirty(); } finally { this._bQuiet = false; } }
       this._bOpen = true;
       this._select({ group: "rooms", key: "Scenes", label: "Scenes" });
@@ -1198,7 +1230,7 @@
         row.classList.add("bflash");
         setTimeout(() => row.classList.remove("bflash"), 1800);
         const pk = row.querySelector(".scpick");
-        if (pk) setTimeout(() => pk.click(), 380);
+        if (pk && !color) setTimeout(() => pk.click(), 380);
         if (this._syncPreview) this._syncPreview();
       }, 420);
     };

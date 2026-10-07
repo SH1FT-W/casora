@@ -218,8 +218,12 @@
       const h = holder();
       h.replaceChildren();
       const el = document.createElement("button-card");
+      // „Vor dem Schalten fragen“ gilt auch hier, mit dem ungespeicherten Stand (casora-core.js
+      // liest die Liste aus den Raumvariablen; sonst setzt der Raum sie auf leer zurück).
+      const ce = I().confirmEntities ? I().confirmEntities(this._state.compact.rooms) : [];
+      window.__casoraConfirmIds = ce;
       const cfg = target.kind === "tile" ? clone(target.tile)
-        : { ...clone(room._hero), name: room.name, variables: clone(room.variables) };
+        : { ...clone(room._hero), name: room.name, variables: { ...clone(room.variables), casora_confirm_entities: ce.slice() } };
       try { el.setConfig(cfg); } catch (e) { return null; }
       el.hass = this._hass;
       h.appendChild(el);

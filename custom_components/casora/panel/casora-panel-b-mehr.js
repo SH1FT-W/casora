@@ -12,6 +12,7 @@
 (() => {
   const W = typeof window !== "undefined" ? window : globalThis;
   const tr = (x) => (W.casoraI18n && W.casoraI18n.t ? W.casoraI18n.t(x) : x);
+  const fill = (s, o) => String(s).replace(/\{(\w+)\}/g, (m, k) => (o && o[k] !== undefined ? o[k] : m));
   const J = (x) => JSON.stringify(x === undefined ? null : x);
   const fold = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/ß/g, "ss");
@@ -373,7 +374,7 @@
   // ── Suche: Treffer ordnen ────────────────────────────────────────────────────────
   // items: [{kind, label, sub?, words?}] – jedes Wort der Suche muss vorkommen; vorn im
   // Namen zählt am meisten. Leere Suche: nichts (die Vorschläge wählt der Aufrufer).
-  const KIND_RANK = { action: 6, room: 5, setting: 4, tile: 3, badge: 2, scene: 1 };
+  const KIND_RANK = { action: 6, room: 5, setting: 4, tile: 3, badge: 2, scene: 1, device: 0 };
   function searchRank(items, q, max) {
     const toks = fold(q).split(/\s+/).filter(Boolean);
     if (!toks.length) return [];
@@ -458,6 +459,7 @@
     .mpop li.mline .mwhy { grid-column:1 / -1; font-size:12px; color:var(--ink-2, #8a8a8e); margin-top:2px; }
     .mpop .mback { flex:none; min-height:32px; padding:4px 12px; border:0; border-radius:999px; font:inherit; font-size:13px; font-weight:600;
       color:var(--accent, #94603B); background:var(--accent-tint, rgba(148,96,59,.12)); box-shadow:none; cursor:pointer; white-space:nowrap; }
+    .mpop li.mgone .mtxt { text-decoration:line-through; color:var(--ink-2, #8a8a8e); }
     .mpop .mback:disabled { color:var(--ink-2, #8a8a8e); background:var(--wash-fill, rgba(118,118,128,.10)); cursor:default; }
     :host(.phone) .mpop .mback { min-height:36px; }
     .mpop .mnone { color:var(--ink-2, #8a8a8e); font-size:14px; padding:6px 4px; }
@@ -572,6 +574,13 @@
     P._redo = function () {
       const snap = (this._mRedo || []).pop();
       if (!snap || !this._state) return;
+      // Nach „Zurücknehmen“ liegt derselbe Stand schon oben auf dem Rückgängig-Stapel: nicht doppelt,
+      // damit ⌘Z danach die Zeile wieder zurücknimmt.
+      if (snap === this._mTakenBack) {
+        const st = this._undoStack || [];
+        if (st[st.length - 1] === snap) this._undoStack = st.slice(0, -1);
+      }
+      this._mTakenBack = null;
       // Über den Rückgängig-Weg anwenden; der jetzige Stand kommt danach wieder auf den Stapel.
       const now = this._snap();
       this._undoStack = (this._undoStack || []).concat([snap]);
@@ -666,9 +675,11 @@
       this._bQuietUndo = true;
       try { this._undo(); } finally { this._mRedoing = false; this._bQuietUndo = false; }
       this._undoStack = (this._undoStack || []).concat([now]).slice(-50);
-      this._mRedo = [];
       this._bQuiet = true;
       try { this._markDirty(); } finally { this._bQuiet = false; }
+      // „Wiederholen“ (⇧⌘Z) holt die Zeile zurück – wie ⌘Z (Nutzertest: Knopf war ausgegraut).
+      this._mRedo = [now];
+      this._mTakenBack = now;
       this._mPaintRedo();
       this._mPaintChanges();
       if (this._bToast && text) this._bToast(tr("Taken back") + ": " + text, { ms: 2600 });
@@ -710,18 +721,39 @@
       }
       return ok;
     });
-    P._mShowChanges = function (anchor) {
+    // taken: in diesem Fenster zurückgenommene Zeilen ({at, text}). Sie bleiben als Platzhalter an
+    // ihrer Stelle stehen – nichts rutscht, „Speichern“ springt nicht unter den Mauszeiger.
+    P._mShowChanges = function (anchor, taken) {
       this._mCss();
       clearTimeout(this._bSoftT);
       if (this._bToastHide) this._bToastHide();
+      taken = taken || [];
       const items = this._mItems();
       const box = document.createElement("div");
       const h = document.createElement("h4");
       h.textContent = items.length ? countText(items.length) : tr("No unsaved changes");
       box.appendChild(h);
-      if (items.length) {
+      if (items.length || taken.length) {
         const ul = document.createElement("ul");
-        items.slice(0, 14).forEach((it, i) => {
+        const rows = items.slice(0, 14).map((it, i) => ({ it, i }));
+        taken.slice().sort((a, b) => a.at - b.at).forEach((x) => rows.splice(Math.min(x.at, rows.length), 0, { gone: x.text }));
+        rows.forEach((row, pos) => {
+          if (row.gone) {
+            const li = document.createElement("li");
+            li.className = "mline mgone";
+            const t = document.createElement("span");
+            t.className = "mtxt";
+            t.textContent = row.gone;
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "mback";
+            b.disabled = true;
+            b.textContent = tr("Taken back");
+            li.append(t, b);
+            ul.appendChild(li);
+            return;
+          }
+          const { it, i } = row;
           const li = document.createElement("li");
           li.className = "mline";
           const t = document.createElement("span");
@@ -744,8 +776,8 @@
           }
           b.onclick = () => {
             if (!this._mRevert(i)) return;
-            // Liste offen lassen und neu zeichnen: man sieht, was übrig bleibt.
-            if (this._mItems().length) this._mShowChanges(anchor); else this._mPopClose();
+            // Liste offen lassen und neu zeichnen: man sieht, was übrig bleibt (und was zurückgenommen ist).
+            this._mShowChanges(anchor, taken.concat([{ at: pos, text: it.text }]));
           };
           li.insertBefore(b, li.children[1] || null);
           ul.appendChild(li);
@@ -902,6 +934,8 @@
         way("Dashboard", "Scenes"));
       A("addroom", "Add Room…", "raum hinzufügen neu zimmer", () => this._addRoom(), true, way("Rooms"));
       A("arrange", "Arrange Rooms", "räume ordnen sortieren reihenfolge ausgeblendet einblenden", () => this._bRoomsOpen(), rooms.length > 1, way("Rooms"));
+      A("hideroom", "Hide room", "raum ausblenden verstecken verbergen vorübergehend weg", () => this._mHideRoom(this._room, true),
+        !!here && !isHome(this, here) && !(here.variables || {}).casora_hidden, here ? this._roomLabel(here) : "");
       A("qr", "Open on phone", "handy qr code smartphone öffnen teilen iphone", () => this._mQr(), !!this._dashUrl, way("Title menu"));
       A("undo", "Undo", "rückgängig zurück", () => this._undo(), !!(this._undoStack || []).length);
       A("redo", "Redo", "wiederholen vor", () => this._redo(), !!(this._mRedo || []).length);
@@ -932,6 +966,19 @@
         out.push({ kind: "tile", id: "t:" + key, label: tileName(t), sub: this._roomLabel(r), path: this._roomLabel(r) + " › " + tr("Tiles"), here: i === this._room, words: eid + " " + alias + " kachel",
           run: () => { go(i); sel({ group: "tiles", key, label: tileName(t) }); setTimeout(() => this._bFlash && this._bFlash("t:" + key), 200); } });
       }));
+      // Geräte ohne Kachel (Nutzertest: ⌘K „Stehlampe“ fand nichts): „Kachel für … hinzufügen“,
+      // in den Raum des Geräts. Nur beim Tippen sichtbar (searchRank), nie in der leeren Liste.
+      if (typeof this._uxDevices === "function" && typeof this._uxAddDevice === "function") {
+        let devs = [];
+        try { devs = this._uxDevices().filter((c) => c.fresh); } catch (e) { devs = []; }
+        devs.forEach((c) => {
+          const ri = c.roomIndex;
+          out.push({ kind: "device", id: "d:" + c.entity, label: fill(tr("Add tile for {name}"), { name: c.name }),
+            path: ri >= 0 ? fill(tr("New in {room} – no tile yet"), { room: this._roomLabel(rooms[ri]) }) : tr("Without a room – no tile yet"),
+            here: ri === this._room, words: c.name + " " + c.entity + " " + (c.area || "") + " " + (c.kind || "") + " gerät kachel hinzufügen neu",
+            run: () => { this._bOpen = true; this._uxAddDevice(c, { direct: true }); } });
+        });
+      }
       // Badges: im offenen Raum alle eingeschalteten, sonst nur eingerichtete
       rooms.forEach((r, i) => {
         const V = r.variables || {};
@@ -957,7 +1004,7 @@
         run: () => { this._bLeavePages && this._bLeavePages(); sel({ group: "rooms", key: "Scenes", label: "Scenes" }); } }));
       return out;
     };
-    const KIND = { action: "Action", room: "Room", tile: "Tile", badge: "Badge", setting: "Setting", scene: "Scene" };
+    const KIND = { action: "Action", room: "Room", tile: "Tile", badge: "Badge", setting: "Setting", scene: "Scene", device: "Device" };
     P._mSearch = function () {
       if (!this._state) return;
       this._mCss();
@@ -1136,6 +1183,14 @@
             : id === "mredo" ? this._redo()
               : id === "mchanges" ? setTimeout(() => this._mShowChanges(more), 60) : pick(id));
         }
+        // „…“: „Auf Handy öffnen“ auch hier (Nutzertest: dort zuerst gesucht, lag nur im Titelmenü).
+        const hi = items.findIndex((x) => x && x.id === "hints");
+        if (hi >= 0 && this._dashUrl && !this._flowMode && !items.some((x) => x && x.id === "mqr")) {
+          items = items.slice();
+          items.splice(hi, 0, { id: "mqr", label: "Open on phone…", icon: "qr", group: items[hi].group });
+          const pick0 = onPick;
+          onPick = (id) => (id === "mqr" ? setTimeout(() => this._mQr(), 60) : pick0(id));
+        }
         // Raummenü: ausblenden bzw. wieder einblenden; ausgeblendete Räume in der Liste gekennzeichnet.
         if (items.some((x) => x && x.id === "rename" && x.group === "This Room")) {
           const rooms = rooms$(this);
@@ -1146,6 +1201,14 @@
             const r = m && rooms[+m[1]];
             return r && (r.variables || {}).casora_hidden ? { ...x, label: x.label + " · " + tr("Hidden") } : x;
           });
+          // Ausgeblendete Räume stehen sonst unauffällig in der Liste (Nutzertest): oben ein Hinweis,
+          // der zu „Räume ordnen“ führt – dort steht an jedem „Wieder einblenden“.
+          const nHid = rooms.filter((r) => (r.variables || {}).casora_hidden).length;
+          if (nHid && typeof this._bRoomsOpen === "function") {
+            const first = items.findIndex((x) => x && /^go:/.test(x.id || ""));
+            items.splice(first >= 0 ? first : 0, 0, { id: "mhidden", label: nHid === 1 ? tr("1 room hidden ›") : fill(tr("{n} rooms hidden ›"), { n: nHid }),
+              icon: "eyeoff", group: (items[first] || {}).group || "Rooms", quiet: true });
+          }
           const at = items.findIndex((x) => x && x.id === "delete");
           const home = room && isHome(this, room);
           items.splice(at >= 0 ? at : items.length, 0, {
@@ -1153,7 +1216,8 @@
             disabled: !!home && !hidden, why: home ? tr("The overview is always shown.") : undefined,
           });
           const pick = onPick;
-          onPick = (id) => (id === "mhide" ? this._mHideRoom(this._room, !hidden) : pick(id));
+          onPick = (id) => (id === "mhide" ? this._mHideRoom(this._room, !hidden)
+            : id === "mhidden" ? setTimeout(() => this._bRoomsOpen(), 60) : pick(id));
         }
       }
       return orig.call(this, anchor, items, onPick, mopts);
@@ -1256,10 +1320,12 @@
     P._mWhoSheet = async function (cur, what, done) {
       const users = await this._mUsers();
       this._mUsersCache = users;
-      const pick = new Set(cur);
+      // Schalter = „sieht es“. Ohne Einschränkung stehen alle an – wer es nicht sehen soll, wird
+      // ausgeschaltet (Nutzertest 3: man wollte das Kind abwählen, musste aber sich selbst wählen).
+      const pick = new Set(cur.length ? cur : users.map((u) => u.id));
       const ok = await this._ask({
         title: tr("Who sees this?"),
-        message: tr(what) + " – " + tr("Pick the people who should see it. Nobody ticked means everyone. Admins always see everything here in the Studio.") + " " + tr(WHO_ONLY_HIDES),
+        message: tr(what) + " – " + tr("Switch off whoever should not see it. Everyone on means everyone. Admins always see everything here in the Studio.") + " " + tr(WHO_ONLY_HIDES),
         confirmLabel: tr("Done"),
         extend: ({ box, acts }) => {
           box.classList.add("mwhosheet");
@@ -1281,7 +1347,9 @@
         },
       });
       if (!ok) return;
-      const ids = users.map((u) => u.id).filter((id) => pick.has(id));
+      let ids = users.map((u) => u.id).filter((id) => pick.has(id));
+      // Alle an (oder niemand – das hieße „keiner“, und das kann HA hier nicht) = alle sehen es.
+      if (ids.length === users.length) ids = [];
       if (J(ids) !== J(cur)) done(ids);
     };
 
@@ -1326,7 +1394,10 @@
               if (v) { inner.variables = inner.variables || {}; inner.variables.confirm_toggle = true; }
               else if (inner.variables) { delete inner.variables.confirm_toggle; if (!Object.keys(inner.variables).length) delete inner.variables; }
               this._markDirty();
-              if (this._bToast) this._bToast(tr(v ? "The dashboard asks before switching" : "Switches right away again"), { sub: tr("Done saves it to your dashboard.") });
+              // Ausprobieren geht jetzt auch hier: das Popup unter der Vorschau fragt ebenfalls (Nutzertest 3).
+              const tryIt = v && !isPhone(this) && typeof this._cpOpen === "function";
+              if (this._bToast) this._bToast(tr(v ? "The dashboard asks before switching" : "Switches right away again"),
+                { sub: tr(tryIt ? "Try it with “Show Popup” below the preview. Done saves it." : "Done saves it to your dashboard.") });
             }, tr("Ask before switching"));
             r.append(l, sw);
             const h = document.createElement("div");

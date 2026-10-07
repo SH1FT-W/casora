@@ -1,6 +1,17 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "Try it with “Show Popup” below the preview. Done saves it.": "Ausprobieren: „Popup anzeigen“ unter der Vorschau. „Fertig“ speichert es.",
+    "Switch off whoever should not see it. Everyone on means everyone. Admins always see everything here in the Studio.": "Schalte aus, wer es nicht sehen soll. Alle an heißt: alle sehen es. Admins sehen im Studio immer alles.",
+    "Visibility & ask first": "Sichtbarkeit & Rückfrage",
+    "Add tile for {name}": "Kachel für {name} hinzufügen",
+    "Device": "Gerät",
+    "1 room hidden ›": "1 Raum ausgeblendet ›",
+    "{n} rooms hidden ›": "{n} Räume ausgeblendet ›",
+    "Home Assistant is loading it…": "Home Assistant lädt sie gerade …",
+    "Saved in Home Assistant.": "In Home Assistant gespeichert.",
+    "Save settings": "Einstellungen speichern",
+    "The clock in the top bar (desktop and tablet – the phone layout has no clock).": "Die Uhr in der Kopfleiste (Desktop und Tablet – das Handy-Layout hat keine Uhr).",
     "Badge renamed": "Badge umbenannt",
     "Tile turned off": "Kachel ausgeschaltet",
     "Tile turned on": "Kachel eingeschaltet",

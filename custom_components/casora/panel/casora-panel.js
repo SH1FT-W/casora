@@ -2005,7 +2005,7 @@ const SECTIONS = [
   },
   {
     label: "Time", icon: "clock", iconColor: studioIcon("time"), group: "rooms", scope: "dashboard",
-    blurb: "The clock in the top bar.",
+    blurb: "The clock in the top bar (desktop and tablet – the phone layout has no clock).",
     fields: [
       { key: "show_time", label: "Show clock", type: "bool", boolDefault: true, always: true, ord: -1 },
       // Immer sichtbar: ohne Eintrag nimmt die Uhr sensor.time, und das soll man sehen.
@@ -18156,7 +18156,10 @@ class CasoraPanel extends HTMLElement {
     const below = window.innerHeight - r.bottom - 12;
     const above = r.top - 12;
     // Eine lange Liste mit Suche braucht Platz: reicht er unten nicht, klappt sie nach oben.
-    const drop = below >= (mopts && mopts.search ? 400 : 180) || below >= above;
+    // Passt die ganze Liste nur oben hin, klappt sie nach oben (Tablet: Szenenfarben unten abgeschnitten).
+    const need = Math.ceil(menu.getBoundingClientRect().height) + 10;
+    const drop = need <= below ? true : need <= above ? false
+      : below >= (mopts && mopts.search ? 400 : 180) || below >= above;
     // Sized to its content, so a single "Remove tile" is not 240px wide.
     menu.style.width = "auto";
     const phone = isPhone(this);
@@ -21187,10 +21190,15 @@ class CasoraPanel extends HTMLElement {
       });
     }
 
-    const secEntities = list("security_entity_", 8);
+    // „Ansehen als“ (casora-panel-b-ux.js): wie im Dashboard zählt nur, was dieser Mensch an Kacheln
+    // sehen darf (casora_entity_users, casora-core.js) – sonst stand bei „Kind“ weiter „1 Schloss“.
+    const asUser = this._uxAs || null;
+    const eUsers = asUser && this._state && this._state.compact ? entityUsers(this._state.compact.rooms) : null;
+    const sees = (e) => !eUsers || !Array.isArray(eUsers[e]) || eUsers[e].indexOf(asUser) >= 0;
+    const secEntities = list("security_entity_", 8).filter(sees);
     const locks = (Array.isArray(V.security_locks) ? V.security_locks : [])
-      .concat([V.security_lock_entity, V.security_lock_entity_2]).filter(Boolean);
-    const cams = (Array.isArray(V.security_cameras) ? V.security_cameras : []).filter(Boolean);
+      .concat([V.security_lock_entity, V.security_lock_entity_2]).filter(Boolean).filter(sees);
+    const cams = (Array.isArray(V.security_cameras) ? V.security_cameras : []).filter(Boolean).filter(sees);
     if (on("show_security") && (secEntities.length || locks.length || cams.length)) {
       // Text wie casora_badge_security_group (Wortlaut des Produktiv-Dashboards): Schlösser,
       // Alarm, Türen, Tore, Fenster, Kipp-Stellung, Geräte offline. Kontakt + Kippsensor
@@ -25505,7 +25513,7 @@ class CasoraPanel extends HTMLElement {
 // Casora: Bausteine des Panels für Casora-Erweiterungen (Import-Assistent, Geräte-Assistent).
 window.__casoraPanelInternals = {
   blankRoom, roomPhoto, slug, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
-  applyScenePick, wrapCustomCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
+  applyScenePick, confirmEntities, wrapCustomCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
   findType, tileTypeAny, newTile, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,

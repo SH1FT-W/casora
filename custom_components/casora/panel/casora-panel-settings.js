@@ -508,12 +508,14 @@
     };
 
     // Speichern-Leiste und Punkt in der Seitenleiste nachziehen.
+    // „Einstellungen speichern“ statt „Speichern“: „Fertig“ speichert das Dashboard, dieser Knopf nur
+    // die Einstellungen für alle Dashboards (Nutzertest: drei gleich klingende Speicherwege).
     P._csBar = function () {
       const dirty = this._csDirty();
       const cs = this._cs || {};
       this.shadowRoot.querySelectorAll(".cs-save").forEach((b) => {
         b.disabled = !dirty || !!cs.busy;
-        b.textContent = cs.busy ? t("Saving…") : t("Save");
+        b.textContent = cs.busy ? t("Saving…") : t("Save settings");
       });
       this.shadowRoot.querySelectorAll(".cs-state").forEach((s) => {
         s.textContent = dirty ? t("Unsaved changes") : t("Applies to all dashboards");
@@ -971,7 +973,7 @@
       wrap.appendChild(body);
       const bar = el("div", "cs-bar" + (this._csDirty() ? "" : " cs-clean"));
       const state = el("span", "cs-state");
-      const save = btn(t("Save"), () => this._csSave());
+      const save = btn(t("Save settings"), () => this._csSave());
       save.className = "cs-save";
       bar.append(state, save);
       wrap.appendChild(bar);
@@ -1183,7 +1185,7 @@
         // die Vollbild-Seite einen Weg zurück: „Abbrechen“ (_flowBack). Der Entwurf bleibt.
         this._flowCancel(s.acts);
         if (this._csDirty()) {
-          const save = this._flowButton(s.acts, t("Save"), () => this._csSave().then(() => this._csSheet(null, null, true)));
+          const save = this._flowButton(s.acts, t("Save settings"), () => this._csSave().then(() => this._csSheet(null, null, true)));
           save.classList.add("cs-save");
         }
         // Nur neu zeichnen, wenn die Seite noch offen ist: Wer schon „Abbrechen“ getippt hat,
@@ -1212,7 +1214,7 @@
         s.box.insertBefore(lede, s.box.querySelector(".flowerr"));
       }
       fill();
-      const save = this._flowButton(s.acts, t("Save"), () => this._csSave());
+      const save = this._flowButton(s.acts, t("Save settings"), () => this._csSave());
       save.classList.add("cs-save");
       this._csBar();
       if ((await this._csLoad()) && this._csSheetPage === page.id && host.isConnected) { fill(); this._csBar(); }
