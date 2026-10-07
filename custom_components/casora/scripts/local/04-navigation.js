@@ -79,7 +79,7 @@
       + '.hmn-btn:active{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));}'
       + '.hmn-btn>span{max-width:100%;padding:0 4px;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
       + '.hmn-menu{position:fixed;z-index:152;transform:translateY(8px);opacity:0;'
-      +   'bottom:calc(76px + env(safe-area-inset-bottom, 0px) * 0.4);width:max-content;min-width:170px;max-width:calc(100vw - 24px);box-sizing:border-box;padding:6px;'
+      +   'bottom:calc(76px + env(safe-area-inset-bottom, 0px) * 0.4);width:max-content;min-width:170px;max-width:calc(100vw - 24px);box-sizing:border-box;padding:var(--casora-mnav-menu-pad, 6px);'
       +   'border-radius:26px;background:var(--casora-mnav-menu-bg, rgba(40,40,44,0.72));backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);'
       +   'box-shadow:0 14px 40px -12px rgba(0,0,0,0.6), inset 0 0.5px 0 rgba(255,255,255,0.22);font-family:var(--primary-font-family, system-ui);'
       +   'transition:opacity .18s ease, transform .22s cubic-bezier(.2,.8,.3,1);max-height:calc(100vh - 160px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}'
@@ -100,7 +100,7 @@
       /* Lange Raumnamen (Stresshaus): mit … kürzen statt über den Menürand zu laufen – 30.09.2026. */
       + '.hmn-item>span{min-width:0;overflow:hidden;text-overflow:ellipsis;}'
       + '.hmn-item{display:grid;grid-template-columns:var(--casora-menu-ic-col, 22px) minmax(0,1fr);align-items:center;column-gap:var(--casora-menu-ic-gap, 14px);width:100%;height:var(--casora-menu-row-h, 48px);min-height:var(--casora-menu-row-h, 48px);padding:var(--casora-mnav-item-pad, 0 20px 0 14px);line-height:19px;'
-      +   'border:0;border-radius:var(--casora-menu-item-radius, 20px);background:transparent;color:var(--casora-mnav-fg-on, #fff);font:inherit;font-size:15px;font-weight:var(--casora-menu-item-weight, inherit);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;}'
+      +   'border:0;border-radius:var(--casora-mnav-item-radius, var(--casora-menu-item-radius, 20px));background:transparent;color:var(--casora-mnav-fg-on, #fff);font:inherit;font-size:15px;font-weight:var(--casora-menu-item-weight, inherit);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;}'
       + '.hmn-item ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;line-height:0;color:color-mix(in srgb, var(--casora-mi-tone, transparent) var(--casora-menu-tone-mix, 0%), var(--casora-mnav-fg-icon, rgba(255,255,255,0.8)));}'
       + '.hmn-item.on{background:var(--casora-mnav-on-fill, rgba(255,255,255,0.14));}'
       /* Schriftstärke der Menüzeilen: Weich wie die Menüs der Desktop-Raumleiste (normal, aktiv 500). */
@@ -425,7 +425,7 @@
          unteren Räume wie „fehlend“ aus. Höhe so kürzen, dass die letzte sichtbare Zeile halb angeschnitten ist
          (Scroll-Hinweis wie in iOS), und den offenen Raum in die Mitte holen – 30.09.2026. */
       if (m.scrollHeight > m.clientHeight + 1 && m.firstElementChild) {
-        var rowH = m.firstElementChild.offsetHeight || 48, pad = 6;
+        var rowH = m.firstElementChild.offsetHeight || 48, pad = parseFloat(getComputedStyle(m).paddingTop) || 6;
         var k = Math.max(1, Math.floor((m.clientHeight - 2 * pad - rowH * 0.5) / rowH));
         m.style.maxHeight = Math.round(pad + k * rowH + rowH * 0.5) + 'px';
         var on = m.querySelector('.hmn-item.on');

@@ -127,6 +127,7 @@ Das größte Update seit Casora 1.0. Neu sind das Studio, in dem die Vorschau se
 - Wer gleich nach dem Laden einen Raum wählt, sieht ihn sofort. Nach dem Licht-Popup rutscht der Inhalt nicht mehr nach unten.
 - Der Titel der Startseite wechselt nicht mehr zwischen „Home“ und „Zuhause“. Nach einem Umzug von Hemma 1 heißt die Übersicht wie am Desktop.
 - Die Sicherheit-Seite lädt ohne Fehler. Glocken-Liste und Räume-Menü sind deckend.
+- Im Räume-Menü sitzt die Markierung des offenen Raums ringsum gleich weit vom Rand, ihre Ecken folgen der Rundung des Menüs, und das Symbol hat links so viel Luft wie zum Text.
 
 #### Studio
 - Kein Speicherweg (Assistent, neue Szene, Einstellungen) überschreibt mehr ein Dashboard, für das Speichern gesperrt ist. Nach einem Lesefehler schreibt das Studio nichts.

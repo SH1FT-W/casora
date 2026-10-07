@@ -127,6 +127,7 @@ The biggest update since Casora 1.0. It brings a new Studio in which the preview
 - Picking a room right after loading opens it straight away. Content no longer jumps down after the light popup.
 - The home page title no longer flips between "Home" and "Zuhause". After moving from Hemma 1 the overview is named like on the desktop.
 - The security page loads without errors. The bell list and the rooms menu are opaque.
+- In the rooms menu the highlight of the open room sits the same distance from every edge, its corners follow the menu's rounding, and the icon has as much room on the left as towards the text.
 
 #### Studio
 - No save path (assistant, new scene, settings) can overwrite a dashboard whose saving is locked any more. After a read error the Studio writes nothing.

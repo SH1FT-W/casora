@@ -238,7 +238,12 @@ Casora:
   casora-menu-row-h: 44px
   casora-menu-row-pad: 0 16px 0 7px
   casora-menu-item-pad: 6px 16px 6px 8px
-  casora-mnav-item-pad: 0 18px 0 7px
+  # Räume-/Szenen-Menü der Handy-Leiste (07.10.2026): Markierung der offenen Zeile ringsum gleich
+  # weit vom Menürand, Ecken konzentrisch zur Menü-Rundung (Handy-Radius minus Abstand), Symbolkreis
+  # links so weit von der Kante wie vom Text (12 px = casora-menu-ic-gap).
+  casora-mnav-menu-pad: 8px
+  casora-mnav-item-radius: calc(var(--casora-tile-radius-phone, 30px) - var(--casora-mnav-menu-pad, 8px))
+  casora-mnav-item-pad: 0 18px 0 12px
   casora-menu-item-radius: 16px
   casora-menu-radius: 24px
   casora-menu-item-weight: 600
