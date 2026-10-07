@@ -48,6 +48,18 @@ for (const size of ['desktop', 'phone']) {
   await check(`Vorschau ${size}: Sicherheit „All secure“`, r && r.secure && !r.alles, r);
   await check(`Vorschau ${size}: keine deutschen Reste`, r && !r.german.length, r && r.german);
 }
+// Raumnamen (07.10.2026, 1.1.1): Das Dashboard übersetzt deutsche Standardnamen („Küche“ → „Kitchen“),
+// die Vorschau zeigt dieselben Namen. Studio-Listen und Eingabefelder behalten den eingegebenen Namen.
+await page.evaluate(() => { const p = window.__panel(); p._room = 0; p._renderTabs(); p._renderForm();
+  p._miniSize = 'desktop'; p._bSyncSize && p._bSyncSize(); p._rebuildPreview(); });
+const prev = await stable(page, () => {
+  const p = window.__panel(); const rooms = p._state.compact.rooms;
+  const tabs = [...p.shadowRoot.querySelectorAll('.mini-tab:not(.scenes):not(.hid)')].map((t) => t.textContent.trim());
+  return { tabs, raw: rooms.map((r) => p._roomLabel(r)), shown: rooms.map((r) => p._roomShown(r)) };
+}, null, { max: 8000 });
+await check('Vorschau: Raumleiste übersetzt mindestens einen Raumnamen', prev && prev.shown.some((n, i) => n !== prev.raw[i]), prev);
+await check('Studio: eingegebene Raumnamen bleiben unübersetzt', prev && prev.raw.some((n) => /[äöüß]|zimmer|Küche|Flur|Büro/i.test(n)), prev && prev.raw);
+
 // Ohne Dashboard-Übersetzung nimmt die Vorschau eigene englische Überschriften – auch für Jalousien.
 const src = await page.evaluate(() => fetch('/casora_panel/casora-panel.js').then((r) => r.text()).catch(() => ''));
 await check('Vorschau: englischer Rückfall kennt „Blinds“', /covers: "Blinds"/.test(src));
@@ -58,4 +70,8 @@ const sec = await stable(page, () => window.__pierce('button-card')
   .filter((b) => [].concat((b._config || {}).template || []).includes('casora_badge_security_group') && b.getBoundingClientRect().width > 0)
   .map((b) => b.shadowRoot.querySelector('ha-card').innerText.replace(/\s+/g, ' ').trim()));
 await check('Dashboard: Sicherheit „All secure“', sec && sec.length && sec.every((t) => /All secure/.test(t)), sec);
+const navNames = await stable(page, () => window.__pierce('casora-nav').flatMap((n) => [...(n.shadowRoot || n).querySelectorAll('.route .label')])
+  .filter((l) => l.getBoundingClientRect().width > 0).map((l) => l.textContent.trim()));
+await check('Raumnamen: Vorschau-Leiste = Dashboard-Leiste', navNames && navNames.length && prev
+  && navNames.join('|') === prev.tabs.join('|'), { dashboard: navNames, vorschau: prev && prev.tabs });
 await finish();

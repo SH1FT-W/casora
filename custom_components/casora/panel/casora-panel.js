@@ -841,6 +841,18 @@ const roomLabel = (room, rooms, hass) => {
   if (isDefaultHome(room, rooms)) return homeRoomWord(hass);
   return room.name || room.path || "";
 };
+// Raumname, wie ihn das Dashboard zeigt (07.10.2026): Dort steht ein Raumname wörtlich nur mit
+// name_literal oder als „Home“/„Zuhause“ (casoraRoomName in casora-core.js), sonst übersetzt ihn
+// casora-i18n.js beim Zeichnen („Küche“ → „Kitchen“). Die Vorschau zeigt dasselbe; Eingabefelder,
+// Menüs und Listen im Studio behalten den Namen, wie er eingegeben ist (roomLabel).
+const shownRoomName = (room, rooms, hass) => {
+  if (!room) return "";
+  const n = roomLabel(room, rooms, hass);
+  if (isDefaultHome(room, rooms) || typeof window.casoraTr !== "function") return n;
+  const literal = !!(room.variables && room.variables.name_literal)
+    || /^(home|zuhause)$/i.test(String(n).trim());
+  return literal ? n : window.casoraTr(String(n));
+};
 // Zu speichernder Name: der Standard der Übersicht immer als „Home“ (sprachunabhängig).
 const storedRoomName = (name, home) => (home && isDefaultHomeName(name) ? HOME_ROOM_NAME : name);
 // Name der Übersicht setzen: Leer = Casoras Standard (wieder übersetzt). Das angezeigte
@@ -15751,6 +15763,11 @@ class CasoraPanel extends HTMLElement {
     return roomLabel(r, (this._state && this._state.compact && this._state.compact.rooms) || [], this._hass);
   }
 
+  // Raumname in der Vorschau: wie das Dashboard ihn zeigt (übersetzt, siehe shownRoomName).
+  _roomShown(r) {
+    return shownRoomName(r, (this._state && this._state.compact && this._state.compact.rooms) || [], this._hass);
+  }
+
   // The overview room: path "home", or the first room when none has that path.
   _isHomeRoom(i) {
     const rooms = (this._state && this._state.compact && this._state.compact.rooms) || [];
@@ -22297,7 +22314,7 @@ class CasoraPanel extends HTMLElement {
     const h1 = document.createElement("span");
     h1.className = "mp-name";
     const dRooms = (this._pair && this._pair.desktop.compact.rooms) || [];
-    h1.textContent = roomLabel(dRooms.find((r) => r.path === "home") || dRooms[0], dRooms, this._hass)
+    h1.textContent = shownRoomName(dRooms.find((r) => r.path === "home") || dRooms[0], dRooms, this._hass)
       || homeRoomWord(this._hass);
     trow.appendChild(h1);
 
@@ -22382,7 +22399,7 @@ class CasoraPanel extends HTMLElement {
     }
     if (this._phoneFilter) {
       // Scenes is not one of the badges, so it names itself.
-      if (roomPop) h1.textContent = roomPop;
+      if (roomPop) h1.textContent = shownRoomName({ name: roomPop }, [], this._hass);
       else if (this._phoneFilter === "scenes") h1.textContent = "Scenes";
       else {
         const on = model.find((b) => b.id === this._phoneFilter);
@@ -22770,7 +22787,7 @@ class CasoraPanel extends HTMLElement {
       const head = document.createElement("div");
       head.className = "mp-head";
       const ht = document.createElement("span");
-      ht.textContent = sec.name || "";
+      ht.textContent = shownRoomName(sec, [], this._hass);
       head.appendChild(ht);
       if (!isFav(sec)) {
         if (!this._phoneFilter) {
@@ -23562,9 +23579,9 @@ class CasoraPanel extends HTMLElement {
       // Ausgeblendete Räume: durchgestrichenes Auge (Nutzertest 4: in der Leiste nicht erkennbar).
       const hid = !!(r.variables || {}).casora_hidden;
       t.className = "mini-tab" + (r === room ? " on" : "") + (hid ? " hid" : "");
-      t.textContent = this._roomLabel(r);
+      t.textContent = this._roomShown(r);
       t.setAttribute("data-no-i18n", "");
-      const go = r === room ? "" : "Go to " + this._roomLabel(r);
+      const go = r === room ? "" : "Go to " + this._roomShown(r);
       t.title = hid ? (go ? trLabel(go) + " – " : "") + trLabel("Hidden on the dashboard") : go;
       if (r !== room) {
         t.onclick = (ev) => {
@@ -23655,7 +23672,7 @@ class CasoraPanel extends HTMLElement {
         wx.appendChild(ct);
       }
     }
-    q(".mini-name").textContent = this._roomLabel(room) || "Room";
+    q(".mini-name").textContent = this._roomShown(room) || "Room";
     q(".mini-name").toggleAttribute("data-no-i18n", !!(room.name || room.path));
 
     // Badges, and the sub-badge row a tap reveals.
