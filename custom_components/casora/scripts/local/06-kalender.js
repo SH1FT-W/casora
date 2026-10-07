@@ -490,6 +490,10 @@
     keys.forEach(function (k) {
       cf[k] = '[[[ return window._casoraCalendar ? window._casoraCalendar.' + fn + '(' + JSON.stringify(k) + ', states, hass, variables) : ""; ]]]';
       cs[k] = [{ 'justify-self': 'stretch' }];
+      /* Abfall-Monat (07.10.2026): die Blätter-Pfeile ragen im Weich-Look absichtlich 6 px über die
+         Überschrift hinaus (siehe monthHtml); button-card schneidet seine Felder sonst ab (overflow:
+         hidden), dann fehlte den runden Pfeil-Knöpfen oben ein Stück. */
+      if (k === 'wmonth') cs[k].push({ overflow: 'visible' });
     });
     var card = {
       type: 'custom:button-card', triggers_update: watch, variables: vars,
