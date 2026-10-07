@@ -113,9 +113,11 @@ await browser.close();
     await check('Tablet: Popup in der Vorschau mindestens 360 px breit (eigene Ebene)', pw && pw.wide && pw.w >= 360, pw);
     await P(() => window.__panel()._cpClose && window.__panel()._cpClose(true));
   }
+  // Wie das Studio (casora-panel-b-mehr.js): Lichter mit entity_category (z. B. Status-LED eines
+  // Access Points im Prüf-Dashboard qa-arbeit) bietet die Suche bewusst nicht zum Einstellen an.
   const light = await P(() => { const H = window.__panel()._hass; const E = H.entities || {}, D = H.devices || {};
     const fresh = new Set((window.__panel()._uxDevices() || []).filter((c) => c.fresh).map((c) => c.entity));
-    const id = Object.keys(H.states).find((e) => /^light\./.test(e) && !fresh.has(e) && E[e] &&!E[e].hidden && (E[e].area_id || (D[E[e].device_id] || {}).area_id));
+    const id = Object.keys(H.states).find((e) => /^light\./.test(e) && !fresh.has(e) && E[e] && !E[e].hidden && !E[e].entity_category && (E[e].area_id || (D[E[e].device_id] || {}).area_id));
     return id ? (E[id].name || H.states[id].attributes.friendly_name) : null; });
   if (light) {
     await pg.keyboard.press('Meta+k'); await pg.waitForTimeout(300);

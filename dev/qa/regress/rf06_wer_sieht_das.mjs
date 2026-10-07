@@ -16,12 +16,15 @@ const d0 = JSON.parse(JSON.stringify(dash.config)), m0 = JSON.parse(JSON.stringi
 const d = JSON.parse(JSON.stringify(d0)), m = JSON.parse(JSON.stringify(m0));
 const tilesOf = (v) => (((v.cards || [])[2] || {}).cards || []);
 // Raum mit zwei Kacheln verschiedener Geräte: die zweite nur für den anderen Benutzer.
-const vHide = d.views.find((v) => tilesOf(v).filter((t) => t.entity).length >= 2 && new Set(tilesOf(v).map((t) => t.entity)).size >= 2);
+// Nur Raumseiten (nicht die Startseite views[0]): in qa-arbeit hat auch sie Kacheln an cards[2], dann
+// fielen Ausblend- und Licht-Kachel auf dieselbe Kachel und der Schalter fehlte.
+const roomViews = d.views.slice(1);
+const vHide = roomViews.find((v) => tilesOf(v).filter((t) => t.entity).length >= 2 && new Set(tilesOf(v).map((t) => t.entity)).size >= 2);
 await need('Raum mit zwei Kacheln', vHide);
 const hideT = tilesOf(vHide).filter((t) => t.entity)[1], keepT = tilesOf(vHide).find((t) => t.entity && t.entity !== hideT.entity);
 hideT.visibility = [{ condition: 'user', users: [OTHER] }];
 // Licht-Kachel: Schalter zeigen + nachfragen; Licht-Badge des Raums nur für den anderen.
-const vLight = d.views.find((v) => tilesOf(v).some((t) => /^light\./.test(t.entity || '')) && (v.cards[0].variables || {}).light_entity_1);
+const vLight = roomViews.find((v) => v !== vHide && tilesOf(v).some((t) => /^light\./.test(t.entity || '')) && (v.cards[0].variables || {}).light_entity_1);
 await need('Raum mit Licht-Kachel und Licht-Badge', vLight);
 const lt = tilesOf(vLight).find((t) => /^light\./.test(t.entity || ''));
 lt.variables = { ...(lt.variables || {}), show_toggle: true, confirm_toggle: true };
@@ -52,12 +55,13 @@ await check('Leiste ohne den Raum nur für anderen Benutzer', routes.length > 0 
 await dashboard(page, dash.url + '/' + vLight.path, 2);
 const badges = (await cards(page)).filter((c) => c.t.some((t) => /^casora_badge_light/.test(t)));
 await check('Licht-Badge nur für anderen Benutzer fehlt im Raumkopf', badges.length === 0, badges.map((b) => b.text));
-const hit = await page.evaluate(() => {
-  const t = window.__pierce('button-card').find((b) => b._config && [].concat(b._config.template || []).includes('casora_light') && b.getBoundingClientRect().width > 0);
+// Genau die Kachel mit Schalter + Rückfrage (lt) – im Raum können weitere Licht-Kacheln stehen (qa-arbeit).
+const hit = await page.evaluate((ent) => {
+  const t = window.__pierce('button-card').find((b) => b._config && b._config.entity === ent && [].concat(b._config.template || []).includes('casora_light') && b.getBoundingClientRect().width > 0);
   const tog = t && [...t.shadowRoot.querySelectorAll('button-card')].find((b) => b._config.tap_action && b._config.tap_action.action === 'call-service');
   const r = tog && tog.getBoundingClientRect();
   return r && r.width ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : null;
-});
+}, lt.entity);
 await need('An/Aus-Schalter der Licht-Kachel', hit);
 const st0 = await page.evaluate((e) => document.querySelector('home-assistant').hass.states[e].state, lt.entity);
 await page.mouse.click(hit.x, hit.y);

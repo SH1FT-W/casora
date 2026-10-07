@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @parallel: ui   (legt kurz eine Szene in HA an und löscht sie wieder; das Dashboard wird nicht gespeichert)
+// @parallel: ui   (legt kurz eine Szene und ggf. einen Benutzer „QA Zweitkonto“ an und löscht beide wieder; das Dashboard wird nicht gespeichert)
 // Nutzertest 7 (07.10.2026), mit echten Klicks im Casora-Look:
 // 1) Szene aus dem jetzigen Zustand mit Farbe: Meldung hat „Jetzt speichern“ und steht nach 10 s noch.
 // 2) Langes Drücken auf ein Badge öffnet das echte Popup (nicht den Editor).
@@ -13,6 +13,18 @@ import { ws } from '../ws.mjs';
 
 const dash = await casoraDashboard((d) => ((d.config || {}).views || []).length > 3);
 await need('Casora-Dashboard', dash);
+// 4) braucht einen zweiten Benutzer zum Ausschalten. Im Zustand „arbeit“ gibt es nur den Admin
+// („Kind“ legt erst dev/qa/wegwerf-ha.sh konten an, das Gate nicht) – dann kurz einen ohne Anmeldung
+// anlegen und am Ende wieder löschen.
+{
+  const c = await ws();
+  const users = await c.cmd({ type: 'config/auth/list' });
+  if (users.filter((u) => !u.system_generated && u.is_active).length < 2) {
+    const { user } = await c.cmd({ type: 'config/auth/create', name: 'QA Zweitkonto', group_ids: ['system-users'], local_only: true });
+    atFinish(async () => { const d = await ws(); try { await d.cmd({ type: 'config/auth/delete', user_id: user.id }); } finally { d.close(); } });
+  }
+  c.close();
+}
 const W = (pg, ms) => pg.waitForTimeout(ms);
 const at = (pg, sel, text, nth = 0) => pg.evaluate(([s, t, n]) => {
   const e = window.__pierce(s).filter((x) => x.getClientRects().length && (!t || new RegExp(t).test(x.textContent.trim())))[n];
