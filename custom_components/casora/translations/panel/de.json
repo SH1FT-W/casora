@@ -1,6 +1,7 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "In the dashboard, active tiles come first": "Im Dashboard stehen aktive Kacheln vorn",
     "Your unsaved edits are discarded.": "Deine ungespeicherten Änderungen gehen dabei verloren.",
     "New users only see this once you switch them on here.": "Neue Benutzer sehen das erst, wenn du sie hier einschaltest.",
     "Violet": "Lila",

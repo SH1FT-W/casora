@@ -7931,6 +7931,10 @@ class CasoraPanel extends HTMLElement {
           width:100%; flex:0 0 auto;
           display:flex; justify-content:center; align-items:flex-start;
         }
+        .maprowhint {
+          flex:0 0 auto; max-width:100%; padding:0 12px; box-sizing:border-box; text-align:center;
+          font-size:12px; line-height:16px; font-weight:500; color:var(--ink-2, var(--secondary-text-color, #8a8a8e));
+        }
         .card.map {
           transform:scale(var(--map-scale, .5));
           transition:none;
@@ -23669,6 +23673,14 @@ class CasoraPanel extends HTMLElement {
     slot.className = "mapslot";
     slot.appendChild(card);
     wrap.appendChild(slot);
+    // note5 Frage 1: Das Dashboard sortiert die Kachelreihe „Aktive zuerst“ (smart-row) – die Reihe
+    // im Dashboard sieht dann anders aus als die Bearbeitungs-Reihenfolge. Kleiner Hinweis darunter.
+    if (this._miniSize !== "phone" && this._smartSortOn() && (room.tiles || []).filter((t) => (t.variables || {}).enabled !== false).length > 1) {
+      const hint = document.createElement("div");
+      hint.className = "maprowhint";
+      hint.textContent = "In the dashboard, active tiles come first";
+      wrap.appendChild(hint);
+    }
 
 
     // tabletUp: iPad hochkant im gleichen Maßstab wie „tablet“ (700 ≈ 1024 px Bildschirm).
@@ -23704,7 +23716,8 @@ class CasoraPanel extends HTMLElement {
           ? parseFloat(ps.paddingTop || 0) + parseFloat(ps.paddingBottom || 0) : 0;
         const free = stage.offsetHeight - headH - pPad
           - parseFloat(cs.paddingTop || 0) - parseFloat(cs.paddingBottom || 0);
-        budget = Math.max(240, free) - MAP_SHADOW_ROOM;
+        const rowHint = wrap.querySelector(".maprowhint");
+        budget = Math.max(240, free - (rowHint ? rowHint.offsetHeight + 12 : 0)) - MAP_SHADOW_ROOM;
       } else if (isNarrow(this)) {
         // The page scrolls here, so nothing else bounds the height: an unbounded phone frame took the whole column width.
         budget = Math.max(240, Math.round(window.innerHeight
