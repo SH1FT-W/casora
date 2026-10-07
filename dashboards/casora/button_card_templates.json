@@ -4484,6 +4484,14 @@
     {
      "text-transform": "none"
     }
+   ],
+   "entity_picture": [
+    {
+     "opacity": "1 !important"
+    },
+    {
+     "filter": "none !important"
+    }
    ]
   },
   "template": [
@@ -4492,7 +4500,9 @@
   ],
   "variables": {
    "casora_default_name": "Fußball",
-   "show_when_match": "always"
+   "show_when_match": "always",
+   "icon_never_masked": true,
+   "icon": "soccer"
   }
  },
  "casora_game": {

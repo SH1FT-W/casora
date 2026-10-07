@@ -387,10 +387,16 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   // Raumklima (casora_vent) und Solar-Tipp (casora_solar_tip) bilden ihren Text über
   // window._casoraVent / _casoraSolar aus scripts/local/05-standard-medien.js – ohne das
   // Modul stand in der Vorschau nur „Aus“. Einmal nachladen (reine Funktionen, keine Karten).
-  let medien = false;
+  let medien = false, fussball = false;
   const needMedien = (tile) => {
+    const tn = names(tile && tile.template);
+    // Fußball: Text („Sa 18:30 · gegen …“) aus window._casoraFootball (scripts/local/11-fussball.js).
+    if (!fussball && !window._casoraFootball && tn.includes("casora_football")) {
+      fussball = true;
+      import("/casora_scripts/local/11-fussball.js").catch(() => {});
+    }
     if (medien || (window._casoraVent && window._casoraSolar)) return;
-    if (!names(tile && tile.template).some((n) => n === "casora_vent" || n === "casora_solar_tip")) return;
+    if (!tn.some((n) => n === "casora_vent" || n === "casora_solar_tip")) return;
     medien = true;
     import("/casora_scripts/local/05-standard-medien.js").catch(() => {});
   };
