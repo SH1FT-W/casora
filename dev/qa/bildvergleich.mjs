@@ -15,7 +15,7 @@
 //                            – nur Bericht neu bauen: --nur-bericht
 //
 // Beide Seiten laufen im Gleichschritt: dieselbe Ansicht wird auf alt und neu gleichzeitig
-// geöffnet, gleich bedient und fotografiert. Feste Uhrzeit (Playwright-Clock), Animationen aus,
+// geöffnet, gleich bedient und fotografiert. Feste Startzeit (nur Date, läuft weiter), Animationen aus,
 // alle schreibenden Aufrufe abgefangen (aufgeklappte Reihen werden nur im Browser unterschoben),
 // so verändert der Lauf an keinem der beiden HAs etwas. Der Pixelvergleich läuft im Browser
 // (Canvas) – keine zusätzlichen Pakete.
@@ -227,7 +227,19 @@ async function newPage(browser, side, t) {
     isMobile: vp.mobile, hasTouch: vp.touch, locale: 'de-DE', timezoneId: 'Europe/Berlin', reducedMotion: 'reduce', serviceWorkers: 'block',
     userAgent: vp.mobile ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148' : undefined,
   });
-  await ctx.clock.setFixedTime(FIXED);
+  // Nur Date startet auf FIXED und läuft dann normal weiter (P-02, 07.10.2026). setFixedTime fror
+  // Date.now() ein – Sperren wie „600 ms nach Popup-Öffnen“ oder „Klick kurz nach Touch“ liefen nie ab;
+  // clock.install ersetzt zusätzlich requestAnimationFrame/Timer, dann blieben Handy-Räume mitten im
+  // Einblenden stehen (leer). Timer, Frames und performance.now() bleiben deshalb echt. Anzeigetexte
+  // stimmen auf beiden Seiten überein: jede Seite startet beim Laden auf derselben vollen Stunde.
+  await ctx.addInitScript((fixed) => {
+    const RD = Date, off = fixed - RD.now();
+    class D extends RD {
+      constructor(...a) { if (a.length) super(...a); else super(RD.now() + off); }
+      static now() { return RD.now() + off; }
+    }
+    window.Date = D;
+  }, FIXED.getTime());
   await ctx.addInitScript(([tk, base, version, theme, dark, filter]) => {
     localStorage.setItem('hassTokens', JSON.stringify({ access_token: tk.access_token, token_type: 'Bearer', expires_in: tk.expires_in,
       refresh_token: tk.refresh_token, hassUrl: base, clientId: base + '/', expires: Date.now() + tk.expires_in * 1000 }));
