@@ -120,6 +120,11 @@
     .btool svg { width:17px; height:17px; flex:none; }
     .btool:hover, .btool[aria-expanded="true"], .btool.on { background:var(--chip, rgba(127,127,127,.14)); color:var(--ink, inherit); }
     .btool .blabel { overflow:hidden; text-overflow:ellipsis; max-width:160px; }
+    .btool.bhidroom::after {
+      content:""; width:15px; height:15px; flex:none; background:currentColor; opacity:.7;
+      -webkit-mask:var(--eyeoff) center/contain no-repeat; mask:var(--eyeoff) center/contain no-repeat;
+      --eyeoff:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M3 3l18 18M10.6 5.6A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3.2 4M6.3 6.8C3.9 8.5 2.5 12 2.5 12S6 18.5 12 18.5c1.6 0 3-.4 4.2-1'/%3E%3C/svg%3E");
+    }
     /* UX-10: Beschriftungen nur weglassen, wenn die Zeile wirklich nicht reicht (_bFitTools misst). */
     :host(.btight) .btool:not(.broom) .blabel { display:none; }
     /* Der Inspektor liegt in B schon unter der Kopfzeile: kein zusätzlicher Abstand oben (Tablet),
@@ -500,6 +505,13 @@
         const room = this._state && this._state.compact.rooms[this._room];
         const lab = tools.querySelector('[data-b="rooms"] .blabel');
         if (lab && room) lab.textContent = this._roomLabel(room);
+        // Ausgeblendeter Raum: am Raumknopf sichtbar (auch wenn nur das Symbol steht).
+        const rbtn = tools.querySelector('[data-b="rooms"]');
+        if (rbtn && room) {
+          const hid = !!(room.variables || {}).casora_hidden;
+          rbtn.classList.toggle("bhidroom", hid);
+          rbtn.title = hid ? this._roomLabel(room) + " – " + tr("Hidden on the dashboard") : this._roomLabel(room);
+        }
         const list = tools.querySelector('[data-b="list"]');
         if (list) list.classList.toggle("on", !!this._bOpen && !this._sel && !this._bPage());
         // Update-Hinweis: dieselbe Zahl wie die (hier ausgeblendete) Zeile „Updates“.
@@ -841,12 +853,23 @@
       this._bPhoneHint();
     };
 
+    // Ausgeblendete Räume des Dashboards ({ i, label }) – nur mit „Wieder einblenden“ (casora-panel-b-mehr.js).
+    P._bHiddenRooms = function () {
+      if (!this._state || typeof this._mHideRoom !== "function") return [];
+      return (this._state.compact.rooms || []).map((r, i) => ({ r, i }))
+        .filter((x) => x.r && (x.r.variables || {}).casora_hidden)
+        .map((x) => ({ i: x.i, label: this._roomLabel(x.r) }));
+    };
+
     // „N ausgeblendet“ unter der Vorschau: Liste aller unsichtbaren Dinge.
     P._bHiddenChip = function (hid) {
       const canvas = this.shadowRoot.querySelector(".canvas");
       if (!canvas) return;
       let chip = canvas.querySelector(".bhid");
-      const n = hid.tiles.length + hid.badges.length;
+      // Ausgeblendete Räume gehören dazu (Nutzertest 4: der Raum stand nicht in der Liste) –
+      // antippen blendet ihn wieder ein.
+      const hRooms = this._bHiddenRooms();
+      const n = hid.tiles.length + hid.badges.length + hRooms.length;
       if (!n) { if (chip) chip.remove(); return; }
       if (!chip) {
         chip = document.createElement("button");
@@ -856,13 +879,17 @@
         chip.setAttribute("data-no-i18n", "");
         chip.onclick = () => {
           const h = this._bHidden();
+          const hr = this._bHiddenRooms();
           const items = [
+            ...hr.map((x) => ({ id: "r:" + x.i, label: x.label + " · " + tr("Show again"), group: tr("Rooms"),
+              quiet: true, icon: "eye" })),
             ...h.tiles.map((x) => ({ id: "t:" + x.key, label: tr(x.label) + " · " + tr(x.why), group: tr("Tiles"),
               quiet: true, glyph: x.glyph, plainGlyph: true })),
             ...h.badges.map((x, i) => ({ id: "b:" + i, label: x.label, group: tr("Badges"), quiet: true,
               glyph: x.glyphUrl ? null : "badge", glyphUrl: x.glyphUrl || null, plainGlyph: true })),
           ];
           this._menuAt(chip, items, (id) => {
+            if (id.indexOf("r:") === 0) { if (this._mHideRoom) this._mHideRoom(+id.slice(2), false); return; }
             if (id.indexOf("t:") === 0) return this._select({ group: "tiles", key: id.slice(2) });
             const b = h.badges[+id.slice(2)];
             if (b && b.el && b.el.isConnected) b.el.click();

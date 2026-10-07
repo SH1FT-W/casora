@@ -1127,18 +1127,32 @@
       return row.scrollWidth > row.clientWidth + 1 || tools.scrollWidth > tools.clientWidth + 1 || !!(next && next.getBoundingClientRect().left < tr0.right + 8)
         || !!(lab && lab.scrollWidth > lab.clientWidth + 1) || !!(pill && pill.getBoundingClientRect().left < tr0.right + 20);
     };
+    // Gemessen wird mit dem längsten Raumnamen des Dashboards (Nutzertest 4: bei „Wohnzimmer“
+    // verschwanden die Beschriftungen, bei „Flur“ standen sie da). Letzte Stufe: auch der Raumname
+    // nur als Symbol – vorher lagen Lupe und Zahnrad hochkant übereinander.
     wrap("_bFitTools", (orig) => function () {
       this.classList.remove("uxs1", "uxs2", "uxs3");
-      const r = orig.apply(this, arguments);
-      if (!this.classList.contains("btight") || this.classList.contains("phone")) return r;
-      for (const st of [["uxs1"], ["uxs1", "uxs2"], ["uxs1", "uxs3"]]) {
-        this.classList.remove("btight", "uxs2", "uxs3");
-        this.classList.add(...st);
-        if (!this._uxTight()) return r;
+      const lab = this.shadowRoot.querySelector('.btools [data-b="rooms"] .blabel');
+      const keep = lab ? lab.textContent : null;
+      if (lab && this._state) {
+        let long = keep;
+        (this._state.compact.rooms || []).forEach((x) => { const t = this._roomLabel(x); if (t && t.length > long.length) long = t; });
+        lab.textContent = long;
       }
-      this.classList.remove("uxs1", "uxs2", "uxs3");
-      this.classList.add("btight");
-      return r;
+      try {
+        const r = orig.apply(this, arguments);
+        if (!this.classList.contains("btight") || this.classList.contains("phone")) return r;
+        for (const st of [["uxs1"], ["uxs1", "uxs2"], ["uxs1", "uxs3"], ["uxs1", "uxs2", "uxs3"]]) {
+          this.classList.remove("btight", "uxs2", "uxs3");
+          this.classList.add(...st);
+          if (!this._uxTight()) return r;
+        }
+        this.classList.remove("uxs3");
+        this.classList.add("btight", "uxs1", "uxs2");
+        return r;
+      } finally {
+        if (lab && keep !== null) lab.textContent = keep;
+      }
     });
 
     // ── Als Nächstes: drei kleine Schritte (V-14) ─────────────────────────

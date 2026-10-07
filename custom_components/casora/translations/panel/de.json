@@ -1,7 +1,11 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
-    "Try it with “Show Popup” below the preview. Done saves it.": "Ausprobieren: „Popup anzeigen“ unter der Vorschau. „Fertig“ speichert es.",
+    "Only together with “{line}” – use Undo for both.": "Geht nur zusammen mit „{line}“ – nimm beides mit „Rückgängig“ zurück.",
+    "Scene saved in Home Assistant. The color is saved with the dashboard (“Done”).": "Szene in Home Assistant gespeichert. Die Farbe wird mit dem Dashboard gespeichert („Fertig“).",
+    "Scene saved in Home Assistant. Pick a color now – it is saved with the dashboard (“Done”).": "Szene in Home Assistant gespeichert. Wähl jetzt eine Farbe – sie wird mit dem Dashboard gespeichert („Fertig“).",
+    "The popup in the preview asks too. Done saves it.": "Das Popup in der Vorschau fragt auch. „Fertig“ speichert es.",
+    "Try it": "Ausprobieren",
     "Switch off whoever should not see it. Everyone on means everyone. Admins always see everything here in the Studio.": "Schalte aus, wer es nicht sehen soll. Alle an heißt: alle sehen es. Admins sehen im Studio immer alles.",
     "Visibility & ask first": "Sichtbarkeit & Rückfrage",
     "Add tile for {name}": "Kachel für {name} hinzufügen",
@@ -130,7 +134,6 @@
     "From small to large: rooms, the content of this room, the settings of this dashboard and the settings for all dashboards.": "Vom Kleinen zum Großen: Räume, der Inhalt dieses Raums, die Einstellungen dieses Dashboards und die für alle Dashboards.",
     "Save scene": "Szene speichern",
     "Save the current state as a scene": "Aktuellen Zustand als Szene speichern",
-    "Saved in Home Assistant. Pick a color now.": "In Home Assistant gespeichert. Wähl jetzt eine Farbe.",
     "Scene deleted": "Szene gelöscht",
     "Scene saved": "Szene gespeichert",
     "Scenes are created in Home Assistant by an administrator.": "Szenen legt eine Administratorin oder ein Administrator in Home Assistant an.",

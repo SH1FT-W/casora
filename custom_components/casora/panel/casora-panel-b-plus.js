@@ -1204,7 +1204,11 @@
           sub: tr("It is in scenes.yaml, but configuration.yaml has no line “scene: !include scenes.yaml”. Add that line, restart Home Assistant, and the scene appears.") });
         return;
       }
-      this._bToast(tr("Scene saved") + ": " + cfg.name, { action: undo, sub: tr(color ? "Saved in Home Assistant." : "Saved in Home Assistant. Pick a color now.") });
+      // Ehrlich: die Szene steht in HA, die Farbe gehört zum Dashboard und kommt erst mit „Fertig“
+      // dorthin (Nutzertest 4: „gespeichert“ – Farbe fehlte im Dashboard bis „Fertig“).
+      this._bToast(tr("Scene saved") + ": " + cfg.name, { action: undo,
+        sub: tr(color ? "Scene saved in Home Assistant. The color is saved with the dashboard (“Done”)."
+          : "Scene saved in Home Assistant. Pick a color now – it is saved with the dashboard (“Done”).") });
       if (!id || !this._state) return;
       // Eigene Reihenfolge oder ausgeblendete Szenen: die neue gehört sichtbar dazu.
       const rooms = this._state.compact.rooms;

@@ -87,6 +87,8 @@ weiteres HA (:8305) für den längsten Zustand, das dessen Pool als zusätzliche
 Je HA unter Last gemessen ~550–600 MB (`GATE_HA_MB`, Standard 600); Docker hat hier 3,8 GB.
 Die Container werden am Ende immer entfernt (auch bei Abbruch). casora-test bleibt unberührt.
 Speicherverlauf: `.qa/logs/<commit>/speicher.log`. Ausgabezeilen tragen `[arbeit]`/`[stress]`/`[frisch]`.
+Für Nutzertests (nicht im Gate): `dev/qa/wegwerf-ha.sh konten <name> <port>` legt im Wegwerf-HA den
+Benutzer „Kind“ (kein Admin, Anmeldung `kind` / `kind-nur-test`) an und wählt im Lüften-Coach das Testhandy.
 
 **Gezielt** (`--gezielt`): ordnet jede seit dem letzten grünen vollen Gate geänderte Datei Zuständen
 zu (Theme/Panel/Vorlagen → arbeit, Umzug/Assistent/Python → frisch + arbeit, Stresshaus → stress,

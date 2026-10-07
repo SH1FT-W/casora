@@ -8535,6 +8535,11 @@ class CasoraPanel extends HTMLElement {
         .mini-tab.on { color:#fff; font-weight:590; box-shadow:inset 0 -1.5px 0 #fff; }
         .mini-tab:not(.on) { cursor:pointer; transition:color .16s ease; }
         .mini-tab:not(.on):hover { color:#fff; }
+        .mini-tab.hid::before {
+          content:""; width:.95em; height:.95em; flex:none; background:currentColor; opacity:.85;
+          -webkit-mask:var(--eyeoff) center/contain no-repeat; mask:var(--eyeoff) center/contain no-repeat;
+          --eyeoff:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M3 3l18 18M10.6 5.6A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3.2 4M6.3 6.8C3.9 8.5 2.5 12 2.5 12S6 18.5 12 18.5c1.6 0 3-.4 4.2-1'/%3E%3C/svg%3E");
+        }
         .mini-scenemenu {
           position:absolute; z-index:8; box-sizing:border-box;
           padding:calc(6px * var(--menu-k)); border-radius:calc(26px * var(--menu-k));
@@ -11472,7 +11477,10 @@ class CasoraPanel extends HTMLElement {
   _openDash(withRoom) {
     const p = this._dashForDevice(this._dashUrl);
     if (!p) return;
-    const room = withRoom && this._state && this._state.compact.rooms[this._room];
+    let room = withRoom && this._state && this._state.compact.rooms[this._room];
+    // Ausgeblendeter Raum: auf die Startseite statt auf die versteckte Raumseite (Nutzertest 4:
+    // nach „Fertig“ sah es aus, als hätte das Ausblenden nicht gewirkt).
+    if (room && (room.variables || {}).casora_hidden) room = null;
     // The phone layout is one page with a section per room, not a view per room: a room
     // opens through the per-device room filter. The page resets that filter while it
     // mounts, so the wish is left for this tab and filter-overlay applies it afterwards.
@@ -23296,10 +23304,13 @@ class CasoraPanel extends HTMLElement {
     tabs.appendChild(strip);
     rooms.forEach((r, ri) => {
       const t = document.createElement("span");
-      t.className = "mini-tab" + (r === room ? " on" : "");
+      // Ausgeblendete Räume: durchgestrichenes Auge (Nutzertest 4: in der Leiste nicht erkennbar).
+      const hid = !!(r.variables || {}).casora_hidden;
+      t.className = "mini-tab" + (r === room ? " on" : "") + (hid ? " hid" : "");
       t.textContent = this._roomLabel(r);
       t.setAttribute("data-no-i18n", "");
-      t.title = r === room ? "" : "Go to " + this._roomLabel(r);
+      const go = r === room ? "" : "Go to " + this._roomLabel(r);
+      t.title = hid ? (go ? trLabel(go) + " – " : "") + trLabel("Hidden on the dashboard") : go;
       if (r !== room) {
         t.onclick = (ev) => {
           ev.stopPropagation();

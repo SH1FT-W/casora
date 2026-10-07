@@ -294,8 +294,10 @@
       for (let i = 0; i < both; i++) {
         const nu = added[i], old = removed[i];
         // Nur ein- oder ausgeschaltet: so sagen (statt „Kachel geändert“).
-        const sansOn = (t) => { const c = JSON.parse(J(t)); delete c.enabled; return J(c); };
-        const onoff = sansOn(nu) === sansOn(old) ? (nu.enabled === false ? "Tile turned off" : "Tile turned on") : "Tile changed";
+        // Das Studio schaltet über variables.enabled (Nutzertest 4: hieß sonst „Kachel geändert“).
+        const sansOn = (t) => { const c = JSON.parse(J(t)); delete c.enabled; if (c.variables) { delete c.variables.enabled; if (!Object.keys(c.variables).length) delete c.variables; } return J(c); };
+        const off = (t) => t.enabled === false || (t.variables || {}).enabled === false;
+        const onoff = sansOn(nu) === sansOn(old) ? (off(nu) ? "Tile turned off" : "Tile turned on") : "Tile changed";
         add(tr(onoff) + ": " + tn(nu) + " · " + n, (x) => { const l = tiles(x); const j = l ? findT(l, nu) : -1; if (j >= 0) l[j] = JSON.parse(J(old)); });
       }
       added.slice(both).forEach((t) => add(tr("Tile added") + ": " + tn(t) + " · " + n,
@@ -365,9 +367,20 @@
     const PHONE = tr("Phone layout changed");
     const desk = (l) => l.filter((t) => t !== PHONE);
     if (!desk(changeLines(before, x, ctx)).length && J(x[4]) !== J((before || [])[4])) x[4] = JSON.parse(J((before || [])[4]));
-    const want = desk(items.filter((_, i) => i !== index).map((y) => y.text)).sort();
-    const got = desk(changeLines(before, x, ctx)).sort();
-    if (J(got) !== J(want)) return { why: "linked" };
+    // Fingerabdruck mit festem Raumschlüssel statt Anzeigename: Wer „Küche → Kochecke“ zurücknimmt,
+    // ändert nur den Namen in den übrigen Zeilen („… · Kochecke“ wird „… · Küche“) – das ist keine
+    // Abhängigkeit (Nutzertest 4: Umbenennung war gesperrt, sobald im Raum etwas anderes geändert war).
+    const fctx = Object.assign({}, ctx, { roomName: (r) => "#" + ((r && (r.path || r.name)) || "") });
+    const itemsF = changeItems(before, after, fctx);
+    const others = itemsF.map((y, i) => ({ f: y.text, text: (items[i] || y).text, i })).filter((y) => y.i !== index && y.f !== PHONE);
+    const got = desk(changeLines(before, x, fctx)).sort();
+    const want = others.map((y) => y.f).sort();
+    if (J(got) !== J(want)) {
+      // Welche andere Zeile hängt mit dran? (für einen verständlichen Grund am ausgegrauten Knopf)
+      const left = got.slice();
+      const tied = others.find((y) => { const k = left.indexOf(y.f); if (k >= 0) { left.splice(k, 1); return false; } return true; });
+      return { why: "linked", with: tied ? tied.text : "" };
+    }
     return { state: x };
   }
 
@@ -771,7 +784,8 @@
             b.disabled = true;
             const why = document.createElement("small");
             why.className = "mwhy";
-            why.textContent = tr("Tied to another change – use Undo.");
+            why.textContent = plan.with ? fill(tr("Only together with “{line}” – use Undo for both."), { line: plan.with })
+              : tr("Tied to another change – use Undo.");
             li.appendChild(why);
           }
           b.onclick = () => {
@@ -891,6 +905,18 @@
           this._redo();
         }
       }, true);
+      // HA-Kürzel aus einem Buchstaben (a = Assist, e/c/d = Schnellsuche, m = My-Link, ? = Kürzel)
+      // feuern im Studio nicht (Nutzertest 4: Tippen kurz vor dem Fokus im Suchfeld öffnete Assist).
+      // HA lauscht auf window (Bubble) und lässt ein Ereignis mit defaultPrevented liegen – hier auf
+      // document (Bubble), also nach den eigenen Tastenhandlern des Studios. Eingabefelder bleiben
+      // unberührt (dort tippt man; HA ignoriert sie ohnehin).
+      this._gOn(document, "keydown", (ev) => {
+        if (!this.isConnected || ev.defaultPrevented || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+        if (String(ev.key || "").length !== 1 || ev.key === " ") return;
+        const t = ev.composedPath ? ev.composedPath()[0] : ev.target;
+        if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+        ev.preventDefault();
+      });
     };
 
     // ── Suche ───────────────────────────────────────────────────────────────
@@ -1104,7 +1130,10 @@
       wrapEl.addEventListener("pointerdown", (ev) => { if (ev.target === wrapEl) close(true); });
       root.appendChild(wrapEl);
       paint();
-      setTimeout(() => input.focus(), 20);
+      // Sofort fokussieren: sonst landeten Buchstaben, die direkt nach dem Klick kamen, beim Knopf
+      // (und in HA-Kürzeln). Der zweite Versuch fängt Fokus-Diebe (Toast, Popover) danach ab.
+      input.focus();
+      setTimeout(() => { if (wrapEl.isConnected && root.activeElement !== input) input.focus(); }, 20);
     };
 
     // ── QR-Code „Auf Handy öffnen“ ──────────────────────────────────────────
@@ -1397,9 +1426,13 @@
               this._bQuiet = true;
               try { this._markDirty(); } finally { this._bQuiet = false; }
               // Ausprobieren geht jetzt auch hier: das Popup unter der Vorschau fragt ebenfalls (Nutzertest 3).
-              const tryIt = v && !isPhone(this) && typeof this._cpOpen === "function";
+              // Nutzertest 4 (iPad): der Hinweis nannte „Popup anzeigen unter der Vorschau“, der Knopf lag
+              // aber unter dem Rand bzw. erschien erst nach erneutem Antippen – jetzt öffnet der Toast es selbst.
+              const target = v && !isPhone(this) && typeof this._cpOpen === "function" && typeof this._cpTarget === "function" ? this._cpTarget() : null;
               if (this._bToast) this._bToast(tr(v ? "The dashboard asks before switching" : "Switches right away again"),
-                { sub: tr(tryIt ? "Try it with “Show Popup” below the preview. Done saves it." : "Done saves it to your dashboard.") });
+                target ? { sub: tr("The popup in the preview asks too. Done saves it."),
+                  action: { label: tr("Try it"), run: () => { this._cpDismissed = null; const t = this._cpTarget(); if (t) this._cpOpen(t); } } }
+                  : { sub: tr("Done saves it to your dashboard.") });
             }, tr("Ask before switching"));
             r.append(l, sw);
             const h = document.createElement("div");

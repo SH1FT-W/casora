@@ -82,7 +82,7 @@ assert.equal(J(rd.state[0]), J(base[0]));
   assert.equal(J(r.state), J(b), 'Desktop und Handy zurück'); }
 // Was sich nicht sauber trennen lässt, wird ehrlich abgelehnt (Fingerabdruck stimmt nicht)
 const W2 = {}; new Function('window', fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel-b-mehr.js', import.meta.url), 'utf8')
-  .replace('const want = desk(items.filter', 'const want = desk([{ text: "x" }].concat(items).filter'))(W2);
+  .replace('const want = others.map((y) => y.f).sort();', 'const want = ["x"].concat(others.map((y) => y.f)).sort();'))(W2);
 assert.equal(W2.__casoraStudioMehr.revertLine(base, now, 0, {}).why, 'linked');
 
 // Panel: Zurückbenennen räumt die Nebenwerte weg (kein Geistereintrag „Raumeinstellungen geändert“)

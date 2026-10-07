@@ -6,6 +6,8 @@
 #   dev/qa/wegwerf-ha.sh start <name> <port> arbeit|frisch|stress|demo   anlegen + starten (ohne Warten)
 #   dev/qa/wegwerf-ha.sh wait  <name> <port>                         warten, bis es bereit ist
 #   dev/qa/wegwerf-ha.sh weg   <name>                                Container + Daten entfernen
+#   dev/qa/wegwerf-ha.sh konten <name> <port>                        für Nutzertests: Benutzer „Kind“ (kein Admin)
+#                                                                    + Handy-Empfänger im Lüften-Coach (wegwerf-testkonten.mjs)
 #
 # Eingespielt wird wie bei dev/haus.sh sync der Arbeitsstand dieses Checkouts (custom_components/casora
 # und dev/casora_mock, im Zustand stress dazu stress.json). Die i18n-Dateien baut gate.sh vorher
@@ -23,6 +25,15 @@ case "$cmd" in
     docker rm -f "$N" >/dev/null 2>&1 || true
     rm -rf "$D"
     exit 0 ;;
+  konten)
+    # Nur auf Wunsch (Nutzertests), nicht im Gate: ein zweiter Benutzer ändert z. B. „Wer sieht das?“.
+    P="$3"
+    case "$P" in ''|*[!0-9]*|8124|8123) echo "wegwerf-ha: Port $P nicht erlaubt" >&2; exit 2 ;; esac
+    docker inspect "$N" >/dev/null 2>&1 || { echo "wegwerf-ha: $N läuft nicht" >&2; exit 1; }
+    CASORA_URL="http://localhost:$P" "$NODE" "$REPO/dev/qa/wegwerf-testkonten.mjs"
+    # Optionen geändert → Casora lädt neu; danach wieder bereit sein.
+    CASORA_URL="http://localhost:$P" "$NODE" "$REPO/dev/qa/bereit.mjs" --max 120
+    exit 0 ;;
   wait)
     P="$3"
     i=0; until curl -s -o /dev/null -w '%{http_code}' "http://localhost:$P/manifest.json" | grep -q 200; do
@@ -32,7 +43,7 @@ case "$cmd" in
     echo "$N bereit (Port $P)"
     exit 0 ;;
   start) ;;
-  *) echo "Aufruf: $0 start <name> <port> <zustand> | wait <name> <port> | weg <name>" >&2; exit 2 ;;
+  *) echo "Aufruf: $0 start <name> <port> <zustand> | wait <name> <port> | konten <name> <port> | weg <name>" >&2; exit 2 ;;
 esac
 
 P="$3"; Z="$4"
