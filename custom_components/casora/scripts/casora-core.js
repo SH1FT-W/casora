@@ -122,15 +122,19 @@
         + ':host(.dark){--casora-askfirst-bg:#2a2a2e;--casora-askfirst-ink:#f2f2f4}'
         + '.row{display:flex;gap:10px}button{flex:1 1 0;min-height:44px;border:0;border-radius:14px;font:inherit;font-size:15px;'
         + 'font-weight:600;cursor:pointer}'
+        // Lange Knopftexte („Trotzdem scharf schalten“): untereinander, Bestätigen oben.
+        + '.row.stack{flex-direction:column-reverse}'
         + '.no{background:rgba(127,127,127,.16);color:inherit}'
         + '.yes{background:var(--casora-accent,var(--primary-color,#94603B));color:#fff}'
         + 'button:focus-visible{outline:2px solid var(--casora-accent,var(--primary-color,#94603B));outline-offset:2px}'
         + '</style><div class="box" role="alertdialog" aria-modal="true"><h2></h2><p></p>'
         + '<div class="row"><button type="button" class="no"></button><button type="button" class="yes"></button></div></div>';
-      root.querySelector('h2').textContent = w.name;
-      root.querySelector('p').textContent = T('Wirklich ' + w.verb.toLowerCase() + '?');
+      // w.title/w.text/w.yes: eigener Wortlaut (Alarm scharf schalten), sonst „Wirklich …?“.
+      root.querySelector('h2').textContent = w.title || w.name;
+      root.querySelector('p').textContent = w.text || T('Wirklich ' + w.verb.toLowerCase() + '?');
       root.querySelector('.no').textContent = T('Abbrechen');
-      root.querySelector('.yes').textContent = T(w.verb);
+      root.querySelector('.yes').textContent = w.yes || T(w.verb);
+      if (w.stack) root.querySelector('.row').classList.add('stack');
       var done = function (ok) {
         document.removeEventListener('keydown', key, true);
         host.remove();
@@ -200,6 +204,122 @@
     return ask(word({ action: 'toggle', target: { entity_id: id } }, { entity: id, name: name || '' }));
   };
   window.__casoraAskFirstParts = { switching: switching, word: word };
+
+  // ── Alarm scharf schalten: Rückfrage, wenn etwas offen ist (07.10.2026) ──────────────
+  // Sind Fenster/Türen offen oder ist ein Schloss entriegelt, fragt Casora vor dem Scharfschalten
+  // („Achtung: 2 Fenster offen, Haustür entriegelt“ – „Trotzdem scharf schalten?“). Gezählt wird
+  // wie im Sicherheits-Badge der Räume (casora_badge_security_group): Schlösser und Öffnungen aus
+  // security_lock_entity(_2), security_locks und security_entity_1…8 jedes Raums des Dashboards,
+  // Gruppen-Helfer über ihre Mitglieder, Kontakt + Kippsensor als eine Öffnung (casoraOpenings).
+  // Ausgeblendete Räume, „Wer sieht das?“ und eine abgeschaltete Sicherheit-Badge zählen nicht.
+  // Die Rückfrage hängt am Dienstaufruf selbst (hass.connection), damit Kachel, Popup, Badge und
+  // Mehr-Infos gleich fragen. Unscharf schalten fragt nie. dev/unit/alarm_rueckfrage.mjs
+  var ARM_SVC = /^alarm_arm_/;
+  var str = function (x) { return typeof x === 'string' && x.indexOf('.') > 0 && x.indexOf('[[[') < 0; };
+  // Raumvariablen mit Sicherheits-Geräten aus dem Dashboard (Desktop: casora_room, Handy: Filter-Badges).
+  var armRooms = function (cfg) {
+    var out = [];
+    (function walk(o, d) {
+      if (!o || typeof o !== 'object' || d > 14) return;
+      if (Array.isArray(o)) { o.forEach(function (x) { walk(x, d + 1); }); return; }
+      var v = o.variables;
+      if (v && typeof v === 'object' && !Array.isArray(v)
+        && (v.security_locks || v.security_lock_entity || v.security_entity_1)) out.push(v);
+      Object.keys(o).forEach(function (k) { if (k !== 'button_card_templates' && k !== 'variables') walk(o[k], d + 1); });
+    })(cfg, 0);
+    return out;
+  };
+  window.casoraArmIds = function (cfg, user) {
+    var ids = [];
+    armRooms(cfg).forEach(function (v) {
+      if (v.casora_hidden === true || v.show_security === false) return;
+      if (Array.isArray(v.casora_users) && v.casora_users.length && window.casoraSeesRoute
+        && !window.casoraSeesRoute({ users: v.casora_users })) return;
+      if (window.casoraSeen && window.casoraSeen(v, 'security', user, true) === false) return;
+      var list = [v.security_lock_entity, v.security_lock_entity_2].concat(Array.isArray(v.security_locks) ? v.security_locks : []);
+      for (var i = 1; i <= 8; i++) list.push(v['security_entity_' + i]);
+      list.forEach(function (id) {
+        if (!str(id) || ids.indexOf(id) >= 0) return;
+        if (window.casoraSeesEntity && !window.casoraSeesEntity(id, user, v)) return;
+        ids.push(id);
+      });
+    });
+    return ids;
+  };
+  // Was beim Scharfschalten offen ist, als deutsche Teile („2 Fenster offen“, „Haustür entriegelt“).
+  window.casoraArmWarnings = function (hass, ids) {
+    var S = (hass && hass.states) || {};
+    var flat = [];
+    (ids || []).forEach(function (id) {
+      var m = ((S[id] || {}).attributes || {}).entity_id;
+      (id.indexOf('binary_sensor.') === 0 && Array.isArray(m) ? m : [id]).forEach(function (x) {
+        if (str(x) && flat.indexOf(x) < 0) flat.push(x);
+      });
+    });
+    var locks = [], gates = 0, doors = 0, windows = 0, doorsT = 0, windowsT = 0;
+    flat.forEach(function (id) {
+      var e = S[id] || {}, s = String(e.state || '').toLowerCase(), a = e.attributes || {};
+      var dom = id.split('.')[0];
+      if (dom === 'lock') { if (s === 'unlocked' || s === 'unlocking' || s === 'open' || s === 'opening') locks.push(a.friendly_name || id); }
+      else if (dom === 'cover') {
+        if (['garage', 'gate', 'door'].indexOf(String(a.device_class || '').toLowerCase()) >= 0 && (s === 'open' || s === 'opening')) gates++;
+      }
+    });
+    var bs = flat.filter(function (id) { return id.indexOf('binary_sensor.') === 0; });
+    var units = window.casoraOpenings ? window.casoraOpenings(hass, bs) : [];
+    units.forEach(function (u) {
+      var win = u.kind === 'window';
+      if (u.state === 'open') { if (win) windows++; else doors++; }
+      else if (u.state === 'tilted') { if (win) windowsT++; else doorsT++; }
+    });
+    var n = function (c, one, many) { return c + ' ' + (c === 1 ? one : many); };
+    var out = [];
+    if (doors) out.push(n(doors, 'Tür offen', 'Türen offen'));
+    if (gates) out.push(n(gates, 'Tor offen', 'Tore offen'));
+    if (windows) out.push(n(windows, 'Fenster offen', 'Fenster offen'));
+    if (windowsT) out.push(n(windowsT, 'Fenster gekippt', 'Fenster gekippt'));
+    if (doorsT) out.push(n(doorsT, 'Tür gekippt', 'Türen gekippt'));
+    // Bis zwei Schlösser mit Namen („Haustür entriegelt“), mehr als Zahl.
+    if (locks.length > 2) out.push(locks.length + ' Schlösser entriegelt');
+    else locks.forEach(function (nm) { out.push(nm + ' entriegelt'); });
+    return out;
+  };
+  // Promise<true>, wenn scharf geschaltet werden darf (nichts offen oder „Trotzdem scharf schalten“).
+  window.casoraConfirmArm = function (hass, cfg) {
+    var parts = window.casoraArmWarnings(hass, window.casoraArmIds(cfg, hass && hass.user));
+    if (!parts.length) return Promise.resolve(true);
+    return ask({ title: T('Achtung') + ': ' + parts.map(T).join(', '), text: T('Trotzdem scharf schalten?'),
+      yes: T('Trotzdem scharf schalten'), stack: true });
+  };
+  // Dienstaufrufe abfangen: hass.callService und callWS laufen beide über connection.sendMessagePromise.
+  var guard = function (conn) {
+    if (!conn || conn.__casoraArmGuard || typeof conn.sendMessagePromise !== 'function') return;
+    conn.__casoraArmGuard = true;
+    var orig = conn.sendMessagePromise;
+    conn.sendMessagePromise = function (msg) {
+      var self = this, args = arguments;
+      if (!msg || msg.type !== 'call_service' || msg.domain !== 'alarm_control_panel' || !ARM_SVC.test(String(msg.service || ''))) {
+        return orig.apply(self, args);
+      }
+      var cfg = window._casoraLovelaceCfg ? window._casoraLovelaceCfg() : null;
+      var ha = document.querySelector('home-assistant');
+      // Nur auf einem Casora-Dashboard (Räume mit Sicherheits-Geräten); sonst wie bisher.
+      if (!cfg || !ha || !ha.hass) return orig.apply(self, args);
+      return window.casoraConfirmArm(ha.hass, cfg).then(function (ok) {
+        // Abbrechen: kein Fehler (sonst zeigte HA „Aktion fehlgeschlagen“ bzw. das Code-Feld „Code falsch“).
+        return ok ? orig.apply(self, args) : { context: null, casora_cancelled: true };
+      });
+    };
+  };
+  var watch = function () {
+    try {
+      var ha = document.querySelector('home-assistant');
+      guard(ha && ha.hass && ha.hass.connection);
+    } catch (e) { /* später erneut */ }
+  };
+  window.__casoraArmGuard = guard;
+  // Verbindung kommt erst nach dem Laden (und neu nach einem Neuanmelden): regelmäßig nachsehen.
+  if (typeof window.setInterval === 'function') window.setInterval(watch, 3000);
 })();
 
 // Casoras Schriften (Inter, Hanken Grotesk) einmal fürs ganze Frontend:
