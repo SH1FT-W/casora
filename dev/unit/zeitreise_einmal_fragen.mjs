@@ -53,4 +53,6 @@ assert.match(vsrc, /this\._cvRestore\(peek\.v, \{ shown: true \}\)/);
   assert.match(err, /offline/);
   assert.equal(discarded, 0, 'Fehler beim Wiederherstellen → Änderungen nicht verworfen');
 }
+// „+N weitere“ in der Verlustliste: sichtbarer Fokusrand (all:unset nahm ihn weg, Review 1.1.1).
+assert.match(vsrc, /\.cv-morebtn:focus-visible\{outline:2px solid/);
 console.log('ok zeitreise_einmal_fragen');
