@@ -661,13 +661,14 @@
         extend: lost ? ({ box, acts }) => box.insertBefore(this._cvLossBox(lost), acts) : undefined,
       });
       if (!ok) return;
-      if (dirty && this._discardDraft) this._discardDraft();
       try {
         await this._hass.callWS({ type: "casora/versions/restore", url_path: this._dashUrl, version: v.id });
       } catch (e) {
+        // Ungespeichertes bleibt, wenn das Wiederherstellen scheitert (Review 1.1.1: war schon verworfen).
         this._cvError(t("Restoring didn't work.") + " " + e.message);
         return;
       }
+      if (dirty && this._discardDraft) this._discardDraft();
       this._cvPeek = null;
       this._cvCache = {};
       this._cvSel = null;

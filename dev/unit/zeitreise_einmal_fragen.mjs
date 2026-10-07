@@ -39,4 +39,18 @@ assert.equal(r.lossAsked, 0);
 assert.doesNotMatch(r.asks[0].message, /discarded/);
 // Der Knopf in der Vorschau übergibt shown
 assert.match(vsrc, /this\._cvRestore\(peek\.v, \{ shown: true \}\)/);
+// Scheitert das Wiederherstellen, bleibt Ungespeichertes erhalten (Review 1.1.1).
+{
+  let discarded = 0, err = '';
+  const self = Object.create(P);
+  Object.assign(self, {
+    _state: {}, _isDirty: () => true, _discardDraft: () => { discarded++; },
+    _ask: async () => true, _cvLossFor: async () => null, _cvLossBox: () => ({}),
+    _cvError: (m) => { err = m; },
+    _hass: { language: 'de', locale: {}, callWS: async () => { throw new Error('offline'); } },
+  });
+  await self._cvRestore({ id: 'v1', ts: '2026-10-07T08:10:00Z' });
+  assert.match(err, /offline/);
+  assert.equal(discarded, 0, 'Fehler beim Wiederherstellen → Änderungen nicht verworfen');
+}
 console.log('ok zeitreise_einmal_fragen');
