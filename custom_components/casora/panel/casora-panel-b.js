@@ -61,6 +61,11 @@
       align-self:stretch;
     }
     :host(.bmode.binsp.split:not(.flow)) .inspector { display:flex; animation:bInspIn .22s var(--ease, ease); }
+    /* Tablet (schmal, geteilt): der Inspektor ist fest hoch, also muss sein Inhalt scrollen –
+       „.narrow .sheet { overflow:visible }“ (alte Handy-Ansicht) schnitt sonst z. B. „Wer sieht
+       das?“ unten ab, Wischen und Mausrad halfen nicht (Nutzertest Tablet). */
+    :host(.bmode.split.narrow:not(.flow):not(.phone)) .inspector .sheet {
+      overflow-y:auto; overflow-x:hidden; min-height:0; overscroll-behavior:contain; touch-action:pan-y; -webkit-overflow-scrolling:touch; }
     :host(.bmode.bpage.split:not(.flow)) { --b-insp-w:min(760px, calc(100% - 28px)); }
     :host(.bmode.bpage.split:not(.flow)) .main { padding-right:0; }
     /* Dunkel liegt die Seite über dem Hausfoto der Vorschau: fast deckend, sonst schimmert es bunt durch. */
@@ -585,7 +590,9 @@
       const lab = row.querySelector("#roomtitle .rt-label");
       const pill = [...this.shadowRoot.querySelectorAll(".navpill")].find((x) => x.getClientRects().length
         && x.getBoundingClientRect().left > tr0.left);
-      const tight = row.scrollWidth > row.clientWidth + 1 || (next && next.getBoundingClientRect().left < tr0.right + 8)
+      // Auch: die Knöpfe selbst laufen über ihren Platz (Nutzertest 1600 px: „Einstellungen“ unter
+      // dem Hinweis „Handy weicht … ab“).
+      const tight = row.scrollWidth > row.clientWidth + 1 || tools.scrollWidth > tools.clientWidth + 1 || (next && next.getBoundingClientRect().left < tr0.right + 8)
         || (lab && lab.scrollWidth > lab.clientWidth + 1)
         || (pill && pill.getBoundingClientRect().left < tr0.right + 20);
       this.classList.toggle("btight", !!tight);

@@ -424,6 +424,9 @@
     /* Als zweite Zeile unter dem Titel, nicht daneben: sonst rückten beim ersten Ändern alle
        Knöpfe der Kopfzeile nach rechts (Nutzertest: Fehlklick). Am Handy so ebenfalls sichtbar. */
     :host(.bmode.bdirty:not(.flow)) .toprow { position:relative; }
+    /* Eng: „Handy weicht bei N Einstellungen ab“ nur als Zahl (wie am Handy). */
+    :host(.bmode.btight:not(.phone)) #diffs .s-long, :host(.bmode.uxs2:not(.phone)) #diffs .s-long { display:none; }
+    :host(.bmode.btight:not(.phone)) #diffs .s-short, :host(.bmode.uxs2:not(.phone)) #diffs .s-short { display:inline; }
     :host(.bmode.bdirty:not(.flow):not(.btight)) .toprow > .bedited.mlink,
     :host(.bmode.bdirty.phone:not(.flow)) .toprow > .bedited.mlink {
       display:inline-flex; position:absolute; top:calc(100% - 4px); margin:0 !important; z-index:3;
@@ -601,6 +604,30 @@
         b.disabled = !n;
       }
     };
+
+    // Vorschau folgt dem gewählten Raum (Nutzertest Handy: Raum im Räume-Menü gewählt, Vorschau
+    // blieb auf „Zuhause“). Nur bei echtem Raumwechsel neu zeichnen.
+    wrap("_renderTabs", (orig) => function () {
+      const r = orig.apply(this, arguments);
+      if (on(this) && this._state && this._mPvRoom !== undefined && this._mPvRoom !== this._room) {
+        requestAnimationFrame(() => {
+          try {
+            // Handy-Vorschau: Raumseite des gewählten Raums (wie beim Umschalten auf „Handy“).
+            if (this._miniSize === "phone" && this._phoneRoomFilter) this._phoneFilter = this._phoneRoomFilter();
+            if (this._rebuildPreview) this._rebuildPreview();
+          } catch (e) { /* nächstes Zeichnen */ }
+        });
+      }
+      this._mPvRoom = this._room;
+      return r;
+    });
+
+    // Der Hinweis „Handy weicht … ab“ kommt nach dem Einpassen der Kopfzeile: danach neu einpassen.
+    wrap("_renderReconcile", (orig) => function () {
+      const r = orig.apply(this, arguments);
+      if (on(this) && typeof this._bFitTools === "function") requestAnimationFrame(() => { try { this._bFitTools(); } catch (e) { /* nächstes Mal */ } });
+      return r;
+    });
 
     // ── Änderungen ───────────────────────────────────────────────────────────
     const flat = (sn) => sn.s.concat([sn.m || null]);

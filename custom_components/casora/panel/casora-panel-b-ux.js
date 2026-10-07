@@ -57,7 +57,7 @@
     room: "Applies to: {room}",
     thisroom: "Applies to: this room",
     dash: "Applies to: this dashboard",
-    design: "Applies to: this dashboard – the design to all dashboards",
+    design: "Applies to: this dashboard · exception: the design applies to all dashboards",
     all: "Applies to: all dashboards",
   };
 
@@ -304,7 +304,14 @@
       const heads = [...this.shadowRoot.querySelectorAll("#pane .sidehead.phonehead, .inspector .sidehead.phonehead")];
       if (!heads.length) return;
       // „nur dieses Dashboard“ → dieselbe Zeile wie überall: „Gilt für: dieses Dashboard“.
-      heads.slice(1).forEach((h) => { const sm = h.querySelector("small"); const t = tr(SCOPE.dash); if (sm && sm.textContent !== t) { sm.textContent = t; sm.setAttribute("data-no-i18n", ""); } });
+      // Der Abschnitt „Einstellungen“ (cu-sidehead) gilt für alle Dashboards – stand fälschlich
+      // auf „dieses Dashboard“ (Nutzertest T1).
+      heads.slice(1).forEach((h) => {
+        const t = tr(h.classList.contains("cu-sidehead") ? SCOPE.all : SCOPE.dash);
+        let sm = h.querySelector("small");
+        if (!sm && h.classList.contains("cu-sidehead")) { sm = document.createElement("small"); h.appendChild(sm); }
+        if (sm && sm.textContent !== t) { sm.textContent = t; sm.setAttribute("data-no-i18n", ""); }
+      });
       const first = heads[0];
       if (first && !first.querySelector("small")) {
         first.appendChild(Object.assign(document.createElement("small"), { textContent: fill(tr(SUB.list), { room: this._uxRoomName() }) }));
@@ -351,7 +358,8 @@
           intro = tr(SCOPE.dash);
           // Die Zeile oben sagt es schon – keine zweite Überschrift „Nur dieses Dashboard“.
           items = items.map((x) => (x && /^sec:/.test(x.id || "") ? { ...x, quiet: true } : x));
-          subs = { General: "The design applies to all dashboards" };
+          // Ausnahme ausdrücklich so nennen – vorher wirkte es wie ein Widerspruch zur Zeile oben (Nutzertest T1).
+          subs = { General: "Exception: the design applies to all dashboards" };
         } else if (items.some((x) => x && /^page:/.test(x.id || ""))) {
           intro = tr(SCOPE.all);
           items = items.map((x) => (x && (/^page:/.test(x.id || "") || x.id === "updates") ? { ...x, quiet: true } : x));
@@ -1077,7 +1085,7 @@
       while (next && (!next.getClientRects().length || next.getBoundingClientRect().width < 2)) next = next.nextElementSibling;
       const lab = row.querySelector("#roomtitle .rt-label");
       const pill = [...this.shadowRoot.querySelectorAll(".navpill")].find((x) => x.getClientRects().length && x.getBoundingClientRect().left > tr0.left);
-      return row.scrollWidth > row.clientWidth + 1 || !!(next && next.getBoundingClientRect().left < tr0.right + 8)
+      return row.scrollWidth > row.clientWidth + 1 || tools.scrollWidth > tools.clientWidth + 1 || !!(next && next.getBoundingClientRect().left < tr0.right + 8)
         || !!(lab && lab.scrollWidth > lab.clientWidth + 1) || !!(pill && pill.getBoundingClientRect().left < tr0.right + 20);
     };
     wrap("_bFitTools", (orig) => function () {
