@@ -3124,6 +3124,30 @@
   };
   S.houseQ = houseQ;
 
+  /* Raum einer einzelnen Leuchte (Popup einer Lampe, 07.10.2026): die kleinste Lichtgruppe mit ihr
+     und mindestens zwei Leuchten. Nie eine Gruppe über mehrere Bereiche („alle Lichter“ des Hauses) –
+     sonst stand das ganze Haus unter „Leuchten im Raum“ und „Alles aus“ schaltete es ohne Rückfrage
+     aus (Review 1.1.1). Ohne passende Gruppe null: dann nur diese Leuchte. */
+  S.roomOf = function (id, states, hass) {
+    if (!id || String(id).indexOf('light.') !== 0 || !states || !states[id]) return null;
+    if (Array.isArray((states[id].attributes || {}).entity_id)) return null;
+    var E = (hass && hass.entities) || {}, D = (hass && hass.devices) || {};
+    var areaOf = function (x) { var e = E[x] || {}; return e.area_id || (e.device_id && D[e.device_id] && D[e.device_id].area_id) || null; };
+    var best = null;
+    for (var gid in states) {
+      if (gid.indexOf('light.') !== 0) continue;
+      var m = (states[gid].attributes || {}).entity_id;
+      if (!Array.isArray(m) || m.indexOf(id) < 0) continue;
+      var ex = m.filter(function (x) { return states[x]; });
+      if (ex.length < 2 || (best && ex.length >= best.length)) continue;
+      var areas = {};
+      ex.forEach(function (x) { var a = areaOf(x); if (a) areas[a] = 1; });
+      if (Object.keys(areas).length > 1) continue;
+      best = ex;
+    }
+    return best;
+  };
+
   var ctPresets = function (lamps, states) {
     var lo = Infinity, hi = -Infinity;
     lamps.forEach(function (id) {

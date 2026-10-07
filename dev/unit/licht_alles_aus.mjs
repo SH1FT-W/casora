@@ -56,4 +56,21 @@ assert.equal(calls.length, 0, 'ausgegraut schaltet nicht');
 // Eine Leuchte: kein Knopf (der Ring schaltet schon).
 html = S.render({ gid: 'light.x', flat: { name: 'Flur', rid: 'light.decke', lights: ['light.decke'] } }, 'hero', states, hass, null);
 assert.ok(!/lps-off/.test(html.replace(/<style>[\s\S]*?<\/style>/, '')), 'mit einer Leuchte kein Knopf');
+// Raum einer einzelnen Leuchte (Review 1.1.1): kleinste Lichtgruppe in einem Bereich, nie die
+// Gruppe „alle Lichter“ über mehrere Bereiche – sonst schaltete „Alles aus“ das ganze Haus.
+{
+  const st = {};
+  const G = (id, members) => { st[id] = { entity_id: id, state: 'on', attributes: { entity_id: members } }; };
+  ['light.a1', 'light.a2', 'light.b1', 'light.c1'].forEach((id) => { st[id] = { entity_id: id, state: 'on', attributes: {} }; });
+  G('light.alle', ['light.a1', 'light.a2', 'light.b1', 'light.c1']);
+  const h = { entities: { 'light.a1': { area_id: 'raum_a' }, 'light.a2': { area_id: 'raum_a' }, 'light.b1': { area_id: 'raum_b' },
+    'light.c1': { device_id: 'dev_c' } }, devices: { dev_c: { area_id: 'raum_c' } } };
+  assert.equal(S.roomOf('light.a1', st, h), null, 'Haus-Gruppe über mehrere Bereiche ist kein Raum');
+  G('light.raum_a', ['light.a1', 'light.a2']);
+  assert.deepEqual(S.roomOf('light.a1', st, h), ['light.a1', 'light.a2'], 'Raumgruppe wird gefunden');
+  assert.equal(S.roomOf('light.c1', st, h), null, 'Bereich über das Gerät zählt mit');
+  assert.equal(S.roomOf('light.raum_a', st, h), null, 'eine Gruppe selbst hat keinen Raum');
+  // Ohne Bereiche (nichts zugeordnet): wie bisher die kleinste Gruppe.
+  assert.deepEqual(S.roomOf('light.b1', st, {}), ['light.a1', 'light.a2', 'light.b1', 'light.c1']);
+}
 console.log('ok licht_alles_aus');
