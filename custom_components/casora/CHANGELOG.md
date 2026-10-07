@@ -113,6 +113,7 @@ The biggest update since Casora 1.0. It brings a new Studio in which the preview
 - Light tile: a custom popup title is shown in the popup.
 - Icons from an icon set that isn't installed show a default icon instead of an empty circle.
 - Voice Assist: if no answer arrives, input works again after 45 seconds.
+- "Casora" look, light mode: in Home Assistant (e.g. "Add condition" in the automation editor) the unselected tabs "By type" and "Blocks" are readable again. The dashboard stays unchanged.
 
 #### Phone
 - A tile hidden in the Studio is also left out of the room page and the category pages.

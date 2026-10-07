@@ -111,6 +111,7 @@ Casora Nebel:
       casora-dialog-bg: rgb(242,245,248)
       ha-color-fill-primary-quiet-resting: rgba(101,114,129,0.10)
       ha-color-fill-primary-quiet-hover: rgba(101,114,129,0.15)
+      wa-color-neutral-fill-normal: rgba(101,114,129,0.10)
       mdc-text-field-fill-color: rgba(101,114,129,0.08)
       mdc-select-fill-color: rgba(101,114,129,0.08)
       input-fill-color: rgba(101,114,129,0.08)
@@ -251,6 +252,7 @@ Casora Nebel:
       secondary-background-color: rgb(25,26,27)
       primary-text-color: '#E5E9EE'
       text-primary-color: rgba(229,233,238,0.96)
+      wa-color-neutral-on-loud: rgb(31,33,35)
       secondary-text-color: rgba(186,192,199,0.85)
       casora-text-3: rgba(229,233,238,0.45)
       casora-ton-ink: '#8DBAD3'

@@ -113,6 +113,7 @@ Das größte Update seit Casora 1.0. Neu sind das Studio, in dem die Vorschau se
 - Licht-Kachel: Ein eigener Popup-Titel wird im Popup angezeigt.
 - Symbole aus einem nicht installierten Symbolsatz zeigen ein Standardsymbol statt eines leeren Kreises.
 - Assist per Sprache: Kommt keine Antwort, ist die Eingabe nach 45 Sekunden wieder bedienbar.
+- Design „Casora“ hell: In Home Assistant (z. B. „Bedingung hinzufügen“ im Automations-Editor) sind die nicht gewählten Reiter „Nach Typ“ und „Bausteine“ wieder lesbar. Das Dashboard bleibt unverändert.
 
 #### Handy
 - Eine im Studio ausgeblendete Kachel fehlt auch auf der Raumseite und den Kategorieseiten.
