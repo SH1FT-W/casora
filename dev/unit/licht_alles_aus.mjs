@@ -43,6 +43,14 @@ listeners.click.forEach((f) => f(ev));
 await new Promise((r) => setTimeout(r, 10));
 assert.deepEqual(calls, [['light', 'turn_off', ['light.decke', 'light.stehlampe']]], JSON.stringify(calls));
 
+// Tastatur (Review 1.1.1): fokussierbar, Eingabetaste wirkt wie ein Tipp.
+assert.ok(/class="lps-off" role="button" tabindex="0"/.test(html), 'Knopf mit der Tastatur erreichbar');
+calls.length = 0;
+const kel = { ...el, classList: { contains: (c) => c === 'lps-off' } };
+listeners.keydown.forEach((f) => f({ ...ev, key: 'Enter', composedPath: () => [kel] }));
+await new Promise((r) => setTimeout(r, 10));
+assert.deepEqual(calls, [['light', 'turn_off', ['light.decke', 'light.stehlampe']]], 'Eingabetaste schaltet aus');
+
 // Alles aus: ausgegraut, Tippen tut nichts.
 L('light.decke', false); L('light.stehlampe', false); L('light.geheim', false);
 html = S.render(cfg, 'hero', states, hass, null);

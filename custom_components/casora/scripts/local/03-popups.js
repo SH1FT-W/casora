@@ -2992,6 +2992,7 @@
     + '.lps-off::before{content:"";position:absolute;left:0;right:0;top:-6px;bottom:-6px;}'
     + '.lps-off .lps-g{width:17px;height:17px;}'
     + '.lps-off.dis{opacity:.45;cursor:default;}'
+    + '.lps-off:focus-visible{outline:2px solid currentColor;outline-offset:2px;}'
     + '@media (hover:hover){.lps-off:not(.dis):hover{filter:brightness(.98);}}'
     + '.lps-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--casora-popup-col-gap,26px);align-items:start;}'
     + '.lps-cols.one{grid-template-columns:minmax(0,1fr);}'
@@ -3117,7 +3118,7 @@
     var any = (seen || ids).some(function (id) { return states[id].state === 'on'; });
     var spec = { a: 'alloff', ids: ids };
     if (house) spec.house = 1;
-    return '<div class="lps-off' + (any ? '' : ' dis') + '" role="button"' + (any ? '' : ' aria-disabled="true"')
+    return '<div class="lps-off' + (any ? '' : ' dis') + '" role="button" tabindex="0"' + (any ? '' : ' aria-disabled="true"')
       + ' data-lps-tap="' + attr(spec) + '"><span class="lps-g" style="--lps-ic:url(\'' + POWER + '\')"></span>' + esc(tr('Alles aus')) + '</div>';
   };
 
@@ -3361,6 +3362,13 @@
     tDone = Date.now(); if (ev.cancelable) ev.preventDefault(); ev.stopPropagation();
     act(el);
   }, { capture: true, passive: false });
+  /* „Alles aus“ mit der Tastatur (Review 1.1.1): Eingabe/Leertaste wie ein Tipp. */
+  window.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    var el = find(ev, 'data-lps-tap'); if (!el || !el.classList || !el.classList.contains('lps-off')) return;
+    ev.preventDefault(); ev.stopPropagation();
+    act(el);
+  }, true);
   window.addEventListener('click', function (ev) {
     var el = find(ev, 'data-lps-tap'); if (!el) return;
     ev.preventDefault(); ev.stopPropagation();
