@@ -2995,7 +2995,8 @@
     + '.lps-sg{flex:1;min-width:0;height:46px;border-radius:18px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;'
     +   'font-size:13px;font-weight:600;white-space:nowrap;background:var(--casora-lps-seg);color:var(--casora-lps-seg-ink);'
     +   'transition:background .2s ease,color .2s ease,box-shadow .2s ease;-webkit-tap-highlight-color:transparent;}'
-    + '.lps-sg.on{background:var(--casora-lps-seg-on);color:var(--casora-lps-seg-on-ink);box-shadow:var(--casora-lps-seg-on-shadow);}'
+    // Gewählte Lichtfarbe wie Weißton/Effekte im Einzel-Licht-Popup: dunkle Pille, helle Schrift (07.10.2026).
+    + '.lps-sg.on{background:var(--casora-popup-tiles-text-primary,#fff);color:var(--casora-popup-ui-on-ink,#000);box-shadow:none;}'
     + '.lps-dot{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1px var(--casora-soft-dot-ring,var(--casora-lps-dot-ring,transparent));}'
     + '.lps-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;}'
     + '.lps-chip{padding:10px 16px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;'

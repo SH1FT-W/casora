@@ -2,7 +2,7 @@
 // - Einzel-Licht-Popup: gewählter Weißton (Warm/Neutral/Kalt) ist hinterlegt und zeichnet nach dem
 //   Tippen neu (vorher statische Karte ohne Markierung).
 // - Szenen ohne lesbare Konfiguration (YAML, Hue …) gelten kurz nach dem Start als aktiv – der
-//   Szenen-Badge blieb sonst bei „Keine Aktiv“.
+//   Szenen-Badge blieb sonst bei „Keine aktiv“.
 //   node dev/unit/licht_rueckmeldung.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
