@@ -72,9 +72,17 @@ const del = clone(base); del[0].rooms.splice(1, 1);
 const rd = revertLine(base, del, 0, {});
 assert.equal(J(rd.state[0]), J(base[0]));
 
+// Handy-Layout folgt (Raumname im Handy-Abschnitt mit umbenannt): Zurücknehmen geht trotzdem,
+// und mit der letzten Desktop-Zeile kommt auch das Handy-Layout zurück.
+{ const b = clone(base); b[4] = [{ rooms: [{ name: 'Küche', tiles: [] }] }, null, null];
+  const n = clone(b); n[0].rooms[1].name = 'Kochecke'; n[4][0].rooms[0].name = 'Kochecke';
+  assert.deepEqual(changeLines(b, n, {}), ['Room renamed: Küche → Kochecke']);
+  const r = revertLine(b, n, 0, {});
+  assert.ok(r.state, 'nicht „verknüpft“');
+  assert.equal(J(r.state), J(b), 'Desktop und Handy zurück'); }
 // Was sich nicht sauber trennen lässt, wird ehrlich abgelehnt (Fingerabdruck stimmt nicht)
 const W2 = {}; new Function('window', fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel-b-mehr.js', import.meta.url), 'utf8')
-  .replace('const want = items.filter', 'const want = ["x"].concat(items).filter'))(W2);
+  .replace('const want = desk(items.filter', 'const want = desk([{ text: "x" }].concat(items).filter'))(W2);
 assert.equal(W2.__casoraStudioMehr.revertLine(base, now, 0, {}).why, 'linked');
 
 // Panel: Zurückbenennen räumt die Nebenwerte weg (kein Geistereintrag „Raumeinstellungen geändert“)

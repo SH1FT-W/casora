@@ -358,8 +358,14 @@
       });
     };
     try { it.fix(x, before); clean(x); } catch (e) { return { why: "error" }; }
-    const want = items.filter((_, i) => i !== index).map((y) => y.text).sort();
-    const got = changeLines(before, x, ctx).slice().sort();
+    // Das Handy-Layout folgt dem Desktop (Abgleich beim Anzeigen/Speichern, z. B. Raumnamen): es zählt
+    // nicht zum Fingerabdruck. Ist am Desktop alles zurück, kommt auch das Handy-Layout zurück –
+    // sonst blieb am Handy „Handy-Layout geändert“ übrig und das Zurücknehmen wirkte verknüpft.
+    const PHONE = tr("Phone layout changed");
+    const desk = (l) => l.filter((t) => t !== PHONE);
+    if (!desk(changeLines(before, x, ctx)).length && J(x[4]) !== J((before || [])[4])) x[4] = JSON.parse(J((before || [])[4]));
+    const want = desk(items.filter((_, i) => i !== index).map((y) => y.text)).sort();
+    const got = desk(changeLines(before, x, ctx)).sort();
     if (J(got) !== J(want)) return { why: "linked" };
     return { state: x };
   }
