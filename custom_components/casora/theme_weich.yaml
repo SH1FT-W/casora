@@ -579,6 +579,12 @@ Casora:
       ha-dialog-surface-background: var(--casora-dialog-bg)
       ha-color-fill-primary-quiet-resting: rgba(140,115,90,0.10)
       ha-color-fill-primary-quiet-hover: rgba(140,115,90,0.15)
+      # HA-Knöpfe „neutral“ (z. B. nicht gewählte Reiter „Nach Typ“/„Bausteine“ im Dialog
+      # „Bedingung hinzufügen“): das Grund-Theme setzt dafür weiße Schrift auf 8 % Weiß – auf
+      # Leinen unlesbar (07.10.2026). Hier Espresso-Schrift auf Sand. Casora-Vorlagen nutzen
+      # diese Web-Awesome-Werte nicht, nur HAs eigene Bedienelemente.
+      wa-color-neutral-on-normal: var(--primary-text-color)
+      wa-color-neutral-fill-normal: rgba(140,115,90,0.10)
       mdc-text-field-fill-color: rgba(140,115,90,0.08)
       mdc-select-fill-color: rgba(140,115,90,0.08)
       input-fill-color: rgba(140,115,90,0.08)
@@ -818,6 +824,9 @@ Casora:
       secondary-background-color: rgb(28,26,24)
       primary-text-color: "#F2EBE1"
       text-primary-color: rgba(242,235,225,0.96)
+      # HA-Knöpfe „neutral, kräftig“: Grund ist hier die helle Schrift (#F2EBE1) – Weiß darauf
+      # war unlesbar; dunkle Schrift wie der Hintergrund (07.10.2026, nur HA-Bedienelemente).
+      wa-color-neutral-on-loud: rgb(36,33,30)
       secondary-text-color: rgba(205,194,180,0.85)
       casora-text-2: var(--secondary-text-color)
       casora-text-3: rgba(242,235,225,0.45)
