@@ -3099,6 +3099,10 @@ const panelW = (el) => {
   return out;
 };
 const isNarrow = (el) => panelW(el) < PANEL_NARROW;
+// Tablet-Vorschau hochkant (note5 Frage 4): läuft das Studio auf einem Touch-Gerät im Hochformat
+// (iPad hochkant), zeigt „Tablet“ den Rahmen hochkant. Am Desktop (ohne Touch) bleibt er quer.
+const tabletPortrait = () => window.innerHeight > window.innerWidth
+  && ((navigator.maxTouchPoints || 0) > 0 || !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches));
 // Handy quer (03.10.2026): niedrig und breit – geteilte Ansicht statt Handy-Ansicht, auch wenn
 // die angedockte HA-Seitenleiste das Studio unter 700 px drückt (die Handy-Ansicht liegt fest
 // über die ganze Breite und rutschte dann unter die HA-Seitenleiste).
@@ -7965,6 +7969,8 @@ class CasoraPanel extends HTMLElement {
           height:var(--nav-h); border-radius:9999px; align-items:center;
           max-width:calc(100% - 2 * (var(--pad-x) + var(--nav-reserve))); overflow:hidden;
         }
+        /* Hochkant: die Leiste stößt an die drei Knöpfe rechts – Platz für sie freihalten. */
+        .card.map.size-tablet.portrait { --nav-reserve:92px; }
         .size-tablet .mini-tabs::before, .size-tablet .mini-tabs::after {
           content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
         }
@@ -23648,12 +23654,15 @@ class CasoraPanel extends HTMLElement {
     wrap.appendChild(slot);
 
 
-    const SPEC = { desktop: [960, Math.round(960 / 1.55)], tablet: [700, 486],
+    // tabletUp: iPad hochkant im gleichen Maßstab wie „tablet“ (700 ≈ 1024 px Bildschirm).
+    const SPEC = { desktop: [960, Math.round(960 / 1.55)], tablet: [700, 486], tabletUp: [525, 700],
       phone: [390, 844] };
     const applySize = (animate) => {
       // Studio B (casora-panel-b.js) zeigt die Vorschau auch am Handy – als Arbeitsfläche.
       if (isPhone(this) && !this.classList.contains("bmode")) return;
-      let [natW, natH] = SPEC[this._miniSize];
+      const upright = this._miniSize === "tablet" && tabletPortrait();
+      card.classList.toggle("portrait", upright);
+      let [natW, natH] = upright ? SPEC.tabletUp : SPEC[this._miniSize];
       // SF-12: Desktop im Seitenverhältnis des Bildschirms, auf dem das Dashboard läuft (Fläche
       // rechts der HA-Seitenleiste), begrenzt auf 1,3 bis 1,78 – füllt die Höhe neben dem Inspektor.
       // Nicht im gestapelten Aufbau (Tablet hochkant): dort teilt sich die Höhe mit dem Inspektor.
