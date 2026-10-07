@@ -1269,8 +1269,20 @@
           this._uxImgSig = sig;
         }
       } catch (e) { /* egal */ }
+      // Satz „Alle sehen diese Kachel …“ gleich mitziehen (Nutzertest 7: blieb nach „Wer sieht das?“ stehen).
+      try { this._uxVisRefresh(); } catch (e) { /* egal */ }
       return r;
     });
+    P._uxVisRefresh = function () {
+      const p0 = this.shadowRoot.querySelector("#pane #band-tiles .tile.sel .adv.uxvis .uxvissent");
+      const room = room$(this);
+      if (!p0 || !room || !this._sel || this._sel.group !== "tiles") return;
+      const shell = (room.tiles || []).find((t) => this._tileKey(t) === this._sel.key);
+      if (!shell) return;
+      p0.textContent = this._uxVisSentence(shell);
+      const v = p0.closest(".adv.uxvis").querySelector(".uxsum");
+      if (v && this._uxVisSummary) v.textContent = this._uxVisSummary(shell);
+    };
     P._uxNext = function () {
       const pane = this.shadowRoot.getElementById("pane");
       const old = pane && pane.querySelector(".uxnext");

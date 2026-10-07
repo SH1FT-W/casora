@@ -1367,6 +1367,8 @@
       try { this._markDirty(); } finally { this._bQuiet = false; }
       this._renderTabs();
       this._renderForm();
+      // Vorschau neu: Auge an der Raumleiste und Zähler „N ausgeblendet“ (Nutzertest 7: blieben stehen).
+      if (this._rebuildPreview) this._rebuildPreview();
       if (this._bToast) {
         this._bToast(tr(hide ? "Room hidden" : "Room shown again") + ": " + this._roomLabel(r), {
           sub: hide ? tr("It stays here with all its settings. Saving hides it on the dashboard.") : "", save: true,
