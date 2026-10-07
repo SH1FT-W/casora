@@ -62,6 +62,10 @@ if [ "$Z" = stress ]; then
 else
   rm -f "$CFG/custom_components/casora_mock/stress.json"
 fi
+# Szenen aus dem Studio („Aus aktuellem Zustand“) landen in scenes.yaml – HA lädt sie nur mit dieser
+# Zeile. Die Zustände haben sie nicht; jeder Tester musste sie nachtragen (Nutzertest 3).
+grep -q '^scene:' "$CFG/configuration.yaml" 2>/dev/null || printf '\nscene: !include scenes.yaml\n' >> "$CFG/configuration.yaml"
+[ -f "$CFG/scenes.yaml" ] || echo '[]' > "$CFG/scenes.yaml"
 echo "$Z" > "$D/zustand"
 IMG="$(docker inspect casora-test --format '{{.Config.Image}}' 2>/dev/null || echo ghcr.io/home-assistant/home-assistant:stable)"
 docker run -d --name "$N" --label casora-gate=1 -p "$P:8123" -v "$CFG:/config" -e TZ=Europe/Berlin "$IMG" >/dev/null
