@@ -8075,15 +8075,19 @@ window.casoraMenuGlass = {
     return '<div style="font-family:' + T.font + ';text-align:left;' + (o.wrapStyle || '') + '">' + out + '</div>';
   }
 
+  // Rollo, Fensterladen und Fenster-Behang sind im Popup alle „Jalousien“ (07.10.2026): vorher stand
+  // eine Jalousie mit Geräteklasse shutter unter „Fensterläden“, Titel und Kachel sagten „Jalousie“.
+  // Eine Gruppe, dieselben Lamellen-Symbole wie die Kachel (cover_open/cover_closed – vorher zeigte ein
+  // Popup Lamellen im Kopf, Vorhang am Regler und Fenster in den Zeilen, Audit M2).
+  // Vorhang, Markise, Tür, Garage und Tor bleiben eigene Gruppen. Reihenfolge = Namens-Raten unten.
+  var BLIND = { key: 'blind', label: 'Jalousien', open: 'cover_open', closed: 'cover_closed' };
   var COVER_KINDS = {
     curtain: { key: 'curtain', label: 'Vorhänge',     open: 'curtain-open',         closed: 'curtain-closed' },
-    // Jalousien mit denselben Lamellen-Symbolen wie die Kachel (cover_open/cover_closed) – vorher
-    // zeigte ein Popup Lamellen im Kopf, Vorhang am Regler und Fenster in den Zeilen (Audit M2).
-    blind:   { key: 'blind',   label: 'Jalousien',    open: 'cover_open',           closed: 'cover_closed' },
-    shade:   { key: 'shade',   label: 'Rollos',       open: 'roller-shade-open',    closed: 'roller-shade-closed' },
-    shutter: { key: 'shutter', label: 'Fensterläden', open: 'window-shade-open',    closed: 'window-shade-closed' },
+    blind:   BLIND,
+    shade:   BLIND,
+    shutter: BLIND,
     awning:  { key: 'awning',  label: 'Markisen',     open: 'window-shade-open',    closed: 'window-shade-closed' },
-    window:  { key: 'window',  label: 'Jalousien',    open: 'cover_open',           closed: 'cover_closed' },
+    window:  BLIND,
     door:    { key: 'door',    label: 'Türen',        open: 'door-open',            closed: 'door-closed' },
     garage:  { key: 'garage',  label: 'Garage',       open: 'door-open',            closed: 'door-closed' },
     gate:    { key: 'gate',    label: 'Tore',         open: 'door-open',            closed: 'door-closed' },
