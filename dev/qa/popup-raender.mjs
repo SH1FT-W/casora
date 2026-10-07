@@ -11,6 +11,9 @@
 //     --only <regex>           nur Popups, deren Schlüssel (Vorlage) passt
 //     --settings '<json>'      Casora-Einstellungen nur im Browser ergänzen, z. B. Abfall mit Monatskalender:
 //                              '{"waste":{"calendar_popup":true}}' (am HA ändert sich nichts)
+//     --handy-raeume [n]       am Handy zusätzlich jeden Raum öffnen (Raumseite) und dort alle Kacheln/Badges
+//                              antippen (n = höchstens so viele Räume; Standard alle). Anlass 07.10.2026:
+//                              Popups aus Räumen (Pflanze, Geräte, Swipe-Karten …) wurden am Handy nie gemessen.
 //     --json <datei>           Rohdaten schreiben
 //     --shots <ordner>         je Fund ein Bild (--alle-bilder: von jedem Popup)
 //
@@ -234,6 +237,20 @@ async function closeAll(page) {
   }
 }
 
+// Liegt die Kachel an ihrer Mitte obenauf (nicht unter der Raumseite verdeckt)?
+const onTop = (page, i, at) => page.evaluate(([i, x, y]) => { const b = window.__pierce('button-card')[i]; let e = document.elementFromPoint(x, y);
+  while (e && e.shadowRoot) { const d = e.shadowRoot.elementFromPoint(x, y); if (!d || d === e) break; e = d; }
+  for (let a = e, n = 0; a && n < 80; n++) { if (a === b) return true; a = a.assignedSlot || a.parentNode || a.host; if (a && a.nodeType === 11) a = a.host; }
+  return false; }, [i, at.x, at.y]).catch(() => false);
+// Raumseite offen halten (Escape beim Schließen eines Popups darf sie nicht mitnehmen).
+const ensureRoom = async (page, room) => {
+  const shown = () => page.evaluate((k) => window.__pierce('casora-filter-overlay').some((o) => o._config && o._config.filter_category === k && o._showing), room).catch(() => false);
+  if (await shown()) return true;
+  await page.evaluate((k) => window._casoraFilter && window._casoraFilter.set(k), room).catch(() => {});
+  await page.waitForTimeout(2500);
+  return shown();
+};
+
 const results = [];
 const stamp = Date.now();
 for (const scheme of schemes) for (const vn of views) {
@@ -244,9 +261,29 @@ for (const scheme of schemes) for (const vn of views) {
   const dash = V.phone ? phoneDash : desk;
   const done = new Set(); const dead = new Set();
   let themeOk = null;
-  for (const v of viewPaths(dash)) {
+  // Durchgänge: jede Ansicht, am Handy mit --handy-raeume danach jeder Raum der ersten Ansicht.
+  const passes = viewPaths(dash).map((v) => ({ v, room: null }));
+  const roomArg = process.argv.indexOf('--handy-raeume');
+  if (V.phone && roomArg > 0) {
+    await H.ready(page, '/' + dash + '/' + passes[0].v, "() => !!window._casoraFilter && window.__pierce('button-card').length >= 3", 60000).catch(() => {});
+    // Die Raumleiste baut sich nach den Kacheln auf: kurz warten.
+    await page.waitForTimeout(2500);
+    const keys = [...await page.evaluate(() => { const n = window.__pierce('*').find((e) => e._rooms && typeof e._set === 'function' && e._bar);
+      return n ? n._rooms.map((r) => r.key).filter((k) => /^room_/.test(k) && k !== 'room_scenes') : []; }).catch(() => [])];
+    console.log(`  info   ${vn}: Räume ${keys.join(', ') || '(keine)'}`);
+    const lim = parseInt(process.argv[roomArg + 1], 10);
+    for (const k of keys.slice(0, lim > 0 ? lim : keys.length)) passes.push({ v: passes[0].v, room: k });
+  }
+  for (const { v, room } of passes) {
+    if (room) await page.evaluate(() => { try { localStorage.setItem('casora_mobile_filter', 'all'); } catch (e) { /* leer */ } }).catch(() => {});
     await H.ready(page, '/' + dash + '/' + v, "() => window.__pierce('button-card').length >= 3", 60000).catch(() => {});
     await page.waitForTimeout(2500);
+    if (room) {
+      await page.evaluate((k) => window._casoraFilter && window._casoraFilter.set(k), room);
+      await page.waitForTimeout(3000);
+      if (!await ensureRoom(page, room)) { console.log(`  info   ${vn}: Raum ${room} öffnet nicht`); continue; }
+    }
+    const pre = room ? room.replace(/^room_/, '') + '/' : '';
     if (themeOk === null) themeOk = await page.evaluate(() => { const ha = document.querySelector('home-assistant'); return { theme: ha.hass.selectedTheme && ha.hass.selectedTheme.theme, active: ha.hass.themes.theme, dark: ha.hass.themes.darkMode, bg: getComputedStyle(document.documentElement).getPropertyValue('--primary-background-color').trim() }; });
     // Sammel-Badges aufklappen (Unter-Badges öffnen die Popups) – nacheinander je Gruppe.
     const groups = await page.evaluate(() => window.__pierce('button-card').map((b, i) => ({ i, t: [].concat((b._config || {}).template || []) })).filter((x) => x.t.some((t) => /^casora_badge_\w+_group$/.test(t) && !/lock_group|camera_group|contact_group/.test(t))).map((x) => x.i));
@@ -254,8 +291,9 @@ for (const scheme of schemes) for (const vn of views) {
       if (gi !== null) {
         const at = await page.evaluate((i) => { const b = window.__pierce('button-card')[i]; if (!b) return null; b.scrollIntoView({ block: 'center' }); const r = b.getBoundingClientRect(); return r.width ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : null; }, gi);
         if (!at) continue;
+        if (room && !await onTop(page, gi, at)) continue;
         await page.mouse.click(at.x, at.y); await page.waitForTimeout(1500);
-        if (await popupOpen(page)) await closeAll(page); // Gruppe ohne Unter-Badges öffnet gleich das Popup (wird unten gemessen)
+        if (await popupOpen(page)) { await closeAll(page); if (room) await ensureRoom(page, room); } // Gruppe ohne Unter-Badges öffnet gleich das Popup (wird unten gemessen)
       }
       const tiles = await page.evaluate(() => window.__pierce('button-card').map((b, i) => {
         const t = [].concat((b._config || {}).template || []); const r = b.getBoundingClientRect();
@@ -264,7 +302,7 @@ for (const scheme of schemes) for (const vn of views) {
       for (const tile of tiles) {
         const key0 = popupKey(tile.t);
         if (!key0 || SKIP.test(key0)) continue;
-        const key = key0 + (/badge_security$|badge_light$|media$/.test(key0) && tile.e ? ':' + tile.e : '');
+        const key = (room ? 'raum/' : '') + key0 + (/badge_security$|badge_light$|media$/.test(key0) && tile.e ? ':' + tile.e : '');
         if (done.has(key) || dead.has(key) || (only && !only.test(key))) continue;
         if (/_group$/.test(key0) && !/lock_group|camera_group|contact_group/.test(key0)) {
           // Sammel-Badge selbst: öffnet nur ohne Unter-Badges ein Popup – ausprobieren.
@@ -273,6 +311,7 @@ for (const scheme of schemes) for (const vn of views) {
           b.scrollIntoView({ block: 'center', inline: 'center' }); const r = b.getBoundingClientRect();
           return r.width ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : null; }, tile.i);
         if (!at) continue;
+        if (room) { await page.waitForTimeout(250); if (!await onTop(page, tile.i, at)) continue; }
         if (arg('settings')) await page.evaluate((x) => { const S = window.CASORA_SETTINGS || {}; const n = { ...S };
           for (const [k, v] of Object.entries(x)) n[k] = (v && typeof v === 'object') ? { ...(S[k] || {}), ...v } : v; window.CASORA_SETTINGS = n; }, JSON.parse(arg('settings')));
         await page.waitForTimeout(300);
@@ -302,7 +341,7 @@ for (const scheme of schemes) for (const vn of views) {
           m.text = same(m.text, m2.text, (x) => x.label + x.sw);
           m.overlap = same(m.overlap, m2.overlap, (x) => x.a + x.b + x.w + x.h);
         }
-        const row = { scheme, view: vn, page: v, key, ...(m || { error: 'kein Popup' }) };
+        const row = { scheme, view: vn, page: v, room: room || undefined, key, ...(m || { error: 'kein Popup' }) };
         if (shotsDir && m && (process.argv.includes('--alle-bilder') || m.cut.length || m.text.length || m.overlap.length)) {
           row.shot = path.join(shotsDir, `${vn}_${scheme}_${key.replace(/[^\w-]+/g, '_')}.jpg`.slice(0, 120));
           // Unten abgeschnitten: ans Ende scrollen – zeigt, ob man es erreichen kann.
@@ -312,8 +351,9 @@ for (const scheme of schemes) for (const vn of views) {
         }
         results.push(row);
         const n = m ? (m.cut.length + m.text.length + m.overlap.length) : -1;
-        console.log(`  ${n ? 'FUND  ' : 'ok    '} ${scheme}/${vn} ${key}` + (n > 0 ? ` – ${m.cut.length} abgeschnitten, ${m.text.length} Text, ${m.overlap.length} Überlappung` : ''));
+        console.log(`  ${n ? 'FUND  ' : 'ok    '} ${scheme}/${vn} ${pre}${key}` + (n > 0 ? ` – ${m.cut.length} abgeschnitten, ${m.text.length} Text, ${m.overlap.length} Überlappung` : ''));
         await closeAll(page);
+        if (room && !await ensureRoom(page, room)) break;
       }
     }
   }
