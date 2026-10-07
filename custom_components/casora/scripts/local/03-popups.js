@@ -3232,6 +3232,15 @@
     window._casoraSuppressDismiss = Date.now() + 600;
     if (d.a === 'toggle') {
       var row = el.closest && el.closest('.lps-row');
+      // Rückfrage der Kachel („Vor dem Schalten fragen“) gilt auch hier.
+      if (window.casoraAsksFirst && window.casoraAsksFirst(d.id)) {
+        window.casoraConfirmSwitch(d.id, 'light.toggle').then(function (ok) {
+          if (!ok) return;
+          if (row) row.classList.toggle('on');
+          h.callService('light', 'toggle', {}, { entity_id: d.id });
+        });
+        return;
+      }
       if (row) row.classList.toggle('on');
       h.callService('light', 'toggle', {}, { entity_id: d.id });
     } else if (d.a === 'scope') {

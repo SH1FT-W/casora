@@ -1294,10 +1294,8 @@
             r.append(l, sw);
             const h = document.createElement("div");
             h.className = "hint";
-            const tv = (inner.variables || {}).show_toggle;
-            const toggleOn = tv !== undefined ? !!tv : !!tf.boolDefault;
-            h.textContent = tr("A calm question before the switch on the tile turns it on or off – for the oven, the heating or the TV.")
-              + (toggleOn ? "" : " " + tr("Needs “Show on/off switch” to be on."));
+            // Seit dem Nutzertest fragt jeder Schaltweg der Kachel nach, auch das Popup (casora-core.js).
+            h.textContent = tr("A calm question before this device turns on or off – on the tile and in its popup. For the oven, the garage or the pump.");
             h.setAttribute("data-no-i18n", "");
             group.append(r, h);
           }

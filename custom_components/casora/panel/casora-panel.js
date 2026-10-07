@@ -219,7 +219,7 @@ function extractConfig(lovelace) {
       title: v.title,
       path: v.path,
       name: hero.name,
-      variables: clone(hero.variables) || {},
+      variables: omit(clone(hero.variables) || {}, ["casora_entity_users", "casora_confirm_entities"]),
       tiles: hostBareTiles(clone(row.cards) || []),
       _hero: omit(hero, ["name", "variables"]),
       _row: omit(row, ["cards"]),
@@ -250,7 +250,44 @@ function roomVisibility(V) {
   return { set: false, hidden: false, users: [], view: undefined, cond: null };
 }
 
+// „Wer sieht das?“ an Kacheln gilt auch für Badges und Summen (Nutzertest: das Kind sah die
+// Schloss-Kachel nicht, das Sicherheits-Badge zeigte aber „1 Schloss“). Beim Speichern wird je
+// Entität gesammelt, wer ihre Kachel sieht; casora-core.js (casoraSeesEntity) filtert damit.
+// Nur im gespeicherten Dashboard, nie im Studio-Stand (beim Laden wieder entfernt).
+function entityUsers(rooms) {
+  const out = {};
+  (rooms || []).forEach((r) => (r.tiles || []).forEach((t) => {
+    const inner = (t && t.type === "conditional" && t.card) || t || {};
+    const vis = [].concat(Array.isArray(t && t.visibility) ? t.visibility : [], inner !== t && Array.isArray(inner.visibility) ? inner.visibility : []);
+    const c = vis.find((x) => x && x.condition === "user" && Array.isArray(x.users));
+    const id = inner.entity || (t && t.entity);
+    if (!c || typeof id !== "string" || !id) return;
+    out[id] = Array.from(new Set((out[id] || []).concat(c.users))).sort();
+  }));
+  return out;
+}
+
+// „Vor dem Schalten fragen“ gilt für jeden Schaltweg der Kachel, auch im Popup: welche Entitäten
+// eine Kachel mit Rückfrage haben, steht wie casora_entity_users in jedem Raum (casora-core.js).
+function confirmEntities(rooms) {
+  const out = new Set();
+  (rooms || []).forEach((r) => (r.tiles || []).forEach((t) => {
+    const inner = (t && t.type === "conditional" && t.card) || t || {};
+    const id = inner.entity || (t && t.entity);
+    if (typeof id === "string" && id && (inner.variables || {}).confirm_toggle === true) out.add(id);
+  }));
+  return Array.from(out).sort();
+}
+
 function expandConfig(compact, scaffold, extras, templates) {
+  const eu = entityUsers(compact.rooms);
+  const euOn = Object.keys(eu).length > 0;
+  const ce = confirmEntities(compact.rooms);
+  const heroVars = (room) => {
+    const v = clone(room.variables);
+    if (!euOn && !ce.length) return v;
+    return { ...(v || {}), ...(euOn ? { casora_entity_users: clone(eu) } : {}), ...(ce.length ? { casora_confirm_entities: ce.slice() } : {}) };
+  };
   const views = (compact.rooms || []).map((room) => ({
     type: scaffold.view_type,
     title: room.title,
@@ -259,7 +296,7 @@ function expandConfig(compact, scaffold, extras, templates) {
     ...clone(room._view),
     ...(roomVisibility(room.variables).set ? { visible: roomVisibility(room.variables).view } : {}),
     cards: [
-      { ...clone(room._hero), name: room.name, variables: clone(room.variables) },
+      { ...clone(room._hero), name: room.name, variables: heroVars(room) },
       clone(scaffold.nav),
       { ...clone(room._row), cards: clone(room.tiles) },
       ...(clone(room._extraCards) || []),

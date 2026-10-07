@@ -12,11 +12,42 @@
     return !!(u && u.id && list.indexOf(u.id) !== -1);
   };
   window.casoraSeen = function (vars, badge, user, val) {
+    if (window.casoraEntityUsersFrom) window.casoraEntityUsersFrom(vars);
     var m = vars && vars.casora_badge_users;
     var l = m && typeof m === 'object' ? m[badge] : null;
     return allowed(l, user) ? val : false;
   };
   window.casoraSeesRoute = function (route) { return !route || allowed(route.users, null); };
+  // „Wer sieht das?“ einer Kachel gilt auch für Badges und Summen: casora_entity_users (vom
+  // Studio beim Speichern in jeden Raum geschrieben) sagt je Entität, wer ihre Kachel sieht.
+  // Gemerkt wird dashboardweit – die Raumkarte zeichnet vor ihren Badges.
+  var entityUsers = {};
+  window.casoraEntityUsersFrom = function (vars) {
+    if (!vars || typeof vars !== 'object') return entityUsers;
+    // Raumvariablen (casora_room / Handy-Raumseite) tragen beide Listen immer, wenn es welche gibt –
+    // fehlen sie dort, sind sie leer (nach dem Abschalten nicht veraltet weiter wirken).
+    var room = 'show_security' in vars || 'show_climate' in vars;
+    var m = vars.casora_entity_users;
+    if (m && typeof m === 'object') entityUsers = m; else if (room) entityUsers = {};
+    // Entitäten mit „Vor dem Schalten fragen“ (Rückfrage auch im Popup, unten).
+    var c = vars.casora_confirm_entities;
+    if (Array.isArray(c)) window.__casoraConfirmIds = c; else if (room) window.__casoraConfirmIds = [];
+    return entityUsers;
+  };
+  window.casoraSeesEntity = function (id, user, vars) {
+    var m = (vars && vars.casora_entity_users) || entityUsers;
+    return allowed(m && m[id], user);
+  };
+  // Hat der Raum (für diesen Benutzer) etwas für das Sicherheits-Badge?
+  window.casoraHasSec = function (v, user) {
+    if (!v) return false;
+    window.casoraEntityUsersFrom(v);
+    var sees = function (id) { return !!id && window.casoraSeesEntity(id, user, v); };
+    if (sees(v.security_lock_entity) || sees(v.security_lock_entity_2)) return true;
+    for (var i = 1; i <= 8; i++) if (sees(v['security_entity_' + i])) return true;
+    if ((v.security_locks || []).some(sees)) return true;
+    return (v.security_cameras || []).some(sees);
+  };
 })();
 
 // Rückfrage vor dem Schalten je Kachel (Studio: „Vor dem Schalten fragen“, variables.confirm_toggle).
@@ -109,8 +140,23 @@
       root.querySelector('.no').onclick = function () { done(false); };
       root.querySelector('.yes').onclick = function () { done(true); };
       document.body.appendChild(host);
-      setTimeout(function () { var y = root.querySelector('.yes'); if (y) y.focus(); }, 30);
+      // Fokus auf „Abbrechen“: ein versehentliches Enter schaltet nicht (Nutzertest).
+      setTimeout(function () { var n = root.querySelector('.no'); if (n) n.focus(); }, 30);
     });
+  };
+  // Entität einer Aktion (Ziel, Daten oder Karte).
+  var entityOf = function (act, cfg) {
+    var tgt = act.target || act.data || act.service_data || {};
+    return [].concat(tgt.entity_id || act.entity || (cfg && cfg.entity) || [])[0] || '';
+  };
+  // Auch ohne Kachel im Pfad (Popup-Schalter, Knöpfe im Popup): Entität einer Kachel mit Rückfrage.
+  var confirmIds = function () { return Array.isArray(window.__casoraConfirmIds) ? window.__casoraConfirmIds : []; };
+  window.casoraAsksFirst = function (id) { return !!id && confirmIds().indexOf(id) !== -1; };
+  // Für Popups, die direkt schalten: Promise<true>, wenn geschaltet werden darf.
+  window.casoraConfirmSwitch = function (id, service) {
+    if (!window.casoraAsksFirst(id)) return Promise.resolve(true);
+    var act = { action: 'perform-action', perform_action: service || 'homeassistant.toggle', target: { entity_id: id } };
+    return ask(word(act, { entity: id }));
   };
   window.addEventListener('hass-action', function (ev) {
     if (passed && passed.has(ev)) return;
@@ -118,6 +164,7 @@
     var act = switching(d);
     if (!act) return;
     var owner = asksFirst(ev);
+    if (!owner && window.casoraAsksFirst(entityOf(act, d.config || {}))) owner = { entity: entityOf(act, d.config || {}) };
     if (!owner) return;
     ev.stopImmediatePropagation();
     var target = (ev.composedPath && ev.composedPath()[0]) || ev.target;
@@ -1292,7 +1339,10 @@ window.casoraMenuGlass = {
 
       if (action === 'toggle') {
         var domain = String(eid).split('.')[0];
-        if (domain) H.callService(domain, 'toggle', { entity_id: eid });
+        if (!domain) return;
+        var go = function () { H.callService(domain, 'toggle', { entity_id: eid }); };
+        if (window.casoraConfirmSwitch) window.casoraConfirmSwitch(eid, domain + '.toggle').then(function (ok) { if (ok) go(); });
+        else go();
         return;
       }
 
@@ -1302,7 +1352,9 @@ window.casoraMenuGlass = {
         var parts = String(full).split('.');
         var data = Object.assign({}, variables['action_' + idx + '_service_data'] || {});
         if (!data.entity_id) data.entity_id = eid;
-        H.callService(parts[0], parts[1], data);
+        var run = function () { H.callService(parts[0], parts[1], data); };
+        if (window.casoraConfirmSwitch) window.casoraConfirmSwitch(data.entity_id, full).then(function (ok) { if (ok) run(); });
+        else run();
         return;
       }
 
@@ -10380,8 +10432,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     return (o.show_climate !== false && !!(o.climate_entity_1 || o.temp_sensor_1 || o.humidity_sensor || o.quality_sensor))
       || (o.show_lights !== false && !!(o.light_entity_1 || o.light_group_entity))
       || (o.show_people !== false && !!o.presence_entity_1)
-      || (o.show_security !== false && !!(o.security_lock_entity || some('security_entity_', 8)
-        || list(o.security_locks) || list(o.security_cameras)))
+      || (o.show_security !== false && (window.casoraHasSec ? window.casoraHasSec(o) : !!(o.security_lock_entity || some('security_entity_', 8)
+        || list(o.security_locks) || list(o.security_cameras))))
       || !!energy
       || (o.show_media !== false && !o.show_now_playing && !!o.media_player_1);
   }
