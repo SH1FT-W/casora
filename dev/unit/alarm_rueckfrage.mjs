@@ -60,26 +60,35 @@ const cfg = { views: [
 ] };
 const warn = (c = cfg, user = hass.user) => w.casoraArmWarnings(hass, w.casoraArmIds(c, user));
 
-// 1) Zwei Fenster offen (Gruppe zählt über Mitglieder), Haustür entriegelt.
-assert.deepEqual(warn(), ['2 Fenster offen', 'Haustür entriegelt']);
+// 1) Zwei Fenster offen (Gruppe zählt über Mitglieder), Haustür entriegelt. Bis drei Öffnungen
+// stehen mit Namen da (07.10.2026: „welche Fenster?“).
+assert.deepEqual(warn(), ['Bad Fenster offen', 'Büro Fenster offen', 'Haustür entriegelt']);
 
 // 2) Kontakt + Kippsensor sind eine Öffnung: gekippt, nicht „2 Fenster“.
 set('binary_sensor.kueche_fenster_kipp', 'on', states['binary_sensor.kueche_fenster_kipp'].attributes);
+assert.deepEqual(warn(), ['Bad Fenster offen', 'Büro Fenster offen', 'Küche Fenster gekippt', 'Haustür entriegelt']);
+// Mehr als drei Öffnungen: Anzahl statt Namen.
+set('binary_sensor.haustuer', 'on', states['binary_sensor.haustuer'].attributes);
+assert.deepEqual(warn(), ['1 Tür offen', '2 Fenster offen', '1 Fenster gekippt', 'Haustür entriegelt']);
+set('binary_sensor.haustuer', 'off', states['binary_sensor.haustuer'].attributes);
+// Gleiche Namen (zwei Mal „Bad Fenster“): Anzahl statt doppelter Namen.
+set('binary_sensor.buero_fenster', 'on', { device_class: 'window', friendly_name: 'Bad Fenster' });
 assert.deepEqual(warn(), ['2 Fenster offen', '1 Fenster gekippt', 'Haustür entriegelt']);
+set('binary_sensor.buero_fenster', 'on', { device_class: 'window', friendly_name: 'Büro Fenster' });
 set('binary_sensor.kueche_fenster_kipp', 'off', states['binary_sensor.kueche_fenster_kipp'].attributes);
 
 // 3) Einzahl/Mehrzahl, mehr als zwei Schlösser als Zahl.
 set('binary_sensor.buero_fenster', 'off', states['binary_sensor.buero_fenster'].attributes);
 set('binary_sensor.haustuer', 'on', states['binary_sensor.haustuer'].attributes);
 set('lock.keller', 'unlocked', states['lock.keller'].attributes);
-assert.deepEqual(warn(), ['1 Tür offen', '1 Fenster offen', 'Haustür entriegelt', 'Keller entriegelt']);
+assert.deepEqual(warn(), ['Haustür Kontakt offen', 'Bad Fenster offen', 'Haustür entriegelt', 'Keller entriegelt']);
 set('lock.dach', 'unlocked', { friendly_name: 'Dach' });
 const three = { views: [{ cards: [room({ security_locks: ['lock.haustuer', 'lock.keller', 'lock.dach'] })] }] };
 assert.deepEqual(warn(three), ['3 Schlösser entriegelt']);
 
 // 4) Ausgeblendeter Raum, Raum nur für andere, abgeschaltete Sicherheit, „Wer sieht das?“ der Kachel.
 const only = (v) => ({ views: [{ cards: [room({ security_entity_1: 'binary_sensor.fenster', ...v })] }] });
-assert.deepEqual(warn(only({})), ['1 Fenster offen']);
+assert.deepEqual(warn(only({})), ['Bad Fenster offen']);
 assert.deepEqual(warn(only({ casora_hidden: true })), [], 'ausgeblendeter Raum');
 assert.deepEqual(warn(only({ casora_users: ['kind'] })), [], 'Raum nur für andere');
 assert.deepEqual(warn(only({ show_security: false })), [], 'Sicherheit im Raum aus');
@@ -100,7 +109,7 @@ const tap = async (c, yes) => {
 {
   const r = await tap(cfg, false);
   assert.equal(r.asked, true);
-  assert.equal(shown.h2, 'Achtung: 1 Tür offen, 1 Fenster offen, Haustür entriegelt, Keller entriegelt');
+  assert.equal(shown.h2, 'Achtung: Haustür Kontakt offen, Bad Fenster offen, Haustür entriegelt, Keller entriegelt');
   assert.equal(shown.p, 'Trotzdem scharf schalten?');
   assert.equal(shown['.no'], 'Abbrechen');
   assert.equal(shown['.yes'], 'Trotzdem scharf schalten');

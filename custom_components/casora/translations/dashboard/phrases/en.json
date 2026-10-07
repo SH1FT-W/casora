@@ -2499,6 +2499,10 @@
    "{1} open"
   ],
   [
+   "^(.+) gekippt$",
+   "{1} tilted"
+  ],
+  [
    "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
    "Pickup dates will be back as soon as {1} responds."
   ],

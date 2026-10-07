@@ -264,23 +264,34 @@
       });
     });
     var locks = [], gates = 0, doors = 0, windows = 0, doorsT = 0, windowsT = 0;
+    // Namen der Öffnungen je Art (bis drei Öffnungen nennt die Rückfrage sie beim Namen, 07.10.2026).
+    var nm = { d: [], g: [], w: [], wt: [], dt: [] };
+    var nameOf = function (id) { return String(((S[id] || {}).attributes || {}).friendly_name || id).trim(); };
     flat.forEach(function (id) {
       var e = S[id] || {}, s = String(e.state || '').toLowerCase(), a = e.attributes || {};
       var dom = id.split('.')[0];
       if (dom === 'lock') { if (s === 'unlocked' || s === 'unlocking' || s === 'open' || s === 'opening') locks.push(a.friendly_name || id); }
       else if (dom === 'cover') {
-        if (['garage', 'gate', 'door'].indexOf(String(a.device_class || '').toLowerCase()) >= 0 && (s === 'open' || s === 'opening')) gates++;
+        if (['garage', 'gate', 'door'].indexOf(String(a.device_class || '').toLowerCase()) >= 0 && (s === 'open' || s === 'opening')) { gates++; nm.g.push(nameOf(id)); }
       }
     });
     var bs = flat.filter(function (id) { return id.indexOf('binary_sensor.') === 0; });
     var units = window.casoraOpenings ? window.casoraOpenings(hass, bs) : [];
     units.forEach(function (u) {
       var win = u.kind === 'window';
-      if (u.state === 'open') { if (win) windows++; else doors++; }
-      else if (u.state === 'tilted') { if (win) windowsT++; else doorsT++; }
+      if (u.state === 'open') { if (win) windows++; else doors++; nm[win ? 'w' : 'd'].push(nameOf(u.main)); }
+      else if (u.state === 'tilted') { if (win) windowsT++; else doorsT++; nm[win ? 'wt' : 'dt'].push(nameOf(u.main)); }
     });
     var n = function (c, one, many) { return c + ' ' + (c === 1 ? one : many); };
     var out = [];
+    // Bis drei Öffnungen mit Namen („Küchenfenster offen“, „Bad Fenster gekippt“), mehr als Zahl.
+    var all = nm.d.concat(nm.g, nm.w, nm.wt, nm.dt);
+    // Gleiche Namen („Fenster“, „Fenster“) sagen nichts – dann wie bisher die Anzahl.
+    if (all.length <= 3 && all.every(function (x, i) { return all.indexOf(x) === i; })) {
+      nm.d.concat(nm.g, nm.w).forEach(function (x) { out.push(x + ' offen'); });
+      nm.wt.concat(nm.dt).forEach(function (x) { out.push(x + ' gekippt'); });
+      doors = gates = windows = windowsT = doorsT = 0;
+    }
     if (doors) out.push(n(doors, 'Tür offen', 'Türen offen'));
     if (gates) out.push(n(gates, 'Tor offen', 'Tore offen'));
     if (windows) out.push(n(windows, 'Fenster offen', 'Fenster offen'));
