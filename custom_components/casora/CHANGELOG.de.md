@@ -128,6 +128,7 @@ Das größte Update seit Casora 1.0. Neu sind das Studio, in dem die Vorschau se
 - Ein Dashboard, das inzwischen zu Casora gehört, erscheint nach spätestens einer Stunde in der Auswahl. Neue oder entfernte Szenen erscheinen beim Zurückkehren in den Tab.
 - Hinter Geräte-Assistent und YAML-Import bleibt das neue Studio stehen. Dialoge mit drei Knöpfen ragen nicht mehr über den Rand.
 - Eine weiße Lampe heißt im Szenen-Dialog „weiß“ statt „rot“, das Studio sagt wie das Dashboard „An“ statt „Ein“.
+- Die Vorschau im Look „Casora“ zeigt das Dashboard jetzt maßstabsgetreu, nur verkleinert: Kacheln, Badges und Titel stehen im selben Verhältnis wie auf dem Bildschirm, und es passen gleich viele Kacheln in die Reihe (vorher waren die Kacheln zu klein und die Badges zu hoch).
 
 #### Updates und Hintergrund
 - Bricht das Einspielen eines Updates ab (z. B. Speicher voll), bleibt die laufende Version unverändert. Ein installiertes Update wird nicht erneut angeboten.

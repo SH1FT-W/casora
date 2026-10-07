@@ -128,6 +128,7 @@ The biggest update since Casora 1.0. It brings a new Studio in which the preview
 - A dashboard that has since become a Casora dashboard shows up in the list within an hour. New or removed scenes appear when you return to the tab.
 - The new Studio stays behind the device assistant and the YAML import. Dialogs with three buttons no longer overflow.
 - A white lamp reads "white" instead of "red" in the scene dialog.
+- In the "Casora" look the preview now shows the dashboard true to scale, just smaller: tiles, badges and the title keep the same proportions as on screen, and the same number of tiles fit in a row (tiles used to be too small and badges too tall).
 
 #### Updates and background
 - If installing an update fails (e.g. disk full), the running version stays intact. An installed update is not offered again.
