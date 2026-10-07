@@ -11,9 +11,12 @@
 import { open, casoraDashboards, dashboard, check, need, finish } from './lib.mjs';
 
 const all = await casoraDashboards();
-const hasTrash = (d) => !/importiert/.test(d.url) && JSON.stringify(d.config).includes('"casora_trash"');
+// Nur echte Abfall-Kacheln zählen (Vorlage casora_trash) – der Name taucht auch in anderen Feldern
+// auf, z. B. im Prüf-Dashboard qa-arbeit-mobile ohne Abfall-Kachel.
+const tileWith = (o, tpl) => !!o && typeof o === 'object' && ([].concat(o.template || []).includes(tpl) || Object.values(o).some((x) => tileWith(x, tpl)));
+const hasTrash = (d) => !/importiert/.test(d.url) && tileWith(d.config, 'casora_trash');
 const desk = all.find((d) => !d.mobile && hasTrash(d));
-const phoneDash = all.find((d) => d.mobile && hasTrash(d)) || desk;
+const phoneDash = all.find((d) => d.mobile && hasTrash(d) && desk && d.url === desk.url + '-mobile') || all.find((d) => d.mobile && hasTrash(d)) || desk;
 await need('Casora-Dashboard mit Abfall-Kachel', desk);
 
 const IPAD = 'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15';
@@ -22,17 +25,30 @@ async function measure(name, opts, dash) {
   const { page } = await open({ dark: false, theme: 'Casora', ...opts });
   await dashboard(page, dash.url, 3);
   let at = null;
+  const find = () => page.evaluate(() => {
+    const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_trash')
+      && x.getBoundingClientRect().width > 20);
+    if (!b) return null;
+    b.scrollIntoView({ block: 'center' });
+    const r = b.getBoundingClientRect();
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  });
   for (const v of [null, ...(dash.config.views || []).map((x, i) => x.path || String(i))]) {
     if (v) await dashboard(page, dash.url + '/' + v, 3);
-    at = await page.evaluate(() => {
-      const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_trash')
-        && x.getBoundingClientRect().width > 20);
-      if (!b) return null;
-      b.scrollIntoView({ block: 'center' });
-      const r = b.getBoundingClientRect();
-      return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
-    });
+    at = await find();
     if (at) break;
+  }
+  // Handy: Die Abfall-Kachel steht meist nur auf einer Raumseite (Raum-Filter) – Räume der Reihe
+  // nach wählen (nur in diesem Browser, wie r63), statt sich auf den zuletzt gewählten Raum zu verlassen.
+  if (!at && dash.mobile) {
+    await dashboard(page, dash.url, 3);
+    const rooms = await page.evaluate(() => (document.querySelector('home-assistant').hass.states['input_select.casora_mobile_filter']?.attributes?.options || []).filter((o) => /^room_/.test(o)));
+    for (const room of rooms) {
+      await page.evaluate((f) => window.dispatchEvent(new CustomEvent('ll-custom', { detail: { casora_filter: f } })), room);
+      await page.waitForTimeout(1500);
+      at = await find();
+      if (at) break;
+    }
   }
   if (!at) return { name, kachel: false };
   await page.evaluate(() => {

@@ -91,7 +91,10 @@ const closePopup = async (pg) => { await pg.evaluate(() => window.casoraPopup &&
     const ha = document.querySelector('home-assistant');
     const calls = []; const orig = ha.hass.callService;
     ha.hass.callService = function (d, s) { calls.push(d + '.' + s); return Promise.resolve(); };
-    const find = (root, out) => { root.querySelectorAll('*').forEach((e) => { if (e.dataset && e.dataset.casoraSvc && e.dataset.casoraSvc.includes(ent)) out.push(e); if (e.shadowRoot) find(e.shadowRoot, out); }); return out; };
+    // Schalt-Knopf: data-casora-svc (ältere Popups) oder die Zeile im Licht-Popup (data-lps-tap,
+    // „Leuchten im Raum“) – welches Popup kommt, hängt vom Licht ab (dimmbar, Gruppe …).
+    const lps = (e) => { try { const d = JSON.parse(e.getAttribute('data-lps-tap')); return d && d.a === 'toggle' && d.id === ent; } catch (x) { return false; } };
+    const find = (root, out) => { root.querySelectorAll('*').forEach((e) => { if (e.dataset && ((e.dataset.casoraSvc && e.dataset.casoraSvc.includes(ent)) || (e.hasAttribute('data-lps-tap') && lps(e)))) out.push(e); if (e.shadowRoot) find(e.shadowRoot, out); }); return out; };
     const btn = find(window.casoraPopup.element.shadowRoot, [])[0];
     if (!btn) { ha.hass.callService = orig; return { btn: false }; }
     window._casoraUILastTap = 0; window._casoraPopupOpenedAt = 0;

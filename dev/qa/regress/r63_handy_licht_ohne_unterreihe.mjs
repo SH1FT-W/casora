@@ -14,6 +14,9 @@ const { page } = await open({ width: 390, height: 844, mobile: true, safari: tru
 usePage(page);
 await dashboard(page, phone.url + '/' + (phone.config.views[0].path || '0'), 3);
 const rooms = await page.evaluate(() => (document.querySelector('home-assistant').hass.states['input_select.casora_mobile_filter']?.attributes?.options || []).filter((o) => /^room_/.test(o)));
+// room_scenes/room_home sind keine Räume: ohne Szenen zeigt room_scenes die Startseite mit ihrer
+// Licht-Badge (öffnet die Seite „Beleuchtung“, kein Popup) – z. B. im Prüf-Dashboard qa-arbeit.
+rooms.splice(0, rooms.length, ...rooms.filter((o) => !/^room_(scenes|home)$/.test(o)));
 // Lage der Licht-Sammel-Badge (sichtbare, oberste) und der ersten Kachel-Überschrift.
 const probe = () => page.evaluate(() => {
   const vis = (b) => { const r = b.getBoundingClientRect(); return r.width > 10 && r.x >= 0 && r.x < innerWidth && (!b.checkVisibility || b.checkVisibility({ opacityProperty: true, visibilityProperty: true })); };
