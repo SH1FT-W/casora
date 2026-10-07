@@ -3095,7 +3095,8 @@
     return '<div class="lps-head">'
       + '<div class="lps-ring' + (on ? ' on' : '') + '" role="button" aria-label="' + esc(title) + '" data-lps-tap="' + attr({ a: 'scope', id: id }) + '">' + glyph('light') + '</div>'
       + '<div class="lps-t">' + esc(title) + '</div><div class="lps-s">' + statusLine(sub) + '</div>'
-      + (sc ? allOff(sc.room || sc.lights, states) : '') + '</div>';
+      + (sc ? allOff(sc.room || sc.lights, states)
+        : allOff([].concat.apply([], cfg.rooms.map(function (r) { return r.lights || []; })), states, true)) + '</div>';
   };
 
   /* „Alles aus“ (07.10.2026): schaltet alle Lichter dieses Raums aus – nur Licht, ohne Rückfrage
@@ -3103,13 +3104,23 @@
      Mit einer Leuchte schaltet schon der Ring; ist alles aus, bleibt der Knopf ausgegraut stehen
      (kein Springen der Höhe). */
   var POWER = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.56,5.44L15.11,6.89C16.84,7.94 18,9.83 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12C6,9.83 7.16,7.94 8.88,6.88L7.44,5.44C5.36,6.88 4,9.28 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12C20,9.28 18.64,6.88 16.56,5.44M13,3H11V13H13"/></svg>');
-  var allOff = function (lights, states) {
-    var ids = (lights || []).filter(function (id) { return states[id] && String(id).indexOf('light.') === 0; });
+  /* Haus (house, Startseite › Beleuchtung): dieselbe Stelle und Optik, aber mit Rückfrage
+     („Alle 6 Lichter im Haus ausschalten?“) und ohne Lichter aus ausgeblendeten Räumen. */
+  var allOff = function (lights, states, house) {
+    var ids = (lights || []).filter(function (id, i, a) { return states[id] && String(id).indexOf('light.') === 0 && a.indexOf(id) === i; });
     if (ids.length < 2) return '';
-    var any = ids.some(function (id) { return states[id].state === 'on'; });
+    var seen = house && window.casoraVisibleIdsNow ? window.casoraVisibleIdsNow(ids, { rooms: true }) : null;
+    var any = (seen || ids).some(function (id) { return states[id].state === 'on'; });
+    var spec = { a: 'alloff', ids: ids };
+    if (house) spec.house = 1;
     return '<div class="lps-off' + (any ? '' : ' dis') + '" role="button"' + (any ? '' : ' aria-disabled="true"')
-      + ' data-lps-tap="' + attr({ a: 'alloff', ids: ids }) + '"><span class="lps-g" style="--lps-ic:url(\'' + POWER + '\')"></span>' + esc(tr('Alles aus')) + '</div>';
+      + ' data-lps-tap="' + attr(spec) + '"><span class="lps-g" style="--lps-ic:url(\'' + POWER + '\')"></span>' + esc(tr('Alles aus')) + '</div>';
   };
+
+  var houseQ = function (n) {
+    return tr(n === 1 ? '1 Licht im Haus ausschalten?' : 'Alle ' + n + ' Lichter im Haus ausschalten?');
+  };
+  S.houseQ = houseQ;
 
   var ctPresets = function (lamps, states) {
     var lo = Infinity, hi = -Infinity;
@@ -3284,10 +3295,14 @@
       else h.callService('light', 'toggle', {}, { entity_id: d.id });
     } else if (d.a === 'alloff') {
       if (el.classList.contains('dis')) return;
-      var vis = window.casoraVisibleIds ? window.casoraVisibleIds(d.ids) : Promise.resolve(d.ids);
+      var vis = window.casoraVisibleIds ? window.casoraVisibleIds(d.ids, d.house ? { rooms: true } : undefined) : Promise.resolve(d.ids);
       vis.then(function (ids) {
         ids = (ids || []).filter(function (id) { return h.states[id] && h.states[id].state === 'on'; });
-        if (ids.length) h.callService('light', 'turn_off', {}, { entity_id: ids });
+        if (!ids.length) return;
+        var off = function () { h.callService('light', 'turn_off', {}, { entity_id: ids }); };
+        // Ganzes Haus: erst fragen (Zahl = gerade eingeschaltete, sichtbare Lichter).
+        if (!d.house || !window.casoraAsk) return off();
+        window.casoraAsk({ title: houseQ(ids.length), text: '', yes: tr('Ausschalten') }).then(function (ok) { if (ok) off(); });
       });
     } else if (d.a === 'scene') {
       el.classList.add('on');
