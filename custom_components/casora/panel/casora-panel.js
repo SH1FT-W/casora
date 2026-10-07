@@ -3818,6 +3818,7 @@ const TILE_TYPES = [
       { key: "robot_name", label: "Robot name", type: "text", advanced: true, group: "Popup",
         placeholder: "Vacuum" },
       { key: "entity_map", label: "Map", domains: ["camera", "image"], advanced: true,
+        find: { fn: "vacuumMap", live: true },
         hint: "The map image your vacuum integration provides." },
       { key: "entity_status", label: "Status", domains: ["sensor"], advanced: true,
         find: { keys: ["status"], domain: "sensor" } },
@@ -20511,7 +20512,7 @@ class CasoraPanel extends HTMLElement {
     if (!found) return;
     const S = (this._hass && this._hass.states) || {};
     tileFieldsFor(type).forEach((f) => {
-      if (!f.find || !f.key || (f.type && f.type !== "entity")) return;
+      if (!f.find || f.find.live || !f.key || (f.type && f.type !== "entity")) return;
       if (tile.variables && tile.variables[f.key] !== undefined && tile.variables[f.key] !== "") return;
       let id = null;
       try { id = found(f, tile, this._hass); } catch (e) { id = null; }
@@ -25732,6 +25733,14 @@ class CasoraPanel extends HTMLElement {
           put(f.label, this._combo(cur, this._entityList(f.domains, f.classes),
             found || f.placeholder || pickHint(f.domains), set).wrap);
           hintUnder();
+          // Eingetragene Entität gelöscht: sagen, was stattdessen gilt (Saugroboter-Karte).
+          const miss = window.casoraFieldMissing && window.casoraFieldMissing(f, tile, this._hass, cur);
+          if (miss) {
+            const h = document.createElement("div");
+            h.className = "hint";
+            h.textContent = miss;
+            (f.advanced && advBody ? advBody : body).appendChild(h);
+          }
           return;
         }
         input = document.createElement("input");

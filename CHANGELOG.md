@@ -56,6 +56,7 @@ The biggest update since Casora 1.0. It brings a new Studio in which the preview
 - **Assist suggestions from your home:** matched to the time of day, using your room names and starting with what needs attention right now (open window, lights on, door unlocked). Voice input uses your home's preferred Assist pipeline.
 - **Aquarium tile:** new "Battery hints" setting (Automatic, Always, Never). If there is already a Batteries tile, the aquarium tile no longer reports a weak sensor battery a second time. Leaks and temperature warnings are reported as before.
 - **Phone room page:** blinds and shutters have their own "Blinds" group instead of sitting under "Climate", garage doors and gates appear under "Security".
+- **Vacuum map on its own:** if no map is set in the Studio, or the chosen one no longer exists, the vacuum popup finds the map on the device itself (Roborock: the map of the current floor, other integrations: a "…_map" camera). A chosen map takes precedence. The map sits fully and undistorted in its area on phone, tablet and desktop and refreshes without flicker. The Studio shows under "Map" which one was found.
 
 ### Improved
 

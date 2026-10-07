@@ -396,6 +396,24 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         async def async_turn_off(self) -> None:
             self.put("off")
 
+    from homeassistant.components.image import ImageEntity
+
+    class MImage(MockEntity, ImageEntity):
+        """Bild-Entität (z. B. Saugroboter-Karte wie bei Roborock): an einem Saugroboter-Gerät
+        eine Karte mit durchsichtigem Rand, sonst das Platzhalterbild."""
+        _attr_content_type = "image/png"
+
+        def __init__(self, mock, eid):
+            MockEntity.__init__(self, mock, eid)
+            ImageEntity.__init__(self, mock.hass)
+            dev = mock.entities[eid].get("device")
+            self._is_map = bool(dev) and any(
+                e.get("device") == dev and k.startswith("vacuum.") for k, e in mock.entities.items())
+            self._attr_image_last_updated = dt_util.utcnow()
+
+        async def async_image(self) -> bytes | None:
+            return MAP_PNG if self._is_map else PLACEHOLDER_PNG
+
     class MTodo(MockEntity, TodoListEntity):
         _attr_supported_features = (
             TodoListEntityFeature.CREATE_TODO_ITEM | TodoListEntityFeature.UPDATE_TODO_ITEM
@@ -510,7 +528,7 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         "light": MLight, "switch": MSwitch, "siren": MSiren, "remote": MRemote, "fan": MFan,
         "cover": MCover, "lock": MLock, "climate": MClimate, "media_player": MMedia,
         "vacuum": MVacuum, "button": MButton, "select": MSelect, "number": MNumber,
-        "alarm_control_panel": MAlarm, "scene": MScene, "camera": MCamera, "todo": MTodo,
+        "alarm_control_panel": MAlarm, "scene": MScene, "camera": MCamera, "todo": MTodo, "image": MImage,
         "calendar": MCalendar, "weather": MWeather,
         # nur anzeigen, keine Dienste
         "sensor": MockEntity, "binary_sensor": MockEntity, "update": MockEntity,
@@ -520,7 +538,7 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
 
 PLATFORMS = [
     "light", "switch", "siren", "remote", "fan", "cover", "lock", "climate", "media_player",
-    "vacuum", "button", "select", "number", "alarm_control_panel", "scene", "camera", "todo",
+    "vacuum", "button", "select", "number", "alarm_control_panel", "scene", "camera", "todo", "image",
     "calendar", "weather", "sensor", "binary_sensor", "update", "event", "time", "date",
 ]
 
@@ -542,3 +560,29 @@ def _png(w: int, h: int, rgb: tuple[int, int, int]) -> bytes:
 
 
 PLACEHOLDER_PNG = _png(640, 360, (58, 62, 70))
+
+
+def _map_png(w: int, h: int) -> bytes:
+    """Erfundene Saugroboter-Karte (RGBA): Räume als Flächen, Rand durchsichtig, Seitenverhältnis 4:3."""
+    rooms = [((0.12, 0.18, 0.48, 0.55), (120, 170, 220)), ((0.48, 0.18, 0.86, 0.48), (240, 180, 110)),
+             ((0.12, 0.55, 0.40, 0.84), (150, 210, 150)), ((0.40, 0.48, 0.86, 0.84), (210, 150, 200))]
+    rows = []
+    for y in range(h):
+        row = bytearray(b"\x00")
+        for x in range(w):
+            px = (0, 0, 0, 0)
+            for (x0, y0, x1, y1), c in rooms:
+                if x0 * w <= x < x1 * w and y0 * h <= y < y1 * h:
+                    edge = min(x - x0 * w, x1 * w - 1 - x, y - y0 * h, y1 * h - 1 - y) < 2
+                    px = (60, 60, 60, 255) if edge else c + (255,)
+            row += bytes(px)
+        rows.append(bytes(row))
+
+    def chunk(t: bytes, d: bytes) -> bytes:
+        return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xFFFFFFFF)
+
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(b"".join(rows), 9)) + chunk(b"IEND", b""))
+
+
+MAP_PNG = _map_png(400, 300)

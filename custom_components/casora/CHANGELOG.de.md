@@ -56,6 +56,7 @@ Das größte Update seit Casora 1.0. Neu sind das Studio, in dem die Vorschau se
 - **Assist-Vorschläge aus deinem Zuhause:** passend zur Tageszeit, mit deinen Raumnamen und zuerst dort, wo gerade etwas zu tun ist (offenes Fenster, Licht an, Tür entriegelt). Die Spracheingabe nutzt die bevorzugte Assist-Pipeline deines Hauses.
 - **Aquarium-Kachel:** neue Einstellung „Akku-Hinweise“ (Automatisch, Immer, Nie). Gibt es schon eine Batterien-Kachel, meldet die Aquarium-Kachel einen schwachen Fühler-Akku nicht noch einmal. Leck und Temperaturwarnung meldet sie wie bisher.
 - **Handy-Raumseite:** Jalousien und Rollläden haben eine eigene Gruppe „Jalousien“ statt unter „Klima“ zu stehen, Garagen- und Hoftore stehen unter „Sicherheit“.
+- **Saugroboter-Karte von selbst:** Ist im Studio keine Karte eingetragen oder gibt es die eingetragene nicht mehr, sucht das Saugroboter-Popup die Karte am Gerät selbst (Roborock: Karte des aktuellen Stockwerks, andere Integrationen: Kamera „…_map“). Eine eingetragene Karte hat Vorrang. Die Karte sitzt auf Handy, Tablet und Desktop vollständig und unverzerrt in ihrer Fläche und wechselt beim Aktualisieren ohne Flackern. Das Studio zeigt beim Feld „Karte“, welche gefunden wurde.
 
 ### Verbessert
 
