@@ -949,11 +949,13 @@
         more.setAttribute("aria-label", t("More"));
         more.onclick = (ev) => {
           ev.stopPropagation();
-          this._menuAt(more, [
+          // Nutzertest 7 (E-T9): hier suchte man „Wiederherstellen“ – derselbe Weg wie Antippen der Zeile.
+          this._menuAt(more, (v.current ? [] : [{ id: "restore", label: "Restore This Version" }]).concat([
             { id: "name", label: v.name ? "Rename…" : "Name…", icon: "pencil" },
             { id: "pin", label: v.pinned ? "Unpin" : "Pin" },
-          ], (id) => {
+          ]), async (id) => {
             const again = () => this._cvSheet();
+            if (id === "restore") { this._exitFlow(true); await this._cvRestore(v); return; }
             if (id === "name") this._cvName(v, again);
             else if (id === "pin") this._cvLabel(v, { pinned: !v.pinned }, again);
           });
