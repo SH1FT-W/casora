@@ -89,6 +89,7 @@ The biggest update since Casora 1.0. It brings a new Studio in which the preview
 - Temperatures, precipitation and costs use the unit or currency of Home Assistant or the sensor (e.g. °F, inches, CHF). The AI coaches get temperatures in the right unit.
 - "36 hours ago" reads "Yesterday", short uptimes show minutes instead of "0 h".
 - Camera and plant AI say what is wrong when no AI is set up ("No AI set up").
+- Phone, while scrolling (Casora and Nebel): a small floating pill at the top shows what matters, in a room e.g. "Bedroom · 21° · Lights off", on the home page "Home · All secure" next to the bell and menu. Tap it to jump to the top. Instead of a bar with a hard edge, content runs softly under a gentle fade; going back is in the bottom bar.
 
 #### Translations
 - English: many gaps closed, e.g. events, "New: …", updates ("2 available"), energy, recipes, pickup dates, robot vacuum, arming countdown, wind directions (NE/SE) and waste duty ("Next turn").

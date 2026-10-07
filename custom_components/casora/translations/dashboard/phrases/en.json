@@ -1408,7 +1408,8 @@
   "1 Tür offen": "1 door open",
   "1 Tor offen": "1 gate open",
   "1 Fenster offen": "1 window open",
-  "1 Fenster gekippt": "1 window tilted"
+  "1 Fenster gekippt": "1 window tilted",
+  "Licht aus": "Lights off"
  },
  "patterns": [
   [
@@ -2590,6 +2591,14 @@
   [
    "^(\\d+) Termine$",
    "{1} events"
+  ],
+  [
+   "^(\\d+) an$",
+   "{1} on"
+  ],
+  [
+   "^(\\d+) Meldungen$",
+   "{1} alerts"
   ]
  ]
 }

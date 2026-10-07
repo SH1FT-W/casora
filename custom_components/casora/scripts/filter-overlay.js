@@ -279,6 +279,155 @@
   let _dashBarOn  = false; // frosted bar visible (hysteresis state)
   let _dashTitleStyle = null;
 
+  // ── Kopf beim Scrollen im Casora-Look (Weich/Nebel, Handy; 1.1.0) ─────────────
+  // Statt Vollbreiten-Balken mit harter Unterkante: weicher Verlauf oben (schützt die
+  // Statusleiste) und eine schwebende Pille mit Mini-Status („Schlafzimmer · 21° · Licht aus“,
+  // Startseite „Zuhause · Alles sicher“). Hemma 1/2 (nicht soft) und Tablet/Desktop: wie bisher.
+  const HEAD_PILL_H = 44;
+  function _softHeadOn() {
+    if (!(window._casoraSoft && window._casoraSoft())) return false;
+    return Math.min(window.innerWidth || 0, window.innerHeight || 0) <= 600;
+  }
+  const _tr = (t) => (window.casoraTr ? window.casoraTr(t) : t);
+  // Oberkante der Pille: mittig zur Glocke/Menü-Kapsel (48 hoch, 4 px unter der Statusleiste).
+  const HEAD_PILL_TOP = `calc(env(safe-area-inset-top, 0px) + var(--casora-mobile-chrome-drop, 4px) + ${(48 - HEAD_PILL_H) / 2}px)`;
+
+  function _makeHeadPill() {
+    const el = document.createElement('div');
+    el.className = 'casora-head-pill';
+    el.setAttribute('role', 'button');
+    el.setAttribute('data-no-i18n', '');
+    el.style.cssText = [
+      'position:fixed', `top:${HEAD_PILL_TOP}`, `height:${HEAD_PILL_H}px`,
+      'box-sizing:border-box', 'padding:0 18px', `border-radius:${HEAD_PILL_H / 2}px`,
+      'display:flex', 'align-items:center', 'white-space:nowrap', 'overflow:hidden', 'min-width:0',
+      'font-size:15px', 'font-weight:600', 'letter-spacing:-0.2px',
+      'color:var(--casora-mobile-title-color, var(--casora-chrome-ink, #fff))',
+      // Wie die Navigationsleiste unten und Glocke/Menü: Leinen, leicht glasig, weicher Schatten.
+      'background:var(--casora-pill-fill, rgba(251,248,243,0.80))',
+      'box-shadow:var(--casora-chrome-shadow, none)',
+      'backdrop-filter:var(--casora-chrome-backdrop, blur(8px) saturate(1.05))',
+      '-webkit-backdrop-filter:var(--casora-chrome-backdrop, blur(8px) saturate(1.05))',
+      'opacity:0', 'transform:translateY(5px)', 'pointer-events:none', 'cursor:pointer',
+      '-webkit-tap-highlight-color:transparent', 'user-select:none', '-webkit-user-select:none',
+    ].join(';');
+    // Der Name bleibt ganz (nur allein zu lang: „…“), gekürzt wird zuerst der Zustand.
+    el.innerHTML = '<span data-n style="flex:0 0 auto;max-width:100%;overflow:hidden;text-overflow:ellipsis"></span>'
+      + '<span data-s style="flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;'
+      + 'font-weight:500;color:var(--casora-text-2, currentColor)"></span>';
+    el.addEventListener('pointerdown', () => { el.style.filter = 'brightness(0.96)'; });
+    const up = () => { el.style.removeProperty('filter'); };
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
+    el.addEventListener('pointerleave', up);
+    return el;
+  }
+  // name + Zustandsteile (schon übersetzt) in die Pille; nur bei Änderung anfassen.
+  function _setHeadPill(el, name, parts) {
+    const s = (parts || []).filter(Boolean);
+    const key = name + '\u0000' + s.join('\u0000');
+    if (el._casoraKey === key) return;
+    el._casoraKey = key;
+    el.querySelector('[data-n]').textContent = name || '';
+    el.querySelector('[data-s]').textContent = s.length ? '\u00a0·\u00a0' + s.join('\u00a0·\u00a0') : '';
+    el.setAttribute('aria-label', [name].concat(s).join(', '));
+  }
+  // Weicher Verlauf oben: Fläche + leichte Unschärfe, nach unten ausgeblendet (keine Kante).
+  function _makeHeadFade() {
+    const el = document.createElement('div');
+    el.className = 'casora-head-fade';
+    const m = 'linear-gradient(to bottom, #000 0px, #000 env(safe-area-inset-top, 0px), rgba(0,0,0,0.55) calc(env(safe-area-inset-top, 0px) + 40px), transparent 100%)';
+    el.style.cssText = [
+      'position:fixed', 'left:0', 'right:0', 'top:0', 'pointer-events:none', 'opacity:0',
+      `height:calc(env(safe-area-inset-top, 0px) + ${HEAD_PILL_H + 46}px)`,
+      'background:var(--casora-room-head-fill, rgba(244,239,231,0.94))',
+      'backdrop-filter:blur(10px)', '-webkit-backdrop-filter:blur(10px)',
+      `mask-image:${m}`, `-webkit-mask-image:${m}`,
+    ].join(';');
+    return el;
+  }
+  // Raum: Temperatur aus dem Klima-/Temperatur-Badge des Raums, Licht aus den Kacheln des Raums.
+  function _roomStatusParts(hass, subRoot, lightIds) {
+    const S = hass?.states || {};
+    const parts = [];
+    const num = (id) => {
+      const e = id && S[id];
+      if (!e) return null;
+      const v = parseFloat(id.startsWith('climate.') ? e.attributes?.current_temperature : e.state);
+      return Number.isFinite(v) ? v : null;
+    };
+    let temp = null;
+    const walk = (root, depth) => {
+      if (!root || depth > 8 || temp != null) return;
+      for (const bc of root.querySelectorAll('*')) {
+        if (bc.localName !== 'button-card') {
+          if (bc.shadowRoot) walk(bc.shadowRoot, depth + 1);
+          if (temp != null) return;
+          continue;
+        }
+        const t = bc._config?.template;
+        const has = (n) => t === n || (Array.isArray(t) && t.includes(n));
+        const r = bc.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+          const v = bc._config?.variables || {};
+          if (has('casora_badge_temp')) temp = num(v.entity_temp || bc._config.entity);
+          else if (has('casora_badge_climate_group')) {
+            for (const id of [v.temp_sensor, v.temp_sensor_2, v.climate_entity, v.climate_entity_2]) {
+              temp = num(id);
+              if (temp != null) break;
+            }
+          }
+          if (temp != null) return;
+        }
+        walk(bc.shadowRoot, depth + 1);
+        if (temp != null) return;
+      }
+    };
+    try { walk(subRoot?.shadowRoot || subRoot, 0); } catch (_) {}
+    if (temp != null) parts.push(`${Math.round(temp)}°`);
+    const lights = [];
+    for (const id of lightIds || []) {
+      // Lichtgruppe: ihre Mitglieder zählen (sofern bekannt), sonst die Gruppe selbst.
+      const m = S[id]?.attributes?.entity_id;
+      const mem = Array.isArray(m) ? m.filter((x) => typeof x === 'string' && S[x]) : [];
+      for (const x of (mem.length ? mem : [id])) {
+        if (typeof x === 'string' && x.startsWith('light.') && lights.indexOf(x) < 0) lights.push(x);
+      }
+    }
+    const known = lights.filter((id) => S[id]);
+    if (known.length) {
+      const on = known.filter((id) => S[id].state === 'on').length;
+      parts.push(_tr(on ? `${on} an` : 'Licht aus'));
+    }
+    return parts;
+  }
+  // Licht-Entitäten aus Kachel-Konfigurationen (auch verschachtelt).
+  function _lightIdsOf(cards) {
+    const out = [];
+    const walk = (c, d) => {
+      if (!c || typeof c !== 'object' || d > 6) return;
+      if (Array.isArray(c)) { c.forEach((x) => walk(x, d + 1)); return; }
+      if (typeof c.entity === 'string' && c.entity.startsWith('light.') && out.indexOf(c.entity) < 0) out.push(c.entity);
+      if (c.cards) walk(c.cards, d + 1);
+      if (c.card) walk(c.card, d + 1);
+    };
+    walk(cards, 0);
+    return out;
+  }
+  // Startseite: Unterzeile des Sicherheits-Sammelbadges (die Vorlage legt sie als _casoraSecText ab).
+  // Nur ein sichtbares Badge zählt (Raum-Badges derselben Art sind auf der Startseite ausgeblendet).
+  function _findSecBadge(root, depth) {
+    if (!root || depth > 8) return null;
+    for (const el of root.querySelectorAll('*')) {
+      if (typeof el._casoraSecText === 'string' && el.getBoundingClientRect().width > 0) return el;
+      if (el.shadowRoot) {
+        const hit = _findSecBadge(el.shadowRoot, depth + 1);
+        if (hit) return hit;
+      }
+    }
+    return null;
+  }
+
   // The dashboard scrolls in an inner shadow-DOM container; scroll doesn't cross it.
   function _findScrollAncestor(el) {
     let node = el;
@@ -600,6 +749,8 @@
       _dashHeader.veil?.remove();
       _dashHeader.edge?.remove();
       _dashHeader.title?.remove();
+      _dashHeader.pill?.remove();
+      _dashHeader.fade?.remove();
       _unpinChromePill();
       _dashHeader = null;
     }
@@ -721,6 +872,10 @@
         `.casora-dash-compact-title{padding-left:calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC}) !important;}`;
       (target || document.head).appendChild(_dashTitleStyle);
     }
+    // Weich/Nebel am Handy: weicher Verlauf + Pille. Beide Fassungen stehen bereit; welche gilt,
+    // entscheidet update() – das Theme ist beim Aufbau oft noch nicht geladen.
+    const fade = _makeHeadFade();
+    fade.style.zIndex = '110';
     const title = document.createElement('div');
     title.className = 'casora-dash-compact-title';
     title.style.cssText = [
@@ -738,10 +893,20 @@
     // Der kleine Titel übernimmt den fertigen Text des Handy-Kopfs (#name, schon nach
     // casoraRoomName aufgelöst) – nicht noch einmal übersetzen, sonst „Home“ → „Zuhause“.
     title.setAttribute('data-no-i18n', '');
-    title.addEventListener('click', () => {
+    // Weich/Nebel am Handy: statt des kleinen Titels die Pille „Zuhause · Kurzstatus“ links.
+    const pill = _makeHeadPill();
+    pill.style.zIndex = '112';
+    pill.style.left = `calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})`;
+    pill.style.maxWidth = 'calc(100vw - 32px - 150px)';
+    const toTop = () => {
       const se = _dashHeader?.scrollEl;
       if (se === window) window.scrollTo({ top: 0, behavior: 'smooth' });
       else se?.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    title.addEventListener('click', toTop);
+    pill.addEventListener('click', () => {
+      try { pill.dispatchEvent(new CustomEvent('haptic', { detail: 'light', bubbles: true, composed: true })); } catch (_) {}
+      toTop();
     });
 
     const pillHost = document.createElement('div');
@@ -776,7 +941,9 @@
     target.appendChild(grad);
     target.appendChild(veil);
     target.appendChild(edge);
+    target.appendChild(fade);
     target.appendChild(title);
+    target.appendChild(pill);
     target.appendChild(pillHost);
     requestAnimationFrame(() => {
       _pinChromePill(pillHost, inst._container || document);
@@ -789,6 +956,9 @@
       edge.style.opacity        = '0';
       title.style.opacity       = '0';
       title.style.pointerEvents = 'none';
+      fade.style.opacity        = '0';
+      pill.style.opacity        = '0';
+      pill.style.pointerEvents  = 'none';
     };
 
     const update = () => {
@@ -818,6 +988,39 @@
       const nameText = nameEl?.textContent?.trim();
       if (nameText && title.textContent !== nameText) title.textContent = nameText;
       const cp = Math.max(0, (p - 0.55) / 0.45);
+      if (_softHeadOn()) {
+        if (title.style.opacity !== '0') { title.style.opacity = '0'; title.style.pointerEvents = 'none'; }
+        if (grad.style.opacity !== '0') { grad.style.opacity = '0'; veil.style.opacity = '0'; edge.style.opacity = '0'; }
+        _dashBarOn = false;
+        if (cp > 0) {
+          let sec = _dashHeader?.secBadge;
+          if (!sec?.isConnected && _dashHeader && Date.now() - (_dashHeader.secAt || 0) > 1500) {
+            // Erst die Badge-Reihe der Startseite, sonst das ganze Dashboard (höchstens alle 1,5 s).
+            _dashHeader.secAt = Date.now();
+            sec = _findSecBadge(inst._badgeRowEl?.shadowRoot, 0)
+              || _findSecBadge(inst._container, 0);
+            _dashHeader.secBadge = sec;
+          }
+          // Kurz: eine Meldung wörtlich („Schloss offen“), mehrere gezählt („3 Meldungen“);
+          // „Aktiv · Abwesend“ bleibt ganz.
+          let st = sec && sec.isConnected ? String(sec._casoraSecText || '') : '';
+          if (st && !/^Aktiv · /.test(st)) {
+            const L = st.split(' · ');
+            st = _tr(L.length > 1 ? `${L.length} Meldungen` : L[0]);
+          } else if (st) st = _tr(st);
+          _setHeadPill(pill, nameText || _tr('Zuhause'), st ? [st] : []);
+          // Nie unter Glocke/Menü: Breite bis 8 px vor deren Kapsel.
+          const pr = pillHost.getBoundingClientRect();
+          const pl = pill.getBoundingClientRect().left;
+          if (pr.width && pr.left > pl) pill.style.maxWidth = `${Math.max(88, Math.floor(pr.left - 8 - pl))}px`;
+        }
+        pill.style.opacity       = String(cp);
+        pill.style.transform     = `translateY(${(1 - cp) * 5}px)`;
+        pill.style.pointerEvents = cp > 0.5 ? 'auto' : 'none';
+        fade.style.opacity = String(cp);
+        return;
+      }
+      if (pill.style.opacity !== '0') { pill.style.opacity = '0'; pill.style.pointerEvents = 'none'; fade.style.opacity = '0'; }
       title.style.opacity       = String(cp);
       title.style.transform     = `translateY(${(1 - cp) * 5}px)`;
       title.style.pointerEvents = cp > 0.5 ? 'auto' : 'none';
@@ -847,7 +1050,7 @@
     scrollEl.addEventListener('scroll', onScroll, { passive: true });
     document.addEventListener('touchmove', onScroll, { passive: true, capture: true });
 
-    _dashHeader = { grad, veil, edge, title, pillHost, scrollEl, onScroll, update, hide, inst, bgCard: null };
+    _dashHeader = { grad, veil, edge, title, pill, fade, pillHost, scrollEl, onScroll, update, hide, inst, bgCard: null };
     update();
   }
 
@@ -1339,6 +1542,7 @@
             if (pending.name === roomMode) {
               // Wie die Reihe am Desktop: aktive Kacheln vorn, außer die Reihe sortiert nicht (sort: false).
               rooms.push({ ...pending, cards: (hsr._config?.cards || []).filter((c) => !_cardOffOnPhone(c)), sort: hsr._config?.sort !== false });
+              this._roomLightIds = _lightIdsOf(rooms[rooms.length - 1].cards);
             }
           } else if (pending.name && !pending.fav) {
             const cards = (hsr._config?.cards || []).filter(
@@ -2252,7 +2456,9 @@
       }
 
       this._compactHeaderEl?.remove();
-      const compactEl = document.createElement('div');
+      // Weich/Nebel am Handy, Raumseite: schwebende Pille mit Mini-Status statt Balken (1.1.0).
+      this._softPill = !!this._config?.room && _softHeadOn();
+      let compactEl = document.createElement('div');
       compactEl.style.cssText = [
         'position:fixed', 'top:0', 'left:0', 'right:0', 'z-index:60',
         `height:${COMPACT_BAR_HEIGHT}px`,
@@ -2263,6 +2469,26 @@
         'opacity:0', 'transform:translateY(5px)', 'pointer-events:none',
       ].join(';');
       compactEl.textContent = titleText;
+      if (this._softPill) {
+        const pill = _makeHeadPill();
+        pill.style.zIndex = '62';
+        pill.style.left = '0';
+        pill.style.right = '0';
+        pill.style.margin = '0 auto';
+        pill.style.width = 'max-content';
+        pill.style.maxWidth = 'calc(100vw - 32px)';
+        _setHeadPill(pill, titleText, []);
+        compactEl.remove();
+        compactEl = pill;
+        compactEl.addEventListener('click', () => {
+          try { pill.dispatchEvent(new CustomEvent('haptic', { detail: 'light', bubbles: true, composed: true })); } catch (_) {}
+        });
+        const fade = _makeHeadFade();
+        fade.style.zIndex = '60';
+        (this._overlayEl || this._appendTarget || document.body).appendChild(fade);
+        this._headFillEl?.remove();
+        this._headFillEl = fade;
+      } else
       // H3 (Weich-Audit): Weich legt unter den kleinen Raumtitel eine Leinenfläche, die nach unten
       // ausläuft – gescrollte Kacheln und Szenen liefen sonst sichtbar hinter „‹ Raumname“ durch.
       // Sie blendet mit dem Titel ein (gleiche Deckkraft). Andere Designs: unverändert.
@@ -2743,6 +2969,7 @@
       const fadeEnd   = Math.max(fadeStart + 1,
         titleBottomDoc - (hdrRect.bottom - COMPACT_BAR_HEIGHT));
       let popupBarOn = false; // bar hysteresis state (per engage)
+      this._pillAt = 0;
       this._scrollHandler = () => {
         const p = Math.max(0, Math.min(1,
           (overlayEl.scrollTop - fadeStart) / (fadeEnd - fadeStart)));
@@ -2755,6 +2982,20 @@
         hdr.style.transform   = `translateY(${(1 - cp) * 5}px)`;
         hdr.style.pointerEvents = cp > 0.5 ? 'auto' : 'none';
         if (this._headFillEl) this._headFillEl.style.opacity = String(cp);
+        if (this._softPill) {
+          // Pille statt Balken: Mini-Status nachziehen, Zurück-Pfeil weicht (zurück geht unten),
+          // kein Glasbalken mit Kante – nur der weiche Verlauf.
+          if (cp > 0 && Date.now() - (this._pillAt || 0) > 500) {
+            this._pillAt = Date.now();
+            _setHeadPill(hdr, titleEl.textContent.trim(), _roomStatusParts(this._hass,
+              this._subBadgesWrapper, this._roomLightIds || _lightIdsOf(this._config?.sections || [])));
+          }
+          if (this._backBtn) {
+            this._backBtn.style.opacity = String(1 - cp);
+            this._backBtn.style.pointerEvents = cp > 0.5 ? 'none' : '';
+          }
+          return;
+        }
         popupBarOn = popupBarOn ? p >= 0.45 : p >= 0.55;
         grad.style.opacity    = popupBarOn ? '1' : '0';
         barEdge.style.opacity = popupBarOn ? '1' : '0';
