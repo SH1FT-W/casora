@@ -607,7 +607,9 @@
     if (!target || !inst._headerEl) return;
 
     // The filter entity is global, so a popup left open elsewhere would leak into this one.
-    if (inst._hass?.states?.['input_select.casora_mobile_filter']?.state !== 'all') {
+    // P-01: hat dieses Gerät seit dem Laden schon gewählt (früher Tipp), bleibt die Wahl stehen.
+    if (inst._hass?.states?.['input_select.casora_mobile_filter']?.state !== 'all'
+      && !(window._casoraFilter?.picked && window._casoraFilter.picked())) {
       try {
         if (window._casoraFilter) {
           window._casoraFilter.set('all');
@@ -974,6 +976,14 @@
         this._filterOff = F.onChange(() => {
           if (this._rawHass) this.hass = this._rawHass;
         });
+      } else if (!F && !this._filterWait) {
+        // P-01: casora-core kam nach dem ersten Zustand. Ohne Anmeldung am Filter blieb eine frühe
+        // Raumwahl wirkungslos, bis HA zufällig neue Zustände schickte (Leiste Raum, Inhalt Zuhause).
+        this._filterWait = true;
+        window.addEventListener('casora-filter-ready', () => {
+          this._filterWait = false;
+          if (this._rawHass) this.hass = this._rawHass;
+        }, { once: true });
       }
       const prevFilter = this._hass?.states?.['input_select.casora_mobile_filter']?.state;
       v = F ? F.apply(v) : v;
@@ -2499,13 +2509,16 @@
             }
           }));
         }
-        // Entity sections start below the viewport, ready to slide up.
-        const vhPx = window.innerHeight || 800;
+        // Entity sections start a little lower and transparent, ready to rise and fade in.
+        // dashfix 22 (07.10.2026): früher starteten sie eine ganze Bildschirmhöhe tiefer – am Handy
+        // stand der Inhalt dann ~0,5 s rund 230 px unter seinem Platz und schoss hoch; ein früher
+        // Tipp traf die falsche Kachel. Jetzt nur ein kurzer Anstieg, die Kacheln stehen sofort fast richtig.
+        const risePx = Math.min(window.innerHeight || 800, 40);
         for (const w of Array.from(this._contentEl?.children || [])) {
           if (w._animIndex !== undefined) {
             w.style.transition = 'none';
-            w.style.transform  = `translateY(${vhPx}px)`;
-            w.style.opacity    = '1';
+            w.style.transform  = `translateY(${risePx}px)`;
+            w.style.opacity    = '0';
           }
         }
 
@@ -2541,8 +2554,9 @@
             if (w._animIndex !== undefined) {
               const delayMs = (w._animIndex || 0) * 40;
               if (550 + delayMs > maxMs) maxMs = 550 + delayMs;
-              w.style.transition = `transform 0.55s ${delayMs}ms ${SPRING_IN}`;
+              w.style.transition = `transform 0.55s ${delayMs}ms ${SPRING_IN}, opacity 0.26s ${delayMs}ms ease`;
               w.style.transform  = 'translateY(0)';
+              w.style.opacity    = '1';
             }
           }
 
@@ -2557,6 +2571,7 @@
                 if (w._animIndex !== undefined) {
                   w.style.transition = 'none';
                   w.style.removeProperty('transform');
+                  w.style.opacity = '1';
                 }
               }
               const tryEngage = () => {

@@ -663,6 +663,14 @@ class CasoraSmartRow extends HTMLElement {
       this._filterOff = F.onChange(() => {
         if (this._rawHass) this.hass = this._rawHass;
       });
+    } else if (!F && !this._filterWait) {
+      // P-01: Filter kommt später – dann einmal nachziehen und anmelden (sonst wirkt eine frühe
+      // Raumwahl erst beim nächsten Zustand aus HA).
+      this._filterWait = true;
+      window.addEventListener('casora-filter-ready', () => {
+        this._filterWait = false;
+        if (this._rawHass) this.hass = this._rawHass;
+      }, { once: true });
     }
     hass = F ? F.apply(hass) : hass;
     this._hass = hass;

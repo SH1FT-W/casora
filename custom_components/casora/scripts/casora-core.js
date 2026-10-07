@@ -417,6 +417,88 @@
   }, 3000);
 })();
 
+// Unbekannter Symbolsatz (dashfix 25, 07.10.2026): Ein Symbol wie „ios:lamp-floor“ aus einem Satz,
+// der nicht installiert ist, zeichnet HAs ha-icon leer (iron-icon ohne Satz) – Szenen zeigten leere
+// Kreise. Erst wenn die Seite fertig geladen ist und noch etwas Zeit verging (langsam ladende Sätze
+// melden sich in dieser Zeit selbst an), gilt der Satz als fehlend: dann liefert ein Ersatz-Satz
+// unter diesem Namen ein neutrales Standardsymbol. Meldet sich der echte Satz später doch noch,
+// geht er vor (window.customIcons wird vor customIconsets gefragt) und die Symbole laden neu.
+(function () {
+  if (window._casoraIconFallback) return;
+  window._casoraIconFallback = true;
+  var BUILTIN = ['mdi', 'hass', 'hassio', 'hademo'];
+  var GRACE = 6000;
+  // mdi:shape-outline
+  var PATH = 'M11,13.5V21.5H3V13.5H11M9,15.5H5V19.5H9V15.5M12,2L17.5,11H6.5L12,2M12,5.86L10.08,9H13.92L12,5.86M17.5,13C20,13 22,15 22,17.5C22,20 20,22 17.5,22C15,22 13,20 13,17.5C13,15 15,13 17.5,13M17.5,15A2.5,2.5 0 0,0 15,17.5A2.5,2.5 0 0,0 17.5,20A2.5,2.5 0 0,0 20,17.5A2.5,2.5 0 0,0 17.5,15Z';
+  var seen = {}, fake = {};
+  var known = function (p) {
+    if (BUILTIN.indexOf(p) > -1) return true;
+    var ci = window.customIcons || {}, cs = window.customIconsets || {};
+    if (ci[p] || (cs[p] && !fake[p])) return true;
+    // Alter Weg (iron-iconset-svg) zeichnet über iron-icon – nicht ersetzen.
+    try { if (document.querySelector('iron-iconset-svg[name="' + p + '"]')) return true; } catch (e) {}
+    return false;
+  };
+  var icons = function (p) {
+    var out = [];
+    (function walk(r) {
+      if (!r || !r.querySelectorAll) return;
+      r.querySelectorAll('ha-icon').forEach(function (e) { if (String(e.icon || '').indexOf(p + ':') === 0) out.push(e); });
+      r.querySelectorAll('*').forEach(function (e) { if (e.shadowRoot) walk(e.shadowRoot); });
+    })(document);
+    return out;
+  };
+  var reload = function (p) {
+    icons(p).forEach(function (e) { try { e._legacy = false; e._loadIcon(); } catch (x) {} });
+  };
+  // Echter Satz kam doch noch: Ersatz entfernen, Symbole neu laden.
+  var watch = function (p) {
+    var n = 0, iv = setInterval(function () {
+      n++;
+      if ((window.customIcons || {})[p]) { clearInterval(iv); delete window.customIconsets[p]; delete fake[p]; reload(p); }
+      else if (n > 60) clearInterval(iv);
+    }, 2000);
+  };
+  var decide = function (p) {
+    var wait = Math.max(0, GRACE - performance.now());
+    if (document.readyState !== 'complete' || wait > 0) { setTimeout(function () { decide(p); }, Math.max(wait, 500)); return; }
+    // Satz kam während der Wartezeit: schon gezeichnete (leere) Symbole einmal nachladen.
+    if (known(p)) { reload(p); return; }
+    window.customIconsets = window.customIconsets || {};
+    fake[p] = true;
+    window.customIconsets[p] = function () { return Promise.resolve({ path: PATH }); };
+    reload(p);
+    watch(p);
+  };
+  customElements.whenDefined('ha-icon').then(function () {
+    var C = customElements.get('ha-icon'), proto = C && C.prototype;
+    if (!proto || typeof proto._loadIcon !== 'function' || proto._casoraFallback) return;
+    proto._casoraFallback = true;
+    var orig = proto._loadIcon;
+    proto._loadIcon = function () {
+      var r = orig.apply(this, arguments);
+      try {
+        var m = /^([a-z0-9_-]+):./i.exec(String(this.icon || ''));
+        if (m && this._legacy && !seen[m[1]] && !known(m[1])) { seen[m[1]] = true; decide(m[1]); }
+      } catch (e) {}
+      return r;
+    };
+    // Symbole, die schon vor diesem Skript gezeichnet wurden.
+    setTimeout(function () {
+      var all = [];
+      (function walk(r) {
+        if (!r || !r.querySelectorAll) return;
+        r.querySelectorAll('ha-icon').forEach(function (e) { if (e._legacy) all.push(e); });
+        r.querySelectorAll('*').forEach(function (e) { if (e.shadowRoot) walk(e.shadowRoot); });
+      })(document);
+      all.forEach(function (e) {
+        var m = /^([a-z0-9_-]+):./i.exec(String(e.icon || ''));
+        if (m && !seen[m[1]] && !known(m[1])) { seen[m[1]] = true; decide(m[1]); }
+      });
+    }, Math.max(0, GRACE - performance.now()));
+  });
+})();
+
 // Grundschrift (Fix-Runde 1, A-01): HA setzt body fest auf Roboto, alles mit font: inherit
 // (Raumleiste, ⋯-Menü, Kamera-Fehler, HA-Seitenleiste) erbte das. Ein Design kann über
 // --casora-body-font seine Schrift setzen (Weich: Inter); ohne Token bleibt
@@ -10307,6 +10389,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   // reist als Attribut des Filter-Helfers (casora_row, casora_tok) zu den Karten – die
   // Handy-Badges hängen an diesem Helfer und zeichnen so neu.
   var row = null, tok = 0;
+  // Wechsel seit dem Laden der Seite (P-01: ein später Startwert darf eine frühe Wahl nicht überschreiben).
+  var picks = 0;
 
   function notify(v) {
     listeners.slice().forEach(function (fn) { try { fn(v); } catch (e) {} });
@@ -10317,6 +10401,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (get() === v) return v;
     current = v;
     row = null;
+    picks++;
     try { localStorage.setItem(KEY, v); } catch (e) {}
     notify(v);
     return v;
@@ -10407,6 +10492,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     get: get,
     set: set,
     row: function () { return row; },
+    picked: function () { return picks > 0; },
     setRow: setRow,
     bump: bump,
     apply: apply,
@@ -10418,6 +10504,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       };
     },
   };
+  // Karten, die vor diesem Skript Zustände bekamen, melden sich jetzt am Filter an (P-01).
+  try { window.dispatchEvent(new Event('casora-filter-ready')); } catch (e) {}
 })();
 
 // Raum-Badges am Handy wie im Raum-Kopf am Desktop/Tablet (05.10.2026). Die Raumseite am Handy
