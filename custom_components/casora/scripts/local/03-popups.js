@@ -2975,6 +2975,12 @@
     + '.lps-s i{font-style:normal;opacity:.6;}'
     /* Trennpunkt an einem Zeilenumbruch: ausgeblendet, dort steht ein Umbruch (_casoraSepScan). */
     + '.lps-s .hui-cut{display:none!important;}'
+    + '.lps-off{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:8px 16px 8px 13px;border-radius:999px;cursor:pointer;'
+    +   'font-size:14px;font-weight:600;white-space:nowrap;background:var(--casora-lps-chip);color:var(--casora-lps-chip-ink);'
+    +   'transition:background .2s ease,opacity .2s ease;-webkit-tap-highlight-color:transparent;}'
+    + '.lps-off .lps-g{width:17px;height:17px;}'
+    + '.lps-off.dis{opacity:.45;cursor:default;}'
+    + '@media (hover:hover){.lps-off:not(.dis):hover{filter:brightness(.98);}}'
     + '.lps-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--casora-popup-col-gap,26px);align-items:start;}'
     + '.lps-cols.one{grid-template-columns:minmax(0,1fr);}'
     + '.lps-lbl{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin:0 0 10px 6px;color:var(--casora-lps-label,var(--secondary-text-color));}'
@@ -3073,7 +3079,21 @@
     }
     return '<div class="lps-head">'
       + '<div class="lps-ring' + (on ? ' on' : '') + '" role="button" aria-label="' + esc(title) + '" data-lps-tap="' + attr({ a: 'scope', id: id }) + '">' + glyph('light') + '</div>'
-      + '<div class="lps-t">' + esc(title) + '</div><div class="lps-s">' + statusLine(sub) + '</div></div>';
+      + '<div class="lps-t">' + esc(title) + '</div><div class="lps-s">' + statusLine(sub) + '</div>'
+      + (sc ? allOff(sc.lights, states) : '') + '</div>';
+  };
+
+  /* „Alles aus“ (07.10.2026): schaltet alle Lichter dieses Raums aus – nur Licht, ohne Rückfrage
+     (Licht aus ist harmlos), nur was der Benutzer sieht („Wer sieht das?“, beim Tippen geprüft).
+     Mit einer Leuchte schaltet schon der Ring; ist alles aus, bleibt der Knopf ausgegraut stehen
+     (kein Springen der Höhe). */
+  var POWER = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.56,5.44L15.11,6.89C16.84,7.94 18,9.83 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12C6,9.83 7.16,7.94 8.88,6.88L7.44,5.44C5.36,6.88 4,9.28 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12C20,9.28 18.64,6.88 16.56,5.44M13,3H11V13H13"/></svg>');
+  var allOff = function (lights, states) {
+    var ids = (lights || []).filter(function (id) { return states[id] && String(id).indexOf('light.') === 0; });
+    if (ids.length < 2) return '';
+    var any = ids.some(function (id) { return states[id].state === 'on'; });
+    return '<div class="lps-off' + (any ? '' : ' dis') + '" role="button"' + (any ? '' : ' aria-disabled="true"')
+      + ' data-lps-tap="' + attr({ a: 'alloff', ids: ids }) + '"><span class="lps-g" style="--lps-ic:url(\'' + POWER + '\')"></span>' + esc(tr('Alles aus')) + '</div>';
   };
 
   var ctPresets = function (lamps, states) {
@@ -3247,6 +3267,13 @@
     } else if (d.a === 'scope') {
       if (h.states['script.casora_light_smart_toggle']) h.callService('script', 'casora_light_smart_toggle', { light_entity: d.id });
       else h.callService('light', 'toggle', {}, { entity_id: d.id });
+    } else if (d.a === 'alloff') {
+      if (el.classList.contains('dis')) return;
+      var vis = window.casoraVisibleIds ? window.casoraVisibleIds(d.ids) : Promise.resolve(d.ids);
+      vis.then(function (ids) {
+        ids = (ids || []).filter(function (id) { return h.states[id] && h.states[id].state === 'on'; });
+        if (ids.length) h.callService('light', 'turn_off', {}, { entity_id: ids });
+      });
     } else if (d.a === 'scene') {
       el.classList.add('on');
       h.callService('scene', 'turn_on', {}, { entity_id: d.id });
