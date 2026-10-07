@@ -3082,6 +3082,8 @@
     if (sc) {
       var s = stat(sc.lights, states);
       title = /^(beleuchtung|licht|lichter|lampen|zuhause)$/i.test(String(sc.name)) ? tr('Beleuchtung') : tr('Licht') + ' ' + sc.name;
+      // Einzelne Leuchte mit Raum (sc.room): Titel = Leuchte, sonst stand „Licht <Raum>“ über einer Lampe.
+      if (sc.room && sc.lights.length === 1) title = short(nameOf(sc.lights[0], states), sc.name);
       sub = subline(s, false); on = s.on > 0; id = sc.rid;
     } else {
       var ron = 0;
@@ -3093,7 +3095,7 @@
     return '<div class="lps-head">'
       + '<div class="lps-ring' + (on ? ' on' : '') + '" role="button" aria-label="' + esc(title) + '" data-lps-tap="' + attr({ a: 'scope', id: id }) + '">' + glyph('light') + '</div>'
       + '<div class="lps-t">' + esc(title) + '</div><div class="lps-s">' + statusLine(sub) + '</div>'
-      + (sc ? allOff(sc.lights, states) : '') + '</div>';
+      + (sc ? allOff(sc.room || sc.lights, states) : '') + '</div>';
   };
 
   /* „Alles aus“ (07.10.2026): schaltet alle Lichter dieses Raums aus – nur Licht, ohne Rückfrage
@@ -3163,7 +3165,7 @@
       }).join('') + '</div>';
     }
     var right = '<div class="lps-lbl">' + esc(tr('Leuchten im Raum')) + '</div><div class="lps-rows">'
-      + ids.map(function (id) { return lampRow(id, states, sc.name); }).join('') + '</div>';
+      + (sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids).map(function (id) { return lampRow(id, states, sc.name); }).join('') + '</div>';
     return '<div class="lps-cols' + (left ? '' : ' one') + '">' + (left ? '<div>' + left + '</div>' : '') + '<div>' + right + '</div></div>';
   };
   var word = function (v) { return v <= 0 ? tr('Aus') : v >= 100 ? tr('Volle Helligkeit') : tr('Gedimmt'); };
