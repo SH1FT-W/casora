@@ -25,6 +25,11 @@
     + ".cp-layer{position:absolute;z-index:6;left:0;right:0;top:0;display:flex;flex-direction:column;align-items:center;"
     + "pointer-events:none;box-sizing:border-box;padding:0 12px}"
     + ".cp-layer>*{pointer-events:auto}"
+    // Schmale Vorschau (Tablet mit offenem Blatt): Popup als eigene Ebene über dem ganzen Studio,
+    // sonst war es nur ~300 px breit und kaum lesbar (Nutzertest 5, H-T2).
+    + ".cp-layer.cp-wide{position:fixed;z-index:80;left:0;right:0;top:0;bottom:0;height:auto!important;padding:16px 16px 0;"
+    + "pointer-events:auto;background:rgba(0,0,0,.34);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}"
+    + ".cp-layer.cp-wide .cp-box{padding-bottom:16px}"
     + ".cp-bar{position:relative;z-index:3;flex:none;display:flex;align-items:center;gap:6px;margin:0 auto 12px;max-width:100%;padding:4px 4px 4px 14px;"
     + "border-radius:999px;background:var(--casora-studio-link-tint, rgba(94,92,230,.28));box-shadow:inset 0 0 0 .5px var(--casora-studio-link-line, rgba(160,158,255,.5));"
     + "-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6)}"
@@ -275,6 +280,7 @@
     };
 
     // Lay the layer over the room preview, down to the bottom of the column.
+    const WIDE_BELOW = 520;
     P._cpPlace = function () {
       const layer = this._cpLayer;
       const plinth = this.shadowRoot.querySelector(".plinth");
@@ -282,6 +288,11 @@
       const stage = plinth.closest(".stage") || plinth.parentElement;
       const pb = plinth.getBoundingClientRect();
       const sb = stage.getBoundingClientRect();
+      const wide = pb.width > 0 && pb.width < WIDE_BELOW;
+      layer.classList.toggle("cp-wide", wide);
+      if (wide && layer.parentNode !== this.shadowRoot) this.shadowRoot.appendChild(layer);
+      else if (!wide && layer.parentNode !== plinth) plinth.appendChild(layer);
+      if (wide) { layer.style.removeProperty("height"); this._cpFit(); return; }
       const bottom = Math.min(sb.bottom, window.innerHeight) - 16;
       layer.style.height = Math.max(240, Math.round(bottom - pb.top)) + "px";
       this._cpFit();
@@ -327,6 +338,10 @@
         box.className = "cp-box";
         layer.appendChild(box);
         plinth.appendChild(layer);
+        // Eigene Ebene (cp-wide): Tippen neben das Popup schließt es wie im Dashboard.
+        layer.addEventListener("click", (ev) => {
+          if (layer.classList.contains("cp-wide") && (ev.target === layer || ev.target === box)) this._cpClose(true);
+        });
         this._cpLayer = layer;
         if (!this._cpObs) {
           this._cpObs = new ResizeObserver(() => this._cpPlace());

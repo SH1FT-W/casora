@@ -505,6 +505,10 @@
     :host(.phone) .msearch .mbox { max-height:78vh; border-radius:24px; }
     /* Wer sieht das? / Rückfrage im Editor */
     .mwho { margin-top:4px; }
+    .mtry { display:block; margin:6px 0 2px; padding:8px 12px; border-radius:10px; font:inherit; font-weight:600; cursor:pointer; }
+    .mtry[hidden] { display:none; }
+    .mhi { animation: mhi 1.8s ease-out; border-radius:10px; }
+    @keyframes mhi { 0%,40% { box-shadow:0 0 0 3px color-mix(in srgb, var(--accent, #94603B) 45%, transparent); } 100% { box-shadow:0 0 0 3px transparent; } }
     .mwho .mval { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; min-height:40px;
       padding:8px 12px 8px 14px; border:0; border-radius:12px; box-shadow:none; text-align:left; cursor:pointer;
       font:inherit; font-size:var(--t-body, 15px); font-weight:500; color:var(--ink, inherit);
@@ -954,8 +958,19 @@
       A("photo", "Change the photo", "foto ändern hintergrund hintergrundbild bild raumbild bild ändern",
         () => { this._bLeavePages && this._bLeavePages(); sel({ group: "rooms", key: "Appearance", label: "Appearance" }); }, !!here,
         here ? this._roomLabel(here) + " › " + tr("Appearance") : "");
-      A("addtile", "Add a tile", "kachel hinzufügen neu gerät", () => this._bAddTile(), true, way("Content", "Tiles"));
+      A("addtile", "Add a tile", "kachel hinzufügen neu gerät lampe licht steckdose schalter einfügen", () => this._bAddTile(), true, way("Content", "Tiles"));
+      // Kachel-Optionen, die man unter anderem Namen sucht (Nutzertest 5: „rückfrage“ fand nichts).
+      A("askfirst", "Ask before switching", "rückfrage rueckfrage bestätigen bestätigung nachfragen fragen vorher sicherheitsabfrage abfrage "
+        + "absichern versehentlich aus versehen garage garagentor tor confirm", () => this._mGoTileOption("ask"), true, way("Tile", "Visibility & ask first"));
+      A("whosees", "Who sees this?", "wer sieht sichtbar sichtbarkeit benutzer nutzer kind kinder person gast ausblenden verbergen verstecken "
+        + "zugriff rechte berechtigung", () => this._mGoTileOption("who"), true, way("Tile", "Visibility & ask first"));
+      A("ventpush", "Ventilation hints on the phone", "lüften lueften lüftung lüftungs-coach coach handy push benachrichtigung benachrichtigungen "
+        + "mitteilung mitteilungen nachricht empfänger telefon smartphone iphone app fenster", () => { this._bOpen = true; this._csOpenPage("vent"); },
+        typeof this._csOpenPage === "function", way("Settings", "Ventilation"));
       A("scene", "Save the current state as a scene", "szene speichern stimmung licht merken aktueller zustand",
+        () => this._bSceneFromState(), typeof this._bSceneFromState === "function" && !!(this._hass && this._hass.user && this._hass.user.is_admin),
+        way("Dashboard", "Scenes"));
+      A("adjustlights", "Adjust the lights now", "licht lichter lampe lampen einstellen helligkeit dimmen jetzt stimmung szene",
         () => this._bSceneFromState(), typeof this._bSceneFromState === "function" && !!(this._hass && this._hass.user && this._hass.user.is_admin),
         way("Dashboard", "Scenes"));
       A("addroom", "Add Room…", "raum hinzufügen neu zimmer", () => this._addRoom(), true, way("Rooms"));
@@ -1005,6 +1020,23 @@
             run: () => { this._bOpen = true; this._uxAddDevice(c, { direct: true }); } });
         });
       }
+      // Geräte zum Einstellen (Nutzertest 5, H-T2: „Leselampe“ – ein Licht im Badge, ohne Kachel – fand
+      // nichts): Lichter, Jalousien, Lüfter, Schalter, Thermostate mit Bereich öffnen HAs großes Gerätefenster.
+      // Nur beim Tippen sichtbar (searchRank), wie „Kachel für … hinzufügen“.
+      {
+        const H = this._hass || {}, S = H.states || {}, E = H.entities || {}, D = H.devices || {}, AR = H.areas || {};
+        const fresh = new Set(out.filter((x) => x.kind === "device").map((x) => x.id.slice(2)));
+        Object.keys(S).filter((id) => /^(light|cover|fan|switch|climate)\./.test(id) && !fresh.has(id)).forEach((id) => {
+          const reg = E[id] || {};
+          if (reg.hidden || reg.entity_category) return;
+          const area = reg.area_id || (D[reg.device_id] || {}).area_id || "";
+          if (!area) return;
+          const name = reg.name || (S[id].attributes || {}).friendly_name || id;
+          out.push({ kind: "device", id: "e:" + id, label: fill(tr("Adjust {name}"), { name }), path: (AR[area] || {}).name || "",
+            words: name + " " + id + " einstellen helligkeit dimmen bedienen öffnen gerät",
+            run: () => this.dispatchEvent(new CustomEvent("hass-more-info", { bubbles: true, composed: true, detail: { entityId: id } })) });
+        });
+      }
       // Badges: im offenen Raum alle eingeschalteten, sonst nur eingerichtete
       rooms.forEach((r, i) => {
         const V = r.variables || {};
@@ -1029,6 +1061,42 @@
       (this._sceneCatalog ? this._sceneCatalog() : []).forEach((s) => out.push({ kind: "scene", id: "sc:" + s.id, label: s.label, words: s.id + " szene", path: way("Dashboard", "Scenes"),
         run: () => { this._bLeavePages && this._bLeavePages(); sel({ group: "rooms", key: "Scenes", label: "Scenes" }); } }));
       return out;
+    };
+    // ⌘K → Kachel-Option: die gewählte Kachel (sonst die erste passende, zuerst im offenen Raum)
+    // öffnen, „Sichtbarkeit & Rückfrage“ aufklappen und die Zeile kurz hervorheben.
+    P._mGoTileOption = function (kind) {
+      const rooms = rooms$(this);
+      const fits = (t) => {
+        if (kind !== "ask") return true;
+        const inner = (t.type === "conditional" && t.card) || t;
+        const ty = I().tileTypeAny ? I().tileTypeAny(inner) : null;
+        return !!(ty && (ty.fields || []).some((f) => f.key === "show_toggle")) || switchesSomething(inner);
+      };
+      let ri = this._room;
+      let tile = this._sel && this._sel.group === "tiles" ? ((rooms[ri] || {}).tiles || []).find((t) => this._tileKey(t) === this._sel.key && fits(t)) : null;
+      if (!tile) tile = ((rooms[ri] || {}).tiles || []).find(fits);
+      if (!tile) rooms.some((r, i) => { const t = (r.tiles || []).find(fits); if (t) { ri = i; tile = t; } return !!t; });
+      if (!tile) { if (this._bToast) this._bToast(tr(kind === "ask" ? "No tile switches anything yet." : "No tiles yet.")); return; }
+      if (ri !== this._room) { this._room = ri; this._renderTabs(); this._renderForm(); }
+      const key = this._tileKey(tile);
+      this._bLeavePages && this._bLeavePages();
+      this._bOpen = true;
+      this._select({ group: "tiles", key, label: tileName(tile) });
+      const show = (n) => {
+        const box = this.shadowRoot.querySelector("#pane #band-tiles .tile.sel");
+        const row = box && box.querySelector(kind === "ask" ? ".row.mask" : ".mwho");
+        if (!row) { if (n > 0) setTimeout(() => show(n - 1), 120); return; }
+        const fold = row.closest(".adv");
+        const sum = fold && fold.querySelector(":scope > .advsum");
+        if (fold && !fold.classList.contains("open") && sum) sum.click();
+        setTimeout(() => {
+          row.scrollIntoView({ block: "center", behavior: "smooth" });
+          row.classList.remove("mhi"); void row.offsetWidth; row.classList.add("mhi");
+          setTimeout(() => row.classList.remove("mhi"), 1900);
+        }, 80);
+      };
+      setTimeout(() => show(12), 60);
+      if (kind === "ask" && this._bToast) this._bToast(fill(tr("Every tile that switches has this – here: {name}"), { name: tileName(tile) }));
     };
     const KIND = { action: "Action", room: "Room", tile: "Tile", badge: "Badge", setting: "Setting", scene: "Scene", device: "Device" };
     P._mSearch = function () {
@@ -1315,7 +1383,7 @@
     const WHO_ONLY_HIDES = "Only hides it – no access protection. Anyone with an account can still control the devices in Home Assistant.";
     const namesOf = (ids, users) => ids.map((id) => (users.find((u) => u.id === id) || {}).name || tr("Unknown user"));
     // Zeile „Wer sieht das?“: Wert „Alle“ bzw. „Nur für: …“, Antippen öffnet die Auswahl.
-    P._mWhoRow = function (host, get, set, what) {
+    P._mWhoRow = function (host, get, set, what, elsewhere) {
       const box = document.createElement("div");
       box.className = "mwho";
       const row = document.createElement("div");
@@ -1337,9 +1405,17 @@
       warn.className = "hint mwhowarn";
       warn.setAttribute("data-no-i18n", "");
       warn.textContent = tr(WHO_ONLY_HIDES);
-      box.append(row, note, warn);
+      // Nutzertest 5 (H-T4): dasselbe Gerät kann woanders weiter zu sehen sein (z. B. Sicherheits-Badge auf „Zuhause“).
+      const also = document.createElement("div");
+      also.className = "hint mwhoalso";
+      also.setAttribute("data-no-i18n", "");
+      also.hidden = true;
+      box.append(row, note, also, warn);
       const paint = (users) => {
         const ids = get();
+        const more = ids.length && typeof elsewhere === "function" ? elsewhere(ids, users || []) : "";
+        also.textContent = more;
+        also.hidden = !more;
         btn.querySelector(".mvt").textContent = ids.length ? tr("Only some people") : tr("Everyone");
         note.textContent = ids.length ? tr("Only for:") + " " + namesOf(ids, users || []).join(", ") : "";
         note.hidden = !ids.length;
@@ -1353,6 +1429,41 @@
       host.appendChild(box);
       return box;
     };
+    // Wo sind diese Entitäten sonst noch zu sehen – für wen, den „ids“ ausblendet? Kacheln (mit ihrem
+    // „Wer sieht das?“) und Sicherheits-Badges (Badge-Freigabe; Kachel-Freigaben gelten dort mit,
+    // casora_entity_users). skip: die Stelle, um die es gerade geht. → Satz oder "".
+    const SEC_KEYS = (V) => [].concat(Array.isArray(V.security_locks) ? V.security_locks : [], V.security_lock_entity || [], V.security_lock_entity_2 || [],
+      Array.isArray(V.security_cameras) ? V.security_cameras : [], [1, 2, 3, 4, 5, 6, 7, 8].map((i) => V["security_entity_" + i]).filter(Boolean));
+    P._mElsewhere = function (ents, ids, users, skip) {
+      const want = new Set(ents.filter((x) => typeof x === "string" && x));
+      if (!want.size || !ids.length) return "";
+      const gone = users.filter((u) => ids.indexOf(u.id) < 0);
+      if (!gone.length) return "";
+      const rooms = rooms$(this);
+      const eu = I().entityUsers ? I().entityUsers(rooms) : {};
+      const allowed = (list, u) => !list.length || list.indexOf(u.id) >= 0;
+      const places = [], who = new Set();
+      rooms.forEach((r, ri) => {
+        (r.tiles || []).forEach((t) => {
+          if (skip && skip.tile === t) return;
+          const inner = (t.type === "conditional" && t.card) || t;
+          if (!want.has(inner.entity)) return;
+          const hit = gone.filter((u) => allowed(tileUsers(t), u));
+          if (hit.length) { hit.forEach((u) => who.add(u.name)); places.push(this._roomLabel(r) + " (" + tileName(t) + ")"); }
+        });
+        const V = r.variables || {};
+        if (skip && skip.badge === ri) return;
+        if (V.show_security === false) return;
+        const sec = SEC_KEYS(V).filter((e) => want.has(e));
+        if (!sec.length) return;
+        const bu = ((V.casora_badge_users || {}).security) || [];
+        const hit = gone.filter((u) => allowed(bu, u) && sec.some((e) => allowed(eu[e] || [], u)));
+        if (hit.length) { hit.forEach((u) => who.add(u.name)); places.push(this._roomLabel(r) + " (" + tr("Security") + ")"); }
+      });
+      if (!places.length) return "";
+      return fill(tr("{names} still sees it here: {places}"), { names: Array.from(who).join(", "), places: places.join(", ") });
+    };
+
     P._mWhoSheet = async function (cur, what, done) {
       const users = await this._mUsers();
       this._mUsersCache = users;
@@ -1389,6 +1500,17 @@
       if (J(ids) !== J(cur)) done(ids);
     };
 
+    // Was eine Kachel schalten oder fahren kann (Tipp, Symbol, Popup-Knöpfe) – dort fragt das Dashboard nach.
+    const SWITCH_DOMAINS = ["light", "switch", "input_boolean", "fan", "cover", "lock", "valve", "humidifier",
+      "climate", "media_player", "siren", "scene", "script", "button", "input_button"];
+    const switchesSomething = (t) => {
+      const v = (t && t.variables) || {};
+      const ids = [t && t.entity, v.cover_entity, v.action_1_entity, v.action_2_entity]
+        .concat(Array.isArray(v.covers) ? v.covers : [], Array.isArray(v.locks) ? v.locks : []);
+      return ids.some((id) => typeof id === "string" && SWITCH_DOMAINS.includes(id.split(".")[0]));
+    };
+    P._mSwitchesSomething = switchesSomething;
+
     // Kachel: visibility (HA-Bedingung „user“) an der Kachel bzw. ihrer Hülle.
     const tileUsers = (t) => {
       const c = t && Array.isArray(t.visibility) ? t.visibility.find((x) => x && x.condition === "user" && Array.isArray(x.users)) : null;
@@ -1416,10 +1538,11 @@
           const subs = body.querySelectorAll(":scope > .subcard");
           if (subs.length) subs[subs.length - 1].after(group); else body.appendChild(group);
           const inner = (shell.type === "conditional" && shell.card) || shell;
-          // Nur Kacheln mit An/Aus-Schalter (Feld show_toggle) – dort fragt das Dashboard nach.
+          // Kacheln, die etwas schalten oder fahren: mit An/Aus-Schalter (Feld show_toggle) oder mit
+          // einer schaltbaren Entität (Nutzertest 5: Garagentor/Jalousie hatten die Option nicht).
           const ty = I().tileTypeAny ? I().tileTypeAny(inner) : null;
           const tf = ty && (ty.fields || []).find((f) => f.key === "show_toggle");
-          if (tf) {
+          if (tf || switchesSomething(inner)) {
             const r = document.createElement("div");
             r.className = "row mask";
             const l = document.createElement("label");
@@ -1436,8 +1559,10 @@
               // Nutzertest 4 (iPad): der Hinweis nannte „Popup anzeigen unter der Vorschau“, der Knopf lag
               // aber unter dem Rand bzw. erschien erst nach erneutem Antippen – jetzt öffnet der Toast es selbst.
               const target = v && !isPhone(this) && typeof this._cpOpen === "function" && typeof this._cpTarget === "function" ? this._cpTarget() : null;
+              // Nutzertest 5 (H-T5): nach ~6 s war „Ausprobieren“ weg – länger stehen lassen, dazu der Knopf unten.
+              if (try_) try_.hidden = !v || !canTry();
               if (this._bToast) this._bToast(tr(v ? "The dashboard asks before switching" : "Switches right away again"),
-                target ? { sub: tr("The popup in the preview asks too. Done saves it."),
+                target ? { ms: 15000, sub: tr("The popup in the preview asks too. Done saves it."),
                   action: { label: tr("Try it"), run: () => { this._cpDismissed = null; const t = this._cpTarget(); if (t) this._cpOpen(t); } } }
                   : { sub: tr("Done saves it to your dashboard.") });
             }, tr("Ask before switching"));
@@ -1445,11 +1570,24 @@
             const h = document.createElement("div");
             h.className = "hint";
             // Seit dem Nutzertest fragt jeder Schaltweg der Kachel nach, auch das Popup (casora-core.js).
-            h.textContent = tr("A calm question before this device turns on or off – on the tile and in its popup. For the oven, the garage or the pump.");
+            const moves = /^(cover|valve)\./.test(String(inner.entity || inner.variables && inner.variables.cover_entity || ""));
+            h.textContent = moves
+              ? tr("A calm question before this opens or closes – on the tile and in its popup. For the garage door, the gate or the blinds.")
+              : tr("A calm question before this device turns on or off – on the tile and in its popup. For the oven, the garage or the pump.");
             h.setAttribute("data-no-i18n", "");
-            group.append(r, h);
+            // Dauerhafter Weg zum Ausprobieren (nicht nur im Toast): öffnet das Popup der Vorschau.
+            const canTry = () => !isPhone(this) && typeof this._cpOpen === "function" && typeof this._cpTarget === "function" && !!this._cpTarget();
+            const try_ = document.createElement("button");
+            try_.type = "button";
+            try_.className = "mval ghost mtry";
+            try_.setAttribute("data-no-i18n", "");
+            try_.textContent = tr("Try it in the popup");
+            try_.hidden = !(V.confirm_toggle === true && canTry());
+            try_.onclick = () => { this._cpDismissed = null; const t = this._cpTarget(); if (t) this._cpOpen(t); };
+            group.append(r, h, try_);
           }
-          this._mWhoRow(group, () => tileUsers(shell), (ids) => setTileUsers(shell, ids), "Tile");
+          this._mWhoRow(group, () => tileUsers(shell), (ids) => setTileUsers(shell, ids), "Tile",
+            (ids, users) => this._mElsewhere([inner.entity], ids, users, { tile: shell }));
         }
       }
       // Badges
@@ -1464,7 +1602,8 @@
           if (ids.length) m[bid] = ids; else delete m[bid];
           if (Object.keys(m).length) room.variables.casora_badge_users = m; else delete room.variables.casora_badge_users;
         };
-        this._mWhoRow(card, get, set, "Badge");
+        this._mWhoRow(card, get, set, "Badge", bid === "security"
+          ? (ids, users) => this._mElsewhere(SEC_KEYS(room.variables || {}), ids, users, { badge: this._room }) : null);
       });
       // Raum (Darstellung)
       const app = pane.querySelector('[data-k="Appearance"]');

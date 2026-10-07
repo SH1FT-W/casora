@@ -89,12 +89,16 @@
       || (st && st.attributes && st.attributes.friendly_name) || id;
     var svc = String(act.perform_action || act.service || '');
     var s = st ? String(st.state) : '';
-    var verb = /\.turn_on$|\.open_cover$/.test(svc) ? 'Einschalten'
-      : /\.turn_off$|\.close_cover$/.test(svc) ? 'Ausschalten'
+    // Position (Regler, „25 %“ … im Cover-Popup): kleiner als jetzt = schließen, sonst öffnen.
+    var pos = /\.set_(cover|valve)_position$/.test(svc) ? Number((act.data || act.service_data || {}).position) : NaN;
+    var cur = st && st.attributes ? Number(st.attributes.current_position) : NaN;
+    var verb = !isNaN(pos) ? (pos === 0 || (!isNaN(cur) && pos < cur) ? 'Ausschalten' : 'Einschalten')
+      : /\.turn_on$|\.open_cover$|\.open_valve$/.test(svc) ? 'Einschalten'
+      : /\.turn_off$|\.close_cover$|\.close_valve$/.test(svc) ? 'Ausschalten'
       : /\.unlock$/.test(svc) ? 'Aufschließen' : /\.lock$/.test(svc) ? 'Abschließen'
       : (s === 'on' || s === 'open' || s === 'playing' || s === 'unlocked') ? 'Ausschalten' : 'Einschalten';
-    if (/^cover\./.test(id) && verb === 'Einschalten') verb = 'Öffnen';
-    if (/^cover\./.test(id) && verb === 'Ausschalten') verb = 'Schließen';
+    if (/^(cover|valve)\./.test(id) && verb === 'Einschalten') verb = 'Öffnen';
+    if (/^(cover|valve)\./.test(id) && verb === 'Ausschalten') verb = 'Schließen';
     return { name: name, verb: verb };
   };
   var ask = function (w) {
@@ -156,6 +160,22 @@
   window.casoraConfirmSwitch = function (id, service) {
     if (!window.casoraAsksFirst(id)) return Promise.resolve(true);
     var act = { action: 'perform-action', perform_action: service || 'homeassistant.toggle', target: { entity_id: id } };
+    return ask(word(act, { entity: id }));
+  };
+  // Knöpfe und Regler der Popups (data-casora-svc, data-casora-slider: Auf/Zu/25 %, Position …):
+  // nur echtes Schalten/Fahren fragt nach, Anhalten nie (Nutzertest 5: Garagentor).
+  var SWITCH_SVC = /^(turn_on|turn_off|toggle|open_cover|close_cover|set_cover_position|open_valve|close_valve|set_valve_position|lock|unlock|open|press)$/;
+  window.casoraConfirmSpec = function (spec) {
+    if (!spec || !spec.domain || !SWITCH_SVC.test(String(spec.service || ''))) return Promise.resolve(true);
+    var ids = [].concat((spec.target && spec.target.entity_id) || (spec.data && spec.data.entity_id) || []);
+    var id = ids.filter(function (x) { return window.casoraAsksFirst(x); })[0];
+    if (!id) return Promise.resolve(true);
+    // Licht/Lüfter, die schon an sind, nur verstellen (Helligkeit, Stufe) – das ist kein Schalten.
+    var h = document.querySelector('home-assistant');
+    var st = h && h.hass && h.hass.states && h.hass.states[id];
+    if (spec.service === 'turn_on' && st && st.state === 'on') return Promise.resolve(true);
+    var act = { action: 'perform-action', perform_action: spec.domain + '.' + spec.service,
+      target: { entity_id: id }, data: spec.data || {} };
     return ask(word(act, { entity: id }));
   };
   window.addEventListener('hass-action', function (ev) {
@@ -7349,7 +7369,10 @@ window.casoraMenuGlass = {
             var spec = JSON.parse(t.dataset.casoraSvc);
             var ha2 = document.querySelector('home-assistant');
             if (ha2 && ha2.hass && spec && spec.domain && spec.service) {
-              ha2.hass.callService(spec.domain, spec.service, spec.data || {}, spec.target || undefined);
+              // „Vor dem Schalten fragen“ der Kachel gilt auch für die Knöpfe im Popup.
+              var go2 = function () { ha2.hass.callService(spec.domain, spec.service, spec.data || {}, spec.target || undefined); };
+              if (window.casoraConfirmSpec) window.casoraConfirmSpec(spec).then(function (ok) { if (ok) go2(); });
+              else go2();
             }
           } catch (err) { console.error('casora: bad service row', err); }
           ev.preventDefault(); ev.stopPropagation();
@@ -7410,6 +7433,16 @@ window.casoraMenuGlass = {
       }
       return Math.max(0, Math.min(100, Math.round(p)));
     };
+    // Angezeigter Stand des Reglers (für „Abbrechen“ in der Rückfrage).
+    var shown = function (el) {
+      var fill = el.querySelector('.hui-sl-fill');
+      if (!fill) return null;
+      var inv = false;
+      try { inv = !!JSON.parse(el.dataset.casoraSlider).invert; } catch (e) {}
+      if (el.dataset.casoraAxis === 'x') { var w = parseFloat(fill.style.width); return isNaN(w) ? null : w; }
+      var hgt = parseFloat(fill.style.height);
+      return isNaN(hgt) ? null : (inv ? 100 - hgt : hgt);
+    };
     var paint = function (el, pct) {
       var fill = el.querySelector('.hui-sl-fill');
       if (!fill) return;
@@ -7429,7 +7462,7 @@ window.casoraMenuGlass = {
       for (var i = 0; i < path.length; i++) {
         var el = path[i];
         if (el && el.dataset && el.dataset.casoraSlider !== undefined) {
-          drag = { el: el, pct: pctFrom(el, ev.clientY, ev.clientX) };
+          drag = { el: el, pct: pctFrom(el, ev.clientY, ev.clientX), from: shown(el) };
           el.classList.add('drag');
           paint(el, drag.pct);
           ev.preventDefault();
@@ -7453,7 +7486,12 @@ window.casoraMenuGlass = {
         if (ha && ha.hass && spec && spec.domain) {
           var data = {};
           data[spec.field || 'position'] = d.pct;
-          ha.hass.callService(spec.domain, spec.service, data, spec.target || undefined);
+          var go = function () { ha.hass.callService(spec.domain, spec.service, data, spec.target || undefined); };
+          // Mit Rückfrage: erst nach „Öffnen“/„Schließen“ fahren, sonst zurück auf den alten Stand.
+          if (window.casoraConfirmSpec) {
+            window.casoraConfirmSpec({ domain: spec.domain, service: spec.service, target: spec.target, data: data })
+              .then(function (ok) { if (ok) go(); else if (d.from != null) paint(d.el, d.from); });
+          } else go();
         }
       } catch (err) { console.error('casora: bad slider', err); }
     };

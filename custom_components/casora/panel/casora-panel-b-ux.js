@@ -969,6 +969,13 @@
         const ids = Array.isArray(bu[bid]) ? bu[bid] : [];
         el.classList.toggle("uxashide", !!as && ((ids.length > 0 && ids.indexOf(as) < 0) || (bid === "security" && secGone)));
       });
+      // Aufgeklappte Unter-Badges gehören zur offenen Badge: ist sie für diesen Menschen weg, die Zeile
+      // auch (Nutzertest 5, H-T4: „Schloss 1 entriegelt“ stand bei „Ansehen als: Kind“ weiter da).
+      map.querySelectorAll(".mini-subs").forEach((sub) => {
+        const host = sub.parentElement || map;
+        const open = host.querySelector('.mini-badges .pbadge.open') || map.querySelector('.mini-badges .pbadge.open');
+        sub.classList.toggle("uxashide", !!as && !!open && open.classList.contains("uxashide"));
+      });
       // Raum für diesen Menschen nicht sichtbar: ein Satz über der Vorschau.
       const canvas = this.shadowRoot.querySelector(".canvas");
       let note = canvas && canvas.querySelector(".uxasnote");

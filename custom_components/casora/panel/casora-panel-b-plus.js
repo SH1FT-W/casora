@@ -168,7 +168,9 @@
     /* ── Meldung unten (Toast) ─────────────────────────────────────── */
     .btoast {
       position:fixed; z-index:60; left:50%; bottom:calc(22px + env(safe-area-inset-bottom, 0px));
-      display:flex; align-items:center; gap:6px; max-width:min(520px, calc(100vw - 32px)); box-sizing:border-box;
+      /* max-content: mit left:50% wäre die Breite sonst auf die halbe Fensterbreite begrenzt
+         (Nutzertest 5: am Handy 6–8 Zeilen Umbruch). */
+      display:flex; align-items:center; gap:6px; width:max-content; max-width:min(520px, calc(100vw - 32px)); box-sizing:border-box;
       padding:7px 7px 7px 16px; min-height:44px; border-radius:16px;
       /* Dieselben Farben wie die übrigen Meldungen des Studios (Theme: casora-studio-toast). */
       background:var(--toast, rgba(255,255,255,.92)); color:var(--ink, #1c1c1e);
@@ -293,6 +295,8 @@
     .bsfs label.bsl { display:grid; gap:5px; font-size:13px; font-weight:600; color:var(--ink-2, inherit); }
     .bsfs input[type=text], .bsfs select { box-sizing:border-box; width:100%; height:44px; padding:0 12px; border-radius:12px;
       border:0; background:var(--field, rgba(127,127,127,.12)); color:inherit; font:inherit; font-size:16px; }
+    /* Feld sichtbar als Feld, auch ohne Fokus (Nutzertest 5: sah wie Text aus). */
+    .bsfs input[type=text] { box-shadow:inset 0 0 0 1px color-mix(in srgb, currentColor 24%, transparent); cursor:text; }
     .bsfs input[type=text]:focus-visible, .bsfs select:focus-visible { outline:2px solid var(--accent, #B67A50); outline-offset:1px; }
     .bsfs .bslisthead { display:flex; justify-content:space-between; align-items:baseline; padding:14px 22px 4px;
       font-size:13px; font-weight:600; color:var(--ink-2, inherit); }

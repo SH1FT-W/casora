@@ -274,7 +274,11 @@ function confirmEntities(rooms) {
   (rooms || []).forEach((r) => (r.tiles || []).forEach((t) => {
     const inner = (t && t.type === "conditional" && t.card) || t || {};
     const id = inner.entity || (t && t.entity);
-    if (typeof id === "string" && id && (inner.variables || {}).confirm_toggle === true) out.add(id);
+    const v = inner.variables || {};
+    if (v.confirm_toggle !== true) return;
+    // Sammelkacheln (Jalousien, Schlösser): auch jedes Mitglied, das Popup schaltet sie einzeln.
+    [id, v.cover_entity].concat(Array.isArray(v.covers) ? v.covers : [], Array.isArray(v.locks) ? v.locks : [])
+      .forEach((x) => { if (typeof x === "string" && x) out.add(x); });
   }));
   return Array.from(out).sort();
 }
@@ -25526,7 +25530,7 @@ class CasoraPanel extends HTMLElement {
 // Casora: Bausteine des Panels für Casora-Erweiterungen (Import-Assistent, Geräte-Assistent).
 window.__casoraPanelInternals = {
   blankRoom, roomPhoto, slug, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
-  applyScenePick, confirmEntities, wrapCustomCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
+  applyScenePick, confirmEntities, entityUsers, wrapCustomCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
   findType, tileTypeAny, newTile, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,

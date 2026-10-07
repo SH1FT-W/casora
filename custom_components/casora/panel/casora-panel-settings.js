@@ -67,6 +67,9 @@
     + ".cs-bar span{flex:1 1 auto;display:flex;align-items:center;gap:9px;min-width:0;font-size:var(--t-callout);font-weight:500;color:var(--ink)}"
     + ".cs-bar span::before{content:'';flex:none;width:8px;height:8px;border-radius:50%;background:var(--casora-studio-done, var(--casora-color-blue, #0A84FF))}"
     + ".cs-bar button{flex:none;min-height:40px;padding:9px 20px;border-radius:999px;font-weight:600}"
+    // Schmal (Handy): Zustand oben, Knopf darunter über die ganze Breite – sonst lag der Knopf über
+    // „Ungespeicherte Änderungen“ (Nutzertest 5).
+    + "@media (max-width:480px){.cs-bar{flex-wrap:wrap;gap:8px;padding:12px 8px 8px}.cs-bar span{flex:1 1 100%;padding-left:10px}.cs-bar button{flex:1 1 100%}}"
     + ".cs-bar .cs-save:not(:disabled){background:var(--casora-studio-done, var(--casora-color-blue, #0A84FF));color:var(--casora-studio-on-done, #fff)}"
     + ".cs-area{width:100%;min-height:84px;box-sizing:border-box;resize:vertical;padding:9px 11px;border-radius:var(--r-s);border:none;"
     + "background:var(--casora-studio-chip, rgba(118,118,128,.18));color:inherit;font:inherit;font-size:var(--t-callout);line-height:1.4}"
