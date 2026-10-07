@@ -22,7 +22,7 @@ assert.ok(S && S.render, 'Baustein fehlt');
 const L = (id, on) => { states[id] = { entity_id: id, state: on ? 'on' : 'off', attributes: { friendly_name: id, brightness: on ? 128 : null, supported_color_modes: ['brightness'] } }; };
 L('light.decke', true); L('light.stehlampe', true); L('light.spots', false); L('light.geheim', true);
 states['switch.tv'] = { entity_id: 'switch.tv', state: 'on', attributes: {} };
-const cfg = { gid: 'light.wohnzimmer', flat: { name: 'Wohnzimmer', rid: 'light.wohnzimmer', lights: ['light.decke', 'light.stehlampe', 'light.spots', 'light.geheim', 'switch.tv'] } };
+const cfg = { gid: 'light.testraum_decke', flat: { name: 'Wohnzimmer', rid: 'light.testraum_decke', lights: ['light.decke', 'light.stehlampe', 'light.spots', 'light.geheim', 'switch.tv'] } };
 
 const unq = (s) => s.replace(/&quot;/g, '"').replace(/&amp;/g, '&');
 let html = S.render(cfg, 'hero', states, hass, null);
