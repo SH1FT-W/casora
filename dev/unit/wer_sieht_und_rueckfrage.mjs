@@ -62,6 +62,7 @@ const all = JSON.stringify(tpl);
   const wrapped = (all.match(/casoraHasSec\((variables|_rv),user\):\(!!(variables|_rv)\.security_lock_entity\|\|/g) || []).length;
   assert.ok(raw > 40 && raw === wrapped, 'jede Sicherheits-Prüfung über casoraHasSec: ' + wrapped + '/' + raw); }
 assert.ok(JSON.stringify(tpl.casora_badge_lock_group).includes('window.casoraSeesEntity(id, user)'), 'Schloss-Gruppe zählt nur Sichtbares');
+assert.equal((JSON.stringify(tpl.casora_badge_security_group).match(/window\.casoraSeesEntity\(x, user\)/g) || []).length, 4, 'Sicherheits-Gruppe („Schloss offen“) zählt nur Sichtbares');
 assert.ok(JSON.stringify(tpl.casora_badge_security).includes('!window.casoraSeesEntity(entity.entity_id, user)'), 'einzelnes Sicherheits-Badge');
 // Popups/Aktionsraster schalten über casoraConfirmSwitch
 assert.ok(core.includes("window.casoraConfirmSwitch(eid, domain + '.toggle')") && read('scripts/local/03-popups.js').includes("window.casoraConfirmSwitch(d.id, 'light.toggle')"));

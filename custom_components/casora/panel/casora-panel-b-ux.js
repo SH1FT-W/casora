@@ -931,10 +931,25 @@
         el.classList.toggle("uxashide", !!as && ids.length > 0 && ids.indexOf(as) < 0);
       });
       const bu = (room.variables || {}).casora_badge_users || {};
+      // Sicherheits-Badge: zählt wie im Dashboard nur, was dieser Mensch an Kacheln sehen darf
+      // (casora_entity_users, casora-core.js) – ohne Sichtbares verschwindet es auch hier.
+      let secGone = false;
+      if (as) {
+        const eu = {};
+        rooms$(this).forEach((r) => (r.tiles || []).forEach((t) => {
+          const inn = (t.type === "conditional" && t.card) || t;
+          const ids = usersOf(t);
+          if (ids.length && typeof inn.entity === "string") eu[inn.entity] = (eu[inn.entity] || []).concat(ids);
+        }));
+        const RV = room.variables || {};
+        const sec = [RV.security_lock_entity, RV.security_lock_entity_2].concat(RV.security_locks || [], RV.security_cameras || [],
+          [1, 2, 3, 4, 5, 6, 7, 8].map((i) => RV["security_entity_" + i])).filter(Boolean);
+        secGone = sec.length > 0 && sec.every((id) => eu[id] && eu[id].indexOf(as) < 0);
+      }
       map.querySelectorAll('.pbadge[data-mk^="b:"]').forEach((el) => {
         const bid = String(el.dataset.mk).replace(/^b:/, "").split(":")[0];
         const ids = Array.isArray(bu[bid]) ? bu[bid] : [];
-        el.classList.toggle("uxashide", !!as && ids.length > 0 && ids.indexOf(as) < 0);
+        el.classList.toggle("uxashide", !!as && ((ids.length > 0 && ids.indexOf(as) < 0) || (bid === "security" && secGone)));
       });
       // Raum für diesen Menschen nicht sichtbar: ein Satz über der Vorschau.
       const canvas = this.shadowRoot.querySelector(".canvas");
