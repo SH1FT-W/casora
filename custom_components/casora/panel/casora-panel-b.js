@@ -359,7 +359,10 @@
     };
     after0("_markDirty", function () {
       const dirty = this._isDirty ? this._isDirty() : false;
+      const was = this.classList.contains("bdirty");
       this.classList.toggle("bdirty", !!dirty);
+      // „Speichern“ kommt oder geht: Kopfzeile neu einpassen (Nutzertest 7, iPad hochkant).
+      if (was !== !!dirty && typeof this._bFitTools === "function") requestAnimationFrame(() => { try { this._bFitTools(); } catch (e) { /* nächstes Mal */ } });
       // Neben dem Titelknopf, nicht darin: sonst bricht ein kurzer Name schon zweizeilig um.
       const t = this.shadowRoot.getElementById("roomtitle");
       if (t && t.parentElement) {
@@ -464,7 +467,15 @@
       if (sig !== this._bSig) {
         this._bSig = sig;
         if (on && phone && typeof this._phoneReachable === "function" && this._phoneReachable()
-          && this._miniSize !== "phone") { this._miniSize = "phone"; this._bSyncSize(); }
+          && this._miniSize !== "phone") { this._bPrePhone = this._miniSize; this._miniSize = "phone"; this._bSyncSize(); }
+        // Wieder breit (iPad gedreht, kurz schmal beim Drehen): die vorige Wahl zurück – Nutzertest 7:
+        // hochkant blieb die Vorschau auf „Handy“, obwohl das iPad dort das Tablet-Layout zeigt.
+        else if (on && !phone && this._bPrePhone && this._miniSize === "phone") {
+          this._miniSize = this._sizeAllowed ? this._sizeAllowed(this._bPrePhone) : this._bPrePhone;
+          this._bPrePhone = null;
+          this._bSyncSize();
+        }
+        if (!phone && this._miniSize !== "phone") this._bPrePhone = null;
         if (this._state) requestAnimationFrame(() => { this._rebuildPreview(); this._bRefit(); });
       }
     };
@@ -529,7 +540,8 @@
         }
       }
       if (on && tools) {
-        const sig = tools.textContent + "|" + tools.querySelectorAll(".on").length;
+        // Auch wenn „Speichern“ kommt oder geht (Nutzertest 7: hochkant lagen dann Zahnrad und Suche aufeinander).
+        const sig = tools.textContent + "|" + tools.querySelectorAll(".on").length + "|" + this.classList.contains("bdirty");
         if (sig !== this._bFitSig) { this._bFitSig = sig; requestAnimationFrame(() => this._bFitTools()); }
       }
       // Handy: der Titel oben öffnet wie überall das Dashboard-Menü (Räume: untere Leiste).

@@ -228,6 +228,12 @@
     :host(.bmode.uxsr:not(.phone)) .btools .btool.broom .blabel { display:block !important; max-width:none; min-width:0; }
     /* Ganz eng: das „+“ der Leiste weicht (Platz „Kachel hinzufügen“ in der Vorschau bleibt). */
     :host(.bmode.btight) .btools .btool.uxplus { display:none; }
+    /* Nur Symbole (btight, Tablet hochkant mit „Speichern“): so eng wie uxsr, sonst ragte das Zahnrad
+       über die Lupe (Nutzertest 7). */
+    :host(.bmode.btight:not(.phone)) .btools { gap:2px; }
+    :host(.bmode.btight:not(.phone)) .btools .btool { padding:0 6px; flex:none; }
+    :host(.bmode.btight:not(.phone)) .btools .btool[data-b="dash"], :host(.bmode.btight:not(.phone)) .btools .btool[data-b="home"] { margin-left:9px; }
+    :host(.bmode.btight:not(.phone)) .btools .btool[data-b="dash"]::before, :host(.bmode.btight:not(.phone)) .btools .btool[data-b="home"]::before { left:-5px; }
     /* Als Nächstes (nach der Einführung) */
     .uxnext { position:relative; margin:0 0 12px; padding:12px 14px 8px; border-radius:var(--r-l, 16px);
       background:var(--casora-studio-slab-card, var(--card-tint, rgba(127,127,127,.08))); box-shadow:inset 0 0 0 1px var(--hair, rgba(127,127,127,.18)); }
@@ -1183,8 +1189,18 @@
       if (self._uxTight()) return false;
       return !rl || rl.clientWidth >= Math.min(48, rl.scrollWidth);
     };
+    // Feste Plätze (Nutzertest 7): Der Raumknopf behält die Breite, die er mit dem längsten Raumnamen
+    // hat – sonst wanderten Liste, Plus, Dashboard und Zahnrad mit jedem Raumwechsel.
+    const pinRoomWidth = (self) => {
+      const rb = self.shadowRoot.querySelector('.btools [data-b="rooms"]');
+      if (!rb || self.classList.contains("phone") || !rb.getClientRects().length) return;
+      rb.style.width = Math.ceil(rb.getBoundingClientRect().width) + "px";
+      rb.style.flex = "none";
+    };
     wrap("_bFitTools", (orig) => function () {
       this.classList.remove("uxs1", "uxs2", "uxs3", "uxsr", "uxsrp");
+      const rb0 = this.shadowRoot.querySelector('.btools [data-b="rooms"]');
+      if (rb0) { rb0.style.width = ""; rb0.style.flex = ""; }
       const lab = this.shadowRoot.querySelector('.btools [data-b="rooms"] .blabel');
       const keep = lab ? lab.textContent : null;
       if (lab && this._state) {
@@ -1194,19 +1210,20 @@
       }
       try {
         const r = orig.apply(this, arguments);
-        if (!this.classList.contains("btight") || this.classList.contains("phone")) return r;
+        if (!this.classList.contains("btight") || this.classList.contains("phone")) { pinRoomWidth(this); return r; }
         this.classList.remove("btight");
         this.classList.add("uxs1");
-        if (!this._uxTight()) return r;
+        if (!this._uxTight()) { pinRoomWidth(this); return r; }
         // Weiter mit dem längsten Raumnamen gemessen (gleiche Leiste in jedem Raum, rb15);
         // gekürzt mit „…“ ist erlaubt, solange genug vom Namen bleibt.
         this.classList.add("uxsr");
         // Name gekürzt: erst das „+“ weichen lassen (der Platz „Kachel hinzufügen“ bleibt in der Vorschau).
         const rl = this.shadowRoot.querySelector('.btools [data-b="rooms"] .blabel');
         if (rl && rl.scrollWidth > rl.clientWidth + 1) this.classList.add("uxsrp");
-        if (roomFits(this)) return r;
+        if (roomFits(this)) { pinRoomWidth(this); return r; }
         this.classList.remove("uxsr", "uxsrp");
         this.classList.add("btight", "uxs1", "uxs2");
+        pinRoomWidth(this);
         return r;
       } finally {
         if (lab && keep !== null) lab.textContent = keep;
