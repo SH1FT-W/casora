@@ -107,7 +107,18 @@
     return out.slice(0, max || 40).map((x) => x.c);
   }
 
-  W.__casoraStudioUx = { SUB, WHAT, SCOPE, scopeOf, pathOf, typeFor, rankDevices, BY_DOMAIN };
+  // „Neu in <Raum>“ (Nutzertest 4, P 5a: nur 5 Einträge, die neue Stehlampe fehlte): alle Geräte des
+  // Raums ohne Kachel. Vorne die erkannten (Assistent) und bewusst in den Bereich gelegten, dann nach
+  // Art (Licht vor Tasten); die ersten `first` stehen sofort da, der Rest hinter „+N weitere“.
+  const NEW_ORDER = ["light", "cover", "thermostat", "fan", "media", "lock", "vacuum", "humidifier", "casora_camera", "casora_alarm", "casora_switch", "entity_actions"];
+  function newInRoom(all, ri, first) {
+    const rank = (c) => (c.suggested || c.loose ? 0 : 1) * 100 + (NEW_ORDER.indexOf(c.type) < 0 ? 50 : NEW_ORDER.indexOf(c.type));
+    const l = all.filter((c) => c.fresh && c.roomIndex === ri)
+      .map((c, i) => [c, i]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map((x) => x[0]);
+    const n = Math.max(first, l.filter((c) => c.suggested || c.loose).length);
+    return { shown: l.slice(0, n), rest: l.slice(n) };
+  }
+  W.__casoraStudioUx = { SUB, WHAT, SCOPE, scopeOf, pathOf, typeFor, rankDevices, BY_DOMAIN, newInRoom };
   if (typeof customElements === "undefined" || !W.document) return;
 
   const CSS = `
@@ -145,6 +156,9 @@
     .uxadd .uxaddh { padding:14px 16px 0; font-size:15px; }
     .uxadd .uxaddh b { font-weight:650; }
     .uxadd .mres { min-height:120px; }
+    .uxadd .uxmorerow { display:block; margin:2px 0 4px; padding:8px 10px; border:0; border-radius:12px; background:none; cursor:pointer;
+      font:inherit; font-size:14px; font-weight:600; color:var(--casora-studio-done, var(--accent, #B67A50)); text-align:left; }
+    .uxadd .uxmorerow:hover { background:var(--wash-fill, rgba(118,118,128,.12)); }
     .uxadd .uxmore { display:flex; flex-wrap:wrap; gap:6px; padding:8px 10px 12px; border-top:.5px solid var(--hair, rgba(127,127,127,.22)); }
     .uxadd .uxlink { border:0; border-radius:999px; padding:6px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer;
       background:var(--wash-fill, rgba(118,118,128,.12)); color:var(--ink-2, inherit); box-shadow:none; }
@@ -589,7 +603,7 @@
       input.setAttribute("aria-label", tr("Search a device"));
       if (phone) box.querySelector(".mesc").remove();
       const res = box.querySelector(".mres");
-      let list = [], at = 0;
+      let list = [], at = 0, moreOpen = false;
       const close = (refocus) => {
         document.removeEventListener("keydown", esc, true);
         box.remove();
@@ -651,9 +665,19 @@
               row(c, k);
             });
           } else {
-            list = fresh.filter((c) => c.roomIndex === this._room).slice(0, 12);
+            const part = newInRoom(all, this._room, 6);
+            list = moreOpen ? part.shown.concat(part.rest) : part.shown;
             head(fill(tr("New in {room} – no tile yet"), { room: roomName }));
             list.forEach(row);
+            if (part.rest.length && !moreOpen) {
+              const b = document.createElement("button");
+              b.type = "button";
+              b.className = "uxmorerow";
+              b.textContent = fill(tr("+{n} more"), { n: part.rest.length });
+              b.setAttribute("aria-expanded", "false");
+              b.onclick = () => { moreOpen = true; paint(); const r = res.querySelector("#uxopt" + part.shown.length); if (r) r.focus(); };
+              res.appendChild(b);
+            }
           }
           if (!list.length) {
             const e = document.createElement("div");
