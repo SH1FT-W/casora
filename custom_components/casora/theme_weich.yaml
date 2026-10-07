@@ -1026,6 +1026,9 @@ Casora:
       casora-soft-label: var(--casora-popup-tiles-text-secondary)
       casora-soft-sub: var(--casora-popup-tiles-text-secondary)
       casora-soft-row-fill: rgba(255,240,220,0.05)
+      # Fußball: Wappen-Kreise gedämpft statt reinweiß, dunkler Rand.
+      casora-football-crest-bg: rgba(250,244,236,0.92)
+      casora-football-crest-ring: rgba(0,0,0,0.25)
       casora-soft-row-hover: rgba(255,240,220,0.08)
       casora-soft-row-press: rgba(255,240,220,0.11)
       casora-soft-plate-fill: rgba(255,240,220,0.04)

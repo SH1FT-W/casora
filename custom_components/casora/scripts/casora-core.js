@@ -5173,6 +5173,11 @@ window.casoraMenuGlass = {
     }
     :host([soft]) .header-ring ha-icon { --mdc-icon-size: 34px; display: flex; }
     :host([soft]) .header-ring .im { width: 52px; height: 52px; object-fit: contain; }
+    /* Wappen-Ring: Sand-Halo statt Gerätefarbe (Weiß hätte auf hellem Grund keinen Rand). */
+    :host([soft]) .header-ring:has(> .im) {
+      box-shadow: 0 0 0 10px var(--casora-soft-row-hover, rgba(140,115,90,0.11)),
+        0 14px 30px -12px rgba(60,40,20,0.28);
+    }
     :host([soft]) .header-title {
       order: 1;
       font-size: 28px;

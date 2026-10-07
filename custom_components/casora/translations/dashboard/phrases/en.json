@@ -1411,11 +1411,9 @@
   "1 Fenster gekippt": "1 window tilted",
   "Licht aus": "Lights off",
   "Kein Team-Tracker-Sensor": "Not a Team Tracker sensor",
-  "Kein Spiel geplant": "No match scheduled",
   "Endstand": "Full time",
   "Live": "Live",
   "Halbzeit": "Half-time",
-  "Abpfiff": "Full time",
   "Morgen": "Tomorrow",
   "Heim": "Home",
   "Gast": "Away",
@@ -1424,8 +1422,6 @@
   "Nächstes Spiel": "Next match",
   "Letztes Spiel": "Last match",
   "Testspiel": "Friendly",
-  "Abstieg": "Relegation",
-  "Relegation": "Relegation play-off",
   "Gegner": "opponent",
   "nächster Gegner": "next opponent",
   "Ganze Tabelle": "Full table",
@@ -1435,7 +1431,19 @@
   "Keine Tabelle für diesen Wettbewerb": "No table for this competition",
   "Fußball": "Football",
   "gegen": "vs",
-  "bei": "at"
+  "bei": "at",
+  "Kein Spiel angesetzt": "No match scheduled",
+  "Nächstes Spiel noch nicht angesetzt": "Next match not scheduled yet",
+  "Verschoben": "Postponed",
+  "Abgesagt": "Cancelled",
+  "Uhrzeit offen": "Time TBC",
+  "Verlängerung": "Extra time",
+  "Elfmeterschießen": "Penalties",
+  "Gleich": "Soon",
+  "n. V.": "a.e.t.",
+  "i. E.": "pens",
+  "Sieg": "Win",
+  "Niederlage": "Loss"
  },
  "patterns": [
   [
@@ -2631,8 +2639,20 @@
    "in {1} months"
   ],
   [
+   "^Platz (1|21|31)$",
+   "{1}st"
+  ],
+  [
+   "^Platz (2|22)$",
+   "{1}nd"
+  ],
+  [
+   "^Platz (3|23)$",
+   "{1}rd"
+  ],
+  [
    "^Platz (\\d+)$",
-   "Position {1}"
+   "{1}th"
   ],
   [
    "^(\\d+) Punkte$",
@@ -2693,6 +2713,54 @@
   [
    "^(\\d+) Monaten$",
    "{1} months"
+  ],
+  [
+   "^in (\\d+) Std\\.$",
+   "in {1} h"
+  ],
+  [
+   "^in (\\d+) Min\\.$",
+   "in {1} min"
+  ],
+  [
+   "^führt (\\d+:\\d+) (bei|gegen) (.+)$",
+   "leading {1} {2} {3}"
+  ],
+  [
+   "^liegt (\\d+:\\d+) zurück (bei|gegen) (.+)$",
+   "trailing {1} {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Sieg n\\. V\\. (bei|gegen) (.+)$",
+   "{1} win a.e.t. {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Niederlage n\\. V\\. (bei|gegen) (.+)$",
+   "{1} loss a.e.t. {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Sieg (bei|gegen) (.+)$",
+   "{1} win {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Niederlage (bei|gegen) (.+)$",
+   "{1} loss {2} {3}"
+  ],
+  [
+   "^Sieg i\\. E\\. (bei|gegen) (.+)$",
+   "Won on penalties {1} {2}"
+  ],
+  [
+   "^Niederlage i\\. E\\. (bei|gegen) (.+)$",
+   "Lost on penalties {1} {2}"
+  ],
+  [
+   "^(\\d+:\\d+) (bei|gegen) (.+)$",
+   "{1} {2} {3}"
+  ],
+  [
+   "^i\\. E\\. (\\d+:\\d+)$",
+   "pens {1}"
   ]
  ]
 }

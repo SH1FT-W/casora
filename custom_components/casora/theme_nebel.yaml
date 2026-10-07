@@ -347,6 +347,7 @@ Casora Nebel:
       casora-lps-chip-on: rgba(94,151,184,0.28)
       casora-lps-close-bg: rgba(228,237,247,0.06)
       casora-soft-row-fill: rgba(228,237,247,0.05)
+      casora-football-crest-bg: rgba(239,243,247,0.92)
       casora-soft-row-hover: rgba(228,237,247,0.08)
       casora-soft-row-press: rgba(228,237,247,0.11)
       casora-soft-plate-fill: rgba(228,237,247,0.04)
