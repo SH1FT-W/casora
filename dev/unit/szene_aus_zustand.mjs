@@ -27,6 +27,9 @@ assert.equal(S.describe(warm, t, 'de'), '60 %, warm');
 const blau = st('light.band', 'on', { brightness: 255, color_mode: 'hs', hs_color: [230, 80], effect: 'none', rgb_color: [0, 0, 255] });
 assert.deepEqual(S.sceneState(blau), { state: 'on', brightness: 255, color_mode: 'hs', hs_color: [230, 80] });
 assert.equal(S.describe(blau, t, 'de'), '100 %, blau');
+// Weißes Licht im Farbmodus (Sättigung 0, Farbton 0) heißt „weiß“, nicht „rot“ (Nutzertest 6).
+assert.equal(S.describe(st('light.lese', 'on', { brightness: 77, color_mode: 'hs', hs_color: [0, 0] }), (x) => (x === 'white' ? 'weiß' : t(x)), 'de'), '30 %, weiß');
+assert.equal(S.describe(st('light.rot', 'on', { brightness: 255, color_mode: 'hs', hs_color: [0, 90] }), (x) => (x === 'red' ? 'rot' : t(x)), 'de'), '100 %, rot');
 
 // Licht aus: nur der Zustand.
 assert.deepEqual(S.sceneState(st('light.nachtlicht', 'off', { brightness: null, color_mode: null })), { state: 'off' });

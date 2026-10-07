@@ -195,6 +195,10 @@
       target.dispatchEvent(again);
     });
   }, true);
+  // Studio (Nutzertest 6, P-T5): Kacheln ohne eigenes Popup (Pumpe) – die Rückfrage ansehen, ohne zu schalten.
+  window.casoraAskFirstTry = function (id, name) {
+    return ask(word({ action: 'toggle', target: { entity_id: id } }, { entity: id, name: name || '' }));
+  };
   window.__casoraAskFirstParts = { switching: switching, word: word };
 })();
 

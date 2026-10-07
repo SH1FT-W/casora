@@ -5135,10 +5135,14 @@ const tileStateWord = (kind, tile, ent, states, hass) => {
     default: break;
   }
   if (ent.state === "ok") return "Healthy";
+  // HA schreibt auf Deutsch „Ein“, das Dashboard „An“ (casora-i18n.js) – Casora sagt An/Aus (Nutzertest 6).
   const formatted = hass && typeof hass.formatEntityState === "function"
-    ? hass.formatEntityState(ent) : null;
+    ? anNotEin(hass.formatEntityState(ent)) : null;
   return formatted || cap(String(ent.state || "")) || "—";
 };
+
+// Wie das Dashboard (scripts/casora-i18n.js, „Ein“ → „An“): HAs deutscher Zustand „Ein“ heißt bei Casora „An“.
+const anNotEin = (v) => (v === "Ein" ? "An" : v);
 
 const selKeyOf = (mk) => {
   const s = String(mk || "");
@@ -9452,6 +9456,7 @@ class CasoraPanel extends HTMLElement {
         }
         .sw[aria-checked="true"] { background:var(--sw-on); }
         .sw[aria-checked="true"]::after { transform:translateX(14px); }
+        .swlabel { cursor:pointer; -webkit-user-select:none; user-select:none; }
         .sw:hover { filter:brightness(1.08); }
         .card.off { background-color:transparent; }
         .card.off > .chead h2 { opacity:.82; }
@@ -18973,7 +18978,7 @@ class CasoraPanel extends HTMLElement {
     const ctx = [area, devName && devName !== name ? devName : ""].filter(Boolean).join(" \u00b7 ");
     let state = "";
     if (st) {
-      try { state = h.formatEntityState ? h.formatEntityState(st) : st.state; } catch (e) { state = st.state; }
+      try { state = h.formatEntityState ? anNotEin(h.formatEntityState(st)) : st.state; } catch (e) { state = st.state; }
       // Rohwerte ohne Anzeige-Genauigkeit („21,3666666667 °C“) auf eine Nachkommastelle.
       const n = Number(st.state);
       if (st.state !== "" && Number.isFinite(n) && /[.,]\d{3,}/.test(String(state))) {
@@ -18996,6 +19001,14 @@ class CasoraPanel extends HTMLElement {
     return [...by.entries()];
   }
 
+  // Entität der Kachel wie im Dashboard: eigene oder die, die ihre Vorlage bestimmt (Alarm → Alarmo).
+  _tileEnt(tile) {
+    if (!tile) return null;
+    if (tile.entity) return tile.entity;
+    return (window.casoraTileEntity
+      && window.casoraTileEntity(tile, this._hass, this._state && this._state.templates)) || null;
+  }
+
   _boolSwitch(cur, boolDefault, onChange, label) {
     const def = !!boolDefault;
     const on = cur === undefined || cur === "" || cur === null ? def : !!cur;
@@ -19011,6 +19024,27 @@ class CasoraPanel extends HTMLElement {
       sw.setAttribute("aria-checked", state ? "true" : "false");
       onChange(state === def ? undefined : state);
     };
+    // Nutzertest 6 (P-T3): ein Klick auf die Beschriftung („12-Stunden-Uhr“) schaltete nicht. Sobald
+    // der Schalter in seiner Zeile steckt, schalten die reinen Text-Geschwister davor ihn mit.
+    const wire = () => {
+      const row = sw.parentElement;
+      if (!row) return false;
+      let n = sw.previousElementSibling;
+      while (n) {
+        if (!n._swLabel && !n.matches("button, input, select, textarea, a, .drop, .hint")
+          && !n.querySelector("button, input, select, textarea, a, .sw")) {
+          n._swLabel = true;
+          n.classList.add("swlabel");
+          n.addEventListener("click", (ev) => {
+            if (ev.defaultPrevented || sw.disabled || !sw.isConnected) return;
+            sw.click();
+          });
+        }
+        n = n.previousElementSibling;
+      }
+      return true;
+    };
+    Promise.resolve().then(() => { if (!wire()) requestAnimationFrame(wire); });
     return sw;
   }
 
@@ -22955,7 +22989,8 @@ class CasoraPanel extends HTMLElement {
       }
       const type = tileTypeOf(tile);
       const kind = type && (type.like || type.id);
-      const ent = tile.entity && this._hass.states[tile.entity];
+      const entId = this._tileEnt(tile);
+      const ent = entId && this._hass.states[entId];
       const active = tileActive(kind, ent, tile.variables || {}, this._hass.states);
       const away = tileHidesNow(type, kind, ent, tile.variables || {}, this._hass.states);
       const el = document.createElement("div");
@@ -23047,7 +23082,10 @@ class CasoraPanel extends HTMLElement {
           el.querySelector(".mtop").appendChild(more);
         }
       }
-      el.querySelector(".mname").textContent = tile.name || (type && type.label) || "Tile";
+      const own = !tile.name && window.casoraTileName
+        && window.casoraTileName(tile, ent, this._hass, this._state && this._state.templates);
+      el.querySelector(".mname").textContent = tile.name || own || (type && type.label) || "Tile";
+      if (own) el.querySelector(".mname").setAttribute("data-no-i18n", "");
       el.querySelector(".mstate").textContent =
         // Casora: Zustandstext wie im Dashboard (state_display der Vorlage).
         (window.casoraTileState && window.casoraTileState(tile, ent, this._hass, this._state && this._state.templates))
@@ -23055,7 +23093,7 @@ class CasoraPanel extends HTMLElement {
       // Wie in der Kachelliste: ohne Gerät zeigt das Dashboard nur den Namen.
       // Gerät fehlt in HA: wie die Dashboard-Kachel (casora_entity, Zustand casora_missing).
       const gone = tileEntityGone(tile, this._hass.states);
-      if (gone || tileMissingEntity(tile, type)) {
+      if (gone || (tileMissingEntity(tile, type) && !entId)) {
         el.classList.add("missingdev");
         el.querySelector(".mstate").textContent = "Device missing";
       } else if (type && type.ownData && !tile.entity
@@ -24411,7 +24449,7 @@ class CasoraPanel extends HTMLElement {
     }
     if (condIn || condKind) notes.push("Conditional");
     // Speichern bleibt erlaubt, aber die L\u00fccke ist sichtbar.
-    const devMissing = tileOn && !contDesc && (tileMissingEntity(tile, type)
+    const devMissing = tileOn && !contDesc && ((tileMissingEntity(tile, type) && !this._tileEnt(tile))
       || tileEntityGone(tile, this._hass && this._hass.states));
     if (devMissing) notes.unshift("Device missing");
     // Unterzeile: Hinweise (Ger\u00e4t fehlt, Bedingt, \u2026) zuerst, dann Art/Sammelart.
@@ -24990,7 +25028,7 @@ class CasoraPanel extends HTMLElement {
     // Öffnet die Kachel ein Casora-Popup, heißt der Aufklapp-Bereich bei jedem Typ „Popup“
     // (wie beim Licht): Popup-Titel zuerst, dann die Popup-Felder, dann eigene Karten.
     // Was nur die Kachel selbst betrifft (tileLevel), kommt in einen eigenen Bereich „Erweitert“.
-    const popupFold = popupCards && !tileMissingEntity(tile, type);
+    const popupFold = popupCards && !(tileMissingEntity(tile, type) && !this._tileEnt(tile));
     if (popupFold) {
       const isTitle = (f) => f.advanced && !f.section && f.key === "room_name";
       tfields = tfields.filter(isTitle).concat(tfields.filter((f) => !isTitle(f)))

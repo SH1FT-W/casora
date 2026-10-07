@@ -322,6 +322,9 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   const OURS = new Set((window.CASORA_TILE_TYPES || []).map((t) => t.template));
   const names = (t) => (Array.isArray(t) ? t : t ? [t] : []);
   const isOurs = (tile) => names(tile && tile.template).some((n) => OURS.has(n));
+  // Auch Kachelarten mit Vorlagenliste (Fußbodenheizung: casora_thermostat + casora_popup_fbh).
+  const OURS_ANY = new Set((window.CASORA_TILE_TYPES || []).flatMap((t) => names(t.template)));
+  const isOursAny = (tile) => names(tile && tile.template).some((n) => OURS_ANY.has(n));
 
   function resolve(templates, list, seen = new Set()) {
     const out = { variables: {} };
@@ -331,7 +334,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       const t = templates[n];
       const base = resolve(templates, t.template, seen);
       Object.assign(out.variables, base.variables, t.variables || {});
-      for (const k of ["state_display", "icon", "entity_picture"]) {
+      for (const k of ["state_display", "icon", "entity_picture", "entity", "name"]) {
         if (t[k] !== undefined) out[k] = t[k];
         else if (base[k] !== undefined && out[k] === undefined) out[k] = base[k];
       }
@@ -389,7 +392,9 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
           const txt = n.toLocaleString(lang, { maximumFractionDigits: digits });
           return unit ? txt + " " + unit : txt;
         }
-        return hass && hass.formatEntityState ? hass.formatEntityState(ent) : null;
+        // HAs deutsches „Ein“ heißt im Dashboard „An“ (casora-i18n.js).
+        const f = hass && hass.formatEntityState ? hass.formatEntityState(ent) : null;
+        return f === "Ein" ? "An" : f;
       };
       if (!tpl.state_display) return fallback();
       let v;
@@ -401,6 +406,36 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       // DOMParser statt div: ein nicht eingehängtes div lädt <img> und führt onerror aus.
       const d = new DOMParser().parseFromString(String(v), "text/html");
       return ((d.body && d.body.textContent) || "").trim() || null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  // Entität wie im Dashboard: Kacheln ohne eigene Entität, deren Vorlage sie selbst bestimmt
+  // (Alarm: alarm_entity, Standard Alarmo). Vorher stand in der Vorschau „Gerät fehlt“, das
+  // Dashboard zeigte die Kachel „Alarmo · Zuhause“ (Nutzertest 6, H-T4).
+  window.casoraTileEntity = (tile, hass, templates) => {
+    if (!tile || tile.entity) return (tile && tile.entity) || null;
+    if (!isOursAny(tile)) return null;
+    try {
+      const tpl = resolve(templates, tile.template);
+      if (typeof tpl.entity !== "string" || !tpl.entity) return null;
+      const id = tpl.entity.includes("[[[") ? run(tpl.entity, ctxFor(tile, null, hass, tpl)) : tpl.entity;
+      return typeof id === "string" && hass && hass.states && hass.states[id] ? id : null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  // Name wie im Dashboard (name der Vorlagenkette, z. B. casora_entity: Anzeigename der Entität,
+  // Wetterwarnung „NINA“). Leer (ohne Entität, je nach Design) → die Vorschau bleibt beim Namen der
+  // Kachelart. null = nichts Eigenes.
+  window.casoraTileName = (tile, ent, hass, templates) => {
+    if (!tile || tile.name || !isOursAny(tile)) return null;
+    try {
+      const tpl = resolve(templates, tile.template);
+      const v = run(tpl.name, ctxFor(tile, ent, hass, tpl));
+      return typeof v === "string" && v.trim() && !v.includes("<") ? v.trim() : null;
     } catch (e) {
       return null;
     }

@@ -38,6 +38,7 @@
     + ".cv-loss{margin:0 0 4px;padding:10px 12px;border-radius:12px;font-size:var(--t-foot);line-height:1.4;"
     + "background:var(--casora-studio-chip,rgba(127,127,127,.12));color:var(--ink)}"
     + ".cv-loss b{display:block;font-weight:650;margin-bottom:3px}.cv-loss ul{margin:0;padding-left:18px}.cv-loss li{margin:1px 0}"
+    + ".cv-loss li.cv-more{list-style:none;margin-left:-18px}.cv-morebtn{all:unset;cursor:pointer;color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px}"
     + ".cv-now{flex:none;padding:3px 9px;border-radius:999px;font-size:var(--t-caption);font-weight:600;background:var(--casora-studio-good-tint, rgba(52,199,89,.22));color:var(--casora-studio-good, #34c759)}"
     + ".cv-pin{display:inline-grid;vertical-align:-2px;margin-left:6px;width:14px;height:14px;color:var(--ink-2)}.cv-pin svg{width:14px;height:14px}"
     + ".cv-item{display:flex;align-items:center}.cv-item+.cv-item{box-shadow:inset 0 .5px 0 var(--hair,rgba(255,255,255,.1))}"
@@ -567,7 +568,23 @@
       if (lines.length) {
         const ul = document.createElement("ul");
         lines.slice(0, 5).forEach((l) => { const li = document.createElement("li"); li.textContent = l; ul.appendChild(li); });
-        if (lines.length > 5) { const li = document.createElement("li"); li.textContent = t("+{n} more").replace("{n}", lines.length - 5); ul.appendChild(li); }
+        if (lines.length > 5) {
+          // Nutzertest 6 (P-T9): „+3 weitere“ ließ sich nicht öffnen – jetzt aufklappbar.
+          const li = document.createElement("li");
+          li.className = "cv-more";
+          const more = document.createElement("button");
+          more.type = "button";
+          more.className = "cv-morebtn";
+          more.textContent = t("+{n} more").replace("{n}", lines.length - 5);
+          more.setAttribute("aria-expanded", "false");
+          more.onclick = (ev) => {
+            ev.stopPropagation();
+            lines.slice(5).forEach((l) => { const x = document.createElement("li"); x.textContent = l; ul.insertBefore(x, li); });
+            li.remove();
+          };
+          li.appendChild(more);
+          ul.appendChild(li);
+        }
         box.appendChild(ul);
       }
       return box;
@@ -602,7 +619,11 @@
       return box;
     };
     P._cvName = async function (v, after) {
+      // Nutzertest 6 (P-T9): der Dialog sagte nicht, welcher Stand gemeint ist – Zeit und Inhalt dazu,
+      // und dass ein Name den Stand anheftet.
+      const which = (v.current ? t("Now") + " · " : "") + fmtFull(this, new Date(v.ts)) + " – " + describe(v);
       const name = await this._ask({ title: t("Name this version"), value: v.name || "",
+        message: which + (v.pinned ? "" : (/[.!?…]$/.test(which) ? " " : ". ") + t("A name also pins it, so it is kept.")),
         placeholder: t("e.g. Before the remodel"), confirmLabel: t("Save") });
       if (name === null || name === undefined || name === false) return;
       // Ein Name heftet den Stand gleich an – sonst räumt das Aufräumen ihn irgendwann weg.

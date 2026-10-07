@@ -83,4 +83,56 @@ const real = await k.page.evaluate(() => window.__pierce('button-card').filter((
 await check('Echtes Konto „Kind“: kein Sicherheits-Badge im Raum', !real.some((t) => SEC.test(t)), real);
 await check('Studio und echtes Konto zeigen dasselbe (beide ohne Sicherheit)', !asKind.some((t) => SEC.test(t)) === !real.some((t) => SEC.test(t)));
 
+// Nutzertest 6 (H-T4): Kacheln auf „Zuhause“, deren Gerät die Vorlage selbst wählt (Alarm → Alarmo),
+// standen im Studio als „Alarm · Gerät fehlt“, im Dashboard als „Alarmo · Zuhause“ – niemand fand sie.
+// Jede benannte Dashboard-Kachel muss in der Vorschau unter demselben Namen stehen, für Admin und Kind.
+const homeIdx = cfg.views.findIndex((v) => v.path === 'home');
+const rowOf = (v) => (v.cards || []).find((x) => x && x.type === 'custom:casora-smart-row');
+const homeRow = homeIdx >= 0 ? rowOf(cfg.views[homeIdx]) : null;
+const alarmAt = homeRow ? homeRow.cards.findIndex((x) => [].concat(x.template || []).includes('casora_alarm') && !x.entity) : -1;
+if (alarmAt >= 0) {
+  const studioNames = (as) => page.evaluate(async (as) => {
+    const p = window.__panel(); p._bClose && p._bClose();
+    p._room = p._state.compact.rooms.findIndex((r) => r.path === 'home'); p._uxAs = as; p._renderTabs(); p._renderForm(); p._rebuildPreview();
+    await new Promise((r) => setTimeout(r, 1800));
+    p._uxMarkPreview && p._uxMarkPreview();
+    return [...p.shadowRoot.querySelectorAll('.card.map .mtile:not(.ghost)')]
+      .filter((e) => e.style.display !== 'none' && getComputedStyle(e).display !== 'none' && !e.classList.contains('uxashide'))
+      .map((e) => ((e.querySelector('.mname') || {}).textContent || '').trim() + ' | ' + ((e.querySelector('.mstate') || {}).textContent || '').trim());
+  }, as);
+  // Kacheln der Kachelreihe im Dashboard: button-cards mit einer Vorlage aus der Reihe, sichtbar, mit Namen.
+  const rowTpls = [...new Set(homeRow.cards.flatMap((x) => [].concat(x.template || (x.card && x.card.template) || [])))];
+  const realAll = (pg) => pg.evaluate((tpls) => window.__pierce('button-card').filter((b) => {
+    const t = [].concat((b._config || {}).template || []);
+    const r = b.getBoundingClientRect();
+    return r.width > 40 && r.height > 40 && t.some((x) => tpls.includes(x));
+  }).map((b) => (b.shadowRoot && b.shadowRoot.querySelector('#name') ? b.shadowRoot.querySelector('#name').textContent : '').trim()), rowTpls);
+  const admPrev = await studioNames(null);
+  const alarmName = (admPrev.find((t) => /Alarm/.test(t)) || '').split(' | ');
+  await check('Studio (Admin): Alarm-Kachel ohne eigene Entität zeigt die Alarmanlage, nicht „Gerät fehlt“',
+    alarmName[0] && !/Gerät fehlt|Device missing/.test(alarmName[1] || ''), admPrev);
+  const adm = await open({ width: 1600, height: 1000, dark: false });
+  await dashboard(adm.page, dash.url + '/home', 3);
+  const admReal = (await realAll(adm.page)).filter(Boolean);
+  const missing = admReal.filter((n) => !admPrev.some((t) => t.split(' | ')[0] === n));
+  await check('Admin: jede benannte Kachel auf Zuhause steht so auch in der Vorschau', !missing.length, { missing, admReal, admPrev });
+
+  // „Wer sieht das?“ an der Alarm-Kachel: nur Admin → bei Kind weder in der Vorschau noch im Dashboard.
+  const c3 = await ws();
+  const cfg2 = await c3.cmd({ type: 'lovelace/config', url_path: dash.url });
+  const row2 = rowOf(cfg2.views[homeIdx]);
+  row2.cards[alarmAt].visibility = [{ condition: 'user', users: [admin.id] }];
+  await c3.cmd({ type: 'lovelace/config/save', url_path: dash.url, config: cfg2 });
+  c3.close();
+  await studio(page, dash.url);
+  const kindPrev = await studioNames(kind.id);
+  const alarmLabel = alarmName[0];
+  await check('Studio „Ansehen als: Kind“: ausgeblendete Alarm-Kachel fehlt', !kindPrev.some((t) => t.split(' | ')[0] === alarmLabel), kindPrev);
+  await dashboard(k.page, dash.url + '/home', 3);
+  const kindReal = (await realAll(k.page)).filter(Boolean);
+  await check('Echtes Konto „Kind“: ausgeblendete Alarm-Kachel fehlt', !kindReal.includes(alarmLabel), kindReal);
+  const kMissing = kindReal.filter((n) => !kindPrev.some((t) => t.split(' | ')[0] === n));
+  await check('Kind: jede benannte Kachel auf Zuhause steht so auch in der Vorschau', !kMissing.length, { kMissing, kindReal, kindPrev });
+}
+
 await finish();

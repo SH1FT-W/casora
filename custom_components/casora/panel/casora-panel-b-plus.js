@@ -83,7 +83,8 @@
         const hs = s.hs_color || a.hs_color;
         if (s.color_mode && /^(hs|xy|rgb|rgbw|rgbww)$/.test(s.color_mode) && Array.isArray(hs)) {
           const h = ((Number(hs[0]) % 360) + 360) % 360;
-          parts.push(t((HUES.find((x) => h < x[0]) || HUES[0])[1]));
+          // Nutzertest 6: weißes Licht (Sättigung fast 0, Farbton 0) stand als „rot“ in der Liste.
+          parts.push(t(Number(hs[1]) < 12 ? "white" : (HUES.find((x) => h < x[0]) || HUES[0])[1]));
         }
       }
       return parts.join(", ") || t("On");

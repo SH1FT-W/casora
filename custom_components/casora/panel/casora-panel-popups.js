@@ -292,6 +292,14 @@
       layer.classList.toggle("cp-wide", wide);
       if (wide && layer.parentNode !== this.shadowRoot) this.shadowRoot.appendChild(layer);
       else if (!wide && layer.parentNode !== plinth) plinth.appendChild(layer);
+      // Nutzertest 6 (H, iPad): fixed links ab 0 lag unter HAs Seitenleiste (An/Aus angeschnitten) –
+      // die eigene Ebene deckt nur die Studio-Fläche ab.
+      if (wide) {
+        const hb = this.getBoundingClientRect();
+        layer.style.left = Math.max(0, Math.round(hb.left)) + "px";
+        layer.style.right = Math.max(0, Math.round(window.innerWidth - hb.right)) + "px";
+        layer.style.top = Math.max(0, Math.round(hb.top)) + "px";
+      } else ["left", "right", "top"].forEach((k) => layer.style.removeProperty(k));
       if (wide) { layer.style.removeProperty("height"); this._cpFit(); return; }
       const bottom = Math.min(sb.bottom, window.innerHeight) - 16;
       layer.style.height = Math.max(240, Math.round(bottom - pb.top)) + "px";

@@ -1560,10 +1560,11 @@
               // aber unter dem Rand bzw. erschien erst nach erneutem Antippen – jetzt öffnet der Toast es selbst.
               const target = v && !isPhone(this) && typeof this._cpOpen === "function" && typeof this._cpTarget === "function" ? this._cpTarget() : null;
               // Nutzertest 5 (H-T5): nach ~6 s war „Ausprobieren“ weg – länger stehen lassen, dazu der Knopf unten.
-              if (try_) try_.hidden = !v || !canTry();
+              if (try_) { try_.hidden = !v || !(canTry() || canAsk()); try_.textContent = tr(canTry() ? "Try it in the popup" : "Try the question"); }
               if (this._bToast) this._bToast(tr(v ? "The dashboard asks before switching" : "Switches right away again"),
                 target ? { ms: 15000, sub: tr("The popup in the preview asks too. Done saves it."),
                   action: { label: tr("Try it"), run: () => { this._cpDismissed = null; const t = this._cpTarget(); if (t) this._cpOpen(t); } } }
+                  : v && canAsk() ? { ms: 15000, sub: tr("Done saves it to your dashboard."), action: { label: tr("Try it"), run: askNow } }
                   : { sub: tr("Done saves it to your dashboard.") });
             }, tr("Ask before switching"));
             r.append(l, sw);
@@ -1577,13 +1578,29 @@
             h.setAttribute("data-no-i18n", "");
             // Dauerhafter Weg zum Ausprobieren (nicht nur im Toast): öffnet das Popup der Vorschau.
             const canTry = () => !isPhone(this) && typeof this._cpOpen === "function" && typeof this._cpTarget === "function" && !!this._cpTarget();
+            // Nutzertest 6 (P-T5): Kacheln ohne eigenes Popup (Pumpe) zeigen die Rückfrage selbst – nur ansehen,
+            // in der Vorschau wird nichts geschaltet.
+            const askId = String(inner.entity || "");
+            // Der Dialog kommt aus casora-core.js; das Studio lädt Casoras Skripte erst bei Bedarf (wie das Popup).
+            const canAsk = () => !!askId && (typeof window.casoraAskFirstTry === "function" || typeof this._casoraCardsReady === "function");
+            const askNow = async () => {
+              if (typeof window.casoraAskFirstTry !== "function" && this._casoraCardsReady) { try { await this._casoraCardsReady(); } catch (e) { /* unten */ } }
+              if (typeof window.casoraAskFirstTry !== "function") { if (this._bToast) this._bToast(tr("Done saves it to your dashboard.")); return; }
+              window.casoraAskFirstTry(askId, typeof inner.name === "string" ? inner.name : "").then((ok) => {
+                if (this._bToast) this._bToast(tr(ok ? "In the dashboard it would switch now" : "Cancelled – nothing switches"),
+                  { sub: tr("Nothing was switched here in the Studio.") });
+              });
+            };
             const try_ = document.createElement("button");
             try_.type = "button";
             try_.className = "mval ghost mtry";
             try_.setAttribute("data-no-i18n", "");
-            try_.textContent = tr("Try it in the popup");
-            try_.hidden = !(V.confirm_toggle === true && canTry());
-            try_.onclick = () => { this._cpDismissed = null; const t = this._cpTarget(); if (t) this._cpOpen(t); };
+            try_.textContent = tr(canTry() ? "Try it in the popup" : "Try the question");
+            try_.hidden = !(V.confirm_toggle === true && (canTry() || canAsk()));
+            try_.onclick = () => {
+              if (canTry()) { this._cpDismissed = null; const t = this._cpTarget(); if (t) this._cpOpen(t); return; }
+              if (canAsk()) askNow();
+            };
             group.append(r, h, try_);
           }
           this._mWhoRow(group, () => tileUsers(shell), (ids) => setTileUsers(shell, ids), "Tile",
