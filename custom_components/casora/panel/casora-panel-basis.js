@@ -129,11 +129,14 @@
     return m.length ? [].concat(...m.map((x) => [x].concat(deepMembers(hass, x, seen)))) : [];
   }
   // Die kleinste HA-Gruppe einer Domain, die alle ids enthält – dann zählt die Kachel über HA.
-  function groupFor(hass, ids, domain) {
+  // exact: nur eine Gruppe ohne fremde Geräte – sonst wurde z. B. „alle Lampen“ des Hauses zur
+  // Beleuchtung eines Raums, sobald dort zwei Lichter stehen (Nutzertest 7: „1 von 8 Räumen an“).
+  function groupFor(hass, ids, domain, exact) {
     domain = domain || String(ids[0] || "").split(".")[0];
+    const mine = new Set([].concat(...ids.map((x) => [x].concat(deepMembers(hass, x)))));
     const hit = Object.keys(hass.states || {}).filter((id) => id.startsWith(domain + ".") && membersOf(hass, id).length)
       .map((id) => ({ id, all: new Set(deepMembers(hass, id).concat(id)) }))
-      .filter((g) => ids.every((x) => g.all.has(x)))
+      .filter((g) => ids.every((x) => g.all.has(x)) && (!exact || [...g.all].every((x) => x === g.id || mine.has(x))))
       .sort((a, b) => a.all.size - b.all.size)[0];
     return hit ? hit.id : null;
   }
@@ -151,13 +154,14 @@
     return out;
   }
   // Mehrere Geräte einer Art → eine Kachel (wie Casoras eigene Gruppen-Kacheln).
-  function groupTile(kind, ids, name, room, hass) {
+  // wide: Übersicht (alle Räume) – dort darf die Gruppe des ganzen Hauses mehr enthalten.
+  function groupTile(kind, ids, name, room, hass, wide) {
     if (kind === "light") {
-      const g = ids.length === 1 ? ids[0] : groupFor(hass, ids, "light");
+      const g = ids.length === 1 ? ids[0] : groupFor(hass, ids, "light", !wide);
       if (g) return tile("light", g, name);
       return tile("light", ids[0], name, { lights: ids.slice(), active_entities: ids.slice() });
     }
-    if (kind === "cover") return tile("cover_group", groupFor(hass, ids, "cover") || ids[0], name, { room_name: room, covers: ids.slice() });
+    if (kind === "cover") return tile("cover_group", groupFor(hass, ids, "cover", !wide) || ids[0], name, { room_name: room, covers: ids.slice() });
     if (kind === "lock") return tile("lock_group", ids[0], name, { room_name: room, locks: ids.slice() });
     return null;
   }
@@ -217,7 +221,7 @@
         const same = room.items.filter((x) => x.type === kind);
         if (same.length < r.group_min) return;
         const ids = same.map((x) => x.entity);
-        const t = groupTile(kind, ids, tr2(GROUP_NAME[kind]), room.name, hass);
+        const t = groupTile(kind, ids, tr2(GROUP_NAME[kind]), room.name, hass, room === overview);
         room.items = room.items.filter((x) => x.type !== kind);
         room.items.push({ key: "group:" + kind + ":" + room.name, type: kind, group: ids, name: tr2(GROUP_NAME[kind]), tile: t, on: true });
       });
@@ -244,7 +248,7 @@
         const ids = [...new Set(all(kind))];
         if (!ids.length) return;
         const name = ids.length === 1 ? single : many;
-        const t = ids.length === 1 ? tile(kind, ids[0], tr2(name)) : groupTile(kind, ids, tr2(name), tr2("Home"), hass);
+        const t = ids.length === 1 ? tile(kind, ids[0], tr2(name)) : groupTile(kind, ids, tr2(name), tr2("Home"), hass, true);
         fav.push({ key: "fav:" + kind, type: kind, group: ids, name: tr2(name), tile: t, label: tr2(name), on: true, fav: true });
       });
       home.items = fav.concat(home.items);
