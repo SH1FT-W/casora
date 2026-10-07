@@ -112,6 +112,7 @@ The biggest update since Casora 1.0. It brings a new Studio in which the preview
 - Light popup for the whole home: the row of rooms no longer flickers when a room with several lights is turned on.
 - Set up automatically: a room's "Lights" tile never uses the light group of the whole house.
 - Bell: notifications without a matching tile (e.g. a plant) open the Casora popup instead of a technical Home Assistant dialog.
+- Plant popup on phones: long reading names no longer push the popup wider than the screen. The plant name is left off at the front even when it is written without umlauts there, and the " 2" Home Assistant adds to duplicate names is dropped. Values on the right are always fully visible.
 - Energy: "Feed-in total", meters in Wh and power in kW are shown correctly (e.g. 1.5 kWh instead of 1500 kWh, 2.5 kW instead of 3 W). The "no daily values yet" hint is fully readable.
 - Media popup: buttons no longer jump when playback starts, and on an iPad in landscape controls and volume are visible without scrolling.
 - Waste popup: the arrows for paging through the month calendar are no longer cut off at the top.

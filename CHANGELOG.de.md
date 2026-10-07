@@ -112,6 +112,7 @@ Das größte Update seit Casora 1.0. Neu sind das Studio, in dem die Vorschau se
 - Licht-Popup des ganzen Hauses: Die Leiste mit den Räumen flackert nicht mehr, wenn ein Raum mit mehreren Lichtern eingeschaltet wird.
 - Automatisch einrichten: Die Raum-Kachel „Beleuchtung“ nimmt nie mehr die Lichtgruppe des ganzen Hauses.
 - Glocke: Meldungen ohne passende Kachel (z. B. eine Pflanze) öffnen das Casora-Popup statt eines technischen Home-Assistant-Fensters.
+- Pflanzen-Popup am Handy: lange Messwert-Namen schieben das Popup nicht mehr breiter als den Bildschirm. Der Pflanzenname fällt vorn auch dann weg, wenn er dort ohne Umlaute geschrieben ist, und der Zusatz „ 2“ von Home Assistant bei doppelten Namen entfällt. Die Werte rechts sind immer ganz zu sehen.
 - Energie: „Einspeisung gesamt“, Zähler in Wh und Leistung in kW werden richtig angezeigt (z. B. 1,5 kWh statt 1500 kWh, 2,5 kW statt 3 W). Der Hinweis ohne Tageswerte ist vollständig lesbar.
 - Musik-Popup: Die Tasten springen beim Abspielen nicht mehr, am iPad quer sind Tasten und Lautstärke ohne Scrollen zu sehen.
 - Abfall-Popup: Die Pfeile zum Blättern im Monatskalender sind nicht mehr oben abgeschnitten.
