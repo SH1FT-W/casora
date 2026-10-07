@@ -99,7 +99,8 @@ const pick = (H) => H(() => { const rs = window.__panel()._state.compact.rooms;
   await check('Handy: „Bearbeitet · 1 Änderung“ sichtbar', /1 Änderung/.test(pill || ''), pill);
   await H(() => window.__panel().shadowRoot.querySelector('.toprow > .bedited').click());
   await page.waitForTimeout(500);
-  await check('Handy: antippen öffnet die Liste mit „Zurücknehmen“', /Zurücknehmen/.test(await R0(H, '.mpop') || ''));
+  await check('Handy: antippen öffnet die Liste mit „Zurücknehmen“ (bedienbar)', /Zurücknehmen/.test(await R0(H, '.mpop') || '')
+    && await H(() => !!window.__panel().shadowRoot.querySelector('.mpop .mback:not([disabled])')), await R0(H, '.mpop'));
   await H(() => window.__panel()._mPopClose());
   await H(() => window.__panel()._undo());
   // Vorschau folgt dem Raum
