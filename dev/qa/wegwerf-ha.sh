@@ -4,6 +4,7 @@
 # (:8124) und ~/casora-haus/config bleiben unberührt.
 #
 #   dev/qa/wegwerf-ha.sh start <name> <port> arbeit|frisch|stress|demo   anlegen + starten (ohne Warten)
+#                                                                    Image: CASORA_HA_IMAGE=…, sonst das von casora-test
 #   dev/qa/wegwerf-ha.sh wait  <name> <port>                         warten, bis es bereit ist
 #   dev/qa/wegwerf-ha.sh weg   <name>                                Container + Daten entfernen
 #   dev/qa/wegwerf-ha.sh konten <name> <port>                        für Nutzertests: Benutzer „Kind“ (kein Admin)
@@ -78,6 +79,7 @@ fi
 grep -q '^scene:' "$CFG/configuration.yaml" 2>/dev/null || printf '\nscene: !include scenes.yaml\n' >> "$CFG/configuration.yaml"
 [ -f "$CFG/scenes.yaml" ] || echo '[]' > "$CFG/scenes.yaml"
 echo "$Z" > "$D/zustand"
-IMG="$(docker inspect casora-test --format '{{.Config.Image}}' 2>/dev/null || echo ghcr.io/home-assistant/home-assistant:stable)"
+# CASORA_HA_IMAGE: anderes HA-Image (z. B. eine Beta vor dem nächsten HA-Release); sonst wie casora-test.
+IMG="${CASORA_HA_IMAGE:-$(docker inspect casora-test --format '{{.Config.Image}}' 2>/dev/null || echo ghcr.io/home-assistant/home-assistant:stable)}"
 docker run -d --name "$N" --label casora-gate=1 -p "$P:8123" -v "$CFG:/config" -e TZ=Europe/Berlin "$IMG" >/dev/null
 echo "$N gestartet: $Z auf Port $P"
