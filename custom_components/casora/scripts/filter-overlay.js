@@ -414,19 +414,6 @@
     walk(cards, 0);
     return out;
   }
-  // Startseite: Unterzeile des Sicherheits-Sammelbadges (die Vorlage legt sie als _casoraSecText ab).
-  // Nur ein sichtbares Badge zählt (Raum-Badges derselben Art sind auf der Startseite ausgeblendet).
-  function _findSecBadge(root, depth) {
-    if (!root || depth > 8) return null;
-    for (const el of root.querySelectorAll('*')) {
-      if (typeof el._casoraSecText === 'string' && el.getBoundingClientRect().width > 0) return el;
-      if (el.shadowRoot) {
-        const hit = _findSecBadge(el.shadowRoot, depth + 1);
-        if (hit) return hit;
-      }
-    }
-    return null;
-  }
 
   // The dashboard scrolls in an inner shadow-DOM container; scroll doesn't cross it.
   function _findScrollAncestor(el) {
@@ -993,22 +980,8 @@
         if (grad.style.opacity !== '0') { grad.style.opacity = '0'; veil.style.opacity = '0'; edge.style.opacity = '0'; }
         _dashBarOn = false;
         if (cp > 0) {
-          let sec = _dashHeader?.secBadge;
-          if (!sec?.isConnected && _dashHeader && Date.now() - (_dashHeader.secAt || 0) > 1500) {
-            // Erst die Badge-Reihe der Startseite, sonst das ganze Dashboard (höchstens alle 1,5 s).
-            _dashHeader.secAt = Date.now();
-            sec = _findSecBadge(inst._badgeRowEl?.shadowRoot, 0)
-              || _findSecBadge(inst._container, 0);
-            _dashHeader.secBadge = sec;
-          }
-          // Kurz: eine Meldung wörtlich („Schloss offen“), mehrere gezählt („3 Meldungen“);
-          // „Aktiv · Abwesend“ bleibt ganz.
-          let st = sec && sec.isConnected ? String(sec._casoraSecText || '') : '';
-          if (st && !/^Aktiv · /.test(st)) {
-            const L = st.split(' · ');
-            st = _tr(L.length > 1 ? `${L.length} Meldungen` : L[0]);
-          } else if (st) st = _tr(st);
-          _setHeadPill(pill, nameText || _tr('Zuhause'), st ? [st] : []);
+          // Startseite: nur „Zuhause“ – Meldungen zeigen Glocke und Sicherheits-Badge (07.10.2026).
+          _setHeadPill(pill, nameText || _tr('Zuhause'), []);
           // Nie unter Glocke/Menü: Breite bis 8 px vor deren Kapsel.
           const pr = pillHost.getBoundingClientRect();
           const pl = pill.getBoundingClientRect().left;

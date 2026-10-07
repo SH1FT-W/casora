@@ -3,7 +3,7 @@
 // Gewünscht (07.10.2026, 1.1.0): Die Kopfleiste am Handy beim Scrollen wird im Casora-Look eine
 // schwebende Pille mit Mini-Status. Raumseite: statt des Vollbreiten-Balkens mit Zurück-Pfeil oben
 // mittig „Raum · 21° · Licht aus“; Startseite: statt einer deckenden Fläche mit harter Unterkante ein
-// weicher Verlauf und links die Pille „Zuhause · Kurzstatus“, die Glocke/Menü nie überlappt.
+// weicher Verlauf und links die Pille „Zuhause“, die Glocke/Menü nie überlappt.
 // Erwartet (iPhone 393×852, Theme „Casora“ hell und „Casora Nebel“ dunkel): Raum gescrollt = Pille
 // sichtbar mit Raumnamen, schmaler als der Bildschirm, kein Vollbreiten-Balken, Zurück-Pfeil
 // ausgeblendet; Startseite gescrollt = weicher Verlauf statt Glasbalken mit Kante, Pille endet vor
@@ -111,7 +111,7 @@ for (const [theme, dark] of [['Casora', false], ['Casora Nebel', true]]) {
   }
   console.log(tag, 'Startseite', JSON.stringify(h));
   await need(`${tag}: Startseite – Pille erscheint beim Scrollen`, h && h.op > 0.9, h);
-  await check(`${tag}: Startseite – Pille sagt „Zuhause …“`, /^(Zuhause|Home)/.test(h.text), h.text);
+  await check(`${tag}: Startseite – Pille sagt nur „Zuhause“`, /^(Zuhause|Home)$/.test(h.text), h.text);
   await check(`${tag}: Startseite – Pille endet vor Glocke/Menü`, h.chromeLeft != null && h.right <= h.chromeLeft - 4, h);
   await check(`${tag}: Startseite – weicher Verlauf sichtbar`, h.fadeOp > 0.9 && /gradient/.test(h.fadeBg || ''), h);
   await check(`${tag}: Startseite – keine deckende Fläche mit harter Kante`, h.hard === 0, h);

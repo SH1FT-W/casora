@@ -89,7 +89,7 @@ Das größte Update seit Casora 1.0. Neu sind das Studio, in dem die Vorschau se
 - Temperaturen, Niederschlag und Kosten erscheinen in der Einheit bzw. Währung von Home Assistant oder des Sensors (z. B. °F, Zoll, CHF). Die KI-Coaches bekommen Temperaturen in der richtigen Einheit.
 - „Vor 36 Stunden“ heißt „Gestern“, kurze Laufzeiten zeigen Minuten statt „0 Std.“.
 - Kamera- und Pflanzen-KI sagen ohne eingerichtete KI, woran es liegt („Keine KI eingerichtet“).
-- Handy beim Scrollen (Casora und Nebel): Oben schwebt eine kleine Pille mit dem Wichtigsten, im Raum z. B. „Schlafzimmer · 21° · Licht aus“, auf der Startseite „Zuhause · Alles sicher“ neben Glocke und Menü. Antippen springt nach oben. Statt des Balkens mit harter Kante läuft der Inhalt unter einem weichen Verlauf durch, zurück geht es über die untere Leiste.
+- Handy beim Scrollen (Casora und Nebel): Oben schwebt eine kleine Pille mit dem Wichtigsten, im Raum z. B. „Schlafzimmer · 21° · Licht aus“, auf der Startseite „Zuhause“ neben Glocke und Menü. Antippen springt nach oben. Statt des Balkens mit harter Kante läuft der Inhalt unter einem weichen Verlauf durch, zurück geht es über die untere Leiste.
 
 #### Übersetzungen
 - Englisch: viele Lücken geschlossen, z. B. Termine, „Neu: …“, Updates („2 available“), Energie, Rezepte, Abfuhrtermine, Saugroboter, Alarm-Countdown, Windrichtungen (NE/SE), Müll-Dienst („Next turn“).
