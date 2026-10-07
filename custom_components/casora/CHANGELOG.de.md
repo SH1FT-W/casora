@@ -139,7 +139,7 @@ Das größte Update seit Casora 1.0. Neu sind das Studio, in dem die Vorschau se
 - Liegt beim Start ein Karten-Update bereit, werden die Dashboards zuverlässig mit dem neuesten Stand gespeichert. Speichern zwei Dashboards gleichzeitig, geht unter „Versionen“ nichts mehr verloren.
 - Eigene Schriften mit gleichem Dateinamen in zwei Familien überschreiben sich nicht mehr.
 - Der Konfigurieren-Dialog sagt bei falschen Werten „Ungültige Eingabe“ statt „Ungültige Zeit“. Umzug „Vorlage anpassen“ meldet unpassende KI-Änderungen verständlich.
-- Heizungs- und Fußbodenheizungs-Kacheln geben beim Antippen ein kurzes Feedback wie Licht, Plus und Minus der Zieltemperatur geben beim Drücken nach.
+- Heizungs-, Fußbodenheizungs- und Luftbefeuchter-Kacheln geben beim Antippen ein kurzes Feedback wie Licht, Plus und Minus der Zieltemperatur geben beim Drücken nach.
 
 ### Sicherheit
 - Neu hochgeladene Raumfotos bekommen einen nicht erratbaren Dateinamen. So kann niemand ein Foto deiner Wohnung über eine einfache Adresse wie „wohnzimmer.jpg“ abrufen. Ältere Fotos einmal neu hochladen.

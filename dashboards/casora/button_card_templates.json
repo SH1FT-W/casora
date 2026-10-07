@@ -4699,6 +4699,7 @@
   "state_display": "[[[\n  /* Ohne Gerät nicht leer bleiben (30.09.2026). */\n  if (!entity) return 'Gerät fehlt';\n  if (!entity.state) return '';\n  return (() => { try { return hass.formatEntityState(entity); } catch (e) { return ''; } })() || entity.state;\n]]]\n",
   "tap_action": {
    "action": "[[[\n  /* Ohne Gerät: Casora-Popup mit dem Hinweis „Gerät fehlt“ statt gar nichts (03.10.2026). */\n  if (entity) return 'more-info';\n  return window.casoraPopupAction ? window.casoraPopupAction() : 'none';\n]]]\n",
+   "haptic": "light",
    "entity": "[[[ return entity?.entity_id ]]]",
    "casora_popup": {
     "title": "[[[\n  const n = String(this._config?.name || '').trim();\n  return (n.startsWith('[[[') ? '' : n) || 'Luftbefeuchter';\n]]]\n",
