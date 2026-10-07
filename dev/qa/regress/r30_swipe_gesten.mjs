@@ -260,6 +260,15 @@ async function session({ label, url, safari, device, overlay }) {
     });
     // Zurückscrollen, damit die Kachel für die nächsten Fälle wieder frei liegt.
     { const s = await st(); await touchDrag(s.x + s.w / 2, Math.max(s.y + s.h / 2, 140), 0, 160); }
+    // Unter Last (paralleles Gate 07.10.2026) wertete Chromium dieses Zurückziehen selten als Tippen
+    // und öffnete das Thermostat-Popup – alle weiteren Fälle scheiterten dann am offenen Popup.
+    // Das Zurückziehen ist nur Vorbereitung: ein dabei offenes Popup schließen und vermerken.
+    if ((await st()).pop) {
+      console.log(`  info   ${label}: Popup nach dem Zurückziehen offen – geschlossen`);
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(() => !window.__swState().pop, null, { timeout: 5000 }).catch(() => {});
+      await page.waitForTimeout(400);
+    }
     await fall('links → nächste Karte', (s) => touchDrag(L(s), M(s), -s.w * 0.6, 3), (a, b, p) =>
       b.idx === a.idx + 1 && same(a.page, b.page) && same(a.row, b.row) && !b.pop ? true : 'kein Weiterblättern / Seite oder Reihe bewegt / Popup');
     await fall('rechts → vorige Karte', (s) => touchDrag(R(s), M(s), s.w * 0.6, 3), (a, b) =>
@@ -280,7 +289,7 @@ async function session({ label, url, safari, device, overlay }) {
       await fall('Punkt 3 antippen', (s) => tap(s.dots[2][0], s.dots[2][1]), (a, b) => b.idx === 2 && !b.pop ? true : 'nicht zur 3. Karte');
       await fall('Wischen auf der Punktleiste', (s) => touchDrag(s.dots[2][0], s.dots[2][1], s.w * 0.6, 2), (a, b) =>
         b.idx === 1 && !b.pop ? true : 'Punktleiste blättert nicht');
-      await fall('Kachel antippen → Popup', (s) => tap(s.x + s.w * 0.7, s.y + s.h * 0.65), (a, b) => b.pop ? true : 'kein Popup');
+      await fall('Kachel antippen → Popup', async (s) => { await tap(s.x + s.w * 0.7, s.y + s.h * 0.65); await page.waitForFunction(() => window.__swState().pop, null, { timeout: 4000 }).catch(() => {}); }, (a, b) => b.pop ? true : 'kein Popup');
     }
   } else {
     await fall('Maus ziehen links → nächste Karte', (s) => mouseDrag(L(s), M(s), -s.w * 0.6, 4), (a, b) =>
@@ -303,7 +312,8 @@ async function session({ label, url, safari, device, overlay }) {
       b.idx === a.idx && !b.pop ? true : 'geblättert oder Popup');
     await fall('Punkt 3 klicken', async (s) => { await page.mouse.click(s.dots[2][0], s.dots[2][1]); await page.waitForTimeout(900); }, (a, b) =>
       b.idx === 2 && !b.pop ? true : 'nicht zur 3. Karte');
-    await fall('Kachel klicken → Popup', async (s) => { await page.mouse.click(s.x + s.w * 0.7, s.y + s.h * 0.65); await page.waitForTimeout(1200); }, (a, b) =>
+    // Auf das Popup warten statt fest 1,2 s – unter Last brauchte es im Gate länger (07.10.2026).
+    await fall('Kachel klicken → Popup', async (s) => { await page.mouse.click(s.x + s.w * 0.7, s.y + s.h * 0.65); await page.waitForFunction(() => window.__swState().pop, null, { timeout: 5000 }).catch(() => {}); }, (a, b) =>
       b.pop ? true : 'kein Popup');
   }
   await browser.close();

@@ -16,9 +16,14 @@ await dashboard(page, dash.url + '/' + (dash.config.views[0].path || '0'));
 const locks = await page.evaluate(() => Object.keys(document.querySelector('home-assistant').hass.states).filter((e) => e.startsWith('lock.')));
 await need('Schlösser im Haus', locks.length, locks);
 
+// Untergeschobene Zustände „klebend“ und aufsummiert: Im parallelen Gate schalten andere Tests auf
+// derselben Test-HA echte Geräte – ein echtes state_changed überschrieb sonst binnen der 1,2 s
+// Wartezeit die Schlösser wieder auf offen („zu“ las dann schon „Schloss offen“, Gate 07.10.2026).
+const fake = {};
+const put = (patch) => fakeStates(page, Object.assign(fake, patch), { sticky: true });
 const read = async () => (await cards(page)).filter((c) => c.t.some((x) => /^casora_badge_security/.test(x)) && c.y < 900);
 // 1) Alle Schlösser zu → Gegenprobe, dass die Badge überhaupt reagiert.
-await fakeStates(page, Object.fromEntries(locks.map((e) => [e, { state: 'locked' }])));
+await put(Object.fromEntries(locks.map((e) => [e, { state: 'locked' }])));
 const zu = await read();
 await need('sichtbare Sicherheit-Badge', zu.length, (await cards(page)).map((c) => c.t.join('+')).slice(0, 12));
 // 2) Schlösser offen. Nicht nur locks[0]: das muss nicht das Schloss der Badge sein (ein im
@@ -33,7 +38,7 @@ const own = await page.evaluate(() => {
   return [...ids].filter((e) => document.querySelector('home-assistant').hass.states[e]);
 });
 const opened = own.length ? own : locks;
-await fakeStates(page, Object.fromEntries(opened.map((e) => [e, { state: 'unlocked' }])));
+await put(Object.fromEntries(opened.map((e) => [e, { state: 'unlocked' }])));
 const auf = await read();
 const bad = auf.filter((c) => /Gesichert|Alles sicher|All secure|Secured?\b/i.test(c.text));
 await check(`kein „Gesichert“ bei offenem Schloss (${opened.join(', ')})`, !bad.length, bad.map((c) => c.t.join('+') + ': ' + c.text));
@@ -57,7 +62,7 @@ if (win.length) {
   });
   const patch = Object.fromEntries(win.concat(tilts).map((e) => [e, { state: 'off' }]));
   patch[win[0]] = { state: 'on' };
-  await fakeStates(page, patch);
+  await put(patch);
   const grp = (await read()).filter((c) => c.t.includes('casora_badge_security_group'));
   await check('kein „Geöffnet“ in der Sicherheit-Badge', !grp.some((c) => /Geöffnet/.test(c.text)), grp.map((c) => c.text));
   await check('Wortlaut „Schloss · Fenster offen“ (wie Produktiv)',

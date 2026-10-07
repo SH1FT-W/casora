@@ -41,10 +41,26 @@ const player = (title, i) => ({ state: 'playing', attributes: { friendly_name: '
   media_artist: 'QA', media_duration: 300, media_position: 60, media_position_updated_at: now, media_content_type: 'music',
   supported_features: 4127295 } });
 
+// Im parallelen Gate laden andere Tests auf derselben Test-HA Themes neu; solange fehlt „Hemma 2“
+// kurz, HA zeichnet dann mit dem Standard-Theme (Casora) – die Karten rechneten schon mit dem
+// falschen Look (Gate 07.10.2026). Deshalb prüfen, ob das gewünschte Theme beim Zeichnen anlag,
+// sonst neu öffnen (höchstens dreimal).
 async function look(theme) {
+  for (let k = 0; k < 3; k++) {
+    const r = await lookOnce(theme);
+    if (r.applied || k === 2) return r.cards;
+  }
+}
+async function lookOnce(theme) {
   const { page, context } = await open({ width: 1440, height: 900, dark: false, theme, scale: 1 });
   await context.route(/\/local\/(09-weich-wiedergabe|10-weich-welle)\.js/, (r) => r.abort());
   await context.addInitScript(INIT, IDS);
+  // Jeder Look-Wert, den HA am Dokument setzt (auch kurzzeitige vom Standard-Theme).
+  await context.addInitScript(() => {
+    window.__qaLayouts = [];
+    const note = () => window.__qaLayouts.push(document.documentElement.style.getPropertyValue('--casora-popup-layout').trim());
+    new MutationObserver(note).observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+  });
   await dashboard(page, dash.url);
   await fakeStates(page, { [IDS[0]]: player('Erster Titel', 1), [IDS[1]]: player('Zweiter Titel', 2) }, { sticky: true });
   await page.waitForTimeout(2500);
@@ -56,8 +72,14 @@ async function look(theme) {
       return { display: m ? getComputedStyle(m).display : null, h: b ? Math.round(b.height) : 0, loaded: typeof window._casoraNPSoft === 'object' };
     });
   });
+  const applied = await page.evaluate((t) => {
+    const ha = document.querySelector('home-assistant');
+    const soft = getComputedStyle(document.documentElement).getPropertyValue('--casora-popup-layout').trim() === 'soft';
+    const want = t === 'Casora' ? 'soft' : '';
+    return ha.hass.themes.theme === t && soft === (t === 'Casora') && window.__qaLayouts.every((v) => v === want);
+  }, theme);
   await page.close();
-  return r;
+  return { cards: r, applied };
 }
 
 const soft = await look('Casora');
