@@ -29,3 +29,21 @@ const need = (keys) => keys.forEach((k) => assert.ok(de[k], 'de.json: ' + k));
     'Scene saved in Home Assistant. The color is saved with the dashboard.', 'Gone for good once you save.']);
   console.log('studio_entscheidungen: 1 Speichern ok');
 }
+
+// 2) Ausprobieren: langes Drücken / Rechtsklick / Alt+Klick öffnet das echte Popup
+{
+  const pop = read('panel/casora-panel-popups.js');
+  const b = read('panel/casora-panel-b.js');
+  assert.ok(/const TRY_MS = 500;/.test(pop), 'langes Drücken ≈ 0,5 s');
+  assert.ok(/await window\.casoraPopup\.open\(cfg\)/.test(pop), 'öffnet das echte Popup (wie im Dashboard, bedienbar)');
+  assert.ok(/cfg = await this\._cpConfig\(target\)/.test(pop), 'mit dem ungespeicherten Stand (Rückfrage-Liste aus _cpConfig)');
+  assert.ok(/me\.armed && !this\._tileDragged && !this\._bDragged/.test(pop), 'Ziehen hat Vorrang');
+  assert.ok(/Math\.abs\(e2\.clientX - sx\) > 8/.test(pop), 'Bewegen bricht das Ausprobieren ab');
+  assert.ok(/if \(ev\.altKey\) \{ ev\.stopPropagation\(\); ev\.preventDefault\(\); this\._tryOpen\(el\)/.test(pop), 'Alt+Klick');
+  assert.ok(/addEventListener\("contextmenu"[\s\S]{0,260}if \(press\) return;\s*this\._tryOpen\(el\)/.test(pop), 'Rechtsklick, aber nicht doppelt beim Finger');
+  assert.ok(/this\._tryWire\(map\)/.test(b), 'in der Vorschau verdrahtet');
+  assert.ok(/casora\.studio\.tryHint/.test(pop) && /tr?\("Press and hold to try it"\)|t\("Press and hold to try it"\)/.test(pop), 'einmaliger Hinweis');
+  need(['Press and hold to try it', 'The real popup opens – devices really switch.', 'Or right-click. The real popup opens – devices really switch.',
+    'This tile has no popup – tap it to edit it.']);
+  console.log('studio_entscheidungen: 2 Ausprobieren ok');
+}

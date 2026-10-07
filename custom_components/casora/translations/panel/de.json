@@ -1,6 +1,10 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "Press and hold to try it": "Zum Ausprobieren lange drücken",
+    "The real popup opens – devices really switch.": "Dann öffnet das echte Popup – Geräte schalten wirklich.",
+    "Or right-click. The real popup opens – devices really switch.": "Oder Rechtsklick. Dann öffnet das echte Popup – Geräte schalten wirklich.",
+    "This tile has no popup – tap it to edit it.": "Diese Kachel hat kein Popup – antippen zum Bearbeiten.",
     "Save – the Studio stays open": "Speichern – das Studio bleibt offen",
     "Save now": "Jetzt speichern",
     "Not saved yet – “Save now” or Done saves it.": "Noch nicht gespeichert – „Jetzt speichern“ oder „Fertig“.",

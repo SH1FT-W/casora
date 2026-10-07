@@ -64,6 +64,8 @@ export async function open({ width = 1440, height = 900, mobile = false, umzug =
     if (!localStorage.getItem('casora.seenVersion')) localStorage.setItem('casora.seenVersion', version);
     // Einführung im neuen Studio (casora-panel-b-plus.js) nicht über die Knöpfe legen.
     if (!localStorage.getItem('casora.studio.intro')) localStorage.setItem('casora.studio.intro', '1');
+    // Einmaliger Hinweis „Zum Ausprobieren lange drücken“ (casora-panel-popups.js) – rb18 prüft ihn eigens.
+    if (!localStorage.getItem('casora.studio.tryHint')) localStorage.setItem('casora.studio.tryHint', '1');
     // Umzugsangebot nicht über die Studio-Knöpfe legen (t19 ruft den Assistenten direkt auf).
     if (!umzug) localStorage.setItem('casora.umzug.off', '1');
     // Hemma-Fixture (alte, von Hand erweiterte Vorlagen) nie überschreiben – das Produkt hat keine Sperre.

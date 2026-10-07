@@ -153,6 +153,9 @@
     :host(.bmode) .card.map .pbadge.btarget { box-shadow:0 0 0 2px var(--accent, #B67A50); }
     :host(.bmode) .card.map .pbadge, :host(.bmode) .card.map .mtile { -webkit-user-select:none; user-select:none;
       -webkit-touch-callout:none; }
+    /* Lange gedrückt (Ausprobieren, casora-panel-popups.js): Loslassen öffnet das echte Popup. */
+    :host(.bmode) .card.map .mtile.btry { box-shadow:0 0 0 2px var(--casora-studio-done, var(--accent, #B67A50)), 0 6px 18px rgba(0,0,0,.2);
+      transform:scale(.97); transition:transform .18s ease, box-shadow .18s ease; }
     /* Wischen scrollt die Kachelreihe; gezogen wird erst nach langem Drücken. */
     :host(.bmode) .card.map .mtile { touch-action:pan-x pan-y; }
     .bhid { display:none; }
@@ -849,6 +852,8 @@
         map.addEventListener("touchmove", (ev) => { if (this._bHold) ev.preventDefault(); }, { passive: false });
         map.addEventListener("contextmenu", (ev) => { if (this._bHold) ev.preventDefault(); });
       }
+      // Langes Drücken / Rechtsklick / Alt+Klick auf eine Kachel: echtes Popup zum Ausprobieren.
+      if (typeof this._tryWire === "function") this._tryWire(map);
       this._bHiddenChip(hid);
       this._bPhoneHint();
     };
