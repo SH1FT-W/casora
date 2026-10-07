@@ -9042,6 +9042,16 @@ class CasoraPanel extends HTMLElement {
           font-weight:400; letter-spacing:-0.006em; line-height:1.15;
           white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
         }
+        .mkind {
+          color:rgba(255,255,255,0.62); font-size:var(--ts);
+          font-weight:400; letter-spacing:-0.006em; line-height:1.15;
+          white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+        }
+        .mtile.on .mkind { color:rgba(0,0,0,0.55); }
+        .card.map.soft .mkind { color:var(--casora-entity-state, rgba(255,255,255,0.62)); }
+        .card.map.soft .mtile.on .mkind { color:var(--casora-entity-state-active, rgba(0,0,0,0.55)); }
+        /* Handy-Vorschau: kleine Kacheln haben nur Platz für Name und Zustand. */
+        .miniphone .mkind { display:none; }
         /* Nur der erste Buchstabe groß: „Nicht festgelegt“, nicht „Nicht Festgelegt“. */
         .mstate::first-letter { text-transform:uppercase; }
         .mtile.on .mname { color:#1d1d1f; }
@@ -23157,6 +23167,18 @@ class CasoraPanel extends HTMLElement {
         && window.casoraTileName(tile, ent, this._hass, this._state && this._state.templates);
       el.querySelector(".mname").textContent = tile.name || own || (type && type.label) || "Tile";
       if (own) el.querySelector(".mname").setAttribute("data-no-i18n", "");
+      // Vergleich 06.10. (#f9): Ohne eigenen Namen heißt die Kachel wie das Gerät („P1S“) – darunter klein
+      // die Kachelart („3D-Drucker“), damit man sie erkennt. Nur in der Vorschau, das Dashboard bleibt gleich.
+      // Heißt die Kachel schon wie ihre Art („Waschmaschine“), keine Doppelung.
+      const kindWord = type && type.label ? ((window.casoraI18n && window.casoraI18n.t) ? window.casoraI18n.t(type.label) : type.label) : "";
+      const same = (x) => String(x || "").trim().toLowerCase();
+      if (own && kindWord && same(own) !== same(kindWord) && same(own) !== same(type.label)) {
+        const k = document.createElement("span");
+        k.className = "mkind";
+        k.setAttribute("data-no-i18n", "");
+        k.textContent = kindWord;
+        el.querySelector(".mname").after(k);
+      }
       el.querySelector(".mstate").textContent =
         // Casora: Zustandstext wie im Dashboard (state_display der Vorlage).
         (window.casoraTileState && window.casoraTileState(tile, ent, this._hass, this._state && this._state.templates))
