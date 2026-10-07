@@ -96,6 +96,10 @@ Das größte Update seit Casora 1.0. Neu sind das Studio, in dem die Vorschau se
 
 ### Behoben
 
+- Glocke: Eine Tür oder ein Fenster mit Kontakt- und Kippsensor steht nur noch einmal in der Glocke, je nach Stellung „ist gekippt“ oder „ist offen“.
+- Automatisch einrichten: Eine Lichtgruppe des Raums mit einer Untergruppe ohne Bereich wird wieder für den Raum genommen statt einer einzelnen Lampe.
+- „Alles aus“ im Licht-Popup ist mit der Tastatur erreichbar und bedienbar.
+- „+N weitere“ in der Verlustliste der Zeitreise zeigt bei Bedienung mit der Tastatur einen Fokusrand.
 #### Dashboard und Popups
 - Heizungs-Popup: Plus, Minus und der Temperatur-Balken reagieren wieder (Touch und Maus). Bei „Aus“ ist die Zieltemperatur sichtbar, Einstellen schaltet auf Heizen.
 - Thermostat im Modus „Automatik“ zeigt „Automatik · 21°“ statt „Aus“, ein Tipp schaltet es aus statt auf manuelles Heizen. Fehlt eine Zieltemperatur, steht nie mehr „undefined°“.

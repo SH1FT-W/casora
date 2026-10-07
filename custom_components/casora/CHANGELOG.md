@@ -96,6 +96,10 @@ The biggest update since Casora 1.0. It brings a new Studio in which the preview
 
 ### Fixed
 
+- Bell: a door or window with both a contact and a tilt sensor shows up only once, as "is tilted" or "is open" depending on its position.
+- Set up automatically: a room light group that contains a subgroup without an area is used for the room again instead of a single lamp.
+- "All off" in the light popup can be reached and used with the keyboard.
+- "+N more" in the Rewind loss list shows a focus ring when used with the keyboard.
 #### Dashboard and popups
 - Heating popup: plus, minus and the temperature bar respond again (touch and mouse). With "Off" the target temperature is shown, and changing it switches to Heat.
 - A thermostat in "Auto" shows "Auto · 21°" instead of "Off", and a tap turns it off instead of switching to manual heating. Without a target temperature, "undefined°" never appears.
