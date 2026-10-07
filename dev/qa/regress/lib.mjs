@@ -33,6 +33,11 @@ export async function open(opts = {}) {
   // brauchen den alten Anfangszustand. Wer das automatische Öffnen prüft: open({ welleAuto: true }).
   if (!opts.welleAuto) await o.context.addInitScript(() => { window.CASORA_QA_NO_WELLE_AUTO = true; });
   if (opts.lang) await o.context.addInitScript((l) => localStorage.setItem('selectedLanguage', JSON.stringify(l)), opts.lang);
+  // CASORA_QA_CPU=4: Prozessor im Chromium künstlich drosseln (Lastprobe für wackelige Tests).
+  if (process.env.CASORA_QA_CPU && o.page.context().newCDPSession) {
+    try { const c = await o.page.context().newCDPSession(o.page);
+      await c.send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.CASORA_QA_CPU) }); } catch (e) { /* WebKit: keine Drosselung */ }
+  }
   browsers.push(o.browser);
   page = o.page;
   return o;

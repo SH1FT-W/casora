@@ -39,7 +39,14 @@ async function openVac(page, d, mobile) {
     }
   }
   if (!at) return null;
-  if (mobile) await page.touchscreen.tap(at.x, at.y); else await page.mouse.click(at.x, at.y);
+  // Unter Last kann der Tipp ins Leere gehen (Kachel rutscht noch, Seite noch nicht bedienbar): bis
+  // zu 4 Mal tippen, jeweils mit neu gemessener Lage, und erst nochmal, wenn kein Popup aufging.
+  const offen = () => page.evaluate(() => !!(window.casoraPopup && window.casoraPopup.surface)).catch(() => false);
+  for (let t = 0; t < 4 && !(await offen()); t++) {
+    at = (await findVac(page)) || at;
+    if (mobile) await page.touchscreen.tap(at.x, at.y); else await page.mouse.click(at.x, at.y);
+    for (let w = 0; w < 24 && !(await offen()); w++) await page.waitForTimeout(250);
+  }
   await page.waitForFunction(() => window.__pierce('img[data-map]').some((i) => i.complete && i.naturalWidth > 0
     && i.getBoundingClientRect().width > 0 && getComputedStyle(i).opacity === '1'), null, { timeout: 20000 }).catch(() => {});
   await page.waitForTimeout(1200);
