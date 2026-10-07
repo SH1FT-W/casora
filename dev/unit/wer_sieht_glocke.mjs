@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const core = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-core.js', import.meta.url), 'utf8');
-const m = core.match(/  function hiddenForUser\(cfg, entityId, uid\) \{[\s\S]*?\n  \}\n/);
+const m = core.match(/  function hiddenForUser\(cfg, entityId, uid(?:, rooms)?\) \{[\s\S]*?\n  \}\n/);
 assert.ok(m, 'hiddenForUser fehlt');
 const hiddenForUser = new Function(m[0] + ' return hiddenForUser;')();
 

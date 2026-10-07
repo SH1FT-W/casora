@@ -138,7 +138,9 @@
         + '<div class="row"><button type="button" class="no"></button><button type="button" class="yes"></button></div></div>';
       // w.title/w.text/w.yes: eigener Wortlaut (Alarm scharf schalten), sonst „Wirklich …?“.
       root.querySelector('h2').textContent = w.title || w.name;
-      root.querySelector('p').textContent = w.text || T('Wirklich ' + w.verb.toLowerCase() + '?');
+      // w.text === '': nur Titel und Knöpfe (die Frage steht schon im Titel).
+      if (w.text === '') { root.querySelector('p').remove(); root.querySelector('h2').style.marginBottom = '18px'; }
+      else root.querySelector('p').textContent = w.text || T('Wirklich ' + w.verb.toLowerCase() + '?');
       root.querySelector('.no').textContent = T('Abbrechen');
       root.querySelector('.yes').textContent = w.yes || T(w.verb);
       if (w.stack) root.querySelector('.row').classList.add('stack');
@@ -181,6 +183,9 @@
   // Auch ohne Kachel im Pfad (Popup-Schalter, Knöpfe im Popup): Entität einer Kachel mit Rückfrage.
   var confirmIds = function () { return Array.isArray(window.__casoraConfirmIds) ? window.__casoraConfirmIds : []; };
   window.casoraAsksFirst = function (id) { return !!id && confirmIds().indexOf(id) !== -1; };
+  // Eigene Rückfrage im selben Stil (07.10.2026, „Alles aus“ im Haus-Licht-Popup):
+  // { title, text?, yes } – Promise<true> bei „Ja“; Fokus auf „Abbrechen“.
+  window.casoraAsk = function (w) { return ask(w || {}); };
   // Für Popups, die direkt schalten: Promise<true>, wenn geschaltet werden darf.
   window.casoraConfirmSwitch = function (id, service) {
     if (!window.casoraAsksFirst(id)) return Promise.resolve(true);
@@ -9898,12 +9903,14 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   // eine so ausgeblendete Kachel aber nicht selbst wieder hervor (Glocke, Sammel-Popups): Steht die
   // Entität im Dashboard nur in Karten/Ansichten, die für diesen Benutzer ausgeblendet sind, gilt sie
   // als verborgen. Kommt sie gar nicht vor, ist sie nicht eingeschränkt.
-  function hiddenForUser(cfg, entityId, uid) {
+  // rooms (07.10.2026, „Alles aus“ fürs ganze Haus): auch vorübergehend ausgeblendete Räume
+  // (Ansicht visible: false, Handy users: []) zählen als nicht sichtbar.
+  function hiddenForUser(cfg, entityId, uid, rooms) {
     if (!cfg || !entityId) return false;
     var hides = function (x) {
       return Array.isArray(x.visibility) && x.visibility.some(function (v) {
         // users: [] = für alle ausgeblendet (Raum vorübergehend weg) – keine Frage, wer es sieht.
-        return v && v.condition === 'user' && Array.isArray(v.users) && v.users.length > 0 && !(uid && v.users.indexOf(uid) !== -1);
+        return v && v.condition === 'user' && Array.isArray(v.users) && (v.users.length > 0 || rooms) && !(uid && v.users.indexOf(uid) !== -1);
       });
     };
     var names = function (c) {
@@ -9914,8 +9921,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     };
     var seen = false, open = false;
     (cfg.views || []).forEach(function (view) {
-      var off = !!view && Array.isArray(view.visible) && view.visible.length > 0
-        && !view.visible.some(function (u) { return u && uid && u.user === uid; });
+      var off = !!view && ((Array.isArray(view.visible) && view.visible.length > 0
+        && !view.visible.some(function (u) { return u && uid && u.user === uid; })) || (!!rooms && view.visible === false));
       (function walk(v, hid) {
         if (open || !v || typeof v !== 'object') return;
         if (Array.isArray(v)) { v.forEach(function (x) { walk(x, hid); }); return; }
@@ -9968,18 +9975,19 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     }, function () { cfgMemo.p = null; cfgMemo.at = Date.now(); return null; });
     return cfgMemo.p;
   }
-  function visibleOf(cfg, ids) {
-    var h = hassOf(), uid = h && h.user && h.user.id;
-    return (ids || []).filter(function (id) { return !cfg || !hiddenForUser(cfg, id, uid); });
+  // opts.rooms: ausgeblendete Räume zählen auch als nicht sichtbar (siehe hiddenForUser).
+  function visibleOf(cfg, ids, opts) {
+    var h = hassOf(), uid = h && h.user && h.user.id, rooms = !!(opts && opts.rooms);
+    return (ids || []).filter(function (id) { return !cfg || !hiddenForUser(cfg, id, uid, rooms); });
   }
-  window.casoraVisibleIds = function (ids) {
-    return dashCfg().then(function (cfg) { return visibleOf(cfg, ids); });
+  window.casoraVisibleIds = function (ids, opts) {
+    return dashCfg().then(function (cfg) { return visibleOf(cfg, ids, opts); });
   };
-  window.casoraVisibleIdsNow = function (ids) {
+  window.casoraVisibleIdsNow = function (ids, opts) {
     var seg = (location.pathname || '').split('/').filter(Boolean);
     var fresh = cfgMemo.url === (seg[0] || 'lovelace') && cfgMemo.at && !cfgMemo.p;
     if (!fresh || Date.now() - cfgMemo.at >= 60000) dashCfg();
-    return fresh ? visibleOf(cfgMemo.cfg, ids) : null;
+    return fresh ? visibleOf(cfgMemo.cfg, ids, opts) : null;
   };
   // Für Benutzer ohne Admin-Rechte schon beim Laden bzw. Wechsel des Dashboards holen, damit das
   // Energie-Popup die Verbraucher gleich beim ersten Öffnen zeigen kann.

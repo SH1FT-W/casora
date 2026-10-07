@@ -51,6 +51,7 @@ Das größte Update seit Casora 1.0. Neu sind das Studio, in dem die Vorschau se
 
 #### Popups, Energie und Geräte
 - **Licht-Popup eines Raums:** neuer Knopf „Alles aus“. Das Popup einer einzelnen Lampe zeigt alle Leuchten des Raums.
+- **Licht-Popup für das ganze Haus (Startseite):** „Alles aus“ gibt es auch hier, mit Rückfrage vor dem Ausschalten. Lichter, die man nicht sieht, bleiben unberührt.
 - **Energie-Popup:** Die größten Verbraucher (bis zu 5) erscheinen auch ohne Zuordnung im Studio. Casora findet sie selbst und lässt Haus-, Netz-, Solar- und Akkuwerte weg. Jeder Sensor der Raumsumme steht mit seinem Wert im Popup.
 - **Assist-Vorschläge aus deinem Zuhause:** passend zur Tageszeit, mit deinen Raumnamen und zuerst dort, wo gerade etwas zu tun ist (offenes Fenster, Licht an, Tür entriegelt). Die Spracheingabe nutzt die bevorzugte Assist-Pipeline deines Hauses.
 - **Aquarium-Kachel:** neue Einstellung „Akku-Hinweise“ (Automatisch, Immer, Nie). Gibt es schon eine Batterien-Kachel, meldet die Aquarium-Kachel einen schwachen Fühler-Akku nicht noch einmal. Leck und Temperaturwarnung meldet sie wie bisher.

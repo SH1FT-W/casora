@@ -112,6 +112,7 @@
   "Alle an": "All on",
   "Alle aus": "All off",
   "Alles aus": "All off",
+  "1 Licht im Haus ausschalten?": "Turn off 1 light in the home?",
   "Alle Lichter": "All lights",
   "Alle Räume aus": "All rooms off",
   "Alle Szenen": "All scenes",
@@ -1410,6 +1411,10 @@
   "1 Fenster gekippt": "1 window tilted"
  },
  "patterns": [
+  [
+   "^Alle (\\d+) Lichter im Haus ausschalten\\?$",
+   "Turn off all {1} lights in the home?"
+  ],
   [
    "^(\\d+) Geräte$",
    "{1} devices"
