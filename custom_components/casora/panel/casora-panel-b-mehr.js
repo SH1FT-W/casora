@@ -1,4 +1,4 @@
-// Studio B: mehr Bedienung (06.10.2026)
+// Neues Studio: mehr Bedienung (06.10.2026)
 //
 // - Suche (Lupe, ⌘K/Strg+K; Handy: „…“ › Suchen): Räume, Kacheln, Badges, Szenen, Einstellungen
 //   und Aktionen („Zeitreise“, „Look ändern“) – mit Tastatur, springt direkt hin

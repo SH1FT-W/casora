@@ -26,9 +26,11 @@
       all: "Alle Änderungen",
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
-      w3t: "Desktop, Tablet und Mobil", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst – mit eigener Mobilansicht.",
-      n1t: "Wiedergabe gleich sichtbar", n1: "Läuft etwas, öffnet sich die Liste unter der Welle von selbst – auch nach dem Neuladen.",
-      n2t: "Zu bleibt zu", n2: "Klappst du die Liste zu, bleibt sie auf diesem Gerät zu, bis eine neue Wiedergabe startet."
+      w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
+      n1t: "Das neue Studio", n1: "Die Vorschau ist die Arbeitsfläche: antippen und gleich daneben einstellen. Speichern geht ohne Verlassen, langes Drücken probiert das echte Popup aus.",
+      n2t: "Erst fragen, dann schalten", n2: "Kacheln fragen auf Wunsch vor dem Schalten nach. Beim Scharfschalten nennt Casora offene Fenster, Türen und Schlösser.",
+      n3t: "Casora Nebel und Lila", n3: "Ein zweites Design in kühlem Grau mit Petrol-Akzent, dazu ein eigenes Lila für deine Szenen.",
+      n4t: "Kleine Helfer", n4: "Räume ausblenden statt löschen, eine Szene aus dem aktuellen Zustand speichern und das Dashboard per QR-Code aufs Handy holen."
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -37,9 +39,11 @@
       all: "All changes",
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
-      w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen – with its own phone layout.",
-      n1t: "Playback right away", n1: "When something plays, the list below the wave opens by itself, also after reloading.",
-      n2t: "Closed stays closed", n2: "If you close the list, it stays closed on this device until a new playback starts."
+      w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
+      n1t: "The new Studio", n1: "The preview is where you work: tap and adjust right beside it. Save without leaving, and press and hold to try the real popup.",
+      n2t: "Ask first, then switch", n2: "Tiles can ask before they switch. When arming, Casora names open windows, doors and locks.",
+      n3t: "Casora Nebel and purple", n3: "A second look in cool grey with a petrol accent, plus a purple of its own for your scenes.",
+      n4t: "Little helpers", n4: "Hide rooms instead of deleting them, save a scene from the current state and open the dashboard on your phone with a QR code."
     },
   };
 
@@ -52,8 +56,10 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:playlist-music", "n1t", "n1"],
-    ["mdi:pin-outline", "n2t", "n2"],
+    ["mdi:gesture-tap", "n1t", "n1"],
+    ["mdi:help-circle-outline", "n2t", "n2"],
+    ["mdi:palette-outline", "n3t", "n3"],
+    ["mdi:qrcode", "n4t", "n4"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

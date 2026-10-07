@@ -1,4 +1,4 @@
-// Studio B „Vorschau ist der Editor“ (ab 1.1.0, 04.10.2026)
+// Neues Studio „Vorschau ist der Editor“ (ab 1.1.0, 04.10.2026)
 //
 // Ein zweiter Aufbau desselben Studios, kein Neubau: Die Vorschau ist die Arbeitsfläche,
 // ein Klick (am Handy: Antippen) auf Titel, Badge oder Kachel öffnet die bestehenden
@@ -288,7 +288,7 @@
       if (typeof orig !== "function") return;
       P[name] = function () {
         const r = orig.apply(this, arguments);
-        try { fn.call(this, r, arguments); } catch (e) { console.warn("Casora Studio B:", e); }
+        try { fn.call(this, r, arguments); } catch (e) { console.warn("Casora Studio:", e); }
         return r;
       };
     };
@@ -1121,7 +1121,7 @@
       if (typeof orig !== "function") return;
       P[name] = function () {
         const r = orig.apply(this, arguments);
-        try { fn.call(this, r, arguments); } catch (e) { console.warn("Casora Studio B:", e); }
+        try { fn.call(this, r, arguments); } catch (e) { console.warn("Casora Studio:", e); }
         return r;
       };
     };
@@ -1129,7 +1129,7 @@
       const orig = P[name];
       if (typeof orig !== "function") return;
       P[name] = function () {
-        try { fn.call(this, arguments); } catch (e) { console.warn("Casora Studio B:", e); }
+        try { fn.call(this, arguments); } catch (e) { console.warn("Casora Studio:", e); }
         return orig.apply(this, arguments);
       };
     };

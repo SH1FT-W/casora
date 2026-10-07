@@ -1,4 +1,4 @@
-// Studio B: Orientierung und Wege (UX-Runde 06.10.2026, Vorschläge V-01 … V-14)
+// Neues Studio: Orientierung und Wege (UX-Runde 06.10.2026, Vorschläge V-01 … V-14)
 //
 // Ergänzt das neue Studio (casora-panel-b.js, -b-plus.js, -b-mehr.js) um das, was die
 // Nutzertests an Orientierung vermisst haben:

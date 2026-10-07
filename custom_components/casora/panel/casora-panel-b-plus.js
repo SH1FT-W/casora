@@ -1,4 +1,4 @@
-// Studio B: Rückmeldung, Einführung und „Szene aus dem jetzigen Zustand“ (06.10.2026)
+// Neues Studio: Rückmeldung, Einführung und „Szene aus dem jetzigen Zustand“ (06.10.2026)
 //
 // Ergänzt das neue Studio (casora-panel-b.js) um das, was die Nutzertests vermisst haben:
 // - eine ruhige Meldung unten nach jeder Änderung („Kachel hinzugefügt“ mit „Rückgängig“)

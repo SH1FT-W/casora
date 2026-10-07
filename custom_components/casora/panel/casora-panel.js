@@ -23315,7 +23315,7 @@ class CasoraPanel extends HTMLElement {
         : "Drag to reorder";
       el.onpointerdown = (ev) => {
         if (ev.button) return;
-        // Studio B (casora-panel-b.js): am Touchscreen nach langem Drücken ziehen.
+        // Neues Studio (casora-panel-b.js): am Touchscreen nach langem Drücken ziehen.
         const bTouch = ev.pointerType === "touch" && this.classList.contains("bmode");
         if (ev.pointerType === "touch" && isPhone(this) && !bTouch) return;
         if (this._smartSortOn()) return;
@@ -23789,7 +23789,7 @@ class CasoraPanel extends HTMLElement {
     const SPEC = { desktop: [960, Math.round(960 / 1.55)], tablet: [700, 486], tabletUp: [525, 700],
       phone: [390, 844] };
     const applySize = (animate) => {
-      // Studio B (casora-panel-b.js) zeigt die Vorschau auch am Handy – als Arbeitsfläche.
+      // Neues Studio (casora-panel-b.js) zeigt die Vorschau auch am Handy – als Arbeitsfläche.
       if (isPhone(this) && !this.classList.contains("bmode")) return;
       const upright = this._miniSize === "tablet" && tabletPortrait();
       card.classList.toggle("portrait", upright);
