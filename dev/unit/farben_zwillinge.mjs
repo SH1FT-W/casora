@@ -6,11 +6,12 @@ import assert from 'node:assert/strict';
 
 const src = fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel.js', import.meta.url), 'utf8');
 const from = src.indexOf('const CASORA_ACCENTS = [');
-const to = src.indexOf('const swatchOf = ', from);
+const to = src.indexOf('const colorLabel = ', from);
 assert.ok(from > 0 && to > from);
 const mk = new Function('CASORA_THEME', 'getComputedStyle', 'document',
-  src.slice(from, to) + '\nreturn { CASORA_ACCENTS, accentsShown, setTheme: (t) => { ACCENT_THEME = t; } };');
-const P = mk('Casora', () => ({ getPropertyValue: () => '' }), { documentElement: {} });
+  src.slice(from, to) + '\nreturn { CASORA_ACCENTS, accentsShown, accentLabel, setTheme: (t) => { ACCENT_THEME = t; } };');
+let purple = '';
+const P = mk('Casora', () => ({ getPropertyValue: (n) => (n === '--casora-color-purple' ? purple : '') }), { documentElement: {} });
 const keys = (l) => l.map((a) => a.key);
 const ALL = keys(P.CASORA_ACCENTS);
 
@@ -30,4 +31,16 @@ for (const t of ['Hemma 2', 'Hemma', '']) {
   P.setTheme(t);
   assert.deepEqual(keys(P.accentsShown()), ALL.filter((x) => x !== 'violet'), 'unter ' + (t || 'ohne Theme') + ' unverändert');
 }
+// Name passt zur gemalten Farbe (Nutzertest 7): „Dunkelrot“, wenn das Theme purple rot färbt –
+// auch unter einem fremden Theme-Namen; sonst „Lila“ (Purple) wie bisher.
+const pur = P.CASORA_ACCENTS.find((a) => a.key === 'purple');
+P.setTheme('Casora'); purple = '#A9473D';
+assert.equal(P.accentLabel(pur), 'Dark red');
+P.setTheme('Mein Casora'); purple = '#A9473D';
+assert.equal(P.accentLabel(pur), 'Dark red', 'eigene Kopie des Casora-Looks');
+assert.ok(keys(P.accentsShown()).includes('violet'), 'dann auch Lila (violet) zur Wahl');
+P.setTheme('Hemma 2'); purple = '#9333ea';
+assert.equal(P.accentLabel(pur), 'Purple');
+P.setTheme('Hemma 2'); purple = '';
+assert.equal(P.accentLabel(pur), 'Purple', 'ohne Theme-Wert: Rückfallfarbe ist lila');
 console.log('ok farben_zwillinge');

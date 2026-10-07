@@ -3671,7 +3671,22 @@ const softLook = () => {
     return getComputedStyle(document.documentElement).getPropertyValue("--casora-popup-layout").trim() === "soft";
   } catch (e) { return false; }
 };
-const casoraLookTheme = () => ACCENT_THEME === CASORA_THEME || ACCENT_THEME === "Casora Nebel";
+// Name nach dem, was das aktive Theme wirklich malt: ein Theme (auch eine eigene Kopie des
+// Casora-Looks unter anderem Namen), das „purple“ rot färbt, bekommt „Dunkelrot“ (Nutzertest 7).
+const hueOf = (c) => {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(String(c || "").trim());
+  if (!m) return null;
+  const [r, g, b] = [m[1], m[2], m[3]].map((x) => parseInt(x, 16) / 255);
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  if (!d) return null;
+  const h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return (h * 60 + 360) % 360;
+};
+const purpleIsRed = () => {
+  const h = hueOf(swatchCss("var(--casora-color-purple, #9333ea)"));
+  return h !== null && (h < 25 || h > 335);
+};
+const casoraLookTheme = () => ACCENT_THEME === CASORA_THEME || ACCENT_THEME === "Casora Nebel" || purpleIsRed();
 const accentLabel = (a) => (a.key === "purple" && casoraLookTheme() ? "Dark red" : a.label);
 // Die Farben zur Auswahl: „Lila“ (violet) nur im Casora-Look – Hemma 1/2 haben ihr Lila schon (purple).
 // Im Casora-Look (Weich/Nebel) sind Bernstein, Eis und Gold Zwillinge von Orange, Blau und Gelb
