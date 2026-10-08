@@ -4,7 +4,7 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
-## 1.1.2 – 08.10.2026
+## 1.2.0 – 08.10.2026
 
 ### Neu
 - **Glocke: „Nicht melden“.** Im Studio unter Einstellungen wählst du Geräte und Sensoren, die nie einen Eintrag in der Glocke erzeugen, zum Beispiel ein Fenster, das immer gekippt ist. Zur Auswahl stehen nur Geräte, die überhaupt melden können, nach Raum sortiert und mit der Art der Meldung.

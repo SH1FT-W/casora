@@ -4,7 +4,7 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
-## 1.1.2 – 08.10.2026
+## 1.2.0 – 08.10.2026
 
 ### New
 - **Bell: "Do not report".** In the Studio under Settings you pick devices and sensors that never create an entry in the bell, for example a window that is always tilted. The list only offers devices that can report at all, sorted by room and with the kind of report.
