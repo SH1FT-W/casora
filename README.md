@@ -87,7 +87,6 @@ The look is *Casora*: warm linen, generous corners and soft shadows, in light an
 | **Home Assistant 2026.9** or newer | Required, with dashboards in storage mode (the default). |
 | [**UI eXtension (UIX)**](https://github.com/Lint-Free-Technology/uix) | Required, from HACS. Needs a restart. Use it instead of card-mod, not both. |
 | [**button-card**](https://github.com/custom-cards/button-card) | Required, from HACS. |
-| [**apexcharts-card**](https://github.com/RomRider/apexcharts-card) | Optional, for the energy and history charts in popups. |
 | An **AI task** in Home Assistant | Optional, for the [AI features](docs/guide.md#ai-features-optional). |
 
 Casora checks all of this when you first open the Studio and links you to anything missing. Helpers, scripts, resources and the theme are created by Casora itself.

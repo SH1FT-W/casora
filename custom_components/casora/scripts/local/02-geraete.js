@@ -270,21 +270,9 @@
         ].filter(Boolean), null);
       ]]]`),
       field('chart', { card: {
-        type: 'custom:apexcharts-card', graph_span: '7d', header: { show: false },
-        yaxis: [{ show: true, decimals: 1, apex_config: { tickAmount: 2, forceNiceScale: true, floating: true,
-          labels: { offsetX: 4, offsetY: -8, align: 'left', style: { colors: 'var(--casora-chart-label, rgba(255,255,255,0.42))', fontSize: '11px' } } } }],
-        series: [{ entity: d.today, name: 'Dosiert', color: '#BF5AF2', type: 'column',
-                   group_by: { func: 'max', duration: '1d', fill: 'zero', start_with_last: true } }],
-        apex_config: {
-          chart: { height: 130, background: 'transparent', toolbar: { show: false }, zoom: { enabled: false } },
-          theme: { mode: 'dark' }, dataLabels: { enabled: false }, legend: { show: false },
-          plotOptions: { bar: { borderRadius: 5, columnWidth: '55%' } },
-          grid: { borderColor: 'var(--casora-chart-grid, rgba(255,255,255,0.10))', xaxis: { lines: { show: false } }, padding: { left: 0, right: 0, top: -6, bottom: -4 } },
-          xaxis: { labels: { datetimeUTC: false, format: 'ddd', style: { colors: 'var(--casora-chart-label, rgba(255,255,255,0.42))', fontSize: '11px' } }, axisBorder: { show: false }, axisTicks: { show: false }, tooltip: { enabled: false } },
-          tooltip: { theme: 'dark', x: { format: 'dd.MM.' } },
-        },
-        card_mod: { style: 'ha-card { background: var(--casora-popup-row-fill, rgba(255,255,255,0.10)) !important; border-radius: var(--casora-popup-row-radius, 20px) !important;'
-          + ' border: none !important; box-shadow: none !important; padding: 12px 8px 4px !important; }' },
+        /* Dosiert pro Tag (Tageshöchstwert des Tageszählers), Säulen wie „Verbrauch pro Tag“. */
+        type: 'custom:casora-chart', kind: 'bar', span: '7d', source: 'history', agg: 'max', height: 130,
+        series: [{ entity: d.today, name: 'Dosiert', decimals: 1 }], plate: true,
       } }),
     ].filter((x) => x[0] !== 'chart' || d.today).forEach((x) => { areas.push('"' + x[0] + '"'); fields[x[0]] = x[1]; fstyle[x[0]] = [{ 'justify-self': 'stretch' }]; });
     window.casoraPopup.open({
@@ -1834,28 +1822,8 @@
       if (c.volt) window._hpChartCfg(c.volt, 'Spannung', '24h', '#8E8E93', 150);
       if (c.amp) window._hpChartCfg(c.amp, 'Stromstärke', active ? '4h' : '24h', '#0A84FF', 150);
       if (c.energy) {
-        var LBL = { colors: 'var(--casora-chart-label, rgba(255,255,255,0.42))', fontSize: '11px', fontFamily: 'var(--primary-font-family, system-ui)' };
-        [['hwd7:', '7d', 'ddd'], ['hwd30:', '30d', 'dd.']].forEach(function (x) {
-          var key = x[0] + c.energy;
-          window._hpPlantMeta[key] = ['Verbrauch pro Tag', x[1], '#30D158'];
-          window._hpPlantCfg[key] = {
-            type: 'custom:apexcharts-card', graph_span: x[1], span: { end: 'day' }, header: { show: false },
-            yaxis: [{ show: true, decimals: 1, apex_config: { tickAmount: 2, forceNiceScale: true, floating: true,
-              labels: { offsetX: 4, offsetY: -8, align: 'left', style: LBL } } }],
-            series: [{ entity: c.energy, name: 'Verbrauch', color: '#30D158', type: 'column', unit: 'kWh',
-                       statistics: { type: 'change', period: 'day', align: 'start' } }],
-            apex_config: {
-              chart: { height: 150, background: 'transparent', toolbar: { show: false }, zoom: { enabled: false } },
-              theme: { mode: 'dark' }, dataLabels: { enabled: false }, legend: { show: false },
-              plotOptions: { bar: { borderRadius: 4, columnWidth: x[1] === '7d' ? '50%' : '70%' } },
-              grid: { show: true, borderColor: 'var(--casora-chart-grid, rgba(255,255,255,0.10))', xaxis: { lines: { show: false } }, yaxis: { lines: { show: true } },
-                      padding: { left: 0, right: 0, top: -6, bottom: -4 } },
-              xaxis: { labels: { datetimeUTC: false, format: x[2], hideOverlappingLabels: true, rotate: 0, style: LBL },
-                       axisBorder: { show: false }, axisTicks: { show: false }, tooltip: { enabled: false } },
-              tooltip: { theme: 'dark', x: { format: 'dd.MM.' } },
-            },
-          };
-        });
+        /* Verbrauch pro Tag als Säulen (Statistik change je Tag), 7 bzw. 30 Tage. */
+        [['hwd7:', '7d'], ['hwd30:', '30d']].forEach(function (x) { window._hpBarCfg(x[0] + c.energy, c.energy, 'Verbrauch pro Tag', x[1], 1); });
       }
       var plate = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
         + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);'
@@ -2374,28 +2342,8 @@
       if (c.volt) window._hpChartCfg(c.volt, 'Spannung', '24h', '#8E8E93', 150);
       if (c.amp) window._hpChartCfg(c.amp, 'Stromstärke', active ? '4h' : '24h', '#0A84FF', 150);
       if (c.energy) {
-        var LBL = { colors: 'var(--casora-chart-label, rgba(255,255,255,0.42))', fontSize: '11px', fontFamily: 'var(--primary-font-family, system-ui)' };
-        [['hwd7:', '7d', 'ddd'], ['hwd30:', '30d', 'dd.']].forEach(function (x) {
-          var key = x[0] + c.energy;
-          window._hpPlantMeta[key] = ['Verbrauch pro Tag', x[1], '#30D158'];
-          window._hpPlantCfg[key] = {
-            type: 'custom:apexcharts-card', graph_span: x[1], span: { end: 'day' }, header: { show: false },
-            yaxis: [{ show: true, decimals: 1, apex_config: { tickAmount: 2, forceNiceScale: true, floating: true,
-              labels: { offsetX: 4, offsetY: -8, align: 'left', style: LBL } } }],
-            series: [{ entity: c.energy, name: 'Verbrauch', color: '#30D158', type: 'column', unit: 'kWh',
-                       statistics: { type: 'change', period: 'day', align: 'start' } }],
-            apex_config: {
-              chart: { height: 150, background: 'transparent', toolbar: { show: false }, zoom: { enabled: false } },
-              theme: { mode: 'dark' }, dataLabels: { enabled: false }, legend: { show: false },
-              plotOptions: { bar: { borderRadius: 4, columnWidth: x[1] === '7d' ? '50%' : '70%' } },
-              grid: { show: true, borderColor: 'var(--casora-chart-grid, rgba(255,255,255,0.10))', xaxis: { lines: { show: false } }, yaxis: { lines: { show: true } },
-                      padding: { left: 0, right: 0, top: -6, bottom: -4 } },
-              xaxis: { labels: { datetimeUTC: false, format: x[2], hideOverlappingLabels: true, rotate: 0, style: LBL },
-                       axisBorder: { show: false }, axisTicks: { show: false }, tooltip: { enabled: false } },
-              tooltip: { theme: 'dark', x: { format: 'dd.MM.' } },
-            },
-          };
-        });
+        /* Verbrauch pro Tag als Säulen (Statistik change je Tag), 7 bzw. 30 Tage. */
+        [['hwd7:', '7d'], ['hwd30:', '30d']].forEach(function (x) { window._hpBarCfg(x[0] + c.energy, c.energy, 'Verbrauch pro Tag', x[1], 1); });
       }
       var plate = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
         + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);'
@@ -2908,28 +2856,8 @@
       if (c.bed) window._hpChartCfg(c.bed, 'Druckbett', active ? '4h' : '24h', '#FF453A', 150);
       if (c.amsHum) { window._hpChartCfg(c.amsHum, 'Luftfeuchtigkeit im AMS', '7d', '#0A84FF', 150); if (window._hpSmooth) window._hpSmooth(c.amsHum); }
       if (c.energy) {
-        var LBL = { colors: 'var(--casora-chart-label, rgba(255,255,255,0.42))', fontSize: '11px', fontFamily: 'var(--primary-font-family, system-ui)' };
-        [['hwd7:', '7d', 'ddd'], ['hwd30:', '30d', 'dd.']].forEach(function (x) {
-          var key = x[0] + c.energy;
-          window._hpPlantMeta[key] = ['Verbrauch pro Tag', x[1], '#30D158'];
-          window._hpPlantCfg[key] = {
-            type: 'custom:apexcharts-card', graph_span: x[1], span: { end: 'day' }, header: { show: false },
-            yaxis: [{ show: true, decimals: 1, apex_config: { tickAmount: 2, forceNiceScale: true, floating: true,
-              labels: { offsetX: 4, offsetY: -8, align: 'left', style: LBL } } }],
-            series: [{ entity: c.energy, name: 'Verbrauch', color: '#30D158', type: 'column', unit: 'kWh',
-                       statistics: { type: 'change', period: 'day', align: 'start' } }],
-            apex_config: {
-              chart: { height: 150, background: 'transparent', toolbar: { show: false }, zoom: { enabled: false } },
-              theme: { mode: 'dark' }, dataLabels: { enabled: false }, legend: { show: false },
-              plotOptions: { bar: { borderRadius: 4, columnWidth: x[1] === '7d' ? '50%' : '70%' } },
-              grid: { show: true, borderColor: 'var(--casora-chart-grid, rgba(255,255,255,0.10))', xaxis: { lines: { show: false } }, yaxis: { lines: { show: true } },
-                      padding: { left: 0, right: 0, top: -6, bottom: -4 } },
-              xaxis: { labels: { datetimeUTC: false, format: x[2], hideOverlappingLabels: true, rotate: 0, style: LBL },
-                       axisBorder: { show: false }, axisTicks: { show: false }, tooltip: { enabled: false } },
-              tooltip: { theme: 'dark', x: { format: 'dd.MM.' } },
-            },
-          };
-        });
+        /* Verbrauch pro Tag als Säulen (Statistik change je Tag), 7 bzw. 30 Tage. */
+        [['hwd7:', '7d'], ['hwd30:', '30d']].forEach(function (x) { window._hpBarCfg(x[0] + c.energy, c.energy, 'Verbrauch pro Tag', x[1], 1); });
       }
     }
     var plate = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
@@ -3778,28 +3706,8 @@
       if (c.progress) window._hpChartCfg(c.progress, 'Fortschritt', '24h', c.color, 150);
       if (c.power) window._hpChartCfg(c.power, 'Leistung der Station', '24h', '#FF9F0A', 150);
       if (c.energy) {
-        var LBL = { colors: 'var(--casora-chart-label, rgba(255,255,255,0.42))', fontSize: '11px', fontFamily: 'var(--primary-font-family, system-ui)' };
-        [['hwd7:', '7d', 'ddd'], ['hwd30:', '30d', 'dd.']].forEach(function (x) {
-          var key = x[0] + c.energy;
-          window._hpPlantMeta[key] = ['Verbrauch pro Tag', x[1], '#30D158'];
-          window._hpPlantCfg[key] = {
-            type: 'custom:apexcharts-card', graph_span: x[1], span: { end: 'day' }, header: { show: false },
-            yaxis: [{ show: true, decimals: 2, apex_config: { tickAmount: 2, forceNiceScale: true, floating: true,
-              labels: { offsetX: 4, offsetY: -8, align: 'left', style: LBL } } }],
-            series: [{ entity: c.energy, name: 'Verbrauch', color: '#30D158', type: 'column', unit: 'kWh',
-                       statistics: { type: 'change', period: 'day', align: 'start' } }],
-            apex_config: {
-              chart: { height: 150, background: 'transparent', toolbar: { show: false }, zoom: { enabled: false } },
-              theme: { mode: 'dark' }, dataLabels: { enabled: false }, legend: { show: false },
-              plotOptions: { bar: { borderRadius: 4, columnWidth: x[1] === '7d' ? '50%' : '70%' } },
-              grid: { show: true, borderColor: 'var(--casora-chart-grid, rgba(255,255,255,0.10))', xaxis: { lines: { show: false } }, yaxis: { lines: { show: true } },
-                      padding: { left: 0, right: 0, top: -6, bottom: -4 } },
-              xaxis: { labels: { datetimeUTC: false, format: x[2], hideOverlappingLabels: true, rotate: 0, style: LBL },
-                       axisBorder: { show: false }, axisTicks: { show: false }, tooltip: { enabled: false } },
-              tooltip: { theme: 'dark', x: { format: 'dd.MM.' } },
-            },
-          };
-        });
+        /* Verbrauch pro Tag als Säulen (Statistik change je Tag), 7 bzw. 30 Tage. */
+        [['hwd7:', '7d'], ['hwd30:', '30d']].forEach(function (x) { window._hpBarCfg(x[0] + c.energy, c.energy, 'Verbrauch pro Tag', x[1], 2); });
       }
       var plate = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
         + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);'
