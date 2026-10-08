@@ -142,6 +142,14 @@ for (const [theme, dark] of [['Casora', false], ['Casora Nebel', true]]) {
   usePage(page);
   await dashboard(page, phone.url, 3);
   await page.waitForTimeout(1500);
+  // Gate 1.1.1: einmal stand die Seite trotz „Hemma 2“ im Casora-Look (Messwerte wie Nebel) – das
+  // Theme hatte noch nicht gegriffen. Erst messen, wenn Hemma 2 wirklich gilt; sonst neu setzen.
+  const hemma = () => page.waitForFunction(() => window._casoraSoft && !window._casoraSoft(), null, { timeout: 8000 }).then(() => true, () => false);
+  if (!(await hemma())) {
+    await page.evaluate(() => document.querySelector('home-assistant')
+      .dispatchEvent(new CustomEvent('settheme', { detail: { theme: 'Hemma 2', dark: true }, bubbles: true, composed: true })));
+    await need('Hemma 2: Theme gilt', await hemma());
+  }
   const label = await openRoom(page);
   await need('Hemma 2: Raum öffnen', label);
   let r = null;
