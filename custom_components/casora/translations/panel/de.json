@@ -736,7 +736,6 @@
     "Temperature sensor": "Temperatursensor",
     "Text": "Text",
     "The account's now playing or session sensor.": "Der Wiedergabe- oder Sitzungssensor des Kontos.",
-    "the energy popup's charts": "die Diagramme im Energie-Popup",
     "The number the Energy badge shows. Without it, the badge shows today's cost.": "Der Wert auf dem Energie-Badge – leer: Kosten heute.",
     "The scenes this dashboard will list": "Die Szenen, die dieses Dashboard anzeigt",
     "Thermostat": "Thermostat",
@@ -2208,7 +2207,11 @@
     "add pump, heater …": "Pumpe, Heizer … hinzufügen",
     "Pump, heater, skimmer … Shown under “Equipment” in the popup and switchable there.": "Pumpe, Heizer, Abschäumer … Steht im Popup unter „Technik“ und lässt sich dort schalten.",
     "Alarm when off": "Alarm, wenn aus",
-    "Ask before switching off": "Vor dem Ausschalten fragen"
+    "Ask before switching off": "Vor dem Ausschalten fragen",
+    "Trend on tile": "Verlauf auf der Kachel",
+    "A small line of the room temperature over the last 24 hours.": "Eine kleine Linie der Raumtemperatur der letzten 24 Stunden.",
+    "A small line of the soil moisture over the last 7 days.": "Eine kleine Linie der Bodenfeuchte der letzten 7 Tage.",
+    "A small line of the power over the last 24 hours.": "Eine kleine Linie der Leistung der letzten 24 Stunden."
   },
   "patterns": [
     [
