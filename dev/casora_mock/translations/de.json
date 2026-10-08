@@ -16,6 +16,20 @@
           "laundry_care_washer_program_easy_care": "Pflegeleicht",
           "laundry_care_washer_program_wool": "Wolle"
         }
+      },
+      "mode": {
+        "state": {
+          "manual": "Manuell",
+          "automatic": "Automatisch",
+          "professional": "Professionell"
+        }
+      },
+      "profile": {
+        "state": {
+          "standard": "Standard",
+          "pflanzen": "Pflanzen",
+          "abend": "Abend"
+        }
       }
     }
   }

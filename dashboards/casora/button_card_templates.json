@@ -770,7 +770,7 @@
     "value": "[[[ return (variables.aq_eval && variables.aq_eval.text ? variables.aq_eval : (window._casoraAqEval ? window._casoraAqEval(entity, variables, states, hass) : {}))?.level === 1 ]]]"
    }
   ],
-  "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? t;\n  return fit((variables.aq_eval && variables.aq_eval.text ? variables.aq_eval : (window._casoraAqEval ? window._casoraAqEval(entity, variables, states, hass) : {}))?.text || '');\n]]]\n",
+  "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? t;\n  const ev = (variables.aq_eval && variables.aq_eval.text ? variables.aq_eval : (window._casoraAqEval ? window._casoraAqEval(entity, variables, states, hass) : {})) || {};\n  /* 1.1.2: Wassertemperatur vorn („25,4° · Alles ok“). */\n  return fit(window._casoraAqTileText ? window._casoraAqTileText(entity, ev) : (ev.text || ''));\n]]]\n",
   "styles": {
    "card": [
     {
@@ -801,7 +801,9 @@
     "force_eval": true,
     "value": "[[[\n  return window._casoraAqEval ? window._casoraAqEval(entity, variables, states, hass) : { level: 0, text: '' };\n]]]\n"
    },
-   "casora_default_name": "Aquarium"
+   "casora_default_name": "Aquarium",
+   "temp_min": null,
+   "temp_max": null
   }
  },
  "casora_assist_button": {

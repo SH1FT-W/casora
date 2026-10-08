@@ -155,9 +155,9 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
                 attrs["brightness"] = kw["brightness"]
             elif not self.a.get("brightness"):
                 attrs["brightness"] = 255
-            for k in ("color_temp_kelvin", "rgb_color", "hs_color", "xy_color", "effect"):
+            for k in ("color_temp_kelvin", "rgb_color", "rgbw_color", "rgbww_color", "hs_color", "xy_color", "effect"):
                 if k in kw:
-                    attrs[k] = kw[k]
+                    attrs[k] = list(kw[k]) if isinstance(kw[k], tuple) else kw[k]
             self.put("on", **attrs)
 
         async def async_turn_off(self, **kw) -> None:

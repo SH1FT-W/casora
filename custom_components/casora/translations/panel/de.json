@@ -2190,80 +2190,311 @@
     "These devices never create an entry in the bell – in every dashboard, on desktop and phone.": "Diese Geräte erzeugen nie einen Eintrag in der Glocke – in allen Dashboards, am Desktop und am Handy.",
     "Not found in Home Assistant": "In Home Assistant nicht gefunden",
     "Notify again": "Wieder melden",
-    "Add device…": "Gerät hinzufügen …"
+    "Add device…": "Gerät hinzufügen …",
+    "Lowest water temperature": "Niedrigste Wassertemperatur",
+    "Highest water temperature": "Höchste Wassertemperatur",
+    "Below this the tile warns. Same unit as the thermometer.": "Darunter warnt die Kachel. Gleiche Einheit wie der Fühler.",
+    "Above this the tile warns; more than 2 °C off raises an alarm.": "Darüber warnt die Kachel; mehr als 2 °C daneben gibt Alarm.",
+    "Colour channels": "Farbkanäle",
+    "add channel number.": "Kanal-Entität number. hinzufügen",
+    "Empty: Casora finds the channels itself (numbers of the light's device, else the light's own colours).": "Leer: Casora findet die Kanäle selbst (number-Entitäten am Gerät der Leuchte, sonst die Farben der Leuchte).",
+    "Optional. Warns on warning/critical (also German) or when a problem sensor is on.": "Optional. Warnt bei „Warnung“/„Kritisch“ (auch englisch) oder wenn ein Problem-Sensor an ist.",
+    "Switches between your automation and the light's own program.": "Schaltet zwischen deiner Automation und dem eigenen Programm der Lampe.",
+    "Schedule switch on means": "Zeitplan-Schalter „an“ heißt",
+    "Home Assistant controls the light": "Home Assistant steuert die Lampe",
+    "The light runs its own program": "Die Lampe fährt ihr eigenes Programm",
+    "Automatic: recognised from the switch (e.g. manual colour simulation = Home Assistant, auto mode = the light).": "Automatisch: erkannt am Schalter (z. B. manuelle Farbsimulation = Home Assistant, Auto-Modus = Lampe).",
+    "Equipment": "Technik",
+    "add pump, heater …": "Pumpe, Heizer … hinzufügen",
+    "Pump, heater, skimmer … Shown under “Equipment” in the popup and switchable there.": "Pumpe, Heizer, Abschäumer … Steht im Popup unter „Technik“ und lässt sich dort schalten.",
+    "Alarm when off": "Alarm, wenn aus",
+    "Ask before switching off": "Vor dem Ausschalten fragen"
   },
   "patterns": [
-    ["^Phone differs in (\\d+) settings$", "Handy weicht bei {1} Einstellungen ab"],
-    ["^Not added up yet: (.+)$", "Noch nicht in der Summe: {1}"],
-    ["^Tile sizes on the phone taken over from Hemma \\((\\d+)\\)$", "Kachelgrößen vom Handy aus Hemma übernommen ({1})"],
-    ["^(\\d+) Locks$", "{1} Schlösser"],
-    ["^(\\d+) Doors open$", "{1} Türen offen"],
-    ["^(\\d+) Gates open$", "{1} Tore offen"],
-    ["^(\\d+) Windows open$", "{1} Fenster offen"],
-    ["^(\\d+) Windows tilted$", "{1} Fenster gekippt"],
-    ["^(\\d+) Doors tilted$", "{1} Türen gekippt"],
-    ["^(\\d+) Locks offline$", "{1} Schlösser offline"],
-    ["^(\\d+) Cameras offline$", "{1} Kameras offline"],
-        ["^(\\d+) more tiles checked – nothing personal, Casora already has it\\.$", "{1} weitere Kacheln geprüft – nichts Persönliches, Casora hat es schon."],
-    ["^(\\d+) active$", "{1} aktiv"],
-    ["^Empty fields use the plant's own sensors\\. Also passed through: (.+)$", "Leere Felder nutzen die Sensoren der Pflanze. Außerdem übernommen: {1}"],
-    ["^1 extra card stays as it is$", "1 weitere Karte bleibt unverändert"],
-    ["^1 extra page stays as it is$", "1 weitere Seite bleibt unverändert"],
-    ["^Rename failed: (.+)$", "Umbenennen fehlgeschlagen: {1}"],
-    ["^Save failed: (.+)$", "Speichern fehlgeschlagen: {1}"],
-    ["^Could not set the icon: (.+)$", "Symbol ließ sich nicht festlegen: {1}"],
-    ["^a room with path \"(.+)\" already exists$", "Einen Raum mit dem Pfad „{1}“ gibt es schon"],
-    ["^Upload failed: (.+)$", "Hochladen fehlgeschlagen: {1}"],
-    ["^Uploaded (.+) \\((.+)\\)$", "{1} hochgeladen ({2})"],
-    ["^Could not add the phone layout: (.+)$", "Handy-Layout ließ sich nicht ergänzen: {1}"],
-    ["^Phone layout could not be rebuilt: (.+)$", "Handy-Layout ließ sich nicht neu bauen: {1}"],
-    ["^Added \"(.+) Mobile\"\\. Open it from Choose dashboard\\.$", "„{1} Mobile“ hinzugefügt. Öffnen über „Dashboard wählen“."],
-    ["^Cooling to (.+)$", "Kühlt auf {1}"],
-    ["^Heating to (.+)$", "Heizt auf {1}"],
-    ["^(\\d+) Away$", "{1} unterwegs"],
-    ["^(\\d+) Unlocked$", "{1} entriegelt"],
-    ["^(\\d+) Playing$", "{1} laufen"],
-    ["^(\\d+) Updates$", "{1} Updates"],
-    ["^(Very Cold|Cool|Comfortable|Warm|Hot|Very Hot|Very Dry|High|Good) · (.+)$", "{1} · {2}"],
-    ["^Button (\\d+) action$", "Aktion Taste {1}"],
-    ["^Button (\\d+) service$", "Dienst Taste {1}"],
-    ["^Button (\\d+) data$", "Daten Taste {1}"],
-    ["^Button (\\d+) opens$", "Ziel Taste {1}"],
-    ["^Button (\\d+) name$", "Name Taste {1}"],
-    ["^Button (\\d+) icon$", "Symbol Taste {1}"],
-    ["^Button (\\d+) shown$", "Taste {1} anzeigen"],
-    ["^Button (\\d+)$", "Taste {1}"],
-    ["^Back to (.+)$", "Zurück zu {1}"],
-    ["^Moved to (.+)$", "Verschoben nach {1}"],
-    ["^Copied to (.+)$", "Kopiert nach {1}"],
-    ["^Use “(.+)”$", "„{1}“ verwenden"],
-    ["^Collapse (.+)$", "{1} einklappen"],
-    ["^Screen: (.*)$", "Bildschirm: {1}"],
-    ["^Users: (.*)$", "Benutzer: {1}"],
-    ["^Desktop: (.+?) {3}· {3}Phone: (.+)$", "Desktop: {1}   ·   Handy: {2}"],
-    ["^(\\d+) extra cards? stays? as (?:it is|they are)$", "{1} weitere Karten bleiben unverändert"],
-    ["^(\\d+) extra pages? stays? as (?:it is|they are)$", "{1} weitere Seiten bleiben unverändert"],
-    ["^Will use (.+)'s navigation bar$", "Nutzt die Navigationsleiste von {1}"],
-    ["^(.+\\.) Nothing was saved, and your YAML dashboard wasn't touched\\.$", "{1} Es wurde nichts gespeichert, dein YAML-Dashboard bleibt unberührt."],
-    ["^(.+\\.) A partly created dashboard may be left in your sidebar at /(.+); you can delete it from the ••• menu\\.$", "{1} In der Seitenleiste kann ein halb angelegtes Dashboard unter /{2} übrig sein – löschen über das •••-Menü."],
-    ["^(.+) (?:has|have) changes Casora can't rebuild exactly, so editing here could alter them\\. Nothing was imported\\.$", "{1}: Änderungen, die Casora nicht exakt nachbauen kann. Es wurde nichts importiert."],
-    ["^This dashboard has views, but none of them look like a Casora room \\((.*)\\)\\. A section is a header card followed by a smart row\\.$", "Keine Seite dieses Dashboards sieht wie ein Casora-Raum aus ({1})."],
-    ["^This dashboard has views, but none of them look like a Casora room \\((.*)\\)\\. A room is a hero card, the nav, and a smart row, in that order\\.$", "Keine Seite dieses Dashboards sieht wie ein Casora-Raum aus ({1})."],
-    ["^This is a phone layout\\. Casora imports it together with the dashboard it belongs to, and that dashboard wasn't found at /(.+)\\.$", "Das ist ein Handy-Layout. Casora importiert es nur zusammen mit seinem Dashboard – das fehlt unter /{1}."],
-    ["^Casora needs (?:this|these) from HACS before your dashboard can render\\. Restart Home Assistant once installed\\.$", "Casora braucht das aus HACS. Danach Home Assistant neu starten."],
-    ["^Casora needs (?:this|these) from HACS before your dashboard can render\\. Come back here once installed\\.$", "Casora braucht das aus HACS. Danach hierher zurückkommen."],
-    ["^Missing from HACS: (.+)\\. Casora works, but parts of it will not render\\.$", "Fehlt in HACS: {1}. Casora läuft, aber Teile werden nicht angezeigt."],
-    ["^A second dashboard at \"(.+)\" laid out for a phone, with (\\d+) section\\(s\\) carried over from this one\\. Done then opens whichever of the two suits the device you are on\\. Nothing here changes\\.$", "Ein zweites Dashboard unter „{1}“ fürs Handy, mit {2} übernommenen Abschnitten. Hier ändert sich nichts."],
-    ["^Couldn't read your areas \\((.*)\\)\\. You can still add rooms by hand\\.$", "Bereiche nicht lesbar ({1}). Räume kannst du trotzdem von Hand anlegen."],
-    ["^Each sensor's reading is taken from its entity id\\. Also passed through: (.+)$", "Die Art jedes Sensors ergibt sich aus seiner Entitäts-ID. Außerdem übernommen: {1}"],
-    ["^Could not read “(.+)”\\.$", "„{1}“ ließ sich nicht lesen."],
-    ["^Added “(.+)” to the tile picker$", "„{1}“ zur Kachelauswahl hinzugefügt"],
-    ["^Couldn't delete everything: (.+)$", "Nicht alles gelöscht: {1}"],
-    ["^Still used in: (.+)\\. Rooms in this dashboard switch back to the automatic icon\\.$", "Noch benutzt in: {1}. Räume in diesem Dashboard bekommen wieder das automatische Symbol."],
-    ["^Still used in: (.+)\\.$", "Noch benutzt in: {1}. Räume dort zeigen danach kein Symbol, bis du ein anderes wählst."],
-    ["^Couldn't delete: (.+)$", "Löschen fehlgeschlagen: {1}"],
-    ["^not a valid SVG file \\(.+\\)$", "Keine gültige SVG-Datei"],
-    ["^(.+) - failed to load$", "{1} – konnte nicht geladen werden"],
+    [
+      "^Phone differs in (\\d+) settings$",
+      "Handy weicht bei {1} Einstellungen ab"
+    ],
+    [
+      "^Not added up yet: (.+)$",
+      "Noch nicht in der Summe: {1}"
+    ],
+    [
+      "^Tile sizes on the phone taken over from Hemma \\((\\d+)\\)$",
+      "Kachelgrößen vom Handy aus Hemma übernommen ({1})"
+    ],
+    [
+      "^(\\d+) Locks$",
+      "{1} Schlösser"
+    ],
+    [
+      "^(\\d+) Doors open$",
+      "{1} Türen offen"
+    ],
+    [
+      "^(\\d+) Gates open$",
+      "{1} Tore offen"
+    ],
+    [
+      "^(\\d+) Windows open$",
+      "{1} Fenster offen"
+    ],
+    [
+      "^(\\d+) Windows tilted$",
+      "{1} Fenster gekippt"
+    ],
+    [
+      "^(\\d+) Doors tilted$",
+      "{1} Türen gekippt"
+    ],
+    [
+      "^(\\d+) Locks offline$",
+      "{1} Schlösser offline"
+    ],
+    [
+      "^(\\d+) Cameras offline$",
+      "{1} Kameras offline"
+    ],
+    [
+      "^(\\d+) more tiles checked – nothing personal, Casora already has it\\.$",
+      "{1} weitere Kacheln geprüft – nichts Persönliches, Casora hat es schon."
+    ],
+    [
+      "^(\\d+) active$",
+      "{1} aktiv"
+    ],
+    [
+      "^Empty fields use the plant's own sensors\\. Also passed through: (.+)$",
+      "Leere Felder nutzen die Sensoren der Pflanze. Außerdem übernommen: {1}"
+    ],
+    [
+      "^1 extra card stays as it is$",
+      "1 weitere Karte bleibt unverändert"
+    ],
+    [
+      "^1 extra page stays as it is$",
+      "1 weitere Seite bleibt unverändert"
+    ],
+    [
+      "^Rename failed: (.+)$",
+      "Umbenennen fehlgeschlagen: {1}"
+    ],
+    [
+      "^Save failed: (.+)$",
+      "Speichern fehlgeschlagen: {1}"
+    ],
+    [
+      "^Could not set the icon: (.+)$",
+      "Symbol ließ sich nicht festlegen: {1}"
+    ],
+    [
+      "^a room with path \"(.+)\" already exists$",
+      "Einen Raum mit dem Pfad „{1}“ gibt es schon"
+    ],
+    [
+      "^Upload failed: (.+)$",
+      "Hochladen fehlgeschlagen: {1}"
+    ],
+    [
+      "^Uploaded (.+) \\((.+)\\)$",
+      "{1} hochgeladen ({2})"
+    ],
+    [
+      "^Could not add the phone layout: (.+)$",
+      "Handy-Layout ließ sich nicht ergänzen: {1}"
+    ],
+    [
+      "^Phone layout could not be rebuilt: (.+)$",
+      "Handy-Layout ließ sich nicht neu bauen: {1}"
+    ],
+    [
+      "^Added \"(.+) Mobile\"\\. Open it from Choose dashboard\\.$",
+      "„{1} Mobile“ hinzugefügt. Öffnen über „Dashboard wählen“."
+    ],
+    [
+      "^Cooling to (.+)$",
+      "Kühlt auf {1}"
+    ],
+    [
+      "^Heating to (.+)$",
+      "Heizt auf {1}"
+    ],
+    [
+      "^(\\d+) Away$",
+      "{1} unterwegs"
+    ],
+    [
+      "^(\\d+) Unlocked$",
+      "{1} entriegelt"
+    ],
+    [
+      "^(\\d+) Playing$",
+      "{1} laufen"
+    ],
+    [
+      "^(\\d+) Updates$",
+      "{1} Updates"
+    ],
+    [
+      "^(Very Cold|Cool|Comfortable|Warm|Hot|Very Hot|Very Dry|High|Good) · (.+)$",
+      "{1} · {2}"
+    ],
+    [
+      "^Button (\\d+) action$",
+      "Aktion Taste {1}"
+    ],
+    [
+      "^Button (\\d+) service$",
+      "Dienst Taste {1}"
+    ],
+    [
+      "^Button (\\d+) data$",
+      "Daten Taste {1}"
+    ],
+    [
+      "^Button (\\d+) opens$",
+      "Ziel Taste {1}"
+    ],
+    [
+      "^Button (\\d+) name$",
+      "Name Taste {1}"
+    ],
+    [
+      "^Button (\\d+) icon$",
+      "Symbol Taste {1}"
+    ],
+    [
+      "^Button (\\d+) shown$",
+      "Taste {1} anzeigen"
+    ],
+    [
+      "^Button (\\d+)$",
+      "Taste {1}"
+    ],
+    [
+      "^Back to (.+)$",
+      "Zurück zu {1}"
+    ],
+    [
+      "^Moved to (.+)$",
+      "Verschoben nach {1}"
+    ],
+    [
+      "^Copied to (.+)$",
+      "Kopiert nach {1}"
+    ],
+    [
+      "^Use “(.+)”$",
+      "„{1}“ verwenden"
+    ],
+    [
+      "^Collapse (.+)$",
+      "{1} einklappen"
+    ],
+    [
+      "^Screen: (.*)$",
+      "Bildschirm: {1}"
+    ],
+    [
+      "^Users: (.*)$",
+      "Benutzer: {1}"
+    ],
+    [
+      "^Desktop: (.+?) {3}· {3}Phone: (.+)$",
+      "Desktop: {1}   ·   Handy: {2}"
+    ],
+    [
+      "^(\\d+) extra cards? stays? as (?:it is|they are)$",
+      "{1} weitere Karten bleiben unverändert"
+    ],
+    [
+      "^(\\d+) extra pages? stays? as (?:it is|they are)$",
+      "{1} weitere Seiten bleiben unverändert"
+    ],
+    [
+      "^Will use (.+)'s navigation bar$",
+      "Nutzt die Navigationsleiste von {1}"
+    ],
+    [
+      "^(.+\\.) Nothing was saved, and your YAML dashboard wasn't touched\\.$",
+      "{1} Es wurde nichts gespeichert, dein YAML-Dashboard bleibt unberührt."
+    ],
+    [
+      "^(.+\\.) A partly created dashboard may be left in your sidebar at /(.+); you can delete it from the ••• menu\\.$",
+      "{1} In der Seitenleiste kann ein halb angelegtes Dashboard unter /{2} übrig sein – löschen über das •••-Menü."
+    ],
+    [
+      "^(.+) (?:has|have) changes Casora can't rebuild exactly, so editing here could alter them\\. Nothing was imported\\.$",
+      "{1}: Änderungen, die Casora nicht exakt nachbauen kann. Es wurde nichts importiert."
+    ],
+    [
+      "^This dashboard has views, but none of them look like a Casora room \\((.*)\\)\\. A section is a header card followed by a smart row\\.$",
+      "Keine Seite dieses Dashboards sieht wie ein Casora-Raum aus ({1})."
+    ],
+    [
+      "^This dashboard has views, but none of them look like a Casora room \\((.*)\\)\\. A room is a hero card, the nav, and a smart row, in that order\\.$",
+      "Keine Seite dieses Dashboards sieht wie ein Casora-Raum aus ({1})."
+    ],
+    [
+      "^This is a phone layout\\. Casora imports it together with the dashboard it belongs to, and that dashboard wasn't found at /(.+)\\.$",
+      "Das ist ein Handy-Layout. Casora importiert es nur zusammen mit seinem Dashboard – das fehlt unter /{1}."
+    ],
+    [
+      "^Casora needs (?:this|these) from HACS before your dashboard can render\\. Restart Home Assistant once installed\\.$",
+      "Casora braucht das aus HACS. Danach Home Assistant neu starten."
+    ],
+    [
+      "^Casora needs (?:this|these) from HACS before your dashboard can render\\. Come back here once installed\\.$",
+      "Casora braucht das aus HACS. Danach hierher zurückkommen."
+    ],
+    [
+      "^Missing from HACS: (.+)\\. Casora works, but parts of it will not render\\.$",
+      "Fehlt in HACS: {1}. Casora läuft, aber Teile werden nicht angezeigt."
+    ],
+    [
+      "^A second dashboard at \"(.+)\" laid out for a phone, with (\\d+) section\\(s\\) carried over from this one\\. Done then opens whichever of the two suits the device you are on\\. Nothing here changes\\.$",
+      "Ein zweites Dashboard unter „{1}“ fürs Handy, mit {2} übernommenen Abschnitten. Hier ändert sich nichts."
+    ],
+    [
+      "^Couldn't read your areas \\((.*)\\)\\. You can still add rooms by hand\\.$",
+      "Bereiche nicht lesbar ({1}). Räume kannst du trotzdem von Hand anlegen."
+    ],
+    [
+      "^Each sensor's reading is taken from its entity id\\. Also passed through: (.+)$",
+      "Die Art jedes Sensors ergibt sich aus seiner Entitäts-ID. Außerdem übernommen: {1}"
+    ],
+    [
+      "^Could not read “(.+)”\\.$",
+      "„{1}“ ließ sich nicht lesen."
+    ],
+    [
+      "^Added “(.+)” to the tile picker$",
+      "„{1}“ zur Kachelauswahl hinzugefügt"
+    ],
+    [
+      "^Couldn't delete everything: (.+)$",
+      "Nicht alles gelöscht: {1}"
+    ],
+    [
+      "^Still used in: (.+)\\. Rooms in this dashboard switch back to the automatic icon\\.$",
+      "Noch benutzt in: {1}. Räume in diesem Dashboard bekommen wieder das automatische Symbol."
+    ],
+    [
+      "^Still used in: (.+)\\.$",
+      "Noch benutzt in: {1}. Räume dort zeigen danach kein Symbol, bis du ein anderes wählst."
+    ],
+    [
+      "^Couldn't delete: (.+)$",
+      "Löschen fehlgeschlagen: {1}"
+    ],
+    [
+      "^not a valid SVG file \\(.+\\)$",
+      "Keine gültige SVG-Datei"
+    ],
+    [
+      "^(.+) - failed to load$",
+      "{1} – konnte nicht geladen werden"
+    ],
     [
       "^(\\d+) dashboards found$",
       "{1} Dashboards gefunden"
@@ -2384,7 +2615,10 @@
       "^Expand (.+)$",
       "{1} aufklappen"
     ],
-    ["^Delete \u201c(.+)\u201d\\?$", "\u201e{1}\u201c löschen?"],
+    [
+      "^Delete “(.+)”\\?$",
+      "„{1}“ löschen?"
+    ],
     [
       "^Delete (.+)$",
       "{1} löschen"
@@ -2565,21 +2799,57 @@
       "^AI didn't work: (.*)$",
       "Die KI-Anpassung hat nicht geklappt: {1}"
     ],
-    ["^Tile “(.+)”$", "Kachel „{1}“"],
+    [
+      "^Tile “(.+)”$",
+      "Kachel „{1}“"
+    ],
     [
       "^add (.+)$",
       "{1} hinzufügen"
     ],
-    ["^(.+), switch dashboard$", "{1}, Dashboard wechseln"],
-    ["^1 Difference$", "1 Unterschied"],
-    ["^(\\d+) Differences$", "{1} Unterschiede"],
-    ["^(.+), 1 room$", "{1}, 1 Raum"],
-    ["^(.+), (\\d+) rooms$", "{1}, {2} Räume"],
-    ["^Rooms disagree on (.+)\\. Changing it here sets every room\\.$", "Die Räume sind hier unterschiedlich eingestellt: {1}. Eine Änderung hier gilt für alle Räume."],
-    ["^The AI returned broken code \\((.+)\\)\\.$", "Die KI hat fehlerhaften Code geliefert ({1})."],
-    ["^Could not read this value: (.+)$", "Dieser Wert lässt sich nicht lesen: {1}"],
-    ["^Unexpected indent at: (.+)$", "Unerwartete Einrückung bei: {1}"],
-    ["^Expected \"key: value\" at: (.+)$", "Erwartet wird „Schlüssel: Wert“ bei: {1}"],
-    ["^That looks like JSON but does not parse: (.+)$", "Das sieht nach JSON aus, lässt sich aber nicht lesen: {1}"]
+    [
+      "^(.+), switch dashboard$",
+      "{1}, Dashboard wechseln"
+    ],
+    [
+      "^1 Difference$",
+      "1 Unterschied"
+    ],
+    [
+      "^(\\d+) Differences$",
+      "{1} Unterschiede"
+    ],
+    [
+      "^(.+), 1 room$",
+      "{1}, 1 Raum"
+    ],
+    [
+      "^(.+), (\\d+) rooms$",
+      "{1}, {2} Räume"
+    ],
+    [
+      "^Rooms disagree on (.+)\\. Changing it here sets every room\\.$",
+      "Die Räume sind hier unterschiedlich eingestellt: {1}. Eine Änderung hier gilt für alle Räume."
+    ],
+    [
+      "^The AI returned broken code \\((.+)\\)\\.$",
+      "Die KI hat fehlerhaften Code geliefert ({1})."
+    ],
+    [
+      "^Could not read this value: (.+)$",
+      "Dieser Wert lässt sich nicht lesen: {1}"
+    ],
+    [
+      "^Unexpected indent at: (.+)$",
+      "Unerwartete Einrückung bei: {1}"
+    ],
+    [
+      "^Expected \"key: value\" at: (.+)$",
+      "Erwartet wird „Schlüssel: Wert“ bei: {1}"
+    ],
+    [
+      "^That looks like JSON but does not parse: (.+)$",
+      "Das sieht nach JSON aus, lässt sich aber nicht lesen: {1}"
+    ]
   ]
 }
