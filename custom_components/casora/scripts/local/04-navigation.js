@@ -409,8 +409,11 @@
         var st = h.states[id];
         var sic = (st.attributes && st.attributes.icon) || 'mdi:palette-outline';
         if (window.casoraFilledIcon) sic = window.casoraFilledIcon(sic);
+        var SCx = window._casoraSC;
         list.push({ id: id, icon: sic, label: (st.attributes && st.attributes.friendly_name) || id,
           color: window.casoraSceneColor ? window.casoraSceneColor(id) : null,
+          /* Aktive Szene wie der offene Raum hinterlegt (1.2) – dieselbe Regel wie die Szenen-Badge („Keine aktiv“). */
+          on: !!(SCx && SCx.isActive && SCx.isActive(id, h.states)),
           run: function () { h.callService('scene', 'turn_on', { entity_id: id }); } });
       });
       return list;
@@ -671,9 +674,12 @@
           if (s) s.classList.toggle('hmn-warn', !!(nt && nt.warn));
         });
       } : function () {
+        var SCx = window._casoraSC, hs = self._hass && self._hass.states;
         Array.prototype.forEach.call(list.querySelectorAll('.hmn-sub[data-sid]'), function (s) {
-          var t = self._sceneAgo(s.getAttribute('data-sid'));
+          var id = s.getAttribute('data-sid'), t = self._sceneAgo(id);
           if (s.textContent !== t) s.textContent = t;
+          var row = s.closest('.hmn-row');
+          if (row && SCx && SCx.isActive && hs) row.classList.toggle('on', !!SCx.isActive(id, hs));
         });
       };
       this._scrimOpen();
