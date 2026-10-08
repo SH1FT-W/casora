@@ -455,7 +455,7 @@ for (const view of views) {
           if (dup) { if (!dup.stations.includes(st.name)) dup.stations.push(st.name); dup.count = (dup.count || 1) + 1; continue; }
           f.stations = [st.name];
           f.k = k; results.push(f); if (!a) nNew++;
-          if (shotsDir && !a) {
+          if (shotsDir) {
             f.shot = path.join(shotsDir, `f${String(results.length).padStart(3, '0')}.png`);
             await page.evaluate((f) => {
               const d = document.createElement('div'); d.id = '__ausr'; d.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2147483647';
