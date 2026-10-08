@@ -7,12 +7,20 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ## 1.2.0 – 08.10.2026
 
 ### Neu
+- **Tanken im Auto-Popup.** Unter Tankstand und Reichweite steht „Tanken · ab 1,74 €“. Ein Tipp öffnet die Tankstellen in der Nähe auf der Karte von Home Assistant, mit Preisen, Logos, offen oder zu und einer Empfehlung, ob jetzt oder später tanken günstiger ist. Einrichten im Studio unter Einstellungen › Tanken, entweder mit der Tankerkönig-Integration oder einem kostenlosen Tankerkönig-Schlüssel.
+- **Eigene Diagramme.** Alle Verläufe in den Popups sind neu: ruhige Linie, Skala rechts, Ablesen mit Finger oder Maus, die große Zahl oben liest mit. Verbrauch pro Tag erscheint als Säulen mit Durchschnittslinie, Temperatur und Luftfeuchtigkeit schaltest du um. apexcharts-card wird nicht mehr gebraucht.
+- **Verlauf auf der Kachel.** Energie, Pflanze und Thermostat zeigen auf Wunsch einen kleinen Verlauf auf der Kachel, im Studio pro Kachel einschaltbar.
+- **Neue Handy-Menüs (Casora und Casora Nebel).** Räume und Szenen öffnen sich als helles Blatt von unten. Rechts steht je Raum die Temperatur, davor das Auffällige („Licht an · 23°“, orange „Fenster offen“). Szenen zeigen, wann sie zuletzt liefen, eine aktive Szene ist hinterlegt und zeigt „Aktiv“. Die Leiste unten hat eine weiße Pille für den offenen Raum.
+- **Geräte-Popups neu.** Geschirrspüler, Waschmaschine, Trockner, 3D-Drucker und Auto zeigen den Fortschritt als Leiste unter dem Kopf, die Prognose in einer Zeile und die Pflege daneben.
 - **Glocke: „Nicht melden“.** Im Studio unter Einstellungen wählst du Geräte und Sensoren, die nie einen Eintrag in der Glocke erzeugen, zum Beispiel ein Fenster, das immer gekippt ist. Zur Auswahl stehen nur Geräte, die überhaupt melden können, nach Raum sortiert und mit der Art der Meldung.
 - **Push bei neuen Casora-Versionen.** Im Studio unter Einstellungen wählst du Handys aus, die bei jeder neuen Version genau einen Push bekommen. Antippen öffnet die Updates. Standard ist aus.
 - **Aquarium: Licht direkt im Becken-Popup.** An/Aus, Helligkeit, ein Regler je Farbkanal in der Kanalfarbe und die Modi der Lampe zum Antippen. Der Sprung ins allgemeine Licht-Popup entfällt. Casora erkennt, ob der Zeitplan-Schalter „Home Assistant steuert“ oder „Programm der Lampe“ bedeutet; im Studio umstellbar.
 - **Aquarium: Temperatur auf der Kachel und Soll-Bereich.** Die Kachel zeigt die Temperatur („25,4° · Alles ok“). Im Studio stellst du einen Soll-Bereich ein; außerhalb warnt das Popup, ein Statussensor ist nur noch optional. Technik wie Filter und Heizer legst du jetzt im Studio an, auch als Thermostat.
 
 ### Behoben
+- **Szenen-Badges:** Eine aktive Szene zeigt „Aktiv“ statt der Zeit.
+- **Raum-Leiste auf Tablet und Desktop:** Der offene Raum ist eine weiße Pille wie am Handy.
+- **Wiedergabe-Liste oben rechts:** Sie schließt nicht mehr beim Tippen daneben, nur über die Welle selbst oder Escape, und wandert beim Raumwechsel mit.
 - **Handy-Leiste:** Die Leiste unten sah seit 1.1.1 anders aus als gewohnt (zu klein, rund). Sie ist wieder wie in 1.1.0.
 - **Räume- und Szenen-Blatt:** Das Blatt lässt sich jetzt wie ein Popup nach unten wegwischen, auch in der Liste. Vorher scrollte dabei der Hintergrund.
 - **Szenenfarbe:** Eine im Studio gewählte Szenenfarbe erscheint sofort überall, auch in den Szenen-Badges auf Desktop und Tablet, ohne Neuladen.
