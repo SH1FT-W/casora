@@ -519,7 +519,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   // Dashboard-Skripten übernimmt (z. B. Sicherheits-Unterzeile „Alles sicher“, 07.10.2026).
   if (!window.casoraTr) import("/casora_scripts/casora-i18n.js").catch(() => {});
   // Diagramm-Karte (1.2) für zuschaltbare Sparklines in der Vorschau.
-  if (!customElements.get("casora-chart")) import("/casora_scripts/casora-chart.js").catch(() => {});
+  if (!window.casoraChart) import("/casora_scripts/casora-chart.js").catch(() => {});
 
   const lang = (hass) => (((hass && ((hass.locale && hass.locale.language) || hass.language)) || "en").split("-")[0]);
   const T = {
