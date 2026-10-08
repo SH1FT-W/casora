@@ -37,18 +37,21 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
       const on = menu.querySelector('.hmn-item.on');
       if (!on) { nav._closeMenu(); return { wait: true }; }
       const off = [...menu.querySelectorAll('.hmn-item:not(.on)')][0];
+      // Seit Entwurf A (08.10.2026) ist das Menü im Casora-Look ein Blatt von unten: die Zeilen liegen
+      // in .hmn-list unter Griff und Überschrift. Oben zählt dort der Kopf, nicht der Rand (r82 misst das Blatt).
+      const sheet = menu.classList.contains('hmn-sheet'), box = sheet ? menu.querySelector('.hmn-list') : menu;
       const R = (e) => e.getBoundingClientRect();
       const cs = (e) => getComputedStyle(e);
-      const mr = R(menu), or = R(on), bw = parseFloat(cs(menu).borderTopWidth) || 0;
+      const mr = R(box), or = R(on), bw = sheet ? 0 : (parseFloat(cs(menu).borderTopWidth) || 0);
       const row = (b) => {
-        const ic = b.querySelector('.casora-mi') || b.querySelector('ha-icon,.hmn-svg');
-        const tx = b.querySelector(':scope>span:not(.casora-mi)');
+        const ic = b.querySelector('.hmn-ic,.casora-mi') || b.querySelector('ha-icon,.hmn-svg');
+        const tx = b.querySelector('.hmn-txt') || b.querySelector(':scope>span:not(.casora-mi)');
         const r = R(b), i = R(ic), t = R(tx);
         return { icL: i.left - r.left, icW: i.width, gap: t.left - i.right, txL: t.left - r.left, icTop: i.top - r.top, icH: i.height, rowH: r.height };
       };
       return {
-        on: true,
-        top: or.top - mr.top - bw + menu.scrollTop, left: or.left - mr.left - bw, right: mr.right - or.right - bw,
+        on: true, sheet,
+        top: sheet ? null : or.top - mr.top - bw + menu.scrollTop, left: or.left - mr.left - bw, right: mr.right - or.right - bw,
         menuR: parseFloat(cs(menu).borderTopLeftRadius), onR: parseFloat(cs(on).borderTopLeftRadius),
         a: row(on), b: off ? row(off) : null,
       };
@@ -58,7 +61,7 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   await need(`${tag}: Räume-Menü mit markierter Zeile`, m && m.on, m);
   console.log(tag, JSON.stringify(m));
   const pad = m.left;
-  await check(`${tag}: Abstand oben = links = rechts`, close(m.top, pad) && close(m.right, pad), m);
+  await check(`${tag}: Abstand oben = links = rechts`, (m.sheet || close(m.top, pad)) && close(m.right, pad), m);
   await check(`${tag}: Radius konzentrisch (Menü ${m.menuR} − ${pad} = Markierung ${m.onR})`, close(m.onR, m.menuR - pad), m);
   await check(`${tag}: Symbolkreis links so weit wie zum Text`, close(m.a.icL, m.a.gap), m.a);
   await check(`${tag}: Symbolkreis oben/unten mittig`, close(m.a.icTop, (m.a.rowH - m.a.icH) / 2), m.a);
