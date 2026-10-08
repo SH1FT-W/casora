@@ -917,32 +917,10 @@
       + title + '</div>'
       + '<div class="hp-chart-slot" style="min-height:150px;margin:8px 0 0;"></div></div>';
   };
-  /* Fortschritt als breiter runder Balken wie der Helligkeitsregler: Wert links, Wort rechts. */
+  /* Töne der Fortschritts-Leisten (HH.pbar, HH.forecast). Der breite Verlaufsblock HH.bar ist seit 1.1.2 weg. */
   var TONE = {
     accent: 'var(--casora-hh-bar-fill, var(--casora-popup-ui-accent, #276B64))',
     good: 'var(--casora-popup-ui-good, #30D158)', warn: 'var(--casora-popup-ui-warn, #FF9F0A)', bad: 'var(--casora-popup-ui-bad, #FF453A)',
-  };
-  H.bar = function (o) {
-    var p = Math.max(0, Math.min(100, Number(o.pct) || 0));
-    var c = TONE[o.tone] || o.tone || TONE.accent;
-    /* Schrift zweilagig: gedämpft auf der Spur, darüber dieselbe Zeile in Balkenschrift,
-       auf die Füllung zugeschnitten – lesbar, egal wie weit der Balken reicht (hell und dunkel). */
-    var txt = function (ink) {
-      return '<div style="position:absolute;left:22px;top:50%;transform:translateY(-50%);font-size:17px;font-weight:700;'
-        + 'font-variant-numeric:tabular-nums;white-space:nowrap;color:' + ink + ';">' + esc(o.text) + '</div>'
-        + (o.word ? '<div style="position:absolute;right:22px;top:50%;transform:translateY(-50%);font-size:14px;font-weight:600;'
-          + 'white-space:nowrap;max-width:60%;overflow:hidden;text-overflow:ellipsis;color:' + ink + ';">' + esc(o.word) + '</div>' : '');
-    };
-    return '<div style="font-family:' + FONT + ';position:relative;height:' + (o.h || 66) + 'px;box-sizing:border-box;'
-      + 'border-radius:var(--casora-popup-row-radius, 24px);overflow:hidden;pointer-events:none;'
-      + 'background:var(--casora-hh-bar-track, var(--casora-soft-control-fill, rgba(140,115,90,0.10)));">'
-      + '<div style="position:absolute;left:0;top:0;bottom:0;width:' + p.toFixed(1) + '%;border-radius:inherit;'
-      + 'background:linear-gradient(90deg, color-mix(in srgb, ' + c + ' var(--casora-soft-slider-mix, 55%), var(--casora-soft-slider-light, #fff)), ' + c + ');'
-      + 'transition:width .3s cubic-bezier(.36,0,.16,1);"></div>'
-      + txt(SUB)
-      + '<div style="position:absolute;inset:0;clip-path:inset(0 ' + (100 - p).toFixed(1) + '% 0 0);">'
-      + txt('var(--casora-hh-bar-ink, #173C38)') + '</div>'
-      + '</div>';
   };
   /* 1.1.2 (Richtung A): schmale Leiste über die volle Breite direkt unter der Kopfzeile – Fortschritt
      gehört zur Restzeit im Kopf. Darunter eine Zeile wie die Popup-Unterzeilen: links „25 %“,
@@ -2402,7 +2380,8 @@
         if (lk != null && lk > 0 && c.price != null) rs.push({ icon: 'mdi:currency-eur', iconTone: DIM, label: 'Kosten letzter Durchgang', value: U.eur(lk * c.price) });
       }
       if (n != null) rs.push({ icon: 'mdi:counter', iconTone: 'accent', label: 'Starts insgesamt', value: String(Math.round(n)) });
-      return rs.length ? UI.group(rs, 'Statistik') : '';
+      /* Weich 1.1.2: „Verlauf“ (steht beim Laufen links unter dem Durchgang, sonst unter „Mehr“). */
+      return rs.length ? UI.group(rs, SF ? 'Verlauf' : 'Statistik') : '';
     }
 
     if (kind === 'd_device') {
@@ -2528,10 +2507,13 @@
          Rasterabstand), Abbrechen-Pille am Ende der linken Spalte. */
       if (active) f2.pbar = tpl('d_pbar', false);
       f2.abort = tpl('d_abort', false);
+      /* Beim Laufen steht „Verlauf“ links unter dem Durchgang (Spaltenbalance gegen die Pflege-Liste). */
+      if (active) f2.stats = fields.stats;
+      var moreD = ['d_opts', 'energy'].concat(active ? [] : ['d_stats']).concat(['d_device', 'plug']);
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
-        + 'return L && H ? H.more("dish", ["d_opts", "energy", "d_stats", "d_device", "plug"].map(function (k) {'
+        + 'return L && H ? H.more("dish", ' + JSON.stringify(moreD) + '.map(function (k) {'
         + ' return (k === "energy" || k === "d_stats") ? L.slot(k, c, states) : L.inner(k, c, states); })) : "";', c.st);
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: ['run', 'prog', 'abort'], right: ['start', 'alerts', 'care', 'more'] });
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: ['run', 'stats', 'prog', 'abort'], right: ['start', 'alerts', 'care', 'more'] });
     }
 
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
@@ -2796,8 +2778,16 @@
     var task = U.str(states, c.task);
     var errOn = (c.err && states[c.err] && states[c.err].state === 'on') || (c.hms && states[c.hms] && states[c.hms].state === 'on');
 
+    /* Weich 1.1.2: Fortschritt als schmale Leiste unter der Kopfzeile. */
+    if (kind === 'p_pbar') {
+      var pcB = U.num(states, c.progress);
+      if (!active || pcB == null || !(window._casoraHH && window._casoraHH.on())) return '';
+      return window._casoraHH.pbar({ pct: pcB, left: Math.round(pcB) + ' %',
+        right: rem != null && rem > 0 ? 'Fertig gegen ' + U.clock(new Date(Date.now() + rem * 60000)) + ' Uhr' : '' });
+    }
     if (kind === 'p_hero') {
-      /* Weich (Entschlacken): Fortschritt als Hauptwert, Unterzeile „noch 1:20 · Schicht 120/300 · PETG“. */
+      /* Weich (Entschlacken): Unterzeile „Schicht 120/300 · PETG“. 1.1.2 (Richtung A): beim Drucken ist die
+         Restzeit der Hauptwert wie bei Geschirrspüler/Wäsche, Prozent und „Fertig gegen“ an der Leiste (p_pbar). */
       if (window._casoraHH && window._casoraHH.on()) {
         var pc = U.num(states, c.progress), sl = U.num(states, c.layer), st2 = U.num(states, c.layers);
         var fil = null, actS = U.str(states, c.activeSlot);
@@ -2807,7 +2797,6 @@
         });
         var sb = [];
         if (active) {
-          if (rem != null && rem > 0) sb.push('noch ' + Math.floor(rem / 60) + ':' + ('0' + Math.round(rem % 60)).slice(-2));
           if (step && step !== 'Druckt') sb.push(step);
           if (st2) sb.push('Schicht ' + Math.round(sl || 0) + '/' + Math.round(st2));
           if (fil) sb.push(fil);
@@ -2818,7 +2807,14 @@
         }
         if (errOn) sb.push('Fehler gemeldet');
         /* Runde 2 (B-16): Der Fehler steht im Zustand (rot), die Meta-Zeile bleibt ruhig. */
-        return UI.hero({ value: active && pc != null ? Math.round(pc) + ' %' : s[0], sub: sb.join(' · ') || null,
+        var vH = s[0], uH = null;
+        if (active && rem != null && rem > 0) {
+          var hH = Math.floor(rem / 60), mH = Math.round(rem % 60);
+          if (mH === 60) { hH++; mH = 0; }
+          vH = hH ? hH + ':' + (mH < 10 ? '0' : '') + mH : String(mH);
+          uH = hH ? 'Std. übrig' : 'Min. übrig';
+        }
+        return UI.hero({ value: vH, unit: uH, sub: sb.join(' · ') || null,
           valueTone: errOn || s[1] === 'bad' ? 'bad' : null, subTone: raw === 'pause' ? 'warn' : null, center: true });
       }
       var sub = [], value = s[0], unit = null, tone = s[1];
@@ -2859,9 +2855,8 @@
         sub: le != null && le > 0 ? U.f(le, 1) + ' m' : null, value: U.f(w, 1) + ' g' });
       /* Weich (Entschlacken): Fortschritt und Schicht stehen im Kopf – hier nur Ende, Start, Aufgabe, Filament. */
       if (window._casoraHH && window._casoraHH.on()) {
+        /* 1.1.2: „Fertig gegen“ steht an der Leiste unter dem Kopf (p_pbar). */
         rows = rows.filter(function (r) { return r.label !== 'Fortschritt' && r.label !== 'Schicht'; });
-        if (active && rem != null && rem > 0) rows.unshift({ icon: 'mdi:flag-checkered', iconTone: 'accent', label: 'Fertig gegen',
-          value: U.clock(new Date(Date.now() + rem * 60000)) + ' Uhr' });
         return rows.length ? UI.group(rows, active ? 'Druck' : 'Zuletzt gedruckt') : '';
       }
       return rows.length ? UI.group(rows, active ? 'Druck' : 'Zuletzt gedruckt') : '';
@@ -3070,6 +3065,8 @@
     if (window._casoraHH && window._casoraHH.on() && window._casoraHH.layout) {
       var HH = window._casoraHH;
       var f2 = { hero: fields.hero, alerts: fields.alerts, ctrl: fields.ctrl, job: fields.job };
+      /* 1.1.2 (Richtung A): Leiste unter dem Kopf, nur beim Drucken angelegt. */
+      if (active) f2.pbar = tpl('p_pbar', false);
       if (fields.cam) {
         f2.camlbl = HH.label('Kamera');
         f2.cam = fields.cam;
@@ -3078,7 +3075,7 @@
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
         + 'return L && H ? H.more("printer", ["p_ams", "p_temp", "p_speed", "energy", "p_info", "plug"].map(function (k) {'
         + ' return k === "energy" ? L.slot(k, c, states) : L.inner(k, c, states); })) : "";', c.st);
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, left: ['alerts', 'ctrl', 'job'], right: ['camlbl', 'cam', 'camai', 'more'],
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: ['alerts', 'ctrl', 'job'], right: ['camlbl', 'cam', 'camai', 'more'],
         colExtra: ' #container > #cam { margin-top: 0 !important; } #container > #camai:not(:empty) { margin-top: 12px !important; }' });
     }
 
@@ -3636,10 +3633,8 @@
         var ls = U.str(states, c.lastStart);
         if (mins != null) rows.push({ icon: 'mdi:timer-outline', iconTone: 'accent', label: 'Läuft seit', value: U.dur(mins) });
         else if (ls) rows.push({ icon: 'mdi:clock-start', iconTone: 'accent', label: 'Gestartet', value: U.clock(new Date(ls)) + ' Uhr' });
-        /* Weich: Fortschritt als breiter Balken über den Zeilen. */
+        /* Weich: Fortschritt steht im Kopf, hier nur Raum, Fläche, Laufzeit. */
         if (SF) return UI.group(rows.filter(function (r) { return r.label !== 'Fortschritt'; }), 'Reinigung');
-        if (SF && pct != null) return HH.label('Reinigung') + HH.bar({ pct: pct, text: Math.round(pct) + ' %', word: room || s.label })
-          + (rows.length > 1 ? '<div style="height:8px"></div>' + UI.group(rows.slice(1)) : '');
         return UI.group(rows, 'Reinigung');
       }
       var a0 = U.str(states, c.lastStart), e0 = U.str(states, c.lastEnd);

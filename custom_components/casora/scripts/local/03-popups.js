@@ -1748,9 +1748,10 @@
         r.stamp ? 'Stand ' + ago(r.stamp) + ' (verzögert)' : null].filter(Boolean).join(' · ');
       var out = UI.hero({ label: SFh ? null : 'Reichweite', value: r.range != null ? (SFh ? 'Reichweite ' : '') + fmtN(r.range) : '—', unit: r.range != null ? 'km' : null,
         sub: sub, subTone: lv === 2 ? 'bad' : lv === 1 ? 'warn' : 'good', center: true });
-      /* Weich: Tank als breiter runder Balken wie der Helligkeitsregler. */
+      /* Weich 1.1.2: Tank als schmale Leiste unter dem Kopf (wie die Geräte-Popups); rechts leer,
+         die Reichweite steht im Kopf. Warn-Ton ab 15 %. */
       if (r.tank != null && window._casoraHH && window._casoraHH.on()) {
-        return out + '<div style="height:20px"></div>' + window._casoraHH.bar({ pct: Math.max(2, Math.min(100, r.tank)), text: fmtN(r.tank) + ' %', word: r.ev ? 'Akku' : 'Tank', tone: r.tank <= 15 ? 'warn' : 'accent' });
+        return out + '<div style="height:var(--casora-popup-sec-gap, 22px)"></div>' + window._casoraHH.pbar({ pct: Math.max(2, Math.min(100, r.tank)), left: (r.ev ? 'Akku ' : 'Tank ') + Math.round(r.tank) + ' %', tone: r.tank <= 15 ? 'warn' : 'accent' });
       }
       if (r.tank != null) {
         var col = r.tank <= 15 ? 'var(--casora-popup-ui-warn, #FF9F0A)' : 'var(--casora-color-teal, #00C3D0)';

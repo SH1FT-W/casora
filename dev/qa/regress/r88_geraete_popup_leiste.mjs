@@ -9,9 +9,12 @@
 // Sand-Pille am Spaltenende, rot erst beim Bestätigen. Bei laufender Wäsche stehen die letzten Durchgänge
 // links, die Programme rechts.
 // Erwartet (Casora hell, Desktop 1440 und Handy 393): Leiste 6 px hoch und so breit wie der Inhalt, kein
-// Verlaufsblock, Prognose eine Zeile, Spalten am Desktop höchstens 1,5 Zeilen (87 px) auseinander – beim
-// Geschirrspüler 2,5 Zeilen, weil Phase/Programm bewusst entfallen –, Pille letztes Element links,
-// Pflege-Liste rechts; am Handy einspaltig, Leiste volle Breite, kein Scrollen beim laufenden Geschirrspüler.
+// Verlaufsblock, Prognose eine Zeile, Spalten am Desktop höchstens 1,5 Zeilen (95 px) auseinander (beim
+// Geschirrspüler steht dafür „Verlauf“ links), Pille letztes Element links, Pflege-Liste rechts; am Handy
+// einspaltig, Leiste volle Breite, kein Scrollen beim laufenden Geschirrspüler.
+// Dazu Auto und 3D-Drucker: Auto zeigt den Tank als dieselbe Leiste („Tank 19 %“, rechts leer, ab 15 % im
+// Warn-Ton) statt des Blocks; der Drucker zeigt die Restzeit groß im Kopf und „42 %“/„Fertig gegen“ an der
+// Leiste, die Zeile „Fertig gegen“ unter „Druck“ entfällt.
 import { open, casoraDashboards, dashboard, cards, fakeStates, check, need, finish } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -103,6 +106,10 @@ const measure = (pg) => pg.evaluate(() => {
   if (track) out.track = box(track);
   const pb = window.__pierce('.hh-pbar', root).filter(vis)[0];
   if (pb) out.pbarText = (pb.textContent || '').replace(/\s+/g, ' ').trim();
+  const fill = window.__pierce('.hh-pbar-fill', root).filter(vis)[0];
+  if (fill) out.fill = getComputedStyle(fill).backgroundColor;
+  const heroEl = window.__pierce('*', root).find((e) => e.children.length === 0 && /übrig$/.test((e.textContent || '').trim()) && vis(e));
+  out.heroUnit = heroEl ? heroEl.textContent.trim() : null;
   // Verlaufsblock (HH.bar): einziges Element mit clip-path:inset(…) im Inline-Stil.
   out.blocks = window.__pierce('[style*="clip-path:inset("]', root).filter(vis).length;
   out.block66 = window.__pierce('[style*="height:66px"][style*="pointer-events:none"]', root).filter(vis).length;
@@ -122,7 +129,7 @@ const measure = (pg) => pg.evaluate(() => {
   out.labels = {};
   window.__pierce('*', root).filter((e) => e.children.length === 0 && vis(e)).forEach((e) => {
     const t = rowText(e).toUpperCase();
-    if (/^(NACHFÜLLEN & PFLEGE|LETZTE DURCHGÄNGE|PROGRAMME|DURCHGANG)$/.test(t) && !out.labels[t]) out.labels[t] = box(e);
+    if (/^(NACHFÜLLEN & PFLEGE|LETZTE DURCHGÄNGE|PROGRAMME|DURCHGANG|VERLAUF|DRUCK)$/.test(t) && !out.labels[t]) out.labels[t] = box(e);
   });
   out.careLabel = out.labels['NACHFÜLLEN & PFLEGE'] || null;
   return out;
@@ -155,10 +162,12 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
     await check(dev + ': kein Verlaufsblock (HH.bar) mehr', m.blocks === 0 && m.block66 === 0, { blocks: m.blocks, block66: m.block66 });
     await check(dev + ': Zeilen „Phase“/„Programm“ nicht doppelt zur Kopfzeile', !m.rows.some((r) => /^(Phase|Programm) (?!abbrechen)/.test(r)), m.rows.filter((r) => /^(Phase|Programm) (?!abbrechen)/.test(r)));
     const diff = Math.abs(m.areas.left.h - m.areas.right.h);
-    const limit = dev === 'dish' ? 2.5 * ROW + 2 * GAP : 1.5 * ROW + GAP;
+    const limit = 1.5 * ROW + 2 * GAP;
     await check(dev + ': Spalten ausgeglichen (Differenz ≤ ' + Math.round(limit) + ' px)', diff <= limit, { left: m.areas.left.h, right: m.areas.right.h, diff });
     if (dev === 'dish') {
       if (pr.estimates) {
+        const lv = m.labels['VERLAUF'];
+        await check('dish: „Verlauf“ links beim Laufen', lv && lv.x < m.areas.right.x, lv);
         await check('dish: Prognose als eine Zeile mit zwei Mini-Balken', m.forecastRows === 1 && m.forecastBars === 2 && !m.rows.some((r) => /^(Energiebedarf|Wasserbedarf)/.test(r)), { forecastRows: m.forecastRows, forecastBars: m.forecastBars });
       }
       await check('dish: Pflege-Liste rechts mit Salz, Klarspüler, Filter, Maschinenpflege', m.careLabel && m.careLabel.x >= m.areas.right.x - 2
@@ -182,6 +191,62 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
     }
     await closePopup(page);
   }
+
+  // ── Auto: Tank als Leiste, Warn-Ton ab 15 % ──
+  const carView = (desk.config.views || []).find((v) => v.path !== 'home' && JSON.stringify(v).includes('"casora_car"')) || desk.config.views.find((v) => JSON.stringify(v).includes('"casora_car"'));
+  if (carView) {
+    await dashboard(page, desk.url + '/' + (carView.path || '0'), 3);
+    await closePopup(page);
+    const tankId = await page.evaluate(() => {
+      const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_car') && x.getBoundingClientRect().width > 20);
+      if (!b || !window._casoraCar) return null;
+      const cfg = b._config || {}, p = (cfg.variables || {}).car || cfg.entity || null;
+      return window._casoraCar.id(p, 'tankfullstand', 'sensor') || window._casoraCar.id(p, 'akku', 'sensor');
+    });
+    await need('Auto: Tank-Entität', tankId, tankId);
+    for (const [v, warn] of [['40', false], ['12', true]]) {
+      await fakeStates(page, { [tankId]: { state: v } }, { sticky: true });
+      await page.waitForTimeout(800);
+      await check('Auto ' + v + ' %: Popup offen', await openPopup(page, 'casora_car', false));
+      const m = await measure(page);
+      await check('Auto ' + v + ' %: Leiste 6 px unter dem Kopf, volle Breite', m && m.track && m.track.h === 6 && m.grid && Math.abs(m.track.w - m.grid.w) <= 20, m && { track: m.track, grid: m.grid });
+      await check('Auto ' + v + ' %: „Tank/Akku ' + v + ' %“ links, rechts leer', m && new RegExp('^(Tank|Akku) ' + v + ' %$').test(m.pbarText || ''), m && m.pbarText);
+      await check('Auto ' + v + ' %: kein Verlaufsblock', m && m.blocks === 0 && m.block66 === 0, m && { blocks: m.blocks, block66: m.block66 });
+      const rgb = String(m && m.fill).match(/(\d+)\D+(\d+)\D+(\d+)/);
+      // Warn-Ton = warmer Ton (Rot > Grün > Blau), Akzent ist Petrol (Grün/Blau vorn).
+      const orange = !!rgb && +rgb[1] > +rgb[2] && +rgb[2] > +rgb[3] && +rgb[1] - +rgb[3] > 80;
+      await check('Auto ' + v + ' %: ' + (warn ? 'Warn-Ton' : 'Akzent, kein Warn-Ton'), warn ? orange : !orange, m && m.fill);
+      await closePopup(page);
+    }
+  } else await check('Auto: Kachel im Dashboard', false);
+
+  // ── 3D-Drucker: Restzeit im Kopf, Leiste mit Prozent und „Fertig gegen“ ──
+  const prView = (desk.config.views || []).find((v) => v.path !== 'home' && JSON.stringify(v).includes('"casora_3d_printer"')) || desk.config.views.find((v) => JSON.stringify(v).includes('"casora_3d_printer"'));
+  if (prView) {
+    await dashboard(page, desk.url + '/' + (prView.path || '0'), 3);
+    await closePopup(page);
+    const pp = await page.evaluate(() => {
+      const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_3d_printer') && x.getBoundingClientRect().width > 20);
+      if (!b || !window._casoraPrint) return null;
+      const h = document.querySelector('home-assistant').hass, cfg = b._config || {};
+      const c = window._casoraPrint.resolve(cfg.entity ? h.states[cfg.entity] : null, cfg.variables || {}, h.states, h);
+      const p = {};
+      if (c.status) p[c.status] = { state: 'running' };
+      if (c.progress) p[c.progress] = { state: '42' };
+      if (c.remaining) p[c.remaining] = { state: '1.6' };
+      return c.status && c.progress && c.remaining ? p : null;
+    });
+    await need('Drucker: Status, Fortschritt, Restzeit', pp, pp);
+    await fakeStates(page, pp, { sticky: true });
+    await page.waitForTimeout(800);
+    await check('Drucker: Popup offen', await openPopup(page, 'casora_3d_printer', false));
+    const m = await measure(page);
+    await check('Drucker: Restzeit groß im Kopf', m && /Std\. übrig$/.test(m.heroUnit || ''), m && m.heroUnit);
+    await check('Drucker: Leiste 6 px unter dem Kopf', m && m.track && m.track.h === 6 && m.areas.hero && m.track.y > m.areas.hero.y + m.areas.hero.h - 1, m && { track: m.track, hero: m.areas.hero });
+    await check('Drucker: „42 %“ links, „Fertig gegen“ rechts', m && /^42 %\s*Fertig gegen \d\d:\d\d Uhr$/.test(m.pbarText || ''), m && m.pbarText);
+    await check('Drucker: keine Zeile „Fertig gegen“ unter „Druck“', m && !m.rows.some((r) => /^Fertig gegen/.test(r)), m && m.rows);
+    await closePopup(page);
+  } else await check('Drucker: Kachel im Dashboard', false);
   await page.context().browser().close().catch(() => {});
 }
 
