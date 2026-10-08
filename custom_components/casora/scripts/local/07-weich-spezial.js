@@ -25,8 +25,8 @@
   // Sand-Kreise für die Knöpfe, Wiedergabe-Knopf in Ton, Quellen als Sand-Pillen.
   // Fix-Runde 1: Medien = Blau (feste Farbzuordnung), über --casora-soft-media-hue.
   var MEDIA_HUE = 'var(--casora-soft-media-hue, var(--casora-soft-media, var(--casora-color-pink, #D16E7E)))';
-  var MEDIA_FILL = 'linear-gradient(90deg, color-mix(in srgb, ' + MEDIA_HUE + ' 50%, var(--casora-soft-slider-light, #fff)),'
-    + ' ' + MEDIA_HUE + ')';
+  /* 1.2 (P6): Wiedergabe-Knopf, Fortschritt und Lautstärke im Medien-Popup in der Medien-Farbe der Kachel (Rosa). */
+  var MEDIA_ACC = 'var(--casora-tile-media-color, ' + MEDIA_HUE + ')';
   var srcRules = function () {
     return '.hm-src-l{font-size:12px !important;font-weight:700 !important;letter-spacing:.1em !important;text-transform:uppercase;'
       + 'color:var(--casora-soft-label, ' + SUB + ') !important;margin:24px 6px 10px !important;}'
@@ -46,21 +46,21 @@
         + '.hm-s{font-weight:500;color:' + SUB + ';}'
         + '.hm-prog{margin-top:18px;}'
         + '.hm-track{height:8px;background:' + CTL + ';}'
-        /* Fortschritt in Ton wie der Wiedergabe-Knopf (Variante B, 04.10.2026). */
-        + '.hm-fill{background:var(--casora-np-progress, ' + MEDIA_FILL + ');}'
+        /* Fortschritt wie der Wiedergabe-Knopf in der Medien-Farbe (P6). */
+        + '.hm-fill{background:' + MEDIA_ACC + ';}'
         + '.hm-times{font-weight:600;color:' + SUB + ';margin-top:7px;}'
         + '.hm-ctl{gap:22px;margin-top:18px;}'
         + '.hm-b.sm{width:56px;height:56px;background:' + CTL + ';}'
         + '.hm-b.sm > div{transform:scale(.72);}'
-        + '.hm-b.lg{width:72px;height:72px;background:var(--casora-soft-media-play, var(--casora-lps-switch-on, #B67A50));'
-        +   'box-shadow:var(--casora-soft-media-play-shadow, 0 14px 30px -12px rgba(150,95,55,0.55));}'
+        + '.hm-b.lg{width:72px;height:72px;background:' + MEDIA_ACC + ';'
+        +   'box-shadow:0 14px 30px -12px color-mix(in srgb, ' + MEDIA_ACC + ' 60%, transparent);}'
         + '.hm-b.lg > div{background-color:#fff !important;}'
         + '@media (hover:hover){.hm-b.sm:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}}'
         + '.hm-vol{min-height:66px;margin-top:24px;padding:8px 12px 8px 10px;border-radius:999px;background:' + ROW + ';color:' + SUB + ';}'
         + '.hm-vol .hm-b{width:44px;height:44px;background:' + CTL + ';}'
         + '.hm-vol .hm-track{height:10px;}'
-        /* Lautstärke im selben Casora-Ton wie der Fortschritt (1.0.5, 04.10.2026). */
-        + '.hm-vol .hm-fill{background:var(--casora-np-progress, ' + MEDIA_FILL + ');}'
+        /* Lautstärke wie der Fortschritt (P6). */
+        + '.hm-vol .hm-fill{background:' + MEDIA_ACC + ';}'
         + '.hm-vol .pct{font-size:14px;font-weight:700;color:' + INK + ';min-width:44px;}'
         + srcRules()
         /* Niedriges Querformat (iPad 1024×768): Cover kleiner, damit Tasten und Lautstärke ohne

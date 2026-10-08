@@ -326,7 +326,7 @@ Casora:
   casora-np-sub: var(--casora-text-2)
   casora-np-track: var(--casora-soft-control-fill)
   # Fortschritt (Balken und Ring) immer in Ton wie der Wiedergabe-Knopf, nicht im Medien-Ton (Variante B, 04.10.2026).
-  # Gilt auch fürs Medien-Popup (07-weich-spezial.js) und die Studio-Vorschau; die Cover-Tönung der Karte bleibt.
+  # Gilt auch für die Studio-Vorschau; die Cover-Tönung der Karte bleibt. Das Medien-Popup nutzt seit 1.2 die Medien-Farbe (P6).
   casora-np-progress: var(--casora-soft-media-play, #B67A50)
   casora-np-fill: var(--casora-np-progress)
   casora-np-glyph: var(--primary-text-color)
