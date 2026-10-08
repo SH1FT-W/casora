@@ -177,7 +177,7 @@ Ansicht, `cards(page, vorlage)` liefert sichtbare Karten mit Lage und Text,
 | r44_handy_raum_wie_desktop | arbeit | Handy-Raumseite zeigte andere Badges als der Raum-Kopf am Desktop (Energie/Sicherheit fehlten, Einzel-Anzeige galt nicht); prüft auch Handy-Schalter, Unter-Reihe je Gerät und Studio-Vorschau |
 | r83_szenenfarbe_sofort | arbeit | Szenenfarbe aus dem Studio kam am Handy an, auf Desktop/Tablet nicht (Unter-Badges nur bei laufender Szene gefärbt, kein Neuzeichnen nach dem Speichern) |
 | r85_glocke_nicht_melden | arbeit | Wunsch 1.1.2: „Nicht melden“ – Auswahl nur meldefähiger Geräte (Fenster ja, Lampe nein), Ausnahme nimmt den Glocken-Eintrag weg (Desktop + Handy), entfernt kommt er wieder |
-| r83_studio_ausrichtung | arbeit | Studio: Symbole nicht mittig in ihren Kreisen (Zurück-Pfeil, Szenen-Symbole, Popup-Pfeile), „Mit KI ergänzen“ am Kartenrand – misst mit `dev/qa/ausrichtung.mjs` (Mitte, Fluchten, Abstände, Radien, Kreisgrößen) |
+| r87_studio_ausrichtung | arbeit | Studio: Symbole nicht mittig in ihren Kreisen (Zurück-Pfeil, Szenen-Symbole, Popup-Pfeile), „Mit KI ergänzen“ am Kartenrand – misst mit `dev/qa/ausrichtung.mjs` (Mitte, Fluchten, Abstände, Radien, Kreisgrößen) |
 | rf01_kachel_ablauf | arbeit | Ablauf Kachel: Kachelart hinzufügen, umbenennen, „Kachel entfernen“, ⌘S – Ergebnis in HA (Desktop + Mobil) und im Dashboard |
 | rf02_raum_ablauf | arbeit | Ablauf Raum über das Raum-Menü: hinzufügen, umbenennen, Symbol, „Nach vorne“, löschen – Ergebnis in HA und in der Navigation |
 | rf03_speichern_zeitreise | arbeit | Rückgängig, „Ungespeicherte Änderungen wiederherstellen“ nach Verlassen, ⌘S, Zeitreise zum Stand davor |
