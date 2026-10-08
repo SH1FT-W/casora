@@ -2,12 +2,13 @@
 // @parallel: ui
 // Wunsch (08.10.2026, Richtung C „Leicht“ für 1.1.3): Räume- und Szenen-Menü der Handy-Leiste kommen als
 // Blatt von unten wie ein Casora-Handy-Popup. Erwartet (Casora hell und dunkel, Casora Nebel hell, iPhone 393 × 852):
-// Blatt volle Breite, unten bündig, nur oben rund (--casora-sheet-radius 24), Griff 36 × 4 wie der Popup-Griff,
+// Seit 08.10.2026 abends schwebendes Fenster über der Leiste (12 px seitlich, ringsum rund 28, höchstens 520 hoch,
+// kein Griff, Leiste bleibt sichtbar) statt ganzflächigem Blatt.
 // Titel mittig mit Etikett „10 RÄUME“ (12/700 Versalien). Zeilen 52 px ohne Platten, Symbolkreis 36 in Sand mit
 // dunkler Glyphe, Name 15/600, Zustand rechts als kleiner Wert (13 px). Nur der offene Raum hat eine Fläche
-// (--casora-entity-background-active, Kreis in Ton). Zeilen 10 px vom Blattrand (links = rechts), Kreis links =
+// (--casora-entity-background-active, Kreis in Ton). Zeilen 8 px vom Fensterrand (links = rechts), Kreis links =
 // oben = Abstand zum Text (8), Pille konzentrisch zum Kreis, Symbol/Text springen zwischen den Zeilen nicht.
-// Rechts je Raum nur das Auffälligste aus den Raum-Badges (08.10.2026): „Fenster offen“ (orange) vor „Licht an“ vor „Feucht · 70 %“, sonst nichts.
+// Rechts je Raum die Temperatur, davor das Auffälligste (08.10.2026): „Fenster offen“ (orange) vor „Licht an“ vor „Feucht · 70 %“.
 // Szenen: dieselben Zeilen, Kreis in der Studio-Farbe der Szene wie am Desktop (eigene Farbe, sonst die
 // Standard-Szenenfarbe --casora-scene-badge-color wie casora_badge_scene/casora_scenes), weiße Glyphe.
 // Viele Räume: Liste scrollt, letzte sichtbare Zeile angeschnitten, offener Raum in der Mitte. Leiste bleibt
@@ -81,7 +82,7 @@ const openSheet = async (page, kind) => {
 };
 
 const geometry = async (tag, m, what) => {
-  await check(`${tag}: ${what} Zeilen 10 px vom Blattrand (links = rechts)`, near(m.first.x, 10) && near(m.first.right, 10) && near(m.second.x, 10) && near(m.second.right, 10), [m.first, m.second]);
+  await check(`${tag}: ${what} Zeilen 8 px vom Fensterrand (links = rechts)`, near(m.first.x, 8) && near(m.first.right, 8) && near(m.second.x, 8) && near(m.second.right, 8), [m.first, m.second]);
   await check(`${tag}: ${what} Zeilen 52 px hoch (Trefferfläche ≥ 44)`, near(m.first.h, 52) && near(m.second.h, 52) && m.first.w >= 44, [m.first.h, m.second.h]);
   await check(`${tag}: ${what} Symbolkreis 36 px, links = oben = Abstand zum Text`,
     near(m.first.icW, 36) && near(m.first.icH, 36) && near(m.first.icL, m.first.icTop) && near(m.first.icL, m.first.gap) && near(m.first.icTop, (m.first.h - m.first.icH) / 2), m.first);
@@ -150,10 +151,10 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   const m = await openSheet(page, 'rooms');
   await need(`${tag}: Räume als Blatt`, m && m.kind === 'rooms' && m.on && m.off, m);
   console.log(tag, 'Räume', JSON.stringify({ sheet: m.sheet, grip: m.grip, title: m.title, count: m.count, on: m.on, off: m.off, list: m.list }));
-  await check(`${tag}: Blatt volle Breite, unten bündig`, near(m.sheet.left, 0) && near(m.sheet.right, 0) && near(m.sheet.bottom, 0), m.sheet);
-  await check(`${tag}: Blatt nur oben rund (24, unten 0)`, near(m.sheet.radius, 24, 0) && near(m.sheet.radiusBottom, 0, 0), m.sheet);
+  await check(`${tag}: Fenster schwebt über der Leiste (12 px seitlich, nicht ganzflächig)`, near(m.sheet.left, 12) && near(m.sheet.right, 12) && m.sheet.bottom > 60 && m.sheet.top > 100, m.sheet);
+  await check(`${tag}: Fenster ringsum rund (28)`, near(m.sheet.radius, 28, 0) && near(m.sheet.radiusBottom, 28, 0), m.sheet);
   await check(`${tag}: Blatt deckend (kein durchscheinender Grund)`, !clear(m.sheet.bg), m.sheet.bg);
-  await check(`${tag}: Griff 36 × 4, mittig, 10 px unter der Kante`, near(m.grip.w, 36) && near(m.grip.h, 4) && near(m.grip.mid, 0) && near(m.grip.top, 10) && !clear(m.grip.bg), m.grip);
+  await check(`${tag}: kein Griff (schwebendes Fenster)`, m.grip && m.grip.w === 0, m.grip);
   await check(`${tag}: Titel mittig 22/700, Etikett mittig 12/700 Versalien`,
     m.title && m.count && near(m.title.mid, 0) && near(m.title.fs, 22) && m.title.fw >= 700 && near(m.count.mid, 0) && near(m.count.fs, 12) && m.count.fw >= 700 && m.count.tt === 'uppercase', [m.title, m.count]);
   await check(`${tag}: Etikett „${m.count.text}“`, new RegExp('^' + m.n + ' (Räume|Raum)$').test(m.count.text), m.count.text);
@@ -164,7 +165,7 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   if (m.off.sub) await check(`${tag}: Zustand rechts als kleiner Wert (13 px, 14 px vom Zeilenrand, mittig)`,
     m.off.subR != null && near(m.off.subR, 14) && near(m.off.subFs, 13) && near(m.off.subMidY, 0) && m.off.subFs < m.off.fs, m.off);
   else console.log('  info   ' + tag + ': kein Raum mit Hinweis rechts – Maße der Zustandsspalte nicht gemessen');
-  await check(`${tag}: Leiste ausgeblendet, solange das Blatt offen ist`, m.bar && m.bar.under && +m.bar.op === 0, m.bar);
+  await check(`${tag}: Leiste bleibt unter dem Fenster sichtbar`, m.bar && !m.bar.under && +m.bar.op === 1, m.bar);
 
   // Zustandszeile: Raum mit Lichtern und Temperatur, Zustände nur im Browser untergeschoben.
   if (!dark) {

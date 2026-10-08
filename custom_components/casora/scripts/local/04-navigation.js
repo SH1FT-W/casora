@@ -137,25 +137,26 @@
          mittig mit Etikett. Zeilen 52 px ohne Platten (Pille 26 = Kreis 18 + 8 Innenabstand, konzentrisch);
          nur der offene Raum bekommt die Fläche der gewählten Popup-Zeile.
          Die Klasse hmn-sheet setzt _openSheet(), nur solange das Weich-Design aktiv ist. */
-      + '.hmn-menu.hmn-sheet{left:0;right:0;bottom:0;margin:0 auto;width:auto;min-width:0;max-width:520px;padding:0;overscroll-behavior:contain;'
-      +   'border-radius:var(--casora-sheet-radius, 24px) var(--casora-sheet-radius, 24px) 0 0 !important;box-shadow:none !important;'
-      +   'display:flex;flex-direction:column;overflow:hidden;opacity:1;'
-      +   'max-height:calc(100vh - max(env(safe-area-inset-top, 0px), 12px) - 40px);'
-      +   'max-height:calc(100dvh - max(env(safe-area-inset-top, 0px), 12px) - 40px);'
-      +   'transform:translateY(calc(100% + 24px));transition:transform .34s cubic-bezier(.2,.9,.25,1);color:var(--casora-mnav-fg-on, #fff);}'
-      + '.hmn-menu.hmn-sheet.open{transform:translateY(0);}'
-      /* Die Leiste liegt unter dem Blatt und schien durch dessen Glasfläche – solange es offen ist, ausblenden. */
-      + '.hmn-bar.hmn-under{opacity:0;pointer-events:none;}'
+      /* Schwebend über der Leiste statt ganzflächig (Wunsch 08.10.2026: „wie früher kleiner“): Höhe nach Inhalt,
+         ringsum rund, die Leiste bleibt sichtbar darunter. */
+      + '.hmn-menu.hmn-sheet{left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom, 0px) * 0.4);margin:0 auto;width:auto;min-width:0;max-width:420px;padding:0;overscroll-behavior:contain;'
+      +   'border-radius:28px !important;box-shadow:0 18px 44px -14px rgba(60,40,20,0.35) !important;'
+      +   'display:flex;flex-direction:column;overflow:hidden;opacity:0;'
+      +   'max-height:min(520px, calc(100vh - max(env(safe-area-inset-top, 0px), 12px) - 150px));'
+      +   'max-height:min(520px, calc(100dvh - max(env(safe-area-inset-top, 0px), 12px) - 150px));'
+      +   'transform:translateY(10px) scale(.98);transform-origin:50% 100%;transition:transform .26s cubic-bezier(.2,.9,.25,1), opacity .18s ease;color:var(--casora-mnav-fg-on, #fff);}'
+      + '.hmn-menu.hmn-sheet.open{transform:none;opacity:1;}'
       + '.hmn-menu.hmn-sheet.hmn-drag{transition:none;}'
+      + '.hmn-sheet .hmn-grip{display:none;}'
       + '.hmn-grip{flex:none;width:36px;height:4px;border-radius:2px;margin:10px auto 0;background:var(--casora-popup-grabber, var(--casora-soft-grabber, rgba(120,100,80,0.30)));}'
-      + '.hmn-head{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 20px 6px;'
+      + '.hmn-head{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:14px 20px 4px;'
       +   'touch-action:none;cursor:grab;}'
-      + '.hmn-title{font-size:22px;line-height:28px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;}'
+      + '.hmn-title{font-size:19px;line-height:24px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;}'
       + '.hmn-count{font-size:12px;line-height:16px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;'
       +   'color:var(--casora-soft-label, var(--casora-mnav-fg-sub, rgba(255,255,255,0.55)));}'
       /* Liste: 10 px Luft zum Blattrand; position:relative, damit offsetTop der Zeilen in der Liste zählt (Mittigstellen). */
       + '.hmn-list{position:relative;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;'
-      +   'padding:8px 10px max(10px, env(safe-area-inset-bottom, 0px));box-sizing:border-box;}'
+      +   'padding:4px 8px 8px;box-sizing:border-box;}'
       + '.hmn-empty{padding:4px 10px 12px;font-size:15px;color:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));}'
       /* Zeile (Räume und Szenen gleich): Kreis 36 | Name | Zustand rechts. Innenabstand links 8 wie
          Kreis-Radius 18 zur Pille 26; Abstand Kreis–Text ebenfalls 8. */
@@ -701,7 +702,7 @@
         });
       };
       this._scrimOpen();
-      if (this._bar) this._bar.classList.add('hmn-under');
+      if (this._bar) this._bar.classList.add('hmn-up');
       document.body.appendChild(m);
       this._render();
       /* Mehr Zeilen als Platz: Liste so kürzen, dass die letzte sichtbare Zeile halb angeschnitten ist
