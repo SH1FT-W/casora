@@ -3022,8 +3022,9 @@
     + '.lps-sg.on{background:var(--casora-popup-tiles-text-primary,#fff);color:var(--casora-popup-ui-on-ink,#000);box-shadow:none;}'
     + '.lps-dot{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1px var(--casora-soft-dot-ring,var(--casora-lps-dot-ring,transparent));}'
     + '.lps-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;}'
-    + '.lps-chip{position:relative;padding:10px 16px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;'
-    +   'background:var(--casora-lps-chip);color:var(--casora-lps-chip-ink);transition:background .2s ease;-webkit-tap-highlight-color:transparent;}'
+    // 1.2 (P4): Aktions-Pille – Höhe und Fläche aus dem Theme (Casora: 40 hoch, Popup-Fläche .10).
+    + '.lps-chip{position:relative;box-sizing:border-box;display:inline-flex;align-items:center;min-height:var(--casora-lps-chip-h,0px);padding:10px 16px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;'
+    +   'background:var(--casora-lps-chip-fill,var(--casora-lps-chip));color:var(--casora-lps-chip-ink);transition:background .2s ease;-webkit-tap-highlight-color:transparent;}'
     + '.lps-chip.on{background:var(--casora-lps-chip-on);color:var(--casora-lps-chip-on-ink);}'
     // Trefferfläche 44 px (07.10.2026): unsichtbarer Rand nur nach oben/unten – nebeneinander
     // stehende Chips überlappen so nicht (Abstand zwischen den Reihen 8 px = 2 × 4 px).

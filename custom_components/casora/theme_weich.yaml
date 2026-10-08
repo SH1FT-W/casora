@@ -169,7 +169,13 @@ Casora:
   casora-back-hit: -2px   # D-03: Zurück-Knopf sichtbar 40 px, Trefferfläche 44 px
   casora-lpc-pill-pad-m: 14px 15px   # D-03: Raumfilter im Licht-Popup am Handy 44 px hoch (vorher 39)
   casora-lpc-row-inset: 14px   # D-17: Raumfilter beginnt auf der Inhaltskante der Zeilen darunter
-  casora-climate-seg-h: 58px   # D-06: Modusknöpfe im Thermostat so hoch wie die Zeilen daneben
+  # 1.2 (P4): Raumfilter = Aktions-Pille wie die Szenen: 40 hoch (Desktop), Popup-Fläche .10, bündig mit den Zeilen
+  casora-lpc-pill-pad: 11.6px 18px
+  casora-lpc-pill-bg: var(--casora-soft-control-fill)
+  casora-lpc-row-pad: 4px 0 18px 0
+  casora-lps-chip-h: 40px   # 1.2 (P4): Licht-Szenen 40 statt 36
+  casora-lps-chip-fill: var(--casora-soft-control-fill)
+  casora-climate-seg-h: 46px   # 1.2 (P4): Modusknöpfe wie alle Auswahlfelder (hui-sg 46/18); vorher 58 wie die Zeilen daneben
   casora-weather-precip-fs: 12px   # D-18: Regen-% im Wetter-Popup 12 statt 11 px
   casora-mobile-np-title-size: 17px   # D-12: „Aktuelle Wiedergabe“ so groß wie „Favoriten“
   casora-category-title-weight: 800   # D-12: Kategorie-Titel („Klima“) wie Seitentitel „Zuhause“
