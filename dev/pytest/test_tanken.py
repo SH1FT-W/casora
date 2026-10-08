@@ -224,6 +224,11 @@ async def test_variante_1_nutzt_vorhandene_sensoren(hass: HomeAssistant, aioclie
     assert [s["n"] for s in d["stations"]] == ["Station Eins", "Station Zwei"]   # geschlossene ans Ende
     assert d["price"] == 1.719 and d["stations"][1]["o"] is False
     assert d["stations"][0]["d"] == 1.1
+    # Für die HA-Karte: Mittelpunkt (3 Stellen) und echte Lage je Station (4 Stellen).
+    assert d["center"] == [50.0, 8.0]
+    from custom_components.casora.tanken import TankenSensor  # noqa: PLC0415
+    assert {"center", "stations"} <= TankenSensor._unrecorded_attributes   # nicht in die Datenbank
+    assert (d["stations"][0]["lat"], d["stations"][0]["lng"]) == (50.01, 8.0)
     p = tk.payload()
     assert p["source"] == "integration" and p["integration"]["stations"] == 2
 
@@ -296,6 +301,10 @@ async def test_kraftstoff_je_auto(hass: HomeAssistant, aioclient_mock) -> None:
     await tk.async_tick()
     by = {c["device_id"]: tk.data_for(c) for c in tk.wanted()}
     assert by[diesel]["price"] == 1.659 and by[benzin]["price"] == 1.709   # geschlossene zählt nicht
+    st = {x["n"]: x for x in by[benzin]["stations"]}
+    assert by[benzin]["center"] == [50.0, 8.0]
+    assert (st["Autohof Testweg"]["lat"], st["Autohof Testweg"]["lng"]) == (50.0, 8.02)
+    assert st["Autohof Testweg"]["x"] > 1 and abs(st["Autohof Testweg"]["y"]) < 0.01
     # Umstellen: Kleinwagen tankt E5, Kombi gar nicht.
     await tk.async_set({"cars": {benzin: "e5", diesel: "off"}})
     want = {c["device_id"]: c["fuel"] for c in tk.wanted()}

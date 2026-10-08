@@ -3,10 +3,13 @@
 // Neu (Casora 1.2): Tanken im Auto-Popup. Erwartet: Mit eingerichtetem Tankerkönig steht direkt unter
 // dem Tankbalken die Zeile „Tanken · ab X,XXX €“; Antippen zeigt im selben Popup die Ansicht „Tanken“
 // (Zurück-Knopf, Empfehlung bzw. in der Lernphase der Hinweis „Die Empfehlung kommt, sobald genug Preise
-// gesammelt sind, in etwa N Tagen“, Typischer Tag, Am günstigsten, Punktkarte, Umschalter
+// gesammelt sind, in etwa N Tagen“, Typischer Tag, Am günstigsten, Karte, Umschalter
 // Günstigste/Nächste/Offen, Liste, „Daten: Tankerkönig, CC BY 4.0“). Ohne Einrichtung (kein Sensor)
 // fehlt die Zeile ganz. Studio › Einstellungen › „Tanken“ mit Link zur Registrierung, maskiertem
 // Schlüsselfeld, Test-Abruf, Umkreis und Kraftstoff je Auto.
+// Karte (1.2): mit Mittelpunkt (Attribut center) liegt HAs eigene Karte (ha-map) unter Umkreis und Pillen, die
+// Pillen sitzen an den echten Koordinaten; lädt sie nicht (kein map_tiles, keine Kacheln), bleibt die
+// Punktkarte – nie eine leere Fläche. Ohne center (älterer Stand) nur die Punktkarte.
 // Der Tank-Sensor wird nur im Browser untergeschoben (erfundene Stationen), nichts wird in HA gespeichert.
 import { open, casoraDashboards, dashboard, studioDashboard, studio, check, need, finish, fakeStates, usePage } from './lib.mjs';
 
@@ -15,17 +18,58 @@ const desk = all.find((d) => !d.mobile && d.url === 'qa-arbeit') || all.find((d)
 await need('ein Casora-Dashboard', desk, all.map((d) => d.url));
 
 const SID = 'sensor.casora_tanken_qa_testauto_e10';
+// Mittelpunkt: Frankfurt am Main (öffentlicher Ort, Testhaus liegt auf 0/0); Lage je Station aus x/y.
+const CENTER = [50.11, 8.682];
 const stations = [
   { n: 'Freie Tankstelle Mühlweg', b: 'Freie', p: 1.689, o: true, d: 2.8, x: 1.9, y: 2.0 },
   { n: 'Autohof Nord', b: 'JET', p: 1.699, o: true, d: 4.6, x: 2.4, y: 3.9 },
   { n: 'Tankpunkt Südring', b: 'Tankpunkt', p: 1.719, o: true, d: 1.2, x: -0.4, y: -1.1 },
   { n: 'Stadttankstelle Gartenstraße', b: 'ARAL', p: 1.739, o: true, d: 0.9, x: -0.7, y: 0.5 },
   { n: 'Tankhof Lindenallee', b: 'Tankhof', p: 1.749, o: false, d: 3.4, x: -3.0, y: -1.6 },
-];
+].map((s) => ({ ...s, lat: +(CENTER[0] + s.y / 110.57).toFixed(4), lng: +(CENTER[1] + s.x / (111.32 * Math.cos(CENTER[0] * Math.PI / 180))).toFixed(4) }));
 const typical = Array.from({ length: 24 }, (_, h) => (h >= 19 && h <= 22 ? 1.649 : h < 6 ? 1.70 : 1.749));
 const sensor = (dev, extra) => ({ state: '1.689', attributes: { car_device_id: dev, car_name: 'Testauto', fuel: 'e10',
   friendly_name: 'Testauto günstigster Preis Super E10', unit_of_measurement: '€/L', source: 'key', origin: 'home',
-  radius_km: 5, updated: new Date().toISOString(), count: stations.length, stations, error: null, ...extra } });
+  radius_km: 5, center: CENTER, updated: new Date().toISOString(), count: stations.length, stations, error: null, ...extra } });
+// Karte „In der Nähe“: wartet, bis die HA-Karte geladen oder aufgegeben ist; misst Ebene, Punktkarte und Pillen.
+const mapState = (pg) => pg.evaluate(async () => {
+  const s = window.casoraPopup && window.casoraPopup.surface;
+  const one = (q) => window.__pierce(q, s)[0] || null;
+  for (let i = 0; i < 80; i++) {
+    const l = one('.ct-hamap');
+    if (!l || l.dataset.state !== 'laden') break;
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  await new Promise((r) => setTimeout(r, 400));
+  const box = one('.ct-mapbox'), layer = one('.ct-hamap');
+  const R = (e) => { const r = e.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; };
+  const pinsIn = (root) => Array.from(root ? root.querySelectorAll('g.ct-pin') : []).map((g) => { const r = g.querySelector('rect').getBoundingClientRect();
+    return { t: g.textContent.trim(), cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: r.width }; });
+  const out = { box: box && R(box), fallbackPins: pinsIn(box && box.querySelector('svg.ct-map')), state: layer ? layer.dataset.state : null };
+  if (layer) {
+    const m = layer.querySelector('ha-map');
+    out.layer = R(layer);
+    out.visible = getComputedStyle(layer).display !== 'none' && +getComputedStyle(layer).opacity > 0.9;
+    out.pins = pinsIn(layer.querySelector('svg.ct-hamap-pins'));
+    const dot = Array.from(layer.querySelectorAll('svg.ct-hamap-pins circle[r="6"]')).pop();
+    if (dot) { const r = dot.getBoundingClientRect(); out.dot = [r.left + r.width / 2, r.top + r.height / 2]; }
+    out.hasMap = !!m;
+    window.__qaMapEl = m;
+    if (m && m.leafletMap) {
+      const lm = m.leafletMap;
+      const sensor = Object.entries(document.querySelector('home-assistant').hass.states).find(([k, x]) => x && k.startsWith('sensor.casora_tanken_qa_'))[1];
+      const st = sensor.attributes.stations;
+      const best = st.find((x) => x.o);
+      const p = lm.latLngToContainerPoint([best.lat, best.lng]), c = lm.latLngToContainerPoint(sensor.attributes.center);
+      out.expect = { best: [out.layer.x + p.x, out.layer.y + p.y], center: [out.layer.x + c.x, out.layer.y + c.y] };
+      out.tiles = Array.from(m.shadowRoot.querySelectorAll('canvas, img.leaflet-tile-loaded')).length;
+      out.zoomCtl = !!m.shadowRoot.querySelector('.leaflet-control-zoom') && getComputedStyle(m.shadowRoot.querySelector('.leaflet-control-zoom')).display !== 'none';
+      out.attribution = (m.shadowRoot.querySelector('.leaflet-control-attribution') || { textContent: '' }).textContent.trim();
+      out.dragging = lm.dragging && lm.dragging.enabled();
+    }
+  }
+  return out;
+});
 
 // Kachel im Browser anlegen (Auto über seine Reichweite), Dienstaufrufe abfangen.
 const mount = (pg) => pg.evaluate(async () => {
@@ -110,7 +154,7 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   await check(vp.name + ': ohne Einrichtung keine Zeile „Tanken“', p && p.row === null && p.firstRowTop != null, p);
 
   // Lernphase: Zeile mit Preis, Ansicht mit Hinweis statt Empfehlung.
-  await fakeStates(page, { ...none, [SID]: sensor(car.dev, { typical: null, low: null, high: null, days: 2, learn_days_left: 5 }) }, { sticky: true });
+  await fakeStates(page, { ...none, [SID]: sensor(car.dev, { typical: null, low: null, high: null, days: 2, learn_days_left: 5, center: null }) }, { sticky: true });
   await openPopup(page);
   p = await popup(page);
   await check(vp.name + ': Zeile „Tanken · ab 1,689 €“', p && /^Tanken/.test(p.row || '') && /ab 1,689 €/.test(p.row) && /Super E10 · Preise werden gesammelt/.test(p.row), p && p.row);
@@ -122,6 +166,11 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   await check(vp.name + ': Ansicht „Tanken“ mit Zurück-Knopf', p && p.title === 'Tanken' && p.back && p.view, p && { title: p.title, back: p.back });
   await check(vp.name + ': Lernphase zeigt den Hinweis statt einer Empfehlung',
     p && /Die Empfehlung kommt, sobald genug Preise gesammelt sind, in etwa 5 Tagen\./.test(p.view) && !p.day && !p.scale, p && p.view);
+  {
+    const ms = await mapState(page);
+    await check(vp.name + ': ohne Mittelpunkt (älterer Stand) nur die Punktkarte mit Pillen',
+      ms.box && ms.box.h > 100 && ms.fallbackPins.length === 5 && (ms.state === null || ms.visible === false), ms);
+  }
   await check(vp.name + ': Am günstigsten (3 Kacheln), Punktkarte, Umschalter, Liste, Quelle',
     p && p.top === 3 && p.map === 1 && p.seg.join('|') === 'Günstigste|Nächste|Offen' && p.list.length === 5
     && /Daten: Tankerkönig, CC BY 4\.0/.test(p.view) && !/Lindenallee.*Mühlweg/.test(p.list.join('|')), p);
@@ -150,6 +199,38 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   p = await popup(page);
   await check(vp.name + ': Empfehlung mit Preis-Skala und Typischem Tag', p && p.scale === 1 && p.day === 1 && /Empfehlung/.test(p.view)
     && /Tief/.test(p.view) && /jetzt 1,689 €/.test(p.view) && /Hoch/.test(p.view) && !/Die Empfehlung kommt/.test(p.view), p && p.view);
+  // Karte: HA-Karte geladen (Ebene deckt die Punktkarte, Pillen an den Koordinaten) oder Rückfall auf die Punktkarte.
+  const ms = await mapState(page);
+  console.log(`  ${vp.name}: Karte ${ms.state === 'ok' ? 'HA-Karte geladen' : 'Rückfall Punktkarte (' + ms.state + ')'}`);
+  await check(vp.name + ': Karte „In der Nähe“ nie leer (HA-Karte oder Punktkarte mit 5 Pillen)',
+    ms.box && ms.box.h > 100 && (ms.state === 'ok' ? ms.visible && ms.hasMap && ms.tiles > 0 && ms.pins.length === 5 : ms.fallbackPins.length === 5 && !ms.visible), ms);
+  if (ms.state === 'ok') {
+    const near = (a, b, t = 2.5) => a && b && Math.abs(a[0] - b[0]) <= t && Math.abs(a[1] - b[1]) <= t;
+    const best = ms.pins.find((q) => q.t === '1,689');
+    await check(vp.name + ': HA-Karte liegt genau auf der Fläche der Punktkarte',
+      ['x', 'y', 'w', 'h'].every((k) => Math.abs(ms.layer[k] - ms.box[k]) < 1.5), { layer: ms.layer, box: ms.box });
+    await check(vp.name + ': günstigste Pille an ihrer Koordinate, Umkreis-Mitte am Standort',
+      best && near([best.cx, best.cy], ms.expect.best) && near(ms.dot, ms.expect.center), { best, dot: ms.dot, expect: ms.expect });
+    await check(vp.name + ': Karte ohne Zoom-Knöpfe, nicht verschiebbar, OSM-Hinweis sichtbar',
+      !ms.zoomCtl && ms.dragging === false && /OpenStreetMap/.test(ms.attribution), ms);
+    // Umschalten zeichnet die Ansicht neu – die Karte bleibt dieselbe (kein Neuladen).
+    await tap(page, '.ct-seg .hui-sg:nth-child(2)');
+    await page.waitForTimeout(500);
+    const same = await page.evaluate(() => { const l = window.__pierce('.ct-hamap', window.casoraPopup.surface)[0]; return !!l && l.querySelector('ha-map') === window.__qaMapEl && l.dataset.state === 'ok'; });
+    await check(vp.name + ': Karte bleibt beim Umschalten erhalten', same);
+  }
+  if (process.env.R89_BILD) await page.screenshot({ path: `${process.env.CASORA_OUT}/r89_${vp.name.replace(/\W+/g, '_')}_karte.png` });
+  // Kartendienst gestört (Kacheln blockiert): Punktkarte bleibt sichtbar, keine leere Fläche.
+  if (!vp.mobile) {
+    await page.route('**/api/map_tiles/**', (r) => r.abort());
+    await openPopup(page);
+    await tap(page, '.casora-tank-row');
+    await page.waitForTimeout(800);
+    const fb = await mapState(page);
+    await check(vp.name + ': Kartendienst gestört → Punktkarte mit Pillen statt leerer Fläche',
+      fb.state === 'fehler' && !fb.visible && fb.box && fb.box.h > 100 && fb.fallbackPins.length === 5, fb);
+    await page.unroute('**/api/map_tiles/**');
+  }
   await page.evaluate(() => { if (window._casoraTank) window._casoraTank.leave(true); if (window.casoraPopup) window.casoraPopup.close(); });
   await page.context().browser().close();
 }
