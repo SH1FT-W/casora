@@ -279,26 +279,42 @@
     }
     return out + '</div>';
   };
-  var day = function (I, A, k) {
-    var T = I.typical;
-    if (!T || A.kind === 'lernen') return '';
-    var hrs = [], vals = [];
-    for (var h = 6; h <= 23; h++) { hrs.push(h); if (T[h] != null) vals.push(T[h]); }
-    if (!vals.length) return '';
+  /* „Typischer Tag“ (1.2): Säulen als casora-chart (Säulen-Art, Skala rechts, gepunktete Linien) in der
+     Diagramm-Karte, Etikett wie die übrigen Diagramme. Farben wie bisher: jetzt = Akzent, günstige Stunden grün. */
+  var dayPoints = function (I, k) {
+    var T = I.typical, vals = [], out = [];
+    if (!T) return out;
+    for (var h = 6; h <= 23; h++) if (T[h] != null) vals.push(T[h]);
+    if (!vals.length) return out;
     var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), span = Math.max(0.01, hi - lo);
-    var now = new Date().getHours();
-    var bars = hrs.map(function (h) {
-      var v = T[h];
-      var ht = v == null ? 6 : Math.round(14 + 86 * (v - lo) / span);
-      var bg = v == null ? k.CTL : h === now ? k.ACC : (v <= lo + span * 0.3 ? k.GOOD : k.CTL);
-      return '<i style="flex:1;height:' + ht + '%;border-radius:4px 4px 2px 2px;background:' + bg + '"></i>';
-    }).join('');
-    var lab = [6, 9, 12, 15, 18, 21, 24].map(function (h) { return '<span>' + h + '</span>'; }).join('');
-    return '<div class="ct-day" style="background:' + k.ROW + ';border-radius:' + k.RAD + ';padding:14px 18px 10px;">'
-      + '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:14px;font-weight:700;color:' + k.T.ink + '">Typischer Tag'
-      + '<span style="font-size:12px;font-weight:500;color:' + k.SUB + '">Ø 14 Tage, günstigste Station</span></div>'
-      + '<div style="display:flex;align-items:flex-end;gap:4px;height:60px;margin-top:12px">' + bars + '</div>'
-      + '<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:500;color:' + k.SUB + ';margin-top:5px">' + lab + '</div></div>';
+    var now = new Date().getHours(), d0 = new Date(); d0.setMinutes(0, 0, 0);
+    for (h = 6; h <= 23; h++) {
+      if (T[h] == null) continue;
+      out.push({ t: d0.setHours(h), v: T[h], tick: h % 3 === 0 ? h : null,
+        color: h === now ? k.ACC : T[h] <= lo + span * 0.3 ? k.GOOD : null });
+    }
+    return out;
+  };
+  var day = function (I, A, k) {
+    if (!I.typical || A.kind === 'lernen' || !dayPoints(I, k).length) return '';
+    return '<div class="ct-day" style="background:' + k.ROW + ';border-radius:' + k.RAD + ';padding:16px 10px 6px;">'
+      + '<div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--casora-soft-label, ' + k.SUB + ');padding:0 6px;text-align:left">'
+      + '<span>Typischer Tag</span><span> · </span><span>Ø 14 Tage</span></div>'
+      + '<div class="ct-day-chart" data-casora-nodismiss="" style="min-height:154px;margin:8px 0 0"></div></div>';
+  };
+  /* Säulen nach jedem Zeichnen der Ansicht einhängen (Inhalt kommt als HTML-Text). */
+  var mountDay = function (I) {
+    var slot = V && V.inner.querySelector('.ct-day-chart');
+    if (!slot) return;
+    var cfg = { type: 'custom:casora-chart', kind: 'bar', points: dayPoints(I, tok()), unit: '€', decimals: 3, height: 120 };
+    customElements.whenDefined('casora-chart').then(function () {
+      if (!slot.isConnected) return;
+      var el = document.createElement('casora-chart');
+      slot.appendChild(el);
+      el.setConfig(cfg);
+      var ha = document.querySelector('home-assistant');
+      if (ha && ha.hass) el.hass = ha.hass;
+    });
   };
   var top3 = function (I, k) {
     var s = I.stations.filter(function (x) { return x.o; }).slice(0, 3);
@@ -573,6 +589,8 @@
     var pad = parseFloat(V.box.style.paddingLeft) || 0;
     V.inner.innerHTML = K.html(V.p, hassStates(), V.sort, wide, bw ? bw - 2 * pad : 0);
     V.wide = wide;
+    var sid = K.sensorId(V.p, hassStates());
+    if (sid) mountDay(info(hassStates()[sid]));
     syncMap();
     if (content) content.scrollTop = keepScroll ? top : 0;
     if (window._casoraSepScan) window._casoraSepScan(sr);

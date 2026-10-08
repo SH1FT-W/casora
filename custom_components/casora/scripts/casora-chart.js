@@ -6,6 +6,8 @@
 //     series: [{ entity, name, color, unit, decimals, map }], source: 'auto'|'history'|'stats'|'change',
 //     agg: 'mean'|'max', bucket: '1h', height, y: { min, max, labels }, step, readout: 'own'|'hero'|'none', legend,
 //     read_as: Entität, deren Hero-Zahl ([data-casora-read]) beim Ablesen mitliest (z. B. Säulen im Energie-Popup) }
+//   Feste Säulen ohne Verlauf (z. B. Tanken „Typischer Tag“): kind: 'bar', points: [{ t, v, color, tick }],
+//     unit, decimals, focus: 'min' (Grundanzeige = kleinster Wert, „Am günstigsten, 19:00 Uhr“).
 (function () {
   'use strict';
   var H = 36e5, MIN = 6e4, DAY = 864e5, NS = 'http://www.w3.org/2000/svg';
@@ -191,6 +193,7 @@
     }
     _load(force) {
       var c = this._c, h = this._h;
+      if (c && c.points) { this._draw(); return; }
       if (!c || !h || !h.connection || !c.series.length || !this.isConnected) { this._draw(); return; }
       var src = this._src(), ids = c.series.map(function (s) { return s.entity; });
       var key = ids.join(',') + '|' + c.span + '|' + src + '|' + (c.agg || '');
@@ -268,6 +271,7 @@
       this._w = W;
       box.textContent = '';
       this._release();
+      if (c.kind === 'bar' && c.points) return this._fixed(box, W);
       if (c.kind === 'bar') return this._bars(box, W);
       return this._line(box, W);
     }
@@ -493,6 +497,37 @@
         if (d && d.raw && i === n - 1) w = C.tr('Heute');
         me._say(ro, x.v == null ? '–' : C.nf(x.v, dec), unit, w, name, [{ entity: s0.entity, text: x.v == null ? '–' : C.nf(x.v, dec) + ' ' + unit, num: x.v == null ? '–' : C.nf(x.v, dec) }]);
       }, function () { bars.forEach(function (b, j) { b.style.opacity = j === n - 1 ? 1 : 0.45; }); me._release(); dflt(); });
+    }
+    /* Feste Säulen (points): Skala rechts ab dem kleinsten Wert, gepunktete Linien, Farbe je Säule;
+       Ablesen zeigt Wert und Uhrzeit, Grundanzeige der kleinste Wert („Am günstigsten“). */
+    _fixed(box, W) {
+      var c = this._c, me = this, pts = c.points.filter(function (p) { return p && isFinite(p.v); });
+      var unit = c.unit || '', dec = c.decimals != null ? c.decimals : 1;
+      var ro = this._head(box, '', unit), Hh = c.height || 120, padT = 10, padB = 24, padR = 44, padL = 2;
+      var vals = pts.map(function (p) { return +p.v; });
+      var at = function (p) { return C.uhr(C.hm(p.t, me._h12())); };
+      var bi = 0; pts.forEach(function (p, i) { if (p.v < pts[bi].v) bi = i; });
+      this._def = pts.length ? C.tr('Am günstigsten') + ', ' + at(pts[bi]) : '';
+      var dflt = function () { me._say(ro, pts.length ? C.nf(pts[bi].v, dec) : '–', unit, me._def, null); };
+      var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), sc = C.nice(lo, hi, 2);
+      var sd = sc.step < 0.1 ? 2 : sc.step < 1 ? 1 : 0;
+      var svg = this._svg(box, W, Hh, pts.length ? C.nf(lo, dec) + ' ' + C.tr('bis') + ' ' + C.nf(hi, dec) + ' ' + unit : C.tr('Keine Daten'));
+      if (!pts.length) { this._empty(svg, W, Hh); dflt(); return; }
+      var Y = function (v) { return padT + (1 - (v - sc.lo) / (sc.hi - sc.lo || 1)) * (Hh - padT - padB); }, base = Y(sc.lo);
+      this._grid(svg, sc, Y, W, padR, function (v) { return C.nf(v, sd); });
+      var n = pts.length, slot = (W - padL - padR) / n, bw = Math.max(2, Math.min(22, slot * 0.62)), bars = [];
+      pts.forEach(function (p, i) {
+        var cx = padL + slot * (i + 0.5), y = Math.min(Y(p.v), base - 3);
+        var b = el('path', { d: roundTop(cx - bw / 2, y, bw, base - y, Math.min(4, bw / 2)), style: 'fill:' + C.color(p.color || 'accent') + ';opacity:' + (p.color ? 1 : 0.45) });
+        svg.appendChild(b); bars.push(b);
+        if (p.tick != null) svg.appendChild(el('text', { x: cx, y: Hh - 6, 'text-anchor': 'middle' }, String(p.tick)));
+      });
+      dflt();
+      this._near = function (x) { return Math.max(0, Math.min(n - 1, Math.floor((x - padL) / slot))); };
+      this._bind(svg, n, function (i) {
+        bars.forEach(function (b, j) { b.style.opacity = j === i ? 1 : 0.3; });
+        me._say(ro, C.nf(pts[i].v, dec), unit, at(pts[i]), '', null);
+      }, function () { bars.forEach(function (b, j) { b.style.opacity = pts[j].color ? 1 : 0.45; }); me._release(); dflt(); });
     }
   }
   customElements.define('casora-chart', CasoraChart);

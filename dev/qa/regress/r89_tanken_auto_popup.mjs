@@ -167,6 +167,9 @@ const popup = (pg) => pg.evaluate(() => {
     segOn: P('.ct-seg .hui-sg.on').map(txt),
     list: P('.ct-list .hui-srow').map(txt),
     map: P('.ct-map').length, top: P('.ct-top > div').length, day: P('.ct-day').length, scale: P('.ct-scale').length,
+    // Typischer Tag (1.2): Säulen als casora-chart (18 Stunden, Skala rechts), Etikett in Versalien.
+    dayBars: (() => { const c = P('.ct-day casora-chart')[0]; return c && c.shadowRoot ? c.shadowRoot.querySelectorAll('path[d*="Q"]').length : 0; })(),
+    dayLabel: (() => { const l = P('.ct-day > div')[0]; return l ? [l.textContent, getComputedStyle(l).textTransform, getComputedStyle(l).fontSize] : null; })(),
   };
 });
 const tap = (pg, sel) => pg.evaluate((sel) => {
@@ -178,7 +181,7 @@ const tap = (pg, sel) => pg.evaluate((sel) => {
 }, sel);
 
 for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy', width: 393, height: 852, mobile: true }]) {
-  const { page } = await open({ width: vp.width, height: vp.height, mobile: !!vp.mobile, dark: false, theme: 'Casora' });
+  const { page } = await open({ width: vp.width, height: vp.height, mobile: !!vp.mobile, dark: process.env.R89_DARK === '1', theme: 'Casora' });
   usePage(page);
   await dashboard(page, vp.mobile ? (all.find((d) => d.mobile && d.url === desk.url + '-mobile') || desk).url : desk.url);
   const car = await mount(page);
@@ -267,6 +270,13 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   p = await popup(page);
   await check(vp.name + ': Empfehlung mit Preis-Skala und Typischem Tag', p && p.scale === 1 && p.day === 1 && /Empfehlung/.test(p.view)
     && /Tief/.test(p.view) && /jetzt 1,689 €/.test(p.view) && /Hoch/.test(p.view) && !/Die Empfehlung kommt/.test(p.view), p && p.view);
+  await check(vp.name + ': Typischer Tag als casora-chart (18 Säulen), Etikett „Typischer Tag · Ø 14 Tage“ 12 px Versalien',
+    p && p.dayBars === 18 && p.dayLabel && /Typischer Tag · Ø 14 Tage/.test(p.dayLabel[0]) && p.dayLabel[1] === 'uppercase' && p.dayLabel[2] === '12px', p && [p.dayBars, p.dayLabel]);
+  if (process.env.R89_BILD) {
+    await page.evaluate(() => { const d = window.__pierce('.ct-day', window.casoraPopup.surface)[0]; if (d) d.scrollIntoView({ block: 'center' }); });
+    await page.waitForTimeout(600);
+    await page.screenshot({ path: `${process.env.CASORA_OUT}/r89_${vp.name.replace(/\W+/g, '_')}_typischer_tag.png` });
+  }
   // Karte: HA-Karte geladen (Ebene deckt die Punktkarte, Pillen an den Koordinaten) oder Rückfall auf die Punktkarte.
   const ms = await mapState(page);
   console.log(`  ${vp.name}: Karte ${ms.state === 'ok' ? 'HA-Karte geladen' : 'Rückfall Punktkarte (' + ms.state + ')'}`);
