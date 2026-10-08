@@ -29,7 +29,7 @@
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
       n1t: "Tanken im Auto-Popup", n1: "Spritpreise in der Nähe auf der Karte, mit Empfehlung. Einrichten im Studio unter Einstellungen › Tanken.",
       n2t: "Neue Diagramme", n2: "Ruhige Verläufe in allen Popups zum Ablesen mit dem Finger, Verbrauch pro Tag als Säulen.",
-      n3t: "Neue Handy-Menüs", n3: "Räume und Szenen als Blatt von unten, mit Temperatur, offenen Fenstern und aktiver Szene.",
+      n3t: "Neue Handy-Menüs", n3: "Räume und Szenen als kleines Fenster über der Leiste, aktive Szenen auf einen Blick.",
       n4t: "Glocke und Aquarium", n4: "Geräte von der Glocke ausnehmen, Aquarium-Licht direkt im Becken-Popup."
     },
     en: {
@@ -42,7 +42,7 @@
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
       n1t: "Fuel prices in the car popup", n1: "Petrol prices nearby on the map, with a recommendation. Set up in the Studio under Settings › Fuel prices.",
       n2t: "New charts", n2: "Calm charts in every popup that you read with your finger, daily use as bars.",
-      n3t: "New phone menus", n3: "Rooms and scenes as a sheet from the bottom, with temperature, open windows and the active scene.",
+      n3t: "New phone menus", n3: "Rooms and scenes as a small window above the bar, active scenes at a glance.",
       n4t: "Bell and aquarium", n4: "Leave devices out of the bell, aquarium light right in the tank popup."
     },
   };
