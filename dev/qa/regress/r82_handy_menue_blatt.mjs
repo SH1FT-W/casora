@@ -7,7 +7,7 @@
 // dunkler Glyphe, Name 15/600, Zustand rechts als kleiner Wert (13 px). Nur der offene Raum hat eine Fläche
 // (--casora-entity-background-active, Kreis in Ton). Zeilen 10 px vom Blattrand (links = rechts), Kreis links =
 // oben = Abstand zum Text (8), Pille konzentrisch zum Kreis, Symbol/Text springen zwischen den Zeilen nicht.
-// Zustandszeile je Raum aus den Werten der Raum-Badges (Lichter, Temperatur): „1 Licht an · 22°“, „Alles aus · 22°“.
+// Rechts je Raum nur das Auffälligste aus den Raum-Badges (08.10.2026): „Fenster offen“ (orange) vor „Licht an“ vor „Feucht · 70 %“, sonst nichts.
 // Szenen: dieselben Zeilen, Kreis in der Studio-Farbe der Szene wie am Desktop (eigene Farbe, sonst die
 // Standard-Szenenfarbe --casora-scene-badge-color wie casora_badge_scene/casora_scenes), weiße Glyphe.
 // Viele Räume: Liste scrollt, letzte sichtbare Zeile angeschnitten, offener Raum in der Mitte. Leiste bleibt
@@ -161,8 +161,9 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   await check(`${tag}: andere Zeilen ohne Platte, Kreis in Sand mit dunkler Glyphe (kein Ton)`,
     clear(m.off.bg) && !clear(m.off.icBg) && m.off.icBg !== m.on.icBg && m.off.icColor !== m.on.icColor, [m.off.bg, m.off.icBg, m.off.icColor, m.on.icBg]);
   await check(`${tag}: offener Raum flächig (Weiß) mit Kreis in Ton`, !clear(m.on.bg) && m.on.bg !== m.off.bg && !clear(m.on.icBg), [m.on.bg, m.off.bg, m.on.icBg]);
-  await check(`${tag}: Zustand rechts als kleiner Wert (13 px, 14 px vom Zeilenrand, mittig)`,
+  if (m.off.sub) await check(`${tag}: Zustand rechts als kleiner Wert (13 px, 14 px vom Zeilenrand, mittig)`,
     m.off.subR != null && near(m.off.subR, 14) && near(m.off.subFs, 13) && near(m.off.subMidY, 0) && m.off.subFs < m.off.fs, m.off);
+  else console.log('  info   ' + tag + ': kein Raum mit Hinweis rechts – Maße der Zustandsspalte nicht gemessen');
   await check(`${tag}: Leiste ausgeblendet, solange das Blatt offen ist`, m.bar && m.bar.under && +m.bar.op === 0, m.bar);
 
   // Zustandszeile: Raum mit Lichtern und Temperatur, Zustände nur im Browser untergeschoben.
@@ -188,26 +189,35 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
         const seen = new Set();
         const units = (e) => { if (!e || seen.has(e)) return []; const m = mems(e); if (!m.length || !m.some((x) => mems(x).length)) return [e]; seen.add(e); return m.flatMap(units); };
         const lights = [...new Set(cfg.flatMap(units))];
-        if (lights.length) return { key: r.key, temp: v.temp_sensor_1, lights, more: [1, 2, 3, 4, 5].some((i) => i > 1 && v['temp_sensor_' + i]) };
+        const sec = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => v['security_entity_' + i]).filter((e) => e && e.startsWith('binary_sensor.') && h.states[e]);
+        if (lights.length) return { key: r.key, temp: v.temp_sensor_1, lights, sec, hum: v.humidity_sensor || null, more: [1, 2, 3, 4, 5].some((i) => i > 1 && v['temp_sensor_' + i]) };
       }
       return null;
     });
     await need(`${tag}: Raum mit Lichtern und Temperatur`, pick && !pick.more, pick);
     const sub = () => page.evaluate((k) => { const b = document.querySelector('.hmn-sheet .hmn-row[data-k="' + k + '"]'); return b ? b.querySelector('.hmn-sub').textContent : null; }, pick.key);
-    const off = Object.fromEntries(pick.lights.map((e) => [e, { state: 'off' }]));
+    // Vorschlag 1 (08.10.2026): rechts nur das Auffälligste – Fenster/Tür offen vor Licht an vor feuchter Luft, sonst nichts.
+    const calm = Object.fromEntries([...pick.sec.map((e) => [e, { state: 'off' }]), ...(pick.hum ? [[pick.hum, { state: '45' }]] : [])]);
+    const off = { ...calm, ...Object.fromEntries(pick.lights.map((e) => [e, { state: 'off' }])) };
     await fakeStates(page, { ...off, [pick.temp]: { state: '21.6' } }, { sticky: true });
     await page.waitForTimeout(500);
     const s1 = await sub();
-    await check(`${tag}: Zustandszeile „Alles aus · 22°“`, s1 === 'Alles aus · 22°', s1);
+    await check(`${tag}: alles ruhig: rechts nichts`, s1 === '', s1);
     await fakeStates(page, { ...off, [pick.lights[0]]: { state: 'on' }, [pick.temp]: { state: '21.6' } }, { sticky: true });
     await page.waitForTimeout(500);
     const s2 = await sub();
-    await check(`${tag}: Zustandszeile „1 Licht an · 22°“ (live nachgezogen)`, s2 === '1 Licht an · 22°', s2);
+    await check(`${tag}: „Licht an“ (live nachgezogen)`, s2 === 'Licht an', s2);
     if (pick.lights.length > 1) {
       await fakeStates(page, { ...Object.fromEntries(pick.lights.map((e) => [e, { state: 'on' }])), [pick.temp]: { state: '21.6' } }, { sticky: true });
       await page.waitForTimeout(500);
       const s3 = await sub();
-      await check(`${tag}: Zustandszeile „${pick.lights.length} Lichter an · 22°“`, s3 === pick.lights.length + ' Lichter an · 22°', s3);
+      await check(`${tag}: „${pick.lights.length} Lichter an“`, s3 === pick.lights.length + ' Lichter an', s3);
+    }
+    if (pick.sec.length) {
+      await fakeStates(page, { ...off, [pick.lights[0]]: { state: 'on' }, [pick.sec[0]]: { state: 'on', attributes: { device_class: 'window' } } }, { sticky: true });
+      await page.waitForTimeout(500);
+      const s4 = await page.evaluate((k) => { const b = document.querySelector('.hmn-sheet .hmn-row[data-k="' + k + '"] .hmn-sub'); return b ? { t: b.textContent, warn: b.classList.contains('hmn-warn') } : null; }, pick.key);
+      await check(`${tag}: offenes Fenster geht vor Licht und ist orange markiert`, s4 && s4.t === 'Fenster offen' && s4.warn, s4);
     }
   }
 

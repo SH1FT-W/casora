@@ -179,6 +179,8 @@
       /* Zustand rechts als kleiner Wert in Text 2 (wie ein Badge-Wert); im offenen Raum in der Aktiv-Zustandsfarbe. */
       + '.hmn-sheet .hmn-sub{display:block;min-width:0;max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:16px;font-weight:500;'
       +   'margin:0;font-variant-numeric:tabular-nums;color:var(--casora-text-2, var(--casora-mnav-fg-sub, rgba(255,255,255,0.55)));}'
+      + '.hmn-sheet .hmn-sub.hmn-warn{color:var(--casora-popup-ui-warn, #D9822B);font-weight:600;}'
+      + '.hmn-sheet .hmn-sub.hmn-warn::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px;}'
       + '.hmn-sheet .hmn-row.on .hmn-sub{color:var(--casora-entity-state-active-color, var(--casora-text-2, inherit));}'
       /* Tipp-Rückmeldung wie die Popup-Zeilen: Fläche hinterlegen und leicht schrumpfen (auch per Klasse, falls :active am Handy nicht greift). */
       + '.hmn-sheet .hmn-item.hmn-row:active,.hmn-sheet .hmn-item.hmn-row.hmn-press{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));transform:scale(.985);}'
@@ -539,40 +541,50 @@
       if (h < 24 || d < 1) return tr('Vor ' + h + ' Std.');
       return tr(d === 1 ? 'Gestern' : 'Vor ' + d + ' Tagen');
     }
+    /* Rechts je Raum nur das Auffälligste (Vorschlag 1, 08.10.2026), sonst nichts: Fenster/Tür offen
+       (orange) vor Licht an vor feuchter Luft. Alles aus den Werten der Raum-Badges – nichts erfinden.
+       Laufende Geräte bewusst nicht: Leistungswerte allein sagen das nicht verlässlich (Kühlschrank). */
     _roomSub(key, chips) {
+      var r = this._roomNote(key, chips);
+      return r ? r.text : '';
+    }
+    _roomNote(key, chips) {
       var PR = window.casoraPhoneRoom, h = this._hass;
-      if (!PR || !h || !key) return '';
+      if (!PR || !h || !key) return null;
       var v; try { v = PR.vars(key, chips); } catch (e) { v = null; }
-      if (!v) return '';
-      var st = h.states || {}, parts = [];
+      if (!v) return null;
+      var st = h.states || {};
+      if (v.show_security !== false) {
+        var win = 0, door = 0;
+        for (var i = 1; i <= 8; i++) {
+          var e = v['security_entity_' + i], s = e && st[e];
+          if (!s || s.state !== 'on' || e.indexOf('binary_sensor.') !== 0) continue;
+          var dc = String((s.attributes && s.attributes.device_class) || '');
+          if (/door|garage/.test(dc)) door++; else if (/window|opening/.test(dc) || !dc) win++;
+        }
+        if (win || door) {
+          var t = win && door ? T('Offen') : win ? (win === 1 ? T('Fenster offen') : T(win + ' Fenster offen')) : (door === 1 ? T('Tür offen') : T(door + ' Türen offen'));
+          return { text: t, warn: true };
+        }
+      }
       if (v.show_lights !== false && (v.light_entity_1 || v.light_group_entity)) {
         var cfg = []; for (var n = 1; n <= 10; n++) if (v['light_entity_' + n]) cfg.push(v['light_entity_' + n]);
-        var mems = function (e) { var m = st[e] && st[e].attributes && st[e].attributes.entity_id; return Array.isArray(m) ? m.filter(function (x) { return typeof x === 'string' && x.indexOf('light.') === 0; }) : []; };
+        var mems = function (x) { var m = st[x] && st[x].attributes && st[x].attributes.entity_id; return Array.isArray(m) ? m.filter(function (y) { return typeof y === 'string' && y.indexOf('light.') === 0; }) : []; };
         if (!cfg.length) { var g = mems(v.light_group_entity); cfg = g.length ? g : [v.light_group_entity]; }
-        var seen = {}, units = function (e) {
-          if (!e || seen[e]) return [];
-          var m = mems(e);
-          if (!m.length || !m.some(function (x) { return mems(x).length; })) return [e];
-          seen[e] = 1;
-          return m.reduce(function (a, x) { return a.concat(units(x)); }, []);
+        var seen = {}, units = function (x) {
+          if (!x || seen[x]) return [];
+          var m = mems(x);
+          if (!m.length || !m.some(function (y) { return mems(y).length; })) return [x];
+          seen[x] = 1;
+          return m.reduce(function (a, y) { return a.concat(units(y)); }, []);
         };
-        var all = cfg.reduce(function (a, e) { return a.concat(units(e)); }, []).filter(function (e, i, a) { return a.indexOf(e) === i; });
-        var on = all.filter(function (e) { return st[e] && st[e].state === 'on'; }).length;
-        if (all.some(function (e) { return st[e]; })) parts.push(on === 0 ? T('Alles aus') : on === 1 ? T('1 Licht an') : T(on + ' Lichter an'));
+        var all = cfg.reduce(function (a, x) { return a.concat(units(x)); }, []).filter(function (x, k, a) { return a.indexOf(x) === k; });
+        var on = all.filter(function (x) { return st[x] && st[x].state === 'on'; }).length;
+        if (on) return { text: on === 1 ? T('Licht an') : T(on + ' Lichter an') };
       }
-      if (v.show_climate !== false) {
-        var ts = [1, 2, 3, 4, 5].map(function (i) { return v['temp_sensor_' + i]; }).filter(Boolean)
-          .map(function (e) { return parseFloat(st[e] && st[e].state); }).filter(function (x) { return !isNaN(x); });
-        if (!ts.length && v.climate_entity_1 && st[v.climate_entity_1]) {
-          var ct = parseFloat(st[v.climate_entity_1].attributes && st[v.climate_entity_1].attributes.current_temperature);
-          if (!isNaN(ct)) ts = [ct];
-        }
-        if (ts.length) {
-          var lo = Math.round(Math.min.apply(null, ts)), hi = Math.round(Math.max.apply(null, ts));
-          parts.push(lo === hi ? lo + '°' : lo + '–' + hi + '°');
-        }
-      }
-      return parts.join(' · ');
+      var hs = v.humidity_sensor && st[v.humidity_sensor], hum = hs ? parseFloat(hs.state) : NaN;
+      if (!isNaN(hum) && hum >= 65) return { text: T('Feucht') + ' · ' + Math.round(hum) + ' %' };
+      return null;
     }
     /* Kreisfarbe einer Szene im Blatt: die Studio-Farbe wie überall am Desktop (Szenen-Badge, -Kacheln, -Reihe):
        eigene Farbe aus dem Studio, sonst die Standard-Szenenfarbe (--casora-scene-badge-color, im Casora-Design
@@ -638,8 +650,8 @@
         }
         if (rooms) {
           /* Zustand rechts neben dem Namen (eigene Rasterspalte), leer = ausgeblendet. */
-          var sub = self._roomSub(it.key, chips);
-          var s = el('span', 'hmn-sub', sub);
+          var note = self._roomNote(it.key, chips), sub = note ? note.text : '';
+          var s = el('span', 'hmn-sub' + (note && note.warn ? ' hmn-warn' : ''), sub);
           s.setAttribute('data-no-i18n', '');
           if (!sub) s.style.display = 'none';
           b.appendChild(s);
@@ -654,8 +666,9 @@
       m._sheetRefresh = rooms ? function () {
         var ch = self._chips();
         Array.prototype.forEach.call(list.querySelectorAll('.hmn-row[data-k]'), function (b) {
-          var s = b.querySelector('.hmn-sub'), t = self._roomSub(b.getAttribute('data-k'), ch);
+          var s = b.querySelector('.hmn-sub'), nt = self._roomNote(b.getAttribute('data-k'), ch), t = nt ? nt.text : '';
           if (s && s.textContent !== t) { s.textContent = t; s.style.display = t ? '' : 'none'; }
+          if (s) s.classList.toggle('hmn-warn', !!(nt && nt.warn));
         });
       } : function () {
         Array.prototype.forEach.call(list.querySelectorAll('.hmn-sub[data-sid]'), function (s) {
