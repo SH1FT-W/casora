@@ -902,6 +902,32 @@ window.casoraMenuGlass = {
       + ' var(--casora-menu-shadow, 0 8px 20px rgba(0,0,0,0.13))';
   },
 
+  // D1 (1.2): gemeinsamer Fensterrahmen. Setzt ein Design --casora-window-radius (Weich: Casora,
+  // Nebel), bekommen Glocke, Welle, ⋯-Menü und die Handy-Fenster denselben Rahmen: Radius, deckende
+  // Fläche, ein Schatten, kein Glas. Ohne Token (Standard, Glas) bleibt alles wie bisher → false.
+  frame: function (el) {
+    var cs = null, r = '';
+    [document.querySelector('home-assistant'), document.documentElement].some(function (src) {
+      if (!src) return false;
+      try { cs = getComputedStyle(src); r = cs.getPropertyValue('--casora-window-radius').trim(); } catch (e) { r = ''; }
+      return !!r;
+    });
+    if (!r) return false;
+    var pane = cs.getPropertyValue('--casora-window-pane').trim() || cs.getPropertyValue('--casora-menu-pane-webkit').trim();
+    var sh = cs.getPropertyValue('--casora-window-shadow').trim();
+    el.classList.add('casora-window');
+    el.style.setProperty('--casora-window-radius', r);
+    el.style.setProperty('--casora-menu-radius', r);
+    if (pane) el.style.setProperty('--casora-window-pane', pane);
+    if (sh) el.style.setProperty('--casora-window-shadow', sh);
+    el.style.borderRadius = r;
+    if (pane) el.style.backgroundColor = pane;
+    el.style.backdropFilter = 'none';
+    el.style.webkitBackdropFilter = 'none';
+    el.style.boxShadow = sh || el.style.boxShadow;
+    return true;
+  },
+
   enter: function (el) {
     el.style.opacity = '0';
     el.style.transformOrigin = 'top right';
@@ -10444,6 +10470,28 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
        3D-Kante. Ein Design setzt --casora-notify-shadow (weicher Schatten wie seine Karten);
        ohne Token bleibt der Glas-Schatten unverändert. */
     menu.style.boxShadow = 'var(--casora-notify-shadow, ' + menu.style.boxShadow + ')';
+    /* D1 (1.2): im Weich-Design derselbe Rahmen wie Welle, ⋯-Menü und Handy-Fenster – ohne Kopf,
+       Zeilen ohne Platten (52 hoch, Kreis 36), „Alles gelesen“ als Sand-Pille unter der Liste. */
+    var win = GLASS.frame ? GLASS.frame(menu) : false;
+    if (win && !document.getElementById('casora-window-notify-style')) {
+      var wst = document.createElement('style');
+      wst.id = 'casora-window-notify-style';
+      var W = '.casora-window.casora-notify-menu ';
+      wst.textContent = W + '.hui-plate{gap:0!important;}'
+        + W + '.hui-srow{background:transparent!important;box-shadow:none!important;min-height:52px!important;'
+        +   'padding:8px 14px 8px 8px!important;border-radius:26px!important;}'
+        + W + '.hui-srow.hui-tap:active{background:var(--casora-menu-hover, rgba(140,115,90,0.08))!important;}'
+        + '@media (hover:hover){' + W + '.hui-srow.hui-tap:hover{background:var(--casora-menu-hover, rgba(140,115,90,0.08))!important;}}'
+        + W + '.hui-inner>:first-child{width:36px!important;height:36px!important;min-width:36px;}'
+        + W + '.hui-inner>:nth-child(2)>:first-child{font-size:15px!important;font-weight:600!important;}'
+        + W + '.hui-sub{font-size:13px!important;}'
+        + W + '.casora-notify-read{display:block;margin:4px auto 12px;border:0;cursor:pointer;width:max-content;'
+        +   'padding:8px 16px;border-radius:999px;background:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));'
+        +   'font:600 13px/16px var(--primary-font-family, system-ui);letter-spacing:-0.01em;'
+        +   'color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));}'
+        + W + '.casora-notify-read:active{transform:scale(.97);}';
+      (document.head || document.documentElement).appendChild(wst);
+    }
 
     var inner = document.createElement('div');
     // Safari lets a descendant's background paint past a rounded parent's radius.
@@ -10487,7 +10535,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       head.style.alignItems = 'center';
       head.style.padding = '6px calc(var(--casora-popup-row-pad-x, 16px) + 8px) 0';
     }
-    if (unread() || softBell) inner.appendChild(head);
+    if (!win && (unread() || softBell)) inner.appendChild(head);
 
     var body = document.createElement('div');
     Object.assign(body.style, {
@@ -10534,9 +10582,16 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     body.style.padding = 'var(--casora-notify-pad, 0px)';
     /* Ohne Kopfzeile („Alles gelesen“ fällt weg, wenn alles gelesen ist) oben derselbe Abstand wie seitlich. */
     if (!unread()) body.style.paddingTop = 'var(--casora-notify-pad-solo-top, 0px)';
+    if (win) body.style.padding = '8px';
     body.style.boxSizing = 'border-box';
     body.innerHTML = (window.casoraTr || function (x) { return x; })(sections());
     inner.appendChild(body);
+    if (win && unread()) {
+      clear.className = 'casora-notify-read';
+      clear.removeAttribute('style');
+      if (body.style.padding) body.style.paddingBottom = '4px';
+      inner.appendChild(clear);
+    }
     menu.appendChild(inner);
     document.body.appendChild(menu);
     fade();

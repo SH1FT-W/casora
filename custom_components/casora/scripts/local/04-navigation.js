@@ -140,7 +140,7 @@
       /* Schwebend über der Leiste statt ganzflächig (Wunsch 08.10.2026: „wie früher kleiner“): Breite und Höhe
          nach Inhalt (mittig, 260 bis 420 px), ringsum rund, die Leiste bleibt sichtbar darunter. */
       + '.hmn-menu.hmn-sheet{left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom, 0px) * 0.4);margin:0 auto;width:max-content;min-width:260px;max-width:min(420px, calc(100vw - 24px));padding:0;overscroll-behavior:contain;'
-      +   'border-radius:28px !important;box-shadow:0 18px 44px -14px rgba(60,40,20,0.35) !important;'
+      +   'border-radius:var(--casora-window-radius, 28px) !important;box-shadow:var(--casora-window-shadow, 0 18px 44px -14px rgba(60,40,20,0.35)) !important;'
       +   'display:flex;flex-direction:column;overflow:hidden;opacity:0;'
       +   'max-height:min(520px, calc(100vh - max(env(safe-area-inset-top, 0px), 12px) - 150px));'
       +   'max-height:min(520px, calc(100dvh - max(env(safe-area-inset-top, 0px), 12px) - 150px));'
@@ -539,6 +539,8 @@
       var bg0 = m.style.backgroundColor || 'transparent';
       if (bg0.indexOf('menu-pane-webkit') < 0) m.style.backgroundColor = 'var(--casora-mnav-menu-pane, ' + bg0 + ')';
       m.style.setProperty('--casora-menu-shadow', 'var(--casora-mnav-menu-shadow, var(--casora-elevation-floating-phone, 0 10px 26px rgba(0,0,0,0.18)))');
+      /* D1 (1.2): derselbe Fensterrahmen wie Glocke, Welle und ⋯-Menü (Radius, deckend, ein Schatten). */
+      if (window.casoraMenuGlass && window.casoraMenuGlass.frame) window.casoraMenuGlass.frame(m);
       var el = function (tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
       var title = T(rooms ? 'Räume' : 'Szenen'), n = items.length;
       m.setAttribute('aria-label', title);
