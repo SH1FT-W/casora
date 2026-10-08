@@ -2742,6 +2742,13 @@ function applyScenePick(cfg, rooms) {
       if (!Object.keys(o.variables).length) delete o.variables;
     }
   });
+  // Alte Kopien der Szenenfarben an Karten (Umzug, ältere Stände) weg – es gilt die Vorlage
+  // casora_scene_row; Quelle im Studio bleiben die Raum-Variablen (casora_room). 1.1.2
+  eachObject(cfg.views, (o) => {
+    const v = o.variables;
+    if (v && typeof v === "object" && !Array.isArray(v) && "scene_colors" in v
+      && ![].concat(o.template || []).includes("casora_room")) delete v.scene_colors;
+  });
 }
 
 // Die Kamera-Privatsphäre ist raus (03.10.2026): Kachel und Badges werten keinen
