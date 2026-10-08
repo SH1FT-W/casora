@@ -203,8 +203,10 @@ Casora:
   badge-font-size-mobile: 12.5px
   # Symbolkreis so hoch wie Titel+Unterzeile (15 + 1 + 12,9 px): sonst bestimmt der Text die
   # Pillenhöhe (38,9) und der 26-px-Kreis sitzt oben/unten 6,4, links aber 5 px vom Rand.
-  # Mit 29 px gilt rundum 5 px wie am Desktop; Pillen mit nur einer Zeile werden gleich hoch.
-  badge-icon-size-mobile: 29px
+  # D13b (1.2): 28 statt des krummen 29 (Raster, Entscheidung nach Bildvergleich badge-28/29/30).
+  badge-icon-size-mobile: 28px
+  # D13a (1.2): Symbolkreise der Kacheln ohne Schatten (Licht und Luftreiniger hatten nie einen)
+  casora-icon-circle-shadow: none
   casora-badge-glass-rim: var(--button-card-box-shadow)
   casora-badge-shadow-mobile: var(--button-card-box-shadow-mobile)
   # Handy-Unterreihen (Klima-Ring-Badges): Pille mit Ruhe-Schatten wie die Haupt-Badges
