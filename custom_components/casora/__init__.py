@@ -361,6 +361,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN]["media_pause"] = pause = PauseTracker(hass)
     await pause.async_start()
+    # Tanken im Auto-Popup (tanken.py): Sensoren je Auto/Kraftstoff, Abruf nur mit Einrichtung.
+    from .tanken import async_setup_tanken
+
+    await async_setup_tanken(hass)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # Push bei neuen Casora-Versionen (update_push.py) – erst jetzt steht fest, ob HACS Casora verwaltet.
     hass.data[DOMAIN]["update_push"] = await async_start_update_push(hass, entry)
@@ -422,4 +426,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     upush = hass.data.get(DOMAIN, {}).pop("update_push", None)
     if upush:
         upush.stop()
+    tk = hass.data.get(DOMAIN, {}).pop("tanken", None)
+    if tk:
+        tk.stop()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
