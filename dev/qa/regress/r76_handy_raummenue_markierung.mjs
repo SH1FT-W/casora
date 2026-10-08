@@ -37,8 +37,10 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
       const on = menu.querySelector('.hmn-item.on');
       if (!on) { nav._closeMenu(); return { wait: true }; }
       const off = [...menu.querySelectorAll('.hmn-item:not(.on)')][0];
-      // Seit Entwurf A (08.10.2026) ist das Menü im Casora-Look ein Blatt von unten: die Zeilen liegen
-      // in .hmn-list unter Griff und Überschrift. Oben zählt dort der Kopf, nicht der Rand (r82 misst das Blatt).
+      // Seit 08.10.2026 ist das Menü im Casora-Look ein Blatt von unten (Richtung C, r82 misst das Blatt): die
+      // Zeilen liegen in .hmn-list unter Griff und Überschrift. Oben zählt dort der Kopf, nicht der Rand, und die
+      // Markierung ist eine Pille unterhalb der Blattecke – konzentrisch ist dort der Symbolkreis in der Pille
+      // (Pillenradius − Abstand links = Kreisradius), nicht Blatt-Radius minus Abstand.
       const sheet = menu.classList.contains('hmn-sheet'), box = sheet ? menu.querySelector('.hmn-list') : menu;
       const R = (e) => e.getBoundingClientRect();
       const cs = (e) => getComputedStyle(e);
@@ -62,7 +64,8 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   console.log(tag, JSON.stringify(m));
   const pad = m.left;
   await check(`${tag}: Abstand oben = links = rechts`, (m.sheet || close(m.top, pad)) && close(m.right, pad), m);
-  await check(`${tag}: Radius konzentrisch (Menü ${m.menuR} − ${pad} = Markierung ${m.onR})`, close(m.onR, m.menuR - pad), m);
+  if (m.sheet) await check(`${tag}: Pille konzentrisch zum Symbolkreis (${Math.min(m.onR, m.a.rowH / 2)} − ${m.a.icL} = ${m.a.icW / 2})`, close(Math.min(m.onR, m.a.rowH / 2) - m.a.icL, m.a.icW / 2, 2), m);
+  else await check(`${tag}: Radius konzentrisch (Menü ${m.menuR} − ${pad} = Markierung ${m.onR})`, close(m.onR, m.menuR - pad), m);
   await check(`${tag}: Symbolkreis links so weit wie zum Text`, close(m.a.icL, m.a.gap), m.a);
   await check(`${tag}: Symbolkreis oben/unten mittig`, close(m.a.icTop, (m.a.rowH - m.a.icH) / 2), m.a);
   await check(`${tag}: Symbol und Text springen nicht zwischen den Zeilen`, m.b && close(m.a.icL, m.b.icL) && close(m.a.txL, m.b.txL), [m.a, m.b]);
