@@ -128,15 +128,14 @@ class CasoraSwipeCard extends HTMLElement {
         overflow: visible;
       }
       .slide > * { display: block; height: 100%; width: 100%; }
-      /* Oben mittig im Innenabstand statt unten (01.10.2026): unten lagen die Punkte auf
-         dem Untertitel der flachen Handy-Kachel („49 % Feuchtigkeit“). Oben mittig ist bei
-         flachen wie großen Kacheln frei (Symbol links, Schalter rechts). */
+      /* Wieder unten mittig (Wunsch 08.10.2026); vorher oben, weil sie unten auf dem Untertitel
+         der flachen Handy-Kachel lagen – deshalb nur knapp über der Unterkante. */
       /* Punkte antippbar (03.10.2026): jeder Punkt hat eine 10 px größere, unsichtbare
          Trefferfläche; sie überlappen sich, damit der sichtbare Abstand 5 px bleibt. */
       #dots {
         position: absolute;
         left: 50%;
-        top: calc(var(--casora-swipe-dots-top, 6px) - 5px);
+        bottom: calc(var(--casora-swipe-dots-bottom, 4px) - 5px);
         transform: translateX(-50%);
         display: flex;
         z-index: 2;

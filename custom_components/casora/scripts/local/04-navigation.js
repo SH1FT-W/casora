@@ -147,16 +147,9 @@
       +   'transform:translateY(10px) scale(.98);transform-origin:50% 100%;transition:transform .26s cubic-bezier(.2,.9,.25,1), opacity .18s ease;color:var(--casora-mnav-fg-on, #fff);}'
       + '.hmn-menu.hmn-sheet.open{transform:none;opacity:1;}'
       + '.hmn-menu.hmn-sheet.hmn-drag{transition:none;}'
-      + '.hmn-sheet .hmn-grip{display:none;}'
-      + '.hmn-grip{flex:none;width:36px;height:4px;border-radius:2px;margin:10px auto 0;background:var(--casora-popup-grabber, var(--casora-soft-grabber, rgba(120,100,80,0.30)));}'
-      + '.hmn-head{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:14px 20px 4px;'
-      +   'touch-action:none;cursor:grab;}'
-      + '.hmn-title{font-size:19px;line-height:24px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;}'
-      + '.hmn-count{font-size:12px;line-height:16px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;'
-      +   'color:var(--casora-soft-label, var(--casora-mnav-fg-sub, rgba(255,255,255,0.55)));}'
       /* Liste: 10 px Luft zum Blattrand; position:relative, damit offsetTop der Zeilen in der Liste zählt (Mittigstellen). */
       + '.hmn-list{position:relative;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;'
-      +   'padding:4px 8px 8px;box-sizing:border-box;}'
+      +   'padding:8px;box-sizing:border-box;}'
       + '.hmn-empty{padding:4px 10px 12px;font-size:15px;color:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));}'
       /* Zeile (Räume und Szenen gleich): Kreis 36 | Name | Zustand rechts. Innenabstand links 8 wie
          Kreis-Radius 18 zur Pille 26; Abstand Kreis–Text ebenfalls 8. */
@@ -549,11 +542,7 @@
       var el = function (tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
       var title = T(rooms ? 'Räume' : 'Szenen'), n = items.length;
       m.setAttribute('aria-label', title);
-      m.appendChild(el('div', 'hmn-grip'));
-      var head = el('div', 'hmn-head');
-      head.appendChild(el('span', 'hmn-title', title));
-      if (n) head.appendChild(el('span', 'hmn-count', rooms ? T(n === 1 ? '1 Raum' : n + ' Räume') : T(n === 1 ? '1 Szene' : n + ' Szenen')));
-      m.appendChild(head);
+      /* Ohne Überschrift und Anzahl (Wunsch 08.10.2026): nur die Liste, der Titel bleibt als aria-label. */
       var list = el('div', 'hmn-list');
       m.appendChild(list);
       var tap = function (b, it) {
@@ -605,13 +594,29 @@
           var row = s.closest('.hmn-row');
           if (row) row.classList.toggle('on', on);
         });
+        if (m._fit) m._fit();
       };
       this._scrimOpen();
       if (this._bar) this._bar.classList.add('hmn-up');
       document.body.appendChild(m);
       this._render();
       /* Breite nach Inhalt beim Öffnen festhalten: ändert sich ein Zustand rechts (Fenster geht auf), springt das Fenster nicht. */
-      m.style.width = Math.ceil(m.getBoundingClientRect().width) + 'px';
+      /* Breite nach Inhalt; WebKit rechnet die Namensspalte einige Pixel zu schmal – den Fehlbetrag der
+         längsten abgeschnittenen Zeile draufschlagen (höchstens bis max-width). */
+      var fit = function () {
+        m.style.width = '';
+        var w = Math.ceil(m.getBoundingClientRect().width), miss = 0;
+        m.style.width = w + 'px';
+        Array.prototype.forEach.call(list.querySelectorAll('.hmn-name'), function (x) { miss = Math.max(miss, x.scrollWidth - x.clientWidth); });
+        if (miss > 0) m.style.width = (w + miss + 2) + 'px';
+      };
+      fit();
+      /* Wird ein Wert rechts länger („Vor 12 Std.“ → „Gestern“) und schneidet einen Namen ab, darf das Fenster nachwachsen. */
+      m._fit = function () {
+        if (Array.prototype.some.call(list.querySelectorAll('.hmn-name'), function (x) { return x.scrollWidth > x.clientWidth + 1; })) fit();
+      };
+      /* Schrift kann nach dem ersten Messen noch nachladen (Namen dann breiter). */
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (m.isConnected) m._fit(); });
       /* Mehr Zeilen als Platz: Liste so kürzen, dass die letzte sichtbare Zeile halb angeschnitten ist
          (Scroll-Hinweis wie in iOS), und den offenen Raum in die Mitte holen. */
       var first = list.firstElementChild;
@@ -643,9 +648,6 @@
         drag = false;
       };
       /* Maus/Stift: am Kopf ziehen. */
-      head.addEventListener('pointerdown', function (e) { if (e.pointerType === 'touch') return; start(e.clientY); try { head.setPointerCapture(e.pointerId); } catch (x) {} });
-      head.addEventListener('pointermove', function (e) { if (e.pointerType !== 'touch') move(e.clientY); });
-      head.addEventListener('pointerup', end); head.addEventListener('pointercancel', end);
       /* Finger: überall im Blatt. In der Liste nur, wenn sie oben steht und nach unten gezogen wird –
          sonst scrollt die Liste selbst. Was das Blatt nicht braucht, geht nie an den Hintergrund. */
       var inList = false;

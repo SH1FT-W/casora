@@ -3,8 +3,8 @@
 // Wunsch (08.10.2026, Richtung C „Leicht“ für 1.1.3): Räume- und Szenen-Menü der Handy-Leiste kommen als
 // Blatt von unten wie ein Casora-Handy-Popup. Erwartet (Casora hell und dunkel, Casora Nebel hell, iPhone 393 × 852):
 // Seit 08.10.2026 abends schwebendes Fenster über der Leiste (Breite nach Inhalt, mittig, ringsum rund 28, höchstens 520 hoch,
-// kein Griff, Leiste bleibt sichtbar) statt ganzflächigem Blatt.
-// Titel mittig mit Etikett „10 RÄUME“ (12/700 Versalien). Zeilen 52 px ohne Platten, Symbolkreis 36 in Sand mit
+// kein Griff, keine Überschrift/Anzahl, Leiste bleibt sichtbar) statt ganzflächigem Blatt.
+// Zeilen 52 px ohne Platten, Symbolkreis 36 in Sand mit
 // dunkler Glyphe, Name 15/600, Zustand rechts als kleiner Wert (13 px). Nur der offene Raum hat eine Fläche
 // (--casora-entity-background-active, Kreis in Ton). Zeilen 8 px vom Fensterrand (links = rechts), Kreis links =
 // oben = Abstand zum Text (8), Pille konzentrisch zum Kreis, Symbol/Text springen zwischen den Zeilen nicht.
@@ -48,7 +48,8 @@ const measure = (page, kind) => page.evaluate((kind) => {
       subFs: sub ? parseFloat(cs(sub).fontSize) : null, subMidY: s ? (s.top + s.height / 2) - (r.top + r.height / 2) : null,
       key: b.getAttribute('data-k'), name: nm ? nm.textContent : '', tone: b.classList.contains('hmn-tone') };
   };
-  const grip = m.querySelector('.hmn-grip'), g = R(grip), title = m.querySelector('.hmn-title'), count = m.querySelector('.hmn-count');
+  const head = m.querySelector('.hmn-grip, .hmn-head, .hmn-title, .hmn-count');
+  const cut = items.filter((b) => { const x = b.querySelector('.hmn-name'); return x && x.scrollWidth > x.clientWidth + 1; }).map((b) => b.textContent);
   // Vergleichszeile: ein anderer Raum MIT Zustand (sonst misst die Zustands-Prüfung ins Leere – je nach Testhaus
   // hat der erste andere Raum weder Licht noch Temperatur).
   const hasSub = (x) => { const e = x.querySelector('.hmn-sub'); return !!e && e.style.display !== 'none' && e.textContent.trim() !== ''; };
@@ -56,12 +57,9 @@ const measure = (page, kind) => page.evaluate((kind) => {
   const mid = (e) => R(e).left + R(e).width / 2 - (sr.left + sr.width / 2);
   const last = items.filter((b) => R(b).top < lr.bottom - 1).pop();
   return {
-    kind, vw: innerWidth, vh: innerHeight,
+    kind, vw: innerWidth, vh: innerHeight, head: !!head, cut,
     sheet: { left: sr.left, right: innerWidth - sr.right, bottom: innerHeight - sr.bottom, top: sr.top,
       radius: parseFloat(cs(m).borderTopLeftRadius), radiusBottom: parseFloat(cs(m).borderBottomLeftRadius), bg: cs(m).backgroundColor },
-    grip: { w: g.width, h: g.height, top: g.top - sr.top, mid: mid(grip), bg: cs(grip).backgroundColor },
-    title: title ? { mid: mid(title), fs: parseFloat(cs(title).fontSize), fw: +cs(title).fontWeight } : null,
-    count: count ? { text: count.textContent, mid: mid(count), fs: parseFloat(cs(count).fontSize), fw: +cs(count).fontWeight, tt: cs(count).textTransform } : null,
     list: { top: lr.top, bottom: lr.bottom, ch: list.clientHeight, sh: list.scrollHeight, st: list.scrollTop },
     n: items.length, on: row(on), off: row(off), first: row(items[0]), second: row(items[1]),
     lastVisible: last ? lr.bottom - R(last).top : null,
@@ -116,22 +114,12 @@ const swipeInPage = async () => {
     fire(row, 'touchend', y + 150);
     await new Promise((r) => setTimeout(r, 500));
     const closedList = !document.querySelector('.hmn-menu.open');
-    // Noch einmal am Kopf.
-    nav._bRooms.click();
-    await new Promise((r) => setTimeout(r, 600));
-    const m2 = document.querySelector('.hmn-menu.hmn-sheet.open'); if (!m2) return { open: true, touch: true, scrimBlocked, closedList, closedHead: null };
-    const head = m2.querySelector('.hmn-head'), y2 = head.getBoundingClientRect().top + 10;
-    fire(head, 'touchstart', y2);
-    for (let i = 1; i <= 6; i++) { fire(head, 'touchmove', y2 + i * 25); await new Promise((r) => setTimeout(r, 16)); }
-    fire(head, 'touchend', y2 + 150);
-    await new Promise((r) => setTimeout(r, 500));
-    return { open: true, touch: true, scrimBlocked, closedList, closedHead: !document.querySelector('.hmn-menu.open') };
+    return { open: true, touch: true, scrimBlocked, closedList };
   };
 const swipeChecks = async (tag, swipe) => {
   if (swipe.touch === false) { console.log('  info   ' + tag + ': Touch-Ereignisse in diesem Browser nicht nachstellbar – Wischen nicht geprüft'); return; }
   await check(`${tag}: Wischen auf dem Hintergrund scrollt die Seite nicht`, swipe.scrimBlocked === true, swipe);
   await check(`${tag}: Liste oben nach unten wischen schließt das Blatt`, swipe.closedList === true, swipe);
-  await check(`${tag}: Am Kopf nach unten wischen schließt das Blatt`, swipe.closedHead === true, swipe);
 };
 
 for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel', false]]) {
@@ -150,14 +138,12 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   // ── Räume ──
   const m = await openSheet(page, 'rooms');
   await need(`${tag}: Räume als Blatt`, m && m.kind === 'rooms' && m.on && m.off, m);
-  console.log(tag, 'Räume', JSON.stringify({ sheet: m.sheet, grip: m.grip, title: m.title, count: m.count, on: m.on, off: m.off, list: m.list }));
+  console.log(tag, 'Räume', JSON.stringify({ sheet: m.sheet, on: m.on, off: m.off, list: m.list }));
   await check(`${tag}: Fenster schwebt mittig über der Leiste (Breite nach Inhalt, mind. 12 px seitlich)`, near(m.sheet.left, m.sheet.right) && m.sheet.left >= 11 && m.sheet.bottom > 60 && m.sheet.top > 100, m.sheet);
   await check(`${tag}: Fenster ringsum rund (28)`, near(m.sheet.radius, 28, 0) && near(m.sheet.radiusBottom, 28, 0), m.sheet);
   await check(`${tag}: Blatt deckend (kein durchscheinender Grund)`, !clear(m.sheet.bg), m.sheet.bg);
-  await check(`${tag}: kein Griff (schwebendes Fenster)`, m.grip && m.grip.w === 0, m.grip);
-  await check(`${tag}: Titel mittig 19/700, Etikett mittig 12/700 Versalien`,
-    m.title && m.count && near(m.title.mid, 0) && near(m.title.fs, 19) && m.title.fw >= 700 && near(m.count.mid, 0) && near(m.count.fs, 12) && m.count.fw >= 700 && m.count.tt === 'uppercase', [m.title, m.count]);
-  await check(`${tag}: Etikett „${m.count.text}“`, new RegExp('^' + m.n + ' (Räume|Raum)$').test(m.count.text), m.count.text);
+  await check(`${tag}: ohne Überschrift, Anzahl und Griff`, !m.head, m.head);
+  await check(`${tag}: kein Raumname abgeschnitten`, !m.cut.length, m.cut);
   await geometry(tag, m, 'Räume:');
   await check(`${tag}: andere Zeilen ohne Platte, Kreis in Sand mit dunkler Glyphe (kein Ton)`,
     clear(m.off.bg) && !clear(m.off.icBg) && m.off.icBg !== m.on.icBg && m.off.icColor !== m.on.icColor, [m.off.bg, m.off.icBg, m.off.icColor, m.on.icBg]);
@@ -200,7 +186,7 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   const s = await openSheet(page, 'scenes');
   await need(`${tag}: Szenen als Blatt`, s && s.kind === 'scenes' && s.n >= 2, s);
   console.log(tag, 'Szenen', JSON.stringify({ sheet: s.sheet, first: s.first, second: s.second, tones: s.tones }));
-  await check(`${tag}: Etikett „${s.count.text}“`, new RegExp('^' + s.n + ' (Szenen|Szene)$').test(s.count.text), s.count.text);
+  await check(`${tag}: Szenen ohne Überschrift, kein Name abgeschnitten`, !s.head && !s.cut.length, [s.head, s.cut]);
   // Szenen zeigen rechts, wann sie zuletzt liefen – wie die Szenen-Badges („Vor 5 Min.“, „Gestern“, „Noch nie“);
   // eine aktive Szene zeigt „Aktiv“.
   const agos = await page.evaluate(() => [...document.querySelectorAll('.hmn-sheet .hmn-sub[data-sid]')].map((e) => ({ t: e.textContent.trim(), w: e.getBoundingClientRect().width })));
