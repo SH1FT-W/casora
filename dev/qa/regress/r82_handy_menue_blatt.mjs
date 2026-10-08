@@ -268,9 +268,27 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   const bar = await page.evaluate(() => {
     const b = document.querySelector('.hmn-bar'); if (!b) return null;
     const r = b.getBoundingClientRect(), cs = getComputedStyle(b);
-    return { h: Math.round(r.height), radius: cs.borderTopLeftRadius, ic: b.classList.contains('hmn-ic'), op: cs.opacity, under: b.classList.contains('hmn-under') };
+    const btn = (el) => { const q = el.getBoundingClientRect(), c = el.querySelector('.hmn-bic'), i = c.getBoundingClientRect(), g = c.firstElementChild, s = getComputedStyle(el), sp = el.querySelector(':scope>span:not(.hmn-bic)');
+      return { x: q.left - r.left, w: q.width, h: q.height, radius: parseFloat(s.borderTopLeftRadius), bg: s.backgroundColor, shadow: s.boxShadow,
+        icL: i.left - q.left, icTop: i.top - q.top, icW: i.width, icBg: getComputedStyle(c).backgroundColor, icColor: getComputedStyle(c).color,
+        glyph: g ? g.getBoundingClientRect().width : null, glyphColor: g ? (g.classList.contains('hmn-svg') ? getComputedStyle(g).backgroundColor : getComputedStyle(g).color) : null,
+        label: sp && getComputedStyle(sp).display !== 'none' ? { fs: parseFloat(getComputedStyle(sp).fontSize), fw: +getComputedStyle(sp).fontWeight, gap: sp.getBoundingClientRect().left - i.right, right: q.right - sp.getBoundingClientRect().right } : null }; };
+    const on = b.querySelector('.hmn-btn.on'), off = b.querySelector('.hmn-btn:not(.on)');
+    return { h: Math.round(r.height), radius: cs.borderTopLeftRadius, pad: parseFloat(cs.paddingLeft), ic: b.classList.contains('hmn-ic'), op: cs.opacity, under: b.classList.contains('hmn-under'),
+      on: on ? btn(on) : null, off: off ? btn(off) : null };
   });
   await check(`${tag}: Leiste unverändert (nicht 40 px, nicht 50 % rund) und nach dem Schließen wieder da`, bar && bar.h > 44 && bar.radius !== '50%' && !bar.under && +bar.op === 1, bar);
+  // Richtung 1 „Weiße Pille“ (08.10.2026): Platte 60/30, Innenrand 6, Tasten 48, Radius 24 = 30 − 6; ruhende Taste
+  // mit Sand-Kreis 36 (wie die C-Zeile) und dunkler Glyphe 22; aktive Taste weiße Pille mit Ton-Kreis, weißer Glyphe,
+  // Name 15/600, Kreis 6 px vom Rand (18 = 24 − 6, konzentrisch).
+  console.log(tag, 'Leiste', JSON.stringify(bar));
+  await check(`${tag}: Leiste 60/30, Innenrand 6, Tasten 48 mit Radius 24`, bar.ic && near(bar.h, 60) && bar.radius === '30px' && near(bar.pad, 6) && near(bar.on.h, 48) && near(bar.off.h, 48) && near(bar.on.radius, 24) && near(bar.off.radius, 24), bar);
+  await check(`${tag}: ruhende Taste 58 breit, Sand-Kreis 36 mittig (wie die C-Zeile), dunkle Glyphe 22`,
+    near(bar.off.w, 58) && near(bar.off.icW, 36) && near(bar.off.icL, (bar.off.w - 36) / 2) && near(bar.off.icTop, 6) && bar.off.icBg === m.off.icBg && near(bar.off.glyph, 22) && bar.off.glyphColor === m.off.icColor && clear(bar.off.bg), [bar.off, m.off.icBg]);
+  await check(`${tag}: aktive Taste weiße Pille wie der offene Raum im Blatt, Kreis in Ton mit weißer Glyphe`,
+    bar.on.bg === m.on.bg && bar.on.shadow === m.on.shadow && bar.on.icBg === m.on.icBg && /^rgb\(255, 255, 255\)/.test(bar.on.glyphColor), [bar.on, m.on.bg, m.on.icBg]);
+  await check(`${tag}: aktive Taste konzentrisch (Kreis 6 px vom Rand = Radius 24 − 18), Name 15/600, 10 px nach dem Kreis, 18 px zum Rand`,
+    near(bar.on.icL, 6) && near(bar.on.icTop, 6) && near(bar.on.radius - bar.on.icL, bar.on.icW / 2) && bar.on.label && near(bar.on.label.fs, 15) && bar.on.label.fw >= 600 && near(bar.on.label.gap, 10) && near(bar.on.label.right, 18), bar.on);
   // Hotfix 1.1.2: Wischen nach unten schließt das Blatt – am Kopf und in der Liste, wenn sie oben steht;
   // Wischen auf dem Hintergrund scrollt die Seite nicht.
   const swipe = await page.evaluate(swipeInPage);

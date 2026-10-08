@@ -77,7 +77,7 @@
       + '.hmn-btn .hmn-svg{width:24px;height:24px;display:block;background:currentColor;-webkit-mask:var(--hmn-svg) center/contain no-repeat;mask:var(--hmn-svg) center/contain no-repeat;}'
       + '.hmn-btn.on ha-icon,.hmn-btn.on .hmn-svg{color:var(--casora-mnav-icon-on, var(--casora-color-teal, #00C3D0));}'
       + '.hmn-btn:active{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));}'
-      + '.hmn-btn>span{max-width:100%;padding:0 4px;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+      + '.hmn-btn>span:not(.hmn-bic){max-width:100%;padding:0 4px;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
       + '.hmn-menu{position:fixed;z-index:152;transform:translateY(8px);opacity:0;'
       +   'bottom:calc(76px + env(safe-area-inset-bottom, 0px) * 0.4);width:max-content;min-width:170px;max-width:calc(100vw - 24px);box-sizing:border-box;padding:var(--casora-mnav-menu-pad, 6px);'
       +   'border-radius:26px;background:var(--casora-mnav-menu-bg, rgba(40,40,44,0.72));backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);'
@@ -111,17 +111,25 @@
       + '.hmn-item.on .hmn-svg{background:color-mix(in srgb, var(--casora-mi-tone, transparent) var(--casora-menu-tone-mix, 0%), var(--casora-color-teal, #00C3D0));}'
 
       + '.hmn-item:active{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));}'
-      /* Weich (1.0.7, Entwurf B „Nur Symbole“): kompakte Kapsel nur mit Symbolen; das aktive Ziel
-         wird zur Pille mit Wort (Farbe aus --casora-mnav-pill, in Weich der helle Sand der Desktop-Raumleiste).
-         Klasse hmn-ic setzt _render(), solange das Weich-Design aktiv ist. */
+      /* Weich (1.0.7, Entwurf B „Nur Symbole“): kompakte Kapsel nur mit Symbolen; das aktive Ziel wird zur
+         Pille mit Wort. Richtung 1 „Weiße Pille“ (08.10.2026, passend zum C-Blatt): jede Taste trägt den
+         Sand-Kreis 36 der C-Zeile (hmn-bic) mit dunkler Glyphe 22; die aktive Taste ist die gewählte C-Zeile –
+         weiße Pille (--casora-entity-background-active, weicher Schatten), Kreis in Ton mit weißer Glyphe,
+         Name 15/600. Maße bleiben: Platte 60/30, Innenrand 6, Tasten 58 × 48, Radius 24 = 30 − 6,
+         Kreis 18 = 24 − 6 (konzentrisch). Klasse hmn-ic setzt _render(), solange das Weich-Design aktiv ist. */
+      + '.hmn-bic{display:contents;}'
       + '.hmn-bar.hmn-ic{width:auto;max-width:calc(100vw - 32px);gap:2px;}'
-      + '.hmn-bar.hmn-ic .hmn-btn{flex:none;width:58px;flex-direction:row;gap:8px;padding:0;}'
-      + '.hmn-bar.hmn-ic .hmn-btn>span{display:none;}'
-      + '.hmn-bar.hmn-ic .hmn-btn:not(.on){opacity:var(--casora-mnav-idle-opacity, 1);}'
-      + '.hmn-bar.hmn-ic .hmn-btn.on{width:auto;min-width:58px;padding:0 20px 0 16px;'
-      +   'background:var(--casora-mnav-pill, var(--primary-color, #B67A50));color:var(--casora-mnav-pill-ink, #fff);}'
-      + '.hmn-bar.hmn-ic .hmn-btn.on>span{display:block;font-size:14.5px;font-weight:var(--casora-mnav-pill-weight, 600);padding:0;letter-spacing:-0.01em;max-width:150px;}'
-      + '.hmn-bar.hmn-ic .hmn-btn.on ha-icon,.hmn-bar.hmn-ic .hmn-btn.on .hmn-svg{color:var(--casora-mnav-pill-ink, #fff);flex:none;}'
+      + '.hmn-bar.hmn-ic .hmn-btn{flex:none;width:58px;flex-direction:row;gap:10px;padding:0;}'
+      + '.hmn-bar.hmn-ic .hmn-btn>span:not(.hmn-bic){display:none;}'
+      + '.hmn-bar.hmn-ic .hmn-bic{display:flex;flex:none;box-sizing:border-box;width:36px;height:36px;border-radius:50%;align-items:center;justify-content:center;'
+      +   'background:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, var(--casora-mnav-fg, currentColor));transition:background .2s ease,color .2s ease;}'
+      + '.hmn-bar.hmn-ic .hmn-bic ha-icon{--mdc-icon-size:22px;width:22px;height:22px;color:inherit;}'
+      + '.hmn-bar.hmn-ic .hmn-bic .hmn-svg{width:22px;height:22px;color:inherit;background:currentColor;}'
+      + '.hmn-bar.hmn-ic .hmn-btn.on{width:auto;min-width:58px;padding:0 18px 0 6px;'
+      +   'background:var(--casora-entity-background-active, var(--casora-mnav-pill, #FFFDF9));color:var(--casora-entity-name-active, var(--casora-mnav-pill-ink, #2E2721));'
+      +   'box-shadow:var(--button-card-box-shadow-active-mobile, none);}'
+      + '.hmn-bar.hmn-ic .hmn-btn.on .hmn-bic{background:var(--primary-color, #B67A50);color:#fff;}'
+      + '.hmn-bar.hmn-ic .hmn-btn.on>span:not(.hmn-bic){display:block;font-size:15px;font-weight:600;padding:0;letter-spacing:-0.01em;max-width:150px;}'
       + '.hmn-bar.hmn-ic .hmn-btn:not(.on):active{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));}'
       + '.hmn-bar.hmn-ic .hmn-btn.on:active{filter:brightness(.94);}'
       /* Casora/Weich (Richtung C „Leicht“, 08.10.2026): Räume und Szenen als Blatt wie ein Casora-Handy-Popup –
@@ -195,7 +203,7 @@
     /* Home-Knopf heißt wie die Übersicht: eigener Name (home_label, vom Studio gesetzt) wie getippt,
        sonst „Home“ übersetzt („Zuhause“) – wie die Pille der Desktop-Leiste. */
     _homeText() {
-      var s = this._bHome && this._bHome.querySelector(':scope > span');
+      var s = this._bHome && this._bHome.querySelector(':scope > span:not(.hmn-bic)');
       if (!s) return;
       var own = this._cfg && typeof this._cfg.home_label === 'string' ? this._cfg.home_label.trim() : '';
       /* Regel wie überall (casoraRoomName): übersetzt nur mit home_auto (von Casora angelegt,
@@ -322,7 +330,8 @@
       var mk = function (key, icon, label) {
         var b = document.createElement('button');
         b.type = 'button'; b.className = 'hmn-btn'; b.setAttribute('data-k', key);
-        b.innerHTML = self._iconHtml(icon) + '<span>' + (window.casoraTr || function (x) { return x; })(label) + '</span>';
+        /* Symbol in einer Hülle (hmn-bic): ohne Weich-Design display:contents, in Weich der Sand-Kreis. */
+        b.innerHTML = '<span class="hmn-bic">' + self._iconHtml(icon) + '</span><span>' + (window.casoraTr || function (x) { return x; })(label) + '</span>';
         b._icon = icon;
         b.setAttribute('aria-label', (window.casoraTr || function (x) { return x; })(label));
         b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); self._haptic(); self._tap(key, b); });
@@ -725,9 +734,7 @@
       var ri = ar ? this._roomIcon(ar) : '/casora_assets/icons/rooms.svg?v=3';
       if (this._bRooms._icon !== ri) {
         this._bRooms._icon = ri;
-        var old = this._bRooms.firstElementChild, t = document.createElement('div');
-        t.innerHTML = this._iconHtml(ri);
-        this._bRooms.replaceChild(t.firstElementChild, old);
+        this._bRooms.firstElementChild.innerHTML = this._iconHtml(ri);
       }
       var rl = ar ? (ar.label || ar.name) : T('Räume'), ls = this._bRooms.lastElementChild;
       if (ls && ls.textContent !== rl) ls.textContent = rl;
