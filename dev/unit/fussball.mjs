@@ -133,6 +133,21 @@ assert.equal(K.shows(old, V('week')), false);
 assert.equal(K.hidden(sensor({ state: 'BYE', attrs: { date: null } }), V('week')), true, 'kein Spiel: ausgeblendet');
 assert.equal(K.hidden({ entity_id: 'sensor.x', state: '1', attributes: {} }, V('live')), false, 'falscher Sensor: nicht verstecken');
 
+// ── Aktive Kachel am Spieltag (variables.active_override) ──
+const kick = at(0, 20, 45), clockAt = (d, h, m) => { const x = new Date(kick); x.setDate(x.getDate() + d); x.setHours(h, m, 0, 0); return x; };
+const pre = sensor({ attrs: { date: kick.toISOString() } });
+assert.equal(K.active(pre, {}, clockAt(-1, 21, 0)), false, 'Vortag: nicht aktiv');
+assert.equal(K.active(pre, {}, clockAt(0, 0, 5)), true, 'Spieltag 0:05 vor dem Anstoß: aktiv');
+assert.equal(K.active(pre, {}, clockAt(0, 20, 0)), true, 'Spieltag kurz vor dem Anstoß: aktiv');
+assert.equal(K.active(sensor({ state: 'IN', attrs: { date: kick.toISOString(), team_score: '1', opponent_score: '0', clock: "30'" } }), {}, clockAt(0, 21, 15)), true, 'live: aktiv');
+const ended = sensor({ state: 'POST', attrs: { date: kick.toISOString(), team_score: '1', opponent_score: '0', clock: 'FT' } });
+assert.equal(K.active(ended, {}, clockAt(0, 23, 0)), true, 'kurz nach Abpfiff: aktiv');
+assert.equal(K.active(ended, {}, clockAt(1, 13, 0)), false, 'Tag danach (nach 12 Uhr): nicht mehr aktiv');
+assert.equal(K.active(ended, { hours_after: 1 }, clockAt(0, 23, 50)), false, 'Stunden-Einstellung: 1 Std. nach Spielende (22:45) vorbei');
+assert.equal(K.active(ended, { hours_after: 1 }, clockAt(0, 23, 30)), true);
+assert.equal(K.active(sensor({ state: 'POST', attrs: { date: kick.toISOString(), clock: 'Postponed', team_score: '0', opponent_score: '0' } }), {}, clockAt(0, 19, 0)), false, 'verschoben: nicht aktiv');
+assert.equal(K.active(sensor({ state: 'BYE', attrs: { date: null } }), {}, clockAt(0, 12, 0)), false, 'spielfrei: nicht aktiv');
+
 // ── ESPN: Liga-Tabelle (v2 standings, mit Zonen) ──
 const team = (id, name) => ({ id, displayName: name, shortDisplayName: name, logos: [{ href: 'https://a.espncdn.com/i/teamlogos/soccer/500/' + id + '.png' }] });
 const st = (rank, gp, gd, pts) => [['rank', rank], ['gamesPlayed', gp], ['pointDifferential', gd], ['points', pts]].map(([name, v]) => ({ name, displayValue: String(v) }));
@@ -224,15 +239,57 @@ assert.equal(f[2].friendly, true);
 assert.equal(f[2].comp, 'Testspiel');
 assert.equal(f[2].home, false);
 
+// ── Letzte Duelle (ESPN seasonseries, gekürzt aus Cagliari – Juventus, Oktober 2026) ──
+const cmp = (home, id, ab, score, winner) => ({ homeAway: home ? 'home' : 'away', winner, score,
+  team: { id, abbreviation: ab, displayName: ab === 'CAG' ? 'Cagliari' : 'Juventus', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/' + id + '.png' } });
+const h2h = { seasonseries: [{ type: 'head-to-head', title: 'Cagliari vs. Juventus', events: [
+  { date: '2026-01-17T19:45:00Z', status: 'post', competitionName: '2025-26 Italian Serie A', competitors: [cmp(true, '2925', 'CAG', '1', true), cmp(false, '111', 'JUV', '0', false)] },
+  { date: '2025-11-29T17:00:00Z', status: 'post', competitionName: '2025-26 Italian Serie A', competitors: [cmp(true, '111', 'JUV', '2', true), cmp(false, '2925', 'CAG', '1', false)] },
+  { date: '2024-12-17T20:00:00Z', status: 'post', competitionName: '2024-25 Coppa Italia', competitors: [cmp(true, '111', 'JUV', '1', true), cmp(false, '2925', 'CAG', '1', false)] },
+  { date: '2024-10-06T10:30:00Z', status: 'post', competitionName: '2024-25 Italian Serie A', competitors: [cmp(true, '111', 'JUV', '1', false), cmp(false, '2925', 'CAG', '1', false)] },
+  { date: '2027-01-10T19:45:00Z', status: 'pre', competitionName: '2026-27 Italian Serie A', competitors: [cmp(true, '111', 'JUV', '0', false), cmp(false, '2925', 'CAG', '0', false)] },
+] }] };
+const du = K.duels(h2h, '111');
+assert.equal(du.length, 4, 'nur beendete Spiele');
+assert.deepEqual([du[0].res, du[0].my, du[0].their, du[0].home], ['L', '0', '1', false], 'aus eigener Sicht: 0:1 auswärts verloren');
+assert.deepEqual([du[1].res, du[1].home], ['W', true]);
+assert.equal(du[0].comp, 'Serie A', 'Saison vor dem Wettbewerb weg');
+assert.deepEqual([du[0].opp, du[0].logo], ['Cagliari', 'https://a.espncdn.com/i/teamlogos/soccer/500/2925.png'], 'Gegner mit Wappen');
+assert.equal(du[2].comp, 'Coppa Italia');
+assert.deepEqual([du[2].res, du[2].pens], ['W', true], 'Remis mit Sieger: Elfmeterschießen');
+assert.deepEqual([du[3].res, du[3].pens], ['D', false]);
+assert.deepEqual(K.duels(h2h, '2925').map((x) => x.res), ['W', 'L', 'L', 'D'], 'Gegenseite');
+assert.deepEqual(K.duels({}, '111'), [], 'keine Duelle bei ESPN: leer');
+const dHtml = K.duelsHtml({ duels: du });
+assert.match(dHtml, /class="cfb-x"/);
+assert.match(dHtml, /class="cfb-f d" data-fit>/, 'Zeilen wie die Form');
+assert.match(dHtml, /<img src="https:\/\/a\.espncdn\.com\/combiner\/i\?img=\/i\/teamlogos\/soccer\/500\/2925\.png&amp;w=128&amp;h=128"/, 'Gegnerwappen (verkleinert)');
+assert.match(dHtml, /Letzte Duelle<span data-no-i18n> · 2 S · 1 U · 1 N<\/span>/, 'Kopf mit Bilanz');
+assert.match(dHtml, /bei <span data-no-i18n>Cagliari<\/span><small>Serie A · 17\.01\.26<\/small>/, 'aus eigener Sicht, Datum mit Jahr');
+assert.match(dHtml, /1 : 1<small>i\. E\.<\/small>/);
+assert.equal((dHtml.match(/data-fit/g) || []).length, 4);
+assert.equal(K.duelsHtml({ duels: [] }), '', 'ohne Duelle kein Abschnitt');
+
 // ── Länderflaggen statt ESPN-Länderbildern (mitgeliefert, rund im Kreis / rechteckig in Listen) ──
+// Wappen schnell (08.10.2026): ESPN-Wappen verkleinert, einmal geladen aus dem Browser-Speicher; anderes bleibt.
+assert.equal(K.small('https://a.espncdn.com/i/teamlogos/soccer/500/111.png'), 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/111.png&w=128&h=128');
+assert.equal(K.small('data:image/png;base64,AA'), 'data:image/png;base64,AA');
+assert.equal(K.logo('/local/x.png'), '/local/x.png');
+{
+  const store = {}; const old = globalThis.localStorage;
+  globalThis.localStorage = { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = v; } };
+  store['casora-fb-logo:https://a.espncdn.com/i/teamlogos/soccer/500/999.png'] = 'data:image/png;base64,QQ==';
+  assert.equal(K.logo('https://a.espncdn.com/i/teamlogos/soccer/500/999.png'), 'data:image/png;base64,QQ==', 'gemerktes Wappen sofort');
+  globalThis.localStorage = old;
+}
 assert.equal(K.flag('https://a.espncdn.com/i/teamlogos/countries/500/ita.png'), 'it');
 assert.equal(K.flag('https://a.espncdn.com/i/teamlogos/countries/500/eng.png'), 'gb-eng');
 assert.equal(K.flag('https://a.espncdn.com/i/teamlogos/countries/500/rom.png'), 'ro', 'ESPN-Eigenname (rom) → ro');
 assert.equal(K.flag('https://a.espncdn.com/i/teamlogos/soccer/500/111.png'), null, 'Vereinswappen bleibt');
 assert.equal(K.img('https://a.espncdn.com/i/teamlogos/countries/500/fra.png', 'round'), '/casora_assets/flags/round/fr.svg');
 assert.equal(K.img('https://a.espncdn.com/i/teamlogos/countries/500/fra.png', 'rect'), '/casora_assets/flags/rect/fr.svg');
-assert.equal(K.img('https://a.espncdn.com/i/teamlogos/soccer/500/111.png', 'round'), 'https://a.espncdn.com/i/teamlogos/soccer/500/111.png');
-assert.equal(K.img('https://a.espncdn.com/i/teamlogos/countries/500/xyz.png', 'round'), 'https://a.espncdn.com/i/teamlogos/countries/500/xyz.png', 'unbekanntes Land: ESPN-Bild');
+assert.equal(K.img('https://a.espncdn.com/i/teamlogos/soccer/500/111.png', 'round'), 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/111.png&w=128&h=128');
+assert.equal(K.img('https://a.espncdn.com/i/teamlogos/countries/500/xyz.png', 'round'), 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/countries/500/xyz.png&w=128&h=128', 'unbekanntes Land: ESPN-Bild (verkleinert)');
 // Jede zugeordnete Flagge liegt in beiden Formen bei.
 const modSrc = src('custom_components/casora/scripts/local/11-fussball.js');
 const isos = [...new Set(/var FLAG = pairs\('([^']+)'\)/.exec(modSrc)[1].split('|').map((p) => p.split('=')[1]))];
@@ -265,6 +322,9 @@ assert.match(mHtml, /class="cfb-m"><div[^>]*><div[^>]*>Nächstes Spiel<span> · 
 assert.ok(mHtml.indexOf('Cagliari') < mHtml.indexOf('Juventus'), 'Auswärtsspiel: Gegner links (Heim)');
 assert.match(mHtml, /20:45/);
 assert.match(K.html('form', S), /cfb-res L" data-no-i18n>N/);
+assert.ok(!/class="cfb-x"/.test(K.html('form', S)), 'ohne Duelle nur die Form');
+K.data[K.key(K.info(S))].duels = du;
+assert.ok(K.html('form', S).indexOf('class="cfb-x"') > K.html('form', S).lastIndexOf('cfb-f"'), 'Duelle unter der Form');
 // Laden: Fehler im Netz → Hinweis statt Absturz.
 K.data = {};
 assert.match(K.html('table', S), /Wird geladen/);
@@ -276,7 +336,18 @@ assert.equal(run(T.casora_popup_football.tap_action.casora_popup.content, { enti
 assert.equal(run(T.casora_football.hidden, { entity: live, variables: V('live') }), false);
 assert.equal(run(T.casora_football.hidden, { entity: inH(1), variables: V('live') }), true);
 assert.equal(run(T.casora_football.hidden, { entity: S, variables: { enabled: false } }), true);
-assert.equal(run(T.casora_football.entity_picture, { entity: S, variables: {} }), S.attributes.team_logo);
+assert.equal(run(T.casora_football.entity_picture, { entity: S, variables: {} }), K.img(S.attributes.team_logo, 'round'));
+{ // Modul noch nicht geladen: gemerktes Wappen aus dem Browser, sonst das Standard-Symbol.
+  const keepK = globalThis._casoraFootball, keepLS = globalThis.localStorage, keepIcon = globalThis.casoraIconUrl;
+  globalThis._casoraFootball = undefined; globalThis.casoraIconUrl = () => 'icon';
+  globalThis.localStorage = { getItem: (k) => (k === 'casora-fb-logo:' + S.attributes.team_logo ? 'data:image/png;base64,QQ==' : null) };
+  assert.equal(run(T.casora_football.entity_picture, { entity: S, variables: {} }), 'data:image/png;base64,QQ==', 'Wappen sofort, bevor das Modul lädt');
+  globalThis.localStorage = { getItem: () => null };
+  assert.equal(run(T.casora_football.entity_picture, { entity: S, variables: {} }), 'icon');
+  globalThis._casoraFootball = keepK; globalThis.localStorage = keepLS; globalThis.casoraIconUrl = keepIcon;
+}
+assert.equal(run(T.casora_football.variables.active_override, { entity: live, variables: {} }), true, 'Vorlage: live aktiv');
+assert.equal(run(T.casora_football.variables.active_override, { entity: sensor({ attrs: { date: at(3, 20, 45).toISOString() } }), variables: {} }), false, 'Vorlage: Spiel in 3 Tagen nicht aktiv');
 
 // ── Studio-Assistent: Team-Tracker-Sensoren (ohne Gerät) werden Fußball-Kacheln auf der Startseite ──
 new Function(src('custom_components/casora/panel/casora-panel-assist.js'))();

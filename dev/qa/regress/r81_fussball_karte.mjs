@@ -7,7 +7,8 @@
 // Erwartet am Desktop und Handy (hell + dunkel): Wappen in der Kachel, Gegnerwappen am Kreis, Statustext in der
 // Ecke auf Höhe der Kreismitte (vor dem Spiel „in … Tagen“, live rot mit Minute und rotem Punkt, nach dem Spiel
 // „Endstand“), Zustandszeile einzeilig; Antippen öffnet das Popup mit Wappen im Ring, Spielkasten, Tabelle
-// (eigenes Team markiert, „Ganze Tabelle“ ≥ 44 px) und Form (5 Spiele).
+// (eigenes Team markiert, „Ganze Tabelle“ ≥ 44 px) und Form (5 Spiele), darunter die letzten 5 Duelle mit dem
+// Gegner; am Desktop endet die rechte Spalte bündig mit der Tabelle (Wunsch 08.10.2026: unten rechts viel Luft).
 import { open, casoraDashboards, dashboard, check, need, finish, fakeStates, stable } from './lib.mjs';
 import { espnRoute } from '../fussball-espn.mjs';
 
@@ -44,6 +45,7 @@ const MEASURE = () => {
     state: st ? st.textContent.trim() : '', stateH: st ? st.getBoundingClientRect().height : 0,
     stateLine: st ? parseFloat(getComputedStyle(st).lineHeight) || 0 : 0, name: box(nm),
     haptic: ((b._config || {}).tap_action || {}).haptic || null,
+    active: getComputedStyle(sr.querySelector('ha-card')).getPropertyValue('--casora-active-overlay-opacity').trim() === '1',
   };
 };
 const measure = (pg) => pg.evaluate(MEASURE);
@@ -67,6 +69,7 @@ for (const [tag, o, d, mobile] of VIEWS) {
   await check(tag + ': Wappen sichtbar (kein Aus-Symbol darüber)', m.imgOp >= 0.95 && m.maskOp === 0, { img: m.imgOp, mask: m.maskOp });
   await check(tag + ': Gegnerwappen am Kreis', m.opp === 'block', m.opp);
   await check(tag + ': Tippen mit Vibration', !!m.haptic, m.haptic);
+  await check(tag + ': Spiel übermorgen – Kachel nicht aktiv', !m.active, m.active);
   if (!mobile) {
     await check(tag + ': vor dem Spiel „in 2 Tagen“ in der Ecke', /in 2 Tagen/.test(m.pillText), m.pillText);
     await check(tag + ': Ecke auf Höhe der Kreismitte', m.pill && Math.abs((m.pill.t + m.pill.b) / 2 - (m.cell.t + m.cell.b) / 2) <= 2, { pill: m.pill, cell: m.cell });
@@ -84,6 +87,7 @@ for (const [tag, o, d, mobile] of VIEWS) {
     await check(tag + ': live – Punkt rot (nicht weiß)', red(m.dotColor), m.dotColor);
   }
   await check(tag + ': live – Spielstand', /2:1/.test(m.state), m.state);
+  await check(tag + ': live – Kachel aktiv (Spieltag)', m.active, m.active);
 
   // Nach dem Spiel (heute): Endstand.
   await fakeStates(page, { [ID]: { state: 'POST', attributes: { date: new Date(Date.now() - 150 * 60000).toISOString(), team_score: '2', opponent_score: '1', clock: 'FT' } } }, { sticky: true });
@@ -110,13 +114,32 @@ for (const [tag, o, d, mobile] of VIEWS) {
     return { surf: { l: S.left, r: S.right }, vw: innerWidth,
       ring: ring ? ring.getAttribute('src').slice(0, 20) : null, ringOk: !!(ring && ring.complete && ring.naturalWidth > 0),
       match: (window.__pierce('.cfb-m')[0] || {}).textContent || '', rows: rows.length, me: me ? me.className : null,
-      more: more ? more.getBoundingClientRect().height : 0, form: window.__pierce('.cfb-f').length };
+      more: more ? more.getBoundingClientRect().height : 0, form: window.__pierce('.cfb-f:not(.d):not(.h)').length,
+      duels: window.__pierce('.cfb-f.d').filter((n) => n.getBoundingClientRect().height > 0).length,
+      // Unterkanten: letzte Tabellenzeile, Fußzeile der Tabelle (Legende), rechte Spalte; Abstand der Duell-Zeilen.
+      last: (window.__pierce('.cfb-r:not(.h)').pop() || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().bottom,
+      lb: (window.__pierce('.cfb-table > .cfb')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().bottom,
+      rb: (window.__pierce('.cfb-form > .cfb')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().bottom,
+      hf: (window.__pierce('.cfb-f:not(.d):not(.h)')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().height,
+      hd: (window.__pierce('.cfb-f.d')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().height,
+      // Spaltenköpfe und erste Zeilen links (Tabelle) und rechts (Form) – oben bündig (08.10.2026).
+      th: (window.__pierce('.cfb-r.h')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().top,
+      fh: (window.__pierce('.cfb-f.h')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().top,
+      t1: (window.__pierce('.cfb-r:not(.h)')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().top,
+      f1: (window.__pierce('.cfb-f:not(.d):not(.h)')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().top };
   }, null, { max: 10000, quiet: 900 });
   await check(tag + ': Popup – Wappen im Ring', p.ringOk && /^data:image/.test(p.ring || ''), p.ring);
   await check(tag + ': Popup – Spielkasten mit beiden Teams', /FC Nordhafen/.test(p.match) && /SV Lindenberg/.test(p.match), p.match.slice(0, 120));
   await check(tag + ': Popup – Tabelle mit eigenem Team', p.rows >= 8 && !!p.me, { rows: p.rows, me: p.me });
   await check(tag + ': Popup – „Ganze Tabelle“ ≥ 44 px', p.more >= 44, p.more);
   await check(tag + ': Popup – Form mit 5 Spielen', p.form === 5, p.form);
+  await check(tag + ': Popup – Duelle unter der Form, Zeilen gleich hoch wie die Form', p.duels >= 2 && p.duels <= 5 && Math.abs(p.hd - p.hf) <= 0.5, { n: p.duels, hf: p.hf, hd: p.hd });
+  if (mobile) await check(tag + ': Popup – Handy (untereinander): alle 5 Duelle', p.duels === 5, p.duels);
+  // Desktop: Unterkante rechts höchstens eine halbe Zeile (29 px) von der letzten Tabellenzeile, nie unter der Legende.
+  else await check(tag + ': Popup – rechte Spalte endet auf Höhe der letzten Tabellenzeile', Math.abs(p.rb - p.last) <= 29 && p.rb <= p.lb + 0.5, { tabelle: p.last, rechts: p.rb, legende: p.lb });
+  if (!mobile) await check(tag + ': Popup – Spaltenkopf der Form auf Höhe des Tabellenkopfs, erste Zeilen bündig',
+    Math.abs(p.fh - p.th) <= 1 && Math.abs(p.f1 - p.t1) <= 1, { th: p.th, fh: p.fh, t1: p.t1, f1: p.f1 });
+  if (process.env.R81_BILD) await page.screenshot({ path: `${process.env.CASORA_OUT}/r81_${tag.replace(/[^a-z0-9]+/gi, '_')}.png` });
   await check(tag + ': Popup im Fenster', p.surf.l >= -1 && p.surf.r <= p.vw + 1, p);
   await check(tag + ': ESPN nur abgefangen (kein Netz)', calls.length > 0 && calls.every((u) => /site\.api\.espn\.com/.test(u)), calls.length);
   await context.close();
