@@ -4,7 +4,8 @@
 // große Zahl (eigene oder die Hero-Zahl des Popups) statt schwebendem Fenster.
 //   { type: 'custom:casora-chart', kind: 'line'|'bar'|'spark', span: '48h',
 //     series: [{ entity, name, color, unit, decimals, map }], source: 'auto'|'history'|'stats'|'change',
-//     agg: 'mean'|'max', bucket: '1h', height, y: { min, max, labels }, step, readout: 'own'|'hero'|'none', legend }
+//     agg: 'mean'|'max', bucket: '1h', height, y: { min, max, labels }, step, readout: 'own'|'hero'|'none', legend,
+//     read_as: Entität, deren Hero-Zahl ([data-casora-read]) beim Ablesen mitliest (z. B. Säulen im Energie-Popup) }
 (function () {
   'use strict';
   var H = 36e5, MIN = 6e4, DAY = 864e5, NS = 'http://www.w3.org/2000/svg';
@@ -309,7 +310,7 @@
       }
       t.forEach(function (n) {
         var e = n.getAttribute('data-casora-read'), txt = w;
-        if (e != null) txt = vals.filter(function (x) { return e === '*' || x.entity === e; }).map(function (x) { return n.hasAttribute('data-casora-read-bare') ? x.num : x.text; }).join(' · ');
+        if (e != null) txt = vals.filter(function (x) { return e === '*' || x.entity === e || me._c.read_as === e; }).map(function (x) { return n.hasAttribute('data-casora-read-bare') ? x.num : x.text; }).join(' · ');
         if (!txt) return;
         if (n._casoraOrig == null) { n._casoraOrig = n.innerHTML; me._touched.push(n); }
         n.setAttribute('data-casora-reading', '');

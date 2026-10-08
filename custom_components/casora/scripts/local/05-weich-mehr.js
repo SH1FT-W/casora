@@ -490,9 +490,17 @@
       /* Ohne Leistungssensor: der erste Wert wird zur Hauptzeile („Heute 3,72 kWh“) statt „— · heute …“. */
       var main = p == null ? null : fW(Math.abs(p) < 20 && p < 0 ? 0 : Math.abs(p), hass);
       if (main == null && bits.length) { main = bits.shift(); main = main.charAt(0).toUpperCase() + main.slice(1); }
-      return UI.hero({ center: true, value: main == null ? '—' : main,
+      var heroH = UI.hero({ center: true, value: main == null ? '—' : main,
         sub: bits.join(' · ') || null, read: C.home || null,
         chip: bad ? { text: 'Solarbank-Fehler ' + err, tone: 'bad' } : null });
+      /* 1.2: Zeigt das Diagramm Säulen (Zeile „Heute“/„Diesen Monat“), schaltet Tippen auf die
+         Leistung zurück auf die Leistungskurve – wie die Leistungszeile im Standard-Look. */
+      if (C.home && window._hpPlantCfg && window._hpPlantCfg[C.home]) {
+        var tp = function (k) { return 'window._hpPlantTap&&window._hpPlantTap(event,\'' + k + '\')'; };
+        heroH = '<div data-hp-metric="' + C.home + '" data-casora-nodismiss="" style="cursor:pointer;pointer-events:auto;"'
+          + ' ontouchstart="' + tp('s') + '" ontouchend="' + tp('t') + '" onclick="' + tp('c') + '">' + heroH + '</div>';
+      }
+      return heroH;
     }
     if (part === 'auto' && C.auto && window._casoraAutoConsumers) {
       var A = window._casoraAutoConsumers(hass, states, Object.assign({}, C.auto, { visible: autoVisible }));
