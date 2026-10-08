@@ -7170,6 +7170,8 @@ window.casoraMenuGlass = {
       + '}' + SEP_CSS
       + ROW_FN_CSS
       + '.hui-cf{font-weight:600;}'
+      /* 1.2 (P7): „Bestätigen“ wie alle Text-Hauptknöpfe 44 hoch, voll rund. */
+      + '.hui-srow .hui-cf{top:calc(50% - 22px);bottom:auto;height:44px;border-radius:999px;}'
       /* B-15: am Handy jede Unterzeile einzeilig mit Auslassung – gleich hohe Zeilen. */
       + '@media (max-width: 600px){.hui-srow .hui-sub{display:block!important;-webkit-line-clamp:1!important;white-space:nowrap!important;text-overflow:ellipsis!important;overflow:hidden!important;}.hui-srow .hui-sub2::before{content:none!important;}}'
       /* Hinweis-Zeilen (r.subWrap, z. B. „Noch keine Tageswerte“): ganzer Satz statt „…“ (07.10.2026). */
@@ -8483,7 +8485,8 @@ window.casoraMenuGlass = {
       + (o.foot ? '<div style="font-size:12.5px;font-weight:500;color:' + S.sub + ';margin-top:10px;">' + o.foot + '</div>' : '')
       + (o.btnText
           ? '<span' + (o.btnSvc || '') + ' style="display:inline-flex;align-items:center;gap:7px;cursor:pointer;'
-            + 'font-size:13px;font-weight:700;padding:11px 18px;border-radius:999px;margin-top:16px;'
+            // 1.2 (P7): Text-Hauptknopf 44 hoch, voll rund (wie Saugroboter „Start“).
+            + 'box-sizing:border-box;min-height:44px;font-size:13px;font-weight:700;padding:0 20px;border-radius:999px;margin-top:16px;'
             + (o.primary
                 ? 'color:var(--casora-soft-ki-ink, #fff);background:var(--casora-soft-ki, var(--casora-color-teal, #4E9E95));'
                   + 'box-shadow:var(--casora-soft-ki-shadow, none);'

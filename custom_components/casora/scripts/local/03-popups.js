@@ -1345,7 +1345,9 @@
          vorher türkisgrüne Pillen, die es sonst nirgends gibt. */
       var softBtn = !!(window._casoraSoft && window._casoraSoft());
       var btn = function (label, attr, primary) {
-        return '<span ' + attr + ' style="display:inline-flex;align-items:center;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;'
+        return '<span ' + attr + ' style="display:inline-flex;align-items:center;cursor:pointer;font-size:14px;font-weight:600;border-radius:999px;'
+          // 1.2 (P7): Weich wie alle Text-Hauptknöpfe 44 hoch, voll rund.
+          + (softBtn ? 'box-sizing:border-box;min-height:44px;padding:0 18px;' : 'padding:9px 14px;')
           + (softBtn ? (primary ? 'color:#fff;background:var(--casora-soft-primary, #B67A50);'
             : 'color:' + T.ink + ';background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));')
           : primary ? (window._casoraHH && window._casoraHH.on() ? 'color:var(--casora-popup-ui-on-action, #fff);background:var(--casora-popup-ui-action, #276B64);'
