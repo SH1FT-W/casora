@@ -8,8 +8,12 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 ### Neu
 - **Fußball-Kachel:** folgt deinem Verein über die Integration Team Tracker (HACS). Die Kachel zeigt das nächste Spiel, den Live-Spielstand oder das Endergebnis mit Wappen oder Landesflagge, und die Ecke sagt auf einen Blick, ob das Spiel bevorsteht, läuft oder vorbei ist.
-- **Fußball-Popup:** ein Tipp öffnet das Spiel mit beiden Mannschaften, dem Tabellenausschnitt rund um deinen Verein (die ganze Tabelle einen Tipp entfernt) und der letzten Form. Nationalmannschaften zeigen ihre Flagge.
+- **Fußball-Popup:** ein Tipp öffnet das Spiel mit beiden Mannschaften, dem Tabellenausschnitt rund um deinen Verein (die ganze Tabelle einen Tipp entfernt) und der letzten Form, darunter die letzten direkten Duelle mit dem nächsten Gegner. Nationalmannschaften zeigen ihre Flagge.
 - **Wann sie erscheint:** wähle, ob die Kachel immer zu sehen ist oder nur in der Spielwoche, am Spieltag, rund ums Spiel oder nur live. Im Studio ist sie der neue Kacheltyp „Fußball“, und der Einrichtungsassistent schlägt sie für Team-Tracker-Sensoren von selbst vor.
+- **Am Spieltag aktiv:** ab Mitternacht am Spieltag, während des Spiels und solange das Ergebnis steht, gilt die Kachel als aktiv und rückt in ihrer Reihe nach vorn.
+
+### Behoben
+- **Updates-Popup:** „Verfügbare Updates“ und „KI-Check“ stehen wieder auf einer Höhe, auch wenn „Alle aktualisieren“ daneben steht.
 
 ## 1.1.0 – 07.10.2026
 

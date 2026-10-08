@@ -27,8 +27,8 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n1t: "Fußball-Kachel", n1: "Folge deinem Verein über Team Tracker: nächstes Spiel, Live-Spielstand oder Endergebnis mit Wappen oder Flagge, auf Wunsch nur am Spieltag oder live.",
-      n2t: "Fußball-Popup", n2: "Ein Tipp zeigt beide Mannschaften, den Tabellenausschnitt rund um deinen Verein und die letzte Form."
+      n1t: "Fußball-Kachel", n1: "Folge deinem Verein über Team Tracker: nächstes Spiel, Live-Spielstand oder Endergebnis mit Wappen oder Flagge, am Spieltag aktiv, auf Wunsch nur dann zu sehen.",
+      n2t: "Fußball-Popup", n2: "Ein Tipp zeigt beide Mannschaften, den Tabellenausschnitt rund um deinen Verein, die letzte Form und die direkten Duelle mit dem Gegner."
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -38,8 +38,8 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n1t: "Football tile", n1: "Follow your club with Team Tracker: next match, live score or final result with crest or flag, optionally only on match day or while live.",
-      n2t: "Football popup", n2: "One tap shows both teams, the table around your club and recent form."
+      n1t: "Football tile", n1: "Follow your club with Team Tracker: next match, live score or final result with crest or flag, active on match day, and if you like only visible then.",
+      n2t: "Football popup", n2: "One tap shows both teams, the table around your club, recent form and head-to-head with the opponent."
     },
   };
 
