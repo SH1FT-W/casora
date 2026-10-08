@@ -7,12 +7,20 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 1.2.0 – 08.10.2026
 
 ### New
+- **Fuel prices in the car popup.** Below fuel level and range it says "Fuel · from €1.74". A tap opens the petrol stations nearby on Home Assistant's map, with prices, logos, open or closed and a recommendation whether filling up now or later is cheaper. Set up in the Studio under Settings › Fuel prices, either with the Tankerkönig integration or a free Tankerkönig key.
+- **Own charts.** All charts in the popups are new: a calm line, the scale on the right, read with your finger or mouse while the large number on top follows along. Daily use shows as bars with an average line, temperature and humidity are switched instead of stacked. apexcharts-card is no longer needed.
+- **Trend on the tile.** Energy, plant and thermostat can show a small trend on the tile, switched on per tile in the Studio.
+- **New phone menus (Casora and Casora Nebel).** Rooms and scenes open as a light sheet from the bottom. Each room shows its temperature on the right, with anything notable in front ("Light on · 23°", orange "Window open"). Scenes show when they last ran, an active scene is highlighted and says "Active". The bar at the bottom shows the open room as a white pill.
+- **New device popups.** Dishwasher, washing machine, dryer, 3D printer and car show progress as a bar under the header, the forecast in one line and the care items next to it.
 - **Bell: "Do not report".** In the Studio under Settings you pick devices and sensors that never create an entry in the bell, for example a window that is always tilted. The list only offers devices that can report at all, sorted by room and with the kind of report.
 - **Push for new Casora versions.** In the Studio under Settings you pick phones that get exactly one push for every new version. Tapping opens the updates. Off by default.
 - **Aquarium: light right in the tank popup.** On/off, brightness, one slider per colour channel in the channel colour and the lamp's modes to tap. No more jump to the general light popup. Casora detects whether the schedule switch means "Home Assistant controls" or "lamp program"; changeable in the Studio.
 - **Aquarium: temperature on the tile and target range.** The tile shows the temperature ("25.4° · All fine"). In the Studio you set a target range; outside it the popup warns, a status sensor is now optional. Equipment like filter and heater is set up in the Studio, also as a thermostat.
 
 ### Fixed
+- **Scene badges:** an active scene says "Active" instead of the time.
+- **Room bar on tablet and desktop:** the open room is a white pill like on the phone.
+- **Playback list top right:** it no longer closes when you tap next to it, only via the wave itself or Escape, and it follows along when you switch rooms.
 - **Phone bar:** since 1.1.1 the bar at the bottom looked different from before (too small, round). It is back to how it was in 1.1.0.
 - **Rooms and scenes sheet:** the sheet can now be swiped down like a popup, also from the list. Before, the page behind it scrolled instead.
 - **Scene colour:** a scene colour chosen in the Studio shows up everywhere right away, also in the scene badges on desktop and tablet, without reloading.

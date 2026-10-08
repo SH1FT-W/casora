@@ -27,9 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n1t: "Glocke: Nicht melden", n1: "Wähle im Studio Geräte, die nie einen Eintrag in der Glocke erzeugen.",
-      n2t: "Push bei neuen Versionen", n2: "Ausgewählte Handys bekommen bei jeder neuen Casora-Version einen Push.",
-      n3t: "Aquarium-Licht im Becken", n3: "Helligkeit, Farbkanäle und Lampen-Modi direkt im Becken-Popup, Temperatur auf der Kachel."
+      n1t: "Tanken im Auto-Popup", n1: "Spritpreise in der Nähe auf der Karte, mit Empfehlung. Einrichten im Studio unter Einstellungen › Tanken.",
+      n2t: "Neue Diagramme", n2: "Ruhige Verläufe in allen Popups zum Ablesen mit dem Finger, Verbrauch pro Tag als Säulen.",
+      n3t: "Neue Handy-Menüs", n3: "Räume und Szenen als Blatt von unten, mit Temperatur, offenen Fenstern und aktiver Szene.",
+      n4t: "Glocke und Aquarium", n4: "Geräte von der Glocke ausnehmen, Aquarium-Licht direkt im Becken-Popup."
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -39,9 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n1t: "Bell: do not report", n1: "Pick devices in the Studio that never create an entry in the bell.",
-      n2t: "Push for new versions", n2: "Selected phones get a push for every new Casora version.",
-      n3t: "Aquarium light in the tank", n3: "Brightness, colour channels and lamp modes right in the tank popup, temperature on the tile."
+      n1t: "Fuel prices in the car popup", n1: "Petrol prices nearby on the map, with a recommendation. Set up in the Studio under Settings › Fuel prices.",
+      n2t: "New charts", n2: "Calm charts in every popup that you read with your finger, daily use as bars.",
+      n3t: "New phone menus", n3: "Rooms and scenes as a sheet from the bottom, with temperature, open windows and the active scene.",
+      n4t: "Bell and aquarium", n4: "Leave devices out of the bell, aquarium light right in the tank popup."
     },
   };
 
@@ -54,9 +56,10 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:bell-off-outline", "n1t", "n1"],
-    ["mdi:cellphone-message", "n2t", "n2"],
-    ["mdi:fishbowl-outline", "n3t", "n3"],
+    ["mdi:gas-station-outline", "n1t", "n1"],
+    ["mdi:chart-line", "n2t", "n2"],
+    ["mdi:cellphone", "n3t", "n3"],
+    ["mdi:bell-off-outline", "n4t", "n4"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.
