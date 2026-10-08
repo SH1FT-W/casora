@@ -6747,7 +6747,7 @@ class CasoraPanel extends HTMLElement {
         :is(#pane.stack, #pane .phonepops) .poptx { flex:1 1 auto; min-width:0; }
         :is(#pane.stack, #pane .phonepops) .poptx b { display:block; font-size:var(--t-foot); font-weight:600; color:var(--ink); }
         :is(#pane.stack, #pane .phonepops) .poptx span { display:block; font-size:var(--t-caption); color:var(--ink-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        :is(#pane.stack, #pane .phonepops) .popchev { flex:none; width:18px; height:18px; color:var(--ink-2); }
+        :is(#pane.stack, #pane .phonepops) .popchev { flex:none; width:18px; height:18px; color:var(--ink-2); display:grid; place-items:center; }
         :is(#pane.stack, #pane .phonepops) .popchev svg { width:16px; height:16px; }
         /* Handy: Die aufgeklappte Liste gehört zur Karte – kein eigener heller Block, sondern
            eingerückte Zeilen auf demselben Grund, Trennlinien wie die Zeilen darüber. */
@@ -6845,7 +6845,6 @@ class CasoraPanel extends HTMLElement {
         }
         .detailbar .back svg {
           width:17px; height:17px; flex:0 0 17px; display:block;
-          transform:translateX(-1px);
         }
         .detailbar .back:hover:not(:disabled) {
           filter:none;
@@ -7883,7 +7882,7 @@ class CasoraPanel extends HTMLElement {
             rgba(255,255,255,0.75) 360deg);
         }
         :host(.phone) .detailbar .back svg {
-          width:16px; height:27px; flex-basis:16px; stroke-width:3; transform:translateX(-1px);
+          width:16px; height:27px; flex-basis:16px; stroke-width:3;
         }
         :host(.phone) .detailbar .mini.icon,
         :host(.phone) .detailbar .plus { width:36px; height:36px; flex:0 0 36px; }
@@ -10195,7 +10194,7 @@ class CasoraPanel extends HTMLElement {
           background:var(--scdot, var(--casora-studio-scdot, rgba(255,255,255,0.94)));
         }
         .scenecolor .scicon {
-          --mdc-icon-size:18px; width:18px; height:18px; display:block;
+          --mdc-icon-size:18px; width:18px; height:18px; display:flex;
         }
         :host(.phone) .scenecolor { height:50px; font-size:var(--t-body); --scgap:13px; }
         :host(.phone) .scenecolor .scdot { width:34px; height:34px; flex-basis:34px; }
