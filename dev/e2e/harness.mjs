@@ -119,6 +119,30 @@ export async function open({ width = 1440, height = 900, mobile = false, umzug =
   // erfundene Verein die echte ESPN-Seite, die blockt Headless-Chrome per CORS und die
   // Konsole meldet Fehler (Gate 1.1.1). CASORA_ESPN_LIVE=1 lässt echte Aufrufe durch.
   if (!process.env.CASORA_ESPN_LIVE) await espnRoute(context);
+  // Eigenes Theme je Testbrowser (Gate 1.1.1): HA hält die Theme-Wahl auch je Benutzer auf dem
+  // Server (frontend/subscribe_user_data, key „theme“). Setzt ein paralleler Test sie (z. B. der
+  // Assistent „Wähle dein Design“), sprangen alle anderen Browser desselben Benutzers mit um –
+  // r58 lief dann im Hemma-, r79 im Casora-Look. Das Abo bekommt hier nur „kein Wert“; die Wahl
+  // aus localStorage gilt. themeSync: true (oder CASORA_THEME_SYNC=1) lässt es durch.
+  if (!(arguments[0] && arguments[0].themeSync) && !process.env.CASORA_THEME_SYNC) {
+    await context.addInitScript(() => {
+      const WS = window.WebSocket;
+      window.WebSocket = class extends WS {
+        send(d) {
+          if (typeof d === 'string' && d.indexOf('"frontend/subscribe_user_data"') > -1 && /"key":"theme"/.test(d)) {
+            try {
+              const m = JSON.parse(d);
+              setTimeout(() => this.dispatchEvent(new MessageEvent('message', { data: JSON.stringify([
+                { id: m.id, type: 'result', success: true, result: null },
+                { id: m.id, type: 'event', event: { value: null } }]) })), 0);
+              return;
+            } catch (e) { /* dann normal senden */ }
+          }
+          return super.send(d);
+        }
+      };
+    });
+  }
   // Unbehandelte Ablehnungen mit einfachem Objekt erscheinen sonst nur als „Object“. Mit Inhalt
   // als Konsolenfehler melden; HAs eigenes Abmelden eines schon beendeten Abos
   // („Subscription not found“, HA-Frontend, z. B. persistent_notification) nur als Warnung (Gate 1.1.1).
