@@ -1947,6 +1947,7 @@ const STUDIO_ICON = {
   "set-ai": ["main", "var(--casora-color-purple, #9333ea)"],
   "set-outdoor": ["heat", "var(--casora-color-orange, #FF9230)"],
   "set-vent": ["main", "var(--casora-color-blue, #0A84FF)"],
+  "set-fuel": ["main", "var(--casora-color-teal, #00C3D0)"],
   // Erststart und Umzug
   "flow-rooms": ["main", "#2fd6e0"],
   "flow-devices": ["light", "#ffb340"],

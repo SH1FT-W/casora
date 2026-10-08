@@ -1466,7 +1466,38 @@
   "Rot": "Red",
   "Grün": "Green",
   "Blau": "Blue",
-  "Weiß": "White"
+  "Weiß": "White",
+  "Tanken": "Fuel",
+  "Abruf gestört": "Request failing",
+  "Preise werden geladen": "Loading prices",
+  "Empfehlung": "Recommendation",
+  "Am günstigsten": "Cheapest",
+  "In der Nähe": "Nearby",
+  "Günstigste": "Cheapest",
+  "Nächste": "Nearest",
+  "Typischer Tag": "Typical day",
+  "Ø 14 Tage, günstigste Station": "Ø 14 days, cheapest station",
+  "Lernphase": "Learning",
+  "Empfehlung kommt bald": "Recommendation coming soon",
+  "Die Empfehlung kommt, sobald genug Preise gesammelt sind, in etwa einem Tag.": "The recommendation comes once enough prices are collected, in about a day.",
+  "Gerade": "Right now",
+  "Keine offene Tankstelle": "No station open",
+  "Im Umkreis hat gerade keine Tankstelle geöffnet.": "No station in the area is open right now.",
+  "Tank knapp": "Low on fuel",
+  "Jetzt tanken": "Fill up now",
+  "Warte bis heute Abend": "Wait until this evening",
+  "Warte bis morgen Abend": "Wait until tomorrow evening",
+  "Warte bis heute Vormittag": "Wait until this morning",
+  "Warte bis morgen früh": "Wait until tomorrow morning",
+  "Guter Zeitpunkt": "Good time",
+  "Kein großer Unterschied": "Little difference",
+  "In den nächsten Stunden ändert sich der Preis meist um weniger als 2 ct.": "Over the next hours the price usually changes by less than 2 ct.",
+  "Noch keine Preise": "No prices yet",
+  "Tankpreise gerade nicht abrufbar": "Fuel prices unavailable right now",
+  "Casora fragt alle 10 Minuten, die ersten Preise kommen gleich.": "Casora asks every 10 minutes, the first prices are on their way.",
+  "Gerade keine offen": "None open right now",
+  "Daten: Tankerkönig, CC BY 4.0": "Data: Tankerkönig, CC BY 4.0",
+  "Umkreis": "Radius"
  },
  "patterns": [
   [
@@ -2792,6 +2823,126 @@
   [
    "^Soll-Bereich (.+)$",
    "Target range {1}"
+  ],
+  [
+   "^ab (\\d[\\d.,]*) €$",
+   "from {1} €"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · abends günstiger$",
+   "{1} · cheaper in the evening"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · ab (\\d+) Uhr günstiger$",
+   "{1} · cheaper from {2}:00"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · jetzt günstig$",
+   "{1} · good price now"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · kaum Unterschied$",
+   "{1} · little difference"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · Tank knapp$",
+   "{1} · low on fuel"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · Preise werden gesammelt$",
+   "{1} · collecting prices"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · keine offen$",
+   "{1} · none open"
+  ],
+  [
+   "^Die Empfehlung kommt, sobald genug Preise gesammelt sind, in etwa (\\d+) Tagen\\.$",
+   "The recommendation comes once enough prices are collected, in about {1} days."
+  ],
+  [
+   "^Heute ab (\\d+) Uhr$",
+   "Today from {1}:00"
+  ],
+  [
+   "^Morgen ab (\\d+) Uhr$",
+   "Tomorrow from {1}:00"
+  ],
+  [
+   "^Warte bis (\\d+) Uhr$",
+   "Wait until {1}:00"
+  ],
+  [
+   "^Warte bis morgen (\\d+) Uhr$",
+   "Wait until {1}:00 tomorrow"
+  ],
+  [
+   "^Tank reicht noch (\\d+) km\\. Ab (\\d+) Uhr lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "Enough fuel for {1} km. From {2}:00, {3} was {4} ct cheaper on average over the last 14 days."
+  ],
+  [
+   "^Ab (\\d+) Uhr lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "From {1}:00, {2} was {3} ct cheaper on average over the last 14 days."
+  ],
+  [
+   "^(.+) liegt gerade im unteren Bereich der letzten 14 Tage\\.$",
+   "{1} is at the low end of the last 14 days right now."
+  ],
+  [
+   "^Tank bei (\\d+) %, noch etwa (\\d+) km\\. Warten lohnt sich nicht\\.$",
+   "Tank at {1} %, about {2} km left. Waiting doesn't pay off."
+  ],
+  [
+   "^Tank bei (\\d+) %\\. Warten lohnt sich nicht\\.$",
+   "Tank at {1} %. Waiting doesn't pay off."
+  ],
+  [
+   "^Noch etwa (\\d+) km\\. Warten lohnt sich nicht\\.$",
+   "About {1} km left. Waiting doesn't pay off."
+  ],
+  [
+   "^(\\d[\\d.,]*) € Tief$",
+   "{1} € low"
+  ],
+  [
+   "^jetzt (\\d[\\d.,]*) €$",
+   "now {1} €"
+  ],
+  [
+   "^(\\d[\\d.,]*) € Hoch$",
+   "{1} € high"
+  ],
+  [
+   "^(\\d+) Tankstellen in (\\d+) km$",
+   "{1} stations within {2} km"
+  ],
+  [
+   "^1 Tankstelle in (\\d+) km$",
+   "1 station within {1} km"
+  ],
+  [
+   "^(\\d[\\d.,]*) km · offen$",
+   "{1} km · open"
+  ],
+  [
+   "^(\\d[\\d.,]*) km · zu$",
+   "{1} km · closed"
+  ],
+  [
+   "^und (\\d+) weitere$",
+   "and {1} more"
+  ],
+  [
+   "^Umkreis (\\d+) km um Zuhause$",
+   "{1} km around home"
+  ],
+  [
+   "^Umkreis (\\d+) km um das Auto$",
+   "{1} km around the car"
+  ],
+  [
+   "^Tankerkönig antwortet gerade nicht: (.+)$",
+   "Tankerkönig isn't answering right now: {1}"
   ]
  ]
 }

@@ -1,0 +1,452 @@
+// ── Tanken im Auto-Popup (Casora 1.2) ─────────────────────────────────────
+// Zeile „Tanken · ab X,XX €“ direkt unter Tankstand/Reichweite (window._casoraCar, 03-popups.js) und
+// eigene Ansicht im selben Popup: Empfehlung (Aussage, Begründung, Preis-Skala Tief → jetzt → Hoch),
+// „Typischer Tag“ als Säulen, die besten 3 als Kacheln, Punktkarte ohne Kartendienst, Umschalter
+// Günstigste/Nächste/Offen mit Liste, Quellenhinweis „Daten: Tankerkönig, CC BY 4.0“.
+// Daten: Sensor sensor.casora_tanken_<auto>_<kraftstoff> (tanken.py), Attribut car_device_id = Gerät
+// des Autos. Ohne Sensor (nicht eingerichtet, E-Auto, Kraftstoff „aus“) gibt es keine Zeile.
+// Keine Markenlogos: farbige Kürzel-Kreise. Nur im Weich-Design (Casora, Nebel).
+(function () {
+  if (window._casoraTank) return;
+  var K = window._casoraTank = {};
+  var FUEL = { e5: 'Super E5', e10: 'Super E10', diesel: 'Diesel' };
+  var loc = function () { return window.casoraLocale ? window.casoraLocale() : 'de-DE'; };
+  var fmt = function (n, d) { return Number(n).toLocaleString(loc(), { minimumFractionDigits: d, maximumFractionDigits: d }); };
+  var price = function (p) { return fmt(p, 3); };
+  var km = function (d) { return fmt(d, 1) + ' km'; };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var GAS = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M19.77,7.23L19.78,7.22L16.06,3.5L15,4.56L17.11,6.67C16.17,7.03 15.5,7.93 15.5,9A2.5,2.5 0 0,0 18,11.5C18.36,11.5 18.69,11.42 19,11.29V18.5A1,1 0 0,1 18,19.5A1,1 0 0,1 17,18.5V14A2,2 0 0,0 15,12H14V5A2,2 0 0,0 12,3H6A2,2 0 0,0 4,5V21H14V13.5H15.5V18.5A2.5,2.5 0 0,0 18,21A2.5,2.5 0 0,0 20.5,18.5V9C20.5,8.31 20.22,7.68 19.77,7.23M12,10H6V5H12V10M18,10A1,1 0 0,1 17,9A1,1 0 0,1 18,8A1,1 0 0,1 19,9A1,1 0 0,1 18,10Z'/%3E%3C/svg%3E";
+
+  // ── Daten ────────────────────────────────────────────────────────────────
+  // Gerät des Autos (p wie in window._casoraCar: Präfix oder Entität), dann der passende Sensor.
+  K.device = function (p) {
+    var C = window._casoraCar, ha = document.querySelector('home-assistant');
+    var R = (ha && ha.hass && ha.hass.entities) || {};
+    if (!C) return null;
+    var m = C.map(p), ids = Object.keys(m);
+    for (var i = 0; i < ids.length; i++) { var x = R[m[ids[i]]]; if (x && x.device_id) return x.device_id; }
+    return null;
+  };
+  K.sensorId = function (p, states) {
+    var dev = K.device(p);
+    if (!dev || !states) return null;
+    var ids = Object.keys(states);
+    for (var i = 0; i < ids.length; i++) {
+      var id = ids[i];
+      if (id.indexOf('sensor.casora_tanken_') !== 0) continue;
+      var a = states[id] && states[id].attributes;
+      if (a && a.car_device_id === dev) return id;
+    }
+    return null;
+  };
+  K.watch = function (p, states) { var id = K.sensorId(p, states); return id ? [id] : []; };
+  var info = function (st) {
+    var a = (st && st.attributes) || {};
+    var n = parseFloat(st && st.state);
+    return { price: isNaN(n) ? null : n, fuel: FUEL[a.fuel] || a.fuel || '', stations: Array.isArray(a.stations) ? a.stations : [],
+      typical: Array.isArray(a.typical) ? a.typical : null, low: a.low, high: a.high, learn: a.learn_days_left,
+      radius: a.radius_km, origin: a.origin, updated: a.updated, error: a.error, source: a.source, count: a.count };
+  };
+
+  // ── Empfehlung (rein rechnerisch, dev/unit/tanken_empfehlung.mjs) ─────────
+  // o: price (günstigste offene jetzt), typical (24 Stundenmittel oder null), hour (0–23), tank (%),
+  //    range (km), learn (Resttage der Lernphase), fuel (Anzeigename).
+  // → { kind: lernen|keine|knapp|warten|jetzt|egal, tone: good|warn|neutral, eyebrow, title, text, short, hour }
+  K.advice = function (o) {
+    o = o || {};
+    var fuel = o.fuel || 'Kraftstoff';
+    if (o.learn > 0) {
+      return { kind: 'lernen', tone: 'neutral', eyebrow: 'Lernphase', title: 'Empfehlung kommt bald',
+        text: 'Die Empfehlung kommt, sobald genug Preise gesammelt sind, in etwa ' + (o.learn === 1 ? 'einem Tag' : o.learn + ' Tagen') + '.',
+        short: 'Preise werden gesammelt' };
+    }
+    if (o.price == null) return { kind: 'keine', tone: 'neutral', eyebrow: 'Gerade', title: 'Keine offene Tankstelle', text: 'Im Umkreis hat gerade keine Tankstelle geöffnet.', short: 'keine offen' };
+    if ((o.tank != null && o.tank <= 15) || (o.range != null && o.range < 60)) {
+      var why = o.tank != null && o.range != null ? 'Tank bei ' + Math.round(o.tank) + ' %, noch etwa ' + Math.round(o.range) + ' km. '
+        : o.tank != null ? 'Tank bei ' + Math.round(o.tank) + ' %. ' : 'Noch etwa ' + Math.round(o.range) + ' km. ';
+      return { kind: 'knapp', tone: 'warn', eyebrow: 'Tank knapp', title: 'Jetzt tanken',
+        text: why + 'Warten lohnt sich nicht.', short: 'Tank knapp' };
+    }
+    var T = o.typical, h = o.hour;
+    var cur = T && T[h] != null ? T[h] : null;
+    var best = null, bh = null;
+    // Die nächsten 12 Stunden, nur zu üblichen Tankzeiten (6 bis 22 Uhr).
+    for (var i = 1; T && i <= 12; i++) {
+      var hh = (h + i) % 24;
+      if (hh < 6 || hh > 22 || T[hh] == null) continue;
+      if (best == null || T[hh] < best - 0.0005) { best = T[hh]; bh = hh; }
+    }
+    var ref = cur != null ? cur : o.price;
+    var save = best != null ? ref - best : 0;
+    if (best != null && save >= 0.02) {
+      var ct = Math.round(save * 100);
+      var later = bh > h;
+      var title = bh >= 17 ? (later ? 'Warte bis heute Abend' : 'Warte bis morgen Abend')
+        : bh <= 10 ? (later ? 'Warte bis heute Vormittag' : 'Warte bis morgen früh')
+          : (later ? 'Warte bis ' + bh + ' Uhr' : 'Warte bis morgen ' + bh + ' Uhr');
+      return { kind: 'warten', tone: 'good', hour: bh, eyebrow: (later ? 'Heute' : 'Morgen') + ' ab ' + bh + ' Uhr', title: title,
+        text: (o.range != null ? 'Tank reicht noch ' + Math.round(o.range) + ' km. ' : '')
+          + 'Ab ' + bh + ' Uhr lag ' + fuel + ' in den letzten 14 Tagen im Schnitt ' + ct + ' ct niedriger.',
+        short: bh >= 17 && later ? 'abends günstiger' : 'ab ' + bh + ' Uhr günstiger' };
+    }
+    if (o.low != null && o.price <= o.low + 0.01) {
+      return { kind: 'jetzt', tone: 'good', eyebrow: 'Guter Zeitpunkt', title: 'Jetzt tanken',
+        text: fuel + ' liegt gerade im unteren Bereich der letzten 14 Tage.', short: 'jetzt günstig' };
+    }
+    return { kind: 'egal', tone: 'neutral', eyebrow: 'Heute', title: 'Kein großer Unterschied',
+      text: 'In den nächsten Stunden ändert sich der Preis meist um weniger als 2 ct.', short: 'kaum Unterschied' };
+  };
+
+  var carInfo = function (p, states) {
+    var C = window._casoraCar;
+    var r = C ? C.read(p, states) : {};
+    return { tank: r.ev ? null : r.tank, range: r.range };
+  };
+  var adviceFor = function (p, states, I) {
+    var c = carInfo(p, states);
+    return K.advice({ price: I.price, typical: I.typical, hour: new Date().getHours(), tank: c.tank, range: c.range,
+      learn: I.learn, fuel: I.fuel, low: I.low });
+  };
+
+  // ── Zeile im Auto-Popup (unter dem Tankbalken) ───────────────────────────
+  K.row = function (p, states) {
+    var UI = window._casoraUI, HH = window._casoraHH;
+    if (!UI || !(HH && HH.on())) return '';
+    var id = K.sensorId(p, states);
+    if (!id) return '';
+    var I = info(states[id]);
+    var sub;
+    if (I.error && !I.stations.length) sub = 'Abruf gestört';
+    else if (I.price == null && !I.stations.length) sub = 'Preise werden geladen';
+    else sub = I.fuel + ' · ' + adviceFor(p, states, I).short;
+    return '<div style="height:10px"></div><div class="casora-tank-row" data-casora-tank="' + esc(p || '') + '">'
+      + UI.group([{ icon: 'mdi:gas-station', iconTone: 'accent', label: 'Tanken', sub: sub,
+        value: I.price != null ? 'ab ' + price(I.price) + ' €' : '—', tappable: true }], null) + '</div>';
+  };
+
+  // ── Ansicht ──────────────────────────────────────────────────────────────
+  var COLORS = ['#5E8C7A', '#5B7FA6', '#B07D4F', '#9A6B8F', '#7D8A4E', '#A35E5E', '#4F8A9A', '#8A7A4E'];
+  // Kürzel aus dem Namen (erstes und letztes Wort: „Autohof Nord“ → AN), sonst aus der Marke.
+  K.abbr = function (s) {
+    var words = function (t) { return String(t || '').replace(/[^A-Za-zÄÖÜäöüß0-9 -]/g, ' ').split(/[\s-]+/).filter(Boolean); };
+    var w = words(s.n);
+    if (w.length < 2) w = words(s.b).length ? words(s.b) : w;
+    if (!w.length) return '?';
+    return (w.length > 1 ? w[0].charAt(0) + w[w.length - 1].charAt(0) : w[0].slice(0, 2)).toUpperCase();
+  };
+  var color = function (s) {
+    var k = String(s.b || s.n || ''), h = 0;
+    for (var i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0;
+    return COLORS[h % COLORS.length];
+  };
+  var circle = function (s, size) {
+    return '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;flex:none;background:' + color(s) + ';color:#fff;'
+      + 'display:grid;place-items:center;font-size:' + Math.round(size * .34) + 'px;font-weight:800;letter-spacing:.02em">' + esc(K.abbr(s)) + '</div>';
+  };
+  var badge = function (s) {
+    return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="76" height="76" viewBox="0 0 76 76">'
+      + '<circle cx="38" cy="38" r="38" fill="' + color(s) + '"/><text x="38" y="38" dy=".35em" text-anchor="middle" '
+      + 'font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="27" font-weight="700" fill="#fff">' + esc(K.abbr(s)) + '</text></svg>');
+  };
+  var sup = function (p) { var s = price(p); return esc(s.slice(0, -1)) + '<sup style="font-size:.62em;margin-left:1px">' + esc(s.slice(-1)) + '</sup>'; };
+  var short = function (n) {
+    // „Freie Tankstelle Mühlweg“ → „Mühlweg“: Gattungswörter weg, letztes Wort bleibt.
+    var w = String(n || '').split(/\s+/).filter(function (x) { return !/^(freie|tankstelle|tankpunkt|tankhof|autohof|stadttankstelle)$/i.test(x); });
+    return w.length ? w.slice(-2).join(' ') : String(n || '');
+  };
+
+  var tok = function () {
+    var UI = window._casoraUI || {}, T = UI.tokens || {};
+    var dark = false;
+    try { dark = matchMedia('(prefers-color-scheme: dark)').matches; } catch (e) { /* egal */ }
+    var root = document.querySelector('home-assistant');
+    if (root && root.hass && root.hass.themes && typeof root.hass.themes.darkMode === 'boolean') dark = root.hass.themes.darkMode;
+    var GOOD = 'var(--casora-popup-ui-good, #6AAE78)';
+    var ROW = 'var(--casora-soft-row-fill, rgba(140,115,90,0.07))';
+    return { T: T, dark: dark, GOOD: GOOD, WARN: 'var(--casora-popup-ui-warn, #E39A3B)', BAD: 'var(--casora-popup-ui-bad, #D35A4E)',
+      ACC: 'var(--casora-popup-ui-accent, var(--casora-color-teal, #4E9E95))', SUB: 'var(--casora-soft-sub, ' + T.ink2 + ')',
+      ROW: ROW, CTL: 'var(--casora-soft-control-fill, rgba(140,115,90,0.10))', RAD: 'var(--casora-popup-row-radius, 24px)',
+      TINT: function (c) { return 'color-mix(in srgb, ' + c + ' ' + (dark ? 22 : 16) + '%, ' + ROW + ')'; } };
+  };
+
+  var verdict = function (A, I, k) {
+    var c = A.tone === 'warn' ? k.WARN : A.tone === 'good' ? k.GOOD : k.SUB;
+    var out = '<div class="ct-verdict" style="background:' + (A.tone === 'neutral' ? k.ROW : k.TINT(c)) + ';border-radius:' + k.RAD + ';padding:18px 20px 16px;">'
+      + '<div style="font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:' + c + '">' + esc(A.eyebrow) + '</div>'
+      + '<div style="font-size:21px;font-weight:800;letter-spacing:-.015em;color:' + k.T.ink + ';margin:4px 0;line-height:1.2">' + esc(A.title) + '</div>'
+      + '<div class="ct-why" style="font-size:13.5px;font-weight:500;line-height:1.4;color:' + k.SUB + '">' + esc(A.text) + '</div>';
+    // Preis-Skala Tief → jetzt → Hoch (nur mit Tageskurve)
+    if (A.kind !== 'lernen' && I.price != null && I.low != null && I.high != null) {
+      var lo = Math.min(I.low, I.price), hi = Math.max(I.high, I.price);
+      var pos = hi > lo ? Math.round((I.price - lo) / (hi - lo) * 100) : 50;
+      out += '<div class="ct-scale" style="position:relative;height:8px;border-radius:99px;margin:18px 9px 8px;background:linear-gradient(90deg,' + k.GOOD + ',#E2BE5A 55%,' + k.BAD + ')">'
+        + '<i style="position:absolute;top:-5px;left:' + pos + '%;width:18px;height:18px;box-sizing:border-box;border-radius:50%;background:#fff;border:3px solid ' + k.T.ink + ';transform:translateX(-50%)"></i></div>'
+        + '<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:500;color:' + k.SUB + ';font-variant-numeric:tabular-nums;margin:0 2px">'
+        + '<span>' + esc(price(lo)) + ' € Tief</span><span style="font-weight:700;color:' + k.T.ink + '">jetzt ' + esc(price(I.price)) + ' €</span><span>' + esc(price(hi)) + ' € Hoch</span></div>';
+    }
+    return out + '</div>';
+  };
+  var day = function (I, A, k) {
+    var T = I.typical;
+    if (!T || A.kind === 'lernen') return '';
+    var hrs = [], vals = [];
+    for (var h = 6; h <= 23; h++) { hrs.push(h); if (T[h] != null) vals.push(T[h]); }
+    if (!vals.length) return '';
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), span = Math.max(0.01, hi - lo);
+    var now = new Date().getHours();
+    var bars = hrs.map(function (h) {
+      var v = T[h];
+      var ht = v == null ? 6 : Math.round(14 + 86 * (v - lo) / span);
+      var bg = v == null ? k.CTL : h === now ? k.ACC : (v <= lo + span * 0.3 ? k.GOOD : k.CTL);
+      return '<i style="flex:1;height:' + ht + '%;border-radius:4px 4px 2px 2px;background:' + bg + '"></i>';
+    }).join('');
+    var lab = [6, 9, 12, 15, 18, 21, 24].map(function (h) { return '<span>' + h + '</span>'; }).join('');
+    return '<div class="ct-day" style="background:' + k.ROW + ';border-radius:' + k.RAD + ';padding:14px 18px 10px;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:14px;font-weight:700;color:' + k.T.ink + '">Typischer Tag'
+      + '<span style="font-size:12px;font-weight:500;color:' + k.SUB + '">Ø 14 Tage, günstigste Station</span></div>'
+      + '<div style="display:flex;align-items:flex-end;gap:4px;height:60px;margin-top:12px">' + bars + '</div>'
+      + '<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:500;color:' + k.SUB + ';margin-top:5px">' + lab + '</div></div>';
+  };
+  var top3 = function (I, k) {
+    var s = I.stations.filter(function (x) { return x.o; }).slice(0, 3);
+    if (!s.length) return '';
+    return '<div class="ct-top" style="display:grid;grid-template-columns:repeat(' + s.length + ',minmax(0,1fr));gap:10px">' + s.map(function (x, i) {
+      return '<div style="min-width:0;background:' + (i ? k.ROW : k.TINT(k.GOOD)) + ';border-radius:' + k.RAD + ';padding:14px 8px 12px;text-align:center">'
+        + '<div style="display:flex;justify-content:center;margin-bottom:8px">' + circle(x, 36) + '</div>'
+        + '<div style="font-size:17px;font-weight:800;color:' + k.T.ink + ';font-variant-numeric:tabular-nums">' + sup(x.p) + '</div>'
+        + '<div style="font-size:12.5px;font-weight:600;color:' + k.T.ink + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">' + esc(short(x.n)) + '</div>'
+        + '<div style="font-size:12px;font-weight:500;color:' + k.SUB + '">' + (x.d != null ? esc(km(x.d)) : '&nbsp;') + '</div></div>';
+    }).join('') + '</div>';
+  };
+  // Punktkarte ohne Kartendienst: Umkreis, eigener Standort, Preise als Pillen.
+  var map = function (I, k, h, w) {
+    var pts = I.stations.filter(function (x) { return x.x != null && x.y != null; });
+    if (!pts.length) return '';
+    // Bildfläche im Seitenverhältnis der Spalte (sonst schneidet „slice“ oben/unten Pillen ab).
+    var H = h, W = Math.max(H, Math.round(w || 300)), cx = W / 2, cy = H / 2;
+    var reach = I.radius || Math.max.apply(null, pts.map(function (x) { return Math.max(Math.abs(x.x), Math.abs(x.y)); }).concat([1]));
+    var sc = (H * 0.46) / reach;
+    var ground = k.dark ? 'rgba(255,255,255,0.045)' : 'rgba(140,115,90,0.10)';
+    var line = k.dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.75)';
+    var s = '<svg class="ct-map" viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="' + h + '" preserveAspectRatio="xMidYMid slice" style="display:block;border-radius:' + k.RAD + ';overflow:hidden">'
+      + '<rect width="' + W + '" height="' + H + '" fill="' + ground + '"/>'
+      + '<line x1="0" y1="' + cy + '" x2="' + W + '" y2="' + cy + '" stroke="' + line + '" stroke-width="3"/>'
+      + '<line x1="' + cx + '" y1="0" x2="' + cx + '" y2="' + H + '" stroke="' + line + '" stroke-width="3"/>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (reach * sc).toFixed(1) + '" fill="' + k.ACC + '" opacity=".10"/>'
+      + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (reach * sc / 2).toFixed(1) + '" fill="none" stroke="' + k.ACC + '" stroke-opacity=".18" stroke-width="1.5"/>';
+    var best = I.stations.filter(function (x) { return x.o; })[0];
+    // Günstigste zuerst platzieren (behält ihren Ort), überlappende Pillen weichen senkrecht aus;
+    // gezeichnet wird umgekehrt, damit die günstigste oben liegt.
+    var placed = [];
+    var fits = function (x, y) { return placed.every(function (q) { return Math.abs(q.x - x) > 70 || Math.abs(q.y - y) > 31; }); };
+    pts.slice().sort(function (a, b) { return a.p - b.p; }).slice(0, 14).forEach(function (p) {
+      var cl = function (x, y) { return [Math.max(38, Math.min(W - 38, x)), Math.max(18, Math.min(H - 18, y))]; };
+      var x0 = cx + p.x * sc, y0 = cy - p.y * sc, at = cl(x0, y0);
+      var MOVES = [[0, 32], [0, -32], [72, 0], [-72, 0], [72, 32], [-72, 32], [72, -32], [-72, -32], [0, 64], [0, -64], [144, 0], [-144, 0]];
+      for (var t = 0; t < MOVES.length && !fits(at[0], at[1]); t++) at = cl(x0 + MOVES[t][0], y0 + MOVES[t][1]);
+      placed.push({ p: p, x: at[0], y: at[1] });
+    });
+    placed.reverse().forEach(function (q) {
+      var p = q.p, x = q.x, y = q.y, w = 66, hh = 28, isBest = p === best;
+      s += '<g' + (p.o ? '' : ' opacity=".55"') + '><rect x="' + (x - w / 2).toFixed(1) + '" y="' + (y - hh / 2).toFixed(1) + '" width="' + w + '" height="' + hh + '" rx="14" fill="'
+        + (isBest ? k.GOOD : (k.dark ? '#4A423B' : '#FFFDF9')) + '"/>'
+        + '<text x="' + x.toFixed(1) + '" y="' + (y + 1).toFixed(1) + '" text-anchor="middle" dominant-baseline="middle" font-size="13.5" font-weight="700" '
+        + 'font-family="Inter,-apple-system,system-ui,sans-serif" fill="' + (isBest ? '#fff' : (k.dark ? '#EEE8E1' : '#3A322B')) + '">' + esc(price(p.p)) + '</text></g>';
+    });
+    s += '<circle cx="' + cx + '" cy="' + cy + '" r="6" fill="' + k.ACC + '" stroke="#fff" stroke-width="3"/>';
+    return s + '</svg>';
+  };
+  var SORTS = [['guenstig', 'Günstigste'], ['naechste', 'Nächste'], ['offen', 'Offen']];
+  var list = function (I, sort) {
+    var UI = window._casoraUI;
+    var s = I.stations.slice();
+    if (sort === 'naechste') s.sort(function (a, b) { return (a.d == null ? 999 : a.d) - (b.d == null ? 999 : b.d); });
+    else if (sort === 'offen') s = s.filter(function (x) { return x.o; });
+    var more = Math.max(0, s.length - 12);
+    var out = UI.group(s.slice(0, 12).map(function (x) {
+      return { image: badge(x), imageFit: 'cover', label: x.n || x.b || '?',
+        sub: [x.d != null ? km(x.d) : null, x.o ? 'offen' : 'zu'].filter(Boolean).join(' · '), subTone: x.o ? null : 'warn',
+        value: price(x.p) + ' €' };
+    }), null);
+    if (more) out += '<div style="font-size:12.5px;font-weight:500;text-align:center;margin-top:10px;color:var(--casora-soft-sub, inherit)">und ' + more + ' weitere</div>';
+    if (!s.length) out = UI.group([{ icon: 'mdi:gas-station-off-outline', iconTone: 'rgba(255,255,255,0.18)', label: 'Gerade keine offen' }], null);
+    return out;
+  };
+  var stamp = function (iso) {
+    var t = Date.parse(iso || '');
+    return isNaN(t) ? null : new Date(t).toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' });
+  };
+
+  K.html = function (p, states, sort, wide, bw) {
+    var UI = window._casoraUI;
+    var id = K.sensorId(p, states);
+    if (!UI || !id) return '';
+    var I = info(states[id]), k = tok(), A = adviceFor(p, states, I);
+    var sp = function (px) { return '<div style="height:' + px + 'px"></div>'; };
+    var n = I.stations.length;
+    var head = UI.line(I.price != null ? 'ab ' + price(I.price) + ' €' : 'Noch keine Preise',
+      wide && n ? [I.fuel, n === 1 ? '1 Tankstelle' + (I.radius ? ' in ' + fmt(I.radius, 0) + ' km' : '') : n + ' Tankstellen' + (I.radius ? ' in ' + fmt(I.radius, 0) + ' km' : '')] : [I.fuel]) + sp(20);
+    var foot = '<div class="ct-src" style="font-family:' + k.T.font + ';font-size:12px;font-weight:500;color:' + k.SUB + ';text-align:center;padding:2px 6px 0;">'
+      // Je Teil ein eigener Text (die Übersetzung arbeitet je Textstück).
+      + [I.fuel, I.radius ? 'Umkreis ' + fmt(I.radius, 0) + ' km um ' + (I.origin === 'car' ? 'das Auto' : 'Zuhause') : null,
+        stamp(I.updated) ? 'Stand ' + stamp(I.updated) : null, 'Daten: Tankerkönig, CC BY 4.0'].filter(Boolean)
+        .map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('<span> · </span>') + '</div>';
+    if (!n) {
+      var why = I.error ? 'Tankerkönig antwortet gerade nicht: ' + I.error : 'Casora fragt alle 10 Minuten, die ersten Preise kommen gleich.';
+      return '<div style="font-family:' + k.T.font + '">' + head
+        + '<div class="ct-empty" style="max-width:520px;margin:0 auto;background:' + k.ROW + ';border-radius:' + k.RAD + ';padding:24px;text-align:center">'
+        + '<div style="font-size:16px;font-weight:700;color:' + k.T.ink + '">' + (I.error ? 'Tankpreise gerade nicht abrufbar' : 'Preise werden geladen') + '</div>'
+        + '<div style="font-size:13px;font-weight:500;color:' + k.SUB + ';line-height:1.45;margin-top:6px">' + esc(why) + '</div></div>' + sp(18) + foot + '</div>';
+    }
+    var L = UI.label('Empfehlung') + verdict(A, I, k) + (day(I, A, k) ? sp(10) + day(I, A, k) : '') + sp(18) + UI.label('Am günstigsten') + top3(I, k);
+    var m = map(I, k, wide ? 190 : 160, bw ? (wide ? (bw - 26) / 2 : bw) : 0);
+    var seg = '<div class="ct-seg">' + UI.segments(SORTS.map(function (s) { return { label: s[1], active: s[0] === sort }; }), null) + '</div>';
+    var R = UI.label('In der Nähe') + (m ? m + sp(12) : '') + seg + sp(12) + '<div class="ct-list">' + list(I, sort) + '</div>';
+    return '<div style="font-family:' + k.T.font + '">' + head + (wide
+      ? '<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:var(--casora-popup-col-gap, 26px);align-items:start"><div>' + L + '</div><div>' + R + '</div></div>'
+      : L + sp(18) + R) + sp(18) + foot + '</div>';
+  };
+
+  // ── Ansicht im offenen Popup ein- und ausblenden ─────────────────────────
+  var V = null;  // { pop, p, sort, saved… }
+  var popEl = function () { var P = window.casoraPopup; return P && P.element && P.element.hasAttribute('open') ? P.element : null; };
+  var hassStates = function () { var ha = document.querySelector('home-assistant'); return (ha && ha.hass && ha.hass.states) || {}; };
+  var render = function (keepScroll) {
+    if (!V) return;
+    var sr = V.pop.shadowRoot, content = sr.querySelector('.content');
+    var top = content ? content.scrollTop : 0;
+    var bw = V.box.getBoundingClientRect().width;
+    var wide = bw > 700 || (bw === 0 && window.innerWidth > 760);
+    var pad = parseFloat(V.box.style.paddingLeft) || 0;
+    V.box.innerHTML = K.html(V.p, hassStates(), V.sort, wide, bw ? bw - 2 * pad : 0);
+    V.wide = wide;
+    if (content) content.scrollTop = keepScroll ? top : 0;
+    if (window._casoraSepScan) window._casoraSepScan(sr);
+  };
+  K.open = function (p) {
+    var pop = popEl();
+    if (!pop || V) return false;
+    var sr = pop.shadowRoot, cont = sr.querySelector('.content .container');
+    var close = sr.querySelector('.header-close'), surf = sr.querySelector('.surface');
+    if (!cont || !close || !surf) return false;
+    // Seitenabstand wie der Popup-Inhalt (erste Statuszeile bzw. Zeile), sonst wie im Entwurf.
+    var first = (function () {
+      var w = window.__pierce ? window.__pierce('.hui-line, .hui-srow', cont) : [];
+      return w.find(function (e) { return e.getBoundingClientRect().width > 0; });
+    })();
+    var cr = cont.getBoundingClientRect();
+    var pad = first ? Math.max(0, Math.round(first.getBoundingClientRect().left - cr.left)) : (window.innerWidth > 760 ? 26 : 14);
+    if (first && first.classList.contains('hui-line')) pad = window.innerWidth > 760 ? 26 : 14;
+    var srow = first && first.classList.contains('hui-srow') ? first : null;
+    if (srow) pad = Math.max(0, Math.round(srow.getBoundingClientRect().left - cr.left));
+    V = { pop: pop, p: p, sort: 'guenstig', hidden: [], title: sr.querySelector('.header-title').textContent };
+    [].slice.call(cont.children).forEach(function (c) { V.hidden.push([c, c.style.display]); c.style.display = 'none'; });
+    var ex = sr.querySelector('.extra');
+    if (ex && !ex.hidden) { V.extra = ex; ex.hidden = true; }
+    var box = document.createElement('div');
+    box.className = 'casora-tank-view';
+    box.style.cssText = 'padding:0 ' + pad + 'px 24px;box-sizing:border-box;position:relative;z-index:1;text-align:left;';
+    cont.appendChild(box);
+    V.box = box;
+    sr.querySelector('.header-title').textContent = 'Tanken';
+    var ring = sr.querySelector('.header-ring');
+    if (ring && !ring.hidden) { V.ring = ring.innerHTML; ring.innerHTML = '<span class="g" style="--g:url(&quot;' + GAS + '&quot;)"></span>'; }
+    // Zurück: Spiegelbild des Schließen-Knopfs (gleiche Größe und Höhe, linke Seite).
+    var back = close.cloneNode(true);
+    back.classList.add('casora-tank-back');
+    back.setAttribute('aria-label', 'Zurück');
+    back.hidden = false;
+    var path = back.querySelector('path');
+    if (path) path.setAttribute('d', 'M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z');
+    var place = function () {
+      var s = surf.getBoundingClientRect(), r = close.getBoundingClientRect();
+      back.style.position = 'absolute';
+      back.style.top = (r.top - s.top) + 'px';
+      back.style.left = (s.right - r.right) + 'px';
+      back.style.right = 'auto';
+      back.style.margin = '0';
+      back.style.zIndex = '5';
+    };
+    surf.appendChild(back);
+    place();
+    V.back = back;
+    V.onResize = function () { if (!V) return; place(); var w = V.box.getBoundingClientRect().width > 700; if (w !== V.wide) render(true); };
+    window.addEventListener('resize', V.onResize);
+    // Popup zu oder neu befüllt: Ansicht verlassen.
+    V.mo = new MutationObserver(function () { if (V && (!pop.hasAttribute('open') || !box.isConnected)) K.leave(true); });
+    V.mo.observe(pop, { attributes: true, attributeFilter: ['open'] });
+    V.mo.observe(cont, { childList: true });
+    V.last = null;
+    V.poll = setInterval(function () {
+      if (!V) return;
+      var id = K.sensorId(V.p, hassStates()), st = id && hassStates()[id];
+      var lu = st ? st.last_updated : null;
+      if (V.last !== null && lu !== V.last) render(true);
+      V.last = lu;
+    }, 4000);
+    render(false);
+    return true;
+  };
+  K.leave = function (closing) {
+    if (!V) return;
+    var v = V; V = null;
+    clearInterval(v.poll);
+    v.mo.disconnect();
+    window.removeEventListener('resize', v.onResize);
+    if (v.back) v.back.remove();
+    if (v.box) v.box.remove();
+    if (closing && !v.pop.hasAttribute('open')) { /* Popup zu: nur aufräumen */ }
+    var sr = v.pop.shadowRoot;
+    v.hidden.forEach(function (x) { if (x[0].isConnected) x[0].style.display = x[1]; });
+    if (v.extra) v.extra.hidden = false;
+    var ttl = sr.querySelector('.header-title');
+    if (ttl && ttl.textContent === 'Tanken') ttl.textContent = v.title;
+    var ring = sr.querySelector('.header-ring');
+    if (ring && v.ring != null) ring.innerHTML = v.ring;
+    var content = sr.querySelector('.content');
+    if (content && !closing) content.scrollTop = 0;
+  };
+  K.active = function () { return !!V; };
+
+  // ── Antippen (wie die Popup-Knöpfe: click + touchend ohne Wischen) ────────
+  var last = 0, tp = null;
+  var fire = function (ev) {
+    var path = (ev.composedPath && ev.composedPath()) || [];
+    for (var i = 0; i < path.length; i++) {
+      var el = path[i];
+      if (!el || !el.classList) continue;
+      if (el.dataset && el.dataset.casoraTank !== undefined) {
+        if (Date.now() - last < 400) return;
+        last = Date.now();
+        ev.preventDefault(); ev.stopPropagation();
+        K.open(el.dataset.casoraTank || null);
+        return;
+      }
+      if (el.classList.contains('casora-tank-back')) {
+        if (Date.now() - last < 400) return;
+        last = Date.now();
+        window._casoraSuppressDismiss = Date.now() + 600;
+        ev.preventDefault(); ev.stopPropagation();
+        K.leave(false);
+        return;
+      }
+      if (el.classList.contains('hui-sg') && V) {
+        var seg = el.closest && el.closest('.ct-seg');
+        if (!seg) continue;
+        if (Date.now() - last < 400) return;
+        last = Date.now();
+        var idx = [].indexOf.call(el.parentNode.children, el);
+        if (SORTS[idx]) { V.sort = SORTS[idx][0]; render(true); }
+        ev.preventDefault(); ev.stopPropagation();
+        return;
+      }
+    }
+  };
+  document.addEventListener('touchstart', function (ev) { var t = ev.touches && ev.touches[0]; tp = t ? { x: t.clientX, y: t.clientY, moved: false } : null; }, { capture: true, passive: true });
+  document.addEventListener('touchmove', function (ev) {
+    var t = ev.touches && ev.touches[0];
+    if (tp && t && (Math.abs(t.clientX - tp.x) > 10 || Math.abs(t.clientY - tp.y) > 10)) tp.moved = true;
+  }, { capture: true, passive: true });
+  document.addEventListener('click', fire, true);
+  document.addEventListener('touchend', function (ev) { var moved = !!(tp && tp.moved); tp = null; if (!moved) fire(ev); }, true);
+})();

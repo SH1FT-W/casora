@@ -1750,7 +1750,9 @@
         sub: sub, subTone: lv === 2 ? 'bad' : lv === 1 ? 'warn' : 'good', center: true });
       /* Weich: Tank als breiter runder Balken wie der Helligkeitsregler. */
       if (r.tank != null && window._casoraHH && window._casoraHH.on()) {
-        return out + '<div style="height:20px"></div>' + window._casoraHH.bar({ pct: Math.max(2, Math.min(100, r.tank)), text: fmtN(r.tank) + ' %', word: r.ev ? 'Akku' : 'Tank', tone: r.tank <= 15 ? 'warn' : 'accent' });
+        return out + '<div style="height:20px"></div>' + window._casoraHH.bar({ pct: Math.max(2, Math.min(100, r.tank)), text: fmtN(r.tank) + ' %', word: r.ev ? 'Akku' : 'Tank', tone: r.tank <= 15 ? 'warn' : 'accent' })
+          /* Tanken (1.2, 12-tanken.js): Zeile direkt unter dem Tankbalken, nur wenn eingerichtet. */
+          + (window._casoraTank ? window._casoraTank.row(p, states) : '');
       }
       if (r.tank != null) {
         var col = r.tank <= 15 ? 'var(--casora-popup-ui-warn, #FF9F0A)' : 'var(--casora-color-teal, #00C3D0)';
@@ -1852,6 +1854,7 @@
     var watch = [];
     var M = C.map(p);
     Object.keys(M).forEach(function (k) { var id = M[k]; if (id && states[id] && watch.indexOf(id) < 0) watch.push(id); });
+    if (window._casoraTank) window._casoraTank.watch(p, states).forEach(function (id) { watch.push(id); });
     var sec = function (n) { return '[[[ return window._casoraCar ? window._casoraCar.sec(' + JSON.stringify(n) + ', ' + JSON.stringify(p) + ', states) : ""; ]]]'; };
     /* Weich (Entschlacken 01.10.2026): Kopf mit Reichweite und Tankbalken, links Zustand (nur Abweichungen),
        rechts Wartung (nur Fälliges); alle Zustandszeilen, Wartungswerte, Fahrten und Daten unter „Mehr“. */
