@@ -332,10 +332,10 @@
       return svg;
     }
     _grid(svg, sc, Y, W, padR, fmt) {
-      sc.ticks.forEach(function (v, i) {
+      return sc.ticks.map(function (v, i) {
         var y = Y(v);
         svg.appendChild(el('line', { x1: 2, x2: W - padR + 6, y1: y, y2: y, style: 'stroke:var(--cgrid);stroke-width:1' + (i ? ';stroke-dasharray:2 3' : '') }));
-        svg.appendChild(el('text', { x: W - padR + 10, y: y + 4 }, fmt(v)));
+        return svg.appendChild(el('text', { x: W - padR + 10, y: y + 4 }, fmt(v)));
       });
     }
     _bind(svg, n, show, hide) {
@@ -462,7 +462,7 @@
       this._def = C.tr('Ø pro Tag');
       var dflt = function () { me._say(ro, avg != null ? C.nf(avg, dec) : '–', unit, me._def, null); };
       if (!have.length) { this._empty(svg, W, Hh); dflt(); return; }
-      this._grid(svg, sc, Y, W, padR, function (v) { return C.nf(v, v % 1 ? 1 : 0); });
+      var tl = this._grid(svg, sc, Y, W, padR, function (v) { return C.nf(v, v % 1 ? 1 : 0); });
       var every = n > 7 ? Math.ceil(44 / slot) : 1, bars = [];
       days.forEach(function (x, i) {
         var cx = padL + slot * (i + 0.5), today = i === n - 1, y = Y(x.v || 0);
@@ -476,6 +476,8 @@
       });
       if (avg != null) {
         var ya = Y(avg);
+        // „Ø“ hat Vorrang vor einer Skalenzahl auf gleicher Höhe.
+        tl.forEach(function (t) { if (Math.abs(t.getAttribute('y') - ya - 4) < 12) t.remove(); });
         svg.appendChild(el('line', { x1: padL, x2: W - padR, y1: ya, y2: ya, style: 'stroke:var(--cink2);stroke-width:1.25;stroke-dasharray:4 4' }));
         svg.appendChild(el('text', { x: W - padR + 10, y: ya + 4, style: 'fill:var(--cink2);font-weight:600' }, 'Ø'));
       }
