@@ -19,6 +19,7 @@
   var diffDays = function (d, now) { return Math.round((day0(d) - day0(now || new Date())) / 86400000); };
   var hm = function (d) { return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
   var dm = function (d) { return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.'; };
+  var dmy = function (d) { return dm(d) + String(d.getFullYear()).slice(-2); };
 
   /* Team Tracker liefert ESPN-Namen auf Englisch. Bei deutscher Oberfläche Länder und Wettbewerbe auf
      Deutsch; sonst bleiben die ESPN-Namen (gekürzt). Datenlisten, kein UI-Text: Name=Name, durch | getrennt. */
@@ -310,6 +311,8 @@
       id: String(t ? t.id : e.id), name: t ? (t.displayName || t.shortDisplayName || t.name) : String(e.team || ''), logo: logo || '',
       rank: Number(s.rank || s.R) || 0, gp: s.gamesPlayed || s.GP || '0', gd: s.pointDifferential || s.GD || '0',
       pts: s.points || s.P || '0', note: note, zone: null,
+      w: s.wins != null ? s.wins : s.W, t: s.ties != null ? s.ties : s.D, l: s.losses != null ? s.losses : s.L,
+      gf: s.pointsFor != null ? s.pointsFor : null, ga: s.pointsAgainst != null ? s.pointsAgainst : null,
     };
   };
   var groupsOf = function (j) {
@@ -360,6 +363,34 @@
     var real = all.filter(function (x) { return !x.friendly; });
     return real.length >= 3 ? real : all;
   };
+  /* Letzte direkte Duelle (ESPN seasonseries „head-to-head“, neueste zuerst), aus eigener Sicht.
+     Nur beendete Spiele; Wettbewerb ohne Saison davor („2025-26 Italian Serie A“). */
+  K.duels = function (summary, teamId) {
+    var ser = ((summary && summary.seasonseries) || []).filter(function (x) { return /head/i.test(x.type || ''); })[0];
+    if (!ser) return [];
+    return (ser.events || []).map(function (ev) {
+      var cs = ev.competitors || [], me = cs.filter(function (c) { return c.team && String(c.team.id) === String(teamId); })[0];
+      var th = cs.filter(function (c) { return c !== me; })[0];
+      var st = typeof ev.status === 'string' ? ev.status : ((ev.statusType || ev.status || {}).state || '');
+      if (!me || !th || st !== 'post' || me.score == null || th.score == null) return null;
+      var my = Number(me.score), their = Number(th.score);
+      var res = my > their ? 'W' : my < their ? 'L' : me.winner ? 'W' : th.winner ? 'L' : 'D';
+      var d = ev.date ? new Date(ev.date) : null;
+      return { res: res, my: String(me.score), their: String(th.score), home: me.homeAway === 'home', pens: my === their && res !== 'D',
+        date: d && !isNaN(d) ? d : null, comp: K.comp(String(ev.competitionName || '').replace(/^\d{4}(-\d{2,4})?\s+/, '')) };
+    }).filter(Boolean);
+  };
+  /* Heim-/Auswärtsbilanz von ESPNs Teamseite (record.items[total].stats). */
+  K.record = function (teamJson) {
+    var it = ((((teamJson || {}).team || {}).record || {}).items || []).filter(function (x) { return x.type === 'total'; })[0];
+    if (!it) return null;
+    var o = {};
+    (it.stats || []).forEach(function (x) { o[x.name] = x.value; });
+    var part = function (p) {
+      return o[p + 'GamesPlayed'] ? { w: o[p + 'Wins'] || 0, t: o[p + 'Ties'] || 0, l: o[p + 'Losses'] || 0, gf: o[p + 'PointsFor'], ga: o[p + 'PointsAgainst'] } : null;
+    };
+    return { home: part('home'), away: part('away') };
+  };
   /* Tabellenausschnitt: Spitze (3), um das eigene Team (±2), Gegner, Ende (2); dazwischen Lücken. */
   K.window = function (rows, me, opp, full) {
     if (full || rows.length <= 10) return rows.slice();
@@ -395,8 +426,11 @@
       var slug = league !== 'all' ? league : (((s || {}).header || {}).league || {}).slug;
       return slug && slug !== 'all' ? getJson(API + '/v2/sports/' + path(i.sport) + '/' + path(slug) + '/standings').catch(function () { return null; }) : null;
     });
-    Promise.all([sum, tab]).then(function (r) {
-      K.data[key] = { ts: Date.now(), err: !r[0] && !r[1] && !!i.event, table: K.table(r[1], r[0], i.team.id), form: K.form(r[0], i.team.id) };
+    /* Heim/Auswärts nur für die Saisonbilanz (Variante C) – eigene Liga, nicht bei „all“. */
+    var rec = K.fill() === 'c' && league !== 'all' ? getJson(API + '/site/v2/sports/' + path(i.sport) + '/' + path(league) + '/teams/' + path(i.team.id)).catch(function () { return null; }) : null;
+    Promise.all([sum, tab, rec]).then(function (r) {
+      K.data[key] = { ts: Date.now(), err: !r[0] && !r[1] && !!i.event, table: K.table(r[1], r[0], i.team.id), form: K.form(r[0], i.team.id),
+        duels: K.duels(r[0], i.team.id), oppForm: i.opp.id ? K.form(r[0], i.opp.id) : [], record: K.record(r[2]) };
     }).catch(function () { K.data[key] = { ts: Date.now(), err: true, table: null, form: [] }; })
       .then(function () { K.busy[key] = false; K.repaint(); });
   };
@@ -441,6 +475,7 @@
         n.innerHTML = (window.casoraTr || function (x) { return x; })(K.html(k, S[K._id]));
       });
     });
+    K.fitSoon();
   };
   var UIT = function () { return (window._casoraUI && window._casoraUI.tokens) || { ink: '#fff', ink2: 'rgba(255,255,255,0.56)', ink3: 'rgba(255,255,255,0.42)', font: 'system-ui' }; };
   var SOFT = function () { return !!(window._casoraHH && window._casoraHH.on()); };
@@ -527,6 +562,21 @@
       + '.cfb-f .s{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;}'
       + '.cfb-f .s small{display:block;font-weight:500;font-size:11px;color:' + sub + ';}'
       + '.cfb-e{background:' + row + ';border-radius:' + rad + ';padding:16px;font-size:14px;font-weight:500;color:' + sub + ';}'
+      /* Unter der Form: ein Kasten (wie der Spielkasten), der am Desktop bis zur Unterkante der Tabelle reicht (K.fit).
+         Zeilen ohne eigene Fläche, mit Haarlinie; Kreise und Ergebnisse fluchten mit den Formzeilen (links 8, rechts 14 px). */
+      + '.cfb-x{display:flex;flex-direction:column;box-sizing:border-box;margin-top:var(--casora-popup-sec-gap, 18px);background:' + row + ';border-radius:calc(' + rad + ' + 4px);padding:16px 14px 6px 8px;' + plate + '}'
+      + '.cfb-x[hidden],.cfb-x [hidden]{display:none !important;}'
+      + '.cfb-xh{padding-left:6px;}'
+      + '.cfb-xb{display:flex;flex-direction:column;flex:1 1 auto;}'
+      + '.cfb-xl{flex:1 1 auto;display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:48px;font-size:14.5px;}'
+      + '.cfb-xl.c{grid-template-columns:28px 22px minmax(0,1fr) auto;}'
+      + '.cfb-xl.v{grid-template-columns:minmax(0,1fr) auto;padding-left:6px;}'
+      + '.cfb-xl+.cfb-xl{border-top:1px solid var(--casora-popup-divider, ' + (soft ? 'rgba(120,100,80,0.10)' : 'rgba(255,255,255,0.08)') + ');}'
+      + '.cfb-xl img{width:22px;height:22px;object-fit:contain;}'
+      + '.cfb-xl .o{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2;}'
+      + '.cfb-xl .o small{display:block;font-weight:500;font-size:12px;color:' + sub + ';}'
+      + '.cfb-xl .s{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;}'
+      + '.cfb-xl .s small{display:block;font-weight:500;font-size:11px;color:' + sub + ';}'
       + '</style>';
   };
   var crest = function (url) {
@@ -612,15 +662,96 @@
             + mini(x.logo)
             + '<span class="o">' + (x.home ? 'gegen ' : 'bei ') + '<span data-no-i18n>' + esc(K.name(x.opp)) + '</span><small>' + esc([x.comp, x.date ? dm(x.date) : ''].filter(Boolean).join(' · ')) + '</small></span>'
             + '<span class="s">' + esc(x.my) + ' : ' + esc(x.their) + (x.pens ? '<small>i. E.</small>' : '') + '</span></div>';
-        }).join('') + '</div></div>';
+        }).join('') + '</div>' + K.fillHtml(i, d, tab) + '</div>';
     }
     return '';
   };
+  /* Zusatz unter der Form (Wunsch 08.10.2026: rechte Spalte endet sonst weit über der Tabelle).
+     Varianten zum Vergleichen: window.CASORA_FB_FILL = a (letzte Duelle) | b (Form des Gegners) | c (Saisonbilanz) | none. */
+  K.fill = function () { var v = window.CASORA_FB_FILL; return /^(a|b|c|none)$/.test(v || '') ? v : 'a'; };
+  var tally = function (list) {
+    var n = { W: 0, D: 0, L: 0 }, ab = K.abbr();
+    list.forEach(function (x) { if (!x.friendly && n[x.res] != null) n[x.res]++; });
+    return '<span data-no-i18n> · ' + n.W + ' ' + ab.W + ' · ' + n.D + ' ' + ab.D + ' · ' + n.L + ' ' + ab.L + '</span>';
+  };
+  var box = function (title, body) {
+    return '<div class="cfb-x"><div class="cfb-xh">' + head(title, '', true) + '</div>' + body + '</div>';
+  };
+  K.fillHtml = function (i, d, tab) {
+    var v = K.fill(), ab = K.abbr();
+    if (!d || v === 'none') return '';
+    if (v === 'a') {
+      var du = (d.duels || []).slice(0, 5);
+      if (!du.length) return '';
+      return box('Letzte Duelle' + tally(du), '<div class="cfb-xb">' + du.map(function (x) {
+        return '<div class="cfb-xl" data-fit><span class="cfb-res ' + esc(x.res) + '" data-no-i18n>' + (ab[x.res] || '–') + '</span>'
+          + '<span class="o">' + (x.home ? 'Heimspiel' : 'Auswärtsspiel') + '<small>' + esc([x.comp, x.date ? dmy(x.date) : ''].filter(Boolean).join(' · ')) + '</small></span>'
+          + '<span class="s">' + esc(x.my) + ' : ' + esc(x.their) + (x.pens ? '<small>i. E.</small>' : '') + '</span></div>';
+      }).join('') + '</div>');
+    }
+    if (v === 'b') {
+      var of = d.oppForm || [];
+      if (!of.length || !i.opp.id || i.opp.id === i.team.id) return '';
+      return box('Form <span data-no-i18n>' + esc(K.name(i.opp.name)) + '</span>' + tally(of), '<div class="cfb-xb">' + of.map(function (x) {
+        return '<div class="cfb-xl c" data-fit><span class="cfb-res ' + esc(x.res) + '" data-no-i18n>' + (ab[x.res] || '–') + '</span>' + mini(x.logo)
+          + '<span class="o">' + (x.home ? 'gegen ' : 'bei ') + '<span data-no-i18n>' + esc(K.name(x.opp)) + '</span><small>' + esc([x.comp, x.date ? dm(x.date) : ''].filter(Boolean).join(' · ')) + '</small></span>'
+          + '<span class="s">' + esc(x.my) + ' : ' + esc(x.their) + (x.pens ? '<small>i. E.</small>' : '') + '</span></div>';
+      }).join('') + '</div>');
+    }
+    /* c: Saisonbilanz aus der Tabelle (Siege, Tore), Heim/auswärts von der Teamseite – fehlt etwas, fehlt nur die Zeile. */
+    var me = tab && tab.rows.filter(function (r) { return r.id === i.team.id; })[0];
+    if (!me || me.w == null) return '';
+    var line = function (lbl, val, small) {
+      return '<div class="cfb-xl v" data-fit><span class="o">' + lbl + (small ? '<small data-no-i18n>' + esc(small) + '</small>' : '') + '</span><span class="s" data-no-i18n>' + esc(val) + '</span></div>';
+    };
+    var wtl = function (x) { return x.w + ' ' + ab.W + ' · ' + x.t + ' ' + ab.D + ' · ' + x.l + ' ' + ab.L; };
+    var goals = function (x) { return x.gf != null && x.ga != null ? x.gf + ' : ' + x.ga : ''; };
+    var rc = d.record || {}, gp = Number(me.gp) || 0, out = [line('Gesamt', wtl(me))];
+    if (goals(me)) out.push(line('Tore', goals(me)));
+    if (rc.home) out.push(line('Heim', wtl(rc.home), goals(rc.home) ? 'Tore ' + goals(rc.home) : ''));
+    if (rc.away) out.push(line('Auswärts', wtl(rc.away), goals(rc.away) ? 'Tore ' + goals(rc.away) : ''));
+    if (gp) out.push(line('Punkte pro Spiel', (Number(me.pts) / gp).toFixed(2).replace('.', german() ? ',' : '.')));
+    return box('Saisonbilanz', '<div class="cfb-xb">' + out.join('') + '</div>');
+  };
+
+  /* Rechte Spalte (Form + Kasten) unten bündig mit der Tabelle: nur nebeneinander und bei eingeklappter Tabelle.
+     Zu wenig Platz → Zeilen von unten weglassen (mindestens zwei, sonst ohne Kasten); Rest streckt den Kasten. */
+  var seen = typeof WeakSet === 'function' ? new WeakSet() : null, ro = null, fitT = [];
+  var shown = function (n) { var q = n.getBoundingClientRect(); return q.width > 0 && q.height > 0; };
+  K.fit = function () {
+    var ha = document.querySelector('home-assistant');
+    if (!ha) return;
+    var L = find(ha.shadowRoot, '.cfb-table > .cfb').filter(shown)[0], R = find(ha.shadowRoot, '.cfb-form > .cfb').filter(shown)[0];
+    if (!L || !R) return;
+    if (seen && typeof ResizeObserver === 'function' && L.parentNode && !seen.has(L.parentNode)) {
+      ro = ro || new ResizeObserver(function () { K.fitSoon(); });
+      seen.add(L.parentNode); ro.observe(L.parentNode);
+    }
+    var X = R.querySelector('.cfb-x');
+    if (!X) return;
+    var lines = X.querySelectorAll('[data-fit]');
+    X.style.minHeight = ''; X.hidden = false;
+    lines.forEach(function (n) { n.hidden = false; });
+    var lb = L.getBoundingClientRect(), rb = R.getBoundingClientRect();
+    if (K.full || rb.left < lb.right || Math.abs(rb.top - lb.top) > 2) return;
+    var target = lb.bottom, n = lines.length;
+    while (n > 2 && X.getBoundingClientRect().bottom > target + 0.5) lines[--n].hidden = true;
+    var xb = X.getBoundingClientRect();
+    if (xb.bottom > target + 0.5) { X.hidden = true; return; }
+    X.style.minHeight = (xb.height + target - xb.bottom) + 'px';
+  };
+  K.fitSoon = function () {
+    fitT.forEach(clearTimeout);
+    fitT = [0, 150, 500].map(function (ms) { return setTimeout(K.fit, ms); });
+  };
+  if (typeof window.addEventListener === 'function') window.addEventListener('resize', function () { if (K._id) K.fitSoon(); });
+
   /* Abschnitt für ein custom_field: Hülle mit Klasse, damit Laden/Antippen neu zeichnen kann. */
   K.sec = function (k, entity) {
     if (!entity) return '';
     K._id = entity.entity_id;
     K.load(K.info(entity));
+    if (k === 'form' || k === 'table') K.fitSoon();
     return '<div class="cfb-' + k + '">' + K.html(k, entity) + '</div>';
   };
 
