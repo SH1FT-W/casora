@@ -263,7 +263,7 @@ assert.deepEqual(K.duels({}, '111'), [], 'keine Duelle bei ESPN: leer');
 const dHtml = K.duelsHtml({ duels: du });
 assert.match(dHtml, /class="cfb-x"/);
 assert.match(dHtml, /class="cfb-f d" data-fit>/, 'Zeilen wie die Form');
-assert.match(dHtml, /<img src="https:\/\/a\.espncdn\.com\/i\/teamlogos\/soccer\/500\/2925\.png"/, 'Gegnerwappen');
+assert.match(dHtml, /<img src="https:\/\/a\.espncdn\.com\/combiner\/i\?img=\/i\/teamlogos\/soccer\/500\/2925\.png&amp;w=128&amp;h=128"/, 'Gegnerwappen (verkleinert)');
 assert.match(dHtml, /Letzte Duelle<span data-no-i18n> · 2 S · 1 U · 1 N<\/span>/, 'Kopf mit Bilanz');
 assert.match(dHtml, /bei <span data-no-i18n>Cagliari<\/span><small>Serie A · 17\.01\.26<\/small>/, 'aus eigener Sicht, Datum mit Jahr');
 assert.match(dHtml, /1 : 1<small>i\. E\.<\/small>/);
@@ -271,14 +271,25 @@ assert.equal((dHtml.match(/data-fit/g) || []).length, 4);
 assert.equal(K.duelsHtml({ duels: [] }), '', 'ohne Duelle kein Abschnitt');
 
 // ── Länderflaggen statt ESPN-Länderbildern (mitgeliefert, rund im Kreis / rechteckig in Listen) ──
+// Wappen schnell (08.10.2026): ESPN-Wappen verkleinert, einmal geladen aus dem Browser-Speicher; anderes bleibt.
+assert.equal(K.small('https://a.espncdn.com/i/teamlogos/soccer/500/111.png'), 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/111.png&w=128&h=128');
+assert.equal(K.small('data:image/png;base64,AA'), 'data:image/png;base64,AA');
+assert.equal(K.logo('/local/x.png'), '/local/x.png');
+{
+  const store = {}; const old = globalThis.localStorage;
+  globalThis.localStorage = { getItem: (k) => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = v; } };
+  store['casora-fb-logo:https://a.espncdn.com/i/teamlogos/soccer/500/999.png'] = 'data:image/png;base64,QQ==';
+  assert.equal(K.logo('https://a.espncdn.com/i/teamlogos/soccer/500/999.png'), 'data:image/png;base64,QQ==', 'gemerktes Wappen sofort');
+  globalThis.localStorage = old;
+}
 assert.equal(K.flag('https://a.espncdn.com/i/teamlogos/countries/500/ita.png'), 'it');
 assert.equal(K.flag('https://a.espncdn.com/i/teamlogos/countries/500/eng.png'), 'gb-eng');
 assert.equal(K.flag('https://a.espncdn.com/i/teamlogos/countries/500/rom.png'), 'ro', 'ESPN-Eigenname (rom) → ro');
 assert.equal(K.flag('https://a.espncdn.com/i/teamlogos/soccer/500/111.png'), null, 'Vereinswappen bleibt');
 assert.equal(K.img('https://a.espncdn.com/i/teamlogos/countries/500/fra.png', 'round'), '/casora_assets/flags/round/fr.svg');
 assert.equal(K.img('https://a.espncdn.com/i/teamlogos/countries/500/fra.png', 'rect'), '/casora_assets/flags/rect/fr.svg');
-assert.equal(K.img('https://a.espncdn.com/i/teamlogos/soccer/500/111.png', 'round'), 'https://a.espncdn.com/i/teamlogos/soccer/500/111.png');
-assert.equal(K.img('https://a.espncdn.com/i/teamlogos/countries/500/xyz.png', 'round'), 'https://a.espncdn.com/i/teamlogos/countries/500/xyz.png', 'unbekanntes Land: ESPN-Bild');
+assert.equal(K.img('https://a.espncdn.com/i/teamlogos/soccer/500/111.png', 'round'), 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/111.png&w=128&h=128');
+assert.equal(K.img('https://a.espncdn.com/i/teamlogos/countries/500/xyz.png', 'round'), 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/countries/500/xyz.png&w=128&h=128', 'unbekanntes Land: ESPN-Bild (verkleinert)');
 // Jede zugeordnete Flagge liegt in beiden Formen bei.
 const modSrc = src('custom_components/casora/scripts/local/11-fussball.js');
 const isos = [...new Set(/var FLAG = pairs\('([^']+)'\)/.exec(modSrc)[1].split('|').map((p) => p.split('=')[1]))];
@@ -325,7 +336,16 @@ assert.equal(run(T.casora_popup_football.tap_action.casora_popup.content, { enti
 assert.equal(run(T.casora_football.hidden, { entity: live, variables: V('live') }), false);
 assert.equal(run(T.casora_football.hidden, { entity: inH(1), variables: V('live') }), true);
 assert.equal(run(T.casora_football.hidden, { entity: S, variables: { enabled: false } }), true);
-assert.equal(run(T.casora_football.entity_picture, { entity: S, variables: {} }), S.attributes.team_logo);
+assert.equal(run(T.casora_football.entity_picture, { entity: S, variables: {} }), K.img(S.attributes.team_logo, 'round'));
+{ // Modul noch nicht geladen: gemerktes Wappen aus dem Browser, sonst das Standard-Symbol.
+  const keepK = globalThis._casoraFootball, keepLS = globalThis.localStorage, keepIcon = globalThis.casoraIconUrl;
+  globalThis._casoraFootball = undefined; globalThis.casoraIconUrl = () => 'icon';
+  globalThis.localStorage = { getItem: (k) => (k === 'casora-fb-logo:' + S.attributes.team_logo ? 'data:image/png;base64,QQ==' : null) };
+  assert.equal(run(T.casora_football.entity_picture, { entity: S, variables: {} }), 'data:image/png;base64,QQ==', 'Wappen sofort, bevor das Modul lädt');
+  globalThis.localStorage = { getItem: () => null };
+  assert.equal(run(T.casora_football.entity_picture, { entity: S, variables: {} }), 'icon');
+  globalThis._casoraFootball = keepK; globalThis.localStorage = keepLS; globalThis.casoraIconUrl = keepIcon;
+}
 assert.equal(run(T.casora_football.variables.active_override, { entity: live, variables: {} }), true, 'Vorlage: live aktiv');
 assert.equal(run(T.casora_football.variables.active_override, { entity: sensor({ attrs: { date: at(3, 20, 45).toISOString() } }), variables: {} }), false, 'Vorlage: Spiel in 3 Tagen nicht aktiv');
 

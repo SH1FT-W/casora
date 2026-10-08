@@ -46,9 +46,35 @@
     var m = /\/countries\/500\/([a-z_-]+)\.png/i.exec(String(url || ''));
     return (m && FLAG[m[1].toLowerCase()]) || null;
   };
+  /* Wappen schnell (08.10.2026, nach dem Neuladen kamen sie spät): ESPNs Bild hat 500 px und darf nur ~2 Min.
+     im Cache bleiben. Stattdessen die verkleinerte Fassung über ESPNs Bilddienst (128 px, ~1,5 KB, ~1 Tag Cache)
+     und einmal geladen als data:-URL im Browser gemerkt (localStorage) – beim nächsten Laden sofort da, ohne Netz.
+     Die Vorlage casora_football liest denselben Schlüssel, solange dieses Modul noch nicht geladen ist. */
+  var LOGO = 'casora-fb-logo:', logoMem = {}, logoBusy = {};
+  var espnLogo = function (url) { return /^https:\/\/a\.espncdn\.com\/i\/teamlogos\/[\w\/-]+\.png$/i.test(url); };
+  K.small = function (url) {
+    return espnLogo(url) ? 'https://a.espncdn.com/combiner/i?img=' + url.slice('https://a.espncdn.com'.length) + '&w=128&h=128' : url;
+  };
+  var warm = function (url) {
+    if (logoBusy[url] || typeof fetch !== 'function' || typeof FileReader !== 'function') return;
+    logoBusy[url] = 1;
+    fetch(K.small(url), { mode: 'cors' }).then(function (r) { return r.ok ? r.blob() : null; }).then(function (b) {
+      if (!b || b.size > 30000 || !/^image\//.test(b.type)) return;
+      var fr = new FileReader();
+      fr.onload = function () { logoMem[url] = fr.result; try { localStorage.setItem(LOGO + url, fr.result); } catch (e) {} };
+      fr.readAsDataURL(b);
+    }).catch(function () {});
+  };
+  K.logo = function (url) {
+    if (!espnLogo(url)) return url || '';
+    if (logoMem[url]) return logoMem[url];
+    try { var c = localStorage.getItem(LOGO + url); if (c) return (logoMem[url] = c); } catch (e) {}
+    warm(url);
+    return K.small(url);
+  };
   K.img = function (url, shape) {
     var f = K.flag(url);
-    return f ? '/casora_assets/flags/' + (shape === 'rect' ? 'rect' : 'round') + '/' + f + '.svg' : (url || '');
+    return f ? '/casora_assets/flags/' + (shape === 'rect' ? 'rect' : 'round') + '/' + f + '.svg' : K.logo(url);
   };
   /* Wettbewerb: Teil vor dem Komma („UEFA Champions League, League Phase“), ohne UEFA/FIFA. */
   K.comp = function (n) {
