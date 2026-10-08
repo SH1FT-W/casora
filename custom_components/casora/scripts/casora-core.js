@@ -8839,14 +8839,14 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   };
   function ago(ms) {
     var s = Math.max(0, (Date.now() - ms) / 1000);
-    if (s < 60) return 'Gerade eben';
+    if (s < 60) return 'gerade eben';
     var m = Math.round(s / 60);
     if (m < 60) return 'vor ' + m + ' Min.';
     var h = Math.round(m / 60);
     // Kalendertage statt 24-h-Blöcke: vor 36 Stunden ist noch „Gestern“ (#11).
     var d = Math.round((new Date(new Date().setHours(0, 0, 0, 0)) - new Date(new Date(ms).setHours(0, 0, 0, 0))) / 86400000);
     if (h < 24 || d < 1) return 'vor ' + h + ' Std.';
-    return d === 1 ? 'Gestern' : 'vor ' + d + ' Tagen';
+    return d === 1 ? 'gestern' : 'vor ' + d + ' Tagen';
   }
 
 
@@ -9535,7 +9535,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           id: 'casora:open:' + id,
           when: o.since,
           label: title + ' ist offen',
-          sub: 'Seit ' + (mins < 60 ? mins + ' Min.'
+          sub: 'seit ' + (mins < 60 ? mins + ' Min.'
             : Math.round(mins / 60) + ' Std.'),
           ongoing: true,
           icon: window.casoraSecurityIcon(id, st.state, st.attributes),

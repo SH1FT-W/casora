@@ -370,7 +370,7 @@
       });
       /* Szenen: nur die Szenen aus window.casoraNavScenes (gemeinsame Liste oben), ohne "Alle Szenen" (24.09.2026). */
       var ago = function (ts) { var q = Date.parse(ts); if (isNaN(q)) return ''; var m = Math.max(0, Math.round((Date.now() - q) / 60000));
-        return m < 1 ? 'Gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
+        return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
       var list = [];
       /* Auswahl der Szenen-Badge (Desktop/Tablet), 1.0.5: das Studio schreibt sie beim Speichern an
          die Leiste; ältere Handy-Dashboards ohne sie lesen sie aus dem Desktop-Dashboard (_deskScenes). */
@@ -510,19 +510,20 @@
       if (this._bar) this._bar.classList.add('hmn-up');
       requestAnimationFrame(function () { sc.classList.add('open'); });
     }
-    /* „Vor 5 Min.“, „Gestern“ … wie casora_badge_scene (Szenen-Zustand = Zeitpunkt der letzten Ausführung). */
+    /* „vor 5 Min.“, „gestern“ … wie casora_badge_scene (Szenen-Zustand = Zeitpunkt der letzten Ausführung).
+       D13 (1.2): Zeitangaben immer klein wie mitten im Satz. */
     _sceneAgo(id) {
       var st = this._hass && this._hass.states[id];
       var t = Date.parse(st && st.state), tr = window.casoraTr || function (x) { return x; };
-      if (!isFinite(t)) return tr('Noch nie');
+      if (!isFinite(t)) return tr('noch nie');
       var m = Math.round((Date.now() - t) / 60000);
-      if (m < 1) return tr('Gerade eben');
-      if (m < 60) return tr('Vor ' + m + ' Min.');
+      if (m < 1) return tr('gerade eben');
+      if (m < 60) return tr('vor ' + m + ' Min.');
       var h = Math.round(m / 60);
       var day = function (x) { var o = new Date(x); return new Date(o.getFullYear(), o.getMonth(), o.getDate()); };
       var d = Math.round((day(Date.now()) - day(t)) / 86400000);
-      if (h < 24 || d < 1) return tr('Vor ' + h + ' Std.');
-      return tr(d === 1 ? 'Gestern' : 'Vor ' + d + ' Tagen');
+      if (h < 24 || d < 1) return tr('vor ' + h + ' Std.');
+      return tr(d === 1 ? 'gestern' : 'vor ' + d + ' Tagen');
     }
     /* Kreisfarbe einer Szene im Blatt: die Studio-Farbe wie überall am Desktop (Szenen-Badge, -Kacheln, -Reihe):
        eigene Farbe aus dem Studio, sonst die Standard-Szenenfarbe (--casora-scene-badge-color, im Casora-Design

@@ -1510,7 +1510,8 @@
   "letzte 24 Stunden": "last 24 hours",
   "letzte 48 Stunden": "last 48 hours",
   "letzte 7 Tage": "last 7 days",
-  "letzte 30 Tage": "last 30 days"
+  "letzte 30 Tage": "last 30 days",
+  "noch nie": "never"
  },
  "patterns": [
   [
