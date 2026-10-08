@@ -513,6 +513,9 @@ Casora:
       casora-mnav-press-fill: rgba(220,205,186,0.95)
       casora-nav-border: rgba(120,100,80,0.10)
       casora-nav-active-fill: rgba(232,221,206,0.95)
+      # Aktiver Reiter der Raum-Leiste (Tablet/Desktop) wie die Handy-Leiste: weiße Pille (1.2).
+      casora-nav-tab-active-fill: rgba(255,253,249,1)
+      casora-nav-tab-active-shadow: 0 1px 3px rgba(90,70,50,0.14)
       casora-pill-fill: rgba(251,248,243,0.80)
       # Kopfleiste D (1.0.7): ohne Randlinie, nur weicher Schatten; Desktop-Kreise gleich
       casora-pill-rim: 0 1px 2px rgba(90,70,50,0.05), 0 8px 24px -16px rgba(90,64,40,0.30)
@@ -912,6 +915,9 @@ Casora:
       casora-mnav-over: rgba(40,36,32,0.94)
       casora-nav-border: rgba(255,240,220,0.06)
       casora-nav-active-fill: rgba(242,232,218,0.14)
+      casora-nav-tab-active-fill: rgba(242,232,218,0.94)
+      casora-nav-tab-active-ink: rgba(58,50,43,0.92)
+      casora-nav-tab-active-shadow: 0 1px 3px rgba(0,0,0,0.25)
       casora-pill-fill: rgba(46,42,38,0.80)
       # Dunkel ohne hellen Ring (Navbar Desktop, Leiste oben rechts), nur Schatten (04.10.2026)
       casora-pill-rim: 0 8px 24px -16px rgba(0,0,0,0.55)

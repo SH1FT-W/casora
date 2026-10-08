@@ -4426,9 +4426,13 @@ window.casoraMenuGlass = {
               - 2 * var(--casora-nav-pill-inset-y-tablet, 4px));
           }
 
+          /* Casora/Nebel 1.2: aktiver Reiter als weiße Pille wie die Handy-Leiste (Theme-Werte
+             casora-nav-tab-active-*); andere Designs behalten ihre Füllung. */
           .indicator .fill {
-            background: var(--casora-nav-active-fill, rgba(200,200,200,0.25));
+            background: var(--casora-nav-tab-active-fill, var(--casora-nav-active-fill, rgba(200,200,200,0.25)));
+            box-shadow: var(--casora-nav-tab-active-shadow, none);
           }
+          .route.active .label { color: var(--casora-nav-tab-active-ink, var(--casora-nav-label-color, #fff)); }
 
           .route[data-has-popup] .label::after {
             margin-left: -1px;
