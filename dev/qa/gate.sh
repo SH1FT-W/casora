@@ -443,8 +443,9 @@ if [ $PAR = 1 ]; then
       elif [ $RUN_ARBEIT = 1 ] && want_regcrawl; then LATE=arbeit; fi
     fi
     if [ $DRY = 0 ]; then
-      if [ -n "$(docker ps -q --filter label=casora-gate=1)" ]; then
-        echo "Es laufen schon Gate-Test-HAs (casora-gate-*) – läuft ein anderes Gate? Sonst: docker rm -f \$(docker ps -aq --filter label=casora-gate=1)" >&2
+      # Nur die eigenen Namen zählen: Wegwerf-HAs von Agenten (andere Namen/Ports) dürfen weiterlaufen (08.10.2026).
+      if docker ps --format '{{.Names}}' | grep -qE '^casora-gate-(arbeit|arbeit2|stress|stress2|frisch|spaet)$'; then
+        echo "Es laufen schon Gate-Test-HAs (casora-gate-arbeit/stress/frisch …) – läuft ein anderes Gate? Sonst: docker rm -f \$(docker ps -aq --filter name=casora-gate-)" >&2
         rm -rf "$PARDIR"; exit 2
       fi
     fi
