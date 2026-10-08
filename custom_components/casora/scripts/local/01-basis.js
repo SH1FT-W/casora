@@ -307,7 +307,8 @@ window._casoraColGap = window._casoraColGap || function (keys) {
   // Regeln: Sensor <= Schwelle bzw. Binärsensor "on", Haltezeit gegen Fehlsprünge).
   var _batHeld = {};
   function fixBattery(hass, rows, api, c) {
-    var ex = c.battery_exclude || [];
+    // Dazu die allgemeinen Ausnahmen „Nicht melden“ (notify.exclude, 1.1.2).
+    var ex = [].concat(c.battery_exclude || [], Array.isArray(c.exclude) ? c.exclude : []);
     var idx = -1;
     rows.forEach(function (r, i) { if (r && r.id === 'casora:battery') idx = i; });
     if (idx < 0) return rows;

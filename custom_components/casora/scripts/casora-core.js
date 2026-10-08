@@ -9012,6 +9012,17 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     return !t || t[type] !== false;
   }
 
+  // Ausnahmen „Nicht melden“ (1.1.2): Casora-Einstellung notify.exclude, gilt für alle Dashboards
+  // (Desktop und Handy). Diese Entitäten erzeugen nie einen Eintrag – auch nicht im Zähler.
+  function excludes() {
+    var n = (window.CASORA_SETTINGS || {}).notify;
+    var x = n && Array.isArray(n.exclude) ? n.exclude : [];
+    var out = {};
+    x.forEach(function (id) { if (typeof id === 'string' && id) out[id] = true; });
+    return out;
+  }
+  function excluded(id) { return !!(id && excludes()[id]); }
+
   function appliances() {
     var list = window.CASORA_NOTIFY_APPLIANCES;
     if (!Array.isArray(list)) return [];
@@ -9092,8 +9103,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   function watched(hass) {
     var out = [];
     var appl = appliances().map(function (a) { return a.entity; });
+    var ex = excludes();
     Object.keys(hass.states).forEach(function (id) {
       var st = hass.states[id];
+      if (ex[id]) return;
       if (on('locks') && id.indexOf('lock.') === 0) return void out.push(id);
       if (on('alarm') && id.indexOf('alarm_control_panel.') === 0) return void out.push(id);
       if (on('vacuum') && id.indexOf('vacuum.') === 0) return void out.push(id);
@@ -9103,7 +9116,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     });
     eachExt('watch', function (e) {
       (e.watch(hass, extApi()) || []).forEach(function (id) {
-        if (out.indexOf(id) === -1) out.push(id);
+        if (out.indexOf(id) === -1 && !ex[id]) out.push(id);
       });
     });
     return out;
@@ -9274,7 +9287,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   function standing(hass) {
     var rows = [];
     var S = hass.states;
-    var ids = Object.keys(S);
+    var EX = excludes();
+    var allIds = Object.keys(S);
+    var ids = allIds.filter(function (id) { return !EX[id]; });
 
     var updates = [];
     var restarts = [];
@@ -9416,10 +9431,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (!isFinite(openMins)) openMins = 10;
     if (on('doors') && openMins > 0) {
       // Nur Personen mit bekanntem Ort zählen – „unbekannt“ ist keine Abwesenheit.
-      var people = ids.filter(function (id) {
+      var people = allIds.filter(function (id) {
         return id.indexOf('person.') === 0 && !/^(unknown|unavailable)?$/.test(String(S[id].state || ''));
       });
-      var away = ids.some(function (id) {
+      var away = allIds.some(function (id) {
         return id.indexOf('alarm_control_panel.') === 0 && /^armed_(away|vacation)$/.test(S[id].state);
       }) || (people.length > 0 && !people.some(function (id) { return S[id].state === 'home'; }));
       // Schloss mit eigenem Türsensor + Kontaktsensor an derselben Tür meldeten doppelt
@@ -9454,6 +9469,18 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         openList.push({ id: id, st: st, since: since, mins: mins, name: tidyName(nameOf(st)),
           room: openRoom, dev: openDev ? String(openDev.name_by_user || openDev.name || '') : '' });
       });
+      // Ausnahme an einem Sensor einer Öffnung (Kontakt, Kippsensor oder Kombi) gilt für die
+      // ganze Öffnung – sonst meldete statt des ausgenommenen Kombi-Sensors der Kontakt (1.1.2).
+      var exOpen = allIds.filter(function (id) { return EX[id] && id.indexOf('binary_sensor.') === 0; });
+      if (exOpen.length && openList.length && typeof window.casoraOpenings === 'function') {
+        try {
+          var gone = {};
+          window.casoraOpenings(hass, openList.map(function (o) { return o.id; }).concat(exOpen)).forEach(function (u) {
+            if (u.ids.some(function (x) { return EX[x]; })) u.ids.forEach(function (x) { gone[x] = true; });
+          });
+          openList = openList.filter(function (o) { return !gone[o.id]; });
+        } catch (e) { /* ohne Gruppen: nur die Sensoren selbst */ }
+      }
       // Kontakt + Kippsensor + Kombi-Sensor derselben Öffnung (00-finden.js, casoraOpenings):
       // nur der Hauptsensor meldet, egal ob sie im selben Bereich liegen.
       if (typeof window.casoraOpenings === 'function' && openList.length > 1) {
@@ -9538,7 +9565,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       try { co2Since = JSON.parse(localStorage.getItem(CO2_KEY) || '{}') || {}; }
       catch (e) { co2Since = {}; }
       var co2Now = {};
-      var plants = ids.filter(function (id) { return id.indexOf('plant.') === 0; })
+      var plants = allIds.filter(function (id) { return id.indexOf('plant.') === 0; })
         .map(function (id) { return id.slice(6); });
       ids.forEach(function (id) {
         if (id.indexOf('sensor.') !== 0) return;
@@ -9615,7 +9642,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (on('appliances')) {
       appliances().forEach(function (a) {
         var st = S[a.entity];
-        if (!st) return;
+        if (!st || EX[a.entity]) return;
         var done = a.done ? new RegExp('^' + a.done + '$', 'i') : APPLIANCE_DONE;
         if (done.test(st.state)) return;
         var left = a.remaining ? minutesLeft(S[a.remaining]) : null;
@@ -9642,6 +9669,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       var next = e.standing(hass, rows, extApi());
       if (Array.isArray(next)) rows = next;
     });
+    // Auch Zeilen der Erweiterungen (Wetterwarnung, Gerätepflege …) nie für Ausnahmen.
+    rows = rows.filter(function (r) { return !(r && r.entity && EX[r.entity]); });
 
     return settleSeen(rows);
   }
@@ -9716,7 +9745,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         if (id.indexOf('vacuum.') === 0 && !DEAD.test(cur)) (vacLine[id] = vacLine[id] || []).push({ when: when, state: cur });
         if (when < sinceMs) return;
         var d = describe(e, st, was);
-        if (!d) return;
+        if (!d || excluded(id)) return;
         events.push({
           id: id + '@' + when,
           when: when,
@@ -9774,7 +9803,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       var have = {};
       events.forEach(function (e) { have[e.id] = 1; });
       doneMemo().forEach(function (m) {
-        if (!m || !m.id || have[m.id] || !(m.when >= sinceMs) || !asked[m.entity]) return;
+        if (!m || !m.id || have[m.id] || !(m.when >= sinceMs) || !asked[m.entity] || excluded(m.entity)) return;
         if ((vacLine[m.entity] || []).some(function (x) { return VACUUM_BUSY[x.state] && x.when < m.when; })) return;
         have[m.id] = 1;
         events.push(m);
@@ -9831,7 +9860,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       });
 
       var room = Math.max(0, MAX_ROWS - live.length);
+      var EXN = excludes();
       _rows = live.concat(kept.slice(0, room))
+        .filter(function (r) { return !(r && r.entity && EXN[r.entity]); })
         .sort(function (a, b) {
           return ((b.rank || 0) - (a.rank || 0)) || (b.when - a.when)
             || (String(a.id) < String(b.id) ? -1 : String(a.id) > String(b.id) ? 1 : 0);
