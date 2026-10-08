@@ -10,7 +10,8 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Football tile:** follows your team with the Team Tracker integration (HACS). The tile shows the next match, the live score or the final result, with crest or national flag, and the corner says at a glance whether the match is coming up, running or over.
 - **Football popup:** a tap opens the match with both teams, the league table around your team (with the full table one tap away) and the recent form, followed by the latest head-to-head games with the next opponent. National teams show their flag.
 - **When it shows:** choose whether the tile is always visible or only in match week, on match day, around the match or only live. In the Studio it is the new tile type "Football", and the setup assistant suggests it on its own for Team Tracker sensors.
-- **Active on match day:** from midnight on match day, during the match and while the result is shown, the tile counts as active and moves to the front of its row.
+- **Active on match day:** from midnight on match day, during the match and while the result is shown, the tile counts as active and moves to the front of its row. The corner then turns into a coloured pill, red while live.
+- **Phone menus as a sheet from the bottom (Casora and Casora Nebel):** the rooms menu shows every room with its status ("1 light on · 22°"), the scenes menu shows scenes as coloured tiles. Swipe down or tap outside to close.
 
 ### Fixed
 - **Updates popup:** "Available updates" and "AI check" line up again, also when "Update all" sits next to them.
