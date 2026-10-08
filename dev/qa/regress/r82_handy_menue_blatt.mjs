@@ -196,28 +196,28 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
     });
     await need(`${tag}: Raum mit Lichtern und Temperatur`, pick && !pick.more, pick);
     const sub = () => page.evaluate((k) => { const b = document.querySelector('.hmn-sheet .hmn-row[data-k="' + k + '"]'); return b ? b.querySelector('.hmn-sub').textContent : null; }, pick.key);
-    // Vorschlag 1 (08.10.2026): rechts nur das Auffälligste – Fenster/Tür offen vor Licht an vor feuchter Luft, sonst nichts.
+    // Rechts immer die Temperatur, das Auffälligste davor (Fenster/Tür offen vor Licht an vor feuchter Luft).
     const calm = Object.fromEntries([...pick.sec.map((e) => [e, { state: 'off' }]), ...(pick.hum ? [[pick.hum, { state: '45' }]] : [])]);
     const off = { ...calm, ...Object.fromEntries(pick.lights.map((e) => [e, { state: 'off' }])) };
     await fakeStates(page, { ...off, [pick.temp]: { state: '21.6' } }, { sticky: true });
     await page.waitForTimeout(500);
     const s1 = await sub();
-    await check(`${tag}: alles ruhig: rechts nichts`, s1 === '', s1);
+    await check(`${tag}: alles ruhig: rechts nur die Temperatur`, s1 === '22°', s1);
     await fakeStates(page, { ...off, [pick.lights[0]]: { state: 'on' }, [pick.temp]: { state: '21.6' } }, { sticky: true });
     await page.waitForTimeout(500);
     const s2 = await sub();
-    await check(`${tag}: „Licht an“ (live nachgezogen)`, s2 === 'Licht an', s2);
+    await check(`${tag}: „Licht an“ (live nachgezogen)`, s2 === 'Licht an · 22°', s2);
     if (pick.lights.length > 1) {
       await fakeStates(page, { ...Object.fromEntries(pick.lights.map((e) => [e, { state: 'on' }])), [pick.temp]: { state: '21.6' } }, { sticky: true });
       await page.waitForTimeout(500);
       const s3 = await sub();
-      await check(`${tag}: „${pick.lights.length} Lichter an“`, s3 === pick.lights.length + ' Lichter an', s3);
+      await check(`${tag}: „${pick.lights.length} Lichter an“`, s3 === pick.lights.length + ' Lichter an · 22°', s3);
     }
     if (pick.sec.length) {
       await fakeStates(page, { ...off, [pick.lights[0]]: { state: 'on' }, [pick.sec[0]]: { state: 'on', attributes: { device_class: 'window' } } }, { sticky: true });
       await page.waitForTimeout(500);
       const s4 = await page.evaluate((k) => { const b = document.querySelector('.hmn-sheet .hmn-row[data-k="' + k + '"] .hmn-sub'); return b ? { t: b.textContent, warn: b.classList.contains('hmn-warn') } : null; }, pick.key);
-      await check(`${tag}: offenes Fenster geht vor Licht und ist orange markiert`, s4 && s4.t === 'Fenster offen' && s4.warn, s4);
+      await check(`${tag}: offenes Fenster geht vor Licht und ist orange markiert`, s4 && /^Fenster offen( · \d+°)?$/.test(s4.t) && s4.warn, s4);
     }
   }
 

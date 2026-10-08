@@ -177,7 +177,7 @@
       + '.hmn-txt{display:flex;flex-direction:column;min-width:0;}'
       + '.hmn-name{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
       /* Zustand rechts als kleiner Wert in Text 2 (wie ein Badge-Wert); im offenen Raum in der Aktiv-Zustandsfarbe. */
-      + '.hmn-sheet .hmn-sub{display:block;min-width:0;max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:16px;font-weight:500;'
+      + '.hmn-sheet .hmn-sub{display:block;min-width:0;max-width:62%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:16px;font-weight:500;'
       +   'margin:0;font-variant-numeric:tabular-nums;color:var(--casora-text-2, var(--casora-mnav-fg-sub, rgba(255,255,255,0.55)));}'
       + '.hmn-sheet .hmn-sub.hmn-warn{color:var(--casora-popup-ui-warn, #D9822B);font-weight:600;}'
       + '.hmn-sheet .hmn-sub.hmn-warn::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px;}'
@@ -544,19 +544,36 @@
       if (h < 24 || d < 1) return tr('Vor ' + h + ' Std.');
       return tr(d === 1 ? 'Gestern' : 'Vor ' + d + ' Tagen');
     }
-    /* Rechts je Raum nur das Auffälligste (Vorschlag 1, 08.10.2026), sonst nichts: Fenster/Tür offen
-       (orange) vor Licht an vor feuchter Luft. Alles aus den Werten der Raum-Badges – nichts erfinden.
+    /* Auffälliges je Raum (Vorschlag 1, 08.10.2026): Fenster/Tür offen (orange) vor Licht an vor feuchter Luft. Alles aus den Werten der Raum-Badges – nichts erfinden.
        Laufende Geräte bewusst nicht: Leistungswerte allein sagen das nicht verlässlich (Kühlschrank). */
     _roomSub(key, chips) {
       var r = this._roomNote(key, chips);
       return r ? r.text : '';
     }
+    /* Rechts immer die Raumtemperatur als Grundwert (Vorschlag 1 „Raumzustand 2“, 08.10.2026), Auffälliges davor:
+       „Licht an · 23°“, orange „Fenster offen · 22°“. Ohne Temperaturfühler bleibt nur das Auffällige. */
     _roomNote(key, chips) {
       var PR = window.casoraPhoneRoom, h = this._hass;
       if (!PR || !h || !key) return null;
       var v; try { v = PR.vars(key, chips); } catch (e) { v = null; }
       if (!v) return null;
-      var st = h.states || {};
+      var st = h.states || {}, a = this._roomAlert(v, st), t = this._roomTemp(v, st);
+      if (!a && !t) return null;
+      return { text: a && t ? a.text + ' · ' + t : (a ? a.text : t), warn: !!(a && a.warn) };
+    }
+    _roomTemp(v, st) {
+      if (v.show_climate === false) return '';
+      var ts = [1, 2, 3, 4, 5].map(function (i) { return v['temp_sensor_' + i]; }).filter(Boolean)
+        .map(function (e) { return parseFloat(st[e] && st[e].state); }).filter(function (x) { return !isNaN(x); });
+      if (!ts.length && v.climate_entity_1 && st[v.climate_entity_1]) {
+        var ct = parseFloat(st[v.climate_entity_1].attributes && st[v.climate_entity_1].attributes.current_temperature);
+        if (!isNaN(ct)) ts = [ct];
+      }
+      if (!ts.length) return '';
+      var lo = Math.round(Math.min.apply(null, ts)), hi = Math.round(Math.max.apply(null, ts));
+      return lo === hi ? lo + '°' : lo + '–' + hi + '°';
+    }
+    _roomAlert(v, st) {
       if (v.show_security !== false) {
         var win = 0, door = 0;
         for (var i = 1; i <= 8; i++) {
