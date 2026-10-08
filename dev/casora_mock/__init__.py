@@ -319,8 +319,40 @@ class CasoraMock:
     #                 "bumps": [[7.5, 6, 0.7]], "digits": 1}}
     # day: Tagesschwankung um base (Höchstwert zur Stunde peak), wave: langsame Welle,
     # bumps: [Stunde, Höhe, Breite in h] (z. B. Duschen am Morgen), noise: Rauschen.
+    # Ohne „_history“ (Testhaus) entsteht die Kurve automatisch je Messgröße (_auto_history), dazu
+    # 30 Tage Langzeitstatistik (Stundenmittel, Zählerstände) für 7/30-Tage-Diagramme und Tagesbalken.
+    def _auto_history(self) -> dict:
+        out = {}
+        for eid, (state, attrs) in self.store.items():
+            if not eid.startswith("sensor.") or attrs.get("state_class") != "measurement":
+                continue
+            try:
+                v = float(state)
+            except (TypeError, ValueError):
+                continue
+            dc = attrs.get("device_class")
+            pct = attrs.get("unit_of_measurement") == "%"
+            cfg = {
+                "temperature": {"day": 0.8, "peak": 16, "wave": 0.25, "noise": 0.05, "digits": 1},
+                "humidity": {"day": 4, "peak": 5, "wave": 1.5, "noise": 0.5, "digits": 0},
+                "power": {"wave": v * 0.25 + 10, "noise": max(3.0, v * 0.08), "digits": 0, "min": 0,
+                          "bumps": [[7.5, v * 1.2 + 300, 0.6], [12.5, v * 0.8 + 500, 0.8], [19.5, v + 600, 1.4]]},
+                "moisture": {"wave": 3, "noise": 0.3, "digits": 0},
+                "illuminance": {"day": max(150.0, v), "peak": 13, "noise": 5, "digits": 0, "min": 0},
+                "battery": {"noise": 0.05, "digits": 0},
+                "data_rate": {"wave": v * 0.5 + 5, "noise": v * 0.3 + 2, "digits": 1, "min": 0},
+                "carbon_dioxide": {"day": 180, "peak": 22, "noise": 15, "digits": 0, "min": 400},
+            }.get(dc)
+            if cfg is None:
+                continue
+            cfg = dict(cfg, base=v)
+            if pct:
+                cfg.update(min=max(cfg.get("min", 0), 0), max=100)
+            out[eid] = cfg
+        return out
+
     def backfill_history(self) -> None:
-        spec = self.fixture.get("_history") or {}
+        spec = self.fixture.get("_history") or self._auto_history()
         if not spec or "recorder" not in self.hass.config.components:
             return
         import math
@@ -379,8 +411,12 @@ class CasoraMock:
                             continue
                         last = s.query(func.max(States.last_updated_ts)).filter(
                             States.metadata_id == meta, States.last_updated_ts < boot - 5).scalar() or 0
+                        # Attribute (Einheit) wie der aktuelle Zustand – ohne sie meldet die Statistik
+                        # „Einheit geändert“ und rechnet für den Sensor nicht weiter.
+                        attr = s.query(States.attributes_id).filter(States.metadata_id == meta) \
+                            .order_by(States.last_updated_ts.desc()).limit(1).scalar()
                         rows = [States(metadata_id=meta, state=str(v), last_updated_ts=ts, last_changed_ts=ts,
-                                       origin_idx=0) for ts, v in pts if ts > last]
+                                       attributes_id=attr, origin_idx=0) for ts, v in pts if ts > last]
                         s.add_all(rows)
                         n += len(rows)
                 return n
@@ -390,12 +426,83 @@ class CasoraMock:
                 try:
                     n = await inst.async_add_executor_job(job)
                     _LOGGER.warning("Casora Mock: Demo-Verlauf ergänzt (%s Werte)", n)
-                    return
+                    break
                 except Exception as err:  # noqa: BLE001 – nur Demo-Schmuck, darf den Start nie stören
                     _LOGGER.warning("Casora Mock: Demo-Verlauf nicht geschrieben (Versuch %s): %s", attempt + 1, err)
                     await asyncio.sleep(5)
+            try:
+                self._import_statistics(spec, curve, boot)
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.warning("Casora Mock: Statistik nicht importiert: %s", err)
 
         self.entry.async_on_unload(async_at_started(self.hass, run))
+
+    # 30 Tage Stundenstatistik: Messgrößen als Mittel/Min/Max aus derselben Kurve, Energiezähler
+    # (kWh, total_increasing) als Stand/Summe mit Tagesgang – Tagesbalken „Verbrauch pro Tag“.
+    # Bis zur letzten vollen Stunde; ein Neustart schreibt dieselben Stunden neu (kein Doppeln).
+    def _import_statistics(self, spec: dict, curve, boot: float) -> None:
+        import math
+        import random
+        from datetime import datetime, timezone
+
+        from homeassistant.components.recorder.models import StatisticMeanType
+        from homeassistant.components.recorder.statistics import async_import_statistics
+
+        try:
+            from homeassistant.components.recorder.statistics import _get_unit_class as unit_class
+        except ImportError:  # ältere/neuere HA: ohne Einheitenklasse
+            def unit_class(_u):
+                return None
+        end = int(boot // 3600) * 3600
+        hours = range(end - 30 * 24 * 3600, end, 3600)
+        utc = lambda ts: datetime.fromtimestamp(ts, timezone.utc)  # noqa: E731
+        n = 0
+        for eid, cfg in spec.items():
+            st = self.store.get(eid)
+            if not st:
+                continue
+            unit = st[1].get("unit_of_measurement")
+            # Kurve über 30 Tage: curve() liefert 48 h in 10-min-Schritten, also die Tagesform wiederholen.
+            pts = curve(eid, cfg)
+            day = [v for ts, v in pts[-144:]] or [cfg.get("base", 0)]
+            rows = []
+            for i, h in enumerate(hours):
+                k = (i * 6) % len(day)
+                vals = day[k:k + 6] or day[:6]
+                rows.append({"start": utc(h), "mean": sum(vals) / len(vals), "min": min(vals), "max": max(vals)})
+            async_import_statistics(self.hass, {
+                "has_mean": True, "mean_type": StatisticMeanType.ARITHMETIC, "has_sum": False, "name": None,
+                "source": "recorder", "statistic_id": eid, "unit_class": unit_class(unit), "unit_of_measurement": unit,
+            }, rows)
+            n += 1
+        for eid, (state, attrs) in self.store.items():
+            if not eid.startswith("sensor.") or attrs.get("device_class") != "energy" \
+                    or attrs.get("state_class") not in ("total_increasing", "total"):
+                continue
+            try:
+                now_v = float(state)
+            except (TypeError, ValueError):
+                continue
+            unit = attrs.get("unit_of_measurement") or "kWh"
+            scale = {"Wh": 1000.0, "MWh": 0.001}.get(unit, 1.0)
+            rnd = random.Random(eid)
+            use = []
+            for h in hours:
+                hour = datetime.fromtimestamp(h).hour
+                base = 0.12 + 0.35 * math.exp(-((hour - 19.5) / 2.2) ** 2) + 0.25 * math.exp(-((hour - 7.5) / 1.2) ** 2)
+                use.append(base * (0.6 + 0.8 * rnd.random()) * scale)
+            total = sum(use)
+            start_v = max(0.0, now_v - total)
+            acc, rows = 0.0, []
+            for h, u in zip(hours, use):
+                acc += u
+                rows.append({"start": utc(h), "state": start_v + acc, "sum": acc})
+            async_import_statistics(self.hass, {
+                "has_mean": False, "mean_type": StatisticMeanType.NONE, "has_sum": True, "name": None,
+                "source": "recorder", "statistic_id": eid, "unit_class": unit_class(unit), "unit_of_measurement": unit,
+            }, rows)
+            n += 1
+        _LOGGER.warning("Casora Mock: Statistik für %s Sensoren importiert (30 Tage)", n)
 
     def run_scenario(self, name: str) -> None:
         for eid, state in self.scenarios.get(name, {}).items():
