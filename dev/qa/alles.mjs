@@ -109,17 +109,6 @@ async function newCtx(vp) {
   await s.context.addInitScript((cfg) => { window.__QA_CFG = cfg; }, { allowWrites: ALLOW_WRITES });
   await s.context.addInitScript({ content: INPAGE });
   s.page.setDefaultTimeout(15000);
-  // Konsolenfehler mit Objekt („…: Object“, Gate 07.10.2026) sagen nichts: den Inhalt nachtragen.
-  s.page.on('console', async (m) => {
-    if (m.type() !== 'error' || !/\bObject\b/.test(m.text())) return;
-    try {
-      const parts = await Promise.all(m.args().map((a) => a.evaluate((v) => {
-        try { return v instanceof Error ? v.message : typeof v === 'object' ? JSON.stringify(v) : String(v); } catch (e) { return String(v); }
-      }).catch(() => '?')));
-      const i = s.errors.lastIndexOf(m.text());
-      if (i >= 0) s.errors[i] = m.text() + ' ⟶ ' + parts.join(' ').slice(0, 300);
-    } catch (e) { /* nur Beiwerk */ }
-  });
   let cdp = null;
   if (!o.safari && o.mobile) { try { cdp = await s.context.newCDPSession(s.page); } catch (e) { cdp = null; } }
   return { vp, browser: s.browser, context: s.context, page_: s.page, errors: s.errors, touch: !!(o.mobile || o.touch), desktop: !o.mobile, cdp, page: '' };
@@ -164,6 +153,8 @@ async function collect(ctx, sel, { scope = null, filter = null } = {}) {
 }
 
 async function newErrors(ctx, from) {
+  // „Object“-Fehler bekommen ihren Inhalt erst nachträglich (harness.mjs) – kurz darauf warten.
+  if (ctx.errors.pending && ctx.errors.pending.size) await Promise.race([Promise.all([...ctx.errors.pending]), new Promise((r) => setTimeout(r, 1500))]);
   return ctx.errors.slice(from).filter((e) => !ERR_ALLOW.test(e));
 }
 

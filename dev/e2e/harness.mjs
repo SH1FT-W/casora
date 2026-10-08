@@ -119,18 +119,34 @@ export async function open({ width = 1440, height = 900, mobile = false, umzug =
   // erfundene Verein die echte ESPN-Seite, die blockt Headless-Chrome per CORS und die
   // Konsole meldet Fehler (Gate 1.1.1). CASORA_ESPN_LIVE=1 lässt echte Aufrufe durch.
   if (!process.env.CASORA_ESPN_LIVE) await espnRoute(context);
+  // Unbehandelte Ablehnungen mit einfachem Objekt erscheinen sonst nur als „Object“. Mit Inhalt
+  // als Konsolenfehler melden; HAs eigenes Abmelden eines schon beendeten Abos
+  // („Subscription not found“, HA-Frontend, z. B. persistent_notification) nur als Warnung (Gate 1.1.1).
+  await context.addInitScript(() => {
+    window.addEventListener('unhandledrejection', (e) => {
+      const r = e.reason;
+      if (!r || typeof r !== 'object' || r instanceof Error) return;
+      let txt; try { txt = JSON.stringify(r); } catch (x) { return; }
+      e.preventDefault();
+      if (r.code === 'not_found' && /^Subscription not found/.test(r.message || '')) console.warn('Unbehandelte Ablehnung (HA): ' + txt);
+      else console.error('Unbehandelte Ablehnung: ' + txt);
+    });
+  });
   const page = await context.newPage();
   const errors = [];
+  errors.pending = new Set();
   page.on('pageerror', (e) => errors.push(String(e.message || e)));
   // Nur „Object“ als Text sagt nichts: dann Inhalt und Herkunft anhängen (Gate 1.1.1).
   page.on('console', async (m) => {
     if (m.type() !== 'error') return;
-    const i = errors.push(m.text()) - 1;
-    if (!/^(Object|JSHandle@object)$/.test(m.text())) return;
-    try {
-      const a = await Promise.all(m.args().map((x) => x.jsonValue().catch(() => '?')));
-      errors[i] = 'Object ' + JSON.stringify(a).slice(0, 300) + ' @ ' + (m.location().url || '?') + ':' + m.location().lineNumber;
-    } catch (e) { /* Seite schon weg */ }
+    if (!/^(Object|JSHandle@object)$/.test(m.text())) { errors.push(m.text()); return; }
+    // Herkunft sofort (synchron), Inhalt danach; errors.pending lässt Prüfer darauf warten.
+    const where = ' @ ' + (m.location().url || '?') + ':' + m.location().lineNumber;
+    const i = errors.push('Object' + where) - 1;
+    const p = Promise.all(m.args().map((x) => x.jsonValue().catch(() => '?')))
+      .then((a) => { errors[i] = 'Object ' + JSON.stringify(a).slice(0, 300) + where; })
+      .catch(() => { /* Seite schon weg */ });
+    errors.pending.add(p); p.finally(() => errors.pending.delete(p));
   });
   return { browser, context, page, errors, token: tok.access_token };
 }

@@ -47,7 +47,14 @@ if (sw) {
   await check('Schalter setzt die Rückfrage', on);
   // Popup der Vorschau: „Auf“ (data-casora-svc) ohne Bestätigen fährt nicht
   await H(() => { const p = window.__panel(); p._cpDismissed = null; const t = p._cpTarget(); if (t) p._cpOpen(t); });
-  await page.waitForTimeout(3500);
+  // Unter Last baut sich das Vorschau-Popup langsamer auf: bis zu 10 s auf den „Auf“-Knopf warten
+  // statt fest 3,5 s (wackelte ~1 von 3, Gate 1.1.1).
+  await page.waitForFunction(() => {
+    const find = (root) => [...root.querySelectorAll('*')].some((e) => (e.dataset && e.dataset.casoraSvc && /set_cover_position|open_cover/.test(e.dataset.casoraSvc)
+      && /"position":100|open_cover/.test(e.dataset.casoraSvc)) || (e.shadowRoot && find(e.shadowRoot)));
+    return find(window.__panel().shadowRoot);
+  }, null, { timeout: 10000, polling: 300 }).catch(() => {});
+  await page.waitForTimeout(500);
   const res = await H(async (c) => {
     const ha = document.querySelector('home-assistant');
     const calls = []; const orig = ha.hass.callService;
