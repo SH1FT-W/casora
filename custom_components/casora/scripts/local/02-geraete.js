@@ -944,6 +944,66 @@
       + txt('var(--casora-hh-bar-ink, #173C38)') + '</div>'
       + '</div>';
   };
+  /* 1.1.2 (Richtung A): schmale Leiste über die volle Breite direkt unter der Kopfzeile – Fortschritt
+     gehört zur Restzeit im Kopf. Darunter eine Zeile wie die Popup-Unterzeilen: links „25 %“,
+     rechts „Fertig gegen 22:06 Uhr“. o = { pct, left, right, tone } */
+  H.pbar = function (o) {
+    var p = Math.max(0, Math.min(100, Number(o.pct) || 0));
+    var c = TONE[o.tone] || o.tone || TONE.accent;
+    return '<div class="hh-pbar" style="font-family:' + FONT + ';padding:0 8px;">'
+      + '<div class="hh-pbar-track" style="height:6px;border-radius:999px;overflow:hidden;'
+      + 'background:var(--casora-hh-bar-track, var(--casora-soft-control-fill, rgba(140,115,90,0.10)));">'
+      + '<div class="hh-pbar-fill" style="height:100%;width:' + p.toFixed(1) + '%;border-radius:999px;background:' + c + ';'
+      + 'transition:width .3s cubic-bezier(.36,0,.16,1);"></div></div>'
+      + ((o.left || o.right) ? '<div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px;font-size:13px;font-weight:600;'
+        + 'color:' + SUB + ';font-variant-numeric:tabular-nums;white-space:nowrap;">'
+        + '<span>' + esc(o.left || '') + '</span><span style="overflow:hidden;text-overflow:ellipsis;">' + esc(o.right || '') + '</span></div>' : '')
+      + '</div>';
+  };
+  /* 1.1.2: Prognose in einer Zeile – zwei Mini-Balken (Symbol je Balken, Prozent rechts) unter dem Titel. */
+  H.forecast = function (label, items) {
+    var UI = window._casoraUI;
+    var cell = function (it) {
+      var p = Math.max(0, Math.min(100, Number(it.pct) || 0));
+      return '<div class="hh-fc" style="display:flex;align-items:center;gap:8px;min-width:0;" title="' + esc(it.name) + '">'
+        + '<ha-icon icon="' + esc(it.icon) + '" style="--mdc-icon-size:15px;width:15px;height:15px;flex:none;display:flex;color:' + SUB + ';"></ha-icon>'
+        + '<div style="flex:1;height:5px;border-radius:999px;overflow:hidden;background:var(--casora-soft-control-fill, rgba(140,115,90,0.10));">'
+        + '<div style="height:100%;width:' + p.toFixed(1) + '%;border-radius:999px;background:' + TONE.good + ';"></div></div>'
+        + '<span style="font-size:12.5px;font-weight:600;color:' + SUB + ';font-variant-numeric:tabular-nums;flex:none;">' + Math.round(p) + ' %</span></div>';
+    };
+    return '<div style="font-family:' + FONT + ';text-align:left;">'
+      + '<div class="hui-row hui-srow hh-forecast" style="display:flex;align-items:center;gap:12px;min-height:58px;box-sizing:border-box;padding:10px 16px 10px 10px;'
+      + 'background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));border-radius:var(--casora-popup-row-radius, 24px);">'
+      + (UI && UI.icon ? UI.icon('mdi:leaf', 'good') : '')
+      + '<div style="flex:1;min-width:0;">'
+      + '<div style="font-size:14.5px;font-weight:700;letter-spacing:-0.01em;line-height:1.3;color:var(--casora-popup-tiles-text-primary, #3A322B);'
+      + 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(label) + '</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(' + items.length + ', minmax(0, 1fr));gap:0 18px;margin-top:7px;">'
+      + items.map(cell).join('') + '</div></div></div></div>';
+  };
+  /* 1.1.2: ruhige Sand-Pille für eine Aktion am Spaltenende (Programm abbrechen), 48 px, Symbol gedimmt.
+     Zweistufig wie die Zeilen von UI.group (data-casora-arm → Bestätigen fährt rechts herein, dort erst
+     die Warnfarbe); casora-core löst data-casora-cf aus. o = { label, icon, svc, confirm } */
+  H.pill = function (o) {
+    return '<style>.hh-abort{position:relative;overflow:hidden;--cf-w:96px;display:flex;align-items:center;justify-content:center;gap:8px;'
+      + 'min-height:48px;box-sizing:border-box;padding:0 22px;border-radius:999px;cursor:pointer;user-select:none;-webkit-user-select:none;'
+      + '-webkit-tap-highlight-color:transparent;font-family:' + FONT + ';font-size:14.5px;font-weight:700;letter-spacing:-0.01em;'
+      + 'color:var(--casora-popup-tiles-text-primary, #3A322B);background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));transition:background-color .18s ease;}'
+      + '.hh-abort > *{pointer-events:none;}'
+      + '.hh-abort .hui-inner{display:flex;align-items:center;justify-content:center;gap:8px;flex:none;transform:translateX(0);transition:transform .36s cubic-bezier(.36,0,.16,1);}'
+      + '.hh-abort.armed .hui-inner{transform:translateX(calc((var(--cf-w) + 10px) / -2));}'
+      + '.hh-abort .hui-cf{position:absolute;top:5px;bottom:5px;right:5px;width:var(--cf-w);border-radius:999px;display:grid;place-items:center;'
+      + 'font-size:14px;font-weight:600;color:var(--casora-popup-ui-on-action, #fff);background:var(--casora-popup-ui-bad, #C8553D);'
+      + 'transform:translateX(calc(var(--cf-w) + 16px));transition:transform .36s cubic-bezier(.36,0,.16,1);pointer-events:none;}'
+      + '.hh-abort.armed .hui-cf{transform:none;pointer-events:auto;cursor:pointer;}'
+      + '@media (hover:hover){.hh-abort:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}}'
+      + '@media (prefers-reduced-motion:reduce){.hh-abort .hui-inner,.hh-abort .hui-cf{transition:none;}}</style>'
+      + '<div class="hui-row hh-abort" role="button" data-casora-arm="">'
+      + '<div class="hui-inner">'
+      + (o.icon ? '<ha-icon icon="' + esc(o.icon) + '" style="--mdc-icon-size:17px;width:17px;height:17px;display:flex;color:' + SUB + ';"></ha-icon>' : '')
+      + '<span>' + esc(o.label) + '</span></div>'
+      + '<div class="hui-cf" data-casora-cf="' + esc(JSON.stringify(o.svc)) + '">' + esc(o.confirm || 'Bestätigen') + '</div></div>';
+  };
   /* Viele Segmente (Startzeit, Saugstufe): Breite nach Text statt gleich breit, damit nichts abgeschnitten wird. */
   H.dense = function (html, wrap) {
     /* wrap: Umbruch statt gleich breiter Spalten (Saugroboter: „Saugen & wischen“ wurde sonst abgeschnitten). */
@@ -1515,7 +1575,23 @@
       return UI.hero({ value: value, unit: unit, sub: sub.join(' · ') || null, subTone: tone, center: true });
     }
 
-    /* Laufender Durchgang: Fortschritt, Programm, Phase, Laufzeit (mit üblicher Dauer). */
+    /* Weich 1.1.2 (Richtung A): Fortschritt als schmale Leiste unter der Kopfzeile. */
+    if (kind === 'pbar') {
+      if (!active || !SF) return '';
+      var pctB = pctOf(c, states);
+      if (pctB == null) return '';
+      var remB = remOf(c, states);
+      return window._casoraHH.pbar({ pct: pctB, left: Math.round(pctB) + ' %',
+        right: remB != null ? 'Fertig gegen ' + clock(new Date(Date.now() + remB * 60000)) + ' Uhr' : '' });
+    }
+    /* Weich 1.1.2: „Programm abbrechen“ als ruhige Pille am Spaltenende (Hersteller-Integration). */
+    if (kind === 'abort') {
+      if (!active || !SF || !c.official || !ok(states, c.stop)) return '';
+      return window._casoraHH.pill({ label: 'Programm abbrechen', icon: 'mdi:stop', svc: btn(c.stop), confirm: 'Abbrechen' });
+    }
+
+    /* Laufender Durchgang: Fortschritt, Programm, Phase, Laufzeit (mit üblicher Dauer).
+       Weich: Fortschritt steht an der Leiste, Programm und Phase in der Kopfzeile – hier nur der Rest. */
     if (kind === 'run' || kind === 'prog') {
       if (!active) return '';
       var rows = [];
@@ -1527,21 +1603,16 @@
       var phn = phaseOf(c, states);
       var endTxt = remM != null ? 'Fertig gegen ' + clock(new Date(Date.now() + remM * 60000)) + ' Uhr' : null;
       if (pct == null && remM != null) rows.push({ icon: 'mdi:timer-sand', iconTone: 'accent', label: 'Restzeit', sub: endTxt, value: dur(remM) });
-      rows.push({ icon: mIcon, iconTone: 'accent', label: 'Programm',
+      if (!SF) rows.push({ icon: mIcon, iconTone: 'accent', label: 'Programm',
         value: pr || (c.source === 'washdata' ? 'Wird erkannt …' : '—') });
-      if (phn) rows.push({ icon: c.dryer ? 'mdi:weather-windy' : 'mdi:water-sync', iconTone: 'accent', label: 'Phase', value: phn });
+      if (phn && !SF) rows.push({ icon: c.dryer ? 'mdi:weather-windy' : 'mdi:water-sync', iconTone: 'accent', label: 'Phase', value: phn });
       if (el != null) rows.push({ icon: 'mdi:timer-outline', iconTone: 'accent', label: 'Läuft seit',
         sub: tot != null && tot > 0 ? 'Üblich sind ' + dur(tot) : null, value: dur(el) });
-      if (pct != null) {
-        if (SF) {
-          var HH = window._casoraHH;
-          return HH.label('Durchgang') + HH.bar({ pct: pct, text: Math.round(pct) + ' %', word: endTxt })
-            + '<div style="height:8px"></div>' + UI.group(rows);
-        }
+      if (pct != null && !SF) {
         rows.unshift({ icon: 'mdi:progress-clock', iconTone: 'accent', label: 'Fortschritt', sub: endTxt,
           value: Math.round(pct) + ' %', bar: pct / 100, barTone: 'accent' });
       }
-      return UI.group(rows, 'Durchgang');
+      return rows.length ? UI.group(rows, 'Durchgang') : '';
     }
 
     /* Programm unbekannt, während es läuft: WashData fragen lassen, welches es ist. */
@@ -1565,7 +1636,8 @@
       if (c.official) {
         if (active && !paused && ok(states, c.pause)) rowsA.push({ icon: 'mdi:pause', iconTone: 'warn', label: 'Pausieren', svc: btn(c.pause) });
         if (paused && ok(states, c.resume)) rowsA.push({ icon: 'mdi:play', iconTone: 'good', label: 'Fortsetzen', svc: btn(c.resume) });
-        if (active && ok(states, c.stop)) rowsA.push({ icon: 'mdi:stop', iconTone: 'bad', label: 'Programm abbrechen', svc: btn(c.stop), confirm: 'Abbrechen' });
+        /* Weich: Abbrechen ist die Pille am Spaltenende (abort). */
+        if (active && !SF && ok(states, c.stop)) rowsA.push({ icon: 'mdi:stop', iconTone: 'bad', label: 'Programm abbrechen', svc: btn(c.stop), confirm: 'Abbrechen' });
       } else if (raw === 'user_paused' && ok(states, c.resume)) {
         rowsA.push({ icon: 'mdi:play', iconTone: 'good', label: 'Erkennung fortsetzen', sub: 'Die Erkennung ist angehalten', svc: btn(c.resume) });
       }
@@ -1756,9 +1828,10 @@
         var every = rem2[k], done = since2[k] || 0;
         var isDue = due.indexOf(k) !== -1 || done >= every;
         var lbl = k === 'filter_clean' && c.dryer ? 'Filter & Kondensator reinigen' : MAINT[k][0];
+        /* Weich 1.1.2: „Erledigt“ nur bei fälliger Pflege. */
         return { icon: MAINT[k][1], iconTone: isDue ? 'warn' : DIM, label: lbl,
           sub: isDue ? 'Fällig · ' + done + ' Durchgänge seit dem letzten Mal' : 'In ' + (every - done) + ' Durchgängen fällig',
-          bar: Math.min(1, done / every), barTone: isDue ? 'warn' : 'good', value: 'HWMAINT' + k + 'X' };
+          bar: Math.min(1, done / every), barTone: isDue ? 'warn' : 'good', value: (SF && !isDue) ? null : 'HWMAINT' + k + 'X' };
       });
       /* „Erledigt“-Knopf an die Stelle des Werts (zweistufig, siehe L.tap) */
       var html = UI.group(rowsM, kind === 'maint_due' ? 'Pflege fällig' : 'Pflege');
@@ -1901,15 +1974,19 @@
         maint: _dueNow ? '[[[ const c = ' + _c + '; const L = window._casoraLaundry; return L && L.due({ entity_id: c.st }, { appliance_state: c.st, device_type: c.dryer ? "dryer" : null }, states).length'
           + " ? L.slot('maint_due', c, states) : ''; ]]]" : undefined };
       var run0 = L.state(states, c.st)[2];
-      var moreKeys = WD ? ['ctrl'].concat(run0 ? ['progs'] : []).concat(['stats', 'energy', 'maint_rest', 'tips', 'plug']) : ['energy', 'plug'];
+      /* 1.1.2 (Richtung A): Leiste unter dem Kopf, Abbrechen-Pille am Spaltenende; beim Laufen stehen
+         die letzten Durchgänge links unter dem Durchgang und die Programme rechts (wie im Zustand aus). */
+      if (run0) f2.pbar = tpl('pbar', false);   /* leer kostet oben einen Rasterabstand – nur beim Laufen anlegen */
+      f2.abort = tpl('abort', false);
+      var moreKeys = WD ? ['ctrl', 'stats', 'energy', 'maint_rest', 'tips', 'plug'] : ['energy', 'plug'];
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
         + 'return L && H ? H.more("laundry", ' + JSON.stringify(moreKeys) + '.map(function (k) {'
         + ' return (k === "ctrl" || k === "plug" || k === "tips") ? L.inner(k, c, states) : L.slot(k, c, states); })) : "";', c.st);
       var left, right;
-      if (!WD) { left = ['run', 'act', 'dev']; right = ['more']; }
-      else if (run0) { left = ['unload', 'run', 'pick', 'act']; right = ['cycles', 'maint', 'more']; }
+      if (!WD) { left = ['run', 'act', 'dev', 'abort']; right = ['more']; }
+      else if (run0) { left = ['unload', 'run', 'pick', 'act', 'cycles', 'abort']; right = ['progs', 'maint', 'more']; }
       else { left = ['unload', 'act', 'cycles']; right = ['progs', 'maint', 'more']; }
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, left: left, right: right });
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: left, right: right });
     }
 
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
@@ -2172,12 +2249,37 @@
       return UI.hero({ value: value, unit: unit, sub: sub.join(' · ') || null, subTone: tone, center: true });
     }
 
+    var SF = !!(window._casoraHH && window._casoraHH.on());
+    var stopOk = c.stop && states[c.stop] && states[c.stop].state !== 'unavailable';
+    var stopSvc = { domain: 'button', service: 'press', target: { entity_id: c.stop } };
+    var endTxt = rem != null && rem > 0 ? 'Fertig gegen ' + U.clock(new Date(Date.now() + rem * 60000)) + ' Uhr' : null;
+
+    /* Weich 1.1.2 (Richtung A): Fortschritt als schmale Leiste unter der Kopfzeile. */
+    if (kind === 'd_pbar') {
+      if (!active || !SF) return '';
+      var pctB = U.num(states, c.progress);
+      if (pctB == null) return '';
+      return window._casoraHH.pbar({ pct: pctB, left: Math.round(pctB) + ' %', right: endTxt || '' });
+    }
+    /* Weich 1.1.2: „Programm abbrechen“ als ruhige Pille am Spaltenende. */
+    if (kind === 'd_abort') {
+      if (!active || !SF || !stopOk) return '';
+      return window._casoraHH.pill({ label: 'Programm abbrechen', icon: 'mdi:stop', svc: stopSvc, confirm: 'Abbrechen' });
+    }
+
     if (kind === 'd_run') {
       if (!active) return '';
       var rows = [];
       var pct = U.num(states, c.progress);
-      if (pct != null) rows.push({ icon: 'mdi:progress-clock', iconTone: 'accent', label: 'Fortschritt',
-        sub: rem != null && rem > 0 ? 'Fertig gegen ' + U.clock(new Date(Date.now() + rem * 60000)) + ' Uhr' : null,
+      /* Weich: Fortschritt steht an der Leiste, Phase und Programm in der Kopfzeile, Abbrechen ist die Pille. */
+      if (SF) {
+        var est = [[c.energyEst, 'Energie', 'mdi:lightning-bolt-outline'], [c.waterEst, 'Wasser', 'mdi:water-outline']].map(function (x) {
+          var n = U.num(states, x[0]);
+          return n == null ? null : { name: x[1], icon: x[2], pct: n };
+        }).filter(Boolean);
+        return est.length ? window._casoraHH.label('Durchgang') + window._casoraHH.forecast('Prognose für dieses Programm', est) : '';
+      }
+      if (pct != null) rows.push({ icon: 'mdi:progress-clock', iconTone: 'accent', label: 'Fortschritt', sub: endTxt,
         value: Math.round(pct) + ' %', bar: Math.max(0, Math.min(1, pct / 100)), barTone: 'accent' });
       var phn = PHASE[U.str(states, c.phase)];
       if (phn) rows.push({ icon: 'mdi:water-sync', iconTone: 'accent', label: 'Phase', value: phn });
@@ -2187,14 +2289,7 @@
         var n = U.num(states, x[0]);
         if (n != null) rows.push({ icon: x[2], iconTone: 'accent', label: x[1], sub: 'Prognose für dieses Programm', value: Math.round(n) + ' %', bar: n / 100, barTone: 'good' });
       });
-      if (c.stop && states[c.stop] && states[c.stop].state !== 'unavailable') rows.push({ icon: 'mdi:stop', iconTone: 'bad', label: 'Programm abbrechen',
-        svc: { domain: 'button', service: 'press', target: { entity_id: c.stop } }, confirm: 'Abbrechen' });
-      /* Weich: Fortschritt als breiter Balken über den Zeilen. */
-      if (pct != null && window._casoraHH && window._casoraHH.on()) {
-        var HH = window._casoraHH;
-        return HH.label('Durchgang') + HH.bar({ pct: pct, text: Math.round(pct) + ' %', word: rows[0].sub })
-          + '<div style="height:8px"></div>' + UI.group(rows.slice(1));
-      }
+      if (stopOk) rows.push({ icon: 'mdi:stop', iconTone: 'bad', label: 'Programm abbrechen', svc: stopSvc, confirm: 'Abbrechen' });
       return UI.group(rows, 'Durchgang');
     }
 
@@ -2283,8 +2378,10 @@
       if (cr != null || c.machineCare) rc.push({ icon: 'mdi:spray-bottle', iconTone: mdue ? 'warn' : 'good', label: 'Maschinenpflege',
         sub: mdue ? 'Programm „Maschinenpflege“ mit Reiniger starten' : (cr != null ? 'In ' + Math.round(cr) + ' Durchgängen' : null),
         value: mdue ? 'Fällig' : null, valueTone: mdue ? 'warn' : null });
-      /* Weich (Entschlacken): nur Fälliges zeigen, sonst ein Satz. */
-      if (window._casoraHH && window._casoraHH.on() && rc.length) {
+      /* Weich 1.1.2: am Desktop/Tablet die volle Liste mit Füllständen (trägt die rechte Spalte);
+         am Handy nur Fälliges, sonst ein Satz – das Popup bleibt dort kurz. */
+      var phone = window.matchMedia && window.matchMedia('(max-width: 760px)').matches;
+      if (SF && rc.length && phone) {
         var dueR = rc.filter(function (r) { return r.valueTone; });
         return UI.group(dueR.length ? dueR : [{ icon: 'mdi:check-circle-outline', iconTone: 'good', label: 'Alles aufgefüllt',
           sub: 'Salz, Klarspüler und Pflege sind in Ordnung' }], 'Nachfüllen & Pflege');
@@ -2427,10 +2524,14 @@
     if (window._casoraHH && window._casoraHH.on() && window._casoraHH.layout) {
       var HH = window._casoraHH;
       var f2 = { hero: fields.hero, run: fields.run, prog: fields.prog, start: fields.start, alerts: fields.alerts, care: fields.care };
+      /* 1.1.2 (Richtung A): Leiste unter dem Kopf (nur beim Laufen angelegt – leer kostet sie oben einen
+         Rasterabstand), Abbrechen-Pille am Ende der linken Spalte. */
+      if (active) f2.pbar = tpl('d_pbar', false);
+      f2.abort = tpl('d_abort', false);
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
         + 'return L && H ? H.more("dish", ["d_opts", "energy", "d_stats", "d_device", "plug"].map(function (k) {'
         + ' return (k === "energy" || k === "d_stats") ? L.slot(k, c, states) : L.inner(k, c, states); })) : "";', c.st);
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, left: ['run', 'prog'], right: ['start', 'alerts', 'care', 'more'] });
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, top: ['hero', 'pbar'], left: ['run', 'prog', 'abort'], right: ['start', 'alerts', 'care', 'more'] });
     }
 
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
