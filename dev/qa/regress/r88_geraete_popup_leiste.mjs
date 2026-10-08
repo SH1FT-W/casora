@@ -229,7 +229,9 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
       const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_3d_printer') && x.getBoundingClientRect().width > 20);
       if (!b || !window._casoraPrint) return null;
       const h = document.querySelector('home-assistant').hass, cfg = b._config || {};
-      const c = window._casoraPrint.resolve(cfg.entity ? h.states[cfg.entity] : null, cfg.variables || {}, h.states, h);
+      // Vorlagen-Variablen kommen hier unausgewertet („[[[ … ]]]“) – die lässt resolve() dann selbst finden.
+      const vars = Object.fromEntries(Object.entries(cfg.variables || {}).filter(([, x]) => !(typeof x === 'string' && x.trim().startsWith('[[['))));
+      const c = window._casoraPrint.resolve(cfg.entity ? h.states[cfg.entity] : null, vars, h.states, h);
       const p = {};
       if (c.status) p[c.status] = { state: 'running' };
       if (c.progress) p[c.progress] = { state: '42' };
