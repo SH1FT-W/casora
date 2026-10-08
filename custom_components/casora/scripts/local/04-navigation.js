@@ -525,6 +525,20 @@
     /* Zustandszeile einer Raumzeile („1 Licht an · 22°“, „Alles aus · 21°“): nur aus den Werten der
        Raum-Badges (Lichter wie casora_badge_light_group, Temperatur wie casora_badge_climate_group).
        Ohne Lichter und Temperatur bleibt die Zeile leer – nichts erfinden. */
+    /* „Vor 5 Min.“, „Gestern“ … wie casora_badge_scene (Szenen-Zustand = Zeitpunkt der letzten Ausführung). */
+    _sceneAgo(id) {
+      var st = this._hass && this._hass.states[id];
+      var t = Date.parse(st && st.state), tr = window.casoraTr || function (x) { return x; };
+      if (!isFinite(t)) return tr('Noch nie');
+      var m = Math.round((Date.now() - t) / 60000);
+      if (m < 1) return tr('Gerade eben');
+      if (m < 60) return tr('Vor ' + m + ' Min.');
+      var h = Math.round(m / 60);
+      var day = function (x) { var o = new Date(x); return new Date(o.getFullYear(), o.getMonth(), o.getDate()); };
+      var d = Math.round((day(Date.now()) - day(t)) / 86400000);
+      if (h < 24 || d < 1) return tr('Vor ' + h + ' Std.');
+      return tr(d === 1 ? 'Gestern' : 'Vor ' + d + ' Tagen');
+    }
     _roomSub(key, chips) {
       var PR = window.casoraPhoneRoom, h = this._hass;
       if (!PR || !h || !key) return '';
@@ -616,6 +630,12 @@
         var tx = el('span', 'hmn-txt');
         tx.appendChild(el('span', 'hmn-name', label));
         b.appendChild(tx);
+        if (!rooms) {
+          /* Szenen: rechts, wann sie zuletzt lief – dieselbe Schreibweise wie die Szenen-Badges. */
+          var ago = el('span', 'hmn-sub', self._sceneAgo(it.id));
+          ago.setAttribute('data-sid', it.id);
+          b.appendChild(ago);
+        }
         if (rooms) {
           /* Zustand rechts neben dem Namen (eigene Rasterspalte), leer = ausgeblendet. */
           var sub = self._roomSub(it.key, chips);
@@ -637,7 +657,12 @@
           var s = b.querySelector('.hmn-sub'), t = self._roomSub(b.getAttribute('data-k'), ch);
           if (s && s.textContent !== t) { s.textContent = t; s.style.display = t ? '' : 'none'; }
         });
-      } : null;
+      } : function () {
+        Array.prototype.forEach.call(list.querySelectorAll('.hmn-sub[data-sid]'), function (s) {
+          var t = self._sceneAgo(s.getAttribute('data-sid'));
+          if (s.textContent !== t) s.textContent = t;
+        });
+      };
       this._scrimOpen();
       if (this._bar) this._bar.classList.add('hmn-under');
       document.body.appendChild(m);
