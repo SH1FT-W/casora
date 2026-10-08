@@ -67,8 +67,12 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   usePage(page);
   await dashboard(page, phone.url, 3);
   // Einen Raum öffnen, damit es eine markierte Zeile gibt.
-  await page.evaluate(() => { const nav = window.__pierce('casora-mobile-nav')[0]; const r = nav && nav._rooms && nav._rooms[0]; if (r) nav._set(r.key); });
-  await page.waitForTimeout(1200);
+  // Nicht fest warten (1,2 s reichten unter Last nicht, dann war keine Zeile markiert – Gate 1.1.2):
+  // erst weiter, wenn die Leiste den Raum wirklich als offen führt.
+  const roomKey = await page.evaluate(() => { const nav = window.__pierce('casora-mobile-nav')[0]; const r = nav && nav._rooms && nav._rooms[0]; if (r) nav._set(r.key); return r ? r.key : null; });
+  await need(`${tag}: Leiste kennt Räume`, !!roomKey);
+  await page.waitForFunction((k) => { const nav = window.__pierce('casora-mobile-nav')[0]; return !!nav && nav._cur() === k; }, roomKey, { timeout: 15000, polling: 200 }).catch(() => {});
+  await page.waitForTimeout(400);
 
   // ── Räume ──
   const m = await openSheet(page, 'rooms');
