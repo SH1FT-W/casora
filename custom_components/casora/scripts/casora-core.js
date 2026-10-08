@@ -10369,7 +10369,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (!anchor || !anchor.style) return;
     if (isPhone()) return;
     if (on) {
-      anchor.style.setProperty('--casora-bell-fill', '#fff');
+      /* D8 (1.2): offen in der Fläche der aktiven Raum-Pille (ohne Token wie bisher Weiß). */
+      anchor.style.setProperty('--casora-bell-fill', 'var(--casora-nav-tab-active-fill, #fff)');
       anchor.style.setProperty('--casora-bell-filter', 'brightness(0)');
     } else {
       anchor.style.removeProperty('--casora-bell-fill');

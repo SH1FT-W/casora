@@ -337,7 +337,8 @@ Casora:
   # Wellen im Ton wie Wiedergabe-Knopf und Balken, solange etwas läuft, sonst dunkel (Variante C, 04.10.2026).
   casora-np-head-ink: var(--casora-chrome-ink, rgba(255,255,255,0.90))
   # Aufgeklappt wie die offene Glocke: weißer Grund, dunkles Symbol (04.10.2026).
-  casora-np-head-on: "#fff"
+  # D8 (1.2): offene Welle in der Fläche der aktiven Raum-Pille (hell Weiß-Creme, dunkel Creme)
+  casora-np-head-on: var(--casora-nav-tab-active-fill, #fff)
   casora-np-head-on-ink: "#000"
   casora-np-head-play-ink: var(--casora-ton-ink)
   # Heizung = Wärme-Orange (Puck, Modus-Symbole); Temperaturleiste in der Weich-Palette statt iOS-Regenbogen
