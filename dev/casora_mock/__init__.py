@@ -94,6 +94,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     from .fussball import extra as fussball_extra
     _merge(fixture, fussball_extra(dt_util.utcnow()), "Team-Tracker-Sensor")
     _vacuum_map(fixture)
+    # Nur auf Wunsch: HACS-artige Update-Entität für Casora (hacs_casora.py).
+    hacs_cfg = await hass.async_add_executor_job(_load_optional, "hacs_casora.json")
+    if hacs_cfg:
+        from .hacs_casora import extra as hacs_extra
+        _merge(fixture, hacs_extra(hacs_cfg), "HACS-Update für Casora")
     fixture["_skip"] = await hass.async_add_executor_job(_skip_list)
     mock = CasoraMock(hass, entry, fixture, scenarios)
     hass.data[DOMAIN] = mock

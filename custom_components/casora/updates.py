@@ -6,14 +6,16 @@ CHANGELOG.de.md – offline zeigt das Studio so wenigstens die bekannten Version
 Hinweise kommen in der Sprache der Oberfläche (Deutsch oder sonst Englisch). Die Antwort wird
 zwischengespeichert (CACHE_S).
 
-Installieren und Prüfen laufen über die Update-Entität (update.py) mit HAs eigenen
-Diensten update.install / homeassistant.update_entity; hier gibt es nur zu lesen.
-Verwaltet HACS Casora, gibt es keine eigene Update-Entität (hacs: true) – dann meldet
-HACS neue Versionen, das Studio zeigt nur die Liste.
+Installieren und Prüfen laufen über die Update-Entität mit HAs eigenen Diensten
+update.install / homeassistant.update_entity; hier gibt es nur zu lesen. Verwaltet HACS
+Casora, gibt es keine eigene Update-Entität (hacs: true) – dann installiert das Studio über
+HACS' Update-Entität für das Casora-Repo (update.casora_update_entity), Prüfen übernimmt HACS.
 
 WebSocket (nur Admins):
   casora/updates/list ← {"force"?: bool, "language"?: str (Sprache der Oberfläche)} →
-    {installed, latest, update_available, entity_id, entry_id, token (prüft Casora selbst?),
+    {installed, latest, update_available, entity_id (Update-Entität zum Installieren oder None),
+     install_via ("hacs"|"casora"|None), install_version (Tag für update.install oder None),
+     entity_ready (Entität geladen und verfügbar?), entry_id, own_check (prüft Casora selbst?),
      hacs, beta (Vorabversionen an?), last_check, last_error, pending_restart, scan_hours, repo_url,
      notes_lang ("de"|"en"),
      groups: [{kind: "casora", title, releases: [{kind, version, date, notes_md, notes_lang, notes_html,
@@ -32,11 +34,11 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN, UPDATE_REPO, VERSION
 from .release_notes import (
     KIND_CASORA,
+    norm_version,
     changelog_file,
     from_github,
     merge_releases,
@@ -54,6 +56,7 @@ from .update import (
     SCAN_INTERVAL,
     async_load_history,
     beta_enabled,
+    casora_update_entity,
 )
 from .update_source import error_code, fetch_releases
 
@@ -118,12 +121,6 @@ async def _remote(hass: HomeAssistant, force: bool, lang: str = "en") -> tuple[l
     return from_github(body, lang), None
 
 
-def _entity_id(hass: HomeAssistant, entry) -> str | None:
-    if entry is None:
-        return None
-    return er.async_get(hass).async_get_entity_id("update", DOMAIN, f"{entry.entry_id}_update")
-
-
 async def async_updates_overview(hass: HomeAssistant, force: bool = False, lang: str | None = None) -> dict[str, Any]:
     """lang: Sprache der Oberfläche (Panel); ohne Angabe die von Home Assistant."""
     entry = _entry(hass)
@@ -137,11 +134,13 @@ async def async_updates_overview(hass: HomeAssistant, force: bool = False, lang:
 
     data = hass.data.get(DOMAIN, {})
     hacs = bool(data.get(DATA_HACS))
-    entity_id = _entity_id(hass, entry)
+    entity_id, via = casora_update_entity(hass, entry)
     st = hass.states.get(entity_id) if entity_id else None
+    ready = st is not None and st.state not in ("unavailable", "unknown")
     latest = VERSION
-    if st is not None and st.attributes.get("latest_version"):
-        latest = str(st.attributes["latest_version"])
+    ent_latest = norm_version(st.attributes.get("latest_version")) if ready else ""
+    if ent_latest and newer(ent_latest, latest):
+        latest = ent_latest
     # Vorabversionen nur mit „Beta-Versionen“ (Option beta_updates); die Liste ist neueste zuerst.
     beta = beta_enabled(entry)
     top = next((r["version"] for r in releases
@@ -151,8 +150,18 @@ async def async_updates_overview(hass: HomeAssistant, force: bool = False, lang:
     # Installiert, aber noch nicht neu gestartet: das läuft erst nach dem Neustart.
     pending = data.get(DATA_PENDING)
     pending = pending if pending and pending != VERSION else None
+    if via == "hacs" and ready:
+        # HACS hat die neue Fassung schon abgelegt (installed_version), Casora läuft noch alt.
+        hacs_inst = norm_version(st.attributes.get("installed_version"))
+        if hacs_inst and newer(hacs_inst, VERSION) and not (pending and newer(pending, hacs_inst)):
+            pending = hacs_inst
     if pending and newer(pending, latest):
         latest = pending
+    # Kennt HACS die neueste Version noch nicht (fragt seltener), gezielt diesen Tag installieren.
+    install_version = None
+    if via == "hacs" and ready and newer(latest, ent_latest or VERSION):
+        raw = str(st.attributes.get("latest_version") or st.attributes.get("installed_version") or "")
+        install_version = ("v" if raw.startswith("v") else "") + latest
 
     out = []
     for r in releases:
@@ -168,9 +177,12 @@ async def async_updates_overview(hass: HomeAssistant, force: bool = False, lang:
         "latest": latest,
         "update_available": newer(latest, pending or VERSION),
         "entity_id": entity_id,
+        "install_via": via if entity_id else None,
+        "install_version": install_version,
+        "entity_ready": ready,
         "entry_id": entry.entry_id if entry else None,
-        # Prüft Casora selbst (Update-Entität)? Mit HACS übernimmt HACS das.
-        "token": not hacs,
+        # Prüft Casora selbst (eigene Update-Entität)? Mit HACS übernimmt HACS das.
+        "own_check": not hacs,
         "hacs": hacs,
         # Option „Beta-Versionen“; mit HACS schaltet man Betas in HACS selbst ein.
         "beta": beta,
