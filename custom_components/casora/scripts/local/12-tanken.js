@@ -149,7 +149,7 @@
     shell: FAV('shell.de'), esso: FAV('esso.de'), total: FAV('totalenergies.de'), totalenergies: FAV('totalenergies.de'),
     jet: FAV('jet-tankstellen.de'), avia: FAV('avia.de'), omv: FAV('omv.de'), hem: FAV('hem-tankstelle.de'),
     star: FAV('star.de'), bft: FAV('bft.de'), westfalen: FAV('westfalen.com'), hoyer: FAV('hoyer.de'),
-    q1: FAV('q1.eu'), agip: FAV('agip.de'), eni: FAV('agip.de'), tamoil: FAV('tamoil.com'),
+    q1: FAV('q1.eu'), agip: FAV('agip.de'), eni: FAV('agip.de'), tamoil: FAV('tamoil.com'), lanfer: FAV('lanfer.de'),
   };
   K.logo = function (s) {
     var b = String((s && (s.b || '')) || '').toLowerCase().replace(/[^a-z0-9]/g, '');
