@@ -168,7 +168,7 @@ Casora:
   casora-nav-more-hover: var(--casora-mnav-press-fill, var(--casora-nav-active-fill))
   casora-nav-more-ink: var(--casora-nav-label-color)
   casora-nav-chevron: var(--casora-text-2)
-  casora-back-hit: -2px   # D-03: Zurück-Knopf sichtbar 40 px, Trefferfläche 44 px
+  casora-back-hit: -2px   # D-03: Trefferfläche 2 px größer als der sichtbare Kreis (seit D7 48 → 52)
   casora-lpc-pill-pad-m: 14px 15px   # D-03: Raumfilter im Licht-Popup am Handy 44 px hoch (vorher 39)
   casora-lpc-row-inset: 14px   # D-17: Raumfilter beginnt auf der Inhaltskante der Zeilen darunter
   casora-climate-seg-h: 58px   # D-06: Modusknöpfe im Thermostat so hoch wie die Zeilen daneben
@@ -258,6 +258,8 @@ Casora:
   casora-menu-item-dim: 1
   casora-menu-icons-filled: 1
   # A-19: Mitteilungen – Zeilen wie Popup-Zeilen, Aktion in Ton
+  # D7 (1.2): Zurück-Kreis am Handy 48 wie die Kopf-Pille rechts (oben 4, gleiche Mittellinie)
+  casora-back-size: 48px
   casora-notify-row-radius: 18px
   casora-notify-pad: 0 8px 8px
   casora-notify-pad-solo-top: 8px
