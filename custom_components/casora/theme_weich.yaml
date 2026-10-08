@@ -557,9 +557,13 @@ Casora:
       casora-sheet-ink: var(--casora-popup-tiles-text-primary)
       casora-sheet-ink-2: var(--casora-popup-tiles-text-secondary)
       casora-sheet-ink-3: var(--casora-popup-tiles-text-muted)
-      # Diagramm-Achsen (ApexCharts liest var() auch im SVG-Attribut)
+      # Diagramme (casora-chart): Achsen, Hilfslinien und vier Datenstufen (Kontrast ≥ 3:1 zur Platte)
       casora-chart-label: var(--casora-text-3)
       casora-chart-grid: rgba(120,100,80,0.12)
+      casora-chart-c1: "#4A7DBA"
+      casora-chart-c2: "#C8743A"
+      casora-chart-c3: "#008A7E"
+      casora-chart-c4: "#A88327"
       casora-popup-tiles-fill: rgba(140,115,90,0.07)
       casora-popup-tile-hover: rgba(140,115,90,0.10)
       casora-popup-progress-track: rgba(140,115,90,0.14)
@@ -942,6 +946,10 @@ Casora:
       casora-popup-slider-track: rgba(0,0,0,0.28)
       casora-chart-label: var(--casora-text-3)
       casora-chart-grid: rgba(255,240,220,0.08)
+      casora-chart-c1: "#5C93D6"
+      casora-chart-c2: "#CF7840"
+      casora-chart-c3: "#16A394"
+      casora-chart-c4: "#B08C2C"
       # Fest weiß gesetzte Popup-Schrift (z. B. Aquarien) über die Popup-Schriftstufen
       casora-sheet-ink: var(--casora-popup-tiles-text-primary)
       casora-sheet-ink-2: var(--casora-popup-tiles-text-secondary)

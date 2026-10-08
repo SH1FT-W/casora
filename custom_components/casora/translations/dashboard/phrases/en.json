@@ -1466,7 +1466,17 @@
   "Rot": "Red",
   "Grün": "Green",
   "Blau": "Blue",
-  "Weiß": "White"
+  "Weiß": "White",
+  "bis": "to",
+  "Ø pro Tag": "Ø per day",
+  "Heute bis": "Today until",
+  "letzte 2 Stunden": "last 2 hours",
+  "letzte 4 Stunden": "last 4 hours",
+  "letzte 6 Stunden": "last 6 hours",
+  "letzte 24 Stunden": "last 24 hours",
+  "letzte 48 Stunden": "last 48 hours",
+  "letzte 7 Tage": "last 7 days",
+  "letzte 30 Tage": "last 30 days"
  },
  "patterns": [
   [
