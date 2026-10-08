@@ -265,7 +265,9 @@ if (await reached(WELCOME, 'Einführung in Casora → Begrüßung')) {
 // WebKit: HAs Vorschau-Rahmen melden beim schnellen Neuladen „Importing a module script failed“
 // (Seitenmodul-Abbruch im Rahmen, nicht Casora) – dort ausgenommen.
 const errs = errors.filter((e) => !/addEventListener|404|Failed to load resource|qa: blockiert/.test(e)
-  && !(SAFARI && /Error loading page .*Importing a module script failed/.test(e)));
+  && !(SAFARI && /Error loading page .*Importing a module script failed/.test(e))
+  // Chrome: Wechselt das Netz des Macs (ERR_NETWORK_CHANGED), lädt HA eigene Seitenteile nicht (08.10.2026).
+  && !/Error loading page .*Failed to fetch dynamically imported module/.test(e));
 check(!errs.length, 'keine Browser-Fehler', errs.slice(0, 3).join(' | '));
 
 } catch (e) {

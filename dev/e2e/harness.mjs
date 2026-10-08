@@ -122,7 +122,16 @@ export async function open({ width = 1440, height = 900, mobile = false, umzug =
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e.message || e)));
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
+  // Nur „Object“ als Text sagt nichts: dann Inhalt und Herkunft anhängen (Gate 1.1.1).
+  page.on('console', async (m) => {
+    if (m.type() !== 'error') return;
+    const i = errors.push(m.text()) - 1;
+    if (!/^(Object|JSHandle@object)$/.test(m.text())) return;
+    try {
+      const a = await Promise.all(m.args().map((x) => x.jsonValue().catch(() => '?')));
+      errors[i] = 'Object ' + JSON.stringify(a).slice(0, 300) + ' @ ' + (m.location().url || '?') + ':' + m.location().lineNumber;
+    } catch (e) { /* Seite schon weg */ }
+  });
   return { browser, context, page, errors, token: tok.access_token };
 }
 

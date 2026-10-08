@@ -49,6 +49,8 @@ jobs:
 
       - name: Übersetzungen
         run: |
+          # phrase-gaps erkennt deutsche Wörter auch über das englische Wörterbuch – Ubuntu hat keins.
+          sudo apt-get install -y -qq wamerican > /dev/null
           python3 tools/i18ncheck.py
           python3 tools/phrase-gaps.py --max 70 > /dev/null
 
