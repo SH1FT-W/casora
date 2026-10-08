@@ -229,17 +229,34 @@
     now = now || new Date();
     if (i.phase === 'PRE') return before(i.date, mode, variables, now);
     if (i.phase === 'POST' || i.phase === 'OFF') {
-      var end = i.phase === 'OFF' ? i.date.getTime() : K.ended(i);
-      var noon = day0(i.date); noon.setDate(noon.getDate() + 1); noon.setHours(12);
-      var until = variables.hours_after !== undefined && variables.hours_after !== '' && variables.hours_after !== null
-        ? end + hrs(variables.hours_after, 3) * H : Math.max(noon.getTime(), end + H);
-      if (now.getTime() <= until) return true;
+      if (now.getTime() <= K.shownUntil(i, variables)) return true;
       var nx = K.nextDate(i);
       return !!(nx && nx > now && before(nx, mode, variables, now));
     }
     return false;
   };
   K.hidden = function (st, variables, now) { return !K.shows(st, variables, now); };
+  /* Bis wann das Ergebnis nach dem Spiel stehen bleibt (ms): hours_after Std. nach Spielende, sonst bis 12 Uhr
+     am Tag danach (mindestens 1 Std. nach Spielende). */
+  K.shownUntil = function (i, variables) {
+    variables = variables || {};
+    var end = i.phase === 'OFF' ? i.date.getTime() : K.ended(i);
+    var noon = day0(i.date); noon.setDate(noon.getDate() + 1); noon.setHours(12);
+    return variables.hours_after !== undefined && variables.hours_after !== '' && variables.hours_after !== null
+      ? end + hrs(variables.hours_after, 3) * H : Math.max(noon.getTime(), end + H);
+  };
+  /* Aktive Kachel (variables.active_override): am Spieltag ab 0 Uhr vor dem Anstoß, während des Spiels und
+     danach, solange das Ergebnis stehen bleibt (wie K.shows). Verschoben/abgesagt, spielfrei: nicht aktiv. */
+  K.active = function (st, variables, now) {
+    var i = K.info(st);
+    if (!i) return false;
+    if (i.phase === 'IN') return true;
+    if (!i.date) return false;
+    now = now || new Date();
+    if (i.phase === 'PRE') return diffDays(i.date, now) === 0;
+    if (i.phase === 'POST') return now.getTime() >= i.date.getTime() && now.getTime() <= K.shownUntil(i, variables);
+    return false;
+  };
 
   /* ── ESPN-Antworten → Tabelle und Form ── */
   var statOf = function (e) {

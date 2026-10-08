@@ -133,6 +133,21 @@ assert.equal(K.shows(old, V('week')), false);
 assert.equal(K.hidden(sensor({ state: 'BYE', attrs: { date: null } }), V('week')), true, 'kein Spiel: ausgeblendet');
 assert.equal(K.hidden({ entity_id: 'sensor.x', state: '1', attributes: {} }, V('live')), false, 'falscher Sensor: nicht verstecken');
 
+// ── Aktive Kachel am Spieltag (variables.active_override) ──
+const kick = at(0, 20, 45), clockAt = (d, h, m) => { const x = new Date(kick); x.setDate(x.getDate() + d); x.setHours(h, m, 0, 0); return x; };
+const pre = sensor({ attrs: { date: kick.toISOString() } });
+assert.equal(K.active(pre, {}, clockAt(-1, 21, 0)), false, 'Vortag: nicht aktiv');
+assert.equal(K.active(pre, {}, clockAt(0, 0, 5)), true, 'Spieltag 0:05 vor dem Anstoß: aktiv');
+assert.equal(K.active(pre, {}, clockAt(0, 20, 0)), true, 'Spieltag kurz vor dem Anstoß: aktiv');
+assert.equal(K.active(sensor({ state: 'IN', attrs: { date: kick.toISOString(), team_score: '1', opponent_score: '0', clock: "30'" } }), {}, clockAt(0, 21, 15)), true, 'live: aktiv');
+const ended = sensor({ state: 'POST', attrs: { date: kick.toISOString(), team_score: '1', opponent_score: '0', clock: 'FT' } });
+assert.equal(K.active(ended, {}, clockAt(0, 23, 0)), true, 'kurz nach Abpfiff: aktiv');
+assert.equal(K.active(ended, {}, clockAt(1, 13, 0)), false, 'Tag danach (nach 12 Uhr): nicht mehr aktiv');
+assert.equal(K.active(ended, { hours_after: 1 }, clockAt(0, 23, 50)), false, 'Stunden-Einstellung: 1 Std. nach Spielende (22:45) vorbei');
+assert.equal(K.active(ended, { hours_after: 1 }, clockAt(0, 23, 30)), true);
+assert.equal(K.active(sensor({ state: 'POST', attrs: { date: kick.toISOString(), clock: 'Postponed', team_score: '0', opponent_score: '0' } }), {}, clockAt(0, 19, 0)), false, 'verschoben: nicht aktiv');
+assert.equal(K.active(sensor({ state: 'BYE', attrs: { date: null } }), {}, clockAt(0, 12, 0)), false, 'spielfrei: nicht aktiv');
+
 // ── ESPN: Liga-Tabelle (v2 standings, mit Zonen) ──
 const team = (id, name) => ({ id, displayName: name, shortDisplayName: name, logos: [{ href: 'https://a.espncdn.com/i/teamlogos/soccer/500/' + id + '.png' }] });
 const st = (rank, gp, gd, pts) => [['rank', rank], ['gamesPlayed', gp], ['pointDifferential', gd], ['points', pts]].map(([name, v]) => ({ name, displayValue: String(v) }));
@@ -311,6 +326,8 @@ assert.equal(run(T.casora_football.hidden, { entity: live, variables: V('live') 
 assert.equal(run(T.casora_football.hidden, { entity: inH(1), variables: V('live') }), true);
 assert.equal(run(T.casora_football.hidden, { entity: S, variables: { enabled: false } }), true);
 assert.equal(run(T.casora_football.entity_picture, { entity: S, variables: {} }), S.attributes.team_logo);
+assert.equal(run(T.casora_football.variables.active_override, { entity: live, variables: {} }), true, 'Vorlage: live aktiv');
+assert.equal(run(T.casora_football.variables.active_override, { entity: sensor({ attrs: { date: at(3, 20, 45).toISOString() } }), variables: {} }), false, 'Vorlage: Spiel in 3 Tagen nicht aktiv');
 
 // ── Studio-Assistent: Team-Tracker-Sensoren (ohne Gerät) werden Fußball-Kacheln auf der Startseite ──
 new Function(src('custom_components/casora/panel/casora-panel-assist.js'))();

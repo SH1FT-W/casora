@@ -45,6 +45,7 @@ const MEASURE = () => {
     state: st ? st.textContent.trim() : '', stateH: st ? st.getBoundingClientRect().height : 0,
     stateLine: st ? parseFloat(getComputedStyle(st).lineHeight) || 0 : 0, name: box(nm),
     haptic: ((b._config || {}).tap_action || {}).haptic || null,
+    active: getComputedStyle(sr.querySelector('ha-card')).getPropertyValue('--casora-active-overlay-opacity').trim() === '1',
   };
 };
 const measure = (pg) => pg.evaluate(MEASURE);
@@ -68,6 +69,7 @@ for (const [tag, o, d, mobile] of VIEWS) {
   await check(tag + ': Wappen sichtbar (kein Aus-Symbol darüber)', m.imgOp >= 0.95 && m.maskOp === 0, { img: m.imgOp, mask: m.maskOp });
   await check(tag + ': Gegnerwappen am Kreis', m.opp === 'block', m.opp);
   await check(tag + ': Tippen mit Vibration', !!m.haptic, m.haptic);
+  await check(tag + ': Spiel übermorgen – Kachel nicht aktiv', !m.active, m.active);
   if (!mobile) {
     await check(tag + ': vor dem Spiel „in 2 Tagen“ in der Ecke', /in 2 Tagen/.test(m.pillText), m.pillText);
     await check(tag + ': Ecke auf Höhe der Kreismitte', m.pill && Math.abs((m.pill.t + m.pill.b) / 2 - (m.cell.t + m.cell.b) / 2) <= 2, { pill: m.pill, cell: m.cell });
@@ -85,6 +87,7 @@ for (const [tag, o, d, mobile] of VIEWS) {
     await check(tag + ': live – Punkt rot (nicht weiß)', red(m.dotColor), m.dotColor);
   }
   await check(tag + ': live – Spielstand', /2:1/.test(m.state), m.state);
+  await check(tag + ': live – Kachel aktiv (Spieltag)', m.active, m.active);
 
   // Nach dem Spiel (heute): Endstand.
   await fakeStates(page, { [ID]: { state: 'POST', attributes: { date: new Date(Date.now() - 150 * 60000).toISOString(), team_score: '2', opponent_score: '1', clock: 'FT' } } }, { sticky: true });
