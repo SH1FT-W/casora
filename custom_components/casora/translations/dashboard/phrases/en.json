@@ -1445,7 +1445,10 @@
   "n. V.": "a.e.t.",
   "i. E.": "pens",
   "Sieg": "Win",
-  "Niederlage": "Loss"
+  "Niederlage": "Loss",
+  "1 Raum": "1 room",
+  "1 Licht an": "1 light on",
+  "Keine Räume": "No rooms"
  },
  "patterns": [
   [
@@ -2763,6 +2766,10 @@
   [
    "^i\\. E\\. (\\d+:\\d+)$",
    "pens {1}"
+  ],
+  [
+   "^(\\d+) Lichter an$",
+   "{1} lights on"
   ]
  ]
 }
