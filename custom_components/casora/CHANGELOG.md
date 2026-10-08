@@ -4,6 +4,12 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.1.2 – 08.10.2026
+
+### Fixed
+- **Phone bar:** since 1.1.1 the bar at the bottom looked different from before (too small, round). It is back to how it was in 1.1.0.
+- **Rooms and scenes sheet:** the sheet can now be swiped down like a popup, also from the list. Before, the page behind it scrolled instead.
+
 ## 1.1.1 – 08.10.2026
 
 ### New

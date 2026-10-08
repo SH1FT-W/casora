@@ -4,6 +4,12 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.1.2 – 08.10.2026
+
+### Behoben
+- **Handy-Leiste:** Die Leiste unten sah seit 1.1.1 anders aus als gewohnt (zu klein, rund). Sie ist wieder wie in 1.1.0.
+- **Räume- und Szenen-Blatt:** Das Blatt lässt sich jetzt wie ein Popup nach unten wegwischen, auch in der Liste. Vorher scrollte dabei der Hintergrund.
+
 ## 1.1.1 – 08.10.2026
 
 ### Neu

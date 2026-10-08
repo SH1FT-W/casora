@@ -27,8 +27,8 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n1t: "Fußball-Kachel", n1: "Folge deinem Verein über Team Tracker: nächstes Spiel, Live-Spielstand oder Endergebnis mit Wappen oder Flagge, am Spieltag aktiv, auf Wunsch nur dann zu sehen.",
-      n2t: "Fußball-Popup", n2: "Ein Tipp zeigt beide Mannschaften, den Tabellenausschnitt rund um deinen Verein, die letzte Form und die direkten Duelle mit dem Gegner.",
+      n1t: "Handy-Leiste wie gewohnt", n1: "Die Leiste unten sieht wieder aus wie in 1.1.0.",
+      n2t: "Blatt wegwischen", n2: "Räume und Szenen am Handy lassen sich wie ein Popup nach unten wegwischen.",
       n3t: "Handy-Menüs", n3: "Räume und Szenen öffnen sich am Handy als Blatt von unten: jeder Raum mit seinem Zustand, Szenen als farbige Kacheln."
     },
     en: {
@@ -39,8 +39,8 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n1t: "Football tile", n1: "Follow your club with Team Tracker: next match, live score or final result with crest or flag, active on match day, and if you like only visible then.",
-      n2t: "Football popup", n2: "One tap shows both teams, the table around your club, recent form and head-to-head with the opponent.",
+      n1t: "Phone bar as before", n1: "The bar at the bottom looks like it did in 1.1.0 again.",
+      n2t: "Swipe the sheet away", n2: "Rooms and scenes on the phone can be swiped down like a popup.",
       n3t: "Phone menus", n3: "Rooms and scenes open on the phone as a sheet from the bottom: every room with its status, scenes as coloured tiles."
     },
   };
@@ -54,9 +54,8 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:soccer", "n1t", "n1"],
-    ["mdi:format-list-numbered", "n2t", "n2"],
-    ["mdi:cellphone", "n3t", "n3"],
+    ["mdi:cellphone", "n1t", "n1"],
+    ["mdi:gesture-swipe-down", "n2t", "n2"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.
