@@ -63,6 +63,61 @@ window.casoraSceneColor = function (id) {
   var c = map[id];
   return c ? String(c).replace(/["<>;{}]/g, '') : null;
 };
+/* Nach dem Speichern im Studio (lovelace_updated) neu zeichnen, wenn sich die Szenenfarben geändert
+   haben (1.1.2): button-cards rechnen ihre Farben sonst erst beim nächsten Zustandswechsel neu –
+   Desktop/Tablet blieben bei der alten Farbe. Offene Szenen-Menüs bauen sich ebenfalls neu. */
+window._casoraSceneColorSig = function () {
+  try {
+    var cfg = window._casoraLovelaceCfg && window._casoraLovelaceCfg();
+    var row = cfg && cfg.button_card_templates && cfg.button_card_templates.casora_scene_row;
+    return JSON.stringify((row && row.variables && row.variables.scene_colors) || null);
+  } catch (e) { return ''; }
+};
+window._casoraSceneRepaint = function () {
+  var ha = document.querySelector('home-assistant'), hass = ha && ha.hass;
+  if (!hass) return 0;
+  var TPL = /^casora_(badge_scene|badge_scene_group|scene_row|scenes|popup_scenes)$/, n = 0;
+  var cards = [];
+  (function walk(root, d) {
+    if (!root || d > 14) return;
+    var all = root.querySelectorAll ? root.querySelectorAll('*') : [];
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      if (el.localName === 'button-card') {
+        var t = [].concat((el._config && el._config.template) || []);
+        if (t.some(function (x) { return TPL.test(x); })) cards.push(el);
+      }
+      if (el.shadowRoot) walk(el.shadowRoot, d + 1);
+    }
+  })(ha.shadowRoot, 0);
+  cards.forEach(function (el) {
+    /* Neues Zustandsobjekt der eigenen Entität (und aller Szenen): button-card zeichnet dann neu. */
+    var st = Object.assign({}, hass.states);
+    var own = el._config && el._config.entity;
+    Object.keys(st).forEach(function (k) { if (k === own || k.indexOf('scene.') === 0) st[k] = Object.assign({}, st[k]); });
+    try { el.hass = Object.assign({}, hass, { states: st }); n++; } catch (e) { /* weiter */ }
+  });
+  document.querySelectorAll('.casora-nav-menu').forEach(function (m) { if (m._refresh) try { m._refresh(); } catch (e) { /* weiter */ } });
+  return n;
+};
+(function sceneColorWatch() {
+  var ha = document.querySelector('home-assistant'), conn = ha && ha.hass && ha.hass.connection;
+  if (!conn) { setTimeout(sceneColorWatch, 1500); return; }
+  if (window._casoraSceneWatch) return;
+  window._casoraSceneWatch = true;
+  var last = window._casoraSceneColorSig();
+  conn.subscribeEvents(function () {
+    /* Das Frontend lädt die neue Konfiguration erst nach dem Ereignis – ein paar Mal nachsehen. */
+    [400, 1200, 3000].forEach(function (ms) {
+      setTimeout(function () {
+        var sig = window._casoraSceneColorSig();
+        if (sig === last) return;
+        last = sig;
+        window._casoraSceneRepaint();
+      }, ms);
+    });
+  }, 'lovelace_updated').catch(function () { window._casoraSceneWatch = false; });
+})();
 /* Leistung fürs Energie-Badge, wenn die Badge selbst keinen Sensor bekommt (03.10.2026):
    Handy-Badge-Reihe und Räume, in denen Energie nur über Verbrauch/Kosten/Geräte an ist,
    zeigten nur „Energie“ ohne Wert und waren dadurch niedriger. Reihenfolge: die
