@@ -200,14 +200,14 @@
     P._casoraBellExclude = function (host, S, render) {
       const hass = this._hass || {};
       css(this);
-      S.notify = S.notify || {};
-      const ex = S.notify.exclude = Array.isArray(S.notify.exclude) ? S.notify.exclude : [];
+      // Beim Anzeigen nichts in den Entwurf schreiben – sonst meldet das Studio sofort „Ungespeicherte Änderungen“.
+      const ex = Array.isArray(S.notify && S.notify.exclude) ? S.notify.exclude : [];
       const list = this._flowGroup(host, { header: tr("Don't notify"),
         footer: tr("These devices never create an entry in the bell – in every dashboard, on desktop and phone.") });
       list.parentElement.dataset.pkey = "notify_exclude";
       const src = {};
       if (typeof W.casoraNotifySources === "function") {
-        W.casoraNotifySources(hass, { appliances: dashAppliances(this), notify: S.notify }).forEach((x) => { src[x.entity] = x; });
+        W.casoraNotifySources(hass, { appliances: dashAppliances(this), notify: S.notify || {} }).forEach((x) => { src[x.entity] = x; });
       }
       ex.forEach((id, i) => {
         const x = src[id];

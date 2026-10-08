@@ -1837,7 +1837,7 @@
     "Casora {v} keeps running until Home Assistant restarts.": "Bis zum Neustart läuft weiter Casora {v}.",
     "Restart Now": "Jetzt neu starten",
     "Installing v{v}…": "v{v} wird installiert …",
-    "New: v{v}": "Neu: v{v}",
+    "New: {v}": "Neu: {v}",
     "Show all changes": "Alle Änderungen anzeigen",
     "Hide all changes": "Änderungen ausblenden",
     "Current": "Aktuell",

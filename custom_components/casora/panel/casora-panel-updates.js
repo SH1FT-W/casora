@@ -432,7 +432,7 @@
       } else if (d.update_available) {
         state.classList.add("new");
         const when = latestRel && latestRel.date ? " (" + fmtDate(this, latestRel.date) + ")" : "";
-        stTx.textContent = t("New: v{v}").replace("{v}", d.latest) + when;
+        stTx.textContent = t("New: {v}").replace("{v}", d.latest) + when;
         if (latestRel && latestRel.summary) hero.appendChild(el("div", "cu-sum", latestRel.summary));
         const inst = btn(t("Install"), () => this._cuInstall());
         inst.disabled = !d.entity_id || !!busy;
