@@ -256,9 +256,10 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   await need(`${tag}: Szenen als Blatt`, s && s.kind === 'scenes' && s.n >= 2, s);
   console.log(tag, 'Szenen', JSON.stringify({ sheet: s.sheet, first: s.first, second: s.second, tones: s.tones }));
   await check(`${tag}: Etikett „${s.count.text}“`, new RegExp('^' + s.n + ' (Szenen|Szene)$').test(s.count.text), s.count.text);
-  // Szenen zeigen rechts, wann sie zuletzt liefen – wie die Szenen-Badges („Vor 5 Min.“, „Gestern“, „Noch nie“).
+  // Szenen zeigen rechts, wann sie zuletzt liefen – wie die Szenen-Badges („Vor 5 Min.“, „Gestern“, „Noch nie“);
+  // eine aktive Szene zeigt „Aktiv“.
   const agos = await page.evaluate(() => [...document.querySelectorAll('.hmn-sheet .hmn-sub[data-sid]')].map((e) => ({ t: e.textContent.trim(), w: e.getBoundingClientRect().width })));
-  await check(`${tag}: Szenen mit „zuletzt ausgeführt“ rechts`, agos.length === s.n && agos.every((a) => a.w > 0 && /^(Gerade eben|Noch nie|Gestern|Vor \d+ (Min\.|Std\.|Tagen))$/.test(a.t)), agos.slice(0, 4));
+  await check(`${tag}: Szenen mit „zuletzt ausgeführt“ rechts`, agos.length === s.n && agos.every((a) => a.w > 0 && /^(Aktiv|Gerade eben|Noch nie|Gestern|Vor \d+ (Min\.|Std\.|Tagen))$/.test(a.t)), agos.slice(0, 4));
   await geometry(tag, s, 'Szenen:');
   const white = (c) => /^rgb\(255, 255, 255\)|^rgba\(255, 255, 255/.test(c || '');
   await check(`${tag}: Szenen ohne Platte, Kreis exakt in der Desktop-Standardfarbe (${colors.badge}), weiße Glyphe`,

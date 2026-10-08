@@ -647,7 +647,7 @@
         b.appendChild(tx);
         if (!rooms) {
           /* Szenen: rechts, wann sie zuletzt lief – dieselbe Schreibweise wie die Szenen-Badges. */
-          var ago = el('span', 'hmn-sub', self._sceneAgo(it.id));
+          var ago = el('span', 'hmn-sub', it.on ? T('Aktiv') : self._sceneAgo(it.id));
           ago.setAttribute('data-sid', it.id);
           b.appendChild(ago);
         }
@@ -676,10 +676,11 @@
       } : function () {
         var SCx = window._casoraSC, hs = self._hass && self._hass.states;
         Array.prototype.forEach.call(list.querySelectorAll('.hmn-sub[data-sid]'), function (s) {
-          var id = s.getAttribute('data-sid'), t = self._sceneAgo(id);
+          var id = s.getAttribute('data-sid'), on = !!(SCx && SCx.isActive && hs && SCx.isActive(id, hs));
+          var t = on ? T('Aktiv') : self._sceneAgo(id);
           if (s.textContent !== t) s.textContent = t;
           var row = s.closest('.hmn-row');
-          if (row && SCx && SCx.isActive && hs) row.classList.toggle('on', !!SCx.isActive(id, hs));
+          if (row) row.classList.toggle('on', on);
         });
       };
       this._scrimOpen();
