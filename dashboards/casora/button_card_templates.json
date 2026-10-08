@@ -3465,7 +3465,7 @@
      "kind": "spark",
      "span": "24h",
      "height": 32,
-     "color": "c3",
+     "color": "spark",
      "entity": "[[[\n  /* Sparkline (1.2, im Studio zuschaltbar): Leistung der letzten 24 Stunden. */\n  return variables.sparkline ? (variables.entity_power || entity?.entity_id || '') : '';\n]]]"
     }
    }
@@ -11150,7 +11150,7 @@
      "kind": "spark",
      "span": "7d",
      "height": 32,
-     "color": "c1",
+     "color": "spark",
      "entity": "[[[\n  /* Sparkline (1.2): Bodenfeuchte der letzten 7 Tage – eigener Sensor oder der des Pflanzengeräts. */\n  if (!variables.sparkline) return '';\n  const own = (Array.isArray(variables.sensors) ? variables.sensors : []).filter(Boolean);\n  const reg = hass?.entities || {}, dev = reg[entity?.entity_id]?.device_id;\n  const list = own.length ? own : Object.keys(reg).filter((id) => id.startsWith('sensor.') && dev && reg[id].device_id === dev);\n  return list.find((id) => states[id]?.attributes?.device_class === 'moisture' || /moisture|bodenfeuchtigkeit/.test(id)) || '';\n]]]"
     }
    }
@@ -15603,7 +15603,7 @@
      "kind": "spark",
      "span": "24h",
      "height": 32,
-     "color": "c2",
+     "color": "spark",
      "entity": "[[[\n  /* Sparkline (1.2): Raumtemperatur der letzten 24 Stunden – Fühler oder current_temperature. */\n  return variables.sparkline ? (variables.temp_sensor || entity?.entity_id || '') : '';\n]]]",
      "attribute": "[[[ return variables.temp_sensor ? '' : 'current_temperature'; ]]]"
     }

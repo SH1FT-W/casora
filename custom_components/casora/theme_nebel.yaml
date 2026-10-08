@@ -92,6 +92,7 @@ Casora Nebel:
       casora-popup-slider-track: rgba(89,99,111,0.26)
       casora-menu-hover: rgba(101,114,129,0.08)
       casora-glass-pill-fill: rgba(101,114,129,0.12)
+      casora-chart-spark: rgba(81,87,93,0.6)
       casora-chart-grid: rgba(89,99,111,0.12)
       casora-popup-tiles-fill: rgba(101,114,129,0.07)
       casora-popup-tile-hover: rgba(101,114,129,0.10)
@@ -316,6 +317,7 @@ Casora Nebel:
       casora-popup-ui-dim: rgba(228,237,247,0.16)
       casora-upd-ai-neutral: rgba(223,230,237,0.78)
       casora-popup-ui-on-action: '#191A1C'
+      casora-chart-spark: rgba(229,233,238,0.5)
       casora-chart-grid: rgba(228,237,247,0.08)
       casora-popup-tile-hover: rgba(228,237,247,0.08)
       casora-popup-progress-track: rgba(228,237,247,0.10)

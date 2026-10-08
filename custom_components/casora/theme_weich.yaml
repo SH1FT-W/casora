@@ -578,6 +578,8 @@ Casora:
       casora-sheet-ink-3: var(--casora-popup-tiles-text-muted)
       # Diagramme (casora-chart): Achsen, Hilfslinien und vier Datenstufen (Kontrast ≥ 3:1 zur Platte)
       casora-chart-label: var(--casora-text-3)
+      # D9 (1.2): Sparkline-Linie auf Kacheln neutral (gedeckter Text-Ton)
+      casora-chart-spark: rgba(98,87,76,0.6)
       casora-chart-grid: rgba(120,100,80,0.12)
       casora-chart-c1: "#4A7DBA"
       casora-chart-c2: "#C8743A"
@@ -968,6 +970,7 @@ Casora:
       casora-popup-ui-action-tint: rgba(98,175,165,0.16)
       casora-popup-slider-track: rgba(0,0,0,0.28)
       casora-chart-label: var(--casora-text-3)
+      casora-chart-spark: rgba(242,235,225,0.5)
       casora-chart-grid: rgba(255,240,220,0.08)
       casora-chart-c1: "#5C93D6"
       casora-chart-c2: "#CF7840"

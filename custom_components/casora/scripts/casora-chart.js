@@ -101,6 +101,8 @@
     if (!c) return 'var(--cc1)';
     if (/^c[1-4]$/.test(c)) return 'var(--c' + c + ')';
     if (c === 'accent') return 'var(--cacc)';
+    // D9 (1.2): Sparklines auf Kacheln neutral im gedeckten Text-Ton; Farbe nur im Popup-Diagramm.
+    if (c === 'spark') return 'var(--casora-chart-spark, var(--cink3))';
     var m = /^#([0-9a-f]{6})$/i.exec(c);
     if (!m) return c;
     var r = parseInt(m[1].slice(0, 2), 16) / 255, g = parseInt(m[1].slice(2, 4), 16) / 255, b = parseInt(m[1].slice(4), 16) / 255;
