@@ -16,6 +16,7 @@ from .assets import CasoraAssetsView
 from .scripts_view import CasoraPanelView, CasoraScriptsView
 from .helfer import async_setup_helfer, async_setup_theme, async_unload_helfer, remove_theme_file
 from .lueften_push import async_start as async_start_lueften_push
+from .update_push import async_start as async_start_update_push
 from .raumklima import async_start as async_start_raumklima
 from .settings import async_setup_settings
 from .kachelart import async_setup_kachelart
@@ -360,15 +361,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN]["media_pause"] = pause = PauseTracker(hass)
     await pause.async_start()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # Push bei neuen Casora-Versionen (update_push.py) – erst jetzt steht fest, ob HACS Casora verwaltet.
+    hass.data[DOMAIN]["update_push"] = await async_start_update_push(hass, entry)
     entry.async_on_unload(entry.add_update_listener(_options_changed))
     hass.data[DOMAIN]["options_seen"] = dict(entry.options)
 
     return True
 
 
-# Optionen, die zur Laufzeit gelesen werden (lueften_push.py liest entry.options bei jedem Takt):
-# Speichern braucht dafür kein Neuladen der Integration.
-LIVE_OPTIONS = frozenset({"lueften_push", "lueften_personen"})
+# Optionen, die zur Laufzeit gelesen werden (lueften_push.py und update_push.py lesen entry.options
+# bei jeder Prüfung): Speichern braucht dafür kein Neuladen der Integration.
+LIVE_OPTIONS = frozenset({"lueften_push", "lueften_personen", "update_push"})
 
 
 def live_only(old: dict, new: dict) -> bool:
@@ -415,4 +418,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     pause = hass.data.get(DOMAIN, {}).pop("media_pause", None)
     if pause:
         pause.stop()
+    upush = hass.data.get(DOMAIN, {}).pop("update_push", None)
+    if upush:
+        upush.stop()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

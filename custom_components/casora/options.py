@@ -34,6 +34,7 @@ from .ki import (OPT_AI, OPT_AI_WEB, OPT_AUTO, OPT_NOTES, OPT_OUT_RH, OPT_OUT_T,
                  OPT_RECIPE_LIST,
                  PLAN_OPTS, UPDATE_PLANS, valid_plan)
 from .lueften_push import OPT_VENT_NOTIFY, OPT_VENT_PERSONS, notify_services
+from .update_push import OPT_UPDATE_PUSH
 from .update_source import LEGACY_OPTIONS, OPT_BETA
 
 
@@ -78,6 +79,11 @@ def options_schema(hass: HomeAssistant, options: dict[str, Any]) -> vol.Schema:
                 multiple=True, custom_value=True, mode=selector.SelectSelectorMode.DROPDOWN)),
         vol.Optional(OPT_VENT_PERSONS, description=sug(OPT_VENT_PERSONS)): selector.EntitySelector(
             selector.EntitySelectorConfig(domain="person", multiple=True)),
+        # Push bei neuen Casora-Versionen (update_push.py): leer = aus.
+        vol.Optional(OPT_UPDATE_PUSH, description=sug(OPT_UPDATE_PUSH)): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[f"notify.{s}" for s in notify_services(hass)],
+                multiple=True, custom_value=True, mode=selector.SelectSelectorMode.DROPDOWN)),
         # Beta-Versionen (Studio → Updates): Vorabversionen als Update anbieten. Standard aus.
         vol.Optional(OPT_BETA, default=options.get(OPT_BETA, False)): selector.BooleanSelector(),
     })

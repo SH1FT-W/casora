@@ -87,9 +87,9 @@ def check(name, cond):
 # Dialog und Studio teilen das Schema.
 check("config_flow nutzt options_schema", config_flow.options_schema is options_schema)
 keys = {str(k) for k in options_schema(hass, entry.options).schema}
-check("Schema hat alle 15 Optionen, keine Update-Felder, kein ki_auto mehr", keys == {
+check("Schema hat alle 16 Optionen, keine Update-Felder, kein ki_auto mehr", keys == {
     "ai_task_entity", "ai_task_web_entity", "outdoor_temperature", "outdoor_humidity", "rezept_liste",
-    "price_kwh", "ki_hinweise", "lueften_push", "lueften_personen", "beta_updates",
+    "price_kwh", "ki_hinweise", "lueften_push", "lueften_personen", "update_push", "beta_updates",
     "ki_plan_energie", "ki_plan_heizung", "ki_plan_lueftung", "ki_plan_rezept", "ki_plan_update"})
 check("Dialog speichert alte Update-Optionen nicht mit",
       options.clean_options({"ai_task_entity": "ai_task.web", **LEGACY}) == {"ai_task_entity": "ai_task.web"})

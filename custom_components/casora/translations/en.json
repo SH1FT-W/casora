@@ -30,6 +30,7 @@
           "ki_plan_update": "Update check",
           "lueften_push": "Send ventilation push to",
           "lueften_personen": "Only notify when at home",
+          "update_push": "Notify about new Casora versions",
           "beta_updates": "Beta versions"
         },
         "data_description": {
@@ -41,6 +42,7 @@
           "ki_plan_update": "Daily: once a day. Off: no AI assessment in the updates popup.",
           "lueften_push": "“Ventilate now” (7–22 h) and “Close window” (7–23 h) after 10 min, CO₂ above 2500 ppm right away. Empty = no push notifications.",
           "lueften_personen": "“Ventilate now” only when one of these people is home. Empty = anyone.",
+          "update_push": "One push per new version to the selected phones. Tapping it opens Casora's updates. Empty = off.",
           "beta_updates": "Try new features earlier. Betas can have bugs. With HACS, turn on betas in HACS instead."
         }
       }
