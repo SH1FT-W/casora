@@ -7,7 +7,8 @@
 // Erwartet am Desktop und Handy (hell + dunkel): Wappen in der Kachel, Gegnerwappen am Kreis, Statustext in der
 // Ecke auf Höhe der Kreismitte (vor dem Spiel „in … Tagen“, live rot mit Minute und rotem Punkt, nach dem Spiel
 // „Endstand“), Zustandszeile einzeilig; Antippen öffnet das Popup mit Wappen im Ring, Spielkasten, Tabelle
-// (eigenes Team markiert, „Ganze Tabelle“ ≥ 44 px) und Form (5 Spiele).
+// (eigenes Team markiert, „Ganze Tabelle“ ≥ 44 px) und Form (5 Spiele), darunter die letzten 5 Duelle mit dem
+// Gegner; am Desktop endet die rechte Spalte bündig mit der Tabelle (Wunsch 08.10.2026: unten rechts viel Luft).
 import { open, casoraDashboards, dashboard, check, need, finish, fakeStates, stable } from './lib.mjs';
 import { espnRoute } from '../fussball-espn.mjs';
 
@@ -110,13 +111,24 @@ for (const [tag, o, d, mobile] of VIEWS) {
     return { surf: { l: S.left, r: S.right }, vw: innerWidth,
       ring: ring ? ring.getAttribute('src').slice(0, 20) : null, ringOk: !!(ring && ring.complete && ring.naturalWidth > 0),
       match: (window.__pierce('.cfb-m')[0] || {}).textContent || '', rows: rows.length, me: me ? me.className : null,
-      more: more ? more.getBoundingClientRect().height : 0, form: window.__pierce('.cfb-f').length };
+      more: more ? more.getBoundingClientRect().height : 0, form: window.__pierce('.cfb-f:not(.d)').length,
+      duels: window.__pierce('.cfb-f.d').filter((n) => n.getBoundingClientRect().height > 0).length,
+      // Unterkanten: letzte Tabellenzeile, Fußzeile der Tabelle (Legende), rechte Spalte; Abstand der Duell-Zeilen.
+      last: (window.__pierce('.cfb-r:not(.h)').pop() || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().bottom,
+      lb: (window.__pierce('.cfb-table > .cfb')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().bottom,
+      rb: (window.__pierce('.cfb-form > .cfb')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().bottom,
+      hf: (window.__pierce('.cfb-f:not(.d)')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().height,
+      hd: (window.__pierce('.cfb-f.d')[0] || { getBoundingClientRect: () => ({}) }).getBoundingClientRect().height };
   }, null, { max: 10000, quiet: 900 });
   await check(tag + ': Popup – Wappen im Ring', p.ringOk && /^data:image/.test(p.ring || ''), p.ring);
   await check(tag + ': Popup – Spielkasten mit beiden Teams', /FC Nordhafen/.test(p.match) && /SV Lindenberg/.test(p.match), p.match.slice(0, 120));
   await check(tag + ': Popup – Tabelle mit eigenem Team', p.rows >= 8 && !!p.me, { rows: p.rows, me: p.me });
   await check(tag + ': Popup – „Ganze Tabelle“ ≥ 44 px', p.more >= 44, p.more);
   await check(tag + ': Popup – Form mit 5 Spielen', p.form === 5, p.form);
+  await check(tag + ': Popup – Duelle unter der Form, Zeilen gleich hoch wie die Form', p.duels >= 2 && p.duels <= 5 && Math.abs(p.hd - p.hf) <= 0.5, { n: p.duels, hf: p.hf, hd: p.hd });
+  if (mobile) await check(tag + ': Popup – Handy (untereinander): alle 5 Duelle', p.duels === 5, p.duels);
+  // Desktop: Unterkante rechts höchstens eine halbe Zeile (29 px) von der letzten Tabellenzeile, nie unter der Legende.
+  else await check(tag + ': Popup – rechte Spalte endet auf Höhe der letzten Tabellenzeile', Math.abs(p.rb - p.last) <= 29 && p.rb <= p.lb + 0.5, { tabelle: p.last, rechts: p.rb, legende: p.lb });
   await check(tag + ': Popup im Fenster', p.surf.l >= -1 && p.surf.r <= p.vw + 1, p);
   await check(tag + ': ESPN nur abgefangen (kein Netz)', calls.length > 0 && calls.every((u) => /site\.api\.espn\.com/.test(u)), calls.length);
   await context.close();

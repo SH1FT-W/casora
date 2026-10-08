@@ -61,11 +61,7 @@ export const summary = {
     duel('2025-04-05T13:30:00Z', '2024-25 German Bundesliga', true, 3, 1), duel('2025-02-04T19:45:00Z', '2024-25 German Cup', false, 0, 1),
     duel('2024-11-09T14:30:00Z', '2024-25 German Bundesliga', false, 1, 0)] }],
 };
-// Teamseite: nächstes Spiel und Bilanz (Heim 3-0-1, auswärts 1-1-1, wie Tabelle und Form).
-const rec = { gamesPlayed: 7, wins: 4, ties: 1, losses: 2, pointsFor: 11, pointsAgainst: 8, homeGamesPlayed: 4, homeWins: 3, homeTies: 0,
-  homeLosses: 1, homePointsFor: 7, homePointsAgainst: 3, awayGamesPlayed: 3, awayWins: 1, awayTies: 1, awayLosses: 1, awayPointsFor: 4, awayPointsAgainst: 5 };
-export const team = (next) => ({ team: { id: TEAM, nextEvent: next ? [{ date: next }] : [],
-  record: { items: [{ type: 'total', summary: '4-1-2', stats: Object.entries(rec).map(([name, value]) => ({ name, value })) }] } } });
+export const team = (next) => ({ team: { id: TEAM, nextEvent: next ? [{ date: next }] : [] } });
 
 // Alle ESPN-Aufrufe abfangen. next: Anstoß des nächsten Spiels (ISO), sonst keins.
 export async function espnRoute(target, { next = null } = {}) {

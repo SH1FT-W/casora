@@ -311,8 +311,6 @@
       id: String(t ? t.id : e.id), name: t ? (t.displayName || t.shortDisplayName || t.name) : String(e.team || ''), logo: logo || '',
       rank: Number(s.rank || s.R) || 0, gp: s.gamesPlayed || s.GP || '0', gd: s.pointDifferential || s.GD || '0',
       pts: s.points || s.P || '0', note: note, zone: null,
-      w: s.wins != null ? s.wins : s.W, t: s.ties != null ? s.ties : s.D, l: s.losses != null ? s.losses : s.L,
-      gf: s.pointsFor != null ? s.pointsFor : null, ga: s.pointsAgainst != null ? s.pointsAgainst : null,
     };
   };
   var groupsOf = function (j) {
@@ -381,16 +379,6 @@
         date: d && !isNaN(d) ? d : null, comp: K.comp(String(ev.competitionName || '').replace(/^\d{4}(-\d{2,4})?\s+/, '')) };
     }).filter(Boolean);
   };
-  K.record = function (teamJson) {
-    var it = ((((teamJson || {}).team || {}).record || {}).items || []).filter(function (x) { return x.type === 'total'; })[0];
-    if (!it) return null;
-    var o = {};
-    (it.stats || []).forEach(function (x) { o[x.name] = x.value; });
-    var part = function (p) {
-      return o[p + 'GamesPlayed'] ? { w: o[p + 'Wins'] || 0, t: o[p + 'Ties'] || 0, l: o[p + 'Losses'] || 0, gf: o[p + 'PointsFor'], ga: o[p + 'PointsAgainst'] } : null;
-    };
-    return { home: part('home'), away: part('away') };
-  };
   /* Tabellenausschnitt: Spitze (3), um das eigene Team (±2), Gegner, Ende (2); dazwischen Lücken. */
   K.window = function (rows, me, opp, full) {
     if (full || rows.length <= 10) return rows.slice();
@@ -426,10 +414,9 @@
       var slug = league !== 'all' ? league : (((s || {}).header || {}).league || {}).slug;
       return slug && slug !== 'all' ? getJson(API + '/v2/sports/' + path(i.sport) + '/' + path(slug) + '/standings').catch(function () { return null; }) : null;
     });
-    var rec = K.fill() === 'c' && league !== 'all' ? getJson(API + '/site/v2/sports/' + path(i.sport) + '/' + path(league) + '/teams/' + path(i.team.id)).catch(function () { return null; }) : null;
-    Promise.all([sum, tab, rec]).then(function (r) {
+    Promise.all([sum, tab]).then(function (r) {
       K.data[key] = { ts: Date.now(), err: !r[0] && !r[1] && !!i.event, table: K.table(r[1], r[0], i.team.id), form: K.form(r[0], i.team.id),
-        duels: K.duels(r[0], i.team.id), oppForm: i.opp.id ? K.form(r[0], i.opp.id) : [], record: K.record(r[2]) };
+        duels: K.duels(r[0], i.team.id) };
     }).catch(function () { K.data[key] = { ts: Date.now(), err: true, table: null, form: [] }; })
       .then(function () { K.busy[key] = false; K.repaint(); });
   };
@@ -561,11 +548,10 @@
       + '.cfb-f .s{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;}'
       + '.cfb-f .s small{display:block;font-weight:500;font-size:11px;color:' + sub + ';}'
       + '.cfb-e{background:' + row + ';border-radius:' + rad + ';padding:16px;font-size:14px;font-weight:500;color:' + sub + ';}'
-      /* Unter der Form: weiterer Abschnitt im selben Raster (Zeilen wie die Form). */
+      /* Unter der Form: letzte Duelle, Zeilen wie die Form. */
       + '.cfb-x{margin-top:var(--casora-popup-sec-gap, 18px);}'
       + '.cfb-x[hidden],.cfb-x [hidden]{display:none !important;}'
       + '.cfb-xb{display:flex;flex-direction:column;gap:6px;}'
-      + '.cfb-f.v{grid-template-columns:minmax(0,1fr) auto;padding-left:20px;}'
       + '</style>';
   };
   var crest = function (url) {
@@ -648,13 +634,12 @@
             + mini(x.logo)
             + '<span class="o">' + (x.home ? 'gegen ' : 'bei ') + '<span data-no-i18n>' + esc(K.name(x.opp)) + '</span><small>' + esc([x.comp, x.date ? dm(x.date) : ''].filter(Boolean).join(' · ')) + '</small></span>'
             + '<span class="s">' + esc(x.my) + ' : ' + esc(x.their) + (x.pens ? '<small>i. E.</small>' : '') + '</span></div>';
-        }).join('') + '</div>' + K.fillHtml(i, d, tab) + '</div>';
+        }).join('') + '</div>' + K.duelsHtml(d) + '</div>';
     }
     return '';
   };
-  /* Unter der Form ein weiterer Abschnitt (Wunsch 08.10.2026 – die rechte Spalte endete weit über der Tabelle).
-     Varianten zum Vergleichen: window.CASORA_FB_FILL = a (letzte Duelle) | b (Form des Gegners) | c (Saisonbilanz) | none. */
-  K.fill = function () { var v = window.CASORA_FB_FILL; return /^(a|b|c|none)$/.test(v || '') ? v : 'a'; };
+  /* Unter der Form die letzten direkten Duelle mit dem Gegner (Wunsch 08.10.2026 – die rechte Spalte endete weit
+     über der Tabelle). Sie stehen in derselben Spielübersicht wie die Form; fehlen sie, fehlt der Abschnitt. */
   var tally = function (list) {
     var n = { W: 0, D: 0, L: 0 }, ab = K.abbr();
     list.forEach(function (x) { if (!x.friendly && n[x.res] != null) n[x.res]++; });
@@ -668,31 +653,11 @@
       + '<span class="o">' + (x.home ? 'gegen ' : 'bei ') + '<span data-no-i18n>' + esc(K.name(x.opp)) + '</span><small>' + esc([x.comp, x.date ? (year ? dmy(x.date) : dm(x.date)) : ''].filter(Boolean).join(' · ')) + '</small></span>'
       + '<span class="s">' + esc(x.my) + ' : ' + esc(x.their) + (x.pens ? '<small>i. E.</small>' : '') + '</span></div>';
   };
-  K.fillHtml = function (i, d, tab) {
-    var v = K.fill(), ab = K.abbr();
-    if (!d || v === 'none') return '';
-    var block = function (title, rows) { return rows.length ? '<div class="cfb-x">' + head(title) + '<div class="cfb-xb">' + rows.join('') + '</div></div>' : ''; };
-    if (v === 'a') {
-      var du = (d.duels || []).slice(0, 5);
-      return block('Letzte Duelle' + tally(du), du.map(function (x) { return gameRow(x, 'd', true); }));
-    }
-    if (v === 'b') {
-      var of = i.opp.id && i.opp.id !== i.team.id ? d.oppForm || [] : [];
-      return block('Form <span data-no-i18n>' + esc(K.name(i.opp.name)) + '</span>' + tally(of), of.map(function (x) { return gameRow(x, 'd'); }));
-    }
-    var me = tab && tab.rows.filter(function (r) { return r.id === i.team.id; })[0];
-    if (!me || me.w == null) return '';
-    var line = function (lbl, val, small) {
-      return '<div class="cfb-f v" data-fit><span class="o">' + lbl + '<small data-no-i18n>' + esc(small || ' ') + '</small></span><span class="s" data-no-i18n>' + esc(val) + '</span></div>';
-    };
-    var wtl = function (x) { return x.w + ' ' + ab.W + ' · ' + x.t + ' ' + ab.D + ' · ' + x.l + ' ' + ab.L; };
-    var goals = function (x) { return x.gf != null && x.ga != null ? x.gf + ' : ' + x.ga : ''; };
-    var rc = d.record || {}, gp = Number(me.gp) || 0, out = [line('Gesamt', wtl(me), me.gp + ' ' + ab.gp)];
-    if (goals(me)) out.push(line('Tore', goals(me)));
-    if (rc.home) out.push(line('Heim', wtl(rc.home), goals(rc.home)));
-    if (rc.away) out.push(line('Auswärts', wtl(rc.away), goals(rc.away)));
-    if (gp) out.push(line('Punkte pro Spiel', (Number(me.pts) / gp).toFixed(2).replace('.', german() ? ',' : '.')));
-    return block('Saisonbilanz', out);
+  K.duelsHtml = function (d) {
+    var du = ((d && d.duels) || []).slice(0, 5);
+    if (!du.length) return '';
+    return '<div class="cfb-x">' + head('Letzte Duelle' + tally(du)) + '<div class="cfb-xb">'
+      + du.map(function (x) { return gameRow(x, 'd', true); }).join('') + '</div></div>';
   };
 
   /* Rechte Spalte unten auf Höhe der letzten Tabellenzeile (nur nebeneinander und bei eingeklappter Tabelle):

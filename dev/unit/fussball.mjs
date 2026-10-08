@@ -224,6 +224,37 @@ assert.equal(f[2].friendly, true);
 assert.equal(f[2].comp, 'Testspiel');
 assert.equal(f[2].home, false);
 
+// ── Letzte Duelle (ESPN seasonseries, gekürzt aus Cagliari – Juventus, Oktober 2026) ──
+const cmp = (home, id, ab, score, winner) => ({ homeAway: home ? 'home' : 'away', winner, score,
+  team: { id, abbreviation: ab, displayName: ab === 'CAG' ? 'Cagliari' : 'Juventus', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/' + id + '.png' } });
+const h2h = { seasonseries: [{ type: 'head-to-head', title: 'Cagliari vs. Juventus', events: [
+  { date: '2026-01-17T19:45:00Z', status: 'post', competitionName: '2025-26 Italian Serie A', competitors: [cmp(true, '2925', 'CAG', '1', true), cmp(false, '111', 'JUV', '0', false)] },
+  { date: '2025-11-29T17:00:00Z', status: 'post', competitionName: '2025-26 Italian Serie A', competitors: [cmp(true, '111', 'JUV', '2', true), cmp(false, '2925', 'CAG', '1', false)] },
+  { date: '2024-12-17T20:00:00Z', status: 'post', competitionName: '2024-25 Coppa Italia', competitors: [cmp(true, '111', 'JUV', '1', true), cmp(false, '2925', 'CAG', '1', false)] },
+  { date: '2024-10-06T10:30:00Z', status: 'post', competitionName: '2024-25 Italian Serie A', competitors: [cmp(true, '111', 'JUV', '1', false), cmp(false, '2925', 'CAG', '1', false)] },
+  { date: '2027-01-10T19:45:00Z', status: 'pre', competitionName: '2026-27 Italian Serie A', competitors: [cmp(true, '111', 'JUV', '0', false), cmp(false, '2925', 'CAG', '0', false)] },
+] }] };
+const du = K.duels(h2h, '111');
+assert.equal(du.length, 4, 'nur beendete Spiele');
+assert.deepEqual([du[0].res, du[0].my, du[0].their, du[0].home], ['L', '0', '1', false], 'aus eigener Sicht: 0:1 auswärts verloren');
+assert.deepEqual([du[1].res, du[1].home], ['W', true]);
+assert.equal(du[0].comp, 'Serie A', 'Saison vor dem Wettbewerb weg');
+assert.deepEqual([du[0].opp, du[0].logo], ['Cagliari', 'https://a.espncdn.com/i/teamlogos/soccer/500/2925.png'], 'Gegner mit Wappen');
+assert.equal(du[2].comp, 'Coppa Italia');
+assert.deepEqual([du[2].res, du[2].pens], ['W', true], 'Remis mit Sieger: Elfmeterschießen');
+assert.deepEqual([du[3].res, du[3].pens], ['D', false]);
+assert.deepEqual(K.duels(h2h, '2925').map((x) => x.res), ['W', 'L', 'L', 'D'], 'Gegenseite');
+assert.deepEqual(K.duels({}, '111'), [], 'keine Duelle bei ESPN: leer');
+const dHtml = K.duelsHtml({ duels: du });
+assert.match(dHtml, /class="cfb-x"/);
+assert.match(dHtml, /class="cfb-f d" data-fit>/, 'Zeilen wie die Form');
+assert.match(dHtml, /<img src="https:\/\/a\.espncdn\.com\/i\/teamlogos\/soccer\/500\/2925\.png"/, 'Gegnerwappen');
+assert.match(dHtml, /Letzte Duelle<span data-no-i18n> · 2 S · 1 U · 1 N<\/span>/, 'Kopf mit Bilanz');
+assert.match(dHtml, /bei <span data-no-i18n>Cagliari<\/span><small>Serie A · 17\.01\.26<\/small>/, 'aus eigener Sicht, Datum mit Jahr');
+assert.match(dHtml, /1 : 1<small>i\. E\.<\/small>/);
+assert.equal((dHtml.match(/data-fit/g) || []).length, 4);
+assert.equal(K.duelsHtml({ duels: [] }), '', 'ohne Duelle kein Abschnitt');
+
 // ── Länderflaggen statt ESPN-Länderbildern (mitgeliefert, rund im Kreis / rechteckig in Listen) ──
 assert.equal(K.flag('https://a.espncdn.com/i/teamlogos/countries/500/ita.png'), 'it');
 assert.equal(K.flag('https://a.espncdn.com/i/teamlogos/countries/500/eng.png'), 'gb-eng');
@@ -265,6 +296,9 @@ assert.match(mHtml, /class="cfb-m"><div[^>]*><div[^>]*>Nächstes Spiel<span> · 
 assert.ok(mHtml.indexOf('Cagliari') < mHtml.indexOf('Juventus'), 'Auswärtsspiel: Gegner links (Heim)');
 assert.match(mHtml, /20:45/);
 assert.match(K.html('form', S), /cfb-res L" data-no-i18n>N/);
+assert.ok(!/class="cfb-x"/.test(K.html('form', S)), 'ohne Duelle nur die Form');
+K.data[K.key(K.info(S))].duels = du;
+assert.ok(K.html('form', S).indexOf('class="cfb-x"') > K.html('form', S).lastIndexOf('cfb-f"'), 'Duelle unter der Form');
 // Laden: Fehler im Netz → Hinweis statt Absturz.
 K.data = {};
 assert.match(K.html('table', S), /Wird geladen/);
