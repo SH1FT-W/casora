@@ -201,7 +201,10 @@ def stations_for(raw: list[dict[str, Any]], fuel: str, lat0: float | None, lng0:
             if radius is not None and d > radius + 0.05:
                 continue
         out.append({"n": s.get("name") or s.get("brand") or "", "b": s.get("brand") or "", "p": p,
-                    "o": bool(s.get("open", True)), "d": d, "x": x, "y": y})
+                    "o": bool(s.get("open", True)), "d": d, "x": x, "y": y,
+                    # Echte Lage für die HA-Karte im Popup (4 Stellen ≈ 10 m).
+                    "lat": round(s["lat"], 4) if s.get("lat") is not None else None,
+                    "lng": round(s["lng"], 4) if s.get("lng") is not None else None})
     out.sort(key=lambda s: (not s["o"], s["p"], s["d"] if s["d"] is not None else 999))
     return out
 
@@ -479,6 +482,8 @@ class Tanken:
             prune_hist(hist, now)
             self._save_hist()
         out = {"price": price, "stations": stations[:25], "count": len(stations), "origin": kind,
+               # Mittelpunkt der Karte (Zuhause bzw. Auto), grob gerundet.
+               "center": [round(lat, 3), round(lng, 3)] if lat is not None and lng is not None else None,
                "radius_km": radius, "updated": at, "source": src,
                "error": self.status.get("error") if src == "key" and not self.status.get("ok") else None}
         out.update(typical_day(hist, now))
@@ -604,7 +609,8 @@ class TankenSensor(SensorEntity):
     _attr_suggested_display_precision = 3
     # Liste und Tageskurve ändern sich bei jedem Abruf – nicht in die Datenbank.
     _unrecorded_attributes = frozenset({"stations", "typical", "low", "high", "days", "learn_days_left",
-                                        "updated", "count", "error", "origin", "radius_km", "source"})
+                                        "updated", "count", "error", "origin", "radius_km", "source",
+                                        "center"})
 
     def __init__(self, tk: Tanken, uid: str, car: dict[str, Any]) -> None:
         self.tk = tk
@@ -628,7 +634,7 @@ class TankenSensor(SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         d = self._data
         return {"car_device_id": self.car["device_id"], "car_name": self.car["name"], "fuel": self.car["fuel"],
-                **{k: d.get(k) for k in ("source", "origin", "radius_km", "updated", "count", "stations",
+                **{k: d.get(k) for k in ("source", "origin", "center", "radius_km", "updated", "count", "stations",
                                          "typical", "low", "high", "days", "learn_days_left", "error")}}
 
 

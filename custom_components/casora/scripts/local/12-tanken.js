@@ -1,8 +1,9 @@
 // ── Tanken im Auto-Popup (Casora 1.2) ─────────────────────────────────────
 // Zeile „Tanken · ab X,XX €“ direkt unter Tankstand/Reichweite (window._casoraCar, 03-popups.js) und
 // eigene Ansicht im selben Popup: Empfehlung (Aussage, Begründung, Preis-Skala Tief → jetzt → Hoch),
-// „Typischer Tag“ als Säulen, die besten 3 als Kacheln, Punktkarte ohne Kartendienst, Umschalter
-// Günstigste/Nächste/Offen mit Liste, Quellenhinweis „Daten: Tankerkönig, CC BY 4.0“.
+// „Typischer Tag“ als Säulen, die besten 3 als Kacheln, Karte „In der Nähe“ (HAs eigene Karte mit Umkreis
+// und Preis-Pillen; ohne sie die schlichte Punktkarte), Umschalter Günstigste/Nächste/Offen mit Liste,
+// Quellenhinweis „Daten: Tankerkönig, CC BY 4.0“.
 // Daten: Sensor sensor.casora_tanken_<auto>_<kraftstoff> (tanken.py), Attribut car_device_id = Gerät
 // des Autos. Ohne Sensor (nicht eingerichtet, E-Auto, Kraftstoff „aus“) gibt es keine Zeile.
 // Markenlogos werden zur Laufzeit geladen (nicht im Repo, nur Adressen); unbekannte Marken: farbige
@@ -46,7 +47,7 @@
     var n = parseFloat(st && st.state);
     return { price: isNaN(n) ? null : n, fuel: FUEL[a.fuel] || a.fuel || '', stations: Array.isArray(a.stations) ? a.stations : [],
       typical: Array.isArray(a.typical) ? a.typical : null, low: a.low, high: a.high, learn: a.learn_days_left,
-      radius: a.radius_km, origin: a.origin, updated: a.updated, error: a.error, source: a.source, count: a.count };
+      radius: a.radius_km, origin: a.origin, center: Array.isArray(a.center) && a.center.length === 2 && a.center[0] != null ? a.center : null, updated: a.updated, error: a.error, source: a.source, count: a.count };
   };
 
   // ── Empfehlung (rein rechnerisch, dev/unit/tanken_empfehlung.mjs) ─────────
@@ -242,43 +243,200 @@
         + '<div style="font-size:12px;font-weight:500;color:' + k.SUB + '">' + (x.d != null ? esc(km(x.d)) : '&nbsp;') + '</div></div>';
     }).join('') + '</div>';
   };
-  // Punktkarte ohne Kartendienst: Umkreis, eigener Standort, Preise als Pillen.
-  var map = function (I, k, h, w) {
-    var pts = I.stations.filter(function (x) { return x.x != null && x.y != null; });
-    if (!pts.length) return '';
-    // Bildfläche im Seitenverhältnis der Spalte (sonst schneidet „slice“ oben/unten Pillen ab).
-    var H = h, W = Math.max(H, Math.round(w || 300)), cx = W / 2, cy = H / 2;
-    var reach = I.radius || Math.max.apply(null, pts.map(function (x) { return Math.max(Math.abs(x.x), Math.abs(x.y)); }).concat([1]));
-    var sc = (H * 0.46) / reach;
-    var ground = k.dark ? 'rgba(255,255,255,0.045)' : 'rgba(140,115,90,0.10)';
-    var line = k.dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.75)';
-    var s = '<svg class="ct-map" viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="' + h + '" preserveAspectRatio="xMidYMid slice" style="display:block;border-radius:' + k.RAD + ';overflow:hidden">'
-      + '<rect width="' + W + '" height="' + H + '" fill="' + ground + '"/>'
-      + '<line x1="0" y1="' + cy + '" x2="' + W + '" y2="' + cy + '" stroke="' + line + '" stroke-width="3"/>'
-      + '<line x1="' + cx + '" y1="0" x2="' + cx + '" y2="' + H + '" stroke="' + line + '" stroke-width="3"/>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (reach * sc).toFixed(1) + '" fill="' + k.ACC + '" opacity=".10"/>'
-      + '<circle cx="' + cx + '" cy="' + cy + '" r="' + (reach * sc / 2).toFixed(1) + '" fill="none" stroke="' + k.ACC + '" stroke-opacity=".18" stroke-width="1.5"/>';
+  // Umkreis, eigener Standort und Preise als Pillen (SVG). at(p) → [x, y] in Pixeln; onMap: über der HA-Karte
+  // (ohne eigenen Grund, Pillen mit leichtem Schatten).
+  var pins = function (I, k, W, H, at, c, rad, onMap) {
+    var cx = c[0], cy = c[1];
+    var s = '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="' + rad.toFixed(1) + '" fill="' + k.ACC + '" opacity="' + (onMap ? '.12' : '.10') + '"/>'
+      + '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="' + (onMap ? rad : rad / 2).toFixed(1) + '" fill="none" stroke="' + k.ACC + '" stroke-opacity="' + (onMap ? '.45' : '.18') + '" stroke-width="1.5"/>';
     var best = I.stations.filter(function (x) { return x.o; })[0];
     // Günstigste zuerst platzieren (behält ihren Ort), überlappende Pillen weichen senkrecht aus;
     // gezeichnet wird umgekehrt, damit die günstigste oben liegt.
     var placed = [];
     var fits = function (x, y) { return placed.every(function (q) { return Math.abs(q.x - x) > 70 || Math.abs(q.y - y) > 31; }); };
-    pts.slice().sort(function (a, b) { return a.p - b.p; }).slice(0, 14).forEach(function (p) {
-      var cl = function (x, y) { return [Math.max(38, Math.min(W - 38, x)), Math.max(18, Math.min(H - 18, y))]; };
-      var x0 = cx + p.x * sc, y0 = cy - p.y * sc, at = cl(x0, y0);
-      var MOVES = [[0, 32], [0, -32], [72, 0], [-72, 0], [72, 32], [-72, 32], [72, -32], [-72, -32], [0, 64], [0, -64], [144, 0], [-144, 0]];
-      for (var t = 0; t < MOVES.length && !fits(at[0], at[1]); t++) at = cl(x0 + MOVES[t][0], y0 + MOVES[t][1]);
-      placed.push({ p: p, x: at[0], y: at[1] });
-    });
+    I.stations.map(function (p) { var xy = at(p); return xy ? { p: p, xy: xy } : null; }).filter(Boolean)
+      .sort(function (a, b) { return a.p.p - b.p.p; }).slice(0, 14).forEach(function (e) {
+        var cl = function (x, y) { return [Math.max(38, Math.min(W - 38, x)), Math.max(18, Math.min(H - 18, y))]; };
+        var x0 = e.xy[0], y0 = e.xy[1], at0 = cl(x0, y0);
+        var MOVES = [[0, 32], [0, -32], [72, 0], [-72, 0], [72, 32], [-72, 32], [72, -32], [-72, -32], [0, 64], [0, -64], [144, 0], [-144, 0]];
+        for (var t = 0; t < MOVES.length && !fits(at0[0], at0[1]); t++) at0 = cl(x0 + MOVES[t][0], y0 + MOVES[t][1]);
+        placed.push({ p: e.p, x: at0[0], y: at0[1] });
+      });
+    var shadow = onMap ? ' style="filter:drop-shadow(0 1px 2px rgba(0,0,0,' + (k.dark ? '.5' : '.22') + '))"' : '';
     placed.reverse().forEach(function (q) {
       var p = q.p, x = q.x, y = q.y, w = 66, hh = 28, isBest = p === best;
-      s += '<g' + (p.o ? '' : ' opacity=".55"') + '><rect x="' + (x - w / 2).toFixed(1) + '" y="' + (y - hh / 2).toFixed(1) + '" width="' + w + '" height="' + hh + '" rx="14" fill="'
+      s += '<g class="ct-pin"' + (p.o ? '' : ' opacity="' + (onMap ? '.8' : '.55') + '"') + shadow + '><rect x="' + (x - w / 2).toFixed(1) + '" y="' + (y - hh / 2).toFixed(1) + '" width="' + w + '" height="' + hh + '" rx="14" fill="'
         + (isBest ? k.GOOD : (k.dark ? '#4A423B' : '#FFFDF9')) + '"/>'
         + '<text x="' + x.toFixed(1) + '" y="' + (y + 1).toFixed(1) + '" text-anchor="middle" dominant-baseline="middle" font-size="13.5" font-weight="700" '
         + 'font-family="Inter,-apple-system,system-ui,sans-serif" fill="' + (isBest ? '#fff' : (k.dark ? '#EEE8E1' : '#3A322B')) + '">' + esc(price(p.p)) + '</text></g>';
     });
-    s += '<circle cx="' + cx + '" cy="' + cy + '" r="6" fill="' + k.ACC + '" stroke="#fff" stroke-width="3"/>';
-    return s + '</svg>';
+    return s + '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="6" fill="' + k.ACC + '" stroke="#fff" stroke-width="3"/>';
+  };
+  var reachOf = function (I, pts) {
+    return I.radius || Math.max.apply(null, pts.map(function (x) { return Math.max(Math.abs(x.x), Math.abs(x.y)); }).concat([1]));
+  };
+  // Punktkarte ohne Kartendienst (Rückfall, liegt immer unter der HA-Karte): Umkreis, eigener Standort, Preise als Pillen.
+  var map = function (I, k, h, w) {
+    var pts = I.stations.filter(function (x) { return x.x != null && x.y != null; });
+    if (!pts.length) return '';
+    // Bildfläche im Seitenverhältnis der Spalte (sonst schneidet „slice“ oben/unten Pillen ab).
+    var H = h, W = Math.max(H, Math.round(w || 300)), cx = W / 2, cy = H / 2;
+    var reach = reachOf(I, pts);
+    var sc = (H * 0.46) / reach;
+    var ground = k.dark ? 'rgba(255,255,255,0.045)' : 'rgba(140,115,90,0.10)';
+    var line = k.dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.75)';
+    return '<div class="ct-mapbox" style="position:relative;height:' + h + 'px;border-radius:' + k.RAD + ';overflow:hidden">'
+      + '<svg class="ct-map" viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="' + h + '" preserveAspectRatio="xMidYMid slice" style="display:block;border-radius:' + k.RAD + ';overflow:hidden">'
+      + '<rect width="' + W + '" height="' + H + '" fill="' + ground + '"/>'
+      + '<line x1="0" y1="' + cy + '" x2="' + W + '" y2="' + cy + '" stroke="' + line + '" stroke-width="3"/>'
+      + '<line x1="' + cx + '" y1="0" x2="' + cx + '" y2="' + H + '" stroke="' + line + '" stroke-width="3"/>'
+      + pins(I, k, W, H, function (p) { return p.x != null && p.y != null ? [cx + p.x * sc, cy - p.y * sc] : null; }, [cx, cy], reach * sc, false)
+      + '</svg></div>';
+  };
+
+  // ── HA-Karte unter Umkreis und Pillen ────────────────────────────────────
+  // HAs eigenes Karten-Element (ha-map, ab HA 2026.9 mit dem eigenen Kartendienst „map_tiles“ samt Token;
+  // HA kümmert sich um Dienst und Token). Liegt als eigene Ebene über der Punktkarte und bleibt beim
+  // Neuzeichnen der Ansicht erhalten; sichtbar erst, wenn Kacheln geladen sind – sonst bleibt die Punktkarte.
+  var mapOk = function () {
+    var ha = document.querySelector('home-assistant');
+    var comps = ha && ha.hass && ha.hass.config && ha.hass.config.components;
+    // Ohne „map_tiles“ (älteres HA) holt ha-map Kacheln von einem Dienst, der inzwischen einen Schlüssel will.
+    return !!(comps && comps.indexOf('map_tiles') >= 0);
+  };
+  var haMapDefined = function () {
+    if (customElements.get('ha-map')) return Promise.resolve(true);
+    if (!window.loadCardHelpers) return Promise.resolve(false);
+    var ha = document.querySelector('home-assistant');
+    // Die Kartenkarte lädt ha-map mit; angezeigt wird sie nicht.
+    var load = window.loadCardHelpers().then(function (h) { var c = h.createCardElement({ type: 'map', entities: ['zone.home'] }); if (c && ha) c.hass = ha.hass; return customElements.whenDefined('ha-map'); })
+      .then(function () { return true; }, function () { return false; });
+    return Promise.race([load, new Promise(function (r) { setTimeout(function () { r(!!customElements.get('ha-map')); }, 6000); })]);
+  };
+  var geo = function (I, p) {
+    if (p.lat != null && p.lng != null) return [p.lat, p.lng];
+    if (p.x == null || p.y == null || !I.center) return null;
+    return [I.center[0] + p.y / 110.57, I.center[1] + p.x / (111.32 * Math.cos(I.center[0] * Math.PI / 180))];
+  };
+  // Zoom, bei dem der Umkreis wie bei der Punktkarte 92 % der kleineren Seite füllt.
+  var zoomFor = function (lat, reachKm, W, H) {
+    var mpp = reachKm * 1000 / (0.46 * Math.min(W, H));
+    return Math.max(3, Math.min(17, Math.log(156543.03 * Math.cos(lat * Math.PI / 180) / mpp) / Math.LN2));
+  };
+  var hmStyle = '#map{background:transparent;border-radius:inherit;overflow:hidden}.leaflet-map-pane{filter:var(--ct-filter,none)}'
+    + ':host{border-radius:inherit;overflow:hidden}.leaflet-control-zoom,.leaflet-control-scale{display:none!important}'
+    + '.leaflet-control-attribution{font-size:9px!important;line-height:1.3!important;padding:1px 6px!important;border-radius:8px 0 0 0;'
+    + 'background:rgba(255,255,255,.6)!important;color:#555!important;pointer-events:auto}#map.dark .leaflet-control-attribution{background:rgba(0,0,0,.45)!important;color:#bbb!important}'
+    + '.leaflet-control-attribution a{color:inherit!important}';
+  var hmCreate = function (v) {
+    var layer = document.createElement('div');
+    layer.className = 'ct-hamap';
+    layer.dataset.state = 'laden';
+    layer.style.cssText = 'position:absolute;z-index:2;overflow:hidden;isolation:isolate;opacity:0;transition:opacity .35s ease;pointer-events:none;';
+    var hm = { layer: layer, el: null, key: null, view: null, tiles: 0, errors: 0 };
+    v.hm = hm;
+    v.box.appendChild(layer);
+    haMapDefined().then(function (ok) {
+      if (V !== v || !layer.isConnected) return;
+      if (!ok) { layer.dataset.state = 'fehler'; return; }
+      var ha = document.querySelector('home-assistant'), hass = ha && ha.hass;
+      var m = document.createElement('ha-map');
+      // Verbindung wie aus HAs Kontext (der Popup liegt evtl. außerhalb); ohne sie gäbe es kein Token.
+      if (hass) m._connection = { connection: hass.connection, hassUrl: function (u) { return hass.hassUrl(u); } };
+      m.themeMode = v.hmDark ? 'dark' : 'light';
+      m.zoom = 13;
+      m.style.cssText = 'display:block;width:100%;height:100%;border-radius:inherit;overflow:hidden;';
+      layer.insertBefore(m, layer.firstChild);
+      hm.el = m;
+      var t0 = Date.now();
+      var wait = setInterval(function () {
+        if (V !== v || !m.isConnected) { clearInterval(wait); return; }
+        var lm = m.leafletMap;
+        if (lm && !hm.hooked) {
+          hm.hooked = true;
+          ['dragging', 'touchZoom', 'doubleClickZoom', 'scrollWheelZoom', 'boxZoom', 'keyboard', 'tap'].forEach(function (x) { if (lm[x] && lm[x].disable) lm[x].disable(); });
+          if (lm.zoomControl) lm.zoomControl.remove();
+          lm.options.zoomSnap = 0;
+          var st = document.createElement('style'); st.textContent = hmStyle; m.shadowRoot.appendChild(st);
+          // Kacheln zählen: Vektorkarte (MapLibre) bzw. Rasterkacheln.
+          lm.eachLayer(function (l) {
+            var ml = l.getMaplibreMap && l.getMaplibreMap();
+            if (ml) {
+              hm.ml = ml;
+              ml.on('data', function (e) { if (e && e.tile) hm.tiles++; });
+              ml.on('error', function () { hm.errors++; });
+            } else if (l.on && l.getTileUrl) {
+              l.on('tileload', function () { hm.tiles++; });
+              l.on('tileerror', function () { hm.errors++; });
+            }
+          });
+          hm.view = null;
+          syncMap();
+        }
+        // Sichtbar, sobald Kacheln da sind und die Karte fertig gezeichnet hat.
+        var done = lm && hm.tiles > 0 && (!hm.ml || hm.ml.loaded());
+        if (done) { clearInterval(wait); layer.dataset.state = 'ok'; layer.style.opacity = '1'; return; }
+        if (Date.now() - t0 > 12000) {
+          clearInterval(wait);
+          layer.dataset.state = 'fehler';
+          m.remove(); hm.el = null;
+        }
+      }, 150);
+    });
+  };
+  // Ebene auf den Platz der Punktkarte legen, Ausschnitt und Pillen setzen.
+  var syncMap = function () {
+    if (!V) return;
+    var hm = V.hm, ph = V.box.querySelector('.ct-mapbox');
+    var id = K.sensorId(V.p, hassStates()), I = id ? info(hassStates()[id]) : null;
+    if (!ph || !I || !I.center || !mapOk()) { if (hm) hm.layer.style.display = 'none'; return; }
+    var k = tok();
+    if (!hm) { V.hmDark = k.dark; hmCreate(V); hm = V.hm; }
+    if (hm.layer.dataset.state === 'fehler') { hm.layer.style.display = 'none'; return; }
+    // Lage über offset* (unabhängig von Popup-Animationen mit transform); box ist der Bezug (position:relative).
+    var x0 = 0, y0 = 0, e = ph;
+    while (e && e !== V.box) { x0 += e.offsetLeft; y0 += e.offsetTop; e = e.offsetParent; }
+    if (!e) { var br = V.box.getBoundingClientRect(), rr = ph.getBoundingClientRect(); x0 = rr.left - br.left; y0 = rr.top - br.top; }
+    var W = ph.offsetWidth, H = ph.offsetHeight;
+    var L = hm.layer.style;
+    L.display = '';
+    L.left = x0 + 'px'; L.top = y0 + 'px';
+    L.width = W + 'px'; L.height = H + 'px';
+    L.borderRadius = k.RAD;
+    // WebGL-Fläche hält sich nicht immer an border-radius (dunkle Ecken) – zusätzlich zuschneiden.
+    L.clipPath = 'inset(0 round ' + k.RAD + ')';
+    // Ruhiger Grund: Farben zurückgenommen.
+    var m = hm.el, lm = m && m.leafletMap;
+    // Filter nur auf der Kartenfläche (auf dem ganzen Element bricht er am Handy die runden Ecken).
+    if (m) m.style.setProperty('--ct-filter', k.dark ? 'saturate(.5) brightness(.9)' : 'saturate(.45) contrast(.9) brightness(1.02)');
+    // Schleier in Popup-Farbe über der Karte, unter den Pillen.
+    var wash = hm.layer.querySelector('.ct-hamap-wash');
+    if (!wash) { wash = document.createElement('div'); wash.className = 'ct-hamap-wash'; wash.style.cssText = 'position:absolute;inset:0;pointer-events:none;'; hm.layer.insertBefore(wash, hm.layer.querySelector('svg.ct-hamap-pins')); }
+    wash.style.background = k.dark ? 'rgba(28,24,21,.28)' : 'rgba(250,246,240,.32)';
+    if (m && m.themeMode !== (k.dark ? 'dark' : 'light')) m.themeMode = k.dark ? 'dark' : 'light';
+    if (!lm || !hm.hooked || !W || !H) return;
+    var pts = I.stations.filter(function (x) { return geo(I, x); });
+    var reach = reachOf(I, I.stations.filter(function (x) { return x.x != null && x.y != null; }));
+    var view = [I.center[0], I.center[1], reach, W, H].join('|');
+    if (view !== hm.view) {
+      hm.view = view;
+      lm.invalidateSize({ animate: false });
+      lm.setView(I.center, zoomFor(I.center[0], reach, W, H), { animate: false });
+    }
+    var key = view + '|' + k.dark + '|' + JSON.stringify(pts.map(function (x) { return [x.p, x.o, geo(I, x)]; }));
+    if (key === hm.key) return;
+    hm.key = key;
+    var pt = function (ll) { var q = lm.latLngToContainerPoint(ll); return [q.x, q.y]; };
+    var c = pt(I.center), north = pt([I.center[0] + reach / 110.57, I.center[1]]);
+    var svg = hm.layer.querySelector('svg.ct-hamap-pins');
+    if (!svg) {
+      svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'ct-hamap-pins');
+      svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:hidden;';
+      hm.layer.appendChild(svg);
+    }
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.innerHTML = pins(I, k, W, H, function (p) { var g = geo(I, p); return g ? pt(g) : null; }, c, Math.abs(c[1] - north[1]), true);
   };
   var SORTS = [['guenstig', 'Günstigste'], ['naechste', 'Nächste'], ['offen', 'Offen']];
   var list = function (I, sort) {
@@ -342,8 +500,9 @@
     var bw = V.box.getBoundingClientRect().width;
     var wide = bw > 700 || (bw === 0 && window.innerWidth > 760);
     var pad = parseFloat(V.box.style.paddingLeft) || 0;
-    V.box.innerHTML = K.html(V.p, hassStates(), V.sort, wide, bw ? bw - 2 * pad : 0);
+    V.inner.innerHTML = K.html(V.p, hassStates(), V.sort, wide, bw ? bw - 2 * pad : 0);
     V.wide = wide;
+    syncMap();
     if (content) content.scrollTop = keepScroll ? top : 0;
     if (window._casoraSepScan) window._casoraSepScan(sr);
   };
@@ -370,8 +529,12 @@
     var box = document.createElement('div');
     box.className = 'casora-tank-view';
     box.style.cssText = 'padding:0 ' + pad + 'px 24px;box-sizing:border-box;position:relative;z-index:1;text-align:left;';
+    // Inhalt neu zeichnen, ohne die HA-Karte (eigene Ebene in box) jedes Mal neu zu laden.
+    var inner = document.createElement('div');
+    box.appendChild(inner);
     cont.appendChild(box);
     V.box = box;
+    V.inner = inner;
     sr.querySelector('.header-title').textContent = 'Tanken';
     var ring = sr.querySelector('.header-ring');
     if (ring && !ring.hidden) { V.ring = ring.innerHTML; ring.innerHTML = '<span class="g" style="--g:url(&quot;' + GAS + '&quot;)"></span>'; }
@@ -394,7 +557,7 @@
     surf.appendChild(back);
     place();
     V.back = back;
-    V.onResize = function () { if (!V) return; place(); var w = V.box.getBoundingClientRect().width > 700; if (w !== V.wide) render(true); };
+    V.onResize = function () { if (!V) return; place(); var w = V.box.getBoundingClientRect().width > 700; if (w !== V.wide) render(true); else syncMap(); };
     window.addEventListener('resize', V.onResize);
     // Popup zu oder neu befüllt: Ansicht verlassen.
     V.mo = new MutationObserver(function () { if (V && (!pop.hasAttribute('open') || !box.isConnected)) K.leave(true); });
