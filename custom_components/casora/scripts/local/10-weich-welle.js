@@ -187,10 +187,15 @@
 
   // ── Panel ──
   var CSS = ''
-    // Die Liste liegt im Menü: Abstände wie die Zeilen des Mitteilungsmenüs.
-    + '.w{padding:0 6px 8px}'
-    + '.l .rc{padding:10px 10px 10px 8px}'
-    + '.l .r.hs:before{left:74px;right:12px}';
+    // D1 (1.2): Zeilen wie Glocke und Handy-Fenster – 8 px Rand, Kreis 36 (Cover rund), Name 15/600,
+    // Unterzeile 13, Pille 26; die Trennlinie beginnt am Text.
+    + '.w{padding:8px}'
+    + '.l .rc{padding:8px 14px 8px 8px;gap:12px}'
+    + '.w .l .cv,.w .l.d .cv{width:36px;height:36px;border-radius:50%}'
+    + '.w .l .t{font-size:15px;font-weight:600}'
+    + '.w .l .s{font-size:13px}'
+    + '.w .l .r{border-radius:26px}'
+    + '.w .l .r.hs:before,.w .l.d .r.hs:before{left:56px;right:12px}';
 
   var menu = null, body = null, wrap = null, head = null;
   // Eintrag im Format von 09 (_casoraNPSoft.paint/bind): Zeilen, Signatur, Öffnen.
@@ -226,7 +231,7 @@
     // Gruppen zählen (gleicher Titel auf mehreren Playern = eine Wiedergabe).
     var n = NP.group ? NP.group(l).length : l.length;
     var label = n === 1 ? T('Läuft gerade') : T(n + ' Wiedergaben');
-    if (head.textContent !== label) head.textContent = label;
+    if (menu.getAttribute('aria-label') !== label) menu.setAttribute('aria-label', label);
     if (built !== null) place();
   }
 
@@ -254,18 +259,12 @@
     GLASS.apply(menu);
     // Wie das Mitteilungsmenü: weicher Schatten des Designs statt Glas-Rand.
     menu.style.boxShadow = 'var(--casora-notify-shadow, ' + menu.style.boxShadow + ')';
+    // D1 (1.2): gemeinsamer Fensterrahmen (Radius 28, deckend, ein Schatten).
+    if (GLASS.frame) GLASS.frame(menu);
 
     var inner = document.createElement('div');
     Object.assign(inner.style, { borderRadius: 'inherit', overflow: 'hidden', clipPath: 'inset(0 round ' + GLASS.radius + ')' });
-    // Kopfzeile außerhalb der Liste, damit bei vielen Playern nur die Zeilen scrollen.
-    head = document.createElement('div');
-    head.className = 'casora-welle-head';
-    Object.assign(head.style, {
-      padding: '13px 18px 3px', fontFamily: 'var(--primary-font-family, system-ui)',
-      fontSize: '13px', fontWeight: '600', letterSpacing: '.01em', lineHeight: '1.3',
-      color: 'var(--casora-menu-fg-sub, var(--secondary-text-color, rgba(98,87,76,.92)))',
-    });
-    inner.appendChild(head);
+    // D1 (1.2): ohne Kopfzeile („2 Wiedergaben“ steht nur noch als aria-label am Fenster).
 
     body = document.createElement('div');
     Object.assign(body.style, { overflowY: 'auto', overscrollBehavior: 'contain', boxSizing: 'border-box' });

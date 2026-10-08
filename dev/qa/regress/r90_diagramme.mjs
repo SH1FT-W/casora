@@ -189,7 +189,7 @@ await check('Pflanze: casora-chart gezeichnet, kein apexcharts-card', r && r.dra
 await page.evaluate(() => window.__pierce('casora-popup').forEach((p) => p.hasAttribute('open') && p.close()));
 await page.waitForTimeout(600);
 
-// Sparkline nur, wenn eingeschaltet.
+// Sparkline nur, wenn eingeschaltet; neutral (D9) und nur Desktop/Tablet (D3).
 const spark = async (on) => {
   await page.evaluate(async ([p, on]) => {
     document.querySelector('home-assistant').shadowRoot.querySelectorAll('.qa-r90').forEach((x) => x.remove());
@@ -202,12 +202,27 @@ const spark = async (on) => {
   return stable(page, () => {
     const t = document.querySelector('home-assistant').shadowRoot.querySelector('.qa-r90');
     const c = t && window.__pierce('casora-chart', t.shadowRoot).find((x) => x.getBoundingClientRect().width > 10);
-    return { visible: !!c, line: !!(c && c.shadowRoot.querySelector('svg path[d^="M"]')) };
+    const path = c && c.shadowRoot.querySelector('svg path[d^="M"]');
+    // D9 (1.2): Linie neutral (--casora-chart-spark, sonst gedeckter Text-Ton), nicht in einer Serienfarbe.
+    let ink = null, teal = null;
+    if (c) {
+      const q = document.createElement('i'); c.shadowRoot.appendChild(q);
+      q.style.color = 'var(--casora-chart-spark, var(--cink3))'; ink = getComputedStyle(q).color;
+      q.style.color = 'var(--cc3)'; teal = getComputedStyle(q).color; q.remove();
+    }
+    return { visible: !!c, line: !!path, stroke: path ? getComputedStyle(path).stroke : null, ink, teal };
   }, null, { max: 10000, quiet: 1500 });
 };
 const off = await spark(false);
 await check('Sparkline: ausgeschaltet (Standard) keine Linie auf der Kachel', off && !off.visible, off);
 const on = await spark(true);
 await check('Sparkline: eingeschaltet Linie auf der Kachel', on && on.visible && on.line, on);
+await check('Sparkline: Linie neutral im gedeckten Text-Ton, nicht in Serienfarbe (D9)', on && on.stroke === on.ink && on.stroke !== on.teal, on);
+// D3 (1.2): In der Handy-Pillen-Kachel keine Sparkline (lief über Name und Zustand), nur Desktop/Tablet.
+await page.setViewportSize({ width: 393, height: 852 });
+await page.waitForTimeout(600);
+const phoneSpark = await spark(true);
+await check('Sparkline: am Handy (Pillen-Kachel) ausgeblendet (D3)', phoneSpark && !phoneSpark.visible, phoneSpark);
+await page.setViewportSize({ width: 1440, height: 900 });
 await page.evaluate(() => document.querySelector('home-assistant').shadowRoot.querySelectorAll('.qa-r90').forEach((x) => x.remove()));
 await finish();

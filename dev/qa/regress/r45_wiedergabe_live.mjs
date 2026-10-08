@@ -79,7 +79,7 @@ const menu = () => page.evaluate(() => {
   if (!m || m.style.opacity === '0') return null;
   const sr = [...m.querySelectorAll('div')].map((d) => d.shadowRoot).filter(Boolean)[0];
   const rows = sr ? [...sr.querySelectorAll('.r')] : [];
-  return { head: (m.querySelector('.casora-welle-head') || {}).textContent || '',
+  return { head: m.getAttribute('aria-label') || '', // D1 (1.2): ohne Kopfzeile, die Zahl steht im aria-label
     rows: rows.map((r) => ({ t: r.querySelector('.t').textContent, s: r.querySelector('.s').textContent, n: +r.dataset.n,
       box: r.getBoundingClientRect().toJSON() })) };
 });
@@ -121,7 +121,7 @@ await page.waitForTimeout(900);
 let m = await menu();
 await check('Gruppe: eine Zeile im Welle-Menü', m && m.rows.length === 1 && m.rows[0].n === 2, m);
 await check('Gruppe: Unterzeile „Lautsprecher Küche + Bad · QA Band“', m && m.rows[0] && /^Lautsprecher (Küche \+ Bad|Bad \+ Küche) · QA Band$/.test(m.rows[0].s), m && m.rows[0]);
-await check('Gruppe: Kopf zählt Gruppen („Läuft gerade“)', m && m.head === 'Läuft gerade', m && m.head);
+await check('Gruppe: Fenster-Name (aria-label) zählt Gruppen („Läuft gerade“)', m && m.head === 'Läuft gerade', m && m.head);
 
 const pbtn = await page.evaluate(() => {
   const sr = [...document.querySelector('.casora-welle-menu').querySelectorAll('div')].map((d) => d.shadowRoot).filter(Boolean)[0];

@@ -9,8 +9,9 @@
 // (--casora-entity-background-active, Kreis in Ton). Zeilen 8 px vom Fensterrand (links = rechts), Kreis links =
 // oben = Abstand zum Text (8), Pille konzentrisch zum Kreis, Symbol/Text springen zwischen den Zeilen nicht.
 // Rechts je Raum die Temperatur, davor das Auffälligste (08.10.2026): „Fenster offen“ (orange) vor „Licht an“ vor „Feucht · 70 %“.
-// Szenen: dieselben Zeilen, Kreis in der Studio-Farbe der Szene wie am Desktop (eigene Farbe, sonst die
-// Standard-Szenenfarbe --casora-scene-badge-color wie casora_badge_scene/casora_scenes), weiße Glyphe.
+// Szenen: dieselben Zeilen. Seit 1.2 (D4/D6) Farbe heißt aktiv: inaktiv Sand-Kreis mit dunkler Glyphe wie die Räume,
+// aktiv Kreis voll in der Studio-Farbe der Szene (eigene Farbe, sonst --casora-scene-badge-color), weiße Glyphe,
+// keine Platte, „Aktiv“ rechts im Akzent. Fensterrahmen (D1) wie Glocke, Welle und ⋯-Menü.
 // Viele Räume: Liste scrollt, letzte sichtbare Zeile angeschnitten, offener Raum in der Mitte. Leiste bleibt
 // unverändert und ist ausgeblendet, solange das Blatt offen ist. Wischen nach unten schließt, Hintergrund scrollt nicht.
 import { open, casoraDashboards, dashboard, fakeStates, check, need, finish, usePage } from './lib.mjs';
@@ -181,7 +182,12 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
     window.casoraSceneColor = (id) => { if (!first) first = id; return id === first ? 'var(--casora-color-blue, #5B8FC9)' : null; };
     // Desktop-Standardfarbe der Szenen (casora_badge_scene: --casora-scene-badge-color; casora_scenes: --casora-color-yellow) aufgelöst.
     const probe = (v) => { const d = document.createElement('div'); d.style.cssText = 'position:fixed;width:1px;height:1px;background:' + v; document.body.appendChild(d); const c = getComputedStyle(d).backgroundColor; d.remove(); return c; };
-    return { badge: probe('var(--casora-scene-badge-color, #C29CFF)'), yellow: probe('var(--casora-color-yellow, #FFCC00)'), blue: probe('var(--casora-color-blue, #5B8FC9)') };
+    // Erste Szene im Browser als aktiv führen (D4/D6: Farbe und „Aktiv“ nur für aktive Szenen).
+    const nav = window.__pierce('casora-mobile-nav')[0], SCx = window._casoraSC;
+    const a = (nav._items('scenes')[0] || {}).id;
+    if (SCx && a && !SCx._qaIsActive) { SCx._qaIsActive = SCx.isActive; SCx.isActive = function (id, hs) { return id === a || SCx._qaIsActive.call(this, id, hs); }; }
+    return { badge: probe('var(--casora-scene-badge-color, #C29CFF)'), yellow: probe('var(--casora-color-yellow, #FFCC00)'), blue: probe('var(--casora-color-blue, #5B8FC9)'),
+      accent: probe('var(--primary-color, #B67A50)') };
   });
   const s = await openSheet(page, 'scenes');
   await need(`${tag}: Szenen als Blatt`, s && s.kind === 'scenes' && s.n >= 2, s);
@@ -189,14 +195,20 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   await check(`${tag}: Szenen ohne Überschrift, kein Name abgeschnitten`, !s.head && !s.cut.length, [s.head, s.cut]);
   // Szenen zeigen rechts, wann sie zuletzt liefen – wie die Szenen-Badges („Vor 5 Min.“, „Gestern“, „Noch nie“);
   // eine aktive Szene zeigt „Aktiv“.
-  const agos = await page.evaluate(() => [...document.querySelectorAll('.hmn-sheet .hmn-sub[data-sid]')].map((e) => ({ t: e.textContent.trim(), w: e.getBoundingClientRect().width })));
-  await check(`${tag}: Szenen mit „zuletzt ausgeführt“ rechts`, agos.length === s.n && agos.every((a) => a.w > 0 && /^(Aktiv|Gerade eben|Noch nie|Gestern|Vor \d+ (Min\.|Std\.|Tagen))$/.test(a.t)), agos.slice(0, 4));
+  // D13 (1.2): Zeitangaben klein wie mitten im Satz („vor 12 Tagen“, „gerade eben“); „Aktiv“ allein bleibt groß.
+  const agos = await page.evaluate(() => [...document.querySelectorAll('.hmn-sheet .hmn-sub[data-sid]')].map((e) => ({ t: e.textContent.trim(), w: e.getBoundingClientRect().width,
+    c: getComputedStyle(e).color, fw: +getComputedStyle(e).fontWeight })));
+  await check(`${tag}: Szenen mit „zuletzt ausgeführt“ rechts, klein geschrieben`, agos.length === s.n && agos.every((a) => a.w > 0 && /^(Aktiv|gerade eben|noch nie|gestern|vor \d+ (Min\.|Std\.|Tagen))$/.test(a.t)), agos.slice(0, 4));
   await geometry(tag, s, 'Szenen:');
   const white = (c) => /^rgb\(255, 255, 255\)|^rgba\(255, 255, 255/.test(c || '');
-  await check(`${tag}: Szenen ohne Platte, Kreis exakt in der Desktop-Standardfarbe (${colors.badge}), weiße Glyphe`,
-    clear(s.second.bg) && s.second.tone && s.second.icBg === colors.badge && s.second.icBg === colors.yellow && white(s.second.icColor), [s.second.bg, s.second.icBg, s.second.icColor, colors]);
-  await check(`${tag}: Szene mit eigener Studio-Farbe: Kreis exakt in dieser Farbe (${colors.blue}), weiße Glyphe`,
-    s.first.tone && s.first.icBg === colors.blue && white(s.first.icColor), [s.first.icBg, s.first.icColor, colors]);
+  // D6 (1.2) „Farbe heißt aktiv“: inaktive Szenen mit Sand-Kreis und dunkler Glyphe wie die Räume.
+  await check(`${tag}: inaktive Szene ohne Platte, Kreis in Sand mit dunkler Glyphe wie die Räume`,
+    clear(s.second.bg) && s.second.tone && s.second.icBg === m.off.icBg && s.second.icColor === m.off.icColor, [s.second.bg, s.second.icBg, s.second.icColor, m.off.icBg]);
+  // D4 (1.2): aktive Szene ohne weiße Platte (die heißt nur „hier bist du“), Kreis voll in der Studio-Farbe, „Aktiv“ im Akzent.
+  await check(`${tag}: aktive Szene ohne Platte, Kreis exakt in ihrer Studio-Farbe (${colors.blue}), weiße Glyphe`,
+    clear(s.first.bg) && s.first.shadow === 'none' && s.first.tone && s.first.icBg === colors.blue && white(s.first.icColor), [s.first.bg, s.first.shadow, s.first.icBg, s.first.icColor, colors]);
+  await check(`${tag}: aktive Szene zeigt „Aktiv“ rechts im Akzent (${colors.accent})`,
+    agos[0] && agos[0].t === 'Aktiv' && agos[0].c === colors.accent && agos[0].fw >= 600, [agos[0], colors.accent]);
   // Tipp-Rückmeldung wie die Popup-Zeilen (ohne auszulösen): pointerdown → Fläche hinterlegt und leicht kleiner.
   const press = await page.evaluate(async () => {
     const t = document.querySelector('.hmn-sheet .hmn-row');
@@ -209,7 +221,7 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   });
   const sc = /matrix\(([\d.]+)/.exec(press.transform || '');
   await check(`${tag}: Tipp hinterlegt die Zeile und schrumpft leicht`, sc && +sc[1] < 0.995 && press.bg !== press.before && !clear(press.bg), press);
-  await page.evaluate(() => window.__pierce('casora-mobile-nav')[0]._closeMenu());
+  await page.evaluate(() => { window.__pierce('casora-mobile-nav')[0]._closeMenu(); const SCx = window._casoraSC; if (SCx && SCx._qaIsActive) { SCx.isActive = SCx._qaIsActive; delete SCx._qaIsActive; } });
   await page.waitForTimeout(500);
   // Hotfix 1.1.2: Die Leiste selbst bleibt wie in 1.1.0 – die Blatt-Regel für den Symbolkreis
   // (früher „.hmn-ic“) zog sie auf 40 px Höhe, rund und eingefärbt.

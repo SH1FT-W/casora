@@ -54,9 +54,9 @@ const by = Object.fromEntries(rows.filter((r) => r.entity).map((r) => [r.entity,
 assert.equal(by['binary_sensor.window_a'].label, 'Schlafzimmer Fenster ist offen');
 assert.equal(by['binary_sensor.window_b'].label, 'Waschküche Fenster ist offen');
 assert.equal(by['binary_sensor.window_c'].label, 'Bürofenster ist offen', 'eindeutiger Name bleibt ohne Raum');
-assert.equal(by['binary_sensor.window_a'].sub, 'Seit 2 Std.');
-assert.equal(by['binary_sensor.window_b'].sub, 'Seit 3 Std.');
-assert.equal(by['binary_sensor.window_c'].sub, 'Seit 12 Min.', 'Merkwert nach last_changed: last_changed');
+assert.equal(by['binary_sensor.window_a'].sub, 'seit 2 Std.');  // D13 (1.2): klein wie mitten im Satz
+assert.equal(by['binary_sensor.window_b'].sub, 'seit 3 Std.');
+assert.equal(by['binary_sensor.window_c'].sub, 'seit 12 Min.', 'Merkwert nach last_changed: last_changed');
 // Gelesen bleibt gelesen: nur der wirklich neue Eintrag (C, seit 12 Min.) zählt als neu.
 assert.equal(window._casoraNotify.count, 1, 'nur ein ungelesener Eintrag');
 const w = Number(store.casora_notify_read_v1);

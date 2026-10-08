@@ -11,7 +11,7 @@ const H = 3600000;
 const pick = (src, re) => { const m = src.match(re); assert.ok(m, String(re)); return m[0]; };
 
 const core = new Function('Date', pick(read('casora-core.js'), /  function ago\(ms\) \{[\s\S]*?\n  \}\n/) + ' return ago;')(FakeDate);
-assert.equal(core(NOW - 36 * H), 'Gestern', 'Statusmeldung: gestern 9 Uhr → Gestern');
+assert.equal(core(NOW - 36 * H), 'gestern', 'Statusmeldung: gestern 9 Uhr → gestern (D13, 1.2: klein wie mitten im Satz)');
 assert.equal(core(NOW - 5 * H), 'vor 5 Std.');
 assert.equal(core(NOW - 60 * H), 'vor 2 Tagen', 'vorgestern 9 Uhr → vor 2 Tagen');
 

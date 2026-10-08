@@ -54,6 +54,10 @@ Casora:
   casora-scene-icon-circle: 1
   casora-scene-icon-box: 40px
   casora-scene-glyph: 22px
+  # D5 (1.2): Szenen-Kacheln am Handy wie die Geräte-Kacheln (casora_scene_row)
+  casora-scene-tile-h-phone: 62px
+  casora-scene-icon-box-phone: 42px
+  casora-scene-chip-pad-phone: 10px 12px
   casora-scene-name-weight: 700
   # Chip-Reihen am Handy (Raum-Chips Temperatur/Luftfeuchtigkeit/Licht, Klima/Sicherheit/Energie):
   # Pillen mit gleichmäßig 8 px Abstand (Standard ohne Pillen: 16 px).
@@ -157,6 +161,8 @@ Casora:
   # A-09: Raumleiste 14/600, Pfeil-Kreis, Verlauf endet vor dem Pfeil
   casora-nav-label-size-tablet: 14px
   casora-nav-label-pad-x-tablet: 14px
+  # D12 (1.2): weiße Pille ringsum 4 eingerückt (01-basis setzt sonst seitlich 6 für alle Designs)
+  casora-nav-pill-inset-x-tablet: 4px
   # D-14: breitere Ausblendung + Einrasten auf Raumanfänge – keine Wortreste („ur“) neben dem Pfeil
   casora-nav-fade-solid: 104px
   casora-nav-fade-clear: 40px
@@ -166,7 +172,7 @@ Casora:
   casora-nav-more-hover: var(--casora-mnav-press-fill, var(--casora-nav-active-fill))
   casora-nav-more-ink: var(--casora-nav-label-color)
   casora-nav-chevron: var(--casora-text-2)
-  casora-back-hit: -2px   # D-03: Zurück-Knopf sichtbar 40 px, Trefferfläche 44 px
+  casora-back-hit: -2px   # D-03: Trefferfläche 2 px größer als der sichtbare Kreis (seit D7 48 → 52)
   casora-lpc-pill-pad-m: 14px 15px   # D-03: Raumfilter im Licht-Popup am Handy 44 px hoch (vorher 39)
   casora-lpc-row-inset: 14px   # D-17: Raumfilter beginnt auf der Inhaltskante der Zeilen darunter
   # 1.2 (P4): Raumfilter = Aktions-Pille wie die Szenen: 40 hoch (Desktop), Popup-Fläche .10, bündig mit den Zeilen
@@ -207,8 +213,10 @@ Casora:
   badge-font-size-mobile: 12.5px
   # Symbolkreis so hoch wie Titel+Unterzeile (15 + 1 + 12,9 px): sonst bestimmt der Text die
   # Pillenhöhe (38,9) und der 26-px-Kreis sitzt oben/unten 6,4, links aber 5 px vom Rand.
-  # Mit 29 px gilt rundum 5 px wie am Desktop; Pillen mit nur einer Zeile werden gleich hoch.
-  badge-icon-size-mobile: 29px
+  # D13b (1.2): 28 statt des krummen 29 (Raster, Entscheidung nach Bildvergleich badge-28/29/30).
+  badge-icon-size-mobile: 28px
+  # D13a (1.2): Symbolkreise der Kacheln ohne Schatten (Licht und Luftreiniger hatten nie einen)
+  casora-icon-circle-shadow: none
   casora-badge-glass-rim: var(--button-card-box-shadow)
   casora-badge-shadow-mobile: var(--button-card-box-shadow-mobile)
   # Handy-Unterreihen (Klima-Ring-Badges): Pille mit Ruhe-Schatten wie die Haupt-Badges
@@ -260,10 +268,16 @@ Casora:
   casora-menu-item-dim: 1
   casora-menu-icons-filled: 1
   # A-19: Mitteilungen – Zeilen wie Popup-Zeilen, Aktion in Ton
+  # D7 (1.2): Zurück-Kreis am Handy 48 wie die Kopf-Pille rechts (oben 4, gleiche Mittellinie)
+  casora-back-size: 48px
   casora-notify-row-radius: 18px
   casora-notify-pad: 0 8px 8px
   casora-notify-pad-solo-top: 8px
   casora-notify-action: var(--casora-ton-ink)
+  # D1 (1.2): ein Rahmen für alle schwebenden Fenster (Glocke, Welle, ⋯-Menü, Handy-Räume/Szenen):
+  # Radius 28, deckende Fläche, ein Schatten (je Modus unten). casoraMenuGlass.frame() liest die Tokens.
+  casora-window-radius: 28px
+  casora-window-pane: var(--casora-menu-pane-webkit)
   # A-22: Handy-Startseite – Titel 34/800, Überschrift 17, Kacheln 62 hoch
   hero-title-size-mobile: 34px
   casora-mobile-title-ls: -1.1px
@@ -339,7 +353,8 @@ Casora:
   # Wellen im Ton wie Wiedergabe-Knopf und Balken, solange etwas läuft, sonst dunkel (Variante C, 04.10.2026).
   casora-np-head-ink: var(--casora-chrome-ink, rgba(255,255,255,0.90))
   # Aufgeklappt wie die offene Glocke: weißer Grund, dunkles Symbol (04.10.2026).
-  casora-np-head-on: "#fff"
+  # D8 (1.2): offene Welle in der Fläche der aktiven Raum-Pille (hell Weiß-Creme, dunkel Creme)
+  casora-np-head-on: var(--casora-nav-tab-active-fill, #fff)
   casora-np-head-on-ink: "#000"
   casora-np-head-play-ink: var(--casora-ton-ink)
   # Heizung = Wärme-Orange (Puck, Modus-Symbole); Temperaturleiste in der Weich-Palette statt iOS-Regenbogen
@@ -507,6 +522,7 @@ Casora:
       casora-notify-shadow: 0 1px 2px rgba(90,70,50,0.06), 0 14px 34px -12px rgba(90,70,50,0.26)
       # D-01: am Handy (WebKit) ganz deckend – 0,97 ließ Text dahinter durchscheinen (Nutzertest 06.10.2026)
       casora-menu-pane-webkit: rgb(248,244,237)
+      casora-window-shadow: 0 18px 44px -14px rgba(60,40,20,0.35)
       casora-menu-fg: rgba(46,39,33,0.95)
       # Kopfleiste D (1.0.7): Menü ohne Randlinie und Glanzkante
       casora-menu-rim-top: transparent
@@ -568,6 +584,8 @@ Casora:
       casora-sheet-ink-3: var(--casora-popup-tiles-text-muted)
       # Diagramme (casora-chart): Achsen, Hilfslinien und vier Datenstufen (Kontrast ≥ 3:1 zur Platte)
       casora-chart-label: var(--casora-text-3)
+      # D9 (1.2): Sparkline-Linie auf Kacheln neutral (gedeckter Text-Ton)
+      casora-chart-spark: rgba(98,87,76,0.6)
       casora-chart-grid: rgba(120,100,80,0.12)
       casora-chart-c1: "#4A7DBA"
       casora-chart-c2: "#C8743A"
@@ -922,6 +940,7 @@ Casora:
       casora-menu-pane: rgba(46,42,38,0.96)
       casora-notify-shadow: 0 14px 34px -12px rgba(0,0,0,0.60)
       casora-menu-pane-webkit: rgb(42,38,34)
+      casora-window-shadow: 0 14px 34px -12px rgba(0,0,0,0.60)
       casora-mnav-over: rgba(40,36,32,0.94)
       casora-nav-border: rgba(255,240,220,0.06)
       casora-nav-active-fill: rgba(242,232,218,0.14)
@@ -957,6 +976,7 @@ Casora:
       casora-popup-ui-action-tint: rgba(98,175,165,0.16)
       casora-popup-slider-track: rgba(0,0,0,0.28)
       casora-chart-label: var(--casora-text-3)
+      casora-chart-spark: rgba(242,235,225,0.5)
       casora-chart-grid: rgba(255,240,220,0.08)
       casora-chart-c1: "#5C93D6"
       casora-chart-c2: "#CF7840"

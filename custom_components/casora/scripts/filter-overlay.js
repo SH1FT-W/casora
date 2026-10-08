@@ -1560,6 +1560,7 @@
           }).length;
         } catch (_) { sceneCount = 0; }
         if (sceneCount) {
+          // D5 (1.2): Überschriften der Raumseite 2 px eingerückt wie die Gruppen-Überschriften (_appendGroupHeader).
           this._appendRevealCard({
             type:       'custom:button-card',
             template:   'casora_mobile_header',
@@ -1567,7 +1568,7 @@
             name:       'Szenen',
             variables:  { hide_caret: true, mobile_filter_categories: null },
             styles:     {
-              card:          [{ padding: `24px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})` }],
+              card:          [{ padding: `24px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC} + 2px)` }],
               custom_fields: { arrow: [{ display: 'none' }] },
             },
           }, this._contentEl, 0);
@@ -1621,7 +1622,7 @@
               name:       'Geräte',
               variables:  { hide_caret: true, mobile_filter_categories: null },
               styles:     {
-                card:          [{ padding: `18px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})` }],
+                card:          [{ padding: `18px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC} + 2px)` }],
                 custom_fields: { arrow: [{ display: 'none' }] },
               },
             }, this._contentEl, i);
@@ -2407,7 +2408,8 @@
           'position:fixed',
           `left:calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})`,
           `top:calc(env(safe-area-inset-top, 0px) + 4px + calc(12px * var(${LANDSCAPE_PHONE_VAR}, 0)))`,
-          'width:40px', 'height:40px', 'border-radius:50%',
+          // D7 (1.2): Weich setzt --casora-back-size 48 (gleiche Höhe und Mittellinie wie die Kopf-Pille).
+          'width:var(--casora-back-size, 40px)', 'height:var(--casora-back-size, 40px)', 'border-radius:50%',
           'display:flex', 'align-items:center', 'justify-content:center',
           'background-image:var(--casora-back-highlight, radial-gradient(140% 90% at 50% -20%,' +
             'rgba(255,255,255,0.14), rgba(255,255,255,0.04) 45%, transparent 62%))',

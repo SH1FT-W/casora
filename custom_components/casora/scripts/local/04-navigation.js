@@ -140,7 +140,7 @@
       /* Schwebend über der Leiste statt ganzflächig (Wunsch 08.10.2026: „wie früher kleiner“): Breite und Höhe
          nach Inhalt (mittig, 260 bis 420 px), ringsum rund, die Leiste bleibt sichtbar darunter. */
       + '.hmn-menu.hmn-sheet{left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom, 0px) * 0.4);margin:0 auto;width:max-content;min-width:260px;max-width:min(420px, calc(100vw - 24px));padding:0;overscroll-behavior:contain;'
-      +   'border-radius:28px !important;box-shadow:0 18px 44px -14px rgba(60,40,20,0.35) !important;'
+      +   'border-radius:var(--casora-window-radius, 28px) !important;box-shadow:var(--casora-window-shadow, 0 18px 44px -14px rgba(60,40,20,0.35)) !important;'
       +   'display:flex;flex-direction:column;overflow:hidden;opacity:0;'
       +   'max-height:min(520px, calc(100vh - max(env(safe-area-inset-top, 0px), 12px) - 150px));'
       +   'max-height:min(520px, calc(100dvh - max(env(safe-area-inset-top, 0px), 12px) - 150px));'
@@ -167,7 +167,8 @@
       +   'background:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, currentColor);}'
       + '.hmn-sheet .hmn-item .hmn-sic ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;line-height:0;color:inherit;}'
       + '.hmn-sheet .hmn-item .hmn-sic .hmn-svg{width:20px;height:20px;display:block;background:currentColor;-webkit-mask:var(--hmn-svg) center/contain no-repeat;mask:var(--hmn-svg) center/contain no-repeat;}'
-      + '.hmn-row.on .hmn-sic,.hmn-row.hmn-tone .hmn-sic{background:var(--hmn-tone, var(--primary-color, #B67A50));color:var(--casora-msheet-on-ink, #fff);}'
+      /* D6 (1.2) „Farbe heißt aktiv“: Szenen nur aktiv in ihrer Studio-Farbe, sonst Sand wie die Räume. */
+      + '.hmn-row.on .hmn-sic{background:var(--hmn-tone, var(--primary-color, #B67A50));color:var(--casora-msheet-on-ink, #fff);}'
       + '.hmn-txt{display:flex;flex-direction:column;min-width:0;}'
       + '.hmn-name{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
       /* Zustand rechts als kleiner Wert in Text 2 (wie ein Badge-Wert); im offenen Raum in der Aktiv-Zustandsfarbe. */
@@ -176,7 +177,12 @@
       + '.hmn-sheet .hmn-row.on .hmn-sub{color:var(--casora-entity-state-active-color, var(--casora-text-2, inherit));}'
       /* Tipp-Rückmeldung wie die Popup-Zeilen: Fläche hinterlegen und leicht schrumpfen (auch per Klasse, falls :active am Handy nicht greift). */
       + '.hmn-sheet .hmn-item.hmn-row:active,.hmn-sheet .hmn-item.hmn-row.hmn-press{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));transform:scale(.985);}'
-      + '.hmn-sheet .hmn-item.hmn-row.on:active,.hmn-sheet .hmn-item.hmn-row.on.hmn-press{background:var(--casora-entity-background-active, var(--casora-mnav-on-fill, rgba(255,255,255,0.14)));filter:brightness(.97);}';
+      + '.hmn-sheet .hmn-item.hmn-row.on:active,.hmn-sheet .hmn-item.hmn-row.on.hmn-press{background:var(--casora-entity-background-active, var(--casora-mnav-on-fill, rgba(255,255,255,0.14)));filter:brightness(.97);}'
+      /* D4 (1.2): die weiße Platte heißt nur „hier bist du“ (Räume). Aktive Szenen ohne Platte: Kreis voll in
+         der Szenenfarbe, „Aktiv“ rechts im Akzent. */
+      + '.hmn-sheet[data-kind=scenes] .hmn-item.hmn-row.on{background:transparent;box-shadow:none;color:inherit;}'
+      + '.hmn-sheet[data-kind=scenes] .hmn-row.on .hmn-sub{color:var(--primary-color, #B67A50);font-weight:600;}'
+      + '.hmn-sheet[data-kind=scenes] .hmn-item.hmn-row.on:active,.hmn-sheet[data-kind=scenes] .hmn-item.hmn-row.on.hmn-press{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));filter:none;}';
     document.head.appendChild(st);
   };
 
@@ -364,7 +370,7 @@
       });
       /* Szenen: nur die Szenen aus window.casoraNavScenes (gemeinsame Liste oben), ohne "Alle Szenen" (24.09.2026). */
       var ago = function (ts) { var q = Date.parse(ts); if (isNaN(q)) return ''; var m = Math.max(0, Math.round((Date.now() - q) / 60000));
-        return m < 1 ? 'Gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
+        return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
       var list = [];
       /* Auswahl der Szenen-Badge (Desktop/Tablet), 1.0.5: das Studio schreibt sie beim Speichern an
          die Leiste; ältere Handy-Dashboards ohne sie lesen sie aus dem Desktop-Dashboard (_deskScenes). */
@@ -504,19 +510,20 @@
       if (this._bar) this._bar.classList.add('hmn-up');
       requestAnimationFrame(function () { sc.classList.add('open'); });
     }
-    /* „Vor 5 Min.“, „Gestern“ … wie casora_badge_scene (Szenen-Zustand = Zeitpunkt der letzten Ausführung). */
+    /* „vor 5 Min.“, „gestern“ … wie casora_badge_scene (Szenen-Zustand = Zeitpunkt der letzten Ausführung).
+       D13 (1.2): Zeitangaben immer klein wie mitten im Satz. */
     _sceneAgo(id) {
       var st = this._hass && this._hass.states[id];
       var t = Date.parse(st && st.state), tr = window.casoraTr || function (x) { return x; };
-      if (!isFinite(t)) return tr('Noch nie');
+      if (!isFinite(t)) return tr('noch nie');
       var m = Math.round((Date.now() - t) / 60000);
-      if (m < 1) return tr('Gerade eben');
-      if (m < 60) return tr('Vor ' + m + ' Min.');
+      if (m < 1) return tr('gerade eben');
+      if (m < 60) return tr('vor ' + m + ' Min.');
       var h = Math.round(m / 60);
       var day = function (x) { var o = new Date(x); return new Date(o.getFullYear(), o.getMonth(), o.getDate()); };
       var d = Math.round((day(Date.now()) - day(t)) / 86400000);
-      if (h < 24 || d < 1) return tr('Vor ' + h + ' Std.');
-      return tr(d === 1 ? 'Gestern' : 'Vor ' + d + ' Tagen');
+      if (h < 24 || d < 1) return tr('vor ' + h + ' Std.');
+      return tr(d === 1 ? 'gestern' : 'vor ' + d + ' Tagen');
     }
     /* Kreisfarbe einer Szene im Blatt: die Studio-Farbe wie überall am Desktop (Szenen-Badge, -Kacheln, -Reihe):
        eigene Farbe aus dem Studio, sonst die Standard-Szenenfarbe (--casora-scene-badge-color, im Casora-Design
@@ -539,6 +546,8 @@
       var bg0 = m.style.backgroundColor || 'transparent';
       if (bg0.indexOf('menu-pane-webkit') < 0) m.style.backgroundColor = 'var(--casora-mnav-menu-pane, ' + bg0 + ')';
       m.style.setProperty('--casora-menu-shadow', 'var(--casora-mnav-menu-shadow, var(--casora-elevation-floating-phone, 0 10px 26px rgba(0,0,0,0.18)))');
+      /* D1 (1.2): derselbe Fensterrahmen wie Glocke, Welle und ⋯-Menü (Radius, deckend, ein Schatten). */
+      if (window.casoraMenuGlass && window.casoraMenuGlass.frame) window.casoraMenuGlass.frame(m);
       var el = function (tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
       var title = T(rooms ? 'Räume' : 'Szenen'), n = items.length;
       m.setAttribute('aria-label', title);
