@@ -377,10 +377,10 @@
       var res = my > their ? 'W' : my < their ? 'L' : me.winner ? 'W' : th.winner ? 'L' : 'D';
       var d = ev.date ? new Date(ev.date) : null;
       return { res: res, my: String(me.score), their: String(th.score), home: me.homeAway === 'home', pens: my === their && res !== 'D',
+        opp: th.team.displayName || th.team.abbreviation || '', logo: th.team.logo || ((th.team.logos || [])[0] || {}).href || '',
         date: d && !isNaN(d) ? d : null, comp: K.comp(String(ev.competitionName || '').replace(/^\d{4}(-\d{2,4})?\s+/, '')) };
     }).filter(Boolean);
   };
-  /* Heim-/Auswärtsbilanz von ESPNs Teamseite (record.items[total].stats). */
   K.record = function (teamJson) {
     var it = ((((teamJson || {}).team || {}).record || {}).items || []).filter(function (x) { return x.type === 'total'; })[0];
     if (!it) return null;
@@ -426,7 +426,6 @@
       var slug = league !== 'all' ? league : (((s || {}).header || {}).league || {}).slug;
       return slug && slug !== 'all' ? getJson(API + '/v2/sports/' + path(i.sport) + '/' + path(slug) + '/standings').catch(function () { return null; }) : null;
     });
-    /* Heim/Auswärts nur für die Saisonbilanz (Variante C) – eigene Liga, nicht bei „all“. */
     var rec = K.fill() === 'c' && league !== 'all' ? getJson(API + '/site/v2/sports/' + path(i.sport) + '/' + path(league) + '/teams/' + path(i.team.id)).catch(function () { return null; }) : null;
     Promise.all([sum, tab, rec]).then(function (r) {
       K.data[key] = { ts: Date.now(), err: !r[0] && !r[1] && !!i.event, table: K.table(r[1], r[0], i.team.id), form: K.form(r[0], i.team.id),
@@ -562,21 +561,11 @@
       + '.cfb-f .s{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;}'
       + '.cfb-f .s small{display:block;font-weight:500;font-size:11px;color:' + sub + ';}'
       + '.cfb-e{background:' + row + ';border-radius:' + rad + ';padding:16px;font-size:14px;font-weight:500;color:' + sub + ';}'
-      /* Unter der Form: ein Kasten (wie der Spielkasten), der am Desktop bis zur Unterkante der Tabelle reicht (K.fit).
-         Zeilen ohne eigene Fläche, mit Haarlinie; Kreise und Ergebnisse fluchten mit den Formzeilen (links 8, rechts 14 px). */
-      + '.cfb-x{display:flex;flex-direction:column;box-sizing:border-box;margin-top:var(--casora-popup-sec-gap, 18px);background:' + row + ';border-radius:calc(' + rad + ' + 4px);padding:16px 14px 6px 8px;' + plate + '}'
+      /* Unter der Form: weiterer Abschnitt im selben Raster (Zeilen wie die Form). */
+      + '.cfb-x{margin-top:var(--casora-popup-sec-gap, 18px);}'
       + '.cfb-x[hidden],.cfb-x [hidden]{display:none !important;}'
-      + '.cfb-xh{padding-left:6px;}'
-      + '.cfb-xb{display:flex;flex-direction:column;flex:1 1 auto;}'
-      + '.cfb-xl{flex:1 1 auto;display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:48px;font-size:14.5px;}'
-      + '.cfb-xl.c{grid-template-columns:28px 22px minmax(0,1fr) auto;}'
-      + '.cfb-xl.v{grid-template-columns:minmax(0,1fr) auto;padding-left:6px;}'
-      + '.cfb-xl+.cfb-xl{border-top:1px solid var(--casora-popup-divider, ' + (soft ? 'rgba(120,100,80,0.10)' : 'rgba(255,255,255,0.08)') + ');}'
-      + '.cfb-xl img{width:22px;height:22px;object-fit:contain;}'
-      + '.cfb-xl .o{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2;}'
-      + '.cfb-xl .o small{display:block;font-weight:500;font-size:12px;color:' + sub + ';}'
-      + '.cfb-xl .s{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;}'
-      + '.cfb-xl .s small{display:block;font-weight:500;font-size:11px;color:' + sub + ';}'
+      + '.cfb-xb{display:flex;flex-direction:column;gap:6px;}'
+      + '.cfb-f.v{grid-template-columns:minmax(0,1fr) auto;padding-left:20px;}'
       + '</style>';
   };
   var crest = function (url) {
@@ -652,11 +641,8 @@
       if (wait) return CSS() + '<div class="cfb">' + head('Form') + wait + '</div>';
       var f = d.form || [];
       if (!f.length) return CSS() + '<div class="cfb">' + head('Form') + '<div class="cfb-e">Keine Spiele gefunden</div></div>';
-      var n = { W: 0, D: 0, L: 0 };
-      f.forEach(function (x) { if (!x.friendly && n[x.res] != null) n[x.res]++; });
       var ab2 = K.abbr();
-      var sum = '<span data-no-i18n> · ' + n.W + ' ' + ab2.W + ' · ' + n.D + ' ' + ab2.D + ' · ' + n.L + ' ' + ab2.L + '</span>';
-      return CSS() + '<div class="cfb">' + head('Form' + sum) + '<div class="cfb-fl">'
+      return CSS() + '<div class="cfb">' + head('Form' + tally(f)) + '<div class="cfb-fl">'
         + f.map(function (x) {
           return '<div class="cfb-f"><span class="cfb-res ' + esc(x.res) + '" data-no-i18n>' + (ab2[x.res] || '–') + '</span>'
             + mini(x.logo)
@@ -666,7 +652,7 @@
     }
     return '';
   };
-  /* Zusatz unter der Form (Wunsch 08.10.2026: rechte Spalte endet sonst weit über der Tabelle).
+  /* Unter der Form ein weiterer Abschnitt (Wunsch 08.10.2026 – die rechte Spalte endete weit über der Tabelle).
      Varianten zum Vergleichen: window.CASORA_FB_FILL = a (letzte Duelle) | b (Form des Gegners) | c (Saisonbilanz) | none. */
   K.fill = function () { var v = window.CASORA_FB_FILL; return /^(a|b|c|none)$/.test(v || '') ? v : 'a'; };
   var tally = function (list) {
@@ -674,54 +660,52 @@
     list.forEach(function (x) { if (!x.friendly && n[x.res] != null) n[x.res]++; });
     return '<span data-no-i18n> · ' + n.W + ' ' + ab.W + ' · ' + n.D + ' ' + ab.D + ' · ' + n.L + ' ' + ab.L + '</span>';
   };
-  var box = function (title, body) {
-    return '<div class="cfb-x"><div class="cfb-xh">' + head(title, '', true) + '</div>' + body + '</div>';
+  /* Eine Spielzeile wie in der Form; year: Datum mit Jahr (Duelle reichen Jahre zurück). */
+  var gameRow = function (x, cls, year) {
+    var ab = K.abbr();
+    return '<div class="cfb-f' + (cls ? ' ' + cls : '') + '"' + (cls ? ' data-fit' : '') + '><span class="cfb-res ' + esc(x.res) + '" data-no-i18n>' + (ab[x.res] || '–') + '</span>'
+      + mini(x.logo)
+      + '<span class="o">' + (x.home ? 'gegen ' : 'bei ') + '<span data-no-i18n>' + esc(K.name(x.opp)) + '</span><small>' + esc([x.comp, x.date ? (year ? dmy(x.date) : dm(x.date)) : ''].filter(Boolean).join(' · ')) + '</small></span>'
+      + '<span class="s">' + esc(x.my) + ' : ' + esc(x.their) + (x.pens ? '<small>i. E.</small>' : '') + '</span></div>';
   };
   K.fillHtml = function (i, d, tab) {
     var v = K.fill(), ab = K.abbr();
     if (!d || v === 'none') return '';
+    var block = function (title, rows) { return rows.length ? '<div class="cfb-x">' + head(title) + '<div class="cfb-xb">' + rows.join('') + '</div></div>' : ''; };
     if (v === 'a') {
       var du = (d.duels || []).slice(0, 5);
-      if (!du.length) return '';
-      return box('Letzte Duelle' + tally(du), '<div class="cfb-xb">' + du.map(function (x) {
-        return '<div class="cfb-xl" data-fit><span class="cfb-res ' + esc(x.res) + '" data-no-i18n>' + (ab[x.res] || '–') + '</span>'
-          + '<span class="o">' + (x.home ? 'Heimspiel' : 'Auswärtsspiel') + '<small>' + esc([x.comp, x.date ? dmy(x.date) : ''].filter(Boolean).join(' · ')) + '</small></span>'
-          + '<span class="s">' + esc(x.my) + ' : ' + esc(x.their) + (x.pens ? '<small>i. E.</small>' : '') + '</span></div>';
-      }).join('') + '</div>');
+      return block('Letzte Duelle' + tally(du), du.map(function (x) { return gameRow(x, 'd', true); }));
     }
     if (v === 'b') {
-      var of = d.oppForm || [];
-      if (!of.length || !i.opp.id || i.opp.id === i.team.id) return '';
-      return box('Form <span data-no-i18n>' + esc(K.name(i.opp.name)) + '</span>' + tally(of), '<div class="cfb-xb">' + of.map(function (x) {
-        return '<div class="cfb-xl c" data-fit><span class="cfb-res ' + esc(x.res) + '" data-no-i18n>' + (ab[x.res] || '–') + '</span>' + mini(x.logo)
-          + '<span class="o">' + (x.home ? 'gegen ' : 'bei ') + '<span data-no-i18n>' + esc(K.name(x.opp)) + '</span><small>' + esc([x.comp, x.date ? dm(x.date) : ''].filter(Boolean).join(' · ')) + '</small></span>'
-          + '<span class="s">' + esc(x.my) + ' : ' + esc(x.their) + (x.pens ? '<small>i. E.</small>' : '') + '</span></div>';
-      }).join('') + '</div>');
+      var of = i.opp.id && i.opp.id !== i.team.id ? d.oppForm || [] : [];
+      return block('Form <span data-no-i18n>' + esc(K.name(i.opp.name)) + '</span>' + tally(of), of.map(function (x) { return gameRow(x, 'd'); }));
     }
-    /* c: Saisonbilanz aus der Tabelle (Siege, Tore), Heim/auswärts von der Teamseite – fehlt etwas, fehlt nur die Zeile. */
     var me = tab && tab.rows.filter(function (r) { return r.id === i.team.id; })[0];
     if (!me || me.w == null) return '';
     var line = function (lbl, val, small) {
-      return '<div class="cfb-xl v" data-fit><span class="o">' + lbl + (small ? '<small data-no-i18n>' + esc(small) + '</small>' : '') + '</span><span class="s" data-no-i18n>' + esc(val) + '</span></div>';
+      return '<div class="cfb-f v" data-fit><span class="o">' + lbl + '<small data-no-i18n>' + esc(small || ' ') + '</small></span><span class="s" data-no-i18n>' + esc(val) + '</span></div>';
     };
     var wtl = function (x) { return x.w + ' ' + ab.W + ' · ' + x.t + ' ' + ab.D + ' · ' + x.l + ' ' + ab.L; };
     var goals = function (x) { return x.gf != null && x.ga != null ? x.gf + ' : ' + x.ga : ''; };
-    var rc = d.record || {}, gp = Number(me.gp) || 0, out = [line('Gesamt', wtl(me))];
+    var rc = d.record || {}, gp = Number(me.gp) || 0, out = [line('Gesamt', wtl(me), me.gp + ' ' + ab.gp)];
     if (goals(me)) out.push(line('Tore', goals(me)));
-    if (rc.home) out.push(line('Heim', wtl(rc.home), goals(rc.home) ? 'Tore ' + goals(rc.home) : ''));
-    if (rc.away) out.push(line('Auswärts', wtl(rc.away), goals(rc.away) ? 'Tore ' + goals(rc.away) : ''));
+    if (rc.home) out.push(line('Heim', wtl(rc.home), goals(rc.home)));
+    if (rc.away) out.push(line('Auswärts', wtl(rc.away), goals(rc.away)));
     if (gp) out.push(line('Punkte pro Spiel', (Number(me.pts) / gp).toFixed(2).replace('.', german() ? ',' : '.')));
-    return box('Saisonbilanz', '<div class="cfb-xb">' + out.join('') + '</div>');
+    return block('Saisonbilanz', out);
   };
 
-  /* Rechte Spalte (Form + Kasten) unten bündig mit der Tabelle: nur nebeneinander und bei eingeklappter Tabelle.
-     Zu wenig Platz → Zeilen von unten weglassen (mindestens zwei, sonst ohne Kasten); Rest streckt den Kasten. */
+  /* Rechte Spalte unten auf Höhe der letzten Tabellenzeile (nur nebeneinander und bei eingeklappter Tabelle):
+     so viele Zeilen des Zusatzabschnitts, dass die Unterkante am nächsten daran liegt, ohne unter die Fußzeile der
+     Tabelle („Ganze Tabelle“, Legende) zu reichen; mindestens zwei, sonst ohne Abschnitt. Zeilen wie die Form,
+     ohne Strecken – ein Rest unter einer halben Zeilenhöhe bleibt. */
   var seen = typeof WeakSet === 'function' ? new WeakSet() : null, ro = null, fitT = [];
   var shown = function (n) { var q = n.getBoundingClientRect(); return q.width > 0 && q.height > 0; };
   K.fit = function () {
-    var ha = document.querySelector('home-assistant');
-    if (!ha) return;
-    var L = find(ha.shadowRoot, '.cfb-table > .cfb').filter(shown)[0], R = find(ha.shadowRoot, '.cfb-form > .cfb').filter(shown)[0];
+    var ha = document.querySelector('home-assistant'), pop = window.casoraPopup && window.casoraPopup.surface;
+    var root = pop || (ha && ha.shadowRoot);
+    if (!root) return;
+    var L = find(root, '.cfb-table > .cfb').filter(shown)[0], R = find(root, '.cfb-form > .cfb').filter(shown)[0];
     if (!L || !R) return;
     if (seen && typeof ResizeObserver === 'function' && L.parentNode && !seen.has(L.parentNode)) {
       ro = ro || new ResizeObserver(function () { K.fitSoon(); });
@@ -730,15 +714,19 @@
     var X = R.querySelector('.cfb-x');
     if (!X) return;
     var lines = X.querySelectorAll('[data-fit]');
-    X.style.minHeight = ''; X.hidden = false;
+    X.hidden = false;
     lines.forEach(function (n) { n.hidden = false; });
     var lb = L.getBoundingClientRect(), rb = R.getBoundingClientRect();
     if (K.full || rb.left < lb.right || Math.abs(rb.top - lb.top) > 2) return;
-    var target = lb.bottom, n = lines.length;
-    while (n > 2 && X.getBoundingClientRect().bottom > target + 0.5) lines[--n].hidden = true;
-    var xb = X.getBoundingClientRect();
-    if (xb.bottom > target + 0.5) { X.hidden = true; return; }
-    X.style.minHeight = (xb.height + target - xb.bottom) + 'px';
+    var rows = L.querySelectorAll('.cfb-r:not(.h)'), last = rows[rows.length - 1];
+    var target = (last || L).getBoundingClientRect().bottom, best = -1, bestD = Infinity;
+    for (var n = lines.length; n >= 2; n--) {
+      var bot = X.getBoundingClientRect().bottom, dist = Math.abs(bot - target);
+      if (bot <= lb.bottom + 0.5 && dist < bestD) { best = n; bestD = dist; }
+      lines[n - 1].hidden = true;
+    }
+    if (best < 0) { X.hidden = true; return; }
+    for (var k = 0; k < best; k++) lines[k].hidden = false;
   };
   K.fitSoon = function () {
     fitT.forEach(clearTimeout);

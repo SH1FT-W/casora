@@ -3,7 +3,7 @@
 // fängt espnRoute(page|context) alle Aufrufe an site.api.espn.com ab und antwortet mit erfundenen
 // Vereinen (18er-Liga, FC Nordhafen auf Platz 7, SV Lindenberg auf 11). Aufbau wie echte ESPN-Antworten
 // (Serie A/Bundesliga, Oktober 2026): Tabelle mit Siegen/Toren, Form beider Teams, letzte direkte Duelle
-// (seasonseries) und Heim-/Auswärtsbilanz auf der Teamseite.
+// (seasonseries).
 const TEAM = '990001', OPP = '990002';
 const crest = (c, t) => 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
   + `<path d="M32 4 56 12v18c0 15-10 25-24 30C18 55 8 45 8 30V12z" fill="${c}"/>`
