@@ -39,6 +39,10 @@
     const aid = e && (e.area_id || (D[e.device_id] || {}).area_id);
     return (aid && A[aid] && A[aid].name) || "";
   };
+  const missing = (id) => {
+    const o = String(id).split(".").slice(1).join(".").replace(/_/g, " ").trim();
+    return o ? o.charAt(0).toUpperCase() + o.slice(1) : String(id);
+  };
   const nameOf = (hass, id) => {
     const st = (hass.states || {})[id];
     return (st && st.attributes && st.attributes.friendly_name) || id;
@@ -212,9 +216,11 @@
       ex.forEach((id, i) => {
         const x = src[id];
         const room = areaName(hass, id);
-        const sub = !(hass.states || {})[id] ? tr("Not found in Home Assistant")
+        // 1.2 (P11): fehlende Entität wie bei Kacheln – lesbarer Name, „Gerät fehlt“, ID nur beim Zeigen.
+        const gone = !(hass.states || {})[id];
+        const sub = gone ? tr("Device missing")
           : [room, x ? kinds(x) : ""].filter(Boolean).join(" · ");
-        const r = this._flowRow(list, { title: nameOf(hass, id), sub, raw: true });
+        const r = this._flowRow(list, { title: gone ? missing(id) : nameOf(hass, id), sub, raw: true });
         r.row.classList.add("gx-row");
         r.row.dataset.entity = id;
         r.row.title = id;

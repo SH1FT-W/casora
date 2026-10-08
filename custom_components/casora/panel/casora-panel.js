@@ -3139,6 +3139,12 @@ function orderDashMenu(items, drop) {
 }
 
 // The entity's own icon: its configured one, else what HA would draw for its state.
+// Lesbarer Name für eine Entität, die es nicht mehr gibt: „sensor.flur_akku“ → „Flur akku“.
+function missingName(id) {
+  const o = String(id || "").split(".").slice(1).join(".").replace(/_/g, " ").trim();
+  return o ? o.charAt(0).toUpperCase() + o.slice(1) : String(id || "");
+}
+
 function entityIconEl(hass, st) {
   const own = st.attributes && st.attributes.icon;
   if (!own && typeof customElements !== "undefined" && customElements.get("ha-state-icon")) {
@@ -20001,9 +20007,14 @@ class CasoraPanel extends HTMLElement {
       wrap._paintEnt = () => {
         lead.innerHTML = "";
         const st = current && this._hass && this._hass.states[current];
-        wrap.classList.toggle("noent", !st);
+        // 1.2 (P11): Entität gibt es nicht (mehr) – wie bei Kacheln „Verbindung getrennt“ und „Gerät fehlt“
+        // statt der rohen ID; die ID steht im Hinweis beim Zeigen.
+        const gone = !st && !!current && current.indexOf(".") > 0 && !!(this._hass && this._hass.states);
+        wrap.classList.toggle("noent", !st && !gone);
+        wrap.classList.toggle("gone", gone);
         if (st) lead.appendChild(entityIconEl(this._hass, st));
-        const m = st ? this._entMeta(current) : null;
+        else if (gone) { const gi = document.createElement("ha-icon"); gi.icon = "mdi:lan-disconnect"; lead.appendChild(gi); }
+        const m = st ? this._entMeta(current) : gone ? { short: missingName(current), ctx: t9("Device missing"), name: missingName(current) } : null;
         wrap.classList.toggle("hasface", !!m);
         face.title = "";
         if (m) {
