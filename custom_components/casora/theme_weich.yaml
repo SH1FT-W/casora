@@ -157,6 +157,8 @@ Casora:
   # A-09: Raumleiste 14/600, Pfeil-Kreis, Verlauf endet vor dem Pfeil
   casora-nav-label-size-tablet: 14px
   casora-nav-label-pad-x-tablet: 14px
+  # D12 (1.2): weiße Pille ringsum 4 eingerückt (01-basis setzt sonst seitlich 6 für alle Designs)
+  casora-nav-pill-inset-x-tablet: 4px
   # D-14: breitere Ausblendung + Einrasten auf Raumanfänge – keine Wortreste („ur“) neben dem Pfeil
   casora-nav-fade-solid: 104px
   casora-nav-fade-clear: 40px
