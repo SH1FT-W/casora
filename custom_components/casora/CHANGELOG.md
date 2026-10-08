@@ -4,6 +4,19 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.1.3 – 08.10.2026
+
+### New
+- **Bell: "Do not report".** In the Studio under Settings you pick devices and sensors that never create an entry in the bell, for example a window that is always tilted. The list only offers devices that can report at all, sorted by room and with the kind of report.
+- **Push for new Casora versions.** In the Studio under Settings you pick phones that get exactly one push for every new version. Tapping opens the updates. Off by default.
+- **Aquarium: light right in the tank popup.** On/off, brightness, one slider per colour channel in the channel colour and the lamp's modes to tap. No more jump to the general light popup. Casora detects whether the schedule switch means "Home Assistant controls" or "lamp program"; changeable in the Studio.
+- **Aquarium: temperature on the tile and target range.** The tile shows the temperature ("25.4° · All fine"). In the Studio you set a target range; outside it the popup warns, a status sensor is now optional. Equipment like filter and heater is set up in the Studio, also as a thermostat.
+
+### Fixed
+- **Scene colour:** a scene colour chosen in the Studio shows up everywhere right away, also in the scene badges on desktop and tablet, without reloading.
+- **Updates: "Install" works.** The button in the Studio now uses Casora's HACS update and shows progress and "restart needed". Under "What's new" of a version that is not installed yet there is also an "Install" button.
+- **Studio alignment:** back arrow, scene icons and the arrow in "Popups" are now exactly centred, "Add with AI" has space to the card edge.
+
 ## 1.1.2 – 08.10.2026
 
 ### Fixed

@@ -1,5 +1,5 @@
 // Ausrichtung im Studio: Symbole in ihren Kreisen, Texte in Pillen/Knöpfen, Zeilen, Abstände, Radien.
-// Anlass 08.10.2026 (Daniel): „Im Studio-UI Ausrichtungen überprüfen, manche Icons sind nicht in den
+// Anlass 08.10.2026 (Wunsch): „Im Studio-UI Ausrichtungen überprüfen, manche Icons sind nicht in den
 // Kreisen zentriert oder manche Texte“. Ergänzt popup-raender.mjs (abgeschnitten/überlappend) um die
 // Geometrie-Qualität (siehe Design-Geometrie-Prüfung, Räume-Menü 07.10.2026).
 //

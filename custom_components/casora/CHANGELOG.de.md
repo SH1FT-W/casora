@@ -4,6 +4,19 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.1.3 – 08.10.2026
+
+### Neu
+- **Glocke: „Nicht melden“.** Im Studio unter Einstellungen wählst du Geräte und Sensoren, die nie einen Eintrag in der Glocke erzeugen, zum Beispiel ein Fenster, das immer gekippt ist. Zur Auswahl stehen nur Geräte, die überhaupt melden können, nach Raum sortiert und mit der Art der Meldung.
+- **Push bei neuen Casora-Versionen.** Im Studio unter Einstellungen wählst du Handys aus, die bei jeder neuen Version genau einen Push bekommen. Antippen öffnet die Updates. Standard ist aus.
+- **Aquarium: Licht direkt im Becken-Popup.** An/Aus, Helligkeit, ein Regler je Farbkanal in der Kanalfarbe und die Modi der Lampe zum Antippen. Der Sprung ins allgemeine Licht-Popup entfällt. Casora erkennt, ob der Zeitplan-Schalter „Home Assistant steuert“ oder „Programm der Lampe“ bedeutet; im Studio umstellbar.
+- **Aquarium: Temperatur auf der Kachel und Soll-Bereich.** Die Kachel zeigt die Temperatur („25,4° · Alles ok“). Im Studio stellst du einen Soll-Bereich ein; außerhalb warnt das Popup, ein Statussensor ist nur noch optional. Technik wie Filter und Heizer legst du jetzt im Studio an, auch als Thermostat.
+
+### Behoben
+- **Szenenfarbe:** Eine im Studio gewählte Szenenfarbe erscheint sofort überall, auch in den Szenen-Badges auf Desktop und Tablet, ohne Neuladen.
+- **Updates: „Installieren“ funktioniert.** Der Knopf im Studio nutzt jetzt das HACS-Update von Casora und zeigt Fortschritt und „Neustart nötig“. Unter „Was ist neu“ einer noch nicht installierten Version steht ebenfalls ein Knopf „Installieren“.
+- **Studio-Ausrichtung:** Zurück-Pfeil, Szenen-Symbole und der Pfeil in „Popups“ sitzen jetzt genau mittig, „Mit KI ergänzen“ hat Abstand zum Kartenrand.
+
 ## 1.1.2 – 08.10.2026
 
 ### Behoben
