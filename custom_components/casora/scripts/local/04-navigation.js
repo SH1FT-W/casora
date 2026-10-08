@@ -167,7 +167,8 @@
       +   'background:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, currentColor);}'
       + '.hmn-sheet .hmn-item .hmn-sic ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;line-height:0;color:inherit;}'
       + '.hmn-sheet .hmn-item .hmn-sic .hmn-svg{width:20px;height:20px;display:block;background:currentColor;-webkit-mask:var(--hmn-svg) center/contain no-repeat;mask:var(--hmn-svg) center/contain no-repeat;}'
-      + '.hmn-row.on .hmn-sic,.hmn-row.hmn-tone .hmn-sic{background:var(--hmn-tone, var(--primary-color, #B67A50));color:var(--casora-msheet-on-ink, #fff);}'
+      /* D6 (1.2) „Farbe heißt aktiv“: Szenen nur aktiv in ihrer Studio-Farbe, sonst Sand wie die Räume. */
+      + '.hmn-row.on .hmn-sic{background:var(--hmn-tone, var(--primary-color, #B67A50));color:var(--casora-msheet-on-ink, #fff);}'
       + '.hmn-txt{display:flex;flex-direction:column;min-width:0;}'
       + '.hmn-name{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
       /* Zustand rechts als kleiner Wert in Text 2 (wie ein Badge-Wert); im offenen Raum in der Aktiv-Zustandsfarbe. */
@@ -176,7 +177,12 @@
       + '.hmn-sheet .hmn-row.on .hmn-sub{color:var(--casora-entity-state-active-color, var(--casora-text-2, inherit));}'
       /* Tipp-Rückmeldung wie die Popup-Zeilen: Fläche hinterlegen und leicht schrumpfen (auch per Klasse, falls :active am Handy nicht greift). */
       + '.hmn-sheet .hmn-item.hmn-row:active,.hmn-sheet .hmn-item.hmn-row.hmn-press{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));transform:scale(.985);}'
-      + '.hmn-sheet .hmn-item.hmn-row.on:active,.hmn-sheet .hmn-item.hmn-row.on.hmn-press{background:var(--casora-entity-background-active, var(--casora-mnav-on-fill, rgba(255,255,255,0.14)));filter:brightness(.97);}';
+      + '.hmn-sheet .hmn-item.hmn-row.on:active,.hmn-sheet .hmn-item.hmn-row.on.hmn-press{background:var(--casora-entity-background-active, var(--casora-mnav-on-fill, rgba(255,255,255,0.14)));filter:brightness(.97);}'
+      /* D4 (1.2): die weiße Platte heißt nur „hier bist du“ (Räume). Aktive Szenen ohne Platte: Kreis voll in
+         der Szenenfarbe, „Aktiv“ rechts im Akzent. */
+      + '.hmn-sheet[data-kind=scenes] .hmn-item.hmn-row.on{background:transparent;box-shadow:none;color:inherit;}'
+      + '.hmn-sheet[data-kind=scenes] .hmn-row.on .hmn-sub{color:var(--primary-color, #B67A50);font-weight:600;}'
+      + '.hmn-sheet[data-kind=scenes] .hmn-item.hmn-row.on:active,.hmn-sheet[data-kind=scenes] .hmn-item.hmn-row.on.hmn-press{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));filter:none;}';
     document.head.appendChild(st);
   };
 
