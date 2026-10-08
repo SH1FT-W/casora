@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { espnRoute } from '../qa/fussball-espn.mjs';
 
 function findPlaywright() {
   if (process.env.PLAYWRIGHT_PATH) return process.env.PLAYWRIGHT_PATH;
@@ -114,6 +115,10 @@ export async function open({ width = 1440, height = 900, mobile = false, umzug =
       return r.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(f, 'utf8') });
     });
   }
+  // Fußball-Kachel im Testhaus: ESPN-Aufrufe immer fest beantworten. Ohne das fragt der
+  // erfundene Verein die echte ESPN-Seite, die blockt Headless-Chrome per CORS und die
+  // Konsole meldet Fehler (Gate 1.1.1). CASORA_ESPN_LIVE=1 lässt echte Aufrufe durch.
+  if (!process.env.CASORA_ESPN_LIVE) await espnRoute(context);
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e.message || e)));
