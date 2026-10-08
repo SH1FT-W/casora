@@ -87,15 +87,19 @@
     cards.forEach(function (c) { if (c.card.isConnected) mark(c); });
     if (!menu) autoOpen();
     if (menu) {
-      if (!W.on() || !pe.src || !pe.src.card.isConnected) close();
+      /* Raumwechsel (Kopfkarte neu): an die Welle der sichtbaren Kopfkarte umhängen statt schließen.
+         Ein Popup/Menü darüber oder keine Welle sichtbar: nur vorübergehend zu, nicht als „selbst
+         zugeklappt“ – autoOpen holt die Liste zurück (08.10.2026). */
+      if (W.on() && pe.src && !pe.src.card.isConnected && !busyElsewhere()) reanchor();
+      if (!W.on() || !pe.src || !pe.src.card.isConnected || busyElsewhere()) close();
       else paint(false);
     }
     if (!cards.length && !menu) { clearInterval(timer); timer = 0; }
   }
 
   // ── Offen oder zu merken (05.10.2026) ──
-  // Läuft etwas, ist die Liste offen – auch nach dem Neuladen. Klappt man sie selbst zu (Welle, daneben
-  // tippen, Escape), bleibt sie auf diesem Gerät zu, bis eine neue Wiedergabe startet. Schließt sie sich
+  // Läuft etwas, ist die Liste offen – auch nach dem Neuladen. Klappt man sie selbst zu (Welle oder
+  // Escape), bleibt sie auf diesem Gerät zu, bis eine neue Wiedergabe startet. Schließt sie sich
   // von selbst (nichts läuft mehr, Seitenwechsel), zählt das nicht als „zu“.
   var KEY = 'casora.welle.offen';
   function memo() { try { return JSON.parse(localStorage.getItem(KEY) || 'null') || {}; } catch (e) { return {}; } }
@@ -129,6 +133,22 @@
       if (open(wv || hd)) remember(true);
       return;
     }
+  }
+  // Offene Liste an die Welle einer anderen sichtbaren Kopfkarte hängen (nach Raumwechsel).
+  function reanchor() {
+    for (var i = 0; i < cards.length; i++) {
+      var c = cards[i];
+      if (c === pe.src || !c.card.isConnected || !list(c).length) continue;
+      var hd = header(c), wv = hd && hd.shadowRoot && hd.shadowRoot.querySelector('.np-head-wave');
+      var r = (wv || hd) && (wv || hd).getBoundingClientRect();
+      if (!r || !r.width || !r.height) continue;
+      var old = pe.src;
+      pe.src = c; pe.card = wv || hd; pe.sig = null;
+      if (old) mark(old);
+      mark(c); paint(true); place();
+      return true;
+    }
+    return false;
   }
   // Selbst zugeklappt: merken, was gerade lief.
   function userClose() {
@@ -268,7 +288,8 @@
     setTimeout(function () {
       if (!menu) return;
       window.addEventListener('keydown', onKey, true);
-      document.addEventListener('pointerdown', onAway, true);
+      /* Kein Schließen mehr beim Tippen daneben (08.10.2026): die Liste geht nur über die Welle (oder
+         Escape) zu, sonst von selbst, wenn nichts mehr läuft. */
       window.addEventListener('resize', onResize);
     }, 0);
     return true;

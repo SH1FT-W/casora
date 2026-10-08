@@ -3,7 +3,7 @@
 // Wiedergabe“) statt den Kachel-Stapel über input_boolean.casora_now_playing_minimized aufzuklappen.
 // Erwartet: Tipp auf die Welle öffnet das Panel unter der Welle mit je Player einer Zeile, der
 // Helfer bleibt unberührt, der Stapel bleibt verborgen; Play/Pause ruft media_play_pause; Tipp
-// daneben und Escape schließen; endet die letzte Wiedergabe, schließt das Panel sich selbst.
+// Welle und Escape schließen (Tipp daneben nicht mehr, 08.10.2026); endet die letzte Wiedergabe, schließt das Panel sich selbst.
 // Nur im Browser: Design „Casora“, Wiedergabe in der Raumkarte und Player werden untergeschoben,
 // Dienstaufrufe für media_player werden abgefangen.
 import { open, casoraDashboard, dashboard, fakeStates, check, need, finish } from './lib.mjs';
@@ -90,9 +90,29 @@ await page.waitForTimeout(600);
 const paused = await state();
 await check('Play/Pause in der Zeile ruft media_play_pause, Panel bleibt offen', paused.calls.includes('media_player.media_play_pause') && paused.open, paused.calls);
 
+// 08.10.2026: Tipp daneben schließt NICHT mehr – nur die Welle (oder Escape) klappt zu.
 await page.mouse.click(300, 650);
 await page.waitForTimeout(700);
-await check('Tipp daneben schließt', !(await state()).open);
+await check('Tipp daneben lässt offen', (await state()).open);
+// Raumwechsel am Desktop (andere Ansicht, zurück zur ersten): die Liste kommt an der Welle zurück.
+const views = (dash.config.views || []).map((v, i) => v.path || String(i));
+if (views.length > 1) {
+  // Ab hier wie im echten Betrieb: Ohne Welle im Raum klappt die Liste vorübergehend zu und kommt zurück.
+  await page.evaluate(() => { window.CASORA_QA_NO_WELLE_AUTO = false; });
+  const go = (p) => page.evaluate((u) => { history.pushState(null, '', u); window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } })); }, '/' + dash.url + '/' + p);
+  await go(views[1]); await page.waitForTimeout(2000);
+  let there = false;
+  for (let i = 0; i < 10 && !there; i++) { await page.waitForTimeout(500); there = (await state()).open; }
+  await go(views[0]); await page.waitForTimeout(1500);
+  let back = false;
+  for (let i = 0; i < 12 && !back; i++) { await page.waitForTimeout(500); back = (await state()).open; }
+  const dbg = await page.evaluate(() => ({ memo: localStorage.getItem('casora.welle.offen'), waves: window.__pierce('.np-head-wave').map((w) => { const r = w.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; }), busy: !!(window.casoraPopup && window.casoraPopup.element && window.casoraPopup.element.hasAttribute('open')), path: location.pathname }));
+  await check('Raumwechsel blendet die Liste nicht dauerhaft aus', back, { imRaum: there, dbg });
+  await page.evaluate(() => { window.CASORA_QA_NO_WELLE_AUTO = true; });
+}
+await page.mouse.click(w.x, w.y);
+await page.waitForTimeout(700);
+await check('Welle schließt', !(await state()).open);
 
 await page.mouse.click(w.x, w.y);
 await page.waitForTimeout(900);

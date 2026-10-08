@@ -1,7 +1,7 @@
 // @zustand: arbeit
 // @parallel: ui
 // Gewünscht (05.10.2026): Die Liste unter der Welle (Casora-Look, Desktop/Tablet) ist offen, sobald
-// etwas läuft – auch nach dem Neuladen. Selbst zugeklappt (Escape/daneben/Welle) bleibt sie auf
+// etwas läuft – auch nach dem Neuladen. Selbst zugeklappt (Escape/Welle) bleibt sie auf
 // diesem Gerät zu, auch nach dem Neuladen, bis eine NEUE Wiedergabe startet. Schließt sie sich von
 // selbst (nichts läuft mehr), zählt das nicht als „zu“. Nur im Browser, gespeichert wird nichts.
 import { open, casoraDashboard, dashboard, fakeStates, check, need, finish } from './lib.mjs';
