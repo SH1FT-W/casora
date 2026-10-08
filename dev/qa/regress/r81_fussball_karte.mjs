@@ -41,6 +41,7 @@ const MEASURE = () => {
     // Wappen sichtbar, nicht vom Aus-Symbol (Maske „?“ in #img-cell::before) verdeckt.
     imgOp: img ? Number(getComputedStyle(img).opacity) : 0, maskOp: cell ? Number(getComputedStyle(cell, '::before').opacity) : 1,
     opp: after ? after.display : null, pillText: pill ? pill.textContent.trim() : '', live: !!(pill && pill.classList.contains('live')),
+    pillOn: !!(pill && pill.classList.contains('on')), pillBg: pill ? getComputedStyle(pill).backgroundColor : null,
     pillColor: pill ? getComputedStyle(pill).color : null, dotColor: dot ? getComputedStyle(dot).backgroundColor : null,
     state: st ? st.textContent.trim() : '', stateH: st ? st.getBoundingClientRect().height : 0,
     stateLine: st ? parseFloat(getComputedStyle(st).lineHeight) || 0 : 0, name: box(nm),
@@ -49,7 +50,17 @@ const MEASURE = () => {
   };
 };
 const measure = (pg) => pg.evaluate(MEASURE);
-const red = (c) => { const m = /(\d+),\s*(\d+),\s*(\d+)/.exec(c || ''); return !!m && +m[1] > 150 && +m[1] > +m[2] + 60 && +m[1] > +m[3] + 50; };
+const red = (c) => { const v = rgb(c); return !!v && v[0] > 150 && v[0] > v[1] + 60 && v[0] > v[2] + 50; };
+// Farbe als [r, g, b, a] – auch color(srgb …), so liefert der Browser color-mix() zurück.
+const rgb = (c) => {
+  const k = /color\(srgb ([\d.]+) ([\d.]+) ([\d.]+)(?: \/ ([\d.]+))?\)/.exec(c || '');
+  if (k) return [k[1] * 255, k[2] * 255, k[3] * 255, k[4] === undefined ? 1 : +k[4]];
+  const m = /(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?)(?:,\s*([\d.]+))?/.exec(c || '');
+  return m ? [+m[1], +m[2], +m[3], m[4] === undefined ? 1 : +m[4]] : null;
+};
+const filled = (c) => { const v = rgb(c); return !!v && v[3] > 0.5; };
+const lum = (v) => { const f = (x) => { x /= 255; return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(v[0]) + 0.7152 * f(v[1]) + 0.0722 * f(v[2]); };
+const contrast = (a, b) => { const x = rgb(a), y = rgb(b); if (!x || !y) return 0; const p = lum(x), q = lum(y); return (Math.max(p, q) + 0.05) / (Math.min(p, q) + 0.05); };
 
 const VIEWS = [
   ['Desktop', { width: 1600, height: 1000, scale: 1, dark: false }, desk, false],
@@ -74,6 +85,7 @@ for (const [tag, o, d, mobile] of VIEWS) {
     await check(tag + ': vor dem Spiel „in 2 Tagen“ in der Ecke', /in 2 Tagen/.test(m.pillText), m.pillText);
     await check(tag + ': Ecke auf Höhe der Kreismitte', m.pill && Math.abs((m.pill.t + m.pill.b) / 2 - (m.cell.t + m.cell.b) / 2) <= 2, { pill: m.pill, cell: m.cell });
     await check(tag + ': Ecke in der Kachel', m.pill && m.pill.r <= m.card.r - 8 && m.pill.t >= m.card.t, { pill: m.pill, card: m.card });
+    await check(tag + ': nicht aktiv – Ecke ohne Fläche', !m.pillOn && !filled(m.pillBg), m.pillBg);
   }
   await check(tag + ': Zustandszeile einzeilig', m.stateH > 0 && m.stateH <= m.stateLine * 1.5 + 1, { h: m.stateH, lh: m.stateLine, t: m.state });
   // Kleine Handy-Kachel: nur Tag und Anstoß (Gegner als Wappen am Kreis).
@@ -83,8 +95,10 @@ for (const [tag, o, d, mobile] of VIEWS) {
   await fakeStates(page, { [ID]: { state: 'IN', attributes: { date: new Date(Date.now() - 70 * 60000).toISOString(), team_score: '2', opponent_score: '1', clock: "67'" } } }, { sticky: true });
   m = await stable(page, MEASURE);
   if (!mobile || m.pill) {
-    await check(tag + ': live – Minute in der Ecke, rot', m.live && /67/.test(m.pillText) && red(m.pillColor), { t: m.pillText, c: m.pillColor });
-    await check(tag + ': live – Punkt rot (nicht weiß)', red(m.dotColor), m.dotColor);
+    await check(tag + ': live – Minute in der Ecke', m.live && /67/.test(m.pillText), { t: m.pillText, c: m.pillColor });
+    // Wahl 08.10.2026 (G): aktiv wird die Ecke eine gefüllte rote Pille mit weißer Schrift (≥ 4,5:1).
+    await check(tag + ': live – Ecke als gefüllte rote Pille', m.pillOn && filled(m.pillBg) && red(m.pillBg), m.pillBg);
+    await check(tag + ': live – Schrift auf der Pille lesbar (≥ 4,5:1)', contrast(m.pillColor, m.pillBg) >= 4.5, { c: m.pillColor, bg: m.pillBg, cr: contrast(m.pillColor, m.pillBg) });
   }
   await check(tag + ': live – Spielstand', /2:1/.test(m.state), m.state);
   await check(tag + ': live – Kachel aktiv (Spieltag)', m.active, m.active);

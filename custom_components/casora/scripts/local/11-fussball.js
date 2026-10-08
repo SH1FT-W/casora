@@ -207,17 +207,19 @@
     return '<span data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
       + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(t) + '</span>';
   };
-  K.corner = function (st, now) {
+  /* Aktive Kachel (Spieltag, K.active): Ecke als gefüllte Pille (Klasse „on“), sonst reiner Statustext. */
+  K.corner = function (st, now, variables) {
     var i = K.info(st);
     if (!i) return '';
+    var on = K.active(st, variables, now) ? ' on' : '';
     if (i.phase === 'IN') {
       var m = K.minute(i.clock);
-      return '<span class="cfb-pill live"><i></i>' + esc(m || 'Live') + '</span>';
+      return '<span class="cfb-pill live' + on + '"><i></i>' + esc(m || 'Live') + '</span>';
     }
     if (i.phase === 'OFF') return '<span class="cfb-pill">' + (i.off === 'cancel' ? 'Abgesagt' : 'Verschoben') + '</span>';
     /* Endstand nur am Spieltag, danach der Tag des Spiels. */
-    if (i.phase === 'POST' && i.date) return '<span class="cfb-pill">' + esc(diffDays(i.date, now) === 0 ? 'Endstand' : K.when(i.date, now)) + '</span>';
-    if (i.phase === 'PRE' && i.date) return '<span class="cfb-pill">' + esc(i.tbd ? 'Uhrzeit offen' : K.until(i.date, now)) + '</span>';
+    if (i.phase === 'POST' && i.date) return '<span class="cfb-pill' + on + '">' + esc(diffDays(i.date, now) === 0 ? 'Endstand' : K.when(i.date, now)) + '</span>';
+    if (i.phase === 'PRE' && i.date) return '<span class="cfb-pill' + on + '">' + esc(i.tbd ? 'Uhrzeit offen' : K.until(i.date, now)) + '</span>';
     return '';
   };
   K.live = function (st) { var i = K.info(st); return !!(i && i.phase === 'IN'); };

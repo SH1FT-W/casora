@@ -57,6 +57,8 @@ assert.match(K.state(itaPre, false, false), /white-space:nowrap/);
 assert.match(K.state(itaPre, false, false), /bei BIH</, 'Desktop, langer Text: Kürzel');
 assert.match(K.state(sensor(), false, false), /bei Cagliari</, 'Desktop, kurz: voller Name');
 assert.match(K.corner(live), /cfb-pill live.*67′/);
+// Aktiv (Spieltag): Ecke als gefüllte Pille (Klasse „on“), vor dem Spieltag nicht.
+assert.match(K.corner(live), /cfb-pill live on"/);
 assert.equal(K.minute('HT'), 'Halbzeit');
 assert.equal(K.minute('FT-Pens'), 'Elfmeterschießen');
 assert.equal(K.minute('ET'), 'Verlängerung');
@@ -87,6 +89,7 @@ const tbd = sensor({ attrs: { clock: 'TBD', date: at(9, 20, 0).toISOString() } }
 assert.ok(!/20:00/.test(K.tile(tbd)), 'TBD: keine Platzhalter-Uhrzeit');
 assert.match(K.corner(tbd), /Uhrzeit offen/);
 assert.match(K.corner(sensor()), /in 4 Tagen|in 3 Tagen/);
+assert.doesNotMatch(K.corner(sensor()), / on"/, 'vor dem Spieltag keine Pille');
 const noon = at(0, 12, 0);
 assert.match(K.corner(sensor({ attrs: { date: new Date(noon.getTime() + 3 * 3600000).toISOString() } }), noon), /in 3 Std\./, 'Spieltag: Countdown');
 assert.match(K.corner(sensor({ attrs: { date: new Date(noon.getTime() + 25 * 60000).toISOString() } }), noon), /in 25 Min\./);
