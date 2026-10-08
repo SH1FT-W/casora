@@ -34,6 +34,9 @@
       lede: "Outdoor values and the electricity price for ventilation, heating and energy tips." },
     { id: "vent", label: "Ventilation", icon: "fan", tone: "set-vent",
       lede: "Push notifications when it is time to open or close the windows." },
+    // Tanken (1.2, tanken.py): eigener Speicher casora/tanken/* – der Schlüssel geht nie an den Browser.
+    { id: "fuel", label: "Fuel prices", icon: "car", tone: "set-fuel", tanken: true,
+      lede: "Petrol stations nearby in the car popup: price, distance, open or closed." },
   ];
   const pageOf = (id) => PAGES.find((p) => p.id === id) || PAGES[0];
 
@@ -164,9 +167,18 @@
     // ── Daten ────────────────────────────────────────────────────────────────
     const settingsDirty = (cs) => !!cs.S && JSON.stringify(PERS().prune(cs.S) || {}) !== cs.S0;
     const optionsDirty = (cs) => !!cs.opt && JSON.stringify(cleanOpts(cs.O)) !== cs.O0;
+    // Tanken: Entwurf ohne Schlüssel; F.key steht nur da, wenn ein neuer eingetippt (oder "" = entfernen) wurde.
+    const tankenDirty = (cs) => !!cs.tk && JSON.stringify(cs.F) !== cs.F0;
     P._csDirty = function () {
       const cs = this._cs;
-      return !!cs && (settingsDirty(cs) || optionsDirty(cs));
+      return !!cs && (settingsDirty(cs) || optionsDirty(cs) || tankenDirty(cs));
+    };
+    const takeTanken = (cs, r) => {
+      cs.tk = r;
+      const cars = {};
+      (r.cars || []).forEach((c) => { cars[c.device_id] = c.fuel; });
+      cs.F = { radius: r.radius, cars };
+      cs.F0 = JSON.stringify(cs.F);
     };
 
     const takeOptions = (cs, r) => {
@@ -210,6 +222,13 @@
       } catch (e) {
         cs.opt = null;
         cs.optErr = e && e.code === "unknown_command" ? "old" : ((e && e.message) || String(e));
+      }
+      try {
+        takeTanken(cs, await hass.callWS({ type: "casora/tanken/get" }));
+        cs.tkErr = null;
+      } catch (e) {
+        cs.tk = null;
+        cs.tkErr = e && e.code === "unknown_command" ? "old" : ((e && e.message) || String(e));
       }
       cs.loaded = true;
       cs.at = Date.now();
@@ -259,6 +278,13 @@
         if (optionsDirty(cs)) {
           takeOptions(cs, await this._hass.callWS({ type: "casora/options/set", options: cleanOpts(cs.O) }));
           done.push(t("Saved – Casora applies the new options now"));
+        }
+        if (tankenDirty(cs)) {
+          const msg = { type: "casora/tanken/set", radius: cs.F.radius, cars: cs.F.cars };
+          if (cs.F.key !== undefined) msg.key = cs.F.key;
+          takeTanken(cs, await this._hass.callWS(msg));
+          cs.tkTest = null;
+          done.push(t("Saved. Fuel prices follow within 10 minutes."));
         }
       } catch (e) {
         cs.err = (e && e.message) || String(e);
@@ -495,6 +521,134 @@
       }
     };
 
+    // ── Tanken (tanken.py) ───────────────────────────────────────────────────
+    const FUEL_LABELS = { e5: "Super E5", e10: "Super E10", diesel: "Diesel", off: "Off" };
+    const tankenTestText = (self, r) => {
+      if (r.ok) {
+        const best = Object.keys(r.cheapest || {}).map((f) => FUEL_LABELS[f] + " " + Number(r.cheapest[f]).toLocaleString(
+          (self._hass && self._hass.language) || undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + " €").join(", ");
+        return t("Works: {n} petrol stations within {r} km.").replace("{n}", r.count).replace("{r}", r.radius)
+          + (best ? " " + t("Cheapest: {x}").replace("{x}", best) : "");
+      }
+      const codes = { format: "The key doesn't have the right format.", key: "Tankerkönig doesn't accept this key.",
+        wait: "Asked just now. Please try again in a moment.", timeout: "Tankerkönig doesn't answer right now.",
+        net: "No connection to Tankerkönig." };
+      return codes[r.code] ? t(codes[r.code]) : (t("Didn't work:") + " " + (r.message || r.code));
+    };
+    P._csFillTanken = function (host) {
+      const cs = this._cs;
+      const self = this;
+      if (!cs.tk) {
+        this._flowGroup(host, { footer: cs.tkErr === "old"
+          ? t("This page appears after Home Assistant has restarted with the new Casora version.")
+          : t("The settings could not be loaded.") + " " + (cs.tkErr || "") });
+        return;
+      }
+      const tk = cs.tk, F = cs.F;
+      if (!tk.source) host.appendChild(el("div", "cs-note", t("Not set up yet: the car popup shows no fuel row. Use the Tankerkönig integration in Home Assistant or a free key below.")));
+      if (tk.source === "integration") {
+        const g = this._flowGroup(host, { header: t("Data source"),
+          footer: t("Casora reads the existing sensors. No key needed. Add petrol stations in the Tankerkönig integration.") });
+        const r = this._flowRow(g, { title: t("Tankerkönig in Home Assistant"),
+          sub: t("Found: {n} petrol stations with prices").replace("{n}", tk.integration.stations), detail: t("In use") });
+        r.row.classList.add("cs-tk-source");
+      } else {
+        // 1 · Schlüssel
+        const g = this._flowGroup(host, { header: t("1 · Key"),
+          footer: t("The key stays in Home Assistant and never goes to the browser. Casora asks at most every 10 minutes, within at most 25 km.") });
+        const r1 = this._flowRow(g, { title: t("Free Tankerkönig key"), sub: t("Arrives by e-mail after a short check") });
+        const a = el("a", "cs-tk-link", t("Apply for one") + " ↗");
+        a.href = "https://onboarding.tankerkoenig.de/";
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.style.cssText = "margin-left:auto;font-size:var(--t-callout);font-weight:600;color:var(--accent);text-decoration:none;white-space:nowrap";
+        r1.row.appendChild(a);
+        const r2 = this._flowRow(g, { title: t("Key"), sub: tk.key_set ? (F.key === "" ? t("Removed when you save") : t("Saved")) : t("Paste") });
+        r2.row.classList.add("casora-prow");
+        const box = el("div", "casora-pctl");
+        const inp = el("input", "fin cs-tk-key");
+        // Maskiert wie ein Kennwort; der gespeicherte Schlüssel kommt nie zurück ins Formular.
+        inp.type = "password";
+        inp.autocomplete = "off";
+        inp.spellcheck = false;
+        inp.setAttribute("autocapitalize", "off");
+        inp.setAttribute("data-no-i18n", "");
+        inp.setAttribute("aria-label", t("Key"));
+        inp.placeholder = tk.key_set ? "••••••••-••••-••••-••••-••••••••••••" : "00000000-0000-0000-0000-000000000000";
+        inp.value = F.key || "";
+        inp.style.cssText = "flex:1 1 260px;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace";
+        inp.oninput = () => {
+          const v = inp.value.trim();
+          if (v) F.key = v; else delete F.key;
+          this._csBar();
+        };
+        box.appendChild(inp);
+        if (tk.key_set) box.appendChild(btn(t("Remove"), () => { F.key = ""; this._csRepaint(); }, true));
+        r2.row.appendChild(box);
+        // Test-Abruf: mit dem eingetippten Schlüssel, sonst mit dem gespeicherten.
+        const r3 = this._flowRow(g, { title: t("Test request"), sub: cs.tkTest ? tankenTestText(this, cs.tkTest) : t("Asks Tankerkönig once around your home.") });
+        r3.row.classList.add("casora-prow", "cs-tk-test");
+        const sub3 = r3.row.querySelector(".rtext > span");
+        if (sub3) {
+          sub3.setAttribute("data-no-i18n", "");
+          if (cs.tkTest) sub3.style.color = cs.tkTest.ok ? "var(--casora-studio-good, #34c759)" : "var(--casora-studio-danger, #ff453a)";
+        }
+        const tb = btn(cs.tkBusy ? t("Testing…") : t("Test now"), async () => {
+          const key = F.key || null;
+          if (!key && !tk.key_set) { cs.tkTest = { ok: false, code: "format" }; this._csRepaint(); return; }
+          cs.tkBusy = true; this._csRepaint();
+          try { cs.tkTest = await this._hass.callWS(key ? { type: "casora/tanken/test", key } : { type: "casora/tanken/test" }); }
+          catch (e) { cs.tkTest = { ok: false, code: "error", message: (e && e.message) || String(e) }; }
+          cs.tkBusy = false;
+          this._csRepaint();
+        }, true);
+        tb.disabled = !!cs.tkBusy;
+        const c3 = el("div", "casora-pctl");
+        c3.appendChild(tb);
+        r3.row.appendChild(c3);
+        // 2 · Umkreis
+        const g2 = this._flowGroup(host, { header: t("2 · Area"),
+          footer: t("Around home, or around the car while it is out and about (if it reports its location). Between 1 and 25 km.") });
+        const rr = this._flowRow(g2, { title: t("Radius"), sub: t("Around home") });
+        const wrap = el("div", "cs-num");
+        const rin = el("input", "cs-tk-radius");
+        rin.type = "text";
+        rin.inputMode = "decimal";
+        rin.value = String(F.radius).replace(".", decimalSep(this));
+        rin.setAttribute("aria-label", t("Radius"));
+        rin.oninput = () => {
+          const v = Number(rin.value.trim().replace(",", "."));
+          if (isFinite(v) && v > 0) F.radius = Math.max(1, Math.min(25, Math.round(v * 10) / 10));
+          this._csBar();
+        };
+        wrap.append(rin, el("span", "", "km"));
+        rr.row.appendChild(wrap);
+        const st = tk.status || {};
+        if (st.at) {
+          const when = new Date(st.at).toLocaleTimeString((this._hass && this._hass.language) || undefined, { hour: "2-digit", minute: "2-digit" });
+          host.appendChild(el("p", "cs-lede", st.ok ? t("Last request {t}: {n} petrol stations.").replace("{t}", when).replace("{n}", st.count)
+            : t("Last request {t} failed: {x}").replace("{t}", when).replace("{x}", st.error || "")));
+        }
+      }
+      // Kraftstoff je Auto
+      const g3 = this._flowGroup(host, { header: t("Fuel per car"),
+        footer: (tk.cars || []).length ? t("Off: no fuel row for this car. Electric cars don't appear here.")
+          : t("No car with a fuel level found in Home Assistant.") });
+      (tk.cars || []).forEach((c) => {
+        const cur = F.cars[c.device_id] || c.fuel;
+        const sub = c.sensor && tk.source ? c.sensor : (c.fuel_auto === "diesel" ? t("Diesel suggested (AdBlue found)") : null);
+        const row = ctlRow(self, g3, c.name, sub, [self._combo(cur, ["e10", "e5", "diesel", "off"], "", (v) => {
+          if (!v) return;
+          F.cars[c.device_id] = v;
+          self._csBar();
+        }, { fixed: true, labels: FUEL_LABELS }).wrap]);
+        row.querySelector(".rtext b").setAttribute("data-no-i18n", "");
+        const sp = row.querySelector(".rtext > span");
+        if (sp && c.sensor) sp.setAttribute("data-no-i18n", "");
+      });
+      host.appendChild(el("p", "cs-lede", t("Data: Tankerkönig, CC BY 4.0")));
+    };
+
     // Inhalt einer Unterseite (Seite am Desktop, Blatt am Handy).
     P._csFill = function (host, pageId, rerender) {
       css(this);
@@ -514,6 +668,10 @@
       }
       const err = el("div", "cs-err", cs.err || "");
       host.appendChild(err);
+      if (page.tanken) {
+        this._csFillTanken(host);
+        return;
+      }
       if (page.personal) {
         if (cs.fromFile && page.id === "home") {
           host.appendChild(el("div", "cs-note", t("Taken over from einstellungen.js. Save once to manage these settings here; the file is no longer needed afterwards.")));

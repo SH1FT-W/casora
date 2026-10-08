@@ -1751,7 +1751,9 @@
       /* Weich 1.1.2: Tank als schmale Leiste unter dem Kopf (wie die Geräte-Popups); rechts leer,
          die Reichweite steht im Kopf. Warn-Ton ab 15 %. */
       if (r.tank != null && window._casoraHH && window._casoraHH.on()) {
-        return out + '<div style="height:var(--casora-popup-sec-gap, 22px)"></div>' + window._casoraHH.pbar({ pct: Math.max(2, Math.min(100, r.tank)), left: (r.ev ? 'Akku ' : 'Tank ') + Math.round(r.tank) + ' %', tone: r.tank <= 15 ? 'warn' : 'accent' });
+        return out + '<div style="height:var(--casora-popup-sec-gap, 22px)"></div>' + window._casoraHH.pbar({ pct: Math.max(2, Math.min(100, r.tank)), left: (r.ev ? 'Akku ' : 'Tank ') + Math.round(r.tank) + ' %', tone: r.tank <= 15 ? 'warn' : 'accent' })
+          /* Tanken (1.2, 12-tanken.js): Zeile direkt unter der Tankleiste, nur wenn eingerichtet. */
+          + (window._casoraTank ? window._casoraTank.row(p, states) : '');
       }
       if (r.tank != null) {
         var col = r.tank <= 15 ? 'var(--casora-popup-ui-warn, #FF9F0A)' : 'var(--casora-color-teal, #00C3D0)';
@@ -1853,6 +1855,7 @@
     var watch = [];
     var M = C.map(p);
     Object.keys(M).forEach(function (k) { var id = M[k]; if (id && states[id] && watch.indexOf(id) < 0) watch.push(id); });
+    if (window._casoraTank) window._casoraTank.watch(p, states).forEach(function (id) { watch.push(id); });
     var sec = function (n) { return '[[[ return window._casoraCar ? window._casoraCar.sec(' + JSON.stringify(n) + ', ' + JSON.stringify(p) + ', states) : ""; ]]]'; };
     /* Weich (Entschlacken 01.10.2026): Kopf mit Reichweite und Tankbalken, links Zustand (nur Abweichungen),
        rechts Wartung (nur Fälliges); alle Zustandszeilen, Wartungswerte, Fahrten und Daten unter „Mehr“. */

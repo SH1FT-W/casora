@@ -50,6 +50,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     if pause:
         async_add_entities([MediaPauseSensor(pause)])
 
+    # Tanken: günstigster Preis je Auto/Kraftstoff (tanken.py), kommen und gehen mit der Einrichtung.
+    tk = hass.data[DOMAIN].get("tanken")
+    if tk:
+        tk.attach(async_add_entities)
+
     rk = hass.data[DOMAIN]["raumklima"]
 
     @callback

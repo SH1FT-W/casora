@@ -73,6 +73,9 @@ def _vacuum_map(fixture: dict) -> None:
 
 
 async def async_setup(hass: HomeAssistant, config) -> bool:
+    # Fake-Tankerkönig (tankerkoenig.py): Casora fragt im Testhaus nur dort, nie im Netz.
+    from .tankerkoenig import setup as tankerkoenig_setup
+    tankerkoenig_setup(hass)
     if DOMAIN in config and not hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(
             hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_IMPORT}, data={})
