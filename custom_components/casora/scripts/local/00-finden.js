@@ -682,6 +682,78 @@ window.casoraPriceKwh = function (v) {
   }
   window.casoraNotAnOpening = notAnOpening;
 
+  // ── Glocke: welche Entitäten überhaupt einen Eintrag erzeugen können (1.1.2) ────
+  // Für die Ausnahmeliste „Nicht melden“ im Studio (casora-panel-glocke.js). Dieselben Quellen,
+  // die die Glocke prüft (casora-core.js watched/standing, 01-basis.js Erweiterung) – ohne die
+  // Schalter je Dashboard, die Liste gilt für alle. o: { appliances: [ids], notify: Einstellungen
+  // notify (mail, warn_prefix, appliance_care), battery, open_minutes, co2 }.
+  // Rückgabe [{ entity, kinds: ['window', …], active }]; active = meldet gerade (Dauerzustände).
+  // Test: dev/unit/glocke_ausnahmen.mjs (gleicht mit den echten Glocken-Zeilen ab).
+  var NOTIFY_SAFETY = { moisture: 'water', smoke: 'smoke', gas: 'gas', carbon_monoxide: 'co', safety: 'safety' };
+  function notifySources(hass, o) {
+    o = o || {};
+    var S = (hass && hass.states) || {};
+    var n = o.notify || ((window.CASORA_SETTINGS || {}).notify) || {};
+    var appl = [].concat(o.appliances || []).filter(Boolean);
+    var warn = n.warn_prefix === undefined ? 'binary_sensor.nina_warning_' : n.warn_prefix;
+    var care = Array.isArray(n.appliance_care) ? n.appliance_care : [];
+    var lowPct = Number(o.battery); if (!isFinite(lowPct)) lowPct = 20;
+    var openMin = Number(o.open_minutes); if (!isFinite(openMin)) openMin = 10;
+    var co2 = Number(o.co2); if (!isFinite(co2)) co2 = 1800;
+    var plants = Object.keys(S).filter(function (id) { return id.indexOf('plant.') === 0; })
+      .map(function (id) { return id.slice(6); });
+    var out = {};
+    var add = function (id, kind, active) {
+      var x = out[id] = out[id] || { entity: id, kinds: [], active: false };
+      if (x.kinds.indexOf(kind) < 0) x.kinds.push(kind);
+      if (active) x.active = true;
+    };
+    Object.keys(S).forEach(function (id) {
+      var st = S[id] || {}, a = st.attributes || {}, dc = String(a.device_class || ''), s = String(st.state);
+      var dom = id.split('.')[0];
+      if (dom === 'lock') add(id, 'lock', s === 'jammed');
+      else if (dom === 'alarm_control_panel') add(id, 'alarm', s === 'triggered');
+      else if (dom === 'vacuum') add(id, 'vacuum', s === 'error');
+      else if (dom === 'person') add(id, 'person', false);
+      else if (dom === 'update') add(id, 'update', s === 'on' && !a.in_progress);
+      else if (dom === 'plant') add(id, 'plant', s === 'problem');
+      if ((dom === 'event' && dc === 'doorbell') || (dom === 'binary_sensor' && dc === 'occupancy' && /doorbell|ding|chime/i.test(id))) {
+        add(id, 'doorbell', false);
+      }
+      if (dc === 'battery' && (dom === 'sensor' || dom === 'binary_sensor')) {
+        var pct = parseFloat(s);
+        add(id, 'battery', dom === 'sensor'
+          ? isFinite(pct) && (window.casoraBattery ? window.casoraBattery.level(pct) !== 'ok' : pct <= lowPct)
+          : s === 'on');
+      }
+      if (dom === 'binary_sensor' && NOTIFY_SAFETY[dc]) add(id, NOTIFY_SAFETY[dc], s === 'on');
+      if (dom === 'binary_sensor' && /^(door|window|garage_door|opening)$/.test(dc) && !notAnOpening(hass, id)) {
+        var nm = String(a.friendly_name || '').toLowerCase();
+        // Offen seit: wie die Glocke (casora-core.js openSince) mit dem Merkwert der Integration.
+        var since = Date.parse(st.last_changed || '');
+        var memo = S['sensor.casora_media_paused'];
+        var seen = memo && memo.attributes && memo.attributes.contacts && memo.attributes.contacts[id];
+        var t0 = seen && seen.since ? Date.parse(seen.since) : NaN;
+        if (s === 'on' && isFinite(t0) && (!isFinite(since) || t0 <= since + 1000)) since = t0;
+        add(id, dc === 'window' || nm.indexOf('fenster') > -1 || nm.indexOf('window') > -1 ? 'window'
+          : dc === 'garage_door' ? 'garage' : 'door',
+          s === 'on' && openMin > 0 && isFinite(since) && Date.now() - since >= openMin * 60000);
+      }
+      if (dom === 'sensor' && dc === 'carbon_dioxide' && co2 > 0
+        && !plants.some(function (p) { return id.slice(7).indexOf(p) === 0; })) {
+        add(id, 'co2', parseFloat(s) >= co2);
+      }
+      if (warn && id.indexOf(warn) === 0) add(id, 'warning', s === 'on');
+    });
+    appl.forEach(function (id) { if (S[id]) add(id, 'appliance', false); });
+    if (n.mail && S[n.mail]) add(n.mail, 'mail', false);
+    care.forEach(function (x) {
+      if (x && x[1] && S[x[1]]) add(x[1], 'care', !!(x[0] && S[x[0]] && S[x[0]].state === 'on'));
+    });
+    return Object.keys(out).sort().map(function (id) { return out[id]; });
+  }
+  window.casoraNotifySources = notifySources;
+
   // ── Sicherheit: Stufe je Gerät/Gruppe (Farbsystem Sicherheit, 03.10.2026) ───────
   // 'ok' = in Ordnung, 'warn' = Hinweis, 'alarm' = Gefahr. Die Sicherheits-Badges färben
   // ihren Symbolkreis über --casora-security-<stufe>-color (Weich: Sand / Orange / Rot);
