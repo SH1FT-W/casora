@@ -44,7 +44,7 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
       const cs = (e) => getComputedStyle(e);
       const mr = R(box), or = R(on), bw = sheet ? 0 : (parseFloat(cs(menu).borderTopWidth) || 0);
       const row = (b) => {
-        const ic = b.querySelector('.hmn-ic,.casora-mi') || b.querySelector('ha-icon,.hmn-svg');
+        const ic = b.querySelector('.hmn-sic,.casora-mi') || b.querySelector('ha-icon,.hmn-svg');
         const tx = b.querySelector('.hmn-txt') || b.querySelector(':scope>span:not(.casora-mi)');
         const r = R(b), i = R(ic), t = R(tx);
         return { icL: i.left - r.left, icW: i.width, gap: t.left - i.right, txL: t.left - r.left, icTop: i.top - r.top, icH: i.height, rowH: r.height };

@@ -85,7 +85,7 @@
       +   'transition:opacity .18s ease, transform .22s cubic-bezier(.2,.8,.3,1);max-height:calc(100vh - 160px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}'
       + '.hmn-menu.open{opacity:1;transform:translateY(0);}'
       /* Hintergrund-Scrim wie bei den Casora-Popups (gleiche Tönung/Blur, gleiche Kurven; Werte kommen aus dem Theme). */
-      + '.hmn-scrim{position:fixed;inset:0;z-index:150;opacity:0;background:var(--hmn-scrim, rgba(0,0,0,0.40));'
+      + '.hmn-scrim{position:fixed;inset:0;z-index:150;opacity:0;touch-action:none;overscroll-behavior:none;background:var(--hmn-scrim, rgba(0,0,0,0.40));'
       +   'backdrop-filter:var(--hmn-scrim-bd, blur(6px) saturate(1.35));-webkit-backdrop-filter:var(--hmn-scrim-bd, blur(6px) saturate(1.35));'
       +   'transition:opacity 480ms cubic-bezier(0.25, 0.6, 0.3, 1);}'
       /* Scrim muss über der sticky Badge-Karte (z 100) und der Glocken-Pille (z 113) liegen; Leiste nur bei offenem Menü darüber. */
@@ -127,7 +127,7 @@
       /* Casora/Weich (Entwurf A „Blatt von unten“, 08.10.2026): Räume und Szenen als Blatt wie die
          Apple-Sheets. Rand 8 px ringsum, Ecken konzentrisch (44 außen, 36 innen = 44 − 8), Zeilen 64 px.
          Die Klasse hmn-sheet setzt _openSheet(), nur solange das Weich-Design aktiv ist. */
-      + '.hmn-menu.hmn-sheet{left:8px;right:8px;bottom:8px;margin:0 auto;width:auto;min-width:0;max-width:520px;padding:0;'
+      + '.hmn-menu.hmn-sheet{left:8px;right:8px;bottom:8px;margin:0 auto;width:auto;min-width:0;max-width:520px;padding:0;overscroll-behavior:contain;'
       +   'border-radius:var(--casora-msheet-radius, 44px) !important;display:flex;flex-direction:column;overflow:hidden;opacity:1;'
       +   'max-height:calc(100vh - 8px - max(env(safe-area-inset-top, 0px), 12px) - 40px);'
       +   'max-height:calc(100dvh - 8px - max(env(safe-area-inset-top, 0px), 12px) - 40px);'
@@ -155,11 +155,13 @@
       + '.hmn-sheet .hmn-row::after{content:"";grid-column:3;justify-self:end;width:8px;height:14px;background:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));opacity:.6;'
       +   '-webkit-mask:var(--hmn-chev) center/contain no-repeat;mask:var(--hmn-chev) center/contain no-repeat;}'
       + '.hmn-sheet{--hmn-chev:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 8 14%27%3E%3Cpath d=%27M1.5 1.5 7 7l-5.5 5.5%27 fill=%27none%27 stroke=%27%23000%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E");}'
-      + '.hmn-ic{flex:none;box-sizing:border-box;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;'
+      /* Symbolkreis im Blatt: eigene Klasse hmn-sic – „hmn-ic“ trägt im Weich-Design die Leiste selbst,
+         die Regel hatte sie in 1.1.1 auf 40 px Höhe, rund und eingefärbt gezogen (Hotfix 1.1.2). */
+      + '.hmn-sic{flex:none;box-sizing:border-box;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;'
       +   'background:color-mix(in srgb, var(--hmn-tone, var(--primary-color, #B67A50)) 14%, transparent);color:var(--hmn-tone, var(--primary-color, #B67A50));}'
-      + '.hmn-sheet .hmn-item .hmn-ic ha-icon{--mdc-icon-size:22px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;line-height:0;color:inherit;}'
-      + '.hmn-sheet .hmn-item .hmn-ic .hmn-svg{width:22px;height:22px;display:block;background:currentColor;-webkit-mask:var(--hmn-svg) center/contain no-repeat;mask:var(--hmn-svg) center/contain no-repeat;}'
-      + '.hmn-row.on .hmn-ic{background:var(--primary-color, #B67A50);color:var(--casora-msheet-on-ink, #fff);}'
+      + '.hmn-sheet .hmn-item .hmn-sic ha-icon{--mdc-icon-size:22px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;line-height:0;color:inherit;}'
+      + '.hmn-sheet .hmn-item .hmn-sic .hmn-svg{width:22px;height:22px;display:block;background:currentColor;-webkit-mask:var(--hmn-svg) center/contain no-repeat;mask:var(--hmn-svg) center/contain no-repeat;}'
+      + '.hmn-row.on .hmn-sic{background:var(--primary-color, #B67A50);color:var(--casora-msheet-on-ink, #fff);}'
       + '.hmn-txt{display:flex;flex-direction:column;min-width:0;}'
       + '.hmn-name{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
       + '.hmn-sheet .hmn-sub{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;line-height:18px;font-weight:500;margin-top:0;}'
@@ -169,7 +171,7 @@
       +   'padding:16px;border-radius:calc(var(--casora-msheet-radius, 44px) - 8px);'
       +   'background:color-mix(in srgb, var(--hmn-tone) var(--casora-msheet-tile-mix, 18%), transparent);'
       +   'font-size:16px;line-height:20px;font-weight:600;transition:transform .14s ease, filter .14s ease;}'
-      + '.hmn-tile .hmn-ic{background:var(--hmn-tone);color:#fff;}'
+      + '.hmn-tile .hmn-sic{background:var(--hmn-tone);color:#fff;}'
       + '.hmn-tile .hmn-name{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;width:100%;overflow-wrap:anywhere;}'
       /* Tipp-Rückmeldung: abdunkeln und leicht schrumpfen (auch per Klasse, falls :active am Handy nicht greift). */
       + '.hmn-sheet .hmn-item.hmn-row:active,.hmn-sheet .hmn-item.hmn-row.hmn-press{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));transform:scale(.985);}'
@@ -484,6 +486,8 @@
     _scrimOpen() {
       var sc = this._scrim = document.createElement('div');
       sc.className = 'hmn-scrim';
+      /* Wischen auf dem abgedunkelten Hintergrund scrollt die Seite darunter nicht (Hotfix 1.1.2). */
+      sc.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
       try {
         var cs = getComputedStyle(document.querySelector('home-assistant') || document.documentElement);
         var sv = (cs.getPropertyValue('--casora-popup-scrim') || cs.getPropertyValue('--mdc-dialog-scrim-color')).trim();
@@ -608,7 +612,7 @@
         b.type = 'button';
         var label = (window.casoraTr || function (x) { return x; })(it.label);
         b.title = String(it.label || '');
-        var ic = el('span', 'hmn-ic');
+        var ic = el('span', 'hmn-sic');
         ic.innerHTML = self._iconHtml(it.icon);
         if (!rooms) b.style.setProperty('--hmn-tone', self._sceneTone(it.id, it.icon));
         b.appendChild(ic);
@@ -654,16 +658,44 @@
       }
       void m.offsetHeight;
       requestAnimationFrame(function () { m.classList.add('open'); });
-      /* Am Kopf nach unten ziehen schließt (ab 70 px oder schnell), sonst federt das Blatt zurück. */
-      var y0 = null, t0 = 0, dy = 0;
-      head.addEventListener('pointerdown', function (e) { y0 = e.clientY; t0 = Date.now(); dy = 0; m.classList.add('hmn-drag'); try { head.setPointerCapture(e.pointerId); } catch (x) {} });
-      head.addEventListener('pointermove', function (e) { if (y0 == null) return; dy = Math.max(0, e.clientY - y0); m.style.transform = 'translateY(' + dy + 'px)'; });
+      /* Nach unten ziehen schließt (ab 70 px oder schnell), sonst federt das Blatt zurück – am Kopf immer,
+         in der Liste, sobald sie oben steht (wie die Casora-Popups). Hotfix 1.1.2: vorher ging es nur am
+         Kopf, und am Handy scrollte dabei der Hintergrund mit. */
+      var y0 = null, t0 = 0, dy = 0, drag = false;
+      var start = function (y) { y0 = y; t0 = Date.now(); dy = 0; drag = false; };
+      var move = function (y) {
+        if (y0 == null) return false;
+        var d = y - y0;
+        if (!drag) { if (d <= 4) return false; drag = true; m.classList.add('hmn-drag'); }
+        dy = Math.max(0, d); m.style.transform = 'translateY(' + dy + 'px)';
+        return true;
+      };
       var end = function () {
         if (y0 == null) return;
         y0 = null; m.classList.remove('hmn-drag');
-        if (dy > 70 || (dy > 24 && Date.now() - t0 < 220)) self._closeMenu(); else m.style.transform = '';
+        if (drag && (dy > 70 || (dy > 24 && Date.now() - t0 < 220))) self._closeMenu(); else m.style.transform = '';
+        drag = false;
       };
+      /* Maus/Stift: am Kopf ziehen. */
+      head.addEventListener('pointerdown', function (e) { if (e.pointerType === 'touch') return; start(e.clientY); try { head.setPointerCapture(e.pointerId); } catch (x) {} });
+      head.addEventListener('pointermove', function (e) { if (e.pointerType !== 'touch') move(e.clientY); });
       head.addEventListener('pointerup', end); head.addEventListener('pointercancel', end);
+      /* Finger: überall im Blatt. In der Liste nur, wenn sie oben steht und nach unten gezogen wird –
+         sonst scrollt die Liste selbst. Was das Blatt nicht braucht, geht nie an den Hintergrund. */
+      var inList = false;
+      m.addEventListener('touchstart', function (e) {
+        if (e.touches.length !== 1) return;
+        inList = !!(e.target && e.target.closest && e.target.closest('.hmn-list'));
+        start(e.touches[0].clientY);
+      }, { passive: true });
+      m.addEventListener('touchmove', function (e) {
+        if (y0 == null || e.touches.length !== 1) return;
+        var y = e.touches[0].clientY;
+        var canScroll = list.scrollHeight > list.clientHeight + 1;
+        if (inList && canScroll && !drag && (y < y0 || list.scrollTop > 0)) return; /* Liste scrollt */
+        if (move(y) || !inList || !canScroll) e.preventDefault();
+      }, { passive: false });
+      m.addEventListener('touchend', end); m.addEventListener('touchcancel', end);
       this._away = function (e) {
         var path = e.composedPath ? e.composedPath() : [e.target];
         if (path.indexOf(m) < 0 && path.indexOf(self._bRooms) < 0 && path.indexOf(self._bScenes) < 0) self._closeMenu();

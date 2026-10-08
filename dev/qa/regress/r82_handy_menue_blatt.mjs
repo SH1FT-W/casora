@@ -32,7 +32,7 @@ const measure = (page, kind) => page.evaluate((kind) => {
   const items = [...list.querySelectorAll('.hmn-item')];
   const row = (b) => {
     if (!b) return null;
-    const r = R(b), ic = b.querySelector('.hmn-ic'), i = R(ic), tx = b.querySelector('.hmn-txt') || b.querySelector('.hmn-name'), t = R(tx);
+    const r = R(b), ic = b.querySelector('.hmn-sic'), i = R(ic), tx = b.querySelector('.hmn-txt') || b.querySelector('.hmn-name'), t = R(tx);
     const after = cs(b, '::after');
     return { x: r.left - sr.left, right: sr.right - r.right, w: r.width, h: r.height, top: r.top, bottom: r.bottom,
       radius: parseFloat(cs(b).borderTopLeftRadius), icL: i.left - r.left, icTop: i.top - r.top, icW: i.width, icH: i.height,
@@ -160,6 +160,47 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   });
   const sc = /matrix\(([\d.]+)/.exec(press.transform || '');
   await check(`${tag}: Tipp dunkelt ab und schrumpft`, sc && +sc[1] < 0.99 && /brightness\(0?\.\d+\)/.test(press.filter), press);
+  await page.evaluate(() => window.__pierce('casora-mobile-nav')[0]._closeMenu());
+  await page.waitForTimeout(500);
+  // Hotfix 1.1.2: Die Leiste selbst bleibt wie in 1.1.0 – die Blatt-Regel für den Symbolkreis
+  // (früher „.hmn-ic“) zog sie auf 40 px Höhe, rund und eingefärbt.
+  const bar = await page.evaluate(() => {
+    const b = document.querySelector('.hmn-bar'); if (!b) return null;
+    const r = b.getBoundingClientRect(), cs = getComputedStyle(b);
+    return { h: Math.round(r.height), radius: cs.borderTopLeftRadius, ic: b.classList.contains('hmn-ic') };
+  });
+  await check(`${tag}: Leiste unverändert (nicht 40 px, nicht 50 % rund)`, bar && bar.h > 44 && bar.radius !== '50%', bar);
+  // Hotfix 1.1.2: Wischen nach unten schließt das Blatt – am Kopf und in der Liste, wenn sie oben steht;
+  // Wischen auf dem Hintergrund scrollt die Seite nicht.
+  const swipe = await page.evaluate(async () => {
+    const nav = window.__pierce('casora-mobile-nav')[0];
+    nav._bRooms.click();
+    await new Promise((r) => setTimeout(r, 600));
+    const m = document.querySelector('.hmn-menu.hmn-sheet.open'); if (!m) return { open: false };
+    let T;
+    try { new Touch({ identifier: 1, target: m, clientX: 1, clientY: 1 }); T = true; } catch (e) { T = false; }
+    if (!T) return { open: true, touch: false };
+    const fire = (el, type, y) => {
+      const t = new Touch({ identifier: 1, target: el, clientX: 200, clientY: y });
+      const ev = new TouchEvent(type, { bubbles: true, cancelable: true, touches: type === 'touchend' ? [] : [t], changedTouches: [t], targetTouches: type === 'touchend' ? [] : [t] });
+      el.dispatchEvent(ev); return ev.defaultPrevented;
+    };
+    const sc = document.querySelector('.hmn-scrim');
+    fire(sc, 'touchstart', 300); const scrimBlocked = fire(sc, 'touchmove', 200); fire(sc, 'touchend', 200);
+    const list = m.querySelector('.hmn-list'); list.scrollTop = 0;
+    const row = m.querySelector('.hmn-row') || m;
+    const y = row.getBoundingClientRect().top + 10;
+    fire(row, 'touchstart', y);
+    for (let i = 1; i <= 6; i++) { fire(row, 'touchmove', y + i * 25); await new Promise((r) => setTimeout(r, 16)); }
+    fire(row, 'touchend', y + 150);
+    await new Promise((r) => setTimeout(r, 500));
+    return { open: true, touch: true, scrimBlocked, closed: !document.querySelector('.hmn-menu.open') };
+  });
+  if (swipe.touch === false) console.log('  info   ' + tag + ': Touch-Ereignisse in diesem Browser nicht nachstellbar – Wischen nicht geprüft');
+  else {
+    await check(`${tag}: Wischen auf dem Hintergrund scrollt die Seite nicht`, swipe.scrimBlocked === true, swipe);
+    await check(`${tag}: Liste oben nach unten wischen schließt das Blatt`, swipe.closed === true, swipe);
+  }
   await page.evaluate(() => window.__pierce('casora-mobile-nav')[0]._closeMenu());
   await browser.close();
 }
