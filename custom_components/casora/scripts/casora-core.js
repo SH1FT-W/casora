@@ -7905,7 +7905,8 @@ window.casoraMenuGlass = {
       try { inv = !!JSON.parse(el.dataset.casoraSlider).invert; } catch (e) {}
       if (el.dataset.casoraAxis === 'x') {
         fill.style.width = pct + '%';
-        el.querySelectorAll('.hui-sl-val').forEach(function (n) { n.textContent = pct + ' %'; });
+        var lb = el.dataset.casoraLabel ? el.dataset.casoraLabel + ' · ' : '';
+        el.querySelectorAll('.hui-sl-val').forEach(function (n) { n.textContent = lb + pct + ' %'; });
         var ink = el.querySelector('.hui-sl-ink');
         if (ink) ink.style.clipPath = 'inset(0 ' + (100 - pct) + '% 0 0)';
         return;
@@ -7939,8 +7940,27 @@ window.casoraMenuGlass = {
         var spec = JSON.parse(d.el.dataset.casoraSlider);
         var ha = document.querySelector('home-assistant');
         if (ha && ha.hass && spec && spec.domain) {
-          var data = {};
-          data[spec.field || 'position'] = d.pct;
+          var data = Object.assign({}, spec.data || {});
+          var val = d.pct;
+          // scale [min, max, step]: Regler 0–100 % auf den Bereich einer number-Entität (Farbkanal).
+          if (spec.scale) {
+            var mn = Number(spec.scale[0]) || 0, mx = Number(spec.scale[1]), st = Number(spec.scale[2]) || 0;
+            if (!isFinite(mx)) mx = 100;
+            val = mn + (mx - mn) * d.pct / 100;
+            if (st > 0) val = mn + Math.round((val - mn) / st) * st;
+            val = Math.round(val * 1000) / 1000;
+          }
+          // channel: ein Kanal einer Farbe (rgbw_color …); die übrigen Kanäle vom aktuellen Zustand.
+          if (spec.channel != null) {
+            var tid = spec.target && [].concat(spec.target.entity_id || [])[0];
+            var cst = tid && ha.hass.states[tid];
+            var cur = cst && cst.state === 'on' && Array.isArray(cst.attributes[spec.field]) ? cst.attributes[spec.field] : (spec.base || []);
+            var arr = [];
+            for (var ci = 0; ci < (spec.size || cur.length || 3); ci++) arr.push(Number(cur[ci]) || 0);
+            arr[spec.channel] = Math.round(d.pct * 2.55);
+            val = arr;
+          }
+          data[spec.field || 'position'] = val;
           var go = function () { ha.hass.callService(spec.domain, spec.service, data, spec.target || undefined); };
           // Mit Rückfrage: erst nach „Öffnen“/„Schließen“ fahren, sonst zurück auf den alten Stand.
           if (window.casoraConfirmSpec) {
@@ -8430,7 +8450,10 @@ window.casoraMenuGlass = {
         + (inv ? ' data-casora-invert="1"' : '');
     }
 
-    if (soft()) {
+    // bar: der breite Balken auch außerhalb von Weich (Farbkanäle im Becken-Popup, 1.1.2);
+    // label: Name vor dem Wert („Rot · 45 %“), small: kleinere Schrift für schmale Regler.
+    var lab = o.label ? esc(o.label) + ' · ' : '';
+    if (soft() || o.bar) {
       // Breiter, runder Balken mit Verlaufsfüllung; der Wert steht in der Füllung.
       // Gleiche Daten-Attribute wie senkrecht, data-casora-axis="x" schaltet Ziehen und
       // Live-Füllung auf die Breite um. Die Füllung zeigt immer den Wert (bei Jalousien die
@@ -8439,7 +8462,8 @@ window.casoraMenuGlass = {
       var sOut = '<style>'
         + 'ha-card.disabled{pointer-events:auto!important;}'
         + '.hui-sl{position:relative;width:100%;height:' + hx + 'px;box-sizing:border-box;'
-        +   'border-radius:var(--casora-popup-row-radius, 24px);overflow:hidden;background:' + S.ctl + ';'
+        +   'border-radius:var(--casora-popup-row-radius, 24px);overflow:hidden;background:'
+        +     (soft() ? S.ctl : 'var(--casora-popup-row-fill, rgba(255,255,255,0.10))') + ';'
         +   'cursor:ew-resize;touch-action:none;user-select:none;-webkit-user-select:none;}'
         + '.hui-sl-fill{position:absolute;top:0;bottom:0;' + 'left:0;'
         +   'border-radius:inherit;'
@@ -8460,14 +8484,17 @@ window.casoraMenuGlass = {
         + '.hui-sl-ink .hui-sl-ic{background-color:var(--casora-soft-slider-ink, ' + T.ink + ');}'
         + '.hui-sl.drag .hui-sl-ink{transition:none;}'
         + '@media (prefers-reduced-motion:reduce){.hui-sl-fill,.hui-sl-ink{transition:none;}}'
+        + (o.small ? '.hui-sl.sm .hui-sl-val{left:18px;font-size:15px;white-space:nowrap;}' : '')
         + '</style>'
-        + '<div class="hui-sl" data-casora-axis="x" data-casora-slider="' + payload + '">'
+        // Höhe auch am Element: mehrere Regler einer Karte teilen sich die .hui-sl-Regel (letzte gewinnt).
+        + '<div class="hui-sl' + (o.small ? ' sm' : '') + '" style="height:' + hx + 'px" data-casora-axis="x" data-casora-slider="' + payload + '"'
+        +   (o.label ? ' data-casora-label="' + esc(o.label) + '"' : '') + '>'
         +   '<div class="hui-sl-fill"' + live.replace(' data-casora-invert="1"', '')
         +     (live ? ' data-casora-axis="x"' : '') + ' style="width:' + v + '%"></div>'
-        +   '<div class="hui-sl-val">' + v + ' %</div>'
+        +   '<div class="hui-sl-val">' + lab + v + ' %</div>'
         +   glyph
         +   '<div class="hui-sl-ink" aria-hidden="true" style="clip-path:inset(0 ' + (100 - v) + '% 0 0)">'
-        +     '<div class="hui-sl-val">' + v + ' %</div>' + glyph + '</div>'
+        +     '<div class="hui-sl-val">' + lab + v + ' %</div>' + glyph + '</div>'
         + '</div>';
       return '<div style="font-family:' + T.font + ';">' + sOut + '</div>';
     }

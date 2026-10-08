@@ -25606,6 +25606,11 @@ class CasoraPanel extends HTMLElement {
             put(f.label, input, who);
             return;
           }
+          // Ja/Nein je Eintrag (z. B. Aquarium-Technik „Alarm, wenn aus“); nur true wird gespeichert.
+          if (f.kind === "bool") {
+            put(f.label, this._boolSwitch(map[id] === true, false, (v) => write(v ? true : ""), f.label), who);
+            return;
+          }
           const c = f.kind === "icon"
             ? this._combo(map[id] || "", [ICON_DEFAULT].concat(CASORA_ICONS),
                 f.iconDefault || "default",

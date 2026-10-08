@@ -1448,7 +1448,25 @@
   "Niederlage": "Loss",
   "1 Raum": "1 room",
   "1 Licht an": "1 light on",
-  "Keine Räume": "No rooms"
+  "Keine Räume": "No rooms",
+  "Lampen-Modi": "Light modes",
+  "Lampen-Profil": "Light profile",
+  "Farbkanäle": "Colour channels",
+  "Ohne Effekt": "No effect",
+  "Home Assistant": "Home Assistant",
+  "Programm der Lampe": "Light's own program",
+  "Eigener Tagesablauf der Lampe": "The light's own daily cycle",
+  "Temperatur zu hoch": "Temperature too high",
+  "Temperatur zu niedrig": "Temperature too low",
+  "Aktinisch": "Actinic",
+  "UV": "UV",
+  "Kaltweiß": "Cold white",
+  "Warmweiß": "Warm white",
+  "Mondlicht": "Moonlight",
+  "Rot": "Red",
+  "Grün": "Green",
+  "Blau": "Blue",
+  "Weiß": "White"
  },
  "patterns": [
   [
@@ -2770,6 +2788,10 @@
   [
    "^(\\d+) Lichter an$",
    "{1} lights on"
+  ],
+  [
+   "^Soll-Bereich (.+)$",
+   "Target range {1}"
   ]
  ]
 }

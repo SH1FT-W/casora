@@ -39,6 +39,157 @@
     const sel = V.light_profile || (hx ? 'select.' + hx + '_profil' : null);
     return { dose: dose, light: sw || sel ? { sw: sw, sel: sel, legacy: !!hx && !V.light_schedule_switch && !V.light_profile } : null };
   };
+
+  /* Zeitplan-Schalter (1.1.2): was heißt „an“? 'ha' = Home Assistant steuert die Farben (Juwel HeliaLux
+     „manuelle Farbsimulation“), 'lamp' = die Lampe fährt ihr eigenes Programm (Chihiros auto_mode,
+     Juwel AppControl „Automatik“, Auto-Modus-Schalter). light_schedule_on aus dem Studio geht vor;
+     erkannt wird über translation_key, Entitäts-ID und Namen, im Zweifel wie bisher 'ha'. */
+  window._casoraAqSwitchMeaning = function (sw, V, hass) {
+    const set = V && V.light_schedule_on;
+    if (set === 'ha' || set === 'lamp') return set;
+    if (!sw) return 'ha';
+    const reg = (hass && hass.entities && hass.entities[sw]) || {};
+    const st = hass && hass.states && hass.states[sw];
+    const keys = [reg.translation_key, sw, reg.name, st && st.attributes && st.attributes.friendly_name]
+      .filter(Boolean).map((s) => String(s).toLowerCase());
+    const any = (re) => keys.some((k) => re.test(k));
+    if (any(/manual|manuell|simulation|override|remote_control|fernsteuer/)) return 'ha';
+    if (any(/auto|program|schedule|zeitplan|daylight|tageslicht|cycle|zyklus/)) return 'lamp';
+    return 'ha';
+  };
+
+  /* Farbkanäle der Beckenlampe (1.1.2): je Kanal Name, Farbe, Wert (0–100) und Regler-Dienst.
+     Quelle: gewählte number-Entitäten (light_channels), sonst number-Entitäten am Gerät der Leuchte
+     mit Farbwort (Fluval, HeliaLux, Chihiros), sonst rgb/rgbw/rgbww der Leuchte selbst. */
+  const CH = [
+    [/^(royal|actinic|aktinisch|aktinic)$/, 'Aktinisch', '#4F5BD5'],
+    [/^(uv|violet|violett|purple)$/, 'UV', '#8E5CC7'],
+    [/^(cold|cool|kalt|kaltweiß|kaltweiss|coldwhite|coolwhite)$/, 'Kaltweiß', '#B9CBE2'],
+    [/^(warm|warmweiß|warmweiss|warmwhite)$/, 'Warmweiß', '#E3C08A'],
+    [/^(moon|mond|mondlicht|moonlight)$/, 'Mondlicht', '#7C8BC4'],
+    [/^(red|rot|r)$/, 'Rot', '#D9534F'],
+    [/^(green|grün|gruen|g)$/, 'Grün', '#4E9F5D'],
+    [/^(blue|blau|b)$/, 'Blau', '#4C6FD8'],
+    [/^(white|weiß|weiss|w)$/, 'Weiß', '#CDBFA8'],
+  ];
+  window._casoraAqChannelOf = function (text) {
+    /* Einzelbuchstaben (r/g/b/w) nur als letztes Wort („kanal_r“), sonst passt jedes „b“. */
+    const toks = String(text || '').toLowerCase().split(/[^a-zäöüß0-9]+/).filter(Boolean);
+    for (let i = 0; i < CH.length; i++) {
+      for (let k = 0; k < toks.length; k++) {
+        if (toks[k].length === 1 && k !== toks.length - 1) continue;
+        if (CH[i][0].test(toks[k])) return { name: CH[i][1], color: CH[i][2] };
+      }
+    }
+    return null;
+  };
+  window._casoraAqChannels = function (light, V, states, hass) {
+    const S = states || {}, s = light && S[light];
+    if (!s) return [];
+    const reg = (hass && hass.entities) || {};
+    const num = (x) => { const n = parseFloat(x); return isNaN(n) ? null : n; };
+    const fromNumber = (id, hit) => {
+      const n = S[id], a = (n && n.attributes) || {};
+      const mn = num(a.min) ?? 0, mx = num(a.max) ?? 100, step = num(a.step) || 1;
+      const v = num(n && n.state);
+      const r = reg[id] || {};
+      const own = hit || window._casoraAqChannelOf([r.translation_key, id.split('.')[1], a.friendly_name].join(' '));
+      let name = own ? own.name : String(a.friendly_name || id);
+      if (!own && s.attributes.friendly_name) {
+        /* Gerätename vorn weglassen („Becken Kanal 1“ → „Kanal 1“). */
+        const pre = String(s.attributes.friendly_name).split(' ').slice(0, -1).join(' ');
+        if (pre && name.indexOf(pre + ' ') === 0) name = name.slice(pre.length + 1);
+      }
+      return { id: id, name: name, color: own ? own.color : null,
+        value: v == null || mx <= mn ? 0 : Math.max(0, Math.min(100, Math.round((v - mn) / (mx - mn) * 100))),
+        svc: { domain: 'number', service: 'set_value', field: 'value', scale: [mn, mx, step], target: { entity_id: id } } };
+    };
+    const pick = Array.isArray(V && V.light_channels) ? V.light_channels.filter((id) => typeof id === 'string' && S[id]) : [];
+    if (pick.length) return pick.map((id) => fromNumber(id));
+    const dev = reg[light] && reg[light].device_id;
+    if (dev) {
+      const found = Object.values(reg).filter((e) => e && e.device_id === dev && String(e.entity_id).indexOf('number.') === 0 && S[e.entity_id])
+        .map((e) => [e.entity_id, window._casoraAqChannelOf([e.translation_key, e.entity_id.split('.')[1], S[e.entity_id].attributes.friendly_name].join(' '))])
+        .filter((x) => x[1]);
+      if (found.length) return found.map((x) => fromNumber(x[0], x[1]));
+    }
+    const a = s.attributes || {};
+    const modes = Array.isArray(a.supported_color_modes) ? a.supported_color_modes : [];
+    const kind = ['rgbww', 'rgbw', 'rgb'].find((m) => modes.indexOf(m) !== -1 || Array.isArray(a[m + '_color']));
+    if (!kind) return [];
+    const names = { rgb: ['Rot', 'Grün', 'Blau'], rgbw: ['Rot', 'Grün', 'Blau', 'Weiß'], rgbww: ['Rot', 'Grün', 'Blau', 'Kaltweiß', 'Warmweiß'] }[kind];
+    const cur = Array.isArray(a[kind + '_color']) ? a[kind + '_color'] : [];
+    return names.map((n, i) => {
+      const c = CH.find((x) => x[1] === n);
+      return { id: light, name: n, color: c ? c[2] : null, value: Math.round((Number(cur[i]) || 0) / 2.55),
+        svc: { domain: 'light', service: 'turn_on', field: kind + '_color', channel: i, size: names.length,
+          base: names.map((x, k) => Number(cur[k]) || 0), target: { entity_id: light } } };
+    });
+  };
+
+  /* Soll-Bereich der Wassertemperatur (1.1.2, temp_min/temp_max aus dem Studio): 0 = im Bereich,
+     1 = draußen (Prüfen), 2 = um mehr als 2 °C (3,6 °F) draußen (Alarm). dir: 'low' | 'high'. */
+  window._casoraAqTempRange = function (value, V, unit) {
+    const n = parseFloat(value);
+    const mn = parseFloat(V && V.temp_min), mx = parseFloat(V && V.temp_max);
+    if (isNaN(n) || (isNaN(mn) && isNaN(mx))) return { level: 0, dir: null };
+    const far = /F/i.test(String(unit || '')) ? 3.6 : 2;
+    if (!isNaN(mn) && n < mn) return { level: mn - n > far ? 2 : 1, dir: 'low' };
+    if (!isNaN(mx) && n > mx) return { level: n - mx > far ? 2 : 1, dir: 'high' };
+    return { level: 0, dir: null };
+  };
+
+  /* Kachel (1.1.2): Wassertemperatur vorn („25,4° · Alles ok“). */
+  window._casoraAqTileText = function (entity, ev) {
+    const t = (ev && ev.text) || '';
+    const n = parseFloat(entity && entity.state);
+    if (isNaN(n)) return t;
+    const v = n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '°';
+    return t ? v + ' · ' + t : v;
+  };
+
+  /* Technik (1.1.2): Studio-Felder tech_entities (Liste) mit tech_names / tech_alarm / tech_confirm (je
+     Eintrag) plus die älteren devices-Objekte aus YAML ({entity, label, icon, alarm, confirm, sub}).
+     Doppelte Entitäten zählen einmal (devices zuerst). */
+  const TECH_ICON = { switch: 'mdi:power-plug', light: 'mdi:lightbulb', fan: 'mdi:fan', climate: 'mdi:thermometer',
+    input_boolean: 'mdi:toggle-switch-outline', humidifier: 'mdi:air-humidifier', siren: 'mdi:alarm-light' };
+  window._casoraAqDevices = function (V, states) {
+    V = V || {};
+    const S = states || {};
+    const obj = (x) => (x && typeof x === 'object' && !Array.isArray(x) ? x : {});
+    const out = (Array.isArray(V.devices) ? V.devices : []).filter((d) => d && d.entity);
+    const seen = new Set(out.map((d) => d.entity));
+    const names = obj(V.tech_names), alarm = obj(V.tech_alarm), confirm = obj(V.tech_confirm);
+    (Array.isArray(V.tech_entities) ? V.tech_entities : []).forEach((id) => {
+      if (typeof id !== 'string' || !id || seen.has(id)) return;
+      seen.add(id);
+      const st = S[id], a = (st && st.attributes) || {};
+      out.push({ entity: id, label: names[id] || a.friendly_name || id,
+        icon: a.icon || TECH_ICON[id.split('.')[0]] || 'mdi:power-plug', alarm: !!alarm[id], confirm: !!confirm[id] });
+    });
+    return out;
+  };
+  /* Schalten je Domain statt fest switch.* (Heizer als climate, Lüfter, Licht, Helfer). on: läuft das Gerät? */
+  window._casoraAqTechSvc = function (id, on) {
+    const dom = String(id || '').split('.')[0];
+    const own = ['switch', 'light', 'fan', 'input_boolean', 'climate', 'humidifier', 'siren'].indexOf(dom) !== -1;
+    return { domain: own ? dom : 'homeassistant', service: on ? 'turn_off' : 'turn_on', target: { entity_id: id } };
+  };
+  window._casoraAqTechOn = function (st) {
+    if (!st) return false;
+    if (String(st.entity_id || '').indexOf('climate.') === 0) return ['off', 'unavailable', 'unknown'].indexOf(st.state) === -1;
+    return st.state === 'on';
+  };
+
+  /* Temperaturstatus eines eigenen Helfers: deutsch oder englisch, auch als binary_sensor (an = Problem). */
+  window._casoraAqStatusLevel = function (st) {
+    if (!st) return 0;
+    const s = String(st.state || '').toLowerCase();
+    if (st.entity_id && String(st.entity_id).indexOf('binary_sensor.') === 0) return s === 'on' ? 1 : 0;
+    if (/kritisch|critical|alarm|danger|gefahr/.test(s)) return 2;
+    if (/warnung|warning|warn|problem|prüfen|check/.test(s)) return 1;
+    return 0;
+  };
 })();
 
 // ── Aquarium-Kacheln (casora_aquarium_tank) ────────────────────────────────
@@ -53,7 +204,7 @@
       + ' onclick="window._hpPlantTap&&window._hpPlantTap(event,\'c\');window._casoraAqTap(event,\'c\')">'
       + html + '</div>';
   };
-  /* Lichtzeile (data-aq-light) öffnet das Casora-Einzellampen-Popup über denselben Weg wie das Licht-Gruppen-Popup. */
+  /* Dünger-Zeile (data-aq-dose) öffnet das Dosier-Popup. Das Licht wird seit 1.1.2 im Becken-Popup selbst bedient. */
   window._casoraAqTap = function (ev, kind) {
     if (kind === 's') { const t0 = ev.touches && ev.touches[0]; window._aqTy = t0 ? t0.clientY : 0; window._aqTx = t0 ? t0.clientX : 0; return; }
     if (kind === 't') {
@@ -62,20 +213,18 @@
       window._aqT = Date.now();
     } else if (Date.now() - (window._aqT || 0) < 700) return;
     const p = (ev.composedPath && ev.composedPath()) || [ev.target];
-    let id = null, dose = null;
+    let dose = null;
     for (let i = 0; i < p.length; i++) {
       const ds = p[i] && p[i].dataset;
       if (!ds) continue;
       if (ds.aqDose) { dose = ds.aqDose; break; }
-      if (ds.aqLight) { id = ds.aqLight; break; }
     }
-    if (!id && !dose) return;
+    if (!dose) return;
     /* Der „Dosieren“-Knopf in der Zeile bleibt eigenständig (Bestätigung) */
     for (let i = 0; i < p.length; i++) { if (p[i] && p[i].dataset && (p[i].dataset.casoraArm !== undefined || (p[i].classList && p[i].classList.contains('hui-cf')))) return; }
     ev.stopPropagation(); if (ev.cancelable) ev.preventDefault();
     window._casoraSuppressDismiss = Date.now() + 600;
-    if (dose) { try { window._casoraAqDoseOpen(JSON.parse(decodeURIComponent(dose))); } catch (e) { console.error('casora aquarium dose', e); } return; }
-    window.dispatchEvent(new CustomEvent('ll-custom', { detail: { casora_light_more_info: id } }));
+    try { window._casoraAqDoseOpen(JSON.parse(decodeURIComponent(dose))); } catch (e) { console.error('casora aquarium dose', e); }
   };
 
   /* Eigenes Casora-Popup je Dünger-Kanal (Sheet-Stil, Bedienung). */
@@ -158,66 +307,128 @@
     });
   };
 
-  /* Farbfelder (Tag/Abend/Voll) als HTML-Block; wird in die Licht-Platte eingehängt. */
-  window._casoraAqSwatches = function (presets, light, states) {
-    const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
-    const cur = JSON.stringify(states[light]?.attributes?.rgbw_color || null);
-    const swatch = (rgbw) => {
-      const w = (rgbw[3] || 0) / 255 * 0.6;
-      const mix = [0, 1, 2].map((k) => (rgbw[k] || 0) * (1 - w) + 255 * w);
-      const mx = Math.max.apply(null, mix) || 1;
-      return 'rgb(' + mix.map((v) => Math.round(v * 255 / mx)).join(',') + ')';
-    };
-    const items = presets.map((pr) => {
-      const on = JSON.stringify(pr.rgbw) === cur;
-      const svc = { domain: 'light', service: 'turn_on', data: { rgbw_color: pr.rgbw }, target: { entity_id: light } };
-      return '<div class="aq-sw" data-casora-svc="' + esc(JSON.stringify(svc)) + '">'
-        + '<div class="aq-dot' + (on ? ' on' : '') + '" style="background:' + swatch(pr.rgbw) + ';">' + (on ? '<span>✓</span>' : '') + '</div>'
-        + '<div class="aq-lbl">' + esc(pr.label) + '</div></div>';
-    }).join('');
-    /* Weich (01.10.2026): Segmente wie „Warm / Neutral / Kalt“ – Farbpunkt + Name, aktiv hell. */
-    if (window._casoraSoft && window._casoraSoft()) {
-      return '<style>'
-        + '.aq-ssw{display:flex;gap:10px;font-family:var(--primary-font-family,system-ui);}'
-        + '.aq-ssg{flex:1 1 0;min-width:0;height:46px;border-radius:18px;display:flex;align-items:center;justify-content:center;gap:7px;'
-        +   'cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;background:var(--casora-lps-seg, rgba(140,115,90,0.10));'
-        +   'color:var(--casora-lps-seg-ink, var(--secondary-text-color));transition:background .2s ease;}'
-        + '.aq-ssg.on{background:var(--casora-lps-seg-on, #FFFDF9);color:var(--casora-lps-seg-on-ink, #2E2721);box-shadow:var(--casora-lps-seg-on-shadow, none);}'
-        + '.aq-ssg i{width:10px;height:10px;border-radius:50%;flex:none;pointer-events:none;box-shadow:inset 0 0 0 1px var(--casora-lps-dot-ring, transparent);}'
-        + '.aq-ssg span{pointer-events:none;}'
-        + '</style><div class="aq-ssw">'
-        + presets.map((pr) => {
-          const on = JSON.stringify(pr.rgbw) === cur;
-          const svc = { domain: 'light', service: 'turn_on', data: { rgbw_color: pr.rgbw }, target: { entity_id: light } };
-          return '<div class="aq-ssg' + (on ? ' on' : '') + '" data-casora-svc="' + esc(JSON.stringify(svc)) + '">'
-            + '<i style="background:' + swatch(pr.rgbw) + ';"></i><span>' + esc(pr.label) + '</span></div>';
-        }).join('') + '</div>';
-    }
+  /* Antippbare Felder (Lampen-Modi, Lampen-Profil): brechen um statt abzuschneiden, Trefferfläche 46 px,
+     aktives Feld hell wie die Weich-Segmente („Warm / Neutral / Kalt“). */
+  window._casoraAqChips = function (items, label) {
+    const UI = window._casoraUI;
+    const soft = !!(window._casoraSoft && window._casoraSoft());
+    const esc = UI.esc;
+    const head = soft ? UI.label(label)
+      : '<div style="font-family:var(--primary-font-family,system-ui);font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);'
+        + 'letter-spacing:var(--casora-h15-ls,-0.01em);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary,#fff));padding:0 4px 8px;text-align:left;">' + esc(label) + '</div>';
     return '<style>'
-      + '.aq-sws{display:flex;justify-content:space-around;gap:8px;padding:14px 12px 14px;font-family:var(--primary-font-family,system-ui);}'
-      + '.aq-sw{display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;min-width:64px;}'
-      + '.aq-dot{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;'
-      +   'box-shadow:inset 0 0 0 1px rgba(0,0,0,0.25), 0 4px 14px -6px rgba(0,0,0,0.6);transition:transform .16s ease, box-shadow .16s ease;}'
-      + '.aq-dot.on{box-shadow:0 0 0 2px rgba(0,0,0,0.35), 0 0 0 4px #fff, 0 4px 14px -6px rgba(0,0,0,0.6);}'
-      + '.aq-dot span{color:rgba(0,0,0,0.72);font-size:20px;font-weight:700;line-height:1;}'
-      + '.aq-sw:active .aq-dot{transform:scale(0.94);}'
-      + '.aq-lbl{font-size:14px;font-weight:500;color:var(--casora-popup-tiles-text-primary,#fff);letter-spacing:-0.01em;}'
-      + '</style>'
-      /* Trennlinie wie zwischen Casora-Zeilen (T.div, eingerückt um das Zeilen-Padding) */
-      + '<div style="height:1px;background:var(--casora-popup-ui-divider, rgba(255,255,255,0.08));'
-      + 'margin:0 var(--casora-popup-row-pad-x, 16px);"></div>'
-      + '<div class="aq-sws">' + items + '</div>';
+      + '.aq-chips{display:flex;flex-wrap:wrap;gap:8px;font-family:var(--primary-font-family,system-ui);}'
+      + '.aq-chip{min-height:46px;box-sizing:border-box;padding:0 16px;display:flex;align-items:center;cursor:pointer;'
+      +   'border-radius:var(--casora-soft-seg-radius, 18px);font-size:13.5px;font-weight:600;line-height:1.2;'
+      +   'background:' + (soft ? 'var(--casora-soft-control-fill, rgba(140,115,90,0.10))' : 'var(--casora-popup-seg-fill, rgba(255,255,255,0.16))') + ';'
+      +   'color:' + (soft ? 'var(--casora-soft-sub, var(--secondary-text-color))' : 'var(--casora-popup-tiles-text-primary, #fff)') + ';'
+      +   'transition:background-color .16s ease, box-shadow .16s ease;}'
+      + '.aq-chip.on{' + (soft ? 'background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, var(--primary-text-color));box-shadow:var(--casora-soft-seg-on-shadow, none);'
+                              : 'background:var(--casora-popup-tiles-text-primary, #fff);color:var(--casora-popup-ui-on-ink, #000);') + '}'
+      + '@media (prefers-reduced-motion:reduce){.aq-chip{transition:none;}}'
+      + '</style>' + head + '<div class="aq-chips">'
+      + items.map((it) => '<div class="aq-chip' + (it.active ? ' on' : '') + '"'
+        + (it.svc && !it.active ? ' data-casora-svc="' + esc(JSON.stringify(it.svc)) + '"' : '') + '>' + esc(it.label) + '</div>').join('')
+      + '</div>';
   };
 
-  /* Hängt die Farbfelder in die Licht-Platte ein (vor dem Schließen von Platte + Hülle, die UI.group liefert). */
-  window._casoraAqMergeSwatches = function (groupHtml, c, states) {
-    /* c.hx: {sw, sel} aus window._casoraAqParts (früher der Präfix als Text). */
-    const sw = c.hx && (typeof c.hx === 'string' ? 'switch.' + c.hx + '_manual_color_simulation' : c.hx.sw);
-    const on = sw && Array.isArray(c.presets) && c.presets.length && states[sw]?.state === 'on';
-    const tail = '</div></div>';
-    if (!on || groupHtml.slice(-tail.length) !== tail) return groupHtml;
-    return groupHtml.slice(0, -tail.length) + window._casoraAqSwatches(c.presets, c.light, states) + tail;
+  /* Licht im Becken-Popup (1.1.2): Zeile An/Aus, Helligkeit, Farbkanäle (zweispaltig) und die eigenen
+     Modi bzw. das Profil der Lampe zum Antippen; „Weitere Einstellungen“ öffnet den HA-Dialog. */
+  window._casoraAqLight = function (c, states, hass) {
+    const UI = window._casoraUI;
+    if (!UI) return '';
+    const soft = !!(window._casoraSoft && window._casoraSoft());
+    const s = states[c.light];
+    const a = (s && s.attributes) || {};
+    const dead = !s || s.state === 'unavailable';
+    const on = !!s && s.state === 'on';
+    const rsx = c.reach && states[c.reach];
+    const offMs = rsx && rsx.state === 'off' ? Date.now() - new Date(rsx.last_changed).getTime() : 0;
+    const far = offMs > 30 * 60 * 1000;        // erst nach 30 min als Problem (wie Kachel/Helfer)
+    const blip = offMs > 0 && !far;            // kurzer BT-Aussetzer, nur neutraler Hinweis
+    const gap = (px) => '<div style="height:' + px + 'px"></div>';
+    const lbl = (t) => soft ? UI.label(t)
+      : '<div style="font-family:var(--primary-font-family,system-ui);font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);'
+        + 'letter-spacing:var(--casora-h15-ls,-0.01em);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary,#fff));padding:0 4px 8px;text-align:left;">' + UI.esc(t) + '</div>';
+    let out = UI.group([{ icon: 'mdi:lightbulb', iconTone: on ? null : 'rgba(255,255,255,0.18)', label: 'Beckenlicht',
+      sub: far ? 'Per Bluetooth nicht erreichbar' : blip ? 'Bluetooth-Verbindung kurz unterbrochen' : (dead ? 'Nicht verfügbar' : null),
+      value: dead ? '—' : on ? 'An' : 'Aus', valueTone: far ? 'warn' : null,
+      /* Einschalten mit Farbwerten (light_on_data): ein nacktes turn_on ließ die Juwel-Lampe dunkel. */
+      svc: dead ? null : (on ? { domain: 'light', service: 'turn_off', target: { entity_id: c.light } }
+                             : { domain: 'light', service: 'turn_on', data: c.lightOn || {}, target: { entity_id: c.light } }),
+      /* Ausschalten nur nach Bestätigung, wie bei Pumpe/Abschäumer. */
+      confirm: on ? 'Ausschalten' : null }], 'Licht');
+    if (dead) return out;
+    const modes = Array.isArray(a.supported_color_modes) ? a.supported_color_modes : [];
+    if (modes.some((m) => m !== 'onoff')) {
+      out += gap(10) + UI.slider({ value: on && a.brightness != null ? Math.round(a.brightness / 2.55) : 0, softHeight: 58, bar: true, icon: 'light',
+        svc: { domain: 'light', service: 'turn_on', field: 'brightness_pct', data: on ? null : (c.lightOn || null), target: { entity_id: c.light } } });
+    }
+    const ch = window._casoraAqChannels(c.light, { light_channels: c.lightChannels }, states, hass);
+    if (ch.length) {
+      out += gap(18) + lbl('Farbkanäle') + '<div class="aq-chs" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">'
+        + ch.map((k, i) => '<div style="min-width:0;--casora-popup-slider-fill:' + (k.color || 'var(--casora-popup-ui-accent, #5E9E96)') + ';'
+          + (i === ch.length - 1 && ch.length % 2 ? 'grid-column:1 / -1;' : '') + '">'
+          + UI.slider({ value: k.value, softHeight: 46, bar: true, small: true, label: k.name, svc: k.svc }) + '</div>').join('')
+        + '</div>';
+    }
+    /* Lampen-Modi: Effekte der Leuchte (übersetzt, wie HA sie zeigt); „none/off“ wird „Ohne Effekt“. */
+    const fxAll = (Array.isArray(a.effect_list) ? a.effect_list : []).filter((e) => typeof e === 'string' && e);
+    const noFx = fxAll.filter((e) => /^(none|off|aus|kein)$/i.test(e))[0];
+    const fx = fxAll.filter((e) => e !== noFx);
+    const fxName = (e) => { try { if (hass && hass.formatEntityAttributeValue) return hass.formatEntityAttributeValue(s, 'effect', e) || e; } catch (x) {} return e; };
+    const fxSvc = (e) => ({ domain: 'light', service: 'turn_on', data: { effect: e }, target: { entity_id: c.light } });
+    if (fx.length) {
+      const items = (noFx ? [{ label: 'Ohne Effekt', active: on && (!a.effect || a.effect === noFx), svc: fxSvc(noFx) }] : [])
+        .concat(fx.map((e) => ({ label: fxName(e), active: on && a.effect === e, svc: fxSvc(e) })));
+      out += gap(18) + window._casoraAqChips(items, 'Lampen-Modi');
+    }
+    /* Lampen-Profil (select): nur solange die Lampe ihr eigenes Programm fährt (oder kein Schalter da ist). */
+    const sel = c.hx && c.hx.sel && states[c.hx.sel];
+    if (sel) {
+      const sw = c.hx.sw && states[c.hx.sw] ? c.hx.sw : null;
+      const mean = sw ? window._casoraAqSwitchMeaning(sw, { light_schedule_on: c.swOn }, hass) : null;
+      const haCtl = sw ? (mean === 'ha') === (states[sw].state === 'on') : false;
+      if (!haCtl) {
+        const nm = (o) => { try { if (hass && hass.formatEntityState) return hass.formatEntityState(sel, o) || o; } catch (x) {} return o; };
+        const seen = new Set();
+        const items = (sel.attributes.options || []).filter((o) => { const k = nm(o); if (seen.has(k)) return false; seen.add(k); return true; })
+          .map((o) => ({ label: nm(o), active: sel.state === o,
+            svc: { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.hx.sel } } }));
+        if (items.length) out += gap(18) + window._casoraAqChips(items, 'Lampen-Profil');
+      }
+    }
+    return out + gap(12) + UI.group([{ icon: 'mdi:tune-variant', iconTone: 'rgba(255,255,255,0.18)', label: 'Weitere Einstellungen', entity: c.light }], null);
   };
+
+  /* Steuerung: Zeitplan-Schalter als zwei Zeilen (aktive hinterlegt); Bedeutung von „an“ je Lampe. */
+  window._casoraAqSteer = function (c, states, hass) {
+    const UI = window._casoraUI;
+    if (!UI || !c.hx) return '';
+    const sw = c.hx.sw && states[c.hx.sw] ? c.hx.sw : null;
+    if (!sw) {
+      /* Profil ohne Leuchte: Auswahlliste wie bisher. */
+      const sel = c.hx.sel && states[c.hx.sel];
+      if (!sel) return '';
+      const nm = (o) => { try { if (hass && hass.formatEntityState) return hass.formatEntityState(sel, o) || o; } catch (x) {} return o; };
+      const opts = Array.from(new Set(sel.attributes.options || []));
+      return window._casoraSelRows(UI.group(opts.map((o) => ({
+        icon: 'mdi:palette-outline', iconTone: sel.state === o ? 'accent' : 'rgba(255,255,255,0.18)', label: nm(o),
+        svc: sel.state === o ? null : { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.hx.sel } },
+      })), 'Profil'), nm(sel.state));
+    }
+    const mean = window._casoraAqSwitchMeaning(sw, { light_schedule_on: c.swOn }, hass);
+    const isOn = states[sw].state === 'on';
+    const haCtl = (mean === 'ha') === isOn;
+    const to = (ha) => ({ domain: 'switch', service: (mean === 'ha') === ha ? 'turn_on' : 'turn_off', target: { entity_id: sw } });
+    return window._casoraSelRows(UI.group([
+      { icon: 'mdi:home-automation', iconTone: haCtl ? 'accent' : 'rgba(255,255,255,0.18)', label: 'Home Assistant',
+        sub: 'Farben nach deiner Automation', svc: haCtl ? null : to(true) },
+      { icon: 'mdi:calendar-clock', iconTone: !haCtl ? 'accent' : 'rgba(255,255,255,0.18)', label: 'Programm der Lampe',
+        sub: 'Eigener Tagesablauf der Lampe', svc: !haCtl ? null : to(false) },
+    ], 'Steuerung'), haCtl ? 'Home Assistant' : 'Programm der Lampe');
+  };
+
   window._casoraAqEval = function (entity, variables, states, hass) {
   /* Drei Zustände: Alles ok / Prüfen (orange) / Alarm (rot), dahinter der wichtigste Grund. */
   const num = (e) => { const n = parseFloat(states[e]?.state); return isNaN(n) ? null : n; };
@@ -236,7 +447,7 @@
   const V = variables || {};
   const alarm = [], warn = [];
   if (V.leak_entity && states[V.leak_entity]?.state === 'on') alarm.push('Wasser erkannt');
-  (V.devices || []).forEach((d) => {
+  (window._casoraAqDevices ? window._casoraAqDevices(V, states) : (V.devices || [])).forEach((d) => {
     if (!d || !states[d.entity]) return;
     const s = states[d.entity].state;
     if (s === 'unavailable') { warn.push(d.label + ' offline'); return; }
@@ -246,9 +457,13 @@
     // Unter 2 W gilt ein eingeschaltetes Gerät als stromlos (kleine Pumpen ziehen 2–3 W).
     if (s === 'on' && pw != null && pw < 2) alarm.push(d.label + ' ohne Strom');
   });
-  const st = String(states[V.status_entity]?.state || '').toLowerCase();
-  if (st.includes('kritisch')) alarm.push('Temperatur kritisch');
-  else if (st.includes('warnung')) warn.push('Temperaturwarnung');
+  /* Soll-Bereich aus dem Studio (temp_min/temp_max); der eigene Statussensor bleibt als Zusatz. */
+  const tr = window._casoraAqTempRange ? window._casoraAqTempRange(entity?.state, V, entity?.attributes?.unit_of_measurement) : { level: 0 };
+  if (tr.level) (tr.level === 2 ? alarm : warn).push(tr.dir === 'low' ? 'Temperatur zu niedrig' : 'Temperatur zu hoch');
+  const sl = window._casoraAqStatusLevel ? window._casoraAqStatusLevel(V.status_entity && states[V.status_entity])
+    : (/kritisch/i.test(String(states[V.status_entity]?.state || '')) ? 2 : /warnung/i.test(String(states[V.status_entity]?.state || '')) ? 1 : 0);
+  if (sl === 2 && !tr.level) alarm.push('Temperatur kritisch');
+  else if (sl === 1 && !tr.level) warn.push('Temperaturwarnung');
   if (dead(entity?.entity_id)) warn.push('Temperaturfühler offline');
   if (dead(V.leak_entity)) warn.push('Lecksensor offline');
   /* Akku-Hinweise (battery_hints, 06.10.2026): steht schon eine Batterien-Kachel auf dem Dashboard,
@@ -356,7 +571,7 @@
     });
     return m;
   };
-  const devs = (variables.devices || []).filter((d) => d && d.entity && states[d.entity])
+  const devs = window._casoraAqDevices(variables, states).filter((d) => d && d.entity && states[d.entity])
     .map((d) => Object.assign({}, d, { power: powerOf(d.entity),
       today: meterOf(d.entity, /_energy_today$/), month: meterOf(d.entity, /_energy_month$/) }));
   /* Dosierpumpe und Lichtsteuerung: gewählte Entitäten, sonst die alten Präfixe (window._casoraAqParts). */
@@ -368,13 +583,18 @@
     leak: variables.leak_entity || null, leakBat: variables.leak_battery || null,
     tempBat: variables.temp_battery || null, devs: devs, dose: dose,
     lightOn: variables.light_on_data || null,
-    hx: parts.light, presets: variables.light_presets || null,
+    hx: parts.light,
+    /* 1.1.2: Farbkanäle (light_channels), Bedeutung des Zeitplan-Schalters (light_schedule_on),
+       Soll-Bereich (temp_min/temp_max). Eigene Farbvorgaben (light_presets) zeigt Casora nicht mehr. */
+    lightChannels: Array.isArray(variables.light_channels) ? variables.light_channels : null,
+    swOn: variables.light_schedule_on || null,
     /* Für die Status-Zeile unter der Temperatur (gleiche Bewertung wie die Kachel) */
     V: { status_entity: variables.status_entity || null, leak_entity: variables.leak_entity || null,
          leak_battery: variables.leak_battery || null, temp_battery: variables.temp_battery || null,
          battery_hints: variables.battery_hints || 'auto',
+         temp_min: variables.temp_min ?? null, temp_max: variables.temp_max ?? null,
          light_entity: variables.light_entity || null, light_reachable: variables.light_reachable || null,
-         devices: (variables.devices || []).map((d) => ({ entity: d.entity, label: d.label, alarm: !!d.alarm })) },
+         devices: window._casoraAqDevices(variables, states).map((d) => ({ entity: d.entity, label: d.label, alarm: !!d.alarm })) },
     labels: dose.map((d) => d.label),
   };
   const _c = JSON.stringify(cfg);
@@ -382,7 +602,8 @@
     .concat(devs.map((d) => d.entity), devs.map((d) => d.power), devs.map((d) => d.today), devs.map((d) => d.month),
             dose.map((d) => d.today), dose.map((d) => d.total), dose.map((d) => d.vol))
     .concat(cfg.hx ? [cfg.hx.sw, cfg.hx.sel] : [])
-    .filter(Boolean);
+    .concat(cfg.light ? window._casoraAqChannels(cfg.light, { light_channels: cfg.lightChannels }, states, hass).map((k) => k.id) : [])
+    .filter((x, i, all) => x && all.indexOf(x) === i);
 
   const areas = [], fields = {}, fstyle = {};
   const add = (name, v) => { areas.push('"' + name + '"'); fields[name] = v; fstyle[name] = [{ 'justify-self': 'stretch' }]; };
@@ -392,7 +613,13 @@
     const n = parseFloat(states[c.temp]?.state);
     /* Unter der Temperatur steht, was los ist (alle Gründe, Schwerstes zuerst), sonst der Temperaturstatus. */
     const ev = window._casoraAqEval ? window._casoraAqEval(states[c.temp], c.V, states, hass) : { level: 0, reasons: [] };
-    const okText = 'Temperatur im Normalbereich';
+    /* Mit Soll-Bereich aus dem Studio steht er im Kopf („Soll-Bereich 24–26 °C“). */
+    const u = (states[c.temp]?.attributes?.unit_of_measurement) || '°C';
+    const fr = (x) => Number(x).toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { maximumFractionDigits: 1 });
+    const hasMin = c.V.temp_min != null && c.V.temp_min !== '' && !isNaN(parseFloat(c.V.temp_min));
+    const hasMax = c.V.temp_max != null && c.V.temp_max !== '' && !isNaN(parseFloat(c.V.temp_max));
+    const okText = hasMin && hasMax ? 'Soll-Bereich ' + fr(c.V.temp_min) + '–' + fr(c.V.temp_max) + ' ' + u
+      : 'Temperatur im Normalbereich';
     return window._casoraUI.hero({
       value: isNaN(n) ? '—' : n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
       unit: (states[c.temp]?.attributes?.unit_of_measurement) || '°C', /* Einheit des Fühlers (°C/°F) */
@@ -435,61 +662,18 @@
     if (typeof window._hpChartInit === 'function') window._hpChartInit(cfg.temp);
   }
 
+  /* Licht (1.1.2, Variante b): An/Aus, Helligkeit, Farbkanäle und Lampen-Modi direkt im Becken-Popup –
+     kein Sprung mehr ins allgemeine Licht-Popup (window._casoraAqLight). */
   if (cfg.light && states[cfg.light]) add('glight', `[[[
     const c = ${_c};
-    const s = states[c.light];
-    const dead = !s || s.state === 'unavailable';
-    const on = s && s.state === 'on';
-    const pct = on && s.attributes.brightness != null ? Math.round(s.attributes.brightness / 2.55) : null;
-    const rsx = c.reach && states[c.reach];
-    const offMs = rsx && rsx.state === 'off' ? Date.now() - new Date(rsx.last_changed).getTime() : 0;
-    const far = offMs > 30 * 60 * 1000;        // erst nach 30 min als Problem (wie Kachel/Helfer)
-    const blip = offMs > 0 && !far;            // kurzer BT-Aussetzer, nur neutraler Hinweis
-    return window._casoraAqWrap(window._casoraAqMergeSwatches(window._casoraUI.group([
-      { icon: 'mdi:lightbulb', iconTone: on ? null : 'rgba(255,255,255,0.18)', label: 'Beckenlicht',
-        sub: far ? 'Per Bluetooth nicht erreichbar' : blip ? 'Bluetooth-Verbindung kurz unterbrochen' : (dead ? 'Nicht verfügbar' : null),
-        value: dead ? '—' : on ? (pct != null ? pct + ' %' : 'An') : 'Aus',
-        valueTone: far ? 'warn' : null,
-        /* Einschalten mit Farbwerten (light_on_data): ein nacktes turn_on ließ die Juwel-Lampe dunkel. */
-        svc: dead ? null : (on ? { domain: 'light', service: 'turn_off', target: { entity_id: c.light } }
-                               : { domain: 'light', service: 'turn_on', data: c.lightOn || {}, target: { entity_id: c.light } }),
-        /* Ausschalten nur nach Bestätigung, wie bei Pumpe/Abschäumer. */
-        confirm: on ? 'Ausschalten' : null },
-    ].concat(c.hx ? [] : [{ icon: 'mdi:tune-variant', iconTone: 'rgba(255,255,255,0.18)', label: 'Lichtsteuerung', entity: c.light }]), 'Licht')
-      .replace('data-casora-mi="' + c.light + '"', 'data-aq-light="' + c.light + '"'), c, states));
+    return window._casoraAqLight ? window._casoraAqLight(c, states, hass) : '';
   ]]]`);
 
-  /* Lichtsteuerung (z. B. Juwel HeliaLux): Schalter HA-Zeitplan vs. Geräteprofil (light_schedule_switch)
-     und Profilwahl (light_profile); ältere Kacheln über den Präfix helialux. */
-  if (cfg.hx && ((cfg.hx.sw && states[cfg.hx.sw]) || (cfg.hx.sel && states[cfg.hx.sel]))) add('glightx', `[[[
+  /* Steuerung: wer bestimmt die Farben – Home Assistant oder das Programm der Lampe (Zeitplan-Schalter,
+     Bedeutung über window._casoraAqSwitchMeaning). Profil ohne Leuchte: Auswahlliste wie bisher. */
+  if (cfg.hx && ((cfg.hx.sw && states[cfg.hx.sw]) || (cfg.hx.sel && states[cfg.hx.sel] && !(cfg.light && states[cfg.light])))) add('glightx', `[[[
     const c = ${_c};
-    const UI = window._casoraUI;
-    const sw = c.hx.sw && states[c.hx.sw] ? c.hx.sw : null;
-    const sel = c.hx.sel;
-    const manual = !!sw && states[sw]?.state === 'on';
-    const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
-    const svcAttr = (o) => ' data-casora-svc="' + esc(JSON.stringify(o)) + '"';
-    /* Steuerung: Auswahlliste, aktive Zeile hinterlegt (window._casoraSelRows) statt Haken. */
-    const steer = !sw ? '' : window._casoraSelRows(UI.group([
-      { icon: 'mdi:calendar-clock', iconTone: manual ? 'accent' : 'rgba(255,255,255,0.18)', label: 'HA-Zeitplan',
-        sub: 'Farben nach deiner Automation',
-        svc: manual ? null : { domain: 'switch', service: 'turn_on', target: { entity_id: sw } } },
-      { icon: 'mdi:tune-vertical', iconTone: !manual ? 'accent' : 'rgba(255,255,255,0.18)', label: 'Geräteprofil',
-        sub: 'Eigenes Tagesprofil der Lampe',
-        svc: !manual ? null : { domain: 'switch', service: 'turn_off', target: { entity_id: sw } } },
-    ], 'Steuerung'), manual ? 'HA-Zeitplan' : 'Geräteprofil');
-    /* Reihenfolge: Farbe bzw. Profil direkt unter „Licht“, danach die Steuerung. */
-    let out = '';
-    if (!manual && sel && states[sel]) {
-      const opts = Array.from(new Set(states[sel].attributes?.options || []));
-      out += window._casoraSelRows(UI.group(opts.map((o) => ({
-        icon: 'mdi:palette-outline', iconTone: states[sel].state === o ? 'accent' : 'rgba(255,255,255,0.18)', label: o,
-        svc: states[sel].state === o ? null : { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: sel } },
-      })), 'Profil'), states[sel].state);
-      /* Nur ältere Kacheln (helialux): dort setzt die eigene Automation morgens zurück. */
-      if (c.hx.legacy && sw) out += '<div style="height:6px"></div>' + UI.note('Gilt bis morgen 9:00, dann übernimmt wieder der HA-Zeitplan.');
-    }
-    return out + (out && steer ? '<div style="height:18px"></div>' : '') + steer;
+    return window._casoraAqSteer ? window._casoraAqSteer(c, states, hass) : '';
   ]]]`);
 
   if (devs.length) add('gtech', `[[[
@@ -497,7 +681,7 @@
     const f = (n) => n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { maximumFractionDigits: n < 10 ? 1 : 0 });
     const rows = c.devs.map((d) => {
       const s = states[d.entity]?.state;
-      const on = s === 'on';
+      const on = window._casoraAqTechOn ? window._casoraAqTechOn(states[d.entity]) : s === 'on';
       const dead = s === 'unavailable' || s == null;
       const p = d.power ? parseFloat(states[d.power]?.state) : NaN;
       const nopow = d.alarm && on && !isNaN(p) && p < 2;
@@ -508,7 +692,8 @@
         sub: !isNaN(p) ? f(p) + ' W' + (nopow ? ' · keine Leistung' : '') : null,
         value: dead ? 'Nicht verfügbar' : on ? 'An' : 'Aus',
         valueTone: (!on && d.alarm) || nopow ? 'bad' : null,
-        svc: dead ? null : { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: d.entity } },
+        svc: dead ? null : (window._casoraAqTechSvc ? window._casoraAqTechSvc(d.entity, on)
+          : { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: d.entity } }),
         confirm: on && d.confirm ? 'Ausschalten' : null,
       };
     });
@@ -646,9 +831,13 @@
         value: ls === 'unavailable' ? 'Offline' : wet ? 'Wasser erkannt!' : 'Trocken', valueTone: wet ? 'bad' : ls === 'unavailable' ? 'warn' : null,
         entity: c.leak, active: wet }], 'Sicherheit');
     ]]]`;
+    /* 1.1.2 (Frage 8): oben links Licht, Steuerung, Technik; rechts Düngeanlage (nur mit Pumpe) und
+       Sicherheit; unter „Mehr“ Aquarium-Doktor, Energie und Akkus. */
+    if (fields.glightx) f2.gctl = fields.glightx;
+    if (fields.gdose) f2.gdose = fields.gdose;
+    delete f2.gai;
     const parts = [];
-    if (fields.glightx) parts.push(fields.glightx.replace(/^\[\[\[|\]\]\]$/g, ''));
-    if (fields.gdose) parts.push(fields.gdose.replace(/^\[\[\[|\]\]\]$/g, ''));
+    if (fields.gai) parts.push(fields.gai.replace(/^\[\[\[|\]\]\]$/g, ''));
     if (fields.genergy) parts.push(fields.genergy.replace(/^\[\[\[|\]\]\]$/g, ''));
     parts.push(`
     const c = ${_c};
@@ -665,7 +854,8 @@
     /* Jeder Teil läuft als eigene Funktion; H.more fasst sie zusammen. */
     f2.more = HH.moreCard(watch, 'const __p = [' + parts.map((p) => '(() => {' + p + '\n})()').join(',\n') + '];\n'
       + 'return window._casoraHH ? window._casoraHH.more("aquarium", __p) : "";', cfg.temp);
-    return HH.layout({ entity: cfg.temp, watch: watch, fields: f2, top: ['hero', 'chart'], left: ['glight', 'gtech'], right: ['gai', 'gleak', 'more'] });
+    return HH.layout({ entity: cfg.temp, watch: watch, fields: f2, top: ['hero', 'chart'],
+      left: ['glight', 'gctl', 'gtech'].filter((k) => f2[k]), right: ['gdose', 'gleak', 'more'].filter((k) => f2[k]) });
   }
   /* Popup-Standard (24.09.2026): links Bedienung (Licht, Technik, Düngeanlage), rechts Infos (Sicherheit, Verbrauch, KI-Doktor). */
   const _sp = ((l, r) => window._casoraSplit ? window._casoraSplit('aquarium', l, r) : { left: l, right: r })(
