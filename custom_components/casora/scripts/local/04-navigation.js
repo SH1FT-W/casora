@@ -124,58 +124,57 @@
       + '.hmn-bar.hmn-ic .hmn-btn.on ha-icon,.hmn-bar.hmn-ic .hmn-btn.on .hmn-svg{color:var(--casora-mnav-pill-ink, #fff);flex:none;}'
       + '.hmn-bar.hmn-ic .hmn-btn:not(.on):active{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));}'
       + '.hmn-bar.hmn-ic .hmn-btn.on:active{filter:brightness(.94);}'
-      /* Casora/Weich (Entwurf A „Blatt von unten“, 08.10.2026): Räume und Szenen als Blatt wie die
-         Apple-Sheets. Rand 8 px ringsum, Ecken konzentrisch (44 außen, 36 innen = 44 − 8), Zeilen 64 px.
+      /* Casora/Weich (Richtung C „Leicht“, 08.10.2026): Räume und Szenen als Blatt wie ein Casora-Handy-Popup –
+         volle Breite, unten bündig, nur oben rund (--casora-sheet-radius), Griff wie der Popup-Griff, Titel
+         mittig mit Etikett. Zeilen 52 px ohne Platten (Pille 26 = Kreis 18 + 8 Innenabstand, konzentrisch);
+         nur der offene Raum bekommt die Fläche der gewählten Popup-Zeile.
          Die Klasse hmn-sheet setzt _openSheet(), nur solange das Weich-Design aktiv ist. */
-      + '.hmn-menu.hmn-sheet{left:8px;right:8px;bottom:8px;margin:0 auto;width:auto;min-width:0;max-width:520px;padding:0;overscroll-behavior:contain;'
-      +   'border-radius:var(--casora-msheet-radius, 44px) !important;display:flex;flex-direction:column;overflow:hidden;opacity:1;'
-      +   'max-height:calc(100vh - 8px - max(env(safe-area-inset-top, 0px), 12px) - 40px);'
-      +   'max-height:calc(100dvh - 8px - max(env(safe-area-inset-top, 0px), 12px) - 40px);'
+      + '.hmn-menu.hmn-sheet{left:0;right:0;bottom:0;margin:0 auto;width:auto;min-width:0;max-width:520px;padding:0;overscroll-behavior:contain;'
+      +   'border-radius:var(--casora-sheet-radius, 24px) var(--casora-sheet-radius, 24px) 0 0 !important;box-shadow:none !important;'
+      +   'display:flex;flex-direction:column;overflow:hidden;opacity:1;'
+      +   'max-height:calc(100vh - max(env(safe-area-inset-top, 0px), 12px) - 40px);'
+      +   'max-height:calc(100dvh - max(env(safe-area-inset-top, 0px), 12px) - 40px);'
       +   'transform:translateY(calc(100% + 24px));transition:transform .34s cubic-bezier(.2,.9,.25,1);color:var(--casora-mnav-fg-on, #fff);}'
       + '.hmn-menu.hmn-sheet.open{transform:translateY(0);}'
       /* Die Leiste liegt unter dem Blatt und schien durch dessen Glasfläche – solange es offen ist, ausblenden. */
       + '.hmn-bar.hmn-under{opacity:0;pointer-events:none;}'
       + '.hmn-menu.hmn-sheet.hmn-drag{transition:none;}'
-      + '.hmn-grip{flex:none;width:36px;height:5px;border-radius:3px;margin:8px auto 0;background:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));opacity:.5;}'
-      + '.hmn-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;height:44px;padding:0 20px;'
+      + '.hmn-grip{flex:none;width:36px;height:4px;border-radius:2px;margin:10px auto 0;background:var(--casora-popup-grabber, var(--casora-soft-grabber, rgba(120,100,80,0.30)));}'
+      + '.hmn-head{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 20px 6px;'
       +   'touch-action:none;cursor:grab;}'
-      + '.hmn-title{font-size:22px;line-height:28px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap;}'
-      + '.hmn-count{font-size:14px;line-height:18px;color:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));white-space:nowrap;}'
-      + '.hmn-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;'
-      +   'padding:0 8px max(8px, calc(env(safe-area-inset-bottom, 0px) - 8px));box-sizing:border-box;}'
-      + '.hmn-list.hmn-grid{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px;align-content:start;}'
-      + '.hmn-empty{grid-column:1 / -1;padding:12px 12px 16px;font-size:15px;color:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));}'
-      /* Raumzeile: Symbolkreis 40 px, links und oben 12 px vom Zeilenrand (Zeile als Pille 64/2 = 32 = 20 + 12,
-         also konzentrisch), Abstand Kreis–Text ebenfalls 12 px. Chevron als ::after, damit der Text
-         lastElementChild bleibt (Tests lesen den Namen dort). */
-      + '.hmn-sheet .hmn-item.hmn-row{grid-template-columns:40px minmax(0,1fr) 14px;column-gap:12px;height:64px;min-height:64px;'
-      +   'padding:0 12px;border-radius:calc(var(--casora-msheet-radius, 44px) - 8px);font-size:17px;line-height:22px;'
+      + '.hmn-title{font-size:22px;line-height:28px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;}'
+      + '.hmn-count{font-size:12px;line-height:16px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;'
+      +   'color:var(--casora-soft-label, var(--casora-mnav-fg-sub, rgba(255,255,255,0.55)));}'
+      /* Liste: 10 px Luft zum Blattrand; position:relative, damit offsetTop der Zeilen in der Liste zählt (Mittigstellen). */
+      + '.hmn-list{position:relative;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;'
+      +   'padding:8px 10px max(10px, env(safe-area-inset-bottom, 0px));box-sizing:border-box;}'
+      + '.hmn-empty{padding:4px 10px 12px;font-size:15px;color:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));}'
+      /* Zeile (Räume und Szenen gleich): Kreis 36 | Name | Zustand rechts. Innenabstand links 8 wie
+         Kreis-Radius 18 zur Pille 26; Abstand Kreis–Text ebenfalls 8. */
+      + '.hmn-sheet .hmn-item.hmn-row{grid-template-columns:36px minmax(0,1fr) auto;column-gap:8px;height:52px;min-height:52px;'
+      +   'padding:0 14px 0 8px;border-radius:26px;font-size:15px;line-height:20px;letter-spacing:-0.01em;background:transparent;'
       +   'font-weight:600;transition:transform .14s ease, background-color .14s ease;}'
-      + '.hmn-sheet .hmn-item.hmn-row.on{font-weight:600;}'
-      + '.hmn-sheet .hmn-row::after{content:"";grid-column:3;justify-self:end;width:8px;height:14px;background:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));opacity:.6;'
-      +   '-webkit-mask:var(--hmn-chev) center/contain no-repeat;mask:var(--hmn-chev) center/contain no-repeat;}'
-      + '.hmn-sheet{--hmn-chev:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 8 14%27%3E%3Cpath d=%27M1.5 1.5 7 7l-5.5 5.5%27 fill=%27none%27 stroke=%27%23000%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E");}'
+      /* Offener Raum = gewählte Popup-Zeile: Weiß mit weichem Schatten, Name/Zustand in den Aktiv-Farben. */
+      + '.hmn-sheet .hmn-item.hmn-row.on{font-weight:600;background:var(--casora-entity-background-active, var(--casora-mnav-on-fill, rgba(255,255,255,0.14)));'
+      +   'box-shadow:var(--button-card-box-shadow-active-mobile, none);color:var(--casora-entity-name-active, inherit);}'
       /* Symbolkreis im Blatt: eigene Klasse hmn-sic – „hmn-ic“ trägt im Weich-Design die Leiste selbst,
-         die Regel hatte sie in 1.1.1 auf 40 px Höhe, rund und eingefärbt gezogen (Hotfix 1.1.2). */
-      + '.hmn-sic{flex:none;box-sizing:border-box;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;'
-      +   'background:color-mix(in srgb, var(--hmn-tone, var(--primary-color, #B67A50)) 14%, transparent);color:var(--hmn-tone, var(--primary-color, #B67A50));}'
-      + '.hmn-sheet .hmn-item .hmn-sic ha-icon{--mdc-icon-size:22px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;line-height:0;color:inherit;}'
-      + '.hmn-sheet .hmn-item .hmn-sic .hmn-svg{width:22px;height:22px;display:block;background:currentColor;-webkit-mask:var(--hmn-svg) center/contain no-repeat;mask:var(--hmn-svg) center/contain no-repeat;}'
-      + '.hmn-row.on .hmn-sic{background:var(--primary-color, #B67A50);color:var(--casora-msheet-on-ink, #fff);}'
+         die Regel hatte sie in 1.1.1 auf 40 px Höhe, rund und eingefärbt gezogen (Hotfix 1.1.2).
+         Räume: Sand-Kreis mit dunkler Glyphe wie die Popup-Zeilen, Ton nur im offenen Raum.
+         Szenen (hmn-tone): Kreis in der Studio-Farbe der Szene (_sceneTone), weiße Glyphe. */
+      + '.hmn-sic{flex:none;box-sizing:border-box;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;'
+      +   'background:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, currentColor);}'
+      + '.hmn-sheet .hmn-item .hmn-sic ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;line-height:0;color:inherit;}'
+      + '.hmn-sheet .hmn-item .hmn-sic .hmn-svg{width:20px;height:20px;display:block;background:currentColor;-webkit-mask:var(--hmn-svg) center/contain no-repeat;mask:var(--hmn-svg) center/contain no-repeat;}'
+      + '.hmn-row.on .hmn-sic,.hmn-row.hmn-tone .hmn-sic{background:var(--hmn-tone, var(--primary-color, #B67A50));color:var(--casora-msheet-on-ink, #fff);}'
       + '.hmn-txt{display:flex;flex-direction:column;min-width:0;}'
       + '.hmn-name{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
-      + '.hmn-sheet .hmn-sub{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;line-height:18px;font-weight:500;margin-top:0;}'
-      /* Szenen: farbige Kacheln im 2er-Raster. Farbe: eigene Szenenfarbe aus dem Studio, sonst passend zum
-         Symbol (_sceneTone). Ecken 36 (= Blatt − 8), Symbolkreis 20 + Innenabstand 16 = 36, konzentrisch. */
-      + '.hmn-sheet .hmn-item.hmn-tile{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:12px;height:auto;min-height:106px;'
-      +   'padding:16px;border-radius:calc(var(--casora-msheet-radius, 44px) - 8px);'
-      +   'background:color-mix(in srgb, var(--hmn-tone) var(--casora-msheet-tile-mix, 18%), transparent);'
-      +   'font-size:16px;line-height:20px;font-weight:600;transition:transform .14s ease, filter .14s ease;}'
-      + '.hmn-tile .hmn-sic{background:var(--hmn-tone);color:#fff;}'
-      + '.hmn-tile .hmn-name{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;width:100%;overflow-wrap:anywhere;}'
-      /* Tipp-Rückmeldung: abdunkeln und leicht schrumpfen (auch per Klasse, falls :active am Handy nicht greift). */
+      /* Zustand rechts als kleiner Wert in Text 2 (wie ein Badge-Wert); im offenen Raum in der Aktiv-Zustandsfarbe. */
+      + '.hmn-sheet .hmn-sub{display:block;min-width:0;max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:16px;font-weight:500;'
+      +   'margin:0;font-variant-numeric:tabular-nums;color:var(--casora-text-2, var(--casora-mnav-fg-sub, rgba(255,255,255,0.55)));}'
+      + '.hmn-sheet .hmn-row.on .hmn-sub{color:var(--casora-entity-state-active-color, var(--casora-text-2, inherit));}'
+      /* Tipp-Rückmeldung wie die Popup-Zeilen: Fläche hinterlegen und leicht schrumpfen (auch per Klasse, falls :active am Handy nicht greift). */
       + '.hmn-sheet .hmn-item.hmn-row:active,.hmn-sheet .hmn-item.hmn-row.hmn-press{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));transform:scale(.985);}'
-      + '.hmn-sheet .hmn-item.hmn-tile:active,.hmn-sheet .hmn-item.hmn-tile.hmn-press{filter:brightness(.9);transform:scale(.96);}';
+      + '.hmn-sheet .hmn-item.hmn-row.on:active,.hmn-sheet .hmn-item.hmn-row.on.hmn-press{background:var(--casora-entity-background-active, var(--casora-mnav-on-fill, rgba(255,255,255,0.14)));filter:brightness(.97);}';
     document.head.appendChild(st);
   };
 
@@ -552,27 +551,15 @@
       }
       return parts.join(' · ');
     }
-    /* Kachelfarbe einer Szene: eigene Farbe aus dem Studio, sonst passend zum Symbol (Farbsystem der
-       Menüsymbole: Nacht dunkelrot, Morgen/Licht gelb, Putzen türkis, Medien blau, Wärme orange,
-       Pflanzen grün). Unbekannt: Gelb wie „Szenen/Stimmung“. */
-    _sceneTone(id, icon) {
+    /* Kreisfarbe einer Szene im Blatt: die Studio-Farbe wie überall am Desktop (Szenen-Badge, -Kacheln, -Reihe):
+       eigene Farbe aus dem Studio, sonst die Standard-Szenenfarbe (--casora-scene-badge-color, im Casora-Design
+       Gelb – dieselbe Quelle wie casora_badge_scene/casora_scenes). Keine geratene Symbolfarbe (Richtung C, 08.10.2026). */
+    _sceneTone(id) {
       var own = window.casoraSceneColor ? window.casoraSceneColor(id) : null;
-      if (own) return String(own).replace(/["<>;{}]/g, '');
-      var ic = String(icon || '').toLowerCase();
-      var map = [
-        [/night|moon|sleep|bed|stars?\b|lamp-off|power-sleep/, 'var(--casora-color-purple, #A9473D)'],
-        [/sun|morning|coffee|alarm|white-balance|ceiling-light|lightbulb|lamp|brightness/, 'var(--casora-tone-light, var(--casora-color-yellow, #E8B04A))'],
-        [/broom|magic|wand|sparkles|auto-fix|clean|vacuum|robot|spray|wash/, 'var(--casora-tone-general, var(--casora-color-teal, #4E9E95))'],
-        [/movie|film|tv|television|theater|popcorn|music|speaker|play|headphones|gamepad|controller/, 'var(--casora-tone-media, var(--casora-color-blue, #5B8FC9))'],
-        [/fire|flame|candle|heat|radiator|thermometer|sofa|fireplace/, 'var(--casora-tone-heat, var(--casora-color-orange, #DE8A4E))'],
-        [/leaf|plant|flower|tree|sprout|nature|eco/, 'var(--casora-tone-energy, var(--casora-color-green, #6AAE78))'],
-        [/home|house|door|lock|shield|walk|run|car|exit|account/, 'var(--casora-tone-settings, var(--casora-color-sand, #9A8672))'],
-      ];
-      for (var i = 0; i < map.length; i++) if (map[i][0].test(ic)) return map[i][1];
-      return 'var(--casora-tone-light, var(--casora-color-yellow, #E8B04A))';
+      return own ? String(own).replace(/["<>;{}]/g, '') : 'var(--casora-scene-badge-color, var(--casora-color-yellow, #FFCC00))';
     }
-    /* Entwurf A „Blatt von unten“ (Casora/Weich, 08.10.2026): Griff, Überschrift mit Anzahl, Räume als
-       große Zeilen mit Zustand, Szenen als farbige Kacheln. Ziehen am Kopf nach unten oder Tipp daneben schließt. */
+    /* Richtung C „Leicht“ (Casora/Weich, 08.10.2026): Griff, Titel mittig mit Etikett, Räume und Szenen als
+       leichte Zeilen (Kreis, Name, Zustand rechts). Ziehen nach unten oder Tipp daneben schließt. */
     _openSheet(kind) {
       var self = this, rooms = kind === 'rooms';
       var items = this._items(kind);
@@ -593,7 +580,7 @@
       head.appendChild(el('span', 'hmn-title', title));
       if (n) head.appendChild(el('span', 'hmn-count', rooms ? T(n === 1 ? '1 Raum' : n + ' Räume') : T(n === 1 ? '1 Szene' : n + ' Szenen')));
       m.appendChild(head);
-      var list = el('div', 'hmn-list' + (rooms ? '' : ' hmn-grid'));
+      var list = el('div', 'hmn-list');
       m.appendChild(list);
       var chips = rooms ? this._chips() : null;
       var tap = function (b, it) {
@@ -608,27 +595,27 @@
         });
       };
       items.forEach(function (it) {
-        var b = el('button', 'hmn-item ' + (rooms ? 'hmn-row' : 'hmn-tile') + (it.on ? ' on' : ''));
+        var tone = rooms ? null : self._sceneTone(it.id);
+        var b = el('button', 'hmn-item hmn-row' + (it.on ? ' on' : '') + (tone ? ' hmn-tone' : ''));
         b.type = 'button';
         var label = (window.casoraTr || function (x) { return x; })(it.label);
         b.title = String(it.label || '');
         var ic = el('span', 'hmn-sic');
         ic.innerHTML = self._iconHtml(it.icon);
-        if (!rooms) b.style.setProperty('--hmn-tone', self._sceneTone(it.id, it.icon));
+        if (tone) b.style.setProperty('--hmn-tone', tone);
         b.appendChild(ic);
+        var tx = el('span', 'hmn-txt');
+        tx.appendChild(el('span', 'hmn-name', label));
+        b.appendChild(tx);
         if (rooms) {
-          var tx = el('span', 'hmn-txt');
-          tx.appendChild(el('span', 'hmn-name', label));
+          /* Zustand rechts neben dem Namen (eigene Rasterspalte), leer = ausgeblendet. */
           var sub = self._roomSub(it.key, chips);
           var s = el('span', 'hmn-sub', sub);
           s.setAttribute('data-no-i18n', '');
           if (!sub) s.style.display = 'none';
-          tx.appendChild(s);
-          b.appendChild(tx);
+          b.appendChild(s);
           b.setAttribute('data-k', it.key);
           if (it.on) b.setAttribute('aria-current', 'true');
-        } else {
-          b.appendChild(el('span', 'hmn-name', label));
         }
         tap(b, it);
         list.appendChild(b);
@@ -650,9 +637,9 @@
          (Scroll-Hinweis wie in iOS), und den offenen Raum in die Mitte holen. */
       var first = list.firstElementChild;
       if (first && list.scrollHeight > list.clientHeight + 1) {
-        var gap = rooms ? 0 : 8, rowH = first.offsetHeight + gap;
-        var k = Math.max(1, Math.floor((list.clientHeight - rowH * 0.5) / rowH));
-        list.style.maxHeight = Math.round(k * rowH + (first.offsetHeight * 0.5)) + 'px';
+        var padT = parseFloat(getComputedStyle(list).paddingTop) || 0, rowH = first.offsetHeight;
+        var k = Math.max(1, Math.floor((list.clientHeight - padT - rowH * 0.5) / rowH));
+        list.style.maxHeight = Math.round(k * rowH + rowH * 0.5 + padT) + 'px';
         var on = list.querySelector('.hmn-item.on');
         if (on) list.scrollTop = Math.max(0, on.offsetTop - (list.clientHeight - on.offsetHeight) / 2);
       }

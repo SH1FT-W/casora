@@ -1,13 +1,17 @@
 // @zustand: arbeit
 // @parallel: ui
-// Wunsch (08.10.2026, Entwurf A „Blatt von unten“): Räume- und Szenen-Menü der Handy-Leiste kommen im
-// Casora-Look als Blatt von unten. Erwartet (Casora hell und dunkel, Casora Nebel hell, iPhone 393 × 852):
-// Blatt 8 px vom Rand links/rechts/unten, Ecken konzentrisch (Blatt 44, Zeilen/Kacheln 44 − 8), Zeilen 64 px,
-// Zeilen 8 px eingerückt, Symbolkreis links so weit wie oben und wie zum Text, Symbol/Text springen zwischen
-// offener und anderer Zeile nicht, Überschrift fluchtet mit dem Kreis, Anzahl mit dem Chevron.
-// Zustandszeile je Raum aus den Werten der Raum-Badges (Lichter, Temperatur): „1 Licht an · 22°“,
-// „Alles aus · 22°“. Szenen als Kacheln im 2er-Raster mit eigener Farbe, Tipp dunkelt ab und schrumpft.
-// Viele Räume: die letzte sichtbare Zeile ist angeschnitten.
+// Wunsch (08.10.2026, Richtung C „Leicht“ für 1.1.3): Räume- und Szenen-Menü der Handy-Leiste kommen als
+// Blatt von unten wie ein Casora-Handy-Popup. Erwartet (Casora hell und dunkel, Casora Nebel hell, iPhone 393 × 852):
+// Blatt volle Breite, unten bündig, nur oben rund (--casora-sheet-radius 24), Griff 36 × 4 wie der Popup-Griff,
+// Titel mittig mit Etikett „10 RÄUME“ (12/700 Versalien). Zeilen 52 px ohne Platten, Symbolkreis 36 in Sand mit
+// dunkler Glyphe, Name 15/600, Zustand rechts als kleiner Wert (13 px). Nur der offene Raum hat eine Fläche
+// (--casora-entity-background-active, Kreis in Ton). Zeilen 10 px vom Blattrand (links = rechts), Kreis links =
+// oben = Abstand zum Text (8), Pille konzentrisch zum Kreis, Symbol/Text springen zwischen den Zeilen nicht.
+// Zustandszeile je Raum aus den Werten der Raum-Badges (Lichter, Temperatur): „1 Licht an · 22°“, „Alles aus · 22°“.
+// Szenen: dieselben Zeilen, Kreis in der Studio-Farbe der Szene wie am Desktop (eigene Farbe, sonst die
+// Standard-Szenenfarbe --casora-scene-badge-color wie casora_badge_scene/casora_scenes), weiße Glyphe.
+// Viele Räume: Liste scrollt, letzte sichtbare Zeile angeschnitten, offener Raum in der Mitte. Leiste bleibt
+// unverändert und ist ausgeblendet, solange das Blatt offen ist. Wischen nach unten schließt, Hintergrund scrollt nicht.
 import { open, casoraDashboards, dashboard, fakeStates, check, need, finish, usePage } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -15,6 +19,7 @@ const phone = (process.env.CASORA_QA_DASH && all.find((d) => d.mobile && d.url =
 await need('Handy-Dashboard', phone);
 
 const near = (a, b, t = 1) => a != null && b != null && Math.abs(a - b) <= t;
+const clear = (c) => /rgba\(0, 0, 0, 0\)|transparent/.test(c || '');
 
 // Blatt öffnen (kind: rooms | scenes) und messen.
 const measure = (page, kind) => page.evaluate((kind) => {
@@ -33,21 +38,32 @@ const measure = (page, kind) => page.evaluate((kind) => {
   const row = (b) => {
     if (!b) return null;
     const r = R(b), ic = b.querySelector('.hmn-sic'), i = R(ic), tx = b.querySelector('.hmn-txt') || b.querySelector('.hmn-name'), t = R(tx);
-    const after = cs(b, '::after');
+    const sub = b.querySelector('.hmn-sub'), s = sub && sub.style.display !== 'none' ? R(sub) : null, nm = b.querySelector('.hmn-name');
     return { x: r.left - sr.left, right: sr.right - r.right, w: r.width, h: r.height, top: r.top, bottom: r.bottom,
       radius: parseFloat(cs(b).borderTopLeftRadius), icL: i.left - r.left, icTop: i.top - r.top, icW: i.width, icH: i.height,
-      icR: /%$/.test(cs(ic).borderTopLeftRadius) ? i.width * parseFloat(cs(ic).borderTopLeftRadius) / 100 : parseFloat(cs(ic).borderTopLeftRadius), gap: t.left - i.right, txL: t.left - r.left,
-      bg: cs(b).backgroundColor, sub: (b.querySelector('.hmn-sub') || {}).textContent || '', key: b.getAttribute('data-k'),
-      name: (b.querySelector('.hmn-name') || {}).textContent || '', chevW: parseFloat(getComputedStyle(b, '::after').width) || 0 };
+      icR: /%$/.test(cs(ic).borderTopLeftRadius) ? i.width * parseFloat(cs(ic).borderTopLeftRadius) / 100 : parseFloat(cs(ic).borderTopLeftRadius),
+      gap: t.left - i.right, txL: t.left - r.left, bg: cs(b).backgroundColor, shadow: cs(b).boxShadow, icBg: cs(ic).backgroundColor, icColor: cs(ic).color,
+      fs: parseFloat(cs(nm).fontSize), fw: +cs(nm).fontWeight, sub: sub ? sub.textContent : '', subR: s ? r.right - s.right : null,
+      subFs: sub ? parseFloat(cs(sub).fontSize) : null, subMidY: s ? (s.top + s.height / 2) - (r.top + r.height / 2) : null,
+      key: b.getAttribute('data-k'), name: nm ? nm.textContent : '', tone: b.classList.contains('hmn-tone') };
   };
-  const head = m.querySelector('.hmn-head'), title = m.querySelector('.hmn-title'), count = m.querySelector('.hmn-count');
+  const grip = m.querySelector('.hmn-grip'), g = R(grip), title = m.querySelector('.hmn-title'), count = m.querySelector('.hmn-count');
   const on = list.querySelector('.hmn-item.on'), off = items.find((x) => !x.classList.contains('on'));
+  const mid = (e) => R(e).left + R(e).width / 2 - (sr.left + sr.width / 2);
+  const last = items.filter((b) => R(b).top < lr.bottom - 1).pop();
   return {
     kind, vw: innerWidth, vh: innerHeight,
-    sheet: { left: sr.left, right: innerWidth - sr.right, bottom: innerHeight - sr.bottom, top: sr.top, radius: parseFloat(cs(m).borderTopLeftRadius) },
-    titleL: title ? R(title).left - sr.left : null, countR: count ? sr.right - R(count).right : null, count: count ? count.textContent : '',
-    list: { top: lr.top, bottom: lr.bottom, ch: list.clientHeight, sh: list.scrollHeight },
-    n: items.length, on: row(on), off: row(off), first: row(items[0]), second: row(items[1]), third: row(items[2]),
+    sheet: { left: sr.left, right: innerWidth - sr.right, bottom: innerHeight - sr.bottom, top: sr.top,
+      radius: parseFloat(cs(m).borderTopLeftRadius), radiusBottom: parseFloat(cs(m).borderBottomLeftRadius), bg: cs(m).backgroundColor },
+    grip: { w: g.width, h: g.height, top: g.top - sr.top, mid: mid(grip), bg: cs(grip).backgroundColor },
+    title: title ? { mid: mid(title), fs: parseFloat(cs(title).fontSize), fw: +cs(title).fontWeight } : null,
+    count: count ? { text: count.textContent, mid: mid(count), fs: parseFloat(cs(count).fontSize), fw: +cs(count).fontWeight, tt: cs(count).textTransform } : null,
+    list: { top: lr.top, bottom: lr.bottom, ch: list.clientHeight, sh: list.scrollHeight, st: list.scrollTop },
+    n: items.length, on: row(on), off: row(off), first: row(items[0]), second: row(items[1]),
+    lastVisible: last ? lr.bottom - R(last).top : null,
+    onMid: on ? (R(on).top + R(on).height / 2) - (lr.top + lr.height / 2) : null,
+    tones: items.map((b) => b.classList.contains('hmn-tone')),
+    bar: (() => { const b = document.querySelector('.hmn-bar'); if (!b) return null; return { op: cs(b).opacity, under: b.classList.contains('hmn-under') }; })(),
   };
 }, kind);
 
@@ -59,6 +75,59 @@ const openSheet = async (page, kind) => {
   }
   await page.waitForTimeout(450); // Einfahren abwarten (0,34 s)
   return measure(page, kind);
+};
+
+const geometry = async (tag, m, what) => {
+  await check(`${tag}: ${what} Zeilen 10 px vom Blattrand (links = rechts)`, near(m.first.x, 10) && near(m.first.right, 10) && near(m.second.x, 10) && near(m.second.right, 10), [m.first, m.second]);
+  await check(`${tag}: ${what} Zeilen 52 px hoch (Trefferfläche ≥ 44)`, near(m.first.h, 52) && near(m.second.h, 52) && m.first.w >= 44, [m.first.h, m.second.h]);
+  await check(`${tag}: ${what} Symbolkreis 36 px, links = oben = Abstand zum Text`,
+    near(m.first.icW, 36) && near(m.first.icH, 36) && near(m.first.icL, m.first.icTop) && near(m.first.icL, m.first.gap) && near(m.first.icTop, (m.first.h - m.first.icH) / 2), m.first);
+  await check(`${tag}: ${what} Pille konzentrisch zum Symbolkreis (${m.first.radius} − ${m.first.icL} = ${m.first.icR})`,
+    near(Math.min(m.first.radius, m.first.h / 2) - m.first.icL, m.first.icR, 2), m.first);
+  await check(`${tag}: ${what} Symbol und Text springen nicht zwischen den Zeilen`, near(m.first.icL, m.second.icL) && near(m.first.txL, m.second.txL), [m.first, m.second]);
+  await check(`${tag}: ${what} Name 15/600`, near(m.first.fs, 15, 0.5) && m.first.fw >= 600 && near(m.second.fs, 15, 0.5), [m.first.fs, m.first.fw]);
+};
+
+// Wischen im Browser nachstellen: Hintergrund (Scrim), Liste oben, Kopf. Liefert { touch:false }, wenn der Browser keine Touch-Ereignisse kennt.
+const swipeInPage = async () => {
+    const nav = window.__pierce('casora-mobile-nav')[0];
+    nav._bRooms.click();
+    await new Promise((r) => setTimeout(r, 600));
+    const m = document.querySelector('.hmn-menu.hmn-sheet.open'); if (!m) return { open: false };
+    let T;
+    try { new Touch({ identifier: 1, target: m, clientX: 1, clientY: 1 }); T = true; } catch (e) { T = false; }
+    if (!T) return { open: true, touch: false };
+    const fire = (el, type, y) => {
+      const t = new Touch({ identifier: 1, target: el, clientX: 200, clientY: y });
+      const ev = new TouchEvent(type, { bubbles: true, cancelable: true, touches: type === 'touchend' ? [] : [t], changedTouches: [t], targetTouches: type === 'touchend' ? [] : [t] });
+      el.dispatchEvent(ev); return ev.defaultPrevented;
+    };
+    const sc = document.querySelector('.hmn-scrim');
+    fire(sc, 'touchstart', 300); const scrimBlocked = fire(sc, 'touchmove', 200); fire(sc, 'touchend', 200);
+    const list = m.querySelector('.hmn-list'); list.scrollTop = 0;
+    const row = m.querySelector('.hmn-row') || m;
+    const y = row.getBoundingClientRect().top + 10;
+    fire(row, 'touchstart', y);
+    for (let i = 1; i <= 6; i++) { fire(row, 'touchmove', y + i * 25); await new Promise((r) => setTimeout(r, 16)); }
+    fire(row, 'touchend', y + 150);
+    await new Promise((r) => setTimeout(r, 500));
+    const closedList = !document.querySelector('.hmn-menu.open');
+    // Noch einmal am Kopf.
+    nav._bRooms.click();
+    await new Promise((r) => setTimeout(r, 600));
+    const m2 = document.querySelector('.hmn-menu.hmn-sheet.open'); if (!m2) return { open: true, touch: true, scrimBlocked, closedList, closedHead: null };
+    const head = m2.querySelector('.hmn-head'), y2 = head.getBoundingClientRect().top + 10;
+    fire(head, 'touchstart', y2);
+    for (let i = 1; i <= 6; i++) { fire(head, 'touchmove', y2 + i * 25); await new Promise((r) => setTimeout(r, 16)); }
+    fire(head, 'touchend', y2 + 150);
+    await new Promise((r) => setTimeout(r, 500));
+    return { open: true, touch: true, scrimBlocked, closedList, closedHead: !document.querySelector('.hmn-menu.open') };
+  };
+const swipeChecks = async (tag, swipe) => {
+  if (swipe.touch === false) { console.log('  info   ' + tag + ': Touch-Ereignisse in diesem Browser nicht nachstellbar – Wischen nicht geprüft'); return; }
+  await check(`${tag}: Wischen auf dem Hintergrund scrollt die Seite nicht`, swipe.scrimBlocked === true, swipe);
+  await check(`${tag}: Liste oben nach unten wischen schließt das Blatt`, swipe.closedList === true, swipe);
+  await check(`${tag}: Am Kopf nach unten wischen schließt das Blatt`, swipe.closedHead === true, swipe);
 };
 
 for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel', false]]) {
@@ -76,24 +145,22 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
 
   // ── Räume ──
   const m = await openSheet(page, 'rooms');
-  await need(`${tag}: Räume als Blatt`, m && m.kind === 'rooms' && m.on, m);
-  console.log(tag, 'Räume', JSON.stringify({ sheet: m.sheet, titleL: m.titleL, countR: m.countR, on: m.on, off: m.off, list: m.list }));
-  await check(`${tag}: Blatt 8 px vom Rand links/rechts/unten`, near(m.sheet.left, 8) && near(m.sheet.right, 8) && near(m.sheet.bottom, 8), m.sheet);
-  await check(`${tag}: Zeilen 8 px eingerückt (links = rechts)`, near(m.on.x, 8) && near(m.on.right, 8) && near(m.off.x, 8), [m.on, m.off]);
-  await check(`${tag}: Ecken konzentrisch (Blatt ${m.sheet.radius} − 8 = Zeile ${m.on.radius})`, near(m.sheet.radius, 44, 0) && near(m.on.radius, m.sheet.radius - 8, 2), m);
-  await check(`${tag}: Zeilen 64 px hoch (Trefferfläche ≥ 44)`, near(m.on.h, 64) && near(m.off.h, 64) && m.on.w >= 44, [m.on.h, m.off.h]);
-  await check(`${tag}: Symbolkreis links = oben = Abstand zum Text`, near(m.on.icL, m.on.icTop) && near(m.on.icL, m.on.gap), m.on);
-  await check(`${tag}: Symbolkreis konzentrisch zur Zeile (Pille)`, near(Math.min(m.on.radius, m.on.h / 2) - m.on.icL, m.on.icR, 2), m.on);
-  await check(`${tag}: Symbol und Text springen nicht zwischen den Zeilen`, near(m.on.icL, m.off.icL) && near(m.on.txL, m.off.txL), [m.on, m.off]);
-  await check(`${tag}: offene Zeile flächig hinterlegt`, m.on.bg !== m.off.bg && !/rgba\(0, 0, 0, 0\)|transparent/.test(m.on.bg), [m.on.bg, m.off.bg]);
-  await check(`${tag}: Überschrift fluchtet mit dem Symbolkreis, Anzahl mit dem Chevron`,
-    near(m.titleL, m.on.x + m.on.icL) && near(m.countR, m.on.right + 12), { titleL: m.titleL, countR: m.countR });
-  await check(`${tag}: Anzahl „${m.count}“`, new RegExp('^' + m.n + ' (Räume|Raum)$').test(m.count), m.count);
-  // Viele Räume (arbeit: über zehn): letzte sichtbare Zeile angeschnitten.
-  if (m.list.sh > m.list.ch + 1) {
-    const rest = m.list.ch % 64;
-    await check(`${tag}: viele Räume – letzte Zeile angeschnitten (${rest} px sichtbar)`, rest >= 16 && rest <= 48, m.list);
-  }
+  await need(`${tag}: Räume als Blatt`, m && m.kind === 'rooms' && m.on && m.off, m);
+  console.log(tag, 'Räume', JSON.stringify({ sheet: m.sheet, grip: m.grip, title: m.title, count: m.count, on: m.on, off: m.off, list: m.list }));
+  await check(`${tag}: Blatt volle Breite, unten bündig`, near(m.sheet.left, 0) && near(m.sheet.right, 0) && near(m.sheet.bottom, 0), m.sheet);
+  await check(`${tag}: Blatt nur oben rund (24, unten 0)`, near(m.sheet.radius, 24, 0) && near(m.sheet.radiusBottom, 0, 0), m.sheet);
+  await check(`${tag}: Blatt deckend (kein durchscheinender Grund)`, !clear(m.sheet.bg), m.sheet.bg);
+  await check(`${tag}: Griff 36 × 4, mittig, 10 px unter der Kante`, near(m.grip.w, 36) && near(m.grip.h, 4) && near(m.grip.mid, 0) && near(m.grip.top, 10) && !clear(m.grip.bg), m.grip);
+  await check(`${tag}: Titel mittig 22/700, Etikett mittig 12/700 Versalien`,
+    m.title && m.count && near(m.title.mid, 0) && near(m.title.fs, 22) && m.title.fw >= 700 && near(m.count.mid, 0) && near(m.count.fs, 12) && m.count.fw >= 700 && m.count.tt === 'uppercase', [m.title, m.count]);
+  await check(`${tag}: Etikett „${m.count.text}“`, new RegExp('^' + m.n + ' (Räume|Raum)$').test(m.count.text), m.count.text);
+  await geometry(tag, m, 'Räume:');
+  await check(`${tag}: andere Zeilen ohne Platte, Kreis in Sand mit dunkler Glyphe (kein Ton)`,
+    clear(m.off.bg) && !clear(m.off.icBg) && m.off.icBg !== m.on.icBg && m.off.icColor !== m.on.icColor, [m.off.bg, m.off.icBg, m.off.icColor, m.on.icBg]);
+  await check(`${tag}: offener Raum flächig (Weiß) mit Kreis in Ton`, !clear(m.on.bg) && m.on.bg !== m.off.bg && !clear(m.on.icBg), [m.on.bg, m.off.bg, m.on.icBg]);
+  await check(`${tag}: Zustand rechts als kleiner Wert (13 px, 14 px vom Zeilenrand, mittig)`,
+    m.off.subR != null && near(m.off.subR, 14) && near(m.off.subFs, 13) && near(m.off.subMidY, 0) && m.off.subFs < m.off.fs, m.off);
+  await check(`${tag}: Leiste ausgeblendet, solange das Blatt offen ist`, m.bar && m.bar.under && +m.bar.op === 0, m.bar);
 
   // Zustandszeile: Raum mit Lichtern und Temperatur, Zustände nur im Browser untergeschoben.
   if (!dark) {
@@ -141,29 +208,59 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
     }
   }
 
-  // ── Szenen ──
+  // ── Viele Räume (nur im Browser: sechs zusätzliche Räume): scrollt, letzte Zeile angeschnitten, offener Raum mittig. ──
+  await page.evaluate(() => {
+    const nav = window.__pierce('casora-mobile-nav')[0];
+    nav._closeMenu();
+    nav._qaRooms = nav._rooms;
+    nav._rooms = nav._rooms.slice(); // die Konfiguration ist eingefroren
+    const base = nav._rooms[1];
+    ['Hobbyraum', 'Gästezimmer', 'Kinderzimmer', 'Garage', 'Werkstatt', 'Garten'].forEach((n, i) => nav._rooms.push(Object.assign({}, base, { key: 'room_qa_' + i, label: n, name: n })));
+    nav._set(nav._rooms[7].key);
+  });
+  await page.waitForTimeout(700);
+  const v = await openSheet(page, 'rooms');
+  await need(`${tag}: Blatt mit 16 Räumen`, v && v.kind === 'rooms' && v.n >= 16 && v.on, v);
+  console.log(tag, 'viele', JSON.stringify({ list: v.list, lastVisible: v.lastVisible, onMid: v.onMid, sheetTop: v.sheet.top }));
+  await check(`${tag}: viele Räume – Liste scrollt und bleibt im Bildschirm`, v.list.sh > v.list.ch + 1 && v.sheet.top >= 40, v.list);
+  await check(`${tag}: viele Räume – letzte sichtbare Zeile angeschnitten (${v.lastVisible} px sichtbar)`, v.lastVisible != null && v.lastVisible >= 10 && v.lastVisible <= 44, v);
+  await check(`${tag}: viele Räume – offener Raum in der Mitte der Liste`, near(v.onMid, 0, 30), v.onMid);
+  await page.evaluate(() => {
+    const nav = window.__pierce('casora-mobile-nav')[0];
+    nav._closeMenu(); nav._rooms = nav._qaRooms; nav._set(nav._rooms[0].key);
+  });
+  await page.waitForTimeout(500);
+
+  // ── Szenen: dieselben leichten Zeilen, Kreis in der Studio-Farbe (erste Szene mit eigener Farbe, Rest Standard). ──
+  const colors = await page.evaluate(() => {
+    let first = null;
+    window.casoraSceneColor = (id) => { if (!first) first = id; return id === first ? 'var(--casora-color-blue, #5B8FC9)' : null; };
+    // Desktop-Standardfarbe der Szenen (casora_badge_scene: --casora-scene-badge-color; casora_scenes: --casora-color-yellow) aufgelöst.
+    const probe = (v) => { const d = document.createElement('div'); d.style.cssText = 'position:fixed;width:1px;height:1px;background:' + v; document.body.appendChild(d); const c = getComputedStyle(d).backgroundColor; d.remove(); return c; };
+    return { badge: probe('var(--casora-scene-badge-color, #C29CFF)'), yellow: probe('var(--casora-color-yellow, #FFCC00)'), blue: probe('var(--casora-color-blue, #5B8FC9)') };
+  });
   const s = await openSheet(page, 'scenes');
   await need(`${tag}: Szenen als Blatt`, s && s.kind === 'scenes' && s.n >= 2, s);
-  console.log(tag, 'Szenen', JSON.stringify({ sheet: s.sheet, first: s.first, second: s.second }));
-  const a = s.first, b = s.second;
-  await check(`${tag}: Szenen im 2er-Raster, 8 px Abstand und Rand`,
-    near(a.x, 8) && near(b.right, 8) && near(a.w, b.w) && near(a.top, b.top) && near((s.vw - s.sheet.left - s.sheet.right) - a.w - b.w - 16, 8), [a, b]);
-  await check(`${tag}: Kachel-Ecken konzentrisch (${s.sheet.radius} − 8 = ${a.radius}), Kreis ${a.icR} = ${a.radius} − ${a.icL}`,
-    near(a.radius, s.sheet.radius - 8, 2) && near(a.icL, a.icTop) && near(a.radius - a.icL, a.icR, 2), a);
-  await check(`${tag}: Kacheln farbig hinterlegt`, !/rgba\(0, 0, 0, 0\)|transparent/.test(a.bg), a.bg);
-  await check(`${tag}: Kacheln groß genug (≥ 44 px)`, a.h >= 44 && a.w >= 44, [a.w, a.h]);
-  if (s.third) await check(`${tag}: Kachelreihen 8 px Abstand`, near(s.third.top - a.bottom, 8), [a.bottom, s.third.top]);
-  // Tipp-Rückmeldung (ohne auszulösen): pointerdown → abgedunkelt und kleiner.
+  console.log(tag, 'Szenen', JSON.stringify({ sheet: s.sheet, first: s.first, second: s.second, tones: s.tones }));
+  await check(`${tag}: Etikett „${s.count.text}“`, new RegExp('^' + s.n + ' (Szenen|Szene)$').test(s.count.text), s.count.text);
+  await geometry(tag, s, 'Szenen:');
+  const white = (c) => /^rgb\(255, 255, 255\)|^rgba\(255, 255, 255/.test(c || '');
+  await check(`${tag}: Szenen ohne Platte, Kreis exakt in der Desktop-Standardfarbe (${colors.badge}), weiße Glyphe`,
+    clear(s.second.bg) && s.second.tone && s.second.icBg === colors.badge && s.second.icBg === colors.yellow && white(s.second.icColor), [s.second.bg, s.second.icBg, s.second.icColor, colors]);
+  await check(`${tag}: Szene mit eigener Studio-Farbe: Kreis exakt in dieser Farbe (${colors.blue}), weiße Glyphe`,
+    s.first.tone && s.first.icBg === colors.blue && white(s.first.icColor), [s.first.icBg, s.first.icColor, colors]);
+  // Tipp-Rückmeldung wie die Popup-Zeilen (ohne auszulösen): pointerdown → Fläche hinterlegt und leicht kleiner.
   const press = await page.evaluate(async () => {
-    const t = document.querySelector('.hmn-sheet .hmn-tile');
+    const t = document.querySelector('.hmn-sheet .hmn-row');
+    const before = getComputedStyle(t).backgroundColor;
     t.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     await new Promise((r) => setTimeout(r, 260));
-    const cs = getComputedStyle(t), out = { transform: cs.transform, filter: cs.filter };
+    const cs = getComputedStyle(t), out = { before, bg: cs.backgroundColor, transform: cs.transform };
     t.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true }));
     return out;
   });
   const sc = /matrix\(([\d.]+)/.exec(press.transform || '');
-  await check(`${tag}: Tipp dunkelt ab und schrumpft`, sc && +sc[1] < 0.99 && /brightness\(0?\.\d+\)/.test(press.filter), press);
+  await check(`${tag}: Tipp hinterlegt die Zeile und schrumpft leicht`, sc && +sc[1] < 0.995 && press.bg !== press.before && !clear(press.bg), press);
   await page.evaluate(() => window.__pierce('casora-mobile-nav')[0]._closeMenu());
   await page.waitForTimeout(500);
   // Hotfix 1.1.2: Die Leiste selbst bleibt wie in 1.1.0 – die Blatt-Regel für den Symbolkreis
@@ -171,40 +268,28 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   const bar = await page.evaluate(() => {
     const b = document.querySelector('.hmn-bar'); if (!b) return null;
     const r = b.getBoundingClientRect(), cs = getComputedStyle(b);
-    return { h: Math.round(r.height), radius: cs.borderTopLeftRadius, ic: b.classList.contains('hmn-ic') };
+    return { h: Math.round(r.height), radius: cs.borderTopLeftRadius, ic: b.classList.contains('hmn-ic'), op: cs.opacity, under: b.classList.contains('hmn-under') };
   });
-  await check(`${tag}: Leiste unverändert (nicht 40 px, nicht 50 % rund)`, bar && bar.h > 44 && bar.radius !== '50%', bar);
+  await check(`${tag}: Leiste unverändert (nicht 40 px, nicht 50 % rund) und nach dem Schließen wieder da`, bar && bar.h > 44 && bar.radius !== '50%' && !bar.under && +bar.op === 1, bar);
   // Hotfix 1.1.2: Wischen nach unten schließt das Blatt – am Kopf und in der Liste, wenn sie oben steht;
   // Wischen auf dem Hintergrund scrollt die Seite nicht.
-  const swipe = await page.evaluate(async () => {
-    const nav = window.__pierce('casora-mobile-nav')[0];
-    nav._bRooms.click();
-    await new Promise((r) => setTimeout(r, 600));
-    const m = document.querySelector('.hmn-menu.hmn-sheet.open'); if (!m) return { open: false };
-    let T;
-    try { new Touch({ identifier: 1, target: m, clientX: 1, clientY: 1 }); T = true; } catch (e) { T = false; }
-    if (!T) return { open: true, touch: false };
-    const fire = (el, type, y) => {
-      const t = new Touch({ identifier: 1, target: el, clientX: 200, clientY: y });
-      const ev = new TouchEvent(type, { bubbles: true, cancelable: true, touches: type === 'touchend' ? [] : [t], changedTouches: [t], targetTouches: type === 'touchend' ? [] : [t] });
-      el.dispatchEvent(ev); return ev.defaultPrevented;
-    };
-    const sc = document.querySelector('.hmn-scrim');
-    fire(sc, 'touchstart', 300); const scrimBlocked = fire(sc, 'touchmove', 200); fire(sc, 'touchend', 200);
-    const list = m.querySelector('.hmn-list'); list.scrollTop = 0;
-    const row = m.querySelector('.hmn-row') || m;
-    const y = row.getBoundingClientRect().top + 10;
-    fire(row, 'touchstart', y);
-    for (let i = 1; i <= 6; i++) { fire(row, 'touchmove', y + i * 25); await new Promise((r) => setTimeout(r, 16)); }
-    fire(row, 'touchend', y + 150);
-    await new Promise((r) => setTimeout(r, 500));
-    return { open: true, touch: true, scrimBlocked, closed: !document.querySelector('.hmn-menu.open') };
-  });
-  if (swipe.touch === false) console.log('  info   ' + tag + ': Touch-Ereignisse in diesem Browser nicht nachstellbar – Wischen nicht geprüft');
-  else {
-    await check(`${tag}: Wischen auf dem Hintergrund scrollt die Seite nicht`, swipe.scrimBlocked === true, swipe);
-    await check(`${tag}: Liste oben nach unten wischen schließt das Blatt`, swipe.closed === true, swipe);
-  }
+  const swipe = await page.evaluate(swipeInPage);
+  await swipeChecks(tag, swipe);
+  await page.evaluate(() => window.__pierce('casora-mobile-nav')[0]._closeMenu());
+  await browser.close();
+}
+
+// Gesten in Chromium (WebKit kennt in Playwright keine Touch-Ereignisse): Wischen nach unten schließt,
+// Hintergrund scrollt nicht.
+{
+  const tag = 'Casora hell (Chromium)';
+  const { page, browser } = await open({ width: 393, height: 852, mobile: true, safari: false, scale: 2, dark: false, theme: 'Casora' });
+  usePage(page);
+  await dashboard(page, phone.url, 3);
+  await page.waitForFunction(() => { const nav = window.__pierce('casora-mobile-nav')[0]; return !!(nav && nav._hass && nav._bRooms); }, null, { timeout: 15000, polling: 200 }).catch(() => {});
+  const swipe = await page.evaluate(swipeInPage);
+  await need(`${tag}: Touch-Ereignisse nachstellbar`, swipe.touch !== false, swipe);
+  await swipeChecks(tag, swipe);
   await page.evaluate(() => window.__pierce('casora-mobile-nav')[0]._closeMenu());
   await browser.close();
 }
