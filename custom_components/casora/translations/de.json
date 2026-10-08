@@ -30,6 +30,7 @@
           "ki_plan_update": "Update-Check",
           "lueften_push": "Lüften-Hinweise per Push an",
           "lueften_personen": "Lüften nur melden, wenn zuhause",
+          "update_push": "Bei neuen Casora-Versionen benachrichtigen",
           "beta_updates": "Beta-Versionen"
         },
         "data_description": {
@@ -41,6 +42,7 @@
           "ki_plan_update": "Täglich: einmal am Tag. Aus: keine KI-Einschätzung im Update-Popup.",
           "lueften_push": "„Jetzt lüften“ (7–22 Uhr), „Fenster schließen“ (7–23 Uhr) nach 10 Min., CO₂ über 2500 ppm sofort. Leer = keine Push-Meldungen.",
           "lueften_personen": "„Jetzt lüften“ nur, wenn eine dieser Personen zuhause ist. Leer = irgendjemand.",
+          "update_push": "Ein Push je neuer Version an die gewählten Handys. Antippen öffnet die Casora-Updates. Leer = aus.",
           "beta_updates": "Neue Funktionen früher testen. Betas können Fehler haben. Mit HACS schaltest du Betas in HACS ein."
         }
       }

@@ -470,6 +470,14 @@
         };
         wrap.append(inp, el("span", "", "€/kWh"));
         pr.row.appendChild(wrap);
+      } else if (page === "update_push") {
+        // Push bei neuen Casora-Versionen (update_push.py): nur Handys (mobile_app), leer = aus.
+        const known = (cs.opt.notify_services || []).filter((x) => /^notify\.mobile_app_/.test(x));
+        (O.update_push || []).forEach((x) => { if (!known.includes(x)) known.push(x); });
+        const g = this._flowGroup(host, { header: t("New Casora versions"),
+          footer: t("One push per new version. Tapping it opens Casora's updates. None selected: no push notifications.") });
+        ctlRow(this, g, t("Notify about new Casora versions"), null,
+          [chips(this, known.map((id) => [id, notifyLabel(id)]), O.update_push || [], toggleIn(cs, "update_push"))]);
       } else if (page === "vent") {
         const known = (cs.opt.notify_services || []).slice();
         (O.lueften_push || []).forEach((x) => { if (!known.includes(x)) known.push(x); });
@@ -514,6 +522,8 @@
           this._casoraPersonalGroups(host, cs.S, page.personal, rerender);
         }
         if (page.id === "dashboards") this._csHemmaGroup(host);
+        // Optionen der Integration auf dieser Seite: Push bei neuen Casora-Versionen.
+        if (page.id === "alerts" && cs.opt) this._csFillOptions(host, "update_push");
       } else {
         this._csFillOptions(host, page.id);
       }

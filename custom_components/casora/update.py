@@ -25,8 +25,9 @@ from typing import Any
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.storage import Store
@@ -63,6 +64,8 @@ DATA_LAST_CHECK = "update_last_check"
 DATA_PENDING = "update_pending"
 DATA_LAST_ERROR = "update_last_error"
 DATA_HACS = "update_via_hacs"
+# GitHub-ID des Casora-Repos in HACS (= unique_id von HACS' Update-Entität), wenn HACS Casora verwaltet.
+DATA_HACS_ID = "update_hacs_repo_id"
 DATA_STAGE_LISTENER = "update_stage_listener"
 STAGE_DIR = "casora_update_neu"
 HISTORY_KEY = f"{DOMAIN}.update_history"
@@ -163,16 +166,25 @@ def swap_in(staged: str, target: str) -> None:
     shutil.rmtree(old, ignore_errors=True)
 
 
-def _read_hacs(path: str) -> bool:
-    """Steht UPDATE_REPO in HACS' Liste als installiert? (.storage/hacs.repositories)"""
+def _hacs_repo_id(path: str) -> str | None:
+    """GitHub-ID von UPDATE_REPO in HACS' Liste, wenn dort installiert (.storage/hacs.repositories).
+
+    HACS nimmt diese ID als unique_id seiner Update-Entität."""
     try:
         with open(path, encoding="utf-8") as fh:
             repos = (json.load(fh) or {}).get("data") or {}
     except (OSError, ValueError, AttributeError):
-        return False
+        return None
     want = UPDATE_REPO.lower()
-    return any(isinstance(r, dict) and str(r.get("full_name") or "").lower() == want and r.get("installed")
-               for r in (repos.values() if isinstance(repos, dict) else []))
+    for key, r in (repos.items() if isinstance(repos, dict) else []):
+        if isinstance(r, dict) and str(r.get("full_name") or "").lower() == want and r.get("installed"):
+            return str(r.get("id") or key)
+    return None
+
+
+def _read_hacs(path: str) -> bool:
+    """Steht UPDATE_REPO in HACS' Liste als installiert? (.storage/hacs.repositories)"""
+    return _hacs_repo_id(path) is not None
 
 
 def beta_enabled(entry: ConfigEntry | None) -> bool:
@@ -195,8 +207,46 @@ def pick_latest(releases: list[dict], installed: str, beta: bool) -> tuple[dict 
 
 
 async def async_hacs_managed(hass: HomeAssistant) -> bool:
-    """Verwaltet HACS Casora? Aus der gespeicherten Liste – HACS muss dafür noch nicht geladen sein."""
-    return await hass.async_add_executor_job(_read_hacs, hass.config.path(".storage", "hacs.repositories"))
+    """Verwaltet HACS Casora? Aus der gespeicherten Liste – HACS muss dafür noch nicht geladen sein.
+
+    Merkt sich dabei die Repo-ID (DATA_HACS_ID), über die casora_update_entity HACS' Eintrag findet."""
+    rid = await hass.async_add_executor_job(_hacs_repo_id, hass.config.path(".storage", "hacs.repositories"))
+    hass.data.setdefault(DOMAIN, {})[DATA_HACS_ID] = rid
+    return rid is not None
+
+
+def _own_unique_id(entry) -> str:
+    return f"{entry.entry_id}_update"
+
+
+@callback
+def casora_update_entity(hass: HomeAssistant, entry) -> tuple[str | None, str | None]:
+    """Update-Entität, über die Casora aktualisiert wird → (entity_id, "hacs" | "casora").
+
+    Mit HACS: HACS' Update-Entität für das Casora-Repo – gefunden über Plattform hacs und die
+    Repo-ID als unique_id; fehlt die (HACS-Liste anders aufgebaut), über die release_url, die
+    auf UPDATE_REPO zeigt. Ohne HACS die eigene (update.py). Nichts gefunden → (None, Quelle).
+    """
+    data = hass.data.get(DOMAIN, {})
+    reg = er.async_get(hass)
+    if data.get(DATA_HACS):
+        rid = data.get(DATA_HACS_ID)
+        eid = reg.async_get_entity_id("update", "hacs", str(rid)) if rid else None
+        if eid is None:
+            repo = "/" + UPDATE_REPO.lower() + "/"
+            hits = []
+            for e in list(reg.entities.values()):
+                if e.domain != "update" or e.platform == DOMAIN:
+                    continue
+                st = hass.states.get(e.entity_id)
+                url = str((st.attributes.get("release_url") if st else "") or "").lower()
+                if repo in url + "/":
+                    hits.append((e.platform != "hacs", e.entity_id))
+            eid = min(hits)[1] if hits else None
+        return eid, "hacs"
+    if entry is None:
+        return None, None
+    return reg.async_get_entity_id("update", DOMAIN, _own_unique_id(entry)), "casora"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
@@ -204,6 +254,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     hacs = await async_hacs_managed(hass)
     data = hass.data.setdefault(DOMAIN, {})
     data[DATA_HACS] = hacs
+    if hacs:
+        # Eigene Update-Entität aus der Zeit vor HACS: bliebe sonst als „nicht verfügbar“ stehen,
+        # und das Studio fand sie statt HACS' Eintrag (Installieren tat dann nichts).
+        try:
+            reg = er.async_get(hass)
+            old = reg.async_get_entity_id("update", DOMAIN, _own_unique_id(entry))
+            if old:
+                reg.async_remove(old)
+        except Exception as err:  # noqa: BLE001 – Aufräumen darf den Start nie stören
+            _LOGGER.debug("Casora: alte Update-Entität nicht entfernt: %s", err)
     if not data.get(DATA_PENDING):
         # Reste eines Wartebereichs, der beim letzten Beenden nicht mehr eingespielt wurde (Absturz,
         # Stromausfall): verwerfen – das Update wird dann einfach wieder angeboten.
@@ -224,7 +284,7 @@ class CasoraUpdate(UpdateEntity):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         self.hass = hass
         self._entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_update"
+        self._attr_unique_id = _own_unique_id(entry)
         self._attr_name = "Casora"
         self._attr_installed_version = VERSION
         self._attr_latest_version = VERSION

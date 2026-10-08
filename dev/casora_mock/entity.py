@@ -506,6 +506,44 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         async def async_forecast_hourly(self):
             return self._fc(timedelta(hours=1), 24)
 
+    class MUpdate(MockEntity):
+        """Update-Entität: Werte aus dem Speicher; update.install wie HACS (in_progress → installiert).
+
+        Die Dienste von update rufen nur diese Eigenschaften/Methoden auf (Duck-Typing)."""
+
+        @property
+        def installed_version(self):
+            return self.a.get("installed_version")
+
+        @property
+        def latest_version(self):
+            return self.a.get("latest_version")
+
+        @property
+        def in_progress(self):
+            return bool(self.a.get("in_progress"))
+
+        @property
+        def auto_update(self):
+            return False
+
+        async def async_install_with_progress(self, version, backup) -> None:
+            import asyncio
+
+            from homeassistant.exceptions import HomeAssistantError
+            new = version or self.latest_version
+            self.put(None, in_progress=True)
+            await asyncio.sleep(float(self.a.get("mock_install_s") or 0))
+            if self.a.get("mock_install_fail"):
+                self.a["in_progress"] = False
+                self.async_write_ha_state()
+                raise HomeAssistantError(f"Downloading {new} failed (Test)")
+            latest = new if not self.latest_version or str(new) > str(self.latest_version) else self.latest_version
+            self.a["in_progress"] = False
+            restart = "<ha-alert alert-type='error'>Restart of Home Assistant required</ha-alert>"
+            self.put("off" if new == latest else "on", installed_version=new, latest_version=latest,
+                     release_summary=restart)
+
     from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
     from homeassistant.components.camera import CameraEntityFeature
     from homeassistant.components.climate import ClimateEntityFeature
@@ -516,12 +554,13 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
     from homeassistant.components.media_player import MediaPlayerEntityFeature
     from homeassistant.components.remote import RemoteEntityFeature
     from homeassistant.components.siren import SirenEntityFeature
+    from homeassistant.components.update import UpdateEntityFeature
     from homeassistant.components.vacuum import VacuumEntityFeature
 
     for cls, feat in ((MLight, LightEntityFeature), (MCover, CoverEntityFeature), (MClimate, ClimateEntityFeature),
                       (MMedia, MediaPlayerEntityFeature), (MVacuum, VacuumEntityFeature), (MAlarm, AlarmControlPanelEntityFeature),
                       (MFan, FanEntityFeature), (MLock, LockEntityFeature), (MSiren, SirenEntityFeature),
-                      (MRemote, RemoteEntityFeature), (MCamera, CameraEntityFeature)):
+                      (MRemote, RemoteEntityFeature), (MCamera, CameraEntityFeature), (MUpdate, UpdateEntityFeature)):
         cls._feature_cls = feat
 
     return {
@@ -530,8 +569,9 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         "vacuum": MVacuum, "button": MButton, "select": MSelect, "number": MNumber,
         "alarm_control_panel": MAlarm, "scene": MScene, "camera": MCamera, "todo": MTodo, "image": MImage,
         "calendar": MCalendar, "weather": MWeather,
+        "update": MUpdate,
         # nur anzeigen, keine Dienste
-        "sensor": MockEntity, "binary_sensor": MockEntity, "update": MockEntity,
+        "sensor": MockEntity, "binary_sensor": MockEntity,
         "event": MockEntity, "time": MockEntity, "date": MockEntity,
     }
 

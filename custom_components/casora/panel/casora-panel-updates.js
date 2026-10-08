@@ -37,6 +37,7 @@
     + ".cu-sum{margin:5px 0 0 17px;font-size:var(--t-foot);line-height:1.45;color:var(--ink-2)}"
     + ".cu-acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px}"
     + ".cu-acts button{padding:8px 14px;font-size:var(--t-foot)}"
+    + ".cu-rowinst{display:block;margin:14px 0 2px;padding:8px 14px;font-size:var(--t-foot)}"
     + ".cu-when{flex:1 1 100%;font-size:var(--t-caption);color:var(--ink-3,rgba(235,235,245,.5))}"
     + ".cu-bar{position:relative;height:4px;margin-top:14px;border-radius:2px;overflow:hidden;background:rgba(255,255,255,.1)}"
     + ".cu-bar::after{content:'';position:absolute;top:0;bottom:0;width:36%;border-radius:2px;background:var(--casora-studio-done, #0a84ff);animation:cuRun 1.2s cubic-bezier(.4,0,.2,1) infinite}"
@@ -303,24 +304,46 @@
       this._cuRepaint();
     };
 
+    // Installieren über die Update-Entität: die eigene (ohne HACS) oder HACS' Eintrag für Casora.
+    // Rückmeldung ehrlich: läuft (in_progress), installiert (Neustart nötig) oder Fehler.
     P._cuInstall = async function () {
       const d = this._cuData || {};
       if (!d.entity_id || this._cuBusy) return;
+      const hacs = d.install_via === "hacs";
       const ok = await this._ask({
         title: t("Install Casora {v}?").replace("{v}", String(d.latest)),
-        message: t("The running version is backed up to casora_sicherungen first. Home Assistant needs a restart afterwards."),
+        message: hacs
+          ? t("HACS downloads the new version. Home Assistant needs a restart afterwards.")
+          : t("The running version is backed up to casora_sicherungen first. Home Assistant needs a restart afterwards."),
         confirmLabel: t("Install"),
       });
       if (!ok) return;
-      this._cuBusy = "install";
       this._cuErr = null;
+      const st = this._hass && this._hass.states[d.entity_id];
+      if (!st || st.state === "unavailable" || st.state === "unknown") {
+        this._cuErr = t(hacs ? "HACS's update entry for Casora is not available right now. Try again in a moment or update in HACS."
+          : "Casora's update entry is not available right now. Try again in a moment.");
+        this._cuRepaint();
+        return;
+      }
+      this._cuBusy = "install";
       this._cuRepaint();
+      const want = String(d.latest);
       try {
-        await this._hass.callService("update", "install", { entity_id: d.entity_id });
+        const data = { entity_id: d.entity_id };
+        if (d.install_version) data.version = d.install_version;
+        await this._hass.callService("update", "install", data);
       } catch (e) {
         this._cuErr = t("Installing didn't work.") + " " + (e.message || e);
       }
       await this._cuLoad(false);
+      const now = this._cuData || {};
+      // Dienst ohne Fehler, aber nichts installiert (z. B. Entität übersprungen): nicht still bleiben.
+      if (!this._cuErr && now.pending_restart !== want && now.update_available) {
+        this._cuErr = t("Installing didn't work.") + " " + t(hacs
+          ? "HACS did not report the new version as installed. Check HACS."
+          : "The new version was not installed.");
+      }
       this._cuBusy = null;
       this._cuRepaint();
     };
@@ -414,6 +437,12 @@
         const inst = btn(t("Install"), () => this._cuInstall());
         inst.disabled = !d.entity_id || !!busy;
         acts.appendChild(inst);
+        if (!d.entity_id) {
+          // Ohne Update-Entität kann der Knopf nichts anstoßen: sagen, wo es weitergeht.
+          hero.appendChild(el("div", "cu-note", d.hacs
+            ? t("HACS has no update entry for Casora yet. Update Casora in HACS, or try again later.")
+            : t("Casora's update entry is missing. Restart Home Assistant, then try again.")));
+        }
       } else if (d.hacs) {
         // Mit HACS keine eigene Update-Entität – HACS meldet neue Versionen.
         stTx.textContent = t("Updates via HACS");
@@ -421,18 +450,20 @@
       } else {
         stTx.textContent = t("Current");
       }
-      if (d.token && !d.pending_restart && busy !== "install") {
+      if (d.own_check && !d.pending_restart && busy !== "install") {
         const chk = btn(busy === "check" ? t("Checking…") : t("Check for Updates"), () => this._cuCheck(), true);
         chk.disabled = !d.entity_id || !!busy;
         acts.appendChild(chk);
       }
-      if (d.token) {
+      if (d.own_check) {
         acts.appendChild(el("div", "cu-when", d.last_check
           ? t("Last checked {when}").replace("{when}", ago(this, d.last_check)) : t("Not checked yet")));
       }
       if (acts.children.length) hero.appendChild(acts);
       if (d.pending_restart) {
-        hero.appendChild(el("div", "cu-note", t("The previous version is kept in casora_sicherungen. Home Assistant also lists the restart under Repairs.")));
+        hero.appendChild(el("div", "cu-note", d.install_via === "hacs"
+          ? t("Installed through HACS. Home Assistant also lists the restart under Repairs.")
+          : t("The previous version is kept in casora_sicherungen. Home Assistant also lists the restart under Repairs.")));
       }
       const errTx = this._cuErr || (d.last_error && t(ERR[d.last_error] || ERR.unreachable));
       if (errTx) hero.appendChild(el("div", "cu-err", errTx));
@@ -485,6 +516,14 @@
           body.append(nw, more);
         }
         body.appendChild(notes);
+        // Hinweise einer noch nicht installierten Version: unten gleich installieren (wie oben im Kopf).
+        if (d.update_available && !d.pending_restart && String(r.version).replace(/^v/, "") === String(d.latest)
+          && cmp(r.version, d.installed) > 0) {
+          const ib = btn(busy === "install" ? t("Installing v{v}…").replace("{v}", d.latest) : t("Install"), () => this._cuInstall());
+          ib.classList.add("cu-rowinst");
+          ib.disabled = !d.entity_id || !!busy;
+          body.appendChild(ib);
+        }
         if (r.url && /^https:\/\//.test(r.url)) {
           const a = el("a", "cu-link", t("View on GitHub"));
           a.href = r.url; a.target = "_blank"; a.rel = "noopener noreferrer";
@@ -760,6 +799,7 @@
         try { this._cvClose(); } finally { this._cvLeaving = false; }
       }
       this._cuOpen = true;
+      this._cuErr = null;  // alte Fehlermeldung nicht wieder zeigen
       this.classList.add("contentpage");
       this._cuRender(true);
       this._cuSideRow();
@@ -790,10 +830,23 @@
       };
     }
 
+    // Link „/casora-studio?updates=1“ (Push bei neuer Version, update_push.py): einmal die Updates öffnen.
+    const wantsUpdates = () => {
+      try { return new URLSearchParams(window.location.search).has("updates"); } catch (e) { return false; }
+    };
     const renderForm = P._renderForm;
     P._renderForm = function () {
       const r = renderForm.apply(this, arguments);
       if (this._cuOpen && !this._cuLeaving) this._cuRender();
+      if (!this._cuLinked && this._dashUrl && wantsUpdates()) {
+        this._cuLinked = true;
+        try {
+          const u = new URL(window.location.href);
+          u.searchParams.delete("updates");
+          window.history.replaceState(window.history.state, "", u.pathname + u.search + u.hash);
+        } catch (e) { /* nur Komfort */ }
+        setTimeout(() => { if (!this._cuOpen) this._cuFromMenu(); }, 0);
+      }
       return r;
     };
 
@@ -921,6 +974,7 @@
     // Handy: dieselbe Seite im Blatt.
     P._cuSheet = async function () {
       css(this);
+      this._cuErr = null;
       const s = this._flowScreen({ icon: "update", title: t("Updates"),
         lede: t("Your Casora version, what's new and all earlier versions.") });
       const wrap = el("div", "cu-wrap");
