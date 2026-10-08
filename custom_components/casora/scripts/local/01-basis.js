@@ -602,10 +602,11 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       return true;
     };
     // Erstes Diagramm einhängen, sobald der Platzhalter im Popup existiert.
-    window._hpChartInit = function (eid) {
+    /* back (Energie-Popup): erneutes Tippen auf die gewählte Zeile schaltet zurück auf dieses Diagramm. */
+    window._hpChartInit = function (eid, back) {
       var n = 0;
       var tick = function () {
-        if (window._hpPlantShow(eid, null, true)) return;
+        if (window._hpPlantShow(eid, null, true)) { var pp = popRoot(); if (pp) pp._hpBack = back ? eid : null; return; }
         if (++n < 100) setTimeout(tick, 100);
       };
       setTimeout(tick, 60);
@@ -623,7 +624,10 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       if (!row) return;
       ev.stopPropagation(); if (ev.cancelable) ev.preventDefault();
       window._casoraSuppressDismiss = Date.now() + 600;
-      window._hpPlantShow(row.dataset.hpMetric, row);
+      var id = row.dataset.hpMetric, pop = popRoot(), back = pop && pop._hpBack;
+      if (back && back !== id && row.classList.contains('hp-sel') && window._hpPlantCfg[back]
+        && find(pop.shadowRoot, '[data-hp-metric]').some(function (r) { return r.dataset.hpMetric === back; })) id = back;
+      window._hpPlantShow(id, row);
     };
     /* Live-Zahlen im offenen Popup: Elemente mit data-hp-live="<entity>"
        bekommen nur ihren Text ausgetauscht (eine Nachkommastelle unter 100,

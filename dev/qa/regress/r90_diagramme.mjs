@@ -3,7 +3,8 @@
 // Casora 1.2: eigene Diagramm-Karte casora-chart statt apexcharts-card. Jedes umgestellte Popup
 // (Energie, Netzwerk, Klima, Pflanze) zeigt casora-chart mit gezeichneter Kurve, nirgends steckt
 // apexcharts-card im DOM; Ablesen per Tastatur und Touch ändert die Hero-Zahl; „Heute“ im
-// Energie-Popup zeigt Tagesbalken mit „Heute“; Klima schaltet Temperatur/Luftfeuchtigkeit um statt
+// Energie-Popup zeigt Tagesbalken mit „Heute“; die Zeilen „Heute“/„Diesen Monat“ schalten das Hero-Diagramm
+// auf 7 bzw. 30 Tagessäulen um (Hero-Zahl liest den Tageswert), erneutes Tippen bzw. die Leistung zurück; Klima schaltet Temperatur/Luftfeuchtigkeit um statt
 // zweiter y-Achse; die Sparkline erscheint auf der Kachel nur, wenn sie eingeschaltet ist.
 // Die Kacheln werden nur im Browser erzeugt (Sensoren aus dem Testhaus), gespeichert wird nichts.
 import { open, casoraDashboard, dashboard, check, need, finish, stable } from './lib.mjs';
@@ -21,6 +22,7 @@ const ids = await page.evaluate(() => {
   return {
     power: by('power', (e, v) => v > 50 && S[e].attributes.state_class === 'measurement'),
     today: by('energy', (e) => /heute|today/.test(e) && S[e].attributes.state_class === 'total_increasing'),
+    month: by('energy', (e) => /monat|month/.test(e)),
     dl: by('data_rate', (e) => /download/.test(e)), ul: by('data_rate', (e) => /upload/.test(e)),
     temp: by('temperature', (e) => S[e].attributes.state_class === 'measurement'),
     hum: by('humidity', (e) => S[e].attributes.state_class === 'measurement'),
@@ -29,6 +31,17 @@ const ids = await page.evaluate(() => {
 });
 await need('Sensoren im Testhaus (Leistung, Tageszähler, Download/Upload, Temperatur, Feuchte, Pflanze)',
   Object.values(ids).every(Boolean), ids);
+// Der Mock schreibt die 30 Tage Statistik erst kurz nach dem Start – bis zu 60 s darauf warten.
+let statsOk = false;
+for (let i = 0; i < 30 && !statsOk; i++) {
+  statsOk = await page.evaluate(async (id) => {
+    const r = await document.querySelector('home-assistant').hass.callWS({ type: 'recorder/statistics_during_period',
+      start_time: new Date(Date.now() - 3 * 864e5).toISOString(), statistic_ids: [id], period: 'day', types: ['change'] });
+    return (r[id] || []).some((x) => x.change > 0);
+  }, ids.today).catch(() => false);
+  if (!statsOk) await page.waitForTimeout(2000);
+}
+await need('Tagesstatistik im Testhaus (Mock)', statsOk, ids.today);
 
 // Kachel im Browser erzeugen, antippen, warten bis das Popup offen ist und ein Diagramm gezeichnet hat.
 async function popup(cfg) {
@@ -89,6 +102,51 @@ const touched = await page.evaluate((f) => {
 await check('Energie: Touch liest ab und bleibt nach dem Loslassen stehen', touched && touched !== before, [before, touched]);
 const aria = await page.evaluate((f) => { const s = eval(f)().shadowRoot.querySelector('svg'); return [s.getAttribute('role'), s.getAttribute('aria-label'), s.getAttribute('tabindex'), getComputedStyle(s).touchAction]; }, chartIn.toString());
 await check('Energie: role=img, aria-label, Tab-Stopp, touch-action pan-y', aria[0] === 'img' && aria[1] && aria[2] === '0' && aria[3] === 'pan-y', aria);
+
+// Energie: „Heute“ → 7 Tagessäulen, „Diesen Monat“ → 30, erneutes Tippen bzw. die Leistung → Kurve.
+r = await popup({ type: 'custom:button-card', template: 'casora_energy', entity: ids.power,
+  variables: { entity_usage_today: ids.today, entity_usage_month: ids.month } });
+await check('Energie (Heute + Monat): Popup mit Diagramm', r && r.drawn >= 1, r);
+const tapMetric = async (eid) => {
+  const at = await page.evaluate((eid) => {
+    const pop = window.__pierce('casora-popup').find((p) => p.hasAttribute('open'));
+    const row = pop && window.__pierce('[data-hp-metric="' + eid + '"]', pop.shadowRoot)[0];
+    if (!row) return null;
+    row.scrollIntoView({ block: 'center' });
+    const b = row.getBoundingClientRect();
+    return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+  }, eid);
+  if (!at) return null;
+  await page.waitForTimeout(300);
+  await page.mouse.click(at.x, at.y);
+  return stable(page, (f) => {
+    const c = eval(f)();
+    if (!c || !c.shadowRoot || !c._c) return null;
+    const svg = c.shadowRoot.querySelector('svg');
+    return { kind: c._c.kind, span: c._c.span, bars: c.shadowRoot.querySelectorAll('path[d*="Q"]').length,
+      heute: [...c.shadowRoot.querySelectorAll('text')].some((t) => t.textContent === 'Heute'),
+      label: svg && svg.getAttribute('aria-label') };
+  }, chartIn.toString(), { max: 10000, quiet: 1200 });
+};
+let t = await tapMetric(ids.today);
+await check('Energie: „Heute“ antippen → 7 Tagessäulen mit „Heute“', t && t.kind === 'bar' && t.span === '7d' && t.bars >= 6 && t.bars <= 7 && t.heute, t);
+const hero0 = await hero();
+await page.evaluate((f) => eval(f)().shadowRoot.querySelector('svg').focus(), chartIn.toString());
+await page.keyboard.press('ArrowLeft');
+await page.keyboard.press('ArrowLeft');
+const heroDay = await hero();
+const whenDay = await page.evaluate(() => { const n = window.__pierce('[data-casora-read-when]')[0]; return n ? n.textContent : ''; });
+await check('Energie: Säulen ablesen → Hero-Zahl zeigt den Tageswert (kWh, Datum)', heroDay && /kWh/.test(heroDay) && heroDay !== hero0
+  && /Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag/.test(whenDay), [hero0, heroDay, whenDay]);
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+t = await tapMetric(ids.month);
+await check('Energie: „Diesen Monat“ antippen → 30 Tagessäulen', t && t.kind === 'bar' && t.span === '30d' && t.bars >= 28 && t.bars <= 30, t);
+t = await tapMetric(ids.month);
+await check('Energie: „Diesen Monat“ erneut antippen → zurück auf die Leistungskurve', t && t.kind === 'line' && t.bars === 0, t);
+await tapMetric(ids.today);
+t = await tapMetric(ids.power);
+await check('Energie: Leistung antippen → zurück auf die Leistungskurve', t && t.kind === 'line', t);
 // Tagesverbrauch (Geräte-Popups „Verbrauch pro Tag“, Energie „Heute“): _hpBarCfg aus 01-basis.js.
 await page.evaluate(async (today) => {
   const h = await window.loadCardHelpers();
@@ -101,7 +159,9 @@ const bar = await stable(page, () => {
   const c = document.querySelector('home-assistant').shadowRoot.querySelector('.qa-r90b');
   if (!c || !c.shadowRoot) return null;
   const t = [...c.shadowRoot.querySelectorAll('text')].map((x) => x.textContent);
-  return { bars: c.shadowRoot.querySelectorAll('path[d*="Q"]').length, heute: t.includes('Heute'), avg: t.includes('Ø'), wd: t.filter((x) => /^(Mo|Di|Mi|Do|Fr|Sa|So)$/.test(x)).length };
+  const n = c.shadowRoot.querySelectorAll('path[d*="Q"]').length;
+  // Erst zählen, wenn die Statistik da ist (vorher kurz ohne Säulen).
+  return n ? { bars: n, heute: t.includes('Heute'), avg: t.includes('Ø'), wd: t.filter((x) => /^(Mo|Di|Mi|Do|Fr|Sa|So)$/.test(x)).length } : null;
 }, null, { max: 10000, quiet: 1000 });
 await page.evaluate(() => document.querySelector('home-assistant').shadowRoot.querySelectorAll('.qa-r90b').forEach((x) => x.remove()));
 await check('Tagesverbrauch: Säulen mit „Heute“, deutschen Wochentagen und Ø-Linie', bar && bar.bars >= 3 && bar.heute && bar.avg && bar.wd >= 5, bar);
