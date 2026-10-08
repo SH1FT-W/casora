@@ -17,9 +17,9 @@ await need('ein Casora-Dashboard', desk, all.map((d) => d.url));
 const SID = 'sensor.casora_tanken_qa_testauto_e10';
 const stations = [
   { n: 'Freie Tankstelle Mühlweg', b: 'Freie', p: 1.689, o: true, d: 2.8, x: 1.9, y: 2.0 },
-  { n: 'Autohof Nord', b: 'Autohof', p: 1.699, o: true, d: 4.6, x: 2.4, y: 3.9 },
+  { n: 'Autohof Nord', b: 'JET', p: 1.699, o: true, d: 4.6, x: 2.4, y: 3.9 },
   { n: 'Tankpunkt Südring', b: 'Tankpunkt', p: 1.719, o: true, d: 1.2, x: -0.4, y: -1.1 },
-  { n: 'Stadttankstelle Gartenstraße', b: 'Stadt', p: 1.739, o: true, d: 0.9, x: -0.7, y: 0.5 },
+  { n: 'Stadttankstelle Gartenstraße', b: 'ARAL', p: 1.739, o: true, d: 0.9, x: -0.7, y: 0.5 },
   { n: 'Tankhof Lindenallee', b: 'Tankhof', p: 1.749, o: false, d: 3.4, x: -3.0, y: -1.6 },
 ];
 const typical = Array.from({ length: 24 }, (_, h) => (h >= 19 && h <= 22 ? 1.649 : h < 6 ? 1.70 : 1.749));
@@ -125,6 +125,10 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   await check(vp.name + ': Am günstigsten (3 Kacheln), Punktkarte, Umschalter, Liste, Quelle',
     p && p.top === 3 && p.map === 1 && p.seg.join('|') === 'Günstigste|Nächste|Offen' && p.list.length === 5
     && /Daten: Tankerkönig, CC BY 4\.0/.test(p.view) && !/Lindenallee.*Mühlweg/.test(p.list.join('|')), p);
+  // Markenlogos (1.2): JET und ARAL bekommen ihr Logo (Adresse aus 12-tanken.js), freie Tankstellen das Kürzel.
+  const logos = await page.evaluate(() => window.__pierce('img').map((i) => i.getAttribute('src') || '').filter((u) => /s2\/favicons|Aral_Logo/.test(u)));
+  await check(vp.name + ': Markenlogos für JET und ARAL', logos.some((u) => /jet-tankstellen/.test(u)) && logos.some((u) => /Aral_Logo/.test(u)), logos.slice(0, 4));
+  if (process.env.R89_BILD) await page.screenshot({ path: `${process.env.CASORA_OUT}/r89_${vp.name.replace(/\W+/g, '_')}_logos.png` });
   await tap(page, '.ct-seg .hui-sg:nth-child(3)');
   await page.waitForTimeout(400);
   p = await popup(page);

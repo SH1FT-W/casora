@@ -24,9 +24,9 @@ KEY_RE = re.compile(r"^[0-9a-fA-F-]{36}$")
 # Erfunden: Name, Marke, Lage (km Ost, km Nord), Grundpreis E10, offen
 STATIONS = [
     ("Freie Tankstelle Mühlweg", "Freie", 1.9, 2.0, 1.689, True),
-    ("Autohof Nord", "Autohof", 2.4, 3.9, 1.699, True),
+    ("Autohof Nord", "JET", 2.4, 3.9, 1.699, True),
     ("Tankpunkt Südring", "Tankpunkt", -0.4, -1.1, 1.719, True),
-    ("Stadttankstelle Gartenstraße", "Stadt", -0.7, 0.5, 1.739, True),
+    ("Stadttankstelle Gartenstraße", "ARAL", -0.7, 0.5, 1.739, True),
     ("Tankhof Lindenallee", "Tankhof", -3.0, -1.6, 1.749, False),
     ("Bahnhof-Tankstelle", "Bahnhof", 1.2, -1.7, 1.769, True),
 ]

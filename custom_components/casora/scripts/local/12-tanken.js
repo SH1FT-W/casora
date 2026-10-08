@@ -5,7 +5,8 @@
 // Günstigste/Nächste/Offen mit Liste, Quellenhinweis „Daten: Tankerkönig, CC BY 4.0“.
 // Daten: Sensor sensor.casora_tanken_<auto>_<kraftstoff> (tanken.py), Attribut car_device_id = Gerät
 // des Autos. Ohne Sensor (nicht eingerichtet, E-Auto, Kraftstoff „aus“) gibt es keine Zeile.
-// Keine Markenlogos: farbige Kürzel-Kreise. Nur im Weich-Design (Casora, Nebel).
+// Markenlogos werden zur Laufzeit geladen (nicht im Repo, nur Adressen); unbekannte Marken: farbige
+// Kürzel-Kreise. Nur im Weich-Design (Casora, Nebel).
 (function () {
   if (window._casoraTank) return;
   var K = window._casoraTank = {};
@@ -139,7 +140,30 @@
     for (var i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0;
     return COLORS[h % COLORS.length];
   };
+  /* Logos der gängigen Marken (1.2, Wunsch 08.10.2026): nur die Adressen stehen hier, das Bild lädt der
+     Browser (Seiten-Symbol der Marke in 128 px über Googles Symbol-Dienst, Aral über Wikimedia; HTTP-Cache
+     eine Woche). Geprüft am 08.10.2026; Marken ohne brauchbares Symbol (z. B. BP) behalten das Kürzel. */
+  var FAV = function (d) { return 'https://www.google.com/s2/favicons?domain=' + d + '&sz=128'; };
+  var LOGOS = {
+    aral: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Aral_Logo.svg/250px-Aral_Logo.svg.png',
+    shell: FAV('shell.de'), esso: FAV('esso.de'), total: FAV('totalenergies.de'), totalenergies: FAV('totalenergies.de'),
+    jet: FAV('jet-tankstellen.de'), avia: FAV('avia.de'), omv: FAV('omv.de'), hem: FAV('hem-tankstelle.de'),
+    star: FAV('star.de'), bft: FAV('bft.de'), westfalen: FAV('westfalen.com'), hoyer: FAV('hoyer.de'),
+    q1: FAV('q1.eu'), agip: FAV('agip.de'), eni: FAV('agip.de'), tamoil: FAV('tamoil.com'),
+  };
+  K.logo = function (s) {
+    var b = String((s && (s.b || '')) || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!b) return null;
+    if (LOGOS[b]) return LOGOS[b];
+    for (var k in LOGOS) if (b.indexOf(k) === 0) return LOGOS[k];
+    return null;
+  };
   var circle = function (s, size) {
+    var lg = K.logo(s);
+    if (lg) return '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;flex:none;background:#fff;'
+      + 'box-shadow:0 0 0 .5px rgba(0,0,0,.12);display:grid;place-items:center;overflow:hidden">'
+      + '<img src="' + esc(lg) + '" alt="" loading="lazy" style="' + (/s2\/favicons/.test(lg)
+        ? 'width:100%;height:100%;object-fit:cover' : 'width:72%;height:72%;object-fit:contain') + '"></div>';
     return '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;flex:none;background:' + color(s) + ';color:#fff;'
       + 'display:grid;place-items:center;font-size:' + Math.round(size * .34) + 'px;font-weight:800;letter-spacing:.02em">' + esc(K.abbr(s)) + '</div>';
   };
@@ -264,7 +288,7 @@
     else if (sort === 'offen') s = s.filter(function (x) { return x.o; });
     var more = Math.max(0, s.length - 12);
     var out = UI.group(s.slice(0, 12).map(function (x) {
-      return { image: badge(x), imageFit: 'cover', label: x.n || x.b || '?',
+      return { image: K.logo(x) || badge(x), imageFit: K.logo(x) && !/s2\/favicons/.test(K.logo(x)) ? 'contain' : 'cover', label: x.n || x.b || '?',
         sub: [x.d != null ? km(x.d) : null, x.o ? 'offen' : 'zu'].filter(Boolean).join(' · '), subTone: x.o ? null : 'warn',
         value: price(x.p) + ' €' };
     }), null);
