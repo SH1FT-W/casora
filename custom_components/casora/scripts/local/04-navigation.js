@@ -180,8 +180,6 @@
       /* Zustand rechts als kleiner Wert in Text 2 (wie ein Badge-Wert); im offenen Raum in der Aktiv-Zustandsfarbe. */
       + '.hmn-sheet .hmn-sub{display:block;min-width:0;max-width:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:16px;font-weight:500;'
       +   'margin:0 0 0 20px;font-variant-numeric:tabular-nums;color:var(--casora-text-2, var(--casora-mnav-fg-sub, rgba(255,255,255,0.55)));}'
-      + '.hmn-sheet .hmn-sub.hmn-warn{color:var(--casora-popup-ui-warn, #D9822B);font-weight:600;}'
-      + '.hmn-sheet .hmn-sub.hmn-warn::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px;}'
       + '.hmn-sheet .hmn-row.on .hmn-sub{color:var(--casora-entity-state-active-color, var(--casora-text-2, inherit));}'
       /* Tipp-Rückmeldung wie die Popup-Zeilen: Fläche hinterlegen und leicht schrumpfen (auch per Klasse, falls :active am Handy nicht greift). */
       + '.hmn-sheet .hmn-item.hmn-row:active,.hmn-sheet .hmn-item.hmn-row.hmn-press{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));transform:scale(.985);}'
@@ -513,24 +511,6 @@
       if (this._bar) this._bar.classList.add('hmn-up');
       requestAnimationFrame(function () { sc.classList.add('open'); });
     }
-    /* room_chips der Raumseiten (casora_mobile_sensor_chips im Handy-Layout) – daraus und aus dem
-       Desktop-Raum (casoraPhoneRoom) kommen dieselben Werte wie für die Raum-Badges. */
-    _chips() {
-      var rows = Array.from(window._casoraSmartRows || []);
-      for (var i = 0; i < rows.length; i++) {
-        var cards = (rows[i]._config && rows[i]._config.cards) || [];
-        for (var j = 0; j < cards.length; j++) {
-          var c = cards[j], t = c && c.template;
-          if (t === 'casora_mobile_sensor_chips' || (Array.isArray(t) && t.indexOf('casora_mobile_sensor_chips') >= 0)) {
-            return (c.variables && c.variables.room_chips) || null;
-          }
-        }
-      }
-      return null;
-    }
-    /* Zustandszeile einer Raumzeile („1 Licht an · 22°“, „Alles aus · 21°“): nur aus den Werten der
-       Raum-Badges (Lichter wie casora_badge_light_group, Temperatur wie casora_badge_climate_group).
-       Ohne Lichter und Temperatur bleibt die Zeile leer – nichts erfinden. */
     /* „Vor 5 Min.“, „Gestern“ … wie casora_badge_scene (Szenen-Zustand = Zeitpunkt der letzten Ausführung). */
     _sceneAgo(id) {
       var st = this._hass && this._hass.states[id];
@@ -544,68 +524,6 @@
       var d = Math.round((day(Date.now()) - day(t)) / 86400000);
       if (h < 24 || d < 1) return tr('Vor ' + h + ' Std.');
       return tr(d === 1 ? 'Gestern' : 'Vor ' + d + ' Tagen');
-    }
-    /* Auffälliges je Raum (Vorschlag 1, 08.10.2026): Fenster/Tür offen (orange) vor Licht an vor feuchter Luft. Alles aus den Werten der Raum-Badges – nichts erfinden.
-       Laufende Geräte bewusst nicht: Leistungswerte allein sagen das nicht verlässlich (Kühlschrank). */
-    _roomSub(key, chips) {
-      var r = this._roomNote(key, chips);
-      return r ? r.text : '';
-    }
-    /* Rechts immer die Raumtemperatur als Grundwert (Vorschlag 1 „Raumzustand 2“, 08.10.2026), Auffälliges davor:
-       „Licht an · 23°“, orange „Fenster offen · 22°“. Ohne Temperaturfühler bleibt nur das Auffällige. */
-    _roomNote(key, chips) {
-      var PR = window.casoraPhoneRoom, h = this._hass;
-      if (!PR || !h || !key) return null;
-      var v; try { v = PR.vars(key, chips); } catch (e) { v = null; }
-      if (!v) return null;
-      var st = h.states || {}, a = this._roomAlert(v, st), t = this._roomTemp(v, st);
-      if (!a && !t) return null;
-      return { text: a && t ? a.text + ' · ' + t : (a ? a.text : t), warn: !!(a && a.warn) };
-    }
-    _roomTemp(v, st) {
-      if (v.show_climate === false) return '';
-      var ts = [1, 2, 3, 4, 5].map(function (i) { return v['temp_sensor_' + i]; }).filter(Boolean)
-        .map(function (e) { return parseFloat(st[e] && st[e].state); }).filter(function (x) { return !isNaN(x); });
-      if (!ts.length && v.climate_entity_1 && st[v.climate_entity_1]) {
-        var ct = parseFloat(st[v.climate_entity_1].attributes && st[v.climate_entity_1].attributes.current_temperature);
-        if (!isNaN(ct)) ts = [ct];
-      }
-      if (!ts.length) return '';
-      var lo = Math.round(Math.min.apply(null, ts)), hi = Math.round(Math.max.apply(null, ts));
-      return lo === hi ? lo + '°' : lo + '–' + hi + '°';
-    }
-    _roomAlert(v, st) {
-      if (v.show_security !== false) {
-        var win = 0, door = 0;
-        for (var i = 1; i <= 8; i++) {
-          var e = v['security_entity_' + i], s = e && st[e];
-          if (!s || s.state !== 'on' || e.indexOf('binary_sensor.') !== 0) continue;
-          var dc = String((s.attributes && s.attributes.device_class) || '');
-          if (/door|garage/.test(dc)) door++; else if (/window|opening/.test(dc) || !dc) win++;
-        }
-        if (win || door) {
-          var t = win && door ? T('Offen') : win ? (win === 1 ? T('Fenster offen') : T(win + ' Fenster offen')) : (door === 1 ? T('Tür offen') : T(door + ' Türen offen'));
-          return { text: t, warn: true };
-        }
-      }
-      if (v.show_lights !== false && (v.light_entity_1 || v.light_group_entity)) {
-        var cfg = []; for (var n = 1; n <= 10; n++) if (v['light_entity_' + n]) cfg.push(v['light_entity_' + n]);
-        var mems = function (x) { var m = st[x] && st[x].attributes && st[x].attributes.entity_id; return Array.isArray(m) ? m.filter(function (y) { return typeof y === 'string' && y.indexOf('light.') === 0; }) : []; };
-        if (!cfg.length) { var g = mems(v.light_group_entity); cfg = g.length ? g : [v.light_group_entity]; }
-        var seen = {}, units = function (x) {
-          if (!x || seen[x]) return [];
-          var m = mems(x);
-          if (!m.length || !m.some(function (y) { return mems(y).length; })) return [x];
-          seen[x] = 1;
-          return m.reduce(function (a, y) { return a.concat(units(y)); }, []);
-        };
-        var all = cfg.reduce(function (a, x) { return a.concat(units(x)); }, []).filter(function (x, k, a) { return a.indexOf(x) === k; });
-        var on = all.filter(function (x) { return st[x] && st[x].state === 'on'; }).length;
-        if (on) return { text: on === 1 ? T('Licht an') : T(on + ' Lichter an') };
-      }
-      var hs = v.humidity_sensor && st[v.humidity_sensor], hum = hs ? parseFloat(hs.state) : NaN;
-      if (!isNaN(hum) && hum >= 65) return { text: T('Feucht') + ' · ' + Math.round(hum) + ' %' };
-      return null;
     }
     /* Kreisfarbe einer Szene im Blatt: die Studio-Farbe wie überall am Desktop (Szenen-Badge, -Kacheln, -Reihe):
        eigene Farbe aus dem Studio, sonst die Standard-Szenenfarbe (--casora-scene-badge-color, im Casora-Design
@@ -638,7 +556,6 @@
       m.appendChild(head);
       var list = el('div', 'hmn-list');
       m.appendChild(list);
-      var chips = rooms ? this._chips() : null;
       var tap = function (b, it) {
         var up = function () { b.classList.remove('hmn-press'); };
         b.addEventListener('pointerdown', function () { b.classList.add('hmn-press'); });
@@ -670,12 +587,7 @@
           b.appendChild(ago);
         }
         if (rooms) {
-          /* Zustand rechts neben dem Namen (eigene Rasterspalte), leer = ausgeblendet. */
-          var note = self._roomNote(it.key, chips), sub = note ? note.text : '';
-          var s = el('span', 'hmn-sub' + (note && note.warn ? ' hmn-warn' : ''), sub);
-          s.setAttribute('data-no-i18n', '');
-          if (!sub) s.style.display = 'none';
-          b.appendChild(s);
+          /* Räume nur mit Namen, ohne Temperatur/Sensoren rechts (Wunsch 08.10.2026). */
           b.setAttribute('data-k', it.key);
           if (it.on) b.setAttribute('aria-current', 'true');
         }
@@ -684,14 +596,7 @@
       });
       if (!n) list.appendChild(el('div', 'hmn-empty', T(rooms ? 'Keine Räume' : 'Keine Szenen')));
       /* Zustand live nachziehen, solange das Blatt offen ist (set hass). */
-      m._sheetRefresh = rooms ? function () {
-        var ch = self._chips();
-        Array.prototype.forEach.call(list.querySelectorAll('.hmn-row[data-k]'), function (b) {
-          var s = b.querySelector('.hmn-sub'), nt = self._roomNote(b.getAttribute('data-k'), ch), t = nt ? nt.text : '';
-          if (s && s.textContent !== t) { s.textContent = t; s.style.display = t ? '' : 'none'; }
-          if (s) s.classList.toggle('hmn-warn', !!(nt && nt.warn));
-        });
-      } : function () {
+      m._sheetRefresh = rooms ? null : function () {
         var SCx = window._casoraSC, hs = self._hass && self._hass.states;
         Array.prototype.forEach.call(list.querySelectorAll('.hmn-sub[data-sid]'), function (s) {
           var id = s.getAttribute('data-sid'), on = !!(SCx && SCx.isActive && hs && SCx.isActive(id, hs));

@@ -162,65 +162,9 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   await check(`${tag}: andere Zeilen ohne Platte, Kreis in Sand mit dunkler Glyphe (kein Ton)`,
     clear(m.off.bg) && !clear(m.off.icBg) && m.off.icBg !== m.on.icBg && m.off.icColor !== m.on.icColor, [m.off.bg, m.off.icBg, m.off.icColor, m.on.icBg]);
   await check(`${tag}: offener Raum flächig (Weiß) mit Kreis in Ton`, !clear(m.on.bg) && m.on.bg !== m.off.bg && !clear(m.on.icBg), [m.on.bg, m.off.bg, m.on.icBg]);
-  if (m.off.sub) await check(`${tag}: Zustand rechts als kleiner Wert (13 px, 14 px vom Zeilenrand, mittig)`,
-    m.off.subR != null && near(m.off.subR, 14) && near(m.off.subFs, 13) && near(m.off.subMidY, 0) && m.off.subFs < m.off.fs, m.off);
-  else console.log('  info   ' + tag + ': kein Raum mit Hinweis rechts – Maße der Zustandsspalte nicht gemessen');
+  // Räume nur mit Namen, ohne Temperatur/Sensoren rechts (Wunsch 08.10.2026).
+  await check(`${tag}: Räume ohne Zustand rechts`, !m.on.sub && !m.off.sub, [m.on.sub, m.off.sub]);
   await check(`${tag}: Leiste bleibt unter dem Fenster sichtbar`, m.bar && !m.bar.under && +m.bar.op === 1, m.bar);
-
-  // Zustandszeile: Raum mit Lichtern und Temperatur, Zustände nur im Browser untergeschoben.
-  if (!dark) {
-    // Raum-Variablen kommen erst aus room_chips, dann vom Server (casora/phone_room_badges) – warten, bis sie stehen.
-    let was = null;
-    for (let i = 0; i < 10; i++) {
-      const now = await page.evaluate(() => { const nav = window.__pierce('casora-mobile-nav')[0], ch = nav._chips();
-        return JSON.stringify(nav._rooms.map((r) => window.casoraPhoneRoom && window.casoraPhoneRoom.vars(r.key, ch))); });
-      if (now === was) break;
-      was = now; await page.waitForTimeout(1200);
-    }
-    const pick = await page.evaluate(() => {
-      const nav = window.__pierce('casora-mobile-nav')[0], h = nav._hass, PR = window.casoraPhoneRoom, ch = nav._chips();
-      for (const r of nav._rooms) {
-        const v = PR && PR.vars(r.key, ch);
-        if (!v || !v.temp_sensor_1 || !h.states[v.temp_sensor_1]) continue;
-        // Lichter zählen wie die Licht-Badge (casora_badge_light_group): eingetragene Lichter, sonst die
-        // Mitglieder der Lichtgruppe; eine Gruppe aus Einzellichtern zählt als ein Licht.
-        const mems = (e) => { const m = h.states[e] && (h.states[e].attributes || {}).entity_id; return Array.isArray(m) ? m.filter((x) => x.startsWith('light.')) : []; };
-        let cfg = []; for (let n = 1; n <= 10; n++) if (v['light_entity_' + n]) cfg.push(v['light_entity_' + n]);
-        if (!cfg.length && v.light_group_entity) cfg = mems(v.light_group_entity).length ? mems(v.light_group_entity) : [v.light_group_entity];
-        const seen = new Set();
-        const units = (e) => { if (!e || seen.has(e)) return []; const m = mems(e); if (!m.length || !m.some((x) => mems(x).length)) return [e]; seen.add(e); return m.flatMap(units); };
-        const lights = [...new Set(cfg.flatMap(units))];
-        const sec = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => v['security_entity_' + i]).filter((e) => e && e.startsWith('binary_sensor.') && h.states[e]);
-        if (lights.length) return { key: r.key, temp: v.temp_sensor_1, lights, sec, hum: v.humidity_sensor || null, more: [1, 2, 3, 4, 5].some((i) => i > 1 && v['temp_sensor_' + i]) };
-      }
-      return null;
-    });
-    await need(`${tag}: Raum mit Lichtern und Temperatur`, pick && !pick.more, pick);
-    const sub = () => page.evaluate((k) => { const b = document.querySelector('.hmn-sheet .hmn-row[data-k="' + k + '"]'); return b ? b.querySelector('.hmn-sub').textContent : null; }, pick.key);
-    // Rechts immer die Temperatur, das Auffälligste davor (Fenster/Tür offen vor Licht an vor feuchter Luft).
-    const calm = Object.fromEntries([...pick.sec.map((e) => [e, { state: 'off' }]), ...(pick.hum ? [[pick.hum, { state: '45' }]] : [])]);
-    const off = { ...calm, ...Object.fromEntries(pick.lights.map((e) => [e, { state: 'off' }])) };
-    await fakeStates(page, { ...off, [pick.temp]: { state: '21.6' } }, { sticky: true });
-    await page.waitForTimeout(500);
-    const s1 = await sub();
-    await check(`${tag}: alles ruhig: rechts nur die Temperatur`, s1 === '22°', s1);
-    await fakeStates(page, { ...off, [pick.lights[0]]: { state: 'on' }, [pick.temp]: { state: '21.6' } }, { sticky: true });
-    await page.waitForTimeout(500);
-    const s2 = await sub();
-    await check(`${tag}: „Licht an“ (live nachgezogen)`, s2 === 'Licht an · 22°', s2);
-    if (pick.lights.length > 1) {
-      await fakeStates(page, { ...Object.fromEntries(pick.lights.map((e) => [e, { state: 'on' }])), [pick.temp]: { state: '21.6' } }, { sticky: true });
-      await page.waitForTimeout(500);
-      const s3 = await sub();
-      await check(`${tag}: „${pick.lights.length} Lichter an“`, s3 === pick.lights.length + ' Lichter an · 22°', s3);
-    }
-    if (pick.sec.length) {
-      await fakeStates(page, { ...off, [pick.lights[0]]: { state: 'on' }, [pick.sec[0]]: { state: 'on', attributes: { device_class: 'window' } } }, { sticky: true });
-      await page.waitForTimeout(500);
-      const s4 = await page.evaluate((k) => { const b = document.querySelector('.hmn-sheet .hmn-row[data-k="' + k + '"] .hmn-sub'); return b ? { t: b.textContent, warn: b.classList.contains('hmn-warn') } : null; }, pick.key);
-      await check(`${tag}: offenes Fenster geht vor Licht und ist orange markiert`, s4 && /^Fenster offen( · \d+°)?$/.test(s4.t) && s4.warn, s4);
-    }
-  }
 
   // ── Viele Räume (nur im Browser: sechs zusätzliche Räume): scrollt, letzte Zeile angeschnitten, offener Raum mittig. ──
   await page.evaluate(() => {
