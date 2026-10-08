@@ -42,7 +42,9 @@ for (const groupsOn of [true, false]) {
   await dashboard(page, dash.phone.url + '/' + (dash.phone.config.views[0].path || '0'), 3);
 
   // Alle Kacheln des Raums aus, nur die Jalousie offen (aktiv).
-  await fakeStates(page, { ...off, [room.cover]: { state: 'open' } });
+  // sticky: Echte Updates des Test-HAs dürfen die untergeschobenen Zustände nicht zurücksetzen,
+  // sonst war das Licht beim Neusortieren wieder aus (wackelte ~1 von 10, Gate 1.1.1).
+  await fakeStates(page, { ...off, [room.cover]: { state: 'open' } }, { sticky: true });
   await page.evaluate((k) => window.dispatchEvent(new CustomEvent('ll-custom', { detail: { casora_filter: k } })), key);
   await page.waitForTimeout(3500);
 
@@ -83,7 +85,8 @@ for (const groupsOn of [true, false]) {
 
   // Bei offenem Raum das Licht einschalten: rückt nach vorn (in seiner Kategorie bzw. global), unter
   // den aktiven gilt die Studio-Reihenfolge (Licht vor Jalousie).
-  await fakeStates(page, { [room.light]: { state: 'on' } });
+  // Der feste Patch ersetzt den vorigen – deshalb Jalousie und übrige Kacheln wieder mitgeben.
+  await fakeStates(page, { ...off, [room.cover]: { state: 'open' }, [room.light]: { state: 'on' } }, { sticky: true });
   // Die Raumseite sortiert spätestens 2,5 s nach einem Update neu; bis zu 8 s warten.
   const ok = (l) => (grouped
     ? scope(l, room.light)[0] === room.light && scope(l, room.cover)[0] === room.cover
