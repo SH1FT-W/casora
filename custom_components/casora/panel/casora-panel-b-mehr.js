@@ -967,6 +967,7 @@
       ["home", "Home & Devices", "haus geräte personen bereiche"], ["alerts", "Bell & Alerts", "glocke meldungen benachrichtigung push"],
       ["dashboards", "New Dashboards", "neue dashboards standard"], ["ai", "AI", "ki künstliche intelligenz assistent"],
       ["outdoor", "Outdoor & Price", "außen draußen strompreis"], ["vent", "Ventilation", "lüften lüftung fenster"],
+      ["fuel", "Fuel prices", "tanken tankstelle sprit benzin diesel spritpreis tankerkönig"],
     ];
     P._mSearchItems = function () {
       const out = [];

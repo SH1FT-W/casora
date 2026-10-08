@@ -1,0 +1,14 @@
+import { open, casoraDashboards, dashboard, finish } from './lib.mjs';
+const all = await casoraDashboards();
+const phone = all.find((d) => d.mobile);
+console.log('phone', phone && phone.url);
+const { page, browser } = await open({ width: 393, height: 852, mobile: true, safari: true, scale: 2, dark: false, theme: 'Casora' });
+await dashboard(page, phone.url, 3);
+await page.waitForTimeout(5000);
+const r = await page.evaluate(() => { const nav = window.__pierce('casora-mobile-nav')[0], ch = nav._chips(), h = nav._hass;
+  return nav._rooms.map((r) => { const v = window.casoraPhoneRoom.vars(r.key, ch) || {}; const o = {};
+    for (const [k, x] of Object.entries(v)) if (typeof x === 'string' && x.includes('.') ) o[k] = x + '=' + (h.states[x] ? h.states[x].state : '-');
+    return { key: r.key, label: r.label, icon: r.icon, v: o }; }); });
+console.log(JSON.stringify(r, null, 1));
+await browser.close();
+process.exit(0);

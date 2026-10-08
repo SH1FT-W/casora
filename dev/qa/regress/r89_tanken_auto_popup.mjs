@@ -168,6 +168,13 @@ const st = await page.evaluate(() => {
     side: P('.sidelist .siderow, #sidesections .siderow').map((e) => e.textContent.trim()) };
 });
 await check('Studio: Abschnitt „Tanken“ unter Einstellungen', /Tanken/.test(st.side.join('|')) || /Tankstellen in der Nähe/.test(st.text), st.side);
+// 08.10.2026: Das neue Studio hat eigene Listen (Einstellungs-Menü, Suche) – dort fehlte „Tanken“.
+{
+  const fs = await import('node:fs');
+  const b = fs.readFileSync(new URL('../../../custom_components/casora/panel/casora-panel-b.js', import.meta.url), 'utf8');
+  const m = fs.readFileSync(new URL('../../../custom_components/casora/panel/casora-panel-b-mehr.js', import.meta.url), 'utf8');
+  await check('Studio: „Tanken“ im Einstellungs-Menü und in der Suche des neuen Studios', /\["fuel", "Fuel prices"/.test(b) && /\["fuel", "Fuel prices"/.test(m));
+}
 await check('Studio: Link zur Registrierung', st.link === 'https://onboarding.tankerkoenig.de/', st.link);
 await check('Studio: Schlüsselfeld maskiert und leer', st.keyType === 'password' && !st.keyValue, st);
 await check('Studio: Test-Abruf, Umkreis, Kraftstoff je Auto, Quelle', st.test === 1 && st.radius && /Kraftstoff je Auto/.test(st.text) && /Daten: Tankerkönig, CC BY 4\.0/.test(st.text), st.text.slice(0, 400));
