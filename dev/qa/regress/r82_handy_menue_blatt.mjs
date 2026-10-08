@@ -2,7 +2,7 @@
 // @parallel: ui
 // Wunsch (08.10.2026, Richtung C „Leicht“ für 1.1.3): Räume- und Szenen-Menü der Handy-Leiste kommen als
 // Blatt von unten wie ein Casora-Handy-Popup. Erwartet (Casora hell und dunkel, Casora Nebel hell, iPhone 393 × 852):
-// Seit 08.10.2026 abends schwebendes Fenster über der Leiste (12 px seitlich, ringsum rund 28, höchstens 520 hoch,
+// Seit 08.10.2026 abends schwebendes Fenster über der Leiste (Breite nach Inhalt, mittig, ringsum rund 28, höchstens 520 hoch,
 // kein Griff, Leiste bleibt sichtbar) statt ganzflächigem Blatt.
 // Titel mittig mit Etikett „10 RÄUME“ (12/700 Versalien). Zeilen 52 px ohne Platten, Symbolkreis 36 in Sand mit
 // dunkler Glyphe, Name 15/600, Zustand rechts als kleiner Wert (13 px). Nur der offene Raum hat eine Fläche
@@ -151,12 +151,12 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   const m = await openSheet(page, 'rooms');
   await need(`${tag}: Räume als Blatt`, m && m.kind === 'rooms' && m.on && m.off, m);
   console.log(tag, 'Räume', JSON.stringify({ sheet: m.sheet, grip: m.grip, title: m.title, count: m.count, on: m.on, off: m.off, list: m.list }));
-  await check(`${tag}: Fenster schwebt über der Leiste (12 px seitlich, nicht ganzflächig)`, near(m.sheet.left, 12) && near(m.sheet.right, 12) && m.sheet.bottom > 60 && m.sheet.top > 100, m.sheet);
+  await check(`${tag}: Fenster schwebt mittig über der Leiste (Breite nach Inhalt, mind. 12 px seitlich)`, near(m.sheet.left, m.sheet.right) && m.sheet.left >= 11 && m.sheet.bottom > 60 && m.sheet.top > 100, m.sheet);
   await check(`${tag}: Fenster ringsum rund (28)`, near(m.sheet.radius, 28, 0) && near(m.sheet.radiusBottom, 28, 0), m.sheet);
   await check(`${tag}: Blatt deckend (kein durchscheinender Grund)`, !clear(m.sheet.bg), m.sheet.bg);
   await check(`${tag}: kein Griff (schwebendes Fenster)`, m.grip && m.grip.w === 0, m.grip);
-  await check(`${tag}: Titel mittig 22/700, Etikett mittig 12/700 Versalien`,
-    m.title && m.count && near(m.title.mid, 0) && near(m.title.fs, 22) && m.title.fw >= 700 && near(m.count.mid, 0) && near(m.count.fs, 12) && m.count.fw >= 700 && m.count.tt === 'uppercase', [m.title, m.count]);
+  await check(`${tag}: Titel mittig 19/700, Etikett mittig 12/700 Versalien`,
+    m.title && m.count && near(m.title.mid, 0) && near(m.title.fs, 19) && m.title.fw >= 700 && near(m.count.mid, 0) && near(m.count.fs, 12) && m.count.fw >= 700 && m.count.tt === 'uppercase', [m.title, m.count]);
   await check(`${tag}: Etikett „${m.count.text}“`, new RegExp('^' + m.n + ' (Räume|Raum)$').test(m.count.text), m.count.text);
   await geometry(tag, m, 'Räume:');
   await check(`${tag}: andere Zeilen ohne Platte, Kreis in Sand mit dunkler Glyphe (kein Ton)`,

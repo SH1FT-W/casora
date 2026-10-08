@@ -137,9 +137,9 @@
          mittig mit Etikett. Zeilen 52 px ohne Platten (Pille 26 = Kreis 18 + 8 Innenabstand, konzentrisch);
          nur der offene Raum bekommt die Fläche der gewählten Popup-Zeile.
          Die Klasse hmn-sheet setzt _openSheet(), nur solange das Weich-Design aktiv ist. */
-      /* Schwebend über der Leiste statt ganzflächig (Wunsch 08.10.2026: „wie früher kleiner“): Höhe nach Inhalt,
-         ringsum rund, die Leiste bleibt sichtbar darunter. */
-      + '.hmn-menu.hmn-sheet{left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom, 0px) * 0.4);margin:0 auto;width:auto;min-width:0;max-width:420px;padding:0;overscroll-behavior:contain;'
+      /* Schwebend über der Leiste statt ganzflächig (Wunsch 08.10.2026: „wie früher kleiner“): Breite und Höhe
+         nach Inhalt (mittig, 260 bis 420 px), ringsum rund, die Leiste bleibt sichtbar darunter. */
+      + '.hmn-menu.hmn-sheet{left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom, 0px) * 0.4);margin:0 auto;width:max-content;min-width:260px;max-width:min(420px, calc(100vw - 24px));padding:0;overscroll-behavior:contain;'
       +   'border-radius:28px !important;box-shadow:0 18px 44px -14px rgba(60,40,20,0.35) !important;'
       +   'display:flex;flex-direction:column;overflow:hidden;opacity:0;'
       +   'max-height:min(520px, calc(100vh - max(env(safe-area-inset-top, 0px), 12px) - 150px));'
@@ -178,8 +178,8 @@
       + '.hmn-txt{display:flex;flex-direction:column;min-width:0;}'
       + '.hmn-name{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
       /* Zustand rechts als kleiner Wert in Text 2 (wie ein Badge-Wert); im offenen Raum in der Aktiv-Zustandsfarbe. */
-      + '.hmn-sheet .hmn-sub{display:block;min-width:0;max-width:62%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:16px;font-weight:500;'
-      +   'margin:0;font-variant-numeric:tabular-nums;color:var(--casora-text-2, var(--casora-mnav-fg-sub, rgba(255,255,255,0.55)));}'
+      + '.hmn-sheet .hmn-sub{display:block;min-width:0;max-width:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:16px;font-weight:500;'
+      +   'margin:0 0 0 20px;font-variant-numeric:tabular-nums;color:var(--casora-text-2, var(--casora-mnav-fg-sub, rgba(255,255,255,0.55)));}'
       + '.hmn-sheet .hmn-sub.hmn-warn{color:var(--casora-popup-ui-warn, #D9822B);font-weight:600;}'
       + '.hmn-sheet .hmn-sub.hmn-warn::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px;}'
       + '.hmn-sheet .hmn-row.on .hmn-sub{color:var(--casora-entity-state-active-color, var(--casora-text-2, inherit));}'
@@ -705,6 +705,8 @@
       if (this._bar) this._bar.classList.add('hmn-up');
       document.body.appendChild(m);
       this._render();
+      /* Breite nach Inhalt beim Öffnen festhalten: ändert sich ein Zustand rechts (Fenster geht auf), springt das Fenster nicht. */
+      m.style.width = Math.ceil(m.getBoundingClientRect().width) + 'px';
       /* Mehr Zeilen als Platz: Liste so kürzen, dass die letzte sichtbare Zeile halb angeschnitten ist
          (Scroll-Hinweis wie in iOS), und den offenen Raum in die Mitte holen. */
       var first = list.firstElementChild;
