@@ -64,7 +64,7 @@ assert.ok(!/max-width': '560px'/.test(pop.slice(pop.indexOf('Ein Raster (01.10.2
 assert.ok(std.includes('&& !full.length) colS'), 'Standard-Layout: Spalte unter vollem Block gleich breit');
 assert.ok(core.includes(':host([more-below]) .more') && core.includes("toggleAttribute('more-below'"), 'Scroll-Hinweis im Popup');
 assert.ok(T.casora_badge_base.extra_styles.includes('max-width: calc(100vw - 2 * var(--casora-badge-row-gutter, 16px))'), 'Badge höchstens bildschirmbreit');
-assert.ok(/#dots \{\s*position: absolute;\s*left: 50%;\s*top:/.test(swipe), 'Karussell-Punkte oben');
+assert.ok(/#dots \{\s*position: absolute;\s*left: 50%;\s*bottom:/.test(swipe), 'Karussell-Punkte unten (wieder seit 08.10.2026)');
 assert.ok(T.casora_menu_icon.extra_styles.includes(':host .hamburger{ opacity: 0 !important; }'), 'Menüsymbol am Desktop in Ruhe unsichtbar');
 assert.ok(core.includes(".bar.more-r-on .more-r"), 'Raumleiste: Pfeil ohne Maske am Vorfahren');
 console.log('ok ui_review_v5');
