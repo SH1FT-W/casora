@@ -23,7 +23,9 @@ fs.mkdirSync(DIR, { recursive: true });
 const F = { small: path.join(DIR, 'klein.jpg'), png: path.join(DIR, 'Wohn zimmer ä.png'),
   big: path.join(DIR, 'gross.jpg'), heic: path.join(DIR, 'iphone.HEIC') };
 if (!fs.existsSync(F.small) || !fs.existsSync(F.png) || !fs.existsSync(F.big)) {
-  execFileSync('python3', ['-c', `
+  // Pillow über uv (System-Python hat kein PIL); die Bilder bleiben im Temp-Ordner liegen,
+  // bis macOS ihn leert – dann fiel r41 im Gate 1.1.1 um.
+  execFileSync('uv', ['run', '--quiet', '--no-project', '--python', '3.14', '--with', 'pillow', 'python', '-c', `
 from PIL import Image, ImageFilter
 d = ${JSON.stringify(DIR)}
 Image.radial_gradient("L").resize((1600, 1000)).convert("RGB").save(d + "/klein.jpg", quality=90)
