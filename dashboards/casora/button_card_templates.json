@@ -830,7 +830,7 @@
      "background": "transparent"
     },
     {
-     "box-shadow": "none !important"
+     "box-shadow": "var(--casora-chrome-shadow, none) !important"
     },
     {
      "border": "none !important"
@@ -9621,7 +9621,7 @@
      "background": "transparent"
     },
     {
-     "box-shadow": "none !important"
+     "box-shadow": "var(--casora-chrome-shadow, none) !important"
     },
     {
      "border": "none !important"
@@ -15236,7 +15236,7 @@
      "background": "transparent"
     },
     {
-     "box-shadow": "none !important"
+     "box-shadow": "var(--casora-chrome-shadow, none) !important"
     },
     {
      "border": "none !important"
