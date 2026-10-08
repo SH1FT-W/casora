@@ -54,6 +54,10 @@ Casora:
   casora-scene-icon-circle: 1
   casora-scene-icon-box: 40px
   casora-scene-glyph: 22px
+  # D5 (1.2): Szenen-Kacheln am Handy wie die Geräte-Kacheln (casora_scene_row)
+  casora-scene-tile-h-phone: 62px
+  casora-scene-icon-box-phone: 42px
+  casora-scene-chip-pad-phone: 10px 12px
   casora-scene-name-weight: 700
   # Chip-Reihen am Handy (Raum-Chips Temperatur/Luftfeuchtigkeit/Licht, Klima/Sicherheit/Energie):
   # Pillen mit gleichmäßig 8 px Abstand (Standard ohne Pillen: 16 px).

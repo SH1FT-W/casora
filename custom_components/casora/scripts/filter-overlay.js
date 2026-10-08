@@ -1560,6 +1560,7 @@
           }).length;
         } catch (_) { sceneCount = 0; }
         if (sceneCount) {
+          // D5 (1.2): Überschriften der Raumseite 2 px eingerückt wie die Gruppen-Überschriften (_appendGroupHeader).
           this._appendRevealCard({
             type:       'custom:button-card',
             template:   'casora_mobile_header',
@@ -1567,7 +1568,7 @@
             name:       'Szenen',
             variables:  { hide_caret: true, mobile_filter_categories: null },
             styles:     {
-              card:          [{ padding: `24px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})` }],
+              card:          [{ padding: `24px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC} + 2px)` }],
               custom_fields: { arrow: [{ display: 'none' }] },
             },
           }, this._contentEl, 0);
@@ -1621,7 +1622,7 @@
               name:       'Geräte',
               variables:  { hide_caret: true, mobile_filter_categories: null },
               styles:     {
-                card:          [{ padding: `18px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})` }],
+                card:          [{ padding: `18px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC} + 2px)` }],
                 custom_fields: { arrow: [{ display: 'none' }] },
               },
             }, this._contentEl, i);
