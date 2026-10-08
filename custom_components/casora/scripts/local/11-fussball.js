@@ -555,7 +555,8 @@
       + '.cfb-lg span{display:inline-flex;align-items:center;}'
       + '.cfb-lg i{display:inline-block;width:3px;height:10px;border-radius:2px;margin-right:6px;}'
       + '.cfb-fl{display:flex;flex-direction:column;gap:6px;}'
-      + '@media (min-width:761px){.cfb-fl{padding-top:24px;}}'
+      /* Spaltenkopf der Form wie „# Team Sp. …“ der Tabelle daneben (08.10.2026): gleiche Höhe, Zeilen fluchten. */
+      + '.cfb-f.h{background:none;min-height:18px;padding-top:0;padding-bottom:0;font-size:11px;font-weight:600;letter-spacing:.04em;color:' + T.ink3 + ';}'
       + '.cfb-f{display:grid;grid-template-columns:28px 22px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:44px;padding:4px 14px 4px 8px;border-radius:' + rad + ';background:' + row + ';font-size:14.5px;}'
       + '.cfb-res{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12.5px;}'
       + '.cfb-res.W{background:var(--casora-color-green, #6AAE78);}.cfb-res.D{background:var(--casora-color-sand, #9A8672);}.cfb-res.L{background:var(--casora-color-red, #D35A4E);}'
@@ -646,6 +647,7 @@
       if (!f.length) return CSS() + '<div class="cfb">' + head('Form') + '<div class="cfb-e">Keine Spiele gefunden</div></div>';
       var ab2 = K.abbr();
       return CSS() + '<div class="cfb">' + head('Form' + tally(f)) + '<div class="cfb-fl">'
+        + '<div class="cfb-f h"><span></span><span></span><span>Spiel</span><span class="s">Ergebnis</span></div>'
         + f.map(function (x) {
           return '<div class="cfb-f"><span class="cfb-res ' + esc(x.res) + '" data-no-i18n>' + (ab2[x.res] || '–') + '</span>'
             + mini(x.logo)
