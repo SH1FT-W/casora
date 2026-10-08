@@ -10,7 +10,12 @@
 // Karte (1.2): mit Mittelpunkt (Attribut center) liegt HAs eigene Karte (ha-map) unter Umkreis und Pillen, die
 // Pillen sitzen an den echten Koordinaten; lädt sie nicht (kein map_tiles, keine Kacheln), bleibt die
 // Punktkarte – nie eine leere Fläche. Ohne center (älterer Stand) nur die Punktkarte.
+// Logos (1.2, Wunsch 08.10.2026 „fehlen zu viele, nicht richtig eingebunden“): Marken mit Zusatz („Pludra Musterstadt“)
+// werden erkannt, alle Logos sitzen gleich groß im selben hellen Kreis, ein Platzhalter (16-px-Globus) oder ein
+// Ladefehler fällt auf das Kürzel zurück, freie Tankstellen zeigen die Zapfsäule statt eines Kürzels. Die Logo-Adressen
+// werden im Test abgefangen (eigenes Bild), damit nichts vom Netz abhängt.
 // Der Tank-Sensor wird nur im Browser untergeschoben (erfundene Stationen), nichts wird in HA gespeichert.
+import zlib from 'node:zlib';
 import { open, casoraDashboards, dashboard, studioDashboard, studio, check, need, finish, fakeStates, usePage } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -27,6 +32,40 @@ const stations = [
   { n: 'Stadttankstelle Gartenstraße', b: 'ARAL', p: 1.739, o: true, d: 0.9, x: -0.7, y: 0.5 },
   { n: 'Tankhof Lindenallee', b: 'Tankhof', p: 1.749, o: false, d: 3.4, x: -3.0, y: -1.6 },
 ].map((s) => ({ ...s, lat: +(CENTER[0] + s.y / 110.57).toFixed(4), lng: +(CENTER[1] + s.x / (111.32 * Math.cos(CENTER[0] * Math.PI / 180))).toFixed(4) }));
+// Logo-Szene: Marken mit Zusätzen; Shell bekommt den Platzhalter, Wiro einen Ladefehler.
+const logoStations = [
+  { n: 'Pludra Musterstadt', b: 'Pludra Musterstadt', p: 1.659 }, { n: 'Freie Tankstelle Am Markt', b: 'freie Tankstelle', p: 1.669 },
+  { n: 'Q1 Am Kanal', b: 'Q1', p: 1.679 }, { n: 'Schonhoff Mineralöle Süd', b: 'Schonhoff Mineralöle', p: 1.689 },
+  { n: 'Shell Ringstraße', b: 'Shell', p: 1.699 }, { n: 'Wiro Tankcenter', b: 'Wiro', p: 1.709 }, { n: 'Tankhof Lindenallee', b: 'Tankhof', p: 1.719 },
+].map((s, i) => ({ ...s, o: true, d: 1 + i / 2, lat: CENTER[0] + i / 300, lng: CENTER[1] }));
+// PNG in beliebiger Größe (einfarbig) für die abgefangenen Logo-Adressen.
+const png = (w, h) => {
+  const chunk = (t, d) => { const l = Buffer.alloc(4); l.writeUInt32BE(d.length); const td = Buffer.concat([Buffer.from(t), d]);
+    const c = Buffer.alloc(4); c.writeUInt32BE(zlib.crc32(td) >>> 0); return Buffer.concat([l, td, c]); };
+  const ih = Buffer.alloc(13); ih.writeUInt32BE(w, 0); ih.writeUInt32BE(h, 4); ih[8] = 8; ih[9] = 2;
+  const row = Buffer.concat([Buffer.from([0]), Buffer.alloc(w * 3, 0x40)]);
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ih),
+    chunk('IDAT', zlib.deflateSync(Buffer.concat(Array(h).fill(row)))), chunk('IEND', Buffer.alloc(0))]);
+};
+const LOGO_URLS = /s2\/favicons|upload\.wikimedia\.org|lanfer-energie\.de|wittrock\.de|schonhoff-mineraloele\.de|classic-oil\.de/;
+const routeLogos = (pg) => pg.route(LOGO_URLS, (r) => {
+  const u = r.request().url();
+  if (/wittrock\.de/.test(u)) return r.abort();
+  return r.fulfill({ status: /domain=shell\.de/.test(u) ? 404 : 200, contentType: 'image/png', body: /domain=shell\.de/.test(u) ? png(16, 16) : png(128, 128) });
+});
+const logoState = (pg) => pg.evaluate(async () => {
+  const s = window.casoraPopup && window.casoraPopup.surface;
+  const all = () => window.__pierce('.ct-logo', s).filter((e) => e.getBoundingClientRect().height > 0);
+  for (let i = 0; i < 40 && all().some((e) => { const m = e.querySelector('img'); return m && !m.complete; }); i++) await new Promise((r) => setTimeout(r, 150));
+  await new Promise((r) => setTimeout(r, 400));
+  const R = (e) => { const r = e.getBoundingClientRect(); return [Math.round(r.width * 10) / 10, Math.round(r.height * 10) / 10]; };
+  const one = (e) => { const m = e.querySelector('img'), row = e.closest('.hui-srow');
+    return { list: !!e.closest('.ct-list'), name: row ? row.textContent.replace(e.textContent, '').replace(/\s+/g, ' ').trim().split(' ').slice(0, 2).join(' ') : '',
+      kind: e.dataset.logo, size: R(e), radius: getComputedStyle(e).borderRadius, text: e.textContent.trim(),
+      img: m ? { u: m.dataset.u, op: getComputedStyle(m).opacity, inside: (() => { const a = e.getBoundingClientRect(), b = m.getBoundingClientRect();
+        return b.left >= a.left - 0.5 && b.right <= a.right + 0.5 && b.top >= a.top - 0.5 && b.bottom <= a.bottom + 0.5; })() } : null }; };
+  return all().map(one);
+});
 const typical = Array.from({ length: 24 }, (_, h) => (h >= 19 && h <= 22 ? 1.649 : h < 6 ? 1.70 : 1.749));
 const sensor = (dev, extra) => ({ state: '1.689', attributes: { car_device_id: dev, car_name: 'Testauto', fuel: 'e10',
   friendly_name: 'Testauto günstigster Preis Super E10', unit_of_measurement: '€/L', source: 'key', origin: 'home',
@@ -174,9 +213,9 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   await check(vp.name + ': Am günstigsten (3 Kacheln), Punktkarte, Umschalter, Liste, Quelle',
     p && p.top === 3 && p.map === 1 && p.seg.join('|') === 'Günstigste|Nächste|Offen' && p.list.length === 5
     && /Daten: Tankerkönig, CC BY 4\.0/.test(p.view) && !/Lindenallee.*Mühlweg/.test(p.list.join('|')), p);
-  // Markenlogos (1.2): JET und ARAL bekommen ihr Logo (Adresse aus 12-tanken.js), freie Tankstellen das Kürzel.
+  // Markenlogos (1.2): JET und ARAL bekommen ihr Logo (Adresse aus 12-tanken.js), freie Tankstellen die Zapfsäule.
   const logos = await page.evaluate(() => window.__pierce('img').map((i) => i.getAttribute('src') || '').filter((u) => /s2\/favicons|Aral_Logo/.test(u)));
-  await check(vp.name + ': Markenlogos für JET und ARAL', logos.some((u) => /jet-tankstellen/.test(u)) && logos.some((u) => /Aral_Logo/.test(u)), logos.slice(0, 4));
+  await check(vp.name + ': Markenlogos für JET und ARAL', logos.some((u) => /domain=jet\.de/.test(u)) && logos.some((u) => /Aral_Logo/.test(u)), logos.slice(0, 4));
   if (process.env.R89_BILD) await page.screenshot({ path: `${process.env.CASORA_OUT}/r89_${vp.name.replace(/\W+/g, '_')}_logos.png` });
   await tap(page, '.ct-seg .hui-sg:nth-child(3)');
   await page.waitForTimeout(400);
@@ -190,6 +229,35 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   await page.waitForTimeout(600);
   p = await popup(page);
   await check(vp.name + ': Zurück führt ins Auto-Popup', p && p.view === null && p.title !== 'Tanken' && !p.back && /Tanken/.test(p.row || ''), p && { title: p.title, view: !!p.view });
+
+  // Logos: Marken mit Zusatz, Platzhalter und Ladefehler → Kürzel, freie Tankstelle → Zapfsäule, alle gleich groß.
+  {
+    await routeLogos(page);
+    await page.evaluate(() => { if (window._casoraTank) for (const k of Object.keys(window._casoraTank.seen)) delete window._casoraTank.seen[k]; });
+    await fakeStates(page, { ...none, [SID]: sensor(car.dev, { typical: null, low: null, high: null, days: 2, learn_days_left: 5, center: null,
+      stations: logoStations, count: logoStations.length }) }, { sticky: true });
+    await openPopup(page);
+    await tap(page, '.casora-tank-row');
+    await page.waitForTimeout(800);
+    const L = await logoState(page);
+    const row = (n) => L.find((x) => x.list && x.name.startsWith(n));
+    const pl = row('Pludra'), q1 = row('Q1'), sh = row('Schonhoff'), shell = row('Shell'), wiro = row('Wiro'), frei = row('Freie'), th = row('Tankhof');
+    await check(vp.name + ': Logo trotz Zusatz („Pludra Musterstadt“, „Schonhoff Mineralöle“) und für Q1, sichtbar im Kreis',
+      [pl, q1, sh].every((x) => x && x.kind === 'bild' && x.img && x.img.op === '1' && x.img.inside) && /pludra/.test(pl.img.u) && /schonhoff/.test(sh.img.u), L);
+    await check(vp.name + ': Platzhalter (16-px-Globus) fällt auf das Kürzel zurück', shell && shell.kind === 'kuerzel' && !shell.img && shell.text === 'SR', shell);
+    await check(vp.name + ': Logo lädt nicht → Kürzel', wiro && wiro.kind === 'kuerzel' && !wiro.img && wiro.text === 'WT', wiro);
+    await check(vp.name + ': freie Tankstelle zeigt die Zapfsäule statt eines Kürzels', frei && frei.kind === 'frei' && frei.text === '' && th && th.kind === 'kuerzel', { frei, th });
+    const sizes = L.map((x) => x.size.join('x'));
+    await check(vp.name + ': alle Logo-Kreise gleich groß und rund (Liste und Kacheln)',
+      L.length >= 10 && L.filter((x) => x.list).length === logoStations.length && new Set(sizes).size === 1 && L.every((x) => x.radius === '50%'), sizes);
+    // Neu zeichnen (Umschalter): bekannte Ergebnisse sofort, kein Zwischenzustand.
+    await tap(page, '.ct-seg .hui-sg:nth-child(2)');
+    const again = await page.evaluate(() => window.__pierce('.ct-list .ct-logo', window.casoraPopup.surface).map((e) => [e.dataset.logo, (e.querySelector('img') || { style: {} }).style.opacity || '']));
+    await check(vp.name + ': nach dem Umschalten sofort Logo bzw. Kürzel (kein Flackern)',
+      again.length === logoStations.length && again.every(([k, o]) => k !== 'bild' || o === '1') && again.filter(([k]) => k === 'kuerzel').length === 3, again);
+    if (process.env.R89_BILD) await page.screenshot({ path: `${process.env.CASORA_OUT}/r89_${vp.name.replace(/\W+/g, '_')}_logo_szene.png` });
+    await page.unroute(LOGO_URLS);
+  }
 
   // Genug Preise: Empfehlung mit Skala und Typischem Tag.
   await fakeStates(page, { ...none, [SID]: sensor(car.dev, { typical, low: 1.649, high: 1.749, days: 14, learn_days_left: 0 }) }, { sticky: true });

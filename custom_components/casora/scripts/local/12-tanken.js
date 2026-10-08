@@ -7,7 +7,7 @@
 // Daten: Sensor sensor.casora_tanken_<auto>_<kraftstoff> (tanken.py), Attribut car_device_id = Gerät
 // des Autos. Ohne Sensor (nicht eingerichtet, E-Auto, Kraftstoff „aus“) gibt es keine Zeile.
 // Markenlogos werden zur Laufzeit geladen (nicht im Repo, nur Adressen); unbekannte Marken: farbige
-// Kürzel-Kreise. Nur im Weich-Design (Casora, Nebel).
+// Kürzel-Kreise, freie Tankstellen: Zapfsäule. Nur im Weich-Design (Casora, Nebel).
 (function () {
   if (window._casoraTank) return;
   var K = window._casoraTank = {};
@@ -141,37 +141,105 @@
     for (var i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) >>> 0;
     return COLORS[h % COLORS.length];
   };
-  /* Logos der gängigen Marken (1.2, Wunsch 08.10.2026): nur die Adressen stehen hier, das Bild lädt der
-     Browser (Seiten-Symbol der Marke in 128 px über Googles Symbol-Dienst, Aral über Wikimedia; HTTP-Cache
-     eine Woche). Geprüft am 08.10.2026; Marken ohne brauchbares Symbol (z. B. BP) behalten das Kürzel. */
+  /* Logos der gängigen Marken (1.2): nur die Adressen stehen hier, das Bild lädt der Browser. Quelle je Marke
+     das Seiten-Symbol der Marke über Googles Symbol-Dienst (128 px), sonst Wikimedia (330 px) oder das Logo der
+     Marken-Seite; jede Adresse am 08.10.2026 geprüft (Bild ≥ 64 px, kein Platzhalter). Tankerkönig schreibt
+     Marken frei („Pludra Musterstadt“, „Schonhoff Mineralöle“), daher Abgleich über ganze Wörter (Kleinschreibung,
+     Umlaute) bzw. Wortanfang ohne Leerzeichen. Reihenfolge zählt: erste passende Marke gewinnt. Marken ohne
+     brauchbares Logo (z. B. Elan, Markant, Tank & Wasch) behalten das Kürzel; freie Tankstellen die Zapfsäule. */
   var FAV = function (d) { return 'https://www.google.com/s2/favicons?domain=' + d + '&sz=128'; };
-  var LOGOS = {
-    aral: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Aral_Logo.svg/250px-Aral_Logo.svg.png',
-    shell: FAV('shell.de'), esso: FAV('esso.de'), total: FAV('totalenergies.de'), totalenergies: FAV('totalenergies.de'),
-    jet: FAV('jet-tankstellen.de'), avia: FAV('avia.de'), omv: FAV('omv.de'), hem: FAV('hem-tankstelle.de'),
-    star: FAV('star.de'), bft: FAV('bft.de'), westfalen: FAV('westfalen.com'), hoyer: FAV('hoyer.de'),
-    q1: FAV('q1.eu'), agip: FAV('agip.de'), eni: FAV('agip.de'), tamoil: FAV('tamoil.com'), lanfer: FAV('lanfer.de'),
+  var WM = function (p) { var n = p.split('/').pop(); return 'https://upload.wikimedia.org/wikipedia/commons/thumb/' + p + '/330px-' + n + (/\.png$/.test(n) ? '' : '.png'); };
+  var BRANDS = [
+    [['aral'], 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Aral_Logo.svg/250px-Aral_Logo.svg.png'],
+    [['shell'], FAV('shell.de')], [['esso'], FAV('esso.de')],
+    [['totalenergies', 'total'], WM('f/f0/Logo_TotalEnergies_%282021%29.png')],
+    [['jet'], FAV('jet.de')], [['avia'], FAV('avia.de')], [['omv'], FAV('omv.de')], [['hem'], FAV('hem-tankstelle.de')],
+    [['star'], FAV('star.de')], [['orlen'], WM('d/d1/Orlen_wordmark_logo.svg')], [['bft'], FAV('bft.de')],
+    [['westfalen'], FAV('westfalen.com')], [['hoyer'], FAV('hoyer.de')], [['q1'], WM('2/25/Q1_logo.svg')],
+    [['agip', 'eni'], FAV('agip.de')], [['tamoil'], WM('5/5a/Tamoil.svg')],
+    // Lanfer: nur das runde Zeichen links aus dem Schriftzug (Ausschnitt), Wiro: Oval mit viel Rand (vergrößert).
+    [['lanfer'], 'https://www.lanfer-energie.de/hs-fs/hubfs/Lanfer%20One-Pager/Lanfer_Energie_Logo_2%20C_ohne%20verlauf%20(1).png?width=600', { crop: 1 }],
+    [['raiffeisen', 'rwg'], WM('9/93/Raiffeisen-Giebelkreuz.svg')], [['team'], FAV('team.de')],
+    [['classic'], 'https://www.classic-oil.de/wp-content/uploads/2021/05/CLASSIC_Logo_web_home.png'],
+    [['calpam'], WM('1/12/Calpam_Mineral%C3%B6l-Gesellschaft_logo.svg')], [['sprint', 'go'], FAV('go-sprint.de')],
+    [['baywa'], FAV('baywa.de')], [['globus'], FAV('globus.de')], [['kaufland'], WM('d/d0/Kaufland_Logo.svg')],
+    [['famila'], FAV('famila.de')], [['marktkauf'], WM('6/6b/Marktkauf.svg')], [['v markt', 'vmarkt'], WM('7/75/V-Markt-Logo.png')],
+    [['gulf'], FAV('gulf.de')], [['ed'], FAV('ed-tankstellen.de')], [['score'], FAV('score-tankstellen.de')],
+    [['nordoel'], FAV('nordoel.de')], [['pludra'], FAV('pludra-tankstellen.de')],
+    [['schonhoff'], 'https://www.schonhoff-mineraloele.de/uploads/YENGIbZN/768x0_480x0/logo-schonhoff.png'],
+    [['wiro'], 'https://wittrock.de/wp-content/uploads/2020/05/wirologo.png', { zoom: 1.75 }],
+    [['mr wash', 'mrwash'], FAV('mrwash.de')], [['bavaria petrol', 'bavariapetrol'], WM('6/60/Bavaria_Petrol_Logo.svg')],
+    [['oil'], FAV('oil-tankstellen.de')],
+  ];
+  // „Mr. Wash“ → „mr wash“, „Nordöl“ → „nordoel“, „V-Markt“ → „v markt“.
+  var norm = function (t) {
+    return String(t || '').toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
   };
-  K.logo = function (s) {
-    var b = String((s && (s.b || '')) || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  K.brand = function (s) {
+    var b = norm(s && s.b), w = ' ' + b + ' ', c = b.replace(/ /g, '');
     if (!b) return null;
-    if (LOGOS[b]) return LOGOS[b];
-    for (var k in LOGOS) if (b.indexOf(k) === 0) return LOGOS[k];
+    for (var i = 0; i < BRANDS.length; i++) for (var j = 0; j < BRANDS[i][0].length; j++) {
+      var a = BRANDS[i][0][j];
+      if (w.indexOf(' ' + a + ' ') >= 0 || (a.length >= 4 && a.indexOf(' ') < 0 && c.indexOf(a) === 0)) return BRANDS[i];
+    }
     return null;
   };
-  var circle = function (s, size) {
-    var lg = K.logo(s);
-    if (lg) return '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;flex:none;background:#fff;'
-      + 'box-shadow:0 0 0 .5px rgba(0,0,0,.12);display:grid;place-items:center;overflow:hidden">'
-      + '<img src="' + esc(lg) + '" alt="" loading="lazy" style="' + (/s2\/favicons/.test(lg)
-        ? 'width:100%;height:100%;object-fit:cover' : 'width:72%;height:72%;object-fit:contain') + '"></div>';
-    return '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;flex:none;background:' + color(s) + ';color:#fff;'
-      + 'display:grid;place-items:center;font-size:' + Math.round(size * .34) + 'px;font-weight:800;letter-spacing:.02em">' + esc(K.abbr(s)) + '</div>';
+  K.logo = function (s) { var m = K.brand(s); return m ? m[1] : null; };
+  // Freie Tankstelle („freie Tankstelle“, „Frei“, „Freie TS“) ohne Markenlogo: Zapfsäule statt Kürzel.
+  K.free = function (s) { return !K.brand(s) && /^frei(e)?( |$)/.test(norm(s && s.b)); };
+  /* Einheitlicher Logo-Kreis (Kacheln und Liste gleich): ruhiger heller Grund, Logo mit Innenabstand eingepasst;
+     im Dunkelmodus der ganze Kreis gedämpft (weiße Logo-Flächen verschmelzen mit dem Grund, nichts grell).
+     Lädt das Bild nicht oder kommt ein Platzhalter (Googles Globus, ≤ 16 px), wird der Kreis zum Kürzel.
+     Das Ergebnis je Adresse bleibt gemerkt – Neuzeichnen (Umschalter, neue Preise) zeigt sofort das Richtige. */
+  var SEEN = {};
+  K.seen = SEEN;
+  // Lage des Bilds im Kreis: quadratische Zeichen mit 16 % Rand, breite Schriftzüge (Seitenverhältnis > 1,6)
+  // fast über die volle Breite, Ausschnitt (crop) zeigt nur das Zeichen am linken Rand.
+  var fit = function (r, o) {
+    o = o || {};
+    var wide = !o.crop && r > 1.6, ins = wide ? 8 : 16;
+    return 'left:' + ins + '%;top:' + ins + '%;width:' + (100 - 2 * ins) + '%;height:' + (100 - 2 * ins) + '%;'
+      + 'object-fit:' + (o.crop ? 'cover;object-position:left center;' : 'contain;') + (o.zoom ? 'transform:scale(' + o.zoom + ');' : '');
   };
-  var badge = function (s) {
-    return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="76" height="76" viewBox="0 0 76 76">'
-      + '<circle cx="38" cy="38" r="38" fill="' + color(s) + '"/><text x="38" y="38" dy=".35em" text-anchor="middle" '
-      + 'font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="27" font-weight="700" fill="#fff">' + esc(K.abbr(s)) + '</text></svg>');
+  K.lg = function (img, failed) {
+    var u = img.getAttribute('data-u'), box = img.parentNode;
+    var ok = !failed && img.naturalWidth > 16 && img.naturalHeight > 16;
+    SEEN[u] = ok ? img.naturalWidth / img.naturalHeight : 0;
+    if (ok) {
+      var m = K.brand({ b: box && box.getAttribute('data-b') });
+      img.style.cssText += ';' + fit(SEEN[u], m && m[2]) + 'opacity:1';
+      return;
+    }
+    if (!box) return;
+    img.remove();
+    box.style.background = box.getAttribute('data-c');
+    box.style.filter = 'none';
+    box.style.boxShadow = 'none';
+    box.setAttribute('data-logo', 'kuerzel');
+    var t = box.querySelector('span');
+    if (t) t.style.display = 'grid';
+  };
+  K.mark = function (s, size, dark) {
+    var px = size + 'px', m = K.brand(s), lg = m && m[1], st = lg ? SEEN[lg] : 0;
+    var wrap = 'class="ct-logo" style="width:' + px + ';height:' + px + ';border-radius:50%;flex:none;position:relative;overflow:hidden;';
+    var abbr = function (show) {
+      return '<span style="position:absolute;inset:0;display:' + (show ? 'grid' : 'none') + ';place-items:center;color:#fff;'
+        + 'font-size:' + Math.round(size * .34) + 'px;font-weight:800;letter-spacing:.02em">' + esc(K.abbr(s)) + '</span>';
+    };
+    if (lg && st !== 0) {
+      return '<div ' + wrap + 'background:#fff;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.12);'
+        + (dark ? 'filter:brightness(.84) saturate(.9);' : '') + '" data-logo="bild" data-b="' + esc(s.b) + '" data-c="' + color(s) + '">'
+        + '<img src="' + esc(lg) + '" data-u="' + esc(lg) + '" alt="" decoding="async" referrerpolicy="no-referrer" '
+        + 'onload="window._casoraTank.lg(this)" onerror="window._casoraTank.lg(this,1)" '
+        + 'style="position:absolute;' + fit(st || 1, m[2]) + 'display:block;opacity:' + (st ? 1 : 0) + ';transition:opacity .18s">' + abbr(false) + '</div>';
+    }
+    if (K.free(s)) {
+      return '<div ' + wrap + 'background:var(--casora-soft-control-fill, rgba(140,115,90,0.10));display:grid;place-items:center" data-logo="frei">'
+        + '<span style="width:52%;height:52%;background:var(--casora-soft-sub, currentColor);-webkit-mask:url(&quot;' + GAS + '&quot;) center/contain no-repeat;'
+        + 'mask:url(&quot;' + GAS + '&quot;) center/contain no-repeat"></span></div>';
+    }
+    return '<div ' + wrap + 'background:' + color(s) + '" data-logo="kuerzel">' + abbr(true) + '</div>';
   };
   var sup = function (p) { var s = price(p); return esc(s.slice(0, -1)) + '<sup style="font-size:.62em;margin-left:1px">' + esc(s.slice(-1)) + '</sup>'; };
   var short = function (n) {
@@ -237,7 +305,7 @@
     if (!s.length) return '';
     return '<div class="ct-top" style="display:grid;grid-template-columns:repeat(' + s.length + ',minmax(0,1fr));gap:10px">' + s.map(function (x, i) {
       return '<div style="min-width:0;background:' + (i ? k.ROW : k.TINT(k.GOOD)) + ';border-radius:' + k.RAD + ';padding:14px 8px 12px;text-align:center">'
-        + '<div style="display:flex;justify-content:center;margin-bottom:8px">' + circle(x, 36) + '</div>'
+        + '<div style="display:flex;justify-content:center;margin-bottom:8px">' + K.mark(x, 38, k.dark) + '</div>'
         + '<div style="font-size:17px;font-weight:800;color:' + k.T.ink + ';font-variant-numeric:tabular-nums">' + sup(x.p) + '</div>'
         + '<div style="font-size:12.5px;font-weight:600;color:' + k.T.ink + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">' + esc(short(x.n)) + '</div>'
         + '<div style="font-size:12px;font-weight:500;color:' + k.SUB + '">' + (x.d != null ? esc(km(x.d)) : '&nbsp;') + '</div></div>';
@@ -438,6 +506,7 @@
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
     svg.innerHTML = pins(I, k, W, H, function (p) { var g = geo(I, p); return g ? pt(g) : null; }, c, Math.abs(c[1] - north[1]), true);
   };
+  var LEAD = 'casora-tank-logo:';
   var SORTS = [['guenstig', 'Günstigste'], ['naechste', 'Nächste'], ['offen', 'Offen']];
   var list = function (I, sort) {
     var UI = window._casoraUI;
@@ -445,11 +514,13 @@
     if (sort === 'naechste') s.sort(function (a, b) { return (a.d == null ? 999 : a.d) - (b.d == null ? 999 : b.d); });
     else if (sort === 'offen') s = s.filter(function (x) { return x.o; });
     var more = Math.max(0, s.length - 12);
-    var out = UI.group(s.slice(0, 12).map(function (x) {
-      return { image: K.logo(x) || badge(x), imageFit: K.logo(x) && !/s2\/favicons/.test(K.logo(x)) ? 'contain' : 'cover', label: x.n || x.b || '?',
+    var rows = s.slice(0, 12), dark = tok().dark;
+    // Die Zeile bekommt einen Platzhalter als Bild; danach tritt der einheitliche Logo-Kreis an seine Stelle.
+    var out = UI.group(rows.map(function (x, i) {
+      return { image: LEAD + i, imageFit: 'cover', label: x.n || x.b || '?',
         sub: [x.d != null ? km(x.d) : null, x.o ? 'offen' : 'zu'].filter(Boolean).join(' · '), subTone: x.o ? null : 'warn',
         value: price(x.p) + ' €' };
-    }), null);
+    }), null).replace(/<img src="casora-tank-logo:(\d+)"[^>]*>/g, function (m, i) { return K.mark(rows[+i], 38, dark); });
     if (more) out += '<div style="font-size:12.5px;font-weight:500;text-align:center;margin-top:10px;color:var(--casora-soft-sub, inherit)">und ' + more + ' weitere</div>';
     if (!s.length) out = UI.group([{ icon: 'mdi:gas-station-off-outline', iconTone: 'rgba(255,255,255,0.18)', label: 'Gerade keine offen' }], null);
     return out;

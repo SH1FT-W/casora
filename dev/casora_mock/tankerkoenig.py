@@ -29,6 +29,12 @@ STATIONS = [
     ("Stadttankstelle Gartenstraße", "ARAL", -0.7, 0.5, 1.739, True),
     ("Tankhof Lindenallee", "Tankhof", -3.0, -1.6, 1.749, False),
     ("Bahnhof-Tankstelle", "Bahnhof", 1.2, -1.7, 1.769, True),
+    # Marken mit Zusätzen wie bei Tankerkönig (Logo-Abgleich, 1.2)
+    ("Pludra Musterstadt", "Pludra Musterstadt", 0.8, 1.4, 1.709, True),
+    ("Q1 Am Kanal", "Q1", -1.6, 2.2, 1.729, True),
+    ("Schonhoff Mineralöle Süd", "Schonhoff Mineralöle", 0.3, -2.6, 1.759, True),
+    ("Wiro Tankcenter", "Wiro", 2.9, -0.8, 1.779, False),
+    ("Shell Ringstraße", "Shell", -2.2, 0.9, 1.789, True),
 ]
 
 
