@@ -29,8 +29,9 @@ SHARED_SCRIPTS = (
     "layout-card-modified.js",
     "smart-row.js",
     "filter-overlay.js",
-    # Casora: eigene Karte und eigene Erweiterungen (Lader für scripts/local/)
+    # Casora: eigene Karten und eigene Erweiterungen (Lader für scripts/local/)
     "casora-swipe-card.js",
+    "casora-chart.js",
     "casora-local.js",
     # Übergang: alte Namen für nicht umgestellte Dashboards
     "casora-kompat.js",

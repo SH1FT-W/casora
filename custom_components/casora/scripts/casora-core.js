@@ -4603,8 +4603,6 @@ window.casoraMenuGlass = {
     } catch (e) { return true; }
   }
 
-  var CHART_WAIT_MAX = 1600;
-
   var FOREIGN = /([^\w.#-]|^)(ha-adaptive-dialog|ha-bottom-sheet|ha-dialog|wa-dialog|wa-drawer)(?![\w-])/g;
   function retarget(css) { return String(css == null ? '' : css).replace(FOREIGN, '$1.surface'); }
 
@@ -4911,10 +4909,6 @@ window.casoraMenuGlass = {
       :host { --casora-popup-gutter: var(--casora-popup-gutter-phone, 14px);
               --casora-popup-value-gap: 0px; }
     }
-    /* Parked chart cards. Off screen but connected, so apexcharts keeps the
-       chart it already drew instead of fetching and drawing it again. */
-    .keep { position: absolute; left: -99999px; top: 0; width: 1px; height: 1px;
-            overflow: hidden; pointer-events: none; }
     .header-close {
       transition: opacity 0.16s ease;
       appearance: none;
@@ -4959,11 +4953,6 @@ window.casoraMenuGlass = {
     @media (hover: hover) {
       .header-close:hover:not([disabled])::after { opacity: 0.1; }
     }
-
-    /* A chart fetches history first, so the shell is hidden and cross-dissolves
-       in. The rule cannot live here - a popup's chart sits inside a
-       button-card's shadow root, so this selector matches nothing. What stays
-       is the safety net below, which walks shadow roots. */
 
     .content {
       /* Every ha-card inherits the theme's --ha-card-backdrop-filter and lays a
@@ -5718,7 +5707,6 @@ window.casoraMenuGlass = {
               '<div class="extra" hidden></div><div class="soft-empty" hidden></div></div>' +
             '<div class="more" aria-hidden="true"></div>' +
             '<div class="rim" part="rim"></div>' +
-            '<div class="keep" aria-hidden="true"></div>' +
             '<casora-popup-hass></casora-popup-hass>' +
           '</div>' +
         '</div>';
@@ -5745,14 +5733,14 @@ window.casoraMenuGlass = {
       this._headerContent = root.querySelector('.header-content');
       this._headerRing = root.querySelector('.header-ring');
       this._dyn = root.querySelector('#dyn');
-      this._keep = root.querySelector('.keep');
-      this._parked = new Map();
       this._bridge = root.querySelector('casora-popup-hass');
 
       this._dismissable = true;
 
       this._onKey = (e) => {
         if (e.key !== 'Escape' && e.key !== 'Esc') return;
+        // Esc beendet zuerst das Ablesen eines Diagramms (casora-chart), erst danach das Popup.
+        if ((e.composedPath ? e.composedPath() : []).some((n) => n.hasAttribute && n.hasAttribute('data-casora-esc'))) return;
         e.stopPropagation();
         this.dismiss();
       };
@@ -5858,7 +5846,6 @@ window.casoraMenuGlass = {
       this.container.textContent = '';
       this._bridge.target = null;
       this.removeAttribute('data-casora-charts-ready');
-      if (this._chartPoll) { clearTimeout(this._chartPoll); this._chartPoll = null; }
 
       if (!wasOpen) {
         this.setAttribute('open', '');
@@ -5891,8 +5878,9 @@ window.casoraMenuGlass = {
         [0, 200, 700, 1600, 3200].forEach(function (ms) { setTimeout(function () { window._casoraSepScan(sr); }, ms); });
       }
       this._checkEmpty(true);
-
-      this._gateOnCharts(isCard ? cfg.content : null);
+      // Startet das Einblenden der Platten (popup_styles „data-casora-charts-ready“). Früher erst,
+      // wenn apexcharts gezeichnet hatte; casora-chart zeichnet selbst, ohne Warten.
+      if (this.hasAttribute('open')) this.setAttribute('data-casora-charts-ready', '');
     }
 
 
@@ -5970,28 +5958,6 @@ window.casoraMenuGlass = {
       this._ringStOff = !!(ring && this._ringSrc && ringOff(this._ringSrc));
       this._headerRing.toggleAttribute('off', this._ringOffNow);
       this._header.hidden = !this._hasHeader && !ring;
-    }
-
-    _gateOnCharts(config) {
-      if (this.hasAttribute('open')) this.setAttribute('data-casora-charts-ready', '');
-      var hasChart = false;
-      try { hasChart = JSON.stringify(config || '').indexOf('custom:apexcharts-card') > -1; }
-      catch (e) { hasChart = false; }
-      if (!hasChart) return;
-      if (this._chartPoll) clearTimeout(this._chartPoll);
-      this._chartPoll = setTimeout(() => {
-        this._chartPoll = null;
-        if (!this.hasAttribute('open')) return;
-        (function walk(node) {
-          if (!node || !node.querySelectorAll) return;
-          node.querySelectorAll('*').forEach((el) => {
-            if (el.tagName === 'APEXCHARTS-CARD' && !el.hasAttribute('data-casora-ready')) {
-              el.setAttribute('data-casora-ready', 'timeout');
-            }
-            if (el.shadowRoot) walk(el.shadowRoot);
-          });
-        })(this.shadowRoot);
-      }, CHART_WAIT_MAX);
     }
 
     _probe() {
@@ -6078,12 +6044,6 @@ window.casoraMenuGlass = {
       return hit;
     }
 
-    _parkedHas(el) {
-      var found = false;
-      this._parked.forEach(function (v) { if (v === el) found = true; });
-      return found;
-    }
-
     // animation-name before opacity, never the other way round.
     _holdChrome() {
       var els = [this._headerClose, this._headerContent, this._headerActions];
@@ -6132,11 +6092,8 @@ window.casoraMenuGlass = {
         this.removeAttribute('open');
         this.removeAttribute('data-casora-charts-ready');
         this.removeAttribute('more-below');
-        if (this._chartPoll) { clearTimeout(this._chartPoll); this._chartPoll = null; }
         this.surface.style.removeProperty('transform');
         this.surface.style.removeProperty('transition');
-        var live = this.container.firstElementChild;
-        if (live && this._keep && this._parkedHas(live)) this._keep.appendChild(live);
         this.container.textContent = '';
         this._extraTok = (this._extraTok || 0) + 1;
         this._extra.textContent = '';
@@ -6170,23 +6127,6 @@ window.casoraMenuGlass = {
         catch (e) { hasLive = true; }
         this._bridge._liveCache = { none: !hasLive, nodes: null, at: 0 };
       }
-      var key = null;
-      try {
-        var cfgStr = JSON.stringify(config || '');
-        if (cfgStr.indexOf('custom:apexcharts-card') > -1) key = target === this.container ? cfgStr : null;
-      } catch (e) { key = null; }
-      if (key && this._parked.has(key)) {
-        var kept = this._parked.get(key);
-        if (kept && kept.isConnected) {
-          kept.hass = (this._bridge.hass || (document.querySelector('home-assistant') || {}).hass);
-          target.textContent = '';
-          target.appendChild(kept);
-          this._syncTargets();
-          return;
-        }
-        this._parked.delete(key);
-      }
-
       var helpers = await cardHelpers();
       if (!helpers || !this.hasAttribute('open')) return;
 
@@ -6213,16 +6153,6 @@ window.casoraMenuGlass = {
       target.textContent = '';
       target.appendChild(el);
       this._syncTargets();
-      if (key) {
-        this._parked.set(key, el);
-        // Two is enough to cover going back and forth between two popups.
-        while (this._parked.size > 2) {
-          var oldest = this._parked.keys().next().value;
-          var drop = this._parked.get(oldest);
-          this._parked.delete(oldest);
-          if (drop && drop.parentNode) drop.parentNode.removeChild(drop);
-        }
-      }
 
       if (!customElements.get(el.localName)) {
         customElements.whenDefined(el.localName).then(() => {
@@ -6757,7 +6687,10 @@ window.casoraMenuGlass = {
     var out = '<div class="hui-line" style="font-family:' + T.font + ';text-align:center;'
       + 'padding:0 8px var(--casora-soft-line-gap, 4px);margin-top:-4px;'
       + 'font-size:15px;font-weight:500;line-height:1.45;text-wrap:balance;overflow-wrap:anywhere;color:' + S.sub + ';">'
-      + (main ? '<span style="font-size:17px;font-weight:700;letter-spacing:-0.01em;color:' + (alertTone(o.tone) || T.ink) + ';">' + esc(main) + '</span>' : '');
+      + (main ? '<span' + (o.read ? ' data-casora-read="' + esc(o.read) + '"' : '') + ' style="font-size:17px;font-weight:700;letter-spacing:-0.01em;color:' + (alertTone(o.tone) || T.ink) + ';">' + esc(main) + '</span>' : '');
+    /* o.read (1.2): casora-chart im selben Popup schreibt beim Ablesen den Wert in die Hauptzahl
+       und die Zeit an die Stelle der Unterzeile; ohne Unterzeile in einen leeren Platz. */
+    if (o.read) out += bits.length ? SEP + '<span data-casora-read-when="">' : '<span class="hui-lslot" data-casora-read-when=""></span>';
     bits.forEach(function (b, i) {
       var txt = typeof b === 'object' ? b.text : b;
       var ink = typeof b === 'object' ? alertTone(b.tone) : null;
@@ -6766,11 +6699,12 @@ window.casoraMenuGlass = {
          die Zeile daran um, blendet sepFix ihn aus und setzt dort einen Zeilenumbruch –
          weder Zeilenende noch Zeilenanfang zeigen „·“ (03.10.2026, ersetzt das geschützte
          Leerzeichen vor dem Punkt). */
-      out += ((main || i) ? SEP : '')
+      out += ((main || i) && !(o.read && !i) ? SEP : '')
         // „ · “ im Text bleibt in Textfarbe (nicht gedämpft) – wie bisher.
         + String(txt).split(' · ').map(function (t) { return open + esc(t) + '</span>'; })
           .join('<span class="hui-sep"' + (ink ? ' style="color:' + ink + ';"' : '') + '> · </span>');
     });
+    if (o.read && bits.length) out += '</span>';
     if (o.slotId || o.slotClass) {
       out += '<span class="hui-lslot' + (o.slotClass ? ' ' + esc(o.slotClass) : '') + '"'
         + (o.slotId ? ' id="' + esc(o.slotId) + '"' : '') + '>' + esc(o.slotText || '') + '</span>';
@@ -6906,7 +6840,7 @@ window.casoraMenuGlass = {
     var rest = [];
     if (o.sub) rest.push({ text: o.sub, tone: o.subTone });
     if (!o.line && o.label) rest.push(o.label);
-    return softLine(main, rest, { tone: o.valueTone, chip: o.chip });
+    return softLine(main, rest, { tone: o.valueTone, chip: o.chip, read: o.read });
   }
 
   function headline(o) {
@@ -6952,13 +6886,15 @@ window.casoraMenuGlass = {
         + '<div style="display:flex;flex-direction:column;gap:1px;min-width:0;">';
       // Weich: Etikett in Großbuchstaben, Wert fett – wie die Abschnitts-Etiketten.
       var cs = soft();
+      // o.read (1.2): Ablesen eines casora-chart – Zahl und Zeit hier statt im Diagramm.
+      var rv = o.read ? ' data-casora-read="' + esc(o.read) + '"' : '', rw = o.read ? ' data-casora-read-when=""' : '';
       if (o.label) {
-        out += '<div style="font-size:' + (cs ? '12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;'
+        out += '<div' + (o.trailing ? '' : rw) + ' style="font-size:' + (cs ? '12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;'
             : 'var(--casora-popup-hero-label-size, 13px);letter-spacing:-0.01em;')
           + 'color:' + (cs ? S.label : T.ink2) + ';">'
           + esc(o.label) + '</div>';
       }
-      out += '<div style="font-size:var(--casora-popup-hero-value-size,'
+      out += '<div' + (o.trailing ? '' : rv) + ' style="font-size:var(--casora-popup-hero-value-size,'
         + ' clamp(21px, 3.4vw, 28px));font-weight:' + (cs ? '700' : '600') + ';letter-spacing:-0.02em;'
         + 'line-height:1.1;min-width:0;color:' + T.ink + ';">' + esc(o.value);
       if (o.unit) {
@@ -6976,12 +6912,12 @@ window.casoraMenuGlass = {
         out += '<div style="flex:none;text-align:right;white-space:nowrap;'
           + 'display:flex;flex-direction:column;gap:1px;">';
         if (o.trailingLabel) {
-          out += '<div style="font-size:' + (cs ? '12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;'
+          out += '<div' + rw + ' style="font-size:' + (cs ? '12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;'
               : 'var(--casora-popup-hero-label-size, 13px);letter-spacing:-0.01em;')
             + 'color:' + (cs ? S.label : T.ink3) + ';">'
             + esc(o.trailingLabel) + '</div>';
         }
-        out += '<div style="font-size:17px;font-weight:600;letter-spacing:-0.01em;'
+        out += '<div' + rv + ' style="font-size:17px;font-weight:600;letter-spacing:-0.01em;'
           + 'color:' + T.ink2 + ';">' + esc(o.trailing) + '</div></div>';
       }
       return out + '</div>';
@@ -7111,7 +7047,7 @@ window.casoraMenuGlass = {
     '#ff453a': '#D35A4E', '#ff3b30': '#D35A4E', '#fa2d48': '#FA2D48', '#ff375f': '#5B8FC9',
   };
   // Kaltes iOS-Grau → Grau des Looks (--casora-soft-grey-mark: Weich warm, Nebel kühl). Als
-  // fertiger Farbwert, nicht var(): ApexCharts (SVG) löst keine CSS-Variablen auf.
+  // fertiger Farbwert (für SVG-Attribute und Canvas, die kein var() kennen).
   var greyAt = 0, greyVal = 'rgba(120,100,80,0.8)';
   function softGrey() {
     var now = Date.now();

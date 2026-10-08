@@ -80,11 +80,12 @@
   var call = function (obj, part, C) {
     return 'return window.' + obj + ' ? window.' + obj + '.sec(' + JSON.stringify(part) + ', ' + JSON.stringify(C) + ', states, hass) : "";';
   };
-  // Diagramm-Platte aus dem Popup, ohne Kopfzeile und Legende (die Werte stehen in der Unterzeile).
+  // Diagramm-Platte aus dem Popup, ohne Kopfzeile (die Werte stehen in der Unterzeile). Die Legende
+  // bleibt (1.2): mehrere Kurven nie nur über die Farbe unterscheiden.
   var chartCard = function (metricCard, extra) {
     if (!metricCard) return null;
     var f = metricCard.custom_fields || {}, st = (metricCard.styles && metricCard.styles.custom_fields) || {};
-    var keys = ['ct', 'chart'].filter(function (k) { return f[k] !== undefined; });
+    var keys = ['ct', 'chart', 'legend'].filter(function (k) { return f[k] !== undefined; });
     if (!keys.length) return null;
     var cf = {}, cs = {};
     keys.forEach(function (k) { cf[k] = f[k]; cs[k] = st[k] || [{ 'justify-self': 'stretch' }]; });
@@ -246,7 +247,7 @@
       var rate = [dl != null ? fN(dl, hass) + ' ↓' : null, ul != null ? fN(ul, hass) + ' ↑' : null].filter(Boolean).join(' · ');
       var sub = [rate ? rate + ' Mbit/s' : null, p != null && p > 0 ? (p < 1 ? '< 1' : Math.round(p)) + ' ms' : null].filter(Boolean).join(' · ');
       return UI.hero({ center: true, value: stt === 'on' ? 'Online' : stt === 'off' ? 'Offline' : '—',
-        sub: stt === 'off' ? 'Keine Verbindung' : (sub || null), subTone: stt === 'off' ? 'bad' : null });
+        sub: stt === 'off' ? 'Keine Verbindung' : (sub || null), subTone: stt === 'off' ? 'bad' : null, read: '*' });
     }
     if (part === 'st') {
       var running = raw(states, C.stRunning) === 'on';
@@ -490,7 +491,7 @@
       var main = p == null ? null : fW(Math.abs(p) < 20 && p < 0 ? 0 : Math.abs(p), hass);
       if (main == null && bits.length) { main = bits.shift(); main = main.charAt(0).toUpperCase() + main.slice(1); }
       return UI.hero({ center: true, value: main == null ? '—' : main,
-        sub: bits.join(' · ') || null,
+        sub: bits.join(' · ') || null, read: C.home || null,
         chip: bad ? { text: 'Solarbank-Fehler ' + err, tone: 'bad' } : null });
     }
     if (part === 'auto' && C.auto && window._casoraAutoConsumers) {

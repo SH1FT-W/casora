@@ -390,33 +390,22 @@ window._casoraStd = function (ui, o) {
   }, true);
 })();
 
-// ── Diagramm mit mehreren Kurven zum Ein-/Ausblenden (Wetter, 24.09.2026) ────
-// _hpMulti.build(key, [[eid, kurzname], …], sel) legt unter key eine kombinierte
-// apexcharts-Konfiguration an (aus den Einzel-Configs von _hpChartCfg), jede Kurve
-// mit eigener Skala (Temperatur/Feuchte/Druck haben verschiedene Maßstäbe).
-// Pillen mit data-hp-multi="key|eid" + _hpMultiTap schalten Kurven an/aus.
+// ── Diagramm mit mehreren Messgrößen zum Umschalten (Wetter, 24.09.2026; 1.2) ────
+// _hpMulti.build(key, [[eid, kurzname], …], sel) legt unter key ein casora-chart an, das
+// genau eine Messgröße zeigt – keine zweite, unsichtbare y-Achse mehr. Pillen mit
+// data-hp-multi="key|eid" + _hpMultiTap wählen die Messgröße.
 window._hpMulti = window._hpMulti || { sel: {}, names: {} };
 window._hpMulti.build = function (key, list, sel) {
   var M = window._hpMulti, C = window._hpPlantCfg || {};
   list = list.filter(function (m) { return C[m[0]]; });
   if (!list.length) return null;
   M.names[key] = list;
-  if (sel) M.sel[key] = sel.slice();
-  var on = (M.sel[key] || list.map(function (m) { return m[0]; })).filter(function (e) { return C[e]; });
+  if (sel) M.sel[key] = sel.slice(0, 1);
+  var on = (M.sel[key] || []).filter(function (e) { return C[e]; });
   if (!on.length) on = [list[0][0]];
-  M.sel[key] = on;
+  M.sel[key] = [on[0]];
   var base = JSON.parse(JSON.stringify(C[on[0]]));
-  var LBL = { colors: 'var(--casora-chart-label, rgba(255,255,255,0.42))', fontSize: '11px', fontFamily: 'var(--primary-font-family, system-ui)' };
-  base.series = on.map(function (e) { return Object.assign({}, JSON.parse(JSON.stringify(C[e].series[0])), { yaxis_id: e.replace(/\W/g, '_') }); });
-  base.yaxis = on.map(function (e) {
-    return { id: e.replace(/\W/g, '_'), show: on.length === 1, decimals: 0,
-      apex_config: { tickAmount: 2, forceNiceScale: true, floating: true, labels: { offsetX: 4, offsetY: -8, align: 'left', style: LBL } } };
-  });
-  base.apex_config.colors = on.map(function (e) { return C[e].series[0].color; });
-  if (on.length > 1) base.apex_config.fill.gradient.opacityFrom = 0.28;
-  var meta0 = (window._hpPlantMeta || {})[on[0]] || ['', '48h'];
-  var names = list.filter(function (m) { return on.indexOf(m[0]) > -1; }).map(function (m) { return m[1]; });
-  window._hpPlantMeta[key] = [on.length === 1 ? meta0[0] : names.join(' · '), meta0[1], base.apex_config.colors[0]];
+  window._hpPlantMeta[key] = ((window._hpPlantMeta || {})[on[0]] || ['', '48h']).slice();
   C[key] = base;
   return base;
 };
@@ -433,11 +422,8 @@ window._hpMultiTap = function (ev, kind) {
   ev.stopPropagation(); if (ev.cancelable) ev.preventDefault();
   window._casoraSuppressDismiss = Date.now() + 600;
   var parts = pill.dataset.hpMulti.split('|'), key = parts[0], eid = parts[1], M = window._hpMulti;
-  var on = (M.sel[key] || []).slice(), ix = on.indexOf(eid);
-  if (ix > -1) { if (on.length === 1) return; on.splice(ix, 1); } else on.push(eid);
-  /* Reihenfolge wie in der Liste halten (Farben/Skalen stabil). */
-  M.sel[key] = (M.names[key] || []).map(function (m) { return m[0]; }).filter(function (e) { return on.indexOf(e) > -1; });
-  M.build(key, M.names[key]);
+  if ((M.sel[key] || [])[0] === eid) return;
+  M.build(key, M.names[key], [eid]);
   Array.prototype.forEach.call(pill.parentNode.children, function (el) {
     var d = el.dataset && el.dataset.hpMulti; if (!d) return;
     el.classList.toggle('on', M.sel[key].indexOf(d.split('|')[1]) > -1);

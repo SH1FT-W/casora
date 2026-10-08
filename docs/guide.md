@@ -27,7 +27,6 @@ You need **Home Assistant 2026.9** or newer with dashboards in storage mode (the
 |---|---|
 | [**UI eXtension (UIX)**](https://github.com/Lint-Free-Technology/uix) | Required. Needs a restart. Use it instead of card-mod, not both. |
 | [**button-card**](https://github.com/custom-cards/button-card) | Required. |
-| [**apexcharts-card**](https://github.com/RomRider/apexcharts-card) | Optional, for the energy and history charts in popups. |
 | An **AI task** in Home Assistant | Optional, for the [AI features](#ai-features-optional). |
 
 1. In HACS open the menu, choose **Custom repositories** and add `https://github.com/SH1FT-W/casora` with the type **Integration**. The button in the [README](../README.md#install) does the same in one click.
@@ -221,8 +220,8 @@ UIX or button-card is probably missing, or card-mod is installed alongside UIX. 
 **The look isn't quite right.**
 Make sure your Home Assistant profile uses one of Casora's themes. Casora's own look is called *Casora* there; the Studio shows a hint if another theme is active.
 
-**A popup has no charts.**
-Install apexcharts-card (it's optional).
+**A chart says "No data".**
+Casora draws its charts itself from Home Assistant's history, so the sensor has to be recorded (Recorder). Charts over 7 or 30 days and the daily bars use long-term statistics, which a sensor only has with a state class.
 
 **I made a change I regret.**
 Use [Rewind](#rewind-going-back-to-an-earlier-version): ⋯ → **Rewind…**, pick an earlier version and click **Restore this version**.

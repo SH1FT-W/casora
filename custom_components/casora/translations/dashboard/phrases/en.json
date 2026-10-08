@@ -1499,7 +1499,17 @@
   "Casora fragt alle 10 Minuten, die ersten Preise kommen gleich.": "Casora asks every 10 minutes, the first prices are on their way.",
   "Gerade keine offen": "None open right now",
   "Daten: Tankerkönig, CC BY 4.0": "Data: Tankerkönig, CC BY 4.0",
-  "Umkreis": "Radius"
+  "Umkreis": "Radius",
+  "bis": "to",
+  "Ø pro Tag": "Ø per day",
+  "Heute bis": "Today until",
+  "letzte 2 Stunden": "last 2 hours",
+  "letzte 4 Stunden": "last 4 hours",
+  "letzte 6 Stunden": "last 6 hours",
+  "letzte 24 Stunden": "last 24 hours",
+  "letzte 48 Stunden": "last 48 hours",
+  "letzte 7 Tage": "last 7 days",
+  "letzte 30 Tage": "last 30 days"
  },
  "patterns": [
   [

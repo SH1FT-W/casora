@@ -513,7 +513,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
 
   // ── Popup-Verlaufsdiagramme (Pflanzen, Luftreiniger, Batterien …) ─────────
   // Zeilen mit data-hp-metric="<entity>" schalten das eingebettete
-  // apexcharts-card im offenen Casora-Popup um. Konfigurationen legen die
+  // casora-chart im offenen Casora-Popup um. Konfigurationen legen die
   // Popups in window._hpPlantCfg[entity] / _hpPlantMeta[entity] ab.
   (function () {
     window._hpPlantCfg = window._hpPlantCfg || {};
@@ -528,225 +528,62 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       })(root);
       return out;
     };
+    /* Verlauf als casora-chart (1.2, statt apexcharts-card): Verlauf bis 48 h live, darüber Statistik. */
     window._hpChartCfg = function (eid, label, span, color, height) {
-      var grp = span === '4h' ? '5min' : span === '24h' ? '15min' : span === '48h' ? '30min' : span === '7d' ? '2h' : '12h';
       window._hpPlantMeta[eid] = [label, span, color];
-      var LBL = { colors: 'var(--casora-chart-label, rgba(255,255,255,0.42))', fontSize: '11px', fontFamily: 'var(--primary-font-family, system-ui)' };
-      window._hpPlantCfg[eid] = {
-        type: 'custom:apexcharts-card', graph_span: span, header: { show: false },
-        yaxis: [{ show: true, decimals: 0, apex_config: { tickAmount: 2, forceNiceScale: true, floating: true,
-          labels: { offsetX: 4, offsetY: -8, align: 'left', style: LBL } } }],
-        series: [{ entity: eid, color: color, type: 'area', curve: 'smooth', stroke_width: 2.5, extend_to: 'now', group_by: { func: 'avg', duration: grp, fill: 'last' } }],
-        apex_config: {
-          colors: [color],
-          chart: { height: height || 150, background: 'transparent', toolbar: { show: false }, zoom: { enabled: false } },
-          theme: { mode: 'dark' }, dataLabels: { enabled: false }, legend: { show: false },
-          grid: { show: true, borderColor: 'var(--casora-chart-grid, rgba(255,255,255,0.10))', strokeDashArray: 0, xaxis: { lines: { show: false } }, yaxis: { lines: { show: true } },
-                  padding: { left: 14, right: 14, top: -6, bottom: -4 } },
-          xaxis: { labels: { show: true, rotate: 0, hideOverlappingLabels: true, datetimeUTC: false, style: LBL }, axisBorder: { show: false }, axisTicks: { show: false }, tooltip: { enabled: false } },
-          tooltip: { theme: 'dark', shared: true, intersect: false, x: { format: 'dd.MM. HH:mm' } },
-          stroke: { curve: 'smooth', width: 2.5, lineCap: 'round' },
-          fill: { type: 'gradient', gradient: { type: 'vertical', shadeIntensity: 0, opacityFrom: 0.6, opacityTo: 0, stops: [0, 100] } },
-          markers: { size: 0, hover: { size: 5 } },
-        },
-      };
+      window._hpPlantCfg[eid] = { type: 'custom:casora-chart', kind: 'line', span: span, height: height || 150,
+        series: [{ entity: eid, name: label, color: color }] };
       return window._hpPlantCfg[eid];
     };
-    /* Glättung wie im Energie-Diagramm: monotoneCubic + wenige, gemittelte Punkte. Fühler messen in
-       kleinen Stufen, feine Mittel (15/30 min) ergaben Treppen und Ecken. dur optional, sonst nach Zeitraum. */
+    /* Glättung: gröbere Mittel. Fühler messen in kleinen Stufen, feine Mittel (15/30 min) ergaben
+       Treppen und Ecken. dur optional, sonst nach Zeitraum. */
     window._hpSmooth = function (eid, dur) {
       var c = window._hpPlantCfg[eid];
-      var ser = c && c.series && c.series[0];
-      if (!ser) return;
-      var span = c.graph_span;
-      ser.curve = 'monotoneCubic';
-      ser.group_by = Object.assign({}, ser.group_by, { func: 'avg', fill: 'last', start_with_last: true,
-        duration: dur || (span === '4h' ? '15min' : span === '24h' ? '1h' : span === '48h' ? '1h' : span === '7d' ? '6h' : '1d') });
-      if (c.apex_config && c.apex_config.stroke) c.apex_config.stroke.curve = 'monotoneCubic';
+      if (!c) return;
+      var span = c.span;
+      c.bucket = dur || (span === '4h' ? '15min' : span === '24h' || span === '48h' ? '1h' : span === '7d' ? '6h' : '1d');
+    };
+    /* Verbrauch pro Tag als Säulen aus der Langzeitstatistik (change je Tag) – heute voll, Ø-Linie. */
+    window._hpBarCfg = function (key, eid, label, span, decimals) {
+      window._hpPlantMeta[key] = [label, span, 'accent'];
+      window._hpPlantCfg[key] = { type: 'custom:casora-chart', kind: 'bar', span: span, source: 'change', height: 150,
+        series: [{ entity: eid, name: label, unit: 'kWh', decimals: decimals == null ? 1 : decimals }] };
+      return window._hpPlantCfg[key];
     };
     window._hpChartTitle = function (eid) {
       var m = window._hpPlantMeta[eid];
       var t = m ? m[0] + ' · ' + (SPAN[m[1]] || m[1]) : '';
       return window.casoraTr ? window.casoraTr(t) : t;
     };
-    /* apexcharts-card setzt die y-Achse auf Minimum/Maximum der Daten. Bei einem
-       konstanten Fühler liefert das Mitteln Rundungsrauschen (21,399999999999995
-       gegen 21,4); ApexCharts teilt diese Winzspanne in Schritte unterhalb der
-       Rechengenauigkeit, zählt endlos hoch und bricht mit „Invalid array length“
-       ab – das Diagramm dreht dann ewig. Fast gleiche Grenzen auf einen Wert
-       setzen, damit ApexCharts seinen eigenen Fall „min = max“ nimmt. */
-    customElements.whenDefined('apexcharts-card').then(function () {
-      var C = customElements.get('apexcharts-card');
-      var P = C && C.prototype;
-      if (!P || typeof P._computeYAxisAutoMinMax !== 'function' || P._casoraFlatFix) return;
-      var orig = P._computeYAxisAutoMinMax;
-      P._casoraFlatFix = true;
-      P._computeYAxisAutoMinMax = function () {
-        var res = orig.apply(this, arguments);
-        var ys = this._config && this._config.apex_config && this._config.apex_config.yaxis;
-        (Array.isArray(ys) ? ys : []).forEach(function (y) {
-          if (!y || typeof y.min !== 'number' || typeof y.max !== 'number') return;
-          if (y.max !== y.min && Math.abs(y.max - y.min) <= 1e-9 * Math.max(1, Math.abs(y.max))) y.min = y.max;
-        });
-        return res;
-      };
-    }).catch(function () {});
-    /* Achsen in allen Casora-Diagrammen: Datumsformat wie im Deutschen („30.09.“,
-       „Sep. 2026“ statt „30 Sep“ / „Sep '26“) und kein „-0“ an der y-Achse (Rundung
-       kleiner negativer Werte). Nur ergänzt, wo eine Karte selbst nichts vorgibt. */
-    window._casoraApexDefaults = function (cfg) {
-      if (!cfg || typeof cfg !== 'object') return cfg;
-      var clone = function (v) {
-        if (Array.isArray(v)) return v.map(clone);
-        if (v && typeof v === 'object') { var o = {}; Object.keys(v).forEach(function (k) { o[k] = clone(v[k]); }); return o; }
-        return v;
-      };
-      var c = clone(cfg);
-      var ac = c.apex_config = c.apex_config || {};
-      var xa = ac.xaxis = ac.xaxis || {};
-      var lb = xa.labels = xa.labels || {};
-      if (!lb.datetimeFormatter && !lb.formatter && !lb.format) {
-        lb.datetimeFormatter = { year: 'yyyy', month: 'MMM yyyy', day: 'dd.MM.', hour: 'HH:mm', minute: 'HH:mm' };
-      }
-      // d = null: wie ApexCharts selbst – ganze Zahlen ohne Nachkomma, sonst eine Stelle.
-      var fmt = function (d) {
-        return 'EVAL:function (v) { if (typeof v !== "number" || !isFinite(v)) return v; var d = ' + d + ';'
-          + ' var n = d == null ? 1 : d; if (Math.abs(v) < 0.5 * Math.pow(10, -n)) v = 0;'
-          + ' var min = d == null ? (Math.round(v) === v ? 0 : 1) : d;'
-          + ' return v.toLocaleString(window.casoraLocale ? window.casoraLocale() : undefined, { minimumFractionDigits: min, maximumFractionDigits: n }); }';
-      };
-      (Array.isArray(c.yaxis) ? c.yaxis : []).forEach(function (y) {
-        if (!y || typeof y !== 'object') return;
-        var ya = y.apex_config = y.apex_config || {};
-        var yl = ya.labels = ya.labels || {};
-        if (!yl.formatter) yl.formatter = fmt(typeof y.decimals === 'number' ? y.decimals : null);
-      });
-      if (window._casoraSoft && window._casoraSoft()) {
-        try { c = window._casoraApexSoft(c); } catch (e) { /* Diagramm bleibt wie geliefert */ }
-      }
-      return c;
-    };
-    /* Weich (Fix-Runde 1, B-06/B-08): Diagramme in Gerätefarben statt iOS-Neon, flacher
-       12-%-Verlauf ohne Leuchten, Achsen in Text 3 (11/500), warme Hilfslinien. ApexCharts
-       zeichnet SVG und löst CSS-Variablen nicht auf – die Theme-Werte werden hier gelesen. */
-    var softCol = function (v) {
-      if (typeof v !== 'string') return v;
-      var n = window._casoraSoftColor ? window._casoraSoftColor(v) : v;
-      if (n !== v) return n;
-      return /^var\(/.test(v.trim()) ? (cssColor(v) || v) : v;
-    };
-    var cssColor = function (expr) {
-      try {
-        var el = document.createElement('span');
-        el.style.color = expr; el.style.display = 'none';
-        (document.querySelector('home-assistant') || document.body).appendChild(el);
-        var c = getComputedStyle(el).color; el.remove();
-        return c && c !== 'rgba(0, 0, 0, 0)' ? c : null;
-      } catch (e) { return null; }
-    };
-    var withAlpha = function (c, a) {
-      var m = /rgba?\(([^)]+)\)/.exec(c || ''); if (!m) return null;
-      var p = m[1].split(',').map(function (x) { return parseFloat(x); });
-      return 'rgba(' + p[0] + ',' + p[1] + ',' + p[2] + ',' + a + ')';
-    };
-    window._casoraApexSoft = function (c) {
-      var ink = cssColor('var(--primary-text-color)');
-      var lbl = withAlpha(ink, 0.5) || cssColor('var(--casora-chart-label)');
-      var grid = cssColor('var(--casora-chart-grid, rgba(120,100,80,0.12))');
-      (Array.isArray(c.series) ? c.series : []).forEach(function (s) { if (s && s.color) s.color = softCol(s.color); });
-      var ac = c.apex_config = c.apex_config || {};
-      if (Array.isArray(ac.colors)) ac.colors = ac.colors.map(softCol);
-      var ch = ac.chart = ac.chart || {};
-      ch.dropShadow = { enabled: false };
-      var f = ac.fill;
-      if (f && f.type === 'gradient') {
-        var gr = f.gradient = f.gradient || {};
-        gr.opacityFrom = 0.12; gr.opacityTo = 0; gr.shadeIntensity = 0;
-        if (Array.isArray(gr.gradientToColors)) gr.gradientToColors = gr.gradientToColors.map(softCol);
-      }
-      var lblStyle = function (o) {
-        o.style = Object.assign({}, o.style || {}, { fontSize: '11px', fontWeight: 500, fontFamily: 'var(--primary-font-family, system-ui)' });
-        if (lbl) o.style.colors = lbl;
-      };
-      var xa = ac.xaxis = ac.xaxis || {}; xa.labels = xa.labels || {}; lblStyle(xa.labels);
-      (Array.isArray(c.yaxis) ? c.yaxis : []).forEach(function (y) {
-        if (!y || typeof y !== 'object') return;
-        var ya = y.apex_config = y.apex_config || {}; ya.labels = ya.labels || {}; lblStyle(ya.labels);
-      });
-      if (ac.yaxis && !Array.isArray(ac.yaxis)) { ac.yaxis.labels = ac.yaxis.labels || {}; lblStyle(ac.yaxis.labels); }
-      var g = ac.grid = ac.grid || {};
-      if (grid) g.borderColor = grid;
-      var pd = g.padding = g.padding || {};
-      if ((pd.left || 0) < 18) pd.left = 18;
-      if ((pd.right || 0) < 18) pd.right = 18;
-      return c;
-    };
-    customElements.whenDefined('apexcharts-card').then(function () {
-      var C = customElements.get('apexcharts-card');
-      var P = C && C.prototype;
-      if (!P || typeof P.setConfig !== 'function' || P._casoraAxisFix) return;
-      var orig = P.setConfig;
-      P._casoraAxisFix = true;
-      P.setConfig = function (cfg) {
-        var c = cfg;
-        try { c = window._casoraApexDefaults(cfg); } catch (e) { c = cfg; }
-        return orig.call(this, c);
-      };
-    }).catch(function () {});
     var popRoot = function () {
       var ha = document.querySelector('home-assistant');
       return find(ha && ha.shadowRoot ? ha.shadowRoot : document, 'casora-popup')[0] || null;
     };
-    var mount = function (slot, cfg, tries, token) {
-      var ha = document.querySelector('home-assistant');
-      if (!window.loadCardHelpers) return;
-      /* Erst einhängen, wenn der Platz Breite hat und die Karte geladen ist.
-         Beim ersten Öffnen nach dem Neuladen baut sich das Popup noch auf,
-         ApexCharts zeichnet dann in 0 px Breite und das Diagramm bleibt leer. */
-      if (!tries) { tries = 0; token = slot._hpMountToken = (slot._hpMountToken || 0) + 1; }
-      if (slot._hpMountToken !== token) return;
-      var tag = String(cfg.type || '').indexOf('custom:') === 0 ? cfg.type.slice(7) : null;
-      if (tries < 50 && (!slot.isConnected || slot.getBoundingClientRect().width < 40
-          || (tag && !customElements.get(tag)))) {
-        setTimeout(function () { mount(slot, cfg, tries + 1, token); }, 100);
-        return;
-      }
-      window.loadCardHelpers().then(function (h) {
-        if (slot._hpMountToken !== token) return;
-        var el = h.createCardElement(cfg);
-        el.addEventListener('ll-rebuild', function (ev) { ev.stopPropagation(); mount(slot, cfg); });
-        el.hass = ha.hass;
-        el.style.display = 'block';
-        el.setAttribute('data-casora-ready', '');
+    /* casora-chart misst seine Breite selbst (ResizeObserver) und zeichnet, sobald Platz da ist –
+       kein Warten auf Breite und keine Parkplätze mehr. */
+    var mount = function (slot, cfg) {
+      customElements.whenDefined('casora-chart').then(function () {
+        var ha = document.querySelector('home-assistant');
+        var el = slot.firstElementChild;
+        if (!el || el.localName !== 'casora-chart') {
+          el = document.createElement('casora-chart');
+          slot.textContent = '';
+          slot.appendChild(el);
+        }
         slot.setAttribute('data-casora-nodismiss', '');
-        slot.innerHTML = '';
-        slot.appendChild(el);
+        el.setConfig(cfg);
+        el.hass = ha && ha.hass;
         clearInterval(slot._hpTick);
         slot._hpTick = setInterval(function () {
           if (!el.isConnected) { clearInterval(slot._hpTick); return; }
           el.hass = document.querySelector('home-assistant').hass;
         }, 60000);
-        /* Ändert sich die Breite noch (Einblenden, Spaltenwechsel), neu zeichnen lassen. */
-        if (window.ResizeObserver) {
-          if (slot._hpRo) slot._hpRo.disconnect();
-          var lastW = slot.getBoundingClientRect().width;
-          slot._hpRo = new ResizeObserver(function () {
-            if (!el.isConnected) { slot._hpRo.disconnect(); return; }
-            var w = slot.getBoundingClientRect().width;
-            if (Math.abs(w - lastW) < 2) return;
-            lastW = w;
-            clearTimeout(slot._hpRz);
-            slot._hpRz = setTimeout(function () { window.dispatchEvent(new Event('resize')); }, 150);
-          });
-          slot._hpRo.observe(slot);
-        }
-      }).catch(function () {});
+      });
     };
     window._hpPlantShow = function (eid, row, noScroll) {
       var pop = popRoot();
       if (!pop || !window._hpPlantCfg[eid]) return false;
       var cfg = JSON.parse(JSON.stringify(window._hpPlantCfg[eid]));
-      cfg.card_mod = { style: 'ha-card { background: transparent !important; box-shadow: none !important; border: none !important; }' };
       var slot = find(pop.shadowRoot, '.hp-chart-slot')[0];
       if (!slot) return false;
       mount(slot, cfg);
@@ -806,6 +643,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         var now = Date.now();
         if (!liveNodes || now - liveAt > 3000) { liveNodes = find(livePop.shadowRoot, '[data-hp-live],[data-hp-live-join]'); liveAt = now; }
         liveNodes.forEach(function (el) {
+          if (el.hasAttribute('data-casora-reading')) return; // Diagramm liest gerade ab (casora-chart)
           /* Mehrere Werte in einer Zeile, z. B. Latenz "7 ms / 9 ms" (ganze Zahlen). */
           if (el.dataset.hpLiveJoin) {
             var parts = el.dataset.hpLiveJoin.split(',').map(function (id) {

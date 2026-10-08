@@ -27,8 +27,6 @@ const REQUIREMENTS = [
     repo: "Lint-Free-Technology/uix", docs: "https://uix.lf.technology" },
   { kind: "card", id: "button-card", label: "button-card", required: true,
     why: "every Casora tile is one", repo: "custom-cards/button-card" },
-  { kind: "card", id: "apexcharts-card", label: "apexcharts-card",
-    why: "the energy popup's charts", repo: "RomRider/apexcharts-card" },
 ];
 
 
@@ -3781,6 +3779,8 @@ const POPUP_TITLE = (placeholder) => ({ key: "room_name", label: "Popup title", 
   advanced: true, group: "Popup", placeholder: placeholder || "The room's name" });
 // Popups, deren Titel sonst der Kachelname ist (window.casoraPopupTitle).
 const POPUP_TITLE_NAME = POPUP_TITLE("The tile's name");
+// Sparkline (1.2): kleine Verlaufslinie oben rechts in der Kachel, je Kachel zuschaltbar.
+const SPARK_FIELD = (hint) => ({ key: "sparkline", label: "Trend on tile", type: "bool", advanced: true, hint });
 // Hex, weil die Diagramme die Farbe direkt ins SVG schreiben.
 const CHART_COLOR = (placeholder) => ({ key: "chart_color", label: "Chart color", type: "text",
   advanced: true, placeholder: placeholder || "#00C3D0", hint: "A hex color, e.g. #30D158." });
@@ -3816,6 +3816,7 @@ const TILE_TYPES = [
       { key: "temp_sensor", label: "Temperature sensor", domains: ["sensor"], classes: ["temperature"] },
       TOGGLE_FIELD_ON,
       POPUP_TITLE(),
+      SPARK_FIELD("A small line of the room temperature over the last 24 hours."),
     ] },
   { id: "media", label: "Media player", template: "casora_media",
     domains: ["media_player"], fields: [
@@ -3899,12 +3900,14 @@ const TILE_TYPES = [
         advanced: true, group: "Popup" },
       { key: "plant_room", label: "Room under the title", type: "text", advanced: true,
         placeholder: "The plant's area" },
+      SPARK_FIELD("A small line of the soil moisture over the last 7 days."),
     ] },
   { id: "energy_tile", label: "Energy", template: "casora_energy",
     domains: ["sensor"], classes: ["power"], entityLabel: "Power sensor",
     multiEntity: true, fields: [
       ICON_FIELD,
       POPUP_TITLE("Energy"),
+      SPARK_FIELD("A small line of the power over the last 24 hours."),
       { key: "entity_usage_today", label: "Usage today", domains: ["sensor"],
         classes: ["energy"], advanced: true },
       { key: "entity_usage_month", label: "Usage this month", domains: ["sensor"],
