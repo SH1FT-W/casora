@@ -411,9 +411,10 @@
     }
     var inner = ctx.inner || {};
     var cj = 'const C = ' + JSON.stringify(C) + ';\n';
-    if (solar && has(C.solar) && has(C.home) && inner.common && inner.flow) {
+    if (solar && has(C.solar) && has(C.home)) {
+      /* 1.2.1: Energiefluss als ruhige Balken (E.flow unten); Standard und Glas behalten den Kreis-Fluss. */
       f.flow = { card: secCard([C.solar, C.charge, C.discharge, C.output, C.grid, C.export, C.home, C.soc],
-        inner.common + cj + inner.flow.replace("plate(title('Energiefluss')", "UI.label('Energiefluss') + plate(''"), states) };
+        'return window._casoraSoftEnergy ? window._casoraSoftEnergy.flow(' + JSON.stringify(C) + ', states, hass, this) : "";', states) };
     }
     if (solar && inner.common) {
       /* Steuerung läuft mit dem bisherigen Rumpf (gleiche Dienste), nur das Etikett wird weich. */
@@ -434,6 +435,153 @@
     return layout({ fields: f, top: ['hero', 'metric'], left: solar ? ['flow'] : ['top'],
       right: solar ? ['use', 'top', 'more'] : ['use', 'more'], moveLeft: ['top'],
       narrowOrder: ['flow', 'use', 'top', 'more'] });
+  };
+
+  // ── Energiefluss als Balken (1.2.1, Entwurf B „Sankey light“) ────────────
+  // Oben der Hausverbrauch mit Akkustand, darunter „Woher“ (Anteile am Hausverbrauch) und „Wohin
+  // Solar“. Ohne Animation. Live wie der Fix gegen das Blinken: das HTML bleibt je Karte gleich,
+  // neue Werte, Breiten und Sichtbarkeit werden direkt in die vorhandenen Knoten geschrieben.
+  var FLOW_ON = 5;
+  // Ganze Prozent, die zusammen genau 100 ergeben (größter Rest bekommt den Ausgleich).
+  var shares = function (parts) {
+    var sum = parts.reduce(function (s, p) { return s + p.w; }, 0);
+    if (!sum) return parts.map(function () { return 0; });
+    var raw = parts.map(function (p) { return p.w / sum * 100; });
+    var out = raw.map(Math.floor), rest = 100 - out.reduce(function (s, x) { return s + x; }, 0);
+    raw.map(function (x, i) { return [x - out[i], i]; }).sort(function (a, b) { return b[0] - a[0]; })
+      .slice(0, rest).forEach(function (r) { out[r[1]]++; });
+    return out;
+  };
+  // v: { solar, chg, dis, outp, grid, exp, home, soc, akku (Akku vorhanden), lade (Lade-/Entladesensor vorhanden) }
+  E.flowModel = function (v) {
+    var act = function (w) { return w != null && w > FLOW_ON; };
+    var pos = function (w) { return w == null ? null : Math.max(0, w); };
+    var exporting = act(v.exp);
+    var dis = pos(v.dis), chg = pos(v.chg), netz = exporting ? 0 : pos(v.grid);
+    // Solar, das im Haus bleibt: was nach Akku und Einspeisung übrig ist (sonst Ausgang minus Entladen),
+    // höchstens so viel, wie das Haus nach Akku und Netz noch braucht.
+    var avail = v.solar != null ? Math.max(0, v.solar - (chg || 0) - (exporting ? v.exp : 0))
+      : (v.outp != null ? Math.max(0, v.outp - (dis || 0)) : null);
+    var need = v.home != null ? Math.max(0, v.home - (dis || 0) - (netz || 0)) : null;
+    var sHome = avail == null ? need : need == null ? avail : Math.min(avail, need);
+    var side = function (list) {
+      var on = list.filter(function (p) { return act(p.w); }), pc = shares(on);
+      return list.map(function (p) { var i = on.indexOf(p); return { k: p.k, w: p.w, on: i > -1, pct: i > -1 ? pc[i] : 0 }; });
+    };
+    var from = side([{ k: 'solar', w: sHome }, { k: 'akku', w: dis }, { k: 'netz', w: netz }]);
+    var to = side([{ k: 'haus', w: sHome }, { k: 'akku', w: chg }, { k: 'exp', w: exporting ? v.exp : 0 }]);
+    var any = function (l) { return l.some(function (p) { return p.on; }); };
+    return {
+      home: v.home, soc: v.soc, solar: v.solar, akku: !!v.akku,
+      akkuSub: !v.lade ? 'Akku' : act(chg) ? 'Akku lädt' : act(dis) ? 'Akku entlädt' : 'Akku bereit',
+      from: from, fromEmpty: !any(from) ? (v.home == null ? 'Noch keine Werte' : 'Kein Verbrauch') : null,
+      to: to, solarOn: act(v.solar), toEmpty: !act(v.solar) ? 'Solar liefert gerade nichts' : !any(to) ? 'Noch keine Aufteilung' : null,
+    };
+  };
+  var FLOW_COL = { solar: 'var(--casora-color-yellow, #E8B04A)', akku: 'var(--casora-color-blue, #5B8FC9)',
+    netz: 'var(--casora-color-sand, #9A8672)', exp: 'var(--casora-color-green, #6AAE78)', haus: 'var(--casora-color-teal, #4E9E95)' };
+  var FLOW_NAME = { solar: 'Solar', akku: 'Akku', netz: 'Netz', exp: 'Einspeisung', haus: 'Haus' };
+  var flowHtml = function (C, FK) {
+    var INK = 'var(--casora-popup-tiles-text-primary, #3A322B)', INK2 = 'var(--casora-popup-tiles-text-secondary, rgba(58,50,43,.62))';
+    var mi = function (id) { return id ? ' data-casora-mi="' + String(id).replace(/"/g, '&quot;') + '"' : ''; };
+    var sec = function (key, title, keys) {
+      return '<div data-b="' + key + '">'
+        + '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:16px;">'
+        + '<div style="font-size:14.5px;font-weight:700;">' + title + '</div>'
+        + '<div data-b="' + key + '-total" style="font-size:14.5px;font-weight:600;color:' + INK2 + ';font-variant-numeric:tabular-nums;"></div></div>'
+        + '<div data-b="' + key + '-bar" style="display:flex;gap:3px;margin-top:10px;height:12px;">'
+        + keys.map(function (k) { return '<div data-seg="' + k + '" style="flex:1 1 0;min-width:10px;border-radius:999px;background:' + FLOW_COL[k] + ';"></div>'; }).join('')
+        + '</div><div data-b="' + key + '-leg" style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:9px;">'
+        + keys.map(function (k) {
+          return '<div data-leg="' + k + '" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:' + INK2 + ';white-space:nowrap;">'
+            + '<span style="width:8px;height:8px;border-radius:50%;flex:none;background:' + FLOW_COL[k] + ';"></span><span>' + FLOW_NAME[k] + '</span>'
+            + '<b data-v style="font-weight:700;color:' + INK + ';font-variant-numeric:tabular-nums;"></b>'
+            + '<span data-p style="opacity:.8;font-variant-numeric:tabular-nums;"></span></div>';
+        }).join('')
+        + '</div><div data-b="' + key + '-hint" style="margin-top:8px;font-size:12.5px;font-weight:500;color:' + INK2 + ';"></div></div>';
+    };
+    return '<div data-casora-flow="' + FK + '" data-casora-kind="b" style="background:var(--casora-popup-row-fill, #FEFCF7);'
+      + 'border-radius:var(--casora-popup-row-radius, 24px);padding:18px 20px 20px;box-shadow:var(--casora-popup-plate-shadow, none);'
+      + 'font-family:var(--primary-font-family, Inter, system-ui);color:' + INK + ';text-align:left;">'
+      + '<div style="font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:' + INK2 + ';">Energiefluss</div>'
+      + '<div style="display:flex;align-items:center;gap:14px;margin-top:14px;">'
+      + '<div' + mi(C.home) + ' style="width:44px;height:44px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;cursor:pointer;'
+      + 'background:color-mix(in srgb, ' + FLOW_COL.haus + ' 16%, transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb, ' + FLOW_COL.haus + ' 70%, transparent);">'
+      + '<ha-icon icon="mdi:home-outline" style="--mdc-icon-size:21px;color:' + FLOW_COL.haus + ';display:flex;pointer-events:none;"></ha-icon></div>'
+      + '<div style="flex:1;min-width:0;"><div data-b="home" style="font-size:24px;font-weight:700;letter-spacing:-0.02em;line-height:1.1;font-variant-numeric:tabular-nums;"></div>'
+      + '<div style="font-size:12.5px;font-weight:500;color:' + INK2 + ';margin-top:2px;">Verbrauch im Haus</div></div>'
+      + '<div data-b="akku"' + mi(C.soc) + ' style="text-align:right;cursor:pointer;"><div data-b="soc" style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;"></div>'
+      + '<div data-b="akkusub" style="font-size:12.5px;font-weight:500;color:' + INK2 + ';"></div></div></div>'
+      + '<div style="height:1px;background:var(--casora-popup-ui-divider, rgba(140,115,90,.14));margin:16px 0 0;"></div>'
+      + sec('from', 'Woher', ['solar', 'akku', 'netz']) + sec('to', 'Wohin Solar', ['haus', 'akku', 'exp'])
+      + '</div>';
+  };
+  // Schreibt das Modell in die vorhandenen Knoten; Text nur, wenn er sich wirklich ändert (die
+  // Übersetzung tauscht den Text danach aus, deshalb wird der zuletzt geschriebene Wert gemerkt).
+  var flowApply = function (box, m, hass) {
+    var q = function (s, r) { return (r || box).querySelector(s); };
+    var txt = function (el, s) { if (el && el.dataset.t !== s) { el.dataset.t = s; el.textContent = s; } };
+    // Ausblenden merkt sich die eigene Anzeige (flex), Einblenden stellt sie wieder her.
+    var show = function (el, on) {
+      if (!el) return;
+      var hid = el.style.display === 'none';
+      if (on && hid) el.style.display = el.dataset.d || '';
+      else if (!on && !hid) { el.dataset.d = el.style.display; el.style.display = 'none'; }
+    };
+    txt(q('[data-b="home"]'), fW(m.home, hass));
+    show(q('[data-b="akku"]'), m.akku);
+    txt(q('[data-b="soc"]'), m.soc != null ? Math.round(m.soc) + ' %' : '—');
+    txt(q('[data-b="akkusub"]'), m.akkuSub);
+    var side = function (key, parts, total, empty, quiet) {
+      var on = parts.some(function (p) { return p.on; });
+      show(q('[data-b="' + key + '-total"]'), !quiet);
+      txt(q('[data-b="' + key + '-total"]'), fW(total, hass));
+      show(q('[data-b="' + key + '-bar"]'), on || !quiet);
+      show(q('[data-b="' + key + '-leg"]'), on);
+      show(q('[data-b="' + key + '-hint"]'), !on);
+      txt(q('[data-b="' + key + '-hint"]'), on ? '' : empty || '');
+      var bar = q('[data-b="' + key + '-bar"]');
+      if (bar) { var bg = on ? '' : 'var(--casora-popup-ui-fill, rgba(140,115,90,.08))'; if (bar.style.background !== bg) { bar.style.background = bg; bar.style.borderRadius = on ? '' : '999px'; } }
+      parts.forEach(function (p) {
+        var seg = q('[data-seg="' + p.k + '"]', bar), leg = q('[data-b="' + key + '-leg"] [data-leg="' + p.k + '"]');
+        show(seg, p.on); show(leg, p.on);
+        if (seg && p.on) { var fx = Math.round(p.w) + ' 1 0'; if (seg.dataset.fx !== fx) { seg.dataset.fx = fx; seg.style.flex = fx; } }
+        if (leg) { txt(q('[data-v]', leg), p.on ? fW(p.w, hass) : ''); txt(q('[data-p]', leg), p.on ? p.pct + ' %' : ''); }
+      });
+    };
+    side('from', m.from, m.home, m.fromEmpty, false);
+    // Solar aus: kein Balken, nur der ruhige Hinweis.
+    side('to', m.to, m.solar, m.toEmpty, !m.solarOn);
+  };
+  E.flow = function (C, states, hass, self) {
+    var has = function (id) { return !!(id && states[id]); };
+    var lade = has(C.charge) || has(C.discharge);
+    var m = E.flowModel({ solar: watt(states, C.solar), chg: watt(states, C.charge), dis: watt(states, C.discharge),
+      outp: watt(states, C.output), grid: watt(states, C.grid), exp: watt(states, C.export), home: watt(states, C.home),
+      soc: num(states, C.soc), akku: has(C.soc) || lade, lade: lade });
+    var FK = 'b' + Array.from(JSON.stringify(C)).reduce(function (h, ch) { return (h * 31 + ch.charCodeAt(0)) | 0; }, 7).toString(36);
+    var host = (self && typeof self === 'object') ? self : window;
+    var MEMO = window._casoraFlowMemo || (window._casoraFlowMemo = new WeakMap());
+    var memo = MEMO.get(host) || {};
+    MEMO.set(host, memo);
+    var deep = function (root, s) {
+      if (!root) return null;
+      var hit = root.querySelector(s);
+      if (hit) return hit;
+      var all = root.querySelectorAll('*');
+      for (var i = 0; i < all.length; i++) if (all[i].shadowRoot) { var r = deep(all[i].shadowRoot, s); if (r) return r; }
+      return null;
+    };
+    var sel = '[data-casora-flow="' + FK + '"]', mm = memo[FK];
+    if (mm && !(mm.el && mm.el.isConnected)) mm.el = deep(host.shadowRoot, sel) || deep(host.renderRoot !== host.shadowRoot ? host.renderRoot : null, sel);
+    if (mm && mm.el && mm.el.isConnected) { flowApply(mm.el, m, hass); return mm.html; }
+    // Erster Aufbau: Gerüst bauen, Werte einsetzen, als HTML zurückgeben (danach nur noch flowApply).
+    var tpl = document.createElement('template');
+    tpl.innerHTML = flowHtml(C, FK);
+    flowApply(tpl.content.firstElementChild, m, hass);
+    var html = tpl.innerHTML;
+    memo[FK] = { html: html, el: null };
+    return html;
   };
 
   // Bereich für die automatischen Verbraucher: der Raum des Popups (room_name = Bereichsname) oder
