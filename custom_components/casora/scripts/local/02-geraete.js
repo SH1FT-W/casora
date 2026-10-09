@@ -229,7 +229,7 @@
     try { window._casoraAqDoseOpen(JSON.parse(decodeURIComponent(dose))); } catch (e) { console.error('casora aquarium dose', e); }
   };
 
-  /* Eigenes Casora-Popup je Dünger-Kanal (Sheet-Stil, Bedienung). */
+  /* Eigenes Casora-Popup je Dünger-Kanal (Sheet-Stil, Bedienung). Inhalt ohne Kachel-Schatten (sonst Karte in der Karte). */
   window._casoraAqDoseOpen = function (d) {
     if (!window.casoraPopup || !d || !d.vol) return;
     const _d = JSON.stringify(d);
@@ -286,7 +286,7 @@
         triggers_update: [d.vol, d.today, d.total, d.btn],
         tap_action: { action: 'none' },
         show_icon: false, show_name: false, show_label: false, show_state: false,
-        card_mod: { style: ':host { --ha-card-box-shadow: none !important; } ha-card { background: transparent !important; border: none !important; box-shadow: none !important; backdrop-filter: none !important; cursor: default !important; } ha-ripple { display: none !important; }' },
+        card_mod: { style: ':host { --ha-card-box-shadow: none !important; --button-card-box-shadow: none !important; --button-card-box-shadow-hover: none !important; } ha-card { background: transparent !important; border: none !important; box-shadow: none !important; backdrop-filter: none !important; cursor: default !important; } ha-ripple { display: none !important; }' },
         styles: {
           card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: 'var(--casora-soft-card-top, 6px) 26px 22px 26px' }],
           grid: [{ 'grid-template-areas': areas.join(' ') }, { 'grid-template-columns': '1fr' }, { 'row-gap': 'var(--casora-popup-sec-gap, 18px)' }],
