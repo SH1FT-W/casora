@@ -1,6 +1,7 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "Pulse problems": "Pulse-Probleme",
     "Nobody switched on – nothing changed": "Niemand eingeschaltet – nichts geändert",
     "To hide it from everyone, switch it off.": "Für alle ausblenden: einfach ausschalten.",
     "Hide it there too": "Dort auch ausblenden",

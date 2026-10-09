@@ -171,7 +171,7 @@
   // Der Plan: {rooms: [{name, items: [{key, on, label, sub, tile}]}], loose: [...]}.
   // key = stabile Kennung für die Vorschau (Gerät oder Gruppe).
   function plan(hass, roomNames, r) {
-    const types = (I().TILE_TYPES || []).filter((t) => !t.hidden);
+    const types = (I().TILE_TYPES || []).filter((t) => !t.hidden && (!t.onlyIf || t.onlyIf(hass)));
     const rooms = [{ name: "Home", tiles: [] }].concat(roomNames.map((name) => ({ name, tiles: [] })));
     let items = window.casoraAssist ? window.casoraAssist.suggest(hass, rooms, types) : [];
     if (r.skip_leds) items = items.filter((it) => !(it.type === "light" && NOISE.test(String(it.entity).split(".")[1] || "")));

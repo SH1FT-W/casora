@@ -545,7 +545,7 @@
       const I = W.__casoraPanelInternals || {};
       const R = h.entities || {}, D = h.devices || {}, S = h.states || {}, A = h.areas || {};
       const rooms = rooms$(this);
-      const types = (I.TILE_TYPES || []).filter((t) => !t.hidden);
+      const types = (I.TILE_TYPES || []).filter((t) => !t.hidden && (!t.onlyIf || t.onlyIf(h)));
       const typeIds = new Set(types.map((t) => t.id));
       const label = (id) => { const t = types.find((x) => x.id === id); return t ? tr(t.label) : ""; };
       const A2 = W.casoraAssist;

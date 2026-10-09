@@ -3119,7 +3119,7 @@ const autoRoomGlyph = (name) => {
 // Tile types about the whole home: a room's own device (a dishwasher's plug in the
 // kitchen) is no reason to offer them as "Fits <room>".
 const HOUSE_WIDE_TILES = new Set(["energy_tile", "network", "battery", "updates", "casora_alarm",
-  "casora_weather_warning", "casora_solar_tip", "casora_trash", "casora_recipe"]);
+  "casora_weather_warning", "casora_solar_tip", "casora_trash", "casora_recipe", "casora_pulse"]);
 
 // The automatic icon follows the name. A new name it doesn't know ("Küche" →
 // "Kochecke") would fall back to the house - keep the icon the room had instead.
@@ -4430,6 +4430,8 @@ const TILE_MAIN_FIND = {
   // Fußball: jeder Sensor der HACS-Integration Team Tracker (ohne Gerät, ohne translation_key);
   // ohne Registry-Eintrag an den Attributen erkannt.
   casora_football: { domain: "sensor", platform: "teamtracker" },
+  // Pulse: nur sein Sensor „Probleme“ (Integration + translation_key, nicht die Entity-ID).
+  casora_pulse: { keys: ["problems"], domain: "sensor", platform: "pulse", both: true },
   casora_weather_warning: { keys: ["warning", "warnings"], domain: "binary_sensor", dc: "safety" },
   // Ein Aquarium ist kein beliebiges Thermometer (sonst: Außentemperatur des Autos).
   casora_aquarium: { domain: "sensor", dc: "temperature", strict: true,
@@ -20482,7 +20484,9 @@ class CasoraPanel extends HTMLElement {
         if (spec.domain && dom !== spec.domain) return false;
         if (!doms.includes(dom)) return false;
         const e = R[id] || {};
-        const keyHit = (spec.keys || []).includes(e.translation_key) || platformHit(spec, e, S[id]);
+        // both: Schlüssel UND Integration müssen passen (Pulse hat mehrere Sensoren).
+        const keyHit = spec.both ? (spec.keys || []).includes(e.translation_key) && platformHit(spec, e, S[id])
+          : (spec.keys || []).includes(e.translation_key) || platformHit(spec, e, S[id]);
         const dcHit = spec.dc && ((S[id].attributes || {}).device_class === spec.dc);
         if (!keyHit && !dcHit) return false;
         const text = id + " " + nameOf(id) + " " + devName(id);
@@ -24504,7 +24508,8 @@ class CasoraPanel extends HTMLElement {
       (this._hass && this._hass.language) || undefined);
     // Casora's types, then the ones the user's own templates provide, then the
     // escape hatch for a card that has no template at all.
-    const addable = TILE_TYPES.filter((t) => !t.hidden).slice().sort(byLabel)
+    // onlyIf: Typen, die eine bestimmte Integration brauchen (Pulse), nur anbieten, wenn sie da ist.
+    const addable = TILE_TYPES.filter((t) => !t.hidden && (!t.onlyIf || t.onlyIf(this._hass))).slice().sort(byLabel)
       .concat(USER_TILE_TYPES.slice().sort(byLabel))
       .concat([CUSTOM_TILE]);
     const ka = window.casoraKachelart && window.casoraKachelart.addItems ? window.casoraKachelart : null;

@@ -1528,7 +1528,16 @@
       for (var i = 0; i < p.length; i++) if (p[i] && p[i].getAttribute && p[i].hasAttribute('data-casora-link')) return p[i];
       return null;
     };
-    var go = function (el) { var u = el.getAttribute('data-casora-link'); if (/^https?:\/\//.test(u || '')) window.open(u, '_blank', 'noopener'); };
+    var go = function (el) {
+      var u = el.getAttribute('data-casora-link');
+      if (/^https?:\/\//.test(u || '')) { window.open(u, '_blank', 'noopener'); return; }
+      // Seite in HA (Pulse-Panel „/pulse“): Popup schließen, dann wie HAs eigene Navigation.
+      if (/^\/[a-z0-9_-]+(\/[\w-]*)*$/i.test(u || '')) {
+        try { window.casoraPopup && window.casoraPopup.close(); } catch (e) { /* schon zu */ }
+        history.pushState(null, '', u);
+        window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));
+      }
+    };
     window.addEventListener('touchstart', function (ev) { var t = ev.touches && ev.touches[0]; ts0 = t ? { x: t.clientX, y: t.clientY } : null; }, { capture: true, passive: true });
     window.addEventListener('touchend', function (ev) {
       var el = linkOf(ev); if (!el || !ts0) return;

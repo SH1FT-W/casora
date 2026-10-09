@@ -7903,7 +7903,15 @@ window.casoraMenuGlass = {
             var cs = JSON.parse(t.dataset.casoraCf);
             var ha3 = document.querySelector('home-assistant');
             if (ha3 && ha3.hass && cs && cs.domain) {
-              ha3.hass.callService(cs.domain, cs.service, cs.data || {}, cs.target || undefined);
+              var cp = ha3.hass.callService(cs.domain, cs.service, cs.data || {}, cs.target || undefined);
+              // Rückmeldung (Pulse „Gewechselt“): cs.done als kurzer HA-Hinweis, sobald der Dienst durch ist.
+              if (cs.done && cp && cp.then) {
+                cp.then(function () {
+                  var nev = new Event('hass-notification', { bubbles: true, composed: true });
+                  nev.detail = { message: typeof window.casoraTr === 'function' ? window.casoraTr(cs.done) : cs.done };
+                  ha3.dispatchEvent(nev);
+                }, function () {});
+              }
             }
           } catch (err) { console.error('casora: bad confirm row', err); }
           if (t.parentNode && t.parentNode.classList) t.parentNode.classList.remove('armed');

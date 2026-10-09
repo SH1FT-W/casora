@@ -1,5 +1,35 @@
 {
  "exact": {
+  "1 Problem": "1 problem",
+  "Keine Probleme": "No problems",
+  "Keine Geräte": "No devices",
+  "Nicht installiert": "Not installed",
+  "Pulse ist nicht installiert": "Pulse is not installed",
+  "Bald fällig": "Due soon",
+  "Batterie bald fällig": "Battery due soon",
+  "In Pulse öffnen": "Open in Pulse",
+  "Gewechselt": "Replaced",
+  "Batterie gewechselt": "Battery replaced",
+  "Batteriewechsel gemeldet": "Battery replacement recorded",
+  "Wichtig": "Important",
+  "Antwortet nicht": "Not responding",
+  "Still": "Silent",
+  "Hat sich noch nicht gemeldet": "Hasn't reported yet",
+  "Still, obwohl das Partnergerät aktiv war": "Silent although its partner device was active",
+  "Batterie fast leer": "Battery almost empty",
+  "Meldet schwache Batterie": "Reports a low battery",
+  "wartet auf erste Meldung": "waiting for the first report",
+  "Lernt noch den Rhythmus": "Still learning its rhythm",
+  "Meldet sich wie gewohnt": "Reporting as usual",
+  "Ausgefallen": "Failed",
+  "Bitte prüfen": "Please check",
+  "Erinnerung pausiert": "Reminder paused",
+  "jede Minute": "every minute",
+  "jede Stunde": "every hour",
+  "einmal am Tag": "once a day",
+  "sonst jede Minute": "usually every minute",
+  "sonst jede Stunde": "usually every hour",
+  "sonst einmal am Tag": "usually once a day",
   "Alarm!": "Alarm!",
   "Scharf schalten": "Arm",
   "Unscharf schalten": "Disarm",
@@ -1552,6 +1582,66 @@
   "Daten": "Data"
  },
  "patterns": [
+  [
+   "^(\\d+) Probleme$",
+   "{1} problems"
+  ],
+  [
+   "^(\\d+) bald$",
+   "{1} soon"
+  ],
+  [
+   "^(\\d+) bald fällig$",
+   "{1} due soon"
+  ],
+  [
+   "^(\\d+) ausgefallen$",
+   "{1} failed"
+  ],
+  [
+   "^(\\d+) prüfen$",
+   "{1} to check"
+  ],
+  [
+   "^(\\d+) ok$",
+   "{1} ok"
+  ],
+  [
+   "^sonst alle (\\d+) Min\\.$",
+   "usually every {1} min"
+  ],
+  [
+   "^sonst alle (\\d+) Std\\.$",
+   "usually every {1} h"
+  ],
+  [
+   "^sonst alle (\\d+) Tage$",
+   "usually every {1} days"
+  ],
+  [
+   "^alle (\\d+) Min\\.$",
+   "every {1} min"
+  ],
+  [
+   "^alle (\\d+) Std\\.$",
+   "every {1} h"
+  ],
+  [
+   "^alle (\\d+) Tage$",
+   "every {1} days"
+  ],
+  [
+   "^seit (\\d+) Min\\.$",
+   "for {1} min"
+  ],
+  [
+   "^seit (\\d+) Std\\.$",
+   "for {1} h"
+  ],
+  [
+   "^seit (\\d+) T\\.$",
+   "for {1} d"
+  ],
   [
    "^zuletzt gemeldet gestern (.+)$",
    "last reported yesterday {1}"

@@ -158,6 +158,17 @@
           type: "casora_football", entity: eid, reason: "key", rank: 9 });
       });
     }
+    // Pulse: eine Kachel fürs ganze Haus auf der Startseite, solange noch keine Pulse-Kachel da ist.
+    // Hauptentität ist Pulses Sensor „Probleme“ (Integration + translation_key, nicht die Entity-ID).
+    if (typeIds.has("casora_pulse") && !JSON.stringify(rooms).includes("casora_pulse")) {
+      const R = hass.entities || {}, S = hass.states || {};
+      const eid = Object.keys(R).sort().find((id) => R[id] && R[id].platform === "pulse" && R[id].translation_key === "problems" && S[id]);
+      if (eid && !used.has(eid)) {
+        const home = rooms.find((r) => r.path === "home") || rooms[0] || null;
+        out.push({ id: eid, device: null, name: "Pulse", room: home ? home.name : null, area: null,
+          type: "casora_pulse", entity: eid, reason: "key", rank: 9 });
+      }
+    }
     // Solar-Tipp und Raumklima kommen nicht von selbst dazu – nur über „Kachel hinzufügen“.
     // Räume in Dashboard-Reihenfolge, darin nach Name.
     const order = new Map(rooms.map((r, i) => [r.name, i]));
@@ -269,7 +280,7 @@
       const s0 = this._state;
       if (!s0 || !s0.compact) return;
       const rooms = s0.compact.rooms;
-      const types = I.TILE_TYPES.filter((t) => !t.hidden);
+      const types = I.TILE_TYPES.filter((t) => !t.hidden && (!t.onlyIf || t.onlyIf(this._hass)));
       const all = suggest(this._hass, rooms, types);
       const picks = new Map(all.map((it) => [it.id, { on: !!it.room, room: it.room, type: it.type }]));
       let focus = null; // Ergebnis der Eingabe: nur diese Geräte zeigen

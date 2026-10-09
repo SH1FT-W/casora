@@ -262,6 +262,13 @@ window.CASORA_TILE_TYPES = [
         when: (v) => ["week", "matchday", "around"].includes(v.show_when_match) },
       TITLE_NAME,
     ] },
+  // Pulse (Batterie-/Funkwächter, eigene Integration): Kachel + Popup aus den Pulse-Entitäten
+  // (scripts/local/14-pulse.js). Hauptentität = Pulses Sensor „Probleme“ (findet sich selbst);
+  // angeboten nur, wenn Pulse installiert ist (onlyIf), der Geräte-Assistent schlägt sie für die Startseite vor.
+  { id: "casora_pulse", label: "Pulse", template: "casora_pulse", domains: ["sensor"], ownData: true, icon: "pulse",
+    color: "var(--casora-color-green, #30D158)", entityLabel: "Pulse problems", entityPlaceholder: "Automatic",
+    onlyIf: (hass) => !!(hass && hass.entities && Object.values(hass.entities).some((e) => e && e.platform === "pulse")),
+    fields: [ICON, { ...TITLE, placeholder: "Pulse" }] },
   // Aquarien-Übersicht (Hemma 1 und ältere Fassungen „…_aquarium“): bis zu drei Becken in einer Kachel. Nur fürs
   // Bearbeiten umgezogener Kacheln – neue Becken bekommen die Aquarium-Kachel (casora_aquarium_tank).
   { id: "casora_aquariums", label: "Aquariums", template: "casora_aquarium", hidden: true, domains: ["sensor"],
@@ -279,7 +286,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "3D_Printer", "dryer", "dishwasher", "fish", "camera", "attention2", "sun", "trash", "car", "car_side",
   "car_side_w2", "ebike", "chef-hat", "shield_check", "shield_lock", "shield_moon", "shield_off",
   "shield_alarm", "shield_bypass", "shield_vacation", "calendar", "calendar-day", "window-open",
-  "window-closed", "heating_coil", "wind", "rooms", "soccer",
+  "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
 // Vorschau: bedingte Karten (type: conditional) so zeigen wie das Dashboard –
