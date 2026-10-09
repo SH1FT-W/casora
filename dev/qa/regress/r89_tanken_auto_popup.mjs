@@ -351,7 +351,7 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
     p && p.dayBars === 18 && p.dayLabel && /Typischer Tag · Ø 14 Tage/.test(p.dayLabel[0]) && p.dayLabel[1] === 'uppercase' && p.dayLabel[2] === '12px', p && [p.dayBars, p.dayLabel]);
   // 1.2.1 (D1, D3): Etiketten in Empfehlung und „Typischer Tag“ 20/18 vom Kartenrand; Ø-Wert mit zwei Nachkommastellen.
   const pl = await plateLabels(page);
-  const ty = pl.find((l) => l.t === 'Typischer Tag'), em = pl.find((l) => /^Heute ab/.test(l.t));
+  const ty = pl.find((l) => l.t === 'Typischer Tag'), em = pl.find((l) => /^(Heute|Morgen|Guter Zeitpunkt)/.test(l.t)); // Wortlaut hängt von der Uhrzeit ab („Heute ab 19 Uhr“, „Heute“, „Morgen ab …“)
   await check(vp.name + ': Etiketten „Heute ab …“ und „Typischer Tag“ 20/18 vom Kartenrand', ty && em && ty.dx === 20 && ty.dy === 18 && em.dx === 20 && em.dy === 18, pl);
   const dayVal = await page.evaluate(() => { const c = window.__pierce('.ct-day casora-chart', window.casoraPopup.surface)[0];
     if (!c || !c.shadowRoot) return null;
