@@ -7404,7 +7404,9 @@ window.casoraMenuGlass = {
       +   'box-shadow:var(--button-card-box-shadow-active-mobile, none);}'
       + '.hui-srow.hui-act div{color:var(--casora-entity-name-active, inherit)!important;}'
       + '.hui-srow.hui-act .hui-sub{color:var(--casora-entity-state-active-color, ' + S.sub + ')!important;}'
-      + '@media (hover:hover){.hui-srow.hui-tap:hover{background:' + S.rowHover + ';}}'
+      + '@media (hover:hover){.hui-srow.hui-tap:hover{background:' + S.rowHover + ';}'
+      // Aktive Zeile behält beim Drüberfahren ihren hellen Grund (sonst dunkle Schrift auf dunklem Hover, Dark Mode).
+      +   '.hui-srow.hui-act.hui-tap:hover{background:var(--casora-entity-background-active, ' + S.row + ');filter:brightness(.97);}}'
       + '.hui-chev{opacity:.4;flex:none;pointer-events:none;}'
       + '@media (min-width: 340px){'
       +   '.hui-sub{display:inline-block;max-width:100%;vertical-align:bottom;'
