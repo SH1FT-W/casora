@@ -9,6 +9,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ### Fixed
 - **Shadows in popups:** the soft shadow under the active row or button (floor heating, blinds, locks, lights, thermostat, air purifier, dishwasher, vacuum) was cut off with a hard edge at the side or bottom. It now fades out fully.
 - **Thermostat text:** floor heating opens its valves only for a few minutes at a time. During such a pause the tile said "Ready" although the room was still below its target. It now says "Heating to 22°" until the target is reached and "Holding 22°" once it is.
+- **Hover in dark mode:** moving the mouse over an active row in a popup (e.g. a heating room) turned it dark while the text stayed dark, so it was barely readable. The row now stays light.
 
 ## 1.2.3 – 09.10.2026
 
