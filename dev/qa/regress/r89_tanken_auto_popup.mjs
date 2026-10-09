@@ -274,7 +274,7 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   await fakeStates(page, { ...none, [SID]: sensor(car.dev, { typical: null, low: null, high: null, days: 2, learn_days_left: 5, center: null }) }, { sticky: true });
   await openPopup(page);
   p = await popup(page);
-  await check(vp.name + ': Zeile „Tanken · ab 1,689 €“', p && /^Tanken/.test(p.row || '') && /ab 1,689 €/.test(p.row) && /Super E10 · Preise werden gesammelt/.test(p.row), p && p.row);
+  await check(vp.name + ': Zeile „Tanken · ab 1,69 €“', p && /^Tanken/.test(p.row || '') && /ab 1,69 €/.test(p.row) && /Super E10 · Preise werden gesammelt/.test(p.row), p && p.row);
   await check(vp.name + ': Zeile direkt unter dem Tankbalken, vor Zustand/Wartung',
     p && p.rowTop != null && (p.barBottom == null || (p.rowTop > p.barBottom && p.rowTop - p.barBottom < 24)) && p.rowTop < p.firstRowTop, p);
   await tap(page, '.casora-tank-row');
@@ -345,7 +345,7 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   await page.waitForTimeout(800);
   p = await popup(page);
   await check(vp.name + ': Empfehlung mit Preis-Skala und Typischem Tag', p && p.scale === 1 && p.day === 1 && /Empfehlung/.test(p.view)
-    && /Tief/.test(p.view) && /jetzt 1,689 €/.test(p.view) && /Hoch/.test(p.view) && !/Die Empfehlung kommt/.test(p.view), p && p.view);
+    && /Tief/.test(p.view) && /jetzt 1,69 €/.test(p.view) && /Hoch/.test(p.view) && !/Die Empfehlung kommt/.test(p.view), p && p.view);
   await check(vp.name + ': Typischer Tag als casora-chart (18 Säulen), Etikett „Typischer Tag · Ø 14 Tage“ 12 px Versalien',
     p && p.dayBars === 18 && p.dayLabel && /Typischer Tag · Ø 14 Tage/.test(p.dayLabel[0]) && p.dayLabel[1] === 'uppercase' && p.dayLabel[2] === '12px', p && [p.dayBars, p.dayLabel]);
   if (process.env.R89_BILD) {
@@ -364,8 +364,8 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
     const best = g0 && g0.dots.find((d) => near(d, ms.expect.best));
     await check(vp.name + ': HA-Karte liegt genau auf der Fläche der Punktkarte',
       ['x', 'y', 'w', 'h'].every((k) => Math.abs(ms.layer[k] - ms.box[k]) < 1.5), { layer: ms.layer, box: ms.box });
-    await check(vp.name + ': günstigste Station als Punkt an ihrer Koordinate, Pille „1,689“, Umkreis-Mitte am Standort',
-      best && ms.pins.some((q) => q.t === '1,689') && near(ms.dot, ms.expect.center), { best, dot: ms.dot, expect: ms.expect });
+    await check(vp.name + ': günstigste Station als Punkt an ihrer Koordinate, Pille „1,69“, Umkreis-Mitte am Standort',
+      best && ms.pins.some((q) => q.t === '1,69') && near(ms.dot, ms.expect.center), { best, dot: ms.dot, expect: ms.expect });
     await check(vp.name + ': Karte ohne Zoom-Knöpfe, nicht verschiebbar, OSM-Hinweis sichtbar',
       !ms.zoomCtl && ms.dragging === false && /OpenStreetMap/.test(ms.attribution), ms);
     // Umschalten zeichnet die Ansicht neu – die Karte bleibt dieselbe (kein Neuladen).
