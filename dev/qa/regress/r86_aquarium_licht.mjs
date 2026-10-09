@@ -120,7 +120,7 @@ const drag = async (pg, label, frac) => {
   // Becken B: Fluval-/Chihiros-Muster.
   await need('Kachel B angelegt', await mount(page, B));
   let t = await tileText(page);
-  await check('Kachel B: Temperatur vorn („25,9° · Alles ok“)', /^25,9° · Alles ok/.test(t), t);
+  await check('Kachel B: alles ok ohne Temperatur („Alles ok“)', /^Alles ok/.test(t), t);
   await fakeStates(page, { 'sensor.testbecken_b_wassertemperatur': { state: '26.8' } });
   t = await tileText(page);
   await check('Kachel B: über dem Soll-Bereich → „Prüfen · Temperatur zu hoch“', /^26,8° · Prüfen · Temperatur zu hoch/.test(t), t);
@@ -172,7 +172,7 @@ const drag = async (pg, label, frac) => {
   // Becken A: HeliaLux-Muster (RGBW-Leuchte, Schalter manuelle Farbsimulation an).
   await mount(page, A);
   t = await tileText(page);
-  await check('Kachel A: „25,4° · Alles ok“', /^25,4° · Alles ok/.test(t), t);
+  await check('Kachel A: „Alles ok“ ohne Temperatur', /^Alles ok/.test(t), t);
   await openPopup(page);
   p = await popup(page);
   await need('Becken-Popup A offen', p && p.sliders.length, p);
@@ -208,7 +208,7 @@ const drag = async (pg, label, frac) => {
   await dashboard(page, phone.url + '/0', 3);
   await mount(page, B);
   const t = await tileText(page);
-  await check('Handy: Kachel mit Temperatur', /^25,9°/.test(t), t);
+  await check('Handy: Kachel ohne Temperatur, wenn alles ok', /^Alles ok/.test(t), t);
   await openPopup(page);
   const p = await popup(page);
   await need('Handy: Becken-Popup offen', p && p.sliders.length, p);

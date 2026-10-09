@@ -100,7 +100,8 @@ const W = window;
 
 // 6) Kachel: Temperatur vorn.
 {
-  assert.equal(W._casoraAqTileText({ state: '25.43' }, { text: 'Alles ok' }), '25,4° · Alles ok');
+  assert.equal(W._casoraAqTileText({ state: '25.43' }, { level: 0, text: 'Alles ok' }), 'Alles ok');
+  assert.equal(W._casoraAqTileText({ state: '26.84' }, { level: 1, text: 'Prüfen · Temperatur zu hoch' }), '26,8° · Prüfen · Temperatur zu hoch');
   assert.equal(W._casoraAqTileText({ state: 'unavailable' }, { text: 'Prüfen · Temperaturfühler offline' }), 'Prüfen · Temperaturfühler offline');
 }
 // 7) Technik aus dem Studio (tech_*) plus ältere devices; Dienst aus der Domain.

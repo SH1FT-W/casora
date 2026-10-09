@@ -139,9 +139,11 @@
     return { level: 0, dir: null };
   };
 
-  /* Kachel (1.1.2): Wassertemperatur vorn („25,4° · Alles ok“). */
+  /* Kachel: ist alles in Ordnung, nur „Alles ok“ ohne Temperatur (Wunsch 09.10.2026); bei Problemen wie
+     bisher die Temperatur vorn („26,8° · Prüfen · Temperatur zu hoch“). */
   window._casoraAqTileText = function (entity, ev) {
     const t = (ev && ev.text) || '';
+    if (t && ev && !ev.level) return t;
     const n = parseFloat(entity && entity.state);
     if (isNaN(n)) return t;
     const v = n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '°';
