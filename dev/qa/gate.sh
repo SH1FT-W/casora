@@ -387,21 +387,7 @@ prefix() { local l; while IFS= read -r l; do printf '%-9s%s\n' "[$1]" "$l"; done
 
 # ── Umfang: voll, patch (gestaffelt) oder nachholen ──────────────────────────────────────
 # Letzter grüner, voller Gate-Lauf (auch nachgeholt), dessen Commit Vorfahre von HEAD ist.
-last_green() {
-  python3 - "$REPO/.qa" <<'PY'
-import glob, json, os, subprocess, sys
-best = None
-for f in glob.glob(os.path.join(sys.argv[1], "gate-*.json")):
-    try: d = json.load(open(f, encoding="utf-8"))
-    except Exception: continue
-    if not d.get("ok") or d.get("quick") or d.get("partial") or d.get("dirty"): continue
-    if d.get("umfang", "voll") != "voll": continue
-    c = d.get("commit", "")
-    if subprocess.run(["git", "merge-base", "--is-ancestor", c, "HEAD"], capture_output=True).returncode: continue
-    if best is None or d.get("timestamp", "") > best[0]: best = (d.get("timestamp", ""), c)
-print(best[1] if best else "")
-PY
-}
+last_green() { python3 tools/qa_gate.py --letztes-volles; }   # sucht in allen Worktrees
 # Auswahl-JSON (auswahl.mjs bzw. nachholen.mjs) → Shell-Variablen A_*/S_*/F_* und RUN_*.
 apply_auswahl() {
   local vars
