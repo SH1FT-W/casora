@@ -287,9 +287,15 @@
     }
     if (part === 'more') {
       var ok = s.list.filter(function (d) { return d.status === 'ok' || d.status === 'learning'; });
-      var out = ok.length ? UI.more('pulse-ok', UI.group(ok.map(function (d) { return rowOf(d); }), null), { label: 'Alles ok', count: ok.length }) : '';
+      // Breit (Desktop/Tablet) zwei Spalten nebeneinander, schmal eine (auto-fit, ab 2 × 300 px).
+      var half = Math.ceil(ok.length / 2);
+      var cols = ok.length > 1 ? [ok.slice(0, half), ok.slice(half)] : [ok];
+      var okHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:start;">'
+        + cols.map(function (c) { return '<div style="min-width:0;">' + UI.group(c.map(function (d) { return rowOf(d); }), null) + '</div>'; }).join('')
+        + '</div>';
+      var out = ok.length ? UI.more('pulse-ok', okHtml, { label: 'Alles ok', count: ok.length }) : '';
       // Fuß: ins Pulse-Panel (Rhythmusleisten, Wechsel-Verlauf, Einstellungen bleiben dort).
-      var foot = UI.group([{ icon: 'mdi:open-in-new', label: 'In Pulse öffnen', tappable: true }], null)
+      var foot = UI.group([{ icon: 'mdi:pulse', label: 'In Pulse öffnen', tappable: true }], null)
         .replace('<div class="hui-row', '<div data-casora-link="' + P.PANEL + '" class="hui-row');
       return out + (out ? '<div style="height:12px"></div>' : '') + foot;
     }
