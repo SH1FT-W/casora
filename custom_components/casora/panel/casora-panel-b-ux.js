@@ -879,6 +879,9 @@
         if (next) move.push(next);
       }
       if (mg) move.push(mg);
+      // Anzeige-Bedingung (casora-panel.js, _condEditor): bei jeder Kachel hier, nicht oben.
+      const ca = body.querySelector(".condarea");
+      if (ca) move.push(ca);
       if (!move.length) return;
       // Mit „Vor dem Schalten fragen“ sagt der Titel das (Nutzertest 3: unter „Sichtbarkeit“ nicht vermutet).
       const asks = !!(mg && [...mg.querySelectorAll("label, .lab")].some((l) => /Ask before switching|Vor dem Schalten fragen/.test(l.textContent || "")));
@@ -886,6 +889,13 @@
       // Vor „Popup“ (erste vorhandene Aufklapp-Gruppe), sonst ans Ende.
       const adv = body.querySelector(":scope > .adv");
       if (adv) adv.before(det); else body.appendChild(det);
+      // Am Handy andere Bedingung gespeichert, oder gerade eine angelegt: aufgeklappt zeigen.
+      const phoneDiff = ca && ca.querySelector(".condphone:not([hidden])");
+      if ((phoneDiff || (this._pendingFirstCond && this._pendingFirstCond === this._sel.key)) && !det.classList.contains("open")) {
+        det.classList.add("open");
+        const s0 = det.querySelector(".advsum");
+        if (s0) s0.setAttribute("aria-expanded", "true");
+      }
       // Leere Optionen-Karte samt Überschrift weg.
       body.querySelectorAll(":scope > .subcard").forEach((c) => {
         if (!c.children.length) { const t = c.previousElementSibling; if (t && t.classList.contains("subtitle")) t.remove(); c.remove(); }

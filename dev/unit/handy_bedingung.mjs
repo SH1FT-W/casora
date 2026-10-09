@@ -93,4 +93,53 @@ const pairOf = (desk, phone) => ({
   assert.equal(m.conditions, undefined);
 }
 
+// Gemeldet 09.10.2026: Bedingung im Studio neu gesetzt (Auto, E-Bike, Abfall hatten keine). Am Handy
+// stand die Kachel ohne Hülle – sie fiel beim Speichern weg und kam nicht wieder. Erwartet: Handy-Kachel
+// bekommt die Hülle samt Bedingung, Handy-eigene Werte bleiben, keine zweite Kachel.
+{
+  const car = (v) => ({ type: 'custom:button-card', template: 'casora_car', ...(v ? { variables: v } : {}) });
+  const p = pairOf([cond(['triggered'], car({ size: 'large' }))], [car({ casora_from_room: true, mobile_filter_category: 'x' })]);
+  I.syncPairTiles(p);
+  const m = p.mobile.compact.rooms[0].tiles;
+  assert.equal(m.length, 1, 'genau eine Auto-Kachel');
+  assert.equal(m[0].type, 'conditional');
+  assert.deepEqual(m[0].conditions[0].state, ['triggered']);
+  assert.equal(m[0].card.variables.mobile_filter_category, 'x', 'Handy-eigener Wert bleibt');
+  assert.equal(m[0].card.variables.size, 'large');
+  // Und zurück: Bedingung entfernt – am Handy wieder ohne Hülle.
+  p.desktop.compact.rooms[0].tiles = [car({ size: 'large' })];
+  I.syncPairTiles(p);
+  const m2 = p.mobile.compact.rooms[0].tiles;
+  assert.equal(m2.length, 1, 'genau eine Auto-Kachel');
+  assert.equal(m2[0].type, 'custom:button-card');
+  assert.equal(m2[0].conditions, undefined);
+  assert.equal(m2[0].variables.mobile_filter_category, 'x');
+}
+
+// Bedingte Kachel, die das Handy noch gar nicht hat (ownData ohne Entität): wird kopiert.
+{
+  const p = pairOf([cond(['triggered'], { type: 'custom:button-card', template: 'casora_ebike' })], []);
+  I.syncPairTiles(p);
+  const m = p.mobile.compact.rooms[0].tiles;
+  assert.equal(m.length, 1);
+  assert.equal(m[0].type, 'conditional');
+  assert.equal(m[0].card.variables.casora_from_room, true, 'Markierung an der Kachel darin');
+}
+
+// Saugroboter aus Hemma: oder mit „nicht (… ist …)“ darin – als Zeilen bearbeitbar, gleiche Bedeutung.
+{
+  const sh = { type: 'conditional', card: t('casora_vacuum', 'vacuum.v'), conditions: [{ condition: 'or', conditions: [
+    { condition: 'not', conditions: [{ condition: 'state', entity: 'sensor.v_status', state: ['idle', 'charging'] }] },
+    { condition: 'state', entity: 'binary_sensor.tank', state: 'on' }] }] };
+  const m = I.condModel(sh);
+  assert.ok(m, 'bearbeitbar');
+  assert.equal(m.mode, 'any');
+  assert.deepEqual(m.rows[0], { entity: 'sensor.v_status', op: 'isnot', value: 'idle, charging' });
+  assert.deepEqual(m.rows[1], { entity: 'binary_sensor.tank', op: 'is', value: 'on' });
+  I.condWrite(sh, m);
+  assert.deepEqual(sh.conditions[0].conditions[0], { condition: 'state', entity: 'sensor.v_status', state_not: ['idle', 'charging'] });
+  // Ohne Bedingung (frisch angelegt): leere Zeilen, nicht „nicht bearbeitbar“.
+  assert.deepEqual(I.condModel({ type: 'conditional', conditions: [], card: t('casora_car') }), { mode: 'all', rows: [] });
+}
+
 console.log('ok handy_bedingung');

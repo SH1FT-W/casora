@@ -1420,6 +1420,39 @@ function syncPairTiles(pair) {
       if (!byKey.has(k)) byKey.set(k, []);
       byKey.get(k).push(i);
     });
+    // Bedingung im Studio neu gesetzt oder entfernt: Am Handy steht die Kachel noch ohne bzw.
+    // mit Hülle. Dann nach der Kachel darin zuordnen und die Handy-Kachel in die Form der
+    // Raum-Kachel bringen (Handy-eigene Werte der Kachel darin bleiben).
+    const plainKey = (t) => tileTwinKey(innerTile(t) || t);
+    const byPlain = new Map();
+    (room.tiles || []).forEach((t, i) => {
+      if (!t) return;
+      const k = plainKey(t);
+      if (!byPlain.has(k)) byPlain.set(k, []);
+      byPlain.get(k).push(i);
+    });
+    const phoneKeys = new Set((sec.tiles || []).filter(Boolean).map(tileTwinKey));
+    (sec.tiles || []).forEach((mt, si) => {
+      if (!mt || byKey.has(tileTwinKey(mt))) return;
+      const inner = innerTile(mt);
+      // Nur eine einzelne Kachel (keine Sammelkarte) und nur, wenn der Raum sie anders umhüllt.
+      if (!inner || isContainerCard(inner)) return;
+      const list = byPlain.get(plainKey(mt));
+      const ti = list && list.find((x) => !phoneKeys.has(tileTwinKey(room.tiles[x])));
+      if (ti === undefined) return;
+      const twin = room.tiles[ti];
+      const tIn = innerTile(twin);
+      if (!tIn || isContainerCard(tIn)) return;
+      const next = clone(twin);
+      const nIn = innerTile(next);
+      const keep = {};
+      MOBILE_ONLY_TILE_KEYS.forEach((k) => {
+        if (inner.variables && inner.variables[k] !== undefined) keep[k] = clone(inner.variables[k]);
+      });
+      if (Object.keys(keep).length) nIn.variables = { ...(nIn.variables || {}), ...keep };
+      sec.tiles[si] = next;
+      phoneKeys.add(tileTwinKey(next));
+    });
     const used = new Map();
     const at = new Map();
     const onPhone = new Set();
@@ -1434,7 +1467,7 @@ function syncPairTiles(pair) {
       const twin = ti >= 0 ? room.tiles[ti] : null;
       if (twin) at.set(mt, ti);
       if (!twin) {
-        const copied = (mt.variables || {}).casora_from_room;
+        const copied = (tileView(mt).variables || {}).casora_from_room;
         if (!(copied === undefined ? !!tileTypeOf(mt) : copied)) {
           unmatched.push({ section: sec.name, tile: mt.name || mt.entity || "?" });
         }
@@ -1449,14 +1482,17 @@ function syncPairTiles(pair) {
       // card, whose entity is the card's business rather than the host's.
       // ownData: Kacheln, die ihre Daten selbst finden (Abfall, Updates, Solar-Tipp …) –
       // ohne Entität sind sie fertig eingerichtet und gehören genauso aufs Handy.
-      const ty = t && !t.entity ? tileTypeAny(t) : null;
-      if (!t || (!t.entity && t.template !== CUSTOM_TEMPLATE && !(ty && (ty.noEntity || ty.ownData)))) return;
+      // Bedingte Kachel: zählt die Kachel darin (Auto, E-Bike, Abfall mit Bedingung).
+      const tv = t ? tileView(t) : null;
+      const ty = tv && !tv.entity ? tileTypeAny(tv) : null;
+      if (!t || (!tv.entity && tv.template !== CUSTOM_TEMPLATE && !(ty && (ty.noEntity || ty.ownData)))) return;
       const key = tileTwinKey(t);
       if (onPhone.has(key)) return;
       onPhone.add(key);
       sec.tiles = sec.tiles || [];
       const copy = clone(t);
-      copy.variables = { ...(copy.variables || {}), casora_from_room: true };
+      const cv = tileView(copy);
+      cv.variables = { ...(cv.variables || {}), casora_from_room: true };
       sec.tiles.push(copy);
       at.set(copy, ti);
       added++;
@@ -1470,8 +1506,9 @@ function syncPairTiles(pair) {
       // Only a tile Casora copied out of the room follows its twin out again.
       // One placed on the phone by hand never had a twin, so it stays. Tiles
       // written before the marker existed fall back to "is this Casora's shape".
-      const copied = (mt.variables || {}).casora_from_room;
-      return !(copied === undefined ? !!tileTypeOf(mt) : copied);
+      const mv = tileView(mt);
+      const copied = (mv.variables || {}).casora_from_room;
+      return !(copied === undefined ? !!tileTypeOf(mv) : copied);
     });
     dropped += before - sec.tiles.length;
 
@@ -4258,6 +4295,12 @@ function homePickOrder(cands, areaOrder, areas) {
 // Bedingungen als bearbeitbare Zeilen: {mode: all|any|none, rows: [{entity, op, value}]}.
 // Was sich so nicht darstellen lässt (Bildschirm, Nutzer, tiefer verschachtelt), gibt null.
 const COND_SIMPLE = (c) => {
+  // „nicht (X ist a, b)“ als eine Zeile „X ist nicht a, b“ (Saugroboter aus Hemma: or mit not darin).
+  if (c && typeof c === "object" && c.condition === "not" && [].concat(c.conditions || []).length === 1) {
+    const r = COND_SIMPLE([].concat(c.conditions)[0]);
+    if (r && (r.op === "is" || r.op === "isnot")) return { ...r, op: r.op === "is" ? "isnot" : "is" };
+    return null;
+  }
   if (!c || typeof c !== "object" || !c.entity) return null;
   const kind = c.condition || "state";
   const list = (v) => [].concat(v).map(String).join(", ");
@@ -10582,6 +10625,9 @@ class CasoraPanel extends HTMLElement {
         .flist.fequal > .frow { height:auto; min-height:0; }
         :host(.phone) .perfcard { flex-direction:row !important; align-items:stretch; }
         .condedit { margin:4px 0 10px; }
+        .condplain { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+        .condalways { color:var(--secondary-text-color, var(--casora-studio-dim, #8e8e93)); }
+        .condarea .condhint { margin-bottom:2px; }
         .condrows { display:flex; flex-direction:column; gap:6px; padding:2px 0 4px; }
         .condrow { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr) 28px; gap:6px; align-items:center; padding:8px 0; border-top:.5px solid var(--wash-line, var(--casora-studio-wash-line, rgba(255,255,255,.08))); }
         .condrow > .combo:first-child { grid-column:1 / -1; }
@@ -24567,22 +24613,63 @@ class CasoraPanel extends HTMLElement {
     }
   }
 
-  // Bedingung einer bedingten Kachel bearbeiten: wann sie erscheint (alle / eine / keine
-  // der Bedingungen) und je Zeile Entität · Vergleich · Wert. Sonderfälle bleiben Text.
-  _condEditor(body, shell, changed) {
-    const m = condModel(shell);
+  // Bedingung einer Kachel bearbeiten: wann sie erscheint (alle / eine / keine der Bedingungen)
+  // und je Zeile Entität · Vergleich · Wert. Sonderfälle bleiben Text.
+  // opts.plain: Kachel ohne Bedingung – „+ Bedingung“ legt die Hülle (type: conditional) an.
+  // Die letzte Zeile entfernt nimmt die Hülle wieder ab; Kennung, „Wer sieht das?“ wandern mit.
+  _condEditor(body, shell, changed, opts) {
+    const o = opts || {};
+    const m = o.plain ? { mode: "all", rows: [] } : condModel(shell);
     if (!m) return;
     const tr = (x) => (window.casoraI18n ? window.casoraI18n.t(x) : x);
+    const key = this._tileKey(shell);
+    const swap = (from, to) => {
+      const list = o.room && o.room.tiles;
+      const at = list ? list.indexOf(from) : -1;
+      if (at < 0) return false;
+      list[at] = to;
+      this._tileKeys.set(to, key);
+      if (this._pendingFirstCond === key) this._pendingFirstCond = null;
+      return true;
+    };
+    // Hülle anlegen: Bedingung leer (zeigt immer), die erste Zeile füllt sie.
+    const wrap = () => {
+      const sh = { type: "conditional", conditions: [], card: shell };
+      if (shell.visibility !== undefined) { sh.visibility = shell.visibility; delete shell.visibility; }
+      if (!swap(shell, sh)) return;
+      this._pendingFirstCond = key;
+      this._markDirty();
+      this._renderForm();
+      this._syncPreview();
+    };
+    // Hülle abnehmen, wenn keine Bedingung mehr bleibt (nur eine Ebene, Kachel darin).
+    const unwrap = () => {
+      const inner = shell.card;
+      if (!inner || inner.type === "conditional" || isContainerCard(inner)) return false;
+      if (shell.visibility !== undefined) inner.visibility = shell.visibility;
+      if (!swap(shell, inner)) return false;
+      this._markDirty();
+      this._renderForm();
+      this._syncPreview();
+      return true;
+    };
     const box = document.createElement("div");
     box.className = "condedit";
     body.appendChild(box);
-    const save = () => { condWrite(shell, m); this._markDirty(); this._syncPreview(); changed(); };
+    const save = () => {
+      condWrite(shell, m);
+      if (m.rows.some((r) => r.entity) && this._pendingFirstCond === key) this._pendingFirstCond = null;
+      this._markDirty(); this._syncPreview(); changed();
+    };
     const mode = this._combo(m.mode, ["all", "any", "none"], "", (v) => { m.mode = v || "all"; save(); },
       { fixed: true, labels: { all: "All conditions met", any: "Any condition met", none: "None of them met" } });
     const head = document.createElement("div");
-    head.className = "row";
+    head.className = o.plain ? "row condplain" : "row";
     const hl = document.createElement("label"); hl.textContent = tr("Show when");
-    head.append(hl, mode.wrap);
+    const always = document.createElement("span");
+    always.className = "condalways";
+    always.textContent = tr("Always");
+    head.append(hl, o.plain ? always : mode.wrap);
     box.appendChild(head);
     const ents = Object.keys((this._hass && this._hass.states) || {}).sort();
     const OPS = ["is", "isnot", "above", "below"];
@@ -24590,6 +24677,10 @@ class CasoraPanel extends HTMLElement {
     const rows = document.createElement("div");
     rows.className = "condrows";
     box.appendChild(rows);
+    // Frisch angelegte Hülle: gleich eine leere Zeile zum Ausfüllen.
+    if (!o.plain && !m.rows.length && this._pendingFirstCond === key) {
+      m.rows.push({ entity: "", op: "is", value: "on" });
+    }
     const draw = () => {
       rows.innerHTML = "";
       m.rows.forEach((r, i) => {
@@ -24607,14 +24698,22 @@ class CasoraPanel extends HTMLElement {
         const del = document.createElement("button");
         del.type = "button"; del.className = "conddel"; del.title = tr("Remove");
         del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 12h12"/></svg>';
-        del.onclick = () => { m.rows.splice(i, 1); save(); draw(); };
+        del.onclick = () => {
+          m.rows.splice(i, 1);
+          save();
+          if (!m.rows.length && unwrap()) return;
+          draw();
+        };
         line.append(ent.wrap, op.wrap, val, del);
         rows.appendChild(line);
       });
       const add = document.createElement("button");
       add.type = "button"; add.className = "condadd";
       add.textContent = "+ " + tr("Condition");
-      add.onclick = () => { m.rows.push({ entity: "", op: "is", value: "on" }); draw(); };
+      add.onclick = () => {
+        if (o.plain) return wrap();
+        m.rows.push({ entity: "", op: "is", value: "on" }); draw();
+      };
       rows.appendChild(add);
     };
     draw();
@@ -24965,13 +25064,21 @@ class CasoraPanel extends HTMLElement {
 
     const body = document.createElement("div");
     body.className = "tbody";
-    if (condIn || shell.type === "conditional") {
+    // Anzeige-Bedingung: jede Kachel hat den Bereich (Auto, E-Bike, Abfall … nicht nur bereits
+    // bedingte). Ohne Bedingung nur „+ Bedingung“; die erste Zeile legt die Hülle an.
+    const condArea = document.createElement("div");
+    condArea.className = "condarea";
+    body.appendChild(condArea);
+    if (!condIn && shell.type !== "conditional") {
+      this._condEditor(condArea, shell, () => {}, { room, plain: true });
+    } else {
       const note = document.createElement("div");
       note.className = "hint condhint";
       note.setAttribute("data-no-i18n", "");
       const txt = condText(shell, this._hass);
       note.textContent = (window.casoraI18n ? window.casoraI18n.t("Shown only when:") : "Shown only when:") + " " + (txt || "–");
-      body.appendChild(note);
+      note.hidden = !txt;
+      condArea.appendChild(note);
       // Handy-Zwilling mit anderer Bedingung (z. B. aus dem Umzug): Speichern übernimmt diese.
       const phoneDiff = document.createElement("div");
       phoneDiff.className = "hint condhint condphone";
@@ -24981,11 +25088,13 @@ class CasoraPanel extends HTMLElement {
         phoneDiff.hidden = !(was !== undefined && was !== condChain(shell));
       };
       markPhone();
-      body.appendChild(phoneDiff);
-      this._condEditor(body, shell, () => {
-        note.textContent = (window.casoraI18n ? window.casoraI18n.t("Shown only when:") : "Shown only when:") + " " + (condText(shell, this._hass) || "–");
+      condArea.appendChild(phoneDiff);
+      this._condEditor(condArea, shell, () => {
+        const t2 = condText(shell, this._hass);
+        note.textContent = (window.casoraI18n ? window.casoraI18n.t("Shown only when:") : "Shown only when:") + " " + (t2 || "–");
+        note.hidden = !t2;
         markPhone();
-      });
+      }, { room });
     }
 
     const addRow = (label, input) => {
@@ -25909,7 +26018,7 @@ window.__casoraPanelInternals = {
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
-  linkPair, syncPairRooms, syncPairTiles, syncTwinTile, phoneCondSnapshot, condChain, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, expandMobileConfig, extractMobileConfig,
+  linkPair, syncPairRooms, syncPairTiles, syncTwinTile, phoneCondSnapshot, condChain, condModel, condWrite, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, expandMobileConfig, extractMobileConfig,
   deriveEnergyRooms, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
   CASORA_ACCENTS, accentsShown, accentLabel, swatchCss,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)
