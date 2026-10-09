@@ -165,11 +165,11 @@ def demo_power(d):
                      "icon": None, "device_class": "power", "unit": "W", "hidden": False, "entity_category": None})
 
 
-# Kurvenform je Messgröße für einzelne Sensoren (Grundwert = aktueller Wert).
+# Kurvenform je Messgröße für einzelne Sensoren (Grundwert = aktueller Wert). Bodenfeuchte bleibt
+# ohne Kurve: das tägliche Auf und Ab wirkte künstlich.
 ROOM_CURVES = {
     "temperature": {"day": 0.7, "peak": 17, "wave": 0.2, "noise": 0.05, "bumps": [[7.0, 0.4, 1.0], [19.5, 0.3, 1.2]], "digits": 1},
     "humidity": {"day": -3, "peak": 16, "wave": 1.0, "noise": 0.4, "bumps": [[7.3, 5, 0.8]], "digits": 0, "min": 25, "max": 80},
-    "moisture": {"wave": 2.5, "noise": 0.3, "bumps": [[18.0, -2, 6.0]], "digits": 0, "min": 5, "max": 95},
 }
 
 
@@ -267,7 +267,7 @@ def enliven(d):
             if now is not None:
                 e["state"] = now
             hist[e["entity_id"]] = curve
-    # Einzelne Raum-Sensoren (Raumklima- und Pflanzen-Popup): Tageskurve um den eigenen Wert,
+    # Einzelne Raum-Sensoren (Raumklima-Popup): Tageskurve um den eigenen Wert,
     # damit die Diagramme nicht flach sind. Der Wert selbst bleibt.
     for e in d["entities"]:
         a = e.get("attributes") or {}
