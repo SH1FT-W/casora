@@ -9,9 +9,9 @@
 // 1.2.1 (gemeldet: Batterie-Popup nicht auf den neuen Graphen umgestellt): im Casora-Look zeigt das
 // Batterie-Popup das Diagramm gleich in der Sand-Karte (Etikett innen, niedrigste Batterie gewählt),
 // Zeilen schalten es um; Wetter-Diagramm mit Etikett in der Karte; ein Popup ohne Diagramm-Platz
-// hängt sein Diagramm nicht mehr ins nächste Popup; Dünger-Säulen mit Etikett.
+// hängt sein Diagramm nicht mehr ins nächste Popup; Dünger-Säulen mit Etikett; Etiketten 20/18 vom Kartenrand (D1).
 // Die Kacheln werden nur im Browser erzeugt (Sensoren aus dem Testhaus), gespeichert wird nichts.
-import { open, casoraDashboard, dashboard, check, need, finish, stable } from './lib.mjs';
+import { open, casoraDashboard, dashboard, check, need, finish, stable, plateLabels } from './lib.mjs';
 
 const dash = await casoraDashboard();
 await need('ein Casora-Dashboard', dash);
@@ -283,6 +283,8 @@ let b1 = await stable(P, look, null, { max: 12000, quiet: 1200 });
 await check('Batterie (Casora-Look): casora-chart gleich sichtbar, in der Sand-Karte, kein apexcharts-card', b1 && b1.plate && b1.apex === 0, b1);
 await check('Batterie (Casora-Look): Etikett innen (Versalien, 700) mit Zeitraum, „Jetzt“-Zeile', b1 && b1.label && /30 Tage/.test(b1.label.t)
   && b1.label.tt === 'uppercase' && b1.label.fw === '700' && b1.ro, b1);
+{ const L = (await plateLabels(P)).find((l) => /30 Tage/.test(l.t));
+  await check('Batterie (Casora-Look): Etikett 20/18 vom Rand der Sand-Karte (D1)', L && L.dx === 20 && L.dy === 18, L); }
 await check('Batterie (Casora-Look): niedrigste Batterie gewählt und hinterlegt', b1 && b1.sel.length === 1 && b1.sel[0] === b1.entity, b1);
 const other = await P.evaluate((cur) => {
   const pop = window.__pierce('casora-popup').find((p) => p.hasAttribute('open'));
@@ -308,6 +310,8 @@ await popupIn(P, { type: 'custom:button-card', template: 'casora_weather', entit
 const w = await stable(P, look, null, { max: 12000, quiet: 1500 });
 await check('Wetter (Casora-Look): Diagramm mit Etikett in der Sand-Karte, kein fremdes Diagramm aus dem vorigen Popup',
   w && w.plate && w.label && !/Leistung/.test(w.label.t) && w.entity !== ids.power && w.label.tt === 'uppercase', w);
+{ const L = (await plateLabels(P)).find((l) => /48 Stunden/.test(l.t));
+  await check('Wetter (Casora-Look): Etikett 20/18 vom Rand der Sand-Karte (D1)', L && L.dx === 20 && L.dy === 18, L); }
 
 // Dünger: Säulen mit Etikett in der eigenen Karte (casora-chart title + plate).
 await P.evaluate(() => window.__pierce('casora-popup').forEach((p) => p.hasAttribute('open') && p.close()));
@@ -320,4 +324,6 @@ const dz = await stable(P, () => {
   return c ? { plate: c.hasAttribute('plate'), title: tt ? tt.textContent : null, tt: tt ? getComputedStyle(tt).textTransform : null } : null;
 }, null, { max: 8000, quiet: 1000 });
 await check('Dünger (Casora-Look): Säulen in der Karte mit Etikett „Dosiert · 7 Tage“', dz && dz.plate && dz.title === 'Dosiert · 7 Tage' && dz.tt === 'uppercase', dz);
+{ const L = (await plateLabels(P)).find((l) => /^Dosiert/.test(l.t));
+  await check('Dünger (Casora-Look): Etikett 20/18 vom Rand der Sand-Karte (D1)', L && L.dx === 20 && L.dy === 18, L); }
 await finish();

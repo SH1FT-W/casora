@@ -1544,7 +1544,9 @@
   "Heute keine Änderung": "No changes today",
   "per App": "via app",
   "Über": "Via",
-  "Alles ok": "All good"
+  "Alles ok": "All good",
+  "Wirklich entriegeln?": "Really unlock?",
+  "Wirklich verriegeln?": "Really lock?"
  },
  "patterns": [
   [
@@ -2906,6 +2908,34 @@
   [
    "^ab (\\d[\\d.,]*) €$",
    "from {1} €"
+  ],
+  [
+   "^Heute ab (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Today from {1}"
+  ],
+  [
+   "^Morgen ab (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Tomorrow from {1}"
+  ],
+  [
+   "^Warte bis (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Wait until {1}"
+  ],
+  [
+   "^Warte bis morgen (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Wait until {1} tomorrow"
+  ],
+  [
+   "^Tank reicht noch (\\d+) km\\. Ab (\\d{1,2}:\\d{2}(?: [AP]M)?) lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "Enough fuel for {1} km. From {2}, {3} was {4} ct cheaper on average over the last 14 days."
+  ],
+  [
+   "^Ab (\\d{1,2}:\\d{2}(?: [AP]M)?) lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "From {1}, {2} was {3} ct cheaper on average over the last 14 days."
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · ab (\\d{1,2}:\\d{2}(?: [AP]M)?) günstiger$",
+   "{1} · cheaper from {2}"
   ],
   [
    "^(Super E5|Super E10|Diesel) · abends günstiger$",

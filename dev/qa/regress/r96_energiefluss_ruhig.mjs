@@ -9,7 +9,7 @@
 // Ab 1.2.1 zeigt das Weich-Design (Theme Casora) den Fluss als ruhige Balken (Entwurf B, ohne Animation):
 // dort bleiben Karte, Balken-Teile und Symbol dieselben Elemente, nur Texte, Breiten und Sichtbarkeit
 // ändern sich, und die Anteile ergeben zusammen 100 %. Standard/Glas: Kreis-Fluss wie bisher.
-import { open, casoraDashboard, dashboard, fakeStates, check, need, finish, stable } from './lib.mjs';
+import { open, casoraDashboard, dashboard, fakeStates, check, need, finish, stable, plateLabels } from './lib.mjs';
 
 const dash = await casoraDashboard();
 await need('ein Casora-Dashboard', dash);
@@ -64,6 +64,13 @@ const da = await stable(page, (f) => { const box = new Function('return (' + f +
 await need('Energiefluss im Popup', da >= 4, da);
 const B = await page.evaluate((f) => { const box = new Function('return (' + f + ')()')(); return box.dataset.casoraKind === 'b'; }, FIND.toString());
 console.log('Ansicht', B ? 'Balken (B)' : 'Kreis-Fluss');
+// 1.2.1 (D1): Etiketten in den Sand-Karten 20/18 vom Rand; „Leistung“ und „Energiefluss“ fluchten.
+if (B) {
+  const L = await plateLabels(page);
+  const lei = L.find((l) => /^Leistung/.test(l.t)), ef = L.find((l) => l.t === 'Energiefluss');
+  check('Etiketten „Leistung“ und „Energiefluss“ 20/18 vom Kartenrand und bündig',
+    lei && ef && lei.dx === 20 && lei.dy === 18 && ef.dx === 20 && ef.dy === 18 && lei.x === ef.x, L);
+}
 
 // Beobachten: Knoten merken, Mutationen zählen, Animationen merken.
 await page.evaluate((f) => {

@@ -434,7 +434,7 @@
     var go = function () { h.callService('lock', svc, { entity_id: id }); };
     if (svc === 'open') {
       // Tür öffnen fragt immer (wie bisher im Schloss-Popup).
-      var w = window.casoraAsk ? window.casoraAsk({ title: nm, text: 'Wirklich die Tür öffnen?', yes: 'Öffnen' }) : Promise.resolve(window.confirm('Wirklich die Tür öffnen?'));
+      var w = window.casoraAsk ? window.casoraAsk({ title: nm, text: 'Wirklich die Tür öffnen?', yes: 'Tür öffnen' }) : Promise.resolve(window.confirm('Wirklich die Tür öffnen?'));
       w.then(function (ok) { if (ok) go(); });
       return;
     }

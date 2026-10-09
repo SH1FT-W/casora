@@ -84,13 +84,19 @@
     if (best != null && save >= 0.02) {
       var ct = Math.round(save * 100);
       var later = bh > h;
+      // Uhrzeit im Format der Sprache (1.2.1, E1): deutsch „19 Uhr“, englisch „7:00 PM“ (en-GB „19:00“).
+      var at = /^de/i.test(loc()) ? bh + ' Uhr' : (function () {
+        var d = new Date(2000, 0, 1, bh, 0), o = { hour: '2-digit', minute: '2-digit' };
+        try { if (new Intl.DateTimeFormat(loc(), o).resolvedOptions().hour12) o.hour = 'numeric'; } catch (e) { /* alter Browser */ }
+        return d.toLocaleTimeString(loc(), o);
+      })();
       var title = bh >= 17 ? (later ? 'Warte bis heute Abend' : 'Warte bis morgen Abend')
         : bh <= 10 ? (later ? 'Warte bis heute Vormittag' : 'Warte bis morgen früh')
-          : (later ? 'Warte bis ' + bh + ' Uhr' : 'Warte bis morgen ' + bh + ' Uhr');
-      return { kind: 'warten', tone: 'good', hour: bh, eyebrow: (later ? 'Heute' : 'Morgen') + ' ab ' + bh + ' Uhr', title: title,
+          : (later ? 'Warte bis ' + at : 'Warte bis morgen ' + at);
+      return { kind: 'warten', tone: 'good', hour: bh, eyebrow: (later ? 'Heute' : 'Morgen') + ' ab ' + at, title: title,
         text: (o.range != null ? 'Tank reicht noch ' + Math.round(o.range) + ' km. ' : '')
-          + 'Ab ' + bh + ' Uhr lag ' + fuel + ' in den letzten 14 Tagen im Schnitt ' + ct + ' ct niedriger.',
-        short: bh >= 17 && later ? 'abends günstiger' : 'ab ' + bh + ' Uhr günstiger' };
+          + 'Ab ' + at + ' lag ' + fuel + ' in den letzten 14 Tagen im Schnitt ' + ct + ' ct niedriger.',
+        short: bh >= 17 && later ? 'abends günstiger' : 'ab ' + at + ' günstiger' };
     }
     if (o.low != null && o.price <= o.low + 0.01) {
       return { kind: 'jetzt', tone: 'good', eyebrow: 'Guter Zeitpunkt', title: 'Jetzt tanken',
@@ -306,7 +312,7 @@
   };
   var day = function (I, A, k) {
     if (!I.typical || A.kind === 'lernen' || !dayPoints(I, k).length) return '';
-    return '<div class="ct-day" style="background:' + k.ROW + ';border-radius:' + k.RAD + ';padding:16px 10px 6px;">'
+    return '<div class="ct-day" style="background:' + k.ROW + ';border-radius:' + k.RAD + ';padding:18px 14px 8px;">'
       + '<div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--casora-soft-label, ' + k.SUB + ');padding:0 6px;text-align:left">'
       + '<span>Typischer Tag</span><span> · </span><span>Ø 14 Tage</span></div>'
       + '<div class="ct-day-chart" data-casora-nodismiss="" style="min-height:154px;margin:8px 0 0"></div></div>';
@@ -315,7 +321,7 @@
   var mountDay = function (I) {
     var slot = V && V.inner.querySelector('.ct-day-chart');
     if (!slot) return;
-    var cfg = { type: 'custom:casora-chart', kind: 'bar', points: dayPoints(I, tok()), unit: '€', decimals: 3, height: 120 };
+    var cfg = { type: 'custom:casora-chart', kind: 'bar', points: dayPoints(I, tok()), unit: '€', decimals: 2, height: 120 };
     customElements.whenDefined('casora-chart').then(function () {
       if (!slot.isConnected) return;
       var el = document.createElement('casora-chart');

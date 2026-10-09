@@ -272,3 +272,27 @@ export async function fakeStates(pg, patch, { sticky = false } = {}) {
   }, { p: patch, sticky });
   await pg.waitForTimeout(1200);
 }
+
+// Versalien-Etiketten in Sand-Karten des offenen Popups (1.2.1, D1): je Etikett der Abstand der Schrift
+// zum Kartenrand (dx links, dy oben). Karte = nächster Vorfahr mit Fläche und Radius.
+export const plateLabels = (pg) => pg.evaluate(() => {
+  const pop = window.__pierce('casora-popup').find((p) => p.hasAttribute('open'));
+  const out = [];
+  const walk = (root) => root.querySelectorAll('*').forEach((e) => {
+    if (e.shadowRoot) walk(e.shadowRoot);
+    if (getComputedStyle(e).textTransform !== 'uppercase') return;
+    const tn = [...e.childNodes].find((n) => n.nodeType === 3 && n.data.trim());
+    if (!tn) return;
+    const rg = document.createRange(); rg.selectNodeContents(tn); const r = rg.getBoundingClientRect();
+    if (r.width < 1) return;
+    let p = e.parentElement || (e.getRootNode() && e.getRootNode().host);
+    while (p) { const c = getComputedStyle(p); if (c.backgroundColor !== 'rgba(0, 0, 0, 0)' && c.borderRadius !== '0px') break;
+      p = p.parentElement || (p.getRootNode() && p.getRootNode().host); }
+    if (!p || p === pop) return;
+    const cr = p.getBoundingClientRect();
+    if (cr.height < 100) return; // „Mehr“-Leiste u. Ä. sind keine Sand-Karten
+    out.push({ t: tn.data.trim(), x: Math.round(r.x), dx: Math.round(r.x - cr.x), dy: Math.round(r.y - cr.y) });
+  });
+  if (pop) walk(pop.shadowRoot);
+  return out;
+});

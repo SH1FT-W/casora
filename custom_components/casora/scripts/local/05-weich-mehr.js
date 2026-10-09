@@ -91,7 +91,7 @@
     keys.forEach(function (k) { cf[k] = f[k]; cs[k] = st[k] || [{ 'justify-self': 'stretch' }]; });
     if (extra) { cf.x = extra; cs.x = [{ 'justify-self': 'stretch' }, { overflow: 'visible' }]; keys.push('x'); }
     var styles = Object.assign({}, metricCard.styles);
-    styles.card = (metricCard.styles.card || []).map(function (o) { return o.padding ? { padding: '22px 24px 18px 24px' } : o; });
+    styles.card = (metricCard.styles.card || []).map(function (o) { return o.padding ? { padding: '16px 18px 18px 18px' } : o; });
     styles.grid = [{ 'grid-template-areas': keys.map(function (k) { return '"' + k + '"'; }).join(' ') },
       { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'row-gap': '0' }];
     styles.custom_fields = cs;

@@ -117,6 +117,9 @@ const btnAt = (page, svc) => page.evaluate((svc) => {
   if (!b) return null; const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2, h: Math.round(r.height), rad: getComputedStyle(b).borderRadius };
 }, svc);
 const askOpen = (page) => page.evaluate(() => !!document.querySelector('.casora-askfirst'));
+// Wortlaut der offenen Rückfrage (Text und Bestätigen-Knopf).
+const askWords = (page) => page.evaluate(() => { const h = document.querySelector('.casora-askfirst'); const r = h && (h.shadowRoot || h);
+  return r ? { text: (r.querySelector('p') || {}).textContent || '', yes: r.querySelector('.yes').textContent } : null; });
 const askClick = (page, cls) => page.evaluate((cls) => { const h = document.querySelector('.casora-askfirst'); const b = h && (h.shadowRoot || h).querySelector('.' + cls); if (b) b.click(); return !!b; }, cls);
 
 // ── Desktop (Casora, hell) ──────────────────────────────────────────────────
@@ -149,6 +152,9 @@ const askClick = (page, cls) => page.evaluate((cls) => { const h = document.quer
   // Rückfrage: Abbrechen schaltet nicht, Ja schaltet.
   await page.mouse.click(ub.x, ub.y); await page.waitForTimeout(500);
   await check('Rückfrage erscheint', await askOpen(page));
+  // 1.2.1 (D2): Bestätigen nimmt das Wort des Knopfs („Entriegeln“), nicht „Aufschließen“.
+  const aw = await askWords(page);
+  await check('Rückfrage mit dem Wort des Knopfs („Wirklich entriegeln?“ / „Entriegeln“)', aw && aw.yes === 'Entriegeln' && aw.text === 'Wirklich entriegeln?', aw);
   await askClick(page, 'no'); await page.waitForTimeout(400);
   v = await view(page);
   await check('Abbrechen: kein Dienstaufruf', v.calls.length === 0, v.calls);
@@ -160,6 +166,8 @@ const askClick = (page, cls) => page.evaluate((cls) => { const h = document.quer
   const ob = await btnAt(page, 'open');
   await page.mouse.click(ob.x, ob.y); await page.waitForTimeout(500);
   await check('Tür öffnen fragt nach', await askOpen(page));
+  const aw2 = await askWords(page);
+  await check('Tür öffnen: Bestätigen heißt „Tür öffnen“', aw2 && aw2.yes === 'Tür öffnen', aw2);
   await askClick(page, 'yes'); await page.waitForTimeout(500);
   v = await view(page);
   await check('Tür öffnen: lock.open', v.calls.length === 2 && /^open:/.test(v.calls[1]), v.calls);

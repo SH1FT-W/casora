@@ -20,7 +20,7 @@
 // Preise, zwei am selben Ort, eine zu, mehrere am Rand) für HA-Karte und Punktkarte.
 // Der Tank-Sensor wird nur im Browser untergeschoben (erfundene Stationen), nichts wird in HA gespeichert.
 import zlib from 'node:zlib';
-import { open, casoraDashboards, dashboard, studioDashboard, studio, check, need, finish, fakeStates, usePage } from './lib.mjs';
+import { open, casoraDashboards, dashboard, studioDashboard, studio, check, need, finish, fakeStates, usePage, plateLabels } from './lib.mjs';
 
 const all = await casoraDashboards();
 const desk = all.find((d) => !d.mobile && d.url === 'qa-arbeit') || all.find((d) => !d.mobile);
@@ -348,6 +348,16 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
     && /Tief/.test(p.view) && /jetzt 1,69 €/.test(p.view) && /Hoch/.test(p.view) && !/Die Empfehlung kommt/.test(p.view), p && p.view);
   await check(vp.name + ': Typischer Tag als casora-chart (18 Säulen), Etikett „Typischer Tag · Ø 14 Tage“ 12 px Versalien',
     p && p.dayBars === 18 && p.dayLabel && /Typischer Tag · Ø 14 Tage/.test(p.dayLabel[0]) && p.dayLabel[1] === 'uppercase' && p.dayLabel[2] === '12px', p && [p.dayBars, p.dayLabel]);
+  // 1.2.1 (D1, D3): Etiketten in Empfehlung und „Typischer Tag“ 20/18 vom Kartenrand; Ø-Wert mit zwei Nachkommastellen.
+  const pl = await plateLabels(page);
+  const ty = pl.find((l) => l.t === 'Typischer Tag'), em = pl.find((l) => /^Heute ab/.test(l.t));
+  await check(vp.name + ': Etiketten „Heute ab …“ und „Typischer Tag“ 20/18 vom Kartenrand', ty && em && ty.dx === 20 && ty.dy === 18 && em.dx === 20 && em.dy === 18, pl);
+  const dayVal = await page.evaluate(() => { const c = window.__pierce('.ct-day casora-chart', window.casoraPopup.surface)[0];
+    if (!c || !c.shadowRoot) return null;
+    const w = document.createTreeWalker(c.shadowRoot, NodeFilter.SHOW_TEXT); const t = []; let n;
+    while ((n = w.nextNode())) if (n.parentNode.nodeName !== 'STYLE') t.push(n.data);
+    return t.join(' ').replace(/\s+/g, ' '); });
+  await check(vp.name + ': „Typischer Tag“ mit zwei Nachkommastellen (1,65 statt 1,649)', dayVal && /1,6\d\s*€/.test(dayVal) && !/1,\d{3}/.test(dayVal), dayVal && dayVal.slice(0, 120));
   if (process.env.R89_BILD) {
     await page.evaluate(() => { const d = window.__pierce('.ct-day', window.casoraPopup.surface)[0]; if (d) d.scrollIntoView({ block: 'center' }); });
     await page.waitForTimeout(600);

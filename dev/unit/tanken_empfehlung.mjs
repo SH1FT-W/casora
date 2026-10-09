@@ -55,6 +55,13 @@ a = K.advice({ ...base, typical: morning, hour: 23, price: 1.75, low: 1.65 });
 assert.equal(a.kind, 'warten');
 assert.equal(a.hour, 7);
 assert.equal(a.eyebrow, 'Morgen ab 7 Uhr');
+// 1.2.1 (E1): Uhrzeit im Format der Sprache – englisch 12 Stunden, deutsch bleibt „19 Uhr“.
+window.casoraLocale = () => 'en';
+const en = K.advice(base);
+assert.equal(en.eyebrow.replace(/\u202f/g, ' '), 'Heute ab 7:00 PM');
+assert.ok(/^Tank reicht noch 300 km\. Ab 7:00.PM lag/.test(en.text), en.text);
+window.casoraLocale = () => 'de';
+assert.equal(K.advice(base).eyebrow, 'Heute ab 19 Uhr');
 assert.equal(a.title, 'Warte bis morgen früh');
 
 // Keine offene Tankstelle.

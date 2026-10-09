@@ -863,7 +863,7 @@
       window._hpChartCfg(chartId, c.group ? 'Temperatur im Haus' : 'Temperatur', '24h', '#FF9F0A', 150);
       if (window._hpSmooth) window._hpSmooth(chartId);
       add('chart', window._casoraHH && window._casoraHH.on() ? window._casoraHH.chart(window._hpChartTitle(chartId), plate)
-        : '<div style="' + plate + 'padding:14px 10px 6px;">'
+        : '<div style="' + plate + 'padding:var(--casora-soft-plate-pad, 14px 10px 6px);">'
         + '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);font-size:15px;font-weight:600;'
         + 'letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary,#fff);text-align:left;padding:0 6px;">'
         + window._hpChartTitle(chartId) + '</div>'

@@ -184,7 +184,8 @@
     var verb = !isNaN(pos) ? (pos === 0 || (!isNaN(cur) && pos < cur) ? 'Ausschalten' : 'Einschalten')
       : /\.turn_on$|\.open_cover$|\.open_valve$/.test(svc) ? 'Einschalten'
       : /\.turn_off$|\.close_cover$|\.close_valve$/.test(svc) ? 'Ausschalten'
-      : /\.unlock$/.test(svc) ? 'Aufschließen' : /\.lock$/.test(svc) ? 'Abschließen'
+      // Schlösser: dieselben Wörter wie die Knöpfe der Schloss-Ansicht (1.2.1, D2).
+      : /\.unlock$/.test(svc) ? 'Entriegeln' : /\.lock$/.test(svc) ? 'Verriegeln'
       : (s === 'on' || s === 'open' || s === 'playing' || s === 'unlocked') ? 'Ausschalten' : 'Einschalten';
     if (/^(cover|valve)\./.test(id) && verb === 'Einschalten') verb = 'Öffnen';
     if (/^(cover|valve)\./.test(id) && verb === 'Ausschalten') verb = 'Schließen';
@@ -5231,6 +5232,8 @@ window.casoraMenuGlass = {
       --casora-fs24: 17px;
       --casora-fw24: 700;
       --casora-popup-row-radius: var(--casora-soft-row-radius, 24px);
+      /* Sand-Karten mit Etikett innen: Etikett 20/18 vom Rand (1.2.1, D1; Titel selbst 0 6px). */
+      --casora-soft-plate-pad: 18px 14px 8px;
       --casora-popup-more-fade: var(--casora-soft-more-fade, rgba(0, 0, 0, 0.12));
       --casora-popup-grabber: var(--casora-soft-grabber, rgba(120, 100, 80, 0.30));
     }
