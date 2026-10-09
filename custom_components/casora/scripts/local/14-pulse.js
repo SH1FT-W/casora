@@ -296,6 +296,11 @@
     }
     if (part === 'more') {
       var ok = s.list.filter(function (d) { return d.status === 'ok' || d.status === 'learning'; });
+      // Niedrigste Batterie zuerst; ohne Batteriewert ans Ende, dann nach Name.
+      ok.sort(function (p, q) {
+        return (p.battery == null ? 101 : p.battery) - (q.battery == null ? 101 : q.battery)
+          || String(p.name).localeCompare(String(q.name));
+      });
       // Breit (Desktop/Tablet) zwei Spalten nebeneinander, schmal eine (auto-fit, ab 2 × 300 px).
       var half = Math.ceil(ok.length / 2);
       var cols = ok.length > 1 ? [ok.slice(0, half), ok.slice(half)] : [ok];
