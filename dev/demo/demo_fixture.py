@@ -147,6 +147,15 @@ def demo_power(d):
                     e["state"] = str(TANK_MAX_W)
             except (TypeError, ValueError):
                 pass
+    # Leistungskurve fürs Diagramm im Energie-Popup (sonst eine flache Linie): Hausverbrauch
+    # mit Morgen-, Mittags- und Abendspitze. Die Kurve endet beim Wert der Fixture.
+    hist = d.setdefault("_history", {})
+    for e in ents:
+        a = e.get("attributes") or {}
+        if e["entity_id"].startswith("sensor.") and a.get("unit_of_measurement") == "W" \
+                and re.search(r"Hausbedarf$", a.get("friendly_name") or ""):
+            hist[e["entity_id"]] = {"base": 330, "wave": 45, "noise": 16, "digits": 0, "min": 90,
+                                    "bumps": [[7.4, 520, 0.6], [12.6, 380, 0.9], [19.2, 640, 1.3]]}
     eid, name, w, area = FRIDGE
     if not any(e["entity_id"] == eid for e in ents):
         ents.append({"entity_id": eid, "state": str(w), "platform": "demo", "device": None,
