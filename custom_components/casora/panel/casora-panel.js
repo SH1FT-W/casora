@@ -6563,6 +6563,9 @@ class CasoraPanel extends HTMLElement {
           box-shadow:none; color:var(--accent);
         }
         :host(.phone) .scadddot.scadddot { border-radius:9.2px; }
+        /* Plus-Quadrat ringsum gleich weit vom Knopfrand (oben = links), Knopf-Ecke konzentrisch dazu (r87). */
+        :host .scadd { padding-left:7px; border-radius:15.1px; }
+        :host(.phone) .scadd.scadd { padding-left:8px; border-radius:17.2px; }
         :host .scadd { font-weight:500; }
         :host .scadd:disabled { opacity:.45; cursor:default; }
         :host .tilegrid > .addbar.tileadd {
@@ -9727,6 +9730,8 @@ class CasoraPanel extends HTMLElement {
         }
         :is(.card, .tile).grouped:not(.shut):not(.off) { background-color:transparent; }
         :is(.card, .tile).grouped .subcard {
+          /* flow-root: der untere Abstand des „+“ (addmore) bleibt in der Unterkarte statt herauszufallen (r87). */
+          display:flow-root;
           margin:0 calc(var(--card-pad-h) * -1);
           padding:0 var(--card-pad-h);
           border-radius:var(--r-m);
