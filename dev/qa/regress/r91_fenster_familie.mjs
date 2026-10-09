@@ -10,6 +10,7 @@
 // D10 Kopfknöpfe Glocke, Assist, ⋯ mit dem Leisten-Schatten wie die Welle.
 // D12 Desktop-Raumleiste: weiße Pille ringsum 4 eingerückt.
 // D5 Handy-Raumseite: Szenen-Kachel 62 hoch, Kreis 42, Text bei 80 wie die Geräte-Kacheln.
+// 1.2.1 Glocke: Symbole auf ganzen Pixeln mittig im Kreis, Warndreieck („Neustart ausstehend“) optisch mittig.
 import { open, casoraDashboards, casoraDashboard, dashboard, fakeStates, check, need, finish, usePage } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -43,6 +44,41 @@ const headBtn = (page, tpl) => page.evaluate((tpl) => { const c = window.__pierc
   const h = c && c.shadowRoot.querySelector('ha-card'); return h ? { bg: getComputedStyle(h).backgroundColor, shadow: getComputedStyle(h).boxShadow } : null; }, tpl);
 const probe = (page, v) => page.evaluate((v) => { const d = document.createElement('div'); d.style.cssText = 'position:fixed;width:1px;height:1px;background:' + v; document.body.appendChild(d); const c = getComputedStyle(d).backgroundColor; d.remove(); return c; }, v);
 
+// Symbole der offenen Glocke in ihren Kreisen: Glyphen-Kasten auf ganzen Pixeln mittig (bei 8,5 px Rand rastete
+// Chrome auf 9 – alles ½ px rechts unten), und beim Warndreieck („Neustart ausstehend“) die gezeichnete Form
+// per Bildauswertung: waagrecht mittig, Schwerpunkt höchstens 1,3 px unter der Kreismitte (vorher 2,2 px).
+async function glyphs(page, tag) {
+  const list = await page.evaluate(() => { const m = window.__pierce('.casora-notify-menu').find((e) => e.getBoundingClientRect().width > 0); if (!m) return [];
+    return [...m.querySelectorAll('.hui-srow')].map((r) => { const c = r.querySelector('.hui-inner > :first-child'), g = c && c.firstElementChild; if (!g) return null;
+      const q = c.getBoundingClientRect(), k = g.getBoundingClientRect();
+      return { label: r.textContent.trim().slice(0, 32), c: { x: q.x, y: q.y, w: q.width, h: q.height }, left: k.left - q.left, top: k.top - q.top,
+        right: q.right - k.right, bottom: q.bottom - k.bottom }; }).filter(Boolean); });
+  await check(`${tag}: Glocke – Symbole auf ganzen Pixeln mittig im Kreis`, list.length > 0 && list.every((x) => near(x.left, x.right, 0.01) && near(x.top, x.bottom, 0.01)
+    && Math.abs(x.left - Math.round(x.left)) < 0.01 && Math.abs(x.top - Math.round(x.top)) < 0.01), list.map((x) => [x.label, x.left, x.right, x.top, x.bottom]));
+  const it = list.find((x) => /Neustart ausstehend|Restart pending/.test(x.label));
+  await need(`${tag}: Glocke mit „Neustart ausstehend“`, it, list.map((x) => x.label));
+  const buf = await page.screenshot({ clip: { x: it.c.x, y: it.c.y, width: it.c.w, height: it.c.h } });
+  const a = await page.evaluate(async (b64) => {
+    const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
+    const cv = document.createElement('canvas'); cv.width = img.width; cv.height = img.height; const x = cv.getContext('2d'); x.drawImage(img, 0, 0);
+    const d = x.getImageData(0, 0, cv.width, cv.height).data, W = cv.width, H = cv.height, cx = W / 2, cy = H / 2, R = W / 2;
+    const px = (i, j) => { const k = (j * W + i) * 4; return [d[k], d[k + 1], d[k + 2]]; };
+    const ring = []; for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) { const r = Math.hypot(i + .5 - cx, j + .5 - cy) / R; if (r > .82 && r < .92) ring.push(px(i, j)); }
+    const bg = [0, 1, 2].map((q) => ring.map((p) => p[q]).sort((u, v) => u - v)[ring.length >> 1]);
+    const w = new Float32Array(W * H); let mx = 0;
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) { if (Math.hypot(i + .5 - cx, j + .5 - cy) / R > .8) continue; const p = px(i, j);
+      const v = Math.hypot(p[0] - bg[0], p[1] - bg[1], p[2] - bg[2]); w[j * W + i] = v; mx = Math.max(mx, v); }
+    let s = 0, sx = 0, sy = 0, x0 = W, x1 = -1;
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) { const v = w[j * W + i] / (mx || 1); if (v < .08) continue;
+      s += v; sx += v * (i + .5); sy += v * (j + .5); if (v > .25) { x0 = Math.min(x0, i); x1 = Math.max(x1, i + 1); } }
+    const f = W / 36;
+    return { massX: (sx / s - cx) / f, massY: (sy / s - cy) / f, boxX: ((x0 + x1) / 2 - cx) / f };
+  }, buf.toString('base64'));
+  console.log(tag, 'Warndreieck', JSON.stringify(a));
+  await check(`${tag}: Glocke – Warndreieck optisch mittig im Kreis (waagrecht ±0,4, Schwerpunkt ≤ 1,3 px unter der Mitte)`,
+    Math.abs(a.boxX) <= 0.4 && Math.abs(a.massX) <= 0.4 && a.massY <= 1.3 && a.massY >= -0.5, a);
+}
+
 const IDS = ['media_player.qa_welle_1', 'media_player.qa_welle_2'];
 for (const dark of [false, true]) {
   const tag = 'Casora ' + (dark ? 'dunkel' : 'hell');
@@ -71,11 +107,18 @@ for (const dark of [false, true]) {
   });
   await check(`${tag}: Raumleiste – Pille ringsum 4 eingerückt (D12)`, nb && near(nb.left, 4) && near(nb.top, 4) && near(nb.bottom, 4), nb);
 
+  // 1.2.1 (gemeldet: „Symbol Neustart im Kreis bei der Glocke nicht ausgerichtet“): Eintrag „Neustart ausstehend“
+  // nur im Browser herstellen, dann Lage der Symbole in ihren Kreisen messen (nach dem Öffnen).
+  await fakeStates(page, { 'update.qa_neustart': { state: 'off', attributes: { friendly_name: 'QA Update', installed_version: '1.2.0',
+    latest_version: '1.2.0', release_summary: 'Restart Home Assistant to finish', in_progress: false } } }, { sticky: true });
+  await page.evaluate(() => window._casoraNotify && window._casoraNotify.refresh());
+  await page.waitForTimeout(600);
   // Glocke.
   await tap(page, () => { const r = window.__pierce('.casora-bell').map((e) => e.getBoundingClientRect()).find((r) => r.width > 0); return r && { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
   const g = await frame(page, ['.casora-notify-menu', '.hui-srow', '.hui-inner > :first-child', '.hui-inner > :nth-child(2) > :first-child']);
   await need(`${tag}: Glocke offen`, g && g.n > 0, g);
   console.log(tag, 'Glocke', JSON.stringify(g));
+  await glyphs(page, tag);
   const bellOpen = await headBtn(page, 'casora_notifications_button');
   await check(`${tag}: offene Glocke in der Fläche der aktiven Raum-Pille (D8)`, bellOpen && same(bellOpen.bg, tabFill), [bellOpen, tabFill]);
   await page.keyboard.press('Escape'); await page.waitForTimeout(600);

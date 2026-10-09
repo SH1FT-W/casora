@@ -10481,7 +10481,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       var wst = document.createElement('style');
       wst.id = 'casora-window-notify-style';
       var W = '.casora-window.casora-notify-menu ';
-      wst.textContent = W + '.hui-plate{gap:0!important;}'
+      /* 1.2.1: Symbolgröße aus dem Kreis (36 → Glyphe 18). Vorher blieb die Glyphe bei 19 (38 × ,5):
+         (36 − 19) / 2 = 8,5 rastet Chrome auf 9 – jedes Symbol saß ½ px rechts unterhalb der Mitte. */
+      wst.textContent = '.casora-window.casora-notify-menu{--casora-soft-icon-size:36px;}'
+        + W + '.hui-plate{gap:0!important;}'
         + W + '.hui-srow{background:transparent!important;box-shadow:none!important;min-height:52px!important;'
         +   'padding:8px 14px 8px 8px!important;border-radius:26px!important;}'
         + W + '.hui-srow.hui-tap:active{background:var(--casora-menu-hover, rgba(140,115,90,0.08))!important;}'
