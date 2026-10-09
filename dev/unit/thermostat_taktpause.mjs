@@ -1,5 +1,5 @@
 // 09.10.2026: Fußbodenheizung taktet (hvac_action wechselt minutenweise heating/idle). In der
-// Pause unter dem Ziel stand „Bereit“, das klang nach „Ziel erreicht“. Jetzt „Heizt auf“, am Ziel „Hält“.
+// Pause unter dem Ziel stand „Bereit“, das klang nach „Ziel erreicht“. Jetzt „Heizt auf“, am Ziel „An · 22°“.
 //   node dev/unit/thermostat_taktpause.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -14,10 +14,10 @@ const at = (hvac_action, current_temperature, temperature = 22) => ({ hvac_actio
 
 assert.equal(tile('heat', at('heating', 21.5)), 'Heizt auf 22°');
 assert.equal(tile('heat', at('idle', 21.5)), 'Heizt auf 22°');   // Taktpause unter dem Ziel
-assert.equal(tile('heat', at('idle', 21.9)), 'Hält 22°');        // innerhalb 0,2 °C = am Ziel
-assert.equal(tile('heat', at('idle', 22.4)), 'Hält 22°');
-assert.equal(tile('heat', at('idle', null)), 'Hält 22°');        // ohne Ist-Wert nichts raten
+assert.equal(tile('heat', at('idle', 21.9)), 'An · 22°');        // innerhalb 0,2 °C = am Ziel
+assert.equal(tile('heat', at('idle', 22.4)), 'An · 22°');
+assert.equal(tile('heat', at('idle', null)), 'An · 22°');        // ohne Ist-Wert nichts raten
 assert.equal(tile('cool', at('idle', 24)), 'Kühlt auf 22°');
-assert.equal(tile('cool', at('idle', 22)), 'Hält 22°');
+assert.equal(tile('cool', at('idle', 22)), 'An · 22°');
 assert.equal(tile('off', at('idle', 18)), 'Aus');
 console.log('ok thermostat_taktpause');

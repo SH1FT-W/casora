@@ -8,7 +8,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 ### Behoben
 - **Schatten in Popups:** Der weiche Schatten unter der aktiven Zeile oder Taste (Fußbodenheizung, Jalousien, Schlösser, Licht, Thermostat, Luftreiniger, Geschirrspüler, Sauger) war seitlich oder unten hart abgeschnitten. Er läuft jetzt sauber aus.
-- **Thermostat-Text:** Eine Fußbodenheizung öffnet ihre Ventile nur minutenweise. In so einer Pause stand „Bereit“, obwohl der Raum noch unter dem Ziel lag. Jetzt steht „Heizt auf 22°“, bis das Ziel erreicht ist, und dann „Hält 22°“.
+- **Thermostat-Text:** Eine Fußbodenheizung öffnet ihre Ventile nur minutenweise. In so einer Pause stand „Bereit“, obwohl der Raum noch unter dem Ziel lag. Jetzt steht „Heizt auf 22°“, bis das Ziel erreicht ist, und dann „An · 22°“.
 - **Drüberfahren im dunklen Design:** Fuhr man mit der Maus über eine aktive Zeile im Popup (z. B. einen heizenden Raum), wurde sie dunkel, die Schrift blieb dunkel und war kaum lesbar. Die Zeile bleibt jetzt hell.
 
 ## 1.2.3 – 09.10.2026

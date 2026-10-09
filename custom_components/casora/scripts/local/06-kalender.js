@@ -594,13 +594,13 @@
 
 // ── Thermostat aktiv? ───────────────────────────────────────────────────────
 // Rückfall, falls casora-core.js window.casoraClimateActive nicht mitbringt.
-// Thermostat-Texte ("Heizt"/"Hält") lesen sie über window.casoraClimateActive?.(entity).
+// Thermostat-Texte ("Heizt"/"An") lesen sie über window.casoraClimateActive?.(entity).
 if (typeof window.casoraClimateActive !== 'function') {
   window.casoraClimateActive = function (entity) {
     const mode = entity?.state;
     const action = entity?.attributes?.hvac_action;
     // Taktpause (idle), solange der Raum noch nicht am Ziel ist, zählt mit: Fußbodenheizungen
-    // öffnen das Ventil nur minutenweise, sonst springt der Text alle paar Minuten auf „Hält“.
+    // öffnen das Ventil nur minutenweise, sonst springt der Text alle paar Minuten auf „An“.
     const cur = Number(entity?.attributes?.current_temperature), tgt = Number(entity?.attributes?.temperature);
     const pause = action === 'idle' && isFinite(cur) && isFinite(tgt) && entity?.attributes?.current_temperature != null && entity?.attributes?.temperature != null;
     const heating = mode === 'heat' && (action == null || action === 'heating' || (pause && cur < tgt - 0.2));
