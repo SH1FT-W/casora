@@ -9782,6 +9782,9 @@ class CasoraPanel extends HTMLElement {
           border-radius:var(--r-m);
           background-color:rgba(255,255,255,0.04);
         }
+        /* Zugeklappt bleibt zu: display oben schlug sonst „.card.shut > :not(.chead)“ (gleiche Stärke,
+           später) – „Aktuelle Wiedergabe“ zeigte zu ihre Unterkarten wie ein zweites Menü. */
+        .card.shut.grouped > .subcard { display:none; }
         :host(.is-light:not(.phone)) :is(.card, .tile).grouped .subcard { background-color:transparent; }
         :host(.phone) .col :is(.card, .tile).grouped .subcard { background-color:transparent; }
         :host(.split:not(.flow):not(.phone)) .inspector .band.detail .col > .card.grouped,
