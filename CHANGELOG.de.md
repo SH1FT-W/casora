@@ -4,6 +4,27 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.2.1 – 09.10.2026
+
+### Neu
+- **Schloss in Casora.** Ein Tipp auf die Schloss-Zeile im Popup öffnet eine eigene Ansicht statt des Home-Assistant-Dialogs: Verriegeln bzw. Entriegeln (mit Rückfrage, wenn eingestellt), „Tür öffnen“, wenn das Schloss das kann, Zustand mit Tür und Akku und der Verlauf von heute mit Auslöser (per App, automatisch, am Schloss). „Ganzer Verlauf“ öffnet das Logbuch für den ganzen Tag.
+- **Energiefluss als ruhige Balken.** Im Energie-Popup zeigt Casora den Hausverbrauch mit Akkustand, darunter woher der Strom kommt und wohin der Solarstrom geht, mit Prozent und Watt. Ohne Animation, die Werte aktualisieren sich live.
+- **Tanken-Karte neu.** Alle Stationen stehen als Punkte am echten Ort, nur die vier günstigsten bekommen eine Preis-Pille. Die Karte zoomt auf den eingestellten Umkreis und folgt der Auswahl Günstigste, Nächste und Offen. Preise mit zwei Nachkommastellen.
+- **Jalousien mit Stufen.** Kachel, Badge, Popup-Ring und Zeilen zeigen dasselbe Symbol, passend zur Position (offen, vier Zwischenstufen, zu).
+- **WashData 0.5.8.** Salz und Klarspüler beim Geschirrspüler, Flusensieb und Kondensator beim Trockner, eigene Wartungsaufgaben mit Namen und der Zustand „Angehalten“, wenn die Maschine mittendrin stehen bleibt.
+
+### Behoben
+- **Tanken-Karte mit Home Assistant 2026.10:** Die Karte erscheint wieder (Home Assistant zeichnet Karten jetzt mit MapLibre). Lanfer-Logo mittig im Kreis.
+- **Kamera-Kachel:** Das Standbild erscheint zuverlässig und frischt sich alle 10 Sekunden auf, solange die Kachel sichtbar ist.
+- **Rückfrage am Handy:** „Vor dem Schalten fragen“ gilt jetzt auch in Popups, an Reglern und in der Schloss-Ansicht am Handy. Die Knöpfe der Rückfrage sind voll rund wie alle Casora-Knöpfe.
+- **Energie-Popup:** Der Energiefluss blinkt nicht mehr bei jedem neuen Wert.
+- **Diagramme:** Das Batterie-Popup zeigt seinen Verlauf gleich oben in der Karte, Wetter und Dünger haben ihr Etikett in der Karte, und ein Diagramm landet nicht mehr im nächsten Popup.
+- **Glocke:** Symbole sitzen genau mittig im Kreis, das Warndreieck ist optisch ausgeglichen.
+- **Studio:** „Verlauf auf der Kachel“ steht unter „Erweitert“. In den Versionen ist „+1 weitere“ wieder normal groß, und der Hinweis zu aktiven Kacheln verdeckt nichts mehr.
+- **Aquarium-Kachel:** „Alles ok“ ohne Temperatur, die Temperatur steht nur bei Problemen davor.
+- **Saugroboter:** „Räume reinigen“ steht über dem Reinigungsmodus.
+- **Englisch:** Die Tanken-Empfehlung ist vollständig übersetzt.
+
 ## 1.2.0 – 08.10.2026
 
 ### Neu

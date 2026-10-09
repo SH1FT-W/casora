@@ -27,10 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n1t: "Tanken im Auto-Popup", n1: "Spritpreise in der Nähe auf der Karte, mit Empfehlung. Einrichten im Studio unter Einstellungen › Tanken.",
-      n2t: "Neue Diagramme", n2: "Ruhige Verläufe in allen Popups zum Ablesen mit dem Finger, Verbrauch pro Tag als Säulen.",
-      n3t: "Neue Handy-Menüs", n3: "Räume und Szenen als kleines Fenster über der Leiste, aktive Szenen auf einen Blick.",
-      n4t: "Glocke und Aquarium", n4: "Geräte von der Glocke ausnehmen, Aquarium-Licht direkt im Becken-Popup."
+      n1t: "Schloss in Casora", n1: "Ein Tipp aufs Schloss öffnet Bedienen, Zustand und den Verlauf von heute mit „wer und wann“.",
+      n2t: "Energie auf einen Blick", n2: "Woher der Strom kommt und wohin der Solarstrom geht, als ruhige Balken.",
+      n3t: "Tanken-Karte neu", n3: "Alle Stationen am echten Ort, die günstigsten mit Preis, folgt Günstigste, Nächste und Offen.",
+      n4t: "Zuverlässiger", n4: "Kamerabilder erscheinen sicher, die Rückfrage gilt auch am Handy, WashData 0.5.8 wird unterstützt."
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n1t: "Fuel prices in the car popup", n1: "Petrol prices nearby on the map, with a recommendation. Set up in the Studio under Settings › Fuel prices.",
-      n2t: "New charts", n2: "Calm charts in every popup that you read with your finger, daily use as bars.",
-      n3t: "New phone menus", n3: "Rooms and scenes as a small window above the bar, active scenes at a glance.",
-      n4t: "Bell and aquarium", n4: "Leave devices out of the bell, aquarium light right in the tank popup."
+      n1t: "Locks in Casora", n1: "A tap on a lock opens controls, state and today's history with who and when.",
+      n2t: "Energy at a glance", n2: "Where your power comes from and where the solar power goes, as calm bars.",
+      n3t: "New fuel map", n3: "Every station at its real place, the cheapest with prices, following Cheapest, Nearest and Open.",
+      n4t: "More reliable", n4: "Camera pictures show up reliably, the confirmation also works on the phone, WashData 0.5.8 is supported."
     },
   };
 
@@ -56,10 +56,10 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:gas-station-outline", "n1t", "n1"],
-    ["mdi:chart-line", "n2t", "n2"],
-    ["mdi:cellphone", "n3t", "n3"],
-    ["mdi:bell-off-outline", "n4t", "n4"],
+    ["mdi:lock-outline", "n1t", "n1"],
+    ["mdi:solar-power-variant-outline", "n2t", "n2"],
+    ["mdi:gas-station-outline", "n3t", "n3"],
+    ["mdi:check-circle-outline", "n4t", "n4"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

@@ -4,6 +4,27 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.2.1 – 09.10.2026
+
+### New
+- **Locks in Casora.** A tap on the lock row in the popup opens its own view instead of the Home Assistant dialog: lock or unlock (with confirmation if set), "Open door" when the lock supports it, state with door and battery, and today's history with what triggered it (app, automation, at the lock). "Full history" opens the logbook for the whole day.
+- **Energy flow as calm bars.** The energy popup shows the home's use with the battery level, then where the power comes from and where the solar power goes, with percent and watts. No animation, the values update live.
+- **New fuel map.** Every station is a dot at its real place, only the four cheapest get a price pill. The map zooms to the radius you set and follows Cheapest, Nearest and Open. Prices with two decimals.
+- **Blinds with steps.** Tile, badge, popup ring and rows show the same icon, matching the position (open, four steps in between, closed).
+- **WashData 0.5.8.** Salt and rinse aid for dishwashers, lint filter and condenser for dryers, your own maintenance tasks by name and the "Stalled" state when the machine stops mid-cycle.
+
+### Fixed
+- **Fuel map with Home Assistant 2026.10:** the map shows again (Home Assistant now draws maps with MapLibre). Lanfer logo centred in its circle.
+- **Camera tile:** the still image shows up reliably and refreshes every 10 seconds while the tile is visible.
+- **Confirmation on the phone:** "Ask before switching" now also applies in popups, on sliders and in the lock view on the phone. The confirmation buttons are fully round like every Casora button.
+- **Energy popup:** the energy flow no longer flickers with every new value.
+- **Charts:** the battery popup shows its history right at the top in the card, weather and fertiliser have their label in the card, and a chart no longer ends up in the next popup.
+- **Bell:** icons sit exactly centred in their circle, the warning triangle is optically balanced.
+- **Studio:** "Trend on tile" is under "Advanced". In Versions, "+1 more" is normal size again and the hint about active tiles no longer covers anything.
+- **Aquarium tile:** "All fine" without the temperature, which only shows in front when something is wrong.
+- **Robot vacuum:** "Clean rooms" is above the cleaning mode.
+- **English:** the fuel recommendation is fully translated.
+
 ## 1.2.0 – 08.10.2026
 
 ### New
