@@ -193,8 +193,8 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
     const txt = (sel) => window.__pierce(sel).map((n) => n.textContent.trim()).filter(Boolean);
     const lbl = txt('.hui-slbl');
     const rows = window.__pierce('.hui-srow').filter((r) => r.getBoundingClientRect().height > 0);
-    const byLbl = (re) => window.__pierce('.hui-slbl').find((n) => re.test(n.textContent));
-    const L = byLbl(/Aufmerksamkeit/), R = byLbl(/Bald/);
+    const byLbl = (re) => window.__pierce('.hui-slbl').find((n) => re.test(n.textContent.trim()));
+    const L = byLbl(/^(Ausgefallen|Prüfen)$/), R = byLbl(/^(Batterie|Beobachten)$/);
     const more = window.__pierce('.hui-more')[0];
     const link = window.__pierce('[data-casora-link="/pulse"]')[0];
     const bar = window.__pierce('.pls-bar span').length;
