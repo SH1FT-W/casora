@@ -18,7 +18,7 @@
     vacuum: "Vacuum", appliance: "Appliance done", update: "Update", water: "Water detected",
     smoke: "Smoke detected", gas: "Gas detected", co: "Carbon monoxide", safety: "Safety warning",
     co2: "High carbon dioxide", plant: "Plant care", mail: "Mailbox", warning: "Weather warning",
-    care: "Appliance care",
+    care: "Appliance care", pulse: "Pulse",
   };
   const kinds = (x) => x.kinds.map((k) => tr(KIND[k] || k)).join(", ");
 

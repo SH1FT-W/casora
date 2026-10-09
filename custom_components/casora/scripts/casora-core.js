@@ -9608,6 +9608,19 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       });
     }
 
+    // Pulse (Batterie-/Funkwächter, scripts/local/14-pulse.js): Geräte mit Problem (prüfen/ausgefallen).
+    // Deren Batteriesensoren meldet die Batterie-Quelle dann nicht noch einmal – nur solange die
+    // Pulse-Quelle an ist, sonst bliebe ein leerer Akku ganz ohne Meldung.
+    var pulseDev = {};
+    if (on('pulse') && window._casoraPulse && typeof window._casoraPulse.bell === 'function') {
+      try {
+        var pb = window._casoraPulse.bell(hass, S, EX);
+        pulseDev = pb.devices || {};
+        (pb.rows || []).forEach(function (r) { rows.push(r); });
+      } catch (e) { console.warn('Casora notify (pulse):', e); }
+    }
+    var REG = hass.entities || {};
+
     var lowPct = Number(window.CASORA_NOTIFY_BATTERY);
     if (!isFinite(lowPct)) lowPct = 20;
     var holdMin = Number(window.CASORA_NOTIFY_BATTERY_HOLD);
@@ -9635,6 +9648,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       if (!_lowSince[id]) {
         _lowSince[id] = Math.min(Date.parse(st.last_changed || '') || nowMs, nowMs);
       }
+      // Meldet Pulse dieses Gerät schon (oben), keine zweite Zeile – die Uhr läuft trotzdem weiter.
+      if (REG[id] && REG[id].device_id && pulseDev[REG[id].device_id]) return;
       if (nowMs - _lowSince[id] >= holdMin * 60000) low.push({ st: st, pct: pct });
     });
     if (low.length && on('battery')) {
@@ -9651,6 +9666,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         tone: low.some(function (x) { return x.pct != null && x.pct <= (window.casoraBattery ? window.casoraBattery.CRIT : 10); }) ? 'bad' : 'warn',
         entity: low.length === 1 ? low[0].st.entity_id : null,
         opens: ['casora_battery', 'casora_popup_battery'],
+        // Für Erweiterungen, die die Zeile neu bilden (01-basis fixBattery): Pulse-Geräte auslassen.
+        pulseDevices: pulseDev,
         seen: low.map(function (x) {
           return { k: x.st.entity_id, t: Date.parse(x.st.last_changed || '') };
         }),
@@ -10925,7 +10942,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
   // The categories a dashboard can switch off, as the panel writes them.
   var TYPES = ['safety', 'air', 'locks', 'alarm', 'doorbell', 'doors', 'people',
-    'vacuum', 'appliances', 'plants', 'battery', 'updates', 'restart'];
+    'vacuum', 'appliances', 'plants', 'battery', 'pulse', 'updates', 'restart'];
 
   function configureFrom(V) {
     V = V || {};

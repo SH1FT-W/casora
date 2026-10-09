@@ -3175,6 +3175,50 @@
   [
    "^Reichweite (\\S+)$",
    "Range {1}"
+  ],
+  [
+   "^(\\d+) Geräte brauchen Aufmerksamkeit$",
+   "{1} devices need attention"
+  ],
+  [
+   "^(.+) antwortet nicht$",
+   "{1} is not responding"
+  ],
+  [
+   "^(.+) ist still$",
+   "{1} has gone quiet"
+  ],
+  [
+   "^(.+) hat sich noch nicht gemeldet$",
+   "{1} has not reported yet"
+  ],
+  [
+   "^(.+) ist nicht erreichbar$",
+   "{1} is unavailable"
+  ],
+  [
+   "^(.+) braucht bald eine neue Batterie$",
+   "{1} needs a new battery soon"
+  ],
+  [
+   "^(.+) braucht eine neue Batterie$",
+   "{1} needs a new battery"
+  ],
+  [
+   "^(.+) meldet schwache Batterie$",
+   "{1} reports a low battery"
+  ],
+  [
+   "^(.+) wartet auf die erste Meldung$",
+   "{1} is waiting for its first report"
+  ],
+  [
+   "^(.+) ist ausgefallen$",
+   "{1} has failed"
+  ],
+  [
+   "^(.+) sollte geprüft werden$",
+   "{1} should be checked"
   ]
  ]
 }

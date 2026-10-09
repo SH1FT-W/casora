@@ -15003,6 +15003,7 @@
    "notify_locks": true,
    "notify_people": true,
    "notify_plants": true,
+   "notify_pulse": true,
    "notify_restart": true,
    "notify_safety": true,
    "notify_updates": true,
