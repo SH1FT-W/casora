@@ -1,8 +1,9 @@
 // README- und Website-Bilder: setzt die Roh-Screenshots aus docs/images/casora-*-{light,dark}.webp zu
 // fertigen Schaubildern zusammen, hell und dunkel. Stil seit 1.2.1 „Produktbühne“: Geräte (Display,
 // Tablet, Handy) stehen gerade nebeneinander, unten bündig, auf einem ruhigen warmen Verlauf mit
-// Bodenschatten. Nichts schräg, nichts überlappt; Popups zeigt das Display als Ausschnitt, damit das
-// Popup den Großteil füllt. Läuft komplett offline, braucht kein HA.
+// Bodenschatten. Nichts schräg, nichts überlappt. Popups zeigt das Display als ganzen Bildschirm in echter
+// Größe über dem Dashboard (kein vergrößerter Ausschnitt, sonst wirkt das Popup wie ein Vollbild-Fenster).
+// Läuft komplett offline, braucht kein HA.
 //
 //   Ablauf nach neuen Roh-Bildern:
 //   1. CASORA_TOKENS='{…}' /opt/homebrew/opt/node@22/bin/node dev/e2e/screenshots.mjs   (Test-HA im Zustand „demo“)
@@ -70,19 +71,14 @@ const fit = (crop, w, h) => Math.min(w, Math.round((h / (crop[3] / crop[2])) / (
 
 // ── Szenen ───────────────────────────────────────────────────────────────────
 // out: Dateiname ohne Modus, h: feste Höhe (Website-Raster, alle 1600 × 1000). html(m, B) liefert die Geräte der Reihe; B = gemessene Popup-Grenzen.
-const popScene = (name) => ({ out: `site-popup-${name}`, h: 1000, html: (m, B) => {
-  const c = popCrop(B[`popup-${name}`][m]);
-  return display(src(`popup-${name}`, m), fit(c, 1240, 800), c);
-} });
+const popScene = (name) => ({ out: `site-popup-${name}`, h: 1000, html: (m) => display(src(`popup-${name}`, m), 1240) });
 const SCENES = {
   hero: { out: 'readme-hero', html: (m) => display(src('desktop', m), 1080) + phone(src('phone', m), 290, m) },
   // Desktop (Raum), Tablet und Handy nebeneinander, unten bündig.
   screens: { out: 'readme-screens', gap: 40, html: (m) => display(src('desktop-room', m), 760) + tablet(src('tablet', m), 480) + phone(src('phone', m), 206, m) },
-  // Popups: Display-Ausschnitt mit dem Popup, daneben dasselbe Popup am Handy.
-  popups: { out: 'readme-popups', html: (m, B) => { const c = popCrop(B['popup-lights'][m]);
-    return display(src('popup-lights', m), fit(c, 1060, 780), c) + phone(src('phone-popup-lights', m), 300, m); } },
-  popups2: { out: 'readme-popups2', html: (m, B) => { const c = popCrop(B['popup-fuel'][m]);
-    return display(src('popup-fuel', m), fit(c, 1060, 780), c) + phone(src('phone-popup-fuel', m), 300, m); } },
+  // Popups: ganzer Bildschirm mit dem Popup in echter Größe, daneben dasselbe Popup am Handy.
+  popups: { out: 'readme-popups', html: (m) => display(src('popup-lights', m), 1060) + phone(src('phone-popup-lights', m), 300, m) },
+  popups2: { out: 'readme-popups2', html: (m) => display(src('popup-fuel', m), 1060) + phone(src('phone-popup-fuel', m), 300, m) },
   studio: { out: 'readme-studio', html: (m) => display(src('studio-tile', m), 1240) },
   // Werkzeuge: Geräte-Assistent und Umzug als Display-Ausschnitt des Dialogs, gleich hoch.
   tools: { out: 'readme-tools', gap: 48, html: (m) => display(src('assistant', m), fit(TOOL_CROP.assistant, 9999, 700), TOOL_CROP.assistant)
