@@ -223,8 +223,9 @@
     var silent = d.reason === 'silent' || d.reason === 'silent_new' || d.reason === 'unavailable' || d.reason === 'partner';
     var r = {
       entity: d.statusId, icon: P.icon(d), iconTone: tone,
-      label: d.name + (d.critical && (d.status === 'failed' || d.status === 'check') ? CHIP_MARK : ''),
-      sub: sub.join(' · '),
+      label: d.name,
+      // Marke vorn in der Unterzeile – hinter dem Namen schnitt die Auslassung („…“) sie ab.
+      sub: (d.critical && (d.status === 'failed' || d.status === 'check') ? CHIP_MARK : '') + sub.join(' · '),
       value: silent && d.silentSince ? P.since(d.silentSince) : d.battery != null ? Math.round(d.battery) + ' %' : null,
       valueTone: d.status === 'failed' ? 'bad' : d.status === 'check' ? 'warn' : null,
     };
@@ -236,9 +237,9 @@
     }
     return r;
   };
-  // „Wichtig“-Marke hinter dem Namen kritischer Geräte (Rauch, Wasser).
+  // „Wichtig“-Marke vor dem Grund kritischer Geräte (Rauch, Wasser).
   var chips = function (html) {
-    return html.split(CHIP_MARK).join('<span style="display:inline-block;vertical-align:2px;margin-left:8px;padding:2px 8px;'
+    return html.split(CHIP_MARK).join('<span style="display:inline-block;vertical-align:1px;margin-right:6px;padding:1px 7px;'
       + 'border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;'
       + 'background:' + COLOR.failed + ';">Wichtig</span>');
   };

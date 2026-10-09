@@ -126,7 +126,7 @@ assert.equal(P.wide(hass, states), true, 'Probleme + bald fällig → zweispalti
 const groups = [];
 window._casoraUI = {
   line: (m, r) => '<line>' + m + '|' + r.join('|') + '</line>',
-  group: (rows, label) => { groups.push({ rows, label }); return '<div class="hui-row">' + rows.map((r) => r.label).join(',') + '</div>'; },
+  group: (rows, label) => { groups.push({ rows, label }); return '<div class="hui-row">' + rows.map((r) => r.label + ' ' + (r.sub || '')).join(',') + '</div>'; },
   more: (id, html, o) => '<more ' + o.label + ' ' + o.count + '>' + html + '</more>',
 };
 const prob = P.sec('prob', null, states, hass);
