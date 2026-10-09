@@ -302,8 +302,8 @@
           || String(p.name).localeCompare(String(q.name));
       });
       // Breit (Desktop/Tablet) zwei Spalten nebeneinander, schmal eine (auto-fit, ab 2 × 300 px).
-      var half = Math.ceil(ok.length / 2);
-      var cols = ok.length > 1 ? [ok.slice(0, half), ok.slice(half)] : [ok];
+      // Abwechselnd verteilen, damit die schwächsten in beiden Spalten oben stehen (zeilenweise lesen).
+      var cols = ok.length > 1 ? [ok.filter(function (d, i) { return i % 2 === 0; }), ok.filter(function (d, i) { return i % 2 === 1; })] : [ok];
       var okHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:start;">'
         + cols.map(function (c) { return '<div style="min-width:0;">' + UI.group(c.map(function (d) { return rowOf(d); }), null) + '</div>'; }).join('')
         + '</div>';
