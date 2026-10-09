@@ -702,6 +702,73 @@
 })();
 // casora-cam-status:end
 
+// casora-cam-still:start
+// Kamera „Standbild von: …“ (09.10.2026, 1.2.1): woher das Standbild der Kamera-Kachel kommt.
+// Manche Kameras liefern ihr Standbild über die Hauptkamera langsam (Reolink E1 Zoom 2–10 s), haben
+// aber eine eigene Schnappschuss-Entität, die schneller antwortet. Popup und Livestream bleiben bei
+// der Kachel-Kamera, nur das Bild auf der Kachel kommt von hier.
+// Reihenfolge:
+// 1) variables.still_entity (Studio-Feld): jede camera.* oder image.*, egal welche Integration.
+// 2) Automatisch, nur am SELBEN Gerät (hass.entities device_id), nur aktivierte (hass.entities kennt
+//    keine deaktivierten) und verfügbare Entitäten mit Bild, erkannt am translation_key (sprachunabhängig):
+//    - Reolink: snapshots_main vor snapshots_sub; Teleobjektiv (telephoto_…) und Doppellinse (…_lens_N)
+//      passend zur Kachel-Kamera.
+//    - sonst eine camera.*/image.* mit translation_key snapshot(s)/still(_image) bzw. …_snapshot(s).
+//    Bewusst NICHT automatisch (geprüft 09.10.2026): UniFi Protect, ONVIF, Generic Camera, Tapo, Blink
+//    (keine eigene Schnappschuss-Entität, die Kamera liefert ihr Standbild selbst); Ring last_recording
+//    (letzte Aufnahme, nicht jetzt); Frigate image.* (letzter Treffer je Objekt, nicht jetzt);
+//    reolink_proxy/go2rtc-Streams (live_*). Wer so ein Bild will, trägt es im Studio ein.
+// 3) Sonst die Kachel-Kamera selbst – genau das bisherige Verhalten.
+// casoraCamAge: Alter des Bildes für die Kachel („gerade eben“, „vor 8 s“, „vor 2 Min.“).
+(function () {
+  if (window.casoraCamStill) return;
+  var ok = function (x) { return typeof x === 'string' && x.indexOf('.') > 0; };
+  var usable = function (st) {
+    if (!st || !st.attributes || !st.attributes.entity_picture) return false;
+    var s = String(st.state == null ? '' : st.state).toLowerCase();
+    return s !== 'unavailable' && s !== 'unknown' && s !== 'off';
+  };
+  var GENERIC = /^(snapshots?|still|still_image)$|_(snapshots?|still)$/;
+  window.casoraCamStill = function (id, hass, vars) {
+    if (!ok(id)) return id;
+    var S = (hass && hass.states) || {};
+    var v = vars || {};
+    var own = v.still_entity;
+    if (ok(own) && own !== id && /^(camera|image)\./.test(own) && usable(S[own])) return own;
+    var R = (hass && hass.entities) || {};
+    var me = R[id];
+    if (!me || !me.device_id) return id;
+    var tk = String(me.translation_key || '');
+    var lens = (tk.match(/_lens_\d+$/) || [''])[0];
+    var pre = tk.indexOf('telephoto_') === 0 ? 'telephoto_' : '';
+    var best = null, bestRank = 99;
+    for (var eid in R) {
+      if (eid === id || !/^(camera|image)\./.test(eid)) continue;
+      var e = R[eid];
+      if (!e || e.device_id !== me.device_id || !usable(S[eid])) continue;
+      var k = String(e.translation_key || '');
+      var r = 99;
+      if (e.platform === 'reolink' && me.platform === 'reolink') {
+        if (k === pre + 'snapshots_main' + lens) r = 0;
+        else if (k === pre + 'snapshots_sub' + lens) r = 1;
+      } else if (k && GENERIC.test(k)) r = 5;
+      if (r < bestRank || (r === bestRank && best && eid < best)) { best = eid; bestRank = r; }
+    }
+    return best || id;
+  };
+  window.casoraCamAge = function (ms) {
+    if (!isFinite(ms)) return '';
+    var s = Math.max(0, Math.floor(ms / 1000));
+    if (s < 5) return 'gerade eben';
+    if (s < 60) return 'vor ' + s + ' s';
+    var m = Math.floor(s / 60);
+    if (m < 60) return 'vor ' + m + ' Min.';
+    if (m < 1440) return 'vor ' + Math.floor(m / 60) + ' Std.';
+    return 'vor ' + Math.floor(m / 1440) + ' T.';
+  };
+})();
+// casora-cam-still:end
+
 // casora-webkit-blur:start
 // Unschärfe auf älteren iPhones (07.10.2026): HA 2026.10 hat bei ha-card, ha-dialog und dem
 // Bottom-Sheet die Safari-Schreibweise -webkit-backdrop-filter gestrichen. Safari bis iOS 17

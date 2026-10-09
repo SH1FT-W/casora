@@ -186,6 +186,11 @@ window.CASORA_TILE_TYPES = [
       { key: "status_entity", label: "Status from", domains: ["camera", "binary_sensor"],
         classes: { binary_sensor: ["connectivity"] }, advanced: true, placeholder: "This camera",
         hint: "Optional. Another camera or a connection sensor that tells whether the camera is reachable, e.g. when the picture comes through a proxy (go2rtc, Frigate, Scrypted) that stays ready although the camera is gone. Picture and popup stay with this camera." },
+      // „Standbild von: …“ (1.2.1): Bild der Kachel von einer anderen camera.*/image.* –
+      // ohne Eintrag automatisch eine Schnappschuss-Entität derselben Kamera (casora-core.js casoraCamStill).
+      { key: "still_entity", label: "Still image from", domains: ["camera", "image"], advanced: true,
+        placeholder: "Automatic",
+        hint: "Optional. Another camera or image entity whose picture the tile shows. Without it, Casora uses a snapshot entity of the same camera if there is one (e.g. Reolink snapshots), otherwise this camera. The popup always shows this camera live." },
       { key: "alert_window_minutes", label: "Recent activity (minutes)", type: "number", advanced: true, group: "Popup",
         placeholder: "5", hint: "A dot marks a camera with activity in this window." },
       { key: "show_stream_variants", label: "Show stream variants", type: "bool", advanced: true, group: "Popup",

@@ -27,7 +27,8 @@ for (const f of ['../../dashboards/casora/button_card_templates.json', '../../cu
   const states = { 'switch.alt_schalter': { state: 'on' } };
   const variables = { toggle_entity: 'switch.alt_schalter' };
   const mk = (state, pic = '/api/camera_proxy/camera.test?token=x') => ({ entity_id: 'camera.test', state, attributes: pic ? { entity_picture: pic } : {} });
-  assert.equal(run(cam.state_display, { entity: mk('idle'), states, variables }), 'Live', f + ': idle = Live');
+  // 1.2.1: kein „Live“ mehr auf der Kachel (Standbild); ohne geladenes Bild „Online“, sonst das Alter des Bildes.
+  assert.equal(run(cam.state_display, { entity: mk('idle'), states, variables }), 'Online', f + ': idle ohne Bild = Online');
   assert.equal(run(cam.state_display, { entity: mk('off'), states, variables }), 'Aus', f + ': off = Aus');
   assert.equal(run(cam.state_display, { entity: mk('unavailable'), states, variables }), 'Offline', f + ': unavailable = Offline');
   assert.equal(run(cam.entity_picture, { entity: mk('off'), states, variables }), 'icon:camera', f + ': aus → Kamerasymbol');
