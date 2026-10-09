@@ -196,6 +196,7 @@
       host.className = 'casora-askfirst';
       var ha = document.querySelector('home-assistant');
       if (ha && ha.hass && ha.hass.themes && ha.hass.themes.darkMode) host.classList.add('dark');
+      if (window._casoraSoft && window._casoraSoft(true)) host.classList.add('soft');
       var root = host.attachShadow ? host.attachShadow({ mode: 'open' }) : host;
       root.innerHTML = '<style>'
         + ':host{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:16px;'
@@ -216,6 +217,14 @@
         + '.no{background:rgba(127,127,127,.16);color:inherit}'
         + '.yes{background:var(--casora-accent,var(--primary-color,#94603B));color:#fff}'
         + 'button:focus-visible{outline:2px solid var(--casora-accent,var(--primary-color,#94603B));outline-offset:2px}'
+        // 1.2.1 (P7): im Casora-Look wie die übrigen Text-Hauptknöpfe 44 hoch und voll rund,
+        // Bestätigen Petrol, Abbrechen Sand, Fläche wie Casoras Dialoge; Rahmen konzentrisch (22 + 20).
+        + ':host(.soft) .box{padding:24px 20px 20px;border-radius:42px;'
+        +   'background:var(--casora-soft-surface,#FAF6F0);color:var(--casora-popup-tiles-text-primary,#3A322B)}'
+        + ':host(.soft) button{border-radius:999px;font-weight:700}'
+        + ':host(.soft) .no{background:var(--casora-soft-control-fill,rgba(140,115,90,.10))}'
+        + ':host(.soft) .yes{background:var(--casora-popup-ui-action,#276B64);color:var(--casora-popup-ui-on-action,#fff)}'
+        + ':host(.soft) button:focus-visible{outline-color:var(--casora-popup-ui-action,#276B64)}'
         + '</style><div class="box" role="alertdialog" aria-modal="true"><h2></h2><p></p>'
         + '<div class="row"><button type="button" class="no"></button><button type="button" class="yes"></button></div></div>';
       // w.title/w.text/w.yes: eigener Wortlaut (Alarm scharf schalten), sonst „Wirklich …?“.
