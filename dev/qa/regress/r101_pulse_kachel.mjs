@@ -7,9 +7,9 @@
 // erfunden). Auf Kopien der Casora-Dashboards (qa-pulse, qa-pulse-mobile) steht die Kachel auf der Startseite.
 // Erwartet am Desktop und Handy (hell + dunkel, Theme Casora):
 //   - alles ok: Kachel „Alles ok“, nicht hinterlegt; nur „bald fällig“ macht sie nicht aktiv
-//   - Probleme: „3 Probleme · 2 bald“, hinterlegt, Symbol rot
-//   - Popup: Unterzeile „3 Probleme · 2 bald fällig · 2 ok“, Übersichtsleiste, „Braucht Aufmerksamkeit“,
-//     „Bald fällig“, „Alles ok“ eingeklappt, „In Pulse öffnen“; Desktop zweispaltig, Handy einspaltig
+//   - Probleme: „3 Probleme · 2 beobachten“, hinterlegt, Symbol rot
+//   - Popup: Unterzeile „3 Probleme · 2 beobachten · 2 ok“, Übersichtsleiste, „Ausgefallen“/„Prüfen“,
+//     „Batterie“/„Beobachten“, „Alles ok“ eingeklappt, „In Pulse öffnen“; Desktop zweispaltig, Handy einspaltig
 //   - „Gewechselt“ → Bestätigen → pulse.mark_replaced mit der device_id des Geräts, danach ein Hinweis
 // Bilder fürs Ergebnis: CASORA_PULSE_BILDER=<ordner> legt dort je Ansicht Kachel- und Popup-Bilder ab.
 import fs from 'node:fs';
@@ -175,7 +175,7 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
 
   await inject(page, 'many');
   m = await stable(page, TILE);
-  await check(tag + ': Probleme – „3 Probleme · 2 bald“', /3 Probleme/.test(m.state) && /2 bald/.test(m.state), m.state);
+  await check(tag + ': Probleme – „3 Probleme · 2 beobachten“', /3 Probleme/.test(m.state) && /2 beobachten/.test(m.state), m.state);
   await check(tag + ': Probleme – hinterlegt', m.active, m.active);
   await check(tag + ': Probleme – Symbol rot (ausgefallen)', red(m.icon), m.icon);
   await tileShot('kachel-probleme');
@@ -210,10 +210,10 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
         const a = n.getBoundingClientRect(), b = n.parentElement.getBoundingClientRect(); return a.width > 20 && a.right <= b.right + 1; }),
       ring: ring && !ring.hidden ? getComputedStyle(ring).backgroundColor : null };
   });
-  await check(tag + ': Unterzeile „3 Probleme · 2 bald fällig · 2 ok“', /3 Probleme/.test(p.line) && /2 bald fällig/.test(p.line) && /2 ok/.test(p.line), p.line);
+  await check(tag + ': Unterzeile „3 Probleme · 2 beobachten · 2 ok“', /3 Probleme/.test(p.line) && /2 beobachten/.test(p.line) && /2 ok/.test(p.line), p.line);
   await check(tag + ': Übersichtsleiste mit 4 Teilen', p.bar === 4, p.bar);
-  await check(tag + ': Abschnitte „Braucht Aufmerksamkeit“ und „Bald fällig“', p.lbl.some((t) => /Aufmerksamkeit/i.test(t)) && p.lbl.some((t) => /Bald fällig/i.test(t)), p.lbl);
-  await check(tag + ': 5 sichtbare Zeilen (3 Probleme, 2 bald fällig) + „In Pulse öffnen“', p.rows === 6, p.rows);
+  await check(tag + ': Abschnitte wie im Pulse-Panel (Ausgefallen/Prüfen, Batterie/Beobachten)', p.lbl.some((t) => /^(Ausgefallen|Prüfen)$/i.test(t)) && p.lbl.some((t) => /^(Batterie|Beobachten)$/i.test(t)), p.lbl);
+  await check(tag + ': 5 sichtbare Zeilen (3 Probleme, 2 beobachten) + „In Pulse öffnen“', p.rows === 6, p.rows);
   await check(tag + ': „Alles ok“ eingeklappt', p.moreOpen === false && /Alles ok/i.test(p.moreTxt), p.moreTxt);
   await check(tag + ': „In Pulse öffnen“ führt ins Pulse-Panel', p.link, p.link);
   await check(tag + ': „Wichtig“ beim kritischen Gerät', p.chip, p.chip);

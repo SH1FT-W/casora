@@ -96,7 +96,7 @@ assert.equal(P.since(new Date(NOW - 12 * 60000).toISOString(), NOW), 'seit 12 Mi
 
 // Kachel: aktiv nur bei echten Problemen, „bald fällig“ nur als Zusatz.
 assert.equal(P.active(s), true);
-assert.equal(P.tileState(s), '3 Probleme · 2 bald');
+assert.equal(P.tileState(s), '3 Probleme · 2 beobachten');
 assert.equal(P.color(s.worst), P.COLOR.failed);
 const onlyWatch = P.scan({ ...hass, states: { ...states,
   'sensor.x1_status': { ...states['sensor.x1_status'], state: 'ok' },
@@ -116,10 +116,10 @@ assert.equal(P.color(one.worst), P.COLOR.check);
 assert.equal(P.tileState(P.scan({ entities: {}, states: {} })), 'Nicht installiert');
 
 // Unterzeile „N Probleme · M bald fällig · K ok“ und Leiste.
-assert.deepEqual(P.subline(s), { main: '3 Probleme', rest: ['2 bald fällig', '2 ok'], tone: 'bad' });
+assert.deepEqual(P.subline(s), { main: '3 Probleme', rest: ['2 beobachten', '2 ok'], tone: 'bad' });
 assert.deepEqual(P.subline(onlyWatch).main, 'Keine Probleme');
 const bar = P.bar(s);
-for (const t of ['1 ausgefallen', '2 prüfen', '2 bald fällig', '2 ok']) assert.ok(bar.includes(t), t);
+for (const t of ['1 ausgefallen', '2 prüfen', '2 beobachten', '2 ok']) assert.ok(bar.includes(t), t);
 assert.equal(P.wide(hass, states), true, 'Probleme + bald fällig → zweispaltig');
 
 // Popup-Bereiche: Zeilen über einen Stub von window._casoraUI.
@@ -129,12 +129,20 @@ window._casoraUI = {
   group: (rows, label) => { groups.push({ rows, label }); return '<div class="hui-row">' + rows.map((r) => r.label + ' ' + (r.sub || '')).join(',') + '</div>'; },
   more: (id, html, o) => '<more ' + o.label + ' ' + o.count + '>' + html + '</more>',
 };
+// Abschnitte wie im Pulse-Panel: links Ausgefallen/Prüfen, rechts Batterie/Beobachten.
+groups.length = 0;
 const prob = P.sec('prob', null, states, hass);
-const g = groups.pop();
-assert.equal(g.label, 'Braucht Aufmerksamkeit');
-assert.equal(g.rows.length, 3);
+const left = groups.splice(0);
+assert.ok(left.length && left.every((x) => x.label === 'Ausgefallen' || x.label === 'Prüfen'), left.map((x) => x.label));
 assert.ok(prob.includes('Wichtig'), '„Wichtig“-Marke für kritisches Gerät');
-const win = g.rows.find((r) => r.label === 'Fenster Atelier');
+P.sec('soon', null, states, hass);
+const right = groups.splice(0);
+assert.ok(right.length && right.every((x) => x.label === 'Batterie' || x.label === 'Beobachten'), right.map((x) => x.label));
+const all = left.concat(right).flatMap((x) => x.rows);
+assert.equal(all.length, 5, '3 Probleme + 2 beobachten');
+const batRows = (right.find((x) => x.label === 'Batterie') || { rows: [] }).rows;
+const win = all.find((r) => r.label === 'Fenster Atelier');
+assert.ok(batRows.includes(win), 'Batterie-Grund steht unter „Batterie“');
 assert.equal(win.action, 'Gewechselt');
 assert.deepEqual(win.svc.domain + '.' + win.svc.service, 'pulse.mark_replaced');
 assert.deepEqual(win.svc.data, { device_id: 'd_win' });
@@ -142,13 +150,10 @@ assert.ok(win.confirm, 'Rückfrage vor dem Melden');
 assert.ok(win.svc.done, 'Rückmeldung nach dem Melden');
 assert.equal(win.value, '7 %');
 assert.equal(win.entity, 'sensor.x2_status');
-const smoke = g.rows.find((r) => /^Rauchmelder/.test(r.label));
+const smoke = all.find((r) => /^Rauchmelder/.test(r.label));
 assert.equal(smoke.action, undefined, 'kein „Gewechselt“ bei Stille');
 assert.equal(smoke.iconTone, 'bad');
-P.sec('soon', null, states, hass);
-const g2 = groups.pop();
-assert.equal(g2.label, 'Bald fällig');
-assert.deepEqual(g2.rows.map((r) => r.action || null), ['Gewechselt', null], 'nach dem Wechsel (wartet) kein Knopf');
+assert.ok(left.flatMap((x) => x.rows).includes(smoke), 'Stille steht links');
 const more = P.sec('more', null, states, hass);
 assert.ok(/<more Alles ok 2>/.test(more), '„Alles ok“ eingeklappt mit Anzahl');
 assert.ok(more.includes('data-casora-link="/pulse"'), 'Fuß führt ins Pulse-Panel');

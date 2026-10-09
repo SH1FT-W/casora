@@ -182,16 +182,18 @@
     if (!s || !s.installed) return 'Nicht installiert';
     if (!s.total) return 'Keine Geräte';
     if (!s.problems) return 'Alles ok';
-    return (s.problems === 1 ? '1 Problem' : s.problems + ' Probleme') + (s.soon ? ' · ' + s.soon + ' bald' : '');
+    return (s.problems === 1 ? '1 Problem' : s.problems + ' Probleme') + (s.soon ? ' · ' + s.soon + ' beobachten' : '');
   };
 
   // ── Popup ─────────────────────────────────────────────────────────────────
   // Ring + Titel kommen aus dem Popup-Rahmen (Kachelsymbol in Kachelfarbe). Darunter die Unterzeile
-  // „N Probleme · M bald fällig · K ok“ und die Übersichtsleiste, links „Braucht Aufmerksamkeit“,
-  // rechts „Bald fällig“, darunter „Alles ok“ eingeklappt und „In Pulse öffnen“.
+  // „N Probleme · M beobachten · K ok“ und die Übersichtsleiste, links „Ausgefallen“/„Prüfen“,
+  // rechts „Batterie“/„Beobachten“, darunter „Alles ok“ eingeklappt und „In Pulse öffnen“.
   P.wide = function (hass, states) {
     var s = P.scan(hass, states);
-    return s.problems > 0 && s.soon > 0;
+    var left = s.list.some(function (d) { return d.status === 'failed' || (d.status === 'check' && !BATTERY[d.reason]); });
+    var right = s.list.some(function (d) { return d.status === 'watch' || (d.status === 'check' && BATTERY[d.reason]); });
+    return left && right;
   };
   P.popup = function (states, hass) {
     var K = window._casoraSoftKit, UI = window._casoraUI;
@@ -248,7 +250,7 @@
     var parts = [
       ['failed', s.counts.failed, s.counts.failed + ' ausgefallen'],
       ['check', s.counts.check, s.counts.check + ' prüfen'],
-      ['watch', s.counts.watch, s.counts.watch + ' bald fällig'],
+      ['watch', s.counts.watch, s.counts.watch + ' beobachten'],
       ['ok', s.counts.ok + s.counts.learning, (s.counts.ok + s.counts.learning) + ' ok'],
     ].filter(function (p) { return p[1] > 0; });
     if (!parts.length) return '';
@@ -264,7 +266,7 @@
   P.subline = function (s) {
     var main = !s.total ? 'Keine Geräte' : s.problems ? (s.problems === 1 ? '1 Problem' : s.problems + ' Probleme') : 'Keine Probleme';
     var rest = [];
-    if (s.soon) rest.push(s.soon + ' bald fällig');
+    if (s.soon) rest.push(s.soon + ' beobachten');
     if (s.total) rest.push(s.ok + ' ok');
     return { main: main, rest: rest, tone: s.counts.failed ? 'bad' : s.problems ? 'warn' : null };
   };
@@ -277,13 +279,20 @@
       var h = P.subline(s);
       return UI.line(h.main, h.rest, { tone: h.tone }) + P.bar(s);
     }
+    // Abschnitte wie im Pulse-Panel: links Ausgefallen + Prüfen, rechts Batterie + Beobachten.
+    // Batterie-Gründe stehen unter „Batterie“, egal ob Pulse sie als prüfen oder beobachten führt.
+    var sect = function (rows, label) {
+      return rows.length ? chips(UI.group(rows.map(function (d) { return rowOf(d, { replace: true }); }), label)) : '';
+    };
+    var join = function (a, b) { return a && b ? a + '<div style="height:12px"></div>' + b : a || b; };
+    var bat = function (d) { return !!BATTERY[d.reason]; };
     if (part === 'prob') {
-      var pr = s.list.filter(function (d) { return d.status === 'failed' || d.status === 'check'; });
-      return pr.length ? chips(UI.group(pr.map(function (d) { return rowOf(d, { replace: true }); }), 'Braucht Aufmerksamkeit')) : '';
+      return join(sect(s.list.filter(function (d) { return d.status === 'failed'; }), 'Ausgefallen'),
+        sect(s.list.filter(function (d) { return d.status === 'check' && !bat(d); }), 'Prüfen'));
     }
     if (part === 'soon') {
-      var so = s.list.filter(function (d) { return d.status === 'watch'; });
-      return so.length ? UI.group(so.map(function (d) { return rowOf(d, { replace: true }); }), 'Bald fällig') : '';
+      return join(sect(s.list.filter(function (d) { return (d.status === 'check' || d.status === 'watch') && bat(d); }), 'Batterie'),
+        sect(s.list.filter(function (d) { return d.status === 'watch' && !bat(d); }), 'Beobachten'));
     }
     if (part === 'more') {
       var ok = s.list.filter(function (d) { return d.status === 'ok' || d.status === 'learning'; });
