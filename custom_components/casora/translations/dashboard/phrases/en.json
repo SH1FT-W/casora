@@ -1546,7 +1546,9 @@
   "Über": "Via",
   "Alles ok": "All good",
   "Wirklich entriegeln?": "Really unlock?",
-  "Wirklich verriegeln?": "Really lock?"
+  "Wirklich verriegeln?": "Really lock?",
+  "Nichts fällig": "Nothing due",
+  "Daten": "Data"
  },
  "patterns": [
   [
@@ -3060,6 +3062,10 @@
   [
    "^(.+) Uhr$",
    "{1}"
+  ],
+  [
+   "^Reichweite (\\S+)$",
+   "Range {1}"
   ]
  ]
 }

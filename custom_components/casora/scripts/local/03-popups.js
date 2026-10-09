@@ -1575,7 +1575,7 @@
       e: ['reichweite_kombiniert', 'range_combined', 'cruising_range_combined', 'remaining_range_total', 'total_range', 'range_total',
         'range_primary', 'est_battery_range', 'battery_range', 'electric_range', 'remaining_range', 'reichweite', 'range'], x: /(scr|adblue)_range$|range_secondary$/ },
     tankfullstand: { d: S, k: ['fuel_level_current_level', 'fuel_level', 'remaining_fuel_percent', 'fuel_percentage'],
-      e: ['tankfullstand', 'fuel_level_current_level', 'fuel_level', 'remaining_fuel_percent', 'fuel_percentage', 'fuel_level_percentage', 'tank_level'] },
+      e: ['tankfullstand', 'tankstand', 'kraftstoffstand', 'fuel_level_current_level', 'fuel_level', 'remaining_fuel_percent', 'fuel_percentage', 'fuel_level_percentage', 'tank_level'] },
     akku: { d: S, k: ['battery_level', 'state_of_charge', 'remaining_battery_percent', 'battery_percentage'],
       e: ['akkustand', 'ladezustand', 'state_of_charge', 'battery_level', 'remaining_battery_percent', 'battery_percentage', 'battery_soc', 'soc'] },
     kilometerstand: { d: S, k: ['mileage', 'odometer'], e: ['kilometerstand', 'mileage', 'odometer', 'odometer_km'] },
@@ -1652,6 +1652,8 @@
   var carCache = { reg: null, map: {} };
   // p: altes Präfix (variables.car) ODER eine Entität des Autos (Kachel-Entität) ODER leer.
   C.map = function (p) {
+    /* Präfix/Entität nur als Text (YAML erlaubt z. B. eine Zahl – p.indexOf warf, Popup ging nicht auf). */
+    p = p == null || p === '' ? null : String(p);
     var root = document.querySelector('home-assistant');
     var hass = root && root.hass;
     var R = (hass && hass.entities) || {};
@@ -1661,6 +1663,11 @@
     var dev = null;
     if (p && p.indexOf('.') > 0 && R[p]) dev = R[p].device_id;
     else if (p && R['sensor.' + p + '_reichweite_kombiniert']) dev = R['sensor.' + p + '_reichweite_kombiniert'].device_id;
+    /* Altes Präfix mit anderen Endungen („…_reichweite“, „…_tankstand“): Gerät einer Entität mit diesem Präfix. */
+    if (!dev && p && p.indexOf('.') < 0) {
+      var pre = Object.keys(R).filter(function (e) { return e.indexOf('sensor.' + p + '_') === 0 && R[e] && R[e].device_id; })[0];
+      if (pre) dev = R[pre].device_id;
+    }
     if (!dev) {
       // Kandidaten: Geräte mit einer Kernrolle; gewählt wird das mit den meisten Rollen.
       var devs = {};
@@ -1671,7 +1678,9 @@
       var top = 0;
       Object.keys(devs).sort().forEach(function (d) {
         var m = mapDevice(R, d), n = Object.keys(m).length;
-        if (n >= 4 && n > top) { top = n; dev = d; carCache.map['dev|' + d] = m; }
+        /* Wenige Entitäten (z. B. nur Reichweite, Kilometerstand, Tankstand): zwei Kernrollen reichen. */
+        var core = CORE.filter(function (role) { return m[role]; }).length;
+        if ((n >= 4 || core >= 2) && n > top) { top = n; dev = d; carCache.map['dev|' + d] = m; }
       });
     }
     var m = dev ? (carCache.map['dev|' + dev] || mapDevice(R, dev)) : {};
@@ -1679,6 +1688,7 @@
     return m;
   };
   C.id = function (p, suffix, domain) {
+    p = p == null || p === '' ? null : String(p);
     var hit = C.map(p)[suffix];
     if (hit && (!domain || hit.split('.')[0] === domain)) return hit;
     return p && p.indexOf('.') < 0 ? domain + '.' + p + '_' + suffix : null;
@@ -1708,14 +1718,24 @@
     var unlocked = lk.filter(function (x) { return x.state === 'on'; }).length;
     var lockEnt = (function () { var id = C.id(p, 'schloss', 'lock'); return id && states[id]; })();
     var locked = lk.length ? unlocked === 0 : null;
-    if (ok(lockEnt)) locked = lockEnt.state === 'locked' && locked !== false;
+    if (ok(lockEnt)) { locked = lockEnt.state === 'locked' && locked !== false; known = true; }
     var range = s('reichweite_kombiniert'), stampS = s('datenstand');
-    var fuel = val('tankfullstand'), soc = val('akku');
+    /* Tank/Akku nur als Prozent (manche Integrationen melden Liter/Gallonen – das ist kein Füllstand in %). */
+    var pct = function (k) { var u = unit(k); return u && u !== '%' ? null : val(k); };
+    var fuel = pct('tankfullstand'), soc = pct('akku');
+    /* Strecken in der Einheit des Sensors (Meilen statt fest „km“); Schwellen rechnen in km. */
+    var du = function (k) { return /^mi$/i.test(unit(k) || '') ? 'mi' : 'km'; };
+    var dk = function (k) { var v = val(k); return v == null ? null : du(k) === 'mi' ? v * 1.609 : v; };
+    /* Liegt überhaupt ein Tür-/Fenster-/Schloss-/Bremswert vor? Sonst kein „Alles zu“ ohne Daten. */
+    var known = DOORS.concat(WINS).map(function (d) { return d[0]; }).concat(['turen', 'fenster', 'klappen', 'feststellbremse'], LOCKS, ['verriegelung'])
+      .some(function (k) { return ok(b(k)); });
     return {
+      rangeU: du('reichweite_kombiniert'), kmU: du('kilometerstand'), inspU: du('inspektionsdistanz'), scrU: du('scr_reichweite'),
+      inspKmKm: dk('inspektionsdistanz'), scrKm: dk('scr_reichweite'), known: known,
       range: val('reichweite_kombiniert'), tank: fuel != null ? fuel : soc, ev: fuel == null && soc != null, km: val('kilometerstand'),
       scr: val('scr_reichweite'), oil: val('olstand'), v12: val('12v_batteriespannung'),
       out: val('aussentemperatur'), outUnit: unit('aussentemperatur') || '°C', open: openDoors.concat(openWins), openDoors: openDoors, openWins: openWins, locked: locked,
-      brake: on('feststellbremse'),
+      brake: on('feststellbremse'), brakeKnown: ok(b('feststellbremse')),
       insp: s('nachste_inspektion'), inspKm: val('inspektionsdistanz'), oilDate: s('nachster_olwechsel'),
       shortKm: val('strecke_kurzzeit'), shortL: val('o_verbrauch_benzin_kurzzeit'), shortMin: val('fahrzeit_kurzzeit'),
       longKm: val('strecke_langzeit'), longL: val('o_verbrauch_benzin_langzeit'), longMin: val('fahrzeit_langzeit'), longV: val('o_geschwindigkeit_langzeit'),
@@ -1750,7 +1770,7 @@
       /* Weich (Entschlacken): „Reichweite 140 km“ als Hauptwert; „kommt verzögert“ als kleiner Zusatz am Datenstand. */
       if (SFh) sub = [r.open.length ? r.open.join(', ') + ' offen' : (r.locked === false ? 'Nicht verriegelt' : r.locked ? 'Verriegelt' : null),
         r.stamp ? 'Stand ' + ago(r.stamp) + ' (verzögert)' : null].filter(Boolean).join(' · ');
-      var out = UI.hero({ label: SFh ? null : 'Reichweite', value: r.range != null ? (SFh ? 'Reichweite ' : '') + fmtN(r.range) : '—', unit: r.range != null ? 'km' : null,
+      var out = UI.hero({ label: SFh ? null : 'Reichweite', value: r.range != null ? (SFh ? 'Reichweite ' : '') + fmtN(r.range) : '—', unit: r.range != null ? r.rangeU : null,
         sub: sub, subTone: lv === 2 ? 'bad' : lv === 1 ? 'warn' : 'good', center: true });
       /* Weich 1.1.2: Tank als schmale Leiste unter dem Kopf (wie die Geräte-Popups); rechts leer,
          die Reichweite steht im Kopf. Warn-Ton ab 15 %. */
@@ -1780,6 +1800,8 @@
       if (r.open.length) dev.push({ icon: 'mdi:alert', iconTone: 'bad', label: r.open.length === 1 ? r.open[0] + ' offen' : 'Offen', sub: r.open.length > 1 ? r.open.join(', ') : null });
       if (r.locked === false) dev.push({ icon: 'mdi:lock-open-variant', iconTone: 'warn', label: 'Nicht verriegelt' });
       if (r.tank != null && r.tank <= 15) dev.push({ icon: r.ev ? 'mdi:battery-10' : 'mdi:gas-station', iconTone: 'warn', label: r.ev ? 'Akku fast leer' : 'Tank fast leer', value: fmtN(r.tank) + ' %', valueTone: 'warn' });
+      /* Keine Tür-/Fenster-/Schlosswerte (alles „unavailable“, Integration ohne Melder): kein „Alles zu“. */
+      if (!dev.length && !r.known) dev.push({ icon: 'mdi:help-circle-outline', iconTone: 'rgba(255,255,255,0.18)', label: 'Keine Daten' });
       if (!dev.length) dev.push({ icon: 'mdi:check-circle-outline', iconTone: 'good', label: r.locked == null ? 'Alles zu' : 'Alles zu und verriegelt',
         sub: r.brake ? 'Feststellbremse angezogen' : null });
       return UI.group(dev, 'Zustand');
@@ -1790,13 +1812,13 @@
       var fmtD = function (t) { return t.toLocaleDateString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { day: '2-digit', month: '2-digit', year: 'numeric' }); };
       var soon = function (t) { return t && (t - Date.now()) < 30 * 86400000; };
       var due = [], it = dd(r.insp), oc = dd(r.oilDate);
-      if (soon(it) || (r.inspKm != null && r.inspKm <= 1500)) due.push({ icon: 'mdi:wrench-clock', iconTone: 'warn', label: 'Inspektion', sub: r.inspKm != null ? 'in ' + fmtN(r.inspKm) + ' km' : null, value: it ? fmtD(it) : '—', valueTone: 'warn' });
+      if (soon(it) || (r.inspKmKm != null && r.inspKmKm <= 1500)) due.push({ icon: 'mdi:wrench-clock', iconTone: 'warn', label: 'Inspektion', sub: r.inspKm != null ? 'in ' + fmtN(r.inspKm) + ' ' + r.inspU : null, value: it ? fmtD(it) : '—', valueTone: 'warn' });
       if (soon(oc)) due.push({ icon: 'mdi:oil', iconTone: 'warn', label: 'Ölwechsel', value: fmtD(oc), valueTone: 'warn' });
       if (r.oil != null && r.oil < 30) due.push({ icon: 'mdi:oil-level', iconTone: 'warn', label: 'Ölstand', value: fmtN(r.oil) + ' %', valueTone: 'warn' });
-      if (r.scr != null && r.scr < 1000) due.push({ icon: 'mdi:water', iconTone: 'warn', label: 'AdBlue-Reichweite', value: fmtN(r.scr) + ' km', valueTone: 'warn' });
+      if (r.scrKm != null && r.scrKm < 1000) due.push({ icon: 'mdi:water', iconTone: 'warn', label: 'AdBlue-Reichweite', value: fmtN(r.scr) + ' ' + r.scrU, valueTone: 'warn' });
       if (r.v12 != null && r.v12 < 12.0) due.push({ icon: 'mdi:car-battery', iconTone: 'warn', label: '12-V-Batterie', value: fmtN(r.v12, 1) + ' V', valueTone: 'warn' });
       if (!due.length) due.push({ icon: 'mdi:check-circle-outline', iconTone: 'good', label: 'Nichts fällig',
-        sub: it ? 'Nächste Inspektion ' + fmtD(it) : (r.inspKm != null ? 'Nächste Inspektion in ' + fmtN(r.inspKm) + ' km' : null) });
+        sub: it ? 'Nächste Inspektion ' + fmtD(it) : (r.inspKm != null ? 'Nächste Inspektion in ' + fmtN(r.inspKm) + ' ' + r.inspU : null) });
       return UI.group(due, 'Wartung');
     }
     if (name === 'state') {
@@ -1804,10 +1826,10 @@
         { icon: r.locked === false ? 'mdi:lock-open-variant' : 'mdi:lock', iconTone: r.locked === false ? 'warn' : 'good', label: 'Verriegelung',
           value: r.locked == null ? '—' : r.locked ? 'Verriegelt' : 'Offen', valueTone: r.locked === false ? 'warn' : null },
         { icon: 'mdi:car-door', iconTone: r.openDoors.length ? 'bad' : 'rgba(255,255,255,0.18)',
-          label: 'Türen & Klappen', value: r.openDoors.length ? 'Offen' : 'Zu' },
+          label: 'Türen & Klappen', value: r.openDoors.length ? 'Offen' : r.known ? 'Zu' : '—' },
         { icon: 'mdi:car-door-lock', iconTone: r.openWins.length ? 'bad' : 'rgba(255,255,255,0.18)',
-          label: 'Fenster & Schiebedach', value: r.openWins.length ? 'Offen' : 'Zu' },
-        { icon: 'mdi:car-brake-parking', iconTone: 'rgba(255,255,255,0.18)', label: 'Feststellbremse', value: r.brake ? 'Angezogen' : 'Gelöst' },
+          label: 'Fenster & Schiebedach', value: r.openWins.length ? 'Offen' : r.known ? 'Zu' : '—' },
+        { icon: 'mdi:car-brake-parking', iconTone: 'rgba(255,255,255,0.18)', label: 'Feststellbremse', value: r.brake ? 'Angezogen' : r.brakeKnown ? 'Gelöst' : '—' },
       ];
       if (r.out != null) rows.push({ icon: 'mdi:thermometer', iconTone: 'rgba(255,255,255,0.18)', label: 'Außentemperatur', value: fmtN(r.out, 1) + ' ' + (r.outUnit || '°C') });
       if (r.open.length) rows.unshift({ icon: 'mdi:alert', iconTone: 'bad', label: 'Offen', sub: r.open.join(', '), valueTone: 'bad' });
@@ -1816,13 +1838,13 @@
     if (name === 'service') {
       var d = function (x) { var t = toDate(x); return t ? t.toLocaleDateString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { day: '2-digit', month: '2-digit', year: 'numeric' }) : null; };
       var rows2 = [];
-      if (r.km != null) rows2.push({ icon: 'mdi:counter', iconTone: 'rgba(255,255,255,0.18)', label: 'Kilometerstand', value: fmtN(r.km) + ' km' });
+      if (r.km != null) rows2.push({ icon: 'mdi:counter', iconTone: 'rgba(255,255,255,0.18)', label: 'Kilometerstand', value: fmtN(r.km) + ' ' + r.kmU });
       var ins = d(r.insp);
-      if (ins || r.inspKm != null) rows2.push({ icon: 'mdi:wrench-clock', iconTone: 'accent', label: 'Inspektion', sub: r.inspKm != null ? 'in ' + fmtN(r.inspKm) + ' km' : null, value: ins || '—' });
+      if (ins || r.inspKm != null) rows2.push({ icon: 'mdi:wrench-clock', iconTone: 'accent', label: 'Inspektion', sub: r.inspKm != null ? 'in ' + fmtN(r.inspKm) + ' ' + r.inspU : null, value: ins || '—' });
       var od = d(r.oilDate);
       if (od) rows2.push({ icon: 'mdi:oil', iconTone: 'accent', label: 'Ölwechsel', value: od });
       if (r.oil != null) rows2.push({ icon: 'mdi:oil-level', iconTone: r.oil < 30 ? 'warn' : 'rgba(255,255,255,0.18)', label: 'Ölstand', value: fmtN(r.oil) + ' %', valueTone: r.oil < 30 ? 'warn' : null });
-      if (r.scr != null) rows2.push({ icon: 'mdi:water', iconTone: r.scr < 1000 ? 'warn' : 'rgba(255,255,255,0.18)', label: 'AdBlue-Reichweite', value: fmtN(r.scr) + ' km', valueTone: r.scr < 1000 ? 'warn' : null });
+      if (r.scr != null) rows2.push({ icon: 'mdi:water', iconTone: r.scrKm < 1000 ? 'warn' : 'rgba(255,255,255,0.18)', label: 'AdBlue-Reichweite', value: fmtN(r.scr) + ' ' + r.scrU, valueTone: r.scrKm < 1000 ? 'warn' : null });
       if (r.v12 != null) rows2.push({ icon: 'mdi:car-battery', iconTone: r.v12 < 12.0 ? 'warn' : 'good', label: '12-V-Batterie', value: fmtN(r.v12, 1) + ' V', valueTone: r.v12 < 12.0 ? 'warn' : null });
       return rows2.length ? UI.group(rows2, 'Wartung') : '';
     }
@@ -1858,7 +1880,9 @@
     var p = variables.car || (entity && entity.entity_id) || null;
     /* Die Kachel findet das Auto über die translation_keys – ohne feste Entität
        ist die Reichweite der Anker (sonst blieb das Popup leer, 30.09.2026). */
-    var anchor = (entity && entity.entity_id) || C.id(p, 'reichweite_kombiniert', 'sensor');
+    var anchor = (entity && entity.entity_id) || C.id(p, 'reichweite_kombiniert', 'sensor')
+      /* Ohne Reichweite-Sensor: eine andere Kernrolle des Autos (sonst leeres Popup). */
+      || CORE.map(function (role) { return C.map(p)[role]; }).filter(Boolean)[0] || null;
     if (!UI || !anchor) return { type: 'vertical-stack', cards: [] };
     entity = { entity_id: anchor };
     var watch = [];
@@ -1921,6 +1945,21 @@
         return { hero: sec('hero'), left: { card: makeCol(sp.left) }, right: { card: makeCol(sp.right) } }; })(),
     };
   };
+
+  /* Schutz: Wirft ein Teil bei unerwarteten Daten, verwirft button-card den Tipp (Popup geht nicht auf)
+     bzw. die Kachel bleibt leer. Dann lieber leer und ruhig, mit einer Warnung in der Konsole. */
+  var FALLBACK = { level: function () { return 0; }, tile: function () { return 'Keine Daten'; }, sec: function () { return ''; },
+    popup: function () { return { type: 'vertical-stack', cards: [] }; } };
+  var warned = {};
+  Object.keys(FALLBACK).forEach(function (k) {
+    var f = C[k];
+    C[k] = function () {
+      try { return f.apply(this, arguments); } catch (e) {
+        if (!warned[k]) { warned[k] = true; console.warn('Casora Auto (' + k + '):', e); }
+        return FALLBACK[k].apply(this, arguments);
+      }
+    };
+  });
 })();
 
 // ── KI-Kamera-Beschreibung im Kamera-Popup (23.09.2026) ─────────────────────
