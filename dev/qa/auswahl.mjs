@@ -86,6 +86,14 @@ function fallback(f) {
   return [STATES, 'unbekannt – sicherheitshalber alles'];
 }
 
+// Elemente/Globale je Skript, und wie viele Skripte jeden setzen.
+const defsOf = (f) => { const src = fs.readFileSync(path.join(REPO, f), 'utf8');
+  return [...new Set([...src.matchAll(/customElements\.define\(\s*['"]([a-z0-9-]+)['"]/g)].map((m) => m[1])
+    .concat([...src.matchAll(/window\.(_{1,2}casora[A-Za-z0-9_]+)\s*=(?!=)/g)].map((m) => m[1])))]; };
+const DEFCOUNT = new Map();
+for (const d of ['custom_components/casora/scripts', 'custom_components/casora/scripts/local']) {
+  for (const x of fs.readdirSync(path.join(REPO, d)).filter((y) => y.endsWith('.js'))) for (const g of defsOf(d + '/' + x)) DEFCOUNT.set(g, (DEFCOUNT.get(g) || 0) + 1);
+}
 const rows = [];
 const sel = Object.fromEntries(STATES.map((s) => [s, { komplett: false, tests: new Set(), teile: new Set(), crawler: null, grund: [] }]));
 const add = (t) => sel[t.state] && sel[t.state].tests.add(t);
@@ -122,9 +130,8 @@ for (const f of files) {
       teile = ['desktop-dashboard', 'phone-dashboard'];
       if (!changed.length) why.push('keine Vorlage geändert');
     } else if (/^custom_components\/casora\/scripts\/.*\.js$/.test(f) && fs.existsSync(path.join(REPO, f))) {
-      const src = fs.readFileSync(path.join(REPO, f), 'utf8');
-      const defs = [...new Set([...src.matchAll(/customElements\.define\(\s*['"]([a-z0-9-]+)['"]/g)].map((m) => m[1])
-        .concat([...src.matchAll(/window\.(_{1,2}casora[A-Za-z0-9_]+)\s*=(?!=)/g)].map((m) => m[1])))];
+      // Globale, die mehrere Skripte setzen (z. B. _casoraSuppressDismiss), sagen nichts über diese Datei.
+      const defs = defsOf(f).filter((d) => (DEFCOUNT.get(d) || 0) <= 1);
       // Vorlagen, die diese Globalen aufrufen, und ihre Erben.
       const users = Object.keys(tplNow).filter((k) => defs.some((d) => JSON.stringify(tplNow[k]).includes(d)));
       const names = defs.concat(heirs(users));
