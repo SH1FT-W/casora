@@ -319,7 +319,8 @@ for (const src of ['hemma-zuhause', 'hemma-eins']) {
       // Dateien übernehmen (carryFiles) läuft nach und schreibt danach den Fertig-Hinweis („… bleibt“):
       // auf den Hinweis warten statt fester 2,5 s – unter Last (paralleles Gate) dauert es länger.
       const rowsText = () => [...p.shadowRoot.querySelectorAll('.frow')].map((r) => r.textContent).join(' | ');
-      for (let i = 0; i < 80 && !/snapshots/.test(rowsText()); i++) await new Promise((res) => setTimeout(res, 250));
+      // Bis 60 s (09.10.2026: 20 s reichten im Gate unter Last nicht).
+      for (let i = 0; i < 240 && !/snapshots/.test(rowsText()); i++) await new Promise((res) => setTimeout(res, 250));
       const cfg = await p._hass.callWS({ type: 'lovelace/config', url_path: url });
       const mob = await p._hass.callWS({ type: 'lovelace/config', url_path: url + '-mobile' }).catch(() => null);
       const T = cfg.button_card_templates || {};
