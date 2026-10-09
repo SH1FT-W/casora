@@ -57,9 +57,9 @@ Casora recognises robot vacuums, washers and dryers, dishwashers, 3D printers, h
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-popups2-dark.webp" />
-    <img src="docs/images/readme-popups2-light.webp" alt="The fuel view of the car popup on a desktop display and on a phone: when to refuel, a typical day of prices, the cheapest stations, a map and the price list." />
+    <img src="docs/images/readme-popups2-light.webp" alt="The energy popup on a desktop display and on a phone: power right now, a chart of the last hours, where the power comes from and the biggest consumers." />
   </picture>
-  <br/><sub><b>Fuel, right in the car popup.</b> When to refuel, the cheapest stations nearby and a typical day of prices, from Tankerkönig.</sub>
+  <br/><sub><b>Energy at a glance.</b> Power right now, where it comes from, where the solar power goes and which devices use the most.</sub>
 </p>
 
 <p align="center">
@@ -77,6 +77,20 @@ Casora recognises robot vacuums, washers and dryers, dishwashers, 3D printers, h
   </picture>
   <br/><sub><b>Assistants for the tedious part.</b> Place new devices, move from Hemma, go back to any version.</sub>
 </p>
+
+## What Casora covers
+
+Casora picks the right tile and popup for each device on its own. Everything below works with the integrations you already have.
+
+| | Tiles and popups |
+|---|---|
+| **Every home** | Lights and light groups, switches, scenes, blinds and covers, locks, thermostats and room climate, fans, air purifiers, humidifiers, media players, cameras and doorbells |
+| **Safety** | Alarm system, doors and windows, smoke, water and gas sensors, weather warnings |
+| **Energy and house** | Energy with solar and home battery, batteries of all devices, network, updates, waste collection, calendar |
+| **Appliances** | Washing machine, dryer, dishwasher, robot vacuum, 3D printer |
+| **On the road** | Car with fuel prices nearby, e-bike |
+| **Hobbies** | Plants, aquariums, football, game activity (PlayStation, Steam, Discord), recipe of the week |
+| **Your own** | Any Home Assistant card as a custom tile |
 
 The look is *Casora*: warm linen, generous corners and soft shadows, in light and dark, set in Inter. *Casora Nebel* is the same calm design in cool grey with a petrol accent. It follows Home Assistant's theme mode. The classic glass looks from Hemma are still there as legacy options.
 

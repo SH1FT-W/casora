@@ -439,6 +439,33 @@ html[lang="de"] .en, html[lang="en"] .de { display: none !important; }
   </section>
 
 
+  <section id="covers">
+    <div class="wrap">
+      <div class="head center">
+        <p class="eyebrow"><span class="en">Tiles</span><span class="de">Kacheln</span></p>
+        <h2><span class="en">Everything in your home.<br>Already covered.</span><span class="de">Alles in deinem Zuhause.<br>Schon dabei.</span></h2>
+        <p class="lead"><span class="en">Casora picks the right tile and popup for each device on its own, with the integrations you already have.</span><span class="de">Casora wählt für jedes Gerät selbst die passende Kachel und das passende Popup, mit den Integrationen, die du schon hast.</span></p>
+      </div>
+      <div class="covers">
+        <div class="cov"><h3><span class="en">Every home</span><span class="de">Jedes Zuhause</span></h3><p><span class="en">Lights, switches, scenes, blinds, locks, thermostats and room climate, fans, air purifiers, humidifiers, media players, cameras and doorbells</span><span class="de">Licht, Schalter, Szenen, Jalousien, Schlösser, Thermostate und Raumklima, Ventilatoren, Luftreiniger, Luftbefeuchter, Medien, Kameras und Klingeln</span></p></div>
+        <div class="cov"><h3><span class="en">Safety</span><span class="de">Sicherheit</span></h3><p><span class="en">Alarm system, doors and windows, smoke, water and gas sensors, weather warnings</span><span class="de">Alarmanlage, Türen und Fenster, Rauch-, Wasser- und Gasmelder, Wetterwarnungen</span></p></div>
+        <div class="cov"><h3><span class="en">Energy and house</span><span class="de">Energie und Haus</span></h3><p><span class="en">Energy with solar and home battery, batteries of all devices, network, updates, waste collection, calendar</span><span class="de">Energie mit Solar und Hausakku, Batterien aller Geräte, Netzwerk, Updates, Abfall, Kalender</span></p></div>
+        <div class="cov"><h3><span class="en">Appliances</span><span class="de">Geräte</span></h3><p><span class="en">Washing machine, dryer, dishwasher, robot vacuum, 3D printer</span><span class="de">Waschmaschine, Trockner, Geschirrspüler, Saugroboter, 3D-Drucker</span></p></div>
+        <div class="cov"><h3><span class="en">On the road</span><span class="de">Unterwegs</span></h3><p><span class="en">Car with fuel prices nearby, e-bike</span><span class="de">Auto mit Spritpreisen in der Nähe, E-Bike</span></p></div>
+        <div class="cov"><h3><span class="en">Hobbies</span><span class="de">Hobbys</span></h3><p><span class="en">Plants, aquariums, football, game activity, recipe of the week</span><span class="de">Pflanzen, Aquarien, Fußball, Spiele-Aktivität, Rezept der Woche</span></p></div>
+      </div>
+      <p class="cap center"><span class="en">Plus any Home Assistant card as a custom tile.</span><span class="de">Dazu jede Home-Assistant-Karte als eigene Kachel.</span></p>
+    </div>
+  </section>
+
+  <style>
+    #covers .covers{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:32px}
+    #covers .cov{background:var(--card, rgba(255,255,255,.6));border-radius:24px;padding:22px 24px}
+    #covers .cov h3{margin:0 0 6px;font-size:17px}
+    #covers .cov p{margin:0;opacity:.8;line-height:1.5}
+    #covers .cap{margin-top:20px;text-align:center}
+  </style>
+
   <!-- Studio -->
   <section class="tint" id="studio">
     <div class="wrap">
