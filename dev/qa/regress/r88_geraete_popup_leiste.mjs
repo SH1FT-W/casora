@@ -193,9 +193,11 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
   }
 
   // ── Auto: Tank als Leiste, Warn-Ton ab 15 % ──
-  const carView = (desk.config.views || []).find((v) => v.path !== 'home' && JSON.stringify(v).includes('"casora_car"')) || desk.config.views.find((v) => JSON.stringify(v).includes('"casora_car"'));
+  // Das Auto steht nicht in jedem Prüf-Dashboard (qa-arbeit hat keins) – dann ein anderes Desktop-Dashboard mit Auto nehmen.
+  const carDesk = has(desk, 'casora_car') ? desk : all.find((d) => !d.mobile && has(d, 'casora_car'));
+  const carView = carDesk && ((carDesk.config.views || []).find((v) => v.path !== 'home' && JSON.stringify(v).includes('"casora_car"')) || carDesk.config.views.find((v) => JSON.stringify(v).includes('"casora_car"')));
   if (carView) {
-    await dashboard(page, desk.url + '/' + (carView.path || '0'), 3);
+    await dashboard(page, carDesk.url + '/' + (carView.path || '0'), 3);
     await closePopup(page);
     const tankId = await page.evaluate(() => {
       const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_car') && x.getBoundingClientRect().width > 20);

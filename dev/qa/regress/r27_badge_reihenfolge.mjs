@@ -54,7 +54,8 @@ const names = await page.evaluate(async () => {
     const el = document.createElement('casora-mobile-nav');
     el.setConfig(cfg);
     host.appendChild(el);
-    const t = el._bHome && el._bHome.querySelector('span') ? el._bHome.querySelector('span').textContent : null;
+    const sp = el._bHome && el._bHome.querySelector(':scope > span:not(.hmn-bic)'); // erster span ist der Symbolkreis
+    const t = sp ? sp.textContent : null;
     el.remove(); if (el._bar) el._bar.remove();
     return t;
   };
