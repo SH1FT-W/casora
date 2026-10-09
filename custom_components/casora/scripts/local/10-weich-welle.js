@@ -191,7 +191,11 @@
     // (Cover, Titel, Interpret, „Gerät · Raum“, Fortschritt mit Zeiten, ⏮ ⏯ ⏭, Lautstärke), weitere
     // als Cover-Streifen darunter (09-weich-wiedergabe.js, paint mit stage). 8 px Rand im Fenster.
     + '.w{padding:8px}'
-    + '.l.tn .r{border-radius:20px}';
+    + '.l.tn .r{border-radius:20px}'
+    // Nur eine Wiedergabe: die Bühne füllt das Fenster selbst – kein zweiter Rahmen drumherum.
+    + '.w:has(.r.st):not(:has(.r:not(.st))){padding:0}'
+    + '.w:has(.r.st):not(:has(.r:not(.st))) .l{background:none;box-shadow:none;padding:0;border-radius:0}'
+    + '.w:has(.r.st):not(:has(.r:not(.st))) .r.st{border-radius:0}';
 
   var menu = null, body = null, wrap = null, head = null;
   // Eintrag im Format von 09 (_casoraNPSoft.paint/bind): Zeilen, Signatur, Öffnen.
