@@ -1,3 +1,4 @@
+// @deckt: custom_components/casora/panel/casora-panel-import.js custom_components/casora/hemma_package.py custom_components/casora/umstellen.py
 // Hemma-1-Import-Assistent: YAML-Dashboard (Raumkarte + layout-card) → neues Dashboard.
 import { open, ready, shot, BASE } from './harness.mjs';
 import { check, ende, echteFehler } from './ergebnis.mjs';

@@ -1,3 +1,4 @@
+// @deckt: custom_components/casora/panel/casora-panel-import.js custom_components/casora/hemma_package.py custom_components/casora/umstellen.py
 // Zwei YAML-Dashboards: Auswahl-Schritt, dann Hemma-2-Import (Casoras eigener Ablauf).
 import { open, ready, shot, PIERCE, BASE } from './harness.mjs';
 import { check, ende, echteFehler } from './ergebnis.mjs';

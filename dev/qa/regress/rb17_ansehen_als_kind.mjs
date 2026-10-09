@@ -1,5 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
+// @deckt: custom_components/casora/panel/casora-panel-personal.js
 // Nutzertest 5 (H-T4, 07.10.2026). „Ansehen als: Kind“ im Studio zeigt genau das, was das echte Konto
 // „Kind“ im Dashboard sieht: Ist das Sicherheits-Badge eines Raums nur für den Admin, fehlen bei beiden
 // Badge, Zusammenfassung und aufgeklappte Unter-Badges (Schloss, Tür). Unter „Wer sieht das?“ steht,

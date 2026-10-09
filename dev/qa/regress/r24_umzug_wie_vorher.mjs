@@ -1,5 +1,6 @@
 // @zustand: frisch
 // @parallel: allein   (legt über den echten Umzug ein Casora-Dashboard an und löscht es am Ende)
+// @deckt: custom_components/casora/panel/casora-panel-umzug.js custom_components/casora/panel/casora-panel-import.js custom_components/casora/hemma_package.py custom_components/casora/hemma_cleanup.py custom_components/casora/umstellen.py
 // Umzugstest („wie ein iOS-Update“): Nach dem Umzug von Hemma 2 (Mein Zuhause (Hemma 2)) und
 // Hemma 1 (Hemma 1 (Test)) hat jeder Raum dieselben Kacheln (Art, Entität, Reihenfolge) wie
 // vorher, sein Foto, das Wetter (Hemma zeigte das Wetter der Übersicht in jedem Raum) und die

@@ -1,3 +1,4 @@
+// @deckt: custom_components/casora/panel/casora-panel-umzug.js custom_components/casora/hemma_cleanup.py
 // Umzugsassistent: findet Hemma-Dashboards, wertet sie aus (Räume, Kacheln, angepasste
 // Vorlagen), zieht eines um und räumt danach auf (neue Dashboards, Merker).
 import { open, ready, PIERCE } from './harness.mjs';
