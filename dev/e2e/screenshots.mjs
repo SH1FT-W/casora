@@ -214,6 +214,8 @@ async function dashShot(page, shot, touch) {
   if (shot.kind === 'phone') {
     await page.evaluate(() => {
       document.documentElement.style.setProperty('--casora-mobile-chrome-drop', '63px');
+      // Popup-Blatt beginnt wie auf dem iPhone unter der Statusleiste (59 px) plus Abstand (44 px), nicht an der Insel.
+      document.documentElement.style.setProperty('--casora-soft-sheet-top', '103px');
       // Unten der Home-Balken (34 px): Navigationsleiste so hoch wie auf dem iPhone.
       (function walk(r) {
         if (!r) return;
