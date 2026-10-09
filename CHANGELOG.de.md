@@ -4,6 +4,12 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.2.4 – 09.10.2026
+
+### Behoben
+- **Schatten in Popups:** Der weiche Schatten unter der aktiven Zeile oder Taste (Fußbodenheizung, Jalousien, Schlösser, Licht, Thermostat, Luftreiniger, Geschirrspüler, Sauger) war seitlich oder unten hart abgeschnitten. Er läuft jetzt sauber aus.
+- **Thermostat-Text:** Eine Fußbodenheizung öffnet ihre Ventile nur minutenweise. In so einer Pause stand „Bereit“, obwohl der Raum noch unter dem Ziel lag. Jetzt steht „Heizt auf 22°“, bis das Ziel erreicht ist, und dann „Hält 22°“.
+
 ## 1.2.3 – 09.10.2026
 
 ### Behoben

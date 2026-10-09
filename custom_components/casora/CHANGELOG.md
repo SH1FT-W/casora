@@ -4,6 +4,12 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.2.4 – 09.10.2026
+
+### Fixed
+- **Shadows in popups:** the soft shadow under the active row or button (floor heating, blinds, locks, lights, thermostat, air purifier, dishwasher, vacuum) was cut off with a hard edge at the side or bottom. It now fades out fully.
+- **Thermostat text:** floor heating opens its valves only for a few minutes at a time. During such a pause the tile said "Ready" although the room was still below its target. It now says "Heating to 22°" until the target is reached and "Holding 22°" once it is.
+
 ## 1.2.3 – 09.10.2026
 
 ### Fixed
