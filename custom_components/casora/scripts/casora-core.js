@@ -831,6 +831,44 @@
 })();
 // casora-webkit-blur:end
 
+// Schatten aktiver Zeilen/Segmente in Popups nicht abschneiden (09.10.2026): button-card gibt
+// jedem custom_field die Klasse „ellipsis“ (overflow:hidden), dazu schneidet ha-card ab. Der weiche
+// Schatten einer aktiven Zeile (hui-srow.hui-act, lps-row.on), eines Segments (hui-sg.on) oder des Schloss-Balkens (lkbar) endete
+// dort als harte, eckige Kante. Nur Felder/Karten mit diesen Bausteinen dürfen überlaufen; der
+// Inhalt passt dort selbst in die Breite (Auslassung je Zeile), die Popup-Fläche schneidet weiter.
+(function () {
+  if (window.__casoraShadowRoom || !window.customElements || typeof CSSStyleSheet !== 'function') return;
+  window.__casoraShadowRoom = true;
+  // min-width:0: mit overflow:hidden war die Mindestbreite des Rasterfelds 0 – ohne würde es mit
+  // breitem Inhalt über die Spalte hinauswachsen.
+  var HAS = ':has(.hui-plate,.hui-seg,.hp-tb,.lps-row,.lkbar)';
+  var css = '#container>.ellipsis' + HAS + ',#card' + HAS + '{overflow:visible!important;min-width:0;}';
+  customElements.whenDefined('button-card').then(function () {
+    try {
+      var C = customElements.get('button-card');
+      var list = C && C.elementStyles;
+      if (!Array.isArray(list) || list.__casoraShadow) return;
+      var sh = new CSSStyleSheet();
+      sh.replaceSync(css);
+      list.push(sh);
+      list.__casoraShadow = true;
+      // Schon gezeichnete Karten (Modul kam später): einmal nachreichen.
+      setTimeout(function () {
+        var n = 0;
+        (function walk(root) {
+          var all = root.querySelectorAll('*');
+          for (var i = 0; i < all.length && n < 20000; i++, n++) {
+            var el = all[i], sr = el.shadowRoot;
+            if (!sr) continue;
+            if (el.localName === 'button-card' && sr.adoptedStyleSheets.indexOf(sh) < 0) sr.adoptedStyleSheets = sr.adoptedStyleSheets.concat([sh]);
+            walk(sr);
+          }
+        })(document);
+      }, 1500);
+    } catch (e) { /* ohne Constructable Stylesheets: wie bisher */ }
+  });
+})();
+
 // Gefüllte Symbolfamilie in Menüs (Fix-Runde 1, A-21): Setzt ein Design
 // --casora-menu-icons-filled: 1, zeigen die Menüs Kontur-Symbole in ihrer gefüllten Form
 // (mdi: …-outline → ohne Suffix; eigene Sätze wie ios: …-fill bzw. …-inverse, nur wenn es

@@ -27,7 +27,8 @@
 //  - Text: scrollWidth > clientWidth bei overflow hidden ohne Ellipsis/line-clamp = abgeschnitten;
 //  - Bedienelemente dürfen sich nicht überlappen (ohne Verschachtelung);
 //  - Handy: Trefferfläche < 44 px wird gezählt (Hinweis, kein Fehler).
-// Rückgabe 1, wenn es Funde „abgeschnitten“ oder „Überlappung“ gibt.
+//  - Schatten: box-shadow nach außen, den ein Vorfahr mit overflow hidden/clip hart abschneidet (09.10.2026).
+// Rückgabe 1, wenn es Funde „abgeschnitten“, „Überlappung“ oder „Schatten“ gibt.
 import fs from 'node:fs';
 import path from 'node:path';
 import { tokens, ws } from './ws.mjs';
@@ -211,6 +212,37 @@ const MEASURE = ({ phone }) => {
     }
     if (phone && inter && isInter(e) && (hw < 44 || hh < 44)) out.small.push({ label: label(e), w: Math.round(r.width), h: Math.round(r.height), path: path(e) });
   }
+  // Schatten (box-shadow nach außen), den ein Vorfahr mit overflow hidden/clip abschneidet: statt weichem
+  // Auslaufen eine harte, eckige Kante (09.10.2026, aktive Zeile im FBH-Popup). Gewertet wird der gut
+  // sichtbare Teil: Versatz + Ausdehnung + drei Viertel der Unschärfe, je Seite.
+  out.shadow = [];
+  const SH = /(rgba?\([^)]*\)|#[0-9a-f]+|[a-z]+)?\s*(-?[\d.]+)px\s+(-?[\d.]+)px(?:\s+([\d.]+)px)?(?:\s+(-?[\d.]+)px)?/i;
+  for (const e of els) {
+    if (e.nodeType !== 1 || e instanceof SVGElement) continue;
+    const bs = cs(e).boxShadow;
+    if (!bs || bs === 'none') continue;
+    const r = e.getBoundingClientRect();
+    // Die Popup-Fläche selbst (Rahmen, Glas) zählt nicht – ihr Schatten liegt außerhalb des Popups.
+    if (!vis(e, r) || e === frame || r.width * r.height > FA * 0.8) continue;
+    const ext = { l: 0, t: 0, r: 0, b: 0 };
+    for (const part of bs.split(/,(?![^(]*\))/)) {
+      if (/inset/.test(part)) continue;
+      const m = part.match(SH); if (!m) continue;
+      const a = (m[1] || '').match(/rgba?\(([^)]+)\)/); const al = a ? Number((a[1].split(/[ ,/]+/).filter(Boolean)[3]) ?? 1) : 1;
+      if (al < 0.04) continue;
+      const x = +m[2], y = +m[3], bl = +(m[4] || 0) * 0.75, sp = +(m[5] || 0);
+      ext.l = Math.max(ext.l, bl + sp - x); ext.r = Math.max(ext.r, bl + sp + x);
+      ext.t = Math.max(ext.t, bl + sp - y); ext.b = Math.max(ext.b, bl + sp + y);
+    }
+    if (Math.max(ext.l, ext.t, ext.r, ext.b) < 3) continue;
+    const cl = clipOf(e);
+    const over = { l: cl.L - (r.left - ext.l), t: cl.T - (r.top - ext.t), r: (r.right + ext.r) - cl.R, b: (r.bottom + ext.b) - cl.B };
+    // Nur Seiten, auf denen der Schatten überhaupt nach außen reicht; Fensterkante zählt nicht.
+    const sides = Object.entries(over).filter(([k, v]) => ext[k] >= 3 && v > 2
+      && !((k === 'l' && cl.L <= 0) || (k === 't' && cl.T <= 0) || (k === 'r' && cl.R >= innerWidth) || (k === 'b' && cl.B >= innerHeight)));
+    if (!sides.length) continue;
+    out.shadow.push({ label: label(e).slice(0, 60), sides: sides.map(([k, v]) => k + Math.round(v)).join(' '), by: cl.by, path: path(e) });
+  }
   // Überlappung zweier Bedienelemente (keins im anderen).
   const contains = (a, b) => { for (let x = b, n = 0; x && n < 80; x = up(x), n++) if (x === a) return true; return false; };
   for (let i = 0; i < inters.length; i++) for (let j = i + 1; j < inters.length; j++) {
@@ -338,16 +370,17 @@ for (const scheme of schemes) for (const vn of views) {
         const measure = () => page.evaluate(MEASURE, { phone: !!V.phone }).catch((e) => ({ error: String(e), cut: [], text: [], overlap: [], small: [] }));
         let m = await measure();
         // Nur Funde, die nach einer weiteren Pause noch genauso da sind (sonst Momentaufnahme).
-        if (m && (m.cut.length || m.text.length || m.overlap.length)) {
+        if (m && (m.cut.length || m.text.length || m.overlap.length || (m.shadow || []).length)) {
           await page.waitForTimeout(1500);
           const m2 = await measure();
           const same = (a, b, k) => a.filter((x) => b.some((y) => k(x) === k(y)));
           m.cut = same(m.cut, m2.cut, (x) => x.label + x.side + x.px);
           m.text = same(m.text, m2.text, (x) => x.label + x.sw);
           m.overlap = same(m.overlap, m2.overlap, (x) => x.a + x.b + x.w + x.h);
+          m.shadow = same(m.shadow || [], m2.shadow || [], (x) => x.path + x.sides);
         }
         const row = { scheme, view: vn, page: v, room: room || undefined, key, ...(m || { error: 'kein Popup' }) };
-        if (shotsDir && m && (process.argv.includes('--alle-bilder') || m.cut.length || m.text.length || m.overlap.length)) {
+        if (shotsDir && m && (process.argv.includes('--alle-bilder') || m.cut.length || m.text.length || m.overlap.length || (m.shadow || []).length)) {
           row.shot = path.join(shotsDir, `${vn}_${scheme}_${key.replace(/[^\w-]+/g, '_')}.jpg`.slice(0, 120));
           // Unten abgeschnitten: ans Ende scrollen – zeigt, ob man es erreichen kann.
           if (m.cut.some((x) => x.side === 'b')) await page.evaluate(() => { const c = window.casoraPopup && window.casoraPopup.surface && window.casoraPopup.surface.querySelector('.content'); if (c) c.scrollTop = c.scrollHeight; });
@@ -355,8 +388,9 @@ for (const scheme of schemes) for (const vn of views) {
           await page.screenshot({ path: row.shot, type: 'jpeg', quality: 55 });
         }
         results.push(row);
-        const n = m ? (m.cut.length + m.text.length + m.overlap.length) : -1;
-        console.log(`  ${n ? 'FUND  ' : 'ok    '} ${scheme}/${vn} ${pre}${key}` + (n > 0 ? ` – ${m.cut.length} abgeschnitten, ${m.text.length} Text, ${m.overlap.length} Überlappung` : ''));
+        const n = m ? (m.cut.length + m.text.length + m.overlap.length + (m.shadow || []).length) : -1;
+        console.log(`  ${n ? 'FUND  ' : 'ok    '} ${scheme}/${vn} ${pre}${key}` + (n > 0 ? ` – ${m.cut.length} abgeschnitten, ${m.text.length} Text, ${m.overlap.length} Überlappung, ${(m.shadow || []).length} Schatten` : ''));
+        for (const x of (m && m.shadow) || []) console.log(`           Schatten ${x.sides} durch ${x.by}: ${x.label} (${x.path})`);
         await closeAll(page);
         if (room && !await ensureRoom(page, room)) break;
       }
@@ -368,7 +402,7 @@ for (const scheme of schemes) for (const vn of views) {
 }
 const json = arg('json');
 if (json) fs.writeFileSync(json, JSON.stringify(results, null, 1));
-const bad = results.filter((r) => r.cut && (r.cut.length || r.overlap.length));
+const bad = results.filter((r) => r.cut && (r.cut.length || r.overlap.length || (r.shadow || []).length));
 if (!results.some((r) => r.key)) { console.log('FAIL popup-raender – kein Popup geöffnet'); process.exit(1); }
 console.log(`${bad.length ? 'FAIL' : 'PASS'} popup-raender – ${results.filter((r) => r.key).length} Messungen, ${bad.length} mit Fund (${Math.round((Date.now() - stamp) / 1000)} s)`);
 process.exit(bad.length ? 1 : 0);
