@@ -7,6 +7,8 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ## 1.2.1 – 09.10.2026
 
 ### Neu
+- **Kamera-Kachel mit Schnappschuss.** Hat die Kamera eine eigene Schnappschuss-Entität (z. B. Reolink „Schnappschüsse in Hochauflösung“), nimmt die Kachel ihr Bild von dort, schneller und schärfer. Im Studio lässt sich unter „Standbild von“ jede Kamera- oder Bild-Entität festlegen und unter „Bild auffrischen“ der Abstand (5 bis 60 Sekunden). Statt „Live“ steht „Aktuell“, ein altes Bild zeigt sein Alter in Orange.
+- **Anzeige-Bedingungen für jede Kachel.** Im Studio hat jede Kachel unter „Sichtbarkeit“ den Bereich „Anzeigen, wenn“, auch Auto, E-Bike und Abfall. Die Bedingung gilt am Desktop und am Handy.
 - **Schloss in Casora.** Ein Tipp auf die Schloss-Zeile im Popup öffnet eine eigene Ansicht statt des Home-Assistant-Dialogs: Verriegeln bzw. Entriegeln (mit Rückfrage, wenn eingestellt), „Tür öffnen“, wenn das Schloss das kann, Zustand mit Tür und Akku und der Verlauf von heute mit Auslöser (per App, automatisch, am Schloss). „Ganzer Verlauf“ öffnet das Logbuch für den ganzen Tag.
 - **Energiefluss als ruhige Balken.** Im Energie-Popup zeigt Casora den Hausverbrauch mit Akkustand, darunter woher der Strom kommt und wohin der Solarstrom geht, mit Prozent und Watt. Ohne Animation, die Werte aktualisieren sich live.
 - **Tanken-Karte neu.** Alle Stationen stehen als Punkte am echten Ort, nur die vier günstigsten bekommen eine Preis-Pille. Die Karte zoomt auf den eingestellten Umkreis und folgt der Auswahl Günstigste, Nächste und Offen. Preise mit zwei Nachkommastellen.
@@ -14,6 +16,9 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **WashData 0.5.8.** Salz und Klarspüler beim Geschirrspüler, Flusensieb und Kondensator beim Trockner, eigene Wartungsaufgaben mit Namen und der Zustand „Angehalten“, wenn die Maschine mittendrin stehen bleibt.
 
 ### Behoben
+- **Saugroboter im Studio:** Seine Anzeige-Bedingung steht als bearbeitbare Zeilen statt als Rohtext da.
+- **Einheitliche Abstände:** Etiketten in den Karten der Popups stehen überall gleich weit vom Rand. Die Rückfrage bestätigt mit demselben Wort wie der Knopf („Entriegeln“).
+- **Englisch:** Uhrzeiten im 12-Stunden-Format, Pflege-Zeilen und Aquarium vollständig übersetzt.
 - **Tanken-Karte mit Home Assistant 2026.10:** Die Karte erscheint wieder (Home Assistant zeichnet Karten jetzt mit MapLibre). Lanfer-Logo mittig im Kreis.
 - **Kamera-Kachel:** Das Standbild erscheint zuverlässig und frischt sich alle 10 Sekunden auf, solange die Kachel sichtbar ist.
 - **Rückfrage am Handy:** „Vor dem Schalten fragen“ gilt jetzt auch in Popups, an Reglern und in der Schloss-Ansicht am Handy. Die Knöpfe der Rückfrage sind voll rund wie alle Casora-Knöpfe.

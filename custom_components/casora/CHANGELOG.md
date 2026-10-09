@@ -7,6 +7,8 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 1.2.1 – 09.10.2026
 
 ### New
+- **Camera tile with snapshots.** If the camera has its own snapshot entity (e.g. Reolink "Snapshots main"), the tile takes its picture from there, faster and sharper. In the Studio you can pick any camera or image entity under "Still image from" and the interval under "Refresh image" (5 to 60 seconds). Instead of "Live" it says "Up to date", an old picture shows its age in orange.
+- **Visibility conditions for every tile.** In the Studio every tile has "Show when" under "Visibility", including car, e-bike and waste. The condition applies on desktop and phone.
 - **Locks in Casora.** A tap on the lock row in the popup opens its own view instead of the Home Assistant dialog: lock or unlock (with confirmation if set), "Open door" when the lock supports it, state with door and battery, and today's history with what triggered it (app, automation, at the lock). "Full history" opens the logbook for the whole day.
 - **Energy flow as calm bars.** The energy popup shows the home's use with the battery level, then where the power comes from and where the solar power goes, with percent and watts. No animation, the values update live.
 - **New fuel map.** Every station is a dot at its real place, only the four cheapest get a price pill. The map zooms to the radius you set and follows Cheapest, Nearest and Open. Prices with two decimals.
@@ -14,6 +16,9 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **WashData 0.5.8.** Salt and rinse aid for dishwashers, lint filter and condenser for dryers, your own maintenance tasks by name and the "Stalled" state when the machine stops mid-cycle.
 
 ### Fixed
+- **Robot vacuum in the Studio:** its visibility condition shows as editable rows instead of raw text.
+- **Consistent spacing:** labels in popup cards sit the same distance from the edge everywhere. The confirmation uses the same word as the button ("Unlock").
+- **English:** times in 12-hour format, care rows and aquarium fully translated.
 - **Fuel map with Home Assistant 2026.10:** the map shows again (Home Assistant now draws maps with MapLibre). Lanfer logo centred in its circle.
 - **Camera tile:** the still image shows up reliably and refreshes every 10 seconds while the tile is visible.
 - **Confirmation on the phone:** "Ask before switching" now also applies in popups, on sliders and in the lock view on the phone. The confirmation buttons are fully round like every Casora button.
