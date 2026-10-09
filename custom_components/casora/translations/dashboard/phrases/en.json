@@ -1583,7 +1583,9 @@
   "Suche …": "Checking …",
   "Keine neuen Updates": "No new updates",
   "1 neues Update gefunden": "1 new update found",
-  "Suche fehlgeschlagen": "Check failed"
+  "Suche fehlgeschlagen": "Check failed",
+  "Vorheriger Titel": "Previous track",
+  "Nächster Titel": "Next track"
  },
  "patterns": [
   [

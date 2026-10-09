@@ -1,8 +1,8 @@
 // ── Weich: Panel hinter der Medien-Welle oben rechts (05.10.2026, 1.0.7, Entwurf A „Liste“) ─────
 // Nur im Weich-Design und nur am Desktop/Tablet (am Handy gibt es keine Welle). Ein Tipp auf die
 // Welle öffnet ein ruhiges Menü unter ihr – Optik wie das Mitteilungsmenü (casoraMenuGlass) –,
-// darin je Player eine Zeile genau wie die Liste „Aktuelle Wiedergabe“ (09-weich-wiedergabe.js:
-// Cover, Titel, „Interpret · Gerät“, Fortschritt, runder Play/Pause-Knopf). Ein Tipp auf eine
+// darin seit 09.10.2026 die erste Wiedergabe als Cover-Bühne und weitere als Cover-Streifen
+// (09-weich-wiedergabe.js, paint mit stage). Ein Tipp auf eine
 // Zeile öffnet das große Medien-Popup wie bisher; Tipp daneben oder Escape schließt. Stoppt die
 // letzte Wiedergabe, blendet das Panel sich selbst aus (die Welle verschwindet wie bisher).
 //
@@ -187,15 +187,11 @@
 
   // ── Panel ──
   var CSS = ''
-    // D1 (1.2): Zeilen wie Glocke und Handy-Fenster – 8 px Rand, Kreis 36 (Cover rund), Name 15/600,
-    // Unterzeile 13, Pille 26; die Trennlinie beginnt am Text.
+    // 09.10.2026, Entwurf C „Cover-Bühne“: die erste Wiedergabe als vom Cover eingefärbte Bühne
+    // (Cover, Titel, Interpret, „Gerät · Raum“, Fortschritt mit Zeiten, ⏮ ⏯ ⏭, Lautstärke), weitere
+    // als Cover-Streifen darunter (09-weich-wiedergabe.js, paint mit stage). 8 px Rand im Fenster.
     + '.w{padding:8px}'
-    + '.l .rc{padding:8px 14px 8px 8px;gap:12px}'
-    + '.w .l .cv,.w .l.d .cv{width:36px;height:36px;border-radius:50%}'
-    + '.w .l .t{font-size:15px;font-weight:600}'
-    + '.w .l .s{font-size:13px}'
-    + '.w .l .r{border-radius:26px}'
-    + '.w .l .r.hs:before,.w .l.d .r.hs:before{left:56px;right:12px}';
+    + '.l.tn .r{border-radius:20px}';
 
   var menu = null, body = null, wrap = null, head = null;
   // Eintrag im Format von 09 (_casoraNPSoft.paint/bind): Zeilen, Signatur, Öffnen.
@@ -227,7 +223,7 @@
     if (force) pe.sig = null;
     var NP = window._casoraNPSoft;
     if (!NP || !NP.paint) return;
-    var built = NP.paint(pe, wrap, l, h.states, { panel: true });
+    var built = NP.paint(pe, wrap, l, h.states, { panel: true, stage: true });
     // Gruppen zählen (gleicher Titel auf mehreren Playern = eine Wiedergabe).
     var n = NP.group ? NP.group(l).length : l.length;
     var label = n === 1 ? T('Läuft gerade') : T(n + ' Wiedergaben');

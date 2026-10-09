@@ -3,6 +3,10 @@
 // Cover, Titel, „Interpret · Gerät“, dünner Fortschritt und ein runder Play/Pause-Knopf.
 // Am Handy stehen die Zeilen untereinander, am Desktop/Tablet nebeneinander (umbrechend
 // statt seitlich zu scrollen). Standard und Glas zeigen weiter Karussell bzw. Pillen.
+// Seit 09.10.2026 (Entwurf B1 „Cover-Streifen“): jede Wiedergabe ist eine eigene, vom Cover
+// eingefärbte Fläche (76 px), rechts ⏮ ⏯ ⏭ – Zurück/Vor nur, wenn der Player es kann. Im
+// Welle-Menü (opt.stage) wird die erste Wiedergabe zur Cover-Bühne (Entwurf C) mit Zeiten und
+// Lautstärke. Tasten und Lautstärke öffnen nie das Popup.
 //
 // Die Vorlagen melden ihre Karte nur an (window._casoraNPSoft.mount):
 //   casora_mobile_now_playing  → 'phone' (ersetzt #media_row/#np_rail, Überschrift bleibt)
@@ -34,6 +38,10 @@
     note: 'M21,3V15.5A3.5,3.5 0 0,1 17.5,19A3.5,3.5 0 0,1 14,15.5A3.5,3.5 0 0,1 17.5,12C18.04,12 18.55,12.12 19,12.34V6.47L9,8.6V17.5A3.5,3.5 0 0,1 5.5,21A3.5,3.5 0 0,1 2,17.5A3.5,3.5 0 0,1 5.5,14C6.04,14 6.55,14.12 7,14.34V6L21,3Z',
     game: 'M7.97,16L5,19C4.67,19.3 4.23,19.5 3.75,19.5A1.75,1.75 0 0,1 2,17.75V17.5L3,10.12C3.21,7.81 5.14,6 7.5,6H16.5C18.86,6 20.79,7.81 21,10.12L22,17.5V17.75A1.75,1.75 0 0,1 20.25,19.5C19.77,19.5 19.33,19.3 19,19L16.03,16H7.97M7,8V10H5V11H7V13H8V11H10V10H8V8H7M16.5,8A0.75,0.75 0 0,0 15.75,8.75A0.75,0.75 0 0,0 16.5,9.5A0.75,0.75 0 0,0 17.25,8.75A0.75,0.75 0 0,0 16.5,8M14.75,9.75A0.75,0.75 0 0,0 14,10.5A0.75,0.75 0 0,0 14.75,11.25A0.75,0.75 0 0,0 15.5,10.5A0.75,0.75 0 0,0 14.75,9.75M18.25,9.75A0.75,0.75 0 0,0 17.5,10.5A0.75,0.75 0 0,0 18.25,11.25A0.75,0.75 0 0,0 19,10.5A0.75,0.75 0 0,0 18.25,9.75M16.5,11.5A0.75,0.75 0 0,0 15.75,12.25A0.75,0.75 0 0,0 16.5,13A0.75,0.75 0 0,0 17.25,12.25A0.75,0.75 0 0,0 16.5,11.5Z',
   };
+  P.prev = 'M6,18V6H8V18H6M9.5,12L18,6V18L9.5,12Z';
+  P.next = 'M16,18H18V6H16M6,18L14.5,12L6,6V18Z';
+  P.volLo = 'M7,9V15H11L16,20V4L11,9H7Z';
+  P.volHi = 'M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z';
   var svg = function (d, s) { return '<svg viewBox="0 0 24 24" width="' + s + '" height="' + s + '" aria-hidden="true"><path fill="currentColor" d="' + d + '"/></svg>'; };
 
   // Einstellungen der Raumkarte → dieselbe Form wie casora_mobile_now_playing (variables.cfg),
@@ -97,7 +105,60 @@
     + 'box-shadow:var(--casora-soft-media-play-shadow, 0 10px 22px -12px rgba(150,95,55,.55));transition:transform .12s ease}'
     + '.p.o{background:var(--cnp-track);color:var(--cnp-ink);box-shadow:none}'
     + '.p:active{transform:scale(.92)}'
-    + '.p:focus-visible{outline:2px solid var(--cnp-ton);outline-offset:2px}';
+    + '.p:focus-visible{outline:2px solid var(--cnp-ton);outline-offset:2px}'
+    // ── Cover-Streifen (B1) und Cover-Bühne (C), 09.10.2026 ──
+    // .tn: jede Wiedergabe eine eigene Fläche, vom Cover eingefärbt (--c aus dem Bild, sonst Ton
+    // leise). Hell 30/11 %, dunkel 62/24 % Coverfarbe im radialen Verlauf von oben links.
+    + '.l.tn{display:grid;gap:8px;background:none;box-shadow:none;border-radius:0;padding:0;-webkit-backdrop-filter:none;backdrop-filter:none;'
+    + '--cnp-sf:var(--casora-np-list-surface, var(--ha-card-background, rgba(251,248,243,.96)));--mA:30%;--mB:11%}'
+    + '.l.tn.dk{--mA:62%;--mB:24%}'
+    + '.l.tn .r.nc{--c:var(--cnp-ton)}'
+    + '.l.tn .r.nc{--mA:16%;--mB:6%}.l.tn.dk .r.nc{--mA:30%;--mB:11%}'
+    + '.l.tn .r{border-radius:22px;background:var(--cnp-sf)}'
+    + '.l.tn.ph .r{box-shadow:var(--cnp-shadow)}'
+    + '.l.tn .r:before,.l.tn .r:after{display:none}'
+    + '.l.tn .r:hover,.l.tn .r:active{background:var(--cnp-sf)}'
+    + '.tn .rc{border-radius:inherit;gap:12px;padding:12px;'
+    + 'background:radial-gradient(130% 150% at 0% 0%,color-mix(in srgb,var(--c) var(--mA),var(--cnp-sf)) 0%,'
+    + 'color-mix(in srgb,var(--c) var(--mB),var(--cnp-sf)) 48%,var(--cnp-sf) 100%)}'
+    + '.tn .rc:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:transparent;transition:background .15s ease}'
+    + '@media (hover:hover){.tn .r:hover .rc:after{background:var(--casora-np-hover, var(--casora-soft-row-hover, rgba(140,115,90,.06)))}}'
+    + '.tn .r:active .rc:after{background:var(--casora-soft-row-hover, rgba(140,115,90,.08))}'
+    + '.tn .cv,.l.d.tn .cv{width:52px;height:52px;border-radius:14px;box-shadow:0 6px 14px -8px rgba(0,0,0,.45)}'
+    + '.tn .t{font-size:15px;font-weight:650}'
+    + '.tn .s{font-size:12.5px;margin-top:1px}'
+    + '.tn .b{margin-top:8px;background:color-mix(in srgb,var(--cnp-ink) 16%,transparent)}'
+    + '.tn .b i{background:var(--cnp-ink)}'
+    + '.ct{display:flex;align-items:center;gap:2px;flex:none}'
+    + '.k{width:34px;height:34px;border-radius:50%;flex:none;display:grid;place-items:center;border:0;padding:0;margin:0;cursor:pointer;'
+    + 'background:none;color:var(--cnp-ink);font:inherit;-webkit-tap-highlight-color:transparent;transition:transform .12s ease,background .15s ease}'
+    + '@media (hover:hover){.k:hover{background:color-mix(in srgb,var(--cnp-ink) 8%,transparent)}}'
+    + '.k:active{transform:scale(.9)}'
+    + '.k:focus-visible{outline:2px solid var(--cnp-ton);outline-offset:1px}'
+    + '.tn .p{width:40px;height:40px}'
+    + '.tn .p.o{background:var(--casora-soft-media-play, var(--primary-color, #B67A50));color:#fff;box-shadow:var(--casora-soft-media-play-shadow, 0 10px 22px -12px rgba(150,95,55,.55))}'
+    // Handy: Trefferflächen mindestens 40 px.
+    + '.tn.ph .k{width:40px;height:40px}.tn.ph .p{width:44px;height:44px}.tn.ph .ct{gap:0}'
+    // Bühne (Welle-Menü, erste Wiedergabe): Cover groß, Zeiten, Tasten mittig, Lautstärke.
+    + '.r.st .rc{display:block;padding:18px 18px 14px;border-radius:inherit}'
+    + '.l.tn .r.st{border-radius:20px}'
+    + '.st .hr{display:flex;align-items:center;gap:14px;min-width:0}'
+    + '.st .cv{width:64px;height:64px;border-radius:16px}'
+    + '.st .t{font-size:17px}'
+    + '.st .a,.st .s{font-size:13px;color:var(--cnp-sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+    + '.st .a{color:var(--cnp-ink);opacity:.82}'
+    + '.st .b{height:4px;margin-top:16px}'
+    + '.st .tm{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--cnp-sub);font-variant-numeric:tabular-nums}'
+    + '.st .ct{justify-content:center;gap:26px;margin-top:6px}'
+    + '.st .k{width:44px;height:44px}'
+    + '.st .p{width:56px;height:56px}'
+    + '.vo{display:flex;align-items:center;gap:10px;margin-top:8px;color:var(--cnp-sub)}'
+    + '.vo svg{flex:none}'
+    + '.vb{flex:1;height:28px;position:relative;cursor:pointer;touch-action:none;outline:none;border-radius:14px}'
+    + '.vb:before{content:"";position:absolute;left:0;right:0;top:12px;height:4px;border-radius:2px;background:color-mix(in srgb,var(--cnp-ink) 16%,transparent)}'
+    + '.vb i{position:absolute;left:0;top:12px;height:4px;border-radius:2px;background:var(--cnp-ink)}'
+    + '.vb i:after{content:"";position:absolute;right:-6px;top:-4px;width:12px;height:12px;border-radius:50%;background:var(--cnp-ink);box-shadow:0 1px 4px rgba(0,0,0,.25)}'
+    + '.vb:focus-visible{box-shadow:0 0 0 2px var(--cnp-ton)}';
 
   // Was die Vorlage sonst zeigt, wird im Weich-Design ausgeblendet (die Karten bleiben im DOM).
   var HIDE = {
@@ -236,8 +297,9 @@
     var cols = 1, colW = 0, avail = 0;
     if (desk) {
       avail = roomWidth(card);
-      cols = Math.max(1, Math.min(list.length || 1, Math.floor((avail - 12) / 290)));
-      colW = Math.floor(Math.max(240, Math.min(370, (avail - 12) / cols)));
+      // Cover-Streifen mit ⏮ ⏯ ⏭ brauchen ~340 px je Spalte (09.10.2026, vorher 290).
+      cols = Math.max(1, Math.min(group(list).length || 1, Math.floor((avail - 4) / 348)));
+      colW = Math.floor(Math.max(300, Math.min(420, (avail - 12) / cols)));
       // Schmale Zeile (Handy hoch): wie die Handy-Liste untereinander.
       if (avail && avail < 560) { desk = false; cols = 1; }
     }
@@ -300,62 +362,193 @@
   M.names = names;
   M.subline = subline;
 
+  // ── Farbe aus dem Cover (09.10.2026) ──
+  // Das Bild wird klein (24×24) auf eine Leinwand gezeichnet; die Farbe ist der nach Sättigung
+  // gewichtete Mittelwert, danach gedämpft (Sättigung ≤ 0,7, Helligkeit 0,28–0,52), damit Schrift
+  // hell wie dunkel lesbar bleibt. Fremde Bilder ohne CORS bleiben beim ruhigen Rückfall (Ton).
+  var TINT = {}, tintN = 0, painted = [];
+  function pickColor(img) {
+    var c = document.createElement('canvas'); c.width = c.height = 24;
+    var x = c.getContext('2d', { willReadFrequently: true });
+    x.drawImage(img, 0, 0, 24, 24);
+    var d = x.getImageData(0, 0, 24, 24).data, R = 0, G = 0, B = 0, W = 0;
+    for (var i = 0; i < d.length; i += 4) {
+      if (d[i + 3] < 128) continue;
+      var r = d[i], g = d[i + 1], b = d[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+      var s = mx ? (mx - mn) / mx : 0, l = (mx + mn) / 510;
+      // Kräftige, mittelhelle Pixel zählen viel; Schwarz/Weiß nur wenig.
+      var w = 0.05 + s * s * (1 - Math.abs(l - 0.5) * 1.6);
+      if (w <= 0) w = 0.02;
+      R += r * w; G += g * w; B += b * w; W += w;
+    }
+    if (!W) return '';
+    return clampColor(R / W, G / W, B / W);
+  }
+  function clampColor(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), h = 0, l = (mx + mn) / 2, s = 0, dd = mx - mn;
+    if (dd) {
+      s = l > 0.5 ? dd / (2 - mx - mn) : dd / (mx + mn);
+      h = mx === r ? (g - b) / dd + (g < b ? 6 : 0) : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4;
+      h *= 60;
+    }
+    s = Math.min(s, 0.7);
+    l = Math.max(0.28, Math.min(0.52, l));
+    return 'hsl(' + Math.round(h) + ',' + Math.round(s * 100) + '%,' + Math.round(l * 100) + '%)';
+  }
+  // Farbe zum Bild: Zeichenkette (fertig), '' (keine), null (lädt – Zeilen werden danach eingefärbt).
+  function tintOf(url) {
+    if (!url) return '';
+    if (Object.prototype.hasOwnProperty.call(TINT, url)) return TINT[url];
+    if (++tintN > 300) { TINT = {}; tintN = 1; }
+    TINT[url] = null;
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.decoding = 'async';
+    var done = function (col) { TINT[url] = col || ''; applyTint(url, TINT[url]); };
+    img.onload = function () { var col = ''; try { col = pickColor(img); } catch (err) { col = ''; } done(col); };
+    img.onerror = function () { done(''); };
+    img.src = url;
+    return null;
+  }
+  function applyTint(url, col) {
+    painted = painted.filter(function (e) { return e.w && e.w.isConnected; });
+    if (!col) return;
+    painted.forEach(function (e) {
+      Array.prototype.forEach.call(e.w.querySelectorAll('.r[data-art]'), function (row) {
+        if (row.getAttribute('data-art') !== url) return;
+        row.style.setProperty('--c', col);
+        row.classList.remove('nc');
+      });
+    });
+  }
+  M.tintOf = tintOf;
+  M.clampColor = clampColor;
+
+  // Raum der Player (Bereich der Entität, sonst des Geräts) – nur wenn alle im selben Raum stehen.
+  function roomOf(recs) {
+    var h = getHass(), out = [];
+    if (!h) return '';
+    (recs || []).forEach(function (r) {
+      var en = r && r.entity && h.entities && h.entities[r.entity];
+      if (!en) return;
+      var a = en.area_id || (en.device_id && h.devices && h.devices[en.device_id] && h.devices[en.device_id].area_id);
+      var n = a && h.areas && h.areas[a] && h.areas[a].name;
+      if (n && out.indexOf(n) < 0) out.push(n);
+    });
+    return out.length === 1 ? out[0] : '';
+  }
+  function clock(s) {
+    s = Math.max(0, Math.floor(s || 0));
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+    return (h ? h + ':' + (m < 10 ? '0' : '') + m : m) + ':' + (x < 10 ? '0' : '') + x;
+  }
+  M.clock = clock;
+
   // Zeilen in w zeichnen (auch für das Panel hinter der Medien-Welle, 10-weich-welle.js).
   // opt: desk/cols = nebeneinander (Raumkarte), panel = ohne eigene Kartenfläche (liegt im Menü).
   // Gibt das neue HTML zurück, wenn neu gebaut wurde, sonst null (nur der Fortschritt lief weiter).
   function paint(e, w, list, states, opt) {
     opt = opt || {};
-    var desk = !!opt.desk, cols = opt.cols || 1;
+    var desk = !!opt.desk, cols = opt.cols || 1, stage = !!opt.stage;
+    var hs = getHass(), dk = !!(hs && hs.themes && hs.themes.darkMode);
     var rows = {}, groups = {};
     var gl = group(list);
-    var items = gl.map(function (g) {
+    var items = gl.map(function (g, gi) {
       var rec = g.live, lead = g.lead;
       var dur = Number(rec.dur), pos = Number(rec.pos);
       var hasBar = rec.kind === 'player' && isFinite(dur) && dur > 0 && isFinite(pos);
       var playing = g.recs.some(function (r) { return r.playing; });
       var tog = g.recs.some(function (r) { return !!(r.controls || {}).toggle; });
+      // Zurück/Vor nur, wenn der Player es kann (supported_features, _casoraNP → controls).
+      var prev = !!(rec.controls || {}).prev, next = !!(rec.controls || {}).next;
       var art = lead.art || (g.recs.filter(function (r) { return r.art; })[0] || {}).art || '';
-      rows[g.key] = { pos: pos, dur: dur, at: Number(rec.posAt) || 0, playing: !!rec.playing, bar: hasBar };
+      // Lautstärke (nur Bühne): wenn der spielende Player volume_set kann (Bit 4) und einen Pegel meldet.
+      var vids = [], vol = null;
+      if (stage && gi === 0) {
+        g.recs.forEach(function (r) {
+          var s = r.kind === 'player' && states[r.entity], a = (s && s.attributes) || {};
+          if ((Number(a.supported_features) & 4) && typeof a.volume_level === 'number') {
+            vids.push(r.entity);
+            if (vol === null || r === rec) vol = a.volume_level;
+          }
+        });
+      }
+      rows[g.key] = { pos: pos, dur: dur, at: Number(rec.posAt) || 0, playing: !!rec.playing, bar: hasBar,
+        live: rec.entity, vol: vol, vids: vids };
       groups[g.key] = g.recs;
+      var dev = names(g.recs.map(function (r) { return device(r, states); }));
       // D-15: ohne Medientitel steht der Gerätename schon als Titel – die Unterzeile wiederholt ihn nicht,
       // sondern nennt die App (falls nicht ebenfalls der Name) bzw. „Spielt“/„Pausiert“.
-      var sb = subline(g, states), tl = String(lead.title || '').trim();
-      if (tl && sb) sb = sb.split(' \u00b7 ').filter(function (x) { return x && x !== tl; }).join(' \u00b7 ');
-      if (!sb) { var src = String(lead.source || '').trim(); sb = src && src !== tl ? src : T(playing ? 'Spielt' : 'Pausiert'); }
-      return [g.key, lead.title, sb, art, playing, tog, hasBar, lead.kind, g.recs.length];
+      // Seit 09.10.2026: läuft eine App (Netflix …) ohne Medientitel, steht sie als Titel und das Gerät darunter.
+      var tl = String(lead.title || '').trim(), sb = subline(g, states), src = String(lead.source || '').trim();
+      if (lead.kind === 'player' && !lead.mtitle && src && low(src) !== low(dev) && low(src) !== low(tl)) { tl = src; sb = dev; }
+      if (tl && sb) sb = sb.split(' · ').filter(function (x) { return x && x !== tl; }).join(' · ');
+      if (!sb) sb = src && src !== tl ? src : T(playing ? 'Spielt' : 'Pausiert');
+      // Bühne: „Gerät · Raum“, der Interpret als eigene Zeile darüber.
+      var artist = '', place = '';
+      if (stage && gi === 0) {
+        artist = String(lead.subtitle || '').trim();
+        if (artist === tl) artist = '';
+        var room = roomOf(g.recs);
+        place = [dev && dev !== tl ? dev : '', room && low(dev).indexOf(low(room)) < 0 ? room : ''].filter(Boolean).join(' · ');
+        if (!place) place = artist ? '' : sb;
+      }
+      return [g.key, tl || lead.title, sb, art, playing, tog, hasBar, lead.kind, g.recs.length, prev, next, vids.length > 0, artist, place];
     });
     e.rows = rows;
     e.groups = groups;
     e.list = list;
-    // Signatur ohne Fortschritt: der Balken läuft über progress(), ohne die Zeilen neu zu bauen.
-    var sig = JSON.stringify([items, desk, cols, !!opt.panel, opt.key || 0]);
+    // Signatur ohne Fortschritt und Lautstärke: beides läuft über progress(), ohne die Zeilen neu zu bauen.
+    var sig = JSON.stringify([items, desk, cols, !!opt.panel, stage, dk, opt.key || 0]);
     if (!w) return null;
     e.w = w;
+    if (painted.indexOf(e) < 0) painted.push(e);
     if (e.sig === sig) { progress(e); return null; }
     e.sig = sig;
     if (e.swRow || e.swAway) closeSwipe(e);
     var hideL = T('Ausblenden');
+    var btn = function (cls, a, d, s, label) {
+      return '<button type="button" class="' + cls + '"' + (a ? ' data-a="' + a + '"' : '') + ' aria-label="' + esc(label) + '">' + svg(d, s) + '</button>';
+    };
     var html = items.map(function (it, i) {
       var key = it[0], title = it[1], sub = it[2], artU = it[3], playing = it[4], tog = it[5], hasBar = it[6], kind = it[7];
-      var cls = 'r';
-      if (desk) { if (i % cols) cls += ' vs'; if (i >= cols) cls += ' hs'; } else if (i) cls += ' hs';
+      var prev = it[9], next = it[10], hasVol = it[11], artist = it[12], place = it[13];
+      var big = stage && i === 0;
+      var cls = 'r tn' + (big ? ' st' : '');
+      var col = artU ? tintOf(artU) : '';
+      if (!col) cls += ' nc';
       var art = artU ? ' style="background-image:url(&quot;' + esc(artU) + '&quot;)"' : '';
-      return '<div class="' + cls + '" data-k="' + esc(key) + '" data-n="' + it[8] + '" role="button" tabindex="0" aria-label="' + esc(title) + '">'
-        + '<div class="rc">'
-        + '<div class="cv"' + art + '>' + (artU ? '' : svg(kind === 'player' ? P.note : P.game, 24)) + '</div>'
-        + '<div class="m"><div class="t">' + esc(title) + '</div>'
-        + '<div class="s">' + esc(sub) + '</div>'
-        + '<div class="b' + (hasBar ? '' : ' n') + '"><i style="width:' + pct(rows[key]) + '%"></i></div></div>'
-        + (tog
-          ? '<button type="button" class="p' + (playing ? '' : ' o') + '" aria-label="' + esc(T(playing ? 'Pausieren' : 'Abspielen')) + '">'
-            + svg(playing ? P.pause : P.play, 22) + '</button>'
-          : '')
-        + '</div>'
+      var cover = '<div class="cv"' + art + '>' + (artU ? '' : svg(kind === 'player' ? P.note : P.game, big ? 28 : 24)) + '</div>';
+      var ks = big ? 26 : 20;
+      var ctl = (prev ? btn('k', 'prev', P.prev, ks, T('Vorheriger Titel')) : '')
+        + (tog ? '<button type="button" class="p' + (playing ? '' : ' o') + '" aria-label="' + esc(T(playing ? 'Pausieren' : 'Abspielen')) + '">'
+          + svg(playing ? P.pause : P.play, big ? 28 : 22) + '</button>' : '')
+        + (next ? btn('k', 'next', P.next, ks, T('Nächster Titel')) : '');
+      var bar = '<div class="b' + (hasBar ? '' : ' n') + '"><i style="width:' + pct(rows[key]) + '%"></i></div>';
+      var inner;
+      if (big) {
+        var r = rows[key], p0 = r && r.bar ? Number(pct(r)) / 100 * r.dur : 0;
+        var vp = Math.round(Math.max(0, Math.min(1, (r && r.vol) || 0)) * 100);
+        inner = '<div class="hr">' + cover + '<div class="m"><div class="t">' + esc(title) + '</div>'
+          + (artist ? '<div class="a">' + esc(artist) + '</div>' : '')
+          + (place ? '<div class="s">' + esc(place) + '</div>' : '<div class="s"></div>') + '</div></div>'
+          + (hasBar ? bar + '<div class="tm"><span class="t0">' + clock(p0) + '</span><span class="t1">−' + clock(r.dur - p0) + '</span></div>' : '')
+          + (ctl ? '<div class="ct">' + ctl + '</div>' : '')
+          + (hasVol ? '<div class="vo">' + svg(P.volLo, 18) + '<div class="vb" role="slider" tabindex="0" aria-label="' + esc(T('Lautstärke'))
+            + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + vp + '"><i style="width:' + vp + '%"></i></div>' + svg(P.volHi, 18) + '</div>' : '');
+      } else {
+        inner = cover + '<div class="m"><div class="t">' + esc(title) + '</div><div class="s">' + esc(sub) + '</div>' + bar + '</div>'
+          + (ctl ? '<div class="ct">' + ctl + '</div>' : '');
+      }
+      return '<div class="' + cls + '" data-k="' + esc(key) + '" data-n="' + it[8] + '"' + (artU ? ' data-art="' + esc(artU) + '"' : '')
+        + (col ? ' style="--c:' + col + '"' : '') + ' role="button" tabindex="0" aria-label="' + esc(title) + '">'
+        + '<div class="rc">' + inner + '</div>'
         + '<button type="button" class="hd" tabindex="-1">' + esc(hideL) + '</button>'
         + '</div>';
     }).join('');
     if (html) {
-      html = '<div class="l' + (desk ? ' d' : '') + (opt.panel ? ' pn' : '') + '"'
+      html = '<div class="l tn' + (desk ? ' d' : '') + (opt.panel ? ' pn' : '') + (!desk && !opt.panel ? ' ph' : '') + (dk ? ' dk' : '') + '"'
         + (desk ? ' style="grid-template-columns:repeat(' + cols + ',minmax(0,1fr))"' : '') + '>' + html + '</div>';
     }
     w.innerHTML = html;
@@ -373,9 +566,24 @@
     if (!w) return;
     Array.prototype.forEach.call(w.querySelectorAll('.r'), function (row) {
       var r = e.rows[row.getAttribute('data-k')];
+      if (!r) return;
       var bar = row.querySelector('.b i');
-      if (r && r.bar && r.playing && bar) bar.style.width = pct(r) + '%';
+      if (r.bar && r.playing && bar) bar.style.width = pct(r) + '%';
+      var t0 = row.querySelector('.t0'), t1 = row.querySelector('.t1');
+      if (r.bar && t0 && t1) {
+        var p = Number(pct(r)) / 100 * r.dur;
+        t0.textContent = clock(p); t1.textContent = '−' + clock(r.dur - p);
+      }
+      var vb = row.querySelector('.vb');
+      // Lautstärke vom Player – nicht während man zieht, und nicht kurz danach (HA bestätigt erst).
+      if (vb && r.vol != null && !e.volDrag && Date.now() - (e.volAt || 0) > 2500) setVol(vb, r.vol);
     });
+  }
+  function setVol(vb, v) {
+    var p = Math.round(Math.max(0, Math.min(1, v)) * 100);
+    var i = vb.querySelector('i');
+    if (i) i.style.width = p + '%';
+    vb.setAttribute('aria-valuenow', String(p));
   }
 
   // Die bisherige (unsichtbare) Karte zu einer Zeile – ihr Tipp öffnet das gewohnte Popup.
@@ -431,7 +639,7 @@
     // Sofort umschalten; der nächste Zustand aus HA bestätigt oder korrigiert.
     var playing = !btn.classList.contains('o');
     btn.classList.toggle('o', playing);
-    btn.innerHTML = svg(playing ? P.play : P.pause, 22);
+    btn.innerHTML = svg(playing ? P.play : P.pause, btn.closest('.st') ? 28 : 22);
     btn.setAttribute('aria-label', T(playing ? 'Abspielen' : 'Pausieren'));
     var r = e.rows[key];
     if (r) { r.pos = Number(pct(r)) / 100 * r.dur; r.at = Date.now(); r.playing = !playing; }
@@ -441,6 +649,28 @@
     else h.callService('media_player', 'media_play_pause', { entity_id: ids[0] });
     // Bleibt HA die Antwort schuldig, zeigt die Zeile nach kurzer Zeit wieder den echten Zustand.
     setTimeout(function () { e.sig = null; }, 4000);
+  }
+
+  // Zurück/Vor: nur der spielende Player der Zeile (bei einer Gruppe sonst doppelt gesprungen).
+  function skip(e, key, dir) {
+    var r = e.rows[key], h = getHass();
+    if (!r || !r.live || !h) return;
+    try { card_haptic(e.card); } catch (err) { /* egal */ }
+    h.callService('media_player', dir === 'prev' ? 'media_previous_track' : 'media_next_track', { entity_id: r.live });
+  }
+
+  // Lautstärke aus der Zeigerlage auf dem Balken; gesendet wird beim Loslassen (bzw. je Pfeiltaste).
+  function volAt(vb, x) {
+    var b = vb.getBoundingClientRect();
+    return b.width ? Math.max(0, Math.min(1, (x - b.left) / b.width)) : 0;
+  }
+  function sendVol(e, key, v) {
+    var r = e.rows[key], h = getHass();
+    if (!r || !h || !r.vids || !r.vids.length) return;
+    v = Math.round(v * 100) / 100;
+    r.vol = v;
+    e.volAt = Date.now();
+    h.callService('media_player', 'volume_set', { entity_id: r.vids.length > 1 ? r.vids : r.vids[0], volume_level: v });
   }
 
   function card_haptic(el) {
@@ -506,15 +736,17 @@
   function bind(e, sr) {
     var rowOf = function (ev) {
       var path = ev.composedPath ? ev.composedPath() : [];
-      var btn = null, hd = null, row = null;
+      var btn = null, hd = null, row = null, sk = null, vo = null;
       for (var i = 0; i < path.length && path[i] !== sr; i++) {
         var n = path[i];
         if (!n.classList) continue;
         if (!btn && n.classList.contains('p')) btn = n;
+        if (!sk && n.classList.contains('k')) sk = n;
+        if (!vo && n.classList.contains('vo')) vo = n;
         if (!hd && n.classList.contains('hd')) hd = n;
         if (n.classList.contains('r')) { row = n; break; }
       }
-      return { row: row, btn: btn, hd: hd };
+      return { row: row, btn: btn, hd: hd, sk: sk, vo: vo };
     };
     var act = function (ev) {
       var t = rowOf(ev), row = t.row;
@@ -526,7 +758,10 @@
       // Aufgewischt: ein Tipp auf die Zeile schließt nur den Knopf.
       if (row.classList.contains('sw') || e.swRow) { closeSwipe(e); return; }
       var key = row.getAttribute('data-k');
-      if (t.btn) toggle(e, key, t.btn); else { try { card_haptic(e.card); } catch (err) { /* egal */ } open(e, key); }
+      // Tasten und Lautstärke bedienen nur – sie öffnen nie das Popup.
+      if (t.vo) return;
+      if (t.sk) skip(e, key, t.sk.getAttribute('data-a'));
+      else if (t.btn) toggle(e, key, t.btn); else { try { card_haptic(e.card); } catch (err) { /* egal */ } open(e, key); }
     };
     // Antippen selbst erkennen: die umgebende button-card (Aktions-Handler am ha-card) unterdrückt
     // am Handy sonst den click. Ihre Touch-/Maus-Ereignisse bekommt sie daher nicht zu sehen.
@@ -537,10 +772,22 @@
     sr.addEventListener('pointerdown', function (ev) {
       if (ev.button > 0) { down = null; return; }
       var t = rowOf(ev);
+      // Lautstärke ziehen: kein Wischen, kein Tipp auf die Zeile.
+      var vb = t.vo && t.vo.querySelector('.vb');
+      if (vb && t.row && (ev.composedPath ? ev.composedPath() : []).indexOf(vb) >= 0) {
+        down = null;
+        e.volDrag = { vb: vb, key: t.row.getAttribute('data-k'), id: ev.pointerId };
+        try { vb.setPointerCapture(ev.pointerId); } catch (err) { /* egal */ }
+        setVol(vb, volAt(vb, ev.clientX));
+        if (ev.cancelable) ev.preventDefault();
+        return;
+      }
       down = { x: ev.clientX, y: ev.clientY, t: Date.now(), row: t.row, id: ev.pointerId, drag: false,
         base: t.row && t.row.classList.contains('sw') ? -swipeW(t.row) : 0 };
     });
     sr.addEventListener('pointermove', function (ev) {
+      var vd = e.volDrag;
+      if (vd && ev.pointerId === vd.id) { setVol(vd.vb, volAt(vd.vb, ev.clientX)); return; }
       var d = down;
       if (!d || !d.row || ev.pointerId !== d.id) return;
       var dx = ev.clientX - d.x, dy = ev.clientY - d.y;
@@ -567,8 +814,17 @@
       last = Date.now();
       return true;
     };
-    sr.addEventListener('pointercancel', function (ev) { if (!endDrag(ev, false)) down = null; });
+    var endVol = function (ev, send) {
+      var vd = e.volDrag;
+      if (!vd || ev.pointerId !== vd.id) return false;
+      e.volDrag = null;
+      last = Date.now();
+      if (send) sendVol(e, vd.key, volAt(vd.vb, ev.clientX));
+      return true;
+    };
+    sr.addEventListener('pointercancel', function (ev) { if (endVol(ev, false)) return; if (!endDrag(ev, false)) down = null; });
     sr.addEventListener('pointerup', function (ev) {
+      if (endVol(ev, true)) return;
       if (endDrag(ev, false)) return;
       var d = down; down = null;
       if (!d || Date.now() - d.t > 700 || Math.abs(ev.clientX - d.x) > 10 || Math.abs(ev.clientY - d.y) > 10) return;
@@ -580,9 +836,19 @@
       act(ev);
     });
     sr.addEventListener('keydown', function (ev) {
-      if (ev.key !== 'Enter' && ev.key !== ' ') return;
       var t = ev.composedPath ? ev.composedPath()[0] : ev.target;
-      if (t && t.classList && t.classList.contains('p')) return;
+      if (t && t.classList && t.classList.contains('vb')) {
+        var st = { ArrowLeft: -0.05, ArrowDown: -0.05, ArrowRight: 0.05, ArrowUp: 0.05 }[ev.key];
+        if (st === undefined) return;
+        ev.preventDefault(); ev.stopPropagation();
+        var row = t.closest('.r'), k = row && row.getAttribute('data-k'), r = k && e.rows[k];
+        var v = Math.max(0, Math.min(1, ((r && r.vol) || 0) + st));
+        setVol(t, v);
+        sendVol(e, k, v);
+        return;
+      }
+      if (ev.key !== 'Enter' && ev.key !== ' ') return;
+      if (t && t.classList && (t.classList.contains('p') || t.classList.contains('k'))) return;
       act(ev);
     });
   }

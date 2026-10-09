@@ -80,7 +80,7 @@ const menu = () => page.evaluate(() => {
   const sr = [...m.querySelectorAll('div')].map((d) => d.shadowRoot).filter(Boolean)[0];
   const rows = sr ? [...sr.querySelectorAll('.r')] : [];
   return { head: m.getAttribute('aria-label') || '', // D1 (1.2): ohne Kopfzeile, die Zahl steht im aria-label
-    rows: rows.map((r) => ({ t: r.querySelector('.t').textContent, s: r.querySelector('.s').textContent, n: +r.dataset.n,
+    rows: rows.map((r) => ({ t: r.querySelector('.t').textContent, s: r.querySelector('.s').textContent, a: (r.querySelector('.a') || {}).textContent || '', n: +r.dataset.n,
       box: r.getBoundingClientRect().toJSON() })) };
 });
 await page.evaluate(() => {
@@ -120,7 +120,9 @@ await page.mouse.click(w.x, w.y);
 await page.waitForTimeout(900);
 let m = await menu();
 await check('Gruppe: eine Zeile im Welle-Menü', m && m.rows.length === 1 && m.rows[0].n === 2, m);
-await check('Gruppe: Unterzeile „Lautsprecher Küche + Bad · QA Band“', m && m.rows[0] && /^Lautsprecher (Küche \+ Bad|Bad \+ Küche) · QA Band$/.test(m.rows[0].s), m && m.rows[0]);
+// 09.10.2026 Cover-Bühne (Entwurf C): Interpret als eigene Zeile, darunter „Gerät · Raum“ (Test-Player ohne Raum).
+await check('Gruppe: Bühne mit „QA Band“ und „Lautsprecher Küche + Bad“', m && m.rows[0] && m.rows[0].a === 'QA Band'
+  && /^Lautsprecher (Küche \+ Bad|Bad \+ Küche)$/.test(m.rows[0].s), m && m.rows[0]);
 await check('Gruppe: Fenster-Name (aria-label) zählt Gruppen („Läuft gerade“)', m && m.head === 'Läuft gerade', m && m.head);
 
 const pbtn = await page.evaluate(() => {
