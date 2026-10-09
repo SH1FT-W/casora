@@ -8554,6 +8554,25 @@ window.casoraMenuGlass = {
     // Ohne Geräteklasse und ohne Hinweis im Namen: Jalousie wie die Kachel (vorher Vorhang).
     return COVER_KINDS.blind;
   };
+  // Symbol der Cover-Kachel, des Badges und damit des Popup-Rings (1.2.1): dasselbe wie die Zeilen
+  // im Popup – Art aus casoraCoverKind, offen bei open/opening/stopping, sonst zu. Vorher zeigten
+  // Kachel und Ring die schmaleren Lamellen cover_open1/cover_closed1 (und beim Schließen cover_60).
+  // Eigenes Symbol aus dem Studio (variables.icon_open / icon_closed) geht vor. Liefert eine URL.
+  window.casoraCoverIconUrl = function (st, vars) {
+    var s = String((st && st.state) || '').toLowerCase();
+    var open = s === 'open' || s === 'opening' || s === 'stopping';
+    var v = vars || {};
+    var own = open ? v.icon_open : v.icon_closed;
+    own = typeof own === 'string' ? own.trim() : '';
+    if (own && own !== 'Default' && own !== 'default' && own.indexOf('mdi:') !== 0) {
+      if (/^(\/|data:image\/)/.test(own)) return own;
+      return typeof window.casoraIconUrl === 'function' ? window.casoraIconUrl(own) : '/casora_assets/icons/' + own + '.svg';
+    }
+    var a = (st && st.attributes) || {};
+    var k = window.casoraCoverKind(a.device_class, st && st.entity_id);
+    var name = open ? k.open : k.closed;
+    return typeof window.casoraIconUrl === 'function' ? window.casoraIconUrl(name) : '/casora_assets/icons/' + name + '.svg';
+  };
 
 
   var PLANT_CACHE_V = 1;
