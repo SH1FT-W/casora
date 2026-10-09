@@ -62,6 +62,88 @@
   window.__casoraAskFirst = true;
   var T = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
   var passed = typeof WeakSet === 'function' ? new WeakSet() : null;
+  // Welche Entitäten fragen (1.2.1): Das Studio schreibt casora_confirm_entities/-names nur in die
+  // Räume des Desktop-Dashboards – am Handy fehlten sie, Popup und Schloss-Ansicht schalteten dort
+  // ohne Rückfrage. Darum zählen zusätzlich die Kacheln mit confirm_toggle im offenen Dashboard und
+  // in seinem Partner (Desktop ↔ „-mobile“), ohne neu speichern. dev/unit/rueckfrage_handy.mjs
+  var fromCfg = function (cfg) {
+    var ids = [], names = {}, n = 0;
+    var add = function (x, nm) {
+      if (typeof x !== 'string' || !x || x.indexOf('[[[') >= 0) return;
+      if (ids.indexOf(x) < 0) ids.push(x);
+      if (nm && !names[x]) names[x] = nm;
+    };
+    (function walk(o, d) {
+      if (!o || typeof o !== 'object' || d > 30 || n > 50000) return;
+      n++;
+      if (Array.isArray(o)) { for (var i = 0; i < o.length; i++) walk(o[i], d + 1); return; }
+      var v = o.variables;
+      if (v && typeof v === 'object' && v.confirm_toggle === true) {
+        var nm = typeof o.name === 'string' && o.name.trim() && o.name.indexOf('[[[') < 0 ? o.name.trim() : '';
+        add(o.entity, nm); add(v.cover_entity, nm);
+        // Sammelkacheln (Jalousien, Schlösser): jedes Mitglied, alle zusammen unter dem Kachelnamen.
+        var all = [].concat(Array.isArray(v.covers) ? v.covers : [], Array.isArray(v.locks) ? v.locks : [])
+          .filter(function (x, i, a) { return typeof x === 'string' && x && a.indexOf(x) === i; });
+        all.forEach(function (x) { add(x, ''); });
+        if (nm && all.length > 1) { var k = all.slice().sort().join(','); if (!names[k]) names[k] = nm; }
+      }
+      for (var key in o) if (key !== 'button_card_templates' && Object.prototype.hasOwnProperty.call(o, key)) walk(o[key], d + 1);
+    })(cfg && cfg.views, 0);
+    return { ids: ids, names: names };
+  };
+  var EMPTY = { ids: [], names: {} };
+  var here = { cfg: null, got: EMPTY };
+  var pair = { url: null, at: 0, got: EMPTY, p: null };
+  var dashUrl = function () {
+    var seg = ((window.location && window.location.pathname) || '').split('/').filter(Boolean);
+    return seg[0] || '';
+  };
+  // Partner holen (eine Minute gemerkt); Promise, solange er lädt, sonst null.
+  var loadPair = function () {
+    var url = dashUrl();
+    if (!url || !here.cfg) return null;
+    var other = /[-_]mobile$/i.test(url) ? url.replace(/[-_]mobile$/i, '') : url + '-mobile';
+    if (pair.url === other && (pair.p || Date.now() - pair.at < 60000)) return pair.p;
+    var h = document.querySelector('home-assistant');
+    if (!h || !h.hass || typeof h.hass.callWS !== 'function') return null;
+    pair.url = other; pair.got = EMPTY;
+    // Höchstens 2 s warten – ein hängender Abruf darf keinen Knopf blockieren.
+    var late = new Promise(function (r) { setTimeout(function () { r(null); }, 2000); });
+    pair.p = Promise.race([Promise.resolve(h.hass.callWS({ type: 'lovelace/config', url_path: other })), late]).then(function (cfg) {
+      return cfg ? fromCfg(cfg) : EMPTY;
+    }, function () { return EMPTY; }).then(function (got) {
+      if (pair.url === other) { pair.got = got; pair.at = Date.now(); pair.p = null; }
+    });
+    return pair.p;
+  };
+  var dashConfirm = function () {
+    var cfg = null;
+    try { cfg = window._casoraLovelaceCfg ? window._casoraLovelaceCfg() : null; } catch (e) { cfg = null; }
+    if (cfg !== here.cfg) { here.cfg = cfg; here.got = cfg ? fromCfg(cfg) : EMPTY; }
+    if (!cfg) return EMPTY;
+    loadPair();
+    return { ids: here.got.ids.concat(pair.got.ids), names: Object.assign({}, pair.got.names, here.got.names) };
+  };
+  // Alle Rückfrage-Entitäten und Kachelnamen: Raumvariablen (Studio-Vorschau, Desktop) + Dashboards.
+  var confirmIds = function () {
+    var own = Array.isArray(window.__casoraConfirmIds) ? window.__casoraConfirmIds : [];
+    var d = dashConfirm().ids;
+    return d.length ? own.concat(d) : own;
+  };
+  var confirmNames = function () {
+    var d = dashConfirm().names;
+    return Object.assign({}, d, window.__casoraConfirmNames || {});
+  };
+  // Vor Popup-Knöpfen: Partner abwarten, falls er gerade lädt (erster Tipp nach dem Öffnen) – sonst
+  // fragt der Dialog sofort (Promise oder null).
+  var ready = function () {
+    dashConfirm();
+    return pair.p || null;
+  };
+  // Beim Öffnen bzw. Wechsel des Dashboards schon holen (Kachel-Tipp und Hinweise fragen sofort).
+  var warm = function () { setTimeout(function () { try { dashConfirm(); } catch (e) { /* später */ } }, 1500); };
+  if (window.addEventListener) window.addEventListener('location-changed', warm);
+  warm();
   var asksFirst = function (ev) {
     var path = ev.composedPath ? ev.composedPath() : [];
     for (var i = 0; i < path.length && i < 40; i++) {
@@ -90,7 +172,7 @@
     var st = states[id];
     // Kachelname vor Gerätename (note4 Frage 4): eigener Name der Kachel, sonst der Name der Kachel
     // mit Rückfrage für diese Entität (casora_confirm_names – Popup-Schalter), sonst das Gerät.
-    var names = window.__casoraConfirmNames || {};
+    var names = confirmNames();
     var own = cfg.name && typeof cfg.name === 'string' && cfg.name.indexOf('[[[') < 0 && cfg.name;
     var name = (cfg.__byId ? (typeof names[id] === 'string' && names[id]) || own : own || (typeof names[id] === 'string' && names[id]))
       || (st && st.attributes && st.attributes.friendly_name) || id;
@@ -168,7 +250,7 @@
     if (ids.length < 2) return w;
     var h = document.querySelector('home-assistant');
     var states = (h && h.hass && h.hass.states) || {};
-    var names = window.__casoraConfirmNames || {};
+    var names = confirmNames();
     var key = ids.slice().sort().join(',');
     var fn = function (x) { var st = states[x]; return (st && st.attributes && st.attributes.friendly_name) || x; };
     var list = ids.slice(0, 3).map(fn).join(', ') + (ids.length > 3 ? ' +' + (ids.length - 3) : '');
@@ -181,13 +263,16 @@
     return [].concat(tgt.entity_id || act.entity || (cfg && cfg.entity) || [])[0] || '';
   };
   // Auch ohne Kachel im Pfad (Popup-Schalter, Knöpfe im Popup): Entität einer Kachel mit Rückfrage.
-  var confirmIds = function () { return Array.isArray(window.__casoraConfirmIds) ? window.__casoraConfirmIds : []; };
   window.casoraAsksFirst = function (id) { return !!id && confirmIds().indexOf(id) !== -1; };
   // Eigene Rückfrage im selben Stil (07.10.2026, „Alles aus“ im Haus-Licht-Popup):
   // { title, text?, yes } – Promise<true> bei „Ja“; Fokus auf „Abbrechen“.
   window.casoraAsk = function (w) { return ask(w || {}); };
   // Für Popups, die direkt schalten: Promise<true>, wenn geschaltet werden darf.
   window.casoraConfirmSwitch = function (id, service) {
+    var p = ready();
+    return p ? p.then(function () { return confirmSwitch(id, service); }) : confirmSwitch(id, service);
+  };
+  var confirmSwitch = function (id, service) {
     if (!window.casoraAsksFirst(id)) return Promise.resolve(true);
     var act = { action: 'perform-action', perform_action: service || 'homeassistant.toggle', target: { entity_id: id } };
     return ask(word(act, { entity: id }));
@@ -196,6 +281,10 @@
   // nur echtes Schalten/Fahren fragt nach, Anhalten nie (Nutzertest 5: Garagentor).
   var SWITCH_SVC = /^(turn_on|turn_off|toggle|open_cover|close_cover|set_cover_position|open_valve|close_valve|set_valve_position|lock|unlock|open|press)$/;
   window.casoraConfirmSpec = function (spec) {
+    var p = ready();
+    return p ? p.then(function () { return confirmSpec(spec); }) : confirmSpec(spec);
+  };
+  var confirmSpec = function (spec) {
     if (!spec || !spec.domain || !SWITCH_SVC.test(String(spec.service || ''))) return Promise.resolve(true);
     var ids = [].concat((spec.target && spec.target.entity_id) || (spec.data && spec.data.entity_id) || []);
     var id = ids.filter(function (x) { return window.casoraAsksFirst(x); })[0];
