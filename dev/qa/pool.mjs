@@ -190,17 +190,19 @@ const cp = (t) => { if (!cpMemo.has(t)) cpMemo.set(t, t.est + Math.max(0, ...t.d
 function pick(pending, running, done, free, lane = 1) {
   if (free <= 0 || running.some((r) => r.alone)) return null;
   const ready = pending.filter((t) => t.deps.every((d) => done.has(d)) && (!t.pin || t.pin === lane));
-  // Wartet ein „allein“-Teil, erst leerlaufen lassen, dann ihn allein starten.
-  const alone = ready.find((t) => t.alone);
-  if (alone) return running.length ? null : alone;
   const held = new Set(running.flatMap((r) => r.locks));
-  const ok = ready.filter((t) => !t.locks.some((l) => held.has(l)));
+  const ok = ready.filter((t) => t.alone || !t.locks.some((l) => held.has(l)));
   if (!ok.length) return null;
   const backlog = (l) => pending.filter((x) => x.locks.includes(l)).reduce((s, x) => s + x.est, 0);
-  const prio = (t) => Math.max(cp(t), ...t.locks.filter((l) => l === 'ui').map(backlog));
+  // Teile, die nur auf dieser Bahn laufen dürfen (E2E-Kette auf HA 1), zuerst: sonst lief die Kette
+  // (~12 min nacheinander) erst am Ende und verlängerte den Zustand (09.10.2026: arbeit 43 statt ~30 min).
+  const prio = (t) => Math.max(cp(t), ...t.locks.filter((l) => l === 'ui').map(backlog)) + (t.pin && t.pin === lane && MULTI ? 1e6 : 0);
   // Gleichstand (z. B. alle ui-Teile mit demselben Rückstau): längerer Restpfad zuerst.
   const better = (x, y) => prio(x) > prio(y) || (prio(x) === prio(y) && cp(x) > cp(y));
-  return ok.reduce((a, b) => (better(b, a) ? b : a));
+  const best = ok.reduce((a, b) => (better(b, a) ? b : a));
+  // „allein“-Teile nach Rang wie alle anderen; ist einer dran, erst die Bahn leerlaufen lassen.
+  if (best.alone && running.length) return null;
+  return best;
 }
 
 function simulate() {

@@ -24,7 +24,14 @@ const findVac = (pg) => pg.evaluate(() => {
   return { x: r.x + r.width / 2, y: r.y + r.height / 2, entity: b._config.entity };
 });
 
+// Ging das Popup trotz allem nicht auf (09.10.2026 im Gate: Seite stand danach wieder auf „Zuhause“,
+// unter Last lädt das Dashboard nach einem Verbindungsabbruch neu), den ganzen Weg einmal wiederholen.
 async function openVac(page, d, mobile) {
+  const at = await openVacOnce(page, d, mobile);
+  if (at && !(await page.evaluate(() => !!(window.casoraPopup && window.casoraPopup.surface)).catch(() => false))) return openVacOnce(page, d, mobile);
+  return at;
+}
+async function openVacOnce(page, d, mobile) {
   const view = (d.config.views || []).findIndex((v) => JSON.stringify(v).includes('casora_vacuum'));
   const path = (d.config.views[view] || {}).path || view;
   await dashboard(page, d.url + '/' + path, 3);
