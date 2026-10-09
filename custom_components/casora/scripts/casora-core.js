@@ -833,7 +833,7 @@
 
 // Schatten aktiver Zeilen/Segmente in Popups nicht abschneiden (09.10.2026): button-card gibt
 // jedem custom_field die Klasse „ellipsis“ (overflow:hidden), dazu schneidet ha-card ab. Der weiche
-// Schatten einer aktiven Zeile (hui-srow.hui-act, lps-row.on), eines Segments (hui-sg.on) oder des Schloss-Balkens (lkbar) endete
+// Schatten einer aktiven Zeile (hui-srow.hui-act, lps-row.on), eines Segments (hui-sg.on) oder des Schloss-Balkens (lkbar), der eigenen Vereinszeile (cfb-r.me) endete
 // dort als harte, eckige Kante. Nur Felder/Karten mit diesen Bausteinen dürfen überlaufen; der
 // Inhalt passt dort selbst in die Breite (Auslassung je Zeile), die Popup-Fläche schneidet weiter.
 (function () {
@@ -841,7 +841,7 @@
   window.__casoraShadowRoom = true;
   // min-width:0: mit overflow:hidden war die Mindestbreite des Rasterfelds 0 – ohne würde es mit
   // breitem Inhalt über die Spalte hinauswachsen.
-  var HAS = ':has(.hui-plate,.hui-seg,.hp-tb,.lps-row,.lkbar)';
+  var HAS = ':has(.hui-plate,.hui-seg,.hp-tb,.lps-row,.lkbar,.cfb-r)';
   var css = '#container>.ellipsis' + HAS + ',#card' + HAS + '{overflow:visible!important;min-width:0;}';
   customElements.whenDefined('button-card').then(function () {
     try {
