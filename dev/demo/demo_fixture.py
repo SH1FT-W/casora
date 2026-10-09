@@ -111,6 +111,51 @@ CLIMATE = {
 }
 
 
+# Energie-Popup: seit 1.2 sucht Casora ohne zugeordnete Verbraucher die fünf größten selbst.
+# Im Demo-Haus sollen das Alltagsgeräte sein (TV, Kühlschrank, Saugroboter …), nicht die
+# Aquarien des Testhauses. Gefunden wird über den übersetzten Namen, nicht über IDs.
+# (Muster im Namen, neuer Name oder None, Watt)
+POWER = [
+    (r'^55" Neo QLED Power$', "TV Power", 96.4),
+    (r"^Roborock Power$", "Robot Vacuum Power", 32.3),
+    (r"^JBL BAR 1000 JBL Power power$", "Soundbar Power", 24.1),
+    (r"^Air Purifier Core 300S Power$", None, 17.6),
+]
+# Erfundener Kühlschrank-Zwischenstecker (neutrale ID, Küche).
+FRIDGE = ("sensor.demo_fridge_power", "Fridge Power", 48.2, "Kitchen")
+# Aquarien-Steckdosen bleiben, ziehen aber nur wenig (sonst stehen sie oben in der Liste).
+TANK_MAX_W = 4.0
+
+
+def demo_power(d):
+    ents = d["entities"]
+    for e in ents:
+        a = e.get("attributes") or {}
+        if not e["entity_id"].startswith("sensor.") or a.get("unit_of_measurement") != "W":
+            continue
+        name = a.get("friendly_name") or ""
+        for rx, new, w in POWER:
+            if re.search(rx, name):
+                e["state"] = str(w)
+                if new:
+                    a["friendly_name"] = new
+                    if e.get("original_name"):
+                        e["original_name"] = new
+        if re.search(r"\bTank\b", name):
+            try:
+                if float(e["state"]) > TANK_MAX_W:
+                    e["state"] = str(TANK_MAX_W)
+            except (TypeError, ValueError):
+                pass
+    eid, name, w, area = FRIDGE
+    if not any(e["entity_id"] == eid for e in ents):
+        ents.append({"entity_id": eid, "state": str(w), "platform": "demo", "device": None,
+                     "attributes": {"friendly_name": name, "device_class": "power", "unit_of_measurement": "W",
+                                    "state_class": "measurement"},
+                     "area": area if area in d["areas"] else None, "original_name": name, "name": None,
+                     "icon": None, "device_class": "power", "unit": "W", "hidden": False, "entity_category": None})
+
+
 def _slug(t):
     return re.sub(r"[^a-z0-9]+", "_", t.lower()).strip("_")
 
@@ -225,6 +270,9 @@ def main():
         if "friendly_name" in a:
             a["friendly_name"] = tr(a["friendly_name"])
     enliven(d)
+    demo_power(d)
+    # Merker für den Mock: im Demo-Haus keine deutschen Testgeräte (Waschmaschinen A/B, Testbecken).
+    d["_demo"] = True
     text = json.dumps(d, ensure_ascii=False)
     # Auch in IDs und Attributen – überall gleich, damit Verweise stimmen.
     # Namen sind oben schon ersetzt; hier geht es um IDs und Attribute. Kleingeschriebene

@@ -90,15 +90,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     stress = await hass.async_add_executor_job(_load_optional, "stress.json")
     if stress:
         _merge(fixture, stress)
+    # Demo-Haus (dev/demo/demo_fixture.py setzt „_demo“): ohne die deutschen Testgeräte
+    # (Waschmaschinen A/B mit Keller/Dachboden, Testbecken A/B) – die gehören nur in die Tests.
+    demo = bool(fixture.get("_demo"))
     # Zwei neutrale Waschmaschinen (WashData-artig und Home-Connect-artig), siehe waesche.py.
-    from .waesche import extra as waesche_extra
-    _merge(fixture, waesche_extra(dt_util.utcnow()), "Waschmaschinen A/B")
+    if not demo:
+        from .waesche import extra as waesche_extra
+        _merge(fixture, waesche_extra(dt_util.utcnow()), "Waschmaschinen A/B")
     # Ein erfundener Team-Tracker-Sensor (Fußball-Kachel), siehe fussball.py.
     from .fussball import extra as fussball_extra
     _merge(fixture, fussball_extra(dt_util.utcnow()), "Team-Tracker-Sensor")
     # Zwei erfundene Aquarien (HeliaLux- und Fluval/Chihiros-artige Lampe, Dosierpumpe), siehe aquarium.py.
-    from .aquarium import extra as aquarium_extra
-    _merge(fixture, aquarium_extra(dt_util.utcnow()), "Testbecken A/B")
+    if not demo:
+        from .aquarium import extra as aquarium_extra
+        _merge(fixture, aquarium_extra(dt_util.utcnow()), "Testbecken A/B")
     _vacuum_map(fixture)
     # Nur auf Wunsch: HACS-artige Update-Entität für Casora (hacs_casora.py).
     hacs_cfg = await hass.async_add_executor_job(_load_optional, "hacs_casora.json")
