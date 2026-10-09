@@ -3786,7 +3786,7 @@ const POPUP_TITLE = (placeholder) => ({ key: "room_name", label: "Popup title", 
 // Popups, deren Titel sonst der Kachelname ist (window.casoraPopupTitle).
 const POPUP_TITLE_NAME = POPUP_TITLE("The tile's name");
 // Sparkline (1.2): kleine Verlaufslinie oben rechts in der Kachel, je Kachel zuschaltbar.
-const SPARK_FIELD = (hint) => ({ key: "sparkline", label: "Trend on tile", type: "bool", advanced: true, hint });
+const SPARK_FIELD = (hint) => ({ key: "sparkline", label: "Trend on tile", type: "bool", advanced: true, tileLevel: true, hint }); // Kachel-Einstellung: unter „Erweitert“, nicht im Popup-Bereich
 // Hex, weil die Diagramme die Farbe direkt ins SVG schreiben.
 const CHART_COLOR = (placeholder) => ({ key: "chart_color", label: "Chart color", type: "text",
   advanced: true, placeholder: placeholder || "#00C3D0", hint: "A hex color, e.g. #30D158." });
