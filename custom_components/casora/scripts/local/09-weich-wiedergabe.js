@@ -364,7 +364,7 @@
 
   // ── Farbe aus dem Cover (09.10.2026) ──
   // Das Bild wird klein (24×24) auf eine Leinwand gezeichnet; die Farbe ist der nach Sättigung
-  // gewichtete Mittelwert, danach gedämpft (Sättigung ≤ 0,7, Helligkeit 0,28–0,52), damit Schrift
+  // gewichtete Mittelwert, danach gedämpft (Sättigung 0,34–0,7, Helligkeit 0,32–0,52), damit Schrift
   // hell wie dunkel lesbar bleibt. Fremde Bilder ohne CORS bleiben beim ruhigen Rückfall (Ton).
   var TINT = {}, tintN = 0, painted = [];
   function pickColor(img) {
@@ -392,8 +392,11 @@
       h = mx === r ? (g - b) / dd + (g < b ? 6 : 0) : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4;
       h *= 60;
     }
+    // Blasse, dunkle Cover (Film-Standbilder) ergäben fast Grau wie die normale Karte: ihren Farbton
+    // sichtbar machen (Sättigung ≥ 0,34, Helligkeit ≥ 0,32); echtes Grau (kein Farbton) bleibt Grau.
     s = Math.min(s, 0.7);
-    l = Math.max(0.28, Math.min(0.52, l));
+    if (s > 0.03) s = Math.max(s, 0.34);
+    l = Math.max(0.32, Math.min(0.52, l));
     return 'hsl(' + Math.round(h) + ',' + Math.round(s * 100) + '%,' + Math.round(l * 100) + '%)';
   }
   // Farbe zum Bild: Zeichenkette (fertig), '' (keine), null (lädt – Zeilen werden danach eingefärbt).
