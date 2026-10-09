@@ -3,7 +3,8 @@
 // Gemeldet (1.2.1): Im Jalousie-Popup zeigen die Zeilen der einzelnen Jalousien und „Position“ ein
 // anderes Symbol (cover_open/cover_closed) als der große Ring im Popup-Kopf und die Kachel
 // (cover_open1/cover_closed1). Erwartet: Kachel und Ring zeigen dasselbe Symbol wie die Zeile,
-// offen bei open (auch teilweise), sonst zu – Desktop und Handy (WebKit), Casora-Design.
+// in Lage-Stufen (100 offen, 70 cover_80, 50 cover_60, 30 cover_40, 0 zu), auch „Position“ –
+// Desktop und Handy (WebKit), Casora-Design.
 import { open, casoraDashboard, dashboard, fakeStates, check, need, finish, usePage } from './lib.mjs';
 
 const has = (x, t) => JSON.stringify(x).includes(`"${t}"`);
@@ -40,12 +41,16 @@ const popup = (page) => page.evaluate(() => {
     const el = [r, ...r.querySelectorAll('*')].find((e) => /cover_|curtain-|door-|window-shade-/.test(dec(getComputedStyle(e).webkitMaskImage || '') + dec(getComputedStyle(e).backgroundImage || '')));
     return el ? name(dec(getComputedStyle(el).webkitMaskImage + ' ' + getComputedStyle(el).backgroundImage)) : null;
   }).filter(Boolean);
-  return { ring, row: rows[0] || null, n: rows.length };
+  const sl = window.__pierce('.hui-sl-ic').filter(vis)[0];
+  const pos = sl ? name(dec(getComputedStyle(sl).webkitMaskImage + ' ' + getComputedStyle(sl).backgroundImage)) : null;
+  return { ring, row: rows[0] || null, n: rows.length, pos };
 });
 
 const CASES = [
   ['offen', { state: 'open', attributes: { current_position: 100 } }, 'cover_open'],
-  ['halb', { state: 'open', attributes: { current_position: 50 } }, 'cover_open'],
+  ['30 %', { state: 'open', attributes: { current_position: 30 } }, 'cover_40'],
+  ['50 %', { state: 'open', attributes: { current_position: 50 } }, 'cover_60'],
+  ['70 %', { state: 'open', attributes: { current_position: 70 } }, 'cover_80'],
   ['zu', { state: 'closed', attributes: { current_position: 0 } }, 'cover_closed'],
 ];
 for (const [vp, url] of [
@@ -73,6 +78,7 @@ for (const [vp, url] of [
     }
     await check(`${vp} ${k}: Zeile zeigt ${want}`, p.row === want, p);
     await check(`${vp} ${k}: Ring im Popup-Kopf wie die Zeile`, p.ring === want && p.ring === p.row, p);
+    await check(`${vp} ${k}: Position zeigt ${want}`, p.pos === want, p);
     await page.keyboard.press('Escape');
     await page.waitForTimeout(900);
     await dashboard(page, url, 3);

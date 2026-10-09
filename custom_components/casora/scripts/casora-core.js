@@ -8555,22 +8555,39 @@ window.casoraMenuGlass = {
     return COVER_KINDS.blind;
   };
   // Symbol der Cover-Kachel, des Badges und damit des Popup-Rings (1.2.1): dasselbe wie die Zeilen
-  // im Popup – Art aus casoraCoverKind, offen bei open/opening/stopping, sonst zu. Vorher zeigten
-  // Kachel und Ring die schmaleren Lamellen cover_open1/cover_closed1 (und beim Schließen cover_60).
-  // Eigenes Symbol aus dem Studio (variables.icon_open / icon_closed) geht vor. Liefert eine URL.
-  window.casoraCoverIconUrl = function (st, vars) {
+  // im Popup. Vorher zeigten Kachel und Ring die schmaleren Lamellen cover_open1/cover_closed1 (und
+  // beim Schließen cover_60). Jalousien zeigen die Lage in Stufen (current_position 100 = offen):
+  // 0 zu, 1–29 cover_20, 30–49 cover_40, 50–69 cover_60, 70–89 cover_80, ab 90 offen. Bewegung:
+  // öffnet sich = offen, schließt sich = zu. Ohne Lage: offen bei open/stopping, sonst zu.
+  // Vorhang, Markise, Tür, Garage, Tor: nur offen/zu.
+  var COVER_STEPS = [[90, null], [70, 'cover_80'], [50, 'cover_60'], [30, 'cover_40'], [1, 'cover_20']];
+  window.casoraCoverIconName = function (st, pos) {
     var s = String((st && st.state) || '').toLowerCase();
-    var open = s === 'open' || s === 'opening' || s === 'stopping';
+    var a = (st && st.attributes) || {};
+    var k = window.casoraCoverKind(a.device_class, st && st.entity_id);
+    if (s === 'opening') return k.open;
+    if (s === 'closing' || s === 'unavailable' || s === 'unknown' || !s) return k.closed;
+    var p = pos != null ? Number(pos) : (a.current_position == null ? NaN : Number(a.current_position));
+    if (p == null || isNaN(p)) return (s === 'open' || s === 'stopping') ? k.open : k.closed;
+    p = Math.round(p);
+    if (p <= 0) return k.closed;
+    for (var i = 0; i < COVER_STEPS.length; i++) {
+      if (p >= COVER_STEPS[i][0]) return (k.key === 'blind' && COVER_STEPS[i][1]) || k.open;
+    }
+    return k.open;
+  };
+  // Als URL; eigenes Symbol aus dem Studio (variables.icon_open / icon_closed) geht vor.
+  window.casoraCoverIconUrl = function (st, vars) {
+    var name = window.casoraCoverIconName(st);
+    var a = (st && st.attributes) || {};
+    var closed = name === window.casoraCoverKind(a.device_class, st && st.entity_id).closed;
     var v = vars || {};
-    var own = open ? v.icon_open : v.icon_closed;
+    var own = closed ? v.icon_closed : v.icon_open;
     own = typeof own === 'string' ? own.trim() : '';
     if (own && own !== 'Default' && own !== 'default' && own.indexOf('mdi:') !== 0) {
       if (/^(\/|data:image\/)/.test(own)) return own;
-      return typeof window.casoraIconUrl === 'function' ? window.casoraIconUrl(own) : '/casora_assets/icons/' + own + '.svg';
+      name = own;
     }
-    var a = (st && st.attributes) || {};
-    var k = window.casoraCoverKind(a.device_class, st && st.entity_id);
-    var name = open ? k.open : k.closed;
     return typeof window.casoraIconUrl === 'function' ? window.casoraIconUrl(name) : '/casora_assets/icons/' + name + '.svg';
   };
 

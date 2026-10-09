@@ -23322,12 +23322,13 @@ class CasoraPanel extends HTMLElement {
             : isLock ? (isUnlocked ? tv.icon_unlocked : tv.icon_locked)
               : (tv.icon || tile.icon);
           // Cover (1.2.1): dasselbe Symbol wie Kachel, Popup-Ring und Popup-Zeilen im Dashboard
-          // (casoraCoverKind: Jalousie cover_open/cover_closed, Vorhang, Markise, Tür, Garage, Tor).
+          // (casoraCoverIconName: Jalousie mit Lage-Stufe, Vorhang, Markise, Tür, Garage, Tor).
           // Vorher: Weich Lamellen blinds-horizontal-*, sonst Vorhang.
           const ck = isCover && window.casoraCoverKind
             ? window.casoraCoverKind(ent && ent.attributes && ent.attributes.device_class, ent && ent.entity_id)
             : { open: "cover_open", closed: "cover_closed" };
-          const fallback = isCover ? "/casora_assets/icons/" + (isOpen ? ck.open : ck.closed) + ".svg"
+          const cn = isCover && ent && window.casoraCoverIconName ? window.casoraCoverIconName(ent) : null;
+          const fallback = isCover ? "/casora_assets/icons/" + (cn || (isOpen ? ck.open : ck.closed)) + ".svg"
             : isLock ? (isUnlocked ? "lock-open-fill" : "lock-fill") : null;
           const derived = type && type.glyphFromEntity
             ? type.glyphFromEntity[String(tile.entity || "").split(".")[0]]
