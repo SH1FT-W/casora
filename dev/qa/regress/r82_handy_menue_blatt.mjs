@@ -183,8 +183,11 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
     // Desktop-Standardfarbe der Szenen (casora_badge_scene: --casora-scene-badge-color; casora_scenes: --casora-color-yellow) aufgelöst.
     const probe = (v) => { const d = document.createElement('div'); d.style.cssText = 'position:fixed;width:1px;height:1px;background:' + v; document.body.appendChild(d); const c = getComputedStyle(d).backgroundColor; d.remove(); return c; };
     // Erste Szene im Browser als aktiv führen (D4/D6: Farbe und „Aktiv“ nur für aktive Szenen).
-    const nav = window.__pierce('casora-mobile-nav')[0], SCx = window._casoraSC;
+    const nav = window.__pierce('casora-mobile-nav')[0];
     const a = (nav._items('scenes')[0] || {}).id;
+    // Ohne Szenen-Badge/-Reihe auf der Seite fehlt der Szenen-Kern – dann eine kleine Attrappe (nur isActive).
+    if (!window._casoraSC) window._casoraSC = { isActive: () => false };
+    const SCx = window._casoraSC;
     if (SCx && a && !SCx._qaIsActive) { SCx._qaIsActive = SCx.isActive; SCx.isActive = function (id, hs) { return id === a || SCx._qaIsActive.call(this, id, hs); }; }
     return { badge: probe('var(--casora-scene-badge-color, #C29CFF)'), yellow: probe('var(--casora-color-yellow, #FFCC00)'), blue: probe('var(--casora-color-blue, #5B8FC9)'),
       accent: probe('var(--primary-color, #B67A50)') };
