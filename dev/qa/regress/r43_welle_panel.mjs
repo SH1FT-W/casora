@@ -40,7 +40,7 @@ await dashboard(page, dash.url);
 const now = new Date().toISOString();
 const player = (title, i) => ({ state: 'playing', attributes: { friendly_name: 'QA Lautsprecher ' + i, media_title: title,
   media_artist: 'QA', media_duration: 300, media_position: 60, media_position_updated_at: now, media_content_type: 'music',
-  supported_features: 4127295 } });
+  supported_features: 4127295, volume_level: 0.3 } });
 await fakeStates(page, { [IDS[0]]: player('Erster Titel', 1), [IDS[1]]: player('Zweiter Titel', 2), [IDS[2]]: player('Dritter Titel', 3) }, { sticky: true });
 await page.waitForTimeout(2500);
 
@@ -89,6 +89,30 @@ await page.mouse.click(btn.x, btn.y);
 await page.waitForTimeout(600);
 const paused = await state();
 await check('Play/Pause in der Zeile ruft media_play_pause, Panel bleibt offen', paused.calls.includes('media_player.media_play_pause') && paused.open, paused.calls);
+
+// 09.10.2026 Cover-Bühne: Vor und Lautstärke bedienen nur, sie öffnen nie das Medien-Popup.
+const at = (sel) => page.evaluate((sel) => {
+  const sr = [...document.querySelector('.casora-welle-menu').querySelectorAll('div')].map((d) => d.shadowRoot).filter(Boolean)[0];
+  const e = sr.querySelector(sel); if (!e) return null;
+  const r = e.getBoundingClientRect(); return { x: r.x + r.width * 0.75, y: r.y + r.height / 2, w: r.width, h: r.height };
+}, sel);
+const popupOpen = () => page.evaluate(() => !!(window.casoraPopup && window.casoraPopup.element && window.casoraPopup.element.hasAttribute('open')));
+const nx = await at('.r.st .k[data-a="next"]');
+await check('Bühne: Vor-Taste da (Player kann next_track)', !!nx, nx);
+if (nx) {
+  await page.mouse.click(nx.x - nx.w * 0.25, nx.y);
+  await page.waitForTimeout(600);
+  const s1 = await state();
+  await check('Vor ruft media_next_track, Panel bleibt offen, kein Popup', s1.calls.includes('media_player.media_next_track') && s1.open && !(await popupOpen()), s1.calls);
+}
+const vb = await at('.r.st .vb');
+await check('Bühne: Lautstärke-Balken da (volume_set + Pegel)', !!vb, vb);
+if (vb) {
+  await page.mouse.click(vb.x, vb.y);
+  await page.waitForTimeout(600);
+  const s2 = await state();
+  await check('Lautstärke ruft volume_set, Panel bleibt offen, kein Popup', s2.calls.includes('media_player.volume_set') && s2.open && !(await popupOpen()), s2.calls);
+}
 
 // 08.10.2026: Tipp daneben schließt NICHT mehr – nur die Welle (oder Escape) klappt zu.
 await page.mouse.click(300, 650);

@@ -1549,7 +1549,9 @@
   "Wirklich entriegeln?": "Really unlock?",
   "Wirklich verriegeln?": "Really lock?",
   "Nichts fällig": "Nothing due",
-  "Daten": "Data"
+  "Daten": "Data",
+  "Vorheriger Titel": "Previous track",
+  "Nächster Titel": "Next track"
  },
  "patterns": [
   [

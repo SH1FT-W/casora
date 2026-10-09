@@ -154,7 +154,8 @@ for (const dark of [false, true]) {
   }
   await check(`${tag}: Glocke ohne Kopf, Zeilen ohne Platte 52, Kreis 36, Name 15/600`, !g.head && clear(g.rowBg) && near(g.rowH, 52) && near(g.icW, 36) && near(g.fs, 15, 0.5) && g.fw >= 600, g);
   await check(`${tag}: „Alles gelesen“ als kleine Sand-Pille unter der Liste (nur bei Ungelesenem)`, g.read === null || (g.read.below && g.read.h <= 36 && g.read.radius >= g.read.h / 2 - 1 && !clear(g.read.bg) && near(g.read.fs, 13, 0.5)), g.read);
-  await check(`${tag}: Welle ohne Kopf, Kreis 36, Name 15/600`, !w.head && near(w.icW, 36) && near(w.fs, 15, 0.5) && w.fw >= 600, w);
+  // 09.10.2026: Welle-Menü als Cover-Bühne (Entwurf C) – erste Wiedergabe mit Cover 64, Titel 17/600.
+  await check(`${tag}: Welle ohne Kopf, Bühne mit Cover 64, Titel 17/600`, !w.head && near(w.icW, 64) && near(w.fs, 17, 0.5) && w.fw >= 600, w);
   await check(`${tag}: ⋯-Menü Zeilen 52, Kreis 36`, near(p.rowH, 52) && near(p.icW, 36), p);
   await browser.close();
 
