@@ -34,6 +34,13 @@ const EXPECT = [
   ['Morgen ab 6 Uhr', 'Tomorrow from 6:00'],
   ['Warte bis 15 Uhr', 'Wait until 15:00'],
   ['um 8 Uhr', 'at 8:00'],
+  // 1.2.1 (E1): Uhrzeit kommt schon im Format der Sprache („7:00 PM“, schmales Leerzeichen wie im Browser).
+  ['Heute ab 7:00\u202fPM', 'Today from 7:00 PM'],
+  ['Warte bis morgen 7:00 AM', 'Wait until 7:00 AM tomorrow'],
+  ['Tank reicht noch 300 km. Ab 7:00 PM lag Super E10 in den letzten 14 Tagen im Schnitt 6 ct niedriger.', 'Enough fuel for 300 km. From 7:00 PM, Super E10 was 6 ct cheaper on average over the last 14 days.'],
+  ['Super E10 · ab 19:00 günstiger', 'Super E10 · cheaper from 19:00'],
+  ['In 25 Durchgängen fällig', 'Due in 25 cycles'],
+  ['Wirklich entriegeln?', 'Really unlock?'],
 ];
 for (const [de, en] of EXPECT) assert.equal(tr(de), en, de);
 console.log('ok phrasen_en');

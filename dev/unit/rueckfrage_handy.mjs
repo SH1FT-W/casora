@@ -69,7 +69,7 @@ const tap = async (spec, yes) => {
   // Schloss-Ansicht „Entriegeln“ (13-schloss.js: casoraConfirmSpec) – erster Tipp wartet auf den Partner.
   const r = await tap({ domain: 'lock', service: 'unlock', target: { entity_id: 'lock.test_haustuer' } }, false);
   assert.equal(r.ok, false, 'Abbrechen → nicht entriegeln');
-  assert.ok(r.asked.includes('h2=Haustür') && r.asked.includes('.yes=Aufschließen'), 'fragt mit Kachelnamen: ' + r.asked);
+  assert.ok(r.asked.includes('h2=Haustür') && r.asked.includes('.yes=Entriegeln'), 'fragt mit Kachelnamen: ' + r.asked);
 }
 assert.equal(w.casoraAsksFirst('cover.test_garage'), true, 'Rückfrage vom Desktop gilt auch am Handy');
 {

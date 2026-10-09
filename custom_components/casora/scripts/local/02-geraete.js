@@ -229,7 +229,7 @@
     try { window._casoraAqDoseOpen(JSON.parse(decodeURIComponent(dose))); } catch (e) { console.error('casora aquarium dose', e); }
   };
 
-  /* Eigenes Casora-Popup je Dünger-Kanal (Sheet-Stil, Bedienung). */
+  /* Eigenes Casora-Popup je Dünger-Kanal (Sheet-Stil, Bedienung). Inhalt ohne Kachel-Schatten (sonst Karte in der Karte). */
   window._casoraAqDoseOpen = function (d) {
     if (!window.casoraPopup || !d || !d.vol) return;
     const _d = JSON.stringify(d);
@@ -286,7 +286,7 @@
         triggers_update: [d.vol, d.today, d.total, d.btn],
         tap_action: { action: 'none' },
         show_icon: false, show_name: false, show_label: false, show_state: false,
-        card_mod: { style: ':host { --ha-card-box-shadow: none !important; } ha-card { background: transparent !important; border: none !important; box-shadow: none !important; backdrop-filter: none !important; cursor: default !important; } ha-ripple { display: none !important; }' },
+        card_mod: { style: ':host { --ha-card-box-shadow: none !important; --button-card-box-shadow: none !important; --button-card-box-shadow-hover: none !important; } ha-card { background: transparent !important; border: none !important; box-shadow: none !important; backdrop-filter: none !important; cursor: default !important; } ha-ripple { display: none !important; }' },
         styles: {
           card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: 'var(--casora-soft-card-top, 6px) 26px 22px 26px' }],
           grid: [{ 'grid-template-areas': areas.join(' ') }, { 'grid-template-columns': '1fr' }, { 'row-gap': 'var(--casora-popup-sec-gap, 18px)' }],
@@ -638,13 +638,13 @@
   reg1(cfg.tempBat, 'Akku Temperaturfühler', '30d', '#30D158');
   const plate = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
     + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);'
-    + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);padding:14px 10px 6px;';
+    + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);padding:var(--casora-soft-plate-pad, 14px 10px 6px);';
   /* Weich (01.10.2026): Diagrammtitel als Etikett (Großbuchstaben, Laufweite) wie bei Klima. */
   const _aqSoft = !!(window._casoraSoft && window._casoraSoft());
   if (hpOk) {
-    add('chart', '<div style="' + plate + (_aqSoft ? 'padding:16px 10px 6px;' : '') + '">'
+    add('chart', '<div style="' + plate + (_aqSoft ? 'padding:18px 14px 8px;' : '') + '">'
       + '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);'
-      + (_aqSoft ? 'font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--casora-soft-label, var(--casora-popup-tiles-text-secondary));padding:0 8px;'
+      + (_aqSoft ? 'font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--casora-soft-label, var(--casora-popup-tiles-text-secondary));padding:0 6px;'
                  : 'font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary,#fff));padding:0 6px;')
       + 'text-align:left;">'
       + window._hpChartTitle(cfg.temp) + '</div>'
@@ -1926,9 +1926,9 @@
       }
       var plate = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
         + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);'
-        + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);padding:14px 10px 6px;';
+        + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);padding:var(--casora-soft-plate-pad, 14px 10px 6px);';
       add('chart', window._casoraHH && window._casoraHH.on()
-        ? window._casoraHH.chart(window._hpChartTitle(c.power), plate.replace('padding:14px 10px 6px;', ''))
+        ? window._casoraHH.chart(window._hpChartTitle(c.power), plate.replace('padding:var(--casora-soft-plate-pad, 14px 10px 6px);', ''))
         : '<div style="' + plate + '">'
         + '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);font-size:15px;font-weight:600;'
         + 'letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary,#fff);text-align:left;padding:0 6px;">'
@@ -2471,9 +2471,9 @@
       }
       var plate = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
         + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);'
-        + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);padding:14px 10px 6px;';
+        + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);padding:var(--casora-soft-plate-pad, 14px 10px 6px);';
       add('chart', window._casoraHH && window._casoraHH.on()
-        ? window._casoraHH.chart(window._hpChartTitle(c.power), plate.replace('padding:14px 10px 6px;', ''))
+        ? window._casoraHH.chart(window._hpChartTitle(c.power), plate.replace('padding:var(--casora-soft-plate-pad, 14px 10px 6px);', ''))
         : '<div style="' + plate + '">'
         + '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);font-size:15px;font-weight:600;'
         + 'letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary,#fff);text-align:left;padding:0 6px;">'
@@ -3009,7 +3009,7 @@
       + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);';
     if (c.power && typeof window._hpChartTitle === 'function') {
       add('chart', window._casoraHH && window._casoraHH.on() ? window._casoraHH.chart(window._hpChartTitle(c.power), plate)
-        : '<div style="' + plate + 'padding:14px 10px 6px;">'
+        : '<div style="' + plate + 'padding:var(--casora-soft-plate-pad, 14px 10px 6px);">'
         + '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);font-size:15px;font-weight:600;'
         + 'letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary,#fff);text-align:left;padding:0 6px;">'
         + window._hpChartTitle(c.power) + '</div>'
@@ -3858,7 +3858,7 @@
         + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);';
       if (typeof window._hpChartTitle === 'function') {
         add('chart', window._casoraHH && window._casoraHH.on() ? window._casoraHH.chart(window._hpChartTitle(c.battery), plate + 'height:100%;box-sizing:border-box;')
-          : '<div style="' + plate + 'padding:14px 10px 6px;height:100%;box-sizing:border-box;">'
+          : '<div style="' + plate + 'padding:var(--casora-soft-plate-pad, 14px 10px 6px);height:100%;box-sizing:border-box;">'
           + '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);font-size:15px;font-weight:600;'
           + 'letter-spacing:-0.01em;color:var(--casora-popup-tiles-text-primary,#fff);text-align:left;padding:0 6px;">'
           + window._hpChartTitle(c.battery) + '</div>'

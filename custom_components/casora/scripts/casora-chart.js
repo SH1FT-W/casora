@@ -1,11 +1,11 @@
 // casora-chart.js – Casoras eigene Diagramm-Karte (ersetzt apexcharts-card, 1.2).
 // Lovelace-Karte custom:casora-chart, SVG, ohne Fremdbibliothek. Richtung A „Still“:
 // 2-px-Linie, Fläche 12 % → 0, gepunktete Hilfslinien, Skala rechts, Ablesen über die
-// große Zahl (eigene oder die Hero-Zahl des Popups) statt schwebendem Fenster.
+// große Zahl (eigene oder Hero-Zahl) statt schwebendem Fenster.
 //   { type: 'custom:casora-chart', kind: 'line'|'bar'|'spark', span: '48h',
 //     series: [{ entity, name, color, unit, decimals, map }], source: 'auto'|'history'|'stats'|'change',
 //     agg: 'mean'|'max', bucket: '1h', height, y: { min, max, labels }, step, readout: 'own'|'hero'|'none', legend,
-//     read_as: Entität, deren Hero-Zahl ([data-casora-read]) beim Ablesen mitliest (z. B. Säulen im Energie-Popup), plate, title }
+//     read_as: Entität, die die Hero-Zahl beim Ablesen mitliest, plate, title }
 //   Feste Säulen ohne Verlauf (z. B. Tanken „Typischer Tag“): kind: 'bar', points: [{ t, v, color, tick }],
 //     unit, decimals, focus: 'min' (Grundanzeige = kleinster Wert, „Am günstigsten, 19:00 Uhr“).
 (function () {
@@ -87,6 +87,7 @@
   };
   C.hm = function (t, h12) {
     var o = { hour: '2-digit', minute: '2-digit' }; if (h12 != null) o.hour12 = h12;
+    try { if (new Intl.DateTimeFormat(C.lang(), o).resolvedOptions().hour12) o.hour = 'numeric'; } catch (e) {} // 12 h: „7:00 PM“
     return new Date(t).toLocaleTimeString(C.lang(), o);
   };
   C.wd = function (t) { return new Date(t).toLocaleDateString(C.lang(), { weekday: 'short' }).replace('.', ''); };
@@ -103,7 +104,7 @@
     if (!c) return 'var(--cc1)';
     if (/^c[1-4]$/.test(c)) return 'var(--c' + c + ')';
     if (c === 'accent') return 'var(--cacc)';
-    // D9 (1.2): Sparklines auf Kacheln neutral im gedeckten Text-Ton; Farbe nur im Popup-Diagramm.
+    // D9 (1.2): Sparklines neutral im Text-Ton; Farbe nur im Popup.
     if (c === 'spark') return 'var(--casora-chart-spark, var(--cink3))';
     var m = /^#([0-9a-f]{6})$/i.exec(c);
     if (!m) return c;
@@ -117,18 +118,18 @@
   window.casoraChart = C;
   if (typeof customElements === 'undefined' || customElements.get('casora-chart')) return;
 
-  var CSS = ':host{display:block;position:relative;--cc1:var(--casora-chart-c1,#4A7DBA);--cc2:var(--casora-chart-c2,#C8743A);'
+  var CSS = ':host{display:block;position:relative;text-align:left;--cc1:var(--casora-chart-c1,#4A7DBA);--cc2:var(--casora-chart-c2,#C8743A);'
     + '--cc3:var(--casora-chart-c3,#008A7E);--cc4:var(--casora-chart-c4,#A88327);--cacc:var(--casora-chart-accent,var(--primary-color,#B67A50));'
     + '--cink:var(--casora-popup-tiles-text-primary,var(--primary-text-color));--cink2:var(--casora-popup-tiles-text-secondary,var(--secondary-text-color));'
     + '--cink3:var(--casora-chart-label,var(--secondary-text-color));--cgrid:var(--casora-chart-grid,rgba(127,127,127,.16));'
     + '--cplate:var(--casora-chart-plate,var(--casora-popup-row-fill,var(--card-background-color,#fff)));font-family:var(--primary-font-family,system-ui);}'
     + ':host([dark]){--cc1:var(--casora-chart-c1,#5C93D6);--cc2:var(--casora-chart-c2,#CF7840);--cc3:var(--casora-chart-c3,#16A394);--cc4:var(--casora-chart-c4,#B08C2C);}'
-    + ':host([plate]){background:var(--cplate);border-radius:var(--casora-popup-row-radius,24px);padding:16px 10px 8px}'
+    + ':host([plate]){background:var(--cplate);border-radius:var(--casora-popup-row-radius,24px);padding:18px 14px 8px}'
     + '.tt{font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls);text-transform:var(--casora-h15-tt);color:var(--casora-h15-c,var(--cink));padding:0 6px 6px}'
     + '.ro{display:flex;align-items:baseline;gap:8px;min-height:34px;padding:0 var(--casora-chart-inset,6px);font-variant-numeric:tabular-nums}'
     + '.v{font-size:28px;font-weight:600;letter-spacing:-.02em;color:var(--cink)}.u{font-size:15px;font-weight:500;color:var(--cink2);margin-left:-4px}'
     + '.w{font-size:13px;font-weight:500;color:var(--cink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-    // Umschalter wie die Casora-Segmente (hui-sg): einzelne Felder 46 hoch, Radius 18, aktiv hell ohne Schatten.
+    // Umschalter wie hui-sg: Felder 46 hoch, Radius 18, aktiv hell.
     + '.sw{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;margin:2px var(--casora-chart-inset,6px) 10px}'
     + '.sw button{all:unset;box-sizing:border-box;min-width:0;min-height:46px;border-radius:var(--casora-soft-seg-radius,18px);padding:0 12px;display:flex;align-items:center;justify-content:center;gap:6px;'
     + 'background:var(--casora-soft-control-fill,rgba(140,115,90,.10));font-size:13px;font-weight:600;color:var(--casora-soft-sub,var(--cink2));cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-tap-highlight-color:transparent;transition:background-color .16s ease}'

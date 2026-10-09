@@ -55,7 +55,7 @@
     if (hpOk && R0.length) {
       B.cur = R0[0].id; // zu Beginn die niedrigste Batterie
       f.chart = '<div class="hp-batwrap" data-casora-nodismiss="" style="background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));'
-        + 'border-radius:var(--casora-popup-row-radius, 20px);box-shadow:var(--casora-popup-plate-shadow, none);padding:14px 10px 6px;">'
+        + 'border-radius:var(--casora-popup-row-radius, 20px);box-shadow:var(--casora-popup-plate-shadow, none);padding:var(--casora-soft-plate-pad, 14px 10px 6px);">'
         + '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);'
         + 'letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary,#fff));'
         + 'text-align:left;padding:0 6px;">' + window._hpChartTitle(B.cur) + '</div>'

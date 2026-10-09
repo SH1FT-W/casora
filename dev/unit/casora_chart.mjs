@@ -78,7 +78,7 @@ console.log('ok Zeitachse');
   assert.equal(C.dm(thu), '8.10.');
   win.casoraLocale = () => 'en';
   assert.equal(C.wd(thu), 'Thu');
-  assert.equal(C.when(thu - DAY, thu, true), 'Wed, 08:15 PM');
+  assert.equal(C.when(thu - DAY, thu, true), 'Wed, 8:15 PM');
   win.casoraLocale = () => 'de';
 }
 console.log('ok Wochentage');
