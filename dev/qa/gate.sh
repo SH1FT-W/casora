@@ -1,29 +1,32 @@
 #!/bin/bash
 # Qualitäts-Gate vor jedem Release und jedem Karten-Update (siehe dev/qa/README.md).
 #
-#   dev/qa/gate.sh                 Standard seit 05.10.2026: Zustände nacheinander auf casora-test
-#                                  (:8124, dev/haus.sh), je Zustand 2 Tests gleichzeitig (~30 Min.); --jobs 1 = ganz einzeln
-#   dev/qa/gate.sh --parallel      arbeit, stress und frisch GLEICHZEITIG auf eigenen Wegwerf-Test-HAs
-#                                  (dev/qa/wegwerf-ha.sh, Ports 8301–8305), 4 Tests je Zustand (~10 Min.)
-#   dev/qa/gate.sh --seriell       wie Standard (bleibt für alte Aufrufe)
-#   dev/qa/gate.sh --gezielt[=C]   nur die Zustände, die die Änderungen seit dem letzten grünen
-#                                  vollen Gate (oder Commit C) betreffen – zählt NICHT als Freigabe
-#   dev/qa/gate.sh --has N         höchstens N Wegwerf-HAs gleichzeitig (2–4; Standard: nach Speicher)
-#   dev/qa/gate.sh --quick         ohne Stress-Zustand und ohne vollen Klick-Durchlauf
-#   dev/qa/gate.sh --only STEP     nur ein Schritt: static|unit|e2e|regress|crawler
-#   dev/qa/gate.sh --no-switch     Test-HA nicht umschalten: nur Tests des aktiven Zustands
-#   dev/qa/gate.sh --dry-run       nur den Plan zeigen (mit Parallel-Plan und Zeitschätzung)
-#   dev/qa/gate.sh --jobs N        höchstens N Browser/Tests gleichzeitig je Zustand (Standard 4, 1 = nacheinander)
+#   dev/qa/gate.sh                 Standard: Umfang nach Version (--umfang auto), Zustände gleichzeitig
+#                                  auf eigenen Wegwerf-Test-HAs (Ports 8301–8307), 1 Test je HA
+#   dev/qa/gate.sh --voll          volles Gate (für X.Y.0 Pflicht): alle Zustände, alle Tests
+#   dev/qa/gate.sh --patch         Grundprüfungen + nur die Tests, die die Änderungen seit dem letzten
+#                                  grünen vollen Gate berühren (dev/qa/auswahl.mjs) – Freigabe für X.Y.Z, Z>0
+#   dev/qa/gate.sh --basis C       Bezug für --patch (sonst letztes grünes volles Gate, Vorfahre von HEAD)
+#   dev/qa/gate.sh --nachholen[=C] nur die im Vorlauf (bzw. Gate von C) roten und seitdem geänderten Tests;
+#                                  zusammen mit dem Vorlauf gilt das Ergebnis als vollständig
+#   dev/qa/gate.sh --seriell       Zustände nacheinander auf casora-test (:8124, dev/haus.sh)
+#   dev/qa/gate.sh --has N         höchstens N Wegwerf-HAs gleichzeitig (2–6; Standard: nach Speicher, höchstens 5)
+#   dev/qa/gate.sh --jobs N        Tests gleichzeitig je Test-HA (Standard 1 = kein geteilter Zustand im HA)
+#   dev/qa/gate.sh --keine-gegenprobe   rote Tests nicht einzeln nachlaufen lassen
+#   dev/qa/gate.sh --quick         ohne Stress-Zustand und ohne vollen Klick-Durchlauf (keine Freigabe)
+#   dev/qa/gate.sh --only STEP     nur ein Schritt: static|unit|e2e|regress|crawler (keine Freigabe)
+#   dev/qa/gate.sh --no-switch     Test-HA casora-test nicht umschalten: nur Tests des aktiven Zustands
+#   dev/qa/gate.sh --dry-run       nur den Plan zeigen (mit Zuordnung, Parallel-Plan und Zeitschätzung)
 #
 # Je Zustand laufen E2E, Regressionstests und Klick-Durchlauf (je Viewport/Teil) über
-# dev/qa/pool.mjs gleichzeitig – mit Abhängigkeiten und Sperren, wo Tests dieselben Dashboards
-# oder denselben HA-Zustand anfassen. Statisch + Unit laufen während des ersten Umschaltens.
+# dev/qa/pool.mjs – mit Abhängigkeiten und Sperren, wo Tests dieselben Dashboards oder denselben
+# HA-Zustand anfassen. Statisch + Unit laufen, während die HAs starten. Ein im Lauf roter Test läuft
+# am Ende einmal einzeln nach (Gegenprobe): grün = wackelt (zählt, steht in der Wackler-Liste).
 #
-# Schreibt .qa/gate-<commit>.json (Commit, Zeit, je Schritt ok/fehlgeschlagen) und die
-# Protokolle nach .qa/logs/<commit>/ (Einzelteile unter teile/, Zeiten in zeiten-<zustand>.log).
-# Rückgabe ≠ 0 bei jedem Fehler. Nur ein vollständiger Lauf (ohne --quick/--only/--no-switch)
-# auf sauberem Arbeitsstand gibt tools/release.sh und tools/build-card-update.py grünes Licht
-# (parallel oder --seriell; --gezielt nie).
+# Schreibt .qa/gate-<commit>.json (Commit, Zeit, Umfang, je Schritt und je Test ok/fehlgeschlagen,
+# Wackler) und die Protokolle nach .qa/logs/<commit>/. Rückgabe ≠ 0 bei jedem Fehler.
+# tools/release.sh (über tools/qa_gate.py) nimmt ein volles Gate immer, ein Patch-Gate nur für X.Y.Z mit
+# Z>0 und nur, wenn sein Bezug ein grünes volles Gate eines Vorfahren ist.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$REPO" || exit 2
@@ -31,36 +34,51 @@ NODE="${NODE:-/opt/homebrew/opt/node@22/bin/node}"
 [ -x "$NODE" ] || NODE="$(command -v node)"
 PY="uv run --python 3.14"
 
-QUICK=0; ONLY=""; DRY=0; NOSWITCH=0; JOBS="${GATE_JOBS:-}"; PAR=0; GEZIELT=0; GBASE=""; HAS="${GATE_HAS:-}"
+QUICK=0; ONLY=""; DRY=0; NOSWITCH=0; JOBS="${GATE_JOBS:-}"; PAR=1; HAS="${GATE_HAS:-}"
+UMFANG="${GATE_UMFANG:-auto}"; BASIS=""; NACH=0; NACHVON=""; GPFLAG=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --seriell) PAR=0 ;;
     --parallel) PAR=1 ;;
-    --gezielt) GEZIELT=1 ;;
-    --gezielt=*) GEZIELT=1; GBASE="${1#--gezielt=}" ;;
+    --voll) UMFANG=voll ;;
+    --patch) UMFANG=patch ;;
+    --umfang) UMFANG="$2"; shift ;;
+    --umfang=*) UMFANG="${1#--umfang=}" ;;
+    --basis) BASIS="$2"; shift ;;
+    --basis=*) BASIS="${1#--basis=}" ;;
+    --gezielt) UMFANG=patch ;;                                  # alter Name
+    --gezielt=*) UMFANG=patch; BASIS="${1#--gezielt=}" ;;
+    --nachholen) NACH=1 ;;
+    --nachholen=*) NACH=1; NACHVON="${1#--nachholen=}" ;;
+    --keine-gegenprobe) GPFLAG="--keine-gegenprobe" ;;
     --has) HAS="$2"; shift ;;
     --has=*) HAS="${1#--has=}" ;;
     --quick) QUICK=1 ;;
     --only) ONLY="$2"; shift ;;
     --only=*) ONLY="${1#--only=}" ;;
     --dry-run|-n) DRY=1 ;;
-    --no-switch) NOSWITCH=1 ;;
+    --no-switch) NOSWITCH=1; PAR=0 ;;
     --jobs|-j) JOBS="$2"; shift ;;
     --jobs=*) JOBS="${1#--jobs=}" ;;
-    -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,30p' "$0"; exit 0 ;;
     *) echo "Unbekannte Option: $1" >&2; exit 2 ;;
   esac
   shift
 done
 case "$ONLY" in ""|static|unit|e2e|regress|crawler) ;; *) echo "--only: static|unit|e2e|regress|crawler" >&2; exit 2 ;; esac
-# Standard (05.10.2026): Zustände nacheinander auf casora-test, je Zustand zwei Tests gleichzeitig
-# (einzeln dauerte ~48 Min., zwei gleichzeitig ~30 Min.; --jobs 1 für ganz einzeln).
-# Gleichzeitig (--parallel) ist schneller, wackelt aber unter Last (Docker 3,8 GB).
-[ -n "$JOBS" ] || { [ $PAR = 1 ] && JOBS=4 || JOBS=2; }
+case "$UMFANG" in auto|voll|patch) ;; *) echo "--umfang: auto | voll | patch" >&2; exit 2 ;; esac
+# Parallel: 1 Test je HA (09.10.2026) – mehrere HAs statt mehrerer Browser auf einem HA, so teilt kein
+# Test den HA-Zustand mit einem anderen. Seriell auf casora-test wie bisher 2 gleichzeitig.
+[ -n "$JOBS" ] || { [ $PAR = 1 ] && JOBS=1 || JOBS=2; }
 case "$JOBS" in ''|*[!0-9]*|0) echo "--jobs: Zahl ≥ 1" >&2; exit 2 ;; esac
-case "$HAS" in ''|2|3|4) ;; *) echo "--has: 2, 3 oder 4" >&2; exit 2 ;; esac
-[ $NOSWITCH = 1 ] && PAR=0
-[ $GEZIELT = 1 ] && [ $PAR = 0 ] && { echo "--gezielt geht nur parallel (nicht mit --seriell/--no-switch)" >&2; exit 2; }
+case "$HAS" in ''|2|3|4|5|6) ;; *) echo "--has: 2 bis 6" >&2; exit 2 ;; esac
+# Teil- und Sonderläufe sind immer „voll“ im Sinne der Auswahl (sie zählen ohnehin nicht als Freigabe).
+if [ -n "$ONLY" ] || [ $QUICK = 1 ] || [ $PAR = 0 ]; then
+  [ "$UMFANG" = patch ] && { echo "--patch geht nur parallel und nicht mit --quick/--only" >&2; exit 2; }
+  [ $NACH = 1 ] && { echo "--nachholen geht nur parallel und nicht mit --quick/--only" >&2; exit 2; }
+  UMFANG=voll
+fi
+[ $NACH = 1 ] && UMFANG=nachholen
 
 COMMIT="$(git rev-parse HEAD)"
 DIRTY=0; [ -n "$(git status --porcelain --untracked-files=no)" ] && DIRTY=1
@@ -71,6 +89,8 @@ START=$(date +%s)
 BGOUT="$(mktemp -t casora-gate-bg)"
 SYNCFLAG="$(mktemp -u -t casora-gate-sync)"
 ESTF="$(mktemp -t casora-gate-est)"
+TESTS="$(mktemp -t casora-gate-tests)"   # je Test eine Zeile (pool.mjs --tests)
+AUSWAHL="$(mktemp -t casora-gate-auswahl)"
 BGPID=""
 trap 'rm -f "$SYNCFLAG"' EXIT
 [ $DRY = 1 ] || mkdir -p "$LOGS"
@@ -191,7 +211,7 @@ export NODE PY SYNCFLAG
 pool() {
   local state="$1"; shift
   if [ $DRY = 1 ]; then "$NODE" dev/qa/pool.mjs --dry-run --state "$state" --jobs "$JOBS" --est-file "${POOL_EST:-$ESTF}" "$@"; return 0; fi
-  "$NODE" dev/qa/pool.mjs --state "$state" --jobs "$JOBS" --logs "$LOGS" --results "$STEPS" --t0 "$START" "$@"
+  "$NODE" dev/qa/pool.mjs --state "$state" --jobs "$JOBS" --logs "$LOGS" --results "$STEPS" --tests "$TESTS" --t0 "$START" $GPFLAG "$@"
   local rc=$?
   # 0/1: Schritte sind eingetragen. Sonst ist der Läufer selbst gescheitert → als Fehler festhalten.
   if [ $rc -gt 1 ]; then
@@ -235,19 +255,22 @@ join_static() {
   cat "$BGOUT"
 }
 
-# ── Paralleles Gate: je Zustand ein Wegwerf-HA ──────────────────────────────────────────
-# arbeit :8301 (+ zweites arbeit-HA :8304, wenn der Speicher für 4 reicht), stress :8302,
-# frisch :8303 – nach den frisch-Tests (~2 min) wird dessen Speicher zu einem weiteren HA
-# (:8305) für den längsten verbleibenden Zustand: mit 3 HAs arbeit, mit 4 HAs stress. Es
-# arbeitet dem laufenden Pool als zusätzliche Bahn zu (pool.mjs --ha-later).
+# ── Paralleles Gate: je Zustand ein oder mehrere Wegwerf-HAs ────────────────────────────
+# Ports: arbeit 8301 (+ 8304, 8307), stress 8302 (+ 8306), frisch 8303. Nach den frisch-Tests
+# (~2 min) wird dessen Speicher zu einem weiteren HA (:8305) für den längsten verbleibenden Zustand,
+# das dem laufenden Pool als zusätzliche Bahn zuarbeitet (pool.mjs --ha-later).
 # Speicher: Docker-VM gesamt minus laufende Container minus Reserve; je HA unter Last ~GATE_HA_MB.
 HA_MB="${GATE_HA_MB:-600}"   # gemessen 04.10.: 550–590 MB je HA unter Last
-PORT_ARBEIT=8301; PORT_STRESS=8302; PORT_FRISCH=8303; PORT_ARBEIT2=8304; PORT_SPAET=8305; PORT_STRESS2=8306
-ARBEIT_TWO=0; STRESS_TWO=0   # zweites HA von Anfang an (wenn mehr HAs passen als Zustände laufen)
+HAS_MAX="${GATE_HAS_MAX:-5}" # mehr HAs = mehr Browser gleichzeitig; 5 hält der Rechner (10 Kerne) gut aus
+PORT_ARBEIT=8301; PORT_STRESS=8302; PORT_FRISCH=8303; PORT_ARBEIT2=8304; PORT_SPAET=8305; PORT_STRESS2=8306; PORT_ARBEIT3=8307
+A_N=1; S_N=1                 # HAs je Zustand von Anfang an
 PARDIR=""; LATEFLAG=""; LATE=""   # LATE: Zustand, der das HA nach frisch bekommt
 NHAS=3; RUN_ARBEIT=1; RUN_STRESS=1; RUN_FRISCH=1
+# Auswahl je Zustand (gestaffeltes Gate / Nachholen): KOMPLETT=1 = alle Tests des Zustands, sonst
+# nur die Listen (Komma-getrennt) und die Teile des Klick-Durchlaufs.
+A_KOMPLETT=1; A_E2E=""; A_REG=""; A_TEILE=""; S_KOMPLETT=1; S_REG=""; S_CRAWL=0; F_KOMPLETT=1; F_REG=""
 url() { echo "http://localhost:$1"; }
-weg_all() { local n; for n in arbeit arbeit2 stress stress2 frisch spaet; do sh "$REPO/dev/qa/wegwerf-ha.sh" weg "$n"; done; }
+weg_all() { local n; for n in arbeit arbeit2 arbeit3 stress stress2 frisch spaet; do sh "$REPO/dev/qa/wegwerf-ha.sh" weg "$n"; done; }
 kill_tree() { local c; for c in $(pgrep -P "$1" 2>/dev/null); do kill_tree "$c"; done; kill "$1" 2>/dev/null || true; }
 par_cleanup() {
   local c
@@ -265,13 +288,12 @@ docker_free_mb() {
     if (u=="GiB") v*=1024; else if (u=="KiB") v/=1024; else if (u=="B") v/=1048576; s+=v } END {printf "%d", s}')
   echo $(( total / 1048576 - used - 400 ))
 }
-# Plan nach Speicher (gleichzeitig laufende HAs): 4 = arbeit×2 + stress + frisch(→stress),
-# 3 = arbeit + stress + frisch(→arbeit), 2 = arbeit + frisch, stress erst nach frisch auf dessen
-# Speicher. Laufen weniger Zustände (gezielt), bekommen sie zweite HAs von Anfang an.
+# Höchstzahl gleichzeitiger HAs nach Speicher (2 … HAS_MAX), --has gibt sie vor.
 plan_has() {
   [ -n "$HAS" ] && { echo "$HAS"; return; }
-  local free; free=$(docker_free_mb) || { echo 3; return; }
-  if [ "$free" -ge $((4 * HA_MB)) ]; then echo 4; elif [ "$free" -ge $((3 * HA_MB)) ]; then echo 3; else echo 2; fi
+  local free n; free=$(docker_free_mb) || { echo 3; return; }
+  n=$(( free / HA_MB )); [ $n -gt "$HAS_MAX" ] && n=$HAS_MAX; [ $n -lt 2 ] && n=2
+  echo $n
 }
 # ha_up <name> <port> <zustand> [<name> <port> <zustand> …]: alle starten, dann auf alle warten.
 ha_up() {
@@ -290,24 +312,34 @@ enter_state() {
   mkdir -p "$CASORA_OUT"
 }
 want_regcrawl() { want regress || want crawler; }
+# Was läuft je Zustand (aus Umfang/Auswahl)?
+a_e2e()   { want e2e && { [ $A_KOMPLETT = 1 ] || [ -n "$A_E2E" ]; }; }
+a_reg()   { want regress && { [ $A_KOMPLETT = 1 ] || [ -n "$A_REG" ]; }; }
+a_crawl() { want crawler && { [ $A_KOMPLETT = 1 ] || [ -n "$A_TEILE" ]; }; }
+s_reg()   { want regress && { [ $S_KOMPLETT = 1 ] || [ -n "$S_REG" ]; }; }
+s_crawl() { want crawler && { [ $S_KOMPLETT = 1 ] || [ $S_CRAWL = 1 ]; }; }
+f_reg()   { want regress && { [ $F_KOMPLETT = 1 ] || [ -n "$F_REG" ]; }; }
+nur_args() { local l; l="$(echo "$*" | tr ' ' ',' | sed 's/,,*/,/g; s/^,//; s/,$//')"; [ -n "$l" ] && echo "--nur $l"; }
 run_arbeit() {
   enter_state arbeit $PORT_ARBEIT
-  local two=$ARBEIT_TWO
-  if [ $two = 1 ]; then step haus-arbeit ha "ha_up arbeit $PORT_ARBEIT arbeit arbeit2 $PORT_ARBEIT2 arbeit" || return 0
-  else step haus-arbeit ha "ha_up arbeit $PORT_ARBEIT arbeit" || return 0; fi
+  local list="arbeit $PORT_ARBEIT arbeit" urls su p
+  urls="$(url $PORT_ARBEIT)"; su="stress_setup --name qa-arbeit --state arbeit"
+  for p in $([ $A_N -ge 2 ] && echo "arbeit2:$PORT_ARBEIT2") $([ $A_N -ge 3 ] && echo "arbeit3:$PORT_ARBEIT3"); do
+    list="$list ${p%%:*} ${p#*:} arbeit"; urls="$urls,$(url "${p#*:}")"; su="$su && setup_on ${p#*:} arbeit --name qa-arbeit --state arbeit"
+  done
+  step haus-arbeit ha "ha_up $list" || return 0
   set_tokens
-  if want_regcrawl; then
-    if [ $two = 1 ]; then step arbeit-setup ha "stress_setup --name qa-arbeit --state arbeit && setup_on $PORT_ARBEIT2 arbeit --name qa-arbeit --state arbeit"
-    else step arbeit-setup ha "stress_setup --name qa-arbeit --state arbeit"; fi
-  fi
-  local args="--ha $(url $PORT_ARBEIT)"
-  [ $two = 1 ] && args="$args,$(url $PORT_ARBEIT2)"
-  [ "$LATE" = arbeit ] && want_regcrawl && args="$args --ha-later $(url $PORT_SPAET)=$LATEFLAG"
-  want e2e && args="$args --e2e"
-  want regress && args="$args --regress"
-  want crawler && args="$args --crawler quick --dash qa-arbeit"
+  # Prüf-Dashboard qa-arbeit über den echten Studio-Ablauf (dashboard-hemma ist gesperrt und hat alte
+  # Vorlagen) – auf jedem arbeit-HA.
+  { a_reg || a_crawl; } && step arbeit-setup ha "$su"
+  local args="--ha $urls"
+  [ "$LATE" = arbeit ] && { a_reg || a_crawl; } && args="$args --ha-later $(url $PORT_SPAET)=$LATEFLAG"
+  a_e2e && args="$args --e2e"
+  a_reg && args="$args --regress"
+  a_crawl && args="$args --crawler quick --dash qa-arbeit"
+  [ $A_KOMPLETT = 1 ] || { args="$args $(nur_args "$A_E2E" "$A_REG")"; [ -n "$A_TEILE" ] && args="$args --crawler-teile $A_TEILE"; }
   # shellcheck disable=SC2086
-  pool arbeit $args
+  { a_e2e || a_reg || a_crawl; } && pool arbeit $args
   [ $DRY = 1 ] || touch "$PARDIR/fertig-arbeit"
 }
 run_stress() {
@@ -316,16 +348,17 @@ run_stress() {
   if [ $DRY = 0 ] && [ "$NHAS" -le 2 ] && [ "$RUN_FRISCH" = 1 ]; then
     while [ ! -e "$PARDIR/frisch-fertig" ]; do sleep 2; done
   fi
-  if [ "$STRESS_TWO" = 1 ]; then step haus-stress ha "ha_up stress $PORT_STRESS stress stress2 $PORT_STRESS2 stress" || { touch "$PARDIR/fertig-stress"; return 0; }
+  if [ "$S_N" -ge 2 ]; then step haus-stress ha "ha_up stress $PORT_STRESS stress stress2 $PORT_STRESS2 stress" || { touch "$PARDIR/fertig-stress"; return 0; }
   else step haus-stress ha "ha_up stress $PORT_STRESS stress" || { touch "$PARDIR/fertig-stress"; return 0; }; fi
   set_tokens
-  if [ "$STRESS_TWO" = 1 ]; then step stress-setup crawler "stress_setup && setup_on $PORT_STRESS2 stress"
-  else step stress-setup crawler "stress_setup"; fi
+  if [ "$S_N" -ge 2 ]; then step stress-setup ha "stress_setup && setup_on $PORT_STRESS2 stress"
+  else step stress-setup ha "stress_setup"; fi
   local args="--ha $(url $PORT_STRESS)"
-  [ "$STRESS_TWO" = 1 ] && args="$args,$(url $PORT_STRESS2)"
+  [ "$S_N" -ge 2 ] && args="$args,$(url $PORT_STRESS2)"
   [ "$LATE" = stress ] && args="$args --ha-later $(url $PORT_SPAET)=$LATEFLAG"
-  want crawler && args="$args --crawler full"
-  want regress && args="$args --regress"
+  s_crawl && args="$args --crawler full"
+  s_reg && args="$args --regress"
+  [ $S_KOMPLETT = 1 ] || args="$args $(nur_args "$S_REG")"
   # shellcheck disable=SC2086
   pool stress $args
   [ $DRY = 1 ] || touch "$PARDIR/fertig-stress"
@@ -334,7 +367,8 @@ run_frisch() {
   enter_state frisch $PORT_FRISCH
   if step haus-frisch ha "ha_up frisch $PORT_FRISCH frisch"; then
     set_tokens
-    pool frisch --regress
+    # shellcheck disable=SC2046
+    pool frisch --regress $([ $F_KOMPLETT = 1 ] || nur_args "$F_REG")
   fi
   [ $DRY = 1 ] && return 0
   sh dev/qa/wegwerf-ha.sh weg frisch
@@ -351,8 +385,8 @@ run_frisch() {
 # Ausgabe eines Zustands mit Präfix, Zeile für Zeile.
 prefix() { local l; while IFS= read -r l; do printf '%-9s%s\n' "[$1]" "$l"; done; }
 
-# ── Gezielt: betroffene Zustände aus den geänderten Dateien ─────────────────────────────────
-# Letzter grüner, vollständiger Gate-Lauf, dessen Commit Vorfahre von HEAD ist.
+# ── Umfang: voll, patch (gestaffelt) oder nachholen ──────────────────────────────────────
+# Letzter grüner, voller Gate-Lauf (auch nachgeholt), dessen Commit Vorfahre von HEAD ist.
 last_green() {
   python3 - "$REPO/.qa" <<'PY'
 import glob, json, os, subprocess, sys
@@ -361,59 +395,79 @@ for f in glob.glob(os.path.join(sys.argv[1], "gate-*.json")):
     try: d = json.load(open(f, encoding="utf-8"))
     except Exception: continue
     if not d.get("ok") or d.get("quick") or d.get("partial") or d.get("dirty"): continue
+    if d.get("umfang", "voll") != "voll": continue
     c = d.get("commit", "")
     if subprocess.run(["git", "merge-base", "--is-ancestor", c, "HEAD"], capture_output=True).returncode: continue
     if best is None or d.get("timestamp", "") > best[0]: best = (d.get("timestamp", ""), c)
 print(best[1] if best else "")
 PY
 }
-# zustand_fuer <datei> → „<zustände>|<grund>“ (Zustände leer = nur statisch/Unit).
-zustand_fuer() {
-  local f="$1"
-  case "$f" in
-    *.md|docs/*|LICENSE|.github/*|brand/*|hacs.json|.gitignore|custom_components/casora/brand/*) echo "|Doku/Changelog" ;;
-    dev/unit/*) echo "|Unit-Test" ;;
-    dev/demo/*|tools/release.sh|tools/sync-changelog.py|tools/privacy-check.py|tools/qa_gate.py|tools/build-card-update.py) echo "|Werkzeug" ;;
-    dev/qa/regress/lib.mjs) echo "arbeit stress frisch|Regress-Bibliothek" ;;
-    dev/qa/regress/*.mjs) echo "$(test_state "$f")|Regressionstest" ;;
-    dev/e2e/*) echo "arbeit|E2E-Test" ;;
-    dev/stress/*) echo "stress|Stresshaus" ;;
-    dev/qa/stress-setup.mjs|dev/qa/alles.mjs|dev/qa/inpage.js) echo "arbeit stress|Klick-Durchlauf/Prüf-Dashboard" ;;
-    dev/qa/*|dev/casora_mock/*|dev/haus.sh) echo "arbeit stress frisch|Gate-Infrastruktur/Mock" ;;
-    custom_components/casora/theme_*.yaml|custom_components/casora/assets/*|www/*|custom_components/casora/translations/*)
-      echo "arbeit|Theme/Bilder/Texte" ;;
-    custom_components/casora/panel/casora-panel-umzug.js|custom_components/casora/panel/casora-panel-import.js|\
-    custom_components/casora/panel/casora-panel-assist.js|custom_components/casora/panel/casora-panel-welcome.js)
-      echo "frisch arbeit|Umzug/Import/Assistent (Ersteinrichtung + E2E)" ;;
-    custom_components/casora/*.py|custom_components/casora/ki/*|tools/build-i18n.py|tools/build-panel-i18n.py)
-      echo "frisch arbeit|Python/Setup" ;;
-    custom_components/casora/panel/*|custom_components/casora/scripts/*|dashboards/*|custom_components/casora/*.yaml)
-      echo "arbeit|Dashboard/Panel" ;;
-    *) echo "arbeit stress frisch|unbekannt – sicherheitshalber alles" ;;
-  esac
+# Auswahl-JSON (auswahl.mjs bzw. nachholen.mjs) → Shell-Variablen A_*/S_*/F_* und RUN_*.
+apply_auswahl() {
+  local vars
+  vars="$(python3 - "$1" <<'PY'
+import json, sys
+d = json.load(open(sys.argv[1], encoding="utf-8"))
+st = d["states"]
+def lst(z, k): return ",".join(st.get(z, {}).get(k) or [])
+a, s, f = st.get("arbeit", {}), st.get("stress", {}), st.get("frisch", {})
+out = {
+  "A_KOMPLETT": int(bool(a.get("komplett"))), "A_E2E": lst("arbeit", "e2e"), "A_REG": lst("arbeit", "regress"),
+  "A_TEILE": ",".join(a.get("teile") or []) if a.get("crawler") else "",
+  "S_KOMPLETT": int(bool(s.get("komplett"))), "S_REG": lst("stress", "regress"), "S_CRAWL": int(bool(s.get("crawler"))),
+  "F_KOMPLETT": int(bool(f.get("komplett"))), "F_REG": lst("frisch", "regress"),
 }
-# Überlauf-/Listen-Hinweise in den geänderten Zeilen einer Oberflächen-Datei → zusätzlich stress.
-STRESS_RE='overflow|ellipsis|nowrap|scroll|flex-wrap|line-clamp|max-width|min-width|white-space|grid-template|Überlauf|lange Namen'
-plan_gezielt() {
-  local base="$GBASE" f z why files
-  [ -n "$base" ] || base="$(last_green)"
-  [ -n "$base" ] || { echo "Kein grünes volles Gate als Vorfahre von HEAD gefunden – --gezielt=<commit> angeben." >&2; return 1; }
-  base="$(git rev-parse --verify -q "$base^{commit}")" || { echo "--gezielt: unbekannter Commit $GBASE" >&2; return 1; }
-  RUN_ARBEIT=0; RUN_STRESS=0; RUN_FRISCH=0
-  files="$( { git diff --name-only "$base" HEAD; git diff --name-only HEAD; } | sort -u)"
-  echo "Gezielt: Änderungen seit ${base:0:12} ($(echo "$files" | grep -c .) Dateien)"
-  while IFS= read -r f; do
-    [ -n "$f" ] || continue
-    z="$(zustand_fuer "$f")"; why="${z#*|}"; z="${z%%|*}"
-    if [ "$z" = arbeit ] && { git diff "$base" HEAD -- "$f"; git diff HEAD -- "$f"; } | grep '^[+-][^+-]' | grep -qiE "$STRESS_RE"; then
-      z="arbeit stress"; why="$why, Überlauf/Listen im Diff"
+out["RUN_ARBEIT"] = int(bool(out["A_KOMPLETT"] or out["A_E2E"] or out["A_REG"] or out["A_TEILE"]))
+out["RUN_STRESS"] = int(bool(out["S_KOMPLETT"] or out["S_REG"] or out["S_CRAWL"]))
+out["RUN_FRISCH"] = int(bool(out["F_KOMPLETT"] or out["F_REG"]))
+for k, v in out.items(): print(f"{k}='{v}'")
+PY
+)" || return 1
+  eval "$vars"
+}
+# Geschätzte Sekunden je Zustand aus .qa/zeiten.json (für die Zahl der HAs je Zustand).
+est_state() {
+  python3 - "$REPO/.qa/zeiten.json" "$1" "$2" "$3" <<'PY'
+import json, sys
+try: z = json.load(open(sys.argv[1], encoding="utf-8"))
+except Exception: z = {}
+state, komplett, ids = sys.argv[2], sys.argv[3] == "1", [x for x in sys.argv[4].split(",") if x]
+if komplett: print(sum(v for k, v in z.items() if k.startswith(state + "/")) or 1500)
+else: print(sum(z.get(f"{state}/{i}", z.get(f"{state}/quick/{i}", 40)) for i in ids))
+PY
+}
+
+# ── Vorab-Prüfung ───────────────────────────────────────────────────────────────────────
+# Was die Tests brauchen, aber nicht im Repo liegt, vorher prüfen – sonst erscheint es mitten im Lauf
+# als Testfehler (09.10.2026: fehlende dev/e2e/testhaus.json im Worktree machte t01/t11 rot).
+# In einem Worktree werden fehlende private Dateien aus dem Haupt-Checkout kopiert (alle gitignored).
+PRIVAT_NOETIG="dev/casora_mock/fixture.json dev/casora_mock/scenarios.json dev/e2e/testhaus.json dev/privat-woerter.txt"
+PRIVAT_KANN="dev/casora_mock/skip.txt dev/casora_mock/einstellungen.privat.js"
+vorab() {
+  local need_ha="$1" f main bad=0 copied="" p z
+  main="$(cd "$(git rev-parse --git-common-dir)/.." 2>/dev/null && pwd)"
+  for f in $PRIVAT_NOETIG $PRIVAT_KANN; do
+    [ -f "$f" ] && continue
+    if [ -n "$main" ] && [ "$main" != "$REPO" ] && [ -f "$main/$f" ]; then
+      mkdir -p "$(dirname "$f")"; cp "$main/$f" "$f" && copied="$copied $f"
+    elif case " $PRIVAT_NOETIG " in *" $f "*) true ;; *) false ;; esac; then
+      echo "✗ Vorab: $f fehlt (privat, nicht im Repo; auch nicht im Haupt-Checkout $main)"; bad=1
+    else echo "  Vorab: $f fehlt (optional)"; fi
+  done
+  [ -n "$copied" ] && echo "▸ Vorab: private Testdateien aus dem Haupt-Checkout kopiert:$copied"
+  if [ "$need_ha" = 1 ]; then
+    docker info >/dev/null 2>&1 || { echo "✗ Vorab: Docker antwortet nicht"; bad=1; }
+    { [ -n "${CASORA_USER:-}" ] && [ -n "${CASORA_PASS:-}" ]; } || [ -f "$HOME/casora-haus/ZUGANG.txt" ] \
+      || { echo "✗ Vorab: kein Test-Zugang (CASORA_USER/CASORA_PASS oder ~/casora-haus/ZUGANG.txt)"; bad=1; }
+    for z in arbeit frisch; do [ -f "$HOME/casora-haus/zustaende/$z.tgz" ] || { echo "✗ Vorab: ~/casora-haus/zustaende/$z.tgz fehlt"; bad=1; }; done
+    if [ $PAR = 1 ]; then
+      for p in $PORT_ARBEIT $PORT_STRESS $PORT_FRISCH $PORT_ARBEIT2 $PORT_SPAET $PORT_STRESS2 $PORT_ARBEIT3; do
+        curl -s -o /dev/null --max-time 1 "http://localhost:$p/" && { echo "✗ Vorab: Port $p ist belegt (anderes Gate oder Wegwerf-HA?)"; bad=1; }
+      done
     fi
-    printf '  %-58s → %s (%s)\n' "$f" "${z:-nur statisch/Unit}" "$why"
-    case " $z " in *" arbeit "*) RUN_ARBEIT=1 ;; esac
-    case " $z " in *" stress "*) RUN_STRESS=1 ;; esac
-    case " $z " in *" frisch "*) RUN_FRISCH=1 ;; esac
-  done <<<"$files"
-  echo "  ⇒ statisch + Unit$([ $RUN_ARBEIT = 1 ] && echo ' + arbeit')$([ $RUN_STRESS = 1 ] && echo ' + stress')$([ $RUN_FRISCH = 1 ] && echo ' + frisch') – zählt nicht als Release-Freigabe"
+  fi
+  [ $bad = 0 ] || echo "Gate nicht gestartet – erst die Punkte oben beheben."
+  return $bad
 }
 
 # ── Plan ────────────────────────────────────────────────────────────────────────────────
@@ -423,54 +477,91 @@ stat_needed=0; { want static || want unit; } && stat_needed=1
 CUR="$(cat "$HOME/casora-haus/aktiv" 2>/dev/null || echo '?')"
 
 if [ $PAR = 1 ]; then
-  if [ $GEZIELT = 1 ]; then plan_gezielt || exit 2; fi
+  [ $DRY = 1 ] || mkdir -p "$LOGS"
+  # Umfang auto: Version im manifest X.Y.Z mit Z>0 = Patch, sonst voll.
+  VER="$(python3 -c 'import json;print(json.load(open("custom_components/casora/manifest.json"))["version"])' 2>/dev/null)"
+  if [ "$UMFANG" = auto ]; then
+    case "$VER" in *.0|"") UMFANG=voll; echo "Umfang: voll (Version ${VER:-?})" ;;
+      *) UMFANG=patch; echo "Umfang: patch (Version $VER – Patch-Release; volles Gate mit --voll)" ;; esac
+  fi
+  if [ "$UMFANG" = patch ]; then
+    [ -n "$BASIS" ] || BASIS="$(last_green)"
+    if [ -z "$BASIS" ]; then
+      echo "Kein grünes volles Gate als Vorfahre von HEAD – Patch-Gate braucht diesen Bezug. Volles Gate läuft (oder --basis <commit>)."
+      UMFANG=voll
+    else
+      BASIS="$(git rev-parse --verify -q "$BASIS^{commit}")" || { echo "--basis: unbekannter Commit" >&2; exit 2; }
+      "$NODE" dev/qa/auswahl.mjs --basis "$BASIS" --out "$AUSWAHL" | tee "$([ $DRY = 1 ] && echo /dev/null || echo "$LOGS/auswahl.log")" || exit 2
+      apply_auswahl "$AUSWAHL" || exit 2
+    fi
+  elif [ "$UMFANG" = nachholen ]; then
+    "$NODE" dev/qa/nachholen.mjs ${NACHVON:+--von "$NACHVON"} --out "$AUSWAHL" | tee "$([ $DRY = 1 ] && echo /dev/null || echo "$LOGS/nachholen.log")"
+    [ "${PIPESTATUS[0]}" = 0 ] || exit 2
+    apply_auswahl "$AUSWAHL" || exit 2
+  fi
   [ $QUICK = 1 ] && RUN_STRESS=0
-  want_regcrawl || RUN_STRESS=0
-  want regress || RUN_FRISCH=0
+  { s_reg || s_crawl; } || RUN_STRESS=0
+  f_reg || RUN_FRISCH=0
+  { a_e2e || a_reg || a_crawl; } || RUN_ARBEIT=0
   [ $ha_needed = 1 ] || { RUN_ARBEIT=0; RUN_STRESS=0; RUN_FRISCH=0; }
   [ $((RUN_ARBEIT + RUN_STRESS + RUN_FRISCH)) = 0 ] && ha_needed=0
   PARDIR="$(mktemp -d -t casora-gate-par)"; LATEFLAG="$PARDIR/spaet-bereit"
   if [ $ha_needed = 1 ]; then
     NHAS="$(plan_has)"
-    # Mehr HAs als Zustände (z. B. gezielt nur arbeit): Rest als zweite HAs von Anfang an.
+    # HAs verteilen: erst je laufendem Zustand eins, dann arbeit (längster Zustand) bis 3, stress bis 2 –
+    # aber nur so viele, wie die geschätzte Arbeit lohnt (~7 min je HA; ein HA starten kostet ~1 min).
+    ea=0; es=0
+    [ $RUN_ARBEIT = 1 ] && ea=$(est_state arbeit "$A_KOMPLETT" "$A_E2E,$A_REG,$A_TEILE")
+    [ $RUN_STRESS = 1 ] && es=$(est_state stress "$S_KOMPLETT" "$S_REG")
+    wa=$(( (ea + 419) / 420 )); [ $wa -gt 3 ] && wa=3; [ $wa -lt 1 ] && wa=1
+    ws=$(( (es + 419) / 420 )); [ $ws -gt 2 ] && ws=2; [ $ws -lt 1 ] && ws=1
     spare=$((NHAS - RUN_ARBEIT - RUN_STRESS - RUN_FRISCH))
-    if [ $RUN_ARBEIT = 1 ] && want_regcrawl && [ $spare -ge 1 ]; then ARBEIT_TWO=1; spare=$((spare - 1)); fi
-    if [ $RUN_STRESS = 1 ] && [ $spare -ge 1 ]; then STRESS_TWO=1; fi
-    # Das HA nach frisch geht an den längsten Zustand, der noch kein zweites hat (arbeit zuerst).
+    while [ $spare -gt 0 ]; do
+      if [ $RUN_ARBEIT = 1 ] && [ $A_N -lt $wa ] && { [ $A_N -le $S_N ] || [ $RUN_STRESS = 0 ] || [ $S_N -ge $ws ]; }; then A_N=$((A_N + 1))
+      elif [ $RUN_STRESS = 1 ] && [ $S_N -lt $ws ]; then S_N=$((S_N + 1))
+      else break; fi
+      spare=$((spare - 1))
+    done
+    # Das HA nach frisch geht an den Zustand mit der meisten Arbeit je HA.
     if [ "$RUN_FRISCH" = 1 ] && [ "$NHAS" -ge 3 ]; then
-      if [ $RUN_ARBEIT = 1 ] && want_regcrawl && [ $ARBEIT_TWO = 0 ]; then LATE=arbeit
-      elif [ $RUN_STRESS = 1 ] && [ $STRESS_TWO = 0 ]; then LATE=stress
-      elif [ $RUN_ARBEIT = 1 ] && want_regcrawl; then LATE=arbeit; fi
+      if [ $RUN_ARBEIT = 1 ] && [ $RUN_STRESS = 1 ]; then
+        if [ $((ea / A_N)) -ge $((es / S_N)) ]; then LATE=arbeit; else LATE=stress; fi
+      elif [ $RUN_ARBEIT = 1 ] && [ $ea -gt 600 ]; then LATE=arbeit
+      elif [ $RUN_STRESS = 1 ] && [ $es -gt 600 ]; then LATE=stress; fi
+      [ "$LATE" = arbeit ] && ! { a_reg || a_crawl; } && LATE=""
     fi
     if [ $DRY = 0 ]; then
       # Nur die eigenen Namen zählen: Wegwerf-HAs von Agenten (andere Namen/Ports) dürfen weiterlaufen (08.10.2026).
-      if docker ps --format '{{.Names}}' | grep -qE '^casora-gate-(arbeit|arbeit2|stress|stress2|frisch|spaet)$'; then
+      if docker ps --format '{{.Names}}' | grep -qE '^casora-gate-(arbeit|arbeit2|arbeit3|stress|stress2|frisch|spaet)$'; then
         echo "Es laufen schon Gate-Test-HAs (casora-gate-arbeit/stress/frisch …) – läuft ein anderes Gate? Sonst: docker rm -f \$(docker ps -aq --filter name=casora-gate-)" >&2
         rm -rf "$PARDIR"; exit 2
       fi
     fi
   fi
   if [ $DRY = 0 ]; then
+    vorab "$ha_needed" || { rm -rf "$PARDIR"; exit 2; }
     trap par_cleanup EXIT
     trap 'echo "Abbruch – räume Test-HAs auf"; exit 130' INT TERM
     # i18n einmal bauen (wegwerf-ha.sh kopiert nur); danach dürfen die statischen Prüfungen los.
     python3 tools/build-i18n.py >/dev/null && $PY tools/build-panel-i18n.py >/dev/null || echo "i18n-Bau fehlgeschlagen (statische Prüfung meldet es)"
     touch "$SYNCFLAG"
   fi
+elif [ $DRY = 0 ]; then
+  vorab "$ha_needed" || exit 2
 fi
 
 if [ $DRY = 1 ]; then
-  echo "Gate-Plan für ${COMMIT:0:12}$([ $DIRTY = 1 ] && echo ' (Arbeitsstand geändert)')$([ $QUICK = 1 ] && echo ' – schnell')${ONLY:+ – nur $ONLY}$([ $NOSWITCH = 1 ] && echo " – ohne Umschalten (aktiv: $CUR)")$([ $GEZIELT = 1 ] && echo ' – gezielt')$([ $PAR = 1 ] && [ $ha_needed = 1 ] && echo " – parallel auf $NHAS Wegwerf-HAs") – $JOBS Tests je Zustand"
+  echo "Gate-Plan für ${COMMIT:0:12}$([ $DIRTY = 1 ] && echo ' (Arbeitsstand geändert)')$([ $QUICK = 1 ] && echo ' – schnell')${ONLY:+ – nur $ONLY}$([ $NOSWITCH = 1 ] && echo " – ohne Umschalten (aktiv: $CUR)") – Umfang $UMFANG${BASIS:+ (Bezug ${BASIS:0:12})}$([ $PAR = 1 ] && [ $ha_needed = 1 ] && echo " – parallel auf bis zu $NHAS Wegwerf-HAs") – $JOBS Test(s) je HA"
 fi
 
 if [ $stat_needed = 1 ]; then
-  if [ $ha_needed = 1 ] && [ "$JOBS" -gt 1 ] && [ $DRY = 0 ]; then
+  if [ $ha_needed = 1 ] && { [ $PAR = 1 ] || [ "$JOBS" -gt 1 ]; } && [ $DRY = 0 ]; then
     [ $NOSWITCH = 1 ] && touch "$SYNCFLAG"   # nichts wird eingespielt – sofort los
     static_bg
   else
     static_steps
     if [ $DRY = 1 ]; then
-      if [ $ha_needed = 1 ] && [ "$JOBS" -gt 1 ]; then echo "   (1+2 laufen im Hintergrund – $([ $NOSWITCH = 1 ] && echo "parallel zu den Tests" || echo "sobald der Arbeitsstand eingespielt ist, parallel zum HA-Start"))"
+      if [ $ha_needed = 1 ] && { [ $PAR = 1 ] || [ "$JOBS" -gt 1 ]; }; then echo "   (1+2 laufen im Hintergrund – $([ $NOSWITCH = 1 ] && echo "parallel zu den Tests" || echo "sobald der Arbeitsstand eingespielt ist, parallel zum HA-Start"))"
       else est 20; fi
     fi
   fi
@@ -479,22 +570,22 @@ fi
 if [ $ha_needed = 1 ]; then
   if [ $PAR = 1 ]; then
     if [ $DRY = 1 ]; then
-      echo "3) Zustände gleichzeitig, je ein Wegwerf-HA (casora-test bleibt unberührt):"
+      echo "3) Zustände gleichzeitig auf Wegwerf-HAs (casora-test bleibt unberührt):"
       if [ $RUN_ARBEIT = 1 ]; then
-        echo "   arbeit  :$PORT_ARBEIT$([ $ARBEIT_TWO = 1 ] && echo " + :$PORT_ARBEIT2") – E2E + Regress: $(regress_names arbeit)+ schneller Klick-Durchlauf"
+        echo "   arbeit  :$PORT_ARBEIT$([ $A_N -ge 2 ] && echo " + :$PORT_ARBEIT2")$([ $A_N -ge 3 ] && echo " + :$PORT_ARBEIT3")$([ "$LATE" = arbeit ] && echo " (+ :$PORT_SPAET nach frisch)") – $([ $A_KOMPLETT = 1 ] && echo "E2E + Regress: $(regress_names arbeit)+ schneller Klick-Durchlauf" || echo "${A_E2E:+E2E $A_E2E }${A_REG:+Regress $A_REG }${A_TEILE:+Klick-Durchlauf $A_TEILE}")"
         POOL_EST="$PARDIR/est-arbeit" run_arbeit
       fi
       if [ $RUN_FRISCH = 1 ]; then
-        echo "   frisch  :$PORT_FRISCH – Regress: $(regress_names frisch)$([ -n "$LATE" ] && echo "– danach weiteres $LATE-HA :$PORT_SPAET")"
+        echo "   frisch  :$PORT_FRISCH – Regress: $([ $F_KOMPLETT = 1 ] && regress_names frisch || echo "$F_REG ")$([ -n "$LATE" ] && echo "– danach weiteres $LATE-HA :$PORT_SPAET")"
         POOL_EST="$PARDIR/est-frisch" run_frisch
       fi
       if [ $RUN_STRESS = 1 ]; then
-        echo "   stress  :$PORT_STRESS$([ $STRESS_TWO = 1 ] && echo " + :$PORT_STRESS2")$([ "$NHAS" -le 2 ] && [ $RUN_FRISCH = 1 ] && echo " (erst nach frisch – Speicher)") – voller Klick-Durchlauf + Regress: $(regress_names stress)"
+        echo "   stress  :$PORT_STRESS$([ $S_N -ge 2 ] && echo " + :$PORT_STRESS2")$([ "$LATE" = stress ] && echo " (+ :$PORT_SPAET nach frisch)")$([ "$NHAS" -le 2 ] && [ $RUN_FRISCH = 1 ] && echo " (erst nach frisch – Speicher)") – $([ $S_KOMPLETT = 1 ] && echo "voller Klick-Durchlauf + Regress: $(regress_names stress)" || echo "${S_REG:+Regress $S_REG}$([ $S_CRAWL = 1 ] && echo ' voller Klick-Durchlauf')")"
         POOL_EST="$PARDIR/est-stress" run_stress
       fi
     else
       PIDS=""
-      if [ $RUN_ARBEIT = 1 ]; then ( run_arbeit; sh dev/qa/wegwerf-ha.sh weg arbeit; sh dev/qa/wegwerf-ha.sh weg arbeit2; [ "$LATE" = arbeit ] && sh dev/qa/wegwerf-ha.sh weg spaet ) 2>&1 | prefix arbeit & PIDS="$PIDS $!"; fi
+      if [ $RUN_ARBEIT = 1 ]; then ( run_arbeit; for n in arbeit arbeit2 arbeit3; do sh dev/qa/wegwerf-ha.sh weg $n; done; [ "$LATE" = arbeit ] && sh dev/qa/wegwerf-ha.sh weg spaet ) 2>&1 | prefix arbeit & PIDS="$PIDS $!"; fi
       if [ $RUN_FRISCH = 1 ]; then ( run_frisch ) 2>&1 | prefix frisch & PIDS="$PIDS $!"; else touch "$PARDIR/frisch-fertig"; fi
       if [ $RUN_STRESS = 1 ]; then ( run_stress; sh dev/qa/wegwerf-ha.sh weg stress; sh dev/qa/wegwerf-ha.sh weg stress2; [ "$LATE" = stress ] && sh dev/qa/wegwerf-ha.sh weg spaet ) 2>&1 | prefix stress & PIDS="$PIDS $!"; fi
       # Speicher-Protokoll alle 15 s (Container und Belegung), bis alle Zustände fertig sind.
@@ -576,46 +667,102 @@ if [ $DRY = 1 ] && [ $PAR = 1 ]; then
   [ "$NHAS" -le 2 ] && [ $RUN_STRESS = 1 ] && es=$((es + ef))
   tot=$ea; [ $es -gt $tot ] && tot=$es; [ $ef -gt $tot ] && tot=$ef; [ $tot -lt 100 ] && tot=100   # Unit ~90 s
   echo "Geschätzte Dauer: ~$((tot / 60)) min $((tot % 60)) s (arbeit ~$((ea / 60)) min, stress ~$((es / 60)) min, frisch ~$((ef / 60)) min gleichzeitig; zusätzliche HAs als von Anfang an da gerechnet)"
-  echo "Ergebnis: .qa/gate-$COMMIT.json$([ $GEZIELT = 1 ] && echo ' (gezielt – keine Freigabe)')"
-  rm -rf "$STEPS" "$BGOUT" "$ESTF" "$PARDIR"; exit 0
+  echo "Ergebnis: .qa/gate-$COMMIT.json (Umfang $UMFANG)"
+  rm -rf "$STEPS" "$BGOUT" "$ESTF" "$PARDIR" "$TESTS" "$AUSWAHL"; exit 0
 fi
 if [ $DRY = 1 ]; then
   tot=$(awk '{s+=$1} END {print s+0}' "$ESTF")
   echo "Geschätzte Dauer: ~$((tot / 60)) min $((tot % 60)) s (seriell zuletzt ~33 min; Schätzung aus .qa/zeiten.json bzw. den letzten Protokollen)"
   echo "Ergebnis: .qa/gate-$COMMIT.json"
-  rm -f "$STEPS" "$BGOUT" "$ESTF"; exit 0
+  rm -f "$STEPS" "$BGOUT" "$ESTF" "$TESTS" "$AUSWAHL"; exit 0
 fi
 
 # ── Ergebnis ────────────────────────────────────────────────────────────────────────────
-PARTIAL=0; { [ -n "$ONLY" ] || [ $NOSWITCH = 1 ] || [ $GEZIELT = 1 ]; } && PARTIAL=1
-MODE=seriell; [ $PAR = 1 ] && MODE="parallel/$NHAS"; [ $GEZIELT = 1 ] && MODE="gezielt/$NHAS"
-python3 - "$STEPS" "$RES" "$COMMIT" "$DIRTY" "$QUICK" "$PARTIAL" "$START" "$ONLY" "$MODE" <<'PY'
-import datetime, json, sys, time
-steps_f, res, commit, dirty, quick, partial, start, only, mode = sys.argv[1:10]
+PARTIAL=0; { [ -n "$ONLY" ] || [ $NOSWITCH = 1 ]; } && PARTIAL=1
+MODE=seriell; [ $PAR = 1 ] && MODE="parallel/$NHAS"
+python3 - "$STEPS" "$RES" "$COMMIT" "$DIRTY" "$QUICK" "$PARTIAL" "$START" "$ONLY" "$MODE" "$UMFANG" "$BASIS" "$TESTS" "$AUSWAHL" "$REPO" <<'PY'
+import datetime, json, os, sys, time
+(steps_f, res, commit, dirty, quick, partial, start, only, mode, umfang, basis, tests_f, auswahl_f, repo) = sys.argv[1:15]
 steps = []
 for line in open(steps_f, encoding="utf-8"):
-    sid, group, rc, dt, log = line.rstrip("\n").split("\t")
-    steps.append({"id": sid, "group": group, "ok": rc == "0", "seconds": int(dt), "log": log})
-ok = bool(steps) and all(s["ok"] for s in steps)
+    p = line.rstrip("\n").split("\t")
+    sid, group, rc, dt, log = p[:5]
+    steps.append({"id": sid, "group": group, "ok": rc == "0", "seconds": int(dt), "log": log,
+                  **({"wackler": p[5].split(",")} if len(p) > 5 and p[5] else {})})
+tests = []
+for line in open(tests_f, encoding="utf-8"):
+    z, sid, tid, ok, wk, dt, log, locks = (line.rstrip("\n").split("\t") + [""] * 8)[:8]
+    tests.append({"zustand": z, "schritt": sid, "id": tid, "ok": ok == "1", "wackelt": wk == "1",
+                  "seconds": int(dt or 0), "log": log, "commit": commit})
+auswahl = None
+try: auswahl = json.load(open(auswahl_f, encoding="utf-8"))
+except Exception: pass
 doc = {"commit": commit, "timestamp": datetime.datetime.now().astimezone().isoformat(timespec="seconds"),
-       "seconds": int(time.time()) - int(start), "ok": ok, "dirty": dirty == "1", "quick": quick == "1",
-       "partial": partial == "1", "only": only or None, "mode": mode, "steps": steps}
+       "seconds": int(time.time()) - int(start), "dirty": dirty == "1", "quick": quick == "1",
+       "partial": partial == "1", "only": only or None, "mode": mode, "umfang": umfang}
+
+if umfang == "nachholen" and auswahl:
+    # Vorlauf übernehmen: seine Tests/Schritte, ersetzt durch die neu gelaufenen. Statisch/Unit und
+    # Aufbau-Schritte (haus-*, *-setup) dieses Laufs kommen dazu, die des Vorlaufs bleiben stehen.
+    prev = json.load(open(auswahl["vorlauf"], encoding="utf-8"))
+    new_ids = {(t["zustand"], t["id"]) for t in tests}
+    kept = [t for t in prev.get("tests", []) if (t["zustand"], t["id"]) not in new_ids]
+    for t in kept: t.setdefault("commit", prev["commit"])
+    all_tests = kept + tests
+    new_steps = {s["id"]: s for s in steps}
+    merged = []
+    for s in prev.get("steps", []):
+        if s["group"] in ("static", "unit"): continue          # laufen jedes Mal neu
+        n = new_steps.pop(s["id"], None)
+        if n is None:
+            merged.append({**s, "von": s.get("von", prev["commit"])})
+        elif s["group"] in ("e2e", "regress"):
+            mine = [t for t in all_tests if t["schritt"] == s["id"]]
+            merged.append({**n, "ok": bool(mine) and all(t["ok"] for t in mine), "nachgeholt": True,
+                           "wackler": sorted({w for x in (s.get("wackler", []), n.get("wackler", [])) for w in x if any(t["id"] == w and t["wackelt"] for t in mine)})})
+        else:
+            merged.append({**n, "nachgeholt": True})
+    for sid, n in new_steps.items():
+        if n["group"] == "ha" and any(m["id"] == sid for m in merged): sid = sid + "@nachholen"
+        merged.append({**n, "id": sid})
+    steps, tests = merged, all_tests
+    doc["umfang"] = prev.get("umfang", "voll")
+    basis = prev.get("basis") or ""
+    doc["nachgeholt"] = {"von": prev["commit"], "vorlauf": os.path.relpath(auswahl["vorlauf"], repo),
+                         "neu_gelaufen": sorted(f"{z}/{i}" for z, i in new_ids),
+                         "uebernommen": len(kept), "geaendert": auswahl.get("geaendert", [])}
+elif umfang == "patch" and auswahl:
+    doc["auswahl"] = {"dateien": [{"datei": f["file"], "tests": f["tests"], "zustaende": f["states"], "grund": f["grund"]} for f in auswahl["files"]],
+                      "zustaende": auswahl["states"]}
+if basis: doc["basis"] = basis
+ok = bool(steps) and all(s["ok"] for s in steps)
+doc["ok"] = ok
+doc["wackler"] = [{"zustand": t["zustand"], "test": t["id"], "log": t["log"]} for t in tests if t.get("wackelt")]
+doc["steps"] = steps
+doc["tests"] = tests
 json.dump(doc, open(res, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print()
-print(f"Gate {commit[:12]}: {'GRÜN' if ok else 'ROT'} – {sum(s['ok'] for s in steps)}/{len(steps)} Schritte ok, "
-      f"{doc['seconds'] // 60} min {doc['seconds'] % 60} s"
+art = {"voll": "volles Gate", "patch": f"Patch-Gate (Bezug {basis[:12]})"}.get(doc["umfang"], doc["umfang"])
+print(f"Gate {commit[:12]}: {'GRÜN' if ok else 'ROT'} – {art} – {sum(s['ok'] for s in steps)}/{len(steps)} Schritte ok, "
+      f"{len(tests)} Tests, {doc['seconds'] // 60} min {doc['seconds'] % 60} s"
       + (" (schnell)" if doc["quick"] else "") + (" (teilweise)" if doc["partial"] else "")
-      + (" (gezielt – keine Freigabe)" if mode.startswith("gezielt") else "")
+      + (f" (nachgeholt auf {doc['nachgeholt']['von'][:12]}: {len(doc['nachgeholt']['neu_gelaufen'])} neu, {doc['nachgeholt']['uebernommen']} übernommen)" if "nachgeholt" in doc else "")
       + (" (Arbeitsstand nicht committet)" if doc["dirty"] else ""))
 for s in steps:
     if not s["ok"]:
         print(f"  FEHLER {s['id']}: {s['log']}")
-print("Zeiten: " + " · ".join(f"{s['id']} {s['seconds']}s" for s in steps))
+        for t in tests:
+            if t["schritt"] == s["id"] and not t["ok"]: print(f"     rot: {t['id']}  {t['log']}")
+if doc["wackler"]:
+    print("  Wackler (im Lauf rot, Gegenprobe grün – zählen als bestanden): " + ", ".join(f"{w['zustand']}/{w['test']}" for w in doc["wackler"]))
+print("Zeiten: " + " · ".join(f"{s['id']} {s['seconds']}s" for s in steps if not s.get("von")))
 print("  (Schritte eines Zustands laufen gleichzeitig" + (", die Zustände auch untereinander" if mode != "seriell" else "")
       + " – Einzelteile in .qa/logs/<commit>/zeiten-<zustand>.log)")
+if not ok and any(t for t in tests if not t["ok"]):
+    print("Nur Tests rot? Tests anpassen, committen und nachholen: dev/qa/gate.sh --nachholen")
 print(f"Ergebnis: {res}")
 sys.exit(0 if ok else 1)
 PY
 FAILED=$?
-rm -f "$STEPS" "$BGOUT" "$ESTF"
+rm -f "$STEPS" "$BGOUT" "$ESTF" "$TESTS" "$AUSWAHL"
 exit $FAILED
