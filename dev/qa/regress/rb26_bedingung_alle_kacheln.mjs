@@ -11,7 +11,7 @@ import { open, usePage, studio, dashboard, casoraDashboard, check, need, finish,
 import { ws } from '../ws.mjs';
 
 // Ein Dashboard mit Auto, E-Bike, Abfall und Saugroboter (das Prüf-Dashboard qa-arbeit hat kein Auto).
-const hasAll = (d) => ['casora_car', 'casora_ebike', 'casora_trash', 'casora_vacuum'].every((t) => JSON.stringify(d.config || {}).includes('"' + t + '"'));
+const hasAll = (d) => ['casora_car', 'casora_ebike', 'casora_trash', 'casora_vacuum'].every((t) => JSON.stringify((d.config && d.config.views) || []).includes('"' + t + '"'));
 const dash = await casoraDashboard(hasAll);
 if (!dash) {
   // Das Gate-Prüfhaus (qa-arbeit) hat kein Auto/E-Bike/Abfall: dann überspringen statt rot (für 1.2.2 vorgemerkt:
