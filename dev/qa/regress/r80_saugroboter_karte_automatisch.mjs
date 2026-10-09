@@ -34,8 +34,8 @@ async function openVac(page, d, mobile) {
       return n ? n._rooms.map((r) => r.key).filter((k) => /^room_/.test(k)) : []; }).catch(() => []);
     for (const k of keys) {
       await page.evaluate((x) => window._casoraFilter && window._casoraFilter.set(x), k);
-      await page.waitForTimeout(2000);
-      if ((at = await findVac(page))) break;
+      for (const t0 = Date.now(); !at && Date.now() - t0 < 6000;) { await page.waitForTimeout(500); at = await findVac(page); }
+      if (at) break;
     }
   }
   if (!at) return null;
@@ -48,7 +48,7 @@ async function openVac(page, d, mobile) {
     for (let w = 0; w < 24 && !(await offen()); w++) await page.waitForTimeout(250);
   }
   await page.waitForFunction(() => window.__pierce('img[data-map]').some((i) => i.complete && i.naturalWidth > 0
-    && i.getBoundingClientRect().width > 0 && getComputedStyle(i).opacity === '1'), null, { timeout: 20000 }).catch(() => {});
+    && i.getBoundingClientRect().width > 0 && getComputedStyle(i).opacity === '1'), null, { timeout: 45000 }).catch(() => {});   // Kamera-Bild unter Last (09.10.2026: 20 s zu kurz)
   await page.waitForTimeout(1200);
   return at;
 }

@@ -70,12 +70,18 @@ const want = {};
 const { page } = await open({ width: 390, height: 844, mobile: true, safari: true });
 usePage(page);
 await dashboard(page, dash.phone.url + '/' + (dash.phone.config.views[0].path || '0'), 3);
-const go = async (key) => {
-  await page.evaluate((k) => window._casoraFilter.set(k), key);
-  await page.waitForTimeout(3000);
-};
 const phoneRow = async () => ((await ROW(page, 'casora_mobile_sensor_chips', 'rooms_row')) || [])
   .filter((t) => !/^casora_badge_base/.test(t));   // Bewegung: nur Handy
+// Raum wählen und warten, bis seine Badge-Reihe steht (mind. 1,5 s, dann 800 ms unverändert und nicht
+// leer, höchstens 12 s) – fest 3 s reichten unter Last nicht (09.10.2026: „Flur“ am Handy leer).
+const go = async (key) => {
+  await page.evaluate((k) => window._casoraFilter.set(k), key);
+  let last = null, since = Date.now();
+  for (const t0 = Date.now(); Date.now() - t0 < 12000; await page.waitForTimeout(200)) {
+    const k = JSON.stringify(await phoneRow());
+    if (k !== last) { last = k; since = Date.now(); } else if (k !== '[]' && Date.now() - t0 >= 1500 && Date.now() - since >= 800) return;
+  }
+};
 
 const phoneGot = {};
 for (const v of picks) {
