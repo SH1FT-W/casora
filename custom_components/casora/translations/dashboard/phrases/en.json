@@ -1511,7 +1511,14 @@
   "letzte 48 Stunden": "last 48 hours",
   "letzte 7 Tage": "last 7 days",
   "letzte 30 Tage": "last 30 days",
-  "noch nie": "never"
+  "noch nie": "never",
+  "Salz nachfüllen": "Refill salt",
+  "Klarspüler nachfüllen": "Refill rinse aid",
+  "Flusensieb reinigen": "Clean lint filter",
+  "Kondensator reinigen": "Clean condenser",
+  "Angehalten": "Stalled",
+  "steht still, evtl. Unwucht": "stopped, possibly an unbalanced load",
+  "Eigene Aufgabe": "Own task"
  },
  "patterns": [
   [
@@ -2013,6 +2020,18 @@
   [
    "^(\\d+) Durchgänge seit dem letzten Mal$",
    "{1} cycles since last time"
+  ],
+  [
+   "^(\\d+) Tage seit dem letzten Mal$",
+   "{1} days since last time"
+  ],
+  [
+   "^(\\d+) Durchgänge, (\\d+) Tage seit dem letzten Mal$",
+   "{1} cycles, {2} days since last time"
+  ],
+  [
+   "^In (\\d+) Durchgängen oder (\\d+) Tagen$",
+   "In {1} cycles or {2} days"
   ],
   [
    "^(\\d+) Unterwegs$",

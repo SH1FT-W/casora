@@ -1211,7 +1211,16 @@
     descale: ['Entkalken', 'mdi:water-opacity'], filter_clean: ['Filter reinigen', 'mdi:air-filter'],
     drum_clean: ['Trommelreinigung', 'mdi:washing-machine'], bearing_service: ['Lagerwartung', 'mdi:cog-outline'],
     other: ['Sonstige Wartung', 'mdi:wrench-outline'],
+    /* WashData 0.5.8: eigene Arten für Geschirrspüler und Trockner */
+    salt: ['Salz nachfüllen', 'mdi:shaker-outline'], rinse_aid: ['Klarspüler nachfüllen', 'mdi:water-plus-outline'],
+    lint_filter: ['Flusensieb reinigen', 'mdi:air-filter'], condenser_clean: ['Kondensator reinigen', 'mdi:hvac'],
   };
+  /* Trockner: nur Filter/Kondensator (Entkalken, Trommelreinigung gibt es dort nicht) */
+  var DRYER_MAINT = { filter_clean: 1, lint_filter: 1, condenser_clean: 1, other: 1 };
+  /* Eigene Wartungsaufgaben (WashData 0.5.8): Kennung beginnt mit custom_ */
+  var isCustom = function (k) { return /^custom_/.test(String(k || '')); };
+  /* Stillstand mitten im Durchgang (WashData 0.5.8: paused + cycle_anomaly stalled, z. B. Unwucht) */
+  var STALLED = ['Angehalten', 'warn', true, 'pause'];
   var DIM = 'rgba(255,255,255,0.18)';
 
   var esc = function (t) {
@@ -1302,6 +1311,7 @@
       return !isNaN(w) && w > 5 ? STATE.running : STATE.idle;
     }
     if (st && /^switch\./.test(id) && raw !== 'unavailable') return raw === 'on' ? STATE.on : STATE.off;
+    if (raw === 'paused' && a.cycle_anomaly === 'stalled') return STALLED;
     if (STATE[raw]) return STATE[raw];
     var h = HASS(), txt = raw;
     try { if (st && h && typeof h.formatEntityState === 'function') txt = h.formatEntityState(st); } catch (x) { /* roh */ }
@@ -1498,6 +1508,45 @@
     return Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return b.n - a.n || b.last - a.last; });
   };
 
+  /* Pflege-Zeilen aus get_maintenance_log: [{ id, label, icon, due, bar, sub }].
+     WashData 0.5.8 liefert status (eingebaute und eigene Aufgaben, Intervall in Durchgängen und/oder
+     Tagen, 0 = aus); 0.5.7 nur reminders/cycles_since (Durchgänge). */
+  var maintRows = function (ml, dryer) {
+    if (!ml) return [];
+    var due = ml.due || [];
+    if (Array.isArray(ml.status)) {
+      var ids = ml.status.map(function (r) { return r && r.id; });
+      return ml.status.filter(function (r) { return r && (r.custom || isCustom(r.id) || MAINT[r.id]); }).map(function (r) {
+        var own = !!(r.custom || isCustom(r.id));
+        var ci = Number(r.cycles_interval) || 0, di = Number(r.days_interval) || 0;
+        var cs = Number(r.cycles_since) || 0, ds = r.days_since == null ? null : Math.floor(Number(r.days_since) || 0);
+        var useD = di > 0 && ds != null;
+        var isDue = due.indexOf(r.id) !== -1 || (ci > 0 && cs >= ci) || (useD && ds >= di);
+        var bar = Math.max(ci > 0 ? cs / ci : 0, useD ? ds / di : 0);
+        var lbl = own ? (r.name || 'Eigene Aufgabe')
+          : r.id === 'filter_clean' && dryer && ids.indexOf('condenser_clean') === -1 ? 'Filter & Kondensator reinigen' : MAINT[r.id][0];
+        var sub;
+        if (isDue) {
+          sub = 'Fällig · ' + (ci > 0 && useD ? cs + ' Durchgänge, ' + ds + ' Tage seit dem letzten Mal'
+            : useD && !(ci > 0 && cs >= ci) ? ds + ' Tage seit dem letzten Mal' : cs + ' Durchgänge seit dem letzten Mal');
+        } else if (ci > 0 && useD) sub = 'In ' + (ci - cs) + ' Durchgängen oder ' + (di - ds) + ' Tagen fällig';
+        else if (useD) sub = 'In ' + (di - ds) + ' Tagen fällig';
+        else if (ci > 0) sub = 'In ' + (ci - cs) + ' Durchgängen fällig';
+        else sub = null;
+        return { id: r.id, label: lbl, icon: own ? 'mdi:wrench-outline' : MAINT[r.id][1], due: isDue, bar: Math.min(1, bar), sub: sub };
+      });
+    }
+    var rem2 = ml.reminders || {};
+    var since2 = ml.cycles_since || {};
+    return Object.keys(rem2).filter(function (k) { return rem2[k] > 0 && MAINT[k] && (!dryer || DRYER_MAINT[k]); }).map(function (k) {
+      var every = rem2[k], done = since2[k] || 0;
+      var isDue = due.indexOf(k) !== -1 || done >= every;
+      return { id: k, label: k === 'filter_clean' && dryer && !rem2.condenser_clean ? 'Filter & Kondensator reinigen' : MAINT[k][0],
+        icon: MAINT[k][1], due: isDue, bar: Math.min(1, done / every),
+        sub: isDue ? 'Fällig · ' + done + ' Durchgänge seit dem letzten Mal' : 'In ' + (every - done) + ' Durchgängen fällig' };
+    });
+  };
+
   /* ── Inhalte der Platten ── */
   L.inner = function (kind, c, states) {
     var UI = window._casoraUI;
@@ -1527,6 +1576,7 @@
         if (prog) sub.push(prog);
         if (ph && ph !== s[0] && ph !== prog) sub.push(ph);
         if (at.cycle_anomaly === 'overrun') { sub.push('dauert länger als üblich'); tone = 'warn'; }
+        if (s === STALLED) { sub.push('steht still, evtl. Unwucht'); tone = 'warn'; }
       } else if (s[3] === 'clean') {
         /* „Wäsche ist noch drin“ steht darunter mit „Ausgeräumt“ – hier nur seit wann. */
         if (stObj.last_changed) sub.push('seit ' + clock(new Date(stObj.last_changed)) + ' Uhr');
@@ -1778,26 +1828,16 @@
     if (kind === 'maint' || kind === 'maint_due' || kind === 'maint_rest') {
       var ml = d.maint;
       if (!ml || !c.entry) return '';
-      var due = ml.due || [];
-      var rem2 = ml.reminders || {};
-      var since2 = ml.cycles_since || {};
-      /* Trockner: nur Filter/Kondensator (Entkalken, Trommelreinigung gibt es dort nicht) */
-      var keys = Object.keys(rem2).filter(function (k) { return rem2[k] > 0 && MAINT[k] && (!c.dryer || k === 'filter_clean'); });
+      var mr = maintRows(ml, c.dryer);
       /* Weich (Entschlacken): fällige Pflege sichtbar (maint_due), der Rest unter „Mehr“ (maint_rest). */
-      if (kind !== 'maint') keys = keys.filter(function (k) {
-        var dk = due.indexOf(k) !== -1 || (since2[k] || 0) >= rem2[k];
-        return kind === 'maint_due' ? dk : !dk;
-      });
-      if (!keys.length) return '';
+      if (kind !== 'maint') mr = mr.filter(function (r) { return kind === 'maint_due' ? r.due : !r.due; });
+      if (!mr.length) return '';
       L._cfg[c.st] = c;
-      var rowsM = keys.map(function (k) {
-        var every = rem2[k], done = since2[k] || 0;
-        var isDue = due.indexOf(k) !== -1 || done >= every;
-        var lbl = k === 'filter_clean' && c.dryer ? 'Filter & Kondensator reinigen' : MAINT[k][0];
-        /* Weich 1.1.2: „Erledigt“ nur bei fälliger Pflege. */
-        return { icon: MAINT[k][1], iconTone: isDue ? 'warn' : DIM, label: lbl,
-          sub: isDue ? 'Fällig · ' + done + ' Durchgänge seit dem letzten Mal' : 'In ' + (every - done) + ' Durchgängen fällig',
-          bar: Math.min(1, done / every), barTone: isDue ? 'warn' : 'good', value: (SF && !isDue) ? null : 'HWMAINT' + k + 'X' };
+      var keys = mr.map(function (r) { return r.id; });
+      var rowsM = mr.map(function (r) {
+        /* Weich 1.1.2: „Erledigt“ nur bei fälliger Pflege. Eigene Aufgaben: event_type = ihre Kennung. */
+        return { icon: r.icon, iconTone: r.due ? 'warn' : DIM, label: r.label, sub: r.sub,
+          bar: r.bar, barTone: r.due ? 'warn' : 'good', value: (SF && !r.due) ? null : 'HWMAINT' + r.id + 'X' };
       });
       /* „Erledigt“-Knopf an die Stelle des Werts (zweistufig, siehe L.tap) */
       var html = UI.group(rowsM, kind === 'maint_due' ? 'Pflege fällig' : 'Pflege');
@@ -1809,14 +1849,20 @@
     return '';
   };
 
-  /* Fällige Pflege laut WashData (Attribut maintenance_due am Zustand); Trockner nur Filter/Kondensator. */
+  /* Fällige Pflege laut WashData (Attribut maintenance_due am Zustand); Trockner nur Filter/Kondensator.
+     Eigene Aufgaben (custom_…) mit Namen aus dem zuletzt geladenen Wartungsprotokoll, sonst „Pflege“. */
   L.due = function (entity, V, states) {
     var st = (V && V.appliance_state) || (entity && entity.entity_id);
     var dryer = !!(V && V.device_type === 'dryer');
     var list = ((states[st] && states[st].attributes) || {}).maintenance_due;
     if (!Array.isArray(list)) return [];
-    return list.filter(function (k) { return MAINT[k] && (!dryer || k === 'filter_clean'); })
-      .map(function (k) { return k === 'filter_clean' && dryer ? 'Filter reinigen' : MAINT[k][0]; });
+    var ml = (L.data[st] || {}).maint || {};
+    var own = function (k) {
+      var hit = (ml.status || []).concat(ml.custom_tasks || []).filter(function (t) { return t && t.id === k && t.name; })[0];
+      return hit ? hit.name : 'Pflege';
+    };
+    return list.filter(function (k) { return isCustom(k) || (MAINT[k] && (!dryer || DRYER_MAINT[k])); })
+      .map(function (k) { return isCustom(k) ? own(k) : k === 'filter_clean' && dryer ? 'Filter reinigen' : MAINT[k][0]; });
   };
   L.dueTile = function (entity, V, states) {
     var st = (V && V.appliance_state) || (entity && entity.entity_id);
