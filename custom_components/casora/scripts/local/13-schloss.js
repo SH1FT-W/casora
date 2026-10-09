@@ -40,8 +40,16 @@
     });
     return hit[0] || null;
   };
-  L.battOf = function (id) { return META.batt[id] || sameDevice(id, 'sensor', ['battery']); };
-  L.doorOf = function (id) { return META.door[id] || sameDevice(id, 'binary_sensor', ['door', 'opening', 'garage_door']); };
+  // Zuerst die Kachel/Badge, die das Popup geöffnet hat (ihre Variablen), dann die Meldung der Vorlage
+  // (kann aus dem Popup-Zwischenspeicher fehlen), zuletzt dasselbe Gerät.
+  var srcVar = function (key, id) {
+    var pop = V ? V.pop : popEl();
+    var c = pop && pop._src && pop._src._config, m = c && c.variables && c.variables[key];
+    var v = m && typeof m === 'object' && !Array.isArray(m) ? m[id] : null;
+    return typeof v === 'string' && v.indexOf('.') > 0 ? v : null;
+  };
+  L.battOf = function (id) { return srcVar('battery_entities', id) || META.batt[id] || sameDevice(id, 'sensor', ['battery']); };
+  L.doorOf = function (id) { return srcVar('door_sensors', id) || META.door[id] || sameDevice(id, 'binary_sensor', ['door', 'opening', 'garage_door']); };
 
   // ── Wörter, Töne, Zeiten ──────────────────────────────────────────────────
   var WORD = { locked: 'Verriegelt', unlocked: 'Entriegelt', locking: 'Wird verriegelt…', unlocking: 'Wird entriegelt…',

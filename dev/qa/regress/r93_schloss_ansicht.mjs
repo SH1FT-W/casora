@@ -25,6 +25,15 @@ async function setup(opts) {
   const { page } = await open(opts);
   usePage(page);
   await dashboard(page, dash.url, 3);
+  // Erfundene Entitäten haben nach echten state_changed-Ereignissen kein last_changed – nachtragen
+  // (vor fakeStates, damit das Unterschieben darüber liegt und jedes Ergebnis hier durchläuft).
+  await page.evaluate((ids) => {
+    const ha = document.querySelector('home-assistant'), up = ha._updateHass, t0 = new Date().toISOString();
+    ha._updateHass = function (obj) {
+      if (obj && obj.states) { const st = { ...obj.states }; ids.forEach((id) => { if (st[id] && !st[id].last_changed) st[id] = { ...st[id], last_changed: t0, last_updated: t0 }; }); obj = { ...obj, states: st }; }
+      return up.call(this, obj);
+    };
+  }, Object.keys(FAKE));
   await fakeStates(page, FAKE, { sticky: true });
   await page.evaluate(({ A }) => {
     // Logbuch: feste Einträge (heute zwischen Mitternacht und jetzt), Dienstaufrufe nur mitschreiben.
@@ -122,7 +131,7 @@ const askClick = (page, cls) => page.evaluate((cls) => { const h = document.quer
   await check('Tipp auf die Zeile öffnet die Casora-Ansicht (kein HA-Dialog)', v.view && v.moreInfo === 0, v);
   await check('Bisheriger Popup-Inhalt ausgeblendet', v.rowsVisible === 0, v.rowsVisible);
   await check('Titel = Name des Schlosses, Zurück-Pfeil sichtbar', v.title === 'Wohnungstür' && v.back, v);
-  await check('Statuszeile „Verriegelt · seit … · Automatisch“', /^Verriegelt · seit \S+ · Automatisch$/.test(v.line || ''), v.line);
+  await check('Statuszeile „Verriegelt · seit … · Automatisch“', /^Verriegelt · seit \S+ · Automatisch$/.test(v.line || ''), { line: v.line, st: await page.evaluate((A) => document.querySelector('home-assistant').hass.states[A], A) });
   await check('Hauptknopf „Entriegeln“ + „Tür öffnen“ (OPEN)', v.btns.length === 2 && v.btns[0].t === 'Entriegeln' && v.btns[0].svc === 'unlock' && v.btns[1].svc === 'open', v.btns);
   await check('Hinweis auf die Rückfrage', v.ask, v);
   await check('Zustand: Schloss, Tür, Batterie', v.zustand.length === 3 && /^Schloss.*Verriegelt$/.test(v.zustand[0]) && /^Tür Türkontakt Geschlossen$/.test(v.zustand[1]) && /^Batterie.*82 %$/.test(v.zustand[2]), v.zustand);
