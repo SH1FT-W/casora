@@ -71,8 +71,17 @@ const SHOTS = [
   { name: 'popup-laundry', kind: 'dash', popup: 'casora_waschmaschine', url: () => `/${DASH}/home` },
   { name: 'popup-security', kind: 'dash', pre: 'casora_badge_security_group', popup: 'casora_badge_contact_group', url: () => `/${DASH}/home` },
   { name: 'popup-plants', kind: 'dash', popup: 'casora_plant', url: () => `/${DASH}/home` },
+  // 1.2.1: Tanken im Auto-Popup (Ansicht „Tanken“ mit Karte und Preisen). Auto-Kachel und
+  // Tank-Sensor gibt es im Demo-Haus nicht – beides nur im Browser, mit erfundenen Stationen.
+  { name: 'popup-fuel', kind: 'dash', after: fuelView, url: () => `/${DASH}/home` },
   { name: 'tablet', kind: 'tablet', url: () => `/${DASH}/home` },
   { name: 'phone', kind: 'phone', url: () => `/${MOBILE}/home` },
+  // Dieselben Popups am Handy (Produktbühne: Display und Handy zeigen dasselbe Motiv).
+  { name: 'phone-popup-lights', kind: 'phone', popup: 'casora_light', url: () => `/${MOBILE}/home` },
+  { name: 'phone-popup-energy', kind: 'phone', popup: 'casora_energy', url: () => `/${MOBILE}/home` },
+  { name: 'phone-popup-laundry', kind: 'phone', popup: 'casora_waschmaschine', url: () => `/${MOBILE}/home` },
+  { name: 'phone-popup-plants', kind: 'phone', popup: 'casora_plant', url: () => `/${MOBILE}/home` },
+  { name: 'phone-popup-fuel', kind: 'phone', after: fuelView, url: () => `/${MOBILE}/home` },
   { name: 'studio', kind: 'studio', run: studioRoom },
   { name: 'studio-tile', kind: 'studio', run: studioTile },
   { name: 'studio-phone', kind: 'studio', run: studioPhone },
@@ -221,6 +230,73 @@ async function dashShot(page, shot, touch) {
     if (!(await tapTile(page, shot.popup, touch))) return `Kachel „${shot.popup}“ nicht sichtbar`;
     await sleep(page, 2500);  // Diagramme im Popup laden den Verlauf nach
   }
+  if (shot.after) return (await shot.after(page)) || null;
+  return null;
+}
+
+// ── Tanken (1.2.1) ───────────────────────────────────────────────────────────
+// Erfundene Stationen um einen öffentlichen Ort (Frankfurt am Main), Preise in €/L.
+const FUEL_CENTER = [50.11, 8.682];
+const FUEL_STATIONS = [
+  { n: 'Tankpunkt Südring', b: 'Tankpunkt', p: 1.689, o: true, x: -0.4, y: -1.1 },
+  { n: 'Stadttankstelle Gartenstraße', b: 'ARAL', p: 1.699, o: true, x: -0.7, y: 0.5 },
+  { n: 'Freie Tankstelle Mühlweg', b: 'Freie', p: 1.709, o: true, x: 1.9, y: 2.0 },
+  { n: 'Autohof Nord', b: 'JET', p: 1.719, o: true, x: 2.4, y: 3.9 },
+  { n: 'Tankstelle Ost', b: 'Shell', p: 1.739, o: true, x: 3.5, y: 1.2 },
+  { n: 'Tankhof Lindenallee', b: 'Tankhof', p: 1.749, o: false, x: -3.0, y: -1.6 },
+].map((s) => ({ ...s, d: Math.round(Math.hypot(s.x, s.y) * 10) / 10,
+  lat: +(FUEL_CENTER[0] + s.y / 110.57).toFixed(4), lng: +(FUEL_CENTER[1] + s.x / (111.32 * Math.cos(FUEL_CENTER[0] * Math.PI / 180))).toFixed(4) }));
+
+async function fuelView(page) {
+  const r = await page.evaluate(async ([center, stations]) => {
+    const ha = document.querySelector('home-assistant');
+    const C = window._casoraCar;
+    const anchor = C && C.id(null, 'reichweite_kombiniert', 'sensor');
+    if (!anchor) return 'keine Kachel: kein Auto im Demo-Haus';
+    const dev = (ha.hass.entities[anchor] || {}).device_id || null;
+    const typical = Array.from({ length: 24 }, (_, h) => (h >= 19 && h <= 22 ? 1.649 : h < 6 ? 1.70 : 1.749));
+    const sid = 'sensor.casora_tanken_demo_car_e10';
+    const tank = { entity_id: sid, state: '1.689', context: { id: 'demo' }, attributes: { car_device_id: dev, car_name: 'Car', fuel: 'e10',
+      friendly_name: 'Car cheapest price Super E10', unit_of_measurement: '€/L', source: 'key', origin: 'home', radius_km: 5, center,
+      updated: new Date().toISOString(), count: stations.length, stations, error: null, typical, low: 1.649, high: 1.749, days: 14, learn_days_left: 0 } };
+    // Nur im Browser: Zustand dauerhaft unterschieben (wie fakeStates in dev/qa/regress/lib.mjs).
+    const orig = ha._updateHass.bind(ha);
+    const patch = (st) => ({ ...st, [sid]: tank });
+    ha._updateHass = (o) => orig(o && o.states ? { ...o, states: patch(o.states) } : o);
+    ha._updateHass({ states: ha.hass.states });
+    // Dienstaufrufe abfangen, nichts in HA ändern.
+    const conn = ha.hass.connection;
+    conn.__send = conn.__send || conn.sendMessagePromise.bind(conn);
+    conn.sendMessagePromise = (m) => (m && m.type === 'call_service' ? Promise.resolve({}) : conn.__send(m));
+    const el = document.createElement('button-card');
+    el.setConfig({ type: 'custom:button-card', template: 'casora_car', entity: anchor, name: 'Car' });
+    el.hass = ha.hass;
+    el.style.cssText = 'position:fixed;left:-2000px;top:0;width:300px';
+    document.body.appendChild(el);
+    await new Promise((res) => setTimeout(res, 1200));
+    el.hass = ha.hass;
+    el.addEventListener('hass-action', (ev) => { const a = ev.detail && ev.detail.config && (ev.detail.config.icon_tap_action || ev.detail.config.tap_action);
+      if (a && a.casora_popup && window.casoraPopup) { ev.stopPropagation(); window.casoraPopup.open(a.casora_popup); } }, { capture: true, once: true });
+    el._handleAction({ detail: { action: 'tap' } }, { isIcon: true });
+    for (let i = 0; i < 40; i++) {
+      const s = window.casoraPopup && window.casoraPopup.surface;
+      const row = s && window.__pierce('.casora-tank-row', s).find((e) => e.getBoundingClientRect().height > 0);
+      if (row) { (row.querySelector('.hui-srow') || row).dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true })); return null; }
+      await new Promise((res) => setTimeout(res, 250));
+    }
+    return 'Fehler: keine Tanken-Zeile im Auto-Popup';
+  }, [FUEL_CENTER, FUEL_STATIONS]);
+  if (r) return r;
+  // Karte (HA-Karte mit Kacheln aus dem Netz) und Logos laden lassen.
+  await page.evaluate(async () => {
+    const s = window.casoraPopup && window.casoraPopup.surface;
+    for (let i = 0; i < 80; i++) {
+      const l = s && window.__pierce('.ct-hamap', s)[0];
+      if (!l || l.dataset.state !== 'laden') break;
+      await new Promise((res) => setTimeout(res, 250));
+    }
+  });
+  await sleep(page, 3000);
   return null;
 }
 

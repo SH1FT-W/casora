@@ -19,7 +19,7 @@ Shape the rest room by room in a visual studio. No YAML.</p>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-hero-dark.webp" />
-  <img src="docs/images/readme-hero-light.webp" alt="Casora on a desktop and a phone: a room photo with the clock, weather and status badges above a row of device tiles, next to the phone layout with favourite tiles." />
+  <img src="docs/images/readme-hero-light.webp" alt="Casora on a desktop display and a phone, side by side: the home view with a house photo, clock, weather and status badges above a row of device tiles, and the phone layout with favourite tiles." />
 </picture>
 
 </div>
@@ -41,7 +41,7 @@ Casora recognises robot vacuums, washers and dryers, dishwashers, 3D printers, h
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-screens-dark.webp" />
-    <img src="docs/images/readme-screens-light.webp" alt="Casora on three screens: a room on a desktop, the home view on a wall tablet and the phone layout." />
+    <img src="docs/images/readme-screens-light.webp" alt="Casora on three screens side by side: a bedroom on a desktop display, the home view on a wall tablet and the phone layout." />
   </picture>
   <br/><sub><b>One home, three screens.</b> Every screen gets a layout made for it, not a shrunken copy.</sub>
 </p>
@@ -49,23 +49,23 @@ Casora recognises robot vacuums, washers and dryers, dishwashers, 3D printers, h
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-popups-dark.webp" />
-    <img src="docs/images/readme-popups-light.webp" alt="Four Casora popups: lights grouped by room, a running washer with progress and recent cycles, energy with today's and this month's consumption and cost, and doors and windows with their state." />
+    <img src="docs/images/readme-popups-light.webp" alt="The lighting popup on a desktop display and on a phone: every room with its lights, the rooms that are on highlighted, and a button to switch all off." />
   </picture>
-  <br/><sub><b>Tap a tile, see the whole story.</b> Controls on the left, devices on the right, the rarely used tucked away under More.</sub>
+  <br/><sub><b>Tap a tile, see the whole story.</b> Lights, climate, energy, locks, blinds, plants, washers and dryers each open a popup of their own.</sub>
 </p>
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-popups2-dark.webp" />
-    <img src="docs/images/readme-popups2-light.webp" alt="Two more popups: a plant with its readings and the plant doctor, and the room climate with temperature and humidity." />
+    <img src="docs/images/readme-popups2-light.webp" alt="The fuel view of the car popup on a desktop display and on a phone: when to refuel, a typical day of prices, the cheapest stations, a map and the price list." />
   </picture>
-  <br/><sub><b>Plants and room climate.</b> Plain words for what a plant needs, and a day of readings for every room.</sub>
+  <br/><sub><b>Fuel, right in the car popup.</b> When to refuel, the cheapest stations nearby and a typical day of prices, from Tankerkönig.</sub>
 </p>
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-studio-dark.webp" />
-    <img src="docs/images/readme-studio-light.webp" alt="Casora Studio with rooms, room settings and a live preview of the dashboard, with the tile editor in front." />
+    <img src="docs/images/readme-studio-light.webp" alt="Casora Studio on a desktop display: the tile editor next to a live preview of the dashboard and the tile's popup." />
   </picture>
   <br/><sub><b>Casora Studio.</b> Rooms, tiles, badges and popups, edited in place. Nothing is written until you click Save.</sub>
 </p>
@@ -73,9 +73,9 @@ Casora recognises robot vacuums, washers and dryers, dishwashers, 3D printers, h
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-tools-dark.webp" />
-    <img src="docs/images/readme-tools-light.webp" alt="Four Studio windows: the setup assistant, the versions timeline, the device assistant and the move assistant for Hemma dashboards." />
+    <img src="docs/images/readme-tools-light.webp" alt="Two Studio assistants, each on a desktop display: the device assistant placing new devices, and the move assistant bringing a Hemma dashboard over." />
   </picture>
-  <br/><sub><b>Assistants for the tedious part.</b> Pick a look, place new devices, move from Hemma, go back to any version.</sub>
+  <br/><sub><b>Assistants for the tedious part.</b> Place new devices, move from Hemma, go back to any version.</sub>
 </p>
 
 The look is *Casora*: warm linen, generous corners and soft shadows, in light and dark, set in Inter. *Casora Nebel* is the same calm design in cool grey with a petrol accent. It follows Home Assistant's theme mode. The classic glass looks from Hemma are still there as legacy options.
