@@ -441,7 +441,11 @@
     if (!V) return;
     var id = V.id;
     try { window.casoraPopup.close(); } catch (e) { /* schon zu */ }
-    history.pushState(null, '', '/logbook?entity_id=' + encodeURIComponent(id));
+    // Ganzer heutiger Tag (HA zeigt ohne Zeitraum nur die letzten Stunden).
+    var d0 = new Date(); d0.setHours(0, 0, 0, 0);
+    var d1 = new Date(d0.getTime()); d1.setDate(d1.getDate() + 1);
+    history.pushState(null, '', '/logbook?entity_id=' + encodeURIComponent(id)
+      + '&start_date=' + encodeURIComponent(d0.toISOString()) + '&end_date=' + encodeURIComponent(d1.toISOString()));
     window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));
   };
 
