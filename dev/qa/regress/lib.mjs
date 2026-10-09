@@ -207,6 +207,9 @@ export async function studioRetry(pg, dash, step) {
 // Dashboard-Ansicht öffnen und warten, bis die Kacheln stehen.
 export async function dashboard(pg, url, min = 5) {
   await ready(pg, '/' + url, `() => window.__pierce('button-card').length >= ${min}`, 60000);
+  // Die Casora-Module (Popups, Glocke, Geräte-Helfer) lädt casora-local.js nach den Kacheln. Unter Last
+  // waren sie nach den 3 s noch nicht da (09.10.2026: r85/r88 brachen mit „… of undefined“ ab).
+  await pg.waitForFunction(() => !!window._casoraLocalLoaded, null, { timeout: 30000 }).catch(() => {});
   await pg.waitForTimeout(3000);
 }
 

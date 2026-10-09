@@ -1,3 +1,4 @@
+// @deckt: custom_components/casora/panel/casora-panel-assist.js
 // Geräte-Assistent: Vorschläge für das in t03 angelegte Dashboard, Wunsch-Eingabe, Einbauen, Speichern.
 import { open, ready, shot } from './harness.mjs';
 const DASH = process.argv[2] || 'test-neu';

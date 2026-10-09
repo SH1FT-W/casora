@@ -1,5 +1,6 @@
 // @zustand: arbeit
 // @parallel: allein
+// @deckt: custom_components/casora/panel/casora-panel-versions.js custom_components/casora/versions.py
 // Speichern, Rückgängig, ungespeicherte Änderungen und Zeitreise im neuen Studio (Desktop, Chromium).
 // Erwartet: (1) Badge per Alt+Pfeil verschieben, „Rückgängig“ in der Werkzeugleiste stellt die
 // Reihenfolge wieder her und nichts ist mehr ungespeichert. (2) Wieder verschieben, Studio ohne

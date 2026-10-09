@@ -1,4 +1,5 @@
 // @zustand: arbeit
+// @deckt: custom_components/casora/panel/casora-panel-updates.js custom_components/casora/update*.py custom_components/casora/release_notes.py custom_components/casora/card_updates.py
 // Gemeldet (1.1.1): „Installieren“ unter Studio › Updates tat nichts. Das Studio rief update.install
 // auf eine nicht mehr geladene eigene Update-Entität auf (Casora kam über HACS), HA übersprang
 // den Aufruf still, keine Rückmeldung. Erwartet: Aufruf an HACS' Update-Entität für Casora,

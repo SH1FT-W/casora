@@ -5,7 +5,8 @@
 #   tools/release.sh 0.6.0 --publish   führt Tag, Push und gh release create danach aus
 #   tools/release.sh 0.6.0 --same-whats-new   WHATS_NEW darf wie beim letzten Release sein
 #
-# Prüft: sauberer Arbeitsstand, .qa/gate-<HEAD>.json grün und vollständig,
+# Prüft: sauberer Arbeitsstand, .qa/gate-<HEAD>.json grün und vollständig (X.Y.0: volles Gate,
+# X.Y.Z mit Z>0: auch Patch-Gate auf einem grünen vollen Gate eines Vorfahren, dev/qa/gate.sh --patch),
 # CHANGELOG in der Integration aktuell (sync-changelog --check), manifest-Version = <version>,
 # CHANGELOG.md und CHANGELOG.de.md haben je einen Abschnitt „## <version>“, WHATS_NEW (casora-panel-welcome.js) gefüllt
 # und seit dem letzten Release geändert. Versionshinweise: .qa/release-notes-<version>.md.
@@ -33,7 +34,7 @@ fail() { echo "✗ $*" >&2; exit 1; }
 ok() { echo "✓ $*"; }
 
 # 1) Gate (inkl. sauberem Arbeitsstand)
-MSG="$(python3 tools/qa_gate.py)" || fail "$MSG"
+MSG="$(python3 tools/qa_gate.py --version "$VER")" || fail "$MSG"
 ok "$MSG"
 
 # 2) CHANGELOG in der Integration aktuell

@@ -1,4 +1,5 @@
 // @zustand: demo
+// @deckt: custom_components/casora/panel/casora-panel-updates.js custom_components/casora/update*.py custom_components/casora/release_notes.py custom_components/casora/card_updates.py
 // Gemeldet (1.0.4, Weich): Im offenen Updates-Popup ein Update installiert, das einen Neustart
 // braucht – „Wartet auf Neustart“ und „Jetzt neu starten“ erschienen erst nach Schließen und
 // erneutem Öffnen. Erwartet: Das offene Popup baut sich selbst um (Zeile raus aus „Verfügbar“,

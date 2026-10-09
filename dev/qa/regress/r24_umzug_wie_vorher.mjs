@@ -1,5 +1,6 @@
 // @zustand: frisch
 // @parallel: allein   (legt über den echten Umzug ein Casora-Dashboard an und löscht es am Ende)
+// @deckt: custom_components/casora/panel/casora-panel-umzug.js custom_components/casora/panel/casora-panel-import.js custom_components/casora/hemma_package.py custom_components/casora/hemma_cleanup.py custom_components/casora/umstellen.py
 // Umzugstest („wie ein iOS-Update“): Nach dem Umzug von Hemma 2 (Mein Zuhause (Hemma 2)) und
 // Hemma 1 (Hemma 1 (Test)) hat jeder Raum dieselben Kacheln (Art, Entität, Reihenfolge) wie
 // vorher, sein Foto, das Wetter (Hemma zeigte das Wetter der Übersicht in jedem Raum) und die
@@ -318,7 +319,8 @@ for (const src of ['hemma-zuhause', 'hemma-eins']) {
       // Dateien übernehmen (carryFiles) läuft nach und schreibt danach den Fertig-Hinweis („… bleibt“):
       // auf den Hinweis warten statt fester 2,5 s – unter Last (paralleles Gate) dauert es länger.
       const rowsText = () => [...p.shadowRoot.querySelectorAll('.frow')].map((r) => r.textContent).join(' | ');
-      for (let i = 0; i < 80 && !/snapshots/.test(rowsText()); i++) await new Promise((res) => setTimeout(res, 250));
+      // Bis 60 s (09.10.2026: 20 s reichten im Gate unter Last nicht).
+      for (let i = 0; i < 240 && !/snapshots/.test(rowsText()); i++) await new Promise((res) => setTimeout(res, 250));
       const cfg = await p._hass.callWS({ type: 'lovelace/config', url_path: url });
       const mob = await p._hass.callWS({ type: 'lovelace/config', url_path: url + '-mobile' }).catch(() => null);
       const T = cfg.button_card_templates || {};

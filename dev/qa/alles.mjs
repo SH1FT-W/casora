@@ -727,7 +727,18 @@ async function crawlPopupControls(ctx, where) {
 }
 
 // ═══ Ablauf ═══════════════════════════════════════════════════════════
+// Lädt das Studio gerade neu (kurz nach dem Anlegen von qa-stress, unter Last), geht die Abfrage
+// verloren („Execution context was destroyed“) – dann neu laden und noch einmal (09.10.2026: im Gate
+// brach so der Tablet-Teil ab, Lauf rot).
 async function pickDashboards(ctx) {
+  for (let i = 0; ; i++) {
+    try { return await pickDashboardsOnce(ctx); } catch (e) {
+      if (i >= 2 || !/context was destroyed|navigation/i.test(String(e && e.message))) throw e;
+      await ctx.page_.waitForTimeout(2000);
+    }
+  }
+}
+async function pickDashboardsOnce(ctx) {
   await goto(ctx, '/casora-studio', PANEL_READY);
   return Q(ctx, async ([want, wantM]) => {
     const h = document.querySelector('home-assistant').hass;

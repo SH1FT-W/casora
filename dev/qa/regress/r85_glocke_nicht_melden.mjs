@@ -15,7 +15,13 @@ const bell = async (page, url) => {
   await ready(page, '/' + url, '() => !!window._casoraNotify && !!window._casoraLocalLoaded', 60000);
   await page.waitForFunction(() => window._casoraNotify.rows.length > 0, null, { timeout: 20000 }).catch(() => {});
 };
-const rowsOf = (page) => page.evaluate(() => window._casoraNotify.rows.map((r) => ({ id: r.id, entity: r.entity || null, label: r.label })));
+// Glocke noch nicht (wieder) geladen → leere Liste statt Abbruch; rowsUntil wartet dann weiter.
+const rowsOf = (page) => page.evaluate(() => (window._casoraNotify ? window._casoraNotify.rows : []).map((r) => ({ id: r.id, entity: r.entity || null, label: r.label }))).catch(() => []);
+// Nach dem Umstellen bis zu 8 s auf den erwarteten Stand warten (want(rows)); die Glocke baut ihre
+// Liste teils nachgelagert neu (09.10.2026: „entfernt → Eintrag wieder da“ im Gate rot, einzeln grün).
+const rowsUntil = async (page, want) => { let r = await rowsOf(page);
+  for (const t0 = Date.now(); !want(r) && Date.now() - t0 < 8000;) { await page.waitForTimeout(300); r = await rowsOf(page); }
+  return r; };
 const setEx = (page, list) => page.evaluate(async (l) => {
   const S = window.CASORA_SETTINGS = window.CASORA_SETTINGS || {};
   S.notify = Object.assign({}, S.notify || {}, { exclude: l });
@@ -77,11 +83,11 @@ await check('× nimmt es wieder heraus', !gone.listed && !gone.draft.includes(E)
 // ── Glocke Desktop ────────────────────────────────────────────────────────────────────────────
 usePage(desk.page);
 await setEx(desk.page, [E]);
-const rows1 = await rowsOf(desk.page);
+const rows1 = await rowsUntil(desk.page, (r) => !r.some((x) => x.entity === E));
 await check('Desktop: Ausnahme → Eintrag weg', !rows1.some((r) => r.entity === E), rows1.map((r) => r.label));
 await check('Desktop: übrige Einträge bleiben', rows1.length === rows0.length - 1, [rows0.length, rows1.length]);
 await setEx(desk.page, []);
-const rows2 = await rowsOf(desk.page);
+const rows2 = await rowsUntil(desk.page, (r) => r.some((x) => x.entity === E));
 await check('Desktop: entfernt → Eintrag wieder da', rows2.some((r) => r.entity === E), rows2.map((r) => r.label));
 
 // ── Glocke Handy ──────────────────────────────────────────────────────────────────────────────
@@ -91,10 +97,10 @@ await bell(ph.page, dash.phone.url + '/' + (dash.phone.config.views[0].path || '
 const p0 = await rowsOf(ph.page);
 await check('Handy: Eintrag vorher da', p0.some((r) => r.entity === E), p0.map((r) => r.label));
 await setEx(ph.page, [E]);
-const p1 = await rowsOf(ph.page);
+const p1 = await rowsUntil(ph.page, (r) => !r.some((x) => x.entity === E));
 await check('Handy: Ausnahme → Eintrag weg', !p1.some((r) => r.entity === E), p1.map((r) => r.label));
 await setEx(ph.page, []);
-const p2 = await rowsOf(ph.page);
+const p2 = await rowsUntil(ph.page, (r) => r.some((x) => x.entity === E));
 await check('Handy: entfernt → Eintrag wieder da', p2.some((r) => r.entity === E), p2.map((r) => r.label));
 
 await finish();

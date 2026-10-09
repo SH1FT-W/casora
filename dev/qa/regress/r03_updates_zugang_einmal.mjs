@@ -1,4 +1,5 @@
 // @zustand: frisch
+// @deckt: custom_components/casora/panel/casora-panel-updates.js
 // Gemeldet: Die Updates-Seite bat dreimal darum, den Update-Zugang einzurichten
 // (Kopfkarte, Karten-Updates, Abschnitt „Update-Zugang“). Seit Updates anonym aus dem
 // öffentlichen Repo kommen, gibt es keinen Update-Zugang mehr. Erwartet: keine Aufforderung,

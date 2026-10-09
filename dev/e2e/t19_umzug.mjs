@@ -1,3 +1,4 @@
+// @deckt: custom_components/casora/panel/casora-panel-umzug.js custom_components/casora/hemma_cleanup.py
 // Umzugsassistent: findet Hemma-Dashboards, wertet sie aus (Räume, Kacheln, angepasste
 // Vorlagen), zieht eines um und räumt danach auf (neue Dashboards, Merker).
 import { open, ready, PIERCE } from './harness.mjs';
@@ -28,7 +29,14 @@ const res = await page.evaluate(async () => {
     const after = await h.callWS({ type: 'lovelace/dashboards/list' });
     const neu = after.filter((d) => !before.includes(d.url_path));
     const cfg = url ? await h.callWS({ type: 'lovelace/config', url_path: url }) : null;
-    const merker = ((await h.callWS({ type: 'casora/settings/get' })).settings.umzug || {}).done || [];
+    // Der Merker wird nach dem Fertig-Schritt gespeichert – bis 15 s darauf warten (09.10.2026: im Gate
+    // unter Last direkt danach noch leer, Test rot).
+    let merker = [];
+    for (let i = 0; i < 60; i++) {
+      merker = ((await h.callWS({ type: 'casora/settings/get' })).settings.umzug || {}).done || [];
+      if (merker.some((x) => (typeof x === 'string' ? x : x && x.src) === target.c.url_path)) break;
+      await new Promise((r) => setTimeout(r, 250));
+    }
     out.umzug = { url, neu: neu.map((d) => d.url_path), raeume: cfg ? cfg.views.length : 0, gemerkt: merker.some((x) => (typeof x === 'string' ? x : x && x.src) === target.c.url_path),
       // Nach einem erfolgreichen Umzug bietet das Studio die übrigen nicht erneut von selbst an.
       keinNeuesAngebot: await U.movedAny(h, merker) };

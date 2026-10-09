@@ -58,6 +58,10 @@ const ERLAUBT = [
     'Vorschau bildet die Maße des echten Dashboard-Badges/-Zurück-Knopfs nach (Symbolkreis links 6 statt 5 px, Zurück-Pfeil 2 px optisch versetzt) – Dashboard-Frage, offen'],
   [/./, /^groesse .*(rowmenu|bclose|back)/,
     'Kopfzeile des Inspektors: ⋯ bewusst kleiner als ✕ bzw. ‹ (Rangfolge) – Geschmacksfrage, offen'],
+  [/Zeitreise/, /^fluchten .*cv-act/,
+    'Zeitreise: Aktionsknöpfe unter einem gewählten Stand sind volle Breite mit mittigem Text – kein linker Rand zum Fluchten. Erscheint nur, wenn es gespeicherte Stände gibt (im Gate je nach Vorgeschichte, 09.10.2026)'],
+  [/Zeitreise/, /^vertikal .*cv-loss/,
+    'Zeitreise: Hinweis „Seit diesem Stand hat sich nichts geändert“ sitzt 1,6 px hoch im Kasten – Inhalt hängt von den gespeicherten Ständen ab (im Gate je nach Vorgeschichte), Optik offen, siehe Bericht gate-opt 09.10.2026'],
 ];
 
 // ── Dashboard wählen ────────────────────────────────────────────────────────
@@ -369,6 +373,22 @@ async function tap(page, sel, re) {
   await page.waitForTimeout(700);
   return true;
 }
+// Erst messen, wenn das Studio steht: keine laufende Animation/Überblendung und Lage der Knöpfe
+// 500 ms unverändert (höchstens 8 s). Unter Last war die Zeitreise nach fester Pause noch mitten im
+// Einblenden – „Texte der Zeilen nicht bündig“ (09.10.2026, r87 im Gate rot, einzeln grün).
+async function settle(page) {
+  let last = '', since = Date.now();
+  for (const t0 = Date.now(); Date.now() - t0 < 8000; await page.waitForTimeout(125)) {
+    const k = await page.evaluate(() => {
+      const p = window.__panel && window.__panel(); const root = p && p.shadowRoot;
+      if (!root) return 'x';
+      const anim = (root.getAnimations ? root.getAnimations() : []).filter((a) => a.playState === 'running' && !(a.effect && a.effect.getTiming && a.effect.getTiming().iterations === Infinity)).length;
+      const pos = [...root.querySelectorAll('button, .pbadge, .mtile')].slice(0, 400).map((e) => { const r = e.getBoundingClientRect(); return r.width ? Math.round(r.left) + ',' + Math.round(r.top) : ''; }).join(';');
+      return anim + '|' + pos;
+    }).catch(() => 'x');
+    if (k !== last) { last = k; since = Date.now(); } else if (k.startsWith('0|') && Date.now() - since >= 500) return;
+  }
+}
 const insp = async (page) => { await PJS(page, 'if (p.classList.contains("bmode") && !p._bOpen) { p._bOpen = true; p._renderForm(); }'); await page.waitForTimeout(500); };
 const esc = async (page, n = 2) => { for (let i = 0; i < n; i++) { await page.keyboard.press('Escape'); await page.waitForTimeout(200); } };
 
@@ -442,6 +462,7 @@ for (const view of views) {
         try { ok = await st.run(page); } catch (e) { console.log('  ! ' + tag + ': ' + String(e.message).slice(0, 120)); }
         if (!ok) { console.log('  –  ' + tag + ': nicht erreichbar (übersprungen)'); continue; }
         await page.waitForTimeout(600);
+        await settle(page);
         await page.addScriptTag({ content: H.PIERCE }).catch(() => {});
         const m = await page.evaluate(MEASURE);
         if (m.err) { console.log('  ! ' + tag + ': ' + m.err); continue; }

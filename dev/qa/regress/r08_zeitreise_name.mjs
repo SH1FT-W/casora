@@ -1,4 +1,5 @@
 // @zustand: frisch
+// @deckt: custom_components/casora/panel/casora-panel-versions.js custom_components/casora/versions.py
 // Gemeldet: „Versionen“ wurde mit „Updates“ verwechselt. Die Seite heißt auf Deutsch
 // „Zeitreise“, auf Englisch „Rewind“ – in der Seitenleiste und als Seitentitel.
 import { open, usePage, studio, studioDashboard, check, need, finish } from './lib.mjs';

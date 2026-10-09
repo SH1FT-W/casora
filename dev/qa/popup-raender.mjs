@@ -320,7 +320,9 @@ for (const scheme of schemes) for (const vn of views) {
         await page.waitForTimeout(300);
         if (V.phone || V.touch) await page.touchscreen.tap(at.x, at.y); else await page.mouse.click(at.x, at.y);
         let opened = false;
-        for (let t0 = Date.now(); Date.now() - t0 < 3000; await page.waitForTimeout(200)) if (await popupOpen(page)) { opened = true; break; }
+        // Bis 6 s auf das Popup warten (3 s reichten unter Last nicht: 09.10.2026 im Gate öffneten am Handy
+        // weniger als 3 Raum-Popups, r56 rot). Öffnet es nie, kostet das nur bei toten Kacheln Zeit.
+        for (let t0 = Date.now(); Date.now() - t0 < 6000; await page.waitForTimeout(200)) if (await popupOpen(page)) { opened = true; break; }
         if (!opened) { dead.add(key); if (process.env.QA_DEBUG) console.log("  (öffnet nicht) " + key); continue; }
         done.add(key);
         // Warten, bis das Popup steht (Öffnen-Animation, nachgeladene Inhalte).

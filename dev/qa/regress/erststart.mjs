@@ -1,3 +1,4 @@
+// @deckt: custom_components/casora/panel/casora-panel-welcome.js custom_components/casora/panel/casora-panel-assist.js custom_components/casora/panel/casora-panel-umzug.js
 // Regression: Erststart ohne Startseite (casora-panel.js _welcomeScreen/_afterWelcome/_firstRun).
 // @parallel: allein   (legt im Zustand frisch qa-start an – andere Tests sähen sonst ein Casora-Dashboard)
 //  1. Ganz neu (kein Casora-Dashboard, Begrüßung nie gesehen): „Willkommen bei Casora“ mit

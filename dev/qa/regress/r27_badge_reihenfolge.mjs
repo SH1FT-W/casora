@@ -85,11 +85,22 @@ const pt = await page.evaluate(() => {
   const h = [...p.shadowRoot.querySelectorAll('*')].find((e) => own(e) === 'Badges'
     && e.getBoundingClientRect().width > 0 && e.getBoundingClientRect().x > 500);
   if (!h) return null;
+  // Der Abschnitt liegt je nach Inhalt (z. B. Wiedergabe-Liste) unterhalb des Fensters – ein Klick
+  // dorthin ginge ins Leere (09.10.2026: im Gate je nach Vorgeschichte grün, einzeln rot).
+  h.scrollIntoView({ block: 'center' });
   const b = h.getBoundingClientRect(); return [b.x + 20, b.y + b.height / 2];
 });
 await need('Badges-Abschnitt der Übersicht', pt);
-await page.mouse.click(pt[0], pt[1]);
-await page.waitForTimeout(1500);
+// Aufklappen, bis die Ziehgriffe der Liste da sind (der Kopf klappt auch zu – nie blind zweimal).
+const gripsShown = () => page.evaluate(() => { const col = window.__panel().shadowRoot.querySelector('.badgecol');
+  return !!col && [...col.querySelectorAll('.grip')].some((g) => g.getBoundingClientRect().width > 0); });
+if (!(await gripsShown())) {
+  await page.mouse.click(pt[0], pt[1]);
+  await page.waitForFunction(() => { const col = window.__panel().shadowRoot.querySelector('.badgecol');
+    return !!col && [...col.querySelectorAll('.grip')].some((g) => g.getBoundingClientRect().width > 0); }, null, { timeout: 8000 }).catch(() => {});
+}
+await page.evaluate(() => { const col = window.__panel().shadowRoot.querySelector('.badgecol'); col && col.scrollIntoView({ block: 'center' }); });
+await page.waitForTimeout(400);
 const list = await page.evaluate(() => {
   const col = window.__panel().shadowRoot.querySelector('.badgecol');
   return col ? [...col.children].filter((c) => c.dataset && c.dataset.bid).map((c) => c.dataset.bid) : [];

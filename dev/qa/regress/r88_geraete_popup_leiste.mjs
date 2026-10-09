@@ -259,6 +259,10 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
   const { page } = await open({ width: 393, height: 852, mobile: true, scale: 2, theme: 'Casora', dark: false });
   await page.context().addInitScript(() => { try { localStorage.setItem('casora_mobile_filter', 'all'); } catch (e) { /* egal */ } });
   await dashboard(page, phone.url + '/' + ((phone.config.views[0] || {}).path || '0'), 3);
+  // Die Handy-Leiste kennt ihre Räume erst nach dem Aufbau – darauf warten (unter Last war die Liste
+  // sonst leer und der Test rot: „Kachel am Handy – []“, 09.10.2026).
+  await page.waitForFunction(() => { const n = window.__pierce('*').find((e) => e._rooms && typeof e._set === 'function' && e._bar);
+    return !!n && n._rooms.some((r) => /^room_/.test(r.key)); }, null, { timeout: 20000 }).catch(() => {});
   const keys = await page.evaluate(() => { const n = window.__pierce('*').find((e) => e._rooms && typeof e._set === 'function' && e._bar);
     return n ? n._rooms.map((r) => r.key).filter((k) => /^room_/.test(k)) : []; }).catch(() => []);
   for (const dev of ['dish', 'wash']) {
@@ -267,8 +271,7 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
     for (const k of keys) {
       if (t) break;
       await page.evaluate((x) => window._casoraFilter && window._casoraFilter.set(x), k);
-      await page.waitForTimeout(2000);
-      t = await findTile(page, tpl);
+      for (const t0 = Date.now(); !t && Date.now() - t0 < 6000;) { await page.waitForTimeout(500); t = await findTile(page, tpl); }
     }
     await need(dev + ': Kachel am Handy', t, keys);
     await closePopup(page);

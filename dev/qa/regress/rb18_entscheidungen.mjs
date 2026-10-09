@@ -95,7 +95,13 @@ const closePopup = async (pg) => { await pg.evaluate(() => window.casoraPopup &&
     // „Leuchten im Raum“) – welches Popup kommt, hängt vom Licht ab (dimmbar, Gruppe …).
     const lps = (e) => { try { const d = JSON.parse(e.getAttribute('data-lps-tap')); return d && d.a === 'toggle' && d.id === ent; } catch (x) { return false; } };
     const find = (root, out) => { root.querySelectorAll('*').forEach((e) => { if (e.dataset && ((e.dataset.casoraSvc && e.dataset.casoraSvc.includes(ent)) || (e.hasAttribute('data-lps-tap') && lps(e)))) out.push(e); if (e.shadowRoot) find(e.shadowRoot, out); }); return out; };
-    const btn = find(window.casoraPopup.element.shadowRoot, [])[0];
+    // Der Popup-Inhalt baut sich nach der Hülle auf – unter Last war der Knopf nach 0,8 s noch nicht da
+    // (09.10.2026: im Gate rot, einzeln grün). Bis zu 10 s auf ihn warten.
+    let btn = null;
+    for (const t0 = Date.now(); !btn && Date.now() - t0 < 10000;) {
+      btn = window.casoraPopup && window.casoraPopup.element && find(window.casoraPopup.element.shadowRoot, [])[0];
+      if (!btn) await new Promise((r) => setTimeout(r, 250));
+    }
     if (!btn) { ha.hass.callService = orig; return { btn: false }; }
     window._casoraUILastTap = 0; window._casoraPopupOpenedAt = 0;
     btn.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));

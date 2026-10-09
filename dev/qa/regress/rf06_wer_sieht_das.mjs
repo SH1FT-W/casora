@@ -1,5 +1,6 @@
 // @zustand: arbeit
 // @parallel: allein
+// @deckt: custom_components/casora/panel/casora-panel-personal.js
 // Neue Studio-Funktionen im Dashboard (06.10.2026). Erwartet: Kachel mit „Wer sieht das?“ für einen
 // anderen HA-Benutzer (visibility, Bedingung „user“) fehlt am Desktop und auf der Handy-Raumseite;
 // Licht-Badge nur für einen anderen Benutzer (casora_badge_users) fehlt im Raumkopf; Raum nur für
