@@ -10,7 +10,9 @@
 import { open, usePage, studio, dashboard, casoraDashboard, check, need, finish, atFinish, shot } from './lib.mjs';
 import { ws } from '../ws.mjs';
 
-const dash = await casoraDashboard();
+// Ein Dashboard mit Auto, E-Bike, Abfall und Saugroboter (das Prüf-Dashboard qa-arbeit hat kein Auto).
+const hasAll = (d) => ['casora_car', 'casora_ebike', 'casora_trash', 'casora_vacuum'].every((t) => JSON.stringify(d.config || {}).includes('"' + t + '"'));
+const dash = (await casoraDashboard(hasAll)) || (await casoraDashboard());
 await need('Casora-Dashboard mit Handy-Gegenstück', dash && dash.phone);
 const c0 = await ws();
 const states = await c0.cmd({ type: 'get_states' });
