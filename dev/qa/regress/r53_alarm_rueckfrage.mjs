@@ -38,7 +38,10 @@ await page.evaluate((a) => { window.__qaArm = document.querySelector('home-assis
   .callService('alarm_control_panel', 'alarm_arm_away', { entity_id: a }).then((r) => r, (e) => ({ err: String(e && e.message || e) })); }, info.alarm);
 await page.waitForTimeout(800);
 const d1 = await dialog();
-await check('offenes Fenster → Rückfrage vor dem Scharfschalten', d1 && /Achtung/.test(d1.title) && /Fenster/.test(d1.title)
+// Seit 07.10.2026 nennt die Rückfrage eine einzelne Öffnung beim Namen („Achtung: Küchenfenster offen“).
+const winName = await page.evaluate((e) => { const S = document.querySelector('home-assistant').hass.states; return String((S[e] && S[e].attributes.friendly_name) || ''); }, win);
+const named = (t) => /Fenster/.test(t) || (winName && t.includes(winName.split(' ')[0]));
+await check('offenes Fenster → Rückfrage vor dem Scharfschalten', d1 && /Achtung/.test(d1.title) && named(d1.title)
   && /Trotzdem scharf schalten/.test(d1.text), d1);
 if (d1) await page.locator('.casora-askfirst button.no').click();
 const r1 = await page.evaluate(() => window.__qaArm);
