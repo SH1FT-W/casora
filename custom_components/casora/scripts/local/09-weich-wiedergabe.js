@@ -33,13 +33,15 @@
     });
   };
   var P = {
-    play: 'M8,5.14V19.14L19,12.14L8,5.14Z',
-    pause: 'M14,19H18V5H14M6,19H10V5H6V19Z',
+    // Abgerundet im Stil der Apple-Mediensteuerung (eigene Pfade).
+    play: 'M7,6.7Q7,4.5 8.91,5.6L18.09,10.9Q20,12 18.09,13.1L8.91,18.4Q7,19.5 7,17.3Z',
+    pause: 'M7.1,4.5H8.4A1.6,1.6 0 0 1 10,6.1V17.9A1.6,1.6 0 0 1 8.4,19.5H7.1A1.6,1.6 0 0 1 5.5,17.9V6.1A1.6,1.6 0 0 1 7.1,4.5ZM15.6,4.5H16.9A1.6,1.6 0 0 1 18.5,6.1V17.9A1.6,1.6 0 0 1 16.9,19.5H15.6A1.6,1.6 0 0 1 14,17.9V6.1A1.6,1.6 0 0 1 15.6,4.5Z',
     note: 'M21,3V15.5A3.5,3.5 0 0,1 17.5,19A3.5,3.5 0 0,1 14,15.5A3.5,3.5 0 0,1 17.5,12C18.04,12 18.55,12.12 19,12.34V6.47L9,8.6V17.5A3.5,3.5 0 0,1 5.5,21A3.5,3.5 0 0,1 2,17.5A3.5,3.5 0 0,1 5.5,14C6.04,14 6.55,14.12 7,14.34V6L21,3Z',
     game: 'M7.97,16L5,19C4.67,19.3 4.23,19.5 3.75,19.5A1.75,1.75 0 0,1 2,17.75V17.5L3,10.12C3.21,7.81 5.14,6 7.5,6H16.5C18.86,6 20.79,7.81 21,10.12L22,17.5V17.75A1.75,1.75 0 0,1 20.25,19.5C19.77,19.5 19.33,19.3 19,19L16.03,16H7.97M7,8V10H5V11H7V13H8V11H10V10H8V8H7M16.5,8A0.75,0.75 0 0,0 15.75,8.75A0.75,0.75 0 0,0 16.5,9.5A0.75,0.75 0 0,0 17.25,8.75A0.75,0.75 0 0,0 16.5,8M14.75,9.75A0.75,0.75 0 0,0 14,10.5A0.75,0.75 0 0,0 14.75,11.25A0.75,0.75 0 0,0 15.5,10.5A0.75,0.75 0 0,0 14.75,9.75M18.25,9.75A0.75,0.75 0 0,0 17.5,10.5A0.75,0.75 0 0,0 18.25,11.25A0.75,0.75 0 0,0 19,10.5A0.75,0.75 0 0,0 18.25,9.75M16.5,11.5A0.75,0.75 0 0,0 15.75,12.25A0.75,0.75 0 0,0 16.5,13A0.75,0.75 0 0,0 17.25,12.25A0.75,0.75 0 0,0 16.5,11.5Z',
   };
-  P.prev = 'M6,18V6H8V18H6M9.5,12L18,6V18L9.5,12Z';
-  P.next = 'M16,18H18V6H16M6,18L14.5,12L6,6V18Z';
+  // Zurück/Weiter als Doppeldreieck ohne Strich (wie Apple Musik/TV).
+  P.prev = 'M22,8.1Q22,6.5 20.61,7.3L13.79,11.2Q12.4,12 13.79,12.8L20.61,16.7Q22,17.5 22,15.9ZM12.2,8.1Q12.2,6.5 10.81,7.3L3.99,11.2Q2.6,12 3.99,12.8L10.81,16.7Q12.2,17.5 12.2,15.9Z';
+  P.next = 'M2,8.1Q2,6.5 3.39,7.3L10.21,11.2Q11.6,12 10.21,12.8L3.39,16.7Q2,17.5 2,15.9ZM11.8,8.1Q11.8,6.5 13.19,7.3L20.01,11.2Q21.4,12 20.01,12.8L13.19,16.7Q11.8,17.5 11.8,15.9Z';
   P.volLo = 'M7,9V15H11L16,20V4L11,9H7Z';
   P.volHi = 'M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z';
   var svg = function (d, s) { return '<svg viewBox="0 0 24 24" width="' + s + '" height="' + s + '" aria-hidden="true"><path fill="currentColor" d="' + d + '"/></svg>'; };
@@ -142,6 +144,8 @@
     + '.k:focus-visible{outline:2px solid var(--cnp-ton);outline-offset:1px}'
     + '.tn .p{width:40px;height:40px}'
     + '.tn .p.o{background:var(--casora-soft-media-play, var(--primary-color, #B67A50));color:#fff;box-shadow:var(--casora-soft-media-play-shadow, 0 10px 22px -12px rgba(150,95,55,.55))}'
+    // Der runde Knopf übernimmt die Cover-Farbe (aufgehellt), solange das Cover eine hat; sonst Ton.
+    + '.tn .r:not(.nc) .p,.tn .r:not(.nc) .p.o{background:color-mix(in srgb,var(--c) 78%,#fff);box-shadow:0 10px 22px -12px color-mix(in srgb,var(--c) 70%,#000)}'
     // Handy: Trefferflächen mindestens 40 px.
     + '.tn.ph .k{width:40px;height:40px}.tn.ph .p{width:44px;height:44px}.tn.ph .ct{gap:0}'
     // Bühne (Welle-Menü, erste Wiedergabe): Cover groß, Zeiten, Tasten mittig, Lautstärke.
