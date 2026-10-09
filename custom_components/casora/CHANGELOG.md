@@ -4,6 +4,12 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.2.3 – 09.10.2026
+
+### Fixed
+- **Car popup:** cars whose integration only provides a few sensors with German names (e.g. "Reichweite", "Kilometerstand", "Tankstand") are now recognised. The popup stayed empty for them. "Tankstand" and "Kraftstoffstand" count as fuel level.
+- **Sturdier car popup:** missing or unavailable values no longer stop it from opening. Distances use the car's unit (km or mi), and without door data it says "No data" instead of "All closed".
+
 ## 1.2.2 – 09.10.2026
 
 ### New

@@ -4,6 +4,12 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.2.3 – 09.10.2026
+
+### Behoben
+- **Auto-Popup:** Autos, deren Integration nur wenige Sensoren mit deutschen Namen liefert (z. B. „Reichweite“, „Kilometerstand“, „Tankstand“), werden jetzt erkannt. Das Popup blieb dort leer. „Tankstand“ und „Kraftstoffstand“ zählen als Tankfüllstand.
+- **Auto-Popup robuster:** Fehlende oder nicht verfügbare Werte verhindern das Öffnen nicht mehr. Strecken stehen in der Einheit des Autos (km oder mi), ohne Türdaten steht „Keine Daten“ statt „Alles zu“.
+
 ## 1.2.2 – 09.10.2026
 
 ### Neu
