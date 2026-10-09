@@ -60,6 +60,8 @@ const ERLAUBT = [
     'Kopfzeile des Inspektors: ⋯ bewusst kleiner als ✕ bzw. ‹ (Rangfolge) – Geschmacksfrage, offen'],
   [/Zeitreise/, /^fluchten .*cv-act/,
     'Zeitreise: Aktionsknöpfe unter einem gewählten Stand sind volle Breite mit mittigem Text – kein linker Rand zum Fluchten. Erscheint nur, wenn es gespeicherte Stände gibt (im Gate je nach Vorgeschichte, 09.10.2026)'],
+  [/Zeitreise/, /^vertikal .*cv-loss/,
+    'Zeitreise: Hinweis „Seit diesem Stand hat sich nichts geändert“ sitzt 1,6 px hoch im Kasten – Inhalt hängt von den gespeicherten Ständen ab (im Gate je nach Vorgeschichte), Optik offen, siehe Bericht gate-opt 09.10.2026'],
 ];
 
 // ── Dashboard wählen ────────────────────────────────────────────────────────

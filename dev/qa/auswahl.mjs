@@ -104,7 +104,12 @@ for (const f of files) {
   }
   else if (tests.some((t) => t.file === f)) { hit = tests.filter((t) => t.file === f); grund = 'Test selbst'; }
   else if (!fs.existsSync(path.join(REPO, f)) && /^dev\/(qa\/regress|e2e)\//.test(f)) grund = 'Test gelöscht';
-  else if (/^dev\/(qa|e2e)\//.test(f)) grund = 'Prüfhilfe ohne Gate-Lauf';
+  else if (/^dev\/(qa|e2e)\//.test(f)) {
+    // Prüfhilfe (z. B. dev/qa/ausrichtung.mjs): die Tests, die sie laden.
+    const base = path.basename(f);
+    hit = tests.filter((t) => t.src.includes(base));
+    grund = hit.length ? `Prüfhilfe, geladen von ${hit.length} Test(s)` : 'Prüfhilfe ohne Gate-Lauf';
+  }
   else {
     const tagged = tests.filter((t) => t.deckt.some((d) => d.re.test(f)));
     let auto = [], why = [];

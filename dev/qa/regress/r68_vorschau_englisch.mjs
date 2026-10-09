@@ -29,6 +29,10 @@ const texts = (inPanel) => {
   const tr = window.casoraTr || ((x) => x); const left = new Set(), seen = new Set();
   // Raumnamen legt der Nutzer an (im Haus „arbeit“ deutsch) – sie zählen nicht als deutsche Reste.
   const rooms = new Set(inPanel ? ((window.__panel()._state || {}).compact || { rooms: [] }).rooms.map((r) => String(r.name || '').trim()) : []);
+  // Gerätenamen ebenso (z. B. „HomePod Büro“ in der Wiedergabe – erscheint nur, wenn gerade etwas läuft,
+  // also je nach Vorgeschichte: 09.10.2026 im Gate rot, einzeln grün).
+  for (const st of Object.values(document.querySelector('home-assistant').hass.states)) {
+    const n = st.attributes && st.attributes.friendly_name; if (n) rooms.add(String(n).trim()); }
   (function walk(r) { const w = document.createTreeWalker(r, NodeFilter.SHOW_TEXT); let n;
     while ((n = w.nextNode())) { const v = n.data.trim(), p = n.parentNode;
       if (!v || !/[A-Za-z]/.test(v) || !p || /STYLE|SCRIPT/.test(p.nodeName)) continue;
