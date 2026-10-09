@@ -11,6 +11,8 @@
 // snapshots_main vor snapshots_sub), ohne sie von der Kamera selbst (auch eine Generic-Kamera mit image.* am
 // selben Gerät rät nichts), das Studio-Feld still_entity hat Vorrang (auch image.*). Statt „Live“ steht das
 // Alter des Bildes („gerade eben“, „vor 12 s“). Die Registry-Einträge (hass.entities) schiebt der Test unter.
+// 1.2.1 „Bild auffrischen“: Abstand je Kachel (refresh_s, Standard 10 s), frisches Bild = „Aktuell“, älter als
+// 2 × Abstand + 5 s = Alter in Warnfarbe, auch ohne neues Bild (Kamera hängt).
 // Legt eine neutrale REST-Kamera und das Dashboard qa-kamera-bild an und räumt ab. Die Standbilder kommen
 // aus page.route (Verlaufsbild, je Abruf anders), der Server kennt nur den jeweils gültigen Token.
 import zlib from 'node:zlib';
@@ -99,7 +101,7 @@ const view = JSON.parse(JSON.stringify(roomView));
 view.cards[2].cards = [
   { type: 'custom:button-card', template: 'casora_camera', entity: CAM, name: 'QA Kamera' },
   { type: 'custom:button-card', template: 'casora_camera', entity: CAM2, name: 'QA Kamera Zwei' },
-  { type: 'custom:button-card', template: 'casora_camera', entity: R3, name: 'QA Reolink' },
+  { type: 'custom:button-card', template: 'casora_camera', entity: R3, name: 'QA Reolink', variables: { refresh_s: '5' } },
   { type: 'custom:button-card', template: 'casora_camera', entity: G4, name: 'QA Generisch' },
   { type: 'custom:button-card', template: 'casora_camera', entity: G5, name: 'QA Generisch Feld', variables: { still_entity: G5I } },
   { type: 'custom:button-card', template: 'casora_doorbell', entity: R6, name: 'QA Klingel Feld', variables: { still_entity: R6S } },
@@ -122,7 +124,10 @@ const look = (pg, id) => pg.evaluate((i) => {
   const c = b.shadowRoot.querySelector('ha-card');
   const blob = (b.style.getPropertyValue('--casora-cam-img').match(/blob:[^")]+/) || [''])[0];
   const img = b.shadowRoot.querySelector('img');
-  return { shown: /var\(--casora-cam-img|blob:/.test(getComputedStyle(c).backgroundImage) && !!blob, blob,
+  const st = b.shadowRoot.querySelector('#state');
+  const probe = document.createElement('span'); probe.style.color = 'var(--casora-color-orange, #FF9230)';
+  b.shadowRoot.appendChild(probe); const warnColor = getComputedStyle(probe).color; probe.remove();
+  return { warn: !!st && getComputedStyle(st).color === warnColor, shown: /var\(--casora-cam-img|blob:/.test(getComputedStyle(c).backgroundImage) && !!blob, blob,
     pic: b._hcPic, text: c.innerText.replace(/\s+/g, ' ').trim(), icon: !!(img && /camera\.svg/.test(img.src || '')) };
 }, id);
 const until = async (pg, fn, max) => {
@@ -155,7 +160,7 @@ for (const mobile of [false, true]) {
   for (const id of EXTRA) { S[id].token = 't2'; await setState(id, 't2'); }
   const d = (id) => S[id].n - base[id];
   const a = await seen(page, CAM, 6000);
-  await check(`${tag}: langsames Bild erscheint ohne Zustandswechsel`, a.ok && !a.icon && /gerade eben|vor \d+ s/.test(a.text || '') && !/Live/.test(a.text || ''), a);
+  await check(`${tag}: langsames Bild erscheint ohne Zustandswechsel`, a.ok && !a.icon && /Aktuell/.test(a.text || '') && !a.warn && !/Live|vor \d/.test(a.text || ''), a);
   const a2 = await seen(page, CAM2, 9000);
   await check(`${tag}: nach zwei Fehlern kommt das Bild wieder`, a2.ok && !a2.icon, a2);
   S[CAM].delay = 0;
@@ -193,18 +198,28 @@ for (const mobile of [false, true]) {
   await check(`${tag}: Generic-Kamera ohne Schnappschuss nimmt sich selbst (image.* am Gerät nicht geraten)`,
     g4.ok && d(G4) > 0 && S[G4I].n === 0, { ...g4, kamera: d(G4), bild: S[G4I].n });
   const g5 = await seen(page, G5, 6000);
-  await check(`${tag}: Studio-Feld image.* liefert das Bild`, g5.ok && d(G5I) > 0 && S[G5].n === 0,
-    { ...g5, kamera: S[G5].n, bild: d(G5I) });
+  // Zähler ab dem Token-Wechsel (d): beim kalten Laden kann die allererste Zeichnung noch ohne casora-core.js
+  // laufen und einmal die Kamera selbst holen (schon vor 1.2.1 so, wackelte unter Last).
+  await check(`${tag}: Studio-Feld image.* liefert das Bild`, g5.ok && d(G5I) > 0 && d(G5) === 0,
+    { ...g5, kamera: d(G5), bild: d(G5I) });
   const r6 = await seen(page, R6, 6000);
-  await check(`${tag}: Studio-Feld hat Vorrang vor der Automatik (Klingel)`, r6.ok && d(R6S) > 0 && S[R6M].n === 0 && S[R6].n === 0,
-    { ...r6, haupt: S[R6].n, hoch: S[R6M].n, std: S[R6S].n });
+  await check(`${tag}: Studio-Feld hat Vorrang vor der Automatik (Klingel)`, r6.ok && d(R6S) > 0 && S[R6M].n === 0 && d(R6) === 0,
+    { ...r6, haupt: d(R6), hoch: S[R6M].n, std: d(R6S) });
 
-  // 6) Alter statt „Live“: liefert die Schnappschuss-Kamera nicht mehr, zählt der Text hoch.
+  // 6) Abstand aus der Kachel (refresh_s 5): in 11 s mindestens zwei neue Abrufe, Text ruhig „Aktuell“.
+  //    Liefert die Schnappschuss-Kamera nicht mehr, wird ohne neues Bild das Alter in Warnfarbe angezeigt.
   if (!mobile) {
+    const n0 = S[R3M].n;
+    await page.waitForTimeout(11000);
+    const f = await look(page, R3);
+    await check(`${tag}: Abstand 5 s aus der Kachel-Einstellung`, S[R3M].n - n0 >= 2 && f && /Aktuell/.test(f.text) && !f.warn,
+      { ...f, abrufe: S[R3M].n - n0 });
     S[R3M].fail = 1000;
-    const g = await until(page, async () => { const l = await look(page, R3); return { ok: !!(l && l.shown && /vor \d+ s/.test(l.text)), ...l }; }, 16000);
-    await check(`${tag}: Kachel zeigt das Alter des Bildes`, g.ok && !/Live/.test(g.text || ''), g);
+    const g = await until(page, async () => { const l = await look(page, R3); return { ok: !!(l && l.shown && /vor \d+ s/.test(l.text) && l.warn), ...l }; }, 26000);
+    await check(`${tag}: hängende Kamera zeigt das Alter in Warnfarbe`, g.ok && !/Live|Aktuell/.test(g.text || ''), g);
     S[R3M].fail = 0;
+    const h = await until(page, async () => { const l = await look(page, R3); return { ok: !!(l && /Aktuell/.test(l.text) && !l.warn), ...l }; }, 35000);
+    await check(`${tag}: neues Bild, wieder „Aktuell“ ohne Warnfarbe`, h.ok, h);
   }
   if (mobile) await o.browser.close().catch(() => {});
 }

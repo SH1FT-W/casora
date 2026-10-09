@@ -719,7 +719,10 @@
 //    (letzte Aufnahme, nicht jetzt); Frigate image.* (letzter Treffer je Objekt, nicht jetzt);
 //    reolink_proxy/go2rtc-Streams (live_*). Wer so ein Bild will, trägt es im Studio ein.
 // 3) Sonst die Kachel-Kamera selbst – genau das bisherige Verhalten.
-// casoraCamAge: Alter des Bildes für die Kachel („gerade eben“, „vor 8 s“, „vor 2 Min.“).
+// casoraCamAge: Text zum Bild auf der Kachel. Frisch (Alter ≤ 2 × Abstand + 5 s) „Aktuell“, sonst
+// das Alter („vor 40 s“, „vor 2 Min.“), die Kachel färbt es dann als Warnung (casoraCamFresh).
+// casoraCamRefresh: Abfrage-Abstand der Kachel in Sekunden (Studio „Bild auffrischen“, refresh_s).
+//   5, 10, 30 oder 60, Standard 10.
 (function () {
   if (window.casoraCamStill) return;
   var ok = function (x) { return typeof x === 'string' && x.indexOf('.') > 0; };
@@ -756,10 +759,18 @@
     }
     return best || id;
   };
-  window.casoraCamAge = function (ms) {
+  window.casoraCamRefresh = function (vars) {
+    var n = Number(vars && vars.refresh_s);
+    return n === 5 || n === 30 || n === 60 ? n : 10;
+  };
+  window.casoraCamFresh = function (ms, refreshS) {
+    var r = Number(refreshS) > 0 ? Number(refreshS) : 10;
+    return isFinite(ms) && ms <= (2 * r + 5) * 1000;
+  };
+  window.casoraCamAge = function (ms, refreshS) {
     if (!isFinite(ms)) return '';
+    if (window.casoraCamFresh(ms, refreshS)) return 'Aktuell';
     var s = Math.max(0, Math.floor(ms / 1000));
-    if (s < 5) return 'gerade eben';
     if (s < 60) return 'vor ' + s + ' s';
     var m = Math.floor(s / 60);
     if (m < 60) return 'vor ' + m + ' Min.';

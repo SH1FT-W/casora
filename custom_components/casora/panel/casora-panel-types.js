@@ -191,6 +191,11 @@ window.CASORA_TILE_TYPES = [
       { key: "still_entity", label: "Still image from", domains: ["camera", "image"], advanced: true,
         placeholder: "Automatic",
         hint: "Optional. Another camera or image entity whose picture the tile shows. Without it, Casora uses a snapshot entity of the same camera if there is one (e.g. Reolink snapshots), otherwise this camera. The popup always shows this camera live." },
+      // „Bild auffrischen“ (1.2.1): Abfrage-Abstand des Standbilds als Kachel-Einstellung (casora-core.js casoraCamRefresh).
+      { key: "refresh_s", label: "Refresh image", type: "select", advanced: true, tileLevel: true,
+        options: ["5", "", "30", "60"],
+        optionLabels: { "5": "Every 5 seconds", "": "Every 10 seconds", "30": "Every 30 seconds", "60": "Every 60 seconds" },
+        hint: "How often the tile fetches a new still image while it is visible. The tile says \"Up to date\" while the picture is fresh and shows its age in the warning colour when the camera stops delivering." },
       { key: "alert_window_minutes", label: "Recent activity (minutes)", type: "number", advanced: true, group: "Popup",
         placeholder: "5", hint: "A dot marks a camera with activity in this window." },
       { key: "show_stream_variants", label: "Show stream variants", type: "bool", advanced: true, group: "Popup",
