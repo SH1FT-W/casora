@@ -98,6 +98,16 @@ const lockView = async (page, mobile) => {
 };
 const askOpen = (page) => page.evaluate(() => !!document.querySelector('.casora-askfirst'));
 const askClick = (page, cls) => page.evaluate((cls) => { const h = document.querySelector('.casora-askfirst'); const b = h && (h.shadowRoot || h).querySelector('.' + cls); if (b) b.click(); return !!b; }, cls);
+// 1.2.1 (P7): Knöpfe der Rückfrage im Casora-Look 44 hoch, voll rund, Bestätigen Petrol, Abbrechen Sand.
+const askLook = (page) => page.evaluate(() => {
+  const r = document.querySelector('.casora-askfirst').shadowRoot;
+  const css = getComputedStyle(document.documentElement);
+  const tone = (v) => { const d = document.createElement('i'); d.style.color = css.getPropertyValue(v).trim(); r.appendChild(d); const c = getComputedStyle(d).color; d.remove(); return c; };
+  const m = (sel) => { const e = r.querySelector(sel), b = e.getBoundingClientRect(), s = getComputedStyle(e);
+    return { h: Math.round(b.height), rad: Math.min(parseFloat(s.borderTopLeftRadius), b.height / 2), bg: s.backgroundColor }; };
+  return { no: m('.no'), yes: m('.yes'), petrol: tone('--casora-popup-ui-action'), sand: tone('--casora-soft-control-fill') };
+});
+const lookOk = (l) => [l.no, l.yes].every((b) => b.h === 44 && b.rad === 22) && l.yes.bg === l.petrol && l.no.bg === l.sand;
 const calls = (page) => page.evaluate(() => window.__qaCalls.slice());
 
 // ── Handy-Dashboard: Rückfrage an der Handy-Kachel ─────────────────────────────
@@ -112,6 +122,8 @@ const calls = (page) => page.evaluate(() => window.__qaCalls.slice());
   await check('Handy: Hinweis „Mit Rückfrage“', ub.hint, ub);
   await page.touchscreen.tap(ub.x, ub.y); await page.waitForTimeout(600);
   await check('Handy: „Entriegeln“ fragt nach', await askOpen(page));
+  const lh = await askLook(page);
+  await check('Handy: Rückfrage-Knöpfe 44 hoch, voll rund, Petrol/Sand', lookOk(lh), lh);
   await askClick(page, 'no'); await page.waitForTimeout(400);
   await check('Handy: Abbrechen entriegelt nicht', (await calls(page)).length === 0, await calls(page));
   await page.touchscreen.tap(ub.x, ub.y); await page.waitForTimeout(600);
@@ -136,6 +148,8 @@ const calls = (page) => page.evaluate(() => window.__qaCalls.slice());
   await need('Desktop: Schloss-Ansicht mit „Entriegeln“', ub);
   await page.mouse.click(ub.x, ub.y); await page.waitForTimeout(600);
   await check('Desktop: „Entriegeln“ fragt nach', await askOpen(page));
+  const ld = await askLook(page);
+  await check('Desktop: Rückfrage-Knöpfe 44 hoch, voll rund, Petrol/Sand', lookOk(ld), ld);
   await askClick(page, 'no'); await page.waitForTimeout(400);
   await check('Desktop: Abbrechen entriegelt nicht', (await calls(page)).length === 0, await calls(page));
 }
