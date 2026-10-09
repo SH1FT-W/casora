@@ -30,7 +30,7 @@
       n1t: "Schloss in Casora", n1: "Ein Tipp aufs Schloss öffnet Bedienen, Zustand und den Verlauf von heute mit „wer und wann“.",
       n2t: "Energie auf einen Blick", n2: "Woher der Strom kommt und wohin der Solarstrom geht, als ruhige Balken.",
       n3t: "Tanken-Karte neu", n3: "Alle Stationen am echten Ort, die günstigsten mit Preis, folgt Günstigste, Nächste und Offen.",
-      n4t: "Zuverlässiger", n4: "Kamerabilder erscheinen sicher, die Rückfrage gilt auch am Handy, WashData 0.5.8 wird unterstützt."
+      n4t: "Heizung für alle Räume", n4: "Zieltemperatur aller Räume mit Plus, Minus und Regler wie bei einem einzelnen Raum."
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -43,7 +43,7 @@
       n1t: "Locks in Casora", n1: "A tap on a lock opens controls, state and today's history with who and when.",
       n2t: "Energy at a glance", n2: "Where your power comes from and where the solar power goes, as calm bars.",
       n3t: "New fuel map", n3: "Every station at its real place, the cheapest with prices, following Cheapest, Nearest and Open.",
-      n4t: "More reliable", n4: "Camera pictures show up reliably, the confirmation also works on the phone, WashData 0.5.8 is supported."
+      n4t: "Heating for all rooms", n4: "Target temperature of all rooms with plus, minus and a slider, like a single room."
     },
   };
 
@@ -59,7 +59,7 @@
     ["mdi:lock-outline", "n1t", "n1"],
     ["mdi:solar-power-variant-outline", "n2t", "n2"],
     ["mdi:gas-station-outline", "n3t", "n3"],
-    ["mdi:check-circle-outline", "n4t", "n4"],
+    ["mdi:heating-coil", "n4t", "n4"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

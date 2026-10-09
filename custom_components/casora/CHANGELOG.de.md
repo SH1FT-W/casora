@@ -4,6 +4,14 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.2.2 – 09.10.2026
+
+### Neu
+- **Fußbodenheizung für alle Räume:** Die Zieltemperatur aller Räume hat jetzt dieselbe Steuerung wie ein einzelner Raum, mit Plus und Minus und dem Regler darunter. Plus, Minus und Regler stellen alle eingeschalteten Räume auf einmal ein. Sind die Räume unterschiedlich eingestellt, zeigt Casora den Durchschnitt.
+
+### Behoben
+- **Wetter-Popup:** Die Regenmengen in „Nächste Stunden“ werden unten nicht mehr abgeschnitten.
+
 ## 1.2.1 – 09.10.2026
 
 ### Neu
