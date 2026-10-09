@@ -35,10 +35,16 @@
     + ".cv-tx{flex:1 1 auto;min-width:0}"
     + ".cv-tx b{display:block;font-size:var(--t-callout);font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}"
     + ".cv-tx span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:var(--t-foot);line-height:1.35;color:var(--ink-2);overflow:hidden}"
-    + ".cv-loss{margin:0 0 4px;padding:10px 12px;border-radius:12px;font-size:var(--t-foot);line-height:1.4;"
+    // Linksbündig auch in der zentrierten Rückfrage „Diesen Stand wiederherstellen?“ (Handy), sonst
+    // standen die Punkte links und die Zeilen mittig.
+    + ".cv-loss{margin:0 0 4px;padding:10px 12px;border-radius:12px;font-size:var(--t-foot);line-height:1.4;text-align:left;"
     + "background:var(--casora-studio-chip,rgba(127,127,127,.12));color:var(--ink)}"
     + ".cv-loss b{display:block;font-weight:650;margin-bottom:3px}.cv-loss ul{margin:0;padding-left:18px}.cv-loss li{margin:1px 0}"
-    + ".cv-loss li.cv-more{list-style:none;margin-left:-18px}.cv-morebtn{all:unset;cursor:pointer;color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px}.cv-morebtn:focus-visible{outline:2px solid currentColor;outline-offset:2px;border-radius:4px}"
+    // Eigene Klasse cv-moreli: „cv-more“ ist der runde 40-px-„…“-Knopf der Liste – die Zeile erbte
+    // sonst dessen Breite und 20-px-Schrift („+1 more“ riesig, umgebrochen).
+    + ".cv-loss li.cv-moreli{list-style:none;margin:3px 0 0 -18px}.cv-morebtn{all:unset;cursor:pointer;font:inherit;font-weight:600;"
+    + "color:var(--casora-studio-link,var(--accent,#B67A50))}.cv-morebtn:hover{text-decoration:underline;text-underline-offset:2px}"
+    + ".cv-morebtn:focus-visible{outline:2px solid currentColor;outline-offset:2px;border-radius:4px}"
     + ".cv-now{flex:none;padding:3px 9px;border-radius:999px;font-size:var(--t-caption);font-weight:600;background:var(--casora-studio-good-tint, rgba(52,199,89,.22));color:var(--casora-studio-good, #34c759)}"
     + ".cv-pin{display:inline-grid;vertical-align:-2px;margin-left:6px;width:14px;height:14px;color:var(--ink-2)}.cv-pin svg{width:14px;height:14px}"
     + ".cv-item{display:flex;align-items:center}.cv-item+.cv-item{box-shadow:inset 0 .5px 0 var(--hair,rgba(255,255,255,.1))}"
@@ -571,7 +577,7 @@
         if (lines.length > 5) {
           // Nutzertest 6 (P-T9): „+3 weitere“ ließ sich nicht öffnen – jetzt aufklappbar.
           const li = document.createElement("li");
-          li.className = "cv-more";
+          li.className = "cv-moreli";
           const more = document.createElement("button");
           more.type = "button";
           more.className = "cv-morebtn";

@@ -74,6 +74,10 @@
     /* Seiten (Einstellungen, Updates, Zeitreise) liegen über der Vorschau: deren Umschalter
        Desktop/Tablet/Mobil ragte sonst halb über den Rand. */
     :host(.bmode.bpage.split:not(.flow)) .stage .segrow { visibility:hidden; }
+    /* Ebenso der Hinweis „Im Dashboard stehen aktive Kacheln vorn“ unter der Vorschau: Er stand
+       mittig unter der ganzen Fläche, also halb unter der Seite, und rutschte in der Zeitreise
+       (Banner über der Vorschau) an den unteren Rand. Für Seiten ohne Bearbeiten ohne Belang. */
+    :host(.bmode.bpage.split:not(.flow)) .maprowhint { visibility:hidden; }
     /* S-05: Die Vorschau steht in der Mitte der freien Höhe (oben Umschalter, darunter nichts
        Leeres mehr) – auch wenn der Inspektor sie schmaler macht. */
     :host(.bmode.split:not(.flow):not(.phone)) .stage > .canvas { align-self:stretch; box-sizing:border-box; }
