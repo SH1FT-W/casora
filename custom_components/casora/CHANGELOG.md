@@ -6,10 +6,17 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ## 1.2.4 – 09.10.2026
 
+### New
+- **Pulse tile and popup:** if the Pulse integration is installed, Casora offers its own Pulse tile. It shows how many devices need attention and opens a popup sorted like Pulse itself: failed, check, battery and watch, with "Battery replaced" right in the row. "All ok" is sorted by battery level, lowest first.
+- **Pulse in the notification centre:** devices Pulse marks as "check" or "failed" show up in the bell, a tap opens the Pulse popup. Switch it off in the Studio under Notifications. A device Pulse already reports is not listed again as a low battery.
+- **New media player:** the menu under the wave shows the cover as a coloured stage with progress, back, play/pause, next and volume. Room cards and the phone show a coloured strip with back, play/pause and next. Colour and play button follow the cover or app logo.
+- **Check for updates now:** a button in the updates popup asks Home Assistant, the Supervisor (Core, OS, apps) and HACS for new updates right away.
+
 ### Fixed
 - **Shadows in popups:** the soft shadow under the active row or button (floor heating, blinds, locks, lights, thermostat, air purifier, dishwasher, vacuum) was cut off with a hard edge at the side or bottom. It now fades out fully.
 - **Thermostat text:** floor heating opens its valves only for a few minutes at a time. During such a pause the tile said "Ready" although the room was still below its target. It now says "Heating to 22°" until the target is reached and "On · 22°" once it is.
 - **Hover in dark mode:** moving the mouse over an active row in a popup (e.g. a heating room) turned it dark while the text stayed dark, so it was barely readable. The row now stays light.
+- **Studio:** "Now playing" in the room view collapses fully again and starts collapsed. Before, part of it stayed visible and looked like a second menu.
 
 ## 1.2.3 – 09.10.2026
 

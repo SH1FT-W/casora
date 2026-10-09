@@ -6,10 +6,17 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 ## 1.2.4 – 09.10.2026
 
+### Neu
+- **Pulse-Kachel und -Popup:** Ist die Integration Pulse installiert, bietet Casora eine eigene Pulse-Kachel an. Sie zeigt, wie viele Geräte Aufmerksamkeit brauchen, und öffnet ein Popup, sortiert wie in Pulse: Ausgefallen, Prüfen, Batterie und Beobachten, mit „Gewechselt“ direkt in der Zeile. „Alles ok“ ist nach Batteriestand sortiert, die schwächsten zuerst.
+- **Pulse in der Mitteilungszentrale:** Geräte, die Pulse als „Prüfen“ oder „Ausgefallen“ führt, erscheinen in der Glocke, ein Tipp öffnet das Pulse-Popup. Abschaltbar im Studio unter Benachrichtigungen. Meldet Pulse ein Gerät schon, steht es nicht zusätzlich als schwache Batterie da.
+- **Neuer Medien-Player:** Das Menü unter der Welle zeigt das Cover als farbige Bühne mit Fortschritt, Zurück, Play/Pause, Weiter und Lautstärke. Raumkarten und Handy zeigen einen farbigen Streifen mit Zurück, Play/Pause und Weiter. Farbe und Play-Knopf richten sich nach Cover oder App-Logo.
+- **Jetzt nach Updates suchen:** Ein Knopf im Updates-Popup fragt Home Assistant, den Supervisor (Core, OS, Apps) und HACS sofort nach neuen Updates.
+
 ### Behoben
 - **Schatten in Popups:** Der weiche Schatten unter der aktiven Zeile oder Taste (Fußbodenheizung, Jalousien, Schlösser, Licht, Thermostat, Luftreiniger, Geschirrspüler, Sauger) war seitlich oder unten hart abgeschnitten. Er läuft jetzt sauber aus.
 - **Thermostat-Text:** Eine Fußbodenheizung öffnet ihre Ventile nur minutenweise. In so einer Pause stand „Bereit“, obwohl der Raum noch unter dem Ziel lag. Jetzt steht „Heizt auf 22°“, bis das Ziel erreicht ist, und dann „An · 22°“.
 - **Drüberfahren im dunklen Design:** Fuhr man mit der Maus über eine aktive Zeile im Popup (z. B. einen heizenden Raum), wurde sie dunkel, die Schrift blieb dunkel und war kaum lesbar. Die Zeile bleibt jetzt hell.
+- **Studio:** „Aktuelle Wiedergabe“ in der Raumansicht klappt wieder ganz zu und startet zugeklappt. Vorher blieb ein Teil sichtbar und sah aus wie ein zweites Menü.
 
 ## 1.2.3 – 09.10.2026
 

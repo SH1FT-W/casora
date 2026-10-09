@@ -27,10 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n1t: "Schloss in Casora", n1: "Ein Tipp aufs Schloss öffnet Bedienen, Zustand und den Verlauf von heute mit „wer und wann“.",
-      n2t: "Energie auf einen Blick", n2: "Woher der Strom kommt und wohin der Solarstrom geht, als ruhige Balken.",
-      n3t: "Tanken-Karte neu", n3: "Alle Stationen am echten Ort, die günstigsten mit Preis, folgt Günstigste, Nächste und Offen.",
-      n4t: "Heizung für alle Räume", n4: "Zieltemperatur aller Räume mit Plus, Minus und Regler wie bei einem einzelnen Raum."
+      n1t: "Pulse in Casora", n1: "Eigene Kachel und Popup für Pulse, Probleme auch in der Glocke.",
+      n2t: "Neuer Medien-Player", n2: "Das Cover färbt den Player ein, mit Zurück, Play/Pause, Weiter und Lautstärke.",
+      n3t: "Jetzt nach Updates suchen", n3: "Ein Knopf im Updates-Popup fragt HA, Supervisor und HACS sofort nach Neuem.",
+      n4t: "Heizung klarer", n4: "„Heizt auf 22°“, solange der Raum aufheizt, am Ziel „An · 22°“ statt „Bereit“."
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n1t: "Locks in Casora", n1: "A tap on a lock opens controls, state and today's history with who and when.",
-      n2t: "Energy at a glance", n2: "Where your power comes from and where the solar power goes, as calm bars.",
-      n3t: "New fuel map", n3: "Every station at its real place, the cheapest with prices, following Cheapest, Nearest and Open.",
-      n4t: "Heating for all rooms", n4: "Target temperature of all rooms with plus, minus and a slider, like a single room."
+      n1t: "Pulse in Casora", n1: "Its own tile and popup for Pulse, problems also in the bell.",
+      n2t: "New media player", n2: "The cover colours the player, with back, play/pause, next and volume.",
+      n3t: "Check for updates now", n3: "A button in the updates popup asks HA, Supervisor and HACS right away.",
+      n4t: "Clearer heating", n4: "\"Heating to 22°\" while the room warms up, \"On · 22°\" at the target instead of \"Ready\"."
     },
   };
 
@@ -56,10 +56,10 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:lock-outline", "n1t", "n1"],
-    ["mdi:solar-power-variant-outline", "n2t", "n2"],
-    ["mdi:gas-station-outline", "n3t", "n3"],
-    ["mdi:heating-coil", "n4t", "n4"],
+    ["mdi:pulse", "n1t", "n1"],
+    ["mdi:music-circle-outline", "n2t", "n2"],
+    ["mdi:update", "n3t", "n3"],
+    ["mdi:thermostat", "n4t", "n4"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.
