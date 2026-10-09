@@ -188,6 +188,19 @@ Ausgeliefert wird automatisch: Die GitHub-Releases sind die Quelle. Casora fragt
 öffentliche GitHub-API anonym nach neuen `v…`-Releases und `karten-…`-Paketen (alle 6 Stunden),
 HACS-Installationen bekommen neue Versionen über HACS, kein eigener Schritt.
 
+## Gemessene Zeiten (09.10.2026)
+
+Rechner mit 10 Kernen, Docker 5,8 GB; meist liefen nebenher Wegwerf-HAs anderer Agenten (Last 10 bis 50).
+
+| Lauf | vorher | jetzt |
+|---|---|---|
+| volles Gate | 77 und 112 min (`--parallel --jobs 1`, arbeit ganz auf einem HA) | 30 bis 44 min, zuletzt ZEIT_VOLL (5 HAs: arbeit 3, stress 2) |
+| Patch-Gate (ein Dashboard-Skript geändert) | gab es nicht als Freigabe | 3 min 49 s (r89 + Klick-Durchlauf Dashboard-Teile) |
+| Nachholen (2 bzw. 3 geänderte Tests) | voller Neulauf | 3 min 28 s bzw. 4 min 26 s |
+
+Engpass im vollen Lauf ist arbeit (~85 min Testzeit auf 3 HAs); stress braucht ~18 min.
+Mehr HAs (`GATE_HAS_MAX=6`, arbeit 3 + stress 2 + spätes HA) gehen, wenn sonst nichts läuft.
+
 ## Neuer Fehler gemeldet → neuer Regressionstest
 
 Jeder vom Nutzer gemeldete Fehler bekommt einen kleinen Test in `dev/qa/regress/`, damit er

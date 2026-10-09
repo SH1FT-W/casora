@@ -327,8 +327,38 @@ async function restoreBase(l) {
   return out;
 }
 const guarded = (t) => t.gp || t.alone || t.locks.includes('ui');
+// Prüf-Dashboards (qa-arbeit, qa-stress … samt -mobile) gehören zum Grundzustand: fehlt eines vor einem
+// Test, wird es über stress-setup neu angelegt und das Protokoll nennt den Test davor (09.10.2026:
+// auf einem HA verschwand qa-arbeit-mobile mitten im Lauf, danach waren 6 Tests rot).
+async function wsCall(l, msg) {
+  const tok = await access(l);
+  return new Promise((resolve, reject) => {
+    const sock = new WebSocket(l.url.replace(/^http/, 'ws') + '/api/websocket');
+    const timer = setTimeout(() => { try { sock.close(); } catch (e) { /* zu */ } reject(new Error('Zeitüberschreitung')); }, 20000);
+    sock.onerror = (e) => { clearTimeout(timer); reject(new Error('WebSocket')); };
+    sock.onmessage = (ev) => {
+      const m = JSON.parse(ev.data);
+      if (m.type === 'auth_required') sock.send(JSON.stringify({ type: 'auth', access_token: tok }));
+      else if (m.type === 'auth_ok') sock.send(JSON.stringify({ id: 1, ...msg }));
+      else if (m.type === 'result' && m.id === 1) { clearTimeout(timer); sock.close(); m.success ? resolve(m.result) : reject(new Error(JSON.stringify(m.error))); }
+    };
+  });
+}
+const qaDashes = async (l) => (await wsCall(l, { type: 'lovelace/dashboards/list' })).map((d) => d.url_path).filter((u) => /^qa-(arbeit|stress)(-mobile)?$/.test(u));
+async function ensureDashes(l, before) {
+  if (!l.dashes || !l.dashes.length) return null;
+  let now;
+  try { now = await qaDashes(l); } catch (e) { return null; }
+  const gone = l.dashes.filter((u) => !now.includes(u));
+  if (!gone.length) return null;
+  const name = gone[0].replace(/-mobile$/, '');
+  const r = await runPost([NODE, path.join(REPO, 'dev/qa/stress-setup.mjs'), '--name', name, '--state', STATE],
+    { CASORA_URL: l.url, CASORA_TOKENS: l.tokens, CASORA_ZUSTAND: STATE });
+  return `  info   Grundzustand: ${gone.join(', ')} fehlte${before ? ` (zuletzt lief hier ${before})` : ''} – ${r.rc === 0 ? 'neu angelegt' : 'Neuanlage fehlgeschlagen'}`;
+}
 async function baseLane(l) {
   try { l.base = await helpers(l); } catch (e) { console.log(`    Grundzustand HA ${l.n} nicht gemerkt: ${e.message}`); }
+  try { l.dashes = await qaDashes(l); } catch (e) { l.dashes = []; }
 }
 const _laneUp = laneUp;
 laneUp = async (l) => { await _laneUp(l); await baseLane(l); };
@@ -343,7 +373,10 @@ async function run(t) {
   if (guarded(t)) {
     const fixed = await restoreBase(l).catch(() => []);
     if (fixed.length) pre.push('  info   Grundzustand hergestellt: ' + fixed.join(', '));
+    const d = await ensureDashes(l, l.lastTest).catch(() => null);
+    if (d) { pre.push(d); console.log(`    ${d.trim()} – HA ${l.n}`); }
   }
+  l.lastTest = t.id;
   await runRaw(t);
   if (pre.length) t.out = pre.join('\n') + '\n' + t.out;
   if (guarded(t) && l.base && t.step.kind !== 'e2e') {
