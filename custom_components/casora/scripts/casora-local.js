@@ -77,6 +77,7 @@ const MODULES = [
   '10-weich-welle',
   '11-fussball',
   '12-tanken',
+  '13-schloss',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());

@@ -1518,9 +1518,36 @@
   "Kondensator reinigen": "Clean condenser",
   "Angehalten": "Stalled",
   "steht still, evtl. Unwucht": "stopped, possibly an unbalanced load",
-  "Eigene Aufgabe": "Own task"
+  "Eigene Aufgabe": "Own task",
+  "Am Schloss": "At the lock",
+  "Bedienen": "Controls",
+  "Entriegeln": "Unlock",
+  "Verriegeln": "Lock",
+  "Ganzer Verlauf": "Full history",
+  "Skript": "Script",
+  "Tür öffnen": "Open door",
+  "Türkontakt": "Door contact",
+  "Wirklich die Tür öffnen?": "Really open the door?",
+  "Mit Rückfrage, wie im Studio eingestellt": "Asks first, as set in the Studio",
+  "Schloss nicht erreichbar": "Lock not reachable",
+  "Verlauf nicht abrufbar": "History unavailable",
+  "Heute keine Änderung": "No changes today",
+  "per App": "via app",
+  "Über": "Via"
  },
  "patterns": [
+  [
+   "^zuletzt gemeldet gestern (.+)$",
+   "last reported yesterday {1}"
+  ],
+  [
+   "^zuletzt gemeldet (.+)$",
+   "last reported {1}"
+  ],
+  [
+   "^seit gestern (.+)$",
+   "since yesterday {1}"
+  ],
   [
    "^Alle (\\d+) Lichter im Haus ausschalten\\?$",
    "Turn off all {1} lights in the home?"
