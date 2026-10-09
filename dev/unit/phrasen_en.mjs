@@ -29,6 +29,11 @@ const EXPECT = [
   ['Zuhause · scharf in <span class="cal-n"></span> s', 'Home · armed in <span class="cal-n"></span> s'],
   ['wird scharf …', 'arming …'],
   ['Alarm in <span class="cal-n"></span> s', 'Alarm in <span class="cal-n"></span> s'],
+  // 1.2.1: Tanken-Empfehlung – das Sammelmuster „… Uhr“ stand vor diesen und fraß das „Uhr“ („HEUTE AB 19“).
+  ['Heute ab 19 Uhr', 'Today from 19:00'],
+  ['Morgen ab 6 Uhr', 'Tomorrow from 6:00'],
+  ['Warte bis 15 Uhr', 'Wait until 15:00'],
+  ['um 8 Uhr', 'at 8:00'],
 ];
 for (const [de, en] of EXPECT) assert.equal(tr(de), en, de);
 console.log('ok phrasen_en');
