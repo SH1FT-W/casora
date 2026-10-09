@@ -346,6 +346,8 @@
      Ort mit Doppelring). Nur die 4 günstigsten Orte bekommen eine Preis-Pille neben dem Punkt mit kurzem Strich;
      Pillen weichen einander, dem Standort, der km-Angabe und dem OSM-Hinweis aus und bleiben ganz in der Fläche.
      Passt eine nirgends hin, bleibt nur der Punkt. */
+  // Sortierung der Liste (Günstigste/Nächste/Offen) bestimmt auch, was die Karte hervorhebt.
+  var PSORT = 'guenstig';
   var pins = function (I, k, W, H, at, c, rad, onMap, avoid) {
     var cx = c[0], cy = c[1], f1 = function (n) { return (+n).toFixed(1); };
     var SUBC = k.dark ? 'rgba(238,232,225,.62)' : 'rgba(58,50,43,.55)', MUTE = k.dark ? '#D8D0C7' : '#6B5F55';
@@ -362,6 +364,7 @@
     // Stationen nach Ort bündeln (gleicher Ort = ein Punkt); je Ort zählt die offene günstigste.
     var groups = [];
     I.stations.forEach(function (p) {
+      if (PSORT === 'offen' && !p.o) return;   // „Offen“: geschlossene Stationen nicht zeigen
       var xy = at(p);
       if (!xy) return;
       var g = groups.filter(function (q) { return Math.abs(q.xy[0] - xy[0]) < 2 && Math.abs(q.xy[1] - xy[1]) < 2; })[0];
@@ -372,7 +375,9 @@
     var minP = open.length ? Math.min.apply(null, open.map(function (x) { return x.p; })) : null;
     var isMin = function (p) { return p.o && minP != null && Math.abs(p.p - minP) < 0.0005; };
     var pillG = groups.filter(function (g) { return g.best.o; })
-      .sort(function (a, b) { return a.best.p - b.best.p || (a.best.d == null ? 99 : a.best.d) - (b.best.d == null ? 99 : b.best.d); }).slice(0, 4);
+      .sort(PSORT === 'naechste'
+        ? function (a, b) { return (a.best.d == null ? 99 : a.best.d) - (b.best.d == null ? 99 : b.best.d) || a.best.p - b.best.p; }
+        : function (a, b) { return a.best.p - b.best.p || (a.best.d == null ? 99 : a.best.d) - (b.best.d == null ? 99 : b.best.d); }).slice(0, 4);
     // Pillen platzieren: 8 Richtungen in zwei Abständen, harte Regeln (Fläche, Hinweis, Standort, andere Pillen),
     // sonst möglichst wenig andere Punkte verdecken und nah am eigenen Punkt.
     var pw = 54, ph = 24, gap = 7, placed = [];
@@ -415,7 +420,7 @@
       s += '<g class="ct-pin"' + shadow + '><rect x="' + f1(q.x - pw / 2) + '" y="' + f1(q.y - ph / 2) + '" width="' + pw + '" height="' + ph + '" rx="' + ph / 2 + '" fill="'
         + (m ? k.GOOD : (k.dark ? '#4A423B' : '#FFFDF9')) + '"/>'
         + '<text x="' + f1(q.x) + '" y="' + f1(q.y + 1) + '" text-anchor="middle" dominant-baseline="middle" font-size="13" font-weight="700" ' + FONT + ' fill="' + (m ? '#fff' : (k.dark ? '#EEE8E1' : '#3A322B')) + '">'
-        + esc(t.slice(0, -1)) + '<tspan font-size="8.8" dy="-4.2">' + esc(t.slice(-1)) + '</tspan></text></g>';
+        + esc(t) + '</text></g>';
     });
     return s + '<circle cx="' + f1(cx) + '" cy="' + f1(cy) + '" r="6" fill="' + k.ACC + '" stroke="#fff" stroke-width="3"/>';
   };
@@ -611,7 +616,8 @@
     var lr = hm.layer.getBoundingClientRect(), ar = at ? at.getBoundingClientRect() : null;
     var avoid = ar && ar.width > 0 ? { x: Math.round(ar.left - lr.left), y: Math.round(ar.top - lr.top), w: Math.round(ar.width), h: Math.round(ar.height) }
       : { x: W - Math.min(W, 200), y: H - 16, w: Math.min(W, 200), h: 16 };
-    var key = view + '|' + k.dark + '|' + JSON.stringify(avoid) + '|' + JSON.stringify(pts.map(function (x) { return [x.p, x.o, geo(I, x)]; }));
+    PSORT = V.sort || PSORT;
+    var key = view + '|' + PSORT + '|' + k.dark + '|' + JSON.stringify(avoid) + '|' + JSON.stringify(pts.map(function (x) { return [x.p, x.o, geo(I, x)]; }));
     if (key === hm.key) return;
     hm.key = key;
     var pt = function (ll) { var q = lm.latLngToContainerPoint(ll); return [q.x, q.y]; };
@@ -651,6 +657,7 @@
   };
 
   K.html = function (p, states, sort, wide, bw) {
+    PSORT = sort || 'guenstig';
     var UI = window._casoraUI;
     var id = K.sensorId(p, states);
     if (!UI || !id) return '';

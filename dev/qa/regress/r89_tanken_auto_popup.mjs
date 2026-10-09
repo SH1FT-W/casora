@@ -373,6 +373,15 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
     await page.waitForTimeout(500);
     const same = await page.evaluate(() => { const l = window.__pierce('.ct-hamap', window.casoraPopup.surface)[0]; return !!l && l.querySelector('ha-map') === window.__qaMapEl && l.dataset.state === 'ok'; });
     await check(vp.name + ': Karte bleibt beim Umschalten erhalten', same);
+    // Umschalten wirkt auch auf die Karte: „Nächste“ hebt die nächsten Stationen hervor, „Offen“ blendet geschlossene aus.
+    const pinTexts = () => page.evaluate(() => { const l = window.__pierce('.ct-hamap', window.casoraPopup.surface)[0]; return l ? [...l.querySelectorAll('svg.ct-hamap-pins .ct-pin text')].map((t) => t.textContent).sort().join('|') + '#' + l.querySelectorAll('svg.ct-hamap-pins circle.ct-dot').length : null; });
+    await tap(page, '.ct-seg .hui-sg:nth-child(1)'); await page.waitForTimeout(500);
+    const pCheap = await pinTexts();
+    await tap(page, '.ct-seg .hui-sg:nth-child(3)'); await page.waitForTimeout(500);
+    const pOpen = await pinTexts();
+    await check(vp.name + ': „Offen“ zeigt weniger Punkte als „Günstigste“ (geschlossene ausgeblendet)', pCheap && pOpen && +pOpen.split('#')[1] < +pCheap.split('#')[1], { pCheap, pOpen });
+    await check(vp.name + ': Pillen ohne hochgestellte Ziffer (zwei Nachkommastellen)', pCheap && !/,\d{3}/.test(pCheap), pCheap);
+    await tap(page, '.ct-seg .hui-sg:nth-child(1)'); await page.waitForTimeout(400);
     // Viele Stationen auf der HA-Karte (1.2.1, Entwurf A).
     await fakeStates(page, { ...none, [SID]: sensor(car.dev, { typical, low: 1.649, high: 1.749, days: 14, learn_days_left: 0, stations: crowd, count: crowd.length }) }, { sticky: true });
     await openPopup(page);
