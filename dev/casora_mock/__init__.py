@@ -326,7 +326,9 @@ class CasoraMock:
     #   {"sensor.x": {"base": 21.5, "day": 0.9, "peak": 16, "wave": 0.25, "noise": 0.05,
     #                 "bumps": [[7.5, 6, 0.7]], "digits": 1}}
     # day: Tagesschwankung um base (Höchstwert zur Stunde peak), wave: langsame Welle,
-    # bumps: [Stunde, Höhe, Breite in h] (z. B. Duschen am Morgen), noise: Rauschen.
+    # bumps: [Stunde, Höhe, Breite in h] (z. B. Duschen am Morgen), noise: Rauschen,
+    # anchor: False = nicht beim Wert der Fixture enden (Solar soll nachts nicht hochrutschen).
+    # now_hour: 13 = der Start gilt als 13 Uhr – die letzten Stunden zeigen immer den Vormittag.
     # Ohne „_history“ (Testhaus) entsteht die Kurve automatisch je Messgröße (_auto_history), dazu
     # 30 Tage Langzeitstatistik (Stundenmittel, Zählerstände) für 7/30-Tage-Diagramme und Tagesbalken.
     def _auto_history(self) -> dict:
@@ -374,8 +376,12 @@ class CasoraMock:
         def curve(eid: str, cfg: dict):
             rnd = random.Random(eid)
             def raw(ts: float) -> float:
-                h = dt_util.as_local(dt_util.utc_from_timestamp(ts))
-                hour = h.hour + h.minute / 60
+                if cfg.get("now_hour") is not None:
+                    # Uhrzeit relativ zum Start: „jetzt“ ist now_hour (Demo-Bild unabhängig von der Uhr).
+                    hour = (cfg["now_hour"] + (ts - boot) / 3600) % 24
+                else:
+                    h = dt_util.as_local(dt_util.utc_from_timestamp(ts))
+                    hour = h.hour + h.minute / 60
                 v = cfg.get("base", 0) + cfg.get("day", 0) * math.cos(2 * math.pi * (hour - cfg.get("peak", 15)) / 24)
                 v += cfg.get("wave", 0) * math.sin(2 * math.pi * ts / (4.7 * 3600))
                 for at, height, width in cfg.get("bumps", []):
@@ -386,7 +392,8 @@ class CasoraMock:
                 end = float(self.store[eid][0])
             except (KeyError, TypeError, ValueError):
                 end = raw(boot)
-            shift = end - raw(boot)
+            # „anchor“: False – Kurve in Tagesform (z. B. Solar), nicht auf den aktuellen Wert verschoben.
+            shift = end - raw(boot) if cfg.get("anchor", True) else 0.0
             lo, hi = cfg.get("min"), cfg.get("max")
             out = []
             for ts in range(int(boot - span), int(boot), step):

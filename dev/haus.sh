@@ -39,6 +39,7 @@ sync_repo() {
   if [ "$(cat "$AKTIV")" = "demo" ]; then
     rsync -a --exclude __pycache__ --exclude fixture.json dev/casora_mock/ "$CFG/custom_components/casora_mock/"
     (cd /tmp && python3 "$REPO/dev/demo/demo_fixture.py" "$CFG/custom_components/casora_mock/fixture.json" >/dev/null)
+    python3 "$REPO/dev/demo/demo_fixture.py" --dashboards "$CFG" >/dev/null
   else
     rsync -a --exclude __pycache__ --exclude stress.json dev/casora_mock/ "$CFG/custom_components/casora_mock/"
   fi

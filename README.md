@@ -57,9 +57,9 @@ Casora recognises robot vacuums, washers and dryers, dishwashers, 3D printers, h
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-popups2-dark.webp" />
-    <img src="docs/images/readme-popups2-light.webp" alt="The energy popup on a desktop display and on a phone: power right now, a chart of the last hours, where the power comes from and the biggest consumers." />
+    <img src="docs/images/readme-popups2-light.webp" alt="The energy popup on a desktop display and on a phone: the home uses 896 W, all of it from solar, while 2.4 kW of solar power goes to the home, the home battery and the grid. Below, usage today and this month and the biggest consumers." />
   </picture>
-  <br/><sub><b>Energy at a glance.</b> Power right now, where it comes from, where the solar power goes and which devices use the most.</sub>
+  <br/><sub><b>Energy at a glance.</b> Power right now, where it comes from, how the solar power splits between home, battery and grid, and which devices use the most.</sub>
 </p>
 
 <p align="center">

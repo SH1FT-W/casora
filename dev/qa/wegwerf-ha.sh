@@ -68,6 +68,8 @@ if [ "$Z" = demo ]; then
   W="$REPO/dev/demo/privat.json"; [ -f "$W" ] || W="$MAIN/dev/demo/privat.json"
   [ -f "$W" ] || { echo "wegwerf-ha: dev/demo/privat.json fehlt – demo abgebrochen" >&2; exit 1; }
   (cd /tmp && CASORA_MOCK_FIXTURE="$F" CASORA_DEMO_PRIVAT="$W" python3 "$REPO/dev/demo/demo_fixture.py" "$CFG/custom_components/casora_mock/fixture.json" >/dev/null)
+  # Energie-Kachel mit Solar, Akku und Netz (Variablen wie im Studio).
+  python3 "$REPO/dev/demo/demo_fixture.py" --dashboards "$CFG" >/dev/null
 fi
 if [ "$Z" = stress ]; then
   python3 "$REPO/dev/stress/stress_fixture.py" "$CFG/custom_components/casora_mock/stress.json" >/dev/null

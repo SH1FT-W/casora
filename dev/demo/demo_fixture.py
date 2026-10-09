@@ -3,6 +3,7 @@
 der Mock-Fixture (dev/casora_mock/fixture.json, nicht im Repo) per Wörterbuch.
 
     python3 dev/demo/demo_fixture.py <ziel/fixture.json>
+    python3 dev/demo/demo_fixture.py --dashboards <config>   Solar-Variablen der Energie-Kachel
 
 Entitäts-IDs bleiben, nur Anzeigenamen ändern sich. Wörter ohne Eintrag bleiben stehen –
 für Screenshots zählen nur die sichtbaren Räume und Geräte.
@@ -165,6 +166,137 @@ def demo_power(d):
                      "icon": None, "device_class": "power", "unit": "W", "hidden": False, "entity_category": None})
 
 
+# Solar und Hausakku: das Demo-Haus zeigt eine mittägliche Lage wie ein echtes Haus mit
+# Balkon-/Dachanlage und Akku. Solar 2,4 kW, Haus 0,9 kW, Akku lädt 0,8 kW (64 %), der Rest
+# (0,7 kW) geht ins Netz. Gefunden wird ohne IDs: Geräte-Sensoren über den Übersetzungsschlüssel,
+# Tageszähler über ihren Namen. Namen werden englisch und neutral („Home Battery“ statt Produkt).
+SOLAR_DEVICE = {"Solarbank 3 E2700 Pro": "Home Battery", "Smart Meter": "Energy Meter", "System Home": "Solar System"}
+# (translation_key, neuer Name, Wert) – gilt für alle Geräte aus SOLAR_DEVICE
+SOLAR_KEYS = [
+    ("input_power", "Solar Power", "2412"), ("solarbank_input_power", "Solar Power", "2412"),
+    ("solar_power_1", "Solar String 1", "1236"), ("solar_power_2", "Solar String 2", "1176"),
+    ("solar_power_3", "Solar String 3", "0"), ("solar_power_4", "Solar String 4", "0"),
+    ("bat_charge_power", "Battery Charging", "804"), ("bat_discharge_power", "Battery Discharging", "0"),
+    ("battery_power_signed", "Battery Power", "804"), ("solarbank_battery_power_signed", "Battery Power", "804"),
+    ("state_of_charge", "Battery Level", "64"),
+    ("battery_energy", "Battery Energy", "1720"), ("battery_status", "Battery Status", "charging"),
+    ("home_load_power", "Home Load", "896"), ("ac_to_home_load", "Output", "1608"),
+    ("dc_output_power", "DC Output", "1608"), ("solarbank_output_power", "Output", "1608"),
+    ("grid_to_home_power", "Grid Import", "0"), ("photovoltaic_to_grid_power", "Grid Export", "712"),
+    ("grid_power_signed", "Grid Power", "-712"), ("grid_to_battery_power", "Grid Charging", "0"),
+    ("charging_status_desc", "Operating State", "charge_bypass"), ("err_code", "Error Code", "0"),
+    ("temperature", "Temperature", "31"), ("allow_grid_export", "Allow Grid Export", "on"),
+    ("grid_export_limit", "Grid Export Limit", "800"),
+]
+# (Name der Testhaus-Fixture, neuer Name, Wert) – Tages- und Monatszähler, Kosten
+SOLAR_NAMES = [
+    ("Hausbedarf Heute", "Home Usage Today", "5.84"), ("Hausbedarf Monat", "Home Usage This Month", "214.6"),
+    ("Solarertrag Heute", "Solar Today", "9.62"), ("Solarertrag Monat", "Solar This Month", "248.3"),
+    ("Netzbezug Heute", "Grid Import Today", "1.92"), ("Netzbezug Monat", "Grid Import This Month", "96.4"),
+    ("Battery Entladen Heute", "Battery Discharge Today", "2.14"),
+    ("Battery Entladen Monat", "Battery Discharge This Month", "61.7"),
+    ("Stromkosten Heute", "Energy Cost Today", "0.73"), ("Stromkosten Monat", "Energy Cost This Month", "36.65"),
+]
+# Tageskurven, als wäre beim Start 13 Uhr (now_hour) – die Bilder zeigen immer die Mittagslage.
+# Haus: Spitzen morgens, vormittags, beim Kochen und abends, endet beim Wert der Fixture.
+# Solar und Akkustand mit „anchor“: False – reine Tagesform (Solar-Buckel etwa 7 bis 19 Uhr).
+SOLAR_HISTORY = {
+    "home_load_power": {"base": 850, "wave": 40, "noise": 18, "digits": 0, "min": 150, "now_hour": 13,
+                        "day": 420, "peak": 14, "bumps": [[7.4, 600, 0.6], [10.1, 700, 0.45], [12.0, 1100, 0.5], [19.2, 700, 1.3]]},
+    "input_power": {"base": -260, "noise": 40, "digits": 0, "min": 0, "anchor": False, "now_hour": 13,
+                    "bumps": [[13.0, 2900, 3.3]]},
+    "state_of_charge": {"base": 10, "digits": 0, "min": 8, "max": 100, "anchor": False, "now_hour": 13,
+                        "bumps": [[16.0, 85, 4.2]]},
+}
+
+
+def demo_solar(d):
+    ents, hist = d["entities"], d.setdefault("_history", {})
+    keys = {k: (n, v) for k, n, v in SOLAR_KEYS}
+    names = {k: (n, v) for k, n, v in SOLAR_NAMES}
+    dev_name = {x["key"]: SOLAR_DEVICE[x["name"]] for x in d["devices"] if x.get("name") in SOLAR_DEVICE}
+    for x in d["devices"]:
+        if x.get("name") in SOLAR_DEVICE:
+            x["name"] = x["model"] = SOLAR_DEVICE[x["name"]]
+            x["manufacturer"] = "Demo"
+    for e in ents:
+        a = e.get("attributes") or {}
+        if e.get("device") in dev_name:
+            a.pop("attribution", None)
+            hit = keys.get(e.get("translation_key"))
+            # Alle Namen des Geräts neutral: „Home Battery …“ statt Produktname.
+            short = hit[0] if hit else (e.get("original_name") or "")
+            if "friendly_name" in a:
+                a["friendly_name"] = (dev_name[e["device"]] + " " + short).replace("Battery Battery", "Battery").strip()
+            if hit:
+                e["original_name"] = short
+                e["state"] = hit[1]
+            if dev_name[e["device"]] == "Home Battery" and e["entity_id"].startswith("sensor.") \
+                    and e.get("translation_key") in SOLAR_HISTORY:
+                hist[e["entity_id"]] = SOLAR_HISTORY[e["translation_key"]]
+            elif e["entity_id"] in hist and e.get("translation_key") == "home_load_power":
+                hist.pop(e["entity_id"])  # Kurve aus demo_power nur einmal (am Akku)
+        elif a.get("friendly_name") in names:
+            n, v = names[a["friendly_name"]]
+            a["friendly_name"] = e["original_name"] = n
+            e["state"] = v
+
+
+# Energie-Kachel des Demo-Dashboards: Variablen wie im Studio unter „Solar and battery“.
+# Rolle → (Gerät, translation_key) oder Name des Zählers; aufgelöst in der erzeugten Fixture.
+ENERGY_TILE = {
+    "entity_power": ("Home Battery", "home_load_power"),
+    "entity_solar_power": ("Home Battery", "input_power"),
+    "entity_battery_power": ("Home Battery", "battery_power_signed"),
+    "entity_battery_soc": ("Home Battery", "state_of_charge"),
+    "entity_netz_power": ("Energy Meter", "grid_to_home_power"),
+    "entity_grid_export": ("Energy Meter", "photovoltaic_to_grid_power"),
+    "entity_usage_today": "Home Usage Today", "entity_usage_month": "Home Usage This Month",
+    "entity_cost_today": "Energy Cost Today", "entity_cost_month": "Energy Cost This Month",
+    "entity_solar_today": "Solar Today", "entity_battery_today": "Battery Discharge Today",
+    "entity_netz_today": "Grid Import Today",
+}
+
+
+def demo_dashboards(cfg):
+    """Trägt die Solar-Variablen in die Energie-Kacheln der Demo-Dashboards ein (.storage)."""
+    fx = json.load(open(os.path.join(cfg, "custom_components", "casora_mock", "fixture.json"), encoding="utf-8"))
+    devs = {x["key"]: x.get("name") for x in fx["devices"]}
+    var = {}
+    for role, m in ENERGY_TILE.items():
+        for e in fx["entities"]:
+            if not e["entity_id"].startswith("sensor."):
+                continue
+            if (isinstance(m, tuple) and devs.get(e.get("device")) == m[0] and e.get("translation_key") == m[1]) \
+                    or (isinstance(m, str) and (e.get("attributes") or {}).get("friendly_name") == m):
+                var[role] = e["entity_id"]
+                break
+    if "entity_power" not in var:
+        print("Energie-Kachel: kein Hausverbrauch in der Fixture", file=sys.stderr)
+        return
+    n = 0
+    for name in ("lovelace.home_dashboard", "lovelace.home_dashboard_mobile"):
+        p = os.path.join(cfg, ".storage", name)
+        if not os.path.exists(p):
+            continue
+        d = json.load(open(p, encoding="utf-8"))
+
+        def walk(o):
+            nonlocal n
+            if isinstance(o, dict):
+                if o.get("template") == "casora_energy" and o.get("entity") == var["entity_power"]:
+                    o.setdefault("variables", {}).update(var)
+                    n += 1
+                for v in o.values():
+                    walk(v)
+            elif isinstance(o, list):
+                for v in o:
+                    walk(v)
+        walk(d)
+        json.dump(d, open(p, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+    print("Energie-Kacheln mit Solar:", n, "·", len(var), "Variablen")
+
+
 # Kurvenform je Messgröße für einzelne Sensoren (Grundwert = aktueller Wert). Bodenfeuchte bleibt
 # ohne Kurve: das tägliche Auf und Ab wirkte künstlich.
 ROOM_CURVES = {
@@ -283,6 +415,9 @@ def enliven(d):
 
 
 def main():
+    if sys.argv[1] == "--dashboards":
+        demo_dashboards(sys.argv[2])
+        return
     dst = sys.argv[1]
     d = json.load(open(SRC, encoding="utf-8"))
     d["areas"] = [AREAS.get(a, a) for a in d["areas"]]
@@ -300,6 +435,7 @@ def main():
             a["friendly_name"] = tr(a["friendly_name"])
     enliven(d)
     demo_power(d)
+    demo_solar(d)
     # Merker für den Mock: im Demo-Haus keine deutschen Testgeräte (Waschmaschinen A/B, Testbecken).
     d["_demo"] = True
     text = json.dumps(d, ensure_ascii=False)
