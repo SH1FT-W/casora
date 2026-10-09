@@ -124,8 +124,11 @@
     + '.tn .rc:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:transparent;transition:background .15s ease}'
     + '@media (hover:hover){.tn .r:hover .rc:after{background:var(--casora-np-hover, var(--casora-soft-row-hover, rgba(140,115,90,.06)))}}'
     + '.tn .r:active .rc:after{background:var(--casora-soft-row-hover, rgba(140,115,90,.08))}'
-    // Tasten und Lautstärke drücken/überfahren: kein Schleier über dem ganzen Player, nur die Taste reagiert.
-    + '.tn .r:has(button:hover,button:active,.vo:hover,.vo:active,.b:hover,.b:active) .rc:after{background:transparent!important}'
+    // Kein Schleier über dem ganzen Player (09.10.2026): nur ⏮ ⏯ ⏭ reagieren auf Maus und Tipp.
+    + '.tn .rc:after{display:none}'
+    + '.tn .k{transition:background .15s ease,transform .1s ease}'
+    + '@media (hover:hover){.tn .k:hover{background:color-mix(in srgb,var(--cnp-ink) 12%,transparent)}.tn .p:hover{filter:brightness(1.08)}}'
+    + '.tn .k:active{background:color-mix(in srgb,var(--cnp-ink) 18%,transparent)}'
     + '.tn .cv,.l.d.tn .cv{width:52px;height:52px;border-radius:14px;box-shadow:0 6px 14px -8px rgba(0,0,0,.45)}'
     + '.tn .t{font-size:15px;font-weight:650}'
     + '.tn .s{font-size:12.5px;margin-top:1px}'
