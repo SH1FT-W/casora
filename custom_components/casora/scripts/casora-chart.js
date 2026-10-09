@@ -87,6 +87,8 @@
   };
   C.hm = function (t, h12) {
     var o = { hour: '2-digit', minute: '2-digit' }; if (h12 != null) o.hour12 = h12;
+    // 12-Stunden-Uhr (Englisch): „7:00 PM“ statt „07:00 PM“; 24 Stunden bleiben zweistellig.
+    try { if (new Intl.DateTimeFormat(C.lang(), o).resolvedOptions().hour12) o.hour = 'numeric'; } catch (e) { /* alter Browser */ }
     return new Date(t).toLocaleTimeString(C.lang(), o);
   };
   C.wd = function (t) { return new Date(t).toLocaleDateString(C.lang(), { weekday: 'short' }).replace('.', ''); };
@@ -117,7 +119,8 @@
   window.casoraChart = C;
   if (typeof customElements === 'undefined' || customElements.get('casora-chart')) return;
 
-  var CSS = ':host{display:block;position:relative;--cc1:var(--casora-chart-c1,#4A7DBA);--cc2:var(--casora-chart-c2,#C8743A);'
+  // text-align: Etikett links, auch wenn die umgebende Karte zentriert (Dünger-Popup).
+  var CSS = ':host{display:block;position:relative;text-align:left;--cc1:var(--casora-chart-c1,#4A7DBA);--cc2:var(--casora-chart-c2,#C8743A);'
     + '--cc3:var(--casora-chart-c3,#008A7E);--cc4:var(--casora-chart-c4,#A88327);--cacc:var(--casora-chart-accent,var(--primary-color,#B67A50));'
     + '--cink:var(--casora-popup-tiles-text-primary,var(--primary-text-color));--cink2:var(--casora-popup-tiles-text-secondary,var(--secondary-text-color));'
     + '--cink3:var(--casora-chart-label,var(--secondary-text-color));--cgrid:var(--casora-chart-grid,rgba(127,127,127,.16));'

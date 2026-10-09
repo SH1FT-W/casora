@@ -70,7 +70,12 @@
     if (s === 'unlocking' || s === 'opening') return 'lock-unlocking-fill';
     return (s === 'unlocked' || s === 'open' || s === 'jammed') ? 'lock-open-fill' : 'lock-fill';
   };
-  var hm = function (d) { return d.toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' }); };
+  // 12-Stunden-Uhr (Englisch) ohne führende Null („2:19 AM“), 24 Stunden zweistellig.
+  var hm = function (d) {
+    var o = { hour: '2-digit', minute: '2-digit' };
+    try { if (new Intl.DateTimeFormat(loc(), o).resolvedOptions().hour12) o.hour = 'numeric'; } catch (e) { /* alter Browser */ }
+    return d.toLocaleTimeString(loc(), o);
+  };
   var dayStart = function (d) { var x = new Date(d || Date.now()); x.setHours(0, 0, 0, 0); return x; };
   // „22:14“ heute, „gestern 22:14“, sonst Datum.
   L.when = function (iso) {
@@ -260,8 +265,8 @@
       body = !td.length ? '<div class="csl-empty" style="padding:14px 4px;font-size:14px;font-weight:500;color:' + k.sub + ';">Heute keine Änderung</div>'
         : td.map(function (x, i) {
           var tt = L.trigText(x.tr, true), last = i === td.length - 1;
-          return '<div class="csl-ev" data-state="' + esc(x.s) + '" style="display:grid;grid-template-columns:46px 22px minmax(0,1fr);align-items:start;column-gap:8px;position:relative;padding:9px 0;">'
-            + '<div style="font-size:13px;font-weight:600;color:' + k.sub + ';font-variant-numeric:tabular-nums;padding-top:2px;">' + esc(hm(new Date(x.t))) + '</div>'
+          return '<div class="csl-ev" data-state="' + esc(x.s) + '" style="display:grid;grid-template-columns:minmax(46px,max-content) 22px minmax(0,1fr);align-items:start;column-gap:8px;position:relative;padding:9px 0;">'
+            + '<div style="font-size:13px;font-weight:600;color:' + k.sub + ';font-variant-numeric:tabular-nums;padding-top:2px;white-space:nowrap;">' + esc(hm(new Date(x.t))) + '</div>'
             + '<div style="position:relative;height:100%;display:flex;justify-content:center;">'
             + (last ? '' : '<div style="position:absolute;top:16px;bottom:-18px;width:2px;border-radius:2px;background:' + DIM + ';"></div>')
             + '<div style="position:relative;width:12px;height:12px;border-radius:50%;margin-top:4px;background:' + dotTone(x.s) + ';box-shadow:0 0 0 3px ' + k.row + ';"></div></div>'

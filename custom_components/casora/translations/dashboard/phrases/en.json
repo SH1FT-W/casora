@@ -1543,7 +1543,8 @@
   "Verlauf nicht abrufbar": "History unavailable",
   "Heute keine Änderung": "No changes today",
   "per App": "via app",
-  "Über": "Via"
+  "Über": "Via",
+  "Alles ok": "All good"
  },
  "patterns": [
   [
@@ -2045,6 +2046,18 @@
   [
    "^(\\d+) Durchgänge$",
    "{1} cycles"
+  ],
+  [
+   "^In (\\d+) Durchgängen oder (\\d+) Tagen fällig$",
+   "Due in {1} cycles or {2} days"
+  ],
+  [
+   "^In (\\d+) Durchgängen fällig$",
+   "Due in {1} cycles"
+  ],
+  [
+   "^In (\\d+) Tagen fällig$",
+   "Due in {1} days"
   ],
   [
    "^In (\\d+) Durchgängen$",

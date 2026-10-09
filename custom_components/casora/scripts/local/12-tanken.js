@@ -653,7 +653,11 @@
   };
   var stamp = function (iso) {
     var t = Date.parse(iso || '');
-    return isNaN(t) ? null : new Date(t).toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' });
+    if (isNaN(t)) return null;
+    // 12-Stunden-Uhr (Englisch) ohne führende Null, 24 Stunden zweistellig.
+    var o = { hour: '2-digit', minute: '2-digit' };
+    try { if (new Intl.DateTimeFormat(loc(), o).resolvedOptions().hour12) o.hour = 'numeric'; } catch (e) { /* alter Browser */ }
+    return new Date(t).toLocaleTimeString(loc(), o);
   };
 
   K.html = function (p, states, sort, wide, bw) {
