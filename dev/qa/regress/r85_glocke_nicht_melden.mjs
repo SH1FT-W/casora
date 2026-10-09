@@ -15,7 +15,8 @@ const bell = async (page, url) => {
   await ready(page, '/' + url, '() => !!window._casoraNotify && !!window._casoraLocalLoaded', 60000);
   await page.waitForFunction(() => window._casoraNotify.rows.length > 0, null, { timeout: 20000 }).catch(() => {});
 };
-const rowsOf = (page) => page.evaluate(() => window._casoraNotify.rows.map((r) => ({ id: r.id, entity: r.entity || null, label: r.label })));
+// Glocke noch nicht (wieder) geladen → leere Liste statt Abbruch; rowsUntil wartet dann weiter.
+const rowsOf = (page) => page.evaluate(() => (window._casoraNotify ? window._casoraNotify.rows : []).map((r) => ({ id: r.id, entity: r.entity || null, label: r.label }))).catch(() => []);
 // Nach dem Umstellen bis zu 8 s auf den erwarteten Stand warten (want(rows)); die Glocke baut ihre
 // Liste teils nachgelagert neu (09.10.2026: „entfernt → Eintrag wieder da“ im Gate rot, einzeln grün).
 const rowsUntil = async (page, want) => { let r = await rowsOf(page);
