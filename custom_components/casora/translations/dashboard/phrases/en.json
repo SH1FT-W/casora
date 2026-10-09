@@ -1579,7 +1579,12 @@
   "Wirklich entriegeln?": "Really unlock?",
   "Wirklich verriegeln?": "Really lock?",
   "Nichts fällig": "Nothing due",
-  "Daten": "Data"
+  "Daten": "Data",
+  "Jetzt nach Updates suchen": "Check for updates now",
+  "Suche …": "Checking …",
+  "Keine neuen Updates": "No new updates",
+  "1 neues Update gefunden": "1 new update found",
+  "Suche fehlgeschlagen": "Check failed"
  },
  "patterns": [
   [
@@ -2289,6 +2294,14 @@
   [
    "^Zuletzt bekannt · vor (\\d+) Tagen$",
    "Last known · {1} days ago"
+  ],
+  [
+   "^(\\d+) neue Updates gefunden$",
+   "{1} new updates found"
+  ],
+  [
+   "^Zuletzt gesucht: (.+)$",
+   "Last checked: {1}"
   ],
   [
    "^Zuletzt: (.+)$",
