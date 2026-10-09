@@ -2102,10 +2102,6 @@
    "In {1} days"
   ],
   [
-   "^(.+) Uhr$",
-   "{1}"
-  ],
-  [
    "^um (\\d+) Uhr$",
    "at {1}:00"
   ],
@@ -2976,6 +2972,10 @@
   [
    "^Tankerkönig antwortet gerade nicht: (.+)$",
    "Tankerkönig isn't answering right now: {1}"
+  ],
+  [
+   "^(.+) Uhr$",
+   "{1}"
   ]
  ]
 }

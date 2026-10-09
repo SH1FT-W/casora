@@ -111,6 +111,68 @@ CLIMATE = {
 }
 
 
+# Energie-Popup: seit 1.2 sucht Casora ohne zugeordnete Verbraucher die fünf größten selbst.
+# Im Demo-Haus sollen das Alltagsgeräte sein (TV, Kühlschrank, Saugroboter …), nicht die
+# Aquarien des Testhauses. Gefunden wird über den übersetzten Namen, nicht über IDs.
+# (Muster im Namen, neuer Name oder None, Watt)
+POWER = [
+    (r'^55" Neo QLED Power$', "TV Power", 96.4),
+    (r"^Roborock Power$", "Robot Vacuum Power", 32.3),
+    (r"^JBL BAR 1000 JBL Power power$", "Soundbar Power", 24.1),
+    (r"^Air Purifier Core 300S Power$", None, 17.6),
+]
+# Erfundener Kühlschrank-Zwischenstecker (neutrale ID, Küche).
+FRIDGE = ("sensor.demo_fridge_power", "Fridge Power", 48.2, "Kitchen")
+# Aquarien-Steckdosen bleiben, ziehen aber nur wenig (sonst stehen sie oben in der Liste).
+TANK_MAX_W = 4.0
+
+
+def demo_power(d):
+    ents = d["entities"]
+    for e in ents:
+        a = e.get("attributes") or {}
+        if not e["entity_id"].startswith("sensor.") or a.get("unit_of_measurement") != "W":
+            continue
+        name = a.get("friendly_name") or ""
+        for rx, new, w in POWER:
+            if re.search(rx, name):
+                e["state"] = str(w)
+                if new:
+                    a["friendly_name"] = new
+                    if e.get("original_name"):
+                        e["original_name"] = new
+        if re.search(r"\bTank\b", name):
+            try:
+                if float(e["state"]) > TANK_MAX_W:
+                    e["state"] = str(TANK_MAX_W)
+            except (TypeError, ValueError):
+                pass
+    # Leistungskurve fürs Diagramm im Energie-Popup (sonst eine flache Linie): Hausverbrauch
+    # mit Morgen-, Mittags- und Abendspitze. Die Kurve endet beim Wert der Fixture.
+    hist = d.setdefault("_history", {})
+    for e in ents:
+        a = e.get("attributes") or {}
+        if e["entity_id"].startswith("sensor.") and a.get("unit_of_measurement") == "W" \
+                and re.search(r"Hausbedarf$", a.get("friendly_name") or ""):
+            hist[e["entity_id"]] = {"base": 330, "wave": 45, "noise": 16, "digits": 0, "min": 90,
+                                    "bumps": [[7.4, 520, 0.6], [12.6, 380, 0.9], [19.2, 640, 1.3]]}
+    eid, name, w, area = FRIDGE
+    if not any(e["entity_id"] == eid for e in ents):
+        ents.append({"entity_id": eid, "state": str(w), "platform": "demo", "device": None,
+                     "attributes": {"friendly_name": name, "device_class": "power", "unit_of_measurement": "W",
+                                    "state_class": "measurement"},
+                     "area": area if area in d["areas"] else None, "original_name": name, "name": None,
+                     "icon": None, "device_class": "power", "unit": "W", "hidden": False, "entity_category": None})
+
+
+# Kurvenform je Messgröße für einzelne Sensoren (Grundwert = aktueller Wert). Bodenfeuchte bleibt
+# ohne Kurve: das tägliche Auf und Ab wirkte künstlich.
+ROOM_CURVES = {
+    "temperature": {"day": 0.7, "peak": 17, "wave": 0.2, "noise": 0.05, "bumps": [[7.0, 0.4, 1.0], [19.5, 0.3, 1.2]], "digits": 1},
+    "humidity": {"day": -3, "peak": 16, "wave": 1.0, "noise": 0.4, "bumps": [[7.3, 5, 0.8]], "digits": 0, "min": 25, "max": 80},
+}
+
+
 def _slug(t):
     return re.sub(r"[^a-z0-9]+", "_", t.lower()).strip("_")
 
@@ -205,6 +267,18 @@ def enliven(d):
             if now is not None:
                 e["state"] = now
             hist[e["entity_id"]] = curve
+    # Einzelne Raum-Sensoren (Raumklima-Popup): Tageskurve um den eigenen Wert,
+    # damit die Diagramme nicht flach sind. Der Wert selbst bleibt.
+    for e in d["entities"]:
+        a = e.get("attributes") or {}
+        dc = a.get("device_class") or e.get("device_class")
+        if e["entity_id"] in hist or not e["entity_id"].startswith("sensor.") or dc not in ROOM_CURVES:
+            continue
+        try:
+            v = float(e["state"])
+        except (TypeError, ValueError):
+            continue
+        hist[e["entity_id"]] = {"base": v, **ROOM_CURVES[dc]}
     d["_history"] = hist
 
 
@@ -225,6 +299,9 @@ def main():
         if "friendly_name" in a:
             a["friendly_name"] = tr(a["friendly_name"])
     enliven(d)
+    demo_power(d)
+    # Merker für den Mock: im Demo-Haus keine deutschen Testgeräte (Waschmaschinen A/B, Testbecken).
+    d["_demo"] = True
     text = json.dumps(d, ensure_ascii=False)
     # Auch in IDs und Attributen – überall gleich, damit Verweise stimmen.
     # Namen sind oben schon ersetzt; hier geht es um IDs und Attribute. Kleingeschriebene
