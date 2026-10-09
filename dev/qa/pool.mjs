@@ -423,6 +423,25 @@ async function finishStep(s) {
     sec(t.end - t.start), t.logFile, t.locks.join('+') + (t.alone ? (t.locks.length ? '+' : '') + 'allein' : '')].join('\t') + '\n');
 }
 
+// ── Gegenprobe ───────────────────────────────────────────────────────────────────────────
+// Ein im Lauf roter Regress-/E2E-Test läuft gleich danach noch einmal einzeln: allein auf einem HA
+// (nichts anderes läuft dort), Grundzustand vorher hergestellt. Grün → „wackelt“: zählt als bestanden,
+// steht aber im Bericht (Wackler-Liste, .qa/wackler.log). Rot → echter Fehler. Höchstens GP_MAX je
+// Zustand; bei mehr roten Tests ist eher etwas kaputt als wackelig.
+const GP_MAX = Number(process.env.GATE_GEGENPROBE_MAX || 8);
+let gpCount = 0;
+function queueRetry(t) {
+  t.first = { out: t.out, start: t.start, end: t.end, rc: t.rc, lane: t.lane, logFile: t.logFile, alone: t.alone, pin: t.pin, deps: t.deps };
+  Object.assign(t, { gp: true, alone: true, pin: 0, deps: [] });
+}
+function settleRetry(t) {
+  const f = t.first, again = { ok: t.ok, out: t.out, start: t.start, end: t.end, lane: t.lane };
+  Object.assign(t, { out: f.out, start: f.start, end: f.end, rc: f.rc, lane: f.lane, logFile: f.logFile, alone: f.alone, pin: f.pin, deps: f.deps, gp: false, again });
+  t.ok = again.ok; t.wackelt = again.ok;
+  t.out = f.out.replace(/\n?$/, '\n') + `>>> Gegenprobe einzeln (${sec(again.end - again.start)} s${MULTI ? ', Test-HA ' + again.lane : ''}): ${again.ok ? 'grün – wackelt' : 'wieder rot'}\n`
+    + again.out.replace(/\n$/, '').split('\n').map((x) => '  | ' + x).join('\n') + '\n';
+  if (again.ok) try { fs.appendFileSync(path.join(REPO, '.qa', 'wackler.log'), `${new Date().toISOString()}\t${path.basename(LOGS)}\t${STATE}\t${t.id}\n`); } catch (e) { /* nur Statistik */ }
+}
 const pending = tasks.slice(), running = [], done = new Set(), stepJobs = [];
 let timer = null;
 await new Promise((resolveAll) => {
@@ -440,10 +459,15 @@ await new Promise((resolveAll) => {
         t.lane = l.n; t.laneObj = l;
         running.push(t); more = true;
         run(t).then((x) => {
-          running.splice(running.indexOf(x), 1); done.add(x);
-          console.log(`    · ${x.step.id} ${x.id.padEnd(30)} ${x.ok ? 'ok    ' : 'FEHLER'} ${String(sec(x.end - x.start)).padStart(4)} s  (+${sec(x.start - T0)}…${sec(x.end - T0)} s)${MULTI ? ' HA ' + x.lane : ''}${clock()}`);
-          // Schritte mit roten Tests warten auf die Gegenprobe (unten), die übrigen melden sich gleich.
-          if (x.step.tasks.every((y) => done.has(y)) && !x.step.tasks.some(retryable)) stepJobs.push(finishStep(x.step));
+          running.splice(running.indexOf(x), 1);
+          const wasGp = x.gp;
+          if (wasGp) settleRetry(x);
+          console.log(wasGp ? `    · Gegenprobe ${x.id.padEnd(30)} ${x.ok ? 'grün – wackelt' : 'wieder rot'} ${String(sec(x.again.end - x.again.start)).padStart(4)} s${MULTI ? ' HA ' + x.again.lane : ''}${clock()}`
+            : `    · ${x.step.id} ${x.id.padEnd(30)} ${x.ok ? 'ok    ' : 'FEHLER'} ${String(sec(x.end - x.start)).padStart(4)} s  (+${sec(x.start - T0)}…${sec(x.end - T0)} s)${MULTI ? ' HA ' + x.lane : ''}${clock()}`);
+          // Rot und nachprüfbar: gleich wieder einreihen – allein auf seinem HA, sobald es frei ist.
+          if (!wasGp && retryable(x) && gpCount < GP_MAX) { gpCount++; queueRetry(x); pending.push(x); }
+          else done.add(x);
+          if (x.step.tasks.every((y) => done.has(y))) stepJobs.push(finishStep(x.step));
           if (!pending.length && !running.length) { clearInterval(timer); resolveAll(); } else pump();
         });
         break;
@@ -467,32 +491,8 @@ await new Promise((resolveAll) => {
 });
 clearInterval(timer);
 
-// ── Gegenprobe ───────────────────────────────────────────────────────────────────────────
-// Ein im Lauf roter Regress-/E2E-Test läuft am Ende noch einmal einzeln (auf seinem HA läuft
-// nichts anderes, Grundzustand vorher hergestellt). Grün → „wackelt“: zählt als bestanden, steht
-// aber im Bericht (Wackler-Liste, .qa/wackler.log). Rot → echter Fehler. Bei vielen roten Tests
-// ist eher etwas kaputt als wackelig – dann keine Gegenprobe (spart Zeit).
-const GP_MAX = Number(process.env.GATE_GEGENPROBE_MAX || 8);
-const toRetry = tasks.filter(retryable);
-if (toRetry.length && GEGENPROBE && toRetry.length <= GP_MAX) {
-  console.log(`    Gegenprobe: ${toRetry.length} rote(r) Test(s) einzeln: ${toRetry.map((t) => t.id).join(', ')}${clock()}`);
-  const queue = toRetry.slice();
-  await Promise.all(LANES.filter((l) => l.up).map(async (l) => {
-    while (queue.length) {
-      const t = queue.shift();
-      const first = { out: t.out, start: t.start, end: t.end, rc: t.rc, lane: t.lane, logFile: t.logFile };
-      Object.assign(t, { gp: true, laneObj: l });
-      await run(t);
-      const again = { ok: t.ok, out: t.out, start: t.start, end: t.end, lane: l.n };
-      Object.assign(t, first, { gp: false, laneObj: t.laneObj });
-      t.ok = again.ok; t.wackelt = again.ok;
-      t.out = first.out.replace(/\n?$/, '\n') + `>>> Gegenprobe einzeln (${sec(again.end - again.start)} s${MULTI ? ', Test-HA ' + l.n : ''}): ${again.ok ? 'grün – wackelt' : 'wieder rot'}\n`
-        + again.out.replace(/\n$/, '').split('\n').map((x) => '  | ' + x).join('\n') + '\n';
-      console.log(`    · Gegenprobe ${t.id.padEnd(30)} ${again.ok ? 'grün – wackelt' : 'wieder rot'} ${String(sec(again.end - again.start)).padStart(4)} s${MULTI ? ' HA ' + l.n : ''}${clock()}`);
-      if (again.ok) try { fs.appendFileSync(path.join(REPO, '.qa', 'wackler.log'), `${new Date().toISOString()}\t${path.basename(LOGS)}\t${STATE}\t${t.id}\n`); } catch (e) { /* nur Statistik */ }
-    }
-  }));
-} else if (toRetry.length && GEGENPROBE) console.log(`    Gegenprobe ausgelassen: ${toRetry.length} rote Tests (> ${GP_MAX}) – eher ein echter Fehler als Wackeln`);
+const skipped = tasks.filter(retryable);
+if (skipped.length) console.log(`    Gegenprobe ausgelassen für ${skipped.length} rote Tests (mehr als ${GP_MAX} – eher ein echter Fehler als Wackeln): ${skipped.map((t) => t.id).join(', ')}`);
 for (const s of steps) if (s.tasks.length && !finished.has(s)) stepJobs.push(finishStep(s));
 await Promise.all(stepJobs);
 
