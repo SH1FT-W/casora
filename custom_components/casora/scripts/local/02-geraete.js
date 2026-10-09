@@ -3894,7 +3894,7 @@
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
         + 'return L && H ? H.more("vacuum", ["v_dock", "v_settings", "v_care", "v_stats", "v_run", "v_power"].map(function (k) {'
         + ' return L.inner(k, c, states); })) : "";', c.st);
-      return HH.layout({ entity: c.st, watch: watch, fields: f2, left: ['mode', 'rooms'], right: ['map', 'attn', 'more'] });
+      return HH.layout({ entity: c.st, watch: watch, fields: f2, left: ['rooms', 'mode'], right: ['map', 'attn', 'more'] });
     }
 
     var colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
