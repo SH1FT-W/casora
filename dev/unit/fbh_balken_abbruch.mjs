@@ -42,4 +42,13 @@ fire('touchstart', ev(barEl, 50));
 barEl.isConnected = false;
 fire('touchend', ev(barEl, 50));
 assert.equal(calls.length, 1, 'geschlossenes Popup: nichts einstellen');
+
+// Haus (1.2.2): Balken mit mehreren Räumen stellt alle in einem Aufruf ein.
+const grpEl = { ...barEl, isConnected: true, getAttribute: () => JSON.stringify({ id: ['climate.a', 'climate.b'], lo: 5, hi: 30, st: 0.5 }) };
+fire('touchstart', ev(grpEl, 50));
+fire('touchend', ev(grpEl, 50));
+assert.equal(calls.length, 2, 'Haus-Balken stellt ein');
+assert.deepEqual(calls[1][3], { entity_id: ['climate.a', 'climate.b'] }, 'Haus-Balken: alle Räume als Ziel');
+assert.match(src, /'Räume unterschiedlich · Ø', true\)/, 'Haus: Zieltemperatur mit Balken wie beim einzelnen Thermostat');
+assert.match(src, /id: tgt\.entity_id \}/, 'Balken übernimmt alle Ziele des Steppers');
 console.log('ok fbh_balken_abbruch');

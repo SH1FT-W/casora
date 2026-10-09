@@ -502,7 +502,8 @@
     + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);'
     + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);';
 
-  /* Zieltemperatur: Stepper (−/+) und optional der ziehbare Balken aus dem Thermostat-Popup. */
+  /* Zieltemperatur: Stepper (−/+) und optional der ziehbare Balken aus dem Thermostat-Popup.
+     Mehrere Ziele (Haus): Knöpfe und Balken stellen alle in einem Aufruf ein. */
   F.stepper = function (targets, value, a, label, withBar) {
     var UI = window._casoraUI, T = UI.tokens;
     var step = num(a.target_temp_step) || 0.5;
@@ -548,7 +549,7 @@
         +   'box-shadow:0 1px 4px rgba(0,0,0,.45);transition:left .15s ease;}'
         + '.fb-tb-s{display:flex;justify-content:space-between;font-size:12px;color:' + T.ink3 + ';margin-top:6px;font-variant-numeric:tabular-nums;}'
         + '</style>'
-        + '<div class="fb-tb" data-fb-bar="' + esc(JSON.stringify({ lo: lo, hi: hi, st: step, id: targets[0] })) + '">'
+        + '<div class="fb-tb" data-fb-bar="' + esc(JSON.stringify({ lo: lo, hi: hi, st: step, id: tgt.entity_id })) + '">'
         + '<div class="fb-tb-t"><div class="fb-tb-k" style="left:' + k + '%"></div></div>'
         + '<div class="fb-tb-s"><span>' + fmt(lo) + ' ' + TU() + '</span><span>' + fmt(hi) + ' ' + TU() + '</span></div></div>';
     }
@@ -634,8 +635,9 @@
     }
 
     if (name === 'house') {
-      /* Zieltemperatur für alle Räume, die gerade an sind. Unterschiedliche Werte:
-         Anzeige = gerundeter Mittelwert, −/+ setzt alle auf denselben Wert. */
+      /* Zieltemperatur für alle Räume, die gerade an sind, aufgebaut wie beim einzelnen Raum
+         (Stepper, darunter der Balken). Unterschiedliche Werte: Anzeige = gerundeter Mittelwert,
+         −/+ und Balken setzen alle auf denselben Wert. */
       var act = c.rooms.concat(c.trvs).filter(function (r) { var s = states[r.id]; return s && s.state !== 'off' && s.state !== 'unavailable'; });
       /* Popup-Standard (24.09.2026): Überschrift wie überall „Modus“ (vorher „Ganzes Haus“). */
       var out = F.modes(c.id, states, true, 'Modus');
@@ -654,10 +656,10 @@
           var st = num(a.target_temp_step) || 0.5;
           var same = ts.every(function (t) { return t === ts[0]; });
           var avg = Math.round(ts.reduce(function (s, t) { return s + t; }, 0) / ts.length / st) * st;
-          out += '<div style="height:12px"></div>'
+          out += '<div style="height:18px"></div>'
             + F.stepper(act.map(function (r) { return r.id; }), same ? ts[0] : avg,
               { target_temp_step: st, min_temp: a.min_temp, max_temp: a.max_temp },
-              same ? 'Zieltemperatur alle Räume' : 'Räume unterschiedlich · Ø', false);
+              same ? 'Zieltemperatur alle Räume' : 'Räume unterschiedlich · Ø', true);
         }
       }
       return out;
