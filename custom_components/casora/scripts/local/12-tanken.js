@@ -335,34 +335,88 @@
         + '<div style="font-size:12px;font-weight:500;color:' + k.SUB + '">' + (x.d != null ? esc(km(x.d)) : '&nbsp;') + '</div></div>';
     }).join('') + '</div>';
   };
-  // Umkreis, eigener Standort und Preise als Pillen (SVG). at(p) → [x, y] in Pixeln; onMap: über der HA-Karte
-  // (ohne eigenen Grund, Pillen mit leichtem Schatten).
-  var pins = function (I, k, W, H, at, c, rad, onMap) {
-    var cx = c[0], cy = c[1];
-    var s = '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="' + rad.toFixed(1) + '" fill="' + k.ACC + '" opacity="' + (onMap ? '.12' : '.10') + '"/>'
-      + '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="' + (onMap ? rad : rad / 2).toFixed(1) + '" fill="none" stroke="' + k.ACC + '" stroke-opacity="' + (onMap ? '.45' : '.18') + '" stroke-width="1.5"/>';
-    var best = I.stations.filter(function (x) { return x.o; })[0];
-    // Günstigste zuerst platzieren (behält ihren Ort), überlappende Pillen weichen senkrecht aus;
-    // gezeichnet wird umgekehrt, damit die günstigste oben liegt.
-    var placed = [];
-    var fits = function (x, y) { return placed.every(function (q) { return Math.abs(q.x - x) > 70 || Math.abs(q.y - y) > 31; }); };
-    I.stations.map(function (p) { var xy = at(p); return xy ? { p: p, xy: xy } : null; }).filter(Boolean)
-      .sort(function (a, b) { return a.p.p - b.p.p; }).slice(0, 14).forEach(function (e) {
-        var cl = function (x, y) { return [Math.max(38, Math.min(W - 38, x)), Math.max(18, Math.min(H - 18, y))]; };
-        var x0 = e.xy[0], y0 = e.xy[1], at0 = cl(x0, y0);
-        var MOVES = [[0, 32], [0, -32], [72, 0], [-72, 0], [72, 32], [-72, 32], [72, -32], [-72, -32], [0, 64], [0, -64], [144, 0], [-144, 0]];
-        for (var t = 0; t < MOVES.length && !fits(at0[0], at0[1]); t++) at0 = cl(x0 + MOVES[t][0], y0 + MOVES[t][1]);
-        placed.push({ p: e.p, x: at0[0], y: at0[1] });
-      });
-    var shadow = onMap ? ' style="filter:drop-shadow(0 1px 2px rgba(0,0,0,' + (k.dark ? '.5' : '.22') + '))"' : '';
-    placed.reverse().forEach(function (q) {
-      var p = q.p, x = q.x, y = q.y, w = 66, hh = 28, isBest = p === best;
-      s += '<g class="ct-pin"' + (p.o ? '' : ' opacity="' + (onMap ? '.8' : '.55') + '"') + shadow + '><rect x="' + (x - w / 2).toFixed(1) + '" y="' + (y - hh / 2).toFixed(1) + '" width="' + w + '" height="' + hh + '" rx="14" fill="'
-        + (isBest ? k.GOOD : (k.dark ? '#4A423B' : '#FFFDF9')) + '"/>'
-        + '<text x="' + x.toFixed(1) + '" y="' + (y + 1).toFixed(1) + '" text-anchor="middle" dominant-baseline="middle" font-size="13.5" font-weight="700" '
-        + 'font-family="Inter,-apple-system,system-ui,sans-serif" fill="' + (isBest ? '#fff' : (k.dark ? '#EEE8E1' : '#3A322B')) + '">' + esc(price(p.p)) + '</text></g>';
+  // Fläche der Karte (Punktkarte und HA-Karte gleich, 1.2.1): unten Platz für den OSM-Hinweis (ATT), Mitte um
+  // dessen halbe Höhe nach oben, Umkreis = halbe kleinere Restseite abzüglich Rand.
+  var ATT = 20;
+  var frame = function (W, H) { return { cx: W / 2, cy: (H - ATT) / 2, r: Math.max(20, Math.min(W, H - ATT) / 2 - 8) }; };
+  /* Umkreis, Stationen und Preise (SVG, 1.2.1 Entwurf A). at(p) → [x, y] in Pixeln; onMap: über der HA-Karte
+     (Pillen mit leichtem Schatten); avoid: Rechteck des OSM-Hinweises { x, y, w, h } oder null.
+     Jede Station ist ein Punkt am echten Ort (günstigster Preis grün, geschlossen gestrichelt, mehrere am selben
+     Ort mit Doppelring). Nur die 4 günstigsten Orte bekommen eine Preis-Pille neben dem Punkt mit kurzem Strich;
+     Pillen weichen einander, dem Standort, der km-Angabe und dem OSM-Hinweis aus und bleiben ganz in der Fläche.
+     Passt eine nirgends hin, bleibt nur der Punkt. */
+  var pins = function (I, k, W, H, at, c, rad, onMap, avoid) {
+    var cx = c[0], cy = c[1], f1 = function (n) { return (+n).toFixed(1); };
+    var SUBC = k.dark ? 'rgba(238,232,225,.62)' : 'rgba(58,50,43,.55)', MUTE = k.dark ? '#D8D0C7' : '#6B5F55';
+    var RING = k.dark ? '#2A2420' : '#fff', FONT = 'font-family="Inter,-apple-system,system-ui,sans-serif"';
+    var s = '<circle class="ct-reach" cx="' + f1(cx) + '" cy="' + f1(cy) + '" r="' + f1(rad) + '" fill="' + k.ACC + '" opacity="' + (onMap ? '.10' : '.08') + '"/>'
+      + '<circle cx="' + f1(cx) + '" cy="' + f1(cy) + '" r="' + f1(rad) + '" fill="none" stroke="' + k.ACC + '" stroke-opacity="' + (onMap ? '.5' : '.3') + '" stroke-width="1.5"/>';
+    // km-Angabe rechts oben am Kreis (nur wenn sie in die Fläche passt).
+    var lab = null;
+    if (I.radius) {
+      lab = { x: cx + rad * 0.707 + 4, y: cy - rad * 0.707 - 4, w: 36, h: 13 };
+      if (lab.x + lab.w > W - 4 || lab.y - lab.h < 2) lab = null;
+      else s += '<text class="ct-km" x="' + f1(lab.x) + '" y="' + f1(lab.y) + '" font-size="10.5" font-weight="600" ' + FONT + ' fill="' + SUBC + '">' + esc(fmt(I.radius, 0) + ' km') + '</text>';
+    }
+    // Stationen nach Ort bündeln (gleicher Ort = ein Punkt); je Ort zählt die offene günstigste.
+    var groups = [];
+    I.stations.forEach(function (p) {
+      var xy = at(p);
+      if (!xy) return;
+      var g = groups.filter(function (q) { return Math.abs(q.xy[0] - xy[0]) < 2 && Math.abs(q.xy[1] - xy[1]) < 2; })[0];
+      if (g) g.items.push(p); else groups.push({ xy: xy, items: [p] });
     });
-    return s + '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="6" fill="' + k.ACC + '" stroke="#fff" stroke-width="3"/>';
+    groups.forEach(function (g) { g.best = g.items.slice().sort(function (a, b) { return (a.o === b.o ? 0 : a.o ? -1 : 1) || a.p - b.p; })[0]; });
+    var open = I.stations.filter(function (x) { return x.o; });
+    var minP = open.length ? Math.min.apply(null, open.map(function (x) { return x.p; })) : null;
+    var isMin = function (p) { return p.o && minP != null && Math.abs(p.p - minP) < 0.0005; };
+    var pillG = groups.filter(function (g) { return g.best.o; })
+      .sort(function (a, b) { return a.best.p - b.best.p || (a.best.d == null ? 99 : a.best.d) - (b.best.d == null ? 99 : b.best.d); }).slice(0, 4);
+    // Pillen platzieren: 8 Richtungen in zwei Abständen, harte Regeln (Fläche, Hinweis, Standort, andere Pillen),
+    // sonst möglichst wenig andere Punkte verdecken und nah am eigenen Punkt.
+    var pw = 54, ph = 24, gap = 7, placed = [];
+    var over = function (x, y, r) { return x + pw / 2 > r.x && x - pw / 2 < r.x + r.w && y + ph / 2 > r.y && y - ph / 2 < r.y + r.h; };
+    var ok = function (x, y) {
+      if (x - pw / 2 < 6 || x + pw / 2 > W - 6 || y - ph / 2 < 6 || y + ph / 2 > H - 6) return false;
+      if (avoid && over(x, y, { x: avoid.x - 3, y: avoid.y - 3, w: avoid.w + 6, h: avoid.h + 6 })) return false;
+      if (over(x, y, { x: cx - 10, y: cy - 10, w: 20, h: 20 })) return false;
+      return placed.every(function (q) { return Math.abs(q.x - x) >= pw + 4 || Math.abs(q.y - y) >= ph + 3; });
+    };
+    var DIRS = [[0, -1], [0, 1], [1, 0], [-1, 0], [1, -1], [-1, -1], [1, 1], [-1, 1]];
+    pillG.forEach(function (g) {
+      var best = null;
+      [1, 1.6].forEach(function (dist) {
+        DIRS.forEach(function (d) {
+          var y = g.xy[1] + d[1] * (ph / 2 + gap) * dist;
+          var x = d[0] && !d[1] ? g.xy[0] + d[0] * (pw / 2 + gap) * dist : g.xy[0] + d[0] * (pw / 2) * 0.9 * dist;
+          if (!ok(x, y)) return;
+          var hits = groups.filter(function (q) { return q !== g && Math.abs(q.xy[0] - x) < pw / 2 + 5 && Math.abs(q.xy[1] - y) < ph / 2 + 5; }).length;
+          var sc = hits * 3 + (lab && over(x, y, { x: lab.x, y: lab.y - lab.h, w: lab.w, h: lab.h }) ? 3 : 0) + dist + (d[0] && d[1] ? 0.4 : 0) + (d[1] > 0 ? 0.2 : 0);
+          if (!best || sc < best.sc) best = { x: x, y: y, sc: sc };
+        });
+      });
+      if (best) placed.push({ g: g, x: best.x, y: best.y });
+    });
+    // Striche, dann Punkte, dann Pillen (günstigste zuletzt, liegt oben).
+    placed.forEach(function (q) {
+      var ex = Math.max(q.x - pw / 2, Math.min(q.x + pw / 2, q.g.xy[0])), ey = Math.max(q.y - ph / 2, Math.min(q.y + ph / 2, q.g.xy[1]));
+      s += '<line x1="' + f1(q.g.xy[0]) + '" y1="' + f1(q.g.xy[1]) + '" x2="' + f1(ex) + '" y2="' + f1(ey) + '" stroke="' + (isMin(q.g.best) ? k.GOOD : MUTE) + '" stroke-width="1.4" stroke-opacity=".8"/>';
+    });
+    groups.forEach(function (g) {
+      var on = placed.some(function (q) { return q.g === g; }), b = g.best, col = !b.o ? 'none' : isMin(b) ? k.GOOD : MUTE;
+      s += '<circle class="ct-dot" cx="' + f1(g.xy[0]) + '" cy="' + f1(g.xy[1]) + '" r="' + (on ? 5 : 4) + '" fill="' + col + '" stroke="' + (b.o ? RING : SUBC) + '" stroke-width="' + (b.o ? 1.6 : 1.4) + '"'
+        + (b.o ? '' : ' stroke-dasharray="2 1.6"') + ' opacity="' + (on || isMin(b) || !b.o ? 1 : 0.75) + '"/>';
+      if (g.items.length > 1) s += '<circle cx="' + f1(g.xy[0]) + '" cy="' + f1(g.xy[1]) + '" r="' + (on ? 8 : 7) + '" fill="none" stroke="' + (col === 'none' ? SUBC : col) + '" stroke-width="1.3" opacity=".7"/>';
+    });
+    var shadow = onMap ? ' style="filter:drop-shadow(0 1px 2px rgba(0,0,0,' + (k.dark ? '.5' : '.22') + '))"' : '';
+    placed.slice().reverse().forEach(function (q) {
+      var b = q.g.best, m = isMin(b), t = price(b.p);
+      s += '<g class="ct-pin"' + shadow + '><rect x="' + f1(q.x - pw / 2) + '" y="' + f1(q.y - ph / 2) + '" width="' + pw + '" height="' + ph + '" rx="' + ph / 2 + '" fill="'
+        + (m ? k.GOOD : (k.dark ? '#4A423B' : '#FFFDF9')) + '"/>'
+        + '<text x="' + f1(q.x) + '" y="' + f1(q.y + 1) + '" text-anchor="middle" dominant-baseline="middle" font-size="13" font-weight="700" ' + FONT + ' fill="' + (m ? '#fff' : (k.dark ? '#EEE8E1' : '#3A322B')) + '">'
+        + esc(t.slice(0, -1)) + '<tspan font-size="8.8" dy="-4.2">' + esc(t.slice(-1)) + '</tspan></text></g>';
+    });
+    return s + '<circle cx="' + f1(cx) + '" cy="' + f1(cy) + '" r="6" fill="' + k.ACC + '" stroke="#fff" stroke-width="3"/>';
   };
   var reachOf = function (I, pts) {
     return I.radius || Math.max.apply(null, pts.map(function (x) { return Math.max(Math.abs(x.x), Math.abs(x.y)); }).concat([1]));
@@ -372,9 +426,9 @@
     var pts = I.stations.filter(function (x) { return x.x != null && x.y != null; });
     if (!pts.length) return '';
     // Bildfläche im Seitenverhältnis der Spalte (sonst schneidet „slice“ oben/unten Pillen ab).
-    var H = h, W = Math.max(H, Math.round(w || 300)), cx = W / 2, cy = H / 2;
+    var H = h, W = Math.max(H, Math.round(w || 300)), F = frame(W, H), cx = F.cx, cy = F.cy;
     var reach = reachOf(I, pts);
-    var sc = (H * 0.46) / reach;
+    var sc = F.r / reach;
     var ground = k.dark ? 'rgba(255,255,255,0.045)' : 'rgba(140,115,90,0.10)';
     var line = k.dark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.75)';
     return '<div class="ct-mapbox" style="position:relative;height:' + h + 'px;border-radius:' + k.RAD + ';overflow:hidden">'
@@ -382,7 +436,7 @@
       + '<rect width="' + W + '" height="' + H + '" fill="' + ground + '"/>'
       + '<line x1="0" y1="' + cy + '" x2="' + W + '" y2="' + cy + '" stroke="' + line + '" stroke-width="3"/>'
       + '<line x1="' + cx + '" y1="0" x2="' + cx + '" y2="' + H + '" stroke="' + line + '" stroke-width="3"/>'
-      + pins(I, k, W, H, function (p) { return p.x != null && p.y != null ? [cx + p.x * sc, cy - p.y * sc] : null; }, [cx, cy], reach * sc, false)
+      + pins(I, k, W, H, function (p) { return p.x != null && p.y != null ? [cx + p.x * sc, cy - p.y * sc] : null; }, [cx, cy], reach * sc, false, null)
       + '</svg></div>';
   };
 
@@ -410,15 +464,15 @@
     if (p.x == null || p.y == null || !I.center) return null;
     return [I.center[0] + p.y / 110.57, I.center[1] + p.x / (111.32 * Math.cos(I.center[0] * Math.PI / 180))];
   };
-  // Zoom, bei dem der Umkreis wie bei der Punktkarte 92 % der kleineren Seite füllt.
+  // Zoom (Leaflet-Zählung), bei dem der Umkreis wie bei der Punktkarte den Radius aus frame() hat.
   var zoomFor = function (lat, reachKm, W, H) {
-    var mpp = reachKm * 1000 / (0.46 * Math.min(W, H));
+    var mpp = reachKm * 1000 / frame(W, H).r;
     return Math.max(3, Math.min(17, Math.log(156543.03 * Math.cos(lat * Math.PI / 180) / mpp) / Math.LN2));
   };
   var hmStyle = '#map{background:transparent;border-radius:inherit;overflow:hidden}.leaflet-map-pane{filter:var(--ct-filter,none)}'
     + ':host{border-radius:inherit;overflow:hidden}.leaflet-control-zoom,.leaflet-control-scale{display:none!important}'
     + '.leaflet-control-attribution{font-size:9px!important;line-height:1.3!important;padding:1px 6px!important;border-radius:8px 0 0 0;'
-    + 'background:rgba(255,255,255,.6)!important;color:#555!important;pointer-events:auto}#map.dark .leaflet-control-attribution{background:rgba(0,0,0,.45)!important;color:#bbb!important}'
+    + 'background:var(--ct-att-bg)!important;color:var(--ct-att-fg)!important;pointer-events:auto}'
     + '.leaflet-control-attribution a{color:inherit!important}';
   // HA 2026.10: ha-map zeichnet direkt mit MapLibre (kein Leaflet mehr, m._engine._map). Gleiche Schnittstelle
   // wie Leaflet für syncMap; MapLibre zählt Zoom in 512er-Kacheln (eine Stufe weniger als Leaflet).
@@ -432,10 +486,11 @@
       invalidateSize: function () { ml.resize(); },
       setView: function (c, z) { ml.jumpTo({ center: [c[1], c[0]], zoom: z - 1 }); },
       latLngToContainerPoint: function (ll) { var q = ml.project([ll[1], ll[0]]); return { x: q.x, y: q.y }; },
+      containerPointToLatLng: function (pt) { var q = ml.unproject(pt); return { lat: q.lat, lng: q.lng }; },
     };
   };
   var hmStyleMl = '.maplibregl-canvas{filter:var(--ct-filter,none)}.maplibregl-ctrl-top-left,.maplibregl-ctrl-top-right,.maplibregl-ctrl-scale{display:none!important}'
-    + '.maplibregl-ctrl-attrib{font-size:9px!important;line-height:1.3!important;padding:1px 6px!important;border-radius:8px 0 0 0;background:rgba(255,255,255,.6)!important;color:#555!important}'
+    + '.maplibregl-ctrl-attrib{font-size:9px!important;line-height:1.3!important;padding:1px 6px!important;border-radius:8px 0 0 0;background:var(--ct-att-bg)!important;color:var(--ct-att-fg)!important}'
     + '.maplibregl-ctrl-attrib a{color:inherit!important}.maplibregl-ctrl-attrib-button{display:none!important}';
   var hmCreate = function (v) {
     var layer = document.createElement('div');
@@ -496,7 +551,7 @@
         }
         // Sichtbar, sobald Kacheln da sind und die Karte fertig gezeichnet hat.
         var done = (lm || mlx) && hm.tiles > 0 && (!hm.ml || hm.ml.loaded());
-        if (done) { clearInterval(wait); layer.dataset.state = 'ok'; layer.style.opacity = '1'; return; }
+        if (done) { clearInterval(wait); layer.dataset.state = 'ok'; layer.style.opacity = '1'; hm.key = null; syncMap(); return; }
         if (Date.now() - t0 > 12000) {
           clearInterval(wait);
           layer.dataset.state = 'fehler';
@@ -530,6 +585,8 @@
     var m = hm.el, lm = lmOf(m);
     // Filter nur auf der Kartenfläche (auf dem ganzen Element bricht er am Handy die runden Ecken).
     if (m) m.style.setProperty('--ct-filter', k.dark ? 'saturate(.5) brightness(.9)' : 'saturate(.45) contrast(.9) brightness(1.02)');
+    // OSM-Hinweis: im Dunkelmodus dunkel hinterlegt (1.2.1).
+    if (m) { m.style.setProperty('--ct-att-bg', k.dark ? 'rgba(28,24,21,.72)' : 'rgba(255,255,255,.6)'); m.style.setProperty('--ct-att-fg', k.dark ? '#bdb3a9' : '#555'); }
     // Schleier in Popup-Farbe über der Karte, unter den Pillen.
     var wash = hm.layer.querySelector('.ct-hamap-wash');
     if (!wash) { wash = document.createElement('div'); wash.className = 'ct-hamap-wash'; wash.style.cssText = 'position:absolute;inset:0;pointer-events:none;'; hm.layer.insertBefore(wash, hm.layer.querySelector('svg.ct-hamap-pins')); }
@@ -542,9 +599,18 @@
     if (view !== hm.view) {
       hm.view = view;
       lm.invalidateSize({ animate: false });
-      lm.setView(I.center, zoomFor(I.center[0], reach, W, H), { animate: false });
+      var z = zoomFor(I.center[0], reach, W, H);
+      lm.setView(I.center, z, { animate: false });
+      // Mitte um die halbe Höhe des OSM-Hinweises nach oben (wie frame()).
+      var sh = lm.containerPointToLatLng([W / 2, H / 2 + ATT / 2]);
+      if (sh) lm.setView([sh.lat, sh.lng], z, { animate: false });
     }
-    var key = view + '|' + k.dark + '|' + JSON.stringify(pts.map(function (x) { return [x.p, x.o, geo(I, x)]; }));
+    // OSM-Hinweis messen (Pillen weichen ihm aus); noch nicht gezeichnet → rechts unten angenommen.
+    var at = m && m.shadowRoot && m.shadowRoot.querySelector('.maplibregl-ctrl-attrib, .leaflet-control-attribution');
+    var lr = hm.layer.getBoundingClientRect(), ar = at ? at.getBoundingClientRect() : null;
+    var avoid = ar && ar.width > 0 ? { x: Math.round(ar.left - lr.left), y: Math.round(ar.top - lr.top), w: Math.round(ar.width), h: Math.round(ar.height) }
+      : { x: W - Math.min(W, 200), y: H - 16, w: Math.min(W, 200), h: 16 };
+    var key = view + '|' + k.dark + '|' + JSON.stringify(avoid) + '|' + JSON.stringify(pts.map(function (x) { return [x.p, x.o, geo(I, x)]; }));
     if (key === hm.key) return;
     hm.key = key;
     var pt = function (ll) { var q = lm.latLngToContainerPoint(ll); return [q.x, q.y]; };
@@ -557,7 +623,7 @@
       hm.layer.appendChild(svg);
     }
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-    svg.innerHTML = pins(I, k, W, H, function (p) { var g = geo(I, p); return g ? pt(g) : null; }, c, Math.abs(c[1] - north[1]), true);
+    svg.innerHTML = pins(I, k, W, H, function (p) { var g = geo(I, p); return g ? pt(g) : null; }, c, Math.abs(c[1] - north[1]), true, avoid);
   };
   var LEAD = 'casora-tank-logo:';
   var SORTS = [['guenstig', 'Günstigste'], ['naechste', 'Nächste'], ['offen', 'Offen']];
@@ -605,7 +671,7 @@
         + '<div style="font-size:13px;font-weight:500;color:' + k.SUB + ';line-height:1.45;margin-top:6px">' + esc(why) + '</div></div>' + sp(18) + foot + '</div>';
     }
     var L = UI.label('Empfehlung') + verdict(A, I, k) + (day(I, A, k) ? sp(10) + day(I, A, k) : '') + sp(18) + UI.label('Am günstigsten') + top3(I, k);
-    var m = map(I, k, wide ? 190 : 160, bw ? (wide ? (bw - 26) / 2 : bw) : 0);
+    var m = map(I, k, wide ? 220 : 200, bw ? (wide ? (bw - 26) / 2 : bw) : 0);
     var seg = '<div class="ct-seg">' + UI.segments(SORTS.map(function (s) { return { label: s[1], active: s[0] === sort }; }), null) + '</div>';
     var R = UI.label('In der Nähe') + (m ? m + sp(12) : '') + seg + sp(12) + '<div class="ct-list">' + list(I, sort) + '</div>';
     return '<div style="font-family:' + k.T.font + '">' + head + (wide

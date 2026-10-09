@@ -8,12 +8,16 @@
 // fehlt die Zeile ganz. Studio › Einstellungen › „Tanken“ mit Link zur Registrierung, maskiertem
 // Schlüsselfeld, Test-Abruf, Umkreis und Kraftstoff je Auto.
 // Karte (1.2): mit Mittelpunkt (Attribut center) liegt HAs eigene Karte (ha-map) unter Umkreis und Pillen, die
-// Pillen sitzen an den echten Koordinaten; lädt sie nicht (kein map_tiles, keine Kacheln), bleibt die
+// Stationen sitzen an den echten Koordinaten; lädt sie nicht (kein map_tiles, keine Kacheln), bleibt die
 // Punktkarte – nie eine leere Fläche. Ohne center (älterer Stand) nur die Punktkarte.
 // Logos (1.2, Wunsch 08.10.2026 „fehlen zu viele, nicht richtig eingebunden“): Marken mit Zusatz („Pludra Musterstadt“)
 // werden erkannt, alle Logos sitzen gleich groß im selben hellen Kreis, ein Platzhalter (16-px-Globus) oder ein
 // Ladefehler fällt auf das Kürzel zurück, freie Tankstellen zeigen die Zapfsäule statt eines Kürzels. Die Logo-Adressen
 // werden im Test abgefangen (eigenes Bild), damit nichts vom Netz abhängt.
+// Karte 1.2.1 (Entwurf A): Fläche 200 px am Handy, 220 px am Desktop; Zoom aus Radius und Fläche, der Kreis hat
+// genau den eingestellten Radius; jede Station ist ein Punkt am echten Ort, höchstens 4 Preis-Pillen (günstigste
+// Orte), ganz in der Fläche, ohne Überlappung, nicht auf dem OSM-Hinweis. Szene mit vielen Stationen (gleiche
+// Preise, zwei am selben Ort, eine zu, mehrere am Rand) für HA-Karte und Punktkarte.
 // Der Tank-Sensor wird nur im Browser untergeschoben (erfundene Stationen), nichts wird in HA gespeichert.
 import zlib from 'node:zlib';
 import { open, casoraDashboards, dashboard, studioDashboard, studio, check, need, finish, fakeStates, usePage } from './lib.mjs';
@@ -32,6 +36,22 @@ const stations = [
   { n: 'Stadttankstelle Gartenstraße', b: 'ARAL', p: 1.739, o: true, d: 0.9, x: -0.7, y: 0.5 },
   { n: 'Tankhof Lindenallee', b: 'Tankhof', p: 1.749, o: false, d: 3.4, x: -3.0, y: -1.6 },
 ].map((s) => ({ ...s, lat: +(CENTER[0] + s.y / 110.57).toFixed(4), lng: +(CENTER[1] + s.x / (111.32 * Math.cos(CENTER[0] * Math.PI / 180))).toFixed(4) }));
+// Viele Stationen (1.2.1): gleiche Preise, zwei am selben Ort, eine zu, mehrere knapp am Rand des 5-km-Umkreises.
+const crowd = [
+  { n: 'Tankstelle West', b: 'JET', p: 1.659, o: true, x: -3.3, y: -3.5 },
+  { n: 'Tankstelle Markt', b: 'ARAL', p: 1.669, o: true, x: 1.0, y: 0.9 },
+  { n: 'Tankstelle Bahnhof', b: 'Shell', p: 1.679, o: true, x: 1.0, y: 0.9 },
+  { n: 'Tankstelle Süd', b: 'Q1', p: 1.669, o: true, x: 2.8, y: -3.0 },
+  { n: 'Tankstelle Südost', b: 'Wiro', p: 1.669, o: true, x: 2.3, y: -4.3 },
+  { n: 'Tankstelle Südring', b: 'Pludra', p: 1.669, o: true, x: 1.6, y: -4.7 },
+  { n: 'Tankstelle Lindenweg', b: 'Freie', p: 1.679, o: false, x: 0.1, y: 0.4 },
+  { n: 'Tankstelle Nordheim', b: 'Freie', p: 1.679, o: true, x: 0.05, y: 2.3 },
+  { n: 'Tankstelle Ost', b: 'ARAL', p: 1.679, o: true, x: 3.5, y: 3.5 },
+  { n: 'Tankstelle Autobahn Ost', b: 'ARAL', p: 1.839, o: true, x: -1.1, y: -3.2 },
+  { n: 'Tankstelle Autobahn West', b: 'ARAL', p: 1.859, o: true, x: -1.2, y: -3.15 },
+  { n: 'Tankstelle Nordost', b: 'HEM', p: 1.689, o: true, x: 3.4, y: 3.6 },
+].map((s) => ({ ...s, d: Math.round(Math.hypot(s.x, s.y) * 10) / 10, lat: +(CENTER[0] + s.y / 110.57).toFixed(5), lng: +(CENTER[1] + s.x / (111.32 * Math.cos(CENTER[0] * Math.PI / 180))).toFixed(5) }))
+  .sort((a, b) => (a.o === b.o ? 0 : a.o ? -1 : 1) || a.p - b.p || a.d - b.d);
 // Logo-Szene: Marken mit Zusätzen; Shell bekommt den Platzhalter, Wiro einen Ladefehler.
 const logoStations = [
   { n: 'Pludra Musterstadt', b: 'Pludra Musterstadt', p: 1.659 }, { n: 'Freie Tankstelle Am Markt', b: 'freie Tankstelle', p: 1.669 },
@@ -93,6 +113,8 @@ const mapState = (pg) => pg.evaluate(async () => {
     const dot = Array.from(layer.querySelectorAll('svg.ct-hamap-pins circle[r="6"]')).pop();
     if (dot) { const r = dot.getBoundingClientRect(); out.dot = [r.left + r.width / 2, r.top + r.height / 2]; }
     out.hasMap = !!m;
+    const ar = m && m.shadowRoot && m.shadowRoot.querySelector('.maplibregl-ctrl-attrib, .leaflet-control-attribution');
+    if (ar) { const r = ar.getBoundingClientRect(); out.att = { x: r.left, y: r.top, w: r.width, h: r.height, bg: getComputedStyle(ar).backgroundColor }; }
     window.__qaMapEl = m;
     if (m && m.leafletMap) {
       const lm = m.leafletMap;
@@ -105,6 +127,10 @@ const mapState = (pg) => pg.evaluate(async () => {
       out.zoomCtl = !!m.shadowRoot.querySelector('.leaflet-control-zoom') && getComputedStyle(m.shadowRoot.querySelector('.leaflet-control-zoom')).display !== 'none';
       out.attribution = (m.shadowRoot.querySelector('.leaflet-control-attribution') || { textContent: '' }).textContent.trim();
       out.dragging = lm.dragging && lm.dragging.enabled();
+      const q = (ll) => { const r = lm.latLngToContainerPoint(ll); return [out.layer.x + r.x, out.layer.y + r.y]; };
+      out.expectDots = st.map((x) => q([x.lat, x.lng]));
+      const ce = sensor.attributes.center, cN = q(ce), nN = q([ce[0] + sensor.attributes.radius_km / 110.57, ce[1]]);
+      out.expectR = Math.abs(cN[1] - nN[1]);
     } else if (m && m._engine && m._engine._map && m._engine._map.project) {
       // HA 2026.10: ha-map zeichnet direkt mit MapLibre (Längengrad zuerst).
       const ml = m._engine._map;
@@ -119,10 +145,45 @@ const mapState = (pg) => pg.evaluate(async () => {
       out.zoomCtl = !!zc && zc.getBoundingClientRect().width > 0;
       out.attribution = (m.shadowRoot.querySelector('.maplibregl-ctrl-attrib') || { textContent: '' }).textContent.trim();
       out.dragging = ml.dragPan.isEnabled();
+      const q = (ll) => { const r = ml.project([ll[1], ll[0]]); return [out.layer.x + r.x, out.layer.y + r.y]; };
+      out.expectDots = st.map((x) => q([x.lat, x.lng]));
+      const cN = q(ce), nN = q([ce[0] + sensor.attributes.radius_km / 110.57, ce[1]]);
+      out.expectR = Math.abs(cN[1] - nN[1]);
     }
   }
   return out;
 });
+
+// Geometrie der sichtbaren Karte (HA-Karte, sonst Punktkarte): Fläche, Kreis, Standort, Punkte, Pillen (Bildschirm-Pixel).
+const geom = (pg, which) => pg.evaluate((which) => {
+  const s = window.casoraPopup && window.casoraPopup.surface;
+  const one = (q) => window.__pierce(q, s)[0] || null;
+  const svg = which === 'ha' ? one('svg.ct-hamap-pins') : one('svg.ct-map');
+  if (!svg) return null;
+  const R = (e) => { const r = e.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; };
+  const mid = (e) => { const r = e.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+  const area = R(which === 'ha' ? one('.ct-hamap') : one('.ct-mapbox'));
+  const reach = svg.querySelector('circle.ct-reach');
+  const dot = Array.from(svg.querySelectorAll('circle[r="6"]')).pop();
+  return { area, r: reach ? reach.getBoundingClientRect().width / 2 : null, center: dot ? mid(dot) : null,
+    dots: Array.from(svg.querySelectorAll('circle.ct-dot')).map(mid),
+    rings: Array.from(svg.querySelectorAll('circle')).filter((c) => c.getAttribute('fill') === 'none' && /^[78]$/.test(c.getAttribute('r'))).length,
+    dashed: svg.querySelectorAll('circle.ct-dot[stroke-dasharray]').length,
+    pills: Array.from(svg.querySelectorAll('g.ct-pin')).map((g) => ({ t: g.textContent.trim(), ...R(g.querySelector('rect')) })) };
+}, which);
+// Prüfungen für Entwurf A an einer gemessenen Karte; exp: erwartete Punkte und Radius in Bildschirm-Pixeln.
+const checkA = async (name, g, exp, att) => {
+  const pills = (g && g.pills) || [];
+  await check(name + ': höchstens 4 Preis-Pillen, mindestens eine', pills.length >= 1 && pills.length <= 4, pills);
+  await check(name + ': jede Pille ganz in der Fläche', pills.every((q) => q.x >= g.area.x - 0.5 && q.y >= g.area.y - 0.5 && q.x + q.w <= g.area.x + g.area.w + 0.5 && q.y + q.h <= g.area.y + g.area.h + 0.5), { area: g && g.area, pills });
+  const ov = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+  await check(name + ': Pillen überlappen nicht', pills.every((a, i) => pills.every((b, j) => i === j || !ov(a, b))), pills);
+  await check(name + ': Pillen liegen nicht auf dem Standort', g && g.center && pills.every((q) => !ov(q, { x: g.center[0] - 6, y: g.center[1] - 6, w: 12, h: 12 })), { center: g && g.center, pills });
+  if (att && att.w > 0) await check(name + ': Pillen liegen nicht auf dem OSM-Hinweis', pills.every((q) => !ov(q, att)), { att, pills });
+  const miss = exp.dots.filter((e) => !g.dots.some((d) => Math.abs(d[0] - e[0]) <= 2.5 && Math.abs(d[1] - e[1]) <= 2.5));
+  await check(name + ': jede Station als Punkt an ihrem Ort (±2,5 px)', g && g.dots.length > 0 && !miss.length, { miss, dots: g && g.dots.length });
+  await check(name + ': Kreisradius = Radius-Einstellung (±2 px)', g && g.r != null && Math.abs(g.r - exp.r) <= 2, { r: g && g.r, exp: exp.r });
+};
 
 // Kachel im Browser anlegen (Auto über seine Reichweite), Dienstaufrufe abfangen.
 const mount = (pg) => pg.evaluate(async () => {
@@ -225,7 +286,8 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   {
     const ms = await mapState(page);
     await check(vp.name + ': ohne Mittelpunkt (älterer Stand) nur die Punktkarte mit Pillen',
-      ms.box && ms.box.h > 100 && ms.fallbackPins.length === 5 && (ms.state === null || ms.visible === false), ms);
+      ms.box && ms.box.h > 100 && ms.fallbackPins.length === 4 && (ms.state === null || ms.visible === false), ms);
+    await check(vp.name + ': Karte ' + (vp.mobile ? '200' : '220') + ' px hoch', ms.box && Math.abs(ms.box.h - (vp.mobile ? 200 : 220)) < 1, ms.box);
   }
   await check(vp.name + ': Am günstigsten (3 Kacheln), Punktkarte, Umschalter, Liste, Quelle',
     p && p.top === 3 && p.map === 1 && p.seg.join('|') === 'Günstigste|Nächste|Offen' && p.list.length === 5
@@ -294,15 +356,16 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   // Karte: HA-Karte geladen (Ebene deckt die Punktkarte, Pillen an den Koordinaten) oder Rückfall auf die Punktkarte.
   const ms = await mapState(page);
   console.log(`  ${vp.name}: Karte ${ms.state === 'ok' ? 'HA-Karte geladen' : 'Rückfall Punktkarte (' + ms.state + ')'}`);
-  await check(vp.name + ': Karte „In der Nähe“ nie leer (HA-Karte oder Punktkarte mit 5 Pillen)',
-    ms.box && ms.box.h > 100 && (ms.state === 'ok' ? ms.visible && ms.hasMap && ms.tiles > 0 && ms.pins.length === 5 : ms.fallbackPins.length === 5 && !ms.visible), ms);
+  await check(vp.name + ': Karte „In der Nähe“ nie leer (HA-Karte oder Punktkarte mit 4 Pillen)',
+    ms.box && ms.box.h > 100 && (ms.state === 'ok' ? ms.visible && ms.hasMap && ms.tiles > 0 && ms.pins.length === 4 : ms.fallbackPins.length === 4 && !ms.visible), ms);
   if (ms.state === 'ok') {
     const near = (a, b, t = 2.5) => a && b && Math.abs(a[0] - b[0]) <= t && Math.abs(a[1] - b[1]) <= t;
-    const best = ms.pins.find((q) => q.t === '1,689');
+    const g0 = await geom(page, 'ha');
+    const best = g0 && g0.dots.find((d) => near(d, ms.expect.best));
     await check(vp.name + ': HA-Karte liegt genau auf der Fläche der Punktkarte',
       ['x', 'y', 'w', 'h'].every((k) => Math.abs(ms.layer[k] - ms.box[k]) < 1.5), { layer: ms.layer, box: ms.box });
-    await check(vp.name + ': günstigste Pille an ihrer Koordinate, Umkreis-Mitte am Standort',
-      best && near([best.cx, best.cy], ms.expect.best) && near(ms.dot, ms.expect.center), { best, dot: ms.dot, expect: ms.expect });
+    await check(vp.name + ': günstigste Station als Punkt an ihrer Koordinate, Pille „1,689“, Umkreis-Mitte am Standort',
+      best && ms.pins.some((q) => q.t === '1,689') && near(ms.dot, ms.expect.center), { best, dot: ms.dot, expect: ms.expect });
     await check(vp.name + ': Karte ohne Zoom-Knöpfe, nicht verschiebbar, OSM-Hinweis sichtbar',
       !ms.zoomCtl && ms.dragging === false && /OpenStreetMap/.test(ms.attribution), ms);
     // Umschalten zeichnet die Ansicht neu – die Karte bleibt dieselbe (kein Neuladen).
@@ -310,17 +373,46 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
     await page.waitForTimeout(500);
     const same = await page.evaluate(() => { const l = window.__pierce('.ct-hamap', window.casoraPopup.surface)[0]; return !!l && l.querySelector('ha-map') === window.__qaMapEl && l.dataset.state === 'ok'; });
     await check(vp.name + ': Karte bleibt beim Umschalten erhalten', same);
+    // Viele Stationen auf der HA-Karte (1.2.1, Entwurf A).
+    await fakeStates(page, { ...none, [SID]: sensor(car.dev, { typical, low: 1.649, high: 1.749, days: 14, learn_days_left: 0, stations: crowd, count: crowd.length }) }, { sticky: true });
+    await openPopup(page);
+    await tap(page, '.casora-tank-row');
+    await page.waitForTimeout(800);
+    const mc = await mapState(page);
+    const gc = await geom(page, 'ha');
+    if (mc.state === 'ok' && gc) {
+      await checkA(vp.name + ' HA-Karte, viele Stationen', gc, { dots: mc.expectDots, r: mc.expectR }, mc.att);
+      const fr = Math.min(gc.area.w, gc.area.h - 20) / 2 - 8;
+      await check(vp.name + ' HA-Karte: Umkreis füllt die Fläche (Radius aus Fläche, ±2 px), Mitte über dem OSM-Hinweis',
+        Math.abs(gc.r - fr) <= 2 && Math.abs(gc.center[1] - (gc.area.y + (gc.area.h - 20) / 2)) <= 2, { r: gc.r, fr, center: gc.center, area: gc.area });
+      await check(vp.name + ' HA-Karte: zwei am selben Ort mit Doppelring, geschlossene gestrichelt', gc.rings >= 1 && gc.dashed === 1, gc);
+      await check(vp.name + ' HA-Karte: OSM-Hinweis ' + (process.env.R89_DARK === '1' ? 'dunkel' : 'hell') + ' hinterlegt',
+        mc.att && (process.env.R89_DARK === '1' ? /rgba\(28, 24, 21/.test(mc.att.bg) : /rgba\(255, 255, 255/.test(mc.att.bg)), mc.att);
+    } else await check(vp.name + ' HA-Karte, viele Stationen: Karte geladen', false, mc.state);
+  }
+  // Viele Stationen auf der Punktkarte (ohne Mittelpunkt).
+  {
+    await fakeStates(page, { ...none, [SID]: sensor(car.dev, { typical, low: 1.649, high: 1.749, days: 14, learn_days_left: 0, stations: crowd, count: crowd.length, center: null }) }, { sticky: true });
+    await openPopup(page);
+    await tap(page, '.casora-tank-row');
+    await page.waitForTimeout(800);
+    const gp = await geom(page, 'punkt');
+    const fr = gp ? Math.min(gp.area.w, gp.area.h - 20) / 2 - 8 : 0, sc = fr / 5;
+    await checkA(vp.name + ' Punktkarte, viele Stationen', gp, { dots: gp && gp.center ? crowd.map((x) => [gp.center[0] + x.x * sc, gp.center[1] - x.y * sc]) : [], r: fr }, null);
+    await check(vp.name + ' Punktkarte: ' + (vp.mobile ? '200' : '220') + ' px hoch', gp && Math.abs(gp.area.h - (vp.mobile ? 200 : 220)) < 1, gp && gp.area);
+    if (process.env.R89_BILD) await page.screenshot({ path: `${process.env.CASORA_OUT}/r89_${vp.name.replace(/\W+/g, '_')}_punktkarte_viele.png` });
   }
   if (process.env.R89_BILD) await page.screenshot({ path: `${process.env.CASORA_OUT}/r89_${vp.name.replace(/\W+/g, '_')}_karte.png` });
   // Kartendienst gestört (Kacheln blockiert): Punktkarte bleibt sichtbar, keine leere Fläche.
   if (!vp.mobile) {
+    await fakeStates(page, { ...none, [SID]: sensor(car.dev, { typical, low: 1.649, high: 1.749, days: 14, learn_days_left: 0 }) }, { sticky: true });
     await page.route('**/api/map_tiles/**', (r) => r.abort());
     await openPopup(page);
     await tap(page, '.casora-tank-row');
     await page.waitForTimeout(800);
     const fb = await mapState(page);
     await check(vp.name + ': Kartendienst gestört → Punktkarte mit Pillen statt leerer Fläche',
-      fb.state === 'fehler' && !fb.visible && fb.box && fb.box.h > 100 && fb.fallbackPins.length === 5, fb);
+      fb.state === 'fehler' && !fb.visible && fb.box && fb.box.h > 100 && fb.fallbackPins.length === 4, fb);
     await page.unroute('**/api/map_tiles/**');
   }
   await page.evaluate(() => { if (window._casoraTank) window._casoraTank.leave(true); if (window.casoraPopup) window.casoraPopup.close(); });
