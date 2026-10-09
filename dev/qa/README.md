@@ -194,7 +194,7 @@ Rechner mit 10 Kernen, Docker 5,8 GB; meist liefen nebenher Wegwerf-HAs anderer 
 
 | Lauf | vorher | jetzt |
 |---|---|---|
-| volles Gate | 77 und 112 min (`--parallel --jobs 1`, arbeit ganz auf einem HA) | 30 bis 44 min, zuletzt ZEIT_VOLL (5 HAs: arbeit 3, stress 2) |
+| volles Gate | 77 und 112 min (`--parallel --jobs 1`, arbeit ganz auf einem HA) | 30 bis 44 min, die letzten drei Läufe 29,5 · 34 · 32 min (5 HAs: arbeit 3, stress 2) |
 | Patch-Gate (ein Dashboard-Skript geändert) | gab es nicht als Freigabe | 3 min 49 s (r89 + Klick-Durchlauf Dashboard-Teile) |
 | Nachholen (2 bzw. 3 geänderte Tests) | voller Neulauf | 3 min 28 s bzw. 4 min 26 s |
 
