@@ -589,6 +589,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       mount(slot, cfg);
       find(pop.shadowRoot, '.hp-ct').forEach(function (t) { t.textContent = window._hpChartTitle(eid); });
       find(pop.shadowRoot, '[data-hp-metric]').forEach(function (r) { r.classList.toggle('hp-sel', r.dataset.hpMetric === eid); });
+      window._hpShown = eid;
       if (!noScroll) {
         var sc = pop.shadowRoot.querySelector('.content') || null;
         var head = find(pop.shadowRoot, '.hp-ct')[0] || slot;
@@ -603,9 +604,13 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     };
     // Erstes Diagramm einhängen, sobald der Platzhalter im Popup existiert.
     /* back (Energie-Popup): erneutes Tippen auf die gewählte Zeile schaltet zurück auf dieses Diagramm. */
+    /* Nur der jüngste Aufruf sucht weiter: ein Popup ohne Platzhalter (z. B. Geräte im Casora-Look)
+       hängte sonst bis zu 10 s später sein Diagramm samt Etikett ins nächste Popup (1.2.1). */
+    var initSeq = 0;
     window._hpChartInit = function (eid, back) {
-      var n = 0;
+      var n = 0, me = ++initSeq;
       var tick = function () {
+        if (me !== initSeq) return;
         if (window._hpPlantShow(eid, null, true)) { var pp = popRoot(); if (pp) pp._hpBack = back ? eid : null; return; }
         if (++n < 100) setTimeout(tick, 100);
       };

@@ -29,9 +29,10 @@
   };
 
   // ── Batterien ─────────────────────────────────────────────────────────────
-  // Ring-Unterzeile mit der Zahl der schwachen Batterien und der niedrigsten, darunter
-  // „Akku schwach“ (≤ 20 %) und alle übrigen in zwei Spalten. Das 30-Tage-Diagramm
-  // erscheint erst nach Antippen einer Zeile (nochmal antippen blendet es aus).
+  // Ring-Unterzeile mit der Zahl der schwachen Batterien und der niedrigsten, darunter das
+  // 30-Tage-Diagramm in der Sand-Karte (1.2.1, wie Pflanze/Energie: Etikett innen, „Jetzt“-Zeile,
+  // zu Beginn die niedrigste Batterie), dann „Akku schwach“ (≤ 20 %) und alle übrigen in zwei
+  // Spalten. Antippen einer Zeile schaltet das Diagramm um.
   // Stufen, Wörter und Farben aus window.casoraBattery (casora-core.js, 05.10.2026).
   var BAT = function () { return window.casoraBattery; };
   var lvOf = function (v) { return BAT() ? BAT().level(v) : v <= 10 ? 'crit' : v <= 20 ? 'low' : 'ok'; };
@@ -49,18 +50,21 @@
     if (hpOk) list.forEach(function (b) { window._hpChartCfg(b.id, b.name, '30d', '#30D158', 140); });
     var f = {};
     f.hero = { card: K.secCard(ids, call('_casoraSoftBat', 'hero', C), states) };
-    if (hpOk) {
-      f.chart = '<div class="hp-batwrap" data-casora-nodismiss="" style="display:none;margin:22px 0 4px;font-family:var(--primary-font-family, system-ui);'
-        + 'background:var(--casora-popup-chart-fill, rgba(140,115,90,0.07));border-radius:var(--casora-popup-row-radius, 24px);padding:16px 12px 6px;">'
-        + '<div class="hp-ct" style="font-size:13px;font-weight:600;color:var(--casora-soft-sub, rgba(58,50,43,0.6));text-align:left;padding:0 8px;"></div>'
-        + '<div class="hp-chart-slot" style="min-height:150px;margin:6px 0 0;"></div></div>';
-    }
     // Leere Bereiche gar nicht erst anlegen (eine leere Karte kostet sonst einen Rasterabstand).
     var R0 = rows(states, C);
+    if (hpOk && R0.length) {
+      B.cur = R0[0].id; // zu Beginn die niedrigste Batterie
+      f.chart = '<div class="hp-batwrap" data-casora-nodismiss="" style="background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));'
+        + 'border-radius:var(--casora-popup-row-radius, 20px);box-shadow:var(--casora-popup-plate-shadow, none);padding:14px 10px 6px;">'
+        + '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);'
+        + 'letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary,#fff));'
+        + 'text-align:left;padding:0 6px;">' + window._hpChartTitle(B.cur) + '</div>'
+        + '<div class="hp-chart-slot" style="min-height:150px;margin:6px 0 0;"></div></div>';
+      if (typeof window._hpChartInit === 'function') window._hpChartInit(B.cur);
+    }
     if (R0.some(function (r) { return lvOf(r.v) !== 'ok'; })) f.low = { card: K.secCard(ids.concat(chg), call('_casoraSoftBat', 'low', C), states) };
     if (R0.some(function (r) { return lvOf(r.v) === 'ok'; })) f.all = { card: K.secCard(ids.concat(chg), call('_casoraSoftBat', 'all', C), states) };
-    return K.layout({ fields: f, top: ['hero', 'chart', 'low', 'all'], left: [], right: [],
-      fieldStyle: { chart: [{ 'margin-top': '-22px' }] } });
+    return K.layout({ fields: f, top: ['hero', 'chart', 'low', 'all'], left: [], right: [] });
   };
   var pctOf = function (states, id) { var n = parseFloat(raw(states, id)); return isNaN(n) ? null : Math.round(n); };
   var charging = function (states, ids) {
@@ -95,41 +99,21 @@
       label: r.name, sub: sub.length ? sub.join(' · ') : null, active: c, value: r.v + ' %',
       valueTone: lv === 'charging' ? null : tone };
   };
-  // Zeilen öffnen das Diagramm statt More-Info (data-hp-metric wie im Pflanzen-Popup).
+  // Zeilen schalten das Diagramm um statt More-Info (data-hp-metric wie im Pflanzen-Popup);
+  // die gezeigte Batterie (B.cur) bleibt auch nach dem Neuzeichnen der Liste hinterlegt.
   var tapWrap = function (html) {
     if (typeof window._hpPlantTap !== 'function') return html;
+    html = html.replace(/data-casora-mi="/g, 'data-hp-metric="');
+    if (B.cur) {
+      var q = String(B.cur).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      html = html.replace(new RegExp('class="(hui-row[^"]*)"([^>]*data-hp-metric="' + q + '")'), 'class="$1 hp-sel"$2');
+    }
     return '<div ontouchstart="window._casoraSoftBat.tap(event,\'s\')" ontouchend="window._casoraSoftBat.tap(event,\'t\')"'
-      + ' onclick="window._casoraSoftBat.tap(event,\'c\')">'
-      + html.replace(/data-casora-mi="/g, 'data-hp-metric="') + '</div>';
-  };
-  var deep = function (root, sel, out) {
-    out = out || [];
-    if (!root || !root.querySelectorAll) return out;
-    root.querySelectorAll(sel).forEach(function (n) { out.push(n); });
-    root.querySelectorAll('*').forEach(function (n) { if (n.shadowRoot) deep(n.shadowRoot, sel, out); });
-    return out;
+      + ' onclick="window._casoraSoftBat.tap(event,\'c\')">' + html + '</div>';
   };
   B.tap = function (ev, kind) {
-    if (kind !== 's') {
-      var p = (ev.composedPath && ev.composedPath()) || [ev.target], row = null;
-      for (var i = 0; i < p.length; i++) { if (p[i] && p[i].dataset && p[i].dataset.hpMetric) { row = p[i]; break; } }
-      var el = window.casoraPopup && window.casoraPopup.element;
-      var wrap = row && el ? deep(el.shadowRoot || el, '.hp-batwrap')[0] : null;
-      if (wrap) {
-        // Gleiche Zeile nochmal: Diagramm wieder aus.
-        if (row.classList.contains('hp-sel') && wrap.style.display !== 'none') {
-          if (kind === 't') window._hpT = Date.now();
-          else if (Date.now() - (window._hpT || 0) < 700) return;
-          ev.stopPropagation(); if (ev.cancelable) ev.preventDefault();
-          window._casoraSuppressDismiss = Date.now() + 600;
-          wrap.style.display = 'none';
-          row.classList.remove('hp-sel');
-          return;
-        }
-        wrap.style.display = 'block';
-      }
-    }
     window._hpPlantTap(ev, kind);
+    if (window._hpShown) B.cur = window._hpShown;
   };
   var SEL_CSS = '<style>.hui-row.hp-sel{background:var(--casora-soft-row-selected, var(--casora-lps-seg-on, #FFFDF9)) !important;'
     + 'box-shadow:var(--casora-soft-row-selected-shadow, 0 6px 16px -10px rgba(90,70,50,0.45));}</style>';

@@ -272,7 +272,7 @@
       field('chart', { card: {
         /* Dosiert pro Tag (Tageshöchstwert des Tageszählers), Säulen wie „Verbrauch pro Tag“. */
         type: 'custom:casora-chart', kind: 'bar', span: '7d', source: 'history', agg: 'max', height: 130,
-        series: [{ entity: d.today, name: 'Dosiert', decimals: 1 }], plate: true,
+        series: [{ entity: d.today, name: 'Dosiert', decimals: 1 }], plate: true, title: 'Dosiert · 7 Tage',
       } }),
     ].filter((x) => x[0] !== 'chart' || d.today).forEach((x) => { areas.push('"' + x[0] + '"'); fields[x[0]] = x[1]; fstyle[x[0]] = [{ 'justify-self': 'stretch' }]; });
     window.casoraPopup.open({

@@ -6,6 +6,10 @@
 // Energie-Popup zeigt Tagesbalken mit „Heute“; die Zeilen „Heute“/„Diesen Monat“ schalten das Hero-Diagramm
 // auf 7 bzw. 30 Tagessäulen um (Hero-Zahl liest den Tageswert), erneutes Tippen bzw. die Leistung zurück; Klima schaltet Temperatur/Luftfeuchtigkeit um statt
 // zweiter y-Achse; die Sparkline erscheint auf der Kachel nur, wenn sie eingeschaltet ist.
+// 1.2.1 (gemeldet: Batterie-Popup nicht auf den neuen Graphen umgestellt): im Casora-Look zeigt das
+// Batterie-Popup das Diagramm gleich in der Sand-Karte (Etikett innen, niedrigste Batterie gewählt),
+// Zeilen schalten es um; Wetter-Diagramm mit Etikett in der Karte; ein Popup ohne Diagramm-Platz
+// hängt sein Diagramm nicht mehr ins nächste Popup; Dünger-Säulen mit Etikett.
 // Die Kacheln werden nur im Browser erzeugt (Sensoren aus dem Testhaus), gespeichert wird nichts.
 import { open, casoraDashboard, dashboard, check, need, finish, stable } from './lib.mjs';
 
@@ -225,4 +229,95 @@ const phoneSpark = await spark(true);
 await check('Sparkline: am Handy (Pillen-Kachel) ausgeblendet (D3)', phoneSpark && !phoneSpark.visible, phoneSpark);
 await page.setViewportSize({ width: 1440, height: 900 });
 await page.evaluate(() => document.querySelector('home-assistant').shadowRoot.querySelectorAll('.qa-r90').forEach((x) => x.remove()));
+
+// ── Casora-Look (Weich): Batterie, Wetter, Dünger ────────────────────────────
+const soft = await open({ width: 1440, height: 900, dark: false, theme: 'Casora' });
+await dashboard(soft.page, dash.url, 3);
+const P = soft.page;
+async function popupIn(pg, cfg) {
+  await pg.evaluate(() => window.__pierce('casora-popup').forEach((p) => p.hasAttribute('open') && p.close()));
+  await pg.waitForTimeout(500);
+  await pg.evaluate(async (c) => {
+    document.querySelector('home-assistant').shadowRoot.querySelectorAll('.qa-r90').forEach((x) => x.remove());
+    const h = await window.loadCardHelpers();
+    const el = h.createCardElement(c);
+    el.classList.add('qa-r90'); el.hass = document.querySelector('home-assistant').hass;
+    el.style.cssText = 'position:fixed;left:400px;top:300px;width:220px;height:140px;z-index:99999;';
+    document.querySelector('home-assistant').shadowRoot.appendChild(el);
+  }, cfg);
+  await pg.waitForTimeout(1500);
+  const at = await pg.evaluate(() => { const el = document.querySelector('home-assistant').shadowRoot.querySelector('.qa-r90');
+    const r = (el.shadowRoot && el.shadowRoot.querySelector('ha-card') || el).getBoundingClientRect();
+    return { x: r.x + Math.min(r.width, 200) / 2, y: r.y + Math.min(r.height, 120) / 2 }; });
+  await pg.mouse.click(at.x, at.y);
+}
+// Diagramm im offenen Popup: Serie, Etikett, Sand-Karte (Vorfahr mit Fläche und Radius), gewählte Zeile.
+const look = () => {
+  const pop = window.__pierce('casora-popup').find((p) => p.hasAttribute('open'));
+  if (!pop) return null;
+  const c = window.__pierce('casora-chart', pop.shadowRoot).find((x) => x.getBoundingClientRect().width > 50);
+  if (!c || !c._c || !c.shadowRoot.querySelector('svg')) return null;
+  let n = c, plate = false, label = null;
+  for (let i = 0; i < 6 && n && !plate; i++) {
+    n = n.parentElement || (n.getRootNode() && n.getRootNode().host);
+    if (!n) break;
+    const st = getComputedStyle(n);
+    if (st.backgroundColor !== 'rgba(0, 0, 0, 0)' && parseFloat(st.borderTopLeftRadius) > 0) {
+      plate = true;
+      const ct = n.querySelector('.hp-ct');
+      if (ct) label = { t: ct.textContent.trim(), tt: getComputedStyle(ct).textTransform, fw: getComputedStyle(ct).fontWeight };
+    }
+  }
+  const sel = window.__pierce('[data-hp-metric].hp-sel', pop.shadowRoot).map((r) => r.dataset.hpMetric);
+  return { entity: c._c.series[0] && c._c.series[0].entity, plate, label, sel, rows: window.__pierce('[data-hp-metric]', pop.shadowRoot).length,
+    ro: !!c.shadowRoot.querySelector('.ro'), apex: window.__pierce('apexcharts-card').length };
+};
+const bat = await P.evaluate(() => {
+  const S = document.querySelector('home-assistant').hass.states;
+  return Object.keys(S).filter((e) => S[e].attributes.device_class === 'battery' && isFinite(parseFloat(S[e].state)))
+    .sort((a, b) => parseFloat(S[a].state) - parseFloat(S[b].state));
+});
+await need('Batterie-Sensoren im Testhaus', bat.length >= 2, bat.length);
+await popupIn(P, { type: 'custom:button-card', template: 'casora_battery', entity: bat[0] });
+let b1 = await stable(P, look, null, { max: 12000, quiet: 1200 });
+await check('Batterie (Casora-Look): casora-chart gleich sichtbar, in der Sand-Karte, kein apexcharts-card', b1 && b1.plate && b1.apex === 0, b1);
+await check('Batterie (Casora-Look): Etikett innen (Versalien, 700) mit Zeitraum, „Jetzt“-Zeile', b1 && b1.label && /30 Tage/.test(b1.label.t)
+  && b1.label.tt === 'uppercase' && b1.label.fw === '700' && b1.ro, b1);
+await check('Batterie (Casora-Look): niedrigste Batterie gewählt und hinterlegt', b1 && b1.sel.length === 1 && b1.sel[0] === b1.entity, b1);
+const other = await P.evaluate((cur) => {
+  const pop = window.__pierce('casora-popup').find((p) => p.hasAttribute('open'));
+  const row = window.__pierce('[data-hp-metric]', pop.shadowRoot).find((r) => r.dataset.hpMetric !== cur && r.getBoundingClientRect().height > 0);
+  if (!row) return null;
+  row.scrollIntoView({ block: 'center' });
+  const r = row.getBoundingClientRect();
+  return { id: row.dataset.hpMetric, x: r.x + r.width / 2, y: r.y + r.height / 2 };
+}, b1 && b1.entity);
+if (other) { await P.waitForTimeout(300); await P.mouse.click(other.x, other.y); }
+const b2 = await stable(P, look, null, { max: 8000, quiet: 1000 });
+await check('Batterie (Casora-Look): Zeile antippen schaltet Diagramm, Etikett und Hinterlegung um', other && b2 && b2.entity === other.id
+  && b2.sel.length === 1 && b2.sel[0] === other.id && b2.label && b2.label.t !== b1.label.t, [other, b2]);
+
+// Ein Popup, dessen Diagramm keinen Platz bekommt (Geräte im Casora-Look), darf sein Diagramm nicht ins nächste hängen.
+const weather = await P.evaluate((pw) => {
+  const S = document.querySelector('home-assistant').hass.states;
+  window._hpChartCfg(pw, 'Leistung', '24h', '#FF9F0A', 150);
+  window._hpChartInit(pw);
+  return Object.keys(S).find((e) => e.startsWith('weather.'));
+}, ids.power);
+await popupIn(P, { type: 'custom:button-card', template: 'casora_weather', entity: weather });
+const w = await stable(P, look, null, { max: 12000, quiet: 1500 });
+await check('Wetter (Casora-Look): Diagramm mit Etikett in der Sand-Karte, kein fremdes Diagramm aus dem vorigen Popup',
+  w && w.plate && w.label && !/Leistung/.test(w.label.t) && w.entity !== ids.power && w.label.tt === 'uppercase', w);
+
+// Dünger: Säulen mit Etikett in der eigenen Karte (casora-chart title + plate).
+await P.evaluate(() => window.__pierce('casora-popup').forEach((p) => p.hasAttribute('open') && p.close()));
+await P.waitForTimeout(500);
+await P.evaluate((t) => window._casoraAqDoseOpen({ vol: 'input_number.qa_r90_dose', btn: 'button.qa_r90_dose', today: t, label: 'Dünger' }), ids.today);
+const dz = await stable(P, () => {
+  const pop = window.__pierce('casora-popup').find((p) => p.hasAttribute('open'));
+  const c = pop && window.__pierce('casora-chart', pop.shadowRoot).find((x) => x.getBoundingClientRect().width > 50);
+  const tt = c && c.shadowRoot.querySelector('.tt');
+  return c ? { plate: c.hasAttribute('plate'), title: tt ? tt.textContent : null, tt: tt ? getComputedStyle(tt).textTransform : null } : null;
+}, null, { max: 8000, quiet: 1000 });
+await check('Dünger (Casora-Look): Säulen in der Karte mit Etikett „Dosiert · 7 Tage“', dz && dz.plate && dz.title === 'Dosiert · 7 Tage' && dz.tt === 'uppercase', dz);
 await finish();
