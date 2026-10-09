@@ -95,7 +95,7 @@ for (const d of ['custom_components/casora/scripts', 'custom_components/casora/s
   for (const x of fs.readdirSync(path.join(REPO, d)).filter((y) => y.endsWith('.js'))) for (const g of defsOf(d + '/' + x)) DEFCOUNT.set(g, (DEFCOUNT.get(g) || 0) + 1);
 }
 const rows = [];
-const sel = Object.fromEntries(STATES.map((s) => [s, { komplett: false, tests: new Set(), teile: new Set(), crawler: null, grund: [] }]));
+const sel = Object.fromEntries(STATES.map((s) => [s, { komplett: false, tests: new Set(), teile: new Set(), crawl: false, grund: [] }]));
 const add = (t) => sel[t.state] && sel[t.state].tests.add(t);
 const studioTests = tests.filter((t) => /\bstudio\(|casora-studio|__panel\b/.test(t.src));
 for (const f of files) {
@@ -103,7 +103,12 @@ for (const f of files) {
   if (/\.md$|^docs\/|^LICENSE$|^\.github\/|^brand\/|^hacs\.json$|^\.gitignore$|^custom_components\/casora\/brand\/|^dev\/demo\//.test(f)) grund = 'Doku/Bilder';
   else if (/^dev\/unit\//.test(f)) grund = 'Unit-Test (läuft immer)';
   else if (/^tools\/(release\.sh|sync-changelog\.py|privacy-check\.py|qa_gate\.py|build-card-update\.py|i18ncheck\.py|phrase-gaps\.py)$/.test(f)) grund = 'Werkzeug (statische Prüfung)';
-  else if (/^dev\/(qa\/regress\/lib\.mjs|e2e\/harness\.mjs|e2e\/ergebnis\.mjs|qa\/(pool|token|ws|bereit|inpage)\.m?js|qa\/(gate|wegwerf-ha)\.sh|qa\/(alles|stress-setup)\.mjs|haus\.sh|casora_mock\/)/.test(f)) { states = STATES; grund = 'Gate-Infrastruktur/Mock → alles'; }
+  else if (/^dev\/qa\/(alles\.mjs|inpage\.js)$/.test(f)) {
+    // Nur der Klick-Durchlauf (schnell in arbeit, voll in stress) – keine Regress-/E2E-Tests.
+    ['desktop-studio', 'desktop-dashboard', 'phone-studio', 'phone-dashboard'].forEach((x) => sel.arbeit.teile.add(x));
+    sel.stress.crawl = true; grund = 'Klick-Durchlauf (arbeit schnell, stress voll)';
+  }
+  else if (/^dev\/(qa\/regress\/lib\.mjs|e2e\/harness\.mjs|e2e\/ergebnis\.mjs|qa\/(pool|token|ws|bereit)\.mjs|qa\/(gate|wegwerf-ha)\.sh|qa\/stress-setup\.mjs|haus\.sh|casora_mock\/)/.test(f)) { states = STATES; grund = 'Gate-Infrastruktur/Mock → alles'; }
   else if (/^dev\/qa\/(auswahl|nachholen)\.mjs$/.test(f)) grund = 'Gate-Auswahl (statische Prüfung)';
   // Release-Teile: Version im manifest, Texte im Neu-Popup (nur Zeichenketten geändert) – Syntax prüft statisch.
   else if (f === 'custom_components/casora/manifest.json' && changedLines(f).every((l) => /^[+-]\s*"version":/.test(l))) grund = 'nur Version';
@@ -164,7 +169,7 @@ for (const z of STATES) {
   const e2e = [...s.tests].filter((t) => t.kind === 'e2e').map((t) => t.id);
   const regress = [...s.tests].filter((t) => t.kind === 'regress').map((t) => t.id);
   out.states[z] = s.komplett ? { komplett: true, crawler: z === 'arbeit' ? 'quick' : z === 'stress' ? 'full' : null }
-    : { komplett: false, e2e, regress, crawler: z === 'arbeit' && s.teile.size ? 'quick' : null, teile: [...s.teile] };
+    : { komplett: false, e2e, regress, crawler: z === 'arbeit' && s.teile.size ? 'quick' : z === 'stress' && s.crawl ? 'full' : null, teile: [...s.teile] };
 }
 if (opt('out', '')) fs.writeFileSync(opt('out', ''), JSON.stringify(out, null, 1));
 
@@ -176,6 +181,6 @@ for (const r of rows) {
 for (const z of STATES) {
   const s = out.states[z];
   const n = s.komplett ? 'komplett' : [s.e2e.length ? `E2E ${s.e2e.join(' ')}` : '', s.regress.length ? `Regress ${s.regress.join(' ')}` : '',
-    s.crawler ? `Klick-Durchlauf ${s.teile.join(' ')}` : ''].filter(Boolean).join(' · ') || '–';
+    s.crawler ? `Klick-Durchlauf ${s.crawler === 'full' ? 'voll' : s.teile.join(' ')}` : ''].filter(Boolean).join(' · ') || '–';
   console.log(`  ⇒ ${z.padEnd(7)} ${n}`);
 }

@@ -69,9 +69,10 @@ for (const z of STATES) {
   const e2e = new Set([...red.filter((t) => kinds[t.id] === 'e2e').map((t) => t.id), ...(s.e2e || [])]);
   const regress = new Set([...red.filter((t) => kinds[t.id] === 'regress').map((t) => t.id), ...(s.regress || [])]);
   // Klick-Durchlauf: Teile werden erst beim Zusammenführen bewertet – roter Schritt = alle Teile neu.
-  const crawlRed = (prev.steps || []).some((x) => x.id === 'crawler-' + z && !x.ok);
-  const teile = crawlRed ? (z === 'arbeit' ? ['desktop-studio', 'desktop-dashboard', 'phone-studio', 'phone-dashboard'] : null) : null;
-  plan.states[z] = { komplett: false, e2e: [...e2e], regress: [...regress], crawler: crawlRed ? (z === 'arbeit' ? 'quick' : 'full') : null, teile: teile || [] };
+  // Roter Klick-Durchlauf im Vorlauf oder Änderungen, die ihn betreffen → alle Teile des Zustands neu.
+  const crawlRed = (prev.steps || []).some((x) => x.id === 'crawler-' + z && !x.ok) || !!s.crawler;
+  const teile = crawlRed && z === 'arbeit' ? ['desktop-studio', 'desktop-dashboard', 'phone-studio', 'phone-dashboard'] : [];
+  plan.states[z] = { komplett: false, e2e: [...e2e], regress: [...regress], crawler: crawlRed ? (z === 'arbeit' ? 'quick' : 'full') : null, teile };
   const n = [...e2e, ...regress].length;
   if (n || crawlRed) lines.push(`  ${z.padEnd(7)} ${[...e2e, ...regress].join(' ')}${crawlRed ? ' + Klick-Durchlauf' : ''}`
     + `  (rot im Vorlauf: ${red.length}, durch Änderungen: ${n - red.filter((t) => e2e.has(t.id) || regress.has(t.id)).length})`);
