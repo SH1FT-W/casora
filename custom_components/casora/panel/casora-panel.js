@@ -23321,10 +23321,14 @@ class CasoraPanel extends HTMLElement {
           const picked = isCover ? (isOpen ? tv.icon_open : tv.icon_closed)
             : isLock ? (isUnlocked ? tv.icon_unlocked : tv.icon_locked)
               : (tv.icon || tile.icon);
-          // Weich: Lamellen wie am Handy, außer das Gerät ist ausdrücklich ein Vorhang.
-          const lamellen = softLook() && !(ent && ent.attributes && ent.attributes.device_class === "curtain");
-          const fallback = isCover ? (lamellen ? (isOpen ? "blinds-horizontal-open" : "blinds-horizontal-closed")
-            : (isOpen ? "curtain-open" : "curtain-closed"))
+          // Cover (1.2.1): dasselbe Symbol wie Kachel, Popup-Ring und Popup-Zeilen im Dashboard
+          // (casoraCoverIconName: Jalousie mit Lage-Stufe, Vorhang, Markise, Tür, Garage, Tor).
+          // Vorher: Weich Lamellen blinds-horizontal-*, sonst Vorhang.
+          const ck = isCover && window.casoraCoverKind
+            ? window.casoraCoverKind(ent && ent.attributes && ent.attributes.device_class, ent && ent.entity_id)
+            : { open: "cover_open", closed: "cover_closed" };
+          const cn = isCover && ent && window.casoraCoverIconName ? window.casoraCoverIconName(ent) : null;
+          const fallback = isCover ? "/casora_assets/icons/" + (cn || (isOpen ? ck.open : ck.closed)) + ".svg"
             : isLock ? (isUnlocked ? "lock-open-fill" : "lock-fill") : null;
           const derived = type && type.glyphFromEntity
             ? type.glyphFromEntity[String(tile.entity || "").split(".")[0]]
