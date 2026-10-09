@@ -124,6 +124,8 @@
     + '.tn .rc:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:transparent;transition:background .15s ease}'
     + '@media (hover:hover){.tn .r:hover .rc:after{background:var(--casora-np-hover, var(--casora-soft-row-hover, rgba(140,115,90,.06)))}}'
     + '.tn .r:active .rc:after{background:var(--casora-soft-row-hover, rgba(140,115,90,.08))}'
+    // Tasten und Lautstärke drücken/überfahren: kein Schleier über dem ganzen Player, nur die Taste reagiert.
+    + '.tn .r:has(button:hover,button:active,.vo:hover,.vo:active,.b:hover,.b:active) .rc:after{background:transparent!important}'
     + '.tn .cv,.l.d.tn .cv{width:52px;height:52px;border-radius:14px;box-shadow:0 6px 14px -8px rgba(0,0,0,.45)}'
     + '.tn .t{font-size:15px;font-weight:650}'
     + '.tn .s{font-size:12.5px;margin-top:1px}'
