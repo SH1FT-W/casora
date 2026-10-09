@@ -271,8 +271,10 @@
       var X0 = window._casoraUpdX;
       var rest = X0 && X0.restart ? X0.restart(states, { UI: UI, headOut: function (t) { return UI.label(t); },
         logoOf: function (id) { return logoOf(states, id); } }) : '';
+      // 09.10.2026: „Jetzt nach Updates suchen“ als Pille unter der Statuszeile (03-popups.js).
+      var chk = window._casoraUpdCheck ? '<div style="display:flex;justify-content:center;">' + window._casoraUpdCheck.html(true) + '</div>' : '';
       return UI.line(head, [busy ? (busy === 1 ? 'Wird installiert' : busy + ' werden installiert') : null, ki, backup],
-        { tone: n ? null : 'good' }) + (rest ? '<div style="text-align:left;">' + rest + '</div>' : '');
+        { tone: n ? null : 'good' }) + chk + (rest ? '<div style="text-align:left;">' + rest + '</div>' : '');
     }
     if (part === 'more') {
       var X = window._casoraUpdX, secs = [];

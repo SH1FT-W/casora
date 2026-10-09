@@ -2852,6 +2852,228 @@
   };
 })();
 
+// ── „Jetzt nach Updates suchen“ (09.10.2026) ─────────────────────────────────
+// Knopf im Updates-Popup (Casora-Look: unter der Statuszeile, sonst rechts in der Statuskarte).
+// Fragt sofort alle Quellen, statt auf HAs Intervall zu warten – in dieser Reihenfolge:
+//  1. Supervisor (nur HA OS/Supervised, Komponente hassio): WS supervisor/api POST /refresh_updates,
+//     wie HAs „Nach Updates suchen“ unter Einstellungen › System › Updates (Core, OS, Supervisor, Apps).
+//  2. HACS (nur wenn geladen): hacs/repositories/list, dann je installiertes Repo
+//     hacs/repository/refresh (wie „Informationen aktualisieren“ in HACS), höchstens 4 gleichzeitig.
+//  3. homeassistant.update_entity für alle update.*-Entitäten (Integrationen wie ESPHome, Casora;
+//     Supervisor- und HACS-Entitäten übernehmen dabei die frischen Daten aus 1. und 2.).
+// Supervisor- und HACS-Befehle verlangen Admin-Rechte: Nicht-Admins sehen den Knopf trotzdem,
+// er löst bei ihnen nur 3. aus (ein normaler Dienstaufruf). Fehler einzelner Quellen werden
+// geschluckt; erst wenn auch 3. ganz scheitert, heißt es „Suche fehlgeschlagen“.
+// Zeitpunkt der letzten Suche je Browser (localStorage), Ergebnis 30 Min. lang sichtbar.
+// dev/unit/updates_suchen.mjs, dev/qa/regress/r101_updates_suchen.mjs
+(function () {
+  if (window._casoraUpdCheck) return;
+  var K = window._casoraUpdCheck = { busy: false, last: null, found: null, err: false, HACS_PAR: 4, SETTLE: 1500 };
+  var LS = 'casora.updCheck';
+  try {
+    var saved = JSON.parse(localStorage.getItem(LS) || 'null');
+    if (saved && typeof saved.t === 'number') { K.last = saved.t; K.found = typeof saved.found === 'number' ? saved.found : null; K.err = !!saved.err; }
+  } catch (e) { /* ohne Speicher: erst nach der ersten Suche */ }
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var tr = function (x) { return (window.casoraTr || function (y) { return y; })(x); };
+  var agoMs = function (t) {
+    var m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    if (m < 1) return 'gerade eben';
+    if (m < 60) return 'vor ' + m + ' Min.';
+    if (m < 1440) return 'vor ' + Math.round(m / 60) + ' Std.';
+    var d = window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440);
+    return d === 1 ? 'gestern' : 'vor ' + d + ' Tagen';
+  };
+  var pendingOf = function (states) {
+    return Object.keys(states || {}).filter(function (id) { return id.indexOf('update.') === 0 && states[id] && states[id].state === 'on'; });
+  };
+  var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+  var soft = function () { return typeof window._casoraSoft === 'function' && window._casoraSoft(); };
+
+  // Was der Knopf für diesen Benutzer auslöst (ohne Aufruf, auch für den Unit-Test).
+  K.plan = function (hass) {
+    var comps = (hass && hass.config && hass.config.components) || [];
+    var admin = !!(hass && hass.user && hass.user.is_admin);
+    return {
+      admin: admin,
+      supervisor: admin && comps.indexOf('hassio') > -1,
+      hacs: admin && comps.indexOf('hacs') > -1,
+      entities: Object.keys((hass && hass.states) || {}).filter(function (id) { return id.indexOf('update.') === 0; }).sort(),
+    };
+  };
+
+  var quiet = function (p) { return Promise.resolve(p).then(function () { return true; }, function () { return false; }); };
+  var supervisor = function (hass) {
+    return quiet(hass.callWS({ type: 'supervisor/api', endpoint: '/refresh_updates', method: 'post', timeout: null }));
+  };
+  var hacs = function (hass) {
+    return quiet(hass.callWS({ type: 'hacs/repositories/list' }).then(function (list) {
+      var ids = (Array.isArray(list) ? list : []).filter(function (r) { return r && r.installed && r.id != null; })
+        .map(function (r) { return String(r.id); });
+      var i = 0;
+      var next = function () {
+        if (i >= ids.length) return Promise.resolve();
+        var id = ids[i++];
+        return quiet(hass.callWS({ type: 'hacs/repository/refresh', repository: id })).then(next);
+      };
+      var lanes = [];
+      for (var k = 0; k < Math.min(K.HACS_PAR, ids.length); k++) lanes.push(next());
+      return Promise.all(lanes);
+    }));
+  };
+  // Ein Aufruf für alle; scheitert er (eine Entität wirft), jede einzeln – Fehler geschluckt.
+  // notifyOnError = false: kein roter HA-Hinweis „Aktion fehlgeschlagen“.
+  var entities = function (hass, ids) {
+    if (!ids.length) return Promise.resolve(true);
+    var svc = function (x) { return hass.callService('homeassistant', 'update_entity', { entity_id: x }, undefined, false); };
+    return quiet(svc(ids)).then(function (ok) {
+      if (ok) return true;
+      return Promise.all(ids.map(function (id) { return quiet(svc(id)); })).then(function (r) { return r.some(Boolean); });
+    });
+  };
+
+  K.run = function (hass) {
+    if (K.busy || !hass) return Promise.resolve(null);
+    var P = K.plan(hass);
+    var before = pendingOf(hass.states);
+    K.busy = true;
+    K.paint();
+    var res = { supervisor: null, hacs: null, entities: null, found: 0 };
+    return Promise.all([
+      P.supervisor ? supervisor(hass).then(function (ok) { res.supervisor = ok; }) : null,
+      P.hacs ? hacs(hass).then(function (ok) { res.hacs = ok; }) : null,
+    ]).then(function () {
+      // Nach 1. und 2.: Entitäten auch aufnehmen, die HACS/Supervisor eben erst angelegt haben
+      // (Zustände frisch aus HA, Aufruf über das übergebene hass).
+      var cur = (document.querySelector('home-assistant') || {}).hass || hass;
+      var ids = K.plan(cur).entities;
+      return entities(hass, ids.length ? ids : P.entities).then(function (ok) { res.entities = ok; });
+    }).then(function () { return wait(K.SETTLE); }).then(function () {
+      var cur = (document.querySelector('home-assistant') || {}).hass || hass;
+      res.found = pendingOf(cur.states).filter(function (id) { return before.indexOf(id) < 0; }).length;
+      K.last = Date.now();
+      K.err = res.entities === false && res.supervisor !== true && res.hacs !== true;
+      K.found = K.err ? null : res.found;
+      try { localStorage.setItem(LS, JSON.stringify({ t: K.last, found: K.found, err: K.err })); } catch (e) { /* egal */ }
+      return res;
+    }, function () { K.err = true; return res; }).then(function (r) {
+      K.busy = false;
+      K.paint();
+      return r;
+    });
+  };
+
+  var ICON = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/></svg>');
+  // Rückmeldung unter bzw. neben dem Knopf (je Stück ein eigener Text für die Übersetzung).
+  K.status = function () {
+    if (K.busy || !K.last) return [];
+    var out = ['Zuletzt gesucht: ' + agoMs(K.last)];
+    if (Date.now() - K.last < 30 * 60000) {
+      if (K.err) out.push('Suche fehlgeschlagen');
+      else if (K.found === 0) out.push('Keine neuen Updates');
+      else if (K.found === 1) out.push('1 neues Update gefunden');
+      else if (K.found > 1) out.push(K.found + ' neue Updates gefunden');
+    }
+    return out;
+  };
+  var inner = function () {
+    var st = K.status();
+    return '<div class="huc-b' + (K.busy ? ' busy' : '') + '" role="button" tabindex="0" data-huc=""'
+      + (K.busy ? ' aria-busy="true" aria-disabled="true"' : '') + '>'
+      + '<span class="huc-g"></span><span>' + esc(K.busy ? 'Suche …' : 'Jetzt nach Updates suchen') + '</span></div>'
+      + '<div class="huc-s">' + st.map(function (t, i) {
+        return (i ? '<span class="huc-dot"> · </span>' : '') + '<span>' + esc(t) + '</span>';
+      }).join('') + '</div>';
+  };
+  var CSS = '<style>'
+    + '.huc{font-family:var(--primary-font-family, system-ui);display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-left:auto;flex:none;text-align:right;line-height:normal;}'
+    + '.huc-b{position:relative;display:inline-flex;align-items:center;gap:7px;cursor:pointer;white-space:nowrap;'
+    +   'font-size:15px;font-weight:500;letter-spacing:-0.01em;color:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));'
+    +   '-webkit-tap-highlight-color:transparent;transition:opacity .2s ease;user-select:none;-webkit-user-select:none;}'
+    // Trefferfläche 44 px: unsichtbarer Rand nach oben/unten.
+    + '.huc-b::before{content:"";position:absolute;left:-6px;right:-6px;top:-10px;bottom:-10px;}'
+    + '.huc-g{flex:none;width:17px;height:17px;background:currentColor;'
+    +   "-webkit-mask:url('" + ICON + "') center/contain no-repeat;mask:url('" + ICON + "') center/contain no-repeat;}"
+    + '.huc-b.busy{cursor:default;opacity:.7;}'
+    + '.huc-b.busy .huc-g{animation:huc-spin 1s linear infinite;}'
+    + '@keyframes huc-spin{to{transform:rotate(360deg);}}'
+    + '@media (hover:hover){.huc-b:not(.busy):hover{opacity:.7;}}'
+    + '.huc-b:not(.busy):active{opacity:.5;}'
+    + '.huc-b:focus-visible{outline:2px solid currentColor;outline-offset:3px;border-radius:6px;}'
+    + '.huc-s{font-size:13px;color:var(--casora-popup-ui-tertiary, rgba(255,255,255,0.42));}'
+    + '.huc-s{max-width:100%;white-space:normal;overflow-wrap:anywhere;}'
+    + '.huc-s:empty{display:none;}'
+    + '.huc-dot{opacity:.6;}'
+    // Schmal: unter den Status, linksbündig.
+    + '@media (max-width:600px){.huc:not(.soft){flex:1 1 100%;min-width:0;align-items:flex-start;text-align:left;margin:4px 0 0 42px;}}'
+    // Casora-Look: Pille wie „Alles aus“ im Licht-Popup, mittig unter der Statuszeile.
+    + '.huc.soft{flex-basis:auto;margin:10px 0 2px;align-items:center;text-align:center;gap:8px;}'
+    + '.huc.soft .huc-b{gap:8px;padding:8px 16px 8px 13px;border-radius:999px;font-size:14px;font-weight:600;letter-spacing:0;'
+    +   'background:var(--casora-lps-chip, var(--casora-soft-row-fill, rgba(140,115,90,0.07)));color:var(--casora-lps-chip-ink, var(--secondary-text-color));}'
+    + '.huc.soft .huc-b::before{left:0;right:0;top:-6px;bottom:-6px;}'
+    + '.huc.soft .huc-b:focus-visible{border-radius:999px;}'
+    + '@media (hover:hover){.huc.soft .huc-b:not(.busy):hover{opacity:1;filter:brightness(.98);}}'
+    + '.huc.soft .huc-s{color:var(--casora-soft-sub, var(--secondary-text-color));}'
+    + '</style>';
+  // HTML für die Vorlage (Statuskarte) bzw. die Weich-Kopfzeile.
+  K.html = function (isSoft) {
+    if (isSoft == null) isSoft = soft();
+    return CSS + '<div class="huc' + (isSoft ? ' soft' : '') + '" data-casora-nodismiss="">' + inner() + '</div>';
+  };
+  var deep = function (root, out) {
+    out = out || [];
+    if (!root || !root.querySelectorAll) return out;
+    root.querySelectorAll('.huc').forEach(function (n) { out.push(n); });
+    root.querySelectorAll('*').forEach(function (n) { if (n.shadowRoot) deep(n.shadowRoot, out); });
+    return out;
+  };
+  // Nur das offene Popup durchsuchen (der ganze Baum wäre teuer).
+  K.paint = function () {
+    var pop = window.casoraPopup && window.casoraPopup.element, ha = document.querySelector('home-assistant');
+    var list = pop ? deep(pop.shadowRoot, deep(pop)) : deep(ha && ha.shadowRoot);
+    list.forEach(function (n) { n.innerHTML = tr(inner()); });
+  };
+
+  // Antippen: eigene Erfassung (onclick im Popup-HTML ist am Handy unzuverlässig).
+  var find = function (ev) {
+    var path = (ev.composedPath && ev.composedPath()) || [];
+    for (var i = 0; i < path.length; i++) {
+      var n = path[i];
+      if (n && n.hasAttribute && n.hasAttribute('data-huc')) return n;
+    }
+    return null;
+  };
+  var go = function () {
+    var ha = document.querySelector('home-assistant');
+    if (ha && ha.hass) K.run(ha.hass);
+  };
+  var ts = null, tDone = 0;
+  window.addEventListener('touchstart', function (ev) {
+    var t = ev.touches && ev.touches[0]; ts = t ? { x: t.clientX, y: t.clientY } : null;
+  }, { capture: true, passive: true });
+  window.addEventListener('touchend', function (ev) {
+    var el = find(ev); if (!el || !ts) return;
+    var t = ev.changedTouches && ev.changedTouches[0];
+    if (t && (Math.abs(t.clientX - ts.x) > 10 || Math.abs(t.clientY - ts.y) > 10)) return;
+    tDone = Date.now(); window._casoraSuppressDismiss = Date.now() + 600;
+    if (ev.cancelable) ev.preventDefault(); ev.stopPropagation();
+    go();
+  }, { capture: true, passive: false });
+  window.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    if (!find(ev)) return;
+    ev.preventDefault(); ev.stopPropagation();
+    go();
+  }, true);
+  window.addEventListener('click', function (ev) {
+    if (!find(ev)) return;
+    ev.preventDefault(); ev.stopPropagation();
+    window._casoraSuppressDismiss = Date.now() + 600;
+    if (Date.now() - tDone < 700) return;
+    go();
+  }, true);
+})();
+
 // ── HAs eigener Update-Dialog (30.09.2026) ──────────────────────────────────
 // Die Zeilen im Update-Popup öffnen HAs Dialog (more-info-update). Dessen Fußleiste
 // mit „Überspringen/Aktualisieren“ klebt unten und nimmt als Hintergrund die Dialog-
