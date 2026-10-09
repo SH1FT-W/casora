@@ -1765,6 +1765,11 @@
           + '<div style="height:8px;border-radius:999px;background:rgba(255,255,255,0.14);overflow:hidden;">'
           + '<div style="height:100%;width:' + Math.max(2, Math.min(100, r.tank)) + '%;border-radius:999px;background:' + col + ';"></div></div></div>';
       }
+      /* Tankstand gerade unbekannt (z. B. nach einem Neustart, Auto-Integration noch nicht da): Tanken trotzdem zeigen. */
+      if (r.tank == null && window._casoraTank && window._casoraHH && window._casoraHH.on()) {
+        var tr0 = window._casoraTank.row(p, states);
+        if (tr0) out += '<div style="height:var(--casora-popup-sec-gap, 22px)"></div>' + tr0;
+      }
       return out;
     }
     if (name === 'state_s') {
