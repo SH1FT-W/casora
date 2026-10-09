@@ -69,7 +69,7 @@ console.log('ok B-TPL-04');
   };
   const F = load('°F');
   const states = { 'climate.bad': { state: 'heat', attributes: { temperature: 70, current_temperature: 68 } } };
-  assert.equal(F.status({ id: 'climate.bad' }, states), 'Bereit · 70,0 °F');
+  assert.equal(F.status({ id: 'climate.bad' }, states), 'Hält 70,0 °F');
   const html = F.stepper(['climate.bad'], 70, {}, 'Ziel', true);
   assert.ok(html.includes('<span> °F</span>') && !html.includes('°C'), 'Stepper in °F');
   const bar = JSON.parse(html.match(/data-fb-bar="([^"]+)"/)[1].replace(/&quot;/g, '"'));

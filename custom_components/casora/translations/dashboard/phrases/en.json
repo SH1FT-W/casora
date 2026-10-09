@@ -37,6 +37,7 @@
   "Verriegelt": "Locked",
   "Entriegelt": "Unlocked",
   "Bereit": "Ready",
+  "Hält": "Holding",
   "Fertig": "Done",
   "Pausiert": "Paused",
   "Läuft": "Running",
@@ -2270,6 +2271,10 @@
   [
    "^Bereit · (.+)$",
    "Ready · {1}"
+  ],
+  [
+   "^Hält (.+)$",
+   "Holding {1}"
   ],
   [
    "^Automatik · (.+)$",

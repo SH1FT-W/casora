@@ -495,6 +495,7 @@
     if (e.state === 'off') return 'Aus';
     if (F.heating(o, states)) return tt ? 'Heizt auf ' + tt : 'Heizt';
     if (e.state === 'auto') return tt ? 'Automatik · ' + tt : 'Automatik';
+    if (e.state === 'heat' || e.state === 'cool') return tt ? 'Hält ' + tt : 'Hält';
     return tt ? 'Bereit · ' + tt : 'Bereit';
   };
 
