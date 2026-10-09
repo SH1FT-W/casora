@@ -158,7 +158,7 @@
     [['westfalen'], FAV('westfalen.com')], [['hoyer'], FAV('hoyer.de')], [['q1'], WM('2/25/Q1_logo.svg')],
     [['agip', 'eni'], FAV('agip.de')], [['tamoil'], WM('5/5a/Tamoil.svg')],
     // Lanfer: nur das runde Zeichen links aus dem Schriftzug (Ausschnitt), Wiro: Oval mit viel Rand (vergrößert).
-    [['lanfer'], 'https://www.lanfer-energie.de/hs-fs/hubfs/Lanfer%20One-Pager/Lanfer_Energie_Logo_2%20C_ohne%20verlauf%20(1).png?width=600', { crop: 1 }],
+    [['lanfer'], 'https://www.lanfer-energie.de/hs-fs/hubfs/Lanfer%20One-Pager/Lanfer_Energie_Logo_2%20C_ohne%20verlauf%20(1).png?width=600', { crop: [0, 0, 120, 119, 600, 137] }],
     [['raiffeisen', 'rwg'], WM('9/93/Raiffeisen-Giebelkreuz.svg')], [['team'], FAV('team.de')],
     [['classic'], 'https://www.classic-oil.de/wp-content/uploads/2021/05/CLASSIC_Logo_web_home.png'],
     [['calpam'], WM('1/12/Calpam_Mineral%C3%B6l-Gesellschaft_logo.svg')], [['sprint', 'go'], FAV('go-sprint.de')],
@@ -199,6 +199,14 @@
   var fit = function (r, o) {
     o = o || {};
     var wide = !o.crop && r > 1.6, ins = wide ? 8 : 16;
+    // Ausschnitt [x, y, b, h, Bildbreite, Bildhöhe]: genau dieses Rechteck mittig in den Kreis (Lanfer-Zeichen).
+    if (Array.isArray(o.crop)) {
+      var c = o.crop, S = 100 - 2 * ins, k = S / Math.max(c[2], c[3]);
+      var ox = ins + (S - c[2] * k) / 2 - c[0] * k, oy = ins + (S - c[3] * k) / 2 - c[1] * k;
+      return 'left:' + ox.toFixed(2) + '%;top:' + oy.toFixed(2) + '%;width:' + (c[4] * k).toFixed(2) + '%;height:' + (c[5] * k).toFixed(2) + '%;object-fit:fill;max-width:none;'
+        // Nur das Rechteck zeigen, nicht den angrenzenden Schriftzug.
+        + 'clip-path:inset(' + (c[1] / c[5] * 100).toFixed(2) + '% ' + ((c[4] - c[0] - c[2]) / c[4] * 100).toFixed(2) + '% ' + ((c[5] - c[1] - c[3]) / c[5] * 100).toFixed(2) + '% ' + (c[0] / c[4] * 100).toFixed(2) + '%);';
+    }
     return 'left:' + ins + '%;top:' + ins + '%;width:' + (100 - 2 * ins) + '%;height:' + (100 - 2 * ins) + '%;'
       + 'object-fit:' + (o.crop ? 'cover;object-position:left center;' : 'contain;') + (o.zoom ? 'transform:scale(' + o.zoom + ');' : '');
   };
@@ -412,6 +420,23 @@
     + '.leaflet-control-attribution{font-size:9px!important;line-height:1.3!important;padding:1px 6px!important;border-radius:8px 0 0 0;'
     + 'background:rgba(255,255,255,.6)!important;color:#555!important;pointer-events:auto}#map.dark .leaflet-control-attribution{background:rgba(0,0,0,.45)!important;color:#bbb!important}'
     + '.leaflet-control-attribution a{color:inherit!important}';
+  // HA 2026.10: ha-map zeichnet direkt mit MapLibre (kein Leaflet mehr, m._engine._map). Gleiche Schnittstelle
+  // wie Leaflet für syncMap; MapLibre zählt Zoom in 512er-Kacheln (eine Stufe weniger als Leaflet).
+  var mlOf = function (m) { return m && !m.leafletMap && m._engine && m._engine._map && m._engine._map.project ? m._engine._map : null; };
+  var lmOf = function (m) {
+    if (!m) return null;
+    if (m.leafletMap) return m.leafletMap;
+    var ml = mlOf(m);
+    if (!ml) return null;
+    return {
+      invalidateSize: function () { ml.resize(); },
+      setView: function (c, z) { ml.jumpTo({ center: [c[1], c[0]], zoom: z - 1 }); },
+      latLngToContainerPoint: function (ll) { var q = ml.project([ll[1], ll[0]]); return { x: q.x, y: q.y }; },
+    };
+  };
+  var hmStyleMl = '.maplibregl-canvas{filter:var(--ct-filter,none)}.maplibregl-ctrl-top-left,.maplibregl-ctrl-top-right,.maplibregl-ctrl-scale{display:none!important}'
+    + '.maplibregl-ctrl-attrib{font-size:9px!important;line-height:1.3!important;padding:1px 6px!important;border-radius:8px 0 0 0;background:rgba(255,255,255,.6)!important;color:#555!important}'
+    + '.maplibregl-ctrl-attrib a{color:inherit!important}.maplibregl-ctrl-attrib-button{display:none!important}';
   var hmCreate = function (v) {
     var layer = document.createElement('div');
     layer.className = 'ct-hamap';
@@ -435,7 +460,19 @@
       var t0 = Date.now();
       var wait = setInterval(function () {
         if (V !== v || !m.isConnected) { clearInterval(wait); return; }
-        var lm = m.leafletMap;
+        var lm = m.leafletMap, mlx = mlOf(m);
+        if (mlx && !hm.hooked) {
+          hm.hooked = true;
+          ['dragPan', 'scrollZoom', 'boxZoom', 'doubleClickZoom', 'touchZoomRotate', 'keyboard', 'dragRotate', 'touchPitch'].forEach(function (x) { if (mlx[x] && mlx[x].disable) mlx[x].disable(); });
+          var st2 = document.createElement('style'); st2.textContent = hmStyleMl; if (m.shadowRoot) m.shadowRoot.appendChild(st2);
+          hm.ml = mlx;
+          // Nur wirklich geladene Kacheln zählen (bei gestörtem Dienst bleibt es bei 0 → Punktkarte).
+          mlx.on('data', function (e) { if (e && e.tile && (!e.tile.state || e.tile.state === 'loaded')) hm.tiles++; });
+          mlx.on('error', function () { hm.errors++; });
+          if (mlx.queryRenderedFeatures && mlx.loaded() && mlx.queryRenderedFeatures().length) hm.tiles++;
+          hm.view = null;
+          syncMap();
+        }
         if (lm && !hm.hooked) {
           hm.hooked = true;
           ['dragging', 'touchZoom', 'doubleClickZoom', 'scrollWheelZoom', 'boxZoom', 'keyboard', 'tap'].forEach(function (x) { if (lm[x] && lm[x].disable) lm[x].disable(); });
@@ -458,7 +495,7 @@
           syncMap();
         }
         // Sichtbar, sobald Kacheln da sind und die Karte fertig gezeichnet hat.
-        var done = lm && hm.tiles > 0 && (!hm.ml || hm.ml.loaded());
+        var done = (lm || mlx) && hm.tiles > 0 && (!hm.ml || hm.ml.loaded());
         if (done) { clearInterval(wait); layer.dataset.state = 'ok'; layer.style.opacity = '1'; return; }
         if (Date.now() - t0 > 12000) {
           clearInterval(wait);
@@ -490,7 +527,7 @@
     // WebGL-Fläche hält sich nicht immer an border-radius (dunkle Ecken) – zusätzlich zuschneiden.
     L.clipPath = 'inset(0 round ' + k.RAD + ')';
     // Ruhiger Grund: Farben zurückgenommen.
-    var m = hm.el, lm = m && m.leafletMap;
+    var m = hm.el, lm = lmOf(m);
     // Filter nur auf der Kartenfläche (auf dem ganzen Element bricht er am Handy die runden Ecken).
     if (m) m.style.setProperty('--ct-filter', k.dark ? 'saturate(.5) brightness(.9)' : 'saturate(.45) contrast(.9) brightness(1.02)');
     // Schleier in Popup-Farbe über der Karte, unter den Pillen.

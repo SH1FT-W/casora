@@ -105,6 +105,20 @@ const mapState = (pg) => pg.evaluate(async () => {
       out.zoomCtl = !!m.shadowRoot.querySelector('.leaflet-control-zoom') && getComputedStyle(m.shadowRoot.querySelector('.leaflet-control-zoom')).display !== 'none';
       out.attribution = (m.shadowRoot.querySelector('.leaflet-control-attribution') || { textContent: '' }).textContent.trim();
       out.dragging = lm.dragging && lm.dragging.enabled();
+    } else if (m && m._engine && m._engine._map && m._engine._map.project) {
+      // HA 2026.10: ha-map zeichnet direkt mit MapLibre (Längengrad zuerst).
+      const ml = m._engine._map;
+      const sensor = Object.entries(document.querySelector('home-assistant').hass.states).find(([k, x]) => x && k.startsWith('sensor.casora_tanken_qa_'))[1];
+      const st = sensor.attributes.stations;
+      const best = st.find((x) => x.o);
+      const ce = sensor.attributes.center;
+      const p = ml.project([best.lng, best.lat]), c = ml.project([ce[1], ce[0]]);
+      out.expect = { best: [out.layer.x + p.x, out.layer.y + p.y], center: [out.layer.x + c.x, out.layer.y + c.y] };
+      out.tiles = m.shadowRoot.querySelectorAll('canvas').length;
+      const zc = m.shadowRoot.querySelector('.maplibregl-ctrl-zoom-in');
+      out.zoomCtl = !!zc && zc.getBoundingClientRect().width > 0;
+      out.attribution = (m.shadowRoot.querySelector('.maplibregl-ctrl-attrib') || { textContent: '' }).textContent.trim();
+      out.dragging = ml.dragPan.isEnabled();
     }
   }
   return out;
