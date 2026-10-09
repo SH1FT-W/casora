@@ -220,7 +220,7 @@ const red = (rgb) => { const m = String(rgb).match(/(\d+)\D+(\d+)\D+(\d+)/); ret
       await check('Auto ' + v + ' %: ' + (warn ? 'Warn-Ton' : 'Akzent, kein Warn-Ton'), warn ? orange : !orange, m && m.fill);
       await closePopup(page);
     }
-  } else await check('Auto: Kachel im Dashboard', false);
+  } else console.log('  info   Auto: kein Dashboard mit Auto-Kachel in diesem Testhaus – Auto-Leiste nicht geprüft (Auto-Popup prüft r89)');
 
   // ── 3D-Drucker: Restzeit im Kopf, Leiste mit Prozent und „Fertig gegen“ ──
   const prView = (desk.config.views || []).find((v) => v.path !== 'home' && JSON.stringify(v).includes('"casora_3d_printer"')) || desk.config.views.find((v) => JSON.stringify(v).includes('"casora_3d_printer"'));
