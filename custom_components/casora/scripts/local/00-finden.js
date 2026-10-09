@@ -747,6 +747,15 @@ window.casoraPriceKwh = function (v) {
     });
     appl.forEach(function (id) { if (S[id]) add(id, 'appliance', false); });
     if (n.mail && S[n.mail]) add(n.mail, 'mail', false);
+    // Pulse (14-pulse.js): je überwachtem Gerät sein Status-Sensor; meldet bei prüfen/ausgefallen.
+    var PL = window._casoraPulse;
+    if (PL && typeof PL.scan === 'function' && PL.installed(hass)) {
+      try {
+        PL.scan(hass, S).list.forEach(function (d) {
+          add(d.statusId, 'pulse', (d.status === 'failed' || d.status === 'check') && !d.snoozed);
+        });
+      } catch (e) { /* ohne Pulse-Zeilen */ }
+    }
     care.forEach(function (x) {
       if (x && x[1] && S[x[1]]) add(x[1], 'care', !!(x[0] && S[x[0]] && S[x[0]].state === 'on'));
     });

@@ -380,6 +380,8 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       if (id.indexOf('sensor.') !== 0 || dcOf(S[id]) !== 'battery' || !isFinite(parseFloat(S[id].state))) return;
       var dv = reg[id] && reg[id].device_id; if (dv) pctDev[dv] = 1;
     });
+    // Geräte, deren Problem schon die Pulse-Quelle meldet (casora-core.js): keine zweite Akku-Zeile.
+    var pulseDev = rows[idx].pulseDevices || {};
     var low = [];
     Object.keys(S).forEach(function (id) {
       if (ex.indexOf(id) !== -1) return;
@@ -395,6 +397,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       var since = Date.parse(st.last_changed || '') || now;
       if (!_batHeld[id] && now - since < holdMin * 60000) return;
       _batHeld[id] = 1;
+      if (reg[id] && reg[id].device_id && pulseDev[reg[id].device_id]) return;
       low.push({ st: st, pct: n });
     });
     var out = rows.slice();

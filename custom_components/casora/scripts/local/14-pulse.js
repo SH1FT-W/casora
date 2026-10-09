@@ -174,6 +174,87 @@
     };
   };
 
+  // ── Glocke (Mitteilungszentrale) ──────────────────────────────────────────
+  // Nur echte Probleme (prüfen/ausgefallen) – „bald fällig“ braucht noch nichts zu tun und bleibt in
+  // Kachel und Popup, wie die Batterie-Quelle erst ab „schwach“ meldet. Pausierte Erinnerungen
+  // (snoozed) und Ausnahmen (ex: Entität → true, „Nicht melden“) nicht. Bis BELL_SINGLE Geräte je eine
+  // Zeile, darüber eine Sammelzeile (sonst flutet z. B. ein Funk-Ausfall die Glocke).
+  // Zeitpunkt: Beginn der Stille (silent_since, von Pulse über Neustarts gemerkt), sonst last_changed
+  // des Status; dazu `seen` je Gerät + Status + Grund – nach einem HA-Neustart bleibt Gelesenes
+  // gelesen (settleSeen in casora-core.js), ein neuer Grund ist neu.
+  // → { rows, devices } – devices: Geräte (device_id → true), deren Problem Pulse meldet oder bewusst
+  // pausiert ist; die Batterie-Quelle der Glocke überspringt deren Batteriesensoren (keine Doppelmeldung).
+  var BELL_SINGLE = 3;
+  var BELL_OPENS = ['casora_pulse', 'casora_popup_pulse'];
+  P.bellPhrase = function (d) {
+    switch (d.reason) {
+      case 'silent': case 'partner': return d.status === 'failed' ? 'antwortet nicht' : 'ist still';
+      case 'silent_new': return 'hat sich noch nicht gemeldet';
+      case 'unavailable': return 'ist nicht erreichbar';
+      case 'battery_low': return 'braucht eine neue Batterie';
+      case 'battery_low_flag': return 'meldet schwache Batterie';
+      case 'battery_soon': return 'braucht bald eine neue Batterie';
+      case 'waiting_first': return 'wartet auf die erste Meldung';
+      default: return d.status === 'failed' ? 'ist ausgefallen' : 'sollte geprüft werden';
+    }
+  };
+  P.bell = function (hass, states, ex, now) {
+    var S = states || (hass && hass.states) || {};
+    var s = P.scan(hass, S, now);
+    var out = { rows: [], devices: {} };
+    var shown = [];
+    s.list.forEach(function (d) {
+      if (d.status !== 'failed' && d.status !== 'check') return;
+      if (ex && ex[d.statusId]) return;
+      out.devices[d.device] = true;
+      if (!d.snoozed) shown.push(d);
+    });
+    if (!shown.length) return out;
+    var at = function (d) {
+      var t = d.silentSince ? Date.parse(d.silentSince) : NaN;
+      if (isNaN(t)) t = Date.parse((S[d.statusId] || {}).last_changed || '');
+      return isNaN(t) ? (now || Date.now()) : Math.min(t, now || Date.now());
+    };
+    var key = function (d) { return { k: d.device + '|' + d.status + '|' + (d.reason || ''), t: at(d) }; };
+    var tone = function (list) { return list.some(function (d) { return d.status === 'failed'; }) ? 'bad' : 'warn'; };
+    // Ausgefallene wichtige Geräte (Rauch, Wasser) oben wie Sicherheitsmeldungen.
+    var rank = function (list) { return list.some(function (d) { return d.status === 'failed' && d.critical; }) ? 1 : 0; };
+    var target = s.problemsId || null;
+    if (shown.length <= BELL_SINGLE) {
+      shown.forEach(function (d) {
+        out.rows.push({
+          id: 'casora:pulse:' + d.device,
+          when: at(d),
+          label: d.name + ' ' + P.bellPhrase(d),
+          sub: d.area || null,
+          value: BATTERY[d.reason] && d.battery != null ? Math.round(d.battery) + ' %' : null,
+          icon: BATTERY[d.reason] ? 'battery' : 'pulse',
+          tone: tone([d]),
+          // Tipp öffnet das Pulse-Popup über die Pulse-Kachel (deren Entität ist „Probleme“).
+          entity: target || d.statusId,
+          opens: BELL_OPENS,
+          rank: rank([d]),
+          seen: [key(d)],
+        });
+      });
+      return out;
+    }
+    var names = shown.slice(0, 3).map(function (d) { return d.name; });
+    out.rows.push({
+      id: 'casora:pulse',
+      when: Math.max.apply(null, shown.map(at)),
+      label: shown.length + ' Geräte brauchen Aufmerksamkeit',
+      sub: names.join(', ') + (shown.length > 3 ? ' …' : ''),
+      icon: 'pulse',
+      tone: tone(shown),
+      entity: target || shown[0].statusId,
+      opens: BELL_OPENS,
+      rank: rank(shown),
+      seen: shown.map(key),
+    });
+    return out;
+  };
+
   // ── Kachel ────────────────────────────────────────────────────────────────
   // Hinterlegt (aktiv) nur bei echten Problemen; „bald fällig“ steht dahinter, färbt aber nicht.
   P.active = function (s) { return !!(s && s.problems); };

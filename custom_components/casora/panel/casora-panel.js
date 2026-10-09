@@ -2188,6 +2188,9 @@ const SECTIONS = [
         always: true, ord: 9 },
       { key: "notify_battery", sub: "system", glyph: "battery", tone: "var(--casora-popup-ui-bad, #FF453A)", label: "Low battery", type: "bool", boolDefault: true,
         always: true, ord: 10 },
+      // Nur mit der Integration Pulse (Batterie-/Funkwächter): deren Probleme in der Glocke (14-pulse.js).
+      { key: "notify_pulse", sub: "system", glyph: "pulse", tone: "var(--casora-popup-ui-warn, #FF9F0A)", label: "Pulse", type: "bool", boolDefault: true,
+        always: true, ord: 10.5, when: () => PULSE_HERE },
       { key: "notify_updates", sub: "system", glyph: "updates", tone: "var(--casora-color-teal, #00C3D0)", label: "Updates", type: "bool", boolDefault: true,
         always: true, ord: 11 },
       { key: "notify_restart", sub: "system", glyph: "exclamation", tone: "var(--casora-popup-ui-warn, #FF9F0A)", label: "Restart pending", type: "bool", boolDefault: true,
@@ -3743,6 +3746,9 @@ const CASORA_ACCENTS = [
 // Aktives HA-Theme (vom Panel bei jedem hass-Update gesetzt). Casora legt
 // casora-color-purple bewusst auf ein dunkles Rot – dort heißt der Eintrag danach.
 let ACCENT_THEME = "";
+// Pulse installiert? (Schalter „Pulse“ unter Benachrichtigungen) – je Registry-Stand einmal geprüft.
+let PULSE_HERE = false;
+let pulseReg = null;
 // Weich-Look: theme_weich.yaml setzt casora-popup-layout: soft (Standard und Glas nicht).
 // Gelesen an <html>, wo HA das aktive Theme in der Fassung des Hell/Dunkel-Modus ablegt –
 // dasselbe Signal, nach dem sich die Popups des echten Dashboards richten.
@@ -5608,6 +5614,10 @@ class CasoraPanel extends HTMLElement {
     ACCENT_THEME = (hass.selectedTheme && hass.selectedTheme.theme)
       || (hass.themes && (hass.themes.theme || hass.themes.default_theme)) || "";
     this._syncLight();
+    if (hass.entities !== pulseReg) {
+      pulseReg = hass.entities;
+      PULSE_HERE = Object.values(pulseReg || {}).some((e) => e && e.platform === "pulse");
+    }
     // Theme oder Modus gewechselt: die Vorschau-Nachbildung folgt dem Look sofort.
     if (this._themeSeen !== hass.themes || this._themeSel !== hass.selectedTheme) {
       this._themeSeen = hass.themes;
