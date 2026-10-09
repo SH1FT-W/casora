@@ -413,13 +413,14 @@ PY
 }
 # Geschätzte Sekunden je Zustand aus .qa/zeiten.json (für die Zahl der HAs je Zustand).
 est_state() {
-  python3 - "$REPO/.qa/zeiten.json" "$1" "$2" "$3" <<'PY'
+  python3 - "$REPO/.qa/zeiten.json" "$1" "$2" "$3" "${4:-0}" <<'PY'
 import json, sys
 try: z = json.load(open(sys.argv[1], encoding="utf-8"))
 except Exception: z = {}
-state, komplett, ids = sys.argv[2], sys.argv[3] == "1", [x for x in sys.argv[4].split(",") if x]
+state, komplett, ids, crawl = sys.argv[2], sys.argv[3] == "1", [x for x in sys.argv[4].split(",") if x], sys.argv[5] == "1"
 if komplett: print(sum(v for k, v in z.items() if k.startswith(state + "/")) or 1500)
-else: print(sum(z.get(f"{state}/{i}", z.get(f"{state}/quick/{i}", 40)) for i in ids))
+else: print(sum(z.get(f"{state}/{i}", z.get(f"{state}/quick/{i}", 40)) for i in ids)
+           + (sum(v for k, v in z.items() if k.startswith(state + "/full/")) if crawl else 0))
 PY
 }
 
@@ -498,7 +499,7 @@ if [ $PAR = 1 ]; then
     # aber nur so viele, wie die geschätzte Arbeit lohnt (~7 min je HA; ein HA starten kostet ~1 min).
     ea=0; es=0
     [ $RUN_ARBEIT = 1 ] && ea=$(est_state arbeit "$A_KOMPLETT" "$A_E2E,$A_REG,$A_TEILE")
-    [ $RUN_STRESS = 1 ] && es=$(est_state stress "$S_KOMPLETT" "$S_REG")
+    [ $RUN_STRESS = 1 ] && es=$(est_state stress "$S_KOMPLETT" "$S_REG" "$S_CRAWL")
     wa=$(( (ea + 419) / 420 )); [ $wa -gt 3 ] && wa=3; [ $wa -lt 1 ] && wa=1
     ws=$(( (es + 419) / 420 )); [ $ws -gt 2 ] && ws=2; [ $ws -lt 1 ] && ws=1
     spare=$((NHAS - RUN_ARBEIT - RUN_STRESS - RUN_FRISCH))
