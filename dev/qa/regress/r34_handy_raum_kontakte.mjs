@@ -83,14 +83,23 @@ const look = (field, contact) => page.evaluate(([field, contact]) => {
 const seen = await look('rooms_row', sync.contact);
 let sub = null;
 if (!seen.hit && seen.group) {
+  // Die Unter-Reihe hängt am gemeinsamen Helfer input_select.casora_expanded_row: Antippen schaltet um.
+  // Stand er noch von einem anderen Test auf einer Reihe, klappte der Tipp zu statt auf (09.10.2026,
+  // im Gate rot, einzeln grün) – darum vorher zuklappen und danach auf die Reihe warten statt fest 2 s.
+  await page.evaluate(() => { const h = document.querySelector('home-assistant').hass, id = 'input_select.casora_expanded_row';
+    const st = h.states[id];
+    if (st && st.state !== 'none' && (st.attributes.options || []).includes('none')) return h.callService('input_select', 'select_option', { entity_id: id, option: 'none' }); });
+  await page.waitForFunction(() => { const st = document.querySelector('home-assistant').hass.states['input_select.casora_expanded_row']; return !st || st.state === 'none'; }, null, { timeout: 8000 }).catch(() => {});
   await page.evaluate(() => {
     const chips = window.__pierce('button-card').find((b) => [].concat((b._config || {}).template || []).includes('casora_mobile_sensor_chips'));
     const g = window.__pierce('button-card', chips.shadowRoot.querySelector('#rooms_row'))
       .find((b) => [].concat((b._config || {}).template || []).includes('casora_badge_security_group') && b.getBoundingClientRect().width > 0);
     (g.shadowRoot.querySelector('ha-card') || g).click();
   });
-  await page.waitForTimeout(2000);
-  sub = await look('room_sub_security', sync.contact);
+  for (let t0 = Date.now(); Date.now() - t0 < 10000; await page.waitForTimeout(300)) {
+    sub = await look('room_sub_security', sync.contact);
+    if (sub && sub.hit) break;
+  }
 }
 await check(`Raumseite „${sync.room}“ am Handy zeigt den Kontakt ${sync.contact} als Badge (einzeln oder in „Sicherheit“)`,
   seen.hit || !!(sub && sub.hit), { seen, sub });

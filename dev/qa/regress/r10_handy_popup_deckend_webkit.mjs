@@ -22,9 +22,18 @@ for (const d of cands) {
   if (tiles.length) break;
 }
 await need('Kachel mit Popup auf der Handy-Startseite', tiles.length, seen);
-const t = tiles[0];
-await page.mouse.click(t.x + t.w / 2, t.y + t.h / 2);
-await page.waitForTimeout(2500);
+// Auf das Popup warten statt fest 2,5 s; die Kacheln sortieren sich am Handy nach Zustand um (aktive
+// vorn) – war das Popup nicht offen, Lage neu messen und noch einmal tippen (09.10.2026: im Gate rot).
+const opened = () => page.waitForFunction(() => window.__pierce('casora-popup').some((p) => {
+  const el = p.shadowRoot && p.shadowRoot.querySelector('.glass'); const r = el && el.getBoundingClientRect();
+  return r && r.width > 100 && r.height > 100; }), null, { timeout: 8000 }).then(() => true, () => false);
+for (let i = 0; i < 3; i++) {
+  const now = i ? (await cards(page)).filter(isPop) : tiles;
+  const t = now.find((x) => x.t.join('+') === tiles[0].t.join('+') && x.text === tiles[0].text) || now[0] || tiles[0];
+  await page.mouse.click(t.x + t.w / 2, t.y + t.h / 2);
+  if (await opened()) break;
+}
+await page.waitForTimeout(600);   // Einblenden fertig
 const g = await page.evaluate(() => {
   const pop = window.__pierce('casora-popup').find((p) => p.shadowRoot && p.shadowRoot.querySelector('.glass'));
   if (!pop) return null;

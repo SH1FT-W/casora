@@ -41,7 +41,10 @@ const pickAndSave = async (want) => {
 };
 
 // Namen im Szenen-Menü der Handy-Leiste (Home, kein Raum).
-const phoneMenu = async () => {
+// want: erwartete Liste – dann bis zu 20 s darauf warten. Die Handy-Leiste liest die Auswahl ohne
+// Schlüssel zur Laufzeit aus dem Desktop-Dashboard (WebSocket, unter Last später); vorher zeigt sie
+// alle Szenen. Mit 1,4 s fester Wartezeit war der Test im Gate rot, einzeln grün (09.10.2026).
+const phoneMenu = async (want) => {
   const { page, browser } = await open({ width: 390, height: 844, mobile: true, safari: true });
   usePage(page);
   const c = await ws();
@@ -49,7 +52,8 @@ const phoneMenu = async () => {
   c.close();
   await dashboard(page, dash.phone.url + '/' + (phone.views[0].path || '0'), 3);
   let out = null;
-  for (let i = 0; i < 12; i++) {
+  const until = Date.now() + (want ? 20000 : 8400);
+  for (let i = 0; Date.now() < until; i++) {
     out = await page.evaluate(() => {
       const nav = window.__pierce('casora-mobile-nav')[0];
       if (!nav || !nav._hass) return null;
@@ -60,7 +64,7 @@ const phoneMenu = async () => {
       nav._closeMenu && nav._closeMenu();
       return names;
     });
-    if (out && out.length && i >= 2) break;
+    if (out && out.length && (want ? JSON.stringify(out) === JSON.stringify(want) : i >= 2)) break;
     await page.waitForTimeout(700);
   }
   await browser.close();
@@ -83,7 +87,7 @@ try {
   const phone = await c.cmd({ type: 'lovelace/config', url_path: dash.phone.url });
   const navCard = (phone.views[0].cards || []).find((x) => x && x.type === 'custom:casora-mobile-nav') || {};
   await check('Handy-Leiste trägt die Badge-Auswahl', JSON.stringify(navCard.scene_order) === JSON.stringify(a.set.scene_order), navCard.scene_order);
-  const shown = await phoneMenu();
+  const shown = await phoneMenu(want);
   await check('Handy-Menü „Szenen“ zeigt genau die 3 Szenen der Badge', JSON.stringify(shown) === JSON.stringify(want), { shown, want });
 
   // 2) Wie vor 1.0.5 gespeichert: Leiste ohne Szenen-Schlüssel → Laufzeit liest das Desktop-Dashboard.
@@ -91,18 +95,22 @@ try {
   old.views[0].cards.forEach((x) => { if (x && x.type === 'custom:casora-mobile-nav') KEYS.forEach((k) => delete x[k]); });
   await c.cmd({ type: 'lovelace/config/save', url_path: dash.phone.url, config: old });
   c.close();
-  const shown2 = await phoneMenu();
+  const shown2 = await phoneMenu(want);
   await check('ohne Schlüssel an der Leiste: Handy folgt trotzdem der Badge', JSON.stringify(shown2) === JSON.stringify(want), { shown2, want });
 
   // 3) Studio öffnen (ohne Speichern): gleicht die Leiste von selbst an.
   const s = await open();
   await studio(s.page, dash.url);
-  await s.page.waitForTimeout(2500);
+  // Der Abgleich schreibt im Hintergrund – nachsehen, bis er da ist (höchstens 20 s), statt fest 2,5 s.
+  let nav3 = {};
+  for (const t0 = Date.now(); Date.now() - t0 < 20000; await s.page.waitForTimeout(500)) {
+    const c2 = await ws();
+    const phone3 = await c2.cmd({ type: 'lovelace/config', url_path: dash.phone.url });
+    c2.close();
+    nav3 = (phone3.views[0].cards || []).find((x) => x && x.type === 'custom:casora-mobile-nav') || {};
+    if (JSON.stringify(nav3.scene_order) === JSON.stringify(a.set.scene_order)) break;
+  }
   await s.browser.close();
-  const c2 = await ws();
-  const phone3 = await c2.cmd({ type: 'lovelace/config', url_path: dash.phone.url });
-  c2.close();
-  const nav3 = (phone3.views[0].cards || []).find((x) => x && x.type === 'custom:casora-mobile-nav') || {};
   await check('Studio-Öffnen schreibt die Auswahl an die Handy-Leiste', JSON.stringify(nav3.scene_order) === JSON.stringify(a.set.scene_order), nav3);
 } finally {
   const back = await pickAndSave(a.before);

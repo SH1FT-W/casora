@@ -107,7 +107,9 @@ await check('Energie: role=img, aria-label, Tab-Stopp, touch-action pan-y', aria
 r = await popup({ type: 'custom:button-card', template: 'casora_energy', entity: ids.power,
   variables: { entity_usage_today: ids.today, entity_usage_month: ids.month } });
 await check('Energie (Heute + Monat): Popup mit Diagramm', r && r.drawn >= 1, r);
-const tapMetric = async (eid) => {
+// want(v): erwartetes Ergebnis – dann bis zu 20 s darauf warten. Die Tagesstatistik kommt per WebSocket
+// nach; unter Last war das Diagramm nach 1,2 s Ruhe noch nicht umgestellt (09.10.2026).
+const tapMetric = async (eid, want) => {
   const at = await page.evaluate((eid) => {
     const pop = window.__pierce('casora-popup').find((p) => p.hasAttribute('open'));
     const row = pop && window.__pierce('[data-hp-metric="' + eid + '"]', pop.shadowRoot)[0];
@@ -119,7 +121,7 @@ const tapMetric = async (eid) => {
   if (!at) return null;
   await page.waitForTimeout(300);
   await page.mouse.click(at.x, at.y);
-  return stable(page, (f) => {
+  const read = () => stable(page, (f) => {
     const c = eval(f)();
     if (!c || !c.shadowRoot || !c._c) return null;
     const svg = c.shadowRoot.querySelector('svg');
@@ -127,8 +129,11 @@ const tapMetric = async (eid) => {
       heute: [...c.shadowRoot.querySelectorAll('text')].some((t) => t.textContent === 'Heute'),
       label: svg && svg.getAttribute('aria-label') };
   }, chartIn.toString(), { max: 10000, quiet: 1200 });
+  let v = await read();
+  for (const t0 = Date.now(); want && !(v && want(v)) && Date.now() - t0 < 20000;) { await page.waitForTimeout(500); v = await read(); }
+  return v;
 };
-let t = await tapMetric(ids.today);
+let t = await tapMetric(ids.today, (v) => v.kind === 'bar' && v.bars >= 6 && v.heute);
 await check('Energie: „Heute“ antippen → 7 Tagessäulen mit „Heute“', t && t.kind === 'bar' && t.span === '7d' && t.bars >= 6 && t.bars <= 7 && t.heute, t);
 const hero0 = await hero();
 await page.evaluate((f) => eval(f)().shadowRoot.querySelector('svg').focus(), chartIn.toString());
@@ -140,7 +145,7 @@ await check('Energie: Säulen ablesen → Hero-Zahl zeigt den Tageswert (kWh, Da
   && /Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag/.test(whenDay), [hero0, heroDay, whenDay]);
 await page.keyboard.press('Escape');
 await page.waitForTimeout(300);
-t = await tapMetric(ids.month);
+t = await tapMetric(ids.month, (v) => v.kind === 'bar' && v.span === '30d' && v.bars >= 28);
 await check('Energie: „Diesen Monat“ antippen → 30 Tagessäulen', t && t.kind === 'bar' && t.span === '30d' && t.bars >= 28 && t.bars <= 30, t);
 t = await tapMetric(ids.month);
 await check('Energie: „Diesen Monat“ erneut antippen → zurück auf die Leistungskurve', t && t.kind === 'line' && t.bars === 0, t);

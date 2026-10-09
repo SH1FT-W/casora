@@ -16,6 +16,13 @@ await need('Casora-Dashboard mit Handy-Gegenstück', dash && dash.phone);
 const m = await open({ width: 390, height: 844, mobile: true, safari: true, dark: false, theme: 'Casora' });
 const pg = m.page;
 await dashboard(pg, dash.phone.url, 3);
+// Leiste und Raum-Overlays bauen sich nach den Kacheln auf (Raumfotos laden nach) – darauf warten
+// statt sofort zu messen (09.10.2026: unter Last „Voraussetzung … null“, einzeln grün).
+await pg.waitForFunction(() => {
+  const n = window.__pierce('*').find((e) => e._rooms && typeof e._set === 'function' && e._bar);
+  const ovs = window.__pierce('casora-filter-overlay');
+  return !!n && n._rooms.filter((r) => ovs.some((o) => o._config && o._config.filter_category === r.key && o._blurLayerRoomBg)).length >= 2;
+}, null, { timeout: 30000 }).catch(() => {});
 
 const nav = await pg.evaluate(() => {
   const n = window.__pierce('*').find((e) => e._rooms && typeof e._set === 'function' && e._bar);
@@ -61,9 +68,11 @@ for (let i = 0; i < N; i++) {
   do { key = nav[Math.floor(Math.random() * nav.length)]; } while (key === prev);
   prev = key;
   await tapRoom(key, i % 2 === 1);
-  await pg.waitForTimeout(1300);
-  const s = await state(key);
-  if (!(s.shown && s.layer && s.display === 'block' && s.opacity > 0.95 && s.photo && s.covers)) {
+  // Bis die Ebene steht (Einblenden ~1 s), höchstens 5 s – fehlt sie dann noch, ist es der Fehler.
+  const good = (s) => s.shown && s.layer && s.display === 'block' && s.opacity > 0.95 && s.photo && s.covers;
+  let s = null;
+  for (const t0 = Date.now(); Date.now() - t0 < 5000; await pg.waitForTimeout(250)) { s = await state(key); if (good(s) && Date.now() - t0 > 1250) break; }
+  if (!good(s)) {
     bad.push({ i, key, ...s });
     if (bad.length === 1) await shot('fehlt');
   }

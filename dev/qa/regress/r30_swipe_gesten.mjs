@@ -192,6 +192,9 @@ async function session({ label, url, safari, device, overlay }) {
   // Kein automatisches Weiterblättern während der Messung.
   await page.evaluate(() => window.__pierce('casora-swipe-card').forEach((s) => { clearInterval(s._autoTimer); s._config = { ...s._config, auto_swipe_interval: 0 }; }));
   picked = await pick(15000);
+  // Unter Last (09.10.2026 im Gate: WebKit Desktop) lag die Kachel nach dem Zentrieren noch nicht im
+  // Bild, weil die Reihe sich danach noch einmal aufbaute – einmal neu zentrieren und weiter warten.
+  if (!picked && device !== 'phone') { await page.evaluate(() => window.__swCenter()).catch(() => {}); picked = await pick(15000); }
   if (!(await check(`${label}: Swipe-Kachel sichtbar`, picked))) { await browser.close(); return; }
   const st = () => page.evaluate(() => window.__swState());
 
