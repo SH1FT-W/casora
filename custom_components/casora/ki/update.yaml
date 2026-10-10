@@ -23,7 +23,7 @@
     sequence:
     - variables:
         eid: '{{ repeat.item }}'
-        name: "{{ (state_attr(repeat.item, 'title') or state_attr(repeat.item, 'friendly_name') or repeat.item)\n   | regex_replace('\\\
+        name: "{{ (state_attr(repeat.item, 'title') or state_attr(repeat.item, 'friendly_name') or repeat.item)\n   | regex_replace('\\\\\
           s+(Update|Firmware)$', '') }}"
         v_from: '{{ state_attr(repeat.item, ''installed_version'') | string }}'
         v_to: '{{ state_attr(repeat.item, ''latest_version'') | string }}'
