@@ -286,9 +286,10 @@ await need('Batterie-Sensoren im Testhaus', bat.length >= 2, bat.length);
 await popupIn(P, { type: 'custom:button-card', template: 'casora_battery', entity: bat[0] });
 let b1 = await stable(P, look, null, { max: 12000, quiet: 1200 });
 await check('Batterie (Casora-Look): casora-chart gleich sichtbar, in der Sand-Karte, kein apexcharts-card', b1 && b1.plate && b1.apex === 0, b1);
-await check('Batterie (Casora-Look): Etikett innen (Versalien, 700) mit Zeitraum, „Jetzt“-Zeile', b1 && b1.label && /30 Tage/.test(b1.label.t)
-  && b1.label.tt === 'uppercase' && b1.label.fw === '700' && b1.ro, b1);
-{ const L = (await plateLabels(P)).find((l) => /30 Tage/.test(l.t));
+// 1.3 (Entscheidung B): Überschriften in Satzschreibung (17/700) statt Versalien.
+await check('Batterie (Casora-Look): Überschrift innen (Satzschreibung, 700) mit Zeitraum, „Jetzt“-Zeile', b1 && b1.label && /30 Tage/.test(b1.label.t)
+  && b1.label.tt === 'none' && b1.label.fw === '700' && b1.ro, b1);
+{ const L = (await plateLabels(P, { satz: true })).find((l) => /30 Tage/.test(l.t));
   await check('Batterie (Casora-Look): Etikett 20/18 vom Rand der Sand-Karte (D1)', L && L.dx === 20 && L.dy === 18, L); }
 await check('Batterie (Casora-Look): niedrigste Batterie gewählt und hinterlegt', b1 && b1.sel.length === 1 && b1.sel[0] === b1.entity, b1);
 const other = await P.evaluate((cur) => {
@@ -314,8 +315,8 @@ const weather = await P.evaluate((pw) => {
 await popupIn(P, { type: 'custom:button-card', template: 'casora_weather', entity: weather });
 const w = await stable(P, look, null, { max: 12000, quiet: 1500 });
 await check('Wetter (Casora-Look): Diagramm mit Etikett in der Sand-Karte, kein fremdes Diagramm aus dem vorigen Popup',
-  w && w.plate && w.label && !/Leistung/.test(w.label.t) && w.entity !== ids.power && w.label.tt === 'uppercase', w);
-{ const L = (await plateLabels(P)).find((l) => /48 Stunden/.test(l.t));
+  w && w.plate && w.label && !/Leistung/.test(w.label.t) && w.entity !== ids.power && w.label.tt === 'none', w);
+{ const L = (await plateLabels(P, { satz: true })).find((l) => /48 Stunden/.test(l.t));
   await check('Wetter (Casora-Look): Etikett 20/18 vom Rand der Sand-Karte (D1)', L && L.dx === 20 && L.dy === 18, L); }
 
 // Dünger: Säulen mit Etikett in der eigenen Karte (casora-chart title + plate).
@@ -328,7 +329,7 @@ const dz = await stable(P, () => {
   const tt = c && c.shadowRoot.querySelector('.tt');
   return c ? { plate: c.hasAttribute('plate'), title: tt ? tt.textContent : null, tt: tt ? getComputedStyle(tt).textTransform : null } : null;
 }, null, { max: 8000, quiet: 1000 });
-await check('Dünger (Casora-Look): Säulen in der Karte mit Etikett „Dosiert · 7 Tage“', dz && dz.plate && dz.title === 'Dosiert · 7 Tage' && dz.tt === 'uppercase', dz);
-{ const L = (await plateLabels(P)).find((l) => /^Dosiert/.test(l.t));
+await check('Dünger (Casora-Look): Säulen in der Karte mit Etikett „Dosiert · 7 Tage“', dz && dz.plate && dz.title === 'Dosiert · 7 Tage' && dz.tt === 'none', dz);
+{ const L = (await plateLabels(P, { satz: true })).find((l) => /^Dosiert/.test(l.t));
   await check('Dünger (Casora-Look): Etikett 20/18 vom Rand der Sand-Karte (D1)', L && L.dx === 20 && L.dy === 18, L); }
 await finish();

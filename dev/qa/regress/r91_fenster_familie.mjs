@@ -2,7 +2,7 @@
 // @parallel: ui
 // Design-Durchsicht 1.2, Teil D (Entscheidungen 08.10.2026). Erwartet im Casora-Design (hell und dunkel):
 // D1 Schwebende Fenster als eine Familie: Glocke (Desktop + Handy), Welle (Desktop), ⋯-Menü (Desktop + Handy)
-//    und Handy-Räume-Fenster mit Radius 28, deckender Fläche und demselben Schatten. Glocke und Welle ohne Kopf
+//    und Handy-Räume-Fenster mit Radius 28 (seit 1.3 Tokens: 34), deckender Fläche und demselben Schatten. Glocke und Welle ohne Kopf
 //    und ohne Platten, Zeilen 52, Kreis 36, Name 15/600, Unterzeile 13; „Alles gelesen“ als Sand-Pille unter
 //    der Liste (nur bei Ungelesenem); ⋯-Menü Zeilen 52, Kreis 36.
 // D7 Handy-Zurück-Kreis 48, gleiche Höhe und Mittellinie wie die Kopf-Pille rechts.
@@ -155,7 +155,8 @@ for (const dark of [false, true]) {
 
   // D1: eine Familie.
   for (const [n, f] of [['Glocke', g], ['Welle', w], ['⋯-Menü', p]]) {
-    await check(`${tag}: ${n} Desktop – Radius 28, deckend, kein Glas (D1)`, near(f.radius, 28, 0) && /^rgb\(/.test(f.bg) && !/blur/.test(f.blur), f);
+    // 1.3 Tokens: Menüfenster 34 (Zeile 26 + Rand 8, --casora-menu-radius) statt 28.
+    await check(`${tag}: ${n} Desktop – Radius 34, deckend, kein Glas (D1)`, near(f.radius, 34, 0) && /^rgb\(/.test(f.bg) && !/blur/.test(f.blur), f);
     await check(`${tag}: ${n} Desktop – Schatten wie die Glocke`, f.shadow === g.shadow && f.shadow !== 'none', [f.shadow, g.shadow]);
     await check(`${tag}: ${n} Desktop – Bg wie die Glocke`, f.bg === g.bg, [f.bg, g.bg]);
   }
@@ -183,7 +184,7 @@ for (const dark of [false, true]) {
   console.log(tag, 'Handy', JSON.stringify({ hg, hp, hr }));
   await need(`${tag}: Handy-Fenster offen`, hg && hp && hr, { hg, hp, hr });
   for (const [n, f] of [['Glocke', hg], ['⋯-Menü', hp]]) {
-    await check(`${tag}: Handy ${n} wie das Räume-Fenster (Radius, Fläche, Schatten)`, near(f.radius, 28, 0) && f.radius === hr.radius && f.bg === hr.bg && f.shadow === hr.shadow, [f, hr]);
+    await check(`${tag}: Handy ${n} wie das Räume-Fenster (Radius, Fläche, Schatten)`, near(f.radius, 34, 0) && f.radius === hr.radius && f.bg === hr.bg && f.shadow === hr.shadow, [f, hr]);
   }
   await check(`${tag}: Handy Glocke Zeilen 52, Kreis 36, ohne Kopf`, !hg.head && near(hg.rowH, 52) && near(hg.icW, 36) && clear(hg.rowBg), hg);
   await check(`${tag}: Handy ⋯-Menü Zeilen 52, Kreis 36`, near(hp.rowH, 52) && near(hp.icW, 36), hp);
@@ -206,7 +207,8 @@ for (const dark of [false, true]) {
   // 1.3 (Handy-Leiste B): die Kopf-Kapsel sitzt unten in der Leiste – dann nur noch den Zurück-Kreis messen.
   const docked = rs.pill && rs.pill.top > 400;
   await check(`${tag}: Zurück-Kreis 48${docked ? ' (Kapsel unten in der Leiste)' : ' auf der Mittellinie der Kopf-Pille'} (D7)`, rs.back && rs.pill && near(rs.back.h, 48) && (docked || near(rs.back.mid, rs.pill.mid)), rs);
-  if (rs.chip) await check(`${tag}: Szenen-Kachel wie Geräte-Kachel – 62 hoch, Kreis 42, Text bei 12 + 42 + 10 (D5)`, near(rs.chip.h, 62) && near(rs.chip.ic, 42) && near(rs.chip.tx, 64) && (!rs.dev || (near(rs.dev.h, rs.chip.h) && near(rs.dev.tx, rs.chip.tx))), rs);
+  // dk-05 (1.3): Symbol ringsum gleich, am Handy 10/10 – Text also bei 10 + 42 + 10 = 62 (vorher 12 + 42 + 10).
+  if (rs.chip) await check(`${tag}: Szenen-Kachel wie Geräte-Kachel – 62 hoch, Kreis 42, Text bei 10 + 42 + 10 (D5, dk-05)`, near(rs.chip.h, 62) && near(rs.chip.ic, 42) && near(rs.chip.tx, 62) && (!rs.dev || (near(rs.dev.h, rs.chip.h) && near(rs.dev.tx, rs.chip.tx))), rs);
   else console.log('  info   ' + tag + ': erste Raumseite ohne Szenen – D5 nicht geprüft');
   await ph.browser.close();
 }

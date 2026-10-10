@@ -1251,7 +1251,8 @@
           rbx.style.width = "";
           const w = rbx.getBoundingClientRect().width;
           if (w > W) rbx.style.width = W + "px";
-          else ra.style.marginRight = Math.round(W - w) + "px";
+          // Ungerundet: gerundet wanderten Liste, Dashboard und Zahnrad je nach Name um bis zu 1 px (rb22).
+          else ra.style.marginRight = (W - w) + "px";
         }
       }
     });

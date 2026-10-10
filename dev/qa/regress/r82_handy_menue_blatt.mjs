@@ -2,7 +2,7 @@
 // @parallel: ui
 // Wunsch (08.10.2026, Richtung C „Leicht“ für 1.1.3): Räume- und Szenen-Menü der Handy-Leiste kommen als
 // Blatt von unten wie ein Casora-Handy-Popup. Erwartet (Casora hell und dunkel, Casora Nebel hell, iPhone 393 × 852):
-// Seit 08.10.2026 abends schwebendes Fenster über der Leiste (Breite nach Inhalt, mittig, ringsum rund 28, höchstens 520 hoch,
+// Seit 08.10.2026 abends schwebendes Fenster über der Leiste (Breite nach Inhalt, mittig, ringsum rund 28 (seit 1.3 Tokens: 34), höchstens 520 hoch,
 // kein Griff, keine Überschrift/Anzahl, Leiste bleibt sichtbar) statt ganzflächigem Blatt.
 // Zeilen 52 px ohne Platten, Symbolkreis 36 in Sand mit
 // dunkler Glyphe, Name 15/600, Zustand rechts als kleiner Wert (13 px). Nur der offene Raum hat eine Fläche
@@ -141,7 +141,8 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   await need(`${tag}: Räume als Blatt`, m && m.kind === 'rooms' && m.on && m.off, m);
   console.log(tag, 'Räume', JSON.stringify({ sheet: m.sheet, on: m.on, off: m.off, list: m.list }));
   await check(`${tag}: Fenster schwebt mittig über der Leiste (Breite nach Inhalt, mind. 12 px seitlich)`, near(m.sheet.left, m.sheet.right) && m.sheet.left >= 11 && m.sheet.bottom > 60 && m.sheet.top > 100, m.sheet);
-  await check(`${tag}: Fenster ringsum rund (28)`, near(m.sheet.radius, 28, 0) && near(m.sheet.radiusBottom, 28, 0), m.sheet);
+  // 1.3 Tokens: Menüfenster = Zeile 26 + Rand 8 = 34 (--casora-menu-radius), konzentrisch zu Kreis 36 + Rand 8.
+  await check(`${tag}: Fenster ringsum rund (34)`, near(m.sheet.radius, 34, 0) && near(m.sheet.radiusBottom, 34, 0), m.sheet);
   await check(`${tag}: Blatt deckend (kein durchscheinender Grund)`, !clear(m.sheet.bg), m.sheet.bg);
   await check(`${tag}: ohne Überschrift, Anzahl und Griff`, !m.head, m.head);
   await check(`${tag}: kein Raumname abgeschnitten`, !m.cut.length, m.cut);
@@ -204,12 +205,16 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   await check(`${tag}: Szenen mit „zuletzt ausgeführt“ rechts, klein geschrieben`, agos.length === s.n && agos.every((a) => a.w > 0 && /^(Aktiv|gerade eben|noch nie|gestern|vor \d+ (Min\.|Std\.|Tagen))$/.test(a.t)), agos.slice(0, 4));
   await geometry(tag, s, 'Szenen:');
   const white = (c) => /^rgb\(255, 255, 255\)|^rgba\(255, 255, 255/.test(c || '');
-  // D6 (1.2) „Farbe heißt aktiv“: inaktive Szenen mit Sand-Kreis und dunkler Glyphe wie die Räume.
-  await check(`${tag}: inaktive Szene ohne Platte, Kreis in Sand mit dunkler Glyphe wie die Räume`,
-    clear(s.second.bg) && s.second.tone && s.second.icBg === m.off.icBg && s.second.icColor === m.off.icColor, [s.second.bg, s.second.icBg, s.second.icColor, m.off.icBg]);
+  // dk-17 (1.3, ersetzt D6): Szenen immer in ihrer Studio-Farbe wie das Szenen-Badge – auch inaktiv Kreis in der
+  // Farbe (hier Standard), weiße Glyphe, keine Platte.
+  await check(`${tag}: inaktive Szene ohne Platte, Kreis in ihrer Farbe (Standard ${colors.badge}), weiße Glyphe`,
+    clear(s.second.bg) && s.second.tone && (s.second.icBg === colors.badge || s.second.icBg === colors.yellow) && white(s.second.icColor), [s.second.bg, s.second.icBg, s.second.icColor, colors]);
   // D4 (1.2): aktive Szene ohne weiße Platte (die heißt nur „hier bist du“), Kreis voll in der Studio-Farbe, „Aktiv“ im Akzent.
-  await check(`${tag}: aktive Szene ohne Platte, Kreis exakt in ihrer Studio-Farbe (${colors.blue}), weiße Glyphe`,
-    clear(s.first.bg) && s.first.shadow === 'none' && s.first.tone && s.first.icBg === colors.blue && white(s.first.icColor), [s.first.bg, s.first.shadow, s.first.icBg, s.first.icColor, colors]);
+  // P-V8 (1.3): die laufende Szene ist leicht in ihrer Farbe getönt (Farbe der Szene mit Deckkraft 0,18, kein Schatten).
+  const tint = (c, rgb) => { const m2 = /color\(srgb ([\d.]+) ([\d.]+) ([\d.]+) \/ ([\d.]+)\)/.exec(c || ''); const t = (rgb.match(/\d+/g) || []).map(Number);
+    return !!m2 && t.length >= 3 && [1, 2, 3].every((i) => Math.abs(+m2[i] * 255 - t[i - 1]) < 1.5) && +m2[4] > 0.05 && +m2[4] < 0.3; };
+  await check(`${tag}: aktive Szene leicht in ihrer Farbe getönt (keine weiße Platte), Kreis exakt in ihrer Studio-Farbe (${colors.blue}), weiße Glyphe`,
+    tint(s.first.bg, colors.blue) && s.first.shadow === 'none' && s.first.tone && s.first.icBg === colors.blue && white(s.first.icColor), [s.first.bg, s.first.shadow, s.first.icBg, s.first.icColor, colors]);
   await check(`${tag}: aktive Szene zeigt „Aktiv“ rechts im Akzent (${colors.accent})`,
     agos[0] && agos[0].t === 'Aktiv' && agos[0].c === colors.accent && agos[0].fw >= 600, [agos[0], colors.accent]);
   // Tipp-Rückmeldung wie die Popup-Zeilen (ohne auszulösen): pointerdown → Fläche hinterlegt und leicht kleiner.

@@ -215,7 +215,8 @@ const openPopup = async (pg) => {
     el.hass = document.querySelector('home-assistant').hass;
     el.addEventListener('hass-action', (ev) => { const act = ev.detail && ev.detail.config && (ev.detail.config.icon_tap_action || ev.detail.config.tap_action);
       if (act && act.casora_popup && window.casoraPopup) { ev.stopPropagation(); window.casoraPopup.open(act.casora_popup); } }, { capture: true, once: true });
-    el._handleAction({ detail: { action: 'tap' } }, { isIcon: true });
+    // Seit 1.3 (Bündel schlank) fehlt icon_tap_action, wo sie dasselbe Popup öffnet: ein Tipp aufs Symbol löst dann die tap_action aus.
+    el._handleAction({ detail: { action: 'tap' } }, { isIcon: !!el._hasIconActions });
   });
   for (let i = 0; i < 30; i++) {
     if (await pg.evaluate(() => !!(window.casoraPopup && window.casoraPopup.surface) && window.__pierce('.hui-srow', window.casoraPopup.surface).length > 0)) break;
@@ -247,6 +248,16 @@ const popup = (pg) => pg.evaluate(() => {
     dayBars: (() => { const c = P('.ct-day casora-chart')[0]; return c && c.shadowRoot ? c.shadowRoot.querySelectorAll('path[d*="Q"]').length : 0; })(),
     dayLabel: (() => { const l = P('.ct-day > div')[0]; return l ? [l.textContent, getComputedStyle(l).textTransform, getComputedStyle(l).fontSize] : null; })(),
   };
+});
+// Kopfzeile A (1.3): Zurück-Knopf neben dem Titel statt darüber, Statuszeile im Kopf gehört zur Ansicht.
+const head = (pg) => pg.evaluate(() => {
+  const sr = window.casoraPopup && window.casoraPopup.element && window.casoraPopup.element.shadowRoot;
+  if (!sr) return null;
+  const R = (q) => { const e = sr.querySelector(q); if (!e || e.hidden) return null; const r = e.getBoundingClientRect(); return r.width ? r : null; };
+  const b = R('.casora-tank-back'), t = R('.header-title'), s = R('.header-status');
+  const apart = (a, c) => !a || !c || a.right <= c.left || c.right <= a.left || a.bottom <= c.top || c.bottom <= a.top;
+  const st = sr.querySelector('.header-status');
+  return { soft: window.casoraPopup.element.hasAttribute('soft'), back: !!b, free: apart(b, t) && apart(b, s), status: st && !st.hidden ? st.textContent.replace(/\s+/g, ' ').trim() : '' };
 });
 const tap = (pg, sel) => pg.evaluate((sel) => {
   const s = window.casoraPopup && window.casoraPopup.surface;
@@ -282,6 +293,9 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   await page.waitForTimeout(800);
   p = await popup(page);
   await check(vp.name + ': Ansicht „Tanken“ mit Zurück-Knopf', p && p.title === 'Tanken' && p.back && p.view, p && { title: p.title, back: p.back });
+  const h1 = await head(page);
+  await check(vp.name + ': Zurück-Knopf liegt nicht über Titel/Statuszeile, Kopf zeigt „ab 1,69 €“',
+    h1 && h1.back && h1.free && (!h1.soft || /^ab 1,69 €/.test(h1.status)), h1);
   await check(vp.name + ': Lernphase zeigt den Hinweis statt einer Empfehlung',
     p && /Die Empfehlung kommt, sobald genug Preise gesammelt sind, in etwa 5 Tagen\./.test(p.view) && !p.day && !p.scale, p && p.view);
   {
@@ -309,6 +323,8 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   await page.waitForTimeout(600);
   p = await popup(page);
   await check(vp.name + ': Zurück führt ins Auto-Popup', p && p.view === null && p.title !== 'Tanken' && !p.back && /Tanken/.test(p.row || ''), p && { title: p.title, view: !!p.view });
+  const h2 = await head(page);
+  await check(vp.name + ': nach Zurück wieder die Statuszeile des Autos', h2 && !h2.back && !/ab 1,69 €/.test(h2.status), h2);
 
   // Logos: Marken mit Zusatz, Platzhalter und Ladefehler → Kürzel, freie Tankstelle → Zapfsäule, alle gleich groß.
   {
@@ -347,11 +363,17 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   p = await popup(page);
   await check(vp.name + ': Empfehlung mit Preis-Skala und Typischem Tag', p && p.scale === 1 && p.day === 1 && /Empfehlung/.test(p.view)
     && /Tief/.test(p.view) && /jetzt 1,69 €/.test(p.view) && /Hoch/.test(p.view) && !/Die Empfehlung kommt/.test(p.view), p && p.view);
-  await check(vp.name + ': Typischer Tag als casora-chart (18 Säulen), Etikett „Typischer Tag · Ø 14 Tage“ 12 px Versalien',
-    p && p.dayBars === 18 && p.dayLabel && /Typischer Tag · Ø 14 Tage/.test(p.dayLabel[0]) && p.dayLabel[1] === 'uppercase' && p.dayLabel[2] === '12px', p && [p.dayBars, p.dayLabel]);
+  // 1.3 (Entscheidung B, Abschnittsüberschriften): „Typischer Tag“ ist eine Überschrift 17/700 in Satzschreibung, keine Versalien mehr.
+  await check(vp.name + ': Typischer Tag als casora-chart (18 Säulen), Überschrift „Typischer Tag · Ø 14 Tage“ 17 px Satzschreibung',
+    p && p.dayBars === 18 && p.dayLabel && /Typischer Tag · Ø 14 Tage/.test(p.dayLabel[0]) && p.dayLabel[1] === 'none' && p.dayLabel[2] === '17px', p && [p.dayBars, p.dayLabel]);
   // 1.2.1 (D1, D3): Etiketten in Empfehlung und „Typischer Tag“ 20/18 vom Kartenrand; Ø-Wert mit zwei Nachkommastellen.
   const pl = await plateLabels(page);
-  const ty = pl.find((l) => l.t === 'Typischer Tag'), em = pl.find((l) => /^(Heute|Morgen|Guter Zeitpunkt)/.test(l.t)); // Wortlaut hängt von der Uhrzeit ab („Heute ab 19 Uhr“, „Heute“, „Morgen ab …“)
+  // „Typischer Tag“ ist seit 1.3 keine Versalien-Etikette mehr (plateLabels findet nur Versalien): Abstand direkt messen.
+  const ty = await page.evaluate(() => { const c = window.__pierce('.ct-day', window.casoraPopup.surface)[0]; const l = c && c.querySelector(':scope > div > span');
+    if (!l) return null; const a = c.getBoundingClientRect(), b = l.getBoundingClientRect(); const rg = document.createRange(); rg.selectNodeContents(l.firstChild); const t = rg.getBoundingClientRect();
+    return { t: l.textContent, dx: Math.round(b.left - a.left), dy: Math.round(t.top - a.top) }; });
+  if (ty) pl.push(ty);
+  const em = pl.find((l) => /^(Heute|Morgen|Guter Zeitpunkt)/.test(l.t)); // Wortlaut hängt von der Uhrzeit ab („Heute ab 19 Uhr“, „Heute“, „Morgen ab …“)
   await check(vp.name + ': Etiketten „Heute ab …“ und „Typischer Tag“ 20/18 vom Kartenrand', ty && em && ty.dx === 20 && ty.dy === 18 && em.dx === 20 && em.dy === 18, pl);
   const dayVal = await page.evaluate(() => { const c = window.__pierce('.ct-day casora-chart', window.casoraPopup.surface)[0];
     if (!c || !c.shadowRoot) return null;

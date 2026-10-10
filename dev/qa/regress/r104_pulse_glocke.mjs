@@ -125,7 +125,8 @@ const inject = (pg) => pg.evaluate((sc) => {
 const ROWS = () => (window._casoraNotify ? window._casoraNotify.rows : []).map((r) => ({ id: r.id, label: r.label,
   keys: (r.seen || []).map((x) => (x && typeof x === 'object' ? x.k : x)) }));
 const refresh = (pg) => pg.evaluate(() => window._casoraNotify && window._casoraNotify.refresh());
-const BELL = () => { const r = window.__pierce('.casora-bell').map((e) => e.getBoundingClientRect()).find((r) => r.width > 0 && r.top < 200);
+// Seit Handy-Leiste B (1.3) sitzt die Glocke am Handy unten in der Leiste – die sichtbare im Bild nehmen, nicht „oben“.
+const BELL = () => { const r = window.__pierce('.casora-bell').map((e) => e.getBoundingClientRect()).find((r) => r.width > 0 && r.top >= 0 && r.bottom <= innerHeight);
   return r && { x: r.x + r.width / 2, y: r.y + r.height / 2 }; };
 const MENU = () => window.__pierce('.casora-notify-menu .hui-srow').filter((r) => r.getBoundingClientRect().height > 0)
   .map((r) => r.textContent.replace(/\s+/g, ' ').trim());

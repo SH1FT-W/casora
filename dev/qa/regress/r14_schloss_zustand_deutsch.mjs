@@ -13,6 +13,7 @@ await dashboard(page, dash.url + '/' + (view.path || '0'), 3);
 
 await check('Zustandstext-Helfer geladen', await page.evaluate(() => typeof window._casoraStateText === 'function'));
 // Der Helfer selbst: nie der rohe englische Zustand, eigene Liste der Vorlage hat Vorrang.
+// Auslassung seit 1.3 (V9 A) wie im Studio mit Leerzeichen: „Wird geöffnet …“.
 const direct = await page.evaluate(() => {
   if (typeof window._casoraStateText !== 'function') return null;
   const h = document.querySelector('home-assistant').hass;
@@ -22,7 +23,7 @@ const direct = await page.evaluate(() => {
 });
 await check('Helfer: jammed → Klemmt, unavailable → Nicht verfügbar, eigene Liste gewinnt',
   !!direct && direct.jammed === 'Klemmt' && direct.unav === 'Nicht verfügbar' && direct.own === 'Offline'
-  && direct.opening === 'Wird geöffnet…' && direct.cover === 'Geöffnet' && direct.unknown === 'Unbekannt', direct);
+  && direct.opening === 'Wird geöffnet …' && direct.cover === 'Geöffnet' && direct.unknown === 'Unbekannt', direct);
 
 const locks = await page.evaluate(() => Object.keys(document.querySelector('home-assistant').hass.states).filter((e) => e.startsWith('lock.')));
 await need('mindestens 4 Schlösser', locks.length >= 4, locks);

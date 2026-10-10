@@ -43,7 +43,8 @@ const openPopup = async (pg) => {
     el.hass = document.querySelector('home-assistant').hass;
     el.addEventListener('hass-action', (ev) => { const act = ev.detail && ev.detail.config && (ev.detail.config.icon_tap_action || ev.detail.config.tap_action);
       if (act && act.casora_popup && window.casoraPopup) { ev.stopPropagation(); window.casoraPopup.open(act.casora_popup); } }, { capture: true, once: true });
-    el._handleAction({ detail: { action: 'tap' } }, { isIcon: true });
+    // Seit 1.3 (Bündel schlank) fehlt icon_tap_action, wo sie dasselbe Popup öffnet: ein Tipp aufs Symbol löst dann die tap_action aus.
+    el._handleAction({ detail: { action: 'tap' } }, { isIcon: !!el._hasIconActions });
   });
   for (let i = 0; i < 30; i++) {
     if (await pg.evaluate(() => !!(window.casoraPopup && window.casoraPopup.surface) && window.__pierce('.hui-srow', window.casoraPopup.surface).length > 0)) break;
