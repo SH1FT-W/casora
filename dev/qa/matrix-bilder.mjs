@@ -6,6 +6,7 @@
 //       [--gruppe popups,kacheln,handy,studio,umzug] [--geraete desktop,tablet,handy] [--nur <regex auf zeile_id>]
 //       [--dash <url>] [--handy-dash <url>] [--neu]   (--neu: schon abgebildete Zeilen nicht überspringen)
 //       [--nochmal <regex>]  nicht abbildbare Zeilen, deren Grund passt, erneut versuchen
+//       [--kern]  nur die Kernmatrix (siehe KERN)
 //   … --vorbereiten   legt im Test-HA ein Hilfs-Dashboard „qa-matrix“ an mit je einer Kachel für jede Vorlage,
 //                     die in den echten Dashboards dieses Hauses fehlt (Karte aus einem anderen Dashboard des
 //                     Hauses, sonst mit einer passenden Entität erzeugt). Nur im Wegwerf-HA verwenden.
@@ -163,7 +164,10 @@ const VIEWS = {
   tablet: { width: 1024, height: 768, safari: true, touch: true, scale: 1 },
   handy: { width: 393, height: 852, mobile: true, safari: true, scale: 2 },
 };
-const rows = MATRIX.zeilen.filter((z) => z.haus === HAUS && GRUPPEN.includes(z.gruppe) && GERAETE.includes(z.geraet) && !done.has(z.zeile_id) && (!NUR || NUR.test(z.zeile_id)));
+// --kern: Kernmatrix zuerst (Grundzustand de: desktop/handy hell+dunkel, tablet hell; en: desktop/handy hell;
+// alle Sonderzustände). Der Rest (tablet dunkel, en dunkel, en tablet) folgt in einem zweiten Lauf ohne --kern.
+const KERN = (z) => z.zustand !== 'standard' || (z.sprache === 'de' ? (z.geraet !== 'tablet' || z.schema === 'hell') : (z.schema === 'hell' && z.geraet !== 'tablet'));
+const rows = MATRIX.zeilen.filter((z) => z.haus === HAUS && GRUPPEN.includes(z.gruppe) && GERAETE.includes(z.geraet) && !done.has(z.zeile_id) && (!NUR || NUR.test(z.zeile_id)) && (!flag('kern') || KERN(z)));
 console.log(`${HAUS}: ${rows.length} Zeilen offen (${done.size} schon fertig), Desktop ${DESK}, Handy ${PHONE}, Matrix-Dashboard ${MATRIX_DASH || '–'}`);
 
 // ── Browser-Helfer ───────────────────────────────────────────────────────
