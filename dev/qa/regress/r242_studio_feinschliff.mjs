@@ -53,7 +53,7 @@ const isPanel = () => { const p = window.__panel && window.__panel(); return !!(
   await page.evaluate(async () => { const p = window.__panel(); p._bOpen = true; await p._csOpenPage('home'); });
   await page.waitForTimeout(2500);
   const xs = await page.evaluate(() => { const p = window.__panel(); const r = p.shadowRoot; const x = (s) => { const e = [...r.querySelectorAll(s)].find((y) => y.getBoundingClientRect().width > 0); if (!e) return null; const g = document.createRange(); g.selectNodeContents(e); return Math.round(g.getBoundingClientRect().left); };
-    return { kopf: x('.detailbar h3'), hinweis: x('.cs-lede'), abschnitt: x('.fhead'), zeile: x('.flist .rtext b, .fgroup .rtext b') }; });
+    return { kopf: x('.detailbar h3'), hinweis: x('.cs-lede'), abschnitt: x('.fhead'), fussnote: x('.ffoot') }; });
   const vals = Object.values(xs).filter((v) => v != null);
   await check('ds-13 Einstellungsseite fluchtet (±1 px)', vals.length >= 3 && Math.max(...vals) - Math.min(...vals) <= 1, xs);
 }

@@ -1214,6 +1214,8 @@
       this.classList.remove("uxs1", "uxs2", "uxs3", "uxsr", "uxsrp");
       const rb0 = this.shadowRoot.querySelector('.btools [data-b="rooms"]');
       if (rb0) { rb0.style.width = ""; rb0.style.flex = ""; }
+      const ra0 = this.shadowRoot.querySelector('.btools [data-b="roomact"]');
+      if (ra0) ra0.style.marginRight = "";
       const lab = this.shadowRoot.querySelector('.btools [data-b="rooms"] .blabel');
       const keep = lab ? lab.textContent : null;
       if (lab && this._state) {
@@ -1240,6 +1242,17 @@
         return r;
       } finally {
         if (lab && keep !== null) lab.textContent = keep;
+        // P-V3 (1.3): ⋯ direkt hinter dem Namen – den festen Platz (längster Name) hält der Abstand hinter ⋯.
+        const rbx = this.shadowRoot.querySelector('.btools [data-b="rooms"]');
+        const ra = this.shadowRoot.querySelector('.btools [data-b="roomact"]');
+        if (ra) ra.style.marginRight = "";
+        if (rbx && ra && rbx.style.width && !this.classList.contains("phone")) {
+          const W = parseFloat(rbx.style.width);
+          rbx.style.width = "";
+          const w = rbx.getBoundingClientRect().width;
+          if (w > W) rbx.style.width = W + "px";
+          else ra.style.marginRight = Math.round(W - w) + "px";
+        }
       }
     });
 
