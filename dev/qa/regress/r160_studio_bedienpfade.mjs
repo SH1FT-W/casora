@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// @deckt: custom_components/casora/panel/casora-panel.js custom_components/casora/panel/casora-panel-b.js custom_components/casora/panel/casora-panel-kachelart.js custom_components/casora/panel/casora-panel-updates.js
+// @deckt: custom_components/casora/panel/casora-panel.js custom_components/casora/panel/casora-panel-b.js custom_components/casora/panel/casora-panel-b-plus.js custom_components/casora/panel/casora-panel-b-mehr.js custom_components/casora/panel/casora-panel-kachelart.js custom_components/casora/panel/casora-panel-updates.js
 // Gefunden beim Durchspielen der Studio-Bedienpfade (d-studio, 10.10.2026), Desktop 1440 – gespeichert wird nichts:
 //   ds-01 Dashboard erneut geladen (Zeitreise, gleiches Dashboard): Vorschau behielt alte Kachel-Schlüssel,
 //         ein Klick auf eine Kachel wählte nichts. Erwartet: Schlüssel der Vorschau = Schlüssel im Stand, Klick wählt.
@@ -10,6 +10,9 @@
 //   ds-04 Kachel hinzufügen → Rückgängig → Inspektor zu: der Schleier über der Vorschau blieb stehen.
 //   ds-05 Kachelart „Was soll anders sein?“: Text 16 px weiter eingerückt als das Namensfeld, andere Schrift.
 //   ds-06 Updates (hell): „Nach Updates suchen“ hatte die Farbe der Karte – der Knopf war unsichtbar.
+//   ds-10 Kachel entfernen bei offenem Inspektor: Schleier über den Kacheln blieb, Inspektor zeigte den Raum.
+//   ds-11 „Raum löschen?“: Taste „Löschen“ dunkle Schrift auf Rot (~1,6:1). Erwartet ≥ 4,5:1.
+//   ds-12 „Wer sieht das?“ 17 px/500 neben 15-px-Eingabefeldern. Erwartet: gleiche Schriftgröße.
 import { open, usePage, studio, studioDashboard, check, need, finish } from './lib.mjs';
 
 const dash = await studioDashboard();
@@ -98,6 +101,45 @@ await P('p._bClose();'); await wait(700);
 const veil = await P(`const room = p.shadowRoot.querySelector('.miniroom'); const s = room && room.querySelector('.mzscrim');
   return { focusing: !!(room && room.classList.contains('focusing')), on: !!p._focusOn, op: s ? getComputedStyle(s).opacity : null, group: p._group };`);
 await check('ds-04 Nach Rückgängig + Schließen kein Schleier über der Vorschau', !veil.focusing && !veil.on, veil);
+
+// ds-10: Kachel entfernen bei offenem Inspektor → Raum, kein Schleier.
+{
+  await P('p._room = 0; p._sel = null; p._group = "rooms"; p._renderTabs(); p._renderForm(); p._rebuildPreview();'); await wait(1500);
+  const b = await tileBox(0);
+  await page.mouse.click(b.x, b.y); await wait(900);
+  await P(`const b = [...p.shadowRoot.querySelectorAll('button')].find((x) => /Kachel entfernen|Remove Tile/i.test(x.textContent) && x.getBoundingClientRect().width); b.click();`);
+  await wait(1200);
+  const st = await P(`return { focus: !!p._focusOn, group: p._group, sel: p._sel, open: !!p._bOpen };`);
+  await check('ds-10 Nach „Kachel entfernen“ (Inspektor offen) kein Schleier, Gruppe Raum', !st.focus && st.group === 'rooms', st);
+  await page.keyboard.press('Meta+z'); await page.keyboard.press('Control+z'); await wait(800);
+}
+
+// ds-11: „Raum löschen?“ – Löschen-Taste lesbar.
+{
+  const res = await P(`const p2 = p; const ri = p2._state.compact.rooms.findIndex((r, i) => i > 0); p2._room = ri;
+    const pr = p2._ask({ title: 'Qa', message: 'Qa', confirmLabel: 'Nur ausblenden', altLabel: 'Löschen',
+      extend: ({ acts }) => { const a = acts.querySelector('.askalt'); if (a) a.classList.add('danger'); } });
+    await new Promise((r) => setTimeout(r, 600));
+    const b = [...p2.shadowRoot.querySelectorAll('.askpane button')].find((x) => x.textContent.trim() === 'Löschen');
+    const s = getComputedStyle(b); const out = { color: s.color, bg: s.backgroundColor };
+    const c = [...p2.shadowRoot.querySelectorAll('.askpane button')].find((x) => /Abbrechen|Cancel/.test(x.textContent)); if (c) c.click();
+    return out;`);
+  const rgb = (x) => x.match(/[\d.]+/g).slice(0, 3).map(Number);
+  const L = (c) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
+  const a = L(rgb(res.color)), b2 = L(rgb(res.bg)); const k = (Math.max(a, b2) + 0.05) / (Math.min(a, b2) + 0.05);
+  await check('ds-11 „Löschen“ auf Rot lesbar (Kontrast ≥ 4,5)', k >= 4.5, { ...res, kontrast: Math.round(k * 100) / 100 });
+  await wait(400);
+}
+
+// ds-12: „Wer sieht das?“ wie die Eingabefelder.
+{
+  await P('p._bClose(); p._room = 1; p._renderTabs(); p._bOpen = true; p._group = "rooms"; p._sel = null; p._renderForm();'); await wait(1200);
+  const fs = await P(`const v = [...p.shadowRoot.querySelectorAll('.mwho .mval')].find((x) => x.getBoundingClientRect().width);
+    const i = [...p.shadowRoot.querySelectorAll('input')].find((x) => x.getBoundingClientRect().width && x.getBoundingClientRect().left > 900 && x.type !== 'checkbox');
+    return v && i ? { wer: getComputedStyle(v).fontSize, feld: getComputedStyle(i).fontSize } : null;`);
+  await need('„Wer sieht das?“ im Raum sichtbar', fs);
+  await check('ds-12 „Wer sieht das?“ in der Schriftgröße der Eingabefelder', fs.wer === fs.feld, fs);
+}
 
 // ds-05: Kachelart – Wunschfeld fluchtet mit dem Namensfeld, gleiche Schrift.
 await P(`const T = await p._previewTemplates(); await p._kaStart({}); await new Promise((r) => setTimeout(r, 600));

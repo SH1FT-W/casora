@@ -10953,6 +10953,9 @@ class CasoraPanel extends HTMLElement {
         .flowfoot button.ghost:hover:not(:disabled),
         .askacts button.ghost:hover:not(:disabled) { filter:none; opacity:.72; }
         .askacts button.ghost { height:38px; }
+        /* Zweiter Weg als Löschen (Raum löschen: ghost + danger): roter Grund braucht weiße Schrift –
+           die ghost-Regel darüber setzte sonst dunkle Schrift auf Rot (Kontrast ~1,6:1). */
+        .askacts button.ghost.danger { color:#fff; }
         .flowfoot button:disabled { opacity:.4; cursor:default; }
         @media (prefers-reduced-motion: reduce) {
           .fspin { animation-duration:2.4s; }
@@ -17494,6 +17497,8 @@ class CasoraPanel extends HTMLElement {
       const hit = band && band.querySelector('[data-k="' + CSS.escape(this._sel.key) + '"]');
       if (!hit) {
         this._sel = null;                       // it was removed under us
+        // Neues Studio zeigt dann den Raum: Gruppe mit zurück, sonst bleibt der Schleier über der Vorschau.
+        if (this.classList.contains("bmode")) this._group = GROUPS[0].id;
       } else {
         band.classList.add("detail");
         band.querySelectorAll(".grouphead").forEach((n) => n.remove());
