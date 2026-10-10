@@ -14,7 +14,7 @@
     });
   };
   var ago = function (ts) {
-    var t = Date.parse(ts); if (isNaN(t)) return null;
+    var t = typeof ts === 'number' ? ts : Date.parse(ts); if (isNaN(t)) return null;
     var m = Math.max(0, Math.round((Date.now() - t) / 60000));
     return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.';
   };
@@ -46,14 +46,16 @@
     var act = SC.activeList(ids, states) || [];
     if (part === 'hero') {
       if (act.length) {
-        var since = ago(states[act[0]] && states[act[0]].state);
+        /* Zuletzt aktiv inkl. Status-Schalter der Szene (#11). */
+        var la = function (id) { return SC.lastActive ? (SC.lastActive(id, states) || NaN) : Date.parse(states[id] && states[id].state); };
+        var since = ago(la(act[0]));
         return UI.hero({ center: true, value: nameOf(act[0], states, V.room) + (act.length > 1 ? ' +' + (act.length - 1) : ''),
           sub: since ? 'Aktiv · ' + since : 'Aktiv', subTone: 'good' });
       }
       var last = null, lastT = 0;
-      ids.forEach(function (id) { var t = Date.parse(states[id].state); if (!isNaN(t) && t > lastT) { lastT = t; last = id; } });
+      ids.forEach(function (id) { var t = SC.lastActive ? (SC.lastActive(id, states) || NaN) : Date.parse(states[id].state); if (!isNaN(t) && t > lastT) { lastT = t; last = id; } });
       return UI.hero({ center: true, value: 'Keine Szene aktiv',
-        sub: last ? 'Zuletzt ' + nameOf(last, states, V.room) + ' · ' + ago(states[last].state) : null });
+        sub: last ? 'Zuletzt ' + nameOf(last, states, V.room) + ' · ' + ago(lastT) : null });
     }
     if (part === 'chips') {
       if (!ids.length) {

@@ -383,6 +383,40 @@ window.casoraPriceKwh = function (v) {
     return onCache[key].v;
   }
 
+  // Letzter Wechsel off → on einer Entität (z. B. Status-Schalter einer Szene, #11), als ms.
+  // last_changed taugt nicht: Es springt bei jedem HA-Neustart. Darum aus dem Verlauf (30 Tage),
+  // je Entität einmal; neu erst, wenn sich ihr Zustand ändert (live off → on ohne Abfrage).
+  // null, solange die Abfrage läuft oder es keinen Wechsel gibt. done() nach dem Laden.
+  var lastOnCache = {};
+  function lastOn(eid, st, done) {
+    if (!eid || !st) return null;
+    var hit = lastOnCache[eid], lc = st.last_changed;
+    if (hit && hit.lc === lc) return hit.v;
+    if (hit && hit.busy) return hit.v;
+    if (hit && hit.state === 'off' && st.state === 'on') {
+      lastOnCache[eid] = { lc: lc, state: 'on', v: Date.parse(lc) || hit.v };
+      return lastOnCache[eid].v;
+    }
+    /* Ausschalten oder Neustart (on → on mit neuem last_changed): bekannter Wert bleibt, keine Abfrage. */
+    if (hit && (st.state !== 'on' || hit.state === 'on')) { hit.lc = lc; hit.state = st.state; return hit.v; }
+    var ha = document.querySelector('home-assistant'), hass = ha && ha.hass;
+    if (!hass || !hass.callApi) return hit ? hit.v : null;
+    var keep = hit ? hit.v : null;
+    lastOnCache[eid] = { lc: lc, state: st.state, v: keep, busy: true };
+    var start = new Date(Date.now() - 30 * 86400000);
+    hass.callApi('GET', 'history/period/' + start.toISOString() + '?filter_entity_id=' + eid
+      + '&minimal_response&no_attributes')
+      .then(function (r) {
+        var list = (r && r[0]) || [], v = null;
+        for (var i = list.length - 1; i > 0 && v == null; i--) {
+          if (list[i].state === 'on' && list[i - 1].state === 'off') v = Date.parse(list[i].last_changed) || null;
+        }
+        lastOnCache[eid] = { lc: lc, state: st.state, v: v != null ? v : keep };
+        if (typeof done === 'function') { try { done(); } catch (e) { /* egal */ } }
+      }).catch(function () { lastOnCache[eid] = { lc: lc, state: st.state, v: keep }; });
+    return keep;
+  }
+
   // Dienst für KI-Knöpfe: eigenes Skript des Nutzers (alte Casora-Pakete), sonst
   // Casoras Dienst aus der Integration (ki.py).
   var KI_SVC = {
@@ -1025,7 +1059,7 @@ window.casoraPriceKwh = function (v) {
   window.casoraDevice = {
     vacuumMap: vacuumMap, vacuumMapFor: vacuumMapFor,
     deviceOf: deviceOf, entities: entities, map: map, companionPlug: companionPlug, byKey: byKey,
-    waste: waste, wasteDates: wasteDates, wasteDown: wasteDown, siblings: siblings, dayStart: dayStart, onHours: onHours, keyAny: keyAny, network: network,
+    waste: waste, wasteDates: wasteDates, wasteDown: wasteDown, siblings: siblings, dayStart: dayStart, onHours: onHours, lastOn: lastOn, keyAny: keyAny, network: network,
     contacts: contacts, outdoor: outdoor, openings: openings,
   };
 })();
