@@ -1622,12 +1622,14 @@
     verriegelung: { d: B, k: ['door_lock_state', 'doors_locked'], e: ['verriegelung', 'door_lock_state', 'doors_locked', 'vehicle_locked', 'central_lock', 'locked'] },
     schloss: { d: ['lock'], k: [], e: ['turschloss', 'door_lock', 'doors', 'lock', 'central_locking', 'vehicle_lock'] },
     feststellbremse: { d: B, k: ['parking_brake'], e: ['feststellbremse', 'parking_brake', 'park_brake', 'handbrake'] },
-    nachste_inspektion: { d: S, k: ['inspection_due_date', 'inspection_due', 'service_inspection_time'],
-      e: ['nachste_inspektion', 'inspection_due_date', 'inspection_due', 'service_inspection_time', 'service_due_date', 'next_service', 'next_inspection'] },
-    inspektionsdistanz: { d: S, k: ['inspectionDistance', 'inspection_due_2', 'service_inspection_distance'],
+    /* Datums-Rollen (date): nur Datum, Zeitstempel oder Resttage – ein km-Sensor mit gleicher Endung
+       (vag_connect „nachste_inspektion“ = service_km) zählt nicht (Issue #15). */
+    nachste_inspektion: { d: S, date: true, k: ['inspection_due_date', 'inspection_due', 'service_inspection_time', 'service_due_at', 'service_due_in_days'],
+      e: ['nachste_inspektion', 'inspektionsdatum', 'inspection_due_date', 'inspection_due', 'service_inspection_time', 'service_due_date', 'next_service', 'next_inspection'] },
+    inspektionsdistanz: { d: S, k: ['inspectionDistance', 'inspection_due_2', 'service_inspection_distance', 'service_km'],
       e: ['inspektionsdistanz', 'inspection_distance', 'inspection_due_2', 'service_inspection_distance', 'service_due_distance', 'next_service_distance'] },
-    nachster_olwechsel: { d: S, k: ['oil_change_due_date', 'oil_service_time', 'oil_service_due'],
-      e: ['nachster_olwechsel', 'oil_change_due_date', 'oil_change_due', 'oil_service_time', 'oil_service_due'] },
+    nachster_olwechsel: { d: S, date: true, k: ['oil_change_due_date', 'oil_service_time', 'oil_service_due', 'oil_service_at', 'oil_service_due_in_days'],
+      e: ['nachster_olwechsel', 'olwechseldatum', 'oil_change_due_date', 'oil_change_due', 'oil_service_time', 'oil_service_due'] },
     strecke_kurzzeit: { d: S, k: ['short_term_data_mileage'], e: ['strecke_kurzzeit'] },
     fahrzeit_kurzzeit: { d: S, k: ['short_term_data_travel_time'], e: ['fahrzeit_kurzzeit'] },
     o_verbrauch_benzin_kurzzeit: { d: S, k: ['short_term_data_average_fuel_consumption'], e: ['o_verbrauch_benzin_kurzzeit'] },
@@ -1643,20 +1645,27 @@
   // Bestes Ergebnis je Rolle für eine Entität: 0 = translation_key, 1… = Rang der Endung.
   // Abgeleitete Helfer am Auto-Gerät (z. B. utility_meter „monthly_mileage“) sind nie die Rolle selbst.
   var HELPER = /^(utility_meter|statistics|derivative|integration|template|filter|min_max|threshold|trend|history_stats)$/;
-  var rank = function (role, eid, x) {
+  /* Strecke statt Datum: Einheit km/mi/m oder device_class distance (Issue #15). */
+  var isDist = function (st) {
+    var a = (st && st.attributes) || {};
+    return a.device_class === 'distance' || /^(km|mi|m)$/i.test(a.unit_of_measurement || '');
+  };
+  var rank = function (role, eid, x, st) {
     var R0 = ROLES[role], dom = eid.split('.')[0], obj = eid.slice(dom.length + 1);
     if (R0.d.indexOf(dom) < 0 || (R0.x && R0.x.test(obj))) return -1;
     if (x && x.platform && HELPER.test(x.platform)) return -1;
+    if (R0.date && isDist(st)) return -1;
     if (x && x.translation_key && R0.k.indexOf(x.translation_key) >= 0) return 0;
     for (var i = 0; i < R0.re.length; i++) if (R0.re[i].test(obj)) return i + 1;
     return -1;
   };
   var mapDevice = function (R, dev) {
     var best = {}, map = {};
+    var root = document.querySelector('home-assistant'), ST = (root && root.hass && root.hass.states) || {};
     Object.keys(R).forEach(function (e) {
       var x = R[e]; if (!x || x.device_id !== dev || x.hidden || x.disabled_by) return;
       Object.keys(ROLES).forEach(function (role) {
-        var r = rank(role, e, x);
+        var r = rank(role, e, x, ST[e]);
         if (r >= 0 && (best[role] == null || r < best[role])) { best[role] = r; map[role] = e; }
       });
     });
@@ -1709,7 +1718,7 @@
 
   // Datum aus einem Wartungssensor: Datum/Zeitstempel oder Resttage (Einheit d/Tage).
   var toDate = function (x) {
-    if (!ok(x)) return null;
+    if (!ok(x) || isDist(x)) return null;
     var u = (x.attributes && x.attributes.unit_of_measurement) || '';
     if (/^(d|days?|tage?)$/i.test(u) && num(x.state) != null) return new Date(Date.now() + num(x.state) * 86400000);
     var t = new Date(x.state); return isNaN(t) ? null : t;
