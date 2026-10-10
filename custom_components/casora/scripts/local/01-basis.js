@@ -336,8 +336,8 @@ window._casoraColGap = window._casoraColGap || function (keys) {
   window._casoraNotifyLocal = true;
 
   // Neutrale Standards. Persönliches (Zonen-Namen, Briefkasten, Akku-Ausnahmen,
-  // Kombi-Kontakte, Geräte-Pflege …) kommt aus CASORA_SETTINGS.notify in
-  // /config/www/casora/einstellungen.js (früher: window.CASORA_NOTIFY_LOCAL).
+  // Kombi-Kontakte, Geräte-Pflege …) kommt aus CASORA_SETTINGS.notify (Studio → „Persönliches“,
+  // früher /config/www/casora/einstellungen.js bzw. window.CASORA_NOTIFY_LOCAL).
   var DEFAULTS = {
     zone_phrases: {},
     post: true,

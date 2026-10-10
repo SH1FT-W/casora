@@ -10661,63 +10661,6 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     }
   }
 
-  function openSheet(anchor) {
-    if (!window.casoraPopup) return;
-    lift(anchor, true);
-    window.casoraPopup.open({
-      title: 'Benachrichtigungen',
-      dismissable: true,
-      popup_styles: [{
-        style: 'all',
-        styles: '--casora-popup-gutter-wide: 40px;'
-          + '--casora-popup-row-fill: transparent;'
-          + '--casora-popup-row-radius: 0px;'
-          + '.header { padding-top: var(--casora-popup-header-gap, 10px);'
-          + ' padding-bottom: var(--casora-popup-header-gap, 10px); }'
-          + '.header-title { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }'
-          + '.content .container { padding-top: 6px !important; }',
-      }],
-      content: {
-        type: 'custom:button-card',
-        tap_action: { action: 'none' },
-        show_icon: false, show_name: false, show_label: false, show_state: false,
-        card_mod: {
-          style: ':host { --ha-card-box-shadow: none !important;'
-            + ' --button-card-box-shadow: none !important; }\n'
-            + 'ha-card { background: transparent !important; border: none !important;'
-            + ' box-shadow: none !important; backdrop-filter: none !important;'
-            + ' -webkit-backdrop-filter: none !important; cursor: default !important; }\n'
-            + 'ha-ripple { display: none !important; }',
-        },
-        styles: {
-          card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' },
-                 { padding: '0 10px 22px 10px' }],
-          grid: [{ 'grid-template-areas': '"list"' }, { 'grid-template-columns': '1fr' }],
-          custom_fields: { list: [{ 'justify-self': 'stretch' }] },
-        },
-        custom_fields: { list: sections() },
-      },
-    });
-
-    var el = window.casoraPopup.element;
-    // The sheet builds its card asynchronously, so the retag waits for it.
-    setTimeout(function () {
-      var surface = window.casoraPopup.surface;
-      paint(surface);
-      if (surface && !surface._casoraNotifyBound) {
-        surface._casoraNotifyBound = true;
-        bindOpens(surface, function () { window.casoraPopup.close(); });
-      }
-    }, 260);
-
-    var watch = setInterval(function () {
-      if (el && el.hasAttribute('open')) return;
-      clearInterval(watch);
-      lift(anchor, false);
-      seal();
-    }, 300);
-  }
-
   var _menu = null;
 
 

@@ -406,7 +406,7 @@ window.casoraPriceKwh = function (v) {
     }).sort()[0] || null;
   }
 
-  // Eigene Einstellungen des Nutzers (/config/www/casora/einstellungen.js).
+  // Eigene Einstellungen des Nutzers (Studio → „Persönliches“, früher /config/www/casora/einstellungen.js).
   function settings(key) {
     var all = window.CASORA_SETTINGS || {};
     return key ? (all[key] || {}) : all;

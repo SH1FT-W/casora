@@ -241,11 +241,6 @@ def _name(hass: HomeAssistant, entity_id: str) -> str:
     return (st and st.attributes.get("friendly_name")) or entity_id
 
 
-def _dc(hass: HomeAssistant, entity_id: str) -> str | None:
-    st = hass.states.get(entity_id)
-    return st.attributes.get("device_class") if st else None
-
-
 def _num(value: Any) -> float | None:
     try:
         return float(value)

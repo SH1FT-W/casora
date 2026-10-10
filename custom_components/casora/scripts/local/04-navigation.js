@@ -10,7 +10,7 @@
 // Mobile-Nav. Ausschließen über scenes.exclude in den Einstellungen. Automatisch raus: scene.casora*,
 // versteckte/deaktivierte Szenen und *_restore_*-Schnappschüsse aus scene.create.
 (function () {
-  // Eigene Ausschlüsse: scenes.exclude in /config/www/casora/einstellungen.js.
+  // Eigene Ausschlüsse: CASORA_SETTINGS.scenes.exclude (Studio → „Persönliches“, früher einstellungen.js).
   var SCENE_EXCLUDE = (((window.CASORA_SETTINGS || {}).scenes || {}).exclude || []).slice();
   var RESTORE = /(^|_)restore(_|$)/;
   window.casoraSceneExclude = SCENE_EXCLUDE;

@@ -36,19 +36,6 @@ function resolveCardConfig(cfg) {
   return c;
 }
 
-// Performance mode, asked twice: casora-core owns the answer, but it is a
-// separate resource, so early on the only evidence is the stylesheet it wrote.
-function perfOn() {
-  try {
-    if (window._casoraPerf && window._casoraPerf.on()) return true;
-  } catch (e) {}
-  try {
-    const v = getComputedStyle(document.documentElement)
-      .getPropertyValue('--casora-anim-duration').trim();
-    return v === '0s' || v === '0';
-  } catch (e) { return false; }
-}
-
 // Opt in with ?casora_rowlog=1 on the dashboard URL. Off, this costs one
 // property read per call and prints nothing.
 let ROWLOG = null;
@@ -1375,16 +1362,6 @@ class CasoraSmartRow extends HTMLElement {
   }
 
   // ── Sort logic ──────────────────────────────────────────────────────────────
-
-  _seedFromDom() {
-    const active = [];
-    this._config.cards.forEach((_, i) => {
-      if (this._isActive(i)) active.push(i);
-    });
-
-    this._activeSet       = new Set(active);
-    this._activationOrder = active;
-  }
 
   _updateSort() {
     if (!this._sortEnabled || !this._wrappers.length) return;

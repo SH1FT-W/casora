@@ -18,7 +18,6 @@
     + 'stroke-linejoin="round"><path d="m9.5 6 6 6-6 6"/></svg>';
 
   const CSS = ".cu-wrap{padding:4px 0 28px}"
-    + ".cu-blurb{margin:0 4px 16px;font-size:var(--t-foot);line-height:1.45;color:var(--ink-2)}"
     + ".cu-h{margin:22px 6px 8px;font-size:var(--t-foot);font-weight:600;letter-spacing:.01em;color:var(--ink-2)}"
     + ".cu-box{border-radius:var(--r-l);overflow:hidden;background:var(--casora-popup-row-fill,rgba(255,255,255,.07))}"
     // Kopf: installierte Version, Status, Knöpfe

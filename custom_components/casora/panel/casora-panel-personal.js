@@ -48,13 +48,11 @@
     + ".frow.casora-pmore .rtext b{color:var(--casora-studio-link, #0a84ff);font-weight:500}"
     + ".frow.casora-pmore .rchev{transform:rotate(90deg);transition:transform .2s}"
     + ".frow.casora-pmore.open .rchev{transform:rotate(-90deg)}"
-    + ".casora-pnote{margin:0 0 14px;padding:10px 12px;border-radius:var(--r-m);background:var(--casora-studio-link-tint, rgba(10,132,255,.16));font-size:var(--t-foot);line-height:1.35}"
     // Hell: Blau und Rot in den dunkleren Apple-Tönen, damit Text ≥ 4,5:1 bleibt.
     + ":host(.is-light) .frow.casora-pmore .rtext b{color:var(--casora-studio-link, #0071e3)}"
 
     + ":host(.is-light) .casora-chip{background:var(--casora-studio-chip, rgba(118,118,128,.12))}:host(.is-light) .casora-chip.on{background:var(--casora-studio-link, #0071e3)}"
-    + ":host(.is-light) .fgroup.casora-pfocus .flist{box-shadow:0 0 0 2px var(--casora-studio-link, #0071e3)}"
-    + ":host(.is-light) .casora-pnote{background:var(--casora-studio-link-tint, rgba(0,113,227,.10))}";
+    + ":host(.is-light) .fgroup.casora-pfocus .flist{box-shadow:0 0 0 2px var(--casora-studio-link, #0071e3)}";
 
   const clone = (x) => JSON.parse(JSON.stringify(x || {}));
   // Neue Kalender: Casora-Blau wie im Farbmenü (früher fest #0A84FF, das bleibt lesbar).

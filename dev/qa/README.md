@@ -381,6 +381,10 @@ Beide brauchen eigene Wegwerf-Test-HAs (nie casora-test :8124) und ändern dort 
   node dev/qa/bildvergleich.mjs --alt http://localhost:8195 --alt-dir <worktree v1.0.1> \
        --neu http://localhost:8196 --out /tmp/bildvergleich --jobs 8
   ```
+- **Stil-Abdruck** `dev/qa/stilabdruck.mjs` – für reine Aufräum-Änderungen mit nur einem HA: berechnete
+  Stile aller Elemente (auch Shadow-DOM) von Dashboard, Handy und Studio; vorher ohne, nachher mit
+  `CASORA_LOCAL=1`, dann `--vergleich a.json b.json`. Rauschen (Uhrbreite, Studio-Sockel) zeigt ein
+  zweiter Vorher-Lauf – am saubersten beide Seiten mit `CASORA_LOCAL=1` (Stand per `git stash`).
 - **Prod-Nachbau** `dev/qa/prodnachbau.mjs` – spielt echte Dashboards aus einer privaten Kopie
   (`CASORA_PRODKOPIE`, Dateien wie in `.storage`; nie ins Repo) 1:1 ein, startet neu (Vorlagen-Auffrischung
   wie nach einem Update) und prüft Fehlerkarten, Konsole, Badge-Reihen je Raum (Sicherheit bei Kontakten,

@@ -499,20 +499,7 @@
         + ".cc-prog{margin:-4px 4px 12px;font:500 var(--t-foot) system-ui;color:#c77dff;text-align:right}.cc-prog[hidden]{display:none}"
         + ".cc-tx>span span{display:inline}"
         + ".cc-cmp{appearance:none;border:0;background:none;padding:0 0 0 8px;margin-left:auto;flex:none;align-self:center;cursor:pointer;font:500 var(--t-foot) system-ui;color:var(--casora-studio-link, #0a84ff);white-space:nowrap}"
-        + ".cc-sh-foot{display:flex;justify-content:flex-end;margin-top:14px}"
-        + ".cc-apply{appearance:none;border:0;cursor:pointer;padding:11px 26px;border-radius:999px;font:600 var(--t-callout) system-ui;background:var(--casora-studio-done, #0a84ff);color:#fff}"
-        + ".cc-apply:hover{filter:brightness(1.08)}"
-        + ".cc-sh-foot{gap:10px;align-items:center}"
-        + ".cc-ai{appearance:none;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:999px;"
-        + "font:600 var(--t-callout) system-ui;color:#fff;background:var(--casora-studio-ai-grad, linear-gradient(135deg,#bf5af2,#7d5cff));box-shadow:0 4px 18px rgba(191,90,242,.35)}"
-        + ".cc-ai svg{width:17px;height:17px;fill:currentColor}.cc-ai:hover{filter:brightness(1.08)}"
-        + ".cc-ai.busy{cursor:progress;background:var(--casora-studio-ai-shimmer, linear-gradient(100deg,#bf5af2 20%,#e3a6ff 50%,#7d5cff 80%)) 0 0/250% 100%;animation:ccaibusy 1.4s linear infinite}"
-        + ".cc-ai.busy svg{animation:ccaispin 1.6s ease-in-out infinite}"
-        + "@keyframes ccaibusy{to{background-position:-250% 0}}@keyframes ccaispin{50%{transform:scale(.8) rotate(90deg)}}"
-        + ".cc-ai.locked{background:var(--casora-studio-chip-hi, rgba(118,118,128,.28));color:var(--ink-3,rgba(255,255,255,.45));box-shadow:none;cursor:not-allowed;filter:none}"
-        + ".cc-aiwho{margin-right:auto;font:500 var(--t-foot) system-ui;color:var(--casora-studio-ai, #bf5af2)}.cc-aiwho[hidden]{display:none}"
-        + ".cc-ailock{margin:10px 4px 0;font-size:var(--t-foot);color:var(--ink-3,rgba(255,255,255,.5));text-align:right}"
-        + ".cc-ai[hidden]{display:none}.cc-col:nth-child(3) .cc-cap,.cc-col:nth-child(3).on .cc-cap{color:var(--casora-studio-ai, #bf5af2)}.cc-col:nth-child(3).on .cc-stage,.cc-col:nth-child(3).on .cc-pop{box-shadow:0 0 0 3px #bf5af2}"
+        + ".cc-col:nth-child(3) .cc-cap,.cc-col:nth-child(3).on .cc-cap{color:var(--casora-studio-ai, #bf5af2)}.cc-col:nth-child(3).on .cc-stage,.cc-col:nth-child(3).on .cc-pop{box-shadow:0 0 0 3px #bf5af2}"
         + ".cc-tile{width:min(290px,100%)}"
         + ".cc-stage.cc-wait{background:var(--casora-studio-chip, rgba(118,118,128,.14));color:var(--ink-2);font:500 var(--t-foot)/1.45 system-ui;text-align:center;padding:24px 28px;"
         + "box-shadow:inset 0 0 0 1.5px rgba(191,90,242,.35)}"
@@ -557,7 +544,7 @@
         // Hell: Blatt und Bedienung hell; Kachel- und Popup-Vorschau zeigen das (dunkle) Dashboard.
         + ":host(.is-light) .cc-seg{background:var(--casora-studio-chip, rgba(118,118,128,.12))}"
         + ":host(.is-light) .cc-seg button.on{background:#fff;color:#1d1d1f;box-shadow:0 1px 3px rgba(0,0,0,.14)}"
-        + ":host(.is-light) .cc-seg button.cc-seg-ai,:host(.is-light) .cc-note,:host(.is-light) .cc-prog,:host(.is-light) .cc-aiwho{color:var(--casora-studio-ai, #8944ab)}"
+        + ":host(.is-light) .cc-seg button.cc-seg-ai,:host(.is-light) .cc-note,:host(.is-light) .cc-prog{color:var(--casora-studio-ai, #8944ab)}"
         + ":host(.is-light) .cc-note.err{color:var(--casora-studio-bad, #d70015)}"
         + ":host(.is-light) .cc-cmp,:host(.is-light) .cc-col.on .cc-cap{color:var(--casora-studio-link, #0071e3)}"
         + ":host(.is-light) .cc-ov{background:rgba(0,0,0,.22)}"
@@ -594,13 +581,8 @@
       if (!this.shadowRoot.getElementById("casora-umzug-css")) {
         const st = document.createElement("style");
         st.id = "casora-umzug-css";
-        st.textContent = ".casora-uchoice{display:flex;gap:6px;flex:1 1 100%;margin-top:2px}"
-          + ".casora-uchoice button{flex:1 1 0;border:none;border-radius:var(--r-s);padding:8px 10px;cursor:pointer;"
-          + "font:500 var(--t-foot) system-ui;background:var(--casora-studio-chip-hi, rgba(118,118,128,.22));color:inherit}"
-          + ".casora-uchoice button.on{background:var(--casora-studio-done, #0a84ff);color:#fff}"
-          + ".frow.casora-urow{flex-wrap:wrap;row-gap:8px}"
-          // Übersicht: Umschalter, Kennzahlen, Räume als Fotos, dann was passiert – klar getrennt.
-          + ".flowin.casora-uwide{max-width:880px}"
+        // Übersicht: Umschalter, Kennzahlen, Räume als Fotos, dann was passiert – klar getrennt.
+        st.textContent = ".flowin.casora-uwide{max-width:880px}"
           + ".cu-seg{display:flex;justify-content:center;margin:-8px 0 22px}"
           + ".cu-seg>div{display:inline-flex;gap:2px;padding:3px;border-radius:999px;background:var(--casora-studio-chip-hi, rgba(118,118,128,.24));max-width:100%;overflow-x:auto;scrollbar-width:none}"
           + ".cu-seg button{appearance:none;border:0;cursor:pointer;white-space:nowrap;padding:7px 16px;border-radius:999px;"
