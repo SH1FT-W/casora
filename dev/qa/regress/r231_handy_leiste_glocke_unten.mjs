@@ -52,7 +52,10 @@ for (const dark of [false, true]) {
     const m = await page.evaluate((sel) => { const m = document.querySelector(sel); if (!m) return null; const r = m.getBoundingClientRect(); const b = document.querySelector('.hmn-bar').getBoundingClientRect();
       return { t: r.top, b: r.bottom, h: r.height, barTop: b.top }; }, sel);
     await check(`${tag}: ${name} (5 px über dem Kreis angetippt) öffnet über der Leiste, ganz im Bild`, m && m.h > 40 && m.t >= 0 && m.b <= m.barTop + 1, m);
-    await page.mouse.click(200, 300);
+    // Schließen mit Escape (beide Menüs hören darauf): ein Tipp daneben, z. B. (200, 300), schließt zwar das Menü,
+    // geht aber wie immer zur Kachel darunter durch (Testhaus: Fußball/Jalousie) – deren Popup fing dann den
+    // nächsten Tipp auf die Leiste ab.
+    await page.keyboard.press('Escape');
     await page.waitForTimeout(900);
   }
   await page.close();
