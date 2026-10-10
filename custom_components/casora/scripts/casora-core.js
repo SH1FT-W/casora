@@ -776,7 +776,8 @@
     var m = Math.floor(s / 60);
     if (m < 60) return 'vor ' + m + ' Min.';
     if (m < 1440) return 'vor ' + Math.floor(m / 60) + ' Std.';
-    return 'vor ' + Math.floor(m / 1440) + ' T.';
+    // Kalendertage (#11): vor 30 Std. ist „vor 1 T.“ (gestern), nicht abgerundet nach 24-h-Blöcken.
+    return 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.floor(m / 1440)) + ' T.';
   };
 })();
 // casora-cam-still:end

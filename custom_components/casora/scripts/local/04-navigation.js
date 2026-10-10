@@ -513,8 +513,9 @@
     /* „vor 5 Min.“, „gestern“ … wie casora_badge_scene (Szenen-Zustand = Zeitpunkt der letzten Ausführung).
        D13 (1.2): Zeitangaben immer klein wie mitten im Satz. */
     _sceneAgo(id) {
-      var st = this._hass && this._hass.states[id];
-      var t = Date.parse(st && st.state), tr = window.casoraTr || function (x) { return x; };
+      var S = (this._hass && this._hass.states) || {}, st = S[id], SC = window._casoraSC;
+      /* Zuletzt aktiv inkl. Status-Schalter der Szene (#11), ohne neuen Szenen-Kern wie bisher. */
+      var t = SC && SC.lastActive ? (SC.lastActive(id, S) || NaN) : Date.parse(st && st.state), tr = window.casoraTr || function (x) { return x; };
       if (!isFinite(t)) return tr('noch nie');
       var m = Math.round((Date.now() - t) / 60000);
       if (m < 1) return tr('gerade eben');

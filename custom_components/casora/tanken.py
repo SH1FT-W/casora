@@ -221,6 +221,8 @@ class Tanken:
         self._hstore: Store = Store(hass, 1, HIST_KEY)
         self.cfg: dict[str, Any] = {"key": None, "radius": RADIUS_DEFAULT, "cars": {}, "last_request": 0.0}
         self.hist: dict[str, dict[str, list[float]]] = {}
+        # Variante 1: letzter bekannter Preis je Preis-Sensor (geschlossene Station meldet „unknown“).
+        self.last_price: dict[str, float] = {}
         # Standorte (Variante 2): je Slot Mittelpunkt, Rohdaten, Abrufzeit, nächster Termin.
         self.slots: list[dict[str, Any]] = []
         self.status: dict[str, Any] = {"at": None, "ok": None, "error": None, "count": None}
@@ -236,13 +238,15 @@ class Tanken:
         data = await self._store.async_load() or {}
         self.cfg.update({k: data[k] for k in ("key", "radius", "cars", "last_request") if k in data})
         self.cfg["radius"] = clamp_radius(self.cfg.get("radius"))
-        self.hist = (await self._hstore.async_load() or {}).get("hist", {})
+        hdata = await self._hstore.async_load() or {}
+        self.hist = hdata.get("hist", {})
+        self.last_price = {k: v for k, v in (hdata.get("last") or {}).items() if isinstance(v, (int, float))}
 
     async def _save(self) -> None:
         await self._store.async_save(dict(self.cfg))
 
     def _save_hist(self) -> None:
-        self._hstore.async_delay_save(lambda: {"hist": self.hist}, 120)
+        self._hstore.async_delay_save(lambda: {"hist": self.hist, "last": self.last_price}, 120)
 
     # Quelle
     def integration_entities(self) -> list[str]:
@@ -437,12 +441,20 @@ class Tanken:
                 continue
             a = st.attributes
             fuel = str(a.get("fuel_type") or "").lower()
+            if fuel not in FUELS:
+                continue
             try:
                 price = round(float(st.state), 3)
             except (TypeError, ValueError):
-                continue
-            if fuel not in FUELS:
-                continue
+                # Geschlossene Station: Die Integration meldet „unknown“. Mit dem letzten bekannten
+                # Preis bleibt sie als „zu“ in der Liste (sonst fehlte sie ganz, Issue #18).
+                price = self.last_price.get(eid) if opened.get(ent.device_id) is False else None
+                if price is None:
+                    continue
+            else:
+                if self.last_price.get(eid) != price:
+                    self.last_price[eid] = price
+                    self._save_hist()
             k = ent.device_id or eid
             s = by_dev.setdefault(k, {"name": str(a.get("station_name") or a.get("friendly_name") or "").strip(),
                                       "brand": str(a.get("brand") or "").strip(),

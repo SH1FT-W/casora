@@ -9,8 +9,10 @@
 // Markenlogos werden zur Laufzeit geladen (nicht im Repo, nur Adressen); unbekannte Marken: farbige
 // Kürzel-Kreise, freie Tankstellen: Zapfsäule. Nur im Weich-Design (Casora, Nebel).
 (function () {
-  if (window._casoraTank) return;
-  var K = window._casoraTank = {};
+  // Eigene Fassung an der Markierung erkennen: Ein altes Nutzer-Modul window._hemmaTank kann über
+  // casora-kompat als _casoraTank durchscheinen (Issue #14). Die Zuweisung ersetzt den Zwilling.
+  if (window._casoraTank && window._casoraTank.casora === true) return;
+  var K = window._casoraTank = { casora: true };
   var FUEL = { e5: 'Super E5', e10: 'Super E10', diesel: 'Diesel' };
   var loc = function () { return window.casoraLocale ? window.casoraLocale() : 'de-DE'; };
   var fmt = function (n, d) { return Number(n).toLocaleString(loc(), { minimumFractionDigits: d, maximumFractionDigits: d }); };

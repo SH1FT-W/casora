@@ -1561,6 +1561,9 @@
 (function () {
   if (window._casoraCar) return;
   var C = window._casoraCar = {};
+  /* Tanken-Modul (12-tanken.js) nur in Casoras eigener Fassung – ein fremdes _casoraTank (altes
+     _hemmaTank über casora-kompat) hat eine andere watch()/row() und kippte das ganze Popup (Issue #14). */
+  var tank = function () { var T = window._casoraTank; return T && T.casora === true ? T : null; };
   var num = function (v) { var n = parseFloat(v); return isNaN(n) ? null : n; };
   var ok = function (s) { return s && s.state !== 'unknown' && s.state !== 'unavailable'; };
   var fmtN = function (n, d) { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); };
@@ -1581,9 +1584,9 @@
   // ihre Entitäten so benennen. Das Auto ist das Gerät mit den meisten Treffern.
   var B = ['binary_sensor'], S = ['sensor'];
   var ROLES = {
-    reichweite_kombiniert: { d: S, k: ['cruising_range_combined', 'range_combined', 'remaining_range_total', 'total_range', 'range'],
+    reichweite_kombiniert: { d: S, k: ['cruising_range_combined', 'range_combined', 'remaining_range_total', 'total_range', 'range', 'range_km'],
       e: ['reichweite_kombiniert', 'range_combined', 'cruising_range_combined', 'remaining_range_total', 'total_range', 'range_total',
-        'range_primary', 'est_battery_range', 'battery_range', 'electric_range', 'remaining_range', 'reichweite', 'range'], x: /(scr|adblue)_range$|range_secondary$/ },
+        'range_primary', 'est_battery_range', 'battery_range', 'electric_range', 'remaining_range', 'reichweite', 'range'], x: /(scr|adblue)_(range|reichweite)$|range_secondary$/ },
     tankfullstand: { d: S, k: ['fuel_level_current_level', 'fuel_level', 'remaining_fuel_percent', 'fuel_percentage'],
       e: ['tankfullstand', 'tankstand', 'kraftstoffstand', 'fuel_level_current_level', 'fuel_level', 'remaining_fuel_percent', 'fuel_percentage', 'fuel_level_percentage', 'tank_level'] },
     akku: { d: S, k: ['battery_level', 'state_of_charge', 'remaining_battery_percent', 'battery_percentage'],
@@ -1619,12 +1622,14 @@
     verriegelung: { d: B, k: ['door_lock_state', 'doors_locked'], e: ['verriegelung', 'door_lock_state', 'doors_locked', 'vehicle_locked', 'central_lock', 'locked'] },
     schloss: { d: ['lock'], k: [], e: ['turschloss', 'door_lock', 'doors', 'lock', 'central_locking', 'vehicle_lock'] },
     feststellbremse: { d: B, k: ['parking_brake'], e: ['feststellbremse', 'parking_brake', 'park_brake', 'handbrake'] },
-    nachste_inspektion: { d: S, k: ['inspection_due_date', 'inspection_due', 'service_inspection_time'],
-      e: ['nachste_inspektion', 'inspection_due_date', 'inspection_due', 'service_inspection_time', 'service_due_date', 'next_service', 'next_inspection'] },
-    inspektionsdistanz: { d: S, k: ['inspectionDistance', 'inspection_due_2', 'service_inspection_distance'],
+    /* Datums-Rollen (date): nur Datum, Zeitstempel oder Resttage – ein km-Sensor mit gleicher Endung
+       (vag_connect „nachste_inspektion“ = service_km) zählt nicht (Issue #15). */
+    nachste_inspektion: { d: S, date: true, k: ['inspection_due_date', 'inspection_due', 'service_inspection_time', 'service_due_at', 'service_due_in_days'],
+      e: ['nachste_inspektion', 'inspektionsdatum', 'inspection_due_date', 'inspection_due', 'service_inspection_time', 'service_due_date', 'next_service', 'next_inspection'] },
+    inspektionsdistanz: { d: S, k: ['inspectionDistance', 'inspection_due_2', 'service_inspection_distance', 'service_km'],
       e: ['inspektionsdistanz', 'inspection_distance', 'inspection_due_2', 'service_inspection_distance', 'service_due_distance', 'next_service_distance'] },
-    nachster_olwechsel: { d: S, k: ['oil_change_due_date', 'oil_service_time', 'oil_service_due'],
-      e: ['nachster_olwechsel', 'oil_change_due_date', 'oil_change_due', 'oil_service_time', 'oil_service_due'] },
+    nachster_olwechsel: { d: S, date: true, k: ['oil_change_due_date', 'oil_service_time', 'oil_service_due', 'oil_service_at', 'oil_service_due_in_days'],
+      e: ['nachster_olwechsel', 'olwechseldatum', 'oil_change_due_date', 'oil_change_due', 'oil_service_time', 'oil_service_due'] },
     strecke_kurzzeit: { d: S, k: ['short_term_data_mileage'], e: ['strecke_kurzzeit'] },
     fahrzeit_kurzzeit: { d: S, k: ['short_term_data_travel_time'], e: ['fahrzeit_kurzzeit'] },
     o_verbrauch_benzin_kurzzeit: { d: S, k: ['short_term_data_average_fuel_consumption'], e: ['o_verbrauch_benzin_kurzzeit'] },
@@ -1640,20 +1645,30 @@
   // Bestes Ergebnis je Rolle für eine Entität: 0 = translation_key, 1… = Rang der Endung.
   // Abgeleitete Helfer am Auto-Gerät (z. B. utility_meter „monthly_mileage“) sind nie die Rolle selbst.
   var HELPER = /^(utility_meter|statistics|derivative|integration|template|filter|min_max|threshold|trend|history_stats)$/;
-  var rank = function (role, eid, x) {
+  /* Strecke statt Datum: Einheit km/mi/m oder device_class distance (Issue #15). */
+  var isDist = function (st) {
+    var a = (st && st.attributes) || {};
+    return a.device_class === 'distance' || /^(km|mi|m)$/i.test(a.unit_of_measurement || '');
+  };
+  /* Elektrische Reichweite nur als Ausweich-Treffer für die Reichweite: Beim Verbrenner/Hybrid gewinnt
+     jede andere Reichweite (deutsche IDs „…_elektrische_reichweite“, Issue #16), beim E-Auto bleibt sie. */
+  var ELEC = /(^|_)(elektrische|electric)_(reichweite|range)$/;
+  var rank = function (role, eid, x, st) {
     var R0 = ROLES[role], dom = eid.split('.')[0], obj = eid.slice(dom.length + 1);
     if (R0.d.indexOf(dom) < 0 || (R0.x && R0.x.test(obj))) return -1;
     if (x && x.platform && HELPER.test(x.platform)) return -1;
+    if (R0.date && isDist(st)) return -1;
     if (x && x.translation_key && R0.k.indexOf(x.translation_key) >= 0) return 0;
-    for (var i = 0; i < R0.re.length; i++) if (R0.re[i].test(obj)) return i + 1;
+    for (var i = 0; i < R0.re.length; i++) if (R0.re[i].test(obj)) return i + 1 + (role === 'reichweite_kombiniert' && ELEC.test(obj) ? 100 : 0);
     return -1;
   };
   var mapDevice = function (R, dev) {
     var best = {}, map = {};
+    var root = document.querySelector('home-assistant'), ST = (root && root.hass && root.hass.states) || {};
     Object.keys(R).forEach(function (e) {
       var x = R[e]; if (!x || x.device_id !== dev || x.hidden || x.disabled_by) return;
       Object.keys(ROLES).forEach(function (role) {
-        var r = rank(role, e, x);
+        var r = rank(role, e, x, ST[e]);
         if (r >= 0 && (best[role] == null || r < best[role])) { best[role] = r; map[role] = e; }
       });
     });
@@ -1706,7 +1721,7 @@
 
   // Datum aus einem Wartungssensor: Datum/Zeitstempel oder Resttage (Einheit d/Tage).
   var toDate = function (x) {
-    if (!ok(x)) return null;
+    if (!ok(x) || isDist(x)) return null;
     var u = (x.attributes && x.attributes.unit_of_measurement) || '';
     if (/^(d|days?|tage?)$/i.test(u) && num(x.state) != null) return new Date(Date.now() + num(x.state) * 86400000);
     var t = new Date(x.state); return isNaN(t) ? null : t;
@@ -1787,7 +1802,7 @@
       if (r.tank != null && window._casoraHH && window._casoraHH.on()) {
         return out + '<div style="height:var(--casora-popup-sec-gap, 22px)"></div>' + window._casoraHH.pbar({ pct: Math.max(2, Math.min(100, r.tank)), left: (r.ev ? 'Akku ' : 'Tank ') + Math.round(r.tank) + ' %', tone: r.tank <= 15 ? 'warn' : 'accent' })
           /* Tanken (1.2, 12-tanken.js): Zeile direkt unter der Tankleiste, nur wenn eingerichtet. */
-          + (window._casoraTank ? window._casoraTank.row(p, states) : '');
+          + (tank() ? tank().row(p, states) : '');
       }
       if (r.tank != null) {
         var col = r.tank <= 15 ? 'var(--casora-popup-ui-warn, #FF9F0A)' : 'var(--casora-color-teal, #00C3D0)';
@@ -1798,8 +1813,8 @@
           + '<div style="height:100%;width:' + Math.max(2, Math.min(100, r.tank)) + '%;border-radius:999px;background:' + col + ';"></div></div></div>';
       }
       /* Tankstand gerade unbekannt (z. B. nach einem Neustart, Auto-Integration noch nicht da): Tanken trotzdem zeigen. */
-      if (r.tank == null && window._casoraTank && window._casoraHH && window._casoraHH.on()) {
-        var tr0 = window._casoraTank.row(p, states);
+      if (r.tank == null && tank() && window._casoraHH && window._casoraHH.on()) {
+        var tr0 = tank().row(p, states);
         if (tr0) out += '<div style="height:var(--casora-popup-sec-gap, 22px)"></div>' + tr0;
       }
       return out;
@@ -1898,7 +1913,7 @@
     var watch = [];
     var M = C.map(p);
     Object.keys(M).forEach(function (k) { var id = M[k]; if (id && states[id] && watch.indexOf(id) < 0) watch.push(id); });
-    if (window._casoraTank) window._casoraTank.watch(p, states).forEach(function (id) { watch.push(id); });
+    if (tank()) tank().watch(p, states).forEach(function (id) { watch.push(id); });
     var sec = function (n) { return '[[[ return window._casoraCar ? window._casoraCar.sec(' + JSON.stringify(n) + ', ' + JSON.stringify(p) + ', states) : ""; ]]]'; };
     /* Weich (Entschlacken 01.10.2026): Kopf mit Reichweite und Tankbalken, links Zustand (nur Abweichungen),
        rechts Wartung (nur Fälliges); alle Zustandszeilen, Wartungswerte, Fahrten und Daten unter „Mehr“. */

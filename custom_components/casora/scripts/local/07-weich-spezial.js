@@ -314,7 +314,7 @@
     age: function (ms, motion) {
       if (!isFinite(ms) || ms < 0) return '';
       var m = Math.floor(ms / 60000);
-      var t = m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.floor(m / 60) + ' Std.' : 'vor ' + Math.floor(m / 1440) + ' T.';
+      var t = m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.floor(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.floor(m / 1440)) + ' T.';
       return motion ? 'Bewegung ' + t : t;
     },
     // Zurück zur Übersicht – sichtbarer Pfeil über dem Livebild.

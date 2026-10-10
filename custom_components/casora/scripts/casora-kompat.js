@@ -50,8 +50,12 @@
   // Fehlt _casoraX (Casora selbst definiert es nicht), zeigt es auf _hemmaX. Legt ein Casora-Modul
   // _casoraX später selbst an, ersetzt die Zuweisung den Zwilling – Casoras Fassung gewinnt, das
   // Modul des Nutzers bleibt unter seinem alten Namen unberührt.
+  // Erst nach den Casora-Modulen (casora-local-loaded, spätestens nach 30 s): Sonst steht ein
+  // Zwilling schon da, wenn ein Modul mit „if (window._casoraX) return;“ prüft – der Getter
+  // liefert dann das alte Nutzer-Modul, Casoras Fassung startet nie (Issue #14, _casoraTank).
   function twinBack(key) {
     if (HEMMA || made[key]) return;
+    if (!window._casoraLocalLoaded && (typeof performance === 'undefined' || performance.now() < 30000)) return;
     var neu = key.replace(/^_hemma/, '_casora').replace(/^hemma/, 'casora').replace(/^HEMMA_/, 'CASORA_');
     if (neu === key || Object.prototype.hasOwnProperty.call(window, neu)) return;
     try {
@@ -75,7 +79,7 @@
   }
   sweep();
   // Module laden nach und nach (casora-local.js, eigene Ressourcen) – mehrmals nachziehen.
-  [1000, 3000, 8000, 20000, 45000].forEach(function (ms) { setTimeout(sweep, ms); });
+  [1000, 3000, 8000, 20000, 31000, 45000].forEach(function (ms) { setTimeout(sweep, ms); });
   window.addEventListener('casora-local-loaded', function () { sweep(); });
   window.__casoraKompatSweep = sweep;
 
