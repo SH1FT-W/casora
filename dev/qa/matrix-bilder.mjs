@@ -161,7 +161,7 @@ function fund(row, text) {
 
 const VIEWS = {
   desktop: { width: 1440, height: 900, scale: 1 },
-  tablet: { width: 1024, height: 768, safari: true, touch: true, scale: 1 },
+  tablet: { width: 1024, height: 768, touch: true, scale: 1 }, // Chromium mit Touch (WebKit nur am Handy – schneller unter Last)
   handy: { width: 393, height: 852, mobile: true, safari: true, scale: 2 },
 };
 // --kern: Kernmatrix zuerst (Grundzustand de: desktop/handy hell+dunkel, tablet hell; en: desktop/handy hell;
