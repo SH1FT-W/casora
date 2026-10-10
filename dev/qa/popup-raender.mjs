@@ -15,6 +15,9 @@
 //                              antippen (n = höchstens so viele Räume; Standard alle). Anlass 07.10.2026:
 //                              Popups aus Räumen (Pflanze, Geräte, Swipe-Karten …) wurden am Handy nie gemessen.
 //     --espn-mock              ESPN-Abfragen (Fußball-Tabelle/Form) mit festen, erfundenen Antworten beantworten
+//     --geo                    zusätzlich Geometrie + Kontrast messen (dev/qa/popup-geo.mjs: Ring, Radien,
+//                              Überschriften, Spalten, Kontrast, Schalter, Haken) – Funde als „GEO“-Zeilen,
+//                              nur mit --geo-streng zählen sie als Fehler
 //     --json <datei>           Rohdaten schreiben
 //     --shots <ordner>         je Fund ein Bild (--alle-bilder: von jedem Popup)
 //
@@ -32,6 +35,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { tokens, ws } from './ws.mjs';
+import { MEASURE_GEO } from './popup-geo.mjs';
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
 process.env.CASORA_THEME = arg('theme', process.env.CASORA_THEME || 'Casora');
@@ -312,6 +316,9 @@ for (const scheme of schemes) for (const vn of views) {
   for (const { v, room } of passes) {
     if (room) await page.evaluate(() => { try { localStorage.setItem('casora_mobile_filter', 'all'); } catch (e) { /* leer */ } }).catch(() => {});
     await H.ready(page, '/' + dash + '/' + v, "() => window.__pierce('button-card').length >= 3", 60000).catch(() => {});
+    // WebKit unter Last: ready() kehrt teils zurück, während HA noch „Loading…“ zeigt – auf Kacheln warten.
+    for (let t0 = Date.now(); Date.now() - t0 < 60000; await page.waitForTimeout(1000))
+      if (await page.evaluate(() => !!window.__pierce && window.__pierce('button-card').length >= 3).catch(() => false)) break;
     await page.waitForTimeout(2500);
     if (room) {
       await page.evaluate((k) => window._casoraFilter && window._casoraFilter.set(k), room);
@@ -319,7 +326,7 @@ for (const scheme of schemes) for (const vn of views) {
       if (!await ensureRoom(page, room)) { console.log(`  info   ${vn}: Raum ${room} öffnet nicht`); continue; }
     }
     const pre = room ? room.replace(/^room_/, '') + '/' : '';
-    if (themeOk === null) themeOk = await page.evaluate(() => { const ha = document.querySelector('home-assistant'); return { theme: ha.hass.selectedTheme && ha.hass.selectedTheme.theme, active: ha.hass.themes.theme, dark: ha.hass.themes.darkMode, bg: getComputedStyle(document.documentElement).getPropertyValue('--primary-background-color').trim() }; });
+    if (themeOk === null) themeOk = await page.evaluate(() => { const ha = document.querySelector('home-assistant'); const h = (ha && ha.hass) || (window.__pierce('home-assistant-main')[0] || {}).hass || {}; return { theme: h.selectedTheme && h.selectedTheme.theme, active: h.themes && h.themes.theme, dark: h.themes && h.themes.darkMode, bg: getComputedStyle(document.documentElement).getPropertyValue('--primary-background-color').trim() }; });
     // Sammel-Badges aufklappen (Unter-Badges öffnen die Popups) – nacheinander je Gruppe.
     const groups = await page.evaluate(() => window.__pierce('button-card').map((b, i) => ({ i, t: [].concat((b._config || {}).template || []) })).filter((x) => x.t.some((t) => /^casora_badge_\w+_group$/.test(t) && !/lock_group|camera_group|contact_group/.test(t))).map((x) => x.i));
     for (const gi of [null, ...groups]) {
@@ -380,6 +387,11 @@ for (const scheme of schemes) for (const vn of views) {
           m.shadow = same(m.shadow || [], m2.shadow || [], (x) => x.path + x.sides);
         }
         const row = { scheme, view: vn, page: v, room: room || undefined, key, ...(m || { error: 'kein Popup' }) };
+        if (process.argv.includes('--geo')) {
+          row.geo = await page.evaluate(MEASURE_GEO).catch((e) => ({ n: 0, finds: [], err: String(e).slice(0, 200) }));
+          row.title = await page.evaluate(() => { const s = window.casoraPopup && window.casoraPopup.surface; const t = s && s.querySelector('.header-title, .title'); return t ? t.textContent.trim().slice(0, 60) : ''; }).catch(() => '');
+          for (const f of row.geo.finds || []) console.log(`           GEO ${f.kind}: ${f.msg} – ${f.label} (${f.path})`);
+        }
         if (shotsDir && m && (process.argv.includes('--alle-bilder') || m.cut.length || m.text.length || m.overlap.length || (m.shadow || []).length)) {
           row.shot = path.join(shotsDir, `${vn}_${scheme}_${key.replace(/[^\w-]+/g, '_')}.jpg`.slice(0, 120));
           // Unten abgeschnitten: ans Ende scrollen – zeigt, ob man es erreichen kann.
@@ -402,7 +414,7 @@ for (const scheme of schemes) for (const vn of views) {
 }
 const json = arg('json');
 if (json) fs.writeFileSync(json, JSON.stringify(results, null, 1));
-const bad = results.filter((r) => r.cut && (r.cut.length || r.overlap.length || (r.shadow || []).length));
+const bad = results.filter((r) => r.cut && (r.cut.length || r.overlap.length || (r.shadow || []).length || (process.argv.includes('--geo-streng') && r.geo && r.geo.n)));
 if (!results.some((r) => r.key)) { console.log('FAIL popup-raender – kein Popup geöffnet'); process.exit(1); }
 console.log(`${bad.length ? 'FAIL' : 'PASS'} popup-raender – ${results.filter((r) => r.key).length} Messungen, ${bad.length} mit Fund (${Math.round((Date.now() - stamp) / 1000)} s)`);
 process.exit(bad.length ? 1 : 0);

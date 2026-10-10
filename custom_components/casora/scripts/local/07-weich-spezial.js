@@ -160,7 +160,9 @@
       + 'border-radius:999px;background:' + b.bg + ';color:' + b.ink + ';font-family:' + FONT + ';text-align:left;cursor:pointer;'
       + (b.bg === CTL ? '' : 'box-shadow:0 12px 26px -14px rgba(90,60,40,0.55);') + '">'
       + '<div style="width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;background:' + (b.bg === CTL ? 'var(--casora-lps-seg-on, #FFFDF9)' : 'rgba(255,255,255,0.2)') + ';">'
-      + icon(b.ic, 22, b.bg === CTL ? INK : '#fff') + '</div>'
+      /* Symbol auf dem hellen Kreis (seg-on) mit dessen Schrift-Token: INK ist im dunklen Design hell und
+         verschwand dort auf dem Creme-Kreis (Design-Audit 10.10.2026). */
+      + icon(b.ic, 22, b.bg === CTL ? 'var(--casora-lps-seg-on-ink, #2E2721)' : '#fff') + '</div>'
       + '<div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:700;letter-spacing:-0.01em;">' + b.t + '</div>'
       + (b.s ? '<div style="font-size:13px;font-weight:600;opacity:.82;margin-top:1px;">' + b.s + '</div>' : '')
       + bar + '</div></div></div></div>';
