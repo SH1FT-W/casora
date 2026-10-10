@@ -1585,7 +1585,12 @@
   "1 neues Update gefunden": "1 new update found",
   "Suche fehlgeschlagen": "Check failed",
   "Vorheriger Titel": "Previous track",
-  "Nächster Titel": "Next track"
+  "Nächster Titel": "Next track",
+  "Klappen": "Hatches",
+  "Kraftstoff": "Fuel",
+  "jetzt günstig": "good price now",
+  "keine offen": "none open",
+  "KI:": "AI:"
  },
  "patterns": [
   [
@@ -1949,6 +1954,14 @@
    "{1} locks unlocked"
   ],
   [
+   "^1 Tür entriegelt$",
+   "1 door unlocked"
+  ],
+  [
+   "^(\\d+) Türen entriegelt$",
+   "{1} doors unlocked"
+  ],
+  [
    "^(.+) entriegelt$",
    "{1} unlocked"
   ],
@@ -2007,6 +2020,10 @@
   [
    "^Stufe (\\d+) von (\\d+)$",
    "Level {1} of {2}"
+  ],
+  [
+   "^(\\d+) von (\\d+) geöffnet$",
+   "{1} of {2} open"
   ],
   [
    "^(\\d+) von (\\d+)$",
@@ -2119,14 +2136,6 @@
   [
    "^(\\d+) Sensoren offen$",
    "{1} sensors open"
-  ],
-  [
-   "^1 Tür entriegelt$",
-   "1 door unlocked"
-  ],
-  [
-   "^(\\d+) Türen entriegelt$",
-   "{1} doors unlocked"
   ],
   [
    "^(\\d+) Öffnungen offen$",
@@ -2589,6 +2598,14 @@
    "No NINA alerts for {1} right now"
   ],
   [
+   "^Einspeisung · (\\d+) % aus Solar und Akku · heute (.+)$",
+   "Feed-in · {1}% from solar and battery · today {2}"
+  ],
+  [
+   "^Einspeisung · heute (.+)$",
+   "Feed-in · today {1}"
+  ],
+  [
    "^Einspeisung (.+)$",
    "Feed-in {1}"
   ],
@@ -2674,19 +2691,11 @@
   ],
   [
    "^(\\d+) % aus Solar und Akku · heute (.+)$",
-   "{1} % from solar and battery · today {2}"
+   "{1}% from solar and battery · today {2}"
   ],
   [
    "^(\\d+) % aus Solar und Akku$",
-   "{1} % from solar and battery"
-  ],
-  [
-   "^Einspeisung · (\\d+) % aus Solar und Akku · heute (.+)$",
-   "Feed-in · {1} % from solar and battery · today {2}"
-  ],
-  [
-   "^Einspeisung · heute (.+)$",
-   "Feed-in · today {1}"
+   "{1}% from solar and battery"
   ],
   [
    "^heute (.+)$",
@@ -2718,7 +2727,7 @@
   ],
   [
    "^Am niedrigsten: (.+) (\\d+) %$",
-   "Lowest: {1} {2} %"
+   "Lowest: {1} {2}%"
   ],
   [
    "^(\\d+) von (\\d+) online$",
@@ -2778,7 +2787,7 @@
   ],
   [
    "^(\\d+) % in (\\d+) Min\\.$",
-   "{1} % in {2} min"
+   "{1}% in {2} min"
   ],
   [
    "^(Heute|Morgen|Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag): (.+)$",
@@ -2787,6 +2796,10 @@
   [
    "^(\\d+) Schlösser offen$",
    "{1} locks open"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · keine offen$",
+   "{1} · none open"
   ],
   [
    "^(.+) offen$",
@@ -2846,7 +2859,7 @@
   ],
   [
    "^(\\d+) % der Summe$",
-   "{1} % of the total"
+   "{1}% of the total"
   ],
   [
    "^(\\d+) Geräte ohne Wert$",
@@ -3077,10 +3090,6 @@
    "{1} · collecting prices"
   ],
   [
-   "^(Super E5|Super E10|Diesel) · keine offen$",
-   "{1} · none open"
-  ],
-  [
    "^Die Empfehlung kommt, sobald genug Preise gesammelt sind, in etwa (\\d+) Tagen\\.$",
    "The recommendation comes once enough prices are collected, in about {1} days."
   ],
@@ -3114,11 +3123,11 @@
   ],
   [
    "^Tank bei (\\d+) %, noch etwa (\\d+) km\\. Warten lohnt sich nicht\\.$",
-   "Tank at {1} %, about {2} km left. Waiting doesn't pay off."
+   "Tank at {1}%, about {2} km left. Waiting doesn't pay off."
   ],
   [
    "^Tank bei (\\d+) %\\. Warten lohnt sich nicht\\.$",
-   "Tank at {1} %. Waiting doesn't pay off."
+   "Tank at {1}%. Waiting doesn't pay off."
   ],
   [
    "^Noch etwa (\\d+) km\\. Warten lohnt sich nicht\\.$",

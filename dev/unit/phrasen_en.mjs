@@ -41,6 +41,30 @@ const EXPECT = [
   ['Super E10 · ab 19:00 günstiger', 'Super E10 · cheaper from 19:00'],
   ['In 25 Durchgängen fällig', 'Due in 25 cycles'],
   ['Wirklich entriegeln?', 'Really unlock?'],
+  // Wortlaut 1.3 (10.10.2026): Muster, die ein allgemeineres früher verdeckte („1 Tür unlocked“).
+  ['1 Tür entriegelt', '1 door unlocked'],
+  ['2 Türen entriegelt', '2 doors unlocked'],
+  ['Einspeisung · heute 3.2 kWh', 'Feed-in · today 3.2 kWh'],
+  ['Einspeisung · 62 % aus Solar und Akku · heute 3.2 kWh', 'Feed-in · 62% from solar and battery · today 3.2 kWh'],
+  ['Super E5 · keine offen', 'Super E5 · none open'],
+  // fehlende Einträge
+  ['3 von 5 geöffnet', '3 of 5 open'],
+  ['Klappen offen', 'Hatches open'],
+  ['Kraftstoff · jetzt günstig', 'Fuel · good price now'],
+  ['KI: <span style="color:red;">1 Update braucht Aufmerksamkeit</span>', 'AI: <span style="color:red;">1 update needs attention</span>'],
+  // E2: Englisch schreibt Prozent ohne Leerzeichen – auch bei reinen Zahlen und unübersetzten Namen.
+  ['62 %', '62%'],
+  ['62\u00a0%', '62%'],
+  ['Akku 62 %', 'Battery 62%'],
+  ['62 % aus Solar und Akku', '62% from solar and battery'],
+  ['Am niedrigsten: Bad 12 %', 'Lowest: Bad 12%'],
+  ['40 % in 30 Min.', '40% in 30 min'],
+  ['Hell 62 %', 'Hell 62%'],
+  ['<b>62 %</b>', '<b>62%</b>'],
 ];
 for (const [de, en] of EXPECT) assert.equal(tr(de), en, de);
+// Kein Englisch-Muster mit „ %“ mehr; CSS-artige Werte ohne Leerzeichen bleiben unberührt.
+const PH = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/translations/dashboard/phrases/en.json', import.meta.url), 'utf8'));
+assert.deepEqual(PH.patterns.filter((p) => / %/.test(p[1])).map((p) => p[1]), [], 'en-Muster ohne Leerzeichen vor %');
+assert.equal(tr('width:100%'), 'width:100%');
 console.log('ok phrasen_en');
