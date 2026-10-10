@@ -177,11 +177,14 @@
     const el = _findChromePill(searchRoot);
     if (!el || el.parentNode === host) return;
     const parent = el.parentNode;
+    // Neu aufgebauter Kopf (zweiter Halter, alter schon weg): ab jetzt gilt der neue. Sonst blendete
+    // die Raumseite den alten, abgehängten Halter aus und Glocke/⋯ blieben über dem Mini-Kopf (AB-14).
+    if (_pinnedPill && _pinnedPill.host !== host) _pinnedPill.host = host;
     if (!_pinnedPill) {
       _pinnedPill = { host, parent, sibling: el.nextSibling, obs: null };
       const obs = new MutationObserver(() => {
         if (_pinnedPill && _pinnedPill.host.isConnected) {
-          requestAnimationFrame(() => _pinChromePill(host, searchRoot));
+          requestAnimationFrame(() => _pinnedPill && _pinChromePill(_pinnedPill.host, searchRoot));
         }
       });
       try { obs.observe(parent, { childList: true }); } catch (_) {}

@@ -479,7 +479,8 @@
         + ".cc-seg{display:inline-flex;gap:2px;padding:3px;border-radius:999px;background:var(--casora-studio-chip-hi, rgba(118,118,128,.24))}"
         + ".cc-seg button{appearance:none;border:0;cursor:pointer;white-space:nowrap;padding:6px 14px;border-radius:999px;font:500 var(--t-foot) system-ui;background:none;color:var(--ink-2)}"
         + ".cc-seg button.on{background:rgba(255,255,255,.92);color:#111;box-shadow:0 1px 4px rgba(0,0,0,.25)}"
-        + ".cc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}"
+        // Karte mindestens so breit wie ihr Segment „Meine | Casora | ✦ KI (≈ 0,05 €)“ (sonst ragt es heraus).
+        + ".cc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(290px,100%),1fr));gap:10px}"
         + ".cc-card{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:var(--r-l);text-align:left;"
         + "background:var(--casora-popup-row-fill,rgba(255,255,255,.08))}"
         + ".cc-top{display:flex;align-items:center;gap:12px;min-width:0}"
@@ -487,7 +488,7 @@
         + ".cc-ic i{width:22px;height:22px;background:#fff;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}"
         + ".cc-tx{flex:1 1 auto;min-width:0}.cc-tx b{display:block;font-size:var(--t-callout);font-weight:600;letter-spacing:-.01em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"
         + ".cc-tx>span{display:block;font-size:var(--t-foot);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"
-        + ".cc-card .cc-seg{display:flex}.cc-card .cc-seg button{flex:1 1 0}.cc-seg button[hidden]{display:none}"
+        + ".cc-card .cc-seg{display:flex}.cc-card .cc-seg button{flex:1 1 0;padding:6px 10px}.cc-seg button[hidden]{display:none}"
         + ".cc-seg button.cc-seg-ai{display:inline-flex;align-items:center;justify-content:center;gap:5px;color:#c77dff}"
         + ".cc-seg button.cc-seg-ai svg{width:13px;height:13px;fill:currentColor;flex:none}"
         + ".cc-seg button.cc-seg-ai.on{background:var(--casora-studio-ai-grad, linear-gradient(135deg,#bf5af2,#7d5cff));color:#fff}"

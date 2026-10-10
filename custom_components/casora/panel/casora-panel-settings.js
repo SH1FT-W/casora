@@ -98,6 +98,8 @@
     + ".chr-item>i{flex:none;width:8px;height:8px;margin-top:6px;border-radius:50%;background:var(--casora-studio-danger, #ff453a)}"
     + ".chr-item.ok>i{background:var(--casora-studio-good, #34c759)}.chr-item.warn>i{background:var(--casora-studio-warn, #ff9f0a)}.chr-item.info>i{background:#8e8e93}"
     + ".chr-item>input{flex:none;width:16px;height:16px;margin:2px 0 0;accent-color:var(--casora-studio-danger, #ff453a);cursor:pointer}"
+    // Liste mit Ankreuz-Zeilen: Punkt mittig über dem 16-px-Kästchen, Texte fluchten.
+    + ".chr-mix .chr-item>i{margin-left:4px;margin-right:4px}"
     + ".chr-item label,.chr-item>div{flex:1 1 auto;min-width:0;cursor:inherit}"
     + ".chr-item b{display:block;font-weight:600}"
     + ".chr-more{display:block;margin:2px 0 0;padding:0;border:0;background:none;font:inherit;font-size:var(--t-foot);font-weight:600;color:var(--accent);cursor:pointer;text-align:left}"
@@ -858,7 +860,7 @@
         message: t("Casora saves a backup to casora_sicherungen first. Home Assistant needs a restart afterwards."),
         confirmLabel: t("Remove"), destructive: true, wide: true,
         extend: ({ box, acts }) => {
-          const list = el("div", "chr-list");
+          const list = el("div", "chr-list chr-mix");
           list.setAttribute("data-no-i18n", "");
           if (h.installed) item(list, "", t("Hemma integration"), [
             h.hacs ? t("Removed through HACS, so HACS doesn't install it again.")
