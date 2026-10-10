@@ -1,5 +1,7 @@
 // Handy-Dashboard aus Hemma ohne Browser: einlesen (extractMobileConfig) und wieder
 // aufbauen (expandMobileConfig).  node dev/unit/handy_umzug.mjs
+// Umzug-Prüfung 10.10.2026: Ein RAUM namens „Favoriten“ (neben dem Favoriten-Abschnitt) wurde zum
+// zweiten Favoriten-Abschnitt – am Handy ohne Pfeil, nicht als Raum zu öffnen, nicht im Menü.
 // Gemeldet: Nach dem Umzug eines deutschen Hemma-Handy-Dashboards zeigte Home nur noch die
 // Badges – „Favoriten“ galt als Raum und wurde ausgeblendet; die Räume im Menü hatten andere
 // Schlüssel als ihre Overlays (room_kche statt room_kueche) und öffneten nichts.
@@ -82,4 +84,35 @@ const out2 = expandMobileConfig(m2.compact, m2.scaffold, m2.extras, m2.templates
 const nav2 = out2.views[0].cards.find((c) => c.type === 'custom:casora-mobile-nav');
 assert.deepEqual(nav2.rooms.map((r) => r.name), ['Küche', 'Waschküche', 'Flur'], 'umbenannte Favoriten nicht als Raum im Menü');
 assert.deepEqual(JSON.stringify(out2.views[0].cards[1]), JSON.stringify(ren.views[0].cards[1]), 'Rundlauf unverändert');
+// Hemma 2.1.2 mit einem Raum „Favoriten“: der erste Abschnitt ist der Favoriten-Bereich, der
+// zweite bleibt Raum (Merkmal favorites: false) – mit Menüeintrag, Rundlauf stabil.
+const dup = JSON.parse(JSON.stringify(lovelace));
+const kidsD = dup.views[0].cards[1].cards;
+const at = kidsD.findIndex((c) => c.name === 'Küche');
+kidsD.splice(at, 0, header('Favoriten'), row([tile('casora_light')]));
+dup.views[0].cards[1].cards.splice(1, 0, { type: 'custom:casora-filter-overlay', room: 'Favoriten' });
+const m3 = extractMobileConfig(dup);
+assert.deepEqual(m3.compact.rooms.map((r) => r.name), ['Favorites', 'Favoriten', 'Küche', 'Waschküche', 'Flur'], 'Raum „Favoriten“ bleibt Raum');
+assert.equal(m3.compact.rooms[1].variables.favorites, false, 'Merkmal: kein Favoriten-Abschnitt');
+const out3 = expandMobileConfig(m3.compact, m3.scaffold, m3.extras, m3.templates, m3.chrome);
+const nav3 = out3.views[0].cards.find((c) => c.type === 'custom:casora-mobile-nav');
+assert.deepEqual(nav3.rooms.map((r) => r.name), ['Favoriten', 'Küche', 'Waschküche', 'Flur'], 'Raum „Favoriten“ im Menü');
+const m4 = extractMobileConfig(out3);
+assert.deepEqual(m4.compact.rooms.map((r) => [r.name, (r.variables || {}).favorites]), m3.compact.rooms.map((r) => [r.name, (r.variables || {}).favorites]), 'Rundlauf stabil');
+// blankMobileState (neues Handy-Layout aus Desktop-Räumen): Raum „Favoriten“ mit Merkmal.
+assert.match(src, /isRoom\(n, i\) && isFavoritesName\(n\)\) r\.variables = \{ \.\.\.\(r\.variables \|\| \{\}\), favorites: false \}/, 'blankMobileState markiert Raum „Favoriten“');
+// Am Handy: Kopf eines Raums „Favoriten“ (favorites: false) mit Pfeil und antippbar; der echte
+// Favoriten-Abschnitt weiter ohne.
+const T = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/panel/casora-templates.json', import.meta.url), 'utf8'));
+const hdr = (T.templates || T).casora_mobile_header;
+const js = (x) => String(x).trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, '');
+const arrow = new Function('variables', js(hdr.styles.custom_fields.arrow.find((o) => o.display).display));
+const tap = js(hdr.tap_action.action);
+const tapFn = new Function('variables', tap);
+const ctx = (name) => ({ _config: { name } });
+assert.equal(arrow.call(ctx('Favoriten'), { favorites: false }), 'flex', 'Raum „Favoriten“: Pfeil');
+assert.equal(arrow.call(ctx('Favoriten'), {}), 'none', 'Favoriten-Abschnitt: kein Pfeil');
+assert.equal(arrow.call(ctx('Lieblinge'), { favorites: true }), 'none', 'umbenannte Favoriten: kein Pfeil');
+assert.equal(tapFn.call(ctx('Favoriten'), {}), 'none', 'Favoriten-Abschnitt nicht antippbar');
+assert.notEqual(tapFn.call(ctx('Favoriten'), { favorites: false }), 'none', 'Raum „Favoriten“ antippbar');
 console.log('ok handy_umzug');
