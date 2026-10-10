@@ -5,7 +5,7 @@
 //   P-V4  Studio startet im zuletzt angesehenen Casora-Dashboard (casora-core merkt es beim Ansehen).
 //   P-V3  Raumaktionen als eigenes ⋯ neben dem Raumnamen; das Raummenü zeigt nur noch die Räume.
 //   ds-13 Einstellungsseiten fluchten: Kopf, Hinweis, Abschnittsköpfe und Karteninhalt auf einer Linie.
-//   ds-15 Handy-Leiste: fünf gleich breite Spalten, „+“ in der Mitte.
+//   ds-15 Handy-Leiste: vier gleich breite Spalten um das „+“ in der Mitte.
 //   ds-14 Handy-Titel im Hellen dunkel (lesbar auf heller Unschärfe).
 //   ds-16 Tablet (Touch): Trefferflächen ≥ 40 px (unsichtbarer Rand) für Suche, Rückgängig/Zeitreise, Umschalter.
 //   ds-17 ⌘K-Hinweis in Text 2 (keine halbe Deckkraft).
@@ -71,7 +71,7 @@ const isPanel = () => { const p = window.__panel && window.__panel(); return !!(
   await need('Handy-Leiste', bar);
   await check('ds-15 „+“ in der Mitte der Leiste (±2 px)', Math.abs(bar.mitte - bar.plus) <= 2, bar);
   const d = bar.cols.slice(1).map((c, i) => c - bar.cols[i]);
-  await check('ds-15 gleiche Abstände der fünf Spalten (±2 px)', Math.max(...d) - Math.min(...d) <= 2, d);
+  await check('ds-15 Spalten symmetrisch um das „+“ (±2 px)', d.length === 4 && Math.abs(d[0] - d[3]) <= 2 && Math.abs(d[1] - d[2]) <= 2, d);
   const col = await page.evaluate(() => getComputedStyle(window.__panel().shadowRoot.getElementById('navtitle')).color);
   await check('ds-14 Handy-Titel im Hellen dunkel', !/255, 255, 255/.test(col), col);
 }

@@ -29,8 +29,10 @@ try {
   await H(() => { const p = window.__panel(); p._sel = null; p._bClose(); });
   await pg.waitForTimeout(800);
 
-  // Menüpunkt im offenen Raum-Menü wählen (Text ohne Haken).
-  const menu = async () => { await pg.locator('button.broom').click(); await pg.waitForTimeout(800); };
+  // Menüpunkt im offenen Raum-Menü wählen (Text ohne Haken). Raumaktionen (Umbenennen, Symbol,
+  // Verschieben, Löschen) stehen seit 1.3 (P-V3) im eigenen ⋯ neben dem Raumnamen.
+  const menu = async (sel = 'button.broom') => { await pg.locator(sel).click(); await pg.waitForTimeout(800); };
+  const actions = () => menu('button.broomact');
   const pick = async (re) => {
     const r = await H((src) => { const rx = new RegExp(src);
       const e = window.__pierce('.combo-opt').find((x) => x.getClientRects().length && rx.test(x.textContent.replace('✓', '').trim()));
@@ -55,7 +57,7 @@ try {
   await check('Neuer Raum angelegt und gewählt', a.name === NEU && a.n === n0 + 1, a);
 
   // Umbenennen
-  await menu();
+  await actions();
   await need('Menüpunkt „Umbenennen …“', await pick(/^(Umbenennen …|Rename…)$/));
   await pg.locator('input:visible').first().fill(NAME);
   await pg.keyboard.press('Enter');
@@ -64,14 +66,14 @@ try {
   await check('Raum umbenannt', b.name === NAME, b);
 
   // Symbol ändern
-  await menu();
+  await actions();
   await need('Menüpunkt „Symbol ändern …“', await pick(/^(Symbol ändern …|Change Icon…)$/));
   await pick(/^(Konsole|Console)$/);
   const c1 = await cur();
   await check('Raumsymbol gesetzt', c1.icon === 'console', c1);
 
   // Nach vorne
-  await menu();
+  await actions();
   await pick(/^(Nach vorne|Move earlier)$/);
   const d = await cur();
   await check('„Nach vorne“ rückt den Raum eine Stelle vor', d.i === b.i - 1, { vorher: b.i, nachher: d.i });
@@ -99,7 +101,7 @@ try {
   await studio(pg, dash.url);
   await H((path) => { const p = window.__panel(); p._room = p._state.compact.rooms.findIndex((r) => r.path === path); p._sel = null; p._bClose(); p._renderTabs(); p._syncPreview(); }, d.path);
   await pg.waitForTimeout(1200);
-  await menu();
+  await actions();
   await need('Menüpunkt „Raum löschen“', await pick(/^(Raum löschen|Delete Room)$/));
   await pg.getByRole('button', { name: /^(Löschen|Delete)$/ }).last().click();
   await pg.waitForTimeout(1200);

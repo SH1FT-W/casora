@@ -126,7 +126,7 @@
     .btool:hover, .btool[aria-expanded="true"], .btool.on { background:var(--chip, rgba(127,127,127,.14)); color:var(--ink, inherit); }
     .btool .blabel { overflow:hidden; text-overflow:ellipsis; max-width:160px; }
     /* P-V3: ⋯ für „Dieser Raum“ direkt hinter dem Raumnamen, nur Symbol. */
-    .btool.broomact { padding:0 8px; margin-left:-4px; }
+    .btool.broomact { padding:0 8px; }
     .btool.broomact .blabel { display:none; }
     .btool.bhidroom::after {
       content:""; width:15px; height:15px; flex:none; background:currentColor; opacity:.7;
@@ -269,9 +269,10 @@
     .bscrim { display:none; }
     :host(.bmode.phone.binsp) .bscrim { display:block; position:fixed; inset:0; z-index:29; background:rgba(0,0,0,.28); }
     .bbar { display:none; }
-    /* ds-15 (1.3): fünf gleich breite Spalten – „+“ steht in der Mitte, Abstände hängen nicht an der Wortlänge. */
+    /* ds-15 (1.3): vier gleich breite Spalten um das „+“ – es steht in der Mitte, die Abstände hängen nicht
+       an der Wortlänge („Einstellungen“ passt ganz in eine Spalte). */
     :host(.bmode.phone) .bbar {
-      display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); justify-items:center; padding:0 4px; box-sizing:border-box;
+      display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr); justify-items:center; padding:0 4px; box-sizing:border-box;
       position:fixed; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom, 0px));
       z-index:20; height:58px; border-radius:20px; align-items:center;
       background:var(--bar-solid, var(--casora-studio-bar-solid, rgba(242,242,247,.96)));
@@ -284,6 +285,7 @@
     }
     .bbar button svg { width:22px; height:22px; }
     .bbar button { max-width:100%; min-width:0; }
+    :host(.bmode.phone) .bbar button:not(.bplus) { padding:4px 2px; }
     .bbar button > span { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .bbar button { position:relative; }
     .bbar button.bdot::after { content:""; position:absolute; top:3px; right:12px; width:8px; height:8px; border-radius:50%;

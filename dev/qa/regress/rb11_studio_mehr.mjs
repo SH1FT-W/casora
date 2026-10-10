@@ -83,7 +83,8 @@ await H(() => { const p = window.__panel(); while ((p._undoStack || []).length) 
 // Raum ausblenden
 await H(() => { const p = window.__panel(); p._room = 1; p._renderTabs(); p._renderForm(); p._bClose(); });
 await page.waitForTimeout(400);
-await page.locator('[data-b="rooms"]').first().click();
+// Seit 1.3 (P-V3) stehen die Raumaktionen im eigenen ⋯ neben dem Raumnamen.
+await page.locator('[data-b="roomact"]').first().click();
 await page.waitForTimeout(500);
 const hideItem = await H(() => [...window.__panel().shadowRoot.querySelectorAll('.combo-opt')].map((e) => e.innerText).find((t) => /Raum ausblenden/.test(t)) || null);
 await check('Raummenü bietet „Raum ausblenden“', !!hideItem, hideItem);
