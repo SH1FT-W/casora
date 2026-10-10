@@ -1834,11 +1834,11 @@
     if (name === 'state') {
       var rows = [
         { icon: r.locked === false ? 'mdi:lock-open-variant' : 'mdi:lock', iconTone: r.locked === false ? 'warn' : 'good', label: 'Verriegelung',
-          value: r.locked == null ? '—' : r.locked ? 'Verriegelt' : 'Offen', valueTone: r.locked === false ? 'warn' : null },
+          value: r.locked == null ? '—' : r.locked ? 'Verriegelt' : 'Entriegelt', valueTone: r.locked === false ? 'warn' : null },
         { icon: 'mdi:car-door', iconTone: r.openDoors.length ? 'bad' : 'rgba(255,255,255,0.18)',
-          label: 'Türen & Klappen', value: r.openDoors.length ? 'Offen' : r.known ? 'Zu' : '—' },
+          label: 'Türen & Klappen', value: r.openDoors.length ? 'Offen' : r.known ? 'Geschlossen' : '—' },
         { icon: 'mdi:car-door-lock', iconTone: r.openWins.length ? 'bad' : 'rgba(255,255,255,0.18)',
-          label: 'Fenster & Schiebedach', value: r.openWins.length ? 'Offen' : r.known ? 'Zu' : '—' },
+          label: 'Fenster & Schiebedach', value: r.openWins.length ? 'Offen' : r.known ? 'Geschlossen' : '—' },
         { icon: 'mdi:car-brake-parking', iconTone: 'rgba(255,255,255,0.18)', label: 'Feststellbremse', value: r.brake ? 'Angezogen' : r.brakeKnown ? 'Gelöst' : '—' },
       ];
       if (r.out != null) rows.push({ icon: 'mdi:thermometer', iconTone: 'rgba(255,255,255,0.18)', label: 'Außentemperatur', value: fmtN(r.out, 1) + ' ' + (r.outUnit || '°C') });

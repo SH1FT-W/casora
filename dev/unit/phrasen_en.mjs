@@ -67,4 +67,8 @@ for (const [de, en] of EXPECT) assert.equal(tr(de), en, de);
 const PH = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/translations/dashboard/phrases/en.json', import.meta.url), 'utf8'));
 assert.deepEqual(PH.patterns.filter((p) => / %/.test(p[1])).map((p) => p[1]), [], 'en-Muster ohne Leerzeichen vor %');
 assert.equal(tr('width:100%'), 'width:100%');
+// Auto-Popup: Türen/Fenster „Geschlossen“ (nicht „Zu“ = Knopf „Close“), Schloss „Entriegelt“ (nicht „Offen“).
+const pop = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/03-popups.js', import.meta.url), 'utf8');
+assert.ok(!/r\.known \? 'Zu'/.test(pop) && (pop.match(/r\.known \? 'Geschlossen'/g) || []).length === 2, 'Auto: Geschlossen statt Zu');
+assert.ok(pop.includes("r.locked ? 'Verriegelt' : 'Entriegelt'"), 'Auto: Entriegelt statt Offen');
 console.log('ok phrasen_en');
