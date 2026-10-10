@@ -514,7 +514,7 @@
     var T = UIT();
     if (SOFT()) {
       return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:' + (inner ? '0 0 12px' : '0 6px 10px') + ';min-height:20px;">'
-        + '<div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--casora-soft-label, var(--secondary-text-color));text-align:left;">'
+        + '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));text-align:left;">'
         + t + '</div>' + (right || '') + '</div>';
     }
     return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 0 10px;">'

@@ -28,8 +28,8 @@
   /* 1.2 (P6): Wiedergabe-Knopf, Fortschritt und Lautstärke im Medien-Popup in der Medien-Farbe der Kachel (Rosa). */
   var MEDIA_ACC = 'var(--casora-tile-media-color, ' + MEDIA_HUE + ')';
   var srcRules = function () {
-    return '.hm-src-l{font-size:12px !important;font-weight:700 !important;letter-spacing:.1em !important;text-transform:uppercase;'
-      + 'color:var(--casora-soft-label, ' + SUB + ') !important;margin:24px 6px 10px !important;}'
+    return '.hm-src-l{font-size:var(--casora-h15-fs,17px) !important;font-weight:700 !important;letter-spacing:-0.01em !important;text-transform:none;'
+      + 'color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary)) !important;margin:24px 6px 10px !important;}'
       + '.hm-src .hui-sg{font-size:13px !important;font-weight:600 !important;padding:11px 16px !important;'
       + 'background:var(--casora-lps-chip, ' + ROW + ') !important;color:var(--casora-lps-chip-ink, ' + SUB + ') !important;}'
       + '.hm-src .hui-sg.on{background:var(--casora-lps-chip-on, ' + CTL + ') !important;color:var(--casora-lps-chip-on-ink, ' + INK + ') !important;}';

@@ -1,6 +1,6 @@
-// „Alles aus“ im Licht-Popup eines Raums (07.10.2026, Casora-Look): ein Knopf unter „x von y An“
-// schaltet alle Lichter dieses Raums aus – nur Licht, nur was der Benutzer sieht („Wer sieht das?“),
-// ohne Rückfrage. Ist alles aus, bleibt er ausgegraut stehen; mit nur einer Leuchte gibt es ihn nicht.
+// „Alles aus“ im Licht-Popup eines Raums (07.10.2026, Casora-Look) – seit 1.3 der Hauptschalter im Kopf:
+// schaltet alle Lichter dieses Raums aus (bzw. an) – nur Licht, nur was der Benutzer sieht („Wer sieht das?“),
+// ohne Rückfrage. Mit nur einer Leuchte schaltet er diese Leuchte.
 //   node dev/unit/licht_alles_aus.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -24,46 +24,37 @@ L('light.decke', true); L('light.stehlampe', true); L('light.spots', false); L('
 states['switch.tv'] = { entity_id: 'switch.tv', state: 'on', attributes: {} };
 const cfg = { gid: 'light.testraum_decke', flat: { name: 'Wohnzimmer', rid: 'light.testraum_decke', lights: ['light.decke', 'light.stehlampe', 'light.spots', 'light.geheim', 'switch.tv'] } };
 
-const unq = (s) => s.replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+// 1.3 Kopfzeile A: „Alles aus“ ist jetzt der Hauptschalter oben rechts im Popup-Kopf (casora-core.js,
+// Haken window._casoraHeadSwitchHooks → S.head). Der Inhalt zeigt keinen eigenen Knopf mehr.
 let html = S.render(cfg, 'hero', states, hass, null);
-const m = html.match(/<div class="lps-off( dis)?"[^>]*data-lps-tap="([^"]+)"[^>]*>/);
-assert.ok(m, 'Knopf „Alles aus“ fehlt');
-assert.ok(!m[1], 'nicht ausgegraut, solange ein Licht an ist');
-assert.ok(/Alles aus<\/div>/.test(html), 'Beschriftung');
-const spec = JSON.parse(unq(m[2]));
-assert.equal(spec.a, 'alloff');
-assert.deepEqual(spec.ids, ['light.decke', 'light.stehlampe', 'light.spots', 'light.geheim'], 'nur Lichter, kein Schalter');
+assert.ok(!/lps-off|Alles aus/.test(html.replace(/<style>[\s\S]*?<\/style>/, '')), 'kein eigener „Alles aus“-Knopf mehr');
+assert.ok(/class="lps-s hui-line"/.test(html), 'Statuszeile als .hui-line (der Kopf spiegelt sie)');
+assert.ok((window._casoraHeadSwitchHooks || []).indexOf(S.head) > -1, 'Haken für den Hauptschalter angemeldet');
 
-// Tippen: nur sichtbare und eingeschaltete Lichter, ohne Rückfrage.
 window.casoraAsksFirst = () => true;
-window.casoraVisibleIds = (ids) => Promise.resolve(ids.filter((x) => x !== 'light.geheim'));
-const el = { hasAttribute: (x) => x === 'data-lps-tap', getAttribute: () => unq(m[2]), classList: { contains: () => false } };
-const ev = { composedPath: () => [el], preventDefault() {}, stopPropagation() {} };
-listeners.click.forEach((f) => f(ev));
-await new Promise((r) => setTimeout(r, 10));
+window.casoraVisibleIdsNow = (ids) => ids.filter((x) => x !== 'light.geheim');
+const tileSrc = { _config: { template: ['casora_light'] } };
+let hs = S.head(tileSrc, hass);
+assert.deepEqual(hs.entities, ['light.decke', 'light.stehlampe', 'light.spots'], 'nur sichtbare Lichter, kein Schalter');
+assert.ok(!hs.disabled, 'Raum: auch einschaltbar');
+// An → aus: nur eingeschaltete, sichtbare Lichter, ohne Rückfrage.
+hs.toggle(true);
 assert.deepEqual(calls, [['light', 'turn_off', ['light.decke', 'light.stehlampe']]], JSON.stringify(calls));
-
-// Tastatur (Review 1.1.1): fokussierbar, Eingabetaste wirkt wie ein Tipp.
-assert.ok(/class="lps-off" role="button" tabindex="0"/.test(html), 'Knopf mit der Tastatur erreichbar');
+// Aus → an: Raumgruppe einschalten.
 calls.length = 0;
-const kel = { ...el, classList: { contains: (c) => c === 'lps-off' } };
-listeners.keydown.forEach((f) => f({ ...ev, key: 'Enter', composedPath: () => [kel] }));
-await new Promise((r) => setTimeout(r, 10));
-assert.deepEqual(calls, [['light', 'turn_off', ['light.decke', 'light.stehlampe']]], 'Eingabetaste schaltet aus');
+states['light.testraum_decke'] = { entity_id: 'light.testraum_decke', state: 'off', attributes: {} };
+hs.toggle(false);
+assert.deepEqual(calls, [['light', 'turn_on', 'light.testraum_decke']], JSON.stringify(calls));
+// Fremde Popups bleiben unberührt.
+assert.equal(S.head({ _config: { template: ['casora_switch'] } }, hass), null);
 
-// Alles aus: ausgegraut, Tippen tut nichts.
-L('light.decke', false); L('light.stehlampe', false); L('light.geheim', false);
-html = S.render(cfg, 'hero', states, hass, null);
-assert.ok(/class="lps-off dis"/.test(html), 'ausgegraut, wenn alles aus ist');
+// Eine Leuchte: Schalter für diese Leuchte.
+S.render({ gid: 'light.x', flat: { name: 'Flur', rid: 'light.decke', lights: ['light.decke'] } }, 'hero', states, hass, null);
+hs = S.head(tileSrc, hass);
+assert.deepEqual(hs.entities, ['light.decke']);
 calls.length = 0;
-const el2 = { ...el, classList: { contains: (c) => c === 'dis' } };
-listeners.click.forEach((f) => f({ ...ev, composedPath: () => [el2] }));
-await new Promise((r) => setTimeout(r, 10));
-assert.equal(calls.length, 0, 'ausgegraut schaltet nicht');
-
-// Eine Leuchte: kein Knopf (der Ring schaltet schon).
-html = S.render({ gid: 'light.x', flat: { name: 'Flur', rid: 'light.decke', lights: ['light.decke'] } }, 'hero', states, hass, null);
-assert.ok(!/lps-off/.test(html.replace(/<style>[\s\S]*?<\/style>/, '')), 'mit einer Leuchte kein Knopf');
+hs.toggle(false);
+assert.deepEqual(calls, [['light', 'turn_on', ['light.decke']]]);
 // Raum einer einzelnen Leuchte (Review 1.1.1): kleinste Lichtgruppe in einem Bereich, nie die
 // Gruppe „alle Lichter“ über mehrere Bereiche – sonst schaltete „Alles aus“ das ganze Haus.
 {

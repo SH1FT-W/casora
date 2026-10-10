@@ -5368,27 +5368,39 @@ window.casoraMenuGlass = {
       --casora-soft-card-top: 0px;
       /* B-02: ein Etiketten-System – Abschnittsköpfe, die noch als 15/600-Satzschrift gebaut
          werden, lesen diese Werte (Fallback = bisherige Optik in Standard und Glas). */
-      --casora-h15-fs: 12px;
+      /* 1.3: Abschnittsüberschriften als normale Überschrift (17/700, Satzschreibung, Text 1) statt
+         kleiner Großbuchstaben – Entscheidung B (Sprachen-Frage 1), überall in Popups. */
+      --casora-h15-fs: var(--casora-fs-heading, 17px);
       --casora-h15-fw: 700;
-      --casora-h15-ls: 0.1em;
-      --casora-h15-tt: uppercase;
-      --casora-h15-c: var(--casora-soft-label, var(--secondary-text-color));
-      --casora-lbl15: none;
-      --casora-lbl12: block;
+      --casora-h15-ls: -0.01em;
+      --casora-h15-tt: none;
+      --casora-h15-c: var(--casora-popup-tiles-text-primary, var(--primary-text-color));
+      --casora-lbl15: block;
+      --casora-lbl12: none;
       /* Ein Schalter für alle Popups (wie das Licht-Popup): 44×26, Ton-Spur, weißer Knopf. */
       --casora-sw-w: 44px;
       --casora-sw-h: 26px;
       --casora-sw-pad: 3px;
       --casora-sw-k: 20px;
       --casora-sw-x: 18px;
-      --casora-sw-on: var(--casora-lps-switch-on, #B67A50);
+      /* 1.3: Schalter in der Gerätefarbe des Popups (Akzent aus dem Kopf), nicht mehr immer Ton. */
+      --casora-sw-on: var(--casora-popup-accent, var(--casora-lps-switch-on, #B67A50));
       --casora-sw-off: var(--casora-lps-switch-off, rgba(58, 50, 43, 0.38));
       --casora-sw-ks: 0 1px 3px rgba(0, 0, 0, 0.2);
       /* B-04: Größen auf die Skala (16 → 15, 24/600 → 17/700). */
       --casora-fs16: 15px;
       --casora-fs24: 17px;
       --casora-fw24: 700;
-      --casora-popup-row-radius: var(--casora-soft-row-radius, 24px);
+      --casora-popup-row-radius: var(--casora-soft-row-radius, var(--casora-r-row, 24px));
+      /* 1.3 Tokens: Zeilensymbol als Kachel 36/r12 mit 12 px Rand – Zeile 60 hoch, Radius 24 konzentrisch (DP-16). */
+      --casora-soft-icon-size: var(--casora-ic-row, 36px);
+      --casora-soft-icon-radius: var(--casora-r-small, 12px);
+      --casora-soft-row-h: 60px;
+      /* 1.3 Tokens: Auftritt 320 ms. */
+      --casora-popup-enter: var(--casora-dur-enter, 320ms);
+      --casora-soft-row-fs: var(--casora-fs-row, 15px);
+      --casora-soft-sub-fs: var(--casora-fs-sub, 13px);
+      --casora-soft-row-pad: 12px 16px 12px 12px;
       /* Sand-Karten mit Etikett innen: Etikett 20/18 vom Rand (1.2.1, D1; Titel selbst 0 6px). */
       --casora-soft-plate-pad: 18px 14px 8px;
       --casora-popup-more-fade: var(--casora-soft-more-fade, rgba(0, 0, 0, 0.12));
@@ -5402,84 +5414,176 @@ window.casoraMenuGlass = {
       -webkit-backdrop-filter: none;
     }
     :host([soft]) .glass::before, :host([soft]) .glass::after { content: none; }
-    :host([soft]) .header { padding-top: var(--casora-soft-header-top, 26px); padding-bottom: 0; }
+    /* ── 1.3 Kopfzeile A: Kopf in EINER Zeile statt Ring-Bühne.
+       Links die Symbol-Kachel (abgerundetes Quadrat in Gerätefarbe), daneben klein der Raum,
+       der Titel und die Statuszeile (aus dem Inhalt gespiegelt, _syncHeadLine), rechts der
+       Hauptschalter (falls es einen Gesamtschalter gibt) und das X. Die Kachel steht bündig mit
+       den Zeilen-Platten darunter (Inhalt 36 px vom Rand, Handy 24 px). */
+    :host([soft]) {
+      --casora-head-inset: calc(var(--casora-soft-inset, 10px) + var(--casora-head-card-pad, 26px));
+    }
+    :host([soft]) .header {
+      padding-top: var(--casora-soft-header-top, 28px);
+      /* 28 px bis zum Inhalt: 8 px Polster des Containers + dieser Abstand. Wurde die Statuszeile
+         aus einem Rasterfeld gespiegelt, bleibt dort dessen Zeilenabstand stehen – dann weniger. */
+      padding-bottom: var(--casora-head-gap, 20px);
+    }
     :host([soft]) .header-bar {
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto auto;
+      grid-template-rows: auto auto auto;
       align-items: center;
-      padding: 0 76px;
+      align-content: center;
+      column-gap: var(--casora-space-4, 16px);
+      row-gap: 0;
+      padding: 0 var(--casora-head-inset);
+      min-height: var(--casora-ic-head, 56px);
     }
-    :host([soft]) .header-nav { position: absolute; top: 0; right: 26px; z-index: 1; }
-    :host([soft]) .header-actions {
-      position: absolute; top: 0; left: 26px; margin: 0; padding-right: 0; z-index: 1;
-    }
-    /* max-width mit !important: ältere popup_styles einiger Vorlagen (Gerät, Auto, Kalender, eBike, Kontakte …)
-       setzen für den alten absoluten Kopf max-width: none !important bzw. calc(100% + 56px) – im Weich-Kopf
-       lief ein langer Titel damit über beide Ränder statt „…“ (Design-Audit 10.10.2026). */
+    /* Kopf-Inhalt löst sich ins Raster auf: Kachel, Raum, Titel, Status sind eigene Zellen. */
     :host([soft]) .header-content {
+      display: contents;
       position: static;
       overflow: visible;
       width: auto;
-      max-width: 100% !important;
+      max-width: none !important;
       margin: 0;
       padding: 0;
-      min-height: 38px;
-      gap: 0;
+      min-height: 0;
+      text-align: left;
     }
+    :host([soft]) .header-nav {
+      grid-column: 4; grid-row: 1 / span 3;
+      position: relative; top: auto; right: auto; z-index: 1;
+      align-self: center;
+    }
+    :host([soft]) .header-switch { grid-column: 3; grid-row: 1 / span 3; align-self: center; }
+    :host([soft]) .header-actions {
+      grid-column: 3; grid-row: 1 / span 3;
+      position: relative; top: auto; left: auto; margin: 0; padding-right: 0; z-index: 1;
+      align-self: center;
+    }
+    :host([soft]) .header-actions:empty { display: none; }
+    /* Symbol-Kachel 56 (Handy 48), Radius ≈ 30 % wie die Zimmer im Casora-Zeichen. Weiß auf Gelb,
+       Orange, Grün lag unter 3 : 1 (DP-17) – die Symbolfarbe kommt darum aus _paintSoft (--ring-ink). */
     :host([soft]) .header-ring {
-      order: 0;
-      width: 78px;
-      height: 78px;
+      grid-column: 1; grid-row: 1 / span 3;
+      align-self: center;
+      width: var(--casora-ic-head, 56px);
+      height: var(--casora-ic-head, 56px);
       flex: none;
-      border-radius: 50%;
+      border-radius: var(--casora-ic-head-radius, 16px);
       display: grid;
       place-items: center;
-      margin: 0 0 16px;
+      margin: 0;
       background: var(--ring, var(--casora-color-teal, #4E9E95));
-      color: var(--casora-soft-glyph, #fff);
-      box-shadow:
-        0 0 0 10px color-mix(in srgb, var(--ring, #4E9E95) var(--casora-soft-ring-halo, 16%), transparent),
-        0 14px 30px -10px color-mix(in srgb, var(--ring, #4E9E95) var(--casora-soft-ring-glow, 55%), transparent);
+      color: var(--ring-ink, var(--casora-soft-glyph, #fff));
+      box-shadow: none;
     }
     :host([soft]) .header-ring[hidden] { display: none; }
-    /* Leeres Popup („Noch kein Gerät zugeordnet“): ebenfalls Sand, keine Gerätefarbe ohne Gerät. */
+    /* Leeres Popup („Noch kein Gerät zugeordnet“) und Aus-Zustand: Sand, keine Gerätefarbe. */
     :host([soft]) .header-ring[off], :host([soft][soft-empty]) .header-ring {
-      background: var(--casora-lps-ring-off, rgba(140,115,90,0.12));
-      color: var(--casora-lps-ring-off-ink, rgba(58,50,43,0.45));
-      box-shadow: 0 0 0 10px var(--casora-lps-ring-off-halo, rgba(140,115,90,0.06));
+      background: var(--casora-soft-icon-off, rgba(140,115,90,0.12));
+      color: var(--casora-soft-glyph-off, rgba(58,50,43,0.7));
+      box-shadow: none;
     }
     :host([soft]) .header-ring .g {
-      width: 34px; height: 34px; background-color: currentColor;
+      width: calc(var(--casora-ic-head, 56px) * .5); height: calc(var(--casora-ic-head, 56px) * .5);
+      background-color: currentColor;
       -webkit-mask: var(--g) center / contain no-repeat; mask: var(--g) center / contain no-repeat;
     }
-    :host([soft]) .header-ring ha-icon { --mdc-icon-size: 34px; display: flex; }
-    :host([soft]) .header-ring .im { width: 52px; height: 52px; object-fit: contain; }
-    /* Runde Länderflagge (Fußball): etwas größer, mit Haarlinie. */
+    :host([soft]) .header-ring ha-icon { --mdc-icon-size: calc(var(--casora-ic-head, 56px) * .5); display: flex; }
+    :host([soft]) .header-ring .im { width: 78%; height: 78%; object-fit: contain; }
+    /* Runde Länderflagge (Fußball): Flagge füllt die Kachel fast, mit Haarlinie. */
     :host([soft]) .header-ring .im[src*="/flags/round/"] {
-      width: 56px; height: 56px; border-radius: 50%;
+      width: 82%; height: 82%; border-radius: 50%;
       box-shadow: 0 0 0 .5px var(--casora-football-flag-hair, rgba(0,0,0,0.14));
     }
-    /* Wappen-Ring: Sand-Halo statt Gerätefarbe (Weiß hätte auf hellem Grund keinen Rand). */
+    /* Wappen: heller Grund mit Sand-Rand statt Gerätefarbe. */
     :host([soft]) .header-ring:has(> .im) {
-      box-shadow: 0 0 0 10px var(--casora-soft-row-hover, rgba(140,115,90,0.11)),
-        0 14px 30px -12px rgba(60,40,20,0.28);
+      box-shadow: inset 0 0 0 1px var(--casora-soft-row-hover, rgba(140,115,90,0.11));
+    }
+    :host([soft]) .header-eyebrow {
+      grid-column: 2; grid-row: 1;
+      font-size: var(--casora-fs-label, 12px);
+      line-height: 16px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin: 0 0 2px;
+      color: var(--casora-soft-label, var(--secondary-text-color));
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
     }
     :host([soft]) .header-title {
-      order: 1;
-      font-size: 28px;
+      grid-column: 2; grid-row: 2;
+      font-size: var(--casora-fs-title, 28px);
       font-weight: 800;
       letter-spacing: -0.025em;
       line-height: 1.2;
       color: var(--casora-popup-tiles-text-primary, var(--primary-text-color, #3A322B));
       max-width: 100% !important;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
     }
-    :host([soft]) .header-eyebrow {
-      order: 2;
-      font-size: 15px;
-      line-height: 1.35;
+    :host([soft]) .header-status {
+      grid-column: 2; grid-row: 3;
+      margin: 2px 0 0;
+      padding: 0;
+      font-size: var(--casora-fs-row, 15px);
       font-weight: 500;
-      margin-top: 2px;
+      line-height: 1.4;
+      text-align: left;
       color: var(--casora-soft-sub, var(--secondary-text-color));
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
     }
+    /* Der gespiegelte Zustand trägt die Inline-Größe 17 der Inhaltszeile – im Kopf 15, fett. */
+    :host([soft]) .header-status span, :host([soft]) .header-status div { font-size: inherit !important; letter-spacing: normal !important; }
+    :host([soft]) .header-status > div { display: inline !important; }
+    :host([soft]) .header-status .hui-sep.hui-cut { display: none !important; }
+    :host([soft]) .header-status i.hui-sep { font-style: normal; opacity: .6; }
+    :host([soft]) .header-status b { font-weight: 700; color: var(--casora-popup-tiles-text-primary, var(--primary-text-color)); }
+    /* Licht-Popup: Kopf kommt in Kopfzeile A vom Rahmen – dessen alte Weich-Werte (Kopf absolut, Titel
+       unsichtbar, eigener Schließen-Knopf) gelten nicht mehr. */
+    :host([soft]) { --casora-lp-head-pos: relative; --casora-lp-head-pe: auto; --casora-lp-title-vis: visible; }
+    :host([soft]) .header-status .hui-lslot:not(:empty)::before { content: "\\00a0· "; opacity: .6; }
+    :host([soft]) .header-status[hidden], :host([soft]) .header-switch[hidden] { display: none; }
+    :host(:not([soft])) .header-status, :host(:not([soft])) .header-switch { display: none; }
+    /* Hauptschalter: Spur in Gerätefarbe (--casora-popup-accent), weißer Knopf. */
+    :host([soft]) .header-switch {
+      appearance: none; -webkit-appearance: none;
+      position: relative;
+      width: 56px; height: 34px;
+      margin: 0; padding: 0; border: 0;
+      border-radius: var(--casora-r-pill, 999px);
+      background: var(--casora-sw-off, rgba(58, 50, 43, 0.38));
+      cursor: pointer;
+      transition: background-color var(--casora-dur-feedback, 160ms) ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Trefferfläche 44 hoch, sichtbar 56×34. */
+    :host([soft]) .header-switch::before { content: ""; position: absolute; left: 0; right: 0; top: -5px; bottom: -5px; }
+    :host([soft]) .header-switch i {
+      position: absolute; left: 3px; top: 3px; width: 28px; height: 28px; border-radius: 50%;
+      background: var(--casora-lps-knob, #fff);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      transition: transform var(--casora-dur-feedback, 160ms) var(--casora-ease-slide, cubic-bezier(.36,0,.16,1));
+    }
+    :host([soft]) .header-switch[aria-checked="true"] { background: var(--casora-popup-accent, var(--casora-sw-on, #B67A50)); }
+    :host([soft]) .header-switch[aria-checked="true"] i { transform: translateX(22px); }
+    :host([soft]) .header-switch:active i { width: 32px; }
+    :host([soft]) .header-switch[aria-checked="true"]:active i { transform: translateX(18px); }
+    :host([soft]) .header-switch[disabled] { opacity: .45; cursor: default; }
+    :host([soft]) .header-switch:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+    @media (prefers-reduced-motion: reduce) { :host([soft]) .header-switch i { transition: none; } }
     :host([soft]) .header-close {
       width: 38px;
       height: 38px;
@@ -5490,6 +5594,7 @@ window.casoraMenuGlass = {
       -webkit-backdrop-filter: none;
     }
     :host([soft]) .header-close svg { width: 18px; height: 18px; }
+    :host([soft]) .header-close:active { transform: scale(var(--casora-press-scale, .97)); }
     /* D-02: sichtbar 38 px, Trefferfläche 44 px (unsichtbarer Rand rundum) */
     :host([soft]) .header-close::before { content: ""; position: absolute; inset: -3px; border-radius: 50%; }
     .soft-empty[hidden] { display: none; }
@@ -5515,14 +5620,14 @@ window.casoraMenuGlass = {
     :host([soft][soft-empty]) .content .container { padding-bottom: 0; }
     :host([soft]) .soft-empty { position: relative; z-index: 1; padding: 16px calc(var(--casora-soft-inset, 10px) + 26px) 30px; font-family: var(--primary-font-family, inherit); }
     :host([soft]) .se-row {
-      display: flex; align-items: center; gap: 12px; min-height: 58px; box-sizing: border-box;
-      padding: 10px 14px 10px 10px; border-radius: var(--casora-popup-row-radius, 24px);
+      display: flex; align-items: center; gap: 12px; min-height: 60px; box-sizing: border-box;
+      padding: 12px 16px 12px 12px; border-radius: var(--casora-popup-row-radius, 24px);
       background: var(--casora-soft-row-fill, rgba(140, 115, 90, 0.07)); cursor: pointer; text-align: left;
       transition: background-color .18s ease; -webkit-tap-highlight-color: transparent;
     }
     @media (hover: hover) { :host([soft]) .se-row:hover { background: var(--casora-soft-row-hover, rgba(140, 115, 90, 0.11)); } }
     :host([soft]) .se-ic {
-      width: 38px; height: 38px; flex: none; border-radius: 50%; display: grid; place-items: center;
+      width: 36px; height: 36px; flex: none; border-radius: var(--casora-r-small, 12px); display: grid; place-items: center;
       background: var(--casora-soft-icon-off, rgba(140, 115, 90, 0.12)); color: var(--casora-soft-glyph-off, rgba(58, 50, 43, 0.55));
       --mdc-icon-size: 19px;
     }
@@ -5531,7 +5636,7 @@ window.casoraMenuGlass = {
       color: var(--casora-popup-tiles-text-primary, var(--primary-text-color)); }
     :host([soft]) .se-tx small { display: block; font-size: 12.5px; font-weight: 500; margin-top: 1px;
       color: var(--casora-soft-sub, var(--secondary-text-color)); }
-    :host([soft]) .se-chev { flex: none; opacity: .4; color: var(--casora-popup-tiles-text-primary, var(--primary-text-color)); }
+    :host([soft]) .se-chev { flex: none; opacity: .6; color: var(--casora-popup-tiles-text-primary, var(--primary-text-color)); }
     /* Fix-Runde 1 (B-01): Inhalt 36 px vom Rand (Container 10 + Kartenrand 26). */
     :host([soft]) .content .container { padding: 8px var(--casora-soft-inset, 10px) 30px; }
     @media (max-width: 768px) {
@@ -5546,22 +5651,26 @@ window.casoraMenuGlass = {
         height: var(--casora-sheet-height, auto) !important;
         min-height: min(var(--casora-sheet-min, 0px), calc(100dvh - env(safe-area-inset-top, 0px) - var(--casora-soft-sheet-gap)));
         max-height: calc(100dvh - env(safe-area-inset-top, 0px) - var(--casora-soft-sheet-gap));
+        /* 1.3 Tokens: das Blatt schiebt mit der Schieber-Kurve (360 ms) statt eigener Feder. */
+        animation: casora-sheet-in var(--casora-dur-slide, 360ms) var(--casora-ease-slide, cubic-bezier(.36, 0, .16, 1));
       }
       /* K9: dieselben Vorlagen strecken den Inhalt per min-height (100svh …) auf volle Höhe. */
       :host([soft]) .content .container { min-height: 0 !important; }
       /* Runde 2: Die Fläche (.glass) ist absolut positioniert und lag über dem statischen Greifer. */
       :host([soft]) .grab { padding: 8px 0 0; position: relative; z-index: 1; }
       :host([soft]) .grab span { width: 36px; height: 5px; border-radius: 3px; }
-      :host([soft]) .header { padding-top: 14px; }
-      :host([soft]) .header-bar { padding: 0 60px; }
-      :host([soft]) .header-nav { right: 16px; }
-      :host([soft]) .header-actions { left: 16px; }
-      :host([soft]) .header-ring { width: 66px; height: 66px; margin-bottom: 12px; }
-      :host([soft]) .header-ring[hidden] { display: none; }
-    :host([soft]) .header-ring .g { width: 29px; height: 29px; }
-      :host([soft]) .header-ring ha-icon { --mdc-icon-size: 29px; }
-      :host([soft]) .header-title { font-size: 24px; }
+      /* Kopfzeile A am Handy: Kachel 48, Titel 24, Inhalt 24 px vom Rand (Container 10 + Karte 14). */
+      :host([soft]) { --casora-ic-head: var(--casora-ic-head-phone, 48px); --casora-ic-head-radius: 14px;
+        --casora-fs-title: 24px; }
+      :host([soft]) .header { padding-top: 16px; }
+      :host([soft]) .header-bar { column-gap: 12px; }
+      :host([soft]) .header-switch { width: 52px; height: 32px; }
+      :host([soft]) .header-switch i { width: 26px; height: 26px; }
+      :host([soft]) .header-switch[aria-checked="true"] i { transform: translateX(20px); }
+      :host([soft]) .header-switch::before { top: -6px; bottom: -6px; }
     }
+    /* Inhaltskarten haben am Handy 14 px Rand (Popup-Layouts, ≤ 600 px) – Kachel bündig dazu. */
+    @media (max-width: 600px) { :host([soft]) { --casora-head-card-pad: 14px; } }
   `;
 
   // Ring im Weich-Kopf: Symbol der Kachel, die das Popup geöffnet hat, Farbe nach Gerät.
@@ -5761,6 +5870,87 @@ window.casoraMenuGlass = {
     var idle = src._casoraRingQuiet === true;
     return { hue: hue, html: glyph, off: idle || ringOff(src) };
   }
+  // ── 1.3 Kopfzeile A ──────────────────────────────────────────────────────
+  // Farbe eines Werts („rgb(…)“, „#…“ oder „var(--x, #…)“) als [r,g,b] – Variablen über <html> aufgelöst.
+  function resolveRgb(c) {
+    c = String(c || '').trim();
+    for (var d = 0; d < 4; d++) {
+      var m = /^var\(\s*(--[\w-]+)\s*(?:,\s*(.+))?\)$/.exec(c);
+      if (!m) break;
+      var v = '';
+      try { v = getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim(); } catch (e) { v = ''; }
+      c = v || (m[2] || '').trim();
+    }
+    var o = rgbaOf(c);
+    return o ? o.slice(0, 3) : null;
+  }
+  function lumOf(rgb) {
+    var f = function (x) { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); };
+    return 0.2126 * f(rgb[0]) + 0.7152 * f(rgb[1]) + 0.0722 * f(rgb[2]);
+  }
+  // DP-17: Symbolfarbe auf einer Akzentfläche – Weiß, solange es mindestens 3 : 1 hat, sonst dunkle
+  // Tinte (Gelb, Orange, Grün hatten mit Weiß nur 1,96 / 2,67 / 2,65 : 1).
+  var INK_CACHE = {};
+  function inkOn(fill) {
+    var k = String(fill || '');
+    if (!k) return null;
+    if (INK_CACHE[k] && Date.now() - INK_CACHE[k].t < 2000) return INK_CACHE[k].v;
+    var rgb = resolveRgb(k);
+    var v = null;
+    if (rgb) v = (1.05 / (lumOf(rgb) + 0.05)) < 3 ? 'var(--casora-on-accent-ink, rgba(46, 34, 20, 0.88))' : 'var(--casora-soft-glyph, #fff)';
+    INK_CACHE[k] = { t: Date.now(), v: v };
+    return v;
+  }
+  window._casoraInkOn = inkOn;
+  // Raum der auslösenden Kachel (laut Dashboard, nur eindeutige Treffer) – nicht bei Sammel-Popups
+  // (Badges, Batterien, Energie …), deren Entität zufällig auch in einem Raum liegt.
+  var HOUSE_POPUP = /\bcasora_(badge_\w+|(popup_)?(pulse|battery|energy|network|updates|scenes|contacts|calendar|weather_warning|football|recipe|solar_tip|time)|weather|trash|now_playing_\w+)\b/;
+  function roomLabelOf(src) {
+    if (!src || !src._config) return '';
+    var tpl = [].concat(src._config.template || []).join(' ');
+    if (HOUSE_POPUP.test(tpl)) return '';
+    var id = src._stateObj && src._stateObj.entity_id;
+    if (!id || typeof window._casoraRoomOf !== 'function') return '';
+    try { return String(window._casoraRoomOf(id) || '').trim(); } catch (e) { return ''; }
+  }
+  // „Licht Badezimmer“ unter dem Etikett „Badezimmer“ → „Licht“ (Raum steht schon darüber).
+  function stripRoom(title, room) {
+    var t = String(title || '');
+    if (!t || !room) return t;
+    var r = String(room).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var out = t.replace(new RegExp('(^|\\s)' + r + '(?=\\s|$)', 'i'), ' ').replace(/\s{2,}/g, ' ').replace(/^[\s·–-]+|[\s·–-]+$/g, '');
+    return out || t;
+  }
+  // Hauptschalter: Vorlage (casora_popup.head_switch: false | { entities: [...] }), Modul-Haken
+  // window._casoraHeadSwitchHooks (Liste von fn(src, hass) → null | false | [ids] | { entities, toggle,
+  // disabled }) oder – nur bei reinen Schalt-Popups – die Kachel-Entität.
+  var HEAD_SWITCH_TPL = /\bcasora_(switch|fan|air_purifier|humidifier)\b/;
+  function headSwitchIds(pop, hass) {
+    var c = pop._hsCfg, src = pop._ringSrc;
+    var S = (hass && hass.states) || {};
+    var keep = function (ids) { ids = [].concat(ids || []).filter(function (x, i, a) { return x && S[x] && a.indexOf(x) === i; }); return ids.length ? ids : null; };
+    pop._hsToggle = null;
+    pop._hsOff = false;
+    if (c === false) return null;
+    if (c && typeof c === 'object') return keep(c.entities || c.entity);
+    if (!src || !src._config) return null;
+    var hooks = window._casoraHeadSwitchHooks || [];
+    for (var i = 0; i < hooks.length; i++) {
+      var r = null;
+      try { r = hooks[i](src, hass); } catch (e) { r = null; }
+      if (r === false) return null;
+      if (Array.isArray(r)) return keep(r);
+      if (r && typeof r === 'object') {
+        pop._hsToggle = typeof r.toggle === 'function' ? r.toggle : null;
+        pop._hsOff = !!r.disabled;
+        return keep(r.entities);
+      }
+    }
+    var tpl = [].concat(src._config.template || []).join(' ');
+    var id = src._stateObj && src._stateObj.entity_id;
+    return HEAD_SWITCH_TPL.test(tpl) && /^(switch|fan|light|input_boolean|humidifier)\./.test(id || '') ? keep([id]) : null;
+  }
+
   // Aus-Zustand (Heizung aus, Gerät aus, nicht erreichbar …): Sand-Ring wie „Alle aus“ im Licht-Popup.
   function ringOff(src, hass) {
     // Sicherheits-Badges (05.10.2026): der Ring trägt immer die Stufenfarbe der Badge (Grün auch bei
@@ -5948,6 +6138,10 @@ window.casoraMenuGlass = {
       }
       // Ring folgt dem Zustand, solange das Popup offen ist (Heizen ↔ Aus).
       var pop = host && host.host;
+      if (pop && pop._syncHeadSwitch && pop.hasAttribute('open')) {
+        pop._syncHeadSwitch(h);
+        if (!pop._headLine || !pop._headLine.isConnected) setTimeout(function () { if (pop.hasAttribute('open')) pop._syncHeadLine(); }, 120);
+      }
       if (pop && pop._ringSrc && pop._paintSoft && pop.hasAttribute('open')
         && ringOff(pop._ringSrc, h) !== !!pop._ringStOff) {
         pop._paintSoft(false);
@@ -5986,8 +6180,12 @@ window.casoraMenuGlass = {
                   '<div class="header-ring" hidden></div>' +
                   '<div class="header-eyebrow"></div>' +
                   '<div class="header-title"></div>' +
+                  // 1.3 Kopfzeile A: Statuszeile des Popups (gespiegelt aus der ersten .hui-line im Inhalt).
+                  '<div class="header-status hui-line" hidden></div>' +
                 '</section>' +
                 '<section class="header-actions"></section>' +
+                // 1.3 Kopfzeile A: Hauptschalter oben rechts (ersetzt eigene „Alles aus“-Knöpfe).
+                '<button class="header-switch" type="button" role="switch" aria-checked="false" hidden><i></i></button>' +
               '</div>' +
             '</div>' +
             '<div class="content" tabindex="-1"><div class="container"></div>' +
@@ -6019,6 +6217,13 @@ window.casoraMenuGlass = {
       this._headerClose = root.querySelector('.header-close');
       this._headerContent = root.querySelector('.header-content');
       this._headerRing = root.querySelector('.header-ring');
+      this._headerStatus = root.querySelector('.header-status');
+      this._headerSwitch = root.querySelector('.header-switch');
+      this._headerSwitch.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this._toggleHeadSwitch();
+      });
       this._dyn = root.querySelector('#dyn');
       this._bridge = root.querySelector('casora-popup-hass');
 
@@ -6111,8 +6316,12 @@ window.casoraMenuGlass = {
       this.toggleAttribute('card', isCard);
       this.toggleAttribute('flat', cfg.flat === true);
       var hasHeader = !!(cfg.title || cfg.eyebrow);
+      this._cfgTitle = cfg.title || '';
+      this._cfgEyebrow = cfg.eyebrow || '';
+      this._hsCfg = cfg.head_switch;
       this._headerTitle.textContent = cfg.title || '';
       this._headerEyebrow.textContent = cfg.eyebrow || '';
+      this._headReset();
       this._headerClose.hidden = cfg.close === false;
       /* D-02: Bildschirmleser-Name in der Oberflächensprache (war fest „Close“) */
       this._headerClose.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Schließen') : 'Schließen');
@@ -6164,6 +6373,8 @@ window.casoraMenuGlass = {
         var sr = this.shadowRoot;
         [0, 200, 700, 1600, 3200].forEach(function (ms) { setTimeout(function () { window._casoraSepScan(sr); }, ms); });
       }
+      // Kopfzeile A: Statuszeile aus dem Inhalt in den Kopf holen (Karten bauen sich nach und nach).
+      [0, 60, 250, 700, 1600].forEach((ms) => { setTimeout(() => { if (this.hasAttribute('open')) this._syncHeadLine(); }, ms); });
       this._checkEmpty(true);
       // Startet das Einblenden der Platten (popup_styles „data-casora-charts-ready“). Früher erst,
       // wenn apexcharts gezeichnet hatte; casora-chart zeichnet selbst, ohne Warten.
@@ -6244,7 +6455,183 @@ window.casoraMenuGlass = {
       this._ringOffNow = !!(ring && ring.off);
       this._ringStOff = !!(ring && this._ringSrc && ringOff(this._ringSrc));
       this._headerRing.toggleAttribute('off', this._ringOffNow);
+      // Kopfzeile A: Gerätefarbe als Akzent des ganzen Popups (Schalter, Kachel), Symbolfarbe nach Kontrast.
+      if (sf && ring) {
+        this.style.setProperty('--casora-popup-accent', ring.hue);
+        var ink = inkOn(ring.hue);
+        if (ink) { this.style.setProperty('--casora-popup-accent-ink', ink); this._headerRing.style.setProperty('--ring-ink', ink); }
+        else { this.style.removeProperty('--casora-popup-accent-ink'); this._headerRing.style.removeProperty('--ring-ink'); }
+      } else {
+        this.style.removeProperty('--casora-popup-accent');
+        this.style.removeProperty('--casora-popup-accent-ink');
+        this._headerRing.style.removeProperty('--ring-ink');
+      }
+      var room = sf && this._ringSrc ? roomLabelOf(this._ringSrc) : '';
+      var title = sf ? stripRoom(this._cfgTitle, room) : this._cfgTitle;
+      if (room && title.toLowerCase() === room.toLowerCase()) room = '';
+      this._headerTitle.textContent = title || '';
+      this._headerEyebrow.textContent = sf ? (this._cfgEyebrow || room) : this._cfgEyebrow;
       this._header.hidden = !this._hasHeader && !ring;
+      this._syncHeadSwitch();
+    }
+
+    // ── Kopfzeile A: Statuszeile ──────────────────────────────────────────
+    _headReset() {
+      if (this._headMO) { try { this._headMO.disconnect(); } catch (e) {} }
+      this._headMO = null;
+      this._headLine = null;
+      this._headField = null;
+      this._headHtml = null;
+      this._headRoot = null;
+      if (this._headerStatus) { this._headerStatus.textContent = ''; this._headerStatus.hidden = true; }
+      this.style.removeProperty('--casora-head-gap');
+    }
+    // Erste Statuszeile (.hui-line, UI.line/hero/headline) oben im Inhalt suchen – durch alle Shadow-DOMs.
+    _findHeadLine() {
+      var top = this.container.getBoundingClientRect().top;
+      var found = null, field = this._headField;
+      var inField = function (el) {
+        for (var n = el, i = 0; n && i < 40; i++) {
+          if (n === field) return true;
+          n = n.parentElement || (n.parentNode && n.parentNode.host) || null;
+        }
+        return false;
+      };
+      (function walk(root, d) {
+        if (found || !root || d > 14) return;
+        var kids;
+        try { kids = root.querySelectorAll('*'); } catch (e) { return; }
+        for (var i = 0; i < kids.length && !found; i++) {
+          var el = kids[i];
+          if (el.classList && el.classList.contains('hui-line')) {
+            var r = el.getBoundingClientRect();
+            if ((field && inField(el)) || (r.height > 0 && r.top - top < 90)) { found = el; return; }
+            // Eine tiefer stehende Zeile ist keine Kopf-Statuszeile – Suche beenden.
+            if (r.height > 0) { found = false; return; }
+          }
+          if (el.shadowRoot) walk(el.shadowRoot, d + 1);
+        }
+      })(this.container, 0);
+      return found || null;
+    }
+    // Feld (Rasterzelle) der Statuszeile: aufwärts, solange darüber nichts anderes Sichtbares liegt.
+    _headFieldOf(line) {
+      var n = line, stop = this.container;
+      for (var i = 0; i < 40; i++) {
+        var p = n.parentElement || (n.parentNode && n.parentNode.host) || null;
+        if (!p || p === stop || p === this.shadowRoot) return n;
+        var other = false;
+        var kids = p.children || [];
+        for (var k = 0; k < kids.length; k++) {
+          var c = kids[k];
+          if (c === n || c.tagName === 'STYLE') continue;
+          var r = c.getBoundingClientRect();
+          if (r.width > 0 && r.height > 0) { other = true; break; }
+        }
+        if (other) return n;
+        n = p;
+      }
+      return n;
+    }
+    _mirrorHead() {
+      var line = this._headLine;
+      if ((!line || !line.isConnected) && this._headRoot) {
+        try { line = this._headRoot.querySelector('.hui-line'); } catch (e) { line = null; }
+        this._headLine = line;
+      }
+      if (!line) return;
+      var html = line.innerHTML;
+      if (html === this._headHtml) return;
+      this._headHtml = html;
+      this._headerStatus.innerHTML = html;
+      // Der Raum steht schon als Etikett über dem Titel – in der Statuszeile nicht noch einmal.
+      var room = (this._headerEyebrow.textContent || '').trim().toLowerCase();
+      if (room) {
+        var spans = this._headerStatus.querySelectorAll('span:not(.hui-sep)');
+        for (var i = 0; i < spans.length; i++) {
+          var sp = spans[i];
+          if (sp.children.length || sp.textContent.trim().toLowerCase() !== room) continue;
+          var sep = sp.previousElementSibling;
+          if (sep && sep.classList.contains('hui-sep')) sep.remove();
+          sp.remove();
+        }
+      }
+      this._headerStatus.hidden = !this._headerStatus.textContent.trim();
+      if (window._casoraSepScan) { var sr = this.shadowRoot; setTimeout(function () { window._casoraSepScan(sr); }, 0); }
+    }
+    _syncHeadLine() {
+      if (!this.hasAttribute('soft') || !this.hasAttribute('open') || this._header.hidden) return;
+      var line = this._headLine;
+      if (!line || !line.isConnected) {
+        line = this._findHeadLine();
+        if (!line) return;
+        this._headLine = line;
+        var root = line.getRootNode();
+        if (root !== this._headRoot) {
+          if (this._headMO) { try { this._headMO.disconnect(); } catch (e) {} }
+          this._headRoot = root;
+          if (typeof MutationObserver === 'function') {
+            this._headMO = new MutationObserver(() => this._mirrorHead());
+            this._headMO.observe(root, { childList: true, subtree: true, characterData: true });
+          }
+        }
+        if (!this._headField || !this._headField.isConnected) {
+          var f = this._headFieldOf(line);
+          var p = f.parentElement || (f.parentNode && f.parentNode.host) || null;
+          var gap = 0;
+          try { var cs = p ? getComputedStyle(p) : null; if (cs && /grid|flex/.test(cs.display)) gap = parseFloat(cs.rowGap) || 0; } catch (e) { gap = 0; }
+          // Zeilenabstand des Rasters bleibt oberhalb des nächsten Felds stehen – den Kopfabstand darum kürzen.
+          var first = !!p && (function () { var ks = p.children || []; for (var i = 0; i < ks.length; i++) { if (ks[i].tagName === 'STYLE') continue; return ks[i] === f; } return false; })();
+          f.style.setProperty('display', 'none', 'important');
+          this._headField = f;
+          if (first && gap > 0) this.style.setProperty('--casora-head-gap', Math.max(0, 20 - gap) + 'px');
+        }
+      }
+      this._mirrorHead();
+      // Module melden ihren Hauptschalter teils erst mit dem ersten Zeichnen (Licht: aktuelle Ansicht).
+      this._syncHeadSwitch();
+    }
+
+    // ── Kopfzeile A: Hauptschalter ────────────────────────────────────────
+    _syncHeadSwitch(h) {
+      var b = this._headerSwitch;
+      if (!b) return;
+      var hass = h || (this._bridge && this._bridge.hass) || (document.querySelector('home-assistant') || {}).hass;
+      var ids = this.hasAttribute('soft') && hass ? headSwitchIds(this, hass) : null;
+      this._hsIds = ids;
+      b.hidden = !ids;
+      if (!ids) return;
+      var S = hass.states;
+      var on = ids.some(function (x) { return S[x] && S[x].state === 'on'; });
+      var dead = ids.every(function (x) { return !S[x] || /^(unavailable|unknown)$/.test(S[x].state); });
+      if (this._hsPending && Date.now() < this._hsPending.until) on = this._hsPending.on;
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+      b.disabled = dead || (!!this._hsOff && !on);
+      var t = this._headerTitle.textContent || '';
+      b.setAttribute('aria-label', (window.casoraTr ? window.casoraTr(on ? 'Ausschalten' : 'Einschalten') : (on ? 'Ausschalten' : 'Einschalten')) + (t ? ' – ' + t : ''));
+    }
+    _toggleHeadSwitch() {
+      var ids = this._hsIds;
+      var hass = (this._bridge && this._bridge.hass) || (document.querySelector('home-assistant') || {}).hass;
+      if (!ids || !hass || this._headerSwitch.disabled) return;
+      var on = this._headerSwitch.getAttribute('aria-checked') === 'true';
+      var svc = on ? 'turn_off' : 'turn_on';
+      if (this._hsToggle) {
+        // Modul schaltet selbst (z. B. Licht: Raum aus, Haus nur mit Rückfrage) – Ergebnis kommt über hass.
+        try { window.dispatchEvent(new CustomEvent('haptic', { detail: 'light' })); } catch (e) {}
+        this._hsToggle(on, ids, hass);
+        return;
+      }
+      var go = () => {
+        this._hsPending = { on: !on, until: Date.now() + 1500 };
+        this._headerSwitch.setAttribute('aria-checked', on ? 'false' : 'true');
+        try { window.dispatchEvent(new CustomEvent('haptic', { detail: 'light' })); } catch (e) {}
+        hass.callService('homeassistant', svc, { entity_id: on ? ids.filter(function (x) { return hass.states[x] && hass.states[x].state === 'on'; }) : ids });
+      };
+      // „Vor dem Schalten fragen“ der Kachel gilt auch hier.
+      var ask = ids.filter(function (x) { return window.casoraAsksFirst && window.casoraAsksFirst(x); })[0];
+      if (ask && window.casoraConfirmSwitch) window.casoraConfirmSwitch(ask, 'homeassistant.' + svc).then(function (ok) { if (ok) go(); });
+      else go();
     }
 
     _probe() {
@@ -6382,6 +6769,8 @@ window.casoraMenuGlass = {
         this.surface.style.removeProperty('transform');
         this.surface.style.removeProperty('transition');
         this.container.textContent = '';
+        this._headReset();
+        this._headRoot = null;
         this._extraTok = (this._extraTok || 0) + 1;
         this._extra.textContent = '';
         this._extra.hidden = true;
@@ -6933,12 +7322,13 @@ window.casoraMenuGlass = {
     glyph: 'var(--casora-soft-glyph, #fff)',
     radius: 'var(--casora-popup-row-radius, 24px)',
   };
-  // Abschnitts-Etikett: klein, Großbuchstaben, Laufweite (HELLIGKEIT, LEUCHTEN IM RAUM).
+  // Abschnittsüberschrift: 1.3 normale Überschrift in Satzschreibung (17/700, „Leuchten im Raum“) statt
+  // kleiner Großbuchstaben – Werte über --casora-h15-* aus dem Weich-Rahmen.
   function softLabel(text, action) {
     var out = '<div class="hui-slbl" style="font-family:' + T.font + ';display:flex;align-items:baseline;'
       + 'justify-content:space-between;gap:12px;margin:0 6px 10px;">'
-      + '<div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;'
-      + 'color:' + S.label + ';">' + esc(text) + '</div>';
+      + '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);'
+      + 'color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));">' + esc(text) + '</div>';
     if (action && action.text) {
       out += '<div class="hui-ga" style="font-size:13px;font-weight:600;'
         + 'color:' + (tone(action.tone) || T.blue) + ';cursor:pointer;white-space:nowrap;"'
@@ -7362,8 +7752,10 @@ window.casoraMenuGlass = {
   function softIcon(name, fill, off) {
     var sz = 'var(--casora-soft-icon-size, 38px)';
     var bg = off ? S.iconOff : softHue(fill);
-    var ink = off ? S.glyphOff : S.glyph;
-    var tile = 'width:' + sz + ';height:' + sz + ';border-radius:50%;background:' + bg + ';flex:none;'
+    // DP-17: Weiß nur, wo es auf der Gerätefarbe mindestens 3 : 1 hat (sonst dunkle Tinte auf Gelb/Orange/Grün).
+    var ink = off ? S.glyphOff : ((window._casoraInkOn && window._casoraInkOn(bg)) || S.glyph);
+    // 1.3: im Popup Symbol-Kachel (abgerundetes Quadrat, --casora-soft-icon-radius), sonst Kreis.
+    var tile = 'width:' + sz + ';height:' + sz + ';border-radius:var(--casora-soft-icon-radius, 50%);background:' + bg + ';flex:none;'
       + 'display:flex;align-items:center;justify-content:center;line-height:0;pointer-events:none;';
     if (String(name).indexOf(':') !== -1) {
       return '<div style="' + tile + '"><ha-icon icon="' + esc(name) + '" style="--mdc-icon-size:calc(' + sz + ' * .5);'
@@ -7444,17 +7836,19 @@ window.casoraMenuGlass = {
       +   'transition:background-color .18s ease;}'
       + '.hui-srow.hui-tap:active{background:' + S.rowPress + ';}'
       // Aktive Zeile (z. B. Gerät lädt) wie eine aktive Kachel im Raum: heller Grund, dunkle Schrift, Zustand in Ton.
-      + '.hui-srow.hui-act{background:var(--casora-entity-background-active, ' + S.row + ');'
-      +   'box-shadow:var(--button-card-box-shadow-active-mobile, none);}'
-      + '.hui-srow.hui-act div{color:var(--casora-entity-name-active, inherit)!important;}'
-      + '.hui-srow.hui-act .hui-sub{color:var(--casora-entity-state-active-color, ' + S.sub + ')!important;}'
+      // DP-07 (1.3): eine Art „aktiv“ – Popup-Token --casora-soft-row-active* (hell Creme, dunkel Sand 14 %).
+      + '.hui-srow.hui-act{background:var(--casora-soft-row-active, var(--casora-entity-background-active, ' + S.row + '));'
+      +   'box-shadow:var(--casora-soft-row-active-shadow, var(--button-card-box-shadow-active-mobile, none));}'
+      + '.hui-srow.hui-act div{color:var(--casora-soft-row-active-ink, var(--casora-entity-name-active, inherit))!important;}'
+      + '.hui-srow.hui-act .hui-sub{color:var(--casora-soft-row-active-sub, var(--casora-entity-state-active-color, ' + S.sub + '))!important;}'
       // Pfeil › auf der hellen aktiven Zeile in deren Schriftfarbe: T.ink3 ist im dunklen Design hell und
       // hatte auf Creme nur 1,09:1 (Design-Audit 10.10.2026, DP-06) – so wie im hellen Design.
-      + '.hui-srow.hui-act .hui-chev path{stroke:var(--casora-entity-name-active, currentColor);}'
+      + '.hui-srow.hui-act .hui-chev path{stroke:var(--casora-soft-row-active-ink, var(--casora-entity-name-active, currentColor));}'
       + '@media (hover:hover){.hui-srow.hui-tap:hover{background:' + S.rowHover + ';}'
       // Aktive Zeile behält beim Drüberfahren ihren hellen Grund (sonst dunkle Schrift auf dunklem Hover, Dark Mode).
-      +   '.hui-srow.hui-act.hui-tap:hover{background:var(--casora-entity-background-active, ' + S.row + ');filter:brightness(.97);}}'
-      + '.hui-chev{opacity:.4;flex:none;pointer-events:none;}'
+      +   '.hui-srow.hui-act.hui-tap:hover{background:var(--casora-soft-row-active, var(--casora-entity-background-active, ' + S.row + '));filter:brightness(.97);}}'
+      // DP-30: Pfeil › mit Deckkraft .6 statt .4 (≥ 3 : 1 hell und dunkel).
+      + '.hui-chev{opacity:var(--casora-chev-opacity, .6);flex:none;pointer-events:none;}'
       + '@media (min-width: 340px){'
       +   '.hui-sub{display:inline-block;max-width:100%;vertical-align:bottom;'
       +     'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
@@ -7488,11 +7882,11 @@ window.casoraMenuGlass = {
                 ? softHue(r.iconTone) : null)
           || S.iconOff;
         if (plate === 'rgba(0,0,0,0)') plate = S.iconOff;
-        lead = '<div style="width:38px;height:38px;border-radius:50%;flex:none;background:' + plate + ';'
+        lead = '<div style="width:var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);border-radius:var(--casora-soft-icon-radius, 50%);flex:none;background:' + plate + ';'
           + 'display:grid;place-items:center;overflow:hidden;">'
           + (r.image
               ? '<img src="' + esc(r.image) + '" alt="" style="width:'
-                + (r.imageFit === 'cover' ? '38px;height:38px;object-fit:cover;' : '28px;height:28px;object-fit:contain;'
+                + (r.imageFit === 'cover' ? 'var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);object-fit:cover;' : '28px;height:28px;object-fit:contain;'
                   /* 04.10.2026: eckige Markenbilder (Updates) rund wie der Kreis dahinter, mittig. */
                   + 'border-radius:50%;')
                 + 'display:block;">'
@@ -7507,12 +7901,12 @@ window.casoraMenuGlass = {
         + ' style="' + (tappable ? 'cursor:pointer;' : '')
         + (r.selected ? 'background:var(--casora-soft-row-selected, var(--casora-lps-seg-on, #FFFDF9));'
           + 'box-shadow:var(--casora-soft-row-selected-shadow, var(--casora-lps-seg-on-shadow, 0 6px 16px -10px rgba(90,70,50,0.45)));' : '')
-        + 'display:flex;align-items:center;gap:12px;min-height:58px;box-sizing:border-box;'
-        + 'padding:10px 16px 10px 10px;">'
+        + 'display:flex;align-items:center;gap:12px;min-height:var(--casora-soft-row-h, 58px);box-sizing:border-box;'
+        + 'padding:var(--casora-soft-row-pad, 10px 16px 10px 10px);">'
         + '<div class="hui-inner">'
         + lead
         + '<div style="flex:1;min-width:0;pointer-events:none;white-space:normal;">'
-        + '<div style="font-size:14.5px;font-weight:700;letter-spacing:-0.01em;line-height:1.3;color:'
+        + '<div style="font-size:var(--casora-soft-row-fs, 14.5px);font-weight:700;letter-spacing:-0.01em;line-height:1.3;color:'
         + (tone(r.labelTone) || T.ink) + ';overflow:hidden;'
         + 'text-overflow:ellipsis;white-space:nowrap;">' + esc(r.label) + '</div>';
 
@@ -7527,7 +7921,7 @@ window.casoraMenuGlass = {
           }
           var one = subs.length === 1;
           out += '<div class="hui-sub' + (si ? ' hui-sub2' : '') + (r.subWrap ? ' hui-wrap' : '') + '"' + sLive
-            + ' style="font-size:12.5px;font-weight:500;line-height:1.3;'
+            + ' style="font-size:var(--casora-soft-sub-fs, 12.5px);font-weight:500;line-height:1.3;'
             // subTone: nur die erste Unterzeile einfärben (z. B. „Lädt“ grün, der Raum bleibt gedämpft).
             + 'color:' + ((si === 0 && r.subTone && (tone(r.subTone) || r.subTone)) || S.sub) + ';overflow:hidden;'
             + (one
@@ -7877,7 +8271,7 @@ window.casoraMenuGlass = {
     +   'transition:background-color .18s ease;}'
     + '@media (hover:hover){.hui-mhd:hover{background:' + S.rowHover + ';}}'
     + '.hui-mhd:active{background:' + S.rowPress + ';}'
-    + '.hui-mlb{flex:1;min-width:0;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;'
+    + '.hui-mlb{flex:1;min-width:0;font-size:var(--casora-fs-value,14px);font-weight:700;letter-spacing:-0.01em;'
     +   'color:var(--casora-soft-mehr-ink, ' + S.label + ');pointer-events:none;}'
     + '.hui-mlb .l{display:none;}'
     + '.hui-more.open>.hui-mhd .hui-mlb .m{display:none;}'
@@ -8442,7 +8836,7 @@ window.casoraMenuGlass = {
           + '}'
           + '@media (hover:hover){.hui-m:hover .fa img{transform:scale(1.022);}}'
           + '.hui-m .fa img{transition:transform .3s cubic-bezier(0.16, 1, 0.3, 1);}'
-          + '.hui-m:active{transform:scale(0.99);}'
+          + '.hui-m:active{transform:scale(var(--casora-press-scale,.97));}'
           + '.hui-m{cursor:pointer;}'
           + '.hui-mov{position:fixed;inset:0;z-index:20;display:grid;'
           +   'align-items:start;justify-items:center;padding:24px;'
@@ -8468,7 +8862,7 @@ window.casoraMenuGlass = {
           +   'backdrop-filter:var(--casora-popup-plate-backdrop, none);'
           +   '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);'
           +   'box-shadow:var(--casora-popup-plate-shadow, none);}'
-          + '.hui-mback:active{transform:scale(0.94);}'
+          + '.hui-mback:active{transform:scale(var(--casora-press-scale,.97));}'
           + '.hui-mdet{width:100%;flex:1 1 auto;min-height:0;overflow:auto;'
           +   'scrollbar-width:none;'
           +   'border-radius:var(--casora-popup-row-radius, 20px);'
@@ -8512,8 +8906,8 @@ window.casoraMenuGlass = {
           +   '.hui-m,.hui-m:first-child{grid-column:auto;}}'
           : '')
       // Weich (01.10.2026): Etikett in Großbuchstaben, große runde Bild-Ecken, Sand statt Glas.
-      + (soft() ? '.hui-mlabel{font-size:12px !important;font-weight:700 !important;letter-spacing:.1em !important;'
-          +   'text-transform:uppercase;color:' + S.label + ' !important;}'
+      + (soft() ? '.hui-mlabel{font-size:var(--casora-h15-fs,17px) !important;font-weight:700 !important;letter-spacing:-0.01em !important;'
+          +   'text-transform:none;color:var(--casora-h15-c, ' + T.ink + ') !important;}'
           + '.hui-m .fa{border-radius:24px !important;background:' + S.ctl + ' !important;'
           +   'box-shadow:var(--casora-soft-art-shadow, 0 10px 24px -14px rgba(90,70,50,.35)) !important;}'
           + '.hui-m .fa::after{box-shadow:none !important;}'

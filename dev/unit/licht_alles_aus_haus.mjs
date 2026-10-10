@@ -1,5 +1,5 @@
-// „Alles aus“ im Haus-Licht-Popup (Startseite › Beleuchtung, 07.10.2026): derselbe Knopf wie im
-// Raum-Popup, aber mit Rückfrage „Alle N Lichter im Haus ausschalten?“ (N = gerade eingeschaltete,
+// „Alles aus“ im Haus-Licht-Popup (Startseite › Beleuchtung, 07.10.2026; seit 1.3 Hauptschalter im Kopf):
+// wie im Raum-Popup, aber mit Rückfrage „Alle N Lichter im Haus ausschalten?“ (N = gerade eingeschaltete,
 // sichtbare Lichter; Einzahl „1 Licht …“). Nur Lichter, die der Benutzer sieht – auch nicht aus
 // vorübergehend ausgeblendeten Räumen. Abbrechen schaltet nichts.
 //   node dev/unit/licht_alles_aus_haus.mjs
@@ -38,25 +38,16 @@ let answer = false;
 const dialogs = [];
 window.casoraAsk = (w) => { dialogs.push(w); return Promise.resolve(answer); };
 
-const unq = (s) => s.replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-let html = S.render(cfg, 'hero', states, hass, null);
-const m = html.match(/<div class="lps-off( dis)?"[^>]*data-lps-tap="([^"]+)"[^>]*>/);
-assert.ok(m, 'Knopf „Alles aus“ im Haus-Popup fehlt');
-assert.ok(!m[1], 'bedienbar, solange ein sichtbares Licht an ist');
-const spec = JSON.parse(unq(m[2]));
-assert.equal(spec.a, 'alloff');
-assert.equal(spec.house, 1, 'Haus-Kennung (Rückfrage)');
-assert.deepEqual(spec.ids, ['light.k1', 'light.k2', 'light.w1', 'light.w2', 'light.w3', 'light.gast'], 'alle Lichter aller Räume, kein Schalter');
-assert.ok(asked.some((o) => o && o.rooms), 'ausgeblendete Räume zählen beim Ausgrauen mit');
+// 1.3 Kopfzeile A: Hauptschalter im Kopf statt „Alles aus“-Knopf (S.head → S.headFor).
+S.render(cfg, 'hero', states, hass, null);
+let hs = S.headFor(cfg, hass);
+assert.ok(hs && hs.disabled, 'Haus: nur ausschalten (ausgegraut, wenn alles aus)');
+assert.deepEqual(hs.entities, ['light.k1', 'light.k2', 'light.w1', 'light.w3'], 'sichtbare Lichter aller Räume, kein Schalter');
+assert.ok(asked.some((o) => o && o.rooms), 'ausgeblendete Räume zählen mit');
 
-const tap = async (raw, dis) => {
-  const el = { hasAttribute: (x) => x === 'data-lps-tap', getAttribute: () => raw, classList: { contains: (c) => !!dis && c === 'dis' } };
-  listeners.click.forEach((f) => f({ composedPath: () => [el], preventDefault() {}, stopPropagation() {} }));
-  await new Promise((r) => setTimeout(r, 10));
-};
-
+const tap = async () => { hs.toggle(true); await new Promise((r) => setTimeout(r, 10)); };
 // Abbrechen: Rückfrage mit Anzahl, nichts geschaltet.
-await tap(unq(m[2]));
+await tap();
 assert.equal(dialogs.length, 1, 'Rückfrage erscheint');
 assert.equal(dialogs[0].title, 'Alle 3 Lichter im Haus ausschalten?', dialogs[0].title);
 assert.equal(dialogs[0].yes, 'Ausschalten');
@@ -64,31 +55,31 @@ assert.equal(calls.length, 0, 'Abbrechen schaltet nichts');
 
 // Ausschalten: nur sichtbare, eingeschaltete Lichter.
 answer = true;
-await tap(unq(m[2]));
+await tap();
 assert.deepEqual(calls, [['light', 'turn_off', ['light.k1', 'light.k2', 'light.w1']]], JSON.stringify(calls));
 
 // Einzahl.
 calls.length = 0; dialogs.length = 0;
 L('light.k1', false); L('light.k2', false);
-await tap(unq(m[2]));
+await tap();
 assert.equal(dialogs[0].title, '1 Licht im Haus ausschalten?', dialogs[0].title);
 assert.deepEqual(calls, [['light', 'turn_off', ['light.w1']]]);
 
-// Nur noch Lichter an, die der Benutzer nicht sieht: ausgegraut, Tippen fragt nicht.
+// Nur noch Lichter an, die der Benutzer nicht sieht: Tippen fragt nicht, schaltet nicht.
 L('light.w1', false);
-html = S.render(cfg, 'hero', states, hass, null);
-assert.ok(/class="lps-off dis"/.test(html), 'ausgegraut, wenn alle sichtbaren Lichter aus sind');
 calls.length = 0; dialogs.length = 0;
-await tap(unq(m[2]));
+await tap();
 assert.equal(dialogs.length + calls.length, 0, 'nichts Sichtbares an: keine Rückfrage, kein Schalten');
+// Einschalten gibt es im Haus nicht.
+hs.toggle(false);
+assert.equal(calls.length, 0);
 
 // Raum-Popup bleibt ohne Rückfrage.
 L('light.k1', true);
 window._casoraLF = { 'light.alle': 0 };
-html = S.render(cfg, 'hero', states, hass, null);
-const r = html.match(/<div class="lps-off( dis)?"[^>]*data-lps-tap="([^"]+)"[^>]*>/);
-assert.ok(r && !JSON.parse(unq(r[2])).house, 'Raum: ohne Haus-Kennung');
-await tap(unq(r[2]));
+hs = S.headFor(cfg, hass);
+assert.ok(!hs.disabled, 'Raum: ohne Haus-Sperre');
+await tap();
 assert.equal(dialogs.length, 0, 'Raum: keine Rückfrage');
 assert.deepEqual(calls, [['light', 'turn_off', ['light.k1']]]);
 
@@ -97,7 +88,6 @@ const en = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/tr
 assert.equal(en.exact['1 Licht im Haus ausschalten?'], 'Turn off 1 light in the home?');
 const p = en.patterns.find((x) => new RegExp(x[0]).test('Alle 6 Lichter im Haus ausschalten?'));
 assert.ok(p && p[1] === 'Turn off all {1} lights in the home?', 'Mehrzahl englisch');
-assert.equal(en.exact['Alles aus'], 'All off');
 assert.equal(en.exact['Ausschalten'], 'Turn off');
 
 const core = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-core.js', import.meta.url), 'utf8');

@@ -315,7 +315,7 @@
   var day = function (I, A, k) {
     if (!I.typical || A.kind === 'lernen' || !dayPoints(I, k).length) return '';
     return '<div class="ct-day" style="background:' + k.ROW + ';border-radius:' + k.RAD + ';padding:18px 14px 8px;">'
-      + '<div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--casora-soft-label, ' + k.SUB + ');padding:0 6px;text-align:left">'
+      + '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));padding:0 6px;text-align:left">'
       + '<span>Typischer Tag</span><span> · </span><span>Ø 14 Tage</span></div>'
       + '<div class="ct-day-chart" data-casora-nodismiss="" style="min-height:154px;margin:8px 0 0"></div></div>';
   };

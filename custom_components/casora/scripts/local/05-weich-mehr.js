@@ -503,7 +503,7 @@
     return '<div data-casora-flow="' + FK + '" data-casora-kind="b" style="background:var(--casora-popup-row-fill, #FEFCF7);'
       + 'border-radius:var(--casora-popup-row-radius, 24px);padding:18px 20px 20px;box-shadow:var(--casora-popup-plate-shadow, none);'
       + 'font-family:var(--primary-font-family, Inter, system-ui);color:' + INK + ';text-align:left;">'
-      + '<div style="font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:' + INK2 + ';">Energiefluss</div>'
+      + '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));">Energiefluss</div>'
       + '<div style="display:flex;align-items:center;gap:14px;margin-top:14px;">'
       + '<div' + mi(C.home) + ' style="width:44px;height:44px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;cursor:pointer;'
       + 'background:color-mix(in srgb, ' + FLOW_COL.haus + ' 16%, transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb, ' + FLOW_COL.haus + ' 70%, transparent);">'

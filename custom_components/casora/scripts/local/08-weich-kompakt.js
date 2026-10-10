@@ -124,7 +124,7 @@
     if (part === 'hero') {
       var min = R[0];
       var crit = low.some(function (r) { return lvOf(r.v) === 'crit'; });
-      return UI.line(low.length ? (low.length === 1 ? '1 Akku schwach' : low.length + ' Akkus schwach') : 'Alle Akkus OK',
+      return UI.line(low.length ? (low.length === 1 ? '1 Akku schwach' : low.length + ' Akkus schwach') : 'Alle Batterien OK',
         min ? ['Am niedrigsten: ' + min.name + ' ' + min.v + ' %'] : [], { tone: low.length ? (crit ? 'bad' : 'warn') : null });
     }
     if (part === 'low') {

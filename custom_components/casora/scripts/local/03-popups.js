@@ -299,7 +299,7 @@
       + '.hua details[open] .cv{transform:rotate(90deg);}'
       + '.hua .bd{padding:0 var(--casora-popup-row-pad-x, 16px) 14px calc(var(--casora-popup-row-pad-x, 16px) + 44px);'
       +   'font-size:13.5px;line-height:1.45;color:' + INK + ';white-space:normal;overflow-wrap:anywhere;}'
-      + '.hua .lb{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:' + INK3 + ';margin:10px 0 3px;}'
+      + '.hua .lb{font-size:var(--casora-fs-sub,13px);font-weight:700;color:' + INK + ';margin:10px 0 3px;}'
       + '.hua ul{margin:0;padding-left:18px;} .hua li{margin:2px 0;}'
       + '.hua .ft{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:12.5px;color:' + INK3 + ';}'
       + '.hua .ft a{color:var(--casora-color-teal, #00C3D0);text-decoration:none;}'
@@ -375,7 +375,7 @@
     if (soft) {
       headOut = '<div class="hui-slbl" style="font-family:var(--primary-font-family, system-ui);display:var(--casora-lbl-out, flex);align-items:center;gap:6px;margin:0 6px 10px;">'
         + '<ha-icon icon="mdi:creation" style="--mdc-icon-size:14px;width:14px;height:14px;margin:-2px 0;flex:none;display:flex;color:var(--casora-color-teal, #00C3D0);"></ha-icon>'
-        + '<div style="font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--casora-soft-label, var(--secondary-text-color));">KI-Check</div></div>';
+        + '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));">KI-Check</div></div>';
       css += '<style>.hua .nm{font-size:14.5px;font-weight:700;letter-spacing:-0.01em;line-height:1.3;}'
         + '.hua .hl{font-size:12.5px;font-weight:500;line-height:1.3;color:var(--casora-soft-sub, ' + INK3 + ');}</style>';
     }
@@ -523,7 +523,7 @@
       +   'background:var(--casora-popup-seg-fill, rgba(255,255,255,0.16));transition:background-color .16s ease,transform .12s ease;user-select:none;-webkit-user-select:none;}'
       + '.fb-st-b.dis{opacity:.3;cursor:default;}.fb-st-b svg{pointer-events:none;}'
       /* Antippen sichtbar wie beim Licht-Popup (Helligkeit ±). */
-      + '.fb-st-b:not(.dis):active{transform:scale(.92);}'
+      + '.fb-st-b:not(.dis):active{transform:scale(var(--casora-press-scale,.97));}'
       + '@media (hover:hover){.fb-st-b:not(.dis):hover{background:var(--casora-popup-seg-fill-hover, rgba(255,255,255,0.24));}}'
       + '.fb-st-v{text-align:center;pointer-events:none;}'
       + '.fb-st-v .l{font-size:13px;color:' + T.ink2 + ';}'
@@ -728,7 +728,7 @@
         body = (z ? '<div style="display:flex;align-items:center;gap:8px;">' + ic(z[2], 20, z[1]) + '<span style="font-size:var(--casora-fs16,16px);font-weight:600;color:' + z[1] + ';">' + z[0] + '</span></div>' : '')
           + '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink + ';margin-top:8px;white-space:normal;">' + esc(ha.fazit) + '</div>'
           + ((ha.erkenntnisse || []).length ? li(ha.erkenntnisse, T.ink2) : '')
-          + ((ha.tipps || []).length ? '<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:' + T.ink3 + ';margin:12px 0 0;">Tipps</div>' + li(ha.tipps, T.ink) : '');
+          + ((ha.tipps || []).length ? '<div style="font-size:var(--casora-fs-sub,13px);font-weight:700;color:' + T.ink + ';margin:12px 0 0;">Tipps</div>' + li(ha.tipps, T.ink) : '');
       } else body = '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink2 + ';white-space:normal;">'
         + (hrs < 1 ? 'Die Auswertung startet mit der Heizsaison: Sobald geheizt wird, prüft Claude jeden Montag Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad.'
                    : 'Claude prüft Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad der letzten 7 Tage.') + '</div>';
@@ -2187,7 +2187,7 @@
         + '<span style="flex:1 1 auto;text-align:left;font-size:var(--casora-fs16,16px);font-weight:600;color:' + z[1] + ';">' + z[0] + '</span></div>'
         + '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink + ';margin-top:8px;white-space:normal;">' + esc(it.fazit) + '</div>'
         + (it.punkte && it.punkte.length ? '<ul style="margin:10px 0 0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + T.ink2 + ';white-space:normal;">' + it.punkte.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' : '')
-        + (it.tipps && it.tipps.length ? '<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:' + T.ink3 + ';margin:12px 0 3px;">Pflegetipps</div>'
+        + (it.tipps && it.tipps.length ? '<div style="font-size:var(--casora-fs-sub,13px);font-weight:700;color:' + T.ink + ';margin:12px 0 3px;">Pflegetipps</div>'
           + '<ul style="margin:0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + T.ink + ';white-space:normal;">' + it.tipps.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' : '');
     } else body = '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink2 + ';white-space:normal;">Claude prüft Bodenfeuchte, Licht, Temperatur und Luftfeuchte der letzten 7 Tage passend zur Art und gibt einen Pflegetipp.</div>';
     var svc = ' data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_pflanzen_doktor', { plant: pid }))) + '"';
@@ -2281,7 +2281,7 @@
           + '<span style="font-size:13px;color:' + T.ink2 + ';">pro Woche sparbar</span></div>' : '')
         + '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink + ';white-space:normal;">' + esc(a.fazit) + '</div>'
         + ((a.erkenntnisse || []).length ? '<ul style="margin:10px 0 0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + T.ink2 + ';white-space:normal;">' + a.erkenntnisse.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' : '')
-        + ((a.tipps || []).length ? '<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:' + T.ink3 + ';margin:12px 0 3px;">Tipps</div>'
+        + ((a.tipps || []).length ? '<div style="font-size:var(--casora-fs-sub,13px);font-weight:700;color:' + T.ink + ';margin:12px 0 3px;">Tipps</div>'
           + '<ul style="margin:0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + T.ink + ';white-space:normal;">' + a.tipps.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' : '');
     }
     var svc = ' data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_energie_coach'))) + '"';
@@ -2482,7 +2482,7 @@
         return '<div style="font-family:' + T.font + ';text-align:left;">' + window._casoraHH.label('Rad-Check im Detail')
           + '<div style="background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));border-radius:var(--casora-popup-row-radius, 24px);padding:6px 18px 16px;">'
           + ((a.punkte || []).length ? li(a.punkte, T.ink2) : '')
-          + ((a.tipps || []).length ? '<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--casora-soft-label, ' + T.ink3 + ');margin:14px 0 0;">Tipps</div>' + li(a.tipps, T.ink) : '')
+          + ((a.tipps || []).length ? '<div style="font-size:var(--casora-fs-sub,13px);font-weight:700;color:' + T.ink + ';margin:14px 0 0;">Tipps</div>' + li(a.tipps, T.ink) : '')
           + '</div></div>';
       }
       if (SF) a = Object.assign({}, a, { punkte: [], tipps: [] });
@@ -2490,7 +2490,7 @@
       else if (has) body = (z ? '<div style="display:flex;align-items:center;gap:8px;">' + ic(z[2], 20, z[1]) + '<span style="font-size:var(--casora-fs16,16px);font-weight:600;color:' + z[1] + ';">' + z[0] + '</span></div>' : '')
         + '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink + ';margin-top:8px;white-space:normal;">' + esc(a.fazit) + '</div>'
         + ((a.punkte || []).length ? li(a.punkte, T.ink2) : '')
-        + ((a.tipps || []).length ? '<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:' + T.ink3 + ';margin:12px 0 0;">Tipps</div>' + li(a.tipps, T.ink) : '');
+        + ((a.tipps || []).length ? '<div style="font-size:var(--casora-fs-sub,13px);font-weight:700;color:' + T.ink + ';margin:12px 0 0;">Tipps</div>' + li(a.tipps, T.ink) : '');
       else body = '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink2 + ';white-space:normal;">Claude prüft Service, Verschleißteile nach Kilometern und die Akku-Pflege passend zur Jahreszeit.</div>';
       var ago = function (ts) { var q = Date.parse(ts); if (isNaN(q)) return ''; var m = Math.max(0, Math.round((Date.now() - q) / 60000)); return m < 1 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + (window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.round(m / 1440)) + ' T.'; };
       var svc = ' data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_ebike_check', { entities: B.ids(states) }))) + '"';
@@ -3277,12 +3277,12 @@
     + 'ha-card.disabled{pointer-events:auto!important;}'
     + '.lps-r{font-family:var(--primary-font-family,system-ui);color:var(--casora-lps-title,var(--primary-text-color));text-align:left;}'
     + '.lps-r *{box-sizing:border-box;}'
-    + '.lps-head{display:flex;flex-direction:column;align-items:center;text-align:center;padding:4px 0 0;}'
+    + '.lps-head{display:block;text-align:left;padding:0;}'
     + '.lps-ring{width:78px;height:78px;border-radius:50%;display:grid;place-items:center;cursor:pointer;'
     +   'background:var(--casora-lps-ring-off);box-shadow:0 0 0 10px var(--casora-lps-ring-off-halo);'
     +   'transition:background .25s ease,box-shadow .25s ease,transform .15s ease;-webkit-tap-highlight-color:transparent;}'
     + '.lps-ring.on{background:var(--casora-lps-ring);box-shadow:0 0 0 10px var(--casora-lps-ring-halo),var(--casora-lps-ring-shadow);}'
-    + '.lps-ring:active{transform:scale(.95);}'
+    + '.lps-ring:active{transform:scale(var(--casora-press-scale,.97));}'
     + '.lps-g{display:block;background:currentColor;-webkit-mask:var(--lps-ic) center/contain no-repeat;mask:var(--lps-ic) center/contain no-repeat;}'
     + '.lps-ring .lps-g{width:34px;height:34px;color:var(--casora-lps-ring-off-ink);}'
     + '.lps-ring.on .lps-g{color:var(--casora-lps-ring-ink);}'
@@ -3292,18 +3292,11 @@
     + '.lps-s i{font-style:normal;opacity:.6;}'
     /* Trennpunkt an einem Zeilenumbruch: ausgeblendet, dort steht ein Umbruch (_casoraSepScan). */
     + '.lps-s .hui-cut{display:none!important;}'
-    + '.lps-off{position:relative;display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:8px 16px 8px 13px;border-radius:999px;cursor:pointer;'
     +   'font-size:14px;font-weight:600;white-space:nowrap;background:var(--casora-lps-chip);color:var(--casora-lps-chip-ink);'
     +   'transition:background .2s ease,opacity .2s ease;-webkit-tap-highlight-color:transparent;}'
-    // Trefferfläche 44 px wie bei den Chips: unsichtbarer Rand nach oben/unten (sichtbar 33 hoch).
-    + '.lps-off::before{content:"";position:absolute;left:0;right:0;top:-6px;bottom:-6px;}'
-    + '.lps-off .lps-g{width:17px;height:17px;}'
-    + '.lps-off.dis{opacity:.45;cursor:default;}'
-    + '.lps-off:focus-visible{outline:2px solid currentColor;outline-offset:2px;}'
-    + '@media (hover:hover){.lps-off:not(.dis):hover{filter:brightness(.98);}}'
     + '.lps-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--casora-popup-col-gap,26px);align-items:start;}'
     + '.lps-cols.one{grid-template-columns:minmax(0,1fr);}'
-    + '.lps-lbl{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin:0 0 10px 6px;color:var(--casora-lps-label,var(--secondary-text-color));}'
+    + '.lps-lbl{font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);margin:0 0 10px 6px;color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));}'
     + '.lps-gap{margin-top:22px;}'
     + '.lps-bar{position:relative;height:66px;border-radius:var(--casora-popup-row-radius,24px);overflow:hidden;cursor:ew-resize;'
     +   'background:var(--casora-lps-track);touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}'
@@ -3334,29 +3327,31 @@
     + '.lps-chip::before{content:"";position:absolute;left:0;right:0;top:-4px;bottom:-4px;}'
     + '.lps-rows{display:flex;flex-direction:column;gap:8px;}'
     + '.lps-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px var(--casora-popup-col-gap,26px);}'
-    + '.lps-row{display:flex;align-items:center;gap:12px;min-height:58px;padding:10px 14px 10px 10px;border-radius:var(--casora-popup-row-radius,24px);'
+    + '.lps-row{display:flex;align-items:center;gap:12px;min-height:var(--casora-soft-row-h,60px);padding:var(--casora-soft-row-pad,12px 16px 12px 12px);border-radius:var(--casora-popup-row-radius,24px);'
     +   'background:var(--casora-soft-row-fill,var(--casora-lps-row));cursor:pointer;transition:background .2s ease;-webkit-tap-highlight-color:transparent;}'
     + '@media (hover:hover){.lps-row:hover{background:var(--casora-soft-row-hover,var(--casora-lps-row-hover));}.lps-chip:not(.on):hover,.lps-sg:not(.on):hover{filter:brightness(.98);}}'
-    + '.lps-ic{width:38px;height:38px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--casora-lps-icon-off);}'
-    + '.lps-ic .lps-g{width:19px;height:19px;color:var(--casora-lps-icon-off-ink);}'
+    + '.lps-ic{width:var(--casora-soft-icon-size,36px);height:var(--casora-soft-icon-size,36px);flex:none;border-radius:var(--casora-soft-icon-radius,12px);display:grid;place-items:center;background:var(--casora-lps-icon-off);}'
+    + '.lps-ic .lps-g{width:calc(var(--casora-soft-icon-size,36px) * .5);height:calc(var(--casora-soft-icon-size,36px) * .5);color:var(--casora-soft-glyph-off,var(--casora-lps-icon-off-ink));}'
     + '.lps-row.on .lps-ic{background:var(--casora-lps-icon-on);}'
-    + '.lps-row.on .lps-ic .lps-g{color:var(--casora-lps-icon-on-ink);}'
+    // DP-17: Symbol auf Gelb dunkel (Weiß hatte 1,96 : 1) – Farbe aus dem Popup-Kopf (Kontrastwahl).
+    + '.lps-row.on .lps-ic .lps-g{color:var(--casora-popup-accent-ink,var(--casora-lps-icon-on-ink));}'
     + '.lps-tx{flex:1;min-width:0;}'
-    + '.lps-tx b{display:block;font-size:14.5px;font-weight:700;color:var(--casora-lps-title,var(--primary-text-color));overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
-    + '.lps-tx small{display:block;font-size:12.5px;font-weight:500;color:var(--casora-lps-sub,var(--secondary-text-color));overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums;}'
+    + '.lps-tx b{display:block;font-size:var(--casora-fs-row,15px);font-weight:700;color:var(--casora-lps-title,var(--primary-text-color));overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
+    + '.lps-tx small{display:block;font-size:var(--casora-fs-sub,13px);font-weight:500;color:var(--casora-lps-sub,var(--secondary-text-color));overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums;}'
     + '.lps-sw{position:relative;width:44px;height:26px;flex:none;border-radius:999px;background:var(--casora-lps-switch-off);cursor:pointer;transition:background .2s ease;}'
     // Trefferfläche 44 px hoch (sichtbar bleibt 44×26), ::after ist der Knopf.
     + '.lps-sw::before{content:"";position:absolute;left:0;right:0;top:-9px;bottom:-9px;}'
     + '.lps-sw::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:var(--casora-lps-knob);'
     +   'box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .2s ease;}'
-    + '.lps-row.on .lps-sw{background:var(--casora-lps-switch-on);}'
+    + '.lps-row.on .lps-sw{background:var(--casora-popup-accent,var(--casora-lps-switch-on));}'
     + '.lps-row.on .lps-sw::after{left:21px;}'
     // Leuchte an = aktive Zeile wie ladende Geräte (Batterien) und gemeldete Werte (Pflanzen):
     // heller Grund, dunkle Schrift, Zustand in Ton (03.10.2026, Vorschlag).
-    + '.lps-row.on{background:var(--casora-entity-background-active,var(--casora-soft-row-fill));box-shadow:var(--button-card-box-shadow-active-mobile,none);}'
-    + '@media (hover:hover){.lps-row.on:hover{background:var(--casora-entity-background-active,var(--casora-soft-row-fill));}}'
-    + '.lps-row.on .lps-tx b{color:var(--casora-entity-name-active,var(--casora-lps-title));}'
-    + '.lps-row.on .lps-tx small{color:var(--casora-entity-state-active-color,var(--casora-lps-sub));}'
+    // DP-07 (1.3): eine Art „aktiv“ in allen Popups (--casora-soft-row-active*: hell Creme, dunkel Sand 14 %).
+    + '.lps-row.on{background:var(--casora-soft-row-active,var(--casora-entity-background-active,var(--casora-soft-row-fill)));box-shadow:var(--casora-soft-row-active-shadow,var(--button-card-box-shadow-active-mobile,none));}'
+    + '@media (hover:hover){.lps-row.on:hover{background:var(--casora-soft-row-active,var(--casora-entity-background-active,var(--casora-soft-row-fill)));}}'
+    + '.lps-row.on .lps-tx b{color:var(--casora-soft-row-active-ink,var(--casora-entity-name-active,var(--casora-lps-title)));}'
+    + '.lps-row.on .lps-tx small{color:var(--casora-soft-row-active-sub,var(--casora-entity-state-active-color,var(--casora-lps-sub)));}'
     + '.lps-row.na{opacity:.55;}'
     + '@media (max-width:760px){.lps-cols,.lps-grid{grid-template-columns:minmax(0,1fr);}.lps-cols{gap:22px;}.lps-t{font-size:24px;margin-top:12px;}'
     +   '.lps-ring{width:66px;height:66px;}.lps-ring .lps-g{width:29px;height:29px;}}'
@@ -3405,29 +3400,11 @@
       sub = ron ? tr(ron + ' von ' + cfg.rooms.length + ' Räumen an') : tr('Alle aus');
       on = ron > 0; id = cfg.gid;
     }
-    return '<div class="lps-head">'
-      + '<div class="lps-ring' + (on ? ' on' : '') + '" role="button" aria-label="' + esc(title) + '" data-lps-tap="' + attr({ a: 'scope', id: id }) + '">' + glyph('light') + '</div>'
-      + '<div class="lps-t">' + esc(title) + '</div><div class="lps-s">' + statusLine(sub) + '</div>'
-      + (sc ? allOff(sc.room || sc.lights, states)
-        : allOff([].concat.apply([], cfg.rooms.map(function (r) { return r.lights || []; })), states, true)) + '</div>';
-  };
-
-  /* „Alles aus“ (07.10.2026): schaltet alle Lichter dieses Raums aus – nur Licht, ohne Rückfrage
-     (Licht aus ist harmlos), nur was der Benutzer sieht („Wer sieht das?“, beim Tippen geprüft).
-     Mit einer Leuchte schaltet schon der Ring; ist alles aus, bleibt der Knopf ausgegraut stehen
-     (kein Springen der Höhe). */
-  var POWER = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.56,5.44L15.11,6.89C16.84,7.94 18,9.83 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12C6,9.83 7.16,7.94 8.88,6.88L7.44,5.44C5.36,6.88 4,9.28 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12C20,9.28 18.64,6.88 16.56,5.44M13,3H11V13H13"/></svg>');
-  /* Haus (house, Startseite › Beleuchtung): dieselbe Stelle und Optik, aber mit Rückfrage
-     („Alle 6 Lichter im Haus ausschalten?“) und ohne Lichter aus ausgeblendeten Räumen. */
-  var allOff = function (lights, states, house) {
-    var ids = (lights || []).filter(function (id, i, a) { return states[id] && String(id).indexOf('light.') === 0 && a.indexOf(id) === i; });
-    if (ids.length < 2) return '';
-    var seen = house && window.casoraVisibleIdsNow ? window.casoraVisibleIdsNow(ids, { rooms: true }) : null;
-    var any = (seen || ids).some(function (id) { return states[id].state === 'on'; });
-    var spec = { a: 'alloff', ids: ids };
-    if (house) spec.house = 1;
-    return '<div class="lps-off' + (any ? '' : ' dis') + '" role="button" tabindex="0"' + (any ? '' : ' aria-disabled="true"')
-      + ' data-lps-tap="' + attr(spec) + '"><span class="lps-g" style="--lps-ic:url(\'' + POWER + '\')"></span>' + esc(tr('Alles aus')) + '</div>';
+    /* 1.3 Kopfzeile A: Symbol, Titel und Hauptschalter stehen im Popup-Kopf (casora-core.js); hier nur
+       noch die Statuszeile – der Rahmen spiegelt sie (.hui-line) unter den Titel. „Alles aus“ ist jetzt
+       der Hauptschalter oben rechts (S.head, Haken unten). */
+    void title; void on; void id;
+    return '<div class="lps-head"><div class="lps-s hui-line">' + statusLine(sub) + '</div></div>';
   };
 
   var houseQ = function (n) {
@@ -3507,7 +3484,9 @@
       var last = null, lastT = 0;
       sc2.forEach(function (id) { var t = Date.parse(states[id].state); if (!isNaN(t) && t > lastT) { lastT = t; last = id; } });
       if (Date.now() - lastT > 12 * 3600000) last = null;
-      left += '<div class="lps-chips"' + (left ? '' : ' style="margin-top:0"') + '>' + sc2.map(function (id) {
+      // 1.3 Kopfzeile A: Szenen mit eigener Abschnittsüberschrift.
+      left += '<div class="lps-lbl' + (left ? ' lps-gap' : '') + '">' + esc(tr('Szenen')) + '</div>'
+        + '<div class="lps-chips" style="margin-top:0">' + sc2.map(function (id) {
         return '<div class="lps-chip' + (id === last ? ' on' : '') + '" role="button" data-lps-tap="' + attr({ a: 'scene', id: id }) + '">'
           + esc(short(nameOf(id, states), sc.name)) + '</div>';
       }).join('') + '</div>';
@@ -3543,7 +3522,12 @@
       S.els[cfg.gid] = set.filter(function (x) { return x.isConnected || x === el; });
     }
     var inner;
-    if (part === 'hero') inner = hero(cfg, states);
+    if (part === 'hero') {
+      S.cur = cfg; inner = hero(cfg, states);
+      // Hauptschalter im Kopf kennt die Ansicht erst jetzt.
+      var pop0 = window.casoraPopup && window.casoraPopup.element;
+      if (pop0 && pop0._syncHeadSwitch) setTimeout(function () { pop0._syncHeadSwitch(); }, 0);
+    }
     else { var sc = scopeOf(cfg); inner = sc ? roomBody(cfg, sc, states, h) : houseBody(cfg, states); }
     return CSS + '<div class="lps-r" data-part="' + part + '">' + inner + '</div>';
   };
@@ -3560,7 +3544,51 @@
       var nr = tmp.querySelector('.lps-r');
       if (nr) r.replaceWith(nr);
     });
+    var pop = window.casoraPopup && window.casoraPopup.element;
+    if (pop && pop._syncHeadSwitch) pop._syncHeadSwitch(h);
   };
+
+  /* Hauptschalter im Popup-Kopf (1.3, ersetzt „Alles aus“): Raum bzw. Leuchte an/aus; das ganze Haus
+     nur aus – mit Rückfrage, ausgegraut, wenn alles aus ist (wie vorher „Alles aus“). */
+  S.head = function (src, hass) {
+    var tpl = [].concat((src && src._config && src._config.template) || []).join(' ');
+    if (!/\bcasora_(popup_)?light\b/.test(tpl) || !S.on() || !S.cur || !hass) return null;
+    return S.headFor(S.cur, hass);
+  };
+  /* Nur Lichter, nur was der Benutzer sieht („Wer sieht das?“; im Haus auch ohne ausgeblendete Räume). */
+  S.headFor = function (cfg, hass) {
+    var states = hass.states, sc = scopeOf(cfg);
+    var lights = function (l, house) {
+      var ids = (l || []).filter(function (x, i, a) { return states[x] && String(x).indexOf('light.') === 0 && a.indexOf(x) === i; });
+      return window.casoraVisibleIdsNow ? window.casoraVisibleIdsNow(ids, house ? { rooms: true } : undefined) : ids;
+    };
+    var onOf = function (ids) { var hh = hassNow() || hass; return ids.filter(function (x) { return hh.states[x] && hh.states[x].state === 'on'; }); };
+    if (sc) {
+      var ids = lights(sc.lights);
+      if (!ids.length) return null;
+      return { entities: ids, toggle: function (on) {
+        var hh = hassNow() || hass;
+        if (on) {
+          var offIds = onOf(ids);
+          if (offIds.length) hh.callService('light', 'turn_off', {}, { entity_id: offIds });
+        } else if (ids.length > 1 && sc.rid && hh.states[sc.rid] && hh.states['script.casora_light_smart_toggle']) {
+          hh.callService('script', 'casora_light_smart_toggle', { light_entity: sc.rid });
+        } else hh.callService('light', 'turn_on', {}, { entity_id: ids.length > 1 && sc.rid && hh.states[sc.rid] ? sc.rid : ids });
+      } };
+    }
+    var all = lights([].concat.apply([], (cfg.rooms || []).map(function (r) { return r.lights || []; })), true);
+    if (!all.length) return null;
+    return { entities: all, disabled: true, toggle: function (on) {
+      if (!on) return;
+      var hh = hassNow() || hass;
+      var v = onOf(all);
+      if (!v.length) return;
+      var off = function () { hh.callService('light', 'turn_off', {}, { entity_id: v }); };
+      if (!window.casoraAsk) return off();
+      window.casoraAsk({ title: houseQ(v.length), text: '', yes: tr('Ausschalten') }).then(function (ok) { if (ok) off(); });
+    } };
+  };
+  (window._casoraHeadSwitchHooks = window._casoraHeadSwitchHooks || []).push(S.head);
 
   S.cards = function (cfg, states, h) {
     var rooms = cfg.rooms || [cfg.flat];
@@ -3630,17 +3658,6 @@
     } else if (d.a === 'scope') {
       if (h.states['script.casora_light_smart_toggle']) h.callService('script', 'casora_light_smart_toggle', { light_entity: d.id });
       else h.callService('light', 'toggle', {}, { entity_id: d.id });
-    } else if (d.a === 'alloff') {
-      if (el.classList.contains('dis')) return;
-      var vis = window.casoraVisibleIds ? window.casoraVisibleIds(d.ids, d.house ? { rooms: true } : undefined) : Promise.resolve(d.ids);
-      vis.then(function (ids) {
-        ids = (ids || []).filter(function (id) { return h.states[id] && h.states[id].state === 'on'; });
-        if (!ids.length) return;
-        var off = function () { h.callService('light', 'turn_off', {}, { entity_id: ids }); };
-        // Ganzes Haus: erst fragen (Zahl = gerade eingeschaltete, sichtbare Lichter).
-        if (!d.house || !window.casoraAsk) return off();
-        window.casoraAsk({ title: houseQ(ids.length), text: '', yes: tr('Ausschalten') }).then(function (ok) { if (ok) off(); });
-      });
     } else if (d.a === 'scene') {
       el.classList.add('on');
       h.callService('scene', 'turn_on', {}, { entity_id: d.id });
@@ -3670,13 +3687,6 @@
     tDone = Date.now(); if (ev.cancelable) ev.preventDefault(); ev.stopPropagation();
     act(el);
   }, { capture: true, passive: false });
-  /* „Alles aus“ mit der Tastatur (Review 1.1.1): Eingabe/Leertaste wie ein Tipp. */
-  window.addEventListener('keydown', function (ev) {
-    if (ev.key !== 'Enter' && ev.key !== ' ') return;
-    var el = find(ev, 'data-lps-tap'); if (!el || !el.classList || !el.classList.contains('lps-off')) return;
-    ev.preventDefault(); ev.stopPropagation();
-    act(el);
-  }, true);
   window.addEventListener('click', function (ev) {
     var el = find(ev, 'data-lps-tap'); if (!el) return;
     ev.preventDefault(); ev.stopPropagation();

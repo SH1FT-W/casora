@@ -106,7 +106,7 @@
     + 'background:var(--casora-soft-media-play, var(--primary-color, #B67A50));color:#fff;font:inherit;-webkit-tap-highlight-color:transparent;'
     + 'box-shadow:var(--casora-soft-media-play-shadow, 0 10px 22px -12px rgba(150,95,55,.55));transition:transform .12s ease}'
     + '.p.o{background:var(--cnp-track);color:var(--cnp-ink);box-shadow:none}'
-    + '.p:active{transform:scale(.92)}'
+    + '.p:active{transform:scale(var(--casora-press-scale,.97))}'
     + '.p:focus-visible{outline:2px solid var(--cnp-ton);outline-offset:2px}'
     // ── Cover-Streifen (B1) und Cover-Bühne (C), 09.10.2026 ──
     // .tn: jede Wiedergabe eine eigene Fläche, vom Cover eingefärbt (--c aus dem Bild, sonst Ton
@@ -140,7 +140,7 @@
     + '.k{width:34px;height:34px;border-radius:50%;flex:none;display:grid;place-items:center;border:0;padding:0;margin:0;cursor:pointer;'
     + 'background:none;color:var(--cnp-ink);font:inherit;-webkit-tap-highlight-color:transparent;transition:transform .12s ease,background .15s ease}'
     + '@media (hover:hover){.k:hover{background:color-mix(in srgb,var(--cnp-ink) 8%,transparent)}}'
-    + '.k:active{transform:scale(.9)}'
+    + '.k:active{transform:scale(var(--casora-press-scale,.97))}'
     + '.k:focus-visible{outline:2px solid var(--cnp-ton);outline-offset:1px}'
     + '.tn .p{width:40px;height:40px}'
     + '.tn .p.o{background:var(--casora-soft-media-play, var(--primary-color, #B67A50));color:#fff;box-shadow:var(--casora-soft-media-play-shadow, 0 10px 22px -12px rgba(150,95,55,.55))}'

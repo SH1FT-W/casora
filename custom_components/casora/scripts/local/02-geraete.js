@@ -516,7 +516,7 @@
         + '<span style="flex:1 1 auto;min-width:0;text-align:left;font-size:var(--casora-fs16,16px);font-weight:600;color:' + z[1] + ';">' + z[0] + '</span></div>'
         + '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink + ';margin-top:8px;white-space:normal;">' + esc(it.fazit) + '</div>'
         + (it.punkte && it.punkte.length ? '<ul style="margin:10px 0 0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + T.ink2 + ';white-space:normal;">' + it.punkte.map((p) => '<li>' + esc(p) + '</li>').join('') + '</ul>' : '')
-        + (it.tipps && it.tipps.length ? '<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:' + T.ink3 + ';margin:12px 0 3px;">Tipps</div>'
+        + (it.tipps && it.tipps.length ? '<div style="font-size:var(--casora-fs-sub,13px);font-weight:700;color:' + T.ink + ';margin:12px 0 3px;">Tipps</div>'
           + '<ul style="margin:0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + T.ink + ';white-space:normal;">' + it.tipps.map((p) => '<li>' + esc(p) + '</li>').join('') + '</ul>' : '');
     } else body = '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink2 + ';white-space:normal;">Claude prüft Temperaturverlauf, Technik und Lecksensor der letzten 7 Tage und sagt, ob alles passt.</div>';
     const btn = running || !ready ? '' : '<span' + svc + ' style="display:inline-flex;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;margin-top:14px;'
@@ -644,7 +644,7 @@
   if (hpOk) {
     add('chart', '<div style="' + plate + (_aqSoft ? 'padding:18px 14px 8px;' : '') + '">'
       + '<div class="hp-ct" style="font-family:var(--primary-font-family,system-ui);'
-      + (_aqSoft ? 'font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--casora-soft-label, var(--casora-popup-tiles-text-secondary));padding:0 6px;'
+      + (_aqSoft ? 'font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));padding:0 6px;'
                  : 'font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary,#fff));padding:0 6px;')
       + 'text-align:left;">'
       + window._hpChartTitle(cfg.temp) + '</div>'
@@ -902,8 +902,8 @@
   /* Diagramm-Platte: Titel als Etikett; 01-basis tauscht später nur den Text von .hp-ct. */
   H.chart = function (title, plate) {
     return '<div style="' + plate + 'padding:18px 14px 8px;">'
-      + '<div class="hp-ct" style="font-family:' + FONT + ';font-size:12px;font-weight:700;letter-spacing:.1em;'
-      + 'text-transform:uppercase;color:var(--casora-soft-label, var(--secondary-text-color));text-align:left;padding:0 6px;">'
+      + '<div class="hp-ct" style="font-family:' + FONT + ';font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);'
+      + 'color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));text-align:left;padding:0 6px;">'
       + title + '</div>'
       + '<div class="hp-chart-slot" style="min-height:150px;margin:8px 0 0;"></div></div>';
   };
@@ -3527,7 +3527,7 @@
         + '.hv-b{border-radius:999px;display:grid;place-items:center;cursor:pointer;line-height:0;flex:none;width:52px;height:52px;'
         + 'background:var(--casora-popup-seg-fill, rgba(255,255,255,0.16));transition:background-color .16s ease, transform .12s ease;user-select:none;-webkit-user-select:none;}'
         + '.hv-b > *{pointer-events:none;}.hv-b.lg{width:68px;height:68px;background:' + T.ink + ';color:var(--casora-popup-ui-on-ink, #000);}'
-        + '.hv-b.dis{opacity:.3;pointer-events:none;}.hv-b:active{transform:scale(.92);}'
+        + '.hv-b.dis{opacity:.3;pointer-events:none;}.hv-b:active{transform:scale(var(--casora-press-scale,.97));}'
         + '.hv-cap{display:flex;justify-content:center;gap:22px;margin-top:6px;font-size:12px;color:' + T.ink3 + ';font-family:' + T.font + ';}'
         + '.hv-cap span{width:52px;display:flex;justify-content:center;white-space:nowrap;overflow:visible;}.hv-cap span.lg{width:68px;}</style>'
         + '<div class="hv-ctl">'

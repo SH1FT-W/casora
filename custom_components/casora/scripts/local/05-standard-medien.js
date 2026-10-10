@@ -82,12 +82,12 @@
     else if (room && !re) body = '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink2 + ';white-space:normal;">Für ' + esc(room) + ' gibt es noch keine eigene Auswertung. „Neu auswerten“ erstellt sie für alle Räume.</div>';
     else if (room) body = (z ? '<div style="display:inline-flex;padding:5px 11px;border-radius:999px;background:' + z[2] + ';margin-bottom:10px;font-size:13px;font-weight:700;color:' + z[1] + ';">' + z[0] + '</div>' : '')
       + '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink + ';white-space:normal;">' + esc(re.fazit) + '</div>'
-      + (re.tipp && !/^[\s\-–—.]*$/.test(re.tipp) ? '<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:' + T.ink3 + ';margin:12px 0 3px;">Tipp</div>'
+      + (re.tipp && !/^[\s\-–—.]*$/.test(re.tipp) ? '<div style="font-size:var(--casora-fs-sub,13px);font-weight:700;color:' + T.ink + ';margin:12px 0 3px;">Tipp</div>'
         + '<div style="font-size:13.5px;line-height:1.5;color:' + T.ink + ';white-space:normal;">' + esc(re.tipp) + '</div>' : '');
     else body = (z ? '<div style="display:inline-flex;padding:5px 11px;border-radius:999px;background:' + z[2] + ';margin-bottom:10px;font-size:13px;font-weight:700;color:' + z[1] + ';">' + z[0] + '</div>' : '')
       + '<div style="font-size:14.5px;line-height:1.45;color:' + T.ink + ';white-space:normal;">' + esc(a.fazit) + '</div>'
       + ((a.erkenntnisse || []).length ? '<ul style="margin:10px 0 0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + T.ink2 + ';white-space:normal;">' + a.erkenntnisse.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' : '')
-      + ((a.tipps || []).length ? '<div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:' + T.ink3 + ';margin:12px 0 3px;">Tipps</div>'
+      + ((a.tipps || []).length ? '<div style="font-size:var(--casora-fs-sub,13px);font-weight:700;color:' + T.ink + ';margin:12px 0 3px;">Tipps</div>'
         + '<ul style="margin:0;padding-left:18px;font-size:13.5px;line-height:1.5;color:' + T.ink + ';white-space:normal;">' + a.tipps.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' : '');
     var svc = ' data-casora-svc="' + esc(JSON.stringify(window.casoraSvc('casora_lueftungs_coach'))) + '"';
     var btn = running ? '' : '<span' + svc + ' style="display:inline-flex;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;margin-top:14px;'
