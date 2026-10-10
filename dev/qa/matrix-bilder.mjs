@@ -223,7 +223,7 @@ async function locate(pg, row, tpl) {
   }
   // Nur sicher fehlende Vorlagen merken – lud eine Seite nicht (Last), beim nächsten Mal neu suchen.
   if (!loadFail) pg.__loc[tpl] = null;
-  return null;
+  return loadFail ? { broken: true } : null;
 }
 const box = (pg, i) => pg.evaluate((i) => { const b = window.__pierce('button-card')[i]; if (!b) return null; b.scrollIntoView({ block: 'center', inline: 'center' });
   const r = b.getBoundingClientRect(); const c = b._config || {}; return { x: r.x, y: r.y, w: r.width, h: r.height, e: c.entity || '' }; }, i);
@@ -506,6 +506,7 @@ async function overlayRow(pg, row, f, V) {
 async function tplRow(pg, row, f, V) {
   const tpl = f.vorlage;
   const loc = await locate(pg, row, tpl);
+  if (loc && loc.broken) return { status: 'fehler', grund: 'Seite lädt nicht', neu: true };
   if (!loc) return { status: 'nicht_abbildbar', grund: `Vorlage ${tpl} in Haus ${HAUS} (${row.geraet}) nicht gefunden – auch nicht im Matrix-Dashboard` };
   let b = await box(pg, loc.i);
   const z = await setZustand(pg, row, f.entitaet ? b.e : null);
@@ -582,8 +583,8 @@ for (const k of keys) {
   let streak = 0;
   for (const row of list_) {
     const f = FL[row.flaeche];
-    const pg = o.page;
-    const e0 = o.errors.length;
+    let pg = o.page;
+    let e0 = o.errors.length;
     const t0 = Date.now();
     let res;
     try {
@@ -591,6 +592,12 @@ for (const k of keys) {
       else if (f.familie === 'overlay') res = await overlayRow(pg, row, f, V);
       else res = await tplRow(pg, row, f, V);
     } catch (e) { res = { status: 'fehler', grund: String(e.message || e).slice(0, 200) }; }
+    // Seite/Browser hängt (Last, Absturz): Browser neu und die Zeile einmal wiederholen.
+    if (res.neu || /Target (page|closed)|has been closed|crash/i.test(res.grund || '')) {
+      await openB(); pg = o.page; e0 = 0;
+      try { res = /^studio/.test(f.familie) ? await studioRow(pg, row, f) : f.familie === 'overlay' ? await overlayRow(pg, row, f, V) : await tplRow(pg, row, f, V); }
+      catch (e) { res = { status: 'fehler', grund: String(e.message || e).slice(0, 200) }; }
+    }
     const out = { zeile_id: row.zeile_id, flaeche: row.flaeche, zustand: row.zustand, geraet: row.geraet, schema: row.schema, sprache: row.sprache, haus: HAUS, gruppe: row.gruppe, status: res.status };
     if (res.status === 'ok') {
       const file = path.join(MDIR, row.bild);
