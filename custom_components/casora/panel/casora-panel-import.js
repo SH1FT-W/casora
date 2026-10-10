@@ -200,21 +200,22 @@
         });
         r.row.classList.add("wrap2");
         keep(r.row.querySelector(".rtext > b"));
-        const sel = document.createElement("select");
-        sel.className = "casora-pick";
         const opts = suggest(u.tile, this._hass).map((x) => ({ value: "type:" + x.type.id, label: x.type.label }));
         opts.push({ value: "custom", label: "Keep as its own card" });
         opts.push({ value: "skip", label: "Leave out" });
-        opts.forEach((x) => {
-          const op = document.createElement("option");
-          op.value = x.value;
-          op.textContent = x.label;
-          sel.appendChild(op);
-        });
-        sel.value = opts[0].value;
-        choices[i] = sel.value;
-        sel.onchange = () => { choices[i] = sel.value; };
-        r.row.appendChild(sel);
+        choices[i] = opts[0].value;
+        // AB-13 (1.3): dieselbe Auswahl wie überall im Studio (Liste/Menü) statt eines nativen <select>.
+        const labels = {};
+        opts.forEach((x) => { labels[x.value] = x.label; });
+        const { wrap, input } = this._combo(choices[i], opts.map((x) => x.value), null, (v) => { choices[i] = v; }, { fixed: true, labels });
+        wrap.classList.add("casora-pick");
+        // Alle Auswahlfelder gleich breit (sonst je nach Text verschieden, Zeilen fluchten nicht).
+        wrap.style.flex = "0 0 200px"; wrap.style.minWidth = "0";
+        // Für Tests (dev/e2e/t02): Wahl setzen und lesen wie über das Menü.
+        wrap._choices = opts;
+        wrap._value = () => choices[i];
+        wrap._choose = (v) => { choices[i] = v; input.value = window.casoraI18n ? window.casoraI18n.t(labels[v]) : labels[v]; };
+        r.row.appendChild(wrap);
       });
       this._flowCancel(s.acts);
       this._flowButton(s.acts, "Continue", () => {

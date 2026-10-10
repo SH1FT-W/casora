@@ -32,7 +32,7 @@ const EXPECT = [
   ['Alarmanlage umgeschaltet auf Bypass', 'Alarmanlage switched to Bypass'],
   // R-04: Countdown-Unterzeile im Weich-Alarm-Popup (Zahl steht in eigenem <span>)
   ['Zuhause · scharf in <span class="cal-n"></span> s', 'Home · armed in <span class="cal-n"></span> s'],
-  ['wird scharf …', 'arming …'],
+  ['wird scharf …', 'arming…'],  // V9 (1.3): Englisch ohne Leerzeichen vor …
   ['Alarm in <span class="cal-n"></span> s', 'Alarm in <span class="cal-n"></span> s'],
   // 1.2.1: Tanken-Empfehlung – das Sammelmuster „… Uhr“ stand vor diesen und fraß das „Uhr“ („HEUTE AB 19“).
   ['Heute ab 19 Uhr', 'Today from 19:00'],

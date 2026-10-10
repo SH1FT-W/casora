@@ -70,8 +70,20 @@ const read = (p) => fs.readFileSync(new URL('../../custom_components/casora/scri
   assert.equal(calls, 2, 'innerhalb einer Minute aus dem Speicher');
   await w._casoraCfgOnce(hass, 'y');
   assert.equal(calls, 3, 'andere Adresse wird geholt');
+  // 1.3: Partner nur noch als Auszug (casora/partner_info), ältere Integration: ganze Konfiguration.
+  let pi = 0;
+  const hass2 = { callWS: (m) => { if (m.type === 'casora/partner_info') { pi++; return Promise.resolve({ confirm: { ids: ['lock.a'], names: {} }, scenes: {} }); } calls++; return Promise.resolve({ views: [] }); } };
+  const i1 = await w._casoraPartnerInfo(hass2, 'p');
+  await w._casoraPartnerInfo(hass2, 'p');
+  assert.equal(pi, 1, 'partner_info eine Minute geteilt');
+  assert.deepEqual(i1.confirm.ids, ['lock.a']);
+  const c0 = calls;
+  const hass3 = { callWS: (m) => m.type === 'casora/partner_info' ? Promise.reject({ code: 'unknown_command' }) : (calls++, Promise.resolve({ views: [{ cards: [{ entity: 'lock.b', variables: { confirm_toggle: true } }] }] })) };
+  const i2 = await w._casoraPartnerInfo(hass3, 'q');
+  assert.equal(calls, c0 + 1, 'ältere Integration: Rückfall auf die ganze Konfiguration');
+  assert.deepEqual(i2.confirm.ids, ['lock.b']);
   // 04-navigation nutzt denselben Weg.
-  assert.match(read('local/04-navigation.js'), /window\._casoraCfgOnce\(this\._hass, desk\)/);
+  assert.match(read('local/04-navigation.js'), /window\._casoraPartnerInfo\(this\._hass, desk\)/);
 }
 
 // ── 3. button-card „haptic“: feste gebundene Funktion je Karte ───────────────

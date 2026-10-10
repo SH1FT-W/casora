@@ -31,6 +31,11 @@
   const SNOOZE_KEY = "casora.umzug.snooze", SNOOZE_MS = 7 * 24 * 3600 * 1000;
   const snoozed = () => { try { return Date.now() - Number(localStorage.getItem(SNOOZE_KEY) || 0) < SNOOZE_MS; } catch (e) { return false; } };
   const snooze = () => { try { localStorage.setItem(SNOOZE_KEY, String(Date.now())); } catch (e) { /* egal */ } };
+  // U-1 (1.3): Umzug läuft – gemerkt ab „Umziehen“ bis zum Fertig-Bildschirm. Steht der Merker beim nächsten
+  // Öffnen noch da (Browser zu, Verbindung weg), bietet das Studio Fortsetzen oder Aufräumen an.
+  const PENDING_KEY = "casora.umzug.pending";
+  const pendingGet = () => { try { const v = JSON.parse(localStorage.getItem(PENDING_KEY) || "null"); return v && v.src && v.target ? v : null; } catch (e) { return null; } };
+  const pendingSet = (v) => { try { if (v) localStorage.setItem(PENDING_KEY, JSON.stringify(v)); else localStorage.removeItem(PENDING_KEY); } catch (e) { /* privat */ } };
   // „Nicht mehr fragen“: für alle Geräte in den Casora-Einstellungen.
   async function offerOffForGood(hass) {
     try {
@@ -1308,6 +1313,8 @@
     P._casoraUmzugRun = async function (a, keep) {
       const hass = this._hass;
       const c = a.c;
+      // U-2: ob Hemma noch installiert ist, schon jetzt fragen – der Fertig-Bildschirm hält dafür Platz frei.
+      const hemmaSt = hass.callWS({ type: "casora/hemma/status" }).catch(() => null);
       try {
         // HA liest das Dashboard selbst – große Dashboards sprengen sonst die WebSocket-Nachricht.
         await hass.callWS({ type: "casora/backup/dashboard", name: c.url_path, url_path: c.url_path, title: c.title,
@@ -1327,6 +1334,7 @@
       // Name aus dem letzten Schritt; sonst der Titel des Hemma-Dashboards (ohne „Hemma“).
       const title = String(a.newTitle || "").trim() || proposeTitle(this, c);
       const url_path = this._flowPath(title, "casora", "casora");
+      pendingSet({ src: c.url_path, srcTitle: c.title, target: url_path, title, t: Date.now() });
       // Fertig-Bildschirm: altes Dashboard (nur aus dem HA-Speicher) per Schalter aus der Seitenleiste
       // nehmen – unter dem Inhalt, nicht als Knopf über „Dashboard öffnen“. Wieder einschaltbar.
       // Ausblenden-Symbol: durchgestrichenes Auge (nicht das Herunterladen-Symbol des Umzugs).
@@ -1425,24 +1433,46 @@
       // (Desktop + Handy) darauf zeigen – das Hemma-Dashboard bleibt unverändert (hemma_cleanup.py).
       // Gleich beim Fertig-Bildschirm, damit „Bearbeiten“ schon die neuen Adressen lädt.
       // Danach im Fertig-Bildschirm: „N Raumfotos übernommen“ und „Hemma danach entfernen …“.
-      const carryFiles = async (target) => {
-        if (!target) return;
-        let r = null, st = null;
-        try { r = await hass.callWS({ type: "casora/hemma/move_files", dashboards: [target] }); } catch (e) { r = null; }
-        try { st = await hass.callWS({ type: "casora/hemma/status" }); } catch (e) { st = null; }
+      // U-2 (1.3): Die Gruppe steht ab dem ersten Bild des Fertig-Bildschirms da („Fotos werden übernommen …“,
+      // „Hemma danach entfernen …“), damit die Vorschau darunter nicht springt, wenn die Antwort kommt.
+      let filesSlot = null;
+      const reserveFiles = (st) => {
         const body = this._fx && this._fx.scroll && this._fx.scroll.querySelector(".fbody");
         if (!body) return;
+        const list = this._flowGroup(body, { footer: "Copied to www/casora – the Hemma dashboard keeps its own." });
+        const row = this._flowRow(list, { icon: "import", tint: I().studioIcon("move-import"), title: "Carrying over room photos…" });
+        row.row.classList.add("wrap2", "cu-files");
+        const removable = st && st.installed && typeof this._casoraHemmaRemove === "function";
+        if (removable) {
+          this._flowRow(list, { icon: "alert", tint: I().studioIcon("move-plain"), title: "Remove Hemma afterwards…", chevron: true,
+            onTap: () => this._casoraHemmaRemove() });
+        }
+        const grp = list.parentNode;
+        const stage = body.querySelector(":scope > .dn-stage");
+        grp.classList.add("cu-donetop");
+        if (stage) body.insertBefore(grp, stage);
+        filesSlot = { list, row, grp, removable };
+      };
+      const carryFiles = async (target) => {
+        if (!target) return;
+        let r = null;
+        try { r = await hass.callWS({ type: "casora/hemma/move_files", dashboards: [target] }); } catch (e) { r = null; }
+        const slot = filesSlot;
+        if (!slot || !slot.grp.isConnected) return;
         const copied = r ? (r.copied || []).length : 0;
         const rooms = r ? r.rooms || 0 : 0;
         const kept = (r && r.write_kept) || [];
-        const removable = st && st.installed && typeof this._casoraHemmaRemove === "function";
-        if (!copied && !rooms && !removable && !kept.length) return;
-        const list = this._flowGroup(body, { footer: rooms || copied ? "Copied to www/casora – the Hemma dashboard keeps its own." : null });
+        const list = slot.list;
+        const b = slot.row.row.querySelector(".rtext > b");
         if (rooms || copied) {
           const title = rooms ? (rooms === 1 ? tr("1 room photo carried over") : tr("{1} room photos carried over").replace("{1}", rooms))
             : (copied === 1 ? tr("1 file carried over") : tr("{1} files carried over").replace("{1}", copied));
-          const row = this._flowRow(list, { icon: "import", tint: I().studioIcon("move-import"), title, raw: true });
-          row.row.classList.add("wrap2");
+          if (b) { b.textContent = title; b.setAttribute("data-no-i18n", ""); }
+        } else {
+          // Nichts zu kopieren: Zeile bleibt (kein Springen), sagt es aber.
+          if (b) b.textContent = tr("No own photos to carry over");
+          const foot = slot.grp.querySelector(".ffoot");
+          if (foot) foot.style.visibility = "hidden";
         }
         // „Pfad bleibt, weil eine Automation dorthin schreibt“ – nichts kopiert, nichts umgeschrieben.
         kept.forEach((x) => {
@@ -1452,14 +1482,6 @@
           const sub = row.row.querySelector(".rtext > span");
           if (sub) sub.setAttribute("data-no-i18n", "");
         });
-        if (removable) {
-          this._flowRow(list, { icon: "alert", tint: I().studioIcon("move-plain"), title: "Remove Hemma afterwards…", chevron: true,
-            onTap: () => this._casoraHemmaRemove() });
-        }
-        const grp = list.parentNode;
-        const stage = body.querySelector(":scope > .dn-stage");
-        grp.classList.add("cu-donetop");
-        if (stage) body.insertBefore(grp, stage);
       };
 
       // Einstellungen, die in Hemma-Helfern stecken, auf die Casora-Helfer übertragen – sonst stehen
@@ -1478,9 +1500,10 @@
       // Import (Fehlermeldung statt Fertig), wird der Haken wieder entfernt – sonst träfe er den nächsten.
       const hooked = async (build) => {
         const origDone = this._flowDone;
+        const st0 = await hemmaSt;
         const hook = (opts) => {
           this._flowDone = origDone; remember(opts && opts.url_path);
-          carryFiles(opts && opts.url_path);
+          pendingSet(null);
           carryHelpers();
           // move: der Fertig-Bildschirm hält den ersten Stand als „Umgezogen“ in den Versionen fest.
           const r = origDone.call(this, Object.assign({}, opts, { move: true }));
@@ -1491,8 +1514,10 @@
           const stage = body && body.querySelector(":scope > .dn-stage");
           if (stage && body.children.length > before) {
             [...body.children].slice(before).forEach((x) => { x.classList.add("cu-donetop"); body.insertBefore(x, stage); });
-            stage.classList.add("cu-small");
           }
+          if (stage) stage.classList.add("cu-small");
+          reserveFiles(st0);
+          carryFiles(opts && opts.url_path);
           return r;
         };
         this._flowDone = hook;
@@ -1619,6 +1644,9 @@
       if (panel._casoraUmzugShown || offerOff()) return;  // schon gezeigt (Erststart oder Menü) bzw. abgeschaltet
       if (!panel._hass || !panel._dashList || panel._flowMode || !panel.isConnected) return setTimeout(wait, 700);
       if (!panel._hass.user || !panel._hass.user.is_admin) return;
+      // U-1: unterbrochener Umzug zuerst (vor dem allgemeinen Angebot und unabhängig von „Später“).
+      const pend = pendingGet();
+      if (pend) return interrupted(panel, pend);
       // In den Casora-Einstellungen abgeschaltet („Nicht mehr fragen“ / Persönliches).
       const um = (await settings(panel._hass)).umzug || {};
       if (um.off) return;
@@ -1634,6 +1662,48 @@
       panel._casoraUmzug({ list, auto: true });
     };
     setTimeout(wait, 1500);
+  }
+
+  // U-1 (1.3): Umzug wurde unterbrochen (Browser zu kurz nach „Umziehen“) – Fortsetzen oder Aufräumen.
+  // Aufräumen entfernt nur, was dieser Umzug angelegt hat: Adresse aus dem Merker und Titel passt.
+  async function interrupted(panel, pend) {
+    const hass = panel._hass;
+    let list = [];
+    try { list = await hass.callWS({ type: "lovelace/dashboards/list" }); } catch (e) { return; }
+    const half = list.filter((d) => d && d.mode === "storage" && d.id
+      && (d.url_path === pend.target || d.url_path === pend.target + "-mobile")
+      && (!pend.title || String(d.title || "").indexOf(pend.title) === 0));
+    const tidy = async () => {
+      for (const d of half) {
+        try { await hass.callWS({ type: "lovelace/dashboards/delete", dashboard_id: d.id }); } catch (e) { /* steht dann noch da */ }
+      }
+      pendingSet(null);
+    };
+    panel._casoraUmzugShown = true;
+    const s = panel._flowScreen({ icon: "alert", tone: "warn", title: "Move Interrupted",
+      lede: tr("Moving “{1}” to Casora was interrupted before it finished.").replace("{1}", pend.srcTitle || pend.src) + " "
+        + tr(half.length ? "A half-finished Casora dashboard was left behind – Casora can remove it or start the move again."
+          : "Nothing was created yet – start the move again whenever you like.") });
+    const lede = s.body && s.body.parentNode && s.body.parentNode.querySelector(".flede");
+    if (lede) lede.setAttribute("data-no-i18n", "");
+    panel._flowButton(s.acts, "Later", () => panel._flowBack(), true);
+    if (half.length) {
+      panel._flowButton(s.acts, "Tidy Up", async () => {
+        await tidy();
+        panel._status(tr("Half-finished dashboard removed"), "ok");
+        if (half.some((d) => d.url_path === panel._dashUrl)) panel._setDash("");
+        panel._refreshDashboards();
+      }, true);
+    } else {
+      pendingSet(null);
+    }
+    panel._flowButton(s.acts, "Continue Move", async () => {
+      await tidy();
+      const cands = await candidates(panel, { includeDone: true });
+      const pick = cands.find((x) => x.url_path === pend.src);
+      if (!pick) { panel._status(tr("The Hemma dashboard is no longer there."), "err"); panel._refreshDashboards(); return; }
+      panel._casoraUmzug({ list: cands, pick });
+    });
   }
 
   // Hinweis oben im Studio (Handy): antippen führt in den Umzug, × schiebt ihn eine Woche auf.

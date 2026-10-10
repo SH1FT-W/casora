@@ -20,6 +20,7 @@
     dash: '<path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/>',
     home: '<path d="M3 11l9-7 9 7M5 9.5V20h14V9.5"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
+    more: '<circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="19" cy="12" r="1.2" fill="currentColor"/>',
     x: '<path d="M6 6l12 12M18 6L6 18"/>',
     down: '<path d="M6 9l6 6 6-6"/>',
     upd: '<path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/>',
@@ -124,6 +125,9 @@
     .btool svg { width:17px; height:17px; flex:none; }
     .btool:hover, .btool[aria-expanded="true"], .btool.on { background:var(--chip, rgba(127,127,127,.14)); color:var(--ink, inherit); }
     .btool .blabel { overflow:hidden; text-overflow:ellipsis; max-width:160px; }
+    /* P-V3: ⋯ für „Dieser Raum“ direkt hinter dem Raumnamen, nur Symbol. */
+    .btool.broomact { padding:0 8px; }
+    .btool.broomact .blabel { display:none; }
     .btool.bhidroom::after {
       content:""; width:15px; height:15px; flex:none; background:currentColor; opacity:.7;
       -webkit-mask:var(--eyeoff) center/contain no-repeat; mask:var(--eyeoff) center/contain no-repeat;
@@ -265,9 +269,12 @@
     .bscrim { display:none; }
     :host(.bmode.phone.binsp) .bscrim { display:block; position:fixed; inset:0; z-index:29; background:rgba(0,0,0,.28); }
     .bbar { display:none; }
+    /* ds-15 (1.3): vier gleich breite Spalten um das „+“ – es steht in der Mitte, die Abstände hängen nicht
+       an der Wortlänge („Einstellungen“ passt ganz in eine Spalte). */
     :host(.bmode.phone) .bbar {
-      display:flex; position:fixed; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom, 0px));
-      z-index:20; height:58px; border-radius:20px; align-items:center; justify-content:space-around;
+      display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr); justify-items:center; padding:0 4px; box-sizing:border-box;
+      position:fixed; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom, 0px));
+      z-index:20; height:58px; border-radius:20px; align-items:center;
       background:var(--bar-solid, var(--casora-studio-bar-solid, rgba(242,242,247,.96)));
       box-shadow:0 10px 30px rgba(0,0,0,.22);
     }
@@ -277,12 +284,28 @@
       display:flex; flex-direction:column; align-items:center; gap:2px; padding:4px 8px; cursor:pointer;
     }
     .bbar button svg { width:22px; height:22px; }
+    .bbar button { max-width:100%; min-width:0; }
+    :host(.bmode.phone) .bbar button:not(.bplus) { padding:4px 2px; }
+    .bbar button > span { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .bbar button { position:relative; }
     .bbar button.bdot::after { content:""; position:absolute; top:3px; right:12px; width:8px; height:8px; border-radius:50%;
       background:var(--casora-popup-ui-bad, #FF453A); }
     .bbar .bplus { width:44px; height:44px; border-radius:50%; padding:0; justify-content:center;
       background:var(--casora-studio-done, var(--accent, #B67A50)); color:#fff; }
     :host(.bmode.phone) .body { padding-bottom:90px; }
+    /* ds-14 (1.3): Dashboard-Titel oben am Handy hell: dunkle Schrift wie die „Fertig“-Pille (weiß auf heller
+       Unschärfe nur ≈ 1,9:1). */
+    :host(.bmode.phone.is-light) .navtitle { color:var(--casora-studio-phone-ink, #3A322B); }
+    /* ds-16 (1.3): Touch (Tablet/Handy) – Trefferflächen ≥ 44 px durch einen unsichtbaren Rand, die Optik bleibt.
+       Die Werkzeuge der Leiste stehen Kante an Kante: dort nur die Höhe, sonst träfe man den Nachbarn. */
+    @media (pointer: coarse) {
+      .btool:not(.bhidroom), #msearch, .msearchbtn, .toprow .ghost, .segopt, .uxas, .roomtitle, .navtitle { position:relative; }
+      .btool:not(.bhidroom)::after { content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%); }
+      #msearch::before, .msearchbtn::before, .toprow .ghost::before, .segopt::before, .uxas::before,
+      .roomtitle::before, .navtitle::before, .bclose::before {
+        content:""; position:absolute; left:50%; top:50%; width:max(100%, 44px); height:max(100%, 44px); transform:translate(-50%, -50%);
+      }
+    }
   `;
 
   customElements.whenDefined("casora-panel").then(() => {
@@ -507,7 +530,11 @@
           tools.appendChild(b);
           return b;
         };
-        const rb = mk("rooms", "rooms", "Rooms", (b) => this._roomTitleMenu(b), "broom");
+        const rb = mk("rooms", "rooms", "Rooms", (b) => this._roomTitleMenu(b, "rooms"), "broom");
+        // P-V3 (1.3): Raumaktionen (Umbenennen, Symbol, Verschieben, Ausblenden, Löschen) als eigenes ⋯
+        // neben dem Raumnamen – im Raummenü lagen sie bei vielen Räumen unter der Falz.
+        const ra = mk("roomact", "more", "Room actions", (b) => this._roomTitleMenu(b, "actions"), "broomact");
+        ra.setAttribute("aria-label", tr("Room actions"));
         // Raumnamen sind keine Casora-Texte: „Home“ stand sonst als „Zuhause“ neben dem
         // gleichnamigen Knopf für die Einstellungen aller Dashboards.
         rb.querySelector(".blabel").setAttribute("data-no-i18n", "");

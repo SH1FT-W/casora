@@ -18,15 +18,15 @@ window.casoraIconUrl = (n) => n;
 }
 console.log('ok B-TPL-07');
 
-// B-TPL-06: Schloss-Badges sagen nur bei „jammed“ „Blockiert“.
+// B-TPL-06: Schloss-Badges sagen nur bei „jammed“ „Klemmt“ (V2 1.3: wie Kachel und Popup, open = „Geöffnet“).
 for (const name of ['casora_badge_contact_group', 'casora_badge_security']) {
   const m = T[name].name.match(/sub = s === 'locked'[\s\S]*?\|\| s\);/)[0];
   const sub = (s) => new Function('s', 'hass', 'entity', 'let sub; ' + m + ' return sub;')(s, { formatEntityState: () => 'X' }, { state: s });
-  assert.equal(sub('jammed'), 'Blockiert', name);
-  assert.equal(sub('open'), 'Offen', name);
-  assert.equal(sub('opening'), 'Offen', name);
-  assert.equal(sub('locking'), 'Wird verriegelt…', name);
-  assert.equal(sub('unlocking'), 'Wird entriegelt…', name);
+  assert.equal(sub('jammed'), 'Klemmt', name);
+  assert.equal(sub('open'), 'Geöffnet', name);
+  assert.equal(sub('opening'), 'Geöffnet', name);
+  assert.equal(sub('locking'), 'Wird verriegelt …', name);
+  assert.equal(sub('unlocking'), 'Wird entriegelt …', name);
   assert.equal(sub('locked'), 'Verriegelt', name);
 }
 console.log('ok B-TPL-06');

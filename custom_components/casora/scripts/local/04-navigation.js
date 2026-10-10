@@ -132,6 +132,21 @@
       + '.hmn-bar.hmn-ic .hmn-btn.on>span:not(.hmn-bic){display:block;font-size:15px;font-weight:600;padding:0;letter-spacing:-0.01em;max-width:150px;}'
       + '.hmn-bar.hmn-ic .hmn-btn:not(.on):active{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));}'
       + '.hmn-bar.hmn-ic .hmn-btn.on:active{filter:brightness(.94);}'
+      /* Handy-Leiste B (1.3, nur Casora/Nebel): Glocke und ⋯ (die Kopf-Kapsel samt Halter aus filter-overlay)
+         wandern rechts in die Leiste, hinter einen Trenner; oben bleiben nur Titel und Wetter. Alle Tasten
+         50 breit (Ziel 50 × 48), die aktive nur als weiße Pille mit Ton-Kreis – ihr Name steht schon groß
+         als Seitentitel darüber („Zuhause“ doppelt, Entwurf nav-h-B). Die Kapsel liest die --casora-mchrome-*-Werte. */
+      + '.hmn-sep,.hmn-dock{display:none;}'
+      + '.hmn-bar.hmn-act .hmn-sep{display:block;flex:none;align-self:center;width:1px;height:24px;margin:0 3px;background:var(--casora-pill-divider, rgba(255,255,255,0.18));}'
+      + '.hmn-bar.hmn-act .hmn-dock{display:flex;align-items:center;flex:none;height:48px;'
+      +   '--casora-mchrome-glass:none;--casora-mchrome-btn-fill:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));--casora-mchrome-btn:36px;'
+      +   '--casora-mchrome-slot-pad:7px;--casora-mchrome-pad:0;--casora-mchrome-gap:2px;--casora-chrome-hit:6px;--casora-chrome-hit-pe:auto;--casora-mchrome-bell:19px;--casora-mchrome-dots:18px;--casora-mchrome-assist:18px;'
+      +   '--casora-mchrome-sep-vis:hidden;--casora-mchrome-edit-ml:0px;--casora-bell-dot-top:6px;--casora-bell-dot-right:8px;'
+      +   '--casora-mchrome-count-top:-2px;--casora-mchrome-count-right:-2px;}'
+      + '.hmn-bar.hmn-act .hmn-dock>div{position:relative!important;top:auto!important;right:auto!important;left:auto!important;z-index:auto!important;display:flex;}'
+      + '.hmn-bar.hmn-act.hmn-ic .hmn-btn{width:50px;}'
+      + '.hmn-bar.hmn-act.hmn-ic .hmn-btn.on{width:50px;min-width:50px;padding:0;justify-content:center;}'
+      + '.hmn-bar.hmn-act.hmn-ic .hmn-btn.on>span:not(.hmn-bic){display:none;}'
       /* Casora/Weich (Richtung C „Leicht“, 08.10.2026): Räume und Szenen als Blatt wie ein Casora-Handy-Popup –
          volle Breite, unten bündig, nur oben rund (--casora-sheet-radius), Griff wie der Popup-Griff, Titel
          mittig mit Etikett. Zeilen 52 px ohne Platten (Pille 26 = Kreis 18 + 8 Innenabstand, konzentrisch);
@@ -140,7 +155,8 @@
       /* Schwebend über der Leiste statt ganzflächig (Wunsch 08.10.2026: „wie früher kleiner“): Breite und Höhe
          nach Inhalt (mittig, 260 bis 420 px), ringsum rund, die Leiste bleibt sichtbar darunter. */
       + '.hmn-menu.hmn-sheet{left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom, 0px) * 0.4);margin:0 auto;width:max-content;min-width:260px;max-width:min(420px, calc(100vw - 24px));padding:0;overscroll-behavior:contain;'
-      +   'border-radius:var(--casora-window-radius, 28px) !important;box-shadow:var(--casora-window-shadow, 0 18px 44px -14px rgba(60,40,20,0.35)) !important;'
+      /* dk-10 (1.3): Radius konzentrisch zur Zeilen-Pille (26) plus Listenrand 8 = 34. */
+      +   'border-radius:34px !important;box-shadow:var(--casora-window-shadow, 0 18px 44px -14px rgba(60,40,20,0.35)) !important;'
       +   'display:flex;flex-direction:column;overflow:hidden;opacity:0;'
       +   'max-height:min(520px, calc(100vh - max(env(safe-area-inset-top, 0px), 12px) - 150px));'
       +   'max-height:min(520px, calc(100dvh - max(env(safe-area-inset-top, 0px), 12px) - 150px));'
@@ -151,6 +167,9 @@
       + '.hmn-list{position:relative;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;'
       +   'padding:8px;box-sizing:border-box;}'
       + '.hmn-empty{padding:4px 10px 12px;font-size:15px;color:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));}'
+      /* P-V6: Gruppenüberschrift im Szenen-Menü (Raum / Ganzes Haus), eingerückt wie der Zeilentext. */
+      + '.hmn-ghead{padding:10px 14px 4px 16px;font-size:13px;line-height:16px;font-weight:600;letter-spacing:-0.01em;color:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));}'
+      + '.hmn-ghead:first-child{padding-top:4px;}'
       /* Zeile (Räume und Szenen gleich): Kreis 36 | Name | Zustand rechts. Innenabstand links 8 wie
          Kreis-Radius 18 zur Pille 26; Abstand Kreis–Text ebenfalls 8. */
       + '.hmn-sheet .hmn-item.hmn-row{grid-template-columns:36px minmax(0,1fr) auto;column-gap:8px;height:52px;min-height:52px;'
@@ -167,8 +186,11 @@
       +   'background:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, currentColor);}'
       + '.hmn-sheet .hmn-item .hmn-sic ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;line-height:0;color:inherit;}'
       + '.hmn-sheet .hmn-item .hmn-sic .hmn-svg{width:20px;height:20px;display:block;background:currentColor;-webkit-mask:var(--hmn-svg) center/contain no-repeat;mask:var(--hmn-svg) center/contain no-repeat;}'
-      /* D6 (1.2) „Farbe heißt aktiv“: Szenen nur aktiv in ihrer Studio-Farbe, sonst Sand wie die Räume. */
       + '.hmn-row.on .hmn-sic{background:var(--hmn-tone, var(--primary-color, #B67A50));color:var(--casora-msheet-on-ink, #fff);}'
+      /* dk-17 (1.3): Szenen immer in ihrer Studio-Farbe wie das Szenen-Badge; P-V8: die laufende Szene zusätzlich
+         mit leicht in ihrer Farbe getönter Zeile. */
+      + '.hmn-row.hmn-tone .hmn-sic{background:var(--hmn-tone);color:var(--casora-msheet-on-ink, #fff);}'
+      + '.hmn-sheet[data-kind=scenes] .hmn-item.hmn-row.hmn-tone.on{background:color-mix(in srgb, var(--hmn-tone) var(--casora-scene-on-tint, 18%), transparent);}'
       + '.hmn-txt{display:flex;flex-direction:column;min-width:0;}'
       + '.hmn-name{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
       /* Zustand rechts als kleiner Wert in Text 2 (wie ein Badge-Wert); im offenen Raum in der Aktiv-Zustandsfarbe. */
@@ -292,6 +314,8 @@
       /* Nur entfernen, wenn die Karte wirklich weg ist (Dashboard gewechselt), nicht bei kurzem Umhängen. */
       setTimeout(function () { if (!self.isConnected) { self._closeMenu(); if (self._bar && self._bar.parentNode) self._bar.remove();
         document.documentElement.style.removeProperty('--casora-mobile-nav-space');
+        document.documentElement.style.removeProperty('--casora-mhead-reserve');
+        if (self._dock) Array.prototype.forEach.call(self._dock.children, function (h) { if (h._hmnHome && h._hmnHome.isConnected) h._hmnHome.appendChild(h); });
         if (self._fOff) { self._fOff(); self._fOff = null; }
         if (self._onScroll) { document.removeEventListener('scroll', self._onScroll, true); self._onScroll = null; }
         if (self._idleIv) { clearInterval(self._idleIv); self._idleIv = null; document.removeEventListener('visibilitychange', self._onVis);
@@ -342,6 +366,38 @@
       this._homeText();
       this._bRooms = mk('rooms', '/casora_assets/icons/rooms.svg?v=3', T('Räume'));
       this._bScenes = mk('scenes', 'mdi:palette-outline', T('Szenen'));
+      this._sep = document.createElement('span'); this._sep.className = 'hmn-sep';
+      this._dock = document.createElement('span'); this._dock.className = 'hmn-dock';
+      bar.appendChild(this._sep); bar.appendChild(this._dock);
+      /* Die Leiste hängt an document.body, neben <home-assistant>: HAs „hass-action“ (Aktionen der
+         Kapsel-Knöpfe, z. B. das ⋯-Menü als javascript-Aktion) käme dort nie an. Weiterreichen. */
+      bar.addEventListener('hass-action', function (e) {
+        var ha = document.querySelector('home-assistant');
+        if (e._hmnFwd || !ha) return;
+        e.stopPropagation();
+        var f = new CustomEvent('hass-action', { detail: e.detail, bubbles: true, composed: true });
+        f._hmnFwd = true;
+        ha.dispatchEvent(f);
+      });
+    }
+    /* Handy-Leiste B (1.3): Halter der Kopf-Kapsel (filter-overlay, window._casoraChromeHost) in die Leiste
+       holen bzw. zurückgeben, wenn das Design wechselt. Der Seitenkopf rückt dafür hoch (--casora-mhead-reserve). */
+    _syncDock() {
+      var soft = !!(window._casoraSoft && window._casoraSoft());
+      var host = soft && window._casoraChromeHost ? window._casoraChromeHost() : null;
+      var dock = this._dock, root = document.documentElement;
+      if (host && host.isConnected !== false && host.querySelector('button-card')) {
+        if (host.parentNode !== dock) {
+          host._hmnHome = host.parentNode; dock.appendChild(host);
+          ['opacity', 'filter', 'transform', 'transition', 'pointer-events'].forEach(function (k) { host.style.removeProperty(k); });
+        }
+      } else if (!soft) {
+        Array.prototype.forEach.call(dock.children, function (h) { if (h._hmnHome && h._hmnHome.isConnected) h._hmnHome.appendChild(h); else h.remove(); });
+      }
+      var on = soft && !!dock.querySelector('button-card');
+      this._bar.classList.toggle('hmn-act', on);
+      if (on) root.style.setProperty('--casora-mhead-reserve', '8px');
+      else root.style.removeProperty('--casora-mhead-reserve');
     }
     /* Pfad statt mdi: → SF-Symbol-SVG aus /casora_assets/icons per mask-image (ha-icon hat unberechenbare Innenmaße). */
     _iconHtml(icon) {
@@ -376,9 +432,10 @@
          die Leiste; ältere Handy-Dashboards ohne sie lesen sie aus dem Desktop-Dashboard (_deskScenes). */
       var sc = this._sceneCfg();
       var ids = window.casoraNavScenes(h, sc.scene_exclude);
+      var all = ids.slice(), fixed = false;
       if (Array.isArray(sc.scenes) && sc.scenes.length) {
         var pick = sc.scenes.filter(function (id) { return h.states[id]; });
-        if (pick.length) ids = pick.filter(function (id) { return (sc.scene_exclude || []).indexOf(id) < 0; });
+        if (pick.length) { ids = pick.filter(function (id) { return (sc.scene_exclude || []).indexOf(id) < 0; }); fixed = true; }
       }
       /* Reihenfolge wie die Szenen-Badges (scene_order zuerst, dann alphabetisch) – 30.09.2026. */
       var so = Array.isArray(sc.scene_order) ? sc.scene_order : [];
@@ -388,21 +445,42 @@
           .sort(function (a, b) { return (at(a[0]) - at(b[0])) || (a[1] - b[1]); })
           .map(function (p) { return p[0]; });
       }
-      /* In einem Raum nur dessen Szenen (30.09.2026): Bereich gleichen Namens (Szene oder ihr Gerät),
-         sonst Raumname im Szenennamen. Passt keine, bleibt die ganze Liste statt eines leeren Menüs. */
+      /* P-V6 (1.3): In einem Raum immer beide Gruppen – oben „<Raum>“ mit den Szenen des Raums (aus allen
+         Szenen: Bereich gleichen Namens bei Szene oder Gerät, sonst Raumname im Szenennamen), darunter
+         „Ganzes Haus“ mit den Haus-Szenen (feste Startseiten-Auswahl genau so, sonst die Szenen ohne Raum).
+         Ohne Raum-Szenen nur die Haus-Gruppe (ohne Überschrift). Vorher hing es an der festen Auswahl:
+         mit ihr fehlten die Raum-Szenen, ohne sie die Haus-Szenen. */
       var room = /^room_/.test(cur) && cur !== 'room_scenes' ? this._rooms.filter(function (r) { return r.key === cur; })[0] : null;
+      var groups = null;
       if (room) {
-        var want = [room.name, room.label].filter(Boolean).map(function (x) { return String(x).trim().toLowerCase(); });
         var areas = h.areas || {}, reg = h.entities || {}, devs = h.devices || {};
-        var aids = Object.keys(areas).filter(function (a) { return want.indexOf(String(areas[a].name || '').trim().toLowerCase()) > -1; });
-        var inRoom = ids.filter(function (id) {
-          var e = reg[id], aid = e && (e.area_id || (e.device_id && devs[e.device_id] ? devs[e.device_id].area_id : null));
+        var areaOf = function (id) { var e = reg[id]; return e && (e.area_id || (e.device_id && devs[e.device_id] ? devs[e.device_id].area_id : null)); };
+        var names = function (r) { return [r.name, r.label].filter(Boolean).map(function (x) { return String(x).trim().toLowerCase(); }); };
+        var inR = function (r, id) {
+          var want = names(r);
+          var aids = Object.keys(areas).filter(function (a) { return want.indexOf(String(areas[a].name || '').trim().toLowerCase()) > -1; });
+          var aid = areaOf(id);
           if (aid) return aids.indexOf(aid) > -1;
-          var n = String((h.states[id].attributes && h.states[id].attributes.friendly_name) || id).toLowerCase();
+          var n = String((h.states[id] && h.states[id].attributes && h.states[id].attributes.friendly_name) || id).toLowerCase();
           return want.some(function (w) { return w && n.indexOf(w) > -1; });
-        });
-        if (inRoom.length) ids = inRoom;
+        };
+        /* Raum-Szenen wie auf der Raumseite (filter-overlay legt die Liste ab); sonst nach Bereich/Namen. */
+        var RS = window._casoraRoomScenes, inRoom = null;
+        if (RS && RS.key === cur) { try { inRoom = (RS.list(h) || []).filter(function (id) { return h.states[id]; }); } catch (e) { inRoom = null; } }
+        if (!inRoom) inRoom = all.filter(function (id) { return inR(room, id); });
+        if (so.length) inRoom.sort(function (a, b) { var x = so.indexOf(a), y = so.indexOf(b); return (x < 0 ? 999 : x) - (y < 0 ? 999 : y); });
+        var rooms = this._rooms;
+        var house = fixed ? ids : ids.filter(function (id) { return !rooms.some(function (r) { return inR(r, id); }); });
+        house = house.filter(function (id) { return inRoom.indexOf(id) < 0; });
+        if (inRoom.length) {
+          groups = [{ header: room.label || room.name, ids: inRoom }];
+          if (house.length) groups.push({ header: T('Ganzes Haus'), ids: house });
+        }
       }
+      if (!groups) groups = [{ header: null, ids: ids }];
+      groups.forEach(function (g) {
+      if (g.header) list.push({ header: g.header });
+      var ids = g.ids;
       ids.forEach(function (id) {
         var st = h.states[id];
         var sic = (st.attributes && st.attributes.icon) || 'mdi:palette-outline';
@@ -413,6 +491,7 @@
           /* Aktive Szene wie der offene Raum hinterlegt (1.2) – dieselbe Regel wie die Szenen-Badge („Keine aktiv“). */
           on: !!(SCx && SCx.isActive && SCx.isActive(id, h.states)),
           run: function () { h.callService('scene', 'turn_on', { entity_id: id }); } });
+      });
       });
       return list;
     }
@@ -429,10 +508,16 @@
       if (D[desk] === undefined) {
         D[desk] = null;
         var self = this;
-        (window._casoraCfgOnce ? window._casoraCfgOnce(this._hass, desk) : this._hass.connection.sendMessagePromise({ type: 'lovelace/config', url_path: desk })).then(function (cfg) {
-          var v0 = ((((cfg || {}).views || [])[0] || {}).cards || [])[0];
-          var t = ((cfg || {}).button_card_templates || {}).casora_scene_row;
-          var src = [v0 && v0.variables, t && t.variables].filter(has)[0] || {};
+        /* Leistung 1.3: nur die Szenen-Auswahl des Desktop-Dashboards (casora/partner_info), nicht seine ganze Konfiguration. */
+        var got = window._casoraPartnerInfo ? window._casoraPartnerInfo(this._hass, desk).then(function (i) { return { scenes: i && i.scenes }; })
+          : this._hass.connection.sendMessagePromise({ type: 'lovelace/config', url_path: desk }).then(function (cfg) { return { cfg: cfg }; });
+        got.then(function (r) {
+          var src = r.scenes || {};
+          if (r.cfg) {
+            var v0 = ((((r.cfg || {}).views || [])[0] || {}).cards || [])[0];
+            var t = ((r.cfg || {}).button_card_templates || {}).casora_scene_row;
+            src = [v0 && v0.variables, t && t.variables].filter(has)[0] || {};
+          }
           D[desk] = { scenes: src.scenes, scene_exclude: src.scene_exclude, scene_order: src.scene_order };
           if (self._menu && self._menuKind === 'scenes') { self._closeMenu(); self._openMenu('scenes'); }
         }, function () { D[desk] = {}; });
@@ -453,6 +538,7 @@
       if (bg0.indexOf('menu-pane-webkit') < 0) m.style.backgroundColor = 'var(--casora-mnav-menu-pane, ' + bg0 + ')';
       m.style.setProperty('--casora-menu-shadow', 'var(--casora-mnav-menu-shadow, var(--casora-elevation-floating-phone, 0 10px 26px rgba(0,0,0,0.18)))');
       this._items(kind).forEach(function (it) {
+        if (it.header) { var hd = document.createElement('div'); hd.className = 'hmn-ghead'; hd.textContent = it.header; m.appendChild(hd); return; }
         var b = document.createElement('button');
         b.type = 'button'; b.className = 'hmn-item' + (it.on ? ' on' : '');
         b.title = String(it.label || '');
@@ -567,6 +653,7 @@
         });
       };
       items.forEach(function (it) {
+        if (it.header) { var hd = el('div', 'hmn-ghead', it.header); hd.setAttribute('data-no-i18n', ''); list.appendChild(hd); return; }
         var tone = rooms ? null : self._sceneTone(it.id);
         var b = el('button', 'hmn-item hmn-row' + (it.on ? ' on' : '') + (tone ? ' hmn-tone' : ''));
         b.type = 'button';
@@ -629,7 +716,7 @@
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (m.isConnected) m._fit(); });
       /* Mehr Zeilen als Platz: Liste so kürzen, dass die letzte sichtbare Zeile halb angeschnitten ist
          (Scroll-Hinweis wie in iOS), und den offenen Raum in die Mitte holen. */
-      var first = list.firstElementChild;
+      var first = list.querySelector('.hmn-item');  /* nicht die Gruppenüberschrift (P-V6) */
       if (first && list.scrollHeight > list.clientHeight + 1) {
         var padT = parseFloat(getComputedStyle(list).paddingTop) || 0, rowH = first.offsetHeight;
         var k = Math.max(1, Math.floor((list.clientHeight - padT - rowH * 0.5) / rowH));
@@ -734,6 +821,7 @@
       }
       this._bindOverlays();
       this._slimHome();
+      this._syncDock();
 
     }
   }

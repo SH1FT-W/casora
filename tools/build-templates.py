@@ -47,9 +47,51 @@ REMOVED = ("casora_badge_plex", "casora_plex_recently_added", "casora_popup_plex
            "casora_popup_vacuum", "casora_popup_geschirrspueler")
 for name in REMOVED:
     tpl.pop(name, None)
+# Leistung 1.3: das Bündel steckt in jeder Dashboard-Konfiguration (wird bei jedem Laden übertragen
+# und geparst). Darum ausgeliefert ohne Kommentarzeilen/Einrückung in den JS-Ausdrücken (Quelle bleibt
+# lesbar) und ohne doppelte icon_tap_action (tools/js_schlank.py, dev/unit/vorlagen_schlank_test.py).
+from js_schlank import schlank_vorlage  # noqa: E402
+
+
+def _ohne_icon_doppel(alle: dict) -> dict:
+    """icon_tap_action weglassen, wenn sie dasselbe Popup öffnet wie tap_action: ohne eigene
+    Symbol-Aktion löst ein Tipp aufs Symbol die tap_action der Kachel aus (button-card). „Dasselbe“ =
+    gleich bis auf popup_styles (die Symbol-Kopien hingen dort hinterher). Nicht, wenn eine erbende
+    Vorlage tap_action ändert, ohne icon_tap_action zu setzen – deren Symbol bliebe sonst nicht gleich."""
+    def ohne_stil(a):
+        if not isinstance(a, dict):
+            return a
+        a = dict(a)
+        if isinstance(a.get("casora_popup"), dict):
+            a["casora_popup"] = {k: v for k, v in a["casora_popup"].items() if k != "popup_styles"}
+        return a
+    eltern = {k: ([v.get("template")] if isinstance(v.get("template"), str) else list(v.get("template") or []))
+              for k, v in alle.items() if isinstance(v, dict)}
+    def vorfahren(k, seen=()):
+        out = []
+        for p in eltern.get(k, []):
+            if p in alle and p not in seen:
+                out += [p] + vorfahren(p, seen + (p,))
+        return out
+    weg = []
+    for k, v in alle.items():
+        if not isinstance(v, dict) or "icon_tap_action" not in v or "tap_action" not in v:
+            continue
+        if ohne_stil(v["icon_tap_action"]) != ohne_stil(v["tap_action"]):
+            continue
+        if any(k in vorfahren(c) and "tap_action" in alle[c] and "icon_tap_action" not in alle[c]
+               for c in alle if isinstance(alle[c], dict)):
+            continue
+        weg.append(k)
+    out = dict(alle)
+    for k in weg:
+        out[k] = {kk: vv for kk, vv in alle[k].items() if kk != "icon_tap_action"}
+    return out
+
+
 added = [k for k in overlay if k not in tpl]
 changed = [k for k in overlay if k in tpl and tpl[k] != overlay[k]]
-tpl.update(overlay)
+tpl.update(schlank_vorlage(_ohne_icon_doppel(overlay)))
 tmp = OUT + ".tmp"
 with open(tmp, "w", encoding="utf-8") as fh:
     json.dump(bundle, fh, ensure_ascii=False, separators=(",", ":"))

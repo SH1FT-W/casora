@@ -21,11 +21,11 @@
   const tint = () => ((window.__casoraPanelInternals || {}).studioIcon ? window.__casoraPanelInternals.studioIcon("versions") : "var(--casora-color-green, #34C759)");
 
   const CSS = ".cv-wrap{padding:4px 0 24px}"
-    + ".cv-blurb{margin:0 4px 16px;font-size:var(--t-foot);line-height:1.45;color:var(--ink-2)}"
-    + ".cv-day{margin:18px 6px 8px;font-size:var(--t-foot);font-weight:600;letter-spacing:.01em;color:var(--ink-2)}"
+    + ".cv-blurb{margin:0 10px 16px;font-size:var(--t-foot);line-height:1.45;color:var(--ink-2)}"
+    + ".cv-day{margin:18px 10px 8px;font-size:var(--t-foot);font-weight:600;letter-spacing:.01em;color:var(--ink-2)}"
     + ".cv-day:first-of-type{margin-top:4px}"
     + ".cv-list{border-radius:var(--r-l);overflow:hidden;background:var(--casora-popup-row-fill,rgba(255,255,255,.07))}"
-    + ".cv-row{appearance:none;display:flex;align-items:center;gap:12px;width:100%;min-height:52px;margin:0;padding:9px 14px;"
+    + ".cv-row{appearance:none;display:flex;align-items:center;gap:12px;width:100%;min-height:52px;margin:0;padding:9px 10px;"
     + "border:0;border-radius:0;background:none;box-shadow:none;color:inherit;text-align:left;cursor:pointer;font:inherit}"
     + ".cv-row+.cv-row{box-shadow:inset 0 .5px 0 var(--hair,rgba(255,255,255,.1))}"
     + ".cv-row:hover{background:rgba(255,255,255,.05);filter:none}"
@@ -84,6 +84,8 @@
     + ":host(.is-light) .cv-row:hover{background:rgba(0,0,0,.04)}"
     + ":host(.is-light) .cv-row[aria-current=true]{background:var(--casora-studio-good-tint, rgba(52,199,89,.14))}"
     + ":host(.is-light) .cv-dot{background:rgba(60,60,67,.3)}"
+    /* ds-17 (1.3): „Jetzt“ im Dunkeln heller (3,7 → ≥ 4,5:1). */
+    + ":host(:not(.is-light)) .cv-now{color:color-mix(in srgb, var(--casora-studio-good, #34c759) 55%, #fff)}"
     + ":host(.is-light) .cv-now{background:var(--casora-studio-good-tint, rgba(52,199,89,.16));color:var(--casora-studio-good, #1a6b2f)}"
     + ":host(.is-light) .cv-err{color:var(--casora-studio-bad, #d70015)}"
     + ":host(.is-light) .cv-banner{background:var(--casora-studio-good-tint, rgba(52,199,89,.14));box-shadow:inset 0 0 0 .5px var(--casora-studio-good-line, rgba(36,138,61,.35))}"

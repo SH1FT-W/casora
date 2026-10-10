@@ -30,16 +30,16 @@ await step('h1_1_uebersicht');
 
 await page.getByText('Weiter', { exact: true }).click();
 await page.getByText('Ersatz auswählen').waitFor({ timeout: 10000 });
-const picks = await page.evaluate(() => window.__pierce('select.casora-pick').map((s) => {
+// AB-13 (1.3): Studio-Auswahl (.combo.casora-pick) statt nativem <select>.
+const picks = await page.evaluate(() => window.__pierce('.casora-pick').map((s) => {
   const row = s.parentElement; const t = row.textContent.replace(/\s+/g, ' ').trim().slice(0, 70);
-  return t + ' → [' + [...s.options].map((o) => o.textContent).join(' | ') + '] gewählt: ' + s.options[s.selectedIndex].textContent;
+  const v = s._value(); return t + ' → [' + s._choices.map((o) => o.label).join(' | ') + '] gewählt: ' + (s._choices.find((o) => o.value === v) || {}).label;
 }));
 console.log('Schritt 2 – Ersatz:', picks);
 // Variante: erste Karte als eigene Karte behalten, zweite weglassen.
 if (process.env.VARIANT === 'custom') {
-  await page.evaluate(() => { const s = window.__pierce('select.casora-pick');
-    s[0].value = 'custom'; s[0].dispatchEvent(new Event('change'));
-    s[1].value = 'skip'; s[1].dispatchEvent(new Event('change')); });
+  await page.evaluate(() => { const s = window.__pierce('.casora-pick');
+    s[0]._choose('custom'); s[1]._choose('skip'); });
   console.log('Variante: 1. eigene Karte, 2. weglassen');
 }
 await step('h1_2_ersatz');

@@ -5,7 +5,7 @@ Verbindliche Wörter für Dashboard und Studio (Stand Feinschliff 1.3, 10.10.202
 `dev/unit/wortlaut.mjs`, `dev/unit/wortlaut_regeln.mjs`, `dev/unit/schloss_zustaende.mjs`, `dev/unit/oeffnungen.mjs`,
 `dev/unit/phrasen_en.mjs`.
 
-Mit **(V)** bzw. **(V1 … V9)** markierte Zeilen sind **OFFEN – Entscheidung Maintainer** (Liste in §6).
+Mit **(V)** bzw. **(V1 … V9)** markierte Zeilen waren offen und sind seit 1.3 entschieden (Liste in §6).
 Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 
 ## 1. Grundregeln
@@ -105,7 +105,7 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 | Groß/klein **(V5)** | Studio: Titel und Knöpfe Title Case („Add Room“), Sätze/Hinweise Satzschreibung. Dashboard-Zustände: erstes Wort groß, Rest klein („All open“, „Due soon“) | „All Away“ neben „All away“ | – |
 | Deutsche Reste | keine – Eigennamen ausgenommen (Tankerkönig, Deutscher Wetterdienst) | „Klappen open“ | `phrasen_en.mjs` |
 
-## 6. Offene Punkte (OFFEN – Entscheidung Maintainer)
+## 6. Entschiedene Punkte (1.3, vorher OFFEN)
 
 | # | Frage | A | B | Empfehlung Audit |
 |---|---|---|---|---|
@@ -119,5 +119,5 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 | V8 | Integrations-Anzeigenamen mit Bindestrich („Casora Kamera-KI“) | mit Bindestrich | lassen | A (entity_id bleibt) |
 | V9 | Auslassung im Dashboard („Läuft…“ 19× / „Läuft …“ 39×) | wie Studio: DE „Läuft …“, EN „Running…“ | überall ohne Leerzeichen | A |
 
-Neue Texte bis zur Wahl: nach der Empfehlung schreiben **nur**, wo die Mehrheit der Stellen sie schon hat
-(V1 „62 %“ in Popups, V2 „Geöffnet“, V3 „Kachelart“, V4 amerikanisch, V9 „Läuft …“ im Deutschen).
+**Entschieden 1.3:** V1 A (die Übersetzungs-Laufzeit setzt U+202F in allen button-card-Texten, Test
+`prozent_de.mjs`), V2 A, V3 A, V4 A (auch „gas station“), V5 A, V6 B (Ausnahme), V7 B, V8 A, V9 A.

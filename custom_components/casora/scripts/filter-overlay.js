@@ -198,9 +198,15 @@
     el.style.setProperty('--ha-ripple-hover-color', 'transparent');
   }
 
+  // Handy-Leiste B (1.3): casora-mobile-nav holt den Halter der Kapsel (Glocke/⋯) in die untere
+  // Leiste. Dort bleibt sie stehen – Raumseiten blenden sie nicht aus.
+  const _docked = (host) => !!(host && host.parentNode && host.parentNode.classList
+    && host.parentNode.classList.contains('hmn-dock'));
+  window._casoraChromeHost = () => (_dashHeader && _dashHeader.pillHost) || null;
+
   function _hideChromePill() {
     const host = _pinnedPill?.host;
-    if (!host) return;
+    if (!host || _docked(host)) return;
     host.style.transition = 'opacity 200ms ease-out, filter 200ms ease-out';
     host.style.filter = 'blur(8px)';
     host.style.opacity = '0';
@@ -209,7 +215,7 @@
 
   function _showChromePill() {
     const host = _pinnedPill?.host;
-    if (!host) return;
+    if (!host || _docked(host)) return;
     host.style.transition = 'none';
     host.style.transformOrigin = '50% 30%';
     host.style.transform = 'scale(0.93) translateY(20px)';
@@ -968,8 +974,11 @@
       if (!rect.height) { hide(); return; }
       const barBottom = title.getBoundingClientRect().bottom;
       const safeTop   = barBottom - DASH_BAR_HEIGHT;
+      // Handy-Leiste B (1.3): der Titel steht 44 px höher (keine Kapsel oben) – gerechnet wird ab seiner
+      // alten Ruhelage, sonst wäre er schon ungescrollt leicht ausgeblendet.
+      const lift = _docked(pillHost) ? 44 : 0;
       const p = Math.max(0, Math.min(1,
-        (barBottom + 24 - rect.bottom) / (barBottom + 24 - safeTop)));
+        (barBottom + 24 - rect.bottom - lift) / (barBottom + 24 - safeTop)));
       const tp = Math.min(1, p / 0.45);
       if (nameEl) {
         nameEl.style.animation  = 'none'; // titleFadeIn's fill:both beats inline opacity
@@ -988,7 +997,8 @@
           // Nie unter Glocke/Menü: Breite bis 8 px vor deren Kapsel.
           const pr = pillHost.getBoundingClientRect();
           const pl = pill.getBoundingClientRect().left;
-          if (pr.width && pr.left > pl) pill.style.maxWidth = `${Math.max(88, Math.floor(pr.left - 8 - pl))}px`;
+          if (_docked(pillHost)) pill.style.maxWidth = 'calc(100vw - 32px)';
+          else if (pr.width && pr.left > pl) pill.style.maxWidth = `${Math.max(88, Math.floor(pr.left - 8 - pl))}px`;
         }
         pill.style.opacity       = String(cp);
         pill.style.transform     = `translateY(${(1 - cp) * 5}px)`;
@@ -1558,12 +1568,14 @@
         let sceneCount = 0;
         try {
           const c = this._config;
-          sceneCount = window._casoraSC.list(this._hass?.states || {}, this._hass, {
-            room: roomMode, area: c.area || null, room_entities: roomEntities, scenes: c.scenes, scene_exclude: c.scene_exclude, scene_order: c.scene_order,
-          }).length;
+          const vars = { room: roomMode, area: c.area || null, room_entities: roomEntities, scenes: c.scenes, scene_exclude: c.scene_exclude, scene_order: c.scene_order };
+          sceneCount = window._casoraSC.list(this._hass?.states || {}, this._hass, vars).length;
+          // P-V6 (1.3): dieselbe Raum-Szenenliste für das Szenen-Menü der Handy-Leiste (04-navigation.js).
+          const key = window._casoraFilter && window._casoraFilter.get ? window._casoraFilter.get() : null;
+          window._casoraRoomScenes = { key, list: (h) => window._casoraSC.list((h && h.states) || {}, h, vars) };
         } catch (_) { sceneCount = 0; }
         if (sceneCount) {
-          // D5 (1.2): Überschriften der Raumseite 2 px eingerückt wie die Gruppen-Überschriften (_appendGroupHeader).
+          // dk-06 (1.3): Überschriften der Raumseite fluchten mit Kacheln und Titel (16 px, früher D5 +2 px).
           this._appendRevealCard({
             type:       'custom:button-card',
             template:   'casora_mobile_header',
@@ -1571,7 +1583,7 @@
             name:       'Szenen',
             variables:  { hide_caret: true, mobile_filter_categories: null },
             styles:     {
-              card:          [{ padding: `24px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC} + 2px)` }],
+              card:          [{ padding: `24px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})` }],
               custom_fields: { arrow: [{ display: 'none' }] },
             },
           }, this._contentEl, 0);
@@ -1625,7 +1637,7 @@
               name:       'Geräte',
               variables:  { hide_caret: true, mobile_filter_categories: null },
               styles:     {
-                card:          [{ padding: `18px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC} + 2px)` }],
+                card:          [{ padding: `18px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})` }],
                 custom_fields: { arrow: [{ display: 'none' }] },
               },
             }, this._contentEl, i);
@@ -1648,8 +1660,8 @@
       wrap.style.cssText = 'display:block;width:100%;box-sizing:border-box;opacity:0;';
       wrap._animIndex = animIdx;
       wrap.setAttribute('data-casora-room-group', key);
-      const left = `calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC} + 2px)`;
-      const right = `calc(var(--casora-rail-left, 16px) + ${LANDSCAPE_GUTTER_CALC} + 2px)`;
+      const left = `calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})`;
+      const right = `calc(var(--casora-rail-left, 16px) + ${LANDSCAPE_GUTTER_CALC})`;
       const head = document.createElement('div');
       head.style.cssText = [
         `padding:${first ? 14 : 24}px ${right} 10px ${left}`,

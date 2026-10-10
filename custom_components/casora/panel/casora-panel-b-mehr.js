@@ -462,7 +462,8 @@
       margin-right:8px; border-radius:999px; border:0; font:inherit; font-size:14px; color:var(--ink-2, inherit); cursor:text;
       background:var(--wash-fill, rgba(118,118,128,.12)); box-shadow:none; flex:none; }
     #msearch svg { width:17px; height:17px; flex:none; }
-    #msearch .mkb { font-size:12px; opacity:.65; margin-left:12px; }
+    /* ds-17 (1.3): Tastenhinweise in Text 2 (≥ 4,5:1) statt halb durchsichtig. */
+    #msearch .mkb { font-size:12px; color:var(--ink-2); margin-left:12px; }
     :host(.bmode.btight) #msearch .mlab, :host(.bmode.btight) #msearch .mkb { display:none; }
     :host(.bmode.phone) #msearch { width:44px; height:44px; padding:0; justify-content:center; margin-right:6px; cursor:pointer;
       background:var(--casora-studio-chip, rgba(118,118,128,.18)); color:var(--ink, inherit); }
@@ -506,7 +507,7 @@
     .mpop .macts { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
     .mpop .macts button { min-width:0; white-space:nowrap; }
     .mpop .macts button:nth-child(3) { grid-column:1 / -1; }
-    .mpop .mkbd { margin-left:6px; opacity:.6; font-weight:500; font-size:12px; }
+    .mpop .mkbd { margin-left:6px; color:var(--ink-2); font-weight:500; font-size:12px; }
     :host(.phone) .mpop { left:8px !important; right:8px; top:auto !important; bottom:calc(10px + env(safe-area-inset-bottom, 0px));
       width:auto; max-height:72vh; border-radius:24px; }
     /* Suche */
@@ -517,7 +518,7 @@
     .msearch .mfield { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:.5px solid var(--hair, rgba(127,127,127,.22)); }
     .msearch .mfield svg { width:20px; height:20px; flex:none; opacity:.55; }
     .msearch input { flex:1 1 auto; min-width:0; border:0; outline:0; background:none; color:inherit; font:inherit; font-size:17px; padding:2px 0; }
-    .msearch .mesc { flex:none; font-size:12px; opacity:.5; }
+    .msearch .mesc { flex:none; font-size:12px; color:var(--ink-2); }
     .msearch .mres { overflow:auto; padding:6px; }
     .msearch .mhead { padding:10px 10px 4px; font-size:12px; font-weight:650; letter-spacing:.02em; color:var(--ink-2, #8a8a8e); }
     .msearch .mrow { display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:8px 10px; border:0; border-radius:12px;
@@ -1674,7 +1675,7 @@
               if (typeof window.casoraAskFirstTry !== "function" && this._casoraCardsReady) { try { await this._casoraCardsReady(); } catch (e) { /* unten */ } }
               if (typeof window.casoraAskFirstTry !== "function") { if (this._bToast) this._bToast(tr("Done saves it to your dashboard.")); return; }
               window.casoraAskFirstTry(askId, typeof inner.name === "string" ? inner.name : "").then((ok) => {
-                if (this._bToast) this._bToast(tr(ok ? "In the dashboard it would switch now" : "Cancelled – nothing switches"),
+                if (this._bToast) this._bToast(tr(ok ? "In the dashboard it would switch now" : "Canceled – nothing switches"),
                   { sub: tr("Nothing was switched here in the Studio.") });
               });
             };

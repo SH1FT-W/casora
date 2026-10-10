@@ -52,8 +52,8 @@
   L.doorOf = function (id) { return srcVar('door_sensors', id) || META.door[id] || sameDevice(id, 'binary_sensor', ['door', 'opening', 'garage_door']); };
 
   // ── Wörter, Töne, Zeiten ──────────────────────────────────────────────────
-  var WORD = { locked: 'Verriegelt', unlocked: 'Entriegelt', locking: 'Wird verriegelt…', unlocking: 'Wird entriegelt…',
-    jammed: 'Klemmt', open: 'Geöffnet', opening: 'Wird geöffnet…', unavailable: 'Offline', unknown: 'Unbekannt' };
+  var WORD = { locked: 'Verriegelt', unlocked: 'Entriegelt', locking: 'Wird verriegelt …', unlocking: 'Wird entriegelt …',
+    jammed: 'Klemmt', open: 'Geöffnet', opening: 'Wird geöffnet …', unavailable: 'Offline', unknown: 'Unbekannt' };
   L.word = function (s) { return WORD[s] || (s ? s.charAt(0).toUpperCase() + s.slice(1) : WORD.unknown); };
   // Stufe wie Kachel/Badge (casoraSecurityLevel); ohne 00-finden.js dieselbe Regel in kurz.
   var level = function (id, s) {
@@ -243,7 +243,7 @@
     if (d) {
       var ds = String(d.state || '').toLowerCase(), dOpen = ds === 'on';
       rows.push({ icon: dOpen ? 'door-open' : 'door-closed', iconTone: dOpen ? color('warn') : 'rgba(255,255,255,0.18)', label: 'Tür', sub: 'Türkontakt',
-        value: dead(ds) ? 'Offline' : dOpen ? 'Offen' : 'Geschlossen', valueTone: dOpen ? 'warn' : null });
+        value: dead(ds) ? 'Offline' : dOpen ? 'Geöffnet' : 'Geschlossen', valueTone: dOpen ? 'warn' : null });
     }
     var bid = L.battOf(id), b = bid && S[bid], B = window.casoraBattery;
     if (b) {

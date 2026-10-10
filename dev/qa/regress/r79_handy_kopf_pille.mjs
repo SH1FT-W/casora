@@ -100,9 +100,11 @@ for (const [theme, dark] of [['Casora', false], ['Casora Nebel', true]]) {
         return cs.position === 'fixed' && cs.zIndex === '113' && d.getBoundingClientRect().width > 0;
       });
       const pr = pill.getBoundingClientRect(), cr = chrome?.getBoundingClientRect();
+      // 1.3 (Handy-Leiste B): Glocke/Menü sitzen unten in der Navigationsleiste – oben nichts zu überlappen.
+      const docked = !!document.querySelector('.hmn-dock button-card');
       return {
         op: parseFloat(pill.style.opacity || '0'), text: pill.textContent.trim(),
-        right: pr.right, chromeLeft: cr ? cr.left : null, top: pr.top,
+        right: pr.right, chromeLeft: cr ? cr.left : null, top: pr.top, docked, vw: innerWidth,
         fadeOp: fade ? parseFloat(fade.style.opacity || '0') : null,
         fadeBg: fade ? getComputedStyle(fade).maskImage || getComputedStyle(fade).webkitMaskImage : null,
         hard,
@@ -112,7 +114,8 @@ for (const [theme, dark] of [['Casora', false], ['Casora Nebel', true]]) {
   console.log(tag, 'Startseite', JSON.stringify(h));
   await need(`${tag}: Startseite – Pille erscheint beim Scrollen`, h && h.op > 0.9, h);
   await check(`${tag}: Startseite – Pille sagt nur „Zuhause“`, /^(Zuhause|Home)$/.test(h.text), h.text);
-  await check(`${tag}: Startseite – Pille endet vor Glocke/Menü`, h.chromeLeft != null && h.right <= h.chromeLeft - 4, h);
+  if (h.docked) await check(`${tag}: Startseite – Pille im Bild (Glocke/Menü unten in der Leiste)`, h.right <= h.vw - 16, h);
+  else await check(`${tag}: Startseite – Pille endet vor Glocke/Menü`, h.chromeLeft != null && h.right <= h.chromeLeft - 4, h);
   await check(`${tag}: Startseite – weicher Verlauf sichtbar`, h.fadeOp > 0.9 && /gradient/.test(h.fadeBg || ''), h);
   await check(`${tag}: Startseite – keine deckende Fläche mit harter Kante`, h.hard === 0, h);
 

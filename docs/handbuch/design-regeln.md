@@ -57,8 +57,8 @@ Gilt (DP-16, entschieden 10.10.2026, „Zeilen konzentrisch“): Popup-Zeile 60 
 36/r12 mit 12 px Rand ringsum → 12 + 12 = 24 konzentrisch. Variablen im Popup-Rahmen: `--casora-soft-row-h`,
 `--casora-soft-row-pad`, `--casora-soft-icon-size`, `--casora-soft-icon-radius`.
 
-> **OFFEN – Entscheidung Maintainer (dk-10, Markierung im Räume-Menü):**
-> A: Fenster 34 (dann konzentrisch zur Pille 26 bei 8 px Abstand) / B: so lassen.
+**Entschieden 1.3 (dk-10):** Räume-/Szenen-Blatt am Handy Radius **34** = Zeilen-Pille 26 + Listenrand 8
+(konzentrisch, `04-navigation.js`).
 
 ## 2. Abstände
 
@@ -77,12 +77,12 @@ Heute weichen 272 von 1 032 gemessenen Lücken ab (meist 3, 6, 7, 9 px) – nich
 Regel **ringsum gleich**: ein Element in einer Fläche hat oben = links = rechts (= unten) denselben
 Abstand, ±1 px. Gilt für Symbolkreis in der Zeile, Markierung im Menü, Knopf in der Leiste.
 
-> **OFFEN – Entscheidung Maintainer (dk-05, Symbolkreis in der Kachel):**
-> A: ringsum gleich (Desktop 20/20, Handy 10/10) / B: so lassen (heute oben 18/links 20 durch
-> `--casora-tile-icon-mt:-2px`, Handy 10/12). Bild: `d-kacheln/bilder/dk05_vergleich.png`.
+**Entschieden 1.3 (dk-05):** Symbolkreis in der Kachel ringsum gleich – Desktop/Tablet oben = links
+(Casora: `casora-tile-icon-mt-desktop: 0px`), Handy 10/10 (`casora-entity-inner-pad-mobile: 10px`,
+Szenen-Kacheln `casora-scene-chip-pad-phone: 10px`). Hemma 2 unverändert.
 
-> **OFFEN – Entscheidung Maintainer (dk-06, Einzug Handy-Überschriften):** A: überall 16 px (fluchtet
-> mit Kacheln) / B: überall 18 px. Heute Raumseite 18, sonst 16.
+**Entschieden 1.3 (dk-06):** Überschriften am Handy fluchten überall bei 16 px mit Kacheln und Titel
+(auch die Raumseite, früher +2).
 
 ## 3. Schatten
 
@@ -131,6 +131,7 @@ Studio heute: eigener Satz `--t-caption 12 · --t-foot 13 · --t-callout 15 · -
 > **OFFEN – Entscheidung Maintainer (Studio-Schrift, Sprachen-Frage 2):**
 > A: Studio bleibt iOS-nah (SF im Inspektor, Radien 8/12/18/26, Haarlinien) /
 > B: Casora-Sprache (Inter, Radien 12/18/24/32, Sand-Platten; Haarlinien in Formularen dürfen bleiben).
+> Stand 1.3: Entwurf „Studio in Inter“ als Bild (Feinschliff-Notizen `um-rest/bilder/studio-schrift-*`), nicht umgesetzt.
 
 Gilt (Sprachen-Frage 1, entschieden B): Abschnittsüberschriften sind **normale Überschriften** („Räume“,
 nicht „RÄUME“), 17/700 – in Popups umgesetzt über `--casora-h15-fs/-fw/-ls/-tt/-c` (Weich-Rahmen) bzw.
@@ -163,8 +164,9 @@ Gilt:
   Menü zeigen dieselbe Farbe. Keine eigenen Ratelisten aus dem Symbol.
 - Was das Studio vorgibt, zeigen alle Geräte gleich.
 
-> **OFFEN – Entscheidung Maintainer (dk-17):** A: Szenenfarbe überall immer (auch inaktiv) /
-> B: überall nur aktiv, inaktiv neutral. Heute: Badge immer, Handy-Menü nur aktiv.
+**Entschieden 1.3 (dk-17, P-V8):** Szenenfarbe aus dem Studio **überall immer** (Badge, Szenen-Kacheln,
+Handy-Szenen-Menü), auch wenn die Szene nicht läuft. Die **laufende** Szene ist zusätzlich leicht in ihrer
+Farbe getönt (`--casora-scene-on-tint`, 18 %).
 
 Gilt (DP-15, entschieden: Ring folgt Zustand): Die Kopf-Kachel zeigt die Farbe, die die Kachel gerade zeigt
 (Zustand), aus = Sand; Fehler/fehlgeschlagen = Rot; nicht verfügbar/unbekannt = Sand. Ein Modul, das den
@@ -247,9 +249,9 @@ mehr). Gilt auch für Auswahllisten (`--casora-soft-row-selected` zeigt darauf).
 - Inaktives (opacity < .6, `disabled`) zählt nicht.
 - Hell **und** dunkel prüfen – die Hälfte der Kontrast-Funde gab es nur dunkel.
 
-> **OFFEN – Entscheidung Maintainer (dk-08, Text-Rot):** A: eigenes Text-Rot (≈ #B0473C, 4,6:1) nur für
-> Schrift / B: so lassen (#D35A4E auf Creme 3,3:1). Pfeil › in Zeilen (DP-30): entschieden B, Deckkraft .6
-> (`--casora-chev-opacity`).
+**Entschieden 1.3 (dk-08):** Rot für Schrift auf Creme ist `--casora-color-red-text` (#A8443A, 4,9:1);
+Kreise/Flächen bleiben `--casora-color-red`. **Pfeil › in Zeilen (DP-30):** entschieden B, Deckkraft .6
+(`--casora-chev-opacity`), Strich in Text 1.
 
 ## 12. Trefferflächen
 
@@ -282,3 +284,26 @@ Entschieden (10.10.2026): A „Kopfzeile“, Symbol als abgerundetes Quadrat, Sc
 
 Siehe [wortliste.md](wortliste.md). Kurz: An/Aus, Geöffnet/Geschlossen, „1 An“ groß, „2 aktiv“ klein,
 du-Form, „62 %“ mit Leerzeichen (Deutsch), Zahlen über `casoraNum`/`toLocaleString(casoraLocale())`.
+
+## 15. Raumleiste und Navigationsleiste (entschieden 10.10.2026, Casora 1.3)
+
+Desktop/Tablet – Raumleiste A „Feinschliff“ (`casora-nav-bar`, Tablet-Fassung in `casora-core.js`):
+- Zuhause steht **fest vorn** (Haus-Kreis 30, aktiv in Ton mit weißer Glyphe), dahinter Trenner 1 × 22.
+- Räume **seitenweise, nur ganze Namen** – nie mitten im Wort abschneiden, nie Text unter einem Pfeil.
+  Die Pfeile ‹ › sind Endkappen (30, Sand) neben den Namen; ohne Weiteres in der Richtung blass.
+  Wenig Rest auf einer Seite → Namen gleichmäßig verteilen, viel Rest (letzte Seite) → mittig.
+  Sehr schmal (< 260 px für die Räume, Tablet mit offener Seitenleiste): Zuhause nur als Haus-Kreis.
+- **Nichts wandert**: Antippen eines sichtbaren Raums verschiebt weder Zuhause noch andere Namen;
+  die Leiste behält beim Blättern ihre Breite. Nur wenn der aktive Raum nicht zu sehen ist (Raumwechsel
+  von woanders), springt sie einmal auf seine Seite. Mausrad/Wischen blättert seitenweise.
+- Aktiver Raum: weiße Pille mit dem Handy-Schatten (auch hell gut sichtbar), Schrift unverändert.
+- Glocke, Sprechblase und ⋯ in **einer Kapsel** (46 hoch = Knopf 40 + 2 × 3, Fläche/Schatten wie die
+  Leiste, Trenner vor ⋯); nur mit ⋯ (Casora-verwaltet) und nur in Designs mit `--casora-chrome-capsule-fill`.
+  Prüfung: `dev/qa/regress/r230_raumleiste_ganze_namen.mjs`, `r150_raumleiste_pfeil.mjs`, `r91` (Kapsel).
+
+Handy – Navigationsleiste B (`casora-mobile-nav`, nur Casora/Nebel):
+- Glocke (und Sprechblase) und ⋯ sitzen **rechts unten in der Leiste** hinter einem Trenner; oben bleiben
+  nur Titel und Wetter (Kopf rückt über `--casora-mhead-reserve` hoch).
+- Alle Tasten 50 × 48 mit Sand-Kreis 36; die aktive Taste ist die weiße Pille **ohne Namen** – der Name
+  steht schon groß als Seitentitel darüber (kein doppeltes „Zuhause“).
+- Menüs der Leisten-Knöpfe öffnen nach oben (`casoraMenuGlass.enter` dreht sie um, wenn unten kein Platz ist).
