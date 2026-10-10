@@ -30,20 +30,19 @@ await need('Beleuchtungs-Badge sichtbar', at);
 await page.mouse.move(at.x, at.y); await page.mouse.down(); await page.waitForTimeout(900); await page.mouse.up();
 await page.waitForTimeout(2500);
 const hit = await page.evaluate(async () => {
-  const b = window.__pierce('.lps-off').find((x) => x.getBoundingClientRect().width > 0);
-  if (!b) return { btn: false };
-  const s = window.__pierce('.lps-s').find((x) => x.getBoundingClientRect().width > 0);
-  const spec = JSON.parse(b.getAttribute('data-lps-tap'));
+  // 1.3 Kopfzeile A: „Alles aus“ = Hauptschalter rechts im Kopf (Haus: nur aus, mit Rückfrage).
+  const pop = window.casoraPopup && window.casoraPopup.element;
+  const b = pop && pop.shadowRoot.querySelector('.header-switch');
+  if (!b || b.hidden) return { btn: false };
+  const ids = pop._hsIds || [];
   const st = document.querySelector('home-assistant').hass.states;
-  const vis = window.casoraVisibleIds ? await window.casoraVisibleIds(spec.ids, { rooms: true }) : spec.ids;
-  const r = b.getBoundingClientRect();
-  return { btn: true, house: spec.house === 1, dis: b.classList.contains('dis'), text: b.textContent.trim(),
-    below: !!s && r.top > s.getBoundingClientRect().bottom, ids: spec.ids,
-    on: vis.filter((id) => st[id] && st[id].state === 'on'), at: { x: r.x + r.width / 2, y: r.y + r.height / 2 } };
+  const r = b.getBoundingClientRect(), t = pop.shadowRoot.querySelector('.header-title').getBoundingClientRect();
+  return { btn: true, house: !!pop._hsOff, dis: b.disabled, checked: b.getAttribute('aria-checked'), right: r.left > t.left,
+    ids, on: ids.filter((id) => st[id] && st[id].state === 'on'), at: { x: r.x + r.width / 2, y: r.y + r.height / 2 } };
 });
-await need('Haus-Licht-Popup mit Knopf „Alles aus“', hit.btn && hit.house, hit);
-await check('Knopf „Alles aus“ unter der Zustandszeile, bedienbar', hit.text === 'Alles aus' && hit.below && !hit.dis, hit);
-await check('nur Lichter im Knopf', hit.ids.every((id) => id.startsWith('light.')) && hit.on.length > 1, hit.ids);
+await need('Haus-Licht-Popup mit Hauptschalter (nur aus)', hit.btn && hit.house, hit);
+await check('Hauptschalter rechts im Kopf, an und bedienbar', hit.right && hit.checked === 'true' && !hit.dis, hit);
+await check('nur Lichter am Schalter', hit.ids.every((id) => id.startsWith('light.')) && hit.on.length > 1, hit.ids);
 
 const dialog = () => page.evaluate(() => {
   const host = document.querySelector('.casora-askfirst');

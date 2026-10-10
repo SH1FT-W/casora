@@ -345,18 +345,16 @@
       + '<div style="width:19px;height:19px;background-color:' + (open ? ((window._casoraInkOn && window._casoraInkOn(lkHue)) || '#fff') : 'var(--casora-soft-glyph-off, rgba(58,50,43,0.55))') + ';'
       + "-webkit-mask:url('" + ic + "') center / contain no-repeat;mask:url('" + ic + "') center / contain no-repeat;"
       + (busy ? 'animation:lktg-pl 1.2s ease-in-out infinite;' : '') + '"></div></div>'
-      /* D-06: auf der hellen aktiven Fläche Schrift wie die aktive Geräte-Zeile (dunkel auch im dunklen Design). */
-      + '<div style="flex:1;min-width:0;"><div style="font-size:14.5px;font-weight:700;letter-spacing:-0.01em;color:'
-      + (open ? 'var(--casora-entity-name-active, var(--casora-popup-tiles-text-primary, #3A322B))' : 'var(--casora-popup-tiles-text-primary, #3A322B)') + ';">' + esc(word) + '</div>'
-      + (hint ? '<div style="font-size:12.5px;font-weight:500;color:' + (open ? 'var(--casora-entity-state-active-color, var(--casora-soft-sub, rgba(58,50,43,0.6)))' : 'var(--casora-soft-sub, rgba(58,50,43,0.6))')
+      /* Schrift der aktiven Zeile aus dem Token (DP-07: im Dunkeln helle Schrift auf Sand 14 %). */
+      + '<div style="flex:1;min-width:0;"><div style="font-size:var(--casora-soft-row-fs, 14.5px);font-weight:700;letter-spacing:-0.01em;color:'
+      + (open ? 'var(--casora-soft-row-active-ink, var(--casora-entity-name-active, #3A322B))' : 'var(--casora-popup-tiles-text-primary, #3A322B)') + ';">' + esc(word) + '</div>'
+      + (hint ? '<div style="font-size:var(--casora-soft-sub-fs, 12.5px);font-weight:500;color:' + (open ? 'var(--casora-soft-row-active-sub, var(--casora-entity-state-active-color, rgba(58,50,43,0.6)))' : 'var(--casora-soft-sub, rgba(58,50,43,0.6))')
         + ';margin-top:1px;">' + esc(hint) + '</div>' : '') + '</div>'
-      /* Entriegelt liegt der (ausgeschaltete) Schalter immer auf der hellen aktiven Fläche – auch im dunklen
-         Design. Die Theme-Werte für „aus“ (helle Spur, heller Knopf) wären dort unsichtbar (Design-Audit
-         10.10.2026): aus = Spur und Knopf wie im hellen Design. */
       + '<div style="position:relative;width:44px;height:26px;border-radius:999px;flex:none;background:'
-      + (on ? 'var(--casora-lps-switch-on, #B67A50)' : 'rgba(58,50,43,0.38)') + ';transition:background .2s ease;">'
+      // 1.3: Schalter wie alle Popup-Schalter (Gerätefarbe, Aus-Spur aus dem Theme – die aktive Zeile ist im Dunkeln nicht mehr hell).
+      + (on ? 'var(--casora-sw-on, var(--casora-lps-switch-on, #B67A50))' : 'var(--casora-sw-off, rgba(58,50,43,0.38))') + ';transition:background .2s ease;">'
       + '<div style="position:absolute;top:3px;left:' + (on ? '21px' : '3px') + ';width:20px;height:20px;border-radius:50%;'
-      + 'background:' + (on ? 'var(--casora-lps-knob, #fff)' : '#fff') + ';box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:left .2s ease;"></div></div></div>'
+      + 'background:var(--casora-lps-knob, #fff);box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:left .2s ease;"></div></div></div>'
       + '<style>@keyframes lktg-pl{0%,100%{opacity:1}50%{opacity:.35}}@media (hover:hover){.lkbar[aria-checked="true"]:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11)) !important;}}</style>';
   };
 })();

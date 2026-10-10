@@ -5548,7 +5548,8 @@ window.casoraMenuGlass = {
       overflow: hidden;
     }
     /* Der gespiegelte Zustand trägt die Inline-Größe 17 der Inhaltszeile – im Kopf 15, fett. */
-    :host([soft]) .header-status span, :host([soft]) .header-status div { font-size: inherit !important; letter-spacing: normal !important; }
+    :host([soft]) .header-status span, :host([soft]) .header-status div { font-size: inherit !important; letter-spacing: normal !important;
+      white-space: normal !important; display: inline !important; }
     :host([soft]) .header-status > div { display: inline !important; }
     :host([soft]) .header-status .hui-sep.hui-cut { display: none !important; }
     :host([soft]) .header-status i.hui-sep { font-style: normal; opacity: .6; }

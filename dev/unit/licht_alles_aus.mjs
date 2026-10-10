@@ -55,6 +55,16 @@ assert.deepEqual(hs.entities, ['light.decke']);
 calls.length = 0;
 hs.toggle(false);
 assert.deepEqual(calls, [['light', 'turn_on', ['light.decke']]]);
+// Leuchte aus einem Raum (sc.room): Schalter gilt dem Raum (aus), einschalten nur diese Leuchte.
+S.render({ gid: 'light.x', flat: { name: 'Wohnzimmer', rid: 'light.decke', lights: ['light.decke'], room: ['light.decke', 'light.stehlampe'] } }, 'hero', states, hass, null);
+hs = S.head(tileSrc, hass);
+assert.deepEqual(hs.entities, ['light.decke', 'light.stehlampe'], 'Raum der Leuchte');
+calls.length = 0; L('light.decke', false); L('light.stehlampe', true);
+hs.toggle(true);
+assert.deepEqual(calls, [['light', 'turn_off', ['light.stehlampe']]]);
+calls.length = 0;
+hs.toggle(false);
+assert.deepEqual(calls, [['light', 'turn_on', ['light.decke']]]);
 // Raum einer einzelnen Leuchte (Review 1.1.1): kleinste Lichtgruppe in einem Bereich, nie die
 // Gruppe „alle Lichter“ über mehrere Bereiche – sonst schaltete „Alles aus“ das ganze Haus.
 {

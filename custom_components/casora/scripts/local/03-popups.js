@@ -3562,13 +3562,17 @@
     };
     var onOf = function (ids) { var hh = hassNow() || hass; return ids.filter(function (x) { return hh.states[x] && hh.states[x].state === 'on'; }); };
     if (sc) {
-      var ids = lights(sc.lights);
+      // Einzelne Leuchte aus einem Raum (sc.room, Review 1.1.1): der Schalter gilt dem ganzen Raum („Alles aus“),
+      // Einschalten nur diese Leuchte.
+      var ids = lights(sc.room || sc.lights);
       if (!ids.length) return null;
       return { entities: ids, toggle: function (on) {
         var hh = hassNow() || hass;
         if (on) {
           var offIds = onOf(ids);
           if (offIds.length) hh.callService('light', 'turn_off', {}, { entity_id: offIds });
+        } else if (sc.room) {
+          hh.callService('light', 'turn_on', {}, { entity_id: lights(sc.lights) });
         } else if (ids.length > 1 && sc.rid && hh.states[sc.rid] && hh.states['script.casora_light_smart_toggle']) {
           hh.callService('script', 'casora_light_smart_toggle', { light_entity: sc.rid });
         } else hh.callService('light', 'turn_on', {}, { entity_id: ids.length > 1 && sc.rid && hh.states[sc.rid] ? sc.rid : ids });

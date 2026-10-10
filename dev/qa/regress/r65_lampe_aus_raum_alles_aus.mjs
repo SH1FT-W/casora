@@ -42,9 +42,11 @@ outer: for (const dash of desks) for (const [i, v] of dash.config.views.entries(
   await page.mouse.click(at.x, at.y);
   await page.waitForTimeout(2500);
   const p = await page.evaluate(() => { const s = window.casoraPopup && window.casoraPopup.surface; if (!s) return null;
-    return { rows: window.__pierce('.lps-row', s).length, off: window.__pierce('.lps-off', s).map((e) => e.getAttribute('data-lps-tap')), title: (window.__pierce('.lps-t', s)[0] || {}).textContent }; });
+    // 1.3 Kopfzeile A: „Alles aus“ = Hauptschalter im Kopf (Einträge in _hsIds), Titel im Kopf.
+    const el = window.casoraPopup.element, sw = el.shadowRoot.querySelector('.header-switch');
+    return { rows: window.__pierce('.lps-row', s).length, ids: sw && !sw.hidden ? (el._hsIds || []) : [], title: el.shadowRoot.querySelector('.header-title').textContent }; });
   await check('Lampen-Popup zeigt alle Leuchten des Raums', p && p.rows === grp.m.length, { popup: p, raum: grp.m.length });
-  const ids = p && p.off[0] ? JSON.parse(p.off[0]).ids : [];
+  const ids = (p && p.ids) || [];
   await check('„Alles aus“ da und für die Leuchten des Raums', !!ids.length && grp.m.every((x) => ids.includes(x)), { ids, raum: grp.m });
   await check('Titel ist die Lampe, nicht „Licht <Raum>“', p && p.title && !/^Licht /.test(p.title), p && p.title);
   done = true;

@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// Gewünscht (07.10.2026): Im Licht-Popup eines Raums ein Knopf „Alles aus“, der alle Lichter dieses
+// Gewünscht (07.10.2026; seit 1.3 Hauptschalter im Kopf): Im Licht-Popup eines Raums „Alles aus“, der alle Lichter dieses
 // Raums ausschaltet (nur Licht). Erwartet im Casora-Look (Tablet 1024×768, hell): der Knopf steht
 // unter „x von y An“, ist bedienbar, solange ein Licht an ist, und ruft light.turn_off genau für die
 // eingeschalteten Lichter des Raums auf. Der Dienstaufruf wird im Browser abgefangen – am Test-HA
@@ -34,21 +34,25 @@ for (const v of dash.config.views.slice(1)) {
   await page.mouse.move(at.x, at.y); await page.mouse.down(); await page.waitForTimeout(900); await page.mouse.up();
   await page.waitForTimeout(2500);
   hit = await page.evaluate(() => {
-    const b = window.__pierce('.lps-off').find((x) => x.getBoundingClientRect().width > 0);
-    if (!b) return { btn: false };
-    const s = window.__pierce('.lps-s').find((x) => x.getBoundingClientRect().width > 0);
-    const spec = JSON.parse(b.getAttribute('data-lps-tap'));
+    // 1.3 Kopfzeile A: „Alles aus“ ist der Hauptschalter rechts im Popup-Kopf.
+    const pop = window.casoraPopup && window.casoraPopup.element;
+    const b = pop && pop.shadowRoot.querySelector('.header-switch');
+    if (!b || b.hidden || !b.getBoundingClientRect().width) return { btn: false };
+    const t = pop.shadowRoot.querySelector('.header-title').getBoundingClientRect();
+    const ids = pop._hsIds || [];
     const st = document.querySelector('home-assistant').hass.states;
-    return { btn: true, dis: b.classList.contains('dis'), text: b.textContent.trim(), below: !!s && b.getBoundingClientRect().top > s.getBoundingClientRect().bottom,
-      ids: spec.ids, on: spec.ids.filter((id) => st[id] && st[id].state === 'on'), at: (() => { const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; })() };
+    const r = b.getBoundingClientRect();
+    return { btn: true, dis: b.disabled, checked: b.getAttribute('aria-checked'), right: r.left > t.left && Math.abs((r.top + r.height / 2) - (t.top + t.height / 2)) < 40,
+      ids, on: ids.filter((id) => st[id] && st[id].state === 'on'), lpsOff: window.__pierce('.lps-off').length, at: { x: r.x + r.width / 2, y: r.y + r.height / 2 } };
   });
   if (hit.btn && hit.on.length) break;
   await page.keyboard.press('Escape'); await page.waitForTimeout(800);
 }
 await need('Raum-Licht-Popup mit eingeschaltetem Licht', hit && hit.btn && hit.on.length, hit);
-await check('Knopf „Alles aus“ unter der Zustandszeile', hit.text === 'Alles aus' && hit.below, hit);
-await check('Knopf bedienbar, solange ein Licht an ist', !hit.dis, hit);
-await check('nur Lichter im Knopf', hit.ids.every((id) => id.startsWith('light.')), hit.ids);
+await check('Hauptschalter im Kopf rechts neben dem Titel, an', hit.right && hit.checked === 'true', hit);
+await check('kein eigener „Alles aus“-Knopf mehr im Inhalt', hit.lpsOff === 0, hit);
+await check('Schalter bedienbar, solange ein Licht an ist', !hit.dis, hit);
+await check('nur Lichter am Schalter', hit.ids.every((id) => id.startsWith('light.')), hit.ids);
 await page.mouse.click(hit.at.x, hit.at.y);
 await page.waitForTimeout(1500);
 const calls = await page.evaluate(() => window.__qaCalls);
