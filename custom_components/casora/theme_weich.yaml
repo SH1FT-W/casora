@@ -99,6 +99,49 @@ Casora:
   # Großbuchstaben-Etiketten. Ohne diesen Schalter bleibt alles wie in Standard/Glas.
   casora-popup-layout: soft
 
+  # --- Designsprache (Tokens, Casora 1.3 „Feinschliff“) – eine Quelle für Popups, später Kacheln/Menüs/Studio ---
+  # Doku: docs/handbuch/design-regeln.md (§ 0). Feste Zahlen im Code nur noch als Rückfallwert dieser Werte.
+  # Radien (konzentrisch: innen = außen − Abstand; Pille = halbe Höhe)
+  casora-r-window: 44px          # Popup, Sheet
+  casora-r-surface: 32px         # Kachel, Platte
+  casora-r-row: 24px             # Zeile im Popup, Menüzeile, Regler
+  casora-r-element: 18px         # Segment, Feld in einer Zeile
+  casora-r-small: 12px           # Symbol-Kachel in der Zeile, Eingabe, Tooltip
+  casora-r-pill: 999px           # Chip, Badge, Knopf mit Text, Schalter
+  # Abstände: 4er-Raster
+  casora-space-1: 4px
+  casora-space-2: 8px
+  casora-space-3: 12px
+  casora-space-4: 16px
+  casora-space-5: 20px
+  casora-space-6: 24px
+  casora-space-8: 32px
+  casora-space-10: 40px
+  # Schrift (Inter): Etikett · Unterzeile · Wert · Zeile · Überschrift · Titel · Seite
+  casora-fs-label: 12px
+  casora-fs-sub: 13px
+  casora-fs-value: 14px
+  casora-fs-row: 15px
+  casora-fs-heading: 17px
+  casora-fs-title: 28px
+  casora-fs-page: 34px
+  # Symbolgrößen (6): Popup-Kopf · Kachel · Zeile · Badge · Knopf · Status
+  casora-ic-head: 56px
+  casora-ic-head-phone: 48px
+  casora-ic-tile: 44px
+  casora-ic-row: 36px
+  casora-ic-badge: 28px
+  casora-ic-button: 48px
+  casora-ic-status: 22px
+  # Bewegung: Auftritt (Popup, Platten, Menüs) und Schieber (Markierung, Breiten); Rückmeldung 160 ms
+  casora-ease-enter: cubic-bezier(.2,.8,.3,1)
+  casora-dur-enter: 320ms
+  casora-ease-slide: cubic-bezier(.36,0,.16,1)
+  casora-dur-slide: 360ms
+  casora-dur-feedback: 160ms
+  # Druck auf Tasten
+  casora-press-scale: .97
+
   # --- Fix-Runde 1 A: globale Tokens (Schrift, Skalen, Palette) ---
   # A-01: HA setzt body fest auf Roboto; casora-core.js liest diesen Wert global (Fallback = HA-Wert).
   casora-body-font: var(--primary-font-family)
@@ -691,7 +734,7 @@ Casora:
       casora-soft-control-fill: var(--casora-control-off)
       casora-soft-icon-off: var(--casora-icon-circle-bg)
       casora-soft-glyph: "#FFFFFF"
-      casora-soft-glyph-off: rgba(58,50,43,0.55)
+      casora-soft-glyph-off: rgba(58,50,43,0.70)   # DP-17: ≥ 3 : 1 auf Sand (war .55)
       casora-waste-rest: "#8F7E6D"
       casora-soft-close-ink: var(--casora-popup-tiles-text-secondary)
       casora-soft-seg-on: var(--casora-entity-background-active)
@@ -722,8 +765,19 @@ Casora:
       casora-soft-mehr-ink: var(--casora-popup-tiles-text-secondary)
       casora-soft-mehr-count-fill: rgba(140,115,90,0.12)
       # --- Entschlacken E3 (soft) ---
-      casora-soft-row-selected: rgba(255,253,249,1)
-      casora-soft-row-selected-shadow: 0 1px 2px rgba(90,70,50,0.05), 0 8px 22px -12px rgba(90,70,50,0.18)
+      casora-soft-row-selected: var(--casora-soft-row-active)
+      casora-soft-row-selected-shadow: var(--casora-soft-row-active-shadow)
+      # 1.3 Tokens: drei Schatten-Stufen (Ruhe · gehoben · schwebend)
+      casora-shadow-rest: 0 1px 2px rgba(90,70,50,0.05), 0 8px 22px -12px rgba(90,70,50,0.18)
+      casora-shadow-raised: 0 2px 4px rgba(90,70,50,0.06), 0 18px 40px -14px rgba(120,85,50,0.32)
+      casora-shadow-float: 0 40px 90px -30px rgba(90,65,40,0.40), 0 10px 28px rgba(90,70,50,0.10)
+      # DP-07: EINE Art „aktiv“ für Popup-Zeilen (an, gewählt, lädt …): hell Creme + Ruhe-Schatten
+      casora-soft-row-active: rgba(255,253,249,1)
+      casora-soft-row-active-shadow: var(--casora-shadow-rest)
+      casora-soft-row-active-ink: var(--casora-entity-name-active)
+      casora-soft-row-active-sub: var(--casora-entity-state-active-color)
+      # DP-17: dunkle Symbolfarbe auf hellen Akzenten (Gelb, Orange, Grün) statt Weiß unter 3 : 1
+      casora-on-accent-ink: rgba(46,34,20,0.88)
 
       # --- Haushalt-Popups (soft) ---
       casora-hh-bar-fill: var(--casora-color-teal)
@@ -1077,7 +1131,7 @@ Casora:
       casora-soft-control-fill: var(--casora-control-off)
       casora-soft-icon-off: var(--casora-icon-circle-bg)
       casora-soft-glyph: "#FFFFFF"
-      casora-soft-glyph-off: rgba(242,235,225,0.55)
+      casora-soft-glyph-off: rgba(242,235,225,0.70)   # DP-17 (war .55)
       casora-waste-rest: "#6A5948"
       casora-soft-close-ink: var(--casora-popup-tiles-text-secondary)
       casora-soft-seg-on: var(--casora-entity-background-active)
@@ -1113,8 +1167,17 @@ Casora:
       casora-hh-bar-ink: "#10302C"
       casora-hh-bar-track: var(--casora-soft-control-fill)
       # --- Entschlacken E3 (soft) ---
-      casora-soft-row-selected: rgba(255,240,220,0.13)
-      casora-soft-row-selected-shadow: 0 10px 26px -14px rgba(0,0,0,0.55)
+      casora-soft-row-selected: var(--casora-soft-row-active)
+      casora-soft-row-selected-shadow: var(--casora-soft-row-active-shadow)
+      casora-shadow-rest: 0 6px 16px -10px rgba(0,0,0,0.45)
+      casora-shadow-raised: 0 10px 26px -14px rgba(0,0,0,0.55)
+      casora-shadow-float: 0 40px 90px -30px rgba(0,0,0,0.70), 0 10px 28px rgba(0,0,0,0.30)
+      # DP-07: im Dunkeln keine Creme-Umkehr mehr – aktive Zeile = hellere Sand-Platte, Schrift bleibt hell
+      casora-soft-row-active: rgba(255,240,220,0.14)
+      casora-soft-row-active-shadow: none
+      casora-soft-row-active-ink: var(--primary-text-color)
+      casora-soft-row-active-sub: var(--casora-ton-ink)
+      casora-on-accent-ink: rgba(46,34,20,0.88)
 
       # --- Fix-Runde 1 C: Casora Studio dunkel – warmes Anthrazit statt kaltem Blauschwarz ---
       casora-studio-backdrop: "linear-gradient(to bottom, #27231F, #1E1B18)"

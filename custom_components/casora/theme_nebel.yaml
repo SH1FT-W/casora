@@ -148,7 +148,7 @@ Casora Nebel:
       casora-soft-row-hover: rgba(101,114,129,0.11)
       casora-soft-row-press: rgba(101,114,129,0.16)
       casora-soft-plate-fill: rgba(101,114,129,0.05)
-      casora-soft-glyph-off: rgba(46,50,55,0.55)
+      casora-soft-glyph-off: rgba(46,50,55,0.70)
       casora-waste-rest: '#757D87'
       casora-soft-art-shadow: 0 10px 24px -14px rgba(59,69,81,0.35)
       casora-soft-more-fade: rgba(234,237,241,0.90)
@@ -160,8 +160,11 @@ Casora Nebel:
       casora-soft-mehr-hover: rgba(101,114,129,0.11)
       casora-soft-mehr-press: rgba(101,114,129,0.16)
       casora-soft-mehr-count-fill: rgba(101,114,129,0.12)
-      casora-soft-row-selected: rgba(250,252,254,1)
-      casora-soft-row-selected-shadow: 0 1px 2px rgba(59,69,81,0.05), 0 8px 22px -12px rgba(59,69,81,0.18)
+      casora-shadow-rest: 0 1px 2px rgba(59,69,81,0.05), 0 8px 22px -12px rgba(59,69,81,0.18)
+      casora-shadow-raised: 0 2px 4px rgba(59,69,81,0.06), 0 18px 40px -14px rgba(49,91,121,0.32)
+      casora-shadow-float: 0 40px 90px -30px rgba(51,64,79,0.40), 0 10px 28px rgba(59,69,81,0.10)
+      casora-soft-row-active: rgba(250,252,254,1)
+      casora-on-accent-ink: rgba(26,33,40,0.88)
       casora-soft-dot-ring: rgba(89,99,111,0.35)
       casora-soft-cam-fail: '#1F2123'
       casora-soft-primary: '#3C6F93'
@@ -358,7 +361,7 @@ Casora Nebel:
       casora-soft-row-hover: rgba(228,237,247,0.08)
       casora-soft-row-press: rgba(228,237,247,0.11)
       casora-soft-plate-fill: rgba(228,237,247,0.04)
-      casora-soft-glyph-off: rgba(229,233,238,0.55)
+      casora-soft-glyph-off: rgba(229,233,238,0.70)
       casora-waste-rest: '#505862'
       casora-soft-more-fade: rgba(36,38,40,0.90)
       casora-soft-grabber: rgba(228,237,247,0.22)
@@ -366,7 +369,8 @@ Casora Nebel:
       casora-soft-mehr-hover: rgba(228,237,247,0.08)
       casora-soft-mehr-press: rgba(228,237,247,0.11)
       casora-soft-mehr-count-fill: rgba(228,237,247,0.09)
-      casora-soft-row-selected: rgba(228,237,247,0.13)
+      casora-soft-row-active: rgba(228,237,247,0.14)
+      casora-on-accent-ink: rgba(26,33,40,0.88)
       casora-studio-backdrop: 'linear-gradient(to bottom, #212325, #191B1D)'
       casora-studio-glow: rgba(156,190,214,0.07)
       casora-studio-ink: '#E5E9EE'
