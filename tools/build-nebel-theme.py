@@ -36,15 +36,13 @@ KEEP = {"casora-lps-fill", "casora-lps-fill-ink", "casora-lps-dot-warm", "casora
         "state-light-on-color", "casora-temp-gradient"}
 
 # Von Hand: Akzent sichtbar machen (aktive Navigation, eingeschaltete Kacheln, Schalter,
-# Hauptknöpfe) und etwas straffere Ecken. Alles andere folgt der Umfärbung.
+# Hauptknöpfe). Alles andere folgt der Umfärbung. Ecken wie Casora (1.3, Daniel 11.10.2026):
+# Kacheln 32, Handy- und Szenen-Kacheln ebenso – keine eigenen Nebel-Radien mehr.
 PETROL = "#3F7491"
 FIX = {
     "top": {
         "primary-color": PETROL,
         "casora-color-neutral": "#B9C2CB",
-        "ha-card-border-radius": "26px",
-        "casora-tile-radius-phone": "24px",
-        "casora-scene-tile-radius": "24px",
         "casora-hero-title-weight": 700,
         "hero-title-letter-spacing-desktop": "-2px",
         "casora-np-progress": f"var(--casora-soft-media-play, {PETROL})",
