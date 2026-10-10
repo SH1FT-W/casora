@@ -1563,7 +1563,7 @@
           }).length;
         } catch (_) { sceneCount = 0; }
         if (sceneCount) {
-          // D5 (1.2): Überschriften der Raumseite 2 px eingerückt wie die Gruppen-Überschriften (_appendGroupHeader).
+          // dk-06 (1.3): Überschriften der Raumseite fluchten mit Kacheln und Titel (16 px, früher D5 +2 px).
           this._appendRevealCard({
             type:       'custom:button-card',
             template:   'casora_mobile_header',
@@ -1571,7 +1571,7 @@
             name:       'Szenen',
             variables:  { hide_caret: true, mobile_filter_categories: null },
             styles:     {
-              card:          [{ padding: `24px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC} + 2px)` }],
+              card:          [{ padding: `24px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})` }],
               custom_fields: { arrow: [{ display: 'none' }] },
             },
           }, this._contentEl, 0);
@@ -1625,7 +1625,7 @@
               name:       'Geräte',
               variables:  { hide_caret: true, mobile_filter_categories: null },
               styles:     {
-                card:          [{ padding: `18px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC} + 2px)` }],
+                card:          [{ padding: `18px var(--casora-rail-left, 16px) 10px calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})` }],
                 custom_fields: { arrow: [{ display: 'none' }] },
               },
             }, this._contentEl, i);
@@ -1648,8 +1648,8 @@
       wrap.style.cssText = 'display:block;width:100%;box-sizing:border-box;opacity:0;';
       wrap._animIndex = animIdx;
       wrap.setAttribute('data-casora-room-group', key);
-      const left = `calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC} + 2px)`;
-      const right = `calc(var(--casora-rail-left, 16px) + ${LANDSCAPE_GUTTER_CALC} + 2px)`;
+      const left = `calc(max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px)) + ${LANDSCAPE_GUTTER_CALC})`;
+      const right = `calc(var(--casora-rail-left, 16px) + ${LANDSCAPE_GUTTER_CALC})`;
       const head = document.createElement('div');
       head.style.cssText = [
         `padding:${first ? 14 : 24}px ${right} 10px ${left}`,

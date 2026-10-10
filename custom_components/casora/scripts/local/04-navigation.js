@@ -140,7 +140,8 @@
       /* Schwebend über der Leiste statt ganzflächig (Wunsch 08.10.2026: „wie früher kleiner“): Breite und Höhe
          nach Inhalt (mittig, 260 bis 420 px), ringsum rund, die Leiste bleibt sichtbar darunter. */
       + '.hmn-menu.hmn-sheet{left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom, 0px) * 0.4);margin:0 auto;width:max-content;min-width:260px;max-width:min(420px, calc(100vw - 24px));padding:0;overscroll-behavior:contain;'
-      +   'border-radius:var(--casora-window-radius, 28px) !important;box-shadow:var(--casora-window-shadow, 0 18px 44px -14px rgba(60,40,20,0.35)) !important;'
+      /* dk-10 (1.3): Radius konzentrisch zur Zeilen-Pille (26) plus Listenrand 8 = 34. */
+      +   'border-radius:34px !important;box-shadow:var(--casora-window-shadow, 0 18px 44px -14px rgba(60,40,20,0.35)) !important;'
       +   'display:flex;flex-direction:column;overflow:hidden;opacity:0;'
       +   'max-height:min(520px, calc(100vh - max(env(safe-area-inset-top, 0px), 12px) - 150px));'
       +   'max-height:min(520px, calc(100dvh - max(env(safe-area-inset-top, 0px), 12px) - 150px));'
@@ -167,8 +168,11 @@
       +   'background:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, currentColor);}'
       + '.hmn-sheet .hmn-item .hmn-sic ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;line-height:0;color:inherit;}'
       + '.hmn-sheet .hmn-item .hmn-sic .hmn-svg{width:20px;height:20px;display:block;background:currentColor;-webkit-mask:var(--hmn-svg) center/contain no-repeat;mask:var(--hmn-svg) center/contain no-repeat;}'
-      /* D6 (1.2) „Farbe heißt aktiv“: Szenen nur aktiv in ihrer Studio-Farbe, sonst Sand wie die Räume. */
       + '.hmn-row.on .hmn-sic{background:var(--hmn-tone, var(--primary-color, #B67A50));color:var(--casora-msheet-on-ink, #fff);}'
+      /* dk-17 (1.3): Szenen immer in ihrer Studio-Farbe wie das Szenen-Badge; P-V8: die laufende Szene zusätzlich
+         mit leicht in ihrer Farbe getönter Zeile. */
+      + '.hmn-row.hmn-tone .hmn-sic{background:var(--hmn-tone);color:var(--casora-msheet-on-ink, #fff);}'
+      + '.hmn-sheet[data-kind=scenes] .hmn-item.hmn-row.hmn-tone.on{background:color-mix(in srgb, var(--hmn-tone) var(--casora-scene-on-tint, 18%), transparent);}'
       + '.hmn-txt{display:flex;flex-direction:column;min-width:0;}'
       + '.hmn-name{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
       /* Zustand rechts als kleiner Wert in Text 2 (wie ein Badge-Wert); im offenen Raum in der Aktiv-Zustandsfarbe. */

@@ -25,6 +25,16 @@ const filterCategories = () => window.CASORA_FILTER_CATEGORIES || {};
 
 const PAGE_ANIM_MS  = 900;  // time for the card entrance animation to finish
 const SORT_DELAY_MS = 2500; // hold time before a state change triggers a sort
+// P-V2 (1.3): erst nach Ruhe umsortieren – nie unter dem Finger. Jede Bedienung irgendwo auf der Seite
+// (Tippen, Tasten, Mausrad) schiebt das Umsortieren, bis QUIET_MS lang nichts passiert ist; solange ein
+// Casora-Popup offen ist oder die Maus über der Reihe steht, wartet es ebenfalls.
+const QUIET_MS = 2000;
+if (!window._casoraLastInput) {
+  window._casoraLastInput = 0;
+  const markInput = () => { window._casoraLastInput = Date.now(); };
+  ['pointerdown', 'pointerup', 'keydown', 'wheel', 'touchstart', 'touchend'].forEach((t) =>
+    window.addEventListener(t, markInput, { capture: true, passive: true }));
+}
 const SORT_MS       = 450;  // FLIP slide duration
 const EASE_FORWARD  = 'cubic-bezier(0.4, 0, 0.2, 1)';
 const EASE_BACK     = 'cubic-bezier(0.4, 0, 0.2, 1)';
@@ -1416,10 +1426,24 @@ class CasoraSmartRow extends HTMLElement {
     if (!this._sortEnabled) return;
     if (this._sortTimer) clearTimeout(this._sortTimer);
     const delay = window._casoraNoFilterAnim ? 100 : SORT_DELAY_MS;
-    this._sortTimer = setTimeout(() => {
-      this._sortTimer = null;
-      this._applyOrder(true);
-    }, delay);
+    this._sortTimer = setTimeout(() => this._sortWhenQuiet(), delay);
+  }
+
+  // Umsortieren erst, wenn niemand bedient (P-V2): sonst in kleinen Schritten neu versuchen.
+  _sortWhenQuiet() {
+    this._sortTimer = null;
+    if (!window._casoraNoFilterAnim) {
+      const idle = Date.now() - (window._casoraLastInput || 0);
+      const popup = !!(window.casoraPopup && window.casoraPopup.surface);
+      let hover = false;
+      try { hover = isDesktop() && this.matches(':hover'); } catch (e) { /* alter Browser */ }
+      if (idle < QUIET_MS || popup || hover) {
+        const wait = Math.max(250, popup || hover ? 600 : QUIET_MS - idle);
+        this._sortTimer = setTimeout(() => this._sortWhenQuiet(), wait);
+        return;
+      }
+    }
+    this._applyOrder(true);
   }
 
   // ── FLIP animation ──────────────────────────────────────────────────────────

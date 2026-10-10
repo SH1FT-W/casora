@@ -2319,6 +2319,36 @@ window.casoraMenuGlass = {
     };
   }
 
+  // casora-midfit:start
+  // per-10 (1.3): Lange Namen in der Mitte kürzen statt am Ende („WZ Dream…Aus“) – das letzte Wort
+  // unterscheidet oft (An/Aus). Gilt für Elemente mit data-casora-mid="<voller Name>"; passt der Name,
+  // bleibt er unverändert. casoraMidText ist die reine Kürzung (Test: dev/unit/name_mitte.mjs).
+  if (typeof window.casoraMidText !== 'function') {
+    window.casoraMidText = function (full, keep) {
+      const t = String(full == null ? '' : full);
+      const words = t.trim().split(/\s+/);
+      const last = words.length > 1 ? words[words.length - 1] : '';
+      const tail = last && last.length <= 12 ? last : t.slice(-4);
+      const head = t.slice(0, t.length - tail.length).replace(/\s+$/, '');
+      const k = Math.max(1, Math.min(head.length, keep));
+      return head.slice(0, k).replace(/\s+$/, '') + '…' + tail;
+    };
+    window.casoraMidFit = function (root) {
+      if (!root || !root.querySelectorAll) return;
+      root.querySelectorAll('[data-casora-mid]').forEach((el) => {
+        const full = el.getAttribute('data-casora-mid');
+        if (el.textContent !== full) el.textContent = full;
+        const over = () => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1;
+        if (!el.clientWidth || !over()) return;
+        for (let k = full.length - 2; k >= 1; k--) {
+          el.textContent = window.casoraMidText(full, k);
+          if (!over()) return;
+        }
+      });
+    };
+  }
+  // casora-midfit:end
+
   if (typeof window.casoraPsnStateTitle !== 'function') {
     const PSN_NOT_A_TITLE = new Set([
       'playing', 'paused', 'idle', 'on', 'off', 'home', 'away', 'online',
@@ -5856,7 +5886,7 @@ window.casoraMenuGlass = {
           if (el.parentNode && el.parentNode.classList.contains('drag')) continue;
           el.style.width = fAvg + '%';
           if (el.parentNode) {
-            el.parentNode.querySelectorAll('.hui-sl-val').forEach(function (n) { n.textContent = fAvg + ' %'; });
+            el.parentNode.querySelectorAll('.hui-sl-val').forEach(function (n) { n.textContent = fAvg + '\u202F%'; });
             var fInk = el.parentNode.querySelector('.hui-sl-ink');
             if (fInk) fInk.style.clipPath = 'inset(0 ' + (100 - fAvg) + '% 0 0)';
           }
@@ -8179,7 +8209,7 @@ window.casoraMenuGlass = {
       if (el.dataset.casoraAxis === 'x') {
         fill.style.width = pct + '%';
         var lb = el.dataset.casoraLabel ? el.dataset.casoraLabel + ' · ' : '';
-        el.querySelectorAll('.hui-sl-val').forEach(function (n) { n.textContent = lb + pct + ' %'; });
+        el.querySelectorAll('.hui-sl-val').forEach(function (n) { n.textContent = lb + pct + '\u202F%'; });
         var ink = el.querySelector('.hui-sl-ink');
         if (ink) ink.style.clipPath = 'inset(0 ' + (100 - pct) + '% 0 0)';
         return;
@@ -8992,8 +9022,8 @@ window.casoraMenuGlass = {
   if (window._casoraStateText) return;
   var ALL = { unavailable: 'Nicht verfügbar', unknown: 'Unbekannt' };
   var DOM = {
-    lock: { locked: 'Verriegelt', unlocked: 'Entriegelt', locking: 'Wird verriegelt…',
-      unlocking: 'Wird entriegelt…', jammed: 'Klemmt', open: 'Geöffnet', opening: 'Wird geöffnet…' },
+    lock: { locked: 'Verriegelt', unlocked: 'Entriegelt', locking: 'Wird verriegelt …',
+      unlocking: 'Wird entriegelt …', jammed: 'Klemmt', open: 'Geöffnet', opening: 'Wird geöffnet …' },
     cover: { open: 'Geöffnet', closed: 'Geschlossen', opening: 'Öffnet', closing: 'Schließt', stopped: 'Gestoppt' },
   };
   var BOOL = { on: 'An', off: 'Aus' };
@@ -11622,4 +11652,24 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   setInterval(function () { check(true); }, EVERY);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) check(false); });
   window.casoraUpdateCheck = function () { check(true); };
+})();
+
+// P-V4 (1.3): zuletzt angesehenes Dashboard merken – das Studio öffnet beim Start dieses
+// (casora-panel.js, _refreshDashboards). Nur Lovelace-Seiten; ob es ein Casora-Dashboard ist,
+// prüft das Studio selbst (es nimmt nur Dashboards aus seiner Liste).
+(function () {
+  if (window._casoraLastViewBound) return;
+  window._casoraLastViewBound = true;
+  var note = function (tries) {
+    try {
+      var seg = decodeURIComponent(String(location.pathname).split('/')[1] || '');
+      var ha = document.querySelector('home-assistant');
+      var panels = ha && ha.hass && ha.hass.panels;
+      if (!panels) { if ((tries || 0) < 10) setTimeout(function () { note((tries || 0) + 1); }, 1000); return; }
+      var p = panels[seg];
+      if (p && p.component_name === 'lovelace') localStorage.setItem('casora_last_viewed_dashboard', seg);
+    } catch (e) { /* privater Modus */ }
+  };
+  window.addEventListener('location-changed', function () { setTimeout(note, 300); });
+  setTimeout(note, 800);
 })();

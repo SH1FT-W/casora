@@ -21,6 +21,8 @@ Casora:
   casora-color-green: "#6AAE78"
   casora-color-orange: "#DE8A4E"
   casora-color-red: "#D35A4E"
+  # dk-08 (1.3): Rot für Schrift auf Creme (aktive Kachel) – 4,9:1 statt 3,3:1; Kreise/Flächen bleiben casora-color-red.
+  casora-color-red-text: "#A8443A"
   casora-color-deep-orange: "#C8693F"
   casora-color-pink: "#D16E7E"
   # --- Abfallarten (Tonnen-Symbol, Kalenderpunkte, Kachel am Abholtag), 05.10.2026 ---
@@ -57,7 +59,7 @@ Casora:
   # D5 (1.2): Szenen-Kacheln am Handy wie die Geräte-Kacheln (casora_scene_row)
   casora-scene-tile-h-phone: 62px
   casora-scene-icon-box-phone: 42px
-  casora-scene-chip-pad-phone: 10px 12px
+  casora-scene-chip-pad-phone: 10px
   casora-scene-name-weight: 700
   # Chip-Reihen am Handy (Raum-Chips Temperatur/Luftfeuchtigkeit/Licht, Klima/Sicherheit/Energie):
   # Pillen mit gleichmäßig 8 px Abstand (Standard ohne Pillen: 16 px).
@@ -71,6 +73,9 @@ Casora:
   casora-popup-content-pad-bottom: 36px
   casora-popup-more-fade: var(--casora-dialog-bg)
   casora-tile-radius-phone: 30px
+  # dk-05 (1.3): Symbolkreis ringsum gleich – Desktop/Tablet oben wie links (Innenabstand), Handy 10/10.
+  casora-tile-icon-mt-desktop: 0px
+  casora-entity-inner-pad-mobile: 10px
 
   # --- Wenig Glas: Blur nur noch als Hauch ---
   ha-card-backdrop-filter: blur(10px) saturate(1.05)
