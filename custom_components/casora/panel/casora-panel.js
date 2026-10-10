@@ -968,17 +968,6 @@ function mobileHoldersOf(mstate, key, templates) {
   return out;
 }
 
-function pairValues(pair, roomIdx, key) {
-  const room = ((pair.desktop.compact || {}).rooms || [])[roomIdx];
-  const link = pair.link.links[roomIdx];
-  const out = { desktop: room ? (room.variables || {})[key] : undefined, mobile: [] };
-  if (!link || link.section === null || !link.overview) return out;
-  mobileHoldersOf(pair.mobile, key, pair.templates).forEach((h) => {
-    out.mobile.push({ template: h.card.template, key: h.key, value: holderValue(h) });
-  });
-  return out;
-}
-
 const emptyVal = (v) => v === undefined || v === null || v === ""
   || (Array.isArray(v) && !v.length);
 
@@ -12024,20 +12013,6 @@ class CasoraPanel extends HTMLElement {
         phone: (list || []).find((o) => o !== d && stem(o.url_path) === stem(d.url_path) && isPhone(o)) || null,
       });
     });
-    return out;
-  }
-
-  _dashLabels(list) {
-    const stemOf = (u) => String(u || "").replace(/[-_]mobile$/i, "");
-    const isMobile = (d) => /[-_]mobile$/i.test(d.url_path || "");
-    const paired = list.filter((d) =>
-      list.some((o) => o !== d && stemOf(o.url_path) === stemOf(d.url_path)));
-    const stems = new Set(paired.map((d) => stemOf(d.url_path)));
-    const out = new Map();
-    list.forEach((d) => out.set(d.url_path, d.title || d.url_path));
-    if (stems.size === 1 && paired.length === list.length) {
-      paired.forEach((d) => out.set(d.url_path, isMobile(d) ? "Phone" : "Desktop"));
-    }
     return out;
   }
 

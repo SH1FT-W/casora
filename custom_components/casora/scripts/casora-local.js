@@ -138,7 +138,6 @@ const wsP = (async () => {
 const cached = () => { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null'); } catch (e) { return null; } };
 
 await fileP;
-window.CASORA_SETTINGS_FILE = window.CASORA_SETTINGS || null;
 const TIMEOUT = {};
 let r = await Promise.race([wsP, wait(SETTINGS_WAIT).then(() => TIMEOUT)]);
 if (r === TIMEOUT) {
