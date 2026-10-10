@@ -190,7 +190,8 @@
   // ── Studio ───────────────────────────────────────────────────────────────────
 
   const CSS = ".ka-wish{width:100%;min-height:88px;box-sizing:border-box;resize:vertical;border:0;outline:0;background:none;color:var(--ink);"
-    + "font:400 var(--t-body,17px)/1.4 var(--primary-font-family,system-ui);padding:12px 16px}"
+    // Wie das Namensfeld darüber: Studio-Schrift, Text bündig (die Zeile hat schon 16 px Rand).
+    + "font:400 var(--t-body,17px)/1.4 system-ui;font-family:inherit;padding:12px 0}"
     + ".ka-wish::placeholder{color:var(--ink-3,rgba(255,255,255,.45))}"
     + ".ka-ai{appearance:none;border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:999px;"
     + "white-space:nowrap;font:600 var(--t-callout,15px) system-ui;color:#fff;background:var(--casora-studio-ai-grad, linear-gradient(135deg,#bf5af2,#7d5cff))}"

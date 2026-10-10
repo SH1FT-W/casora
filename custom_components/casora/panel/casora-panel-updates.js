@@ -37,6 +37,8 @@
     + ".cu-sum{margin:5px 0 0 17px;font-size:var(--t-foot);line-height:1.45;color:var(--ink-2)}"
     + ".cu-acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px}"
     + ".cu-acts button{padding:8px 14px;font-size:var(--t-foot)}"
+    // Hell: Zweitknopf (ghost) auf der weißen Karte war unsichtbar (--chip = Kartenfarbe) – wie „Foto wählen“.
+    + ":host(.is-light) .cu-acts button.ghost{background:rgba(140,115,90,.12);box-shadow:none}"
     + ".cu-rowinst{display:block;margin:14px 0 2px;padding:8px 14px;font-size:var(--t-foot)}"
     + ".cu-when{flex:1 1 100%;font-size:var(--t-caption);color:var(--ink-3,rgba(235,235,245,.5))}"
     + ".cu-bar{position:relative;height:4px;margin-top:14px;border-radius:2px;overflow:hidden;background:rgba(255,255,255,.1)}"
