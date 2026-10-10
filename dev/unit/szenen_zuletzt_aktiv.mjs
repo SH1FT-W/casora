@@ -36,7 +36,11 @@ const hass = {
   callApi: (m, url) => {
     calls.push(url);
     const id = decodeURIComponent(url.match(/filter_entity_id=([^&]+)/)[1]);
-    return Promise.resolve([HIST[id] || []]);
+    // Wie HA: ohne end_time nur ein Tag ab start (10.10.2026: Abfrage über 30 Tage kam leer zurück).
+    const start = Date.parse(decodeURIComponent(url.match(/history\/period\/([^?]+)/)[1]));
+    const e = url.match(/[?&]end_time=([^&]+)/);
+    const end = e ? Date.parse(decodeURIComponent(e[1])) : start + 86400000;
+    return Promise.resolve([(HIST[id] || []).filter((x) => { const t = Date.parse(x.last_changed); return t >= start && t <= end; })]);
   },
   callWS: () => Promise.resolve({}),
   entities: {}, states: {},
@@ -114,5 +118,8 @@ assert.ok(badge('scene.stimmung').includes('vor 8 Min.'), badge('scene.stimmung'
 assert.ok(badge('scene.ohne').includes('gestern'));
 // Handy-Zeile (Kern, chipHtml): gleiche Zeit.
 assert.ok(/vor 8 Min\./.test(SC.chipHtml('scene.stimmung', states, {})), 'Handy-Zeile');
+// Heizdauer über 7 Tage (onHours) fragt ebenfalls bis jetzt ab, nicht nur den ersten Tag.
+window.casoraDevice.onHours(['input_boolean.nachtmodus'], 7);
+assert.ok(calls.length > 0 && calls.every((u) => /[?&]end_time=/.test(u)), 'jede Verlaufsabfrage mit end_time');
 Date.now = realNow;
 console.log('szenen_zuletzt_aktiv: ok (' + calls.length + ' Verlaufsabfragen)');

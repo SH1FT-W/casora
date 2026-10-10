@@ -366,8 +366,9 @@ window.casoraPriceKwh = function (v) {
     var ha = document.querySelector('home-assistant'), hass = ha && ha.hass;
     if (!hass || !hass.callApi) { delete onCache[key]; return null; }
     var start = new Date(Date.now() - days * 86400000), now = Date.now();
+    // end_time immer mitgeben: ohne liefert HA nur den ersten Tag ab start.
     hass.callApi('GET', 'history/period/' + start.toISOString() + '?filter_entity_id=' + eids.join(',')
-      + '&minimal_response&no_attributes')
+      + '&end_time=' + encodeURIComponent(new Date(now).toISOString()) + '&minimal_response&no_attributes')
       .then(function (r) {
         var ms = 0;
         (r || []).forEach(function (list) {
@@ -404,8 +405,9 @@ window.casoraPriceKwh = function (v) {
     var keep = hit ? hit.v : null;
     lastOnCache[eid] = { lc: lc, state: st.state, v: keep, busy: true };
     var start = new Date(Date.now() - 30 * 86400000);
+    // end_time immer mitgeben: ohne liefert HA nur den ersten Tag ab start (also nichts aus den letzten 29 Tagen).
     hass.callApi('GET', 'history/period/' + start.toISOString() + '?filter_entity_id=' + eid
-      + '&minimal_response&no_attributes')
+      + '&end_time=' + encodeURIComponent(new Date().toISOString()) + '&minimal_response&no_attributes')
       .then(function (r) {
         var list = (r && r[0]) || [], v = null;
         for (var i = list.length - 1; i > 0 && v == null; i--) {

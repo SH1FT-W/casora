@@ -2916,11 +2916,12 @@ function refreshTemplates(current, bundleTemplates, priorPrints) {
 }
 
 // Umlaute ausschreiben statt verlieren: „Küche“ → kueche, nicht k-che.
-const slug = (s) =>
+const translit = (s) =>
   String(s || "").toLowerCase().trim()
     .replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss")
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "room";
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const slug = (s) => translit(s) || "room";
 
 // Im Erststart gewählter Performance-Modus („“ = aus, „auto“, „on“); neue Räume übernehmen ihn.
 let firstRunPerf = null;
@@ -12655,9 +12656,10 @@ class CasoraPanel extends HTMLElement {
   }
 
   // HA needs a url_path, but it is not something anyone should have to choose.
+  // Umlaute wie bei Räumen ausschreiben („Sonderfälle“ → sonderfaelle, nicht sonderf-lle);
+  // nur für neue Dashboards, bestehende Adressen bleiben.
   _flowPath(title, fallback, suffix) {
-    const s = String(title || "").toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const s = translit(title);
     // HA requires a hyphen, so a single-word name earns the suffix.
     return this._freePath(!s ? fallback : s.includes("-") ? s : s + "-" + suffix);
   }
@@ -26011,7 +26013,7 @@ class CasoraPanel extends HTMLElement {
 
 // Casora: Bausteine des Panels für Casora-Erweiterungen (Import-Assistent, Geräte-Assistent).
 window.__casoraPanelInternals = {
-  blankRoom, roomPhoto, slug, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
+  blankRoom, roomPhoto, slug, translit, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
   applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
   findType, tileTypeAny, newTile, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,

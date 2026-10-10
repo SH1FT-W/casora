@@ -523,6 +523,35 @@ def copy_files(config_dir: str, shipped_dir: str) -> dict:
     }
 
 
+def _room_photo_names(rels: list[str]) -> set[str]:
+    return {os.path.splitext(r[len("rooms/"):])[0] for r in rels
+            if r.startswith("rooms/") and not os.path.splitext(r)[0].endswith("-night")}
+
+
+def room_photo_count(rels: list[str], cfgs: list[Any]) -> int:
+    """Raumfotos, die die neuen Dashboards nutzen (variables.image), statt aller Dateien im
+    Ordner – sonst „13 Raumfotos übernommen“ bei 5 Räumen. Ohne Dashboard: alle Tagfotos."""
+    names = _room_photo_names(rels)
+    if not cfgs:
+        return len(names)
+    used: set[str] = set()
+
+    def walk(x: Any) -> None:
+        if isinstance(x, dict):
+            for k, v in x.items():
+                if k == "image" and isinstance(v, str):
+                    used.add(v)
+                else:
+                    walk(v)
+        elif isinstance(x, list):
+            for v in x:
+                walk(v)
+
+    for c in cfgs:
+        walk(c)
+    return len(names & used)
+
+
 def files_complete(config_dir: str, shipped_dir: str) -> bool:
     """Jede eigene Datei aus www/hemma liegt gleich in www/casora (oder ist Casoras eigene)."""
     return all(w in ("same", "shipped") for w in plan_files(config_dir, shipped_dir).values())
@@ -1130,6 +1159,7 @@ async def async_move_files(hass: HomeAssistant, dashboards: list[str] | None) ->
     urls: list[str] = []
     for u in dashboards or []:
         urls += [u, u + "-mobile"]
+    cfgs: list[Any] = []
     for u in urls:
         dash = boards.get(u)
         if dash is None or getattr(dash, "mode", "storage") != "storage":
@@ -1138,6 +1168,7 @@ async def async_move_files(hass: HomeAssistant, dashboards: list[str] | None) ->
         if is_hemma_config(cfg):
             continue  # das Original bleibt, wie es ist
         new, n = rewrite_refs(cfg, result["mapping"])
+        cfgs.append(new)
         if not n:
             continue
         try:
@@ -1145,6 +1176,8 @@ async def async_move_files(hass: HomeAssistant, dashboards: list[str] | None) ->
             rewritten[u] = n
         except Exception as err:  # noqa: BLE001
             errors.append(f"{u}: {err}")
+    if cfgs:
+        result["rooms"] = room_photo_count(result["copied"] + result["existing"], cfgs)
     result["rewritten"] = rewritten
     result["errors"] = errors
     return result
