@@ -61,6 +61,10 @@ const EXPECT = [
   ['40 % in 30 Min.', '40% in 30 min'],
   ['Hell 62 %', 'Hell 62%'],
   ['<b>62 %</b>', '<b>62%</b>'],
+  // Jalousie-Kachel („62% Geöffnet“) und Glocke Pflanze („Boden bei 40%“) blieben deutsch.
+  ['62% Geöffnet', '62% open'],
+  ['38% Geschlossen', '38% closed'],
+  ['Boden bei 40%', 'Soil at 40%'],
 ];
 for (const [de, en] of EXPECT) assert.equal(tr(de), en, de);
 // Kein Englisch-Muster mit „ %“ mehr; CSS-artige Werte ohne Leerzeichen bleiben unberührt.

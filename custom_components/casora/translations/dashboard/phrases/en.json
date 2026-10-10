@@ -2434,6 +2434,18 @@
    "{1}% open"
   ],
   [
+   "^(\\d+) ?% Geöffnet$",
+   "{1}% open"
+  ],
+  [
+   "^(\\d+) ?% Geschlossen$",
+   "{1}% closed"
+  ],
+  [
+   "^Boden bei (\\d+) ?%$",
+   "Soil at {1}%"
+  ],
+  [
    "^(\\d+) geöffnet$",
    "{1} open"
   ],
