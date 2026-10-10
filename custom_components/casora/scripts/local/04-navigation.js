@@ -429,7 +429,7 @@
       if (D[desk] === undefined) {
         D[desk] = null;
         var self = this;
-        this._hass.connection.sendMessagePromise({ type: 'lovelace/config', url_path: desk }).then(function (cfg) {
+        (window._casoraCfgOnce ? window._casoraCfgOnce(this._hass, desk) : this._hass.connection.sendMessagePromise({ type: 'lovelace/config', url_path: desk })).then(function (cfg) {
           var v0 = ((((cfg || {}).views || [])[0] || {}).cards || [])[0];
           var t = ((cfg || {}).button_card_templates || {}).casora_scene_row;
           var src = [v0 && v0.variables, t && t.variables].filter(has)[0] || {};
