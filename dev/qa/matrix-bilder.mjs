@@ -199,7 +199,12 @@ async function locate(pg, row, tpl) {
     if (row.geraet === 'handy') cands.push('/' + PHONE + '/' + (phoneViews[0] || { path: 'home' }).path);
     else for (const v of deskViews.slice(0, 4)) cands.push('/' + DESK + '/' + v.path);
   }
-  if (MATRIX_DASH && matrixTpl.has(tpl)) cands.push('/qa-matrix/matrix');
+  // Steht die Vorlage in keiner echten Ansicht (nur im Matrix-Dashboard), gleich dort suchen – außer Badges,
+  // die die Raumkarte selbst zeichnet (dort ist das echte Badge der bessere Ort).
+  if (MATRIX_DASH && matrixTpl.has(tpl)) {
+    const inReal = (row.geraet === 'handy' ? phoneViews : deskViews).some((v) => v.tpl.has(tpl));
+    if (!inReal && !/^casora_badge_/.test(tpl)) cands.unshift('/qa-matrix/matrix'); else cands.push('/qa-matrix/matrix');
+  }
   // Merken je Browser: wo die Vorlage zuletzt stand bzw. dass sie fehlt (Zeilen derselben Fläche folgen aufeinander).
   pg.__loc = pg.__loc || {};
   const known = pg.__loc[tpl];
