@@ -279,7 +279,8 @@ async function fuelView(page) {
     el.hass = ha.hass;
     el.addEventListener('hass-action', (ev) => { const a = ev.detail && ev.detail.config && (ev.detail.config.icon_tap_action || ev.detail.config.tap_action);
       if (a && a.casora_popup && window.casoraPopup) { ev.stopPropagation(); window.casoraPopup.open(a.casora_popup); } }, { capture: true, once: true });
-    el._handleAction({ detail: { action: 'tap' } }, { isIcon: true });
+    // Seit 1.3 (Bündel schlank) fehlt icon_tap_action, wo sie dasselbe Popup öffnet: ein Tipp aufs Symbol löst dann die tap_action aus.
+    el._handleAction({ detail: { action: 'tap' } }, { isIcon: !!el._hasIconActions });
     for (let i = 0; i < 40; i++) {
       const s = window.casoraPopup && window.casoraPopup.surface;
       const row = s && window.__pierce('.casora-tank-row', s).find((e) => e.getBoundingClientRect().height > 0);
