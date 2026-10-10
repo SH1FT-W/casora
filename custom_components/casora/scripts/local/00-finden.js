@@ -909,7 +909,9 @@ window.casoraPriceKwh = function (v) {
         + (x[3] ? '<span style="position:absolute;left:-12%;top:50%;width:124%;height:1.6px;margin-top:-0.8px;border-radius:1px;background:currentColor;transform:rotate(-45deg)"></span>' : '')
         + '</span><span aria-hidden="true" style="font-variant-numeric:tabular-nums;font-weight:700">' + x[2] + '</span></span>';
     });
-    return { text: text, html: '<span class="cs-sum" style="display:inline-flex;align-items:center;gap:9px;height:1.25em;line-height:1;vertical-align:top">' + items.join('') + '</span>' };
+    // Höhe = Zeilenhöhe der Badge-Unterzeile (.badge-sub line-height 1.2): mit 1.25em war das
+    // Sicherheits-Badge 0,6 px höher als alle anderen Badges (Feinschliff 1.3, d-kacheln).
+    return { text: text, html: '<span class="cs-sum" style="display:inline-flex;align-items:center;gap:9px;height:1.2em;line-height:1;vertical-align:top">' + items.join('') + '</span>' };
   };
 
   // ── Kurz oder ausführlich? (07.10.2026) ───────────────────────────────────────
