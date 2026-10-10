@@ -740,6 +740,9 @@
       document.addEventListener("keydown", esc, true);
       box.addEventListener("pointerdown", (ev) => { if (ev.target === box) close(true); });
       root.appendChild(box);
+      // per-03 (10.10.2026): Fläche erst rechts der angedockten HA-Seitenleiste – sonst lag der Kasten
+      // (Fenstermitte) am Tablet 1024 halb darunter.
+      box.style.left = Math.max(0, Math.round(this.getBoundingClientRect().left)) + "px";
       paint();
       // Am Handy nicht gleich die Tastatur: erst sehen, was neu ist.
       if (!phone) setTimeout(() => input.focus(), 20);

@@ -1230,6 +1230,9 @@
       document.addEventListener("keydown", esc, true);
       wrapEl.addEventListener("pointerdown", (ev) => { if (ev.target === wrapEl) close(true); });
       root.appendChild(wrapEl);
+      // per-03 (10.10.2026): Fläche erst rechts der angedockten HA-Seitenleiste – sonst lag der Kasten
+      // (Fenstermitte) am Tablet 1024 halb darunter.
+      wrapEl.style.left = Math.max(0, Math.round(this.getBoundingClientRect().left)) + "px";
       paint();
       // Sofort fokussieren: sonst landeten Buchstaben, die direkt nach dem Klick kamen, beim Knopf
       // (und in HA-Kürzeln). Der zweite Versuch fängt Fokus-Diebe (Toast, Popover) danach ab.
