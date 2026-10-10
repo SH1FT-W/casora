@@ -44,7 +44,8 @@ assert.ok(lpc.includes("oc + ' An'") && !lpc.includes("oc + ' an'"), 'Licht-Kopf
 
 // ── V6 ──
 const cam = T.casora_popup_camera.tap_action.casora_popup.content;
-assert.equal(cam, T.casora_popup_camera.icon_tap_action.casora_popup.content, 'Kamera: tap und icon_tap gleich');
+// Seit 1.3 ohne eigene icon_tap_action im Paket (Symbol nimmt die tap_action, build-templates.py).
+assert.ok(!T.casora_popup_camera.icon_tap_action || cam === T.casora_popup_camera.icon_tap_action.casora_popup.content, 'Kamera: Symbol öffnet dasselbe Popup');
 assert.ok(/width:52px;height:52px;/.test(cam) && !/width:38px;height:38px;/.test(cam), 'Kamera-Knöpfe 52 px');
 for (const l of ["'Ton')", "'Aufnahme')", "'Ausfüllen')"]) assert.ok(cam.includes(l), 'Kamera-Beschriftung ' + l);
 assert.ok(cam.includes('cam-lbl') && cam.includes('height:52px;padding:0 15px'), 'Zubehör-Pille 52 px + Beschriftung');

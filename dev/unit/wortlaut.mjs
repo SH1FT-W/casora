@@ -13,8 +13,10 @@ const scene = JSON.stringify(T.casora_badge_scene_group);
 assert.ok(scene.includes("'Keine aktiv'") && !scene.includes("'Keine Aktiv'") && scene.includes("' aktiv'") && !scene.includes("' Aktiv'"), 'Szenen-Badge: „Keine aktiv“ / „N aktiv“');
 // Die Quelle (dashboards/casora) muss dasselbe sagen – sonst dreht build-templates.py es zurück.
 const SRC = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8'));
-assert.equal(JSON.stringify(SRC.casora_badge_light_group), light, 'Quelle = Paket (Licht-Gruppenbadge)');
-assert.equal(JSON.stringify(SRC.casora_badge_scene_group), scene, 'Quelle = Paket (Szenen-Badge)');
+// Paket ist verschlankt (tools/js_schlank.py) – die Quelle muss dieselben Wörter tragen.
+const srcL = JSON.stringify(SRC.casora_badge_light_group), srcS = JSON.stringify(SRC.casora_badge_scene_group);
+assert.ok(srcL.includes("'1 An'") && srcL.includes('${onCount} An`'), 'Quelle = Paket (Licht-Gruppenbadge)');
+assert.ok(srcS.includes("'Keine aktiv'") && srcS.includes("' aktiv'") && !srcS.includes("' Aktiv'"), 'Quelle = Paket (Szenen-Badge)');
 const en = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/translations/dashboard/phrases/en.json', import.meta.url), 'utf8'));
 assert.ok(en.exact['Keine aktiv'] === 'None active' && !en.exact['Keine Aktiv'] && en.patterns.some((p) => p[0] === '^(\\d+) aktiv$') && en.patterns.some((p) => p[0] === '^(\\d+) An$'),
   'englische Übersetzung: „None active“, „N aktiv“, „N An“');

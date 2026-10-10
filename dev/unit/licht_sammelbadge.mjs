@@ -7,7 +7,8 @@
 //   node dev/unit/licht_sammelbadge.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
-const T = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/panel/casora-templates.json', import.meta.url), 'utf8')).templates;
+// Quelle statt Paket: das Paket ist seit 1.3 ohne Einrückung/Kommentare (tools/js_schlank.py).
+const T = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8'));
 
 const hold = T.casora_badge_light_group.hold_action;
 assert.ok(!('browser_mod' in hold), 'kein browser_mod-Altpfad mehr');

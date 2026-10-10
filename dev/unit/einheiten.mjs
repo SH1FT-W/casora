@@ -3,7 +3,9 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
-const T = JSON.parse(read('custom_components/casora/panel/casora-templates.json')).templates;
+// Quelle statt Paket: das Paket ist seit 1.3 ohne Einrückung/Kommentare (tools/js_schlank.py), die
+// Ausschnitte unten suchen nach Einrückung.
+const T = JSON.parse(read('dashboards/casora/button_card_templates.json'));
 const strings = (o) => typeof o === 'string' ? [o] : o && typeof o === 'object' ? Object.values(o).flatMap(strings) : [];
 const tpl = (name) => strings(T[name]).join('\n');
 const mod = (p) => read('custom_components/casora/scripts/local/' + p);
