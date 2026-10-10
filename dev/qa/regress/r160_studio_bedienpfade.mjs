@@ -66,12 +66,12 @@ await page.keyboard.type('qa xyz'); await wait(300);
 await page.keyboard.press('Escape'); await wait(300);
 await check('ds-02 Esc verwirft den Suchtext im Gerätefeld', (await f.inputValue()) === '', await f.inputValue());
 await page.mouse.click(1230, 860); await wait(400);
-// ds-02c: ↓ ↓ + Enter wählt den zweiten Eintrag des Menüs.
+// ds-02c: ↓ + Enter wählt den nächsten Eintrag des Menüs. Beim Öffnen ist das aktuelle Gerät markiert
+// (active = sein Platz); ↓ ↓ landete bei nur zwei Einträgen (arbeit-Haus: zwei Schlösser) wieder darauf.
 f = await field();
 const before = await ent();
 await f.click(); await wait(500);
 const opts = await P(`return [...p.shadowRoot.querySelectorAll('.combo-opt')].filter((e) => e.getBoundingClientRect().width).length;`);
-await page.keyboard.press('ArrowDown'); await wait(120);
 await page.keyboard.press('ArrowDown'); await wait(120);
 await page.keyboard.press('Enter'); await wait(800);
 const after = await ent();
