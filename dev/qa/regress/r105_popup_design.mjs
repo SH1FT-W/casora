@@ -7,6 +7,7 @@
 //    Gerät-/Auto-/Kalender-Vorlagen (max-width: calc(100% + 56px)) – lief vorher 114–287 px über den Rand.
 //  - DP-04 Schloss entriegelt (dunkel): Schalter hebt sich von der hellen aktiven Zeile ab (≥ 1,5:1),
 //    vorher Spur .18 + heller Knopf auf Creme = unsichtbar.
+//  - DP-06 Pfeil › auf der hellen aktiven Zeile (dunkel) ≥ 1,5:1 (vorher 1,09:1).
 //  - DP-25 Alarm scharf (dunkel): Symbol im hellen Kreis von „Unscharf schalten“ ≥ 3:1 (vorher hell auf Creme).
 //  - DP-11 Sicherheits-Badge mit Alarmanlage: Weich-Kopf (Zustand ≤ 17 px), nicht der alte 36-px-Kopf.
 //  - DP-02 Handy: Szenen-Chips und Kalender-Pfeile/-Legende mit Trefferfläche ≥ 40 px (inkl. ::before).
@@ -66,6 +67,8 @@ for (const dark of [false, true]) for (const V of VIEWS) {
     await settle(page); opened++;
     const g = await geo(page);
     await check(`${tag}: DP-04 Schloss-Schalter sichtbar`, !g.finds.some((f) => f.kind === 'schalter'), g.finds.filter((f) => f.kind === 'schalter'));
+    const weak = g.finds.filter((f) => f.kind === 'kontrast' && /^Symbol/.test(f.msg) && parseFloat(f.msg.slice(7)) < 1.5);
+    await check(`${tag}: DP-06 Schloss – Pfeil/Symbole auf aktiver Zeile sichtbar (≥ 1,5:1)`, !weak.length, weak);
   }
   // DP-25 + DP-11: Alarm scharf – Alarm-Popup und Sicherheits-Badge mit Alarmanlage
   if (pick.alarm) {

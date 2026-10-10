@@ -7407,6 +7407,9 @@ window.casoraMenuGlass = {
       +   'box-shadow:var(--button-card-box-shadow-active-mobile, none);}'
       + '.hui-srow.hui-act div{color:var(--casora-entity-name-active, inherit)!important;}'
       + '.hui-srow.hui-act .hui-sub{color:var(--casora-entity-state-active-color, ' + S.sub + ')!important;}'
+      // Pfeil › auf der hellen aktiven Zeile in deren Schriftfarbe: T.ink3 ist im dunklen Design hell und
+      // hatte auf Creme nur 1,09:1 (Design-Audit 10.10.2026, DP-06) – so wie im hellen Design.
+      + '.hui-srow.hui-act .hui-chev path{stroke:var(--casora-entity-name-active, currentColor);}'
       + '@media (hover:hover){.hui-srow.hui-tap:hover{background:' + S.rowHover + ';}'
       // Aktive Zeile behält beim Drüberfahren ihren hellen Grund (sonst dunkle Schrift auf dunklem Hover, Dark Mode).
       +   '.hui-srow.hui-act.hui-tap:hover{background:var(--casora-entity-background-active, ' + S.row + ');filter:brightness(.97);}}'
