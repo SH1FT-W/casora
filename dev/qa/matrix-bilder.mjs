@@ -192,11 +192,31 @@ async function locate(pg, row, tpl) {
     else for (const v of deskViews.slice(0, 4)) cands.push('/' + DESK + '/' + v.path);
   }
   if (MATRIX_DASH && matrixTpl.has(tpl)) cands.push('/qa-matrix/matrix');
-  for (const u of cands) {
+  // Merken je Browser: wo die Vorlage zuletzt stand bzw. dass sie fehlt (Zeilen derselben Fläche folgen aufeinander).
+  pg.__loc = pg.__loc || {};
+  const known = pg.__loc[tpl];
+  if (known === null) return null;
+  const order = known ? [known, ...cands.filter((u) => u !== known)] : cands;
+  for (const u of order) {
     if (!(await goView(pg, u))) continue;
-    const i = await pg.evaluate(FIND, tpl).catch(() => -1);
-    if (i >= 0) return { i, url: u };
+    let i = await pg.evaluate(FIND, tpl).catch(() => -1);
+    // Unter-Badges erscheinen erst nach Antippen ihres Sammel-Badges (wie popup-raender.mjs).
+    if (i < 0 && /^casora_badge_(?!.*_group$)/.test(tpl)) {
+      const groups = await pg.evaluate(() => window.__pierce('button-card').map((b, i) => ({ i, t: [].concat((b._config || {}).template || []), w: b.getBoundingClientRect().width }))
+        .filter((x) => x.w > 0 && x.t.some((t) => /^casora_badge_\w+_group$/.test(t))).map((x) => x.i)).catch(() => []);
+      for (const gi of groups) {
+        const b = await box(pg, gi); if (!b) continue;
+        await sleep(pg, 250);
+        if (row.geraet === 'desktop') await pg.mouse.click(b.x + b.w / 2, b.y + b.h / 2); else await pg.touchscreen.tap(b.x + b.w / 2, b.y + b.h / 2);
+        await sleep(pg, 1200);
+        if (await popupOpen(pg)) { await closeAll(pg); continue; }
+        i = await pg.evaluate(FIND, tpl).catch(() => -1);
+        if (i >= 0) { pg.__dirty = true; break; }
+      }
+    }
+    if (i >= 0) { pg.__loc[tpl] = u; return { i, url: u }; }
   }
+  pg.__loc[tpl] = null;
   return null;
 }
 const box = (pg, i) => pg.evaluate((i) => { const b = window.__pierce('button-card')[i]; if (!b) return null; b.scrollIntoView({ block: 'center', inline: 'center' });
@@ -496,9 +516,16 @@ async function tplRow(pg, row, f, V) {
   await pg.evaluate((i) => { window.__qaCard = window.__pierce('button-card')[i]; }, loc.i);
   if (f.familie === 'popup') {
     const touch = row.geraet !== 'desktop';
-    if (touch) await pg.touchscreen.tap(b.x + b.w / 2, b.y + b.h / 2); else await pg.mouse.click(b.x + b.w / 2, b.y + b.h / 2);
+    // Erst antippen, wenn die Kachel ruhig steht (nach dem Schließen des vorigen Popups); zweiter Versuch
+    // auf dem Namen (unten links) – die Mitte trifft bei manchen Kacheln einen Schalter.
     let opened = false;
-    for (let t0 = Date.now(); Date.now() - t0 < 6000; await sleep(pg, 200)) if (await popupOpen(pg)) { opened = true; break; }
+    for (const [fx, fy, wait] of [[0.5, 0.5, 5000], [0.22, 0.82, 4000]]) {
+      await sleep(pg, 450);
+      const bb = (await box(pg, loc.i)) || b;
+      if (touch) await pg.touchscreen.tap(bb.x + bb.w * fx, bb.y + bb.h * fy); else await pg.mouse.click(bb.x + bb.w * fx, bb.y + bb.h * fy);
+      for (let t0 = Date.now(); Date.now() - t0 < wait; await sleep(pg, 200)) if (await popupOpen(pg)) { opened = true; break; }
+      if (opened) break;
+    }
     if (!opened) return { status: 'nicht_abbildbar', grund: 'Antippen öffnet kein Popup (schaltet, klappt Unter-Badges auf oder Gerät fehlt)' };
     await settle(pg, POPSIG); await sleep(pg, 400);
     const r = await pg.evaluate(() => { const s = window.casoraPopup && window.casoraPopup.surface; let e = s;
@@ -527,6 +554,19 @@ for (const k of keys) {
     if (o) await o.browser.close().catch(() => {});
     o = await H.open({ ...V, dark: schema === 'dunkel', locale: SPRACHE === 'de' ? 'de-DE' : 'en-US', studio: 'b', args: ['--hide-scrollbars'] });
     await o.context.addInitScript((l) => { window.CASORA_QA_NO_WELLE_AUTO = true; localStorage.setItem('selectedLanguage', JSON.stringify(l)); }, SPRACHE);
+    // Nur abbilden, nichts schalten: Dienstaufrufe (call_service) und Speichern im Browser abfangen und mit
+    // „ok“ beantworten – das Test-HA bleibt für alle Zeilen im selben Zustand.
+    await o.context.addInitScript(() => {
+      const WS = window.WebSocket;
+      window.WebSocket = class extends WS {
+        send(d) {
+          if (typeof d === 'string' && /"type":"(call_service|lovelace\/config\/save|frontend\/set_user_data|casora\/settings\/(set|save))"/.test(d)) {
+            try { const m = JSON.parse(d); setTimeout(() => this.dispatchEvent(new MessageEvent('message', { data: JSON.stringify({ id: m.id, type: 'result', success: true, result: { context: { id: 'qa' } } }) })), 0); return; } catch (e) { /* normal */ }
+          }
+          return super.send(d);
+        }
+      };
+    });
   };
   await openB();
   // Zeilen nach Ort sortieren (gleiche Fläche nacheinander), Studio zuletzt egal.
