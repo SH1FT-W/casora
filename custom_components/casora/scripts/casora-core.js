@@ -5371,11 +5371,14 @@ window.casoraMenuGlass = {
     :host([soft]) .header-actions {
       position: absolute; top: 0; left: 26px; margin: 0; padding-right: 0; z-index: 1;
     }
+    /* max-width mit !important: ältere popup_styles einiger Vorlagen (Gerät, Auto, Kalender, eBike, Kontakte …)
+       setzen für den alten absoluten Kopf max-width: none !important bzw. calc(100% + 56px) – im Weich-Kopf
+       lief ein langer Titel damit über beide Ränder statt „…“ (Design-Audit 10.10.2026). */
     :host([soft]) .header-content {
       position: static;
       overflow: visible;
       width: auto;
-      max-width: 100%;
+      max-width: 100% !important;
       margin: 0;
       padding: 0;
       min-height: 38px;
@@ -5426,7 +5429,7 @@ window.casoraMenuGlass = {
       letter-spacing: -0.025em;
       line-height: 1.2;
       color: var(--casora-popup-tiles-text-primary, var(--primary-text-color, #3A322B));
-      max-width: 100%;
+      max-width: 100% !important;
     }
     :host([soft]) .header-eyebrow {
       order: 2;
