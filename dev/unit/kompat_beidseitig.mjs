@@ -23,19 +23,26 @@ function setup(hemmaInstalled) {
     customElements: { whenDefined: () => new Promise(() => {}), get: () => null, define() {} },
     MutationObserver: class { observe() {} },
   };
-  win.addEventListener = () => {};
+  const ev = {};
+  win.addEventListener = (n, f) => { (ev[n] = ev[n] || []).push(f); };
   const run = () => new Function(...Object.keys(env), code)(...Object.values(env));
-  return { win, run, tick: () => timers.splice(0).forEach((f) => f()) };
+  // Casoras Module fertig geladen (casora-local.js): erst dann legt die Gegenrichtung Zwillinge an (#14).
+  const loaded = () => { win._casoraLocalLoaded = ['x']; (ev['casora-local-loaded'] || []).forEach((f) => f()); };
+  return { win, run, loaded, tick: () => timers.splice(0).forEach((f) => f()) };
 }
 
 {
-  const { win, run, tick } = setup(false);
+  const { win, run, loaded, tick } = setup(false);
   // Casora selbst: ein eigenes Modul (wird wie bisher vorwärts gespiegelt).
   win._casoraLaundry = { own: 'casora' };
   // Eigenes Modul des Nutzers, alter Name.
   const mine = { popup: () => 'beispiel' };
   win._hemmaBeispiel = mine;
   run();
+  // Vor dem Laden der Casora-Module noch kein Zwilling: Er würde ein Modul mit
+  // „if (window._casoraX) return;“ am Start hindern (Issue #14).
+  assert.equal(Object.getOwnPropertyDescriptor(win, '_casoraBeispiel'), undefined, 'kein Zwilling vor casora-local-loaded');
+  loaded();
 
   assert.equal(win._casoraBeispiel, mine, '_casoraBeispiel → _hemmaBeispiel');
   assert.equal(win._casoraBeispiel.popup(), 'beispiel');
