@@ -5526,9 +5526,13 @@ window.casoraMenuGlass = {
       line-height: 1.2;
       color: var(--casora-popup-tiles-text-primary, var(--primary-text-color, #3A322B));
       max-width: 100% !important;
-      white-space: nowrap;
+      /* Lange Titel (Handy) dürfen zweizeilig werden, erst dann „…“. */
+      white-space: normal;
+      overflow-wrap: break-word;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
       overflow: hidden;
-      text-overflow: ellipsis;
       text-align: left;
     }
     :host([soft]) .header-status {
@@ -5542,10 +5546,7 @@ window.casoraMenuGlass = {
       color: var(--casora-soft-sub, var(--secondary-text-color));
       font-variant-numeric: tabular-nums;
       overflow-wrap: anywhere;
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 2;
-      overflow: hidden;
+      /* Statuszeile darf umbrechen (Teile an „·“, _casoraSepScan) – nie abgeschnitten. */
     }
     /* Der gespiegelte Zustand trägt die Inline-Größe 17 der Inhaltszeile – im Kopf 15, fett. */
     :host([soft]) .header-status span, :host([soft]) .header-status div { font-size: inherit !important; letter-spacing: normal !important;
@@ -6481,9 +6482,12 @@ window.casoraMenuGlass = {
         this._headerRing.style.removeProperty('--ring-ink');
       }
       var room = sf && this._ringSrc ? roomLabelOf(this._ringSrc) : '';
+      this._roomLabel = room;
       var title = sf ? stripRoom(this._cfgTitle, room) : this._cfgTitle;
-      if (room && title.toLowerCase() === room.toLowerCase()) room = '';
-      this._headerTitle.textContent = title || '';
+      // Titel beginnt schon mit dem Raum („Wohnzimmer/Küche“): Etikett weglassen statt den Raum doppelt zu zeigen.
+      if (room && title.toLowerCase().indexOf(room.toLowerCase()) === 0) room = '';
+      // Lange Titel umbrechen an „/“ (Zonen wie „Wohnzimmer/Küche“), nicht mitten im Wort.
+      this._headerTitle.textContent = sf ? String(title || '').replace(/\/(?=\S)/g, '/\u200B') : (title || '');
       this._headerEyebrow.textContent = sf ? (this._cfgEyebrow || room) : this._cfgEyebrow;
       this._header.hidden = !this._hasHeader && !ring;
       this._syncHeadSwitch();
@@ -6560,7 +6564,7 @@ window.casoraMenuGlass = {
       this._headHtml = html;
       this._headerStatus.innerHTML = html;
       // Der Raum steht schon als Etikett über dem Titel – in der Statuszeile nicht noch einmal.
-      var room = (this._headerEyebrow.textContent || '').trim().toLowerCase();
+      var room = String(this._roomLabel || '').trim().toLowerCase();
       if (room) {
         var spans = this._headerStatus.querySelectorAll('span:not(.hui-sep)');
         for (var i = 0; i < spans.length; i++) {
