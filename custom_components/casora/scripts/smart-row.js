@@ -647,8 +647,12 @@ class CasoraSmartRow extends HTMLElement {
     this._rawHass = hass;
     const F = window._casoraFilter;
     if (F && !this._filterOff) {
-      this._filterOff = F.onChange(() => {
-        if (this._rawHass) this.hass = this._rawHass;
+      // Schwach gehalten: sonst blieb jede Reihe aus geschlossenen Popups im Speicher.
+      const ref = typeof WeakRef === 'function' ? new WeakRef(this) : { deref: () => this };
+      const off = this._filterOff = F.onChange(() => {
+        const row = ref.deref();
+        if (!row) { off(); return; }
+        if (row._rawHass) row.hass = row._rawHass;
       });
     } else if (!F && !this._filterWait) {
       // P-01: Filter kommt später – dann einmal nachziehen und anmelden (sonst wirkt eine frühe

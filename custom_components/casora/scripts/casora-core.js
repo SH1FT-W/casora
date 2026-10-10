@@ -98,6 +98,17 @@
     var seg = ((window.location && window.location.pathname) || '').split('/').filter(Boolean);
     return seg[0] || '';
   };
+  // Konfiguration je Dashboard eine Minute geteilt (Rückfrage + Handy-Szenenleiste luden sie doppelt).
+  var cfgs = {};
+  window._casoraCfgOnce = function (hass, url) {
+    var c = cfgs[url];
+    if (!c || c.at && Date.now() - c.at > 6e4) {
+      c = cfgs[url] = { at: 0 };
+      c.p = Promise.resolve(hass.callWS({ type: 'lovelace/config', url_path: url })).then(function (r) { c.at = Date.now(); return r; },
+        function (e) { if (cfgs[url] === c) delete cfgs[url]; throw e; });
+    }
+    return c.p;
+  };
   // Partner holen (eine Minute gemerkt); Promise, solange er lädt, sonst null.
   var loadPair = function () {
     var url = dashUrl();
@@ -109,7 +120,7 @@
     pair.url = other; pair.got = EMPTY;
     // Höchstens 2 s warten – ein hängender Abruf darf keinen Knopf blockieren.
     var late = new Promise(function (r) { setTimeout(function () { r(null); }, 2000); });
-    pair.p = Promise.race([Promise.resolve(h.hass.callWS({ type: 'lovelace/config', url_path: other })), late]).then(function (cfg) {
+    pair.p = Promise.race([window._casoraCfgOnce(h.hass, other), late]).then(function (cfg) {
       return cfg ? fromCfg(cfg) : EMPTY;
     }, function () { return EMPTY; }).then(function (got) {
       if (pair.url === other) { pair.got = got; pair.at = Date.now(); pair.p = null; }
@@ -847,6 +858,13 @@
   customElements.whenDefined('button-card').then(function () {
     try {
       var C = customElements.get('button-card');
+      // „haptic“ meldet button-card mit .bind(this) ab – nie wirksam, jede Karte blieb im Speicher.
+      var h = C && C.prototype._hapticInterceptHandler;
+      if (typeof h === 'function' && !h.__casora) {
+        var f = C.prototype._hapticInterceptHandler = function () { return h.apply(this, arguments); };
+        f.__casora = true;
+        f.bind = function (el) { return el.__casoraHB || (el.__casoraHB = h.bind(el)); };
+      }
       var list = C && C.elementStyles;
       if (!Array.isArray(list) || list.__casoraShadow) return;
       var sh = new CSSStyleSheet();
