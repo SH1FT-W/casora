@@ -539,11 +539,12 @@
     .mhi { animation: mhi 1.8s ease-out; border-radius:10px; }
     @keyframes mhi { 0%,40% { box-shadow:0 0 0 3px color-mix(in srgb, var(--accent, #94603B) 45%, transparent); } 100% { box-shadow:0 0 0 3px transparent; } }
     .mwho .mval { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; min-height:40px;
-      padding:8px 12px 8px 14px; border:0; border-radius:12px; box-shadow:none; text-align:left; cursor:pointer;
-      font:inherit; font-size:var(--t-body, 15px); font-weight:500; color:var(--ink, inherit);
+      padding:8px 12px; border:0; border-radius:12px; box-shadow:none; text-align:left; cursor:pointer;
+      font:inherit; font-size:var(--t-callout, 15px); font-weight:400; color:var(--ink, inherit);
       background:var(--field-fill, var(--wash-fill, rgba(118,118,128,.12))); }
     .mwho .mval svg { width:18px; height:18px; flex:none; opacity:.6; }
     .mwho .mval .mvt { flex:1 1 auto; min-width:0; }
+    /* Wie die Eingabefelder darüber (Raumname, Hintergrundbild): 15 px, normal, Text bei 12 px. */
     .mwho .mnote { font-size:13px; line-height:1.35; color:var(--accent, #94603B); font-weight:600; margin:2px 0 0; }
     .mwhosheet .mu { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 2px;
       border-top:.5px solid var(--hair, rgba(127,127,127,.2)); font-size:15px; }

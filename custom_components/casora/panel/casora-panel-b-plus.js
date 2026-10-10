@@ -582,7 +582,9 @@
         // Der Inspektor zeigte danach noch Kopf und Namen der entfernten Kachel.
         const room = room$(this);
         if (this._sel && this._sel.group === "tiles" && room && !(room.tiles || []).some((t) => this._tileKey(t) === this._sel.key)) {
-          requestAnimationFrame(() => { this._sel = null; this._renderForm(); });
+          // Zurück auf den Raum (oben) – sonst blieb der Schleier über den Kacheln (_group „tiles“)
+          // und der Inspektor stand mitten in „Darstellung“.
+          requestAnimationFrame(() => { this._sel = null; this._group = "rooms"; this._toPageTop = true; this._renderForm(); });
         }
       } else if (d.kind === "tileorder") {
         const smart = this._smartSortOn && this._smartSortOn();

@@ -11,7 +11,9 @@
     + ".frow.casora-prow .rtext{flex:1 1 100%;min-width:0}"
     + ".casora-pctl{display:flex;gap:8px;flex:1 1 100%;min-width:0;align-items:center;flex-wrap:wrap}"
     + ".casora-pctl>.combo{flex:1 1 260px;min-width:0;width:auto;max-width:none}"
-    + ".casora-pctl>input.fin{flex:1 1 160px;min-width:0;text-align:left;padding:7px 12px;border-radius:var(--r-m);height:var(--k-h, 38px);box-sizing:border-box;"
+    // Grundbreite 100 statt 160: am Handy (Zeile 337 px) passen kurzes Feld + Feld + ✕ in eine Zeile –
+    // vorher rutschte das ✕ allein in eine eigene Zeile darunter (Zonen-Formulierung, Glocke).
+    + ".casora-pctl>input.fin{flex:1 1 100px;min-width:0;text-align:left;padding:7px 12px;border-radius:var(--r-m);height:var(--k-h, 38px);box-sizing:border-box;"
     + "background:var(--field, var(--casora-studio-field, rgba(118,118,128,.18)));border:none;color:inherit;font:inherit}"
     + ".casora-pctl>input.fin.casora-short{flex:0 1 130px}"
     + ".casora-pctl>input[type=color]{flex:0 0 38px;width:38px;height:32px;padding:0;border:none;border-radius:var(--r-s);background:none;cursor:pointer}"
