@@ -7,6 +7,7 @@
 //       [--dash <url>] [--handy-dash <url>] [--neu]   (--neu: schon abgebildete Zeilen nicht überspringen)
 //       [--nochmal <regex>]  nicht abbildbare Zeilen, deren Grund passt, erneut versuchen
 //       [--kern]  nur die Kernmatrix (siehe KERN)
+//       [--als demo]  Zeilen des demo-Hauses (en) in diesem Haus abbilden (Vorlage fehlt im demo-Haus)
 //   … --vorbereiten   legt im Test-HA ein Hilfs-Dashboard „qa-matrix“ an mit je einer Kachel für jede Vorlage,
 //                     die in den echten Dashboards dieses Hauses fehlt (Karte aus einem anderen Dashboard des
 //                     Hauses, sonst mit einer passenden Entität erzeugt). Nur im Wegwerf-HA verwenden.
@@ -25,6 +26,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { tokens, ws } from './ws.mjs';
+import { MEASURE_GEO } from './popup-geo.mjs';
 
 const argv = process.argv;
 const arg = (k, d) => { const i = argv.indexOf('--' + k); return i > 0 ? argv[i + 1] : d; };
@@ -36,7 +38,9 @@ const H = await import('../e2e/harness.mjs');
 const MDIR = arg('matrix');
 const HAUS = arg('haus');
 if (!MDIR || !HAUS) { console.error('--matrix <ordner> und --haus arbeit|demo nötig'); process.exit(2); }
-const SPRACHE = HAUS === 'demo' ? 'en' : 'de';
+// --als demo: Zeilen des demo-Hauses (Englisch) im laufenden Haus abbilden – für Vorlagen, die es im demo-Haus nicht gibt.
+const ALS = arg('als') || HAUS;
+const SPRACHE = ALS === 'demo' ? 'en' : 'de';
 const QA = new URL('./', import.meta.url).pathname;
 
 // ── Messfunktionen der vorhandenen Werkzeuge (Quelltext übernehmen, nicht kopieren) ──
@@ -71,13 +75,16 @@ if (flag('vorbereiten')) {
 async function vorbereiten() {
   const flaechen = JSON.parse(fs.readFileSync(path.join(MDIR, 'flaechen.json'), 'utf8'));
   const want = flaechen.filter((f) => f.vorlage && /^(kachel|badge|badge-gruppe|kopf|handy-vorlage)$/.test(f.familie)).map((f) => f.vorlage);
-  const have = new Set([...tplsOfView(cfgs[DESK].views), ...tplsOfView((cfgs[PHONE] || {}).views || [])]);
+  // Fehlend = nicht im Desktop-Dashboard (Desktop/Tablet suchen nur dort und im Matrix-Dashboard; das Handy sucht zuerst
+  // in seinem eigenen Dashboard).
+  const have = new Set(tplsOfView(cfgs[DESK].views));
   const missing = want.filter((t) => !have.has(t));
   // Kartenbeispiele aus allen Dashboards des Hauses (auch Hemma-Fixture/Importe), deren Entitäten es gibt.
   const all = {};
   for (const d of list.filter((x) => x.mode === 'storage' || x.mode === 'yaml')) { const cf = cfgs[d.url_path] || await cfgOf(d.url_path); if (cf) all[d.url_path] = cf; }
   const examples = {};
-  const ok = (card) => { const ids = JSON.stringify(card).match(/"[a-z_]+\.[a-z0-9_]+"/g) || [];
+  // Platzhalter wie „humidifier.YOUR_HUMIDIFIER“ zählen als fehlende Entität (Großbuchstaben mitprüfen).
+  const ok = (card) => { const ids = JSON.stringify(card).match(/"[a-z_]+\.[A-Za-z0-9_]+"/g) || [];
     return ids.map((x) => x.slice(1, -1)).filter((x) => /^(light|switch|sensor|binary_sensor|climate|cover|lock|media_player|fan|camera|vacuum|update|person|calendar|weather|alarm_control_panel|scene|humidifier|device_tracker|input_\w+|todo|select|number|event|image)\./.test(x)).every((x) => states[x]); };
   for (const cf of Object.values(all)) (function w(o) { if (Array.isArray(o)) return o.forEach(w); if (!o || typeof o !== 'object') return;
     if (o.type === 'custom:button-card' && o.template) { const t = [].concat(o.template).slice(-1)[0]; if (!examples[t] && ok(o)) examples[t] = o; }
@@ -102,20 +109,41 @@ async function vorbereiten() {
     casora_plant: () => first(/^(plant|sensor)\..*(pflanze|plant)/), casora_weather_warning: () => first(/^sensor\..*(warn)/) || first(/^weather\./),
     casora_trash: () => first(/^(sensor|calendar)\..*(abfall|muell|waste|trash)/), casora_vent: () => first(/^sensor\..*(lueft|vent)/),
     casora_solar_tip: () => first(/^sensor\./, dc('power')), casora_now_playing: () => first(/^media_player\./),
+    casora_football: () => first(/^sensor\./, (s) => 'team_abbr' in (s.attributes || {}) || 'opponent_name' in (s.attributes || {})),
+    casora_aquarium_light: () => first(/^light\..*(becken|aquar|fluval|chihiros|helialux|tank)/),
+  };
+  // Hilfskarten mit sinnvollen Daten (nicht leer): Variablen, die das Studio sonst setzt.
+  const EXTRA = {
+    casora_custom: (e) => ({ custom_fields: { card: { type: 'tile', entity: e } } }),
+    casora_presence: (e) => ({ variables: { person_entity: e, person_name: ((states[e] || {}).attributes || {}).friendly_name || 'Person' } }),
+    casora_aquarium_light: (e) => ({ variables: { tank_name: ((states[e] || {}).attributes || {}).friendly_name || 'Becken' } }),
   };
   const cards = []; const report = [];
   for (const t of missing) {
     if (/^casora_mobile_|^casora_(notifications|settings|assist)_button$|^casora_room$/.test(t)) { report.push(t + ': nur im Handy-/Kopfbereich, kein Beispiel nötig'); continue; }
     if (examples[t]) { cards.push(JSON.parse(JSON.stringify(examples[t]))); report.push(t + ': Beispiel aus Dashboard übernommen'); continue; }
     const e = GUESS[t] ? GUESS[t]() : null;
-    if (e || ohneEnt(t)) { cards.push({ type: 'custom:button-card', template: t, ...(e ? { entity: e } : {}), name: t.replace(/^casora_/, '').replace(/_/g, ' ') }); report.push(t + ': erzeugt' + (e ? ' mit ' + e.split('.')[0] + '.…' : ' ohne Entität')); }
+    // Ohne festen Namen: Entitäts- bzw. Vorlagen-Standardname (casora_default_name) wie im echten Dashboard.
+    if (e || ohneEnt(t)) { cards.push({ type: 'custom:button-card', template: t, ...(e ? { entity: e } : {}), ...(EXTRA[t] && e ? EXTRA[t](e) : {}) }); report.push(t + ': erzeugt' + (e ? ' mit ' + e.split('.')[0] + '.…' : ' ohne Entität')); }
     else report.push(t + ': KEINE passende Entität – nicht abbildbar');
   }
   const base = cfgs[DESK];
   const room = base.views.find((v, i) => i > 0 && (v.cards || []).some((x) => x.template === 'casora_room')) || base.views[0];
   const view = JSON.parse(JSON.stringify(room));
   view.path = 'matrix'; view.title = 'matrix';
-  view.cards = (view.cards || []).filter((x) => x.template === 'casora_room').map((x) => ({ ...x, name: 'Matrix' }));
+  // Zwei Raumkarten mit den Badges, die nur aus Variablen der Raumkarte entstehen (Personen, Medien, Aktivität,
+  // Szenen, Schlösser/Kameras inline, Player) – wie das Studio sie bei einem Haus mit diesen Geräten setzt.
+  const ids = (re) => Object.keys(states).filter((id) => re.test(id));
+  const persons = ids(/^person\./), players = ids(/^media_player\./), scenes = ids(/^scene\./), locks = ids(/^lock\./), cams = ids(/^camera\./).filter((x) => !/karte|map/.test(x));
+  const rv1 = { presence_entity_1: persons[0], presence_entity_2: persons[1], show_people: true, show_people_inline: false,
+    media_player_1: players[0], media_player_2: players[1], show_media: true, show_now_playing: false, psn_1: players[2] || players[0] };
+  const rv2 = { presence_entity_1: persons[0], show_people: true, show_people_inline: true, media_player_1: players[0], show_media: true, show_now_playing: true,
+    show_scenes: true, scene_entities: scenes.slice(0, 4), show_security: true, show_security_inline: true, security_locks: locks.slice(0, 2), security_cameras: cams.slice(0, 2) };
+  const clean = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined));
+  const rc = (view.cards || []).filter((x) => x.template === 'casora_room');
+  view.cards = rc.length ? [{ ...rc[0], name: 'Matrix', variables: { ...(rc[0].variables || {}), ...clean(rv1) } },
+    { ...JSON.parse(JSON.stringify(rc[0])), name: 'Matrix 2', variables: { ...(rc[0].variables || {}), ...clean(rv2) } }] : [];
+  report.push(`Raumkarten: Personen ${persons.length}, Player ${players.length}, Szenen ${scenes.length}, Schlösser ${locks.length}, Kameras ${cams.length}`);
   view.cards.push({ type: 'custom:casora-smart-row', cards });
   const cfg = { ...JSON.parse(JSON.stringify(base)), views: [view] };
   if (!list.some((d) => d.url_path === 'qa-matrix')) await c.cmd({ type: 'lovelace/dashboards/create', url_path: 'qa-matrix', title: 'qa-matrix', mode: 'storage', show_in_sidebar: false, require_admin: false });
@@ -167,7 +195,7 @@ const VIEWS = {
 // --kern: Kernmatrix zuerst (Grundzustand de: desktop/handy hell+dunkel, tablet hell; en: desktop/handy hell;
 // alle Sonderzustände). Der Rest (tablet dunkel, en dunkel, en tablet) folgt in einem zweiten Lauf ohne --kern.
 const KERN = (z) => z.zustand !== 'standard' || (z.sprache === 'de' ? (z.geraet !== 'tablet' || z.schema === 'hell') : (z.schema === 'hell' && z.geraet !== 'tablet'));
-const rows = MATRIX.zeilen.filter((z) => z.haus === HAUS && GRUPPEN.includes(z.gruppe) && GERAETE.includes(z.geraet) && !done.has(z.zeile_id) && (!NUR || NUR.test(z.zeile_id)) && (!flag('kern') || KERN(z)));
+const rows = MATRIX.zeilen.filter((z) => z.haus === ALS && GRUPPEN.includes(z.gruppe) && GERAETE.includes(z.geraet) && !done.has(z.zeile_id) && (!NUR || NUR.test(z.zeile_id)) && (!flag('kern') || KERN(z)));
 console.log(`${HAUS}: ${rows.length} Zeilen offen (${done.size} schon fertig), Desktop ${DESK}, Handy ${PHONE}, Matrix-Dashboard ${MATRIX_DASH || '–'}`);
 
 // ── Browser-Helfer ───────────────────────────────────────────────────────
@@ -187,7 +215,9 @@ async function goView(pg, url) {
 }
 const FIND = (tpl) => { const all = window.__pierce('button-card');
   for (let i = 0; i < all.length; i++) { const b = all[i]; const t = [].concat((b._config || {}).template || []); const r = b.getBoundingClientRect();
-    if (t[t.length - 1] === tpl || (t.includes(tpl) && !t.some((x) => /^casora_/.test(x) && x !== tpl && x !== 'casora_entity' && x !== 'casora_default' && !/^casora_popup_/.test(x)))) if (r.width > 4 && r.height > 4) return i; }
+    // Sichtbar heißt: echte Größe (nicht mitten in der Aufklapp-Animation) und nicht ausgeblendet/durchsichtig.
+    if (t[t.length - 1] === tpl || (t.includes(tpl) && !t.some((x) => /^casora_/.test(x) && x !== tpl && x !== 'casora_entity' && x !== 'casora_default' && !/^casora_popup_/.test(x))))
+      if (r.width > 12 && r.height > 12 && (!b.checkVisibility || b.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true }))) return i; }
   return -1; };
 async function locate(pg, row, tpl) {
   // Kandidaten-Seiten: Handy → Handy-Startseite, sonst Desktop-Ansichten; Ersatz: qa-matrix.
@@ -201,7 +231,8 @@ async function locate(pg, row, tpl) {
   }
   // Steht die Vorlage in keiner echten Ansicht (nur im Matrix-Dashboard), gleich dort suchen – außer Badges,
   // die die Raumkarte selbst zeichnet (dort ist das echte Badge der bessere Ort).
-  if (MATRIX_DASH && matrixTpl.has(tpl)) {
+  // Badges zeichnet die Raumkarte selbst (stehen nicht in der Konfiguration): im Matrix-Dashboard immer mitsuchen.
+  if (MATRIX_DASH && (matrixTpl.has(tpl) || /^casora_badge_/.test(tpl))) {
     const inReal = (row.geraet === 'handy' ? phoneViews : deskViews).some((v) => v.tpl.has(tpl));
     if (!inReal && !/^casora_badge_/.test(tpl)) cands.unshift('/qa-matrix/matrix'); else cands.push('/qa-matrix/matrix');
   }
@@ -213,7 +244,21 @@ async function locate(pg, row, tpl) {
   let loadFail = false;
   for (const u of order) {
     if (!(await goView(pg, u)) && !(await goView(pg, u))) { loadFail = true; continue; }
+    // Handy: Filter zurück auf „alle“ (eine vorige Zeile kann einen Raum gewählt haben).
+    if (row.geraet === 'handy' && pg.__room) { await setRoom(pg, 'all'); }
     let i = await pg.evaluate(FIND, tpl).catch(() => -1);
+    // Handy: Kacheln stehen in den Raumseiten (Filter je Raum, wie die Raumleiste) – der Reihe nach probieren.
+    if (i < 0 && row.geraet === 'handy' && u.startsWith('/' + PHONE + '/')) {
+      const keys = pg.__roomKeys || (pg.__roomKeys = await pg.evaluate(() => { const n = window.__pierce('*').find((e) => e._rooms && typeof e._set === 'function' && e._bar);
+        return n ? n._rooms.map((r) => r.key).filter((k) => /^room_/.test(k)) : []; }).catch(() => []));
+      const pref = pg.__locRoom && pg.__locRoom[tpl];
+      for (const k of pref ? [pref, ...keys.filter((x) => x !== pref)] : keys) {
+        await setRoom(pg, k);
+        i = await pg.evaluate(FIND, tpl).catch(() => -1);
+        if (i >= 0) { (pg.__locRoom = pg.__locRoom || {})[tpl] = k; break; }
+      }
+      if (i < 0) await setRoom(pg, 'all');
+    }
     // Unter-Badges erscheinen erst nach Antippen ihres Sammel-Badges (wie popup-raender.mjs).
     if (i < 0 && /^casora_badge_(?!.*_group$)/.test(tpl)) {
       const groups = await pg.evaluate(() => window.__pierce('button-card').map((b, i) => ({ i, t: [].concat((b._config || {}).template || []), w: b.getBoundingClientRect().width }))
@@ -234,6 +279,12 @@ async function locate(pg, row, tpl) {
   if (!loadFail) pg.__loc[tpl] = null;
   return loadFail ? { broken: true } : null;
 }
+// Handy-Raumfilter (window._casoraFilter, je Gerät) setzen und warten, bis die Karten neu stehen.
+async function setRoom(pg, k) {
+  const ok = await pg.evaluate((k) => { if (!window._casoraFilter) return false; if (window._casoraFilter.get() === k) return 'gleich'; window._casoraFilter.set(k); return true; }, k).catch(() => false);
+  pg.__room = k === 'all' ? null : k;
+  if (ok === true) { await sleep(pg, 1600); await settle(pg, () => window.__pierce('button-card').filter((b) => b.getBoundingClientRect().width > 4).length + ':' + document.scrollingElement.scrollHeight, 3000); }
+}
 const box = (pg, i) => pg.evaluate((i) => { const b = window.__pierce('button-card')[i]; if (!b) return null; b.scrollIntoView({ block: 'center', inline: 'center' });
   const r = b.getBoundingClientRect(); const c = b._config || {}; return { x: r.x, y: r.y, w: r.width, h: r.height, e: c.entity || '' }; }, i);
 const clipOf = (r, v, pad = 14) => { const x = Math.max(0, r.x - pad), y = Math.max(0, r.y - pad);
@@ -247,11 +298,11 @@ async function closeAll(pg) {
     await pg.keyboard.press('Escape').catch(() => {}); await sleep(pg, 450);
   }
 }
-async function settle(pg, fn, ms = 6000) {
+async function settle(pg, fn, ms = 6000, quiet = 700) {
   let last = '', since = Date.now();
   for (const t0 = Date.now(); Date.now() - t0 < ms; await sleep(pg, 150)) {
     const k = await pg.evaluate(fn).catch(() => '');
-    if (k !== last) { last = k; since = Date.now(); } else if (Date.now() - since > 700) break;
+    if (k !== last) { last = k; since = Date.now(); } else if (Date.now() - since > quiet) break;
   }
 }
 const POPSIG = () => { const s = window.casoraPopup && window.casoraPopup.surface; const c = s && s.querySelector('.content');
@@ -327,13 +378,21 @@ async function measure(pg, row, kind) {
   if (kind !== 'seite') {
     m.ausrichtung = await pg.evaluate(`(() => { const __p = window.__panel; ${swap} try { const r = (${M_AUSR})(); return r.err ? r : { n: r.finds.length, finds: r.finds.slice(0, 20).map((f) => ({ kind: f.kind, msg: f.msg, label: f.label, path: f.path.slice(-120) })) }; } finally { window.__panel = __p; } })()`).catch((e) => ({ err: String(e).slice(0, 200) }));
   }
+  // Geometrie + Kontrast + Trefferfläche (inkl. ::before) aus popup-geo – taucht in die Shadow-DOMs der
+  // button-cards ein, die ausrichtung (NODIVE) auslässt. Wurzel: Popup bzw. die Kachel/Fläche.
+  if (kind === 'popup' || kind === 'card') {
+    await pg.evaluate((k) => { window.__qaGeoRoot = k === 'card' ? window.__qaCard : null; }, kind).catch(() => {});
+    m.geo = await pg.evaluate(MEASURE_GEO).catch((e) => ({ n: 0, finds: [], err: String(e).slice(0, 200) }));
+    await pg.evaluate(() => { window.__qaGeoRoot = null; }).catch(() => {});
+    if (m.geo && m.geo.finds) m.geo.finds = m.geo.finds.slice(0, 40);
+  }
   m.allgemein = await pg.evaluate(M_GENERAL, { touch, sel: kind === 'studio' ? 'panel' : kind === 'popup' ? 'popup' : kind === 'seite' ? 'button-card' : 'card' }).catch((e) => ({ error: String(e).slice(0, 200) }));
   return m;
 }
 const zaehle = (m) => {
   const p = m.popup || {};
   return { abgeschnitten: (p.cut || []).length, text: (p.text || []).length + ((m.allgemein || {}).ueberlauf || []).length, ueberlappung: (p.overlap || []).length,
-    schatten: (p.shadow || []).length, treffer: Math.max((p.small || []).length, ((m.allgemein || {}).treffer || []).length), ausrichtung: (m.ausrichtung || {}).n || 0 };
+    schatten: (p.shadow || []).length, treffer: Math.max((p.small || []).length, ((m.allgemein || {}).treffer || []).length), ausrichtung: (m.ausrichtung || {}).n || 0, geo: (m.geo || {}).n || 0 };
 };
 
 // ── Studio (Wege wie dev/qa/ausrichtung.mjs) ───────────────────────────────
@@ -448,7 +507,16 @@ async function overlayRow(pg, row, f, V) {
   const navTap = async (n) => { const pt = await pg.evaluate((n) => { const b = window.__pierce('.hmn-btn').filter((x) => x.getBoundingClientRect().width > 0).sort((x, y) => x.getBoundingClientRect().left - y.getBoundingClientRect().left)[n];
     if (!b) return null; const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }, n).catch(() => null);
     if (!pt) return false; await pg.touchscreen.tap(pt.x, pt.y); await sleep(pg, 1300); return true; };
-  const elBox = (sel) => pg.evaluate((sel) => { const e = window.__pierce(sel).find((x) => x.getBoundingClientRect().width > 0); if (!e) return null; window.__qaCard = e; const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; }, sel).catch(() => null);
+  // Box eines Elements samt seinem Shadow-Inhalt (casora-nav-bar: Host nur 16 px hoch, die Leiste liegt fest positioniert im Shadow-DOM).
+  const elBox = (sel) => pg.evaluate((sel) => { const e = window.__pierce(sel).find((x) => x.getBoundingClientRect().width > 0); if (!e) return null; window.__qaCard = e;
+    let r = e.getBoundingClientRect(); let x0 = r.left, y0 = r.top, x1 = r.right, y1 = r.bottom;
+    // Fest positionierte Leiste im Shadow-DOM (Handy-Leiste): deren Box statt der Host-Box.
+    if (e.shadowRoot) { const fx = [...e.shadowRoot.querySelectorAll('*')].filter((c) => { const s = getComputedStyle(c); const q = c.getBoundingClientRect(); return s.position === 'fixed' && q.width > 100 && q.height > 30 && s.visibility !== 'hidden'; })
+      .sort((a, b) => b.getBoundingClientRect().width * b.getBoundingClientRect().height - a.getBoundingClientRect().width * a.getBoundingClientRect().height)[0];
+      if (fx) { const q = fx.getBoundingClientRect(); return { x: q.left, y: q.top, w: q.width, h: q.height }; } }
+    if (e.shadowRoot && r.height < 24) for (const c of e.shadowRoot.querySelectorAll('*')) { const q = c.getBoundingClientRect(); if (q.width < 2 || q.height < 2 || getComputedStyle(c).visibility === 'hidden') continue;
+      x0 = Math.min(x0, q.left); y0 = Math.min(y0, q.top); x1 = Math.max(x1, q.right); y1 = Math.max(y1, q.bottom); }
+    return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }; }, sel).catch(() => null);
   let clip = null, kind = 'seite';
   switch (f.aktion) {
     case 'navbar': {
@@ -517,7 +585,10 @@ async function tplRow(pg, row, f, V) {
   const loc = await locate(pg, row, tpl);
   if (loc && loc.broken) return { status: 'fehler', grund: 'Seite lädt nicht', neu: true };
   if (!loc) return { status: 'nicht_abbildbar', grund: `Vorlage ${tpl} in Haus ${HAUS} (${row.geraet}) nicht gefunden – auch nicht im Matrix-Dashboard` };
+  // Erst messen, wenn die Karte ruhig steht (Sammel-Badges klappen animiert auf).
+  await settle(pg, `(() => { const b = window.__pierce('button-card')[${loc.i}]; if (!b) return ''; const r = b.getBoundingClientRect(); return [r.x, r.y, r.width, r.height].map(Math.round).join(','); })()`, 3000);
   let b = await box(pg, loc.i);
+  if (!b || b.w < 12 || b.h < 12) return { status: 'nicht_abbildbar', grund: `Vorlage ${tpl} nur zugeklappt/ausgeblendet gefunden (Breite ${b ? Math.round(b.w) : 0} px)` };
   const z = await setZustand(pg, row, f.entitaet ? b.e : null);
   if (!z.ok) return { status: 'nicht_abbildbar', grund: z.grund };
   pg.__zust = z;
@@ -528,7 +599,8 @@ async function tplRow(pg, row, f, V) {
     if (had) { pg.__dirty = true; await sleep(pg, 600); }
     if (!z.entity && !had) return { status: 'nicht_abbildbar', grund: 'kein Name zum Verlängern (weder Entität noch name:)' };
   }
-  if (z.entity) { pg.__dirty = true; b = await box(pg, loc.i); await sleep(pg, 300); }
+  if (z.entity) { pg.__dirty = true; await sleep(pg, 300); b = await box(pg, loc.i);
+    if ((!b || b.w < 12 || b.h < 12) && row.zustand === 'nicht_verfuegbar') return { status: 'nicht_abbildbar', grund: 'ausgeblendet bei „nicht verfügbar“ (gewolltes Verhalten, Fläche verschwindet)' }; }
   await pg.evaluate((i) => { window.__qaCard = window.__pierce('button-card')[i]; }, loc.i);
   if (f.familie === 'popup') {
     const touch = row.geraet !== 'desktop';
@@ -542,8 +614,15 @@ async function tplRow(pg, row, f, V) {
       for (let t0 = Date.now(); Date.now() - t0 < wait; await sleep(pg, 200)) if (await popupOpen(pg)) { opened = true; break; }
       if (opened) break;
     }
-    if (!opened) return { status: 'nicht_abbildbar', grund: 'Antippen öffnet kein Popup (schaltet, klappt Unter-Badges auf oder Gerät fehlt)' };
-    await settle(pg, POPSIG); await sleep(pg, 400);
+    // Sammel-Badges klappen beim Antippen auf; ihr Popup liegt auf Halten (hold_action) – so wie ein Mensch es öffnet.
+    if (!opened) {
+      const bb = (await box(pg, loc.i)) || b;
+      if (bb && bb.w > 12) { await pg.mouse.move(bb.x + bb.w / 2, bb.y + bb.h / 2); await pg.mouse.down(); await sleep(pg, 900); await pg.mouse.up();
+        for (let t0 = Date.now(); Date.now() - t0 < 4000; await sleep(pg, 200)) if (await popupOpen(pg)) { opened = true; pg.__held = true; break; } }
+    }
+    if (!opened) return { status: 'nicht_abbildbar', grund: 'Antippen/Halten öffnet kein Popup (schaltet, klappt Unter-Badges auf oder Gerät fehlt)' };
+    // Länger ruhig abwarten: Popups mit nachgeladenem Inhalt („kein Gerät“, Verlauf) wachsen nach dem ersten Bild.
+    await settle(pg, POPSIG, 9000, 1600); await sleep(pg, 400);
     const r = await pg.evaluate(() => { const s = window.casoraPopup && window.casoraPopup.surface; let e = s;
       if (!e) e = window.__pierce('ha-dialog, ha-adaptive-dialog, ha-md-dialog, ha-wa-dialog, ha-more-info-dialog').find((d) => d.getBoundingClientRect().width > 80);
       if (!e) return null; const q = e.getBoundingClientRect(); return { x: q.x, y: q.y, w: q.width, h: q.height, kind: s ? 'casora' : e.tagName.toLowerCase() }; });
@@ -607,13 +686,19 @@ for (const k of keys) {
       try { res = /^studio/.test(f.familie) ? await studioRow(pg, row, f) : f.familie === 'overlay' ? await overlayRow(pg, row, f, V) : await tplRow(pg, row, f, V); }
       catch (e) { res = { status: 'fehler', grund: String(e.message || e).slice(0, 200) }; }
     }
-    const out = { zeile_id: row.zeile_id, flaeche: row.flaeche, zustand: row.zustand, geraet: row.geraet, schema: row.schema, sprache: row.sprache, haus: HAUS, gruppe: row.gruppe, status: res.status };
+    const out = { zeile_id: row.zeile_id, flaeche: row.flaeche, zustand: row.zustand, geraet: row.geraet, schema: row.schema, sprache: row.sprache, haus: ALS === HAUS ? HAUS : HAUS + '-als-' + ALS, gruppe: row.gruppe, status: res.status };
     if (res.status === 'ok') {
       const file = path.join(MDIR, row.bild);
       fs.mkdirSync(path.dirname(file), { recursive: true });
       try {
         await pg.addScriptTag({ content: H.PIERCE }).catch(() => {});
         const m = await measure(pg, row, res.kind);
+        // Ausschnitt erst jetzt aus der aktuellen Lage der Karte (sie kann sich seit dem Suchen verschoben haben:
+        // Sammel-Badges klappen, Zustände ändern die Reihe) – sonst zeigt das Bild die Nachbarn statt der Fläche.
+        if (res.kind === 'card' && res.clip && f.familie !== 'overlay') {
+          const q = await pg.evaluate(() => { const c = window.__qaCard; if (!c) return null; const r = c.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; }).catch(() => null);
+          if (q && q.w > 4 && q.h > 4) { const nc = clipOf(q, V, 16); if (Math.abs(nc.y - res.clip.y) > 3 || Math.abs(nc.x - res.clip.x) > 3) out.verschoben = Math.round(Math.hypot(nc.x - res.clip.x, nc.y - res.clip.y)); res.clip = nc; }
+        }
         await pg.screenshot({ path: file, ...(res.clip ? { clip: res.clip } : {}) });
         out.bild = row.bild; out.messung = m; out.zahlen = zaehle(m); if (res.popupArt) out.popup_art = res.popupArt;
         nOk++;
