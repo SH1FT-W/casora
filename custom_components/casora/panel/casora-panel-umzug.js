@@ -569,7 +569,46 @@
     }
   }
 
-  window.casoraUmzug = { candidates, analyze, loadOriginals, spreadWeather, sourceName, proposeTitle, movedAny: (h, d) => movedAny(h, d),
+  // Einstellungen aus Hemma-Helfern für die Casora-Helfer (beim Umzug, wie _carry_values in
+  // hemma_cleanup.py beim Entfernen): nur, wo Casora noch seinen Ausgangswert hat – ein erneuter
+  // Umzug überschreibt nichts, was im Casora-Dashboard eingestellt wurde –, Zahlen nur innerhalb
+  // des Casora-Bereichs (Hemma 2.1.2 hat die Zieltemperatur in °F, 68–75; Casora in °C 15–30
+  // meldete sonst „Invalid value … 71.0 (range 15.0 - 30.0)“ als Fehler) und die Glocke nur
+  // vorwärts (der spätere Zeitpunkt „gelesen“ gewinnt). Ausgangswerte wie in helfer.yaml
+  // (dev/unit/umzug_helfer.mjs prüft, dass sie übereinstimmen).
+  const CARRY_INITIAL = { "input_boolean.dashboard_redirect": "on", "input_boolean.motion_badges": "on",
+    "input_boolean.now_playing_minimized": "off", "input_text.now_playing_pinned": "",
+    "input_select.thermostat_mode": "heat", "input_number.thermostat_target_temperature": "min",
+    "input_datetime.notifications_read": null };
+  function carryPlan(S) {
+    const out = [];
+    Object.keys(CARRY_INITIAL).forEach((k) => {
+      const [dom, name] = k.split(".");
+      const from = S[dom + ".hemma_" + name], to = S[dom + ".casora_" + name];
+      if (!from || !to || from.state === to.state || /^(unknown|unavailable)$/.test(from.state)) return;
+      const v = from.state, entity_id = to.entity_id, a = to.attributes || {};
+      if (dom === "input_datetime") {
+        if (!/^(unknown|unavailable|)$/.test(to.state) && String(to.state) >= String(v)) return;
+        out.push({ domain: dom, service: "set_datetime", data: { entity_id, datetime: v } });
+        return;
+      }
+      const init = CARRY_INITIAL[k];
+      const untouched = init === "min" ? Number(to.state) === Number(a.min) : to.state === init;
+      if (!untouched) return;
+      if (dom === "input_boolean") out.push({ domain: dom, service: v === "on" ? "turn_on" : "turn_off", data: { entity_id } });
+      else if (dom === "input_select") {
+        if ((a.options || []).includes(v)) out.push({ domain: dom, service: "select_option", data: { entity_id, option: v } });
+      } else if (dom === "input_number") {
+        const n = Number(v);
+        const unit = (from.attributes || {}).unit_of_measurement, unit2 = a.unit_of_measurement;
+        if (!isFinite(n) || (unit && unit2 && unit !== unit2) || (a.min != null && n < Number(a.min)) || (a.max != null && n > Number(a.max))) return;
+        out.push({ domain: dom, service: "set_value", data: { entity_id, value: n } });
+      } else if (dom === "input_text") out.push({ domain: dom, service: "set_value", data: { entity_id, value: v } });
+    });
+    return out;
+  }
+
+  window.casoraUmzug = { candidates, analyze, loadOriginals, spreadWeather, sourceName, proposeTitle, carryPlan, CARRY_INITIAL, movedAny: (h, d) => movedAny(h, d),
     lib: { classify, foreignVars, chainOf, ownPlan, renameRefs, retarget, isOwnModule } };
 
   customElements.whenDefined("casora-panel").then(() => {
@@ -1439,24 +1478,11 @@
       // sie nach dem Umzug auf Casora-Standard (Glocke wieder ungelesen, Thermostat-Modus, Schalter).
       // Nur Werte, die der Nutzer setzt; Bedien-Zustände (Overlays, aufgeklappte Reihe) nicht.
       const carryHelpers = async () => {
-        const S = hass.states || {};
-        const KEYS = ["input_boolean.dashboard_redirect", "input_boolean.motion_badges",
-          "input_boolean.now_playing_minimized", "input_text.now_playing_pinned",
-          "input_select.thermostat_mode", "input_number.thermostat_target_temperature",
-          "input_datetime.notifications_read"];
-        for (const k of KEYS) {
-          const [dom, name] = k.split(".");
-          const from = S[dom + ".hemma_" + name], to = S[dom + ".casora_" + name];
-          if (!from || !to || from.state === to.state || /^(unknown|unavailable)$/.test(from.state)) continue;
-          const v = from.state, entity_id = to.entity_id;
-          try {
-            if (dom === "input_boolean") await hass.callService(dom, v === "on" ? "turn_on" : "turn_off", { entity_id });
-            else if (dom === "input_select") {
-              if ((to.attributes.options || []).includes(v)) await hass.callService(dom, "select_option", { entity_id, option: v });
-            } else if (dom === "input_number") await hass.callService(dom, "set_value", { entity_id, value: Number(v) });
-            else if (dom === "input_text") await hass.callService(dom, "set_value", { entity_id, value: v });
-            else if (dom === "input_datetime") await hass.callService(dom, "set_datetime", { entity_id, datetime: v });
-          } catch (e) { /* ein Helfer, der nicht passt, hält den Umzug nicht auf */ }
+        for (const c of carryPlan(hass.states || {})) {
+          // callWS statt callService: ein Helfer, der nicht passt, hält den Umzug nicht auf und
+          // zeigt keine Fehlermeldung (callService meldet jeden Fehler als Toast).
+          try { await hass.callWS({ type: "call_service", domain: c.domain, service: c.service, service_data: c.data }); }
+          catch (e) { /* nichts */ }
         }
       };
 
