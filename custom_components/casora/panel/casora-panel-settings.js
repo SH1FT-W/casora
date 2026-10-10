@@ -36,7 +36,7 @@
       lede: "Push notifications when it is time to open or close the windows." },
     // Tanken (1.2, tanken.py): eigener Speicher casora/tanken/* – der Schlüssel geht nie an den Browser.
     { id: "fuel", label: "Fuel prices", icon: "car", tone: "set-fuel", tanken: true,
-      lede: "Petrol stations nearby in the car popup: price, distance, open or closed." },
+      lede: "Gas stations nearby in the car popup: price, distance, open or closed." },
   ];
   const pageOf = (id) => PAGES.find((p) => p.id === id) || PAGES[0];
 
@@ -51,7 +51,7 @@
     + ".cs-wrap .frow.casora-prow .rtext span{font-size:var(--t-caption)}"
     + ".cs-wrap .casora-pctl .combo>input,.cs-wrap .casora-pctl>input.fin,.cs-wrap .cs-num input"
     + "{height:var(--k-h, 38px);box-sizing:border-box;font-size:var(--t-callout)}"
-    + ".cs-lede{margin:0 4px 14px;font-size:var(--t-foot);line-height:1.45;color:var(--ink-2)}"
+    + ".cs-lede{margin:0 10px 14px;font-size:var(--t-foot);line-height:1.45;color:var(--ink-2)}"
     + ".cs-note{margin:0 0 14px;padding:10px 12px;border-radius:var(--r-m);background:var(--casora-studio-link-tint, rgba(10,132,255,.16));font-size:var(--t-foot);line-height:1.4}"
     + ".cs-err{margin:0 0 14px;padding:10px 12px;border-radius:var(--r-m);background:rgba(255,69,58,.16);color:var(--ink);font-size:var(--t-foot);line-height:1.4}"
     + ".cs-err:empty{display:none}"
@@ -529,7 +529,7 @@
       if (r.ok) {
         const best = Object.keys(r.cheapest || {}).map((f) => FUEL_LABELS[f] + " " + Number(r.cheapest[f]).toLocaleString(
           (self._hass && self._hass.language) || undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + " €").join(", ");
-        return t("Works: {n} petrol stations within {r} km.").replace("{n}", r.count).replace("{r}", r.radius)
+        return t("Works: {n} gas stations within {r} km.").replace("{n}", r.count).replace("{r}", r.radius)
           + (best ? " " + t("Cheapest: {x}").replace("{x}", best) : "");
       }
       const codes = { format: "The key doesn't have the right format.", key: "Tankerkönig doesn't accept this key.",
@@ -550,9 +550,9 @@
       if (!tk.source) host.appendChild(el("div", "cs-note", t("Not set up yet: the car popup shows no fuel row. Use the Tankerkönig integration in Home Assistant or a free key below.")));
       if (tk.source === "integration") {
         const g = this._flowGroup(host, { header: t("Data source"),
-          footer: t("Casora reads the existing sensors. No key needed. Add petrol stations in the Tankerkönig integration.") });
+          footer: t("Casora reads the existing sensors. No key needed. Add gas stations in the Tankerkönig integration.") });
         const r = this._flowRow(g, { title: t("Tankerkönig in Home Assistant"),
-          sub: t("Found: {n} petrol stations with prices").replace("{n}", tk.integration.stations), detail: t("In use") });
+          sub: t("Found: {n} gas stations with prices").replace("{n}", tk.integration.stations), detail: t("In use") });
         r.row.classList.add("cs-tk-source");
       } else {
         // 1 · Schlüssel
@@ -628,7 +628,7 @@
         const st = tk.status || {};
         if (st.at) {
           const when = new Date(st.at).toLocaleTimeString((this._hass && this._hass.language) || undefined, { hour: "2-digit", minute: "2-digit" });
-          host.appendChild(el("p", "cs-lede", st.ok ? t("Last request {t}: {n} petrol stations.").replace("{t}", when).replace("{n}", st.count)
+          host.appendChild(el("p", "cs-lede", st.ok ? t("Last request {t}: {n} gas stations.").replace("{t}", when).replace("{n}", st.count)
             : t("Last request {t} failed: {x}").replace("{t}", when).replace("{x}", st.error || "")));
         }
       }
@@ -947,6 +947,15 @@
     };
 
     // Entfernen ausführen, Schritte zeigen, Neustart anbieten (auch für „Rest entfernen“).
+    // AB-09 (1.3): alle Ergebnis-Rückfragen von „Hemma entfernen“ gleich gebaut – breit, linksbündig,
+    // Zeichen oben (✓ fertig, ! noch etwas offen).
+    const resultMark = (box, tone) => {
+      box.classList.add("chv");
+      const m = el("div", "chv-mark " + tone);
+      m.innerHTML = STATUS_ICON[tone];
+      box.insertBefore(m, box.firstChild);
+    };
+
     P._csHemmaRun = async function (payload) {
       css(this);
       this._status(t("Removing Hemma…"), "ok");
@@ -965,6 +974,7 @@
         confirmLabel: r.restart_required ? t("Restart Now") : t("OK"),
         cancelLabel: t("Later"), wide: true,
         extend: ({ box, acts }) => {
+          resultMark(box, r.ok ? "ok" : "warn");
           const list = el("div", "chr-list");
           list.setAttribute("data-no-i18n", "");
           (r.steps || []).forEach((s) => stepItem(list, s));
@@ -1002,18 +1012,13 @@
 
     P._csHemmaVerifyShow = async function (r) {
       css(this);
-      const mark = (box, tone) => {
-        const m = el("div", "chv-mark " + tone);
-        m.innerHTML = STATUS_ICON[tone];
-        box.insertBefore(m, box.firstChild);
-      };
+      const mark = resultMark;
       if (r.ok) {
         await this._ask({
           title: t("Hemma is completely removed"),
           message: t("Everything now runs on Casora.") + (r.backup ? "\n" + t("The backup is in:") : ""),
-          confirmLabel: t("Done"),
+          confirmLabel: t("Done"), wide: true,
           extend: ({ box, acts, cancel }) => {
-            box.classList.add("chv");
             mark(box, "ok");
             cancel.remove();
             // Satz und Pfad je auf eigener Zeile; der Pfad bricht nur nach einem „/“ um,
@@ -1035,10 +1040,8 @@
         title: t("Hemma is almost removed"),
         message: t("A few things are still there:"),
         confirmLabel: t("Remove the Rest"), cancelLabel: t("Later"),
-        // Breit nur bei längeren Listen – ein, zwei Reste passen ins schmale Fenster.
-        wide: (r.leftovers || []).reduce((n, x) => n + 1 + (x.items || []).length, 0) > 4,
+        wide: true,
         extend: ({ box, acts }) => {
-          box.classList.add("chv");
           mark(box, "warn");
           const list = el("div", "chr-list");
           list.setAttribute("data-no-i18n", "");

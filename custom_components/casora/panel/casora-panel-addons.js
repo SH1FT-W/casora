@@ -235,7 +235,7 @@ customElements.whenDefined("casora-panel").then(() => {
         // M10 (Weich-Audit): drei Designs nebeneinander statt 2er-Raster mit Lücke, Namen einzeilig.
         + ".casora-looks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:12px 0 14px}"
         + ".casora-lookcard b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"
-        + ".casora-looktag{display:block;margin-top:-4px;font-size:11px;font-weight:500;letter-spacing:.02em;opacity:.6}"
+        + ".casora-looktag{display:block;margin-top:-4px;font-size:11px;font-weight:500;letter-spacing:.02em;color:var(--ink-2)}"  /* ds-17: Text 2 statt .6 */
         + ".casora-lookcard{appearance:none;border:0;margin:0;padding:0;background:none;box-shadow:none;cursor:pointer;"
         + "display:flex;flex-direction:column;gap:7px;text-align:left;color:var(--ink,#fff);min-width:0}"
         + ".casora-lookcard:hover{filter:none}"

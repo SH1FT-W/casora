@@ -49,7 +49,7 @@ const CASORA_THEMES = [
     shot: { light: "/casora_assets/themes/weich-light.webp", dark: "/casora_assets/themes/weich-dark.webp" } },
   // Casora Nebel (06.10.2026): kühl, Petrol-Akzent. ph: ruhiger Platzhalter hinter dem Vorschaubild
   // (nebel-*.webp), sichtbar, solange das Bild noch lädt.
-  { name: "Casora Nebel", label: "Casora Nebel", sub: "Cool light grey with a petrol accent, slightly crisper corners.",
+  { name: "Casora Nebel", label: "Casora Nebel", sub: "Cool light gray with a teal accent, slightly crisper corners.",
     shot: { light: "/casora_assets/themes/nebel-light.webp", dark: "/casora_assets/themes/nebel-dark.webp" },
     ph: { light: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23EEF1F3%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2226%22%20width%3D%22120%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%23D5DCE1%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23FFFFFF%22/%3E%3Crect%20x%3D%22116%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23FFFFFF%22/%3E%3Crect%20x%3D%2224%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%23FFFFFF%22/%3E%3Crect%20x%3D%22168%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%23FFFFFF%22/%3E%3Ccircle%20cx%3D%2246%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%233F7491%22/%3E%3Ccircle%20cx%3D%22190%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%233F7491%22%20opacity%3D%22.35%22/%3E%3C/svg%3E")', dark: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%231C2226%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2226%22%20width%3D%22120%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%2338434A%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%232A3237%22/%3E%3Crect%20x%3D%22116%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%232A3237%22/%3E%3Crect%20x%3D%2224%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%232A3237%22/%3E%3Crect%20x%3D%22168%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%232A3237%22/%3E%3Ccircle%20cx%3D%2246%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%235E9AB8%22/%3E%3Ccircle%20cx%3D%22190%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%235E9AB8%22%20opacity%3D%22.35%22/%3E%3C/svg%3E")' } },
   { name: CASORA_LEGACY, aliases: ["Casora Standard", "Hemma"], label: "Hemma 2 (Legacy)", sub: "The original dark glass over your room photos.",
@@ -2445,6 +2445,7 @@ const dashScopedKeys = () => {
 
 const FINGERPRINT_KEY = "casora_template_fingerprint";
 const LAST_DASH_KEY = "casora_panel_last_dashboard";
+const LAST_VIEWED_KEY = "casora_last_viewed_dashboard";  // P-V4, gesetzt von casora-core.js
 // „Willkommen bei Casora“ gesehen (Browser-Merker; dazu casora/settings „welcome“).
 const WELCOME_KEY = "casora.welcomed";
 const NOT_CASORA_KEY = "casora_panel_not_casora_v1";
@@ -4745,7 +4746,7 @@ const lightUnits = (states, eid, seen) => {
 const lightWord = (states, eid) => {
   const all = [...new Set(lightUnits(states, eid, new Set()))];
   const lit = all.filter((e) => (states[e] || {}).state === "on").length;
-  return lit === 0 ? "All Off" : lit === all.length ? "All On" : lit + " On";
+  return lit === 0 ? "All off" : lit === all.length ? "All on" : lit + " on";
 };
 
 const batteryPack = (V, states) => {
@@ -10739,8 +10740,9 @@ class CasoraPanel extends HTMLElement {
 
         .fgroup { margin:0 0 24px; }
         .fgroup:last-child { margin-bottom:4px; }
+        /* ds-13 (1.3): Abschnittsköpfe und Fußnoten fluchten mit dem Text in den Karten (10 px Innenrand). */
         .fhead {
-          margin:0 4px 8px; font-size:var(--t-callout); font-weight:600; letter-spacing:-0.01em;
+          margin:0 10px 8px; font-size:var(--t-callout); font-weight:600; letter-spacing:-0.01em;
           color:var(--casora-popup-tiles-text-primary, #fff);
         }
         .flist {
@@ -10748,7 +10750,7 @@ class CasoraPanel extends HTMLElement {
           background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));
         }
         .ffoot {
-          margin:8px 4px 0; font-size:var(--t-foot); line-height:1.45;
+          margin:8px 10px 0; font-size:var(--t-foot); line-height:1.45;
           color:var(--casora-popup-ui-tertiary, rgba(255,255,255,0.42));
         }
 
@@ -10821,6 +10823,9 @@ class CasoraPanel extends HTMLElement {
         .rcheck { flex:0 0 22px; display:grid; place-items:center; color:var(--accent); }
         .rcheck svg { width:18px; height:18px; display:block; opacity:0; transition:opacity .15s ease; }
         .frow[aria-checked="true"] .rcheck svg { opacity:1; }
+        /* AB-13 (1.3): Auswahl aus einer Liste (eine Wahl) wie überall in Casora: aktive Zeile hinterlegt, kein Haken. */
+        .frow[role="radio"] .rcheck { display:none; }
+        .frow[role="radio"][aria-checked="true"] { background:var(--casora-studio-sel-row, var(--chip, rgba(127,127,127,.14))); }
         .rget {
           flex:0 0 auto; padding:5px 15px; border-radius:999px;
           background:var(--wash-fill, var(--casora-studio-wash-fill, rgba(255,255,255,0.14))); color:var(--ink);
@@ -12072,7 +12077,11 @@ class CasoraPanel extends HTMLElement {
   }
 
   _remember(url_path) {
-    try { if (url_path) localStorage.setItem(LAST_DASH_KEY, url_path); } catch (e) { /* private mode */ }
+    try {
+      if (url_path) localStorage.setItem(LAST_DASH_KEY, url_path);
+      // P-V4: Was im Studio offen ist, gilt auch als zuletzt angesehen (sonst gewänne ein älterer Blick).
+      if (url_path) localStorage.setItem(LAST_VIEWED_KEY, url_path);
+    } catch (e) { /* private mode */ }
   }
 
   _forget(url_path) {
@@ -12189,6 +12198,17 @@ class CasoraPanel extends HTMLElement {
         const stem = String(asked).replace(/[-_]mobile$/i, "");
         if (list.some((d) => d.url_path === stem)) pick = stem;
         else if (list.some((d) => d.url_path === asked)) pick = asked;
+      }
+    }
+    // P-V4 (1.3): sonst das zuletzt angesehene Casora-Dashboard (casora-core merkt es beim Ansehen),
+    // danach das zuletzt im Studio bearbeitete.
+    if (!pick) {
+      let seen = null;
+      try { seen = localStorage.getItem(LAST_VIEWED_KEY); } catch (e) { /* private mode */ }
+      if (seen) {
+        const stem = String(seen).replace(/[-_]mobile$/i, "");
+        if (list.some((d) => d.url_path === stem)) pick = stem;
+        else if (list.some((d) => d.url_path === seen)) pick = seen;
       }
     }
     if (!pick) {
@@ -16226,8 +16246,12 @@ class CasoraPanel extends HTMLElement {
     }
   }
 
-  _roomTitleMenu(anchor) {
+  // mode (P-V3, 1.3): "rooms" = nur Raumliste (Raumknopf der Leiste), "actions" = nur „Dieser Raum“
+  // (eigener ⋯-Knopf daneben), ohne Angabe beides (Handy). Gefiltert wird erst in _menuAt, nachdem
+  // Erweiterungen (Verschieben, Ausblenden, Räume ordnen) ihre Einträge ergänzt haben.
+  _roomTitleMenu(anchor, mode) {
     const rooms = this._state.compact.rooms;
+    this._roomMenuMode = mode || null;
     this._menuAt(anchor, [
       ...rooms.map((r, i) => ({
         id: "go:" + i, label: this._roomLabel(r), glyph: roomGlyph(r.name, r), plainGlyph: true,
@@ -18215,6 +18239,12 @@ class CasoraPanel extends HTMLElement {
   // Shared popover for the section + buttons, same material as the combobox.
   _menuAt(anchor, items, onPick, mopts) {
     mopts = mopts || {};
+    const roomMode = this._roomMenuMode;
+    this._roomMenuMode = null;
+    if (roomMode && Array.isArray(items)) {
+      const mine = (x) => !!(x && x.group === "This Room");
+      items = items.filter((x) => (roomMode === "actions" ? mine(x) : !mine(x)));
+    }
     const dashMenu = Array.isArray(items) && items.some((x) => x && x.id === "create");
     // Versionen hat in der Seitenleiste eine eigene Zeile; am Handy fehlt die, dort bleibt der Eintrag.
     // Updates ebenso (casora-panel-updates.js).
@@ -21489,7 +21519,7 @@ class CasoraPanel extends HTMLElement {
       const lit = lights.filter((e) => (st(e) || {}).state === "on").length;
       out.push({
         id: "lights", label: "Lights", icon: "light", color: LIGHT, dim: !lit,
-        text: lit ? lit + " On" : "All Off",
+        text: lit ? lit + " on" : "All off",
         subs: lights.map((e) => {
           const l = st(e) || {};
           const br = l.attributes && l.attributes.brightness;
@@ -21531,8 +21561,8 @@ class CasoraPanel extends HTMLElement {
       } else out.push({
         id: "people", label: "People", icon: "person",
         color: home === people.length ? GREEN : (home === 0 ? "rgba(255,255,255,0.55)" : YELLOW),
-        text: home === people.length ? "All Home"
-          : (people.length - home) + " Away",
+        text: home === people.length ? "All home"
+          : (people.length - home) + " away",
         subs: people.map(personSub),
       });
     }
