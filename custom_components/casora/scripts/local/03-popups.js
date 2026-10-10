@@ -1044,6 +1044,14 @@
   var todo = function () { return ckey('ingredient_list', 'todo'); };
   var extra = function () { return ckey('additional_item_list', 'todo'); };
   var DAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  /* Kurzer Wochentag in Versalien in der HA-Sprache (DP-20: „SO/MO/HEUTE“ standen auch englisch da);
+     Deutsch unverändert „SO“, „MO“ … */
+  var dayUp = function (d) {
+    var t = null;
+    try { t = d.toLocaleDateString(window.casoraLocale ? window.casoraLocale() : 'de-DE', { weekday: 'short' }).replace(/\.$/, ''); } catch (e) { t = null; }
+    return (t || DAYS[d.getDay()]).toUpperCase();
+  };
+  var todayUp = function () { return (window.casoraTr ? window.casoraTr('Heute') : 'Heute').toUpperCase(); };
   var DAYL = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
   var esc = function (t) {
     return String(t == null ? '' : t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
@@ -1146,7 +1154,7 @@
     if (!C.list.length) return CAL_CSS + lbl + '<div class="hrw">' + row('', empty, 'Nichts geplant', 'In der Cookidoo-App auf „Meine Woche“ planen') + '</div>';
     return CAL_CSS + lbl + '<div class="hrw">' + C.list.map(function (x) {
       var dn = dayName(x.when), rel = dn === 'Heute' || dn === 'Morgen';
-      return row(dn === 'Heute' ? ' now' : '', '<div class="hrw-b"><b>' + DAYS[x.when.getDay()].toUpperCase() + '</b><span>' + x.when.getDate() + '</span></div>',
+      return row(dn === 'Heute' ? ' now' : '', '<div class="hrw-b"><b>' + dayUp(x.when) + '</b><span>' + x.when.getDate() + '</span></div>',
         esc(x.name), rel ? dn : null, x.min ? mins(x.min) : null);
     }).join('') + '</div>';
   };
@@ -1177,7 +1185,7 @@
         var d = new Date(t0.getTime() + i * 86400000);
         var meals = C.list.filter(function (x) { return dayStart(x.when).getTime() === dayStart(d).getTime(); });
         var m0 = meals[0];
-        strip += '<div class="hrk-d' + (i === 0 ? ' now' : '') + '"><div class="hrk-h"><b>' + (i === 0 ? 'HEUTE' : DAYS[d.getDay()].toUpperCase()) + '</b><span>' + d.getDate() + '</span></div>'
+        strip += '<div class="hrk-d' + (i === 0 ? ' now' : '') + '"><div class="hrk-h"><b>' + (i === 0 ? todayUp() : dayUp(d)) + '</b><span>' + d.getDate() + '</span></div>'
           + (m0 ? '<div class="hrk-n">' + esc(m0.name) + (meals.length > 1 ? ' +' + (meals.length - 1) : '') + '</div>' + (m0.min ? '<div class="hrk-m">' + mins(m0.min) + '</div>' : '')
             : '<div class="hrk-n off">–</div>') + '</div>';
       }
