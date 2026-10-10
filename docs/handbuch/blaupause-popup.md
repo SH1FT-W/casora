@@ -8,15 +8,26 @@ kleine Designsprache erzeugt – das nicht wiederholen.
 
 ```
 <casora-popup>  (casora-core.js, gemeinsamer Rahmen – nicht nachbauen)
- ├─ Kopf: Ring (aus der angetippten Kachel) · Raum-Etikett (eyebrow) · Titel · Schließen-X
- ├─ hero    – Statuszeile/Unterzeile unter dem Titel (UI.line) + ggf. Übersichtsleiste
+ ├─ Kopf (Kopfzeile A, 1.3): Symbol-Kachel · Raum-Etikett · Titel · Statuszeile │ Hauptschalter · X
+ ├─ hero    – Statuszeile (UI.line) – der Rahmen holt die erste .hui-line oben im Inhalt in den Kopf
  ├─ full    – Diagramm / Kamera / Karte über volle Breite (optional)
  ├─ left    – Bedienung: Modus (Überschrift „Modus“), Programme, Schalter, Aktionen
  └─ right   – Infos: Status, Messwerte, Verbrauch, Verlauf, „Mehr“
 ```
 
-- Der **Kopf** (Ring 78 / Handy 66, Titel 28/800, Etikett, X) kommt immer vom Rahmen. Nie einen eigenen
-  Kopf in den Inhalt bauen (Fund DP-11: Sicherheits-Badge mit altem 36-px-Kopf).
+- Der **Kopf** kommt immer vom Rahmen (Kopfzeile A, Theme „Casora“): links die Symbol-Kachel 56/r16 (Handy 48/r14)
+  aus der angetippten Kachel in deren Gerätefarbe, darüber klein der Raum (`_casoraRoomOf` der Kachel-Entität; nicht
+  bei Sammel-Popups wie Batterien/Energie/Badges), Titel 28/800 (der Raumname wird aus dem Titel genommen), darunter
+  die Statuszeile; rechts Hauptschalter und X. Nie einen eigenen Kopf in den Inhalt bauen (Fund DP-11).
+- **Statuszeile**: die erste `UI.line`/`UI.hero({center})`/`UI.headline({barTitle})` oben im Inhalt – der Rahmen
+  spiegelt sie live in den Kopf und blendet ihr Feld aus. Steht der Raum noch einmal darin, fällt er dort weg.
+- **Hauptschalter** (ersetzt eigene „Alles aus“-/Ein-Aus-Knöpfe): bei `casora_switch|fan|air_purifier|humidifier`
+  automatisch (Kachel-Entität), sonst per Vorlage `casora_popup.head_switch: { entities: [...] }` (oder `false`) oder
+  per Modul-Haken `window._casoraHeadSwitchHooks.push(fn(src, hass) → null | [ids] | { entities, toggle(on, ids, hass),
+  disabled })` (Beispiel Licht: `_casoraLightSoft.head`). „Vor dem Schalten fragen“ gilt.
+- **Gerätefarbe** = `--casora-popup-accent` (vom Rahmen gesetzt): alle Schalter, Kopf-Kachel, aktive Symbole.
+  Weicht der Zustand von der Kachelfarbe ab (Batterien „Alle OK“), setzt das Modul sie über
+  `window._casoraRingHueHooks.push(fn(src, key) → farbe | { hue, off })` (DP-15).
 - Titel über `casoraPopupTitle(this, variables, 'Standard', ['Aliasse'])` (eigener Popup-Titel →
   Kachelname → Standard).
 - Breite: Standard 900–920 px (`--popup-min-width/--popup-max-width`); nur wenn der Inhalt einspaltig ist,
@@ -96,11 +107,12 @@ es aber nicht an.
 
 - **Bedien-Popup** (Sheet): Abschnittsüberschriften außen über der Platte. **Info-Popup** (Glasplatten):
   innen – im `popup_styles` `--casora-lbl-in: block; --casora-lbl-out: none`. Einheitlich pro Popup.
-- Auswahl ohne Haken (`_casoraSelRows`), aktive Zeile hinterlegt; Pfeil/Schalter auf aktiver Zeile in deren Schriftfarbe.
+- Auswahl ohne Haken (`_casoraSelRows`), aktive Zeile hinterlegt (`--casora-soft-row-active*`, DP-07);
+  ausgeschaltete Zeilen bleiben Sand; Pfeil/Schalter auf aktiver Zeile in deren Schriftfarbe.
 - Leere Bereiche nicht rendern (Feld weglassen), leere Diagramme mit Hinweis statt leerer Fläche (DP-09).
 - Felder mit Schatten: `overflow: visible` (macht `layout` selbst).
 - Kein HA-Schalter `ha-switch` neu einbauen, wenn ein Kern-Schalter in der Zeile reicht (DP-19 Switch-Popup).
-- Ringfarbe/Ton des Kopfs = Zustand (keine rote Batterie bei „Alles OK“) – siehe OFFEN DP-15 in den Design-Regeln.
+- Farbe der Kopf-Kachel = Zustand (keine rote Batterie bei „Alles OK“, DP-15 entschieden) – siehe oben `_casoraRingHueHooks`.
 - Langer Titel: Kern-CSS kürzt; keine eigenen `max-width: calc(100% + 56px)`-Köpfe (DP-03).
 - Gerät verschwindet bei offenem Popup → Rahmen zeigt Hinweis (`_checkEmpty`), Inhalt darf nicht werfen.
 
@@ -108,7 +120,7 @@ es aber nicht an.
 
 | Zustand | Erwartung |
 |---|---|
-| alle Gerätezustände (an/aus/aktiv/läuft/fertig/Fehler) | Zustandswort laut Wortliste, Ring/Ton passend |
+| alle Gerätezustände (an/aus/aktiv/läuft/fertig/Fehler) | Zustandswort laut Wortliste, Kopf-Kachel/Ton passend |
 | nicht verfügbar / unbekannt / Attribut fehlt | Text statt `undefined`/`NaN`, keine Konsolenmeldung |
 | leer (keine Einträge) / sehr viele Einträge | Hinweiszeile bzw. Scrollen mit Verlauf, keine harte Kante |
 | lange Namen (Titel, Zeilen) | `…`, nichts über den Rand |
@@ -121,7 +133,9 @@ es aber nicht an.
 
 ## 7. Checkliste
 
-- [ ] Kopf vom Rahmen, Titel über `casoraPopupTitle`
+- [ ] Kopf vom Rahmen (Kopfzeile A), Titel über `casoraPopupTitle`, Statuszeile als `UI.line` oben
+- [ ] Gesamtschalter als Hauptschalter im Kopf (kein eigener „Alles aus“-Knopf), Szenen mit eigener Überschrift
+- [ ] Maße nur aus Tokens (`design-regeln.md` § 0), Abschnittsüberschriften über `UI.group(rows, 'Titel')`
 - [ ] Inhalt aus `_casoraUI`/`_casoraSoftKit`, keine neuen Klassen-Präfixe
 - [ ] Live-Teile als `secCard` mit vollständiger `watch`-Liste
 - [ ] Spalten: links Bedienung, rechts Infos; Handy einspaltig

@@ -5805,6 +5805,17 @@ window.casoraMenuGlass = {
     // B-16: Der Ring zeigt einen Fehler (Druck fehlgeschlagen …) in Alarmfarbe statt in Gerätefarbe.
     var stv = String((src._stateObj && src._stateObj.state) || '').toLowerCase();
     if (/^(failed|failure|error|fault|fehler|fehlgeschlagen|problem)$/.test(stv)) hue = 'var(--casora-color-red, #D35A4E)';
+    // DP-15 (1.3): Module, die den Zustand ihres Popups kennen (Batterien „Alle OK“ …), geben die Farbe vor –
+    // sonst zeigte der Kopf die Farbe der Kachel, die am Handy/Desktop verschieden sein kann.
+    var forcedOff = null;
+    (window._casoraRingHueHooks || []).some(function (f) {
+      var r = null;
+      try { r = f(src, key); } catch (e) { r = null; }
+      if (!r) return false;
+      if (typeof r === 'string') hue = r;
+      else { if (r.hue) hue = r.hue; if (r.off != null) forcedOff = !!r.off; }
+      return true;
+    });
     var ic = src.shadowRoot && src.shadowRoot.querySelector('#icon');
     var glyph = null;
     // Kachel, die ihr sichtbares Symbol selbst zeichnet (Kalender: Rahmen mit heutiger Tageszahl
@@ -5868,7 +5879,7 @@ window.casoraMenuGlass = {
     if (!glyph) return null;
     // Kachel meldet selbst Ruhe (z. B. NINA „Keine Warnung“ setzt _casoraRingQuiet): Sand wie die Kachel.
     var idle = src._casoraRingQuiet === true;
-    return { hue: hue, html: glyph, off: idle || ringOff(src) };
+    return { hue: hue, html: glyph, off: forcedOff != null ? forcedOff : (idle || ringOff(src)) };
   }
   // ── 1.3 Kopfzeile A ──────────────────────────────────────────────────────
   // Farbe eines Werts („rgb(…)“, „#…“ oder „var(--x, #…)“) als [r,g,b] – Variablen über <html> aufgelöst.

@@ -10,6 +10,29 @@ im neuen Code. Wo ein fester Wert nötig ist (Rückfallwert in `var(--x, …)`),
 
 ---
 
+## 0. Tokens (eine Designsprache, seit 1.3)
+
+Gilt: Die Werte stehen **einmal** als CSS-Variablen im Theme „Casora“ (`theme_weich.yaml`, Abschnitt
+„Designsprache“; „Casora Nebel“ wird daraus gebaut). Neuer Code nimmt nur diese Variablen; feste Zahlen nur
+als Rückfallwert `var(--casora-r-row, 24px)`. Die Popups (Kern `casora-core.js`, Module `scripts/local/`)
+sind umgestellt; Kacheln, Menüs und Studio ziehen nach (bis dahin: dort die heutigen Werte der Nachbarn).
+
+| Gruppe | Variablen | Werte |
+|---|---|---|
+| Radien | `--casora-r-window` · `-surface` · `-row` · `-element` · `-small` · `-pill` | 44 · 32 · 24 · 18 · 12 · 999 px |
+| Abstände (4er-Raster) | `--casora-space-1` … `-10` (1,2,3,4,5,6,8,10) | 4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 px |
+| Schrift | `--casora-fs-label` · `-sub` · `-value` · `-row` · `-heading` · `-title` · `-page` | 12 · 13 · 14 · 15 · 17 · 28 · 34 px |
+| Symbolgrößen (6) | `--casora-ic-head` (Handy `-head-phone`) · `-tile` · `-row` · `-badge` · `-button` · `-status` | 56 (48) · 44 · 36 · 28 · 48 · 22 px |
+| Schatten (3 Stufen, hell + dunkel) | `--casora-shadow-rest` · `-raised` · `-float` | Ruhe (Platte, aktive Zeile) · gehoben (Hover/aktiv) · schwebend (Popup, Menü) |
+| Bewegung | `--casora-ease-enter` + `--casora-dur-enter` · `--casora-ease-slide` + `--casora-dur-slide` · `--casora-dur-feedback` | (.2,.8,.3,1) 320 ms · (.36,0,.16,1) 360 ms · 160 ms |
+| Druck | `--casora-press-scale` | `.97` auf Tasten (`transform: scale(var(--casora-press-scale, .97))`) |
+| Aktive Zeile (DP-07) | `--casora-soft-row-active` · `-active-shadow` · `-active-ink` · `-active-sub` | hell Creme + Ruhe-Schatten; dunkel Sand 14 %, helle Schrift |
+| Symbol auf Akzent (DP-17) | `--casora-on-accent-ink` | dunkle Tinte, wo Weiß unter 3 : 1 hat (Gelb, Orange, Grün) |
+| Popup-Akzent | `--casora-popup-accent` · `--casora-popup-accent-ink` | vom Rahmen je Popup gesetzt = Gerätefarbe der Kachel (Schalter, Kopf-Kachel, aktive Symbole) |
+
+Symbol-Kacheln (abgerundetes Quadrat statt Kreis, Popups seit 1.3): Radius ≈ 30 % – Kopf 56/16, Handy 48/14,
+Zeile 36/12 (`--casora-soft-icon-size`, `--casora-soft-icon-radius` im Popup-Rahmen). Startseite zieht nach.
+
 ## 1. Radien
 
 Gilt (gemessen, Kern-Popups halten das zu 98–100 %):
@@ -30,9 +53,9 @@ Höhe: `min(Radius, Höhe/2)`. Beispiel Handy-Leiste: Leiste 60/Radius 30, Polst
 Bekannte Abweichungen (nicht nachbauen): Pulse-Popup setzt `--casora-popup-row-radius: 26px`, Glocke
 Fenster 28 / Zeile 18 bei 8 px Rand (konzentrisch wäre 20), Kamera-Bildplatte 28, HA-Dialog 36.
 
-> **OFFEN – Entscheidung Maintainer (DP-16, Zeilenradius in Popups):**
-> A: Zeilen-Platte bleibt 24 (heute) / B: konzentrisch zum Symbolkreis 29 (= Pille bei 58 px Zeilenhöhe).
-> Bilder: Feinschliff-Notizen `d-popups/bilder/ab_DP16_*`. Bis zur Wahl: 24.
+Gilt (DP-16, entschieden 10.10.2026, „Zeilen konzentrisch“): Popup-Zeile 60 hoch, Radius 24, Symbol-Kachel
+36/r12 mit 12 px Rand ringsum → 12 + 12 = 24 konzentrisch. Variablen im Popup-Rahmen: `--casora-soft-row-h`,
+`--casora-soft-row-pad`, `--casora-soft-icon-size`, `--casora-soft-icon-radius`.
 
 > **OFFEN – Entscheidung Maintainer (dk-10, Markierung im Räume-Menü):**
 > A: Fenster 34 (dann konzentrisch zur Pille 26 bei 8 px Abstand) / B: so lassen.
@@ -88,11 +111,12 @@ in neuem Code (heute noch ~100 Stellen, u. a. 12,5/13,5/14,5).
 
 | Rolle | Größe/Gewicht |
 |---|---|
-| Etikett (Abschnittskopf im Popup) | 12/700, Großbuchstaben, `letter-spacing: .1em` |
+| Abschnittsüberschrift im Popup (seit 1.3) | 17/700, Satzschreibung, Text 1 – über `--casora-h15-*` (Popup-Rahmen setzt sie) |
+| Etikett (Raum über dem Popup-Titel, Wert-Etiketten) | 12/700, Großbuchstaben, `letter-spacing: .1em` |
 | Unterzeile | 13/500 |
 | Wert in Zeile | 14/600 |
 | Zeile | 15/500 bzw. 15/700 |
-| Status unter dem Popup-Titel | 17/700 |
+| Status unter dem Popup-Titel (Kopfzeile A) | 15/700 Zustand · 15/500 Rest |
 | Popup-Titel | 28/800 |
 | Seitentitel Handy | 34/800 |
 | Kachelname | 18 / 15 / 14 (Desktop/Tablet/Handy), 700 |
@@ -108,9 +132,9 @@ Studio heute: eigener Satz `--t-caption 12 · --t-foot 13 · --t-callout 15 · -
 > A: Studio bleibt iOS-nah (SF im Inspektor, Radien 8/12/18/26, Haarlinien) /
 > B: Casora-Sprache (Inter, Radien 12/18/24/32, Sand-Platten; Haarlinien in Formularen dürfen bleiben).
 
-> **OFFEN – Entscheidung Maintainer (Abschnittsköpfe, Sprachen-Frage 1):**
-> A: Etikett überall (12/700 Großbuchstaben), Satz-Überschrift nur auf Seitenebene /
-> B: Satz-Überschrift (17/700) überall. Heute drei Stile (Popup-Etikett, Handy „Favoriten“ 17/700, Studio „Optionen“ 15/600).
+Gilt (Sprachen-Frage 1, entschieden B): Abschnittsüberschriften sind **normale Überschriften** („Räume“,
+nicht „RÄUME“), 17/700 – in Popups umgesetzt über `--casora-h15-fs/-fw/-ls/-tt/-c` (Weich-Rahmen) bzw.
+`UI.group(rows, 'Räume')`. Kleine Großbuchstaben bleiben nur für Etiketten (Raum über dem Titel, Wert-Etiketten).
 
 ## 5. Farben
 
@@ -142,20 +166,22 @@ Gilt:
 > **OFFEN – Entscheidung Maintainer (dk-17):** A: Szenenfarbe überall immer (auch inaktiv) /
 > B: überall nur aktiv, inaktiv neutral. Heute: Badge immer, Handy-Menü nur aktiv.
 
-> **OFFEN – Entscheidung Maintainer (DP-15):** Ringfarbe = Zustand überall (z. B. „Alle Akkus OK“
-> nicht rot, „Fehlgeschlagen“ nicht grau)? A: ja, Ring folgt Zustand / B: Ring bleibt Gerätefarbe.
+Gilt (DP-15, entschieden: Ring folgt Zustand): Die Kopf-Kachel zeigt die Farbe, die die Kachel gerade zeigt
+(Zustand), aus = Sand; Fehler/fehlgeschlagen = Rot; nicht verfügbar/unbekannt = Sand. Ein Modul, das den
+Zustand selbst kennt, setzt ihn über `window.casoraRingHue(src, key)` (siehe Blaupause Popup).
 
 ## 6. Symbolkreise
 
-Gilt (heute gemessen): Popup-Ring 78 (Handy 66) · Kachelkreis 44 (Tablet 38, Handy 42) · Zeilenkreis 38 ·
-Badge 28–30 · Knopf 48 · Status 22 · Menü 32 (`--casora-menu-ic-size`). Symbol ≈ 50 % des Kreises.
+Gilt: Popup-Kopf-Kachel 56 (Handy 48) · Kachelkreis 44 (Tablet 38, Handy 42) · Zeilen-Kachel im Popup 36 ·
+Badge 28–30 · Knopf 48 · Status 22 · Menü 32 (`--casora-menu-ic-size`). Symbol ≈ 50 % der Fläche. In Popups
+sind Symbole seit 1.3 abgerundete Quadrate (siehe § 0), auf der Startseite noch Kreise.
 Eigene SVG-Symbole über `mask-image` (`/casora_assets/icons/<name>.svg`), neue Namen in
 `CASORA_EXTRA_ICONS` (`casora-panel-types.js`) eintragen.
 
 Neue Kreisgrößen außerhalb dieser Liste nicht einführen (heute 13 Größen in Popups – Altlast).
 
-> **OFFEN – Entscheidung Maintainer (DP-17):** Symbole auf hellen Akzentkreisen unter 3:1
-> (Weiß auf Gelb 1,96:1). A: Markenfarben lassen / B: dunkle Tinte auf Gelb/Hellgrün, Aus-Symbol .55→.7.
+Gilt (DP-17, entschieden B): Symbol auf einer Akzentfläche ≥ 3 : 1 – der Kern wählt Weiß oder
+`--casora-on-accent-ink` nach Kontrast (`window._casoraInkOn(farbe)`); Aus-Symbol `--casora-soft-glyph-off` .70.
 
 ## 7. Bewegung
 
@@ -185,8 +211,8 @@ Gilt:
 > **OFFEN – Entscheidung Maintainer (dk-13, Druck bei Badges):** A: wie Kacheln ohne sichtbaren Druck
 > (nur Haptik) / B: alle Badges Platte .07→.11 beim Drücken. Heute färbt nur das Einzel-Sicherheits-Badge.
 
-> **OFFEN – Entscheidung Maintainer (Druck-Skala):** Vorschlag `scale(.97)` + Platte .16, 120 ms für alle
-> Tasten; heute 49 verschiedene Skalen (.86–.985). Bis zur Wahl: die Skala der Nachbarn übernehmen.
+Gilt (Druck-Skala, entschieden): `scale(var(--casora-press-scale, .97))` auf Tasten – in Popups umgestellt;
+Kacheln/Menüs/Studio ziehen nach (heute dort noch .86–.985).
 
 ## 9. Aktive Zeilen und Auswahllisten
 
@@ -196,9 +222,9 @@ Gilt:
 - Auf hinterlegter (heller) aktiver Zeile erben Pfeil, Schalter und Symbol die Schriftfarbe der Zeile
   (Funde DP-04/DP-06: Schalter 1,15:1, Pfeil 1,09:1 im Dunkeln).
 
-> **OFFEN – Entscheidung Maintainer (DP-07, „aktiv“ im Dunkeln):** A: Creme-Platte überall (wie Licht,
-> Jalousie, Schloss) / B: aufgehelltes Braun (wie Alarm-Modus, Batterien). Popup-Entwurf A/B/C schlägt
-> „Creme/Sand 14 %“ für alles vor.
+Gilt (DP-07, entschieden „eine Art aktiv“): Popup-Zeilen, die an/gewählt/aktiv sind, nehmen
+`--casora-soft-row-active*` – hell Creme + Ruhe-Schatten, dunkel Sand 14 % mit heller Schrift (keine Creme-Umkehr
+mehr). Gilt auch für Auswahllisten (`--casora-soft-row-selected` zeigt darauf). Ausgeschaltete Zeilen bleiben Sand.
 
 ## 10. Geometrie (gemessen mit `dev/qa/popup-geo.mjs`, `dev/qa/ausrichtung.mjs`)
 
@@ -222,8 +248,8 @@ Gilt:
 - Hell **und** dunkel prüfen – die Hälfte der Kontrast-Funde gab es nur dunkel.
 
 > **OFFEN – Entscheidung Maintainer (dk-08, Text-Rot):** A: eigenes Text-Rot (≈ #B0473C, 4,6:1) nur für
-> Schrift / B: so lassen (#D35A4E auf Creme 3,3:1). **(DP-30)** Pfeil › in Zeilen: A Deckkraft .35/.4 lassen /
-> B .6 (≥ 3:1).
+> Schrift / B: so lassen (#D35A4E auf Creme 3,3:1). Pfeil › in Zeilen (DP-30): entschieden B, Deckkraft .6
+> (`--casora-chev-opacity`).
 
 ## 12. Trefferflächen
 
@@ -235,18 +261,19 @@ Gilt:
 
 Gilt:
 - Breit: `--popup-min-width: 900px; --popup-max-width: 920px` (auch kleine Steuer-Popups).
-- Ab 761 px: Kopf (Ring, Titel, Status) mittig über volle Breite → Diagramm/Kamera/Karte volle Breite →
+- **Kopfzeile A** (seit 1.3, alle Popup-Arten, nur Theme „Casora“/Nebel): Kopf in einer Zeile – links die
+  Symbol-Kachel 56/r16 (Handy 48/r14) in Gerätefarbe, daneben klein der Raum (Etikett), der Titel 28/800 (Handy 24)
+  und die Statuszeile; rechts der Hauptschalter (nur wo es einen Gesamtschalter gibt, ersetzt eigene „Alles aus“-
+  Knöpfe) und das X. Kachel bündig mit den Zeilen darunter (36 px vom Rand, Handy 24). 28 px bis zum Inhalt.
+- Ab 761 px: darunter Diagramm/Kamera/Karte volle Breite →
   zwei Spalten, **links Bedienung** (Modus mit Überschrift „Modus“ oben links, Programme, Schalter,
   Aktionen), **rechts Infos** (Status, Messwerte, Verbrauch, Verlauf).
 - Handy (≤ 760): eine Spalte, Reihenfolge Kopf → Diagramm → Modus → übrige Bedienung → Infos.
 - Überschriften **pro Popup** einheitlich: Bedien-Popup (Sheet) alle außen über der Platte,
   Info-Popup (Glasplatten) alle innen (`--casora-lbl-in: block; --casora-lbl-out: none`).
 
-> **OFFEN – Entscheidung Maintainer (Popups neu gedacht, A/B/C):** A „Kopfzeile“ (Kopf links in einer
-> Zeile, Hauptschalter + X rechts, darunter der heutige Zweispalten-Standard) / B „Bühne“ (Kopf mittig,
-> Hauptregler groß über volle Breite) / C „Blatt“ (eine Spalte überall). Dazu: Zimmer-Kachel statt Kreis?
-> Schalter in Gerätefarbe statt Ton? Vergleich: Feinschliff-Notizen `popup-neu/vergleich.html`.
-> Bis zur Wahl gilt der heutige Standard oben.
+Entschieden (10.10.2026): A „Kopfzeile“, Symbol als abgerundetes Quadrat, Schalter in Gerätefarbe
+(`--casora-popup-accent`, alle Schalter im Popup). Szenen bekommen eine eigene Abschnittsüberschrift „Szenen“.
 
 > **OFFEN – Entscheidung Maintainer (Listen in Fenstern, Sprachen-Frage 3):** A: jede Zeile Platte 24
 > (wie Popups) / B: Zeilen ohne Platte, nur Hover-Platte (wie Glocke) – Vorschlag B in Glocke/Menüs, A in Popups.

@@ -37,6 +37,16 @@
   var BAT = function () { return window.casoraBattery; };
   var lvOf = function (v) { return BAT() ? BAT().level(v) : v <= 10 ? 'crit' : v <= 20 ? 'low' : 'ok'; };
   var B = window._casoraSoftBat = {};
+  /* DP-15 (1.3): Kopf-Kachel der Batterien in der Farbe des Zustands – alle OK grün, schwach orange, fast leer rot
+     (vorher die Farbe der Kachel: am Handy rot bei „Alle Batterien OK“). */
+  (window._casoraRingHueHooks = window._casoraRingHueHooks || []).push(function (src, key) {
+    if (!/\bcasora_(battery|popup_battery)\b/.test(key) || !B.lastC) return null;
+    var h = (document.querySelector('home-assistant') || {}).hass; if (!h) return null;
+    var lv = rows(h.states, B.lastC).map(function (r) { return lvOf(r.v); });
+    if (!lv.length) return null;
+    return { hue: lv.indexOf('crit') > -1 ? 'var(--casora-color-red, #D35A4E)' : lv.indexOf('low') > -1 ? 'var(--casora-color-orange, #DE8A4E)'
+      : 'var(--casora-color-green, #6AAE78)', off: false };
+  });
   B.build = function (ctx) {
     var UI = window._casoraUI, K = kit();
     if (!UI || !UI.more || !K) return null;
@@ -44,6 +54,7 @@
     var list = (ctx.batteries || []).filter(function (b) { return b && states[b.id]; });
     if (!list.length) return null;
     var C = { b: list.map(function (b) { return [b.id, b.name, b.icon, b.charge || []]; }) };
+    B.lastC = C;
     var ids = list.map(function (b) { return b.id; });
     var chg = [].concat.apply([], list.map(function (b) { return b.charge || []; }));
     var hpOk = typeof window._hpChartCfg === 'function';

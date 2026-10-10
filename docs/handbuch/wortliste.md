@@ -115,7 +115,7 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 | V4 | Englische Schreibweise | amerikanisch (wie HA) | britisch | A |
 | V5 | Englisch Groß/klein bei Zuständen („All Away“ vs „All away“) | Satzschreibung | Title Case | A |
 | V6 | Netzwerk WLAN aus: Unterzeile „Ausgeschaltet“ neben Knopf „Aus“ | „Aus“ | lassen (Ausnahme notieren) | B |
-| V7 | Batterien-Popup: Titel „Batterien“, Kopf „Alle Akkus OK“ | Titel „Akkus“ | Kopf „Alle Batterien OK“ | B |
+| V7 | Batterien-Popup: Titel „Batterien“, Kopf „Alle Akkus OK“ | Titel „Akkus“ | Kopf „Alle Batterien OK“ | **entschieden B, umgesetzt 1.3** |
 | V8 | Integrations-Anzeigenamen mit Bindestrich („Casora Kamera-KI“) | mit Bindestrich | lassen | A (entity_id bleibt) |
 | V9 | Auslassung im Dashboard („Läuft…“ 19× / „Läuft …“ 39×) | wie Studio: DE „Läuft …“, EN „Running…“ | überall ohne Leerzeichen | A |
 
