@@ -703,6 +703,24 @@
   var V = null;  // { pop, p, sort, saved… }
   var popEl = function () { var P = window.casoraPopup; return P && P.element && P.element.hasAttribute('open') ? P.element : null; };
   var hassStates = function () { var ha = document.querySelector('home-assistant'); return (ha && ha.hass && ha.hass.states) || {}; };
+  /* Kopfzeile A (1.3, Casora/Nebel): die Statuszeile der Ansicht („ab 1,69 € · Super E10 …“) steht im Kopf
+     statt der des Autos, ihr Feld im Inhalt entfällt; der Abstand Kopf → Inhalt wird neu auf 28 px gemessen. */
+  var softHead = function () {
+    if (!V || !V.soft) return;
+    var sr = V.pop.shadowRoot, st = sr.querySelector('.header-status');
+    var line = V.inner.querySelector('.hui-line');
+    if (st && line) {
+      st.innerHTML = line.innerHTML;
+      st.hidden = !st.textContent.trim();
+      line.style.display = 'none';
+      var gap = line.nextElementSibling;
+      if (gap && !gap.className && !gap.children.length && !gap.textContent.trim()) gap.style.display = 'none';
+      if (window._casoraSepScan) setTimeout(function () { window._casoraSepScan(sr); }, 0);
+    }
+    if (V.cont) V.cont.style.marginTop = '0px';
+    var pop = V.pop;
+    requestAnimationFrame(function () { if (V && V.pop === pop && typeof pop._fitHeadGap === 'function') pop._fitHeadGap(); });
+  };
   var render = function (keepScroll) {
     if (!V) return;
     var sr = V.pop.shadowRoot, content = sr.querySelector('.content');
@@ -712,6 +730,7 @@
     var pad = parseFloat(V.box.style.paddingLeft) || 0;
     V.inner.innerHTML = K.html(V.p, hassStates(), V.sort, wide, bw ? bw - 2 * pad : 0);
     V.wide = wide;
+    softHead();
     var sid = K.sensorId(V.p, hassStates());
     if (sid) mountDay(info(hassStates()[sid]));
     syncMap();
@@ -766,10 +785,25 @@
       back.style.margin = '0';
       back.style.zIndex = '5';
     };
-    surf.appendChild(back);
-    place();
+    V.soft = pop.hasAttribute('soft');
+    var bar = V.soft && sr.querySelector('.header-bar');
+    if (bar) {
+      // Kopfzeile A: der Titel steht links – der Zurück-Knopf nimmt den Platz der Symbol-Kachel ein (Spalte 1),
+      // statt als Spiegelbild des Schließen-Knopfs über Titel und Statuszeile zu liegen.
+      V.cont = cont;
+      var stEl = sr.querySelector('.header-status');
+      V.head = { mt: cont.style.marginTop, gap: pop.style.getPropertyValue('--casora-head-gap'),
+        st: stEl ? stEl.innerHTML : null, stHidden: stEl ? stEl.hidden : true };
+      if (ring) { V.ringEl = ring; ring.style.setProperty('display', 'none', 'important'); }
+      pop.style.removeProperty('--casora-head-gap');
+      back.style.cssText = 'grid-column:1;grid-row:1 / span 3;align-self:center;position:relative;margin:0;z-index:1;';
+      bar.appendChild(back);
+    } else {
+      surf.appendChild(back);
+      place();
+    }
     V.back = back;
-    V.onResize = function () { if (!V) return; place(); var w = V.box.getBoundingClientRect().width > 700; if (w !== V.wide) render(true); else syncMap(); };
+    V.onResize = function () { if (!V) return; if (!V.soft) place(); var w = V.box.getBoundingClientRect().width > 700; if (w !== V.wide) render(true); else syncMap(); };
     window.addEventListener('resize', V.onResize);
     // Popup zu oder neu befüllt: Ansicht verlassen.
     V.mo = new MutationObserver(function () { if (V && (!pop.hasAttribute('open') || !box.isConnected)) K.leave(true); });
@@ -802,6 +836,13 @@
     if (ttl && ttl.textContent === 'Tanken') ttl.textContent = v.title;
     var ring = sr.querySelector('.header-ring');
     if (ring && v.ring != null) ring.innerHTML = v.ring;
+    if (v.ringEl) v.ringEl.style.removeProperty('display');
+    if (v.head) {
+      var st = sr.querySelector('.header-status');
+      if (st && v.head.st != null) { st.innerHTML = v.head.st; st.hidden = v.head.stHidden; }
+      if (v.cont) v.cont.style.marginTop = v.head.mt;
+      if (v.head.gap) v.pop.style.setProperty('--casora-head-gap', v.head.gap);
+    }
     var content = sr.querySelector('.content');
     if (content && !closing) content.scrollTop = 0;
   };
