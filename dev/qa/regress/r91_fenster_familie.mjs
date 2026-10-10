@@ -38,7 +38,8 @@ const frame = (page, [sel, row, ic, name]) => page.evaluate(([sel, row, ic, name
       return { below: r.top >= (rows.length ? rows[rows.length - 1].getBoundingClientRect().bottom - 1 : 0), radius: parseFloat(c.borderTopLeftRadius), h: r.height, bg: c.backgroundColor, fs: parseFloat(c.fontSize) }; })() };
 }, [sel, row, ic, name]);
 const tap = async (page, fn) => { const p = await page.evaluate(fn); if (!p) return false; await page.mouse.click(p.x, p.y); await page.waitForTimeout(1300); return true; };
-const btn = (tpl) => `(() => { const c = window.__pierce('button-card').find((b) => [].concat(b._config?.template || []).includes('${tpl}') && b.getBoundingClientRect().width > 0 && b.getBoundingClientRect().top < 220);
+// maxTop: Kopfzeile (Desktop 220); am Handy sitzen Glocke/⋯ seit 1.3 (Leiste B) unten in der Navigationsleiste.
+const btn = (tpl, maxTop = 220) => `(() => { const c = window.__pierce('button-card').find((b) => [].concat(b._config?.template || []).includes('${tpl}') && b.getBoundingClientRect().width > 0 && b.getBoundingClientRect().top < ${maxTop});
   if (!c) return null; const r = c.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; })()`;
 const headBtn = (page, tpl) => page.evaluate((tpl) => { const c = window.__pierce('button-card').find((b) => [].concat(b._config?.template || []).includes(tpl) && b.getBoundingClientRect().width > 0 && b.getBoundingClientRect().top < 220);
   const h = c && c.shadowRoot.querySelector('ha-card'); return h ? { bg: getComputedStyle(h).backgroundColor, shadow: getComputedStyle(h).boxShadow } : null; }, tpl);
@@ -95,9 +96,15 @@ for (const dark of [false, true]) {
   const rim = await page.evaluate(() => { const d = document.createElement('div'); d.style.boxShadow = 'var(--casora-pill-rim)'; document.body.appendChild(d); const s = getComputedStyle(d).boxShadow; d.remove(); return s; });
 
   // D10: Kopfknöpfe mit dem Leisten-Schatten.
+  // 1.3 (Kopfknöpfe A): die Knöpfe liegen in einer Kapsel (::before des ⋯-Felds) – die Kapsel trägt den
+  // Leisten-Schatten, die Kreise darin sind durchsichtig und ohne eigenen Schatten.
+  const cap = await page.evaluate(() => { const c = window.__pierce('button-card').find((b) => [].concat(b._config?.template || []).includes('casora_room') && b.getBoundingClientRect().width > 0);
+    const s = c && c.shadowRoot.getElementById('settings'); if (!s) return null; const st = getComputedStyle(s, '::before');
+    return { shadow: st.boxShadow, bg: st.backgroundColor, w: parseFloat(st.width), h: parseFloat(st.height) }; });
+  await check(`${tag}: Kopfknöpfe in einer Kapsel mit Leisten-Schatten (1.3, vorher D10 je Kreis)`, cap && cap.shadow === rim && cap.bg !== 'rgba(0, 0, 0, 0)' && near(cap.h, 46), [cap, rim]);
   for (const t of ['casora_notifications_button', 'casora_settings_button']) {
     const b = await headBtn(page, t);
-    await check(`${tag}: ${t} mit Leisten-Schatten wie die Welle (D10)`, b && b.shadow !== 'none' && b.shadow === rim, [b, rim]);
+    await check(`${tag}: ${t} in der Kapsel ohne eigene Fläche/Schatten`, b && b.shadow === 'none' && b.bg === 'rgba(0, 0, 0, 0)', b);
   }
   // D12: Raumleiste, weiße Pille ringsum 4.
   const nb = await page.evaluate(() => { const nb = window.__pierce('casora-nav-bar').find((e) => e.getBoundingClientRect().width > 0); if (!nb) return null;
@@ -164,10 +171,11 @@ for (const dark of [false, true]) {
   usePage(ph.page);
   await dashboard(ph.page, desk.phone.url, 3);
   await ph.page.waitForFunction(() => { const n = window.__pierce('casora-mobile-nav')[0]; return !!(n && n._hass && n._bRooms); }, null, { timeout: 15000 }).catch(() => {});
-  const hg = await tap(ph.page, () => { const r = window.__pierce('.casora-bell').map((e) => e.getBoundingClientRect()).find((r) => r.width > 0 && r.top < 200); return r && { x: r.x + r.width / 2, y: r.y + r.height / 2 }; })
+  const hg = await tap(ph.page, () => { const r = window.__pierce('.casora-bell').map((e) => e.getBoundingClientRect()).find((r) => r.width > 0); return r && { x: r.x + r.width / 2, y: r.y + r.height / 2 }; })
     ? await frame(ph.page, ['.casora-notify-menu', '.hui-srow', '.hui-inner > :first-child', '.hui-inner > :nth-child(2) > :first-child']) : null;
-  await ph.page.keyboard.press('Escape'); await ph.page.mouse.click(200, 600); await ph.page.waitForTimeout(800);
-  const hp = await tap(ph.page, new Function('return ' + btn('casora_settings_button'))) ? await frame(ph.page, ['.casora-settings-menu', 'button', '.casora-mi', null]) : null;
+  // 1.3: Glocke unten → ihr Fenster öffnet nach oben und liegt um y 600; zum Schließen oben ins Leere tippen.
+  await ph.page.keyboard.press('Escape'); await ph.page.mouse.click(200, 135); await ph.page.waitForTimeout(800);
+  const hp = await tap(ph.page, new Function('return ' + btn('casora_settings_button', 9999))) ? await frame(ph.page, ['.casora-settings-menu', 'button', '.casora-mi', null]) : null;
   await ph.page.keyboard.press('Escape'); await ph.page.mouse.click(200, 600); await ph.page.waitForTimeout(800);
   await ph.page.evaluate(() => window.__pierce('casora-mobile-nav')[0]._bRooms.click()); await ph.page.waitForTimeout(1300);
   const hr = await frame(ph.page, ['.hmn-menu.open', '.hmn-row', '.hmn-sic', '.hmn-name']);
@@ -195,7 +203,9 @@ for (const dark of [false, true]) {
       dev: dh && { h: dh.height, tx: dn.left - dh.left } };
   });
   console.log(tag, 'Raumseite', JSON.stringify(rs));
-  await check(`${tag}: Zurück-Kreis 48 auf der Mittellinie der Kopf-Pille (D7)`, rs.back && rs.pill && near(rs.back.h, 48) && near(rs.back.mid, rs.pill.mid), rs);
+  // 1.3 (Handy-Leiste B): die Kopf-Kapsel sitzt unten in der Leiste – dann nur noch den Zurück-Kreis messen.
+  const docked = rs.pill && rs.pill.top > 400;
+  await check(`${tag}: Zurück-Kreis 48${docked ? ' (Kapsel unten in der Leiste)' : ' auf der Mittellinie der Kopf-Pille'} (D7)`, rs.back && rs.pill && near(rs.back.h, 48) && (docked || near(rs.back.mid, rs.pill.mid)), rs);
   if (rs.chip) await check(`${tag}: Szenen-Kachel wie Geräte-Kachel – 62 hoch, Kreis 42, Text bei 12 + 42 + 10 (D5)`, near(rs.chip.h, 62) && near(rs.chip.ic, 42) && near(rs.chip.tx, 64) && (!rs.dev || (near(rs.dev.h, rs.chip.h) && near(rs.dev.tx, rs.chip.tx))), rs);
   else console.log('  info   ' + tag + ': erste Raumseite ohne Szenen – D5 nicht geprüft');
   await ph.browser.close();
