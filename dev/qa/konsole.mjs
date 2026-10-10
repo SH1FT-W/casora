@@ -33,7 +33,8 @@ export const FREMD = [
   [/favicon/i, 'Favicon'],
   [/Failed to read the 'localStorage' property.*Access is denied/i, 'Init-Skript des Testrahmens auf about:blank'],
   [/Service Worker registration blocked by Playwright/i, 'Service Worker im Test gesperrt'],
-  [/\/static\/(mdi|icons)\/.*due to access control checks/i, 'WebKit meldet beim Seitenwechsel abgebrochene Symbol-Abrufe von HA so'],
+  [/Received event for unknown subscription/i, 'HA-WebSocket-Bibliothek: Ereignis kurz nach dem Abmelden, meldet selbst ab'],
+  [/Fetch API cannot load https?:\/\/(localhost|127\.0\.0\.1)[:\/].*due to access control checks/i, 'WebKit meldet beim Seitenwechsel abgebrochene Abrufe (Symbole, Kamerabild) so; die Kette hat ein catch'],
 ];
 
 export function normal(t) {

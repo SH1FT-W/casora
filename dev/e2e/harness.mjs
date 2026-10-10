@@ -37,13 +37,13 @@ export async function freshToken() {
   return { ...j, refresh_token: t.refresh_token };
 }
 
-// dark: HA-Dunkelmodus (Standard an), locale: Browser-Sprache, args: Chromium-Startargumente
+// dark: HA-Dunkelmodus (Standard an), locale: Browser-Sprache (Standard CASORA_LOCALE, sonst de-DE), args: Chromium-Startargumente
 // (z. B. --hide-scrollbars für Screenshots), scale: Pixeldichte (Standard 2, iPhone 3),
 // theme: HA-Theme dieses Browsers (Standard „Hemma 2“, wie die Regressionstests es erwarten).
 // Nutzertests laufen im Theme „Casora“: CASORA_THEME=Casora setzt den Standard um (eine
 // ausdrücklich übergebene Option theme gilt weiter).
 export async function open({ width = 1440, height = 900, mobile = false, umzug = false, safari = false,
-  dark = true, locale = 'de-DE', args = [], touch, userAgent, scale = 2, theme = process.env.CASORA_THEME || 'Hemma 2' } = {}) {
+  dark = true, locale = process.env.CASORA_LOCALE || 'de-DE', args = [], touch, userAgent, scale = 2, theme = process.env.CASORA_THEME || 'Hemma 2' } = {}) {
   const tok = await freshToken();
   // safari: WebKit statt Chromium (Safari-Eigenheiten nachstellen).
   const browser = await (safari ? webkit : chromium).launch(safari ? {} : { args });
