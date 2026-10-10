@@ -245,6 +245,75 @@ async def async_room_badges(hass, mobile_url: str, admin: bool = True) -> dict:
     return {"desktop": desk_url, "rooms": room_badges(desktop, mobile)}
 
 
+# ─── Partner-Daten statt Partner-Dashboard (Leistung 1.3, Vorschlag A) ────────
+# Handy und Desktop brauchten vom jeweils anderen Dashboard nur zwei Kleinigkeiten, holten dafür aber
+# die ganze Konfiguration (~2,5 MB samt Vorlagen): die Kacheln mit Rückfrage (confirm_toggle) und die
+# Szenen-Auswahl der Startseite. partner_info liefert genau das (casora-core.js, 04-navigation.js).
+# Gleiche Regeln wie fromCfg (casora-core.js) bzw. _sceneCfg (04-navigation.js).
+
+def confirm_of(cfg: dict) -> dict:
+    ids: list = []
+    names: dict = {}
+    seen = [0]
+
+    def add(x, nm):
+        if not isinstance(x, str) or not x or "[[[" in x:
+            return
+        if x not in ids:
+            ids.append(x)
+        if nm and x not in names:
+            names[x] = nm
+
+    def walk(o, d):
+        if not isinstance(o, (dict, list)) or d > 30 or seen[0] > 50000:
+            return
+        seen[0] += 1
+        if isinstance(o, list):
+            for x in o:
+                walk(x, d + 1)
+            return
+        v = o.get("variables")
+        if isinstance(v, dict) and v.get("confirm_toggle") is True:
+            n = o.get("name")
+            nm = n.strip() if isinstance(n, str) and n.strip() and "[[[" not in n else ""
+            add(o.get("entity"), nm)
+            add(v.get("cover_entity"), nm)
+            members = []
+            for x in (v.get("covers") if isinstance(v.get("covers"), list) else []) + (v.get("locks") if isinstance(v.get("locks"), list) else []):
+                if isinstance(x, str) and x and x not in members:
+                    members.append(x)
+            for x in members:
+                add(x, "")
+            if nm and len(members) > 1:
+                k = ",".join(sorted(members))
+                names.setdefault(k, nm)
+        for key, x in o.items():
+            if key != "button_card_templates":
+                walk(x, d + 1)
+
+    walk(cfg.get("views"), 0)
+    return {"ids": ids, "names": names}
+
+
+def scenes_of(cfg: dict) -> dict:
+    def has(o):
+        return isinstance(o, dict) and any(isinstance(o.get(k), list) and o.get(k) for k in ("scenes", "scene_exclude", "scene_order"))
+
+    views = cfg.get("views") or []
+    v0 = views[0] if views and isinstance(views[0], dict) else {}
+    c0 = (v0.get("cards") or [None])[0] if isinstance(v0.get("cards"), list) and v0.get("cards") else None
+    tpl = (cfg.get("button_card_templates") or {}).get("casora_scene_row") or {}
+    src = next((x for x in ((c0 or {}).get("variables") if isinstance(c0, dict) else None, tpl.get("variables")) if has(x)), {})
+    return {k: src.get(k) for k in ("scenes", "scene_exclude", "scene_order")}
+
+
+async def async_partner_info(hass, url_path: str, admin: bool = True) -> dict | None:
+    cfg = await _load(hass, url_path, admin)
+    if not cfg:
+        return None
+    return {"confirm": confirm_of(cfg), "scenes": scenes_of(cfg)}
+
+
 def async_setup_phone_badges(hass) -> None:
     import voluptuous as vol
 
@@ -265,4 +334,14 @@ def async_setup_phone_badges(hass) -> None:
         connection.send_result(msg["id"], await async_room_badges(hass, msg["url_path"], connection.user.is_admin))
 
     websocket_api.async_register_command(hass, ws_room_badges)
+
+    @websocket_api.websocket_command({
+        vol.Required("type"): "casora/partner_info",
+        vol.Required("url_path"): str,
+    })
+    @websocket_api.async_response
+    async def ws_partner_info(hass, connection, msg) -> None:
+        connection.send_result(msg["id"], await async_partner_info(hass, msg["url_path"], connection.user.is_admin))
+
+    websocket_api.async_register_command(hass, ws_partner_info)
     dom["phone_badges_ws"] = True

@@ -110,7 +110,32 @@
     return c.p;
   };
   // Gemerkte Konfiguration verwerfen (eine oder alle) – z. B. Tests, die den Partner neu abholen lassen.
-  window._casoraCfgOnce.forget = function (url) { if (url) delete cfgs[url]; else cfgs = {}; };
+  window._casoraCfgOnce.forget = function (url) { if (url) delete cfgs[url]; else cfgs = {}; infos = {}; };
+  // Leistung 1.3 (Vorschlag A): vom Partner-Dashboard nur, was gebraucht wird – Rückfrage-Kacheln und
+  // Szenen-Auswahl – über casora/partner_info (phone_badges.py, wenige kB statt ~2,5 MB). Ältere Integration
+  // ohne den Befehl: wie bisher die ganze Konfiguration holen und hier auswerten. Eine Minute geteilt.
+  var scenesOf = function (cfg) {
+    var has = function (o) { return o && ['scenes', 'scene_exclude', 'scene_order'].some(function (k) { return Array.isArray(o[k]) && o[k].length; }); };
+    var v0 = ((((cfg || {}).views || [])[0] || {}).cards || [])[0];
+    var t = ((cfg || {}).button_card_templates || {}).casora_scene_row;
+    var src = [v0 && v0.variables, t && t.variables].filter(has)[0] || {};
+    return { scenes: src.scenes, scene_exclude: src.scene_exclude, scene_order: src.scene_order };
+  };
+  var infos = {};
+  window._casoraPartnerInfo = function (hass, url) {
+    var c = infos[url];
+    if (!c || c.at && Date.now() - c.at > 6e4) {
+      c = infos[url] = { at: 0 };
+      c.p = Promise.resolve(hass.callWS({ type: 'casora/partner_info', url_path: url })).then(function (r) {
+        if (!r) throw new Error('leer');
+        return r;
+      }).catch(function (e) {
+        if (!(e && e.code === 'unknown_command')) throw e;
+        return window._casoraCfgOnce(hass, url).then(function (cfg) { return { confirm: fromCfg(cfg), scenes: scenesOf(cfg) }; });
+      }).then(function (r) { c.at = Date.now(); return r; }, function (e) { if (infos[url] === c) delete infos[url]; throw e; });
+    }
+    return c.p;
+  };
   // Partner holen (eine Minute gemerkt); Promise, solange er lädt, sonst null.
   var loadPair = function () {
     var url = dashUrl();
@@ -122,8 +147,8 @@
     pair.url = other; pair.got = EMPTY;
     // Höchstens 2 s warten – ein hängender Abruf darf keinen Knopf blockieren.
     var late = new Promise(function (r) { setTimeout(function () { r(null); }, 2000); });
-    pair.p = Promise.race([window._casoraCfgOnce(h.hass, other), late]).then(function (cfg) {
-      return cfg ? fromCfg(cfg) : EMPTY;
+    pair.p = Promise.race([window._casoraPartnerInfo(h.hass, other), late]).then(function (info) {
+      return info && info.confirm ? { ids: info.confirm.ids || [], names: info.confirm.names || {} } : EMPTY;
     }, function () { return EMPTY; }).then(function (got) {
       if (pair.url === other) { pair.got = got; pair.at = Date.now(); pair.p = null; }
     });

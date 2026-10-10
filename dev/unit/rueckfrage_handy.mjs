@@ -32,7 +32,10 @@ const desktop = { views: [{ cards: [{ template: 'casora_room', variables: { show
 
 const shown = [];
 let host = null, calls = [];
-const hass = { states, callWS: (m) => { calls.push(m.url_path); return m.url_path === 'test-zuhause' ? Promise.resolve(desktop) : Promise.reject(new Error('nf')); } };
+// Seit 1.3 fragt casora-core zuerst casora/partner_info; ältere Integration kennt den Befehl nicht →
+// wie bisher die ganze Konfiguration (dieser Weg prüft fromCfg, partner_info: dev/unit/partner_info_test.py).
+const hass = { states, callWS: (m) => { if (m.type === 'casora/partner_info') return Promise.reject({ code: 'unknown_command', message: 'Unknown command.' });
+  calls.push(m.url_path); return m.url_path === 'test-zuhause' ? Promise.resolve(desktop) : Promise.reject(new Error('nf')); } };
 const doc = {
   querySelector: () => ({ hass }),
   addEventListener() {}, removeEventListener() {},
@@ -56,6 +59,7 @@ assert.equal(w.casoraAsksFirst('lock.test_haustuer'), true, 'Schloss-Kachel am H
 assert.equal(w.casoraAsksFirst('switch.test_pumpe'), true, 'Kachel in conditional');
 assert.equal(w.casoraAsksFirst('light.test_decke'), false, 'ohne Rückfrage');
 assert.equal(w.casoraAsksFirst('casora_x'), false, 'Vorlagen zählen nicht');
+for (let i = 0; i < 10; i++) await Promise.resolve();  // Rückfall partner_info → lovelace/config ist asynchron
 assert.deepEqual(calls, ['test-zuhause'], 'Partner (Desktop) geholt');
 
 const tap = async (spec, yes) => {

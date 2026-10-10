@@ -508,10 +508,16 @@
       if (D[desk] === undefined) {
         D[desk] = null;
         var self = this;
-        (window._casoraCfgOnce ? window._casoraCfgOnce(this._hass, desk) : this._hass.connection.sendMessagePromise({ type: 'lovelace/config', url_path: desk })).then(function (cfg) {
-          var v0 = ((((cfg || {}).views || [])[0] || {}).cards || [])[0];
-          var t = ((cfg || {}).button_card_templates || {}).casora_scene_row;
-          var src = [v0 && v0.variables, t && t.variables].filter(has)[0] || {};
+        /* Leistung 1.3: nur die Szenen-Auswahl des Desktop-Dashboards (casora/partner_info), nicht seine ganze Konfiguration. */
+        var got = window._casoraPartnerInfo ? window._casoraPartnerInfo(this._hass, desk).then(function (i) { return { scenes: i && i.scenes }; })
+          : this._hass.connection.sendMessagePromise({ type: 'lovelace/config', url_path: desk }).then(function (cfg) { return { cfg: cfg }; });
+        got.then(function (r) {
+          var src = r.scenes || {};
+          if (r.cfg) {
+            var v0 = ((((r.cfg || {}).views || [])[0] || {}).cards || [])[0];
+            var t = ((r.cfg || {}).button_card_templates || {}).casora_scene_row;
+            src = [v0 && v0.variables, t && t.variables].filter(has)[0] || {};
+          }
           D[desk] = { scenes: src.scenes, scene_exclude: src.scene_exclude, scene_order: src.scene_order };
           if (self._menu && self._menuKind === 'scenes') { self._closeMenu(); self._openMenu('scenes'); }
         }, function () { D[desk] = {}; });
