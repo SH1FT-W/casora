@@ -3364,7 +3364,7 @@
   },
   "custom_fields": {
    "card": {
-    "card": "[[[ const c = Object.assign({}, this._config.custom_fields.card); delete c.card; return c; ]]]"
+    "card": "[[[ const c = Object.assign({}, this._config.custom_fields.card); delete c.card; return c.type ? c : null; ]]]"
    }
   }
  },
