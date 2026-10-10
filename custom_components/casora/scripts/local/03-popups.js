@@ -1584,9 +1584,9 @@
   // ihre Entitäten so benennen. Das Auto ist das Gerät mit den meisten Treffern.
   var B = ['binary_sensor'], S = ['sensor'];
   var ROLES = {
-    reichweite_kombiniert: { d: S, k: ['cruising_range_combined', 'range_combined', 'remaining_range_total', 'total_range', 'range'],
+    reichweite_kombiniert: { d: S, k: ['cruising_range_combined', 'range_combined', 'remaining_range_total', 'total_range', 'range', 'range_km'],
       e: ['reichweite_kombiniert', 'range_combined', 'cruising_range_combined', 'remaining_range_total', 'total_range', 'range_total',
-        'range_primary', 'est_battery_range', 'battery_range', 'electric_range', 'remaining_range', 'reichweite', 'range'], x: /(scr|adblue)_range$|range_secondary$/ },
+        'range_primary', 'est_battery_range', 'battery_range', 'electric_range', 'remaining_range', 'reichweite', 'range'], x: /(scr|adblue)_(range|reichweite)$|range_secondary$/ },
     tankfullstand: { d: S, k: ['fuel_level_current_level', 'fuel_level', 'remaining_fuel_percent', 'fuel_percentage'],
       e: ['tankfullstand', 'tankstand', 'kraftstoffstand', 'fuel_level_current_level', 'fuel_level', 'remaining_fuel_percent', 'fuel_percentage', 'fuel_level_percentage', 'tank_level'] },
     akku: { d: S, k: ['battery_level', 'state_of_charge', 'remaining_battery_percent', 'battery_percentage'],
@@ -1650,13 +1650,16 @@
     var a = (st && st.attributes) || {};
     return a.device_class === 'distance' || /^(km|mi|m)$/i.test(a.unit_of_measurement || '');
   };
+  /* Elektrische Reichweite nur als Ausweich-Treffer für die Reichweite: Beim Verbrenner/Hybrid gewinnt
+     jede andere Reichweite (deutsche IDs „…_elektrische_reichweite“, Issue #16), beim E-Auto bleibt sie. */
+  var ELEC = /(^|_)(elektrische|electric)_(reichweite|range)$/;
   var rank = function (role, eid, x, st) {
     var R0 = ROLES[role], dom = eid.split('.')[0], obj = eid.slice(dom.length + 1);
     if (R0.d.indexOf(dom) < 0 || (R0.x && R0.x.test(obj))) return -1;
     if (x && x.platform && HELPER.test(x.platform)) return -1;
     if (R0.date && isDist(st)) return -1;
     if (x && x.translation_key && R0.k.indexOf(x.translation_key) >= 0) return 0;
-    for (var i = 0; i < R0.re.length; i++) if (R0.re[i].test(obj)) return i + 1;
+    for (var i = 0; i < R0.re.length; i++) if (R0.re[i].test(obj)) return i + 1 + (role === 'reichweite_kombiniert' && ELEC.test(obj) ? 100 : 0);
     return -1;
   };
   var mapDevice = function (R, dev) {
