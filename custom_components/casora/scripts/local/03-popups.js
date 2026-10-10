@@ -1561,6 +1561,9 @@
 (function () {
   if (window._casoraCar) return;
   var C = window._casoraCar = {};
+  /* Tanken-Modul (12-tanken.js) nur in Casoras eigener Fassung – ein fremdes _casoraTank (altes
+     _hemmaTank über casora-kompat) hat eine andere watch()/row() und kippte das ganze Popup (Issue #14). */
+  var tank = function () { var T = window._casoraTank; return T && T.casora === true ? T : null; };
   var num = function (v) { var n = parseFloat(v); return isNaN(n) ? null : n; };
   var ok = function (s) { return s && s.state !== 'unknown' && s.state !== 'unavailable'; };
   var fmtN = function (n, d) { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }); };
@@ -1787,7 +1790,7 @@
       if (r.tank != null && window._casoraHH && window._casoraHH.on()) {
         return out + '<div style="height:var(--casora-popup-sec-gap, 22px)"></div>' + window._casoraHH.pbar({ pct: Math.max(2, Math.min(100, r.tank)), left: (r.ev ? 'Akku ' : 'Tank ') + Math.round(r.tank) + ' %', tone: r.tank <= 15 ? 'warn' : 'accent' })
           /* Tanken (1.2, 12-tanken.js): Zeile direkt unter der Tankleiste, nur wenn eingerichtet. */
-          + (window._casoraTank ? window._casoraTank.row(p, states) : '');
+          + (tank() ? tank().row(p, states) : '');
       }
       if (r.tank != null) {
         var col = r.tank <= 15 ? 'var(--casora-popup-ui-warn, #FF9F0A)' : 'var(--casora-color-teal, #00C3D0)';
@@ -1798,8 +1801,8 @@
           + '<div style="height:100%;width:' + Math.max(2, Math.min(100, r.tank)) + '%;border-radius:999px;background:' + col + ';"></div></div></div>';
       }
       /* Tankstand gerade unbekannt (z. B. nach einem Neustart, Auto-Integration noch nicht da): Tanken trotzdem zeigen. */
-      if (r.tank == null && window._casoraTank && window._casoraHH && window._casoraHH.on()) {
-        var tr0 = window._casoraTank.row(p, states);
+      if (r.tank == null && tank() && window._casoraHH && window._casoraHH.on()) {
+        var tr0 = tank().row(p, states);
         if (tr0) out += '<div style="height:var(--casora-popup-sec-gap, 22px)"></div>' + tr0;
       }
       return out;
@@ -1898,7 +1901,7 @@
     var watch = [];
     var M = C.map(p);
     Object.keys(M).forEach(function (k) { var id = M[k]; if (id && states[id] && watch.indexOf(id) < 0) watch.push(id); });
-    if (window._casoraTank) window._casoraTank.watch(p, states).forEach(function (id) { watch.push(id); });
+    if (tank()) tank().watch(p, states).forEach(function (id) { watch.push(id); });
     var sec = function (n) { return '[[[ return window._casoraCar ? window._casoraCar.sec(' + JSON.stringify(n) + ', ' + JSON.stringify(p) + ', states) : ""; ]]]'; };
     /* Weich (Entschlacken 01.10.2026): Kopf mit Reichweite und Tankbalken, links Zustand (nur Abweichungen),
        rechts Wartung (nur Fälliges); alle Zustandszeilen, Wartungswerte, Fahrten und Daten unter „Mehr“. */
