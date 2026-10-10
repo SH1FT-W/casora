@@ -337,10 +337,13 @@
       + (open ? 'var(--casora-entity-name-active, var(--casora-popup-tiles-text-primary, #3A322B))' : 'var(--casora-popup-tiles-text-primary, #3A322B)') + ';">' + esc(word) + '</div>'
       + (hint ? '<div style="font-size:12.5px;font-weight:500;color:' + (open ? 'var(--casora-entity-state-active-color, var(--casora-soft-sub, rgba(58,50,43,0.6)))' : 'var(--casora-soft-sub, rgba(58,50,43,0.6))')
         + ';margin-top:1px;">' + esc(hint) + '</div>' : '') + '</div>'
+      /* Entriegelt liegt der (ausgeschaltete) Schalter immer auf der hellen aktiven Fläche – auch im dunklen
+         Design. Die Theme-Werte für „aus“ (helle Spur, heller Knopf) wären dort unsichtbar (Design-Audit
+         10.10.2026): aus = Spur und Knopf wie im hellen Design. */
       + '<div style="position:relative;width:44px;height:26px;border-radius:999px;flex:none;background:'
-      + (on ? 'var(--casora-lps-switch-on, #B67A50)' : 'var(--casora-lps-switch-off, rgba(58,50,43,0.38))') + ';transition:background .2s ease;">'
+      + (on ? 'var(--casora-lps-switch-on, #B67A50)' : 'rgba(58,50,43,0.38)') + ';transition:background .2s ease;">'
       + '<div style="position:absolute;top:3px;left:' + (on ? '21px' : '3px') + ';width:20px;height:20px;border-radius:50%;'
-      + 'background:var(--casora-lps-knob, #fff);box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:left .2s ease;"></div></div></div>'
+      + 'background:' + (on ? 'var(--casora-lps-knob, #fff)' : '#fff') + ';box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:left .2s ease;"></div></div></div>'
       + '<style>@keyframes lktg-pl{0%,100%{opacity:1}50%{opacity:.35}}@media (hover:hover){.lkbar[aria-checked="true"]:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11)) !important;}}</style>';
   };
 })();
