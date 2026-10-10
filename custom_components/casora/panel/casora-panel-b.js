@@ -709,10 +709,10 @@
       this._bLeavePages();
       this._bOpen = false;
       this._bRooms = false;
-      if (this._sel) {
-        this._sel = null;
-        this._group = "rooms";
-      }
+      // Auch ohne Auswahl zurück auf „Räume“: nach Kachel hinzufügen + Rückgängig war die Auswahl
+      // schon weg, _group blieb „tiles“ – der Schleier über der Vorschau blieb nach dem Schließen stehen.
+      this._sel = null;
+      this._group = "rooms";
       this._renderForm();
       this._bApply();
       // Fokus zurück an das Element, das den Inspektor geöffnet hat.

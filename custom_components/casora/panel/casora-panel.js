@@ -16654,8 +16654,10 @@ class CasoraPanel extends HTMLElement {
 
     const sheet = pane;
     const mount = this.$("mapmount");
+    // Mit den Kachel-Schlüsseln: nach erneutem Laden (Zeitreise, gleiches Dashboard) sind es neue
+    // Objekte mit gleichem Inhalt – ohne Neuzeichnen trug die Vorschau alte Schlüssel, Klicks wählten nichts.
     const sig = JSON.stringify([
-      room.path, room.name, room.variables, room.tiles,
+      room.path, room.name, room.variables, room.tiles, (room.tiles || []).map((t) => this._tileKey(t)),
       this._phoneFilter || null,
       this._scenesMode(), this._miniSize, (this._imgs || []).length,
     ]);
@@ -19420,7 +19422,8 @@ class CasoraPanel extends HTMLElement {
       const tile = tileView(shellT);
       const type = tile && tileTypeAny(tile);
       // A tile whose template the panel does not know still has a name.
-      if (!type) return { ...grp, label: sel.label || grp.label };
+      // Name aus der Kachel (nach Umbenennen aktuell), sonst der beim Auswählen gemerkte.
+      if (!type) return { ...grp, label: (tile.name && String(tile.name).trim()) || sel.label || grp.label };
       return {
         icon: TILE_ICON[type.id] || grp.icon,
         color: TILE_COLOR[type.id] || TILE_TINT,
@@ -20317,6 +20320,16 @@ class CasoraPanel extends HTMLElement {
         if (!typed && current && (isPhone(this) || entityish)) { input.value = pretty(current); return; }
         // Symbol-Feld: ein getippter Name („Glühbirne“) meint sein Symbol.
         const byName = iconMode && typed && list.find((o) => iconName(o, lang).toLowerCase() === typed.toLowerCase());
+        // Gerätefeld: nur eine echte Entität übernehmen (ID aus der Liste/HA, ID-Form oder eindeutiger Name).
+        // Vorher wurde jeder getippte Suchtext beim Verlassen (Tab, Klick daneben) zur „Entität“ der Kachel.
+        if (entityish && typed) {
+          const low = typed.toLowerCase();
+          const named = list.filter((o) => pretty(o).toLowerCase() === low || this._prettyEntity(o).toLowerCase() === low);
+          const pick = list.indexOf(typed) >= 0 || (this._hass && this._hass.states[typed]) || /^[a-z_]+\.[a-z0-9_]+$/.test(typed)
+            ? typed : named.length === 1 ? named[0] : null;
+          if (pick && pick !== current) commit(pick); else input.value = pretty(current);
+          return;
+        }
         if (byName) { if (byName !== current) commit(byName); else input.value = pretty(current); }
         else if (typed !== current && typed !== pretty(current)) commit(typed);
         else input.value = pretty(current);
@@ -20333,18 +20346,21 @@ class CasoraPanel extends HTMLElement {
     input.onkeydown = (ev) => {
       if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
         ev.preventDefault();
-        if (!menu.classList.contains("open")) open();
+        // Offen = Menü hängt in der Seite (die Klasse „open“ setzt niemand – Enter wählte darum nie).
+        if (!menu.parentNode || menu._closing) open();
         if (!shown.length) return;
         active += ev.key === "ArrowDown" ? 1 : -1;
         if (active < 0) active = Math.min(shown.length, 300) - 1;
         if (active >= Math.min(shown.length, 300)) active = 0;
         paint();
       } else if (ev.key === "Enter") {
-        if (menu.classList.contains("open") && active >= 0 && shown[active]) {
+        if (menu.parentNode && !menu._closing && active >= 0 && shown[active]) {
           ev.preventDefault();
           commit(shown[active]);
         }
       } else if (ev.key === "Escape") {
+        // Gerätefeld: Esc verwirft den Suchtext (sonst stand er weiter im Feld statt des Geräts).
+        if (entityish && !input.readOnly) input.value = "";
         // The menu is open while it is in the page (close() takes it out).
         if (menu.parentNode && !menu._closing) {
           ev.preventDefault();
@@ -22232,9 +22248,16 @@ class CasoraPanel extends HTMLElement {
 
   _syncPreview() {
     this._markDirty();
+    const room = this._state && this._state.compact.rooms[this._room];
+    // Kopf des Inspektors (Kachelname) gleich mitziehen – nach Umbenennen/Gerätewechsel stand dort der alte Name.
+    const h3 = room && this._sel && this._sel.group === "tiles" && this.shadowRoot.querySelector(".detailbar h3");
+    if (h3) {
+      const grp = GROUPS.find((x) => x.id === "tiles");
+      const lab = grp && this._headFor(grp, room).label;
+      if (lab && h3.textContent !== lab) h3.textContent = lab;
+    }
     const mount = this.$("mapmount");
     if (!mount || !mount.firstChild) return;
-    const room = this._state && this._state.compact.rooms[this._room];
     if (!room) return;
     this._swapMap(mount, room);
   }
