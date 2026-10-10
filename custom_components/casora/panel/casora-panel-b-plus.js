@@ -187,8 +187,10 @@
          (Nutzertest 5: am Handy 6–8 Zeilen Umbruch). */
       display:flex; align-items:center; gap:6px; width:max-content; max-width:min(520px, calc(100vw - 32px)); box-sizing:border-box;
       padding:7px 7px 7px 16px; min-height:44px; border-radius:16px;
-      /* Dieselben Farben wie die übrigen Meldungen des Studios (Theme: casora-studio-toast). */
-      background:var(--toast, rgba(255,255,255,.92)); color:var(--ink, #1c1c1e);
+      /* Dieselben Farben wie die übrigen Meldungen des Studios (Theme: casora-studio-toast).
+         per-04 (10.10.2026): --toast gibt es nur im hellen Studio; dunkel fiel die Meldung auf Weiß
+         zurück (helle Schrift auf Weiß) – jetzt dieselbe Rückfallfarbe wie .status im Studio. */
+      background:var(--toast, var(--casora-studio-toast, rgba(30,33,38,0.55))); color:var(--ink, #1c1c1e);
       font:inherit; font-size:var(--t-foot, 14px); font-weight:550; letter-spacing:0;
       box-shadow:var(--toast-rim, 0 0 0 .5px rgba(0,0,0,.08), 0 12px 30px rgba(0,0,0,.14)); pointer-events:none;
       opacity:0; transform:translate(-50%, 10px); transition:opacity .2s ease, transform .24s var(--ease, ease);

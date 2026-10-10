@@ -51,7 +51,43 @@ WORDS = {
     "Bioabfall": "Organic Waste", "Restabfall": "General Waste", "Papierabfall": "Paper", "Gelber Sack": "Recycling",
     "Dreamview An": "Dreamview On", "Dreamview Aus": "Dreamview Off",
     "WZ": "LR", "SZ": "BR", "HWR": "Utility",
+    # per-21 (10.10.2026): Entitätsnamen, die im englischen Demo noch deutsch standen.
+    "Nachhaltiges Lüften": "Eco Ventilation", "Wärmeanforderung": "Heat Demand", "Heizpause": "Heating Pause",
+    "Belegung": "Occupancy", "Identifizieren": "Identify",
+    "Zeitplanüberschreibung": "Schedule Override", "Kindersicherung": "Child Lock", "Lichtintensität": "Light Intensity",
+    "Außentemperatur": "Outdoor Temperature", "Solarüberschuss": "Solar Surplus", "Tankfüllstand": "Tank Level",
+    "Erschütterung": "Vibration", "Konnektivität": "Connectivity", "Privatsphäre": "Privacy", "Wasserhärte": "Water Hardness",
+    "Türschloss": "Door Lock", "Lautstärke": "Volume", "Klarspüler": "Rinse Aid", "Überhitzung": "Overheating",
+    "Überspannung": "Overvoltage", "Überstrom": "Overcurrent", "Überlast": "Overload", "Ölwechsel": "Oil Change",
+    "Ölstand": "Oil Level", "Höhenmeter": "Elevation", "Restzeit": "Remaining Time", "Verbrauch": "Consumption",
+    "Verbindung": "Connection", "Bewegung": "Motion", "Programm": "Program", "Zustand": "State", "Modus": "Mode",
+    "Letzte": "Last", "Letzter": "Last", "Nächste": "Next", "Nächster": "Next", "Nächstes": "Next", "Heute": "Today",
+    "Zeit": "Time", "Fehler": "Error", "Stufe": "Level", "Ladung": "Charge", "Kapazität": "Capacity",
+    "Intensität": "Intensity", "Übersicht": "Overview", "Szene": "Scene", "Türen": "Doors", "Düse": "Nozzle",
+    "Schildkröte": "Turtle", "Süßwasser": "Freshwater", "Geschätzte": "Estimated",
 }
+
+# per-21: feste Mock-Werte (Zustand/Attribute, ganzer Text) – sonst stand „Beispiel-Titel“ im Player.
+VALUES = {
+    "Beispiel-Titel": "Sample Track", "Beispiel-Künstler": "Sample Artist", "Beispiel-Album": "Sample Album",
+    "Beispiel": "Sample", "Beispiel-Server": "Sample Server", "Beispiel-Provider": "Sample Provider",
+    "Beispieltext": "Sample text",
+    "Beispieltext für den Test. Hier stünde die KI-Auswertung.": "Sample text for testing. The AI analysis would go here.",
+    "1 Knoblauchzehe": "1 garlic clove", "150-180 g Paprika": "150-180 g bell pepper", "20 g Olivenöl": "20 g olive oil",
+    "250 g Hähnchenoberkeulenfleisch": "250 g chicken thigh", "100 g frische Pilze": "100 g fresh mushrooms",
+    "100 g gewürfelte Tomaten aus der Dose": "100 g canned diced tomatoes", "1 Hühnerbrühwürfel": "1 chicken stock cube",
+    "200 g Rundkornreis": "200 g short-grain rice",
+}
+
+
+def values(x):
+    if isinstance(x, str):
+        return VALUES.get(x, x)
+    if isinstance(x, list):
+        return [values(v) for v in x]
+    if isinstance(x, dict):
+        return {k: values(v) for k, v in x.items()}
+    return x
 
 _KEYS = sorted(WORDS, key=len, reverse=True)
 _RE = re.compile(r"(?<![\wÄÖÜäöüß])(" + "|".join(re.escape(k) for k in _KEYS) + r")(?![\wÄÖÜäöüß])")
@@ -433,6 +469,9 @@ def main():
         a = e.get("attributes") or {}
         if "friendly_name" in a:
             a["friendly_name"] = tr(a["friendly_name"])
+        e["state"] = values(e.get("state"))
+        if a:
+            e["attributes"] = values(a)
     enliven(d)
     demo_power(d)
     demo_solar(d)

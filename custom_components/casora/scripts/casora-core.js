@@ -3848,6 +3848,17 @@ window.casoraMenuGlass = {
       this._bar       = bar;
       this._scroller  = scroller;
       scroller.addEventListener('scroll', () => this._syncFade(), { passive: true });
+      // per-01 (10.10.2026): Mausrad (senkrecht) blättert die Leiste waagerecht – sonst kamen
+      // Mausnutzer nicht an die hinteren Räume. Am Ende der Leiste scrollt die Seite wie gewohnt.
+      scroller.addEventListener('wheel', (ev) => {
+        if (ev.ctrlKey || Math.abs(ev.deltaY) <= Math.abs(ev.deltaX)) return;
+        const max = scroller.scrollWidth - scroller.clientWidth;
+        if (max <= 2) return;
+        const dy = ev.deltaMode === 1 ? ev.deltaY * 16 : ev.deltaY;
+        if ((dy < 0 && scroller.scrollLeft <= 0) || (dy > 0 && scroller.scrollLeft >= max - 1)) return;
+        ev.preventDefault();
+        scroller.scrollLeft += dy;
+      }, { passive: false });
       this._indicator = indicator;
       this._els       = [];
       if (this._revealRO) { this._revealRO.disconnect(); this._revealRO = null; }
@@ -3896,9 +3907,18 @@ window.casoraMenuGlass = {
         this._els.push({ btn: btn, label: label, badge: badge, route: route });
       });
 
+      // per-01 (10.10.2026): Größenwächter gleich beim Aufbau, nicht erst in _revealActive – wurde die
+      // Leiste unsichtbar/ohne aktiven Raum gebaut, gab es sonst nie ein _syncFade (Pfeil rechts fehlte).
+      if (window.ResizeObserver) {
+        this._revealRO = new ResizeObserver(() => { if (this.isConnected) { this._placeIndicator(true); this._syncFade(); } });
+        this._revealRO.observe(scroller);
+        this._els.forEach((el) => this._revealRO.observe(el.label));
+      }
+
       this._built = true;
       this._syncRoute();
       this._syncBadges();
+      this._syncFade();
     }
 
     _isMenuRoute(route) {
@@ -8014,11 +8034,19 @@ window.casoraMenuGlass = {
           return;
         }
         if (t && t.dataset && t.dataset.casoraSvc) {
-          if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
+          // per-02 (10.10.2026): Plus/Minus (data-casora-step) – jeder Tipp zählt. Die 400-ms-Sperre
+          // schluckte schnelle Tipps, und bis zum Neuzeichnen trug die Taste noch das alte Ziel.
+          // Hier nur das Klick-Echo eines Fingertipps auslassen und vom zuletzt gesendeten Ziel weiterzählen.
+          var stepBy = t.dataset.casoraStep != null ? parseFloat(t.dataset.casoraStep) : NaN;
+          if (isFinite(stepBy)) {
+            if (ev.type === 'touchend') window._casoraStepTouch = Date.now();
+            else if (Date.now() - (window._casoraStepTouch || 0) < 700) { ev.preventDefault(); ev.stopPropagation(); return; }
+          } else if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
           window._casoraUILastTap = Date.now();
           try {
             var spec = JSON.parse(t.dataset.casoraSvc);
             var ha2 = document.querySelector('home-assistant');
+            if (isFinite(stepBy) && ha2 && ha2.hass && spec && spec.data) stepSpec(t, spec, stepBy, ha2.hass);
             if (ha2 && ha2.hass && spec && spec.domain && spec.service) {
               // „Vor dem Schalten fragen“ der Kachel gilt auch für die Knöpfe im Popup.
               var go2 = function () { ha2.hass.callService(spec.domain, spec.service, spec.data || {}, spec.target || undefined); };
@@ -8043,6 +8071,29 @@ window.casoraMenuGlass = {
           return;
         }
       }
+    };
+    // per-02: Zielwert für Plus/Minus – vom zuletzt gesendeten Wert (2,5 s) bzw. vom aktuellen Ziel
+    // aus weiterzählen, in Grenzen halten und die Anzeige (.hp-st-v .n) sofort mitnehmen.
+    var stepSpec = function (el, spec, by, hass) {
+      var eid = spec.target && spec.target.entity_id;
+      if (!eid || spec.data.temperature == null) return;
+      var P = window._casoraStepPending || (window._casoraStepPending = {});
+      var cur = parseFloat((((hass.states || {})[eid] || {}).attributes || {}).temperature);
+      var p = P[eid];
+      var base = p && Date.now() - p.t < 2500 ? p.v : (isFinite(cur) ? cur : spec.data.temperature - by);
+      var st = Math.abs(by);
+      var v = Math.round((base + by) / st) * st;
+      var lo = parseFloat(el.dataset.casoraMin), hi = parseFloat(el.dataset.casoraMax);
+      if (isFinite(lo)) v = Math.max(lo, v);
+      if (isFinite(hi)) v = Math.min(hi, v);
+      v = Math.round(v * 100) / 100;
+      P[eid] = { v: v, t: Date.now() };
+      spec.data.temperature = v;
+      try {
+        var n = el.getRootNode().querySelector('.hp-st-v .n');
+        if (n && n.firstChild) n.firstChild.nodeValue = v.toLocaleString(window.casoraLocale ? window.casoraLocale() : 'de-DE',
+          { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      } catch (e) { /* Anzeige folgt dem Zustand */ }
     };
     var TAP_SLOP = 10;
     var tp = null;
@@ -9819,8 +9870,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           id: 'casora:open:' + id,
           when: o.since,
           label: title + ' ist offen',
+          // per-07 (10.10.2026): ab 48 Std. in Tagen („seit 137 Std.“ las niemand).
           sub: 'seit ' + (mins < 60 ? mins + ' Min.'
-            : Math.round(mins / 60) + ' Std.'),
+            : mins < 2880 ? Math.round(mins / 60) + ' Std.'
+            : Math.floor(mins / 1440) + ' Tagen'),
           ongoing: true,
           icon: window.casoraSecurityIcon(id, st.state, st.attributes),
           // Offen, während niemand da ist (bzw. Alarm auf Abwesend/Urlaub): Gefahr statt Hinweis.
