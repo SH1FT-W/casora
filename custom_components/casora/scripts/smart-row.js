@@ -1356,11 +1356,37 @@ class CasoraSmartRow extends HTMLElement {
     return isOn(cfg.entity);
   }
 
+  // Sammelkarten (auto-entities/Swipe mit active_entities): Aktiv ist, was eine ihrer Kacheln zeigt.
+  // _findHaCard erreicht deren Kacheln nicht (zu tief) und fiel auf active_entities zurück – ein Hilfs-
+  // sensor „prüfen“ = on zog so eine grau „Alles ok“ zeigende Aquarium-Kachel vor die aktiven (10.10.2026).
+  // Kein Kachel-Element gerendert → null (dann wie bisher active_entities).
+  _isActiveByTiles(index) {
+    const cfg = resolveCardConfig(this._config.cards[index]);
+    if (!Array.isArray(cfg?.active_entities) || !cfg.active_entities.length) return null;
+    const tiles = [];
+    const walk = (el, d) => {
+      if (!el || d > 16) return;
+      if (el.tagName === 'BUTTON-CARD') {
+        const ha = el.shadowRoot && el.shadowRoot.querySelector('ha-card');
+        if (ha) tiles.push(ha);
+        return;
+      }
+      if (el.shadowRoot) for (const k of el.shadowRoot.children) walk(k, d + 1);
+      for (const k of el.children || []) walk(k, d + 1);
+    };
+    walk(this._cards[index], 0);
+    if (!tiles.length) return null;
+    return tiles.some((ha) => (ha.style.getPropertyValue('--casora-active-overlay-opacity').trim()
+      || getComputedStyle(ha).getPropertyValue('--casora-active-overlay-opacity').trim()) === '1');
+  }
+
   _isActive(index) {
     if (this._heldClosed(index)) return false;
     if (this._isCardHidden(this._cards[index], this._wrappers[index])) return false;
     // casora-local-patch: always_active verankert eine Karte vorne in der Aktiv-Gruppe (Kamera-Karussell).
     if (cardFlag(resolveCardConfig(this._config.cards[index]), 'always_active')) return true;
+    const tiles = this._isActiveByTiles(index);
+    if (tiles !== null) return tiles;
     const dom = this._isActiveByDom(index);
     return dom !== null ? dom : this._isActiveByState(index);
   }
