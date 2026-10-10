@@ -36,11 +36,11 @@ NAMES = {
     "heizung": ("Heizungs-Coach", "mdi:radiator"),
     "lueftung": ("Lüftungs-Coach", "mdi:weather-windy"),
     "rezept": ("Rezept der Woche", "mdi:chef-hat"),
-    "kamera": ("Kamera KI", "mdi:cctv"),
-    "pflanzen": ("Pflanzen KI", "mdi:sprout-outline"),
-    "update": ("Update KI-Analyse", "mdi:robot-outline"),
-    "aquarium": ("Aquarium KI", "mdi:fishbowl-outline"),
-    "ebike": ("E-Bike KI", "mdi:bicycle-electric"),
+    "kamera": ("Kamera-KI", "mdi:cctv"),
+    "pflanzen": ("Pflanzen-KI", "mdi:sprout-outline"),
+    "update": ("Update-KI-Analyse", "mdi:robot-outline"),
+    "aquarium": ("Aquarium-KI", "mdi:fishbowl-outline"),
+    "ebike": ("E-Bike-KI", "mdi:bicycle-electric"),
 }
 
 

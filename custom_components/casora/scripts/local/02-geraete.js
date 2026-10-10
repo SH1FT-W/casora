@@ -1695,7 +1695,7 @@
       if (c.door && states[c.door] && states[c.door].state !== 'unavailable') {
         var dop = doorOpen(c, states);
         rowsD.push({ icon: dop ? 'mdi:door-open' : 'mdi:door-closed', iconTone: dop ? 'warn' : DIM, label: 'Tür',
-          value: dop ? 'Offen' : 'Geschlossen', valueTone: dop ? 'warn' : null });
+          value: dop ? 'Geöffnet' : 'Geschlossen', valueTone: dop ? 'warn' : null });
       }
       return rowsD.length ? UI.group(rowsD, 'Gerät') : '';
     }

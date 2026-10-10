@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Casora",
-        "description": "Fügt das Casora-Einstellungsfenster zur Seitenleiste hinzu."
+        "description": "Fügt Casora Studio zur Seitenleiste hinzu."
       }
     },
     "abort": {
@@ -214,24 +214,24 @@
         "name": "Casora Rezept der Woche"
       },
       "kamera": {
-        "name": "Casora Kamera KI"
+        "name": "Casora Kamera-KI"
       },
       "pflanzen": {
-        "name": "Casora Pflanzen KI"
+        "name": "Casora Pflanzen-KI"
       },
       "update": {
-        "name": "Casora Update KI-Analyse"
+        "name": "Casora Update-KI-Analyse"
       },
       "aquarium": {
-        "name": "Casora Aquarium KI"
+        "name": "Casora Aquarium-KI"
       },
       "ebike": {
-        "name": "Casora E-Bike KI"
+        "name": "Casora E-Bike-KI"
       }
     },
     "binary_sensor": {
       "lueften_hinweis": {
-        "name": "Casora Lüften Hinweis"
+        "name": "Casora Lüften-Hinweis"
       },
       "solar_tipp": {
         "name": "Casora Solar-Tipp"

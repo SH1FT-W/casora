@@ -6,9 +6,9 @@
   "filter.media": "Media",
   "filter.presence": "People",
   "filter.security": "Security",
-  "presence.all_away": "All Away",
-  "presence.all_home": "All Home",
+  "presence.all_away": "All away",
+  "presence.all_home": "All home",
   "presence.group.title": "People",
-  "presence.n_away": "{n} Away",
+  "presence.n_away": "{n} away",
   "presence.person": "Person"
 }

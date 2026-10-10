@@ -164,9 +164,9 @@ casora_badge_presence_group:
           : L('component.person.entity_component._.state.not_home', 'Away');
       } else {
         title = T('presence.group.title', 'People');
-        if (homeCount === entities.length)  status = T('presence.all_home', 'All Home');
-        else if (homeCount === 0)           status = T('presence.all_away', 'All Away');
-        else status = T('presence.n_away', '{n} Away', { n: awayEntities.length });
+        if (homeCount === entities.length)  status = T('presence.all_home', 'All home');
+        else if (homeCount === 0)           status = T('presence.all_away', 'All away');
+        else status = T('presence.n_away', '{n} away', { n: awayEntities.length });
       }
 
       const esc = (t) => String(t || '').replaceAll('"', '&quot;');
