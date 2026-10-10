@@ -78,7 +78,7 @@
     + ":host(.cv-peek) #mapmount::before,:host(.cv-peek) #mapmount::after{content:'';position:absolute;left:4%;right:4%;top:-10px;height:40px;"
     + "border-radius:var(--r-l);background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.1);z-index:-1}"
     + ":host(.cv-peek) #mapmount::after{left:8%;right:8%;top:-20px;background:rgba(255,255,255,.04)}"
-    + "@media (prefers-reduced-motion:no-preference){:host(.cv-peek) #mapmount>*{animation:cvIn .32s cubic-bezier(.32,.72,0,1)}}"
+    + "@media (prefers-reduced-motion:no-preference){:host(.cv-peek) #mapmount>*{animation:cvIn .32s var(--casora-ease-enter, cubic-bezier(.32,.72,0,1))}}"
     + "@keyframes cvIn{from{opacity:.4;transform:translateY(-10px) scale(.985)}to{opacity:1;transform:none}}"
     // Hell (HA im Hellmodus): dunkle Waschungen und Grün mit genug Kontrast.
     + ":host(.is-light) .cv-row:hover{background:rgba(0,0,0,.04)}"

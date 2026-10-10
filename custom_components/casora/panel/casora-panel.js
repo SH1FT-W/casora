@@ -5806,7 +5806,7 @@ class CasoraPanel extends HTMLElement {
             inset 0 3px 6px -3px rgba(255,255,255,0.20),
             inset 0 -3px 6px -3px rgba(255,255,255,0.12),
             0 2px 8px rgba(0,0,0,0.18));
-          --ease:cubic-bezier(.32,.72,0,1);
+          --ease:var(--casora-ease-enter, cubic-bezier(.32,.72,0,1));
           --sw-ease:cubic-bezier(.34,1.12,.64,1);
           --up:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 16V4m0 0L7 9m5-5 5 5'/%3E%3Cpath d='M4 17v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2'/%3E%3C/svg%3E");
 
@@ -5842,9 +5842,13 @@ class CasoraPanel extends HTMLElement {
           /* Schrift- und Eckensystem des Studios (iOS-Vorbild): sechs Textgrößen,
              vier Radien. Neue Regeln nehmen nur diese Werte; die Vorschau-Nachbildungen
              (.miniphone, .miniroom, .fontshot) messen am echten Dashboard und bleiben roh. */
-          --t-large:34px; --t-title:22px; --t-body:17px;
-          --t-callout:15px; --t-foot:13px; --t-caption:12px;
-          --r-s:8px; --r-m:12px; --r-l:18px; --r-xl:26px;
+          /* 1.3 Tokens (um-tokens): im Casora-/Nebel-Look aus den Design-Tokens des Themes – Schrift dieselben
+             Stufen, Radien auf die Token-Stufen (8 → klein 12, 12 = klein, 18 = Element, 26 → Fläche 32). Gruppen
+             und Felder darin behalten ihr Verhältnis (beide --r-m). Ohne Casora-Theme (Hemma 1/2) gelten die
+             Rückfallwerte = bisherige iOS-Werte. */
+          --t-large:var(--casora-fs-page, 34px); --t-title:22px; --t-body:var(--casora-fs-heading, 17px);
+          --t-callout:var(--casora-fs-row, 15px); --t-foot:var(--casora-fs-sub, 13px); --t-caption:var(--casora-fs-label, 12px);
+          --r-s:var(--casora-r-small, 8px); --r-m:var(--casora-r-small, 12px); --r-l:var(--casora-r-element, 18px); --r-xl:var(--casora-r-surface, 26px);
           --r-group:var(--r-xl);
           --card-pad-h:16px;
           --head-row:26px;
@@ -6247,7 +6251,7 @@ class CasoraPanel extends HTMLElement {
           outline:2px solid var(--accent, #00C3D0); outline-offset:2px;
         }
         .combo-opt:focus-visible { outline-offset:-2px; }
-        button:active:not(:disabled) { transform:scale(0.97); }
+        button:active:not(:disabled) { transform:scale(var(--casora-press-scale, 0.97)); }
         button.ghost {
           background:var(--chip); color:var(--ink);
           box-shadow:inset 0 0 0 1px var(--chip-rim);
@@ -6499,9 +6503,9 @@ class CasoraPanel extends HTMLElement {
           display:grid; place-items:center;
           font-size:var(--t-callout); font-weight:500; color:var(--ink);
           background:var(--chip); box-shadow:inset 0 0 0 1px var(--chip-rim);
-          transition:min-width .34s cubic-bezier(.36,0,.16,1),
-                     width .34s cubic-bezier(.36,0,.16,1),
-                     padding .34s cubic-bezier(.36,0,.16,1),
+          transition:min-width .34s var(--casora-ease-slide, cubic-bezier(.36,0,.16,1)),
+                     width .34s var(--casora-ease-slide, cubic-bezier(.36,0,.16,1)),
+                     padding .34s var(--casora-ease-slide, cubic-bezier(.36,0,.16,1)),
                      background-color .28s var(--ease),
                      box-shadow .28s var(--ease);
           overflow:hidden;
@@ -6543,7 +6547,7 @@ class CasoraPanel extends HTMLElement {
           box-shadow:none;
           margin-right:calc(var(--rm-gap) - var(--head-gap));
           margin-left:calc((var(--rm-w) + var(--rm-gap)) * -1);
-          transition:margin-left .36s cubic-bezier(.36,0,.16,1);
+          transition:margin-left .36s var(--casora-ease-slide, cubic-bezier(.36,0,.16,1));
         }
         .tilegrid.editing .rmbtn { margin-left:0; }
         .tilegrid:not(.editing) .rmbtn { pointer-events:none; }
@@ -6557,7 +6561,7 @@ class CasoraPanel extends HTMLElement {
           background:var(--casora-studio-danger, #ff453a); color:#fff; font-size:var(--t-callout); font-weight:600;
           display:grid; place-items:center;
           transform:translateX(calc(var(--del-w, 84px) + 16px));
-          transition:transform .36s cubic-bezier(.36,0,.16,1);
+          transition:transform .36s var(--casora-ease-slide, cubic-bezier(.36,0,.16,1));
         }
         /* Delete always lies over its own row: anchored to the row, above the slid header
            (which a transform lifts into its own layer) and above notes like "Device missing". */
@@ -6567,7 +6571,7 @@ class CasoraPanel extends HTMLElement {
         .tile.armed .delbtn { transform:none; }
         .row.arming { position:relative; overflow:hidden; }
         .row.arming > *:not(.delbtn) {
-          transition:transform .36s cubic-bezier(.36,0,.16,1);
+          transition:transform .36s var(--casora-ease-slide, cubic-bezier(.36,0,.16,1));
         }
         .row.armed > *:not(.delbtn) {
           transform:translateX(calc((var(--del-w, 84px) + 16px) * -1));
@@ -6582,7 +6586,7 @@ class CasoraPanel extends HTMLElement {
         .tile > .thead {
           --armed-x:0px;
           transform:translateX(var(--armed-x));
-          transition:transform .36s cubic-bezier(.36,0,.16,1);
+          transition:transform .36s var(--casora-ease-slide, cubic-bezier(.36,0,.16,1));
         }
         .tile.armed > .thead { --armed-x:calc((var(--del-w, 84px) + 16px) * -1); }
         .band:not(.detail) .tilegrid.editing .tile > .thead .fold { opacity:0; }
@@ -6594,8 +6598,8 @@ class CasoraPanel extends HTMLElement {
           --grip-x:calc(var(--rm-w) + var(--rm-gap));
           transform:translate(var(--grip-x), -50%);
           opacity:0; pointer-events:none;
-          transition:transform .36s cubic-bezier(.36,0,.16,1),
-                     opacity .36s cubic-bezier(.36,0,.16,1),
+          transition:transform .36s var(--casora-ease-slide, cubic-bezier(.36,0,.16,1)),
+                     opacity .36s var(--casora-ease-slide, cubic-bezier(.36,0,.16,1)),
                      color .2s var(--ease);
         }
         .tilegrid.editing .tile > .thead .grip {
@@ -7926,7 +7930,7 @@ class CasoraPanel extends HTMLElement {
         :host(.phone) .detailbar .back:active:not(:disabled) {
           background-color:rgba(255,255,255,0.07); box-shadow:none;
         }
-        :host(.phone) .detailbar .back:active:not(:disabled) { transform:scale(0.94); }
+        :host(.phone) .detailbar .back:active:not(:disabled) { transform:scale(var(--casora-press-scale, 0.94)); }
         :host(.phone.is-light) .detailbar .back::before {
           background:conic-gradient(from 0deg,
             rgba(255,255,255,0.75) 0deg, rgba(255,255,255,0.28) 55deg,
@@ -8152,7 +8156,7 @@ class CasoraPanel extends HTMLElement {
         .size-tablet .mini-tabs {
           position:absolute; top:var(--nav-top); left:50%; transform:translateX(-50%);
           flex:0 1 auto; gap:var(--nav-gap); padding:0 var(--nav-inset);
-          height:var(--nav-h); border-radius:9999px; align-items:center;
+          height:var(--nav-h); border-radius:999px; align-items:center;
           max-width:calc(100% - 2 * (var(--pad-x) + var(--nav-reserve))); overflow:hidden;
         }
         /* Hochkant: die Leiste stößt an die drei Knöpfe rechts – Platz für sie freihalten. */
@@ -8182,7 +8186,7 @@ class CasoraPanel extends HTMLElement {
         .size-tablet .mini-tab {
           color:#fff; opacity:.82; font-weight:600;
           font-size:var(--nav-label); padding:0 var(--nav-pad-x);
-          height:var(--nav-label-h); border-radius:9999px;
+          height:var(--nav-label-h); border-radius:999px;
         }
         .size-tablet .mini-tab.on {
           opacity:1; font-weight:600; box-shadow:none;
@@ -8759,7 +8763,7 @@ class CasoraPanel extends HTMLElement {
           top:calc(var(--chrome-top-btn) - var(--cap-p)); right:calc(var(--pad-x) - var(--cap-p));
           height:calc(var(--chrome-btn) + 2 * var(--cap-p));
           width:calc(var(--cap-n) * var(--chrome-btn) + (var(--cap-n) - 1) * var(--chrome-btn-gap) + 2 * var(--cap-p));
-          border-radius:9999px;
+          border-radius:999px;
           background:var(--casora-chrome-capsule-fill, transparent);
           box-shadow:var(--casora-chrome-capsule-shadow, none);
         }
@@ -8795,7 +8799,7 @@ class CasoraPanel extends HTMLElement {
           box-shadow:var(--casora-glass-rim, inset 0 1px .5px -0.5px rgba(255,255,255,0.55)),
                      0 calc(12px * var(--menu-k)) calc(34px * var(--menu-k)) rgba(0,0,0,0.26);
           opacity:0; transform:scale(.96); transform-origin:top center;
-          transition:opacity .14s ease, transform .16s cubic-bezier(.2,.9,.3,1);
+          transition:opacity .14s ease, transform .16s var(--casora-ease-enter, cubic-bezier(.2,.9,.3,1));
         }
         .mini-scenemenu::-webkit-scrollbar { width:0; height:0; }
         .mini-scenemenu.in { opacity:1; transform:scale(1); }
@@ -9074,7 +9078,7 @@ class CasoraPanel extends HTMLElement {
           display:inline-flex; align-items:center; gap:var(--bcg); max-width:100%;
           min-height:var(--bmh);
           padding:var(--bpt) var(--bpr) var(--bpb) var(--bpl);
-          border-radius:9999px; box-sizing:border-box;
+          border-radius:999px; box-sizing:border-box;
           background:rgba(28,28,32,0.66); border:0; cursor:pointer;
           box-shadow:inset 0 0 0 .5px rgba(255,255,255,0.14);
           font-family:inherit; text-align:left;
@@ -9602,7 +9606,7 @@ class CasoraPanel extends HTMLElement {
         .band:not(.detail) .tile > .thead .fold {
           width:20px; flex:0 0 20px; opacity:1; color:var(--fold-ink, var(--casora-studio-fold-ink, rgba(255,255,255,0.42)));
           pointer-events:none; overflow:visible;
-          transition:opacity .36s cubic-bezier(.36,0,.16,1);
+          transition:opacity .36s var(--casora-ease-slide, cubic-bezier(.36,0,.16,1));
         }
         .band:not(.detail) .card > .chead { cursor:pointer; }
         .band.detail .card > .chead { cursor:default; }
@@ -9734,7 +9738,7 @@ class CasoraPanel extends HTMLElement {
           max-width:16ch; opacity:1; transform:translateY(0);
           transition:max-width .24s var(--ease),
                      opacity .18s var(--ease) .02s,
-                     transform .38s cubic-bezier(.26,1.08,.36,1) .02s;
+                     transform .38s var(--casora-ease-enter, cubic-bezier(.26,1.08,.36,1)) .02s;
         }
         .tile:is(.shut, .counting) > .thead .count { max-width:32ch; }
         .card > .chead .count { grid-column:3; justify-self:end; }
@@ -10156,8 +10160,8 @@ class CasoraPanel extends HTMLElement {
           --grip-x:calc(var(--rm-w) + var(--rm-gap));
           transform:translate(var(--grip-x), -50%);
           opacity:0; pointer-events:none;
-          transition:transform .36s cubic-bezier(.36,0,.16,1),
-                     opacity .36s cubic-bezier(.36,0,.16,1),
+          transition:transform .36s var(--casora-ease-slide, cubic-bezier(.36,0,.16,1)),
+                     opacity .36s var(--casora-ease-slide, cubic-bezier(.36,0,.16,1)),
                      color .2s var(--ease);
         }
         .badgecol.editing > .card > .chead .grip {
@@ -10623,7 +10627,7 @@ class CasoraPanel extends HTMLElement {
         .ffeats { display:flex; flex-direction:column; gap:22px; margin:8px 6px 0; }
         .ffeat {
           display:flex; align-items:flex-start; gap:16px;
-          animation:ffeatIn .5s cubic-bezier(.2,.8,.2,1) both;
+          animation:ffeatIn .5s var(--casora-ease-enter, cubic-bezier(.2,.8,.2,1)) both;
           animation-delay:calc(180ms + var(--i) * 90ms);
         }
         @keyframes ffeatIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
@@ -10705,7 +10709,7 @@ class CasoraPanel extends HTMLElement {
           letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         .rp-room[aria-checked="false"] { filter:grayscale(.7) brightness(.45); }
         .rp-room[aria-checked="true"] { box-shadow:0 0 0 3px var(--casora-studio-done, #0a84ff); }
-        .rp-room:active, .rp-add:active { transform:scale(.97); }
+        .rp-room:active, .rp-add:active { transform:scale(var(--casora-press-scale, .97)); }
         .rp-tick { position:absolute; right:9px; bottom:9px; z-index:1; width:24px; height:24px; border-radius:50%;
           display:grid; place-items:center; box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.8); }
         .rp-tick svg { width:14px; height:14px; opacity:0; color:#fff; }
@@ -10719,7 +10723,7 @@ class CasoraPanel extends HTMLElement {
         :host(.phone) .rp-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
         /* Raumauswahl: ab Tablet breiteres Blatt, damit die Fotos in mehr Spalten stehen. */
         @media (min-width: 769px) and (prefers-reduced-motion: no-preference) {
-          :host(.sheeted) .flowstack { transition:width .38s cubic-bezier(.32,.72,0,1), max-width .38s cubic-bezier(.32,.72,0,1); }
+          :host(.sheeted) .flowstack { transition:width .38s var(--ease), max-width .38s var(--ease); }
         }
         @media (min-width: 769px) {
           :host(.sheeted) .flowstack:has(.rp-grid) { width:880px; max-width:calc(100% - 48px); }
@@ -10743,7 +10747,7 @@ class CasoraPanel extends HTMLElement {
           background:linear-gradient(145deg, #9a948c, #5f5a55); box-shadow:0 24px 50px rgba(0,0,0,.55); }
         .dn-screen { position:relative; border-radius:13% / 6%; overflow:hidden; background:#1c1d22; box-shadow:0 0 0 2px #0a0a0b; }
         .dn-screen::before { content:""; position:absolute; z-index:2; top:1.6%; left:50%; width:32%; height:3.6%;
-          transform:translateX(-50%); border-radius:99px; background:#000; }
+          transform:translateX(-50%); border-radius:999px; background:#000; }
         .dn-chips { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:28px 0 22px; }
         .dn-chip { display:inline-flex; align-items:center; gap:7px; padding:7px 12px; border-radius:999px;
           background:var(--casora-popup-row-fill, rgba(255,255,255,.08)); font-size:var(--t-foot); color:var(--ink-2); }
@@ -10770,7 +10774,7 @@ class CasoraPanel extends HTMLElement {
           -webkit-tap-highlight-color:transparent;
         }
         .themecard:hover { filter:none; }
-        .themecard:active { transform:scale(.985); }
+        .themecard:active { transform:scale(var(--casora-press-scale, .985)); }
         .themecard[aria-checked="true"] { box-shadow:0 0 0 2px var(--casora-studio-done, #0a84ff); }
         .themeshot {
           position:relative; display:block; flex:none; width:100%; aspect-ratio:16 / 10;
@@ -10912,7 +10916,7 @@ class CasoraPanel extends HTMLElement {
         .fprog .track { height:5px; border-radius:3px; overflow:hidden; background:var(--wash-fill, var(--casora-studio-wash-fill, rgba(255,255,255,0.16))); }
         .fprog .fill {
           width:0; height:100%; border-radius:inherit; background:var(--prog, var(--casora-studio-prog, #fff));
-          transition:width .5s cubic-bezier(.32,.72,0,1);
+          transition:width .5s var(--ease);
         }
         .fprog .cap { margin-top:12px; text-align:center; font-size:var(--t-foot); color:var(--ink-3); }
         .fspin {
@@ -11077,8 +11081,8 @@ class CasoraPanel extends HTMLElement {
           to   { height:var(--rowto, 0px); opacity:0; border-top-color:transparent; }
         }
         .row.rowin, .row.rowout { overflow:hidden; box-sizing:border-box; }
-        .row.rowin  { animation:casora-rowin .26s cubic-bezier(.4,0,.2,1); }
-        .row.rowout { animation:casora-rowout .22s cubic-bezier(.4,0,.2,1) forwards; }
+        .row.rowin  { animation:casora-rowin .26s var(--casora-ease-slide, cubic-bezier(.4,0,.2,1)); }
+        .row.rowout { animation:casora-rowout .22s var(--casora-ease-slide, cubic-bezier(.4,0,.2,1)) forwards; }
         @media (prefers-reduced-motion:reduce) {
           .row.rowin, .row.rowout { animation:none; overflow:visible; }
         }

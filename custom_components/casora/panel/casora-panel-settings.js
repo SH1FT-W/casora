@@ -64,7 +64,7 @@
     + "background:var(--menu-glass, var(--casora-studio-menu-glass, rgba(44,44,50,0.94)));"
     + "-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);"
     + "box-shadow:var(--toast-rim, var(--casora-studio-toast-rim, 0 0 0 .5px rgba(255,255,255,0.10), 0 14px 34px rgba(0,0,0,0.42)));"
-    + "transition:opacity .22s ease, transform .34s cubic-bezier(.2,.9,.3,1.12), visibility 0s}"
+    + "transition:opacity .22s ease, transform .34s var(--casora-ease-enter, cubic-bezier(.2,.9,.3,1.12)), visibility 0s}"
     // Hell liegt die Leiste weiß auf weißer Karte – ein tieferer, weicher Schatten hebt sie ab.
     + ":host(.is-light) .cs-bar{box-shadow:var(--toast-rim, 0 0 0 .5px rgba(0,0,0,0.08)), 0 18px 40px -12px color-mix(in srgb, var(--ink, #3C2814) 28%, transparent), 0 2px 8px color-mix(in srgb, var(--ink, #3C2814) 8%, transparent)}"
     + ".cs-bar.cs-clean{opacity:0;visibility:hidden;pointer-events:none;transform:translateY(18px) scale(.98);"
