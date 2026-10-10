@@ -23,6 +23,7 @@ Kacheln, Badges, Raumkarten, Menüs (Glocke, ⋯, Räume, Szenen, Raumleisten-Me
 | Radien | `--casora-r-window` · `-surface` · `-row` · `-element` · `-small` · `-pill` | 44 · 32 · 24 · 18 · 12 · 999 px |
 | Abstände (4er-Raster) | `--casora-space-1` … `-10` (1,2,3,4,5,6,8,10) | 4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 px |
 | Schrift | `--casora-fs-label` · `-sub` · `-value` · `-row` · `-heading` · `-title` · `-page` | 12 · 13 · 14 · 15 · 17 · 28 · 34 px |
+| Studio-Schrift | `--casora-font-studio` | Inter („Casora Studio Inter“ = Inter 4.1, lokal `assets/fonts/inter-4.1-latin-var.woff2`, OFL), Rückfall `-apple-system … system-ui, sans-serif` |
 | Symbolgrößen (6) | `--casora-ic-head` (Handy `-head-phone`) · `-tile` · `-row` · `-badge` · `-button` · `-status` | 56 (48) · 44 · 36 · 28 · 48 · 22 px |
 | Schatten (3 Stufen, hell + dunkel) | `--casora-shadow-rest` · `-raised` · `-float` | Ruhe (Platte, aktive Zeile) · gehoben (Hover/aktiv) · schwebend (Popup, Menü) |
 | Bewegung | `--casora-ease-enter` + `--casora-dur-enter` · `--casora-ease-slide` + `--casora-dur-slide` · `--casora-dur-feedback` + `--casora-ease-feedback` | (.2,.8,.3,1) 320 ms · (.36,0,.16,1) 360 ms · 160 ms `ease` |
@@ -37,13 +38,15 @@ Zeile 36/12 (`--casora-soft-icon-size`, `--casora-soft-icon-radius` im Popup-Rah
 
 **Gilt jetzt überall (um-tokens, 1.3) – im Casora- und Nebel-Look:**
 
+Nebel hat seit 1.3 dieselben Ecken wie Casora (Kacheln 32, Handy- und Szenen-Kacheln 32; vorher 26 / 24 / 24, entschieden 11.10.) – `tools/build-nebel-theme.py` setzt keine eigenen Radien mehr, alles Abgeleitete (Symbolkreis-Rand, Pillen, Menüzeilen) folgt `--casora-r-surface`.
+
 | Fläche | Was die Tokens setzen |
 |---|---|
 | Kacheln | Radius Fläche 32 (Desktop, Tablet, Szenen-Kacheln; Handy 62 hoch → rundet als Pille 31, konzentrisch zum Kreis 42 + 10 Rand), Innenabstand Desktop/Tablet 20 (Handy 10, dk-05), Zustand 14 (`--casora-fs-value`, Handy 12), Ruhe-/gehoben-Schatten (`--button-card-box-shadow*` zeigen auf `--casora-shadow-rest/-raised`, Handy ebenso), Reihenabstand 12 / Handy 8 |
 | Badges | Pille, Ruhe-Schatten (auch Handy), Auftritt-/Breiten-Bewegung über `--casora-badge-enter-ease` / `--casora-badge-flip-ease` (Auftritt / Schieber) |
 | Menüs (Glocke, ⋯, Raumleisten-Menü, Räume/Szenen am Handy, Welle) | Fenster 34, Zeile 52 hoch mit Radius 26, Kreis 36, Rand 8, Schrift 15/13, Schatten „schwebend“ (`--casora-window-shadow` → `--casora-shadow-float`), Auftritt-Kurve, Druck `.97`. Zeilen ohne Platte (E3c). |
 | Navigationsleisten | Raumleiste/Handy-Leiste: Fläche + Ruhe-Schatten (`--casora-pill-rim` → `--casora-shadow-rest`), Markierung als Schieber (`--casora-nav-indicator-ease/-duration`), Tasten-Druck `.97`. Maße der Leisten bleiben (Raumleiste A, Handy-Leiste B). |
-| Studio | `--t-*` = Schrift-Tokens (Titel 22 bleibt), `--r-s` 8 → 12, `--r-m` 12, `--r-l` 18, `--r-xl` 26 → 32 (Karten, Blätter, Vorschau-Rahmen), `--ease` = Auftritt, CSS-Kurven und Knopf-Druck aus den Tokens. Schrift bleibt SF (Inter nur als Entwurf, OFFEN). |
+| Studio | `--t-*` = Schrift-Tokens (Titel 22 bleibt), `--r-s` 8 → 12, `--r-m` 12, `--r-l` 18, `--r-xl` 26 → 32 (Karten, Blätter, Vorschau-Rahmen), `--ease` = Auftritt, CSS-Kurven und Knopf-Druck aus den Tokens. Schrift **Inter** über `--casora-font-studio` (entschieden 11.10.): Host und alle festen `system-ui`-Stellen im Studio, Rückfall SF/System. Die Schrift kommt nur von Casora selbst (`/casora_assets/fonts/`, keine fremden Server), eigener Familienname „Casora Studio Inter“ – das Dashboard-„Inter“ (`inter-v20`) bleibt unberührt, die Vorschau zeigt die Dashboard-Schrift. Neue Schrift = neuer Dateiname (Cache 1 Tag, Adresse ohne `?v=`). |
 
 Ausnahmen (bewusst, mit Grund): Animationen per `element.animate()` (WAAPI) können keine CSS-Variable lesen und
 behalten ihre Kurve; die Desktop-Badges wachsen mit `--casora-u-badge` (Schrift u·1,4, Unterzeile 12,32 – feste
@@ -149,10 +152,9 @@ Lange Zustände in Kacheln: `window.casoraStateFit(text)` (verkleinert bis zur M
 Studio heute: eigener Satz `--t-caption 12 · --t-foot 13 · --t-callout 15 · --t-body 17 · --t-title 22 ·
 --t-large 34` (`casora-panel.js`). Neue Studio-Regeln nehmen nur diese.
 
-> **OFFEN – Entscheidung Maintainer (Studio-Schrift, Sprachen-Frage 2):**
-> A: Studio bleibt iOS-nah (SF im Inspektor, Radien 8/12/18/26, Haarlinien) /
-> B: Casora-Sprache (Inter, Radien 12/18/24/32, Sand-Platten; Haarlinien in Formularen dürfen bleiben).
-> Stand 1.3: Entwurf „Studio in Inter“ als Bild (Feinschliff-Notizen `um-rest/bilder/studio-schrift-*`), nicht umgesetzt.
+Gilt (Studio-Schrift, entschieden 11.10.2026): Das Studio schreibt im Casora- und Nebel-Look **Inter**
+(`--casora-font-studio`, siehe § 0), Radien aus den Tokens (12/12/18/32). Hemma 1/2 setzen das Token nicht
+und bleiben bei SF/System.
 
 Gilt (Sprachen-Frage 1, entschieden B): Abschnittsüberschriften sind **normale Überschriften** („Räume“,
 nicht „RÄUME“), 17/700 – in Popups umgesetzt über `--casora-h15-fs/-fw/-ls/-tt/-c` (Weich-Rahmen) bzw.

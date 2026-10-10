@@ -597,7 +597,7 @@
     if (!panel.shadowRoot.getElementById("casora-upg-css")) {
       const st = document.createElement("style"); st.id = "casora-upg-css";
       st.textContent = ".cc-upg{display:flex;flex-direction:column;align-items:center;gap:6px;margin:10px 0 0}"
-        + ".cc-upg-btn{appearance:none;border:0;cursor:pointer;padding:9px 18px;border-radius:999px;font:600 var(--t-callout) system-ui;color:#fff;"
+        + ".cc-upg-btn{appearance:none;border:0;cursor:pointer;padding:9px 18px;border-radius:999px;font:600 var(--t-callout) var(--casora-font-studio, system-ui);color:#fff;"
         + "background:var(--casora-studio-ai-grad, linear-gradient(135deg,#bf5af2,#7d5cff));box-shadow:0 4px 18px rgba(191,90,242,.35)}"
         + ".cc-upg-btn:disabled{cursor:progress;background:var(--casora-studio-ai-shimmer, linear-gradient(100deg,#bf5af2 20%,#e3a6ff 50%,#7d5cff 80%)) 0 0/250% 100%;animation:ccupg 1.4s linear infinite}"
         + "@keyframes ccupg{to{background-position:-250% 0}}"

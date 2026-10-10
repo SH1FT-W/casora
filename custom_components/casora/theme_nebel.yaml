@@ -6,9 +6,6 @@ Casora Nebel:
   casora-color-neutral: '#B9C2CB'
   casora-soft-grey-mark: rgba(89,99,111,0.8)
   primary-color: '#3F7491'
-  ha-card-border-radius: 26px
-  casora-tile-radius-phone: 24px
-  casora-scene-tile-radius: 24px
   casora-hero-title-weight: 700
   hero-title-letter-spacing-desktop: -2px
   casora-np-progress: 'var(--casora-soft-media-play, #3F7491)'

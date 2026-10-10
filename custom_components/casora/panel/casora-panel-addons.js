@@ -18,6 +18,19 @@
     link.setAttribute("data-casora-font", "");
     document.head.appendChild(link);
   }
+  // Studio-Schrift (1.3): Inter 4.1 aus dem offiziellen Release (rsms/inter), lokal
+  // mitgeliefert – kein Abruf fremder Server. Eigener Familienname, damit das Dashboard-
+  // „Inter“ (inter-v20) unberührt bleibt. Geladen wird sie nur, wenn das Theme
+  // --casora-font-studio setzt (Casora, Nebel); Hemma 1/2 fragen sie nie an. Die Version
+  // steckt im Dateinamen – ein Update mit neuer Schrift bekommt eine neue Adresse.
+  if (!document.getElementById("casora-studio-font")) {
+    const face = document.createElement("style");
+    face.id = "casora-studio-font";
+    face.textContent = '@font-face{font-family:"Casora Studio Inter";'
+      + 'src:url("/casora_assets/fonts/inter-4.1-latin-var.woff2") format("woff2");'
+      + "font-weight:100 900;font-style:normal;font-display:swap}";
+    document.head.appendChild(face);
+  }
 
   const PHONE_WIDTH = 390;
   const LABELS = {

@@ -62,6 +62,8 @@ const ERLAUBT = [
     'Zeitreise: Aktionsknöpfe unter einem gewählten Stand sind volle Breite mit mittigem Text – kein linker Rand zum Fluchten. Erscheint nur, wenn es gespeicherte Stände gibt (im Gate je nach Vorgeschichte, 09.10.2026)'],
   [/Zeitreise/, /^vertikal .*cv-loss/,
     'Zeitreise: Hinweis „Seit diesem Stand hat sich nichts geändert“ sitzt 1,6 px hoch im Kasten – Inhalt hängt von den gespeicherten Ständen ab (im Gate je nach Vorgeschichte), Optik offen, siehe Bericht gate-opt 09.10.2026'],
+  [/Dashboard-Menü/, /^vertikal Symbol sitzt 0\.[0-7] px zu tief .*combo-opt/,
+    'Messgrenze, kein Versatz: mit Inter (Studio-Schrift 1.3) liegt der Textrahmen des Browsers in der Menüzeile ohne Fläche 0,6 px über der Zeilenmitte, die sichtbare Schrift nicht – Tinte Symbol 11–29 (Mitte 20,0), Text 12,5–27 (Mitte 19,75) in der 39-px-Zeile (um-nachgang 11.10.2026)'],
 ];
 
 // ── Dashboard wählen ────────────────────────────────────────────────────────

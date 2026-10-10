@@ -29,7 +29,7 @@
     + ".frow.casora-prow .casora-pctl .combo.hasface:not(.typing)>input{color:transparent}"
     + ".casora-pctl input[type=checkbox]{accent-color:var(--accent)}"
     + ".casora-chips{display:flex;flex-wrap:wrap;gap:6px}"
-    + ".casora-chip{border:none;border-radius:999px;padding:6px 11px;cursor:pointer;font:500 var(--t-foot) system-ui;"
+    + ".casora-chip{border:none;border-radius:999px;padding:6px 11px;cursor:pointer;font:500 var(--t-foot) var(--casora-font-studio, system-ui);"
     + "background:var(--casora-studio-chip-hi, rgba(118,118,128,.24));color:inherit}"
     + ".casora-chip.on{background:var(--casora-studio-done, #0a84ff);color:#fff}"
     // Kalenderfarbe: derselbe Farbknopf wie bei den Szenen (nur der Punkt, Menü mit den Casora-Farben).
@@ -600,7 +600,7 @@
         const st = document.createElement("style");
         st.id = "casora-plink-css";
         st.textContent = ".casora-plink{appearance:none;display:block;width:100%;margin:10px 0 0;padding:10px 0 2px;border:0;"
-          + "background:none;box-shadow:none;text-align:left;font:500 var(--t-foot)/1.35 system-ui;color:var(--casora-studio-link, #0a84ff);cursor:pointer}"
+          + "background:none;box-shadow:none;text-align:left;font:500 var(--t-foot)/1.35 var(--casora-font-studio, system-ui);color:var(--casora-studio-link, #0a84ff);cursor:pointer}"
           + ".casora-plink:hover{opacity:.8;filter:none}"
           + ":host(.is-light) .casora-plink{color:var(--casora-studio-link, #0071e3)}";
         this.shadowRoot.appendChild(st);
