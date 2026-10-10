@@ -503,7 +503,6 @@
     .mpop li.mgone .mtxt { text-decoration:line-through; color:var(--ink-2, #8a8a8e); }
     .mpop .mback:disabled { color:var(--ink-2, #8a8a8e); background:var(--wash-fill, rgba(118,118,128,.10)); cursor:default; }
     :host(.phone) .mpop .mback { min-height:36px; }
-    .mpop .mnone { color:var(--ink-2, #8a8a8e); font-size:14px; padding:6px 4px; }
     .mpop .macts { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
     .mpop .macts button { min-width:0; white-space:nowrap; }
     .mpop .macts button:nth-child(3) { grid-column:1 / -1; }
@@ -560,7 +559,6 @@
     #pane .brow.mhid .bri, #pane .brow.mhid .bn { opacity:.45; }
     #pane .brow .mshow { margin-left:auto; padding:4px 10px; border-radius:999px; font:inherit; font-size:12px; font-weight:650;
       background:var(--wash-fill, rgba(118,118,128,.14)); color:inherit; cursor:pointer; }
-    #pane .brow .mhidtag { margin-left:auto; font-size:12px; color:var(--ink-2, #8a8a8e); }
     #pane .brow.mhid .bgrip { margin-left:8px; }
   `;
 

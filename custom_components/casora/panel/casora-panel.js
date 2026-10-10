@@ -5958,8 +5958,7 @@ class CasoraPanel extends HTMLElement {
         :host(.is-light) :is(.mini.danger, .line.err, .conddel, .flowerr) { color:var(--casora-studio-bad, #d70015); }
         :host(.is-light) .line.ok { color:var(--casora-studio-good, #248a3d); }
         :host(.is-light) :is(.line.warn, .card > .cdesc.drift) { color:var(--casora-studio-warn, #b25000); }
-        :host(.is-light) :is(.condadd, .fnote-i) { color:var(--casora-studio-link, #0071e3); }
-        :host(.is-light) .fnote { background:var(--casora-studio-link-tint, rgba(0,113,227,0.08)); }
+        :host(.is-light) .condadd { color:var(--casora-studio-link, #0071e3); }
         :host(.is-light:not(.phone)) .seg { background:var(--casora-studio-chip, rgba(118,118,128,0.12)); }
         :host(.is-light:not(.phone)) .segthumb { background:#ffffff; box-shadow:0 1px 3px rgba(0,0,0,0.12), 0 0 0 .5px rgba(0,0,0,0.04); }
         :host(.is-light:not(.phone)) .shot { background:var(--casora-studio-chip, rgba(118,118,128,0.12)); }
@@ -6738,16 +6737,14 @@ class CasoraPanel extends HTMLElement {
         /* 12 · Eine Akzentfarbe: Links, Auswahlringe, „Empfohlen“ und Haken folgen --accent. */
         :host .askcheck input { accent-color:var(--accent); }
         :host .condadd, :host .rp-all, :host .casora-plink, :host .cc-cmp, :host .cc-col.on .cc-cap { color:var(--accent); }
-        :host .frow .rtext b .frec, :host .frec2 { background:var(--accent); color:var(--on-accent) !important; }
+        :host .frec2 { background:var(--accent); color:var(--on-accent) !important; }
         :host .rp-room[aria-checked="true"] { box-shadow:0 0 0 3px var(--accent); }
         :host .rp-room[aria-checked="true"] .rp-tick, :host .themecard[aria-checked="true"] .themetick,
         :host .rp-plus, :host .bs-item[aria-checked=true] i {
           background:var(--accent); color:var(--on-accent);
         }
         :host .themecard[aria-checked="true"] { box-shadow:0 0 0 2px var(--accent); }
-        :host .fnote { background:color-mix(in srgb, var(--accent) 12%, transparent); }
-        :host .fnote-i { color:var(--accent); }
-        :host .casora-chip.on, :host .casora-uchoice button.on, :host .cc-apply {
+        :host .casora-chip.on {
           background:var(--accent); color:var(--on-accent);
         }
         :host .fgroup.casora-pfocus .flist { box-shadow:0 0 0 2px var(--accent); }
@@ -7486,12 +7483,6 @@ class CasoraPanel extends HTMLElement {
         .sidelist .siderow:hover { background:var(--wash-hover, var(--casora-studio-wash-hover, rgba(255,255,255,0.07))); filter:none; }
         .sidelist .siderow:active { transform:none; }
         .sidelist .siderow.on { background:var(--wash-sel, var(--casora-studio-wash-sel, rgba(255,255,255,0.18))); font-weight:600; }
-        .sidelist .siderow .sideglyph {
-          flex:0 0 20px; width:20px; height:20px;
-          background-color:var(--casora-color-teal, #00C3D0);
-          -webkit-mask:var(--i) center / contain no-repeat;
-          mask:var(--i) center / contain no-repeat;
-        }
         .sidelist .siderow .sidelabel {
           flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
         }
@@ -7514,17 +7505,6 @@ class CasoraPanel extends HTMLElement {
         .railhead .burger {
           margin:0; width:36px; height:36px; flex:0 0 36px;
         }
-        .surfnote {
-          display:flex; align-items:center; gap:12px;
-          margin:0 0 14px; padding:11px 13px;
-          border-radius:var(--r-m); background:var(--wash-fill, var(--casora-studio-wash-fill, rgba(255,255,255,0.045)));
-          box-shadow:inset 0 0 0 1px var(--wash-line, var(--casora-studio-wash-line, rgba(255,255,255,0.08)));
-        }
-        .surfnote p {
-          flex:1 1 auto; margin:0; font-size:var(--t-caption); line-height:1.4;
-          color:var(--ink-2);
-        }
-        .surfnote .ract { flex:0 0 auto; }
         .toprow > button.diffs, .toprow > :where(.navpill) > button.diffs { gap:8px; padding:0 16px 0 13px; }
         .toprow > button.diffs[hidden], .toprow > :where(.navpill) > button.diffs[hidden] { display:none; }
         .diffs .ddot {
@@ -7543,7 +7523,6 @@ class CasoraPanel extends HTMLElement {
           padding-right:10px;
         }
         .railgroup[hidden] { display:none; }
-        .railgroup .railmore { margin-bottom:7px; }
         .railgroup .railhead2 { flex:1 1 auto; }
         .railedit {
           flex:0 0 auto; padding:0 2px; border:0; border-radius:var(--r-s);
@@ -7574,7 +7553,6 @@ class CasoraPanel extends HTMLElement {
           background:var(--chip); color:var(--ink-2);
           font-size:var(--t-caption); font-weight:600; letter-spacing:0.03em; text-transform:uppercase;
         }
-        #dashes .tab.on .dashkind { background:rgba(0,0,0,0.16); color:var(--ink); }
         :host(.flow) #g-rooms, :host(.flow) #g-dashes,
         :host(.phone) #g-rooms, :host(.phone) #g-dashes,
         :host(.narrow) #dashes:not(.rail #dashes), :host(.phone) .rail #dashes { display:none; }
@@ -8080,7 +8058,6 @@ class CasoraPanel extends HTMLElement {
         .card > .cdesc { font-size:var(--t-caption); margin:4px 0 0; }
         .card > .cdesc.drift { color:#ffd60a; }
 
-        .card.noheader { padding-top:28px; }
         .mapwrap {
           display:flex; flex-direction:column; align-items:center;
           gap:12px; margin:0 0 30px;
@@ -8535,11 +8512,6 @@ class CasoraPanel extends HTMLElement {
         .miniphone .mp-scene.on {
           background:rgba(255,255,255,0.94);
           color:rgba(0,0,0,0.88);
-        }
-        .miniphone .mp-scene .scglyph {
-          width:26px; height:26px; flex:0 0 26px;
-          -webkit-mask:var(--i) center / contain no-repeat;
-          mask:var(--i) center / contain no-repeat;
         }
         .miniphone .mp-scene ha-icon { --mdc-icon-size:26px; }
         .miniphone .mp-scenes.grid {
@@ -9016,7 +8988,6 @@ class CasoraPanel extends HTMLElement {
         .mini-subs.on { pointer-events:none; }
         .mini-subs.on > * { pointer-events:auto; }
         .mini-subs.on { opacity:1; }
-        .mini-none { color:rgba(255,255,255,0.55); font-size:11.5px; }
         /* Vorschau als Arbeitsfläche */
         .miniroom [data-pv] { cursor:pointer; }
         .miniroom .mini-name, .miniroom .mini-weather {
@@ -9162,10 +9133,6 @@ class CasoraPanel extends HTMLElement {
         .mtile .mdots i:first-child { opacity:.75; }
         @keyframes casora-mini-fan-spin { to { transform:rotate(360deg); } }
         @media (prefers-reduced-motion: reduce) { .mglyph.spin { animation:none; } }
-        .mnum {
-          color:rgba(255,255,255,0.9); font-weight:800; line-height:1;
-          font-size:calc(var(--tc) * 0.386); letter-spacing:-0.02em;
-        }
         .mtile.hasmore .mtop {
           justify-content:flex-start; gap:calc(var(--tc) * 0.1);
         }
@@ -9260,7 +9227,6 @@ class CasoraPanel extends HTMLElement {
           display:block; margin-left:3px; font-size:calc(var(--wx) * 0.46); font-weight:600;
           letter-spacing:0; white-space:nowrap;
         }
-        .card.map.soft .mini-none { color:var(--casora-text-2, var(--secondary-text-color)); }
         /* H5: Symbolkreis der Weich-Badges (weißes Symbol im Gerätefarbkreis). */
         .card.map.soft .pring {
           flex:none; display:grid; place-items:center; border-radius:50%;
@@ -9342,8 +9308,7 @@ class CasoraPanel extends HTMLElement {
         .card.map.soft .mtile:not(.on) .mcircle:not(.art) { background-color:var(--casora-icon-circle-bg, rgba(0,0,0,0.20)); }
         /* Inaktive Symbole wie auf dem Dashboard (Weich: Ton statt Weiß auf hellem Kreis). */
         .card.map.soft .mtile:not(.on) .mglyph { background-color:var(--ic, var(--casora-icon-inactive-fallback-color, #fff)); }
-        .card.map.soft .mtile:not(.on) .mmore,
-        .card.map.soft .mnum { color:var(--casora-entity-name, #fff); }
+        .card.map.soft .mtile:not(.on) .mmore { color:var(--casora-entity-name, #fff); }
         /* Schalter aus: gefüllte Spur, weißer Knopf (casora-toggle-style: solid). */
         .card.map.soft .mtile:not(.on) .mtgl rect {
           fill:var(--casora-toggle-off-color, rgba(255,255,255,0.30)); stroke:none;
@@ -10067,13 +10032,6 @@ class CasoraPanel extends HTMLElement {
           line-height:1.35; letter-spacing:-0.01em;
         }
         .combo-opt.active { background:var(--wash-sel, var(--casora-studio-wash-sel, rgba(255,255,255,0.14))); color:var(--ink); }
-        .sugrow { display:flex; flex-wrap:wrap; gap:7px; margin:10px 0 0; }
-        .sugchip {
-          font-size:var(--t-foot); padding:6px 13px; border-radius:999px;
-          background:var(--chip); color:var(--ink); box-shadow:inset 0 0 0 1px var(--chip-rim);
-        }
-        .sugchip::before { content:"+ "; color:var(--accent); font-weight:600; }
-        .sugchip:hover { background:var(--chip-hi); filter:none; }
         .addroom { margin:10px 0 0; }
         .addroom input { width:100%; box-sizing:border-box; height:36px; }
         .combo-opt.off { opacity:.38; cursor:default; pointer-events:none; }
@@ -10618,15 +10576,7 @@ class CasoraPanel extends HTMLElement {
         }
         .fbody { margin-top:28px; text-align:left; }
         .fbody:empty { margin-top:0; }
-        .frow .rtext b .frec {
-          display:inline-block !important; width:auto !important; flex:none !important; margin:0 0 0 8px !important;
-          padding:2px 8px !important; border-radius:999px; vertical-align:2px; white-space:nowrap !important;
-          font-size:var(--t-caption) !important; font-weight:600 !important; line-height:1.3 !important; letter-spacing:0;
-          color:#fff !important; background:var(--casora-studio-done, #0a84ff); opacity:1 !important;
-        }
         /* Choice lists whose rows should read as equals: every row as tall as the tallest. */
-        .flist.fequal { display:grid; grid-auto-rows:1fr; }
-        .flist.fequal > .frow { height:auto; min-height:0; }
         :host(.phone) .perfcard { flex-direction:row !important; align-items:stretch; }
         .condedit { margin:4px 0 10px; }
         .condplain { display:flex; align-items:center; justify-content:space-between; gap:12px; }
@@ -10723,13 +10673,6 @@ class CasoraPanel extends HTMLElement {
         :host(.phone) .dn-desk { display:none; }
         :host(.phone) .dn-phone { position:relative; right:auto; bottom:auto; width:46%; margin:0 auto; }
         .fnote2 { margin:16px auto 0; max-width:52ch; font-size:var(--t-foot); line-height:1.45; color:var(--ink-3, rgba(255,255,255,0.5)); text-align:center; }
-        .fnote {
-          display:flex; gap:10px; align-items:flex-start; margin:14px 2px 0; padding:12px 14px;
-          border-radius:var(--r-m); background:var(--casora-studio-link-tint, rgba(10,132,255,0.12)); color:var(--ink-2);
-          font-size:var(--t-foot); line-height:1.45; text-align:left;
-        }
-        .fnote-i { flex:0 0 18px; width:18px; height:18px; color:var(--casora-studio-link, #0a84ff); margin-top:1px; }
-        .fnote-i svg { width:18px; height:18px; display:block; }
 
         .themegrid { display:grid; gap:14px; grid-template-columns:minmax(0,1fr); }
         /* Looks side by side once there is room, like the move overview. */
