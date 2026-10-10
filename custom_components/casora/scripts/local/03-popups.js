@@ -1130,11 +1130,11 @@
   /* Weich: Speiseplan mit Datums-Plakette (FR / 3) statt sieben gleicher Besteck-Symbole –
      der Tag ist die eigentliche Information. Heute in Akzentfarbe, Zeilen schlanker. */
   var CAL_CSS = '<style>.hrw{display:flex;flex-direction:column;gap:8px;text-align:left;}'
-    + '.hrw-r{display:flex;align-items:center;gap:12px;min-height:58px;box-sizing:border-box;padding:10px 16px 10px 10px;'
+    + '.hrw-r{display:flex;align-items:center;gap:12px;min-height:var(--casora-soft-row-h, 58px);box-sizing:border-box;padding:var(--casora-soft-row-pad, 10px 16px 10px 10px);'
     + 'border-radius:var(--casora-popup-row-radius, 24px);background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));}'
-    + '.hrw-b{flex:none;width:38px;height:38px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;'
+    + '.hrw-b{flex:none;width:var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);border-radius:var(--casora-soft-icon-radius, 50%);display:flex;flex-direction:column;align-items:center;justify-content:center;'
     + 'background:var(--casora-soft-icon-off, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, #2E2721);line-height:1;}'
-    + '.hrw-b b{font-size:9.5px;font-weight:700;letter-spacing:.06em;opacity:.7;}'
+    + '.hrw-b b{font-size:9px;font-weight:700;letter-spacing:.06em;opacity:.7;}'
     + '.hrw-b span{font-size:14px;font-weight:700;margin-top:1px;font-variant-numeric:tabular-nums;}'
     + '.hrw-r.now .hrw-b{background:var(--casora-soft-icon-on, #276B64);color:var(--casora-soft-glyph, #fff);}'
     + '.hrw-r.now .hrw-b b{opacity:.85;}'
@@ -1273,13 +1273,13 @@
     var sf = window._casoraHH && window._casoraHH.on();
     if (sf) css += '<style>.hrl{background:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;overflow:visible;'
       + 'border-radius:0;display:flex;flex-direction:column;gap:8px;}'
-      + '.hrl-r{min-height:58px;box-sizing:border-box;padding:10px 16px 10px 10px;border-radius:var(--casora-popup-row-radius, 24px);'
+      + '.hrl-r{min-height:var(--casora-soft-row-h, 58px);box-sizing:border-box;padding:var(--casora-soft-row-pad, 10px 16px 10px 10px);border-radius:var(--casora-popup-row-radius, 24px);'
       + 'background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));transition:background-color .18s ease;}'
       + '.hrl-r + .hrl-r{border-top:none;}'
       + '@media (hover:hover){.hrl-r:hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}}'
-      + '.hrl-i{width:38px;height:38px;border-radius:50%;}'
-      + '.hrl-n{font-size:14.5px;font-weight:700;letter-spacing:-0.01em;}'
-      + '.hrl-s{font-size:12.5px;font-weight:500;color:var(--casora-soft-sub, ' + K.ink2 + ');}'
+      + '.hrl-i{width:var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);border-radius:var(--casora-soft-icon-radius, 50%);}'
+      + '.hrl-n{font-size:var(--casora-soft-row-fs, 14.5px);font-weight:700;letter-spacing:-0.01em;}'
+      + '.hrl-s{font-size:var(--casora-soft-sub-fs, 12.5px);font-weight:500;color:var(--casora-soft-sub, ' + K.ink2 + ');}'
       + '.hrl-c ha-icon{color:var(--casora-soft-glyph-off, rgba(58,50,43,0.55)) !important;}'
       + '.hrl-d .hrl-c ha-icon{color:var(--casora-popup-ui-good, #30D158) !important;}</style>';
     /* Haken statt Kästchen: offen = blasser Umriss-Haken, erledigt = grüner gefüllter Haken. */
@@ -1329,9 +1329,9 @@
     if (name === 'app' && SF) {
       /* Weich: als beschriftete Zeile wie „Zutaten der Idee“ – steht im breiten „Mehr“ bündig daneben. */
       return '<div style="font-family:' + T.font + ';text-align:left;">' + window._casoraHH.label('Cookidoo')
-        + '<div data-casora-link="https://cookidoo.de/shopping/de-DE" style="display:flex;align-items:center;gap:12px;min-height:58px;box-sizing:border-box;padding:10px 16px 10px 10px;cursor:pointer;'
+        + '<div data-casora-link="https://cookidoo.de/shopping/de-DE" style="display:flex;align-items:center;gap:12px;min-height:var(--casora-soft-row-h, 58px);box-sizing:border-box;padding:var(--casora-soft-row-pad, 10px 16px 10px 10px);cursor:pointer;'
         + 'border-radius:var(--casora-popup-row-radius, 24px);background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));-webkit-tap-highlight-color:transparent;">'
-        + '<div style="flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--casora-soft-icon-off, rgba(140,115,90,0.12));pointer-events:none;">'
+        + '<div style="flex:none;width:var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);border-radius:var(--casora-soft-icon-radius, 50%);display:grid;place-items:center;background:var(--casora-soft-icon-off, rgba(140,115,90,0.12));pointer-events:none;">'
         + '<ha-icon icon="mdi:chef-hat" style="--mdc-icon-size:19px;width:19px;height:19px;display:flex;color:var(--casora-popup-tiles-text-primary, #2E2721);"></ha-icon></div>'
         + '<div style="flex:1;min-width:0;pointer-events:none;"><div style="font-size:14.5px;font-weight:700;letter-spacing:-0.01em;color:' + T.ink + ';">Cookidoo-App öffnen</div>'
         + '<div style="font-size:12.5px;font-weight:500;color:var(--casora-soft-sub, ' + T.ink2 + ');margin-top:1px;">Einkaufsliste und Wochenplan bearbeiten</div></div>'

@@ -940,7 +940,7 @@
         + '<span style="font-size:12.5px;font-weight:600;color:' + SUB + ';font-variant-numeric:tabular-nums;flex:none;">' + Math.round(p) + ' %</span></div>';
     };
     return '<div style="font-family:' + FONT + ';text-align:left;">'
-      + '<div class="hui-row hui-srow hh-forecast" style="display:flex;align-items:center;gap:12px;min-height:58px;box-sizing:border-box;padding:10px 16px 10px 10px;'
+      + '<div class="hui-row hui-srow hh-forecast" style="display:flex;align-items:center;gap:12px;min-height:var(--casora-soft-row-h, 58px);box-sizing:border-box;padding:var(--casora-soft-row-pad, 10px 16px 10px 10px);'
       + 'background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));border-radius:var(--casora-popup-row-radius, 24px);">'
       + (UI && UI.icon ? UI.icon('mdi:leaf', 'good') : '')
       + '<div style="flex:1;min-width:0;">'
