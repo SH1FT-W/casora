@@ -39,7 +39,8 @@ const topOverlaps = (pg) => pg.evaluate(() => { const r = window.__panel().shado
   for (let i = 0; i < R.length; i++) for (let j = i + 1; j < R.length; j++) { const a = R[i], c = R[j];
     if (a.l < c.r - 1 && c.l < a.r - 1 && a.t < c.b - 1 && c.t < a.b - 1) ov.push(a.n + '×' + c.n); }
   return ov; });
-const toolPos = (pg) => pg.evaluate(() => [...window.__panel().shadowRoot.querySelectorAll('.btools .btool')].filter((e) => e.getClientRects().length && e.dataset.b !== 'rooms')
+// P-V3 (1.3): das Raum-⋯ steht direkt hinter dem Namen und wandert mit ihm – nur die übrigen Knöpfe bleiben fest.
+const toolPos = (pg) => pg.evaluate(() => [...window.__panel().shadowRoot.querySelectorAll('.btools .btool')].filter((e) => e.getClientRects().length && e.dataset.b !== 'rooms' && e.dataset.b !== 'roomact')
   .map((e) => e.dataset.b + '@' + Math.round(e.getBoundingClientRect().left)).join(' '));
 // Kürzester und längster Raumname des Dashboards.
 const roomPair = (pg) => pg.evaluate(() => { const p = window.__panel(); const rs = p._state.compact.rooms.map((r, i) => ({ i, n: p._roomLabel(r) }));
