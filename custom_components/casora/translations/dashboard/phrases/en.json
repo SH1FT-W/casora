@@ -3240,6 +3240,10 @@
   [
    "^(.+) sollte geprüft werden$",
    "{1} should be checked"
+  ],
+  [
+   "^(\\d+) offline$",
+   "{1} offline"
   ]
  ]
 }

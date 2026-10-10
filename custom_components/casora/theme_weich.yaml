@@ -214,7 +214,7 @@ Casora:
   badge-min-height-tablet: 38px
   badge-col-gap-mobile: 7px
   badge-padding-mobile: 5px 14px 5px 5px
-  badge-min-height-mobile: 36px
+  badge-min-height-mobile: 40px  # AB-03 (1.3): Tippfläche ≥ 40 px (vorher 36, Inhalt ergab 39,2)
   badge-font-size-mobile: 12.5px
   # Symbolkreis so hoch wie Titel+Unterzeile (15 + 1 + 12,9 px): sonst bestimmt der Text die
   # Pillenhöhe (38,9) und der 26-px-Kreis sitzt oben/unten 6,4, links aber 5 px vom Rand.

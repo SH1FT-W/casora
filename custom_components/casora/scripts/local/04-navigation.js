@@ -167,6 +167,9 @@
       + '.hmn-list{position:relative;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;'
       +   'padding:8px;box-sizing:border-box;}'
       + '.hmn-empty{padding:4px 10px 12px;font-size:15px;color:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));}'
+      /* P-V6: Gruppenüberschrift im Szenen-Menü (Raum / Ganzes Haus), eingerückt wie der Zeilentext. */
+      + '.hmn-ghead{padding:10px 14px 4px 16px;font-size:13px;line-height:16px;font-weight:600;letter-spacing:-0.01em;color:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));}'
+      + '.hmn-ghead:first-child{padding-top:4px;}'
       /* Zeile (Räume und Szenen gleich): Kreis 36 | Name | Zustand rechts. Innenabstand links 8 wie
          Kreis-Radius 18 zur Pille 26; Abstand Kreis–Text ebenfalls 8. */
       + '.hmn-sheet .hmn-item.hmn-row{grid-template-columns:36px minmax(0,1fr) auto;column-gap:8px;height:52px;min-height:52px;'
@@ -429,9 +432,10 @@
          die Leiste; ältere Handy-Dashboards ohne sie lesen sie aus dem Desktop-Dashboard (_deskScenes). */
       var sc = this._sceneCfg();
       var ids = window.casoraNavScenes(h, sc.scene_exclude);
+      var all = ids.slice(), fixed = false;
       if (Array.isArray(sc.scenes) && sc.scenes.length) {
         var pick = sc.scenes.filter(function (id) { return h.states[id]; });
-        if (pick.length) ids = pick.filter(function (id) { return (sc.scene_exclude || []).indexOf(id) < 0; });
+        if (pick.length) { ids = pick.filter(function (id) { return (sc.scene_exclude || []).indexOf(id) < 0; }); fixed = true; }
       }
       /* Reihenfolge wie die Szenen-Badges (scene_order zuerst, dann alphabetisch) – 30.09.2026. */
       var so = Array.isArray(sc.scene_order) ? sc.scene_order : [];
@@ -441,21 +445,42 @@
           .sort(function (a, b) { return (at(a[0]) - at(b[0])) || (a[1] - b[1]); })
           .map(function (p) { return p[0]; });
       }
-      /* In einem Raum nur dessen Szenen (30.09.2026): Bereich gleichen Namens (Szene oder ihr Gerät),
-         sonst Raumname im Szenennamen. Passt keine, bleibt die ganze Liste statt eines leeren Menüs. */
+      /* P-V6 (1.3): In einem Raum immer beide Gruppen – oben „<Raum>“ mit den Szenen des Raums (aus allen
+         Szenen: Bereich gleichen Namens bei Szene oder Gerät, sonst Raumname im Szenennamen), darunter
+         „Ganzes Haus“ mit den Haus-Szenen (feste Startseiten-Auswahl genau so, sonst die Szenen ohne Raum).
+         Ohne Raum-Szenen nur die Haus-Gruppe (ohne Überschrift). Vorher hing es an der festen Auswahl:
+         mit ihr fehlten die Raum-Szenen, ohne sie die Haus-Szenen. */
       var room = /^room_/.test(cur) && cur !== 'room_scenes' ? this._rooms.filter(function (r) { return r.key === cur; })[0] : null;
+      var groups = null;
       if (room) {
-        var want = [room.name, room.label].filter(Boolean).map(function (x) { return String(x).trim().toLowerCase(); });
         var areas = h.areas || {}, reg = h.entities || {}, devs = h.devices || {};
-        var aids = Object.keys(areas).filter(function (a) { return want.indexOf(String(areas[a].name || '').trim().toLowerCase()) > -1; });
-        var inRoom = ids.filter(function (id) {
-          var e = reg[id], aid = e && (e.area_id || (e.device_id && devs[e.device_id] ? devs[e.device_id].area_id : null));
+        var areaOf = function (id) { var e = reg[id]; return e && (e.area_id || (e.device_id && devs[e.device_id] ? devs[e.device_id].area_id : null)); };
+        var names = function (r) { return [r.name, r.label].filter(Boolean).map(function (x) { return String(x).trim().toLowerCase(); }); };
+        var inR = function (r, id) {
+          var want = names(r);
+          var aids = Object.keys(areas).filter(function (a) { return want.indexOf(String(areas[a].name || '').trim().toLowerCase()) > -1; });
+          var aid = areaOf(id);
           if (aid) return aids.indexOf(aid) > -1;
-          var n = String((h.states[id].attributes && h.states[id].attributes.friendly_name) || id).toLowerCase();
+          var n = String((h.states[id] && h.states[id].attributes && h.states[id].attributes.friendly_name) || id).toLowerCase();
           return want.some(function (w) { return w && n.indexOf(w) > -1; });
-        });
-        if (inRoom.length) ids = inRoom;
+        };
+        /* Raum-Szenen wie auf der Raumseite (filter-overlay legt die Liste ab); sonst nach Bereich/Namen. */
+        var RS = window._casoraRoomScenes, inRoom = null;
+        if (RS && RS.key === cur) { try { inRoom = (RS.list(h) || []).filter(function (id) { return h.states[id]; }); } catch (e) { inRoom = null; } }
+        if (!inRoom) inRoom = all.filter(function (id) { return inR(room, id); });
+        if (so.length) inRoom.sort(function (a, b) { var x = so.indexOf(a), y = so.indexOf(b); return (x < 0 ? 999 : x) - (y < 0 ? 999 : y); });
+        var rooms = this._rooms;
+        var house = fixed ? ids : ids.filter(function (id) { return !rooms.some(function (r) { return inR(r, id); }); });
+        house = house.filter(function (id) { return inRoom.indexOf(id) < 0; });
+        if (inRoom.length) {
+          groups = [{ header: room.label || room.name, ids: inRoom }];
+          if (house.length) groups.push({ header: T('Ganzes Haus'), ids: house });
+        }
       }
+      if (!groups) groups = [{ header: null, ids: ids }];
+      groups.forEach(function (g) {
+      if (g.header) list.push({ header: g.header });
+      var ids = g.ids;
       ids.forEach(function (id) {
         var st = h.states[id];
         var sic = (st.attributes && st.attributes.icon) || 'mdi:palette-outline';
@@ -466,6 +491,7 @@
           /* Aktive Szene wie der offene Raum hinterlegt (1.2) – dieselbe Regel wie die Szenen-Badge („Keine aktiv“). */
           on: !!(SCx && SCx.isActive && SCx.isActive(id, h.states)),
           run: function () { h.callService('scene', 'turn_on', { entity_id: id }); } });
+      });
       });
       return list;
     }
@@ -506,6 +532,7 @@
       if (bg0.indexOf('menu-pane-webkit') < 0) m.style.backgroundColor = 'var(--casora-mnav-menu-pane, ' + bg0 + ')';
       m.style.setProperty('--casora-menu-shadow', 'var(--casora-mnav-menu-shadow, var(--casora-elevation-floating-phone, 0 10px 26px rgba(0,0,0,0.18)))');
       this._items(kind).forEach(function (it) {
+        if (it.header) { var hd = document.createElement('div'); hd.className = 'hmn-ghead'; hd.textContent = it.header; m.appendChild(hd); return; }
         var b = document.createElement('button');
         b.type = 'button'; b.className = 'hmn-item' + (it.on ? ' on' : '');
         b.title = String(it.label || '');
@@ -620,6 +647,7 @@
         });
       };
       items.forEach(function (it) {
+        if (it.header) { var hd = el('div', 'hmn-ghead', it.header); hd.setAttribute('data-no-i18n', ''); list.appendChild(hd); return; }
         var tone = rooms ? null : self._sceneTone(it.id);
         var b = el('button', 'hmn-item hmn-row' + (it.on ? ' on' : '') + (tone ? ' hmn-tone' : ''));
         b.type = 'button';
@@ -682,7 +710,7 @@
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (m.isConnected) m._fit(); });
       /* Mehr Zeilen als Platz: Liste so kürzen, dass die letzte sichtbare Zeile halb angeschnitten ist
          (Scroll-Hinweis wie in iOS), und den offenen Raum in die Mitte holen. */
-      var first = list.firstElementChild;
+      var first = list.querySelector('.hmn-item');  /* nicht die Gruppenüberschrift (P-V6) */
       if (first && list.scrollHeight > list.clientHeight + 1) {
         var padT = parseFloat(getComputedStyle(list).paddingTop) || 0, rowH = first.offsetHeight;
         var k = Math.max(1, Math.floor((list.clientHeight - padT - rowH * 0.5) / rowH));

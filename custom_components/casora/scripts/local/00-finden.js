@@ -950,6 +950,41 @@ window.casoraPriceKwh = function (v) {
     return { text: text, html: '<span class="cs-sum" style="display:inline-flex;align-items:center;gap:9px;height:1.2em;line-height:1;vertical-align:top">' + items.join('') + '</span>' };
   };
 
+  // ── Sicherheits-Sammelbadge: Kurzform nur, wenn die Reihe nicht passt (1.3) ─────
+  // Hemma 2/1: Die Vorlage liefert lange und kurze Zeile („3 Schlösser offen · …“ / „3 offen · 3 offline“);
+  // hier wird gemessen, ob die Badge-Reihe mit der langen Zeile in die Breite passt. Klasse
+  // casora-sec-kurz am Badge zeigt die kurze. Gemessen, nicht nach Gerät; bei Größenänderung neu.
+  window.casoraSecFit = function (card) {
+    if (!card || !card.isConnected) return;
+    // Reihe = nächster Vorfahr mit weiteren Badges; Rand = nächster Vorfahr, der abschneidet oder scrollt.
+    var row = null, clip = null, n = card.parentNode || card.host, guard = 0;
+    while (n && guard++ < 40) {
+      if (n.nodeType === 1) {
+        if (!row && n.querySelectorAll('button-card').length > 1) row = n;
+        if (row && getComputedStyle(n).overflowX !== 'visible') { clip = n; break; }
+      }
+      n = n.parentNode || n.host;
+    }
+    if (!row) return;
+    var right = 0;
+    Array.prototype.forEach.call(row.querySelectorAll('button-card'), function (b) {
+      var q = b.getBoundingClientRect(); if (q.width > 0) right = Math.max(right, q.right + (row.scrollLeft || 0));
+    });
+    var avail = clip ? clip.getBoundingClientRect().right - (parseFloat(getComputedStyle(clip).paddingRight) || 0) : window.innerWidth;
+    var kurz = card.classList.contains('casora-sec-kurz');
+    var w = card.getBoundingClientRect().width;
+    if (!kurz) {
+      if (right > avail + 1) { card._casoraSecLongW = w; card.classList.add('casora-sec-kurz'); }
+    } else if (card._casoraSecLongW && right - w + card._casoraSecLongW <= avail + 1) {
+      card.classList.remove('casora-sec-kurz');
+    }
+    var obs = clip || row;
+    if (!obs._casoraSecRO && window.ResizeObserver) {
+      obs._casoraSecRO = new ResizeObserver(function () { if (card.isConnected) window.casoraSecFit(card); });
+      obs._casoraSecRO.observe(obs);
+    }
+  };
+
   // ── Kurz oder ausführlich? (07.10.2026) ───────────────────────────────────────
   // Einstellung security_summary je Raum: '' bzw. 'auto' (Standard) = auf der Startseite kurz
   // (Symbole mit Zahl), in Räumen ausgeschrieben – dort gibt es meist nur ein Fenster, eine Tür;

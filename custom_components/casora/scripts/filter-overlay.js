@@ -1568,9 +1568,11 @@
         let sceneCount = 0;
         try {
           const c = this._config;
-          sceneCount = window._casoraSC.list(this._hass?.states || {}, this._hass, {
-            room: roomMode, area: c.area || null, room_entities: roomEntities, scenes: c.scenes, scene_exclude: c.scene_exclude, scene_order: c.scene_order,
-          }).length;
+          const vars = { room: roomMode, area: c.area || null, room_entities: roomEntities, scenes: c.scenes, scene_exclude: c.scene_exclude, scene_order: c.scene_order };
+          sceneCount = window._casoraSC.list(this._hass?.states || {}, this._hass, vars).length;
+          // P-V6 (1.3): dieselbe Raum-Szenenliste für das Szenen-Menü der Handy-Leiste (04-navigation.js).
+          const key = window._casoraFilter && window._casoraFilter.get ? window._casoraFilter.get() : null;
+          window._casoraRoomScenes = { key, list: (h) => window._casoraSC.list((h && h.states) || {}, h, vars) };
         } catch (_) { sceneCount = 0; }
         if (sceneCount) {
           // dk-06 (1.3): Überschriften der Raumseite fluchten mit Kacheln und Titel (16 px, früher D5 +2 px).
