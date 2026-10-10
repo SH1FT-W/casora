@@ -128,7 +128,7 @@
     + '.tt{font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls);text-transform:var(--casora-h15-tt);color:var(--casora-h15-c,var(--cink));padding:0 6px 6px}'
     + '.ro{display:flex;align-items:baseline;gap:8px;min-height:34px;padding:0 var(--casora-chart-inset,6px);font-variant-numeric:tabular-nums}'
     + '.v{font-size:28px;font-weight:600;letter-spacing:-.02em;color:var(--cink)}.u{font-size:15px;font-weight:500;color:var(--cink2);margin-left:-4px}'
-    + '.w{font-size:13px;font-weight:500;color:var(--cink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+    + '.w{font-size:13px;font-weight:500;color:var(--cink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
     // Umschalter wie hui-sg: Felder 46 hoch, Radius 18, aktiv hell.
     + '.sw{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;margin:2px var(--casora-chart-inset,6px) 10px}'
     + '.sw button{all:unset;box-sizing:border-box;min-width:0;min-height:46px;border-radius:var(--casora-soft-seg-radius,18px);padding:0 12px;display:flex;align-items:center;justify-content:center;gap:6px;'

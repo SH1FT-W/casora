@@ -5396,6 +5396,8 @@ window.casoraMenuGlass = {
       --casora-soft-icon-size: var(--casora-ic-row, 36px);
       --casora-soft-icon-radius: var(--casora-r-small, 12px);
       --casora-soft-row-h: 60px;
+      /* Pillen-Knöpfe in einer Platte (Thermostat ±): Platte als Pille → konzentrisch (DP-16). */
+      --casora-popup-stepper-radius: var(--casora-r-pill, 999px);
       /* 1.3 Tokens: Auftritt 320 ms. */
       --casora-popup-enter: var(--casora-dur-enter, 320ms);
       --casora-soft-row-fs: var(--casora-fs-row, 15px);
@@ -7990,7 +7992,8 @@ window.casoraMenuGlass = {
       }
       if ((r.entity || r.tappable) && (!r.svc || armOnAction)) {
         out += '<svg class="hui-chev" width="7" height="12" viewBox="0 0 7 12" aria-hidden="true">'
-          + '<path d="M1 1L6 6L1 11" fill="none" stroke="' + T.ink3 + '" stroke-width="2" '
+          // DP-30: Pfeil in Text 1 mit Deckkraft .6 (Text 3 · .6 lag bei 2,5 : 1).
+          + '<path d="M1 1L6 6L1 11" fill="none" stroke="' + T.ink + '" stroke-width="2" '
           + 'stroke-linecap="round" stroke-linejoin="round"/></svg>';
       }
       out += '</div>';   // .hui-inner

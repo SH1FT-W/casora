@@ -940,7 +940,8 @@ window._casoraColGap = window._casoraColGap || function (keys) {
             var send = 'window._casoraAssist.send(this.dataset.q)';
             return '<div class="has-chip" role="button" tabindex="0" data-q="' + esc(q) + '"' + tap(send)
               + ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();' + send + '}">'
-              + '<span class="has-chip-i" style="--t:' + (TONE[it.tone] || TONE.general) + ';"><ha-icon icon="' + esc(it.icon) + '" style="--mdc-icon-size:18px;width:18px;height:18px;display:flex;"></ha-icon></span>'
+              // DP-17: Symbolfarbe nach Kontrast (Weiß auf Gelb/Orange lag unter 3 : 1).
+              + '<span class="has-chip-i" style="--t:' + (TONE[it.tone] || TONE.general) + ';color:' + ((window._casoraInkOn && window._casoraInkOn(TONE[it.tone] || TONE.general)) || '#fff') + ';"><ha-icon icon="' + esc(it.icon) + '" style="--mdc-icon-size:18px;width:18px;height:18px;display:flex;"></ha-icon></span>'
               + '<span>' + esc(q) + '</span></div>';
           }).join('') + '</div>'
           + '<div class="has-bar">'

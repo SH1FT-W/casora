@@ -332,15 +332,17 @@
     var word = s === 'locking' ? 'Wird verriegelt …' : s === 'unlocking' ? 'Wird entriegelt …' : on ? 'Verriegelt' : 'Entriegelt';
     var hint = busy ? '' : on ? (one ? 'Tippen zum Entriegeln' : 'Tippen, um alle zu entriegeln') : (one ? 'Tippen zum Verriegeln' : 'Tippen, um alle zu verriegeln');
     var ic = (typeof window.casoraIconUrl === 'function') ? window.casoraIconUrl(on ? 'lock-fill' : 'lock-open-fill') : '';
-    return '<div class="lkbar" role="switch" aria-checked="' + on + '" style="display:flex;align-items:center;gap:14px;min-height:66px;box-sizing:border-box;'
-      /* D-06: eine Zeilenart – entriegelt (aktiv) hell und erhoben wie die aktive Geräte-Zeile darunter, sonst Sand. */
-      + 'padding:10px 14px 10px 14px;border-radius:var(--casora-popup-row-radius, 24px);background:'
-      + (open ? 'var(--casora-entity-background-active, var(--casora-soft-seg-on, #FFFDF9));box-shadow:var(--button-card-box-shadow-active-mobile, var(--casora-soft-seg-on-shadow, none));'
+    var lkHue = 'var(--casora-lock-unlocked-color, var(--casora-lps-switch-on, #B67A50))';
+    return '<div class="lkbar" role="switch" aria-checked="' + on + '" style="display:flex;align-items:center;gap:12px;min-height:var(--casora-soft-row-h, 60px);box-sizing:border-box;'
+      /* D-06: eine Zeilenart – entriegelt (aktiv) hell und erhoben wie die aktive Geräte-Zeile darunter, sonst Sand.
+         1.3: Token der aktiven Zeile (DP-07), Symbol-Kachel 36/r12 mit 12 px Rand (DP-16), Symbolfarbe nach Kontrast. */
+      + 'padding:var(--casora-soft-row-pad, 12px 16px 12px 12px);border-radius:var(--casora-popup-row-radius, 24px);background:'
+      + (open ? 'var(--casora-soft-row-active, var(--casora-entity-background-active, #FFFDF9));box-shadow:var(--casora-soft-row-active-shadow, var(--button-card-box-shadow-active-mobile, none));'
         : 'var(--casora-soft-row-fill, rgba(140,115,90,0.07));')
       + 'font-family:var(--primary-font-family, system-ui);text-align:left;line-height:normal;cursor:pointer;">'
-      + '<div style="width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;background:'
-      + (open ? 'var(--casora-lock-unlocked-color, var(--casora-lps-switch-on, #B67A50))' : 'var(--casora-soft-icon-off, rgba(140,115,90,0.12))') + ';">'
-      + '<div style="width:19px;height:19px;background-color:' + (open ? '#fff' : 'var(--casora-soft-glyph-off, rgba(58,50,43,0.55))') + ';'
+      + '<div style="width:var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);border-radius:var(--casora-soft-icon-radius, 50%);flex:none;display:grid;place-items:center;background:'
+      + (open ? lkHue : 'var(--casora-soft-icon-off, rgba(140,115,90,0.12))') + ';">'
+      + '<div style="width:19px;height:19px;background-color:' + (open ? ((window._casoraInkOn && window._casoraInkOn(lkHue)) || '#fff') : 'var(--casora-soft-glyph-off, rgba(58,50,43,0.55))') + ';'
       + "-webkit-mask:url('" + ic + "') center / contain no-repeat;mask:url('" + ic + "') center / contain no-repeat;"
       + (busy ? 'animation:lktg-pl 1.2s ease-in-out infinite;' : '') + '"></div></div>'
       /* D-06: auf der hellen aktiven Fläche Schrift wie die aktive Geräte-Zeile (dunkel auch im dunklen Design). */
