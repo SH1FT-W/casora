@@ -9,6 +9,11 @@ try { new Function('window', 'document', 'customElements', 'MutationObserver', s
 const tr = win.casoraTr;
 assert.ok(tr, 'casoraTr geladen');
 const EXPECT = [
+  // DP-20 (10.10.2026): Modus „Auto“ wurde zu „Car“ – direkt (Thermostat, Luftreiniger, Sauger, eBike)
+  // und über die Kette Automatik → Auto → Car (DOM-Wächter übersetzt das Ergebnis erneut).
+  ['Auto', 'Auto'],
+  ['Automatik', 'Auto'],
+  ['Fahrzeug', 'Vehicle'],
   // B-TPL-05: zwei verschmolzene Muster
   ['3 Termine heute', '3 events today'],
   ['Neu: Casora 1.0.11', 'New: Casora 1.0.11'],
@@ -76,3 +81,11 @@ const pop = fs.readFileSync(new URL('../../custom_components/casora/scripts/loca
 assert.ok(!/r\.known \? 'Zu'/.test(pop) && (pop.match(/r\.known \? 'Geschlossen'/g) || []).length === 2, 'Auto: Geschlossen statt Zu');
 assert.ok(pop.includes("r.locked ? 'Verriegelt' : 'Entriegelt'"), 'Auto: Entriegelt statt Offen');
 console.log('ok phrasen_en');
+// Keine Kette: Was eine Übersetzung liefert, darf kein anderer deutscher Schlüssel sein
+// (sonst übersetzt der DOM-Wächter das Ergebnis ein zweites Mal, z. B. Automatik → Auto → Car).
+{
+  const ex = JSON.parse(fs.readFileSync(new URL('../../custom_components/casora/translations/dashboard/phrases/en.json', import.meta.url), 'utf8')).exact;
+  const chains = Object.entries(ex).filter(([k, v]) => v !== k && ex[v] !== undefined && ex[v] !== v).map(([k, v]) => k + ' → ' + v + ' → ' + ex[v]);
+  assert.deepEqual(chains, [], 'Übersetzungsketten');
+}
+console.log('ok phrasen_en (Ketten)');

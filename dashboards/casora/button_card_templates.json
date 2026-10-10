@@ -3127,7 +3127,7 @@
    "car": null,
    "icon": "car_side_w2",
    "room_name": "Fahrzeug",
-   "casora_default_name": "Auto"
+   "casora_default_name": "Fahrzeug"
   }
  },
  "casora_climate_popup": {
