@@ -5,6 +5,7 @@
 //   CASORA_URL=http://localhost:<port> node dev/qa/matrix-bilder.mjs --matrix <ordner> --haus arbeit|demo
 //       [--gruppe popups,kacheln,handy,studio,umzug] [--geraete desktop,tablet,handy] [--nur <regex auf zeile_id>]
 //       [--dash <url>] [--handy-dash <url>] [--neu]   (--neu: schon abgebildete Zeilen nicht überspringen)
+//       [--nochmal <regex>]  nicht abbildbare Zeilen, deren Grund passt, erneut versuchen
 //   … --vorbereiten   legt im Test-HA ein Hilfs-Dashboard „qa-matrix“ an mit je einer Kachel für jede Vorlage,
 //                     die in den echten Dashboards dieses Hauses fehlt (Karte aus einem anderen Dashboard des
 //                     Hauses, sonst mit einer passenden Entität erzeugt). Nur im Wegwerf-HA verwenden.
@@ -140,7 +141,10 @@ const NUR = arg('nur') ? new RegExp(arg('nur')) : null;
 const MESS = path.join(MDIR, 'messung.jsonl');
 const FUNDE = path.join(MDIR, 'funde.jsonl');
 const done = new Set();
-if (fs.existsSync(MESS) && !flag('neu')) for (const l of fs.readFileSync(MESS, 'utf8').split('\n')) { try { const j = JSON.parse(l); if (j.status === 'ok' || j.status === 'nicht_abbildbar') done.add(j.zeile_id); } catch (e) { /* leer */ } }
+// --nochmal <regex>: Zeilen, deren letzter Grund passt, noch einmal versuchen (z. B. nach einer Verbesserung).
+const NOCHMAL = arg('nochmal') ? new RegExp(arg('nochmal')) : null;
+if (fs.existsSync(MESS) && !flag('neu')) for (const l of fs.readFileSync(MESS, 'utf8').split('\n')) { try { const j = JSON.parse(l);
+  if (j.status === 'ok' || (j.status === 'nicht_abbildbar' && !(NOCHMAL && NOCHMAL.test(j.grund || '')))) done.add(j.zeile_id); else done.delete(j.zeile_id); } catch (e) { /* leer */ } }
 const fundSeen = new Set();
 if (fs.existsSync(FUNDE)) for (const l of fs.readFileSync(FUNDE, 'utf8').split('\n')) { try { fundSeen.add(JSON.parse(l).ist); } catch (e) { /* leer */ } }
 let fundN = fundSeen.size;
@@ -197,8 +201,9 @@ async function locate(pg, row, tpl) {
   const known = pg.__loc[tpl];
   if (known === null) return null;
   const order = known ? [known, ...cands.filter((u) => u !== known)] : cands;
+  let loadFail = false;
   for (const u of order) {
-    if (!(await goView(pg, u))) continue;
+    if (!(await goView(pg, u)) && !(await goView(pg, u))) { loadFail = true; continue; }
     let i = await pg.evaluate(FIND, tpl).catch(() => -1);
     // Unter-Badges erscheinen erst nach Antippen ihres Sammel-Badges (wie popup-raender.mjs).
     if (i < 0 && /^casora_badge_(?!.*_group$)/.test(tpl)) {
@@ -216,7 +221,8 @@ async function locate(pg, row, tpl) {
     }
     if (i >= 0) { pg.__loc[tpl] = u; return { i, url: u }; }
   }
-  pg.__loc[tpl] = null;
+  // Nur sicher fehlende Vorlagen merken – lud eine Seite nicht (Last), beim nächsten Mal neu suchen.
+  if (!loadFail) pg.__loc[tpl] = null;
   return null;
 }
 const box = (pg, i) => pg.evaluate((i) => { const b = window.__pierce('button-card')[i]; if (!b) return null; b.scrollIntoView({ block: 'center', inline: 'center' });
@@ -560,7 +566,9 @@ for (const k of keys) {
       const WS = window.WebSocket;
       window.WebSocket = class extends WS {
         send(d) {
-          if (typeof d === 'string' && /"type":"(call_service|lovelace\/config\/save|frontend\/set_user_data|casora\/settings\/(set|save))"/.test(d)) {
+          // Ausnahme: reine UI-Helfer (input_select.casora_expanded_row u. Ä.: Sammel-Badges aufklappen) wie in alles.mjs.
+          if (typeof d === 'string' && /"type":"(call_service|lovelace\/config\/save|frontend\/set_user_data|casora\/settings\/(set|save))"/.test(d)
+            && !/"domain":"input_(select|boolean|number|text)"[^}]*"casora_|"entity_id":"input_(select|boolean|number|text)\.casora_/.test(d)) {
             try { const m = JSON.parse(d); setTimeout(() => this.dispatchEvent(new MessageEvent('message', { data: JSON.stringify({ id: m.id, type: 'result', success: true, result: { context: { id: 'qa' } } }) })), 0); return; } catch (e) { /* normal */ }
           }
           return super.send(d);
