@@ -5987,7 +5987,7 @@
    "custom_fields": {
     "arrow": [
      {
-      "display": "[[[ return (variables?.hide_caret || variables?.favorites === true || ['Favoriten', 'Favorites'].includes(this._config?.name)) ? 'none' : 'flex' ]]]\n"
+      "display": "[[[ return (variables?.hide_caret || variables?.favorites === true || (variables?.favorites !== false && ['Favoriten', 'Favorites'].includes(this._config?.name))) ? 'none' : 'flex' ]]]\n"
      },
      {
       "align-items": "center"
@@ -6086,7 +6086,7 @@
    ]
   },
   "tap_action": {
-   "action": "[[[\n  // Favorites has no matching popup — never tappable, no hide_caret\n  // variable needed to say so.\n  if (variables?.favorites === true || ['Favoriten', 'Favorites'].includes(this._config?.name)) return 'none';\n  const slug = String(this._config?.name || '').trim().toLowerCase()\n      .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')\n      .replace(/[^a-z0-9]+/g, '');\n  const roomKey = variables.room_key || (!variables.hide_caret && slug ? 'room_' + slug : null);\n  return roomKey ? 'fire-dom-event' : 'none';\n]]]\n",
+   "action": "[[[\n  // Favorites has no matching popup — never tappable, no hide_caret\n  // variable needed to say so. A room that is itself called „Favoriten“ carries\n  // favorites: false (Umzug-Prüfung 10.10.2026) and stays a room.\n  if (variables?.favorites === true || (variables?.favorites !== false && ['Favoriten', 'Favorites'].includes(this._config?.name))) return 'none';\n  const slug = String(this._config?.name || '').trim().toLowerCase()\n      .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')\n      .replace(/[^a-z0-9]+/g, '');\n  const roomKey = variables.room_key || (!variables.hide_caret && slug ? 'room_' + slug : null);\n  return roomKey ? 'fire-dom-event' : 'none';\n]]]\n",
    "haptic": "light",
    "casora_filter": "[[[\n  const slug = String(this._config?.name || '').trim().toLowerCase()\n    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')\n    .replace(/[^a-z0-9]+/g, '');\n  const roomKey = variables.room_key || (!variables.hide_caret && slug ? 'room_' + slug : null);\n  return roomKey || 'all';\n]]]\n"
   },

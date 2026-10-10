@@ -1,10 +1,12 @@
-"""settings.read_umzug_phones ohne HA: Handy-Layouts aus den Umzugs-Sicherungen lesen.
+"""settings.read_umzug_phones und ws_backup ohne HA: Umzugs-Sicherungen lesen und schreiben.
 
   uv run --python 3.14 --with homeassistant python dev/unit/umzug_sicherung_test.py
 
 Das Studio holt daraus einmalig die Kachelgrößen am Handy für Dashboards, die vor 1.0.3
 umgezogen sind. Prüft: je Quelle die neueste Sicherung, nur mit Handy-Layout, ohne
 button_card_templates, Filter nach Quelle, kaputte Dateien und fremde Dateien werden übersprungen.
+ws_backup (10.10.2026): Lässt sich die Sicherung nicht schreiben, kommt der Fehlercode backup_failed
+(das Studio meldet dann verständlich, was zu tun ist) statt „Unknown error“.
 """
 
 from __future__ import annotations
@@ -17,7 +19,9 @@ import tempfile
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT)
 
-from custom_components.casora.settings import read_umzug_phones  # noqa: E402
+import asyncio  # noqa: E402
+
+from custom_components.casora.settings import read_umzug_phones, ws_backup  # noqa: E402
 
 fails = []
 
@@ -50,5 +54,53 @@ with tempfile.TemporaryDirectory() as folder:
     check("Filter nach Quelle", [b["url_path"] for b in read_umzug_phones(folder, ["zweites"])] == ["zweites"])
     check("Grenze", len(read_umzug_phones(folder, None, 1)) == 1)
 check("fehlender Ordner: leer", read_umzug_phones("/nicht/vorhanden") == [])
+
+
+
+class FakeConn:
+    user = type("U", (), {"is_admin": True, "id": "x"})()
+
+    def __init__(self):
+        self.out = []
+
+    def send_result(self, mid, result=None):
+        self.out.append(("result", result))
+
+    def send_error(self, mid, code, message=None, *a, **k):
+        self.out.append(("error", code, message))
+
+    def async_handle_exception(self, msg, err):  # so meldet HA eine unbehandelte Ausnahme: „Unknown error“
+        self.out.append(("error", "unknown_error", str(err)))
+
+
+class FakeHass:
+    def __init__(self, root):
+        self.config = type("C", (), {"config_dir": root, "path": lambda _s, *p: os.path.join(root, *p)})()
+
+    async def async_add_executor_job(self, fn, *a):
+        return fn(*a)
+
+    def async_create_background_task(self, coro, *a, **k):
+        self.task = coro
+
+
+def handler(hass, conn, msg):
+    """ws_backup wie HA es aufruft (async_response legt eine Hintergrundaufgabe an)."""
+    async def run():
+        ws_backup(hass, conn, msg)
+        await hass.task
+    return run()
+
+with tempfile.TemporaryDirectory() as root:
+    msg = {"id": 1, "type": "casora/backup/dashboard", "name": "Hemma Neu", "data": {"url_path": "x", "config": {"views": []}}}
+    conn = FakeConn()
+    asyncio.run(handler(FakeHass(root), conn, dict(msg)))
+    check("Sicherung geschrieben " + repr(conn.out), conn.out and conn.out[0][0] == "result"
+          and os.path.exists(os.path.join(root, conn.out[0][1]["path"])))
+with tempfile.TemporaryDirectory() as root:
+    open(os.path.join(root, "casora_sicherungen"), "w").close()  # Datei statt Ordner: nicht beschreibbar
+    conn = FakeConn()
+    asyncio.run(handler(FakeHass(root), conn, dict(msg)))
+    check("nicht beschreibbar: backup_failed " + repr(conn.out), conn.out and conn.out[0][:2] == ("error", "backup_failed"))
 
 sys.exit(1 if fails else 0)

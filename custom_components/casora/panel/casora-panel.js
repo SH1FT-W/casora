@@ -389,6 +389,10 @@ function extractMobileConfig(lovelace) {
   const kids = outer.cards || [];
   const rooms = [];
   const items = [];
+  // Nur EIN Abschnitt ist der Favoriten-Bereich: der mit Merkmal, sonst der erste so benannte.
+  // Ein Raum, der selbst „Favoriten“ heißt (Umzug-Prüfung 10.10.2026), wurde sonst zu einem
+  // zweiten Favoriten-Abschnitt – ohne Pfeil, am Handy nicht mehr als Raum zu öffnen.
+  let favSeen = kids.some((c) => c && c.template === MOBILE_HEADER && (c.variables || {}).favorites === true);
 
   for (let i = 0; i < kids.length; i++) {
     const card = kids[i] || {};
@@ -398,8 +402,10 @@ function extractMobileConfig(lovelace) {
         variables: clone(card.variables) || {} };
       // Hemma-Dashboards auf Deutsch nennen den Abschnitt „Favoriten“: intern immer „Favorites“
       // (wird beim Anzeigen übersetzt), sonst wäre er ein Raum und Home bliebe leer.
-      put(room, "name", isFavoritesName(card.name) && !(card.variables || {}).favorites
-        ? MOBILE_FAVORITES : clone(card.name));
+      const favName = isFavoritesName(card.name) && room.variables.favorites === undefined;
+      if (favName && favSeen) room.variables.favorites = false;
+      put(room, "name", favName && !favSeen ? MOBILE_FAVORITES : clone(card.name));
+      if (favName) favSeen = true;
       room._header = omit(card, ["name", "variables"]);
       room._row = omit(next, ["cards"]);
       rooms.push(room);
@@ -606,12 +612,16 @@ function blankMobileState(mobile, names) {
   });
   if (firstPair < 0) throw new Error("the bundled mobile example has no section to copy");
 
-  const isRoom = (n) => n !== MOBILE_FAVORITES;
+  // Favoriten-Abschnitt ist nur der erste „Favorites“ – ein Raum gleichen Namens bleibt Raum
+  // (Merkmal favorites: false, siehe extractMobileConfig).
+  const favAt = names.indexOf(MOBILE_FAVORITES);
+  const isRoom = (n, i) => i !== favAt;
 
-  const rooms = names.map((n) => {
+  const rooms = names.map((n, i) => {
     const r = { tiles: [], _header: clone(hdrProto), _row: clone(rowProto) };
     put(r, "name", n);
-    if (isRoom(n) && hdrVars) r.variables = clone(hdrVars);
+    if (isRoom(n, i) && hdrVars) r.variables = clone(hdrVars);
+    if (isRoom(n, i) && isFavoritesName(n)) r.variables = { ...(r.variables || {}), favorites: false };
     return r;
   });
 

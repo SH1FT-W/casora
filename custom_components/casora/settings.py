@@ -194,7 +194,13 @@ async def ws_backup(hass: HomeAssistant, connection: websocket_api.ActiveConnect
         with open(path, "w", encoding="utf-8") as fh:
             json.dump(data, fh, ensure_ascii=False, indent=1)
 
-    await hass.async_add_executor_job(_write)
+    try:
+        await hass.async_add_executor_job(_write)
+    except OSError as err:
+        # Ordner nicht beschreibbar (oder eine Datei gleichen Namens): eigener Code, damit das Studio
+        # verständlich meldet, was zu tun ist – statt „Unknown error“.
+        connection.send_error(msg["id"], "backup_failed", f"casora_sicherungen: {err.strerror or err}")
+        return
     connection.send_result(msg["id"], {"path": os.path.relpath(path, hass.config.config_dir)})
 
 
