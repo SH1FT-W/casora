@@ -2413,7 +2413,7 @@
             '-webkit-mask-composite:xor;' +
             'mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);' +
             'mask-composite:exclude;pointer-events:none;}' +
-            '.casora-back-glass:active{transform:scale(0.94);}' +
+            '.casora-back-glass:active{transform:scale(var(--casora-press-scale, 0.94));}' +
             '.casora-back-glass{transition:transform 0.15s ease;}';
           overlayEl.appendChild(st);
         }
