@@ -52,7 +52,7 @@
     + ".cp-box casora-popup.cp-in{opacity:1}"
     + ".cp-note{margin-top:40px;padding:14px 18px;border-radius:var(--r-l);background:rgba(20,20,26,.66);font-size:var(--t-foot);"
     + "color:var(--ink-2,rgba(255,255,255,.7));text-align:center;max-width:340px}"
-    + "@media (prefers-reduced-motion:no-preference){.cp-layer .cp-box{animation:cpIn .3s cubic-bezier(.32,.72,0,1)}}"
+    + "@media (prefers-reduced-motion:no-preference){.cp-layer .cp-box{animation:cpIn .3s var(--casora-ease-enter, cubic-bezier(.32,.72,0,1))}}"
     + "@keyframes cpIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}"
     // Reopen pill under the room preview while a tile with a popup is selected.
     + ".cp-show{position:absolute;z-index:6;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;"

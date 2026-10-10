@@ -1880,7 +1880,7 @@ class CasoraSmartRow extends HTMLElement {
            Spur, der doppelte Zeilenabstand blieb (+8 px über dem nächsten Abschnitt). Darum den
            Nachfolger hochziehen (Hemma 2.2.0, MIT). */
         #container > .card-wrapper:has([data-casora-np]) + .card-wrapper {
-          transition: margin-top 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+          transition: margin-top 0.5s var(--casora-ease-enter, cubic-bezier(0.32, 0.72, 0, 1));
         }
         #container > .card-wrapper:has([data-casora-np-empty]) + .card-wrapper {
           margin-top: -8px;

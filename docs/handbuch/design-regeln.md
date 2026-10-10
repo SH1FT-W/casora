@@ -14,8 +14,9 @@ im neuen Code. Wo ein fester Wert nötig ist (Rückfallwert in `var(--x, …)`),
 
 Gilt: Die Werte stehen **einmal** als CSS-Variablen im Theme „Casora“ (`theme_weich.yaml`, Abschnitt
 „Designsprache“; „Casora Nebel“ wird daraus gebaut). Neuer Code nimmt nur diese Variablen; feste Zahlen nur
-als Rückfallwert `var(--casora-r-row, 24px)`. Die Popups (Kern `casora-core.js`, Module `scripts/local/`)
-sind umgestellt; Kacheln, Menüs und Studio ziehen nach (bis dahin: dort die heutigen Werte der Nachbarn).
+als Rückfallwert `var(--casora-r-row, 24px)` – der Rückfallwert ist der **alte** Wert, damit Hemma 1/2 (die die
+Tokens nicht setzen) unverändert bleiben. Umgestellt sind Popups (1.3, um-popups) und seit um-tokens auch
+Kacheln, Badges, Raumkarten, Menüs (Glocke, ⋯, Räume, Szenen, Raumleisten-Menü), Navigationsleisten und Studio.
 
 | Gruppe | Variablen | Werte |
 |---|---|---|
@@ -24,7 +25,8 @@ sind umgestellt; Kacheln, Menüs und Studio ziehen nach (bis dahin: dort die heu
 | Schrift | `--casora-fs-label` · `-sub` · `-value` · `-row` · `-heading` · `-title` · `-page` | 12 · 13 · 14 · 15 · 17 · 28 · 34 px |
 | Symbolgrößen (6) | `--casora-ic-head` (Handy `-head-phone`) · `-tile` · `-row` · `-badge` · `-button` · `-status` | 56 (48) · 44 · 36 · 28 · 48 · 22 px |
 | Schatten (3 Stufen, hell + dunkel) | `--casora-shadow-rest` · `-raised` · `-float` | Ruhe (Platte, aktive Zeile) · gehoben (Hover/aktiv) · schwebend (Popup, Menü) |
-| Bewegung | `--casora-ease-enter` + `--casora-dur-enter` · `--casora-ease-slide` + `--casora-dur-slide` · `--casora-dur-feedback` | (.2,.8,.3,1) 320 ms · (.36,0,.16,1) 360 ms · 160 ms |
+| Bewegung | `--casora-ease-enter` + `--casora-dur-enter` · `--casora-ease-slide` + `--casora-dur-slide` · `--casora-dur-feedback` + `--casora-ease-feedback` | (.2,.8,.3,1) 320 ms · (.36,0,.16,1) 360 ms · 160 ms `ease` |
+| Menüs (abgeleitet) | `--casora-menu-row-radius` = Kreis/2 + Rand · `--casora-menu-radius` = Zeile + Rand · `--casora-menu-pad` | 18 + 8 = **26** · 26 + 8 = **34** · 8 px |
 | Druck | `--casora-press-scale` | `.97` auf Tasten (`transform: scale(var(--casora-press-scale, .97))`) |
 | Aktive Zeile (DP-07) | `--casora-soft-row-active` · `-active-shadow` · `-active-ink` · `-active-sub` | hell Creme + Ruhe-Schatten; dunkel Sand 14 %, helle Schrift |
 | Symbol auf Akzent (DP-17) | `--casora-on-accent-ink` | dunkle Tinte, wo Weiß unter 3 : 1 hat (Gelb, Orange, Grün) |
@@ -33,6 +35,23 @@ sind umgestellt; Kacheln, Menüs und Studio ziehen nach (bis dahin: dort die heu
 Symbol-Kacheln (abgerundetes Quadrat statt Kreis, Popups seit 1.3): Radius ≈ 30 % – Kopf 56/16, Handy 48/14,
 Zeile 36/12 (`--casora-soft-icon-size`, `--casora-soft-icon-radius` im Popup-Rahmen). Startseite zieht nach.
 
+**Gilt jetzt überall (um-tokens, 1.3) – im Casora- und Nebel-Look:**
+
+| Fläche | Was die Tokens setzen |
+|---|---|
+| Kacheln | Radius Fläche 32 (Desktop, Tablet, Szenen-Kacheln; Handy 62 hoch → rundet als Pille 31, konzentrisch zum Kreis 42 + 10 Rand), Innenabstand Desktop/Tablet 20 (Handy 10, dk-05), Zustand 14 (`--casora-fs-value`, Handy 12), Ruhe-/gehoben-Schatten (`--button-card-box-shadow*` zeigen auf `--casora-shadow-rest/-raised`, Handy ebenso), Reihenabstand 12 / Handy 8 |
+| Badges | Pille, Ruhe-Schatten (auch Handy), Auftritt-/Breiten-Bewegung über `--casora-badge-enter-ease` / `--casora-badge-flip-ease` (Auftritt / Schieber) |
+| Menüs (Glocke, ⋯, Raumleisten-Menü, Räume/Szenen am Handy, Welle) | Fenster 34, Zeile 52 hoch mit Radius 26, Kreis 36, Rand 8, Schrift 15/13, Schatten „schwebend“ (`--casora-window-shadow` → `--casora-shadow-float`), Auftritt-Kurve, Druck `.97`. Zeilen ohne Platte (E3c). |
+| Navigationsleisten | Raumleiste/Handy-Leiste: Fläche + Ruhe-Schatten (`--casora-pill-rim` → `--casora-shadow-rest`), Markierung als Schieber (`--casora-nav-indicator-ease/-duration`), Tasten-Druck `.97`. Maße der Leisten bleiben (Raumleiste A, Handy-Leiste B). |
+| Studio | `--t-*` = Schrift-Tokens (Titel 22 bleibt), `--r-s` 8 → 12, `--r-m` 12, `--r-l` 18, `--r-xl` 26 → 32 (Karten, Blätter, Vorschau-Rahmen), `--ease` = Auftritt, CSS-Kurven und Knopf-Druck aus den Tokens. Schrift bleibt SF (Inter nur als Entwurf, OFFEN). |
+
+Ausnahmen (bewusst, mit Grund): Animationen per `element.animate()` (WAAPI) können keine CSS-Variable lesen und
+behalten ihre Kurve; die Desktop-Badges wachsen mit `--casora-u-badge` (Schrift u·1,4, Unterzeile 12,32 – feste
+Token-Größen würden das Mitwachsen abschalten); Handy-Badges bleiben 40 hoch mit 12,5/11 (AB-03); Raumleiste A
+(Kapsel 46 = 40 + 2 × 3) und der aktive Raum mit eigenem Schatten (`--casora-nav-tab-active-shadow`) bleiben wie
+entschieden; Kachelkreis Tablet 38 / Handy 42 (dk-05); Uhr 16 (A-11); Studio-Werkzeugleiste (29 breit, Radius 11)
+und weitere ~120 feste Radien im Studio sind noch nicht umgestellt (Liste im Bericht um-tokens).
+
 ## 1. Radien
 
 Gilt (gemessen, Kern-Popups halten das zu 98–100 %):
@@ -40,7 +59,7 @@ Gilt (gemessen, Kern-Popups halten das zu 98–100 %):
 | Stufe | Wert | Wo | Variable |
 |---|---|---|---|
 | Fenster | 44 px | Popup/Sheet | `--casora-popup-radius` |
-| Fläche | 32 px (Handy 30) | Kachel, Szenen-Kachel 30 | `--ha-card-border-radius`, `--casora-tile-radius-phone`, `--casora-scene-tile-radius` |
+| Fläche | 32 px (auch Handy und Szenen-Kachel, seit um-tokens) | Kachel, Szenen-Kachel, Studio-Karte | `--casora-r-surface` (über `--ha-card-border-radius`, `--casora-tile-radius-phone`, `--casora-scene-tile-radius`) |
 | Zeile | 24 px | Zeilen-Platte im Popup, Menüzeile | `--casora-popup-row-radius` |
 | Element | 18 px | Segment, Feld in einer Zeile | `--ha-border-radius-lg` |
 | klein | 12 px | Eingabe, Tooltip | – |
@@ -50,15 +69,17 @@ Gilt (gemessen, Kern-Popups halten das zu 98–100 %):
 Regel **konzentrisch**: innerer Radius = äußerer Radius − Abstand (±2 px). Bei Pillen gilt die halbe
 Höhe: `min(Radius, Höhe/2)`. Beispiel Handy-Leiste: Leiste 60/Radius 30, Polster 6, Taste 48/Radius 24 ✓.
 
-Bekannte Abweichungen (nicht nachbauen): Pulse-Popup setzt `--casora-popup-row-radius: 26px`, Glocke
-Fenster 28 / Zeile 18 bei 8 px Rand (konzentrisch wäre 20), Kamera-Bildplatte 28, HA-Dialog 36.
+Bekannte Abweichungen (nicht nachbauen): Pulse-Popup setzt `--casora-popup-row-radius: 26px`, Kamera-Bildplatte 28,
+HA-Dialog 36. (Glocke/⋯-Menü 28 sind seit um-tokens 34 wie das Räume-Blatt.)
 
 Gilt (DP-16, entschieden 10.10.2026, „Zeilen konzentrisch“): Popup-Zeile 60 hoch, Radius 24, Symbol-Kachel
 36/r12 mit 12 px Rand ringsum → 12 + 12 = 24 konzentrisch. Variablen im Popup-Rahmen: `--casora-soft-row-h`,
 `--casora-soft-row-pad`, `--casora-soft-icon-size`, `--casora-soft-icon-radius`.
 
 **Entschieden 1.3 (dk-10):** Räume-/Szenen-Blatt am Handy Radius **34** = Zeilen-Pille 26 + Listenrand 8
-(konzentrisch, `04-navigation.js`).
+(konzentrisch, `04-navigation.js`). **Seit um-tokens für alle Menüs** (Glocke, ⋯, Raumleisten-Menü, Welle):
+`--casora-menu-radius` = `--casora-menu-row-radius` (Kreis 36 / 2 + Rand 8 = 26) + Rand 8. Ein Fenster mit
+Fläche 32 ginge nicht konzentrisch auf (32 − 8 = 24 ≠ 26).
 
 ## 2. Abstände
 
@@ -90,9 +111,9 @@ Gilt: nur Theme-Variablen, kein neues `box-shadow: 0 … rgba(…)` im Code.
 
 | Stufe | Variable |
 |---|---|
-| Ruhe (Kachel, Platte) | `--button-card-box-shadow`, Handy `--button-card-box-shadow-mobile` |
-| gehoben (aktiv / Hover) | `--button-card-box-shadow-active`, `--button-card-box-shadow-hover` |
-| schwebend (Popup, Menü, Glocke) | `--dialog-box-shadow`, `--casora-window-shadow`, `--casora-mnav-menu-shadow` |
+| Ruhe (Kachel, Platte, Leiste, Badge) | `--casora-shadow-rest` – `--button-card-box-shadow(-mobile)`, `--casora-pill-rim`, `--ha-card-box-shadow` zeigen darauf |
+| gehoben (aktiv / Hover) | `--casora-shadow-raised` – `--button-card-box-shadow-active(-mobile)`, `--button-card-box-shadow-hover` |
+| schwebend (Popup, Menü, Glocke) | `--casora-shadow-float` – `--casora-window-shadow`, `--casora-notify-shadow`, `--casora-mnav-menu-shadow` (`--dialog-box-shadow` hat denselben Wert) |
 | Farbe (Ring, Hauptknopf) | `--casora-lps-ring-shadow`, `--casora-soft-media-play-shadow` |
 | Studio | `--casora-studio-shadow` |
 
@@ -175,7 +196,7 @@ Zustand selbst kennt, setzt ihn über `window.casoraRingHue(src, key)` (siehe Bl
 ## 6. Symbolkreise
 
 Gilt: Popup-Kopf-Kachel 56 (Handy 48) · Kachelkreis 44 (Tablet 38, Handy 42) · Zeilen-Kachel im Popup 36 ·
-Badge 28–30 · Knopf 48 · Status 22 · Menü 32 (`--casora-menu-ic-size`). Symbol ≈ 50 % der Fläche. In Popups
+Badge 28–30 · Knopf 48 · Status 22 · Menü 36 (`--casora-menu-ic-size` = `--casora-ic-row`, seit um-tokens auch im Raumleisten-Menü). Symbol ≈ 50 % der Fläche. In Popups
 sind Symbole seit 1.3 abgerundete Quadrate (siehe § 0), auf der Startseite noch Kreise.
 Eigene SVG-Symbole über `mask-image` (`/casora_assets/icons/<name>.svg`), neue Namen in
 `CASORA_EXTRA_ICONS` (`casora-panel-types.js`) eintragen.
@@ -193,7 +214,9 @@ Gilt:
 - **Schieber** `cubic-bezier(.36,0,.16,1)` 360 ms – Segment-Markierung, Breiten.
 - **Rückmeldung** 160 ms `ease` – Farbe, Hover.
 - Immer `@media (prefers-reduced-motion: reduce)` → keine Bewegung (Beispiel Pulse-Popup-Stil).
-- Keine neuen Kurven (heute 47 Fremdkurven, Studio `(.32,.72,0,1)`, Handy-Federn – Altlast).
+- Keine neuen Kurven. Seit um-tokens nehmen Kacheln, Badges, Menüs, Leisten und Studio-CSS die Token-Kurven
+  (`var(--casora-ease-enter, <alter Wert>)`); Federn/Studio-Kurve gibt es nur noch als Rückfallwert (Hemma) und in
+  `element.animate()`-Aufrufen (dort geht keine CSS-Variable).
 
 > **OFFEN – Entscheidung Maintainer (Popup-Einblendung, Backlog):** Optionen 1/2/3 aus dem Backlog,
 > noch nicht gewählt.
@@ -213,8 +236,9 @@ Gilt:
 > **OFFEN – Entscheidung Maintainer (dk-13, Druck bei Badges):** A: wie Kacheln ohne sichtbaren Druck
 > (nur Haptik) / B: alle Badges Platte .07→.11 beim Drücken. Heute färbt nur das Einzel-Sicherheits-Badge.
 
-Gilt (Druck-Skala, entschieden): `scale(var(--casora-press-scale, .97))` auf Tasten – in Popups umgestellt;
-Kacheln/Menüs/Studio ziehen nach (heute dort noch .86–.985).
+Gilt (Druck-Skala, entschieden): `scale(var(--casora-press-scale, .97))` auf Tasten – Popups, Menüzeilen (Räume/Szenen
+am Handy, „Alles gelesen“), Tasten der Handy-Leiste, Zurück-Knopf der Handy-Raumseite, Szenen-Kacheln, Studio-Knöpfe.
+Kacheln selbst haben weiter keinen Druck (Regel oben).
 
 ## 9. Aktive Zeilen und Auswahllisten
 

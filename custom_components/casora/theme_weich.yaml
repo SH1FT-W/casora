@@ -46,9 +46,10 @@ Casora:
   state-icon-active-color: rgb(78,158,149)
 
   # --- Rundungen: überall großzügiger ---
-  ha-card-border-radius: 32px
+  # 1.3 Tokens überall (um-tokens): Radien/Schatten/Schrift der Kacheln, Badges, Menüs und Leisten aus den Tokens oben.
+  ha-card-border-radius: var(--casora-r-surface)
   ha-dialog-border-radius: 36px
-  casora-scene-tile-radius: 30px
+  casora-scene-tile-radius: var(--casora-r-surface)
   # Szenen-Knöpfe (casora_scene_core) wie die übrigen Weich-Kacheln (04.10.2026): dunkle Schrift,
   # Symbol im Kreis – aus neutral, aktiv in der Szenenfarbe mit hellem Symbol.
   casora-scene-off-name: var(--casora-entity-name)
@@ -63,19 +64,21 @@ Casora:
   casora-scene-name-weight: 700
   # Chip-Reihen am Handy (Raum-Chips Temperatur/Luftfeuchtigkeit/Licht, Klima/Sicherheit/Energie):
   # Pillen mit gleichmäßig 8 px Abstand (Standard ohne Pillen: 16 px).
-  casora-mobile-chip-gap: 8px
+  casora-mobile-chip-gap: var(--casora-space-2)
   wa-border-radius-m: 28px
   ha-border-radius-lg: 18px
   # Nicht in theme.yaml, aber vom Code mit Fallback gelesen (casora-core.js/smart-row.js):
-  casora-popup-radius: 44px
-  casora-popup-row-radius: 24px
+  casora-popup-radius: var(--casora-r-window)
+  casora-popup-row-radius: var(--casora-r-row)
   # Lange Popups (Batterien, Jalousien): unten 36px Luft und ein Verlauf in Sheet-Farbe statt dunkel (Audit M3)
   casora-popup-content-pad-bottom: 36px
   casora-popup-more-fade: var(--casora-dialog-bg)
-  casora-tile-radius-phone: 30px
+  # Handy-Kachel 62 hoch: Fläche 32 rundet als Pille (31) – konzentrisch zum Kreis 42 mit 10 Rand (dk-05).
+  casora-tile-radius-phone: var(--casora-r-surface)
   # dk-05 (1.3): Symbolkreis ringsum gleich – Desktop/Tablet oben wie links (Innenabstand), Handy 10/10.
   casora-tile-icon-mt-desktop: 0px
-  casora-entity-inner-pad-mobile: 10px
+  casora-entity-inner-pad-tablet: var(--casora-space-5)   # 1.3 Tokens: 20 wie Desktop (vorher 18, nicht im 4er-Raster)
+  casora-entity-inner-pad-mobile: 10px   # dk-05: bleibt 10 (Kreis 42 in 62 hoher Kachel ringsum gleich)
 
   # --- Wenig Glas: Blur nur noch als Hauch ---
   ha-card-backdrop-filter: blur(10px) saturate(1.05)
@@ -144,6 +147,7 @@ Casora:
   casora-ease-slide: cubic-bezier(.36,0,.16,1)
   casora-dur-slide: 360ms
   casora-dur-feedback: 160ms
+  casora-ease-feedback: ease   # Rückmeldung (Farbe, Hover, Druck) – keine dritte Kurve
   # Druck auf Tasten
   casora-press-scale: .97
 
@@ -195,23 +199,29 @@ Casora:
   # A-06: Kachel-Typo – Name 700, Status 500 und kleiner
   casora-entity-name-weight: 700
   casora-entity-state-weight: 500
-  casora-entity-state-font-desktop: calc(var(--casora-u, 10px) * 1.45)
+  casora-entity-state-font-desktop: var(--casora-fs-value)   # 1.3 Tokens: 14 statt 14,5 (keine halben px)
   # Tablet (07.10.2026): Zustände 14 px statt 12,5/13 – am iPad las sich Kleingedrucktes schwer.
-  casora-entity-state-font-tablet: 14px
-  casora-entity-state-font-tablet-lg: 14px
-  casora-entity-name-font-mobile: 14px
-  casora-entity-state-font-mobile: 12px
+  casora-entity-state-font-tablet: var(--casora-fs-value)
+  casora-entity-state-font-tablet-lg: var(--casora-fs-value)
+  casora-entity-name-font-mobile: var(--casora-fs-value)
+  casora-entity-state-font-mobile: var(--casora-fs-label)
   casora-entity-text-line-height: 1.3
   # A-11: Uhr ruhiger; 05.10.2026 minimal größer (15 → 16) passend zum größeren Hero-Wetter
   casora-clock-font-size: 16px
   casora-clock-letter-spacing: 0px
   casora-clock-transform: none
   # A-09: Raumleiste 14/600, Pfeil-Kreis, Verlauf endet vor dem Pfeil
-  casora-nav-label-size-tablet: 14px
+  casora-nav-label-size-tablet: var(--casora-fs-value)
   casora-nav-label-pad-x-tablet: 14px
   # D12 (1.2): weiße Pille ringsum 4 eingerückt (01-basis setzt sonst seitlich 6 für alle Designs)
   casora-nav-pill-inset-x-tablet: 4px
   # D-14: breitere Ausblendung + Einrasten auf Raumanfänge – keine Wortreste („ur“) neben dem Pfeil
+  # 1.3 Tokens: Markierung der Raumleiste = Schieber (Kurve + Dauer), Badges: Breite = Schieber, Auftritt = Auftritt.
+  casora-nav-indicator-ease: var(--casora-ease-slide)
+  casora-nav-indicator-duration: var(--casora-dur-slide)
+  casora-badge-flip-ease: var(--casora-ease-slide)
+  casora-badge-flip-dur: var(--casora-dur-slide)
+  casora-badge-enter-ease: var(--casora-ease-enter)
   casora-nav-fade-solid: 104px
   casora-nav-fade-clear: 40px
   # D-09 (06.10.2026): kein Ring – nur bei Tastatur ist die Schrift unterstrichen
@@ -231,7 +241,7 @@ Casora:
   casora-lps-chip-fill: var(--casora-soft-control-fill)
   casora-climate-seg-h: 46px   # 1.2 (P4): Modusknöpfe wie alle Auswahlfelder (hui-sg 46/18); vorher 58 wie die Zeilen daneben
   casora-weather-precip-fs: 12px   # D-18: Regen-% im Wetter-Popup 12 statt 11 px
-  casora-mobile-np-title-size: 17px   # D-12: „Aktuelle Wiedergabe“ so groß wie „Favoriten“
+  casora-mobile-np-title-size: var(--casora-fs-heading)   # D-12: „Aktuelle Wiedergabe“ so groß wie „Favoriten“
   casora-category-title-weight: 800   # D-12: Kategorie-Titel („Klima“) wie Seitentitel „Zuhause“
   # Kachelreihe (smart-row): Pfeil links/rechts, solange dort noch Kacheln liegen (Audit H2)
   casora-row-arrows: block
@@ -295,13 +305,15 @@ Casora:
   # Menüs (Navbar Räume/Szenen, ⋯-Menü, Raumleisten-Menü): Symbol im Ton auf 14-%-Kreis, Zeilen 44 hoch
   casora-menu-tone-mix: 100%
   casora-menu-ic-display: flex
-  # Kopfleiste D (1.0.7): Symbolkreise 32 mit leichter Tönung, Zeilen 44, Radius 24
-  casora-menu-ic-size: 32px
+  # Kopfleiste D (1.0.7): Symbolkreise mit leichter Tönung; seit 1.3 (Tokens) Kreis 36, Zeile 52, wie Glocke/⋯/Räume
+  casora-menu-ic-size: var(--casora-ic-row)
   casora-menu-ic-fill: 12%
-  casora-menu-ic-col: 32px
-  casora-menu-ic-gap: 12px
-  casora-menu-row-h: 44px
-  casora-menu-row-pad: 0 16px 0 7px
+  casora-menu-ic-col: var(--casora-ic-row)
+  casora-menu-ic-gap: var(--casora-space-3)
+  casora-menu-row-h: calc(var(--casora-ic-row) + var(--casora-space-2) * 2)
+  casora-menu-row-pad: 0 var(--casora-space-4) 0 var(--casora-space-2)
+  casora-menu-pad: var(--casora-space-2)
+  casora-menu-radius-desktop: var(--casora-menu-radius)
   casora-menu-item-pad: 6px 16px 6px 8px
   # Räume-/Szenen-Menü der Handy-Leiste (07.10.2026): Markierung der offenen Zeile ringsum gleich
   # weit vom Menürand, Ecken konzentrisch zur Menü-Rundung (Handy-Radius minus Abstand), Symbolkreis
@@ -309,27 +321,30 @@ Casora:
   casora-mnav-menu-pad: 8px
   casora-mnav-item-radius: calc(var(--casora-tile-radius-phone, 30px) - var(--casora-mnav-menu-pad, 8px))
   casora-mnav-item-pad: 0 18px 0 12px
-  casora-menu-item-radius: 16px
-  casora-menu-radius: 24px
+  # 1.3 Tokens: Menüs (Glocke, ⋯, Räume/Szenen, Welle) konzentrisch aus Symbolkreis + Rand –
+  # Zeile = Kreis/2 + Rand (18 + 8 = 26), Fenster = Zeile + Listenrand (26 + 8 = 34).
+  casora-menu-row-radius: calc(var(--casora-ic-row) / 2 + var(--casora-space-2))
+  casora-menu-item-radius: var(--casora-menu-row-radius)
+  casora-menu-radius: calc(var(--casora-menu-row-radius) + var(--casora-space-2))
   casora-menu-item-weight: 600
-  casora-menu-item-size: 15px   # D-12: ⋯-Menü in derselben Größe wie das Räume-Menü
+  casora-menu-item-size: var(--casora-fs-row)   # D-12: ⋯-Menü in derselben Größe wie das Räume-Menü
   casora-menu-item-dim: 1
   casora-menu-icons-filled: 1
   # A-19: Mitteilungen – Zeilen wie Popup-Zeilen, Aktion in Ton
   # D7 (1.2): Zurück-Kreis am Handy 48 wie die Kopf-Pille rechts (oben 4, gleiche Mittellinie)
-  casora-back-size: 48px
-  casora-notify-row-radius: 18px
+  casora-back-size: var(--casora-ic-button)
+  casora-notify-row-radius: var(--casora-menu-row-radius)
   casora-notify-pad: 0 8px 8px
   casora-notify-pad-solo-top: 8px
   casora-notify-action: var(--casora-ton-ink)
   # D1 (1.2): ein Rahmen für alle schwebenden Fenster (Glocke, Welle, ⋯-Menü, Handy-Räume/Szenen):
   # Radius 28, deckende Fläche, ein Schatten (je Modus unten). casoraMenuGlass.frame() liest die Tokens.
-  casora-window-radius: 28px
+  casora-window-radius: var(--casora-menu-radius)
   casora-window-pane: var(--casora-menu-pane-webkit)
   # A-22: Handy-Startseite – Titel 34/800, Überschrift 17, Kacheln 62 hoch
-  hero-title-size-mobile: 34px
+  hero-title-size-mobile: var(--casora-fs-page)
   casora-mobile-title-ls: -1.1px
-  casora-mobile-section-size: 17px
+  casora-mobile-section-size: var(--casora-fs-heading)
   casora-tile-row-h-mobile: 62px
   # Kopfleiste D „Ruhig“ (1.0.7): Desktop-Kreise 40 mit 8 Abstand (mittig zur Raum-Leiste, die
   # Mitte bleibt über casora-chrome-row-center-desktop), Handy-Kapsel 48 hoch, Trennstrich kürzer,
@@ -437,17 +452,17 @@ Casora:
   # Menüs aus der Leiste (Räume, Szenen) wie die Menüs der Desktop-Raumleiste: gleiche Fläche und
   # Schatten, normale Schrift, aktiver Eintrag in hellem Sand.
   casora-mnav-menu-pane: var(--casora-menu-pane)
-  casora-mnav-menu-shadow: var(--casora-elevation-floating, 0 8px 20px rgba(0,0,0,0.13))
+  casora-mnav-menu-shadow: var(--casora-shadow-float)
   casora-mnav-on-fill: var(--casora-nav-active-fill)
   casora-mnav-fg-on: var(--casora-menu-fg, #fff)
   # D-12: Räume-Menü wie das ⋯-Menü (15 px / 600, aktiv 700) statt 15/400
   casora-mnav-item-weight: 600
   casora-mnav-item-on-weight: 700
   # A-07: Kachelabstand Desktop/Tablet (war 16), Handy-Raster (Standard 8) – minimal enger
-  casora-tile-row-gap-desktop: 12px
-  casora-tile-row-gap-mobile: 8px
+  casora-tile-row-gap-desktop: var(--casora-space-3)
+  casora-tile-row-gap-mobile: var(--casora-space-2)
   # Handy-Raum: Abstand Badge-Reihe -> erste Kachelreihe (Standard 24px), 5x Kachelraster
-  casora-room-badges-gap-mobile: 40px
+  casora-room-badges-gap-mobile: var(--casora-space-10)
   # A-03: Kachel-Schalter wie im Licht-Popup (gefüllte Spur, weißer Knopf)
   casora-toggle-style: solid
   casora-toggle-hover-filter: brightness(1.04)
@@ -578,10 +593,10 @@ Casora:
       # Menü-Glas (casoraMenuGlass: Navbar, ⋯-Menüs): Creme statt dunkel
       casora-menu-pane: rgba(251,248,243,0.96)
       # Mitteilungszentrum ohne Glas-Rand (Rim oben/unten), weicher Schatten wie die Karten
-      casora-notify-shadow: 0 1px 2px rgba(90,70,50,0.06), 0 14px 34px -12px rgba(90,70,50,0.26)
+      casora-notify-shadow: var(--casora-shadow-float)   # 1.3 Tokens (vorher 0 1px 2px rgba(90,70,50,0.06), 0 14px 34px -12px rgba(90,70,50,0.26))
       # D-01: am Handy (WebKit) ganz deckend – 0,97 ließ Text dahinter durchscheinen (Nutzertest 06.10.2026)
       casora-menu-pane-webkit: rgb(248,244,237)
-      casora-window-shadow: 0 18px 44px -14px rgba(60,40,20,0.35)
+      casora-window-shadow: var(--casora-shadow-float)   # 1.3 Tokens (vorher 0 18px 44px -14px rgba(60,40,20,0.35))
       casora-menu-fg: rgba(46,39,33,0.95)
       # Kopfleiste D (1.0.7): Menü ohne Randlinie und Glanzkante
       casora-menu-rim-top: transparent
@@ -600,7 +615,7 @@ Casora:
       casora-nav-tab-active-shadow: 0 1px 3px rgba(90,70,50,0.14), 0 10px 24px -12px rgba(120,85,50,0.30)
       casora-pill-fill: rgba(251,248,243,0.80)
       # Kopfleiste D (1.0.7): ohne Randlinie, nur weicher Schatten; Desktop-Kreise gleich
-      casora-pill-rim: 0 1px 2px rgba(90,70,50,0.05), 0 8px 24px -16px rgba(90,64,40,0.30)
+      casora-pill-rim: var(--casora-shadow-rest)   # 1.3 Tokens (vorher 0 1px 2px rgba(90,70,50,0.05), 0 8px 24px -16px rgba(90,64,40,0.30))
       casora-chrome-shadow: var(--casora-pill-rim)
       casora-popup-tiles-text-primary: 'rgba(58,50,43,0.95)'
       casora-popup-tiles-text-secondary: var(--casora-text-2)
@@ -662,13 +677,13 @@ Casora:
       app-header-background-color: rgba(244,239,231,0.85)
 
       # Weiche Schatten statt Glaskanten
-      ha-card-box-shadow: 0 1px 2px rgba(90,70,50,0.05), 0 12px 32px -14px rgba(90,70,50,0.22)
-      button-card-box-shadow: 0 1px 2px rgba(90,70,50,0.05), 0 8px 22px -12px rgba(90,70,50,0.18)
-      button-card-box-shadow-mobile: 0 6px 16px -10px rgba(90,70,50,0.18)
-      button-card-box-shadow-active: 0 2px 4px rgba(90,70,50,0.06), 0 18px 40px -14px rgba(120,85,50,0.32)
-      button-card-box-shadow-active-mobile: 0 10px 24px -12px rgba(120,85,50,0.30)
-      button-card-box-shadow-hover: 0 2px 4px rgba(90,70,50,0.06), 0 16px 34px -14px rgba(90,70,50,0.26)
-      button-card-box-shadow-hover-mobile: 0 6px 16px -10px rgba(90,70,50,0.18)
+      ha-card-box-shadow: var(--casora-shadow-rest)   # 1.3 Tokens (vorher 0 1px 2px rgba(90,70,50,0.05), 0 12px 32px -14px rgba(90,70,50,0.22))
+      button-card-box-shadow: var(--casora-shadow-rest)   # 1.3 Tokens (vorher 0 1px 2px rgba(90,70,50,0.05), 0 8px 22px -12px rgba(90,70,50,0.18))
+      button-card-box-shadow-mobile: var(--casora-shadow-rest)   # 1.3 Tokens (vorher 0 6px 16px -10px rgba(90,70,50,0.18))
+      button-card-box-shadow-active: var(--casora-shadow-raised)   # 1.3 Tokens (vorher 0 2px 4px rgba(90,70,50,0.06), 0 18px 40px -14px rgba(120,85,50,0.32))
+      button-card-box-shadow-active-mobile: var(--casora-shadow-raised)   # 1.3 Tokens (vorher 0 10px 24px -12px rgba(120,85,50,0.30))
+      button-card-box-shadow-hover: var(--casora-shadow-raised)   # 1.3 Tokens (vorher 0 2px 4px rgba(90,70,50,0.06), 0 16px 34px -14px rgba(90,70,50,0.26))
+      button-card-box-shadow-hover-mobile: var(--casora-shadow-rest)   # 1.3 Tokens (vorher 0 6px 16px -10px rgba(90,70,50,0.18))
       dialog-box-shadow: 0 40px 90px -30px rgba(90,65,40,0.40), 0 10px 28px rgba(90,70,50,0.10)
       mdc-dialog-scrim-color: rgba(60,48,38,0.26)
 
@@ -1009,9 +1024,9 @@ Casora:
       casora-mnav-menu-bg: rgba(46,42,38,0.95)
       # Menü-Glas (Mitteilungen, ⋯-Menü) fast deckend, sonst scheint die Kopfzeile durch
       casora-menu-pane: rgba(46,42,38,0.96)
-      casora-notify-shadow: 0 14px 34px -12px rgba(0,0,0,0.60)
+      casora-notify-shadow: var(--casora-shadow-float)   # 1.3 Tokens (vorher 0 14px 34px -12px rgba(0,0,0,0.60))
       casora-menu-pane-webkit: rgb(42,38,34)
-      casora-window-shadow: 0 14px 34px -12px rgba(0,0,0,0.60)
+      casora-window-shadow: var(--casora-shadow-float)   # 1.3 Tokens (vorher 0 14px 34px -12px rgba(0,0,0,0.60))
       casora-mnav-over: rgba(40,36,32,0.94)
       casora-nav-border: rgba(255,240,220,0.06)
       casora-nav-active-fill: rgba(242,232,218,0.14)
@@ -1020,7 +1035,7 @@ Casora:
       casora-nav-tab-active-shadow: 0 1px 3px rgba(0,0,0,0.25)
       casora-pill-fill: rgba(46,42,38,0.80)
       # Dunkel ohne hellen Ring (Navbar Desktop, Leiste oben rechts), nur Schatten (04.10.2026)
-      casora-pill-rim: 0 8px 24px -16px rgba(0,0,0,0.55)
+      casora-pill-rim: var(--casora-shadow-rest)   # 1.3 Tokens (vorher 0 8px 24px -16px rgba(0,0,0,0.55))
       casora-chrome-shadow: var(--casora-pill-rim)
       casora-popup-tiles-fill: rgba(255,240,220,0.05)
       casora-popup-tiles-text-primary: 'rgba(242,235,225,0.96)'
@@ -1066,13 +1081,13 @@ Casora:
       app-header-background-color: rgba(36,33,30,0.85)
 
       # Schatten: tief und weich, keine Lichtkanten
-      ha-card-box-shadow: 0 14px 34px -16px rgba(0,0,0,0.55)
-      button-card-box-shadow: 0 10px 26px -14px rgba(0,0,0,0.55)
-      button-card-box-shadow-mobile: 0 8px 18px -12px rgba(0,0,0,0.50)
-      button-card-box-shadow-active: 0 18px 40px -14px rgba(0,0,0,0.60), 0 0 0 1px rgba(255,240,220,0.05)
-      button-card-box-shadow-active-mobile: 0 10px 24px -12px rgba(0,0,0,0.55)
-      button-card-box-shadow-hover: 0 16px 34px -14px rgba(0,0,0,0.58)
-      button-card-box-shadow-hover-mobile: 0 8px 18px -12px rgba(0,0,0,0.50)
+      ha-card-box-shadow: var(--casora-shadow-rest)   # 1.3 Tokens (vorher 0 14px 34px -16px rgba(0,0,0,0.55))
+      button-card-box-shadow: var(--casora-shadow-rest)   # 1.3 Tokens (vorher 0 10px 26px -14px rgba(0,0,0,0.55))
+      button-card-box-shadow-mobile: var(--casora-shadow-rest)   # 1.3 Tokens (vorher 0 8px 18px -12px rgba(0,0,0,0.50))
+      button-card-box-shadow-active: var(--casora-shadow-raised)   # 1.3 Tokens (vorher 0 18px 40px -14px rgba(0,0,0,0.60), 0 0 0 1px rgba(255,240,220,0.05))
+      button-card-box-shadow-active-mobile: var(--casora-shadow-raised)   # 1.3 Tokens (vorher 0 10px 24px -12px rgba(0,0,0,0.55))
+      button-card-box-shadow-hover: var(--casora-shadow-raised)   # 1.3 Tokens (vorher 0 16px 34px -14px rgba(0,0,0,0.58))
+      button-card-box-shadow-hover-mobile: var(--casora-shadow-rest)   # 1.3 Tokens (vorher 0 8px 18px -12px rgba(0,0,0,0.50))
       dialog-box-shadow: 0 40px 90px -30px rgba(0,0,0,0.70), inset 0 1px 0 rgba(255,240,220,0.05)
       mdc-dialog-scrim-color: rgba(14,12,10,0.45)
 

@@ -1205,16 +1205,17 @@ window.casoraMenuGlass = {
     el.style.transformOrigin = up ? 'bottom right' : 'top right';
     el.style.transform = 'scale(0.92) translateY(' + (up ? 8 : -8) + 'px)';
     requestAnimationFrame(function () {
-      el.style.transition = 'opacity 200ms cubic-bezier(0.32,0.72,0,1),'
-        + ' transform 260ms cubic-bezier(0.32,0.72,0,1)';
+      /* 1.3 Tokens: Auftritt-Kurve/-Dauer aus dem Design (Casora/Nebel), sonst wie bisher. */
+      el.style.transition = 'opacity 200ms var(--casora-ease-enter, cubic-bezier(0.32,0.72,0,1)),'
+        + ' transform var(--casora-dur-enter, 260ms) var(--casora-ease-enter, cubic-bezier(0.32,0.72,0,1))';
       el.style.transform = 'scale(1) translateY(0)';
       el.style.opacity = '1';
     });
   },
 
   exit: function (el, done) {
-    el.style.transition = 'opacity 150ms cubic-bezier(0.4,0,1,1),'
-      + ' transform 170ms cubic-bezier(0.4,0,1,1)';
+    el.style.transition = 'opacity 150ms var(--casora-ease-slide, cubic-bezier(0.4,0,1,1)),'
+      + ' transform 170ms var(--casora-ease-slide, cubic-bezier(0.4,0,1,1))';
     el.style.transform = 'scale(0.95) translateY(-6px)';
     el.style.opacity = '0';
     setTimeout(function () { if (done) done(); }, 190);
@@ -4502,7 +4503,7 @@ window.casoraMenuGlass = {
       menu._owner = btn;
       Object.assign(menu.style, {
         position: 'fixed', zIndex: '99999', boxSizing: 'border-box',
-        padding: '6px',
+        padding: 'var(--casora-menu-pad, 6px)',
         maxHeight: 'calc(100vh - 140px)', overflowY: 'auto', overflowX: 'hidden',
         width: 'max-content', maxWidth: 'calc(100vw - 24px)',
         display: 'flex', flexDirection: 'column', alignItems: 'stretch', rowGap: '2px',
@@ -4816,7 +4817,7 @@ window.casoraMenuGlass = {
           -webkit-mask: url("${CHEVRON}") no-repeat center / contain;
           mask: url("${CHEVRON}") no-repeat center / contain;
           transform: rotate(0deg);
-          transition: transform 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+          transition: transform 0.34s var(--casora-ease-enter, cubic-bezier(0.32, 0.72, 0, 1));
         }
 
         .route[data-has-popup][data-popup-open] .label::after {
@@ -11532,18 +11533,21 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
          (36 − 19) / 2 = 8,5 rastet Chrome auf 9 – jedes Symbol saß ½ px rechts unterhalb der Mitte. */
       wst.textContent = '.casora-window.casora-notify-menu{--casora-soft-icon-size:36px;}'
         + W + '.hui-plate{gap:0!important;}'
+        /* 1.3 Tokens: Zeile = Kreis/2 + Rand (konzentrisch zum Fenster), Abstände im 4er-Raster. */
         + W + '.hui-srow{background:transparent!important;box-shadow:none!important;min-height:52px!important;'
-        +   'padding:8px 14px 8px 8px!important;border-radius:26px!important;}'
+        +   'padding:var(--casora-space-2,8px) var(--casora-space-4,14px) var(--casora-space-2,8px) var(--casora-space-2,8px)!important;'
+        +   'border-radius:var(--casora-menu-row-radius,26px)!important;}'
         + W + '.hui-srow.hui-tap:active{background:var(--casora-menu-hover, rgba(140,115,90,0.08))!important;}'
         + '@media (hover:hover){' + W + '.hui-srow.hui-tap:hover{background:var(--casora-menu-hover, rgba(140,115,90,0.08))!important;}}'
-        + W + '.hui-inner>:first-child{width:36px!important;height:36px!important;min-width:36px;}'
-        + W + '.hui-inner>:nth-child(2)>:first-child{font-size:15px!important;font-weight:600!important;}'
-        + W + '.hui-sub{font-size:13px!important;}'
-        + W + '.casora-notify-read{display:block;margin:4px auto 12px;border:0;cursor:pointer;width:max-content;'
-        +   'padding:8px 16px;border-radius:999px;background:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));'
-        +   'font:600 13px/16px var(--primary-font-family, system-ui);letter-spacing:-0.01em;'
-        +   'color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));}'
-        + W + '.casora-notify-read:active{transform:scale(.97);}';
+        + W + '.hui-inner>:first-child{width:var(--casora-ic-row,36px)!important;height:var(--casora-ic-row,36px)!important;min-width:var(--casora-ic-row,36px);}'
+        + W + '.hui-inner>:nth-child(2)>:first-child{font-size:var(--casora-fs-row,15px)!important;font-weight:600!important;}'
+        + W + '.hui-sub{font-size:var(--casora-fs-sub,13px)!important;}'
+        + W + '.casora-notify-read{display:block;margin:var(--casora-space-1,4px) auto var(--casora-space-3,12px);border:0;cursor:pointer;width:max-content;'
+        +   'padding:var(--casora-space-2,8px) var(--casora-space-4,16px);border-radius:var(--casora-r-pill,999px);background:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));'
+        +   'font:600 var(--casora-fs-sub,13px)/16px var(--primary-font-family, system-ui);letter-spacing:-0.01em;'
+        +   'color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));'
+        +   'transition:transform var(--casora-dur-feedback,160ms) var(--casora-ease-feedback,ease);}'
+        + W + '.casora-notify-read:active{transform:scale(var(--casora-press-scale,.97));}';
       (document.head || document.documentElement).appendChild(wst);
     }
 
