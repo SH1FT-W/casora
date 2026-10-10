@@ -15517,6 +15517,29 @@ class CasoraPanel extends HTMLElement {
       ev.returnValue = "";
     };
     this._gOn(window, "beforeunload", this._leaveGuard);
+    // per-08 (10.10.2026): Verlassen über die HA-Seitenleiste lud nichts neu – kein beforeunload, die
+    // Änderung war ohne Rückfrage weg. Jetzt dieselbe Rückfrage wie beim Verlassen aus dem Studio.
+    this._leaveNav = (ev) => {
+      if (this._leaving || this._leaveAsking || !this.isConnected || !this._state || !this._isDirty()) return;
+      if (ev.button || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+      const path = ev.composedPath ? ev.composedPath() : [];
+      if (!path.some((n) => n && n.localName === "ha-sidebar")) return;
+      const link = path.find((n) => n && n.getAttribute && n.getAttribute("href"));
+      const href = link && link.getAttribute("href");
+      if (!href || href.charAt(0) !== "/" || href === location.pathname) return;
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      this._leaveAsking = true;
+      this._writeDraft();
+      this._leaveStudioOk().then((ok) => {
+        this._leaveAsking = false;
+        if (!ok) return;
+        this._leaving = true;
+        history.pushState(null, "", href);
+        window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
+      });
+    };
+    this._gOn(window, "click", this._leaveNav, true);
   }
 
   _placeRooms(strip) {
@@ -15907,6 +15930,8 @@ class CasoraPanel extends HTMLElement {
         if (this._isHomeRoom(i)) setHomeName(r, name, this._hass); else r.name = storedRoomName(name, false);
         this._renderTabs();
         this._renderForm();
+        // per-09 (10.10.2026): Vorschau (Raum-Tab, großer Titel) sofort mit dem neuen Namen.
+        this._syncPreview();
         return;
       }
       if (id === "delete") {
