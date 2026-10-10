@@ -121,7 +121,7 @@
       + '.hmn-bar.hmn-ic{width:auto;max-width:calc(100vw - 32px);gap:2px;}'
       + '.hmn-bar.hmn-ic .hmn-btn{flex:none;width:58px;flex-direction:row;gap:10px;padding:0;}'
       + '.hmn-bar.hmn-ic .hmn-btn>span:not(.hmn-bic){display:none;}'
-      + '.hmn-bar.hmn-ic .hmn-bic{display:flex;flex:none;box-sizing:border-box;width:36px;height:36px;border-radius:50%;align-items:center;justify-content:center;'
+      + '.hmn-bar.hmn-ic .hmn-bic{display:flex;flex:none;box-sizing:border-box;width:var(--casora-ic-row, 36px);height:var(--casora-ic-row, 36px);border-radius:50%;align-items:center;justify-content:center;'
       +   'background:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, var(--casora-mnav-fg, currentColor));transition:background .2s ease,color .2s ease;}'
       + '.hmn-bar.hmn-ic .hmn-bic ha-icon{--mdc-icon-size:22px;width:22px;height:22px;color:inherit;}'
       + '.hmn-bar.hmn-ic .hmn-bic .hmn-svg{width:22px;height:22px;color:inherit;background:currentColor;}'
@@ -129,8 +129,11 @@
       +   'background:var(--casora-entity-background-active, var(--casora-mnav-pill, #FFFDF9));color:var(--casora-entity-name-active, var(--casora-mnav-pill-ink, #2E2721));'
       +   'box-shadow:var(--button-card-box-shadow-active-mobile, none);}'
       + '.hmn-bar.hmn-ic .hmn-btn.on .hmn-bic{background:var(--primary-color, #B67A50);color:#fff;}'
-      + '.hmn-bar.hmn-ic .hmn-btn.on>span:not(.hmn-bic){display:block;font-size:15px;font-weight:600;padding:0;letter-spacing:-0.01em;max-width:150px;}'
+      + '.hmn-bar.hmn-ic .hmn-btn.on>span:not(.hmn-bic){display:block;font-size:var(--casora-fs-row, 15px);font-weight:600;padding:0;letter-spacing:-0.01em;max-width:150px;}'
       + '.hmn-bar.hmn-ic .hmn-btn:not(.on):active{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));}'
+      /* 1.3 Tokens: Druck wie alle Tasten (nur Casora/Nebel – Klasse hmn-ic). */
+      + '.hmn-bar.hmn-ic .hmn-btn{transition:background .2s ease,color .2s ease,transform var(--casora-dur-feedback, .16s) var(--casora-ease-feedback, ease);}'
+      + '.hmn-bar.hmn-ic .hmn-btn:active{transform:scale(var(--casora-press-scale, .97));}'
       + '.hmn-bar.hmn-ic .hmn-btn.on:active{filter:brightness(.94);}'
       /* Handy-Leiste B (1.3, nur Casora/Nebel): Glocke und ⋯ (die Kopf-Kapsel samt Halter aus filter-overlay)
          wandern rechts in die Leiste, hinter einen Trenner; oben bleiben nur Titel und Wetter. Alle Tasten
@@ -155,26 +158,27 @@
       /* Schwebend über der Leiste statt ganzflächig (Wunsch 08.10.2026: „wie früher kleiner“): Breite und Höhe
          nach Inhalt (mittig, 260 bis 420 px), ringsum rund, die Leiste bleibt sichtbar darunter. */
       + '.hmn-menu.hmn-sheet{left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom, 0px) * 0.4);margin:0 auto;width:max-content;min-width:260px;max-width:min(420px, calc(100vw - 24px));padding:0;overscroll-behavior:contain;'
-      /* dk-10 (1.3): Radius konzentrisch zur Zeilen-Pille (26) plus Listenrand 8 = 34. */
-      +   'border-radius:34px !important;box-shadow:var(--casora-window-shadow, 0 18px 44px -14px rgba(60,40,20,0.35)) !important;'
+      /* dk-10 (1.3): Radius konzentrisch zur Zeilen-Pille (26) plus Listenrand 8 = 34 – seit den Tokens
+         (um-tokens) aus --casora-menu-radius wie Glocke und ⋯-Menü, Schatten „schwebend“. */
+      +   'border-radius:var(--casora-menu-radius, 34px) !important;box-shadow:var(--casora-window-shadow, 0 18px 44px -14px rgba(60,40,20,0.35)) !important;'
       +   'display:flex;flex-direction:column;overflow:hidden;opacity:0;'
       +   'max-height:min(520px, calc(100vh - max(env(safe-area-inset-top, 0px), 12px) - 150px));'
       +   'max-height:min(520px, calc(100dvh - max(env(safe-area-inset-top, 0px), 12px) - 150px));'
-      +   'transform:translateY(10px) scale(.98);transform-origin:50% 100%;transition:transform .26s cubic-bezier(.2,.9,.25,1), opacity .18s ease;color:var(--casora-mnav-fg-on, #fff);}'
+      +   'transform:translateY(10px) scale(.98);transform-origin:50% 100%;transition:transform var(--casora-dur-enter, .26s) var(--casora-ease-enter, cubic-bezier(.2,.9,.25,1)), opacity .18s ease;color:var(--casora-mnav-fg-on, #fff);}'
       + '.hmn-menu.hmn-sheet.open{transform:none;opacity:1;}'
       + '.hmn-menu.hmn-sheet.hmn-drag{transition:none;}'
       /* Liste: 10 px Luft zum Blattrand; position:relative, damit offsetTop der Zeilen in der Liste zählt (Mittigstellen). */
       + '.hmn-list{position:relative;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;'
-      +   'padding:8px;box-sizing:border-box;}'
-      + '.hmn-empty{padding:4px 10px 12px;font-size:15px;color:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));}'
+      +   'padding:var(--casora-space-2, 8px);box-sizing:border-box;}'
+      + '.hmn-empty{padding:4px 10px 12px;font-size:var(--casora-fs-row, 15px);color:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));}'
       /* P-V6: Gruppenüberschrift im Szenen-Menü (Raum / Ganzes Haus), eingerückt wie der Zeilentext. */
-      + '.hmn-ghead{padding:10px 14px 4px 16px;font-size:13px;line-height:16px;font-weight:600;letter-spacing:-0.01em;color:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));}'
+      + '.hmn-ghead{padding:var(--casora-space-3, 10px) 14px var(--casora-space-1, 4px) var(--casora-space-4, 16px);font-size:var(--casora-fs-sub, 13px);line-height:16px;font-weight:600;letter-spacing:-0.01em;color:var(--casora-mnav-fg-sub, rgba(255,255,255,0.55));}'
       + '.hmn-ghead:first-child{padding-top:4px;}'
       /* Zeile (Räume und Szenen gleich): Kreis 36 | Name | Zustand rechts. Innenabstand links 8 wie
          Kreis-Radius 18 zur Pille 26; Abstand Kreis–Text ebenfalls 8. */
-      + '.hmn-sheet .hmn-item.hmn-row{grid-template-columns:36px minmax(0,1fr) auto;column-gap:8px;height:52px;min-height:52px;'
-      +   'padding:0 14px 0 8px;border-radius:26px;font-size:15px;line-height:20px;letter-spacing:-0.01em;background:transparent;'
-      +   'font-weight:600;transition:transform .14s ease, background-color .14s ease;}'
+      + '.hmn-sheet .hmn-item.hmn-row{grid-template-columns:var(--casora-ic-row, 36px) minmax(0,1fr) auto;column-gap:var(--casora-space-2, 8px);height:52px;min-height:52px;'
+      +   'padding:0 var(--casora-space-4, 14px) 0 var(--casora-space-2, 8px);border-radius:var(--casora-menu-row-radius, 26px);font-size:var(--casora-fs-row, 15px);line-height:20px;letter-spacing:-0.01em;background:transparent;'
+      +   'font-weight:600;transition:transform var(--casora-dur-feedback, .14s) var(--casora-ease-feedback, ease), background-color var(--casora-dur-feedback, .14s) var(--casora-ease-feedback, ease);}'
       /* Offener Raum = gewählte Popup-Zeile: Weiß mit weichem Schatten, Name/Zustand in den Aktiv-Farben. */
       + '.hmn-sheet .hmn-item.hmn-row.on{font-weight:600;background:var(--casora-entity-background-active, var(--casora-mnav-on-fill, rgba(255,255,255,0.14)));'
       +   'box-shadow:var(--button-card-box-shadow-active-mobile, none);color:var(--casora-entity-name-active, inherit);}'
@@ -182,7 +186,7 @@
          die Regel hatte sie in 1.1.1 auf 40 px Höhe, rund und eingefärbt gezogen (Hotfix 1.1.2).
          Räume: Sand-Kreis mit dunkler Glyphe wie die Popup-Zeilen, Ton nur im offenen Raum.
          Szenen (hmn-tone): Kreis in der Studio-Farbe der Szene (_sceneTone), weiße Glyphe. */
-      + '.hmn-sic{flex:none;box-sizing:border-box;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;'
+      + '.hmn-sic{flex:none;box-sizing:border-box;width:var(--casora-ic-row, 36px);height:var(--casora-ic-row, 36px);border-radius:50%;display:flex;align-items:center;justify-content:center;'
       +   'background:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, currentColor);}'
       + '.hmn-sheet .hmn-item .hmn-sic ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;line-height:0;color:inherit;}'
       + '.hmn-sheet .hmn-item .hmn-sic .hmn-svg{width:20px;height:20px;display:block;background:currentColor;-webkit-mask:var(--hmn-svg) center/contain no-repeat;mask:var(--hmn-svg) center/contain no-repeat;}'
@@ -194,11 +198,11 @@
       + '.hmn-txt{display:flex;flex-direction:column;min-width:0;}'
       + '.hmn-name{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
       /* Zustand rechts als kleiner Wert in Text 2 (wie ein Badge-Wert); im offenen Raum in der Aktiv-Zustandsfarbe. */
-      + '.hmn-sheet .hmn-sub{display:block;min-width:0;max-width:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:16px;font-weight:500;'
-      +   'margin:0 0 0 20px;font-variant-numeric:tabular-nums;color:var(--casora-text-2, var(--casora-mnav-fg-sub, rgba(255,255,255,0.55)));}'
+      + '.hmn-sheet .hmn-sub{display:block;min-width:0;max-width:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--casora-fs-sub, 13px);line-height:16px;font-weight:500;'
+      +   'margin:0 0 0 var(--casora-space-5, 20px);font-variant-numeric:tabular-nums;color:var(--casora-text-2, var(--casora-mnav-fg-sub, rgba(255,255,255,0.55)));}'
       + '.hmn-sheet .hmn-row.on .hmn-sub{color:var(--casora-entity-state-active-color, var(--casora-text-2, inherit));}'
       /* Tipp-Rückmeldung wie die Popup-Zeilen: Fläche hinterlegen und leicht schrumpfen (auch per Klasse, falls :active am Handy nicht greift). */
-      + '.hmn-sheet .hmn-item.hmn-row:active,.hmn-sheet .hmn-item.hmn-row.hmn-press{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));transform:scale(.985);}'
+      + '.hmn-sheet .hmn-item.hmn-row:active,.hmn-sheet .hmn-item.hmn-row.hmn-press{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));transform:scale(var(--casora-press-scale, .985));}'
       + '.hmn-sheet .hmn-item.hmn-row.on:active,.hmn-sheet .hmn-item.hmn-row.on.hmn-press{background:var(--casora-entity-background-active, var(--casora-mnav-on-fill, rgba(255,255,255,0.14)));filter:brightness(.97);}'
       /* D4 (1.2): die weiße Platte heißt nur „hier bist du“ (Räume). Aktive Szenen ohne Platte: Kreis voll in
          der Szenenfarbe, „Aktiv“ rechts im Akzent. */
