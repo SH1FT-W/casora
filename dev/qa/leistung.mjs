@@ -421,12 +421,24 @@ for (const g of GERAETE) {
       }
       if (TEILE.has('update') && i === 0) res.update = await measureUpdates(o.page);
       if (TEILE.has('leck') && i === 0 && o.cdp) {
+        // Popup 10× öffnen/schließen. Lebendig nach 65 s + GC (WeakRef auf die Karten im Popup) = Leck;
+        // die Zähler aus getMetrics sinken erst nach dem (trägen) Aufräumen und sind nur ein Hinweis.
         const a = await metrics(o.page, o.cdp);
+        await o.page.evaluate(() => { window.__lpWr = []; });
         let opened = 0;
-        for (let n = 0; n < 10; n++) { const at = await findTile(o.page, POPUPS.energie.expand) || await findTile(o.page, POPUPS.licht.tile); if (!at) break; await tap(o.page, at, touch); await o.page.waitForTimeout(900); if (await popupOpen(o.page)) opened++; await closePopup(o.page); }
+        for (let n = 0; n < 10; n++) {
+          const at = await findTile(o.page, POPUPS.energie.expand) || await findTile(o.page, POPUPS.licht.tile); if (!at) break;
+          await tap(o.page, at, touch); await o.page.waitForTimeout(1200);
+          if (await o.page.evaluate(() => { const s = window.casoraPopup && window.casoraPopup.surface; if (!s) return false;
+            window.__pierce('button-card, casora-smart-row, hui-vertical-stack-card', s).forEach((e) => window.__lpWr.push(new WeakRef(e))); return true; })) opened++;
+          await closePopup(o.page);
+        }
         const b = await metrics(o.page, o.cdp);
+        await o.page.waitForTimeout(65000);
+        const c = await metrics(o.page, o.cdp); await metrics(o.page, o.cdp);
+        const alive = await o.page.evaluate(() => ({ alive: window.__lpWr.filter((r) => r.deref()).length, made: window.__lpWr.length }));
         const t = await timers(o.page);
-        res.leck = { geoeffnet: opened, vorher: a, nach10Popups: b, intervalleDanach: t.intervalle, moDanach: t.mutationObserver };
+        res.leck = { geoeffnet: opened, ...alive, vorher: a, nach10Popups: b, nach65s: c, intervalleDanach: t.intervalle, moDanach: t.mutationObserver };
       }
     } finally { await o.browser.close(); }
   }
@@ -490,7 +502,7 @@ for (const [g, r] of Object.entries(R.geraete)) {
   if (r.update && r.update.ruhe60s) { s.ruhe60s_renders = r.update.ruhe60s.bc; s.ruhe60s_vollDurchlaeufe = r.update.ruhe60s.qsaStar; s.ruhe60s_requestUpdateLeer = r.update.ruhe60s.ruLeer; s.ruhe60s_timeouts = r.update.ruhe60s.timeouts; }
   if (r.update) for (const k of ['fremd', 'leistung', 'licht']) if (r.update[k]) { s['update_' + k + '_renders'] = r.update[k].bc; s['update_' + k + '_renderMs'] = r.update[k].renderMs; s['update_' + k + '_vollDurchlaeufe'] = r.update[k].qsaStar; }
   if (r.timer) { s.intervalle = r.timer.intervalle; s.mutationObserver = r.timer.mutationObserver.observing; }
-  if (r.leck) { s.leck_listener = r.leck.nach10Popups.listeners - r.leck.vorher.listeners; s.leck_knoten = r.leck.nach10Popups.nodes - r.leck.vorher.nodes; s.leck_heapMB = +(r.leck.nach10Popups.heapMB - r.leck.vorher.heapMB).toFixed(1); }
+  if (r.leck) { s.leck_popupKartenLebendig = r.leck.made ? `${r.leck.alive}/${r.leck.made}` : null; s.leck_listener = r.leck.nach65s.listeners - r.leck.vorher.listeners; s.leck_knoten = r.leck.nach65s.nodes - r.leck.vorher.nodes; s.leck_heapMB = +(r.leck.nach65s.heapMB - r.leck.vorher.heapMB).toFixed(1); }
   if (r.netz) { s.requests = r.netz.requests; for (const [k, v] of Object.entries(r.netz.gruppen)) if (/Casora|casora|Vorlagen|i18n|Studio|local/.test(k)) s['kB_' + k] = `${v.rawKB}→${v.wireKB}`; }
 }
 // Ausgelieferter Code (Dateien im Checkout, roh)
