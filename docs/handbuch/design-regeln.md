@@ -34,8 +34,8 @@ Fenster 28 / Zeile 18 bei 8 px Rand (konzentrisch wäre 20), Kamera-Bildplatte 2
 > A: Zeilen-Platte bleibt 24 (heute) / B: konzentrisch zum Symbolkreis 29 (= Pille bei 58 px Zeilenhöhe).
 > Bilder: Feinschliff-Notizen `d-popups/bilder/ab_DP16_*`. Bis zur Wahl: 24.
 
-> **OFFEN – Entscheidung Maintainer (dk-10, Markierung im Räume-Menü):**
-> A: Fenster 34 (dann konzentrisch zur Pille 26 bei 8 px Abstand) / B: so lassen.
+**Entschieden 1.3 (dk-10):** Räume-/Szenen-Blatt am Handy Radius **34** = Zeilen-Pille 26 + Listenrand 8
+(konzentrisch, `04-navigation.js`).
 
 ## 2. Abstände
 
@@ -54,12 +54,12 @@ Heute weichen 272 von 1 032 gemessenen Lücken ab (meist 3, 6, 7, 9 px) – nich
 Regel **ringsum gleich**: ein Element in einer Fläche hat oben = links = rechts (= unten) denselben
 Abstand, ±1 px. Gilt für Symbolkreis in der Zeile, Markierung im Menü, Knopf in der Leiste.
 
-> **OFFEN – Entscheidung Maintainer (dk-05, Symbolkreis in der Kachel):**
-> A: ringsum gleich (Desktop 20/20, Handy 10/10) / B: so lassen (heute oben 18/links 20 durch
-> `--casora-tile-icon-mt:-2px`, Handy 10/12). Bild: `d-kacheln/bilder/dk05_vergleich.png`.
+**Entschieden 1.3 (dk-05):** Symbolkreis in der Kachel ringsum gleich – Desktop/Tablet oben = links
+(Casora: `casora-tile-icon-mt-desktop: 0px`), Handy 10/10 (`casora-entity-inner-pad-mobile: 10px`,
+Szenen-Kacheln `casora-scene-chip-pad-phone: 10px`). Hemma 2 unverändert.
 
-> **OFFEN – Entscheidung Maintainer (dk-06, Einzug Handy-Überschriften):** A: überall 16 px (fluchtet
-> mit Kacheln) / B: überall 18 px. Heute Raumseite 18, sonst 16.
+**Entschieden 1.3 (dk-06):** Überschriften am Handy fluchten überall bei 16 px mit Kacheln und Titel
+(auch die Raumseite, früher +2).
 
 ## 3. Schatten
 
@@ -107,6 +107,7 @@ Studio heute: eigener Satz `--t-caption 12 · --t-foot 13 · --t-callout 15 · -
 > **OFFEN – Entscheidung Maintainer (Studio-Schrift, Sprachen-Frage 2):**
 > A: Studio bleibt iOS-nah (SF im Inspektor, Radien 8/12/18/26, Haarlinien) /
 > B: Casora-Sprache (Inter, Radien 12/18/24/32, Sand-Platten; Haarlinien in Formularen dürfen bleiben).
+> Stand 1.3: Entwurf „Studio in Inter“ als Bild (Feinschliff-Notizen `um-rest/bilder/studio-schrift-*`), nicht umgesetzt.
 
 > **OFFEN – Entscheidung Maintainer (Abschnittsköpfe, Sprachen-Frage 1):**
 > A: Etikett überall (12/700 Großbuchstaben), Satz-Überschrift nur auf Seitenebene /
@@ -139,8 +140,9 @@ Gilt:
   Menü zeigen dieselbe Farbe. Keine eigenen Ratelisten aus dem Symbol.
 - Was das Studio vorgibt, zeigen alle Geräte gleich.
 
-> **OFFEN – Entscheidung Maintainer (dk-17):** A: Szenenfarbe überall immer (auch inaktiv) /
-> B: überall nur aktiv, inaktiv neutral. Heute: Badge immer, Handy-Menü nur aktiv.
+**Entschieden 1.3 (dk-17, P-V8):** Szenenfarbe aus dem Studio **überall immer** (Badge, Szenen-Kacheln,
+Handy-Szenen-Menü), auch wenn die Szene nicht läuft. Die **laufende** Szene ist zusätzlich leicht in ihrer
+Farbe getönt (`--casora-scene-on-tint`, 18 %).
 
 > **OFFEN – Entscheidung Maintainer (DP-15):** Ringfarbe = Zustand überall (z. B. „Alle Akkus OK“
 > nicht rot, „Fehlgeschlagen“ nicht grau)? A: ja, Ring folgt Zustand / B: Ring bleibt Gerätefarbe.
@@ -221,8 +223,8 @@ Gilt:
 - Inaktives (opacity < .6, `disabled`) zählt nicht.
 - Hell **und** dunkel prüfen – die Hälfte der Kontrast-Funde gab es nur dunkel.
 
-> **OFFEN – Entscheidung Maintainer (dk-08, Text-Rot):** A: eigenes Text-Rot (≈ #B0473C, 4,6:1) nur für
-> Schrift / B: so lassen (#D35A4E auf Creme 3,3:1). **(DP-30)** Pfeil › in Zeilen: A Deckkraft .35/.4 lassen /
+**Entschieden 1.3 (dk-08):** Rot für Schrift auf Creme ist `--casora-color-red-text` (#A8443A, 4,9:1);
+Kreise/Flächen bleiben `--casora-color-red`. **(DP-30)** Pfeil › in Zeilen: A Deckkraft .35/.4 lassen /
 > B .6 (≥ 3:1).
 
 ## 12. Trefferflächen
