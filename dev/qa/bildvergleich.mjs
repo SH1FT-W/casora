@@ -6,6 +6,8 @@
 //        --neu http://localhost:8196 [--neu-dir .] --out /pfad/bildvergleich [--jobs 8]
 //
 // Weitere Schalter:
+//   --neu-lokal        Skripte/Studio-JS der Seite „neu“ aus --neu-dir statt aus ihrem HA (wie CASORA_LOCAL=1):
+//                      so reicht ein HA für vorher/nachher, wenn sich nur JS geändert hat (--neu = --alt).
 //   --theme "Casora"   HA-Theme beider Seiten (Standard Casora), immer hell und dunkel
 //   --dash a,b               Desktop-Dashboards (Handy = <url>-mobile); Standard: alle Casora-Dashboards
 //                            außer Fixture/Importkopien (dashboard-hemma*, *importiert*)
@@ -227,6 +229,15 @@ async function newPage(browser, side, t) {
     isMobile: vp.mobile, hasTouch: vp.touch, locale: 'de-DE', timezoneId: 'Europe/Berlin', reducedMotion: 'reduce', serviceWorkers: 'block',
     userAgent: vp.mobile ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148' : undefined,
   });
+  if (side === SIDES.neu && flag('neu-lokal')) {
+    const CC = path.join(SIDES.neu.dir, 'custom_components/casora/');
+    await ctx.route(/\/casora_(scripts|panel|studio|assets)\/[^?]*\.js(\?|$)/, async (r) => {
+      const m = new URL(r.request().url()).pathname.match(/^\/casora_(\w+)\/(.*)$/);
+      const f = [CC + (m[1] === 'scripts' ? 'scripts' : 'panel') + '/' + m[2], CC + m[2]].find((c) => fs.existsSync(c));
+      if (!f) return r.continue();
+      return r.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(f, 'utf8') });
+    });
+  }
   // Nur Date startet auf FIXED und läuft dann normal weiter (P-02, 07.10.2026). setFixedTime fror
   // Date.now() ein – Sperren wie „600 ms nach Popup-Öffnen“ oder „Klick kurz nach Touch“ liefen nie ab;
   // clock.install ersetzt zusätzlich requestAnimationFrame/Timer, dann blieben Handy-Räume mitten im

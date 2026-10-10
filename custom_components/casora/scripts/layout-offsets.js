@@ -5,14 +5,25 @@
 
   var html = document.documentElement;
 
-  function walkFind(root, selector, out, depth) {
-    if (!root || depth > 20) return;
-    if (root.querySelectorAll) {
-      root.querySelectorAll(selector).forEach(function (el) { out.push(el); });
-      root.querySelectorAll('*').forEach(function (el) {
-        if (el.shadowRoot) walkFind(el.shadowRoot, selector, out, depth + 1);
-      });
-    }
+  // Ein Durchlauf für alle drei Suchen, gilt bis zum nächsten Mikrotask (vorher sechs je Takt).
+  var scanned = null;
+  function scan() {
+    if (scanned) return scanned;
+    var out = scanned = { badges: [], rows: [], navs: [] };
+    (function walk(root, depth) {
+      if (!root || depth > 20 || !root.querySelectorAll) return;
+      var all = root.querySelectorAll('*'), sr = [], i, el;
+      for (i = 0; i < all.length; i++) {
+        el = all[i];
+        if (el.id === 'badges_media') out.badges.push(el);
+        if (el.localName === 'casora-smart-row') out.rows.push(el);
+        else if (el.localName === 'casora-nav-bar') out.navs.push(el);
+        if (el.shadowRoot) sr.push(el.shadowRoot);
+      }
+      for (i = 0; i < sr.length; i++) walk(sr[i], depth + 1);
+    })(document, 0);
+    Promise.resolve().then(function () { scanned = null; });
+    return out;
   }
 
   function isVisible(el) {
@@ -149,8 +160,7 @@
   }
 
   function findRoomHeaderStack() {
-    var found = [];
-    walkFind(document, '#badges_media', found, 0);
+    var found = scan().badges;
     for (var i = 0; i < found.length; i++) {
       var container = found[i].closest('#container');
       if (container && isVisible(container)) return container;
@@ -159,8 +169,7 @@
   }
 
   function findActiveEntityRow() {
-    var found = [];
-    walkFind(document, 'casora-smart-row', found, 0);
+    var found = scan().rows;
     for (var i = 0; i < found.length; i++) {
       var el = found[i];
       if (el._scrollMode === false && isVisible(el)) return el;
@@ -170,8 +179,7 @@
 
   // The casora-nav-bar host is a zero-height fixed anchor; .bar is the real box.
   function findNavbar() {
-    var found = [];
-    walkFind(document, 'casora-nav-bar', found, 0);
+    var found = scan().navs;
     for (var i = 0; i < found.length; i++) {
       var nb = found[i];
       var inner = nb.shadowRoot ? nb.shadowRoot.querySelector('.bar') : null;
