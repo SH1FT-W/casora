@@ -948,7 +948,10 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           + ' ontouchstart="event.stopPropagation();" ontouchend="event.stopPropagation();if(document.activeElement!==this&&this.getRootNode().activeElement!==this){this.focus();}"'
           /* Tasten nicht zur Karte durchreichen: button-card fängt sonst die Leertaste als „Tippen“ ab */
           + ' onkeydown="event.stopPropagation();if(event.key===\'Enter\'){event.preventDefault();window._casoraAssist.send();}" onkeyup="event.stopPropagation();" onkeypress="event.stopPropagation();">'
-          /* Mikrofon-Knopf auf Wunsch ausgebaut (voice() bleibt als Funktion erhalten) */
+          /* Mikrofon-Knopf: Sprachaufnahme über die Assist-Pipeline (voice()); rot pulsierend, solange aufgenommen wird */
+          + '<div class="has-b has-mic" role="button" tabindex="0" title="Sprechen" aria-label="Sprechen"' + tap('window._casoraAssist.voice()')
+          + ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();event.stopPropagation();window._casoraAssist.voice();}">'
+          + '<svg width="20" height="20" viewBox="0 0 20 20"><rect x="7" y="2.5" width="6" height="10" rx="3" fill="currentColor"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>'
           + '<div class="has-b has-send" title="Senden"' + tap('window._casoraAssist.send()') + '><svg width="20" height="20" viewBox="0 0 20 20"><path d="M10 16V4M4.5 9.5L10 4l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
           + '</div></div>';
         /* Popup-Rahmen wie die übrigen Casora-Popups: popup_styles einer vorhandenen Karte übernehmen */
