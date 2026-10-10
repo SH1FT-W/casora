@@ -37,7 +37,7 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 | Offen (Einzelzustand Kontakt) **(V2)** | Open | – | heute gemischt mit „Geöffnet“ |
 | Verriegelt / Entriegelt | Locked / Unlocked | „Offen“/„Zu“ für Schlösser (Ausnahme: Badges „Offen“ bei Nuki-open, Test B-TPL-06) | Schloss, Auto |
 | Klemmt **(V2)** | Jammed | heute zusätzlich „Blockiert“ in 2 Badges | Schloss |
-| Wird verriegelt… / Wird entriegelt… / Wird geöffnet… | Locking… / Unlocking… / Opening… | – | Schloss |
+| Wird verriegelt … / Wird entriegelt … / Wird geöffnet … **(V9)** | Locking… / Unlocking… / Opening… | – | Schloss |
 | Läuft | Running | „Aktiv“ für Geräteprogramme | Waschmaschine |
 | Zahl + läuft | „1 läuft“ (klein) | – | Medien-Gruppenbadge |
 | Bereit | Ready | „Leerlauf“, „Idle“ | Geräte im Leerlauf, Luftreiniger |
