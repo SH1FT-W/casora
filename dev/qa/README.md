@@ -394,3 +394,17 @@ Beide brauchen eigene Wegwerf-Test-HAs (nie casora-test :8124) und ändern dort 
   ```sh
   CASORA_PRODKOPIE=/privat/prodkopie CASORA_URL=http://localhost:8197 node dev/qa/prodnachbau.mjs --out /tmp/prodnachbau
   ```
+- **Konsole + HA-Log** `dev/qa/konsole.mjs` – Klick-Durchlauf (`alles.mjs`, Standard Desktop +
+  Handy 393×852 WebKit, Theme Casora) mit Mitschnitt jeder Browser-Meldung (Fehler, Warnungen,
+  Seitenfehler, unbehandelte Promises, fehlgeschlagene Anfragen, HTTP ≥ 400; `CASORA_KONSOLE` in
+  `harness.mjs`), danach die neuen HA-Log-Zeilen (Casora-Fehler/-Warnungen, „Detected blocking call“,
+  Tracebacks) und die Setup-Zeit der Integration. Bekannte fremde Meldungen (Testrahmen, HA-Frontend)
+  stehen mit Grund in `FREMD` und zählen getrennt. `--randfaelle` hängt `dev/qa/randfaelle.mjs` an:
+  Entitäten der Kacheln nur im Browser nicht verfügbar / unbekannt / ohne Attribute / leere Listen /
+  lange Namen / fehlend, Gerät verschwindet bei offenem Popup; sucht dabei auch „undefined“/„NaN“ im Text.
+  ```sh
+  CASORA_URL=http://localhost:8314 CASORA_TOKENS="$(node dev/qa/token.mjs)" \
+    node dev/qa/konsole.mjs --lauf arbeit --dash qa-arbeit --randfaelle \
+         --ha-log ~/casora-agents/gate/<name>/config/home-assistant.log
+  node dev/qa/konsole.mjs --auswerten /tmp/casora-konsole/arbeit   # nur neu zählen
+  ```

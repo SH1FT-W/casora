@@ -37,13 +37,13 @@ export async function freshToken() {
   return { ...j, refresh_token: t.refresh_token };
 }
 
-// dark: HA-Dunkelmodus (Standard an), locale: Browser-Sprache, args: Chromium-Startargumente
+// dark: HA-Dunkelmodus (Standard an), locale: Browser-Sprache (Standard CASORA_LOCALE, sonst de-DE), args: Chromium-Startargumente
 // (z. B. --hide-scrollbars für Screenshots), scale: Pixeldichte (Standard 2, iPhone 3),
 // theme: HA-Theme dieses Browsers (Standard „Hemma 2“, wie die Regressionstests es erwarten).
 // Nutzertests laufen im Theme „Casora“: CASORA_THEME=Casora setzt den Standard um (eine
 // ausdrücklich übergebene Option theme gilt weiter).
 export async function open({ width = 1440, height = 900, mobile = false, umzug = false, safari = false,
-  dark = true, locale = 'de-DE', args = [], touch, userAgent, scale = 2, theme = process.env.CASORA_THEME || 'Hemma 2' } = {}) {
+  dark = true, locale = process.env.CASORA_LOCALE || 'de-DE', args = [], touch, userAgent, scale = 2, theme = process.env.CASORA_THEME || 'Hemma 2' } = {}) {
   const tok = await freshToken();
   // safari: WebKit statt Chromium (Safari-Eigenheiten nachstellen).
   const browser = await (safari ? webkit : chromium).launch(safari ? {} : { args });
@@ -156,6 +156,9 @@ export async function open({ width = 1440, height = 900, mobile = false, umzug =
       else console.error('Unbehandelte Ablehnung: ' + txt);
     });
   });
+  // CASORA_KONSOLE=<datei>: jede Konsolenmeldung (Fehler + Warnung), Seitenfehler, fehlgeschlagene
+  // Anfrage und HTTP ≥ 400 aller Seiten dieses Browsers als JSON-Zeile anhängen (dev/qa/konsole.mjs).
+  if (process.env.CASORA_KONSOLE) konsoleMitschnitt(context, process.env.CASORA_KONSOLE);
   const page = await context.newPage();
   const errors = [];
   errors.pending = new Set();
@@ -173,6 +176,32 @@ export async function open({ width = 1440, height = 900, mobile = false, umzug =
     errors.pending.add(p); p.finally(() => errors.pending.delete(p));
   });
   return { browser, context, page, errors, token: tok.access_token };
+}
+
+function konsoleMitschnitt(context, file) {
+  const out = (rec) => {
+    rec.zeit = new Date().toISOString();
+    rec.lauf = process.env.CASORA_KONSOLE_LAUF || '';
+    try { fs.appendFileSync(file, JSON.stringify(rec) + '\n'); } catch (e) { /* Mitschnitt darf den Lauf nicht stören */ }
+  };
+  const seite = (p) => { try { return new URL(p.url()).pathname; } catch (e) { return ''; } };
+  const watch = (p) => {
+    p.on('console', (m) => {
+      const t = m.type();
+      if (t !== 'error' && t !== 'warning') return;
+      const loc = m.location() || {};
+      out({ typ: t === 'warning' ? 'warnung' : 'fehler', text: m.text().slice(0, 600), quelle: (loc.url || '') + ':' + (loc.lineNumber ?? ''), seite: seite(p) });
+    });
+    p.on('pageerror', (e) => out({ typ: 'seitenfehler', text: String((e && e.stack) || e).slice(0, 900), seite: seite(p) }));
+    p.on('requestfailed', (r) => {
+      const why = (r.failure() || {}).errorText || '';
+      // Abgebrochene Anfragen beim Seitenwechsel/Schließen sind kein Fehler.
+      if (/ERR_ABORTED|cancelled|Load request cancelled|NS_BINDING_ABORTED/i.test(why)) return;
+      out({ typ: 'anfrage', text: why, url: r.url().slice(0, 300), seite: seite(p) });
+    });
+    p.on('response', (r) => { if (r.status() >= 400) out({ typ: 'http', text: String(r.status()), url: r.url().slice(0, 300), seite: seite(p) }); });
+  };
+  context.on('page', watch);
 }
 
 export async function call(token, domain, service, data = {}) {

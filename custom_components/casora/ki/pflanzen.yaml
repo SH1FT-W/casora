@@ -6,12 +6,12 @@
     status: running
 - variables:
     ents: '{{ device_entities(device_id(plant)) }}'
-    sens: '{{ device_entities(device_id(plant)) | select(''match'', ''sensor\.'') | reject(''search'', ''ppfd|integral'')
+    sens: '{{ device_entities(device_id(plant)) | select(''match'', ''sensor[.]'') | reject(''search'', ''ppfd|integral'')
       | list }}'
     room_lux: '{% set pe = device_entities(device_id(plant)) %}{% set a = area_id(plant) or area_id(pe | select(''match'',
-      ''sensor\.'') | first) %}{% set ns = namespace(l=[]) %}{% for e in area_entities(a) | select(''match'', ''sensor\.'')
+      ''sensor[.]'') | first) %}{% set ns = namespace(l=[]) %}{% for e in area_entities(a) | select(''match'', ''sensor[.]'')
       | select(''is_state_attr'', ''device_class'', ''illuminance'') %}{% if e not in pe and ''trend'' not in e and (device_entities(device_id(e))
-      | select(''match'', ''plant\.'') | list | count) == 0 %}{% set ns.l = ns.l + [e] %}{% endif %}{% endfor %}{{ ns.l }}'
+      | select(''match'', ''plant[.]'') | list | count) == 0 %}{% set ns.l = ns.l + [e] %}{% endif %}{% endfor %}{{ ns.l }}'
 - action: recorder.get_statistics
   response_variable: d
   continue_on_error: true
@@ -35,7 +35,7 @@
       %}{% if state_attr(plant, k) %}{{ k | replace(''_status'','''') }}={{ state_attr(plant, k) }} {% endif %}{% endfor %};
       Probleme: {{ state_attr(plant, ''problems'') or ''keine'' }}
 
-      Grenzwerte: {% for e in ents | select(''match'', ''number\.'') %}{% if ''faktor'' not in e and ''dli'' not in e %}{{
+      Grenzwerte: {% for e in ents | select(''match'', ''number[.]'') %}{% if ''faktor'' not in e and ''dli'' not in e %}{{
       e.split(''.'')[1] | replace(plant.split(''.'')[1] ~ ''_'', '''') }}={{ states(e) }}{{ state_attr(e, ''unit_of_measurement'')
       or '''' }} {% endif %}{% endfor %}
 

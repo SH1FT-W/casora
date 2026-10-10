@@ -667,7 +667,9 @@ if (typeof window.casoraClimateActive !== 'function') {
         r.when = m;
         lookup(hass, r.entity, m);
       });
-      return rows.filter(function (r) { return !HIDE.test(String(r.entity || '')); });
+      // Früher: rows.filter(… HIDE.test …) – HIDE gab es nie, die Erweiterung warf bei jedem
+      // Aufbau „HIDE is not defined“ (Konsole, 1.3). Gefiltert wurde dadurch nie; so bleibt es.
+      return rows;
     },
   };
 

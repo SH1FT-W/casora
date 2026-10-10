@@ -365,6 +365,7 @@
     "can't", "Couldn't", "don't", 'Coming soon', 'Tap to', 'Add a tile', 'Just now', 'ago', 'Never', 'Nobody', 'Away',
     'Home Assistant is', 'Setup', 'Sub-badges', 'expands'];
   const EN_RE = new RegExp('(?<![\\wÄÖÜäöüß-])(' + EN.map((w) => w.replace(/[.*+?^${}()|[\]\\']/g, '\\$&')).join('|') + ')(?![\\wÄÖÜäöüß-])');
+  const uiEn = () => /^en/i.test(((document.querySelector("home-assistant") || {}).hass || {}).language || document.documentElement.lang || "");
   const RAW_STATE = /^(Unavailable|Unknown|Jammed|Jamming|Locked|Unlocked|Locking|Unlocking|Opening|Closing|Open|Opened|Closed|Playing|Paused|Idle|Standby|Buffering|On|Off|Not home|Away|Heating|Cooling|Docked|Cleaning|Returning|Charging|Discharging|Armed away|Armed home|Disarmed|Triggered|Problem|Detected|Clear|Wet|Dry)$/;
   const ENTITY_RE = /(?<![\w/.])(light|switch|sensor|binary_sensor|scene|script|input_[a-z]+|climate|cover|lock|media_player|camera|vacuum|fan|automation|person|weather|button|select|number|alarm_control_panel|update|calendar|todo)\.[a-z0-9_]{3,}(?![\w/])/;
   const SKIP_TEXT = 'input, textarea, select, code, pre, ha-code-editor, ha-entity-picker, ha-combo-box, ha-selector, [data-no-i18n], .mono, [data-entity], script, style, noscript, .kbd, .qa-ignore';
@@ -393,7 +394,9 @@
           if (ENTITY_RE.test(s)) add(new RegExp('^' + ENTITY_RE.source + '$').test(s) ? 'info' : 'warn', 'text-entity-id', s);
           // Ein ganzer Text, der nur ein roher englischer HA-Zustand ist („Unavailable“,
           // „Jammed“ …), ist ein sichtbarer Übersetzungsfehler → error; sonst Verdacht → warn.
-          if (RAW_STATE.test(s)) add('error', 'text-englisch', s + '  [roher Zustand]');
+          // Englische Oberfläche (Demo-Haus, CASORA_LOCALE=en-US): Englisch ist dort richtig.
+          if (uiEn()) { /* keine Englisch-Prüfung */ }
+          else if (RAW_STATE.test(s)) add('error', 'text-englisch', s + '  [roher Zustand]');
           else { const m = s.match(EN_RE); if (m) add('warn', 'text-englisch', s + '  [' + m[1] + ']'); }
         }
       }
