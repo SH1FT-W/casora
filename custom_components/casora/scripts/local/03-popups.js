@@ -3292,8 +3292,6 @@
     + '.lps-s i{font-style:normal;opacity:.6;}'
     /* Trennpunkt an einem Zeilenumbruch: ausgeblendet, dort steht ein Umbruch (_casoraSepScan). */
     + '.lps-s .hui-cut{display:none!important;}'
-    +   'font-size:14px;font-weight:600;white-space:nowrap;background:var(--casora-lps-chip);color:var(--casora-lps-chip-ink);'
-    +   'transition:background .2s ease,opacity .2s ease;-webkit-tap-highlight-color:transparent;}'
     + '.lps-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--casora-popup-col-gap,26px);align-items:start;}'
     + '.lps-cols.one{grid-template-columns:minmax(0,1fr);}'
     + '.lps-lbl{font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);margin:0 0 10px 6px;color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));}'
