@@ -1332,7 +1332,12 @@
       } catch (e) {
         const s = this._flowScreen({ icon: "alert", tone: "warn", title: "Backup Didn't Work",
           lede: "Casora couldn't save a backup, so nothing was moved. Your Hemma dashboard is unchanged." });
-        this._flowError(this._plainError(e, (e && e.message) || "Unknown error."));
+        // Gefunden 10.10.2026: ohne lesbare Meldung stand hier HAs englisches „Unknown error“ im
+        // deutschen Fenster. Schreibfehler meldet HA jetzt als backup_failed; Einzelheiten ins Protokoll.
+        if (this._log) this._log("backup: " + ((e && (e.code + " " + e.message)) || e), "err");
+        this._flowError(e && e.code === "backup_failed"
+          ? "Casora couldn't write the backup file. Check that the folder casora_sicherungen in your Home Assistant configuration can be written."
+          : this._plainError(e, "Something went wrong while saving the backup."));
         this._flowCancel(s.acts);
         return;
       }

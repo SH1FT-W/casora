@@ -2260,7 +2260,9 @@
     "Trend on tile": "Verlauf auf der Kachel",
     "A small line of the room temperature over the last 24 hours.": "Eine kleine Linie der Raumtemperatur der letzten 24 Stunden.",
     "A small line of the soil moisture over the last 7 days.": "Eine kleine Linie der Bodenfeuchte der letzten 7 Tage.",
-    "A small line of the power over the last 24 hours.": "Eine kleine Linie der Leistung der letzten 24 Stunden."
+    "A small line of the power over the last 24 hours.": "Eine kleine Linie der Leistung der letzten 24 Stunden.",
+    "Casora couldn't write the backup file. Check that the folder casora_sicherungen in your Home Assistant configuration can be written.": "Casora konnte die Sicherung nicht schreiben. Prüfe, ob der Ordner casora_sicherungen in deiner Home-Assistant-Konfiguration beschreibbar ist.",
+    "Something went wrong while saving the backup.": "Beim Sichern ist etwas schiefgelaufen."
   },
   "patterns": [
     [
