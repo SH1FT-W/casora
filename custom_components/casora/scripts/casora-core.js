@@ -9838,8 +9838,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           id: 'casora:open:' + id,
           when: o.since,
           label: title + ' ist offen',
+          // per-07 (10.10.2026): ab 48 Std. in Tagen („seit 137 Std.“ las niemand).
           sub: 'seit ' + (mins < 60 ? mins + ' Min.'
-            : Math.round(mins / 60) + ' Std.'),
+            : mins < 2880 ? Math.round(mins / 60) + ' Std.'
+            : Math.floor(mins / 1440) + ' Tagen'),
           ongoing: true,
           icon: window.casoraSecurityIcon(id, st.state, st.attributes),
           // Offen, während niemand da ist (bzw. Alarm auf Abwesend/Urlaub): Gefahr statt Hinweis.

@@ -1653,6 +1653,10 @@
    "for {1} d"
   ],
   [
+   "^seit (\\d+) Tagen$",
+   "for {1} days"
+  ],
+  [
    "^zuletzt gemeldet gestern (.+)$",
    "last reported yesterday {1}"
   ],
