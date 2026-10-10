@@ -8156,7 +8156,7 @@ class CasoraPanel extends HTMLElement {
         .size-tablet .mini-tabs {
           position:absolute; top:var(--nav-top); left:50%; transform:translateX(-50%);
           flex:0 1 auto; gap:var(--nav-gap); padding:0 var(--nav-inset);
-          height:var(--nav-h); border-radius:999px; align-items:center;
+          height:var(--nav-h); border-radius:9999px; align-items:center;
           max-width:calc(100% - 2 * (var(--pad-x) + var(--nav-reserve))); overflow:hidden;
         }
         /* Hochkant: die Leiste stößt an die drei Knöpfe rechts – Platz für sie freihalten. */
@@ -8186,7 +8186,7 @@ class CasoraPanel extends HTMLElement {
         .size-tablet .mini-tab {
           color:#fff; opacity:.82; font-weight:600;
           font-size:var(--nav-label); padding:0 var(--nav-pad-x);
-          height:var(--nav-label-h); border-radius:999px;
+          height:var(--nav-label-h); border-radius:9999px;
         }
         .size-tablet .mini-tab.on {
           opacity:1; font-weight:600; box-shadow:none;
@@ -8763,7 +8763,7 @@ class CasoraPanel extends HTMLElement {
           top:calc(var(--chrome-top-btn) - var(--cap-p)); right:calc(var(--pad-x) - var(--cap-p));
           height:calc(var(--chrome-btn) + 2 * var(--cap-p));
           width:calc(var(--cap-n) * var(--chrome-btn) + (var(--cap-n) - 1) * var(--chrome-btn-gap) + 2 * var(--cap-p));
-          border-radius:999px;
+          border-radius:9999px;
           background:var(--casora-chrome-capsule-fill, transparent);
           box-shadow:var(--casora-chrome-capsule-shadow, none);
         }
@@ -9078,7 +9078,7 @@ class CasoraPanel extends HTMLElement {
           display:inline-flex; align-items:center; gap:var(--bcg); max-width:100%;
           min-height:var(--bmh);
           padding:var(--bpt) var(--bpr) var(--bpb) var(--bpl);
-          border-radius:999px; box-sizing:border-box;
+          border-radius:9999px; box-sizing:border-box;
           background:rgba(28,28,32,0.66); border:0; cursor:pointer;
           box-shadow:inset 0 0 0 .5px rgba(255,255,255,0.14);
           font-family:inherit; text-align:left;
@@ -10747,7 +10747,7 @@ class CasoraPanel extends HTMLElement {
           background:linear-gradient(145deg, #9a948c, #5f5a55); box-shadow:0 24px 50px rgba(0,0,0,.55); }
         .dn-screen { position:relative; border-radius:13% / 6%; overflow:hidden; background:#1c1d22; box-shadow:0 0 0 2px #0a0a0b; }
         .dn-screen::before { content:""; position:absolute; z-index:2; top:1.6%; left:50%; width:32%; height:3.6%;
-          transform:translateX(-50%); border-radius:999px; background:#000; }
+          transform:translateX(-50%); border-radius:99px; background:#000; }
         .dn-chips { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:28px 0 22px; }
         .dn-chip { display:inline-flex; align-items:center; gap:7px; padding:7px 12px; border-radius:999px;
           background:var(--casora-popup-row-fill, rgba(255,255,255,.08)); font-size:var(--t-foot); color:var(--ink-2); }
