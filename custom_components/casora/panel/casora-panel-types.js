@@ -460,7 +460,8 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
         if (ent.state !== "" && Number.isFinite(n)) {
           const digits = Math.abs(n) >= 100 ? 0 : 1;
           const txt = n.toLocaleString(lang, { maximumFractionDigits: digits });
-          return unit ? txt + " " + unit : txt;
+          // Englisch ohne Leerzeichen vor % („62%“), wie HA selbst.
+          return unit ? txt + (unit === "%" && lang === "en" ? "" : " ") + unit : txt;
         }
         // HAs deutsches „Ein“ heißt im Dashboard „An“ (casora-i18n.js).
         const f = hass && hass.formatEntityState ? hass.formatEntityState(ent) : null;
