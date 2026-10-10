@@ -74,7 +74,14 @@ const r0 = await H(() => { const p = window.__panel(); p._room = 1; p._renderTab
 await page.locator('.btool[data-b=rooms]').click();
 await page.waitForTimeout(600);
 const rm = await menu();
-await check('Raummenü: Nach vorne / Nach hinten / Räume ordnen', rm.some((t) => /Nach hinten|Move later/.test(t)) && rm.some((t) => /Räume ordnen/.test(t)), rm);
+// P-V3 (1.3): das Raummenü zeigt nur die Räume (und „Räume ordnen“); Nach vorne/hinten stehen im eigenen ⋯ neben dem Raumnamen.
+await check('Raummenü: Räume und „Räume ordnen“, ohne Raumaktionen', !rm.some((t) => /Nach hinten|Move later|Umbenennen/.test(t)) && rm.some((t) => /Räume ordnen/.test(t)), rm);
+await page.keyboard.press('Escape');
+await page.waitForTimeout(400);
+await page.locator('.btool[data-b=roomact]').first().click();
+await page.waitForTimeout(600);
+const ra = await menu();
+await check('Raum-⋯: Nach vorne / Nach hinten', ra.some((t) => /Nach vorne|Move earlier/.test(t)) && ra.some((t) => /Nach hinten|Move later/.test(t)), ra);
 await page.locator('.combo-opt', { hasText: /Nach hinten|Move later/ }).first().click();
 await page.waitForTimeout(1000);
 const r1 = await H(() => { const p = window.__panel(); return { paths: p._state.compact.rooms.map((r) => r.path), room: p._room }; });
