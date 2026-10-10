@@ -133,6 +133,9 @@ Casora:
   casora-fs-heading: 17px
   casora-fs-title: 28px
   casora-fs-page: 34px
+  # Studio-Schrift (1.3): Inter, lokal mitgeliefert (assets/fonts/inter-4.1-latin-var.woff2,
+  # @font-face in panel/casora-panel-addons.js). Ohne dieses Token (Hemma 1/2) bleibt SF/System.
+  casora-font-studio: '"Casora Studio Inter", "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif'
   # Symbolgrößen (6): Popup-Kopf · Kachel · Zeile · Badge · Knopf · Status
   casora-ic-head: 56px
   casora-ic-head-phone: 48px

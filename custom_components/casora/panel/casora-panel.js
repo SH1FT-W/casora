@@ -5866,7 +5866,7 @@ class CasoraPanel extends HTMLElement {
           --insp-w:386px;
           --insp-gap:26px;
           color:var(--ink);
-          font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+          font-family:var(--casora-font-studio, -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif);
           font-size:var(--t-callout); -webkit-font-smoothing:antialiased;
           background:var(--primary-background-color,#0c0c0f);
         }
@@ -10673,7 +10673,7 @@ class CasoraPanel extends HTMLElement {
         .condval { min-width:0; padding:7px 10px; border-radius:var(--r-s); border:none; background:var(--casora-studio-chip, rgba(118,118,128,.18)); color:inherit; font:inherit; }
         .conddel { width:28px; height:28px; border-radius:50%; border:none; padding:0; cursor:pointer; background:rgba(255,69,58,.16); color:var(--casora-studio-bad, #ff453a); display:grid; place-items:center; }
         .conddel svg { width:14px; height:14px; }
-        .condadd { align-self:flex-start; border:none; background:none; color:var(--casora-studio-link, #0a84ff); font:500 var(--t-foot) system-ui; cursor:pointer; padding:4px 2px; }
+        .condadd { align-self:flex-start; border:none; background:none; color:var(--casora-studio-link, #0a84ff); font:500 var(--t-foot) var(--casora-font-studio, system-ui); cursor:pointer; padding:4px 2px; }
         :host(.phone) .perfgrid .pvshot { flex:0 0 96px; width:96px; aspect-ratio:auto; background-size:cover; background-position:82% 50%; }
         :host(.phone) .perfgrid { gap:10px; }
         .frec2 {
@@ -10695,7 +10695,7 @@ class CasoraPanel extends HTMLElement {
         .rp-head { display:flex; align-items:center; justify-content:space-between; margin:0 4px 12px; }
         .rp-h { font-size:var(--t-body); font-weight:600; letter-spacing:-.015em; color:var(--ink); }
         .rp-all { appearance:none; border:0; background:none; padding:0; box-shadow:none; min-width:0; height:auto;
-          font:500 var(--t-callout) system-ui; color:var(--casora-studio-link, #0a84ff); cursor:pointer; }
+          font:500 var(--t-callout) var(--casora-font-studio, system-ui); color:var(--casora-studio-link, #0a84ff); cursor:pointer; }
         .rp-all:hover { filter:none; opacity:.8; }
         .rp-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; margin:0 0 26px; }
         .rp-room, .rp-add {

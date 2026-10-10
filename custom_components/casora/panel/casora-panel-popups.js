@@ -57,7 +57,7 @@
     // Reopen pill under the room preview while a tile with a popup is selected.
     + ".cp-show{position:absolute;z-index:6;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;"
     + "appearance:none;margin:0;padding:7px 14px 7px 11px;border:0;border-radius:999px;cursor:pointer;white-space:nowrap;"
-    + "font:600 var(--t-foot)/1 system-ui,-apple-system,sans-serif;color:var(--ink,#fff);min-width:0;"
+    + "font:600 var(--t-foot)/1 var(--casora-font-studio, system-ui,-apple-system,sans-serif);color:var(--ink,#fff);min-width:0;"
     + "background:var(--casora-studio-link-tint, rgba(94,92,230,.3));box-shadow:inset 0 0 0 .5px var(--casora-studio-link-line, rgba(160,158,255,.5))}"
     + ".cp-show:hover{background:var(--casora-studio-link-line, rgba(94,92,230,.45));filter:none}"
     + ".cp-show svg{width:16px;height:16px}";
@@ -502,7 +502,7 @@
       + "overflow:hidden;text-overflow:ellipsis;white-space:nowrap}"
       + ".pc-ai{display:flex;flex-direction:column;gap:8px;margin:12px 0 0}"
       + ".pc-aibar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}"
-      + ".pc-aibtn{appearance:none;border:0;cursor:pointer;padding:8px 16px;border-radius:999px;font:600 var(--t-foot) system-ui;color:#fff;"
+      + ".pc-aibtn{appearance:none;border:0;cursor:pointer;padding:8px 16px;border-radius:999px;font:600 var(--t-foot) var(--casora-font-studio, system-ui);color:#fff;"
       + "background:var(--casora-studio-ai-grad, linear-gradient(135deg,#bf5af2,#7d5cff));box-shadow:0 4px 18px rgba(191,90,242,.3)}"
       + ".pc-aibtn:disabled{cursor:progress;opacity:1;background:var(--casora-studio-ai-shimmer, linear-gradient(100deg,#bf5af2 20%,#e3a6ff 50%,#7d5cff 80%)) 0 0/250% 100%;"
       + "animation:pcai 1.4s linear infinite}"
@@ -512,7 +512,7 @@
       + ".pc-aimsg.err{color:#ff6961}"
       + ".pc-seg{display:inline-flex;padding:2px;border-radius:999px;background:var(--chip,rgba(255,255,255,.08));"
       + "box-shadow:inset 0 0 0 1px var(--chip-rim,rgba(255,255,255,.1))}"
-      + ".pc-seg button{appearance:none;border:0;padding:5px 12px;border-radius:999px;font:600 var(--t-foot) system-ui;"
+      + ".pc-seg button{appearance:none;border:0;padding:5px 12px;border-radius:999px;font:600 var(--t-foot) var(--casora-font-studio, system-ui);"
       + "background:transparent;color:var(--ink-2,rgba(255,255,255,.7));box-shadow:none;cursor:pointer}"
       + ".pc-seg button.on{background:var(--chip-hi,rgba(255,255,255,.18));color:var(--ink,#fff)}"
       + ".pc-notes{margin:0;padding:10px 14px 10px 30px;border-radius:var(--r-m);background:rgba(191,90,242,.12);"
