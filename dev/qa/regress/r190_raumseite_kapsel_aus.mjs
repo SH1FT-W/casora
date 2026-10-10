@@ -8,6 +8,8 @@
 // Halter aus, der sichtbare blieb stehen.
 // Erwartet: Raumseite offen → Kapsel unsichtbar und nicht antippbar (kein Überlappen mit dem Mini-Kopf);
 // Raumseite zu → Kapsel wieder da.
+// 1.3 (Handy-Leiste B, Casora-Look): die Kapsel sitzt unten in der Navigationsleiste (.hmn-dock) – dort
+// bleibt sie auf der Raumseite sichtbar und bedienbar, überlappt den Mini-Kopf oben aber nie.
 process.env.CASORA_THEME = process.env.CASORA_THEME || 'Casora';
 import { open, casoraDashboard, dashboard, check, need, finish } from './lib.mjs';
 
@@ -26,7 +28,8 @@ const probe = () => page.evaluate(() => {
   const host = window.__pierce('button-card').map((b) => b.parentNode).find((p) => p && p.style && p.style.position === 'fixed' && p.style.zIndex === '113');
   const pill = window.__pierce('.casora-head-pill').find((p) => p.isConnected && getComputedStyle(p).opacity > 0.5);
   const r = (e) => { const b = e.getBoundingClientRect(); return { l: b.left, r: b.right, t: b.top, b: b.bottom }; };
-  return { host: host ? { op: Number(getComputedStyle(host).opacity), pe: getComputedStyle(host).pointerEvents, ...r(host) } : null,
+  return { host: host ? { op: Number(getComputedStyle(host).opacity), pe: getComputedStyle(host).pointerEvents,
+    docked: !!(host.parentNode && host.parentNode.classList && host.parentNode.classList.contains('hmn-dock')), vh: innerHeight, ...r(host) } : null,
     pill: pill ? { text: pill.textContent.trim(), ...r(pill) } : null };
 });
 const before = await probe();
@@ -47,7 +50,11 @@ if (room.pill) {
   const over = room.host && room.host.op > 0.05 && room.host.l < room.pill.r && room.pill.l < room.host.r && room.host.t < room.pill.b && room.pill.t < room.host.b;
   await check('Kapsel liegt nicht sichtbar über dem Mini-Kopf', !over, room);
 }
-await check('Kapsel auf der Raumseite nicht antippbar', !room.host || room.host.pe === 'none' || room.host.op < 0.05, room.host);
+if (room.host && room.host.docked) {
+  await check('Kapsel in der unteren Leiste: auf der Raumseite sichtbar und bedienbar', room.host.op > 0.9 && room.host.pe !== 'none' && room.host.t > room.host.vh / 2, room.host);
+} else {
+  await check('Kapsel auf der Raumseite nicht antippbar', !room.host || room.host.pe === 'none' || room.host.op < 0.05, room.host);
+}
 await page.evaluate(() => window._casoraFilter.set('all'));
 await page.waitForTimeout(2500);
 const back = await probe();

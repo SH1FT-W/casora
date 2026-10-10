@@ -255,3 +255,26 @@ Gilt:
 
 Siehe [wortliste.md](wortliste.md). Kurz: An/Aus, Geöffnet/Geschlossen, „1 An“ groß, „2 aktiv“ klein,
 du-Form, „62 %“ mit Leerzeichen (Deutsch), Zahlen über `casoraNum`/`toLocaleString(casoraLocale())`.
+
+## 15. Raumleiste und Navigationsleiste (entschieden 10.10.2026, Casora 1.3)
+
+Desktop/Tablet – Raumleiste A „Feinschliff“ (`casora-nav-bar`, Tablet-Fassung in `casora-core.js`):
+- Zuhause steht **fest vorn** (Haus-Kreis 30, aktiv in Ton mit weißer Glyphe), dahinter Trenner 1 × 22.
+- Räume **seitenweise, nur ganze Namen** – nie mitten im Wort abschneiden, nie Text unter einem Pfeil.
+  Die Pfeile ‹ › sind Endkappen (30, Sand) neben den Namen; ohne Weiteres in der Richtung blass.
+  Wenig Rest auf einer Seite → Namen gleichmäßig verteilen, viel Rest (letzte Seite) → mittig.
+  Sehr schmal (< 260 px für die Räume, Tablet mit offener Seitenleiste): Zuhause nur als Haus-Kreis.
+- **Nichts wandert**: Antippen eines sichtbaren Raums verschiebt weder Zuhause noch andere Namen;
+  die Leiste behält beim Blättern ihre Breite. Nur wenn der aktive Raum nicht zu sehen ist (Raumwechsel
+  von woanders), springt sie einmal auf seine Seite. Mausrad/Wischen blättert seitenweise.
+- Aktiver Raum: weiße Pille mit dem Handy-Schatten (auch hell gut sichtbar), Schrift unverändert.
+- Glocke, Sprechblase und ⋯ in **einer Kapsel** (46 hoch = Knopf 40 + 2 × 3, Fläche/Schatten wie die
+  Leiste, Trenner vor ⋯); nur mit ⋯ (Casora-verwaltet) und nur in Designs mit `--casora-chrome-capsule-fill`.
+  Prüfung: `dev/qa/regress/r230_raumleiste_ganze_namen.mjs`, `r150_raumleiste_pfeil.mjs`, `r91` (Kapsel).
+
+Handy – Navigationsleiste B (`casora-mobile-nav`, nur Casora/Nebel):
+- Glocke (und Sprechblase) und ⋯ sitzen **rechts unten in der Leiste** hinter einem Trenner; oben bleiben
+  nur Titel und Wetter (Kopf rückt über `--casora-mhead-reserve` hoch).
+- Alle Tasten 50 × 48 mit Sand-Kreis 36; die aktive Taste ist die weiße Pille **ohne Namen** – der Name
+  steht schon groß als Seitentitel darüber (kein doppeltes „Zuhause“).
+- Menüs der Leisten-Knöpfe öffnen nach oben (`casoraMenuGlass.enter` dreht sie um, wenn unten kein Platz ist).

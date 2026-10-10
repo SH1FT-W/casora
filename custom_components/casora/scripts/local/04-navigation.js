@@ -132,6 +132,21 @@
       + '.hmn-bar.hmn-ic .hmn-btn.on>span:not(.hmn-bic){display:block;font-size:15px;font-weight:600;padding:0;letter-spacing:-0.01em;max-width:150px;}'
       + '.hmn-bar.hmn-ic .hmn-btn:not(.on):active{background:var(--casora-mnav-press-fill, rgba(255,255,255,0.20));}'
       + '.hmn-bar.hmn-ic .hmn-btn.on:active{filter:brightness(.94);}'
+      /* Handy-Leiste B (1.3, nur Casora/Nebel): Glocke und ⋯ (die Kopf-Kapsel samt Halter aus filter-overlay)
+         wandern rechts in die Leiste, hinter einen Trenner; oben bleiben nur Titel und Wetter. Alle Tasten
+         50 breit (Ziel 50 × 48), die aktive nur als weiße Pille mit Ton-Kreis – ihr Name steht schon groß
+         als Seitentitel darüber („Zuhause“ doppelt, Entwurf nav-h-B). Die Kapsel liest die --casora-mchrome-*-Werte. */
+      + '.hmn-sep,.hmn-dock{display:none;}'
+      + '.hmn-bar.hmn-act .hmn-sep{display:block;flex:none;align-self:center;width:1px;height:24px;margin:0 3px;background:var(--casora-pill-divider, rgba(255,255,255,0.18));}'
+      + '.hmn-bar.hmn-act .hmn-dock{display:flex;align-items:center;flex:none;height:48px;'
+      +   '--casora-mchrome-glass:none;--casora-mchrome-btn-fill:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));--casora-mchrome-btn:36px;'
+      +   '--casora-mchrome-slot-pad:7px;--casora-mchrome-pad:0;--casora-mchrome-gap:2px;--casora-chrome-hit:6px;--casora-chrome-hit-pe:auto;--casora-mchrome-bell:19px;--casora-mchrome-dots:18px;--casora-mchrome-assist:18px;'
+      +   '--casora-mchrome-sep-vis:hidden;--casora-mchrome-edit-ml:0px;--casora-bell-dot-top:6px;--casora-bell-dot-right:8px;'
+      +   '--casora-mchrome-count-top:-2px;--casora-mchrome-count-right:-2px;}'
+      + '.hmn-bar.hmn-act .hmn-dock>div{position:relative!important;top:auto!important;right:auto!important;left:auto!important;z-index:auto!important;display:flex;}'
+      + '.hmn-bar.hmn-act.hmn-ic .hmn-btn{width:50px;}'
+      + '.hmn-bar.hmn-act.hmn-ic .hmn-btn.on{width:50px;min-width:50px;padding:0;justify-content:center;}'
+      + '.hmn-bar.hmn-act.hmn-ic .hmn-btn.on>span:not(.hmn-bic){display:none;}'
       /* Casora/Weich (Richtung C „Leicht“, 08.10.2026): Räume und Szenen als Blatt wie ein Casora-Handy-Popup –
          volle Breite, unten bündig, nur oben rund (--casora-sheet-radius), Griff wie der Popup-Griff, Titel
          mittig mit Etikett. Zeilen 52 px ohne Platten (Pille 26 = Kreis 18 + 8 Innenabstand, konzentrisch);
@@ -296,6 +311,8 @@
       /* Nur entfernen, wenn die Karte wirklich weg ist (Dashboard gewechselt), nicht bei kurzem Umhängen. */
       setTimeout(function () { if (!self.isConnected) { self._closeMenu(); if (self._bar && self._bar.parentNode) self._bar.remove();
         document.documentElement.style.removeProperty('--casora-mobile-nav-space');
+        document.documentElement.style.removeProperty('--casora-mhead-reserve');
+        if (self._dock) Array.prototype.forEach.call(self._dock.children, function (h) { if (h._hmnHome && h._hmnHome.isConnected) h._hmnHome.appendChild(h); });
         if (self._fOff) { self._fOff(); self._fOff = null; }
         if (self._onScroll) { document.removeEventListener('scroll', self._onScroll, true); self._onScroll = null; }
         if (self._idleIv) { clearInterval(self._idleIv); self._idleIv = null; document.removeEventListener('visibilitychange', self._onVis);
@@ -346,6 +363,38 @@
       this._homeText();
       this._bRooms = mk('rooms', '/casora_assets/icons/rooms.svg?v=3', T('Räume'));
       this._bScenes = mk('scenes', 'mdi:palette-outline', T('Szenen'));
+      this._sep = document.createElement('span'); this._sep.className = 'hmn-sep';
+      this._dock = document.createElement('span'); this._dock.className = 'hmn-dock';
+      bar.appendChild(this._sep); bar.appendChild(this._dock);
+      /* Die Leiste hängt an document.body, neben <home-assistant>: HAs „hass-action“ (Aktionen der
+         Kapsel-Knöpfe, z. B. das ⋯-Menü als javascript-Aktion) käme dort nie an. Weiterreichen. */
+      bar.addEventListener('hass-action', function (e) {
+        var ha = document.querySelector('home-assistant');
+        if (e._hmnFwd || !ha) return;
+        e.stopPropagation();
+        var f = new CustomEvent('hass-action', { detail: e.detail, bubbles: true, composed: true });
+        f._hmnFwd = true;
+        ha.dispatchEvent(f);
+      });
+    }
+    /* Handy-Leiste B (1.3): Halter der Kopf-Kapsel (filter-overlay, window._casoraChromeHost) in die Leiste
+       holen bzw. zurückgeben, wenn das Design wechselt. Der Seitenkopf rückt dafür hoch (--casora-mhead-reserve). */
+    _syncDock() {
+      var soft = !!(window._casoraSoft && window._casoraSoft());
+      var host = soft && window._casoraChromeHost ? window._casoraChromeHost() : null;
+      var dock = this._dock, root = document.documentElement;
+      if (host && host.isConnected !== false && host.querySelector('button-card')) {
+        if (host.parentNode !== dock) {
+          host._hmnHome = host.parentNode; dock.appendChild(host);
+          ['opacity', 'filter', 'transform', 'transition', 'pointer-events'].forEach(function (k) { host.style.removeProperty(k); });
+        }
+      } else if (!soft) {
+        Array.prototype.forEach.call(dock.children, function (h) { if (h._hmnHome && h._hmnHome.isConnected) h._hmnHome.appendChild(h); else h.remove(); });
+      }
+      var on = soft && !!dock.querySelector('button-card');
+      this._bar.classList.toggle('hmn-act', on);
+      if (on) root.style.setProperty('--casora-mhead-reserve', '8px');
+      else root.style.removeProperty('--casora-mhead-reserve');
     }
     /* Pfad statt mdi: → SF-Symbol-SVG aus /casora_assets/icons per mask-image (ha-icon hat unberechenbare Innenmaße). */
     _iconHtml(icon) {
@@ -738,6 +787,7 @@
       }
       this._bindOverlays();
       this._slimHome();
+      this._syncDock();
 
     }
   }

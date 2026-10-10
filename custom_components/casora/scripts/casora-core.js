@@ -1165,9 +1165,20 @@ window.casoraMenuGlass = {
   },
 
   enter: function (el) {
+    /* Handy-Leiste B (1.3): Glocke und ⋯ sitzen unten – ein Menü, das per dropTop unter ihnen
+       aufginge, liefe aus dem Bild. Dann öffnet es über dem Knopf (und wächst nach oben). */
+    var d = this._drop, up = false;
+    this._drop = null;
+    if (d && Date.now() - d.t < 1500 && d.rect.top > window.innerHeight / 2) {
+      var h = el.offsetHeight;
+      if (d.rect.bottom + d.gap + h > window.innerHeight - 8) {
+        el.style.top = Math.max(12, Math.round(d.rect.top - d.gap - h)) + 'px';
+        up = true;
+      }
+    }
     el.style.opacity = '0';
-    el.style.transformOrigin = 'top right';
-    el.style.transform = 'scale(0.92) translateY(-8px)';
+    el.style.transformOrigin = up ? 'bottom right' : 'top right';
+    el.style.transform = 'scale(0.92) translateY(' + (up ? 8 : -8) + 'px)';
     requestAnimationFrame(function () {
       el.style.transition = 'opacity 200ms cubic-bezier(0.32,0.72,0,1),'
         + ' transform 260ms cubic-bezier(0.32,0.72,0,1)';
@@ -1185,6 +1196,7 @@ window.casoraMenuGlass = {
   },
 
   dropTop: function (rect, gap) {
+    this._drop = { rect: rect, gap: gap == null ? 10 : gap, t: Date.now() };
     var y = rect.bottom;
     var bar = this._navRow();
     if (bar) {
@@ -3770,7 +3782,7 @@ window.casoraMenuGlass = {
       this._path    = normalize(location.pathname);
       this._menu    = null;
       this._onRoute  = () => this._syncRoute();
-      this._onResize = () => { this._syncHeaderOffset(); this._placeIndicator(true); };
+      this._onResize = () => { this._syncHeaderOffset(); if (this._pagedMode) this._queueLayout(); else this._placeIndicator(true); };
     }
 
     static getStubConfig() { return { variant: 'desktop', routes: [] }; }
@@ -3821,12 +3833,13 @@ window.casoraMenuGlass = {
       requestAnimationFrame(() => {
         if (!this.isConnected) return;
         this._syncHeaderOffset();
+        if (this._pagedMode) this._layout();
         this._placeIndicator();
       });
       if (document.fonts && document.fonts.ready && !CasoraNavBar._fontsReady) {
         document.fonts.ready.then(() => {
           CasoraNavBar._fontsReady = true;
-          this._placeIndicator(true);
+          if (this._pagedMode) this._queueLayout(); else this._placeIndicator(true);
         }).catch(() => {});
       }
     }
@@ -3861,22 +3874,37 @@ window.casoraMenuGlass = {
       const scroller = document.createElement('div');
       scroller.className = 'scroller';
       bar.appendChild(scroller);
+      /* Raumleiste A „Feinschliff“ (1.3, Tablet-Fassung = Desktop + Tablet): Zuhause steht fest vorn,
+         dahinter ein Trenner und die Räume seitenweise – nur ganze Namen, die Pfeile sind Endkappen
+         neben (nicht über) den Namen, und die Leiste behält ihre Breite: Antippen eines sichtbaren
+         Raums verschiebt nichts mehr (vorher rückte der Raum in die Mitte, 100–160 px). */
+      const paged = this._variant === 'tablet';
+      this._pagedMode = paged;
+      this._page = 0;
+      this._pages = null;
       /* Scroll-Hinweis bei Überlänge (01.10.2026): kleiner Pfeil über dem Rand, Geschwister
          der Liste (kein Vorfahre) – beeinflusst weder Blur noch Maske. Tippen blättert weiter. */
+      const mores = {};
       ['l', 'r'].forEach((side) => {
         const more = document.createElement('button');
         more.type = 'button';
         more.className = 'more more-' + side;
-        more.tabIndex = -1;
-        more.setAttribute('aria-hidden', 'true');
+        if (paged) {
+          more.setAttribute('aria-label', window.casoraTr ? window.casoraTr(side === 'r' ? 'Weiter' : 'Zurück') : (side === 'r' ? 'Weiter' : 'Zurück'));
+        } else {
+          more.tabIndex = -1;
+          more.setAttribute('aria-hidden', 'true');
+        }
         more.addEventListener('click', (ev) => {
           ev.stopPropagation();
+          if (this._pages) { this._showPage(this._page + (side === 'r' ? 1 : -1), true); return; }
           const sc = this._scroller;
           if (!sc) return;
           const by = Math.max(120, sc.clientWidth * 0.6) * (side === 'r' ? 1 : -1);
           try { sc.scrollBy({ left: by, behavior: 'smooth' }); } catch (_) { sc.scrollLeft += by; }
         });
-        bar.appendChild(more);
+        mores[side] = more;
+        if (!paged) bar.appendChild(more);
       });
       if (this._variant === 'tablet') {
         const flash = document.createElement('div');
@@ -3900,7 +3928,19 @@ window.casoraMenuGlass = {
       scroller.addEventListener('scroll', () => this._syncFade(), { passive: true });
       // per-01 (10.10.2026): Mausrad (senkrecht) blättert die Leiste waagerecht – sonst kamen
       // Mausnutzer nicht an die hinteren Räume. Am Ende der Leiste scrollt die Seite wie gewohnt.
+      // 1.3: in der Seiten-Leiste blättert das Rad seitenweise (eine Seite je Rast, kurz gesperrt).
       scroller.addEventListener('wheel', (ev) => {
+        if (this._pages) {
+          const d = Math.abs(ev.deltaY) >= Math.abs(ev.deltaX) ? ev.deltaY : ev.deltaX;
+          if (ev.ctrlKey || !d) return;
+          const to = this._page + (d > 0 ? 1 : -1);
+          if (to < 0 || to >= this._pages.length) return;
+          ev.preventDefault();
+          if (this._wheelLock && Date.now() < this._wheelLock) return;
+          this._wheelLock = Date.now() + 350;
+          this._showPage(to, true);
+          return;
+        }
         if (ev.ctrlKey || Math.abs(ev.deltaY) <= Math.abs(ev.deltaX)) return;
         const max = scroller.scrollWidth - scroller.clientWidth;
         if (max <= 2) return;
@@ -3912,6 +3952,26 @@ window.casoraMenuGlass = {
       this._indicator = indicator;
       this._els       = [];
       if (this._revealRO) { this._revealRO.disconnect(); this._revealRO = null; }
+
+      // Seiten-Leiste: Zuhause (erster Eintrag, kein Menü) | Trenner | ‹ Räume › – Räume in eigener Reihe.
+      const homeFixed = paged && this._routes.length > 1 && !this._isMenuRoute(this._routes[0]);
+      let rooms = null;
+      if (paged) {
+        rooms = document.createElement('div');
+        rooms.className = 'rooms';
+        this._rooms = rooms;
+        // Wischen am Tablet blättert seitenweise; der Klick danach öffnet keinen Raum.
+        let sx = null, sy = 0;
+        rooms.addEventListener('pointerdown', (ev) => { if (ev.pointerType !== 'mouse') { sx = ev.clientX; sy = ev.clientY; } }, { passive: true });
+        rooms.addEventListener('pointerup', (ev) => {
+          if (sx == null) return;
+          const dx = ev.clientX - sx, dy = ev.clientY - sy; sx = null;
+          if (!this._pages || Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+          this._swipedAt = Date.now();
+          this._showPage(this._page + (dx < 0 ? 1 : -1), true);
+        }, { passive: true });
+        rooms.addEventListener('pointercancel', () => { sx = null; }, { passive: true });
+      }
 
       this._routes.forEach((route, i) => {
         const btn = document.createElement('button');
@@ -3929,6 +3989,21 @@ window.casoraMenuGlass = {
         if (lit) label.setAttribute('data-no-i18n', '');
         label.textContent = nm && nm.auto ? nm.text
           : (window.casoraTr && !lit ? window.casoraTr(route.label || '') : (route.label || ''));
+        if (homeFixed && i === 0) {
+          // Zuhause mit Haus-Kreis wie die Handy-Leiste; der Name bleibt der Textknoten des Labels.
+          btn.classList.add('home');
+          const hic = document.createElement('span');
+          hic.className = 'hic';
+          const ic = document.createElement('ha-icon');
+          ic.setAttribute('icon', 'mdi:home-variant');
+          hic.appendChild(ic);
+          const htx = document.createElement('span');
+          htx.className = 'htx';
+          while (label.firstChild) htx.appendChild(label.firstChild);
+          label.appendChild(hic);
+          label.appendChild(htx);
+          btn.setAttribute('aria-label', htx.textContent);
+        }
         btn.appendChild(label);
 
         const badge = document.createElement('span');
@@ -3940,6 +4015,7 @@ window.casoraMenuGlass = {
         btn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
+          if (this._swipedAt && Date.now() - this._swipedAt < 400) return;
           this._activate(route, btn);
         });
 
@@ -3953,22 +4029,105 @@ window.casoraMenuGlass = {
         });
         btn.addEventListener('blur', () => btn.classList.remove('kbd'));
 
-        scroller.appendChild(btn);
+        if (!paged || (homeFixed && i === 0)) scroller.appendChild(btn);
+        else rooms.appendChild(btn);
         this._els.push({ btn: btn, label: label, badge: badge, route: route });
+        if (paged && homeFixed && i === 0) {
+          const sep = document.createElement('span');
+          sep.className = 'sep';
+          scroller.appendChild(sep);
+        }
       });
+      if (paged) {
+        scroller.appendChild(mores.l);
+        scroller.appendChild(rooms);
+        scroller.appendChild(mores.r);
+      }
 
       // per-01 (10.10.2026): Größenwächter gleich beim Aufbau, nicht erst in _revealActive – wurde die
       // Leiste unsichtbar/ohne aktiven Raum gebaut, gab es sonst nie ein _syncFade (Pfeil rechts fehlte).
       if (window.ResizeObserver) {
-        this._revealRO = new ResizeObserver(() => { if (this.isConnected) { this._placeIndicator(true); this._syncFade(); } });
-        this._revealRO.observe(scroller);
+        this._revealRO = new ResizeObserver(() => {
+          if (!this.isConnected) return;
+          if (this._pagedMode) { this._queueLayout(); return; }
+          this._placeIndicator(true); this._syncFade();
+        });
+        this._revealRO.observe(paged ? bar : scroller);
         this._els.forEach((el) => this._revealRO.observe(el.label));
       }
 
       this._built = true;
+      if (paged) this._layout();
       this._syncRoute();
       this._syncBadges();
       this._syncFade();
+    }
+
+    // ── Seiten-Leiste (1.3) ──────────────────────────────────────────────────
+    // Alle Räume zeigen und messen; passen sie nicht, Seiten aus ganzen Namen bilden. Die
+    // Raumreihe behält dann eine feste Breite, so steht Zuhause auf jeder Seite an derselben Stelle.
+    _queueLayout() {
+      if (this._layoutQ) return;
+      this._layoutQ = requestAnimationFrame(() => { this._layoutQ = 0; if (this.isConnected) this._layout(); });
+    }
+
+    _layout() {
+      const rooms = this._rooms, bar = this._bar;
+      if (!this._pagedMode || !rooms || !bar) return;
+      const list = this._els.filter((el) => el.btn.parentNode === rooms);
+      bar.classList.remove('paged', 'tight');
+      rooms.classList.remove('spread');
+      list.forEach((el) => { el.btn.hidden = false; });
+      const over = list.length > 1 && rooms.scrollWidth - rooms.clientWidth > 1;
+      if (!over) {
+        this._pages = null;
+        this._page = 0;
+        this._syncFade();
+        this._placeIndicator(true);
+        return;
+      }
+      bar.classList.add('paged');
+      // Sehr schmal (Tablet hochkant, Seitenleiste offen): Zuhause nur als Haus-Kreis – sonst passte oft nur ein Raum.
+      if (rooms.clientWidth < 260 && rooms.parentNode.querySelector('.route.home')) bar.classList.add('tight');
+      const W = rooms.clientWidth;
+      const gap = parseFloat(getComputedStyle(rooms).columnGap) || 0;
+      const w = list.map((el) => el.btn.getBoundingClientRect().width);
+      const pages = [];
+      let cur = null, sum = 0;
+      list.forEach((el, i) => {
+        if (cur && sum + gap + w[i] <= W + 0.5) { cur.push(i); sum += gap + w[i]; return; }
+        cur = [i]; sum = w[i]; pages.push(cur);
+      });
+      this._pageList = list;
+      this._pages = pages.map((p) => ({ idx: p, w: p.reduce((s, i) => s + w[i], 0) + gap * (p.length - 1) }));
+      this._pageW = W;
+      const act = list.findIndex((el) => el.btn.classList.contains('active'));
+      const keep = Math.min(this._page || 0, this._pages.length - 1);
+      // Neu vermessen (Schrift, Größe): auf der Seite des aktiven Raums – außer es wurde seit dem letzten Wechsel von Hand geblättert.
+      const fresh = this._pagedFor !== this._activeIdx;
+      this._pagedFor = this._activeIdx;
+      const stay = !fresh && this._userPaged;
+      this._showPage(act >= 0 && !stay ? this._pageOf(act) : keep, stay);
+    }
+
+    _pageOf(i) {
+      const p = (this._pages || []).findIndex((pg) => pg.idx.indexOf(i) >= 0);
+      return p < 0 ? 0 : p;
+    }
+
+    _showPage(p, byUser) {
+      const pages = this._pages;
+      this._userPaged = !!byUser;
+      if (!pages || !this._rooms) return;
+      p = Math.max(0, Math.min(pages.length - 1, p));
+      this._page = p;
+      const pg = pages[p];
+      this._pageList.forEach((el, i) => { el.btn.hidden = pg.idx.indexOf(i) < 0; });
+      // Wenig Rest: Namen gleichmäßig verteilen (keine Lücke vor dem Pfeil); viel Rest (letzte Seite): vorn bündig.
+      const rest = this._pageW - pg.w;
+      this._rooms.classList.toggle('spread', pg.idx.length > 1 && rest / (pg.idx.length - 1) <= 32);
+      this._syncFade();
+      this._placeIndicator(true);
     }
 
     _isMenuRoute(route) {
@@ -4093,9 +4252,16 @@ window.casoraMenuGlass = {
         return;
       }
 
+      // Seiten-Leiste: nach einem Raumwechsel den aktiven Raum auf seine Seite holen – nur wenn er gerade
+      // nicht zu sehen ist, und nur einmal je Wechsel (von Hand weitergeblättert bleibt weitergeblättert).
+      if (this._pages && this._pagedFor !== this._activeIdx) {
+        this._pagedFor = this._activeIdx;
+        const li = this._pageList.indexOf(this._els[this._activeIdx]);
+        if (li >= 0 && this._els[this._activeIdx].btn.hidden) { this._showPage(this._pageOf(li)); return; }
+      }
       const to = this._labelBox(this._activeIdx);
-      if (!to) return;
-      this._revealActive(to, instant);
+      if (!to) { if (this._pagedMode) { ind.classList.remove('on'); this._from = null; } return; }
+      if (!this._pagedMode) this._revealActive(to, instant);
 
       const from = this._from;
       if (!instant && from && from.left === to.left && from.width === to.width
@@ -4187,6 +4353,16 @@ window.casoraMenuGlass = {
     _syncFade() {
       const sc = this._scroller;
       if (!sc) return;
+      if (this._pagedMode) {
+        // Seiten-Leiste: kein Verlauf (nur ganze Namen); die Pfeile zeigen, ob es davor/danach weitergeht.
+        const n = this._pages ? this._pages.length : 0;
+        sc.classList.remove('fade-l', 'fade-r');
+        if (this._bar) {
+          this._bar.classList.toggle('more-l-on', n > 1 && this._page > 0);
+          this._bar.classList.toggle('more-r-on', n > 1 && this._page < n - 1);
+        }
+        return;
+      }
       const max = sc.scrollWidth - sc.clientWidth;
       sc.classList.toggle('fade-l', max > 2 && sc.scrollLeft > 2);
       sc.classList.toggle('fade-r', max > 2 && sc.scrollLeft < max - 2);
@@ -4752,6 +4928,73 @@ window.casoraMenuGlass = {
           }
 
           .badge { top: 8px; right: 12px; }
+
+          /* Seiten-Leiste A (1.3): Zuhause | Trenner | ‹ Räume ›. Die Liste blättert nicht, sie
+             zeigt eine Seite ganzer Namen; JS (_layout) misst und setzt .paged/.spread. */
+          .scroller { overflow: hidden; touch-action: pan-y; }
+          .rooms {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            flex: 0 1 auto;
+            min-width: 0;
+            height: 100%;
+            overflow: hidden;
+            column-gap: var(--casora-nav-route-gap-tablet, 4px);
+          }
+          /* Läuft die Leiste über, nimmt sie ihre volle Breite (max-width) – so bleibt sie beim Blättern
+             gleich breit und ihr Größenwächter merkt, wenn sich die verfügbare Breite ändert. */
+          .bar.paged { width: 100%; }
+          .bar.paged .rooms { flex: 1 1 auto; }
+          .rooms { justify-content: center; }
+          .rooms.spread { justify-content: space-between; }
+          .bar.tight .route.home .htx { display: none; }
+          .bar.tight .route.home .label { padding-right: calc((var(--casora-nav-pill-height-tablet, 46px)
+              - 2 * var(--casora-nav-pill-inset-y-tablet, 4px) - 30px) / 2); gap: 0; }
+          .rooms .route { margin-left: 0 !important; }
+          .route[hidden] { display: none; }
+          .sep {
+            flex: none;
+            width: 1px;
+            height: 22px;
+            margin: 0 var(--casora-nav-sep-gap, 6px);
+            background: var(--casora-pill-divider, rgba(255,255,255,0.18));
+          }
+          .route.home .label {
+            gap: 8px;
+            padding-left: calc((var(--casora-nav-pill-height-tablet, 46px)
+              - 2 * var(--casora-nav-pill-inset-y-tablet, 4px) - 30px) / 2);
+          }
+          .hic {
+            flex: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--casora-nav-home-circle, var(--casora-icon-circle-bg, rgba(255,255,255,0.12)));
+            color: var(--casora-nav-label-color, #fff);
+            --mdc-icon-size: 18px;
+          }
+          .hic ha-icon { width: 18px; height: 18px; display: inline-flex; color: inherit; }
+          .route.home.active .hic { background: var(--primary-color, #B67A50); color: #fff; }
+          /* Pfeile als Endkappen neben den Namen; ohne Weiteres in der Richtung blass und still. */
+          .scroller .more {
+            display: none;
+            position: relative;
+            top: auto;
+            left: auto;
+            right: auto;
+            flex: none;
+            width: 30px;
+            height: 30px;
+            margin: 0 4px;
+          }
+          .bar.paged .scroller .more { display: block; opacity: .35; pointer-events: none; }
+          .bar.paged.more-l-on .more-l, .bar.paged.more-r-on .more-r { opacity: 1; pointer-events: auto; }
+          .scroller .more:focus-visible { outline: 2px solid var(--casora-nav-focus-line, currentColor); outline-offset: 1px; }
         `;
       }
 
