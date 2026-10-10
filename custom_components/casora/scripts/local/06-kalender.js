@@ -206,6 +206,11 @@
       + '.hcal-d.t .hcal-n{background:var(--casora-color-teal, #00C3D0);color:#000;font-weight:600;opacity:1;}'
       + '.hcal-dots{display:flex;gap:3px;height:5px;pointer-events:none;}'
       + '.hcal-dots i{width:5px;height:5px;border-radius:50%;}'
+      // Trefferflächen ≥ 40 px ohne neue Optik (Design-Audit 10.10.2026): unsichtbarer Rand um Pfeile,
+      // „Heute“-Knopf und Legenden-Pillen (sichtbar 32/30 px).
+      + '.hcal-b,.hcal-tb,.hcal-c{position:relative;}'
+      + '.hcal-b::before{content:"";position:absolute;inset:-4px;border-radius:50%;}'
+      + '.hcal-tb::before,.hcal-c::before{content:"";position:absolute;left:0;right:0;top:-5px;bottom:-5px;}'
       + '.hcal-b{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;cursor:pointer;background:rgba(255,255,255,0.08);-webkit-tap-highlight-color:transparent;}'
       + '.hcal-b ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;color:' + T.ink + ';pointer-events:none;}'
       + '.hcal-tb{font-size:13px;font-weight:600;padding:7px 12px;border-radius:999px;cursor:pointer;background:rgba(255,255,255,0.08);color:' + T.ink + ';-webkit-tap-highlight-color:transparent;}'

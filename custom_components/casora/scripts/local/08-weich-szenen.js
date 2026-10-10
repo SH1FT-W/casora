@@ -29,7 +29,10 @@
   };
   var CSS = '<style>'
     + '.zs-chips{display:flex;gap:8px;flex-wrap:wrap;}'
-    + '.zs-chip{padding:11px 17px;border-radius:999px;font-family:var(--primary-font-family,system-ui);font-size:13.5px;font-weight:600;'
+    // Sichtbar 38 px hoch, Trefferfläche 46 px (unsichtbarer Rand oben/unten in der 8-px-Lücke,
+    // Design-Audit 10.10.2026: Trefferflächen ≥ 40 px wie Schließen/„Alles aus“).
+    + '.zs-chip::before{content:"";position:absolute;left:0;right:0;top:-4px;bottom:-4px;}'
+    + '.zs-chip{position:relative;padding:11px 17px;border-radius:999px;font-family:var(--primary-font-family,system-ui);font-size:13.5px;font-weight:600;'
     +   'cursor:pointer;white-space:nowrap;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;'
     +   'background:var(--casora-lps-chip, var(--casora-soft-row-fill, rgba(140,115,90,0.07)));'
     +   'color:var(--casora-lps-chip-ink, var(--casora-soft-sub, rgba(58,50,43,0.6)));transition:background .2s ease, color .2s ease;}'
