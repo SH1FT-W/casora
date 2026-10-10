@@ -528,7 +528,7 @@ if (arg('vergleich')) {
 let rc = 0;
 if (arg('grenzen')) {
   const G = JSON.parse(fs.readFileSync(arg('grenzen'), 'utf8'));
-  for (const [p, lim] of Object.entries(G)) {
+  for (const [p, lim] of Object.entries(G).filter(([k]) => !k.startsWith('_'))) {
     const v = p.split('.').reduce((o, k) => (o == null ? o : o[k]), R);
     const ok = typeof v === 'number' && (lim.max == null || v <= lim.max);
     console.log(`  ${ok ? 'ok    ' : 'FEHLER'} ${p} = ${v} (max ${lim.max})`);

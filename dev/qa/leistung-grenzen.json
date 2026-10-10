@@ -1,0 +1,8 @@
+{
+ "_hinweis": "Messgrenzen für dev/qa/leistung.mjs --grenzen (Zustand arbeit, Dashboard test-neu). Nur Zähler, keine Zeiten (unter Last zu unruhig). Stand 1.3: Voll-Durchläufe beim Laden 150k → 37k (Desktop), 94k → 58k (Handy); Popup-Leck 56/56 → 0.",
+ "zusammenfassung.desktop.laden_vollDurchlaeufe": { "max": 60000 },
+ "zusammenfassung.handy.laden_vollDurchlaeufe": { "max": 75000 },
+ "zusammenfassung.desktop.ruhe60s_vollDurchlaeufe": { "max": 120000 },
+ "zusammenfassung.desktop.ruhe60s_requestUpdateLeer": { "max": 0 },
+ "geraete.desktop.leck.alive": { "max": 7 }
+}
