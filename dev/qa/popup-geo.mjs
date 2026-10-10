@@ -14,7 +14,8 @@
 export const MEASURE_GEO = () => {
   const parentOf = (e) => e.assignedSlot || e.parentNode || (e.host || null);
   const up = (e) => { const p = parentOf(e); return p && p.nodeType === 11 ? p.host : p; };
-  let frame = window.casoraPopup && window.casoraPopup.surface;
+  // window.__qaGeoRoot: andere Wurzel als das Popup (z. B. eine Kachel, dev/qa/matrix-bilder.mjs).
+  let frame = window.__qaGeoRoot || (window.casoraPopup && window.casoraPopup.surface);
   if (!frame) {
     for (const d of window.__pierce('ha-dialog, ha-adaptive-dialog, ha-md-dialog, ha-wa-dialog, ha-more-info-dialog')) {
       const r = d.getBoundingClientRect(); if (r.width > 80 && r.height > 80) { frame = d; break; }
