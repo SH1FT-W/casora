@@ -50,6 +50,20 @@ async function setup(opts, url) {
     conn.sendMessagePromise = (m) => {
       if (m && m.type === 'call_service' && (m.domain === 'lock' || m.domain === 'cover')) { window.__qaCalls.push(m.domain + '.' + m.service); return Promise.resolve({ context: { id: 'qa' } }); }
       if (m && m.type === 'lovelace/config' && window.__qaPartner && m.url_path === window.__qaPartner.url) return Promise.resolve(window.__qaPartner.cfg);
+      // Seit 1.3 (Leistung, Vorschlag A) holt der Browser vom Partner nur den Auszug casora/partner_info
+      // (phone_badges.py confirm_of) – hier aus der untergeschobenen Konfiguration nachgebaut.
+      if (m && m.type === 'casora/partner_info' && window.__qaPartner && m.url_path === window.__qaPartner.url) {
+        const ids = [];
+        const add = (x) => { if (typeof x === 'string' && x && !x.includes('[[[') && !ids.includes(x)) ids.push(x); };
+        (function walk(o) {
+          if (!o || typeof o !== 'object') return;
+          if (Array.isArray(o)) { o.forEach(walk); return; }
+          const v = o.variables;
+          if (v && v.confirm_toggle === true) { add(o.entity); add(v.cover_entity); [].concat(v.covers || [], v.locks || []).forEach(add); }
+          for (const k in o) if (k !== 'button_card_templates') walk(o[k]);
+        })(window.__qaPartner.cfg.views);
+        return Promise.resolve({ confirm: { ids, names: {} }, scenes: {} });
+      }
       return orig(m);
     };
   });
@@ -103,14 +117,16 @@ const askOpen = (page) => page.evaluate(() => !!document.querySelector('.casora-
 const askClick = (page, cls) => page.evaluate((cls) => { const h = document.querySelector('.casora-askfirst'); const b = h && (h.shadowRoot || h).querySelector('.' + cls); if (b) b.click(); return !!b; }, cls);
 // 1.2.1 (P7): Knöpfe der Rückfrage im Casora-Look 44 hoch, voll rund, Bestätigen Petrol, Abbrechen Sand.
 const askLook = (page) => page.evaluate(() => {
-  const r = document.querySelector('.casora-askfirst').shadowRoot;
+  const h = document.querySelector('.casora-askfirst');
+  if (!h) return null; // keine Rückfrage offen – die Prüfung davor ist schon rot, hier nicht abbrechen
+  const r = h.shadowRoot;
   const css = getComputedStyle(document.documentElement);
   const tone = (v) => { const d = document.createElement('i'); d.style.color = css.getPropertyValue(v).trim(); r.appendChild(d); const c = getComputedStyle(d).color; d.remove(); return c; };
   const m = (sel) => { const e = r.querySelector(sel), b = e.getBoundingClientRect(), s = getComputedStyle(e);
     return { h: Math.round(b.height), rad: Math.min(parseFloat(s.borderTopLeftRadius), b.height / 2), bg: s.backgroundColor }; };
   return { no: m('.no'), yes: m('.yes'), petrol: tone('--casora-popup-ui-action'), sand: tone('--casora-soft-control-fill') };
 });
-const lookOk = (l) => [l.no, l.yes].every((b) => b.h === 44 && b.rad === 22) && l.yes.bg === l.petrol && l.no.bg === l.sand;
+const lookOk = (l) => !!l && [l.no, l.yes].every((b) => b.h === 44 && b.rad === 22) && l.yes.bg === l.petrol && l.no.bg === l.sand;
 const calls = (page) => page.evaluate(() => window.__qaCalls.slice());
 
 // ── Handy-Dashboard: Rückfrage an der Handy-Kachel ─────────────────────────────
