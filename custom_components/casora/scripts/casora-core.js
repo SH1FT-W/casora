@@ -3847,6 +3847,17 @@ window.casoraMenuGlass = {
       this._bar       = bar;
       this._scroller  = scroller;
       scroller.addEventListener('scroll', () => this._syncFade(), { passive: true });
+      // per-01 (10.10.2026): Mausrad (senkrecht) blättert die Leiste waagerecht – sonst kamen
+      // Mausnutzer nicht an die hinteren Räume. Am Ende der Leiste scrollt die Seite wie gewohnt.
+      scroller.addEventListener('wheel', (ev) => {
+        if (ev.ctrlKey || Math.abs(ev.deltaY) <= Math.abs(ev.deltaX)) return;
+        const max = scroller.scrollWidth - scroller.clientWidth;
+        if (max <= 2) return;
+        const dy = ev.deltaMode === 1 ? ev.deltaY * 16 : ev.deltaY;
+        if ((dy < 0 && scroller.scrollLeft <= 0) || (dy > 0 && scroller.scrollLeft >= max - 1)) return;
+        ev.preventDefault();
+        scroller.scrollLeft += dy;
+      }, { passive: false });
       this._indicator = indicator;
       this._els       = [];
       if (this._revealRO) { this._revealRO.disconnect(); this._revealRO = null; }
@@ -3895,9 +3906,18 @@ window.casoraMenuGlass = {
         this._els.push({ btn: btn, label: label, badge: badge, route: route });
       });
 
+      // per-01 (10.10.2026): Größenwächter gleich beim Aufbau, nicht erst in _revealActive – wurde die
+      // Leiste unsichtbar/ohne aktiven Raum gebaut, gab es sonst nie ein _syncFade (Pfeil rechts fehlte).
+      if (window.ResizeObserver) {
+        this._revealRO = new ResizeObserver(() => { if (this.isConnected) { this._placeIndicator(true); this._syncFade(); } });
+        this._revealRO.observe(scroller);
+        this._els.forEach((el) => this._revealRO.observe(el.label));
+      }
+
       this._built = true;
       this._syncRoute();
       this._syncBadges();
+      this._syncFade();
     }
 
     _isMenuRoute(route) {
