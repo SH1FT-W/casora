@@ -12,7 +12,7 @@
 //
 // Optionen:
 //   --quick                 Kurzlauf (desktop + phone, wenige Räume/Kacheln je Ansicht)
-//   --viewports a,b         desktop | tablet | phone | phone-webkit   (Standard: alle vier; quick: desktop,phone)
+//   --viewports a,b         desktop | tablet | phone | phone-webkit | handy (393×852 WebKit)   (Standard: alle vier; quick: desktop,phone)
 //   --dash <url_path>       Test-Dashboard (Standard: qa-stress, sonst ein im Studio angelegtes, sonst irgendein Casora-Dashboard)
 //   --mobile-dash <url>     Handy-Dashboard (Standard: <dash>-mobile, falls vorhanden)
 //   --only studio|dashboard nur einen Teil
@@ -55,6 +55,8 @@ const VP = {
   tablet: { width: 1024, height: 768, mobile: true, touch: true, userAgent: IPAD_UA },
   phone: { width: 390, height: 844, mobile: true },
   'phone-webkit': { width: 390, height: 844, mobile: true, safari: true },
+  // iPhone 15/16 (Maß der Feinschliff-Matrix), WebKit.
+  handy: { width: 393, height: 852, mobile: true, safari: true },
 };
 const MERGE = flag('merge');
 for (const v of VIEWPORTS) if (!VP[v]) { console.error('Unbekannter Viewport:', v, '– erlaubt:', Object.keys(VP).join(', ')); process.exit(2); }
