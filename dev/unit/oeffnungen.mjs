@@ -111,8 +111,11 @@ const body = (s) => s.trim().replace(/^\[\[\[/, '').replace(/\]\]\]$/, '');
 const nameFn = new Function('hass', 'states', 'entity', 'variables', 'user', body(tpl.name));
 const sub = (h, variables) => {
   const html = nameFn(h, h.states, null, { enabled: true, ...variables }, {});
-  return /badge-sub">([^<]*)</.exec(html)[1];
+  // Seit 1.3 bei mehreren Meldungen lange und kurze Zeile (Kurzform nur bei Platzmangel, casoraSecFit).
+  const lang = /class="sec-lang">([^<]*)</.exec(html);
+  return lang ? lang[1] : /badge-sub">([^<]*)</.exec(html)[1];
 };
+const kurz = (h, variables) => { const m = /class="sec-kurz">([^<]*)</.exec(nameFn(h, h.states, null, { enabled: true, ...variables }, {})); return m ? m[1] : null; };
 {
   const h = house();
   const V = { locks: ['lock.haustuer'], entities: ['binary_sensor.balkontuer_kombi', 'binary_sensor.kuechenfenster_contact', 'binary_sensor.kuechenfenster_kipp', 'binary_sensor.buerofenster', 'binary_sensor.haustuer', 'binary_sensor.flur_bewegung'] };
@@ -121,6 +124,7 @@ const sub = (h, variables) => {
   assert.equal(sub(h, V), 'Schloss offen');
   set(h, 'binary_sensor.buerofenster', 'on');
   assert.equal(sub(h, V), 'Schloss offen · Fenster offen', 'Schloss offen + Fenster offen');
+  assert.equal(kurz(h, V), '2 offen', 'Kurzform bei Platzmangel');
   set(h, 'lock.haustuer', 'locked');
   assert.equal(sub(h, V), 'Fenster offen');
   set(h, 'binary_sensor.buerofenster', 'off');
