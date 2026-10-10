@@ -75,13 +75,16 @@ if (flag('vorbereiten')) {
 async function vorbereiten() {
   const flaechen = JSON.parse(fs.readFileSync(path.join(MDIR, 'flaechen.json'), 'utf8'));
   const want = flaechen.filter((f) => f.vorlage && /^(kachel|badge|badge-gruppe|kopf|handy-vorlage)$/.test(f.familie)).map((f) => f.vorlage);
-  const have = new Set([...tplsOfView(cfgs[DESK].views), ...tplsOfView((cfgs[PHONE] || {}).views || [])]);
+  // Fehlend = nicht im Desktop-Dashboard (Desktop/Tablet suchen nur dort und im Matrix-Dashboard; das Handy sucht zuerst
+  // in seinem eigenen Dashboard).
+  const have = new Set(tplsOfView(cfgs[DESK].views));
   const missing = want.filter((t) => !have.has(t));
   // Kartenbeispiele aus allen Dashboards des Hauses (auch Hemma-Fixture/Importe), deren Entitäten es gibt.
   const all = {};
   for (const d of list.filter((x) => x.mode === 'storage' || x.mode === 'yaml')) { const cf = cfgs[d.url_path] || await cfgOf(d.url_path); if (cf) all[d.url_path] = cf; }
   const examples = {};
-  const ok = (card) => { const ids = JSON.stringify(card).match(/"[a-z_]+\.[a-z0-9_]+"/g) || [];
+  // Platzhalter wie „humidifier.YOUR_HUMIDIFIER“ zählen als fehlende Entität (Großbuchstaben mitprüfen).
+  const ok = (card) => { const ids = JSON.stringify(card).match(/"[a-z_]+\.[A-Za-z0-9_]+"/g) || [];
     return ids.map((x) => x.slice(1, -1)).filter((x) => /^(light|switch|sensor|binary_sensor|climate|cover|lock|media_player|fan|camera|vacuum|update|person|calendar|weather|alarm_control_panel|scene|humidifier|device_tracker|input_\w+|todo|select|number|event|image)\./.test(x)).every((x) => states[x]); };
   for (const cf of Object.values(all)) (function w(o) { if (Array.isArray(o)) return o.forEach(w); if (!o || typeof o !== 'object') return;
     if (o.type === 'custom:button-card' && o.template) { const t = [].concat(o.template).slice(-1)[0]; if (!examples[t] && ok(o)) examples[t] = o; }
@@ -507,7 +510,11 @@ async function overlayRow(pg, row, f, V) {
   // Box eines Elements samt seinem Shadow-Inhalt (casora-nav-bar: Host nur 16 px hoch, die Leiste liegt fest positioniert im Shadow-DOM).
   const elBox = (sel) => pg.evaluate((sel) => { const e = window.__pierce(sel).find((x) => x.getBoundingClientRect().width > 0); if (!e) return null; window.__qaCard = e;
     let r = e.getBoundingClientRect(); let x0 = r.left, y0 = r.top, x1 = r.right, y1 = r.bottom;
-    if (e.shadowRoot) for (const c of e.shadowRoot.querySelectorAll('*')) { const q = c.getBoundingClientRect(); if (q.width < 2 || q.height < 2 || getComputedStyle(c).visibility === 'hidden') continue;
+    // Fest positionierte Leiste im Shadow-DOM (Handy-Leiste): deren Box statt der Host-Box.
+    if (e.shadowRoot) { const fx = [...e.shadowRoot.querySelectorAll('*')].filter((c) => { const s = getComputedStyle(c); const q = c.getBoundingClientRect(); return s.position === 'fixed' && q.width > 100 && q.height > 30 && s.visibility !== 'hidden'; })
+      .sort((a, b) => b.getBoundingClientRect().width * b.getBoundingClientRect().height - a.getBoundingClientRect().width * a.getBoundingClientRect().height)[0];
+      if (fx) { const q = fx.getBoundingClientRect(); return { x: q.left, y: q.top, w: q.width, h: q.height }; } }
+    if (e.shadowRoot && r.height < 24) for (const c of e.shadowRoot.querySelectorAll('*')) { const q = c.getBoundingClientRect(); if (q.width < 2 || q.height < 2 || getComputedStyle(c).visibility === 'hidden') continue;
       x0 = Math.min(x0, q.left); y0 = Math.min(y0, q.top); x1 = Math.max(x1, q.right); y1 = Math.max(y1, q.bottom); }
     return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }; }, sel).catch(() => null);
   let clip = null, kind = 'seite';
@@ -686,6 +693,12 @@ for (const k of keys) {
       try {
         await pg.addScriptTag({ content: H.PIERCE }).catch(() => {});
         const m = await measure(pg, row, res.kind);
+        // Ausschnitt erst jetzt aus der aktuellen Lage der Karte (sie kann sich seit dem Suchen verschoben haben:
+        // Sammel-Badges klappen, Zustände ändern die Reihe) – sonst zeigt das Bild die Nachbarn statt der Fläche.
+        if (res.kind === 'card' && res.clip && f.familie !== 'overlay') {
+          const q = await pg.evaluate(() => { const c = window.__qaCard; if (!c) return null; const r = c.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; }).catch(() => null);
+          if (q && q.w > 4 && q.h > 4) { const nc = clipOf(q, V, 16); if (Math.abs(nc.y - res.clip.y) > 3 || Math.abs(nc.x - res.clip.x) > 3) out.verschoben = Math.round(Math.hypot(nc.x - res.clip.x, nc.y - res.clip.y)); res.clip = nc; }
+        }
         await pg.screenshot({ path: file, ...(res.clip ? { clip: res.clip } : {}) });
         out.bild = row.bild; out.messung = m; out.zahlen = zaehle(m); if (res.popupArt) out.popup_art = res.popupArt;
         nOk++;
