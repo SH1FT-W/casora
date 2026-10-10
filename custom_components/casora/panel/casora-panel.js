@@ -8745,6 +8745,30 @@ class CasoraPanel extends HTMLElement {
         }
         .mini-tabs.clipped.cl-l { --fl:7%; }
         .mini-tabs.clipped.cl-r { --fr:7%; }
+        /* Raumleiste A (1.3): kein Verlauf mehr, halbe Namen bleiben leer (_fitMiniTabs setzt .cut);
+           die Übersicht steht vor dem Streifen, mit Trenner. */
+        .mini-tabs.clipped { -webkit-mask-image:none; mask-image:none; }
+        .mini-tab.cut { visibility:hidden; }
+        .mini-tab.home { flex:none; }
+        .mini-tabsep { flex:none; align-self:center; width:1px; height:1.1em; background:currentColor; opacity:.25; }
+        .mini-cap, .mini-capsep { display:none; }
+        .capsule .mini-cap {
+          display:block; position:absolute; z-index:1; pointer-events:none;
+          --cap-p:calc(var(--chrome-btn) * 0.075);
+          top:calc(var(--chrome-top-btn) - var(--cap-p)); right:calc(var(--pad-x) - var(--cap-p));
+          height:calc(var(--chrome-btn) + 2 * var(--cap-p));
+          width:calc(var(--cap-n) * var(--chrome-btn) + (var(--cap-n) - 1) * var(--chrome-btn-gap) + 2 * var(--cap-p));
+          border-radius:9999px;
+          background:var(--casora-chrome-capsule-fill, transparent);
+          box-shadow:var(--casora-chrome-capsule-shadow, none);
+        }
+        .capsule .mini-capsep {
+          display:block; position:absolute; z-index:3; pointer-events:none; width:1px;
+          height:calc(var(--chrome-btn) * 0.5);
+          top:calc(var(--chrome-top-btn) + var(--chrome-btn) * 0.25);
+          right:calc(var(--pad-x) + var(--chrome-btn) + var(--chrome-btn-gap) / 2);
+          background:var(--casora-chrome-capsule-line, transparent);
+        }
         .mini-tab {
           color:rgba(255,255,255,0.66); white-space:nowrap;
           padding-bottom:4px; display:inline-flex; align-items:center; gap:3px;
@@ -9226,6 +9250,10 @@ class CasoraPanel extends HTMLElement {
           box-shadow:var(--button-card-box-shadow-mobile, none);
         }
         .card.map.soft :is(.mini-bell, .mini-assist) svg { fill:var(--casora-chrome-ink, #fff); }
+        .card.map.soft .capsule :is(.mini-settings, .mini-bell, .mini-assist) {
+          background:var(--casora-chrome-capsule-btn-fill, var(--casora-chrome-fill, rgba(0,0,0,0.40)));
+          box-shadow:var(--casora-chrome-capsule-btn-shadow, var(--button-card-box-shadow-mobile, none));
+        }
         .card.map.soft .mini-settings i,
         .card.map.soft .mini-wave:not(.on) i { background:var(--casora-chrome-ink, #fff); }
         .card.map.soft :is(.mini-weather, .mini-name) {
@@ -9385,6 +9413,46 @@ class CasoraPanel extends HTMLElement {
         .card.map.soft .miniphone :is(.mp-wcond, .mp-cvalue, .mp-chev) { color:var(--casora-text-2, var(--secondary-text-color)); }
         .card.map.soft .miniphone .mp-wglyph { filter:var(--casora-hero-weather-glyph-filter, none); }
         .card.map.soft .miniphone .mp-pbell path { fill:var(--casora-chrome-ink, #fff); }
+        /* Handy-Leiste B (1.3): Kapsel oben weg, Leiste unten mit Glocke/⋯; Kopf rückt hoch. */
+        .miniphone .mp-nav { display:none; }
+        .card.map.soft .miniphone .mp-pill { display:none; }
+        .card.map.soft .miniphone .mp-body { padding-top:calc(var(--ph-safe) + 21px); padding-bottom:calc(var(--pad-b) + 76px); }
+        .card.map.soft .miniphone .mp-nav {
+          position:absolute; z-index:9; left:50%; transform:translateX(-50%);
+          bottom:calc(6px + var(--ph-safe-b, 0px) * 0.4); height:60px; box-sizing:border-box;
+          padding:6px; border-radius:30px; display:flex; align-items:center; gap:2px;
+          background:var(--casora-mnav-pane, var(--casora-pill-fill, rgba(251,248,243,0.8)));
+          box-shadow:var(--casora-mnav-shadow, none);
+          backdrop-filter:var(--casora-mnav-blur, none); -webkit-backdrop-filter:var(--casora-mnav-blur, none);
+        }
+        .card.map.soft .miniphone .mp-nbtn {
+          width:50px; height:48px; border-radius:24px; flex:none;
+          display:flex; align-items:center; justify-content:center;
+        }
+        .card.map.soft .miniphone .mp-nbtn.on {
+          background:var(--casora-entity-background-active);
+          box-shadow:var(--button-card-box-shadow-active-mobile, none);
+        }
+        .card.map.soft .miniphone .mp-nbic {
+          position:relative; width:36px; height:36px; border-radius:50%;
+          display:flex; align-items:center; justify-content:center;
+          background:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));
+          color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));
+          --mdc-icon-size:20px;
+        }
+        .card.map.soft .miniphone .mp-nbtn.on .mp-nbic { background:var(--primary-color, #B67A50); color:#fff; }
+        .card.map.soft .miniphone .mp-nsvg {
+          width:20px; height:20px; display:block; background:currentColor;
+          -webkit-mask:var(--mp-svg) center/contain no-repeat; mask:var(--mp-svg) center/contain no-repeat;
+        }
+        .card.map.soft .miniphone .mp-nsep {
+          flex:none; width:1px; height:24px; margin:0 3px;
+          background:var(--casora-pill-divider, rgba(60,60,67,0.36));
+        }
+        .card.map.soft .miniphone .mp-ndot {
+          position:absolute; top:6px; right:8px; width:8px; height:8px; border-radius:50%;
+          background:var(--casora-bell-dot-fill, var(--casora-color-red));
+        }
         .card.map.soft .miniphone .mp-passist svg { fill:var(--casora-chrome-ink, #fff); }
         .card.map.soft .miniphone .mp-pdots i { background:var(--casora-chrome-ink, #fff); }
         .card.map.soft .miniphone .mp-back { background:var(--casora-chrome-fill, rgba(255,255,255,0.07)); }
@@ -19558,11 +19626,11 @@ class CasoraPanel extends HTMLElement {
     // The bell and its neighbours float over the bar's end: the bar stops short of
     // them. It is centred, so it narrows by the overlap on both sides.
     const box0 = tabs.getBoundingClientRect();
-    const btns = [...tabs.parentElement.querySelectorAll(".mini-bell, .mini-assist, .mini-settings")]
+    const btns = [...tabs.parentElement.querySelectorAll(".mini-bell, .mini-assist, .mini-settings, .capsule .mini-cap")]
       .map((b) => b.getBoundingClientRect())
       .filter((r) => r.width && r.bottom > box0.top && r.top < box0.bottom);
     if (btns.length) {
-      const over = (box0.right - Math.min(...btns.map((r) => r.left))) * k() + 5;
+      const over = (box0.right - Math.min(...btns.map((r) => r.left))) * k() + 8;
       if (over > 0) tabs.style.maxWidth = Math.max(40, Math.floor(tabs.offsetWidth - 2 * over)) + "px";
     }
     const edges = () => {
@@ -19571,6 +19639,12 @@ class CasoraPanel extends HTMLElement {
       tabs.classList.toggle("clipped", on);
       tabs.classList.toggle("cl-l", on && strip.scrollLeft > 1);
       tabs.classList.toggle("cl-r", on && strip.scrollLeft < max - 1);
+      // Raumleiste A (1.3): nur ganze Namen – was am Rand nur halb zu sehen ist, bleibt leer.
+      const sb = strip.getBoundingClientRect();
+      strip.querySelectorAll(".mini-tab").forEach((t) => {
+        const r = t.getBoundingClientRect();
+        t.classList.toggle("cut", on && (r.left < sb.left - 0.5 || r.right > sb.right + 0.5));
+      });
     };
     if (!strip._miniScroll) {
       strip._miniScroll = true;
@@ -22412,6 +22486,28 @@ class CasoraPanel extends HTMLElement {
       }
       screen.appendChild(pill);
     }
+    // Handy-Leiste B (1.3, nur Casora-Look per CSS): Glocke/⋯ unten in der Navigationsleiste,
+    // aktiver Knopf ohne Namen (der steht als Titel darüber). Ohne Weich-Look bleibt .mp-nav aus.
+    {
+      const nav = document.createElement("div");
+      nav.className = "mp-nav";
+      nav.dataset.jump = "Notifications";
+      const btn = (html, on) => {
+        const b = document.createElement("span");
+        b.className = "mp-nbtn" + (on ? " on" : "");
+        b.innerHTML = '<span class="mp-nbic">' + html + "</span>";
+        nav.appendChild(b);
+      };
+      const mask = (u) => '<i class="mp-nsvg" style="--mp-svg:url(\'' + u + '\')"></i>';
+      btn('<ha-icon icon="mdi:home-variant"></ha-icon>', !this._phoneFilter);
+      btn(mask("/casora_assets/icons/rooms.svg?v=3"), String(this._phoneFilter || "").indexOf("room:") === 0);
+      btn('<ha-icon icon="mdi:palette-outline"></ha-icon>', false);
+      if (pBell || pAssist || pEdit) nav.appendChild(Object.assign(document.createElement("span"), { className: "mp-nsep" }));
+      if (pBell) btn('<ha-icon icon="mdi:bell"></ha-icon><b class="mp-ndot"></b>', false);
+      if (pAssist) btn(mask(iconUrl("assist-fill")), false);
+      if (pEdit) btn('<ha-icon icon="mdi:dots-horizontal"></ha-icon>', false);
+      screen.appendChild(nav);
+    }
 
     const trow = document.createElement("div");
     trow.className = "mp-title";
@@ -22925,8 +23021,11 @@ class CasoraPanel extends HTMLElement {
       const barBottom = s0.top + BAR_H * scale;
       const safeTop = barBottom - BAR_H * scale;
       const span = barBottom + 24 * scale - safeTop;
+      // Handy-Leiste B (1.3, Casora-Look): Titel 44 px höher – ab seiner alten Ruhelage rechnen (wie filter-overlay).
+      const mn = screen.querySelector(".mp-nav");
+      const lift = mn && getComputedStyle(mn).display !== "none" ? 44 * scale : 0;
       const p = span <= 0 ? 0
-        : Math.max(0, Math.min(1, (barBottom + 24 * scale - r.bottom) / span));
+        : Math.max(0, Math.min(1, (barBottom + 24 * scale - r.bottom - lift) / span));
       const tp = Math.min(1, p / 0.45);
       h1.style.opacity = String(1 - tp);
       const cp = Math.max(0, Math.min(1, (p - 0.55) / 0.45));
@@ -23683,11 +23782,13 @@ class CasoraPanel extends HTMLElement {
     const strip = document.createElement("span");
     strip.className = "mini-strip";
     tabs.appendChild(strip);
+    // Raumleiste A (1.3) wie am Dashboard: die Übersicht steht fest vorn mit Trenner, nur die Räume blättern.
+    const homeFixed = rooms.length > 1 && rooms[0] && rooms[0].path === "home";
     rooms.forEach((r, ri) => {
       const t = document.createElement("span");
       // Ausgeblendete Räume: durchgestrichenes Auge (Nutzertest 4: in der Leiste nicht erkennbar).
       const hid = !!(r.variables || {}).casora_hidden;
-      t.className = "mini-tab" + (r === room ? " on" : "") + (hid ? " hid" : "");
+      t.className = "mini-tab" + (r === room ? " on" : "") + (hid ? " hid" : "") + (homeFixed && ri === 0 ? " home" : "");
       t.textContent = this._roomShown(r);
       t.setAttribute("data-no-i18n", "");
       const go = r === room ? "" : "Go to " + this._roomShown(r);
@@ -23700,7 +23801,10 @@ class CasoraPanel extends HTMLElement {
           this._renderForm();
         };
       }
-      strip.appendChild(t);
+      if (homeFixed && ri === 0) {
+        tabs.insertBefore(t, strip);
+        tabs.insertBefore(Object.assign(document.createElement("span"), { className: "mini-tabsep" }), strip);
+      } else strip.appendChild(t);
     });
     if (this._scenesOn()) {
       const t = document.createElement("span");
@@ -23733,6 +23837,17 @@ class CasoraPanel extends HTMLElement {
     q(".miniroom").style.setProperty("--mini-np-inset",
       "calc(" + ((dotsOn ? 1 : 0) + (assistOn ? 1 : 0) + (bellOn ? 1 : 0))
       + " * (var(--chrome-btn) + var(--chrome-btn-gap)))");
+    // Kopfknöpfe A (1.3): mit ⋯ liegen die Knöpfe in einer Kapsel (sichtbar nur, wenn das Design
+    // --casora-chrome-capsule-fill setzt – wie am Dashboard), Trenner vor ⋯.
+    if (dotsOn) {
+      const nBtn = 1 + (assistOn ? 1 : 0) + (bellOn ? 1 : 0);
+      const cap = document.createElement("span");
+      cap.className = "mini-cap";
+      cap.style.setProperty("--cap-n", nBtn);
+      q(".mini-nav").appendChild(cap);
+      q(".miniroom").classList.add("capsule");
+      if (nBtn > 1) q(".mini-nav").appendChild(Object.assign(document.createElement("span"), { className: "mini-capsep" }));
+    }
 
     const npOn = V.show_media !== false && !!V.show_now_playing;
     if (!npOn) q(".mz-np").remove();
