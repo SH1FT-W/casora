@@ -62,8 +62,11 @@ const setOwn = (page, cfg) => page.evaluate((cfg) => {
   ll.lovelace = Object.assign({}, ll.lovelace, { config: cfg });
 }, cfg);
 // Partner neu abholen lassen (er wird eine Minute gemerkt): kurz eine andere Adresse vorgeben.
+// Seit 1.3 teilen Rückfrage und Handy-Szenenleiste die Konfiguration (_casoraCfgOnce, eine Minute) –
+// die beim Laden geholte echte Partner-Konfiguration verwerfen, sonst kommt die untergeschobene nie an.
 const refetchPartner = (page, partner) => page.evaluate(async (p) => {
   window.__qaPartner = p;
+  if (window._casoraCfgOnce && window._casoraCfgOnce.forget) window._casoraCfgOnce.forget(p.url);
   const path = location.pathname;
   history.replaceState(history.state, '', '/qa-anderes' + path.slice(path.indexOf('/', 1)));
   window.casoraAsksFirst('x.y');

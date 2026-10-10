@@ -109,6 +109,8 @@
     }
     return c.p;
   };
+  // Gemerkte Konfiguration verwerfen (eine oder alle) – z. B. Tests, die den Partner neu abholen lassen.
+  window._casoraCfgOnce.forget = function (url) { if (url) delete cfgs[url]; else cfgs = {}; };
   // Partner holen (eine Minute gemerkt); Promise, solange er lädt, sonst null.
   var loadPair = function () {
     var url = dashUrl();
