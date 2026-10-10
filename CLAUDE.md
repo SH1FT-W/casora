@@ -10,6 +10,11 @@ Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
   `custom_components/casora/translations/dashboard/phrases/en.json` (Dashboard) bzw.
   `custom_components/casora/translations/panel/` (Studio). Danach `python3 tools/i18ncheck.py`.
 
+## Bau-Handbuch
+- Vor neuen Kacheln, Popups oder Studio-Flächen `docs/handbuch/` lesen (Design-Regeln, Blaupausen, Wortliste,
+  Test und Release). Was dort „OFFEN“ ist, nicht selbst entscheiden: Wert der Nachbarn übernehmen.
+- Regeltests `dev/unit/design_zaehler.mjs`, `dev/unit/vorlagen_regeln.mjs` müssen grün bleiben.
+
 ## Vorlagen (button-card)
 - Quelle ist `dashboards/casora/button_card_templates.json`. Nur dort ändern, danach
   `python3 tools/build-templates.py` – das baut `custom_components/casora/panel/casora-templates.json`.
