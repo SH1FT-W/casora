@@ -6499,6 +6499,7 @@ window.casoraMenuGlass = {
       this._headRoot = null;
       if (this._headerStatus) { this._headerStatus.textContent = ''; this._headerStatus.hidden = true; }
       this.style.removeProperty('--casora-head-gap');
+      if (this.container) this.container.style.removeProperty('margin-top');
     }
     // Erste Statuszeile (.hui-line, UI.line/hero/headline) oben im Inhalt suchen – durch alle Shadow-DOMs.
     _findHeadLine() {
@@ -6599,11 +6600,43 @@ window.casoraMenuGlass = {
           f.style.setProperty('display', 'none', 'important');
           this._headField = f;
           if (first && gap > 0) this.style.setProperty('--casora-head-gap', Math.max(0, 20 - gap) + 'px');
+          requestAnimationFrame(() => this._fitHeadGap());
+          setTimeout(() => this._fitHeadGap(), 400);
         }
       }
       this._mirrorHead();
       // Module melden ihren Hauptschalter teils erst mit dem ersten Zeichnen (Licht: aktuelle Ansicht).
       this._syncHeadSwitch();
+    }
+
+    // Abstand Kopf → erster sichtbarer Inhalt: 28 px (Kopfzeile A). Nach dem Ausblenden der Statuszeile
+    // bleiben je Layout verschiedene Ränder stehen (Kartenpolster, Rasterabstand) – gemessen und ausgeglichen.
+    _fitHeadGap() {
+      if (!this._headField || !this.hasAttribute('open') || this.content.scrollTop > 0) return;
+      var bar = this.shadowRoot.querySelector('.header-bar').getBoundingClientRect();
+      var top = Infinity;
+      (function walk(root, d) {
+        if (!root || d > 14) return;
+        var kids;
+        try { kids = root.querySelectorAll('*'); } catch (e) { return; }
+        for (var i = 0; i < kids.length; i++) {
+          var el = kids[i];
+          if (el.shadowRoot) walk(el.shadowRoot, d + 1);
+          if (el.tagName === 'STYLE' || el.tagName === 'SLOT') continue;
+          var r = el.getBoundingClientRect();
+          if (r.width < 2 || r.height < 2 || r.top >= top) continue;
+          var cs = getComputedStyle(el);
+          if (cs.visibility === 'hidden' || cs.opacity === '0') continue;
+          var paints = (cs.backgroundColor && !/rgba\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor)) || cs.backgroundImage !== 'none';
+          var text = false;
+          for (var c = el.firstChild; c && !text; c = c.nextSibling) if (c.nodeType === 3 && c.textContent.trim()) text = true;
+          if (paints || text || el.tagName === 'IMG' || el.tagName === 'HA-ICON' || el.tagName === 'CANVAS' || el.tagName === 'svg') top = r.top;
+        }
+      })(this.container, 0);
+      if (!isFinite(top)) return;
+      var cur = parseFloat(this.container.style.marginTop) || 0;
+      var want = Math.max(-80, Math.min(0, cur + (28 - (top - bar.bottom))));
+      if (Math.abs(want - cur) >= 1) this.container.style.marginTop = Math.round(want) + 'px';
     }
 
     // ── Kopfzeile A: Hauptschalter ────────────────────────────────────────

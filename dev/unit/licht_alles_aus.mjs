@@ -45,7 +45,8 @@ calls.length = 0;
 states['light.testraum_decke'] = { entity_id: 'light.testraum_decke', state: 'off', attributes: {} };
 hs.toggle(false);
 assert.deepEqual(calls, [['light', 'turn_on', 'light.testraum_decke']], JSON.stringify(calls));
-// Fremde Popups bleiben unberührt.
+// Fremde Popups bleiben unberührt (keine eingehängte Licht-Kopfkarte, andere Vorlage).
+S.els = {};
 assert.equal(S.head({ _config: { template: ['casora_switch'] } }, hass), null);
 
 // Eine Leuchte: Schalter für diese Leuchte.

@@ -3549,8 +3549,11 @@
   /* Hauptschalter im Popup-Kopf (1.3, ersetzt „Alles aus“): Raum bzw. Leuchte an/aus; das ganze Haus
      nur aus – mit Rückfrage, ausgegraut, wenn alles aus ist (wie vorher „Alles aus“). */
   S.head = function (src, hass) {
+    // Gilt, solange das offene Popup ein Licht-Popup ist (Kachel, Badge, Sammel-Badge): dessen Kopf-Karte ist eingehängt.
+    if (!S.on() || !S.cur || !hass) return null;
+    var live = (S.els[S.cur.gid] || []).some(function (el) { return el.isConnected && el._lpsPart === 'hero'; });
     var tpl = [].concat((src && src._config && src._config.template) || []).join(' ');
-    if (!/\bcasora_(popup_)?light\b/.test(tpl) || !S.on() || !S.cur || !hass) return null;
+    if (!live && !/\bcasora_(popup_)?light\b/.test(tpl)) return null;
     return S.headFor(S.cur, hass);
   };
   /* Nur Lichter, nur was der Benutzer sieht („Wer sieht das?“; im Haus auch ohne ausgeblendete Räume). */
