@@ -326,7 +326,7 @@ Desktop/Tablet – Raumleiste A „Feinschliff“ (`casora-nav-bar`, Tablet-Fass
 - Aktiver Raum: weiße Pille mit dem Handy-Schatten (auch hell gut sichtbar), Schrift unverändert.
 - Glocke, Sprechblase und ⋯ in **einer Kapsel** (46 hoch = Knopf 40 + 2 × 3, Fläche/Schatten wie die
   Leiste, Trenner vor ⋯); nur mit ⋯ (Casora-verwaltet) und nur in Designs mit `--casora-chrome-capsule-fill`.
-  Prüfung: `dev/qa/regress/r230_raumleiste_ganze_namen.mjs`, `r150_raumleiste_pfeil.mjs`, `r91` (Kapsel).
+  Prüfung: `dev/qa/regress/r230_raumleiste_frei.mjs`, `r150_raumleiste_pfeil.mjs`, `r91` (Kapsel).
 
 Handy – Navigationsleiste B (`casora-mobile-nav`, nur Casora/Nebel):
 - Glocke (und Sprechblase) und ⋯ sitzen **rechts unten in der Leiste** hinter einem Trenner; oben bleiben
