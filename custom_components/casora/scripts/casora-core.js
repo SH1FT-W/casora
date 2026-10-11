@@ -3959,11 +3959,19 @@ window.casoraMenuGlass = {
         if (this._pages) {
           const d = Math.abs(ev.deltaY) >= Math.abs(ev.deltaX) ? ev.deltaY : ev.deltaX;
           if (ev.ctrlKey || !d) return;
+          // Eine Geste = eine Seite: Trackpad-Schwung (Trägheit) feuert noch ~1 s weiter – vorher
+          // blätterte ein Wisch nach 350 ms Sperre erneut (bis zu 5 Seiten). Die Sperre hält, bis 200 ms Ruhe ist.
+          const now = Date.now();
+          if (this._wheelLock && now < this._wheelLock) { ev.preventDefault(); this._wheelLock = now + 200; return; }
+          if (!this._wheelAt || now - this._wheelAt > 200) this._wheelAcc = 0;
+          this._wheelAt = now;
           const to = this._page + (d > 0 ? 1 : -1);
           if (to < 0 || to >= this._pages.length) return;
           ev.preventDefault();
-          if (this._wheelLock && Date.now() < this._wheelLock) return;
-          this._wheelLock = Date.now() + 350;
+          this._wheelAcc = (this._wheelAcc || 0) + (ev.deltaMode === 1 ? d * 16 : d);
+          if (Math.abs(this._wheelAcc) < 24) return;
+          this._wheelAcc = 0;
+          this._wheelLock = now + 200;
           this._showPage(to, true);
           return;
         }
@@ -3986,17 +3994,16 @@ window.casoraMenuGlass = {
         rooms = document.createElement('div');
         rooms.className = 'rooms';
         this._rooms = rooms;
-        // Wischen am Tablet blättert seitenweise; der Klick danach öffnet keinen Raum.
-        let sx = null, sy = 0;
-        rooms.addEventListener('pointerdown', (ev) => { if (ev.pointerType !== 'mouse') { sx = ev.clientX; sy = ev.clientY; } }, { passive: true });
-        rooms.addEventListener('pointerup', (ev) => {
-          if (sx == null) return;
-          const dx = ev.clientX - sx, dy = ev.clientY - sy; sx = null;
-          if (!this._pages || Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
-          this._swipedAt = Date.now();
-          this._showPage(this._page + (dx < 0 ? 1 : -1), true);
-        }, { passive: true });
-        rooms.addEventListener('pointercancel', () => { sx = null; }, { passive: true });
+        /* Die Seiten liegen nebeneinander in einer Schiene (.track), die nur per transform gleitet –
+           vorher wurden Räume per hidden aus- und eingeblendet (harter Sprung, Neuaufbau je Blättern). */
+        const track = document.createElement('div');
+        track.className = 'track';
+        rooms.appendChild(track);
+        this._track = track;
+        this._pageEls = [];
+        // Überlauf-hidden lässt sich per Fokus trotzdem scrollen – die Schiene bewegt nur transform.
+        rooms.addEventListener('scroll', () => { if (rooms.scrollLeft) rooms.scrollLeft = 0; }, { passive: true });
+        this._initSwipe(rooms);
       }
 
       this._routes.forEach((route, i) => {
@@ -4051,13 +4058,18 @@ window.casoraMenuGlass = {
         btn.addEventListener('focus', () => {
           const kb = !!window._casoraKbd;
           btn.classList.toggle('kbd', kb);
-          if (kb) btn.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+          // Seiten-Leiste: fokussierbar sind nur Räume der sichtbaren Seite (andere Seiten sind inert).
+          if (kb && !this._pagedMode) btn.scrollIntoView({ inline: 'nearest', block: 'nearest' });
         });
         btn.addEventListener('blur', () => btn.classList.remove('kbd'));
 
-        if (!paged || (homeFixed && i === 0)) scroller.appendChild(btn);
-        else rooms.appendChild(btn);
-        this._els.push({ btn: btn, label: label, badge: badge, route: route });
+        const inRooms = paged && !(homeFixed && i === 0);
+        if (!inRooms) scroller.appendChild(btn);
+        else {
+          if (!this._pageEls.length) { const pg = document.createElement('div'); pg.className = 'pg'; this._track.appendChild(pg); this._pageEls.push(pg); }
+          this._pageEls[0].appendChild(btn);
+        }
+        this._els.push({ btn: btn, label: label, badge: badge, route: route, room: inRooms });
         if (paged && homeFixed && i === 0) {
           const sep = document.createElement('span');
           sep.className = 'sep';
@@ -4098,26 +4110,32 @@ window.casoraMenuGlass = {
     }
 
     _layout() {
-      const rooms = this._rooms, bar = this._bar;
-      if (!this._pagedMode || !rooms || !bar) return;
-      const list = this._els.filter((el) => el.btn.parentNode === rooms);
-      bar.classList.remove('paged', 'tight');
-      rooms.classList.remove('spread');
-      list.forEach((el) => { el.btn.hidden = false; });
-      const over = list.length > 1 && rooms.scrollWidth - rooms.clientWidth > 1;
+      const rooms = this._rooms, bar = this._bar, track = this._track;
+      if (!this._pagedMode || !rooms || !bar || !track) return;
+      // Während der Finger zieht nichts umbauen – danach nachholen.
+      if (this._drag) { this._layoutLater = true; return; }
+      const list = this._els.filter((el) => el.room);
+      if (!this._pageEls.length) return;
+      // Mit .paged messen (volle Breite); die Knöpfe schrumpfen nie, ihre Breite hängt nicht an der Seite.
+      bar.classList.add('paged');
+      bar.classList.remove('tight');
+      const gap = parseFloat(getComputedStyle(this._pageEls[0]).columnGap) || 0;
+      const w = list.map((el) => el.btn.getBoundingClientRect().width);
+      const total = w.reduce((a, x) => a + x, 0) + gap * Math.max(0, list.length - 1);
+      let W = rooms.clientWidth;
+      const over = list.length > 1 && total > W + 0.5;
       if (!over) {
+        bar.classList.remove('paged');
+        this._regroup(list, [list.map((el, i) => i)], 0);
         this._pages = null;
         this._page = 0;
+        this._setX(0, false);
         this._syncFade();
         this._placeIndicator(true);
         return;
       }
-      bar.classList.add('paged');
       // Sehr schmal (Tablet hochkant, Seitenleiste offen): Zuhause nur als Haus-Kreis – sonst passte oft nur ein Raum.
-      if (rooms.clientWidth < 260 && rooms.parentNode.querySelector('.route.home')) bar.classList.add('tight');
-      const W = rooms.clientWidth;
-      const gap = parseFloat(getComputedStyle(rooms).columnGap) || 0;
-      const w = list.map((el) => el.btn.getBoundingClientRect().width);
+      if (W < 260 && rooms.parentNode.querySelector('.route.home')) { bar.classList.add('tight'); W = rooms.clientWidth; }
       const pages = [];
       let cur = null, sum = 0;
       list.forEach((el, i) => {
@@ -4127,13 +4145,40 @@ window.casoraMenuGlass = {
       this._pageList = list;
       this._pages = pages.map((p) => ({ idx: p, w: p.reduce((s, i) => s + w[i], 0) + gap * (p.length - 1) }));
       this._pageW = W;
+      this._regroup(list, pages, W);
+      // Wenig Rest: Namen gleichmäßig verteilen (keine Lücke vor dem Pfeil); viel Rest: mittig.
+      this._pages.forEach((pg, i) => {
+        const rest = W - pg.w;
+        this._pageEls[i].classList.toggle('spread', pg.idx.length > 1 && rest / (pg.idx.length - 1) <= 32);
+      });
       const act = list.findIndex((el) => el.btn.classList.contains('active'));
       const keep = Math.min(this._page || 0, this._pages.length - 1);
       // Neu vermessen (Schrift, Größe): auf der Seite des aktiven Raums – außer es wurde seit dem letzten Wechsel von Hand geblättert.
       const fresh = this._pagedFor !== this._activeIdx;
       this._pagedFor = this._activeIdx;
       const stay = !fresh && this._userPaged;
-      this._showPage(act >= 0 && !stay ? this._pageOf(act) : keep, stay);
+      this._showPage(act >= 0 && !stay ? this._pageOf(act) : keep, stay, true);
+    }
+
+    // Räume auf Seiten-Behälter (.pg, je W breit) verteilen – nur wenn sich die Aufteilung ändert,
+    // sonst bleibt das DOM stehen (Fokus, keine Arbeit beim Größenwächter).
+    _regroup(list, pages, W) {
+      const key = W + '|' + pages.map((p) => p.join(',')).join('/');
+      if (key === this._groupKey && this._pageEls.length === pages.length) return;
+      this._groupKey = key;
+      const sr = this.shadowRoot;
+      const foc = sr && sr.activeElement;
+      const old = this._pageEls;
+      this._pageEls = pages.map((p) => {
+        const pg = document.createElement('div');
+        pg.className = 'pg';
+        if (W) pg.style.width = W + 'px';
+        p.forEach((i) => pg.appendChild(list[i].btn));
+        this._track.appendChild(pg);
+        return pg;
+      });
+      old.forEach((pg) => pg.remove());
+      if (foc && foc.isConnected && foc !== (sr && sr.activeElement)) { try { foc.focus({ preventScroll: true }); } catch (_) {} }
     }
 
     _pageOf(i) {
@@ -4141,19 +4186,98 @@ window.casoraMenuGlass = {
       return p < 0 ? 0 : p;
     }
 
-    _showPage(p, byUser) {
+    _still() {
+      return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+
+    // Schiene setzen; glide = weich gleiten (Token --casora-ease-slide, ~360 ms), sonst sofort.
+    _setX(x, glide) {
+      const t = this._track;
+      if (!t) return;
+      t.classList.toggle('glide', !!glide && !this._still());
+      t.style.transform = x ? 'translate3d(' + x + 'px,0,0)' : '';
+    }
+
+    // Wo die Schiene gerade sichtbar steht (auch mitten im Gleiten).
+    _trackX() {
+      const t = this._track;
+      if (!t) return 0;
+      const m = getComputedStyle(t).transform;
+      if (!m || m === 'none') return 0;
+      try { return new DOMMatrixReadOnly(m).m41; } catch (_) { return 0; }
+    }
+
+    _showPage(p, byUser, instant) {
       const pages = this._pages;
       this._userPaged = !!byUser;
-      if (!pages || !this._rooms) return;
+      if (!pages || !this._track) return;
       p = Math.max(0, Math.min(pages.length - 1, p));
       this._page = p;
-      const pg = pages[p];
-      this._pageList.forEach((el, i) => { el.btn.hidden = pg.idx.indexOf(i) < 0; });
-      // Wenig Rest: Namen gleichmäßig verteilen (keine Lücke vor dem Pfeil); viel Rest (letzte Seite): vorn bündig.
-      const rest = this._pageW - pg.w;
-      this._rooms.classList.toggle('spread', pg.idx.length > 1 && rest / (pg.idx.length - 1) <= 32);
+      // Nur die sichtbare Seite ist bedienbar (Tab, Vorlesen); die anderen liegen daneben, inert.
+      this._pageEls.forEach((pg, i) => { pg.inert = i !== p; });
+      this._setX(-p * this._pageW, !!byUser && !instant);
       this._syncFade();
       this._placeIndicator(true);
+    }
+
+    /* Wischen am Tablet: die Raumreihe folgt dem Finger; beim Loslassen gleitet sie auf die nächste
+       bzw. vorige Seite (ab 30 % der Breite oder schnellem Wisch), sonst zurück. Immer höchstens eine
+       Seite je Wisch. Vorher: kein Mitgehen, Sprung erst beim Loslassen, schon ab 40 px. */
+    _initSwipe(rooms) {
+      let d = null;
+      const down = (ev) => {
+        if (ev.pointerType === 'mouse' || !ev.isPrimary || !this._pages) return;
+        d = { id: ev.pointerId, x: ev.clientX, y: ev.clientY, on: false, hist: [[ev.timeStamp, ev.clientX]] };
+      };
+      const move = (ev) => {
+        if (!d || ev.pointerId !== d.id) return;
+        const dx = ev.clientX - d.x, dy = ev.clientY - d.y;
+        if (!d.on) {
+          if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+          if (Math.abs(dy) >= Math.abs(dx) || !this._pages) { d = null; return; }
+          d.on = true;
+          this._drag = true;
+          try { rooms.setPointerCapture(ev.pointerId); } catch (_) {}
+          d.base = this._trackX();
+          d.home = -this._page * this._pageW;
+          this._track.classList.remove('glide');
+        }
+        d.hist.push([ev.timeStamp, ev.clientX]);
+        if (d.hist.length > 8) d.hist.shift();
+        const min = -(this._pages.length - 1) * this._pageW;
+        let x = d.base + dx;
+        // Am Anfang/Ende nur gebremst (Gummiband).
+        if (x > 0) x *= 0.3; else if (x < min) x = min + (x - min) * 0.3;
+        d.x2 = x;
+        this._setX(x, false);
+      };
+      const up = (ev, cancel) => {
+        if (!d || (ev && ev.pointerId !== d.id)) return;
+        const g = d; d = null;
+        if (!g.on) return;
+        this._drag = false;
+        this._swipedAt = Date.now();
+        let to = this._page;
+        if (!cancel && this._pages) {
+          const W = this._pageW || rooms.clientWidth;
+          const off = (g.x2 == null ? g.base : g.x2) - g.home;
+          // Tempo aus den letzten ~100 ms (px/ms).
+          const h = g.hist, last = h[h.length - 1];
+          let first = h[0];
+          for (let i = h.length - 1; i >= 0; i--) { if (last[0] - h[i][0] > 100) break; first = h[i]; }
+          const v = last[0] > first[0] ? (last[1] - first[1]) / (last[0] - first[0]) : 0;
+          if (Math.abs(v) > 0.45 && Math.abs(off) > 16) to += v < 0 ? 1 : -1;
+          else if (Math.abs(off) > W * 0.3) to += off < 0 ? 1 : -1;
+        }
+        this._showPage(to, true);
+        if (this._layoutLater) { this._layoutLater = false; this._queueLayout(); }
+      };
+      rooms.addEventListener('pointerdown', down, { passive: true });
+      rooms.addEventListener('pointermove', move, { passive: true });
+      rooms.addEventListener('pointerup', (ev) => up(ev, false), { passive: true });
+      rooms.addEventListener('pointercancel', (ev) => up(ev, true), { passive: true });
+      // Nur der eigene Verlust zählt: der Knopf unter dem Finger meldet seinen (impliziten) beim Übernehmen auch.
+      rooms.addEventListener('lostpointercapture', (ev) => { if (ev.target === rooms && d && d.on && ev.pointerId === d.id) up(ev, true); }, { passive: true });
     }
 
     _isMenuRoute(route) {
@@ -4262,10 +4386,12 @@ window.casoraMenuGlass = {
       const el = this._els[idx];
       const sc = this._scroller;
       if (!el || !sc) return null;
-      const sRect = sc.getBoundingClientRect();
+      // Bezug ist der Behälter der Pille (Leiste oder Schiene) – in der Schiene ohne deren Verschiebung.
+      const host = (this._indicator && this._indicator.parentNode) || sc;
+      const sRect = host.getBoundingClientRect();
       const lRect = el.label.getBoundingClientRect();
       if (!lRect.width || !sRect.width) return null;
-      return { left: lRect.left - sRect.left + sc.scrollLeft, width: lRect.width };
+      return { left: lRect.left - sRect.left + (host === sc ? sc.scrollLeft : 0), width: lRect.width };
     }
 
     _placeIndicator(instant) {
@@ -4283,8 +4409,11 @@ window.casoraMenuGlass = {
       if (this._pages && this._pagedFor !== this._activeIdx) {
         this._pagedFor = this._activeIdx;
         const li = this._pageList.indexOf(this._els[this._activeIdx]);
-        if (li >= 0 && this._els[this._activeIdx].btn.hidden) { this._showPage(this._pageOf(li)); return; }
+        if (li >= 0 && this._pageOf(li) !== this._page) { this._showPage(this._pageOf(li)); return; }
       }
+      // Aktiver Raum: die Pille liegt in der Schiene und gleitet mit ihr; Zuhause: in der festen Leiste.
+      const host = this._pagedMode && this._track && this._els[this._activeIdx].room ? this._track : this._scroller;
+      if (ind.parentNode !== host) { host.insertBefore(ind, host.firstChild); this._from = null; instant = true; }
       const to = this._labelBox(this._activeIdx);
       if (!to) { if (this._pagedMode) { ind.classList.remove('on'); this._from = null; } return; }
       if (!this._pagedMode) this._revealActive(to, instant);
@@ -4305,7 +4434,7 @@ window.casoraMenuGlass = {
         ghost.classList.add('instant');
         ghost.classList.remove('on');
         ghost.style.opacity = '1';
-        this._scroller.insertBefore(ghost, ind);
+        ind.parentNode.insertBefore(ghost, ind);
         const gone = () => ghost.remove();
         ghost.animate([{ opacity: 1 }, { opacity: 0 }],
           { duration: 110, easing: 'ease-out', fill: 'forwards' }).finished.then(gone, gone);
@@ -4384,8 +4513,18 @@ window.casoraMenuGlass = {
         const n = this._pages ? this._pages.length : 0;
         sc.classList.remove('fade-l', 'fade-r');
         if (this._bar) {
-          this._bar.classList.toggle('more-l-on', n > 1 && this._page > 0);
+          const l = n > 1 && this._page > 0;
+          this._bar.classList.toggle('more-l-on', l);
           this._bar.classList.toggle('more-r-on', n > 1 && this._page < n - 1);
+          // Linker Pfeil erst, wenn links Räume verborgen sind: davor unsichtbar und nicht bedienbar
+          // (Platz bleibt, damit nichts springt). Fokus darauf wandert zum rechten Pfeil.
+          const ml = this._bar.querySelector('.more-l');
+          if (ml) {
+            ml.tabIndex = l ? 0 : -1;
+            if (l) ml.removeAttribute('aria-hidden'); else ml.setAttribute('aria-hidden', 'true');
+            const sr = this.shadowRoot;
+            if (!l && sr && sr.activeElement === ml) { const mr = this._bar.querySelector('.more-r'); if (mr) mr.focus({ preventScroll: true }); }
+          }
         }
         return;
       }
@@ -4967,14 +5106,34 @@ window.casoraMenuGlass = {
             min-width: 0;
             height: 100%;
             overflow: hidden;
+            touch-action: pan-y;
+          }
+          /* Schiene mit den Seiten nebeneinander; bewegt wird nur transform (GPU), nie Breite/left. */
+          .track {
+            position: relative;
+            display: flex;
+            flex: none;
+            align-items: center;
+            height: 100%;
+          }
+          .bar.paged .track { will-change: transform; }
+          .track.glide { transition: transform var(--casora-dur-slide, 360ms) var(--casora-ease-slide, cubic-bezier(.36,0,.16,1)); }
+          .pg {
+            display: flex;
+            flex: none;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
             column-gap: var(--casora-nav-route-gap-tablet, 4px);
           }
+          .pg.spread { justify-content: space-between; }
+          @media (prefers-reduced-motion: reduce) { .track.glide { transition: none; } }
           /* Läuft die Leiste über, nimmt sie ihre volle Breite (max-width) – so bleibt sie beim Blättern
              gleich breit und ihr Größenwächter merkt, wenn sich die verfügbare Breite ändert. */
           .bar.paged { width: 100%; }
           .bar.paged .rooms { flex: 1 1 auto; }
           .rooms { justify-content: center; }
-          .rooms.spread { justify-content: space-between; }
+          .bar.paged .rooms { justify-content: flex-start; }
           .bar.tight .route.home .htx { display: none; }
           .bar.tight .route.home .label { padding-right: calc((var(--casora-nav-pill-height-tablet, 46px)
               - 2 * var(--casora-nav-pill-inset-y-tablet, 4px) - 30px) / 2); gap: 0; }
@@ -5018,8 +5177,12 @@ window.casoraMenuGlass = {
             height: 30px;
             margin: 0 4px;
           }
-          .bar.paged .scroller .more { display: block; opacity: .35; pointer-events: none; }
+          .bar.paged .scroller .more { display: block; opacity: .35; pointer-events: none;
+            transition: opacity var(--casora-dur-feedback, 160ms) var(--casora-ease-feedback, ease), visibility 0s linear 0s; }
           .bar.paged.more-l-on .more-l, .bar.paged.more-r-on .more-r { opacity: 1; pointer-events: auto; }
+          /* Linker Pfeil auf der ersten Seite ganz weg (Platz bleibt); blendet weich ein, sobald links etwas verborgen ist. */
+          .bar.paged:not(.more-l-on) .scroller .more-l { opacity: 0; visibility: hidden;
+            transition: opacity var(--casora-dur-feedback, 160ms) var(--casora-ease-feedback, ease), visibility 0s linear var(--casora-dur-feedback, 160ms); }
           .scroller .more:focus-visible { outline: 2px solid var(--casora-nav-focus-line, currentColor); outline-offset: 1px; }
         `;
       }
