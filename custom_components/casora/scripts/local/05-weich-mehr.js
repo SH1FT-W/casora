@@ -634,7 +634,8 @@
       if (cost) bits.push('heute ' + cost);
       else if (kwh != null) bits.push('heute ' + fN(kwh, hass) + ' kWh');
       var err = raw(states, C.error);
-      var bad = ok(err) && err !== '0' && String(err).toLowerCase() !== 'none';
+      /* Anker-Code 40 = Geräteschlaf (Akku leer, nachts) – kein Fehler. */
+      var bad = ok(err) && err !== '0' && err !== '40' && String(err).toLowerCase() !== 'none';
       /* Ohne Leistungssensor: der erste Wert wird zur Hauptzeile („Heute 3,72 kWh“) statt „— · heute …“. */
       var main = p == null ? null : fW(Math.abs(p) < 20 && p < 0 ? 0 : Math.abs(p), hass);
       if (main == null && bits.length) { main = bits.shift(); main = main.charAt(0).toUpperCase() + main.slice(1); }
@@ -748,7 +749,7 @@
       };
       var srows = [];
       var err = raw(states, C.error);
-      if (ok(err) && err !== '0' && String(err).toLowerCase() !== 'none') {
+      if (ok(err) && err !== '0' && err !== '40' && String(err).toLowerCase() !== 'none') {
         srows.push({ entity: C.error, icon: 'mdi:alert-circle-outline', iconTone: 'bad', label: 'Fehler', labelTone: 'bad', value: 'Code ' + err });
       }
       var st = raw(states, C.state);
