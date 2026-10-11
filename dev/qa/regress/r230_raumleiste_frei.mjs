@@ -90,6 +90,10 @@ for (const [name, dev] of GERAETE) {
   const halbe = b.list.filter((v) => part(b, v)).map((v) => v.name);
   await check(name + ': halbe Namen am Rand erlaubt (' + halbe.length + ')', halbe.length >= 1, { halbe });
   await check(name + ': linker Pfeil sichtbar, links läuft die Reihe weich aus', b.leftShown && !b.leftGone && b.fl !== '' && b.fl !== '0px', { fl: b.fl });
+  // Unter dem linken Pfeil (im Dunklen durchscheinend) bleibt die Reihe ganz ausgeblendet – kein Text unter dem Pfeil.
+  const clear = [...b.mask.matchAll(/rgba\(0, 0, 0, 0\) ([\d.]+)px/g)].map((m) => parseFloat(m[1]));
+  await check(name + ': unter dem linken Pfeil nichts sichtbar (Maske bis ' + Math.max(0, ...clear) + ' px durchsichtig, Pfeil-Platz ' + b.pad + ' px)',
+    b.pad > 0 && clear.some((x) => x >= b.pad - 1), { mask: b.mask, pad: b.pad });
   await check(name + ': Zuhause und Breite fest beim Scrollen', Math.abs(b.home.l - a.home.l) <= 1 && Math.abs(b.bar.w - a.bar.w) <= 1, [a.bar, b.bar]);
 
   // Antippen eines ganz sichtbaren, nicht aktiven Raums: nichts verschiebt sich.
