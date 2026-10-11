@@ -8766,17 +8766,17 @@ class CasoraPanel extends HTMLElement {
         }
         .mini-strip::-webkit-scrollbar { display:none; }
         .mini-tabs.clipped .mini-strip { justify-content:flex-start; }
-        .mini-tabs.clipped {
-          justify-content:flex-start; --fl:0%; --fr:0%;
+        .mini-tabs.clipped { justify-content:flex-start; }
+        /* Raumleiste A (1.3): die Übersicht steht vor dem Streifen, mit Trenner. Frei scrollend wie im
+           Dashboard (11.10.2026): halbe Namen am Rand laufen weich aus, links erst, wenn dort etwas verborgen
+           ist. Der Verlauf liegt nur auf dem Streifen – Übersicht und Leistenfläche bleiben unberührt. */
+        .mini-tabs.clipped .mini-strip {
+          --fl:0%; --fr:0%;
           -webkit-mask-image:linear-gradient(to right, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%);
           mask-image:linear-gradient(to right, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%);
         }
-        .mini-tabs.clipped.cl-l { --fl:7%; }
-        .mini-tabs.clipped.cl-r { --fr:7%; }
-        /* Raumleiste A (1.3): kein Verlauf mehr, halbe Namen bleiben leer (_fitMiniTabs setzt .cut);
-           die Übersicht steht vor dem Streifen, mit Trenner. */
-        .mini-tabs.clipped { -webkit-mask-image:none; mask-image:none; }
-        .mini-tab.cut { visibility:hidden; }
+        .mini-tabs.clipped.cl-l .mini-strip { --fl:8%; }
+        .mini-tabs.clipped.cl-r .mini-strip { --fr:8%; }
         .mini-tab.home { flex:none; }
         .mini-tabsep { flex:none; align-self:center; width:1px; height:1.1em; background:currentColor; opacity:.25; }
         .mini-cap, .mini-capsep { display:none; }
@@ -19696,12 +19696,6 @@ class CasoraPanel extends HTMLElement {
       tabs.classList.toggle("clipped", on);
       tabs.classList.toggle("cl-l", on && strip.scrollLeft > 1);
       tabs.classList.toggle("cl-r", on && strip.scrollLeft < max - 1);
-      // Raumleiste A (1.3): nur ganze Namen – was am Rand nur halb zu sehen ist, bleibt leer.
-      const sb = strip.getBoundingClientRect();
-      strip.querySelectorAll(".mini-tab").forEach((t) => {
-        const r = t.getBoundingClientRect();
-        t.classList.toggle("cut", on && (r.left < sb.left - 0.5 || r.right > sb.right + 0.5));
-      });
     };
     if (!strip._miniScroll) {
       strip._miniScroll = true;
