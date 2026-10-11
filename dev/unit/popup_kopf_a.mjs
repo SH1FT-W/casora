@@ -43,6 +43,12 @@ assert.equal(lib.stripRoom('Spots Küche Insel', 'Küche'), 'Spots Insel');
 for (const cls of ['header-ring', 'header-eyebrow', 'header-title', 'header-status hui-line', 'header-switch'])
   assert.ok(core.includes('class="' + cls + '"'), 'Kopf-Element ' + cls);
 assert.ok(/:host\(\[soft\]\) \.header-bar \{[^}]*display: grid;/.test(core), 'Kopf als Raster in einer Zeile');
+// Kopfmitte (11.10.2026): Etikett/Titel/Status als ein Block, Kachel mittig dazu – keine drei festen Rasterzeilen.
+assert.ok(core.includes('<div class="header-text">'), 'Textblock-Hülle im Kopf');
+assert.ok(/:host\(\[soft\]\) \.header-bar \{[^}]*grid-template-rows: auto;/.test(core), 'Kopf-Raster mit einer Zeile');
+assert.ok(/:host\(\[soft\]\) \.header-text \{[^}]*display: flex;[^}]*flex-direction: column;/.test(core), 'Textblock als Spalte');
+assert.ok(/\n    \.header-text \{ display: contents; \}/.test(core), 'Hemma 1/2: Hülle wirkungslos');
+assert.ok(!/span 3/.test(core) && !/span 3/.test(rd('custom_components/casora/scripts/local/12-tanken.js')), 'nichts hängt mehr an drei Kopfzeilen');
 assert.ok(/:host\(\[soft\]\) \.header-ring \{[^}]*border-radius: var\(--casora-ic-head-radius, 16px\)/.test(core), 'Symbol als abgerundetes Quadrat');
 assert.ok(/--casora-sw-on: var\(--casora-popup-accent,/.test(core), 'Schalter in Gerätefarbe');
 assert.ok(/header-switch\[aria-checked="true"\] \{ background: var\(--casora-popup-accent/.test(core), 'Hauptschalter in Gerätefarbe');
