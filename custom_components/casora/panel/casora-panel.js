@@ -1357,8 +1357,10 @@ function syncTwinTile(twin, mt, depth) {
   if (twin.type !== "conditional" || mt.type !== "conditional" || (depth || 0) > 3) return;
   if (twin.conditions !== undefined) mt.conditions = clone(twin.conditions); else delete mt.conditions;
   const a = twin.card, b = mt.card;
-  // Nur dieselbe Kachel darin (Art + Entität); Sammelkarten (Swipe, auto-entities) bleiben, wie sie sind.
+  // Nur dieselbe Kachel darin (Art + Entität); Sammelkarten (Swipe, auto-entities) bleiben, wie sie sind –
+  // bis auf die Größe ihrer Kacheln (im Studio an der Sammelkarte gewählt, setInnerSize).
   if (!a || !b || typeof a !== "object" || typeof b !== "object") return;
+  if (isContainerCard(a) && a.type !== "conditional" && isContainerCard(b)) { copySizeDeep(a, b); return; }
   if (a.type === "conditional" ? b.type === "conditional" : (a.template !== undefined && tileTwinKey(a) === tileTwinKey(b))) {
     syncTwinTile(a, b, (depth || 0) + 1);
   }
@@ -1549,6 +1551,32 @@ function copySizeDeep(from, to) {
     Object.keys(a).forEach((k) => { if (k !== "variables") walk(a[k], b[k], d + 1); });
   })(from, to, 0);
   return changed;
+}
+
+// Größe einer Sammelkarte (Bedingung → auto-entities/Karussell/Stapel) in jede Kachel darin schreiben,
+// ausdrücklich „large“ bzw. „small“: Die Kacheln darin richten sich nach ihrer eigenen Größe, die Hülle
+// zeigte am Handy sonst nur „klein“, während die Pflanzen aus dem Umzug groß blieben (11.10.2026).
+// Ausdrücklich „small“ statt löschen, damit copySizeDeep sie beim Speichern aufs Handy mitnimmt.
+function setInnerSize(card, size) {
+  const want = size === "large" ? "large" : "small";
+  let n = 0;
+  // Die Sammelkarte unter der Bedingung (auto-entities, Karussell, Stapel) trägt die Größe des Platzes in der
+  // Handy-Reihe (smart-row liest sie dort) – auch sie bekommt die Wahl.
+  let host = card, k = 0;
+  while (host && host.type === "conditional" && host.card && k++ < 4) host = host.card;
+  if (host && host !== card && typeof host === "object" && (host.variables || {}).size !== want) {
+    host.variables = { ...(host.variables || {}), size: want };
+    n++;
+  }
+  (function walk(o, d) {
+    if (!o || typeof o !== "object" || d > 12) return;
+    if (Array.isArray(o)) { o.forEach((x) => walk(x, d + 1)); return; }
+    if (d > 0 && o.template !== undefined && (o.type === undefined || o.type === "custom:button-card")) {
+      if ((o.variables || {}).size !== want) { o.variables = { ...(o.variables || {}), size: want }; n++; }
+    }
+    Object.keys(o).forEach((k) => { if (k !== "variables") walk(o[k], d + 1); });
+  })(card, 0);
+  return n;
 }
 
 function carryPhoneSizes(dstate, mstate, link, key) {
@@ -25969,6 +25997,8 @@ class CasoraPanel extends HTMLElement {
             if (v === "") { if (tile.variables) delete tile.variables[f.key]; }
             else { if (!tile.variables) tile.variables = {}; tile.variables[f.key] = v; }
             if (tile.variables && !Object.keys(tile.variables).length) delete tile.variables;
+            // „Größe am Handy“ an einer Sammelkarte gilt auch für die Kacheln darin.
+            if (f.key === "size" && isContainerCard(tile)) setInnerSize(tile, v);
             after();
           },
           { fixed: true, labels: { "": "Default", ...(f.optionLabels || {}) } }).wrap);
@@ -26185,7 +26215,7 @@ window.__casoraPanelInternals = {
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
-  linkPair, syncPairRooms, syncPairTiles, syncTwinTile, phoneCondSnapshot, condChain, condModel, condWrite, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, expandMobileConfig, extractMobileConfig,
+  linkPair, syncPairRooms, syncPairTiles, syncTwinTile, phoneCondSnapshot, condChain, condModel, condWrite, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, setInnerSize, expandMobileConfig, extractMobileConfig,
   deriveEnergyRooms, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
   CASORA_ACCENTS, accentsShown, accentLabel, swatchCss,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)
