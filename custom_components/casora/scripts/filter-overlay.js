@@ -204,6 +204,24 @@
     && host.parentNode.classList.contains('hmn-dock'));
   window._casoraChromeHost = () => (_dashHeader && _dashHeader.pillHost) || null;
 
+  // Druck-Rückmeldung nur am getippten Kapsel-Knopf (Glocke, Sprechblase, ⋯), solange der Finger liegt.
+  const _DOCK_BTNS = ['casora_notifications_button', 'casora_assist_button', 'casora_settings_button'];
+  function _pressDocked(ev) {
+    const b = (ev.composedPath ? ev.composedPath() : []).find((n) => n && n.tagName === 'BUTTON-CARD'
+      && [].concat(n._config?.template || []).some((t) => _DOCK_BTNS.includes(t)));
+    if (!b) return;
+    const tr = 'var(--casora-dur-feedback, .16s) var(--casora-ease-feedback, ease)';
+    b.style.transition = 'transform ' + tr + ', filter ' + tr;
+    b.style.transform = 'scale(var(--casora-press-scale, .97))';
+    b.style.filter = 'brightness(.94)';
+    const up = () => {
+      b.style.removeProperty('transform');
+      b.style.removeProperty('filter');
+      ['pointerup', 'pointercancel'].forEach((t) => window.removeEventListener(t, up, true));
+    };
+    ['pointerup', 'pointercancel'].forEach((t) => window.addEventListener(t, up, true));
+  }
+
   function _hideChromePill() {
     const host = _pinnedPill?.host;
     if (!host || _docked(host)) return;
@@ -920,6 +938,10 @@
     ].join(';');
     pillHost.appendChild(pillFlash);
     pillHost.addEventListener('pointerdown', (ev) => {
+      // Handy-Leiste B (1.3): unten in der Leiste sind Glocke/Sprechblase/⋯ einzelne Tasten wie die
+      // Leisten-Tasten. Der Schein über die ganze Kapsel ließ beim Tipp auf ⋯ auch Glocke und Sprechblase
+      // aufleuchten – dort drückt nur der getippte Knopf (wie die Leisten-Tasten: --casora-press-scale, leicht dunkler).
+      if (_docked(pillHost)) { _pressDocked(ev); return; }
       const r = pillHost.getBoundingClientRect();
       const x = r.width ? ((ev.clientX - r.left) / r.width) * 100 : 50;
       pillFlash.style.background = 'radial-gradient(circle at '
