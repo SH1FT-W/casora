@@ -369,6 +369,8 @@ Casora:
   casora-chrome-capsule-line: var(--casora-pill-divider)
   casora-chrome-capsule-btn-fill: transparent
   casora-chrome-capsule-btn-shadow: none
+  # Kreise in der Kapsel ohne eigenen Blur: er verwischte die Kapselkante (grauer Schleier links/rechts, 11.10.2026).
+  casora-chrome-capsule-btn-backdrop: none
   casora-chrome-capsule-pad: 3px
   # Kapsel ragt 3 px über die Kreise: Raumleiste hochkant (768) etwas schmaler, sonst nur 6 px Luft zur Kapsel.
   casora-chrome-side-reserve-tablet-portrait: 104px
