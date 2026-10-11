@@ -15,6 +15,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Updates popup:** After "Check for updates" new entries appear right away, without reopening the popup.
 - **Pulse popup:** "All ok" uses both columns on desktop and tablet.
 - **Bell on the phone:** The notifications window opens centred above the bar, the background blurs like for rooms and scenes, and the bell is marked active.
+- **Assist on the phone:** Opens as a window above the bar like the bell and the rooms, instead of a sheet up to the top. The bar stays sharp and the Assist button is marked active.
 
 ## 1.3.1 – 11.10.2026
 
