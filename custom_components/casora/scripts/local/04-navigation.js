@@ -252,6 +252,11 @@
       /* Raum-/Kategorie-Seiten (filter-overlay) scrollen in einem eigenen Fenster: ohne diesen Platz
          unten bleibt die letzte Kachelreihe dauerhaft unter der Leiste liegen. */
       document.documentElement.style.setProperty('--casora-mobile-nav-space', 'calc(84px + env(safe-area-inset-bottom, 0px))');
+      /* Die jeweils letzte verbundene Leiste besitzt die Werte am <html>: beim Neuladen räumte die alte Leiste
+         (verzögert) erst auf, nachdem die neue sie gesetzt hatte – oben blieb der alte, große Kopfabstand (11.10.2026). */
+      window._hmnOwner = this;
+      var me = this;
+      [0, 300, 1000, 2500].forEach(function (t) { setTimeout(function () { if (me.isConnected && me._bar) me._syncDock(); }, t); });
       this._bindScroll();
       this._bindIdle();
       if (window._casoraFilter && !this._fOff) { var me = this; this._fOff = window._casoraFilter.onChange(function () { me._render(); }); }
@@ -317,8 +322,12 @@
       var self = this;
       /* Nur entfernen, wenn die Karte wirklich weg ist (Dashboard gewechselt), nicht bei kurzem Umhängen. */
       setTimeout(function () { if (!self.isConnected) { self._closeMenu(); if (self._bar && self._bar.parentNode) self._bar.remove();
-        document.documentElement.style.removeProperty('--casora-mobile-nav-space');
-        document.documentElement.style.removeProperty('--casora-mhead-reserve');
+        if (window._hmnOwner === self) {
+          window._hmnOwner = null;
+          document.documentElement.style.removeProperty('--casora-mobile-nav-space');
+          // Nicht im Casora-/Nebel-Look: dort käme sonst auch der Design-Wert (8px) mit weg.
+          if (!(window._casoraSoft && window._casoraSoft())) document.documentElement.style.removeProperty('--casora-mhead-reserve');
+        }
         if (self._dock) Array.prototype.forEach.call(self._dock.children, function (h) { if (h._hmnHome && h._hmnHome.isConnected) h._hmnHome.appendChild(h); });
         if (self._fOff) { self._fOff(); self._fOff = null; }
         if (self._onScroll) { document.removeEventListener('scroll', self._onScroll, true); self._onScroll = null; }
@@ -393,14 +402,18 @@
       if (host && host.isConnected !== false && host.querySelector('button-card')) {
         if (host.parentNode !== dock) {
           host._hmnHome = host.parentNode; dock.appendChild(host);
-          ['opacity', 'filter', 'transform', 'transition', 'pointer-events'].forEach(function (k) { host.style.removeProperty(k); });
+          ['opacity', 'filter', 'transform', 'transition', 'pointer-events', 'visibility'].forEach(function (k) { host.style.removeProperty(k); });
         }
       } else if (!soft) {
         Array.prototype.forEach.call(dock.children, function (h) { if (h._hmnHome && h._hmnHome.isConnected) h._hmnHome.appendChild(h); else h.remove(); });
       }
       var on = soft && !!dock.querySelector('button-card');
       this._bar.classList.toggle('hmn-act', on);
+      if (window._hmnOwner && window._hmnOwner !== this && window._hmnOwner.isConnected) return;
+      window._hmnOwner = this;
+      // Casora/Nebel setzen 8px schon im Design; ohne Leisten-Kapsel braucht der Kopf oben wieder Platz (52).
       if (on) root.style.setProperty('--casora-mhead-reserve', '8px');
+      else if (soft) root.style.setProperty('--casora-mhead-reserve', '52px');
       else root.style.removeProperty('--casora-mhead-reserve');
     }
     /* Pfad statt mdi: → SF-Symbol-SVG aus /casora_assets/icons per mask-image (ha-icon hat unberechenbare Innenmaße). */
