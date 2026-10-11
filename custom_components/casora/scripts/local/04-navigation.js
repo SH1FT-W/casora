@@ -256,7 +256,7 @@
          (verzögert) erst auf, nachdem die neue sie gesetzt hatte – oben blieb der alte, große Kopfabstand (11.10.2026). */
       window._hmnOwner = this;
       var me = this;
-      [0, 300, 1000, 2500].forEach(function (t) { setTimeout(function () { if (me.isConnected && me._bar) me._syncDock(); }, t); });
+      [0, 300, 1000, 2500, 4000].forEach(function (t) { setTimeout(function () { if (me.isConnected && me._bar) me._syncDock(); }, t); });
       this._bindScroll();
       this._bindIdle();
       if (window._casoraFilter && !this._fOff) { var me = this; this._fOff = window._casoraFilter.onChange(function () { me._render(); }); }
@@ -408,11 +408,13 @@
         Array.prototype.forEach.call(dock.children, function (h) { if (h._hmnHome && h._hmnHome.isConnected) h._hmnHome.appendChild(h); else h.remove(); });
       }
       var on = soft && !!dock.querySelector('button-card');
+      // Die Kapsel kann in der Leiste einer zweiten (gleichzeitig verbundenen) Instanz sitzen – dann gilt auch hier 8px.
+      var dockedAny = soft && !!document.querySelector('.hmn-dock button-card');
       this._bar.classList.toggle('hmn-act', on);
       if (window._hmnOwner && window._hmnOwner !== this && window._hmnOwner.isConnected) return;
       window._hmnOwner = this;
       // Casora/Nebel setzen 8px schon im Design; ohne Leisten-Kapsel braucht der Kopf oben wieder Platz (52).
-      if (on) root.style.setProperty('--casora-mhead-reserve', '8px');
+      if (dockedAny) root.style.setProperty('--casora-mhead-reserve', '8px');
       else if (soft) root.style.setProperty('--casora-mhead-reserve', '52px');
       else root.style.removeProperty('--casora-mhead-reserve');
     }

@@ -938,6 +938,10 @@
       pillHost.style.visibility = 'hidden';
       setTimeout(() => {
         if (_docked(pillHost)) return;
+        // Beim ersten Laden wird der Kopf oft zweimal gebaut: der Zeitgeber der verworfenen Kapsel setzte
+        // sonst 52px, obwohl die neue längst unten in der Leiste sitzt (oben zu großer Abstand, 11.10.2026).
+        const cur = window._casoraChromeHost && window._casoraChromeHost();
+        if (!pillHost.isConnected || (cur && cur !== pillHost) || document.querySelector('.hmn-dock button-card')) return;
         pillHost.style.removeProperty('visibility');
         document.documentElement.style.setProperty('--casora-mhead-reserve', '52px');
       }, 3000);
