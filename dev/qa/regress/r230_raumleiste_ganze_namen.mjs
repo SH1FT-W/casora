@@ -7,7 +7,7 @@
 // Erwartet (Desktop 1440, Tablet 1024 quer, Tablet 768 hoch): jeder sichtbare Raumname liegt ganz in
 // der Leiste (nicht unter einem Pfeil), Zuhause steht fest vorn; Antippen eines sichtbaren Raums
 // verschiebt weder Zuhause noch die anderen Namen; Blättern mit dem Pfeil behält Breite und Zuhause,
-// und über alle Seiten ist jeder Raum genau einmal erreichbar.
+// und über alle Seiten ist jeder Raum erreichbar (die letzte Seite endet bündig rechts, 11.10.2026).
 // 1.3 (leiste2, 11.10.2026): die Seiten liegen nebeneinander in einer gleitenden Schiene – sichtbar ist,
 // was im Fenster (.rooms) liegt; der linke Pfeil ist auf der ersten Seite unsichtbar und nicht bedienbar.
 process.env.CASORA_THEME = process.env.CASORA_THEME || 'Casora';
@@ -32,12 +32,15 @@ const state = (page) => page.evaluate(() => {
   const sr = nav.shadowRoot;
   const R = (e) => { const r = e.getBoundingClientRect(); return { l: r.left, r: r.right, w: r.width }; };
   const bar = sr.querySelector('.bar'), rooms = sr.querySelector('.rooms');
-  const rb = rooms ? rooms.getBoundingClientRect() : null;
+  // Sichtbares Fenster = Raumreihe abzüglich des Zuschnitts (--clip-l/-r, 11.10.2026: durchgehende Reihe).
+  const rb0 = rooms ? rooms.getBoundingClientRect() : null;
+  const clip = (k) => (rooms && bar.classList.contains('paged') ? parseFloat(rooms.style.getPropertyValue(k)) || 0 : 0);
+  const rb = rb0 ? { left: rb0.left + clip('--clip-l'), right: rb0.right - clip('--clip-r'), width: rb0.width - clip('--clip-l') - clip('--clip-r'), top: rb0.top, height: rb0.height } : null;
   // Sichtbar = im Fenster der Raumreihe (die übrigen Seiten liegen daneben in der Schiene).
   const vis = [...sr.querySelectorAll('.route')].filter((b) => { const r = b.getBoundingClientRect();
     return r.width > 0 && (!rb || b.classList.contains('home') || (r.right > rb.left + 1 && r.left < rb.right - 1)); });
   const lab = (b) => (b.querySelector('.htx') || b.querySelector('.label')).textContent.trim();
-  const box = rooms ? R(rooms) : R(sr.querySelector('.scroller'));
+  const box = rb ? { l: rb.left, r: rb.right, w: rb.width } : R(sr.querySelector('.scroller'));
   // Nur sichtbare Pfeile zählen: der linke liegt auf Seite 1 unsichtbar über dem Anfang der Reihe (11.10.2026).
   const caps = [...sr.querySelectorAll('.more')].filter((m) => { const c = getComputedStyle(m);
     return m.getBoundingClientRect().width > 0 && c.visibility !== 'hidden' && parseFloat(c.opacity) > 0.1; }).map(R);
@@ -102,9 +105,9 @@ for (const [name, dev] of GERAETE) {
   await check(name + ': ab Seite 2 linker Pfeil da', leftLater, { page: p.page });
   await check(name + ': jede Seite nur ganze Namen', bad.length === 0, bad);
   await check(name + ': Zuhause und Breite bleiben beim Blättern stehen', ok, { home: s.home, bar: s.bar });
-  const dup = seen.filter((n, i) => seen.indexOf(n) !== i);
+  // Die letzte Seite endet bündig rechts und darf Räume der vorigen wiederholen (keine halb leere Seite).
   const miss = p.all.filter((n) => seen.indexOf(n) < 0);
-  await check(name + ': über alle Seiten jeder Raum genau einmal (' + seen.length + '/' + p.all.length + ')', !dup.length && !miss.length, { dup, miss });
+  await check(name + ': über alle Seiten jeder Raum erreichbar (' + new Set(seen).size + '/' + p.all.length + ')', !miss.length, { miss });
   await page.close();
 }
 
