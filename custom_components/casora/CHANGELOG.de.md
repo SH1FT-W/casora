@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.3.1 – 11.10.2026
+
+### Behoben
+- **Handy-Kopf:** Beim allerersten Laden steht der Seitenkopf nicht mehr zu weit unten. Ein übrig gebliebener Zeitgeber aus dem ersten Aufbau des Kopfs setzte den alten Abstand oben, obwohl die Kapsel schon unten in der Leiste saß.
+
 ## 1.3.0 – 11.10.2026
 
 **Feinschliff.** Dieses Update bringt kaum neue Funktionen. Es macht Casora ruhiger, einheitlicher und angenehmer zu bedienen, auf jedem Bildschirm.

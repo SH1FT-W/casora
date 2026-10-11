@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.3.1 – 11.10.2026
+
+### Fixed
+- **Phone header:** On the very first load the page header no longer sits too far down. A leftover timer from the first header build set the old top spacing although the capsule was already in the bottom bar.
+
 ## 1.3.0 – 11.10.2026
 
 **Polish.** This update brings few new features. It makes Casora calmer, more consistent and nicer to use, on every screen.
