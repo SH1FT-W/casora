@@ -10,6 +10,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Warning popup:** It no longer shows "No device assigned yet": neither for a warning tile with a single entity, nor when there is no warning at the moment.
 - **Bell and chat:** On desktop and tablet both circles light up again when the mouse moves over them.
 - **Large tiles on the phone:** Name and status line up with the small tile next to them.
+- **Phone home page:** The gap between the player and "Favorites" is as small as the one above "Now playing".
 - **Phone header:** After a restart of Home Assistant or with an empty cache the page header sat too low on the phone when kiosk-mode was installed. Casora now hides the Home Assistant header itself in that case too and leaves no gap.
 - **Cover popup:** The icon in the header follows the position live.
 - **Updates popup:** After "Check for updates" new entries appear right away, without reopening the popup.

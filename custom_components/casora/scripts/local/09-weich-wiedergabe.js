@@ -325,7 +325,10 @@
             : 'display:block;width:' + (avail || 320) + 'px;padding:2px 0 10px';
       } else {
         e.host.style.cssText = !html ? 'display:none'
-          : 'display:block;width:100%;box-sizing:border-box;padding:0 max(env(safe-area-inset-right), var(--casora-rail-left, 16px)) 14px max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px))';
+          // Player → „Favoriten“ so eng wie Badges → „Aktuelle Wiedergabe“ (11.10.2026): unten kein eigener Abstand
+          // (war 14 px) und die 24 px Kopfpolster der nächsten Abschnitts-Überschrift (statt 10 wie über dem Player)
+          // um 19 px ausgleichen – nur solange ein Player steht. Der Schatten der Zeilen ragt frei darüber hinaus.
+          : 'display:block;width:100%;box-sizing:border-box;margin-bottom:-19px;padding:0 max(env(safe-area-inset-right), var(--casora-rail-left, 16px)) 0 max(var(--casora-measured-safe-left, 0px), var(--casora-rail-left, 16px))';
       }
     }
   }
