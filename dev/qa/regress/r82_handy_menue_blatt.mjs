@@ -127,7 +127,13 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   const tag = theme + ' ' + (dark ? 'dunkel' : 'hell');
   const { page, browser } = await open({ width: 393, height: 852, mobile: true, safari: true, scale: 2, dark, theme });
   usePage(page);
+  // Handy-Filter auf „alle“: ein vorheriger Test im selben HA ließ sonst einen Raum stehen, und das
+  // Szenen-Blatt zeigte zuerst dessen Szenen (P-V6) statt der geprüften ersten Haus-Szene.
   await dashboard(page, phone.url, 3);
+  await page.evaluate(async () => { const h = document.querySelector('home-assistant').hass;
+    if (h.states['input_select.casora_mobile_filter'] && h.states['input_select.casora_mobile_filter'].state !== 'all') {
+      try { await h.callService('input_select', 'select_option', { entity_id: 'input_select.casora_mobile_filter', option: 'all' }); } catch (e) { /* egal */ } } });
+  await page.waitForTimeout(1200);
   // Einen Raum öffnen, damit es eine markierte Zeile gibt.
   // Nicht fest warten (1,2 s reichten unter Last nicht, dann war keine Zeile markiert – Gate 1.1.2):
   // erst weiter, wenn die Leiste den Raum wirklich als offen führt.
@@ -275,7 +281,13 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   const tag = 'Casora hell (Chromium)';
   const { page, browser } = await open({ width: 393, height: 852, mobile: true, safari: false, scale: 2, dark: false, theme: 'Casora' });
   usePage(page);
+  // Handy-Filter auf „alle“: ein vorheriger Test im selben HA ließ sonst einen Raum stehen, und das
+  // Szenen-Blatt zeigte zuerst dessen Szenen (P-V6) statt der geprüften ersten Haus-Szene.
   await dashboard(page, phone.url, 3);
+  await page.evaluate(async () => { const h = document.querySelector('home-assistant').hass;
+    if (h.states['input_select.casora_mobile_filter'] && h.states['input_select.casora_mobile_filter'].state !== 'all') {
+      try { await h.callService('input_select', 'select_option', { entity_id: 'input_select.casora_mobile_filter', option: 'all' }); } catch (e) { /* egal */ } } });
+  await page.waitForTimeout(1200);
   await page.waitForFunction(() => { const nav = window.__pierce('casora-mobile-nav')[0]; return !!(nav && nav._hass && nav._bRooms); }, null, { timeout: 15000, polling: 200 }).catch(() => {});
   const swipe = await page.evaluate(swipeInPage);
   await need(`${tag}: Touch-Ereignisse nachstellbar`, swipe.touch !== false, swipe);
