@@ -206,8 +206,9 @@ Casora:
   # Tablet (07.10.2026): Zustände 14 px statt 12,5/13 – am iPad las sich Kleingedrucktes schwer.
   casora-entity-state-font-tablet: var(--casora-fs-value)
   casora-entity-state-font-tablet-lg: var(--casora-fs-value)
-  casora-entity-name-font-mobile: var(--casora-fs-value)
-  casora-entity-state-font-mobile: var(--casora-fs-label)
+  # 1.3.3: Handy-Kacheln eine Stufe größer (15/13 wie die Popup-Zeilen) – 14/12 las sich besonders auf großen Kacheln zu klein.
+  casora-entity-name-font-mobile: var(--casora-fs-row)
+  casora-entity-state-font-mobile: var(--casora-fs-sub)
   casora-entity-text-line-height: 1.3
   # A-11: Uhr ruhiger; 05.10.2026 minimal größer (15 → 16) passend zum größeren Hero-Wetter
   casora-clock-font-size: 16px

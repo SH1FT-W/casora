@@ -18,6 +18,9 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Glocke am Handy:** Das Fenster öffnet mittig über der Leiste, der Hintergrund wird unscharf wie bei Räumen und Szenen, und die Glocke ist aktiv markiert.
 - **Glocke und Assist am Handy:** Ein Tipp vibriert wie bei den übrigen Tasten der Leiste.
 
+### Geändert
+- **Kacheln am Handy:** Name und Zustand sind eine Stufe größer (15 und 13 px, wie die Zeilen in den Popups). Die Schrift las sich vor allem auf großen Kacheln zu klein.
+
 ## 1.3.1 – 11.10.2026
 
 ### Behoben

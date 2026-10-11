@@ -18,6 +18,9 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Bell on the phone:** The notifications window opens centred above the bar, the background blurs like for rooms and scenes, and the bell is marked active.
 - **Bell and Assist on the phone:** A tap vibrates like the other buttons in the bar.
 
+### Changed
+- **Tiles on the phone:** Name and status are one step larger (15 and 13 px, like the rows in the popups). The text read too small, especially on large tiles.
+
 ## 1.3.1 – 11.10.2026
 
 ### Fixed
