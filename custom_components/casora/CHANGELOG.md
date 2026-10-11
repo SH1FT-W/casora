@@ -4,6 +4,33 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.3.0 – 11.10.2026
+
+**Polish.** This update brings few new features. It makes Casora calmer, more consistent and nicer to use, on every screen.
+
+### New
+- **New room bar (desktop and tablet):** Home stays fixed on the left, the rooms scroll freely with momentum and fade out softly at the edges. Tapping a room no longer moves the bar. The left arrow only appears once rooms are hidden on the left. Bell, chat and ⋯ sit together in one capsule next to the bar.
+- **Phone bar:** bell and ⋯ moved into the bottom bar, so "Home" no longer shows twice and the page header moves up. All buttons in the bar give the same tap feedback and vibration.
+- **New popup header:** on every popup, icon, title, status and the main switch sit in one row. The icon is a rounded square in the device colour, and all switches in the popup use the device colour. Long titles wrap onto two lines, the room name is not repeated. Section headings are in sentence case. In the lights popup the main switch replaces "All off".
+- **Group thermostat:** floor heating and other heating groups no longer have a shared target temperature, plus, minus or slider. Each room is set on its own row, and the status sums up the rooms, for example "5 heating · 21 to 23°".
+- **Same shapes everywhere:** tiles, badges, menus, bars and the Studio now share one set of corner radii, spacing, shadows and motion. The Nebel look gets the same tile corners as Casora.
+- **Studio in Inter:** the Studio uses the Inter typeface, shipped with Casora. No external font service is used.
+- **Scenes:** the running scene is tinted in its colour, and scene colours always show. On the phone the scene button in a room lists the room's scenes first and the whole home below.
+- **Microphone back in Assist:** the voice button next to the text field is there again.
+- **Faster on the phone:** the phone loads about 40 % less data when it opens (3.6 instead of 5.9 MB). The card templates are 15 % smaller.
+- **Smaller wave player:** on desktop and tablet the player under the wave is about 15 % smaller, with the same layout.
+
+### Fixed
+- **Popup header:** the icon is always centred to the title and status, with or without a room label. On the phone long device names wrap instead of being cut off.
+- **Popup icons** are always white, like on the tiles.
+- **Car popup:** in the fuel view the back button sat on top of the title, and the header still showed the car's status.
+- **Phone bar:** tapping ⋯ no longer lights up bell and Assist as well. The top spacing is right after reloading, and the old capsule no longer flashes at the top while loading.
+- **Tiles and badges:** the icon circle has the same distance to the edge on all sides. Phone badges are 40 px high. On the tablet the badge row uses its short form only when the long one does not fit. Long scene names are shortened in the middle. The tile row only re-sorts after two seconds without changes, never while a popup is open.
+- **Readability:** error text in red is darker and easier to read. Rooms and scenes on the phone have the same edge distance as the tiles.
+- **Studio:** pages line up, the phone title is readable in light mode and "+" sits exactly in the middle. Touch targets are at least 44 px, hints and shortcuts are easier to read. Each room has its own ⋯ next to its name (rename, move, icon, hide, delete), and the Studio opens on the dashboard you looked at last. The phone preview shows the wallpaper down to the bottom, and the room bar preview matches the dashboard.
+- **Moving from Hemma:** an interrupted move can be cleaned up or continued. The done screen no longer jumps. The questions when removing Hemma all look the same, and the import marks your choice with a highlighted row.
+- **Wording:** "62 %" with a narrow space, "Opening …" with a space, "All batteries OK".
+
 ## 1.2.4 – 09.10.2026
 
 ### New

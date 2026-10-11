@@ -4,6 +4,33 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.3.0 – 11.10.2026
+
+**Feinschliff.** Dieses Update bringt kaum neue Funktionen. Es macht Casora ruhiger, einheitlicher und angenehmer zu bedienen, auf jedem Bildschirm.
+
+### Neu
+- **Neue Raumleiste (Desktop und Tablet):** Zuhause steht fest links, die Räume scrollen frei mit Schwung und laufen an den Rändern weich aus. Antippen eines Raums verschiebt die Leiste nicht mehr. Der linke Pfeil erscheint erst, wenn links Räume verborgen sind. Glocke, Sprechblase und ⋯ sitzen daneben zusammen in einer Kapsel.
+- **Handy-Leiste:** Glocke und ⋯ sitzen jetzt unten in der Leiste, „Zuhause“ steht nicht mehr doppelt da und der Seitenkopf rückt nach oben. Alle Knöpfe der Leiste geben dieselbe Tipp-Rückmeldung und Vibration.
+- **Neuer Popup-Kopf:** In jedem Popup stehen Symbol, Titel, Status und Hauptschalter in einer Zeile. Das Symbol ist ein abgerundetes Quadrat in der Gerätefarbe, alle Schalter im Popup haben die Gerätefarbe. Lange Titel brechen auf zwei Zeilen um, der Raumname steht nicht doppelt da. Abschnittsüberschriften sind normal geschrieben. Im Licht-Popup ersetzt der Hauptschalter „Alles aus“.
+- **Gruppen-Thermostat:** Fußbodenheizung und andere Heizungsgruppen haben keine gemeinsame Zieltemperatur, kein Plus, Minus und keinen Regler mehr. Jeder Raum wird in seiner eigenen Zeile eingestellt, die Statuszeile fasst die Räume zusammen, zum Beispiel „5 heizen · 21 bis 23°“.
+- **Überall dieselben Formen:** Kacheln, Badges, Menüs, Leisten und Studio teilen sich jetzt dieselben Ecken, Abstände, Schatten und Bewegungen. Der Nebel-Look bekommt dieselben Kachelecken wie Casora.
+- **Studio in Inter:** Das Studio nutzt die Schrift Inter, die Casora mitbringt. Kein fremder Schriftdienst wird abgefragt.
+- **Szenen:** Die laufende Szene ist leicht in ihrer Farbe getönt, Szenenfarben sind immer zu sehen. Am Handy zeigt der Szenenknopf im Raum zuerst die Szenen des Raums, darunter das ganze Haus.
+- **Mikrofon wieder in Assist:** Der Sprachknopf neben dem Eingabefeld ist zurück.
+- **Schneller am Handy:** Das Handy lädt beim Öffnen rund 40 % weniger Daten (3,6 statt 5,9 MB). Die Kartenvorlagen sind 15 % kleiner.
+- **Kleinerer Welle-Player:** Auf Desktop und Tablet ist der Player unter der Welle rund 15 % kleiner, der Aufbau bleibt gleich.
+
+### Behoben
+- **Popup-Kopf:** Das Symbol steht immer mittig zu Titel und Status, mit oder ohne Raumzeile. Am Handy brechen lange Gerätenamen um, statt abgeschnitten zu werden.
+- **Popup-Symbole** sind immer weiß wie auf den Kacheln.
+- **Auto-Popup:** In der Tanken-Ansicht lag der Zurück-Knopf über dem Titel, und der Kopf zeigte noch den Status des Autos.
+- **Handy-Leiste:** Ein Tipp auf ⋯ lässt Glocke und Assist nicht mehr mitleuchten. Der Abstand oben stimmt auch nach dem Neuladen, und die alte Kapsel blitzt beim Laden nicht mehr oben auf.
+- **Kacheln und Badges:** Der Symbolkreis hat ringsum denselben Abstand zum Rand. Badges am Handy sind 40 px hoch. Am Tablet nutzt die Badge-Reihe die Kurzform nur, wenn die lange nicht passt. Lange Szenennamen werden in der Mitte gekürzt. Die Kachelreihe sortiert erst nach zwei Sekunden Ruhe um und nie bei offenem Popup.
+- **Lesbarkeit:** Roter Fehlertext ist dunkler und besser lesbar. Räume und Szenen am Handy haben denselben Randabstand wie die Kacheln.
+- **Studio:** Die Seiten fluchten, der Handy-Titel ist im Hellen lesbar und „+“ sitzt genau in der Mitte. Trefferflächen sind mindestens 44 px groß, Hinweise und Kürzel besser lesbar. Jeder Raum hat ein eigenes ⋯ neben seinem Namen (umbenennen, verschieben, Symbol, ausblenden, löschen), und das Studio öffnet das zuletzt angesehene Dashboard. Die Handy-Vorschau zeigt das Hintergrundbild bis unten, die Vorschau der Raumleiste entspricht dem Dashboard.
+- **Umzug von Hemma:** Ein unterbrochener Umzug lässt sich aufräumen oder fortsetzen. Der Fertig-Bildschirm springt nicht mehr. Die Rückfragen beim Entfernen von Hemma sehen alle gleich aus, und der Import markiert die Auswahl mit einer hinterlegten Zeile.
+- **Wortlaut:** „62 %“ mit schmalem Abstand, „Wird geöffnet …“ mit Leerzeichen, „Alle Batterien OK“.
+
 ## 1.2.4 – 09.10.2026
 
 ### Neu

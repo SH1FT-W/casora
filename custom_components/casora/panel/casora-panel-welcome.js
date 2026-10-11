@@ -27,10 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n1t: "Pulse in Casora", n1: "Eigene Kachel und Popup für Pulse, Probleme auch in der Glocke.",
-      n2t: "Neuer Medien-Player", n2: "Das Cover färbt den Player ein, mit Zurück, Play/Pause, Weiter und Lautstärke.",
-      n3t: "Jetzt nach Updates suchen", n3: "Ein Knopf im Updates-Popup fragt HA, Supervisor und HACS sofort nach Neuem.",
-      n4t: "Heizung klarer", n4: "„Heizt auf 22°“, solange der Raum aufheizt, am Ziel „An · 22°“ statt „Bereit“."
+      n1t: "Neue Raumleiste", n1: "Zuhause steht fest, die Räume scrollen frei. Am Handy sitzen Glocke und Menü unten in der Leiste.",
+      n2t: "Neuer Popup-Kopf", n2: "Symbol, Titel, Status und Hauptschalter in einer Zeile, Schalter in der Farbe des Geräts.",
+      n3t: "Überall dieselben Formen", n3: "Gleiche Ecken, Abstände und Schatten, das Studio in Inter und ein ruhigeres Gruppen-Thermostat.",
+      n4t: "Schneller am Handy", n4: "Das Handy lädt beim Öffnen rund 40 % weniger Daten."
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n1t: "Pulse in Casora", n1: "Its own tile and popup for Pulse, problems also in the bell.",
-      n2t: "New media player", n2: "The cover colours the player, with back, play/pause, next and volume.",
-      n3t: "Check for updates now", n3: "A button in the updates popup asks HA, Supervisor and HACS right away.",
-      n4t: "Clearer heating", n4: "\"Heating to 22°\" while the room warms up, \"On · 22°\" at the target instead of \"Ready\"."
+      n1t: "New room bar", n1: "Home stays put, the rooms scroll freely. On the phone, bell and menu sit in the bottom bar.",
+      n2t: "New popup header", n2: "Icon, title, status and main switch in one row, switches in the device colour.",
+      n3t: "Same shapes everywhere", n3: "Matching corners, spacing and shadows, the Studio in Inter and a calmer group thermostat.",
+      n4t: "Faster on the phone", n4: "The phone loads about 40 % less data when it opens."
     },
   };
 
@@ -56,10 +56,10 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:pulse", "n1t", "n1"],
-    ["mdi:music-circle-outline", "n2t", "n2"],
-    ["mdi:update", "n3t", "n3"],
-    ["mdi:thermostat", "n4t", "n4"],
+    ["mdi:gesture-swipe-horizontal", "n1t", "n1"],
+    ["mdi:dock-top", "n2t", "n2"],
+    ["mdi:shape-outline", "n3t", "n3"],
+    ["mdi:speedometer", "n4t", "n4"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.
