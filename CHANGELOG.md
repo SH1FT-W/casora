@@ -4,6 +4,14 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.3.2 – 11.10.2026
+
+### Fixed
+- **Warning popup:** A warning tile with a single entity (for example on the phone) opened with "No device assigned yet" instead of the active warning.
+- **Bell and chat:** On desktop and tablet both circles light up again when the mouse moves over them.
+- **Large tiles on the phone:** Name and status line up with the small tile next to them.
+- **Phone header:** The page header stays at the top. If the capsule already sits in the bottom bar, a later large top spacing is reset at once.
+
 ## 1.3.1 – 11.10.2026
 
 ### Fixed

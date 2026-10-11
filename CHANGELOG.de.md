@@ -4,6 +4,14 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.3.2 – 11.10.2026
+
+### Behoben
+- **Warn-Popup:** Eine Warn-Kachel mit nur einer Entität (zum Beispiel am Handy) zeigte „Noch kein Gerät zugeordnet“ statt der aktiven Warnung.
+- **Glocke und Sprechblase:** Auf Desktop und Tablet hellen beide Kreise beim Darüberfahren mit der Maus wieder auf.
+- **Große Kacheln am Handy:** Name und Status fluchten mit der kleinen Kachel daneben.
+- **Handy-Kopf:** Der Seitenkopf bleibt oben. Sitzt die Kapsel schon unten in der Leiste, wird ein späterer großer Abstand oben sofort zurückgestellt.
+
 ## 1.3.1 – 11.10.2026
 
 ### Behoben
