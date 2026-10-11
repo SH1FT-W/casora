@@ -7,7 +7,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 1.3.2 – 11.10.2026
 
 ### Fixed
-- **Warning popup:** A warning tile with a single entity (for example on the phone) opened with "No device assigned yet" instead of the active warning.
+- **Warning popup:** It no longer shows "No device assigned yet": neither for a warning tile with a single entity, nor when there is no warning at the moment.
 - **Bell and chat:** On desktop and tablet both circles light up again when the mouse moves over them.
 - **Large tiles on the phone:** Name and status line up with the small tile next to them.
 - **Phone header:** After a restart of Home Assistant or with an empty cache the page header sat too low on the phone when kiosk-mode was installed. Casora now hides the Home Assistant header itself in that case too and leaves no gap.
@@ -15,6 +15,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Updates popup:** After "Check for updates" new entries appear right away, without reopening the popup.
 - **Pulse popup:** "All ok" uses both columns on desktop and tablet.
 - **Bell on the phone:** The notifications window opens centred above the bar, the background blurs like for rooms and scenes, and the bell is marked active.
+- **Bell and Assist on the phone:** A tap vibrates like the other buttons in the bar.
 
 ## 1.3.1 – 11.10.2026
 

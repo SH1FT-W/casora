@@ -6809,6 +6809,9 @@ window.casoraMenuGlass = {
         for (var i = 0; i < kids.length; i++) used = Math.max(used, kids[i].getBoundingClientRect().height);
         if (ex && !ex.hidden) used += ex.getBoundingClientRect().height;
       } catch (e) { used = 99; }
+      // Statuszeile in den Kopf übernommen (Kopfzeile A): Der Inhalt hat also etwas gezeigt – kein „Noch kein Gerät“.
+      // Sonst meldete z. B. das NINA-Popup ohne Warnung (nur „Keine Warnungen“) fälschlich kein Gerät (11.10.2026).
+      if (this._headField && this._headField.isConnected) used = Math.max(used, 12);
       var empty = this.hasAttribute('soft') && used < 12;
       if (empty && !box.firstChild) row(emptyKind, emptyKind === 'Noch nicht eingerichtet' ? '' : 'Im Casora Studio dieser Kachel ein Gerät zuweisen');
       box.hidden = !empty;

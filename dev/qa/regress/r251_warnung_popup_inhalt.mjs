@@ -2,6 +2,7 @@
 // @parallel: allein   (speichert das Dashboard und stellt es am Ende wieder her)
 // Gemeldet (11.10.2026): Das Popup der Warn-Kachel (NINA) zeigte bei aktiver Warnung „Noch kein Gerät
 // zugeordnet“ statt der Warnung. Erwartet: Desktop und Handy zeigen die Warnung im Popup, kein Leer-Hinweis.
+// Nachtrag 11.10. abends: ohne aktive Warnung (nur „Keine Warnungen“ im Kopf) kam ebenfalls „Noch kein Gerät“.
 // Die Warnung gibt es nur im Browser (fakeStates), in HA wird nichts angelegt.
 import { open, casoraDashboard, dashboard, fakeStates, check, need, finish, atFinish } from './lib.mjs';
 import { ws } from '../ws.mjs';
@@ -40,10 +41,14 @@ const WARN = { state: 'on', attributes: { friendly_name: 'Warnung 1', headline: 
   description: 'Es treten Gewitter auf.', severity: 'Moderate', event: 'STARKES GEWITTER',
   sent: new Date().toISOString(), expires: new Date(Date.now() + 3600e3).toISOString() } };
 
-for (const [label, url, size] of [['Desktop', dash.url, { width: 1440, height: 900 }], ['Handy', dash.phone.url, { width: 393, height: 852, mobile: true }]]) {
+for (const [phase, WSTATE] of [['Warnung', WARN], ['ohne Warnung', { state: 'off', attributes: { friendly_name: 'Warnung 1' } }]])
+for (const [label0, url, size] of [['Desktop', dash.url, { width: 1440, height: 900 }], ['Handy', dash.phone.url, { width: 393, height: 852, mobile: true }]]) {
+  // Am Handy steht die Kachel in einer Bedingungs-Karte (nur bei Warnung sichtbar) – ohne Warnung nur Desktop.
+  if (phase !== 'Warnung' && label0 === 'Handy') continue;
+  const label = label0 + ' (' + phase + ')';
   const { page, browser } = await open({ ...size, theme: 'Casora', dark: false });
   await dashboard(page, url);
-  await fakeStates(page, { [W1]: WARN, [W2]: { state: 'off', attributes: { friendly_name: 'Warnung 2' } } }, { sticky: true });
+  await fakeStates(page, { [W1]: WSTATE, [W2]: { state: 'off', attributes: { friendly_name: 'Warnung 2' } } }, { sticky: true });
   const tile = await page.evaluate(() => { const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_weather_warning'));
     if (!b) return null; b.scrollIntoView({ block: 'center' }); const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
   await need(`${label}: Warn-Kachel sichtbar`, tile);
@@ -63,7 +68,7 @@ for (const [label, url, size] of [['Desktop', dash.url, { width: 1440, height: 9
   });
   await check(`${label}: Popup offen`, pop);
   await check(`${label}: kein Leer-Hinweis`, pop && !pop.empty && !pop.shown, pop);
-  await check(`${label}: Warnung im Popup`, pop && pop.warn, pop);
+  if (phase === 'Warnung') await check(`${label}: Warnung im Popup`, pop && pop.warn, pop);
   await browser.close();
 }
 await finish();

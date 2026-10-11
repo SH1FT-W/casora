@@ -7,7 +7,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ## 1.3.2 – 11.10.2026
 
 ### Behoben
-- **Warn-Popup:** Eine Warn-Kachel mit nur einer Entität (zum Beispiel am Handy) zeigte „Noch kein Gerät zugeordnet“ statt der aktiven Warnung.
+- **Warn-Popup:** Es zeigt nicht mehr „Noch kein Gerät zugeordnet“, weder bei einer Warn-Kachel mit nur einer Entität noch wenn gerade keine Warnung besteht.
 - **Glocke und Sprechblase:** Auf Desktop und Tablet hellen beide Kreise beim Darüberfahren mit der Maus wieder auf.
 - **Große Kacheln am Handy:** Name und Status fluchten mit der kleinen Kachel daneben.
 - **Handy-Kopf:** Nach einem Neustart von Home Assistant oder mit leerem Cache stand der Seitenkopf am Handy zu tief, wenn kiosk-mode installiert ist. Casora blendet die Kopfzeile von Home Assistant jetzt auch dann selbst aus und lässt keinen Platz frei.
@@ -15,6 +15,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Updates-Popup:** Nach „Jetzt nach Updates suchen“ erscheinen neue Einträge sofort, ohne das Popup neu zu öffnen.
 - **Pulse-Popup:** „Alles ok“ nutzt auf Desktop und Tablet beide Spalten.
 - **Glocke am Handy:** Das Fenster öffnet mittig über der Leiste, der Hintergrund wird unscharf wie bei Räumen und Szenen, und die Glocke ist aktiv markiert.
+- **Glocke und Assist am Handy:** Ein Tipp vibriert wie bei den übrigen Tasten der Leiste.
 
 ## 1.3.1 – 11.10.2026
 
