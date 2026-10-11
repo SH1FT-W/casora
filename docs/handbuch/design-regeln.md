@@ -30,7 +30,7 @@ Kacheln, Badges, Raumkarten, Menüs (Glocke, ⋯, Räume, Szenen, Raumleisten-Me
 | Menüs (abgeleitet) | `--casora-menu-row-radius` = Kreis/2 + Rand · `--casora-menu-radius` = Zeile + Rand · `--casora-menu-pad` | 18 + 8 = **26** · 26 + 8 = **34** · 8 px |
 | Druck | `--casora-press-scale` | `.97` auf Tasten (`transform: scale(var(--casora-press-scale, .97))`) |
 | Aktive Zeile (DP-07) | `--casora-soft-row-active` · `-active-shadow` · `-active-ink` · `-active-sub` | hell Creme + Ruhe-Schatten; dunkel Sand 14 %, helle Schrift |
-| Symbol auf Akzent (DP-17) | `--casora-on-accent-ink` | dunkle Tinte, wo Weiß unter 3 : 1 hat (Gelb, Orange, Grün) |
+| Symbol auf Akzent | `--casora-soft-glyph` | immer Weiß wie auf den Kacheln (DP-17-Kontrastregel am 11.10. zurückgenommen) |
 | Popup-Akzent | `--casora-popup-accent` · `--casora-popup-accent-ink` | vom Rahmen je Popup gesetzt = Gerätefarbe der Kachel (Schalter, Kopf-Kachel, aktive Symbole) |
 
 Symbol-Kacheln (abgerundetes Quadrat statt Kreis, Popups seit 1.3): Radius ≈ 30 % – Kopf 56/16, Handy 48/14,
@@ -205,8 +205,9 @@ Eigene SVG-Symbole über `mask-image` (`/casora_assets/icons/<name>.svg`), neue 
 
 Neue Kreisgrößen außerhalb dieser Liste nicht einführen (heute 13 Größen in Popups – Altlast).
 
-Gilt (DP-17, entschieden B): Symbol auf einer Akzentfläche ≥ 3 : 1 – der Kern wählt Weiß oder
-`--casora-on-accent-ink` nach Kontrast (`window._casoraInkOn(farbe)`); Aus-Symbol `--casora-soft-glyph-off` .70.
+Gilt (seit 11.10.): Symbol auf einer Akzentfläche immer Weiß wie auf den Kacheln (`window._casoraInkOn(farbe)`
+liefert `--casora-soft-glyph`). Die Kontrastregel DP-17 (dunkle Tinte auf Gelb/Orange/Grün) ist zurückgenommen,
+weil sie zwischen Kachel und Popup uneinheitlich wirkte. Aus-Symbol `--casora-soft-glyph-off` .70.
 
 ## 7. Bewegung
 

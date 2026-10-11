@@ -6197,35 +6197,10 @@ window.casoraMenuGlass = {
     return { hue: hue, html: glyph, off: forcedOff != null ? forcedOff : (idle || ringOff(src)) };
   }
   // ── 1.3 Kopfzeile A ──────────────────────────────────────────────────────
-  // Farbe eines Werts („rgb(…)“, „#…“ oder „var(--x, #…)“) als [r,g,b] – Variablen über <html> aufgelöst.
-  function resolveRgb(c) {
-    c = String(c || '').trim();
-    for (var d = 0; d < 4; d++) {
-      var m = /^var\(\s*(--[\w-]+)\s*(?:,\s*(.+))?\)$/.exec(c);
-      if (!m) break;
-      var v = '';
-      try { v = getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim(); } catch (e) { v = ''; }
-      c = v || (m[2] || '').trim();
-    }
-    var o = rgbaOf(c);
-    return o ? o.slice(0, 3) : null;
-  }
-  function lumOf(rgb) {
-    var f = function (x) { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); };
-    return 0.2126 * f(rgb[0]) + 0.7152 * f(rgb[1]) + 0.0722 * f(rgb[2]);
-  }
-  // DP-17: Symbolfarbe auf einer Akzentfläche – Weiß, solange es mindestens 3 : 1 hat, sonst dunkle
-  // Tinte (Gelb, Orange, Grün hatten mit Weiß nur 1,96 / 2,67 / 2,65 : 1).
-  var INK_CACHE = {};
+  // Symbolfarbe auf einer Akzentfläche: immer Weiß wie auf den Kacheln (1.3 entschieden, statt der
+  // Kontrast-Regel DP-17, die auf Gelb/Orange/Grün dunkle Tinte setzte und uneinheitlich wirkte).
   function inkOn(fill) {
-    var k = String(fill || '');
-    if (!k) return null;
-    if (INK_CACHE[k] && Date.now() - INK_CACHE[k].t < 2000) return INK_CACHE[k].v;
-    var rgb = resolveRgb(k);
-    var v = null;
-    if (rgb) v = (1.05 / (lumOf(rgb) + 0.05)) < 3 ? 'var(--casora-on-accent-ink, rgba(46, 34, 20, 0.88))' : 'var(--casora-soft-glyph, #fff)';
-    INK_CACHE[k] = { t: Date.now(), v: v };
-    return v;
+    return fill ? 'var(--casora-soft-glyph, #fff)' : null;
   }
   window._casoraInkOn = inkOn;
   // Raum der auslösenden Kachel (laut Dashboard, nur eindeutige Treffer) – nicht bei Sammel-Popups
