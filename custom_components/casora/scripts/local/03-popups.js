@@ -395,10 +395,10 @@
 // Template casora_popup_fbh (über casora_thermostat gelegt) ruft nur
 // window._casoraFbhPopup(entity, variables, states, hass) auf, die Logik bleibt
 // hier update-sicher. Zwei Modi:
-//  - Gruppe (climate-Gruppe mit member_entities): Haus-Temperatur,
-//    Verlauf, "Ganzes Haus" (Modus mit Bestätigung, Zieltemperatur für alle
-//    aktiven Räume), Räume + Heizkörper getrennt. Tipp auf einen Raum öffnet
-//    das Raum-Popup.
+//  - Gruppe (climate mit member_entities bzw. entity_id, siehe casoraClimateMembers):
+//    Haus-Temperatur, Verlauf, Modus mit Bestätigung, Räume + Heizkörper getrennt.
+//    Keine gemeinsame Zieltemperatur (1.3): Räume werden meist unterschiedlich
+//    eingestellt – Tipp auf einen Raum öffnet das Raum-Popup mit Stepper und Balken.
 //  - Einzelraum (Bosch Room Climate) bzw. Heizkörper (Zigbee-TRV): Ist/Soll,
 //    Verlauf, Stepper + Balken, Modus, Details (Anforderung, Absenkung,
 //    Kindersicherung bzw. Akku/Ventil/Fenster/Boost).
@@ -421,6 +421,29 @@
   };
   var MODES = { off: 'Aus', heat: 'Heizen', auto: 'Automatik' };
   var ORDER = ['off', 'heat', 'auto'];
+
+  /* Klima-Gruppe erkennen (1.3): member_entities (Template-Climate, climate_group) oder entity_id
+     (HA-Gruppen-Stil). Liefert die vorhandenen climate-Mitglieder, sonst [] (Einzel-Thermostat). */
+  window.casoraClimateMembers = function (e, states) {
+    var a = (e && e.attributes) || {};
+    var list = Array.isArray(a.member_entities) ? a.member_entities : Array.isArray(a.entity_id) ? a.entity_id : [];
+    return list.filter(function (m) { return typeof m === 'string' && m.indexOf('climate.') === 0 && m !== e.entity_id && (!states || states[m]); });
+  };
+  /* Statuszeile einer Gruppe im Kopf: „2 heizen · 21–23°“ – wer heizt bzw. an ist, dazu die
+     Spanne der Zieltemperaturen der eingeschalteten Räume (statt einer gemeinsamen Zieltemperatur). */
+  var short = function (n) { return n % 1 ? fmt(n) : String(Math.round(n)); };
+  window.casoraClimateGroupLine = function (ids, states, isHeating) {
+    var on = (ids || []).filter(function (m) { var s = states[m]; return s && s.state !== 'off' && s.state !== 'unavailable' && s.state !== 'unknown'; });
+    if (!on.length) return 'Alle Räume aus';
+    var heat = on.filter(function (m) { if (isHeating) return isHeating(m);
+      var x = window.casoraClimateActive ? window.casoraClimateActive(states[m]) : {}; return !!(x && x.heating); });
+    var head = heat.length ? (heat.length === 1 ? '1 heizt' : heat.length + ' heizen')
+      : on.length === ids.length ? 'Alle an' : on.length + ' von ' + ids.length + ' an';
+    var ts = on.map(function (m) { return num(states[m].attributes.temperature); }).filter(function (t) { return t != null; });
+    if (!ts.length) return head;
+    var lo = Math.min.apply(null, ts), hi = Math.max.apply(null, ts);
+    return head + ' · ' + (lo === hi ? short(lo) : short(lo) + '–' + short(hi)) + '°';
+  };
 
   /* Geräte-Geschwister: Bosch Room Climate (call_for_heat …) über translation_keys, das
      Wandthermostat als eigenes Gerät im selben Bereich (child_lock, Temperatur, Feuchte). */
@@ -615,17 +638,17 @@
     if (name === 'hero') {
       if (c.group) {
         var rooms = c.rooms.map(function (r) { return r; });
-        var active = rooms.filter(function (r) { return states[r.id] && states[r.id].state !== 'off' && states[r.id].state !== 'unavailable'; });
-        var heat = rooms.filter(function (r) { return F.heating(r, states); });
+        var all = c.rooms.concat(c.trvs);
+        var heat = all.filter(function (r) { return F.heating(r, states); });
         var v = c.houseTemp && states[c.houseTemp] && ok(states[c.houseTemp]) ? num(states[c.houseTemp].state) : null;
         if (v == null) {
           /* Kein Haus-Temperatursensor: Mittel der Raumtemperaturen der Gruppe. */
           var temps = rooms.map(function (r) { return F.curTemp(r, states); }).filter(function (t) { return t != null && !isNaN(t); });
           if (temps.length) v = Math.round(temps.reduce(function (a, b) { return a + b; }, 0) / temps.length * 10) / 10;
         }
-        var sub = !active.length ? 'Alle Räume aus'
-          : heat.length ? (heat.length === 1 ? '1 Raum heizt gerade' : heat.length + ' Räume heizen gerade')
-          : (active.length === rooms.length ? 'An · alle Räume warm genug' : active.length + ' von ' + rooms.length + ' Räumen an');
+        /* 1.3: ohne gemeinsame Zieltemperatur fasst die Statuszeile zusammen (wer heizt, Spanne der Ziele). */
+        var sub = window.casoraClimateGroupLine(all.map(function (r) { return r.id; }), states,
+          function (m) { return heat.some(function (r) { return r.id === m; }); });
         return UI.hero({ label: window._casoraHH && window._casoraHH.on() ? null : 'Durchschnitt im Haus', value: v != null ? fmt(v) : '—', unit: v != null ? TU() : null,
           sub: sub, subTone: heat.length ? 'warn' : null, center: true });
       }
@@ -636,10 +659,8 @@
     }
 
     if (name === 'house') {
-      /* Zieltemperatur für alle Räume, die gerade an sind, aufgebaut wie beim einzelnen Raum
-         (Stepper, darunter der Balken). Unterschiedliche Werte: Anzeige = gerundeter Mittelwert,
-         −/+ und Balken setzen alle auf denselben Wert. */
-      var act = c.rooms.concat(c.trvs).filter(function (r) { var s = states[r.id]; return s && s.state !== 'off' && s.state !== 'unavailable'; });
+      /* 1.3: keine gemeinsame Zieltemperatur mehr (Stepper/Balken für alle Räume) – Räume werden
+         meist unterschiedlich eingestellt, das geht einzeln über die Raum-Zeilen. Bleibt: Modus, Hauptschalter. */
       /* Popup-Standard (24.09.2026): Überschrift wie überall „Modus“ (vorher „Ganzes Haus“). */
       var out = F.modes(c.id, states, true, 'Modus');
       var ms = c.master && states[c.master];
@@ -650,18 +671,6 @@
           label: 'Hauptschalter', sub: mon ? 'Heizkreise mit Strom versorgt' : 'Heizkreise stromlos', value: mon ? 'An' : 'Aus',
           svc: ok(ms) ? { domain: 'switch', service: mon ? 'turn_off' : 'turn_on', target: { entity_id: c.master } } : null,
           confirm: mon ? 'Ausschalten' : 'Einschalten' }]);
-      }
-      if (act.length) {
-        var ts = act.map(function (r) { return num(states[r.id].attributes.temperature); }).filter(function (t) { return t != null; });
-        if (ts.length) {
-          var st = num(a.target_temp_step) || 0.5;
-          var same = ts.every(function (t) { return t === ts[0]; });
-          var avg = Math.round(ts.reduce(function (s, t) { return s + t; }, 0) / ts.length / st) * st;
-          out += '<div style="height:18px"></div>'
-            + F.stepper(act.map(function (r) { return r.id; }), same ? ts[0] : avg,
-              { target_temp_step: st, min_temp: a.min_temp, max_temp: a.max_temp },
-              same ? 'Zieltemperatur alle Räume' : 'Räume unterschiedlich · Ø', true);
-        }
       }
       return out;
     }
@@ -838,7 +847,7 @@
     var UI = window._casoraUI;
     if (!UI || !entity) return { type: 'vertical-stack', cards: [] };
     var id = entity.entity_id;
-    var members = Array.isArray(entity.attributes.member_entities) ? entity.attributes.member_entities.filter(function (m) { return states[m]; }) : [];
+    var members = window.casoraClimateMembers(entity, states);
     var c;
     if (members.length) {
       var infos = members.map(function (m) { return F.info(m, states, hass); });
@@ -881,7 +890,7 @@
     else { add('ctl', sec('ctl')); add('det', sec('det')); leftKeys = ['ctl']; rightKeys = ['det']; }
     if (c.group && window._casoraSplit) { var _sp = window._casoraSplit('fbh', leftKeys, rightKeys); leftKeys = _sp.left; rightKeys = _sp.right; }
 
-    /* Weich (Entschlacken 01.10.2026): Haus – Kopf mit Ø-Temperatur, links Modus und Zieltemperatur,
+    /* Weich (Entschlacken 01.10.2026): Haus – Kopf mit Ø-Temperatur, links Modus (seit 1.3 ohne Zieltemperatur),
        rechts eine Liste aus Räumen und Heizkörpern; Heizungs-Coach, Hauptschalter und Verlauf unter
        „Mehr“. Raum – Kopf, Verlauf, links Modus/Zieltemperatur, rechts Raum-/Gerätedetails unter „Mehr“. */
     var HH = window._casoraHH;

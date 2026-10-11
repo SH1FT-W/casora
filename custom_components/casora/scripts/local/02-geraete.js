@@ -3123,7 +3123,7 @@
 // ── Popup-Tippschutz (23.09.2026) ───────────────────────────────────────────
 // 1) Direkt nach dem Öffnen eines Popups (600 ms) lösen data-casora-svc-Elemente nichts aus –
 //    der Finger, der das Popup geöffnet hat, darf nicht gleich „Heizen“ o. Ä. treffen.
-// 2) Klima-GRUPPEN (member_entities, z. B. eine Fußbodenheizungs-Gruppe): Einschalten (Heizen/Auto)
+// 2) Klima-GRUPPEN (member_entities/entity_id, z. B. eine Fußbodenheizungs-Gruppe): Einschalten (Heizen/Auto)
 //    braucht einen zweiten Tipp „Bestätigen“ innerhalb von 4 s. „Aus“ bleibt ein Tipp.
 // Läuft im Capture auf window, also vor casora-cores document-Listener.
 (function () {
@@ -3192,7 +3192,8 @@
     var eid = spec.target && spec.target.entity_id;
     var ha = document.querySelector('home-assistant');
     var st = ha && ha.hass && ha.hass.states[eid];
-    if (!st || !Array.isArray((st.attributes || {}).member_entities) || mode === 'off') return;
+    var grp = st && (window.casoraClimateMembers ? window.casoraClimateMembers(st, ha.hass.states).length > 0 : Array.isArray((st.attributes || {}).member_entities));
+    if (!grp || mode === 'off') return;
     if (st.state === mode) { block(); return; }
     if (ev.type === 'click' && Date.now() - lastTouch < 700) { block(); return; }   // Maus-Klick nach dem Touch
     if (ev.type === 'touchend') lastTouch = Date.now();
