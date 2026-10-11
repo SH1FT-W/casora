@@ -5,11 +5,12 @@
 import { open, casoraDashboard, dashboard, check, need, finish, atFinish } from './lib.mjs';
 import { ws } from '../ws.mjs';
 const dash = await casoraDashboard();
-const c0 = await ws(); const orig = await c0.cmd({ type: 'lovelace/config', url_path: dash.phone.url }); c0.close();
+const c0 = await ws(); const LIGHT = ((await c0.cmd({ type: 'get_states' })).find((x) => /^light\./.test(x.entity_id) && x.state !== 'unavailable') || {}).entity_id;
+const orig = await c0.cmd({ type: 'lovelace/config', url_path: dash.phone.url }); c0.close();
 atFinish(async () => { const c = await ws(); try { await c.cmd({ type: 'lovelace/config/save', url_path: dash.phone.url, config: orig }); } finally { c.close(); } });
 { const cfg = JSON.parse(JSON.stringify(orig)); let done = false;
   (function w(o) { if (done || !o || typeof o !== 'object') return; if (Array.isArray(o)) return o.forEach(w);
-    if (o.type === 'custom:casora-smart-row' && Array.isArray(o.cards) && o.cards.some((c) => c && c.type === 'custom:button-card' && [].concat(c.template || []).includes('casora_vent'))) { const big = JSON.parse(JSON.stringify(o.cards.find((c) => c && c.type === 'custom:button-card' && [].concat(c.template || []).includes('casora_car'))));
+    if (o.type === 'custom:casora-smart-row' && Array.isArray(o.cards) && o.cards.filter((c) => c && c.type === 'custom:button-card' && [].concat(c.template || []).some((t) => /^casora_/.test(t) && !/^casora_(mobile|badge|room|section)/.test(t))).length >= 3) { const big = { type: 'custom:button-card', template: 'casora_light', entity: LIGHT };
       big.variables = { ...(big.variables || {}), size: 'large' }; o.cards.unshift(big); done = true; return; } Object.values(o).forEach(w); })(cfg);
   await need('große Kachel in die Favoriten gesetzt', done);
   const c = await ws(); try { await c.cmd({ type: 'lovelace/config/save', url_path: dash.phone.url, config: cfg }); } finally { c.close(); } }

@@ -220,6 +220,20 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
   await check(tag + ': Ring in Alarmfarbe', red(p.ring), p.ring);
   if (mobile) await check(tag + ': Handy einspaltig', p.lx !== null && p.rx !== null && Math.abs(p.lx - p.rx) < 4 && p.ry > p.ly, p);
   else await check(tag + ': Desktop zweispaltig', p.lx !== null && p.rx !== null && p.rx > p.lx + 200 && Math.abs(p.ry - p.ly) < 4, p);
+  // Gemeldet 11.10.2026: aufgeklappt stand „Alles ok“ am Desktop nur in der linken Hälfte, einspaltig.
+  if (!mobile) {
+    for (let i = 0; i < 3; i++) {
+      const closed = await page.evaluate(() => { const h = window.__pierce('.hui-more:not(.open) > .hui-mhd').find((x) => x.getBoundingClientRect().height > 0);
+        if (!h) return false; h.click(); return true; });
+      if (!closed) break;
+      await page.waitForTimeout(500);
+    }
+    const ok = await page.evaluate(() => { const box = window.__pierce('.hui-more.open').filter((m) => /Meldet|ok/i.test(m.textContent)).pop();
+      if (!box) return null; const rows = [...box.querySelectorAll('.hui-srow')].filter((r) => r.getBoundingClientRect().height > 0);
+      const pop = box.getBoundingClientRect();
+      return { lefts: [...new Set(rows.map((r) => Math.round(r.getBoundingClientRect().left)))], rights: Math.max(...rows.map((r) => r.getBoundingClientRect().right)), boxR: pop.right, n: rows.length }; });
+    await check(tag + ': „Alles ok“ aufgeklappt zweispaltig über die volle Breite', ok && ok.n >= 2 && ok.lefts.length >= 2 && ok.rights > ok.boxR - 40, ok);
+  }
   if (BILDER) {
     await page.waitForTimeout(500);
     await page.screenshot({ path: file('popup'), fullPage: false });

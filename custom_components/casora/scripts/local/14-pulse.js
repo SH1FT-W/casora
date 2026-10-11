@@ -385,7 +385,9 @@
       // Breit (Desktop/Tablet) zwei Spalten nebeneinander, schmal eine (auto-fit, ab 2 × 300 px).
       // Abwechselnd verteilen, damit die schwächsten in beiden Spalten oben stehen (zeilenweise lesen).
       var cols = ok.length > 1 ? [ok.filter(function (d, i) { return i % 2 === 0; }), ok.filter(function (d, i) { return i % 2 === 1; })] : [ok];
-      var okHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:start;">'
+      // column-span: das breite „Mehr“ (02-geraete, MORE_WIDE_CSS) teilt seinen Inhalt selbst in zwei Spalten –
+      // ohne Spannen lag dieses zweispaltige Raster ganz in dessen linker Hälfte und fiel auf eine Spalte (11.10.2026).
+      var okHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:start;column-span:all;-webkit-column-span:all;">'
         + cols.map(function (c) { return '<div style="min-width:0;">' + UI.group(c.map(function (d) { return rowOf(d); }), null) + '</div>'; }).join('')
         + '</div>';
       var out = ok.length ? UI.more('pulse-ok', okHtml, { label: 'Alles ok', count: ok.length }) : '';

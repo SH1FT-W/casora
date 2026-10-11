@@ -6513,8 +6513,12 @@ window.casoraMenuGlass = {
         pop._syncHeadSwitch(h);
         if (!pop._headLine || !pop._headLine.isConnected) setTimeout(function () { if (pop.hasAttribute('open')) pop._syncHeadLine(); }, 120);
       }
+      // Auch ohne An/Aus-Wechsel: ändert sich das Gerät (Jalousie-Position → anderes Symbol), Kopf nachziehen.
+      var rso = pop && pop._ringSrc && pop._ringSrc._stateObj, rnow = rso && h && h.states ? h.states[rso.entity_id] : null;
+      var rchg = !!(pop && rnow && pop._ringSo && rnow !== pop._ringSo);
+      if (pop && rnow) pop._ringSo = rnow;
       if (pop && pop._ringSrc && pop._paintSoft && pop.hasAttribute('open')
-        && ringOff(pop._ringSrc, h) !== !!pop._ringStOff) {
+        && (rchg || ringOff(pop._ringSrc, h) !== !!pop._ringStOff)) {
         pop._paintSoft(false);
         // Die Kachel rendert den neuen Zustand erst danach – Farbe/Leerlauf kurz darauf noch einmal lesen.
         setTimeout(function () { if (pop.hasAttribute('open')) pop._paintSoft(false); }, 700);
@@ -6703,7 +6707,7 @@ window.casoraMenuGlass = {
       // Weich: Ring aus der auslösenden Kachel. Gemerkt wird die Kachel, nicht das Ergebnis –
       // Farbe und Symbol werden bei jedem Öffnen und nach einem Theme-Wechsel neu gelesen.
       // Ein neues Popup ohne angetippte Kachel bekommt keinen fremden Ring.
-      if (this._src) { this._ringSrc = this._src; this._ringLast = null; }
+      if (this._src) { this._ringSrc = this._src; this._ringLast = null; this._ringSo = null; }
       else if (!wasOpen) { this._ringSrc = null; this._ringLast = null; }
       // Gerät fehlt: Die Kachel nennt eine Entität, die es (nicht mehr) gibt – z. B. nach einem Umzug
       // mit umbenannten Geräten. Dann zeigt jedes Popup statt Leere einen Hinweis (_checkEmpty).
@@ -6917,6 +6921,12 @@ window.casoraMenuGlass = {
       if ((!line || !line.isConnected) && this._headRoot) {
         try { line = this._headRoot.querySelector('.hui-line'); } catch (e) { line = null; }
         this._headLine = line;
+        // Neu gezeichnete Statuszeile (Updates: erst „Aktuell“, nach der Suche die Liste): ihr Feld wieder
+        // ausblenden, sonst stand sie doppelt – im Kopf und im Inhalt (11.10.2026).
+        if (line && (!this._headField || !this._headField.isConnected)) {
+          var hf = this._headFieldOf(line);
+          if (hf) { hf.style.setProperty('display', 'none', 'important'); this._headField = hf; setTimeout(() => this._fitHeadGap(), 60); }
+        }
       }
       if (!line) return;
       var html = line.innerHTML;
