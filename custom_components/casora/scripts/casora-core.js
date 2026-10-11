@@ -3923,8 +3923,7 @@ window.casoraMenuGlass = {
         }
         more.addEventListener('click', (ev) => {
           ev.stopPropagation();
-          if (this._pages) { this._showPage(this._page + (side === 'r' ? 1 : -1), true); return; }
-          const sc = this._scroller;
+          const sc = this._pagedMode && this._rooms ? this._rooms : this._scroller;
           if (!sc) return;
           const by = Math.max(120, sc.clientWidth * 0.6) * (side === 'r' ? 1 : -1);
           try { sc.scrollBy({ left: by, behavior: 'smooth' }); } catch (_) { sc.scrollLeft += by; }
@@ -3954,34 +3953,16 @@ window.casoraMenuGlass = {
       scroller.addEventListener('scroll', () => this._syncFade(), { passive: true });
       // per-01 (10.10.2026): Mausrad (senkrecht) blättert die Leiste waagerecht – sonst kamen
       // Mausnutzer nicht an die hinteren Räume. Am Ende der Leiste scrollt die Seite wie gewohnt.
-      // 1.3: in der Seiten-Leiste blättert das Rad seitenweise (eine Seite je Rast, kurz gesperrt).
+      // 1.3: in der Raumleiste scrollt das Rad die Raumreihe (Zuhause bleibt stehen).
       scroller.addEventListener('wheel', (ev) => {
-        if (this._pages) {
-          const d = Math.abs(ev.deltaY) >= Math.abs(ev.deltaX) ? ev.deltaY : ev.deltaX;
-          if (ev.ctrlKey || !d) return;
-          // Eine Geste = eine Seite: Trackpad-Schwung (Trägheit) feuert noch ~1 s weiter – vorher
-          // blätterte ein Wisch nach 350 ms Sperre erneut (bis zu 5 Seiten). Die Sperre hält, bis 200 ms Ruhe ist.
-          const now = Date.now();
-          if (this._wheelLock && now < this._wheelLock) { ev.preventDefault(); this._wheelLock = now + 200; return; }
-          if (!this._wheelAt || now - this._wheelAt > 200) this._wheelAcc = 0;
-          this._wheelAt = now;
-          const to = this._page + (d > 0 ? 1 : -1);
-          if (to < 0 || to >= this._pages.length) return;
-          ev.preventDefault();
-          this._wheelAcc = (this._wheelAcc || 0) + (ev.deltaMode === 1 ? d * 16 : d);
-          if (Math.abs(this._wheelAcc) < 24) return;
-          this._wheelAcc = 0;
-          this._wheelLock = now + 200;
-          this._showPage(to, true);
-          return;
-        }
         if (ev.ctrlKey || Math.abs(ev.deltaY) <= Math.abs(ev.deltaX)) return;
-        const max = scroller.scrollWidth - scroller.clientWidth;
+        const sc = this._pagedMode && this._rooms ? this._rooms : scroller;
+        const max = sc.scrollWidth - sc.clientWidth;
         if (max <= 2) return;
         const dy = ev.deltaMode === 1 ? ev.deltaY * 16 : ev.deltaY;
-        if ((dy < 0 && scroller.scrollLeft <= 0) || (dy > 0 && scroller.scrollLeft >= max - 1)) return;
+        if ((dy < 0 && sc.scrollLeft <= 0) || (dy > 0 && sc.scrollLeft >= max - 1)) return;
         ev.preventDefault();
-        scroller.scrollLeft += dy;
+        sc.scrollLeft += dy;
       }, { passive: false });
       this._indicator = indicator;
       this._els       = [];
@@ -4001,9 +3982,9 @@ window.casoraMenuGlass = {
         rooms.appendChild(track);
         this._track = track;
         this._pageEls = [];
-        // Überlauf-hidden lässt sich per Fokus trotzdem scrollen – die Schiene bewegt nur transform.
-        rooms.addEventListener('scroll', () => { if (rooms.scrollLeft) rooms.scrollLeft = 0; }, { passive: true });
-        this._initSwipe(rooms);
+        /* Frei scrollen (11.10.2026, Wunsch): die Raumreihe scrollt wie eine Liste mit Schwung und darf
+           halbe Namen zeigen – Seiten blätterten sprunghaft und ließen Lücken. */
+        rooms.addEventListener('scroll', () => this._syncFade(), { passive: true });
       }
 
       this._routes.forEach((route, i) => {
@@ -4112,8 +4093,6 @@ window.casoraMenuGlass = {
     _layout() {
       const rooms = this._rooms, bar = this._bar, track = this._track;
       if (!this._pagedMode || !rooms || !bar || !track) return;
-      // Während der Finger zieht nichts umbauen – danach nachholen.
-      if (this._drag) { this._layoutLater = true; return; }
       const list = this._els.filter((el) => el.room);
       if (!this._pageEls.length) return;
       // Mit .paged messen (volle Breite); die Knöpfe schrumpfen nie, ihre Breite hängt nicht an der Seite.
@@ -4137,46 +4116,17 @@ window.casoraMenuGlass = {
       }
       // Sehr schmal (Tablet hochkant, Seitenleiste offen): Zuhause nur als Haus-Kreis – sonst passte oft nur ein Raum.
       if (W < 260 && rooms.parentNode.querySelector('.route.home')) { bar.classList.add('tight'); W = rooms.clientWidth; }
-      // Platz des linken Pfeils (liegt über dem Anfang der Reihe): Seite 1 nutzt ihn, ab Seite 2 bleibt er frei.
+      // Platz des linken Pfeils (liegt über dem Anfang der Reihe): dort läuft die Reihe weich aus, sobald links etwas verborgen ist.
       const ml = bar.querySelector('.more-l');
       const pad = ml ? Math.max(0, Math.round(ml.getBoundingClientRect().right - rooms.getBoundingClientRect().left + 4)) : 0;
-      /* Eine durchgehende Reihe mit festen Abständen (11.10.2026: keine verteilten Lücken mehr). Seiten sind
-         Ausschnitte: Seite 1 ab dem ersten Raum, jede weitere beginnt mit dem ersten nicht ganz sichtbaren Raum
-         hinter dem linken Pfeil; die letzte endet bündig rechts und zeigt so viele Räume, wie passen – nie eine
-         halb leere letzte Seite. Was nicht ganz zur Seite gehört, schneidet clip-path weg. */
-      const L = [], R = [];
-      let x = 0;
-      w.forEach((wi) => { L.push(x); R.push(x + wi); x += wi + gap; });
-      const n = list.length, end = R[n - 1];
-      const lastIn = (off) => { let e = 0; for (let i = 0; i < n; i++) if (R[i] - off <= W + 0.5) e = i; return e; };
-      const firstIn = (off, from) => { for (let i = 0; i < n; i++) if (L[i] - off >= from - 0.5) return i; return n - 1; };
-      const pages = [];
-      let off = 0;
-      for (let guard = 0; guard < n; guard++) {
-        const st = pages.length ? firstIn(off, pad) : 0;
-        const e = lastIn(off);
-        pages.push({ s: st, e: e, off: off });
-        if (e >= n - 1) break;
-        off = L[e + 1] - pad;
-        if (end - off <= W + 0.5) off = end - W;   // Rest passt: letzte Seite bündig rechts
-      }
+      rooms.style.setProperty('--pg-pad', pad + 'px');
       this._pageList = list;
-      this._pages = pages.map((p) => {
-        const idx = [];
-        for (let i = p.s; i <= p.e; i++) idx.push(i);
-        return { idx: idx, off: p.off,
-          cl: p.s ? Math.max(0, L[p.s] - p.off - gap / 2) : 0,
-          cr: Math.max(0, W - (R[p.e] - p.off) - gap / 2) };
-      });
-      this._pageW = W;
+      this._pages = null;
       this._regroup(list, [list.map((el, i) => i)], 0);
-      const act = list.findIndex((el) => el.btn.classList.contains('active'));
-      const keep = Math.min(this._page || 0, this._pages.length - 1);
-      // Neu vermessen (Schrift, Größe): auf der Seite des aktiven Raums – außer es wurde seit dem letzten Wechsel von Hand geblättert.
-      const fresh = this._pagedFor !== this._activeIdx;
-      this._pagedFor = this._activeIdx;
-      const stay = !fresh && this._userPaged;
-      this._showPage(act >= 0 && !stay ? this._pageOf(act) : keep, stay, true);
+      this._setX(0, false);
+      this._pagedFor = null;
+      this._syncFade();
+      this._placeIndicator(true);
     }
 
     // Räume auf Seiten-Behälter (.pg, je W breit) verteilen – nur wenn sich die Aufteilung ändert,
@@ -4200,11 +4150,6 @@ window.casoraMenuGlass = {
       if (foc && foc.isConnected && foc !== (sr && sr.activeElement)) { try { foc.focus({ preventScroll: true }); } catch (_) {} }
     }
 
-    _pageOf(i) {
-      const p = (this._pages || []).findIndex((pg) => pg.idx.indexOf(i) >= 0);
-      return p < 0 ? 0 : p;
-    }
-
     _still() {
       return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     }
@@ -4215,86 +4160,6 @@ window.casoraMenuGlass = {
       if (!t) return;
       t.classList.toggle('glide', !!glide && !this._still());
       t.style.transform = x ? 'translate3d(' + x + 'px,0,0)' : '';
-    }
-
-    _showPage(p, byUser, instant) {
-      const pages = this._pages;
-      this._userPaged = !!byUser;
-      if (!pages || !this._track) return;
-      p = Math.max(0, Math.min(pages.length - 1, p));
-      const prev = this._page || 0;
-      this._page = p;
-      // Nur die Räume der sichtbaren Seite sind bedienbar (Tab, Vorlesen); die übrigen sind inert.
-      const cur = pages[p], list = this._pageList || [];
-      list.forEach((el, i) => { el.btn.inert = cur.idx.indexOf(i) < 0; });
-      if (this._rooms) {
-        this._rooms.style.setProperty('--clip-l', cur.cl + 'px');
-        this._rooms.style.setProperty('--clip-r', cur.cr + 'px');
-      }
-      /* Seitenwechsel ohne Schieben (11.10.2026): beim Gleiten war zwischen zwei Seiten kurz eine große Lücke
-         zu sehen. Die Schiene springt, die neue Seite blendet mit kleinem Versatz aus der Wischrichtung ein. */
-      this._setX(-cur.off, false);
-      const pg = this._pageEls[0];
-      if (byUser && !instant && p !== prev && pg && pg.animate && !this._still()) {
-        const dx = (p > prev ? 1 : -1) * 24;
-        pg.animate([{ opacity: 0, transform: 'translateX(' + dx + 'px)' }, { opacity: 1, transform: 'none' }],
-          { duration: 280, easing: 'cubic-bezier(.2,.8,.3,1)' });
-      }
-      this._syncFade();
-      this._placeIndicator(true);
-    }
-
-    /* Wischen am Tablet: beim Loslassen gleitet die Reihe weich auf die nächste bzw. vorige Seite (ab 30 %
-       der Breite oder schnellem Wisch), immer höchstens eine Seite je Wisch. Die Reihe folgt dem Finger
-       bewusst nicht (11.10.2026): am iPad blieb sie zwischen zwei Seiten stehen, wenn das Loslassen nicht
-       ankam – mit einer Lücke zwischen den Räumen; beim Mitgehen schauten links Reste der vorigen Seite heraus. */
-    _initSwipe(rooms) {
-      let d = null;
-      const down = (ev) => {
-        if (ev.pointerType === 'mouse' || !ev.isPrimary || !this._pages) return;
-        d = { id: ev.pointerId, x: ev.clientX, y: ev.clientY, on: false, hist: [[ev.timeStamp, ev.clientX]] };
-      };
-      const move = (ev) => {
-        if (!d || ev.pointerId !== d.id) return;
-        const dx = ev.clientX - d.x, dy = ev.clientY - d.y;
-        if (!d.on) {
-          if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-          if (Math.abs(dy) >= Math.abs(dx) || !this._pages) { d = null; return; }
-          d.on = true;
-          this._drag = true;
-          try { rooms.setPointerCapture(ev.pointerId); } catch (_) {}
-        }
-        d.hist.push([ev.timeStamp, ev.clientX]);
-        if (d.hist.length > 8) d.hist.shift();
-        d.dx = dx;
-      };
-      const up = (ev, cancel) => {
-        if (!d || (ev && ev.pointerId !== d.id)) return;
-        const g = d; d = null;
-        if (!g.on) return;
-        this._drag = false;
-        this._swipedAt = Date.now();
-        let to = this._page;
-        if (!cancel && this._pages) {
-          const W = this._pageW || rooms.clientWidth;
-          const off = g.dx || 0;
-          // Tempo aus den letzten ~100 ms (px/ms).
-          const h = g.hist, last = h[h.length - 1];
-          let first = h[0];
-          for (let i = h.length - 1; i >= 0; i--) { if (last[0] - h[i][0] > 100) break; first = h[i]; }
-          const v = last[0] > first[0] ? (last[1] - first[1]) / (last[0] - first[0]) : 0;
-          if (Math.abs(v) > 0.45 && Math.abs(off) > 16) to += v < 0 ? 1 : -1;
-          else if (Math.abs(off) > W * 0.3) to += off < 0 ? 1 : -1;
-        }
-        this._showPage(to, true);
-        if (this._layoutLater) { this._layoutLater = false; this._queueLayout(); }
-      };
-      rooms.addEventListener('pointerdown', down, { passive: true });
-      rooms.addEventListener('pointermove', move, { passive: true });
-      rooms.addEventListener('pointerup', (ev) => up(ev, false), { passive: true });
-      rooms.addEventListener('pointercancel', (ev) => up(ev, true), { passive: true });
-      // Nur der eigene Verlust zählt: der Knopf unter dem Finger meldet seinen (impliziten) beim Übernehmen auch.
-      rooms.addEventListener('lostpointercapture', (ev) => { if (ev.target === rooms && d && d.on && ev.pointerId === d.id) up(ev, true); }, { passive: true });
     }
 
     _isMenuRoute(route) {
@@ -4423,10 +4288,18 @@ window.casoraMenuGlass = {
 
       // Seiten-Leiste: nach einem Raumwechsel den aktiven Raum auf seine Seite holen – nur wenn er gerade
       // nicht zu sehen ist, und nur einmal je Wechsel (von Hand weitergeblättert bleibt weitergeblättert).
-      if (this._pages && this._pagedFor !== this._activeIdx) {
+      if (this._pagedMode && this._rooms && this._bar.classList.contains('paged') && this._pagedFor !== this._activeIdx) {
         this._pagedFor = this._activeIdx;
-        const li = this._pageList.indexOf(this._els[this._activeIdx]);
-        if (li >= 0 && this._pageOf(li) !== this._page) { this._showPage(this._pageOf(li)); return; }
+        const el = this._els[this._activeIdx], rm = this._rooms;
+        if (el && el.room) {
+          const r = el.btn.getBoundingClientRect(), v = rm.getBoundingClientRect();
+          const padL = parseFloat(rm.style.getPropertyValue('--pg-pad')) || 0;
+          const out = r.left < v.left + padL - 1 || r.right > v.right + 1;
+          if (out) {
+            const to = Math.max(0, rm.scrollLeft + (r.left - v.left) - padL);
+            try { rm.scrollTo({ left: to, behavior: instant ? 'auto' : 'smooth' }); } catch (_) { rm.scrollLeft = to; }
+          }
+        }
       }
       // Aktiver Raum: die Pille liegt in der Schiene und gleitet mit ihr; Zuhause: in der festen Leiste.
       const host = this._pagedMode && this._track && this._els[this._activeIdx].room ? this._track : this._scroller;
@@ -4527,12 +4400,13 @@ window.casoraMenuGlass = {
       if (!sc) return;
       if (this._pagedMode) {
         // Seiten-Leiste: kein Verlauf (nur ganze Namen); die Pfeile zeigen, ob es davor/danach weitergeht.
-        const n = this._pages ? this._pages.length : 0;
+        const rm = this._rooms, on = !!(this._bar && this._bar.classList.contains('paged') && rm);
+        const max = on ? rm.scrollWidth - rm.clientWidth : 0;
         sc.classList.remove('fade-l', 'fade-r');
         if (this._bar) {
-          const l = n > 1 && this._page > 0;
+          const l = on && max > 2 && rm.scrollLeft > 2;
           this._bar.classList.toggle('more-l-on', l);
-          this._bar.classList.toggle('more-r-on', n > 1 && this._page < n - 1);
+          this._bar.classList.toggle('more-r-on', on && max > 2 && rm.scrollLeft < max - 2);
           // Linker Pfeil erst, wenn links Räume verborgen sind: davor unsichtbar und nicht bedienbar
           // (Platz bleibt, damit nichts springt). Fokus darauf wandert zum rechten Pfeil.
           const ml = this._bar.querySelector('.more-l');
@@ -5203,7 +5077,15 @@ window.casoraMenuGlass = {
           .bar.paged .scroller .more-l { z-index: 2; margin-right: calc(-30px - 4px); }
           .bar.paged .pg { box-sizing: border-box; }
           /* Nur die Räume der Seite zeigen: links (unter dem Pfeil) und rechts angeschnittene Namen wegschneiden. */
-          .bar.paged .rooms { clip-path: inset(-8px var(--clip-r, 0px) -8px var(--clip-l, 0px)); }
+          /* Frei scrollende Raumreihe (11.10.2026): mit Schwung, ohne Leiste; an den Rändern laufen angeschnittene
+             Namen weich aus – links erst, wenn dort etwas verborgen ist (unter dem Pfeil), rechts vor dem Pfeil. */
+          .bar.paged .rooms { overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none;
+            -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y;
+            -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--fl, 0px), #000 calc(100% - var(--fr, 0px)), transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0, #000 var(--fl, 0px), #000 calc(100% - var(--fr, 0px)), transparent 100%); }
+          .bar.paged .rooms::-webkit-scrollbar { display: none; }
+          .bar.paged.more-l-on .rooms { --fl: calc(var(--pg-pad, 38px) + 12px); }
+          .bar.paged.more-r-on .rooms { --fr: 20px; }
           /* Linker Pfeil auf der ersten Seite ganz weg; blendet weich ein, sobald links etwas verborgen ist. */
           .bar.paged:not(.more-l-on) .scroller .more-l { opacity: 0; visibility: hidden;
             transition: opacity var(--casora-dur-feedback, 160ms) var(--casora-ease-feedback, ease), visibility 0s linear var(--casora-dur-feedback, 160ms); }
