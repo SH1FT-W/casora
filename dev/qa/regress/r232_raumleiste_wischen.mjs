@@ -5,9 +5,10 @@
 // linke Pfeil stand schon auf der ersten Seite da. Ursache: die Seiten wurden per hidden umgeschaltet
 // (harter Sprung, kein Mitgehen mit dem Finger, Neuvermessung je Blättern), Wischen blätterte schon ab
 // 40 px, ein Trackpad-Schwung blätterte bis zu 5 Seiten.
-// Erwartet (Tablet 1180×820 quer und 820×1180 hochkant, Theme Casora): die Raumreihe folgt dem Finger;
+// Erwartet (Tablet 1180×820 quer und 820×1180 hochkant, Theme Casora): die Raumreihe bleibt während des
+// Zugs stehen (11.10.: Mitgehen ließ sie am iPad zwischen zwei Seiten hängen) und gleitet beim Loslassen;
 // Loslassen nach kurzem Zug gleitet zurück, nach langem/schnellem Wisch genau eine Seite weiter; Pfeil
-// und Trackpad gleiten weich (Zwischenlagen) auf genau eine Seite; am Ende nur ganze Namen bündig,
+// und Trackpad blättern genau eine Seite, die neue Seite blendet weich ein; am Ende nur ganze Namen bündig,
 // Zuhause und Breite fest; linker Pfeil auf Seite 1 unsichtbar und nicht bedienbar, danach sichtbar.
 // Ohne Bewegung (prefers-reduced-motion) kein Gleiten. Chromium mit echtem CDP-Touch, dazu WebKit
 // (Safari) mit nachgestellten Zeiger-Ereignissen.
@@ -92,35 +93,38 @@ for (const [name, vp, engine] of [['Tablet quer 1180', { width: 1180, height: 82
     return { before, mid, R, end: await state(page), dx: x1 - x0 };
   };
 
-  // 1) Langer Zug (45 %, langsam): Reihe folgt dem Finger, dann genau eine Seite weiter.
+  // 1) Langer Zug (45 %, langsam): Reihe bleibt während des Zugs stehen, dann genau eine Seite weiter.
   let d = await drag(0.45, 16, 30);
-  await check(name + ': Wischen – Reihe folgt dem Finger (vor dem Loslassen ' + (d.mid - d.before) + ' px bei ' + Math.round(d.dx) + ' px Zug)',
-    d.mid != null && Math.abs((d.mid - d.before) - d.dx) <= Math.max(12, Math.abs(d.dx) * 0.1), { before: d.before, mid: d.mid, dx: d.dx });
+  await check(name + ': Wischen – Reihe bleibt während des Zugs stehen (vor dem Loslassen ' + (d.mid - d.before) + ' px bei ' + Math.round(d.dx) + ' px Zug)',
+    d.mid != null && Math.abs(d.mid - d.before) <= 1, { before: d.before, mid: d.mid, dx: d.dx });
   await check(name + ': langer Zug blättert genau eine Seite (' + s.page + ' → ' + d.end.page + ')', d.end.page === s.page + 1 && pageChanges(d.R) === 1, { page: d.end.page, wechsel: pageChanges(d.R) });
   await check(name + ': danach nur ganze Namen, bündig im Fenster', whole(d.end) && d.end.vis.length > 0, d.end.vis);
   await check(name + ': Seite 2 – linker Pfeil sichtbar und bedienbar', d.end.leftShown, d.end);
   await check(name + ': Zuhause und Breite fest', Math.abs(d.end.bar - s.bar) <= 1 && (s.home == null || Math.abs(d.end.home - s.home) <= 1), { s: [s.bar, s.home], e: [d.end.bar, d.end.home] });
 
-  // 2) Kurzer Zug (15 %, langsam): gleitet zurück, keine neue Seite.
+  // 2) Kurzer Zug (15 %, langsam): bleibt stehen, keine neue Seite.
   const p2 = d.end.page;
   d = await drag(0.15, 10, 40);
-  await check(name + ': kurzer Zug (15 %) gleitet zurück', d.end.page === p2 && pageChanges(d.R) === 0 && whole(d.end), { page: d.end.page, vorher: p2 });
-  await check(name + ': … mit Zwischenlagen (kein Sprung)', steps(d.R) >= 6, { lagen: steps(d.R) });
+  await check(name + ': kurzer Zug (15 %) bleibt auf der Seite', d.end.page === p2 && pageChanges(d.R) === 0 && whole(d.end), { page: d.end.page, vorher: p2 });
+  await check(name + ': … und die Reihe steht dabei still (kein Hängenbleiben zwischen Seiten)', steps(d.R) <= 1, { lagen: steps(d.R) });
 
   // 3) Schneller Wisch zurück (35 % in ~110 ms): genau eine Seite zurück.
   d = await drag(-0.35, 6, 18);
   await check(name + ': schneller Wisch zurück = genau eine Seite', d.end.page === p2 - 1 && pageChanges(d.R) === 1, { page: d.end.page, wechsel: pageChanges(d.R) });
 
-  // 4) Pfeil rechts: weiches Gleiten mit Zwischenlagen auf genau die nächste Seite.
+  // 4) Pfeil rechts: die nächste Seite blendet weich ein, genau eine Seite.
   if (engine === 'chromium') {
     await toPage(page, 0); await page.waitForTimeout(400);
     const c = await page.evaluate((NAV) => { const r = eval(NAV).shadowRoot.querySelector('.more-r').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }, NAV);
     await rec(page, true);
     await page.mouse.click(c[0], c[1]);
+    // Seitenwechsel ohne Schieben (11.10.): die neue Seite blendet ein – keine Lücke zwischen zwei Seiten.
+    const fade = await page.evaluate((NAV) => { const n = eval(NAV), pg = n._pageEls[n._page];
+      return pg && pg.getAnimations ? pg.getAnimations().length : 0; }, NAV);
     await page.waitForTimeout(700);
     let R = await rec(page, false);
     let e = await state(page);
-    await check(name + ': Pfeil gleitet weich (' + steps(R) + ' Lagen) auf Seite 2', e.page === 1 && steps(R) >= 8 && whole(e), { lagen: steps(R), page: e.page });
+    await check(name + ': Pfeil blendet die nächste Seite weich ein (' + fade + ' Animation)', e.page === 1 && fade >= 1 && whole(e), { fade, page: e.page });
 
     // 5) Trackpad-Schwung (abklingende Rad-Ereignisse ~650 ms): genau eine Seite.
     await toPage(page, 0); await page.waitForTimeout(400);
