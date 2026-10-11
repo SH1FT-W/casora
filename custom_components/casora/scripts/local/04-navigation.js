@@ -257,6 +257,16 @@
       window._hmnOwner = this;
       var me = this;
       [0, 300, 1000, 2500, 4000].forEach(function (t) { setTimeout(function () { if (me.isConnected && me._bar) me._syncDock(); }, t); });
+      /* Sicherung: sitzt die Kapsel unten in der Leiste, gilt oben 8px – setzt irgendwer (Zeitgeber, alte Leiste,
+         HA beim Theme-Anwenden) danach wieder den großen Abstand, sofort zurück (Kopf rutschte am iPhone, 11.10.2026). */
+      if (!window._hmnResvObs) {
+        var root = document.documentElement;
+        window._hmnResvObs = new MutationObserver(function () {
+          if (!(window._casoraSoft && window._casoraSoft()) || !document.querySelector('.hmn-dock button-card')) return;
+          if (getComputedStyle(root).getPropertyValue('--casora-mhead-reserve').trim() !== '8px') root.style.setProperty('--casora-mhead-reserve', '8px');
+        });
+        window._hmnResvObs.observe(root, { attributes: true, attributeFilter: ['style'] });
+      }
       this._bindScroll();
       this._bindIdle();
       if (window._casoraFilter && !this._fOff) { var me = this; this._fOff = window._casoraFilter.onChange(function () { me._render(); }); }
