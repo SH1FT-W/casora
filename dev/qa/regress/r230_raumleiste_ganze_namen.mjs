@@ -38,7 +38,9 @@ const state = (page) => page.evaluate(() => {
     return r.width > 0 && (!rb || b.classList.contains('home') || (r.right > rb.left + 1 && r.left < rb.right - 1)); });
   const lab = (b) => (b.querySelector('.htx') || b.querySelector('.label')).textContent.trim();
   const box = rooms ? R(rooms) : R(sr.querySelector('.scroller'));
-  const caps = [...sr.querySelectorAll('.more')].filter((m) => m.getBoundingClientRect().width > 0).map(R);
+  // Nur sichtbare Pfeile zählen: der linke liegt auf Seite 1 unsichtbar über dem Anfang der Reihe (11.10.2026).
+  const caps = [...sr.querySelectorAll('.more')].filter((m) => { const c = getComputedStyle(m);
+    return m.getBoundingClientRect().width > 0 && c.visibility !== 'hidden' && parseFloat(c.opacity) > 0.1; }).map(R);
   const ml = sr.querySelector('.more-l'), mcs = ml && getComputedStyle(ml);
   const leftGone = !!ml && (mcs.visibility === 'hidden' || parseFloat(mcs.opacity) === 0) && mcs.pointerEvents === 'none' && ml.getAttribute('aria-hidden') === 'true';
   return {

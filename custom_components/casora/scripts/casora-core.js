@@ -4136,10 +4136,15 @@ window.casoraMenuGlass = {
       }
       // Sehr schmal (Tablet hochkant, Seitenleiste offen): Zuhause nur als Haus-Kreis – sonst passte oft nur ein Raum.
       if (W < 260 && rooms.parentNode.querySelector('.route.home')) { bar.classList.add('tight'); W = rooms.clientWidth; }
+      // Platz des linken Pfeils (liegt über dem Anfang der Reihe): Seite 1 nutzt ihn, ab Seite 2 bleibt er frei.
+      const ml = bar.querySelector('.more-l');
+      const pad = ml ? Math.max(0, Math.round(ml.getBoundingClientRect().right - rooms.getBoundingClientRect().left + 4)) : 0;
+      this._pgPad = pad;
       const pages = [];
       let cur = null, sum = 0;
       list.forEach((el, i) => {
-        if (cur && sum + gap + w[i] <= W + 0.5) { cur.push(i); sum += gap + w[i]; return; }
+        const cap = W - (pages.length > 1 ? pad : 0);  // Seite, die gerade gefüllt wird: Index pages.length - 1
+        if (cur && sum + gap + w[i] <= cap + 0.5) { cur.push(i); sum += gap + w[i]; return; }
         cur = [i]; sum = w[i]; pages.push(cur);
       });
       this._pageList = list;
@@ -4148,7 +4153,8 @@ window.casoraMenuGlass = {
       this._regroup(list, pages, W);
       // Wenig Rest: Namen gleichmäßig verteilen (keine Lücke vor dem Pfeil); viel Rest: links bündig.
       this._pages.forEach((pg, i) => {
-        const rest = W - pg.w;
+        this._pageEls[i].style.paddingLeft = i ? pad + 'px' : '';
+        const rest = W - (i ? pad : 0) - pg.w;
         this._pageEls[i].classList.toggle('spread', pg.idx.length > 1 && rest / (pg.idx.length - 1) <= 32);
       });
       const act = list.findIndex((el) => el.btn.classList.contains('active'));
@@ -5182,7 +5188,11 @@ window.casoraMenuGlass = {
           .bar.paged .scroller .more { display: block; opacity: .35; pointer-events: none;
             transition: opacity var(--casora-dur-feedback, 160ms) var(--casora-ease-feedback, ease), visibility 0s linear 0s; }
           .bar.paged.more-l-on .more-l, .bar.paged.more-r-on .more-r { opacity: 1; pointer-events: auto; }
-          /* Linker Pfeil auf der ersten Seite ganz weg (Platz bleibt); blendet weich ein, sobald links etwas verborgen ist. */
+          /* Linker Pfeil liegt über dem Anfang der Raumreihe (negativer Rand): Seite 1 beginnt direkt hinter
+             dem Trenner, ab Seite 2 hält die Seite dort Platz für den Pfeil frei (--pg-pad, 11.10.2026). */
+          .bar.paged .scroller .more-l { z-index: 2; margin-right: calc(-30px - 4px); }
+          .bar.paged .pg { box-sizing: border-box; }
+          /* Linker Pfeil auf der ersten Seite ganz weg; blendet weich ein, sobald links etwas verborgen ist. */
           .bar.paged:not(.more-l-on) .scroller .more-l { opacity: 0; visibility: hidden;
             transition: opacity var(--casora-dur-feedback, 160ms) var(--casora-ease-feedback, ease), visibility 0s linear var(--casora-dur-feedback, 160ms); }
           .scroller .more:focus-visible { outline: 2px solid var(--casora-nav-focus-line, currentColor); outline-offset: 1px; }
