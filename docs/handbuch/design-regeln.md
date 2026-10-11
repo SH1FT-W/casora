@@ -316,17 +316,25 @@ du-Form, „62 %“ mit Leerzeichen (Deutsch), Zahlen über `casoraNum`/`toLocal
 
 Desktop/Tablet – Raumleiste A „Feinschliff“ (`casora-nav-bar`, Tablet-Fassung in `casora-core.js`):
 - Zuhause steht **fest vorn** (Haus-Kreis 30, aktiv in Ton mit weißer Glyphe), dahinter Trenner 1 × 22.
-- Räume **seitenweise, nur ganze Namen** – nie mitten im Wort abschneiden, nie Text unter einem Pfeil.
-  Die Pfeile ‹ › sind Endkappen (30, Sand) neben den Namen; ohne Weiteres in der Richtung blass.
-  Wenig Rest auf einer Seite → Namen gleichmäßig verteilen, viel Rest (letzte Seite) → mittig.
+- Räume **frei scrollend** (geändert 11.10.2026, vorher seitenweise mit nur ganzen Namen): die Raumreihe
+  scrollt nativ mit Schwung, ohne sichtbare Scrollleiste und ohne Einrasten. **Halbe Namen sind erlaubt**;
+  an den Rändern laufen sie per `mask-image` **weich aus** – links erst, wenn dort etwas verborgen ist
+  (unter dem linken Pfeil), rechts vor dem Pfeil. Begründung (Nutzerwunsch): „ich will nicht das die
+  leiste springt oder so also ganze räume anzeigt...sondern wenn ich nur ganz bisschen scrolle sollen auch
+  halbe räume angezeigt werden“ – das Blättern in Seiten wirkte sprunghaft und ließ Lücken.
+  Die Pfeile ‹ › sind Endkappen (30, Sand); ohne Weiteres in der Richtung blass. Der linke Pfeil ist bei
+  Scrollstand 0 ganz weg (unsichtbar, `aria-hidden`, nicht fokussierbar) und liegt über dem Anfang der
+  Reihe – der erste Raum beginnt direkt hinter dem Trenner. Pfeil = weich um 60 % der Breite, Mausrad
+  senkrecht scrollt waagrecht. Am Ende schließt der letzte Raum bündig rechts ab.
   Sehr schmal (< 260 px für die Räume, Tablet mit offener Seitenleiste): Zuhause nur als Haus-Kreis.
 - **Nichts wandert**: Antippen eines sichtbaren Raums verschiebt weder Zuhause noch andere Namen;
-  die Leiste behält beim Blättern ihre Breite. Nur wenn der aktive Raum nicht zu sehen ist (Raumwechsel
-  von woanders), springt sie einmal auf seine Seite. Mausrad/Wischen blättert seitenweise.
+  die Leiste behält beim Scrollen ihre Breite. Nur wenn der aktive Raum nach einem Raumwechsel von
+  woanders nicht ganz zu sehen ist, scrollt sie ihn weich ins Bild. Die Studio-Vorschau zeigt dasselbe
+  (halbe Namen am Rand mit weichem Auslauf).
 - Aktiver Raum: weiße Pille mit dem Handy-Schatten (auch hell gut sichtbar), Schrift unverändert.
 - Glocke, Sprechblase und ⋯ in **einer Kapsel** (46 hoch = Knopf 40 + 2 × 3, Fläche/Schatten wie die
   Leiste, Trenner vor ⋯); nur mit ⋯ (Casora-verwaltet) und nur in Designs mit `--casora-chrome-capsule-fill`.
-  Prüfung: `dev/qa/regress/r230_raumleiste_ganze_namen.mjs`, `r150_raumleiste_pfeil.mjs`, `r91` (Kapsel).
+  Prüfung: `dev/qa/regress/r230_raumleiste_frei.mjs`, `r232_raumleiste_wischen.mjs` (Touch), `r150_raumleiste_pfeil.mjs`, `r91` (Kapsel).
 
 Handy – Navigationsleiste B (`casora-mobile-nav`, nur Casora/Nebel):
 - Glocke (und Sprechblase) und ⋯ sitzen **rechts unten in der Leiste** hinter einem Trenner; oben bleiben

@@ -5081,10 +5081,11 @@ window.casoraMenuGlass = {
              Namen weich aus – links erst, wenn dort etwas verborgen ist (unter dem Pfeil), rechts vor dem Pfeil. */
           .bar.paged .rooms { overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none;
             -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y;
-            -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--fl, 0px), #000 calc(100% - var(--fr, 0px)), transparent 100%);
-            mask-image: linear-gradient(to right, transparent 0, #000 var(--fl, 0px), #000 calc(100% - var(--fr, 0px)), transparent 100%); }
+            -webkit-mask-image: linear-gradient(to right, transparent 0, transparent var(--fl0, 0px), #000 var(--fl, 0px), #000 calc(100% - var(--fr, 0px)), transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0, transparent var(--fl0, 0px), #000 var(--fl, 0px), #000 calc(100% - var(--fr, 0px)), transparent 100%); }
           .bar.paged .rooms::-webkit-scrollbar { display: none; }
-          .bar.paged.more-l-on .rooms { --fl: calc(var(--pg-pad, 38px) + 12px); }
+          /* Unter dem linken Pfeil (im Dunklen durchscheinend) nichts zeigen, erst dahinter weich einblenden. */
+          .bar.paged.more-l-on .rooms { --fl0: var(--pg-pad, 38px); --fl: calc(var(--pg-pad, 38px) + 16px); }
           .bar.paged.more-r-on .rooms { --fr: 20px; }
           /* Linker Pfeil auf der ersten Seite ganz weg; blendet weich ein, sobald links etwas verborgen ist. */
           .bar.paged:not(.more-l-on) .scroller .more-l { opacity: 0; visibility: hidden;
