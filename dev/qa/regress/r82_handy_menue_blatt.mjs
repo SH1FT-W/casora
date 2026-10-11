@@ -184,21 +184,27 @@ for (const [theme, dark] of [['Casora', false], ['Casora', true], ['Casora Nebel
   await page.waitForTimeout(500);
 
   // ── Szenen: dieselben leichten Zeilen, Kreis in der Studio-Farbe (erste Szene mit eigener Farbe, Rest Standard). ──
-  const colors = await page.evaluate(() => {
+  // Die oberste Zeile des Blatts bestimmen: im Raum stehen dessen Szenen zuerst (P-V6). Legte ein früherer Test im
+  // selben HA eine Raum-Szene an, war die erste Szene der Liste nicht die oberste Zeile.
+  await openSheet(page, 'scenes');
+  const top = await page.evaluate(() => { const e = document.querySelector('.hmn-sheet .hmn-sub[data-sid]'); return e ? e.getAttribute('data-sid') : null; });
+  await page.evaluate(() => { const nav = window.__pierce('casora-mobile-nav')[0]; nav._closeMenu(); });
+  await page.waitForTimeout(500);
+  const colors = await page.evaluate((top) => {
     let first = null;
-    window.casoraSceneColor = (id) => { if (!first) first = id; return id === first ? 'var(--casora-color-blue, #5B8FC9)' : null; };
+    window.casoraSceneColor = (id) => { if (!first) first = top || id; return id === first ? 'var(--casora-color-blue, #5B8FC9)' : null; };
     // Desktop-Standardfarbe der Szenen (casora_badge_scene: --casora-scene-badge-color; casora_scenes: --casora-color-yellow) aufgelöst.
     const probe = (v) => { const d = document.createElement('div'); d.style.cssText = 'position:fixed;width:1px;height:1px;background:' + v; document.body.appendChild(d); const c = getComputedStyle(d).backgroundColor; d.remove(); return c; };
     // Erste Szene im Browser als aktiv führen (D4/D6: Farbe und „Aktiv“ nur für aktive Szenen).
     const nav = window.__pierce('casora-mobile-nav')[0];
-    const a = (nav._items('scenes')[0] || {}).id;
+    const a = top || (nav._items('scenes')[0] || {}).id;
     // Ohne Szenen-Badge/-Reihe auf der Seite fehlt der Szenen-Kern – dann eine kleine Attrappe (nur isActive).
     if (!window._casoraSC) window._casoraSC = { isActive: () => false };
     const SCx = window._casoraSC;
     if (SCx && a && !SCx._qaIsActive) { SCx._qaIsActive = SCx.isActive; SCx.isActive = function (id, hs) { return id === a || SCx._qaIsActive.call(this, id, hs); }; }
     return { badge: probe('var(--casora-scene-badge-color, #C29CFF)'), yellow: probe('var(--casora-color-yellow, #FFCC00)'), blue: probe('var(--casora-color-blue, #5B8FC9)'),
       accent: probe('var(--primary-color, #B67A50)') };
-  });
+  }, top);
   const s = await openSheet(page, 'scenes');
   await need(`${tag}: Szenen als Blatt`, s && s.kind === 'scenes' && s.n >= 2, s);
   console.log(tag, 'Szenen', JSON.stringify({ sheet: s.sheet, first: s.first, second: s.second, tones: s.tones }));
