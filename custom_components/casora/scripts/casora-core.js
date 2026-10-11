@@ -4146,7 +4146,7 @@ window.casoraMenuGlass = {
       this._pages = pages.map((p) => ({ idx: p, w: p.reduce((s, i) => s + w[i], 0) + gap * (p.length - 1) }));
       this._pageW = W;
       this._regroup(list, pages, W);
-      // Wenig Rest: Namen gleichmäßig verteilen (keine Lücke vor dem Pfeil); viel Rest: mittig.
+      // Wenig Rest: Namen gleichmäßig verteilen (keine Lücke vor dem Pfeil); viel Rest: links bündig.
       this._pages.forEach((pg, i) => {
         const rest = W - pg.w;
         this._pageEls[i].classList.toggle('spread', pg.idx.length > 1 && rest / (pg.idx.length - 1) <= 32);
@@ -5122,7 +5122,9 @@ window.casoraMenuGlass = {
             display: flex;
             flex: none;
             align-items: center;
-            justify-content: center;
+            /* Links bündig: eine Seite mit wenigen Räumen stand mittig in voller Breite – beim Wischen
+               lag dann eine große Lücke zwischen den Räumen der Seiten (11.10.2026). */
+            justify-content: flex-start;
             height: 100%;
             column-gap: var(--casora-nav-route-gap-tablet, 4px);
           }
