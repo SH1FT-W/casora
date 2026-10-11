@@ -8,6 +8,8 @@
 // der Leiste (nicht unter einem Pfeil), Zuhause steht fest vorn; Antippen eines sichtbaren Raums
 // verschiebt weder Zuhause noch die anderen Namen; Blättern mit dem Pfeil behält Breite und Zuhause,
 // und über alle Seiten ist jeder Raum genau einmal erreichbar.
+// 1.3 (leiste2, 11.10.2026): die Seiten liegen nebeneinander in einer gleitenden Schiene – sichtbar ist,
+// was im Fenster (.rooms) liegt; der linke Pfeil ist auf der ersten Seite unsichtbar und nicht bedienbar.
 process.env.CASORA_THEME = process.env.CASORA_THEME || 'Casora';
 import { open, usePage, ready, casoraDashboards, check, need, finish } from './lib.mjs';
 
@@ -30,16 +32,21 @@ const state = (page) => page.evaluate(() => {
   const sr = nav.shadowRoot;
   const R = (e) => { const r = e.getBoundingClientRect(); return { l: r.left, r: r.right, w: r.width }; };
   const bar = sr.querySelector('.bar'), rooms = sr.querySelector('.rooms');
-  const vis = [...sr.querySelectorAll('.route')].filter((b) => b.getBoundingClientRect().width > 0);
+  const rb = rooms ? rooms.getBoundingClientRect() : null;
+  // Sichtbar = im Fenster der Raumreihe (die übrigen Seiten liegen daneben in der Schiene).
+  const vis = [...sr.querySelectorAll('.route')].filter((b) => { const r = b.getBoundingClientRect();
+    return r.width > 0 && (!rb || b.classList.contains('home') || (r.right > rb.left + 1 && r.left < rb.right - 1)); });
   const lab = (b) => (b.querySelector('.htx') || b.querySelector('.label')).textContent.trim();
   const box = rooms ? R(rooms) : R(sr.querySelector('.scroller'));
   const caps = [...sr.querySelectorAll('.more')].filter((m) => m.getBoundingClientRect().width > 0).map(R);
+  const ml = sr.querySelector('.more-l'), mcs = ml && getComputedStyle(ml);
+  const leftGone = !!ml && (mcs.visibility === 'hidden' || parseFloat(mcs.opacity) === 0) && mcs.pointerEvents === 'none' && ml.getAttribute('aria-hidden') === 'true';
   return {
     bar: R(bar), rooms: box, paged: bar.classList.contains('paged'), page: nav._page, pages: nav._pages ? nav._pages.length : 0,
     home: sr.querySelector('.route.home') ? R(sr.querySelector('.route.home')) : null,
     all: [...sr.querySelectorAll('.rooms .route')].map(lab),
     vis: vis.map((b) => ({ name: lab(b), active: b.classList.contains('active'), home: b.classList.contains('home'), ...R(b.querySelector('.label')) })),
-    caps,
+    caps, leftGone,
   };
 });
 const cut = (s) => s.vis.filter((v) => !v.home).filter((v) => v.l < s.rooms.l - 1 || v.r > s.rooms.r + 1
@@ -72,10 +79,12 @@ for (const [name, dev] of GERAETE) {
 
   // Durchblättern: jede Seite ganze Namen, Zuhause und Breite fest, jeder Raum einmal.
   await page.evaluate(() => { const nav = window.__pierce('casora-nav-bar').filter((e) => e.getClientRects().length)[0]; nav._showPage(0, true); });
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(700);   // Seiten gleiten 360 ms
   const seen = [];
   let p = await state(page), guard = 0, ok = true;
   const bad = [];
+  await check(name + ': Seite 1 – linker Pfeil unsichtbar und nicht bedienbar', p.page === 0 && p.leftGone, { page: p.page, caps: p.caps });
+  let leftLater = true;
   while (guard++ < 30) {
     seen.push(...p.vis.filter((v) => !v.home).map((v) => v.name));
     if (cut(p).length) bad.push({ page: p.page, cut: cut(p) });
@@ -84,9 +93,11 @@ for (const [name, dev] of GERAETE) {
     const c = await page.evaluate(() => { const nav = window.__pierce('casora-nav-bar').filter((e) => e.getClientRects().length)[0];
       const r = nav.shadowRoot.querySelector('.more-r').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
     await page.mouse.click(c.x, c.y);
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(700);
     p = await state(page);
+    if (p.leftGone) leftLater = false;
   }
+  await check(name + ': ab Seite 2 linker Pfeil da', leftLater, { page: p.page });
   await check(name + ': jede Seite nur ganze Namen', bad.length === 0, bad);
   await check(name + ': Zuhause und Breite bleiben beim Blättern stehen', ok, { home: s.home, bar: s.bar });
   const dup = seen.filter((n, i) => seen.indexOf(n) !== i);
