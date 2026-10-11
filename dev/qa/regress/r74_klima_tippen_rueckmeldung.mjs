@@ -6,9 +6,8 @@
 // Fußbodenheizungs-Popup) hatten nur Hover, beim Drücken änderte sich nichts (Licht-Popup: kleiner
 // werden). Prüft im Casora-Look: Antippen der Kachel löst haptic aus, Drücken von Plus/Minus
 // verkleinert den Knopf sichtbar.
-// Erweitert 09.10.2026 (1.2.2): Im Fußbodenheizungs-Popup für mehrere Räume ist die Zieltemperatur
-// wie beim einzelnen Thermostat gebaut (Plus/Minus, darunter der Balken). Prüft: Balken sichtbar,
-// Ziehen am Balken stellt mit einem set_temperature alle eingeschalteten Räume ein.
+// Geändert 10.10.2026 (1.3): Das Fußbodenheizungs-Popup für mehrere Räume hat keine gemeinsame
+// Zieltemperatur mehr (Räume werden einzeln eingestellt, r246). Plus/Minus prüft der Einzelraum.
 import { open, casoraDashboard, dashboard, check, need, finish, atFinish, stable } from './lib.mjs';
 
 const dash = await casoraDashboard((d) => !d.mobile);
@@ -31,7 +30,10 @@ async function findTile(fbh) {
       return window.__pierce('button-card').findIndex((b) => {
         const t = [].concat((b._config || {}).template || []);
         if (!t.includes('casora_thermostat') || t.includes('casora_popup_fbh') !== fbh || b.getBoundingClientRect().width < 60) return false;
-        if (!b._config.entity && heat.length) b.setConfig({ ...b._config, entity: heat[0] });
+        // Gruppe (1.3 ohne Plus/Minus) bzw. ohne Gerät: ein einzelnes Thermostat unterschieben.
+        const e = st[b._config.entity];
+        const grp = e && ((e.attributes.member_entities || []).length || (e.attributes.entity_id || []).length);
+        if ((!b._config.entity || grp) && heat.length) b.setConfig({ ...b._config, entity: heat.find((h) => !(st[h].attributes.member_entities || []).length) || heat[0] });
         return !!b._config.entity;
       });
     }, fbh);
@@ -87,7 +89,7 @@ async function run(name, fbh, sel) {
   await page.waitForTimeout(800);
 }
 
-// Gruppe (Ganzes Haus): Zieltemperatur mit Balken, Balken stellt alle Räume ein.
+// Gruppe (Ganzes Haus, 1.3): keine gemeinsame Zieltemperatur, Räume einzeln.
 async function haus() {
   let i = -1;
   for (const v of (dash.config.views || []).map((x, k) => x.path || String(k))) {
@@ -107,7 +109,7 @@ async function haus() {
   if (i < 0) { console.log('  info   Haus: keine Fußbodenheizungs-Gruppe im Testhaus'); return; }
   const members = await page.evaluate((i) => { const b = window.__pierce('button-card')[i];
     return document.querySelector('home-assistant').hass.states[b._config.entity].attributes.member_entities; }, i);
-  // Räume an, unterschiedliche Zieltemperaturen (Anzeige „unterschiedlich“).
+  // Räume an, unterschiedliche Zieltemperaturen.
   for (const [k, id] of members.entries()) {
     await svc('climate', 'set_hvac_mode', { entity_id: id, hvac_mode: 'heat' });
     await svc('climate', 'set_temperature', { entity_id: id, temperature: k % 2 ? 21 : 22 });
@@ -117,27 +119,11 @@ async function haus() {
   await page.waitForTimeout(500);
   await page.mouse.click(p.x, p.y);
   const bar = await stable(page, () => {
-    const l = window.__pierce('.fb-st-v .l').map((e) => e.textContent);
-    const b = window.__pierce('.fb-tb').map((e) => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; }).filter((r) => r.w > 0);
-    return { l, b: b[0] || null, n: window.__pierce('.fb-st-b').length };
+    const vis = (sel) => window.__pierce(sel).filter((e) => e.getBoundingClientRect().width > 0).length;
+    return { st: vis('.fb-st-b'), b: vis('.fb-tb'), rows: vis('[data-fbh-room]') };
   }, null, { max: 6000 });
-  await check('Haus: Zieltemperatur mit Plus/Minus und Balken wie beim einzelnen Thermostat',
-    bar && bar.n >= 2 && bar.b && bar.l.some((t) => /unterschiedlich|alle Räume/.test(t)), bar);
-  if (!(bar && bar.b)) return;
-  await page.evaluate(() => { const ha = document.querySelector('home-assistant'); window.__svc = [];
-    const orig = ha.hass.callService; ha.hass.callService = function (d, s, data, tgt) { window.__svc.push({ d, s, data, tgt }); return orig.apply(this, arguments); }; });
-  await page.waitForTimeout(700);   // Popup-Tippschutz
-  const x = bar.b.x + bar.b.w * 0.8, y = bar.b.y + 14 + 4;
-  await page.mouse.move(x, y); await page.mouse.down(); await page.mouse.up();
-  const calls = await page.evaluate(() => window.__svc.filter((c) => c.s === 'set_temperature'));
-  const ids = calls.length ? [].concat(calls[0].tgt && calls[0].tgt.entity_id) : [];
-  await check('Haus: Balken stellt alle eingeschalteten Räume ein', calls.length === 1 && members.every((m) => ids.includes(m)), { calls, members });
-  if (calls.length) {
-    const want = calls[0].data.temperature;
-    let ok = false;
-    for (let k = 0; k < 20 && !ok; k++) { const st = await states(); ok = members.every((m) => st[m].attributes.temperature === want); if (!ok) await page.waitForTimeout(250); }
-    await check('Haus: danach haben alle Räume dieselbe Zieltemperatur', ok, want);
-  }
+  await check('Haus: keine gemeinsame Zieltemperatur (kein Plus/Minus, kein Balken), Räume als Zeilen',
+    bar && bar.st === 0 && bar.b === 0 && bar.rows >= 2, bar);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(800);
 }
