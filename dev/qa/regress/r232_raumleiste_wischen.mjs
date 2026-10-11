@@ -27,7 +27,9 @@ const state = (page) => page.evaluate((NAV) => {
   if (!nav) return null;
   const sr = nav.shadowRoot, rooms = sr.querySelector('.rooms');
   if (!rooms) return null;
-  const rr = rooms.getBoundingClientRect();
+  const r0 = rooms.getBoundingClientRect();
+  const cl = parseFloat(rooms.style.getPropertyValue('--clip-l')) || 0, cr = parseFloat(rooms.style.getPropertyValue('--clip-r')) || 0;
+  const rr = { left: r0.left + cl, right: r0.right - cr, width: r0.width - cl - cr, top: r0.top, height: r0.height };
   const btns = [...sr.querySelectorAll('.rooms .route')];
   const vis = btns.filter((b) => { const r = b.getBoundingClientRect(); return r.width > 0 && r.right > rr.left + 1 && r.left < rr.right - 1; });
   const ml = sr.querySelector('.more-l'), cs = getComputedStyle(ml);
@@ -119,7 +121,7 @@ for (const [name, vp, engine] of [['Tablet quer 1180', { width: 1180, height: 82
     await rec(page, true);
     await page.mouse.click(c[0], c[1]);
     // Seitenwechsel ohne Schieben (11.10.): die neue Seite blendet ein – keine Lücke zwischen zwei Seiten.
-    const fade = await page.evaluate((NAV) => { const n = eval(NAV), pg = n._pageEls[n._page];
+    const fade = await page.evaluate((NAV) => { const n = eval(NAV), pg = n._pageEls[0];
       return pg && pg.getAnimations ? pg.getAnimations().length : 0; }, NAV);
     await page.waitForTimeout(700);
     let R = await rec(page, false);

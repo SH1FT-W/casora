@@ -4127,6 +4127,7 @@ window.casoraMenuGlass = {
       if (!over) {
         bar.classList.remove('paged');
         this._regroup(list, [list.map((el, i) => i)], 0);
+        list.forEach((el) => { el.btn.inert = false; });
         this._pages = null;
         this._page = 0;
         this._setX(0, false);
@@ -4139,25 +4140,36 @@ window.casoraMenuGlass = {
       // Platz des linken Pfeils (liegt über dem Anfang der Reihe): Seite 1 nutzt ihn, ab Seite 2 bleibt er frei.
       const ml = bar.querySelector('.more-l');
       const pad = ml ? Math.max(0, Math.round(ml.getBoundingClientRect().right - rooms.getBoundingClientRect().left + 4)) : 0;
-      this._pgPad = pad;
-      rooms.style.setProperty('--pg-pad', pad + 'px');
+      /* Eine durchgehende Reihe mit festen Abständen (11.10.2026: keine verteilten Lücken mehr). Seiten sind
+         Ausschnitte: Seite 1 ab dem ersten Raum, jede weitere beginnt mit dem ersten nicht ganz sichtbaren Raum
+         hinter dem linken Pfeil; die letzte endet bündig rechts und zeigt so viele Räume, wie passen – nie eine
+         halb leere letzte Seite. Was nicht ganz zur Seite gehört, schneidet clip-path weg. */
+      const L = [], R = [];
+      let x = 0;
+      w.forEach((wi) => { L.push(x); R.push(x + wi); x += wi + gap; });
+      const n = list.length, end = R[n - 1];
+      const lastIn = (off) => { let e = 0; for (let i = 0; i < n; i++) if (R[i] - off <= W + 0.5) e = i; return e; };
+      const firstIn = (off, from) => { for (let i = 0; i < n; i++) if (L[i] - off >= from - 0.5) return i; return n - 1; };
       const pages = [];
-      let cur = null, sum = 0;
-      list.forEach((el, i) => {
-        const cap = W - (pages.length > 1 ? pad : 0);  // Seite, die gerade gefüllt wird: Index pages.length - 1
-        if (cur && sum + gap + w[i] <= cap + 0.5) { cur.push(i); sum += gap + w[i]; return; }
-        cur = [i]; sum = w[i]; pages.push(cur);
-      });
+      let off = 0;
+      for (let guard = 0; guard < n; guard++) {
+        const st = pages.length ? firstIn(off, pad) : 0;
+        const e = lastIn(off);
+        pages.push({ s: st, e: e, off: off });
+        if (e >= n - 1) break;
+        off = L[e + 1] - pad;
+        if (end - off <= W + 0.5) off = end - W;   // Rest passt: letzte Seite bündig rechts
+      }
       this._pageList = list;
-      this._pages = pages.map((p) => ({ idx: p, w: p.reduce((s, i) => s + w[i], 0) + gap * (p.length - 1) }));
-      this._pageW = W;
-      this._regroup(list, pages, W);
-      // Wenig Rest: Namen gleichmäßig verteilen (keine Lücke vor dem Pfeil); viel Rest: links bündig.
-      this._pages.forEach((pg, i) => {
-        this._pageEls[i].style.paddingLeft = i ? pad + 'px' : '';
-        const rest = W - (i ? pad : 0) - pg.w;
-        this._pageEls[i].classList.toggle('spread', pg.idx.length > 1 && rest / (pg.idx.length - 1) <= 32);
+      this._pages = pages.map((p) => {
+        const idx = [];
+        for (let i = p.s; i <= p.e; i++) idx.push(i);
+        return { idx: idx, off: p.off,
+          cl: p.s ? Math.max(0, L[p.s] - p.off - gap / 2) : 0,
+          cr: Math.max(0, W - (R[p.e] - p.off) - gap / 2) };
       });
+      this._pageW = W;
+      this._regroup(list, [list.map((el, i) => i)], 0);
       const act = list.findIndex((el) => el.btn.classList.contains('active'));
       const keep = Math.min(this._page || 0, this._pages.length - 1);
       // Neu vermessen (Schrift, Größe): auf der Seite des aktiven Raums – außer es wurde seit dem letzten Wechsel von Hand geblättert.
@@ -4212,12 +4224,17 @@ window.casoraMenuGlass = {
       p = Math.max(0, Math.min(pages.length - 1, p));
       const prev = this._page || 0;
       this._page = p;
-      // Nur die sichtbare Seite ist bedienbar (Tab, Vorlesen); die anderen liegen daneben, inert.
-      this._pageEls.forEach((pg, i) => { pg.inert = i !== p; });
+      // Nur die Räume der sichtbaren Seite sind bedienbar (Tab, Vorlesen); die übrigen sind inert.
+      const cur = pages[p], list = this._pageList || [];
+      list.forEach((el, i) => { el.btn.inert = cur.idx.indexOf(i) < 0; });
+      if (this._rooms) {
+        this._rooms.style.setProperty('--clip-l', cur.cl + 'px');
+        this._rooms.style.setProperty('--clip-r', cur.cr + 'px');
+      }
       /* Seitenwechsel ohne Schieben (11.10.2026): beim Gleiten war zwischen zwei Seiten kurz eine große Lücke
          zu sehen. Die Schiene springt, die neue Seite blendet mit kleinem Versatz aus der Wischrichtung ein. */
-      this._setX(-p * this._pageW, false);
-      const pg = this._pageEls[p];
+      this._setX(-cur.off, false);
+      const pg = this._pageEls[0];
       if (byUser && !instant && p !== prev && pg && pg.animate && !this._still()) {
         const dx = (p > prev ? 1 : -1) * 24;
         pg.animate([{ opacity: 0, transform: 'translateX(' + dx + 'px)' }, { opacity: 1, transform: 'none' }],
@@ -5095,7 +5112,7 @@ window.casoraMenuGlass = {
           .badge { top: 8px; right: 12px; }
 
           /* Seiten-Leiste A (1.3): Zuhause | Trenner | ‹ Räume ›. Die Liste blättert nicht, sie
-             zeigt eine Seite ganzer Namen; JS (_layout) misst und setzt .paged/.spread. */
+             zeigt eine Seite ganzer Namen; JS (_layout) misst, setzt .paged und schneidet per --clip-l/-r zu. */
           .scroller { overflow: hidden; touch-action: pan-y; }
           .rooms {
             position: relative;
@@ -5128,7 +5145,6 @@ window.casoraMenuGlass = {
             height: 100%;
             column-gap: var(--casora-nav-route-gap-tablet, 4px);
           }
-          .pg.spread { justify-content: space-between; }
           @media (prefers-reduced-motion: reduce) { .track.glide { transition: none; } }
           /* Läuft die Leiste über, nimmt sie ihre volle Breite (max-width) – so bleibt sie beim Blättern
              gleich breit und ihr Größenwächter merkt, wenn sich die verfügbare Breite ändert. */
@@ -5183,11 +5199,11 @@ window.casoraMenuGlass = {
             transition: opacity var(--casora-dur-feedback, 160ms) var(--casora-ease-feedback, ease), visibility 0s linear 0s; }
           .bar.paged.more-l-on .more-l, .bar.paged.more-r-on .more-r { opacity: 1; pointer-events: auto; }
           /* Linker Pfeil liegt über dem Anfang der Raumreihe (negativer Rand): Seite 1 beginnt direkt hinter
-             dem Trenner, ab Seite 2 hält die Seite dort Platz für den Pfeil frei (--pg-pad, 11.10.2026). */
+             dem Trenner, ab Seite 2 beginnt der erste Raum hinter dem Pfeil (11.10.2026). */
           .bar.paged .scroller .more-l { z-index: 2; margin-right: calc(-30px - 4px); }
           .bar.paged .pg { box-sizing: border-box; }
-          /* Unter dem sichtbaren linken Pfeil nichts durchscheinen lassen (beim Gleiten lagen dort Reste der vorigen Seite). */
-          .bar.paged.more-l-on .rooms { clip-path: inset(0 0 0 var(--pg-pad, 0px)); }
+          /* Nur die Räume der Seite zeigen: links (unter dem Pfeil) und rechts angeschnittene Namen wegschneiden. */
+          .bar.paged .rooms { clip-path: inset(-8px var(--clip-r, 0px) -8px var(--clip-l, 0px)); }
           /* Linker Pfeil auf der ersten Seite ganz weg; blendet weich ein, sobald links etwas verborgen ist. */
           .bar.paged:not(.more-l-on) .scroller .more-l { opacity: 0; visibility: hidden;
             transition: opacity var(--casora-dur-feedback, 160ms) var(--casora-ease-feedback, ease), visibility 0s linear var(--casora-dur-feedback, 160ms); }
