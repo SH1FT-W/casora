@@ -15,7 +15,9 @@ const pw = (() => {
   for (const d of fs.existsSync(npx) ? fs.readdirSync(npx) : []) { const f = path.join(npx, d, 'node_modules', 'playwright', 'index.mjs'); if (fs.existsSync(f)) return f; }
   return 'playwright';
 })();
-const { chromium } = await import(pw);
+// Ohne Playwright (z. B. GitHub-CI ohne Browser) nur der statische Teil oben – der Browser-Teil läuft im Gate.
+let chromium;
+try { ({ chromium } = await import(pw)); } catch (e) { console.log('übersprungen (Browser-Teil): kein Playwright'); process.exit(0); }
 const b = await chromium.launch();
 const pg = await b.newPage();
 await pg.setContent(`<style>:root{--t-foot:13px;--t-caption:12px}body{margin:0;font-family:system-ui}${css}</style>
