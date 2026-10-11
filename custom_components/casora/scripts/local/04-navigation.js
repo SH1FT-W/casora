@@ -823,7 +823,8 @@
       setTimeout(function () { if (m.parentNode) m.remove(); }, m.classList.contains('hmn-sheet') ? 360 : 220);
       var sc = this._scrim; this._scrim = null;
       var bar = this._bar;
-      if (sc) { sc.classList.add('out'); sc.classList.remove('open'); setTimeout(function () { if (sc.parentNode) sc.remove(); if (bar && !self._menu) bar.classList.remove('hmn-up'); }, 260); }
+      // Nicht, wenn inzwischen die Glocke offen ist (Szenen → Glocke): sonst lag die Leiste unter deren Scrim (11.10.2026).
+      if (sc) { sc.classList.add('out'); sc.classList.remove('open'); setTimeout(function () { if (sc.parentNode) sc.remove(); if (bar && !self._menu && !self._extKind) bar.classList.remove('hmn-up'); }, 260); }
       this._render();
     }
     _render() {

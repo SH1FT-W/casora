@@ -2,6 +2,7 @@
 // Gemeldet (11.10.2026): Am Handy (Glocke unten in der Leiste) lag das Glocken-Fenster nicht mittig, der
 // Hintergrund wurde nicht unscharf wie bei Räumen/Szenen, und die Glocke war nicht aktiv markiert (Zuhause blieb es).
 // Erwartet: Fenster mittig, Scrim offen, Glocke mit Ring (aktiv), Zuhause nicht aktiv; nach dem Schließen alles zurück.
+// Nachtrag 11.10.: Szenen-Blatt offen → direkt Glocke – die Leiste lag danach unter dem Scrim (unscharf).
 import { open, casoraDashboard, dashboard, check, need, finish } from './lib.mjs';
 
 const dash = await casoraDashboard();
@@ -33,4 +34,15 @@ await page.touchscreen.tap(a.vw / 2, 120);
 await page.waitForTimeout(900);
 const b = await state();
 await check('nach dem Schließen: Scrim weg, Glocke normal, Zuhause aktiv', !b.menu && !b.scrim && !b.ring && b.homeOn, b);
+
+// Szenen-Blatt offen, dann direkt die Glocke: die Leiste bleibt über dem Scrim.
+const scenes = await page.evaluate(() => { const b = document.querySelectorAll('.hmn-bar .hmn-btn')[2].getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; });
+await page.touchscreen.tap(scenes.x, scenes.y);
+await page.waitForTimeout(900);
+await page.touchscreen.tap(bell.x, bell.y);
+await page.waitForTimeout(1200);
+const c = await page.evaluate(() => { const top = document.elementsFromPoint(40, document.querySelector('.hmn-bar').getBoundingClientRect().top + 30)[0];
+  return { up: document.querySelector('.hmn-bar').classList.contains('hmn-up'), scrim: !!document.querySelector('.hmn-scrim.open'),
+    barOben: !!(top && top.closest && top.closest('.hmn-bar')), menu: window.__pierce('.casora-notify-menu').some((m) => m.getBoundingClientRect().height > 0) }; });
+await check('Szenen → Glocke: Glocke offen, Leiste über dem Scrim (nicht unscharf)', c.menu && c.scrim && c.up && c.barOben, c);
 await finish();
