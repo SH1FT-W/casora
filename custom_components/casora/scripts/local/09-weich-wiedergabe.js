@@ -149,19 +149,22 @@
     // Handy: Trefferflächen mindestens 40 px.
     + '.tn.ph .k{width:40px;height:40px}.tn.ph .p{width:44px;height:44px}.tn.ph .ct{gap:0}'
     // Bühne (Welle-Menü, erste Wiedergabe): Cover groß, Zeiten, Tasten mittig, Lautstärke.
-    + '.r.st .rc{display:block;padding:18px 18px 14px;border-radius:inherit}'
+    // 1.3 (11.10.2026): rund 15 % kleiner (Fenster 392 → 332, 10-weich-welle.js). Ecke konzentrisch:
+    // Rand 16 + Cover-Radius 18 = Fenster 34. Zurück/Vor zeigen 36 px, treffen aber 44 px (:after).
+    + '.r.st .rc{display:block;padding:var(--casora-space-4, 16px) var(--casora-space-4, 16px) var(--casora-space-3, 12px);border-radius:inherit}'
     + '.l.tn .r.st{border-radius:20px}'
-    + '.st .hr{display:flex;align-items:center;gap:14px;min-width:0}'
-    + '.st .cv{width:64px;height:64px;border-radius:16px}'
-    + '.st .t{font-size:17px}'
-    + '.st .a,.st .s{font-size:13px;color:var(--cnp-sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+    + '.st .hr{display:flex;align-items:center;gap:var(--casora-space-3, 12px);min-width:0}'
+    + '.st .cv{width:56px;height:56px;border-radius:var(--casora-r-element, 18px)}'
+    + '.st .t{font-size:var(--casora-fs-row, 15px)}'
+    + '.st .a,.st .s{font-size:var(--casora-fs-label, 12px);color:var(--cnp-sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
     + '.st .a{color:var(--cnp-ink);opacity:.82}'
-    + '.st .b{height:4px;margin-top:16px}'
-    + '.st .tm{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--cnp-sub);font-variant-numeric:tabular-nums}'
-    + '.st .ct{justify-content:center;gap:26px;margin-top:6px}'
-    + '.st .k{width:44px;height:44px}'
-    + '.st .p{width:56px;height:56px}'
-    + '.vo{display:flex;align-items:center;gap:10px;margin-top:8px;color:var(--cnp-sub)}'
+    + '.st .b{height:4px;margin-top:var(--casora-space-3, 12px)}'
+    + '.st .tm{display:flex;justify-content:space-between;margin-top:var(--casora-space-1, 4px);font-size:11px;color:var(--cnp-sub);font-variant-numeric:tabular-nums}'
+    + '.st .ct{justify-content:center;gap:var(--casora-space-6, 24px);margin-top:var(--casora-space-1, 4px)}'
+    + '.st .k{width:36px;height:36px;position:relative}'
+    + '.st .k:after{content:"";position:absolute;inset:-4px;border-radius:50%}'
+    + '.st .p{width:48px;height:48px}'
+    + '.vo{display:flex;align-items:center;gap:var(--casora-space-2, 8px);margin-top:var(--casora-space-1, 4px);color:var(--cnp-sub)}'
     + '.vo svg{flex:none}'
     + '.vb{flex:1;height:28px;position:relative;cursor:pointer;touch-action:none;outline:none;border-radius:14px}'
     + '.vb:before{content:"";position:absolute;left:0;right:0;top:12px;height:4px;border-radius:2px;background:color-mix(in srgb,var(--cnp-ink) 16%,transparent)}'
@@ -531,11 +534,11 @@
       var col = artU ? tintOf(artU) : '';
       if (!col) cls += ' nc';
       var art = artU ? ' style="background-image:url(&quot;' + esc(artU) + '&quot;)"' : '';
-      var cover = '<div class="cv"' + art + '>' + (artU ? '' : svg(kind === 'player' ? P.note : P.game, big ? 28 : 24)) + '</div>';
-      var ks = big ? 26 : 20;
+      var cover = '<div class="cv"' + art + '>' + (artU ? '' : svg(kind === 'player' ? P.note : P.game, 24)) + '</div>';
+      var ks = big ? 22 : 20;
       var ctl = (prev ? btn('k', 'prev', P.prev, ks, T('Vorheriger Titel')) : '')
         + (tog ? '<button type="button" class="p' + (playing ? '' : ' o') + '" aria-label="' + esc(T(playing ? 'Pausieren' : 'Abspielen')) + '">'
-          + svg(playing ? P.pause : P.play, big ? 28 : 22) + '</button>' : '')
+          + svg(playing ? P.pause : P.play, big ? 24 : 22) + '</button>' : '')
         + (next ? btn('k', 'next', P.next, ks, T('Nächster Titel')) : '');
       var bar = '<div class="b' + (hasBar ? '' : ' n') + '"><i style="width:' + pct(rows[key]) + '%"></i></div>';
       var inner;
@@ -547,8 +550,8 @@
           + (place ? '<div class="s">' + esc(place) + '</div>' : '<div class="s"></div>') + '</div></div>'
           + (hasBar ? bar + '<div class="tm"><span class="t0">' + clock(p0) + '</span><span class="t1">−' + clock(r.dur - p0) + '</span></div>' : '')
           + (ctl ? '<div class="ct">' + ctl + '</div>' : '')
-          + (hasVol ? '<div class="vo">' + svg(P.volLo, 18) + '<div class="vb" role="slider" tabindex="0" aria-label="' + esc(T('Lautstärke'))
-            + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + vp + '"><i style="width:' + vp + '%"></i></div>' + svg(P.volHi, 18) + '</div>' : '');
+          + (hasVol ? '<div class="vo">' + svg(P.volLo, 16) + '<div class="vb" role="slider" tabindex="0" aria-label="' + esc(T('Lautstärke'))
+            + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + vp + '"><i style="width:' + vp + '%"></i></div>' + svg(P.volHi, 16) + '</div>' : '');
       } else {
         inner = cover + '<div class="m"><div class="t">' + esc(title) + '</div><div class="s">' + esc(sub) + '</div>' + bar + '</div>'
           + (ctl ? '<div class="ct">' + ctl + '</div>' : '');
@@ -651,7 +654,7 @@
     // Sofort umschalten; der nächste Zustand aus HA bestätigt oder korrigiert.
     var playing = !btn.classList.contains('o');
     btn.classList.toggle('o', playing);
-    btn.innerHTML = svg(playing ? P.play : P.pause, btn.closest('.st') ? 28 : 22);
+    btn.innerHTML = svg(playing ? P.play : P.pause, btn.closest('.st') ? 24 : 22);
     btn.setAttribute('aria-label', T(playing ? 'Abspielen' : 'Pausieren'));
     var r = e.rows[key];
     if (r) { r.pos = Number(pct(r)) / 100 * r.dur; r.at = Date.now(); r.playing = !playing; }

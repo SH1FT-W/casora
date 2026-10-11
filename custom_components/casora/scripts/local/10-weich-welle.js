@@ -192,6 +192,11 @@
     // als Cover-Streifen darunter (09-weich-wiedergabe.js, paint mit stage). 8 px Rand im Fenster.
     + '.w{padding:8px}'
     + '.l.tn .r{border-radius:20px}'
+    // 1.3 (11.10.2026): Cover-Streifen im schmaleren Fenster mitverkleinert (Cover 52 → 44, Schrift 15/12,5 →
+    // 14/12). Die Tasten behalten ihre Trefferfläche. Raumkarte und Handy bleiben wie sie sind.
+    + '.tn .r:not(.st) .cv{width:44px;height:44px;border-radius:var(--casora-r-small, 12px)}'
+    + '.tn .r:not(.st) .t{font-size:var(--casora-fs-value, 14px)}'
+    + '.tn .r:not(.st) .s{font-size:var(--casora-fs-label, 12px)}'
     // Nur eine Wiedergabe: die Bühne füllt das Fenster selbst – kein zweiter Rahmen drumherum.
     + '.w:has(.r.st):not(:has(.r:not(.st))){padding:0}'
     + '.w:has(.r.st):not(:has(.r:not(.st))) .l{background:none;box-shadow:none;padding:0;border-radius:0}'
@@ -252,9 +257,10 @@
     menu.setAttribute('role', 'dialog');
     menu.setAttribute('aria-label', T('Aktuelle Wiedergabe'));
     menu.setAttribute('data-no-i18n', '');
+    // 1.3 (11.10.2026): 332 statt 392 breit – am Tablet war die Bühne zu wuchtig (Maße in 09, .st).
     Object.assign(menu.style, {
       position: 'fixed', zIndex: '99999', boxSizing: 'border-box',
-      width: 'min(392px, calc(100vw - 24px))', padding: '0', overflow: 'hidden',
+      width: 'min(332px, calc(100vw - 24px))', padding: '0', overflow: 'hidden',
     });
     GLASS.apply(menu);
     // Wie das Mitteilungsmenü: weicher Schatten des Designs statt Glas-Rand.
