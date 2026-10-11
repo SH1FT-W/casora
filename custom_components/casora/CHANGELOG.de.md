@@ -10,7 +10,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Warn-Popup:** Eine Warn-Kachel mit nur einer Entität (zum Beispiel am Handy) zeigte „Noch kein Gerät zugeordnet“ statt der aktiven Warnung.
 - **Glocke und Sprechblase:** Auf Desktop und Tablet hellen beide Kreise beim Darüberfahren mit der Maus wieder auf.
 - **Große Kacheln am Handy:** Name und Status fluchten mit der kleinen Kachel daneben.
-- **Handy-Kopf:** Der Seitenkopf bleibt oben. Sitzt die Kapsel schon unten in der Leiste, wird ein späterer großer Abstand oben sofort zurückgestellt.
+- **Handy-Kopf:** Nach einem Neustart von Home Assistant oder mit leerem Cache stand der Seitenkopf am Handy zu tief, wenn kiosk-mode installiert ist. Casora blendet die Kopfzeile von Home Assistant jetzt auch dann selbst aus und lässt keinen Platz frei.
 - **Jalousie-Popup:** Das Symbol im Kopf folgt der Position sofort.
 - **Updates-Popup:** Nach „Jetzt nach Updates suchen“ erscheinen neue Einträge sofort, ohne das Popup neu zu öffnen.
 - **Pulse-Popup:** „Alles ok“ nutzt auf Desktop und Tablet beide Spalten.

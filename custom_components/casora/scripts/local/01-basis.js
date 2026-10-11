@@ -1441,10 +1441,10 @@ window._casoraColGap = window._casoraColGap || function (keys) {
   }, 700);
 })();
 
-// ── HA-Kopfzeile ohne kiosk-mode ausblenden (27.09.2026) ──────────────────────
-// Casora-Dashboards speichern kiosk_mode.hide_header (Standard: an). Ist das
-// Zusatzmodul kiosk-mode nicht installiert, blendet Casora die Kopfzeile selbst
-// aus – sonst liegen HA-Tabs und Knöpfe über der Glas-Navigation. Mit ?edit=1
+// ── HA-Kopfzeile ausblenden (27.09.2026, seit 1.3.2 auch neben kiosk-mode) ─────
+// Casora-Dashboards speichern kiosk_mode.hide_header (Standard: an). Casora blendet
+// die Kopfzeile dann selbst aus (mit oder ohne das Zusatzmodul kiosk-mode) –
+// sonst liegen HA-Tabs und Knöpfe über der Glas-Navigation. Mit ?edit=1
 // oder im Bearbeitungsmodus bleibt sie sichtbar.
 (function () {
   if (window._casoraHeaderGuard) return;
@@ -1462,8 +1462,10 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     } catch (e) { return null; }
   }
   function want(hr) {
-    if (window.KioskMode) return false;                       // kiosk-mode übernimmt
-    if (/[?&]edit=1/.test(location.search)) return false;
+    // Auch mit kiosk-mode: Der blendet beim ersten Laden (App, leerer Cache) die Kopfzeile aus, ließ aber ihren
+    // Platz (--header-height 56) im Abstand oben stehen – der Seitenkopf rutschte 56 px nach unten, bis zum
+    // Neuladen (iPhone-Messung 11.10.2026). Casoras Regel ist dieselbe Absicht und schadet neben kiosk-mode nicht.
+    if (/[?&](edit=1|disable_km)/.test(location.search)) return false;   // kiosk-mode: ?disable_km zeigt die Kopfzeile
     var ll = hr.lovelace;
     if (!ll || !ll.config || ll.editMode) return false;
     var km = ll.config.kiosk_mode;
