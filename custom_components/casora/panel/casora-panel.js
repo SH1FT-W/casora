@@ -8264,24 +8264,47 @@ class CasoraPanel extends HTMLElement {
           border-radius:inherit; background:var(--casora-mobile-hero-floor, #524f4d);
           clip-path:inset(0 round var(--r-xl));
         }
+        /* Foto und Verlauf wie am echten Handy (casora_mobile_bg: ::after = Foto, ::before = Verlauf),
+           mit den Werten des Themes – fest 64 % ließ das Foto im Look „Casora“ (100 %) mittig enden. */
         .miniphone .mp-photo {
-          position:absolute; top:calc(var(--ph-overscan) * -1); height:calc(64% + var(--ph-overscan));
+          position:absolute; top:calc(var(--ph-overscan) * -1);
+          height:calc(var(--casora-mobile-hero-height, 64%) + var(--ph-safe) + var(--ph-overscan));
           left:calc(var(--ph-overscan) * -1); right:calc(var(--ph-overscan) * -1);
           width:calc(100% + var(--ph-overscan) * 2);
           object-fit:cover; display:block;
-          filter:blur(var(--ph-hero-blur))
-                 contrast(0.75)
-                 saturate(0.90)
-                 brightness(1.00);
+          object-position:var(--casora-mobile-hero-x, 50%) var(--casora-mobile-hero-y, 0%);
+          filter:blur(var(--casora-mobile-hero-blur, var(--ph-hero-blur)))
+                 contrast(var(--casora-mobile-hero-photo-contrast, 0.75))
+                 saturate(var(--casora-mobile-hero-photo-saturate, 0.90))
+                 brightness(var(--casora-mobile-hero-photo-brightness, 1.00));
         }
         .miniphone.nophoto .mp-photo { display:none; }
         .miniphone .mp-wash {
           position:absolute; inset:0;
-          background:linear-gradient(to bottom,
-            rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.04) 16%,
-            color-mix(in srgb, var(--casora-mobile-hero-floor, #524f4d) 50%, transparent) 44%,
-            var(--casora-mobile-hero-floor, #524f4d) 72%,
-            var(--casora-mobile-hero-floor, #524f4d) 100%);
+          background:
+            linear-gradient(to bottom,
+              var(--casora-mobile-hero-tint-top, rgba(0,0,0,0.10)) 0%,
+              var(--casora-mobile-hero-tint-bot, rgba(0,0,0,0.04))
+                calc(var(--casora-mobile-hero-wash-mid, 27%) + var(--ph-safe)),
+              transparent calc(var(--casora-mobile-hero-wash-end, 70%) + var(--ph-safe))),
+            radial-gradient(var(--casora-mobile-hero-mesh-a-size, 120% 46%)
+                at var(--casora-mobile-hero-mesh-a-pos, 18% 58%),
+              var(--casora-mobile-hero-mesh-a, transparent) 0%, transparent 72%),
+            radial-gradient(var(--casora-mobile-hero-mesh-b-size, 130% 50%)
+                at var(--casora-mobile-hero-mesh-b-pos, 88% 92%),
+              var(--casora-mobile-hero-mesh-b, transparent) 0%, transparent 70%),
+            linear-gradient(var(--casora-mobile-hero-angle, 180deg),
+              transparent calc(var(--casora-mobile-hero-fade-start, 12%) + var(--ph-safe)),
+              var(--casora-mobile-hero-c-handoff, var(--casora-mobile-hero-floor, #524f4d))
+                calc(var(--casora-mobile-hero-p-handoff, 30%) + var(--ph-safe)),
+              var(--casora-mobile-hero-c-upper, var(--casora-mobile-hero-floor, #524f4d))
+                calc(var(--casora-mobile-hero-p-upper, 55%) + var(--ph-safe)),
+              var(--casora-mobile-hero-c-mid, var(--casora-mobile-hero-floor, #524f4d))
+                calc(var(--casora-mobile-hero-p-mid, 67%) + var(--ph-safe)),
+              var(--casora-mobile-hero-c-lower, var(--casora-mobile-hero-floor, #524f4d))
+                calc(var(--casora-mobile-hero-p-lower, 80%) + var(--ph-safe)),
+              var(--casora-mobile-hero-c-base, var(--casora-mobile-hero-floor, #524f4d))
+                calc(var(--casora-mobile-hero-p-base, 100%) + var(--ph-safe)));
         }
         .miniphone .mp-body > * { flex:0 0 auto; }
         .miniphone .mp-body {
