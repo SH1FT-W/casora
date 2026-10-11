@@ -929,6 +929,19 @@
       'top:calc(env(safe-area-inset-top, 0px) + var(--casora-mobile-chrome-drop, 4px))',
       'right:16px', 'z-index:113', 'pointer-events:auto',
     ].join(';');
+    /* Handy-Leiste B (1.3): im Casora-/Nebel-Look wandert die Kapsel gleich in die untere Leiste – bis dahin
+       unsichtbar, sonst blitzte sie beim Laden oben auf (11.10.2026). Ohne Leiste nach 3 s doch zeigen. */
+    // Erkennung auch am Design-Wert (8px): beim ersten Laden ist _casoraSoft() oft noch nicht bereit.
+    let _resv = '';
+    try { _resv = getComputedStyle(document.documentElement).getPropertyValue('--casora-mhead-reserve').trim(); } catch (_) {}
+    if (_resv === '8px' || (window._casoraSoft && window._casoraSoft())) {
+      pillHost.style.visibility = 'hidden';
+      setTimeout(() => {
+        if (_docked(pillHost)) return;
+        pillHost.style.removeProperty('visibility');
+        document.documentElement.style.setProperty('--casora-mhead-reserve', '52px');
+      }, 3000);
+    }
 
     const pillFlash = document.createElement('div');
     pillFlash.style.cssText = [
@@ -954,6 +967,11 @@
         pillFlash.style.transition = 'opacity 420ms cubic-bezier(0.4,0,0.6,1)';
         pillFlash.style.opacity = '0';
       }, 150);
+    }, true);
+    // Unten in der Leiste: Tipp-Vibration wie bei Räumen und Szenen (11.10.2026).
+    pillHost.addEventListener('click', () => {
+      if (!_docked(pillHost)) return;
+      try { pillHost.dispatchEvent(new CustomEvent('haptic', { detail: 'light', bubbles: true, composed: true })); } catch (_) {}
     }, true);
 
     target.appendChild(grad);

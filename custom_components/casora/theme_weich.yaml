@@ -369,6 +369,9 @@ Casora:
   casora-chrome-capsule-line: var(--casora-pill-divider)
   casora-chrome-capsule-btn-fill: transparent
   casora-chrome-capsule-btn-shadow: none
+  # Handy-Leiste B: Glocke/⋯ sitzen unten, der Seitenkopf braucht oben keinen Platz für die Kapsel. Schon im
+  # Design statt erst per Skript – sonst sprang der Titel beim Laden 44 px hoch (11.10.2026).
+  casora-mhead-reserve: 8px
   # Kreise in der Kapsel ohne eigenen Blur: er verwischte die Kapselkante (grauer Schleier links/rechts, 11.10.2026).
   casora-chrome-capsule-btn-backdrop: none
   casora-chrome-capsule-pad: 3px
