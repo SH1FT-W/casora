@@ -5837,8 +5837,9 @@ window.casoraMenuGlass = {
       line-height: 1.2;
       color: var(--casora-popup-tiles-text-primary, var(--primary-text-color, #3A322B));
       max-width: 100% !important;
-      /* Lange Titel (Handy) dürfen zweizeilig werden, erst dann „…“. */
-      white-space: normal;
+      /* Lange Titel (Handy) dürfen zweizeilig werden, erst dann „…“. !important: alte popup_styles einiger
+         Vorlagen (Auto, E-Bike, Gerät …) setzen nowrap !important – der Titel wurde dann ohne „…“ abgeschnitten. */
+      white-space: normal !important;
       overflow-wrap: break-word;
       display: -webkit-box;
       -webkit-box-orient: vertical;

@@ -48,6 +48,7 @@ assert.ok(core.includes('<div class="header-text">'), 'Textblock-Hülle im Kopf'
 assert.ok(/:host\(\[soft\]\) \.header-bar \{[^}]*grid-template-rows: auto;/.test(core), 'Kopf-Raster mit einer Zeile');
 assert.ok(/:host\(\[soft\]\) \.header-text \{[^}]*display: flex;[^}]*flex-direction: column;/.test(core), 'Textblock als Spalte');
 assert.ok(/\n    \.header-text \{ display: contents; \}/.test(core), 'Hemma 1/2: Hülle wirkungslos');
+assert.ok(/:host\(\[soft\]\) \.header-title \{[^}]*white-space: normal !important;/.test(core), 'langer Titel bricht auch gegen alte nowrap-Regeln um');
 assert.ok(!/span 3/.test(core) && !/span 3/.test(rd('custom_components/casora/scripts/local/12-tanken.js')), 'nichts hängt mehr an drei Kopfzeilen');
 assert.ok(/:host\(\[soft\]\) \.header-ring \{[^}]*border-radius: var\(--casora-ic-head-radius, 16px\)/.test(core), 'Symbol als abgerundetes Quadrat');
 assert.ok(/--casora-sw-on: var\(--casora-popup-accent,/.test(core), 'Schalter in Gerätefarbe');

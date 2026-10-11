@@ -89,6 +89,16 @@ for (const V of VIEWS) {
         else if (v.t === LONG && V.name === 'Handy' && r.lines < 2) bad.push({ hinweis: 'langer Titel nicht zweizeilig', ...r });
       }
       await check(`${V.name}: alle ${COMBOS.length} Kombinationen Etikett/Titel 1–2 Zeilen/Status mittig (≤ 1 px)`, !bad.length, bad);
+      // Alte Kopf-Regel einiger Vorlagen (Auto, E-Bike, Gerät …: nowrap !important): langer Titel bricht trotzdem um
+      // bzw. endet mit „…“, statt hart abgeschnitten zu werden (Handy, 11.10.2026).
+      if (V.name === 'Handy') {
+        const t = await page.evaluate((long) => { const sr = window.casoraPopup.element.shadowRoot; const st = document.createElement('style');
+          st.textContent = '.header-title { max-width: calc(100% + 56px) !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }';
+          sr.appendChild(st); const ti = sr.querySelector('.header-title'), keep = ti.textContent; ti.textContent = 'Tiguan R-Line 2,0 l TDI SCR 4MOTION ' + long;
+          const cs = getComputedStyle(ti), lines = Math.round(ti.getBoundingClientRect().height / (parseFloat(cs.lineHeight) || 30));
+          const r = { ws: cs.whiteSpace, lines, clamp: cs.webkitLineClamp }; ti.textContent = keep; st.remove(); return r; }, LONG);
+        await check('Handy: langer Titel trotz alter nowrap-Regel zweizeilig mit „…“', t.ws !== 'nowrap' && t.lines === 2 && String(t.clamp) === '2', t);
+      }
     }
   }
   await page.evaluate(() => window.casoraPopup && window.casoraPopup.close());
