@@ -5478,6 +5478,8 @@ window.casoraMenuGlass = {
       text-overflow: ellipsis;
     }
     .header-eyebrow:empty, .header-title:empty { display: none; }
+    /* Textblock-Hülle nur für Kopfzeile A (:host([soft])) – sonst wirkungslos. */
+    .header-text { display: contents; }
     /* A circle and a rectangle set to the same x do not read as aligned: the
        circle's edge is a tangent and only its widest point reaches the margin,
        so it looks further left than the flat edge beside it. A few pixels of
@@ -5732,7 +5734,10 @@ window.casoraMenuGlass = {
     :host([soft]) .header-bar {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr) auto auto;
-      grid-template-rows: auto auto auto;
+      /* EINE Zeile: Kachel, Textblock, Schalter und X stehen je mittig darin. Vorher drei Zeilen
+         (Etikett/Titel/Status) mit der Kachel über alle drei – ohne Etikett blieb Zeile 1 nicht leer
+         (das Raster verteilte die Kachel-/X-Höhe auch auf sie), die Kachel stand ~8 px zu hoch. */
+      grid-template-rows: auto;
       align-items: center;
       align-content: center;
       column-gap: var(--casora-space-4, 16px);
@@ -5753,13 +5758,13 @@ window.casoraMenuGlass = {
       text-align: left;
     }
     :host([soft]) .header-nav {
-      grid-column: 4; grid-row: 1 / span 3;
+      grid-column: 4; grid-row: 1;
       position: relative; top: auto; right: auto; z-index: 1;
       align-self: center;
     }
-    :host([soft]) .header-switch { grid-column: 3; grid-row: 1 / span 3; align-self: center; }
+    :host([soft]) .header-switch { grid-column: 3; grid-row: 1; align-self: center; }
     :host([soft]) .header-actions {
-      grid-column: 3; grid-row: 1 / span 3;
+      grid-column: 3; grid-row: 1;
       position: relative; top: auto; left: auto; margin: 0; padding-right: 0; z-index: 1;
       align-self: center;
     }
@@ -5767,7 +5772,7 @@ window.casoraMenuGlass = {
     /* Symbol-Kachel 56 (Handy 48), Radius ≈ 30 % wie die Zimmer im Casora-Zeichen. Weiß auf Gelb,
        Orange, Grün lag unter 3 : 1 (DP-17) – die Symbolfarbe kommt darum aus _paintSoft (--ring-ink). */
     :host([soft]) .header-ring {
-      grid-column: 1; grid-row: 1 / span 3;
+      grid-column: 1; grid-row: 1;
       align-self: center;
       width: var(--casora-ic-head, 56px);
       height: var(--casora-ic-head, 56px);
@@ -5803,8 +5808,16 @@ window.casoraMenuGlass = {
     :host([soft]) .header-ring:has(> .im) {
       box-shadow: inset 0 0 0 1px var(--casora-soft-row-hover, rgba(140,115,90,0.11));
     }
-    :host([soft]) .header-eyebrow {
+    /* Textblock: Etikett, Titel, Statuszeile untereinander – fehlt eins, rückt der Rest zusammen und
+       der Block bleibt als Ganzes mittig zur Kachel. */
+    :host([soft]) .header-text {
       grid-column: 2; grid-row: 1;
+      align-self: center;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    :host([soft]) .header-eyebrow {
       font-size: var(--casora-fs-label, 12px);
       line-height: 16px;
       font-weight: 700;
@@ -5818,15 +5831,15 @@ window.casoraMenuGlass = {
       text-align: left;
     }
     :host([soft]) .header-title {
-      grid-column: 2; grid-row: 2;
       font-size: var(--casora-fs-title, 28px);
       font-weight: 800;
       letter-spacing: -0.025em;
       line-height: 1.2;
       color: var(--casora-popup-tiles-text-primary, var(--primary-text-color, #3A322B));
       max-width: 100% !important;
-      /* Lange Titel (Handy) dürfen zweizeilig werden, erst dann „…“. */
-      white-space: normal;
+      /* Lange Titel (Handy) dürfen zweizeilig werden, erst dann „…“. !important: alte popup_styles einiger
+         Vorlagen (Auto, E-Bike, Gerät …) setzen nowrap !important – der Titel wurde dann ohne „…“ abgeschnitten. */
+      white-space: normal !important;
       overflow-wrap: break-word;
       display: -webkit-box;
       -webkit-box-orient: vertical;
@@ -5835,7 +5848,6 @@ window.casoraMenuGlass = {
       text-align: left;
     }
     :host([soft]) .header-status {
-      grid-column: 2; grid-row: 3;
       margin: 2px 0 0;
       padding: 0;
       font-size: var(--casora-fs-row, 15px);
@@ -6492,10 +6504,14 @@ window.casoraMenuGlass = {
                 '</section>' +
                 '<section class="header-content">' +
                   '<div class="header-ring" hidden></div>' +
-                  '<div class="header-eyebrow"></div>' +
-                  '<div class="header-title"></div>' +
-                  // 1.3 Kopfzeile A: Statuszeile des Popups (gespiegelt aus der ersten .hui-line im Inhalt).
-                  '<div class="header-status hui-line" hidden></div>' +
+                  // 1.3 Kopfmitte: Etikett, Titel und Statuszeile als EIN Block (Kopfzeile A: eigene Rasterzelle,
+                  // die Kachel steht mittig dazu; sonst display: contents – Hemma 1/2 wie bisher).
+                  '<div class="header-text">' +
+                    '<div class="header-eyebrow"></div>' +
+                    '<div class="header-title"></div>' +
+                    // 1.3 Kopfzeile A: Statuszeile des Popups (gespiegelt aus der ersten .hui-line im Inhalt).
+                    '<div class="header-status hui-line" hidden></div>' +
+                  '</div>' +
                 '</section>' +
                 '<section class="header-actions"></section>' +
                 // 1.3 Kopfzeile A: Hauptschalter oben rechts (ersetzt eigene „Alles aus“-Knöpfe).

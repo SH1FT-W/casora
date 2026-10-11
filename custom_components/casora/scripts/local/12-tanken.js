@@ -796,7 +796,7 @@
         st: stEl ? stEl.innerHTML : null, stHidden: stEl ? stEl.hidden : true };
       if (ring) { V.ringEl = ring; ring.style.setProperty('display', 'none', 'important'); }
       pop.style.removeProperty('--casora-head-gap');
-      back.style.cssText = 'grid-column:1;grid-row:1 / span 3;align-self:center;position:relative;margin:0;z-index:1;';
+      back.style.cssText = 'grid-column:1;grid-row:1;align-self:center;position:relative;margin:0;z-index:1;';
       bar.appendChild(back);
     } else {
       surf.appendChild(back);
