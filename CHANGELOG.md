@@ -29,6 +29,10 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Readability:** error text in red is darker and easier to read. Rooms and scenes on the phone have the same edge distance as the tiles.
 - **Studio:** pages line up, the phone title is readable in light mode and "+" sits exactly in the middle. Touch targets are at least 44 px, hints and shortcuts are easier to read. Each room has its own ⋯ next to its name (rename, move, icon, hide, delete), and the Studio opens on the dashboard you looked at last. The phone preview shows the wallpaper down to the bottom, and the room bar preview matches the dashboard.
 - **Moving from Hemma:** an interrupted move can be cleaned up or continued. The done screen no longer jumps. The questions when removing Hemma all look the same, and the import marks your choice with a highlighted row.
+- **Car popup stayed empty** when an old Hemma resource was still loaded: Casora's own fuel module can no longer be covered by the old one (#14).
+- **Car detection:** a distance sensor is no longer read as the next inspection or oil change date, which showed years like 26800 (#15). The range ignores AdBlue range, and electric range only counts on a pure electric car (#16). The popup title shows the car's device name instead of a sensor name (#17).
+- **Fuel list:** with the Tankerkönig integration, closed stations keep their last price and stay in the list as closed, so the "Open" filter works again (#18).
+- **Scenes "last active":** a scene switched on by an automation or its input_boolean now shows the right time. "x days ago" counts calendar days everywhere (#11).
 - **Wording:** "62 %" with a narrow space, "Opening …" with a space, "All batteries OK".
 
 ## 1.2.4 – 09.10.2026

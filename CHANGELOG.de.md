@@ -29,6 +29,10 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Lesbarkeit:** Roter Fehlertext ist dunkler und besser lesbar. Räume und Szenen am Handy haben denselben Randabstand wie die Kacheln.
 - **Studio:** Die Seiten fluchten, der Handy-Titel ist im Hellen lesbar und „+“ sitzt genau in der Mitte. Trefferflächen sind mindestens 44 px groß, Hinweise und Kürzel besser lesbar. Jeder Raum hat ein eigenes ⋯ neben seinem Namen (umbenennen, verschieben, Symbol, ausblenden, löschen), und das Studio öffnet das zuletzt angesehene Dashboard. Die Handy-Vorschau zeigt das Hintergrundbild bis unten, die Vorschau der Raumleiste entspricht dem Dashboard.
 - **Umzug von Hemma:** Ein unterbrochener Umzug lässt sich aufräumen oder fortsetzen. Der Fertig-Bildschirm springt nicht mehr. Die Rückfragen beim Entfernen von Hemma sehen alle gleich aus, und der Import markiert die Auswahl mit einer hinterlegten Zeile.
+- **Auto-Popup blieb leer,** wenn noch eine alte Hemma-Ressource geladen war: Casoras eigenes Tanken-Modul lässt sich nicht mehr vom alten verdecken (#14).
+- **Auto-Erkennung:** Ein Strecken-Sensor wird nicht mehr als nächste Inspektion oder Ölwechsel gelesen, dort standen Jahre wie 26800 (#15). Die Reichweite übergeht die AdBlue-Reichweite, die elektrische Reichweite zählt nur bei reinen E-Autos (#16). Der Popup-Titel zeigt den Gerätenamen des Autos statt eines Sensornamens (#17).
+- **Tankstellen-Liste:** Mit der Tankerkönig-Integration behalten geschlossene Stationen ihren letzten Preis und bleiben als „zu“ in der Liste, der Filter „Offen“ wirkt wieder (#18).
+- **Szenen „zuletzt aktiv“:** Wird eine Szene per Automation oder über ihren input_boolean eingeschaltet, stimmt die Zeit jetzt. „vor x T.“ rechnet überall nach Kalendertagen (#11).
 - **Wortlaut:** „62 %“ mit schmalem Abstand, „Wird geöffnet …“ mit Leerzeichen, „Alle Batterien OK“.
 
 ## 1.2.4 – 09.10.2026
