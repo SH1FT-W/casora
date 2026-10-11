@@ -11544,8 +11544,30 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     announce();
   }
 
+  // Glocke unten in der Handy-Leiste (1.3): Fenster mittig über der Leiste, Hintergrund unscharf, Glocke aktiv.
+  function docked(anchor) {
+    for (var up = anchor, i = 0; up && i < 14; i++) {
+      if (up.classList && up.classList.contains('hmn-dock')) return true;
+      up = up.parentNode || (up.host || null);
+      if (up && up.nodeType === 11) up = up.host;
+    }
+    return false;
+  }
+
   function lift(anchor, on) {
     if (!anchor || !anchor.style) return;
+    if (isPhone() && docked(anchor)) {
+      /* Aktiv wie Zuhause/Räume/Szenen: Ton-Kreis mit weißem Symbol in heller Pille (Ring 7 px = 50 breit). */
+      if (on) {
+        anchor.style.setProperty('--casora-bell-fill', 'var(--primary-color, #B67A50)');
+        anchor.style.setProperty('--casora-bell-filter', 'brightness(0) invert(1)');
+        anchor.style.setProperty('--casora-chrome-btn-shadow', '0 0 0 7px var(--casora-entity-background-active, var(--casora-mnav-pill, #FFFDF9))');
+      } else {
+        ['--casora-bell-fill', '--casora-bell-filter', '--casora-chrome-btn-shadow'].forEach(function (k) { anchor.style.removeProperty(k); });
+      }
+      if (window._hmnExt) window._hmnExt('notify', on);
+      return;
+    }
     if (isPhone()) return;
     if (on) {
       /* D8 (1.2): offen in der Fläche der aktiven Raum-Pille (ohne Token wie bisher Weiß). */
@@ -11732,6 +11754,10 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     menu.style.left = Math.round(
       Math.max(12, Math.min(r.right - w, window.innerWidth - w - 12))
     ) + 'px';
+    if (isPhone() && docked(anchor)) {
+      menu.style.left = Math.round(Math.max(12, (window.innerWidth - w) / 2)) + 'px';
+      menu.style.zIndex = '152';
+    }
 
     inner.style.opacity = '1';
     inner.style.willChange = 'auto';

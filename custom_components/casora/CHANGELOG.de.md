@@ -11,6 +11,10 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Glocke und Sprechblase:** Auf Desktop und Tablet hellen beide Kreise beim Darüberfahren mit der Maus wieder auf.
 - **Große Kacheln am Handy:** Name und Status fluchten mit der kleinen Kachel daneben.
 - **Handy-Kopf:** Der Seitenkopf bleibt oben. Sitzt die Kapsel schon unten in der Leiste, wird ein späterer großer Abstand oben sofort zurückgestellt.
+- **Jalousie-Popup:** Das Symbol im Kopf folgt der Position sofort.
+- **Updates-Popup:** Nach „Jetzt nach Updates suchen“ erscheinen neue Einträge sofort, ohne das Popup neu zu öffnen.
+- **Pulse-Popup:** „Alles ok“ nutzt auf Desktop und Tablet beide Spalten.
+- **Glocke am Handy:** Das Fenster öffnet mittig über der Leiste, der Hintergrund wird unscharf wie bei Räumen und Szenen, und die Glocke ist aktiv markiert.
 
 ## 1.3.1 – 11.10.2026
 

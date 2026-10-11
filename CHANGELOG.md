@@ -11,6 +11,10 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Bell and chat:** On desktop and tablet both circles light up again when the mouse moves over them.
 - **Large tiles on the phone:** Name and status line up with the small tile next to them.
 - **Phone header:** The page header stays at the top. If the capsule already sits in the bottom bar, a later large top spacing is reset at once.
+- **Cover popup:** The icon in the header follows the position live.
+- **Updates popup:** After "Check for updates" new entries appear right away, without reopening the popup.
+- **Pulse popup:** "All ok" uses both columns on desktop and tablet.
+- **Bell on the phone:** The notifications window opens centred above the bar, the background blurs like for rooms and scenes, and the bell is marked active.
 
 ## 1.3.1 – 11.10.2026
 

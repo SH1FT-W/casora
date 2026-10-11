@@ -255,6 +255,7 @@
       /* Die jeweils letzte verbundene Leiste besitzt die Werte am <html>: beim Neuladen räumte die alte Leiste
          (verzögert) erst auf, nachdem die neue sie gesetzt hatte – oben blieb der alte, große Kopfabstand (11.10.2026). */
       window._hmnOwner = this;
+      window._hmnExt = function (kind, on) { var o = window._hmnOwner; if (o && o.isConnected && o._bar) o._ext(kind, on); };
       var me = this;
       [0, 300, 1000, 2500, 4000].forEach(function (t) { setTimeout(function () { if (me.isConnected && me._bar) me._syncDock(); }, t); });
       /* Sicherung: sitzt die Kapsel unten in der Leiste, gilt oben 8px – setzt irgendwer (Zeitgeber, alte Leiste,
@@ -797,6 +798,20 @@
       this._esc = function (e) { if (e.key === 'Escape') self._closeMenu(); };
       setTimeout(function () { document.addEventListener('pointerdown', self._away, true); document.addEventListener('keydown', self._esc, true); }, 0);
     }
+    /* Glocke unten in der Leiste (1.3): ihr Fenster bekommt denselben unscharfen Hintergrund wie Räume/Szenen,
+       „Zuhause“ ist solange nicht aktiv (die Glocke zeichnet sich selbst aktiv, casora-core). */
+    _ext(kind, on) {
+      if (on) {
+        if (this._menu) this._closeMenu();
+        this._extKind = kind;
+        if (!this._scrim) this._scrimOpen();
+      } else if (this._extKind === kind) {
+        this._extKind = null;
+        var sc = this._scrim, bar = this._bar, self = this; this._scrim = null;
+        if (sc) { sc.classList.add('out'); sc.classList.remove('open'); setTimeout(function () { if (sc.parentNode) sc.remove(); if (bar && !self._menu && !self._extKind) bar.classList.remove('hmn-up'); }, 260); }
+      }
+      this._render();
+    }
     _closeMenu() {
       var self = this, m = this._menu; if (!m) return;
       this._menu = null;
@@ -822,7 +837,7 @@
       var room = /^room_/.test(cur) && cur !== 'room_scenes';
       this._bar.classList.toggle('hmn-over', !!cur && cur !== 'all');
       this._bar.classList.toggle('hmn-ic', !!(window._casoraSoft && window._casoraSoft()));
-      var mk = this._menu ? this._menuKind : null;
+      var mk = this._menu ? this._menuKind : (this._extKind || null);
       this._homeText();
       this._bHome.classList.toggle('on', !room && cur !== 'room_scenes' && !mk);
       this._bRooms.classList.toggle('on', mk ? mk === 'rooms' : room);
