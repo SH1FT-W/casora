@@ -1,6 +1,6 @@
 // Popup-Kopfzeile A (Casora 1.3 „Feinschliff“): Kopf in einer Zeile – Symbol-Kachel links, Raum klein
-// darüber, Titel + Statuszeile, Hauptschalter + X rechts; Schalter in Gerätefarbe; Symbolfarbe nach
-// Kontrast (DP-17); Satz-Überschriften; Tokens im Theme.
+// darüber, Titel + Statuszeile, Hauptschalter + X rechts; Schalter in Gerätefarbe; Symbol immer weiß
+// wie auf den Kacheln; Satz-Überschriften; Tokens im Theme.
 //   node dev/unit/popup_kopf_a.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -16,22 +16,12 @@ const fn = (name) => {
   const b = core.indexOf('\n  }\n', a);
   return core.slice(a, b + 4);
 };
-const vars = { '--casora-color-yellow': '#E8B04A', '--casora-color-orange': '#DE8A4E', '--casora-color-green': '#6AAE78',
-  '--casora-color-teal': '#4E9E95', '--casora-color-red': '#D35A4E', '--casora-color-blue': '#5B8FC9' };
-globalThis.document = { documentElement: {} };
-globalThis.getComputedStyle = () => ({ getPropertyValue: (k) => vars[k] || '' });
-const lib = new Function(fn('rgbaOf') + fn('resolveRgb') + fn('lumOf') + 'var INK_CACHE = {};' + fn('inkOn') + fn('stripRoom')
-  + ' return { inkOn: inkOn, stripRoom: stripRoom };')();
+const lib = new Function(fn('inkOn') + fn('stripRoom') + ' return { inkOn: inkOn, stripRoom: stripRoom };')();
 
-// DP-17: Weiß nur mit mindestens 3 : 1, sonst dunkle Tinte.
-const dark = (c) => /on-accent-ink/.test(lib.inkOn(c));
-assert.ok(dark('var(--casora-color-yellow, #E8B04A)'), 'Gelb → dunkle Tinte');
-assert.ok(dark('var(--casora-color-orange, #DE8A4E)'), 'Orange → dunkle Tinte');
-assert.ok(dark('var(--casora-color-green, #6AAE78)'), 'Grün → dunkle Tinte');
-assert.ok(dark('rgb(232,176,74)'), 'Gerätefarbe aus der Kachel (rgb) → dunkle Tinte');
-assert.ok(!dark('var(--casora-color-red, #D35A4E)'), 'Rot bleibt weiß');
-assert.ok(!dark('var(--casora-color-teal, #4E9E95)'), 'Petrol bleibt weiß');
-assert.ok(!dark('var(--casora-color-blue, #5B8FC9)'), 'Blau bleibt weiß');
+// Symbol auf Akzentfläche immer weiß wie auf den Kacheln – auch auf Gelb, Orange und Grün.
+for (const c of ['var(--casora-color-yellow, #E8B04A)', 'var(--casora-color-orange, #DE8A4E)', 'rgb(232,176,74)', 'var(--casora-color-red, #D35A4E)'])
+  assert.equal(lib.inkOn(c), 'var(--casora-soft-glyph, #fff)', c + ' → weiß');
+assert.equal(lib.inkOn(''), null, 'ohne Fläche nichts');
 
 // Raum steht als Etikett über dem Titel – nicht noch einmal im Titel.
 assert.equal(lib.stripRoom('Licht Badezimmer', 'Badezimmer'), 'Licht');
