@@ -6056,16 +6056,6 @@ window.casoraMenuGlass = {
     }
     /* Inhaltskarten haben am Handy 14 px Rand (Popup-Layouts, ≤ 600 px) – Kachel bündig dazu. */
     @media (max-width: 600px) { :host([soft]) { --casora-head-card-pad: 14px; } }
-    /* Schwebend (float, 1.3.2): am Handy wie Glocke und Räume ein Fenster über der Leiste statt Blatt bis oben –
-       ringsum rund, mittig, unten über der Leiste, ohne Greifer. */
-    @media (max-width: 768px) {
-      :host([soft][float]) .layer { align-items: flex-end; box-sizing: border-box;
-        padding: 0 12px calc(76px + env(safe-area-inset-bottom, 0px) * 0.4); }
-      :host([soft][float]) .surface { width: min(420px, 100%) !important; margin: 0 auto;
-        border-radius: var(--casora-menu-radius, 28px) !important;
-        max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 76px - 40px) !important; }
-      :host([soft][float]) .grab { display: none; }
-    }
   `;
 
   // Ring im Weich-Kopf: Symbol der Kachel, die das Popup geöffnet hat, Farbe nach Gerät.
@@ -6708,10 +6698,6 @@ window.casoraMenuGlass = {
       this._cfgTitle = cfg.title || '';
       this._cfgEyebrow = cfg.eyebrow || '';
       this._hsCfg = cfg.head_switch;
-      // Schwebendes Fenster über der Handy-Leiste (Assist aus der Leiste, 1.3.2): unter der Leiste (z 150),
-      // damit sie scharf und bedienbar bleibt.
-      this.toggleAttribute('float', !!cfg.float);
-      if (cfg.float) this.style.setProperty('--casora-popup-z', '150'); else this.style.removeProperty('--casora-popup-z');
       this._headerTitle.textContent = cfg.title || '';
       this._headerEyebrow.textContent = cfg.eyebrow || '';
       this._headReset();

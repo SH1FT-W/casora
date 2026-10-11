@@ -15,7 +15,6 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Updates-Popup:** Nach „Jetzt nach Updates suchen“ erscheinen neue Einträge sofort, ohne das Popup neu zu öffnen.
 - **Pulse-Popup:** „Alles ok“ nutzt auf Desktop und Tablet beide Spalten.
 - **Glocke am Handy:** Das Fenster öffnet mittig über der Leiste, der Hintergrund wird unscharf wie bei Räumen und Szenen, und die Glocke ist aktiv markiert.
-- **Assist am Handy:** Öffnet wie Glocke und Räume als Fenster über der Leiste statt als Blatt bis oben. Die Leiste bleibt scharf, der Assist-Knopf ist aktiv markiert.
 
 ## 1.3.1 – 11.10.2026
 

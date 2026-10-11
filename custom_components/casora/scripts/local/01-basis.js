@@ -866,35 +866,15 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       /* Popup zu → laufende Aufnahme beenden */
       watchClose: function () {
         clearInterval(A._wc);
-        A._wc = setInterval(function () { if (!A.el('.has-log')) { clearInterval(A._wc); if (A.rec) A.cleanupRec();
-          if (A._dock) { A.mark(A._dock, false); A._dock = null; } } }, A._dock ? 200 : 700);
+        A._wc = setInterval(function () { if (!A.el('.has-log')) { clearInterval(A._wc); if (A.rec) A.cleanupRec(); } }, 700);
       },
       paintMic: function () {
         var m = A.el('.has-mic'); if (m) m.classList.toggle('rec', !!A.rec);
         var i = A.el('.has-in'); if (i) i.placeholder = A.rec ? 'Hört zu …' : 'Frag Assist …';
       },
       reset: function () { if (A.rec) A.cleanupRec(); A.msgs = []; A.convId = null; A.busy = false; A.paint(); },
-      /* Handy mit Assist unten in der Leiste (1.3.2): Fenster über der Leiste wie Glocke/Räume, Knopf aktiv. */
-      dockBtn: function () {
-        if (!window.matchMedia('(max-width: 767px)').matches) return null;
-        var d = document.querySelector('.hmn-bar.hmn-act .hmn-dock');
-        return d ? find(d, 'button-card').filter(function (b) { return [].concat((b._config || {}).template || []).indexOf('casora_assist_button') >= 0; })[0] || null : null;
-      },
-      mark: function (btn, on) {
-        if (btn) {
-          if (on) {
-            btn.style.setProperty('--casora-assist-fill', 'var(--primary-color, #B67A50)');
-            btn.style.setProperty('--casora-chrome-glyph-filter', 'brightness(0) invert(1)');
-            btn.style.setProperty('--casora-chrome-btn-shadow', '0 0 0 7px var(--casora-entity-background-active, var(--casora-mnav-pill, #FFFDF9))');
-          } else ['--casora-assist-fill', '--casora-chrome-glyph-filter', '--casora-chrome-btn-shadow'].forEach(function (k) { btn.style.removeProperty(k); });
-        }
-        if (window._hmnExt) window._hmnExt('assist', on, true);
-      },
       open: function () {
         if (!window.casoraPopup) return false;
-        var dock = A.dockBtn();
-        // Zweiter Tipp auf den Knopf in der Leiste schließt das offene Fenster.
-        if (dock && A._dock && A.el('.has-log')) { window.casoraPopup.close(); return true; }
         var T = (window._casoraUI && window._casoraUI.tokens) || {};
         var ink = T.ink || '#fff', ink2 = T.ink2 || 'rgba(255,255,255,0.56)', ink3 = T.ink3 || 'rgba(255,255,255,0.42)';
         var soft = !!(window._casoraSoft && window._casoraSoft());
@@ -986,7 +966,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
           });
         } catch (e) {}
         window.casoraPopup.open({
-          title: 'Assist', dismissable: true, popup_styles: styles || undefined, float: !!dock,
+          title: 'Assist', dismissable: true, popup_styles: styles || undefined,
           content: { type: 'custom:button-card', tap_action: { action: 'none' }, hold_action: { action: 'none' },
             show_icon: false, show_name: false, show_label: false, show_state: false,
             card_mod: { style: ':host { --ha-card-background: transparent !important; --ha-card-box-shadow: none !important; } ha-card { background: transparent !important; border: none !important; box-shadow: none !important; } @media (max-width: 600px) { ha-card { padding-left: 14px !important; padding-right: 14px !important; } }' },
@@ -996,7 +976,6 @@ window._casoraColGap = window._casoraColGap || function (keys) {
             custom_fields: { b: html } },
         });
         var n = 0;
-        if (dock) { A._dock = dock; A.mark(dock, true); }
         (function tick() { if (A.el('.has-log')) { A.paint(); A.paintMic(); A.watchClose(); var i = A.el('.has-in'); if (i && window.matchMedia('(hover: hover)').matches) i.focus(); return; } if (++n < 40) setTimeout(tick, 80); })();
         return true;
       },

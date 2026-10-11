@@ -255,18 +255,7 @@
       /* Die jeweils letzte verbundene Leiste besitzt die Werte am <html>: beim Neuladen räumte die alte Leiste
          (verzögert) erst auf, nachdem die neue sie gesetzt hatte – oben blieb der alte, große Kopfabstand (11.10.2026). */
       window._hmnOwner = this;
-      window._hmnExt = function (kind, on, noScrim) { var o = window._hmnOwner; if (o && o.isConnected && o._bar) o._ext(kind, on, noScrim); };
-      // Offenes Assist-Fenster schließt, sobald eine andere Taste der Leiste gedrückt wird.
-      if (this._bar && !this._bar._assistClose) {
-        this._bar._assistClose = true;
-        var self0 = this;
-        this._bar.addEventListener('pointerdown', function (e) {
-          if (self0._extKind !== 'assist') return;
-          var path = e.composedPath ? e.composedPath() : [];
-          if (path.some(function (n) { return n && n._config && [].concat(n._config.template || []).indexOf('casora_assist_button') >= 0; })) return;
-          if (window.casoraPopup) window.casoraPopup.close();
-        }, true);
-      }
+      window._hmnExt = function (kind, on) { var o = window._hmnOwner; if (o && o.isConnected && o._bar) o._ext(kind, on); };
       var me = this;
       [0, 300, 1000, 2500, 4000].forEach(function (t) { setTimeout(function () { if (me.isConnected && me._bar) me._syncDock(); }, t); });
       /* Sicherung: sitzt die Kapsel unten in der Leiste, gilt oben 8px – setzt irgendwer (Zeitgeber, alte Leiste,
@@ -811,18 +800,15 @@
     }
     /* Glocke unten in der Leiste (1.3): ihr Fenster bekommt denselben unscharfen Hintergrund wie Räume/Szenen,
        „Zuhause“ ist solange nicht aktiv (die Glocke zeichnet sich selbst aktiv, casora-core). */
-    _ext(kind, on, noScrim) {
+    _ext(kind, on) {
       if (on) {
         if (this._menu) this._closeMenu();
         this._extKind = kind;
-        // Assist bringt als Popup seinen eigenen Hintergrund mit – nur die Leiste darüber heben.
-        if (noScrim) { if (this._bar) this._bar.classList.add('hmn-up'); }
-        else if (!this._scrim) this._scrimOpen();
+        if (!this._scrim) this._scrimOpen();
       } else if (this._extKind === kind) {
         this._extKind = null;
         var sc = this._scrim, bar = this._bar, self = this; this._scrim = null;
         if (sc) { sc.classList.add('out'); sc.classList.remove('open'); setTimeout(function () { if (sc.parentNode) sc.remove(); if (bar && !self._menu && !self._extKind) bar.classList.remove('hmn-up'); }, 260); }
-        else if (bar && !this._menu) bar.classList.remove('hmn-up');
       }
       this._render();
     }
