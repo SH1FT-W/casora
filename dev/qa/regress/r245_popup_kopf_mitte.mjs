@@ -67,7 +67,7 @@ for (const V of VIEWS) {
   const { page } = await open({ ...V.o, dark: false, theme: 'Casora' });
   await dashboard(page, V.url + '/' + V.view, 3);
   const light = await page.evaluate(() => { const st = document.querySelector('home-assistant').hass.states;
-    return ['light.wohnzimmer'].find((i) => st[i]) || Object.keys(st).find((i) => /^light\./.test(i) && window._casoraRoomOf && window._casoraRoomOf(i)); });
+    return Object.keys(st).find((i) => /^light\./.test(i) && window._casoraRoomOf && window._casoraRoomOf(i)); });
   const cases = [
     { name: 'Licht', id: light, cfg: null },
     { name: 'Batterien (ohne Raum)', id: null, cfg: { type: 'custom:button-card', template: ['casora_battery'], name: 'Batterien' } },
