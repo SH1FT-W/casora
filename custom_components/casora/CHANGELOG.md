@@ -17,6 +17,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Pulse popup:** "All ok" uses both columns on desktop and tablet.
 - **Bell on the phone:** The notifications window opens centred above the bar, the background blurs like for rooms and scenes, and the bell is marked active.
 - **Bell and Assist on the phone:** A tap vibrates like the other buttons in the bar.
+- **Studio, size on the phone for collection cards:** Choosing small or large on a collection card (automatic list, carousel, stack) now applies to every tile inside it as well. Plants from a move stayed large before.
 
 ### Changed
 - **Tiles on the phone:** Name and status are one step larger (15 and 13 px, like the rows in the popups). The text read too small, especially on large tiles.

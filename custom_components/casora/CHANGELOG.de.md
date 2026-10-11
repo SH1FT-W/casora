@@ -17,6 +17,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Pulse-Popup:** „Alles ok“ nutzt auf Desktop und Tablet beide Spalten.
 - **Glocke am Handy:** Das Fenster öffnet mittig über der Leiste, der Hintergrund wird unscharf wie bei Räumen und Szenen, und die Glocke ist aktiv markiert.
 - **Glocke und Assist am Handy:** Ein Tipp vibriert wie bei den übrigen Tasten der Leiste.
+- **Studio, Größe am Handy bei Sammelkarten:** Klein oder groß an einer Sammelkarte (automatische Liste, Karussell, Stapel) gilt jetzt auch für jede Kachel darin. Pflanzen aus dem Umzug blieben vorher groß.
 
 ### Geändert
 - **Kacheln am Handy:** Name und Zustand sind eine Stufe größer (15 und 13 px, wie die Zeilen in den Popups). Die Schrift las sich vor allem auf großen Kacheln zu klein.
