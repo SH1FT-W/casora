@@ -35,6 +35,8 @@ const state = (page) => page.evaluate(() => {
     left: paged ? nav._page : Math.round(sc.scrollLeft),
     moreR: bar.classList.contains('more-r-on') && getComputedStyle(more).opacity === '1',
     moreL: bar.classList.contains('more-l-on'), fadeR: paged || sc.classList.contains('fade-r'),
+    leftGone: (() => { const m = nav.shadowRoot.querySelector('.more-l'), c = getComputedStyle(m);
+      return (c.visibility === 'hidden' || parseFloat(c.opacity) === 0) && c.pointerEvents === 'none'; })(),
     x: r.left + r.width / 2, y: r.top + r.height / 2,
   };
 });
@@ -57,7 +59,19 @@ for (const [name, dev] of GERAETE) {
   await page.waitForTimeout(400);
   const t = await state(page);
   await check(name + ': Mausrad blättert die Leiste (scrollLeft ' + t.left + ' > 0)', t.left > 0, t);
-  await check(name + ': danach linker Pfeil sichtbar', t.moreL, t);
+  await check(name + ': danach linker Pfeil sichtbar', t.moreL && !t.leftGone, t);
+  if (s.paged) {
+    // leiste2 (11.10.2026): vor dem Blättern ist der linke Pfeil ganz weg; ein Trackpad-Schwung
+    // (abklingende Rad-Ereignisse, Trägheit ~650 ms) blättert genau eine Seite (vorher bis zu 5).
+    await page.evaluate(() => window.__pierce('casora-nav-bar').filter((e) => e.getClientRects().length)[0]._showPage(0, true));
+    await page.waitForTimeout(400);
+    const z = await state(page);
+    await check(name + ': Seite 1 – linker Pfeil unsichtbar', z.leftGone && !z.moreL, z);
+    for (let i = 0; i < 40; i++) { await page.mouse.wheel(Math.max(1, Math.round(60 * Math.pow(0.9, i))), 0); await page.waitForTimeout(16); }
+    await page.waitForTimeout(600);
+    const u = await state(page);
+    await check(name + ': ein Trackpad-Schwung = genau eine Seite (' + u.left + ')', u.left === 1, u);
+  }
   await page.close();
 }
 
