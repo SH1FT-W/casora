@@ -49,6 +49,7 @@ fire('touchstart', ev(grpEl, 50));
 fire('touchend', ev(grpEl, 50));
 assert.equal(calls.length, 2, 'Haus-Balken stellt ein');
 assert.deepEqual(calls[1][3], { entity_id: ['climate.a', 'climate.b'] }, 'Haus-Balken: alle Räume als Ziel');
-assert.match(src, /'Räume unterschiedlich · Ø', true\)/, 'Haus: Zieltemperatur mit Balken wie beim einzelnen Thermostat');
+// 1.3: Haus ohne gemeinsame Zieltemperatur – Räume werden einzeln eingestellt (r246); der Balken kann mehrere Ziele weiter.
+assert.doesNotMatch(src, /Räume unterschiedlich · Ø/, 'Haus: kein gemeinsamer Stepper mehr');
 assert.match(src, /id: tgt\.entity_id \}/, 'Balken übernimmt alle Ziele des Steppers');
 console.log('ok fbh_balken_abbruch');

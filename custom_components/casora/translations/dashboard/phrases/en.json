@@ -1586,7 +1586,8 @@
   "Kraftstoff": "Fuel",
   "jetzt günstig": "good price now",
   "keine offen": "none open",
-  "KI:": "AI:"
+  "KI:": "AI:",
+  "1 heizt": "1 heating"
  },
  "patterns": [
   [
@@ -2116,6 +2117,14 @@
   [
    "^(\\d+) Räume heizen gerade$",
    "{1} rooms heating"
+  ],
+  [
+   "^(\\d+) heizen$",
+   "{1} heating"
+  ],
+  [
+   "^(\\d+) von (\\d+) an$",
+   "{1} of {2} on"
   ],
   [
    "^1 Raum reinigen$",
