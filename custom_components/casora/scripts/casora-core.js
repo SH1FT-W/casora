@@ -4140,6 +4140,7 @@ window.casoraMenuGlass = {
       const ml = bar.querySelector('.more-l');
       const pad = ml ? Math.max(0, Math.round(ml.getBoundingClientRect().right - rooms.getBoundingClientRect().left + 4)) : 0;
       this._pgPad = pad;
+      rooms.style.setProperty('--pg-pad', pad + 'px');
       const pages = [];
       let cur = null, sum = 0;
       list.forEach((el, i) => {
@@ -4204,31 +4205,32 @@ window.casoraMenuGlass = {
       t.style.transform = x ? 'translate3d(' + x + 'px,0,0)' : '';
     }
 
-    // Wo die Schiene gerade sichtbar steht (auch mitten im Gleiten).
-    _trackX() {
-      const t = this._track;
-      if (!t) return 0;
-      const m = getComputedStyle(t).transform;
-      if (!m || m === 'none') return 0;
-      try { return new DOMMatrixReadOnly(m).m41; } catch (_) { return 0; }
-    }
-
     _showPage(p, byUser, instant) {
       const pages = this._pages;
       this._userPaged = !!byUser;
       if (!pages || !this._track) return;
       p = Math.max(0, Math.min(pages.length - 1, p));
+      const prev = this._page || 0;
       this._page = p;
       // Nur die sichtbare Seite ist bedienbar (Tab, Vorlesen); die anderen liegen daneben, inert.
       this._pageEls.forEach((pg, i) => { pg.inert = i !== p; });
-      this._setX(-p * this._pageW, !!byUser && !instant);
+      /* Seitenwechsel ohne Schieben (11.10.2026): beim Gleiten war zwischen zwei Seiten kurz eine große Lücke
+         zu sehen. Die Schiene springt, die neue Seite blendet mit kleinem Versatz aus der Wischrichtung ein. */
+      this._setX(-p * this._pageW, false);
+      const pg = this._pageEls[p];
+      if (byUser && !instant && p !== prev && pg && pg.animate && !this._still()) {
+        const dx = (p > prev ? 1 : -1) * 24;
+        pg.animate([{ opacity: 0, transform: 'translateX(' + dx + 'px)' }, { opacity: 1, transform: 'none' }],
+          { duration: 280, easing: 'cubic-bezier(.2,.8,.3,1)' });
+      }
       this._syncFade();
       this._placeIndicator(true);
     }
 
-    /* Wischen am Tablet: die Raumreihe folgt dem Finger; beim Loslassen gleitet sie auf die nächste
-       bzw. vorige Seite (ab 30 % der Breite oder schnellem Wisch), sonst zurück. Immer höchstens eine
-       Seite je Wisch. Vorher: kein Mitgehen, Sprung erst beim Loslassen, schon ab 40 px. */
+    /* Wischen am Tablet: beim Loslassen gleitet die Reihe weich auf die nächste bzw. vorige Seite (ab 30 %
+       der Breite oder schnellem Wisch), immer höchstens eine Seite je Wisch. Die Reihe folgt dem Finger
+       bewusst nicht (11.10.2026): am iPad blieb sie zwischen zwei Seiten stehen, wenn das Loslassen nicht
+       ankam – mit einer Lücke zwischen den Räumen; beim Mitgehen schauten links Reste der vorigen Seite heraus. */
     _initSwipe(rooms) {
       let d = null;
       const down = (ev) => {
@@ -4244,18 +4246,10 @@ window.casoraMenuGlass = {
           d.on = true;
           this._drag = true;
           try { rooms.setPointerCapture(ev.pointerId); } catch (_) {}
-          d.base = this._trackX();
-          d.home = -this._page * this._pageW;
-          this._track.classList.remove('glide');
         }
         d.hist.push([ev.timeStamp, ev.clientX]);
         if (d.hist.length > 8) d.hist.shift();
-        const min = -(this._pages.length - 1) * this._pageW;
-        let x = d.base + dx;
-        // Am Anfang/Ende nur gebremst (Gummiband).
-        if (x > 0) x *= 0.3; else if (x < min) x = min + (x - min) * 0.3;
-        d.x2 = x;
-        this._setX(x, false);
+        d.dx = dx;
       };
       const up = (ev, cancel) => {
         if (!d || (ev && ev.pointerId !== d.id)) return;
@@ -4266,7 +4260,7 @@ window.casoraMenuGlass = {
         let to = this._page;
         if (!cancel && this._pages) {
           const W = this._pageW || rooms.clientWidth;
-          const off = (g.x2 == null ? g.base : g.x2) - g.home;
+          const off = g.dx || 0;
           // Tempo aus den letzten ~100 ms (px/ms).
           const h = g.hist, last = h[h.length - 1];
           let first = h[0];
@@ -5192,6 +5186,8 @@ window.casoraMenuGlass = {
              dem Trenner, ab Seite 2 hält die Seite dort Platz für den Pfeil frei (--pg-pad, 11.10.2026). */
           .bar.paged .scroller .more-l { z-index: 2; margin-right: calc(-30px - 4px); }
           .bar.paged .pg { box-sizing: border-box; }
+          /* Unter dem sichtbaren linken Pfeil nichts durchscheinen lassen (beim Gleiten lagen dort Reste der vorigen Seite). */
+          .bar.paged.more-l-on .rooms { clip-path: inset(0 0 0 var(--pg-pad, 0px)); }
           /* Linker Pfeil auf der ersten Seite ganz weg; blendet weich ein, sobald links etwas verborgen ist. */
           .bar.paged:not(.more-l-on) .scroller .more-l { opacity: 0; visibility: hidden;
             transition: opacity var(--casora-dur-feedback, 160ms) var(--casora-ease-feedback, ease), visibility 0s linear var(--casora-dur-feedback, 160ms); }
