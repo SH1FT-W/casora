@@ -354,7 +354,8 @@ Casora:
   # Symbole etwas leichter, gleiche helle Fläche mit weichem Schatten (casora-chrome-shadow je Modus).
   casora-chrome-btn-step: 48px
   casora-chrome-btn-size-desktop: 40px
-  casora-np-head-size: 40px
+  casora-np-head-size: 46px  # gleich hoch wie Raumleiste und Kapsel (11.10.2026)
+  casora-np-head-shift: -3px  # Mitte bleibt auf der Leistenmitte (vorher 40 hoch)
   casora-mchrome-h: 48px
   casora-chrome-sep-top: 16px
   casora-chrome-sep-h: 16px
