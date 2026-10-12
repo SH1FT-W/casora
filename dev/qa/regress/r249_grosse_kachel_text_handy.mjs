@@ -24,7 +24,8 @@ const r = await page.evaluate(() => window.__pierce('button-card').map((b) => {
   const fs = (s) => { const e = sr.querySelector(s); return e ? getComputedStyle(e).fontSize + '/' + getComputedStyle(e).lineHeight + '/mb' + getComputedStyle(e).marginBottom : ''; };
   return { f: fs('#name') + ' ' + fs('#state'), name: txt('#name'), x: Math.round(R.left), top: Math.round(R.top), h: Math.round(R.height), nm: q('#name'), lb: q('#label'), st: q('#state'), tpl: [].concat(b._config.template || []).join(',').slice(0, 60) };
 }).filter(Boolean));
-const big = r.find((x) => x.h > 100), next = big && r.find((x) => x.h < 80 && x.x > big.x + 50 && x.top + x.h === big.top + big.h);
+// Die Nachbarin links oder rechts (die Reihe sortiert aktive Kacheln nach vorn, die große steht mal rechts).
+const big = r.find((x) => x.h > 100), next = big && r.find((x) => x.h < 80 && Math.abs(x.x - big.x) > 50 && Math.abs(x.top + x.h - (big.top + big.h)) <= 1);
 await need('große Kachel mit kleiner Nachbarin unten bündig', big && next, r);
 const off = next.top - big.top;
 await check('Name fluchtet (oben)', Math.abs(big.nm[0] - (next.nm[0] + off)) <= 1, { gross: big.nm, klein: next.nm.map((v) => v + off) });
