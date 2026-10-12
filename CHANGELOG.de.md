@@ -10,6 +10,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Gruppen-Popups:** Ein Tipp auf eine einzelne Lampe oder Jalousie in der Beleuchtungs- oder Jalousien-Gruppe öffnet Casoras Popup des Geräts statt des Dialogs von Home Assistant.
 - **Abfall-Kachel:** Am Tag vor der Abholung steht das Symbol wie am Abholtag auf dem vollen Kreis in der Farbe der Tonne. Vorher war das helle Symbol auf der aktiven Kachel kaum zu sehen (#19).
 - **Große Kacheln am Handy:** Der Name fluchtet wieder mit der kleinen Kachel daneben. Seit der größeren Schrift in 1.3.2 stand er 2 px zu hoch.
+- **Kleine Android-Tablets quer:** Auf Tablets wie dem Galaxy Tab A9 (im Browser 1006×600) lagen die Kacheln unterhalb des Bildschirms. Casora behandelt sie jetzt wie ein kleines iPad: kompakter Kopf, Kachelreihe unten. Handys und iPads bleiben, wie sie sind.
 - **Tank-Logos:** Quadratische Marken-Logos (JET, star, bft, Westfalen, Hoyer, BayWa) füllen den ganzen Kreis, statt mit Rand darin zu stehen.
 - **Energie:** Nachts bei leerem Akku meldet die Anker Solarbank Code 40 (Ruhemodus). Casora zeigt das nicht mehr als Fehler.
 
