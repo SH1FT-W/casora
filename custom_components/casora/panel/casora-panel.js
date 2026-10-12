@@ -4442,8 +4442,10 @@ function condStates(hass, id) {
 // Anzeige eines Zustands wie in HA („Spielt“, „Offen“ je nach Geräteklasse), gespeichert bleibt der Rohwert.
 function condStateLabel(hass, id, v) {
   const st = hass && hass.states && hass.states[id];
-  try { if (st && typeof hass.formatEntityState === "function") return hass.formatEntityState(st, v) || v; } catch (e) { /* Rohwert */ }
-  return v;
+  let out = v;
+  try { if (st && typeof hass.formatEntityState === "function") out = hass.formatEntityState(st, v) || v; } catch (e) { /* Rohwert */ }
+  // Casora-Wortwahl: „An“ statt HAs „Ein“.
+  return out === "Ein" ? "An" : out;
 }
 function condModel(t) {
   if (!t || t.type !== "conditional" || (t.card && t.card.type === "conditional")) return null;
@@ -19676,6 +19678,8 @@ class CasoraPanel extends HTMLElement {
     const room = this._state && this._state.compact.rooms[this._room];
     const shellT = ((room && room.tiles) || []).find((t) => this._tileKey(t) === key);
     if (!shellT) return key;
+    // 1.4: Karussell heißt so (sonst trug es den Namen seiner ersten Seite).
+    if (carouselOf(shellT)) return trLabel(CAROUSEL_TILE.label);
     const tile = tileView(shellT);
     const type = tileTypeAny(tile);
     if (type && type.id === "custom") {
@@ -19693,6 +19697,7 @@ class CasoraPanel extends HTMLElement {
     const room = this._state && this._state.compact.rooms[this._room];
     const shellT = ((room && room.tiles) || []).find((t) => this._tileKey(t) === key);
     if (!shellT) return "tile";
+    if (carouselOf(shellT)) return "carousel";
     const tile = tileView(shellT);
     const type = tileTypeAny(tile) || RAW_TILE;
     const cd = condContainerDesc(shellT);
