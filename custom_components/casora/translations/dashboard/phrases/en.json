@@ -1587,7 +1587,40 @@
   "jetzt günstig": "good price now",
   "keine offen": "none open",
   "KI:": "AI:",
-  "1 heizt": "1 heating"
+  "1 heizt": "1 heating",
+  "Handy": "Phone",
+  "Lädt nicht": "Not charging",
+  "Mobilfunk": "Mobile data",
+  "kein WLAN": "no Wi-Fi",
+  "Entfernung": "Distance",
+  "Richtung": "Direction",
+  "Nach Hause": "Way home",
+  "Luftlinie zur Zone Zuhause": "Straight line to the home zone",
+  "Standort jetzt holen": "Get location now",
+  "fragt die Companion-App": "asks the Companion app",
+  "Nachricht schicken": "Send a message",
+  "Klingeln lassen": "Make it ring",
+  "auch wenn es leise ist": "even when it is on silent",
+  "Standort per GPS": "Location via GPS",
+  "über das WLAN": "via Wi-Fi",
+  "über Bluetooth": "via Bluetooth",
+  "Verlauf wird geladen …": "Loading history …",
+  "Kein Verlauf der letzten drei Tage": "No history in the last three days",
+  "Entfernt sich": "Moving away",
+  "Kommt näher": "Coming closer",
+  "Bleibt stehen": "Not moving",
+  "Angekommen": "Arrived",
+  "Standort angefragt": "Location requested",
+  "Konnte das Handy nicht erreichen": "Couldn't reach the phone",
+  "Nachricht gesendet": "Message sent",
+  "Handy klingelt": "Phone is ringing",
+  "Senden": "Send",
+  "Nachricht": "Message",
+  "Handy klingeln lassen?": "Make the phone ring?",
+  "Es klingelt auch, wenn es leise gestellt ist.": "It rings even when it is set to silent.",
+  "Klingeln": "Ring",
+  "Hier bin ich!": "I'm here!",
+  "Person": "Person"
  },
  "patterns": [
   [
@@ -3253,6 +3286,30 @@
   [
    "^(\\d+) offline$",
    "{1} offline"
+  ],
+  [
+   "^seit (\\d{1,2}:\\d{2})$",
+   "since {1}"
+  ],
+  [
+   "^seit gestern (\\d{1,2}:\\d{2})$",
+   "since yesterday {1}"
+  ],
+  [
+   "^(.+) von zuhause$",
+   "{1} from home"
+  ],
+  [
+   "^GPS · auf (\\d+) m genau$",
+   "GPS · accurate to {1} m"
+  ],
+  [
+   "^Nachricht an (.+)$",
+   "Message to {1}"
+  ],
+  [
+   "^gestern (\\d{1,2}:\\d{2}) – (\\d{1,2}:\\d{2})$",
+   "yesterday {1} – {2}"
   ]
  ]
 }

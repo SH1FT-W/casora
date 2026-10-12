@@ -79,6 +79,7 @@ const MODULES = [
   '12-tanken',
   '13-schloss',
   '14-pulse',
+  '15-person',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());

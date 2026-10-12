@@ -254,6 +254,10 @@
         // Lange Knopftexte („Trotzdem scharf schalten“): untereinander, Bestätigen oben.
         + '.row.stack{flex-direction:column-reverse}'
         + '.no{background:rgba(127,127,127,.16);color:inherit}'
+        // 1.4 (Personen-Popup, „Nachricht schicken“): w.input → Textfeld, „Ja“ liefert den Text.
+        + 'input{width:100%;box-sizing:border-box;margin:0 0 16px;padding:12px 14px;border:0;border-radius:14px;font:inherit;font-size:15px;'
+        + 'background:rgba(127,127,127,.12);color:inherit;outline:none}'
+        + 'input:focus-visible{box-shadow:0 0 0 2px var(--casora-popup-ui-action,var(--casora-accent,#276B64))}'
         + '.yes{background:var(--casora-accent,var(--primary-color,#94603B));color:#fff}'
         + 'button:focus-visible{outline:2px solid var(--casora-accent,var(--primary-color,#94603B));outline-offset:2px}'
         // 1.2.1 (P7): im Casora-Look wie die übrigen Text-Hauptknöpfe 44 hoch und voll rund,
@@ -274,10 +278,19 @@
       root.querySelector('.no').textContent = T('Abbrechen');
       root.querySelector('.yes').textContent = w.yes || T(w.verb);
       if (w.stack) root.querySelector('.row').classList.add('stack');
+      var field = null;
+      if (w.input) {
+        field = document.createElement('input');
+        field.type = 'text';
+        field.placeholder = T(w.input.placeholder || '');
+        field.setAttribute('aria-label', field.placeholder || w.title || '');
+        root.querySelector('.row').before(field);
+        field.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); root.querySelector('.yes').click(); } });
+      }
       var done = function (ok) {
         document.removeEventListener('keydown', key, true);
         host.remove();
-        resolve(ok);
+        resolve(ok && field ? (field.value.trim() || false) : ok);
       };
       var key = function (e) {
         if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(false); }
@@ -287,8 +300,8 @@
       root.querySelector('.no').onclick = function () { done(false); };
       root.querySelector('.yes').onclick = function () { done(true); };
       document.body.appendChild(host);
-      // Fokus auf „Abbrechen“: ein versehentliches Enter schaltet nicht (Nutzertest).
-      setTimeout(function () { var n = root.querySelector('.no'); if (n) n.focus(); }, 30);
+      // Fokus auf „Abbrechen“: ein versehentliches Enter schaltet nicht (Nutzertest). Mit Textfeld dorthin.
+      setTimeout(function () { var n = field || root.querySelector('.no'); if (n) n.focus(); }, 30);
     });
   };
   // Mehrere Geräte auf einmal („Zu“ für beide Jalousien, Nutzertest 7): Titel = Name der Sammelkachel
@@ -313,7 +326,8 @@
   // Auch ohne Kachel im Pfad (Popup-Schalter, Knöpfe im Popup): Entität einer Kachel mit Rückfrage.
   window.casoraAsksFirst = function (id) { return !!id && confirmIds().indexOf(id) !== -1; };
   // Eigene Rückfrage im selben Stil (07.10.2026, „Alles aus“ im Haus-Licht-Popup):
-  // { title, text?, yes } – Promise<true> bei „Ja“; Fokus auf „Abbrechen“.
+  // { title, text?, yes, input?: { placeholder } } – Promise<true> bei „Ja“ (mit input: der Text oder false);
+  // Fokus auf „Abbrechen“ bzw. das Textfeld.
   window.casoraAsk = function (w) { return ask(w || {}); };
   // Für Popups, die direkt schalten: Promise<true>, wenn geschaltet werden darf.
   window.casoraConfirmSwitch = function (id, service) {
@@ -5869,13 +5883,15 @@ window.casoraMenuGlass = {
     }
     :host([soft]) .header-ring ha-icon { --mdc-icon-size: calc(var(--casora-ic-head, 56px) * .5); display: flex; }
     :host([soft]) .header-ring .im { width: 78%; height: 78%; object-fit: contain; }
+    /* 1.4: Personenfoto füllt die Kachel. */
+    :host([soft]) .header-ring .im.ph { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
     /* Runde Länderflagge (Fußball): Flagge füllt die Kachel fast, mit Haarlinie. */
     :host([soft]) .header-ring .im[src*="/flags/round/"] {
       width: 82%; height: 82%; border-radius: 50%;
       box-shadow: 0 0 0 .5px var(--casora-football-flag-hair, rgba(0,0,0,0.14));
     }
     /* Wappen: heller Grund mit Sand-Rand statt Gerätefarbe. */
-    :host([soft]) .header-ring:has(> .im) {
+    :host([soft]) .header-ring:has(> .im:not(.ph)) {
       box-shadow: inset 0 0 0 1px var(--casora-soft-row-hover, rgba(140,115,90,0.11));
     }
     /* Textblock: Etikett, Titel, Statuszeile untereinander – fehlt eins, rückt der Rest zusammen und
@@ -6207,6 +6223,12 @@ window.casoraMenuGlass = {
     // als Maske, #icon ist nur der schlichte Rahmen): ein Popup-Modul nennt dafür eine Bild-URL,
     // damit der Ring dasselbe Symbol zeigt wie die Kachel.
     // Kachel mit farbigem Bild statt Symbol (Fußball: Vereinswappen): weißer Ring, Bild in Farbe.
+    // 1.4: Foto füllt die Kachel (Person) – window._casoraRingPhotoHooks: fn(src, key) → { url, hue } | null.
+    var ph = null;
+    (window._casoraRingPhotoHooks || []).some(function (f) { try { ph = f(src, key); } catch (e) { ph = null; } return !!ph; });
+    if (ph && typeof ph.url === 'string' && /^(https?:|\/|data:image\/)/.test(ph.url)) {
+      return { hue: ph.hue || hue, html: '<img class="im ph" alt="" src="' + ph.url.replace(/["<>\\]/g, '') + '">', off: false };
+    }
     var im = typeof window.casoraRingImage === 'function' ? window.casoraRingImage(src, key) : null;
     if (typeof im === 'string' && /^(https?:|\/|data:image\/)/.test(im)) {
       return { hue: 'var(--casora-football-crest-bg, #fff)', html: '<img class="im" alt="" src="' + im.replace(/["<>\\]/g, '') + '">', off: false };
