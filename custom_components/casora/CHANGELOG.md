@@ -9,6 +9,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ### Fixed
 - **Group popups:** Tapping a single light or cover in the lights or covers group opens Casora's popup for that device instead of the Home Assistant dialog.
 - **Waste tile:** On the day before collection the icon sits on the full bin-coloured circle, like on collection day. Before, the light icon was hard to see on the active tile (#19).
+- **Large tiles on the phone:** The name lines up with the small tile next to it again. Since the larger text in 1.3.2 it sat 2 px too high.
 - **Fuel logos:** Square brand logos (JET, star, bft, Westfalen, Hoyer, BayWa) fill the whole circle instead of sitting in it with a border.
 - **Energy:** At night with an empty battery the Anker Solarbank reports code 40 (sleep mode). Casora no longer shows that as an error.
 
