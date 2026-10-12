@@ -590,7 +590,9 @@
       return this._uxAdd();
     };
 
-    P._uxAdd = function () {
+    // o (1.4, Karussell): {title, onPick(c), onClose()} – Gerät wählen statt Kachel anlegen.
+    P._uxAdd = function (o) {
+      o = o || {};
       if (!this._state) return;
       if (this._mCss) this._mCss();
       this._uxCss();
@@ -615,20 +617,22 @@
         + '<input type="text" enterkeyhint="go" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="uxres" aria-autocomplete="list">'
         + '<span class="mesc">esc</span></div><div class="mres" id="uxres" role="listbox"></div><div class="uxmore"></div></div>';
       box.setAttribute("data-no-i18n", "");
-      box.querySelector(".uxaddh b").textContent = tr("What should go on the dashboard?");
-      box.querySelector(".mbox").setAttribute("aria-label", tr("What should go on the dashboard?"));
+      box.querySelector(".uxaddh b").textContent = tr(o.title || "What should go on the dashboard?");
+      box.querySelector(".mbox").setAttribute("aria-label", tr(o.title || "What should go on the dashboard?"));
       const input = box.querySelector("input");
       input.placeholder = tr("Search a device, e.g. floor lamp");
       input.setAttribute("aria-label", tr("Search a device"));
       if (phone) box.querySelector(".mesc").remove();
       const res = box.querySelector(".mres");
       let list = [], at = 0, moreOpen = false;
+      let picked = false;
       const close = (refocus) => {
         document.removeEventListener("keydown", esc, true);
         box.remove();
         if (refocus && from && from.focus) from.focus();
+        if (o.onClose && !picked) o.onClose();
       };
-      const pick = (c) => { close(false); this._uxAddDevice(c); };
+      const pick = (c) => { picked = true; close(false); if (o.onPick) o.onPick(c); else this._uxAddDevice(c); };
       const mark = () => {
         res.querySelectorAll(".mrow").forEach((b, k) => { b.classList.toggle("on", k === at); b.setAttribute("aria-selected", k === at ? "true" : "false"); });
         input.setAttribute("aria-activedescendant", "uxopt" + at);
@@ -711,7 +715,7 @@
       // Unten klein: die übrigen Wege (Typauswahl bleibt erreichbar).
       const more = box.querySelector(".uxmore");
       const extra = (label, run, ok) => {
-        if (ok === false) return;
+        if (ok === false || o.onPick) return;
         const b = document.createElement("button");
         b.type = "button";
         b.className = "uxlink";
@@ -720,6 +724,7 @@
         more.appendChild(b);
       };
       extra("Other tile type…", () => this._uxAddByType());
+      extra("Carousel…", () => { const r = room$(this); if (r && this._addCarousel) this._addCarousel(r); });
       extra("Scene from the current state…", () => this._bSceneFromState(), typeof this._bSceneFromState === "function"
         && !!(this._hass && this._hass.user && this._hass.user.is_admin));
       extra("Badge…", () => { this._bLeavePages && this._bLeavePages(); this._sel = null; this._group = "badges"; this._stackOpenReq = "badges"; this._bOpen = true; this._renderForm(); });

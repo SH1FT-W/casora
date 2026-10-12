@@ -1066,6 +1066,9 @@ function pairConflicts(pair) {
 const MOBILE_ONLY_TILE_KEYS = ["mobile_filter_category", "casora_from_room"];
 
 function tileTwinKey(t) {
+  // 1.4: Karussell mit Kennung (carouselId) – ausgeschrieben, die Umzugs-Tests laden nur diese Funktion.
+  const cid = Array.isArray(t.cards) && t.variables && t.variables.casora_carousel;
+  if (cid) return stable(["carousel", String(cid)]);
   // A hosted card keeps its entity inside the card it hosts, so every custom
   // tile would key the same and only the first would ever reach the phone.
   if (t.template === CUSTOM_TEMPLATE) {
@@ -1354,12 +1357,21 @@ function syncTwinTile(twin, mt, depth) {
   if (twin.name !== undefined) mt.name = twin.name; else delete mt.name;
   // „Wer sieht das?“ (visibility mit Bedingung „user“) gilt auch am Handy.
   if (twin.visibility !== undefined) mt.visibility = clone(twin.visibility); else delete mt.visibility;
+  // 1.4: Karussell mit Kennung – Seiten und Optionen wie im Raum (die Größe steht an den Seiten).
+  if (carouselId(twin) && carouselId(twin) === carouselId(mt)) {
+    mt.cards = clone(twin.cards);
+    ["auto_swipe_interval", "always_active"].forEach((k) => {
+      if (twin[k] !== undefined) mt[k] = clone(twin[k]); else delete mt[k];
+    });
+    return;
+  }
   if (twin.type !== "conditional" || mt.type !== "conditional" || (depth || 0) > 3) return;
   if (twin.conditions !== undefined) mt.conditions = clone(twin.conditions); else delete mt.conditions;
   const a = twin.card, b = mt.card;
   // Nur dieselbe Kachel darin (Art + Entität); Sammelkarten (Swipe, auto-entities) bleiben, wie sie sind –
   // bis auf die Größe ihrer Kacheln (im Studio an der Sammelkarte gewählt, setInnerSize).
   if (!a || !b || typeof a !== "object" || typeof b !== "object") return;
+  if (carouselId(a) && carouselId(a) === carouselId(b)) { syncTwinTile(a, b, (depth || 0) + 1); return; }
   if (isContainerCard(a) && a.type !== "conditional" && isContainerCard(b)) { copySizeDeep(a, b); return; }
   if (a.type === "conditional" ? b.type === "conditional" : (a.template !== undefined && tileTwinKey(a) === tileTwinKey(b))) {
     syncTwinTile(a, b, (depth || 0) + 1);
@@ -1411,6 +1423,17 @@ function syncPairTiles(pair) {
     const room = rooms[link.room];
     const sec = sections[link.section];
     if (!room || !sec) return;
+    // 1.4: Im Studio bearbeitetes Import-Karussell („i…“) übernimmt sein Gegenstück am Handy – das
+    // gleichrangige Import-Karussell ohne Kennung (k-tes im Raum ↔ k-tes in der Handy-Reihe).
+    {
+      const imported = (c) => !carouselId(c) || carouselId(c)[0] === "i";
+      const carsR = (room.tiles || []).map(carouselOf).filter((c) => c && imported(c));
+      const carsP = (sec.tiles || []).map(carouselOf).filter((c) => c && imported(c));
+      carsR.forEach((c, k) => {
+        const id = carouselId(c), p = carsP[k];
+        if (id && p && !carouselId(p)) p.variables = { ...(p.variables || {}), casora_carousel: id };
+      });
+    }
     // Gleiche Kacheln (Art + Entität) mehrfach im Raum: der Reihe nach zuordnen, die erste
     // Handy-Kachel zur ersten im Raum usw. – sonst bekamen alle die Einstellungen (auch „Größe
     // am Handy“) der letzten. Mehr am Handy als im Raum: die übrigen zur letzten, wie bisher.
@@ -1486,7 +1509,9 @@ function syncPairTiles(pair) {
       // Bedingte Kachel: zählt die Kachel darin (Auto, E-Bike, Abfall mit Bedingung).
       const tv = t ? tileView(t) : null;
       const ty = tv && !tv.entity ? tileTypeAny(tv) : null;
-      if (!t || (!tv.entity && tv.template !== CUSTOM_TEMPLATE && !(ty && (ty.noEntity || ty.ownData)))) return;
+      // Karussell mit Kennung (1.4) gehört aufs Handy; importierte ohne Kennung wie bisher nicht.
+      if (!t || (!tv.entity && tv.template !== CUSTOM_TEMPLATE && !(ty && (ty.noEntity || ty.ownData))
+        && !carouselId(carouselOf(t)))) return;
       const key = tileTwinKey(t);
       if (onPhone.has(key)) return;
       onPhone.add(key);
@@ -1509,7 +1534,7 @@ function syncPairTiles(pair) {
       // written before the marker existed fall back to "is this Casora's shape".
       const mv = tileView(mt);
       const copied = (mv.variables || {}).casora_from_room;
-      return !(copied === undefined ? !!tileTypeOf(mv) : copied);
+      return !(copied === undefined ? !!tileTypeOf(mv) || !!carouselId(carouselOf(mt)) : copied);
     });
     dropped += before - sec.tiles.length;
 
@@ -3541,6 +3566,8 @@ const ICON_DATA = {
   "window-shade-closed": "data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3C%21--Generator%3A%20Apple%20Native%20CoreSVG%20362--%3E%0A%3C%21DOCTYPE%20svg%0APUBLIC%20%22-//W3C//DTD%20SVG%201.1//EN%22%0A%20%20%20%20%20%20%20%22http%3A//www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd%22%3E%0A%3Csvg%20version%3D%221.1%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20xmlns%3Axlink%3D%22http%3A//www.w3.org/1999/xlink%22%20viewBox%3D%220%200%2016.7049%2020.7354%22%3E%0A%20%3Cg%3E%0A%20%20%3Crect%20height%3D%2220.7354%22%20opacity%3D%220%22%20width%3D%2216.7049%22%20x%3D%220%22%20y%3D%220%22/%3E%0A%20%20%3Cpath%20d%3D%22M0%2018.7286C0%2019.9165%200.81891%2020.723%202.04421%2020.723L14.6607%2020.723C15.8964%2020.723%2016.7049%2019.9165%2016.7049%2018.7286L16.7049%201.99436C16.7049%200.806449%2015.8964%200%2014.6607%200L2.04421%200C0.81891%200%200%200.806449%200%201.99436ZM1.5728%2018.631L1.5728%202.09194C1.5728%201.78042%201.77218%201.57069%202.06913%201.57069L14.6358%201.57069C14.9327%201.57069%2015.1321%201.78042%2015.1321%202.09194L15.1321%2018.631C15.1321%2018.9425%2014.9327%2019.1523%2014.6358%2019.1523L2.06913%2019.1523C1.77218%2019.1523%201.5728%2018.9425%201.5728%2018.631Z%22%20fill%3D%22white%22%20fill-opacity%3D%220.425%22/%3E%0A%20%20%3Cpath%20d%3D%22M3.04119%2018.0134L13.6616%2018.0134C13.8502%2018.0134%2013.9932%2017.86%2013.9932%2017.6818L13.9932%203.04119C13.9932%202.86292%2013.8502%202.70957%2013.6616%202.70957L3.04119%202.70957C2.86503%202.70957%202.71168%202.86292%202.71168%203.04119L2.71168%2017.6818C2.71168%2017.86%202.86503%2018.0134%203.04119%2018.0134ZM6.78891%2016.819C6.50462%2016.819%206.31158%2016.626%206.31158%2016.3417C6.31158%2016.0574%206.50462%2015.8747%206.78891%2015.8747L9.75411%2015.8747C10.0384%2015.8747%2010.2314%2016.0574%2010.2314%2016.3417C10.2314%2016.626%2010.0384%2016.819%209.75411%2016.819Z%22%20fill%3D%22white%22%20fill-opacity%3D%220.85%22/%3E%0A%20%3C/g%3E%0A%3C/svg%3E%0A",
   "window-shade-open": "data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3C%21--Generator%3A%20Apple%20Native%20CoreSVG%20362--%3E%0A%3C%21DOCTYPE%20svg%0APUBLIC%20%22-//W3C//DTD%20SVG%201.1//EN%22%0A%20%20%20%20%20%20%20%22http%3A//www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd%22%3E%0A%3Csvg%20version%3D%221.1%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20xmlns%3Axlink%3D%22http%3A//www.w3.org/1999/xlink%22%20viewBox%3D%220%200%2016.7049%2020.7354%22%3E%0A%20%3Cg%3E%0A%20%20%3Crect%20height%3D%2220.7354%22%20opacity%3D%220%22%20width%3D%2216.7049%22%20x%3D%220%22%20y%3D%220%22/%3E%0A%20%20%3Cpath%20d%3D%22M0%2018.7286C0%2019.9165%200.81891%2020.723%202.04421%2020.723L14.6607%2020.723C15.8964%2020.723%2016.7049%2019.9165%2016.7049%2018.7286L16.7049%201.99436C16.7049%200.806449%2015.8964%200%2014.6607%200L2.04421%200C0.81891%200%200%200.806449%200%201.99436ZM1.5728%2018.631L1.5728%202.09194C1.5728%201.78042%201.77218%201.57069%202.06913%201.57069L14.6358%201.57069C14.9327%201.57069%2015.1321%201.78042%2015.1321%202.09194L15.1321%2018.631C15.1321%2018.9425%2014.9327%2019.1523%2014.6358%2019.1523L2.06913%2019.1523C1.77218%2019.1523%201.5728%2018.9425%201.5728%2018.631Z%22%20fill%3D%22white%22%20fill-opacity%3D%220.425%22/%3E%0A%20%20%3Cpath%20d%3D%22M3.04119%206.05503L13.6616%206.05503C13.8502%206.05503%2013.9932%205.90168%2013.9932%205.7234L13.9932%203.04119C13.9932%202.86292%2013.8502%202.70957%2013.6616%202.70957L3.04119%202.70957C2.86503%202.70957%202.71168%202.86292%202.71168%203.04119L2.71168%205.7234C2.71168%205.90168%202.86503%206.05503%203.04119%206.05503ZM6.86468%204.84823C6.59074%204.84823%206.3977%204.66553%206.3977%204.38124C6.3977%204.09695%206.59074%203.90391%206.86468%203.90391L9.84023%203.90391C10.1245%203.90391%2010.3072%204.09695%2010.3072%204.38124C10.3072%204.66553%2010.1245%204.84823%209.84023%204.84823Z%22%20fill%3D%22white%22%20fill-opacity%3D%220.85%22/%3E%0A%20%3C/g%3E%0A%3C/svg%3E%0A",
   "settings": "data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3C%21--Generator%3A%20Apple%20Native%20CoreSVG%20362--%3E%0A%3C%21DOCTYPE%20svg%0APUBLIC%20%22-//W3C//DTD%20SVG%201.1//EN%22%0A%20%20%20%20%20%20%20%22http%3A//www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd%22%3E%0A%3Csvg%20version%3D%221.1%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20xmlns%3Axlink%3D%22http%3A//www.w3.org/1999/xlink%22%20viewBox%3D%220%200%2022.451%2022.4466%22%3E%0A%20%3Cg%3E%0A%20%20%3Crect%20height%3D%2222.4466%22%20opacity%3D%220%22%20width%3D%2222.451%22%20x%3D%220%22%20y%3D%220%22/%3E%0A%20%20%3Cpath%20d%3D%22M11.2255%2022.4466C11.487%2022.4466%2011.686%2022.3074%2011.7523%2021.8429L11.856%2021.0372C11.9141%2020.7149%2012.1052%2020.5278%2012.4651%2020.4883C12.8%2020.4342%2013.0266%2020.5736%2013.1512%2020.875L13.4564%2021.6123C13.6471%2022.0622%2013.8856%2022.1351%2014.1243%2022.0645C14.3733%2021.9919%2014.5349%2021.8092%2014.4665%2021.324L14.3604%2020.5535C14.3146%2020.2105%2014.4766%2020.0068%2014.8177%2019.8488C15.1152%2019.7219%2015.3853%2019.7635%2015.5849%2020.0359L16.0749%2020.6735C16.3755%2021.0695%2016.6078%2021.074%2016.834%2020.9329C17.0706%2020.8021%2017.1741%2020.607%2016.9813%2020.1571L16.6862%2019.4158C16.5511%2019.0895%2016.6404%2018.8255%2016.9213%2018.6278C17.204%2018.4261%2017.4473%2018.397%2017.7341%2018.6132L18.3654%2019.1034C18.7448%2019.3875%2018.9813%2019.3442%2019.1702%2019.1657C19.3507%2018.9748%2019.3919%2018.73%2019.0975%2018.3589L18.6094%2017.7401C18.4035%2017.4636%2018.4409%2017.1891%2018.6447%2016.894C18.8402%2016.6465%2019.0979%2016.5405%2019.4202%2016.6881L20.1594%2016.9832C20.6114%2017.176%2020.8169%2017.0725%2020.9477%2016.8256C21.0784%2016.6097%2021.074%2016.3795%2020.6779%2016.0768L20.0507%2015.5868C19.7825%2015.379%2019.7409%2015.1068%2019.8739%2014.801C19.9884%2014.4889%2020.1964%2014.3393%2020.5558%2014.3727L21.3512%2014.4787C21.8136%2014.5368%2022.0087%2014.3856%2022.0689%2014.1262C22.1291%2013.8751%2022.0666%2013.6491%2021.6146%2013.4687L20.8794%2013.1656C20.5717%2013.0471%2020.449%2012.8102%2020.4927%2012.4359C20.5322%2012.1033%2020.7088%2011.9056%2021.052%2011.8579L21.837%2011.7563C22.3118%2011.69%2022.451%2011.4889%2022.451%2011.2274C22.451%2010.9659%2022.3118%2010.7648%2021.837%2010.6985L21.052%2010.5969C20.6984%2010.5388%2020.5426%2010.3412%2020.4927%209.9982C20.449%209.66537%2020.5717%209.42842%2020.8794%209.29959L21.625%208.9965C22.0666%208.80577%2022.1395%208.56941%2022.0689%208.32863C21.9984%208.07962%2021.8136%207.91802%2021.3409%207.98646L20.5662%208.09248C20.2171%208.13619%2019.9677%207.95561%2019.8635%207.65383C19.7305%207.30664%2019.7618%207.07581%2020.0507%206.86799L20.6779%206.378C21.074%206.07531%2021.0784%205.84298%2020.958%205.61888C20.8066%205.37197%2020.5907%205.28917%2020.1594%205.46131L19.4202%205.77705C19.0979%205.91432%2018.8402%205.79796%2018.6343%205.5401C18.4409%205.26575%2018.4035%205.01191%2018.6198%204.72511L19.1079%204.09594C19.3919%203.72482%2019.3611%203.48002%2019.1702%203.28909C18.9813%203.11061%2018.7448%203.0673%2018.3758%203.36174L17.7445%203.85194C17.468%204.07855%2017.1833%204.0287%2016.9213%203.81667C16.6404%203.58795%2016.5511%203.36325%2016.6862%203.03907L16.9813%202.29774C17.1741%201.84784%2017.0706%201.64233%2016.834%201.52194C16.5871%201.3705%2016.3465%201.42668%2016.0749%201.78131L15.5849%202.40858C15.375%202.68101%2015.1152%202.72261%2014.7866%202.59569C14.487%202.46877%2014.325%202.25463%2014.3708%201.9013L14.4872%201.12048C14.5349%200.645658%2014.4147%200.462965%2014.1243%200.390309C13.8546%200.319764%2013.6264%200.434023%2013.4668%200.842522L13.1719%201.57983C13.0473%201.89155%2012.7897%202.03093%2012.4444%201.97687C12.0845%201.91667%2011.9037%201.75026%2011.8663%201.40728L11.7523%200.622246C11.686%200.147421%2011.487%200.00824052%2011.2359%200.00824052C10.964%200.00824052%2010.7629%200.147421%2010.6966%200.611895L10.5929%201.41764C10.5452%201.73991%2010.354%201.93738%209.99629%201.96652C9.66135%201.99988%209.42229%201.8812%209.29768%201.57983L8.99459%200.842522C8.82456%200.444373%208.6068%200.309413%208.32672%200.390309C8.02384%200.473315%207.91611%200.697412%207.98244%201.12048L8.09057%201.9013C8.13639%202.25463%207.96405%202.47913%207.64157%202.60605C7.30473%202.72261%207.07601%202.68101%206.86608%202.40858L6.37609%201.78131C6.09411%201.41633%205.86177%201.38085%205.62521%201.52194C5.38041%201.65268%205.27691%201.84784%205.46975%202.29774L5.76479%203.03907C5.89995%203.34466%205.81062%203.619%205.54834%203.81667C5.27591%204.0287%205.00367%204.05784%204.71687%203.84159L4.08559%203.35139C3.73517%203.088%203.48826%203.08991%203.28085%203.28909C3.06921%203.51107%203.09011%203.74552%203.3535%204.09594L3.84159%204.71476C4.0682%204.99121%204.02046%205.28646%203.80632%205.55045C3.57971%205.80831%203.36134%205.90397%203.03083%205.7667L2.2895%205.47166C1.881%205.29952%201.64444%205.36162%201.5137%205.61888C1.35191%205.87403%201.42879%206.11672%201.77307%206.378L2.40034%206.86799C2.66855%207.07581%202.7205%207.35839%202.58745%207.65383C2.44194%207.96596%202.24217%208.11549%201.89306%208.08213L1.09767%207.97611C0.637418%207.91802%200.442263%208.06927%200.382069%208.32863C0.321874%208.56941%200.384379%208.80577%200.836392%208.98615L1.57159%209.28924C1.88964%209.42842%202.02269%209.66537%201.95828%2010.0086C1.89808%2010.3515%201.76292%2010.5388%201.39904%2010.5969L0.614005%2010.6985C0.139181%2010.7648%202.22045e-15%2010.9659%202.22045e-15%2011.2274C2.22045e-15%2011.4889%200.139181%2011.69%200.614005%2011.7563L1.39904%2011.8579C1.76292%2011.9056%201.90843%2012.1033%201.95828%2012.4463C2.00199%2012.7687%201.88964%2013.0264%201.57159%2013.1552L0.826041%2013.4583C0.384379%2013.6491%200.311523%2013.8751%200.382069%2014.1262C0.452614%2014.3752%200.637418%2014.5368%201.10802%2014.4684L1.88271%2014.3623C2.23393%2014.3186%202.44194%2014.4785%202.59781%2014.8113C2.7205%2015.1068%202.66855%2015.3894%202.40034%2015.5868L1.77307%2016.0768C1.37703%2016.3795%201.37261%2016.6097%201.5137%2016.8359C1.63409%2017.0725%201.8396%2017.176%202.2895%2016.9935L3.03083%2016.6778C3.34064%2016.5405%203.619%2016.6672%203.81667%2016.9147C4.02046%2017.1684%204.04749%2017.4429%203.83124%2017.7297L3.34315%2018.3485C3.05906%2018.73%203.08991%2018.9748%203.28085%2019.1657C3.46967%2019.3442%203.70412%2019.3875%204.07523%2019.0931L4.70652%2018.6029C4.98297%2018.397%205.24485%2018.4261%205.54834%2018.6382C5.81062%2018.8358%205.89995%2019.0998%205.76479%2019.4158L5.46975%2020.1571C5.27691%2020.607%205.38041%2020.8021%205.62521%2020.9329C5.84107%2021.074%206.07341%2021.0695%206.37609%2020.6735L6.86608%2020.0462C7.08636%2019.7635%207.33578%2019.7219%207.63122%2019.8488C7.94335%2019.9757%208.12604%2020.2002%208.08022%2020.5535L7.96174%2021.3343C7.91611%2021.8092%208.06525%2022.0022%208.32672%2022.0645C8.57574%2022.1247%208.80386%2022.0622%208.98424%2021.6123L9.27908%2020.875C9.40369%2020.5736%209.64065%2020.4446%2010.017%2020.478C10.3644%2020.5174%2010.5452%2020.7149%2010.5826%2021.0475L10.6966%2021.8326C10.7629%2022.3074%2010.964%2022.4466%2011.2255%2022.4466ZM5.562%2016.9333C4.07332%2015.4752%203.16036%2013.4635%203.16036%2011.2253C3.16036%208.97671%204.07332%206.96508%205.55989%205.5173C6.15741%204.91384%206.81262%205.05051%207.24182%205.79275L9.87388%2010.3521C10.2306%2010.9723%2010.2306%2011.4973%209.86544%2012.1299L7.24604%2016.6536C6.81473%2017.4043%206.16163%2017.5346%205.562%2016.9333ZM11.1737%2019.2387C10.4414%2019.2387%209.72166%2019.1365%209.04776%2018.9426C8.20755%2018.7162%208.0126%2018.0944%208.44602%2017.3458L11.0675%2012.8097C11.4203%2012.1872%2011.8746%2011.9217%2012.6092%2011.9217L17.8376%2011.9217C18.7004%2011.9217%2019.1333%2012.4174%2018.9032%2013.2389C18.0176%2016.6947%2014.9033%2019.2387%2011.1737%2019.2387ZM11.1427%2011.8015C10.8318%2011.8015%2010.5872%2011.5569%2010.5872%2011.246C10.5872%2010.9351%2010.8318%2010.6905%2011.1427%2010.6905C11.4536%2010.6905%2011.7086%2010.9351%2011.7086%2011.246C11.7086%2011.5569%2011.4536%2011.8015%2011.1427%2011.8015ZM12.6092%2010.5331C11.8892%2010.5331%2011.4203%2010.2634%2011.076%209.65783L8.44391%205.09845C8.01471%204.3541%208.21177%203.73015%209.04565%203.50796C9.71955%203.31412%2010.4414%203.20157%2011.1737%203.20157C14.9033%203.20157%2018.0301%205.7456%2018.9032%209.21808C19.1333%2010.0395%2018.7047%2010.5331%2017.8397%2010.5331Z%22%20fill%3D%22white%22%20fill-opacity%3D%220.85%22/%3E%0A%20%3C/g%3E%0A%3C/svg%3E%0A",
+  // 1.4: Karussell (Kachel in der Mitte, Nachbarseiten angedeutet)
+  "carousel": "data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Crect%20x=%226.5%22%20y=%224.5%22%20width=%2211%22%20height=%2215%22%20rx=%222.5%22/%3E%3Cpath%20d=%22M3%207.5v9M21%207.5v9%22/%3E%3C/svg%3E",
   // D-23 Raumsymbole (UX-06)
   "garage": "data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M3%2010.5%2012%204l9%206.5V20a1%201%200%200%201-1%201H4a1%201%200%200%201-1-1z%22/%3E%3Cpath%20d=%22M7%2021v-8h10v8M7%2015.7h10M7%2018.4h10%22/%3E%3C/svg%3E",
   "mailbox": "data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M8%207h8a4%204%200%200%201%204%204v7H4v-7a4%204%200%200%201%204-4z%22/%3E%3Cpath%20d=%22M8%207a4%204%200%200%201%204%204v7%22/%3E%3Cpath%20d=%22M15%2011V3h3.5v2.6H15%22/%3E%3Cpath%20d=%22M12%2018v3%22/%3E%3C/svg%3E",
@@ -3613,6 +3640,7 @@ const TILE_ICON = {
   lock: "lock-fill", lock_group: "lock-fill", cover_group: "curtain-open",
   cameras: "doorbell",
   entity_actions: "plug",
+  __carousel: "carousel",
 };
 
 const MEMBER_ID = /^[a-z_]+\.[a-z0-9_]+$/i;
@@ -4159,6 +4187,24 @@ const CUSTOM_TILE = { id: "__custom", label: "Custom card\u2026" };
 // What Casora reads sits in variables, and that is all this type offers.
 const RAW_TILE = { id: "__raw", label: "Custom card", noEntity: true,
   domains: [], fields: [], raw: true };
+// 1.4: Karussell (casora-swipe-card) – mehrere Kacheln als Seiten, im Studio eine eigene Kachelart.
+// Kein Eintrag in TILE_TYPES: findType vergleicht über template, die Swipe-Karte hat keins.
+const CAROUSEL_CARD = "custom:casora-swipe-card";
+const CAROUSEL_TILE = { id: "__carousel", label: "Carousel", noEntity: true, domains: [], fields: [], carousel: true };
+const isCarouselCard = (t) => !!t && /swipe|carousel/.test(String(t.type || "")) && Array.isArray(t.cards);
+// Seite eines Karussells bzw. Kachel, die eine werden kann: einfache Kachel, keine Hülle, keine Sammelkarte.
+const isPageTile = (t) => !!t && t.type === "custom:button-card" && !isContainerCard(t);
+// Kennung in variables.casora_carousel: Desktop und Handy erkennen dasselbe Karussell (sonst hießen alle
+// gleich). „n…“ = im Studio angelegt, „i…“ = importiertes, im Studio bearbeitet (übernimmt sein Gegenstück
+// am Handy, syncPairTiles). Importierte ohne Kennung bleiben am Handy, wie sie sind.
+const carouselOf = (t) => (isCarouselCard(t) ? t : t && t.type === "conditional" && isCarouselCard(t.card) ? t.card : null);
+const carouselId = (c) => String((c && c.variables && c.variables.casora_carousel) || "");
+function markCarousel(c, kind) {
+  if (c && !carouselId(c)) {
+    c.variables = { ...(c.variables || {}), casora_carousel: kind + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) };
+  }
+  return c;
+}
 const CUSTOM_IN_ROW = "row";
 const CUSTOM_BELOW = "below";
 
@@ -4345,6 +4391,60 @@ const COND_SIMPLE = (c) => {
   if (kind === "numeric_state" && c.below !== undefined && c.above === undefined) return { entity: c.entity, op: "below", value: String(c.below) };
   return null;
 };
+// 1.4: Welche Zustände eine Entität annehmen kann – für die Wert-Auswahl einer Bedingung statt Raten.
+// {kind: "list", values} | {kind: "number", unit} | null (frei, z. B. Zeitstempel).
+const COND_DOMAIN_STATES = {
+  light: ["on", "off"], switch: ["on", "off"], fan: ["on", "off"], input_boolean: ["on", "off"],
+  automation: ["on", "off"], script: ["on", "off"], siren: ["on", "off"], remote: ["on", "off"],
+  humidifier: ["on", "off"], binary_sensor: ["on", "off"], group: ["on", "off"], calendar: ["on", "off"],
+  schedule: ["on", "off"], update: ["on", "off"],
+  media_player: ["playing", "paused", "idle", "on", "off", "standby", "buffering"],
+  cover: ["open", "closed", "opening", "closing"], valve: ["open", "closed", "opening", "closing"],
+  lock: ["locked", "unlocked", "locking", "unlocking", "open", "opening", "jammed"],
+  alarm_control_panel: ["disarmed", "armed_home", "armed_away", "armed_night", "armed_vacation",
+    "armed_custom_bypass", "arming", "pending", "triggered", "disarming"],
+  vacuum: ["cleaning", "docked", "idle", "paused", "returning", "error"],
+  lawn_mower: ["mowing", "docked", "paused", "returning", "error"],
+  timer: ["idle", "active", "paused"], sun: ["above_horizon", "below_horizon"],
+  person: ["home", "not_home"], device_tracker: ["home", "not_home"],
+  weather: ["sunny", "clear-night", "partlycloudy", "cloudy", "fog", "rainy", "pouring", "lightning",
+    "lightning-rainy", "snowy", "snowy-rainy", "hail", "windy", "windy-variant", "exceptional"],
+};
+const COND_NUMERIC_DOMAINS = new Set(["sensor", "number", "input_number", "counter"]);
+function condStates(hass, id) {
+  const states = (hass && hass.states) || {};
+  const st = states[id];
+  const dom = String(id || "").split(".")[0];
+  const a = (st && st.attributes) || {};
+  const uniq = (xs) => [...new Set(xs.filter((x) => x != null && x !== "").map(String))];
+  let values = null;
+  if ((dom === "select" || dom === "input_select") && Array.isArray(a.options)) values = a.options;
+  else if (dom === "sensor" && a.device_class === "enum" && Array.isArray(a.options)) values = a.options;
+  else if (dom === "climate") values = ["off"].concat(Array.isArray(a.hvac_modes) ? a.hvac_modes : ["heat", "cool", "auto"]);
+  else if (dom === "water_heater" && Array.isArray(a.operation_list)) values = a.operation_list;
+  else if (COND_DOMAIN_STATES[dom]) values = COND_DOMAIN_STATES[dom].slice();
+  if (values && (dom === "person" || dom === "device_tracker")) {
+    // Zonen heißen im Zustand wie die Zone selbst („Arbeit“).
+    Object.keys(states).filter((k) => k.indexOf("zone.") === 0 && k !== "zone.home")
+      .forEach((k) => values.push((states[k].attributes || {}).friendly_name || k.slice(5)));
+  }
+  if (values) {
+    // Der aktuelle Zustand steht immer mit drin (Geräte mit eigenen Zuständen).
+    if (st && st.state && !["unavailable", "unknown"].includes(st.state)) values = values.concat(st.state);
+    return { kind: "list", values: uniq(values.concat("unavailable", "unknown")) };
+  }
+  const n = st ? Number(st.state) : NaN;
+  if (st && (COND_NUMERIC_DOMAINS.has(dom) || a.unit_of_measurement) && (Number.isFinite(n) || a.unit_of_measurement)) {
+    return { kind: "number", unit: a.unit_of_measurement || "" };
+  }
+  return null;
+}
+// Anzeige eines Zustands wie in HA („Spielt“, „Offen“ je nach Geräteklasse), gespeichert bleibt der Rohwert.
+function condStateLabel(hass, id, v) {
+  const st = hass && hass.states && hass.states[id];
+  try { if (st && typeof hass.formatEntityState === "function") return hass.formatEntityState(st, v) || v; } catch (e) { /* Rohwert */ }
+  return v;
+}
 function condModel(t) {
   if (!t || t.type !== "conditional" || (t.card && t.card.type === "conditional")) return null;
   const list = [].concat(t.conditions || []);
@@ -10722,6 +10822,22 @@ class CasoraPanel extends HTMLElement {
         .condrow > .combo:first-child { grid-column:1 / -1; }
         .condrow .combo { min-width:0; }
         .condval { min-width:0; padding:7px 10px; border-radius:var(--r-s); border:none; background:var(--casora-studio-chip, rgba(118,118,128,.18)); color:inherit; font:inherit; }
+        .condnum { display:flex; align-items:center; gap:6px; min-width:0; }
+        .condnum .condval { flex:1 1 auto; width:0; }
+        .condunit { flex:0 0 auto; color:var(--secondary-text-color, var(--casora-studio-dim, #8e8e93)); }
+        .carpages { display:flex; flex-direction:column; gap:2px; margin:2px 0 8px; }
+        .carhead { font-size:var(--t-foot); color:var(--secondary-text-color, var(--casora-studio-dim, #8e8e93)); padding:4px 0 2px; }
+        .carrow { display:flex; align-items:center; gap:10px; padding:8px 0; border-top:.5px solid var(--wash-line, var(--casora-studio-wash-line, rgba(255,255,255,.08))); }
+        .carrow .sicon { flex:0 0 auto; }
+        .cartx { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:1px; }
+        .cartx input { min-width:0; padding:4px 0; border:none; background:none; color:inherit; font:inherit; font-weight:600; }
+        .carsub { font-size:var(--t-caption); color:var(--secondary-text-color, var(--casora-studio-dim, #8e8e93)); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .carbtn { flex:0 0 auto; width:28px; height:28px; border-radius:50%; border:none; padding:0; cursor:pointer; display:grid; place-items:center;
+          background:var(--casora-studio-chip, rgba(118,118,128,.18)); color:inherit; }
+        .carbtn svg { width:14px; height:14px; }
+        .carbtn.cardel { background:rgba(255,69,58,.16); color:var(--casora-studio-bad, #ff453a); }
+        .carbtn:disabled { opacity:.3; cursor:default; }
+        .caradd { margin-top:4px; }
         .conddel { width:28px; height:28px; border-radius:50%; border:none; padding:0; cursor:pointer; background:rgba(255,69,58,.16); color:var(--casora-studio-bad, #ff453a); display:grid; place-items:center; }
         .conddel svg { width:14px; height:14px; }
         .condadd { align-self:flex-start; border:none; background:none; color:var(--casora-studio-link, #0a84ff); font:500 var(--t-foot) var(--casora-font-studio, system-ui); cursor:pointer; padding:4px 2px; }
@@ -19926,15 +20042,17 @@ class CasoraPanel extends HTMLElement {
         stack.classList.add("picks");
         const list = document.createElement("div");
         list.className = "flist askpicks";
-        list.setAttribute("role", "radiogroup");
+        // opts.multi (1.4, Karussell): mehrere Zeilen wählbar, OK liefert {picks: [...]}.
+        const multi = !!opts.multi;
+        list.setAttribute("role", multi ? "group" : "radiogroup");
         list.setAttribute("data-no-i18n", "");
-        pick = opts.picks[0].id;
+        pick = multi ? new Set(opts.picks.filter((p) => p.on).map((p) => p.id)) : opts.picks[0].id;
         const rows = [];
         opts.picks.forEach((p) => {
           const r = document.createElement("button");
           r.type = "button";
           r.className = "frow askpick";
-          r.setAttribute("role", "radio");
+          r.setAttribute("role", multi ? "checkbox" : "radio");
           const tx = document.createElement("span");
           tx.className = "askpicktx";
           const b = document.createElement("b");
@@ -19952,11 +20070,12 @@ class CasoraPanel extends HTMLElement {
           }
           r.appendChild(tx);
           const paint = () => rows.forEach(([el, id]) => {
-            el.classList.toggle("on", id === pick);
-            el.setAttribute("aria-checked", id === pick ? "true" : "false");
+            const on = multi ? pick.has(id) : id === pick;
+            el.classList.toggle("on", on);
+            el.setAttribute("aria-checked", on ? "true" : "false");
           });
-          r.onclick = () => { pick = p.id; paint(); };
-          r.ondblclick = () => { pick = p.id; paint(); ok.click(); };
+          r.onclick = () => { if (multi) { if (!pick.delete(p.id)) pick.add(p.id); } else pick = p.id; paint(); };
+          if (!multi) r.ondblclick = () => { pick = p.id; paint(); ok.click(); };
           rows.push([r, p.id]);
           list.appendChild(r);
           paint();
@@ -20074,6 +20193,7 @@ class CasoraPanel extends HTMLElement {
         input.focus();
       };
       ok.onclick = () => {
+        if (pick instanceof Set && !input) return finish({ picks: [...pick] });
         if (pick !== null && !input) return finish({ pick });
         if (!input) return finish(checkBox ? { ok: true, checked: checkBox.checked } : true);
         const v = input.value.trim();
@@ -20935,6 +21055,172 @@ class CasoraPanel extends HTMLElement {
       h.textContent = f.hint;
       fs.appendChild(h);
     }
+  }
+
+  // ── 1.4: Karussell ─────────────────────────────────────────────────────────────
+  // Gerät für eine Seite wählen: dieselbe Suche wie „Kachel hinzufügen“ (casora-panel-b-ux.js),
+  // liefert den Kandidaten {entity, name, type} oder null.
+  _carouselPick() {
+    if (typeof this._uxAdd !== "function") return Promise.resolve(null);
+    return new Promise((resolve) => {
+      this._uxAdd({ title: "Which device becomes a page?", onPick: resolve, onClose: () => resolve(null) });
+    });
+  }
+
+  // Kandidat → Kachel wie beim Hinzufügen (Kachelart des Geräts, Finder-Variablen, Name ohne Raum).
+  _carouselPageTile(c, room) {
+    const type = c && TILE_TYPES.find((t) => t.id === c.type);
+    if (!type) { this._status("No tile type fits this device.", "warn"); return null; }
+    const tile = newTile(type);
+    this._fillTile(tile, type, c.entity);
+    const B = window.casoraBasis;
+    if (c.name) tile.name = B && B.shortName ? B.shortName(c.name, this._roomLabel(room)) : c.name;
+    return tile;
+  }
+
+  _carouselAfter(room, tile) {
+    this._markDirty();
+    this._select({ group: "tiles", key: this._tileKey(tile) });
+    if (this._rebuildPreview) requestAnimationFrame(() => this._rebuildPreview());
+  }
+
+  // „Kachel hinzufügen“ → Karussell: gleich die erste Seite wählen, ohne sie entsteht nichts
+  // (die Swipe-Karte braucht mindestens eine Seite).
+  async _addCarousel(room) {
+    const c = await this._carouselPick();
+    const page = c && this._carouselPageTile(c, room);
+    if (!page) return;
+    const car = markCarousel({ type: CAROUSEL_CARD, cards: [page] }, "n");
+    room.tiles.push(car);
+    this._carouselAfter(room, car);
+  }
+
+  // Kachel + weitere einfache Kacheln des Raums → ein Karussell an der Stelle der ersten.
+  async _carouselJoin(room, shell) {
+    const others = room.tiles.filter((t) => t !== shell && isPageTile(t));
+    if (!others.length) return;
+    const typeName = (t) => { const ty = tileTypeAny(t); return ty ? trLabel(ty.label) : ""; };
+    const res = await this._ask({
+      title: "Combine into carousel",
+      message: "Pick the tiles that become further pages. This tile stays the first page.",
+      picks: others.map((t) => ({ id: this._tileKey(t), title: t.name || typeName(t) || t.entity || "", sub: t.name ? typeName(t) : "" })),
+      multi: true,
+      confirmLabel: "Combine",
+    });
+    const keys = new Set((res && res.picks) || []);
+    if (!keys.size) return;
+    const pages = [shell].concat(others.filter((t) => keys.has(this._tileKey(t))));
+    const car = markCarousel({ type: CAROUSEL_CARD, cards: pages }, "n");
+    room.tiles.splice(room.tiles.indexOf(shell), 1, car);
+    room.tiles = room.tiles.filter((t) => !pages.includes(t));
+    this._carouselAfter(room, car);
+    this._status("Combined into a carousel", "ok");
+  }
+
+  // Karussell → seine Seiten als einzelne Kacheln an derselben Stelle; eine Bedingung gilt für jede.
+  _carouselSplit(room, shell) {
+    const car = isCarouselCard(shell) ? shell : shell.card;
+    const at = room.tiles.indexOf(shell);
+    if (!isCarouselCard(car) || at < 0) return;
+    const pages = car.cards.map((p) => (shell === car ? p
+      : { type: "conditional", conditions: clone(shell.conditions || []), card: p }));
+    room.tiles.splice(at, 1, ...pages);
+    this._sel = null;
+    this._markDirty();
+    this._renderForm();
+    if (this._rebuildPreview) requestAnimationFrame(() => this._rebuildPreview());
+    this._status("Carousel split into separate tiles", "ok");
+  }
+
+  // Editor-Bereich: Seiten (Name, Reihenfolge, entfernen, hinzufügen) und die Optionen der Swipe-Karte.
+  _carouselPages(body, room, car) {
+    const tr = (x) => (window.casoraI18n ? window.casoraI18n.t(x) : x);
+    const changed = (redraw) => {
+      markCarousel(car, "i");
+      this._markDirty();
+      if (redraw) this._renderForm(); else this._syncPreview();
+    };
+    const box = document.createElement("div");
+    box.className = "carpages";
+    const head = document.createElement("div");
+    head.className = "carhead";
+    head.textContent = tr("Pages");
+    box.appendChild(head);
+    const btn = (cls, title, path, on) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "carbtn " + cls; b.title = tr(title);
+      b.setAttribute("aria-label", tr(title));
+      b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="' + path + '"/></svg>';
+      b.onclick = on;
+      return b;
+    };
+    car.cards.forEach((p, i) => {
+      const row = document.createElement("div");
+      row.className = "carrow";
+      const ty = tileTypeAny(p);
+      const g = document.createElement("span");
+      g.className = "sicon";
+      const ic = (p.variables || {}).icon || (ty && TILE_ICON[ty.id]) || "tile";
+      g.style.setProperty("--i", "url('" + iconUrl(ICON_DATA[ic] ? ic : "tile") + "')");
+      g.style.setProperty("--sc", (ty && TILE_COLOR[ty.id]) || TILE_TINT);
+      const txt = document.createElement("span");
+      txt.className = "cartx";
+      const nm = document.createElement("input");
+      nm.value = p.name || "";
+      nm.placeholder = ty ? trLabel(ty.label) : (p.entity || "");
+      nm.setAttribute("aria-label", tr("Name"));
+      nm.onchange = () => { p.name = nm.value.trim(); changed(false); };
+      const sub = document.createElement("span");
+      sub.className = "carsub";
+      sub.setAttribute("data-no-i18n", "");
+      const st = p.entity && this._hass && this._hass.states[p.entity];
+      sub.textContent = [ty ? trLabel(ty.label) : "", st ? (st.attributes.friendly_name || p.entity) : (p.entity || "")]
+        .filter(Boolean).join(" · ");
+      txt.append(nm, sub);
+      row.append(g, txt);
+      const move = (d) => { const j = i + d; [car.cards[i], car.cards[j]] = [car.cards[j], car.cards[i]]; changed(true); };
+      const up = btn("carup", "Move up", "M6 15l6-6 6 6", () => move(-1));
+      const dn = btn("cardn", "Move down", "M6 9l6 6 6-6", () => move(1));
+      up.disabled = i === 0;
+      dn.disabled = i === car.cards.length - 1;
+      // Die letzte Seite bleibt: ein leeres Karussell zeigt die Swipe-Karte nicht an („Karussell auflösen“ im Menü).
+      const rm = btn("cardel", "Remove page", "M6 12h12", () => { car.cards.splice(i, 1); changed(true); });
+      rm.disabled = car.cards.length < 2;
+      row.append(up, dn, rm);
+      box.appendChild(row);
+    });
+    const add = document.createElement("button");
+    add.type = "button"; add.className = "condadd caradd";
+    add.textContent = "+ " + tr("Add a page");
+    add.onclick = async () => {
+      const c = await this._carouselPick();
+      const page = c && this._carouselPageTile(c, room);
+      if (!page) return;
+      car.cards.push(page);
+      changed(true);
+    };
+    box.appendChild(add);
+    body.appendChild(box);
+
+    const optRow = (label, el) => {
+      const r = document.createElement("div");
+      r.className = "row";
+      const l = document.createElement("label");
+      l.textContent = label;
+      r.append(l, el);
+      body.appendChild(r);
+    };
+    const SECS = ["0", "5000", "10000", "20000", "30000"];
+    const cur = String(car.auto_swipe_interval || 0);
+    const auto = this._combo(SECS.includes(cur) ? cur : "0", SECS, "", (v) => {
+      if (v && v !== "0") car.auto_swipe_interval = Number(v); else delete car.auto_swipe_interval;
+      changed(false);
+    }, { fixed: true, labels: { 0: "Off", 5000: "Every 5 s", 10000: "Every 10 s", 20000: "Every 20 s", 30000: "Every 30 s" } });
+    optRow("Swipe automatically", auto.wrap);
+    optRow("Keep at the front", this._boolSwitch(car.always_active, false, (v) => {
+      if (v) car.always_active = true; else delete car.always_active;
+      changed(false);
+    }, "Keep at the front"));
   }
 
   async _addCustomCard(room) {
@@ -24701,13 +24987,14 @@ class CasoraPanel extends HTMLElement {
     // onlyIf: Typen, die eine bestimmte Integration brauchen (Pulse), nur anbieten, wenn sie da ist.
     const addable = TILE_TYPES.filter((t) => !t.hidden && (!t.onlyIf || t.onlyIf(this._hass))).slice().sort(byLabel)
       .concat(USER_TILE_TYPES.slice().sort(byLabel))
-      .concat([CUSTOM_TILE]);
+      .concat([CAROUSEL_TILE, CUSTOM_TILE]);
     const ka = window.casoraKachelart && window.casoraKachelart.addItems ? window.casoraKachelart : null;
     const addTile = async (id) => {
       if (ka && ka.addPick(this, id, room)) return;
       const type = addable.find((t) => t.id === id);
       if (!type) return;
       if (type.id === CUSTOM_TILE.id) return this._addCustomCard(room);
+      if (type.id === CAROUSEL_TILE.id) return this._addCarousel(room);
       if (!(await this._addTileAsk(room, type))) return;
       this._renderForm();
       // Bring it into view so it can be filled in without hunting for it.
@@ -24738,7 +25025,7 @@ class CasoraPanel extends HTMLElement {
       const fits = [];
       if (this._roomArea(room)) {
         addable.forEach((t) => {
-          if (t.id === CUSTOM_TILE.id || fits.length >= 8 || HOUSE_WIDE_TILES.has(t.id)) return;
+          if (t.id === CUSTOM_TILE.id || t.carousel || fits.length >= 8 || HOUSE_WIDE_TILES.has(t.id)) return;
           let c = [];
           try { c = this._tileCandidates(t, room); } catch (e) { c = []; }
           // Not what already has its tile here.
@@ -24881,15 +25168,63 @@ class CasoraPanel extends HTMLElement {
       m.rows.forEach((r, i) => {
         const line = document.createElement("div");
         line.className = "condrow";
-        const ent = this._combo(r.entity || "", ents, "Entity", (v) => { r.entity = v; save(); });
-        const op = this._combo(r.op, OPS, "", (v) => { r.op = v || "is"; save(); }, { fixed: true, labels: OPL });
-        const val = document.createElement("input");
-        val.className = "condval";
-        val.value = r.value || "";
-        val.placeholder = tr(r.op === "above" || r.op === "below" ? "Number" : "State, e.g. on");
-        val.spellcheck = false;
-        val.setAttribute("data-no-i18n", "");
-        val.onchange = () => { r.value = val.value.trim(); save(); };
+        // 1.4: Nach der Entität nur Zustände, die sie annehmen kann (Liste), Zahlen mit Einheit, sonst frei.
+        const kind = r.entity ? condStates(this._hass, r.entity) : null;
+        const ent = this._combo(r.entity || "", ents, "Entity", (v) => {
+          r.entity = v;
+          const k = v ? condStates(this._hass, v) : null;
+          const now = v && this._hass && this._hass.states[v] ? this._hass.states[v].state : "";
+          if (k && k.kind === "list") {
+            if (r.op === "above" || r.op === "below") r.op = "is";
+            if (!k.values.includes(r.value)) r.value = k.values.includes(now) ? now : k.values[0];
+          } else if (k && k.kind === "number") {
+            if (r.op === "is" || r.op === "isnot") r.op = "above";
+            if (!Number.isFinite(Number(String(r.value).replace(",", ".")))) r.value = Number.isFinite(Number(now)) ? now : "0";
+          }
+          save(); draw();
+        });
+        const ops = kind && kind.kind === "list" ? ["is", "isnot"] : OPS;
+        const op = this._combo(r.op, ops, "", (v) => { r.op = v || "is"; save(); draw(); }, { fixed: true, labels: OPL });
+        let val;
+        const multi = String(r.value || "").indexOf(",") >= 0;
+        if (kind && kind.kind === "list" && (r.op === "is" || r.op === "isnot") && !r.own && !multi) {
+          const OWN = "__casora_own";
+          const vals = kind.values.slice();
+          if (r.value && !vals.includes(r.value)) vals.unshift(r.value);
+          const labels = {};
+          vals.forEach((v) => { labels[v] = condStateLabel(this._hass, r.entity, v); });
+          labels[OWN] = "Custom value…";
+          const pick = this._combo(r.value || "", vals.concat(OWN), "", (v) => {
+            if (v === OWN) { r.own = true; draw(); const f = rows.children[i] && rows.children[i].querySelector(".condval"); if (f) f.focus(); return; }
+            r.value = v; save();
+          }, { fixed: true, labels });
+          pick.wrap.classList.add("condpick");
+          pick.wrap.setAttribute("data-no-i18n", "");
+          val = pick.wrap;
+        } else {
+          const inp = document.createElement("input");
+          inp.className = "condval";
+          inp.value = r.value || "";
+          const num = r.op === "above" || r.op === "below" || (kind && kind.kind === "number");
+          const now = r.entity && this._hass && this._hass.states[r.entity] ? this._hass.states[r.entity].state : "";
+          inp.placeholder = num ? tr("Number") + (kind && kind.unit ? " (" + kind.unit + ")" : "")
+            : now && !["unavailable", "unknown"].includes(now) ? tr("State, e.g.") + " " + now : tr("State, e.g. on");
+          if (num) inp.inputMode = "decimal";
+          inp.spellcheck = false;
+          inp.setAttribute("data-no-i18n", "");
+          inp.onchange = () => { r.value = inp.value.trim(); save(); };
+          val = inp;
+          if (num && kind && kind.unit) {
+            const box2 = document.createElement("span");
+            box2.className = "condnum";
+            const u = document.createElement("span");
+            u.className = "condunit";
+            u.textContent = kind.unit;
+            u.setAttribute("data-no-i18n", "");
+            box2.append(inp, u);
+            val = box2;
+          }
+        }
         const del = document.createElement("button");
         del.type = "button"; del.className = "conddel"; del.title = tr("Remove");
         del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 12h12"/></svg>';
@@ -24944,7 +25279,10 @@ class CasoraPanel extends HTMLElement {
     const shell = tile;
     const condIn = condInner(tile);
     if (condIn) { this._tileKeys.set(condIn, this._tileKey(shell)); tile = condIn; }
-    const type = tileTypeAny(tile) || RAW_TILE;
+    // 1.4: Karussell – auch in einer Bedingung (dann bleibt die Hülle die Kachel).
+    const carousel = isCarouselCard(tile) ? tile
+      : shell.type === "conditional" && isCarouselCard(shell.card) ? shell.card : null;
+    const type = carousel ? CAROUSEL_TILE : tileTypeAny(tile) || RAW_TILE;
     const glyphNow = () => (type.glyphFromEntity
       ? type.glyphFromEntity[String(tile.entity || "").split(".")[0]] : null);
 
@@ -24998,6 +25336,11 @@ class CasoraPanel extends HTMLElement {
     if (!(tile.name && tile.name.trim()) && type.label && !type.raw) { shown = type.label; kind = ""; }
     let condKind = false;
     if (contDesc) { shown = contDesc.label; kind = contDesc.how ? tr0(contDesc.how) : ""; condKind = true; }
+    if (carousel && !contDesc) {
+      const n = carousel.cards.length;
+      shown = tr0("Carousel");
+      kind = (n === 1 ? tr0("1 page") : tr0("{n} pages").replace("{n}", n));
+    }
     // Eigene Karte: oben ihr Name (eigener oder aus der Karte gelesen), darunter die Art.
     // Ohne beides nur einmal „Eigene Karte“.
     const isCustom = !condIn && !contDesc && type.id === "custom";
@@ -25117,12 +25460,21 @@ class CasoraPanel extends HTMLElement {
         menu.splice(1, 0, { id: "down", label: "Move below the tiles" });
       }
     }
+    // 1.4: Karussell auflösen bzw. einfache Kacheln zu einem Karussell zusammenfassen.
+    if (carousel) {
+      menu.unshift({ id: "edit", label: "Edit card\u2026" });
+      menu.splice(menu.length - 1, 0, { id: "carousel_split", label: "Split carousel" });
+    } else if (isPageTile(shell) && room.tiles.some((t) => t !== shell && isPageTile(t))) {
+      menu.splice(menu.length - 1, 0, { id: "carousel_join", label: "Combine into carousel\u2026" });
+    }
     // Casora: eigene Kachelart anlegen / wechseln (casora-panel-kachelart.js).
     const ka = window.casoraKachelart && window.casoraKachelart.menu ? window.casoraKachelart : null;
     if (ka) ka.menu(this, menu, { room, tile, type });
     dots.onclick = () => this._menuAt(dots, menu, (id) => {
       if (ka && ka.pick(this, id, { room, tile, type, anchor: dots })) return;
       if (id === "edit") return this._editRawCard(room, shell);
+      if (id === "carousel_split") return this._carouselSplit(room, shell);
+      if (id === "carousel_join") return this._carouselJoin(room, shell);
       if (id === "down") {
         const inner = condIn ? clone(shell) : tile.template === CUSTOM_TEMPLATE
           ? clone((tile.custom_fields || {}).card || {}) : omit(tile, ["variables"]);
@@ -25448,7 +25800,9 @@ class CasoraPanel extends HTMLElement {
     let entRowEl = null;
     const noEntityRow = !!type.noEntity;
     const entityInDrawer = !noEntityRow && !!type.entityAdvanced && !isGroup;
-    if (noEntityRow) {
+    if (carousel) {
+      this._carouselPages(body, room, carousel);
+    } else if (noEntityRow) {
       addRow("Name", nameIn);
     } else if (!entityInDrawer) {
       if (autoName) {
@@ -26218,6 +26572,7 @@ window.__casoraPanelInternals = {
   linkPair, syncPairRooms, syncPairTiles, syncTwinTile, phoneCondSnapshot, condChain, condModel, condWrite, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, setInnerSize, expandMobileConfig, extractMobileConfig,
   deriveEnergyRooms, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
   CASORA_ACCENTS, accentsShown, accentLabel, swatchCss,
+  condStates, isCarouselCard, isPageTile, carouselOf, carouselId, markCarousel, CAROUSEL_CARD, CAROUSEL_TILE,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)
 };
 
