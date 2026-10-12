@@ -44,7 +44,7 @@
     s.id = 'casora-landscape-phone-style';
     s.textContent =
       `:root{${LANDSCAPE_PHONE_VAR}:0;}` +
-      `@media (max-height:600px) and (orientation:landscape){:root{${LANDSCAPE_PHONE_VAR}:1;}}`;
+      `@media (max-height:500px) and (orientation:landscape), (max-height:600px) and (orientation:landscape) and (hover: hover){:root{${LANDSCAPE_PHONE_VAR}:1;}}`;
     document.head.appendChild(s);
   }
   const LANDSCAPE_GUTTER_CALC = `calc(60px * var(${LANDSCAPE_PHONE_VAR}, 0))`;
@@ -1466,13 +1466,14 @@
           '.casora-entity-grid{grid-template-columns:repeat(2,minmax(0,1fr));}' +
           '@media (max-width:767px) and (orientation:portrait),' +
           '(max-height:500px) and (orientation:portrait),' +
-          '(max-height:600px) and (orientation:landscape){' +
+          '(max-height:500px) and (orientation:landscape), ' +
+          '(max-height:600px) and (orientation:landscape) and (hover: hover){' +
           '.casora-entity-grid{grid-auto-rows:var(--casora-tile-row-h-current,66px);' +
           // Handy-Kachelabstand wie im Zuhause-Raster (smart-row): der Look darf ihn setzen.
           '--casora-entity-grid-gap:var(--casora-tile-row-gap-mobile,8px);' +
           'grid-auto-flow:row dense;align-items:stretch;}' +
           '.casora-entity-grid > [data-casora-size="large"]{grid-row:span 2;}}' +
-          '@media (max-height:600px) and (orientation:landscape){' +
+          '@media (max-height:500px) and (orientation:landscape), (max-height:600px) and (orientation:landscape) and (hover: hover){' +
           '.casora-entity-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}';
         (this._appendTarget || document.head).appendChild(st);
         this._entityGridStyle = st;

@@ -202,7 +202,7 @@ function cardFlag(cfg, flag) {
 
 function isDesktop() {
   const p = window.matchMedia('(max-width: 767px) and (orientation: portrait), (max-height: 500px) and (orientation: portrait)').matches;
-  const l = window.matchMedia('(max-height: 600px) and (orientation: landscape)').matches;
+  const l = window.matchMedia('(max-height: 500px) and (orientation: landscape), (max-height: 600px) and (orientation: landscape) and (hover: hover)').matches;
   return !p && !l;
 }
 
@@ -1813,7 +1813,7 @@ class CasoraSmartRow extends HTMLElement {
          and landscape share one in-flow scrolling layout. */
       @media (max-width: 767px) and (orientation: portrait),
              (max-height: 500px) and (orientation: portrait),
-             (max-height: 600px) and (orientation: landscape) {
+             (max-height: 500px) and (orientation: landscape), (max-height: 600px) and (orientation: landscape) and (hover: hover) {
         :host {
           position: relative;
           z-index: auto;
@@ -1892,7 +1892,7 @@ class CasoraSmartRow extends HTMLElement {
       }
 
       /* Landscape has enough width for a third column of entity cards. */
-      @media (max-height: 600px) and (orientation: landscape) {
+      @media (max-height: 500px) and (orientation: landscape), (max-height: 600px) and (orientation: landscape) and (hover: hover) {
         #container { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       }
 

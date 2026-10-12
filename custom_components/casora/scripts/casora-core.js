@@ -2320,7 +2320,7 @@ window.casoraMenuGlass = {
          mehr; passt ein Wert nicht, endet er mit „…“. Eigenes Attribut, damit casoraFitFix ihn nicht
          nachträglich doch verkleinert. Desktop unverändert (siehe unten). */
       let phone = false;
-      try { phone = window.matchMedia('(max-width: 767px), (max-height: 600px)').matches; } catch (e) { /* Desktop */ }
+      try { phone = window.matchMedia('(max-width: 767px), (max-height: 500px), (max-height: 600px) and (hover: hover)').matches; } catch (e) { /* Desktop */ }
       if (phone) {
         return '<span data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
           + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
