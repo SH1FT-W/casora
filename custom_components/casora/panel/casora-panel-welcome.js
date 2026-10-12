@@ -27,10 +27,9 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n1t: "Neue Raumleiste", n1: "Zuhause steht fest, die Räume scrollen frei. Am Handy sitzen Glocke und Menü unten in der Leiste.",
-      n2t: "Neuer Popup-Kopf", n2: "Symbol, Titel, Status und Hauptschalter in einer Zeile, Schalter in der Farbe des Geräts.",
-      n3t: "Überall dieselben Formen", n3: "Gleiche Ecken, Abstände und Schatten, das Studio in Inter und ein ruhigeres Gruppen-Thermostat.",
-      n4t: "Schneller am Handy", n4: "Das Handy lädt beim Öffnen rund 40 % weniger Daten."
+      n1t: "Geräte in Gruppen", n1: "Eine einzelne Lampe oder Jalousie in der Gruppe öffnet jetzt Casoras eigenes Popup.",
+      n2t: "Abfall am Vortag", n2: "Am Tag vor der Abholung ist das Symbol gut sichtbar auf dem Kreis in Tonnenfarbe.",
+      n3t: "Tank-Logos", n3: "Quadratische Marken-Logos füllen den ganzen Kreis."
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +39,9 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n1t: "New room bar", n1: "Home stays put, the rooms scroll freely. On the phone, bell and menu sit in the bottom bar.",
-      n2t: "New popup header", n2: "Icon, title, status and main switch in one row, switches in the device colour.",
-      n3t: "Same shapes everywhere", n3: "Matching corners, spacing and shadows, the Studio in Inter and a calmer group thermostat.",
-      n4t: "Faster on the phone", n4: "The phone loads about 40 % less data when it opens."
+      n1t: "Devices in groups", n1: "A single light or cover in a group now opens Casora's own popup.",
+      n2t: "Waste the day before", n2: "On the day before collection the icon is easy to see on the bin-coloured circle.",
+      n3t: "Fuel logos", n3: "Square brand logos fill the whole circle."
     },
   };
 
@@ -56,10 +54,9 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:gesture-swipe-horizontal", "n1t", "n1"],
-    ["mdi:dock-top", "n2t", "n2"],
-    ["mdi:shape-outline", "n3t", "n3"],
-    ["mdi:speedometer", "n4t", "n4"],
+    ["mdi:lightbulb-group-outline", "n1t", "n1"],
+    ["mdi:trash-can-outline", "n2t", "n2"],
+    ["mdi:gas-station-outline", "n3t", "n3"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

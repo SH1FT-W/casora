@@ -4,6 +4,14 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.3.3 – 12.10.2026
+
+### Fixed
+- **Group popups:** Tapping a single light or cover in the lights or covers group opens Casora's popup for that device instead of the Home Assistant dialog.
+- **Waste tile:** On the day before collection the icon sits on the full bin-coloured circle, like on collection day. Before, the light icon was hard to see on the active tile (#19).
+- **Fuel logos:** Square brand logos (JET, star, bft, Westfalen, Hoyer, BayWa) fill the whole circle instead of sitting in it with a border.
+- **Energy:** At night with an empty battery the Anker Solarbank reports code 40 (sleep mode). Casora no longer shows that as an error.
+
 ## 1.3.2 – 11.10.2026
 
 ### Fixed

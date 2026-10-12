@@ -4,6 +4,14 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.3.3 – 12.10.2026
+
+### Behoben
+- **Gruppen-Popups:** Ein Tipp auf eine einzelne Lampe oder Jalousie in der Beleuchtungs- oder Jalousien-Gruppe öffnet Casoras Popup des Geräts statt des Dialogs von Home Assistant.
+- **Abfall-Kachel:** Am Tag vor der Abholung steht das Symbol wie am Abholtag auf dem vollen Kreis in der Farbe der Tonne. Vorher war das helle Symbol auf der aktiven Kachel kaum zu sehen (#19).
+- **Tank-Logos:** Quadratische Marken-Logos (JET, star, bft, Westfalen, Hoyer, BayWa) füllen den ganzen Kreis, statt mit Rand darin zu stehen.
+- **Energie:** Nachts bei leerem Akku meldet die Anker Solarbank Code 40 (Ruhemodus). Casora zeigt das nicht mehr als Fehler.
+
 ## 1.3.2 – 11.10.2026
 
 ### Behoben
