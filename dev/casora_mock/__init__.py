@@ -193,7 +193,14 @@ class CasoraMock:
             if e.get("name") and entry.name != e["name"]:
                 upd["name"] = e["name"]
             if upd:
-                ents.async_update_entity(entry.entity_id, **upd)
+                try:
+                    ents.async_update_entity(entry.entity_id, **upd)
+                except ValueError:
+                    # HA 2026.10: Entität ohne eigenen Namen darf keinen eigenen Bereich haben
+                    # (gilt dann der des Geräts) – ohne Bereich weiter, sonst bricht der Aufbau ab.
+                    upd.pop("area_id", None)
+                    if upd:
+                        ents.async_update_entity(entry.entity_id, **upd)
 
     # ── Zustände ────────────────────────────────────────────────────────
     def apply_fixture(self) -> None:

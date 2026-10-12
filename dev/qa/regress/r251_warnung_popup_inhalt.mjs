@@ -49,6 +49,12 @@ for (const [label0, url, size] of [['Desktop', dash.url, { width: 1440, height: 
   const { page, browser } = await open({ ...size, theme: 'Casora', dark: false });
   await dashboard(page, url);
   await fakeStates(page, { [W1]: WSTATE, [W2]: { state: 'off', attributes: { friendly_name: 'Warnung 2' } } }, { sticky: true });
+  // HA 2026.10: Die Bedingungs-Karte (Handy) liest Zustände nicht mehr aus dem untergeschobenen hass –
+  // dort die Warnung kurz echt im Wegwerf-HA setzen (am Ende wieder entfernt).
+  if (label0 === 'Handy') {
+    await page.evaluate(async ([id, st]) => { await document.querySelector('home-assistant').hass.callApi('POST', 'states/' + id, st); }, [W1, WSTATE]);
+    await page.waitForTimeout(1200);
+  }
   const tile = await page.evaluate(() => { const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_weather_warning'));
     if (!b) return null; b.scrollIntoView({ block: 'center' }); const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
   await need(`${label}: Warn-Kachel sichtbar`, tile);
@@ -69,6 +75,7 @@ for (const [label0, url, size] of [['Desktop', dash.url, { width: 1440, height: 
   await check(`${label}: Popup offen`, pop);
   await check(`${label}: kein Leer-Hinweis`, pop && !pop.empty && !pop.shown, pop);
   if (phase === 'Warnung') await check(`${label}: Warnung im Popup`, pop && pop.warn, pop);
+  if (label0 === 'Handy') await page.evaluate((id) => document.querySelector('home-assistant').hass.callApi('DELETE', 'states/' + id), W1).catch(() => {});
   await browser.close();
 }
 await finish();

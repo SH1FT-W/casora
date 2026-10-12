@@ -10,7 +10,7 @@
 // Erwartet: Eine Sammelkarte ist so aktiv wie ihre Kacheln aussehen – grau → hinten; eine Sammelkarte mit
 // sichtbar aktiver Kachel (Pflanze mit Problem) bleibt vorn.
 // Es wird nichts gespeichert: Zustände nur im Browser untergeschoben (fakeStates).
-import { open, usePage, dashboard, fakeStates, check, need, finish } from './lib.mjs';
+import { open, usePage, dashboard, fakeStates, check, need, finish, atFinish } from './lib.mjs';
 import { ws } from '../ws.mjs';
 
 // Dashboard mit einer Kachelreihe, die eine Aquarium-Sammelkarte (active_entities) enthält.
@@ -42,6 +42,19 @@ await dashboard(page, hit.url, 5);
 const patch = { [hit.sensor]: { state: 'on' } };
 if (hit.plant) patch[hit.plant] = { state: 'problem' };
 await fakeStates(page, patch, { sticky: true });
+// HA 2026.10: Die Bedingungs-Hülle der Sammelkarte liest Zustände nicht mehr aus dem untergeschobenen hass –
+// dieselben Zustände kurz echt im Wegwerf-HA setzen, am Ende den alten Stand zurück.
+const was = await page.evaluate(async (p) => {
+  const h = document.querySelector('home-assistant').hass, out = {};
+  for (const [id, v] of Object.entries(p)) {
+    const r = await h.callApi('GET', 'states/' + id).catch(() => null);
+    out[id] = r ? { state: r.state, attributes: r.attributes } : null;
+    await h.callApi('POST', 'states/' + id, { state: v.state, attributes: r ? r.attributes : {} });
+  }
+  return out;
+}, patch);
+atFinish(() => page.evaluate(async (w) => { const h = document.querySelector('home-assistant').hass;
+  for (const [id, v] of Object.entries(w)) await (v ? h.callApi('POST', 'states/' + id, v) : h.callApi('DELETE', 'states/' + id)).catch(() => {}); }, was).catch(() => {}));
 // Sortieren wartet SORT_DELAY_MS (2,5 s) nach der Änderung.
 await page.waitForTimeout(4500);
 
