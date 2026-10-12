@@ -27,9 +27,9 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n1t: "Geräte in Gruppen", n1: "Eine einzelne Lampe oder Jalousie in der Gruppe öffnet jetzt Casoras eigenes Popup.",
-      n2t: "Abfall am Vortag", n2: "Am Tag vor der Abholung ist das Symbol gut sichtbar auf dem Kreis in Tonnenfarbe.",
-      n3t: "Tank-Logos", n3: "Quadratische Marken-Logos füllen den ganzen Kreis."
+      n1t: "Personen-Popup", n1: "Karte, Handy und die Orte des Tages – statt des Kartendialogs von Home Assistant.",
+      n2t: "Karussell im Studio", n2: "Mehrere Kacheln als Seiten einer Kachel. Anlegen, zusammenfassen, sortieren, auflösen.",
+      n3t: "Bedingungen zum Auswählen", n3: "Nach der Entität stehen nur ihre möglichen Zustände zur Wahl – kein Raten mehr."
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -39,9 +39,9 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n1t: "Devices in groups", n1: "A single light or cover in a group now opens Casora's own popup.",
-      n2t: "Waste the day before", n2: "On the day before collection the icon is easy to see on the bin-coloured circle.",
-      n3t: "Fuel logos", n3: "Square brand logos fill the whole circle."
+      n1t: "Person popup", n1: "Map, phone and today's places – instead of the Home Assistant map dialog.",
+      n2t: "Carousel in the Studio", n2: "Several tiles as pages of one tile. Create, combine, reorder, split.",
+      n3t: "Conditions to pick from", n3: "After the entity, only its possible states are offered – no more guessing."
     },
   };
 
@@ -54,9 +54,9 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:lightbulb-group-outline", "n1t", "n1"],
-    ["mdi:trash-can-outline", "n2t", "n2"],
-    ["mdi:gas-station-outline", "n3t", "n3"],
+    ["mdi:account-circle-outline", "n1t", "n1"],
+    ["mdi:view-carousel-outline", "n2t", "n2"],
+    ["mdi:format-list-checks", "n3t", "n3"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

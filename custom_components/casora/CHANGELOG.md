@@ -4,6 +4,13 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.4.0 – 13.10.2026
+
+### New
+- **Person popup:** tapping a person tile or badge opens Casora's own popup instead of the Home Assistant map dialog. On top the Home Assistant map with zones and the path of the last 24 hours, then the phone (battery, connection), "Way home" with distance and direction, and the places of the last three days. With the Companion app: get the location now, send a message, make the phone ring (even on silent).
+- **Carousel in the Studio:** "Carousel" is now a tile type. Add pages, reorder or remove them, swipe automatically, keep it at the front. Existing tiles can be combined into a carousel from their ⋯ menu, and a carousel can be split back into tiles. New carousels and changed pages go to the phone layout too.
+- **Conditions with a choice of states:** after picking an entity, the condition only offers the states it can have (playing, paused, open, the options of a select …), shown in your language. Numbers get a number field with their unit. "Custom value …" stays as a way out.
+
 ## 1.3.3 – 12.10.2026
 
 ### Fixed
