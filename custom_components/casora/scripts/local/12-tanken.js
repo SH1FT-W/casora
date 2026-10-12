@@ -162,16 +162,16 @@
     [['aral'], 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Aral_Logo.svg/250px-Aral_Logo.svg.png'],
     [['shell'], FAV('shell.de')], [['esso'], FAV('esso.de')],
     [['totalenergies', 'total'], WM('f/f0/Logo_TotalEnergies_%282021%29.png')],
-    [['jet'], FAV('jet.de')], [['avia'], FAV('avia.de')], [['omv'], FAV('omv.de')], [['hem'], FAV('hem-tankstelle.de')],
-    [['star'], FAV('star.de')], [['orlen'], WM('d/d1/Orlen_wordmark_logo.svg')], [['bft'], FAV('bft.de')],
-    [['westfalen'], FAV('westfalen.com')], [['hoyer'], FAV('hoyer.de')], [['q1'], WM('2/25/Q1_logo.svg')],
+    [['jet'], FAV('jet.de'), { fill: 1 }], [['avia'], FAV('avia.de')], [['omv'], FAV('omv.de')], [['hem'], FAV('hem-tankstelle.de')],
+    [['star'], FAV('star.de'), { fill: 1 }], [['orlen'], WM('d/d1/Orlen_wordmark_logo.svg')], [['bft'], FAV('bft.de'), { fill: 1 }],
+    [['westfalen'], FAV('westfalen.com'), { fill: 1 }], [['hoyer'], FAV('hoyer.de'), { fill: 1 }], [['q1'], WM('2/25/Q1_logo.svg')],
     [['agip', 'eni'], FAV('agip.de')], [['tamoil'], WM('5/5a/Tamoil.svg')],
     // Lanfer: nur das runde Zeichen links aus dem Schriftzug (Ausschnitt), Wiro: Oval mit viel Rand (vergrößert).
     [['lanfer'], 'https://www.lanfer-energie.de/hs-fs/hubfs/Lanfer%20One-Pager/Lanfer_Energie_Logo_2%20C_ohne%20verlauf%20(1).png?width=600', { crop: [0, 0, 120, 119, 600, 137] }],
     [['raiffeisen', 'rwg'], WM('9/93/Raiffeisen-Giebelkreuz.svg')], [['team'], FAV('team.de')],
     [['classic'], 'https://www.classic-oil.de/wp-content/uploads/2021/05/CLASSIC_Logo_web_home.png'],
     [['calpam'], WM('1/12/Calpam_Mineral%C3%B6l-Gesellschaft_logo.svg')], [['sprint', 'go'], FAV('go-sprint.de')],
-    [['baywa'], FAV('baywa.de')], [['globus'], FAV('globus.de')], [['kaufland'], WM('d/d0/Kaufland_Logo.svg')],
+    [['baywa'], FAV('baywa.de'), { fill: 1 }], [['globus'], FAV('globus.de')], [['kaufland'], WM('d/d0/Kaufland_Logo.svg')],
     [['famila'], FAV('famila.de')], [['marktkauf'], WM('6/6b/Marktkauf.svg')], [['v markt', 'vmarkt'], WM('7/75/V-Markt-Logo.png')],
     [['gulf'], FAV('gulf.de')], [['ed'], FAV('ed-tankstellen.de')], [['score'], FAV('score-tankstellen.de')],
     [['nordoel'], FAV('nordoel.de')], [['pludra'], FAV('pludra-tankstellen.de')],
@@ -207,6 +207,9 @@
   // fast über die volle Breite, Ausschnitt (crop) zeigt nur das Zeichen am linken Rand.
   var fit = function (r, o) {
     o = o || {};
+    // Quadratische Logos mit eigenem Grund (JET, star, Hoyer …): füllen den ganzen Kreis, statt als Quadrat
+    // mit Rand darin zu stehen.
+    if (o.fill) return 'left:0;top:0;width:100%;height:100%;object-fit:cover;';
     var wide = !o.crop && r > 1.6, ins = wide ? 8 : 16;
     // Ausschnitt [x, y, b, h, Bildbreite, Bildhöhe]: genau dieses Rechteck mittig in den Kreis (Lanfer-Zeichen).
     if (Array.isArray(o.crop)) {
