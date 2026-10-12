@@ -3682,6 +3682,12 @@
     } else if (d.a === 'room') {
       document.dispatchEvent(new CustomEvent('ll-custom', { detail: { casora_lf_gid: d.gid, casora_lf_action: 'toggle', casora_lf_idx: d.idx } }));
     } else if (d.a === 'mi') {
+      // Einzelne Lampe: Casoras Licht-Popup wie an der Kachel, HAs Dialog nur als Rückfall.
+      if (window._casoraNotifyOpenViaCard) {
+        window._casoraSuppressDismiss = Date.now() + 600;
+        window._casoraNotifyOpenViaCard(d.id, function (ok) { if (!ok && window.casoraPopup) window.casoraPopup.moreInfo(d.id); }, null, true);
+        return;
+      }
       var ha = document.querySelector('home-assistant');
       var pop = window.casoraPopup && window.casoraPopup.element;
       if (pop) pop._miOpenedAt = Date.now();

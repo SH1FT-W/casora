@@ -984,6 +984,20 @@ window._casoraColGap = window._casoraColGap || function (keys) {
 
   window._casoraNotifyOpenViaCard = openViaCard;
 
+  // Zeile im Gruppen-Popup (Jalousien): einzelnes Gerät mit Casoras Popup öffnen, HAs Dialog nur als Rückfall.
+  if (!window._casoraMemberOpen) {
+    window._casoraMemberOpen = true;
+    document.addEventListener('ll-custom', function (e) {
+      var d = (e.detail && e.detail.event_data) ? e.detail.event_data : (e.detail || {});
+      var id = d.casora_member_open;
+      if (!id) return;
+      if (Date.now() - (window._casoraLastScrollTs || 0) < 400) return;
+      e.stopPropagation();
+      window._casoraSuppressDismiss = Date.now() + 600;
+      openViaCard(id, function (ok) { if (!ok && window.casoraPopup) window.casoraPopup.moreInfo(id); }, null, true);
+    }, true);
+  }
+
   (function bindRowOpen() {
     if (window._casoraNotifyRowOpen) return;
     window._casoraNotifyRowOpen = true;

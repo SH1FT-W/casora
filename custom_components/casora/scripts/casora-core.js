@@ -8905,6 +8905,15 @@ window.casoraMenuGlass = {
         if (t && t.dataset && t.dataset.casoraMi) {
           if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
           window._casoraUILastTap = Date.now();
+          // Licht und Jalousie in einer Gruppe: Casoras Popup des Geräts statt HAs Dialog (01-basis.js).
+          // Ohne Kachelsuche: die fände die Gruppenkarte selbst (Gerät steht in ihrer Liste).
+          var mid = t.dataset.casoraMi;
+          if (/^(light|cover)\./.test(mid) && window._casoraNotifyOpenViaCard) {
+            window._casoraSuppressDismiss = Date.now() + 600;
+            window._casoraNotifyOpenViaCard(mid, function (ok) { if (!ok && window.casoraPopup) window.casoraPopup.moreInfo(mid); }, null, true);
+            ev.preventDefault(); ev.stopPropagation();
+            return;
+          }
           var ha = document.querySelector('home-assistant');
           if (ha) {
             var el = window.casoraPopup && window.casoraPopup.element;
