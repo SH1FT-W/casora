@@ -17933,7 +17933,7 @@ class CasoraPanel extends HTMLElement {
     }
     this._stackKeys = { rooms: roomKeys, bands: ["__stack_badges", "__stack_tiles", "__stack_popups"] };
     this._stackPopups(pane, room);
-    // Neu in einen Raum (oder aus einer Dashboard-Seite zurück): Darstellung offen, der Rest zu.
+    // Neu in einen Raum (oder aus einer Dashboard-Seite zurück): alles zu (1.5, vorher war Darstellung offen).
     const here = (this._dashUrl || "") + "|" + room.path;
     const ret = this._stackReturn;
     this._stackReturn = null;
@@ -17945,7 +17945,7 @@ class CasoraPanel extends HTMLElement {
           if (ret.open.includes(k)) this._folded.delete(k); else this._folded.add(k);
         });
       } else {
-        roomKeys.forEach((k, i) => { if (i === 0) this._folded.delete(k); else this._folded.add(k); });
+        roomKeys.forEach((k) => this._folded.add(k));
         this._stackKeys.bands.forEach((k) => this._folded.add(k));
       }
     }
@@ -25083,6 +25083,9 @@ class CasoraPanel extends HTMLElement {
     const ka = window.casoraKachelart && window.casoraKachelart.addItems ? window.casoraKachelart : null;
     const addTile = async (id) => {
       if (ka && ka.addPick(this, id, room)) return;
+      // 1.5: Community (casora-panel-community.js).
+      if (id === "__com_catalog" && this._comCatalog) return this._comCatalog();
+      if (id === "__com_wish" && this._comWish) return this._comWish();
       const type = addable.find((t) => t.id === id);
       if (!type) return;
       if (type.id === CUSTOM_TILE.id) return this._addCustomCard(room);
@@ -25135,6 +25138,12 @@ class CasoraPanel extends HTMLElement {
       const kaItems = ka ? ka.addItems(this) : [];
       const at = rest.findIndex((x) => x.id === CUSTOM_TILE.id);
       if (kaItems.length) rest.splice(at < 0 ? rest.length : at, 0, ...kaItems);
+      // Ganz unten: Karten anderer und Kartenwunsch (1.5).
+      if (this._comCatalog) {
+        const g = trLabel("Community");
+        rest.push({ id: "__com_catalog", label: trLabel("Community cards…"), group: g, quiet: false },
+          { id: "__com_wish", label: trLabel("Request a card…"), group: g, quiet: false });
+      }
       this._menuAt(add, fits.concat(rest), addTile, { search: trLabel("Search tile types") });
     };
     bar.appendChild(add);

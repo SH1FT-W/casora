@@ -2275,6 +2275,7 @@
     "Casora couldn't write the backup file. Check that the folder casora_sicherungen in your Home Assistant configuration can be written.": "Casora konnte die Sicherung nicht schreiben. Prüfe, ob der Ordner casora_sicherungen in deiner Home-Assistant-Konfiguration beschreibbar ist.",
     "Something went wrong while saving the backup.": "Beim Sichern ist etwas schiefgelaufen.",
     "Custom value…": "Eigener Wert …",
+    "Community": "Community",
     "This kind of tile can't be shared.": "Diese Art Kachel lässt sich nicht teilen.",
     "Kind of tile": "Kachelart",
     "This is what will be public": "Das wird öffentlich",

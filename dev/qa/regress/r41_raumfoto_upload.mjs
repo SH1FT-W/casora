@@ -52,6 +52,8 @@ const show = () => pg.evaluate(() => {
   if (i < 0) i = rooms.findIndex((r, n) => n > 0 && /-demo$/.test((r.variables || {}).image || ''));
   if (i < 0) i = 1;
   p._room = i; p._sel = null; p._renderTabs(); p._renderForm();
+  // Seit 1.5 startet ein Raum mit allen Abschnitten zu: Darstellung hier ausdrücklich öffnen.
+  if (p._folded && p._folded.has('Appearance')) { p._folded.delete('Appearance'); p._renderForm(); }
   if (!p.__stSpy) {
     p.__stSpy = true; window.__st = [];
     const o = p._status.bind(p);
