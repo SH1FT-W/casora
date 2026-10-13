@@ -1637,7 +1637,9 @@
   "Es klingelt auch, wenn es leise gestellt ist.": "It rings even when it is set to silent.",
   "Klingeln": "Ring",
   "Hier bin ich!": "I'm here!",
-  "Person": "Person"
+  "Person": "Person",
+  "jetzt hier": "here now",
+  "Keine Änderung in den letzten drei Tagen": "No change in the last three days"
  },
  "patterns": [
   [
@@ -3335,6 +3337,10 @@
   [
    "^gestern (\\d{1,2}:\\d{2}) – (\\d{1,2}:\\d{2})$",
    "yesterday {1} – {2}"
+  ],
+  [
+   "^bis (\\d{1,2}:\\d\\d)$",
+   "until {1}"
   ]
  ]
 }
