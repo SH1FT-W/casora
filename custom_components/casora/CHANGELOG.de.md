@@ -9,6 +9,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ### Behoben
 - **Kachel-Status:** Ein langer Status macht die Schrift nicht mehr so klein, dass man ihn kaum lesen kann. Die Schrift bleibt gleich groß; passt der Text nicht, zeigt die Kachel den ersten Teil und zählt den Rest („Trocknung endet +1“), alles steht im Popup. Das gilt für alle Kacheln, am Desktop und am Handy.
 - **Warn-Kachel:** NINA-Warnungen, die nicht vom Wetterdienst kommen, behalten ihre Schreibweise und verlieren die Vorsilbe „Gefahreninformation:“ („Hochwasser an der Ems“ statt „Hochwasser An Der Ems“). Bei mehreren Warnungen zählt die Kachel die übrigen mit.
+- **Tanken:** Autos, die ihren Tank in Litern statt in Prozent melden (etwa Volvo, „Kraftstoffmenge“), erscheinen unter „Kraftstoff je Auto“. Vorher meldete Casora, es gebe kein Auto mit Tankfüllstand.
 - **Saugroboter:** Fehler der Station sind übersetzt (zum Beispiel „Schmutzwassertank voll“ statt „waste water tank full“).
 - **Glocke:** Das Mitteilungsfenster ist immer gleich breit (360 px, am Handy bis zum Bildschirmrand). Vorher war es bei kurzen Meldungen schmal und die beiden Knöpfe unten gedrängt. Die Überschrift „Neu“ hat oben denselben Abstand zum Rand wie die Zeilen zur Seite.
 - **Update-Logos:** Die Markenlogos im Update-Popup haben dieselbe Form wie die übrigen Symbole und füllen sie aus, statt rund in einem abgerundeten Quadrat zu sitzen. Im Dunkeln gibt es keinen hellen Rand mehr, Updates ohne Logo bekommen ein neutrales Symbol.

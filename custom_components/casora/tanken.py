@@ -69,10 +69,11 @@ SLOT_STALE = 3600                 # Standort ohne Auto seit 1 h: vergessen
 KEY_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
 # Auto = Gerät mit Tankfüllstand (wie window._casoraCar, Rolle „tankfullstand“); Diesel, wenn es
-# eine AdBlue-/SCR-Reichweite hat.
-FUEL_KEYS = {"fuel_level_current_level", "fuel_level", "remaining_fuel_percent", "fuel_percentage"}
+# eine AdBlue-/SCR-Reichweite hat. 1.4.1: auch Tankinhalt in Litern (Volvo: fuel_amount, „Kraftstoffmenge“) –
+# hier zählt nur, dass das Auto einen Tank hat.
+FUEL_KEYS = {"fuel_level_current_level", "fuel_level", "remaining_fuel_percent", "fuel_percentage", "fuel_amount"}
 FUEL_ENDS = ("tankfullstand", "fuel_level_current_level", "fuel_level", "remaining_fuel_percent",
-             "fuel_percentage", "fuel_level_percentage", "tank_level")
+             "fuel_percentage", "fuel_level_percentage", "tank_level", "kraftstoffmenge", "fuel_amount")
 DIESEL_KEYS = {"scr_range", "adblue_range"}
 DIESEL_ENDS = ("scr_reichweite", "scr_range", "adblue_range", "adblue_reichweite")
 HELPER_PLATFORMS = {"utility_meter", "statistics", "derivative", "integration", "template", "filter",
