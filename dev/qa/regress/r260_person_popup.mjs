@@ -2,7 +2,7 @@
 // @parallel: ui
 // @deckt: custom_components/casora/scripts/local/15-person.js
 // 1.4 (Wunsch 12.10.2026): Tipp auf eine Person öffnete HAs Kartendialog. Erwartet: Casoras Personen-Popup
-// (Entwurf B): Kopf mit Ort und „seit …“, HAs Karte, „Zuletzt“ aus dem Verlauf, unterwegs „Nach Hause“ mit
+// (Entwurf B): Kopf mit Ort und „seit …“, HAs Karte, „Verlauf“ als Zeitleiste (seit 1.4.2, vorher „Zuletzt“), unterwegs „Nach Hause“ mit
 // Entfernung; Karte direkt unter dem Kopf (nicht hochgeschoben). Zustände nur vorübergehend im Wegwerf-HA.
 import { open, casoraDashboard, dashboard, check, need, finish, usePage, atFinish } from './lib.mjs';
 
@@ -43,12 +43,12 @@ const r = await page.evaluate(() => {
   return { open: !!sf, haDialog: !!(mi && mi.shadowRoot && mi.shadowRoot.querySelector('ha-dialog, ha-adaptive-dialog, [open]')),
     status: sr && (sr.querySelector('.header-status') || {}).textContent, map: !!map,
     gap: map && bar ? Math.round(map.getBoundingClientRect().top - bar.getBoundingClientRect().bottom) : null,
-    zuletzt: /Zuletzt/.test(txt), nachHause: /Nach Hause/.test(txt), ring: !!(sr && sr.querySelector('.header-ring:not([hidden]) .g, .header-ring:not([hidden]) .im')) };
+    zuletzt: /Verlauf/.test(txt) && window.__pierce('.cpe-verlauf').length > 0, nachHause: /Nach Hause/.test(txt), ring: !!(sr && sr.querySelector('.header-ring:not([hidden]) .g, .header-ring:not([hidden]) .im')) };
 });
 await check('Casoras Popup offen, kein HA-Dialog', r.open && !r.haDialog, r);
 await check('Kopf: Ort und „seit …“', /QA Arbeit/.test(r.status || '') && /seit/.test(r.status || ''), r.status);
 await check('Kopf mit Symbol', r.ring, r);
 await check('Karte (HAs Kartenkarte)', r.map, r);
 await check('Karte nicht unter den Kopf geschoben (Abstand ≥ 0)', r.gap !== null && r.gap >= 0, r.gap);
-await check('„Zuletzt“ und unterwegs „Nach Hause“', r.zuletzt && r.nachHause, r);
+await check('„Verlauf“ (Zeitleiste) und unterwegs „Nach Hause“', r.zuletzt && r.nachHause, r);
 await finish();
