@@ -11944,6 +11944,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
          (36 − 19) / 2 = 8,5 rastet Chrome auf 9 – jedes Symbol saß ½ px rechts unterhalb der Mitte. */
       wst.textContent = '.casora-window.casora-notify-menu{--casora-soft-icon-size:36px;}'
         + W + '.hui-plate{gap:0!important;}'
+        /* 1.4.1: erste Abschnittsüberschrift („Neu“) so weit vom oberen Rand wie die Zeilen vom seitlichen. */
+        + W + '.hui-slbl:first-child{margin-top:6px!important;}'
         /* 1.3 Tokens: Zeile = Kreis/2 + Rand (konzentrisch zum Fenster), Abstände im 4er-Raster. */
         + W + '.hui-srow{background:transparent!important;box-shadow:none!important;min-height:52px!important;'
         +   'padding:var(--casora-space-2,8px) var(--casora-space-4,14px) var(--casora-space-2,8px) var(--casora-space-2,8px)!important;'
