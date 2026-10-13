@@ -9,10 +9,12 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ### New
 - **Greeting on the home page:** in the Studio (home page › Appearance › Title) the room name can become "Good morning", "Good afternoon" or "Good evening", optionally with the first names of the people at home or of the signed-in user. A long greeting gets smaller and stays on one line, on desktop and phone.
 - **Person popup:** tapping a person tile, badge or a person's notification in the bell opens Casora's own popup instead of the Home Assistant map dialog. On top the Home Assistant map with zones and the path of the last 24 hours, then the phone (battery, connection), "Way home" with distance and direction, and the places of the last three days. With the Companion app: get the location now, send a message, make the phone ring (even on silent).
+- **Clean up the bell:** swipe a notification to the left on the phone to remove it, or use the × that appears on hover on the desktop. "Remove all" empties the bell after a short confirmation. A removed notification comes back only when something changes, and it stays removed on all devices of the same Home Assistant user.
 - **Carousel in the Studio:** "Carousel" is now a tile type. Add pages, reorder or remove them, swipe automatically, keep it at the front. Existing tiles can be combined into a carousel from their ⋯ menu, and a carousel can be split back into tiles. New carousels and changed pages go to the phone layout too.
 - **Conditions with a choice of states:** after picking an entity, the condition only offers the states it can have (playing, paused, open, the options of a select …), shown in your language. Numbers get a number field with their unit. "Custom value …" stays as a way out. Text sensors without a list (template sensors, Team Tracker) offer the states from their history, and "Several …" picks more than one state at once.
 
 ### Fixed
+- **Bell:** Tapping a notification opens its popup without the wait. Before, Casora loaded the whole dashboard configuration (several MB) again on every tap.
 - **Pulse tile:** When a device is only due soon (a battery at 18 %, for example) and nothing is broken, the tile says "1 due soon" instead of "All ok". It still only lights up for real problems.
 
 ## 1.3.3 – 12.10.2026

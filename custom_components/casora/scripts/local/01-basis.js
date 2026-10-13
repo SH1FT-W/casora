@@ -458,7 +458,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       return window._casoraTapTile(entityId, function (ok) { if (ok) done(true); else openViaCard(entityId, done, null, true, true); });
     }
     var seg = (location.pathname || '').split('/').filter(Boolean);
-    h.callWS({ type: 'lovelace/config', url_path: seg[0] || 'lovelace' }).then(function (cfg) {
+    (window._casoraCfgOnce ? window._casoraCfgOnce(h, seg[0] || 'lovelace') : h.callWS({ type: 'lovelace/config', url_path: seg[0] || 'lovelace' })).then(function (cfg) {
       var found = explicitCfg || findCardCfg(cfg, entityId);
       // Keine eigene Karte (Alarm/Schloss stecken oft nur als Badge in der Raumkarte): die Kachel-Vorlage
       // der Domäne – dasselbe Popup wie deren Kachel statt HAs Dialog (B-NOTI).

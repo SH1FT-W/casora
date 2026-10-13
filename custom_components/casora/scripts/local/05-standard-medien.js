@@ -694,7 +694,7 @@ window._hpMultiTap = function (ev, kind) {
       var via = window._casoraNotifyOpenViaCard, h = hass && hass.callWS ? hass : (document.querySelector('home-assistant') || {}).hass;
       if (!via || !h || !h.callWS) return more();
       var seg = (location.pathname || '').split('/').filter(Boolean);
-      h.callWS({ type: 'lovelace/config', url_path: seg[0] || 'lovelace' }).then(function (cfg) {
+      (window._casoraCfgOnce ? window._casoraCfgOnce(h, seg[0] || 'lovelace') : h.callWS({ type: 'lovelace/config', url_path: seg[0] || 'lovelace' })).then(function (cfg) {
         var hit = null;
         var st = (h && h.states) || {};
         var HOUSE = /(^|_)(haus|house|home|gesamt|total|verbrauch|consumption|load|netz|grid)(_|$)/i;

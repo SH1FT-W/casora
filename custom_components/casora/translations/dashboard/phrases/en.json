@@ -1,5 +1,9 @@
 {
  "exact": {
+  "Entfernen": "Remove",
+  "Alle entfernen": "Remove all",
+  "Alle Meldungen entfernen?": "Remove all notifications?",
+  "Sie kommen wieder, wenn sich etwas ändert.": "They come back when something changes.",
   "Guten Morgen": "Good morning",
   "Guten Tag": "Good afternoon",
   "Guten Abend": "Good evening",

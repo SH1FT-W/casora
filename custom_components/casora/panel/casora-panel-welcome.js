@@ -30,7 +30,7 @@
       n0t: "Begrüßung", n0: "Guten Morgen, Guten Tag, Guten Abend – auf Wunsch mit Namen, statt „Zuhause“.",
       n1t: "Personen-Popup", n1: "Karte, Handy und die Orte des Tages – statt des Kartendialogs von Home Assistant.",
       n2t: "Karussell im Studio", n2: "Mehrere Kacheln als Seiten einer Kachel. Anlegen, zusammenfassen, sortieren, auflösen.",
-      n3t: "Bedingungen zum Auswählen", n3: "Nach der Entität stehen nur ihre möglichen Zustände zur Wahl – kein Raten mehr."
+      n3t: "Glocke aufräumen", n3: "Meldungen wegwischen oder alle auf einmal entfernen – und Popups öffnen schneller."
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -43,7 +43,7 @@
       n0t: "Greeting", n0: "Good morning, good afternoon, good evening – with names if you like, instead of \"Home\".",
       n1t: "Person popup", n1: "Map, phone and today's places – instead of the Home Assistant map dialog.",
       n2t: "Carousel in the Studio", n2: "Several tiles as pages of one tile. Create, combine, reorder, split.",
-      n3t: "Conditions to pick from", n3: "After the entity, only its possible states are offered – no more guessing."
+      n3t: "Clean up the bell", n3: "Swipe notifications away or remove them all at once – and popups open faster."
     },
   };
 
@@ -59,7 +59,7 @@
     ["mdi:hand-wave-outline", "n0t", "n0"],
     ["mdi:account-circle-outline", "n1t", "n1"],
     ["mdi:view-carousel-outline", "n2t", "n2"],
-    ["mdi:format-list-checks", "n3t", "n3"],
+    ["mdi:bell-remove-outline", "n3t", "n3"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

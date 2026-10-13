@@ -98,11 +98,22 @@
     var seg = ((window.location && window.location.pathname) || '').split('/').filter(Boolean);
     return seg[0] || '';
   };
-  // Konfiguration je Dashboard eine Minute geteilt (Rückfrage + Handy-Szenenleiste luden sie doppelt).
+  // Konfiguration je Dashboard geteilt (Rückfrage + Handy-Szenenleiste luden sie doppelt). 1.4: 30 Minuten
+  // statt einer – die Glocke holte sonst bei jedem Tipp ~2,5 MB (Wartezeit bis zum Popup). Speichert das
+  // Studio oder HA das Dashboard (Ereignis lovelace_updated), wird die gemerkte Fassung sofort verworfen.
   var cfgs = {};
+  var cfgWatch = null;
+  var watchCfg = function (hass) {
+    if (cfgWatch || !hass || !hass.connection || typeof hass.connection.subscribeEvents !== 'function') return;
+    cfgWatch = Promise.resolve(hass.connection.subscribeEvents(function (ev) {
+      var u = ev && ev.data && ev.data.url_path;
+      if (u) { delete cfgs[u]; delete infos[u]; } else { cfgs = {}; infos = {}; }
+    }, 'lovelace_updated')).catch(function () { cfgWatch = null; });
+  };
   window._casoraCfgOnce = function (hass, url) {
+    watchCfg(hass);
     var c = cfgs[url];
-    if (!c || c.at && Date.now() - c.at > 6e4) {
+    if (!c || c.at && Date.now() - c.at > (cfgWatch ? 18e5 : 6e4)) {
       c = cfgs[url] = { at: 0 };
       c.p = Promise.resolve(hass.callWS({ type: 'lovelace/config', url_path: url })).then(function (r) { c.at = Date.now(); return r; },
         function (e) { if (cfgs[url] === c) delete cfgs[url]; throw e; });
@@ -10058,6 +10069,58 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     try { localStorage.setItem(KEY, String(ts)); } catch (e) {}
   }
 
+  // ── Entfernte Meldungen (1.4: Wischen, „Alle entfernen“) ─────────────────
+  // Eine Meldung bleibt weg, bis sich etwas ändert (neuer Zeitpunkt): je Meldung der Zeitpunkt, bis
+  // zu dem sie entfernt ist, dazu „alle bis“. Je HA-Benutzer in HAs Benutzerdaten (gilt auf allen
+  // Geräten dieses Benutzers), hier zusätzlich lokal für den ersten Aufbau ohne Warten.
+  var HID_KEY = 'casora_notify_hidden';
+  var _hid = { all: 0, rows: {} };
+  try {
+    var hl = JSON.parse(localStorage.getItem(HID_KEY) || 'null');
+    if (hl && typeof hl === 'object') _hid = { all: +hl.all || 0, rows: hl.rows || {} };
+  } catch (e) { /* leer */ }
+  var _hidLoaded = false;
+  function loadHidden(hass) {
+    if (_hidLoaded || !hass || !hass.connection || typeof hass.connection.sendMessagePromise !== 'function') return;
+    _hidLoaded = true;
+    hass.connection.sendMessagePromise({ type: 'frontend/get_user_data', key: HID_KEY }).then(function (r) {
+      var v = r && r.value;
+      if (!v || typeof v !== 'object') return;
+      _hid = { all: Math.max(+v.all || 0, _hid.all), rows: Object.assign({}, v.rows || {}, _hid.rows) };
+      try { localStorage.setItem(HID_KEY, JSON.stringify(_hid)); } catch (e) { /* nur geteilt */ }
+      _rows = _rows.filter(function (x) { return !isHidden(x); });
+      announce();
+    }, function () { _hidLoaded = false; });
+  }
+  function rowKey(r) { return String((r && r.id) || ((r && r.entity) || '') + '|' + ((r && r.label) || '')); }
+  function isHidden(r) {
+    if (!r) return false;
+    if (r.when <= _hid.all) return true;
+    var t = _hid.rows[rowKey(r)];
+    return t != null && r.when <= t;
+  }
+  function saveHidden() {
+    var old = Date.now() - 30 * 864e5;
+    Object.keys(_hid.rows).forEach(function (k) { if (_hid.rows[k] < old && _hid.rows[k] <= _hid.all) delete _hid.rows[k]; });
+    try { localStorage.setItem(HID_KEY, JSON.stringify(_hid)); } catch (e) { /* nur geteilt */ }
+    var h = hassOf();
+    if (h && h.connection && typeof h.connection.sendMessagePromise === 'function') {
+      h.connection.sendMessagePromise({ type: 'frontend/set_user_data', key: HID_KEY, value: _hid }).catch(function () { /* lokal bleibt */ });
+    }
+  }
+  function hideRows(list) {
+    (list || []).forEach(function (r) { if (r) _hid.rows[rowKey(r)] = r.when; });
+    saveHidden();
+    _rows = _rows.filter(function (x) { return !isHidden(x); });
+    announce();
+  }
+  function hideAll() {
+    _hid = { all: Math.max(Date.now(), _rows.reduce(function (m, r) { return Math.max(m, r.when || 0); }, 0)), rows: {} };
+    saveHidden();
+    _rows = [];
+    announce();
+  }
+
   function nameOf(st) {
     return (st && st.attributes && st.attributes.friendly_name) || (st && st.entity_id) || '';
   }
@@ -10965,6 +11028,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var hass = hassOf();
     if (!hass) return Promise.resolve(_rows);
     if (_busy) return _busy;
+    loadHidden(hass);
 
     var live = standing(hass);
     var ids = watched(hass);
@@ -11123,6 +11187,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       var EXN = excludes();
       _rows = live.concat(kept.slice(0, room))
         .filter(function (r) { return !(r && r.entity && EXN[r.entity]); })
+        .filter(function (r) { return !isHidden(r); })
         .sort(function (a, b) {
           return ((b.rank || 0) - (a.rank || 0)) || (b.when - a.when)
             || (String(a.id) < String(b.id) ? -1 : String(a.id) > String(b.id) ? 1 : 0);
@@ -11373,7 +11438,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var h = hassOf();
     if (!entityId || !h || !h.callWS) return go();
     var seg = (location.pathname || '').split('/').filter(Boolean);
-    h.callWS({ type: 'lovelace/config', url_path: seg[0] || 'lovelace' }).then(function (cfg) {
+    // Gemerkte Konfiguration (_casoraCfgOnce) – vorher bei jedem Tipp neu geholt.
+    window._casoraCfgOnce(h, seg[0] || 'lovelace').then(function (cfg) {
       return hiddenForUser(cfg, entityId, h.user && h.user.id);
     }, function () { return false; }).then(function (hid) {
       if (!hid) return go();
@@ -11395,7 +11461,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (cfgMemo.url === url && (cfgMemo.p || Date.now() - cfgMemo.at < 60000)) return cfgMemo.p || Promise.resolve(cfgMemo.cfg);
     if (!h || !h.callWS) return Promise.resolve(null);
     cfgMemo.url = url; cfgMemo.cfg = null;
-    cfgMemo.p = h.callWS({ type: 'lovelace/config', url_path: url }).then(function (cfg) {
+    cfgMemo.p = window._casoraCfgOnce(h, url).then(function (cfg) {
       if (cfgMemo.url === url) { cfgMemo.cfg = cfg; cfgMemo.at = Date.now(); cfgMemo.p = null; }
       return cfg;
     }, function () { cfgMemo.p = null; cfgMemo.at = Date.now(); return null; });
@@ -11478,7 +11544,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (!h || !h.callWS) return Promise.resolve(null);
     var seg = (location.pathname || '').split('/').filter(Boolean);
     var url = seg[0] || 'lovelace';
-    return h.callWS({ type: 'lovelace/config', url_path: url }).then(function (cfg) {
+    return window._casoraCfgOnce(h, url).then(function (cfg) {
       var found = null;
       (function walk(cards) {
         (cards || []).forEach(function (c) {
@@ -11669,6 +11735,132 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
   var _menu = null;
 
+  // Meldung entfernen (1.4, Entwurf A): am Handy nach links wischen – roter Knopf „Entfernen“, weit
+  // gewischt sofort weg; mit der Maus ein × beim Darüberfahren. Die Knöpfe liegen neben den Zeilen
+  // (nicht darin), damit der Tipp darauf nicht zugleich die Meldung öffnet. after(): neu zeichnen.
+  function swipeRows(body, after) {
+    var tr = window.casoraTr || function (x) { return x; };
+    var RED = 'var(--casora-notify-remove, var(--casora-tone-alert, var(--casora-color-red)))';
+    var BTN_W = 96;
+    var pairs = [];
+    var place = function (row, b) {
+      var br = body.getBoundingClientRect(), rr = row.getBoundingClientRect();
+      b.style.top = (rr.top - br.top + body.scrollTop + 6) + 'px';
+      b.style.height = Math.max(0, rr.height - 12) + 'px';
+      b.style.right = (br.right - rr.right + 6) + 'px';
+    };
+    var innerOf = function (row) { return row.querySelector('.hui-inner') || row.firstElementChild || row; };
+    var slide = function (row, x, anim) {
+      var inn = innerOf(row);
+      inn.style.transition = anim ? 'transform .28s cubic-bezier(.36,0,.16,1)' : 'none';
+      inn.style.transform = x ? 'translateX(' + x + 'px)' : '';
+    };
+    var show = function (b, w, mode) {
+      b.dataset.mode = mode || '';
+      if (mode !== 'x') b.style.width = Math.max(0, Math.round(w)) + 'px';
+      b.style.opacity = (mode === 'x' || w > 8) ? '1' : '0';
+      b.style.pointerEvents = (mode === 'x' || w >= BTN_W - 4) ? 'auto' : 'none';
+    };
+    var unarm = function (except) {
+      pairs.forEach(function (p) { if (p[0] !== except && p[0]._armed) { p[0]._armed = false; slide(p[0], 0, true); show(p[1], 0); } });
+    };
+    var drop = function (row) {
+      var r = row._casoraRow;
+      var inn = innerOf(row);
+      inn.style.transition = 'transform .22s ease, opacity .22s ease';
+      inn.style.transform = 'translateX(-110%)';
+      inn.style.opacity = '0';
+      pairs.forEach(function (p) { if (p[0] === row) p[1].style.opacity = '0'; });
+      setTimeout(function () { hideRows([r]); after(); }, 230);
+    };
+    var css = 'position:absolute;z-index:2;display:flex;align-items:center;justify-content:center;gap:6px;border:0;cursor:pointer;'
+      + 'border-radius:calc(var(--casora-menu-row-radius, 26px) - 6px);background:' + RED + ';color:#fff;'
+      + 'font:600 14px/1 var(--primary-font-family, system-ui);overflow:hidden;white-space:nowrap;padding:0;opacity:0;'
+      + 'pointer-events:none;transition:opacity .18s ease;';
+    body.style.position = 'relative';
+    body.style.touchAction = 'pan-y';
+    body.querySelectorAll('.hui-row').forEach(function (row) {
+      if (!row._casoraRow) return;
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'casora-nx';
+      b.setAttribute('data-casora-nodismiss', '');
+      b.setAttribute('aria-label', tr('Entfernen'));
+      b.style.cssText = css;
+      b.innerHTML = '<span class="casora-nx-t">' + tr('Entfernen') + '</span>'
+        + '<svg class="casora-nx-x" viewBox="0 0 24 24" style="width:14px;height:14px;display:none;" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+      b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); drop(row); });
+      body.appendChild(b);
+      place(row, b);
+      pairs.push([row, b]);
+      // Maus: × beim Darüberfahren (rund, kein Text).
+      var hov = function (on) {
+        if (row._armed) return;
+        var x = b.querySelector('.casora-nx-x'), t = b.querySelector('.casora-nx-t');
+        // Das × steht an der Stelle des Pfeils.
+        var chev = row.querySelector('.hui-chev');
+        if (chev) chev.style.visibility = on ? 'hidden' : '';
+        if (on) {
+          x.style.display = ''; t.style.display = 'none';
+          b.style.width = b.style.height;
+          b.style.borderRadius = '50%';
+          b.style.top = (parseFloat(b.style.top) + (parseFloat(b.style.height) - 30) / 2) + 'px';
+          b.style.height = b.style.width = '30px';
+          if (chev) { var cr = chev.getBoundingClientRect(), bb = body.getBoundingClientRect(); b.style.right = Math.round(bb.right - (cr.left + cr.width / 2) - 15) + 'px'; }
+          b.style.background = 'var(--casora-icon-circle-bg, rgba(140,115,90,0.18))';
+          b.style.color = 'var(--casora-popup-tiles-text-primary, var(--primary-text-color))';
+          show(b, 0, 'x');
+        } else {
+          x.style.display = 'none'; t.style.display = '';
+          b.style.borderRadius = ''; b.style.background = ''; b.style.color = '';
+          b.style.cssText = css; place(row, b); show(b, 0);
+        }
+      };
+      if (window.matchMedia && window.matchMedia('(hover: hover)').matches) {
+        var over = false;
+        var sync = function () { setTimeout(function () { var on = row.matches(':hover') || b.matches(':hover'); if (on !== over) { over = on; hov(on); } }, 0); };
+        row.addEventListener('mouseenter', sync); row.addEventListener('mouseleave', sync);
+        b.addEventListener('mouseleave', sync);
+      }
+    });
+    // Wischen (Finger/Stift): waagerecht nach links, senkrecht bleibt Scrollen.
+    var g = null;
+    body.addEventListener('pointerdown', function (e) {
+      if (e.pointerType === 'mouse') return;
+      var path = (e.composedPath && e.composedPath()) || [];
+      if (path.some(function (n) { return n && n.classList && n.classList.contains('casora-nx'); })) return;
+      var row = null;
+      for (var i = 0; i < path.length; i++) if (path[i] && path[i]._casoraRow && path[i].classList && path[i].classList.contains('hui-row')) { row = path[i]; break; }
+      unarm(row);
+      if (!row) return;
+      g = { row: row, x: e.clientX, y: e.clientY, on: false, dx: 0, base: row._armed ? -(BTN_W + 16) : 0 };
+    }, true);
+    body.addEventListener('pointermove', function (e) {
+      if (!g) return;
+      var dx = e.clientX - g.x, dy = e.clientY - g.y;
+      if (!g.on) {
+        if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { g = null; return; }
+        if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.4) g.on = true; else return;
+      }
+      g.dx = Math.min(0, g.base + dx);
+      slide(g.row, g.dx, false);
+      var p = pairs.filter(function (q) { return q[0] === g.row; })[0];
+      if (p) show(p[1], Math.max(0, -g.dx - 16), '');
+    }, true);
+    var up = function () {
+      if (!g) return;
+      var st = g; g = null;
+      if (!st.on) return;
+      var p = pairs.filter(function (q) { return q[0] === st.row; })[0];
+      var w = st.row.getBoundingClientRect().width;
+      if (-st.dx > w * 0.5) return drop(st.row);
+      if (-st.dx > 56) { st.row._armed = true; slide(st.row, -(BTN_W + 16), true); if (p) show(p[1], BTN_W, ''); return; }
+      st.row._armed = false; slide(st.row, 0, true); if (p) show(p[1], 0);
+    };
+    body.addEventListener('pointerup', up, true);
+    body.addEventListener('pointercancel', up, true);
+    body.addEventListener('scroll', function () { unarm(null); }, { passive: true });
+  }
 
   function openMenu(anchor) {
     var GLASS = window.casoraMenuGlass;
@@ -11757,6 +11949,27 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     clear.onclick = function (e) { e.stopPropagation(); seal(); menu._close(); };
     clear.style.display = unread() ? 'block' : 'none';
     head.appendChild(clear);
+    // „Alle entfernen“ (1.4): mit Rückfrage; leert die Glocke, bis Neues kommt.
+    var wipe = document.createElement('button');
+    wipe.type = 'button';
+    wipe.textContent = window.casoraTr ? window.casoraTr('Alle entfernen') : 'Alle entfernen';
+    wipe.style.cssText = clear.style.cssText;
+    wipe.style.display = _rows.length ? 'block' : 'none';
+    wipe.style.color = 'var(--casora-notify-remove, var(--casora-tone-alert, var(--casora-color-red)))';
+    wipe.onclick = function (e) {
+      e.stopPropagation();
+      var T = window.casoraTr || function (x) { return x; };
+      var ask = window.casoraAsk ? window.casoraAsk({ title: T('Alle Meldungen entfernen?'), text: T('Sie kommen wieder, wenn sich etwas ändert.'), yes: T('Entfernen') })
+        : Promise.resolve(window.confirm(T('Alle Meldungen entfernen?')));
+      menu._keep = true;
+      ask.then(function (ok) {
+        menu._keep = false;
+        if (!ok) return;
+        hideAll();
+        menu._close();
+      });
+    };
+    head.appendChild(wipe);
     head.style.justifyContent = 'flex-end';
     head.style.padding = '11px calc(var(--casora-popup-row-pad-x, 16px) + 8px) 5px';
     /* Weich (D-03/D-21): Kopfzeile „Benachrichtigungen“ links, „Alles gelesen“ rechts mit
@@ -11771,10 +11984,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       head.insertBefore(ttl, clear);
       Object.assign(clear.style, { minHeight: '44px', padding: '0 12px', margin: '0 -12px', display: unread() ? 'inline-flex' : 'none',
         alignItems: 'center', borderRadius: '999px', fontWeight: '600' });
+      Object.assign(wipe.style, { minHeight: '44px', padding: '0 12px', margin: '0 -12px 0 12px', display: _rows.length ? 'inline-flex' : 'none',
+        alignItems: 'center', borderRadius: '999px', fontWeight: '600' });
       head.style.alignItems = 'center';
       head.style.padding = '6px calc(var(--casora-popup-row-pad-x, 16px) + 8px) 0';
     }
-    if (!win && (unread() || softBell)) inner.appendChild(head);
+    if (!win && (unread() || softBell || _rows.length)) inner.appendChild(head);
 
     var body = document.createElement('div');
     Object.assign(body.style, {
@@ -11825,17 +12040,38 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     body.style.boxSizing = 'border-box';
     body.innerHTML = (window.casoraTr || function (x) { return x; })(sections());
     inner.appendChild(body);
-    if (win && unread()) {
+    if (win && (unread() || _rows.length)) {
+      // Fenster-Gestaltung: „Alles gelesen“ und „Alle entfernen“ als Pillen nebeneinander unter der Liste.
+      var acts = document.createElement('div');
+      acts.className = 'casora-notify-acts';
+      acts.style.cssText = 'display:flex;justify-content:center;gap:8px;flex-wrap:wrap;';
       clear.className = 'casora-notify-read';
       clear.removeAttribute('style');
+      if (!unread()) clear.style.display = 'none';
+      wipe.className = 'casora-notify-read casora-notify-wipe';
+      wipe.removeAttribute('style');
+      wipe.style.color = 'var(--casora-notify-remove, var(--casora-tone-alert, var(--casora-color-red)))';
+      if (!_rows.length) wipe.style.display = 'none';
+      acts.appendChild(clear);
+      acts.appendChild(wipe);
       if (body.style.padding) body.style.paddingBottom = '4px';
-      inner.appendChild(clear);
+      inner.appendChild(acts);
     }
     menu.appendChild(inner);
     document.body.appendChild(menu);
     fade();
     paint(body);
     bindOpens(body, null);
+    // Nach dem Entfernen einer Meldung: Liste neu, Knöpfe nachziehen; leer → „Nichts Neues“.
+    var redraw = function () {
+      body.innerHTML = (window.casoraTr || function (x) { return x; })(sections());
+      paint(body);
+      swipeRows(body, redraw);
+      fade();
+      if (!_rows.length) { wipe.style.display = 'none'; clear.style.display = 'none'; }
+      else if (!unread()) clear.style.display = 'none';
+    };
+    swipeRows(body, redraw);
 
     var w = menu.offsetWidth;
     menu.style.top = GLASS.dropTop(r, 10) + 'px';
@@ -11853,6 +12089,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
 
     var onKey = function (e) { if (e.key === 'Escape') menu._close(); };
     var onAway = function (e) {
+      // Rückfrage „Alle entfernen“ offen: die Glocke bleibt dahinter stehen.
+      if (menu._keep) return;
       var path = (e.composedPath && e.composedPath()) || [e.target];
       if (path.indexOf(menu) !== -1) return;
       // contains() cannot cross a shadow boundary.
@@ -11892,6 +12130,11 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (pop && pop.hasAttribute('open')) { window.casoraPopup.close(); return; }
 
     var show = function () { openMenu(anchor); };
+    // Konfiguration schon jetzt holen: der Tipp auf eine Meldung findet sie dann gemerkt vor (1.4).
+    try {
+      var h0 = hassOf(), seg0 = (location.pathname || '').split('/').filter(Boolean);
+      if (h0 && h0.callWS) window._casoraCfgOnce(h0, seg0[0] || 'lovelace').catch(function () {});
+    } catch (e) { /* ohne Vorladen */ }
     // Opening waits on the network only the very first time.
     if (_rows.length) { show(); collect(); } else { collect().then(show); }
   }
