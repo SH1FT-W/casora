@@ -7,7 +7,7 @@
 // erfunden). Auf Kopien der Casora-Dashboards (qa-pulse, qa-pulse-mobile) steht die Kachel auf der Startseite.
 // Erwartet am Desktop und Handy (hell + dunkel, Theme Casora):
 //   - alles ok: Kachel „Alles ok“, nicht hinterlegt; nur „bald fällig“: „N bald fällig“, hinterlegt (1.4)
-//   - Probleme: „3 Probleme · 2 beobachten“, hinterlegt, Symbol rot
+//   - Probleme: „3 Probleme · 1 Batterie bald fällig · 1 beobachten“ (seit 1.4.2 Batterie getrennt), hinterlegt, Symbol rot
 //   - Popup: Unterzeile „3 Probleme · 2 beobachten · 2 ok“, Übersichtsleiste, „Ausgefallen“/„Prüfen“,
 //     „Batterie“/„Beobachten“, „Alles ok“ eingeklappt, „In Pulse öffnen“; Desktop zweispaltig, Handy einspaltig
 //   - „Gewechselt“ → Bestätigen → pulse.mark_replaced mit der device_id des Geräts, danach ein Hinweis
@@ -175,7 +175,7 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
 
   await inject(page, 'many');
   m = await stable(page, TILE);
-  await check(tag + ': Probleme – „3 Probleme · 2 beobachten“', /3 Probleme/.test(m.state) && /2 beobachten/.test(m.state), m.state);
+  await check(tag + ': Probleme – „3 Probleme · 1 Batterie bald fällig · 1 beobachten“', /3 Probleme/.test(m.state) && /1 Batterie bald fällig/.test(m.state) && /1 beobachten/.test(m.state), m.state);
   await check(tag + ': Probleme – hinterlegt', m.active, m.active);
   await check(tag + ': Probleme – Symbol rot (ausgefallen)', red(m.icon), m.icon);
   await tileShot('kachel-probleme');
