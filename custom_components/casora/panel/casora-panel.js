@@ -19027,7 +19027,8 @@ class CasoraPanel extends HTMLElement {
     }, { passive: true });
 
     draw();
-    this.$("overlay").appendChild(sheet);
+    // Aus einem Dialog heraus (askpane) über dem Dialog, sonst wie bisher in der Overlay-Ebene (1.5).
+    (this.shadowRoot.querySelector(".askpane") ? this.shadowRoot : this.$("overlay")).appendChild(sheet);
     this._openCombo = done;
     fit();
     // Synchronously, inside the tap: iOS only raises the keyboard for a focus the gesture made.
