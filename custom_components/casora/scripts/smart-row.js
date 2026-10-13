@@ -175,6 +175,16 @@ const ROW_TEMPLATE_FLAGS = {
 // A header is generic, so the category it labels comes from its name.
 const HEADER_CATEGORIES = { scenes: 'unfiltered' };
 
+// Größe am Handy „Automatisch“ (1.5): Kacheln in einem Rahmen neu zeichnen (auch in bedingten Karten).
+function kickTiles(root) {
+  const walk = (el, d) => {
+    if (!el || d > 6) return;
+    if (el.tagName === 'BUTTON-CARD') { if (window.casoraKick) window.casoraKick(el); return; }
+    for (const k of [...(el.shadowRoot ? el.shadowRoot.children : []), ...(el.children || [])]) walk(k, d + 1);
+  };
+  walk(root, 0);
+}
+
 // variables.size is the Studio's "Size on phone": it sits on the desktop tile too
 // (mirrored to the phone on save), so only a phone row may read it. Desktop and
 // tablet rows drop it and keep only what a template itself declares large.
@@ -1444,6 +1454,8 @@ class CasoraSmartRow extends HTMLElement {
       if (big === (w.dataset.size === 'large')) return;
       if (big) { w.dataset.size = 'large'; this._scheduleLargeFill(w); }
       else delete w.dataset.size;
+      // Die Kachel liest ihre Größe selbst (size_large) – neu zeichnen, damit das Layout mitwechselt.
+      kickTiles(w);
     });
   }
 

@@ -4210,7 +4210,7 @@
    "show_toggle": false,
    "show_when": "always",
    "size": "small",
-   "size_large": "[[[ return String(variables.size || '').toLowerCase() === 'large' && /^\\/[^/]*[-_]mobile(\\/|$)/i.test(window.location.pathname); ]]]\n",
+   "size_large": "[[[\n  /* Groß am Handy: fest (size: large) oder „Automatisch“ und gerade groß gezogen – smart-row bzw. das\n     Raum-Raster setzen dann data-size / data-casora-size am Rahmen (1.5). */\n  if (!/^\\/[^/]*[-_]mobile(\\/|$)/i.test(window.location.pathname)) return false;\n  const v = String(variables.size || '').toLowerCase();\n  if (v === 'large') return true;\n  if (v !== 'auto') return false;\n  let el = this;\n  for (let i = 0; i < 8 && el; i++) {\n    if (el.dataset && (el.dataset.size === 'large' || el.dataset.casoraSize === 'large')) return true;\n    el = el.parentElement || (el.parentNode && el.parentNode.host) || null;\n  }\n  return false;\n]]]\n",
    "toggle_entity": null,
    "toggle_service": null,
    "toggle_service_data": null
@@ -16223,7 +16223,7 @@
    "casora_entity"
   ],
   "variables": {
-   "has_controls": "[[[\n  if (variables.size === 'large' && /^\\/[^/]*[-_]mobile(\\/|$)/i.test(window.location.pathname)) return true;\n  return !window.matchMedia('(max-width: 767px) and (orientation: portrait), (max-height: 500px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape), (max-height: 600px) and (orientation: landscape) and (hover: hover)').matches;\n]]]\n",
+   "has_controls": "[[[\n  if (variables.size_large) return true;\n  return !window.matchMedia('(max-width: 767px) and (orientation: portrait), (max-height: 500px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape), (max-height: 600px) and (orientation: landscape) and (hover: hover)').matches;\n]]]\n",
    "mobile_filter_category": "climate",
    "show_toggle": "[[[\n  /* D-22 (Weich): Schalter nur bei Einzelgeräten – eine Thermostat-Gruppe (z. B. Fußbodenheizung\n     mit mehreren Räumen) ohne Schalter, wie Beleuchtung und Jalousien. */\n  const _mem = entity?.attributes?.member_entities || entity?.attributes?.entity_id;\n  const _grp = Array.isArray(_mem) && _mem.length > 1;\n  if (_grp && window._casoraSoft && window._casoraSoft()) return false;\n  return variables.has_controls;\n]]]\n",
    "size": "small",

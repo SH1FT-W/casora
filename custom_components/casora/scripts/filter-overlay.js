@@ -1233,8 +1233,13 @@
       });
       cand.sort((a, b) => (b.r - a.r) || (a.n - b.n)).slice(0, 2).forEach((c) => want.add(c.el));
       auto.forEach((el) => {
-        if (want.has(el)) el.dataset.casoraSize = 'large';
+        const big = want.has(el);
+        if (big === (el.dataset.casoraSize === 'large')) return;
+        if (big) el.dataset.casoraSize = 'large';
         else delete el.dataset.casoraSize;
+        // Die Kachel liest ihre Größe selbst (size_large) – neu zeichnen, damit das Layout mitwechselt.
+        const t = tileOf(el);
+        if (t && window.casoraKick) window.casoraKick(t);
       });
     }
 
