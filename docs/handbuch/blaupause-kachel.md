@@ -56,7 +56,7 @@ Regeln für Vorlagen-JS (`[[[ … ]]]`):
   eigenes `[[[ … ]]]` (nicht als fertig berechneter String).
 - `tap_action` mit `"haptic": "light"`.
 - Icon antippen (entschieden 13.10.2026): Hat die Kachel etwas zu schalten, schaltet das Icon (Licht an/aus,
-  Jalousie auf/zu, Schloss auf/zu, Saugroboter saugen/zurück, Medien an/aus …). Sonst `icon_tap_action:
+  Jalousie auf/zu, Schloss auf/zu, Saugroboter saugen/zurück, Medien Play/Pause – aus: einschalten …). Sonst `icon_tap_action:
   { "action": "none" }` – dann gilt der Tipp als Tipp auf die Kachel (dasselbe Casora-Popup). Nie `more-info`
   (HAs Dialog). Popup-Vorlagen, die mit einer schaltenden Vorlage kombiniert werden, bringen deren Schalter mit.
 

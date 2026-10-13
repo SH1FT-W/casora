@@ -5155,9 +5155,10 @@
    "entity": "[[[ return entity?.entity_id ]]]"
   },
   "icon_tap_action": {
-   "action": "[[[\n  const s = String(entity?.state || '').toLowerCase();\n  if (s === 'unavailable' || s === 'unknown') return 'none';\n  const feats = Number(entity?.attributes?.supported_features || 0);\n  return (s === 'off' ? (feats & 128) : (feats & 256)) ? 'call-service' : 'none';\n]]]\n",
-   "service": "[[[\n  return String(entity?.state || '').toLowerCase() === 'off'\n    ? 'media_player.turn_on'\n    : 'media_player.turn_off';\n]]]\n",
-   "service_data": "[[[ return { entity_id: entity?.entity_id }; ]]]\n"
+   "action": "[[[\n  /* Icon = Play/Pause (13.10.2026); aus → einschalten. Kann das Gerät es nicht: none = Popup wie die Kachel. */\n  const s = String(entity?.state || '').toLowerCase();\n  if (s === 'unavailable' || s === 'unknown') return 'none';\n  const feats = Number(entity?.attributes?.supported_features || 0);\n  if (s === 'off') return (feats & 128) ? 'call-service' : 'none';\n  if (s === 'playing' || s === 'buffering') return (feats & 1) ? 'call-service' : 'none';\n  return (feats & 16384) ? 'call-service' : 'none';\n]]]\n",
+   "service": "[[[\n  const s = String(entity?.state || '').toLowerCase();\n  if (s === 'off') return 'media_player.turn_on';\n  return (s === 'playing' || s === 'buffering') ? 'media_player.media_pause' : 'media_player.media_play';\n]]]\n",
+   "service_data": "[[[ return { entity_id: entity?.entity_id }; ]]]\n",
+   "haptic": "light"
   },
   "show_empty": false,
   "show_entity_picture": true,
