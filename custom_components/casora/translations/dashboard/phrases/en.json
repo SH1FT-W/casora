@@ -17,6 +17,7 @@
   "Guten Abend": "Good evening",
   "und": "and",
   "1 Problem": "1 problem",
+  "1 Batterie bald fällig": "1 battery due soon",
   "Keine Probleme": "No problems",
   "Keine Geräte": "No devices",
   "Nicht installiert": "Not installed",
@@ -1654,6 +1655,10 @@
   [
    "^(\\d+) bald fällig$",
    "{1} due soon"
+  ],
+  [
+   "^(\\d+) Batterien bald fällig$",
+   "{1} batteries due soon"
   ],
   [
    "^(\\d+) ausgefallen$",
