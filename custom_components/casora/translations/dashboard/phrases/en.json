@@ -1,5 +1,12 @@
 {
  "exact": {
+  "Staubbeutel oder Filter fehlt": "Dust bag or filter missing",
+  "Absauggebläse gestört": "Emptying fan fault",
+  "Absaugkanal verstopft": "Emptying duct blocked",
+  "Spannungsfehler an der Station": "Dock voltage fault",
+  "Reinigungsbürste blockiert": "Cleaning brush jammed",
+  "Schmutzwassertank nicht eingerastet": "Dirty water tank not latched",
+  "Reinigungstank voll oder verstopft": "Cleaning tank full or blocked",
   "Entfernen": "Remove",
   "Alle entfernen": "Remove all",
   "Alle Meldungen entfernen?": "Remove all notifications?",

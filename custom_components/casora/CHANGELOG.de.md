@@ -7,6 +7,8 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ## 1.4.1 – 13.10.2026
 
 ### Behoben
+- **Kachel-Status:** Ein langer Status macht die Schrift nicht mehr so klein, dass man ihn kaum lesen kann. Die Schrift bleibt gleich groß; passt der Text nicht, zeigt die Kachel den ersten Teil und zählt den Rest („Trocknung endet +1“), alles steht im Popup. Das gilt für alle Kacheln, am Desktop und am Handy.
+- **Saugroboter:** Fehler der Station sind übersetzt (zum Beispiel „Schmutzwassertank voll“ statt „waste water tank full“).
 - **Glocke:** Das Mitteilungsfenster ist immer gleich breit (360 px, am Handy bis zum Bildschirmrand). Vorher war es bei kurzen Meldungen schmal und die beiden Knöpfe unten gedrängt.
 - **Update-Logos:** Die Markenlogos im Update-Popup haben dieselbe Form wie die übrigen Symbole und füllen sie aus, statt rund in einem abgerundeten Quadrat zu sitzen. Im Dunkeln gibt es keinen hellen Rand mehr, Updates ohne Logo bekommen ein neutrales Symbol.
 - **Personen-Popup:** „seit …“ im Kopf zeigt, wie lange die Person wirklich an dem Ort ist. Nach einem Neustart von Home Assistant zählte es ab dem Neustart.

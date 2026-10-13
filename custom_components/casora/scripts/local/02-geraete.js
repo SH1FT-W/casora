@@ -3244,6 +3244,12 @@
     vertical_bumper_pressed: 'Oberer Stoßfänger gedrückt', robot_tilted: 'Roboter gekippt', clean_tank_empty: 'Frischwassertank leer',
     dirty_tank_full: 'Schmutzwassertank voll', water_box_empty: 'Wasserbehälter leer', no_mop: 'Mopp fehlt',
     strainer_error: 'Schmutzfänger prüfen', dock: 'Dock-Fehler', mop_washing_error: 'Moppwäsche gestört',
+    // Station (Roborock dock_error, 1.4.1): kamen sonst englisch („waste water tank full“).
+    no_dustbin_or_filter: 'Staubbeutel oder Filter fehlt', auto_empty_dock_fan_error: 'Absauggebläse gestört',
+    duct_blockage: 'Absaugkanal verstopft', auto_empty_dock_voltage_error: 'Spannungsfehler an der Station',
+    water_empty: 'Frischwassertank leer', waste_water_tank_full: 'Schmutzwassertank voll',
+    maintenance_brush_jammed: 'Reinigungsbürste blockiert', dirty_tank_latch_open: 'Schmutzwassertank nicht eingerastet',
+    cleaning_tank_full_or_blocked: 'Reinigungstank voll oder verstopft',
   };
   var MODE = {
     smart_mode: 'Smart', custom: 'Eigene', off: 'Aus', quiet: 'Leise', balanced: 'Ausgewogen', turbo: 'Turbo', max: 'Max',

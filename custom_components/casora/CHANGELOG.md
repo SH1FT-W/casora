@@ -7,6 +7,8 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 1.4.1 – 13.10.2026
 
 ### Fixed
+- **Tile status:** A long status no longer shrinks the text until it is hard to read. The text keeps its size; if it doesn't fit, the tile shows the first part and counts the rest ("Drying ends +1"), all of it is in the popup. This applies to every tile, on desktop and phone.
+- **Robot vacuum:** Dock errors are translated (for example "Dirty water tank full" instead of "waste water tank full").
 - **Bell:** The notification window always has the same width (360 px, on the phone up to the screen edge). Before, it was narrow with short notifications and the two buttons at the bottom were cramped.
 - **Update logos:** Brand logos in the updates popup have the same shape as the other icons and fill it, instead of a round logo sitting in a rounded square. In dark mode there is no light edge around them any more, and updates without a logo get a neutral icon.
 - **Person popup:** "since …" in the header shows how long the person has really been at that place. After a Home Assistant restart it started counting from the restart.

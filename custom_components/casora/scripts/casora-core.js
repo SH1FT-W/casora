@@ -2395,25 +2395,46 @@ window.casoraMenuGlass = {
       const esc = t.replace(/[&<>"]/g, (c) => (
         { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]
       ));
-      /* Handy (01.10.2026): einheitliche Schriftgröße auf allen Kacheln – kein Schrumpfen je Kachel
-         mehr; passt ein Wert nicht, endet er mit „…“. Eigenes Attribut, damit casoraFitFix ihn nicht
-         nachträglich doch verkleinert. Desktop unverändert (siehe unten). */
-      let phone = false;
-      try { phone = window.matchMedia('(max-width: 767px), (max-height: 500px), (max-height: 600px) and (hover: hover)').matches; } catch (e) { /* Desktop */ }
-      if (phone) {
-        return '<span data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
-          + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
-          + esc + '</span>';
+      /* 1.4.1: überall (Handy und Desktop) dieselbe Schriftgröße – kein Verkleinern mehr. Passt ein Text
+         mit „ · “ nicht, zeigt casora-statefit den ersten Teil ganz und zählt den Rest („Trocknet Mopp +3“,
+         alles im Popup); passt auch der erste Teil nicht, endet er mit „…“. Beide Fassungen stehen im HTML,
+         damit casora-i18n sie übersetzt; das Element misst nur und schaltet um. */
+      const parts = t.split(' · ');
+      let short = '';
+      if (parts.length > 1) {
+        let more = parts.length - 1;
+        const tail = /\s\+(\d+)$/.exec(parts[parts.length - 1]);
+        if (tail) more += Number(tail[1]);
+        const e1 = parts[0].replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        // Der Zähler bleibt immer sichtbar; zu lang wird nur der erste Teil gekürzt („Trocknu… +1“).
+        short = '<span class="sf-s" style="display:none;max-width:100%;align-items:baseline">'
+          + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">' + e1 + '</span>'
+          + '<span style="flex:none;margin-left:6px;padding:0 6px;border-radius:999px;font-size:.86em;font-weight:700;'
+          + 'background:color-mix(in srgb, currentColor 14%, transparent)" data-no-i18n>+' + more + '</span></span>';
       }
-      /* Untergrenze 0,72em (30.09.2026): lange Namen („Hauswirtschaftsraum“) schrumpften auf dem
-         Handy auf ~7 px. Reicht auch die Untergrenze nicht, bricht der Text auf höchstens zwei Zeilen um. */
-      return '<span data-casora-fit style="display:-webkit-inline-box;-webkit-box-orient:vertical;'
-        + '-webkit-line-clamp:2;line-clamp:2;overflow:hidden;max-width:100%;vertical-align:top;'
-        + 'white-space:nowrap;hyphens:auto;overflow-wrap:break-word;font-size:max(0.72em,min(1em,'
-        + 'calc((100cqi - var(--casora-tile-state-inset, 0px)) / ' + em.toFixed(3) + ')))">'
-        + esc + '</span>';
+      return '<casora-statefit data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
+        + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
+        + '<span class="sf-f">' + esc + '</span>' + short + '</casora-statefit>';
     };
-
+    // Statuszeile (1.4.1): voller Text oder Kurzform, je nachdem, was in die Breite passt.
+    if (!customElements.get('casora-statefit')) {
+      customElements.define('casora-statefit', class extends HTMLElement {
+        connectedCallback() {
+          this._fit();
+          if (!this._ro && typeof ResizeObserver === 'function') {
+            this._ro = new ResizeObserver(() => this._fit());
+            this._ro.observe(this.parentElement || this);
+          }
+        }
+        disconnectedCallback() { if (this._ro) { this._ro.disconnect(); this._ro = null; } }
+        _fit() {
+          const f = this.querySelector('.sf-f'), s = this.querySelector('.sf-s');
+          if (!f || !s) return;
+          f.style.display = ''; s.style.display = 'none';
+          if (this.scrollWidth > this.clientWidth + 0.5) { f.style.display = 'none'; s.style.display = 'inline-flex'; }
+        }
+      });
+    }
     // Nachmessen nach dem Zeichnen: Die Canvas-Messung bei 100 px unterschätzt kleine Schrift
     // (Inter mit optischer Größe, Safari um bis zu 10 %) – dann blieb doch ein „…“ stehen.
     window.casoraFitFix = function (root) {
