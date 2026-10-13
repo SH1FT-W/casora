@@ -104,7 +104,7 @@ const onlyWatch = P.scan({ ...hass, states: { ...states,
   'sensor.x3_status': { ...states['sensor.x3_status'], state: 'ok' } } }, null, NOW);
 assert.equal(onlyWatch.problems, 0);
 assert.equal(P.active(onlyWatch), false, 'bald fällig macht die Kachel nicht aktiv');
-assert.equal(P.tileState(onlyWatch), 'Alles ok');
+assert.equal(P.tileState(onlyWatch), onlyWatch.soon + ' bald fällig', 'bald fällig steht auf der Kachel, nicht „Alles ok“');
 assert.equal(P.color(onlyWatch.worst), P.COLOR.ok, 'bald fällig färbt nicht');
 const one = P.scan({ ...hass, states: { ...states,
   'sensor.x1_status': { ...states['sensor.x1_status'], state: 'ok' },

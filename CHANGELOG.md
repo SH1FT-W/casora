@@ -12,6 +12,9 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Carousel in the Studio:** "Carousel" is now a tile type. Add pages, reorder or remove them, swipe automatically, keep it at the front. Existing tiles can be combined into a carousel from their ⋯ menu, and a carousel can be split back into tiles. New carousels and changed pages go to the phone layout too.
 - **Conditions with a choice of states:** after picking an entity, the condition only offers the states it can have (playing, paused, open, the options of a select …), shown in your language. Numbers get a number field with their unit. "Custom value …" stays as a way out. Text sensors without a list (template sensors, Team Tracker) offer the states from their history, and "Several …" picks more than one state at once.
 
+### Fixed
+- **Pulse tile:** When a device is only due soon (a battery at 18 %, for example) and nothing is broken, the tile says "1 due soon" instead of "All ok". It still only lights up for real problems.
+
 ## 1.3.3 – 12.10.2026
 
 ### Fixed

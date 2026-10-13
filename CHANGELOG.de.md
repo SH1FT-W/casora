@@ -12,6 +12,9 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Karussell im Studio:** „Karussell“ ist jetzt eine Kachelart. Seiten hinzufügen, umsortieren oder entfernen, automatisch weiterblättern, immer vorne. Vorhandene Kacheln lassen sich über ihr ⋯-Menü zu einem Karussell zusammenfassen, ein Karussell lässt sich wieder in einzelne Kacheln auflösen. Neue Karussells und geänderte Seiten gehen auch ins Handy-Layout.
 - **Bedingungen mit Zustandsauswahl:** Nach der Wahl der Entität bietet die Bedingung nur die Zustände an, die sie haben kann (Wiedergabe, Pausiert, Offen, die Optionen einer Auswahl …). Zahlen bekommen ein Zahlenfeld mit Einheit. „Eigener Wert …“ bleibt als Ausweg. Text-Sensoren ohne Liste (Vorlagen-Sensoren, Team Tracker) bieten die Zustände aus ihrem Verlauf an, und „Mehrere …“ wählt mehrere Zustände auf einmal.
 
+### Behoben
+- **Pulse-Kachel:** Ist ein Gerät nur bald fällig (etwa eine Batterie bei 18 %) und sonst nichts kaputt, steht auf der Kachel „1 bald fällig“ statt „Alles ok“. Hinterlegt wird sie weiter nur bei echten Problemen.
+
 ## 1.3.3 – 12.10.2026
 
 ### Behoben

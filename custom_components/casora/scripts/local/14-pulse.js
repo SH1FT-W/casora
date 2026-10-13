@@ -262,7 +262,8 @@
   P.tileState = function (s) {
     if (!s || !s.installed) return 'Nicht installiert';
     if (!s.total) return 'Keine Geräte';
-    if (!s.problems) return 'Alles ok';
+    // Ohne Problem, aber bald fällig (z. B. Batterie 18 %): nicht „Alles ok“ – steht da, färbt nicht.
+    if (!s.problems) return s.soon ? s.soon + ' bald fällig' : 'Alles ok';
     return (s.problems === 1 ? '1 Problem' : s.problems + ' Probleme') + (s.soon ? ' · ' + s.soon + ' beobachten' : '');
   };
 
