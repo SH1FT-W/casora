@@ -245,6 +245,44 @@
       narrowOrder: ['phone', 'home', 'last'], fieldStyle: { map: mapStyle } });
   };
 
+  // „Verlauf · 3 Tage“ als Zeitleiste wie im Schloss-Popup (13-schloss.js): Uhrzeit | Punkt in der Farbe des
+  // Orts mit Linie zum nächsten | Ort, darunter bis wann und wie lange. Beim ersten Eintrag eines früheren Tags
+  // steht der Tag über der Uhrzeit. „Ganzer Verlauf“ öffnet HAs Verlauf der letzten drei Tage.
+  var lastHtml = function (UI, list, pid, now) {
+    var font = 'var(--primary-font-family, system-ui)', ink = 'var(--casora-popup-tiles-text-primary, #3A322B)',
+      sub = 'var(--casora-soft-sub, rgba(58,50,43,.6))', row = 'var(--casora-soft-row-fill, rgba(140,115,90,0.07))',
+      ctl = 'var(--casora-soft-control-fill, rgba(140,115,90,0.10))', dim = 'var(--casora-soft-icon-off, rgba(140,115,90,0.18))';
+    var note = function (t) { return '<div style="padding:14px 4px;font-size:14px;font-weight:500;color:' + sub + ';">' + esc(T(t)) + '</div>'; };
+    var head = UI.label('Verlauf').replace(/<\/div>$/, '<div style="font-size:12.5px;font-weight:600;color:' + sub + ';">' + esc(T('3 Tage')) + '</div></div>');
+    var body;
+    if (!list) body = note('Wird geladen …');
+    else if (!list.length) body = note('Keine Änderung in den letzten drei Tagen');
+    else {
+      var items = list.slice(0, 8), today = dayStart(now);
+      body = items.map(function (s, i) {
+        var d = dayStart(s.start), prev = items[i - 1], first = d !== today && (!prev || dayStart(prev.start) !== d);
+        var dd = Math.round((today - d) / 86400000);
+        var day = first ? (dd === 1 ? T('Gestern') : new Date(s.start).toLocaleDateString(window.casoraLocale ? window.casoraLocale() : 'de-DE', { weekday: 'short' }).replace(/\.$/, '')) : '';
+        var open = s.end == null, last = i === items.length - 1;
+        // Teile einzeln, damit die Übersetzung sie erkennt („bis 16:42“, „8 Std. 21 Min.“).
+        var info = '<span>' + esc(open ? T('jetzt hier') : T('bis ' + hm(s.end))) + '</span> · <span>' + esc(T(P.dur((s.end || now) - s.start))) + '</span>';
+        return '<div class="cpe-ev" style="display:grid;grid-template-columns:minmax(46px,max-content) 22px minmax(0,1fr);align-items:start;column-gap:8px;position:relative;padding:9px 0;">'
+          + '<div style="font-size:13px;font-weight:600;color:' + sub + ';font-variant-numeric:tabular-nums;padding-top:2px;white-space:nowrap;">'
+          + (day ? '<div style="font-size:11.5px;font-weight:700;margin:-1px 0 1px;">' + esc(day) + '</div>' : '') + esc(hm(s.start)) + '</div>'
+          + '<div style="position:relative;height:100%;display:flex;justify-content:center;">'
+          + (last ? '' : '<div style="position:absolute;top:16px;bottom:-18px;width:2px;border-radius:2px;background:' + dim + ';"></div>')
+          + '<div style="position:relative;width:12px;height:12px;border-radius:50%;margin-top:4px;background:' + P.zoneHue(s.state) + ';box-shadow:0 0 0 3px ' + row + ';"></div></div>'
+          + '<div style="min-width:0;"><div style="font-size:14.5px;font-weight:700;color:' + ink + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(T(P.place(s.state))) + '</div>'
+          + '<div style="font-size:12.5px;font-weight:500;color:' + sub + ';margin-top:1px;white-space:nowrap;">' + info + '</div></div></div>';
+      }).join('');
+    }
+    return '<div style="font-family:' + font + '">' + head
+      + '<div class="cpe-verlauf" style="background:' + row + ';border-radius:var(--casora-popup-row-radius, 24px);padding:8px 16px 8px 12px;">' + body + '</div>'
+      + '<div role="button" data-casora-person-act="hist" data-casora-person="' + esc(pid) + '" style="box-sizing:border-box;width:100%;text-align:center;margin-top:10px;height:46px;min-height:46px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:6px;'
+      + 'font-size:14px;font-weight:700;cursor:pointer;background:var(--casora-soft-mehr-fill, ' + ctl + ');color:var(--casora-soft-mehr-ink, ' + ink + ');">'
+      + '<span style="flex:none;margin:0;">' + esc(T('Ganzer Verlauf')) + '</span><ha-icon icon="mdi:chevron-right" style="--mdc-icon-size:18px;display:flex;flex:none;margin:0;"></ha-icon></div></div>';
+  };
+
   P.sec = function (part, pid, states, hass, el) {
     var UI = window._casoraUI;
     var st = states && states[pid];
@@ -312,18 +350,7 @@
       if (dir && DIR[dir.state]) rowsH.push({ entity: px.dir, icon: 'mdi:navigation-variant', iconTone: AWAY, label: 'Richtung', value: DIR[dir.state] });
       return rowsH.length ? UI.group(rowsH, 'Nach Hause') : '';
     }
-    if (part === 'last') {
-      var list = P.history(hass, pid, el);
-      if (!list) return UI.group([{ icon: 'mdi:history', label: 'Verlauf wird geladen …' }], 'Zuletzt');
-      if (!list.length) return UI.group([{ icon: 'mdi:history', label: 'Kein Verlauf der letzten drei Tage' }], 'Zuletzt');
-      var rowsL = list.slice(0, 5).map(function (s, i) {
-        var open = s.end == null;
-        return { icon: zoneIcon(s.state, states), iconTone: i === 0 ? P.zoneHue(s.state) : P.zoneHue(s.state), label: P.place(s.state),
-          sub: open ? T('seit') + ' ' + P.when(s.start, now) : P.when(s.start, now) + ' – ' + hm(s.end),
-          value: P.dur((s.end || now) - s.start) };
-      });
-      return UI.group(rowsL, 'Zuletzt');
-    }
+    if (part === 'last') return lastHtml(UI, P.history(hass, pid, el), pid, now);
     return '';
   };
 
@@ -339,6 +366,13 @@
   P.act = function (kind, pid, svc) {
     var ha = document.querySelector('home-assistant'), hass = ha && ha.hass;
     if (!hass || !svc) return;
+    if (kind === 'hist') {
+      try { window.casoraPopup.close(); } catch (e) { /* schon zu */ }
+      history.pushState(null, '', '/history?entity_id=' + encodeURIComponent(pid)
+        + '&start_date=' + encodeURIComponent(new Date(dayStart(Date.now()) - 2 * 86400000).toISOString()));
+      window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));
+      return;
+    }
     var name = ((hass.states[pid] || {}).attributes || {}).friendly_name || '';
     if (kind === 'loc') {
       notify(hass, svc, { message: 'request_location_update' }).then(function () { toast('Standort angefragt'); }, function () { toast('Konnte das Handy nicht erreichen'); });
