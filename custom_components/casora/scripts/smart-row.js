@@ -1410,18 +1410,34 @@ class CasoraSmartRow extends HTMLElement {
   _autoSize() {
     if (!this._scrollMode || !this._sortEnabled || !this._wrappers.length || !window.casoraAutoLarge) return;
     const AUTO_MAX = 2;
-    const want = new Set(), cand = [];
+    // Obergrenze für die ganze Seite, nicht je Reihe: alle Handy-Reihen melden ihre Kandidaten.
+    const REG = window._casoraAutoRows = window._casoraAutoRows || new Set();
+    REG.add(this);
+    this._autoAlways = new Set();
+    this._autoCand = [];
     this._config.cards.forEach((raw, i) => {
       const cfg = resolveCardConfig(raw);
       if (String(cfg?.variables?.size || '').toLowerCase() !== 'auto') return;
       const w = this._wrappers[i];
       if (!w || w.dataset.off === '1') return;
-      const v = window.casoraAutoLarge(cfg, this._hass, this._isActive(i));
-      if (v === 2) want.add(i);
-      else if (v === 1) cand.push({ i, r: window.casoraAutoLarge.rank(cfg), o: Number(w.style.order) || i });
       w.dataset.sizeAuto = '1';
+      if (w.style.display === 'none') return;
+      const v = window.casoraAutoLarge(cfg, this._hass, this._isActive(i));
+      if (v === 2) this._autoAlways.add(i);
+      else if (v === 1) this._autoCand.push({ row: this, i, r: window.casoraAutoLarge.rank(cfg), o: Number(w.style.order) || i });
     });
-    cand.sort((a, b) => (b.r - a.r) || (a.o - b.o)).slice(0, AUTO_MAX).forEach((c) => want.add(c.i));
+    const rows = [...REG].filter((r) => r.isConnected);
+    REG.forEach((r) => { if (!r.isConnected) REG.delete(r); });
+    // Reihen in Seitenreihenfolge, darin nach Rang, dann Position.
+    rows.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+    const all = [];
+    rows.forEach((r, ri) => (r._autoCand || []).forEach((c) => all.push({ ...c, ri })));
+    all.sort((a, b) => (b.r - a.r) || (a.ri - b.ri) || (a.o - b.o));
+    rows.forEach((r) => r._autoApply(all.slice(0, AUTO_MAX).filter((c) => c.row === r).map((c) => c.i)));
+  }
+
+  _autoApply(winners) {
+    const want = new Set([...(this._autoAlways || []), ...winners]);
     this._wrappers.forEach((w, i) => {
       if (!w || w.dataset.sizeAuto !== '1') return;
       const big = want.has(i);

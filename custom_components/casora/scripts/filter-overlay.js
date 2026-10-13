@@ -1201,6 +1201,43 @@
       if (this.isConnected && !this._initialized && !this._initializing) this._init();
     }
 
+    // „Größe am Handy: Automatisch“ (1.5) im Raum: wie smart-row._autoSize – groß, solange
+    // casoraAutoLarge es sagt, höchstens zwei zugleich (Kamera/Karussell immer, zählen nicht mit).
+    _autoSizeGrid() {
+      const A = window.casoraAutoLarge;
+      if (!A || !this._cardEls) return;
+      const auto = this._cardEls.filter((el) => el._casoraAutoCfg && el.isConnected);
+      if (!auto.length) return;
+      // Bedingte Karte: die Kachel darin (hui-conditional-card › hui-card › button-card).
+      const tileOf = (el, d = 0) => {
+        if (!el || d > 4) return null;
+        if (el.tagName === 'BUTTON-CARD') return el;
+        for (const k of [...(el.shadowRoot ? el.shadowRoot.children : []), ...(el.children || [])]) {
+          const t = tileOf(k, d + 1); if (t) return t;
+        }
+        return null;
+      };
+      const activeOf = (el) => {
+        const t = tileOf(el);
+        const ha = t && t.shadowRoot && t.shadowRoot.querySelector('ha-card');
+        if (!ha) return false;
+        const v = ha.style.getPropertyValue('--casora-active-overlay-opacity').trim()
+          || getComputedStyle(ha).getPropertyValue('--casora-active-overlay-opacity').trim();
+        return v === '1';
+      };
+      const want = new Set(), cand = [];
+      auto.forEach((el, n) => {
+        const v = A(el._casoraAutoCfg, this._hass, activeOf(el));
+        if (v === 2) want.add(el);
+        else if (v === 1) cand.push({ el, r: A.rank(el._casoraAutoCfg), n });
+      });
+      cand.sort((a, b) => (b.r - a.r) || (a.n - b.n)).slice(0, 2).forEach((c) => want.add(c.el));
+      auto.forEach((el) => {
+        if (want.has(el)) el.dataset.casoraSize = 'large';
+        else delete el.dataset.casoraSize;
+      });
+    }
+
     set hass(v) {
       // Per device, like the row: rewrite before the overlay or its cards read it.
       this._rawHass = v;
@@ -1222,6 +1259,7 @@
       v = F ? F.apply(v) : v;
       this._hass = v;
       for (const el of this._cardEls) { try { el.hass = v; } catch (_) {} }
+      if (!this._autoRaf) this._autoRaf = requestAnimationFrame(() => { this._autoRaf = null; this._autoSizeGrid(); });
       const filter = v?.states?.['input_select.casora_mobile_filter']?.state;
       // Offene Raumseite: schaltet eine Kachel um, rückt sie wie in der Reihe nach kurzer Pause
       // nach vorn bzw. zurück (Issue #6).
@@ -1503,6 +1541,10 @@
         const cardSize = window.casoraCardSize?.(sizeCfg)
           || (String(sizeCfg?.variables?.size || '').toLowerCase() === 'large' ? 'large' : 'small');
         if (cardSize === 'large') card.dataset.casoraSize = 'large';
+        // „Automatisch“ (1.5): Größe folgt dem Zustand (_autoSizeGrid), nur am Handy.
+        const autoCfg = cardCfg?.type === 'conditional' && cardCfg.card ? cardCfg.card : cardCfg;
+        if (/^\/[^/]*[-_]mobile(\/|$)/i.test(window.location.pathname)
+          && String(autoCfg?.variables?.size || '').toLowerCase() === 'auto') card._casoraAutoCfg = autoCfg;
         grid.appendChild(card);
         this._cardEls.push(card);
       }
