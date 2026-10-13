@@ -760,6 +760,13 @@ function markPhoneManaged(cfg, showBell, showAssist, rooms) {
             if (home && isDefaultHome(home, rooms)) c.variables.home_auto = true;
             else delete c.variables.home_auto;
           }
+          // Begrüßung der Startseite (1.4) gilt auch für den Handy-Titel.
+          const hv = (home && home.variables) || {};
+          if (hv.casora_greeting) c.variables.casora_greeting = hv.casora_greeting;
+          else delete c.variables.casora_greeting;
+          if (hv.casora_greeting && Array.isArray(hv.casora_greeting_people) && hv.casora_greeting_people.length) {
+            c.variables.casora_greeting_people = hv.casora_greeting_people.slice();
+          } else delete c.variables.casora_greeting_people;
         }
       }
       walk(c.cards);
@@ -2105,6 +2112,15 @@ const SECTIONS = [
     label: "Appearance", icon: "home", iconColor: studioIcon("appearance"), group: "rooms",
     fields: [
       { key: "__name", label: "Room name", type: "text", always: true },
+      // 1.4: Begrüßung statt Name, nur Startseite (casora-core.js casoraGreeting).
+      { key: "casora_greeting", label: "Title", type: "select", always: true, homeOnly: true,
+        options: ["", "time", "names", "user"],
+        optionLabels: { "": "Room name", time: "Greeting by time of day", names: "Greeting with who is home",
+          user: "Greeting the signed-in user" },
+        hint: "Good morning, good afternoon or good evening instead of the name. A long greeting gets smaller and stays on one line." },
+      { ...LIST("casora_greeting_people", "People to name", ["person"]), always: true, homeOnly: true,
+        when: (v) => v.casora_greeting === "names",
+        hint: "Empty: everyone who is home. With three or more at home, just the greeting." },
       { key: "__phone_name", label: "Name on phone", type: "text", always: true,
         phoneName: true, placeholder: MOBILE_FAVORITES,
         hint: "Heading of the favorites on the phone's Home page." },
@@ -4411,6 +4427,22 @@ const COND_DOMAIN_STATES = {
     "lightning-rainy", "snowy", "snowy-rainy", "hail", "windy", "windy-variant", "exceptional"],
 };
 const COND_NUMERIC_DOMAINS = new Set(["sensor", "number", "input_number", "counter"]);
+// Zustände aus dem Verlauf (Textsensoren ohne Liste, z. B. Vorlagen-Sensoren): id → [Zustände].
+const COND_SEEN = new Map();
+function condLoadSeen(hass, id) {
+  if (!hass || typeof hass.callWS !== "function" || !id || COND_SEEN.has(id)) return Promise.resolve(false);
+  COND_SEEN.set(id, []);
+  const start = new Date(Date.now() - 14 * 864e5).toISOString();
+  return hass.callWS({ type: "history/history_during_period", start_time: start, entity_ids: [id],
+    minimal_response: true, no_attributes: true, significant_changes_only: false })
+    .then((r) => {
+      const seen = [...new Set(((r && r[id]) || []).map((x) => x && (x.s !== undefined ? x.s : x.state))
+        .filter((x) => x != null && x !== "" && !["unavailable", "unknown"].includes(x)).map(String))];
+      COND_SEEN.set(id, seen.slice(0, 40));
+      return seen.length > 0;
+    })
+    .catch(() => false);
+}
 function condStates(hass, id) {
   const states = (hass && hass.states) || {};
   const st = states[id];
@@ -4423,6 +4455,16 @@ function condStates(hass, id) {
   else if (dom === "climate") values = ["off"].concat(Array.isArray(a.hvac_modes) ? a.hvac_modes : ["heat", "cool", "auto"]);
   else if (dom === "water_heater" && Array.isArray(a.operation_list)) values = a.operation_list;
   else if (COND_DOMAIN_STATES[dom]) values = COND_DOMAIN_STATES[dom].slice();
+  // Team Tracker (Fußball & Co.): feste Spielzustände, HA meldet sie nicht als Liste.
+  else if (dom === "sensor" && a.team_abbr !== undefined && a.league !== undefined) values = ["PRE", "IN", "POST", "BYE", "NOT_FOUND"];
+  let open = false;
+  if (!values && st && !a.unit_of_measurement && !["timestamp", "date"].includes(a.device_class)
+    && !Number.isFinite(Number(st.state)) && !/^\d{4}-\d\d-\d\d/.test(String(st.state))) {
+    // Text ohne bekannte Liste (Vorlagen-Sensor, Status-Text): aktueller Zustand + was der Verlauf zeigt.
+    values = [];
+    open = true;
+  }
+  if (values && COND_SEEN.has(id)) values = values.concat(COND_SEEN.get(id));
   if (values && (dom === "person" || dom === "device_tracker")) {
     // Zonen heißen im Zustand wie die Zone selbst („Arbeit“).
     Object.keys(states).filter((k) => k.indexOf("zone.") === 0 && k !== "zone.home")
@@ -4431,7 +4473,7 @@ function condStates(hass, id) {
   if (values) {
     // Der aktuelle Zustand steht immer mit drin (Geräte mit eigenen Zuständen).
     if (st && st.state && !["unavailable", "unknown"].includes(st.state)) values = values.concat(st.state);
-    return { kind: "list", values: uniq(values.concat("unavailable", "unknown")) };
+    return { kind: "list", open, values: uniq(values.concat("unavailable", "unknown")) };
   }
   const n = st ? Number(st.state) : NaN;
   if (st && (COND_NUMERIC_DOMAINS.has(dom) || a.unit_of_measurement) && (Number.isFinite(n) || a.unit_of_measurement)) {
@@ -4484,7 +4526,7 @@ function condText(t, hass) {
     if (kind === "state") {
       const want = c.state !== undefined ? c.state : c.state_not;
       // Zustände so, wie HA sie anzeigt („Abwesend scharf“ statt „armed_away“).
-      const show = (v) => { try { return S[c.entity] && hass.formatEntityState ? hass.formatEntityState(S[c.entity], String(v)) : v; } catch (e) { return v; } };
+      const show = (v) => { try { return S[c.entity] && hass.formatEntityState ? condStateLabel(hass, c.entity, String(v)) : v; } catch (e) { return v; } };
       const vals = [].concat(want === undefined ? [] : want).map(show).join(" / ");
       return nm(c.entity) + (c.state_not !== undefined ? " ≠ " : " = ") + vals;
     }
@@ -10826,6 +10868,7 @@ class CasoraPanel extends HTMLElement {
         .condval { min-width:0; padding:7px 10px; border-radius:var(--r-s); border:none; background:var(--casora-studio-chip, rgba(118,118,128,.18)); color:inherit; font:inherit; }
         .condnum { display:flex; align-items:center; gap:6px; min-width:0; }
         .condnum .condval { flex:1 1 auto; width:0; }
+        .condmany { text-align:left; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         .condunit { flex:0 0 auto; color:var(--secondary-text-color, var(--casora-studio-dim, #8e8e93)); }
         .carpages { display:flex; flex-direction:column; gap:2px; margin:2px 0 8px; }
         .carhead { font-size:var(--t-foot); color:var(--secondary-text-color, var(--casora-studio-dim, #8e8e93)); padding:4px 0 2px; }
@@ -16870,6 +16913,7 @@ class CasoraPanel extends HTMLElement {
       return sectionFields(sec)
         .filter((f) => live.has(unitOf(f)) && modAvail(f) && (!f.when || f.when(room.variables || {})))
         .filter((f) => !f.phoneName || this._favSection(room))
+        .filter((f) => !f.homeOnly || isHomeRoom(room, this._state.compact.rooms))
         .map((f, i) => [f, i])
         .sort((a, b) => (ordOf(a[0]) - ordOf(b[0])) || (a[1] - b[1]))
         .map(([f]) => f);
@@ -25175,6 +25219,8 @@ class CasoraPanel extends HTMLElement {
         line.className = "condrow";
         // 1.4: Nach der Entität nur Zustände, die sie annehmen kann (Liste), Zahlen mit Einheit, sonst frei.
         const kind = r.entity ? condStates(this._hass, r.entity) : null;
+        // Text ohne Liste: Zustände aus dem Verlauf nachladen, dann neu zeichnen.
+        if (kind && kind.open) condLoadSeen(this._hass, r.entity).then((got) => { if (got && box.isConnected) draw(); });
         const ent = this._combo(r.entity || "", ents, "Entity", (v) => {
           r.entity = v;
           const k = v ? condStates(this._hass, v) : null;
@@ -25192,15 +25238,42 @@ class CasoraPanel extends HTMLElement {
         const op = this._combo(r.op, ops, "", (v) => { r.op = v || "is"; save(); draw(); }, { fixed: true, labels: OPL });
         let val;
         const multi = String(r.value || "").indexOf(",") >= 0;
-        if (kind && kind.kind === "list" && (r.op === "is" || r.op === "isnot") && !r.own && !multi) {
+        // Mehrere Zustände („ist nicht Leerlauf, Lädt“): Auswahl mit Häkchen, gespeichert als Liste.
+        const pickMany = async () => {
+          const cur = String(r.value || "").split(",").map((x) => x.trim()).filter(Boolean);
+          const all = kind.values.concat(cur.filter((x) => !kind.values.includes(x)));
+          const res = await this._ask({
+            title: "Pick states",
+            message: "The condition is met for any of the ticked states.",
+            picks: all.map((v) => ({ id: v, title: condStateLabel(this._hass, r.entity, v), on: cur.includes(v) })),
+            multi: true,
+            confirmLabel: "OK",
+          });
+          const got = res && res.picks;
+          if (!got || !got.length) return;
+          r.value = all.filter((v) => got.includes(v)).join(", ");
+          save(); draw();
+        };
+        if (kind && kind.kind === "list" && (r.op === "is" || r.op === "isnot") && !r.own && multi) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "condval condmany";
+          btn.setAttribute("data-no-i18n", "");
+          btn.textContent = String(r.value).split(",").map((x) => condStateLabel(this._hass, r.entity, x.trim())).join(", ");
+          btn.onclick = pickMany;
+          val = btn;
+        } else if (kind && kind.kind === "list" && (r.op === "is" || r.op === "isnot") && !r.own) {
           const OWN = "__casora_own";
+          const MANY = "__casora_many";
           const vals = kind.values.slice();
           if (r.value && !vals.includes(r.value)) vals.unshift(r.value);
           const labels = {};
           vals.forEach((v) => { labels[v] = condStateLabel(this._hass, r.entity, v); });
+          labels[MANY] = "Several…";
           labels[OWN] = "Custom value…";
-          const pick = this._combo(r.value || "", vals.concat(OWN), "", (v) => {
+          const pick = this._combo(r.value || "", vals.concat(MANY, OWN), "", (v) => {
             if (v === OWN) { r.own = true; draw(); const f = rows.children[i] && rows.children[i].querySelector(".condval"); if (f) f.focus(); return; }
+            if (v === MANY) { draw(); pickMany(); return; }
             r.value = v; save();
           }, { fixed: true, labels });
           pick.wrap.classList.add("condpick");
@@ -26577,7 +26650,7 @@ window.__casoraPanelInternals = {
   linkPair, syncPairRooms, syncPairTiles, syncTwinTile, phoneCondSnapshot, condChain, condModel, condWrite, syncRoomChips, phoneRoomBadgeVars, PHONE_ROOM_OVERRIDE, phoneRoundTrips, phoneStale, phoneRoomKeys, carryPhoneSizes, restorePhoneSizes, hasTileSize, setInnerSize, expandMobileConfig, extractMobileConfig,
   deriveEnergyRooms, roomVisibility, homePickOrder, MENU_ICONS, SECTIONS, tileTwinKey,
   CASORA_ACCENTS, accentsShown, accentLabel, swatchCss,
-  condStates, isCarouselCard, isPageTile, carouselOf, carouselId, markCarousel, CAROUSEL_CARD, CAROUSEL_TILE,
+  condStates, condLoadSeen, isCarouselCard, isPageTile, carouselOf, carouselId, markCarousel, CAROUSEL_CARD, CAROUSEL_TILE,
   TILE_ICON, TILE_COLOR, syncUserTileTypes,  // eigene Kachelarten (casora-panel-kachelart.js)  // Farbmenü wie bei den Szenen, auch für Kalenderfarben (Einstellungen)
 };
 

@@ -7,9 +7,10 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ## 1.4.0 – 13.10.2026
 
 ### Neu
-- **Personen-Popup:** Ein Tipp auf eine Personen-Kachel oder ein Personen-Badge öffnet Casoras eigenes Popup statt des Kartendialogs von Home Assistant. Oben die Karte von Home Assistant mit Zonen und dem Weg der letzten 24 Stunden, darunter das Handy (Akku, Verbindung), „Nach Hause“ mit Entfernung und Richtung und die Orte der letzten drei Tage. Mit der Companion-App: Standort jetzt holen, Nachricht schicken, Handy klingeln lassen (auch wenn es leise gestellt ist).
+- **Begrüßung auf der Startseite:** Im Studio (Startseite › Darstellung › Titel) wird aus dem Raumnamen auf Wunsch „Guten Morgen“, „Guten Tag“ oder „Guten Abend“, wahlweise mit den Vornamen der Anwesenden oder des angemeldeten Benutzers. Eine lange Begrüßung wird kleiner und bleibt in einer Zeile, am Desktop und am Handy.
+- **Personen-Popup:** Ein Tipp auf eine Personen-Kachel, ein Personen-Badge oder die Meldung einer Person in der Glocke öffnet Casoras eigenes Popup statt des Kartendialogs von Home Assistant. Oben die Karte von Home Assistant mit Zonen und dem Weg der letzten 24 Stunden, darunter das Handy (Akku, Verbindung), „Nach Hause“ mit Entfernung und Richtung und die Orte der letzten drei Tage. Mit der Companion-App: Standort jetzt holen, Nachricht schicken, Handy klingeln lassen (auch wenn es leise gestellt ist).
 - **Karussell im Studio:** „Karussell“ ist jetzt eine Kachelart. Seiten hinzufügen, umsortieren oder entfernen, automatisch weiterblättern, immer vorne. Vorhandene Kacheln lassen sich über ihr ⋯-Menü zu einem Karussell zusammenfassen, ein Karussell lässt sich wieder in einzelne Kacheln auflösen. Neue Karussells und geänderte Seiten gehen auch ins Handy-Layout.
-- **Bedingungen mit Zustandsauswahl:** Nach der Wahl der Entität bietet die Bedingung nur die Zustände an, die sie haben kann (Wiedergabe, Pausiert, Offen, die Optionen einer Auswahl …). Zahlen bekommen ein Zahlenfeld mit Einheit. „Eigener Wert …“ bleibt als Ausweg.
+- **Bedingungen mit Zustandsauswahl:** Nach der Wahl der Entität bietet die Bedingung nur die Zustände an, die sie haben kann (Wiedergabe, Pausiert, Offen, die Optionen einer Auswahl …). Zahlen bekommen ein Zahlenfeld mit Einheit. „Eigener Wert …“ bleibt als Ausweg. Text-Sensoren ohne Liste (Vorlagen-Sensoren, Team Tracker) bieten die Zustände aus ihrem Verlauf an, und „Mehrere …“ wählt mehrere Zustände auf einmal.
 
 ## 1.3.3 – 12.10.2026
 

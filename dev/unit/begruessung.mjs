@@ -1,0 +1,26 @@
+// Begrüßung statt Name der Übersicht (1.4, casora-core.js casoraGreeting): Tageszeit, Namen, Grenzen.
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const src = fs.readFileSync(new URL('../../custom_components/casora/scripts/casora-core.js', import.meta.url), 'utf8');
+const block = src.slice(src.indexOf('// casora-greeting:start'), src.indexOf('// casora-greeting:end'));
+globalThis.window = {};
+new Function(block)();
+const G = window.casoraGreeting;
+const at = (h) => new Date(2026, 9, 13, h, 0);
+const hass = (st) => ({ user: { name: 'Erika Mustermann' }, states: st });
+const p = (name, state) => ({ state, attributes: { friendly_name: name } });
+assert.equal(G(hass({}), {}, at(9)), null, 'ohne Einstellung bleibt der Raumname');
+assert.equal(G(hass({}), { casora_greeting: 'time' }, at(5)), 'Guten Morgen');
+assert.equal(G(hass({}), { casora_greeting: 'time' }, at(11)), 'Guten Tag');
+assert.equal(G(hass({}), { casora_greeting: 'time' }, at(18)), 'Guten Abend');
+assert.equal(G(hass({}), { casora_greeting: 'time' }, at(2)), 'Guten Abend', 'nachts Guten Abend');
+assert.equal(G(hass({}), { casora_greeting: 'user' }, at(20)), 'Guten Abend, Erika');
+const st = { 'person.a': p('Anna Test', 'home'), 'person.b': p('Ben Test', 'home'), 'person.c': p('Cem Test', 'not_home') };
+assert.equal(G(hass(st), { casora_greeting: 'names' }, at(20)), 'Guten Abend, Anna und Ben');
+assert.equal(G(hass(st), { casora_greeting: 'names', casora_greeting_people: ['person.b', 'person.c'] }, at(20)), 'Guten Abend, Ben', 'nur gewählte');
+st['person.c'].state = 'home';
+assert.equal(G(hass(st), { casora_greeting: 'names' }, at(20)), 'Guten Abend', 'ab drei nur die Begrüßung');
+assert.equal(G(hass({ 'person.a': p('Anna', 'not_home') }), { casora_greeting: 'names' }, at(20)), 'Guten Abend', 'niemand zuhause');
+window.casoraTr = (x) => ({ 'Guten Abend': 'Good evening', und: 'and' }[x] || x);
+assert.equal(G(hass(Object.fromEntries(Object.entries(st).slice(0, 2))), { casora_greeting: 'names' }, at(20)), 'Good evening, Anna and Ben', 'Englisch');
+console.log('ok begruessung');

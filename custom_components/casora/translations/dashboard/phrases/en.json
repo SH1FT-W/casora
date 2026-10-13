@@ -1,5 +1,9 @@
 {
  "exact": {
+  "Guten Morgen": "Good morning",
+  "Guten Tag": "Good afternoon",
+  "Guten Abend": "Good evening",
+  "und": "and",
   "1 Problem": "1 problem",
   "Keine Probleme": "No problems",
   "Keine Geräte": "No devices",

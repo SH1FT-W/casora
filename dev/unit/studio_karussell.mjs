@@ -32,6 +32,8 @@ const hass = { states: {
   'person.anna': { state: 'home', attributes: {} },
   'zone.arbeit': { state: '0', attributes: { friendly_name: 'Arbeit' } },
   'button.klingel': { state: '2026-10-12T10:00:00+00:00', attributes: {} },
+  'sensor.verein_test': { state: 'PRE', attributes: { team_abbr: 'ABC', league: 'XYZ' } },
+  'sensor.drucker_schritt': { state: 'idle', attributes: {} },
 } };
 const vals = (id) => I.condStates(hass, id).values;
 assert.ok(['playing', 'paused', 'idle', 'off'].every((v) => vals('media_player.musik_test').includes(v)), 'Mediaplayer');
@@ -44,6 +46,11 @@ assert.ok(vals('person.anna').includes('Arbeit') && vals('person.anna').includes
 assert.ok(vals('light.diele_test').includes('unavailable'), 'nicht verfügbar wählbar');
 assert.deepEqual(I.condStates(hass, 'sensor.temperatur'), { kind: 'number', unit: '°C' });
 assert.equal(I.condStates(hass, 'button.klingel'), null, 'Zeitstempel bleibt frei');
+assert.ok(['PRE', 'IN', 'POST'].every((v) => vals('sensor.verein_test').includes(v)), 'Team Tracker');
+assert.ok(I.condStates(hass, 'sensor.drucker_schritt').open && vals('sensor.drucker_schritt').includes('idle'), 'Text ohne Liste: offen mit aktuellem Zustand');
+hass.callWS = async () => ({ 'sensor.drucker_schritt': [{ s: 'idle' }, { s: 'printing' }, { s: 'unavailable' }] });
+assert.equal(await I.condLoadSeen(hass, 'sensor.drucker_schritt'), true);
+assert.ok(vals('sensor.drucker_schritt').includes('printing'), 'Zustände aus dem Verlauf');
 
 // ── Karussell ────────────────────────────────────────────────────────────────
 const tile = (tpl, e) => ({ type: 'custom:button-card', template: tpl, entity: e, name: e });

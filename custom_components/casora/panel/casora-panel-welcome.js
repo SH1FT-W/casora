@@ -27,6 +27,7 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
+      n0t: "Begrüßung", n0: "Guten Morgen, Guten Tag, Guten Abend – auf Wunsch mit Namen, statt „Zuhause“.",
       n1t: "Personen-Popup", n1: "Karte, Handy und die Orte des Tages – statt des Kartendialogs von Home Assistant.",
       n2t: "Karussell im Studio", n2: "Mehrere Kacheln als Seiten einer Kachel. Anlegen, zusammenfassen, sortieren, auflösen.",
       n3t: "Bedingungen zum Auswählen", n3: "Nach der Entität stehen nur ihre möglichen Zustände zur Wahl – kein Raten mehr."
@@ -39,6 +40,7 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
+      n0t: "Greeting", n0: "Good morning, good afternoon, good evening – with names if you like, instead of \"Home\".",
       n1t: "Person popup", n1: "Map, phone and today's places – instead of the Home Assistant map dialog.",
       n2t: "Carousel in the Studio", n2: "Several tiles as pages of one tile. Create, combine, reorder, split.",
       n3t: "Conditions to pick from", n3: "After the entity, only its possible states are offered – no more guessing."
@@ -54,6 +56,7 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
+    ["mdi:hand-wave-outline", "n0t", "n0"],
     ["mdi:account-circle-outline", "n1t", "n1"],
     ["mdi:view-carousel-outline", "n2t", "n2"],
     ["mdi:format-list-checks", "n3t", "n3"],

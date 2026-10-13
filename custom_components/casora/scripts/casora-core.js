@@ -686,6 +686,60 @@
 })();
 // casora-room-name:end
 
+// casora-greeting:start
+// Begrüßung statt Name der Übersicht (1.4): variables.casora_greeting an der Startseite.
+//   'time'  – Guten Morgen (5–11) / Guten Tag (11–18) / Guten Abend (ab 18, auch nachts)
+//   'names' – dazu die Vornamen der Personen, die zuhause sind (casora_greeting_people grenzt ein);
+//             zwei mit „und“, ab drei oder niemand zuhause nur die Begrüßung
+//   'user'  – dazu der Vorname des angemeldeten Benutzers
+// Rückgabe: Text (schon übersetzt, Namen wie gespeichert) oder null (Raumname bleibt).
+(function () {
+  if (window.casoraGreeting) return;
+  var tr = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
+  var first = function (n) { return String(n || '').trim().split(/\s+/)[0] || ''; };
+  window.casoraGreeting = function (hass, vars, now) {
+    var v = vars || {};
+    var mode = v.casora_greeting;
+    if (mode !== 'time' && mode !== 'names' && mode !== 'user') return null;
+    var h = (now || new Date()).getHours();
+    var g = tr(h >= 5 && h < 11 ? 'Guten Morgen' : h >= 11 && h < 18 ? 'Guten Tag' : 'Guten Abend');
+    var names = [];
+    if (mode === 'user') names = [first(hass && hass.user && hass.user.name)].filter(Boolean);
+    if (mode === 'names') {
+      var S = (hass && hass.states) || {};
+      var only = Array.isArray(v.casora_greeting_people) ? v.casora_greeting_people.filter(Boolean) : [];
+      names = Object.keys(S).filter(function (id) {
+        return id.indexOf('person.') === 0 && S[id].state === 'home' && (!only.length || only.indexOf(id) >= 0);
+      }).sort().map(function (id) { return first((S[id].attributes || {}).friendly_name || id.slice(7)); }).filter(Boolean);
+    }
+    if (names.length === 1) return g + ', ' + names[0];
+    if (names.length === 2) return g + ', ' + names[0] + ' ' + tr('und') + ' ' + names[1];
+    return g;
+  };
+  // Lange Begrüßung: eine Zeile, Schrift so weit kleiner, bis sie passt (nie größer als im Design).
+  // area: Rasterplatz erzwingen (button-card setzt grid-area eigener Felder selbst).
+  window.casoraFitTitle = function (el, area) {
+    if (!el || !el.isConnected) return;
+    if (area) el.style.setProperty('grid-area', area, 'important');
+    // Größe aus der Vorlage merken – zurückgesetzt wird auf sie, nicht auf leer.
+    if (el._casoraFs === undefined) el._casoraFs = el.style.fontSize || '';
+    el.style.fontSize = el._casoraFs;
+    el.style.whiteSpace = 'nowrap';
+    // Breite der Rasterzelle statt der Textbreite messen (Vorlage: justify-self start).
+    el.style.justifySelf = 'stretch';
+    var room = el.clientWidth, need = el.scrollWidth;
+    if (room > 0 && need > room) {
+      var px = parseFloat(getComputedStyle(el).fontSize) || 0;
+      if (px) el.style.fontSize = Math.max(18, Math.floor(px * room / need)) + 'px';
+    }
+    if (!el._casoraFit) {
+      el._casoraFit = true;
+      try { new ResizeObserver(function () { window.casoraFitTitle(el, area); }).observe(el.parentElement || el); } catch (e) { /* ohne Nachmessen */ }
+    }
+  };
+})();
+// casora-greeting:end
+
 // casora-cam-status:start
 // Kamera „Status von: …“ (07.10.2026, 1.1.1): Freiwillig je Kamera-Kachel (variables.status_entity)
 // eine zweite Entität, die sagt, ob die Kamera erreichbar ist – eine andere camera.* oder ein

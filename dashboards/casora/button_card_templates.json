@@ -9214,7 +9214,7 @@
   "hold_action": {
    "action": "none"
   },
-  "name": "[[[\n  const f = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  if (f === 'all') {\n    /* Titel = Name der Übersicht (Studio: variables.home_name bei eigenem Namen). Übersetzt nur\n       mit home_auto (von Casora angelegt, unverändert) – Regel casoraRoomName, 04.10.2026. */\n    const own = String(variables.home_name || '').trim();\n    const r = window.casoraRoomName ? window.casoraRoomName(own || 'Home',\n      { casora_auto_name: !own && variables.home_auto === true ? 'home' : undefined, name_literal: !!own || variables.name_literal === true }) : null;\n    /* Wörtlicher Name in <span data-no-i18n>: casora-i18n übersetzt beim Zeichnen sonst „Home“ zu\n       „Zuhause“, die Stil-Regel unten schrieb danach wieder „Home“ – der Titel sprang (07.10.2026). */\n    const text = r ? r.text : (own || 'Home');\n    const lit = r ? r.literal : (variables.name_literal === true && !!own);\n    if (!lit) return text;\n    const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\n    return '<span data-no-i18n>' + esc(text) + '</span>';\n  }\n  const labels = {climate:'Klima',lights:'Beleuchtung',presence:'Personen',media:'Medien',security:'Sicherheit',energy:'Energie'};\n  return labels[f] || 'Zuhause';\n]]]\n",
+  "name": "[[[\n  const f = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  if (f === 'all') {\n    /* Begrüßung statt Name (1.4, variables.casora_greeting von der Startseite). */\n    const gr = window.casoraGreeting ? window.casoraGreeting(hass, variables) : null;\n    if (gr) {\n      setTimeout(() => { const el = this.shadowRoot && this.shadowRoot.querySelector('#name'); if (el && window.casoraFitTitle) window.casoraFitTitle(el); }, 0);\n      return '<span data-no-i18n>' + String(gr).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>';\n    }\n    /* Titel = Name der Übersicht (Studio: variables.home_name bei eigenem Namen). Übersetzt nur\n       mit home_auto (von Casora angelegt, unverändert) – Regel casoraRoomName, 04.10.2026. */\n    const own = String(variables.home_name || '').trim();\n    const r = window.casoraRoomName ? window.casoraRoomName(own || 'Home',\n      { casora_auto_name: !own && variables.home_auto === true ? 'home' : undefined, name_literal: !!own || variables.name_literal === true }) : null;\n    /* Wörtlicher Name in <span data-no-i18n>: casora-i18n übersetzt beim Zeichnen sonst „Home“ zu\n       „Zuhause“, die Stil-Regel unten schrieb danach wieder „Home“ – der Titel sprang (07.10.2026). */\n    const text = r ? r.text : (own || 'Home');\n    const lit = r ? r.literal : (variables.name_literal === true && !!own);\n    if (!lit) return text;\n    const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\n    return '<span data-no-i18n>' + esc(text) + '</span>';\n  }\n  const labels = {climate:'Klima',lights:'Beleuchtung',presence:'Personen',media:'Medien',security:'Sicherheit',energy:'Energie'};\n  return labels[f] || 'Zuhause';\n]]]\n",
   "show_entity_picture": false,
   "show_icon": false,
   "show_label": false,
@@ -13844,7 +13844,8 @@
      "layout_type": "custom:grid-layout",
      "type": "custom:layout-card"
     }
-   }
+   },
+   "greeting": "[[[\n  /* Begrüßung statt Raumname (1.4, variables.casora_greeting, casora-core.js casoraGreeting). */\n  const g = window.casoraGreeting ? window.casoraGreeting(hass, variables) : null;\n  if (!g) return '';\n  setTimeout(() => { const el = this.shadowRoot && this.shadowRoot.querySelector('#greeting'); if (el && window.casoraFitTitle) window.casoraFitTitle(el, 'n'); }, 0);\n  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\n  return '<span data-no-i18n>' + esc(g) + '</span>';\n]]]\n"
   },
   "double_tap_action": {
    "action": "none"
@@ -14868,6 +14869,47 @@
      {
       "pointer-events": "auto"
      }
+    ],
+    "greeting": [
+     {
+      "display": "[[[ return window.casoraGreeting && window.casoraGreeting(hass, variables) ? 'block' : 'none' ]]]"
+     },
+     {
+      "min-width": 0
+     },
+     {
+      "text-align": "left"
+     },
+     {
+      "color": "var(--primary-text-color)"
+     },
+     {
+      "opacity": 1
+     },
+     {
+      "font-size": "var(--hero-room-name-size-current, clamp(48px, 6vw + 12px, 100px))"
+     },
+     {
+      "letter-spacing": "var(--hero-room-name-letter-spacing-current, -2px)"
+     },
+     {
+      "font-weight": "var(--casora-hero-title-weight, 700)"
+     },
+     {
+      "justify-self": "start"
+     },
+     {
+      "padding-left": 0
+     },
+     {
+      "line-height": "var(--hero-room-name-line-height-current, 1.2)"
+     },
+     {
+      "margin-left": "var(--hero-room-name-margin-left-current, 0px)"
+     },
+     {
+      "overflow": "visible"
+     }
     ]
    },
    "grid": [
@@ -14908,6 +14950,9 @@
     },
     {
      "overflow": "visible"
+    },
+    {
+     "display": "[[[ return window.casoraGreeting && window.casoraGreeting(hass, variables) ? 'none' : 'block' ]]]"
     }
    ]
   },

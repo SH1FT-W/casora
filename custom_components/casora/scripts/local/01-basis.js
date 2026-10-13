@@ -463,7 +463,8 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       // Keine eigene Karte (Alarm/Schloss stecken oft nur als Badge in der Raumkarte): die Kachel-Vorlage
       // der Domäne – dasselbe Popup wie deren Kachel statt HAs Dialog (B-NOTI).
       var tpl = !found && { lock: 'casora_lock', alarm_control_panel: 'casora_alarm', vacuum: 'casora_vacuum',
-        cover: 'casora_cover', climate: 'casora_thermostat', media_player: 'casora_media', light: 'casora_light' }[String(entityId).split('.')[0]];
+        cover: 'casora_cover', climate: 'casora_thermostat', media_player: 'casora_media', light: 'casora_light',
+        person: 'casora_presence' }[String(entityId).split('.')[0]];
       if (tpl && cfg && cfg.button_card_templates && cfg.button_card_templates[tpl] && h.states[entityId]) {
         found = { type: 'custom:button-card', template: tpl, entity: entityId,
           name: (h.states[entityId].attributes && h.states[entityId].attributes.friendly_name) || entityId };
@@ -1019,7 +1020,8 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         if (!row) continue;
         if (row.opens || !row.entity || !n.dataset || !n.dataset.casoraMi) return;
         var id = row.entity;
-        if (/^(person|device_tracker|sensor\.post|input_boolean)\./.test(id)) return;
+        // Person (1.4): eigenes Casora-Popup wie an Kachel und Badge.
+        if (/^(device_tracker|sensor\.post|input_boolean)\./.test(id)) return;
         e.preventDefault(); e.stopPropagation();
         if (e.type === 'touchend') lastTouch = Date.now();
         try { window._casoraNotify && window._casoraNotify.close(); } catch (x) {}

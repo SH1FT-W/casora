@@ -7,9 +7,10 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 1.4.0 – 13.10.2026
 
 ### New
-- **Person popup:** tapping a person tile or badge opens Casora's own popup instead of the Home Assistant map dialog. On top the Home Assistant map with zones and the path of the last 24 hours, then the phone (battery, connection), "Way home" with distance and direction, and the places of the last three days. With the Companion app: get the location now, send a message, make the phone ring (even on silent).
+- **Greeting on the home page:** in the Studio (home page › Appearance › Title) the room name can become "Good morning", "Good afternoon" or "Good evening", optionally with the first names of the people at home or of the signed-in user. A long greeting gets smaller and stays on one line, on desktop and phone.
+- **Person popup:** tapping a person tile, badge or a person's notification in the bell opens Casora's own popup instead of the Home Assistant map dialog. On top the Home Assistant map with zones and the path of the last 24 hours, then the phone (battery, connection), "Way home" with distance and direction, and the places of the last three days. With the Companion app: get the location now, send a message, make the phone ring (even on silent).
 - **Carousel in the Studio:** "Carousel" is now a tile type. Add pages, reorder or remove them, swipe automatically, keep it at the front. Existing tiles can be combined into a carousel from their ⋯ menu, and a carousel can be split back into tiles. New carousels and changed pages go to the phone layout too.
-- **Conditions with a choice of states:** after picking an entity, the condition only offers the states it can have (playing, paused, open, the options of a select …), shown in your language. Numbers get a number field with their unit. "Custom value …" stays as a way out.
+- **Conditions with a choice of states:** after picking an entity, the condition only offers the states it can have (playing, paused, open, the options of a select …), shown in your language. Numbers get a number field with their unit. "Custom value …" stays as a way out. Text sensors without a list (template sensors, Team Tracker) offer the states from their history, and "Several …" picks more than one state at once.
 
 ## 1.3.3 – 12.10.2026
 
