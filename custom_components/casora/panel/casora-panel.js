@@ -2184,6 +2184,10 @@ const SECTIONS = [
         hint: "How soft the room photo behind an open room looks. Sharp shows the room clearly." },
       // Raumseite am Handy nach Kategorien gliedern (filter-overlay.js, --casora-room-groups).
       // Geht wie room_photo_blur über casora_mobile_bg ans Handy; leer = an.
+      // 1.5: alle Kacheln dieses Dashboards auf „Größe am Handy: Automatisch“ (_allTilesAuto).
+      { key: "__all_auto", sub: "phone", label: "Tile size on the phone", type: "action", auto: true, scope: "dashboard",
+        button: "Set all tiles to Automatic",
+        hint: "Tiles get large on the phone while something is going on and small again afterwards. You can still set single tiles to Small or Large." },
       { key: "room_groups", sub: "phone", label: "Group rooms by category on the phone", type: "bool",
         boolDefault: true, auto: true, scope: "dashboard",
         hint: "Like Apple's Home app: Light, Climate, Security … each with a small heading. Off shows all devices under one heading." },
@@ -4236,8 +4240,10 @@ const HINT_BLOCKS = ".grouphead p, .band.detail .card > .chead .blurb, .hint,"
 
 const SIZE_FIELD = {
   key: "size", label: "Size on phone", type: "select",
-  options: ["", "large"],
-  optionLabels: { "": "Small", large: "Large" },
+  options: ["", "large", "auto"],
+  optionLabels: { "": "Small", large: "Large", auto: "Automatic" },
+  // 1.5: groß nur, solange die Kachel etwas zu erzählen hat (casora-core.js casoraAutoLarge).
+  hint: "Automatic: large while something is going on (appliance running, music playing, warning), otherwise small.",
   // Nur auf dem Desktop gezeigt: eine Handy-Größe gibt es dann nicht.
   when: (vars) => vars.surfaces !== "desktop",
 };
@@ -4653,7 +4659,9 @@ const foldName = (s) => String(s || "").toLowerCase().normalize("NFD")
 // The name is stored in the user's language: templates without a name of their
 // own (Batteries, Network …) show exactly this on the dashboard.
 function newTile(type) {
-  return { type: "custom:button-card", template: type.template, entity: "", name: trLabel(type.label) };
+  // Neue Kacheln: „Größe am Handy“ automatisch (1.5); bestehende bleiben, wie sie sind.
+  return { type: "custom:button-card", template: type.template, entity: "", name: trLabel(type.label),
+    variables: { size: "auto" } };
 }
 
 // Candidate for casora-panel.js: enough YAML to read a card config off the
@@ -15604,6 +15612,29 @@ class CasoraPanel extends HTMLElement {
     this._syncPreview();
   }
 
+  // „Alle Kacheln auf Automatisch“ (1.5): Größe am Handy jeder Kachel (bedingte: die Kachel darin)
+  // auf auto; Speichern spiegelt es wie jede Größe ins Handy-Layout.
+  async _allTilesAuto() {
+    const rooms = (this._state && this._state.compact && this._state.compact.rooms) || [];
+    const tiles = [];
+    rooms.forEach((r) => (r.tiles || []).forEach((t) => {
+      const inner = t && t.type === "conditional" && t.card ? t.card : t;
+      if (inner && typeof inner === "object" && inner.type) tiles.push(inner);
+    }));
+    const todo = tiles.filter((t) => !(t.variables && t.variables.size === "auto"));
+    if (!todo.length) return;
+    const res = await this._ask({
+      title: "Set all tiles to Automatic?",
+      message: "{n} tiles get the size Automatic on the phone. Save afterwards to apply it.".replace("{n}", todo.length),
+      confirmLabel: "Set to Automatic",
+    });
+    if (!res) return;
+    todo.forEach((t) => { t.variables = Object.assign({}, t.variables || {}, { size: "auto" }); });
+    this._markDirty();
+    this._renderForm();
+    this._syncPreview();
+  }
+
   _markDirty() {
     const b = this.$("save");
     if (!b) return;
@@ -17399,6 +17430,16 @@ class CasoraPanel extends HTMLElement {
         if (f.type === "extras") {
           row.remove();
           this._extrasField(room, fs, f);
+          return;
+        }
+
+        if (f.type === "action") {
+          fs.appendChild(row);
+          addHint();
+          const b = document.createElement("button");
+          b.type = "button"; b.className = "linkbtn"; b.textContent = f.button;
+          b.onclick = () => this._allTilesAuto();
+          (hintEl || row).appendChild(b);
           return;
         }
 

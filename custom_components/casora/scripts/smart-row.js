@@ -692,6 +692,7 @@ class CasoraSmartRow extends HTMLElement {
         this._rafId = null;
         this._updateWrapperVisibility();
         this._updateSort();
+        this._autoSize();
       });
     }
   }
@@ -1286,6 +1287,7 @@ class CasoraSmartRow extends HTMLElement {
 
       this._activeSet       = new Set(active);
       this._activationOrder = [...active];
+      this._autoSize();
 
       // Active cards move to the front, keeping config order among themselves.
       order.forEach((origIdx, pos) => { this._wrappers[origIdx].style.order = pos; });
@@ -1399,6 +1401,34 @@ class CasoraSmartRow extends HTMLElement {
     if (tiles !== null) return tiles;
     const dom = this._isActiveByDom(index);
     return dom !== null ? dom : this._isActiveByState(index);
+  }
+
+  // ── Größe am Handy „Automatisch“ (1.5) ──────────────────────────────────────
+  // variables.size = 'auto': groß, solange casoraAutoLarge es sagt (casora-core.js). Höchstens
+  // AUTO_MAX Kacheln werden so gleichzeitig groß (Rang, dann Reihenfolge); immer große (Kamera,
+  // Karussell) zählen nicht mit. Nur am Handy – Desktop und Tablet kennen keine Handy-Größe.
+  _autoSize() {
+    if (!this._scrollMode || !this._sortEnabled || !this._wrappers.length || !window.casoraAutoLarge) return;
+    const AUTO_MAX = 2;
+    const want = new Set(), cand = [];
+    this._config.cards.forEach((raw, i) => {
+      const cfg = resolveCardConfig(raw);
+      if (String(cfg?.variables?.size || '').toLowerCase() !== 'auto') return;
+      const w = this._wrappers[i];
+      if (!w || w.dataset.off === '1') return;
+      const v = window.casoraAutoLarge(cfg, this._hass, this._isActive(i));
+      if (v === 2) want.add(i);
+      else if (v === 1) cand.push({ i, r: window.casoraAutoLarge.rank(cfg), o: Number(w.style.order) || i });
+      w.dataset.sizeAuto = '1';
+    });
+    cand.sort((a, b) => (b.r - a.r) || (a.o - b.o)).slice(0, AUTO_MAX).forEach((c) => want.add(c.i));
+    this._wrappers.forEach((w, i) => {
+      if (!w || w.dataset.sizeAuto !== '1') return;
+      const big = want.has(i);
+      if (big === (w.dataset.size === 'large')) return;
+      if (big) { w.dataset.size = 'large'; this._scheduleLargeFill(w); }
+      else delete w.dataset.size;
+    });
   }
 
   // ── Sort logic ──────────────────────────────────────────────────────────────

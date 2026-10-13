@@ -2018,6 +2018,43 @@ window.casoraMenuGlass = {
     };
   }
 
+  // „Größe am Handy: Automatisch“ (1.5, variables.size = 'auto'): groß nur, solange die Kachel etwas
+  // zu erzählen hat. Rückgabe 0 = klein, 1 = groß solange aktiv (zählt zur Obergrenze, prio: höher
+  // zuerst), 2 = immer groß (Bild braucht Breite). active: die Kachel ist gerade hinterlegt (smart-row).
+  if (typeof window.casoraAutoLarge !== 'function') {
+    var AUTO_WHEN_ACTIVE = {
+      casora_appliance: 2, casora_waschmaschine: 2, casora_trockner: 2, casora_geschirrspueler: 2,
+      casora_3d_printer: 2, casora_vacuum: 2, casora_media: 1, casora_football: 1, casora_trash: 1,
+      casora_weather_warning: 3, casora_alarm: 3, casora_pulse: 3,
+    };
+    var AUTO_ALWAYS = { casora_camera: 1, casora_cameras: 1 };
+    window.casoraAutoLarge = function (cfg, hass, active) {
+      if (!cfg) return 0;
+      if (/swipe|carousel/.test(String(cfg.type || '')) && Array.isArray(cfg.cards)) return 2;
+      var tmpl = cfg.template;
+      var list = Array.isArray(tmpl) ? tmpl : (tmpl ? [tmpl] : []);
+      if (list.some(function (t) { return AUTO_ALWAYS[t]; })) return 2;
+      var S = (hass && hass.states) || {};
+      // Schloss: klein mit Schalter; groß nur bei Störung oder entriegelt, während niemand zuhause ist.
+      if (list.indexOf('casora_lock') !== -1) {
+        var st = S[cfg.entity] && S[cfg.entity].state;
+        if (st === 'jammed') return 1;
+        var home = Object.keys(S).some(function (k) { return k.indexOf('person.') === 0 && S[k].state === 'home'; });
+        return st === 'unlocked' && !home ? 1 : 0;
+      }
+      if (!active) return 0;
+      for (var i = 0; i < list.length; i++) if (AUTO_WHEN_ACTIVE[list[i]]) return 1;
+      return 0;
+    };
+    // Rang für die Obergrenze (höchstens zwei automatisch große): Warnungen vor Geräten vor Medien.
+    window.casoraAutoLarge.rank = function (cfg) {
+      var tmpl = cfg && cfg.template;
+      var list = Array.isArray(tmpl) ? tmpl : (tmpl ? [tmpl] : []);
+      if (list.indexOf('casora_lock') !== -1) return 3;
+      return list.reduce(function (m, t) { return Math.max(m, AUTO_WHEN_ACTIVE[t] || 0); }, 0);
+    };
+  }
+
   window._casoraActions = (function () {
     var OFF = ['false', '0', 'no', 'off', 'disabled'];
     var ON_STATES = [
