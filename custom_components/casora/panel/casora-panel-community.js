@@ -252,6 +252,8 @@
 
   async function catalog() {
     const r = await fetch(CATALOG, { cache: "no-store" });
+    // 404: Katalog (noch) nicht im Repo – das heißt „noch keine Karten“, nicht „GitHub nicht erreichbar“.
+    if (r.status === 404) return [];
     if (!r.ok) throw new Error("Katalog " + r.status);
     const j = await r.json();
     return ((j && j.cards) || []).filter((c) => c && typeof c === "object" && validate(c.card).ok
