@@ -15,7 +15,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ### Fixed
 - **Bell:** Tapping a notification opens its popup without the wait. Before, Casora loaded the whole dashboard configuration (several MB) again on every tap.
-- **Pulse tile:** When a device is only due soon (a battery at 18 %, for example) and nothing is broken, the tile says "1 due soon" instead of "All ok". It still only lights up for real problems.
+- **Pulse tile:** When a device is only due soon (a battery at 18 %, for example) and nothing is broken, the tile says "1 due soon" instead of "All ok" and lights up in yellow.
 
 ## 1.3.3 – 12.10.2026
 

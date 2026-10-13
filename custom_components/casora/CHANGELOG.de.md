@@ -15,7 +15,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 ### Behoben
 - **Glocke:** Ein Tipp auf eine Meldung öffnet ihr Popup ohne Wartezeit. Vorher lud Casora bei jedem Tipp die ganze Dashboard-Konfiguration (mehrere MB) neu.
-- **Pulse-Kachel:** Ist ein Gerät nur bald fällig (etwa eine Batterie bei 18 %) und sonst nichts kaputt, steht auf der Kachel „1 bald fällig“ statt „Alles ok“. Hinterlegt wird sie weiter nur bei echten Problemen.
+- **Pulse-Kachel:** Ist ein Gerät nur bald fällig (etwa eine Batterie bei 18 %) und sonst nichts kaputt, steht auf der Kachel „1 bald fällig“ statt „Alles ok“, und sie ist gelb hinterlegt.
 
 ## 1.3.3 – 12.10.2026
 

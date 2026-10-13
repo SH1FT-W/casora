@@ -2903,7 +2903,7 @@
       }
      ]
     },
-    "value": "[[[\n  // Pulse: hinterlegt nur bei echten Problemen (prüfen/ausgefallen), „bald fällig“ färbt nicht – window._casoraPulse (14-pulse.js).\n  const P = window._casoraPulse;\n  return !!(P && P.active(P.scan(hass, states)));\n]]]\n"
+    "value": "[[[\n  // Pulse: hinterlegt bei Problemen und bei „bald fällig“ (1.4) – window._casoraPulse (14-pulse.js).\n  const P = window._casoraPulse;\n  return !!(P && P.active(P.scan(hass, states)));\n]]]\n"
    }
   ],
   "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? t;\n  // „Alles ok“, „1 Problem“, „3 Probleme · 2 bald“ (window._casoraPulse.tileState).\n  const P = window._casoraPulse;\n  return P ? fit(P.tileState(P.scan(hass, states))) : '';\n]]]\n",

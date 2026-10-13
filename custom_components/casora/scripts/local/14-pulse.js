@@ -256,13 +256,14 @@
   };
 
   // ── Kachel ────────────────────────────────────────────────────────────────
-  // Hinterlegt (aktiv) nur bei echten Problemen; „bald fällig“ steht dahinter, färbt aber nicht.
-  P.active = function (s) { return !!(s && s.problems); };
-  P.color = function (worst) { return worst === 'failed' || worst === 'check' ? COLOR[worst] : COLOR.ok; };
+  // Hinterlegt (aktiv), sobald etwas Aufmerksamkeit braucht: Problem (prüfen/ausgefallen) oder bald
+  // fällig (1.4, vorher nur Probleme). „Lernt noch“ und ok bleiben ruhig. Farbe = schlimmster Zustand.
+  P.active = function (s) { return !!(s && (s.problems || s.soon)); };
+  P.color = function (worst) { return COLOR[worst] && worst !== 'learning' ? COLOR[worst] : COLOR.ok; };
   P.tileState = function (s) {
     if (!s || !s.installed) return 'Nicht installiert';
     if (!s.total) return 'Keine Geräte';
-    // Ohne Problem, aber bald fällig (z. B. Batterie 18 %): nicht „Alles ok“ – steht da, färbt nicht.
+    // Ohne Problem, aber bald fällig (z. B. Batterie 18 %): nicht „Alles ok“.
     if (!s.problems) return s.soon ? s.soon + ' bald fällig' : 'Alles ok';
     return (s.problems === 1 ? '1 Problem' : s.problems + ' Probleme') + (s.soon ? ' · ' + s.soon + ' beobachten' : '');
   };
