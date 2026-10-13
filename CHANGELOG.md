@@ -8,6 +8,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ### Fixed
 - **Tile status:** A long status no longer shrinks the text until it is hard to read. The text keeps its size; if it doesn't fit, the tile shows the first part and counts the rest ("Drying ends +1"), all of it is in the popup. This applies to every tile, on desktop and phone.
+- **Warning tile:** NINA warnings that don't come from the weather service keep their spelling and drop the "Gefahreninformation:" prefix ("Hochwasser an der Ems" instead of "Hochwasser An Der Ems"). With several warnings the tile counts the others.
 - **Robot vacuum:** Dock errors are translated (for example "Dirty water tank full" instead of "waste water tank full").
 - **Bell:** The notification window always has the same width (360 px, on the phone up to the screen edge). Before, it was narrow with short notifications and the two buttons at the bottom were cramped.
 - **Update logos:** Brand logos in the updates popup have the same shape as the other icons and fill it, instead of a round logo sitting in a rounded square. In dark mode there is no light edge around them any more, and updates without a logo get a neutral icon.

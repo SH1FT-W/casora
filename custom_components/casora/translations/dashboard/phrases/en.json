@@ -3231,6 +3231,10 @@
    "{1} km · closed"
   ],
   [
+   "^(\\d+) weitere$",
+   "{1} more"
+  ],
+  [
    "^und (\\d+) weitere$",
    "and {1} more"
   ],
