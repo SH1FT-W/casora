@@ -72,6 +72,9 @@ bad('unsichtbares Zeichen', (c) => { c.name = 'Sauger\u200b'; });
 bad('Richtungszeichen', (c) => { c.name = 'Sauger\u202egnp.exe'; });
 bad('zu groß', (c) => { for (let i = 0; i < 3; i++) c.variables['f' + i] = Array(20).fill('x'.repeat(190)); });
 bad('zu viele Variablen', (c) => { for (let i = 0; i < 31; i++) c.variables['f' + i] = 1; });
+bad('Aquarium-Präfix', (c) => { c.variables.dosing_prefix = 'meerwasser'; });
+bad('HeliaLux-Präfix', (c) => { c.variables.helialux = 'juwel_helialux'; });
+bad('Auto-Präfix', (c) => { c.variables.car = 'mein_auto'; });
 // Apostroph bleibt erlaubt (Namen wie „Kid's Room“).
 { const c = JSON.parse(JSON.stringify(good)); c.name = "Kid's Room"; assert.equal(C.validate(c).ok, true, 'Apostroph erlaubt'); }
 // Mit Vorlagenliste: vorhandene Vorlage geht, fehlende nicht.

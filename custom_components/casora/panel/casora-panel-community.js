@@ -33,7 +33,7 @@
   const TEMPLATE = /^casora_[a-z0-9_]{2,40}$/;
   const NOT_TILES = /^casora_(room|popup|mobile|badge|custom|menu|assist|settings|notifications|scene_core|scene_row|now_playing|time|default|entity|shared|climate_popup|lock|alarm|cover|garage|gate|valve|doorbell|solar_tip|scene)/;
   // Variablen, die etwas auslösen oder Code/Karten tragen könnten – nie.
-  const BAD_KEY = /(action|service|url|link|navigat|script|card|style|template|html|popup|confirm|command|code|iframe|image|camera_url|webhook|token|password|secret|cookie|javascript|eval|toggle|unlock|helper|proto|constructor|picture|path|file)/i;
+  const BAD_KEY = /(action|service|url|link|navigat|script|card|style|template|html|popup|confirm|command|code|iframe|image|camera_url|webhook|token|password|secret|cookie|javascript|eval|toggle|unlock|helper|proto|constructor|picture|path|file|prefix|helialux|bike|preload|src|suffix|svg|account|discord|steam|psn)/i;
   // Texte: keine Formeln, kein HTML, keine Jinja-Vorlagen, keine Protokolle.
   const BAD_TEXT = /\[\[\[|\]\]\]|[<>"`\\]|\$\{|\{\{|\{%|javascript|data:|vbscript|on[a-z]+\s*=|https?:|\/\/|\.\./i;
   // Steuer-, unsichtbare und Richtungszeichen (Text läuft rückwärts, versteckte Zeilen).
@@ -99,7 +99,8 @@
       const keys = Object.keys(vars);
       if (keys.length > 30) errs.push("variables: zu viele");
       keys.forEach((k) => {
-        if (!/^[a-z0-9_]{1,40}$/.test(k) || BAD_KEY.test(k)) { errs.push("variables." + k + ": nicht erlaubt"); return; }
+        // Präfix-Felder (car, cfg …) bauen selbst Geräte-IDs zusammen – an den Platzhaltern vorbei.
+        if (!/^[a-z0-9_]{1,40}$/.test(k) || BAD_KEY.test(k) || /^(car|cfg|game|base|group)$/.test(k)) { errs.push("variables." + k + ": nicht erlaubt"); return; }
         const v = vars[k];
         checkValue(v, "variables." + k, errs);
         [].concat(v).forEach((x) => { if (typeof x === "string") slotRef(x, "variables." + k); });
@@ -143,7 +144,7 @@
       // Studio-interne Merker und Größe am Handy nicht mitnehmen.
       if (/^(casora_|size$)/.test(k)) return;
       // Was etwas auslösen könnte (Schalter, Aktionen, Links), bleibt beim Teilen zu Hause.
-      if (!/^[a-z0-9_]{1,40}$/.test(k) || BAD_KEY.test(k)) return;
+      if (!/^[a-z0-9_]{1,40}$/.test(k) || BAD_KEY.test(k) || /^(car|cfg|game|base|group)$/.test(k)) return;
       if (typeof v === "string" && ENTITY.test(v)) v = slotFor(v, k);
       else if (Array.isArray(v)) v = v.map((x) => (typeof x === "string" && ENTITY.test(x) ? slotFor(x, k) : x));
       vars[k] = v;
