@@ -11884,9 +11884,11 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     menu.setAttribute('role', 'dialog');
     Object.assign(menu.style, {
       position: 'fixed', zIndex: '99999', boxSizing: 'border-box',
-      width: 'max-content',
-      minWidth: '256px',
-      maxWidth: 'min(392px, calc(100vw - 24px))',
+      // Feste Breite (1.5): mit max-content war das Fenster bei kurzen Meldungen schmal und die
+      // Knöpfe unten gedrängt, bei langen breiter – jetzt immer gleich, am Handy bis zum Rand.
+      width: 'min(var(--casora-notify-width, 360px), calc(100vw - 24px))',
+      minWidth: '0',
+      maxWidth: 'calc(100vw - 24px)',
       padding: '0',
       overflow: 'hidden',
     });
