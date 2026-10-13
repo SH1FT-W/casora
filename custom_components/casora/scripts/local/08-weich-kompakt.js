@@ -234,7 +234,8 @@
       var k = aiKey(aiOf(states, id));
       var t = AI_TXT[k] || AI_TXT.unknown;
       return {
-        entity: id, iconTone: 'rgba(0,0,0,0)', image: logoOf(states, id), label: nameOf(states, id),
+        // logo (1.5): Markenbild im weißen Kreis wie beim Tanken (casora-core.js, Zeilen-Kopf).
+        entity: id, iconTone: 'rgba(0,0,0,0)', image: logoOf(states, id), logo: true, label: nameOf(states, id),
         sub: (a.latest_version ? 'Neu: ' + a.latest_version : '') + (aiS(states) ? ' · KI: ' + t[0] : ''),
         _tone: t[1],
         action: a.in_progress ? 'Wird aktualisiert' : 'Aktualisieren', actionTone: 'accent', actionBusy: !!a.in_progress,
