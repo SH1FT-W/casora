@@ -8393,15 +8393,17 @@ window.casoraMenuGlass = {
                 ? softHue(r.iconTone) : null)
           || S.iconOff;
         if (plate === 'rgba(0,0,0,0)') plate = S.iconOff;
-        // Markenlogo (r.logo, 1.5): wie beim Tanken ein weißer Kreis mit feinem Rand, das Logo eingepasst
-        // statt rund beschnitten; ohne Logo ein neutraler Kreis mit Symbol – alle Zeilen gleich rund.
+        // Markenlogo (r.logo, 1.5): Grund in der Form der übrigen Symbole (--casora-soft-icon-radius, nur die
+        // Ecken rund), das Logo füllt ihn in genau dieser Form – vorher saß ein rund beschnittenes Logo im
+        // eckigen Grund. Durchsichtige Logos stehen auf Weiß; ohne Logo der neutrale Grund mit Symbol.
         if (r.logo) {
-          lead = '<div style="width:var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);border-radius:50%;flex:none;'
+          var lr = 'var(--casora-soft-icon-radius, 50%)';
+          lead = '<div style="width:var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);border-radius:' + lr + ';flex:none;'
             + 'display:grid;place-items:center;overflow:hidden;background:'
             + (r.image ? '#fff;border:.5px solid rgba(0,0,0,.12);box-sizing:border-box;filter:var(--casora-logo-filter, none);' : 'var(--casora-soft-control-fill, ' + S.iconOff + ');')
             + '">'
             + (r.image
-              ? '<img src="' + esc(r.image) + '" alt="" style="width:66%;height:66%;object-fit:contain;display:block;">'
+              ? '<img src="' + esc(r.image) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:' + lr + ';display:block;">'
               : '<ha-icon icon="mdi:package-variant" style="--mdc-icon-size:19px;width:19px;height:19px;color:' + S.glyphOff + ';"></ha-icon>')
             + '</div>';
         } else
