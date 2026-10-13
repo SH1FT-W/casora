@@ -1210,7 +1210,7 @@
       if (!auto.length) return;
       // Bedingte Karte: die Kachel darin (hui-conditional-card › hui-card › button-card).
       const tileOf = (el, d = 0) => {
-        if (!el || d > 4) return null;
+        if (!el || d > 10) return null;
         if (el.tagName === 'BUTTON-CARD') return el;
         for (const k of [...(el.shadowRoot ? el.shadowRoot.children : []), ...(el.children || [])]) {
           const t = tileOf(k, d + 1); if (t) return t;

@@ -4210,7 +4210,7 @@
    "show_toggle": false,
    "show_when": "always",
    "size": "small",
-   "size_large": "[[[\n  /* Groß am Handy: fest (size: large) oder „Automatisch“ und gerade groß gezogen – smart-row bzw. das\n     Raum-Raster setzen dann data-size / data-casora-size am Rahmen (1.5). */\n  if (!/^\\/[^/]*[-_]mobile(\\/|$)/i.test(window.location.pathname)) return false;\n  const v = String(variables.size || '').toLowerCase();\n  if (v === 'large') return true;\n  if (v !== 'auto') return false;\n  let el = this;\n  for (let i = 0; i < 8 && el; i++) {\n    if (el.dataset && (el.dataset.size === 'large' || el.dataset.casoraSize === 'large')) return true;\n    el = el.parentElement || (el.parentNode && el.parentNode.host) || null;\n  }\n  return false;\n]]]\n",
+   "size_large": "[[[\n  /* Groß am Handy: fest (size: large) oder „Automatisch“ und gerade groß gezogen – smart-row bzw. das\n     Raum-Raster setzen dann data-size / data-casora-size am Rahmen (1.5). */\n  if (!/^\\/[^/]*[-_]mobile(\\/|$)/i.test(window.location.pathname)) return false;\n  const v = String(variables.size || '').toLowerCase();\n  if (v === 'large') return true;\n  if (v !== 'auto') return false;\n  let el = this;\n  // Tief genug für Kachel in Karussell in Bedingung (Kamera-Karussell, 1.5).\n  for (let i = 0; i < 16 && el; i++) {\n    if (el.dataset && (el.dataset.size === 'large' || el.dataset.casoraSize === 'large')) return true;\n    el = el.parentElement || (el.parentNode && el.parentNode.host) || null;\n  }\n  return false;\n]]]\n",
    "toggle_entity": null,
    "toggle_service": null,
    "toggle_service_data": null
@@ -13845,7 +13845,7 @@
      "type": "custom:layout-card"
     }
    },
-   "greeting": "[[[\n  /* Begrüßung statt Raumname (1.4, variables.casora_greeting, casora-core.js casoraGreeting). */\n  const g = window.casoraGreeting ? window.casoraGreeting(hass, variables) : null;\n  if (!g) return '';\n  setTimeout(() => { const el = this.shadowRoot && this.shadowRoot.querySelector('#greeting'); if (el && window.casoraFitTitle) window.casoraFitTitle(el, 'n'); }, 0);\n  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\n  return '<span data-no-i18n>' + esc(g) + '</span>';\n]]]\n"
+   "n": "[[[\n  /* Begrüßung statt Raumname (1.4, variables.casora_greeting, casora-core.js casoraGreeting). */\n  const g = window.casoraGreeting ? window.casoraGreeting(hass, variables) : null;\n  if (!g) return '';\n  setTimeout(() => { const el = this.shadowRoot && this.shadowRoot.querySelector('#n'); if (el && window.casoraFitTitle) window.casoraFitTitle(el); }, 0);\n  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\n  return '<span data-no-i18n>' + esc(g) + '</span>';\n]]]\n"
   },
   "double_tap_action": {
    "action": "none"
@@ -14870,7 +14870,7 @@
       "pointer-events": "auto"
      }
     ],
-    "greeting": [
+    "n": [
      {
       "display": "[[[ return window.casoraGreeting && window.casoraGreeting(hass, variables) ? 'block' : 'none' ]]]"
      },

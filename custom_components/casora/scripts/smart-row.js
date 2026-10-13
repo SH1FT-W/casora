@@ -178,7 +178,7 @@ const HEADER_CATEGORIES = { scenes: 'unfiltered' };
 // Größe am Handy „Automatisch“ (1.5): Kacheln in einem Rahmen neu zeichnen (auch in bedingten Karten).
 function kickTiles(root) {
   const walk = (el, d) => {
-    if (!el || d > 6) return;
+    if (!el || d > 12) return;
     if (el.tagName === 'BUTTON-CARD') { if (window.casoraKick) window.casoraKick(el); return; }
     for (const k of [...(el.shadowRoot ? el.shadowRoot.children : []), ...(el.children || [])]) walk(k, d + 1);
   };
