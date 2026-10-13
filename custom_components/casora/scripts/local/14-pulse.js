@@ -263,9 +263,15 @@
   P.tileState = function (s) {
     if (!s || !s.installed) return 'Nicht installiert';
     if (!s.total) return 'Keine Geräte';
+    // „Bald fällig“ getrennt nach Batterie und Rest (13.10.: „3 bald fällig“ war 1 Batterie + 2 beobachten).
+    var bat = (s.list || []).filter(function (d) { return d.status === 'watch' && BATTERY[d.reason]; }).length;
+    var rest = (s.soon || 0) - bat;
+    var soon = [];
+    if (bat) soon.push(bat === 1 ? '1 Batterie bald fällig' : bat + ' Batterien bald fällig');
+    if (rest > 0) soon.push(rest + ' beobachten');
     // Ohne Problem, aber bald fällig (z. B. Batterie 18 %): nicht „Alles ok“.
-    if (!s.problems) return s.soon ? s.soon + ' bald fällig' : 'Alles ok';
-    return (s.problems === 1 ? '1 Problem' : s.problems + ' Probleme') + (s.soon ? ' · ' + s.soon + ' beobachten' : '');
+    if (!s.problems) return soon.length ? soon.join(' · ') : 'Alles ok';
+    return [s.problems === 1 ? '1 Problem' : s.problems + ' Probleme'].concat(soon).join(' · ');
   };
 
   // ── Popup ─────────────────────────────────────────────────────────────────

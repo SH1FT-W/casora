@@ -96,7 +96,7 @@ assert.equal(P.since(new Date(NOW - 12 * 60000).toISOString(), NOW), 'seit 12 Mi
 
 // Kachel: aktiv nur bei echten Problemen, „bald fällig“ nur als Zusatz.
 assert.equal(P.active(s), true);
-assert.equal(P.tileState(s), '3 Probleme · 2 beobachten');
+assert.equal(P.tileState(s), '3 Probleme · 1 Batterie bald fällig · 1 beobachten', 'Batterie und Beobachten getrennt');
 assert.equal(P.color(s.worst), P.COLOR.failed);
 const onlyWatch = P.scan({ ...hass, states: { ...states,
   'sensor.x1_status': { ...states['sensor.x1_status'], state: 'ok' },
@@ -104,7 +104,7 @@ const onlyWatch = P.scan({ ...hass, states: { ...states,
   'sensor.x3_status': { ...states['sensor.x3_status'], state: 'ok' } } }, null, NOW);
 assert.equal(onlyWatch.problems, 0);
 assert.equal(P.active(onlyWatch), true, 'bald fällig macht die Kachel aktiv (1.4)');
-assert.equal(P.tileState(onlyWatch), onlyWatch.soon + ' bald fällig', 'bald fällig steht auf der Kachel, nicht „Alles ok“');
+assert.equal(P.tileState(onlyWatch), '1 Batterie bald fällig · 1 beobachten', 'bald fällig steht auf der Kachel, nicht „Alles ok“');
 assert.equal(P.color(onlyWatch.worst), P.COLOR.watch, 'bald fällig färbt gelb');
 assert.equal(P.color('learning'), P.COLOR.ok, 'lernt noch bleibt ruhig');
 const one = P.scan({ ...hass, states: { ...states,
