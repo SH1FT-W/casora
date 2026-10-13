@@ -6,7 +6,7 @@
 // künstlich eingespielt (Registry-Einträge mit platform 'pulse' + translation_key, Geräte, Zustände; alles
 // erfunden). Auf Kopien der Casora-Dashboards (qa-pulse, qa-pulse-mobile) steht die Kachel auf der Startseite.
 // Erwartet am Desktop und Handy (hell + dunkel, Theme Casora):
-//   - alles ok: Kachel „Alles ok“, nicht hinterlegt; nur „bald fällig“ macht sie nicht aktiv
+//   - alles ok: Kachel „Alles ok“, nicht hinterlegt; nur „bald fällig“: „N bald fällig“, hinterlegt (1.4)
 //   - Probleme: „3 Probleme · 2 beobachten“, hinterlegt, Symbol rot
 //   - Popup: Unterzeile „3 Probleme · 2 beobachten · 2 ok“, Übersichtsleiste, „Ausgefallen“/„Prüfen“,
 //     „Batterie“/„Beobachten“, „Alles ok“ eingeklappt, „In Pulse öffnen“; Desktop zweispaltig, Handy einspaltig
@@ -171,7 +171,7 @@ for (const [tag, o, url, view, mobile] of VIEWS) {
 
   await inject(page, 'watch');
   m = await stable(page, TILE);
-  await check(tag + ': nur bald fällig – nicht hinterlegt', !m.active && /Alles ok/.test(m.state), m);
+  await check(tag + ': nur bald fällig – hinterlegt, „bald fällig“', m.active && /bald fällig/.test(m.state), m);
 
   await inject(page, 'many');
   m = await stable(page, TILE);
