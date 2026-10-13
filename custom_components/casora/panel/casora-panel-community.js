@@ -247,7 +247,7 @@
     return inp;
   };
   const CSS = ".comlbl{font-size:12px;font-weight:700;opacity:.7;margin:12px 2px 6px;text-transform:uppercase;letter-spacing:.04em}"
-    + ".comin{width:100%;box-sizing:border-box}.comchips{display:flex;flex-wrap:wrap;gap:6px}"
+    + ".comin{width:100%;box-sizing:border-box;font:inherit!important}.comchips{display:flex;flex-wrap:wrap;gap:6px}"
     + ".comchip{border:0;border-radius:999px;padding:5px 10px;font:inherit;font-size:13px;background:var(--casora-studio-chip, rgba(118,118,128,.18));color:inherit;cursor:pointer}"
     + ".comrow{display:flex;align-items:center;gap:10px;padding:10px 4px;border-top:1px solid rgba(127,127,127,.15)}.comrow:first-child{border-top:0}"
     + ".comrow .comtx{flex:1;min-width:0}.comrow b{display:block;font-size:14px}.comrow span{font-size:13px;opacity:.7}"
@@ -255,6 +255,12 @@
     + ".comnote{font-size:13px;opacity:.75;margin:8px 2px 0;line-height:1.4}";
   const css = (box) => { if (!box.querySelector("style.comcss")) { const s = el("style", "comcss"); s.textContent = CSS; box.appendChild(s); } };
   const open = (url) => { try { W.open(url, "_blank", "noopener"); } catch (e) { location.href = url; } };
+
+  // Casora-Version fürs Issue (casora/version, frontend_version.py).
+  const loadVersion = (hass) => (W.__casoraVersion ? Promise.resolve() : Promise.resolve(hass && hass.callWS && hass.callWS({ type: "casora/version" }))
+    .then((r) => { if (r && r.version) W.__casoraVersion = r.version; }).catch(() => {}));
+  // Gerätart lesbar („Staubsauger“ statt „vacuum“), aus HAs eigenen Übersetzungen.
+  const domainName = (hass, d) => { try { const t = hass && hass.localize && hass.localize("component." + d + ".title"); if (t) return t; } catch (e) { /* roh */ } return d; };
 
   customElements.whenDefined("casora-panel").then(() => {
     const P = customElements.get("casora-panel").prototype;
@@ -308,6 +314,7 @@
       });
       if (!res) return;
       const C = W.casoraCommunity;
+      await loadVersion(hass);
       const w = C.wishBody(f, hass);
       open(C.issueUrl("Kartenwunsch: " + f.device, w.body, [LABEL_WISH].concat(w.plat.length ? ["integration: " + w.plat[0]] : [])));
       if (this._status) this._status(tr("GitHub is open – submit the request there."), "ok");
@@ -324,27 +331,35 @@
       let desc = "";
       const res = await this._ask({
         title: tr("Share with the community"),
-        message: tr("After your review this card is visible to everyone. Devices become placeholders, your own names stay here."),
+        message: tr("After your review this card is visible to everyone. Devices become placeholders. Check the name – everyone will see it."),
         wide: true,
         confirmLabel: tr("Submit on GitHub"),
         extend: ({ box, acts, ok }) => {
           css(box);
           const info = el("div");
           info.appendChild(el("div", "comlbl", tr("Shared as")));
-          const rows = [[tr("Template"), s.shared.template], [tr("Name"), s.shared.name],
-            [tr("Devices"), s.shared.slots.map((x) => x.domain + " (" + x.label + ")").join(", ") || "–"]];
+          const rows = [[tr("Template"), s.shared.template],
+            [tr("Devices"), s.shared.slots.map((x) => domainName(this._hass, x.domain)).join(", ") || "–"]];
           rows.forEach(([k, v]) => { const r = el("div", "comrow"); const t = el("div", "comtx"); t.append(el("b", "", k), el("span", "", v)); r.appendChild(t); info.appendChild(r); });
+          const nm = field(info, "Name for everyone *", { placeholder: "e.g. Robot vacuum" });
+          nm.value = s.shared.name;
           const d = field(info, "Short description *", { placeholder: "e.g. Roborock with dock: status, dock errors, room" });
           box.insertBefore(info, acts);
           const warn = el("div", "fieldwarn");
           ok.addEventListener("click", (ev) => {
             desc = d.value.trim();
-            const why = !desc ? "Add a short description." : desc.length > 200 || /[<>]|\[\[\[|https?:\/\//i.test(desc) ? "Plain text only, up to 200 characters." : "";
+            const name = nm.value.trim();
+            const plain = (x) => x.length <= 200 && !/[<>]|\[\[\[|https?:\/\/|\{\{|\$\{/i.test(x);
+            const why = !name ? "Give the card a name." : !plain(name) ? "Plain text only, up to 200 characters."
+              : !desc ? "Add a short description." : !plain(desc) ? "Plain text only, up to 200 characters." : "";
+            if (!why) s.shared.name = name;
             if (why) { ev.stopImmediatePropagation(); warn.textContent = tr(why); if (!warn.parentNode) box.insertBefore(warn, acts); }
           }, true);
         },
       });
       if (!res) return;
+      if (!C.validate(s.shared).ok) return;
+      await loadVersion(this._hass);
       const id = Math.random().toString(36).slice(2, 10);
       const mine = await loadMine(this._hass);
       mine.push({ id, title: s.shared.name, at: Date.now() });
