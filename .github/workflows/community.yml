@@ -1,0 +1,74 @@
+# Community-Karten und Kartenwünsche (1.5).
+# Einreichungen kommen als vorausgefülltes Issue aus dem Studio. Labels im Link übernimmt GitHub nur für
+# Mitglieder – daher erkennt diese Action die Art am Inhalt und setzt das Label selbst.
+# Sicherheit: Issue-Inhalte gehen nur über Umgebungsvariablen in die Schritte, nie in den Befehlstext.
+# Geprüft wird mit demselben Prüfer wie im Studio (tools/community-check.mjs); freigeben (Label
+# „freigegeben“) kann nur, wer im Repo Labels setzen darf.
+name: Community
+on:
+  issues:
+    types: [opened, edited, labeled]
+permissions:
+  contents: write
+  issues: write
+concurrency:
+  group: community-${{ github.event.issue.number }}
+  cancel-in-progress: false
+jobs:
+  einordnen:
+    if: github.event.action != 'labeled'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Art erkennen und prüfen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          N: ${{ github.event.issue.number }}
+          ISSUE: ${{ toJSON(github.event.issue) }}
+          TITLE: ${{ github.event.issue.title }}
+          BODY: ${{ github.event.issue.body }}
+        run: |
+          printf '%s' "$ISSUE" > /tmp/issue.json
+          case "$TITLE" in
+            "Kartenwunsch:"*)
+              gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --add-label kartenwunsch || true ;;
+          esac
+          if printf '%s' "$BODY" | grep -q '```casora-karte'; then
+            gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --add-label community-karte || true
+            if node tools/community-check.mjs pruefen /tmp/issue.json > /tmp/out.txt; then
+              gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --add-label in-pruefung --remove-label rueckfrage || true
+            else
+              { echo "Die automatische Prüfung hat die Karte abgelehnt:"; echo; cat /tmp/out.txt; echo; echo "Erlaubt sind nur Casora-Kacheln mit Platzhaltern, ohne Formeln, HTML, Links oder Aktionen."; } > /tmp/msg.md
+              gh issue comment "$N" --repo "$GITHUB_REPOSITORY" --body-file /tmp/msg.md
+              gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --add-label rueckfrage --remove-label in-pruefung || true
+            fi
+          fi
+  aufnehmen:
+    if: github.event.action == 'labeled' && github.event.label.name == 'freigegeben'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: In den Katalog aufnehmen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          N: ${{ github.event.issue.number }}
+          ISSUE: ${{ toJSON(github.event.issue) }}
+        run: |
+          printf '%s' "$ISSUE" > /tmp/issue.json
+          if ! node tools/community-check.mjs aufnehmen /tmp/issue.json > /tmp/out.txt; then
+            { echo "Freigabe nicht möglich, die Prüfung schlägt fehl:"; echo; cat /tmp/out.txt; } > /tmp/msg.md
+            gh issue comment "$N" --repo "$GITHUB_REPOSITORY" --body-file /tmp/msg.md
+            gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --remove-label freigegeben || true
+            exit 1
+          fi
+          git config user.name "casora-community"
+          git config user.email "actions@users.noreply.github.com"
+          git add community/karten.json
+          git commit -m "Community: Karte aus #$N aufgenommen"
+          git push
+          gh issue comment "$N" --repo "$GITHUB_REPOSITORY" --body "Danke! Die Karte steht jetzt im Studio unter „Kachel hinzufügen › Karten der Community“."
+          gh issue close "$N" --repo "$GITHUB_REPOSITORY"
