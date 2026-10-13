@@ -27,9 +27,9 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Begrüßung", n0: "Guten Morgen, Guten Tag, Guten Abend – auf Wunsch mit Namen, statt „Zuhause“.",
-      n1t: "Personen-Popup", n1: "Karte, Handy und die Orte des Tages – statt des Kartendialogs von Home Assistant.",
-      n2t: "Karussell im Studio", n2: "Mehrere Kacheln als Seiten einer Kachel. Anlegen, zusammenfassen, sortieren, auflösen.",
+      n0t: "Glocke gleich breit", n0: "Das Mitteilungsfenster hat immer dieselbe Breite, die Knöpfe unten genug Platz.",
+      n1t: "Update-Logos", n1: "In der Form der übrigen Symbole – ohne hellen Rand im Dunkeln.",
+      n2t: "Personen-Popup", n2: "„seit …“ stimmt auch nach einem Neustart von Home Assistant.",
       n3t: "Glocke aufräumen", n3: "Meldungen wegwischen oder alle auf einmal entfernen – und Popups öffnen schneller."
     },
     en: {
@@ -40,9 +40,9 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Greeting", n0: "Good morning, good afternoon, good evening – with names if you like, instead of \"Home\".",
-      n1t: "Person popup", n1: "Map, phone and today's places – instead of the Home Assistant map dialog.",
-      n2t: "Carousel in the Studio", n2: "Several tiles as pages of one tile. Create, combine, reorder, split.",
+      n0t: "Bell with a fixed width", n0: "The notification window always has the same width, with room for the buttons.",
+      n1t: "Update logos", n1: "In the shape of the other icons – no light edge in dark mode.",
+      n2t: "Person popup", n2: "\"since …\" is right after a Home Assistant restart too.",
       n3t: "Clean up the bell", n3: "Swipe notifications away or remove them all at once – and popups open faster."
     },
   };
@@ -56,10 +56,9 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:hand-wave-outline", "n0t", "n0"],
-    ["mdi:account-circle-outline", "n1t", "n1"],
-    ["mdi:view-carousel-outline", "n2t", "n2"],
-    ["mdi:bell-remove-outline", "n3t", "n3"],
+    ["mdi:bell-outline", "n0t", "n0"],
+    ["mdi:package-variant", "n1t", "n1"],
+    ["mdi:account-circle-outline", "n2t", "n2"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

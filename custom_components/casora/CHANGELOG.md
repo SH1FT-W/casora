@@ -4,6 +4,13 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.4.1 – 13.10.2026
+
+### Fixed
+- **Bell:** The notification window always has the same width (360 px, on the phone up to the screen edge). Before, it was narrow with short notifications and the two buttons at the bottom were cramped.
+- **Update logos:** Brand logos in the updates popup have the same shape as the other icons and fill it, instead of a round logo sitting in a rounded square. In dark mode there is no light edge around them any more, and updates without a logo get a neutral icon.
+- **Person popup:** "since …" in the header shows how long the person has really been at that place. After a Home Assistant restart it started counting from the restart.
+
 ## 1.4.0 – 13.10.2026
 
 ### New
