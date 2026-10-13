@@ -2,8 +2,8 @@
 //   node dev/unit/np_cover_streifen.mjs
 // Prüft ohne Browser, was paint() aus 09-weich-wiedergabe.js zeichnet: (1) Zurück/Vor nur, wenn der
 // Player sie kann (controls aus supported_features); (2) Streifen ohne Zeiten und Lautstärke;
-// (3) Bühne nur für die erste Wiedergabe, mit Zeiten, „Gerät · Raum“ und Lautstärke nur bei
-// volume_set (Bit 4) samt Pegel; (4) App ohne Medientitel (Netflix) steht als Titel, das Gerät darunter;
+// (3) Bühne nur für die erste Wiedergabe, mit „Gerät · Raum“, seit 13.10.2026 ohne Zeiten und
+// Lautstärke (schlanker); (4) App ohne Medientitel (Netflix) steht als Titel, das Gerät darunter;
 // (5) Coverfarbe gedämpft (Sättigung ≤ 70 %, Helligkeit 28–52 %), Uhrzeit-Format.
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -47,12 +47,12 @@ assert.ok(/ nc"/.test(r[0]) && /^tn/.test(r[0]), 'ohne Cover: ruhiger Rückfall 
 let html = draw([box, tv], { panel: true, stage: true });
 r = rows(html);
 assert.ok(/^tn st/.test(r[0]) && !/^tn st/.test(r[1]), 'nur die erste Wiedergabe als Bühne');
-assert.ok(/class="t0">0:30</.test(r[0]) && /class="t1">−2:50</.test(r[0]), 'Zeiten auf der Bühne: ' + r[0].slice(0, 400));
-assert.ok(/class="vo"/.test(r[0]) && /aria-valuenow="40"/.test(r[0]), 'Lautstärke 40 % auf der Bühne');
+assert.ok(!/class="(tm|vo|vb)"/.test(r[0]), 'Bühne ohne Zeiten und Lautstärke: ' + r[0].slice(0, 400));
+assert.ok(/class="b"/.test(r[0]), 'Bühne mit Fortschrittsbalken');
 assert.ok(/class="a">Band</.test(r[0]) && /class="s">Lautsprecher · Wohnzimmer</.test(r[0]), 'Interpret und „Gerät · Raum“');
 html = draw([tv, box], { panel: true, stage: true });
 r = rows(html);
-assert.ok(/^tn st/.test(r[0]) && !/class="vo"/.test(r[0]), 'Fernseher ohne volume_set: keine Lautstärke');
+assert.ok(/^tn st/.test(r[0]) && !/class="vo"/.test(r[0]), 'Fernseher: Bühne ohne Lautstärke');
 assert.ok(!/class="tm"/.test(r[0]), 'ohne Dauer keine Zeiten');
 assert.ok(/class="s">Fernseher · Wohnzimmer</.test(r[0]), 'Raum über das Gerät: ' + r[0].slice(0, 600));
 

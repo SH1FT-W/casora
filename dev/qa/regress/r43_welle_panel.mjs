@@ -90,7 +90,7 @@ await page.waitForTimeout(600);
 const paused = await state();
 await check('Play/Pause in der Zeile ruft media_play_pause, Panel bleibt offen', paused.calls.includes('media_player.media_play_pause') && paused.open, paused.calls);
 
-// 09.10.2026 Cover-Bühne: Vor und Lautstärke bedienen nur, sie öffnen nie das Medien-Popup.
+// 09.10.2026 Cover-Bühne: Vor bedient nur, es öffnet nie das Medien-Popup.
 const at = (sel) => page.evaluate((sel) => {
   const sr = [...document.querySelector('.casora-welle-menu').querySelectorAll('div')].map((d) => d.shadowRoot).filter(Boolean)[0];
   const e = sr.querySelector(sel); if (!e) return null;
@@ -105,14 +105,9 @@ if (nx) {
   const s1 = await state();
   await check('Vor ruft media_next_track, Panel bleibt offen, kein Popup', s1.calls.includes('media_player.media_next_track') && s1.open && !(await popupOpen()), s1.calls);
 }
-const vb = await at('.r.st .vb');
-await check('Bühne: Lautstärke-Balken da (volume_set + Pegel)', !!vb, vb);
-if (vb) {
-  await page.mouse.click(vb.x, vb.y);
-  await page.waitForTimeout(600);
-  const s2 = await state();
-  await check('Lautstärke ruft volume_set, Panel bleibt offen, kein Popup', s2.calls.includes('media_player.volume_set') && s2.open && !(await popupOpen()), s2.calls);
-}
+// 13.10.2026: Bühne schlanker – ohne Lautstärke-Regler und ohne Zeitangaben, Fortschrittsbalken bleibt.
+const vb = await at('.r.st .vb'), tm = await at('.r.st .tm'), bar = await at('.r.st .b');
+await check('Bühne: keine Lautstärke, keine Zeiten, Fortschritt da', !vb && !tm && !!bar, { vb, tm, bar });
 
 // 08.10.2026: Tipp daneben schließt NICHT mehr – nur die Welle (oder Escape) klappt zu.
 await page.mouse.click(300, 650);

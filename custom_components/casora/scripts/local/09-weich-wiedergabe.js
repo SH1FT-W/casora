@@ -5,8 +5,8 @@
 // statt seitlich zu scrollen). Standard und Glas zeigen weiter Karussell bzw. Pillen.
 // Seit 09.10.2026 (Entwurf B1 „Cover-Streifen“): jede Wiedergabe ist eine eigene, vom Cover
 // eingefärbte Fläche (76 px), rechts ⏮ ⏯ ⏭ – Zurück/Vor nur, wenn der Player es kann. Im
-// Welle-Menü (opt.stage) wird die erste Wiedergabe zur Cover-Bühne (Entwurf C) mit Zeiten und
-// Lautstärke. Tasten und Lautstärke öffnen nie das Popup.
+// Welle-Menü (opt.stage) wird die erste Wiedergabe zur Cover-Bühne (Entwurf C): Cover, Fortschritt,
+// Tasten (seit 13.10.2026 ohne Zeiten und Lautstärke, schlanker). Tasten öffnen nie das Popup.
 //
 // Die Vorlagen melden ihre Karte nur an (window._casoraNPSoft.mount):
 //   casora_mobile_now_playing  → 'phone' (ersetzt #media_row/#np_rail, Überschrift bleibt)
@@ -42,8 +42,6 @@
   // Zurück/Weiter als Doppeldreieck ohne Strich (wie Apple Musik/TV).
   P.prev = 'M22,8.1Q22,6.5 20.61,7.3L13.79,11.2Q12.4,12 13.79,12.8L20.61,16.7Q22,17.5 22,15.9ZM12.2,8.1Q12.2,6.5 10.81,7.3L3.99,11.2Q2.6,12 3.99,12.8L10.81,16.7Q12.2,17.5 12.2,15.9Z';
   P.next = 'M2,8.1Q2,6.5 3.39,7.3L10.21,11.2Q11.6,12 10.21,12.8L3.39,16.7Q2,17.5 2,15.9ZM11.8,8.1Q11.8,6.5 13.19,7.3L20.01,11.2Q21.4,12 20.01,12.8L13.19,16.7Q11.8,17.5 11.8,15.9Z';
-  P.volLo = 'M7,9V15H11L16,20V4L11,9H7Z';
-  P.volHi = 'M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z';
   var svg = function (d, s) { return '<svg viewBox="0 0 24 24" width="' + s + '" height="' + s + '" aria-hidden="true"><path fill="currentColor" d="' + d + '"/></svg>'; };
 
   // Einstellungen der Raumkarte → dieselbe Form wie casora_mobile_now_playing (variables.cfg),
@@ -159,18 +157,10 @@
     + '.st .a,.st .s{font-size:var(--casora-fs-label, 12px);color:var(--cnp-sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
     + '.st .a{color:var(--cnp-ink);opacity:.82}'
     + '.st .b{height:4px;margin-top:var(--casora-space-3, 12px)}'
-    + '.st .tm{display:flex;justify-content:space-between;margin-top:var(--casora-space-1, 4px);font-size:11px;color:var(--cnp-sub);font-variant-numeric:tabular-nums}'
-    + '.st .ct{justify-content:center;gap:var(--casora-space-6, 24px);margin-top:var(--casora-space-1, 4px)}'
+    + '.st .ct{justify-content:center;gap:var(--casora-space-6, 24px);margin-top:var(--casora-space-2, 8px)}'
     + '.st .k{width:36px;height:36px;position:relative}'
     + '.st .k:after{content:"";position:absolute;inset:-4px;border-radius:50%}'
-    + '.st .p{width:48px;height:48px}'
-    + '.vo{display:flex;align-items:center;gap:var(--casora-space-2, 8px);margin-top:var(--casora-space-1, 4px);color:var(--cnp-sub)}'
-    + '.vo svg{flex:none}'
-    + '.vb{flex:1;height:28px;position:relative;cursor:pointer;touch-action:none;outline:none;border-radius:14px}'
-    + '.vb:before{content:"";position:absolute;left:0;right:0;top:12px;height:4px;border-radius:2px;background:color-mix(in srgb,var(--cnp-ink) 16%,transparent)}'
-    + '.vb i{position:absolute;left:0;top:12px;height:4px;border-radius:2px;background:var(--cnp-ink)}'
-    + '.vb i:after{content:"";position:absolute;right:-6px;top:-4px;width:12px;height:12px;border-radius:50%;background:var(--cnp-ink);box-shadow:0 1px 4px rgba(0,0,0,.25)}'
-    + '.vb:focus-visible{box-shadow:0 0 0 2px var(--cnp-ton)}';
+    + '.st .p{width:48px;height:48px}';
 
   // Was die Vorlage sonst zeigt, wird im Weich-Design ausgeblendet (die Karten bleiben im DOM).
   var HIDE = {
@@ -481,19 +471,8 @@
       // Zurück/Vor nur, wenn der Player es kann (supported_features, _casoraNP → controls).
       var prev = !!(rec.controls || {}).prev, next = !!(rec.controls || {}).next;
       var art = lead.art || (g.recs.filter(function (r) { return r.art; })[0] || {}).art || '';
-      // Lautstärke (nur Bühne): wenn der spielende Player volume_set kann (Bit 4) und einen Pegel meldet.
-      var vids = [], vol = null;
-      if (stage && gi === 0) {
-        g.recs.forEach(function (r) {
-          var s = r.kind === 'player' && states[r.entity], a = (s && s.attributes) || {};
-          if ((Number(a.supported_features) & 4) && typeof a.volume_level === 'number') {
-            vids.push(r.entity);
-            if (vol === null || r === rec) vol = a.volume_level;
-          }
-        });
-      }
       rows[g.key] = { pos: pos, dur: dur, at: Number(rec.posAt) || 0, playing: !!rec.playing, bar: hasBar,
-        live: rec.entity, vol: vol, vids: vids };
+        live: rec.entity };
       groups[g.key] = g.recs;
       var dev = names(g.recs.map(function (r) { return device(r, states); }));
       // D-15: ohne Medientitel steht der Gerätename schon als Titel – die Unterzeile wiederholt ihn nicht,
@@ -512,12 +491,12 @@
         place = [dev && dev !== tl ? dev : '', room && low(dev).indexOf(low(room)) < 0 ? room : ''].filter(Boolean).join(' · ');
         if (!place) place = artist ? '' : sb;
       }
-      return [g.key, tl || lead.title, sb, art, playing, tog, hasBar, lead.kind, g.recs.length, prev, next, vids.length > 0, artist, place];
+      return [g.key, tl || lead.title, sb, art, playing, tog, hasBar, lead.kind, g.recs.length, prev, next, artist, place];
     });
     e.rows = rows;
     e.groups = groups;
     e.list = list;
-    // Signatur ohne Fortschritt und Lautstärke: beides läuft über progress(), ohne die Zeilen neu zu bauen.
+    // Signatur ohne Fortschritt: der läuft über progress(), ohne die Zeilen neu zu bauen.
     var sig = JSON.stringify([items, desk, cols, !!opt.panel, stage, dk, opt.key || 0]);
     if (!w) return null;
     e.w = w;
@@ -531,7 +510,7 @@
     };
     var html = items.map(function (it, i) {
       var key = it[0], title = it[1], sub = it[2], artU = it[3], playing = it[4], tog = it[5], hasBar = it[6], kind = it[7];
-      var prev = it[9], next = it[10], hasVol = it[11], artist = it[12], place = it[13];
+      var prev = it[9], next = it[10], artist = it[11], place = it[12];
       var big = stage && i === 0;
       var cls = 'r tn' + (big ? ' st' : '');
       var col = artU ? tintOf(artU) : '';
@@ -546,15 +525,11 @@
       var bar = '<div class="b' + (hasBar ? '' : ' n') + '"><i style="width:' + pct(rows[key]) + '%"></i></div>';
       var inner;
       if (big) {
-        var r = rows[key], p0 = r && r.bar ? Number(pct(r)) / 100 * r.dur : 0;
-        var vp = Math.round(Math.max(0, Math.min(1, (r && r.vol) || 0)) * 100);
         inner = '<div class="hr">' + cover + '<div class="m"><div class="t">' + esc(title) + '</div>'
           + (artist ? '<div class="a">' + esc(artist) + '</div>' : '')
           + (place ? '<div class="s">' + esc(place) + '</div>' : '<div class="s"></div>') + '</div></div>'
-          + (hasBar ? bar + '<div class="tm"><span class="t0">' + clock(p0) + '</span><span class="t1">−' + clock(r.dur - p0) + '</span></div>' : '')
-          + (ctl ? '<div class="ct">' + ctl + '</div>' : '')
-          + (hasVol ? '<div class="vo">' + svg(P.volLo, 16) + '<div class="vb" role="slider" tabindex="0" aria-label="' + esc(T('Lautstärke'))
-            + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + vp + '"><i style="width:' + vp + '%"></i></div>' + svg(P.volHi, 16) + '</div>' : '');
+          + (hasBar ? bar : '')
+          + (ctl ? '<div class="ct">' + ctl + '</div>' : '');
       } else {
         inner = cover + '<div class="m"><div class="t">' + esc(title) + '</div><div class="s">' + esc(sub) + '</div>' + bar + '</div>'
           + (ctl ? '<div class="ct">' + ctl + '</div>' : '');
@@ -587,21 +562,7 @@
       if (!r) return;
       var bar = row.querySelector('.b i');
       if (r.bar && r.playing && bar) bar.style.width = pct(r) + '%';
-      var t0 = row.querySelector('.t0'), t1 = row.querySelector('.t1');
-      if (r.bar && t0 && t1) {
-        var p = Number(pct(r)) / 100 * r.dur;
-        t0.textContent = clock(p); t1.textContent = '−' + clock(r.dur - p);
-      }
-      var vb = row.querySelector('.vb');
-      // Lautstärke vom Player – nicht während man zieht, und nicht kurz danach (HA bestätigt erst).
-      if (vb && r.vol != null && !e.volDrag && Date.now() - (e.volAt || 0) > 2500) setVol(vb, r.vol);
     });
-  }
-  function setVol(vb, v) {
-    var p = Math.round(Math.max(0, Math.min(1, v)) * 100);
-    var i = vb.querySelector('i');
-    if (i) i.style.width = p + '%';
-    vb.setAttribute('aria-valuenow', String(p));
   }
 
   // Die bisherige (unsichtbare) Karte zu einer Zeile – ihr Tipp öffnet das gewohnte Popup.
@@ -677,19 +638,6 @@
     h.callService('media_player', dir === 'prev' ? 'media_previous_track' : 'media_next_track', { entity_id: r.live });
   }
 
-  // Lautstärke aus der Zeigerlage auf dem Balken; gesendet wird beim Loslassen (bzw. je Pfeiltaste).
-  function volAt(vb, x) {
-    var b = vb.getBoundingClientRect();
-    return b.width ? Math.max(0, Math.min(1, (x - b.left) / b.width)) : 0;
-  }
-  function sendVol(e, key, v) {
-    var r = e.rows[key], h = getHass();
-    if (!r || !h || !r.vids || !r.vids.length) return;
-    v = Math.round(v * 100) / 100;
-    r.vol = v;
-    e.volAt = Date.now();
-    h.callService('media_player', 'volume_set', { entity_id: r.vids.length > 1 ? r.vids : r.vids[0], volume_level: v });
-  }
 
   function card_haptic(el) {
     el.dispatchEvent(new CustomEvent('haptic', { detail: 'light', bubbles: true, composed: true }));
@@ -754,17 +702,16 @@
   function bind(e, sr) {
     var rowOf = function (ev) {
       var path = ev.composedPath ? ev.composedPath() : [];
-      var btn = null, hd = null, row = null, sk = null, vo = null;
+      var btn = null, hd = null, row = null, sk = null;
       for (var i = 0; i < path.length && path[i] !== sr; i++) {
         var n = path[i];
         if (!n.classList) continue;
         if (!btn && n.classList.contains('p')) btn = n;
         if (!sk && n.classList.contains('k')) sk = n;
-        if (!vo && n.classList.contains('vo')) vo = n;
         if (!hd && n.classList.contains('hd')) hd = n;
         if (n.classList.contains('r')) { row = n; break; }
       }
-      return { row: row, btn: btn, hd: hd, sk: sk, vo: vo };
+      return { row: row, btn: btn, hd: hd, sk: sk };
     };
     var act = function (ev) {
       var t = rowOf(ev), row = t.row;
@@ -776,8 +723,7 @@
       // Aufgewischt: ein Tipp auf die Zeile schließt nur den Knopf.
       if (row.classList.contains('sw') || e.swRow) { closeSwipe(e); return; }
       var key = row.getAttribute('data-k');
-      // Tasten und Lautstärke bedienen nur – sie öffnen nie das Popup.
-      if (t.vo) return;
+      // Tasten bedienen nur – sie öffnen nie das Popup.
       if (t.sk) skip(e, key, t.sk.getAttribute('data-a'));
       else if (t.btn) toggle(e, key, t.btn); else { try { card_haptic(e.card); } catch (err) { /* egal */ } open(e, key); }
     };
@@ -790,22 +736,10 @@
     sr.addEventListener('pointerdown', function (ev) {
       if (ev.button > 0) { down = null; return; }
       var t = rowOf(ev);
-      // Lautstärke ziehen: kein Wischen, kein Tipp auf die Zeile.
-      var vb = t.vo && t.vo.querySelector('.vb');
-      if (vb && t.row && (ev.composedPath ? ev.composedPath() : []).indexOf(vb) >= 0) {
-        down = null;
-        e.volDrag = { vb: vb, key: t.row.getAttribute('data-k'), id: ev.pointerId };
-        try { vb.setPointerCapture(ev.pointerId); } catch (err) { /* egal */ }
-        setVol(vb, volAt(vb, ev.clientX));
-        if (ev.cancelable) ev.preventDefault();
-        return;
-      }
       down = { x: ev.clientX, y: ev.clientY, t: Date.now(), row: t.row, id: ev.pointerId, drag: false,
         base: t.row && t.row.classList.contains('sw') ? -swipeW(t.row) : 0 };
     });
     sr.addEventListener('pointermove', function (ev) {
-      var vd = e.volDrag;
-      if (vd && ev.pointerId === vd.id) { setVol(vd.vb, volAt(vd.vb, ev.clientX)); return; }
       var d = down;
       if (!d || !d.row || ev.pointerId !== d.id) return;
       var dx = ev.clientX - d.x, dy = ev.clientY - d.y;
@@ -832,17 +766,8 @@
       last = Date.now();
       return true;
     };
-    var endVol = function (ev, send) {
-      var vd = e.volDrag;
-      if (!vd || ev.pointerId !== vd.id) return false;
-      e.volDrag = null;
-      last = Date.now();
-      if (send) sendVol(e, vd.key, volAt(vd.vb, ev.clientX));
-      return true;
-    };
-    sr.addEventListener('pointercancel', function (ev) { if (endVol(ev, false)) return; if (!endDrag(ev, false)) down = null; });
+    sr.addEventListener('pointercancel', function (ev) { if (!endDrag(ev, false)) down = null; });
     sr.addEventListener('pointerup', function (ev) {
-      if (endVol(ev, true)) return;
       if (endDrag(ev, false)) return;
       var d = down; down = null;
       if (!d || Date.now() - d.t > 700 || Math.abs(ev.clientX - d.x) > 10 || Math.abs(ev.clientY - d.y) > 10) return;
@@ -855,16 +780,6 @@
     });
     sr.addEventListener('keydown', function (ev) {
       var t = ev.composedPath ? ev.composedPath()[0] : ev.target;
-      if (t && t.classList && t.classList.contains('vb')) {
-        var st = { ArrowLeft: -0.05, ArrowDown: -0.05, ArrowRight: 0.05, ArrowUp: 0.05 }[ev.key];
-        if (st === undefined) return;
-        ev.preventDefault(); ev.stopPropagation();
-        var row = t.closest('.r'), k = row && row.getAttribute('data-k'), r = k && e.rows[k];
-        var v = Math.max(0, Math.min(1, ((r && r.vol) || 0) + st));
-        setVol(t, v);
-        sendVol(e, k, v);
-        return;
-      }
       if (ev.key !== 'Enter' && ev.key !== ' ') return;
       if (t && t.classList && (t.classList.contains('p') || t.classList.contains('k'))) return;
       act(ev);
