@@ -412,16 +412,25 @@
     P._comCatalog = async function () {
       const C = W.casoraCommunity;
       const room = this._state && this._state.compact && this._state.compact.rooms[this._room];
-      let chosen = null, wish = false;
+      let chosen = null, then = "";
       const res = await this._ask({
-        title: tr("Community cards"),
-        message: tr("Reviewed and approved. Before adding, you pick your own devices."),
+        title: tr("Community"),
+        message: tr("Cards from other Casora users, reviewed and approved. Share your own or ask for a card that is missing."),
         wide: true,
         confirmLabel: tr("Close"),
-        cancelLabel: tr("Request a card…"),
         extend: ({ box, acts, ok, cancel }) => {
           css(box);
-          cancel.addEventListener("click", () => { wish = true; }, true);
+          cancel.style.display = "none";
+          // Oben die beiden Wege: eigene Karte teilen, Kartenwunsch.
+          const ways = el("div", "comchips");
+          ways.style.margin = "4px 0 6px";
+          [["share", "Share one of your tiles…"], ["wish", "Request a card…"]].forEach(([k, label]) => {
+            const b = el("button", "comchip", tr(label));
+            b.type = "button";
+            b.onclick = () => { then = k; ok.click(); };
+            ways.appendChild(b);
+          });
+          box.insertBefore(ways, acts);
           const host = el("div");
           box.insertBefore(host, acts);
           const listBox = el("div");
@@ -471,10 +480,33 @@
           });
         },
       });
-      // Linker Knopf ist „Kartenwunsch …“ statt Abbrechen.
-      if (res === null) { if (wish) this._comWish(); return; }
-      if (!chosen || !room) return;
+      if (then === "wish") return this._comWish();
+      if (then === "share") return this._comPickShare();
+      if (!res || !chosen || !room) return;
       await this._comAdd(room, chosen);
+    };
+
+    // Eigene Kachel zum Teilen wählen (aus der Community-Seite): nur teilbare Kacheln dieses Raums.
+    P._comPickShare = async function () {
+      const C = W.casoraCommunity;
+      const I = W.__casoraPanelInternals || {};
+      const room = this._state && this._state.compact && this._state.compact.rooms[this._room];
+      const tiles = ((room && room.tiles) || []).filter((t) => C.shareable(t));
+      if (!tiles.length) {
+        await this._ask({ title: tr("Share one of your tiles"), message: tr("This room has no tile that can be shared. Switch to another room first."),
+          confirmLabel: "OK", extend: ({ cancel }) => { cancel.style.display = "none"; } });
+        return;
+      }
+      const name = (t) => { const inner = t.type === "conditional" && t.card ? t.card : t; const ty = I.tileTypeAny ? I.tileTypeAny(inner) : null;
+        return { title: inner.name || (ty && tr(ty.label)) || "", sub: ty && inner.name ? tr(ty.label) : "" }; };
+      const res = await this._ask({
+        title: tr("Share one of your tiles"),
+        message: fill(tr("Tiles in {room} that can be shared."), { room: this._roomLabel ? this._roomLabel(room) : "" }),
+        picks: tiles.map((t, i) => Object.assign({ id: String(i) }, name(t))),
+        confirmLabel: tr("Next"),
+      });
+      if (!res || res.pick == null) return;
+      return this._comShare(room, tiles[Number(res.pick)]);
     };
 
     // Geräte zuordnen und hinzufügen – vorher noch einmal prüfen.
