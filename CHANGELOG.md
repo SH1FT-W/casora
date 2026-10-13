@@ -11,6 +11,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Media:** The icon is play/pause. If the device is off, it turns it on. If the device can do neither, it opens the popup.
 - **Person popup:** "Last" is now "History" and shows the places of the last three days as a timeline like the lock popup: time, a dot in the colour of the place, until when and for how long. "Full history" opens Home Assistant's history.
 - **Pulse tile:** The status line separates batteries that are due soon from devices Pulse only watches ("1 battery due soon · 2 watch").
+- **Greeting:** "Good evening, Alex" sits in its place as soon as the home page loads. Before, the greeting appeared on the right and then jumped to the left.
 - **Bell:** When the notification window opens upwards, its bottom edge stays put when you remove a notification instead of jumping.
 - **Studio on the phone:** A picker opened from a dialog sits above the dialog instead of behind it.
 
