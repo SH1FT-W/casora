@@ -8400,10 +8400,11 @@ window.casoraMenuGlass = {
           var lr = 'var(--casora-soft-icon-radius, 50%)';
           lead = '<div style="width:var(--casora-soft-icon-size, 38px);height:var(--casora-soft-icon-size, 38px);border-radius:' + lr + ';flex:none;'
             + 'display:grid;place-items:center;overflow:hidden;background:'
-            + (r.image ? '#fff;border:.5px solid rgba(0,0,0,.12);box-sizing:border-box;filter:var(--casora-logo-filter, none);' : 'var(--casora-soft-control-fill, ' + S.iconOff + ');')
+            // Weiß nur hinter dem Logo selbst, kein zweiter Grund mit Rand – sonst blitzte im Dunkeln ein heller Saum.
+            + (r.image ? 'transparent;' : 'var(--casora-soft-control-fill, ' + S.iconOff + ');')
             + '">'
             + (r.image
-              ? '<img src="' + esc(r.image) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:' + lr + ';display:block;">'
+              ? '<img src="' + esc(r.image) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:' + lr + ';background:#fff;filter:var(--casora-logo-filter, none);display:block;">'
               : '<ha-icon icon="mdi:package-variant" style="--mdc-icon-size:19px;width:19px;height:19px;color:' + S.glyphOff + ';"></ha-icon>')
             + '</div>';
         } else
