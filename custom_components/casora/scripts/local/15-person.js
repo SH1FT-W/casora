@@ -245,6 +245,10 @@
     if (!UI || !st) return '';
     var a = st.attributes || {}, now = Date.now();
     var since = Date.parse(st.last_changed) || now;
+    // „seit“ aus dem Verlauf (1.5): HA setzt last_changed bei jedem Neustart neu – der Verlauf kennt den
+    // echten Beginn des Orts (Neustart-Lücken unavailable/unknown zählen dort nicht als Wechsel).
+    var seg = (P.history(hass, pid, el) || [])[0];
+    if (seg && seg.state === st.state && seg.start < since) since = seg.start;
     if (part === 'hero') {
       var rest = [T('seit') + ' ' + P.when(since, now)];
       var m = P.away(hass, pid);
