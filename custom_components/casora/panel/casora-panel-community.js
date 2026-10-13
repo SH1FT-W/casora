@@ -504,6 +504,11 @@
         message: fill(tr("Tiles in {room} that can be shared."), { room: this._roomLabel ? this._roomLabel(room) : "" }),
         picks: tiles.map((t, i) => Object.assign({ id: String(i) }, name(t))),
         confirmLabel: tr("Next"),
+        // Viele Kacheln (Startseite): Liste in Fensterhöhe, scrollbar – sonst ragte der Dialog aus dem Bild.
+        extend: ({ box }) => {
+          const l = box.querySelector(".askpicks");
+          if (l) Object.assign(l.style, { maxHeight: "min(52vh, 460px)", overflowY: "auto", overscrollBehavior: "contain" });
+        },
       });
       if (!res || res.pick == null) return;
       return this._comShare(room, tiles[Number(res.pick)]);
