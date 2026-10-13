@@ -18,9 +18,10 @@ const desc = (/### Kurzbeschreibung\s*\n([^\n]*)/.exec(body) || [])[1] || '';
 let card = null, why = [];
 if (!m) why.push('Kein Block ```casora-karte``` gefunden.');
 else { try { card = JSON.parse(m[1]); } catch (e) { why.push('Karte ist kein gültiges JSON.'); } }
-if (card) why = why.concat(C.validate(card).errors);
-const txt = (s) => typeof s === 'string' && s.length <= 200 && !/[<>]|\[\[\[|https?:\/\/|\{\{|\$\{/i.test(s);
-if (!txt(desc) || !desc.trim()) why.push('Kurzbeschreibung fehlt oder enthält nicht erlaubte Zeichen.');
+// Nur Vorlagen, die es im Repo wirklich gibt.
+const templates = new Set(Object.keys(JSON.parse(fs.readFileSync(new URL('dashboards/casora/button_card_templates.json', root), 'utf8'))));
+if (card) why = why.concat(C.validate(card, { templates }).errors);
+if (C.badText(desc) || !desc.trim()) why.push('Kurzbeschreibung fehlt oder enthält nicht erlaubte Zeichen.');
 
 if (why.length) { console.log(why.map((x) => '- ' + x).join('\n')); process.exit(1); }
 if (cmd === 'aufnehmen') {

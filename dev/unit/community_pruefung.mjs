@@ -10,7 +10,7 @@ const C = mod.exports;
 assert.ok(C.validate && C.share && C.materialize, 'Bausteine fehlen');
 
 const good = { v: 1, template: 'casora_vacuum', name: 'Saugroboter', entity: '@slot:1',
-  variables: { entity_status: '@slot:2', icon: 'robot-vacuum', show_toggle: true, levels: [1, 2, 3] },
+  variables: { entity_status: '@slot:2', icon: 'robot-vacuum', compact: true, levels: [1, 2, 3] },
   slots: [{ id: 1, domain: 'vacuum', label: 'Saugroboter' }, { id: 2, domain: 'sensor', label: 'Status' }] };
 assert.equal(C.validate(good).ok, true, 'gute Karte geht durch: ' + C.validate(good).errors.join(', '));
 
@@ -50,6 +50,33 @@ bad('entity ohne Platzhalter', (c) => { c.entity = 'vacuum.robo'; });
 bad('falsche Slot-Felder', (c) => { c.slots[0].onclick = 'x'; });
 bad('Text zu lang', (c) => { c.name = 'x'.repeat(201); });
 bad('unbekannte Fassung', (c) => { c.v = 2; });
+// Angriffe aus dem Sicherheitstest (13.10.)
+bad('Entität groß geschrieben', (c) => { c.variables.entity_status = 'Cover.garage_door'; });
+bad('Entität mit Leerzeichen', (c) => { c.variables.entity_status = ' lock . haustuer '; });
+bad('Schalter-Ziel als Variable', (c) => { c.variables.show_toggle = true; c.variables.toggle_entity = '@slot:1'; });
+bad('Schloss als Platzhalter', (c) => { c.slots[1].domain = 'lock'; });
+bad('Alarm als Platzhalter', (c) => { c.slots[1].domain = 'alarm_control_panel'; });
+bad('Tor als Platzhalter', (c) => { c.slots[1].domain = 'cover'; });
+bad('Skript als Platzhalter', (c) => { c.slots[1].domain = 'script'; });
+bad('doppelte Platzhalter-ID', (c) => { c.slots[1].id = 1; });
+bad('Schloss-Vorlage', (c) => { c.template = 'casora_lock'; });
+bad('Alarm-Vorlage', (c) => { c.template = 'casora_alarm'; });
+bad('__proto__', (c) => { c.variables = JSON.parse('{"__proto__": {"icon": "x"}}'); });
+bad('Anführungszeichen', (c) => { c.variables.icon = 'x" y'; });
+bad('Backslash', (c) => { c.variables.icon = 'x\\u003c'; });
+bad('Pfad nach oben', (c) => { c.variables.icon = '../../secrets'; });
+bad('Doppel-Slash', (c) => { c.variables.icon = '//evil.example'; });
+bad('Zeilenumbruch', (c) => { c.name = 'a\nb'; });
+bad('Tabulator', (c) => { c.name = 'a\tb'; });
+bad('unsichtbares Zeichen', (c) => { c.name = 'Sauger\u200b'; });
+bad('Richtungszeichen', (c) => { c.name = 'Sauger\u202egnp.exe'; });
+bad('zu groß', (c) => { for (let i = 0; i < 3; i++) c.variables['f' + i] = Array(20).fill('x'.repeat(190)); });
+bad('zu viele Variablen', (c) => { for (let i = 0; i < 31; i++) c.variables['f' + i] = 1; });
+// Apostroph bleibt erlaubt (Namen wie „Kid's Room“).
+{ const c = JSON.parse(JSON.stringify(good)); c.name = "Kid's Room"; assert.equal(C.validate(c).ok, true, 'Apostroph erlaubt'); }
+// Mit Vorlagenliste: vorhandene Vorlage geht, fehlende nicht.
+assert.equal(C.validate(good, { templates: new Set(['casora_vacuum']) }).ok, true, 'vorhandene Vorlage');
+assert.equal(C.validate(good, { templates: new Set(['casora_light']) }).ok, false, 'fehlende Vorlage');
 
 // Teilen: echte Geräte werden zu Platzhaltern, Studio-Merker und Größe bleiben hier.
 const hass = { states: { 'vacuum.robo': { attributes: { device_class: '' } }, 'sensor.robo_status': { attributes: { device_class: 'enum' } } } };
@@ -60,7 +87,12 @@ assert.equal(s.shared.entity, '@slot:1');
 assert.equal(s.shared.variables.entity_status, '@slot:2');
 assert.equal(s.shared.variables.size, undefined); assert.equal(s.shared.variables.casora_carousel, undefined);
 assert.equal(JSON.stringify(s.shared).includes('vacuum.robo'), false, 'keine echte Entität in der geteilten Karte');
-assert.equal(C.share({ type: 'custom:button-card', template: 'casora_vacuum', name: 'x', variables: { tap_action: 'toggle' } }, hass).ok, false, 'Aktion wird nicht geteilt');
+{ // Aktionen und Schalter-Ziele bleiben beim Teilen zu Hause, der Rest geht mit.
+  const a = C.share({ type: 'custom:button-card', template: 'casora_vacuum', name: 'x', entity: 'vacuum.robo',
+    variables: { tap_action: 'toggle', toggle_entity: 'vacuum.robo', icon: 'robot-vacuum' } }, hass);
+  assert.equal(a.ok, true, 'Teilen ohne Aktion klappt');
+  assert.deepEqual(Object.keys(a.shared.variables), ['icon'], 'Aktion wird nicht geteilt');
+}
 assert.equal(C.share({ type: 'markdown', content: 'x' }, hass).ok, false, 'nur Casora-Kacheln');
 
 // Hinzufügen: nur passende Geräte, Ergebnis ohne Platzhalter.

@@ -18,25 +18,35 @@
   const LABEL_WISH = "kartenwunsch";
   const SLOT = /^@slot:([1-9][0-9]?)$/;
   const ENTITY = /^[a-z_]+\.[a-z0-9_]+$/;
+  // Alles, was HA als Geräte-ID nähme – auch groß geschrieben oder mit Leerzeichen („Cover.garage“).
+  const LOOKS_ENTITY = /^\s*[a-z_]+\s*\.\s*[a-z0-9_]+\s*$/i;
   const MAX_SLOTS = 12;
+  const MAX_BYTES = 8000;
+  // Nur Geräte, deren Kachel nichts Heikles auslöst. Schlösser, Alarm, Tore/Jalousien, Ventile, Sirenen,
+  // Skripte, Szenen, Tasten u. ä. gibt es in geteilten Karten nicht.
+  const SAFE_DOMAINS = new Set(["sensor", "binary_sensor", "light", "switch", "fan", "climate", "media_player", "vacuum",
+    "lawn_mower", "camera", "weather", "person", "device_tracker", "humidifier", "select", "number", "input_boolean",
+    "input_number", "input_select", "update", "calendar", "todo", "plant", "sun", "counter", "timer", "event", "image"]);
 
   // ── Prüfen ──────────────────────────────────────────────────────────────
   // Nur Kachel-Vorlagen; Gerüst, Popups, Badges und eigene Karten nie.
   const TEMPLATE = /^casora_[a-z0-9_]{2,40}$/;
-  const NOT_TILES = /^casora_(room|popup|mobile|badge|custom|menu|assist|settings|notifications|scene_core|scene_row|now_playing|time|default|entity|shared|climate_popup)/;
+  const NOT_TILES = /^casora_(room|popup|mobile|badge|custom|menu|assist|settings|notifications|scene_core|scene_row|now_playing|time|default|entity|shared|climate_popup|lock|alarm|cover|garage|gate|valve|doorbell|solar_tip|scene)/;
   // Variablen, die etwas auslösen oder Code/Karten tragen könnten – nie.
-  const BAD_KEY = /(action|service|url|link|navigat|script|card|style|template|html|popup|confirm|command|code|iframe|image|camera_url|webhook|token|password|secret|cookie|javascript|eval)/i;
+  const BAD_KEY = /(action|service|url|link|navigat|script|card|style|template|html|popup|confirm|command|code|iframe|image|camera_url|webhook|token|password|secret|cookie|javascript|eval|toggle|unlock|helper|proto|constructor|picture|path|file)/i;
   // Texte: keine Formeln, kein HTML, keine Jinja-Vorlagen, keine Protokolle.
-  const BAD_TEXT = /\[\[\[|\]\]\]|[<>]|\$\{|\{\{|\{%|javascript:|data:|vbscript:|on[a-z]+\s*=|https?:\/\//i;
+  const BAD_TEXT = /\[\[\[|\]\]\]|[<>"`\\]|\$\{|\{\{|\{%|javascript|data:|vbscript|on[a-z]+\s*=|https?:|\/\/|\.\./i;
+  // Steuer-, unsichtbare und Richtungszeichen (Text läuft rückwärts, versteckte Zeilen).
+  const BAD_CHARS = /[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u2028-\u202e\u2060-\u2069\ufeff]/;
 
-  function badText(s) { return typeof s !== "string" || s.length > 200 || BAD_TEXT.test(s); }
+  function badText(s) { return typeof s !== "string" || s.length > 200 || BAD_TEXT.test(s) || BAD_CHARS.test(s); }
 
   function checkValue(v, path, errs) {
     if (v === null || typeof v === "boolean") return;
     if (typeof v === "number") { if (!isFinite(v)) errs.push(path + ": keine gültige Zahl"); return; }
     if (typeof v === "string") { if (badText(v)) errs.push(path + ": Text nicht erlaubt"); return; }
     if (Array.isArray(v)) {
-      if (v.length > 30) { errs.push(path + ": Liste zu lang"); return; }
+      if (v.length > 20) { errs.push(path + ": Liste zu lang"); return; }
       v.forEach((x, i) => {
         if (x !== null && typeof x === "object") errs.push(path + "[" + i + "]: verschachtelt nicht erlaubt");
         else checkValue(x, path + "[" + i + "]", errs);
@@ -47,14 +57,18 @@
   }
 
   // shared = {v:1, template, name, entity?, variables, slots:[{id, domain, label}]}
-  function validate(shared) {
+  // opts.templates (optional): vorhandene Vorlagen – dann muss die Vorlage dazugehören.
+  function validate(shared, opts) {
     const errs = [];
     if (!shared || typeof shared !== "object" || Array.isArray(shared)) return { ok: false, errors: ["keine Karte"] };
+    try { if (JSON.stringify(shared).length > MAX_BYTES) return { ok: false, errors: ["Karte zu groß"] }; } catch (e) { return { ok: false, errors: ["keine Karte"] }; }
+    if (Object.getPrototypeOf(shared) !== Object.prototype) errs.push("keine einfache Karte");
     const allowedTop = ["v", "template", "name", "entity", "variables", "slots"];
     Object.keys(shared).forEach((k) => { if (!allowedTop.includes(k)) errs.push(k + ": nicht erlaubt"); });
     if (shared.v !== 1) errs.push("v: unbekannte Fassung");
     const t = shared.template;
     if (typeof t !== "string" || !TEMPLATE.test(t) || NOT_TILES.test(t)) errs.push("template: nur Casora-Kachelvorlagen");
+    else if (opts && opts.templates && !opts.templates.has(t)) errs.push("template: gibt es nicht");
     if (badText(shared.name || "") || !String(shared.name || "").trim()) errs.push("name: fehlt oder nicht erlaubt");
     const slots = Array.isArray(shared.slots) ? shared.slots : null;
     if (!slots || slots.length > MAX_SLOTS) errs.push("slots: fehlen oder zu viele");
@@ -63,15 +77,16 @@
       if (!s || typeof s !== "object" || Array.isArray(s)) { errs.push("slots[" + i + "]: nicht erlaubt"); return; }
       Object.keys(s).forEach((k) => { if (!["id", "domain", "label"].includes(k)) errs.push("slots[" + i + "]." + k + ": nicht erlaubt"); });
       if (!Number.isInteger(s.id) || s.id < 1 || s.id > MAX_SLOTS) errs.push("slots[" + i + "].id: ungültig");
-      if (typeof s.domain !== "string" || !/^[a-z_]{2,30}$/.test(s.domain)) errs.push("slots[" + i + "].domain: ungültig");
+      if (typeof s.domain !== "string" || !SAFE_DOMAINS.has(s.domain)) errs.push("slots[" + i + "].domain: nicht erlaubt");
+      if (ids.has(s.id)) errs.push("slots[" + i + "].id: doppelt");
       if (badText(s.label || "")) errs.push("slots[" + i + "].label: nicht erlaubt");
       ids.add(s.id);
     });
     const slotRef = (v, path) => {
       const m = SLOT.exec(v);
       if (m && !ids.has(Number(m[1]))) errs.push(path + ": Platzhalter ohne Gerät");
-      // Echte Entitäts-IDs gehören nicht in eine geteilte Karte (dafür gibt es Platzhalter).
-      if (!m && ENTITY.test(v)) errs.push(path + ": Gerät ohne Platzhalter");
+      // Echte Entitäts-IDs (in jeder Schreibweise) gehören nicht in eine geteilte Karte – dafür gibt es Platzhalter.
+      if (!m && LOOKS_ENTITY.test(v)) errs.push(path + ": Gerät ohne Platzhalter");
     };
     if (shared.entity !== undefined) {
       if (typeof shared.entity !== "string" || !SLOT.test(shared.entity)) errs.push("entity: nur Platzhalter");
@@ -80,8 +95,9 @@
     const vars = shared.variables;
     if (vars !== undefined && (typeof vars !== "object" || vars === null || Array.isArray(vars))) errs.push("variables: nicht erlaubt");
     else if (vars) {
+      if (Object.getPrototypeOf(vars) !== Object.prototype) errs.push("variables: nicht erlaubt");
       const keys = Object.keys(vars);
-      if (keys.length > 60) errs.push("variables: zu viele");
+      if (keys.length > 30) errs.push("variables: zu viele");
       keys.forEach((k) => {
         if (!/^[a-z0-9_]{1,40}$/.test(k) || BAD_KEY.test(k)) { errs.push("variables." + k + ": nicht erlaubt"); return; }
         const v = vars[k];
@@ -126,6 +142,8 @@
       let v = inner.variables[k];
       // Studio-interne Merker und Größe am Handy nicht mitnehmen.
       if (/^(casora_|size$)/.test(k)) return;
+      // Was etwas auslösen könnte (Schalter, Aktionen, Links), bleibt beim Teilen zu Hause.
+      if (!/^[a-z0-9_]{1,40}$/.test(k) || BAD_KEY.test(k)) return;
       if (typeof v === "string" && ENTITY.test(v)) v = slotFor(v, k);
       else if (Array.isArray(v)) v = v.map((x) => (typeof x === "string" && ENTITY.test(x) ? slotFor(x, k) : x));
       vars[k] = v;
@@ -136,8 +154,8 @@
   }
 
   // Geteilte Karte + eigene Geräte → Kachel. Prüft vorher und danach.
-  function materialize(shared, mapping) {
-    const pre = validate(shared);
+  function materialize(shared, mapping, opts) {
+    const pre = validate(shared, opts);
     if (!pre.ok) return { ok: false, errors: pre.errors };
     const put = (v) => {
       if (typeof v === "string") { const m = SLOT.exec(v); if (m) return mapping[Number(m[1])] || ""; }
@@ -223,7 +241,8 @@
     if ((state === "question" || state === "declined") && it.comments) {
       try {
         const c = await (await fetch(it.comments_url + "?per_page=100")).json();
-        const last = (c || []).filter((x) => x && x.author_association !== "NONE").pop() || (c || []).pop();
+        // Nur Antworten des Casora-Teams zeigen – sonst könnte jeder hier Text (Links) unterbringen.
+        const last = (c || []).filter((x) => x && /^(OWNER|MEMBER|COLLABORATOR)$/.test(x.author_association)).pop();
         note = last && last.body ? String(last.body).slice(0, 200) : "";
       } catch (e) { /* ohne Kommentar */ }
     }
@@ -238,7 +257,7 @@
       && !badText(c.title || "") && !badText(c.desc || "") && !badText(c.by || ""));
   }
 
-  W.casoraCommunity = { validate, share, shareable, materialize, issueUrl, wishBody, shareBody, status, catalog, describe, REPO, LABEL_SHARE, LABEL_WISH };
+  W.casoraCommunity = { validate, badText, share, shareable, materialize, issueUrl, wishBody, shareBody, status, catalog, describe, REPO, LABEL_SHARE, LABEL_WISH };
   if (typeof module !== "undefined" && module.exports) module.exports = W.casoraCommunity;
   if (typeof customElements === "undefined") return;
 
@@ -518,12 +537,14 @@
     P._comAdd = async function (room, c) {
       const C = W.casoraCommunity;
       const shared = c.card;
-      if (!C.validate(shared).ok) { if (this._status) this._status(tr("This card did not pass the check."), "err"); return; }
+      const opts = { templates: new Set(Object.keys((this._state && this._state.templates) || {})) };
+      if (!opts.templates.size) delete opts.templates;
+      if (!C.validate(shared, opts).ok) { if (this._status) this._status(tr("This card did not pass the check."), "err"); return; }
       const S = (this._hass && this._hass.states) || {};
       const mapping = {};
       const res = await this._ask({
         title: fill(tr("Add “{x}”"), { x: c.title }),
-        message: tr("Pick your devices. The card only shows them – it can't switch anything on its own."),
+        message: tr("Pick your devices. The card only uses the devices you pick here."),
         wide: true,
         confirmLabel: tr("Add"),
         extend: ({ box, acts, ok }) => {
@@ -537,13 +558,13 @@
           box.insertBefore(host, acts);
           const warn = el("div", "fieldwarn");
           ok.addEventListener("click", (ev) => {
-            const m = C.materialize(shared, mapping);
+            const m = C.materialize(shared, mapping, opts);
             if (!m.ok) { ev.stopImmediatePropagation(); warn.textContent = m.errors[0]; if (!warn.parentNode) box.insertBefore(warn, acts); }
           }, true);
         },
       });
       if (!res) return;
-      const m = C.materialize(shared, mapping);
+      const m = C.materialize(shared, mapping, opts);
       if (!m.ok) return;
       room.tiles.push(m.tile);
       this._markDirty();

@@ -26,6 +26,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           N: ${{ github.event.issue.number }}
+          ACTION: ${{ github.event.action }}
           ISSUE: ${{ toJSON(github.event.issue) }}
           TITLE: ${{ github.event.issue.title }}
           BODY: ${{ github.event.issue.body }}
@@ -37,6 +38,11 @@ jobs:
           esac
           if printf '%s' "$BODY" | grep -q '```casora-karte'; then
             gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --add-label community-karte || true
+            if [ "$ACTION" = "edited" ]; then
+              # Nach einer Änderung gilt eine frühere Sichtung nicht mehr: neu prüfen und neu ansehen.
+              gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --remove-label in-pruefung --remove-label freigegeben || true
+              gh issue comment "$N" --repo "$GITHUB_REPOSITORY" --body "Die Einreichung wurde geändert. Sie wird neu geprüft und muss neu angesehen werden." || true
+            fi
             if node tools/community-check.mjs pruefen /tmp/issue.json > /tmp/out.txt; then
               gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --add-label in-pruefung --remove-label rueckfrage || true
             else
@@ -70,5 +76,7 @@ jobs:
           git add community/karten.json
           git commit -m "Community: Karte aus #$N aufgenommen"
           git push
-          gh issue comment "$N" --repo "$GITHUB_REPOSITORY" --body "Danke! Die Karte steht jetzt im Studio unter „Kachel hinzufügen › Karten der Community“."
+          # Genau die aufgenommene Fassung festhalten (falls das Issue später geändert wird).
+          { echo "Danke! Die Karte steht jetzt im Studio unter „Kachel hinzufügen › Karten der Community“."; echo; echo "Aufgenommen wurde diese Fassung:"; echo; echo '```json'; node -e 'const c=require("./community/karten.json").cards.find((x)=>x.issue===Number(process.argv[1]));console.log(JSON.stringify(c&&c.card,null,1))' "$N"; echo '```'; } > /tmp/msg.md
+          gh issue comment "$N" --repo "$GITHUB_REPOSITORY" --body-file /tmp/msg.md
           gh issue close "$N" --repo "$GITHUB_REPOSITORY"

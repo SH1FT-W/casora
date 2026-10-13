@@ -2319,7 +2319,7 @@
     "Only Casora tiles can be shared.": "Teilen lassen sich nur Casora-Kacheln.",
     "Pick a device": "Gerät wählen",
     "Pick a device for {x}.": "Wähl ein Gerät für {x}.",
-    "Pick your devices. The card only shows them – it can't switch anything on its own.": "Wähl deine Geräte. Die Karte zeigt sie nur an – von sich aus schaltet sie nichts.",
+    "Pick your devices. The card only uses the devices you pick here.": "Wähl deine Geräte. Die Karte nutzt nur die Geräte, die du hier auswählst.",
     "Request a card": "Kartenwunsch",
     "Request a card…": "Kartenwunsch einreichen …",
     "Reviewed and approved. Before adding, you pick your own devices.": "Geprüft und freigegeben. Vor dem Hinzufügen wählst du deine eigenen Geräte.",
