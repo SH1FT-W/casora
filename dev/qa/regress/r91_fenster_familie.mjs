@@ -31,7 +31,8 @@ const frame = (page, [sel, row, ic, name]) => page.evaluate(([sel, row, ic, name
     .filter((r) => r.getBoundingClientRect().height > 0) : [];
   const r0 = rows[0], i0 = r0 && ic ? r0.querySelector(ic) : null, n0 = r0 && name ? r0.querySelector(name) : null;
   return { radius: parseFloat(cs.borderTopLeftRadius), bg: cs.backgroundColor, shadow: cs.boxShadow, blur: cs.backdropFilter || cs.webkitBackdropFilter || 'none',
-    w: mr.width, n: rows.length, rowH: r0 ? r0.getBoundingClientRect().height : null, rowBg: r0 ? getComputedStyle(r0).backgroundColor : null,
+    // Zeilenhöhe der einzeiligen Zeilen (1.4.1: Glocke fest 360 breit – eine sehr lange Meldung darf umbrechen).
+    w: mr.width, n: rows.length, rowH: rows.length ? Math.min(...rows.map((r) => r.getBoundingClientRect().height)) : null, rowBg: r0 ? getComputedStyle(r0).backgroundColor : null,
     icW: i0 ? i0.getBoundingClientRect().width : null, fs: n0 ? parseFloat(getComputedStyle(n0).fontSize) : null, fw: n0 ? +getComputedStyle(n0).fontWeight : null,
     head: !!m.querySelector('.casora-welle-head') || [...m.querySelectorAll('div')].some((d) => /^(Benachrichtigungen|Notifications)$/.test(d.textContent.trim())),
     read: (() => { const b = m.querySelector('.casora-notify-read'); if (!b) return null; const r = b.getBoundingClientRect(), c = getComputedStyle(b);
