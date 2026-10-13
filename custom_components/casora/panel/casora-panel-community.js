@@ -93,32 +93,41 @@
   }
 
   // Kachel aus dem Studio → geteilte Form (Geräte → Platzhalter). Nur einfache Casora-Kacheln.
-  function share(tile, hass) {
+  // Teilbar: genau eine Casora-Kachelvorlage (keine Popups, keine eigenen Karten, keine Mehrfach-Vorlagen).
+  function shareable(tile) {
     const inner = tile && tile.type === "conditional" && tile.card ? tile.card : tile;
-    if (!inner || inner.type !== "custom:button-card") return { ok: false, errors: [tr("Only Casora tiles can be shared.")] };
+    if (!inner || inner.type !== "custom:button-card") return false;
     const tpl = [].concat(inner.template || []).filter(Boolean);
-    if (tpl.length !== 1) return { ok: false, errors: [tr("Only Casora tiles can be shared.")] };
-    const S = (hass && hass.states) || {};
+    return tpl.length === 1 && TEMPLATE.test(tpl[0]) && !NOT_TILES.test(tpl[0]);
+  }
+  // Lesbarer Platzhalter aus dem Feldnamen („entity_status“ → „Status“).
+  const slotLabel = (key, domain) => {
+    const k = String(key || "").replace(/^entity_?|_entity$|_sensor$|_\d+$/g, "").replace(/_/g, " ").trim();
+    return k ? k.charAt(0).toUpperCase() + k.slice(1) : domain;
+  };
+  function share(tile, hass, fallbackName) {
+    const inner = tile && tile.type === "conditional" && tile.card ? tile.card : tile;
+    if (!shareable(tile)) return { ok: false, errors: [tr("This kind of tile can't be shared.")] };
+    const tpl = [].concat(inner.template || []).filter(Boolean);
     const slots = [], map = new Map();
-    const slotFor = (eid) => {
+    const slotFor = (eid, key) => {
       if (!map.has(eid)) {
         const id = slots.length + 1;
-        const st = S[eid];
-        const dc = st && st.attributes && st.attributes.device_class;
-        slots.push({ id, domain: eid.split(".")[0], label: dc ? String(dc).replace(/_/g, " ") : eid.split(".")[0] });
+        const domain = eid.split(".")[0];
+        slots.push({ id, domain, label: key ? slotLabel(key, domain) : (fallbackName || domain) });
         map.set(eid, "@slot:" + id);
       }
       return map.get(eid);
     };
-    const out = { v: 1, template: tpl[0], name: String(inner.name || "").trim(), slots };
-    if (typeof inner.entity === "string" && ENTITY.test(inner.entity)) out.entity = slotFor(inner.entity);
+    const out = { v: 1, template: tpl[0], name: String(fallbackName || inner.name || "").trim() || "Karte", slots };
+    if (typeof inner.entity === "string" && ENTITY.test(inner.entity)) out.entity = slotFor(inner.entity, "");
     const vars = {};
     Object.keys(inner.variables || {}).forEach((k) => {
       let v = inner.variables[k];
       // Studio-interne Merker und Größe am Handy nicht mitnehmen.
       if (/^(casora_|size$)/.test(k)) return;
-      if (typeof v === "string" && ENTITY.test(v)) v = slotFor(v);
-      else if (Array.isArray(v)) v = v.map((x) => (typeof x === "string" && ENTITY.test(x) ? slotFor(x) : x));
+      if (typeof v === "string" && ENTITY.test(v)) v = slotFor(v, k);
+      else if (Array.isArray(v)) v = v.map((x) => (typeof x === "string" && ENTITY.test(x) ? slotFor(x, k) : x));
       vars[k] = v;
     });
     if (Object.keys(vars).length) out.variables = vars;
@@ -162,9 +171,12 @@
   function describe(hass, eid) {
     const S = (hass && hass.states) || {}, R = (hass && hass.entities) || {};
     const st = S[eid] || {}, a = st.attributes || {}, e = R[eid] || {};
-    const short = eid.replace(/^([a-z_]+)\.[a-z0-9]+_/, "$1.<geraet>_");
+    // Keine Namen, Räume, Seriennummern: von der ID bleibt nur die Art und der Schlüssel der Integration.
+    const dom = eid.split(".")[0];
+    const short = dom + ".<geraet>" + (e.translation_key ? "_" + e.translation_key : "");
+    // Zustand nur als Zahl oder kurzer Schlüsselwert (on, idle, charging) – Koordinaten, IPs, Texte nie.
     let val = st.state == null ? "" : String(st.state);
-    if (val.length > 40 || /[<>]/.test(val)) val = "…";
+    if (!(/^-?\d+(\.\d+)?$/.test(val) || /^[a-z][a-z_]{0,29}$/.test(val))) val = "(Text)";
     return {
       line: [short, val, a.unit_of_measurement ? "unit: " + a.unit_of_measurement : "", a.device_class ? "class: " + a.device_class : "",
         e.translation_key ? "tk: " + e.translation_key : ""].filter(Boolean).join("   "),
@@ -182,7 +194,7 @@
         + (f.popup ? "\n\n### Und im Popup?\n" + f.popup : "")
         + "\n\n### Integration\n" + (plat.join(", ") || "–")
         + "\n\n### Entitäten (anonymisiert)\n```\n" + d.map((x) => x.line).join("\n") + "\n```"
-        + "\n\n### Attribute\n" + d.map((x) => "- " + (x.attrs.join(", ") || "–")).join("\n")
+        + "\n\n### Attribute\n" + d.map((x) => "- " + x.line.split("   ")[0] + ": " + (x.attrs.join(", ") || "–")).join("\n")
         + (f.image ? "\n\n### Bild\n" + f.image : "")
         + "\n\n---\nEingereicht aus Casora " + version() + " · Home Assistant " + haVersion(hass),
     };
@@ -204,7 +216,8 @@
     const labels = (it.labels || []).map((l) => l.name);
     let state = "review";
     if (labels.includes("freigegeben")) state = "approved";
-    else if (labels.includes("abgelehnt") || it.state === "closed") state = labels.includes("freigegeben") ? "approved" : "declined";
+    else if (labels.includes("abgelehnt")) state = "declined";
+    else if (it.state === "closed") state = "closed";
     else if (labels.includes("rueckfrage")) state = "question";
     let note = "";
     if ((state === "question" || state === "declined") && it.comments) {
@@ -225,7 +238,7 @@
       && !badText(c.title || "") && !badText(c.desc || "") && !badText(c.by || ""));
   }
 
-  W.casoraCommunity = { validate, share, materialize, issueUrl, wishBody, shareBody, status, catalog, describe, REPO, LABEL_SHARE, LABEL_WISH };
+  W.casoraCommunity = { validate, share, shareable, materialize, issueUrl, wishBody, shareBody, status, catalog, describe, REPO, LABEL_SHARE, LABEL_WISH };
   if (typeof module !== "undefined" && module.exports) module.exports = W.casoraCommunity;
   if (typeof customElements === "undefined") return;
 
@@ -260,7 +273,14 @@
   const loadVersion = (hass) => (W.__casoraVersion ? Promise.resolve() : Promise.resolve(hass && hass.callWS && hass.callWS({ type: "casora/version" }))
     .then((r) => { if (r && r.version) W.__casoraVersion = r.version; }).catch(() => {}));
   // Gerätart lesbar („Staubsauger“ statt „vacuum“), aus HAs eigenen Übersetzungen.
-  const domainName = (hass, d) => { try { const t = hass && hass.localize && hass.localize("component." + d + ".title"); if (t) return t; } catch (e) { /* roh */ } return d; };
+  const DOMAINS = { sensor: "Sensor", binary_sensor: "Sensor", light: "Light", switch: "Switch", vacuum: "Robot vacuum",
+    camera: "Camera", climate: "Thermostat", cover: "Cover", lock: "Lock", media_player: "Media player", fan: "Fan",
+    lawn_mower: "Lawn mower", alarm_control_panel: "Alarm", weather: "Weather", person: "Person", select: "Selection",
+    number: "Number", button: "Button", humidifier: "Humidifier", water_heater: "Water heater", valve: "Valve", update: "Update" };
+  const domainName = (hass, d) => {
+    try { const t = hass && hass.localize && hass.localize("component." + d + ".title"); if (t) return t; } catch (e) { /* Rückfall */ }
+    return tr(DOMAINS[d] || d);
+  };
 
   customElements.whenDefined("casora-panel").then(() => {
     const P = customElements.get("casora-panel").prototype;
@@ -303,6 +323,7 @@
           const img = field(form, "Image (optional)", { placeholder: "Link to a screenshot" });
           box.insertBefore(form, acts);
           const warn = el("div", "fieldwarn");
+          [dev, tile, pop, img].forEach((x) => x.addEventListener("input", () => { if (warn.parentNode) warn.remove(); }));
           get = () => { f.device = dev.value.trim(); f.tile = tile.value.trim(); f.popup = pop.value.trim(); f.image = img.value.trim(); };
           ok.addEventListener("click", (ev) => {
             get();
@@ -316,6 +337,16 @@
       const C = W.casoraCommunity;
       await loadVersion(hass);
       const w = C.wishBody(f, hass);
+      // Vorschau: genau dieser Text geht an GitHub (öffentlich).
+      const go = await this._ask({ title: tr("This is what will be public"), message: tr("Check the text. Nothing else is sent."),
+        value: w.body, multiline: true, rows: 14, wide: true, confirmLabel: tr("Open GitHub"),
+        extend: ({ input }) => {
+          if (!input) return;
+          input.readOnly = true;
+          // Nicht alles markiert und von oben lesen (der Dialog wählt sonst den ganzen Text aus).
+          setTimeout(() => { try { input.setSelectionRange(0, 0); input.scrollTop = 0; } catch (e) { /* egal */ } }, 60);
+        } });
+      if (!go) return;
       open(C.issueUrl("Kartenwunsch: " + f.device, w.body, [LABEL_WISH].concat(w.plat.length ? ["integration: " + w.plat[0]] : [])));
       if (this._status) this._status(tr("GitHub is open – submit the request there."), "ok");
     };
@@ -323,9 +354,15 @@
     // Kachel teilen: Vorschau der geteilten Form, Kurzbeschreibung, dann GitHub.
     P._comShare = async function (room, tile) {
       const C = W.casoraCommunity;
-      const s = C.share(tile, this._hass);
+      // Name-Vorschlag aus der Kachelart („Saugroboter“), nicht der eigene Kachelname („Wohnzimmer“).
+      const I = W.__casoraPanelInternals || {};
+      const inner = tile && tile.type === "conditional" && tile.card ? tile.card : tile;
+      const ty = I.tileTypeAny ? I.tileTypeAny(inner) : null;
+      const kind = ty && ty.label ? tr(ty.label) : "";
+      const s = C.share(tile, this._hass, kind);
       if (!s.ok) {
-        await this._ask({ title: tr("This tile can't be shared"), message: s.errors.slice(0, 4).join(" · "), cancelLabel: tr("Close"), confirmLabel: "OK" });
+        await this._ask({ title: tr("This tile can't be shared"), message: tr("This kind of tile can't be shared."), confirmLabel: "OK",
+          extend: ({ cancel }) => { cancel.style.display = "none"; } });
         return;
       }
       let desc = "";
@@ -338,19 +375,22 @@
           css(box);
           const info = el("div");
           info.appendChild(el("div", "comlbl", tr("Shared as")));
-          const rows = [[tr("Template"), s.shared.template],
-            [tr("Devices"), s.shared.slots.map((x) => domainName(this._hass, x.domain)).join(", ") || "–"]];
+          const rows = [[tr("Kind of tile"), kind || s.shared.template],
+            [tr("Devices"), s.shared.slots.map((x) => { const dn = domainName(this._hass, x.domain); return x.label === dn ? dn : x.label + " (" + dn + ")"; }).join(", ") || "–"]];
           rows.forEach(([k, v]) => { const r = el("div", "comrow"); const t = el("div", "comtx"); t.append(el("b", "", k), el("span", "", v)); r.appendChild(t); info.appendChild(r); });
           const nm = field(info, "Name for everyone *", { placeholder: "e.g. Robot vacuum" });
-          nm.value = s.shared.name;
+          nm.value = kind || "";
           const d = field(info, "Short description *", { placeholder: "e.g. Roborock with dock: status, dock errors, room" });
           box.insertBefore(info, acts);
           const warn = el("div", "fieldwarn");
+          [nm, d].forEach((x) => x.addEventListener("input", () => { if (warn.parentNode) warn.remove(); }));
           ok.addEventListener("click", (ev) => {
             desc = d.value.trim();
             const name = nm.value.trim();
-            const plain = (x) => x.length <= 200 && !/[<>]|\[\[\[|https?:\/\/|\{\{|\$\{/i.test(x);
-            const why = !name ? "Give the card a name." : !plain(name) ? "Plain text only, up to 200 characters."
+            // Dieselbe Prüfung wie überall (validate) – nicht stumm abbrechen.
+            const tryName = Object.assign({}, s.shared, { name });
+            const plain = (x) => C.validate(Object.assign({}, s.shared, { name: x })).ok;
+            const why = !name ? "Give the card a name." : !C.validate(tryName).ok ? "Plain text only, up to 200 characters."
               : !desc ? "Add a short description." : !plain(desc) ? "Plain text only, up to 200 characters." : "";
             if (!why) s.shared.name = name;
             if (why) { ev.stopImmediatePropagation(); warn.textContent = tr(why); if (!warn.parentNode) box.insertBefore(warn, acts); }
@@ -407,7 +447,7 @@
           loadMine(this._hass).then((mine) => {
             if (!mine.length) return;
             host.appendChild(el("div", "comlbl", tr("Your shared cards")));
-            const L = { sent: ["Not submitted yet", "rgba(127,127,127,.2)"], review: ["In review", "rgba(232,176,74,.22)"],
+            const L = { sent: ["Sent?", "rgba(127,127,127,.2)"], closed: ["Closed", "rgba(127,127,127,.2)"], review: ["In review", "rgba(232,176,74,.22)"],
               question: ["Question", "rgba(91,143,209,.25)"], approved: ["Approved", "rgba(107,178,122,.25)"], declined: ["Declined", "rgba(217,96,79,.25)"] };
             mine.slice().reverse().slice(0, 10).forEach((m, k) => {
               const r = el("div", "comrow");
@@ -422,7 +462,9 @@
               setTimeout(() => C.status(m.id).then((st) => {
                 const l = L[st.state] || L.review;
                 pill.textContent = tr(l[0]); pill.style.background = l[1];
-                sub.textContent = st.note || (st.number ? "#" + st.number : tr("Submit it on GitHub to start the review."));
+                const when = new Date(m.at).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+                sub.textContent = st.note || (st.number ? "#" + st.number + " · " + when
+                  : tr("Submitted? It can take a few minutes until the state shows here.") + " · " + when);
                 if (st.url) { r.style.cursor = "pointer"; r.onclick = () => open(st.url); }
               }).catch(() => { sub.textContent = tr("GitHub can't be reached right now."); }), k * 1200);
             });
@@ -451,7 +493,7 @@
           css(box);
           const host = el("div");
           shared.slots.forEach((s) => {
-            host.appendChild(el("div", "comlbl", s.label + " · " + s.domain));
+            host.appendChild(el("div", "comlbl", s.label + " · " + domainName(this._hass, s.domain)));
             const list = Object.keys(S).filter((k) => k.split(".")[0] === s.domain).sort();
             host.appendChild(this._combo("", list, tr("Pick a device"), (v) => { mapping[s.id] = v; }).wrap);
           });
@@ -477,9 +519,7 @@
   // Kachel-Menü (casora-panel.js ruft menu/pick wie bei casoraKachelart).
   W.casoraCommunityMenu = {
     menu(panel, menu, ctx) {
-      const t = ctx && ctx.tile;
-      const inner = t && t.type === "conditional" && t.card ? t.card : t;
-      if (!inner || inner.type !== "custom:button-card") return;
+      if (!W.casoraCommunity.shareable(ctx && ctx.tile)) return;
       menu.splice(Math.max(0, menu.length - 1), 0, { id: "community_share", label: "Share with the community…" });
     },
     pick(panel, id, ctx) {

@@ -10182,7 +10182,8 @@ class CasoraPanel extends HTMLElement {
         .combo > input { width:100%; box-sizing:border-box; text-overflow:ellipsis; }
 
         #overlay { position:fixed; inset:0; z-index:200; pointer-events:none; }
-        .psheet { position:fixed; inset:0; pointer-events:auto; }
+        /* Über Dialogen (askpane 300): eine Auswahl aus einem Dialog heraus lag am Handy sonst dahinter (1.5). */
+        .psheet { position:fixed; inset:0; pointer-events:auto; z-index:310; }
         .psheet-scrim { position:absolute; inset:0; background:rgba(0,0,0,0.34); touch-action:none; }
         .psheet-head, .psheet-search { touch-action:none; }
         .psheet-panel {
