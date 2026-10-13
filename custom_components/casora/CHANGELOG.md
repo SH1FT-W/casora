@@ -10,6 +10,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Bell:** The notification window always has the same width (360 px, on the phone up to the screen edge). Before, it was narrow with short notifications and the two buttons at the bottom were cramped.
 - **Update logos:** Brand logos in the updates popup have the same shape as the other icons and fill it, instead of a round logo sitting in a rounded square. In dark mode there is no light edge around them any more, and updates without a logo get a neutral icon.
 - **Person popup:** "since …" in the header shows how long the person has really been at that place. After a Home Assistant restart it started counting from the restart.
+- **Person popup:** "Get location", "Send message" and "Ring" also show up when the phone's name has an apostrophe (like "Alex's iPhone"). Casora looked for the wrong notification service and hid the actions.
 
 ## 1.4.0 – 13.10.2026
 

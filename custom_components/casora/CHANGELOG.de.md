@@ -10,6 +10,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Glocke:** Das Mitteilungsfenster ist immer gleich breit (360 px, am Handy bis zum Bildschirmrand). Vorher war es bei kurzen Meldungen schmal und die beiden Knöpfe unten gedrängt.
 - **Update-Logos:** Die Markenlogos im Update-Popup haben dieselbe Form wie die übrigen Symbole und füllen sie aus, statt rund in einem abgerundeten Quadrat zu sitzen. Im Dunkeln gibt es keinen hellen Rand mehr, Updates ohne Logo bekommen ein neutrales Symbol.
 - **Personen-Popup:** „seit …“ im Kopf zeigt, wie lange die Person wirklich an dem Ort ist. Nach einem Neustart von Home Assistant zählte es ab dem Neustart.
+- **Personen-Popup:** „Standort jetzt holen“, „Nachricht schicken“ und „Klingeln lassen“ erscheinen auch, wenn der Name des Handys einen Apostroph hat (etwa „Alex's iPhone“). Casora suchte den falschen Benachrichtigungsdienst und blendete die Aktionen aus.
 
 ## 1.4.0 – 13.10.2026
 

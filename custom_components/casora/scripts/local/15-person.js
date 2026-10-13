@@ -98,9 +98,11 @@
   // ── Handy finden ──────────────────────────────────────────────────────────
   // Tracker der Companion-App (Quelle der Person, sonst der erste mobile_app-Tracker), sein Gerät und
   // dessen Sensoren. Notify-Dienst: notify.mobile_app_<Gerätename> (Name wie bei der Registrierung).
+  // Wie HAs slugify: Apostrophe fallen weg („Basti's iPhone“ → bastis_iphone, nicht basti_s_iphone),
+  // Akzente werden zum Grundbuchstaben.
   var slug = function (t) {
-    return String(t || '').toLowerCase().replace(/ä/g, 'a').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/ß/g, 'ss')
-      .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    return String(t || '').toLowerCase().replace(/ß/g, 'ss').normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/['’‘`´]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
   };
   var KEY = {
     battery: [/^battery_level$/, /_battery_level$/],
@@ -130,8 +132,12 @@
     });
     var svc = (hass.services && hass.services.notify) || {};
     var want = 'mobile_app_' + slug(D[dev] && D[dev].name);
+    // Rückfall ohne Trenner verglichen (Gerät umbenannt, andere Schreibweise beim Registrieren).
+    var bare = function (x) { return slug(x).replace(/_/g, ''); };
     out.notify = svc[want] ? want : Object.keys(svc).filter(function (k) {
-      return k.indexOf('mobile_app_') === 0 && slug(out.name) && k.indexOf(slug(out.name)) > -1;
+      if (k.indexOf('mobile_app_') !== 0) return false;
+      var kb = k.slice(11).replace(/_/g, '');
+      return [D[dev] && D[dev].name, out.name].some(function (n) { return bare(n) && kb.indexOf(bare(n)) === 0; });
     })[0] || null;
     return out;
   };

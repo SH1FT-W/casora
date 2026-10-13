@@ -65,6 +65,13 @@ assert.equal(ph.battery, 'sensor.annas_phone_battery_level');
 assert.equal(ph.charging, 'sensor.annas_phone_battery_state');
 assert.equal(ph.wifi, 'sensor.annas_phone_wifi_connection');
 assert.equal(ph.notify, 'mobile_app_annas_phone');
+// Gemeldet 13.10.2026: Apostroph im Gerätenamen – HA lässt ihn im Dienstnamen weg (bastis_iphone).
+for (const [name, svc] of [['Annas’ iPhone', 'mobile_app_annas_iphone'], ["Ben's iPhone", 'mobile_app_bens_iphone'], ['Zoë Handy', 'mobile_app_zoe_handy']]) {
+  const h2 = JSON.parse(JSON.stringify(hass));
+  h2.devices.d1.name = name;
+  h2.services.notify = { [svc]: {}, persistent_notification: {} };
+  assert.equal(P.phone(h2, 'person.anna').notify, svc, 'Dienst gefunden für ' + name);
+}
 // Ohne Companion-App kein Handy-Block.
 const noApp = JSON.parse(JSON.stringify(hass));
 delete noApp.entities['device_tracker.annas_phone'];
