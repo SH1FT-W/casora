@@ -13845,7 +13845,7 @@
      "type": "custom:layout-card"
     }
    },
-   "greeting": "[[[\n  /* Begrüßung statt Raumname (1.4, variables.casora_greeting, casora-core.js casoraGreeting). */\n  const g = window.casoraGreeting ? window.casoraGreeting(hass, variables) : null;\n  if (!g) return '';\n  setTimeout(() => { const el = this.shadowRoot && this.shadowRoot.querySelector('#greeting'); if (el && window.casoraFitTitle) window.casoraFitTitle(el, 'n'); }, 0);\n  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\n  return '<span data-no-i18n>' + esc(g) + '</span>';\n]]]\n"
+   "n": "[[[\n  /* Begrüßung statt Raumname (1.4, variables.casora_greeting, casora-core.js casoraGreeting). */\n  const g = window.casoraGreeting ? window.casoraGreeting(hass, variables) : null;\n  if (!g) return '';\n  setTimeout(() => { const el = this.shadowRoot && this.shadowRoot.querySelector('#n'); if (el && window.casoraFitTitle) window.casoraFitTitle(el); }, 0);\n  const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\n  return '<span data-no-i18n>' + esc(g) + '</span>';\n]]]\n"
   },
   "double_tap_action": {
    "action": "none"
@@ -14870,7 +14870,7 @@
       "pointer-events": "auto"
      }
     ],
-    "greeting": [
+    "n": [
      {
       "display": "[[[ return window.casoraGreeting && window.casoraGreeting(hass, variables) ? 'block' : 'none' ]]]"
      },
