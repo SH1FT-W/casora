@@ -12141,12 +12141,17 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     bindOpens(body, null);
     // Nach dem Entfernen einer Meldung: Liste neu, Knöpfe nachziehen; leer → „Nichts Neues“.
     var redraw = function () {
+      // Nach oben aufgeklappt (Handy-Leiste unten): die Unterkante bleibt stehen, das Fenster schrumpft
+      // nach oben – sonst schwebte es nach dem Entfernen über der Leiste (1.4.1).
+      var mr = menu.getBoundingClientRect();
+      var upward = mr.top < r.top;
       body.innerHTML = (window.casoraTr || function (x) { return x; })(sections());
       paint(body);
       swipeRows(body, redraw);
       fade();
       if (!_rows.length) { wipe.style.display = 'none'; clear.style.display = 'none'; }
       else if (!unread()) clear.style.display = 'none';
+      if (upward) menu.style.top = Math.round(mr.bottom - menu.offsetHeight) + 'px';
     };
     swipeRows(body, redraw);
 
