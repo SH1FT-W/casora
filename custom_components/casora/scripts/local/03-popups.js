@@ -1606,6 +1606,8 @@
         'range_primary', 'est_battery_range', 'battery_range', 'electric_range', 'remaining_range', 'reichweite', 'range'], x: /(scr|adblue)_(range|reichweite)$|range_secondary$/ },
     tankfullstand: { d: S, k: ['fuel_level_current_level', 'fuel_level', 'remaining_fuel_percent', 'fuel_percentage'],
       e: ['tankfullstand', 'tankstand', 'kraftstoffstand', 'fuel_level_current_level', 'fuel_level', 'remaining_fuel_percent', 'fuel_percentage', 'fuel_level_percentage', 'tank_level'] },
+    // 1.4.1: Tankinhalt in Litern (Volvo fuel_amount „Kraftstoffmenge“) – gezeigt, wenn kein Füllstand in % da ist.
+    tankmenge: { d: S, k: ['fuel_amount'], e: ['kraftstoffmenge', 'tankinhalt', 'fuel_amount', 'fuel_remaining'] },
     akku: { d: S, k: ['battery_level', 'state_of_charge', 'remaining_battery_percent', 'battery_percentage'],
       e: ['akkustand', 'ladezustand', 'state_of_charge', 'battery_level', 'remaining_battery_percent', 'battery_percentage', 'battery_soc', 'soc'] },
     kilometerstand: { d: S, k: ['mileage', 'odometer'], e: ['kilometerstand', 'mileage', 'odometer', 'odometer_km'] },
@@ -1658,7 +1660,7 @@
   };
   Object.keys(ROLES).forEach(function (r) { var R0 = ROLES[r]; R0.re = R0.e.map(function (x) { return new RegExp('(^|_)' + x + '$'); }); });
   // Rollen, an denen ein Fahrzeug-Gerät zu erkennen ist (eine davon muss dabei sein).
-  var CORE = ['reichweite_kombiniert', 'kilometerstand', 'tankfullstand', 'akku'];
+  var CORE = ['reichweite_kombiniert', 'kilometerstand', 'tankfullstand', 'tankmenge', 'akku'];
   // Bestes Ergebnis je Rolle für eine Entität: 0 = translation_key, 1… = Rang der Endung.
   // Abgeleitete Helfer am Auto-Gerät (z. B. utility_meter „monthly_mileage“) sind nie die Rolle selbst.
   var HELPER = /^(utility_meter|statistics|derivative|integration|template|filter|min_max|threshold|trend|history_stats)$/;
@@ -1775,6 +1777,7 @@
       rangeU: du('reichweite_kombiniert'), kmU: du('kilometerstand'), inspU: du('inspektionsdistanz'), scrU: du('scr_reichweite'),
       inspKmKm: dk('inspektionsdistanz'), scrKm: dk('scr_reichweite'), known: known,
       range: val('reichweite_kombiniert'), tank: fuel != null ? fuel : soc, ev: fuel == null && soc != null, km: val('kilometerstand'),
+      tankL: val('tankmenge'), tankLU: /^l$/i.test(unit('tankmenge') || 'l') ? 'l' : unit('tankmenge'),
       scr: val('scr_reichweite'), oil: val('olstand'), v12: val('12v_batteriespannung'),
       out: val('aussentemperatur'), outUnit: unit('aussentemperatur') || '°C', open: openDoors.concat(openWins), openDoors: openDoors, openWins: openWins, locked: locked,
       brake: on('feststellbremse'), brakeKnown: ok(b('feststellbremse')),
@@ -1828,6 +1831,11 @@
           + '<span>' + (r.ev ? 'Akku' : 'Tank') + '</span><span>' + fmtN(r.tank) + ' %</span></div>'
           + '<div style="height:8px;border-radius:999px;background:rgba(255,255,255,0.14);overflow:hidden;">'
           + '<div style="height:100%;width:' + Math.max(2, Math.min(100, r.tank)) + '%;border-radius:999px;background:' + col + ';"></div></div></div>';
+      }
+      /* Kein Füllstand in %, aber Tankinhalt in Litern (1.4.1, Volvo): als Zeile unter dem Kopf. */
+      if (r.tank == null && r.tankL != null) {
+        out += '<div style="height:var(--casora-popup-sec-gap, 22px)"></div>'
+          + UI.group([{ icon: 'mdi:gas-station', iconTone: 'var(--casora-color-teal, #00C3D0)', label: 'Tankinhalt', value: fmtN(r.tankL) + ' ' + r.tankLU }], null);
       }
       /* Tankstand gerade unbekannt (z. B. nach einem Neustart, Auto-Integration noch nicht da): Tanken trotzdem zeigen. */
       if (r.tank == null && tank() && window._casoraHH && window._casoraHH.on()) {

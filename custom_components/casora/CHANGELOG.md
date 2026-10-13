@@ -9,7 +9,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ### Fixed
 - **Tile status:** A long status no longer shrinks the text until it is hard to read. The text keeps its size; if it doesn't fit, the tile shows the first part and counts the rest ("Drying ends +1"), all of it is in the popup. This applies to every tile, on desktop and phone.
 - **Warning tile:** NINA warnings that don't come from the weather service keep their spelling and drop the "Gefahreninformation:" prefix ("Hochwasser an der Ems" instead of "Hochwasser An Der Ems"). With several warnings the tile counts the others.
-- **Fuel prices:** Cars that report their tank in litres instead of percent (for example Volvo, "fuel amount") now show up under "Fuel per car". Before, Casora said it found no car with a fuel level.
+- **Fuel prices:** Cars that report their tank in litres instead of percent (for example Volvo, "fuel amount") now show up under "Fuel per car". Before, Casora said it found no car with a fuel level. The car popup shows the fuel in the tank in litres for these cars.
 - **Robot vacuum:** Dock errors are translated (for example "Dirty water tank full" instead of "waste water tank full").
 - **Bell:** The notification window always has the same width (360 px, on the phone up to the screen edge). Before, it was narrow with short notifications and the two buttons at the bottom were cramped. The heading "New" at the top is as far from the edge as the rows are from the side.
 - **Update logos:** Brand logos in the updates popup have the same shape as the other icons and fill it, instead of a round logo sitting in a rounded square. In dark mode there is no light edge around them any more, and updates without a logo get a neutral icon.

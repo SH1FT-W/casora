@@ -104,4 +104,15 @@ const st = (pairs) => Object.fromEntries(pairs.map(([id, s, attrs]) => [id, { en
   assert.deepEqual(C.map(null), {});
   assert.equal(C.tile(null, {}), 'Keine Daten');
 }
+// 1.4.1, gemeldet 13.10.2026: Volvo meldet den Tank nur in Litern (fuel_amount, „Kraftstoffmenge“).
+{
+  const ids = [['sensor.auto_v_kraftstoffmenge', 'car', 'fuel_amount'], ['sensor.auto_v_kilometerstand', 'car', 'odometer'],
+    ['sensor.auto_v_zeit_bis_wartung', 'car']];
+  const C = load(reg(ids));
+  const M = C.map(null);
+  assert.equal(M.tankmenge, 'sensor.auto_v_kraftstoffmenge', 'Tankinhalt in Litern erkannt');
+  const r = C.read(null, st([['sensor.auto_v_kraftstoffmenge', '34.5', { unit_of_measurement: 'L' }], ['sensor.auto_v_kilometerstand', '61200']]));
+  assert.equal(r.tank, null, 'Liter sind kein Füllstand in %');
+  assert.equal(r.tankL, 34.5); assert.equal(r.tankLU, 'l');
+}
 console.log('fahrzeug_rollen: ok');
