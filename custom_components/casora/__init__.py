@@ -26,7 +26,6 @@ from .updates import async_setup_updates
 from .options import async_setup_options
 from .template_refresh import async_setup_template_refresh
 from .phone_badges import async_setup_phone_badges
-from .card_updates import async_setup_card_updates, async_unload_card_updates
 from .update_source import LEGACY_OPTIONS
 from .ki import KiRunner
 from .umstellen import async_setup_umstellen
@@ -353,8 +352,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_setup_template_refresh(hass)
     # Handy-Raumseite: Raum-Badges wie am Desktop, Variablen zur Laufzeit (phone_badges.py).
     async_setup_phone_badges(hass)
-    # Karten-Updates: Vorlagen-Fixes aus „karten-…“-Releases (card_updates.py).
-    async_setup_card_updates(hass)
     hass.data[DOMAIN]["raumklima"] = rk = async_start_raumklima(hass, entry)
     async_start_lueften_push(hass, entry, rk)
     # Pausiert seit: überlebt Neustarts, damit alte Pausen nicht wieder auftauchen (media_pause.py).
@@ -411,7 +408,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not hass.data.get(DOMAIN, {}).get("reloading"):
         async_remove_panel(hass, PANEL_URL, warn_if_unknown=False)
     async_unload_helfer(hass)
-    async_unload_card_updates(hass)
     # Sonst blieben sie bis zum Neustart aufrufbar, auch nach dem Entfernen von Casora.
     for name in ("einrichten", "umstellen"):
         hass.services.async_remove(DOMAIN, name)

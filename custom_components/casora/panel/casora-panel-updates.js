@@ -271,7 +271,7 @@
       return this._cuData;
     };
 
-    // Karten-Updates (card_updates.py). Ältere Integration ohne den Befehl: Gruppe fehlt.
+    // Karten-Updates (seit 1.5 ohne Befehl in der Integration): die Gruppe fehlt dann.
     P._cuLoadCards = async function (refresh) {
       try {
         this._cuCards = await this._hass.callWS({ type: "casora/card_updates/list", refresh: !!refresh });

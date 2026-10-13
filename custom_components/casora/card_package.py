@@ -2,8 +2,8 @@
 
 Ein Karten-Update bringt Fehlerbehebungen für BESTEHENDE Kartenvorlagen
 (button_card_templates, casora_*) ohne komplettes Casora-Release. Es kommt als
-JSON-Anhang eines GitHub-Releases mit Tag „karten-…“ (card_updates.py holt es),
-gebaut von tools/build-card-update.py, das dieses Modul mitbenutzt.
+JSON-Anhang eines früheren „karten-…“-Releases. Das Holen (card_updates.py) und Bauen
+(tools/build-card-update.py) ist seit 1.5 entfernt; eine vorhandene Überlagerung wirkt weiter.
 
 Paket (format 1):
   {"format": 1, "id": "karten-2026-09-30-1", "published": "<ISO>",
