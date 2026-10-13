@@ -80,7 +80,7 @@ let card = null; try { card = block && JSON.parse(block[1]); } catch (e) { /* bl
 await check('GitHub-Link „Community-Karte: …“ ins Casora-Repo', su && /github\.com\/SH1FT-W\/casora\/issues\/new/.test(shareUrl) && /^Community-Karte: /.test(sTitle), sTitle);
 await check('Karte nur mit Platzhaltern, keine Geräte-IDs', card && card.slots && card.slots.length > 0
   && !/"[a-z_]+\.[a-z0-9_]+"/.test(JSON.stringify(card).replace(/"@slot:\d+"/g, '')), card);
-await check('Kennung und IssueBar-Markierung im Text', /<!-- casora-id:[a-z0-9]+ -->/.test(sBody) && /<!-- issuebar:action approve=freigegeben ready=in-pruefung -->/.test(sBody), sBody && sBody.slice(-200));
+await check('Kennung und IssueBar-Markierung im Text', /<!-- casora-id:[a-z0-9]+ -->/.test(sBody) && /<!-- issuebar:action approve=freigegeben ready=in-pruefung decline=abgelehnt -->/.test(sBody), sBody && sBody.slice(-200));
 const mine = await page.evaluate(() => document.querySelector('home-assistant').hass.connection.sendMessagePromise({ type: 'frontend/get_user_data', key: 'casora_community_shared' }));
 // Die gemerkte Einreichung am Ende wieder entfernen (andere Tests sehen sonst „Deine geteilten Karten“).
 const mineBefore = (mine && Array.isArray(mine.value) ? mine.value : []).filter((m) => sBody.indexOf('casora-id:' + m.id) < 0);

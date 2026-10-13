@@ -223,7 +223,7 @@
     return "### Kurzbeschreibung\n" + desc + "\n\n### Karte\n```casora-karte\n" + JSON.stringify(shared, null, 1) + "\n```\n\n"
       + "<!-- casora-id:" + id + " -->\n"
       // Für IssueBar: Dieses Issue prüft die Community-Action; freigegeben wird per Label, sobald es „in-pruefung“ ist.
-      + "<!-- issuebar:action approve=freigegeben ready=in-pruefung -->\nEingereicht aus Casora " + version();
+      + "<!-- issuebar:action approve=freigegeben ready=in-pruefung decline=abgelehnt -->\nEingereicht aus Casora " + version();
   }
 
   // Stand einer geteilten Karte: Suche nach der Kennung im Issue (ohne Anmeldung, wenige Anfragen).
