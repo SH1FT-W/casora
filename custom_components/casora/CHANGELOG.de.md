@@ -12,6 +12,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Personen-Popup:** „Zuletzt“ heißt jetzt „Verlauf“ und zeigt die Orte der letzten drei Tage als Zeitleiste wie im Schloss-Popup: Uhrzeit, Punkt in der Farbe des Orts, bis wann und wie lange. „Ganzer Verlauf“ öffnet den Verlauf von Home Assistant.
 - **Pulse-Kachel:** Die Statuszeile trennt Batterien, die bald fällig sind, von Geräten, die Pulse nur beobachtet („1 Batterie bald fällig · 2 beobachten“).
 - **Begrüßung:** „Guten Abend, Alex“ steht beim Laden der Startseite sofort an seinem Platz. Vorher tauchte die Begrüßung rechts auf und sprang dann nach links.
+- **Wiedergabe (Welle):** Der Player unter der Medien-Welle ist schlanker: ohne Lautstärke-Regler und ohne Zeitangaben, der Fortschrittsbalken bleibt. Lautstärke gibt es weiter im Medien-Popup.
 - **Glocke:** Ist das Mitteilungsfenster nach oben aufgeklappt, bleibt seine Unterkante beim Entfernen einer Meldung stehen, statt zu springen.
 - **Studio am Handy:** Eine Auswahl, die aus einem Dialog heraus geöffnet wird, liegt über dem Dialog statt dahinter.
 
