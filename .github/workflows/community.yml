@@ -70,19 +70,27 @@ jobs:
           if [ -n "$EDIT" ] && [ $(( $(date +%s) - $(date -d "$EDIT" +%s) )) -lt 900 ]; then
             gh issue comment "$N" --repo "$GITHUB_REPOSITORY" --body "Die Einreichung wurde in den letzten 15 Minuten geändert. Bitte die aktuelle Fassung ansehen und danach erneut freigeben."
             gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --remove-label freigegeben || true
-            exit 1
+            # Gewollte Ablehnung, kein Fehler: grün enden (sonst schickt GitHub dem Freigebenden eine Fehler-Mail).
+            exit 0
           fi
           if ! node tools/community-check.mjs aufnehmen /tmp/issue.json > /tmp/out.txt; then
             { echo "Freigabe nicht möglich, die Prüfung schlägt fehl:"; echo; cat /tmp/out.txt; } > /tmp/msg.md
             gh issue comment "$N" --repo "$GITHUB_REPOSITORY" --body-file /tmp/msg.md
             gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --remove-label freigegeben || true
-            exit 1
+            exit 0
           fi
           git config user.name "casora-community"
           git config user.email "actions@users.noreply.github.com"
           git add community/karten.json
           git commit -m "Community: Karte aus #$N aufgenommen"
-          git push
+          # Zwei Freigaben kurz hintereinander: der zweite Lauf holt den neuen Katalog und trägt neu ein.
+          for i in 1 2 3; do
+            git push && break
+            git reset -q --hard HEAD~1 && git pull -q --rebase
+            node tools/community-check.mjs aufnehmen /tmp/issue.json > /dev/null
+            git add community/karten.json && git commit -q -m "Community: Karte aus #$N aufgenommen"
+            [ "$i" = 3 ] && exit 1
+          done
           # Genau die aufgenommene Fassung festhalten (falls das Issue später geändert wird).
           { echo "Danke! Die Karte steht jetzt im Studio unter „Kachel hinzufügen › Karten der Community“."; echo; echo "Aufgenommen wurde diese Fassung:"; echo; echo '```json'; node -e 'const c=require("./community/karten.json").cards.find((x)=>x.issue===Number(process.argv[1]));console.log(JSON.stringify(c&&c.card,null,1))' "$N"; echo '```'; } > /tmp/msg.md
           gh issue comment "$N" --repo "$GITHUB_REPOSITORY" --body-file /tmp/msg.md
