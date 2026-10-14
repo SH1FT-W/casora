@@ -2385,7 +2385,9 @@
     "It is removed from this list. To withdraw it, close the request on GitHub.": "Er verschwindet aus dieser Liste. Zurückziehen kannst du ihn, indem du ihn auf GitHub schließt.",
     "It is removed from this list. If you did submit it on GitHub, close it there to withdraw it.": "Er verschwindet aus dieser Liste. Falls du ihn auf GitHub eingereicht hast, schließ ihn dort, um ihn zurückzuziehen.",
     "Open on GitHub": "Auf GitHub öffnen",
-    "Removed from the list.": "Aus der Liste entfernt."
+    "Removed from the list.": "Aus der Liste entfernt.",
+    "“{x}” removed from the list.": "„{x}“ aus der Liste entfernt.",
+    "“{x}” is no longer in Add tile. Its tiles are removed – save to keep it.": "„{x}“ steht nicht mehr in „Kachel hinzufügen“. Die Kacheln sind entfernt – speichern, damit es bleibt."
   },
   "patterns": [
     [

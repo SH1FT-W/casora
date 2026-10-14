@@ -198,7 +198,18 @@
     + ".compill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}"
     + ".comrm{flex:none;width:32px;height:32px;border-radius:50%;border:0;padding:0;margin:0;display:grid;place-items:center;cursor:pointer;"
     + "background:var(--casora-studio-chip, rgba(118,118,128,.18));color:inherit}.comrm ha-icon{--mdc-icon-size:18px;width:18px;height:18px;display:flex;margin:0}"
-    + ".comnote{font-size:13px;opacity:.75;margin:8px 2px 0;line-height:1.4}";
+    + ".comnote{font-size:13px;opacity:.75;margin:8px 2px 0;line-height:1.4}"
+    + ".comflash{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;font-weight:600;color:var(--casora-color-green, #30D158)}"
+    + ".comflash.err{color:var(--casora-color-red, #FF453A)}.comflash ha-icon{--mdc-icon-size:18px;width:18px;height:18px;display:flex;flex:none}"
+    + ".comflash span{color:var(--primary-text-color);opacity:.85;font-size:13px}";
+  // Bestätigung in der Seite: grüner Haken bzw. rotes Ausrufezeichen und Text.
+  const flash = (note) => {
+    const f = el("div", "comflash" + (note.tone === "err" ? " err" : ""));
+    f.setAttribute("role", "status");
+    f.innerHTML = '<ha-icon icon="' + (note.tone === "err" ? "mdi:alert-circle" : "mdi:check-circle") + '"></ha-icon>';
+    f.appendChild(el("span", "", note.text));
+    return f;
+  };
   const css = (box) => { if (!box.querySelector("style.comcss")) { const s = el("style", "comcss"); s.textContent = CSS; box.appendChild(s); } };
   // Neuer Tab über einen echten Link: Safari und die HA-App lassen nur das zu, und nur direkt im Klick
   // (nach einem await gilt der Klick nicht mehr als Nutzeraktion – „GitHub öffnen“ tat dann nichts, 14.10.).
@@ -349,7 +360,9 @@
     };
 
     // Community-Seite: Community-Karten (Hinzufügen/Entfernen) und eigene Kartenwünsche mit Stand.
-    P._comCatalog = async function () {
+    // note (nach Hinzufügen/Entfernen): {text, tone, id} – erscheint in der Seite selbst (an der Karte bzw. oben),
+    // eine Statusmeldung des Studios läge unter dem Weichzeichner der wieder geöffneten Seite.
+    P._comCatalog = async function (note) {
       const C = W.casoraCommunity;
       const I = W.__casoraPanelInternals || {};
       const hass = this._hass;
@@ -374,6 +387,8 @@
           box.insertBefore(ways, acts);
           const host = el("div");
           box.insertBefore(host, acts);
+          // Meldung ohne Karte (Wunsch entfernt): oben über der Liste.
+          if (note && !note.id) host.appendChild(flash(note));
           host.appendChild(el("div", "comlbl", tr("Community cards")));
           if (!list.length) host.appendChild(el("div", "comnote", tr("No community cards yet. Ask for one – the first ones come with the next update.")));
           list.forEach((t) => {
@@ -417,6 +432,7 @@
             b.type = "button";
             b.setAttribute("data-com", t.id);
             b.onclick = () => { then = { toggle: t }; ok.click(); };
+            if (note && note.id === t.id) tx.appendChild(flash(note));
             r.append(zoom, tx, b);
             host.appendChild(r);
           });
@@ -455,10 +471,9 @@
         },
       });
       if (then && then.wish) return this._comWish();
-      if (then && then.unwish) { await this._comUnwish(then.unwish, then.url); return this._comCatalog(); }
+      if (then && then.unwish) return this._comCatalog(await this._comUnwish(then.unwish, then.url));
       if (!res || !then || !then.toggle) return;
-      await this._comToggle(then.toggle);
-      return this._comCatalog();
+      return this._comCatalog(await this._comToggle(then.toggle));
     };
 
     // Eigenen Kartenwunsch aus „Deine Kartenwünsche“ nehmen. Steht er schon auf GitHub, zieht man ihn dort
@@ -478,10 +493,10 @@
           acts.insertBefore(gh, acts.firstChild);
         },
       });
-      if (!res) return;
+      if (!res) return null;
       const mine = (await loadMine(this._hass)).filter((x) => x.id !== m.id);
       await saveMine(this._hass, mine);
-      if (this._status) this._status(tr("Removed from the list."), "ok");
+      return { text: fill(tr("“{x}” removed from the list."), { x: m.title }), tone: "ok" };
     };
 
     // Hinzufügen/Entfernen einer Community-Karte in der Kachelauswahl.
@@ -492,9 +507,8 @@
       if (!ids.has(type.id)) {
         ids.add(type.id);
         try { await C.save(this._hass, ids); }
-        catch (e) { if (this._status) this._status(tr("Couldn't save. Try again."), "err"); return; }
-        if (this._status) this._status(fill(tr("“{x}” is now in Add tile."), { x: name }), "ok");
-        return;
+        catch (e) { return { text: tr("Couldn't save. Try again."), tone: "err", id: type.id }; }
+        return { text: fill(tr("“{x}” is now in Add tile."), { x: name }), tone: "ok", id: type.id };
       }
       // Wird die Kachel in diesem Dashboard benutzt? Dann nachfragen: Kacheln behalten oder mit entfernen.
       const rooms = (this._state && this._state.compact && this._state.compact.rooms) || [];
@@ -510,20 +524,19 @@
           ],
           confirmLabel: tr("Remove"),
         });
-        if (!res || res.pick == null) return;
+        if (!res || res.pick == null) return null;
         drop = res.pick === "drop";
       }
       ids.delete(type.id);
       try { await C.save(this._hass, ids); }
-      catch (e) { if (this._status) this._status(tr("Couldn't save. Try again."), "err"); return; }
+      catch (e) { return { text: tr("Couldn't save. Try again."), tone: "err", id: type.id }; }
       if (drop && C.dropTiles(rooms, type)) {
         this._markDirty();
         this._renderForm();
         if (this._syncPreview) this._syncPreview();
-        if (this._status) this._status(tr("Removed – save to keep it."), "ok");
-        return;
+        return { text: fill(tr("“{x}” is no longer in Add tile. Its tiles are removed – save to keep it."), { x: name }), tone: "ok", id: type.id };
       }
-      if (this._status) this._status(fill(tr("“{x}” is no longer in Add tile."), { x: name }), "ok");
+      return { text: fill(tr("“{x}” is no longer in Add tile."), { x: name }), tone: "ok", id: type.id };
     };
   });
 })();
