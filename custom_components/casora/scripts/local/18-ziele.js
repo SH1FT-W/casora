@@ -265,8 +265,9 @@
     // Bild im offenen Kamera-Popup angetippt → Vollbild; sonst (Halten auf der Kachel) das Kamera-Popup.
     if (dom === 'camera' && window.casoraPopup && window.casoraPopup.current) return Z.openCamera(id);
     if (MEAS.test(dom) || e.entity_category) return Z.openMeasure(id);
-    // Gerät, dessen Popup schon offen ist (Marker auf der Personen-Karte …): nichts tun statt es erneut zu öffnen.
-    if (DEVICE.test(dom) && window.casoraPopup && window.casoraPopup.entity === id) return true;
+    // Gerät, dessen Popup schon offen ist: nicht dasselbe Popup erneut öffnen, sondern seine Geräteseite
+    // („Weitere Einstellungen“ im Luftreiniger …); ohne Gerät (Marker auf der Personen-Karte) nichts tun.
+    if (DEVICE.test(dom) && window.casoraPopup && window.casoraPopup.entity === id) return devOf(h, id) ? Z.openDevice(id) : true;
     if (DEVICE.test(dom)) return Z.openDeviceTile(id);
     if (devOf(h, id)) return Z.openDevice(id);
     return false;

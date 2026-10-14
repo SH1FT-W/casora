@@ -85,6 +85,31 @@ if (cam) {
   await close();
 }
 
+// 3c. „Weitere Einstellungen“ im Popup eines Geräts (Luftreiniger, Medien) → seine Geräteseite (14.10.: tat nichts)
+for (const [tpl, dom] of [['casora_air_purifier', 'fan.'], ['casora_media', 'media_player.']]) {
+  const eid = await page.evaluate((dom) => { const h = document.querySelector('home-assistant').hass;
+    return Object.keys(h.states).find((x) => x.startsWith(dom) && h.entities[x] && h.entities[x].device_id); }, dom);
+  if (!eid) continue;
+  await page.evaluate(async ([tpl, eid]) => {
+    const ha = document.querySelector('home-assistant'); const h = await window.loadCardHelpers();
+    const el = h.createCardElement({ type: 'custom:button-card', template: tpl, entity: eid });
+    el.id = 'qa-r266s'; el.hass = ha.hass; el.style.cssText = 'position:fixed;left:400px;top:300px;width:220px;height:140px;z-index:99990;';
+    ha.shadowRoot.appendChild(el);
+  }, [tpl, eid]);
+  await page.waitForTimeout(1500);
+  await page.evaluate(() => document.querySelector('home-assistant').shadowRoot.getElementById('qa-r266s')._handleAction({ detail: { action: 'tap' } }, { isIcon: false }));
+  await look();
+  const t0 = await page.evaluate(() => window.casoraPopup.element.shadowRoot.querySelector('.header-title').textContent.trim());
+  const hit = await page.evaluate(() => { const r = window.__pierce('.hui-row, [data-casora-mi]', window.casoraPopup.element.shadowRoot).find((e) => /Weitere Einstellungen/.test(e.textContent));
+    if (r) { r.scrollIntoView({ block: 'center' }); r.click(); } return !!r; });
+  if (hit) {
+    s = await look();
+    await check(tpl + ': „Weitere Einstellungen“ öffnet die Geräteseite', s.open && !s.native && s.back && /In Home Assistant öffnen/.test(s.text), { t0, title: s.title, back: s.back });
+  }
+  await close();
+  await page.evaluate(() => document.querySelector('home-assistant').shadowRoot.getElementById('qa-r266s').remove());
+}
+
 // 4. Halten auf einer Casora-Kachel: kein HA-Dialog, Schalter bleibt, wie er ist
 const before = await page.evaluate((id) => document.querySelector('home-assistant').hass.states[id].state, ids.sw);
 await page.evaluate(async (id) => {
