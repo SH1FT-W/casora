@@ -51,4 +51,14 @@ await check('Kopf mit Symbol', r.ring, r);
 await check('Karte (HAs Kartenkarte)', r.map, r);
 await check('Karte nicht unter den Kopf geschoben (Abstand ≥ 0)', r.gap !== null && r.gap >= 0, r.gap);
 await check('„Verlauf“ (Zeitleiste) und unterwegs „Nach Hause“', r.zuletzt && r.nachHause, r);
+// 1.5: Tipp auf den Marker der Karte öffnet weder HAs Dialog noch dasselbe Popup ein zweites Mal (mit ‹).
+const mk = await page.evaluate(() => { const m = window.__pierce('ha-entity-marker')[0]; if (!m) return null; const b = m.getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; });
+if (mk) {
+  await page.mouse.click(mk.x, mk.y);
+  await page.waitForTimeout(2500);
+  const m2 = await page.evaluate(() => { const sr = window.casoraPopup.element.shadowRoot, bk = sr.querySelector('.header-back');
+    return { open: window.casoraPopup.element.hasAttribute('open'), back: !!(bk && !bk.hidden),
+      native: !!document.querySelector('home-assistant').shadowRoot.querySelector('ha-more-info-dialog') }; });
+  await check('Marker-Tipp: Popup bleibt, kein HA-Dialog, kein ‹', m2.open && !m2.native && !m2.back, m2);
+}
 await finish();

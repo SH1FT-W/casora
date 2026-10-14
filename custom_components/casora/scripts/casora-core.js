@@ -7645,6 +7645,9 @@ window.casoraMenuGlass = {
     open: function (data) {
       var el = instance();
       if (data && data.src) { el._src = data.src; data = Object.assign({}, data); delete data.src; }
+      // 1.5: Entität der Kachel, deren Popup offen ist (nur beim Öffnen über die Kachel gesetzt).
+      el._casoraEntity = (data && data._entity) || null;
+      if (data && data._entity) { data = Object.assign({}, data); delete data._entity; }
       return el.open(data || {});
     },
     close: function () { if (_el) _el.close(); },
@@ -7666,6 +7669,7 @@ window.casoraMenuGlass = {
     get element() { return _el; },
     // 1.5: Konfiguration des offenen Popups (für Detailseiten mit ‹ zurück).
     get current() { return _el && _el.hasAttribute('open') ? _el._cfgCurrent : null; },
+    get entity() { return _el && _el.hasAttribute('open') ? _el._casoraEntity || null : null; },
     get surface() { return _el && _el.hasAttribute('open') ? _el.surface : null; },
     get enabled() { return flagOn(); },
     setEnabled: function (on) {
@@ -7689,7 +7693,8 @@ window.casoraMenuGlass = {
     // Pfad; gemerkt wird die zuletzt angetippte Kachel (siehe unten).
     var lt = window._casoraLastTile;
     instance()._src = (lt && Date.now() - lt.at < 2000) ? lt.el : null;
-    window.casoraPopup.open(cfg);
+    var so = ev.detail.entity || (instance()._src && instance()._src._stateObj && instance()._src._stateObj.entity_id) || null;
+    window.casoraPopup.open(so ? Object.assign({}, cfg, { _entity: so }) : cfg);
   }, true);
   // Gerät fehlt: Kacheln, die HAs eigenen Dialog öffnen (Bewegung, Person …), zeigten für eine
   // Entität, die es nicht gibt, einen leeren HA-Dialog. Stattdessen das Casora-Popup mit dem Hinweis.
