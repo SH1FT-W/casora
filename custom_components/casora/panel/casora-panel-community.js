@@ -185,11 +185,15 @@
     // Große Vorschau über der Community-Seite: Kachel / Popup.
     + ".comlb{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;box-sizing:border-box;"
     + "background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}"
-    + ".comlb img{max-width:min(92%,960px);max-height:72vh;border-radius:18px;box-shadow:var(--casora-popup-plate-shadow, 0 18px 50px -20px rgba(0,0,0,.6));background:rgba(127,127,127,.15)}"
+    + ".comlb img{max-width:min(92vw,880px);max-height:72vh;border-radius:18px;box-shadow:var(--casora-popup-plate-shadow, 0 18px 50px -20px rgba(0,0,0,.6));background:rgba(127,127,127,.15)}"
     + ".comlb .comseg{display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.18)}"
     + ".comlb .comseg button{border:0;border-radius:999px;padding:7px 16px;font:inherit;font-size:14px;font-weight:600;background:none;color:#fff;cursor:pointer}"
     + ".comlb .comseg button.on{background:#fff;color:#000}"
-    + ".comlb .comx{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.2);color:#fff;cursor:pointer;display:grid;place-items:center}"
+    // Bild + Leiste darüber (Umschalter mittig, × rechts bündig mit der Bildkante) als ein Block.
+    + ".comlb .comfig{display:flex;flex-direction:column;align-items:stretch;gap:12px;max-width:100%}"
+    + ".comlb .combar{position:relative;display:flex;justify-content:center;align-items:center;min-height:44px}"
+    + ".comlb .comfig img{max-width:100%;align-self:center}"
+    + ".comlb .comx{position:absolute;top:2px;right:0;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.2);color:#fff;cursor:pointer;display:grid;place-items:center}"
     + ".compill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}"
     + ".comnote{font-size:13px;opacity:.75;margin:8px 2px 0;line-height:1.4}";
   const css = (box) => { if (!box.querySelector("style.comcss")) { const s = el("style", "comcss"); s.textContent = CSS; box.appendChild(s); } };
@@ -237,8 +241,13 @@
     x.onclick = (ev) => { ev.stopPropagation(); close(); };
     lb.onclick = (ev) => { if (ev.target === lb) close(); };
     img.onclick = (ev) => ev.stopPropagation();
-    if (seg.children.length > 1) lb.appendChild(seg);
-    lb.append(img, x);
+    const fig = el("div", "comfig");
+    const bar = el("div", "combar");
+    if (seg.children.length > 1) bar.appendChild(seg);
+    bar.appendChild(x);
+    fig.append(bar, img);
+    fig.onclick = (ev) => ev.stopPropagation();
+    lb.appendChild(fig);
     pane.appendChild(lb);
     show(which);
   };
