@@ -313,8 +313,10 @@
 
     var lead = function (id, key) {
       var pic = h.logoOf ? h.logoOf(id) : null;
-      return '<div style="width:32px;height:32px;flex:none;display:grid;place-items:center;border-radius:9px;overflow:hidden;">'
-        + (pic ? '<img src="' + esc(pic) + '" alt="" style="width:28px;height:28px;object-fit:contain;border-radius:50%;display:block;">'
+      // Logo in der Form der übrigen Symbole und randfüllend wie in den Update-Listen (14.10.2026).
+      var lr = 'var(--casora-soft-icon-radius, 9px)';
+      return '<div style="width:32px;height:32px;flex:none;display:grid;place-items:center;border-radius:' + lr + ';overflow:hidden;">'
+        + (pic ? '<img src="' + esc(pic) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:' + lr + ';background:#fff;filter:var(--casora-logo-filter, none);display:block;">'
                : '<ha-icon icon="' + LV[key].i + '" style="--mdc-icon-size:22px;color:' + LV[key].c + ';"></ha-icon>')
         + '</div>';
     };
@@ -533,16 +535,18 @@
     var step = num(a.target_temp_step) || 0.5;
     var F_ = TU() === '°F', lo = num(a.min_temp) != null ? num(a.min_temp) : (F_ ? 41 : 5), hi = num(a.max_temp) != null ? num(a.max_temp) : (F_ ? 86 : 30);
     var tgt = { entity_id: targets.length === 1 ? targets[0] : targets };
-    var dn = Math.max(lo, Math.round((value - step) / step) * step);
-    var up = Math.min(hi, Math.round((value + step) / step) * step);
-    var btn = function (svg, t, dis) {
+    /* Schnelles Tippen (14.10.2026): −/+ zählen sofort lokal weiter, set_temperature geht erst
+       nach kurzer Pause raus. Bis HA den neuen Wert meldet, zeigt jedes Neuzeichnen den lokalen Wert. */
+    var pd = (window._casoraStepPend || {})[JSON.stringify(tgt.entity_id)];
+    if (pd && Date.now() - pd.t < 5000 && !(pd.sent && Math.abs(value - pd.v) < 1e-6)) value = pd.v;
+    var btn = function (svg, d, dis) {
       return '<div class="fb-st-b' + (dis ? ' dis' : '') + '"'
-        + (dis ? '' : ' data-casora-svc="' + esc(JSON.stringify({ domain: 'climate', service: 'set_temperature', data: { temperature: t }, target: tgt })) + '"')
+        + ' data-fb-step="' + esc(JSON.stringify({ id: tgt.entity_id, d: d, v: value, lo: lo, hi: hi, st: step })) + '"'
         + '>' + svg + '</div>';
     };
     var out = '<style>'
       + '.fb-st{display:flex;align-items:center;justify-content:space-between;gap:12px;font-family:' + T.font + ';' + plate + 'padding:12px;}'
-      + '.fb-st-b{width:52px;height:52px;flex:none;border-radius:999px;display:grid;place-items:center;cursor:pointer;line-height:0;color:' + T.ink + ';'
+      + '.fb-st-b{width:52px;height:52px;flex:none;border-radius:999px;display:grid;place-items:center;cursor:pointer;line-height:0;color:' + T.ink + ';touch-action:manipulation;'
       +   'background:var(--casora-popup-seg-fill, rgba(255,255,255,0.16));transition:background-color .16s ease,transform .12s ease;user-select:none;-webkit-user-select:none;}'
       + '.fb-st-b.dis{opacity:.3;cursor:default;}.fb-st-b svg{pointer-events:none;}'
       /* Antippen sichtbar wie beim Licht-Popup (Helligkeit ±). */
@@ -559,9 +563,9 @@
         + '.fb-st-v .l{font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--casora-soft-label, ' + T.ink2 + ');}'
         + '.fb-st-v .n{font-weight:700;}' : '')
       + '</style><div class="fb-st">'
-      + btn('<svg width="20" height="20" viewBox="0 0 20 20" style="display:block"><path d="M4 10H16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>', dn, value <= lo)
+      + btn('<svg width="20" height="20" viewBox="0 0 20 20" style="display:block"><path d="M4 10H16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>', -step, value <= lo)
       + '<div class="fb-st-v"><div class="l">' + esc(label) + '</div><div class="n">' + fmt(value) + '<span> ' + TU() + '</span></div></div>'
-      + btn('<svg width="20" height="20" viewBox="0 0 20 20" style="display:block"><path d="M4 10H16M10 4V16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>', up, value >= hi)
+      + btn('<svg width="20" height="20" viewBox="0 0 20 20" style="display:block"><path d="M4 10H16M10 4V16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>', step, value >= hi)
       + '</div>';
     if (withBar) {
       var k = ((value - lo) / (hi - lo) * 100).toFixed(1);
@@ -1019,6 +1023,8 @@
     // Popup inzwischen zu: nichts mehr einstellen.
     if (!b.el.isConnected) return;
     var ha = document.querySelector('home-assistant');
+    var P = window._casoraStepPend, pk = JSON.stringify(b.c.id);
+    if (P && P[pk]) { clearTimeout(P[pk].tm); delete P[pk]; }
     if (ha && ha.hass && b.v != null) ha.hass.callService('climate', 'set_temperature', { temperature: b.v }, { entity_id: b.c.id });
   };
   window.addEventListener('touchstart', function (ev) { var t = ev.touches && ev.touches[0]; if (t) barStart(ev, t.clientX); }, { capture: true, passive: true });
@@ -1032,6 +1038,51 @@
   window.addEventListener('mousedown', function (ev) { if (barStart(ev, ev.clientX)) ev.preventDefault(); }, true);
   window.addEventListener('mousemove', function (ev) { if (bar) { bar.v = barVal(bar, ev.clientX); barPaint(bar, bar.v); } }, true);
   window.addEventListener('mouseup', function () { barEnd(); }, true);
+
+  /* −/+ der Zieltemperatur: jeder Tipp zählt sofort weiter (Anzeige, Balken, Grenzen),
+     set_temperature geht erst 600 ms nach dem letzten Tipp raus – ein Aufruf statt einer Kette. */
+  var stepTap = function (el) {
+    if (el.classList.contains('dis')) return;
+    if (window._casoraPopupOpenedAt && Date.now() - window._casoraPopupOpenedAt < 600) return;
+    var c; try { c = JSON.parse(el.getAttribute('data-fb-step')); } catch (e) { return; }
+    var P = window._casoraStepPend = window._casoraStepPend || {}, key = JSON.stringify(c.id), p = P[key];
+    var cur = p && Date.now() - p.t < 5000 ? p.v : c.v;
+    var v = Math.round(Math.min(c.hi, Math.max(c.lo, Math.round((cur + c.d) / c.st) * c.st)) * 100) / 100;
+    if (v === cur) return;
+    if (p) clearTimeout(p.tm);
+    p = P[key] = { v: v, t: Date.now(), sent: false };
+    var box = el.parentNode, root = el.getRootNode();
+    var n = box && box.querySelector('.fb-st-v .n'); if (n && n.firstChild) n.firstChild.nodeValue = fmt(v);
+    var k = root && root.querySelector && root.querySelector('.fb-tb-k'); if (k) k.style.left = ((v - c.lo) / (c.hi - c.lo) * 100) + '%';
+    if (box) box.querySelectorAll('[data-fb-step]').forEach(function (b) {
+      var d; try { d = JSON.parse(b.getAttribute('data-fb-step')).d; } catch (e) { return; }
+      b.classList.toggle('dis', d < 0 ? v <= c.lo : v >= c.hi);
+    });
+    p.tm = setTimeout(function () {
+      p.sent = true; p.t = Date.now();
+      var ha = document.querySelector('home-assistant');
+      if (ha && ha.hass) ha.hass.callService('climate', 'set_temperature', { temperature: v }, { entity_id: c.id });
+    }, 600);
+  };
+  var stepT = null, stepTouchAt = 0;
+  window.addEventListener('touchstart', function (ev) {
+    var el = pathFind(ev, 'data-fb-step'), t = ev.touches && ev.touches[0];
+    stepT = el && t ? { el: el, x: t.clientX, y: t.clientY } : null;
+  }, { capture: true, passive: true });
+  window.addEventListener('touchend', function (ev) {
+    if (!stepT) return; var s = stepT; stepT = null;
+    var t = ev.changedTouches && ev.changedTouches[0];
+    ev.stopPropagation(); if (ev.cancelable) ev.preventDefault();
+    stepTouchAt = Date.now();
+    if (t && Math.abs(t.clientX - s.x) < 10 && Math.abs(t.clientY - s.y) < 10) stepTap(s.el);
+  }, { capture: true, passive: false });
+  window.addEventListener('touchcancel', function () { stepT = null; }, { capture: true, passive: true });
+  window.addEventListener('click', function (ev) {
+    var el = pathFind(ev, 'data-fb-step'); if (!el) return;
+    ev.preventDefault(); ev.stopPropagation();
+    if (Date.now() - stepTouchAt < 700) return;
+    stepTap(el);
+  }, true);
 })();
 
 // ── Küche: Rezept der Woche + Cookidoo-Speiseplan (23.09.2026) ──────────────
@@ -2739,7 +2790,7 @@
     (C.system || []).concat(SYS_EXTRA).forEach(function (sy) {
       var e = states[sy[0]]; if (!e) return;
       var a = e.attributes, pending = e.state === 'on';
-      rows.push({ entity: sy[0], iconTone: 'rgba(0,0,0,0)', image: h.logoOf ? h.logoOf(sy[0]) : null, label: sy[1],
+      rows.push({ entity: sy[0], iconTone: 'rgba(0,0,0,0)', image: h.logoOf ? h.logoOf(sy[0]) : null, logo: true, label: sy[1],
         value: a.installed_version || '—',
         sub: pending ? 'Update auf ' + a.latest_version : (a.auto_update ? 'Aktuell · automatisch' : 'Aktuell'),
         valueTone: pending ? 'warn' : null });
@@ -2769,7 +2820,7 @@
     if (!H.list) return UI.group([{ icon: 'clock', iconTone: 'rgba(0,0,0,0)', label: H.err ? 'Verlauf nicht verfügbar' : 'Wird geladen …' }], null, null, { labelInside: true });
     if (!H.list.length) return UI.group([{ icon: 'clock', iconTone: 'rgba(0,0,0,0)', label: 'Keine Updates in 30 Tagen' }], null, null, { labelInside: true });
     return UI.group(H.list.slice(0, Math.max(5, sysRowsN(states, h.C))).map(function (u) {
-      return { entity: states[u.id] ? u.id : undefined, iconTone: 'rgba(0,0,0,0)', image: h.logoOf ? h.logoOf(u.id) : null,
+      return { entity: states[u.id] ? u.id : undefined, iconTone: 'rgba(0,0,0,0)', image: h.logoOf ? h.logoOf(u.id) : null, logo: true,
         label: nameOf(states, u.id), sub: (u.from ? u.from + ' → ' : '') + u.to, value: agoMs(u.t) };
     }), null, null, { labelInside: true });
   };
@@ -2822,7 +2873,7 @@
       }).filter(Boolean)[0];
       if (sum && sum.length > 90) sum = sum.slice(0, 88).replace(/\s+\S*$/, '') + ' …';
       return {
-        entity: id, iconTone: 'rgba(0,0,0,0)', image: h.logoOf ? h.logoOf(id) : null,
+        entity: id, iconTone: 'rgba(0,0,0,0)', image: h.logoOf ? h.logoOf(id) : null, logo: true,
         label: String(a.title || a.friendly_name || id).replace(/\s+Update$/i, ''),
         sub: [ver, sum].filter(Boolean),
         action: a.in_progress ? 'Wird aktualisiert' : 'Aktualisieren', actionTone: 'accent', actionBusy: !!a.in_progress,
@@ -2853,7 +2904,7 @@
   X.restartRows = function (states, h) {
     return X.restartIds(states).map(function (id) {
       var a = states[id].attributes || {};
-      return { entity: id, iconTone: 'rgba(0,0,0,0)', image: h && h.logoOf ? h.logoOf(id) : null,
+      return { entity: id, iconTone: 'rgba(0,0,0,0)', image: h && h.logoOf ? h.logoOf(id) : null, logo: true,
         label: String(a.title || a.friendly_name || id).replace(/\s+Update$/i, ''),
         sub: a.installed_version || null, value: 'Neustart erforderlich', valueTone: 'warn', valueIcon: 'mdi:restart',
         svc: { domain: 'homeassistant', service: 'restart' }, confirm: 'Neustart' };
@@ -2880,7 +2931,7 @@
     if (!sk.length) return '';
     var id = '__hu_skipped';
     var body = UI.group(sk.map(function (e) {
-      return { entity: e, iconTone: 'rgba(0,0,0,0)', image: h.logoOf ? h.logoOf(e) : null, label: nameOf(states, e),
+      return { entity: e, iconTone: 'rgba(0,0,0,0)', image: h.logoOf ? h.logoOf(e) : null, logo: true, label: nameOf(states, e),
         sub: 'Version ' + states[e].attributes.skipped_version + ' übersprungen',
         action: 'Wieder anzeigen', actionTone: 'accent',
         svc: { domain: 'update', service: 'clear_skipped', target: { entity_id: e } }, confirm: 'Anzeigen' };

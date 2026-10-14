@@ -230,6 +230,7 @@ static_steps() {
   step syntax-js        static  syntax_js
   step syntax-py        static  syntax_py
   step vorlagen-js      static  "\"\$NODE\" dev/qa/check-templates.mjs dashboards/casora/button_card_templates.json custom_components/casora/panel/casora-templates.json"
+  step update-logos     static  "\"\$NODE\" dev/qa/check-logos.mjs"
   step json             static  json_valid
   [ -f tools/privacy-check.py ] && step privacy static "python3 tools/privacy-check.py"
   # Übersetzungen (T-06, 06.10.2026): Studio-Schlüssel vollständig; Dashboard-Lücken dürfen nur

@@ -10884,7 +10884,8 @@ class CasoraPanel extends HTMLElement {
         .carrow { display:flex; align-items:center; gap:10px; padding:8px 0; border-top:.5px solid var(--wash-line, var(--casora-studio-wash-line, rgba(255,255,255,.08))); }
         .carrow .sicon { flex:0 0 auto; }
         .cartx { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:1px; }
-        .cartx input { min-width:0; padding:4px 0; border:none; background:none; color:inherit; font:inherit; font-weight:600; }
+        /* Seitenname: sichtbares Feld wie die übrigen Namen (vorher randlos – sah aus wie fester Text, 14.10.2026). */
+        .cartx input { min-width:0; width:100%; box-sizing:border-box; height:var(--k-h, 38px); padding:0 12px; font-weight:600; }
         .carsub { font-size:var(--t-caption); color:var(--secondary-text-color, var(--casora-studio-dim, #8e8e93)); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .carbtn { flex:0 0 auto; width:28px; height:28px; border-radius:50%; border:none; padding:0; cursor:pointer; display:grid; place-items:center;
           background:var(--casora-studio-chip, rgba(118,118,128,.18)); color:inherit; }
@@ -21262,6 +21263,7 @@ class CasoraPanel extends HTMLElement {
       nm.placeholder = ty ? trLabel(ty.label) : (p.entity || "");
       nm.setAttribute("aria-label", tr("Name"));
       nm.onchange = () => { p.name = nm.value.trim(); changed(false); };
+      nm.onkeydown = (e) => { if (e.key === "Enter") nm.blur(); };
       const sub = document.createElement("span");
       sub.className = "carsub";
       sub.setAttribute("data-no-i18n", "");
