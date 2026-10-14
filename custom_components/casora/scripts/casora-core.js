@@ -5731,6 +5731,8 @@ window.casoraMenuGlass = {
       -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     }
     .header-back[hidden] { display: none; }
+    /* Die Kopfmitte nimmt keine Klicks an (pointer-events: none) – der Knopf darin schon. */
+    .header-back { pointer-events: auto; z-index: 2; }
     .header-back svg { width: 22px; height: 22px; display: block; fill: currentColor; }
     .header-back:active { transform: scale(var(--casora-press-scale, .97)); }
     .header-back::before { content: ""; position: absolute; inset: -3px; border-radius: 50%; }

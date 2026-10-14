@@ -60,8 +60,14 @@
       return esc(s).replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
         .replace(/`([^`]+)`/g, '<code>$1</code>').replace(/(^|\s)@([\w-]+)/g, '$1@$2');
     };
+    var fence = false;
     lines.forEach(function (l) {
       var m;
+      // Code-Blöcke als schlichter Text; Tabellenzeilen als „a · b · c“ (sonst sprengten sie die Breite).
+      if (/^\s*```/.test(l)) { fence = !fence; return; }
+      if (/^\s*\|?\s*:?-{2,}/.test(l)) return;
+      if (/^\s*\|.*\|\s*$/.test(l)) l = l.replace(/^\s*\||\|\s*$/g, '').split('|').map(function (x) { return x.trim(); }).filter(Boolean).join(' · ');
+      l = l.replace(/<[^>]+>/g, '').replace(/!\[[^\]]*\]\([^)]*\)/g, '');
       if ((m = /^\s*[-*+]\s+(.*)$/.exec(l))) {
         if (!list) { out.push('<ul>'); list = true; }
         out.push('<li>' + inline(m[1]) + '</li>');
@@ -248,8 +254,10 @@
         : txt ? D.md(txt) : '<p class="cud-sub">' + esc(T('Keine Versionshinweise')) + '</p>';
       secs.push(head + '<div class="cud-txt cud-notes">' + body + '</div>');
       return '<style>.cud-txt{padding:14px 18px;border-radius:var(--casora-popup-row-radius, 22px);background:var(--casora-popup-row-fill, rgba(127,127,127,.10));'
-        + 'font-size:14.5px;line-height:1.55;color:var(--casora-popup-tiles-text-primary, inherit);text-align:left;overflow-wrap:anywhere;}'
-        + '.cud-notes{max-height:min(46vh, 420px);overflow:auto;}'
+        + 'font-size:14.5px;line-height:1.55;color:var(--casora-popup-tiles-text-primary, inherit);text-align:left;overflow-wrap:anywhere;'
+        + 'word-break:break-word;min-width:0;max-width:100%;box-sizing:border-box;}'
+        + '.cud-txt *{max-width:100%;white-space:normal;overflow-wrap:anywhere;word-break:break-word;}'
+        + '.cud-notes{max-height:min(46vh, 420px);overflow-y:auto;overflow-x:hidden;}'
         + '.cud-txt p{margin:0 0 8px;}.cud-txt p.h{font-weight:700;margin-top:6px;}.cud-txt ul{margin:0 0 8px;padding-left:20px;}'
         + '.cud-txt li{margin:2px 0;}.cud-txt code{font-size:13px;padding:1px 5px;border-radius:6px;background:rgba(127,127,127,.15);}'
         + '.cud-sub{opacity:.65;}</style>' + secs.join('<div style="height:16px"></div>');

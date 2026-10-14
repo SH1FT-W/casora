@@ -15,7 +15,9 @@ const ID = await page.evaluate(() => { const S = document.querySelector('home-as
   return Object.keys(S).find((k) => k.startsWith('update.') && (S[k].attributes || {}).device_class === 'firmware'); });
 await need('ein Update im Testhaus', ID);
 await fakeStates(page, { [ID]: { state: 'on', attributes: { installed_version: '2.3.1', latest_version: '2.4.0', title: 'QA Firmware',
-  release_summary: '## Neu\n- Erster Punkt\n- **Zweiter** Punkt', release_url: 'https://example.com/qa', supported_features: 13 } } }, { sticky: true });
+  // Lange URL, Tabelle und Code wie in echten Versionshinweisen – nichts davon darf seitlich überstehen (14.10.).
+  release_summary: '## Neu\n- Erster Punkt\n- **Zweiter** Punkt\n- Siehe https://example.com/' + 'sehr-langer-pfad-'.repeat(12)
+    + '\n\n| Spalte A | Spalte B | Spalte C |\n|---|---|---|\n| ' + 'x'.repeat(80) + ' | b | c |\n\n```yaml\nlange_zeile: ' + 'y'.repeat(120) + '\n```', release_url: 'https://example.com/qa', supported_features: 13 } } }, { sticky: true });
 await page.evaluate(async (id) => {
   const ha = document.querySelector('home-assistant');
   const h = await window.loadCardHelpers();
@@ -51,12 +53,19 @@ s = await stable(page, POP, ID, { max: 8000, quiet: 1200 });
 await check('Kein nativer HA-Dialog', s && !s.native, s);
 await check('Detailseite: Titel = Update, ‹ zurück sichtbar', s && /QA/.test(s.title) && s.back, s && s.title);
 await check('Versionen und Versionshinweise (Markdown)', s && /2\.3\.1/.test(s.text) && /2\.4\.0/.test(s.text) && /Erster Punkt/.test(s.text) && /Zweiter Punkt/.test(s.text), s && s.text);
+const wide = await page.evaluate(() => { const p = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
+  const n = window.__pierce('.cud-notes', p.shadowRoot)[0]; const sf = p.shadowRoot.querySelector('.surface');
+  return n ? { sw: n.scrollWidth, cw: n.clientWidth, right: Math.round(n.getBoundingClientRect().right), surf: Math.round(sf.getBoundingClientRect().right) } : null; });
+await check('„Was ist neu“ bricht um (nichts steht seitlich über)', wide && wide.sw <= wide.cw + 1 && wide.right <= wide.surf, wide);
 await check('Installieren mit Sicherung, Überspringen da', s && s.install && s.install.service === 'install' && s.install.data.backup === true && /Überspringen/.test(s.text), s && s.install);
 await page.evaluate(() => { const p = window.__pierce('casora-popup').find((x) => x.hasAttribute('open')); window.__pierce('[data-casora-upd-bk]', p.shadowRoot)[0].click(); });
 await page.waitForTimeout(400);
 s = await pop();
 await check('„Vorher sichern“ aus → Installieren ohne Sicherung', s && s.install && !s.install.data.backup, s && s.install);
-await page.evaluate(() => { const p = window.__pierce('casora-popup').find((x) => x.hasAttribute('open')); p.shadowRoot.querySelector('.header-back').click(); });
+// Echter Klick (Kopfmitte nimmt sonst keine Klicks an – per Skript ausgelöst fiel das nicht auf).
+const bk = await page.evaluate(() => { const p = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
+  const r = p.shadowRoot.querySelector('.header-back').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+await page.mouse.click(bk.x, bk.y);
 s = await stable(page, POP, ID, { max: 8000, quiet: 1200 });
 await check('‹ zurück zur Update-Liste', s && !s.back && s.row, s && s.title);
 await finish();
