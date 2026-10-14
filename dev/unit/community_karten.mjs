@@ -76,4 +76,13 @@ for (const [labels, state, want] of [[['kartenwunsch'], 'open', 'open'], [['kart
 }
 answer = { total_count: 0, items: [] };
 assert.equal((await C.status('x')).state, 'sent');
+
+// Eingestellte Karte (community.retired): nie wählbar, in der Liste nur, wenn sie hinzugefügt ist; Editor-Hinweis.
+const old = { id: 'casora_qa_alt', label: 'Alt', template: 'casora_qa_alt', community: { desc: 'x', retired: true }, fields: [{ key: 'icon' }] };
+w2.casoraCommunityType(old);
+w2.casoraCommunityOn = new Set(['casora_qa_alt']);
+assert.equal(pickable(old), false, 'eingestellt → nicht in „Kachel hinzufügen“, auch wenn hinzugefügt');
+assert.ok(/retired/.test(old.fields[0].hint || ''), 'Hinweis im Editor');
+assert.deepEqual(C.cards([old], new Set()).map((t) => t.id), [], 'nicht hinzugefügt → nicht in der Liste');
+assert.deepEqual(C.cards([old], new Set(['casora_qa_alt'])).map((t) => t.id), ['casora_qa_alt'], 'hinzugefügt → zum Entfernen in der Liste');
 console.log('community_karten: ok');

@@ -90,7 +90,9 @@
 
   // ── Community-Karten ────────────────────────────────────────────────────
   // Kachelarten mit `community: {desc, needs?}` – mitgeliefert, standardmäßig nicht in der Auswahl.
-  const cards = (types) => (types || []).filter((t) => t && t.community && !t.hidden);
+  // Eingestellte Karten (community.retired) nur noch für die, die sie hinzugefügt haben (zum Entfernen).
+  const cards = (types, on) => (types || []).filter((t) => t && t.community && !t.hidden
+    && (!t.community.retired || !!(on && on.has(t.id))));
   const tplOf = (t) => [].concat((t && t.template) || []).filter(Boolean);
   // Kacheln (auch in Bedingungen und Karussells), die diese Kachelart benutzen.
   const uses = (tile, type) => {
@@ -372,7 +374,7 @@
       const hass = this._hass;
       if (this._comLoaded) await this._comLoaded;
       else if (hass) await (this._comLoaded = load(hass));
-      const list = C.cards(I.TILE_TYPES);
+      const list = C.cards(I.TILE_TYPES, W.casoraCommunityOn);
       let then = null;
       const res = await this._ask({
         title: tr("Community"),
@@ -409,7 +411,7 @@
             shot.onerror = () => { shot.replaceWith(el("div", "comshot")); };
             zoom.appendChild(shot);
             const tx = el("div", "comtx");
-            tx.append(el("b", "", tr(t.label)), el("span", "", tr(t.community.desc || "")));
+            tx.append(el("b", "", tr(t.label)), el("span", "", tr(t.community.retired ? "This card is being retired. Your tiles keep working for now." : (t.community.desc || ""))));
             const need = t.community.needs;
             if (need) {
               const ok2 = hasIntegration(hass, need);

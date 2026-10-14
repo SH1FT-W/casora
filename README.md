@@ -110,7 +110,7 @@ Missing a card for one of your devices? Ask for it, and it may become a Communit
 | Built | The card ships with the next Casora release |
 | Declined | Not planned, with the reason |
 
-**Add a card.** Community cards ship with Casora, but they only appear in **Add tile** once you add them in the Community, so your tile list stays short. Every card has a preview of its tile and popup. Removing a card asks whether tiles that use it stay or go. Nothing is downloaded from outside your Home Assistant: a new Community card comes with a Casora release.
+**Add a card.** Community cards ship with Casora, but they only appear in **Add tile** once you add them in the Community, so your tile list stays short. Every card has a preview of its tile and popup. Removing a card asks whether tiles that use it stay or go. Nothing is downloaded from outside your Home Assistant: a new Community card comes with a Casora release. If a card is ever retired, it disappears from **Add tile** first while existing tiles keep working, and only a later release removes it.
 
 Available now: **Robot lawn mower** (any lawn mower in Home Assistant, with extra details for Gardena).
 

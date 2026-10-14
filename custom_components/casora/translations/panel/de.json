@@ -2388,7 +2388,9 @@
     "Removed from the list.": "Aus der Liste entfernt.",
     "“{x}” removed from the list.": "„{x}“ aus der Liste entfernt.",
     "“{x}” is no longer in Add tile. Its tiles are removed – save to keep it.": "„{x}“ steht nicht mehr in „Kachel hinzufügen“. Die Kacheln sind entfernt – speichern, damit es bleibt.",
-    "In progress": "In Arbeit"
+    "In progress": "In Arbeit",
+    "This Community card is being retired. Your tiles keep working for now; a later update removes it.": "Diese Community-Karte wird eingestellt. Deine Kacheln laufen vorerst weiter, ein späteres Update entfernt sie.",
+    "This card is being retired. Your tiles keep working for now.": "Diese Karte wird eingestellt. Deine Kacheln laufen vorerst weiter."
   },
   "patterns": [
     [

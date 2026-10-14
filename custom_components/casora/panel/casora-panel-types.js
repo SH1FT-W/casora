@@ -297,10 +297,16 @@ window.CASORA_TILE_TYPES = [
 //   needs  – Integration (Domain), die die Karte braucht; fehlt sie, steht das als Hinweis dabei
 //   needsText / needsMissing – lesbarer Hinweis dazu (sonst „Braucht <Integration>“)
 //   preview – Vorschaubild, sonst /casora_assets/community/<id>.webp; Popup-Bild optional <id>-popup.webp
+//   retired – Karte wird eingestellt: nicht mehr in der Community-Liste (außer bei denen, die sie hinzugefügt
+//            haben – dort nur noch „Entfernen“) und nie mehr in „Kachel hinzufügen“; vorhandene Kacheln laufen
+//            weiter, der Editor zeigt einen Hinweis. Ein späteres Release kann Kachelart und Vorlage dann löschen.
 window.casoraCommunityType = (t) => {
   if (!t || !t.community || t._communityWrapped) return t;
   const own = t.onlyIf;
-  t.onlyIf = (hass) => !!(window.casoraCommunityOn && window.casoraCommunityOn.has(t.id)) && (!own || own(hass));
+  t.onlyIf = (hass) => !t.community.retired && !!(window.casoraCommunityOn && window.casoraCommunityOn.has(t.id)) && (!own || own(hass));
+  if (t.community.retired && Array.isArray(t.fields) && t.fields.length) {
+    t.fields = [{ ...t.fields[0], hint: "This Community card is being retired. Your tiles keep working for now; a later update removes it." }].concat(t.fields.slice(1));
+  }
   t._communityWrapped = true;
   return t;
 };
