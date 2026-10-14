@@ -209,7 +209,8 @@
     o = o || {};
     // Quadratische Logos mit eigenem Grund (JET, star, Hoyer …): füllen den ganzen Kreis, statt als Quadrat
     // mit Rand darin zu stehen.
-    if (o.fill) return 'left:0;top:0;width:100%;height:100%;object-fit:cover;';
+    // Wie die Update-Logos (1.5.2): quadratische Zeichen füllen die ganze Fläche, ohne weißen Rand.
+    if (o.fill || (!o.crop && !o.zoom && r >= 0.8 && r <= 1.25)) return 'left:0;top:0;width:100%;height:100%;object-fit:cover;';
     var wide = !o.crop && r > 1.6, ins = wide ? 8 : 16;
     // Ausschnitt [x, y, b, h, Bildbreite, Bildhöhe]: genau dieses Rechteck mittig in den Kreis (Lanfer-Zeichen).
     if (Array.isArray(o.crop)) {
@@ -250,7 +251,8 @@
         + 'font-size:' + Math.round(size * .34) + 'px;font-weight:800;letter-spacing:.02em">' + esc(K.abbr(s)) + '</span>';
     };
     if (lg && st !== 0) {
-      return '<div ' + wrap + 'background:#fff;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.12);'
+      // Weißer Grund nur hinter dem Logo, ohne Rand – wie die Update-Logos (1.5.2).
+      return '<div ' + wrap + 'background:#fff;'
         + (dark ? 'filter:brightness(.84) saturate(.9);' : '') + '" data-logo="bild" data-b="' + esc(s.b) + '" data-c="' + color(s) + '">'
         + '<img src="' + esc(lg) + '" data-u="' + esc(lg) + '" alt="" decoding="async" referrerpolicy="no-referrer" '
         + 'onload="window._casoraTank.lg(this)" onerror="window._casoraTank.lg(this,1)" '

@@ -4,13 +4,17 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.5.2 – 14.10.2026
+
+### Fixed
+- **"More settings" for lights and blinds:** The row in the popup of a single light did nothing. It now opens the device page, as it does for the other devices.
+- **Fuel logos:** The brand logos look like the logos in the update popup: the shape of the other icons, square logos fill the whole area, no thin border. Before, a round logo sat on the rounded square and its corners showed.
+
 ## 1.5.1 – 14.10.2026
 
 ### Fixed
 - **Back in the lock and fuel views:** The ‹ back button no longer sits on top of the icon. Like on all Casora pages it now stands in front of the icon and the title.
 - **3D printer in English:** The popup showed "1:36 Std. übrig · Schicht 124/295". It now reads "1:36 h left · Layer 124/295".
-- **"More settings" for lights and blinds:** The row in the popup of a single light did nothing. It now opens the device page, as it does for the other devices.
-- **Fuel logos:** The brand logos take the shape of the other icons in the popup. Before, a round logo sat on the rounded square and its corners showed.
 
 ## 1.5.0 – 14.10.2026
 
