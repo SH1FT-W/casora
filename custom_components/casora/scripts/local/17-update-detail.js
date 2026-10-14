@@ -117,36 +117,54 @@
     var data = (feats & F_BACKUP) && wantsBackup(id) ? { backup: true } : {};
     return { domain: 'update', service: 'install', data: data, target: { entity_id: id } };
   };
-  document.addEventListener('click', function (ev) {
-    var p = (ev.composedPath && ev.composedPath()) || [];
-    for (var i = 0; i < p.length; i++) {
-      var n = p[i];
-      if (!n || !n.getAttribute || !n.hasAttribute('data-casora-upd-bk')) continue;
-      var id = n.getAttribute('data-casora-upd-bk');
-      backup[id] = !wantsBackup(id);
-      n.setAttribute('aria-checked', wantsBackup(id) ? 'true' : 'false');
-      ev.preventDefault(); ev.stopPropagation();
-      return;
-    }
-  }, true);
+  // Tipps auch auf touchend (14.10.2026): am Handy schluckt die Teilkarte (button-card) das Klick-Echo nach dem
+  // Fingertipp – „Überspringen“ ging (casora-core wertet touchend aus), „Installieren“ tat nichts.
+  var tp = null, lastTouch = 0;
+  document.addEventListener('touchstart', function (ev) {
+    var t0 = ev.touches && ev.touches[0];
+    tp = t0 ? { x: t0.clientX, y: t0.clientY, moved: false } : null;
+  }, { capture: true, passive: true });
+  document.addEventListener('touchmove', function (ev) {
+    var t1 = ev.touches && ev.touches[0];
+    if (tp && t1 && (Math.abs(t1.clientX - tp.x) > 10 || Math.abs(t1.clientY - tp.y) > 10)) tp.moved = true;
+  }, { capture: true, passive: true });
+  var onTap = function (attr, fn) {
+    var h = function (ev) {
+      var p = (ev.composedPath && ev.composedPath()) || [];
+      for (var i = 0; i < p.length; i++) {
+        var n = p[i];
+        if (!n || !n.getAttribute || !n.hasAttribute(attr)) continue;
+        if (ev.type === 'touchend') {
+          var moved = !!(tp && tp.moved);
+          tp = null;
+          if (moved) return;   // Scrollgeste
+          lastTouch = Date.now();
+        } else if (Date.now() - lastTouch < 700) { ev.preventDefault(); ev.stopPropagation(); return; }   // Klick-Echo
+        if (ev.cancelable) ev.preventDefault();
+        ev.stopPropagation();
+        fn(n, n.getAttribute(attr));
+        return;
+      }
+    };
+    document.addEventListener('touchend', h, true);
+    document.addEventListener('click', h, true);
+  };
+  onTap('data-casora-upd-bk', function (n, id) {
+    if (window.casoraHaptic) window.casoraHaptic('selection');
+    backup[id] = !wantsBackup(id);
+    n.setAttribute('aria-checked', wantsBackup(id) ? 'true' : 'false');
+  });
   // Installieren: „Vorher sichern“ erst beim Tipp lesen – der Schalter steht in einer anderen Teilkarte.
-  document.addEventListener('click', function (ev) {
-    var p = (ev.composedPath && ev.composedPath()) || [];
-    for (var i = 0; i < p.length; i++) {
-      var n = p[i];
-      if (!n || !n.getAttribute || !n.hasAttribute('data-casora-upd-install')) continue;
-      ev.preventDefault(); ev.stopPropagation();
-      if (n.classList.contains('dis')) return;
-      var id = n.getAttribute('data-casora-upd-install');
-      var ha = document.querySelector('home-assistant'), st = ha && ha.hass && ha.hass.states[id];
-      if (!st) return;
-      var spec = installSpec(id, st);
-      D.lastInstall = spec;
-      var go = function () { ha.hass.callService(spec.domain, spec.service, spec.data, spec.target); };
-      if (window.casoraConfirmSpec) window.casoraConfirmSpec(spec).then(function (ok) { if (ok) go(); }); else go();
-      return;
-    }
-  }, true);
+  onTap('data-casora-upd-install', function (n, id) {
+    if (n.classList.contains('dis')) return;
+    if (window.casoraHaptic) window.casoraHaptic('light');
+    var ha = document.querySelector('home-assistant'), st = ha && ha.hass && ha.hass.states[id];
+    if (!st) return;
+    var spec = installSpec(id, st);
+    D.lastInstall = spec;
+    var go = function () { ha.hass.callService(spec.domain, spec.service, spec.data, spec.target); };
+    if (window.casoraConfirmSpec) window.casoraConfirmSpec(spec).then(function (ok) { if (ok) go(); }); else go();
+  });
 
   D.installSpec = installSpec;
 
