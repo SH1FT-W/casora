@@ -239,7 +239,7 @@ const popup = (pg) => pg.evaluate(() => {
     firstRowTop: (P('.hui-srow').filter((e) => !e.closest('.casora-tank-row'))[0] || { getBoundingClientRect: () => ({ top: null }) }).getBoundingClientRect().top,
     view: P('.casora-tank-view').length ? txt(P('.casora-tank-view')[0]) : null,
     title: sr.querySelector('.header-title').textContent,
-    back: !!sr.querySelector('.casora-tank-back'),
+    back: !!sr.querySelector('.header-back:not([hidden])'),
     seg: P('.ct-seg .hui-sg').map(txt),
     segOn: P('.ct-seg .hui-sg.on').map(txt),
     list: P('.ct-list .hui-srow').map(txt),
@@ -254,7 +254,7 @@ const head = (pg) => pg.evaluate(() => {
   const sr = window.casoraPopup && window.casoraPopup.element && window.casoraPopup.element.shadowRoot;
   if (!sr) return null;
   const R = (q) => { const e = sr.querySelector(q); if (!e || e.hidden) return null; const r = e.getBoundingClientRect(); return r.width ? r : null; };
-  const b = R('.casora-tank-back'), t = R('.header-title'), s = R('.header-status');
+  const b = R('.header-back'), t = R('.header-title'), s = R('.header-status');
   const apart = (a, c) => !a || !c || a.right <= c.left || c.right <= a.left || a.bottom <= c.top || c.bottom <= a.top;
   const st = sr.querySelector('.header-status');
   return { soft: window.casoraPopup.element.hasAttribute('soft'), back: !!b, free: apart(b, t) && apart(b, s), status: st && !st.hidden ? st.textContent.replace(/\s+/g, ' ').trim() : '' };
@@ -319,7 +319,7 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
   await page.waitForTimeout(400);
   p = await popup(page);
   await check(vp.name + ': „Nächste“ sortiert nach Entfernung', p && /Gartenstraße/.test(p.list[0] || ''), p && p.list);
-  await tap(page, '.casora-tank-back');
+  await tap(page, '.header-back');
   await page.waitForTimeout(600);
   p = await popup(page);
   await check(vp.name + ': Zurück führt ins Auto-Popup', p && p.view === null && p.title !== 'Tanken' && !p.back && /Tanken/.test(p.row || ''), p && { title: p.title, view: !!p.view });

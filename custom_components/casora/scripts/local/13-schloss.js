@@ -360,26 +360,15 @@
     box.style.cssText = 'grid-column:1 / -1;width:100%;align-self:stretch;justify-self:stretch;flex:0 0 auto;display:block;padding:0 ' + pad + 'px 24px;box-sizing:border-box;position:relative;z-index:1;text-align:left;';
     cont.appendChild(box);
     V.box = box;
-    // Zurück: Spiegelbild des Schließen-Knopfs (wie Tanken).
-    var back = close.cloneNode(true);
-    back.classList.add('casora-lock-back');
-    back.setAttribute('aria-label', 'Zurück');
-    back.hidden = false;
-    var path = back.querySelector('path');
-    if (path) path.setAttribute('d', 'M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z');
-    var place = function () {
-      var s = surf.getBoundingClientRect(), r = close.getBoundingClientRect();
-      back.style.position = 'absolute';
-      back.style.top = (r.top - s.top) + 'px';
-      back.style.left = (s.right - r.right) + 'px';
-      back.style.right = 'auto';
-      back.style.margin = '0';
-      back.style.zIndex = '5';
-    };
-    surf.appendChild(back);
-    place();
-    V.back = back;
-    V.onResize = function () { if (!V) return; place(); var w = V.box.getBoundingClientRect().width > 700; if (w !== V.wide) render(true); };
+    // Zurück: der ‹ des Popup-Rahmens (wie die Casora-Seiten, 1.5) – eigene Spalte vor dem Symbol statt
+    // eines Knopfs, der über dem Symbol lag. Der vorige Zustand des Rahmens wird beim Verlassen zurückgestellt.
+    var hb = pop._headerBack;
+    V.prevBack = { fn: pop._backFn, hidden: hb ? hb.hidden : true, attr: pop.hasAttribute('has-back') };
+    pop._backFn = function () { window._casoraSuppressDismiss = Date.now() + 600; L.leave(false); };
+    if (hb) hb.hidden = false;
+    pop.toggleAttribute('has-back', true);
+    V.back = hb;
+    V.onResize = function () { if (!V) return; var w = V.box.getBoundingClientRect().width > 700; if (w !== V.wide) render(true); };
     window.addEventListener('resize', V.onResize);
     V.mo = new MutationObserver(function () { if (V && (!pop.hasAttribute('open') || !box.isConnected)) L.leave(true); });
     V.mo.observe(pop, { attributes: true, attributeFilter: ['open'] });
@@ -407,7 +396,11 @@
     clearTimeout(v.refetch);
     v.mo.disconnect();
     window.removeEventListener('resize', v.onResize);
-    if (v.back) v.back.remove();
+    if (v.prevBack) {
+      v.pop._backFn = v.prevBack.fn;
+      if (v.back) v.back.hidden = v.prevBack.hidden;
+      v.pop.toggleAttribute('has-back', v.prevBack.attr);
+    }
     if (v.box) v.box.remove();
     var sr = v.pop.shadowRoot;
     var hide = v.hide;
@@ -477,12 +470,6 @@
           return;
         }
         continue;
-      }
-      if (el.classList.contains('casora-lock-back')) {
-        if (!take()) return;
-        window._casoraSuppressDismiss = Date.now() + 600;
-        L.leave(false);
-        return;
       }
       if (el.dataset && el.dataset.cslSvc) { if (take()) act(el.dataset.cslSvc); return; }
       if (el.dataset && el.dataset.cslMore !== undefined) { if (take()) full(); return; }

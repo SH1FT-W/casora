@@ -772,41 +772,23 @@
     sr.querySelector('.header-title').textContent = 'Tanken';
     var ring = sr.querySelector('.header-ring');
     if (ring && !ring.hidden) { V.ring = ring.innerHTML; ring.innerHTML = '<span class="g" style="--g:url(&quot;' + GAS + '&quot;)"></span>'; }
-    // Zurück: Spiegelbild des Schließen-Knopfs (gleiche Größe und Höhe, linke Seite).
-    var back = close.cloneNode(true);
-    back.classList.add('casora-tank-back');
-    back.setAttribute('aria-label', 'Zurück');
-    back.hidden = false;
-    var path = back.querySelector('path');
-    if (path) path.setAttribute('d', 'M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z');
-    var place = function () {
-      var s = surf.getBoundingClientRect(), r = close.getBoundingClientRect();
-      back.style.position = 'absolute';
-      back.style.top = (r.top - s.top) + 'px';
-      back.style.left = (s.right - r.right) + 'px';
-      back.style.right = 'auto';
-      back.style.margin = '0';
-      back.style.zIndex = '5';
-    };
     V.soft = pop.hasAttribute('soft');
-    var bar = V.soft && sr.querySelector('.header-bar');
-    if (bar) {
-      // Kopfzeile A: der Titel steht links – der Zurück-Knopf nimmt den Platz der Symbol-Kachel ein (Spalte 1),
-      // statt als Spiegelbild des Schließen-Knopfs über Titel und Statuszeile zu liegen.
+    if (V.soft) {
       V.cont = cont;
       var stEl = sr.querySelector('.header-status');
       V.head = { mt: cont.style.marginTop, gap: pop.style.getPropertyValue('--casora-head-gap'),
         st: stEl ? stEl.innerHTML : null, stHidden: stEl ? stEl.hidden : true };
-      if (ring) { V.ringEl = ring; ring.style.setProperty('display', 'none', 'important'); }
       pop.style.removeProperty('--casora-head-gap');
-      back.style.cssText = 'grid-column:1;grid-row:1;align-self:center;position:relative;margin:0;z-index:1;';
-      bar.appendChild(back);
-    } else {
-      surf.appendChild(back);
-      place();
     }
-    V.back = back;
-    V.onResize = function () { if (!V) return; if (!V.soft) place(); var w = V.box.getBoundingClientRect().width > 700; if (w !== V.wide) render(true); else syncMap(); };
+    // Zurück: der ‹ des Popup-Rahmens vor dem Tank-Symbol (wie die Casora-Seiten, 1.5) statt einer Kopie des
+    // Schließen-Knopfs. Der vorige Zustand des Rahmens wird beim Verlassen zurückgestellt.
+    var hb = pop._headerBack;
+    V.prevBack = { fn: pop._backFn, hidden: hb ? hb.hidden : true, attr: pop.hasAttribute('has-back') };
+    pop._backFn = function () { window._casoraSuppressDismiss = Date.now() + 600; K.leave(false); };
+    if (hb) hb.hidden = false;
+    pop.toggleAttribute('has-back', true);
+    V.back = hb;
+    V.onResize = function () { if (!V) return; var w = V.box.getBoundingClientRect().width > 700; if (w !== V.wide) render(true); else syncMap(); };
     window.addEventListener('resize', V.onResize);
     // Popup zu oder neu befüllt: Ansicht verlassen.
     V.mo = new MutationObserver(function () { if (V && (!pop.hasAttribute('open') || !box.isConnected)) K.leave(true); });
@@ -829,7 +811,11 @@
     clearInterval(v.poll);
     v.mo.disconnect();
     window.removeEventListener('resize', v.onResize);
-    if (v.back) v.back.remove();
+    if (v.prevBack) {
+      v.pop._backFn = v.prevBack.fn;
+      if (v.back) v.back.hidden = v.prevBack.hidden;
+      v.pop.toggleAttribute('has-back', v.prevBack.attr);
+    }
     if (v.box) v.box.remove();
     if (closing && !v.pop.hasAttribute('open')) { /* Popup zu: nur aufräumen */ }
     var sr = v.pop.shadowRoot;
@@ -839,7 +825,6 @@
     if (ttl && ttl.textContent === 'Tanken') ttl.textContent = v.title;
     var ring = sr.querySelector('.header-ring');
     if (ring && v.ring != null) ring.innerHTML = v.ring;
-    if (v.ringEl) v.ringEl.style.removeProperty('display');
     if (v.head) {
       var st = sr.querySelector('.header-status');
       if (st && v.head.st != null) { st.innerHTML = v.head.st; st.hidden = v.head.stHidden; }
@@ -863,14 +848,6 @@
         last = Date.now();
         ev.preventDefault(); ev.stopPropagation();
         K.open(el.dataset.casoraTank || null);
-        return;
-      }
-      if (el.classList.contains('casora-tank-back')) {
-        if (Date.now() - last < 400) return;
-        last = Date.now();
-        window._casoraSuppressDismiss = Date.now() + 600;
-        ev.preventDefault(); ev.stopPropagation();
-        K.leave(false);
         return;
       }
       if (el.classList.contains('hui-sg') && V) {

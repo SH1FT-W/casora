@@ -97,7 +97,7 @@ const view = (page) => page.evaluate(() => {
   const sr = pop.shadowRoot, v = sr.querySelector('.casora-lock-view');
   const txt = (e) => (e ? e.textContent.replace(/\s+/g, ' ').trim() : null);
   const vis = (e) => !!e && e.getBoundingClientRect().height > 0;
-  const back = sr.querySelector('.casora-lock-back');
+  const back = v ? sr.querySelector('.header-back:not([hidden])') : null;
   const L = v && v.querySelector('.csl-left'), R = v && v.querySelector('.csl-right');
   return { open: true, view: !!v, title: txt(sr.querySelector('.header-title')), line: txt(v && v.querySelector('.csl-line')),
     back: vis(back), backAt: back ? (() => { const b = back.getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; })() : null,
