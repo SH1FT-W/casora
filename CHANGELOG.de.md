@@ -14,7 +14,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Studio:** Räume starten mit zugeklappten Abschnitten, damit man schneller findet, was man sucht.
 
 ### Behoben
-- **Pause im Kreis:** Pause und Weiter im Kreis oben rechts (Saugroboter, Medien) taten nichts. Der Klick erreichte den Dienst nie.
+- **Pause im Kreis:** Pause und Weiter im Kreis oben rechts (Saugroboter, Medien) taten nichts. Der Klick erreichte den Dienst nie. Pausiert bleibt der Kreis jetzt stehen und zeigt Play, vorher verschwand er.
 - **Personen-Popup:** „Ganzer Verlauf“ öffnet wieder den Verlauf von Home Assistant. Die Karte zeigt nur noch Person und Zonen, ohne die blauen Wegelinien.
 - **Thermostat:** − und + reagieren flüssig. Mehrere Tipps werden gesammelt und als eine Änderung geschickt.
 - **Karussell:** Seitennamen stehen im Studio in einem sichtbaren Eingabefeld.

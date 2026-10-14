@@ -4192,6 +4192,7 @@
    "mobile_filter_category": null,
    "progress_active_states": [
     "playing",
+    "paused",
     "cleaning",
     "returning",
     "washing",

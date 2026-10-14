@@ -14,7 +14,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Studio:** Rooms start with their sections collapsed, so you find things faster.
 
 ### Fixed
-- **Pause in the ring:** Pause and resume in the ring in the top corner (robot vacuum, media) did nothing. The tap never reached the service.
+- **Pause in the ring:** Pause and resume in the ring in the top corner (robot vacuum, media) did nothing. The tap never reached the service. When paused, the ring now stays and shows play; before, it disappeared.
 - **Person popup:** "Full history" opens Home Assistant's history again. The map shows only the person and the zones, without the blue path lines.
 - **Thermostat:** − and + respond smoothly. Several taps are collected and sent as one change.
 - **Carousel:** Page names are in a visible input field in the Studio.

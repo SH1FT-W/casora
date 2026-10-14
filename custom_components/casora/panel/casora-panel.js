@@ -5590,7 +5590,8 @@ const tileToggleOn = (tile, type, ent) => {
   return true;
 };
 
-const PROGRESS_STATES = ["playing", "cleaning", "returning", "washing",
+// „paused“ (14.10.2026): pausiert bleibt der Kreis mit Play – vorher verschwand er samt Knopf.
+const PROGRESS_STATES = ["playing", "paused", "cleaning", "returning", "washing",
   "rinsing", "spinning", "drying", "running", "active"];
 
 // --casora-progress-display, property for property.
