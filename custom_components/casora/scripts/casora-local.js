@@ -82,6 +82,7 @@ const MODULES = [
   '15-person',
   '16-maeher',
   '17-update-detail',
+  '18-ziele',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());

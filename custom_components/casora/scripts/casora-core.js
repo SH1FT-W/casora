@@ -6891,6 +6891,10 @@ window.casoraMenuGlass = {
       // 1.5: Zurück (cfg.back: Funktion) und die Konfiguration, mit der das Popup gerade offen ist –
       // eine Detailseite merkt sie sich und öffnet sie mit ‹ wieder (window.casoraPopup.current).
       this._backFn = typeof cfg.back === 'function' ? cfg.back : null;
+      // Über eine Kachel geöffnet (casoraRoute → openViaCard): der Weg zurück liegt vorgemerkt bereit.
+      var bn = window._casoraBackNext;
+      if (!this._backFn && bn && Date.now() - bn.at < 4000) this._backFn = bn.fn;
+      window._casoraBackNext = null;
       this._headerBack.hidden = !this._backFn;
       this._headerBack.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Zurück') : 'Zurück');
       this.toggleAttribute('has-back', !!this._backFn);
@@ -7644,11 +7648,19 @@ window.casoraMenuGlass = {
       return el.open(data || {});
     },
     close: function () { if (_el) _el.close(); },
+    // 1.5: zuerst eine Casora-Seite (window.casoraRoute, 18-ziele.js), HAs Dialog nur als letzter Rückfall.
     moreInfo: function (entityId, view) {
+      if (!view && typeof window.casoraRoute === 'function') {
+        try { if (window.casoraRoute(entityId)) return; } catch (e) { /* Rückfall */ }
+      }
+      window.casoraPopup.nativeMoreInfo(entityId, view);
+    },
+    // Bewusst HAs Dialog („In Home Assistant öffnen“) – geht an casoraRoute vorbei.
+    nativeMoreInfo: function (entityId, view) {
       var ha = document.querySelector('home-assistant');
       if (!ha || !entityId) return;
       ha.dispatchEvent(new CustomEvent('hass-more-info', {
-        bubbles: true, composed: true, detail: { entityId: entityId, view: view },
+        bubbles: true, composed: true, detail: { entityId: entityId, view: view, casoraNative: true },
       }));
     },
     get element() { return _el; },
@@ -7691,6 +7703,35 @@ window.casoraMenuGlass = {
     var title = (nameEl && nameEl.textContent.trim()) || '';
     instance()._src = lt.el;
     window.casoraPopup.open({ title: title, content: { type: 'vertical-stack', cards: [] } });
+  }, true);
+  // 1.5: HAs Dialog aus Casora heraus (Halten auf Kacheln, Badges mit more-info, HA-Karten in Casora-Popups)
+  // → Casora-Seite (window.casoraRoute, 18-ziele.js). Nur, was aus einer Casora-Kachel oder einem
+  // Casora-Popup kommt – HAs eigene Seiten bleiben unberührt. casoraNative: bewusst HAs Dialog.
+  var fromCasora = function (ev) {
+    var path = (ev.composedPath && ev.composedPath()) || [];
+    for (var i = 0; i < path.length; i++) {
+      var n = path[i];
+      if (!n || !n.tagName) continue;
+      if (n.tagName === 'CASORA-POPUP') return true;
+      if (n.tagName === 'BUTTON-CARD') {
+        var tp = [].concat((n._config && n._config.template) || []);
+        if (tp.some(function (x) { return /^casora_/.test(String(x)); })) return true;
+      }
+    }
+    return false;
+  };
+  // Halten/Tippen auf einer Kachel: button-card meldet „hass-action“, HA öffnet den Dialog danach vom Wurzel-
+  // element aus (ohne Kachel im Pfad). Darum die letzte Aktion einer Casora-Kachel kurz merken.
+  var lastAct = 0;
+  window.addEventListener('hass-action', function (ev) { if (fromCasora(ev)) lastAct = Date.now(); }, true);
+  window.addEventListener('hass-more-info', function (ev) {
+    var d = ev.detail || {};
+    if (!flagOn() || d.casoraNative || !d.entityId || typeof window.casoraRoute !== 'function') return;
+    if (!fromCasora(ev) && Date.now() - lastAct > 1500) return;
+    lastAct = 0;
+    var ok = false;
+    try { ok = window.casoraRoute(d.entityId); } catch (e) { ok = false; }
+    if (ok) { ev.stopPropagation(); ev.stopImmediatePropagation(); }
   }, true);
   var noteTile = function (ev) {
     var path = (ev.composedPath && ev.composedPath()) || [];
@@ -9127,16 +9168,25 @@ window.casoraMenuGlass = {
           }
           if (/^(light|cover)\./.test(mid) && window._casoraNotifyOpenViaCard) {
             window._casoraSuppressDismiss = Date.now() + 600;
+            // 1.5: ‹ zurück ins Popup, aus dem die Lampe geöffnet wurde.
+            var prevCfg = window.casoraPopup && window.casoraPopup.current;
+            if (prevCfg) window._casoraBackNext = { fn: function () { window.casoraPopup.open(prevCfg); }, at: Date.now() };
             window._casoraNotifyOpenViaCard(mid, function (ok) { if (!ok && window.casoraPopup) window.casoraPopup.moreInfo(mid); }, null, true);
             ev.preventDefault(); ev.stopPropagation();
             return;
+          }
+          // 1.5: Casora-Seite statt HAs Dialog (Messwert, Gerät, Geräteseite – window.casoraRoute).
+          if (typeof window.casoraRoute === 'function') {
+            var routed = false;
+            try { routed = window.casoraRoute(mid, { el: t }); } catch (e) { routed = false; }
+            if (routed) { ev.preventDefault(); ev.stopPropagation(); return; }
           }
           var ha = document.querySelector('home-assistant');
           if (ha) {
             var el = window.casoraPopup && window.casoraPopup.element;
             if (el) el._miOpenedAt = Date.now();
             ha.dispatchEvent(new CustomEvent('hass-more-info', {
-              bubbles: true, composed: true, detail: { entityId: t.dataset.casoraMi },
+              bubbles: true, composed: true, detail: { entityId: t.dataset.casoraMi, casoraNative: true },
             }));
           }
           return;
@@ -11735,6 +11785,11 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var take = function (ev) {
       var cfg = ev.detail && ev.detail.config;
       var act = cfg && cfg[((ev.detail && ev.detail.action) || 'tap') + '_action'];
+      if (!(act && act.casora_popup) && window._casoraTapPopupOnly) {
+        // casoraRoute will nur ein Popup öffnen – eine Kachel, die beim Tippen schaltet, darf dabei nicht schalten.
+        ev.stopPropagation();
+        return finish(false);
+      }
       if (act && act.casora_popup && window.casoraPopup) {
         // Only ours gets intercepted; anything else stays HA's to handle.
         ev.stopPropagation();
