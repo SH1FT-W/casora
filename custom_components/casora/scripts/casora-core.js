@@ -5756,6 +5756,14 @@ window.casoraMenuGlass = {
     }
     @media (hover: hover) {
       .header-close:hover:not([disabled])::after { opacity: 0.1; }
+      .header-back:hover::after { opacity: 0.1; }
+    }
+    /* ‹ zurück: dieselbe Scheibe beim Darüberfahren wie das X. */
+    .header-back { isolation: isolate; }
+    .header-back::after {
+      content: ""; position: absolute; inset: 0; border-radius: 50%;
+      background-color: currentColor; opacity: 0; pointer-events: none; z-index: -1;
+      transition: opacity 0.16s ease;
     }
 
     .content {
