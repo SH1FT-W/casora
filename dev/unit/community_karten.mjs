@@ -52,4 +52,15 @@ assert.ok(w.body.includes('<!-- casora-id:abc123 -->'));
 assert.deepEqual(w.plat, ['volvo']);
 const u = C.issueUrl('Kartenwunsch: Volvo', w.body, ['kartenwunsch']);
 assert.ok(u.startsWith('https://github.com/SH1FT-W/casora/issues/new?'));
+
+// Jede mitgelieferte Community-Karte hat ein Vorschaubild (sonst leere Fläche in der Community-Liste).
+const typesSrc = read('casora-panel-types.js');
+const list = typesSrc.slice(typesSrc.indexOf('window.CASORA_TILE_TYPES = ['), typesSrc.indexOf('\n];', typesSrc.indexOf('window.CASORA_TILE_TYPES = [')));
+const comIds = list.split('\n  { id: "').slice(1).filter((x) => /\bcommunity: \{/.test(x)).map((x) => x.split('"')[0]);
+assert.ok(comIds.includes('casora_lawn_mower'), 'Mähroboter ist Community-Karte: ' + comIds);
+for (const id of comIds) {
+  const prev = (typesSrc.split('{ id: "' + id + '"')[1] || '').match(/preview: "([^"]+)"/);
+  const file = prev ? null : new URL('../../custom_components/casora/assets/community/' + id + '.webp', import.meta.url);
+  assert.ok(prev || fs.existsSync(file), 'Vorschaubild fehlt: assets/community/' + id + '.webp');
+}
 console.log('community_karten: ok');
