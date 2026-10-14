@@ -275,7 +275,8 @@ window.CASORA_TILE_TYPES = [
   { id: "casora_lawn_mower", label: "Robot lawn mower", template: "casora_lawn_mower", domains: ["lawn_mower"],
     icon: "lawn-mower", color: "var(--casora-color-green, #30D158)", entityLabel: "Lawn mower",
     community: { desc: "Status, battery and connection. Mow, pause, back to the station and park. More details for Gardena.",
-      needs: "lawn_mower" },
+      needs: "lawn_mower", needsText: "For every robot lawn mower in Home Assistant",
+      needsMissing: "No robot lawn mower in Home Assistant yet" },
     fields: [ICON, TITLE_NAME] },
   // Aquarien-Übersicht (Hemma 1 und ältere Fassungen „…_aquarium“): bis zu drei Becken in einer Kachel. Nur fürs
   // Bearbeiten umgezogener Kacheln – neue Becken bekommen die Aquarium-Kachel (casora_aquarium_tank).
@@ -294,7 +295,8 @@ window.CASORA_TILE_TYPES = [
 // (window.casoraCommunityOn, casora-panel-community.js). Bestehende Kacheln erkennt das Studio immer.
 //   desc   – Kurzbeschreibung (englisch, Übersetzung in translations/panel)
 //   needs  – Integration (Domain), die die Karte braucht; fehlt sie, steht das als Hinweis dabei
-//   preview – Vorschaubild, sonst /casora_assets/community/<id>.webp
+//   needsText / needsMissing – lesbarer Hinweis dazu (sonst „Braucht <Integration>“)
+//   preview – Vorschaubild, sonst /casora_assets/community/<id>.webp; Popup-Bild optional <id>-popup.webp
 window.casoraCommunityType = (t) => {
   if (!t || !t.community || t._communityWrapped) return t;
   const own = t.onlyIf;

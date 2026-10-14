@@ -176,7 +176,19 @@
     + ".comrow{display:flex;align-items:center;gap:10px;padding:10px 4px;border-top:1px solid rgba(127,127,127,.15)}.comrow:first-child{border-top:0}"
     + ".comrow .comtx{flex:1;min-width:0}.comrow b{display:block;font-size:14px}.comrow span{font-size:13px;opacity:.7}"
     + ".comrow small{display:block;font-size:12px;opacity:.6;margin-top:2px}"
-    + ".comshot{width:72px;height:48px;border-radius:10px;flex:none;object-fit:cover;background:rgba(127,127,127,.15)}"
+    + ".comshot{width:132px;height:88px;border-radius:12px;flex:none;object-fit:cover;background:rgba(127,127,127,.15);border:0;padding:0;display:block}"
+    + "button.comzoom{border:0;padding:0;background:none;border-radius:12px;flex:none;cursor:zoom-in;line-height:0}"
+    + ".comrow.card{align-items:flex-start}.comrow.card > .comchip{align-self:center}"
+    + ".comlink{display:inline-flex;align-items:center;gap:5px;margin-top:6px;border:0;border-radius:999px;padding:4px 10px 4px 8px;font:inherit;font-size:13px;font-weight:600;"
+    + "background:var(--casora-studio-chip, rgba(118,118,128,.18));color:inherit;cursor:pointer}.comlink ha-icon{--mdc-icon-size:16px;display:flex}"
+    // Große Vorschau über der Community-Seite: Kachel / Popup.
+    + ".comlb{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;box-sizing:border-box;"
+    + "background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}"
+    + ".comlb img{max-width:min(92%,960px);max-height:72vh;border-radius:18px;box-shadow:var(--casora-popup-plate-shadow, 0 18px 50px -20px rgba(0,0,0,.6));background:rgba(127,127,127,.15)}"
+    + ".comlb .comseg{display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.18)}"
+    + ".comlb .comseg button{border:0;border-radius:999px;padding:7px 16px;font:inherit;font-size:14px;font-weight:600;background:none;color:#fff;cursor:pointer}"
+    + ".comlb .comseg button.on{background:#fff;color:#000}"
+    + ".comlb .comx{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.2);color:#fff;cursor:pointer;display:grid;place-items:center}"
     + ".compill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}"
     + ".comnote{font-size:13px;opacity:.75;margin:8px 2px 0;line-height:1.4}";
   const css = (box) => { if (!box.querySelector("style.comcss")) { const s = el("style", "comcss"); s.textContent = CSS; box.appendChild(s); } };
@@ -191,6 +203,44 @@
     return d;
   };
   const hasIntegration = (hass, d) => !d || !!(hass && hass.config && (hass.config.components || []).includes(d));
+  // Vorschaubilder einer Community-Karte: Kachel (Pflicht) und Popup (optional, „<id>-popup.webp“).
+  const shots = (t) => ({ tile: t.community.preview || ("/casora_assets/community/" + t.id + ".webp"),
+    popup: t.community.previewPopup || ("/casora_assets/community/" + t.id + "-popup.webp") });
+  // Große Vorschau über der Community-Seite; Esc oder Tipp daneben schließt nur die Vorschau.
+  const lightbox = (box, t, which, hasPopup) => {
+    const pane = box.closest(".askpane") || box;
+    const old = pane.querySelector(".comlb");
+    if (old) old.remove();
+    const S = shots(t);
+    const lb = el("div", "comlb");
+    lb.setAttribute("role", "dialog");
+    lb.setAttribute("aria-label", tr(t.label));
+    const img = el("img");
+    img.alt = tr(t.label);
+    const seg = el("div", "comseg");
+    // Popup-Bild ist genau auf den Rahmen geschnitten: Ecken rund wie das Popup selbst.
+    const show = (k) => { img.src = S[k]; img.style.borderRadius = k === "popup" ? "36px" : ""; seg.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.k === k)); };
+    [["tile", "Tile"], ["popup", "Popup"]].forEach(([k, label]) => {
+      if (k === "popup" && !hasPopup) return;
+      const b = el("button", "", tr(label));
+      b.type = "button"; b.dataset.k = k;
+      b.onclick = (ev) => { ev.stopPropagation(); show(k); };
+      seg.appendChild(b);
+    });
+    const x = el("button", "comx");
+    x.type = "button"; x.setAttribute("aria-label", tr("Close"));
+    x.innerHTML = '<ha-icon icon="mdi:close"></ha-icon>';
+    const close = () => { lb.remove(); W.removeEventListener("keydown", esc, true); };
+    const esc = (ev) => { if (ev.key === "Escape") { ev.stopImmediatePropagation(); ev.preventDefault(); close(); } };
+    W.addEventListener("keydown", esc, true);
+    x.onclick = (ev) => { ev.stopPropagation(); close(); };
+    lb.onclick = (ev) => { if (ev.target === lb) close(); };
+    img.onclick = (ev) => ev.stopPropagation();
+    if (seg.children.length > 1) lb.appendChild(seg);
+    lb.append(img, x);
+    pane.appendChild(lb);
+    show(which);
+  };
 
   customElements.whenDefined("casora-panel").then(() => {
     const P = customElements.get("casora-panel").prototype;
@@ -303,26 +353,47 @@
           host.appendChild(el("div", "comlbl", tr("Community cards")));
           if (!list.length) host.appendChild(el("div", "comnote", tr("No community cards yet. Ask for one – the first ones come with the next update.")));
           list.forEach((t) => {
-            const r = el("div", "comrow");
+            const r = el("div", "comrow card");
+            const S = shots(t);
+            const zoom = el("button", "comzoom");
+            zoom.type = "button";
+            zoom.setAttribute("aria-label", fill(tr("Preview of “{x}”"), { x: tr(t.label) }));
             const shot = el("img", "comshot");
             shot.alt = "";
             shot.loading = "lazy";
-            shot.src = (t.community.preview || ("/casora_assets/community/" + t.id + ".webp"));
+            shot.src = S.tile;
             // Ohne Vorschaubild: leere Fläche statt Symbol für ein kaputtes Bild.
             shot.onerror = () => { shot.replaceWith(el("div", "comshot")); };
+            zoom.appendChild(shot);
             const tx = el("div", "comtx");
             tx.append(el("b", "", tr(t.label)), el("span", "", tr(t.community.desc || "")));
             const need = t.community.needs;
             if (need) {
               const ok2 = hasIntegration(hass, need);
-              tx.appendChild(el("small", "", fill(tr(ok2 ? "Needs {x}" : "Needs {x} – not installed"), { x: integrationName(hass, need) })));
+              // Lesbarer Hinweis aus der Karte (needsText/needsMissing), sonst der Name der Integration.
+              const txt = ok2 ? (t.community.needsText ? tr(t.community.needsText) : fill(tr("Needs {x}"), { x: integrationName(hass, need) }))
+                : (t.community.needsMissing ? tr(t.community.needsMissing) : fill(tr("Needs {x} – not installed"), { x: integrationName(hass, need) }));
+              tx.appendChild(el("small", "", txt));
             }
+            // „Popup ansehen“ nur, wenn es ein Popup-Bild gibt.
+            let hasPopup = false;
+            const pop = el("button", "comlink");
+            pop.type = "button";
+            pop.innerHTML = '<ha-icon icon="mdi:open-in-app"></ha-icon>';
+            pop.appendChild(el("span", "", tr("View popup")));
+            pop.style.display = "none";
+            pop.onclick = () => lightbox(box, t, "popup", true);
+            const probe = new Image();
+            probe.onload = () => { hasPopup = true; pop.style.display = ""; };
+            probe.src = S.popup;
+            tx.appendChild(pop);
+            zoom.onclick = () => lightbox(box, t, "tile", hasPopup);
             const on = W.casoraCommunityOn.has(t.id);
             const b = el("button", "comchip" + (on ? "" : " on"), tr(on ? "Remove" : "Add"));
             b.type = "button";
             b.setAttribute("data-com", t.id);
             b.onclick = () => { then = { toggle: t }; ok.click(); };
-            r.append(shot, tx, b);
+            r.append(zoom, tx, b);
             host.appendChild(r);
           });
           // Eigene Wünsche

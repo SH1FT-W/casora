@@ -1,6 +1,7 @@
 // @zustand: arbeit
 // Community (1.5) einmal ganz durchspielen, wie ein Nutzer im Studio:
-//   1. Community-Seite: nur „Kartenwunsch einreichen …“ (kein Teilen mehr), Liste „Community-Karten“.
+//   1. Community-Seite: nur „Kartenwunsch einreichen …“ (kein Teilen mehr), Liste „Community-Karten“;
+//      große Vorschau (Kachel/Popup) beim Antippen des Vorschaubilds, Esc schließt nur die Vorschau.
 //   2. Prüf-Community-Karte: erst nicht in „Kachel hinzufügen“; „Hinzufügen“ → steht in der Auswahl und in
 //      den Casora-Einstellungen (community.added); „Entfernen“ bei benutzter Kachel fragt nach, „Kacheln auch
 //      entfernen“ nimmt sie aus dem Raum.
@@ -70,6 +71,26 @@ await check('Community-Seite offen, nur Kartenwunsch als Weg', s && /Community/.
 await check('Prüfkarte in der Liste mit „Hinzufügen“ und Integrations-Hinweis', s && /QA-Prüfkarte/.test(s.text) && /Braucht/.test(s.text)
   && s.chips.includes('Hinzufügen'), s && s.text);
 await check('Vor dem Hinzufügen nicht in „Kachel hinzufügen“', !(await pickable()));
+
+// Große Vorschau (Mähroboter hat Kachel- und Popup-Bild): Antippen öffnet sie, Esc schließt nur die Vorschau.
+const lb = async () => page.evaluate(() => {
+  const ps = window.__panel().shadowRoot.querySelectorAll('.askpane'); const a = ps[ps.length - 1];
+  const l = a && a.querySelector('.comlb');
+  return l ? { segs: [...l.querySelectorAll('.comseg button')].map((b) => b.textContent + (b.classList.contains('on') ? '*' : '')), src: (l.querySelector('img') || {}).src || '' } : null;
+});
+await inPane("a.querySelector('.comrow.card button.comzoom').click()");
+await wait(1200);
+let v = await lb();
+await check('Vorschau groß: Kachel aktiv, Umschalter Kachel/Popup', v && /community\/casora_lawn_mower\.webp$/.test(v.src) && v.segs.join() === 'Kachel*,Popup', v);
+await inPane("[...a.querySelectorAll('.comlb .comseg button')].find((b) => b.textContent === 'Popup').click()");
+await wait(500);
+v = await lb();
+await check('Umschalter zeigt das Popup-Bild', v && /casora_lawn_mower-popup\.webp$/.test(v.src), v);
+await page.keyboard.press('Escape');
+await wait(500);
+s = await pane();
+await check('Esc schließt nur die Vorschau, Community bleibt offen', !(await lb()) && s && /Community/.test(s.title), s && s.title);
+await check('Knopf „Popup ansehen“ sichtbar', await inPane("const b = [...a.querySelectorAll('.comlink')].find((x) => /Popup ansehen/.test(x.textContent)); return !!b && b.style.display !== 'none';"));
 
 // 2. Hinzufügen
 await qa();

@@ -2376,7 +2376,11 @@
     "Save afterwards to keep the change.": "Danach speichern, damit es bleibt.",
     "Removed – save to keep it.": "Entfernt – speichern, damit es bleibt.",
     "Robot lawn mower": "Mähroboter",
-    "Status, battery and connection. Mow, pause, back to the station and park. More details for Gardena.": "Status, Akku und Verbindung. Mähen, Pause, zur Station und parken. Mehr Angaben bei Gardena."
+    "Status, battery and connection. Mow, pause, back to the station and park. More details for Gardena.": "Status, Akku und Verbindung. Mähen, Pause, zur Station und parken. Mehr Angaben bei Gardena.",
+    "Preview of “{x}”": "Vorschau von „{x}“",
+    "View popup": "Popup ansehen",
+    "For every robot lawn mower in Home Assistant": "Für jeden Mähroboter in Home Assistant",
+    "No robot lawn mower in Home Assistant yet": "Noch kein Mähroboter in Home Assistant"
   },
   "patterns": [
     [
