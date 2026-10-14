@@ -279,14 +279,17 @@ export async function fakeStates(pg, patch, { sticky = false } = {}) {
 // Versalien-Etiketten in Sand-Karten des offenen Popups (1.2.1, D1): je Etikett der Abstand der Schrift
 // zum Kartenrand (dx links, dy oben). Karte = nächster Vorfahr mit Fläche und Radius.
 // satz: auch Überschriften in Satzschreibung (1.3, Entscheidung B: 17/700 statt Versalien) mitnehmen.
-export const plateLabels = (pg, { satz = false } = {}) => pg.evaluate((satz) => {
+// texts: Regex-Quelle – passende Texte zählen unabhängig von Schreibweise und Größe (Casora-Design).
+export const plateLabels = (pg, { satz = false, texts = null } = {}) => pg.evaluate(([satz, texts]) => {
+  const want = texts ? new RegExp(texts) : null;
   const pop = window.__pierce('casora-popup').find((p) => p.hasAttribute('open'));
   const out = [];
   const walk = (root) => root.querySelectorAll('*').forEach((e) => {
     if (e.shadowRoot) walk(e.shadowRoot);
     const cs = getComputedStyle(e);
-    if (cs.textTransform !== 'uppercase' && !(satz && +cs.fontWeight >= 700 && parseFloat(cs.fontSize) >= 15)) return;
     const tn = [...e.childNodes].find((n) => n.nodeType === 3 && n.data.trim());
+    if (cs.textTransform !== 'uppercase' && !(satz && +cs.fontWeight >= 700 && parseFloat(cs.fontSize) >= 15)
+      && !(want && tn && want.test(tn.data.trim()))) return;
     if (!tn) return;
     const rg = document.createRange(); rg.selectNodeContents(tn); const r = rg.getBoundingClientRect();
     if (r.width < 1) return;
@@ -300,4 +303,4 @@ export const plateLabels = (pg, { satz = false } = {}) => pg.evaluate((satz) => 
   });
   if (pop) walk(pop.shadowRoot);
   return out;
-}, satz);
+}, [satz, texts]);

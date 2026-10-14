@@ -65,7 +65,10 @@ const look = async () => {
   const all = await cards(page);
   const tile = all.find((c) => c.t.includes('casora_camera'));
   const sec = all.find((c) => c.t.includes('casora_badge_security_group'));
-  return { tile: tile && tile.text, sec: sec && sec.text };
+  // Casora-Design zeigt Symbole mit Zahl statt Sätzen – deren Beschreibung (title) zählt mit.
+  const tips = await page.evaluate(() => { const b = window.__pierce('button-card').find((x) => [].concat((x._config || {}).template || []).includes('casora_badge_security_group'));
+    return b ? [...b.shadowRoot.querySelectorAll('[title]')].map((e) => e.getAttribute('title')).join(' · ') : ''; });
+  return { tile: tile && tile.text, sec: sec && [sec.text, tips].filter(Boolean).join(' | ') };
 };
 
 // 1) Ohne Einstellung: der tote Sensor ändert nichts.

@@ -66,7 +66,8 @@ const B = await page.evaluate((f) => { const box = new Function('return (' + f +
 console.log('Ansicht', B ? 'Balken (B)' : 'Kreis-Fluss');
 // 1.2.1 (D1): Etiketten in den Sand-Karten 20/18 vom Rand; „Leistung“ und „Energiefluss“ fluchten.
 if (B) {
-  const L = await plateLabels(page);
+  // Casora-Design: Überschriften in Satzschreibung statt Versalien – die beiden Texte trotzdem messen.
+  const L = await plateLabels(page, { texts: '^(Leistung|Energiefluss)' });
   const lei = L.find((l) => /^Leistung/.test(l.t)), ef = L.find((l) => l.t === 'Energiefluss');
   check('Etiketten „Leistung“ und „Energiefluss“ 20/18 vom Kartenrand und bündig',
     lei && ef && lei.dx === 20 && lei.dy === 18 && ef.dx === 20 && ef.dy === 18 && lei.x === ef.x, L);

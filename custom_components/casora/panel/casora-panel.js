@@ -6165,7 +6165,7 @@ class CasoraPanel extends HTMLElement {
         :host(.is-light) .status.err, :host(.is-light.split:not(.flow)) .status.err { color:var(--casora-studio-bad, #d70015); }
         :host(.is-light) .sw::after { box-shadow:0 1px 2px rgba(0,0,0,0.16), 0 0 0 .5px rgba(0,0,0,0.04); }
         /* Ausgegrautes Rückgängig bleibt als Symbol lesbar (ohne Verlauf ist es nur inaktiv). */
-        :host(.is-light:not(.phone)) .toprow > :where(.navpill) > button#undo:disabled { color:var(--ink); opacity:.5; }
+        :host(.is-light:not(.phone)) .toprow > :where(.navpill) > button#undo:disabled { color:var(--ink); opacity:.62; }
         :host(.is-light) .toprow > button#save.dirty:hover:not(:disabled),
         :host(.is-light) .toprow > :where(.navpill) > button#save.dirty:hover:not(:disabled) { background:#000; }
 
@@ -8032,6 +8032,8 @@ class CasoraPanel extends HTMLElement {
         }
         .toprow > :where(.navpill) > button#undo:hover:not(:disabled) { background:none; filter:none; opacity:.72; }
         .toprow > :where(.navpill) > button#undo svg { width:21px; height:21px; display:block; }
+        /* Inaktiv (kein Verlauf) noch mit 3:1 lesbar, auch im Casora-Design hell und dunkel. */
+        .toprow > :where(.navpill) > button#undo:disabled { opacity:.62; }
         :host(.phone) .toprow > :where(.navpill) > button#undo,
         :host(.flow) .toprow > :where(.navpill) > button#undo { display:none; }
         :host(.phone) .navflash {

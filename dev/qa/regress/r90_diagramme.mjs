@@ -96,13 +96,14 @@ await check('Energie: Zeit beim Ablesen („Heute, … Uhr“ bzw. Wochentag)', 
 await page.keyboard.press('Escape');
 await page.waitForTimeout(300);
 await check('Energie: Esc stellt die Hero-Zahl wieder her', await hero() === before, await hero());
-const touched = await page.evaluate((f) => {
+await page.evaluate((f) => {
   const svg = eval(f)().shadowRoot.querySelector('svg'), b = svg.getBoundingClientRect();
   const ev = (t, x) => svg.dispatchEvent(new PointerEvent(t, { pointerType: 'touch', clientX: x, clientY: b.y + b.height / 2, bubbles: true, buttons: 1 }));
   ev('pointerdown', b.x + b.width * 0.2); ev('pointerleave', b.x + b.width * 0.2);
-  const n = window.__pierce('[data-casora-read]')[0];
-  return n ? n.textContent.trim() : null;
 }, chartIn.toString());
+// Der Kopf (Casora-Design) zeichnet den Ablesewert im nächsten Bild – nicht im selben Schritt lesen.
+await page.waitForTimeout(400);
+const touched = await hero();
 await check('Energie: Touch liest ab und bleibt nach dem Loslassen stehen', touched && touched !== before, [before, touched]);
 const aria = await page.evaluate((f) => { const s = eval(f)().shadowRoot.querySelector('svg'); return [s.getAttribute('role'), s.getAttribute('aria-label'), s.getAttribute('tabindex'), getComputedStyle(s).touchAction]; }, chartIn.toString());
 await check('Energie: role=img, aria-label, Tab-Stopp, touch-action pan-y', aria[0] === 'img' && aria[1] && aria[2] === '0' && aria[3] === 'pan-y', aria);
@@ -116,7 +117,8 @@ await check('Energie (Heute + Monat): Popup mit Diagramm', r && r.drawn >= 1, r)
 const tapMetric = async (eid, want) => {
   const at = await page.evaluate((eid) => {
     const pop = window.__pierce('casora-popup').find((p) => p.hasAttribute('open'));
-    const row = pop && window.__pierce('[data-hp-metric="' + eid + '"]', pop.shadowRoot)[0];
+    // Nur sichtbare Zeilen: im Casora-Design ist die Leistungszeile versteckt (Klick auf 0/0 schlösse das Popup).
+    const row = pop && window.__pierce('[data-hp-metric="' + eid + '"]', pop.shadowRoot).find((e) => e.getBoundingClientRect().width > 0);
     if (!row) return null;
     row.scrollIntoView({ block: 'center' });
     const b = row.getBoundingClientRect();
@@ -154,7 +156,8 @@ await check('Energie: „Diesen Monat“ antippen → 30 Tagessäulen', t && t.k
 t = await tapMetric(ids.month);
 await check('Energie: „Diesen Monat“ erneut antippen → zurück auf die Leistungskurve', t && t.kind === 'line' && t.bars === 0, t);
 await tapMetric(ids.today);
-t = await tapMetric(ids.power);
+// Casora-Design: keine eigene Leistungszeile (die Leistung steht im Kopf) – dann „Heute“ erneut antippen.
+t = (await tapMetric(ids.power)) || (await tapMetric(ids.today));
 await check('Energie: Leistung antippen → zurück auf die Leistungskurve', t && t.kind === 'line', t);
 // Tagesverbrauch (Geräte-Popups „Verbrauch pro Tag“, Energie „Heute“): _hpBarCfg aus 01-basis.js.
 await page.evaluate(async (today) => {

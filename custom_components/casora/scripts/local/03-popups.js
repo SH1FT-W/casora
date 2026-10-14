@@ -1220,7 +1220,8 @@
   };
   /* Weich, breit: Wochenleiste – sieben Tage nebeneinander (heute hervorgehoben, freie Tage
      als Strich). Schmal (Handy) dieselbe Liste wie sonst, sieben Kacheln wären dort zu eng. */
-  var WEEK_CSS = '<style>.hrk-w{display:none;}'
+  // #week (Feld der Karte) schnitt den Schatten der „Heute“-Kachel hart ab (popup-raender, 14.10.2026).
+  var WEEK_CSS = '<style>#week{overflow:visible !important;}.hrk-w{display:none;}'
     + '@media (min-width: 761px) { .hrk-w{display:block;} .hrk-l{display:none;} }'
     + '.hrk{display:grid;grid-template-columns:repeat(7, minmax(0, 1fr));gap:8px;text-align:left;}'
     + '.hrk-d{min-height:104px;box-sizing:border-box;padding:12px 10px 12px 12px;border-radius:20px;display:flex;flex-direction:column;'
