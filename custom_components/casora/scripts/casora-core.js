@@ -9174,6 +9174,14 @@ window.casoraMenuGlass = {
             try { done = hooks[hi](mid, t); } catch (e) { done = false; }
             if (done) { ev.preventDefault(); ev.stopPropagation(); return; }
           }
+          // „Weitere Einstellungen“ zeigt auf das Gerät des offenen Popups: Geräteseite (casoraRoute), nicht dasselbe
+          // Popup über die Kachel noch einmal – bei Lampen und Rollos tat der Tipp sonst sichtbar nichts (14.10.2026).
+          var rowLbl = String(t.textContent || '').replace(/\s+/g, ' ').trim();
+          if (/^(Weitere Einstellungen|More settings)$/i.test(rowLbl) && typeof window.casoraRoute === 'function') {
+            var setOk = false;
+            try { setOk = window.casoraRoute(mid, { el: t }); } catch (e) { setOk = false; }
+            if (setOk) { window._casoraSuppressDismiss = Date.now() + 600; ev.preventDefault(); ev.stopPropagation(); return; }
+          }
           if (/^(light|cover)\./.test(mid) && window._casoraNotifyOpenViaCard) {
             window._casoraSuppressDismiss = Date.now() + 600;
             // 1.5: ‹ zurück ins Popup, aus dem die Lampe geöffnet wurde.

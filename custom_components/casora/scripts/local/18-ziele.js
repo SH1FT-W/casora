@@ -259,7 +259,8 @@
       try { if (hooks[i](id, o && o.el)) return true; } catch (e) { /* weiter */ }
     }
     var el = o && o.el;
-    var label = el && el.querySelector ? (el.querySelector('.hui-inner b, .hui-inner div') || el).textContent : '';
+    // Ganzer Zeilentext: das erste div der Zeile ist oft die (leere) Symbol-Fläche.
+    var label = el ? String(el.textContent || '').replace(/\s+/g, ' ') : '';
     if (el && SETTINGS_ROW.test(String(label || '').trim())) return Z.openDevice(id);
     var dom = id.split('.')[0], e = reg(h, id);
     // Bild im offenen Kamera-Popup angetippt → Vollbild; sonst (Halten auf der Kachel) das Kamera-Popup.

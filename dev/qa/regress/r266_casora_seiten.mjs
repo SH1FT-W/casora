@@ -85,10 +85,10 @@ if (cam) {
   await close();
 }
 
-// 3c. „Weitere Einstellungen“ im Popup eines Geräts (Luftreiniger, Medien) → seine Geräteseite (14.10.: tat nichts)
-for (const [tpl, dom] of [['casora_air_purifier', 'fan.'], ['casora_media', 'media_player.']]) {
+// 3c. „Weitere Einstellungen“ im Popup eines Geräts (Luftreiniger, Medien, Lampe, Rollo) → seine Geräteseite (14.10.: tat nichts)
+for (const [tpl, dom] of [['casora_air_purifier', 'fan.'], ['casora_media', 'media_player.'], ['casora_light', 'light.'], ['casora_cover', 'cover.']]) {
   const eid = await page.evaluate((dom) => { const h = document.querySelector('home-assistant').hass;
-    return Object.keys(h.states).find((x) => x.startsWith(dom) && h.entities[x] && h.entities[x].device_id); }, dom);
+    return Object.keys(h.states).find((x) => x.startsWith(dom) && h.entities[x] && h.entities[x].device_id && !Array.isArray((h.states[x].attributes || {}).entity_id)); }, dom);
   if (!eid) continue;
   await page.evaluate(async ([tpl, eid]) => {
     const ha = document.querySelector('home-assistant'); const h = await window.loadCardHelpers();
