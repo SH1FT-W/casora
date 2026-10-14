@@ -82,6 +82,8 @@ await inPane("a.querySelector('.comrow.card button.comzoom').click()");
 await wait(1200);
 let v = await lb();
 await check('Vorschau groß: Kachel aktiv, Umschalter Kachel/Popup', v && /community\/casora_lawn_mower\.webp$/.test(v.src) && v.segs.join() === 'Kachel*,Popup', v);
+const xm = await inPane("const x = a.querySelector('.comlb .comx'), b = x.getBoundingClientRect(), i = x.querySelector('ha-icon').getBoundingClientRect(); return [Math.round(i.x + i.width / 2 - b.x - b.width / 2), Math.round(i.y + i.height / 2 - b.y - b.height / 2)];");
+await check('Schließen-× mittig im Kreis', xm && Math.abs(xm[0]) <= 1 && Math.abs(xm[1]) <= 1, xm);
 await inPane("[...a.querySelectorAll('.comlb .comseg button')].find((b) => b.textContent === 'Popup').click()");
 await wait(500);
 v = await lb();

@@ -193,7 +193,8 @@
     + ".comlb .comfig{display:flex;flex-direction:column;align-items:stretch;gap:12px;max-width:100%}"
     + ".comlb .combar{position:relative;display:flex;justify-content:center;align-items:center;min-height:44px}"
     + ".comlb .comfig img{max-width:100%;align-self:center}"
-    + ".comlb .comx{position:absolute;top:2px;right:0;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.2);color:#fff;cursor:pointer;display:grid;place-items:center}"
+    + ".comlb .comx{position:absolute;top:2px;right:0;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.2);color:#fff;cursor:pointer;display:grid;place-items:center;padding:0;margin:0;box-sizing:border-box}"
+    + ".comlb .comx ha-icon{--mdc-icon-size:22px;width:22px;height:22px;display:flex;margin:0}"
     + ".compill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}"
     + ".comnote{font-size:13px;opacity:.75;margin:8px 2px 0;line-height:1.4}";
   const css = (box) => { if (!box.querySelector("style.comcss")) { const s = el("style", "comcss"); s.textContent = CSS; box.appendChild(s); } };
