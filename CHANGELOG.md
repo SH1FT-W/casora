@@ -4,6 +4,18 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.4.2 – 13.10.2026
+
+### Fixed
+- **Tapping the icon:** A tile's icon now follows one rule. If there is something to switch, it switches: light on/off, blind open/close, lock lock/unlock, vacuum clean/return, plug, fan. Otherwise it opens the same Casora popup as the tile. Before, camera, energy, updates, weather warning, motion, person, plant, contacts and scenes opened Home Assistant's dialog from the icon, and blind groups with a popup no longer moved.
+- **Media:** The icon is play/pause. If the device is off, it turns it on. If the device can do neither, it opens the popup.
+- **Person popup:** "Last" is now "History" and shows the places of the last three days as a timeline like the lock popup: time, a dot in the colour of the place, until when and for how long. "Full history" opens Home Assistant's history.
+- **Pulse tile:** The status line separates batteries that are due soon from devices Pulse only watches ("1 battery due soon · 2 watch").
+- **Greeting:** "Good evening, Alex" sits in its place as soon as the home page loads. Before, the greeting appeared on the right and then jumped to the left.
+- **Playback (wave):** The player under the media wave is slimmer: no volume slider and no times, the progress bar stays. Volume is still in the media popup.
+- **Bell:** When the notification window opens upwards, its bottom edge stays put when you remove a notification instead of jumping.
+- **Studio on the phone:** A picker opened from a dialog sits above the dialog instead of behind it.
+
 ## 1.4.1 – 13.10.2026
 
 ### Fixed

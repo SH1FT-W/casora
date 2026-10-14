@@ -27,10 +27,9 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Glocke gleich breit", n0: "Das Mitteilungsfenster hat immer dieselbe Breite, die Knöpfe unten genug Platz.",
-      n1t: "Update-Logos", n1: "In der Form der übrigen Symbole – ohne hellen Rand im Dunkeln.",
-      n2t: "Personen-Popup", n2: "„seit …“ stimmt auch nach einem Neustart von Home Assistant.",
-      n3t: "Glocke aufräumen", n3: "Meldungen wegwischen oder alle auf einmal entfernen – und Popups öffnen schneller."
+      n0t: "Icon antippen", n0: "Schaltet, wo es etwas zu schalten gibt (Licht, Jalousie, Schloss, Sauger, Play/Pause), sonst öffnet es das Popup.",
+      n1t: "Personen-Verlauf", n1: "Die Orte der letzten drei Tage als Zeitleiste, wie beim Schloss.",
+      n2t: "Pulse", n2: "Die Kachel unterscheidet „bald fällig“ und „beobachten“.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +39,9 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Bell with a fixed width", n0: "The notification window always has the same width, with room for the buttons.",
-      n1t: "Update logos", n1: "In the shape of the other icons – no light edge in dark mode.",
-      n2t: "Person popup", n2: "\"since …\" is right after a Home Assistant restart too.",
-      n3t: "Clean up the bell", n3: "Swipe notifications away or remove them all at once – and popups open faster."
+      n0t: "Tap the icon", n0: "Switches where there is something to switch (light, blind, lock, vacuum, play/pause), otherwise it opens the popup.",
+      n1t: "Person history", n1: "The places of the last three days as a timeline, like the lock.",
+      n2t: "Pulse", n2: "The tile tells \"due soon\" and \"watch\" apart.",
     },
   };
 
@@ -56,9 +54,9 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:bell-outline", "n0t", "n0"],
-    ["mdi:package-variant", "n1t", "n1"],
-    ["mdi:account-circle-outline", "n2t", "n2"],
+    ["mdi:gesture-tap", "n0t", "n0"],
+    ["mdi:map-marker-path", "n1t", "n1"],
+    ["mdi:heart-pulse", "n2t", "n2"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

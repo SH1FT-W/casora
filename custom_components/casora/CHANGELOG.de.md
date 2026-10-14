@@ -4,6 +4,18 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.4.2 – 13.10.2026
+
+### Behoben
+- **Icon antippen:** Das Symbol einer Kachel folgt jetzt einer Regel. Gibt es etwas zu schalten, schaltet es: Licht an/aus, Jalousie auf/zu, Schloss auf/zu, Saugroboter saugen/zurück, Steckdose, Lüfter. Sonst öffnet es dasselbe Casora-Popup wie die Kachel. Vorher öffneten Kamera, Energie, Updates, Wetterwarnung, Bewegung, Person, Pflanze, Kontakte und Szenen über das Symbol den Dialog von Home Assistant, und Jalousie-Gruppen mit Popup fuhren nicht mehr.
+- **Medien:** Das Symbol ist Play/Pause. Ist das Gerät aus, schaltet es ein. Kann das Gerät beides nicht, öffnet es das Popup.
+- **Personen-Popup:** „Zuletzt“ heißt jetzt „Verlauf“ und zeigt die Orte der letzten drei Tage als Zeitleiste wie im Schloss-Popup: Uhrzeit, Punkt in der Farbe des Orts, bis wann und wie lange. „Ganzer Verlauf“ öffnet den Verlauf von Home Assistant.
+- **Pulse-Kachel:** Die Statuszeile trennt Batterien, die bald fällig sind, von Geräten, die Pulse nur beobachtet („1 Batterie bald fällig · 2 beobachten“).
+- **Begrüßung:** „Guten Abend, Alex“ steht beim Laden der Startseite sofort an seinem Platz. Vorher tauchte die Begrüßung rechts auf und sprang dann nach links.
+- **Wiedergabe (Welle):** Der Player unter der Medien-Welle ist schlanker: ohne Lautstärke-Regler und ohne Zeitangaben, der Fortschrittsbalken bleibt. Lautstärke gibt es weiter im Medien-Popup.
+- **Glocke:** Ist das Mitteilungsfenster nach oben aufgeklappt, bleibt seine Unterkante beim Entfernen einer Meldung stehen, statt zu springen.
+- **Studio am Handy:** Eine Auswahl, die aus einem Dialog heraus geöffnet wird, liegt über dem Dialog statt dahinter.
+
 ## 1.4.1 – 13.10.2026
 
 ### Behoben
