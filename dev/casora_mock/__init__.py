@@ -108,6 +108,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Ein erfundener Gardena-artiger Mähroboter (Community-Karte), siehe maeher.py.
     from .maeher import extra as maeher_extra
     _merge(fixture, maeher_extra(dt_util.utcnow()), "Testmäher")
+    # Ein erfundener Luftbefeuchter mit Modi, Wassertank und Feuchtesensor, siehe befeuchter.py.
+    from .befeuchter import extra as befeuchter_extra
+    _merge(fixture, befeuchter_extra(dt_util.utcnow()), "Testbefeuchter")
     _vacuum_map(fixture)
     # Nur auf Wunsch: HACS-artige Update-Entität für Casora (hacs_casora.py).
     hacs_cfg = await hass.async_add_executor_job(_load_optional, "hacs_casora.json")

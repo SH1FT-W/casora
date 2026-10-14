@@ -1751,7 +1751,13 @@
   "Insgesamt entriegelt": "Unlocked in total",
   "Insgesamt eingesteckt": "Plugged in in total",
   "Insgesamt gelaufen": "Running in total",
-  "Insgesamt an": "On in total"
+  "Insgesamt an": "On in total",
+  "Befeuchtet": "Humidifying",
+  "Entfeuchtet": "Drying",
+  "Betrieb": "Power",
+  "Zielfeuchte": "Target humidity",
+  "Wassertank": "Water tank",
+  "Komfort": "Comfort"
  },
  "patterns": [
   [
