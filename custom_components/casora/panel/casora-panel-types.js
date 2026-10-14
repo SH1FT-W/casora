@@ -269,6 +269,14 @@ window.CASORA_TILE_TYPES = [
     color: "var(--casora-color-green, #30D158)", entityLabel: "Pulse problems", entityPlaceholder: "Automatic",
     onlyIf: (hass) => !!(hass && hass.entities && Object.values(hass.entities).some((e) => e && e.platform === "pulse")),
     fields: [ICON, { ...TITLE, placeholder: "Pulse" }] },
+  // Mähroboter (Community-Karte 1.5, aus einem Kartenwunsch): jede lawn_mower-Entität; Akku, Verbindung und
+  // „Parken bis auf Weiteres“ findet scripts/local/16-maeher.js am selben Gerät. Gardena liefert dazu Tätigkeit
+  // und Fehlercode als Attribute.
+  { id: "casora_lawn_mower", label: "Robot lawn mower", template: "casora_lawn_mower", domains: ["lawn_mower"],
+    icon: "lawn-mower", color: "var(--casora-color-green, #30D158)", entityLabel: "Lawn mower",
+    community: { desc: "Status, battery and connection. Mow, pause, back to the station and park. More details for Gardena.",
+      needs: "lawn_mower" },
+    fields: [ICON, TITLE_NAME] },
   // Aquarien-Übersicht (Hemma 1 und ältere Fassungen „…_aquarium“): bis zu drei Becken in einer Kachel. Nur fürs
   // Bearbeiten umgezogener Kacheln – neue Becken bekommen die Aquarium-Kachel (casora_aquarium_tank).
   { id: "casora_aquariums", label: "Aquariums", template: "casora_aquarium", hidden: true, domains: ["sensor"],
@@ -301,7 +309,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "3D_Printer", "dryer", "dishwasher", "fish", "camera", "attention2", "sun", "trash", "car", "car_side",
   "car_side_w2", "ebike", "chef-hat", "shield_check", "shield_lock", "shield_moon", "shield_off",
   "shield_alarm", "shield_bypass", "shield_vacation", "calendar", "calendar-day", "window-open",
-  "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse",
+  "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
 // Vorschau: bedingte Karten (type: conditional) so zeigen wie das Dashboard –

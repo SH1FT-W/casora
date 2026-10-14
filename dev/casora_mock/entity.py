@@ -134,6 +134,7 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
     from homeassistant.components.switch import SwitchEntity
     from homeassistant.components.todo import TodoItem, TodoItemStatus, TodoListEntity, TodoListEntityFeature
     from homeassistant.components.vacuum import StateVacuumEntity
+    from homeassistant.components.lawn_mower import LawnMowerEntity
     from homeassistant.components.weather import Forecast, WeatherEntity, WeatherEntityFeature
 
     class MLight(MockEntity, ToggleMixin, LightEntity):
@@ -318,6 +319,18 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
 
         async def async_send_command(self, command, params=None, **kw) -> None:
             return None
+
+    # Mähroboter wie Gardena: Zustand + Tätigkeit (activity) als Attribut, die Mäher-Popup und -Kachel lesen.
+    class MLawnMower(MockEntity, LawnMowerEntity):
+        async def async_start_mowing(self) -> None:
+            self.put("mowing", activity="OK_CUTTING")
+
+        async def async_pause(self) -> None:
+            self.put("paused", activity="PAUSED")
+
+        # Ohne Fahrzeit: gleich wieder in der Station und nach Zeitplan geparkt (Grundzustand der Tests).
+        async def async_dock(self) -> None:
+            self.put("docked", activity="PARKED_TIMER")
 
     class MButton(MockEntity, ButtonEntity):
         async def async_press(self) -> None:
@@ -556,17 +569,19 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
     from homeassistant.components.siren import SirenEntityFeature
     from homeassistant.components.update import UpdateEntityFeature
     from homeassistant.components.vacuum import VacuumEntityFeature
+    from homeassistant.components.lawn_mower import LawnMowerEntityFeature
 
     for cls, feat in ((MLight, LightEntityFeature), (MCover, CoverEntityFeature), (MClimate, ClimateEntityFeature),
                       (MMedia, MediaPlayerEntityFeature), (MVacuum, VacuumEntityFeature), (MAlarm, AlarmControlPanelEntityFeature),
                       (MFan, FanEntityFeature), (MLock, LockEntityFeature), (MSiren, SirenEntityFeature),
-                      (MRemote, RemoteEntityFeature), (MCamera, CameraEntityFeature), (MUpdate, UpdateEntityFeature)):
+                      (MRemote, RemoteEntityFeature), (MCamera, CameraEntityFeature), (MUpdate, UpdateEntityFeature),
+                      (MLawnMower, LawnMowerEntityFeature)):
         cls._feature_cls = feat
 
     return {
         "light": MLight, "switch": MSwitch, "siren": MSiren, "remote": MRemote, "fan": MFan,
         "cover": MCover, "lock": MLock, "climate": MClimate, "media_player": MMedia,
-        "vacuum": MVacuum, "button": MButton, "select": MSelect, "number": MNumber,
+        "vacuum": MVacuum, "lawn_mower": MLawnMower, "button": MButton, "select": MSelect, "number": MNumber,
         "alarm_control_panel": MAlarm, "scene": MScene, "camera": MCamera, "todo": MTodo, "image": MImage,
         "calendar": MCalendar, "weather": MWeather,
         "update": MUpdate,
@@ -578,7 +593,7 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
 
 PLATFORMS = [
     "light", "switch", "siren", "remote", "fan", "cover", "lock", "climate", "media_player",
-    "vacuum", "button", "select", "number", "alarm_control_panel", "scene", "camera", "todo", "image",
+    "vacuum", "lawn_mower", "button", "select", "number", "alarm_control_panel", "scene", "camera", "todo", "image",
     "calendar", "weather", "sensor", "binary_sensor", "update", "event", "time", "date",
 ]
 

@@ -75,7 +75,7 @@
   const BY_DOMAIN = { light: "light", climate: "thermostat", media_player: "media", fan: "fan", cover: "cover", lock: "lock",
     vacuum: "vacuum", humidifier: "humidifier", camera: "casora_camera", alarm_control_panel: "casora_alarm", switch: "casora_switch",
     input_boolean: "entity_actions", script: "entity_actions", scene: "entity_actions", button: "entity_actions",
-    input_button: "entity_actions", remote: "entity_actions" };
+    input_button: "entity_actions", remote: "entity_actions", lawn_mower: "casora_lawn_mower" };
   const ADD_DOMAINS = Object.keys(BY_DOMAIN);
   // Alltagswörter je Kachelart – „Licht“ findet auch „Stehlampe“.
   const WORDS = { light: "licht lampe leuchte light lamp", cover: "jalousie rollladen rollo markise blind", thermostat: "heizung thermostat klima heating",
@@ -85,6 +85,9 @@
     if (suggested && typeIds.has(suggested)) return suggested;
     const t = BY_DOMAIN[String(entity || "").split(".")[0]];
     if (t && typeIds.has(t)) return t;
+    // Community-Karte (Mähroboter …), die nicht hinzugefügt ist: Gerät hier nicht anbieten.
+    const ty = t && ((W.__casoraPanelInternals || {}).TILE_TYPES || []).find((x) => x.id === t);
+    if (ty && ty.community) return null;
     return typeIds.has("entity_actions") ? "entity_actions" : null;
   }
   const foldTx = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ß/g, "ss");

@@ -2374,7 +2374,9 @@
     "They stay in the dashboard. Only Add tile gets shorter.": "Sie bleiben im Dashboard. Nur „Kachel hinzufügen“ wird kürzer.",
     "Remove the tiles too": "Kacheln auch entfernen",
     "Save afterwards to keep the change.": "Danach speichern, damit es bleibt.",
-    "Removed – save to keep it.": "Entfernt – speichern, damit es bleibt."
+    "Removed – save to keep it.": "Entfernt – speichern, damit es bleibt.",
+    "Robot lawn mower": "Mähroboter",
+    "Status, battery and connection. Mow, pause, back to the station and park. More details for Gardena.": "Status, Akku und Verbindung. Mähen, Pause, zur Station und parken. Mehr Angaben bei Gardena."
   },
   "patterns": [
     [
