@@ -74,6 +74,7 @@
     if (labels.includes("gebaut")) state = "built";
     else if (labels.includes("abgelehnt")) state = "declined";
     else if (labels.includes("rueckfrage")) state = "question";
+    else if (labels.includes("in-arbeit")) state = "progress";
     else if (it.state === "closed") state = "closed";
     let note = "";
     if ((state === "question" || state === "declined") && it.comments) {
@@ -441,7 +442,7 @@
             if (!mine.length) return;
             host.appendChild(el("div", "comlbl", tr("Your requests")));
             const L = { sent: ["Sent?", "rgba(127,127,127,.2)"], closed: ["Closed", "rgba(127,127,127,.2)"], open: ["Open", "rgba(232,176,74,.22)"],
-              question: ["Question", "rgba(91,143,209,.25)"], built: ["Built", "rgba(107,178,122,.25)"], declined: ["Declined", "rgba(217,96,79,.25)"] };
+              question: ["Question", "rgba(232,176,74,.30)"], progress: ["In progress", "rgba(91,143,209,.25)"], built: ["Built", "rgba(107,178,122,.25)"], declined: ["Declined", "rgba(217,96,79,.25)"] };
             mine.slice().reverse().slice(0, 10).forEach((m, k) => {
               const r = el("div", "comrow");
               const t = el("div", "comtx");

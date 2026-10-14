@@ -2387,7 +2387,8 @@
     "Open on GitHub": "Auf GitHub öffnen",
     "Removed from the list.": "Aus der Liste entfernt.",
     "“{x}” removed from the list.": "„{x}“ aus der Liste entfernt.",
-    "“{x}” is no longer in Add tile. Its tiles are removed – save to keep it.": "„{x}“ steht nicht mehr in „Kachel hinzufügen“. Die Kacheln sind entfernt – speichern, damit es bleibt."
+    "“{x}” is no longer in Add tile. Its tiles are removed – save to keep it.": "„{x}“ steht nicht mehr in „Kachel hinzufügen“. Die Kacheln sind entfernt – speichern, damit es bleibt.",
+    "In progress": "In Arbeit"
   },
   "patterns": [
     [

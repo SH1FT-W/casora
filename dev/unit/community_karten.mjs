@@ -63,4 +63,17 @@ for (const id of comIds) {
   const file = prev ? null : new URL('../../custom_components/casora/assets/community/' + id + '.webp', import.meta.url);
   assert.ok(prev || fs.existsSync(file), 'Vorschaubild fehlt: assets/community/' + id + '.webp');
 }
+
+// Stand eines Wunschs aus den Labels (Reihenfolge: gebaut > abgelehnt > rueckfrage > in-arbeit > geschlossen > offen).
+const issue = (labels, state = 'open') => ({ total_count: 1, items: [{ number: 5, state, html_url: 'u', comments: 0, labels: labels.map((name) => ({ name })) }] });
+let answer = null;
+globalThis.fetch = async () => ({ ok: true, json: async () => answer });
+for (const [labels, state, want] of [[['kartenwunsch'], 'open', 'open'], [['kartenwunsch', 'in-arbeit'], 'open', 'progress'],
+  [['in-arbeit', 'rueckfrage'], 'open', 'question'], [['in-arbeit', 'gebaut'], 'closed', 'built'], [['abgelehnt'], 'closed', 'declined'],
+  [[], 'closed', 'closed']]) {
+  answer = issue(labels, state);
+  assert.equal((await C.status('x')).state, want, labels.join(',') + ' → ' + want);
+}
+answer = { total_count: 0, items: [] };
+assert.equal((await C.status('x')).state, 'sent');
 console.log('community_karten: ok');
