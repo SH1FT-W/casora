@@ -1,5 +1,5 @@
 // ── Person: Popup statt HAs Kartendialog (Casora 1.4) ─────────────────────────
-// Entwurf „B · Karte zuerst“ (12.10.2026): oben HAs eigene Karte (Zonen, Weg der letzten 24 Std.),
+// Entwurf „B · Karte zuerst“ (12.10.2026): oben HAs eigene Karte (Person und Zonen, ohne Weg),
 // links das Handy (Companion-App: Akku, Verbindung, Aktionen), rechts „Nach Hause“ und „Zuletzt“.
 // Daten: person.* (Zustand, latitude/longitude, gps_accuracy, source, device_trackers, entity_picture),
 // zone.*, Sensoren des Handys über das Gerät des Trackers (translation_key bzw. Endung der Kennung),
@@ -225,10 +225,10 @@
         + JSON.stringify(pid) + ', states, hass, this) : "";';
     };
     var zones = Object.keys(states).filter(function (k) { return k.indexOf('zone.') === 0; });
-    // HAs Karte: Person mit Weg der letzten 24 Std., alle Zonen als Kreise. Gleiche Kartenkacheln wie
+    // HAs Karte: Person und alle Zonen als Kreise, ohne Weg (14.10.: blaue Wegelinien unerwünscht). Gleiche Kartenkacheln wie
     // HAs Kartendialog – Casora bindet keinen weiteren Kartendienst ein.
     var map = {
-      type: 'map', hours_to_show: 24, theme_mode: 'auto', aspect_ratio: '2.4',
+      type: 'map', hours_to_show: 0, theme_mode: 'auto', aspect_ratio: '2.4',
       entities: [{ entity: pid }].concat(zones.map(function (z) { return { entity: z }; })),
     };
     var f = { hero: { card: K.secCard(watch, call('hero'), states) }, map: { card: map } };
