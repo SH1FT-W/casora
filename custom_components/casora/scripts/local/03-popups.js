@@ -1600,7 +1600,8 @@
       var u = el.getAttribute('data-casora-link');
       if (/^https?:\/\//.test(u || '')) { window.open(u, '_blank', 'noopener'); return; }
       // Seite in HA (Pulse-Panel „/pulse“): Popup schließen, dann wie HAs eigene Navigation.
-      if (/^\/[a-z0-9_-]+(\/[\w-]*)*$/i.test(u || '')) {
+      // Mit einfachem Abfrageteil (HAs Verlauf „/history?entity_id=…“, Mähroboter 1.5).
+      if (/^\/[a-z0-9_-]+(\/[\w-]*)*(\?[\w.%:=&+-]*)?$/i.test(u || '')) {
         try { window.casoraPopup && window.casoraPopup.close(); } catch (e) { /* schon zu */ }
         history.pushState(null, '', u);
         window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));

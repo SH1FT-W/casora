@@ -40,6 +40,14 @@ def extra(now) -> dict:
     return {
         "devices": [{"key": DEV, "name": "Testmäher", "manufacturer": "Gardena", "model": "smart Mower", "area": None}],
         "entities": ents,
+        # Mähfahrten der letzten Tage (Stunden zurück, Zustand) – Verlauf im Popup. Gestern ein Fehler.
+        "_history": {f"lawn_mower.{BASE}_lawn_mower": {"steps": [
+            [100, "docked"], [98, "mowing"], [96.2, "returning"], [96, "docked"],
+            [74, "mowing"], [73, "paused"], [72.6, "mowing"], [71.5, "docked"],
+            [50, "mowing"], [48.8, "docked"],
+            [28, "mowing"], [27.2, "error"], [26.5, "docked"],
+            [6, "mowing"], [4.5, "returning"], [4.3, "docked"],
+        ]}},
         # „Parken bis auf Weiteres“ schickt ihn in die Station (nur der Zustand; die Tätigkeit bleibt Testsache).
         "_buttons": {f"button.{BASE}_park_until_further_notice": {f"lawn_mower.{BASE}_lawn_mower": "docked"}},
     }

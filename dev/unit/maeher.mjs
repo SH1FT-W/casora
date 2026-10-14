@@ -102,4 +102,32 @@ const info = M.sec('info', c, states, hass);
 assert.ok(/Akku=100 %/.test(info) && /Verbindung=90 %/.test(info) && /Betriebsstunden=1.?234 h/.test(info), info);
 set('error', { state: 'ERROR', last_error_code: 'LIFTED' });
 assert.ok(/^<group Status>Angehoben=/.test(M.sec('info', c, states, hass)), 'Fehler steht oben im Status');
+
+// Verlauf: Mähfahrten aus Zustandswechseln (Pause/Rückfahrt gehören zur Fahrt, Fehler eigener Eintrag).
+const H = 3600000, t0 = Date.parse('2026-10-13T08:00:00');
+const ses = M.sessions([
+  { state: 'docked', t: t0 },
+  { state: 'mowing', t: t0 + 1 * H },
+  { state: 'paused', t: t0 + 2 * H },
+  { state: 'mowing', t: t0 + 2.5 * H },
+  { state: 'returning', t: t0 + 3 * H },
+  { state: 'docked', t: t0 + 3.2 * H },
+  { state: 'mowing', t: t0 + 5 * H },
+  { state: 'error', t: t0 + 5.5 * H },
+  { state: 'docked', t: t0 + 6 * H },
+  { state: 'mowing', t: t0 + 8 * H },
+], t0 + 9 * H);
+assert.deepEqual(ses.map((x) => x.kind), ['mow', 'error', 'mow', 'mow'], JSON.stringify(ses));
+assert.equal(ses[0].end, null, 'laufende Fahrt offen');
+assert.equal(ses[0].mow, 1 * H);
+assert.equal(ses[3].mow, 1.5 * H, 'Pause zählt nicht als Mähzeit');
+assert.equal(ses[3].end, t0 + 3.2 * H, 'Fahrt endet in der Station');
+assert.equal(ses[2].end, t0 + 5.5 * H, 'Fehler beendet die Fahrt');
+assert.equal(ses[1].end, t0 + 6 * H);
+assert.equal(M.total(ses), '3 Std. · 3 Fahrten');
+assert.equal(M.total([]), null);
+assert.equal(M.dur(25 * 60000), '25 Min.'); assert.equal(M.dur(90 * 60000), '1 Std. 30 Min.');
+window._casoraUI.label = (t) => '<div>' + t + '</div>';
+const hh = M.sec('hist', c, states, Object.assign({}, hass, { callApi: () => new Promise(() => {}) }), null);
+assert.ok(/Wird geladen/.test(hh) && /data-casora-link="\/history\?entity_id=lawn_mower\.gartenzwerg_lawn_mower&amp;start_date=/.test(hh), hh);
 console.log('maeher: ok');

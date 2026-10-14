@@ -8,7 +8,8 @@
 //   window._casoraMower.status(c, states)              → {key, label, level, run, dead, error, battery, …}
 //   window._casoraMower.tileState / .active / .color   – Kachel casora_lawn_mower
 //   window._casoraMower.popup(entity, states, hass)    – Popup casora_popup_lawn_mower
-//   window._casoraMower.sec(part, C, states, hass)     – Live-Bereiche des Popups
+//   window._casoraMower.sec(part, C, states, hass, el) – Live-Bereiche des Popups (hero, info, hist)
+//   window._casoraMower.sessions(rows, now)            – Mähfahrten aus dem Verlauf (7 Tage)
 (function () {
   if (window._casoraMower) return;
   var M = window._casoraMower = {};
@@ -148,6 +149,129 @@
     return s.level ? { hue: M.color(s), off: false } : { hue: COLOR.run, off: true };
   });
 
+  // ── Verlauf (7 Tage) ──────────────────────────────────────────────────────
+  // Mähfahrten aus HAs Verlauf: eine Fahrt beginnt mit „mowing“ und endet, sobald er wieder in der Station ist
+  // (Pause und Rückfahrt gehören dazu). Fehler sind eigene Einträge. Einmal je Zustandswechsel abfragen, danach
+  // die offenen Live-Bereiche neu zeichnen (wie das Personen-Popup, 15-person.js).
+  var DAYS = 7;
+  var T = function (x) { return window.casoraT ? window.casoraT(x) : x; };
+  var two = function (n) { return (n < 10 ? '0' : '') + n; };
+  var hm = function (ms) { var d = new Date(ms); return two(d.getHours()) + ':' + two(d.getMinutes()); };
+  var dayStart = function (ms) { var d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
+  M.dur = function (ms) {
+    var m = Math.max(1, Math.round(ms / 60000));
+    if (m < 60) return m + ' Min.';
+    var h = Math.floor(m / 60), r = m % 60;
+    return h + ' Std.' + (r ? ' ' + r + ' Min.' : '');
+  };
+  // rows: [{state, t}] aufsteigend → [{kind: 'mow'|'error', start, end, mow (ms gemäht), error}] neueste zuerst.
+  M.sessions = function (rows, now) {
+    var out = [], cur = null, err = null;
+    var close = function (t) { if (cur) { cur.end = t; out.push(cur); cur = null; } };
+    rows.forEach(function (x, i) {
+      var s = x.state, t = x.t, next = rows[i + 1], tEnd = next ? next.t : null;
+      if (s !== 'error' && err) { err.end = t; out.push(err); err = null; }
+      if (s === 'mowing') {
+        if (!cur) cur = { kind: 'mow', start: t, end: null, mow: 0 };
+        cur.mow += (tEnd || now) - t;
+      } else if (s === 'paused' || s === 'returning') {
+        /* gehört zur laufenden Fahrt */
+      } else if (s === 'error') {
+        close(t);
+        if (!err) err = { kind: 'error', start: t, end: null };
+      } else close(t);
+    });
+    if (err) out.push(err);
+    if (cur) out.push(cur);
+    return out.sort(function (a, b) { return b.start - a.start; });
+  };
+  var hist = {};
+  M.history = function (hass, id, el) {
+    var st = hass && hass.states && hass.states[id];
+    if (!st) return null;
+    var key = id + '|' + st.last_changed;
+    var hit = hist[id];
+    if (hit && hit.key === key) { if (el && hit.busy) hit.wait.push(el); return hit.list; }
+    hist[id] = { key: key, list: hit ? hit.list : null, busy: true, wait: el ? [el] : [] };
+    if (!hass.callApi) return hist[id].list;
+    var now = Date.now(), start = dayStart(now) - (DAYS - 1) * 86400000;
+    hass.callApi('GET', 'history/period/' + new Date(start).toISOString() + '?filter_entity_id=' + id
+      + '&end_time=' + encodeURIComponent(new Date(now).toISOString()) + '&minimal_response&no_attributes')
+      .then(function (r) {
+        var rows = [];
+        ((r && r[0]) || []).forEach(function (x) {
+          var t = Date.parse(x.last_changed);
+          if (bad(x.state) || !isFinite(t)) return;
+          if (rows.length && rows[rows.length - 1].state === x.state) return;
+          rows.push({ state: x.state, t: Math.max(t, start) });
+        });
+        var h = hist[id];
+        if (!h || h.key !== key) return;
+        h.list = M.sessions(rows, Date.now());
+        h.busy = false;
+        h.wait.forEach(function (w) {
+          try {
+            if (typeof window.casoraKick === 'function') window.casoraKick(w);
+            else if (typeof w.requestUpdate === 'function') w.requestUpdate('_config', undefined);
+          } catch (e) { /* Popup schon zu */ }
+        });
+        h.wait = [];
+      }).catch(function () { if (hist[id] && hist[id].key === key) { hist[id].busy = false; hist[id].list = hist[id].list || []; } });
+    return hist[id].list;
+  };
+  // Summe der Woche für die Überschrift: „6 Std. 10 Min. in 5 Fahrten“.
+  M.total = function (list) {
+    var mow = (list || []).filter(function (x) { return x.kind === 'mow'; });
+    if (!mow.length) return null;
+    var ms = mow.reduce(function (a, x) { return a + x.mow; }, 0);
+    return M.dur(ms) + ' · ' + (mow.length === 1 ? '1 Fahrt' : mow.length + ' Fahrten');
+  };
+  // Zeitleiste wie im Personen-Popup: Uhrzeit | Punkt (grün gemäht, rot Fehler) mit Linie | Text.
+  var histHtml = function (UI, list, id, now) {
+    var font = 'var(--primary-font-family, system-ui)', ink = 'var(--casora-popup-tiles-text-primary, #3A322B)',
+      sub = 'var(--casora-soft-sub, rgba(58,50,43,.6))', row = 'var(--casora-soft-row-fill, rgba(140,115,90,0.07))',
+      ctl = 'var(--casora-soft-control-fill, rgba(140,115,90,0.10))', dim = 'var(--casora-soft-icon-off, rgba(140,115,90,0.18))';
+    var note = function (t) { return '<div style="padding:14px 4px;font-size:14px;font-weight:500;color:' + sub + ';">' + esc(T(t)) + '</div>'; };
+    var sum = list ? M.total(list) : null;
+    var head = (UI.label ? UI.label('Verlauf') : '<div>Verlauf</div>').replace(/<\/div>$/, '<div style="font-size:12.5px;font-weight:600;color:' + sub + ';">'
+      + esc(T('7 Tage')) + (sum ? ' · ' + sum.split(' · ').map(function (x) { return '<span>' + esc(T(x)) + '</span>'; }).join(' · ') : '') + '</div></div>');
+    var body;
+    if (!list) body = note('Wird geladen …');
+    else if (!list.length) body = note('In den letzten 7 Tagen nicht gemäht');
+    else {
+      var items = list.slice(0, 8), today = dayStart(now);
+      body = items.map(function (s, i) {
+        var d = dayStart(s.start), prev = items[i - 1], first = d !== today && (!prev || dayStart(prev.start) !== d);
+        var dd = Math.round((today - d) / 86400000);
+        var day = first ? (dd === 1 ? T('Gestern') : new Date(s.start).toLocaleDateString(window.casoraLocale ? window.casoraLocale() : 'de-DE', { weekday: 'short' }).replace(/\.$/, '')) : '';
+        var open = s.end == null, last = i === items.length - 1, isErr = s.kind === 'error';
+        var title = isErr ? 'Fehler' : open ? 'Mäht gerade' : 'Gemäht';
+        var info = isErr
+          ? (open ? '<span>' + esc(T('besteht noch')) + '</span>' : '<span>' + esc(T('bis ' + hm(s.end))) + '</span>')
+          : '<span>' + esc(T(M.dur(s.mow))) + '</span>' + (open ? '' : ' · <span>' + esc(T('bis ' + hm(s.end))) + '</span>');
+        return '<div style="display:grid;grid-template-columns:minmax(46px,max-content) 22px minmax(0,1fr);align-items:start;column-gap:8px;position:relative;padding:9px 0;">'
+          + '<div style="font-size:13px;font-weight:600;color:' + sub + ';font-variant-numeric:tabular-nums;padding-top:2px;white-space:nowrap;">'
+          + (day ? '<div style="font-size:11.5px;font-weight:700;margin:-1px 0 1px;">' + esc(day) + '</div>' : '') + esc(hm(s.start)) + '</div>'
+          + '<div style="position:relative;height:100%;display:flex;justify-content:center;">'
+          + (last ? '' : '<div style="position:absolute;top:16px;bottom:-18px;width:2px;border-radius:2px;background:' + dim + ';"></div>')
+          + '<div style="position:relative;width:12px;height:12px;border-radius:50%;margin-top:4px;background:' + (isErr ? COLOR.bad : COLOR.run) + ';box-shadow:0 0 0 3px ' + row + ';"></div></div>'
+          + '<div style="min-width:0;"><div style="font-size:14.5px;font-weight:700;color:' + ink + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(T(title)) + '</div>'
+          + '<div style="font-size:12.5px;font-weight:500;color:' + sub + ';margin-top:1px;white-space:nowrap;">' + info + '</div></div></div>';
+      }).join('');
+    }
+    var link = '/history?entity_id=' + encodeURIComponent(id) + '&start_date=' + encodeURIComponent(new Date(dayStart(now) - (DAYS - 1) * 86400000).toISOString());
+    return '<div style="font-family:' + font + '">' + head
+      + '<div style="background:' + row + ';border-radius:var(--casora-popup-row-radius, 24px);padding:8px 16px 8px 12px;">' + body + '</div>'
+      + '<div role="button" data-casora-link="' + esc(link) + '" style="box-sizing:border-box;width:100%;text-align:center;margin-top:10px;height:46px;min-height:46px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:6px;'
+      + 'font-size:14px;font-weight:700;cursor:pointer;background:var(--casora-soft-mehr-fill, ' + ctl + ');color:var(--casora-soft-mehr-ink, ' + ink + ');">'
+      + '<span style="flex:none;margin:0;">' + esc(T('Ganzer Verlauf')) + '</span><ha-icon icon="mdi:chevron-right" style="--mdc-icon-size:18px;display:flex;flex:none;margin:0;"></ha-icon></div></div>';
+  };
+  var esc = function (t) {
+    return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  };
+
   // ── Popup ─────────────────────────────────────────────────────────────────
   M.popup = function (entity, states, hass) {
     var K = window._casoraSoftKit, UI = window._casoraUI;
@@ -158,10 +282,11 @@
     var c = M.find(hass, id);
     var watch = [c.mower, c.battery, c.online, c.hours, c.rf, c.park, c.error];
     var call = function (part) {
-      return 'return window._casoraMower ? window._casoraMower.sec(' + JSON.stringify(part) + ', ' + JSON.stringify(c) + ', states, hass) : "";';
+      return 'return window._casoraMower ? window._casoraMower.sec(' + JSON.stringify(part) + ', ' + JSON.stringify(c) + ', states, hass, this) : "";';
     };
-    var f = { hero: { card: K.secCard(watch, call('hero'), states) }, info: { card: K.secCard(watch, call('info'), states) } };
-    return K.layout({ fields: f, top: ['hero'], left: ['info'], right: [] });
+    var f = { hero: { card: K.secCard(watch, call('hero'), states) }, info: { card: K.secCard(watch, call('info'), states) },
+      hist: { card: K.secCard(watch, call('hist'), states) } };
+    return K.layout({ fields: f, top: ['hero'], left: ['info'], right: ['hist'], narrowOrder: ['info', 'hist'] });
   };
 
   // Tasten wie beim Saugroboter (Zur Station · Mähen/Pause · Parken): Weich als Pillen, sonst große runde Knöpfe.
@@ -204,7 +329,7 @@
       + '<div class="hm-cap">' + keys.map(function (k) { return '<span' + (k.lg ? ' class="lg"' : '') + '>' + esc(k.l) + '</span>'; }).join('') + '</div>';
   };
 
-  M.sec = function (part, c, states, hass) {
+  M.sec = function (part, c, states, hass, el) {
     var UI = window._casoraUI;
     if (!UI || !c) return '';
     var s = M.status(c, states);
@@ -226,6 +351,7 @@
         value: Math.round(s.hours).toLocaleString(window.casoraLocale ? window.casoraLocale() : undefined) + ' h' });
       return rows.length ? UI.group(rows, 'Status') : '';
     }
+    if (part === 'hist') return histHtml(UI, M.history(hass, c.mower, el), c.mower, Date.now());
     return '';
   };
 })();

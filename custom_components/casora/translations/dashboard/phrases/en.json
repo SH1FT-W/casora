@@ -1694,7 +1694,12 @@
   "Mähen": "Mow",
   "Parken": "Park",
   "Pause": "Pause",
-  "Betriebsstunden": "Operating hours"
+  "Betriebsstunden": "Operating hours",
+  "In den letzten 7 Tagen nicht gemäht": "Not mowed in the last 7 days",
+  "Mäht gerade": "Mowing now",
+  "Gemäht": "Mowed",
+  "besteht noch": "still active",
+  "1 Fahrt": "1 run"
  },
  "patterns": [
   [
@@ -3400,6 +3405,10 @@
   [
    "^Fehler: (.+)$",
    "Error: {1}"
+  ],
+  [
+   "^(\\d+) Fahrten$",
+   "{1} runs"
   ]
  ]
 }

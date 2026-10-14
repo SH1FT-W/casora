@@ -73,6 +73,21 @@ const run = async (view, dark, first) => {
   await check(tag + ': Popup mit Akku und Status', p && /Akku 100/.test(p.txt) && /Verbindung/.test(p.txt) && /Betriebsstunden/.test(p.txt), p && p.txt);
   await check(tag + ': Tasten Zur Station (aus) · Mähen · Parken', p && p.btns.length === 3 && !p.btns[0].on && p.btns[1].on
     && /start_mowing/.test(p.btns[1].svc) && p.btns[2].on && /park_until_further_notice/.test(p.btns[2].svc), p && p.btns);
+  // Verlauf (7 Tage) aus HAs Verlauf: der Testmäher hat Fahrten der letzten Tage (dev/casora_mock/maeher.py).
+  const hv = await stable(page, () => {
+    const pop = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
+    const parts = [];
+    const walk = (n) => n.childNodes.forEach((c) => {
+      if (c.nodeType === 3) { if (c.parentNode && c.parentNode.nodeName !== 'STYLE') parts.push(c.textContent); return; }
+      if (c.nodeType !== 1 || c.nodeName === 'STYLE') return;
+      if (c.shadowRoot) walk(c.shadowRoot);
+      walk(c);
+    });
+    if (pop) walk(pop.shadowRoot);
+    const t = parts.join(' ').replace(/\s+/g, ' ');
+    return { gemaeht: (t.match(/Gemäht/g) || []).length, fahrten: /\d+ Fahrten/.test(t), fehler: /Fehler/.test(t), ganz: /Ganzer Verlauf/.test(t) };
+  }, null, { max: 10000, quiet: 1500 });
+  await check(tag + ': Verlauf mit Mähfahrten, Summe, Fehler und „Ganzer Verlauf“', hv && hv.gemaeht >= 3 && hv.fahrten && hv.fehler && hv.ganz, hv);
   await shot('2-popup');
   if (first) {
     // Echter Dienst über die Taste im Popup.

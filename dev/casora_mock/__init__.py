@@ -55,6 +55,7 @@ def _merge(fixture: dict, extra: dict, label: str = "Stresshaus aktiv") -> None:
     ids = {e["entity_id"] for e in fixture["entities"]}
     fixture["entities"] = list(fixture["entities"]) + [e for e in extra.get("entities", []) if e["entity_id"] not in ids]
     fixture.setdefault("_buttons", {}).update(extra.get("_buttons", {}))
+    fixture.setdefault("_history_extra", {}).update(extra.get("_history", {}))
     _LOGGER.warning("Casora Mock: %s (+%s Entitäten)", label, len(extra.get("entities", [])))
 
 
@@ -372,7 +373,9 @@ class CasoraMock:
         return out
 
     def backfill_history(self) -> None:
-        spec = self.fixture.get("_history") or self._auto_history()
+        spec = dict(self.fixture.get("_history") or self._auto_history() or {})
+        # Feste Zustandsfolgen der Zusatzgeräte (Mähroboter: Mähfahrten), {"steps": [[Std. zurück, Zustand], …]}.
+        spec.update(self.fixture.get("_history_extra") or {})
         if not spec or "recorder" not in self.hass.config.components:
             return
         import math
@@ -384,6 +387,8 @@ class CasoraMock:
         step, span = 600, 48 * 3600
 
         def curve(eid: str, cfg: dict):
+            if cfg.get("steps"):
+                return [(float(int(boot - h * 3600)), st) for h, st in cfg["steps"]]
             rnd = random.Random(eid)
             def raw(ts: float) -> float:
                 if cfg.get("now_hour") is not None:
@@ -484,7 +489,7 @@ class CasoraMock:
         n = 0
         for eid, cfg in spec.items():
             st = self.store.get(eid)
-            if not st:
+            if not st or cfg.get("steps"):  # Zustandsfolgen haben keine Statistik
                 continue
             unit = st[1].get("unit_of_measurement")
             # Kurve über 30 Tage: curve() liefert 48 h in 10-min-Schritten, also die Tagesform wiederholen.
