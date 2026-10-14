@@ -24,6 +24,9 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Thermostat:** − and + respond smoothly. Several taps are collected and sent as one change.
 - **Carousel:** Page names are in a visible input field in the Studio.
 - **Update logos:** Show in every list of the update popup, including System, Recently updated, Restart and Skipped.
+- **Light popup:** The room pills at the top appear together with the rooms, and the content no longer jumps down a moment after opening.
+- **Recipe popup:** The shadow of today's day in the meal plan is no longer cut off.
+- **Studio:** Undo stays readable when there is nothing to undo, and the buttons in the list of changes stay put when you take a change back.
 
 ### Removed
 - **Card updates:** Templates only come with a Casora release, no longer as a separate card update.

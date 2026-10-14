@@ -24,6 +24,9 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Thermostat:** − und + reagieren flüssig. Mehrere Tipps werden gesammelt und als eine Änderung geschickt.
 - **Karussell:** Seitennamen stehen im Studio in einem sichtbaren Eingabefeld.
 - **Update-Logos:** Erscheinen in allen Listen des Update-Popups, auch bei System, Zuletzt aktualisiert, Neustart und Übersprungen.
+- **Licht-Popup:** Die Raum-Pillen oben erscheinen zusammen mit den Räumen, und der Inhalt springt kurz nach dem Öffnen nicht mehr nach unten.
+- **Rezept-Popup:** Der Schatten des heutigen Tags im Speiseplan wird nicht mehr abgeschnitten.
+- **Studio:** Rückgängig bleibt lesbar, auch wenn es nichts zurückzunehmen gibt, und die Knöpfe in der Änderungsliste bleiben beim Zurücknehmen stehen.
 
 ### Entfernt
 - **Karten-Updates:** Vorlagen kommen nur noch mit einem Casora-Release, nicht mehr als eigenes Karten-Update.
