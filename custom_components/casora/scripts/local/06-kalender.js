@@ -588,12 +588,12 @@
     var a = target(ev); if (!a || !tS) return;
     var t = ev.changedTouches && ev.changedTouches[0];
     if (t && (Math.abs(t.clientX - tS.x) > 10 || Math.abs(t.clientY - tS.y) > 10)) return;
-    tDone = Date.now(); if (ev.cancelable) ev.preventDefault(); ev.stopPropagation(); act(a);
+    tDone = Date.now(); if (ev.cancelable) ev.preventDefault(); ev.stopPropagation(); if (window.casoraHaptic) window.casoraHaptic('selection'); act(a);
   }, { capture: true, passive: false });
   window.addEventListener('click', function (ev) {
     var a = target(ev); if (!a) return;
     ev.preventDefault(); ev.stopPropagation();
-    if (Date.now() - tDone >= 700) act(a);
+    if (Date.now() - tDone >= 700) { if (window.casoraHaptic) window.casoraHaptic('selection'); act(a); }
   }, true);
 })();
 

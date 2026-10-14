@@ -851,6 +851,7 @@
         if (Date.now() - last < 400) return;
         last = Date.now();
         ev.preventDefault(); ev.stopPropagation();
+        if (window.casoraHaptic) window.casoraHaptic('light');
         K.open(el.dataset.casoraTank || null);
         return;
       }
@@ -860,7 +861,7 @@
         if (Date.now() - last < 400) return;
         last = Date.now();
         var idx = [].indexOf.call(el.parentNode.children, el);
-        if (SORTS[idx]) { V.sort = SORTS[idx][0]; render(true); }
+        if (SORTS[idx]) { if (window.casoraHaptic) window.casoraHaptic('selection'); V.sort = SORTS[idx][0]; render(true); }
         ev.preventDefault(); ev.stopPropagation();
         return;
       }

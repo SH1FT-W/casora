@@ -206,6 +206,7 @@
       if (ev.type === 'click' && Date.now() - lastTouch < 700) return;
       if (ev.type === 'touchend') lastTouch = Date.now();
       if (Date.now() - (window._casoraPopupOpenedAt || 0) < 600) return;
+      if (window.casoraHaptic) window.casoraHaptic('medium');
       var spec; try { spec = JSON.parse(el.dataset.casoraAlarm); } catch (e) { return; }
       spec = AL.spec(spec); if (!spec) return;
       var ha = document.querySelector('home-assistant'); var hass = ha && ha.hass; if (!hass) return;

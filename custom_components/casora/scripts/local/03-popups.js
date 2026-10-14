@@ -978,6 +978,7 @@
   var openRoom = function (el) {
     var d; try { d = JSON.parse(el.getAttribute('data-fbh-room')); } catch (e) { return; }
     var open = window._casoraNotifyOpenViaCard; if (!open) return;
+    if (window.casoraHaptic) window.casoraHaptic('light');
     window._casoraSuppressDismiss = Date.now() + 600;
     open(d.id, function (okd) { if (!okd && window.casoraPopup) window.casoraPopup.moreInfo(d.id); },
       { type: 'custom:button-card', template: ['casora_thermostat', 'casora_popup_fbh'], entity: d.id, name: d.name, variables: {} });
@@ -1022,6 +1023,7 @@
     if (!bar) return; var b = bar; bar = null;
     // Popup inzwischen zu: nichts mehr einstellen.
     if (!b.el.isConnected) return;
+    if (window.casoraHaptic) window.casoraHaptic('selection');
     var ha = document.querySelector('home-assistant');
     var P = window._casoraStepPend, pk = JSON.stringify(b.c.id);
     if (P && P[pk]) { clearTimeout(P[pk].tm); delete P[pk]; }
@@ -1045,6 +1047,7 @@
     if (el.classList.contains('dis')) return;
     if (window._casoraPopupOpenedAt && Date.now() - window._casoraPopupOpenedAt < 600) return;
     var c; try { c = JSON.parse(el.getAttribute('data-fb-step')); } catch (e) { return; }
+    if (window.casoraHaptic) window.casoraHaptic('selection');
     var P = window._casoraStepPend = window._casoraStepPend || {}, key = JSON.stringify(c.id), p = P[key];
     var cur = p && Date.now() - p.t < 5000 ? p.v : c.v;
     var v = Math.round(Math.min(c.hi, Math.max(c.lo, Math.round((cur + c.d) / c.st) * c.st)) * 100) / 100;
@@ -2180,6 +2183,7 @@
   setInterval(function () { sweep(); sweepInline(); }, 1000);
 
   var fire = function (btn) {
+    if (window.casoraHaptic) window.casoraHaptic('light');
     var id = btn.getAttribute('data-cam-ai');
     var ha = document.querySelector('home-assistant');
     if (!id || !ha || !ha.hass) return;
@@ -3147,6 +3151,7 @@
   };
   var go = function () {
     var ha = document.querySelector('home-assistant');
+    if (window.casoraHaptic) window.casoraHaptic('light');
     if (ha && ha.hass) K.run(ha.hass);
   };
   var ts = null, tDone = 0;
@@ -3716,6 +3721,7 @@
   var act = function (el) {
     var d; try { d = JSON.parse(el.getAttribute('data-lps-tap')); } catch (e) { return; }
     var h = hassNow(); if (!h || !d) return;
+    if (window.casoraHaptic) window.casoraHaptic('light');
     window._casoraSuppressDismiss = Date.now() + 600;
     if (d.a === 'toggle') {
       var row = el.closest && el.closest('.lps-row');
@@ -3802,6 +3808,7 @@
   var barEnd = function (x) {
     if (!bar) return; var b = bar; bar = null;
     b.el.classList.remove('drag');
+    if (window.casoraHaptic) window.casoraHaptic('selection');
     if (b.v == null && x != null) { b.v = barVal(b, x); barPaint(b, b.v); }
     window._casoraSuppressDismiss = Date.now() + 600;
     var h = hassNow(); if (!h || b.v == null || !b.ids || !b.ids.length) return;

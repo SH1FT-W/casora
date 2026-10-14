@@ -283,6 +283,7 @@
       if (n.hasAttribute('data-casora-zspan')) {
         ev.preventDefault(); ev.stopPropagation();
         var v = n.getAttribute('data-casora-zspan').split('|');
+        if (window.casoraHaptic) window.casoraHaptic('selection');
         Z.openMeasure(v[0], v[1], Z._back);
         return;
       }
@@ -499,6 +500,7 @@
       var n = p[i];
       if (!n || !n.getAttribute || !n.hasAttribute('data-casora-zdev')) continue;
       ev.preventDefault(); ev.stopPropagation();
+      if (window.casoraHaptic) window.casoraHaptic('light');
       Z.openDevice(n.getAttribute('data-casora-zdev'));
       return;
     }

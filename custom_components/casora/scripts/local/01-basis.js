@@ -1024,6 +1024,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         if (/^(device_tracker|sensor\.post|input_boolean)\./.test(id)) return;
         e.preventDefault(); e.stopPropagation();
         if (e.type === 'touchend') lastTouch = Date.now();
+        if (window.casoraHaptic) window.casoraHaptic('light');
         try { window._casoraNotify && window._casoraNotify.close(); } catch (x) {}
         openViaCard(id, function (ok) {
           if (!ok && window.casoraPopup) window.casoraPopup.moreInfo(id);

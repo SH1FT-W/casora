@@ -471,8 +471,8 @@
         }
         continue;
       }
-      if (el.dataset && el.dataset.cslSvc) { if (take()) act(el.dataset.cslSvc); return; }
-      if (el.dataset && el.dataset.cslMore !== undefined) { if (take()) full(); return; }
+      if (el.dataset && el.dataset.cslSvc) { if (take()) { if (window.casoraHaptic) window.casoraHaptic('medium'); act(el.dataset.cslSvc); } return; }
+      if (el.dataset && el.dataset.cslMore !== undefined) { if (take()) { if (window.casoraHaptic) window.casoraHaptic('light'); full(); } return; }
     }
   };
   window.addEventListener('touchstart', function (ev) { var t = ev.touches && ev.touches[0]; tp = t ? { x: t.clientX, y: t.clientY, moved: false } : null; }, { capture: true, passive: true });

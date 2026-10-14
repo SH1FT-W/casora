@@ -1,3 +1,12 @@
+// Haptik (14.10.2026): casoraHaptic('light'|'selection'|'medium'|'success') – HA-Companion-App vibriert.
+// Tipp-Handler hängen oft an touchend UND click: ein zweiter Impuls binnen 250 ms entfällt (Klick-Echo).
+window.casoraHaptic = window.casoraHaptic || function (kind) {
+  var now = Date.now();
+  if (now - (window._casoraHapticAt || 0) < 250) return;
+  window._casoraHapticAt = now;
+  try { window.dispatchEvent(new CustomEvent('haptic', { detail: kind || 'light' })); } catch (e) { /* egal */ }
+};
+
 // Casora Studio „Wer sieht das?“ (06.10.2026): Badges und Räume nur für bestimmte HA-Benutzer.
 // casoraSeen(vars, badge, user, wert) – liefert false, wenn die Badge für diesen Benutzer
 // ausgeblendet ist, sonst den Wert unverändert (in den Vorlagen statt variables.show_<badge>).
@@ -309,7 +318,7 @@
       document.addEventListener('keydown', key, true);
       host.addEventListener('click', function (e) { if (e.composedPath()[0] === host) done(false); });
       root.querySelector('.no').onclick = function () { done(false); };
-      root.querySelector('.yes').onclick = function () { done(true); };
+      root.querySelector('.yes').onclick = function () { window.casoraHaptic('medium'); done(true); };
       document.body.appendChild(host);
       // Fokus auf „Abbrechen“: ein versehentliches Enter schaltet nicht (Nutzertest). Mit Textfeld dorthin.
       setTimeout(function () { var n = field || root.querySelector('.no'); if (n) n.focus(); }, 30);
@@ -4062,6 +4071,7 @@ window.casoraMenuGlass = {
           ev.stopPropagation();
           const sc = this._pagedMode && this._rooms ? this._rooms : this._scroller;
           if (!sc) return;
+          window.casoraHaptic('light');
           const by = Math.max(120, sc.clientWidth * 0.6) * (side === 'r' ? 1 : -1);
           try { sc.scrollBy({ left: by, behavior: 'smooth' }); } catch (_) { sc.scrollLeft += by; }
         });
@@ -4167,6 +4177,7 @@ window.casoraMenuGlass = {
           e.preventDefault();
           e.stopPropagation();
           if (this._swipedAt && Date.now() - this._swipedAt < 400) return;
+          window.casoraHaptic('selection');
           this._activate(route, btn);
         });
 
@@ -6778,6 +6789,7 @@ window.casoraMenuGlass = {
       this._headerBack.addEventListener('click', (e) => {
         e.preventDefault(); e.stopPropagation();
         var fn = this._backFn;
+        window.casoraHaptic('light');
         if (typeof fn === 'function') fn();
       });
       this._headerContent = root.querySelector('.header-content');
@@ -6841,6 +6853,7 @@ window.casoraMenuGlass = {
         this._lastClose = now;
         e.preventDefault();
         e.stopPropagation();
+        window.casoraHaptic('light');
         this.close();
       };
       this._headerClose.addEventListener('click', closeTap);
@@ -9017,6 +9030,7 @@ window.casoraMenuGlass = {
         if (t && t.dataset && t.dataset.casoraMoreTg !== undefined) {
           if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
           window._casoraUILastTap = Date.now();
+          window.casoraHaptic('selection');
           moreToggle(t);
           ev.preventDefault(); ev.stopPropagation();
           return;
@@ -9024,6 +9038,7 @@ window.casoraMenuGlass = {
         if (t && t.classList && t.classList.contains('hui-cf')) {
           if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
           window._casoraUILastTap = Date.now();
+          window.casoraHaptic('success');
           try {
             var cs = JSON.parse(t.dataset.casoraCf);
             var ha3 = document.querySelector('home-assistant');
@@ -9047,6 +9062,7 @@ window.casoraMenuGlass = {
           if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
           window._casoraUILastTap = Date.now();
           window._casoraSuppressDismiss = Date.now() + 600;
+          window.casoraHaptic('light');
           var shelf = t.closest && t.closest('.hui-mrow');
           var wrapM = shelf && shelf.parentElement;
           var ov = wrapM && wrapM.querySelector && wrapM.querySelector('.hui-mov');
@@ -9109,6 +9125,7 @@ window.casoraMenuGlass = {
         }
         if (t && t.classList && t.classList.contains('hui-mback')) {
           window._casoraSuppressDismiss = Date.now() + 600;
+          window.casoraHaptic('light');
           closeMediaOverlay(t.closest ? t.closest('.hui-mov') : null);
           ev.preventDefault(); ev.stopPropagation();
           return;
@@ -9127,6 +9144,7 @@ window.casoraMenuGlass = {
           var armRow = (t.classList && t.classList.contains('hui-row')) ? t
             : (t.closest ? t.closest('.hui-row') : null);
           if (!armRow) return;
+          window.casoraHaptic('selection');
           var rt = t.getRootNode && t.getRootNode();
           if (rt && rt.querySelectorAll) {
             rt.querySelectorAll('.hui-row.armed').forEach(function (o) {
@@ -9147,6 +9165,7 @@ window.casoraMenuGlass = {
             else if (Date.now() - (window._casoraStepTouch || 0) < 700) { ev.preventDefault(); ev.stopPropagation(); return; }
           } else if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
           window._casoraUILastTap = Date.now();
+          window.casoraHaptic(isFinite(stepBy) ? 'selection' : 'light');
           try {
             var spec = JSON.parse(t.dataset.casoraSvc);
             var ha2 = document.querySelector('home-assistant');
@@ -9164,6 +9183,7 @@ window.casoraMenuGlass = {
         if (t && t.dataset && t.dataset.casoraMi) {
           if (Date.now() - (window._casoraUILastTap || 0) < 400) return;
           window._casoraUILastTap = Date.now();
+          window.casoraHaptic('light');
           // Licht und Jalousie in einer Gruppe: Casoras Popup des Geräts statt HAs Dialog (01-basis.js).
           // Ohne Kachelsuche: die fände die Gruppenkarte selbst (Gerät steht in ihrer Liste).
           var mid = t.dataset.casoraMi;
@@ -9320,6 +9340,7 @@ window.casoraMenuGlass = {
       if (!drag) return;
       var d = drag; drag = null;
       d.el.classList.remove('drag');
+      window.casoraHaptic('selection');
       try {
         var spec = JSON.parse(d.el.dataset.casoraSlider);
         var ha = document.querySelector('home-assistant');
@@ -10310,11 +10331,25 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     _rows = _rows.filter(function (x) { return !isHidden(x); });
     announce();
   }
+  // „Alle entfernen“ lässt sich 10 s lang zurücknehmen (14.10.2026: Glocke war versehentlich leer).
   function hideAll() {
+    var prevHid = { all: _hid.all, rows: Object.assign({}, _hid.rows) }, prevRows = _rows.slice();
     _hid = { all: Math.max(Date.now(), _rows.reduce(function (m, r) { return Math.max(m, r.when || 0); }, 0)), rows: {} };
     saveHidden();
     _rows = [];
     announce();
+    var h = ha();
+    if (!h) return;
+    var T = window.casoraTr || function (x) { return x; };
+    var nev = new Event('hass-notification', { bubbles: true, composed: true });
+    nev.detail = { message: T('Alle Meldungen entfernt'), duration: 10000, dismissable: true,
+      action: { text: T('Rückgängig'), action: function () {
+        _hid = prevHid;
+        saveHidden();
+        _rows = prevRows.filter(function (x) { return !isHidden(x); });
+        announce();
+      } } };
+    h.dispatchEvent(nev);
   }
 
   function nameOf(st) {
@@ -11878,6 +11913,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           e.preventDefault();
           e.stopPropagation();
           var row = n._casoraRow;
+          window.casoraHaptic('light');
           if (close) close();
           openTarget(n.dataset.casoraOpen, row && row.entity);
           return;
@@ -11967,6 +12003,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     };
     var drop = function (row) {
       var r = row._casoraRow;
+      window.casoraHaptic('medium');
       var inn = innerOf(row);
       inn.style.transition = 'transform .22s ease, opacity .22s ease';
       inn.style.transform = 'translateX(-110%)';

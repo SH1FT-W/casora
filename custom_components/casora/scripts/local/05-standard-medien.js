@@ -380,12 +380,13 @@ window._casoraStd = function (ui, o) {
     if (!find(ev)) return;
     var t = ev.changedTouches && ev.changedTouches[0];
     if (st && t && (Math.abs(t.clientX - st.x) > 10 || Math.abs(t.clientY - st.y) > 10)) return;
-    last = Date.now(); if (ev.cancelable) ev.preventDefault(); ev.stopPropagation(); open();
+    last = Date.now(); if (ev.cancelable) ev.preventDefault(); ev.stopPropagation(); if (window.casoraHaptic) window.casoraHaptic('light'); open();
   }, true);
   window.addEventListener('click', function (ev) {
     if (!find(ev)) return;
     ev.preventDefault(); ev.stopPropagation();
     if (Date.now() - last < 700) return;
+    if (window.casoraHaptic) window.casoraHaptic('light');
     open();
   }, true);
 })();

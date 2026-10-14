@@ -3169,6 +3169,7 @@
   };
   var arm = function (el) {
     disarm();
+    if (window.casoraHaptic) window.casoraHaptic('selection');
     armed = el;
     el._hgArmed = Date.now();
     el._hgLabel = el.textContent;

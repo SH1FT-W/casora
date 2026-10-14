@@ -4,7 +4,8 @@
    "progress": "[[[\n  const PROP_ID = 'casora-progress-property-v2';\n  if (!document.getElementById(PROP_ID)) {\n    const s = document.createElement('style');\n    s.id = PROP_ID;\n    s.textContent = '@property --casora-progress-pct { syntax: \"<number>\"; inherits: true; initial-value: 0; }';\n    document.head.appendChild(s);\n  }\n\n  const dom = (entity?.entity_id || '').split('.')[0];\n  const st = (entity?.state || '').toLowerCase();\n  const feats = Number(entity?.attributes?.supported_features || 0);\n\n  let glyph = '', svc = '', svcTarget = entity?.entity_id;\n  if (variables.progress_transport) {\n    if (dom === 'media_player' && (feats & 16385)) {\n      glyph = st === 'paused' ? 'play' : 'pause';\n      svc = 'media_player.media_play_pause';\n    } else if (dom === 'vacuum' && (feats & 4)) {\n      glyph = st === 'paused' ? 'play' : 'pause';\n      svc = st === 'paused' ? 'vacuum.start' : 'vacuum.pause';\n    } else if (variables.entity_pause) {\n      /* 3D-Drucker: Pause/Fortsetzen sind button.*-Entitäten (23.09.2026). */\n      const paused = st.includes('pause');\n      const target = paused ? variables.entity_resume : variables.entity_pause;\n      if (target && states[target]?.state !== 'unavailable') {\n        glyph = paused ? 'play' : 'pause';\n        svc = 'button.press';\n        svcTarget = target;\n      }\n    }\n  }\n\n  /* Wie casora_entity (Variante A, 14.10.2026). */\n  const GLYPHS = {\n    pause: '<rect class=\"casora-progress-glyph\" x=\"13.6\" y=\"12.6\" width=\"3.2\" height=\"10.8\" rx=\"1.6\" stroke-width=\"0\"/>'\n         + '<rect class=\"casora-progress-glyph\" x=\"19.2\" y=\"12.6\" width=\"3.2\" height=\"10.8\" rx=\"1.6\" stroke-width=\"0\"/>',\n    play:  '<path class=\"casora-progress-glyph\" d=\"M15 12.2 L24.6 18 L15 23.8 Z\"'\n         + ' stroke-width=\"2.6\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>',\n  };\n\n  let inner = '';\n  if (glyph && svc) {\n    const [d, sv] = svc.split('.');\n    /* An SVG-Elementen heißt das Ereignis „evt“ – mit „event“ brach der Aufruf ab (14.10.2026). */\n    const E = \"(typeof evt!=='undefined'?evt:event)\";\n    const stop = E + '.stopPropagation();' + E + '.stopImmediatePropagation();';\n    const act = stop + \"document.querySelector('home-assistant').hass.callService('\"\n              + d + \"','\" + sv + \"',{entity_id:'\" + svcTarget + \"'});\";\n    inner = `<g style=\"cursor:pointer;pointer-events:auto;\" onpointerdown=\"${stop}\" onpointerup=\"${stop}\" ontouchstart=\"${stop}\" ontouchend=\"${stop}\" onclick=\"${act}\">`\n          + `<circle cx=\"18\" cy=\"18\" r=\"12\" fill=\"transparent\"/>${GLYPHS[glyph]}</g>`;\n  }\n\n  return `<svg viewBox=\"0 0 36 36\" xmlns=\"http://www.w3.org/2000/svg\" style=\"display:block;width:100%;height:100%;overflow:visible;\">\n    <g transform=\"rotate(-90 18 18)\">\n      <circle class=\"casora-progress-track\" cx=\"18\" cy=\"18\" r=\"14\" fill=\"none\" stroke=\"rgba(255,255,255,0.2)\" stroke-width=\"4\" stroke-linecap=\"round\"/>\n      <circle class=\"casora-progress-arc\" cx=\"18\" cy=\"18\" r=\"14\" fill=\"none\" stroke=\"var(--casora-color-teal, #00c3d0)\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-dasharray=\"87.965\"/>\n    </g>\n    ${inner}\n  </svg>`;\n]]]\n"
   },
   "icon_hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "show_icon": false,
   "show_label": false,
@@ -167,14 +168,17 @@
  "casora_air_device": {
   "hold_action": {
    "action": "more-info",
-   "entity": "[[[ return entity?.entity_id ]]]"
+   "entity": "[[[ return entity?.entity_id ]]]",
+   "haptic": "medium"
   },
   "icon_hold_action": {
    "action": "more-info",
-   "entity": "[[[ return entity?.entity_id ]]]"
+   "entity": "[[[ return entity?.entity_id ]]]",
+   "haptic": "medium"
   },
   "icon_tap_action": {
-   "action": "toggle"
+   "action": "toggle",
+   "haptic": "light"
   },
   "show_icon": true,
   "show_name": true,
@@ -261,7 +265,8 @@
   "entity_picture": "[[[\n  const iconMap = {\n    disarmed: 'shield_off',\n    armed_home: 'shield_check',\n    armed_away: 'shield_lock',\n    armed_night: 'shield_moon',\n    armed_vacation: 'shield_vacation',\n    armed_custom_bypass: 'shield_bypass',\n    triggered: 'shield_alarm',\n  };\n  return window.casoraIconUrl(iconMap[entity?.state] || 'shield_marked');\n]]]\n",
   "icon_hold_action": {
    "action": "more-info",
-   "entity": "[[[ return entity?.entity_id ]]]"
+   "entity": "[[[ return entity?.entity_id ]]]",
+   "haptic": "medium"
   },
   "icon_tap_action": {
    "action": "call-service",
@@ -449,7 +454,8 @@
  },
  "casora_aquarium": {
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "state": [
    {
@@ -543,10 +549,12 @@
  "casora_aquarium_light": {
   "entity_picture": "[[[ return window.casoraIconUrl('fish'); ]]]\n",
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "icon_hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "icon_tap_action": {
    "action": "call-service",
@@ -646,7 +654,8 @@
  },
  "casora_aquarium_tank": {
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "state": [
    {
@@ -873,7 +882,8 @@
   "entity_picture": "[[[\n  const a = entity?.attributes || {};\n  const raw = a.entity_picture_local || a.entity_picture || a.media_image_url;\n  if (raw) return String(raw).startsWith('/') ? `${location.origin}${raw}` : raw;\n\n  const appName = String(a.app_name || a.source || '').toLowerCase();\n  const appId   = String(a.app_id || '').toLowerCase();\n  if (appName.includes('youtube') || appId.includes('youtube'))\n    return '/casora_assets/icons/youtube.png';\n  if (appName.includes('netflix') || appId.includes('netflix'))\n    return '/casora_assets/icons/netflix.png?v=4';\n  if (appName.includes('dazn') || appId.includes('dazn'))\n    return '/casora_assets/icons/dazn.png?v=1';\n\n  return null;\n]]]\n",
   "extra_styles": "@media (max-width: 767px) and (orientation: portrait) {\n  :host {\n    --badge-media-max-width-current: calc(100vw - 2 * var(--hero-gutter, 16px));\n  }\n}\n\n@media (max-height: 500px) and (orientation: landscape), (max-height: 600px) and (orientation: landscape) and (hover: hover) {\n  :host {\n    --badge-media-max-width-current: calc(100vw - 2 * var(--hero-gutter, 16px));\n  }\n}\n\nha-card {\n  opacity: calc((1 - var(--casora-badge-enter-p)) * var(--casora-row-fade, 1));\n  pointer-events: var(--casora-badge-ptr, none);\n}\n\n#name{\n  display:flex !important;\n  align-items:center !important;\n  padding-block: 2px !important;\n  overflow: hidden !important;\n}\n",
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "name": "[[[\n  // Mirrors casora_now_playing's derivation exactly, so the same source\n  // reads identically on mobile and on desktop:\n  //   top    what is playing   (the game)\n  //   bottom device - person   (\"PS5 - username\")\n  const a = entity?.attributes || {};\n  const norm = (x) => String(x ?? '').trim();\n\n  const title = norm(a.full_title) || norm(a.media_title) || norm(a.title)\n    || norm(a.friendly_name) || 'Aktivität';\n\n  // friendly_name (\"PS5\"), not a.source — that is the verbose\n  // \"PlayStation Network\", which says nothing the console name doesn't.\n  const device = norm(a.friendly_name) || norm(a.source);\n  const who    = norm(a.user);\n  const sub    = [device, who].filter(Boolean).join(' · ');\n\n  const esc = (s) => String(s ?? '')\n    .replace(/&/g,'&amp;')\n    .replace(/</g,'&lt;')\n    .replace(/>/g,'&gt;')\n    .replace(/\"/g,'&quot;')\n    .replace(/'/g,'&#39;');\n\n  return `\n    <div class=\"badge-wrap\">\n      <div class=\"badge-title\">${esc(title)}</div>\n      <div class=\"badge-sub\">${esc(sub)}</div>\n    </div>\n  `;\n]]]\n",
   "show_entity_picture": true,
@@ -1442,7 +1452,8 @@
   },
   "extra_styles": "[[[\n  const v = variables?.enabled;\n  const enabled = (v === undefined || v === null) ? true :\n    (typeof v === 'boolean') ? v :\n    (typeof v === 'number') ? v !== 0 :\n    !['false','0','no','off','disabled'].includes(String(v).trim().toLowerCase());\n  const st = String(entity?.state ?? '').trim().toLowerCase();\n  const dead = !entity?.entity_id || !st || ['unknown','unavailable'].includes(st);\n  const resolveUnit = (u, e) => {\n    u = String(u || 'auto').toLowerCase();\n    if (u === 'energy') return 'kwh';\n    if (u !== 'auto' && u !== '') return u;\n    const dc = String(e?.attributes?.device_class || '').toLowerCase();\n    const uom = String(e?.attributes?.unit_of_measurement || '');\n    if (dc === 'monetary') return 'cost';\n    if (dc === 'energy' || /^k?Wh$/i.test(uom)) return 'kwh';\n    return 'auto';\n  };\n  const unit = resolveUnit(variables?.unit, entity);\n  const isCost = unit === 'cost' || !!variables?.cost_entity;\n\n  const rr = 13.5, C = 16, W = 3;\n  const pt = (deg) => {\n    const a = deg * Math.PI / 180;\n    return (C + rr * Math.sin(a)).toFixed(3) + ' ' + (C - rr * Math.cos(a)).toFixed(3);\n  };\n  const arcPath = (a0, a1) =>\n    'M ' + pt(a0) + ' A ' + rr + ' ' + rr + ' 0 ' + ((a1 - a0) > 180 ? 1 : 0) + ' 1 ' + pt(a1);\n  /* Zähler in Wh/MWh → kWh, Leistung in kW/MW → W (die Anzeige rechnet in kWh bzw. W). */\n  const raw = parseFloat(entity?.state) * ((u, r) => r === 'kwh' ? ({ Wh: 0.001, MWh: 1000 }[u] || 1)\n    : r === 'auto' ? ({ kW: 1000, MW: 1e6, mW: 0.001 }[u] || 1) : 1)(String(entity?.attributes?.unit_of_measurement || ''), resolveUnit(variables?.unit, entity));\n  const gf = !Number.isFinite(raw) ? 0.05\n    : unit === 'percent' ? Math.max(0.05, Math.min(1, raw / 100))\n    : Math.max(0.05, Math.min(1, Math.abs(raw) / (Number(variables?.gauge_max) > 0 ? Number(variables.gauge_max) : 1000)));\n  const arc = Math.round(gf * 270);\n  let ringPaths = '';\n  if (arc < 269) ringPaths += \"<path d='\" + arcPath(225 + arc, 495) + \"' stroke='white' stroke-opacity='0.30' stroke-width='\" + W + \"' stroke-linecap='round' fill='none'/>\";\n  ringPaths += \"<path d='\" + arcPath(225, 225 + arc) + \"' stroke='white' stroke-width='\" + W + \"' stroke-linecap='round' fill='none'/>\";\n\n  let glyph;\n  if (isCost) {\n    const cur = String((typeof hass !== 'undefined' && hass?.config?.currency) || 'USD').toUpperCase();\n    const SYM = { USD:'$', CAD:'$', AUD:'$', NZD:'$', MXN:'$',\n                  EUR:'\\u20AC', GBP:'\\u00A3', JPY:'\\u00A5', CNY:'\\u00A5',\n                  SEK:'kr', NOK:'kr', DKK:'kr', CHF:'Fr', INR:'\\u20B9',\n                  BRL:'R$', PLN:'z\\u0142', KRW:'\\u20A9' }[cur] || '$';\n    const fs = SYM.length > 1 ? 11 : 15;\n    glyph =\n      \"<text x='16' y='21.5' text-anchor='middle' fill='white' font-weight='700'\" +\n      \" font-size='\" + fs + \"' font-family='-apple-system,BlinkMacSystemFont,system-ui,sans-serif'>\" +\n      SYM + \"</text>\";\n  } else {\n    const BW = 16.8633, BH = 26.3734, H = 15;\n    const s = H / BH;\n    const bolt = 'M0 14.5402C0 14.9972 0.351562 15.3371 0.84375 15.3371L7.46484 15.3371L3.97266 24.8293C3.51562 26.0363 4.76953 26.6808 5.55469 25.6965L16.207 12.384C16.4062 12.1379 16.5117 11.9035 16.5117 11.634C16.5117 11.1887 16.1602 10.8371 15.668 10.8371L9.04688 10.8371L12.5391 1.34491C12.9961 0.137874 11.7422-0.506657 10.957 0.489437L0.304688 13.7902C0.105469 14.048 0 14.2824 0 14.5402Z';\n    glyph =\n      \"<g transform='translate(\" + (C - BW * s / 2).toFixed(3) + ' ' +\n      (C - H / 2).toFixed(3) + \") scale(\" + s.toFixed(5) + \")'>\" +\n      \"<path d='\" + bolt + \"' fill='white'/></g>\";\n  }\n\n  const svg =\n    \"<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'>\" +\n    ringPaths +\n    glyph + \"</svg>\";\n  const URL = 'data:image/svg+xml,' + encodeURIComponent(svg);\n\n  return `:host{display:${(!enabled || dead) ? 'none' : 'inline-block'} !important;}\n    #img-cell, .img-cell{ position: relative; }\n\n    #img-cell #icon, .img-cell #icon{\n      color: transparent !important;\n      opacity: 0 !important;\n    }\n\n    #img-cell::before,\n    .img-cell::before{\n      content: '';\n      position: absolute;\n      inset: 0;\n      background-color: color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), var(--casora-badge-icon-color, var(--casora-badge-energy-color, #30D158))) !important;\n      scale: var(--casora-badge-glyph-scale, none);\n      -webkit-mask: url(\"${URL}\") no-repeat center / contain;\n      mask: url(\"${URL}\") no-repeat center / contain;\n      transform: translateZ(0);\n    }`;\n]]]\n",
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "icon": "mdi:flash",
   "name": "[[[\n  const esc = (t) => String(t ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');\n\n  const title = variables?.label\n    || entity?.attributes?.friendly_name\n    || 'Leistung';\n\n  const cur = String((typeof hass !== 'undefined' && hass?.config?.currency) || 'USD').toUpperCase();\n  const SYM = { USD:'$', CAD:'$', AUD:'$', NZD:'$', MXN:'$',\n                EUR:'\\u20AC', GBP:'\\u00A3', JPY:'\\u00A5', CNY:'\\u00A5',\n                SEK:'kr', NOK:'kr', DKK:'kr', CHF:'Fr', INR:'\\u20B9',\n                BRL:'R$', PLN:'z\\u0142', KRW:'\\u20A9' }[cur] || '$';\n  const _L = (hass&&hass.locale&&hass.locale.language)||'de';\n  const money = (n) => SYM + (n >= 100 ? Math.round(n) : n.toLocaleString(_L, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));\n\n  const resolveUnit = (u, e) => {\n    u = String(u || 'auto').toLowerCase();\n    if (u === 'energy') return 'kwh';\n    if (u !== 'auto' && u !== '') return u;\n    const dc = String(e?.attributes?.device_class || '').toLowerCase();\n    const uom = String(e?.attributes?.unit_of_measurement || '');\n    if (dc === 'monetary') return 'cost';\n    if (dc === 'energy' || /^k?Wh$/i.test(uom)) return 'kwh';\n    return 'auto';\n  };\n\n  /* Zähler in Wh/MWh → kWh, Leistung in kW/MW → W (die Anzeige rechnet in kWh bzw. W). */\n  const raw = parseFloat(entity?.state) * ((u, r) => r === 'kwh' ? ({ Wh: 0.001, MWh: 1000 }[u] || 1)\n    : r === 'auto' ? ({ kW: 1000, MW: 1e6, mW: 0.001 }[u] || 1) : 1)(String(entity?.attributes?.unit_of_measurement || ''), resolveUnit(variables?.unit, entity));\n  const unit = resolveUnit(variables?.unit, entity);\n  let value = '';\n  if (Number.isFinite(raw)) {\n    if (unit === 'kwh') {\n      value = (raw >= 10 ? Math.round(raw) : raw.toLocaleString(_L, { minimumFractionDigits: 1, maximumFractionDigits: 1 })) + ' kWh';\n    } else if (unit === 'cost') {\n      value = money(raw);\n    } else if (unit === 'percent') {\n      value = Math.round(raw) + '%';\n    } else {\n      value = raw >= 1000 ? (raw / 1000).toLocaleString(_L, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' kW' : Math.round(raw) + ' W';\n    }\n  }\n\n  const cid = variables?.cost_entity;\n  const cost = cid ? parseFloat(states[cid]?.state) : NaN;\n  if (Number.isFinite(cost)) {\n    value = value ? (value + ' · ' + money(cost)) : money(cost);\n  }\n\n  return `\n    <div class=\"badge-wrap\">\n      <div class=\"badge-title\">${esc(title)}</div>\n      ${value ? `<div class=\"badge-sub\">${esc(value)}</div>` : ''}\n    </div>\n  `;\n]]]\n",
@@ -1609,7 +1620,8 @@
     "variables": {
      "light_entity": "[[[ return entity?.entity_id ]]]"
     }
-   }
+   },
+   "haptic": "medium"
   },
   "icon": "mdi:lightbulb",
   "icon_tap_action": {
@@ -2076,7 +2088,8 @@
          "service": "media_player.media_next_track",
          "service_data": {
           "entity_id": "[[[ return [variables.entity, ...(variables.group_entities||[])].filter(Boolean) ]]]"
-         }
+         },
+         "haptic": "light"
         },
         "type": "custom:button-card"
        }
@@ -2143,7 +2156,8 @@
          "service": "media_player.media_play_pause",
          "service_data": {
           "entity_id": "[[[ return [variables.entity, ...(variables.group_entities||[])].filter(Boolean) ]]]"
-         }
+         },
+         "haptic": "light"
         },
         "type": "custom:button-card"
        }
@@ -2568,7 +2582,8 @@
   },
   "extra_styles": "[[[\n  const v = variables?.enabled;\n  const enabled = (v === undefined || v === null) ? true :\n    (typeof v === 'boolean') ? v :\n    (typeof v === 'number') ? v !== 0 :\n    !['false','0','no','off','disabled'].includes(String(v).trim().toLowerCase());\n  const st = String(entity?.state ?? '').trim().toLowerCase();\n  const noEntity = !entity?.entity_id || (window.casoraSeesEntity && !window.casoraSeesEntity(entity.entity_id, user));\n  const isUnavailable = !st || ['unknown','unavailable'].includes(st);\n\n  const dom = String(entity?.entity_id || '').split('.')[0];\n  const dc = String(entity?.attributes?.device_class || '').toLowerCase();\n  const nameRaw = String(entity?.attributes?.friendly_name || '').toLowerCase();\n  const isWindow = dc === 'window' || nameRaw.includes('fenster') || nameRaw.includes('window');\n\n  let name = 'lock';\n  if (isUnavailable) name = 'default';\n  else if (dom === 'camera') name = 'doorbell';\n  else if (dom === 'lock') name = st === 'locked' ? 'lock-fill' : 'lock-open-fill';\n  else if (dom === 'alarm_control_panel') name = ((window._casoraSoft && window._casoraSoft()) && window.casoraSecurityIcon)\n    /* Weich: Modus-Symbol wie Alarm-Kachel, Popup und Mitteilungen. */\n    ? window.casoraSecurityIcon(entity.entity_id, st, entity.attributes)\n    : (st === 'disarmed' || st === 'triggered') ? 'shield_alarm' : 'shield_check';\n  else if (dom === 'binary_sensor' || dom === 'cover') {\n    const isOpen = st === 'on' || st === 'open';\n    name = isWindow ? (isOpen ? 'window-open' : 'window-closed') : (isOpen ? 'door-open' : 'door-closed');\n  }\n  const URL = window.casoraIconUrl(name);\n  // One size for every security glyph so the group badge and its\n  // sub-badges are visually identical. Every glyph here now carries 6% of\n  // transparent viewBox padding, so they all take the same 6% bump.\n  const SIZE = variables?.icon_size || '88%';\n\n  return `:host{display:${(!enabled || noEntity) ? 'none' : 'inline-block'} !important;${variables?.inline ? 'order:var(--casora-badge-order-security,1);' : ''}}\n    #img-cell, .img-cell{ position: relative; }\n\n    #img-cell #icon, .img-cell #icon{\n      color: transparent !important;\n      opacity: 0 !important;\n    }\n\n    #img-cell::before,\n    .img-cell::before{\n      content: '';\n      position: absolute;\n      inset: 0;\n      background-color: color-mix(in srgb, var(--casora-badge-glyph, #fff) var(--casora-badge-circle-mix, 0%), var(--casora-badge-icon-color, var(--casora-badge-security-color, #00c3d0))) !important;\n      scale: var(--casora-badge-glyph-scale, none);\n      -webkit-mask: url('${URL}') no-repeat center / auto ${SIZE};\n      mask: url('${URL}') no-repeat center / auto ${SIZE};\n      transform: translateZ(0);\n    }`;\n]]]\n",
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "icon": "[[[\n  const id = String(entity?.entity_id || '');\n  const dom = id.split('.')[0];\n  const s = String(entity?.state || '').toLowerCase();\n  const dc = String(entity?.attributes?.device_class || '').toLowerCase();\n\n  if (dom === 'lock') return s === 'locked' ? 'mdi:lock' : 'mdi:lock-open-variant';\n  if (dom === 'alarm_control_panel')\n    return s === 'disarmed' ? 'mdi:shield-off-outline' : 'mdi:shield-check';\n  if (dom === 'camera') return 'mdi:cctv';\n  if (dc === 'garage' || dc === 'garage_door') return 'mdi:garage';\n  if (dc === 'window') return s === 'on' ? 'mdi:window-open' : 'mdi:window-closed';\n  if (dc === 'motion') return 'mdi:motion-sensor';\n  return s === 'on' ? 'mdi:door-open' : 'mdi:door-closed';\n]]]\n",
   "name": "[[[\n  const esc = (t) => String(t ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');\n\n  const id  = String(entity?.entity_id || '');\n  const dom = id.split('.')[0];\n  const s   = String(entity?.state || '').toLowerCase();\n  const dc  = String(entity?.attributes?.device_class || '').toLowerCase();\n  const tilt = entity?.attributes?.tilt === true || entity?.attributes?.tilt === 'true'\n    || (s === 'on' && !('tilt' in (entity?.attributes || {})) && !/kombi|combined/i.test(id + ' ' + (entity?.attributes?.friendly_name || ''))\n      && /kipp|tilt/i.test(id + ' ' + (entity?.attributes?.friendly_name || '')));\n\n  const title = variables?.label || entity?.attributes?.friendly_name || 'Sicherheit';\n\n  let sub = '';\n  if (['unknown','unavailable',''].includes(s)) {\n    sub = 'Nicht verfügbar';\n  } else if (dom === 'lock') {\n    /* V2 (1.3): Wörter wie Kachel und Popup – jammed „Klemmt“, open „Geöffnet“; open/opening (Falle gezogen) und die Übergänge eigens (Nuki & Co.). */\n    sub = s === 'locked' ? 'Verriegelt' : s === 'unlocked' ? 'Entriegelt' : s === 'jammed' ? 'Klemmt'\n        : s === 'open' || s === 'opening' ? 'Geöffnet' : s === 'locking' ? 'Wird verriegelt …' : s === 'unlocking' ? 'Wird entriegelt …'\n        : ((() => { try { return hass.formatEntityState(entity); } catch (e) { return ''; } })() || s);\n  } else if (dom === 'alarm_control_panel') {\n    sub = s === 'disarmed' ? 'Deaktiviert'\n        : s === 'triggered' ? 'Ausgelöst'\n        : s === 'armed_home' ? 'Aktiviert (Zuhause)'\n        : s === 'armed_away' ? 'Aktiviert (Abwesend)'\n        : s === 'armed_custom_bypass' ? 'Aktiviert (Bypass)'\n        : 'Aktiviert';\n  } else if (dom === 'camera') {\n    /* \"Idle\" is every camera, all day, so it says nothing. Fall through to the\n       same alert wording the aggregated camera badge uses. */\n    const alert = window.casoraCameraAlert\n      ? window.casoraCameraAlert(hass, states, [id], variables?.alert_window_minutes) : '';\n    sub = s === 'recording' ? 'Aufnahme'\n        : s === 'streaming' ? 'Live'\n        : (alert || 'Sicher');\n  } else if (dom === 'cover') {\n    sub = s === 'closed' ? 'Geschlossen' : 'Geöffnet';\n  } else if (dc === 'motion') {\n    sub = s === 'on' ? 'Bewegung' : 'Frei';\n  } else if (tilt) {\n    sub = 'Gekippt';\n  } else {\n    sub = s === 'on' ? 'Geöffnet' : 'Geschlossen';\n  }\n\n  /* Weich: dasselbe Wort wie Popup und Mitteilungen (casoraSecurityWord, 00-finden.js). */\n  if ((dom === 'lock' || dom === 'alarm_control_panel') && (window._casoraSoft && window._casoraSoft()) && window.casoraSecurityWord)\n    sub = window.casoraSecurityWord(id, s) || sub;\n\n  return `\n    <div class=\"badge-wrap\">\n      <div class=\"badge-title\">${esc(title)}</div>\n      <div class=\"badge-sub\">${esc(sub)}</div>\n    </div>\n  `;\n]]]\n",
@@ -2965,7 +2980,8 @@
  "casora_camera": {
   "entity_picture": "[[[\n  /* Kamera aus: Kamerasymbol auf der normalen Kachelfläche wie jede ausgeschaltete Kachel. */\n  if (String(entity?.state || '').toLowerCase() === 'off') return window.casoraIconUrl('camera');\n  // Weich (Runde 2): ohne Bild (keine Entität, offline) wenigstens das Kamerasymbol wie jede Kachel.\n  /* Offline (Kamera liefert kein Bild, _casoraCamDead) zählt wie ohne Bild – sonst lag ein schwarzes\n     Standbild auf der Kachel und der dunkle Weich-Name darauf war unlesbar (03.10.2026). */\n  const s0 = String(entity?.state || '').toLowerCase();\n  const dead = s0 !== 'recording' && s0 !== 'off' && (!!window._casoraCamDead?.[entity?.entity_id] || !!window.casoraCamOffline?.(entity?.entity_id, states, variables));\n  /* D-05: Weich auch ohne geladenes Standbild (lädt nicht, nur Schwarz) – this._hcPic setzt background-image. */\n  const plain = !entity?.attributes?.entity_picture || entity?.state === 'unavailable' || dead || this._hcPic !== true;\n  return plain && (() => { try { return getComputedStyle(document.documentElement).getPropertyValue('--casora-tile-fallback-name').trim() === '1'; } catch (e) { return false; } })() ? window.casoraIconUrl('camera') : null;\n]]]\n",
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "icon_tap_action": {
    "action": "none"
@@ -3072,7 +3088,8 @@
  },
  "casora_cameras": {
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? t;\n  const cams = Array.isArray((window._casoraCams ? window._casoraCams(variables, entity, hass) : variables.cameras)) ? (window._casoraCams ? window._casoraCams(variables, entity, hass) : variables.cameras).filter(Boolean) : [];\n  if (!cams.length) return fit('Keine Kameras');\n  const dead = cams.filter(id => ['unavailable','unknown',''].includes(String(states[id]?.state ?? '').toLowerCase()) || !!window.casoraCamOffline?.(id, states)).length;\n  if (dead === cams.length) return fit(cams.length === 1 ? 'Offline' : 'Alle offline');\n  if (dead > 0) return fit(dead + ' offline');\n  const alert = window.casoraCameraAlert ? window.casoraCameraAlert(hass, states, cams, variables.alert_window_minutes) : '';\n  return fit(alert || 'Sicher');\n]]]\n",
   "styles": {
@@ -3168,14 +3185,16 @@
  "casora_cover": {
   "entity_picture": "[[[\n  /* Dasselbe Symbol wie die Zeilen im Popup (casoraCoverIconUrl, 1.2.1); eigenes Symbol aus dem Studio geht vor. */\n  if (window.casoraCoverIconUrl && window.casoraCoverKind) return window.casoraCoverIconUrl(entity, variables);\n  const st = (entity?.state || '').toLowerCase();\n  const name = ['open', 'opening', 'stopping'].includes(st) ? 'cover_open' : 'cover_closed';\n  return window.casoraIconUrl(name);\n]]]\n",
   "hold_action": {
-   "action": "toggle"
+   "action": "toggle",
+   "haptic": "medium"
   },
   "icon_tap_action": {
    "action": "call-service",
    "service": "[[[\n  const s = (entity?.state || '').toLowerCase();\n  return ['open', 'opening'].includes(s) ? 'cover.close_cover' : 'cover.open_cover';\n]]]\n",
    "service_data": {
     "entity_id": "[[[ return entity?.entity_id ]]]"
-   }
+   },
+   "haptic": "light"
   },
   "name": "Jalousie",
   "show_entity_picture": true,
@@ -3448,7 +3467,8 @@
  },
  "casora_energy": {
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "icon_tap_action": {
    "action": "none"
@@ -3663,7 +3683,8 @@
      "tap_action": {
       "action": "call-service",
       "service": "[[[\n  if (variables.toggle_service) return variables.toggle_service;\n\n  const target = variables.toggle_entity || entity?.entity_id || '';\n  const state = (states[target]?.state || entity?.state || '').toLowerCase();\n  if (state === 'unavailable' || state === 'unknown') return 'none';\n\n  if (target.startsWith('lock.')) {\n    if (state === 'locked') return 'lock.unlock';\n    if (state === 'unlocked') return 'lock.lock';\n    return 'none';\n  }\n\n  if (target.startsWith('media_player.')) {\n    const feats = Number(states[target]?.attributes?.supported_features || 0);\n    if (state === 'off') return (feats & 128) ? 'media_player.turn_on' : 'none';\n    return (feats & 256) ? 'media_player.turn_off' : 'none';\n  }\n\n  return 'homeassistant.toggle';\n]]]\n",
-      "service_data": "[[[\n  if (variables.toggle_service_data) return variables.toggle_service_data;\n\n  return {\n    entity_id: variables.toggle_entity || entity?.entity_id\n  };\n]]]\n"
+      "service_data": "[[[\n  if (variables.toggle_service_data) return variables.toggle_service_data;\n\n  return {\n    entity_id: variables.toggle_entity || entity?.entity_id\n  };\n]]]\n",
+      "haptic": "light"
      },
      "type": "custom:button-card"
     }
@@ -3677,7 +3698,8 @@
   "icon_tap_action": {
    "action": "[[[ return variables.show_toggle ? 'call-service' : 'none'; ]]]\n",
    "service": "[[[\n  if (variables.toggle_service) return variables.toggle_service;\n\n  const target = variables.toggle_entity || entity?.entity_id || '';\n  const state = (states[target]?.state || entity?.state || '').toLowerCase();\n  if (state === 'unavailable' || state === 'unknown') return 'none';\n\n  if (target.startsWith('lock.')) {\n    if (state === 'locked') return 'lock.unlock';\n    if (state === 'unlocked') return 'lock.lock';\n    return 'none';\n  }\n\n  if (target.startsWith('media_player.')) {\n    const feats = Number(states[target]?.attributes?.supported_features || 0);\n    if (state === 'off') return (feats & 128) ? 'media_player.turn_on' : 'none';\n    return (feats & 256) ? 'media_player.turn_off' : 'none';\n  }\n\n  if (target.startsWith('vacuum.')) {\n    return (state === 'cleaning' || state === 'returning' || state === 'paused') ? 'vacuum.return_to_base' : 'vacuum.start';\n  }\n\n  return 'homeassistant.toggle';\n]]]\n",
-   "service_data": "[[[\n  if (variables.toggle_service_data) return variables.toggle_service_data;\n\n  return {\n    entity_id: variables.toggle_entity || entity?.entity_id\n  };\n]]]\n"
+   "service_data": "[[[\n  if (variables.toggle_service_data) return variables.toggle_service_data;\n\n  return {\n    entity_id: variables.toggle_entity || entity?.entity_id\n  };\n]]]\n",
+   "haptic": "light"
   },
   "show_entity_picture": true,
   "show_icon": false,
@@ -4484,14 +4506,17 @@
   "extra_styles": "#img-cell img {\n  transform-origin: 50% 50% !important;\n  animation: var(--casora-fan-animation, none) !important;\n  animation-play-state: var(--hsr-anim-paused, running) !important;\n}\n\n@keyframes casora-fan-spin {\n  from { transform: rotate(0deg); }\n  to   { transform: rotate(360deg); }\n}\n@keyframes casora-fan-coast {\n  from { transform: rotate(0deg); }\n  to   { transform: rotate(360deg); }\n}\n",
   "hold_action": {
    "action": "more-info",
-   "entity": "[[[ return entity?.entity_id ]]]"
+   "entity": "[[[ return entity?.entity_id ]]]",
+   "haptic": "medium"
   },
   "icon_hold_action": {
    "action": "more-info",
-   "entity": "[[[ return entity?.entity_id ]]]"
+   "entity": "[[[ return entity?.entity_id ]]]",
+   "haptic": "medium"
   },
   "icon_tap_action": {
-   "action": "toggle"
+   "action": "toggle",
+   "haptic": "light"
   },
   "name": "Ventilator",
   "show_entity_picture": true,
@@ -4671,10 +4696,12 @@
  "casora_geschirrspueler": {
   "entity_picture": "[[[ return window.casoraIconUrl(variables.icon || 'dishwasher'); ]]]\n",
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "icon_hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "show_entity_picture": true,
   "show_icon": false,
@@ -4949,7 +4976,8 @@
     "variables": {
      "light_entity": "[[[ return entity?.entity_id ]]]"
     }
-   }
+   },
+   "haptic": "light"
   },
   "show_icon": false,
   "show_last_changed": false,
@@ -5031,16 +5059,19 @@
   "entity_picture": "[[[\n  /* open (Falle gezogen) zeigt das offene Schloss wie unlocked, opening wie unlocking. */\n  if (['unlocked', 'open'].includes(variables.lock_state || entity?.state)) return window.casoraIconUrl('lock-open-fill');\n  if (['unlocking', 'opening'].includes(variables.lock_state || entity?.state)) return window.casoraIconUrl('lock-unlocking-fill');\n  return window.casoraIconUrl('lock-fill');\n]]]\n",
   "hold_action": {
    "action": "more-info",
-   "entity": "[[[ return entity?.entity_id ]]]"
+   "entity": "[[[ return entity?.entity_id ]]]",
+   "haptic": "medium"
   },
   "icon_hold_action": {
    "action": "more-info",
-   "entity": "[[[ return entity?.entity_id ]]]"
+   "entity": "[[[ return entity?.entity_id ]]]",
+   "haptic": "medium"
   },
   "icon_tap_action": {
    "action": "[[[ return variables.show_toggle ? 'call-service' : 'none'; ]]]\n",
    "service": "[[[\n  if (variables.toggle_service) return variables.toggle_service;\n\n  const target = variables.toggle_entity || entity?.entity_id || '';\n  const state = (states[target]?.state || entity?.state || '').toLowerCase();\n  if (state === 'unavailable' || state === 'unknown') return 'none';\n\n  if (target.startsWith('lock.')) {\n    if (state === 'locked') return 'lock.unlock';\n    if (state === 'unlocked') return 'lock.lock';\n    return 'none';\n  }\n\n  if (target.startsWith('media_player.')) {\n    const feats = Number(states[target]?.attributes?.supported_features || 0);\n    if (state === 'off') return (feats & 128) ? 'media_player.turn_on' : 'none';\n    return (feats & 256) ? 'media_player.turn_off' : 'none';\n  }\n\n  if (target.startsWith('vacuum.')) {\n    return (state === 'cleaning' || state === 'returning' || state === 'paused') ? 'vacuum.return_to_base' : 'vacuum.start';\n  }\n\n  return 'homeassistant.toggle';\n]]]\n",
-   "service_data": "[[[\n  if (variables.toggle_service_data) return variables.toggle_service_data;\n\n  return {\n    entity_id: variables.toggle_entity || entity?.entity_id\n  };\n]]]\n"
+   "service_data": "[[[\n  if (variables.toggle_service_data) return variables.toggle_service_data;\n\n  return {\n    entity_id: variables.toggle_entity || entity?.entity_id\n  };\n]]]\n",
+   "haptic": "light"
   },
   "show_entity_picture": true,
   "show_icon": true,
@@ -5161,7 +5192,8 @@
   "extra_styles": "#img-cell {\n  background: var(--casora-media-icon-bg, var(--casora-icon-circle-bg, rgba(0,0,0,0.20))) !important;\n  width: var(--casora-icon-circle-size, 44px) !important;\n  height: var(--casora-icon-circle-size, 44px) !important;\n  /* Forces a square whichever rule wins on each axis. */\n  aspect-ratio: 1 / 1 !important;\n}\n\n:host #img-cell img {\n  width: var(--casora-media-icon-size, var(--casora-icon-mask-scale, 60%)) !important;\n  height: var(--casora-media-icon-size, var(--casora-icon-mask-scale, 60%)) !important;\n  max-width: var(--casora-media-icon-size, var(--casora-icon-mask-scale, 60%)) !important;\n  max-height: var(--casora-media-icon-size, var(--casora-icon-mask-scale, 60%)) !important;\n  aspect-ratio: 1 / 1 !important;\n  object-fit: var(--casora-media-icon-fit, contain) !important;\n  transition: opacity 0.3s ease, width 0.3s ease, height 0.3s ease !important;\n}\n",
   "hold_action": {
    "action": "more-info",
-   "entity": "[[[ return entity?.entity_id ]]]"
+   "entity": "[[[ return entity?.entity_id ]]]",
+   "haptic": "medium"
   },
   "icon_tap_action": {
    "action": "[[[\n  /* Icon = Play/Pause (13.10.2026); aus → einschalten. Kann das Gerät es nicht: none = Popup wie die Kachel. */\n  const s = String(entity?.state || '').toLowerCase();\n  if (s === 'unavailable' || s === 'unknown') return 'none';\n  const feats = Number(entity?.attributes?.supported_features || 0);\n  if (s === 'off') return (feats & 128) ? 'call-service' : 'none';\n  if (s === 'playing' || s === 'buffering') return (feats & 1) ? 'call-service' : 'none';\n  return (feats & 16384) ? 'call-service' : 'none';\n]]]\n",
@@ -5607,7 +5639,8 @@
        "entity": "input_select.casora_mobile_filter",
        "tap_action": {
         "action": "fire-dom-event",
-        "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  return cur === 'security' ? 'all' : 'security';\n]]]\n"
+        "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  return cur === 'security' ? 'all' : 'security';\n]]]\n",
+        "haptic": "selection"
        },
        "template": "casora_badge_security_group",
        "type": "custom:button-card",
@@ -5627,7 +5660,8 @@
        "entity": "input_select.casora_mobile_filter",
        "tap_action": {
         "action": "fire-dom-event",
-        "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  return cur === 'climate' ? 'all' : 'climate';\n]]]\n"
+        "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  return cur === 'climate' ? 'all' : 'climate';\n]]]\n",
+        "haptic": "selection"
        },
        "template": "casora_badge_climate_group",
        "type": "custom:button-card",
@@ -5651,7 +5685,8 @@
        "entity": "input_select.casora_mobile_filter",
        "tap_action": {
         "action": "fire-dom-event",
-        "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  return cur === 'lights' ? 'all' : 'lights';\n]]]\n"
+        "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  return cur === 'lights' ? 'all' : 'lights';\n]]]\n",
+        "haptic": "selection"
        },
        "template": "casora_badge_light_group",
        "type": "custom:button-card",
@@ -5675,7 +5710,8 @@
        "entity": "input_select.casora_mobile_filter",
        "tap_action": {
         "action": "fire-dom-event",
-        "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  return cur === 'presence' ? 'all' : 'presence';\n]]]\n"
+        "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  return cur === 'presence' ? 'all' : 'presence';\n]]]\n",
+        "haptic": "selection"
        },
        "template": "casora_badge_presence_group",
        "type": "custom:button-card",
@@ -5692,7 +5728,8 @@
        "entity": "input_select.casora_mobile_filter",
        "tap_action": {
         "action": "fire-dom-event",
-        "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  return cur === 'energy' ? 'all' : 'energy';\n]]]\n"
+        "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  return cur === 'energy' ? 'all' : 'energy';\n]]]\n",
+        "haptic": "selection"
        },
        "template": "casora_badge_energy_group",
        "type": "custom:button-card",
@@ -5708,7 +5745,8 @@
        "entity": "input_select.casora_mobile_filter",
        "tap_action": {
         "action": "fire-dom-event",
-        "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  return cur === 'media' ? 'all' : 'media';\n]]]\n"
+        "casora_filter": "[[[\n  const cur = states['input_select.casora_mobile_filter']?.state ?? 'all';\n  return cur === 'media' ? 'all' : 'media';\n]]]\n",
+        "haptic": "selection"
        },
        "template": "casora_badge_media_group",
        "type": "custom:button-card",
@@ -9379,7 +9417,8 @@
   "entity": "[[[\n  return (\n    variables.sensor_1 ||\n    variables.sensor_2 ||\n    variables.sensor_3 ||\n    variables.sensor_4 ||\n    variables.sensor_5 ||\n    variables.sensor_6 ||\n    null\n  );\n]]]\n",
   "entity_picture": "[[[\n  return window.casoraIconUrl('motion');\n]]]\n",
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "icon_tap_action": {
    "action": "none"
@@ -9494,7 +9533,8 @@
  "casora_network": {
   "hold_action": {
    "action": "more-info",
-   "entity": "[[[\n  const ulId = variables.entity_upload || variables.upload_sensor;\n  const dl = parseFloat(entity?.state);\n  const ul = parseFloat(states[ulId]?.state);\n  return (Number.isFinite(ul) && ul > dl && ulId)\n    ? ulId\n    : entity?.entity_id;\n]]]\n"
+   "entity": "[[[\n  const ulId = variables.entity_upload || variables.upload_sensor;\n  const dl = parseFloat(entity?.state);\n  const ul = parseFloat(states[ulId]?.state);\n  return (Number.isFinite(ul) && ul > dl && ulId)\n    ? ulId\n    : entity?.entity_id;\n]]]\n",
+   "haptic": "medium"
   },
   "icon_tap_action": {
    "action": "[[[\n  return window.casoraPopupAction ? window.casoraPopupAction() : 'more-info';\n]]]\n",
@@ -11156,7 +11196,8 @@
  },
  "casora_plant": {
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "state": [
    {
@@ -11709,7 +11750,8 @@
    "service": "[[[\n  const s = (entity?.state || '').toLowerCase();\n  return ['open', 'opening'].includes(s) ? 'cover.close_cover' : 'cover.open_cover';\n]]]\n",
    "service_data": {
     "entity_id": "[[[ return entity?.entity_id ]]]"
-   }
+   },
+   "haptic": "light"
   }
  },
  "casora_popup_dishwasher": {
@@ -11884,7 +11926,8 @@
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst wie bisher. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', [])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own) return _own;\n  const n = String(this._config?.name || '').trim();\n  if (n && !n.startsWith('[[[')) return n;\n  return (window.casoraClimateMembers ? window.casoraClimateMembers(entity, states).length : entity?.attributes?.member_entities) ? 'Fußbodenheizung' : (entity?.attributes?.friendly_name || 'Heizung');\n]]]",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
-   }
+   },
+   "haptic": "medium"
   },
   "tap_action": {
    "casora_popup": {
@@ -11898,7 +11941,8 @@
     ],
     "title": "[[[\n  /* Eigener Popup-Titel der Kachel (room_name) zuerst, sonst wie bisher. */\n  const _own = window.casoraPopupTitle ? window.casoraPopupTitle(null, variables, '', [])\n    : (() => { const r = String(variables.room_name || '').trim(); return r.startsWith('[[[') ? '' : r; })();\n  if (_own) return _own;\n  const n = String(this._config?.name || '').trim();\n  if (n && !n.startsWith('[[[')) return n;\n  return (window.casoraClimateMembers ? window.casoraClimateMembers(entity, states).length : entity?.attributes?.member_entities) ? 'Fußbodenheizung' : (entity?.attributes?.friendly_name || 'Heizung');\n]]]",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
-   }
+   },
+   "haptic": "light"
   }
  },
  "casora_popup_football": {
@@ -12059,7 +12103,8 @@
     "variables": {
      "light_entity": "[[[ return entity?.entity_id ]]]"
     }
-   }
+   },
+   "haptic": "light"
   }
  },
  "casora_popup_lock": {
@@ -15346,7 +15391,8 @@
  },
  "casora_scenes": {
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "state": [
    {
@@ -15556,18 +15602,21 @@
   "entity_picture": "[[[ return window.casoraIconUrl('power_on'); ]]]\n",
   "hold_action": {
    "action": "more-info",
-   "entity": "[[[ return entity?.entity_id ]]]"
+   "entity": "[[[ return entity?.entity_id ]]]",
+   "haptic": "medium"
   },
   "icon_hold_action": {
    "action": "more-info",
-   "entity": "[[[ return entity?.entity_id ]]]"
+   "entity": "[[[ return entity?.entity_id ]]]",
+   "haptic": "medium"
   },
   "icon_tap_action": {
    "action": "call-service",
    "service": "switch.toggle",
    "service_data": {
     "entity_id": "[[[ return entity?.entity_id ]]]"
-   }
+   },
+   "haptic": "light"
   },
   "show_entity_picture": true,
   "show_icon": false,
@@ -15803,7 +15852,8 @@
        "variables": {
         "thermostat_entity_id": "[[[ return window.casoraOverlayKey?.(entity?.entity_id) ?? entity?.entity_id ]]]"
        }
-      }
+      },
+      "haptic": "selection"
      },
      "template": [
       "casora_default"
@@ -16453,10 +16503,12 @@
  "casora_trockner": {
   "entity_picture": "[[[ return window.casoraIconUrl(variables.icon || 'dryer'); ]]]\n",
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "icon_hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "show_entity_picture": true,
   "show_icon": false,
@@ -16594,7 +16646,8 @@
  },
  "casora_updates": {
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "icon_tap_action": {
    "action": "none"
@@ -16721,11 +16774,13 @@
   "entity_picture": "[[[\n  const raw = (entity?.state || '').toLowerCase();\n  const status = (variables.entity_status && states[variables.entity_status]?.state || '').toLowerCase();\n  const drying = variables.entity_drying && states[variables.entity_drying]?.state === 'on';\n  const cleanSet = ['cleaning','returning','returning_home','docking','spot_cleaning','zoned_cleaning','segment_cleaning','going_to_target','mapping','patrol','remote_control_active','manual_mode','robot_status_mopping','clean_mop_cleaning','clean_mop_mopping','segment_mopping','segment_clean_mop_cleaning','segment_clean_mop_mopping','zoned_mopping','zoned_clean_mop_cleaning','zoned_clean_mop_mopping'];\n  const chargeSet = ['charging','charging_problem','charging_complete','emptying_the_bin','washing_the_mop','washing_the_mop_2','going_to_wash_the_mop','attaching_the_mop','detaching_the_mop','back_to_dock_washing_duster','air_drying_stopping'];\n  if (cleanSet.includes(raw) || cleanSet.includes(status)) return window.casoraIconUrl('vacuum-clean');\n  if (drying || chargeSet.includes(raw) || chargeSet.includes(status)) return window.casoraIconUrl('vacuum-charge');\n  return window.casoraIconUrl('vacuum');\n]]]\n",
   "hold_action": {
    "action": "more-info",
-   "entity": "[[[ return entity?.entity_id ]]]"
+   "entity": "[[[ return entity?.entity_id ]]]",
+   "haptic": "medium"
   },
   "icon_hold_action": {
    "action": "more-info",
-   "entity": "[[[ return entity?.entity_id ]]]"
+   "entity": "[[[ return entity?.entity_id ]]]",
+   "haptic": "medium"
   },
   "icon_tap_action": {
    "action": "call-service",
@@ -16953,10 +17008,12 @@
  "casora_waschmaschine": {
   "entity_picture": "[[[ return window.casoraIconUrl(variables.icon || 'laundry-room'); ]]]\n",
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "icon_hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "show_entity_picture": true,
   "show_icon": false,
@@ -17331,10 +17388,12 @@
  "casora_weather_warning": {
   "extra_styles": "/* Dreieck optisch mittig: Bild und Weich-Maske (::before) gemeinsam anheben – sonst stand die Maske 2 px darunter wie ein Schatten. */\n#img-cell img,\n#img-cell::before {\n  transform: translateY(-2px) !important;\n}\n",
   "hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "icon_hold_action": {
-   "action": "more-info"
+   "action": "more-info",
+   "haptic": "medium"
   },
   "icon_tap_action": {
    "action": "none"
@@ -17431,7 +17490,8 @@
   },
   "hold_action": {
    "action": "more-info",
-   "entity": "[[[ return entity?.entity_id ]]]"
+   "entity": "[[[ return entity?.entity_id ]]]",
+   "haptic": "medium"
   },
   "icon_tap_action": {
    "action": "call-service",

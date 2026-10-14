@@ -405,6 +405,7 @@
         var kind = n.getAttribute('data-casora-person-act');
         if (!kind) continue;
         e.preventDefault(); e.stopPropagation();
+        if (window.casoraHaptic) window.casoraHaptic('light');
         P.act(kind, n.getAttribute('data-casora-person'), n.getAttribute('data-casora-notify'));
         return;
       }
