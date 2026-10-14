@@ -176,8 +176,9 @@
     + ".comrow{display:flex;align-items:center;gap:10px;padding:10px 4px;border-top:1px solid rgba(127,127,127,.15)}.comrow:first-child{border-top:0}"
     + ".comrow .comtx{flex:1;min-width:0}.comrow b{display:block;font-size:14px}.comrow span{font-size:13px;opacity:.7}"
     + ".comrow small{display:block;font-size:12px;opacity:.6;margin-top:2px}"
-    + ".comshot{width:132px;height:88px;border-radius:12px;flex:none;object-fit:cover;background:rgba(127,127,127,.15);border:0;padding:0;display:block}"
-    + "button.comzoom{border:0;padding:0;background:none;border-radius:12px;flex:none;cursor:zoom-in;line-height:0}"
+    // Vorschaubild = genau die Kachel (240 × 200, Radius 32 px): gleiches Seitenverhältnis, Ecken anteilig.
+    + ".comshot{width:120px;height:100px;border-radius:13.33%/16%;flex:none;object-fit:cover;background:rgba(127,127,127,.15);border:0;padding:0;display:block}"
+    + "button.comzoom{border:0;padding:0;background:none;border-radius:13.33%/16%;flex:none;cursor:zoom-in;line-height:0}"
     + ".comrow.card{align-items:flex-start}.comrow.card > .comchip{align-self:center}"
     + ".comlink{display:inline-flex;align-items:center;gap:5px;margin-top:6px;border:0;border-radius:999px;padding:4px 10px 4px 8px;font:inherit;font-size:13px;font-weight:600;"
     + "background:var(--casora-studio-chip, rgba(118,118,128,.18));color:inherit;cursor:pointer}.comlink ha-icon{--mdc-icon-size:16px;display:flex}"
@@ -219,7 +220,7 @@
     img.alt = tr(t.label);
     const seg = el("div", "comseg");
     // Popup-Bild ist genau auf den Rahmen geschnitten: Ecken rund wie das Popup selbst.
-    const show = (k) => { img.src = S[k]; img.style.borderRadius = k === "popup" ? "36px" : ""; seg.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.k === k)); };
+    const show = (k) => { img.src = S[k]; img.style.borderRadius = k === "popup" ? "36px" : "13.33%/16%"; img.style.width = k === "popup" ? "" : "min(360px, 80vw)"; seg.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.k === k)); };
     [["tile", "Tile"], ["popup", "Popup"]].forEach(([k, label]) => {
       if (k === "popup" && !hasPopup) return;
       const b = el("button", "", tr(label));
