@@ -94,6 +94,26 @@ Casora picks the right tile and popup for each device on its own. Everything bel
 
 The look is *Casora*: warm linen, generous corners and soft shadows, in light and dark, set in Inter. *Casora Nebel* is the same calm design in cool grey with a petrol accent. It follows Home Assistant's theme mode. The classic glass looks from Hemma are still there as legacy options.
 
+## Community cards
+
+Missing a card for one of your devices? Ask for it, and it may become a Community card for everyone.
+
+**Request a card.** In the Studio, open **Community** in the header and choose **Request a card…**. Describe the device and what the tile and popup should show, and pick a few example entities. Casora prepares a GitHub issue for you and shows you the exact text before anything is sent. It contains the kind of device, units, device classes and attribute names, but no entity names, rooms or places. You submit it on GitHub yourself.
+
+**Follow it.** Under **Your requests** in the Community the Studio shows where each request stands:
+
+| State | Meaning |
+|---|---|
+| Open | Received, not picked up yet |
+| Question | Something is unclear, the answer from the Casora team is shown right there |
+| In progress | The card is being built |
+| Built | The card ships with the next Casora release |
+| Declined | Not planned, with the reason |
+
+**Add a card.** Community cards ship with Casora, but they only appear in **Add tile** once you add them in the Community, so your tile list stays short. Every card has a preview of its tile and popup. Removing a card asks whether tiles that use it stay or go. Nothing is downloaded from outside your Home Assistant: a new Community card comes with a Casora release.
+
+Available now: **Robot lawn mower** (any lawn mower in Home Assistant, with extra details for Gardena).
+
 ## Requirements
 
 | Requirement | Notes |
