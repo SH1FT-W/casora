@@ -1,4 +1,4 @@
-"""Casora ↔ öffentliche GitHub-API (update_source.py, update.py, updates.py, card_updates.py) ohne HA-Kern.
+"""Casora ↔ öffentliche GitHub-API (update_source.py, update.py, updates.py) ohne HA-Kern.
 
   uv run --python 3.14 --with homeassistant python dev/unit/update_github_test.py
 
@@ -30,7 +30,7 @@ sys.path.insert(0, ROOT)
 from aiohttp import web  # noqa: E402
 import aiohttp  # noqa: E402
 
-from custom_components.casora import card_updates, update, update_source, updates  # noqa: E402
+from custom_components.casora import update, update_source, updates  # noqa: E402
 from custom_components.casora.release_notes import latest_casora  # noqa: E402
 
 fails: list[str] = []
@@ -136,19 +136,6 @@ class Records(logging.Handler):
         self.items.append(record)
 
 
-def card_checker(hass) -> card_updates.CardUpdates:
-    cu = object.__new__(card_updates.CardUpdates)
-    cu.hass = hass
-    cu._data = {"auto": False, "applied": [], "packages": {}, "rejected": {}}
-
-    async def _noop(*a, **k):
-        return {}
-
-    cu._save = _noop
-    cu._shipped = _noop
-    return cu
-
-
 async def main():
     app = web.Application()
     app.router.add_get("/repos/OWNER/casora/releases", gh_releases)
@@ -233,17 +220,6 @@ async def main():
         check("Alte Fassung gesichert", len(backups) == 1 and backups[0].endswith(".zip"), repr(backups))
         check("Neustart-Hinweis", issues and issues[0]["translation_placeholders"] == {"version": "9.0.1"})
 
-        # ── Karten-Updates ───────────────────────────────────────────────
-        cu = card_checker(hass)
-        await cu._fetch({})
-        d = cu._data
-        check("Karten: gutes Paket geladen", "karten-2026-10-01" in d["packages"]
-              and d["packages"]["karten-2026-10-01"]["_asset"] == "11:a", repr(list(d["packages"])))
-        check("Karten: Anhang als octet-stream", any(s["path"].endswith("/assets/11") and s["accept"] == "application/octet-stream"
-                                                     for s in SEEN))
-        check("Karten: falsche Prüfsumme abgelehnt", "Prüfsumme" in d["rejected"].get("karten-2026-10-02", {}).get("reason", ""))
-        check("Karten: ohne Paket-Datei abgelehnt", d["rejected"].get("karten-leer", {}).get("reason") == "Release ohne Paket-Datei")
-
         # ── 404: Repo (noch) nicht öffentlich → still keine Updates ───────
         MODE["now"] = "404"
         hass404 = Hass(tempfile.mkdtemp())
@@ -255,9 +231,6 @@ async def main():
         await ent404.async_update()
         check("404: Entität ohne Fehler, nichts Neues", hass404.data["casora"][update.DATA_LAST_ERROR] is None
               and ent404.latest_version == ent404.installed_version)
-        cu404 = card_checker(hass404)
-        await cu404.async_check()
-        check("404: Karten-Updates ohne Fehler", cu404._data.get("error") is None and cu404._data["packages"] == {})
         loud = [r for r in log.items if r.levelno >= logging.WARNING]
         check("404: keine Warnung/Fehler im Log", not loud, repr([r.getMessage() for r in loud]))
 
@@ -276,13 +249,9 @@ async def main():
         entrl = update.CasoraUpdate(hrl, SimpleNamespace(entry_id="e5", options={}))
         await entrl.async_update()
         items, err = await updates._remote(hrl, force=True)
-        curl = card_checker(hrl)
-        await curl.async_check()
         check("403-Limit: während der Pause keine Anfrage", len(SEEN) == n, len(SEEN) - n)
         check("403-Limit: Entität meldet rate_limited", hrl.data["casora"][update.DATA_LAST_ERROR] == "rate_limited")
         check("403-Limit: Studio meldet rate_limited", err == "rate_limited")
-        check("403-Limit: Karten „später erneut“", curl._data.get("error") == "Zu viele Anfragen – später erneut",
-              repr(curl._data.get("error")))
         loud = [r for r in log.items if r.levelno >= logging.WARNING]
         check("403-Limit: keine Warnung/Fehler im Log", not loud, repr([r.getMessage() for r in loud]))
         hrl.data["casora"][update_source._PAUSE] = 0  # Freigabe erreicht
