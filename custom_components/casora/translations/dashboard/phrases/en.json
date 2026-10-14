@@ -1699,7 +1699,16 @@
   "Mäht gerade": "Mowing now",
   "Gemäht": "Mowed",
   "besteht noch": "still active",
-  "1 Fahrt": "1 run"
+  "1 Fahrt": "1 run",
+  "KI-Check": "AI check",
+  "Vorher sichern": "Back up first",
+  "Installieren": "Install",
+  "Überspringen": "Skip",
+  "Was ist neu": "What's new",
+  "Alle Hinweise": "All notes",
+  "Keine Versionshinweise": "No release notes",
+  "KI-Einschätzung": "AI assessment",
+  "Breaking Change": "Breaking change"
  },
  "patterns": [
   [
@@ -3409,6 +3418,14 @@
   [
    "^(\\d+) Fahrten$",
    "{1} runs"
+  ],
+  [
+   "^Neue Version (.+)$",
+   "New version {1}"
+  ],
+  [
+   "^Wird installiert · (\\d+) %$",
+   "Installing · {1}%"
   ]
  ]
 }

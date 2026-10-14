@@ -5722,6 +5722,18 @@ window.casoraMenuGlass = {
       -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     }
     .header-close[hidden] { display: none; }
+    .header-back {
+      appearance: none; -webkit-appearance: none; border: 0; margin: 0 8px 0 0; padding: 0;
+      width: 40px; height: 40px; flex: none; display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; cursor: pointer; position: relative;
+      background: var(--casora-soft-control-fill, rgba(127, 127, 127, 0.14));
+      color: var(--casora-popup-header-title-color, var(--primary-text-color, #fff));
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    }
+    .header-back[hidden] { display: none; }
+    .header-back svg { width: 22px; height: 22px; display: block; fill: currentColor; }
+    .header-back:active { transform: scale(var(--casora-press-scale, .97)); }
+    .header-back::before { content: ""; position: absolute; inset: -3px; border-radius: 50%; }
     .header-close svg {
       width: 24px;
       height: 24px;
@@ -6118,6 +6130,15 @@ window.casoraMenuGlass = {
       -webkit-backdrop-filter: none;
     }
     :host([soft]) .header-close svg { width: 18px; height: 18px; }
+    /* ‹ zurück vor der Symbol-Kachel: eine Spalte mehr im Kopf-Raster. */
+    :host([soft][has-back]) .header-bar { grid-template-columns: auto auto minmax(0, 1fr) auto auto; }
+    :host([soft][has-back]) .header-back { grid-column: 1; grid-row: 1; align-self: center; margin: 0;
+      width: 38px; height: 38px; color: var(--casora-soft-close-ink, var(--secondary-text-color)); }
+    :host([soft][has-back]) .header-back svg { width: 20px; height: 20px; }
+    :host([soft][has-back]) .header-ring { grid-column: 2; }
+    :host([soft][has-back]) .header-text { grid-column: 3; }
+    :host([soft][has-back]) .header-switch, :host([soft][has-back]) .header-actions { grid-column: 4; }
+    :host([soft][has-back]) .header-nav { grid-column: 5; }
     :host([soft]) .header-close:active { transform: scale(var(--casora-press-scale, .97)); }
     /* D-02: sichtbar 38 px, Trefferfläche 44 px (unsichtbarer Rand rundum) */
     :host([soft]) .header-close::before { content: ""; position: absolute; inset: -3px; border-radius: 50%; }
@@ -6697,6 +6718,10 @@ window.casoraMenuGlass = {
                   '</button>' +
                 '</section>' +
                 '<section class="header-content">' +
+                  // 1.5: ‹ zurück (cfg.back) – Detailseite im selben Popup, z. B. ein Update aus der Update-Liste.
+                  '<button class="header-back" type="button" aria-label="Zurück" hidden>' +
+                    '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15.4 5.4L14 4l-8 8 8 8 1.4-1.4L8.8 12z"></path></svg>' +
+                  '</button>' +
                   '<div class="header-ring" hidden></div>' +
                   // 1.3 Kopfmitte: Etikett, Titel und Statuszeile als EIN Block (Kopfzeile A: eigene Rasterzelle,
                   // die Kachel steht mittig dazu; sonst display: contents – Hemma 1/2 wie bisher).
@@ -6739,6 +6764,12 @@ window.casoraMenuGlass = {
       this._headerEyebrow = root.querySelector('.header-eyebrow');
       this._headerActions = root.querySelector('.header-actions');
       this._headerClose = root.querySelector('.header-close');
+      this._headerBack = root.querySelector('.header-back');
+      this._headerBack.addEventListener('click', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        var fn = this._backFn;
+        if (typeof fn === 'function') fn();
+      });
       this._headerContent = root.querySelector('.header-content');
       this._headerRing = root.querySelector('.header-ring');
       this._headerStatus = root.querySelector('.header-status');
@@ -6847,6 +6878,13 @@ window.casoraMenuGlass = {
       this._headerEyebrow.textContent = cfg.eyebrow || '';
       this._headReset();
       this._headerClose.hidden = cfg.close === false;
+      // 1.5: Zurück (cfg.back: Funktion) und die Konfiguration, mit der das Popup gerade offen ist –
+      // eine Detailseite merkt sie sich und öffnet sie mit ‹ wieder (window.casoraPopup.current).
+      this._backFn = typeof cfg.back === 'function' ? cfg.back : null;
+      this._headerBack.hidden = !this._backFn;
+      this._headerBack.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Zurück') : 'Zurück');
+      this.toggleAttribute('has-back', !!this._backFn);
+      this._cfgCurrent = data || {};
       /* D-02: Bildschirmleser-Name in der Oberflächensprache (war fest „Close“) */
       this._headerClose.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Schließen') : 'Schließen');
       // Weich: Ring aus der auslösenden Kachel. Gemerkt wird die Kachel, nicht das Ergebnis –
@@ -7604,6 +7642,8 @@ window.casoraMenuGlass = {
       }));
     },
     get element() { return _el; },
+    // 1.5: Konfiguration des offenen Popups (für Detailseiten mit ‹ zurück).
+    get current() { return _el && _el.hasAttribute('open') ? _el._cfgCurrent : null; },
     get surface() { return _el && _el.hasAttribute('open') ? _el.surface : null; },
     get enabled() { return flagOn(); },
     setEnabled: function (on) {
@@ -9068,6 +9108,13 @@ window.casoraMenuGlass = {
           // Licht und Jalousie in einer Gruppe: Casoras Popup des Geräts statt HAs Dialog (01-basis.js).
           // Ohne Kachelsuche: die fände die Gruppenkarte selbst (Gerät steht in ihrer Liste).
           var mid = t.dataset.casoraMi;
+          // 1.5: Module zeigen statt HAs Dialog eine eigene Detailseite (Update → _casoraUpdDetail, 17-update-detail.js).
+          var hooks = window._casoraMiHooks || [];
+          for (var hi = 0; hi < hooks.length; hi++) {
+            var done = false;
+            try { done = hooks[hi](mid, t); } catch (e) { done = false; }
+            if (done) { ev.preventDefault(); ev.stopPropagation(); return; }
+          }
           if (/^(light|cover)\./.test(mid) && window._casoraNotifyOpenViaCard) {
             window._casoraSuppressDismiss = Date.now() + 600;
             window._casoraNotifyOpenViaCard(mid, function (ok) { if (!ok && window.casoraPopup) window.casoraPopup.moreInfo(mid); }, null, true);

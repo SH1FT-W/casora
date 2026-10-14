@@ -81,6 +81,7 @@ const MODULES = [
   '14-pulse',
   '15-person',
   '16-maeher',
+  '17-update-detail',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());
