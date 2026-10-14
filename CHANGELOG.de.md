@@ -9,6 +9,8 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ### Behoben
 - **Zurück in der Schloss- und Tanken-Ansicht:** Der ‹ Zurück-Knopf liegt nicht mehr über dem Symbol. Wie auf allen Casora-Seiten steht er jetzt vor Symbol und Titel.
 - **3D-Drucker auf Englisch:** Das Popup zeigte „1:36 Std. übrig · Schicht 124/295“ auf Deutsch. Jetzt steht dort „1:36 h left · Layer 124/295“.
+- **„Weitere Einstellungen“ bei Lampen und Rollos:** Die Zeile im Popup einer einzelnen Lampe tat nichts. Jetzt öffnet sie die Geräteseite wie bei den übrigen Geräten.
+- **Tank-Logos:** Die Markenlogos haben die Form der übrigen Symbole im Popup. Vorher lag ein rundes Logo auf dem abgerundeten Quadrat, und dessen Ecken schauten hervor.
 
 ## 1.5.0 – 14.10.2026
 
