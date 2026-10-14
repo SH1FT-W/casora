@@ -242,7 +242,9 @@
   };
   K.mark = function (s, size, dark) {
     var px = size + 'px', m = K.brand(s), lg = m && m[1], st = lg ? SEEN[lg] : 0;
-    var wrap = 'class="ct-logo" style="width:' + px + ';height:' + px + ';border-radius:50%;flex:none;position:relative;overflow:hidden;';
+    // Form wie die übrigen Symbole im Popup (abgerundetes Quadrat, --casora-soft-icon-radius), sonst Kreis –
+    // vorher stand ein Kreis auf der eckigen Symbol-Fläche und deren Ecken schauten hervor (14.10.2026).
+    var wrap = 'class="ct-logo" style="width:' + px + ';height:' + px + ';border-radius:var(--casora-soft-icon-radius, 50%);flex:none;position:relative;overflow:hidden;';
     var abbr = function (show) {
       return '<span style="position:absolute;inset:0;display:' + (show ? 'grid' : 'none') + ';place-items:center;color:#fff;'
         + 'font-size:' + Math.round(size * .34) + 'px;font-weight:800;letter-spacing:.02em">' + esc(K.abbr(s)) + '</span>';

@@ -344,8 +344,11 @@ for (const vp of [{ name: 'Desktop', width: 1440, height: 900 }, { name: 'Handy'
     await check(vp.name + ': Logo lädt nicht → Kürzel', wiro && wiro.kind === 'kuerzel' && !wiro.img && wiro.text === 'WT', wiro);
     await check(vp.name + ': freie Tankstelle zeigt die Zapfsäule statt eines Kürzels', frei && frei.kind === 'frei' && frei.text === '' && th && th.kind === 'kuerzel', { frei, th });
     const sizes = L.map((x) => x.size.join('x'));
-    await check(vp.name + ': alle Logo-Kreise gleich groß und rund (Liste und Kacheln)',
-      L.length >= 10 && L.filter((x) => x.list).length === logoStations.length && new Set(sizes).size === 1 && L.every((x) => x.radius === '50%'), sizes);
+    // Form wie die übrigen Popup-Symbole (--casora-soft-icon-radius): im Casora-Design abgerundetes Quadrat (14.10.2026).
+    const want = await page.evaluate(() => { const p = window.casoraPopup.element; return (getComputedStyle(p).getPropertyValue('--casora-soft-icon-radius') || '').trim(); });
+    await check(vp.name + ': alle Logos gleich groß, Form wie die übrigen Symbole (Liste und Kacheln)',
+      L.length >= 10 && L.filter((x) => x.list).length === logoStations.length && new Set(sizes).size === 1
+      && new Set(L.map((x) => x.radius)).size === 1 && (want ? L[0].radius === want : L[0].radius === '50%'), { sizes, radius: [...new Set(L.map((x) => x.radius))], want });
     // Neu zeichnen (Umschalter): bekannte Ergebnisse sofort, kein Zwischenzustand.
     await tap(page, '.ct-seg .hui-sg:nth-child(2)');
     const again = await page.evaluate(() => window.__pierce('.ct-list .ct-logo', window.casoraPopup.surface).map((e) => [e.dataset.logo, (e.querySelector('img') || { style: {} }).style.opacity || '']));
