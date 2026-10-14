@@ -35,7 +35,7 @@ from .const import DOMAIN
 STORAGE_KEY = f"{DOMAIN}.settings"
 STORAGE_VERSION = 1
 # Nur diese Bereiche kennt Casora; Unbekanntes wird nicht gespeichert.
-SECTIONS = ("waste", "calendars", "notify", "scenes", "contacts", "media", "night_entity", "ebike", "umzug", "basis", "welcome")
+SECTIONS = ("waste", "calendars", "notify", "scenes", "contacts", "media", "night_entity", "ebike", "umzug", "basis", "welcome", "community")
 
 
 def _store(hass: HomeAssistant) -> Store:

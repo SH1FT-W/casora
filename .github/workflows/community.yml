@@ -1,97 +1,23 @@
-# Community-Karten und Kartenwünsche (1.5).
-# Einreichungen kommen als vorausgefülltes Issue aus dem Studio. Labels im Link übernimmt GitHub nur für
-# Mitglieder – daher erkennt diese Action die Art am Inhalt und setzt das Label selbst.
-# Sicherheit: Issue-Inhalte gehen nur über Umgebungsvariablen in die Schritte, nie in den Befehlstext.
-# Geprüft wird mit demselben Prüfer wie im Studio (tools/community-check.mjs); freigeben (Label
-# „freigegeben“) kann nur, wer im Repo Labels setzen darf.
+# Kartenwünsche (1.5): Einreichungen kommen als vorausgefülltes Issue aus dem Studio. Labels im Link
+# übernimmt GitHub nur für Mitglieder – daher erkennt diese Action den Wunsch am Titel und setzt das
+# Label selbst. Sicherheit: Issue-Inhalte gehen nur über Umgebungsvariablen in den Schritt.
 name: Community
 on:
   issues:
-    types: [opened, edited, labeled]
+    types: [opened]
 permissions:
-  contents: write
   issues: write
-concurrency:
-  group: community-${{ github.event.issue.number }}
-  cancel-in-progress: false
 jobs:
   einordnen:
-    if: github.event.action != 'labeled'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - name: Art erkennen und prüfen
+      - name: Kartenwunsch markieren
         env:
           GH_TOKEN: ${{ github.token }}
           N: ${{ github.event.issue.number }}
-          ACTION: ${{ github.event.action }}
-          ISSUE: ${{ toJSON(github.event.issue) }}
           TITLE: ${{ github.event.issue.title }}
-          BODY: ${{ github.event.issue.body }}
         run: |
-          printf '%s' "$ISSUE" > /tmp/issue.json
           case "$TITLE" in
             "Kartenwunsch:"*)
               gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --add-label kartenwunsch || true ;;
           esac
-          if printf '%s' "$BODY" | grep -q '```casora-karte'; then
-            gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --add-label community-karte || true
-            if [ "$ACTION" = "edited" ]; then
-              # Nach einer Änderung gilt eine frühere Sichtung nicht mehr: neu prüfen und neu ansehen.
-              gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --remove-label in-pruefung --remove-label freigegeben || true
-              gh issue comment "$N" --repo "$GITHUB_REPOSITORY" --body "Die Einreichung wurde geändert. Sie wird neu geprüft und muss neu angesehen werden." || true
-            fi
-            if node tools/community-check.mjs pruefen /tmp/issue.json > /tmp/out.txt; then
-              gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --add-label in-pruefung --remove-label rueckfrage || true
-            else
-              { echo "Die automatische Prüfung hat die Karte abgelehnt:"; echo; cat /tmp/out.txt; echo; echo "Erlaubt sind nur Casora-Kacheln mit Platzhaltern, ohne Formeln, HTML, Links oder Aktionen."; } > /tmp/msg.md
-              gh issue comment "$N" --repo "$GITHUB_REPOSITORY" --body-file /tmp/msg.md
-              gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --add-label rueckfrage --remove-label in-pruefung || true
-            fi
-          fi
-  aufnehmen:
-    if: github.event.action == 'labeled' && github.event.label.name == 'freigegeben'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - name: In den Katalog aufnehmen
-        env:
-          GH_TOKEN: ${{ github.token }}
-          N: ${{ github.event.issue.number }}
-          ISSUE: ${{ toJSON(github.event.issue) }}
-        run: |
-          printf '%s' "$ISSUE" > /tmp/issue.json
-          # Kurz vor der Freigabe geändert? Dann wurde womöglich eine andere Fassung angesehen als aufgenommen.
-          EDIT=$(gh api graphql -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){issue(number:$n){lastEditedAt}}}' -f o="${GITHUB_REPOSITORY%/*}" -f r="${GITHUB_REPOSITORY#*/}" -F n="$N" --jq '.data.repository.issue.lastEditedAt // empty')
-          if [ -n "$EDIT" ] && [ $(( $(date +%s) - $(date -d "$EDIT" +%s) )) -lt 900 ]; then
-            gh issue comment "$N" --repo "$GITHUB_REPOSITORY" --body "Die Einreichung wurde in den letzten 15 Minuten geändert. Bitte die aktuelle Fassung ansehen und danach erneut freigeben."
-            gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --remove-label freigegeben || true
-            # Gewollte Ablehnung, kein Fehler: grün enden (sonst schickt GitHub dem Freigebenden eine Fehler-Mail).
-            exit 0
-          fi
-          if ! node tools/community-check.mjs aufnehmen /tmp/issue.json > /tmp/out.txt; then
-            { echo "Freigabe nicht möglich, die Prüfung schlägt fehl:"; echo; cat /tmp/out.txt; } > /tmp/msg.md
-            gh issue comment "$N" --repo "$GITHUB_REPOSITORY" --body-file /tmp/msg.md
-            gh issue edit "$N" --repo "$GITHUB_REPOSITORY" --remove-label freigegeben || true
-            exit 0
-          fi
-          git config user.name "casora-community"
-          git config user.email "actions@users.noreply.github.com"
-          git add community/karten.json
-          git commit -m "Community: Karte aus #$N aufgenommen"
-          # Zwei Freigaben kurz hintereinander: der zweite Lauf holt den neuen Katalog und trägt neu ein.
-          for i in 1 2 3; do
-            git push && break
-            git reset -q --hard HEAD~1 && git pull -q --rebase
-            node tools/community-check.mjs aufnehmen /tmp/issue.json > /dev/null
-            git add community/karten.json && git commit -q -m "Community: Karte aus #$N aufgenommen"
-            [ "$i" = 3 ] && exit 1
-          done
-          # Genau die aufgenommene Fassung festhalten (falls das Issue später geändert wird).
-          { echo "Danke! Die Karte steht jetzt im Studio unter „Kachel hinzufügen › Karten der Community“."; echo; echo "Aufgenommen wurde diese Fassung:"; echo; echo '```json'; node -e 'const c=require("./community/karten.json").cards.find((x)=>x.issue===Number(process.argv[1]));console.log(JSON.stringify(c&&c.card,null,1))' "$N"; echo '```'; } > /tmp/msg.md
-          gh issue comment "$N" --repo "$GITHUB_REPOSITORY" --body-file /tmp/msg.md
-          gh issue close "$N" --repo "$GITHUB_REPOSITORY"

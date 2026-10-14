@@ -281,6 +281,21 @@ window.CASORA_TILE_TYPES = [
     ] },
 ];
 
+// Community-Karten (1.5): Kachelarten mit `community: {desc, needs?, preview?}` – gebaut aus Kartenwünschen,
+// kommen mit dem Release, stehen aber erst in „Kachel hinzufügen“, wenn man sie unter Community hinzufügt
+// (window.casoraCommunityOn, casora-panel-community.js). Bestehende Kacheln erkennt das Studio immer.
+//   desc   – Kurzbeschreibung (englisch, Übersetzung in translations/panel)
+//   needs  – Integration (Domain), die die Karte braucht; fehlt sie, steht das als Hinweis dabei
+//   preview – Vorschaubild, sonst /casora_assets/community/<id>.webp
+window.casoraCommunityType = (t) => {
+  if (!t || !t.community || t._communityWrapped) return t;
+  const own = t.onlyIf;
+  t.onlyIf = (hass) => !!(window.casoraCommunityOn && window.casoraCommunityOn.has(t.id)) && (!own || own(hass));
+  t._communityWrapped = true;
+  return t;
+};
+window.CASORA_TILE_TYPES.forEach(window.casoraCommunityType);
+
 // Symbole, die Casora mitliefert, aber das Panel nicht kennt (Auswahlliste + Kachelliste).
 window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "3D_Printer", "dryer", "dishwasher", "fish", "camera", "attention2", "sun", "trash", "car", "car_side",

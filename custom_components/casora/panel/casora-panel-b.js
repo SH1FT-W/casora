@@ -544,7 +544,7 @@
         mk("dash", "dash", "Dashboard", (b) => this._bDashMenu(b));
         // UX-04: Einstellungen für alle Dashboards – nicht „Haus & Geräte“ (so heißt nur die erste Seite).
         mk("home", "gear", "Settings", (b) => this._bHomeMenu(b));
-        // 1.5: Community – Karten anderer, eigene teilen, Kartenwunsch (casora-panel-community.js).
+        // 1.5: Community – Community-Karten hinzufügen/entfernen, Kartenwunsch (casora-panel-community.js).
         const com = mk("com", "community", "Community", () => this._comCatalog && this._comCatalog());
         com.setAttribute("aria-haspopup", "dialog");
         const upd = mk("upd", "upd", "Update", () => this._cuFromMenu && this._cuFromMenu(), "bupd");

@@ -729,7 +729,7 @@
         && !!(this._hass && this._hass.user && this._hass.user.is_admin));
       extra("Badge…", () => { this._bLeavePages && this._bLeavePages(); this._sel = null; this._group = "badges"; this._stackOpenReq = "badges"; this._bOpen = true; this._renderForm(); });
       extra("Custom card (YAML)…", () => { const r = room$(this); if (r && this._addCustomCard) this._addCustomCard(r); });
-      // 1.5: Community (casora-panel-community.js) – Karten anderer und Kartenwunsch.
+      // 1.5: Community (casora-panel-community.js) – Community-Karten und Kartenwunsch.
       extra("Community cards…", () => this._comCatalog(), typeof this._comCatalog === "function");
       extra("Request a card…", () => this._comWish(), typeof this._comWish === "function");
       input.addEventListener("input", () => { at = 0; paint(); });

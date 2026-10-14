@@ -25140,7 +25140,7 @@ class CasoraPanel extends HTMLElement {
       const kaItems = ka ? ka.addItems(this) : [];
       const at = rest.findIndex((x) => x.id === CUSTOM_TILE.id);
       if (kaItems.length) rest.splice(at < 0 ? rest.length : at, 0, ...kaItems);
-      // Ganz unten: Karten anderer und Kartenwunsch (1.5).
+      // Ganz unten: Community-Karten und Kartenwunsch (1.5).
       if (this._comCatalog) {
         const g = trLabel("Community");
         rest.push({ id: "__com_catalog", label: trLabel("Community cards…"), group: g, quiet: false },
@@ -25602,12 +25602,8 @@ class CasoraPanel extends HTMLElement {
     // Casora: eigene Kachelart anlegen / wechseln (casora-panel-kachelart.js).
     const ka = window.casoraKachelart && window.casoraKachelart.menu ? window.casoraKachelart : null;
     if (ka) ka.menu(this, menu, { room, tile, type });
-    // 1.5: „Mit der Community teilen …“ (casora-panel-community.js).
-    const cm = window.casoraCommunityMenu || null;
-    if (cm) cm.menu(this, menu, { room, tile: shell, type });
     dots.onclick = () => this._menuAt(dots, menu, (id) => {
       if (ka && ka.pick(this, id, { room, tile, type, anchor: dots })) return;
-      if (cm && cm.pick(this, id, { room, tile: shell, type })) return;
       if (id === "edit") return this._editRawCard(room, shell);
       if (id === "carousel_split") return this._carouselSplit(room, shell);
       if (id === "carousel_join") return this._carouselJoin(room, shell);
