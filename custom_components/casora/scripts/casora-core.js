@@ -7200,7 +7200,10 @@ window.casoraMenuGlass = {
           var r = el.getBoundingClientRect();
           if (r.width < 2 || r.height < 2 || r.top >= top) continue;
           var cs = getComputedStyle(el);
-          if (cs.visibility === 'hidden' || cs.opacity === '0') continue;
+          // Was gerade einblendet (Deckkraft 0 mit Animation) oder bis zum fertigen Layout versteckt ist
+          // (visibility, z. B. die Raumleiste im Licht-Popup), belegt seinen Platz schon – mitzählen. Sonst schob
+          // der Abgleich den Inhalt unter den Kopf, bis die zweite Messung es korrigierte (Sprung, 14.10.2026).
+          if (cs.opacity === '0' && !(el.getAnimations && el.getAnimations().length)) continue;
           var paints = (cs.backgroundColor && !/rgba\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor)) || cs.backgroundImage !== 'none';
           var text = false;
           for (var c = el.firstChild; c && !text; c = c.nextSibling) if (c.nodeType === 3 && c.textContent.trim()) text = true;
