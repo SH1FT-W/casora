@@ -5,7 +5,7 @@
 // (Entriegeln/Verriegeln mit der Rückfrage aus dem Studio, „Tür öffnen“ nur mit OPEN), ZUSTAND (Schloss,
 // Tür, Batterie), VERLAUF · Heute mit Auslöser aus dem Logbuch-Kontext (Automation, Skript, Person per App,
 // „Am Schloss“ – nach „Offline“ ohne Auslöser), „Ganzer Verlauf“, Zurück-Pfeil. Mehrere Schlösser: jede
-// Zeile ihre eigene Ansicht. Handy einspaltig. Standard-Look: weiter HAs Dialog.
+// Zeile ihre eigene Ansicht. Handy einspaltig. Standard-Look: Casora-Seite (seit 1.5 kein HA-Dialog mehr).
 // Zustände, Logbuch-Antwort und Dienstaufrufe werden nur im Browser untergeschoben bzw. abgefangen.
 import { open, casoraDashboard, dashboard, fakeStates, check, need, finish, usePage } from './lib.mjs';
 
@@ -210,7 +210,7 @@ const askClick = (page, cls) => page.evaluate((cls) => { const h = document.quer
   await check('Handy: Zurück führt zurück', !(await view(page)).view);
 }
 
-// ── Standard-Look: weiter HAs Dialog ───────────────────────────────────────
+// ── Standard-Look: keine Schloss-Ansicht, seit 1.5 aber auch kein HA-Dialog (Casora-Seite mit ‹) ──────
 {
   const page = await setup({ width: 1440, height: 900, dark: false, theme: 'Hemma 2' });
   await openPopup(page, false);
@@ -218,7 +218,9 @@ const askClick = (page, cls) => page.evaluate((cls) => { const h = document.quer
   if (at) {
     await page.mouse.click(at.x, at.y); await page.waitForTimeout(1200);
     const v = await view(page);
-    await check('Standard: keine Casora-Ansicht, HA-Dialog wie bisher', !v.view && v.moreInfo >= 1, v);
+    const x = await page.evaluate(() => { const bk = window.casoraPopup.element.shadowRoot.querySelector('.header-back');
+      return { nat: !!document.querySelector('home-assistant').shadowRoot.querySelector('ha-more-info-dialog'), hb: !!(bk && !bk.hidden) }; });
+    await check('Standard: keine Schloss-Ansicht, Casora-Seite mit ‹ statt HA-Dialog', !v.view && x.hb && !x.nat, { ...v, ...x });
   } else await check('Standard: Schloss-Popup mit Zeile', false);
 }
 await finish();

@@ -504,6 +504,11 @@
     .mpop li.mgone .mtxt { text-decoration:line-through; color:var(--ink-2, #8a8a8e); }
     .mpop .mback:disabled { color:var(--ink-2, #8a8a8e); background:var(--wash-fill, rgba(118,118,128,.10)); cursor:default; }
     :host(.phone) .mpop .mback { min-height:36px; }
+    /* Beide Beschriftungen übereinander, die andere unsichtbar: der Knopf ist immer so breit wie das längere
+       Wort – sonst wurde „Zurückgenommen“ breiter, der Text daneben brach um und die Knöpfe rutschten (rb14). */
+    .mpop .mback .mbl { display:grid; }
+    .mpop .mback .mbl > span { grid-area:1 / 1; }
+    .mpop .mback .mbl > .malt { visibility:hidden; }
     .mpop .macts { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
     .mpop .macts button { min-width:0; white-space:nowrap; }
     .mpop .macts button:nth-child(3) { grid-column:1 / -1; }
@@ -780,6 +785,13 @@
       const h = document.createElement("h4");
       h.textContent = items.length ? countText(items.length) : tr("No unsaved changes");
       box.appendChild(h);
+      // Sichtbare Beschriftung + unsichtbar die andere (Breite des längeren Worts, siehe .mbl).
+      const mlab = (btn, shown, alt) => {
+        const w = document.createElement("span"); w.className = "mbl";
+        const a = document.createElement("span"); a.textContent = shown;
+        const o = document.createElement("span"); o.className = "malt"; o.textContent = alt; o.setAttribute("aria-hidden", "true");
+        w.append(a, o); btn.appendChild(w);
+      };
       if (items.length || taken.length) {
         const ul = document.createElement("ul");
         const rows = items.slice(0, 14).map((it, i) => ({ it, i }));
@@ -795,7 +807,7 @@
             b.type = "button";
             b.className = "mback";
             b.disabled = true;
-            b.textContent = tr("Taken back");
+            mlab(b, tr("Taken back"), tr("Take back"));
             li.append(t, b);
             ul.appendChild(li);
             return;
@@ -811,7 +823,7 @@
           const b = document.createElement("button");
           b.type = "button";
           b.className = "mback";
-          b.textContent = tr("Take back");
+          mlab(b, tr("Take back"), tr("Taken back"));
           b.setAttribute("aria-label", tr("Take back") + ": " + it.text);
           if (!plan.state) {
             // Ehrlich ausgrauen statt still mehr zurückzunehmen als diese Zeile.

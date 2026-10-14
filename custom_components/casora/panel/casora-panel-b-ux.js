@@ -203,7 +203,8 @@
       background:var(--chip, rgba(127,127,127,.14)); color:var(--ink, inherit); box-shadow:none; }
     /* Tablet: stufenweise kürzen */
     :host(.bmode.uxs1) #msearch .mlab, :host(.bmode.uxs1) #msearch .mkb { display:none; }
-    :host(.bmode.uxs1) #msearch { padding:0; width:34px; justify-content:center; }
+    /* Als Lupe so groß wie die runden Nachbarn (Community, Rückgängig …): 36px (r87). */
+    :host(.bmode.uxs1) #msearch { padding:0; width:36px; height:36px; justify-content:center; }
     :host(.bmode.uxs2) .btool[data-b="home"] .blabel, :host(.bmode.uxs2) .btool[data-b="rooms"] .blabel { display:none; }
     /* Stufe 3 (Tablet, Nutzertest 3): Symbol mit kleiner Beschriftung darunter statt nur Symbol –
        Raum, Inhalt, Dashboard und Einstellungen waren sonst nicht zu unterscheiden. */

@@ -266,8 +266,8 @@
     if (dom === 'camera' && window.casoraPopup && window.casoraPopup.current) return Z.openCamera(id);
     if (MEAS.test(dom) || e.entity_category) return Z.openMeasure(id);
     // Gerät, dessen Popup schon offen ist: nicht dasselbe Popup erneut öffnen, sondern seine Geräteseite
-    // („Weitere Einstellungen“ im Luftreiniger …); ohne Gerät (Marker auf der Personen-Karte) nichts tun.
-    if (DEVICE.test(dom) && window.casoraPopup && window.casoraPopup.entity === id) return devOf(h, id) ? Z.openDevice(id) : true;
+    // („Weitere Einstellungen“ im Luftreiniger, Schloss-Zeile …); nur der Marker auf der Personen-Karte tut nichts.
+    if (DEVICE.test(dom) && window.casoraPopup && window.casoraPopup.entity === id) return dom === 'person' ? true : Z.openDevice(id);
     if (DEVICE.test(dom)) return Z.openDeviceTile(id);
     if (devOf(h, id)) return Z.openDevice(id);
     return false;

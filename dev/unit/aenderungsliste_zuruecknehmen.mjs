@@ -89,6 +89,6 @@ assert.equal(W2.__casoraStudioMehr.revertLine(base, now, 0, {}).why, 'linked');
 const src = fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel.js', import.meta.url), 'utf8');
 assert.ok(/const saved = this\._savedRoom \? this\._savedRoom\(room\) : null;/.test(src) && src.includes('room.variables.room_icon === autoRoomGlyph(nv)'), 'Zurückbenennen räumt auf');
 const mehr = fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel-b-mehr.js', import.meta.url), 'utf8');
-assert.ok(mehr.includes('b.textContent = tr("Take back");') && mehr.includes('tr("Tied to another change – use Undo.")'), 'Zeilen mit „Zurücknehmen“ bzw. Grund');
+assert.ok(mehr.includes('mlab(b, tr("Take back"), tr("Taken back"));') && mehr.includes('tr("Tied to another change – use Undo.")'), 'Zeilen mit „Zurücknehmen“ bzw. Grund');
 assert.ok(/:host\(\.bmode\.bdirty\.phone:not\(\.flow\)\) \.toprow > \.bedited\.mlink/.test(mehr), 'am Handy sichtbar unter dem Titel');
 console.log('aenderungsliste_zuruecknehmen: ok');

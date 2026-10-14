@@ -119,6 +119,20 @@ const PAGE_HELPERS = () => {
       }
     }
   };
+  // Vor „am Stapelende → Reihe“: der Reihe in Wischrichtung Platz lassen (dir 1 = nach rechts scrollen, -1 = zurück).
+  // Längere Reihen (z. B. eine Kachel mehr im Testhaus) standen sonst schon fast am Ende (14.10.2026).
+  window.__swRoom = (dir) => {
+    const s = window.__sw; if (!s) return;
+    for (let e = up(s); e; e = up(e)) {
+      if (/auto|scroll/.test(getComputedStyle(e).overflowX) && e.scrollWidth > e.clientWidth + 1 && e !== document.documentElement) {
+        const max = e.scrollWidth - e.clientWidth, room = Math.min(120, max / 2);
+        e.style.scrollSnapType = 'none';
+        if (dir > 0 && e.scrollLeft > max - room) e.scrollLeft = max - room;
+        if (dir < 0 && e.scrollLeft < room) e.scrollLeft = room;
+        return;
+      }
+    }
+  };
   window.__swState = () => {
     const s = window.__sw;
     const r = s.getBoundingClientRect();
@@ -279,9 +293,11 @@ async function session({ label, url, safari, device, overlay }) {
     if (device === 'tablet') {
       // Bis ans Ende blättern, dann übernimmt die Reihe.
       for (let k = 0; k < 4 && (await st()).idx < (await st()).n - 1; k++) { const s = await st(); await touchDrag(L(s), M(s), -s.w * 0.6, 3); }
+      await page.evaluate(() => window.__swRoom(1)); await page.waitForTimeout(200);
       await fall('links am Stapelende → Reihe', (s) => touchDrag(L(s), M(s), -s.w * 0.7, 3), (a, b) =>
         a.idx === a.n - 1 && b.idx === a.idx && b.row - a.row > 40 && !b.pop ? true : 'Reihe hat nicht übernommen');
       for (let k = 0; k < 4 && (await st()).idx > 0; k++) { const s = await st(); await touchDrag(R(s), M(s), s.w * 0.6, 3); }
+      await page.evaluate(() => window.__swRoom(-1)); await page.waitForTimeout(200);
       await fall('rechts am Stapelanfang → Reihe', (s) => touchDrag(R(s), M(s), s.w * 0.7, 3), (a, b) =>
         a.idx === 0 && b.idx === 0 && a.row - b.row > 40 && !b.pop ? true : 'Reihe hat nicht übernommen');
     } else {
@@ -299,6 +315,7 @@ async function session({ label, url, safari, device, overlay }) {
       b.idx === a.idx + 1 && same(a.row, b.row) && !b.pop ? true : 'kein Weiterblättern / Reihe zog mit / Popup');
     await fall('Maus ziehen links → nächste Karte (Ende)', (s) => mouseDrag(L(s), M(s), -s.w * 0.6, 4), (a, b) =>
       b.idx === a.idx + 1 && same(a.row, b.row) && !b.pop ? true : 'kein Weiterblättern');
+    await page.evaluate(() => window.__swRoom(1)); await page.waitForTimeout(200);
     await fall('Maus ziehen links am Stapelende → Reihe', (s) => mouseDrag(L(s), M(s), -s.w * 0.7, 4), (a, b) =>
       a.idx === a.n - 1 && b.idx === a.idx && b.row - a.row > 40 && !b.pop ? true : 'Reihe hat nicht übernommen');
     await fall('Trackpad seitwärts zurück → vorige Karte', (s) => wheel(s.x + s.w / 2, M(s), -120, 0), (a, b) =>
