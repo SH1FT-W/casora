@@ -365,7 +365,8 @@
   };
   P.act = function (kind, pid, svc) {
     var ha = document.querySelector('home-assistant'), hass = ha && ha.hass;
-    if (!hass || !svc) return;
+    if (!hass) return;
+    // „Ganzer Verlauf“ braucht keinen Benachrichtigungsdienst (vorher brach !svc auch hier ab – Knopf tat nichts).
     if (kind === 'hist') {
       try { window.casoraPopup.close(); } catch (e) { /* schon zu */ }
       history.pushState(null, '', '/history?entity_id=' + encodeURIComponent(pid)
@@ -373,6 +374,7 @@
       window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));
       return;
     }
+    if (!svc) return;
     var name = ((hass.states[pid] || {}).attributes || {}).friendly_name || '';
     if (kind === 'loc') {
       notify(hass, svc, { message: 'request_location_update' }).then(function () { toast('Standort angefragt'); }, function () { toast('Konnte das Handy nicht erreichen'); });

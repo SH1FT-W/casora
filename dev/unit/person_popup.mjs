@@ -84,4 +84,13 @@ assert.equal(P.away({ ...hass, states: { ...hass.states, 'person.anna': { state:
 const withProx = { ...hass, entities: { ...hass.entities, 'sensor.home_anna_distance': { platform: 'proximity', translation_key: 'dist_to_zone' } },
   states: { ...hass.states, 'sensor.home_anna_distance': { state: '7.5', attributes: { unit_of_measurement: 'km' } } } };
 assert.equal(P.away(withProx, 'person.anna'), 7500);
+
+// „Ganzer Verlauf“ öffnet HAs Verlauf auch ohne Benachrichtigungsdienst (14.10.: Knopf tat nichts).
+let pushed = null, closed = false, nav = 0;
+globalThis.history = { pushState: (a, b, u) => { pushed = u; } };
+win.casoraPopup = { close: () => { closed = true; } };
+win.dispatchEvent = () => { nav++; };
+doc.querySelector = (q) => (q === 'home-assistant' ? { hass: { states: {} } } : null);
+P.act('hist', 'person.anna', null);
+assert.ok(closed && nav === 1 && /^\/history\?entity_id=person\.anna&start_date=/.test(pushed || ''), 'Ganzer Verlauf: ' + pushed);
 console.log('ok person_popup');
