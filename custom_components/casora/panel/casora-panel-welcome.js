@@ -27,9 +27,9 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Icon antippen", n0: "Schaltet, wo es etwas zu schalten gibt (Licht, Jalousie, Schloss, Sauger, Play/Pause), sonst öffnet es das Popup.",
-      n1t: "Personen-Verlauf", n1: "Die Orte der letzten drei Tage als Zeitleiste, wie beim Schloss.",
-      n2t: "Pulse", n2: "Die Kachel unterscheidet „bald fällig“ und „beobachten“.",
+      n0t: "Community", n0: "Wünsch dir Karten, die dir fehlen, und füg fertige Community-Karten deiner Kachelauswahl hinzu.",
+      n1t: "Mähroboter", n1: "Die erste Community-Karte: Status, Akku, Mähen und Parken, dazu der Verlauf der letzten 7 Tage.",
+      n2t: "Größe am Handy „Automatisch“", n2: "Kacheln werden groß, solange gerade etwas los ist, und danach wieder klein.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -39,9 +39,9 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Tap the icon", n0: "Switches where there is something to switch (light, blind, lock, vacuum, play/pause), otherwise it opens the popup.",
-      n1t: "Person history", n1: "The places of the last three days as a timeline, like the lock.",
-      n2t: "Pulse", n2: "The tile tells \"due soon\" and \"watch\" apart.",
+      n0t: "Community", n0: "Ask for cards you are missing and add finished Community cards to your tile list.",
+      n1t: "Robot lawn mower", n1: "The first Community card: status, battery, mow and park, plus the history of the last 7 days.",
+      n2t: "Size on the phone \"Automatic\"", n2: "Tiles turn large while something is going on and small again afterwards.",
     },
   };
 
@@ -54,9 +54,9 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:gesture-tap", "n0t", "n0"],
-    ["mdi:map-marker-path", "n1t", "n1"],
-    ["mdi:heart-pulse", "n2t", "n2"],
+    ["mdi:account-group-outline", "n0t", "n0"],
+    ["mdi:robot-mower-outline", "n1t", "n1"],
+    ["mdi:cellphone-arrow-down", "n2t", "n2"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

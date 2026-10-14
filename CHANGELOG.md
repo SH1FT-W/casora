@@ -4,6 +4,25 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.5.0 – 14.10.2026
+
+### New
+- **Community:** A new button in the Studio header opens the Community. There you ask for cards you are missing ("Request a card…"). Casora prepares the request for GitHub with the details of your devices, but without names or places, and shows you exactly the text that becomes public first. "Your requests" shows the state: Open, Question (with the answer), In progress, Built or Declined. The × removes a request from the list.
+- **Community cards:** Cards built from requests ship with Casora but only appear in "Add tile" once you add them in the Community, so the tile list stays short. Every card has a preview; tap it to see the tile and the popup large. When you remove a card, Casora asks whether existing tiles stay or go too. The choice applies to the whole installation.
+- **Robot lawn mower:** The first Community card. The tile shows what the mower is doing ("Mowing", "Parked until the next schedule", "Trapped") and the battery as a ring with pause in the top corner. The icon sends it mowing or back to the station. The popup has buttons for To station, Mow/Pause and Park, the status (battery, connection, operating hours, fault) and the history of the last 7 days with the mowing time per run. Works with every robot lawn mower in Home Assistant; with Gardena the card also shows the exact activity and translated faults.
+- **Size on the phone "Automatic":** Tiles turn large on the phone while something is going on (say the washer or robot vacuum is running, a warning, the alarm) and small again when not. In the Studio, "Set all tiles to Automatic" switches a whole dashboard at once.
+- **Studio:** Rooms start with their sections collapsed, so you find things faster.
+
+### Fixed
+- **Pause in the ring:** Pause and resume in the ring in the top corner (robot vacuum, media) did nothing. The tap never reached the service.
+- **Person popup:** "Full history" opens Home Assistant's history again. The map shows only the person and the zones, without the blue path lines.
+- **Thermostat:** − and + respond smoothly. Several taps are collected and sent as one change.
+- **Carousel:** Page names are in a visible input field in the Studio.
+- **Update logos:** Show in every list of the update popup, including System, Recently updated, Restart and Skipped.
+
+### Removed
+- **Card updates:** Templates only come with a Casora release, no longer as a separate card update.
+
 ## 1.4.2 – 13.10.2026
 
 ### Fixed

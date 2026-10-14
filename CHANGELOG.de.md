@@ -4,6 +4,25 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.5.0 – 14.10.2026
+
+### Neu
+- **Community:** Ein neuer Knopf in der Kopfzeile des Studios öffnet die Community. Dort wünschst du dir Karten, die dir fehlen („Kartenwunsch einreichen …“). Casora füllt den Wunsch für GitHub vor, mit den Angaben zu deinen Geräten, aber ohne Namen und Orte, und zeigt dir vorher genau den Text, der öffentlich wird. Unter „Deine Kartenwünsche“ siehst du den Stand: Offen, Rückfrage (mit der Antwort), In Arbeit, Gebaut oder Abgelehnt. Mit dem × nimmst du einen Wunsch wieder aus der Liste.
+- **Community-Karten:** Karten, die aus Wünschen gebaut wurden, kommen mit Casora mit, stehen aber erst in „Kachel hinzufügen“, wenn du sie in der Community hinzufügst. So bleibt die Kachelauswahl kurz. Jede Karte hat ein Vorschaubild; antippen zeigt Kachel und Popup groß. Beim Entfernen fragt Casora, ob vorhandene Kacheln bleiben oder mit entfernt werden. Die Auswahl gilt für die ganze Installation.
+- **Mähroboter:** Die erste Community-Karte. Die Kachel zeigt, was der Mäher gerade tut („Mäht“, „Parkt bis zum nächsten Zeitplan“, „Steckt fest“), oben rechts den Akku als Kreis mit Pause. Das Symbol schickt ihn mähen oder zur Station. Das Popup hat Tasten für Zur Station, Mähen/Pause und Parken, den Status (Akku, Verbindung, Betriebsstunden, Fehler) und den Verlauf der letzten 7 Tage mit Mähdauer je Fahrt. Funktioniert mit jedem Mähroboter in Home Assistant, mit Gardena zeigt die Karte zusätzlich die genaue Tätigkeit und übersetzte Fehler.
+- **Größe am Handy „Automatisch“:** Kacheln werden am Handy groß, solange gerade etwas los ist (etwa Waschmaschine oder Saugroboter laufen, Warnung, Alarm), und wieder klein, wenn nicht. Im Studio stellt „Alle Kacheln auf Automatisch“ das für ein Dashboard auf einmal um.
+- **Studio:** Räume starten mit zugeklappten Abschnitten, damit man schneller findet, was man sucht.
+
+### Behoben
+- **Pause im Kreis:** Pause und Weiter im Kreis oben rechts (Saugroboter, Medien) taten nichts. Der Klick erreichte den Dienst nie.
+- **Personen-Popup:** „Ganzer Verlauf“ öffnet wieder den Verlauf von Home Assistant. Die Karte zeigt nur noch Person und Zonen, ohne die blauen Wegelinien.
+- **Thermostat:** − und + reagieren flüssig. Mehrere Tipps werden gesammelt und als eine Änderung geschickt.
+- **Karussell:** Seitennamen stehen im Studio in einem sichtbaren Eingabefeld.
+- **Update-Logos:** Erscheinen in allen Listen des Update-Popups, auch bei System, Zuletzt aktualisiert, Neustart und Übersprungen.
+
+### Entfernt
+- **Karten-Updates:** Vorlagen kommen nur noch mit einem Casora-Release, nicht mehr als eigenes Karten-Update.
+
 ## 1.4.2 – 13.10.2026
 
 ### Behoben
