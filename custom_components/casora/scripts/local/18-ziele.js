@@ -6,7 +6,8 @@
 //   2. Zeile „Weitere Einstellungen“ → Geräteseite (Gerätedaten, „Gehört dazu“, „In Home Assistant öffnen“)
 //   3. Messwerte (sensor, binary_sensor, number …, Einstellungs-/Diagnose-Entitäten) → Messwert-Seite
 //      (Zeitraum, Diagramm bzw. Offen-Band, Höchst/Tiefst/Ø bzw. Zählwerte, Zeitleiste)
-//   4. Geräte (Licht, Klima, Medien, Sauger …) → das Casora-Popup ihrer Kachel (openViaCard), sonst Geräteseite
+//   4. Geräte (Licht, Klima, Medien, Sauger …) → das Casora-Popup ihrer Kachel (openViaCard), sonst Geräteseite;
+//      Kamera aus einem offenen Popup heraus (Tipp aufs Bild) → Vollbild
 // Jede Seite öffnet im selben Popup mit ‹ zurück (casoraPopup.open({back}) bzw. window._casoraBackNext).
 (function () {
   if (window.casoraRoute) return;
@@ -232,6 +233,24 @@
     return true;
   };
 
+  // Kamera-Vollbild: Live-Bild groß, ‹ zurück ins Kamera-Popup (statt HAs Kamera-Dialog).
+  Z.openCamera = function (id) {
+    var P = window.casoraPopup, h = hassNow();
+    if (!P || !h || !h.states[id]) return false;
+    var back = backTo();
+    P.open({
+      title: Z.nameOf(h, id), back: back, dismiss_on_background: true,
+      content: { type: 'picture-entity', entity: id, camera_view: 'live', show_name: false, show_state: false, aspect_ratio: '16:9',
+        tap_action: { action: 'none' }, hold_action: { action: 'none' },
+        card_mod: { style: 'ha-card { border-radius: var(--casora-popup-row-radius, 20px) !important; overflow: hidden !important;'
+          + ' border: none !important; background: #000 !important; }' } },
+      // 16:9 passt ganz auf den Schirm: Breite folgt auch der Höhe (Abstand oben + Kopfzeile ≈ 260px).
+      style: '--popup-min-width: min(1400px, 96vw, calc((100vh - 260px) * 16 / 9)); --popup-max-width: min(1400px, 96vw, calc((100vh - 260px) * 16 / 9));',
+      popup_styles: (P.current || {}).popup_styles,
+    });
+    return true;
+  };
+
   window.casoraRoute = function (id, o) {
     var h = hassNow();
     if (!id || !h || !h.states[id]) return false;
@@ -243,6 +262,8 @@
     var label = el && el.querySelector ? (el.querySelector('.hui-inner b, .hui-inner div') || el).textContent : '';
     if (el && SETTINGS_ROW.test(String(label || '').trim())) return Z.openDevice(id);
     var dom = id.split('.')[0], e = reg(h, id);
+    // Bild im offenen Kamera-Popup angetippt → Vollbild; sonst (Halten auf der Kachel) das Kamera-Popup.
+    if (dom === 'camera' && window.casoraPopup && window.casoraPopup.current) return Z.openCamera(id);
     if (MEAS.test(dom) || e.entity_category) return Z.openMeasure(id);
     if (DEVICE.test(dom)) return Z.openDeviceTile(id);
     if (devOf(h, id)) return Z.openDevice(id);

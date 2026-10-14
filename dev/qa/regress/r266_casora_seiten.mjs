@@ -73,6 +73,18 @@ if (ids.clim) {
   await close();
 }
 
+// 3b. Kamera aus einem offenen Popup (Tipp aufs Bild) → Vollbild mit Live-Bild und ‹ zurück
+const cam = await page.evaluate(() => Object.keys(document.querySelector('home-assistant').hass.states).find((x) => x.startsWith('camera.')));
+if (cam) {
+  await page.evaluate(() => window.casoraPopup.open({ title: 'Startpunkt', content: { type: 'markdown', content: 'x' } }));
+  await page.waitForTimeout(800);
+  await page.evaluate((id) => window.casoraRoute(id), cam);
+  s = await look();
+  const pic = await page.evaluate(() => window.__pierce('hui-picture-entity-card', window.casoraPopup.element.shadowRoot).length);
+  await check('Kamera-Vollbild: Live-Bild, ‹ zurück, kein HA-Dialog', s.open && !s.native && s.back && pic >= 1, { title: s.title, back: s.back, pic });
+  await close();
+}
+
 // 4. Halten auf einer Casora-Kachel: kein HA-Dialog, Schalter bleibt, wie er ist
 const before = await page.evaluate((id) => document.querySelector('home-assistant').hass.states[id].state, ids.sw);
 await page.evaluate(async (id) => {
