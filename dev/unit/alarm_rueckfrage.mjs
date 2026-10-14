@@ -35,7 +35,7 @@ const doc = {
     return el;
   },
 };
-const w = { addEventListener() {}, casoraOpenings: globalThis.casoraOpenings };
+const w = { addEventListener() {}, casoraHaptic() {}, casoraOpenings: globalThis.casoraOpenings };
 new Function('window', 'document', 'WeakSet', 'CustomEvent', 'setTimeout',
   block('(function () {\n  var hassUser', '})();\n') + block('(function () {\n  if (window.__casoraAskFirst)', '})();\n'))(
   w, doc, WeakSet, class {}, () => {});

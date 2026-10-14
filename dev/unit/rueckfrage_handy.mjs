@@ -48,7 +48,7 @@ const doc = {
   },
 };
 let cfg = mobile;
-const w = { addEventListener() {}, location: { pathname: '/test-zuhause-mobile/home' }, _casoraLovelaceCfg: () => cfg };
+const w = { addEventListener() {}, casoraHaptic() {}, location: { pathname: '/test-zuhause-mobile/home' }, _casoraLovelaceCfg: () => cfg };
 new Function('window', 'document', 'WeakSet', 'CustomEvent', 'setTimeout',
   block('(function () {\n  var hassUser', '})();\n') + block('(function () {\n  if (window.__casoraAskFirst)', '})();\n'))(w, doc, WeakSet, class {}, () => {});
 

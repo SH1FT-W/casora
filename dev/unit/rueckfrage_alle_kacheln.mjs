@@ -57,7 +57,7 @@ const doc = {
     return el;
   },
 };
-const w = { addEventListener() {} };
+const w = { addEventListener() {}, casoraHaptic() {} };
 new Function('window', 'document', 'WeakSet', 'CustomEvent', 'setTimeout',
   block('(function () {\n  if (window.__casoraAskFirst)', '})();\n'))(w, doc, WeakSet, class {}, () => {});
 assert.equal(typeof w.casoraConfirmSpec, 'function');
