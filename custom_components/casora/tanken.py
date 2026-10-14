@@ -544,7 +544,13 @@ class Tanken:
     # Start/Stopp
     @callback
     def start(self) -> None:
+        once: list[Callable] = []
+
         def _go(*_: Any) -> None:
+            # Gelaufener listen_once darf beim Entladen nicht mehr abgemeldet werden (HA loggt sonst einen Fehler).
+            for u in once:
+                if u in self._unsubs:
+                    self._unsubs.remove(u)
             self._unsubs.append(async_track_time_interval(self.hass, self.async_tick, timedelta(seconds=TICK)))
             # Erster Abruf mit Zufallsversatz (nicht alle Häuser zur selben Sekunde).
             self._unsubs.append(async_call_later(self.hass, self._rnd.uniform(5, 60), self.async_tick))
@@ -554,7 +560,8 @@ class Tanken:
         else:
             from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 
-            self._unsubs.append(self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _go))
+            once.append(self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _go))
+            self._unsubs.append(once[0])
 
     @callback
     def stop(self) -> None:
