@@ -196,6 +196,8 @@
     + ".comlb .comx{position:absolute;top:2px;right:0;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.2);color:#fff;cursor:pointer;display:grid;place-items:center;padding:0;margin:0;box-sizing:border-box}"
     + ".comlb .comx ha-icon{--mdc-icon-size:22px;width:22px;height:22px;display:flex;margin:0}"
     + ".compill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}"
+    + ".comrm{flex:none;width:32px;height:32px;border-radius:50%;border:0;padding:0;margin:0;display:grid;place-items:center;cursor:pointer;"
+    + "background:var(--casora-studio-chip, rgba(118,118,128,.18));color:inherit}.comrm ha-icon{--mdc-icon-size:18px;width:18px;height:18px;display:flex;margin:0}"
     + ".comnote{font-size:13px;opacity:.75;margin:8px 2px 0;line-height:1.4}";
   const css = (box) => { if (!box.querySelector("style.comcss")) { const s = el("style", "comcss"); s.textContent = CSS; box.appendChild(s); } };
   // Neuer Tab über einen echten Link: Safari und die HA-App lassen nur das zu, und nur direkt im Klick
@@ -431,7 +433,13 @@
               t.append(el("b", "", m.title), sub);
               t.setAttribute("data-no-i18n", "");
               const pill = el("span", "compill", "…");
-              r.append(t, pill);
+              // × nimmt den Wunsch aus der Liste (Rückfrage; auf GitHub zurückziehen = Issue dort schließen).
+              const rm = el("button", "comrm");
+              rm.type = "button";
+              rm.setAttribute("aria-label", tr("Remove from the list"));
+              rm.innerHTML = '<ha-icon icon="mdi:close"></ha-icon>';
+              rm.onclick = (ev) => { ev.stopPropagation(); then = { unwish: m, url: r.dataset.url || "" }; ok.click(); };
+              r.append(t, pill, rm);
               host.appendChild(r);
               // Wenige Anfragen: GitHub erlaubt ohne Anmeldung nur einige je Minute.
               setTimeout(() => C.status(m.id).then((st) => {
@@ -440,16 +448,40 @@
                 const when = new Date(m.at).toLocaleDateString(undefined, { day: "numeric", month: "short" });
                 sub.textContent = st.note || (st.number ? "#" + st.number + " · " + when
                   : tr("Submitted? It can take a few minutes until the state shows here.") + " · " + when);
-                if (st.url) { r.style.cursor = "pointer"; r.onclick = () => open(st.url); }
+                if (st.url) { r.dataset.url = st.url; r.style.cursor = "pointer"; r.onclick = () => open(st.url); }
               }).catch(() => { sub.textContent = tr("GitHub can't be reached right now."); }), k * 1200);
             });
           });
         },
       });
       if (then && then.wish) return this._comWish();
+      if (then && then.unwish) { await this._comUnwish(then.unwish, then.url); return this._comCatalog(); }
       if (!res || !then || !then.toggle) return;
       await this._comToggle(then.toggle);
       return this._comCatalog();
+    };
+
+    // Eigenen Kartenwunsch aus „Deine Kartenwünsche“ nehmen. Steht er schon auf GitHub, zieht man ihn dort
+    // zurück (Issue schließen) – das kann Casora ohne Anmeldung nicht; die Rückfrage bietet den Weg an.
+    P._comUnwish = async function (m, url) {
+      const res = await this._ask({
+        title: fill(tr("Remove “{x}”?"), { x: m.title }),
+        message: url ? tr("It is removed from this list. To withdraw it, close the request on GitHub.")
+          : tr("It is removed from this list. If you did submit it on GitHub, close it there to withdraw it."),
+        confirmLabel: tr("Remove"),
+        extend: ({ acts }) => {
+          if (!url || !acts) return;
+          const gh = el("button", "comchip", tr("Open on GitHub"));
+          gh.type = "button";
+          gh.style.marginRight = "auto";
+          gh.onclick = () => open(url);
+          acts.insertBefore(gh, acts.firstChild);
+        },
+      });
+      if (!res) return;
+      const mine = (await loadMine(this._hass)).filter((x) => x.id !== m.id);
+      await saveMine(this._hass, mine);
+      if (this._status) this._status(tr("Removed from the list."), "ok");
     };
 
     // Hinzufügen/Entfernen einer Community-Karte in der Kachelauswahl.

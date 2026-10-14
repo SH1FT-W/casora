@@ -164,5 +164,16 @@ await wait(1500);
 s = await pane();
 await check('„Deine Kartenwünsche“: Stand „Gebaut“ mit Issue-Nummer', s && /Deine Kartenwünsche/.test(s.text) && /Gebaut/.test(s.text) && /#7/.test(s.text), s && s.text);
 
+// Eigenen Wunsch aus der Liste nehmen: × → Rückfrage mit „Auf GitHub öffnen“ → Entfernen → Zeile weg.
+const wishes = () => inPane("return [...a.querySelectorAll('.comrow')].filter((r) => r.querySelector('.comrm')).length;");
+const n0 = await wishes();
+await inPane("[...a.querySelectorAll('.comrow')].filter((r) => r.querySelector('.comrm')).pop().querySelector('.comrm').click()");
+await wait(1000);
+s = await pane();
+await check('Wunsch entfernen: Rückfrage mit „Auf GitHub öffnen“', s && /entfernen\?/.test(s.title) && /Auf GitHub öffnen/.test(s.text), s);
+await ok();
+await wait(2500);
+await check('Wunsch ist aus „Deine Kartenwünsche“ verschwunden', (await wishes()) === n0 - 1, { n0, n: await wishes() });
+
 if (process.env.COM_OUT) fs.writeFileSync(process.env.COM_OUT, JSON.stringify({ wish: { title: wu && wu.searchParams.get('title'), body: wBody } }, null, 1));
 await finish();
