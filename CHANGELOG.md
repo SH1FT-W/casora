@@ -8,14 +8,19 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ### New
 - **Community:** A new button in the Studio header opens the Community. There you ask for cards you are missing ("Request a card…"). Casora prepares the request for GitHub with the details of your devices, but without names or places, and shows you exactly the text that becomes public first. "Your requests" shows the state: Open, Question (with the answer), In progress, Built or Declined. The × removes a request from the list.
-- **Community cards:** Cards built from requests ship with Casora but only appear in "Add tile" once you add them in the Community, so the tile list stays short. Every card has a preview; tap it to see the tile and the popup large. When you remove a card, Casora asks whether existing tiles stay or go too. The choice applies to the whole installation.
+- **Community cards:** Cards built from requests ship with Casora but only appear in "Add tile" once you add them in the Community, so the tile list stays short. Every card has a preview; tap it to see the tile and the popup large. When you remove a card, Casora asks whether existing tiles stay or go too. The choice applies to the whole installation. If a card is ever retired, it first disappears from "Add tile" while existing tiles keep working.
 - **Robot lawn mower:** The first Community card. The tile shows what the mower is doing ("Mowing", "Parked until the next schedule", "Trapped") and the battery as a ring with pause in the top corner. The icon sends it mowing or back to the station. The popup has buttons for To station, Mow/Pause and Park, the status (battery, connection, operating hours, fault) and the history of the last 7 days with the mowing time per run. Works with every robot lawn mower in Home Assistant; with Gardena the card also shows the exact activity and translated faults.
 - **Size on the phone "Automatic":** Tiles turn large on the phone while something is going on (say the washer or robot vacuum is running, a warning, the alarm) and small again when not. In the Studio, "Set all tiles to Automatic" switches a whole dashboard at once.
+- **Casora pages instead of Home Assistant's dialog:** What used to open Home Assistant's dialog now opens a Casora page with ‹ back to where you came from. A reading (temperature, power, …) shows its chart with 24 h, 7 days or 30 days, highest, lowest and average value and the history. A door or window contact shows when it was open. A device opens its Casora popup, and everything else opens a device page with the device data, what belongs to it and "Open in Home Assistant" for the rest. Holding a tile and tapping a badge work the same way.
+- **Update details:** Tapping an update in the update popup opens its page with the release notes, with ‹ back to the list.
+- **Camera full screen:** Holding a camera in the camera popup shows the live picture large, with ‹ back.
+- **Humidifier:** The tile opens its own popup like the air purifier: state and target, the humidity history, on/off, mode and target humidity, plus status with water tank and power.
 - **Studio:** Rooms start with their sections collapsed, so you find things faster.
 
 ### Fixed
 - **Pause in the ring:** Pause and resume in the ring in the top corner (robot vacuum, media) did nothing. The tap never reached the service. When paused, the ring now stays and shows play; before, it disappeared.
-- **Person popup:** "Full history" opens Home Assistant's history again. The map shows only the person and the zones, without the blue path lines.
+- **Pause in the ring (look):** Play and pause in the ring are softer and stronger, and the 3D printer's ring responds too.
+- **Person popup:** "Full history" opens Home Assistant's history again. The map shows only the person and the zones, without the blue path lines. Tapping the marker on the map no longer opens the same popup a second time.
 - **Thermostat:** − and + respond smoothly. Several taps are collected and sent as one change.
 - **Carousel:** Page names are in a visible input field in the Studio.
 - **Update logos:** Show in every list of the update popup, including System, Recently updated, Restart and Skipped.

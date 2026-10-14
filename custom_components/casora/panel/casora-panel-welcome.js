@@ -30,6 +30,7 @@
       n0t: "Community", n0: "Wünsch dir Karten, die dir fehlen, und füg fertige Community-Karten deiner Kachelauswahl hinzu.",
       n1t: "Mähroboter", n1: "Die erste Community-Karte: Status, Akku, Mähen und Parken, dazu der Verlauf der letzten 7 Tage.",
       n2t: "Größe am Handy „Automatisch“", n2: "Kacheln werden groß, solange gerade etwas los ist, und danach wieder klein.",
+      n3t: "Casora statt Home-Assistant-Dialog", n3: "Messwerte, Geräte, Updates und Kameras öffnen eigene Casora-Seiten, mit ‹ zurück.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -42,6 +43,7 @@
       n0t: "Community", n0: "Ask for cards you are missing and add finished Community cards to your tile list.",
       n1t: "Robot lawn mower", n1: "The first Community card: status, battery, mow and park, plus the history of the last 7 days.",
       n2t: "Size on the phone \"Automatic\"", n2: "Tiles turn large while something is going on and small again afterwards.",
+      n3t: "Casora instead of Home Assistant's dialog", n3: "Readings, devices, updates and cameras open Casora's own pages, with ‹ back.",
     },
   };
 
@@ -56,6 +58,7 @@
   const WHATS_NEW = [
     ["mdi:account-group-outline", "n0t", "n0"],
     ["mdi:robot-mower-outline", "n1t", "n1"],
+    ["mdi:arrow-left-circle-outline", "n3t", "n3"],
     ["mdi:cellphone-arrow-down", "n2t", "n2"],
   ];
 
