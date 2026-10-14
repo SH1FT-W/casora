@@ -198,7 +198,16 @@
     + ".compill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}"
     + ".comnote{font-size:13px;opacity:.75;margin:8px 2px 0;line-height:1.4}";
   const css = (box) => { if (!box.querySelector("style.comcss")) { const s = el("style", "comcss"); s.textContent = CSS; box.appendChild(s); } };
-  const open = (url) => { try { W.open(url, "_blank", "noopener"); } catch (e) { location.href = url; } };
+  // Neuer Tab über einen echten Link: Safari und die HA-App lassen nur das zu, und nur direkt im Klick
+  // (nach einem await gilt der Klick nicht mehr als Nutzeraktion – „GitHub öffnen“ tat dann nichts, 14.10.).
+  const open = (url) => {
+    try {
+      const a = document.createElement("a");
+      a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+      a.style.display = "none";
+      document.body.appendChild(a); a.click(); a.remove();
+    } catch (e) { location.href = url; }
+  };
 
   // Casora-Version fürs Issue (casora/version, frontend_version.py).
   const loadVersion = (hass) => (W.__casoraVersion ? Promise.resolve() : Promise.resolve(hass && hass.callWS && hass.callWS({ type: "casora/version" }))
@@ -318,10 +327,13 @@
       await loadVersion(hass);
       const id = Math.random().toString(36).slice(2, 10);
       const w = C.wishBody(f, hass, id);
+      const url = C.issueUrl("Kartenwunsch: " + f.device, w.body, [LABEL_WISH].concat(w.plat.length ? ["integration: " + w.plat[0]] : []));
       // Vorschau: genau dieser Text geht an GitHub (öffentlich).
       const go = await this._ask({ title: tr("This is what will be public"), message: tr("Check the text. Nothing else is sent."),
         value: w.body, multiline: true, rows: 14, wide: true, confirmLabel: tr("Open GitHub"),
-        extend: ({ input }) => {
+        extend: ({ input, ok }) => {
+          // GitHub direkt im Klick öffnen, nicht erst nach dem Schließen des Dialogs.
+          if (ok) ok.addEventListener("click", () => open(url), true);
           if (!input) return;
           input.readOnly = true;
           // Nicht alles markiert und von oben lesen (der Dialog wählt sonst den ganzen Text aus).
@@ -331,7 +343,6 @@
       const mine = await loadMine(hass);
       mine.push({ id, title: f.device, at: Date.now() });
       saveMine(hass, mine);
-      open(C.issueUrl("Kartenwunsch: " + f.device, w.body, [LABEL_WISH].concat(w.plat.length ? ["integration: " + w.plat[0]] : [])));
       if (this._status) this._status(tr("GitHub is open – submit the request there."), "ok");
     };
 

@@ -7,7 +7,7 @@
 //      entfernen“ nimmt sie aus dem Raum.
 //   3. „Kartenwunsch einreichen …“ → Pflichtfelder → Vorschau → GitHub-Link „Kartenwunsch: …“ ohne Geräte-IDs,
 //      mit Kennung; „Deine Kartenwünsche“ zeigt den Stand („Gebaut“).
-// GitHub wird nicht aufgerufen: window.open und Suche sind im Browser abgefangen. Die Casora-Einstellungen und
+// GitHub wird nicht aufgerufen: Links in neuen Tabs und die Suche sind im Browser abgefangen. Die Casora-Einstellungen und
 // die gemerkten Wünsche werden am Ende zurückgesetzt; das Dashboard wird nicht gespeichert.
 // COM_OUT=<datei>: den GitHub-Link als JSON ablegen (für einen echten Lauf gegen ein Test-Repo).
 import fs from 'node:fs';
@@ -36,7 +36,15 @@ const room = await page.evaluate(() => {
   p._room = isNaN(Number(k)) ? k : Number(k);
   p._renderForm();
   window.__opened = [];
-  window.open = (u) => { window.__opened.push(u); return null; };
+  window.__openedActive = [];
+  // GitHub öffnet ein Link mit target=_blank; mitschreiben, ob der Klick dabei noch als Nutzeraktion galt
+  // (sonst blockieren Safari und die HA-App den neuen Tab still – 14.10.).
+  const click0 = HTMLAnchorElement.prototype.click;
+  HTMLAnchorElement.prototype.click = function () {
+    if (this.target === '_blank') { window.__opened.push(this.href); window.__openedActive.push(!!(navigator.userActivation && navigator.userActivation.isActive)); return; }
+    return click0.call(this);
+  };
+  window.open = (u) => { window.__opened.push(u); window.__openedActive.push(false); return null; };
   return { key: k };
 });
 await need('Raum', room);
@@ -136,9 +144,13 @@ await wait();
 s = await pane();
 await check('Vorschau „Das wird öffentlich“', s && /öffentlich|public/i.test(s.title), s);
 const preview = await inPane("return (a.querySelector('textarea') || {}).value || ''");
-await ok();
+// Echter Klick (nicht per Skript), damit der Browser ihn als Nutzeraktion zählt.
+const okAt = await inPane("const r = a.querySelector('.askacts button:last-child').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 };");
+await page.mouse.click(okAt.x, okAt.y);
 await wait(1200);
 const wishUrl = await page.evaluate(() => window.__opened[window.__opened.length - 1] || '');
+const wishActive = await page.evaluate(() => window.__openedActive[window.__openedActive.length - 1]);
+await check('GitHub öffnet direkt im Klick (Nutzeraktion noch aktiv, kein Popup-Blocker)', wishActive === true, wishActive);
 const wu = wishUrl ? new URL(wishUrl) : null;
 const wBody = wu ? wu.searchParams.get('body') : '';
 await check('GitHub-Link „Kartenwunsch: Prüfgerät QA“ mit Vorschau-Text', wu && wu.searchParams.get('title') === 'Kartenwunsch: Prüfgerät QA' && wBody === preview, wu && wu.searchParams.get('title'));
