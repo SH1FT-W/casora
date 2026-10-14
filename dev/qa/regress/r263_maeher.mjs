@@ -27,7 +27,7 @@ const run = async (view, dark, first) => {
     el.classList.add('qa-r263');
     el.hass = ha.hass;
     const phone = window.innerWidth < 600;
-    el.style.cssText = 'position:fixed;left:' + (phone ? 16 : 400) + 'px;top:' + (phone ? 120 : 300) + 'px;width:' + (phone ? 170 : 220) + 'px;height:' + (phone ? 64 : 140) + 'px;z-index:5;';
+    el.style.cssText = 'position:fixed;left:' + (phone ? 16 : 400) + 'px;top:' + (phone ? 120 : 300) + 'px;width:' + (phone ? 170 : 220) + 'px;height:' + (phone ? 64 : 140) + 'px;z-index:99990;';
     ha.shadowRoot.appendChild(el);
     setInterval(() => { if (el.hass !== ha.hass) el.hass = ha.hass; }, 200);
   }, ID);
@@ -100,8 +100,21 @@ const run = async (view, dark, first) => {
     await check(tag + ': „Mähen“ startet den Mäher (lawn_mower.start_mowing)', st === 'mowing', st);
     await close();
     t = await tile();
-    await check(tag + ': Kachel „Mäht · 100 %“, hinterlegt', t && /Mäht · 100/.test(t.state) && t.active, t);
+    await check(tag + ': Kachel „Mäht“, hinterlegt', t && /^Mäht$/.test(t.state) && t.active, t);
+    // Kreis oben rechts wie beim Saugroboter: Akku, darin Pause.
+    const ring = await page.evaluate(() => { const el = document.querySelector('home-assistant').shadowRoot.querySelector('.qa-r263');
+      const c = el.shadowRoot.querySelector('ha-card'), p = el.shadowRoot.querySelector('#progress');
+      const r = p && p.getBoundingClientRect();
+      return { pct: getComputedStyle(c).getPropertyValue('--casora-progress-pct').trim(), shown: !!(r && r.width > 10),
+        pause: !!(p && p.querySelector('.casora-progress-glyph')) }; });
+    await check(tag + ': Kreis oben rechts mit Akku 100 und Pause', ring.shown && Number(ring.pct) === 100 && ring.pause, ring);
     await shot('3-maeht');
+    const at = await page.evaluate(() => { const el = document.querySelector('home-assistant').shadowRoot.querySelector('.qa-r263');
+      const r = el.shadowRoot.querySelector('#progress g[onclick] circle').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+    await page.mouse.click(at.x, at.y);
+    await page.waitForTimeout(1500);
+    const st2 = await page.evaluate((id) => document.querySelector('home-assistant').hass.states[id].state, ID);
+    await check(tag + ': Pause im Kreis hält den Mäher an (lawn_mower.pause)', st2 === 'paused', st2);
     const tok = await tokens();
     await call(tok.access_token, 'lawn_mower', 'dock', { entity_id: ID });
     await page.waitForTimeout(800);

@@ -51,7 +51,7 @@ assert.equal(M.tileState(s), 'Parkt bis zum nächsten Zeitplan');
 assert.equal(M.iconService(s), 'lawn_mower.start_mowing', 'geparkt: Icon startet');
 s = set('mowing', { activity: 'OK_CUTTING', battery_level: 78 });
 assert.equal(s.label, 'Mäht'); assert.equal(s.level, 1); assert.equal(M.active(s), true);
-assert.equal(M.tileState(s), 'Mäht · 78 %');
+assert.equal(M.tileState(s), 'Mäht', 'Akku steht im Kreis, nicht im Text');
 assert.equal(M.iconService(s), 'lawn_mower.dock', 'mäht: Icon schickt zur Station');
 assert.equal(M.color(s), M.COLOR.run);
 s = set('returning', { activity: 'OK_SEARCHING', battery_level: 30 });

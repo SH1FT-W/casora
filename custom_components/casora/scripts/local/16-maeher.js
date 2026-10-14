@@ -128,10 +128,10 @@
   // ── Kachel ────────────────────────────────────────────────────────────────
   M.active = function (s) { return !!(s && s.level >= 1); };
   M.color = function (s) { return !s ? COLOR.run : s.level === 3 ? COLOR.bad : s.level === 2 ? COLOR.warn : COLOR.run; };
-  // „Mäht · 78 %“ solange er unterwegs ist oder lädt, sonst nur der Zustand.
+  // Nur der Zustand – den Akku zeigt unterwegs der Kreis oben rechts (show_progress), beim Laden „Lädt · 40 %“.
   M.tileState = function (s) {
     if (!s) return '';
-    if ((s.run || s.returning || s.charging) && s.battery != null && s.level < 2) return s.label + ' · ' + Math.round(s.battery) + ' %';
+    if (s.charging && s.battery != null && s.level < 2) return s.label + ' · ' + Math.round(s.battery) + ' %';
     return s.label;
   };
   // Icon antippen: unterwegs → zur Station, sonst mähen. Ohne passende Funktion nichts.
