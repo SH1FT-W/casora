@@ -149,6 +149,8 @@ const f = await t.page.evaluate(async (old) => {
   p._room = ri; p._sel = null;
   p._renderTabs && p._renderTabs();
   p._renderForm();
+  // 1.5: Räume starten zugeklappt – „Darstellung“ (Name, Wer sieht das?) erst aufklappen.
+  if (p._folded && p._folded.has('Appearance')) { p._folded.delete('Appearance'); p._renderForm(); }
   await new Promise((res) => setTimeout(res, 900));
   const row = [...p.shadowRoot.querySelectorAll('#pane .row, #pane label')].find((e) => /^(Raumname|Room name)$/i.test((e.querySelector ? (e.querySelector('label') || e) : e).textContent.trim()));
   const inp = row && (row.querySelector('input') || row.parentElement.querySelector('input'));

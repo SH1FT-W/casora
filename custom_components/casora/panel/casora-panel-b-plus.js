@@ -167,6 +167,7 @@
     clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
     check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
     x: '<path d="M6 6l12 12M18 6L6 18"/>',
+    community: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9.5" r="2.4"/><path d="M3.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5M14.5 14.6c2.6-.4 5 .9 6 4.4"/>',
   };
   const svg = (k, sw) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (sw || 2)
     + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[k] + "</svg>";
@@ -243,6 +244,14 @@
     #brewind { display:none; }
     :host(.bmode:not(.phone):not(.flow)) #brewind.has { display:inline-flex; }
     #brewind svg { width:20px; height:20px; }
+    /* Community vor der Suche (Desktop/Tablet); der Knopf in der Werkzeuggruppe bleibt nur am Handy. */
+    #bcom { display:none; }
+    :host(.bmode:not(.phone):not(.flow)) #bcom.has { display:inline-flex; }
+    /* Nur Symbole (Tablet hochkant, mit „Speichern“): Community weicht – sonst lag sie über dem Zahnrad (rb22).
+       Erreichbar bleibt sie über „Kachel hinzufügen“. */
+    :host(.bmode.btight:not(.phone)) #bcom.has { display:none; }
+    #bcom svg { width:20px; height:20px; }
+    :host(.bmode:not(.phone)) .btools .btool[data-b="com"] { display:none; }
 
     /* ── Hinweis „Handy weicht ab“: ruhig, kein Warnorange ─────────── */
     :host(.bmode) .diffs .ddot { background:var(--ink-3, rgba(127,127,127,.7)); width:6px; height:6px; flex-basis:6px; }
@@ -736,7 +745,30 @@
       return orig.call(this, anchor, items, onPick, mopts);
     });
 
+    // 1.5: Community als runder Symbolknopf vor der Suche (Desktop/Tablet). In der Werkzeuggruppe (casora-panel-b.js)
+    // fehlte ihr der Platz: bei 1440 px schrumpfte die Suche zur Lupe (rb11), bei 768 px lag sie über der Lupe (rb22).
+    P._bComBtn = function () {
+      const root = this.shadowRoot;
+      const search = root.getElementById("msearch");
+      if (!search) return;
+      let b = root.getElementById("bcom");
+      if (!b) {
+        b = document.createElement("button");
+        b.id = "bcom";
+        b.type = "button";
+        b.className = "ghost icon";
+        b.innerHTML = svg("community", 2);
+        b.setAttribute("aria-label", "Community");
+        b.title = "Community";
+        b.setAttribute("aria-haspopup", "dialog");
+        b.onclick = () => { if (typeof this._comCatalog === "function") this._comCatalog(); };
+        search.before(b);
+      }
+      b.classList.toggle("has", typeof this._comCatalog === "function" && !!this._state);
+    };
+
     P._bRewindBtn = function () {
+      if (this._bComBtn) this._bComBtn();
       const root = this.shadowRoot;
       const undo = root.getElementById("undo");
       if (!undo) return;

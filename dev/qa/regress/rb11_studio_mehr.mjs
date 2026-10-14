@@ -1,6 +1,6 @@
 // @zustand: arbeit
 // @parallel: ui
-// Neues Studio – mehr Bedienung (06.10.2026). Erwartet: Suchfeld „Suchen … ⌘K“ sichtbar, ⌘K öffnet die
+// Neues Studio – mehr Bedienung (06.10.2026). Erwartet: Suche sichtbar (bei 1440 px seit 1.5 als Lupe neben Community), ⌘K öffnet die
 // Suche, „Verlauf“ findet die Zeitreise (mit Weg im Ergebnis), Enter auf einer Kachel öffnet ihren
 // Editor; „Bearbeitet · N Änderungen“ am Titel öffnet die Liste in Klartext; Rückgängig, dann ⌘⇧Z
 // stellt die Änderung wieder her; Raummenü „Raum ausblenden“ – in „Räume ordnen“ grau mit
@@ -20,8 +20,11 @@ await H(() => window.__panel()._bClose());
 await page.waitForTimeout(500);
 
 // Suche
-const field = await H(() => { const b = window.__panel().shadowRoot.getElementById('msearch'); return b && b.getClientRects().length ? b.innerText : null; });
-await check('Suchfeld „Suchen … ⌘K“ in der Werkzeugleiste', !!field && /Such/.test(field), field);
+// 1.5 (Entscheidung A, 14.10.2026): Bei 1440 px steht vor der Suche der Community-Knopf; die Suche ist dann eine
+// Lupe (Titel „Suchen (⌘K)“), ⌘K öffnet sie weiter. Mit Text, wenn genug Platz ist.
+const field = await H(() => { const r = window.__panel().shadowRoot, b = r.getElementById('msearch'), c = r.getElementById('bcom');
+  return b && b.getClientRects().length ? { text: b.innerText, title: b.title, com: !!(c && c.getClientRects().length) } : null; });
+await check('Suche in der Werkzeugleiste („Suchen … ⌘K“ oder Lupe neben Community)', !!field && (/Such/.test(field.text) || (field.com && /Such/.test(field.title))), field);
 await page.keyboard.press('Meta+k');
 await page.waitForTimeout(400);
 await check('⌘K öffnet die Suche', !!(await R('.msearch')));

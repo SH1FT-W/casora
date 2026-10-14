@@ -133,7 +133,9 @@ await check('ds-04 Nach Rückgängig + Schließen kein Schleier über der Vorsch
 
 // ds-12: „Wer sieht das?“ wie die Eingabefelder.
 {
-  await P('p._bClose(); p._room = 1; p._renderTabs(); p._bOpen = true; p._group = "rooms"; p._sel = null; p._renderForm();'); await wait(1200);
+  await P('p._bClose(); p._room = 1; p._renderTabs(); p._bOpen = true; p._group = "rooms"; p._sel = null; p._renderForm();'
+    // 1.5: Räume starten zugeklappt – „Darstellung“ aufklappen.
+    + ' if (p._folded && p._folded.has("Appearance")) { p._folded.delete("Appearance"); p._renderForm(); }'); await wait(1200);
   const fs = await P(`const v = [...p.shadowRoot.querySelectorAll('.mwho .mval')].find((x) => x.getBoundingClientRect().width);
     const i = [...p.shadowRoot.querySelectorAll('input')].find((x) => x.getBoundingClientRect().width && x.getBoundingClientRect().left > 900 && x.type !== 'checkbox');
     return v && i ? { wer: getComputedStyle(v).fontSize, feld: getComputedStyle(i).fontSize } : null;`);
