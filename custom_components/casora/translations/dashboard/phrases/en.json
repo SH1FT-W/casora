@@ -3475,6 +3475,14 @@
   [
    "^Wird installiert · (\\d+) %$",
    "Installing · {1}%"
+  ],
+  [
+   "^(\\d+:\\d\\d) Std\\. übrig$",
+   "{1} h left"
+  ],
+  [
+   "^Schicht (\\d+)/(\\d+)$",
+   "Layer {1}/{2}"
   ]
  ]
 }
