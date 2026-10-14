@@ -4,6 +4,17 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.5.3 – 14.10.2026
+
+### Verbessert
+- **Spürbares Feedback am Handy:** Knöpfe, Plus/Minus, Regler, Rückfragen, Raum-Tabs, die Glocke und das Schließen von Popups geben am Handy eine kurze Vibration. Halten auf einer Kachel fühlt sich etwas kräftiger an als Tippen.
+- **Glocke „Alle entfernen“ rückgängig machen:** Nach „Alle entfernen“ steht 10 Sekunden lang „Rückgängig“ im Hinweis. Damit kommen alle Benachrichtigungen zurück.
+
+### Behoben
+- **Updates am Handy installieren:** Auf der Update-Seite reagierten „Installieren“ und „Vorher sichern“ am Handy nicht auf einen Fingertipp, nur „Überspringen“ ging. Jetzt reagieren beide.
+- **Sammelkacheln im Studio ([#21](https://github.com/SH1FT-W/casora/issues/21)):** In Kacheln mit mehreren Geräten (Jalousien, Schlösser, Batterien) tat „Löschen“ nach dem „−“ an einer Zeile nichts. Jetzt wird das Gerät entfernt.
+- **Tanken:** Beim Neuladen der Integration schrieb Home Assistant „Unable to remove unknown job listener“ ins Log. Die Meldung kommt nicht mehr.
+
 ## 1.5.2 – 14.10.2026
 
 ### Behoben

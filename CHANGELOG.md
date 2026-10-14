@@ -4,6 +4,17 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.5.3 – 14.10.2026
+
+### Improved
+- **Haptic feedback on phones:** Buttons, plus/minus, sliders, confirmations, room tabs, the bell and closing popups give a short vibration on phones. Holding a tile feels a little stronger than tapping.
+- **Undo "Remove all" in the bell:** After "Remove all", the notice shows "Undo" for 10 seconds. It brings all notifications back.
+
+### Fixed
+- **Installing updates on phones:** On the update page, "Install" and "Back up first" did not react to a tap on phones, only "Skip" worked. Both react now.
+- **Group tiles in Studio ([#21](https://github.com/SH1FT-W/casora/issues/21)):** In tiles with several devices (blinds, locks, batteries), "Delete" after the "−" on a row did nothing. The device is removed now.
+- **Fuel prices:** When the integration was reloaded, Home Assistant logged "Unable to remove unknown job listener". This message no longer appears.
+
 ## 1.5.2 – 14.10.2026
 
 ### Fixed
