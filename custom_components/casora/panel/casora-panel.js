@@ -6748,7 +6748,7 @@ class CasoraPanel extends HTMLElement {
            (which a transform lifts into its own layer) and above notes like "Device missing". */
         .tilegrid > .tile { position:relative; }
         .tilegrid > .tile > .delbtn { z-index:3; }
-        .tile:not(.armed) .delbtn { pointer-events:none; }
+        .tile:not(.armed) > .delbtn { pointer-events:none; }
         .tile.armed .delbtn { transform:none; }
         .row.arming { position:relative; overflow:hidden; }
         .row.arming > *:not(.delbtn) {
