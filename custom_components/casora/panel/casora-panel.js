@@ -6868,6 +6868,19 @@ class CasoraPanel extends HTMLElement {
           -webkit-mask:var(--updown) center/contain no-repeat; mask:var(--updown) center/contain no-repeat;
         }
         :host .combo > input { padding-right:32px; }
+        /* Optionales Feld mit Wert: „×“ links neben ⌃⌄ leert es. */
+        .combo > .combo-x { display:none; }
+        .combo.clearable.hasval > .combo-x {
+          display:grid; place-items:center; position:absolute; right:30px; top:50%; width:22px; height:22px; margin-top:-11px;
+          padding:0; border:0; border-radius:50%; background:transparent; color:color-mix(in srgb, var(--ink) 50%, transparent); cursor:pointer;
+        }
+        .combo.clearable.hasval > .combo-x::before { content:"×"; font-size:18px; line-height:1; }
+        .combo.clearable.hasval > .combo-x:hover { background:color-mix(in srgb, var(--ink) 10%, transparent); color:var(--ink); }
+        .combo.clearable.hasval > input { padding-right:56px; }
+        .combo.clearable.hasval.hasent > .entface { right:58px; }
+        :host(.phone) .row .combo.clearable.hasval > .combo-x { right:32px; width:24px; height:30px; margin-top:-15px; }
+        :host(.phone) .row .combo.clearable.hasval > input { padding-right:58px; }
+        :host(.phone) .row > .combo.clearable.hasval.hasent > .entface { right:58px; }
         :host(.phone) .row .combo.combo::after { width:13px; height:18px; margin-top:-9px; right:14px; }
         :host(.phone) .row .combo.combo > input { padding-right:40px; }
 
@@ -17577,7 +17590,7 @@ class CasoraPanel extends HTMLElement {
                   (v) => write(v === ICON_DEFAULT ? "" : v),
                   { icon: true, iconFallback: f.iconDefault || null })
               : this._combo(map[id] || "", this._rankedEntityList(f.domains, f.classes, room, map[id]),
-                  pickHint(f.domains), write);
+                  pickHint(f.domains), write, { clearable: true });
             r.appendChild(c.wrap);
             if (n === 0) addDrop(r, f);
             else { const pad = document.createElement("span"); r.appendChild(pad); }
@@ -17660,7 +17673,7 @@ class CasoraPanel extends HTMLElement {
               setVar(f.key, v, f);
               addFault(v);
               filled(f);
-            });
+            }, { clearable: true });
           row.appendChild(c.wrap);
           addDrop(row, f);
           fs.appendChild(row);
@@ -20485,6 +20498,7 @@ class CasoraPanel extends HTMLElement {
         const m = st ? this._entMeta(current) : gone ? { short: missingName(current), ctx: t9("Device missing"), name: missingName(current) } : null;
         wrap.classList.toggle("hasface", !!m);
         face.title = "";
+        if (!m) input.title = "";
         if (m) {
           fName.textContent = m.short;
           fCtx.textContent = m.ctx;
@@ -20507,10 +20521,13 @@ class CasoraPanel extends HTMLElement {
 
     const commit = (v) => {
       current = v;
+      // Geleert (×): nicht mehr den alten Namen als Platzhalter zeigen.
+      if (!v && entityish) input.placeholder = placeholder || "";
       input.value = v === ICON_DEFAULT ? "" : pretty(show(v));
       onChange(v === ICON_DEFAULT ? "" : v);
       if (wrap._paintLead) wrap._paintLead();
       if (wrap._paintEnt) wrap._paintEnt();
+      if (wrap._paintX) wrap._paintX();
       close();
     };
 
@@ -20778,6 +20795,23 @@ class CasoraPanel extends HTMLElement {
       if (this.shadowRoot.activeElement === input) { place(); return; }
       close();
     };
+
+    // Optionale Felder (opts.clearable): „×“ leert die Auswahl. Ohne das ließ sich ein einmal gewähltes
+    // Gerät nie mehr entfernen – Leertippen stellt den Wert bewusst wieder her (Checkup 10/2026).
+    if (opts && opts.clearable) {
+      const x = document.createElement("button");
+      x.type = "button";
+      x.className = "combo-x";
+      x.title = "Remove";
+      x.setAttribute("aria-label", "Remove");
+      x.onmousedown = (ev) => { ev.preventDefault(); ev.stopPropagation(); };
+      x.onclick = (ev) => { ev.preventDefault(); ev.stopPropagation(); commit(""); paintX(); };
+      wrap.appendChild(x);
+      wrap.classList.add("clearable");
+      const paintX = () => wrap.classList.toggle("hasval", !!current);
+      paintX();
+      wrap._paintX = paintX;
+    }
 
     return { wrap, input };
   }
@@ -26363,7 +26397,7 @@ class CasoraPanel extends HTMLElement {
               { icon: true, iconFallback: null }).wrap;
           } else {
             wrap = this._combo(map[id] || "", this._entityList(pm.domains, pm.classes),
-              pickHint(pm.domains), write).wrap;
+              pickHint(pm.domains), write, { clearable: true }).wrap;
           }
           advRow(pm.label, wrap, many ? who : null);
         });
@@ -26400,6 +26434,10 @@ class CasoraPanel extends HTMLElement {
       input.addEventListener("input", paint);
     };
 
+    // Welche Felder gerade sichtbar sind (when): ändert eine Eingabe das, zeichnet after() neu –
+    // sonst blieb z. B. „Akku-Hinweise“ nach dem Leeren von „Akku Lecksensor“ stehen.
+    const shownSig = () => tfields.filter((f) => !f.when || f.when(tile.variables || {})).map((f) => f.key).join("|");
+    const shown0 = shownSig();
     tfields.filter((f) => !f.when || f.when(tile.variables || {})).forEach((f) => {
       const cur = (tile.variables || {})[f.key];
       let input;
@@ -26522,7 +26560,7 @@ class CasoraPanel extends HTMLElement {
                 (v) => write(v === ICON_DEFAULT ? "" : v),
                 { icon: true, iconFallback: f.iconDefault || null })
             : this._combo(map[id] || "", this._entityList(f.domains, f.classes),
-                pickHint(f.domains), write);
+                pickHint(f.domains), write, { clearable: true });
           put(f.label, c.wrap, who);
         });
         hintUnder();
@@ -26545,7 +26583,7 @@ class CasoraPanel extends HTMLElement {
         hintUnder();
         return;
       }
-      const after = () => { if (f.reveals) this._renderForm(); else this._syncPreview(); };
+      const after = () => { if (f.reveals || shownSig() !== shown0) this._renderForm(); else this._syncPreview(); };
       if (f.type === "states") {
         const vals = f.values || {};
         put(f.label, this._combo(listOption(vals, cur), f.options, "",
@@ -26692,7 +26730,7 @@ class CasoraPanel extends HTMLElement {
           // Casora: leeres Feld zeigt, was der Geräte-Finder stattdessen nimmt.
           const found = f.find && window.casoraFieldFound && window.casoraFieldFound(f, tile, this._hass);
           put(f.label, this._combo(cur, this._entityList(f.domains, f.classes),
-            found || f.placeholder || pickHint(f.domains), set).wrap);
+            found || f.placeholder || pickHint(f.domains), set, { clearable: true }).wrap);
           hintUnder();
           // Eingetragene Entität gelöscht: sagen, was stattdessen gilt (Saugroboter-Karte).
           const miss = window.casoraFieldMissing && window.casoraFieldMissing(f, tile, this._hass, cur);
