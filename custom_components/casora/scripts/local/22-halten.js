@@ -13,7 +13,7 @@
 (function () {
   if (window._casoraHold) return;
   var H = window._casoraHold = {};
-  var T = function (x) { return window.casoraT ? window.casoraT(x) : x; };
+  var T = function (x) { return typeof window.casoraTr === 'function' ? window.casoraTr(x) : x; };
   var esc = function (t) {
     return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
