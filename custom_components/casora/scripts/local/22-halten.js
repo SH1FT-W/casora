@@ -219,6 +219,7 @@
     kindActs(m, o);
     // Info-Kacheln (nichts zu bedienen): oben „Öffnen“ wie Tippen, darunter die Wege (Menü auf allen Kacheln).
     if (!m.main && !m.quick.length && !m.timer && (o.tapPopup || o.tapOpens)) m.main = { t: 'Öffnen', ic: 'mdi:arrow-top-right', open: true };
+    if (o.kind === 'updates' && m.main && m.main.open) { m.main.t = 'Alle Updates'; m.main.ic = 'mdi:update'; }
     // Wege: „Details“ nur, wenn Tippen nicht schon das Popup öffnet; Gerät und Bearbeiten nur für Admins.
     if (!o.tapPopup) m.rows.push({ key: 'popup', t: 'Details', ic: 'mdi:card-text-outline' });
     if (dom !== 'camera') m.rows.push({ key: 'history', t: 'Verlauf', ic: 'mdi:history' });
@@ -232,7 +233,8 @@
     if (o.kind === 'energy') m.acts.push({ key: 'nav', t: 'Energie-Dashboard', ic: 'mdi:lightning-bolt-outline', path: '/energy' });
     // Updates: sofort suchen wie der Knopf im Updates-Popup (03-popups.js, _casoraUpdCheck – Supervisor, HACS, update.*).
     if (o.kind === 'updates' && o.updCheck) m.acts.push({ key: 'updcheck', t: 'Nach Updates suchen', ic: 'mdi:refresh' });
-    if (o.kind === 'updates' && o.admin) m.acts.push({ key: 'nav', t: 'Alle Updates', ic: 'mdi:update', path: '/config/updates' });
+    // Updates: „Alle Updates“ ist das Casora-Popup der Kachel (statt HAs Seite) und steht oben statt „Öffnen“.
+    if (o.kind === 'updates' && m.main && m.main.open) { m.main.t = 'Alle Updates'; m.main.ic = 'mdi:update'; }
   };
   // Lohnt ein Menü? Nur mit etwas zu bedienen – sonst tut Halten dasselbe wie Tippen.
   H.worth = function (m) { return !!(m && (m.main || m.quick.length || m.timer || m.acts.length || m.rows.length)); };
