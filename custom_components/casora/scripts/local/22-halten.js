@@ -54,29 +54,33 @@
     var pct = function (v) { return v == null ? '' : ' · ' + Math.round(v) + ' %'; };
 
     if (!dead) {
-      if (TOGGLE.test(dom)) {
+      var fanOk = dom !== 'fan' || !(feats & 48) || (s === 'on' ? feats & 16 : feats & 32);
+      if (TOGGLE.test(dom) && fanOk) {
         m.main = s === 'on' ? svc('Ausschalten', 'mdi:power', 'homeassistant.turn_off') : svc('Einschalten', 'mdi:power', 'homeassistant.turn_on');
       } else if (dom === 'climate') {
-        // Ein/Aus nur, wenn das Gerät es kann (TURN_ON 128 / TURN_OFF 256), sonst über den Betriebsmodus.
+        // Ein/Aus nur, wenn das Gerät es kann (ClimateEntityFeature TURN_OFF 128 / TURN_ON 256), sonst über den Betriebsmodus.
         var hv = a.hvac_modes || [], onMode = hv.filter(function (x) { return x !== 'off'; })[0];
         if (s === 'off') {
-          if (feats & 128) m.main = svc('Einschalten', 'mdi:power', 'climate.turn_on');
+          if (feats & 256) m.main = svc('Einschalten', 'mdi:power', 'climate.turn_on');
           else if (onMode) m.main = svc('Einschalten', 'mdi:power', 'climate.set_hvac_mode', { hvac_mode: hv.indexOf('heat') !== -1 ? 'heat' : onMode });
-        } else if (feats & 256) m.main = svc('Ausschalten', 'mdi:power', 'climate.turn_off');
+        } else if (feats & 128) m.main = svc('Ausschalten', 'mdi:power', 'climate.turn_off');
         else if (hv.indexOf('off') !== -1) m.main = svc('Ausschalten', 'mdi:power', 'climate.set_hvac_mode', { hvac_mode: 'off' });
       } else if (dom === 'cover') {
         if ((s === 'open' || s === 'opening') && (feats & 2)) m.main = svc('Schließen', 'mdi:arrow-collapse-down', 'cover.close_cover');
         else if (s !== 'open' && s !== 'opening' && (feats & 1)) m.main = svc('Öffnen', 'mdi:arrow-collapse-up', 'cover.open_cover');
       } else if (dom === 'valve') {
-        m.main = (s === 'open' || s === 'opening') ? svc('Schließen', 'mdi:valve-closed', 'valve.close_valve') : svc('Öffnen', 'mdi:valve-open', 'valve.open_valve');
+        if ((s === 'open' || s === 'opening') && (feats & 2)) m.main = svc('Schließen', 'mdi:valve-closed', 'valve.close_valve');
+        else if (s !== 'open' && s !== 'opening' && (feats & 1)) m.main = svc('Öffnen', 'mdi:valve-open', 'valve.open_valve');
       } else if (dom === 'lock') {
         // Schloss mit Tastenfeld (code_format): Code im selben Dialog.
         if (s === 'locked') m.main = svc('Entriegeln', 'mdi:lock-open-variant', 'lock.unlock', null, { ask: 'Wirklich entriegeln?', code: !!a.code_format, numeric: /^\^?\\d/.test(String(a.code_format || '')) });
-        else if (s === 'unlocked' || s === 'open' || s === 'jammed') m.main = svc('Verriegeln', 'mdi:lock', 'lock.lock');
+        // Mit code_format verlangt HA den Code auch fürs Verriegeln (leer erlaubt, wenn ein Standard-Code hinterlegt ist).
+        else if (s === 'unlocked' || s === 'open' || s === 'jammed') m.main = svc('Verriegeln', 'mdi:lock', 'lock.lock', null,
+          a.code_format ? { ask: 'Code eingeben', code: true, numeric: /^\^?\\d/.test(String(a.code_format)) } : null);
       } else if (dom === 'media_player') {
         if (s === 'playing' && (feats & 1)) m.main = svc('Pausieren', 'mdi:pause', 'media_player.media_pause');
         else if ((s === 'paused' || s === 'idle' || s === 'on' || s === 'buffering') && (feats & 16384)) m.main = svc('Abspielen', 'mdi:play', 'media_player.media_play');
-        else if (feats & 128) m.main = svc('Einschalten', 'mdi:power', 'media_player.turn_on');
+        else if ((s === 'off' || s === 'standby') && (feats & 128)) m.main = svc('Einschalten', 'mdi:power', 'media_player.turn_on');
       } else if (dom === 'vacuum') {
         if (s === 'cleaning') { if (feats & 16) m.main = svc('Zur Station', 'mdi:home-import-outline', 'vacuum.return_to_base'); }
         else if (feats & 8192) m.main = svc('Starten', 'mdi:play', 'vacuum.start');
@@ -176,9 +180,10 @@
     if (P) {
       var ps = String(((S[P.st] || st).state) || '').toLowerCase();
       var pb = [];
+      // Tasten haben den Zustand „unknown“ bis zum ersten Druck – nur „unavailable“ heißt: gerade nicht möglich.
       // Bambu meldet beim Pausieren im Arbeitsschritt „paused_user“ u. ä., der Druckstatus heißt „pause“.
-      if (/paus/.test(ps) && P.resume && S[P.resume]) pb.push(svc('Fortsetzen', 'mdi:play', 'button.press', null, { entity: P.resume, wide: true }));
-      else if (/^(running|printing|print|prepare|printing_\w+)$/.test(ps) && P.pause && S[P.pause]) pb.push(svc('Pause', 'mdi:pause', 'button.press', null, { entity: P.pause, wide: true }));
+      if (/paus/.test(ps) && P.resume && S[P.resume] && S[P.resume].state !== 'unavailable') pb.push(svc('Fortsetzen', 'mdi:play', 'button.press', null, { entity: P.resume, wide: true }));
+      else if (/^(running|printing|print|prepare|printing_\w+)$/.test(ps) && P.pause && S[P.pause] && S[P.pause].state !== 'unavailable') pb.push(svc('Pause', 'mdi:pause', 'button.press', null, { entity: P.pause, wide: true }));
       if (P.light && S[P.light] && !bad(S[P.light].state)) {
         var pOn = S[P.light].state === 'on';
         pb.push(svc(pOn ? 'Licht aus' : 'Licht an', pOn ? 'mdi:lightbulb-off-outline' : 'mdi:lightbulb-outline', 'light.toggle', null, { entity: P.light, wide: true, on: pOn }));
@@ -200,8 +205,8 @@
     }
 
     // Zeitschalter: nur mit Casoras Dienst (sensor.casora_timers) und für Schaltbares.
-    // Klima: Aus braucht TURN_OFF; „Einschalten für“ (aus) zusätzlich TURN_ON.
-    var timerOk = o.timers && !dead && (TOGGLE.test(dom) || (dom === 'climate' && (feats & 256) && (s !== 'off' || (feats & 128))) || (dom === 'media_player' && (feats & 256)));
+    // Klima: Aus braucht TURN_OFF (128); „Einschalten für“ (aus) zusätzlich TURN_ON (256).
+    var timerOk = o.timers && !dead && (TOGGLE.test(dom) || (dom === 'climate' && (feats & 128) && (s !== 'off' || (feats & 256))) || (dom === 'media_player' && (feats & 256)));
     if (timerOk) {
       var on = dom === 'climate' ? s !== 'off' : dom === 'media_player' ? !(s === 'off' || s === 'standby') : s === 'on';
       var run = o.timers[id];
@@ -211,6 +216,7 @@
           word: run.action === 'turn_on' ? 'An um' : 'Aus um',
           time: at.toLocaleTimeString(window.casoraLocale ? window.casoraLocale() : undefined, { hour: 'numeric', minute: '2-digit' }) };
       }
+      if (m.timer && m.timer.active) { m.timer.mode = 'off'; m.timer.items = MINUTES.map(function (x) { return { t: x[1], min: x[0] }; }); }
       if (!m.timer && (on || dom !== 'media_player')) {
         m.timer = { active: false, mode: on ? 'off' : 'on', label: on ? 'Ausschalten in' : 'Einschalten für',
           items: MINUTES.map(function (x) { return { t: x[1], min: x[0] }; }) };
@@ -306,7 +312,7 @@
     + '.qr{display:flex;gap:8px;}'
     + '.q > .row{margin:0 -8px;}'
     + '.qr .pill{padding:0 4px;}'
-    + '.pill{flex:1 1 0;min-width:0;height:40px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:4px;box-sizing:border-box;padding:0 8px;'
+    + '.pill{flex:1 1 0;min-width:0;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:4px;box-sizing:border-box;padding:0 8px;'
     +   'background:var(--casora-soft-control-fill, rgba(127,127,127,0.14));font-size:var(--casora-fs-value, 14px);font-weight:600;white-space:nowrap;cursor:pointer;user-select:none;outline:none;'
     +   'font-variant-numeric:tabular-nums;transition:transform var(--casora-dur-feedback, .16s) var(--casora-ease-feedback, ease), background-color var(--casora-dur-feedback, .16s) ease;}'
     + '.pill ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;}'
@@ -400,7 +406,11 @@
       out += '<div class="q">';
       if (m.timer.active) {
         out += '<div class="tm"><ha-icon icon="mdi:timer-outline"></ha-icon><span>' + esc(H.leftText(m.timer)) + '</span>'
-          + '<div class="pill" role="button" tabindex="-1" data-k="tcancel">' + esc(T('Abbrechen')) + '</div></div>';
+          + '<div class="pill" role="button" tabindex="-1" data-k="tcancel">' + esc(T('Zeitschalter aus')) + '</div></div>';
+        // Direkt ändern statt erst beenden: dieselben Zeiten, ersetzen den laufenden Zeitschalter.
+        if (m.timer.items) out += '<div class="ql" style="padding-top:8px;">' + esc(T('Ändern auf')) + '</div><div class="qr">' + m.timer.items.map(function (x, i) {
+          return '<div class="pill" role="button" tabindex="-1" data-k="timer" data-i="' + i + '">' + esc(T(x.t)) + '</div>';
+        }).join('') + '</div>';
       } else {
         out += '<div class="ql">' + esc(T(m.timer.label)) + '</div><div class="qr">' + m.timer.items.map(function (x, i) {
           return '<div class="pill" role="button" tabindex="-1" data-k="timer" data-i="' + i + '">' + esc(T(x.t)) + '</div>';
@@ -464,7 +474,7 @@
   var act = function (id, it) {
     var go = function () {
       var d = Object.assign(it.noEntity ? {} : { entity_id: it.entity || id }, it.data || {});
-      return call(it.svc, d).then(function (r) { if (it.done) notice(T(it.done)); return r; }).catch(failed);
+      return call(it.svc, d).then(function () { if (it.done) notice(T(it.done)); return true; }).catch(function (e) { failed(e); return null; });
     };
     // Riskantes (Entriegeln, Tür öffnen) fragt immer – unabhängig von der Studio-Einstellung.
     if (it.ask) {
@@ -474,13 +484,14 @@
         try {
           var hh = hassNow(), parts = window.casoraArmWarnings(hh, window.casoraArmIds(window._casoraLovelaceCfg(), hh && hh.user));
           if (parts && parts.length) { q = T('Achtung') + ': ' + parts.map(T).join(', ') + '. ' + T('Trotzdem scharf schalten?'); yes = T('Trotzdem scharf schalten'); }
-        } catch (e) { /* ohne Warnung */ }
-        it = Object.assign({}, it, { armed: true });
+          // Nur wenn die Warnung hier wirklich geprüft wurde, darf der Kern seine eigene Rückfrage auslassen.
+          it = Object.assign({}, it, { armed: true });
+        } catch (e) { /* ohne Warnung: der Kern fragt selbst */ }
       }
       var arm = function () { if (it.armed) window._casoraArmAsked = Date.now(); };
       // Alarm mit Code: Code im selben Dialog, verdeckt; leer = abbrechen.
       if (it.code && window.casoraAsk) {
-        return window.casoraAsk({ title: name, text: q, yes: yes, input: { placeholder: 'Code', secret: true, numeric: !!it.numeric, allowEmpty: true } })
+        return window.casoraAsk({ title: name, text: q, yes: yes, stack: yes.length > 14, input: { placeholder: 'Code', secret: true, numeric: !!it.numeric, allowEmpty: true } })
           .then(function (code) {
             // Abbrechen = false; „Ja“ mit leerem Feld schickt ohne Code (Code nur fürs Scharfschalten verlangt).
             if (code === false || code == null) return null;
@@ -612,7 +623,7 @@
       }
       if (/\bcasora_geschirrspueler\b/.test(tpl) && DI && DI.resolve && id) {
         var d = DI.resolve(S[id], V, S, h), ds = String((S[d.st] || {}).state || '').toLowerCase();
-        if (/finish|fertig|end/.test(ds)) return line(null, Date.parse((S[d.st] || {}).last_changed));
+        if (/^(finish(ed)?|fertig|end(ed)?|program_ended|done)$/.test(ds)) return line(null, Date.parse((S[d.st] || {}).last_changed));
         return line(H.minutesLeft(S[d.remaining]));
       }
       if (/\bcasora_3d_printer\b/.test(tpl) && PR && PR.auto && id) {
@@ -643,7 +654,9 @@
       tapOpens: tapOpens(cfg.tap_action),
       states: h.states,
       tpl: tpl,
-      pendingTemp: cur && cur.id === id && cur.stepT ? cur.pendingTemp : null,
+      // Gesammelte Tipps gelten, bis HA den neuen Wert meldet (höchstens 4 s) – sonst rechnete ein Tipp kurz nach dem Senden vom alten Wert.
+      pendingTemp: cur && cur.id === id && cur.pendingTemp != null && Date.now() - (cur.pendingAt || 0) < 4000
+        && num(((h.states[id] || {}).attributes || {}).temperature) !== cur.pendingTemp ? cur.pendingTemp : null,
     };
     // Kachel-eigene Geräte: Drucker über seinen Finder (02-geraete.js), Aquarium über die Kachel-Variable.
     if (/\bcasora_3d_printer\b/.test(tpl) && window._casoraPrint && window._casoraPrint.auto) {
@@ -669,6 +682,7 @@
     cur.st = cur.id ? h.states[cur.id] : null;
     cur.ts = h.states[TIMERS];
     cur.m = modelFor(h, cur.id, cur.tile);
+    cur.painted = Date.now();
     var pane = host.shadowRoot.querySelector('.pane');
     var focused = host.shadowRoot.activeElement;
     var fk = focused && focused.getAttribute('data-k') ? [focused.getAttribute('data-k'), focused.getAttribute('data-q'), focused.getAttribute('data-i'), focused.getAttribute('data-d')].join('|') : '';
@@ -720,7 +734,7 @@
       if (b) b.textContent = H.fmtTemp(v, sq.unit);
       // Mehrere Tipps sammeln, dann einmal setzen.
       // Mehrere Tipps sammeln (auch über Neuzeichnen hinweg, pendingTemp), dann einmal setzen.
-      cur.pendingTemp = v;
+      cur.pendingTemp = v; cur.pendingAt = Date.now();
       clearTimeout(cur.stepT);
       var me = cur;
       cur.stepT = setTimeout(function () { me.stepT = 0; call(sq.svc, { entity_id: id, temperature: v }).catch(failed); }, 450);
@@ -883,7 +897,9 @@
     poll = setInterval(function () {
       var hh = hassNow();
       if (!cur || !hh) return;
-      if (hh.states[id] !== last || hh.states[TIMERS] !== lastT) { last = hh.states[id]; lastT = hh.states[TIMERS]; paint(); }
+      // Restzeit (Fertig-Zeile, Zeitschalter) alle 30 s nachziehen, sonst nur bei Zustandswechsel.
+      var tick = Date.now() - (cur.painted || 0) > 30000 && (cur.m && (cur.m.info || (cur.m.timer && cur.m.timer.active)));
+      if (hh.states[id] !== last || hh.states[TIMERS] !== lastT || tick) { last = hh.states[id]; lastT = hh.states[TIMERS]; paint(); }
     }, 250);
     // Kein Fokus beim Öffnen (Halten kommt von Maus/Finger, ein Fokusring wirkte wie ein Fehler);
     // Pfeiltasten/Tab springen auf die erste Zeile.
@@ -952,7 +968,11 @@
     // Nur Halten, das bisher ein Popup/HAs Dialog war (bzw. Jalousie) – eigene Halten-Aktionen (Licht-Badge: Smart-Toggle) bleiben.
     if (!h || !H.wants(cfg)) return false;
     var mode = modeOf(cfg);
-    if (mode === 'ha' && id && h.states[id]) { window.casoraPopup.nativeMoreInfo(id); return true; }
+    if (mode === 'ha') {
+      if (!id || !h.states[id]) return false;
+      window.casoraPopup.nativeMoreInfo(id);
+      return true;
+    }
     if (mode !== 'popup' && (!id || h.states[id]) && H.worth(modelFor(h, id, tile))) {
       if (H.open(tile, { src: src, via: H.via(cfg) })) {
         // button-card vibriert beim Halten erst in seiner Aktion – die fangen wir ab, also hier (wie hold_action haptic: medium).
@@ -973,15 +993,21 @@
     if (d.action !== 'hold') return;
     if (onHold(path, path[0])) { ev.stopPropagation(); ev.stopImmediatePropagation(); }
   }, true);
+  var lastPointer = '';
+  window.addEventListener('pointerdown', function (ev) { lastPointer = ev.pointerType || ''; }, { capture: true, passive: true });
   // Desktop: Rechtsklick öffnet dasselbe Menü (nur mit feinem Zeiger – am Touchgerät löst langes Drücken auch contextmenu aus).
   window.addEventListener('contextmenu', function (ev) {
     if (!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches)) return;
+    // Touch-Laptop: langes Drücken mit dem Finger löst contextmenu und Halten aus – nur Maus/Stift zählt.
+    if ((ev.pointerType || lastPointer) === 'touch' || (cur && Date.now() - cur.opened < 800)) { if (cur) ev.preventDefault(); return; }
     var path = (ev.composedPath && ev.composedPath()) || [];
     if (onHold(path, path[0])) { ev.preventDefault(); ev.stopPropagation(); }
   }, true);
   // Tastatur: Kacheln fokussierbar machen (erst wenn jemand Tab nutzt), Kontextmenü-Taste bzw. Umschalt+F10 öffnet das Menü.
   var kbd = false;
+  var lastTab = 0, kbdTimer = 0;
   var focusable = function () {
+    if (/^\/(casora-studio|config|developer-tools|profile|hassio)(\/|$)/.test(location.pathname)) return;
     var walk = function (root) {
       [].forEach.call(root.querySelectorAll('*'), function (n) {
         if (n.tagName === 'BUTTON-CARD' && n._config && [].concat(n._config.template || []).some(function (x) { return /^casora_/.test(String(x)) && !NO_MENU.test(String(x)); })) {
@@ -994,7 +1020,17 @@
     try { walk(document); } catch (e) { /* egal */ }
   };
   document.addEventListener('keydown', function (ev) {
-    if (ev.key === 'Tab' && !kbd) { kbd = true; focusable(); setInterval(function () { if (kbd) focusable(); }, 4000); }
+    // Nach dem ersten Tab; danach nur bei Seitenwechsel bzw. alle 15 s und nur bei sichtbarer Seite (neu gezeichnete Kacheln).
+    if (ev.key === 'Tab') lastTab = Date.now();
+    if (ev.key === 'Tab' && !kbd) {
+      kbd = true; focusable();
+      window.addEventListener('location-changed', function () { if (kbd) setTimeout(focusable, 800); }, true);
+      // Neu gezeichnete Kacheln nachziehen; nach 10 Min. ohne Tab aufhören (beim nächsten Tab wieder an).
+      kbdTimer = setInterval(function () {
+        if (Date.now() - lastTab > 600000) { clearInterval(kbdTimer); kbd = false; return; }
+        if (!document.hidden) focusable();
+      }, 15000);
+    }
     if (cur) return;
     if (ev.key === 'ContextMenu' || (ev.key === 'F10' && ev.shiftKey)) {
       var path = (ev.composedPath && ev.composedPath()) || [];
@@ -1008,6 +1044,7 @@
   // Einmaliger Tipp, damit man das Menü findet: beim ersten Tippen auf eine Kachel (je Browser).
   var TIP = 'casora.holdTip';
   var tipOnce = function (path) {
+    if (/^\/casora-studio/.test(location.pathname)) return;
     try { if (localStorage.getItem(TIP)) return; } catch (e) { return; }
     var tile = casoraTile(path);
     if (!tile || window.CASORA_HOLD_MENU === false || (window._casoraHoldMode && window._casoraHoldMode !== 'menu')) return;

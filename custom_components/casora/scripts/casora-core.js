@@ -516,7 +516,7 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
         return orig.apply(self, args);
       }
       // Halten-Menü (22-halten.js) hat die Warnung schon in seiner einen Rückfrage gezeigt: nicht noch einmal fragen.
-      if (window._casoraArmAsked && Date.now() - window._casoraArmAsked < 5000) { window._casoraArmAsked = 0; return orig.apply(self, args); }
+      if (window._casoraArmAsked && Date.now() - window._casoraArmAsked < 1500) { window._casoraArmAsked = 0; return orig.apply(self, args); }
       var cfg = window._casoraLovelaceCfg ? window._casoraLovelaceCfg() : null;
       var ha = document.querySelector('home-assistant');
       // Nur auf einem Casora-Dashboard (Räume mit Sicherheits-Geräten); sonst wie bisher.
@@ -12758,10 +12758,13 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var root = null, lookedAt = 0;
   var memo = typeof WeakMap === 'function' ? new WeakMap() : null;
   var refresh = function () {
+    // Studio, Einstellungen, HA-Seiten: keine Kacheln – gar nicht suchen.
+    var lp = typeof location !== 'undefined' ? location.pathname : '';
+    if (/^\/(casora-studio|config|developer-tools|profile|hassio|history|logbook|energy|map|media-browser|todo|calendar)(\/|$)/.test(lp)) return window._casoraHoldMode;
     if (!root || !root.isConnected) {
       root = null;
       // Ohne Dashboard (Studio, Einstellungen) nicht bei jedem Tipp den ganzen Baum durchsuchen.
-      if (Date.now() - lookedAt < 1500) return window._casoraHoldMode;
+      if (Date.now() - lookedAt < 5000) return window._casoraHoldMode;
       lookedAt = Date.now();
       root = deep(document, 'hui-root', 0);
     }
