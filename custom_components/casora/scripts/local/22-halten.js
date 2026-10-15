@@ -1078,6 +1078,8 @@
     try { if (localStorage.getItem(TIP)) return; } catch (e) { return; }
     var tile = casoraTile(path);
     if (!tile || window.CASORA_HOLD_MENU === false || (window._casoraHoldMode && window._casoraHoldMode !== 'menu')) return;
+    // Nur echte Kacheln – nicht Leiste, Badges, Kopf-Knöpfe (der Hinweis lag sonst über der Handy-Leiste).
+    if ([].concat(tile._config.template || []).some(function (x) { return NO_MENU.test(String(x)); })) return;
     try { localStorage.setItem(TIP, '1'); } catch (e) { return; }
     setTimeout(function () {
       var fine = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;

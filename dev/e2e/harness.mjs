@@ -67,6 +67,8 @@ export async function open({ width = 1440, height = 900, mobile = false, umzug =
     if (!localStorage.getItem('casora.seenVersion')) localStorage.setItem('casora.seenVersion', version);
     // Einführung im neuen Studio (casora-panel-b-plus.js) nicht über die Knöpfe legen.
     if (!localStorage.getItem('casora.studio.intro')) localStorage.setItem('casora.studio.intro', '1');
+    // Einmaliger Tipp „Kachel gedrückt halten“ (22-halten.js): liegt sonst als Hinweis über der Handy-Leiste.
+    if (!localStorage.getItem('casora.holdTip')) localStorage.setItem('casora.holdTip', '1');
     // Einmaliger Hinweis „Zum Ausprobieren lange drücken“ (casora-panel-popups.js) – rb18 prüft ihn eigens.
     if (!localStorage.getItem('casora.studio.tryHint')) localStorage.setItem('casora.studio.tryHint', '1');
     // Umzugsangebot nicht über die Studio-Knöpfe legen (t19 ruft den Assistenten direkt auf).
