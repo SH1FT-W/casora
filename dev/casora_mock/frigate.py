@@ -255,8 +255,10 @@ def setup(hass, mock) -> None:
         if label not in OBJECTS:
             return
         t = dt_util.utcnow()
+        dauer = float(call.data.get("dauer", 30))
+        ev_id = f"{t.timestamp():.6f}-mockneu"
         hass.data["casora_mock_frigate"].append({
-            "id": f"{t.timestamp():.6f}-mockneu", "camera": CAM, "label": label, "sub_label": None,
+            "id": ev_id, "camera": CAM, "label": label, "sub_label": None,
             "start_time": t.timestamp(), "end_time": None, "has_clip": True, "has_snapshot": True, "zones": ["einfahrt"],
             "top_score": 0.86, "false_positive": None, "retain_indefinitely": False,
             "data": {"score": 0.86, "top_score": 0.86, "type": "object"}})
@@ -271,17 +273,21 @@ def setup(hass, mock) -> None:
             mock.set(eid, st)
 
         async def ruhig(_now) -> None:
-            ev = hass.data["casora_mock_frigate"][-1]
-            if ev.get("end_time") is None:
-                ev["end_time"] = ev["start_time"] + 30
+            # Genau dieses Ereignis beenden (bei zwei Erkennungen nacheinander blieb sonst das erste „läuft“).
+            ev = next((e for e in hass.data["casora_mock_frigate"] if e["id"] == ev_id), None)
+            if ev is not None and ev.get("end_time") is None:
+                ev["end_time"] = ev["start_time"] + dauer
             for eid, st in ((f"binary_sensor.{CAM}_{label}_occupancy", "off"), (f"sensor.{CAM}_{label}_count", "0"),
-                            (f"sensor.{CAM}_{label}_active_count", "0"), (f"binary_sensor.{CAM}_all_occupancy", "off"),
-                            (f"sensor.{CAM}_all_count", "0"), (f"binary_sensor.{CAM}_motion", "off"),
-                            (f"sensor.{CAM}_review_status", "NONE")):
+                            (f"sensor.{CAM}_{label}_active_count", "0")):
                 mock.set(eid, st)
+            # Haus-weit erst ruhig, wenn kein anderes Objekt mehr im Bild ist.
+            if not any(hass.states.is_state(f"binary_sensor.{CAM}_{o}_occupancy", "on") for o in OBJECTS):
+                for eid, st in ((f"binary_sensor.{CAM}_all_occupancy", "off"), (f"sensor.{CAM}_all_count", "0"),
+                                (f"binary_sensor.{CAM}_motion", "off"), (f"sensor.{CAM}_review_status", "NONE")):
+                    mock.set(eid, st)
 
         from homeassistant.helpers.event import async_call_later
-        async_call_later(hass, float(call.data.get("dauer", 30)), ruhig)
+        async_call_later(hass, dauer, ruhig)
 
     hass.services.async_register("casora_mock", "frigate_erkennung", erkennung)
 

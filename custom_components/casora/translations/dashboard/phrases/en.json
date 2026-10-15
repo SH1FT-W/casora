@@ -1875,7 +1875,15 @@
   "Kuh": "Cow",
   "Boot": "Boat",
   "Lkw": "Truck",
-  "Bus": "Bus"
+  "Bus": "Bus",
+  "Aufnahme & Erkennung": "Recording & detection",
+  "Löst die Objekterkennung aus": "Triggers object detection",
+  "Neuere Erkennung": "Newer detection",
+  "Ältere Erkennung": "Older detection",
+  "Mehr anzeigen": "Show more",
+  "Weniger anzeigen": "Show less",
+  "Alle Objekte zeigen": "Show all objects",
+  "Läuft noch": "Still running"
  },
  "patterns": [
   [
@@ -3645,6 +3653,22 @@
   [
    "^(.+) erkannt$",
    "{1} detected"
+  ],
+  [
+   "^([^,]+), (vor .+|gerade eben|gestern|Gestern|jetzt|\\d+ Min\\.|\\d+ Std\\.|\\d+ Tagen)$",
+   "{1}, {2}"
+  ],
+  [
+   "^(\\d{1,2}:\\d{2}) \\((.+)\\)$",
+   "{1} ({2})"
+  ],
+  [
+   "^Keine (.+) in den letzten 7 Tagen$",
+   "No {1} in the last 7 days"
+  ],
+  [
+   "^(\\d+) Tagen$",
+   "{1} days"
   ]
  ]
 }

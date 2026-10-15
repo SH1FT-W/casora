@@ -160,13 +160,16 @@
     });
     return s;
   };
-  F.ago = function (ms, now) {
+  // Geschützte Leerzeichen: „vor 5 Min.“ bricht im Popup-Kopf am Handy nicht mitten durch.
+  // short (schmale Handy-Kachel): ohne „vor“ – „Person · 5 Min.“ statt der Kürzung „Person +1“.
+  F.ago = function (ms, now, short) {
     var m = Math.max(0, Math.floor(((now || Date.now()) - ms) / 60000));
-    if (m < 1) return 'gerade eben';
-    if (m < 60) return 'vor ' + m + ' Min.';
+    var pre = short ? '' : 'vor\u00a0';
+    if (m < 1) return short ? 'jetzt' : 'gerade eben';
+    if (m < 60) return pre + m + '\u00a0Min.';
     var d = window.casoraDaysAgo ? window.casoraDaysAgo(m) : Math.floor(m / 1440);
-    if (m < 1440 || d < 1) return 'vor ' + Math.round(m / 60) + ' Std.';
-    return d === 1 ? 'gestern' : 'vor ' + d + ' Tagen';
+    if (m < 1440 || d < 1) return pre + Math.round(m / 60) + '\u00a0Std.';
+    return d === 1 ? (short ? 'Gestern' : 'gestern') : pre + d + '\u00a0Tagen';
   };
   var who = function (list) {
     if (list.length === 1) return F.label(list[0]) + ' erkannt';
@@ -174,11 +177,12 @@
     return list.length + ' Objekte erkannt';
   };
   // Kachel: Erkennung aus · jetzt erkannt · letzte Erkennung (bis 24 Std.) – sonst null (Kamera-Text).
-  F.tileText = function (s, now) {
+  F.tileText = function (s, now, short) {
     if (!s || s.dead || s.off) return null;
     if (s.detectOff) return 'Erkennung aus';
-    if (s.live.length) return who(s.live);
-    if (s.last && (now || Date.now()) - s.last.at < 86400000) return F.label(s.last.o) + ' · ' + F.ago(s.last.at, now);
+    if (s.live.length) return short && s.live.length > 1 ? s.live.length + ' Objekte erkannt' : who(s.live);
+    // Komma statt „ · “: casoraStateFit kürzt an „ · “ zu „Person +1“ (las sich wie „noch ein Objekt“).
+    if (s.last && (now || Date.now()) - s.last.at < 86400000) return F.label(s.last.o) + ', ' + F.ago(s.last.at, now, short);
     return null;
   };
   F.of = function (entity, hass, states) {
@@ -227,7 +231,9 @@
       .map(function (x) { return S[x] ? S[x].last_changed : ''; }).join('|');
     var hit = evc[c.cam];
     var fresh = hit && hit.key === key && Date.now() - hit.at < 30000;
-    if (fresh || (hit && hit.busy)) { if (el && hit.busy) hit.wait.push(el); return hit.list; }
+    // Hängt eine Anfrage (keine Antwort), nach 15 s neu fragen – sonst bliebe „Wird geladen …“ für immer.
+    var busy = hit && hit.busy && Date.now() - hit.at < 15000;
+    if (fresh || busy) { if (el && busy) hit.wait.push(el); return hit.list; }
     var job = evc[c.cam] = { key: key, at: Date.now(), list: hit ? hit.list : null, err: hit ? hit.err : false, busy: true, wait: el ? [el] : [] };
     if (!hass || !hass.callWS) { job.busy = false; job.list = job.list || []; return job.list; }
     var after = Math.floor(Date.now() / 1000) - 7 * 86400;
@@ -252,6 +258,21 @@
       });
     return job.list;
   };
+  // Filter nach Objekt (Antippen in „Objekte“) und „Mehr anzeigen“ je Kamera; offene Bereiche neu zeichnen.
+  var flt = {}, more = {}, els = {};
+  F.filter = function (cam) { return flt[cam] || null; };
+  var shown = function (cam) {
+    var l = (evc[cam] && evc[cam].list) || [];
+    return flt[cam] ? l.filter(function (e) { return e.o === flt[cam]; }) : l;
+  };
+  F.shown = shown;
+  var redraw = function (cam) {
+    (els[cam] || []).forEach(function (w) {
+      if (!w || !w.isConnected) return;
+      try { if (typeof window.casoraKick === 'function') window.casoraKick(w); } catch (e) { /* zu */ }
+    });
+  };
+  F.forget = function (cam) { delete evc[cam]; };
   F.eventById = function (cam, id) {
     var l = (evc[cam] && evc[cam].list) || [];
     for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i];
@@ -301,23 +322,36 @@
     if (d === 1) return 'Gestern';
     return b.toLocaleDateString(window.casoraLocale ? window.casoraLocale() : undefined, { weekday: 'short', day: 'numeric', month: 'numeric' });
   };
+  // Zeitpunkt mit Tag, wenn nicht heute: „Gestern, 23:30“, „Mi., 14.10., 22:47“.
+  var stamp = function (ms) { var dw = dayWord(ms); return (dw ? dw + ', ' : '') + clock(ms); };
+  var lastBack = null;
   var zoneName = function (z) { var t = String(z || '').replace(/_/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1); };
   F.detail = function (cam, evId, back) {
     var ha = document.querySelector('home-assistant'), hass = ha && ha.hass;
     var P = window.casoraPopup, UI = window._casoraUI, K = window._casoraSoftKit;
     if (!hass || !P || !UI || !K || !F.is(hass, cam)) return false;
-    var c = F.find(hass, cam), e = F.eventById(cam, evId);
+    var c = F.find(hass, cam), e = typeof evId === 'object' ? evId : F.eventById(cam, evId);
     if (!e) return false;
+    // Blättern wie in Frigate: neuere/ältere Erkennung derselben Liste (Filter nach Objekt gilt mit).
+    var all = shown(cam), at = -1;
+    for (var k = 0; k < all.length; k++) if (all[k].id === e.id) at = k;
     var snapP = F.sign(hass, F.path(c, 'snap', e.id));
     var clipP = e.clip ? F.sign(hass, F.path(c, 'clip', e.id)) : Promise.resolve(null);
     Promise.all([snapP, clipP]).then(function (u) {
       var snap = u[0] || e.thumb || '', clip = u[1];
       var dur = e.end ? Math.max(1, Math.round((e.end - e.start) / 1000)) : null;
       var day = dayWord(e.start);
-      var rows = [{ icon: F.icon(e.o), iconTone: 'accent', label: F.label(e.o) + (e.sub ? ' · ' + e.sub : ''),
-        sub: (day ? day + ', ' : '') + clock(e.start) + (dur ? ' · ' + (dur < 60 ? dur + ' s' : Math.round(dur / 60) + ' Min.') : ' · läuft noch'),
-        value: e.score != null ? Math.round(e.score * 100) + ' %' : null }];
+      void day;
+      // Kopf: Titel = Objekt, Statuszeile = Zeitpunkt · Dauer · Treffer (UI.line wandert in den Kopf).
+      var line = UI.line(stamp(e.start), [dur ? (dur < 60 ? dur + ' s' : Math.round(dur / 60) + ' Min.') : 'Läuft noch',
+        e.score != null ? Math.round(e.score * 100) + ' %' : null].filter(Boolean));
+      var rows = [];
       if (e.zones.length) rows.push({ icon: 'mdi:vector-square', iconTone: 'accent', label: 'Zonen', value: e.zones.map(zoneName).join(', ') });
+      var nav = [];
+      if (at > 0) nav.push({ icon: 'mdi:chevron-up', iconTone: 'accent', label: 'Neuere Erkennung', sub: F.label(all[at - 1].o) + ' · ' + stamp(all[at - 1].start),
+        entity: 'frigate-ev:' + cam + '|' + all[at - 1].id + '|' + (back ? 'b' : '') });
+      if (at >= 0 && at < all.length - 1) nav.push({ icon: 'mdi:chevron-down', iconTone: 'accent', label: 'Ältere Erkennung', sub: F.label(all[at + 1].o) + ' · ' + stamp(all[at + 1].start),
+        entity: 'frigate-ev:' + cam + '|' + all[at + 1].id + '|' + (back ? 'b' : '') });
       // Clip mit dem Schnappschuss als Vorschaubild; ohne Clip (oder wenn er nicht lädt) nur der Schnappschuss.
       var media = '<div style="position:relative;width:100%;aspect-ratio:16/9;border-radius:var(--casora-popup-row-radius, 24px);overflow:hidden;background:#000;">'
         + (clip
@@ -328,17 +362,21 @@
         + '</div>';
       var card = K.bare();
       card.styles = { card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0 26px 24px 26px' }],
-        grid: [{ 'grid-template-areas': '"m" "i"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'row-gap': 'var(--casora-popup-sec-gap, 22px)' }],
-        custom_fields: { m: [{ 'justify-self': 'stretch' }], i: [{ 'justify-self': 'stretch' }, { 'text-align': 'left' }, { overflow: 'visible' }] } };
-      card.custom_fields = { m: media, i: UI.group(rows, null) };
-      P.open({ title: F.label(e.o) + ' · ' + clock(e.start), back: back || null, dismiss_on_background: true, content: card,
+        grid: [{ 'grid-template-areas': '"h" "m" "i"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'row-gap': 'var(--casora-popup-sec-gap, 22px)' }],
+        custom_fields: { h: [{ 'justify-self': 'stretch' }], m: [{ 'justify-self': 'stretch' }], i: [{ 'justify-self': 'stretch' }, { 'text-align': 'left' }, { overflow: 'visible' }] } };
+      var info = (rows.length ? UI.group(rows, null) : '') + (nav.length ? (rows.length ? '<div style="height:8px"></div>' : '') + UI.group(nav, null) : '');
+      card.custom_fields = { h: line, m: media };
+      if (info) card.custom_fields.i = info;
+      else card.styles.grid[0] = { 'grid-template-areas': '"h" "m"' };
+      lastBack = back || null;
+      P.open({ title: F.label(e.o) + (e.sub ? ' · ' + e.sub : ''), back: back || null, dismiss_on_background: true, content: card, head_switch: false,
         style: '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);',
         popup_styles: (P.current || {}).popup_styles });
     });
     return true;
   };
   // Letzter Schnappschuss eines Objekts (Bild-Entität), wenn es keine Ereignisliste gibt.
-  F.snapshot = function (imgId, back) {
+  F.snapshot = function (imgId, back, title) {
     var ha = document.querySelector('home-assistant'), hass = ha && ha.hass, P = window.casoraPopup, K = window._casoraSoftKit;
     var st = hass && hass.states[imgId];
     if (!st || !P || !K || !st.attributes.entity_picture) return false;
@@ -346,7 +384,7 @@
     card.styles = { card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0 26px 24px 26px' }] };
     card.custom_fields = { m: '<div style="width:100%;aspect-ratio:16/9;border-radius:var(--casora-popup-row-radius, 24px);overflow:hidden;background:#000;">'
       + '<img src="' + esc(st.attributes.entity_picture) + '" alt="" style="width:100%;height:100%;object-fit:contain;display:block;"></div>' };
-    P.open({ title: String(st.attributes.friendly_name || 'Schnappschuss'), back: back || null, dismiss_on_background: true, content: card,
+    P.open({ title: title || 'Schnappschuss', back: back || null, dismiss_on_background: true, content: card, head_switch: false,
       style: '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);', popup_styles: (P.current || {}).popup_styles });
     return true;
   };
@@ -356,10 +394,14 @@
     return cur ? function () { window.casoraPopup.open(cur); } : null;
   };
   (window._casoraMiHooks = window._casoraMiHooks || []).push(function (mid) {
-    var m = /^frigate-(ev|img|go):(.*)$/.exec(String(mid || ''));
+    var m = /^frigate-(ev|img|go|flt|more):(.*)$/.exec(String(mid || ''));
     if (!m) return false;
-    if (m[1] === 'ev') { var p = m[2].split('|'); return F.detail(p[0], p.slice(1).join('|'), backHere()); }
+    var p = m[2].split('|');
+    // Blättern im Detail: dasselbe „zurück“ wie das erste Detail (nicht Detail für Detail zurück).
+    if (m[1] === 'ev') return F.detail(p[0], p[1], p[2] === 'b' ? lastBack : (p.length > 2 ? null : backHere()));
     if (m[1] === 'img') return F.snapshot(m[2], backHere());
+    if (m[1] === 'flt') { flt[p[0]] = flt[p[0]] === p[1] || !p[1] ? null : p[1]; more[p[0]] = false; redraw(p[0]); return true; }
+    if (m[1] === 'more') { more[p[0]] = !more[p[0]]; redraw(p[0]); return true; }
     var w = m[2];
     go(/^https?:\/\//.test(w) ? { url: w } : { path: w });
     return true;
@@ -429,7 +471,7 @@
       else if (s.live.length) { main = who(s.live); tone = 'bad'; }
       else if (s.last) { main = 'Zuletzt: ' + F.label(s.last.o); rest.push(F.ago(s.last.at, now)); }
       else main = 'Keine Erkennung';
-      if (!s.dead && s.rec != null) rest.push(s.rec ? 'Aufnahme an' : 'Aufnahme aus');
+      if (!s.dead && s.rec != null) rest.push(s.rec ? 'Aufnahme\u00a0an' : 'Aufnahme\u00a0aus');
       if (s.server && s.server !== 'running' && !bad(s.server)) rest.push(s.server === 'starting' ? 'Frigate startet' : 'Frigate meldet Fehler');
       return UI.line(main, rest, { tone: tone });
     }
@@ -438,11 +480,11 @@
       var rows = [
         swRow(S, c.sw.recordings, 'mdi:record-rec', 'Aufnahme', true),
         swRow(S, c.sw.snapshots, 'mdi:image-multiple-outline', 'Schnappschüsse', false),
-        swRow(S, c.sw.motion, 'mdi:motion-sensor', 'Bewegungserkennung', true),
+        Object.assign(swRow(S, c.sw.motion, 'mdi:motion-sensor', 'Bewegungserkennung', true) || {}, c.sw.motion && S[c.sw.motion] && S[c.sw.motion].state !== 'unavailable' ? { sub: 'Löst die Objekterkennung aus' } : {}),
         swRow(S, c.sw.audio, 'mdi:ear-hearing', 'Geräuscherkennung', false),
         swRow(S, c.sw.ptz, 'mdi:target-account', 'Automatisch folgen', false),
-      ].filter(Boolean);
-      return rows.length ? UI.group(rows, 'Frigate') : '';
+      ].filter(function (r) { return r && r.label; });
+      return rows.length ? UI.group(rows, 'Aufnahme & Erkennung') : '';
     }
     if (part === 'objs') {
       if (!c.order.length) return '';
@@ -451,32 +493,40 @@
         var x = s.objs[o] || {}, today = ev ? ev.filter(function (e) { return e.o === o && e.start >= start.getTime(); }).length : null;
         var sub = x.live ? (x.n > 1 ? x.n + ' im Bild' : 'Gerade im Bild') : x.at ? 'Zuletzt ' + F.ago(x.at, now) : 'Noch nicht erkannt';
         var img = c.objs[o].img;
-        return { icon: F.icon(o), iconTone: x.live ? 'bad' : x.at ? 'accent' : null, label: F.label(o), sub: sub, subTone: x.live ? 'bad' : null,
-          active: !!x.live, value: today ? today + '× heute' : null,
-          entity: img && S[img] && S[img].attributes.entity_picture && x.at ? 'frigate-img:' + img : null };
+        // Antippen filtert „Letzte Erkennungen“ auf dieses Objekt (noch einmal: alle); ohne Liste der letzte Schnappschuss.
+        var tap = ev && ev.length ? 'frigate-flt:' + c.cam + '|' + o : (img && S[img] && S[img].attributes.entity_picture && x.at ? 'frigate-img:' + img : null);
+        return { icon: F.icon(o), iconTone: x.live ? 'bad' : x.at ? 'accent' : null, label: F.label(o), sub: sub,
+          active: !!x.live, selected: flt[c.cam] === o, value: today ? today + '× heute' : null, entity: tap };
       });
       return UI.group(orows, 'Objekte');
     }
     if (part === 'ev') {
-      var list = F.events(hass, c, el);
+      if (el) { els[c.cam] = (els[c.cam] || []).filter(function (w) { return w.isConnected; }); if (els[c.cam].indexOf(el) < 0) els[c.cam].push(el); }
+      var all0 = F.events(hass, c, el);
+      var list = all0 ? shown(c.cam) : null;
       var job = evc[c.cam] || {};
-      var head = 'Letzte Erkennungen';
+      var head = flt[c.cam] ? 'Letzte Erkennungen · ' + F.label(flt[c.cam]) : 'Letzte Erkennungen';
       var out;
       if (!list) out = UI.group([{ icon: 'mdi:timer-sand', label: 'Wird geladen …' }], head);
       else if (!list.length) {
         out = UI.group([{ icon: job.err ? 'mdi:alert-circle-outline' : 'mdi:check', iconTone: job.err ? 'warn' : null,
-          label: job.err ? 'Frigate antwortet nicht' : 'Keine Erkennungen in den letzten 7 Tagen',
+          label: job.err ? 'Frigate antwortet nicht' : flt[c.cam] ? 'Keine ' + F.label(flt[c.cam]) + ' in den letzten 7 Tagen' : 'Keine Erkennungen in den letzten 7 Tagen',
           sub: job.err ? 'Liste über die Frigate-Integration nicht abrufbar' : null }], head);
       } else {
-        var erows = list.slice(0, 8).map(function (e) {
+        var max = more[c.cam] ? 30 : 8;
+        var erows = list.slice(0, max).map(function (e) {
           var dw = dayWord(e.start, now);
-          var sub = [(dw ? dw + ', ' : '') + clock(e.start)];
+          // Treffer-Prozent nur im Detail – am Handy verdrängte es die Zone.
+          var sub = [dw ? dw + ', ' + clock(e.start) : clock(e.start) + ' (' + F.ago(e.start, now) + ')'];
           if (e.zones.length) sub.push(e.zones.map(zoneName).join(', '));
-          if (e.score != null) sub.push(Math.round(e.score * 100) + ' %');
           return { image: e.thumb || '', imageFit: 'cover', iconTone: null, label: F.label(e.o) + (e.sub ? ' · ' + e.sub : ''),
-            sub: sub.join(' · '), value: e.end == null ? 'läuft' : F.ago(e.start, now), valueTone: e.end == null ? 'bad' : null,
+            // Rechts nur „Läuft“ (Schrift-Rot, 4,9 : 1) – die Zeit steht schon in der Unterzeile (Handy schnitt sonst die Zone ab).
+            sub: sub.join(' · '), value: e.end == null ? 'Läuft' : null, valueTone: e.end == null ? 'var(--casora-color-red-text, #A8443A)' : null,
             entity: 'frigate-ev:' + c.cam + '|' + e.id };
         });
+        if (list.length > 8) erows.push({ icon: more[c.cam] ? 'mdi:chevron-up' : 'mdi:chevron-down', iconTone: 'accent',
+          label: more[c.cam] ? 'Weniger anzeigen' : 'Mehr anzeigen', entity: 'frigate-more:' + c.cam });
+        if (flt[c.cam]) erows.push({ icon: 'mdi:filter-remove-outline', iconTone: 'accent', label: 'Alle Objekte zeigen', entity: 'frigate-flt:' + c.cam + '|' });
         out = UI.group(erows, head);
       }
       // Wege: Aufnahmen in HAs Medien (Frigate-Medienquelle) und die Frigate-Oberfläche.
@@ -488,11 +538,31 @@
     if (part === 'sys') {
       if (!c.server || !S[c.server]) return '';
       var v = String(S[c.server].state || '');
+      // Läuft Frigate, steht hier nichts (der Kopf meldet Störungen ohnehin); nur bei Problemen ein Abschnitt.
+      if (v === 'running') return '';
       var word = { running: 'Läuft', starting: 'Startet', error: 'Fehler' }[v] || (bad(v) ? 'Nicht erreichbar' : v);
       var tn = v === 'running' ? null : v === 'starting' ? 'warn' : 'bad';
       return UI.group([{ icon: 'mdi:server', iconTone: tn || 'accent', label: 'Frigate', value: word, valueTone: tn, entity: c.server }], 'System');
     }
     return '';
+  };
+
+  // Letzte Erkennung groß (Halten-Menü): das Ereignis aus der Frigate-Liste mit Clip und Blättern; ohne Liste der
+  // Schnappschuss der Bild-Entität mit lesbarem Titel („Auto · 23:30“ statt des Entitätsnamens).
+  F.latest = function (hass, c, o, img, at) {
+    var fall = function () { F.snapshot(img, null, F.label(o) + ' · ' + stamp(at)); };
+    var have = evc[c.cam] && evc[c.cam].list && evc[c.cam].list.length ? evc[c.cam].list : null;
+    var pick = function (l) { return (l || []).filter(function (e) { return e.o === o; })[0] || (l || [])[0]; };
+    if (have) { if (!F.detail(c.cam, pick(have), null)) fall(); return; }
+    if (!hass || !hass.callWS) { fall(); return; }
+    hass.callWS({ type: 'frigate/events/get', instance_id: c.inst, cameras: [c.name], limit: 40, after: Math.floor(Date.now() / 1000) - 7 * 86400 })
+      .then(function (raw) {
+        var l = F.parse(raw);
+        evc[c.cam] = { key: '', at: 0, list: l, err: false, busy: false, wait: [] };
+        var e = pick(l);
+        if (!e) return fall();
+        F.sign(hass, F.path(c, 'thumb', e.id)).then(function (u) { e.thumb = u; if (!F.detail(c.cam, e, null)) fall(); });
+      }).catch(fall);
   };
 
   // ── Halten-Menü (22-halten.js): Erkennung/Aufnahme schalten, letzte Erkennung, Frigate ───────
@@ -506,11 +576,12 @@
       out.push({ key: 'act', t: v ? offT : onT, ic: icon, svc: v ? 'switch.turn_off' : 'switch.turn_on', entity: sw,
         ask: v ? ask : null, yes: 'Ausschalten' });
     };
-    tog(c.sw.detect, 'Erkennung an', 'Erkennung aus', 'mdi:motion-sensor', 'Erkennung ausschalten?');
+    tog(c.sw.detect, 'Erkennung an', 'Erkennung aus', 'mdi:eye-outline', 'Erkennung ausschalten?');
     tog(c.sw.recordings, 'Aufnahme an', 'Aufnahme aus', 'mdi:record-rec', 'Aufnahme ausschalten?');
     if (s.last && c.objs[s.last.o] && c.objs[s.last.o].img && S[c.objs[s.last.o].img]) {
       var img = c.objs[s.last.o].img;
-      out.push({ key: 'fn', t: 'Letzte Erkennung', ic: 'mdi:image-outline', fn: function () { F.snapshot(img, null); } });
+      var lo = s.last.o, lat = s.last.at;
+      out.push({ key: 'fn', t: 'Letzte Erkennung', ic: 'mdi:image-outline', fn: function () { F.latest(hass, c, lo, img, lat); } });
     }
     var ui = F.ui(hass, c);
     if (ui) out.push({ key: 'fn', t: 'In Frigate öffnen', ic: 'mdi:open-in-new', fn: function () { go(ui); } });

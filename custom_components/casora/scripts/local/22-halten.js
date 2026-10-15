@@ -359,7 +359,9 @@
   };
   var tileText = function (tile, sel) {
     var n = tile && tile.shadowRoot && tile.shadowRoot.querySelector(sel);
-    return n ? String(n.textContent || '').replace(/\s+/g, ' ').trim() : '';
+    // Gekürzter Zustand (casoraStateFit): nur der volle Text, nicht zusätzlich die versteckte Kurzform („… +1“).
+    var full = n && n.querySelector && n.querySelector('.sf-f');
+    return n ? String((full || n).textContent || '').replace(/\s+/g, ' ').trim() : '';
   };
   // Maske: ganze Fläche sichtbar, abgerundetes Loch an der Kachel.
   var holeMask = function (r, rad) {
