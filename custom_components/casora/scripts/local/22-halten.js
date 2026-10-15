@@ -652,8 +652,11 @@
       if (c) o.printer = { st: c.st, pause: c.pause, resume: c.resume, light: c.light, cam: c.cam };
     }
     if (/\bcasora_aquarium/.test(tpl) && typeof V.light_entity === 'string' && ENT.test(V.light_entity)) o.aqLight = V.light_entity;
-    o.extra = extras(h, id, tpl, V);
-    o.info = progInfo(h, id, tpl, V);
+    // Rohe Variablen ohne Vorlagen-Ausdrücke ([[[ ]]]) – die Finder würden sie sonst als Entität nehmen.
+    var VP = {};
+    Object.keys(V).forEach(function (k) { var x = V[k]; if (!(typeof x === 'string' && /\[\[\[/.test(x))) VP[k] = x; });
+    o.extra = extras(h, id, tpl, VP);
+    o.info = progInfo(h, id, tpl, VP);
     if (/\bcasora_energy\b/.test(tpl)) o.kind = 'energy';
     if (/\bcasora_updates\b/.test(tpl)) { o.kind = 'updates'; o.updCheck = !!(window._casoraUpdCheck && window._casoraUpdCheck.run); }
     return H.model(id ? h.states[id] : null, o);
