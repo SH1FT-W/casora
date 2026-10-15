@@ -15600,7 +15600,9 @@ class CasoraPanel extends HTMLElement {
       .map((r) => phoneKeyOf(pk, r.name));
     // room_scenes is a category that happens to share the prefix, never a room.
     const kept = have.filter((o) => o === "room_scenes" || !/^room_/.test(o));
-    const next = kept.concat(keys.filter((k) => kept.indexOf(k) < 0));
+    // Doppelte Schlüssel (zwei Räume ergeben z. B. beide room_home) nur einmal – HA lehnt doppelte Optionen ab
+    // („Duplicated options“, Fehlermeldung bei jedem Speichern).
+    const next = kept.concat(keys.filter((k, i) => kept.indexOf(k) < 0 && keys.indexOf(k) === i));
     if (next.length === have.length && next.every((o, i) => o === have[i])) return;
     try {
       await this._hass.callService("input_select", "set_options",
