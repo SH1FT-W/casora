@@ -168,7 +168,7 @@
    "casora_default_name": "3D-Drucker"
   },
   "hold_action": {
-   "action": "more-info",
+   "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
    "haptic": "medium"
   }
  },
@@ -369,7 +369,7 @@
    "casora_default_name": "Alarm"
   },
   "hold_action": {
-   "action": "more-info",
+   "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
    "haptic": "medium"
   }
  },
@@ -2787,7 +2787,7 @@
  },
  "casora_battery": {
   "hold_action": {
-   "action": "more-info",
+   "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
    "haptic": "medium"
   },
   "state": [
@@ -2873,7 +2873,7 @@
  },
  "casora_pulse": {
   "hold_action": {
-   "action": "more-info",
+   "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
    "haptic": "medium"
   },
   "state": [
@@ -3165,7 +3165,7 @@
    "casora_default_name": "Fahrzeug"
   },
   "hold_action": {
-   "action": "more-info",
+   "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
    "haptic": "medium"
   }
  },
@@ -3485,7 +3485,7 @@
    "casora_default_name": "E-Bike"
   },
   "hold_action": {
-   "action": "more-info",
+   "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
    "haptic": "medium"
   }
  },
@@ -4695,7 +4695,7 @@
    "active_override": "[[[\n  /* Am Spieltag aktiv (wie Licht an): ab 0 Uhr vor dem Anstoß, live und nach Abpfiff, solange das Ergebnis steht. */\n  try { return window._casoraFootball ? window._casoraFootball.active(entity, variables) : null; }\n  catch (e) { return null; }\n]]]\n"
   },
   "hold_action": {
-   "action": "more-info",
+   "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
    "haptic": "medium"
   }
  },
@@ -12485,7 +12485,7 @@
   "entity_picture": "[[[\n  return entity?.attributes?.entity_picture\n    || hass.states[variables?.person_entity]?.attributes?.entity_picture\n    || null;\n]]]\n",
   "extra_styles": "#img-cell img#icon {\n  position: absolute !important;\n  top: 0 !important;\n  right: 0 !important;\n  bottom: 0 !important;\n  left: 0 !important;\n  width: 100% !important;\n  height: 100% !important;\n  max-width: 100% !important;\n  max-height: 100% !important;\n  object-fit: cover !important;\n  border-radius: 50% !important;\n  opacity: 1 !important;\n  z-index: 10 !important;\n  flex: none !important;\n  filter: none !important;\n}\n",
   "hold_action": {
-   "action": "more-info",
+   "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
    "haptic": "medium"
   },
   "icon_tap_action": {
@@ -12572,7 +12572,7 @@
    "casora_default_name": "Rezept"
   },
   "hold_action": {
-   "action": "more-info",
+   "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
    "haptic": "medium"
   }
  },
@@ -16514,7 +16514,7 @@
   },
   "entity_picture": "/casora_assets/icons/trash.svg",
   "hold_action": {
-   "action": "more-info",
+   "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
    "haptic": "medium"
   },
   "icon": "mdi:trash-can-outline",
@@ -17108,7 +17108,7 @@
    "casora_default_name": "Lüften"
   },
   "hold_action": {
-   "action": "more-info",
+   "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
    "haptic": "medium"
   }
  },

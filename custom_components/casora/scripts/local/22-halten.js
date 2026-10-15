@@ -51,23 +51,31 @@
       if (TOGGLE.test(dom)) {
         m.main = s === 'on' ? svc('Ausschalten', 'mdi:power', 'homeassistant.turn_off') : svc('Einschalten', 'mdi:power', 'homeassistant.turn_on');
       } else if (dom === 'climate') {
-        m.main = s === 'off' ? svc('Einschalten', 'mdi:power', 'climate.turn_on') : svc('Ausschalten', 'mdi:power', 'climate.turn_off');
+        // Ein/Aus nur, wenn das Gerät es kann (TURN_ON 128 / TURN_OFF 256), sonst über den Betriebsmodus.
+        var hv = a.hvac_modes || [], onMode = hv.filter(function (x) { return x !== 'off'; })[0];
+        if (s === 'off') {
+          if (feats & 128) m.main = svc('Einschalten', 'mdi:power', 'climate.turn_on');
+          else if (onMode) m.main = svc('Einschalten', 'mdi:power', 'climate.set_hvac_mode', { hvac_mode: hv.indexOf('heat') !== -1 ? 'heat' : onMode });
+        } else if (feats & 256) m.main = svc('Ausschalten', 'mdi:power', 'climate.turn_off');
+        else if (hv.indexOf('off') !== -1) m.main = svc('Ausschalten', 'mdi:power', 'climate.set_hvac_mode', { hvac_mode: 'off' });
       } else if (dom === 'cover') {
-        m.main = (s === 'open' || s === 'opening')
-          ? svc('Schließen', 'mdi:arrow-collapse-down', 'cover.close_cover') : svc('Öffnen', 'mdi:arrow-collapse-up', 'cover.open_cover');
+        if ((s === 'open' || s === 'opening') && (feats & 2)) m.main = svc('Schließen', 'mdi:arrow-collapse-down', 'cover.close_cover');
+        else if (s !== 'open' && s !== 'opening' && (feats & 1)) m.main = svc('Öffnen', 'mdi:arrow-collapse-up', 'cover.open_cover');
       } else if (dom === 'valve') {
         m.main = (s === 'open' || s === 'opening') ? svc('Schließen', 'mdi:valve-closed', 'valve.close_valve') : svc('Öffnen', 'mdi:valve-open', 'valve.open_valve');
       } else if (dom === 'lock') {
         if (s === 'locked') m.main = svc('Entriegeln', 'mdi:lock-open-variant', 'lock.unlock', null, { ask: 'Wirklich entriegeln?' });
         else if (s === 'unlocked' || s === 'open' || s === 'jammed') m.main = svc('Verriegeln', 'mdi:lock', 'lock.lock');
       } else if (dom === 'media_player') {
-        if (s === 'playing') m.main = svc('Pausieren', 'mdi:pause', 'media_player.media_pause');
-        else if (s === 'paused' || s === 'idle' || s === 'on' || s === 'buffering') m.main = svc('Abspielen', 'mdi:play', 'media_player.media_play');
+        if (s === 'playing' && (feats & 1)) m.main = svc('Pausieren', 'mdi:pause', 'media_player.media_pause');
+        else if ((s === 'paused' || s === 'idle' || s === 'on' || s === 'buffering') && (feats & 16384)) m.main = svc('Abspielen', 'mdi:play', 'media_player.media_play');
         else if (feats & 128) m.main = svc('Einschalten', 'mdi:power', 'media_player.turn_on');
       } else if (dom === 'vacuum') {
-        m.main = s === 'cleaning' ? svc('Zur Station', 'mdi:home-import-outline', 'vacuum.return_to_base') : svc('Starten', 'mdi:play', 'vacuum.start');
+        if (s === 'cleaning') { if (feats & 16) m.main = svc('Zur Station', 'mdi:home-import-outline', 'vacuum.return_to_base'); }
+        else if (feats & 8192) m.main = svc('Starten', 'mdi:play', 'vacuum.start');
       } else if (dom === 'lawn_mower') {
-        m.main = s === 'mowing' ? svc('Zur Station', 'mdi:home-import-outline', 'lawn_mower.dock') : svc('Starten', 'mdi:play', 'lawn_mower.start_mowing');
+        if (s === 'mowing') { if (feats & 4) m.main = svc('Zur Station', 'mdi:home-import-outline', 'lawn_mower.dock'); }
+        else if (feats & 1) m.main = svc('Starten', 'mdi:play', 'lawn_mower.start_mowing');
       }
     }
 
@@ -122,7 +130,7 @@
         }
       } else if (dom === 'climate' && num(a.temperature) != null && s !== 'off') {
         var step = num(a.target_temp_step) || (a.temperature_unit === '°F' ? 1 : 0.5);
-        m.quick.push({ kind: 'step', label: 'Zieltemperatur', value: num(a.temperature), step: step,
+        m.quick.push({ kind: 'step', label: 'Zieltemperatur', value: o.pendingTemp != null ? o.pendingTemp : num(a.temperature), step: step,
           min: num(a.min_temp), max: num(a.max_temp), unit: (o.unit || '°C'), svc: 'climate.set_temperature' });
       } else if (dom === 'media_player' && s !== 'off' && s !== 'standby') {
         var mb = [];
@@ -131,7 +139,7 @@
         if (feats & 1024 || feats & 4) mb.push(svc('Lauter', 'mdi:volume-plus', 'media_player.volume_up'));
         if (feats & 32) mb.push(svc('Weiter', 'mdi:skip-next', 'media_player.media_next_track'));
         if (mb.length) m.quick.push({ kind: 'buttons', items: mb });
-      } else if (dom === 'vacuum' && s === 'cleaning') {
+      } else if (dom === 'vacuum' && s === 'cleaning' && (feats & 4)) {
         m.quick.push({ kind: 'buttons', items: [svc('Pause', 'mdi:pause', 'vacuum.pause', null, { wide: true })] });
       } else if (dom === 'lawn_mower' && s === 'mowing' && (feats & 2)) {
         m.quick.push({ kind: 'buttons', items: [svc('Pause', 'mdi:pause', 'lawn_mower.pause', null, { wide: true })] });
@@ -164,7 +172,7 @@
     }
 
     // Zeitschalter: nur mit Casoras Dienst (sensor.casora_timers) und für Schaltbares.
-    var timerOk = o.timers && !dead && (TOGGLE.test(dom) || dom === 'climate' || (dom === 'media_player' && (feats & 256)));
+    var timerOk = o.timers && !dead && (TOGGLE.test(dom) || (dom === 'climate' && (feats & 256)) || (dom === 'media_player' && (feats & 256)));
     if (timerOk) {
       var on = dom === 'climate' ? s !== 'off' : dom === 'media_player' ? !(s === 'off' || s === 'standby') : s === 'on';
       var run = o.timers[id];
@@ -216,13 +224,9 @@
     +   'opacity:0;transform:scale(.96);transition:transform var(--casora-dur-enter, .32s) var(--casora-ease-enter, cubic-bezier(.2,.8,.3,1)), opacity .18s ease;}'
     + ':host(.open) .pane{opacity:1;transform:none;}'
     + '@supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.pane{background:var(--casora-menu-pane-webkit, var(--casora-menu-pane, rgb(248,244,237)));}}'
-    /* Handy: Blatt von unten, ringsum rund, über der Leiste wie Räume/Szenen. */
-    + '.pane.sheet{left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom, 0px));width:auto;max-width:none;max-height:min(78vh, 640px);'
-    +   'transform:translateY(24px);transform-origin:50% 100%;padding-top:6px;}'
-    + '.grip{width:36px;height:5px;border-radius:3px;margin:2px auto 8px;background:var(--casora-text-2, rgba(127,127,127,.5));opacity:.35;}'
-    + '.head{display:flex;flex-direction:column;align-items:center;gap:2px;padding:2px 16px 10px;text-align:center;}'
-    + '.head b{font-size:var(--casora-fs-heading, 17px);font-weight:700;letter-spacing:-0.01em;line-height:22px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
-    + '.head span{font-size:var(--casora-fs-sub, 13px);font-weight:500;color:var(--casora-text-2, rgba(127,127,127,.9));}'
+    /* Handy: schwebend über der Leiste wie das Räume-/Szenen-Blatt (04-navigation.js), ringsum rund. */
+    + '.pane.sheet{left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom, 0px) * 0.4);width:auto;max-width:420px;margin:0 auto;'
+    +   'max-height:min(520px, calc(100vh - 150px));max-height:min(520px, calc(100dvh - 150px));transform:translateY(10px) scale(.98);transform-origin:50% 100%;}'
     /* Zeilen wie die übrigen Casora-Menüs: Kreis 36 | Text, 52 hoch, Pille 26. */
     + '.row{display:grid;grid-template-columns:var(--casora-ic-row, 36px) minmax(0,1fr) auto;align-items:center;column-gap:var(--casora-menu-ic-gap, 12px);'
     +   'height:var(--casora-menu-row-h, 52px);padding:var(--casora-menu-row-pad, 0 16px 0 8px);box-sizing:border-box;border-radius:var(--casora-menu-row-radius, 26px);'
@@ -230,7 +234,7 @@
     +   'transition:transform var(--casora-dur-feedback, .16s) var(--casora-ease-feedback, ease), background-color var(--casora-dur-feedback, .16s) var(--casora-ease-feedback, ease);}'
     + '.row > span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
     + '.row small{font-size:var(--casora-fs-sub, 13px);font-weight:500;color:var(--casora-text-2, rgba(127,127,127,.9));}'
-    + '@media (hover:hover){.row:hover{background:var(--casora-soft-control-fill, rgba(127,127,127,0.10));}}'
+    + '@media (hover:hover){.row:hover{background:var(--casora-menu-hover, rgba(140,115,90,0.08));}}'
     + '.row:focus-visible{box-shadow:inset 0 0 0 2px var(--casora-hold-hue, var(--primary-color, #B67A50));}'
     + '.row:active,.row.press{transform:scale(var(--casora-press-scale, .97));background:var(--casora-mnav-press-fill, rgba(127,127,127,0.16));}'
     + '.ic{width:var(--casora-ic-row, 36px);height:var(--casora-ic-row, 36px);border-radius:50%;display:flex;align-items:center;justify-content:center;'
@@ -238,11 +242,13 @@
     + '.ic ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;}'
     + '.row.main{background:var(--casora-soft-row-active, rgba(127,127,127,0.10));box-shadow:var(--casora-soft-row-active-shadow, none);}'
     + '.row.main .ic{background:var(--casora-hold-hue, var(--casora-color-teal, #4E9E95));color:var(--casora-soft-glyph, #fff);}'
-    + '.sep{height:1px;margin:6px 16px;background:var(--casora-menu-sep, rgba(127,127,127,0.18));}'
+    + '.sep{height:1px;margin:8px;background:var(--casora-popup-divider, rgba(120,100,80,0.10));}'
     /* Schnellbedienung: Pillen wie die Zeitraum-Pillen der Messwert-Seite, gewählt = Segment-Fläche. */
-    + '.q{padding:6px 8px 4px;}'
-    + '.ql{font-size:var(--casora-fs-label, 12px);font-weight:600;color:var(--casora-text-2, rgba(127,127,127,.9));padding:0 8px 6px;letter-spacing:0;}'
-    + '.qr{display:flex;gap:6px;}'
+    /* Etiketten fluchten mit Kreisen/Pillen (wie die Gruppenüberschriften im Szenen-Menü), 4er-Raster. */
+    + '.q{padding:8px;}'
+    + '.ql{font-size:var(--casora-fs-sub, 13px);line-height:16px;font-weight:600;color:var(--casora-text-2, rgba(127,127,127,.9));padding:0 0 8px;letter-spacing:-0.01em;}'
+    + '.qr{display:flex;gap:8px;}'
+    + '.qr .pill{padding:0 4px;}'
     + '.pill{flex:1 1 0;min-width:0;height:40px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:4px;box-sizing:border-box;padding:0 8px;'
     +   'background:var(--casora-soft-control-fill, rgba(127,127,127,0.14));font-size:var(--casora-fs-value, 14px);font-weight:650;white-space:nowrap;cursor:pointer;user-select:none;outline:none;'
     +   'font-variant-numeric:tabular-nums;transition:transform var(--casora-dur-feedback, .16s) var(--casora-ease-feedback, ease), background-color var(--casora-dur-feedback, .16s) ease;}'
@@ -251,13 +257,14 @@
     + '.pill:focus-visible{box-shadow:inset 0 0 0 2px var(--casora-hold-hue, var(--primary-color, #B67A50));}'
     + '.pill.on{background:var(--casora-soft-seg-on, var(--primary-color, #B67A50));box-shadow:var(--casora-soft-seg-on-shadow, none);color:var(--casora-soft-seg-on-ink, var(--text-primary-color, #fff));}'
     + '.pill.busy{opacity:.55;pointer-events:none;}'
-    + '.step{display:flex;align-items:center;gap:6px;}'
+    + '.step{display:flex;align-items:center;gap:8px;}'
     + '.step .pill{flex:0 0 48px;}'
     + '.step b{flex:1;text-align:center;font-size:var(--casora-fs-heading, 17px);font-weight:700;font-variant-numeric:tabular-nums;}'
     + '.tm{display:flex;align-items:center;gap:8px;}'
     + '.tm .pill{flex:0 0 auto;padding:0 16px;}'
     + '.tm > ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;margin-left:10px;color:var(--casora-hold-hue, currentColor);}'
     + '.row.quiet{color:var(--casora-text-2, inherit);font-weight:500;}'
+    + '.row.quiet .ic{color:var(--casora-text-2, inherit);}'
     + '.tm span{flex:1;font-size:var(--casora-fs-row, 15px);font-weight:600;padding-left:8px;}';
 
   var host = null, cur = null, poll = 0;
@@ -298,8 +305,7 @@
       return '<div class="row' + (cls ? ' ' + cls : '') + '" role="menuitem" tabindex="-1" data-k="' + esc(key) + '"' + (i != null ? ' data-i="' + i + '"' : '') + '>'
         + '<div class="ic"><ha-icon icon="' + esc(ic) + '"></ha-icon></div><span>' + esc(T(t)) + '</span>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div>';
     };
-    // Handy: nur der Griff – Name und Zustand stehen schon scharf auf der Kachel darüber.
-    if (c.phone) out += '<div class="grip"></div>';
+    // Handy: kein Kopf – Name und Zustand stehen schon scharf auf der Kachel darüber.
     if (m.main) out += row('main', m.main.t, m.main.ic, 'main');
     m.quick.forEach(function (q, qi) {
       out += '<div class="q">' + (q.label ? '<div class="ql">' + esc(T(q.label)) + esc(q.value || '') + '</div>' : '');
@@ -328,11 +334,11 @@
       }
       out += '</div>';
     }
-    // Blöcke mit Trennlinie: Bedienung | abgesetzte Aktionen (Tür öffnen, Kamera live) | Wege | Bearbeiten.
-    var blocks = [out.replace('<div class="grip"></div>', ''), '', '', ''];
+    // Wenige Linien wie in den übrigen Menüs: Bedienung | abgesetzte Aktionen und Wege | Bearbeiten.
+    var blocks = [out, '', ''];
     m.acts.forEach(function (x, i) { blocks[1] += row(x.key, x.t, x.ic, x.ask ? 'quiet' : '', null, i); });
-    m.rows.forEach(function (r) { blocks[r.key === 'edit' ? 3 : 2] += row(r.key, r.t, r.ic); });
-    out = (c.phone ? '<div class="grip"></div>' : '') + blocks.filter(Boolean).join('<div class="sep"></div>');
+    m.rows.forEach(function (r) { blocks[r.key === 'edit' ? 2 : 1] += row(r.key, r.t, r.ic); });
+    out = blocks.filter(Boolean).join('<div class="sep"></div>');
     return out;
   };
 
@@ -348,7 +354,9 @@
       top = r.bottom + gap;
       if (top + ph > Hh - edge) { top = Math.max(edge, r.top - gap - ph); origin = 'center bottom'; }
     } else {
-      top = Math.min(Math.max(edge, r.top), Math.max(edge, Hh - edge - ph));
+      // Oben bündig zur Kachel; passt das nicht, unten bündig – erst dann an den Bildschirmrand.
+      top = r.top + ph > Hh - edge ? r.bottom - ph : r.top;
+      top = Math.min(Math.max(edge, top), Math.max(edge, Hh - edge - ph));
     }
     pane.style.left = Math.round(left) + 'px';
     pane.style.top = Math.round(top) + 'px';
@@ -356,6 +364,15 @@
     pane.style.transformOrigin = origin;
   };
 
+  var SWITCHY = /\.(turn_on|turn_off|toggle|open_cover|close_cover|lock|open_valve|close_valve)$/;
+  // Fehlgeschlagener Dienst: kurzer HA-Hinweis statt stiller Ablehnung.
+  var failed = function (e) {
+    var ha = document.querySelector('home-assistant');
+    if (!ha) return;
+    var ev = new Event('hass-notification', { bubbles: true, composed: true });
+    ev.detail = { message: T('Hat nicht geklappt') + (e && e.message ? ': ' + e.message : '') };
+    ha.dispatchEvent(ev);
+  };
   var call = function (service, data) {
     var h = hassNow();
     if (!h) return Promise.resolve();
@@ -364,14 +381,16 @@
   };
   // Schalten wie in den Popups: mit Rückfrage, wenn das Gerät im Studio so eingestellt ist.
   var act = function (id, it) {
-    var go = function () { return call(it.svc, Object.assign({ entity_id: it.entity || id }, it.data || {})); };
+    var go = function () { return call(it.svc, Object.assign({ entity_id: it.entity || id }, it.data || {})).catch(failed); };
     // Riskantes (Entriegeln, Tür öffnen) fragt immer – unabhängig von der Studio-Einstellung.
     if (it.ask) {
       var name = cur ? cur.name : id, q = T(it.ask);
       var w = window.casoraAsk ? window.casoraAsk({ title: name, text: q, yes: T(it.yes || it.t) }) : Promise.resolve(window.confirm(q));
       return w.then(function (ok) { return ok ? go() : null; });
     }
-    var ok = window.casoraConfirmSwitch ? window.casoraConfirmSwitch(id, it.svc) : Promise.resolve(true);
+    // Rückfrage nach Studio-Einstellung nur fürs reine Schalten (nicht Helligkeit, Position, Stopp) – für das Gerät, das geschaltet wird.
+    var ask = !it.data && SWITCHY.test(it.svc) && window.casoraConfirmSwitch;
+    var ok = ask ? window.casoraConfirmSwitch(it.entity || id, it.svc) : true;
     return Promise.resolve(ok).then(function (yes) { return yes ? go() : null; });
   };
 
@@ -387,6 +406,7 @@
       unit: (h.config && h.config.unit_system && h.config.unit_system.temperature) || '°C',
       tapPopup: popupish(cfg.tap_action),
       states: h.states,
+      pendingTemp: cur && cur.id === id && cur.stepT ? cur.pendingTemp : null,
     };
     // Kachel-eigene Geräte: Drucker über seinen Finder (02-geraete.js), Aquarium über die Kachel-Variable.
     if (/\bcasora_3d_printer\b/.test(tpl) && window._casoraPrint && window._casoraPrint.auto) {
@@ -446,8 +466,11 @@
       var b = n.parentNode.querySelector('b');
       if (b) b.textContent = H.fmtTemp(v, sq.unit);
       // Mehrere Tipps sammeln, dann einmal setzen.
+      // Mehrere Tipps sammeln (auch über Neuzeichnen hinweg, pendingTemp), dann einmal setzen.
+      cur.pendingTemp = v;
       clearTimeout(cur.stepT);
-      cur.stepT = setTimeout(function () { call(sq.svc, { entity_id: id, temperature: v }); }, 450);
+      var me = cur;
+      cur.stepT = setTimeout(function () { me.stepT = 0; call(sq.svc, { entity_id: id, temperature: v }).catch(failed); }, 450);
       return;
     }
     if (k === 'timer' && m.timer) {
@@ -456,7 +479,7 @@
       var start = mode === 'on' ? act(id, { svc: id.split('.')[0] === 'climate' ? 'climate.turn_on' : 'homeassistant.turn_on' }) : Promise.resolve(true);
       start.then(function (r) {
         if (r === null) return;
-        call('casora.set_timer', { entity_id: id, minutes: mins, action: 'turn_off' });
+        call('casora.set_timer', { entity_id: id, minutes: mins, action: 'turn_off' }).catch(failed);
       });
       return;
     }
@@ -468,7 +491,7 @@
       act(id, ax);
       return;
     }
-    if (k === 'tcancel') { n.classList.add('busy'); call('casora.cancel_timer', { entity_id: id }).then(paint, paint); return; }
+    if (k === 'tcancel') { n.classList.add('busy'); call('casora.cancel_timer', { entity_id: id }).catch(failed).then(paint); return; }
     var tile = cur.tile, detail = cur.detail;
     H.close();
     if (k === 'popup' && detail && detail.via === 'tap') {
@@ -515,13 +538,20 @@
     cur = null;
     clearInterval(poll);
     document.removeEventListener('keydown', onKey, true);
-    window.removeEventListener('resize', H.close, true);
+    window.removeEventListener('resize', onResize, true);
     window.removeEventListener('scroll', onScroll, true);
+    window.removeEventListener('popstate', onNav, true);
+    window.removeEventListener('location-changed', onNav, true);
     host.classList.remove('open');
     var h0 = host;
-    setTimeout(function () { if (!cur && h0.parentNode) h0.parentNode.removeChild(h0); }, 220);
+    setTimeout(function () { if (!cur && h0.parentNode) h0.parentNode.removeChild(h0); }, 340);
     if (refocus && was.tile && was.tile.focus) { try { was.tile.focus({ preventScroll: true }); } catch (e) { /* egal */ } }
   };
+  // Adressleiste am Handy (wenige px) schließt nicht; Drehen/Fenstergröße schon. Zurück/Seitenwechsel schließt.
+  var onResize = function () {
+    if (cur && (Math.abs(window.innerWidth - cur.vw) > 40 || Math.abs(window.innerHeight - cur.vh) > 120)) H.close();
+  };
+  var onNav = function () { H.close(); };
   var onScroll = function (ev) {
     if (!cur || (ev.target && ev.target.nodeType === 1 && host.contains(ev.target))) return;
     H.close();
@@ -571,8 +601,11 @@
       if (t) { t.classList.add('press'); var off = function () { t.classList.remove('press'); }; setTimeout(off, 260); }
     });
     document.addEventListener('keydown', onKey, true);
-    window.addEventListener('resize', H.close, true);
+    cur.vw = window.innerWidth; cur.vh = window.innerHeight;
+    window.addEventListener('resize', onResize, true);
     window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('popstate', onNav, true);
+    window.addEventListener('location-changed', onNav, true);
     // Zustand live nachziehen (Schalten aus dem Menü, Zeitschalter).
     var last = h.states[id], lastT = h.states[TIMERS];
     poll = setInterval(function () {
@@ -625,7 +658,8 @@
     var tile = casoraTile(path);
     if (!tile || [].concat(tile._config.template || []).some(function (x) { return NO_MENU.test(String(x)); })) return;
     var h = hassNow(), id = (tile._stateObj && tile._stateObj.entity_id) || '', cfg = tile._config;
-    if (!h || !id || !h.states[id]) return;
+    // Nur Halten, das bisher ein Popup/HAs Dialog war (bzw. Jalousie) – eigene Halten-Aktionen (Licht-Badge: Smart-Toggle) bleiben.
+    if (!h || !id || !h.states[id] || !H.wants(cfg)) return;
     if (H.worth(modelFor(h, id, tile))) {
       if (H.open(tile, { src: path[0], via: H.via(cfg) })) { ev.stopPropagation(); ev.stopImmediatePropagation(); }
       return;

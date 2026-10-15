@@ -47,12 +47,23 @@ assert.equal(m.quick[1].items[1].on, true);
 assert.equal(m.timer, null, 'kein Zeitschalter für Jalousien');
 
 // Thermostat: Ausschalten, Zieltemperatur in Schritten und Grenzen.
-m = H.model(st('climate.e', 'heat', { temperature: 21, min_temp: 7, max_temp: 21.5 }), { timers: {} });
+m = H.model(st('climate.e', 'heat', { supported_features: 384, temperature: 21, min_temp: 7, max_temp: 21.5 }), { timers: {} });
 assert.equal(m.main.t, 'Ausschalten');
 assert.equal(m.quick[0].kind, 'step');
 assert.equal(H.stepTo(m.quick[0], 1), 21.5);
 assert.equal(H.stepTo({ value: 21.5, step: 0.5, max: 21.5 }, 1), 21.5);
 assert.equal(H.stepTo({ value: 7, step: 0.5, min: 7 }, -1), 7);
+assert.equal(H.model(st('climate.e', 'heat', { temperature: 21 }), { pendingTemp: 23 }).quick[0].value, 23, 'gesammelte Tipps gehen beim Neuzeichnen nicht verloren');
+// Ohne TURN_ON/TURN_OFF: über den Betriebsmodus; ohne Aus-Fähigkeit kein Zeitschalter.
+m = H.model(st('climate.k', 'off', { hvac_modes: ['off', 'heat'] }), { timers: {} });
+assert.equal(m.main.svc, 'climate.set_hvac_mode'); assert.equal(m.main.data.hvac_mode, 'heat');
+assert.equal(H.model(st('climate.k', 'heat', { hvac_modes: ['off', 'heat'] }), { timers: {} }).main.data.hvac_mode, 'off');
+assert.equal(H.model(st('climate.k', 'heat', { hvac_modes: ['off', 'heat'] }), { timers: {} }).timer, null);
+// Nur angebotene Fähigkeiten: Sauger ohne START, Player ohne PAUSE, Jalousie nur kippbar.
+assert.equal(H.model(st('vacuum.v', 'docked', { supported_features: 0 }), {}).main, null);
+assert.equal(H.model(st('vacuum.v', 'docked', { supported_features: 8192 }), {}).main.t, 'Starten');
+assert.equal(H.model(st('media_player.x', 'playing', { supported_features: 0 }), {}).main, null);
+assert.equal(H.model(st('cover.t', 'closed', { supported_features: 128 }), {}).main, null);
 
 // Schloss: Entriegeln, „Tür öffnen“ mit Rückfrage; kein Zeitschalter.
 m = H.model(st('lock.f', 'locked', { supported_features: 1 }), { timers: {} });
@@ -64,7 +75,7 @@ assert.equal(H.model(st('lock.f', 'unlocked', {}), {}).main.ask, undefined, 'Ver
 assert.equal(m.timer, null);
 
 // Medien: Pausieren, Tasten nach Fähigkeiten; Zeitschalter nur mit turn_off-Fähigkeit.
-m = H.model(st('media_player.g', 'playing', { supported_features: 16 | 32 | 1024 }), { timers: {} });
+m = H.model(st('media_player.g', 'playing', { supported_features: 1 | 16 | 32 | 1024 }), { timers: {} });
 assert.equal(m.main.t, 'Pausieren');
 assert.deepEqual(m.quick[0].items.map((x) => x.t), ['Zurück', 'Leiser', 'Lauter', 'Weiter']);
 assert.equal(m.timer, null);
@@ -110,4 +121,6 @@ assert.equal(H.via({ hold_action: { action: 'toggle' }, tap_action: { action: "[
 assert.equal(H.via({ hold_action: { action: 'more-info' } }), 'hold');
 assert.equal(H.wants({ hold_action: { action: "[[[\nreturn window.casoraPopupAction ? window.casoraPopupAction() : 'more-info';\n]]]\n" } }), true);
 assert.equal(H.wants({ hold_action: { action: "[[[ return 'call-service' ]]]" } }), false);
+assert.equal(H.wants({ hold_action: { action: "[[[ return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none'; ]]]" } }), true, 'neue Halten-Aktion der Info-Vorlagen');
+assert.equal(H.wants({ hold_action: { action: 'call-service', service: 'script.turn_on' } }), false, 'Licht-Badge: Smart-Toggle bleibt');
 console.log('halten: ok');

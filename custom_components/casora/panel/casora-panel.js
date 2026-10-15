@@ -5908,6 +5908,13 @@ class CasoraPanel extends HTMLElement {
       tile = has(rooms[i]);
     }
     this._select({ group: "tiles", key: this._tileKey(tile) });
+    // Einmal gewählt: ?tile aus der Adresse nehmen, damit ein späterer Aufruf dieselbe Kachel wieder wählt.
+    try {
+      const u = new URL(window.location.href);
+      u.searchParams.delete("tile");
+      window.history.replaceState(window.history.state, "", u.pathname + u.search + u.hash);
+      this._tileRouteUsed = "";
+    } catch (e) { /* Adresse bleibt */ }
   }
   _dashFromRoute() {
     try { return new URLSearchParams(window.location.search).get("dash") || ""; }
