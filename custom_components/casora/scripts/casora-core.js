@@ -305,7 +305,7 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
         field = document.createElement('input');
         // input.secret: Code verdeckt (Alarm aus dem Halten-Menü), input.numeric: Ziffern-Tastatur.
         field.type = w.input.secret ? 'password' : 'text';
-        if (w.input.secret) { field.autocomplete = 'off'; field.className = 'code'; }
+        if (w.input.secret) { field.autocomplete = 'one-time-code'; field.className = 'code'; }
         if (w.input.numeric) field.inputMode = 'numeric';
         field.placeholder = T(w.input.placeholder || '');
         field.setAttribute('aria-label', field.placeholder || w.title || '');
@@ -315,7 +315,8 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
       var done = function (ok) {
         document.removeEventListener('keydown', key, true);
         host.remove();
-        resolve(ok && field ? (field.value.trim() || false) : ok);
+        // input.allowEmpty: „Ja“ mit leerem Feld liefert '' (Alarm ohne Code), sonst false.
+        resolve(ok && field ? (field.value.trim() || (w.input.allowEmpty ? '' : false)) : ok);
       };
       var key = function (e) {
         if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(false); }

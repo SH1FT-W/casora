@@ -250,3 +250,5 @@ class TimerTracker:
             self._started = None
         for name in ("set_timer", "cancel_timer"):
             self.hass.services.async_remove(DOMAIN, name)
+        # Sofort sichern: ein Neuladen kurz nach set_timer läse sonst den alten Stand (verzögertes Speichern).
+        self.hass.async_create_task(self.store.async_save({"timers": dict(self.timers)}))

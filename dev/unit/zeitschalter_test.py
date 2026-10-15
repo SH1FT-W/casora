@@ -74,6 +74,9 @@ class FakeStore:
     def async_delay_save(self, fn, delay):
         self.shared["data"] = fn()
 
+    async def async_save(self, data):
+        self.shared["data"] = data
+
 
 class St:
     def __init__(self, eid, state):

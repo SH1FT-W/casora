@@ -64,7 +64,8 @@
       } else if (dom === 'valve') {
         m.main = (s === 'open' || s === 'opening') ? svc('Schließen', 'mdi:valve-closed', 'valve.close_valve') : svc('Öffnen', 'mdi:valve-open', 'valve.open_valve');
       } else if (dom === 'lock') {
-        if (s === 'locked') m.main = svc('Entriegeln', 'mdi:lock-open-variant', 'lock.unlock', null, { ask: 'Wirklich entriegeln?' });
+        // Schloss mit Tastenfeld (code_format): Code im selben Dialog.
+        if (s === 'locked') m.main = svc('Entriegeln', 'mdi:lock-open-variant', 'lock.unlock', null, { ask: 'Wirklich entriegeln?', code: !!a.code_format, numeric: /^\^?\\d/.test(String(a.code_format || '')) });
         else if (s === 'unlocked' || s === 'open' || s === 'jammed') m.main = svc('Verriegeln', 'mdi:lock', 'lock.lock');
       } else if (dom === 'media_player') {
         if (s === 'playing' && (feats & 1)) m.main = svc('Pausieren', 'mdi:pause', 'media_player.media_pause');
@@ -185,18 +186,20 @@
     if (dom === 'camera' && !dead) m.acts.push({ key: 'live', t: 'Live ansehen', ic: 'mdi:cctv', entity: id });
     // Schloss: Tür öffnen abgesetzt unter der Bedienung, immer mit Rückfrage.
     if (dom === 'lock' && !dead && (feats & 1) && !/ing$/.test(s)) {
-      m.acts.push({ key: 'act', t: 'Tür öffnen', ic: 'mdi:door-open', svc: 'lock.open', ask: 'Wirklich die Tür öffnen?', yes: 'Tür öffnen' });
+      m.acts.push({ key: 'act', t: 'Tür öffnen', ic: 'mdi:door-open', svc: 'lock.open', ask: 'Wirklich die Tür öffnen?', yes: 'Tür öffnen', code: !!a.code_format });
     }
 
     // Zeitschalter: nur mit Casoras Dienst (sensor.casora_timers) und für Schaltbares.
-    var timerOk = o.timers && !dead && (TOGGLE.test(dom) || (dom === 'climate' && (feats & 256)) || (dom === 'media_player' && (feats & 256)));
+    // Klima: Aus braucht TURN_OFF; „Einschalten für“ (aus) zusätzlich TURN_ON.
+    var timerOk = o.timers && !dead && (TOGGLE.test(dom) || (dom === 'climate' && (feats & 256) && (s !== 'off' || (feats & 128))) || (dom === 'media_player' && (feats & 256)));
     if (timerOk) {
       var on = dom === 'climate' ? s !== 'off' : dom === 'media_player' ? !(s === 'off' || s === 'standby') : s === 'on';
       var run = o.timers[id];
       if (run && run.at) {
         var at = new Date(run.at);
         if (!isNaN(at)) m.timer = { active: true, at: at.getTime(), action: run.action || 'turn_off',
-          word: run.action === 'turn_on' ? 'An um' : 'Aus um', time: two(at.getHours()) + ':' + two(at.getMinutes()) };
+          word: run.action === 'turn_on' ? 'An um' : 'Aus um',
+          time: at.toLocaleTimeString(window.casoraLocale ? window.casoraLocale() : undefined, { hour: 'numeric', minute: '2-digit' }) };
       }
       if (!m.timer && (on || dom !== 'media_player')) {
         m.timer = { active: false, mode: on ? 'off' : 'on', label: on ? 'Ausschalten in' : 'Einschalten für',
@@ -414,10 +417,13 @@
       var name = (cur ? cur.name : lastName || id) + (it.mode ? ' · ' + T(it.mode) : ''), q = T(it.ask);
       // Alarm mit Code: Code im selben Dialog, verdeckt; leer = abbrechen.
       if (it.code && window.casoraAsk) {
-        return window.casoraAsk({ title: name, text: q, yes: T(it.yes || it.t), input: { placeholder: 'Code', secret: true, numeric: !!it.numeric } })
+        return window.casoraAsk({ title: name, text: q, yes: T(it.yes || it.t), input: { placeholder: 'Code', secret: true, numeric: !!it.numeric, allowEmpty: true } })
           .then(function (code) {
-            if (!code) return null;
-            return call(it.svc, Object.assign({ entity_id: it.entity || id, code: String(code) }, it.data || {})).catch(failed);
+            // Abbrechen = false; „Ja“ mit leerem Feld schickt ohne Code (Code nur fürs Scharfschalten verlangt).
+            if (code === false || code == null) return null;
+            var d = Object.assign({ entity_id: it.entity || id }, it.data || {});
+            if (String(code)) d.code = String(code);
+            return call(it.svc, d).catch(failed);
           });
       }
       var w = window.casoraAsk ? window.casoraAsk({ title: name, text: q, yes: T(it.yes || it.t) }) : Promise.resolve(window.confirm(q));
