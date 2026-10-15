@@ -985,7 +985,6 @@
   "Alles gelesen": "All read",
   "Als beendet markieren": "Mark as finished",
   "Amtliche Warnung": "Official warning",
-  "Amtliche Warnung (NINA)": "Official warning (NINA)",
   "Andere Idee": "Another idea",
   "Aquarium-Licht": "Aquarium light",
   "Auf die Einkaufsliste": "Add to shopping list",
@@ -1089,7 +1088,6 @@
   "Mopp wird angebracht": "Attaching mop",
   "Mopp wird entfernt": "Removing mop",
   "Motor wird kalibriert": "Calibrating motor",
-  "NINA Warnung": "NINA warning",
   "Nach Zeitplan": "Scheduled",
   "Neue Post im Briefkasten": "New mail in the mailbox",
   "Neues Gespräch": "New conversation",
@@ -1199,10 +1197,7 @@
   "An/Aus": "On/Off",
   "12-V-Batterie": "12 V battery",
   "Luftfeuchtigkeit außen": "Outdoor humidity",
-  "NINA-Warnung": "NINA warning",
-  "NINA-Warnungen": "NINA warnings",
   "Nächstes Backup überfällig": "Next backup overdue",
-  "Aktuell keine NINA-Meldungen": "No NINA alerts right now",
   "Kamera nicht erreichbar": "Camera unreachable",
   "Kein Bild – Kamera ist offline oder ihr Dienst läuft nicht.": "No image – the camera is offline or its service is not running.",
   "Kamera offline": "Camera offline",
@@ -1760,7 +1755,9 @@
   "Betrieb": "Power",
   "Zielfeuchte": "Target humidity",
   "Wassertank": "Water tank",
-  "Komfort": "Comfort"
+  "Komfort": "Comfort",
+  "Warnungen": "Warnings",
+  "Aktuell keine Warnungen": "No warnings right now"
  },
  "patterns": [
   [
@@ -2792,10 +2789,6 @@
    "{1}% humidity"
   ],
   [
-   "^Aktuell keine NINA-Meldungen für (.+)$",
-   "No NINA alerts for {1} right now"
-  ],
-  [
    "^Einspeisung · (\\d+) % aus Solar und Akku · heute (.+)$",
    "Feed-in · {1}% from solar and battery · today {2}"
   ],
@@ -3486,6 +3479,14 @@
   [
    "^Schicht (\\d+)/(\\d+)$",
    "Layer {1}/{2}"
+  ],
+  [
+   "^Aktuell keine Warnungen für (.+)$",
+   "No warnings for {1} right now"
+  ],
+  [
+   "^Warnungen · (.+)$",
+   "Warnings · {1}"
   ]
  ]
 }

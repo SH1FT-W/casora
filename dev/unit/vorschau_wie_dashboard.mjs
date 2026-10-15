@@ -37,7 +37,7 @@ assert.equal(window.casoraTileName({ ...tile, name: 'Haus' }, alarm, hass, templ
 // Vorlagenliste (Fußbodenheizung) und feste Namen (Rezept, Wetterwarnung)
 assert.equal(window.casoraTileName({ type: 'custom:button-card', template: ['casora_thermostat', 'casora_popup_fbh'] }, null, hass, templates), 'Thermostat');
 assert.equal(window.casoraTileName({ type: 'custom:button-card', template: 'casora_recipe' }, null, hass, templates), 'Rezept');
-assert.equal(window.casoraTileName({ type: 'custom:button-card', template: 'casora_weather_warning' }, null, hass, templates), 'NINA');
+assert.equal(window.casoraTileName({ type: 'custom:button-card', template: 'casora_weather_warning' }, null, hass, templates), 'Warnungen');
 // Fremde Karten: nichts Eigenes
 assert.equal(window.casoraTileName({ type: 'tile', entity: 'switch.pumpe' }, hass.states['switch.pumpe'], hass, templates), null);
 

@@ -213,7 +213,7 @@ window.CASORA_TILE_TYPES = [
       ICON,
       { key: "sensors", type: "list", label: "Warning sensors", domains: ["binary_sensor"], classes: ["safety"],
         placeholder: "Add a warning sensor", hint: "E.g. the NINA or DWD warnings for your town." },
-      { ...TITLE, placeholder: "NINA warnings" },
+      { ...TITLE, placeholder: "Warnings" },
     ] },
   { id: "casora_solar_tip", label: "Solar tip", template: "casora_solar_tip", domains: ["binary_sensor"], ownData: true,
     icon: "sun", color: "var(--casora-color-yellow, #FFCC00)", fields: [ICON, TITLE] },
@@ -533,7 +533,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   };
 
   // Name wie im Dashboard (name der Vorlagenkette, z. B. casora_entity: Anzeigename der Entität,
-  // Wetterwarnung „NINA“). Leer (ohne Entität, je nach Design) → die Vorschau bleibt beim Namen der
+  // Warn-Kachel „Warnungen“). Leer (ohne Entität, je nach Design) → die Vorschau bleibt beim Namen der
   // Kachelart. null = nichts Eigenes.
   window.casoraTileName = (tile, ent, hass, templates) => {
     if (!tile || tile.name || !isOursAny(tile)) return null;

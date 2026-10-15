@@ -1160,7 +1160,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
         // Eine laufende Warnung steht schon als Live-Zeile mit Details oben.
         if (s === 'on' && st && st.state === 'on') return null;
         if (s === 'on') {
-          return { label: 'Wetterwarnung', sub: 'Amtliche Warnung (NINA)', icon: 'exclamation', tone: 'warn' };
+          return { label: 'Wetterwarnung', sub: 'Amtliche Warnung', icon: 'exclamation', tone: 'warn' };
         }
         if (s === 'off' && prev === 'on') {
           return { label: 'Entwarnung', sub: 'Wetterwarnung aufgehoben', icon: 'exclamation', tone: 'good' };
