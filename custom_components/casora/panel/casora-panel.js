@@ -2161,7 +2161,7 @@ const SECTIONS = [
       { key: "hold_mode", sub: "hold", label: "Hold on tiles", type: "select", auto: true, scope: "dashboard",
         options: ["", "popup", "ha"],
         optionLabels: { "": "Quick menu", popup: "Open popup", ha: "Home Assistant dialog" },
-        hint: "What holding a tile does. A single tile can do something else – set it on the tile under Hold." },
+        hint: "What holding a tile does. A single tile can do something else – set it on the tile under Visibility, ask first & hold." },
       // Stored as casora_hide_* (true = hidden); shown the other way round,
       // so an on switch means "visible".
       { key: "casora_hide_dialog_logbook", sub: "dialogs", label: "Show logbook", type: "bool", invert: true,

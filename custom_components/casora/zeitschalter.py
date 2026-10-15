@@ -10,6 +10,11 @@ während des Neustarts abgelaufen, schaltet Casora nach dem Start nach, wenn der
 höchstens zehn Minuten her ist; ältere verfallen. Das Frontend liest sensor.casora_timers
 (Attribut timers: {entity_id: {at, action, start}} – start = Zeitpunkt des Setzens für den Ring
 auf der Kachel; ältere Einträge ohne start bleiben gültig).
+
+Endet ein Timer, feuert Casora das Ereignis casora_timer_finished mit {entity_id, action, reason}:
+reason „expired“ (abgelaufen, nach dem Schalten), „manual“ (von Hand in den Zielzustand
+geschaltet) oder „cancelled“ (cancel_timer oder Entität entfernt). Ein Ersetzen per set_timer
+feuert nichts. set_timer antwortet auf Wunsch mit {entity_id, at, start}.
 """
 
 from __future__ import annotations
@@ -28,6 +33,7 @@ ACTIONS = ("turn_off", "turn_on")
 BLOCKED = ("lock", "alarm_control_panel", "camera")
 GRACE = timedelta(minutes=10)
 MAX_MINUTES = 1440
+EVENT_FINISHED = "casora_timer_finished"
 OFF_STATES = {"cover": ("closed", "closing"), "valve": ("closed", "closing")}
 ON_STATES = {"cover": ("open", "opening"), "valve": ("open", "opening")}
 
@@ -38,6 +44,24 @@ def domain_of(entity_id: str) -> str:
 
 def allowed(entity_id: str) -> bool:
     return domain_of(entity_id) not in BLOCKED
+
+
+def parse_minutes(value: Any) -> int | None:
+    """Minuten als ganze Zahl 1–1440; auch als Text („30“). 1.5, „1.5“, True, 0 → None."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, float):
+        if not value.is_integer():
+            return None
+        value = int(value)
+    elif isinstance(value, str):
+        text = value.strip()
+        if not text.isdigit():
+            return None
+        value = int(text)
+    elif not isinstance(value, int):
+        return None
+    return value if 1 <= value <= MAX_MINUTES else None
 
 
 def due_at(now: datetime, minutes: int) -> datetime:
@@ -146,7 +170,7 @@ class TimerTracker:
             def _run_late(_event=None) -> None:
                 self._started = None
                 for eid, action in late:
-                    self.hass.async_create_task(self._switch(eid, action))
+                    self.hass.async_create_task(self._switch(eid, action, fire=True))
 
             # Erst wenn HA läuft – sonst gibt es die Entität vielleicht noch nicht.
             if self.hass.state is CoreState.running:
@@ -162,9 +186,12 @@ class TimerTracker:
                 return
             old = event.data.get("old_state")
             new = event.data.get("new_state")
-            if new is None or reached_by_hand(eid, entry["action"], old.state if old else None, new.state):
-                # Entität entfernt oder von Hand geschaltet: Timer verfällt.
-                self.remove(eid)
+            if new is None:
+                # Entität entfernt: Timer verfällt.
+                self.remove(eid, "cancelled")
+            elif reached_by_hand(eid, entry["action"], old.state if old else None, new.state):
+                # Von Hand geschaltet: Timer verfällt.
+                self.remove(eid, "manual")
 
         self._unsub.append(self.hass.bus.async_listen(EVENT_STATE_CHANGED, _changed))
         self._register_services()
@@ -172,6 +199,7 @@ class TimerTracker:
     def _register_services(self) -> None:
         import voluptuous as vol
 
+        from homeassistant.core import SupportsResponse
         from homeassistant.exceptions import ServiceValidationError
         from homeassistant.helpers import config_validation as cv
         from homeassistant.util import dt as dt_util
@@ -180,24 +208,37 @@ class TimerTracker:
 
         def _check(eid: str) -> None:
             if not allowed(eid):
-                raise ServiceValidationError(f"Zeitschalter ist für {domain_of(eid)} nicht erlaubt: {eid}")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="timer_domain_blocked",
+                    translation_placeholders={"domain": domain_of(eid), "entity_id": eid})
             if self.hass.states.get(eid) is None:
-                raise ServiceValidationError(f"Entität nicht gefunden: {eid}")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="timer_entity_not_found",
+                    translation_placeholders={"entity_id": eid})
 
-        async def _set(call) -> None:
+        async def _set(call) -> dict[str, str]:
             eid = call.data["entity_id"]
+            minutes = parse_minutes(call.data["minutes"])
+            if minutes is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="timer_invalid_minutes",
+                    translation_placeholders={"minutes": str(call.data["minutes"]), "max": str(MAX_MINUTES)})
             _check(eid)
             now = dt_util.utcnow()
-            self.set(eid, due_at(now, call.data["minutes"]), call.data["action"], now)
+            self.set(eid, due_at(now, minutes), call.data["action"], now)
+            entry = self.timers[eid]
+            return {"entity_id": eid, "at": entry["at"], "start": entry.get("start", now.isoformat())}
 
         async def _cancel(call) -> None:
-            self.remove(call.data["entity_id"])
+            self.remove(call.data["entity_id"], "cancelled")
 
+        # minutes prüft _set selbst (ganze Zahl 1–1440) – so kommt eine übersetzte Meldung statt
+        # still abgerundeter 1.5.
         self.hass.services.async_register(DOMAIN, "set_timer", _set, schema=vol.Schema({
             vol.Required("entity_id"): cv.entity_id,
-            vol.Required("minutes"): vol.All(vol.Coerce(int), vol.Range(min=1, max=MAX_MINUTES)),
+            vol.Required("minutes"): vol.Any(int, float, str),
             vol.Optional("action", default="turn_off"): vol.In(ACTIONS),
-        }))
+        }), supports_response=SupportsResponse.OPTIONAL)
         self.hass.services.async_register(DOMAIN, "cancel_timer", _cancel, schema=vol.Schema({
             vol.Required("entity_id"): cv.entity_id,
         }))
@@ -218,7 +259,7 @@ class TimerTracker:
             if self.timers.get(eid, {}).get("at") != at.isoformat():
                 return
             self.remove(eid)
-            self.hass.async_create_task(self._switch(eid, action))
+            self.hass.async_create_task(self._switch(eid, action, fire=True))
 
         self._cancel[eid] = async_track_point_in_utc_time(self.hass, _due, at)
 
@@ -228,20 +269,30 @@ class TimerTracker:
         self._save()
         self._notify()
 
-    def remove(self, eid: str) -> None:
+    def remove(self, eid: str, reason: str | None = None) -> None:
+        """Timer löschen; mit reason („manual“/„cancelled“) feuert casora_timer_finished."""
         cancel = self._cancel.pop(eid, None)
         if cancel:
             cancel()
-        if self.timers.pop(eid, None) is not None:
+        entry = self.timers.pop(eid, None)
+        if entry is not None:
             self._save()
             self._notify()
+            if reason:
+                self._fire(eid, entry["action"], reason)
 
-    async def _switch(self, eid: str, action: str) -> None:
+    async def _switch(self, eid: str, action: str, fire: bool = False) -> None:
         domain, service = service_for(eid, action)
         try:
             await self.hass.services.async_call(domain, service, {"entity_id": eid}, blocking=True)
         except Exception as err:  # noqa: BLE001
             _LOGGER.warning("Zeitschalter für %s fehlgeschlagen (%s.%s): %s", eid, domain, service, err)
+        if fire:
+            # Nach dem Schalten, damit Automationen schon den neuen Zustand sehen.
+            self._fire(eid, action, "expired")
+
+    def _fire(self, eid: str, action: str, reason: str) -> None:
+        self.hass.bus.async_fire(EVENT_FINISHED, {"entity_id": eid, "action": action, "reason": reason})
 
     def _save(self) -> None:
         # Kurz verzögert, beim Herunterfahren sicher geschrieben (Store final write).

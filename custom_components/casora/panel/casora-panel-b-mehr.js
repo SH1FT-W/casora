@@ -538,6 +538,8 @@
     :host(.phone) .msearch .mbox { max-height:78vh; border-radius:24px; }
     /* Wer sieht das? / Rückfrage im Editor */
     .mwho { margin-top:4px; }
+    /* „Halten“ nach Rückfrage-Hinweis bzw. „Ausprobieren“: Abstand wie zwischen den übrigen Zeilen. */
+    .mgroup > * + .row.mhold { margin-top:12px; }
     .mtry { display:block; margin:6px 0 2px; padding:8px 12px; border-radius:10px; font:inherit; font-weight:600; cursor:pointer; }
     .mtry[hidden] { display:none; }
     .mwhofix { display:block; margin:4px 0 6px; padding:8px 12px; border-radius:10px; font:inherit; font-weight:600; cursor:pointer; }
@@ -1006,11 +1008,11 @@
       A("addtile", "Add a tile", "kachel hinzufügen neu gerät lampe licht steckdose schalter einfügen", () => this._bAddTile(), true, way("Content", "Tiles"));
       // Kachel-Optionen, die man unter anderem Namen sucht (Nutzertest 5: „rückfrage“ fand nichts).
       A("askfirst", "Ask before switching", "rückfrage rueckfrage bestätigen bestätigung nachfragen fragen vorher sicherheitsabfrage abfrage "
-        + "absichern versehentlich aus versehen garage garagentor tor confirm", () => this._mGoTileOption("ask"), true, way("Tile", "Visibility & ask first"));
+        + "absichern versehentlich aus versehen garage garagentor tor confirm", () => this._mGoTileOption("ask"), true, way("Tile", "Visibility, ask first & hold"));
       A("whosees", "Who sees this?", "wer sieht sichtbar sichtbarkeit benutzer nutzer kind kinder person gast ausblenden verbergen verstecken "
-        + "zugriff rechte berechtigung", () => this._mGoTileOption("who"), true, way("Tile", "Visibility & ask first"));
+        + "zugriff rechte berechtigung", () => this._mGoTileOption("who"), true, way("Tile", "Visibility, ask first & hold"));
       A("hold", "Hold on this tile", "halten gedrückt lange drücken langes drücken schnellmenü menü kontextmenü popup dialog hold long press",
-        () => this._mGoTileOption("hold"), true, way("Tile", "Visibility & ask first"));
+        () => this._mGoTileOption("hold"), true, way("Tile", "Visibility, ask first & hold"));
       A("ventpush", "Ventilation hints on the phone", "lüften lueften lüftung lüftungs-coach coach handy push benachrichtigung benachrichtigungen "
         + "mitteilung mitteilungen nachricht empfänger telefon smartphone iphone app fenster", () => { this._bOpen = true; this._csOpenPage("vent"); },
         typeof this._csOpenPage === "function", way("Settings", "Ventilation"));
@@ -1621,6 +1623,12 @@
     const holdsTile = (t) => !!t && t.type === "custom:button-card"
       && [].concat(t.template || []).some((x) => typeof x === "string" && x.indexOf("casora_") === 0);
     P._mHoldsTile = holdsTile;
+    // Dashboard-Wert „Halten auf Kacheln“ ('' = Schnellmenü, Unbekanntes ebenso) – für „Wie Dashboard (…)“.
+    const dashHold = (rooms) => {
+      const v = (rooms || []).map((r) => (r && r.variables || {}).hold_mode).find((x) => x !== undefined && x !== null && x !== "");
+      return v === "popup" || v === "ha" ? v : "menu";
+    };
+    P._mDashHold = dashHold;
 
     // Kachel: visibility (HA-Bedingung „user“) an der Kachel bzw. ihrer Hülle.
     const tileUsers = (t) => {
@@ -1715,6 +1723,7 @@
             group.append(r, h, try_);
           }
           // Halten (22-halten.js): leer = wie im Dashboard eingestellt (Bedienung › Kacheln, window._casoraHoldMode).
+          // „Wie Dashboard“ nennt den Dashboard-Wert (erster Raum mit hold_mode, wie das Studio-Feld; sonst Schnellmenü).
           if (holdsTile(inner) && typeof this._combo === "function") {
             const r = document.createElement("div");
             r.className = "row mhold";
@@ -1727,7 +1736,7 @@
               if (v && HOLD_MODES.includes(v)) { inner.variables = inner.variables || {}; inner.variables.hold_mode = v; }
               else if (inner.variables) { delete inner.variables.hold_mode; if (!Object.keys(inner.variables).length) delete inner.variables; }
               this._markDirty();
-            }, { fixed: true, labels: HOLD_LABELS });
+            }, { fixed: true, labels: { ...HOLD_LABELS, "": fill(tr("Same as dashboard ({mode})"), { mode: tr(HOLD_LABELS[dashHold(rooms$(this))]) }) } });
             r.append(l, c.wrap);
             const h = document.createElement("div");
             h.className = "hint";

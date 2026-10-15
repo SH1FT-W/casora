@@ -2,7 +2,8 @@
 // - Studio › Bedienung › Kacheln: hold_mode ('' = Schnellmenü, popup, ha) dashboardweit, Rundlauf ohne Warnung.
 // - casora_mobile_bg erklärt hold_mode → das Studio spiegelt den Wert ans Handy (mobileTargetsFor).
 // - casora-core.js setzt window._casoraHoldMode ('menu' | 'popup' | 'ha') aus Raumkarte bzw. casora_mobile_bg.
-// - Kachel-Inspektor: „Halten“ je Kachel (variables.hold_mode, leer = wie Dashboard).
+// - Kachel-Inspektor: „Halten“ je Kachel (variables.hold_mode, leer = „Wie Dashboard (…)“ mit dem Dashboard-Wert),
+//   in der Gruppe „Sichtbarkeit, Rückfrage & Halten“, mit Abstand zum Hinweis darüber.
 // - „Kachel bearbeiten“ (?tile=): findet auch Kacheln in Hüllen und lässt die Vorschau dorthin blättern.
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -37,6 +38,7 @@ assert.equal(f.type, 'select');
 assert.equal(f.label, 'Hold on tiles');
 assert.deepEqual(f.options, ['', 'popup', 'ha'], 'leer = Schnellmenü (Standard)');
 assert.equal(f.optionLabels[''], 'Quick menu');
+assert.ok(/under Visibility, ask first & hold\.$/.test(f.hint), 'Hinweis nennt den Weg zur Kachel-Einstellung');
 
 // ── Rundlauf mit hold_mode an den Räumen und an einer Kachel ───────────────────────
 const view = (path, name, vars, tiles) => ({
@@ -121,13 +123,40 @@ for (const [name, tpl] of [['Quelle', T], ['Paket', B]]) {
   assert.ok(mehr.includes('const HOLD_MODES = ["menu", "popup", "ha"];'), 'Werte wie vereinbart');
   assert.ok(/"": "Same as dashboard"/.test(mehr), 'leer = wie Dashboard');
   assert.ok(mehr.includes('inner.variables.hold_mode = v') && mehr.includes('delete inner.variables.hold_mode'), 'schreibt variables.hold_mode an der Kachel');
+  // „Wie Dashboard (…)“: Wert des Dashboards (erster Raum mit hold_mode), sonst Schnellmenü.
+  const j = mehr.indexOf('const dashHold = ');
+  const dashHold = new Function('return ' + mehr.slice(j + 'const dashHold = '.length, mehr.indexOf('\n    };\n', j) + 6))();
+  assert.equal(dashHold([]), 'menu', 'nichts gesetzt: Schnellmenü');
+  assert.equal(dashHold([{ variables: {} }, { variables: { hold_mode: 'popup' } }]), 'popup', 'erster Raum mit Wert');
+  assert.equal(dashHold([{ variables: { hold_mode: '' } }, { variables: { hold_mode: 'ha' } }]), 'ha', 'leer zählt nicht');
+  assert.equal(dashHold([{ variables: { hold_mode: 'quatsch' } }]), 'menu', 'Unbekanntes = Schnellmenü');
+  assert.equal(dashHold([null, {}]), 'menu', 'kaputte Räume');
+  assert.ok(mehr.includes('fill(tr("Same as dashboard ({mode})"), { mode: tr(HOLD_LABELS[dashHold(rooms$(this))]) })'),
+    'Auswahl zeigt den Dashboard-Wert');
+  assert.ok(/\.mgroup > \* \+ \.row\.mhold \{ margin-top:12px; \}/.test(mehr), '„Halten“ mit Abstand zum Hinweis darüber');
+  assert.equal((mehr.match(/way\("Tile", "Visibility, ask first & hold"\)/g) || []).length, 3, 'Suche nennt den neuen Gruppennamen');
+  assert.ok(!mehr.includes('way("Tile", "Visibility & ask first")'), 'kein alter Weg in der Suche');
+  // Gruppentitel nach Inhalt (casora-panel-b-ux.js).
+  const ux = read('custom_components/casora/panel/casora-panel-b-ux.js');
+  const k = ux.indexOf('const visTitle = ');
+  const visTitle = new Function('return ' + ux.slice(k + 'const visTitle = '.length, ux.indexOf('\n    };\n', k) + 6))();
+  const el = (...cls) => ({ querySelector: (q) => (cls.includes(q) ? {} : null) });
+  assert.equal(visTitle(el('.row.mask', '.row.mhold')), 'Visibility, ask first & hold');
+  assert.equal(visTitle(el('.row.mask')), 'Visibility & ask first');
+  assert.equal(visTitle(el('.row.mhold')), 'Visibility & hold');
+  assert.equal(visTitle(el()), 'Visibility');
+  assert.equal(visTitle(null), 'Visibility');
 }
 
 // ── Übersetzungen ───────────────────────────────────────────────────────────────
 {
   const de = JSON.parse(read('custom_components/casora/translations/panel/de.json')).exact;
   const want = { 'Hold on tiles': 'Halten auf Kacheln', 'Quick menu': 'Schnellmenü', 'Open popup': 'Popup öffnen',
-    'Home Assistant dialog': 'Home-Assistant-Dialog', Hold: 'Halten', 'Same as dashboard': 'Wie Dashboard', Tiles: 'Kacheln' };
+    'Home Assistant dialog': 'Home-Assistant-Dialog', Hold: 'Halten', 'Same as dashboard': 'Wie Dashboard', Tiles: 'Kacheln',
+    'Same as dashboard ({mode})': 'Wie Dashboard ({mode})', 'Visibility, ask first & hold': 'Sichtbarkeit, Rückfrage & Halten',
+    'Visibility & hold': 'Sichtbarkeit & Halten',
+    'What holding a tile does. A single tile can do something else – set it on the tile under Visibility, ask first & hold.':
+      'Was Halten auf einer Kachel tut. Eine einzelne Kachel kann etwas anderes tun – einstellen an der Kachel unter „Sichtbarkeit, Rückfrage & Halten“.' };
   for (const [k, v] of Object.entries(want)) assert.equal(de[k], v, k);
 }
 

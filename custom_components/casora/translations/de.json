@@ -194,7 +194,7 @@
     },
     "set_timer": {
       "name": "Zeitschalter setzen",
-      "description": "Schaltet eine Entität nach einigen Minuten aus oder an. Ersetzt einen bestehenden Zeitschalter derselben Entität.",
+      "description": "Schaltet eine Entität nach einigen Minuten aus oder an. Ersetzt einen bestehenden Zeitschalter derselben Entität. Endet der Zeitschalter, feuert Casora das Ereignis casora_timer_finished (entity_id, action, reason: expired, manual oder cancelled). Antwortet auf Wunsch mit entity_id, at und start.",
       "fields": {
         "entity_id": {
           "name": "Entität",
@@ -202,7 +202,7 @@
         },
         "minutes": {
           "name": "Minuten",
-          "description": "Nach wie vielen Minuten (1–1440)"
+          "description": "Nach wie vielen Minuten (ganze Zahl, 1–1440)"
         },
         "action": {
           "name": "Aktion",
@@ -212,7 +212,7 @@
     },
     "cancel_timer": {
       "name": "Zeitschalter löschen",
-      "description": "Löscht den Zeitschalter einer Entität.",
+      "description": "Löscht den Zeitschalter einer Entität (Ereignis casora_timer_finished mit reason cancelled).",
       "fields": {
         "entity_id": {
           "name": "Entität",
@@ -273,6 +273,17 @@
     "restart_after_update": {
       "title": "Casora {version} ist installiert – Neustart nötig",
       "description": "Casora wurde auf Version {version} aktualisiert. Starte Home Assistant neu, damit die neue Fassung geladen wird."
+    }
+  },
+  "exceptions": {
+    "timer_domain_blocked": {
+      "message": "Zeitschalter ist für {domain} nicht erlaubt: {entity_id}"
+    },
+    "timer_entity_not_found": {
+      "message": "Entität nicht gefunden: {entity_id}"
+    },
+    "timer_invalid_minutes": {
+      "message": "Ungültige Minuten: {minutes}. Erlaubt ist eine ganze Zahl von 1 bis {max}."
     }
   }
 }

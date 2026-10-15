@@ -253,3 +253,6 @@ Casora adds these actions to Home Assistant (Developer tools → Actions).
 | `casora.rezept_neu`, `casora.rezept_auf_liste` | Get a new recipe of the week, or add its ingredients to the shopping list |
 | `casora.einrichten` | Create missing helpers, scripts and the theme again |
 | `casora.umstellen` | Rename existing Hemma dashboards to Casora names (with a backup) |
+| `casora.set_timer`, `casora.cancel_timer` | Turn an entity off or on after 1–1440 minutes (the hold menu's timers), or remove that timer. `set_timer` can return `entity_id`, `at` and `start` |
+
+When a timer ends, Casora fires the event `casora_timer_finished` with `entity_id`, `action` and `reason`: `expired` (time is up, after switching), `manual` (someone switched the entity by hand first) or `cancelled` (`cancel_timer`, or the entity was removed). Replacing a timer with a new `set_timer` fires nothing. Use it as an event trigger in automations.

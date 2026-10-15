@@ -4,7 +4,8 @@
 
 Reine Logik (Ablauf, Zielzustand, Neustart-Entscheid) und der Tracker mit nachgebautem
 HA: Timer setzen/ersetzen/löschen, Ablauf schaltet, Schalten von Hand verwirft den Timer,
-Neustart legt offene Timer wieder an und holt kurz verpasste nach.
+Neustart legt offene Timer wieder an und holt kurz verpasste nach. Dazu: Minuten nur ganzzahlig,
+übersetzte Fehlermeldungen, Ereignis casora_timer_finished und Antwort von set_timer.
 """
 
 from __future__ import annotations
@@ -18,7 +19,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 sys.path.insert(0, ROOT)
 
 import homeassistant.helpers.event as ha_event  # noqa: E402
-from homeassistant.core import CoreState  # noqa: E402
+from homeassistant.core import CoreState, SupportsResponse  # noqa: E402
 from homeassistant.exceptions import ServiceValidationError  # noqa: E402
 from homeassistant.util import dt as dt_util  # noqa: E402
 
@@ -65,6 +66,10 @@ check(z.parse_start({"at": t0.isoformat(), "action": "turn_on", "start": t0.isof
 check(z.parse_start({"at": t0.isoformat(), "action": "turn_on"}) is None, "alter Eintrag ohne Start")
 check(z.parse_start({"start": "kaputt"}) is None and z.parse_start({"start": "2026-10-15T18:00:00"}) is None,
       "kaputter Start / ohne Zeitzone")
+for ok_in, ok_out in ((30, 30), ("30", 30), (" 45 ", 45), (1, 1), (1440, 1440), (60.0, 60)):
+    check(z.parse_minutes(ok_in) == ok_out, f"Minuten {ok_in!r} → {ok_out}")
+for bad_in in (1.5, "1.5", "abc", "", 0, 1441, "-5", True, None, [30]):
+    check(z.parse_minutes(bad_in) is None, f"Minuten {bad_in!r} abgelehnt")
 
 
 # 2. Tracker mit nachgebautem HA
@@ -91,10 +96,14 @@ class Bus:
     def __init__(self):
         self.cb = None
         self.once = []
+        self.fired = []
 
     def async_listen(self, ev, cb):
         self.cb = cb
         return lambda: None
+
+    def async_fire(self, ev, data):
+        self.fired.append((ev, data))
 
     def async_listen_once(self, ev, cb):
         self.once.append(cb)
@@ -103,10 +112,10 @@ class Bus:
 
 class Services:
     def __init__(self):
-        self.handlers, self.schemas, self.calls = {}, {}, []
+        self.handlers, self.schemas, self.calls, self.support = {}, {}, [], {}
 
-    def async_register(self, domain, name, fn, schema=None):
-        self.handlers[name], self.schemas[name] = fn, schema
+    def async_register(self, domain, name, fn, schema=None, supports_response=None):
+        self.handlers[name], self.schemas[name], self.support[name] = fn, schema, supports_response
 
     def async_remove(self, domain, name):
         self.handlers.pop(name, None)
@@ -185,8 +194,10 @@ async def main():
     schema = h.services.schemas["set_timer"]
     check(schema({"entity_id": L, "minutes": 30}) == {"entity_id": L, "minutes": 30, "action": "turn_off"},
           "Standard-Aktion turn_off")
-    for bad in ({"entity_id": L, "minutes": 0}, {"entity_id": L, "minutes": 1441},
-                {"entity_id": L, "minutes": 5, "action": "toggle"}, {"entity_id": [L, C], "minutes": 5}):
+    check(schema({"entity_id": L, "minutes": "30"})["minutes"] == "30", "Minuten als Text erreichen den Dienst")
+    check(h.services.support["set_timer"] is SupportsResponse.OPTIONAL, "set_timer antwortet optional")
+    for bad in ({"entity_id": L, "minutes": 5, "action": "toggle"}, {"entity_id": [L, C], "minutes": 5},
+                {"entity_id": L, "minutes": None}):
         try:
             schema(bad)
             check(False, f"Schema nimmt {bad} an")
@@ -194,10 +205,26 @@ async def main():
             pass
 
     async def svc(name, **data):
-        await h.services.handlers[name](Call(h.services.schemas[name](data)))
+        return await h.services.handlers[name](Call(h.services.schemas[name](data)))
 
-    # Setzen, Ablauf schaltet, Eintrag weg.
-    await svc("set_timer", entity_id=L, minutes=30)
+    def finished():
+        return [d for ev, d in h.bus.fired if ev == "casora_timer_finished"]
+
+    # Ungültige Minuten: übersetzter Fehler statt still abgerundet, kein Timer.
+    for bad in (1.5, "1.5", 0, 1441, "x"):
+        try:
+            await svc("set_timer", entity_id=L, minutes=bad)
+            check(False, f"Minuten {bad!r} angenommen")
+        except ServiceValidationError as err:
+            check(err.translation_domain == "casora" and err.translation_key == "timer_invalid_minutes"
+                  and err.translation_placeholders.get("minutes") == str(bad),
+                  f"Minuten {bad!r}: Übersetzungsschlüssel")
+    check(not tr.timers, "ungültige Minuten setzen keinen Timer")
+
+    # Setzen (Text-Minuten), Antwort, Ablauf schaltet, Ereignis expired, Eintrag weg.
+    resp = await svc("set_timer", entity_id=L, minutes="30")
+    check(resp == {"entity_id": L, "at": (t0 + timedelta(minutes=30)).isoformat(), "start": t0.isoformat()},
+          "Antwort {entity_id, at, start}")
     check(disk["data"]["timers"][L] == {"at": (t0 + timedelta(minutes=30)).isoformat(), "action": "turn_off",
                                         "start": t0.isoformat()},
           "Timer gespeichert (mit Start für den Ring)")
@@ -205,6 +232,7 @@ async def main():
     fire_due(L)
     await asyncio.gather(*h.tasks)
     check(h.services.calls == [("homeassistant", "turn_off", L)], "Ablauf schaltet aus")
+    check(finished() == [{"entity_id": L, "action": "turn_off", "reason": "expired"}], "Ereignis expired")
     check(L not in tr.timers and L not in disk["data"]["timers"], "nach Ablauf gelöscht")
 
     # Ersetzen: alter Rückruf schaltet nicht mehr.
@@ -213,6 +241,7 @@ async def main():
     old_rec = POINTS[-1]
     await svc("set_timer", entity_id=C, minutes=60, action="turn_on")
     check(not old_rec["live"], "alter Timer abbestellt")
+    check(len(finished()) == 1, "Ersetzen feuert kein Ereignis")
     check(tr.timers[C]["action"] == "turn_on" and len(tr.timers) == 1, "ersetzt statt doppelt")
     fire_due(C)
     await asyncio.gather(*h.tasks)
@@ -227,6 +256,7 @@ async def main():
     check(L in tr.timers, "Rückkehr aus unavailable lässt Timer stehen")
     h.bus.cb(Ev({"entity_id": L, "old_state": St(L, "on"), "new_state": St(L, "off")}))
     check(L not in tr.timers, "von Hand aus: Timer verworfen")
+    check(finished()[-1] == {"entity_id": L, "action": "turn_off", "reason": "manual"}, "Ereignis manual")
     fire_due(L)
     await asyncio.gather(*h.tasks)
     check(h.services.calls == [], "verworfener Timer schaltet nicht")
@@ -235,14 +265,22 @@ async def main():
     await svc("set_timer", entity_id=L, minutes=5)
     await svc("cancel_timer", entity_id=L)
     check(L not in tr.timers, "cancel_timer löscht")
+    check(finished()[-1] == {"entity_id": L, "action": "turn_off", "reason": "cancelled"}, "Ereignis cancelled")
+    n = len(finished())
+    await svc("cancel_timer", entity_id=L)
+    check(len(finished()) == n, "cancel_timer ohne Timer feuert nichts")
+    await svc("set_timer", entity_id=L, minutes=5, action="turn_on")
+    h.bus.cb(Ev({"entity_id": L, "old_state": St(L, "on"), "new_state": None}))
+    check(L not in tr.timers and finished()[-1]["reason"] == "cancelled", "Entität entfernt: cancelled")
 
     # Abgelehnt: Schloss, unbekannte Entität.
-    for eid in (K, "light.missing"):
+    for eid, key in ((K, "timer_domain_blocked"), ("light.missing", "timer_entity_not_found")):
         try:
             await svc("set_timer", entity_id=eid, minutes=5)
             check(False, f"{eid} angenommen")
-        except ServiceValidationError:
-            pass
+        except ServiceValidationError as err:
+            check(err.translation_domain == "casora" and err.translation_key == key
+                  and err.translation_placeholders.get("entity_id") == eid, f"{eid}: Schlüssel {key}")
     check(K not in tr.timers, "kein Timer fürs Schloss")
 
     # 3. Neustart: offen → wieder angelegt, kurz verpasst → nach Start nachholen, alt → weg.
@@ -266,6 +304,8 @@ async def main():
     h2.bus.once[0](None)
     await asyncio.gather(*h2.tasks)
     check(h2.services.calls == [("cover", "close_cover", C)], "verpasster Timer nach Start nachgeholt")
+    check(h2.bus.fired == [("casora_timer_finished", {"entity_id": C, "action": "turn_off", "reason": "expired"})],
+          "nachgeholter Timer feuert expired")
     fire_due(L)
     await asyncio.gather(*h2.tasks)
     check(h2.services.calls[-1] == ("homeassistant", "turn_off", L), "wieder angelegter Timer schaltet")
@@ -275,6 +315,22 @@ async def main():
 
 
 asyncio.run(main())
+
+# 4. Übersetzungen der Fehlermeldungen (de/en) mit passenden Platzhaltern.
+import json  # noqa: E402
+import re  # noqa: E402
+
+src = open(os.path.join(ROOT, "custom_components/casora/zeitschalter.py"), encoding="utf-8").read()
+keys = set(re.findall(r'translation_key="([a-z_]+)"', src))
+check(keys == {"timer_domain_blocked", "timer_entity_not_found", "timer_invalid_minutes"}, f"Schlüssel {keys}")
+for lang in ("de", "en"):
+    tr_json = json.load(open(os.path.join(ROOT, f"custom_components/casora/translations/{lang}.json"),
+                             encoding="utf-8"))
+    for key in keys:
+        msg = tr_json.get("exceptions", {}).get(key, {}).get("message", "")
+        check(msg, f"{lang}: exceptions.{key} fehlt")
+        check(set(re.findall(r"\{(\w+)\}", msg)) <= {"domain", "entity_id", "minutes", "max"},
+              f"{lang}: {key} unbekannter Platzhalter")
 
 if FAILS:
     print(f"{len(FAILS)} Fehler")

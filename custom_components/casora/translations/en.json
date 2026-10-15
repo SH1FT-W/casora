@@ -194,7 +194,7 @@
     },
     "set_timer": {
       "name": "Set timer",
-      "description": "Turns an entity off or on after a number of minutes. Replaces an existing timer for the same entity.",
+      "description": "Turns an entity off or on after a number of minutes. Replaces an existing timer for the same entity. When the timer ends, Casora fires the event casora_timer_finished (entity_id, action, reason: expired, manual or cancelled). Can respond with entity_id, at and start.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -202,7 +202,7 @@
         },
         "minutes": {
           "name": "Minutes",
-          "description": "After how many minutes (1–1440)"
+          "description": "After how many minutes (whole number, 1–1440)"
         },
         "action": {
           "name": "Action",
@@ -212,7 +212,7 @@
     },
     "cancel_timer": {
       "name": "Cancel timer",
-      "description": "Removes the timer of an entity.",
+      "description": "Removes the timer of an entity (event casora_timer_finished with reason cancelled).",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -273,6 +273,17 @@
     "restart_after_update": {
       "title": "Casora {version} installed – restart required",
       "description": "Casora was updated to version {version}. Restart Home Assistant to load it."
+    }
+  },
+  "exceptions": {
+    "timer_domain_blocked": {
+      "message": "Timers are not allowed for {domain}: {entity_id}"
+    },
+    "timer_entity_not_found": {
+      "message": "Entity not found: {entity_id}"
+    },
+    "timer_invalid_minutes": {
+      "message": "Invalid minutes: {minutes}. Use a whole number from 1 to {max}."
     }
   }
 }

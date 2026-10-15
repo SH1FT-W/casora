@@ -864,6 +864,13 @@
       if (shell && shell.type === "conditional") parts.push(tr("with a condition"));
       return parts.join(" \u00b7 ");
     };
+    // Titel der Gruppe nach ihrem Inhalt: Rückfrage (.row.mask) und Halten (.row.mhold, casora-panel-b-mehr.js).
+    const visTitle = (el) => {
+      const asks = !!(el && el.querySelector(".row.mask"));
+      const holds = !!(el && el.querySelector(".row.mhold"));
+      return asks && holds ? "Visibility, ask first & hold" : asks ? "Visibility & ask first" : holds ? "Visibility & hold" : "Visibility";
+    };
+    P._uxVisTitle = visTitle;
     P._uxTileEditor = function () {
       if (!this._sel || this._sel.group !== "tiles") return;
       const box = this.shadowRoot.querySelector("#pane #band-tiles .tile.sel");
@@ -878,7 +885,7 @@
         const late = body.querySelector(":scope > .subcard.mgroup");
         if (late) have.querySelector(".advbody").appendChild(late);
         const lab = have.querySelector(".advsum > span");
-        if (lab && [...have.querySelectorAll(".advbody label, .advbody .lab")].some((l) => /Ask before switching|Vor dem Schalten fragen/.test(l.textContent || ""))) lab.textContent = tr("Visibility & ask first");
+        if (lab) lab.textContent = tr(visTitle(have.querySelector(".advbody")));
         const v = have.querySelector(".uxsum");
         if (v) v.textContent = this._uxVisSummary(shell);
         return;
@@ -898,9 +905,8 @@
       const ca = body.querySelector(".condarea");
       if (ca) move.push(ca);
       if (!move.length) return;
-      // Mit „Vor dem Schalten fragen“ sagt der Titel das (Nutzertest 3: unter „Sichtbarkeit“ nicht vermutet).
-      const asks = !!(mg && [...mg.querySelectorAll("label, .lab")].some((l) => /Ask before switching|Vor dem Schalten fragen/.test(l.textContent || "")));
-      const det = this._uxFold("vis", asks ? "Visibility & ask first" : "Visibility", move, "uxvis");
+      // Mit „Vor dem Schalten fragen“ bzw. „Halten“ sagt der Titel das (Nutzertest 3: unter „Sichtbarkeit“ nicht vermutet).
+      const det = this._uxFold("vis", visTitle(mg), move, "uxvis");
       // Vor „Popup“ (erste vorhandene Aufklapp-Gruppe), sonst ans Ende.
       const adv = body.querySelector(":scope > .adv");
       if (adv) adv.before(det); else body.appendChild(det);

@@ -83,6 +83,7 @@ set_timer:
         number:
           min: 1
           max: 1440
+          step: 1
           unit_of_measurement: min
     action:
       default: turn_off
