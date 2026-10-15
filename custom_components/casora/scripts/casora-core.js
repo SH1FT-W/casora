@@ -6355,6 +6355,8 @@ window.casoraMenuGlass = {
     }
     return url;
   }
+  // Halten-Menü (22-halten.js): Gerätefarbe der Kachel wie im Popup-Kopf.
+  window._casoraRingHue = function (src) { var r = ringFor(src); return r ? r.hue : null; };
   function ringFor(src, onGlyph) {
     if (!src || !src._config) return null;
     var tpl = [].concat(src._config.template || []).join(' ');

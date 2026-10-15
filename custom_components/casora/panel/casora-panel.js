@@ -5891,6 +5891,24 @@ class CasoraPanel extends HTMLElement {
     const i = rooms.findIndex((r) => r.path === want);
     return i < 0 ? 0 : i;
   }
+  // Halten-Menü „Kachel bearbeiten“: ?tile=<entität> wählt die Kachel gleich aus (einmal je Aufruf).
+  _tileFromRoute() {
+    let want = "";
+    try { want = new URLSearchParams(window.location.search).get("tile") || ""; } catch (e) { want = ""; }
+    if (!want || this._tileRouteUsed === want) return;
+    this._tileRouteUsed = want;
+    const rooms = (this._state && this._state.compact.rooms) || [];
+    const has = (r) => (r && r.tiles || []).find((t) => t && t.entity === want);
+    let tile = has(rooms[this._room]);
+    if (!tile) {
+      const i = rooms.findIndex(has);
+      if (i < 0) return;
+      this._room = i;
+      this._renderTabs();
+      tile = has(rooms[i]);
+    }
+    this._select({ group: "tiles", key: this._tileKey(tile) });
+  }
   _dashFromRoute() {
     try { return new URLSearchParams(window.location.search).get("dash") || ""; }
     catch (e) { return ""; }
@@ -15026,6 +15044,7 @@ class CasoraPanel extends HTMLElement {
       this._renderTabs();
       this._renderForm();
       requestAnimationFrame(() => this._playEntrance());
+      this._tileFromRoute();
       if (!this._saveBlocked) setTimeout(() => this._offerDraft(), 400);
       if (this._sizeNote) {
         const n = this._sizeNote;

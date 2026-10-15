@@ -1773,7 +1773,21 @@
   "Netzleistung": "Grid power",
   "Woher kommt der Strom": "Where the power comes from",
   "Wohin geht der Solarstrom": "Where the solar power goes",
-  "Bypass": "Bypass"
+  "Bypass": "Bypass",
+  "Popup öffnen": "Open popup",
+  "Kachel bearbeiten": "Edit tile",
+  "Aus in": "Off in",
+  "An für": "On for",
+  "Aus um": "Off at",
+  "An um": "On at",
+  "Stopp": "Stop",
+  "Lauter": "Louder",
+  "Kälter": "Cooler",
+  "Wärmer": "Warmer",
+  "15 Min.": "15 min",
+  "30 Min.": "30 min",
+  "1 Std.": "1 hr",
+  "2 Std.": "2 hrs"
  },
  "patterns": [
   [
