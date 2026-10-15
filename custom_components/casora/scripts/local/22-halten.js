@@ -154,7 +154,7 @@
       if (s === 'disarmed') {
         var ab = [['Zuhause', 'mdi:shield-home-outline', 'alarm_arm_home', 1], ['Abwesend', 'mdi:shield-lock-outline', 'alarm_arm_away', 2],
           ['Nacht', 'mdi:shield-moon-outline', 'alarm_arm_night', 4]].filter(function (x) { return af & x[3]; }).map(function (x) {
-          return svc(x[0], x[1], 'alarm_control_panel.' + x[2], null, { wide: true, ask: 'Alarm scharf schalten?', yes: 'Scharf schalten', mode: x[0], code: needArm, numeric: cn });
+          return svc(x[0], x[1], 'alarm_control_panel.' + x[2], null, { row: true, ask: 'Alarm scharf schalten?', yes: 'Scharf schalten', mode: x[0], code: needArm, numeric: cn });
         });
         if (ab.length) m.quick.push({ kind: 'buttons', label: 'Scharf schalten', items: ab });
       } else if (/^(armed_|arming|pending|triggered)/.test(s)) {
@@ -265,9 +265,10 @@
     + '.q{padding:8px;}'
     + '.ql{font-size:var(--casora-fs-sub, 13px);line-height:16px;font-weight:600;color:var(--casora-text-2, rgba(127,127,127,.9));padding:0 0 8px;letter-spacing:-0.01em;}'
     + '.qr{display:flex;gap:8px;}'
+    + '.q > .row{margin:0 -8px;}'
     + '.qr .pill{padding:0 4px;}'
     + '.pill{flex:1 1 0;min-width:0;height:40px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:4px;box-sizing:border-box;padding:0 8px;'
-    +   'background:var(--casora-soft-control-fill, rgba(127,127,127,0.14));font-size:var(--casora-fs-value, 14px);font-weight:650;white-space:nowrap;cursor:pointer;user-select:none;outline:none;'
+    +   'background:var(--casora-soft-control-fill, rgba(127,127,127,0.14));font-size:var(--casora-fs-value, 14px);font-weight:600;white-space:nowrap;cursor:pointer;user-select:none;outline:none;'
     +   'font-variant-numeric:tabular-nums;transition:transform var(--casora-dur-feedback, .16s) var(--casora-ease-feedback, ease), background-color var(--casora-dur-feedback, .16s) ease;}'
     + '.pill ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;}'
     + '.pill:active,.pill.press{transform:scale(var(--casora-press-scale, .97));}'
@@ -279,7 +280,7 @@
     + '.step b{flex:1;text-align:center;font-size:var(--casora-fs-heading, 17px);font-weight:700;font-variant-numeric:tabular-nums;}'
     + '.tm{display:flex;align-items:center;gap:8px;}'
     + '.tm .pill{flex:0 0 auto;padding:0 16px;}'
-    + '.tm > ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;margin-left:10px;color:var(--casora-hold-hue, currentColor);}'
+    + '.tm > ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;margin-left:8px;color:var(--casora-hold-hue, currentColor);}'
     + '.row.quiet{color:var(--casora-text-2, inherit);font-weight:500;}'
     + '.row.quiet .ic{color:var(--casora-text-2, inherit);}'
     + '.tm span{flex:1;font-size:var(--casora-fs-row, 15px);font-weight:600;padding-left:8px;}';
@@ -332,6 +333,14 @@
           + '<b>' + esc(H.fmtTemp(q.value, q.unit)) + '</b>'
           + '<div class="pill" role="button" tabindex="-1" aria-label="' + esc(T('Wärmer')) + '" data-k="step" data-q="' + qi + '" data-d="1"><ha-icon icon="mdi:plus"></ha-icon></div></div>';
       } else {
+        // Einträge als Menüzeilen (Alarm-Modi: Symbol + Wort passt nicht in drei Pillen).
+        if (q.items.some(function (it) { return it.row; })) {
+          out += q.items.map(function (it, ii) {
+            return '<div class="row" role="menuitem" tabindex="-1" data-k="quick" data-q="' + qi + '" data-i="' + ii + '"><div class="ic"><ha-icon icon="'
+              + esc(it.ic) + '"></ha-icon></div><span>' + esc(T(it.t)) + '</span></div>';
+          }).join('') + '</div>';
+          return;
+        }
         out += '<div class="qr">' + q.items.map(function (it, ii) {
           var label = it.ic && !it.wide ? '<ha-icon icon="' + esc(it.ic) + '"></ha-icon>' : (it.ic ? '<ha-icon icon="' + esc(it.ic) + '"></ha-icon>' : '') + esc(T(it.t));
           return '<div class="pill' + (it.on ? ' on' : '') + '" role="button" tabindex="-1" aria-label="' + esc(T(it.t)) + '"'

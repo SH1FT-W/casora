@@ -277,6 +277,8 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
         // 1.4 (Personen-Popup, „Nachricht schicken“): w.input → Textfeld, „Ja“ liefert den Text.
         + 'input{width:100%;box-sizing:border-box;margin:0 0 16px;padding:12px 14px;border:0;border-radius:14px;font:inherit;font-size:15px;'
         + 'background:rgba(127,127,127,.12);color:inherit;outline:none}'
+        // Code-Feld (Alarm aus dem Halten-Menü): Pille wie die Knöpfe, mittig.
+        + 'input.code{border-radius:999px;padding:12px 16px;text-align:center;letter-spacing:.2em;background:var(--casora-soft-control-fill,rgba(127,127,127,.12))}'
         + 'input:focus-visible{box-shadow:0 0 0 2px var(--casora-popup-ui-action,var(--casora-accent,#276B64))}'
         + '.yes{background:var(--casora-accent,var(--primary-color,#94603B));color:#fff}'
         + 'button:focus-visible{outline:2px solid var(--casora-accent,var(--primary-color,#94603B));outline-offset:2px}'
@@ -303,7 +305,7 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
         field = document.createElement('input');
         // input.secret: Code verdeckt (Alarm aus dem Halten-Menü), input.numeric: Ziffern-Tastatur.
         field.type = w.input.secret ? 'password' : 'text';
-        if (w.input.secret) field.autocomplete = 'off';
+        if (w.input.secret) { field.autocomplete = 'off'; field.className = 'code'; }
         if (w.input.numeric) field.inputMode = 'numeric';
         field.placeholder = T(w.input.placeholder || '');
         field.setAttribute('aria-label', field.placeholder || w.title || '');
