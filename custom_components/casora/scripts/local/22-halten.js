@@ -513,7 +513,8 @@
   var choose = function (n) {
     if (!cur || !n) return;
     var k = n.getAttribute('data-k'), id = cur.id, m = cur.m, Z = window._casoraZiele;
-    if (window.casoraHaptic) window.casoraHaptic('selection');
+    // Rückmeldung wie beim Tippen auf Kacheln (haptic light; die HA-App vibriert).
+    if (window.casoraHaptic) window.casoraHaptic('light');
     if (k === 'main' && m.main && m.main.open) {
       // „Öffnen“: dasselbe wie Tippen (Popup der Kachel).
       var t0 = cur.tile, src0 = (cur.detail && cur.detail.src) || t0;
@@ -752,7 +753,11 @@
     // Nur Halten, das bisher ein Popup/HAs Dialog war (bzw. Jalousie) – eigene Halten-Aktionen (Licht-Badge: Smart-Toggle) bleiben.
     if (!h || !H.wants(cfg)) return;
     if ((!id || h.states[id]) && H.worth(modelFor(h, id, tile))) {
-      if (H.open(tile, { src: path[0], via: H.via(cfg) })) { ev.stopPropagation(); ev.stopImmediatePropagation(); }
+      if (H.open(tile, { src: path[0], via: H.via(cfg) })) {
+        ev.stopPropagation(); ev.stopImmediatePropagation();
+        // button-card vibriert beim Halten erst in seiner Aktion – die fangen wir ab, also hier (wie hold_action haptic: medium).
+        if (window.casoraHaptic) window.casoraHaptic('medium');
+      }
       return;
     }
     // Nichts zu bedienen (Info-Kacheln): Halten tut dasselbe wie Tippen, wenn Tippen das Popup öffnet.
