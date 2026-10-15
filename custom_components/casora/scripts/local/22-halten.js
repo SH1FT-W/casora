@@ -403,6 +403,11 @@
     if (k === 'tcancel') { n.classList.add('busy'); call('casora.cancel_timer', { entity_id: id }).then(paint, paint); return; }
     var tile = cur.tile, detail = cur.detail;
     H.close();
+    if (k === 'popup' && detail && detail.via === 'tap') {
+      // Halten schaltete bisher (Jalousie), Tippen öffnet das Popup: das Casora-Popup der Kachel ohne zu schalten.
+      if (!(Z && Z.openDeviceTile(id))) tile.dispatchEvent(new CustomEvent('hass-more-info', { bubbles: true, composed: true, detail: { entityId: id } }));
+      return;
+    }
     if (k === 'popup') {
       // Das ursprüngliche Halten weiterreichen (öffnet das Popup wie bisher), Kachel als Quelle für den Ring.
       window._casoraLastTile = { el: tile, at: Date.now() };
@@ -459,10 +464,10 @@
     var id = (tile._stateObj && tile._stateObj.entity_id) || (tile._config && tile._config.entity);
     if (!h || !id || !h.states[id]) return false;
     if (cur) H.close();
-    if (!host) {
-      host = document.createElement('casora-hold-menu');
-      host.attachShadow({ mode: 'open' });
-    }
+    // Jedes Mal ein frisches Element: keine doppelten Klick-Zuhörer aus früheren Öffnungen.
+    if (host && host.parentNode) host.parentNode.removeChild(host);
+    host = document.createElement('casora-hold-menu');
+    host.attachShadow({ mode: 'open' });
     var phone = isPhone();
     var r = tile.getBoundingClientRect(), rad = cardRadius(tile);
     var name = tileText(tile, '#name') || (h.states[id].attributes || {}).friendly_name || id;
@@ -481,11 +486,8 @@
     place(pane, r, phone);
     requestAnimationFrame(function () { requestAnimationFrame(function () { if (cur) host.classList.add('open'); }); });
 
-    // Erst nach dem Loslassen bedienbar: sonst trifft das Ende des Haltens am Handy gleich eine Zeile.
-    var arm = function () { if (cur) cur.armed = true; };
-    var up = function () { document.removeEventListener('pointerup', up, true); setTimeout(arm, 60); };
-    document.addEventListener('pointerup', up, true);
-    setTimeout(arm, 900);
+    // button-card meldet Halten erst beim Loslassen – nur kurz sperren, falls danach noch ein Klick nachkommt.
+    setTimeout(function () { if (cur) cur.armed = true; }, 150);
 
     host.shadowRoot.addEventListener('click', function (ev) {
       if (!cur) return;
