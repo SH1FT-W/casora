@@ -37,7 +37,12 @@
   H.model = function (st, o) {
     o = o || {};
     var m = { main: null, quick: [], timer: null, acts: [], rows: [] };
-    if (!st) return m;
+    // Kachel ohne Gerät (Müll, Lüften, Rezept …): Öffnen wie Tippen und Bearbeiten.
+    if (!st) {
+      if (o.tapPopup) m.main = { t: 'Öffnen', ic: 'mdi:arrow-top-right', open: true };
+      if (o.admin) m.rows.push({ key: 'edit', t: 'Kachel bearbeiten', ic: 'mdi:pencil-outline', sep: true });
+      return m;
+    }
     var id = st.entity_id, dom = id.split('.')[0], s = String(st.state || ''), a = st.attributes || {};
     var feats = Number(a.supported_features || 0), dead = bad(s), S = o.states || {};
     var svc = function (t, ic, service, data, extra) {
@@ -209,6 +214,11 @@
       }
     }
 
+    // Info-Kacheln (nichts zu bedienen): oben „Öffnen“ wie Tippen, darunter die Wege (Menü auf allen Kacheln).
+    if (!m.main && !m.quick.length && !m.timer && !m.acts.length && o.tapPopup) m.main = { t: 'Öffnen', ic: 'mdi:arrow-top-right', open: true };
+    // Eigene Wege je Kachelart.
+    if (o.kind === 'energy') m.acts.push({ key: 'nav', t: 'Energie-Dashboard', ic: 'mdi:lightning-bolt-outline', path: '/energy' });
+    if (o.kind === 'updates' && o.admin) m.acts.push({ key: 'nav', t: 'Alle Updates', ic: 'mdi:update', path: '/config/updates' });
     // Wege: „Details“ nur, wenn Tippen nicht schon das Popup öffnet; Gerät und Bearbeiten nur für Admins.
     if (!o.tapPopup) m.rows.push({ key: 'popup', t: 'Details', ic: 'mdi:card-text-outline' });
     if (dom !== 'camera') m.rows.push({ key: 'history', t: 'Verlauf', ic: 'mdi:history' });
@@ -217,7 +227,7 @@
     return m;
   };
   // Lohnt ein Menü? Nur mit etwas zu bedienen – sonst tut Halten dasselbe wie Tippen.
-  H.worth = function (m) { return !!(m && (m.main || m.quick.length || m.timer || m.acts.length)); };
+  H.worth = function (m) { return !!(m && (m.main || m.quick.length || m.timer || m.acts.length || m.rows.length)); };
 
   // Zieltemperatur einen Schritt weiter, in den Grenzen des Geräts.
   H.stepTo = function (q, dir) {
@@ -453,6 +463,7 @@
       unit: (h.config && h.config.unit_system && h.config.unit_system.temperature) || '°C',
       tapPopup: popupish(cfg.tap_action),
       states: h.states,
+      tpl: tpl,
       pendingTemp: cur && cur.id === id && cur.stepT ? cur.pendingTemp : null,
     };
     // Kachel-eigene Geräte: Drucker über seinen Finder (02-geraete.js), Aquarium über die Kachel-Variable.
@@ -462,14 +473,16 @@
       if (c) o.printer = { st: c.st, pause: c.pause, resume: c.resume, light: c.light, cam: c.cam };
     }
     if (/\bcasora_aquarium/.test(tpl) && typeof V.light_entity === 'string' && ENT.test(V.light_entity)) o.aqLight = V.light_entity;
-    return H.model(h.states[id], o);
+    if (/\bcasora_energy\b/.test(tpl)) o.kind = 'energy';
+    if (/\bcasora_updates\b/.test(tpl)) o.kind = 'updates';
+    return H.model(id ? h.states[id] : null, o);
   };
 
   var paint = function () {
     if (!cur) return;
     var h = hassNow();
-    if (!h || !h.states[cur.id]) return H.close();
-    cur.st = h.states[cur.id];
+    if (!h || (cur.id && !h.states[cur.id])) return H.close();
+    cur.st = cur.id ? h.states[cur.id] : null;
     cur.ts = h.states[TIMERS];
     cur.m = modelFor(h, cur.id, cur.tile);
     var pane = host.shadowRoot.querySelector('.pane');
@@ -494,6 +507,14 @@
     if (!cur || !n) return;
     var k = n.getAttribute('data-k'), id = cur.id, m = cur.m, Z = window._casoraZiele;
     if (window.casoraHaptic) window.casoraHaptic('selection');
+    if (k === 'main' && m.main && m.main.open) {
+      // „Öffnen“: dasselbe wie Tippen (Popup der Kachel).
+      var t0 = cur.tile, src0 = (cur.detail && cur.detail.src) || t0;
+      H.close();
+      window._casoraLastTile = { el: t0, at: Date.now() };
+      src0.dispatchEvent(new CustomEvent('action', { bubbles: true, composed: true, detail: { action: 'tap', casoraHoldPass: true } }));
+      return;
+    }
     if (k === 'main' && m.main) { var it = m.main; H.close(); act(id, it); return; }
     if (k === 'quick') {
       var q = m.quick[+n.getAttribute('data-q')], x = q && q.items[+n.getAttribute('data-i')];
@@ -530,10 +551,11 @@
       });
       return;
     }
-    if (k === 'act' || k === 'live') {
+    if (k === 'act' || k === 'live' || k === 'nav') {
       var ax = m.acts[+n.getAttribute('data-i')];
       H.close();
       if (!ax) return;
+      if (ax.path) { navigate(ax.path); return; }
       if (k === 'live') { if (!(Z && Z.openCamera(ax.entity)) && window.casoraPopup) window.casoraPopup.nativeMoreInfo(ax.entity); return; }
       act(id, ax);
       return;
@@ -559,7 +581,7 @@
       var seg = (window.location.pathname || '').split('/').filter(Boolean);
       var dash = (seg[0] || '').replace(/[-_]mobile$/i, '');
       navigate('/casora-studio' + (seg[1] && !/^cat-/.test(seg[1]) ? '/' + encodeURIComponent(seg[1]) : '')
-        + '?' + (dash ? 'dash=' + encodeURIComponent(dash) + '&' : '') + 'tile=' + encodeURIComponent(id));
+        + (dash || id ? '?' : '') + (dash ? 'dash=' + encodeURIComponent(dash) : '') + (dash && id ? '&' : '') + (id ? 'tile=' + encodeURIComponent(id) : ''));
     }
   };
 
@@ -606,8 +628,8 @@
 
   H.open = function (tile, detail) {
     var h = hassNow();
-    var id = (tile._stateObj && tile._stateObj.entity_id) || (tile._config && tile._config.entity);
-    if (!h || !id || !h.states[id]) return false;
+    var id = (tile._stateObj && tile._stateObj.entity_id) || '';
+    if (!h || (id && !h.states[id])) return false;
     if (cur) H.close();
     // Jedes Mal ein frisches Element: keine doppelten Klick-Zuhörer aus früheren Öffnungen.
     if (host && host.parentNode) host.parentNode.removeChild(host);
@@ -615,7 +637,7 @@
     host.attachShadow({ mode: 'open' });
     var phone = isPhone();
     var r = tile.getBoundingClientRect(), rad = cardRadius(tile);
-    var name = tileText(tile, '#name') || (h.states[id].attributes || {}).friendly_name || id;
+    var name = tileText(tile, '#name') || (id ? (h.states[id].attributes || {}).friendly_name || id : '');
     cur = { tile: tile, detail: detail, id: id, phone: phone, name: name, armed: false, opened: Date.now() };
     lastName = name;
     host.shadowRoot.innerHTML = '<style>' + CSS + '</style><div class="veil"></div><div class="lift"></div>'
@@ -700,7 +722,16 @@
   };
   H.wants = function (cfg) { return !!H.via(cfg); };
   // Ohne Menü: Raum, Szenenzeile, eigene Karte, Kachel mit eigenen Knöpfen (Halten würde gegen die Kachel arbeiten).
-  var NO_MENU = /^casora_(room|scene_row|custom|entity_actions)$/;
+  // Kein Menü: Raum-Hintergrund und Szenenleiste – das sind Flächen mit eigener Bedienung, keine Kacheln.
+  var NO_MENU = /^casora_(room|scene_row)$/;
+  // Halten auf einer eingebetteten Karte (eigene Karte, HA-Karte im Kachelinhalt) gehört dieser Karte.
+  var innerCard = function (path, tile) {
+    for (var i = 0; i < path.length && path[i] !== tile; i++) {
+      var t = path[i] && path[i].tagName;
+      if (t && t !== 'HA-CARD' && (/^HUI-/.test(t) || /-CARD$/.test(t))) return true;
+    }
+    return false;
+  };
   window.addEventListener('action', function (ev) {
     var d = ev.detail || {};
     if (d.action !== 'hold' || d.casoraHoldPass || window.CASORA_HOLD_MENU === false) return;
@@ -709,10 +740,11 @@
     var path = (ev.composedPath && ev.composedPath()) || [];
     var tile = casoraTile(path);
     if (!tile || [].concat(tile._config.template || []).some(function (x) { return NO_MENU.test(String(x)); })) return;
+    if (innerCard(path, tile)) return;
     var h = hassNow(), id = (tile._stateObj && tile._stateObj.entity_id) || '', cfg = tile._config;
     // Nur Halten, das bisher ein Popup/HAs Dialog war (bzw. Jalousie) – eigene Halten-Aktionen (Licht-Badge: Smart-Toggle) bleiben.
     if (!h || !H.wants(cfg)) return;
-    if (id && h.states[id] && H.worth(modelFor(h, id, tile))) {
+    if ((!id || h.states[id]) && H.worth(modelFor(h, id, tile))) {
       if (H.open(tile, { src: path[0], via: H.via(cfg) })) { ev.stopPropagation(); ev.stopImmediatePropagation(); }
       return;
     }

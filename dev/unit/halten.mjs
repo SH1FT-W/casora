@@ -86,7 +86,14 @@ m = H.model(st('light.h', 'unavailable'), { timers: {}, device: true });
 assert.equal(m.main, null); assert.equal(m.quick.length, 0); assert.equal(m.timer, null);
 m = H.model(st('sensor.i', '21.5'), { timers: {} });
 assert.equal(m.main, null); assert.equal(keys(m), 'popup,history');
-assert.equal(H.worth(m), false, 'Info-Kachel: kein Menü, Halten wie Tippen');
+assert.equal(H.worth(m), true, 'Info-Kachel: Menü mit den Wegen');
+m = H.model(st('sensor.i', '21.5'), { tapPopup: true, admin: true });
+assert.equal(m.main.t, 'Öffnen'); assert.ok(m.main.open, 'Info-Kachel: oben Öffnen wie Tippen');
+assert.equal(H.model(st('sensor.e', '400'), { tapPopup: true, kind: 'energy' }).acts[0].path, '/energy');
+assert.equal(H.model(st('sensor.u', '2'), { tapPopup: true, kind: 'updates', admin: false }).acts.length, 0, 'Alle Updates nur für Admins');
+m = H.model(null, { tapPopup: true, admin: true });
+assert.equal(m.main.t, 'Öffnen'); assert.equal(keys(m), 'edit', 'Kachel ohne Gerät: Öffnen und Bearbeiten');
+assert.equal(H.worth(H.model(null, {})), false, 'ohne Gerät, ohne Popup, kein Admin: nichts');
 
 // 3D-Drucker: Pause während des Drucks, Fortsetzen pausiert, Licht, Kamera live – nur vorhandene Entitäten.
 const S = { 'button.p_pause': st('button.p_pause', 'unknown'), 'button.p_resume': st('button.p_resume', 'unknown'),
@@ -99,7 +106,7 @@ assert.equal(m.quick[0].items[1].on, true);
 assert.equal(m.acts[0].t, 'Kamera live');
 S['sensor.p_stage'] = st('sensor.p_stage', 'pause');
 assert.equal(H.model(st('sensor.p_stage', 'pause'), { printer: PR, states: S }).quick[0].items[0].t, 'Fortsetzen');
-assert.equal(H.worth(H.model(st('sensor.p_stage', 'idle'), { printer: { st: 'sensor.p_stage' }, states: S })), false, 'Drucker ohne Tasten: kein Menü');
+assert.equal(H.model(st('sensor.p_stage', 'idle'), { printer: { st: 'sensor.p_stage' }, states: S, tapPopup: true }).main.t, 'Öffnen', 'Drucker ohne Tasten: Öffnen');
 
 // Aquarium: Licht des Beckens; Kamera: Live ansehen ohne Verlauf; Befeuchter: Zielfeuchte; Ventilator: Auto.
 m = H.model(st('sensor.aq', 'ok'), { aqLight: 'light.aq', states: { 'light.aq': st('light.aq', 'off') } });
