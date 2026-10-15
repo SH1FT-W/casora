@@ -28,18 +28,24 @@
   var TOGGLE = /^(light|switch|input_boolean|fan|humidifier)$/;
 
   // ── Modell: was das Menü für eine Entität zeigt (ohne DOM) ────────────────
-  // o: { admin, device, timers (Attribut timers von sensor.casora_timers oder null), now }
+  // o: { admin, device, timers (Attribut timers von sensor.casora_timers oder null), unit,
+  //      tapPopup (Tippen öffnet schon das Popup – dann keine Zeile „Details“),
+  //      printer {st, pause, resume, light, cam} (Kachel 3D-Drucker), aqLight (Licht der Aquarium-Kachel),
+  //      states (für Zusatz-Entitäten) }
+  // Grundsätze (Nutzerrunde 15.10.): Hauptaktion nur, wenn umkehrbar; Riskantes (Entriegeln, Tür öffnen) immer
+  // mit Rückfrage; nur, was das Gerät wirklich kann; ohne Bedienung kein Menü (H.worth) – dann wie Tippen.
   H.model = function (st, o) {
     o = o || {};
-    var m = { main: null, quick: [], timer: null, rows: [] };
+    var m = { main: null, quick: [], timer: null, acts: [], rows: [] };
     if (!st) return m;
     var id = st.entity_id, dom = id.split('.')[0], s = String(st.state || ''), a = st.attributes || {};
-    var feats = Number(a.supported_features || 0), dead = bad(s);
+    var feats = Number(a.supported_features || 0), dead = bad(s), S = o.states || {};
     var svc = function (t, ic, service, data, extra) {
       var x = { t: t, ic: ic, svc: service, data: data || null };
       if (extra) Object.keys(extra).forEach(function (k) { x[k] = extra[k]; });
       return x;
     };
+    var pct = function (v) { return v == null ? '' : ' · ' + Math.round(v) + ' %'; };
 
     if (!dead) {
       if (TOGGLE.test(dom)) {
@@ -52,7 +58,7 @@
       } else if (dom === 'valve') {
         m.main = (s === 'open' || s === 'opening') ? svc('Schließen', 'mdi:valve-closed', 'valve.close_valve') : svc('Öffnen', 'mdi:valve-open', 'valve.open_valve');
       } else if (dom === 'lock') {
-        if (s === 'locked') m.main = svc('Entriegeln', 'mdi:lock-open-variant', 'lock.unlock');
+        if (s === 'locked') m.main = svc('Entriegeln', 'mdi:lock-open-variant', 'lock.unlock', null, { ask: 'Wirklich entriegeln?' });
         else if (s === 'unlocked' || s === 'open' || s === 'jammed') m.main = svc('Verriegeln', 'mdi:lock', 'lock.lock');
       } else if (dom === 'media_player') {
         if (s === 'playing') m.main = svc('Pausieren', 'mdi:pause', 'media_player.media_pause');
@@ -65,21 +71,22 @@
       }
     }
 
-    // Schnellbedienung
+    // Schnellbedienung; der aktuelle Wert steht an der Überschrift.
     if (!dead) {
       if (dom === 'light') {
         var modes = a.supported_color_modes || [];
         var dim = modes.some(function (x) { return x !== 'onoff'; });
+        var cur = s === 'on' && num(a.brightness) != null ? Math.round(num(a.brightness) / 2.55) : null;
         if (dim) {
-          var cur = s === 'on' && num(a.brightness) != null ? Math.round(num(a.brightness) / 2.55) : null;
-          m.quick.push({ kind: 'pills', label: 'Helligkeit', items: [25, 50, 100].map(function (p) {
+          m.quick.push({ kind: 'pills', label: 'Helligkeit', value: pct(cur), items: [25, 50, 100].map(function (p) {
             return svc(p + ' %', null, 'light.turn_on', { brightness_pct: p }, { on: cur != null && Math.abs(cur - p) <= 3 });
           }) });
         }
-        if (modes.indexOf('color_temp') !== -1) {
+        // Lichtfarbe nur bei eingeschaltetem Licht (aus: kurz halten, Nutzerrunde).
+        if (s === 'on' && modes.indexOf('color_temp') !== -1) {
           var kmin = num(a.min_color_temp_kelvin) || 2200, kmax = num(a.max_color_temp_kelvin) || 6500;
           var warm = Math.max(kmin, 2700), cold = Math.min(kmax, 6000), mid = Math.round((warm + cold) / 2 / 100) * 100;
-          var k = s === 'on' && a.color_mode === 'color_temp' ? num(a.color_temp_kelvin) : null;
+          var k = a.color_mode === 'color_temp' ? num(a.color_temp_kelvin) : null;
           var near = function (x) { return k != null && Math.abs(k - x) <= 150; };
           m.quick.push({ kind: 'pills', label: 'Lichtfarbe', items: [
             svc('Warm', null, 'light.turn_on', { color_temp_kelvin: warm }, { on: near(warm) }),
@@ -87,10 +94,19 @@
             svc('Kalt', null, 'light.turn_on', { color_temp_kelvin: cold }, { on: near(cold) }),
           ] });
         }
-      } else if (dom === 'fan' && (feats & 1)) {
-        var pc = s === 'on' ? num(a.percentage) : null;
-        m.quick.push({ kind: 'pills', label: 'Stufe', items: [33, 66, 100].map(function (p) {
-          return svc(p + ' %', null, 'fan.set_percentage', { percentage: p }, { on: pc != null && Math.abs(pc - p) <= 4 });
+      } else if (dom === 'fan') {
+        var pc = s === 'on' ? num(a.percentage) : null, fi = [];
+        if (feats & 1) fi = [33, 66, 100].map(function (p) {
+          return svc(p + ' %', null, 'fan.set_percentage', { percentage: p }, { on: pc != null && !a.preset_mode && Math.abs(pc - p) <= 4 });
+        });
+        var auto = (a.preset_modes || []).filter(function (x) { return /^auto$/i.test(x); })[0];
+        if (auto) fi.push(svc('Auto', null, 'fan.set_preset_mode', { preset_mode: auto }, { on: s === 'on' && a.preset_mode === auto }));
+        if (fi.length) m.quick.push({ kind: 'pills', label: 'Stufe', value: a.preset_mode && s === 'on' ? '' : pct(pc), items: fi });
+      } else if (dom === 'humidifier' && num(a.humidity) != null) {
+        var hu = num(a.humidity), lo = num(a.min_humidity) || 0, hi = num(a.max_humidity) || 100;
+        var hs = [40, 50, 60].filter(function (p) { return p >= lo && p <= hi; });
+        if (hs.length) m.quick.push({ kind: 'pills', label: 'Zielfeuchte', value: pct(hu), items: hs.map(function (p) {
+          return svc(p + ' %', null, 'humidifier.set_humidity', { humidity: p }, { on: Math.abs(hu - p) <= 2 });
         }) });
       } else if (dom === 'cover') {
         var btn = [];
@@ -100,7 +116,7 @@
         if (btn.length > 1) m.quick.push({ kind: 'buttons', items: btn });
         if (feats & 4) {
           var pos = num(a.current_position);
-          m.quick.push({ kind: 'pills', label: 'Position', items: [25, 50, 75].map(function (p) {
+          m.quick.push({ kind: 'pills', label: 'Position', value: pct(pos), items: [25, 50, 75].map(function (p) {
             return svc(p + ' %', null, 'cover.set_cover_position', { position: p }, { on: pos != null && Math.abs(pos - p) <= 3 });
           }) });
         }
@@ -115,11 +131,36 @@
         if (feats & 1024 || feats & 4) mb.push(svc('Lauter', 'mdi:volume-plus', 'media_player.volume_up'));
         if (feats & 32) mb.push(svc('Weiter', 'mdi:skip-next', 'media_player.media_next_track'));
         if (mb.length) m.quick.push({ kind: 'buttons', items: mb });
-      } else if (dom === 'lock' && (feats & 1) && !/ing$/.test(s)) {
-        m.quick.push({ kind: 'buttons', items: [svc('Tür öffnen', 'mdi:door-open', 'lock.open', null, { ask: true, wide: true })] });
       } else if (dom === 'vacuum' && s === 'cleaning') {
         m.quick.push({ kind: 'buttons', items: [svc('Pause', 'mdi:pause', 'vacuum.pause', null, { wide: true })] });
+      } else if (dom === 'lawn_mower' && s === 'mowing' && (feats & 2)) {
+        m.quick.push({ kind: 'buttons', items: [svc('Pause', 'mdi:pause', 'lawn_mower.pause', null, { wide: true })] });
       }
+    }
+
+    // 3D-Drucker: Pause/Fortsetzen (Tasten der Integration) und Bauraumlicht – nur, was es gibt. Kein Abbrechen.
+    var P = o.printer;
+    if (P) {
+      var ps = String(((S[P.st] || st).state) || '').toLowerCase();
+      var pb = [];
+      if (/^(pause|paused)$/.test(ps) && P.resume && S[P.resume]) pb.push(svc('Fortsetzen', 'mdi:play', 'button.press', null, { entity: P.resume, wide: true }));
+      else if (/^(running|printing|print)$/.test(ps) && P.pause && S[P.pause]) pb.push(svc('Pause', 'mdi:pause', 'button.press', null, { entity: P.pause, wide: true }));
+      if (P.light && S[P.light] && !bad(S[P.light].state)) {
+        pb.push(svc('Licht', 'mdi:lightbulb-outline', 'light.toggle', null, { entity: P.light, wide: true, on: S[P.light].state === 'on' }));
+      }
+      if (pb.length) m.quick.push({ kind: 'buttons', items: pb });
+      if (P.cam && S[P.cam]) m.acts.push({ key: 'live', t: 'Kamera live', ic: 'mdi:cctv', entity: P.cam });
+    }
+    // Aquarium: Licht des Beckens an/aus.
+    var L = o.aqLight && S[o.aqLight];
+    if (L && !bad(L.state) && /^(light|switch)\./.test(o.aqLight)) {
+      m.quick.push({ kind: 'buttons', items: [svc('Licht', 'mdi:lightbulb-outline', 'homeassistant.toggle', null, { entity: o.aqLight, wide: true, on: L.state === 'on' })] });
+    }
+    // Kamera: groß und live.
+    if (dom === 'camera' && !dead) m.acts.push({ key: 'live', t: 'Live ansehen', ic: 'mdi:cctv', entity: id });
+    // Schloss: Tür öffnen abgesetzt unter der Bedienung, immer mit Rückfrage.
+    if (dom === 'lock' && !dead && (feats & 1) && !/ing$/.test(s)) {
+      m.acts.push({ key: 'act', t: 'Tür öffnen', ic: 'mdi:door-open', svc: 'lock.open', ask: 'Wirklich die Tür öffnen?', yes: 'Tür öffnen' });
     }
 
     // Zeitschalter: nur mit Casoras Dienst (sensor.casora_timers) und für Schaltbares.
@@ -130,20 +171,23 @@
       if (run && run.at) {
         var at = new Date(run.at);
         if (!isNaN(at)) m.timer = { active: true, at: at.getTime(), action: run.action || 'turn_off',
-          text: (run.action === 'turn_on' ? 'An um' : 'Aus um') + ' ' + two(at.getHours()) + ':' + two(at.getMinutes()) };
+          word: run.action === 'turn_on' ? 'An um' : 'Aus um', time: two(at.getHours()) + ':' + two(at.getMinutes()) };
       }
       if (!m.timer && (on || dom !== 'media_player')) {
-        m.timer = { active: false, mode: on ? 'off' : 'on', label: on ? 'Aus in' : 'An für',
+        m.timer = { active: false, mode: on ? 'off' : 'on', label: on ? 'Ausschalten in' : 'Einschalten für',
           items: MINUTES.map(function (x) { return { t: x[1], min: x[0] }; }) };
       }
     }
 
-    m.rows.push({ key: 'popup', t: 'Popup öffnen', ic: 'mdi:card-outline' });
-    m.rows.push({ key: 'history', t: 'Verlauf', ic: 'mdi:history' });
-    if (o.device) m.rows.push({ key: 'device', t: 'Einstellungen', ic: 'mdi:tune-variant' });
+    // Wege: „Details“ nur, wenn Tippen nicht schon das Popup öffnet; Gerät und Bearbeiten nur für Admins.
+    if (!o.tapPopup) m.rows.push({ key: 'popup', t: 'Details', ic: 'mdi:card-text-outline' });
+    if (dom !== 'camera') m.rows.push({ key: 'history', t: 'Verlauf', ic: 'mdi:history' });
+    if (o.device && o.admin) m.rows.push({ key: 'device', t: 'Gerät', ic: 'mdi:tune-variant' });
     if (o.admin) m.rows.push({ key: 'edit', t: 'Kachel bearbeiten', ic: 'mdi:pencil-outline', sep: true });
     return m;
   };
+  // Lohnt ein Menü? Nur mit etwas zu bedienen – sonst tut Halten dasselbe wie Tippen.
+  H.worth = function (m) { return !!(m && (m.main || m.quick.length || m.timer || m.acts.length)); };
 
   // Zieltemperatur einen Schritt weiter, in den Grenzen des Geräts.
   H.stepTo = function (q, dir) {
@@ -212,6 +256,8 @@
     + '.step b{flex:1;text-align:center;font-size:var(--casora-fs-heading, 17px);font-weight:700;font-variant-numeric:tabular-nums;}'
     + '.tm{display:flex;align-items:center;gap:8px;}'
     + '.tm .pill{flex:0 0 auto;padding:0 16px;}'
+    + '.tm > ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;margin-left:10px;color:var(--casora-hold-hue, currentColor);}'
+    + '.row.quiet{color:var(--casora-text-2, inherit);font-weight:500;}'
     + '.tm span{flex:1;font-size:var(--casora-fs-row, 15px);font-weight:600;padding-left:8px;}';
 
   var host = null, cur = null, poll = 0;
@@ -248,16 +294,15 @@
 
   var html = function (m, c) {
     var out = '';
-    var row = function (key, t, ic, cls, sub) {
-      return '<div class="row' + (cls ? ' ' + cls : '') + '" role="menuitem" tabindex="-1" data-k="' + esc(key) + '">'
+    var row = function (key, t, ic, cls, sub, i) {
+      return '<div class="row' + (cls ? ' ' + cls : '') + '" role="menuitem" tabindex="-1" data-k="' + esc(key) + '"' + (i != null ? ' data-i="' + i + '"' : '') + '>'
         + '<div class="ic"><ha-icon icon="' + esc(ic) + '"></ha-icon></div><span>' + esc(T(t)) + '</span>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div>';
     };
-    if (c.phone) {
-      out += '<div class="grip"></div><div class="head"><b>' + esc(c.name) + '</b>' + (c.state ? '<span>' + esc(c.state) + '</span>' : '') + '</div>';
-    }
+    // Handy: nur der Griff – Name und Zustand stehen schon scharf auf der Kachel darüber.
+    if (c.phone) out += '<div class="grip"></div>';
     if (m.main) out += row('main', m.main.t, m.main.ic, 'main');
     m.quick.forEach(function (q, qi) {
-      out += '<div class="q">' + (q.label ? '<div class="ql">' + esc(T(q.label)) + '</div>' : '');
+      out += '<div class="q">' + (q.label ? '<div class="ql">' + esc(T(q.label)) + esc(q.value || '') + '</div>' : '');
       if (q.kind === 'step') {
         out += '<div class="step"><div class="pill" role="button" tabindex="-1" aria-label="' + esc(T('Kälter')) + '" data-k="step" data-q="' + qi + '" data-d="-1"><ha-icon icon="mdi:minus"></ha-icon></div>'
           + '<b>' + esc(H.fmtTemp(q.value, q.unit)) + '</b>'
@@ -274,7 +319,7 @@
     if (m.timer) {
       out += '<div class="q">';
       if (m.timer.active) {
-        out += '<div class="tm"><span>' + esc(T(m.timer.text.replace(/ \d.*$/, '')) + m.timer.text.replace(/^[^\d]*/, ' ')) + '</span>'
+        out += '<div class="tm"><ha-icon icon="mdi:timer-outline"></ha-icon><span>' + esc(T(m.timer.word) + ' ' + m.timer.time) + '</span>'
           + '<div class="pill" role="button" tabindex="-1" data-k="tcancel">' + esc(T('Abbrechen')) + '</div></div>';
       } else {
         out += '<div class="ql">' + esc(T(m.timer.label)) + '</div><div class="qr">' + m.timer.items.map(function (x, i) {
@@ -283,11 +328,11 @@
       }
       out += '</div>';
     }
-    if (m.main || m.quick.length || m.timer) out += '<div class="sep"></div>';
-    m.rows.forEach(function (r) {
-      if (r.sep) out += '<div class="sep"></div>';
-      out += row(r.key, r.t, r.ic);
-    });
+    // Blöcke mit Trennlinie: Bedienung | abgesetzte Aktionen (Tür öffnen, Kamera live) | Wege | Bearbeiten.
+    var blocks = [out.replace('<div class="grip"></div>', ''), '', '', ''];
+    m.acts.forEach(function (x, i) { blocks[1] += row(x.key, x.t, x.ic, x.ask ? 'quiet' : '', null, i); });
+    m.rows.forEach(function (r) { blocks[r.key === 'edit' ? 3 : 2] += row(r.key, r.t, r.ic); });
+    out = (c.phone ? '<div class="grip"></div>' : '') + blocks.filter(Boolean).join('<div class="sep"></div>');
     return out;
   };
 
@@ -319,25 +364,38 @@
   };
   // Schalten wie in den Popups: mit Rückfrage, wenn das Gerät im Studio so eingestellt ist.
   var act = function (id, it) {
-    var go = function () { return call(it.svc, Object.assign({ entity_id: id }, it.data || {})); };
+    var go = function () { return call(it.svc, Object.assign({ entity_id: it.entity || id }, it.data || {})); };
+    // Riskantes (Entriegeln, Tür öffnen) fragt immer – unabhängig von der Studio-Einstellung.
     if (it.ask) {
-      var name = cur ? cur.name : id;
-      var w = window.casoraAsk ? window.casoraAsk({ title: name, text: T('Wirklich die Tür öffnen?'), yes: T('Tür öffnen') }) : Promise.resolve(window.confirm(T('Wirklich die Tür öffnen?')));
+      var name = cur ? cur.name : id, q = T(it.ask);
+      var w = window.casoraAsk ? window.casoraAsk({ title: name, text: q, yes: T(it.yes || it.t) }) : Promise.resolve(window.confirm(q));
       return w.then(function (ok) { return ok ? go() : null; });
     }
     var ok = window.casoraConfirmSwitch ? window.casoraConfirmSwitch(id, it.svc) : Promise.resolve(true);
     return Promise.resolve(ok).then(function (yes) { return yes ? go() : null; });
   };
 
-  var modelFor = function (h, id) {
+  var ENT = /^[a-z_]+\.[a-z0-9_]+$/;
+  var modelFor = function (h, id, tile) {
     var e = ((h.entities || {})[id]) || {};
     var ts = h.states[TIMERS];
-    return H.model(h.states[id], {
+    var cfg = (tile && tile._config) || {}, tpl = [].concat(cfg.template || []).join(' '), V = cfg.variables || {};
+    var o = {
       admin: window.casoraIsAdmin ? window.casoraIsAdmin() : !!(h.user && h.user.is_admin),
       device: !!e.device_id,
       timers: ts ? ((ts.attributes || {}).timers || {}) : null,
       unit: (h.config && h.config.unit_system && h.config.unit_system.temperature) || '°C',
-    });
+      tapPopup: popupish(cfg.tap_action),
+      states: h.states,
+    };
+    // Kachel-eigene Geräte: Drucker über seinen Finder (02-geraete.js), Aquarium über die Kachel-Variable.
+    if (/\bcasora_3d_printer\b/.test(tpl) && window._casoraPrint && window._casoraPrint.auto) {
+      var c = null;
+      try { c = window._casoraPrint.auto(h.states[id], h); } catch (x) { c = null; }
+      if (c) o.printer = { st: c.st, pause: c.pause, resume: c.resume, light: c.light, cam: c.cam };
+    }
+    if (/\bcasora_aquarium/.test(tpl) && typeof V.light_entity === 'string' && ENT.test(V.light_entity)) o.aqLight = V.light_entity;
+    return H.model(h.states[id], o);
   };
 
   var paint = function () {
@@ -346,7 +404,7 @@
     if (!h || !h.states[cur.id]) return H.close();
     cur.st = h.states[cur.id];
     cur.ts = h.states[TIMERS];
-    cur.m = modelFor(h, cur.id);
+    cur.m = modelFor(h, cur.id, cur.tile);
     var pane = host.shadowRoot.querySelector('.pane');
     var focused = host.shadowRoot.activeElement;
     var fk = focused && focused.getAttribute('data-k') ? [focused.getAttribute('data-k'), focused.getAttribute('data-q'), focused.getAttribute('data-i'), focused.getAttribute('data-d')].join('|') : '';
@@ -374,6 +432,8 @@
       var q = m.quick[+n.getAttribute('data-q')], x = q && q.items[+n.getAttribute('data-i')];
       if (!x) return;
       if (x.ask) { H.close(); act(id, x); return; }
+      // Sofort sichtbar: gewählte Pille markieren, bis der neue Zustand kommt.
+      if (q.kind === 'pills') [].forEach.call(n.parentNode.children, function (p) { p.classList.toggle('on', p === n); });
       n.classList.add('busy');
       act(id, x).then(paint, paint);
       return;
@@ -398,6 +458,14 @@
         if (r === null) return;
         call('casora.set_timer', { entity_id: id, minutes: mins, action: 'turn_off' });
       });
+      return;
+    }
+    if (k === 'act' || k === 'live') {
+      var ax = m.acts[+n.getAttribute('data-i')];
+      H.close();
+      if (!ax) return;
+      if (k === 'live') { if (!(Z && Z.openCamera(ax.entity)) && window.casoraPopup) window.casoraPopup.nativeMoreInfo(ax.entity); return; }
+      act(id, ax);
       return;
     }
     if (k === 'tcancel') { n.classList.add('busy'); call('casora.cancel_timer', { entity_id: id }).then(paint, paint); return; }
@@ -546,6 +614,8 @@
     return null;
   };
   H.wants = function (cfg) { return !!H.via(cfg); };
+  // Ohne Menü: Raum, Szenenzeile, eigene Karte, Kachel mit eigenen Knöpfen (Halten würde gegen die Kachel arbeiten).
+  var NO_MENU = /^casora_(room|scene_row|custom|entity_actions)$/;
   window.addEventListener('action', function (ev) {
     var d = ev.detail || {};
     if (d.action !== 'hold' || d.casoraHoldPass || window.CASORA_HOLD_MENU === false) return;
@@ -553,9 +623,18 @@
     if (/^\/casora-studio/.test(location.pathname)) return;
     var path = (ev.composedPath && ev.composedPath()) || [];
     var tile = casoraTile(path);
-    if (!tile || !H.wants(tile._config)) return;
-    var h = hassNow(), id = (tile._stateObj && tile._stateObj.entity_id) || '';
+    if (!tile || [].concat(tile._config.template || []).some(function (x) { return NO_MENU.test(String(x)); })) return;
+    var h = hassNow(), id = (tile._stateObj && tile._stateObj.entity_id) || '', cfg = tile._config;
     if (!h || !id || !h.states[id]) return;
-    if (H.open(tile, { src: path[0], via: H.via(tile._config) })) { ev.stopPropagation(); ev.stopImmediatePropagation(); }
+    if (H.worth(modelFor(h, id, tile))) {
+      if (H.open(tile, { src: path[0], via: H.via(cfg) })) { ev.stopPropagation(); ev.stopImmediatePropagation(); }
+      return;
+    }
+    // Nichts zu bedienen (Info-Kacheln): Halten tut dasselbe wie Tippen, wenn Tippen das Popup öffnet.
+    if (popupish(cfg.tap_action)) {
+      ev.stopPropagation(); ev.stopImmediatePropagation();
+      window._casoraLastTile = { el: tile, at: Date.now() };
+      path[0].dispatchEvent(new CustomEvent('action', { bubbles: true, composed: true, detail: { action: 'tap', casoraHoldPass: true } }));
+    }
   }, true);
 })();

@@ -16,21 +16,28 @@ assert.equal(m.main.t, 'Ausschalten');
 assert.equal(m.quick[0].label, 'Helligkeit');
 assert.deepEqual(m.quick[0].items.map((x) => !!x.on), [false, true, false]);
 assert.equal(m.quick[1].items[0].on, true, 'Warm gewählt');
-assert.equal(m.timer.label, 'Aus in');
+assert.equal(m.quick[0].value, ' · 50 %', 'aktueller Wert an der Überschrift');
+assert.equal(m.timer.label, 'Ausschalten in');
 assert.equal(keys(m), 'popup,history,device,edit');
+assert.equal(keys(H.model(st('light.a', 'on'), { admin: true, device: true, tapPopup: true })), 'history,device,edit', 'Tippen öffnet schon das Popup: keine Zeile Details');
+assert.equal(keys(H.model(st('light.a', 'on'), { admin: false, device: true, tapPopup: true })), 'history', 'Gerät und Bearbeiten nur für Admins');
+assert.equal(H.worth(m), true);
 
 // Licht nur an/aus: keine Helligkeit; aus → „An für“; ohne Casora-Zeitschalter-Sensor kein Zeitschalter.
+m = H.model(st('light.c', 'off', { supported_color_modes: ['color_temp'] }), { timers: {} });
+assert.deepEqual(m.quick.map((q) => q.label), ['Helligkeit'], 'aus: keine Lichtfarbe');
 m = H.model(st('light.b', 'off', { supported_color_modes: ['onoff'] }), { timers: {} });
 assert.equal(m.main.t, 'Einschalten');
 assert.equal(m.quick.length, 0);
-assert.equal(m.timer.label, 'An für');
+assert.equal(m.timer.label, 'Einschalten für');
 assert.equal(H.model(st('light.b', 'off', {}), { timers: null }).timer, null);
-assert.equal(keys(m), 'popup,history', 'ohne Gerät/Admin nur Popup und Verlauf');
+assert.equal(keys(m), 'popup,history', 'ohne Gerät/Admin nur Details und Verlauf');
 
 // Laufender Zeitschalter: „Aus um hh:mm“ mit Abbrechen.
 m = H.model(st('switch.c', 'on'), { timers: { 'switch.c': { at: '2026-10-15T19:30:00Z', action: 'turn_off' } } });
 assert.equal(m.timer.active, true);
-assert.match(m.timer.text, /^Aus um \d\d:\d\d$/);
+assert.equal(m.timer.word, 'Aus um');
+assert.match(m.timer.time, /^\d\d:\d\d$/);
 
 // Jalousie: Öffnen (zu), Auf/Stopp/Zu, Position 50 %.
 m = H.model(st('cover.d', 'closed', { supported_features: 15, current_position: 50 }), { timers: {} });
@@ -50,7 +57,10 @@ assert.equal(H.stepTo({ value: 7, step: 0.5, min: 7 }, -1), 7);
 // Schloss: Entriegeln, „Tür öffnen“ mit Rückfrage; kein Zeitschalter.
 m = H.model(st('lock.f', 'locked', { supported_features: 1 }), { timers: {} });
 assert.equal(m.main.t, 'Entriegeln');
-assert.equal(m.quick[0].items[0].ask, true);
+assert.ok(m.main.ask, 'Entriegeln fragt immer');
+assert.equal(m.quick.length, 0);
+assert.equal(m.acts[0].t, 'Tür öffnen'); assert.ok(m.acts[0].ask, 'Tür öffnen abgesetzt und mit Rückfrage');
+assert.equal(H.model(st('lock.f', 'unlocked', {}), {}).main.ask, undefined, 'Verriegeln ohne Rückfrage');
 assert.equal(m.timer, null);
 
 // Medien: Pausieren, Tasten nach Fähigkeiten; Zeitschalter nur mit turn_off-Fähigkeit.
@@ -58,13 +68,38 @@ m = H.model(st('media_player.g', 'playing', { supported_features: 16 | 32 | 1024
 assert.equal(m.main.t, 'Pausieren');
 assert.deepEqual(m.quick[0].items.map((x) => x.t), ['Zurück', 'Leiser', 'Lauter', 'Weiter']);
 assert.equal(m.timer, null);
-assert.equal(H.model(st('media_player.g', 'playing', { supported_features: 256 }), { timers: {} }).timer.label, 'Aus in');
+assert.equal(H.model(st('media_player.g', 'playing', { supported_features: 256 }), { timers: {} }).timer.label, 'Ausschalten in');
 
 // Nicht erreichbar / reiner Sensor: nur die Wege.
 m = H.model(st('light.h', 'unavailable'), { timers: {}, device: true });
 assert.equal(m.main, null); assert.equal(m.quick.length, 0); assert.equal(m.timer, null);
 m = H.model(st('sensor.i', '21.5'), { timers: {} });
 assert.equal(m.main, null); assert.equal(keys(m), 'popup,history');
+assert.equal(H.worth(m), false, 'Info-Kachel: kein Menü, Halten wie Tippen');
+
+// 3D-Drucker: Pause während des Drucks, Fortsetzen pausiert, Licht, Kamera live – nur vorhandene Entitäten.
+const S = { 'button.p_pause': st('button.p_pause', 'unknown'), 'button.p_resume': st('button.p_resume', 'unknown'),
+  'light.p_light': st('light.p_light', 'on'), 'camera.p_cam': st('camera.p_cam', 'idle'), 'sensor.p_stage': st('sensor.p_stage', 'running') };
+const PR = { st: 'sensor.p_stage', pause: 'button.p_pause', resume: 'button.p_resume', light: 'light.p_light', cam: 'camera.p_cam' };
+m = H.model(st('sensor.p_stage', 'running'), { printer: PR, states: S });
+assert.deepEqual(m.quick[0].items.map((x) => x.t), ['Pause', 'Licht']);
+assert.equal(m.quick[0].items[0].entity, 'button.p_pause');
+assert.equal(m.quick[0].items[1].on, true);
+assert.equal(m.acts[0].t, 'Kamera live');
+S['sensor.p_stage'] = st('sensor.p_stage', 'pause');
+assert.equal(H.model(st('sensor.p_stage', 'pause'), { printer: PR, states: S }).quick[0].items[0].t, 'Fortsetzen');
+assert.equal(H.worth(H.model(st('sensor.p_stage', 'idle'), { printer: { st: 'sensor.p_stage' }, states: S })), false, 'Drucker ohne Tasten: kein Menü');
+
+// Aquarium: Licht des Beckens; Kamera: Live ansehen ohne Verlauf; Befeuchter: Zielfeuchte; Ventilator: Auto.
+m = H.model(st('sensor.aq', 'ok'), { aqLight: 'light.aq', states: { 'light.aq': st('light.aq', 'off') } });
+assert.equal(m.quick[0].items[0].entity, 'light.aq'); assert.equal(H.worth(m), true);
+m = H.model(st('camera.c', 'idle'), {});
+assert.equal(m.acts[0].key, 'live'); assert.equal(keys(m), 'popup');
+m = H.model(st('humidifier.h', 'on', { humidity: 50, min_humidity: 30, max_humidity: 80 }), {});
+assert.equal(m.quick[0].label, 'Zielfeuchte'); assert.equal(m.quick[0].items[1].on, true);
+m = H.model(st('fan.f', 'on', { supported_features: 9, percentage: 33, preset_modes: ['Auto', 'Sleep'], preset_mode: 'Auto' }), {});
+assert.deepEqual(m.quick[0].items.map((x) => x.t), ['33 %', '66 %', '100 %', 'Auto']);
+assert.equal(m.quick[0].items[3].on, true); assert.equal(m.quick[0].items[0].on, false);
 
 // Nur Halten, das bisher ein Popup/HAs Dialog war, wird zum Menü.
 assert.equal(H.wants({ hold_action: { action: 'more-info' } }), true);
