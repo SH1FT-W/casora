@@ -153,4 +153,8 @@ assert.deepEqual(ex.map((x) => x.t), ['Auf die Einkaufsliste', 'Rezept öffnen']
 m = H.model(st('sensor.casora_rezept_der_woche', 'ok'), { tapPopup: true, extra: ex });
 assert.equal(m.main.t, 'Öffnen', 'Öffnen bleibt oben, auch mit Zusatz-Einträgen');
 assert.equal(m.acts.length, 2);
+S['sensor.p_stage'] = st('sensor.p_stage', 'paused_user');
+assert.equal(H.model(st('sensor.p_stage', 'paused_user'), { printer: PR, states: S }).quick[0].items[0].t, 'Fortsetzen', 'Bambu paused_user');
+m = H.model(null, { tapPopup: true, kind: 'updates', admin: true, updCheck: true });
+assert.deepEqual(m.acts.map((x) => x.t), ['Nach Updates suchen', 'Alle Updates'], 'Updates-Sammelkachel ohne Gerät');
 console.log('halten: ok');

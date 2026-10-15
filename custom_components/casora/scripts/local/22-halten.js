@@ -40,6 +40,7 @@
     // Kachel ohne Gerät (Müll, Lüften, Rezept …): Öffnen wie Tippen und Bearbeiten.
     if (!st) {
       if (o.tapPopup || o.tapOpens) m.main = { t: 'Öffnen', ic: 'mdi:arrow-top-right', open: true };
+      kindActs(m, o);
       if (o.admin) m.rows.push({ key: 'edit', t: 'Kachel bearbeiten', ic: 'mdi:pencil-outline', sep: true });
       return m;
     }
@@ -174,8 +175,9 @@
     if (P) {
       var ps = String(((S[P.st] || st).state) || '').toLowerCase();
       var pb = [];
-      if (/^(pause|paused)$/.test(ps) && P.resume && S[P.resume]) pb.push(svc('Fortsetzen', 'mdi:play', 'button.press', null, { entity: P.resume, wide: true }));
-      else if (/^(running|printing|print)$/.test(ps) && P.pause && S[P.pause]) pb.push(svc('Pause', 'mdi:pause', 'button.press', null, { entity: P.pause, wide: true }));
+      // Bambu meldet beim Pausieren im Arbeitsschritt „paused_user“ u. ä., der Druckstatus heißt „pause“.
+      if (/paus/.test(ps) && P.resume && S[P.resume]) pb.push(svc('Fortsetzen', 'mdi:play', 'button.press', null, { entity: P.resume, wide: true }));
+      else if (/^(running|printing|print|prepare|printing_\w+)$/.test(ps) && P.pause && S[P.pause]) pb.push(svc('Pause', 'mdi:pause', 'button.press', null, { entity: P.pause, wide: true }));
       if (P.light && S[P.light] && !bad(S[P.light].state)) {
         var pOn = S[P.light].state === 'on';
         pb.push(svc(pOn ? 'Licht aus' : 'Licht an', pOn ? 'mdi:lightbulb-off-outline' : 'mdi:lightbulb-outline', 'light.toggle', null, { entity: P.light, wide: true, on: pOn }));
@@ -214,20 +216,23 @@
       }
     }
 
-    (o.extra || []).forEach(function (x) { m.acts.push(x); });
+    kindActs(m, o);
     // Info-Kacheln (nichts zu bedienen): oben „Öffnen“ wie Tippen, darunter die Wege (Menü auf allen Kacheln).
     if (!m.main && !m.quick.length && !m.timer && (o.tapPopup || o.tapOpens)) m.main = { t: 'Öffnen', ic: 'mdi:arrow-top-right', open: true };
-    // Eigene Wege je Kachelart.
-    if (o.kind === 'energy') m.acts.push({ key: 'nav', t: 'Energie-Dashboard', ic: 'mdi:lightning-bolt-outline', path: '/energy' });
-    // Updates: sofort suchen wie der Knopf im Updates-Popup (03-popups.js, _casoraUpdCheck – Supervisor, HACS, update.*).
-    if (o.kind === 'updates' && o.updCheck) m.acts.push({ key: 'updcheck', t: 'Nach Updates suchen', ic: 'mdi:refresh' });
-    if (o.kind === 'updates' && o.admin) m.acts.push({ key: 'nav', t: 'Alle Updates', ic: 'mdi:update', path: '/config/updates' });
     // Wege: „Details“ nur, wenn Tippen nicht schon das Popup öffnet; Gerät und Bearbeiten nur für Admins.
     if (!o.tapPopup) m.rows.push({ key: 'popup', t: 'Details', ic: 'mdi:card-text-outline' });
     if (dom !== 'camera') m.rows.push({ key: 'history', t: 'Verlauf', ic: 'mdi:history' });
     if (o.device && o.admin) m.rows.push({ key: 'device', t: 'Gerät', ic: 'mdi:tune-variant' });
     if (o.admin) m.rows.push({ key: 'edit', t: 'Kachel bearbeiten', ic: 'mdi:pencil-outline', sep: true });
     return m;
+  };
+  // Eigene Wege je Kachelart (auch ohne Gerät, z. B. Updates-Sammelkachel) und Zusatz-Einträge.
+  var kindActs = function (m, o) {
+    (o.extra || []).forEach(function (x) { m.acts.push(x); });
+    if (o.kind === 'energy') m.acts.push({ key: 'nav', t: 'Energie-Dashboard', ic: 'mdi:lightning-bolt-outline', path: '/energy' });
+    // Updates: sofort suchen wie der Knopf im Updates-Popup (03-popups.js, _casoraUpdCheck – Supervisor, HACS, update.*).
+    if (o.kind === 'updates' && o.updCheck) m.acts.push({ key: 'updcheck', t: 'Nach Updates suchen', ic: 'mdi:refresh' });
+    if (o.kind === 'updates' && o.admin) m.acts.push({ key: 'nav', t: 'Alle Updates', ic: 'mdi:update', path: '/config/updates' });
   };
   // Lohnt ein Menü? Nur mit etwas zu bedienen – sonst tut Halten dasselbe wie Tippen.
   H.worth = function (m) { return !!(m && (m.main || m.quick.length || m.timer || m.acts.length || m.rows.length)); };
@@ -838,8 +843,8 @@
   };
   H.wants = function (cfg) { return !!H.via(cfg); };
   // Ohne Menü: Raum, Szenenzeile, eigene Karte, Kachel mit eigenen Knöpfen (Halten würde gegen die Kachel arbeiten).
-  // Kein Menü: Raum-Hintergrund und Szenenleiste – das sind Flächen mit eigener Bedienung, keine Kacheln.
-  var NO_MENU = /^casora_(room|scene_row)$/;
+  // Kein Menü: Raum-Hintergrund, Szenenleiste, Badges und Bedienleisten (Uhr, Wetter im Kopf, Knöpfe oben) – keine Kacheln.
+  var NO_MENU = /^casora_(room|scene_row|badge_.*|mobile_.*|menu_icon|settings_button|assist_button|notifications_button|now_playing.*|time|weather)$/;
   // Halten auf einer eingebetteten Karte (eigene Karte, HA-Karte im Kachelinhalt) gehört dieser Karte.
   var innerCard = function (path, tile) {
     for (var i = 0; i < path.length && path[i] !== tile; i++) {
@@ -856,7 +861,8 @@
     var path = (ev.composedPath && ev.composedPath()) || [];
     var tile = casoraTile(path);
     if (!tile || [].concat(tile._config.template || []).some(function (x) { return NO_MENU.test(String(x)); })) return;
-    if (innerCard(path, tile)) return;
+    // Eigene Karte: die eingebettete Karte füllt die Kachel – dort gilt das Menü (Bearbeiten), sonst behält die innere Karte ihr Halten.
+    if (innerCard(path, tile) && ![].concat(tile._config.template || []).some(function (x) { return x === 'casora_custom'; })) return;
     var h = hassNow(), id = (tile._stateObj && tile._stateObj.entity_id) || '', cfg = tile._config;
     // Nur Halten, das bisher ein Popup/HAs Dialog war (bzw. Jalousie) – eigene Halten-Aktionen (Licht-Badge: Smart-Toggle) bleiben.
     if (!h || !H.wants(cfg)) return;
