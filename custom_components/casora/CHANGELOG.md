@@ -9,6 +9,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ### Fixed
 - **Deleting in Studio:** A quick double-click on "Delete" removed two tiles, or two devices in group tiles. Only the chosen one goes now.
 - **Saving in Studio:** Changing something while saving, or switching dashboards right away, could lose changes without "unsaved" staying on. Your own tile types were also written into the other dashboard you had open before. Neither happens anymore.
+- **Clearing device fields:** Once you had picked a device in an optional field (such as the light, leak sensor or battery of an aquarium), Studio offered no way to remove it. An "×" at the right of the field now clears it.
 - **Interrupted move:** "Tidy Up" and "Continue Move" could delete a finished dashboard at the same address. They now only remove dashboards that really are half-finished.
 - **Removing Hemma:** Your own scripts and hidden files in www/hemma were deleted along with it, as were folders a YAML dashboard or an automation still needed. www/hemma now stays in these cases, and the dialog names the files that keep it.
 - **Rewind:** If a chosen version could not be read, "Restore This Version" restored the one shown before. The button now disappears in that case.

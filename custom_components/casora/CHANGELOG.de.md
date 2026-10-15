@@ -9,6 +9,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ### Behoben
 - **Löschen im Studio:** Ein schneller Doppelklick auf „Löschen“ entfernte zwei Kacheln, bei Sammelkacheln zwei Geräte. Jetzt verschwindet nur das gewählte.
 - **Speichern im Studio:** Wer während des Speicherns weiter änderte oder gleich das Dashboard wechselte, konnte Änderungen verlieren, ohne dass „ungespeichert“ stehen blieb. Eigene Kachelarten landeten beim Speichern auch im zuletzt geöffneten anderen Dashboard. Beides passiert nicht mehr.
+- **Geräte-Felder leeren:** Ein einmal gewähltes Gerät in einem optionalen Feld (etwa Licht, Lecksensor oder Akku beim Aquarium) ließ sich im Studio nicht mehr entfernen. Jetzt leert ein „ד rechts im Feld die Auswahl.
 - **Unterbrochener Umzug:** „Aufräumen“ und „Umzug fortsetzen“ konnten ein fertiges Dashboard mit derselben Adresse löschen. Jetzt entfernen sie nur Dashboards, die wirklich halb fertig sind.
 - **Hemma entfernen:** Eigene Skripte und versteckte Dateien in www/hemma wurden mitgelöscht, ebenso Ordner, die noch ein YAML-Dashboard oder eine Automation brauchte. Jetzt bleibt www/hemma in diesen Fällen stehen, und der Dialog nennt die Dateien, die es halten.
 - **Zeitreise:** Ließ sich ein gewählter Stand nicht lesen, stellte „Diesen Stand wiederherstellen“ den vorher gezeigten wieder her. Jetzt verschwindet der Knopf in diesem Fall.
