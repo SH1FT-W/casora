@@ -2849,6 +2849,16 @@
     { attr: 'state', eq: 'off', and: [{ attr: 'release_summary', has: 'restart' }], text: 'Neustart erforderlich', icon: 'mdi:restart', color: ORG },
     { attr: 'state', eq: 'off', text: 'Installiert', icon: 'mdi:check', color: 'var(--casora-popup-ui-good, #30D158)' },
   ];
+  // Symbol rechts startet das Update (mit Rückfrage „Aktualisieren“), ein Tipp auf die Zeile öffnet die Details.
+  // Nur wenn die Integration installieren kann (UpdateEntityFeature.INSTALL) und gerade nichts läuft.
+  var installOf = function (states, id) {
+    var st = states[id], a = (st && st.attributes) || {};
+    if (!st || a.in_progress || !(Number(a.supported_features || 0) & 1)) return null;
+    var D = window._casoraUpdDetail;
+    var spec = D && D.installSpec ? D.installSpec(id, st) : { domain: 'update', service: 'install', data: {}, target: { entity_id: id } };
+    return Object.assign({}, spec, { done: 'Update gestartet' });
+  };
+  X.installOf = installOf;
   X.list = function (states, h) {
     var UI = h.UI;
     var ids = Object.keys(states).filter(function (id) { return id.indexOf('update.') === 0 && states[id].state === 'on'; })
@@ -2889,6 +2899,8 @@
         /* 1.0.5: am Handy runder Download-Knopf statt Text (casora-core .hui-actx). */
         actionIcon: 'mdi:download',
         actionLive: { rules: X.RULES, text: 'Aktualisieren', icon: 'mdi:download', color: TEAL },
+        // Symbol startet das Update (Rückfrage „Aktualisieren“), Zeile öffnet die Details.
+        svc: installOf(states, id), confirm: installOf(states, id) ? 'Aktualisieren' : undefined,
       };
     }), null);
   };

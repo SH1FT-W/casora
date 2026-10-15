@@ -226,6 +226,15 @@
     var e = states[id]; if (!e) return id;
     return String(e.attributes.title || e.attributes.friendly_name || id).replace(/\s+(Update|Firmware|Software-Aktualisierung)$/i, '').trim() || id;
   };
+  // Symbol rechts startet das Update (mit Rückfrage „Aktualisieren“), ein Tipp auf die Zeile öffnet die Details.
+  // Nur wenn die Integration installieren kann (UpdateEntityFeature.INSTALL) und gerade nichts läuft.
+  var installOf = function (states, id) {
+    var st = states[id], a = (st && st.attributes) || {};
+    if (!st || a.in_progress || !(Number(a.supported_features || 0) & 1)) return null;
+    var D = window._casoraUpdDetail;
+    var spec = D && D.installSpec ? D.installSpec(id, st) : { domain: 'update', service: 'install', data: {}, target: { entity_id: id } };
+    return Object.assign({}, spec, { done: 'Update gestartet' });
+  };
   // Schlanke Zeilen für _casoraUpdX.list: Name, „Neu: x“, KI-Urteil als farbiger Punkt.
   U.rows = function (states, ids) {
     var TEAL = 'var(--casora-color-teal, #00C3D0)';
@@ -241,6 +250,7 @@
         action: a.in_progress ? 'Wird aktualisiert' : 'Aktualisieren', actionTone: 'accent', actionBusy: !!a.in_progress,
         actionIcon: 'mdi:download',
         actionLive: { rules: (window._casoraUpdX && window._casoraUpdX.RULES) || [], text: 'Aktualisieren', icon: 'mdi:download', color: TEAL },
+        svc: installOf(states, id), confirm: installOf(states, id) ? 'Aktualisieren' : undefined,
       };
     });
   };
