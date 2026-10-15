@@ -278,6 +278,23 @@ window.CASORA_TILE_TYPES = [
       needs: "lawn_mower", needsText: "For every robot lawn mower in Home Assistant",
       needsMissing: "No robot lawn mower in Home Assistant yet" },
     fields: [ICON, TITLE_NAME] },
+  // Frigate (Community-Karte, aus Kartenwunsch #22): Kamera-Kachel für Kameras der Frigate-Integration
+  // (device_class „camera“ setzt nur Frigate), dazu Erkennungen, Schnappschüsse und Schalter am selben Gerät
+  // (scripts/local/23-frigate.js). Felder wie die Kamera-Kachel, ohne die Popup-Felder der Kamera-Übersicht.
+  { id: "casora_frigate", label: "Frigate camera", template: "casora_frigate", domains: ["camera"], classes: ["camera"],
+    icon: "camera", entityLabel: "Frigate camera",
+    community: { desc: "Live camera with what Frigate detected last. The popup shows the live view, the latest detections with snapshot and clip, objects and the camera switches.",
+      needs: "frigate", needsText: "For every camera of the Frigate integration",
+      needsMissing: "Frigate integration not installed yet" },
+    fields: [ICON, TITLE_NAME,
+      { key: "status_entity", label: "Status from", domains: ["camera", "binary_sensor"],
+        classes: { binary_sensor: ["connectivity"] }, advanced: true, placeholder: "This camera",
+        hint: "Optional. Another camera or a connection sensor that tells whether the camera is reachable, e.g. when the picture comes through a proxy (go2rtc, Frigate, Scrypted) that stays ready although the camera is gone. Picture and popup stay with this camera." },
+      { key: "refresh_s", label: "Refresh image", type: "select", advanced: true, tileLevel: true,
+        options: ["5", "", "30", "60"],
+        optionLabels: { "5": "Every 5 seconds", "": "Every 10 seconds", "30": "Every 30 seconds", "60": "Every 60 seconds" },
+        hint: "How often the tile fetches a new still image while it is visible. The tile says \"Up to date\" while the picture is fresh and shows its age in the warning color when the camera stops delivering." },
+    ] },
   // Aquarien-Übersicht (Hemma 1 und ältere Fassungen „…_aquarium“): bis zu drei Becken in einer Kachel. Nur fürs
   // Bearbeiten umgezogener Kacheln – neue Becken bekommen die Aquarium-Kachel (casora_aquarium_tank).
   { id: "casora_aquariums", label: "Aquariums", template: "casora_aquarium", hidden: true, domains: ["sensor"],

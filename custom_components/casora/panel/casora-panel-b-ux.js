@@ -567,7 +567,10 @@
         if (seen.has(id) || !S[id]) return;
         const e = R[id];
         if (e && (e.hidden || e.entity_category || e.disabled_by)) return;
-        const type = typeFor(id, typeIds, suggested);
+        // Frigate-Kamera (device_class „camera“ setzt nur Frigate): die Community-Karte, wenn sie hinzugefügt ist.
+        const frig = !suggested && id.startsWith("camera.") && typeIds.has("casora_frigate")
+          && (S[id].attributes || {}).device_class === "camera" ? "casora_frigate" : null;
+        const type = typeFor(id, typeIds, frig || suggested);
         if (!type) return;
         seen.add(id);
         const aid = areaOf(id);

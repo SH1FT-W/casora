@@ -483,8 +483,18 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             MockEntity.__init__(self, mock, eid)
             Camera.__init__(self)
             self.content_type = "image/png"
+            # Frigate-Testkamera (frigate.py): Hofbild mit Uhrzeit wie Frigates latest.jpg.
+            self._frigate = bool(mock.entities[eid].get("frigate"))
+            if self._frigate:
+                self.content_type = "image/jpeg"
 
         async def async_camera_image(self, width=None, height=None) -> bytes:
+            if self._frigate:
+                from .frigate import picture
+                stamp = dt_util.now().strftime("%d.%m.%Y %H:%M:%S")
+                img = await self.hass.async_add_executor_job(picture, None, 1, 1280, 720, stamp, False)
+                if img:
+                    return img
             return PLACEHOLDER_PNG
 
         async def handle_async_mjpeg_stream(self, request):
@@ -492,6 +502,9 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             # Browser-Verbindungen pro Server – mit mehreren Kamera-Kacheln blieb
             # das Test-Dashboard sonst beim Laden hängen. Ein Standbild genügt.
             from aiohttp import web
+            if self._frigate:
+                img = await self.async_camera_image()
+                return web.Response(body=img, content_type=self.content_type)
             return web.Response(body=PLACEHOLDER_PNG, content_type="image/png")
 
         async def async_turn_on(self) -> None:
@@ -514,8 +527,22 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             self._is_map = bool(dev) and any(
                 e.get("device") == dev and k.startswith("vacuum.") for k, e in mock.entities.items())
             self._attr_image_last_updated = dt_util.utcnow()
+            # Frigate-Schnappschuss (frigate.py): letzter Treffer je Objekt, Alter aus der Fixture.
+            self._frigate = mock.entities[eid].get("frigate_label")
+            if self._frigate:
+                self._attr_content_type = "image/jpeg"
+                ago = mock.entities[eid].get("ago_min")
+                if ago is not None:
+                    self._attr_image_last_updated = dt_util.utcnow() - timedelta(minutes=ago)
 
         async def async_image(self) -> bytes | None:
+            if self._frigate:
+                from .frigate import picture
+                stamp = dt_util.as_local(self._attr_image_last_updated).strftime("%d.%m.%Y %H:%M:%S")
+                img = await self.hass.async_add_executor_job(
+                    picture, self._frigate, int(self._attr_image_last_updated.timestamp()) % 997, 1280, 720, stamp, True)
+                if img:
+                    return img
             return MAP_PNG if self._is_map else PLACEHOLDER_PNG
 
     class MTodo(MockEntity, TodoListEntity):
