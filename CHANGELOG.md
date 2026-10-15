@@ -4,6 +4,24 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.6.0 – 16.10.2026
+
+### New
+- **Hold quick menu:** Press and hold a tile to open a small menu right at the tile (a bottom sheet on phones). At the top the main action (turn off, unlock, pause …), below quick controls per device: brightness and color, cover open/stop/close and position, temperature −/+, volume and tracks, target humidity, fan speed. Info tiles get "Open" plus fitting entries such as "Check for updates", "Energy dashboard", "Add to shopping list", "Send message" or "Unloaded". Washer, dryer, dishwasher and 3D printer show "Done at … · … left". History, Device and "Edit tile" (jumps to the tile in the Studio) follow. On desktop a right-click opens the menu too; on the keyboard Shift+F10 or the context-menu key.
+- **Timer:** "Turn off in" / "Turn on for" 15 min, 30 min, 1 hr or 2 hrs for lights, switches, fans, air purifiers, humidifiers, heating and media players. While a timer runs, the tile shows a ring with a clock in the top right that empties over time. Timers survive restarts and are dropped when you switch by hand first. For automations: actions `casora.set_timer` / `casora.cancel_timer`, sensor `sensor.casora_timers` and the event `casora_timer_finished`.
+- **Hold is configurable:** In the Studio under Controls › Tiles, "Hold on tiles": quick menu, open popup or Home Assistant dialog, for the whole dashboard and per tile.
+- **Energy popup per sub-badge:** Tapping solar, battery, house or grid in the energy badge opens its own popup with history and fitting controls. Casora detects the kind; in the Studio you can set it under "Popup type".
+
+### Changed
+- **Safer switching:** Unlock, "Open door" and the alarm always ask in the quick menu; codes are asked masked. When arming, the open-window warning is in the same dialog.
+- **Football:** The popup shows the competition (e.g. "Live · Europa League"), even when Team Tracker follows all competitions.
+- **UIX check:** The Studio tells exactly what is missing, download UIX, add it or restart HA, and warns when card-mod is installed as well.
+
+### Fixed
+- **Phone filter:** If two rooms had the same key (e.g. "Home"), every save reported "Duplicated options". Not anymore.
+- **Aquarium:** With a reachability sensor set, short Bluetooth dropouts no longer show "Light offline".
+- **Confirmations:** The confirm dialog has a name for screen readers, keeps keyboard focus inside and returns it afterwards.
+
 ## 1.5.5 – 15.10.2026
 
 ### Changed

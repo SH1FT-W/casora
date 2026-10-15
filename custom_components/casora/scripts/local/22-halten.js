@@ -806,7 +806,7 @@
     if (k === 'edit') {
       var seg = (window.location.pathname || '').split('/').filter(Boolean);
       var dash = (seg[0] || '').replace(/[-_]mobile$/i, '');
-      navigate('/casora-studio' + (seg[1] && !/^cat-/.test(seg[1]) ? '/' + encodeURIComponent(seg[1]) : '')
+      navigate('/casora-studio' + (seg[1] ? '/' + encodeURIComponent(seg[1]) : '')
         + (dash || id ? '?' : '') + (dash ? 'dash=' + encodeURIComponent(dash) : '') + (dash && id ? '&' : '') + (id ? 'tile=' + encodeURIComponent(id) : ''));
     }
   };

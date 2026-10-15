@@ -27,10 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Community", n0: "Wünsch dir Karten, die dir fehlen, und füg fertige Community-Karten deiner Kachelauswahl hinzu.",
-      n1t: "Mähroboter", n1: "Die erste Community-Karte: Status, Akku, Mähen und Parken, dazu der Verlauf der letzten 7 Tage.",
-      n2t: "Größe am Handy „Automatisch“", n2: "Kacheln werden groß, solange gerade etwas los ist, und danach wieder klein.",
-      n3t: "Casora statt Home-Assistant-Dialog", n3: "Messwerte, Geräte, Updates und Kameras öffnen eigene Casora-Seiten, mit ‹ zurück.",
+      n0t: "Halten-Schnellmenü", n0: "Lange drücken (oder Rechtsklick) auf eine Kachel: Hauptaktion, Helligkeit, Jalousie, Temperatur und mehr direkt an der Kachel.",
+      n1t: "Zeitschalter", n1: "„Ausschalten in 30 Min.“ für Licht, Schalter, Heizung und Medien. Ein Kreis auf der Kachel zeigt, wie lange es noch läuft.",
+      n2t: "Energie je Badge", n2: "Solar, Akku, Haus und Netz im Energie-Badge öffnen jetzt jeweils ein eigenes Popup mit Verlauf und Steuerung.",
+      n3t: "Halten einstellbar", n3: "Im Studio unter Bedienung › Kacheln: Schnellmenü, Popup oder Home-Assistant-Dialog, auch je Kachel.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Community", n0: "Ask for cards you are missing and add finished Community cards to your tile list.",
-      n1t: "Robot lawn mower", n1: "The first Community card: status, battery, mow and park, plus the history of the last 7 days.",
-      n2t: "Size on the phone \"Automatic\"", n2: "Tiles turn large while something is going on and small again afterwards.",
-      n3t: "Casora instead of Home Assistant's dialog", n3: "Readings, devices, updates and cameras open Casora's own pages, with ‹ back.",
+      n0t: "Hold quick menu", n0: "Press and hold (or right-click) a tile: main action, brightness, covers, temperature and more right at the tile.",
+      n1t: "Timer", n1: "\"Turn off in 30 min\" for lights, switches, heating and media. A ring on the tile shows how long is left.",
+      n2t: "Energy per badge", n2: "Solar, battery, house and grid in the energy badge now each open their own popup with history and controls.",
+      n3t: "Hold is configurable", n3: "In the Studio under Controls › Tiles: quick menu, popup or Home Assistant dialog, also per tile.",
     },
   };
 
@@ -56,10 +56,10 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:account-group-outline", "n0t", "n0"],
-    ["mdi:robot-mower-outline", "n1t", "n1"],
-    ["mdi:arrow-left-circle-outline", "n3t", "n3"],
-    ["mdi:cellphone-arrow-down", "n2t", "n2"],
+    ["mdi:gesture-tap-hold", "n0t", "n0"],
+    ["mdi:timer-outline", "n1t", "n1"],
+    ["mdi:solar-power-variant-outline", "n2t", "n2"],
+    ["mdi:tune-variant", "n3t", "n3"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

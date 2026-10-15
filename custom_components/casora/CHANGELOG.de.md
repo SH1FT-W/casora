@@ -4,6 +4,24 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 1.6.0 – 16.10.2026
+
+### Neu
+- **Halten-Schnellmenü:** Lange drücken auf eine Kachel öffnet ein kleines Menü direkt an der Kachel (am Handy als Blatt von unten). Oben die Hauptaktion (Ausschalten, Entriegeln, Pausieren …), darunter Schnellbedienung je Gerät: Helligkeit und Lichtfarbe, Jalousie Auf/Stopp/Zu und Position, Temperatur −/+, Lautstärke und Titel, Zielfeuchte, Lüfterstufe. Bei Info-Kacheln steht oben „Öffnen“, dazu passende Einträge wie „Nach Updates suchen“, „Energie-Dashboard“, „Auf die Einkaufsliste“, „Nachricht schicken“ oder „Ausgeräumt“. Waschmaschine, Trockner, Spüler und 3D-Drucker zeigen „Fertig um … · noch …“. Verlauf, Gerät und „Kachel bearbeiten“ (springt im Studio zur Kachel) stehen darunter. Am Desktop öffnet auch ein Rechtsklick das Menü, per Tastatur Umschalt+F10 bzw. die Kontextmenü-Taste.
+- **Zeitschalter:** „Ausschalten in“ bzw. „Einschalten für“ 15 Min., 30 Min., 1 Std. oder 2 Std. für Licht, Schalter, Lüfter, Luftreiniger, Befeuchter, Heizung und Medien. Läuft ein Zeitschalter, zeigt die Kachel oben rechts einen Kreis mit Uhr, der sich leert. Er überlebt Neustarts und verfällt, wenn man vorher selbst schaltet. Für Automationen: Dienste `casora.set_timer` / `casora.cancel_timer`, Sensor `sensor.casora_timers` und das Ereignis `casora_timer_finished`.
+- **Halten einstellbar:** Im Studio unter Bedienung › Kacheln „Halten auf Kacheln“: Schnellmenü, Popup öffnen oder Home-Assistant-Dialog, für das ganze Dashboard und je Kachel.
+- **Energie-Popup je Sub-Badge:** Ein Tipp auf Solar, Akku, Haus oder Netz im Energie-Badge öffnet ein eigenes Popup mit Verlauf und passender Steuerung. Casora erkennt die Art selbst; im Studio lässt sie sich unter „Popup-Art“ festlegen.
+
+### Geändert
+- **Sicherheit beim Schalten:** Entriegeln, „Tür öffnen“ und Alarm fragen im Schnellmenü immer nach; Codes werden verdeckt abgefragt. Beim Scharfschalten steht die Fenster-Warnung im selben Dialog.
+- **Fußball:** Im Popup steht der Wettbewerb (z. B. „Live · Europa League“), auch wenn Team Tracker alle Wettbewerbe verfolgt.
+- **UIX-Prüfung:** Das Studio sagt genau, was fehlt, UIX herunterladen, hinzufügen oder HA neu starten, und warnt, wenn card-mod zusätzlich installiert ist.
+
+### Behoben
+- **Handy-Filter:** Hatten zwei Räume denselben Schlüssel (z. B. „Home“), meldete jedes Speichern „Duplicated options“. Jetzt nicht mehr.
+- **Aquarium:** Mit eingetragenem Erreichbar-Sensor zeigt die Kachel bei kurzen Bluetooth-Aussetzern nicht mehr „Licht offline“.
+- **Rückfragen:** Der Bestätigen-Dialog hat einen Namen für Screenreader, hält den Tastaturfokus und gibt ihn danach zurück.
+
 ## 1.5.5 – 15.10.2026
 
 ### Geändert
