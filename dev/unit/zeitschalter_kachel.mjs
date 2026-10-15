@@ -69,7 +69,7 @@ assert.match(svg, /--casora-timer-pct:50\.00/);
 assert.match(svg, /<text class="casora-timer-left"[^>]*>30<\/text>/);
 assert.ok(svg.includes('aria-label="Off at ' + clk + '"'));
 assert.ok(!/#[0-9a-f]{3,6}\b/i.test(svg), 'keine festen Farben im Ring');
-assert.match(ring('switch.pumpe', S({ 'switch.pumpe': { at: iso(T0 + 75 * MIN), action: 'turn_on', start: iso(T0) } }), null, T0), /font-size="10">1:15</);
+assert.match(ring('switch.pumpe', S({ 'switch.pumpe': { at: iso(T0 + 75 * MIN), action: 'turn_on', start: iso(T0) } }), null, T0), /font-size="13">2h</);
 
 // 6) Takt: Kachel mit laufendem Timer wird angemeldet und neu gezeichnet, ohne Timer fällt sie raus
 assert.equal(intervals.length, 1);
