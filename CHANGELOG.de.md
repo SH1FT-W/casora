@@ -10,6 +10,27 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Warnungen statt NINA:** Warn-Kachel und Warn-Popup heißen jetzt allgemein „Warnungen“ („Aktuell keine Warnungen“, einzelne Warnung ohne Titel: „Amtliche Warnung“), die Glocke zeigt „Amtliche Warnung“. Die Warnungen können aus NINA, vom DWD oder aus einer Integration kommen, die beides bündelt.
 - **Warngebiet:** Bringt ein Warn-Sensor das Attribut `region` mit, steht das Gebiet im Popup („Aktuell keine Warnungen für …“). Bei NINA-Sensoren kommt es wie bisher aus dem Namen.
 
+### Behoben
+- **Löschen im Studio:** Ein schneller Doppelklick auf „Löschen“ entfernte zwei Kacheln, bei Sammelkacheln zwei Geräte. Jetzt verschwindet nur das gewählte.
+- **Speichern im Studio:** Wer während des Speicherns weiter änderte oder gleich das Dashboard wechselte, konnte Änderungen verlieren, ohne dass „ungespeichert“ stehen blieb. Eigene Kachelarten landeten beim Speichern auch im zuletzt geöffneten anderen Dashboard. Beides passiert nicht mehr.
+- **Geräte-Felder leeren:** Ein einmal gewähltes Gerät in einem optionalen Feld (etwa Licht, Lecksensor oder Akku beim Aquarium) ließ sich im Studio nicht mehr entfernen. Jetzt leert ein „ד rechts im Feld die Auswahl.
+- **Unterbrochener Umzug:** „Aufräumen“ und „Umzug fortsetzen“ konnten ein fertiges Dashboard mit derselben Adresse löschen. Jetzt entfernen sie nur Dashboards, die wirklich halb fertig sind.
+- **Hemma entfernen:** Eigene Skripte und versteckte Dateien in www/hemma wurden mitgelöscht, ebenso Ordner, die noch ein YAML-Dashboard oder eine Automation brauchte. Jetzt bleibt www/hemma in diesen Fällen stehen, und der Dialog nennt die Dateien, die es halten.
+- **Zeitreise:** Ließ sich ein gewählter Stand nicht lesen, stellte „Diesen Stand wiederherstellen“ den vorher gezeigten wieder her. Jetzt verschwindet der Knopf in diesem Fall.
+- **Schloss offline:** Kopfzeile und Schalter zeigten „Entriegelt“, und Tippen versuchte zu entriegeln. Jetzt steht dort „Offline“, Tippen tut nichts. „Akku NaN %“ erscheint nicht mehr.
+- **Lecksensor und Gerätetür:** Bei unbekanntem Zustand standen „Trocken“ bzw. „Geschlossen“ da. Jetzt steht „Offline“ bzw. entfällt die Zeile.
+- **Pulse:** War das einzige Problem eine schwache Batterie, zählte die Kachel „1 Problem“, das Popup zeigte aber keine Zeile. Jetzt steht das Gerät unter „Batterie“. Nach dem Neuladen steht die Kachel auch gleich vorne bei den aktiven.
+- **Aktive Kacheln vorne:** Kacheln, deren Zustand Casoras Module auswerten (Pulse, Geräte), standen nach dem Neuladen einige Sekunden hinten. Jetzt rücken sie sofort nach vorn.
+- **Popups schnell nacheinander:** Wer ein Popup schloss und sofort ein anderes antippte, bekam keins. Jetzt öffnet es.
+- **Kalender:** Bei langen Einträgen lief die Unterzeile über den Rand. Jetzt endet sie wie der Titel mit „…“.
+- **Hover auf aktiven Kacheln:** Abfall, 3D-Drucker, Aquarium-Licht und Schalter wurden beim Darüberfahren heller als die übrigen aktiven Kacheln. Jetzt verhalten sie sich gleich.
+- **Wartungsdatum und Diagramme:** In Zeitzonen westlich von UTC stand beim Fahrzeug ein Tag zu früh. Diagramm-Beschriftungen liegen auch über die Zeitumstellung auf vollen Stunden.
+- **Englisch:** „Wird verriegelt …“, „Öffnet sich …“ und weitere Texte blieben auf englischen Dashboards deutsch.
+- **Speicher:** Das Studio und mehrere Dashboard-Teile hielten nach dem Verlassen Speicher fest, am Handy wurde Casora mit der Zeit träger. Die Glocke sucht auf Seiten ohne Glocke nicht mehr alle 2 Sekunden.
+- **Lüften-Hinweis:** Kam ein Hinweis innerhalb von 30 Minuten zurück, blieb er danach stumm, auch der CO₂-Alarm. Jetzt meldet er sich nach 30 Minuten wieder.
+- **Eigene KI-Zeiten:** Eine Zeit mit Tabulator brachte die Optionen zum Absturz. Jetzt wird sie gespeichert wie jede andere.
+- **Weitere Korrekturen:** Ausgemusterte Vorlagen werden beim Speichern entfernt, Rezept und Update-Analyse hängen ohne KI nicht mehr, Update-Hinweise kommen nicht doppelt, Zisternen und Heizöltanks gelten nicht mehr als Auto, die Liste „benutzt von“ der Raum-Symbole zeigt Titel und steht nur Admins offen.
+
 ## 1.5.4 – 15.10.2026
 
 ### Behoben
