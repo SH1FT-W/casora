@@ -36,7 +36,7 @@
   // mit Rückfrage; nur, was das Gerät wirklich kann; ohne Bedienung kein Menü (H.worth) – dann wie Tippen.
   H.model = function (st, o) {
     o = o || {};
-    var m = { main: null, quick: [], timer: null, acts: [], rows: [] };
+    var m = { main: null, quick: [], timer: null, acts: [], rows: [], info: o.info || null };
     // Kachel ohne Gerät (Müll, Lüften, Rezept …): Öffnen wie Tippen und Bearbeiten.
     if (!st) {
       if (o.tapPopup || o.tapOpens) m.main = { t: 'Öffnen', ic: 'mdi:arrow-top-right', open: true };
@@ -128,7 +128,7 @@
         if (feats & 1) btn.push(svc('Auf', 'mdi:arrow-up', 'cover.open_cover'));
         if (feats & 8) btn.push(svc('Stopp', 'mdi:stop', 'cover.stop_cover'));
         if (feats & 2) btn.push(svc('Zu', 'mdi:arrow-down', 'cover.close_cover'));
-        if (btn.length > 1) m.quick.push({ kind: 'buttons', items: btn });
+        if (btn.length > 1) { m.quick.push({ kind: 'buttons', labels: true, items: btn }); m.main = null; }
         if (feats & 4) {
           var pos = num(a.current_position);
           m.quick.push({ kind: 'pills', label: 'Position', value: pct(pos), items: [25, 50, 75].map(function (p) {
@@ -145,7 +145,8 @@
         if (feats & 1024 || feats & 4) mb.push(svc('Leiser', 'mdi:volume-minus', 'media_player.volume_down'));
         if (feats & 1024 || feats & 4) mb.push(svc('Lauter', 'mdi:volume-plus', 'media_player.volume_up'));
         if (feats & 32) mb.push(svc('Weiter', 'mdi:skip-next', 'media_player.media_next_track'));
-        if (mb.length) m.quick.push({ kind: 'buttons', items: mb });
+        var vol = num(a.volume_level);
+        if (mb.length) m.quick.push({ kind: 'buttons', labels: true, label: vol != null ? 'Lautstärke' : null, value: vol != null ? pct(vol * 100) : '', items: mb });
       } else if (dom === 'vacuum' && s === 'cleaning' && (feats & 4)) {
         m.quick.push({ kind: 'buttons', items: [svc('Pause', 'mdi:pause', 'vacuum.pause', null, { wide: true })] });
       } else if (dom === 'lawn_mower' && s === 'mowing' && (feats & 2)) {
@@ -239,6 +240,16 @@
   // Lohnt ein Menü? Nur mit etwas zu bedienen – sonst tut Halten dasselbe wie Tippen.
   H.worth = function (m) { return !!(m && (m.main || m.quick.length || m.timer || m.acts.length || m.rows.length)); };
 
+  // Laufender Zeitschalter einzeilig: „Aus in 28 Min.“ / „Aus in 1 Std. 5 Min.“.
+  H.dur = function (min) {
+    min = Math.max(1, Math.round(min));
+    if (min < 60) return min + ' ' + T('Min.');
+    var h = Math.floor(min / 60), r = min % 60;
+    return h + ' ' + T('Std.') + (r ? ' ' + r + ' ' + T('Min.') : '');
+  };
+  H.leftText = function (t, now) {
+    return T(t.action === 'turn_on' ? 'An in' : 'Aus in') + ' ' + H.dur((t.at - (now || Date.now())) / 60000);
+  };
   // Zieltemperatur einen Schritt weiter, in den Grenzen des Geräts.
   H.stepTo = function (q, dir) {
     var v = Math.round((q.value + dir * q.step) * 100) / 100;
@@ -301,6 +312,8 @@
     + '.pill ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;}'
     + '.pill:active,.pill.press{transform:scale(var(--casora-press-scale, .97));}'
     + '.pill:focus-visible{box-shadow:inset 0 0 0 2px var(--casora-hold-hue, var(--primary-color, #B67A50));}'
+    + '.pill.lbl{flex-direction:column;height:56px;gap:2px;padding:4px 2px;}'
+    + '.pill.lbl small{font-size:var(--casora-fs-label, 12px);font-weight:600;line-height:14px;}'
     + '.pill.on{background:var(--casora-soft-seg-on, var(--primary-color, #B67A50));box-shadow:var(--casora-soft-seg-on-shadow, none);color:var(--casora-soft-seg-on-ink, var(--text-primary-color, #fff));}'
     + '.pill.busy{opacity:.55;pointer-events:none;}'
     + '.step{display:flex;align-items:center;gap:8px;}'
@@ -309,6 +322,8 @@
     + '.tm{display:flex;align-items:center;gap:8px;}'
     + '.tm .pill{flex:0 0 auto;padding:0 16px;}'
     + '.tm > ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;margin-left:8px;color:var(--casora-hold-hue, currentColor);}'
+    + '.info{display:flex;align-items:center;gap:var(--casora-menu-ic-gap, 12px);padding:8px 16px 8px 16px;font-size:var(--casora-fs-row, 15px);font-weight:600;font-variant-numeric:tabular-nums;}'
+    + '.info ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;color:var(--casora-hold-hue, currentColor);flex:none;}'
     + '.row.quiet{color:var(--casora-text-2, inherit);font-weight:500;}'
     + '.row.quiet .ic{color:var(--casora-text-2, inherit);}'
     + '.tm span{flex:1;font-size:var(--casora-fs-row, 15px);font-weight:600;padding-left:8px;}';
@@ -353,7 +368,8 @@
         + '<div class="ic"><ha-icon icon="' + esc(ic) + '"></ha-icon></div><span>' + esc(T(t)) + '</span>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div>';
     };
     // Handy: Kopf mit Name und Zustand nur, wenn das Blatt die Kachel verdeckt (sonst steht beides scharf darüber).
-    if (c.phone && c.covered) out += '<div class="head"><b>' + esc(c.name) + '</b>' + (c.state ? '<span>' + esc(c.state) + '</span>' : '') + '</div>';
+    if (c.phone) out += '<div class="head"><b>' + esc(c.name) + '</b>' + (c.state ? '<span>' + esc(c.state) + '</span>' : '') + '</div>';
+    if (m.info) out += '<div class="info"><ha-icon icon="' + esc(m.info.ic) + '"></ha-icon><span>' + esc(m.info.t) + '</span></div>';
     if (m.main) out += row('main', m.main.t, m.main.ic, 'main');
     m.quick.forEach(function (q, qi) {
       out += '<div class="q">' + (q.label ? '<div class="ql">' + esc(T(q.label)) + (q.kind === 'step' ? '' : esc(q.value || '')) + '</div>' : '');
@@ -371,8 +387,10 @@
           return;
         }
         out += '<div class="qr">' + q.items.map(function (it, ii) {
-          var label = it.ic && !it.wide ? '<ha-icon icon="' + esc(it.ic) + '"></ha-icon>' : (it.ic ? '<ha-icon icon="' + esc(it.ic) + '"></ha-icon>' : '') + esc(T(it.t));
-          return '<div class="pill' + (it.on ? ' on' : '') + '" role="button" tabindex="-1" aria-label="' + esc(T(it.t)) + '"'
+          // Symbol-Tasten mit Wort darunter (Nutzerrunde: „■“ allein war nicht zu erraten).
+          var label = q.labels && it.ic ? '<ha-icon icon="' + esc(it.ic) + '"></ha-icon><small>' + esc(T(it.t)) + '</small>'
+            : it.ic && !it.wide ? '<ha-icon icon="' + esc(it.ic) + '"></ha-icon>' : (it.ic ? '<ha-icon icon="' + esc(it.ic) + '"></ha-icon>' : '') + esc(T(it.t));
+          return '<div class="pill' + (it.on ? ' on' : '') + (q.labels ? ' lbl' : '') + '" role="button" tabindex="-1" aria-label="' + esc(T(it.t)) + '"'
             + (it.on ? ' aria-pressed="true"' : '') + ' data-k="quick" data-q="' + qi + '" data-i="' + ii + '">' + label + '</div>';
         }).join('') + '</div>';
       }
@@ -381,7 +399,7 @@
     if (m.timer) {
       out += '<div class="q">';
       if (m.timer.active) {
-        out += '<div class="tm"><ha-icon icon="mdi:timer-outline"></ha-icon><span>' + esc(T(m.timer.word) + ' ' + m.timer.time) + '</span>'
+        out += '<div class="tm"><ha-icon icon="mdi:timer-outline"></ha-icon><span>' + esc(H.leftText(m.timer)) + '</span>'
           + '<div class="pill" role="button" tabindex="-1" data-k="tcancel">' + esc(T('Abbrechen')) + '</div></div>';
       } else {
         out += '<div class="ql">' + esc(T(m.timer.label)) + '</div><div class="qr">' + m.timer.items.map(function (x, i) {
@@ -450,20 +468,30 @@
     };
     // Riskantes (Entriegeln, Tür öffnen) fragt immer – unabhängig von der Studio-Einstellung.
     if (it.ask) {
-      var name = (cur ? cur.name : lastName || id) + (it.mode ? ' · ' + T(it.mode) : ''), q = T(it.ask);
+      var name = (cur ? cur.name : lastName || id) + (it.mode ? ' · ' + T(it.mode) : ''), q = T(it.ask), yes = T(it.yes || it.t);
+      // Scharf schalten: Casoras Fenster-/Schloss-Warnung gleich in diese Rückfrage (sonst kamen zwei Dialoge nacheinander).
+      if (/^alarm_control_panel\.alarm_arm_/.test(it.svc) && window.casoraArmWarnings && window.casoraArmIds && window._casoraLovelaceCfg) {
+        try {
+          var hh = hassNow(), parts = window.casoraArmWarnings(hh, window.casoraArmIds(window._casoraLovelaceCfg(), hh && hh.user));
+          if (parts && parts.length) { q = T('Achtung') + ': ' + parts.map(T).join(', ') + '. ' + T('Trotzdem scharf schalten?'); yes = T('Trotzdem scharf schalten'); }
+        } catch (e) { /* ohne Warnung */ }
+        it = Object.assign({}, it, { armed: true });
+      }
+      var arm = function () { if (it.armed) window._casoraArmAsked = Date.now(); };
       // Alarm mit Code: Code im selben Dialog, verdeckt; leer = abbrechen.
       if (it.code && window.casoraAsk) {
-        return window.casoraAsk({ title: name, text: q, yes: T(it.yes || it.t), input: { placeholder: 'Code', secret: true, numeric: !!it.numeric, allowEmpty: true } })
+        return window.casoraAsk({ title: name, text: q, yes: yes, input: { placeholder: 'Code', secret: true, numeric: !!it.numeric, allowEmpty: true } })
           .then(function (code) {
             // Abbrechen = false; „Ja“ mit leerem Feld schickt ohne Code (Code nur fürs Scharfschalten verlangt).
             if (code === false || code == null) return null;
             var d = Object.assign({ entity_id: it.entity || id }, it.data || {});
             if (String(code)) d.code = String(code);
+            arm();
             return call(it.svc, d).catch(failed);
           });
       }
-      var w = window.casoraAsk ? window.casoraAsk({ title: name, text: q, yes: T(it.yes || it.t) }) : Promise.resolve(window.confirm(q));
-      return w.then(function (ok) { return ok ? go() : null; });
+      var w = window.casoraAsk ? window.casoraAsk({ title: name, text: q, yes: yes, stack: yes.length > 14 }) : Promise.resolve(window.confirm(q));
+      return w.then(function (ok) { if (!ok) return null; arm(); return go(); });
     }
     // Rückfrage nach Studio-Einstellung nur fürs reine Schalten (nicht Helligkeit, Position, Stopp) – für das Gerät, das geschaltet wird.
     var ask = !it.data && SWITCHY.test(it.svc) && window.casoraConfirmSwitch;
@@ -556,6 +584,45 @@
     } catch (e) { /* ohne Zusatz-Einträge */ }
     return out;
   };
+  // Restzeit eines Sensors in Minuten (Zeitpunkt, Minuten/Stunden/Sekunden oder „H:MM:SS“).
+  H.minutesLeft = function (st, now) {
+    if (!st || bad(st.state)) return null;
+    var a = st.attributes || {}, v = String(st.state), u = String(a.unit_of_measurement || '').toLowerCase();
+    if (a.device_class === 'timestamp' || /^\d{4}-\d{2}-\d{2}T/.test(v)) { var t = Date.parse(v); return isNaN(t) ? null : (t - (now || Date.now())) / 60000; }
+    var hm = /^(\d+):(\d{2})(?::(\d{2}))?$/.exec(v);
+    if (hm) return +hm[1] * 60 + +hm[2] + (hm[3] ? +hm[3] / 60 : 0);
+    var n = num(v);
+    if (n == null) return null;
+    return /^h/.test(u) ? n * 60 : /^s/.test(u) ? n / 60 : n;
+  };
+  // Programm-Geräte: „Fertig um 14:20 · noch 35 Min.“ bzw. „Fertig seit 13:05“ oben im Menü.
+  var progInfo = function (h, id, tpl, V) {
+    var S = h.states || {}, clock = function (ms) { return new Date(ms).toLocaleTimeString(window.casoraLocale ? window.casoraLocale() : undefined, { hour: 'numeric', minute: '2-digit' }); };
+    var line = function (rem, doneSince) {
+      if (rem != null && rem > 0.5) return { t: T('Fertig um') + ' ' + clock(Date.now() + rem * 60000) + ' · ' + T('noch') + ' ' + H.dur(rem), ic: 'mdi:timer-sand' };
+      if (doneSince) return { t: T('Fertig seit') + ' ' + clock(doneSince), ic: 'mdi:check-circle-outline' };
+      return null;
+    };
+    try {
+      var LA = window._casoraLaundry, DI = window._casoraDish, PR = window._casoraPrint;
+      if (/\bcasora_(waschmaschine|trockner)\b/.test(tpl) && LA && LA.resolve && id) {
+        var c = LA.resolve(S[id], V, S, h), ls = LA.state(S, c.st) || [], so = S[c.st] || {};
+        if (ls[2]) return line(H.minutesLeft(S[c.remaining]));
+        if (ls[3] === 'done' || ls[3] === 'clean') return line(null, Date.parse(so.last_changed));
+      }
+      if (/\bcasora_geschirrspueler\b/.test(tpl) && DI && DI.resolve && id) {
+        var d = DI.resolve(S[id], V, S, h), ds = String((S[d.st] || {}).state || '').toLowerCase();
+        if (/finish|fertig|end/.test(ds)) return line(null, Date.parse((S[d.st] || {}).last_changed));
+        return line(H.minutesLeft(S[d.remaining]));
+      }
+      if (/\bcasora_3d_printer\b/.test(tpl) && PR && PR.auto && id) {
+        var p = PR.auto(S[id], h) || {}, ps = String((S[p.st] || S[id] || {}).state || '').toLowerCase();
+        if (/^(running|printing|print|prepare)$/.test(ps)) return line(H.minutesLeft(S[p.remaining]));
+        if (/^finish/.test(ps) && p.end && S[p.end]) return line(null, Date.parse(S[p.end].state));
+      }
+    } catch (e) { /* ohne Zeile */ }
+    return null;
+  };
   H.extras = function (h, id, tpl, V) { return extras(h, id, tpl, V || {}); };
   // Tippen öffnet etwas (Popup, eigene Seite per javascript, navigate) – dann gibt es oben „Öffnen“.
   var tapOpens = function (x) {
@@ -586,6 +653,7 @@
     }
     if (/\bcasora_aquarium/.test(tpl) && typeof V.light_entity === 'string' && ENT.test(V.light_entity)) o.aqLight = V.light_entity;
     o.extra = extras(h, id, tpl, V);
+    o.info = progInfo(h, id, tpl, V);
     if (/\bcasora_energy\b/.test(tpl)) o.kind = 'energy';
     if (/\bcasora_updates\b/.test(tpl)) { o.kind = 'updates'; o.updCheck = !!(window._casoraUpdCheck && window._casoraUpdCheck.run); }
     return H.model(id ? h.states[id] : null, o);
@@ -661,7 +729,11 @@
       var start = mode === 'on' ? act(id, { svc: id.split('.')[0] === 'climate' ? 'climate.turn_on' : 'homeassistant.turn_on' }) : Promise.resolve(true);
       start.then(function (r) {
         if (r === null) return;
-        call('casora.set_timer', { entity_id: id, minutes: mins, action: 'turn_off' }).catch(failed);
+        call('casora.set_timer', { entity_id: id, minutes: mins, action: 'turn_off' }).then(function () {
+          // Bestätigung (Nutzerrunde: ohne Hinweis war unklar, ob es geklappt hat).
+          var at = new Date(Date.now() + mins * 60000);
+          notice((lastName ? lastName + ': ' : '') + T('Aus um') + ' ' + at.toLocaleTimeString(window.casoraLocale ? window.casoraLocale() : undefined, { hour: 'numeric', minute: '2-digit' }));
+        }, failed);
       });
       return;
     }
@@ -775,12 +847,12 @@
     paint();
     var pane = host.shadowRoot.querySelector('.pane');
     place(pane, r, phone);
-    if (phone && r.bottom > pane.getBoundingClientRect().top - 8) { cur.covered = true; paint(); }
     requestAnimationFrame(function () { requestAnimationFrame(function () { if (cur) host.classList.add('open'); }); });
 
     // button-card meldet Halten erst beim Loslassen. Bedienbar erst nach einer Sperrzeit und nur mit einem neuen
     // Antippen danach – ein Nachtipper am Handy (Blatt rutscht unter den Finger) schaltet sonst gleich etwas.
-    setTimeout(function () { if (cur) cur.armed = true; }, phone ? 450 : 150);
+    var touch = phone || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    setTimeout(function () { if (cur) cur.armed = true; }, touch ? 450 : 150);
 
     host.shadowRoot.addEventListener('click', function (ev) {
       if (!cur) return;
@@ -855,32 +927,91 @@
     }
     return false;
   };
-  window.addEventListener('action', function (ev) {
-    var d = ev.detail || {};
-    if (d.action !== 'hold' || d.casoraHoldPass || window.CASORA_HOLD_MENU === false) return;
-    if (!(window.casoraPopup && window.casoraPopup.enabled)) return;
-    if (/^\/casora-studio/.test(location.pathname)) return;
-    var path = (ev.composedPath && ev.composedPath()) || [];
+  // Halten (oder Rechtsklick/Kontextmenü-Taste) auf einer Kachel: Menü bzw. wie eingestellt (Studio „Halten auf Kacheln“).
+  var modeOf = function (cfg) {
+    var v = cfg && cfg.variables && cfg.variables.hold_mode;
+    v = typeof v === 'string' && /^(menu|popup|ha)$/.test(v) ? v : (window._casoraHoldMode || 'menu');
+    return /^(menu|popup|ha)$/.test(v) ? v : 'menu';
+  };
+  var tapLike = function (tile, src) {
+    window._casoraLastTile = { el: tile, at: Date.now() };
+    (src || tile).dispatchEvent(new CustomEvent('action', { bubbles: true, composed: true, detail: { action: 'tap', casoraHoldPass: true } }));
+  };
+  // Rückgabe true = erledigt (Ereignis abfangen).
+  var onHold = function (path, src) {
+    if (window.CASORA_HOLD_MENU === false || !(window.casoraPopup && window.casoraPopup.enabled)) return false;
+    if (/^\/casora-studio/.test(location.pathname)) return false;
     var tile = casoraTile(path);
-    if (!tile || [].concat(tile._config.template || []).some(function (x) { return NO_MENU.test(String(x)); })) return;
+    if (!tile || [].concat(tile._config.template || []).some(function (x) { return NO_MENU.test(String(x)); })) return false;
     // Eigene Karte: die eingebettete Karte füllt die Kachel – dort gilt das Menü (Bearbeiten), sonst behält die innere Karte ihr Halten.
-    if (innerCard(path, tile) && ![].concat(tile._config.template || []).some(function (x) { return x === 'casora_custom'; })) return;
+    if (innerCard(path, tile) && ![].concat(tile._config.template || []).some(function (x) { return x === 'casora_custom'; })) return false;
     var h = hassNow(), id = (tile._stateObj && tile._stateObj.entity_id) || '', cfg = tile._config;
     // Nur Halten, das bisher ein Popup/HAs Dialog war (bzw. Jalousie) – eigene Halten-Aktionen (Licht-Badge: Smart-Toggle) bleiben.
-    if (!h || !H.wants(cfg)) return;
-    if ((!id || h.states[id]) && H.worth(modelFor(h, id, tile))) {
-      if (H.open(tile, { src: path[0], via: H.via(cfg) })) {
-        ev.stopPropagation(); ev.stopImmediatePropagation();
+    if (!h || !H.wants(cfg)) return false;
+    var mode = modeOf(cfg);
+    if (mode === 'ha' && id && h.states[id]) { window.casoraPopup.nativeMoreInfo(id); return true; }
+    if (mode !== 'popup' && (!id || h.states[id]) && H.worth(modelFor(h, id, tile))) {
+      if (H.open(tile, { src: src, via: H.via(cfg) })) {
         // button-card vibriert beim Halten erst in seiner Aktion – die fangen wir ab, also hier (wie hold_action haptic: medium).
         if (window.casoraHaptic) window.casoraHaptic('medium');
+        return true;
       }
-      return;
+      return false;
     }
-    // Nichts zu bedienen (Info-Kacheln): Halten tut dasselbe wie Tippen, wenn Tippen das Popup öffnet.
-    if (popupish(cfg.tap_action)) {
-      ev.stopPropagation(); ev.stopImmediatePropagation();
-      window._casoraLastTile = { el: tile, at: Date.now() };
-      path[0].dispatchEvent(new CustomEvent('action', { bubbles: true, composed: true, detail: { action: 'tap', casoraHoldPass: true } }));
+    // Nichts zu bedienen bzw. „Popup öffnen“ eingestellt: Halten tut dasselbe wie Tippen, wenn Tippen das Popup öffnet.
+    if (popupish(cfg.tap_action) || tapOpens(cfg.tap_action)) { tapLike(tile, src); return true; }
+    return false;
+  };
+  window.addEventListener('action', function (ev) {
+    var d = ev.detail || {};
+    if (d.casoraHoldPass) return;
+    var path = (ev.composedPath && ev.composedPath()) || [];
+    if (d.action === 'tap') { tipOnce(path); return; }
+    if (d.action !== 'hold') return;
+    if (onHold(path, path[0])) { ev.stopPropagation(); ev.stopImmediatePropagation(); }
+  }, true);
+  // Desktop: Rechtsklick öffnet dasselbe Menü (nur mit feinem Zeiger – am Touchgerät löst langes Drücken auch contextmenu aus).
+  window.addEventListener('contextmenu', function (ev) {
+    if (!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches)) return;
+    var path = (ev.composedPath && ev.composedPath()) || [];
+    if (onHold(path, path[0])) { ev.preventDefault(); ev.stopPropagation(); }
+  }, true);
+  // Tastatur: Kacheln fokussierbar machen (erst wenn jemand Tab nutzt), Kontextmenü-Taste bzw. Umschalt+F10 öffnet das Menü.
+  var kbd = false;
+  var focusable = function () {
+    var walk = function (root) {
+      [].forEach.call(root.querySelectorAll('*'), function (n) {
+        if (n.tagName === 'BUTTON-CARD' && n._config && [].concat(n._config.template || []).some(function (x) { return /^casora_/.test(String(x)) && !NO_MENU.test(String(x)); })) {
+          var c = n.shadowRoot && n.shadowRoot.querySelector('ha-card');
+          if (c && !c.hasAttribute('tabindex')) { c.setAttribute('tabindex', '0'); c.setAttribute('aria-haspopup', 'menu'); }
+        }
+        if (n.shadowRoot) walk(n.shadowRoot);
+      });
+    };
+    try { walk(document); } catch (e) { /* egal */ }
+  };
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Tab' && !kbd) { kbd = true; focusable(); setInterval(function () { if (kbd) focusable(); }, 4000); }
+    if (cur) return;
+    if (ev.key === 'ContextMenu' || (ev.key === 'F10' && ev.shiftKey)) {
+      var path = (ev.composedPath && ev.composedPath()) || [];
+      if (onHold(path, path[0])) {
+        ev.preventDefault(); ev.stopPropagation();
+        var f = host && host.shadowRoot && host.shadowRoot.querySelector('.row, .pill');
+        if (f) { try { f.focus(); } catch (e) { /* egal */ } }
+      }
     }
   }, true);
+  // Einmaliger Tipp, damit man das Menü findet: beim ersten Tippen auf eine Kachel (je Browser).
+  var TIP = 'casora.holdTip';
+  var tipOnce = function (path) {
+    try { if (localStorage.getItem(TIP)) return; } catch (e) { return; }
+    var tile = casoraTile(path);
+    if (!tile || window.CASORA_HOLD_MENU === false || (window._casoraHoldMode && window._casoraHoldMode !== 'menu')) return;
+    try { localStorage.setItem(TIP, '1'); } catch (e) { return; }
+    setTimeout(function () {
+      var fine = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+      notice(T(fine ? 'Tipp: Kachel gedrückt halten oder rechts klicken – Schnellbedienung' : 'Tipp: Kachel gedrückt halten – Schnellbedienung'));
+    }, 1200);
+  };
 })();

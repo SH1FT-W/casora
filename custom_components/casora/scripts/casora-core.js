@@ -515,6 +515,8 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
       if (!msg || msg.type !== 'call_service' || msg.domain !== 'alarm_control_panel' || !ARM_SVC.test(String(msg.service || ''))) {
         return orig.apply(self, args);
       }
+      // Halten-Menü (22-halten.js) hat die Warnung schon in seiner einen Rückfrage gezeigt: nicht noch einmal fragen.
+      if (window._casoraArmAsked && Date.now() - window._casoraArmAsked < 5000) { window._casoraArmAsked = 0; return orig.apply(self, args); }
       var cfg = window._casoraLovelaceCfg ? window._casoraLovelaceCfg() : null;
       var ha = document.querySelector('home-assistant');
       // Nur auf einem Casora-Dashboard (Räume mit Sicherheits-Geräten); sonst wie bisher.

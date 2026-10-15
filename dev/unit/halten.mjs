@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 globalThis.window = globalThis;
-globalThis.document = { querySelector: () => null };
+globalThis.document = { querySelector: () => null, addEventListener: () => {} };
 globalThis.addEventListener = () => {};
 new Function(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/22-halten.js', import.meta.url), 'utf8'))();
 const H = window._casoraHold;
@@ -41,8 +41,10 @@ assert.match(m.timer.time, /^\d\d:\d\d$/);
 
 // Jalousie: Öffnen (zu), Auf/Stopp/Zu, Position 50 %.
 m = H.model(st('cover.d', 'closed', { supported_features: 15, current_position: 50 }), { timers: {} });
-assert.equal(m.main.t, 'Öffnen');
-assert.deepEqual(m.quick[0].items.map((x) => x.t), ['Auf', 'Stopp', 'Zu']);
+assert.equal(m.main, null, 'Jalousie mit Auf/Stopp/Zu: keine doppelte Hauptaktion');
+assert.deepEqual(m.quick[0].items.map((x) => x.t), ['Auf', 'Stopp', 'Zu']); assert.ok(m.quick[0].labels);
+assert.equal(H.model(st('cover.n', 'closed', { supported_features: 3 }), {}).main, null);
+assert.equal(H.model(st('cover.k', 'closed', { supported_features: 1 }), {}).main.t, 'Öffnen', 'nur Auf: Hauptaktion bleibt');
 assert.equal(m.quick[1].items[1].on, true);
 assert.equal(m.timer, null, 'kein Zeitschalter für Jalousien');
 
@@ -160,4 +162,14 @@ assert.equal(H.model(st('sensor.p_stage', 'paused_user'), { printer: PR, states:
 m = H.model(null, { tapPopup: true, kind: 'updates', admin: true, updCheck: true });
 assert.equal(m.main.t, 'Alle Updates');
 assert.deepEqual(m.acts.map((x) => x.t), ['Nach Updates suchen'], 'Updates-Sammelkachel ohne Gerät');
+// Restzeit lesen und einzeilig zeigen.
+const now0 = Date.parse('2026-10-15T20:00:00Z');
+assert.equal(H.minutesLeft(st('sensor.r', '35', { unit_of_measurement: 'min' })), 35);
+assert.equal(H.minutesLeft(st('sensor.r', '1.5', { unit_of_measurement: 'h' })), 90);
+assert.equal(H.minutesLeft(st('sensor.r', '0:35:00')), 35);
+assert.equal(Math.round(H.minutesLeft(st('sensor.r', '2026-10-15T20:30:00+00:00', { device_class: 'timestamp' }), now0)), 30);
+assert.equal(H.minutesLeft(st('sensor.r', 'unavailable')), null);
+assert.equal(H.leftText({ at: now0 + 28 * 60000, action: 'turn_off' }, now0), 'Aus in 28 Min.');
+assert.equal(H.leftText({ at: now0 + 65 * 60000, action: 'turn_off' }, now0), 'Aus in 1 Std. 5 Min.');
+assert.equal(H.model(st('sensor.w', 'run'), { info: { t: 'Fertig um 14:20', ic: 'mdi:timer-sand' } }).info.t, 'Fertig um 14:20');
 console.log('halten: ok');

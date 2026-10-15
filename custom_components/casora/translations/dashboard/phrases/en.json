@@ -1810,7 +1810,15 @@
   "Gäste-WLAN aus": "Guest Wi-Fi off",
   "Gäste-WLAN ausschalten?": "Turn off guest Wi-Fi?",
   "Daten aktualisieren": "Refresh data",
-  "Auto aufwecken und Daten holen?": "Wake the car and fetch data?"
+  "Auto aufwecken und Daten holen?": "Wake the car and fetch data?",
+  "Fertig um": "Done at",
+  "Fertig seit": "Done since",
+  "noch": "left",
+  "An in": "On in",
+  "Std.": "hr",
+  "Min.": "min",
+  "Tipp: Kachel gedrückt halten oder rechts klicken – Schnellbedienung": "Tip: press and hold a tile or right-click it for quick controls",
+  "Tipp: Kachel gedrückt halten – Schnellbedienung": "Tip: press and hold a tile for quick controls"
  },
  "patterns": [
   [
