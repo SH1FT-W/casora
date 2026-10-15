@@ -91,6 +91,7 @@ m = H.model(st('sensor.i', '21.5'), { tapPopup: true, admin: true });
 assert.equal(m.main.t, 'Öffnen'); assert.ok(m.main.open, 'Info-Kachel: oben Öffnen wie Tippen');
 assert.equal(H.model(st('sensor.e', '400'), { tapPopup: true, kind: 'energy' }).acts[0].path, '/energy');
 assert.equal(H.model(st('sensor.u', '2'), { tapPopup: true, kind: 'updates', admin: false }).acts.length, 0, 'Alle Updates nur für Admins');
+assert.deepEqual(H.model(st('sensor.u', '2'), { tapPopup: true, kind: 'updates', admin: true, updCheck: true }).acts.map((x) => x.t), ['Nach Updates suchen', 'Alle Updates']);
 m = H.model(null, { tapPopup: true, admin: true });
 assert.equal(m.main.t, 'Öffnen'); assert.equal(keys(m), 'edit', 'Kachel ohne Gerät: Öffnen und Bearbeiten');
 assert.equal(H.worth(H.model(null, {})), false, 'ohne Gerät, ohne Popup, kein Admin: nichts');

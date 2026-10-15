@@ -1799,7 +1799,9 @@
   "Alarm unscharf schalten?": "Disarm the alarm?",
   "Code": "Code",
   "Energie-Dashboard": "Energy dashboard",
-  "Alle Updates": "All updates"
+  "Alle Updates": "All updates",
+  "Nach Updates suchen": "Check for updates",
+  "Suche nach Updates …": "Checking for updates …"
  },
  "patterns": [
   [

@@ -218,6 +218,8 @@
     if (!m.main && !m.quick.length && !m.timer && !m.acts.length && (o.tapPopup || o.tapOpens)) m.main = { t: 'Öffnen', ic: 'mdi:arrow-top-right', open: true };
     // Eigene Wege je Kachelart.
     if (o.kind === 'energy') m.acts.push({ key: 'nav', t: 'Energie-Dashboard', ic: 'mdi:lightning-bolt-outline', path: '/energy' });
+    // Updates: sofort suchen wie der Knopf im Updates-Popup (03-popups.js, _casoraUpdCheck – Supervisor, HACS, update.*).
+    if (o.kind === 'updates' && o.updCheck) m.acts.push({ key: 'updcheck', t: 'Nach Updates suchen', ic: 'mdi:refresh' });
     if (o.kind === 'updates' && o.admin) m.acts.push({ key: 'nav', t: 'Alle Updates', ic: 'mdi:update', path: '/config/updates' });
     // Wege: „Details“ nur, wenn Tippen nicht schon das Popup öffnet; Gerät und Bearbeiten nur für Admins.
     if (!o.tapPopup) m.rows.push({ key: 'popup', t: 'Details', ic: 'mdi:card-text-outline' });
@@ -412,6 +414,13 @@
 
   var SWITCHY = /\.(turn_on|turn_off|toggle|open_cover|close_cover|lock|open_valve|close_valve)$/;
   // Fehlgeschlagener Dienst: kurzer HA-Hinweis statt stiller Ablehnung.
+  var notice = function (msg) {
+    var ha = document.querySelector('home-assistant');
+    if (!ha) return;
+    var ev = new Event('hass-notification', { bubbles: true, composed: true });
+    ev.detail = { message: msg };
+    ha.dispatchEvent(ev);
+  };
   var failed = function (e) {
     var ha = document.querySelector('home-assistant');
     if (!ha) return;
@@ -481,7 +490,7 @@
     }
     if (/\bcasora_aquarium/.test(tpl) && typeof V.light_entity === 'string' && ENT.test(V.light_entity)) o.aqLight = V.light_entity;
     if (/\bcasora_energy\b/.test(tpl)) o.kind = 'energy';
-    if (/\bcasora_updates\b/.test(tpl)) o.kind = 'updates';
+    if (/\bcasora_updates\b/.test(tpl)) { o.kind = 'updates'; o.updCheck = !!(window._casoraUpdCheck && window._casoraUpdCheck.run); }
     return H.model(id ? h.states[id] : null, o);
   };
 
@@ -557,6 +566,14 @@
         if (r === null) return;
         call('casora.set_timer', { entity_id: id, minutes: mins, action: 'turn_off' }).catch(failed);
       });
+      return;
+    }
+    if (k === 'updcheck') {
+      var UC = window._casoraUpdCheck, hu = hassNow();
+      H.close();
+      if (!UC || !hu) return;
+      notice(T('Suche nach Updates …'));
+      UC.run(hu).then(function () { var st = UC.status(); if (st[1]) notice(T(st[1])); });
       return;
     }
     if (k === 'act' || k === 'live' || k === 'nav') {
