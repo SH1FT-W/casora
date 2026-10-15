@@ -445,6 +445,15 @@
     catch (e) { return Promise.reject(e); }
   };
   var path = function (x) { return encodeURIComponent(x); };
+  /* Wettbewerb des Spiels aus der Spielübersicht – Team Tracker mit league_path „all“ (alle Wettbewerbe)
+     lässt league_name leer, dann stand im Popup nur „Live“ statt „Live · Europa League“. */
+  K.summaryComp = function (s) {
+    var h = (s && s.header) || {}, lg = h.league || {};
+    var n = lg.name || lg.abbreviation || '';
+    if (!n && h.competitions && h.competitions[0]) n = ((h.competitions[0].league || {}).name) || '';
+    return n ? K.comp(n) : '';
+  };
+  K.leagueOf = function (i, d) { return (i && i.leagueName) || (d && d.comp) || ''; };
   K.key = function (i) { return i ? [i.sport, i.league, i.event, i.team.id].join('|') : ''; };
   K.load = function (i, force) {
     if (!i || !i.sport || !i.team.id || typeof fetch !== 'function') return;
@@ -461,7 +470,7 @@
     });
     Promise.all([sum, tab]).then(function (r) {
       K.data[key] = { ts: Date.now(), err: !r[0] && !r[1] && !!i.event, table: K.table(r[1], r[0], i.team.id), form: K.form(r[0], i.team.id),
-        duels: K.duels(r[0], i.team.id) };
+        duels: K.duels(r[0], i.team.id), comp: K.summaryComp(r[0]) };
     }).catch(function () { K.data[key] = { ts: Date.now(), err: true, table: null, form: [] }; })
       .then(function () { K.busy[key] = false; K.repaint(); });
   };
@@ -617,14 +626,15 @@
     var wait = !d ? '<div class="cfb-e">Wird geladen …</div>' : null;
     if (k === 'hero') {
       var UI = window._casoraUI;
-      var line = me ? { value: 'Platz ' + me.rank, sub: [i.leagueName, tab.name, me.pts + ' Punkte'].filter(Boolean).join(' · ') }
-        : { value: i.leagueName || K.name(i.team.name), sub: null };
+      var lgN = K.leagueOf(i, d);
+      var line = me ? { value: 'Platz ' + me.rank, sub: [lgN, tab.name, me.pts + ' Punkte'].filter(Boolean).join(' · ') }
+        : { value: lgN || K.name(i.team.name), sub: null };
       return UI && UI.hero ? UI.hero({ center: true, value: line.value, sub: line.sub }) : '';
     }
     if (k === 'match') {
       if (i.phase === 'BYE' || i.phase === 'NONE' || !i.date) return CSS() + '<div class="cfb"><div class="cfb-e">Nächstes Spiel noch nicht angesetzt</div></div>';
       /* Wettbewerb als eigener Textteil, damit „Nächstes Spiel“ für sich übersetzt wird. */
-      var lbl = esc({ PRE: 'Nächstes Spiel', IN: 'Live', POST: 'Letztes Spiel', OFF: 'Spiel' }[i.phase]) + (i.leagueName ? '<span> · ' + esc(i.leagueName) + '</span>' : '');
+      var lbl = esc({ PRE: 'Nächstes Spiel', IN: 'Live', POST: 'Letztes Spiel', OFF: 'Spiel' }[i.phase]) + (K.leagueOf(i, d) ? '<span> · ' + esc(K.leagueOf(i, d)) + '</span>' : '');
       var ha = homeAway(i), big, sub;
       if (i.phase === 'PRE') {
         big = i.tbd ? K.day(i.date) : hm(i.date);
