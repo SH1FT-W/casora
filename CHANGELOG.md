@@ -4,6 +4,28 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.5.4 – 15.10.2026
+
+### Fixed
+- **Deleting in Studio:** A quick double-click on "Delete" removed two tiles, or two devices in group tiles. Only the chosen one goes now.
+- **Saving in Studio:** Changing something while saving, or switching dashboards right away, could lose changes without "unsaved" staying on. Your own tile types were also written into the other dashboard you had open before. Neither happens anymore.
+- **Interrupted move:** "Tidy Up" and "Continue Move" could delete a finished dashboard at the same address. They now only remove dashboards that really are half-finished.
+- **Removing Hemma:** Your own scripts and hidden files in www/hemma were deleted along with it, as were folders a YAML dashboard or an automation still needed. www/hemma now stays in these cases, and the dialog names the files that keep it.
+- **Rewind:** If a chosen version could not be read, "Restore This Version" restored the one shown before. The button now disappears in that case.
+- **Lock offline:** The header and the switch said "Unlocked", and tapping tried to unlock. They now say "Offline", and tapping does nothing. "Battery NaN %" no longer appears.
+- **Leak sensor and appliance door:** An unknown state showed "Dry" or "Closed". It now shows "Offline", or the row is left out.
+- **Pulse:** When the only problem was a low battery, the tile said "1 problem" but the popup showed no row. The device now appears under "Battery". After a reload the tile is also right at the front with the active ones.
+- **Active tiles first:** Tiles whose state Casora's modules work out (Pulse, appliances) sat at the back for a few seconds after a reload. They now move to the front at once.
+- **Popups in quick succession:** Closing a popup and tapping another one straight away opened nothing. It opens now.
+- **Calendar:** For long entries the second line ran past the edge. It now ends with "…" like the title.
+- **Hover on active tiles:** Waste, 3D printer, aquarium light and switch turned lighter on hover than the other active tiles. They now behave the same.
+- **Service date and charts:** In time zones west of UTC the vehicle showed a day early. Chart labels stay on whole hours across the clock change.
+- **English:** "Locking…", "Opening…" and other texts stayed German on English dashboards.
+- **Memory:** The Studio and several dashboard parts kept memory after you left them, so Casora got slower on phones over time. The bell no longer searches every 2 seconds on pages without a bell.
+- **Ventilation notice:** If a notice came back within 30 minutes, it then stayed silent, including the CO₂ alert. It now reminds you again after 30 minutes.
+- **Your own AI times:** A time with a tab character crashed the options. It is now saved like any other.
+- **More fixes:** Retired templates are removed when you save, recipe and update analysis no longer hang without AI, update notices no longer come twice, cisterns and heating-oil tanks no longer count as cars, the "used by" list of room icons shows titles and is admin-only.
+
 ## 1.5.3 – 14.10.2026
 
 ### Improved
