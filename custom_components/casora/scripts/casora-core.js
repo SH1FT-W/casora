@@ -728,7 +728,8 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     return {
       action: on ? 'turn_on' : 'turn_off', at: at, left: left, minutes: mins,
       pct: Math.max(0, Math.min(100, (left / total) * 100)),
-      label: h ? h + ':' + (m < 10 ? '0' : '') + m : String(mins),
+      // Ab einer Stunde „2h“ (aufgerundet) – „1:59“ passte nicht in den kleinen Ring.
+      label: h ? Math.ceil(mins / 60) + 'h' : String(mins),
       clock: clock,
       title: (window.casoraTr ? window.casoraTr(word) : word) + ' ' + clock,
     };
@@ -761,7 +762,7 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     if (!n) return '';
     if (card) watch(card);
     var esc = function (x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
-    var fs = n.label.length > 2 ? 10 : 13;
+    var fs = n.label.length > 2 ? 11 : 13;
     return '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + esc(n.title) + '"'
       + ' style="display:block;width:100%;height:100%;overflow:visible;--casora-timer-pct:' + n.pct.toFixed(2) + ';">'
       + '<g transform="rotate(-90 18 18)">'

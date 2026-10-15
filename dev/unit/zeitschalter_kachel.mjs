@@ -46,12 +46,12 @@ assert.equal(note('light.lampe', half, T0 + 29 * MIN + 30000).label, '1', 'letzt
 n = note('light.lampe', S({ 'light.lampe': { at: iso(T0 + 15 * MIN), action: 'turn_off', start: iso(T0) } }), T0);
 assert.equal(Math.round(n.pct), 100);
 
-// 3) Stunden als h:mm, An-Timer
+// 3) Ab einer Stunde aufgerundete Stunden (2h), An-Timer
 n = note('switch.pumpe', S({ 'switch.pumpe': { at: iso(T0 + 75 * MIN), action: 'turn_on', start: iso(T0) } }), T0);
-assert.equal(n.label, '1:15');
+assert.equal(n.label, '2h');
 assert.equal(n.action, 'turn_on');
 assert.ok(n.title.startsWith('On at '));
-assert.equal(note('switch.pumpe', S({ 'switch.pumpe': { at: iso(T0 + 120 * MIN), action: 'turn_on', start: iso(T0) } }), T0).label, '2:00');
+assert.equal(note('switch.pumpe', S({ 'switch.pumpe': { at: iso(T0 + 120 * MIN), action: 'turn_on', start: iso(T0) } }), T0).label, '2h');
 
 // 4) Ohne start (ältere Einträge): erster Blick = Start, danach leert sich der Ring
 const old = S({ 'fan.luefter': { at: iso(T0 + 20 * MIN), action: 'turn_off' } });
