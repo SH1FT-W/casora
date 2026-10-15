@@ -71,3 +71,29 @@ umstellen:
       selector:
         boolean:
 einrichten:
+set_timer:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+    minutes:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 1440
+          unit_of_measurement: min
+    action:
+      default: turn_off
+      selector:
+        select:
+          options:
+            - turn_off
+            - turn_on
+cancel_timer:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:

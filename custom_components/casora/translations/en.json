@@ -191,6 +191,34 @@
     "einrichten": {
       "name": "Set up",
       "description": "Creates missing Casora helpers and scripts (runs automatically at startup) and reports anything it could not create."
+    },
+    "set_timer": {
+      "name": "Set timer",
+      "description": "Turns an entity off or on after a number of minutes. Replaces an existing timer for the same entity.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Entity to switch"
+        },
+        "minutes": {
+          "name": "Minutes",
+          "description": "After how many minutes (1–1440)"
+        },
+        "action": {
+          "name": "Action",
+          "description": "turn_off (default) or turn_on"
+        }
+      }
+    },
+    "cancel_timer": {
+      "name": "Cancel timer",
+      "description": "Removes the timer of an entity.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Entity"
+        }
+      }
     }
   },
   "entity": {
@@ -227,6 +255,9 @@
       },
       "ebike": {
         "name": "Casora E-bike AI"
+      },
+      "timers": {
+        "name": "Casora Timers"
       }
     },
     "binary_sensor": {

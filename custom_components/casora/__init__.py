@@ -360,6 +360,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN]["media_pause"] = pause = PauseTracker(hass)
     await pause.async_start()
+    # Zeitschalter fürs Halten-Menü: Dienste set_timer/cancel_timer, überleben Neustarts (zeitschalter.py).
+    from .zeitschalter import TimerTracker
+
+    hass.data[DOMAIN]["timers"] = timers = TimerTracker(hass)
+    await timers.async_start()
     # Tanken im Auto-Popup (tanken.py): Sensoren je Auto/Kraftstoff, Abruf nur mit Einrichtung.
     from .tanken import async_setup_tanken
 
@@ -421,6 +426,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     pause = hass.data.get(DOMAIN, {}).pop("media_pause", None)
     if pause:
         pause.stop()
+    timers = hass.data.get(DOMAIN, {}).pop("timers", None)
+    if timers:
+        timers.stop()
     upush = hass.data.get(DOMAIN, {}).pop("update_push", None)
     if upush:
         upush.stop()

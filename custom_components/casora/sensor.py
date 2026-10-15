@@ -49,6 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     pause = hass.data[DOMAIN].get("media_pause")
     if pause:
         async_add_entities([MediaPauseSensor(pause)])
+    timers = hass.data[DOMAIN].get("timers")
+    if timers:
+        async_add_entities([TimerSensor(timers)])
 
     # Tanken: günstigster Preis je Auto/Kraftstoff (tanken.py), kommen und gehen mit der Einrichtung.
     tk = hass.data[DOMAIN].get("tanken")
@@ -121,6 +124,34 @@ class MediaPauseSensor(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         return {"players": dict(self.pause.players), "contacts": dict(self.pause.contacts)}
+
+
+class TimerSensor(SensorEntity):
+    """Aktive Zeitschalter (zeitschalter.py): Anzahl, Attribut timers {entity_id: {at, action}}."""
+
+    _attr_should_poll = False
+    _attr_unique_id = f"{DOMAIN}_timers"
+    _attr_has_entity_name = True
+    _attr_translation_key = "timers"
+    _attr_icon = "mdi:timer-outline"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _unrecorded_attributes = frozenset({"timers"})
+
+    def __init__(self, timers) -> None:
+        self.tracker = timers
+        self.entity_id = "sensor.casora_timers"
+
+    async def async_added_to_hass(self) -> None:
+        self.tracker.listeners.append(self.async_write_ha_state)
+        self.async_on_remove(lambda: self.tracker.listeners.remove(self.async_write_ha_state))
+
+    @property
+    def native_value(self) -> int:
+        return len(self.tracker.timers)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return {"timers": {k: dict(v) for k, v in self.tracker.timers.items()}}
 
 
 class KiSensor(RestoreEntity, SensorEntity):

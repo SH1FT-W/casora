@@ -191,6 +191,34 @@
     "einrichten": {
       "name": "Einrichten",
       "description": "Legt fehlende Casora-Helfer und -Skripte an (passiert beim Start automatisch) und meldet, was fehlt."
+    },
+    "set_timer": {
+      "name": "Zeitschalter setzen",
+      "description": "Schaltet eine Entität nach einigen Minuten aus oder an. Ersetzt einen bestehenden Zeitschalter derselben Entität.",
+      "fields": {
+        "entity_id": {
+          "name": "Entität",
+          "description": "Entität, die geschaltet wird"
+        },
+        "minutes": {
+          "name": "Minuten",
+          "description": "Nach wie vielen Minuten (1–1440)"
+        },
+        "action": {
+          "name": "Aktion",
+          "description": "turn_off (Standard) oder turn_on"
+        }
+      }
+    },
+    "cancel_timer": {
+      "name": "Zeitschalter löschen",
+      "description": "Löscht den Zeitschalter einer Entität.",
+      "fields": {
+        "entity_id": {
+          "name": "Entität",
+          "description": "Entität"
+        }
+      }
     }
   },
   "entity": {
@@ -227,6 +255,9 @@
       },
       "ebike": {
         "name": "Casora E-Bike-KI"
+      },
+      "timers": {
+        "name": "Casora Zeitschalter"
       }
     },
     "binary_sensor": {
