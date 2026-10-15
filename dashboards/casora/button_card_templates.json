@@ -21,6 +21,9 @@
        "--casora-active-overlay-opacity": "1"
       },
       {
+       "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+      },
+      {
        "--casora-active-overlay-dur": "0s"
       },
       {
@@ -582,6 +585,9 @@
       },
       {
        "--casora-active-overlay-opacity": "1"
+      },
+      {
+       "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
       },
       {
        "--casora-active-overlay-dur": "0s"
@@ -15640,6 +15646,9 @@
        "--casora-active-overlay-opacity": "1"
       },
       {
+       "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
+      },
+      {
        "--casora-active-overlay-dur": "0s"
       },
       {
@@ -16432,6 +16441,9 @@
       },
       {
        "--casora-active-overlay-opacity": "1"
+      },
+      {
+       "--casora-entity-overlay-tint": "var(--casora-entity-active-tint-current, rgba(255,255,255,0.94))"
       },
       {
        "--casora-active-overlay-dur": "0s"
