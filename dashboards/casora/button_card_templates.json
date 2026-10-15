@@ -15694,6 +15694,10 @@
    "icon": "sun",
    "room_name": "Sonnenstrom übrig",
    "casora_default_name": "Solar-Tipp"
+  },
+  "hold_action": {
+   "action": "[[[\n  /* Halten (1.6): Casoras Halten-Menü bzw. dasselbe Popup wie Tippen (22-halten.js); ohne Casora-Popups nichts. */\n  return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none';\n]]]\n",
+   "haptic": "medium"
   }
  },
  "casora_switch": {

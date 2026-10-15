@@ -39,7 +39,7 @@
     var m = { main: null, quick: [], timer: null, acts: [], rows: [] };
     // Kachel ohne Gerät (Müll, Lüften, Rezept …): Öffnen wie Tippen und Bearbeiten.
     if (!st) {
-      if (o.tapPopup) m.main = { t: 'Öffnen', ic: 'mdi:arrow-top-right', open: true };
+      if (o.tapPopup || o.tapOpens) m.main = { t: 'Öffnen', ic: 'mdi:arrow-top-right', open: true };
       if (o.admin) m.rows.push({ key: 'edit', t: 'Kachel bearbeiten', ic: 'mdi:pencil-outline', sep: true });
       return m;
     }
@@ -215,7 +215,7 @@
     }
 
     // Info-Kacheln (nichts zu bedienen): oben „Öffnen“ wie Tippen, darunter die Wege (Menü auf allen Kacheln).
-    if (!m.main && !m.quick.length && !m.timer && !m.acts.length && o.tapPopup) m.main = { t: 'Öffnen', ic: 'mdi:arrow-top-right', open: true };
+    if (!m.main && !m.quick.length && !m.timer && !m.acts.length && (o.tapPopup || o.tapOpens)) m.main = { t: 'Öffnen', ic: 'mdi:arrow-top-right', open: true };
     // Eigene Wege je Kachelart.
     if (o.kind === 'energy') m.acts.push({ key: 'nav', t: 'Energie-Dashboard', ic: 'mdi:lightning-bolt-outline', path: '/energy' });
     if (o.kind === 'updates' && o.admin) m.acts.push({ key: 'nav', t: 'Alle Updates', ic: 'mdi:update', path: '/config/updates' });
@@ -452,6 +452,12 @@
   };
 
   var ENT = /^[a-z_]+\.[a-z0-9_]+$/;
+  // Tippen öffnet etwas (Popup, eigene Seite per javascript, navigate) – dann gibt es oben „Öffnen“.
+  var tapOpens = function (x) {
+    var a = x && x.action;
+    if (popupish(x)) return true;
+    return typeof a === 'string' && !/\[\[\[/.test(a) && /^(javascript|navigate|url|fire-dom-event)$/.test(a);
+  };
   var modelFor = function (h, id, tile) {
     var e = ((h.entities || {})[id]) || {};
     var ts = h.states[TIMERS];
@@ -462,6 +468,7 @@
       timers: ts ? ((ts.attributes || {}).timers || {}) : null,
       unit: (h.config && h.config.unit_system && h.config.unit_system.temperature) || '°C',
       tapPopup: popupish(cfg.tap_action),
+      tapOpens: tapOpens(cfg.tap_action),
       states: h.states,
       tpl: tpl,
       pendingTemp: cur && cur.id === id && cur.stepT ? cur.pendingTemp : null,
