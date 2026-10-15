@@ -2451,6 +2451,10 @@ const SECTIONS = [
       ]),
       R("endev", "Popup device", 6, [
         { ...T("energy_popup_name_%", "Name"), needs: "energy_entity_%", ord: 7 },
+        { key: "energy_popup_focus_%", label: "Popup type", type: "select", needs: "energy_entity_%", ord: 7,
+          options: ["", "solar", "battery", "home", "grid", "simple"],
+          optionLabels: { "": "Automatic", solar: "Solar", battery: "Battery", home: "Home", grid: "Grid", simple: "Simple" },
+          hint: "Automatic recognises solar, battery, home and grid from the sensor." },
         { ...E("energy_popup_power_%", "Power", ["sensor"]), classes: ["power"], needs: "energy_entity_%", ord: 7 },
         { ...E("energy_popup_today_%", "Today", ["sensor"]), classes: ["energy"], needs: "energy_entity_%", ord: 7 },
         { ...E("energy_popup_month_%", "This month", ["sensor"]), classes: ["energy"], needs: "energy_entity_%", ord: 7 },
@@ -2692,7 +2696,7 @@ function deriveEnergyRooms(rooms) {
   for (let i = 1; i <= 6; i++) {
     ["energy_entity_", "energy_label_", "energy_unit_", "energy_popup_name_",
      "energy_popup_power_", "energy_popup_today_", "energy_popup_month_",
-     "energy_popup_cost_today_", "energy_popup_cost_month_"]
+     "energy_popup_cost_today_", "energy_popup_cost_month_", "energy_popup_focus_"]
       .forEach((k) => { delete V[k + i]; });
   }
 

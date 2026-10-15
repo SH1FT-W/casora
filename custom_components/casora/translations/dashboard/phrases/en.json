@@ -1757,7 +1757,23 @@
   "Wassertank": "Water tank",
   "Komfort": "Comfort",
   "Warnungen": "Warnings",
-  "Aktuell keine Warnungen": "No warnings right now"
+  "Aktuell keine Warnungen": "No warnings right now",
+  "Liefert gerade nichts": "Not producing right now",
+  "Liefert": "Producing",
+  "Kein Austausch": "No exchange",
+  "Module": "Modules",
+  "Ertrag": "Yield",
+  "Entladen": "Discharge",
+  "Laden": "Charge",
+  "Eingespeist gesamt": "Fed in total",
+  "Einspeisung und Eigenversorgung": "Feed-in and self-supply",
+  "Solarleistung": "Solar power",
+  "Ladestand": "Charge level",
+  "Akkuleistung": "Battery power",
+  "Netzleistung": "Grid power",
+  "Woher kommt der Strom": "Where the power comes from",
+  "Wohin geht der Solarstrom": "Where the solar power goes",
+  "Bypass": "Bypass"
  },
  "patterns": [
   [
@@ -3487,6 +3503,14 @@
   [
    "^Warnungen · (.+)$",
    "Warnings · {1}"
+  ],
+  [
+   "^(\\d+) Module liefern$",
+   "{1} modules producing"
+  ],
+  [
+   "^Solaranteil am Verbrauch (\\d+) %$",
+   "Solar share of use {1}%"
   ]
  ]
 }

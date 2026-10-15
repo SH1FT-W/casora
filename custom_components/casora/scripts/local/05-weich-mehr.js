@@ -484,12 +484,14 @@
   var flowHtml = function (C, FK) {
     var INK = 'var(--casora-popup-tiles-text-primary, #3A322B)', INK2 = 'var(--casora-popup-tiles-text-secondary, rgba(58,50,43,.62))';
     var mi = function (id) { return id ? ' data-casora-mi="' + String(id).replace(/"/g, '&quot;') + '"' : ''; };
+    // C.only ('from' | 'to', Sub-Badge-Popups 15.10.2026): nur diese Hälfte, ohne Hauszeile und Zwischentitel.
+    var only = C.only === 'from' || C.only === 'to' ? C.only : null;
     var sec = function (key, title, keys) {
       return '<div data-b="' + key + '">'
-        + '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:16px;">'
+        + (title ? '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:16px;">'
         + '<div style="font-size:14.5px;font-weight:700;">' + title + '</div>'
-        + '<div data-b="' + key + '-total" style="font-size:14.5px;font-weight:600;color:' + INK2 + ';font-variant-numeric:tabular-nums;"></div></div>'
-        + '<div data-b="' + key + '-bar" style="display:flex;gap:3px;margin-top:10px;height:12px;">'
+        + '<div data-b="' + key + '-total" style="font-size:14.5px;font-weight:600;color:' + INK2 + ';font-variant-numeric:tabular-nums;"></div></div>' : '')
+        + '<div data-b="' + key + '-bar" style="display:flex;gap:3px;margin-top:' + (title ? 10 : 14) + 'px;height:12px;">'
         + keys.map(function (k) { return '<div data-seg="' + k + '" style="flex:1 1 0;min-width:10px;border-radius:999px;background:' + FLOW_COL[k] + ';"></div>'; }).join('')
         + '</div><div data-b="' + key + '-leg" style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:9px;">'
         + keys.map(function (k) {
@@ -503,8 +505,9 @@
     return '<div data-casora-flow="' + FK + '" data-casora-kind="b" style="background:var(--casora-popup-row-fill, #FEFCF7);'
       + 'border-radius:var(--casora-popup-row-radius, 24px);padding:18px 20px 20px;box-shadow:var(--casora-popup-plate-shadow, none);'
       + 'font-family:var(--primary-font-family, Inter, system-ui);color:' + INK + ';text-align:left;">'
-      + '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));">Energiefluss</div>'
-      + '<div style="display:flex;align-items:center;gap:14px;margin-top:14px;">'
+      + '<div style="font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary, var(--primary-text-color)));">'
+      + (only === 'from' ? 'Woher kommt der Strom' : only === 'to' ? 'Wohin geht der Solarstrom' : 'Energiefluss') + '</div>'
+      + (only ? '' : '<div style="display:flex;align-items:center;gap:14px;margin-top:14px;">'
       + '<div' + mi(C.home) + ' style="width:44px;height:44px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;cursor:pointer;'
       + 'background:color-mix(in srgb, ' + FLOW_COL.haus + ' 16%, transparent);box-shadow:inset 0 0 0 1.5px color-mix(in srgb, ' + FLOW_COL.haus + ' 70%, transparent);">'
       + '<ha-icon icon="mdi:home-outline" style="--mdc-icon-size:21px;color:' + FLOW_COL.haus + ';display:flex;pointer-events:none;"></ha-icon></div>'
@@ -512,8 +515,9 @@
       + '<div style="font-size:12.5px;font-weight:500;color:' + INK2 + ';margin-top:2px;">Verbrauch im Haus</div></div>'
       + '<div data-b="akku"' + mi(C.soc) + ' style="text-align:right;cursor:pointer;"><div data-b="soc" style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;"></div>'
       + '<div data-b="akkusub" style="font-size:12.5px;font-weight:500;color:' + INK2 + ';"></div></div></div>'
-      + '<div style="height:1px;background:var(--casora-popup-ui-divider, rgba(140,115,90,.14));margin:16px 0 0;"></div>'
-      + sec('from', 'Woher', ['solar', 'akku', 'netz']) + sec('to', 'Wohin Solar', ['haus', 'akku', 'exp'])
+      + '<div style="height:1px;background:var(--casora-popup-ui-divider, rgba(140,115,90,.14));margin:16px 0 0;"></div>')
+      + (only === 'to' ? '' : sec('from', only ? '' : 'Woher', ['solar', 'akku', 'netz']))
+      + (only === 'from' ? '' : sec('to', only ? '' : 'Wohin Solar', ['haus', 'akku', 'exp']))
       + '</div>';
   };
   // Schreibt das Modell in die vorhandenen Knoten; Text nur, wenn er sich wirklich ändert (die
@@ -533,6 +537,8 @@
     txt(q('[data-b="soc"]'), m.soc != null ? Math.round(m.soc) + ' %' : '—');
     txt(q('[data-b="akkusub"]'), m.akkuSub);
     var side = function (key, parts, total, empty, quiet) {
+      // Teilansicht (C.only): die andere Hälfte fehlt – nicht in den Segmenten der vorhandenen schreiben.
+      if (!q('[data-b="' + key + '-bar"]')) return;
       var on = parts.some(function (p) { return p.on; });
       show(q('[data-b="' + key + '-total"]'), !quiet);
       txt(q('[data-b="' + key + '-total"]'), fW(total, hass));
@@ -553,6 +559,8 @@
     // Solar aus: kein Balken, nur der ruhige Hinweis.
     side('to', m.to, m.solar, m.toEmpty, !m.solarOn);
   };
+  // Bausteine für die Sub-Badge-Popups (20-energie-fokus.js).
+  E.kit = { secCard: secCard, layout: layout, chartCard: chartCard, call: call };
   E.flow = function (C, states, hass, self) {
     var has = function (id) { return !!(id && states[id]); };
     var lade = has(C.charge) || has(C.discharge);

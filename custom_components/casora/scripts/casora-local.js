@@ -84,6 +84,7 @@ const MODULES = [
   '17-update-detail',
   '18-ziele',
   '19-befeuchter',
+  '20-energie-fokus',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());
