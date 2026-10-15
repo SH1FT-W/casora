@@ -1801,7 +1801,16 @@
   "Energie-Dashboard": "Energy dashboard",
   "Alle Updates": "All updates",
   "Nach Updates suchen": "Check for updates",
-  "Suche nach Updates …": "Checking for updates …"
+  "Suche nach Updates …": "Checking for updates …",
+  "Handy klingeln lassen": "Ring phone",
+  "Auf der Einkaufsliste": "Added to shopping list",
+  "Rezept öffnen": "Open recipe",
+  "Batterie gewechselt?": "Battery replaced?",
+  "Gäste-WLAN an": "Guest Wi-Fi on",
+  "Gäste-WLAN aus": "Guest Wi-Fi off",
+  "Gäste-WLAN ausschalten?": "Turn off guest Wi-Fi?",
+  "Daten aktualisieren": "Refresh data",
+  "Auto aufwecken und Daten holen?": "Wake the car and fetch data?"
  },
  "patterns": [
   [

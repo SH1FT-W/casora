@@ -140,4 +140,17 @@ assert.equal(m.timer, null); assert.equal(H.worth(m), true);
 m = H.model(st('alarm_control_panel.a', 'armed_away', { supported_features: 3, code_format: 'number' }), {});
 assert.equal(m.main.svc, 'alarm_control_panel.alarm_disarm'); assert.ok(m.main.ask && m.main.code && m.main.numeric);
 assert.equal(H.model(st('alarm_control_panel.a', 'triggered', {}), {}).main.t, 'Alarm beenden');
+// Zusatz-Einträge der Info-Kacheln (nur, was Casora schon kann; rohe [[[ ]]]-Variablen werden übergangen).
+const hx = { states: { 'switch.lampe': st('switch.lampe', 'off'), 'sensor.casora_rezept_der_woche': st('sensor.casora_rezept_der_woche', 'ok', { zutaten: ['Mehl'], status: 'done', link: 'https://cookidoo.de/x' }) } };
+let ex = H.extras(hx, '', 'casora_entity_actions', { action_1_action: 'toggle', action_1_entity: 'switch.lampe', action_1_label: 'Lampe',
+  action_2_action: 'call-service', action_2_service: 'script.turn_on', action_2_service_data: { entity_id: 'script.x' }, action_2_label: 'Skript',
+  action_3_action: '[[[ return 1 ]]]', action_3_entity: 'switch.lampe' });
+assert.deepEqual(ex.map((x) => [x.t, x.svc]), [['Lampe', 'homeassistant.toggle'], ['Skript', 'script.turn_on']]);
+assert.equal(ex[1].noEntity, true);
+window.casoraSvc = (n) => ({ domain: 'casora', service: 'rezept_auf_liste', data: {} });
+ex = H.extras(hx, 'sensor.casora_rezept_der_woche', 'casora_recipe', {});
+assert.deepEqual(ex.map((x) => x.t), ['Auf die Einkaufsliste', 'Rezept öffnen']);
+m = H.model(st('sensor.casora_rezept_der_woche', 'ok'), { tapPopup: true, extra: ex });
+assert.equal(m.main.t, 'Öffnen', 'Öffnen bleibt oben, auch mit Zusatz-Einträgen');
+assert.equal(m.acts.length, 2);
 console.log('halten: ok');

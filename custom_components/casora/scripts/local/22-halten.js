@@ -214,8 +214,9 @@
       }
     }
 
+    (o.extra || []).forEach(function (x) { m.acts.push(x); });
     // Info-Kacheln (nichts zu bedienen): oben „Öffnen“ wie Tippen, darunter die Wege (Menü auf allen Kacheln).
-    if (!m.main && !m.quick.length && !m.timer && !m.acts.length && (o.tapPopup || o.tapOpens)) m.main = { t: 'Öffnen', ic: 'mdi:arrow-top-right', open: true };
+    if (!m.main && !m.quick.length && !m.timer && (o.tapPopup || o.tapOpens)) m.main = { t: 'Öffnen', ic: 'mdi:arrow-top-right', open: true };
     // Eigene Wege je Kachelart.
     if (o.kind === 'energy') m.acts.push({ key: 'nav', t: 'Energie-Dashboard', ic: 'mdi:lightning-bolt-outline', path: '/energy' });
     // Updates: sofort suchen wie der Knopf im Updates-Popup (03-popups.js, _casoraUpdCheck – Supervisor, HACS, update.*).
@@ -384,7 +385,7 @@
     }
     // Wenige Linien wie in den übrigen Menüs: Bedienung | abgesetzte Aktionen und Wege | Bearbeiten.
     var blocks = [out, '', ''];
-    m.acts.forEach(function (x, i) { blocks[1] += row(x.key, x.t, x.ic, x.ask ? 'quiet' : '', null, i); });
+    m.acts.forEach(function (x, i) { blocks[1] += row(x.key, x.t, x.ic, x.ask && x.svc === 'lock.open' ? 'quiet' : '', x.sub || null, i); });
     m.rows.forEach(function (r) { blocks[r.key === 'edit' ? 2 : 1] += row(r.key, r.t, r.ic); });
     out = blocks.filter(Boolean).join('<div class="sep"></div>');
     return out;
@@ -436,7 +437,10 @@
   };
   // Schalten wie in den Popups: mit Rückfrage, wenn das Gerät im Studio so eingestellt ist.
   var act = function (id, it) {
-    var go = function () { return call(it.svc, Object.assign({ entity_id: it.entity || id }, it.data || {})).catch(failed); };
+    var go = function () {
+      var d = Object.assign(it.noEntity ? {} : { entity_id: it.entity || id }, it.data || {});
+      return call(it.svc, d).then(function (r) { if (it.done) notice(T(it.done)); return r; }).catch(failed);
+    };
     // Riskantes (Entriegeln, Tür öffnen) fragt immer – unabhängig von der Studio-Einstellung.
     if (it.ask) {
       var name = (cur ? cur.name : lastName || id) + (it.mode ? ' · ' + T(it.mode) : ''), q = T(it.ask);
@@ -461,6 +465,91 @@
   };
 
   var ENT = /^[a-z_]+\.[a-z0-9_]+$/;
+  // Eigene Einträge je Info-Kachel – nur, was Casora dort schon kann (Knöpfe der Popups, Dienste).
+  // Kachel-Variablen kommen roh an (können [[[ ]]] sein): nur echte Entitäten übernehmen.
+  var extras = function (h, id, tpl, V) {
+    var out = [], S = h.states || {};
+    var real = function (x) { return typeof x === 'string' && ENT.test(x) ? x : null; };
+    var live = function (x) { return !!(x && S[x] && !bad(S[x].state)); };
+    var has = function (re) { return re.test(tpl); };
+    try {
+      // Person: Nachricht und Handy klingeln lassen (15-person.js, mit eigenen Rückfragen).
+      if (has(/\bcasora_presence\b/) && window._casoraPerson) {
+        var pid = real(V.person_entity) || (/^person\./.test(id) ? id : null);
+        var ph = pid && window._casoraPerson.phone(h, pid);
+        if (ph && ph.notify) {
+          out.push({ key: 'fn', t: 'Nachricht schicken', ic: 'mdi:message-text-outline', fn: function () { window._casoraPerson.act('msg', pid, ph.notify); } });
+          out.push({ key: 'fn', t: 'Handy klingeln lassen', ic: 'mdi:volume-high', fn: function () { window._casoraPerson.act('ring', pid, ph.notify); } });
+        }
+      }
+      // Rezept: Zutaten auf die Einkaufsliste (casora.rezept_auf_liste, keine KI), Rezept öffnen.
+      if (has(/\bcasora_recipe\b/) && window.casoraSvc) {
+        var ra = (S['sensor.casora_rezept_der_woche'] || {}).attributes || {};
+        if ((ra.zutaten || []).length && ra.status !== 'running') {
+          var sv = window.casoraSvc('casora_rezept_auf_liste');
+          out.push({ key: 'act', t: 'Auf die Einkaufsliste', ic: 'mdi:cart-plus', svc: sv.domain + '.' + sv.service, data: sv.data, noEntity: true, done: 'Auf der Einkaufsliste' });
+        }
+        if (/^https:\/\/cookidoo\./.test(String(ra.link || ''))) {
+          var link = String(ra.link);
+          out.push({ key: 'fn', t: 'Rezept öffnen', ic: 'mdi:open-in-new', fn: function () { window.open(link, '_blank', 'noopener'); } });
+        }
+      }
+      // Pulse: Panel; „Batterie gewechselt“, wenn genau ein Gerät einen Batterie-Grund hat (mit Rückfrage).
+      var PU = window._casoraPulse;
+      if (has(/\bcasora_pulse\b/) && PU && PU.installed && PU.installed(h)) {
+        out.push({ key: 'nav', t: 'In Pulse öffnen', ic: 'mdi:pulse', path: PU.PANEL || '/pulse' });
+        var bl = ((PU.scan(h, S) || {}).list || []).filter(function (d) { return /^battery_(low|low_flag|soon)$/.test(d.reason || ''); });
+        if (bl.length === 1 && bl[0].device) {
+          out.push({ key: 'act', t: 'Batterie gewechselt', sub: bl[0].name, ic: 'mdi:battery-sync', svc: 'pulse.mark_replaced', data: { device_id: bl[0].device },
+            noEntity: true, ask: 'Batterie gewechselt?', yes: 'Gewechselt', done: 'Batteriewechsel gemeldet' });
+        }
+      }
+      // Netzwerk: Gäste-WLAN (genau ein Schalter), Speedtest-Taste der Kachel.
+      if (has(/\bcasora_network\b/)) {
+        var CD = window.casoraDevice;
+        if (V.network_extended !== false && CD && CD.network) {
+          var gw = ((CD.network(h) || {}).wlans || []).filter(function (w) { return /guest|gast/i.test(w.sw + ' ' + (w.label || '')); });
+          if (gw.length === 1 && live(gw[0].sw)) {
+            var gOn = S[gw[0].sw].state === 'on';
+            out.push({ key: 'act', t: gOn ? 'Gäste-WLAN aus' : 'Gäste-WLAN an', ic: gOn ? 'mdi:wifi-off' : 'mdi:wifi', svc: gOn ? 'switch.turn_off' : 'switch.turn_on',
+              entity: gw[0].sw, ask: gOn ? 'Gäste-WLAN ausschalten?' : null, yes: 'Ausschalten' });
+          }
+        }
+        var sb = real(V.entity_speedtest_button), sr = real(V.entity_speedtest_running);
+        if (live(sb) && !(sr && S[sr] && S[sr].state === 'on')) out.push({ key: 'act', t: 'Speedtest starten', ic: 'mdi:speedometer', svc: 'button.press', entity: sb });
+      }
+      // Waschmaschine/Trockner: „Ausgeräumt“ (fertig, Wäsche noch drin), Pausieren/Fortsetzen nur mit Hersteller-Integration.
+      var LA = window._casoraLaundry;
+      if (has(/\bcasora_(waschmaschine|trockner)\b/) && LA && LA.resolve && id) {
+        var c = LA.resolve(S[id], V, S, h), ls = LA.state(S, c.st) || [];
+        if (ls[3] === 'clean' && live(c.unload)) out.push({ key: 'act', t: 'Ausgeräumt', ic: 'mdi:basket-check-outline', svc: 'button.press', entity: c.unload });
+        if (c.official) {
+          if (ls[2] && ls[3] !== 'pause' && live(c.pause)) out.push({ key: 'act', t: 'Pausieren', ic: 'mdi:pause', svc: 'button.press', entity: c.pause });
+          if (ls[3] === 'pause' && live(c.resume)) out.push({ key: 'act', t: 'Fortsetzen', ic: 'mdi:play', svc: 'button.press', entity: c.resume });
+        }
+      }
+      // Auto: Daten holen (weckt das Auto – Rückfrage wie im Popup).
+      if (has(/\bcasora_car\b/) && window._casoraCar && window._casoraCar.read) {
+        var r = window._casoraCar.read(real(V.car) || id, S) || {};
+        if (live(r.refresh)) out.push({ key: 'act', t: 'Daten aktualisieren', ic: 'mdi:refresh', svc: 'button.press', entity: r.refresh, ask: 'Auto aufwecken und Daten holen?', yes: 'Aktualisieren' });
+      }
+      // Kachel mit Knöpfen: ihre eigenen Knöpfe (Dienst oder Umschalten), bis zu drei.
+      if (has(/\bcasora_entity_actions\b/)) {
+        for (var i = 1; i <= 6 && out.length < 3; i++) {
+          var p = 'action_' + i + '_', a = V[p + 'action'], ent = real(V[p + 'entity']), svn = V[p + 'service'];
+          if (V[p + 'enabled'] === false || typeof a !== 'string' || /\[\[\[/.test(a)) continue;
+          var lbl = typeof V[p + 'label'] === 'string' && !/\[\[\[/.test(V[p + 'label']) ? V[p + 'label'] : (ent && S[ent] && S[ent].attributes.friendly_name) || svn || ent;
+          var ic = typeof V[p + 'icon'] === 'string' && V[p + 'icon'] ? (V[p + 'icon'].indexOf(':') < 0 ? 'mdi:' + V[p + 'icon'] : V[p + 'icon']) : 'mdi:gesture-tap-button';
+          if (a === 'call-service' && typeof svn === 'string' && /^[a-z_]+\.[a-z0-9_]+$/.test(svn)) {
+            var sd = V[p + 'service_data'] && typeof V[p + 'service_data'] === 'object' ? V[p + 'service_data'] : {};
+            out.push({ key: 'act', t: lbl, ic: ic, svc: svn, data: sd, noEntity: !ent, entity: ent || undefined });
+          } else if (a === 'toggle' && ent) out.push({ key: 'act', t: lbl, ic: ic, svc: 'homeassistant.toggle', entity: ent });
+        }
+      }
+    } catch (e) { /* ohne Zusatz-Einträge */ }
+    return out;
+  };
+  H.extras = function (h, id, tpl, V) { return extras(h, id, tpl, V || {}); };
   // Tippen öffnet etwas (Popup, eigene Seite per javascript, navigate) – dann gibt es oben „Öffnen“.
   var tapOpens = function (x) {
     var a = x && x.action;
@@ -489,6 +578,7 @@
       if (c) o.printer = { st: c.st, pause: c.pause, resume: c.resume, light: c.light, cam: c.cam };
     }
     if (/\bcasora_aquarium/.test(tpl) && typeof V.light_entity === 'string' && ENT.test(V.light_entity)) o.aqLight = V.light_entity;
+    o.extra = extras(h, id, tpl, V);
     if (/\bcasora_energy\b/.test(tpl)) o.kind = 'energy';
     if (/\bcasora_updates\b/.test(tpl)) { o.kind = 'updates'; o.updCheck = !!(window._casoraUpdCheck && window._casoraUpdCheck.run); }
     return H.model(id ? h.states[id] : null, o);
@@ -576,11 +666,12 @@
       UC.run(hu).then(function () { var st = UC.status(); if (st[1]) notice(T(st[1])); });
       return;
     }
-    if (k === 'act' || k === 'live' || k === 'nav') {
+    if (k === 'act' || k === 'live' || k === 'nav' || k === 'fn') {
       var ax = m.acts[+n.getAttribute('data-i')];
       H.close();
       if (!ax) return;
       if (ax.path) { navigate(ax.path); return; }
+      if (ax.fn) { try { ax.fn(); } catch (e) { failed(e); } return; }
       if (k === 'live') { if (!(Z && Z.openCamera(ax.entity)) && window.casoraPopup) window.casoraPopup.nativeMoreInfo(ax.entity); return; }
       act(id, ax);
       return;
