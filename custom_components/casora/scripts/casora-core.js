@@ -686,6 +686,98 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
 })();
 // casora-battery-hints:end
 
+// casora-timer:start
+// Zeitschalter auf der Kachel (15.10.2026): läuft für die Entität ein Timer (casora.set_timer,
+// sensor.casora_timers → Attribut timers {entity_id: {at, action, start}}), zeigt die Kachel oben rechts
+// einen Ring wie der Fortschrittsring (Saugroboter, Waschmaschine): voll beim Setzen, leer beim Ablauf,
+// in der Mitte die Restzeit („28“ bzw. „1:15“ wie bei den Geräte-Popups). Ohne start (ältere Einträge)
+// gilt der erste Blick dieses Browsers als Start.
+// states ist das states-Objekt der Vorlage (button-card beobachtet so sensor.casora_timers mit).
+// Die Kachel meldet sich mit casoraTimerRing(…, this) an; ein Takt zeichnet angemeldete Kacheln alle 20 s neu.
+(function () {
+  if (window.casoraTimerNote) return;
+  var ID = 'sensor.casora_timers';
+  var seen = {};
+  var cards = [];
+  var tick = null;
+
+  var note = function (eid, states, now) {
+    if (!eid || !states) return null;
+    var ts = states[ID];
+    var all = ts && ts.attributes && ts.attributes.timers;
+    var run = all && typeof all === 'object' ? all[eid] : null;
+    if (!run || !run.at) return null;
+    var at = Date.parse(run.at);
+    if (!isFinite(at)) return null;
+    var t = typeof now === 'number' ? now : Date.now();
+    var left = at - t;
+    if (left <= 0) return null;
+    var key = eid + '|' + run.at;
+    var start = run.start ? Date.parse(run.start) : NaN;
+    if (!isFinite(start) || start >= at) {
+      if (!seen[key]) seen[key] = t;
+      start = seen[key];
+    }
+    var total = Math.max(at - start, left);
+    var mins = Math.max(1, Math.ceil(left / 60000));
+    var h = Math.floor(mins / 60), m = mins % 60;
+    var on = run.action === 'turn_on';
+    var loc = window.casoraLocale ? window.casoraLocale() : 'de-DE';
+    var clock = new Date(at).toLocaleTimeString(loc, { hour: 'numeric', minute: '2-digit' });
+    var word = on ? 'An um' : 'Aus um';
+    return {
+      action: on ? 'turn_on' : 'turn_off', at: at, left: left, minutes: mins,
+      pct: Math.max(0, Math.min(100, (left / total) * 100)),
+      label: h ? h + ':' + (m < 10 ? '0' : '') + m : String(mins),
+      clock: clock,
+      title: (window.casoraTr ? window.casoraTr(word) : word) + ' ' + clock,
+    };
+  };
+
+  var kick = function (el) {
+    if (window.casoraKick) return window.casoraKick(el);
+    try {
+      var hs = el._hass || el.hass;
+      if (hs) el.hass = Object.assign({}, hs);
+      if (typeof el.requestUpdate === 'function') el.requestUpdate('_config', undefined);
+    } catch (e) { /* nächster Zustand zeichnet neu */ }
+  };
+
+  var watch = function (card) {
+    if (!card || cards.indexOf(card) !== -1) return;
+    cards.push(card);
+    if (tick || typeof window.setInterval !== 'function') return;
+    tick = window.setInterval(function () {
+      cards = cards.filter(function (c) { return c && c.isConnected !== false && c._casoraTimerLive; });
+      cards.forEach(kick);
+      if (!cards.length) { window.clearInterval(tick); tick = null; }
+    }, 20000);
+  };
+
+  // Ring wie #progress (36er-Raster, r14, Strich 4); Füllstand über --casora-timer-pct am Pfad.
+  var ring = function (eid, states, card, now) {
+    var n = note(eid, states, now);
+    if (card) card._casoraTimerLive = !!n;
+    if (!n) return '';
+    if (card) watch(card);
+    var esc = function (x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+    var fs = n.label.length > 2 ? 10 : 13;
+    return '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + esc(n.title) + '"'
+      + ' style="display:block;width:100%;height:100%;overflow:visible;--casora-timer-pct:' + n.pct.toFixed(2) + ';">'
+      + '<g transform="rotate(-90 18 18)">'
+      + '<circle class="casora-progress-track" cx="18" cy="18" r="14" fill="none" stroke-width="4" stroke-linecap="round"/>'
+      + '<circle class="casora-progress-arc" cx="18" cy="18" r="14" fill="none" stroke-width="4" stroke-linecap="round" stroke-dasharray="87.965"/>'
+      + '</g>'
+      + '<text class="casora-timer-left" x="18" y="18" text-anchor="middle" dominant-baseline="central" font-size="' + fs + '">'
+      + esc(n.label) + '</text></svg>';
+  };
+
+  window.casoraTimerNote = note;
+  window.casoraTimerRing = ring;
+  window.casoraTimerActive = function (eid, states, now) { return !!note(eid, states, now); };
+})();
+// casora-timer:end
+
 // casora-room-name:start
 // Name der Übersicht (04.10.2026): Übersetzt wird nur ein Name, den Casora selbst angelegt hat
 // (variables.casora_auto_name, z. B. 'home') und der noch unverändert ist ('Home'/'Zuhause'/leer).
@@ -2342,7 +2434,9 @@ window.casoraMenuGlass = {
     }
 
     // Safari cannot evaluate calc() over a clamp(), so every length is a sum of whole variables.
-    function cornerWidth(variables, entityState) {
+    function cornerWidth(variables, entityState, states, eid) {
+      // Laufender Zeitschalter belegt die Ecke wie der Fortschrittsring (casora-timer).
+      if (states && eid && window.casoraTimerActive && window.casoraTimerActive(eid, states)) return 'var(--casora-progress-size-mq)';
       if (variables.show_progress) {
         var active = variables.progress_active_states || [];
         var st = String(entityState || '').toLowerCase();
@@ -2352,8 +2446,8 @@ window.casoraMenuGlass = {
       return null;
     }
 
-    function moreGeom(variables, entityState) {
-      var corner = cornerWidth(variables, entityState);
+    function moreGeom(variables, entityState, states, eid) {
+      var corner = cornerWidth(variables, entityState, states, eid);
       var lineTop = 'var(--casora-icon-center-y) - var(--casora-actions-hit) / 2';
       return {
         top: corner

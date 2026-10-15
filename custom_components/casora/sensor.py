@@ -127,7 +127,7 @@ class MediaPauseSensor(SensorEntity):
 
 
 class TimerSensor(SensorEntity):
-    """Aktive Zeitschalter (zeitschalter.py): Anzahl, Attribut timers {entity_id: {at, action}}."""
+    """Aktive Zeitschalter (zeitschalter.py): Anzahl, Attribut timers {entity_id: {at, action, start}}."""
 
     _attr_should_poll = False
     _attr_unique_id = f"{DOMAIN}_timers"

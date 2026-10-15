@@ -61,6 +61,10 @@ check(z.parse_entry({"at": t0.isoformat(), "action": "turn_on"}) == (t0, "turn_o
 check(z.parse_entry({"at": "kaputt", "action": "turn_on"}) is None, "kaputtes Datum")
 check(z.parse_entry({"at": "2026-10-15T18:00:00", "action": "turn_on"}) is None, "ohne Zeitzone")
 check(z.parse_entry({"at": t0.isoformat(), "action": "toggle"}) is None, "unbekannte Aktion")
+check(z.parse_start({"at": t0.isoformat(), "action": "turn_on", "start": t0.isoformat()}) == t0, "Start lesen")
+check(z.parse_start({"at": t0.isoformat(), "action": "turn_on"}) is None, "alter Eintrag ohne Start")
+check(z.parse_start({"start": "kaputt"}) is None and z.parse_start({"start": "2026-10-15T18:00:00"}) is None,
+      "kaputter Start / ohne Zeitzone")
 
 
 # 2. Tracker mit nachgebautem HA
@@ -194,8 +198,9 @@ async def main():
 
     # Setzen, Ablauf schaltet, Eintrag weg.
     await svc("set_timer", entity_id=L, minutes=30)
-    check(disk["data"]["timers"][L] == {"at": (t0 + timedelta(minutes=30)).isoformat(), "action": "turn_off"},
-          "Timer gespeichert")
+    check(disk["data"]["timers"][L] == {"at": (t0 + timedelta(minutes=30)).isoformat(), "action": "turn_off",
+                                        "start": t0.isoformat()},
+          "Timer gespeichert (mit Start für den Ring)")
     check(notes, "Änderung gemeldet")
     fire_due(L)
     await asyncio.gather(*h.tasks)
@@ -242,7 +247,9 @@ async def main():
 
     # 3. Neustart: offen → wieder angelegt, kurz verpasst → nach Start nachholen, alt → weg.
     disk2 = {"data": {"timers": {
-        L: {"at": (t0 + timedelta(minutes=20)).isoformat(), "action": "turn_off"},
+        L: {"at": (t0 + timedelta(minutes=20)).isoformat(), "action": "turn_off",
+            "start": (t0 - timedelta(minutes=10)).isoformat()},
+        "switch.alt": {"at": (t0 + timedelta(minutes=5)).isoformat(), "action": "turn_on"},
         C: {"at": (t0 - timedelta(minutes=5)).isoformat(), "action": "turn_off"},
         "switch.old": {"at": (t0 - timedelta(hours=1)).isoformat(), "action": "turn_on"},
         K: {"at": (t0 + timedelta(minutes=5)).isoformat(), "action": "turn_off"},
@@ -251,8 +258,10 @@ async def main():
     h2 = Hass([St(L, "on"), St(C, "open")], running=False)
     tr2 = z.TimerTracker(h2, FakeStore(disk2))
     await tr2.async_start()
-    check(set(tr2.timers) == {L}, "nur der offene Timer bleibt")
-    check(set(disk2["data"]["timers"]) == {L}, "Speicher bereinigt")
+    check(set(tr2.timers) == {L, "switch.alt"}, "nur die offenen Timer bleiben")
+    check(set(disk2["data"]["timers"]) == {L, "switch.alt"}, "Speicher bereinigt")
+    check(tr2.timers[L].get("start") == (t0 - timedelta(minutes=10)).isoformat(), "Start überlebt den Neustart")
+    check("start" not in tr2.timers["switch.alt"], "alter Eintrag ohne Start bleibt ohne Start")
     check(h2.services.calls == [] and len(h2.bus.once) == 1, "verpasster wartet auf HA-Start")
     h2.bus.once[0](None)
     await asyncio.gather(*h2.tasks)

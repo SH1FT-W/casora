@@ -8,7 +8,8 @@ den Zielzustand, verfällt der Timer – sonst schaltete Casora später ein zwei
 Die Einträge stehen in .storage (casora_timers) und überleben Neustarts. Ist ein Timer
 während des Neustarts abgelaufen, schaltet Casora nach dem Start nach, wenn der Ablauf
 höchstens zehn Minuten her ist; ältere verfallen. Das Frontend liest sensor.casora_timers
-(Attribut timers).
+(Attribut timers: {entity_id: {at, action, start}} – start = Zeitpunkt des Setzens für den Ring
+auf der Kachel; ältere Einträge ohne start bleiben gültig).
 """
 
 from __future__ import annotations
@@ -94,6 +95,17 @@ def parse_entry(value: Any) -> tuple[datetime, str] | None:
     return (at, value["action"]) if at.tzinfo else None
 
 
+def parse_start(value: Any) -> datetime | None:
+    """Startzeitpunkt eines Eintrags (für den Ring auf der Kachel); fehlt oder kaputt → None."""
+    if not isinstance(value, dict) or not value.get("start"):
+        return None
+    try:
+        start = datetime.fromisoformat(str(value["start"]))
+    except ValueError:
+        return None
+    return start if start.tzinfo else None
+
+
 class TimerTracker:
     """Hält die Timer, plant sie ein, speichert sie und meldet Änderungen."""
 
@@ -125,7 +137,7 @@ class TimerTracker:
             at, action = parsed
             verdict = on_restart(at, now)
             if verdict == "keep":
-                self._add(eid, at, action)
+                self._add(eid, at, action, parse_start(raw))
             elif verdict == "run":
                 late.append((eid, action))
         self._save()
@@ -175,7 +187,8 @@ class TimerTracker:
         async def _set(call) -> None:
             eid = call.data["entity_id"]
             _check(eid)
-            self.set(eid, due_at(dt_util.utcnow(), call.data["minutes"]), call.data["action"])
+            now = dt_util.utcnow()
+            self.set(eid, due_at(now, call.data["minutes"]), call.data["action"], now)
 
         async def _cancel(call) -> None:
             self.remove(call.data["entity_id"])
@@ -189,13 +202,15 @@ class TimerTracker:
             vol.Required("entity_id"): cv.entity_id,
         }))
 
-    def _add(self, eid: str, at: datetime, action: str) -> None:
+    def _add(self, eid: str, at: datetime, action: str, start: datetime | None = None) -> None:
         from homeassistant.core import callback
         from homeassistant.helpers.event import async_track_point_in_utc_time
 
         if eid in self._cancel:
             self._cancel.pop(eid)()
         self.timers[eid] = {"at": at.isoformat(), "action": action}
+        if start is not None and start < at:
+            self.timers[eid]["start"] = start.isoformat()
 
         @callback
         def _due(_now) -> None:
@@ -207,9 +222,9 @@ class TimerTracker:
 
         self._cancel[eid] = async_track_point_in_utc_time(self.hass, _due, at)
 
-    def set(self, eid: str, at: datetime, action: str) -> None:
+    def set(self, eid: str, at: datetime, action: str, start: datetime | None = None) -> None:
         """Timer setzen; ersetzt einen bestehenden derselben Entität."""
-        self._add(eid, at, action)
+        self._add(eid, at, action, start)
         self._save()
         self._notify()
 
