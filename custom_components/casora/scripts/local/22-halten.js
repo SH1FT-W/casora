@@ -254,7 +254,8 @@
     return h + ' ' + T('Std.') + (r ? ' ' + r + ' ' + T('Min.') : '');
   };
   H.leftText = function (t, now) {
-    return T(t.action === 'turn_on' ? 'An in' : 'Aus in') + ' ' + H.dur((t.at - (now || Date.now())) / 60000);
+    // Aufgerundet wie der Ring auf der Kachel (beide zeigen dieselbe Minute).
+    return T(t.action === 'turn_on' ? 'An in' : 'Aus in') + ' ' + H.dur(Math.ceil((t.at - (now || Date.now())) / 60000));
   };
   // Zieltemperatur einen Schritt weiter, in den Grenzen des Geräts.
   H.stepTo = function (q, dir) {
@@ -314,6 +315,7 @@
     + '.ql{font-size:var(--casora-fs-sub, 13px);line-height:16px;font-weight:600;color:var(--casora-text-2, rgba(127,127,127,.9));padding:0 0 8px;letter-spacing:-0.01em;}'
     + '.qr{display:flex;gap:8px;}'
     + '.q > .row{margin:0 -8px;}'
+    + '.q:has(> .row:last-child){padding-bottom:0;}'
     + '.qr .pill{padding:0 4px;}'
     + '.pill{flex:1 1 0;min-width:0;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:4px;box-sizing:border-box;padding:0 8px;'
     +   'background:var(--casora-soft-control-fill, rgba(127,127,127,0.14));font-size:var(--casora-fs-value, 14px);font-weight:600;white-space:nowrap;cursor:pointer;user-select:none;outline:none;'
@@ -321,7 +323,7 @@
     + '.pill ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;}'
     + '.pill:active,.pill.press{transform:scale(var(--casora-press-scale, .97));}'
     + '.pill:focus-visible{outline:2px solid var(--casora-hold-focus, var(--casora-popup-ui-action, #276B64));outline-offset:2px;}'
-    + '.pill.lbl{flex-direction:column;height:56px;gap:2px;padding:4px 2px;}'
+    + '.pill.lbl{flex-direction:column;height:56px;gap:2px;padding:4px 2px;border-radius:var(--casora-r-element, 18px);}'
     + '.pill.lbl small{font-size:var(--casora-fs-label, 12px);font-weight:600;line-height:14px;}'
     + '.pill.on{background:var(--casora-soft-seg-on, var(--primary-color, #B67A50));box-shadow:var(--casora-soft-seg-on-shadow, none), inset 0 0 0 2px var(--casora-hold-hue, transparent);color:var(--casora-soft-seg-on-ink, var(--text-primary-color, #fff));}'
     + '.pill.busy{opacity:.55;pointer-events:none;}'
@@ -329,13 +331,17 @@
     + '.step .pill{flex:0 0 48px;}'
     + '.step b{flex:1;text-align:center;font-size:var(--casora-fs-heading, 17px);font-weight:700;font-variant-numeric:tabular-nums;}'
     + '.tm{display:flex;align-items:center;gap:8px;}'
-    + '.tm .pill{flex:0 0 auto;padding:0 16px;}'
-    + '.tm > ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;margin-left:8px;color:var(--casora-hold-hue, currentColor);}'
-    + '.info{display:flex;align-items:center;gap:var(--casora-menu-ic-gap, 12px);padding:8px 16px 8px 16px;font-size:var(--casora-fs-row, 15px);font-weight:600;font-variant-numeric:tabular-nums;}'
-    + '.info ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;color:var(--casora-hold-hue, currentColor);flex:none;}'
+    + '.tm .pill{flex:0 0 auto;padding:0 12px;}'
+    + '.tm > ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;margin-left:8px;color:var(--casora-text-2, currentColor);}'
+    /* Fertig-Zeile im Raster der Zeilen (Kreis 36 | Text), Restzeit als Unterzeile – Info, keine Aktion. */
+    + '.info{display:grid;grid-template-columns:var(--casora-ic-row, 36px) minmax(0,1fr);align-items:center;column-gap:var(--casora-menu-ic-gap, 12px);'
+    +   'min-height:var(--casora-menu-row-h, 52px);padding:0 16px 0 8px;box-sizing:border-box;font-variant-numeric:tabular-nums;}'
+    + '.info ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;justify-self:center;color:var(--casora-text-2, currentColor);}'
+    + '.info b{display:block;font-size:var(--casora-fs-row, 15px);font-weight:600;line-height:20px;}'
+    + '.info small{display:block;font-size:var(--casora-fs-sub, 13px);font-weight:500;line-height:16px;color:var(--casora-text-2, inherit);}'
     + '.row.quiet{color:var(--casora-text-2, inherit);font-weight:500;}'
     + '.row.quiet .ic{color:var(--casora-text-2, inherit);}'
-    + '.tm span{flex:1;font-size:var(--casora-fs-row, 15px);font-weight:600;padding-left:8px;}';
+    + '.tm span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:4px;flex:1;font-size:var(--casora-fs-row, 15px);font-weight:600;padding-left:8px;}';
 
   // lastName: Titel der Rückfrage, auch wenn das Menü schon zu ist (Hauptaktion schließt erst, dann fragt sie).
   var host = null, cur = null, poll = 0, lastName = '';
@@ -378,7 +384,7 @@
     };
     // Handy: Kopf mit Name und Zustand nur, wenn das Blatt die Kachel verdeckt (sonst steht beides scharf darüber).
     if (c.phone) out += '<div class="head"><b>' + esc(c.name) + '</b>' + (c.state ? '<span>' + esc(c.state) + '</span>' : '') + '</div>';
-    if (m.info) out += '<div class="info"><ha-icon icon="' + esc(m.info.ic) + '"></ha-icon><span>' + esc(m.info.t) + '</span></div>';
+    if (m.info) out += '<div class="info"><ha-icon icon="' + esc(m.info.ic) + '"></ha-icon><span><b>' + esc(m.info.t) + '</b>' + (m.info.sub ? '<small>' + esc(m.info.sub) + '</small>' : '') + '</span></div>';
     if (m.main) out += row('main', m.main.t, m.main.ic, 'main');
     m.quick.forEach(function (q, qi) {
       out += '<div class="q" role="group"' + (q.label ? ' aria-label="' + esc(T(q.label)) + '"' : '') + '>' + (q.label ? '<div class="ql" aria-hidden="true">' + esc(T(q.label)) + (q.kind === 'step' ? '' : esc(q.value || '')) + '</div>' : '');
@@ -613,7 +619,7 @@
   var progInfo = function (h, id, tpl, V) {
     var S = h.states || {}, clock = function (ms) { return new Date(ms).toLocaleTimeString(window.casoraLocale ? window.casoraLocale() : undefined, { hour: 'numeric', minute: '2-digit' }); };
     var line = function (rem, doneSince) {
-      if (rem != null && rem > 0.5) return { t: T('Fertig um') + ' ' + clock(Date.now() + rem * 60000) + ' · ' + T('noch') + ' ' + H.dur(rem), ic: 'mdi:timer-sand' };
+      if (rem != null && rem > 0.5) return { t: T('Fertig um') + ' ' + clock(Date.now() + rem * 60000), sub: T('noch') + ' ' + H.dur(rem), ic: 'mdi:timer-sand' };
       if (doneSince) return { t: T('Fertig seit') + ' ' + clock(doneSince), ic: 'mdi:check-circle-outline' };
       return null;
     };

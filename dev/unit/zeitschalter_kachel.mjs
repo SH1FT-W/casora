@@ -66,10 +66,11 @@ const svg = ring('light.lampe', half, card, T0);
 assert.match(svg, /class="casora-progress-track"/);
 assert.match(svg, /class="casora-progress-arc"[^>]*stroke-dasharray="87.965"/);
 assert.match(svg, /--casora-timer-pct:50\.00/);
-assert.match(svg, /<text class="casora-timer-left"[^>]*>30<\/text>/);
+assert.match(svg, /<path class="casora-timer-left"/, 'Uhr-Symbol in der Mitte (Entscheid D)');
+assert.ok(!/<text/.test(svg), 'keine Zahl im Ring');
 assert.ok(svg.includes('aria-label="Off at ' + clk + '"'));
 assert.ok(!/#[0-9a-f]{3,6}\b/i.test(svg), 'keine festen Farben im Ring');
-assert.match(ring('switch.pumpe', S({ 'switch.pumpe': { at: iso(T0 + 75 * MIN), action: 'turn_on', start: iso(T0) } }), null, T0), /font-size="13">2h</);
+assert.match(ring('switch.pumpe', S({ 'switch.pumpe': { at: iso(T0 + 75 * MIN), action: 'turn_on', start: iso(T0) } }), null, T0), /aria-label="On at /);
 
 // 6) Takt: Kachel mit laufendem Timer wird angemeldet und neu gezeichnet, ohne Timer fällt sie raus
 assert.equal(intervals.length, 1);

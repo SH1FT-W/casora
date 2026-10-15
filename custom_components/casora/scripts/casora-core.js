@@ -775,15 +775,16 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     if (!n) return '';
     if (card) watch(card);
     var esc = function (x) { return String(x).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
-    var fs = n.label.length > 2 ? 11 : 13;
+    // Mitte: Uhr-Symbol (mdi:timer-outline, Entscheid D) – die Restzeit zeigt der Ring, die genaue Zeit das Halten-Menü
+    // und die Beschriftung (aria-label „Aus um …“). Eine Zahl wurde mit Helligkeit/Luftfeuchte verwechselt.
     return '<svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' + esc(n.title) + '"'
       + ' style="display:block;width:100%;height:100%;overflow:visible;--casora-timer-pct:' + n.pct.toFixed(2) + ';">'
       + '<g transform="rotate(-90 18 18)">'
       + '<circle class="casora-progress-track" cx="18" cy="18" r="14" fill="none" stroke-width="4" stroke-linecap="round"/>'
       + '<circle class="casora-progress-arc" cx="18" cy="18" r="14" fill="none" stroke-width="4" stroke-linecap="round" stroke-dasharray="87.965"/>'
       + '</g>'
-      + '<text class="casora-timer-left" x="18" y="18" text-anchor="middle" dominant-baseline="central" font-size="' + fs + '">'
-      + esc(n.label) + '</text></svg>';
+      + '<path class="casora-timer-left" transform="translate(10.5 10.5) scale(0.625)" d="M12,20A7,7 0 0,1 5,13A7,7 0 0,1 12,6A7,7 0 0,1 19,13A7,7 0 0,1 12,20M19.03,7.39L20.45,5.97C20,5.46 19.55,5 19.04,4.56L17.62,6C16.07,4.74 14.12,4 12,4A9,9 0 0,0 3,13A9,9 0 0,0 12,22C17,22 21,17.97 21,13C21,10.88 20.26,8.93 19.03,7.39M11,14H13V8H11M15,1H9V3H15V1Z"/>'
+      + '</svg>';
   };
 
   window.casoraTimerNote = note;
