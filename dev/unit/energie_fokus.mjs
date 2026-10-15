@@ -54,4 +54,26 @@ assert.equal(P.battery.soc, 'sensor.sb_soc');
 assert.equal(P.home.power, 'sensor.sb_haus');
 assert.equal(P.grid.power, 'sensor.sb_netz');
 assert.equal(P.grid.costToday, 'sensor.kosten_heute');
+// Namen sind nur Rückfall, als ganze Wörter und nur bei Leistung/Prozent (Code-Review 15.10.).
+{
+  const S2 = { ...states, 'sensor.k': st(80, 'W', 'power', 'Kühlschrank Verbrauch'), 'sensor.n': st(40, 'W', 'power', 'Netzwerkschrank'),
+    'sensor.hs': st(30, 'W', 'power', 'Homeserver Power'), 'sensor.ws': st(2, 'kW', 'power', 'Warmwasserspeicher'),
+    'sensor.kost': st(1.2, '€', 'monetary', 'Gartenhaus Kosten'), 'sensor.pv2': st(100, 'W', 'power', 'PV Balkon') };
+  const d = (id, label) => F.detect({ states: S2, entities: {} }, { energy_entity_1: id, energy_label_1: label }, 1);
+  assert.equal(d('sensor.k'), null, 'Kühlschrank');
+  assert.equal(d('sensor.n'), null, 'Netzwerkschrank');
+  assert.equal(d('sensor.hs'), null, 'Homeserver');
+  assert.equal(d('sensor.ws'), null, 'Warmwasserspeicher');
+  assert.equal(d('sensor.kost', 'Haus'), null, 'Kosten-Badge');
+  assert.equal(d('sensor.pv2'), 'solar', 'PV Balkon');
+  const S3 = { ...S2, 'sensor.sp': st(30, 'W', 'power', 'Solarpumpe Teich'), 'sensor.as': st(5, 'W', 'power', 'Akkuschrauber Ladegerät'),
+    'sensor.ho': st(90, 'W', 'power', 'Home Office'), 'sensor.bl': st(8, 'W', 'power', 'Batterieladegerät') };
+  const d3 = (id) => F.detect({ states: S3, entities: {} }, { energy_entity_1: id }, 1);
+  assert.equal(d3('sensor.sp'), null, 'Solarpumpe'); assert.equal(d3('sensor.as'), null, 'Akkuschrauber');
+  assert.equal(d3('sensor.ho'), null, 'Home Office'); assert.equal(d3('sensor.bl'), null, 'Batterieladegerät');
+  // Eigener Sensor ist Hauptwert: zweites Solar-Badge zeigt seinen Wert, nicht den des ersten.
+  const C = F.model({ states: S2, entities: {} }, 'solar', F.peers(hass, V), 'sensor.pv2');
+  assert.equal(C.solar, 'sensor.pv2');
+}
+
 console.log('ok energie_fokus');

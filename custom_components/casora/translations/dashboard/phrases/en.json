@@ -3511,6 +3511,14 @@
   [
    "^Solaranteil am Verbrauch (\\d+) %$",
    "Solar share of use {1}%"
+  ],
+  [
+   "^Solar ([\\d.,]+) kWh$",
+   "Solar {1} kWh"
+  ],
+  [
+   "^Netz ([\\d.,]+) kWh$",
+   "Grid {1} kWh"
   ]
  ]
 }

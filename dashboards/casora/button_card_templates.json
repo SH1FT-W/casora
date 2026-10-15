@@ -9263,7 +9263,13 @@
    "security_label_6": "[[[ return (window._casoraMobileSec || {})['security_label_6'] ?? null; ]]]",
    "security_label_7": "[[[ return (window._casoraMobileSec || {})['security_label_7'] ?? null; ]]]",
    "security_label_8": "[[[ return (window._casoraMobileSec || {})['security_label_8'] ?? null; ]]]",
-   "casora_rv": "[[[\n  // Variablen des Desktop-Raums für die Raumseite (casora-core.js, window.casoraPhoneRoom).\n  const f = states['input_select.casora_mobile_filter']?.state;\n  return window.casoraPhoneRoom ? window.casoraPhoneRoom.vars(f, variables.room_chips) : null;\n]]]\n"
+   "casora_rv": "[[[\n  // Variablen des Desktop-Raums für die Raumseite (casora-core.js, window.casoraPhoneRoom).\n  const f = states['input_select.casora_mobile_filter']?.state;\n  return window.casoraPhoneRoom ? window.casoraPhoneRoom.vars(f, variables.room_chips) : null;\n]]]\n",
+   "energy_popup_focus_1": null,
+   "energy_popup_focus_2": null,
+   "energy_popup_focus_3": null,
+   "energy_popup_focus_4": null,
+   "energy_popup_focus_5": null,
+   "energy_popup_focus_6": null
   }
  },
  "casora_mobile_weather": {
@@ -15265,7 +15271,13 @@
    "security_summary": null,
    "security_title": null,
    "media_title": null,
-   "people_title": null
+   "people_title": null,
+   "energy_popup_focus_1": null,
+   "energy_popup_focus_2": null,
+   "energy_popup_focus_3": null,
+   "energy_popup_focus_4": null,
+   "energy_popup_focus_5": null,
+   "energy_popup_focus_6": null
   }
  },
  "casora_scene_core": {

@@ -15,7 +15,11 @@
   if (window._casoraEnergyFocus) return;
 
   var FOCI = ['solar', 'battery', 'home', 'grid'];
-  var COL = { solar: '#FFD600', battery: '#0A84FF', home: '#BF5AF2', grid: '#FF453A', green: '#30D158' };
+  // Farben aus dem Theme (Design-Regeln § 5) – dieselben Töne wie der Energiefluss (FLOW_COL) und der
+  // Popup-Kopf (Ring-Hook unten).
+  var COL = { solar: 'var(--casora-color-yellow, #E8B04A)', battery: 'var(--casora-color-blue, #5B8FC9)',
+    home: 'var(--casora-color-teal, #4E9E95)', grid: 'var(--casora-color-red, #D35A4E)', green: 'var(--casora-color-green, #6AAE78)',
+    warm: 'var(--casora-color-orange, #DE8A4E)' };
   // Schlüssel (translation_key) bekannter Integrationen; Anker Solix zuerst.
   var TK = {
     input_power: 'solar', solarbank_input_power: 'solar', solar_power_1: 'solar', solar_power_2: 'solar',
@@ -25,8 +29,13 @@
     home_load_power: 'home', ac_to_home_load: 'home',
     grid_power_signed: 'grid', grid_to_home_power: 'grid', grid_export_power: 'grid',
   };
-  var NAMES = [[/solar|photovolt|\bpv\b/i, 'solar'], [/akku|batter|speicher|ladestand|\bsoc\b/i, 'battery'],
-    [/netz|grid|bezug|einspeis|smart.?meter/i, 'grid'], [/haus|home|verbrauch|bedarf|house/i, 'home']];
+  // Namen nur als letzter Rückfall und nur ganze Wörter: „Netzwerkschrank“, „Homeserver“ oder
+  // „Kühlschrank Verbrauch“ sind keine Anlage.
+  var NAMES = [[/\b(solar|solarleistung|solaranlage|solarstrom|pv|pv-anlage|photovoltaik)\b/i, 'solar'],
+    [/\b(akku|akkustand|akkuleistung|batterie|batteriespeicher|stromspeicher|battery|ladestand|soc)\b/i, 'battery'],
+    [/\b(netz|netzbezug|netzleistung|netzeinspeisung|grid|einspeisung|smart ?meter|smartmeter)\b/i, 'grid'],
+    [/\b(haus|hausbedarf|hausverbrauch|house|home)\b/i, 'home']];
+  var NOT_HOME = /\bhome\s*office\b/i;
 
   var num = function (states, id) {
     if (!id || !states[id]) return null;
@@ -85,20 +94,24 @@
     return (list && list[0] && list[0][k]) || null;
   };
 
+  // Studio-Feld je Entität gemerkt, damit der Popup-Kopf (casoraRingUrl) „Einfach“ kennt.
+  var OVR = {};
   function detect(hass, V, n) {
     V = V || {};
     var o = V['energy_popup_focus_' + n];
+    var id = V['energy_entity_' + n];
+    if (id) { if (o) OVR[id] = o; else delete OVR[id]; }
     if (o === 'simple') return null;
     if (FOCI.indexOf(o) > -1) return o;
-    var id = V['energy_entity_' + n];
     var states = (hass && hass.states) || {};
     if (!id || !states[id]) return null;
     var reg = ((hass && hass.entities) || {})[id];
     if (reg && TK[reg.translation_key]) return TK[reg.translation_key];
     var a = states[id].attributes || {};
     if (a.device_class === 'battery' || (a.unit_of_measurement === '%' && /akku|batter|lade|soc/i.test(id + ' ' + (a.friendly_name || '')))) return 'battery';
+    if (!isPower(states, id) && !isPct(states, id)) return null; /* Kosten/kWh-Badges sind keine Anlage */
     var txt = [V['energy_label_' + n], V['energy_popup_name_' + n], a.friendly_name, id].filter(Boolean).join(' ');
-    for (var i = 0; i < NAMES.length; i++) if (NAMES[i][0].test(txt)) return NAMES[i][1];
+    for (var i = 0; i < NAMES.length; i++) if (NAMES[i][0].test(txt) && !(NAMES[i][1] === 'home' && NOT_HOME.test(txt))) return NAMES[i][1];
     return null;
   }
 
@@ -141,6 +154,14 @@
   // Alle Entitäten, die ein Popup braucht, in einem Objekt (geht als JSON in die Live-Karten).
   function model(hass, focus, P, self) {
     var k = function (key2, domain) { return key(hass, 'anker_solix', key2, domain || 'sensor'); };
+    // Der eigene Sensor des Badges ist der Hauptwert (zwei Solar-Badges zeigen nicht beide den ersten).
+    var S0 = (hass && hass.states) || {};
+    if (self && S0[self]) {
+      P = JSON.parse(JSON.stringify(P));
+      if (focus === 'solar' && isPower(S0, self)) P.solar.power = self;
+      if (focus === 'home' && isPower(S0, self)) P.home.power = self;
+      if (focus === 'battery') { if (isPct(S0, self)) P.battery.soc = self; else if (isPower(S0, self)) P.battery.power = self; }
+    }
     return {
       focus: focus, self: self || null,
       solar: P.solar.power || null, solarToday: P.solar.today || null, solarMonth: P.solar.month || null,
@@ -207,7 +228,9 @@
     }
     if (part === 'flow') {
       var E = window._casoraSoftEnergy;
-      return E && E.flow ? E.flow(C.flow, states, hass, this) : '';
+      if (!E || !E.flow) return '';
+      var lbl = C.flow.only === 'from' ? 'Woher kommt der Strom' : C.flow.only === 'to' ? 'Wohin geht der Solarstrom' : '';
+      return (lbl && UI.label ? UI.label(lbl) : '') + E.flow(C.flow, states, hass, this);
     }
     return '';
   }
@@ -254,7 +277,7 @@
         row(C.discharge, 'mdi:battery-arrow-down-outline', COL.battery, 'Entladen', fW(watt(states, C.discharge), hass),
           C.battToday ? 'heute ' + (kwh(states, C.battToday, hass) || '—') : null, true),
         row(C.capacity, 'mdi:battery-outline', COL.battery, 'Kapazität', capv != null ? fN(capv / 1000, hass) + ' kWh' : null),
-        row(C.temp, 'mdi:thermometer', t != null && t >= 45 ? 'bad' : '#FF9F0A', 'Temperatur',
+        row(C.temp, 'mdi:thermometer', t != null && t >= 45 ? 'bad' : COL.warm, 'Temperatur',
           t != null ? Math.round(t) + ' ' + (unit(states, C.temp) || '°C') : null),
       ], 'Akku');
     } else if (C.focus === 'home') {
@@ -294,7 +317,8 @@
     var CH = { solar: ['Solarleistung', '4h'], battery: [C.soc ? 'Ladestand' : 'Akkuleistung', '24h'],
       home: ['Verbrauch', '4h'], grid: ['Netzleistung', '24h'] }[focus];
     if (typeof window._hpChartCfg === 'function' && ctx.metricCard) {
-      window._hpChartCfg(main, CH[0], CH[1], COL[focus], 120);
+      // Diagramm: geprüfte Stufen von casora-chart (c1 Blau, c2 Orange, c3 Türkis, c4 Gold) passend zur Art.
+      window._hpChartCfg(main, CH[0], CH[1], { solar: 'c4', battery: 'c1', home: 'c3', grid: 'c2' }[focus], 120);
       if (CH[1] === '24h' && window._hpSmooth) window._hpSmooth(main, '15min');
       var mc = ctx.metricCard;
       var cf = {
@@ -346,8 +370,9 @@
       f.ctl = { card: K.secCard([CC.socMin, CC.socMax, CC.exportSwitch], inner.common + 'const C = ' + JSON.stringify(CC) + ';\n' + ctl, states) };
     }
 
-    var L = { solar: ['flow', 'mods'], battery: ['batt'], home: ['flow', 'use'], grid: ['use', 'aut'] }[focus];
-    var R = { solar: ['yield'], battery: ['ctl'], home: ['top'], grid: ['ctl'] }[focus];
+    // Blaupause Popup: links Bedienung, rechts Infos.
+    var L = { solar: ['flow', 'mods'], battery: ['ctl'], home: ['flow', 'use'], grid: ['ctl'] }[focus];
+    var R = { solar: ['yield'], battery: ['batt'], home: ['top'], grid: ['use', 'aut'] }[focus];
     return K.layout({ fields: f, top: ['hero', 'chart'], left: L, right: R, moveLeft: ['top'],
       narrowOrder: L.concat(R) });
   }
@@ -359,11 +384,21 @@
     if (/\bcasora_badge_energy\b/.test(key2) && typeof window.casoraIconUrl === 'function') {
       var h = src && (src._hass || (document.querySelector('home-assistant') || {}).hass);
       var id = src && src._stateObj && src._stateObj.entity_id;
-      var f = id && h ? detect(h, { energy_entity_1: id }, 1) : null;
+      var f = id && h && OVR[id] !== 'simple' ? detect(h, { energy_entity_1: id, energy_popup_focus_1: OVR[id] }, 1) : null;
       if (f) return window.casoraIconUrl(GLYPH[f]);
     }
     return typeof prevRingUrl === 'function' ? prevRingUrl(src, key2) : null;
   };
+
+  // Popup-Kopf in der Farbe der Art (wie Diagramm und Zeilen), nicht in der freien Badge-Farbe.
+  (window._casoraRingHueHooks = window._casoraRingHueHooks || []).push(function (src, key2) {
+    if (!/\bcasora_badge_energy\b/.test(key2)) return null;
+    var h = src && (src._hass || (document.querySelector('home-assistant') || {}).hass);
+    var id = src && src._stateObj && src._stateObj.entity_id;
+    if (!id || !h || OVR[id] === 'simple') return null;
+    var f = detect(h, { energy_entity_1: id, energy_popup_focus_1: OVR[id] }, 1);
+    return f ? COL[f] : null;
+  });
 
   window._casoraEnergyFocus = { detect: detect, peers: peers, model: model, sec: sec, build: build };
 })();
