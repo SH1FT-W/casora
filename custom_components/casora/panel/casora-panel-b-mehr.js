@@ -968,7 +968,7 @@
     // ── Suche ───────────────────────────────────────────────────────────────
     const SECS = [
       // Das Design gilt für alle Dashboards (Einstellungen › Design, unten bei PAGES); hier bleibt die Bedienung.
-      ["General", "Controls", "bedienung kopfzeile knöpfe assist schrift leerlauf startseite tablet leistung dialoge"],
+      ["General", "Controls", "bedienung kopfzeile knöpfe assist schrift leerlauf startseite tablet leistung dialoge halten gedrückt lange drücken schnellmenü hold"],
       ["Weather", "Weather", "wetter temperatur vorhersage"], ["Time", "Time", "uhrzeit uhr datum uhrformat format 12 12h 12-stunden 12-stunden-uhr 24 24h 24-stunden stunden am pm"],
       ["Notifications", "Notifications", "glocke benachrichtigungen hinweise meldungen push"], ["Scenes", "Scenes", "szenen stimmung"],
       ["Now Playing", "Now Playing", "musik wiedergabe medien player"],
@@ -1009,6 +1009,8 @@
         + "absichern versehentlich aus versehen garage garagentor tor confirm", () => this._mGoTileOption("ask"), true, way("Tile", "Visibility & ask first"));
       A("whosees", "Who sees this?", "wer sieht sichtbar sichtbarkeit benutzer nutzer kind kinder person gast ausblenden verbergen verstecken "
         + "zugriff rechte berechtigung", () => this._mGoTileOption("who"), true, way("Tile", "Visibility & ask first"));
+      A("hold", "Hold on this tile", "halten gedrückt lange drücken langes drücken schnellmenü menü kontextmenü popup dialog hold long press",
+        () => this._mGoTileOption("hold"), true, way("Tile", "Visibility & ask first"));
       A("ventpush", "Ventilation hints on the phone", "lüften lueften lüftung lüftungs-coach coach handy push benachrichtigung benachrichtigungen "
         + "mitteilung mitteilungen nachricht empfänger telefon smartphone iphone app fenster", () => { this._bOpen = true; this._csOpenPage("vent"); },
         typeof this._csOpenPage === "function", way("Settings", "Ventilation"));
@@ -1112,6 +1114,7 @@
     P._mGoTileOption = function (kind) {
       const rooms = rooms$(this);
       const fits = (t) => {
+        if (kind === "hold") return holdsTile((t.type === "conditional" && t.card) || t);
         if (kind !== "ask") return true;
         const inner = (t.type === "conditional" && t.card) || t;
         const ty = I().tileTypeAny ? I().tileTypeAny(inner) : null;
@@ -1129,7 +1132,7 @@
       this._select({ group: "tiles", key, label: tileName(tile) });
       const show = (n) => {
         const box = this.shadowRoot.querySelector("#pane #band-tiles .tile.sel");
-        const row = box && box.querySelector(kind === "ask" ? ".row.mask" : ".mwho");
+        const row = box && box.querySelector(kind === "ask" ? ".row.mask" : kind === "hold" ? ".row.mhold" : ".mwho");
         if (!row) { if (n > 0) setTimeout(() => show(n - 1), 120); return; }
         const fold = row.closest(".adv");
         const sum = fold && fold.querySelector(":scope > .advsum");
@@ -1611,6 +1614,14 @@
     };
     P._mSwitchesSomething = switchesSomething;
 
+    // Halten je Kachel (variables.hold_mode): nur Casora-Kacheln (button-card mit Vorlage), keine
+    // Karussell-Hülle oder fremde Karte – das Halten-Menü liest die Variable an der Kachel selbst.
+    const HOLD_MODES = ["menu", "popup", "ha"];
+    const HOLD_LABELS = { "": "Same as dashboard", menu: "Quick menu", popup: "Open popup", ha: "Home Assistant dialog" };
+    const holdsTile = (t) => !!t && t.type === "custom:button-card"
+      && [].concat(t.template || []).some((x) => typeof x === "string" && x.indexOf("casora_") === 0);
+    P._mHoldsTile = holdsTile;
+
     // Kachel: visibility (HA-Bedingung „user“) an der Kachel bzw. ihrer Hülle.
     const tileUsers = (t) => {
       const c = t && Array.isArray(t.visibility) ? t.visibility.find((x) => x && x.condition === "user" && Array.isArray(x.users)) : null;
@@ -1702,6 +1713,27 @@
               if (canAsk()) askNow();
             };
             group.append(r, h, try_);
+          }
+          // Halten (22-halten.js): leer = wie im Dashboard eingestellt (Bedienung › Kacheln, window._casoraHoldMode).
+          if (holdsTile(inner) && typeof this._combo === "function") {
+            const r = document.createElement("div");
+            r.className = "row mhold";
+            const l = document.createElement("label");
+            l.textContent = tr("Hold");
+            l.setAttribute("data-no-i18n", "");
+            const V = inner.variables || {};
+            const cur = HOLD_MODES.includes(V.hold_mode) ? V.hold_mode : "";
+            const c = this._combo(cur, ["", ...HOLD_MODES], "", (v) => {
+              if (v && HOLD_MODES.includes(v)) { inner.variables = inner.variables || {}; inner.variables.hold_mode = v; }
+              else if (inner.variables) { delete inner.variables.hold_mode; if (!Object.keys(inner.variables).length) delete inner.variables; }
+              this._markDirty();
+            }, { fixed: true, labels: HOLD_LABELS });
+            r.append(l, c.wrap);
+            const h = document.createElement("div");
+            h.className = "hint";
+            h.setAttribute("data-no-i18n", "");
+            h.textContent = tr("What holding this tile does. Same as dashboard follows Controls › Tiles.");
+            group.append(r, h);
           }
           this._mWhoRow(group, () => tileUsers(shell), (ids) => setTileUsers(shell, ids), "Tile",
             (ids, users) => this._mElsewhere([inner.entity], ids, users, { tile: shell }),

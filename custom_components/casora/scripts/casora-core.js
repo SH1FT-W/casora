@@ -12706,6 +12706,84 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   });
 })();
 
+// Halten auf Kacheln (Studio › Bedienung › Kacheln, Variable hold_mode): window._casoraHoldMode =
+// 'menu' | 'popup' | 'ha' für das Halten-Menü (22-halten.js); je Kachel überstimmt variables.hold_mode.
+// Desktop: Raumvariable der Raumkarte jeder Ansicht (wie casora_idle_home). Handy: casora_mobile_bg –
+// dorthin spiegelt das Studio den Wert der Übersicht. Gelesen beim Laden, beim Seitenwechsel und vor
+// jedem Drücken/jeder Taste (ein Halten folgt immer einem pointerdown), je Konfiguration einmal ausgewertet.
+(function () {
+  if (window._casoraHoldWatch) return;
+  window._casoraHoldWatch = true;
+  if (!window._casoraHoldMode) window._casoraHoldMode = 'menu';
+
+  var MODES = /^(menu|popup|ha)$/;
+  var norm = function (v) { return typeof v === 'string' && MODES.test(v) ? v : 'menu'; };
+  var isSet = function (v) { return v !== undefined && v !== null && v !== ''; };
+  var isShell = function (c) { return [].concat((c && c.template) || []).indexOf('casora_mobile_bg') !== -1; };
+
+  // Nur die Ansichten, nie die Vorlagen (button_card_templates erklären hold_mode: null).
+  var fromConfig = function (cfg) {
+    var views = (cfg && cfg.views) || [];
+    for (var i = 0; i < views.length; i++) {
+      var hero = ((views[i] || {}).cards || [])[0];
+      var v = hero && hero.variables && hero.variables.hold_mode;
+      if (isSet(v)) return norm(v);
+    }
+    var hit = null;
+    var walk = function (o, d) {
+      if (hit !== null || !o || typeof o !== 'object' || d > 14) return;
+      if (Array.isArray(o)) { for (var k = 0; k < o.length && hit === null; k++) walk(o[k], d + 1); return; }
+      if (isShell(o)) { hit = norm(o.variables && o.variables.hold_mode); return; }
+      for (var key in o) {
+        if (key !== 'variables' && Object.prototype.hasOwnProperty.call(o, key)) walk(o[key], d + 1);
+      }
+    };
+    walk(views, 0);
+    return hit || 'menu';
+  };
+
+  var deep = function (root, tag, depth) {
+    if (!root || depth > 10 || !root.querySelector) return null;
+    var hit = root.querySelector(tag);
+    if (hit) return hit;
+    var kids = root.querySelectorAll('*');
+    for (var i = 0; i < kids.length; i++) {
+      if (kids[i].shadowRoot) {
+        var f = deep(kids[i].shadowRoot, tag, depth + 1);
+        if (f) return f;
+      }
+    }
+    return null;
+  };
+  var root = null, lookedAt = 0;
+  var memo = typeof WeakMap === 'function' ? new WeakMap() : null;
+  var refresh = function () {
+    if (!root || !root.isConnected) {
+      root = null;
+      // Ohne Dashboard (Studio, Einstellungen) nicht bei jedem Tipp den ganzen Baum durchsuchen.
+      if (Date.now() - lookedAt < 1500) return window._casoraHoldMode;
+      lookedAt = Date.now();
+      root = deep(document, 'hui-root', 0);
+    }
+    var cfg = root && root.lovelace && root.lovelace.config;
+    if (!cfg) return window._casoraHoldMode;
+    var m = memo && memo.get(cfg);
+    if (!m) { m = fromConfig(cfg); if (memo) memo.set(cfg, m); }
+    window._casoraHoldMode = m;
+    return m;
+  };
+  window._casoraHoldModeOf = fromConfig;
+  window._casoraHoldModeRefresh = refresh;
+
+  ['pointerdown', 'keydown'].forEach(function (t) {
+    window.addEventListener(t, function () { try { refresh(); } catch (e) { /* bleibt beim letzten Wert */ } }, { capture: true, passive: true });
+  });
+  window.addEventListener('location-changed', function () {
+    setTimeout(function () { lookedAt = 0; try { refresh(); } catch (e) { /* egal */ } }, 0);
+  }, true);
+  setTimeout(function () { try { refresh(); } catch (e) { /* egal */ } }, 0);
+})();
+
 // The mobile filter, per device. It lives in an input_select so the button-card
 // templates re-render when it changes, but an entity is one value for the whole
 // house, so two phones open at once drove each other. Each device now keeps its

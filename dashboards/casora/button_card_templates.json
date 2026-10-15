@@ -5477,7 +5477,8 @@
    "room_photo_blur": null,
    "room_groups": null,
    "font": null,
-   "font_family": null
+   "font_family": null,
+   "hold_mode": null
   }
  },
  "casora_mobile_chrome": {
@@ -15342,7 +15343,8 @@
    "energy_popup_focus_3": null,
    "energy_popup_focus_4": null,
    "energy_popup_focus_5": null,
-   "energy_popup_focus_6": null
+   "energy_popup_focus_6": null,
+   "hold_mode": null
   }
  },
  "casora_scene_core": {

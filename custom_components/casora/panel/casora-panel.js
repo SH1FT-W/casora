@@ -2137,6 +2137,7 @@ const SECTIONS = [
     blurb: "Header and buttons, font and speed – for this dashboard.",
     subs: [
       { id: "chrome", label: "Screen" },
+      { id: "hold", label: "Tiles" },
       // Die Detailfenster von Home Assistant (Mehr-Infos), nicht Casoras eigene Popups.
       { id: "dialogs", label: "HA detail dialogs" },
       { id: "text", label: "Text" },
@@ -2155,6 +2156,12 @@ const SECTIONS = [
         optionLabels: { "": "Off", "1": "After 1 minute", "2": "After 2 minutes",
           "5": "After 5 minutes", "10": "After 10 minutes" },
         hint: "Tablets only. Brings one back to Home after a while without use." },
+      // Halten auf Kacheln (22-halten.js): leer = Schnellmenü. casora-core.js setzt daraus window._casoraHoldMode,
+      // ans Handy geht es über casora_mobile_bg. Je Kachel überstimmbar (variables.hold_mode, Kachel-Inspektor).
+      { key: "hold_mode", sub: "hold", label: "Hold on tiles", type: "select", auto: true, scope: "dashboard",
+        options: ["", "popup", "ha"],
+        optionLabels: { "": "Quick menu", popup: "Open popup", ha: "Home Assistant dialog" },
+        hint: "What holding a tile does. A single tile can do something else – set it on the tile under Hold." },
       // Stored as casora_hide_* (true = hidden); shown the other way round,
       // so an on switch means "visible".
       { key: "casora_hide_dialog_logbook", sub: "dialogs", label: "Show logbook", type: "bool", invert: true,
@@ -5898,7 +5905,16 @@ class CasoraPanel extends HTMLElement {
     if (!want || this._tileRouteUsed === want) return;
     this._tileRouteUsed = want;
     const rooms = (this._state && this._state.compact.rooms) || [];
-    const has = (r) => (r && r.tiles || []).find((t) => t && t.entity === want);
+    // Auch Kacheln in Hüllen: Bedingung, Reihe (cards) und Karussell – gewählt wird die Hülle (Inspektor),
+    // aufgeleuchtet die Kachel selbst, falls die Vorschau sie einzeln zeichnet.
+    const inner = (t, d) => {
+      if (!t || typeof t !== "object" || d > 6) return null;
+      if (t.entity === want) return t;
+      if (t.card) { const x = inner(t.card, d + 1); if (x) return x; }
+      if (Array.isArray(t.cards)) for (const c of t.cards) { const x = inner(c, d + 1); if (x) return x; }
+      return null;
+    };
+    const has = (r) => (r && r.tiles || []).find((t) => t && inner(t, 0));
     let tile = has(rooms[this._room]);
     if (!tile) {
       const i = rooms.findIndex(has);
@@ -5907,7 +5923,9 @@ class CasoraPanel extends HTMLElement {
       this._renderTabs();
       tile = has(rooms[i]);
     }
-    this._select({ group: "tiles", key: this._tileKey(tile) });
+    const key = this._tileKey(tile);
+    this._select({ group: "tiles", key });
+    this._tileRouteReveal(["t:" + key, "t:" + this._tileKey(inner(tile, 0))]);
     // Einmal gewählt: ?tile aus der Adresse nehmen, damit ein späterer Aufruf dieselbe Kachel wieder wählt.
     try {
       const u = new URL(window.location.href);
@@ -5915,6 +5933,33 @@ class CasoraPanel extends HTMLElement {
       window.history.replaceState(window.history.state, "", u.pathname + u.search + u.hash);
       this._tileRouteUsed = "";
     } catch (e) { /* Adresse bleibt */ }
+  }
+  // Nach „Kachel bearbeiten“: Vorschau zur Kachel blättern und sie kurz aufleuchten lassen – wie beim
+  // Auswählen aus der Suche (_bFlash, auch waagerecht scrollende Reihen). Die Vorschau entsteht erst nach
+  // dem Laden und hinter dem Vorhang (booting): bis ~4 s warten, bis eines der Elemente sichtbar ist.
+  _tileRouteReveal(mks) {
+    const want = [...new Set((mks || []).filter((m) => m && m !== "t:undefined"))];
+    if (!want.length) return;
+    const t0 = Date.now();
+    const find = () => {
+      const map = this.shadowRoot && this.shadowRoot.querySelector(".card.map");
+      if (!map) return null;
+      for (const mk of want) {
+        const el = map.querySelector('[data-mk="' + CSS.escape(mk) + '"]:not(.bghost)');
+        if (el && el.getClientRects().length) return { mk, el };
+      }
+      return null;
+    };
+    const go = () => {
+      if (!this.isConnected) return;
+      const hit = !this.classList.contains("booting") && find();
+      if (!hit) { if (Date.now() - t0 < 4000) setTimeout(go, 150); return; }
+      if (typeof this._bFlash === "function") { this._bFlash(hit.mk); return; }
+      // Bisheriges Studio ohne _bFlash: nur hinblättern.
+      try { hit.el.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" }); } catch (e) { /* egal */ }
+    };
+    // Erst nach dem Vorhang (240 ms) – sonst leuchtet die Kachel unsichtbar auf.
+    setTimeout(go, 320);
   }
   _dashFromRoute() {
     try { return new URLSearchParams(window.location.search).get("dash") || ""; }

@@ -2400,7 +2400,16 @@
     "“{x}” is no longer in Add tile. Its tiles are removed – save to keep it.": "„{x}“ steht nicht mehr in „Kachel hinzufügen“. Die Kacheln sind entfernt – speichern, damit es bleibt.",
     "In progress": "In Arbeit",
     "This Community card is being retired. Your tiles keep working for now; a later update removes it.": "Diese Community-Karte wird eingestellt. Deine Kacheln laufen vorerst weiter, ein späteres Update entfernt sie.",
-    "This card is being retired. Your tiles keep working for now.": "Diese Karte wird eingestellt. Deine Kacheln laufen vorerst weiter."
+    "This card is being retired. Your tiles keep working for now.": "Diese Karte wird eingestellt. Deine Kacheln laufen vorerst weiter.",
+    "Hold on tiles": "Halten auf Kacheln",
+    "Quick menu": "Schnellmenü",
+    "Open popup": "Popup öffnen",
+    "Home Assistant dialog": "Home-Assistant-Dialog",
+    "What holding a tile does. A single tile can do something else – set it on the tile under Hold.": "Was Halten auf einer Kachel tut. Eine einzelne Kachel kann etwas anderes tun – einstellen an der Kachel unter „Halten“.",
+    "Hold": "Halten",
+    "Same as dashboard": "Wie Dashboard",
+    "What holding this tile does. Same as dashboard follows Controls › Tiles.": "Was Halten auf dieser Kachel tut. „Wie Dashboard“ folgt Bedienung › Kacheln.",
+    "Hold on this tile": "Halten auf dieser Kachel"
   },
   "patterns": [
     [
