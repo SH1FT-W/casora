@@ -111,6 +111,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Ein erfundener Luftbefeuchter mit Modi, Wassertank und Feuchtesensor, siehe befeuchter.py.
     from .befeuchter import extra as befeuchter_extra
     _merge(fixture, befeuchter_extra(dt_util.utcnow()), "Testbefeuchter")
+    # Je Kachelart ein Testgerät fürs Halten-Schnellmenü (Licht, Klima, Drucker, Alarm …), siehe halten.py.
+    if not demo:
+        from .halten import extra as halten_extra
+        _merge(fixture, halten_extra(dt_util.utcnow()), "Halten-Testgeräte")
     _vacuum_map(fixture)
     # Nur auf Wunsch: HACS-artige Update-Entität für Casora (hacs_casora.py).
     hacs_cfg = await hass.async_add_executor_job(_load_optional, "hacs_casora.json")

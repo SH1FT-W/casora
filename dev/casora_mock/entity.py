@@ -7,6 +7,7 @@ die Werte 1:1 dem Schnappschuss entsprechen.
 """
 from __future__ import annotations
 
+import re
 import struct
 import zlib
 from datetime import datetime, timedelta
@@ -19,6 +20,8 @@ from homeassistant.util import dt as dt_util
 
 DOMAIN = "casora_mock"
 HIDE_ATTRS = {"friendly_name", "icon", "unit_of_measurement", "device_class", "supported_features"}
+# Zahlencode der Test-Alarmanlagen mit code_format (halten.py: „Testalarm Code“).
+ALARM_CODE = "1234"
 
 
 class MockEntity(Entity):
@@ -160,6 +163,13 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             for k in ("color_temp_kelvin", "rgb_color", "rgbw_color", "rgbww_color", "hs_color", "xy_color", "effect"):
                 if k in kw:
                     attrs[k] = list(kw[k]) if isinstance(kw[k], tuple) else kw[k]
+            # Farbmodus folgt der gewählten Farbe (wie echte Leuchten) – sonst bliebe color_mode alt stehen.
+            sup = self.a.get("supported_color_modes") or []
+            for k, cm in (("color_temp_kelvin", "color_temp"), ("hs_color", "hs"), ("rgb_color", "rgb"),
+                          ("rgbw_color", "rgbw"), ("rgbww_color", "rgbww"), ("xy_color", "xy")):
+                if k in kw and cm in sup:
+                    attrs["color_mode"] = cm
+                    break
             self.put("on", **attrs)
 
         async def async_turn_off(self, **kw) -> None:
@@ -184,11 +194,27 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             return None
 
     class MFan(MockEntity, ToggleMixin, FanEntity):
+        # HA prüft set_preset_mode gegen preset_modes (Eigenschaft, nicht Attribut).
+        @property
+        def preset_modes(self):
+            return self.a.get("preset_modes")
+
+        @property
+        def preset_mode(self):
+            return self.a.get("preset_mode")
+
+        @property
+        def percentage(self):
+            return self.a.get("percentage")
+
         # FanEntity ruft turn_on(percentage, preset_mode, **kw) mit Positionsargumenten auf.
         async def async_turn_on(self, percentage=None, preset_mode=None, **kw) -> None:
             self.put("on", **{k: v for k, v in (("percentage", percentage), ("preset_mode", preset_mode)) if v is not None})
 
         async def async_set_percentage(self, percentage: int) -> None:
+            # Eine feste Stufe beendet den preset-Modus (wie echte Luftreiniger).
+            if "preset_mode" in self.a:
+                self.a["preset_mode"] = None
             self.put("on" if percentage else "off", percentage=percentage)
 
         async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -287,11 +313,30 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         async def async_media_stop(self) -> None:
             self.put("idle")
 
+        # Titelwechsel nur mit Titelnummer (media_track, z. B. Testlautsprecher): „Testlied 1“ → „Testlied 2“.
+        def _track(self, step: int) -> None:
+            n = self.a.get("media_track")
+            if not isinstance(n, int):
+                return
+            n = max(1, n + step)
+            title = re.sub(r"\d+$", str(n), str(self.a.get("media_title") or ""))
+            self.put(None, media_track=n, media_title=title)
+
         async def async_media_next_track(self) -> None:
-            return None
+            self._track(1)
 
         async def async_media_previous_track(self) -> None:
-            return None
+            self._track(-1)
+
+        @property
+        def volume_level(self):
+            return self.a.get("volume_level")
+
+        async def async_volume_up(self) -> None:
+            self.put(None, volume_level=round(min(1.0, float(self.volume_level or 0) + 0.1), 2))
+
+        async def async_volume_down(self) -> None:
+            self.put(None, volume_level=round(max(0.0, float(self.volume_level or 0) - 0.1), 2))
 
         async def async_set_volume_level(self, volume: float) -> None:
             self.put(None, volume_level=volume)
@@ -381,24 +426,49 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             self.put(str(value))
 
     class MAlarm(MockEntity, AlarmControlPanelEntity):
-        _attr_code_arm_required = False
+        # Code wie Alarmo aus den Attributen (code_format, code_arm_required). Mit code_format gilt der
+        # Testcode ALARM_CODE – ein anderer oder fehlender Code wird abgelehnt (Scharf nur mit code_arm_required).
+        @property
+        def code_format(self):
+            from homeassistant.components.alarm_control_panel import CodeFormat
+            try:
+                return CodeFormat(self.a["code_format"]) if self.a.get("code_format") else None
+            except ValueError:
+                return None
+
+        @property
+        def code_arm_required(self) -> bool:
+            return bool(self.a.get("code_arm_required", False))
+
+        def _check(self, code, arm: bool) -> None:
+            if not self.code_format or (arm and not self.code_arm_required):
+                return
+            if str(code or "") != ALARM_CODE:
+                from homeassistant.exceptions import HomeAssistantError
+                raise HomeAssistantError("Falscher Code (Test)")
 
         async def async_alarm_disarm(self, code=None) -> None:
+            self._check(code, False)
             self.put("disarmed")
 
         async def async_alarm_arm_home(self, code=None) -> None:
+            self._check(code, True)
             self.put("armed_home")
 
         async def async_alarm_arm_away(self, code=None) -> None:
+            self._check(code, True)
             self.put("armed_away")
 
         async def async_alarm_arm_night(self, code=None) -> None:
+            self._check(code, True)
             self.put("armed_night")
 
         async def async_alarm_arm_vacation(self, code=None) -> None:
+            self._check(code, True)
             self.put("armed_vacation")
 
         async def async_alarm_arm_custom_bypass(self, code=None) -> None:
+            self._check(code, True)
             self.put("armed_custom_bypass")
 
         async def async_alarm_trigger(self, code=None) -> None:
