@@ -172,7 +172,8 @@
       if (/^(pause|paused)$/.test(ps) && P.resume && S[P.resume]) pb.push(svc('Fortsetzen', 'mdi:play', 'button.press', null, { entity: P.resume, wide: true }));
       else if (/^(running|printing|print)$/.test(ps) && P.pause && S[P.pause]) pb.push(svc('Pause', 'mdi:pause', 'button.press', null, { entity: P.pause, wide: true }));
       if (P.light && S[P.light] && !bad(S[P.light].state)) {
-        pb.push(svc('Licht', 'mdi:lightbulb-outline', 'light.toggle', null, { entity: P.light, wide: true, on: S[P.light].state === 'on' }));
+        var pOn = S[P.light].state === 'on';
+        pb.push(svc(pOn ? 'Licht aus' : 'Licht an', pOn ? 'mdi:lightbulb-off-outline' : 'mdi:lightbulb-outline', 'light.toggle', null, { entity: P.light, wide: true, on: pOn }));
       }
       if (pb.length) m.quick.push({ kind: 'buttons', items: pb });
       if (P.cam && S[P.cam]) m.acts.push({ key: 'live', t: 'Kamera live', ic: 'mdi:cctv', entity: P.cam });
@@ -180,7 +181,8 @@
     // Aquarium: Licht des Beckens an/aus.
     var L = o.aqLight && S[o.aqLight];
     if (L && !bad(L.state) && /^(light|switch)\./.test(o.aqLight)) {
-      m.quick.push({ kind: 'buttons', items: [svc('Licht', 'mdi:lightbulb-outline', 'homeassistant.toggle', null, { entity: o.aqLight, wide: true, on: L.state === 'on' })] });
+      var lOn = L.state === 'on';
+      m.quick.push({ kind: 'buttons', items: [svc(lOn ? 'Licht aus' : 'Licht an', lOn ? 'mdi:lightbulb-off-outline' : 'mdi:lightbulb-outline', 'homeassistant.toggle', null, { entity: o.aqLight, wide: true, on: lOn })] });
     }
     // Kamera: groß und live.
     if (dom === 'camera' && !dead) m.acts.push({ key: 'live', t: 'Live ansehen', ic: 'mdi:cctv', entity: id });
@@ -248,6 +250,9 @@
     + '.pane.sheet{left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom, 0px) * 0.4);width:auto;max-width:420px;margin:0 auto;'
     +   'max-height:min(520px, calc(100vh - 150px));max-height:min(520px, calc(100dvh - 150px));transform:translateY(10px) scale(.98);transform-origin:50% 100%;}'
     /* Zeilen wie die übrigen Casora-Menüs: Kreis 36 | Text, 52 hoch, Pille 26. */
+    + '.head{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 16px 8px;text-align:center;}'
+    + '.head b{font-size:var(--casora-fs-heading, 17px);font-weight:700;letter-spacing:-0.01em;line-height:22px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
+    + '.head span{font-size:var(--casora-fs-sub, 13px);font-weight:500;color:var(--casora-text-2, rgba(127,127,127,.9));}'
     + '.row{display:grid;grid-template-columns:var(--casora-ic-row, 36px) minmax(0,1fr) auto;align-items:center;column-gap:var(--casora-menu-ic-gap, 12px);'
     +   'height:var(--casora-menu-row-h, 52px);padding:var(--casora-menu-row-pad, 0 16px 0 8px);box-sizing:border-box;border-radius:var(--casora-menu-row-radius, 26px);'
     +   'font-size:var(--casora-fs-row, 15px);font-weight:var(--casora-menu-item-weight, 600);letter-spacing:-0.01em;line-height:20px;cursor:pointer;user-select:none;outline:none;'
@@ -327,10 +332,11 @@
       return '<div class="row' + (cls ? ' ' + cls : '') + '" role="menuitem" tabindex="-1" data-k="' + esc(key) + '"' + (i != null ? ' data-i="' + i + '"' : '') + '>'
         + '<div class="ic"><ha-icon icon="' + esc(ic) + '"></ha-icon></div><span>' + esc(T(t)) + '</span>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div>';
     };
-    // Handy: kein Kopf – Name und Zustand stehen schon scharf auf der Kachel darüber.
+    // Handy: Kopf mit Name und Zustand nur, wenn das Blatt die Kachel verdeckt (sonst steht beides scharf darüber).
+    if (c.phone && c.covered) out += '<div class="head"><b>' + esc(c.name) + '</b>' + (c.state ? '<span>' + esc(c.state) + '</span>' : '') + '</div>';
     if (m.main) out += row('main', m.main.t, m.main.ic, 'main');
     m.quick.forEach(function (q, qi) {
-      out += '<div class="q">' + (q.label ? '<div class="ql">' + esc(T(q.label)) + esc(q.value || '') + '</div>' : '');
+      out += '<div class="q">' + (q.label ? '<div class="ql">' + esc(T(q.label)) + (q.kind === 'step' ? '' : esc(q.value || '')) + '</div>' : '');
       if (q.kind === 'step') {
         out += '<div class="step"><div class="pill" role="button" tabindex="-1" aria-label="' + esc(T('Kälter')) + '" data-k="step" data-q="' + qi + '" data-d="-1"><ha-icon icon="mdi:minus"></ha-icon></div>'
           + '<b>' + esc(H.fmtTemp(q.value, q.unit)) + '</b>'
@@ -624,21 +630,25 @@
     paint();
     var pane = host.shadowRoot.querySelector('.pane');
     place(pane, r, phone);
+    if (phone && r.bottom > pane.getBoundingClientRect().top - 8) { cur.covered = true; paint(); }
     requestAnimationFrame(function () { requestAnimationFrame(function () { if (cur) host.classList.add('open'); }); });
 
-    // button-card meldet Halten erst beim Loslassen – nur kurz sperren, falls danach noch ein Klick nachkommt.
-    setTimeout(function () { if (cur) cur.armed = true; }, 150);
+    // button-card meldet Halten erst beim Loslassen. Bedienbar erst nach einer Sperrzeit und nur mit einem neuen
+    // Antippen danach – ein Nachtipper am Handy (Blatt rutscht unter den Finger) schaltet sonst gleich etwas.
+    setTimeout(function () { if (cur) cur.armed = true; }, phone ? 450 : 150);
 
     host.shadowRoot.addEventListener('click', function (ev) {
       if (!cur) return;
       ev.stopPropagation();
       var p = ev.composedPath(), n = null;
       for (var i = 0; i < p.length; i++) { if (p[i].getAttribute && p[i].getAttribute('data-k')) { n = p[i]; break; } if (p[i] === pane) break; }
-      if (!cur.armed) return;
+      if (!cur.armed || !cur.downOk) return;
+      cur.downOk = false;
       if (n) choose(n);
       else if (p.indexOf(pane) === -1) H.close(true);
     });
     host.shadowRoot.addEventListener('pointerdown', function (ev) {
+      if (cur) cur.downOk = !!cur.armed;
       var t = ev.composedPath().find(function (x) { return x.classList && (x.classList.contains('row') || x.classList.contains('pill')); });
       if (t) { t.classList.add('press'); var off = function () { t.classList.remove('press'); }; setTimeout(off, 260); }
     });
@@ -701,8 +711,8 @@
     if (!tile || [].concat(tile._config.template || []).some(function (x) { return NO_MENU.test(String(x)); })) return;
     var h = hassNow(), id = (tile._stateObj && tile._stateObj.entity_id) || '', cfg = tile._config;
     // Nur Halten, das bisher ein Popup/HAs Dialog war (bzw. Jalousie) – eigene Halten-Aktionen (Licht-Badge: Smart-Toggle) bleiben.
-    if (!h || !id || !h.states[id] || !H.wants(cfg)) return;
-    if (H.worth(modelFor(h, id, tile))) {
+    if (!h || !H.wants(cfg)) return;
+    if (id && h.states[id] && H.worth(modelFor(h, id, tile))) {
       if (H.open(tile, { src: path[0], via: H.via(cfg) })) { ev.stopPropagation(); ev.stopImmediatePropagation(); }
       return;
     }

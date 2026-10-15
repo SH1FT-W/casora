@@ -93,7 +93,7 @@ const S = { 'button.p_pause': st('button.p_pause', 'unknown'), 'button.p_resume'
   'light.p_light': st('light.p_light', 'on'), 'camera.p_cam': st('camera.p_cam', 'idle'), 'sensor.p_stage': st('sensor.p_stage', 'running') };
 const PR = { st: 'sensor.p_stage', pause: 'button.p_pause', resume: 'button.p_resume', light: 'light.p_light', cam: 'camera.p_cam' };
 m = H.model(st('sensor.p_stage', 'running'), { printer: PR, states: S });
-assert.deepEqual(m.quick[0].items.map((x) => x.t), ['Pause', 'Licht']);
+assert.deepEqual(m.quick[0].items.map((x) => x.t), ['Pause', 'Licht aus']);
 assert.equal(m.quick[0].items[0].entity, 'button.p_pause');
 assert.equal(m.quick[0].items[1].on, true);
 assert.equal(m.acts[0].t, 'Kamera live');
