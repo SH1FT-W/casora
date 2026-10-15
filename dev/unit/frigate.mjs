@@ -103,7 +103,7 @@ states['image.gartentor_person'].state = iso(3); states['image.gartentor_car'].s
 states[ID].state = 'unavailable';
 assert.equal(n(F.tileText(F.status(c, states, NOW), NOW)), null, 'offline: Kamera-Kachel sagt „Offline“');
 states[ID].state = 'recording';
-assert.equal(F.ago(NOW - 30000, NOW), 'gerade eben'); assert.equal(n(F.ago(NOW - 90 * 60000, NOW)), 'vor 2 Std.');
+assert.equal(n(F.ago(NOW - 30000, NOW)), 'gerade eben'); assert.equal(n(F.ago(NOW - 90 * 60000, NOW)), 'vor 2 Std.');
 assert.equal(n(F.ago(NOW - 5 * 60000, NOW, true)), '5 Min.', 'Kurzform ohne „vor“'); assert.ok(/vor\u00a05\u00a0Min\./.test(F.ago(NOW - 5 * 60000, NOW)), 'geschützte Leerzeichen');
 assert.equal(F.label('license_plate'), 'Kennzeichen'); assert.equal(F.label('garbage_truck'), 'Garbage truck', 'unbekannt lesbar');
 window.casoraLocale = () => 'en';
@@ -137,9 +137,12 @@ window._casoraUI = {
   group: (rows, label) => '<group ' + label + '>' + rows.map((r) => r.label + '=' + (r.value || '') + '~' + (r.sub || '') + (r.confirm ? '!' : '') + (r.entity ? '@' + r.entity : '')).join(';') + '</group>',
 };
 let h = n(F.sec('hero', c, states, hass));
-assert.ok(/^<line>Zuletzt: Person\|vor \d+ Min\.;Aufnahme an<\/line>$/.test(h), h);
+assert.ok(/^<line>Zuletzt: Person\|vor \d+ Min\.<\/line>$/.test(h), h);
+states['switch.gartentor_recordings'].state = 'off';
+assert.ok(/Aufnahme aus/.test(n(F.sec('hero', c, states, hass))), 'nur „Aufnahme aus“ steht im Kopf');
+states['switch.gartentor_recordings'].state = 'on';
 states['binary_sensor.gartentor_person_occupancy'] = { state: 'on', attributes: {}, last_changed: new Date().toISOString() };
-assert.ok(/^<line>Person erkannt\|Aufnahme an/.test(F.sec('hero', c, states, hass)));
+assert.ok(/^<line>Person erkannt\|/.test(n(F.sec('hero', c, states, hass))));
 const ctl = n(F.sec('ctl', c, states, hass));
 assert.ok(/<group Aufnahme & Erkennung>Aufnahme=An~!/.test(ctl) && /Schnappschüsse=An~[^!]/.test(ctl) && /Bewegungserkennung=An~Löst die Objekterkennung aus!/.test(ctl), ctl);
 assert.ok(!/(>|;)(Objekterkennung|Erkennung|Detect)=/.test(ctl), 'Erkennung ist der Hauptschalter im Kopf, nicht doppelt');
@@ -175,7 +178,7 @@ F.sec('ev', c, states, okWs);
 await new Promise((r) => setTimeout(r, 10));
 let evh = n(F.sec('ev', c, states, okWs));
 assert.equal((evh.match(/@frigate-ev:/g) || []).length, 8, evh);
-assert.ok(/Mehr anzeigen=~@frigate-more:camera\.gartentor/.test(evh) && /Person=Läuft~/.test(evh), 'laufende Erkennung: „Läuft“, sonst kein Wert rechts');
+assert.ok(/data-casora-mi="frigate-more:camera\.gartentor"[^>]*>.*Mehr anzeigen/.test(evh) && /Person=Läuft~/.test(evh), evh);
 const hook = (id) => window._casoraMiHooks.some((fn) => fn(id));
 assert.ok(hook('frigate-more:camera.gartentor'));
 assert.equal((n(F.sec('ev', c, states, okWs)).match(/@frigate-ev:/g) || []).length, 10, 'Mehr: alle');

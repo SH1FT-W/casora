@@ -8162,7 +8162,8 @@ window.casoraMenuGlass = {
   }
 
   // Weich: Farbe nur für Warnung und Fehler (B-16), „gut“/Akzent bleiben neutral.
-  function alertTone(t) { return (t === 'warn' || t === 'bad') ? tone(t) : null; }
+  // Auch eine feste Farbe (var(…)/#…), z. B. Schrift-Rot --casora-color-red-text für „Läuft“ (Frigate, 4,9 : 1).
+  function alertTone(t) { return (t === 'warn' || t === 'bad') ? tone(t) : (typeof t === 'string' && /^(var\(|#)/.test(t) ? t : null); }
 
   // Statuszeile: Zustand fett und dunkel, Rest gedämpft, dicht unter dem Titel.
   // rest: Texte oder { text, tone } (Ton nur für Warnung/Fehler).
