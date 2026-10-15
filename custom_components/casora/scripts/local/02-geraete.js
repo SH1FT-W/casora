@@ -470,7 +470,8 @@
   const BT_TOL_MS = 30 * 60 * 1000;
   const rs = V.light_reachable && states[V.light_reachable];
   if (rs && rs.state === 'off' && Date.now() - new Date(rs.last_changed).getTime() > BT_TOL_MS) warn.push('Licht nicht erreichbar');
-  else if (dead(V.light_entity)) warn.push('Licht offline');
+  // Mit Erreichbar-Sensor gilt dessen Toleranz auch für „unavailable“ (BT-Lampen melden bei jedem Aussetzer beides).
+  else if (!rs && dead(V.light_entity)) warn.push('Licht offline');
   const all = alarm.concat(warn);
   if (!all.length) return { level: 0, text: 'Alles ok', reasons: [] };
   const level = alarm.length ? 2 : 1;
