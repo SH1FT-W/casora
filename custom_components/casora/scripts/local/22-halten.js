@@ -4,8 +4,9 @@
 // Lichtfarbe, Jalousie, Temperatur, Wiedergabe), der Zeitschalter („Aus in 30 Min.“, Dienst
 // casora.set_timer) und die Wege Popup öffnen · Verlauf · Einstellungen · Kachel bearbeiten.
 // Rest der Seite unscharf, die Kachel bleibt scharf; am Handy als Blatt von unten.
-// Abgefangen wird button-cards „hass-action“ (action: hold) einer casora_-Kachel, deren Halten bisher
-// ein Popup bzw. HAs Dialog öffnete; „Popup öffnen“ schickt genau dieses Halten weiter.
+// Abgefangen wird button-cards internes „action“-Ereignis (action: hold) einer casora_-Kachel, deren Halten
+// bisher ein Popup bzw. HAs Dialog öffnete (button-card macht daraus erst danach ein „hass-action“ mit
+// der Halten-Konfiguration); „Popup öffnen“ schickt genau dieses Halten weiter.
 //   window._casoraHold.model(stateObj, o) → { main, quick[], timer, rows[] } (ohne DOM, für Tests)
 //   window._casoraHold.open(tile, detail)  – Menü zur Kachel öffnen
 //   window._casoraHold.close()
@@ -166,8 +167,8 @@
     + ':host(.open) .lift{opacity:1;}'
     + '.pane{position:fixed;box-sizing:border-box;width:288px;max-width:calc(100vw - 32px);overflow:auto;overscroll-behavior:contain;'
     +   'padding:var(--casora-menu-pad, 8px);border-radius:var(--casora-menu-radius, 34px);'
-    +   'background:var(--casora-menu-pane, rgba(251,248,243,0.96));-webkit-backdrop-filter:blur(24px) saturate(1.2);backdrop-filter:blur(24px) saturate(1.2);'
-    +   'box-shadow:var(--casora-window-shadow, 0 18px 44px -14px rgba(60,40,20,0.35));color:var(--casora-menu-fg, var(--primary-text-color, #2E2721));'
+    +   'background:var(--casora-menu-pane, var(--ha-card-background, var(--card-background-color, rgba(251,248,243,0.96))));-webkit-backdrop-filter:blur(24px) saturate(1.2);backdrop-filter:blur(24px) saturate(1.2);'
+    +   'box-shadow:var(--casora-window-shadow, 0 18px 44px -14px rgba(60,40,20,0.35));color:var(--casora-menu-fg, var(--primary-text-color, rgba(46,39,33,0.95)));'
     +   'opacity:0;transform:scale(.96);transition:transform var(--casora-dur-enter, .32s) var(--casora-ease-enter, cubic-bezier(.2,.8,.3,1)), opacity .18s ease;}'
     + ':host(.open) .pane{opacity:1;transform:none;}'
     + '@supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){.pane{background:var(--casora-menu-pane-webkit, var(--casora-menu-pane, rgb(248,244,237)));}}'
@@ -204,7 +205,7 @@
     + '.pill ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;}'
     + '.pill:active,.pill.press{transform:scale(var(--casora-press-scale, .97));}'
     + '.pill:focus-visible{box-shadow:inset 0 0 0 2px var(--casora-hold-hue, var(--primary-color, #B67A50));}'
-    + '.pill.on{background:var(--casora-soft-seg-on, #fff);box-shadow:var(--casora-soft-seg-on-shadow, none);color:var(--casora-soft-seg-on-ink, inherit);}'
+    + '.pill.on{background:var(--casora-soft-seg-on, var(--primary-color, #B67A50));box-shadow:var(--casora-soft-seg-on-shadow, none);color:var(--casora-soft-seg-on-ink, var(--text-primary-color, #fff));}'
     + '.pill.busy{opacity:.55;pointer-events:none;}'
     + '.step{display:flex;align-items:center;gap:6px;}'
     + '.step .pill{flex:0 0 48px;}'
@@ -405,8 +406,8 @@
     if (k === 'popup') {
       // Das ursprüngliche Halten weiterreichen (öffnet das Popup wie bisher), Kachel als Quelle für den Ring.
       window._casoraLastTile = { el: tile, at: Date.now() };
-      tile.dispatchEvent(new CustomEvent('hass-action', { bubbles: true, composed: true,
-        detail: Object.assign({}, detail, { casoraHoldPass: true }) }));
+      ((detail && detail.src) || tile).dispatchEvent(new CustomEvent('action', { bubbles: true, composed: true,
+        detail: { action: (detail && detail.via) || 'hold', casoraHoldPass: true } }));
       return;
     }
     if (k === 'history') { if (!(Z && Z.openMeasure(id, '24h', null))) navigate('/history?entity_id=' + encodeURIComponent(id)); return; }
@@ -527,19 +528,32 @@
     }
     return null;
   };
-  H.wants = function (cfg) {
-    var a = cfg && cfg.hold_action && cfg.hold_action.action;
+  // Rohe Kachel-Konfiguration: Popup-Aktion (auch als Ausdruck über casoraPopupAction) oder HAs Dialog.
+  var popupish = function (x) {
+    var a = x && x.action;
+    if (typeof a !== 'string') return false;
+    if (/\[\[\[/.test(a)) return /casoraPopupAction|more-info/.test(a);
     return a === 'more-info' || a === 'fire-dom-event';
   };
-  window.addEventListener('hass-action', function (ev) {
+  // Menü, wenn Halten bisher ein Popup öffnete – oder schaltete (Jalousie) und Tippen das Popup öffnet;
+  // das Schalten steht dann als Hauptaktion im Menü. Rückgabe: welche Aktion „Popup öffnen“ auslöst.
+  H.via = function (cfg) {
+    if (!cfg) return null;
+    if (popupish(cfg.hold_action)) return 'hold';
+    if (cfg.hold_action && cfg.hold_action.action === 'toggle' && popupish(cfg.tap_action)) return 'tap';
+    return null;
+  };
+  H.wants = function (cfg) { return !!H.via(cfg); };
+  window.addEventListener('action', function (ev) {
     var d = ev.detail || {};
     if (d.action !== 'hold' || d.casoraHoldPass || window.CASORA_HOLD_MENU === false) return;
     if (!(window.casoraPopup && window.casoraPopup.enabled)) return;
     if (/^\/casora-studio/.test(location.pathname)) return;
-    var tile = casoraTile((ev.composedPath && ev.composedPath()) || []);
-    if (!tile || !H.wants(d.config)) return;
+    var path = (ev.composedPath && ev.composedPath()) || [];
+    var tile = casoraTile(path);
+    if (!tile || !H.wants(tile._config)) return;
     var h = hassNow(), id = (tile._stateObj && tile._stateObj.entity_id) || '';
     if (!h || !id || !h.states[id]) return;
-    if (H.open(tile, d)) { ev.stopPropagation(); ev.stopImmediatePropagation(); }
+    if (H.open(tile, { src: path[0], via: H.via(tile._config) })) { ev.stopPropagation(); ev.stopImmediatePropagation(); }
   }, true);
 })();

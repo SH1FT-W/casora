@@ -71,4 +71,8 @@ assert.equal(H.wants({ hold_action: { action: 'more-info' } }), true);
 assert.equal(H.wants({ hold_action: { action: 'fire-dom-event' } }), true);
 assert.equal(H.wants({ hold_action: { action: 'none' } }), false);
 assert.equal(H.wants({ hold_action: { action: 'toggle' } }), false);
+assert.equal(H.via({ hold_action: { action: 'toggle' }, tap_action: { action: "[[[ return window.casoraPopupAction ? window.casoraPopupAction() : 'more-info'; ]]]" } }), 'tap', 'Jalousie: Halten schaltete, Tippen öffnet das Popup');
+assert.equal(H.via({ hold_action: { action: 'more-info' } }), 'hold');
+assert.equal(H.wants({ hold_action: { action: "[[[\nreturn window.casoraPopupAction ? window.casoraPopupAction() : 'more-info';\n]]]\n" } }), true);
+assert.equal(H.wants({ hold_action: { action: "[[[ return 'call-service' ]]]" } }), false);
 console.log('halten: ok');
