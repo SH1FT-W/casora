@@ -297,13 +297,16 @@
     + '.row > span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
     + '.row small{font-size:var(--casora-fs-sub, 13px);font-weight:500;color:var(--casora-text-2, rgba(127,127,127,.9));}'
     + '@media (hover:hover){.row:hover{background:var(--casora-menu-hover, rgba(140,115,90,0.08));}}'
-    + '.row:focus-visible{box-shadow:inset 0 0 0 2px var(--casora-hold-hue, var(--primary-color, #B67A50));}'
+    /* Fokus als outline (box-shadow der Hauptzeile/aktiven Pille überdeckte ihn), feste Farbe statt Gerätefarbe (Kontrast). */
+    + '.row:focus-visible{outline:2px solid var(--casora-hold-focus, var(--casora-popup-ui-action, #276B64));outline-offset:2px;}'
     + '.row:active,.row.press{transform:scale(var(--casora-press-scale, .97));background:var(--casora-mnav-press-fill, rgba(127,127,127,0.16));}'
     + '.ic{width:var(--casora-ic-row, 36px);height:var(--casora-ic-row, 36px);border-radius:50%;display:flex;align-items:center;justify-content:center;'
     +   'background:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, currentColor);}'
     + '.ic ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;}'
     + '.row.main{background:var(--casora-soft-row-active, rgba(127,127,127,0.10));box-shadow:var(--casora-soft-row-active-shadow, none);}'
     + '.row.main .ic{background:var(--casora-hold-hue, var(--casora-color-teal, #4E9E95));color:var(--casora-soft-glyph, #fff);}'
+    + '@media (prefers-reduced-motion: reduce){.pane,.pane.sheet,.veil,.lift{transition:opacity .12s linear !important;transform:none !important;}.row:active,.row.press,.pill:active,.pill.press{transform:none;}}'
+    + '.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}'
     + '.sep{height:1px;margin:8px;background:var(--casora-popup-divider, rgba(120,100,80,0.10));}'
     /* Schnellbedienung: Pillen wie die Zeitraum-Pillen der Messwert-Seite, gewählt = Segment-Fläche. */
     /* Etiketten fluchten mit Kreisen/Pillen (wie die Gruppenüberschriften im Szenen-Menü), 4er-Raster. */
@@ -317,10 +320,10 @@
     +   'font-variant-numeric:tabular-nums;transition:transform var(--casora-dur-feedback, .16s) var(--casora-ease-feedback, ease), background-color var(--casora-dur-feedback, .16s) ease;}'
     + '.pill ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;}'
     + '.pill:active,.pill.press{transform:scale(var(--casora-press-scale, .97));}'
-    + '.pill:focus-visible{box-shadow:inset 0 0 0 2px var(--casora-hold-hue, var(--primary-color, #B67A50));}'
+    + '.pill:focus-visible{outline:2px solid var(--casora-hold-focus, var(--casora-popup-ui-action, #276B64));outline-offset:2px;}'
     + '.pill.lbl{flex-direction:column;height:56px;gap:2px;padding:4px 2px;}'
     + '.pill.lbl small{font-size:var(--casora-fs-label, 12px);font-weight:600;line-height:14px;}'
-    + '.pill.on{background:var(--casora-soft-seg-on, var(--primary-color, #B67A50));box-shadow:var(--casora-soft-seg-on-shadow, none);color:var(--casora-soft-seg-on-ink, var(--text-primary-color, #fff));}'
+    + '.pill.on{background:var(--casora-soft-seg-on, var(--primary-color, #B67A50));box-shadow:var(--casora-soft-seg-on-shadow, none), inset 0 0 0 2px var(--casora-hold-hue, transparent);color:var(--casora-soft-seg-on-ink, var(--text-primary-color, #fff));}'
     + '.pill.busy{opacity:.55;pointer-events:none;}'
     + '.step{display:flex;align-items:center;gap:8px;}'
     + '.step .pill{flex:0 0 48px;}'
@@ -378,11 +381,11 @@
     if (m.info) out += '<div class="info"><ha-icon icon="' + esc(m.info.ic) + '"></ha-icon><span>' + esc(m.info.t) + '</span></div>';
     if (m.main) out += row('main', m.main.t, m.main.ic, 'main');
     m.quick.forEach(function (q, qi) {
-      out += '<div class="q">' + (q.label ? '<div class="ql">' + esc(T(q.label)) + (q.kind === 'step' ? '' : esc(q.value || '')) + '</div>' : '');
+      out += '<div class="q" role="group"' + (q.label ? ' aria-label="' + esc(T(q.label)) + '"' : '') + '>' + (q.label ? '<div class="ql" aria-hidden="true">' + esc(T(q.label)) + (q.kind === 'step' ? '' : esc(q.value || '')) + '</div>' : '');
       if (q.kind === 'step') {
         out += '<div class="step"><div class="pill" role="button" tabindex="-1" aria-label="' + esc(T('Kälter')) + '" data-k="step" data-q="' + qi + '" data-d="-1"><ha-icon icon="mdi:minus"></ha-icon></div>'
           + '<b>' + esc(H.fmtTemp(q.value, q.unit)) + '</b>'
-          + '<div class="pill" role="button" tabindex="-1" aria-label="' + esc(T('Wärmer')) + '" data-k="step" data-q="' + qi + '" data-d="1"><ha-icon icon="mdi:plus"></ha-icon></div></div>';
+          + '<div class="pill" role="menuitem" tabindex="-1" aria-label="' + esc(T('Wärmer')) + '" data-k="step" data-q="' + qi + '" data-d="1"><ha-icon icon="mdi:plus"></ha-icon></div></div>';
       } else {
         // Einträge als Menüzeilen (Alarm-Modi: Symbol + Wort passt nicht in drei Pillen).
         if (q.items.some(function (it) { return it.row; })) {
@@ -396,8 +399,8 @@
           // Symbol-Tasten mit Wort darunter (Nutzerrunde: „■“ allein war nicht zu erraten).
           var label = q.labels && it.ic ? '<ha-icon icon="' + esc(it.ic) + '"></ha-icon><small>' + esc(T(it.t)) + '</small>'
             : it.ic && !it.wide ? '<ha-icon icon="' + esc(it.ic) + '"></ha-icon>' : (it.ic ? '<ha-icon icon="' + esc(it.ic) + '"></ha-icon>' : '') + esc(T(it.t));
-          return '<div class="pill' + (it.on ? ' on' : '') + (q.labels ? ' lbl' : '') + '" role="button" tabindex="-1" aria-label="' + esc(T(it.t)) + '"'
-            + (it.on ? ' aria-pressed="true"' : '') + ' data-k="quick" data-q="' + qi + '" data-i="' + ii + '">' + label + '</div>';
+          return '<div class="pill' + (it.on ? ' on' : '') + (q.labels ? ' lbl' : '') + '" role="' + (q.kind === 'pills' ? 'menuitemradio' : 'menuitem') + '" tabindex="-1" aria-label="' + esc(T(it.t)) + '"'
+            + (q.kind === 'pills' ? ' aria-checked="' + (it.on ? 'true' : 'false') + '"' : '') + ' data-k="quick" data-q="' + qi + '" data-i="' + ii + '">' + label + '</div>';
         }).join('') + '</div>';
       }
       out += '</div>';
@@ -406,14 +409,14 @@
       out += '<div class="q">';
       if (m.timer.active) {
         out += '<div class="tm"><ha-icon icon="mdi:timer-outline"></ha-icon><span>' + esc(H.leftText(m.timer)) + '</span>'
-          + '<div class="pill" role="button" tabindex="-1" data-k="tcancel">' + esc(T('Zeitschalter aus')) + '</div></div>';
+          + '<div class="pill" role="menuitem" tabindex="-1" data-k="tcancel">' + esc(T('Zeitschalter aus')) + '</div></div>';
         // Direkt ändern statt erst beenden: dieselben Zeiten, ersetzen den laufenden Zeitschalter.
         if (m.timer.items) out += '<div class="ql" style="padding-top:8px;">' + esc(T('Ändern auf')) + '</div><div class="qr">' + m.timer.items.map(function (x, i) {
-          return '<div class="pill" role="button" tabindex="-1" data-k="timer" data-i="' + i + '">' + esc(T(x.t)) + '</div>';
+          return '<div class="pill" role="menuitem" tabindex="-1" data-k="timer" data-i="' + i + '">' + esc(T(x.t)) + '</div>';
         }).join('') + '</div>';
       } else {
         out += '<div class="ql">' + esc(T(m.timer.label)) + '</div><div class="qr">' + m.timer.items.map(function (x, i) {
-          return '<div class="pill" role="button" tabindex="-1" data-k="timer" data-i="' + i + '">' + esc(T(x.t)) + '</div>';
+          return '<div class="pill" role="menuitem" tabindex="-1" data-k="timer" data-i="' + i + '">' + esc(T(x.t)) + '</div>';
         }).join('') + '</div>';
       }
       out += '</div>';
@@ -688,6 +691,11 @@
     var fk = focused && focused.getAttribute('data-k') ? [focused.getAttribute('data-k'), focused.getAttribute('data-q'), focused.getAttribute('data-i'), focused.getAttribute('data-d')].join('|') : '';
     cur.state = tileText(cur.tile, '#state') || tileText(cur.tile, '#label');
     pane.innerHTML = html(cur.m, cur);
+    // Ansage bei Änderung (Helligkeit · 50 %, Aus in 28 Min. …) – nicht beim ersten Zeichnen.
+    var say = [].map.call(pane.querySelectorAll('.ql, .tm span, .info span'), function (n) { return n.textContent; }).join('. ');
+    var live = host.shadowRoot.querySelector('.sr');
+    if (live && cur.said != null && say !== cur.said) live.textContent = say;
+    cur.said = say;
     if (fk) {
       var again = [].slice.call(pane.querySelectorAll('[data-k]')).find(function (n) {
         return [n.getAttribute('data-k'), n.getAttribute('data-q'), n.getAttribute('data-i'), n.getAttribute('data-d')].join('|') === fk;
@@ -802,9 +810,10 @@
     if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); H.close(true); return; }
     var all = [].slice.call(host.shadowRoot.querySelectorAll('.row, .pill'));
     var i = all.indexOf(host.shadowRoot.activeElement);
-    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp' || ev.key === 'Tab') {
+    if (ev.key === 'Home' || ev.key === 'End') { ev.preventDefault(); var e2 = all[ev.key === 'Home' ? 0 : all.length - 1]; if (e2) e2.focus(); return; }
+    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp' || ev.key === 'ArrowRight' || ev.key === 'ArrowLeft' || ev.key === 'Tab') {
       ev.preventDefault();
-      var dir = ev.key === 'ArrowUp' || (ev.key === 'Tab' && ev.shiftKey) ? -1 : 1;
+      var dir = ev.key === 'ArrowUp' || ev.key === 'ArrowLeft' || (ev.key === 'Tab' && ev.shiftKey) ? -1 : 1;
       var nx = all[(i + dir + all.length) % all.length] || all[0];
       if (nx) nx.focus();
     } else if ((ev.key === 'Enter' || ev.key === ' ') && i >= 0) {
@@ -826,7 +835,10 @@
     host.classList.remove('open');
     var h0 = host;
     setTimeout(function () { if (!cur && h0.parentNode) h0.parentNode.removeChild(h0); }, 340);
-    if (refocus && was.tile && was.tile.focus) { try { was.tile.focus({ preventScroll: true }); } catch (e) { /* egal */ } }
+    if (refocus && was.tile) {
+      var fc = (was.tile.shadowRoot && was.tile.shadowRoot.querySelector('ha-card[tabindex]')) || was.tile;
+      try { fc.focus({ preventScroll: true }); } catch (e) { /* egal */ }
+    }
   };
   // Adressleiste am Handy (wenige px) schließt nicht; Drehen/Fenstergröße schon. Zurück/Seitenwechsel schließt.
   var onResize = function () {
@@ -853,7 +865,8 @@
     cur = { tile: tile, detail: detail, id: id, phone: phone, name: name, armed: false, opened: Date.now() };
     lastName = name;
     host.shadowRoot.innerHTML = '<style>' + CSS + '</style><div class="veil"></div><div class="lift"></div>'
-      + '<div class="pane' + (phone ? ' sheet' : '') + '" role="menu" aria-label="' + esc(name) + '"></div>';
+      + '<div class="pane' + (phone ? ' sheet' : '') + '" role="menu" aria-label="' + esc(name) + '"></div>'
+      + '<div class="sr" role="status" aria-live="polite"></div>';
     var hue = hueOf(tile);
     if (hue) host.style.setProperty('--casora-hold-hue', hue); else host.style.removeProperty('--casora-hold-hue');
     var veil = host.shadowRoot.querySelector('.veil'), lift = host.shadowRoot.querySelector('.lift');
@@ -1012,7 +1025,18 @@
       [].forEach.call(root.querySelectorAll('*'), function (n) {
         if (n.tagName === 'BUTTON-CARD' && n._config && [].concat(n._config.template || []).some(function (x) { return /^casora_/.test(String(x)) && !NO_MENU.test(String(x)); })) {
           var c = n.shadowRoot && n.shadowRoot.querySelector('ha-card');
-          if (c && !c.hasAttribute('tabindex')) { c.setAttribute('tabindex', '0'); c.setAttribute('aria-haspopup', 'menu'); }
+          if (c && !c.hasAttribute('tabindex')) {
+            c.setAttribute('tabindex', '0'); c.setAttribute('aria-haspopup', 'menu'); c.setAttribute('role', 'button');
+            // Enter/Leertaste = Tippen (button-card reagiert ohne eigenen Fokus nicht auf Tasten).
+            c.addEventListener('keydown', function (ev) {
+              if ((ev.key === 'Enter' || ev.key === ' ') && !ev.shiftKey && !cur) { ev.preventDefault(); ev.stopPropagation(); tapLike(n, c); }
+            });
+          }
+          if (c) {
+            var nm = n.shadowRoot.querySelector('#name'), stt = n.shadowRoot.querySelector('#state');
+            var lab = [nm && nm.textContent, stt && stt.textContent].filter(Boolean).join(', ').replace(/\s+/g, ' ').trim();
+            if (lab && c.getAttribute('aria-label') !== lab) c.setAttribute('aria-label', lab);
+          }
         }
         if (n.shadowRoot) walk(n.shadowRoot);
       });

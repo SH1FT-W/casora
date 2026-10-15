@@ -290,7 +290,9 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
         + ':host(.soft) .no{background:var(--casora-soft-control-fill,rgba(140,115,90,.10))}'
         + ':host(.soft) .yes{background:var(--casora-popup-ui-action,#276B64);color:var(--casora-popup-ui-on-action,#fff)}'
         + ':host(.soft) button:focus-visible{outline-color:var(--casora-popup-ui-action,#276B64)}'
-        + '</style><div class="box" role="alertdialog" aria-modal="true"><h2></h2><p></p>'
+        // Platzhalter und Feldrand mit genug Kontrast (WCAG 1.4.3/1.4.11).
+        + 'input::placeholder{color:inherit;opacity:.72}input{box-shadow:inset 0 0 0 1px rgba(127,127,127,.55)}'
+        + '</style><div class="box" role="alertdialog" aria-modal="true" aria-labelledby="ask-t" aria-describedby="ask-d"><h2 id="ask-t"></h2><p id="ask-d"></p>'
         + '<div class="row"><button type="button" class="no"></button><button type="button" class="yes"></button></div></div>';
       // w.title/w.text/w.yes: eigener Wortlaut (Alarm scharf schalten), sonst „Wirklich …?“.
       root.querySelector('h2').textContent = w.title || w.name;
@@ -312,14 +314,25 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
         root.querySelector('.row').before(field);
         field.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); root.querySelector('.yes').click(); } });
       }
+      // Fokus nach dem Schließen zurück, wo er vorher war (Kachel, Menü …).
+      var before = document.activeElement;
+      while (before && before.shadowRoot && before.shadowRoot.activeElement) before = before.shadowRoot.activeElement;
       var done = function (ok) {
         document.removeEventListener('keydown', key, true);
         host.remove();
+        try { if (before && before.isConnected && before.focus) before.focus({ preventScroll: true }); } catch (e) { /* egal */ }
         // input.allowEmpty: „Ja“ mit leerem Feld liefert '' (Alarm ohne Code), sonst false.
         resolve(ok && field ? (field.value.trim() || (w.input.allowEmpty ? '' : false)) : ok);
       };
       var key = function (e) {
-        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(false); }
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(false); return; }
+        // Tab bleibt im Dialog (aria-modal).
+        if (e.key === 'Tab') {
+          var f = [field, root.querySelector('.no'), root.querySelector('.yes')].filter(Boolean);
+          var i = f.indexOf(root.activeElement);
+          e.preventDefault(); e.stopPropagation();
+          f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+        }
       };
       document.addEventListener('keydown', key, true);
       host.addEventListener('click', function (e) { if (e.composedPath()[0] === host) done(false); });
