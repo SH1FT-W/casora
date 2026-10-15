@@ -37,8 +37,15 @@ class CasoraSwipeCard extends HTMLElement {
     if (!config || !Array.isArray(config.cards) || config.cards.length < 1) {
       throw new Error('casora-swipe-card: cards array required');
     }
+    // Geänderte Konfiguration (z. B. im Editor): neu aufbauen statt alte Karten stehen zu lassen.
+    let changed = false;
+    try { changed = !!this._config && JSON.stringify(config) !== JSON.stringify(this._config); } catch (e) { changed = true; }
     this._config = config;
-    this._index = 0;
+    if (changed || !this._built) {
+      this._built = false;
+      this._dots = null;
+      this._index = 0;
+    }
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
     this._build();
   }

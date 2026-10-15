@@ -247,6 +247,8 @@ def refresh_templates(current: dict | None, bundle: dict, prior: dict | None, au
             if not auto:
                 del nxt[k]
                 res["removed"].append(k)
+            else:
+                prints[k] = seen[k]  # Fingerabdruck behalten: das nächste Speichern im Studio räumt sie weg
             continue
         (res["orphan"] if ours else res["foreign"]).append(k)
 

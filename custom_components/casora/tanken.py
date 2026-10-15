@@ -74,6 +74,10 @@ KEY_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{
 FUEL_KEYS = {"fuel_level_current_level", "fuel_level", "remaining_fuel_percent", "fuel_percentage", "fuel_amount"}
 FUEL_ENDS = ("tankfullstand", "fuel_level_current_level", "fuel_level", "remaining_fuel_percent",
              "fuel_percentage", "fuel_level_percentage", "tank_level", "kraftstoffmenge", "fuel_amount")
+# „tank_level“ heißt auch der Füllstand von Zisterne oder Öltank: zählt nur mit einem zweiten
+# Auto-Merkmal am selben Gerät (Standort, Reichweite, Kilometerstand).
+WEAK_FUEL_ENDS = ("tank_level",)
+CAR_HINTS = ("range", "reichweite", "odometer", "kilometerstand", "mileage")
 DIESEL_KEYS = {"scr_range", "adblue_range"}
 DIESEL_ENDS = ("scr_reichweite", "scr_range", "adblue_range", "adblue_reichweite")
 HELPER_PLATFORMS = {"utility_meter", "statistics", "derivative", "integration", "template", "filter",
@@ -271,16 +275,20 @@ class Tanken:
                 continue
             obj = e.entity_id.split(".", 1)[1]
             tk = e.translation_key or ""
-            car = found.setdefault(e.device_id, {"fuel": False, "diesel": False, "tracker": None})
+            car = found.setdefault(e.device_id, {"fuel": False, "weak": False, "hint": False,
+                                                 "diesel": False, "tracker": None})
             if e.domain == "sensor" and (tk in FUEL_KEYS or any(obj == x or obj.endswith("_" + x) for x in FUEL_ENDS)):
-                car["fuel"] = True
+                weak = tk not in FUEL_KEYS and any(obj == x or obj.endswith("_" + x) for x in WEAK_FUEL_ENDS)
+                car["weak" if weak else "fuel"] = True
+            if e.domain == "sensor" and set(CAR_HINTS) & set(obj.split("_") + tk.split("_")):
+                car["hint"] = True
             if e.domain == "sensor" and (tk in DIESEL_KEYS or any(obj == x or obj.endswith("_" + x) for x in DIESEL_ENDS)):
                 car["diesel"] = True
             if e.domain == "device_tracker":
                 car["tracker"] = e.entity_id
         out = []
         for dev_id, c in found.items():
-            if not c["fuel"]:
+            if not (c["fuel"] or (c["weak"] and (c["hint"] or c["tracker"] or c["diesel"]))):
                 continue
             dev = devs.async_get(dev_id)
             name = (dev.name_by_user or dev.name) if dev else None

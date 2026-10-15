@@ -754,6 +754,8 @@
       const f = h.files || {};
       // Nicht kopierte Dateien übernimmt das Entfernen vorher nach www/casora (hemma_cleanup.py).
       if (!f.www_hemma || (f.conflicts || []).length || (f.resource_refs || []).length) return false;
+      // Eigene Skripte/versteckte Dateien und Schreibziele (Automationen) halten www/hemma fest.
+      if ((f.extra || []).length || (f.write_targets || []).length) return false;
       const gone = withMobile(h, urls);
       return Object.keys(f.refs || {}).every((u) => !f.refs[u] || gone.has(u));
     };
@@ -917,8 +919,12 @@
                   : t("No dashboard uses them any more. Your photos and icons are copied to www/casora first. Included in the backup."), (on) => { delWww = wwwWish = on; });
             } else {
               delWww = false;
-              item(www, "info", t("Old files in www/hemma stay"),
-                t("A dashboard still uses them or not all of them are in www/casora yet – Casora keeps reading them from there."));
+              // Halten nur eigene/versteckte Dateien den Ordner fest, diese nennen statt „ein Dashboard nutzt sie“.
+              const extra = (h.files || {}).extra || [];
+              item(www, "info", t("Old files in www/hemma stay"), extra.length
+                ? t("It also holds files that don't come from Hemma:") + "\n" + extra.slice(0, 4).join("\n")
+                  + (extra.length > 4 ? "\n" + t("… and {1} more").replace("{1}", extra.length - 4) : "")
+                : t("A dashboard still uses them or not all of them are in www/casora yet – Casora keeps reading them from there."));
             }
           };
           paintWww();

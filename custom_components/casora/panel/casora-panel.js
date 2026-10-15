@@ -5729,6 +5729,7 @@ class CasoraPanel extends HTMLElement {
     if (!this._built) this.style.backgroundColor = STUDIO_GROUND;
     // Wieder eingehängt (selten – HA baut das Panel sonst neu): globale Listener zurück.
     if (this._gOff) { this._gOff = false; (this._gList || []).forEach(([t, ty, fn, o]) => t.addEventListener(ty, fn, o)); }
+    if (this._slotObs && this.parentElement) this._slotObs.observe(this.parentElement);
   }
 
   // Leaving the Studio inside HA (sidebar, back): the draft is written now, not a beat later.
@@ -5741,6 +5742,8 @@ class CasoraPanel extends HTMLElement {
     // sonst bleibt sie samt Vorlagen im Speicher, läuft bei Resize mit und fragt beim Neuladen
     // irgendeiner HA-Seite noch nach ungespeicherten Änderungen.
     if (!this._gOff) { this._gOff = true; (this._gList || []).forEach(([t, ty, fn, o]) => t.removeEventListener(ty, fn, o)); }
+    // Der ResizeObserver am Eltern-Element hielte die alte Instanz sonst ebenso fest.
+    if (this._slotObs) this._slotObs.disconnect();
   }
 
   // Globaler Listener, den disconnectedCallback wieder abmeldet.
@@ -13616,6 +13619,8 @@ class CasoraPanel extends HTMLElement {
     ]);
     this._clearLog();
 
+    // Angelegt, aber nicht beschrieben: im Fehlerfall wieder entfernen (wie beim Import).
+    let made = null, saved = false;
     try {
       const bundle = await this._bundleOnce();
       this._log(`templates bundle: ${Object.keys(bundle.templates).length} templates`);
@@ -13663,17 +13668,18 @@ class CasoraPanel extends HTMLElement {
       if (!fixed.rewritten) this._log("no routes list found - nav links may point elsewhere", "warn");
       prog.at(2);
 
-      await this._hass.callWS({
+      made = await this._hass.callWS({
         type: "lovelace/dashboards/create",
         url_path,
         title,
         icon: "mdi:home",
         show_in_sidebar: true,
         require_admin: false,
-      });
+      }) || {};
       this._log(`created dashboard "${url_path}"`, "ok");
 
       await this._hass.callWS({ type: "lovelace/config/save", url_path, config });
+      saved = true;
       this._log(`wrote config  ${JSON.stringify(config).length.toLocaleString()} bytes`, "ok");
       prog.at(3);
 
@@ -13684,6 +13690,15 @@ class CasoraPanel extends HTMLElement {
       this._flowDone({ url_path, title, rooms, paired, filled: !!filled, theme: await this._ensureTheme() });
     } catch (e) {
       this._log("create failed: " + e.message, "err");
+      if (made && !saved) {
+        try {
+          if (!made.id) throw new Error("no id");
+          await this._hass.callWS({ type: "lovelace/dashboards/delete", dashboard_id: made.id });
+          this._log(`removed the partial dashboard "${url_path}"`, "ok");
+        } catch (e2) {
+          this._log(`could not remove the partial dashboard "${url_path}": ` + e2.message, "warn");
+        }
+      }
       const fail = this._flowScreen({
         icon: "alert", tone: "warn",
         title: "Dashboard Not Created",
@@ -14253,6 +14268,7 @@ class CasoraPanel extends HTMLElement {
 
       let paired = false;
       if (sib) {
+        let mobileMade = null;
         try {
           const mex = extractMobileConfig(sib.cfg);
           if (move) {
@@ -14290,7 +14306,8 @@ class CasoraPanel extends HTMLElement {
             url_path: url_path + "-mobile", title: title + " Mobile",
             icon: "mdi:cellphone", show_in_sidebar: false, require_admin: false,
           });
-          created.push({ url_path: url_path + "-mobile", id: mmade && mmade.id });
+          mobileMade = { url_path: url_path + "-mobile", id: mmade && mmade.id };
+          created.push(mobileMade);
           await this._hass.callWS({ type: "lovelace/config/save",
             url_path: url_path + "-mobile", config: mcfg });
           this._log(`imported phone layout with `
@@ -14298,6 +14315,17 @@ class CasoraPanel extends HTMLElement {
           paired = true;
         } catch (e) {
           this._log("phone layout not imported: " + e.message, "warn");
+          // Angelegt, aber nicht beschrieben: weg damit, sonst scheitert der neue Handy-Aufbau an der Adresse.
+          if (mobileMade) {
+            try {
+              if (!mobileMade.id) throw new Error("no id");
+              await this._hass.callWS({ type: "lovelace/dashboards/delete", dashboard_id: mobileMade.id });
+              created.splice(created.indexOf(mobileMade), 1);
+              this._log(`removed the partial dashboard "${mobileMade.url_path}"`, "ok");
+            } catch (e2) {
+              this._log(`could not remove the partial dashboard "${mobileMade.url_path}": ` + e2.message, "warn");
+            }
+          }
           phoneNote = "Your phone layout couldn't be copied exactly, so a new one was made "
             + "from your rooms. Your phone YAML dashboard hasn't changed.";
         }
@@ -14803,6 +14831,8 @@ class CasoraPanel extends HTMLElement {
   }
 
   async _load() {
+    // Läuft gerade ein Speichern, erst das zu Ende bringen – sonst landet es im neuen Stand.
+    if (this._saving && this._saveWait) await this._saveWait;
     const url_path = this._dashUrl;
     if (!url_path) return;
     // Laufnummer: ein schneller Wechsel zu einem anderen Dashboard macht diesen Lauf ungültig.
@@ -14836,6 +14866,8 @@ class CasoraPanel extends HTMLElement {
       this._pair = null;
       this._state = extractAny(cfg);
       this._stateUrl = url_path;
+      // Eigene Vorlagen gehören zum vorigen Dashboard, nicht in dieses.
+      this._ownTemplates = {};
       // Bis die Handy-Hälfte da ist, speichert nichts (⌘S hier schriebe nur die Desktop-Hälfte).
       this._pairWait = seq;
       let pair;
@@ -15306,10 +15338,34 @@ class CasoraPanel extends HTMLElement {
       this._status("This dashboard has content the editor would not preserve. Saving is disabled.", "err");
       return false;
     }
-    let ok = false;
+    // Läuft schon ein Speichern: erst abwarten, dann nur speichern, wenn noch etwas offen ist.
+    if (this._saving) {
+      const prev = await this._saveWait;
+      if (this._state !== s || !this._isDirty()) return prev;
+      return this._save();
+    }
     // Der Stand gehört zu dem Dashboard, aus dem er geladen wurde – nicht zu einem, das gerade lädt.
     const url_path = this._stateUrl || this._dashUrl;
+    const pair = this._pair;
+    // Sperre gleich zu Beginn (vor dem ersten await) und in jedem Ausstieg wieder lösen.
+    this._saving = true;
+    this._markDirty();
+    let release;
+    this._saveWait = new Promise((r) => { release = r; });
+    let ok = false;
+    try {
+      ok = await this._saveRun(s, url_path, pair);
+    } finally {
+      this._saving = false;
+      this._markDirty();
+      release(ok);
+    }
+    if (ok && this._state === s) await this._syncFilterOptions();
+    return ok;
+  }
 
+  async _saveRun(s, url_path, pair) {
+    let ok = false;
     let templates = s.templates;
     let extras = s.extras;
     let scaffold = s.scaffold;
@@ -15329,6 +15385,17 @@ class CasoraPanel extends HTMLElement {
       if (this._raw && stable(live.views) !== stable(this._raw.views)) {
         this._log("this dashboard's rooms changed somewhere else since it was "
           + "opened - saving replaces them with what is on screen", "warn");
+      }
+    }
+    // Handy-Hälfte schon hier lesen: zwischen dem Bauen von cfg und dem Absenden liegt kein await mehr,
+    // sonst gälte eine Änderung in der Wartezeit als gespeichert, ohne in cfg zu stehen.
+    let mbase = pair && pair.safe !== false ? pair.mobile.extras : null;
+    if (pair && pair.safe !== false) {
+      try {
+        const mlive = await this._ws({ type: "lovelace/config", url_path: pair.mobileUrl });
+        mbase = omit(mlive, ["views", "button_card_templates"]);
+      } catch (e) {
+        this._log("could not re-read the phone layout before saving: " + e.message, "warn");
       }
     }
 
@@ -15376,6 +15443,8 @@ class CasoraPanel extends HTMLElement {
     } catch (e) {
       this._log("could not refresh templates: " + e.message, "warn");
     }
+    // Inzwischen ein anderes Dashboard geladen: dieser Stand gehört nicht mehr dazu.
+    if (this._state !== s || this._pair !== pair) return false;
 
     const mobile = s.surface === "mobile";
 
@@ -15422,7 +15491,6 @@ class CasoraPanel extends HTMLElement {
       : (JSON.stringify(built).match(/\/dashboard-casora\//g) || []).length;
     if (stale) this._log(`repaired ${stale} navigation link(s) pointing elsewhere`, "warn");
 
-    const pair = this._pair;
     let mcfg = null;
     if (pair && pair.safe !== false) {
       try {
@@ -15459,13 +15527,6 @@ class CasoraPanel extends HTMLElement {
         if (nc) this._log(`phone Cameras tile: ${nc} camera(s)`, "ok");
         st.unmatched.slice(0, 6).forEach((u) => this._log(
           `phone tile "${u.tile}" in ${u.section} has no match here - left as it is`, "warn"));
-        let mbase = pair.mobile.extras;
-        try {
-          const mlive = await this._ws({ type: "lovelace/config", url_path: pair.mobileUrl });
-          mbase = omit(mlive, ["views", "button_card_templates"]);
-        } catch (e) {
-          this._log("could not re-read the phone layout before saving: " + e.message, "warn");
-        }
         const mextras = { ...clone(mbase) };
         mextras[FINGERPRINT_KEY] = extras[FINGERPRINT_KEY];
         mcfg = markPhoneManaged(
@@ -15482,14 +15543,14 @@ class CasoraPanel extends HTMLElement {
       }
     }
 
-    this._saving = true;
-    this._markDirty();
     try {
       // Fingerabdruck dessen, was jetzt gespeichert wird (inkl. der Abgleiche oben): was während der
       // Netzwege danach geändert wird, bleibt „ungespeichert“ statt still verloren zu gehen.
       savedPrint = this._print();
       await this._hass.callWS({ type: "lovelace/config/save", url_path, config: cfg });
-      this._raw = clone(cfg);
+      // Ist inzwischen ein anderes Dashboard offen, gehört _raw zu dem – nicht überschreiben.
+      const same = () => this._state === s;
+      if (same()) this._raw = clone(cfg);
       this._log(`saved  ${JSON.stringify(cfg).length.toLocaleString()} bytes`, "ok");
       if (mcfg) {
         await this._hass.callWS({
@@ -15498,20 +15559,19 @@ class CasoraPanel extends HTMLElement {
         pair.mobileRaw = clone(mcfg);
         this._log(`saved phone layout  ${JSON.stringify(mcfg).length.toLocaleString()} bytes`, "ok");
       }
-      this._clean = savedPrint || this._print();
       this._dropDraft(url_path);
-      this._resetUndo(true);
-      this._markDirty();
-      this._status("");
-      this._saveFlash();
+      if (same()) {
+        this._clean = savedPrint || this._print();
+        this._resetUndo(true);
+        this._markDirty();
+        this._status("");
+        this._saveFlash();
+      }
       ok = true;
     } catch (e) {
       this._status("Save failed: " + e.message, "err");
       this._log("save failed: " + e.message, "err");
     }
-    this._saving = false;
-    this._markDirty();
-    if (ok) await this._syncFilterOptions();
     return ok;
   }
 
@@ -16215,10 +16275,16 @@ class CasoraPanel extends HTMLElement {
           confirmLabel: "Delete", destructive: true,
         });
         if (!yes) return;
+        // Während der Rückfrage kann sich die Liste geändert haben (Rückgängig, anderes Dashboard):
+        // Raum frisch suchen statt fester Stelle i.
+        const list = this._state && this._state.compact && this._state.compact.rooms;
+        if (!list || list.indexOf(r) < 0 || this._roomDeleteBlock(list.indexOf(r))) return;
 
         const done = () => {
-          rooms.splice(i, 1);
-          this._room = Math.max(0, i - 1);
+          const at = list.indexOf(r);
+          if (at < 0) return;
+          list.splice(at, 1);
+          this._room = Math.max(0, at - 1);
           this._renderTabs();
           this._renderForm();
         };
@@ -19149,7 +19215,8 @@ class CasoraPanel extends HTMLElement {
         if (n.nodeType !== 1 || n === sc || n === document.body || n === document.documentElement) continue;
         if (!this._pinWatch.has(n)) {
           this._pinWatch.add(n);
-          n.addEventListener("scroll", later, { passive: true });
+          // Über _gOn: HA-Vorfahren bleiben, ein ausgehängtes Panel darf an ihnen nicht hängen bleiben.
+          this._gOn(n, "scroll", later, { passive: true });
         }
         const ov = getComputedStyle(n).overflowY;
         if (ov === "auto" || ov === "scroll") continue;
@@ -19167,8 +19234,8 @@ class CasoraPanel extends HTMLElement {
     };
     const afterKeyboard = () => [0, 160, 450, 900].forEach((ms) => setTimeout(later, ms));
     this.shadowRoot.addEventListener("focusout", afterKeyboard);
-    window.addEventListener("scroll", later, { passive: true });
-    if (window.visualViewport) window.visualViewport.addEventListener("resize", afterKeyboard);
+    this._gOn(window, "scroll", later, { passive: true });
+    if (window.visualViewport) this._gOn(window.visualViewport, "resize", afterKeyboard);
     later();
   }
 
@@ -19320,6 +19387,9 @@ class CasoraPanel extends HTMLElement {
     del.onpointerdown = (ev) => ev.stopPropagation();
     del.onclick = (ev) => {
       ev.stopPropagation();
+      // Doppelklick: nur einmal entfernen.
+      if (del._done) return;
+      del._done = true;
       this._armedRow = null;
       this._armedDel = null;
       remove();
@@ -21339,7 +21409,8 @@ class CasoraPanel extends HTMLElement {
         { id: CUSTOM_IN_ROW, label: "In the tile row" },
         { id: CUSTOM_BELOW, label: "Below the tiles" },
       ] : null,
-      validate: (v) => { try { parseCardText(v); return ""; } catch (e) { return e.message; } },
+      // Karte oder button_card_templates-Eintrag – beides nimmt der Dialog an (siehe unten).
+      validate: (v) => { try { parsePasted(v); return ""; } catch (e) { return e.message; } },
     });
     if (!got) return;
     const text = typeof got === "string" ? got : got.value;
@@ -25558,8 +25629,13 @@ class CasoraPanel extends HTMLElement {
     box.classList.add("shut");
 
     const removeTile = () => {
+      // Doppelklick: nur einmal entfernen, und die Kachel selbst – nicht, was danach an Stelle i steht.
+      if (box._gone) return;
+      box._gone = true;
       const done = () => {
-        const [gone] = room.tiles.splice(i, 1);
+        const at = room.tiles.indexOf(shell);
+        if (at < 0) return;
+        const [gone] = room.tiles.splice(at, 1);
         this._removePairTwin(room, gone);
         this._renderForm();
       };
@@ -26048,6 +26124,8 @@ class CasoraPanel extends HTMLElement {
       // alle Felder gleich breit (Wunsch 03.10.2026). Das nächste rückt nach.
       if (!grp.entityless && entRowEl && list.filter(Boolean).length >= 2) {
         const dropFirst = () => {
+          // Schon entfernt (zweiter Klick während der Animation): Liste ist inzwischen eine andere.
+          if (!tile.variables || tile.variables[grp.list] !== list) return;
           const gone = list[0];
           const next = list.slice(1);
           if (next.filter(Boolean).length < 2) collapse();
@@ -26076,9 +26154,13 @@ class CasoraPanel extends HTMLElement {
         // Slot 1 is the entity row above - unless there is no entity row.
         if (n === 0 && !grp.entityless) return;
         const drop = () => {
-          const gone = (tile.variables[grp.list] || [])[n];
-          const next = (tile.variables[grp.list] || []).slice();
-          next.splice(n, 1);
+          // Mitglied per Wert suchen: n kann nach einem ersten Entfernen schon ein anderes sein.
+          const cur = (tile.variables && tile.variables[grp.list]) || [];
+          const at = cur[n] === member ? n : cur.indexOf(member);
+          if (at < 0) return;
+          const gone = cur[at];
+          const next = cur.slice();
+          next.splice(at, 1);
           const floor = grp.entityless ? 1 : 2;
           if (next.filter(Boolean).length < floor) collapse();
           else tile.variables[grp.list] = next;

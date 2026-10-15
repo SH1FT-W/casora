@@ -601,7 +601,7 @@
     return out;
   }
 
-  window.casoraUmzug = { candidates, analyze, loadOriginals, spreadWeather, sourceName, proposeTitle, carryPlan, CARRY_INITIAL, movedAny: (h, d) => movedAny(h, d),
+  window.casoraUmzug = { candidates, analyze, loadOriginals, spreadWeather, sourceName, proposeTitle, carryPlan, CARRY_INITIAL, movedAny: (h, d) => movedAny(h, d), halfLeft: (h, p, l) => halfLeft(h, p, l),
     lib: { classify, foreignVars, chainOf, ownPlan, renameRefs, retarget, isOwnModule } };
 
   customElements.whenDefined("casora-panel").then(() => {
@@ -1521,7 +1521,9 @@
           return r;
         };
         this._flowDone = hook;
-        try { return await build(); } finally { if (this._flowDone === hook) this._flowDone = origDone; }
+        // Haken nicht gefeuert (Import gescheitert, räumt selbst auf): Merker weg – sonst böte „Aufräumen“
+        // später an, ein neues Dashboard unter derselben Adresse zu löschen.
+        try { return await build(); } finally { if (this._flowDone === hook) { this._flowDone = origDone; pendingSet(null); } }
       };
 
       if (a.legacy) {
@@ -1664,15 +1666,32 @@
     setTimeout(wait, 1500);
   }
 
+  // Was ein unterbrochener Umzug liegen ließ: Adresse und Titel passen, und das Dashboard ist wirklich
+  // halbfertig – noch keine gespeicherte Konfiguration oder keine Seiten. Ein fertiges (auch ein später
+  // unter derselben Adresse neu angelegtes) bleibt; im Zweifel (Lesefehler) ebenso.
+  async function halfLeft(hass, pend, list) {
+    const out = [];
+    for (const d of list || []) {
+      if (!(d && d.mode === "storage" && d.id
+        && (d.url_path === pend.target || d.url_path === pend.target + "-mobile")
+        && (!pend.title || String(d.title || "").indexOf(pend.title) === 0))) continue;
+      let cfg = null;
+      try { cfg = await hass.callWS({ type: "lovelace/config", url_path: d.url_path }); } catch (e) {
+        if (e && e.code === "config_not_found") out.push(d);
+        continue;
+      }
+      if (!cfg || !(cfg.views || []).length) out.push(d);
+    }
+    return out;
+  }
+
   // U-1 (1.3): Umzug wurde unterbrochen (Browser zu kurz nach „Umziehen“) – Fortsetzen oder Aufräumen.
   // Aufräumen entfernt nur, was dieser Umzug angelegt hat: Adresse aus dem Merker und Titel passt.
   async function interrupted(panel, pend) {
     const hass = panel._hass;
     let list = [];
     try { list = await hass.callWS({ type: "lovelace/dashboards/list" }); } catch (e) { return; }
-    const half = list.filter((d) => d && d.mode === "storage" && d.id
-      && (d.url_path === pend.target || d.url_path === pend.target + "-mobile")
-      && (!pend.title || String(d.title || "").indexOf(pend.title) === 0));
+    const half = await halfLeft(hass, pend, list);
     const tidy = async () => {
       for (const d of half) {
         try { await hass.callWS({ type: "lovelace/dashboards/delete", dashboard_id: d.id }); } catch (e) { /* steht dann noch da */ }

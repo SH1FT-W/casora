@@ -474,6 +474,16 @@
 
     P._cvShow = async function (v) {
       const tok = (this._cvTok = (this._cvTok || 0) + 1);
+      // Stand nicht darstellbar: alte Vorschau weg – sonst stellte „Wiederherstellen“ den vorher gezeigten her.
+      const fail = (msg) => {
+        const had = !!this._cvPeek;
+        this._cvPeek = null;
+        this.classList.remove("cv-peek");
+        this._cvBanner();
+        if (had) this._rebuildPreview();
+        this._cvActions();
+        this._cvError(msg);
+      };
       this._cvSel = v ? v.id : null;
       this._cvPaintRows();
       if (!v || v.current) {
@@ -485,7 +495,8 @@
           try {
             data = await this._hass.callWS({ type: "casora/versions/get", url_path: this._dashUrl, version: v.id });
           } catch (e) {
-            this._cvError(t("This version could not be read.") + " " + e.message);
+            if (tok !== this._cvTok) return;
+            fail(t("This version could not be read.") + " " + e.message);
             return;
           }
           if (tok !== this._cvTok) return;
@@ -495,7 +506,7 @@
         let state = null;
         try { state = I().extractAny(data.config); } catch (e) { state = null; }
         if (!state || !state.compact || !(state.compact.rooms || []).length) {
-          this._cvError(t("This version can't be shown in the preview."));
+          fail(t("This version can't be shown in the preview."));
           return;
         }
         this._cvPeek = { v, state };
@@ -879,7 +890,9 @@
         ev.preventDefault();
         self._cvStep(ev.key === "ArrowDown" ? 1 : -1);
       };
-      window.addEventListener("keydown", self._cvKeys);
+      // Über _gOn: disconnectedCallback meldet ihn wieder ab (HA baut das Panel bei jedem Besuch neu).
+      if (typeof self._gOn === "function") self._gOn(window, "keydown", self._cvKeys);
+      else window.addEventListener("keydown", self._cvKeys);
     };
     const connected = P.connectedCallback;
     P.connectedCallback = function () {

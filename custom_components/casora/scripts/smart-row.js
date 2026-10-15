@@ -29,6 +29,14 @@ const SORT_DELAY_MS = 2500; // hold time before a state change triggers a sort
 // (Tippen, Tasten, Mausrad) schiebt das Umsortieren, bis QUIET_MS lang nichts passiert ist; solange ein
 // Casora-Popup offen ist oder die Maus über der Reihe steht, wartet es ebenfalls.
 const QUIET_MS = 2000;
+// Module fertig (casora-local-loaded): nach den beiden Neuzeichnungen (06: sofort, nach 1,5 s) jede
+// Reihe in der Ladephase gleich nachsortieren (_settleSort). Ein Listener für alle Reihen.
+if (!window._casoraRowSettle) {
+  window._casoraRowSettle = true;
+  window.addEventListener('casora-local-loaded', () => {
+    [400, 1900].forEach((ms) => setTimeout(() => (window._casoraSmartRows || []).forEach((r) => r._settleSort && r._settleSort()), ms));
+  });
+}
 if (!window._casoraLastInput) {
   window._casoraLastInput = 0;
   const markInput = () => { window._casoraLastInput = Date.now(); };
@@ -988,7 +996,12 @@ class CasoraSmartRow extends HTMLElement {
     // casora-local-patch: Swipe-Karten setzen ihre Höhe später selbst neu – Stempel regelmäßig erneuern.
     if (!wrapper._casoraLargeFillInterval) {
       wrapper._casoraLargeFillInterval = setInterval(() => {
-        if (!wrapper.isConnected) { clearInterval(wrapper._casoraLargeFillInterval); return; }
+        // Ausgehängt oder nicht mehr groß: beenden (ein neues „groß“ startet es wieder).
+        if (!wrapper.isConnected || wrapper.dataset.size !== 'large') {
+          clearInterval(wrapper._casoraLargeFillInterval);
+          wrapper._casoraLargeFillInterval = null;
+          return;
+        }
         run();
       }, 600);
     }
@@ -1322,8 +1335,8 @@ class CasoraSmartRow extends HTMLElement {
           // Nur ein hass-Update löst sonst einen Durchgang aus: eine von Anfang an aktive
           // show_when-Kachel würde bis dahin zurückgehalten (Hemma 2.2.0).
           this._updateWrapperVisibility();
-          setTimeout(() => this._updateSort(), 2000);
-          setTimeout(() => this._updateSort(), 5000);
+          setTimeout(() => this._settleSort(), 2000);
+          setTimeout(() => this._settleSort(), 5000);
         }, PAGE_ANIM_MS);
       };
 
@@ -1460,6 +1473,22 @@ class CasoraSmartRow extends HTMLElement {
   }
 
   // ── Sort logic ──────────────────────────────────────────────────────────────
+
+  // Ladephase: Kacheln, deren Aktiv-Zustand Casora-Module braucht (Pulse, Geräte …), färben sich erst
+  // nach casora-local-loaded (06 zeichnet sofort und nach 1,5 s neu). Bis 10 s nach dem Aufbau gleich
+  // nachsortieren – über _updateSort warteten sie SORT_DELAY_MS plus Ruhezeit hinten (Checkup 10/2026).
+  _settleSort() {
+    if (!this._initialized || !this.isConnected) return;
+    if (Date.now() - (this._builtAt || 0) > 10000 || (window.casoraPopup && window.casoraPopup.surface)) return this._updateSort();
+    if (!this._sortEnabled || !this._wrappers.length) return;
+    const now = new Set();
+    this._config.cards.forEach((_, i) => { if (this._isActive(i)) now.add(i); });
+    if (now.size === this._activeSet.size && [...now].every((i) => this._activeSet.has(i))) return;
+    this._activeSet = now;
+    this._activationOrder = [...now].sort((a, b) => a - b);
+    if (this._sortTimer) { clearTimeout(this._sortTimer); this._sortTimer = null; }
+    this._applyOrder(true);
+  }
 
   _updateSort() {
     if (!this._sortEnabled || !this._wrappers.length) return;

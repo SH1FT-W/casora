@@ -378,11 +378,42 @@ def user_files(config_dir: str) -> list[str]:
     return sorted(out)
 
 
+# Systemmüll, der www/hemma nicht festhält.
+JUNK_FILES = (".DS_Store", "Thumbs.db")
+
+
+def extra_files(config_dir: str) -> list[str]:
+    """Dateien unter www/hemma, die user_files nicht übernimmt und die nicht von Hemma stammen:
+    versteckte Dateien und eigene Skripte direkt in scripts/. Sie halten www/hemma fest."""
+    base = os.path.join(config_dir, WWW_HEMMA)
+    out: list[str] = []
+    if not os.path.isdir(base):
+        return out
+    for root, _dirs, files in os.walk(base):
+        rel_root = os.path.relpath(root, base).replace(os.sep, "/")
+        parts = [] if rel_root == "." else rel_root.split("/")
+        hidden = any(x.startswith(".") for x in parts)
+        for f in files:
+            if f in JUNK_FILES:
+                continue
+            rel = "/".join(parts + [f])
+            if hidden or f.startswith("."):
+                out.append(rel)
+            # Unterordner in scripts/ (local/…) bringt Hemma selbst mit, wie bei is_own_module.
+            elif len(parts) == 1 and parts[0] in SKIP_DIRS and f not in HEMMA_SCRIPT_NAMES:
+                out.append(rel)
+    return sorted(out)
+
+
 # Pfade unter www/hemma, die Automationen, Skripte oder Pakete selbst benutzen (Schreibziel von
 # camera.snapshot, downloader, shell_command …): /config/www/hemma/snapshots/{{ cam }}.jpg.
 WRITE_REF = re.compile(r"(?:/config/)?www/hemma/([^\s\"'`,;()\[\]]*)")
 WRITE_FILES = ("configuration.yaml", "automations.yaml", "scripts.yaml", "scenes.yaml")
 WRITE_DIRS = ("packages",)
+# /local/hemma/… in YAML (Benachrichtigungsbild, Karte in einem YAML-Dashboard …): bleibt in www/hemma.
+WRITE_LOCAL_REF = re.compile(r"/local/hemma/([^\s\"'`,;()\[\]?#]*)")
+# Einbindungen in configuration.yaml: !include datei.yaml, !include_dir_… ordner.
+_INCLUDE = re.compile(r"!include(?:_dir_[a-z_]+)?\s+['\"]?([^\s'\"#]+)")
 _TEMPLATE_START = re.compile(r"[{%$<*]")
 
 
@@ -403,7 +434,23 @@ def write_targets(config_dir: str) -> dict[str, list[str]]:
     """Was Automationen/Skripte/Pakete unter www/hemma benutzen: {Teilpfad: [Datei, …]}.
     Nur lesen. Diese Pfade bleiben beim Umzug, wie sie sind (nichts kopieren, nichts umschreiben)."""
     files: list[str] = [f for f in WRITE_FILES if os.path.isfile(os.path.join(config_dir, f))]
-    for d in WRITE_DIRS:
+    dirs = list(WRITE_DIRS)
+    real = os.path.realpath(config_dir)
+    try:
+        with open(os.path.join(config_dir, "configuration.yaml"), encoding="utf-8", errors="replace") as fh:
+            includes = _INCLUDE.findall(fh.read())
+    except OSError:
+        includes = []
+    for inc in includes:
+        full = os.path.realpath(os.path.join(config_dir, inc))
+        if not full.startswith(real + os.sep):
+            continue  # nur Dateien unter /config
+        rel = os.path.relpath(full, real).replace(os.sep, "/")
+        if os.path.isdir(full):
+            dirs.append(rel)
+        elif rel.endswith((".yaml", ".yml")) and os.path.isfile(full) and rel not in files:
+            files.append(rel)
+    for d in dict.fromkeys(dirs):
         base = os.path.join(config_dir, d)
         if not os.path.isdir(base):
             continue
@@ -412,7 +459,7 @@ def write_targets(config_dir: str) -> dict[str, list[str]]:
             files += [os.path.relpath(os.path.join(root, n), config_dir).replace(os.sep, "/")
                       for n in names if n.endswith((".yaml", ".yml"))]
     out: dict[str, list[str]] = {}
-    for rel in sorted(files):
+    for rel in sorted(set(files)):
         path = os.path.join(config_dir, rel)
         try:
             if os.path.getsize(path) > 5 * 1024 * 1024:
@@ -421,7 +468,7 @@ def write_targets(config_dir: str) -> dict[str, list[str]]:
                 text = fh.read()
         except OSError:
             continue
-        for m in WRITE_REF.finditer(text):
+        for m in [*WRITE_REF.finditer(text), *WRITE_LOCAL_REF.finditer(text)]:
             out.setdefault(_write_prefix(m.group(1)), [])
             if rel not in out[_write_prefix(m.group(1))]:
                 out[_write_prefix(m.group(1))].append(rel)
@@ -808,6 +855,7 @@ async def async_status(hass: HomeAssistant) -> dict:
             "complete": all(w in ("same", "shipped") for w in plan.values()),
             "plan": plan,
             "targets": targets,
+            "extra": extra_files(config_dir),
         }
 
     fs = await hass.async_add_executor_job(_fs)
@@ -842,13 +890,23 @@ async def async_status(hass: HomeAssistant) -> dict:
             "resource_refs": other_local,
             # Pfade, die eine Automation benutzt: bleiben in www/hemma.
             "write_targets": [{"path": WWW_HEMMA + "/" + p, "sources": src} for p, src in sorted(fs["targets"].items())],
+            # Eigene Skripte in scripts/ und versteckte Dateien: halten www/hemma fest.
+            "extra": fs["extra"],
         },
     }
 
 
-def www_deletable(complete: bool, refs: dict[str, int], removed: set[str], resource_refs: list) -> bool:
-    """www/hemma darf weg: alles liegt in www/casora und nichts Bleibendes zeigt darauf."""
-    return complete and not resource_refs and not any(n and url not in removed for url, n in refs.items())
+def www_deletable(complete: bool, refs: dict[str, int], removed: set[str], resource_refs: list,
+                  hold: list | None = None) -> bool:
+    """www/hemma darf weg: alles liegt in www/casora und nichts Bleibendes zeigt darauf
+    (hold: Schreibziele, eigene Skripte, versteckte Dateien – halten es fest)."""
+    return (complete and not resource_refs and not hold
+            and not any(n and url not in removed for url, n in refs.items()))
+
+
+def www_hold(config_dir: str) -> list[str]:
+    """Was www/hemma festhält, auch wenn alle Bilder in www/casora liegen."""
+    return extra_files(config_dir) + [WWW_HEMMA + "/" + p for p in write_targets(config_dir)]
 
 
 # ── Entfernen ─────────────────────────────────────────────────────────────────
@@ -862,11 +920,8 @@ async def async_remove(hass: HomeAssistant, remove_dashboards: list[str] | None,
     if remove_dashboards is None:
         remove_dashboards = [b["url_path"] for b in boards if b["moved_to"]]
     chosen = [by_url[u] for u in remove_dashboards if u in by_url]
-    removed_urls = set()
-    for b in chosen:
-        removed_urls.add(b["url_path"])
-        if b["mobile"]:
-            removed_urls.add(b["mobile"])
+    # YAML-Dashboards löscht Casora nicht – sie zeigen weiter auf www/hemma.
+    removed_urls = {u for b in chosen if b["mode"] == "storage" for u in (b["url_path"], b["mobile"]) if u}
     items, writable = await _resource_items(hass)
     hemma_res = [i for i in items if is_hemma_resource(i.get("url"))]
     other_local = [str(i.get("url")) for i in items
@@ -879,7 +934,8 @@ async def async_remove(hass: HomeAssistant, remove_dashboards: list[str] | None,
         # Dateien in www/casora halten www/hemma weiter fest.
         await hass.async_add_executor_job(copy_files, config_dir, shipped)
         complete = await hass.async_add_executor_job(files_complete, config_dir, shipped)
-    delete_www = not keep_files and www_deletable(complete, refs, removed_urls, other_local)
+    hold = await hass.async_add_executor_job(www_hold, config_dir)
+    delete_www = not keep_files and www_deletable(complete, refs, removed_urls, other_local, hold)
     entries = hemma_entries(hass)
     hacs = await async_hacs_repo(hass, config_dir)
     extras = await _extras(hass)
@@ -917,6 +973,8 @@ async def async_remove(hass: HomeAssistant, remove_dashboards: list[str] | None,
     #    (/hemma_scripts/…) ladbaren bekommen vorher eine, die ohne Hemma weiter lädt.
     own_res = [i for i in items if is_own_module(i.get("url"))]
     own_moved = await async_keep_own_modules(hass, _resources(hass)[0], own_res) if writable else []
+    # Jetzt unter /local/hemma/ geladen: www/hemma muss bleiben.
+    other_local += [m["to"] for m in own_moved if str(m["to"]).startswith(LOCAL_HEMMA)]
     if not hemma_res:
         steps.append({"step": "resources", "ok": True, "removed": [], "manual": []})
     elif not writable:
@@ -950,6 +1008,10 @@ async def async_remove(hass: HomeAssistant, remove_dashboards: list[str] | None,
             try:
                 await call_ws(hass, "hacs/repository/remove", {"repository": hacs["id"]})
             except LookupError:
+                # HACS nicht geladen (Eintrag nur aus .storage): Ordner bleibt, sonst führt HACS
+                # Hemma weiter als installiert – klare Meldung statt KeyError.
+                if hass.data.get("hacs") is None:
+                    raise RuntimeError("hacs_not_loaded") from None
                 repo = hass.data["hacs"].repositories.get_by_id(hacs["id"])
                 await repo.uninstall()
             steps.append({"step": "integration", "ok": True, "via": "hacs", "repository": hacs.get("full_name")})
@@ -985,6 +1047,8 @@ async def async_remove(hass: HomeAssistant, remove_dashboards: list[str] | None,
                 errs.append(f"{u}: {err}")
     steps.append({"step": "dashboards", "ok": not errs and not manual, "removed": done,
                   "manual": manual, "error": "; ".join(errs) or None})
+    # Nur tatsächlich gelöschte Dashboards geben www/hemma frei.
+    delete_www = delete_www and www_deletable(complete, refs, set(done), other_local, hold)
 
     # f) Hemmas Helfer-Paket: Werte übernehmen, dann YAML-Teile, ihre Registry-Einträge und
     #    UI-Helfer gleicher Herkunft entfernen. Eigenes (auch mit „hemma“ im Namen) bleibt.
@@ -998,6 +1062,8 @@ async def async_remove(hass: HomeAssistant, remove_dashboards: list[str] | None,
     for p in applied:
         if p["ok"]:
             removed_items += [f'{i["domain"]}.{i["key"]}' for i in p["items"]]
+        elif p.get("io"):
+            errs.append(f'{p["file"]}: {p["error"]}')
         else:
             manual.append(p["file"])
     reg = er.async_get(hass)
@@ -1125,7 +1191,8 @@ async def async_leftovers(hass: HomeAssistant, rec: dict | None = None) -> list[
     f = st["files"]
     gone = {u for b in boards for u in (b["url_path"], b["mobile"]) if u}
     if (rec.get("keep_files") is False and f["www_hemma"]
-            and www_deletable(f["complete"], f["refs"], gone, f["resource_refs"])):
+            and www_deletable(f["complete"], f["refs"], gone, f["resource_refs"],
+                              f["extra"] + f["write_targets"])):
         out.append({"kind": "files", "items": [WWW_HEMMA]})
     return out
 

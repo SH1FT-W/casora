@@ -1137,6 +1137,8 @@
 
     connectedCallback() {
       this.style.cssText = 'display:none!important;';
+      // Wieder eingehängt: am Filter neu anmelden (beim Aushängen abgemeldet).
+      if (this._rawHass && !this._filterOff) this.hass = this._rawHass;
       if (this._config && !this._initialized && !this._initializing) this._init();
     }
 
@@ -1149,6 +1151,8 @@
       if (this._subBadgesSavedParent || this._npSaved) {
         try { this._restoreMovedWrappers(); } catch (_) {}
       }
+      // Ausgehängte Overlays nicht weiter vom Filter aufrufen lassen.
+      this._filterOff?.(); this._filterOff = null;
       if (this._blurLayerEl) _blurLayers.delete(this._blurLayerEl);
       this._blurLayerEl?.remove();
       this._blurTwinObs?.disconnect(); this._blurTwinEl?.remove(); this._blurTwinObs = this._blurTwinEl = null; // casora-local-patch
@@ -1247,7 +1251,7 @@
       // Per device, like the row: rewrite before the overlay or its cards read it.
       this._rawHass = v;
       const F = window._casoraFilter;
-      if (F && !this._filterOff) {
+      if (F && !this._filterOff && this.isConnected) {
         this._filterOff = F.onChange(() => {
           if (this._rawHass) this.hass = this._rawHass;
         });
@@ -1287,7 +1291,8 @@
         this._showing = shouldShow;
         if (shouldShow) {
           // Noch nicht aufgebaut: _init zeigt am Ende selbst, was dann gewünscht ist.
-          this._initialized ? this._animIn() : this._init();
+          // Ausgehängt nicht aufbauen – connectedCallback holt das nach.
+          if (this._initialized) this._animIn(); else if (this.isConnected) this._init();
         } else {
           this._animOut();
         }
@@ -1299,6 +1304,8 @@
       this._initializing = true;
       try {
         if (!this._helpers) this._helpers = await window.loadCardHelpers();
+        // Während des Wartens ausgehängt: nichts anhängen (connectedCallback baut neu auf).
+        if (!this.isConnected) return;
         this._buildOverlay();
         this._initialized = true;
       } catch (e) {
@@ -1326,8 +1333,11 @@
 
 
       // html/body scrollbar hiding - always in document.head (not shadow root scoped)
+      // Eine Regel für alle Overlays: nicht je Instanz und Neuaufbau ein weiteres <style>.
+      if (!this._bodyScrollStyle) this._bodyScrollStyle = document.getElementById('casora-fo-body-scroll');
       if (!this._bodyScrollStyle) {
         const s = document.createElement('style');
+        s.id = 'casora-fo-body-scroll';
         s.textContent = 'html::-webkit-scrollbar,body::-webkit-scrollbar{display:none!important}html,body{scrollbar-width:none!important;-ms-overflow-style:none!important}';
         document.head.appendChild(s);
         this._bodyScrollStyle = s;

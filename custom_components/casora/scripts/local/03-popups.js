@@ -1799,6 +1799,9 @@
     if (!ok(x) || isDist(x)) return null;
     var u = (x.attributes && x.attributes.unit_of_measurement) || '';
     if (/^(d|days?|tage?)$/i.test(u) && num(x.state) != null) return new Date(Date.now() + num(x.state) * 86400000);
+    // Reines Datum (YYYY-MM-DD) als lokaler Tag – new Date() läse es als UTC (westlich davon: Vortag).
+    var ymd = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(x.state).trim());
+    if (ymd) return new Date(+ymd[1], +ymd[2] - 1, +ymd[3]);
     var t = new Date(x.state); return isNaN(t) ? null : t;
   };
   C.toDate = toDate;

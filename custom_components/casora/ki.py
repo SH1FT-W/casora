@@ -1189,9 +1189,9 @@ class KiRunner:
         # Antwortsprache wie Home Assistant (ki/*.yaml: „Antworte auf {{ sprache }}“).
         await script.async_run(run_variables={"sprache": answer_language(self.hass), **variables}, context=Context())
 
-    def _no_ai(self, feature: str, key: dict) -> bool:
+    def _no_ai(self, feature: str, key: dict, web: bool = False) -> bool:
         """Keine KI eingerichtet: Fehler mit Grund melden, statt die KI-Aufgabe „None“ aufzurufen."""
-        if ai_entity(self.hass, self.entry):
+        if ai_entity(self.hass, self.entry, web=web):
             return False
         self.hass.bus.async_fire(FEATURES[feature]["event"], {**key, "status": "error", "error": NO_AI})
         return True
@@ -1213,7 +1213,12 @@ class KiRunner:
         self._bg(run_ebike(self.hass, self.entry, dict(call.data)))
 
     async def _run_update(self, request: str) -> None:
-        if not ai_entity(self.hass, self.entry, web=True):
+        st = self.hass.states.get(request) if request else None
+        attrs = st.attributes if st else {}
+        # Wie update.yaml: mit Name und Versionen, damit der Sensor den Fehler zum Update zeigt.
+        if self._no_ai("update", {"entity_id": request, "name": attrs.get("friendly_name") or request,
+                                  "from": str(attrs.get("installed_version") or ""),
+                                  "version": str(attrs.get("latest_version") or "")}, web=True):
             return
         # Casoras eigene Release-Notes gleich mitgeben: die KI kommt per web_fetch nicht
         # verlässlich an GitHubs Release-Seite („Release-Notes nicht abrufbar“).
@@ -1233,6 +1238,8 @@ class KiRunner:
         self.hass.bus.async_fire("casora_update_ai_ack", {"entity_id": call.data["entity_id"]})
 
     async def _run_recipe(self) -> None:
+        if self._no_ai("rezept", {}, web=True):  # sonst bleibt der Sensor auf „running“
+            return
         weather = sorted(self.hass.states.async_entity_ids("weather"))
         await self._run("rezept", {
             "weather_entity": weather[0] if weather else "",

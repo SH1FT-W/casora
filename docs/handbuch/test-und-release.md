@@ -115,7 +115,7 @@ Vor einem Release zusätzlich:
 
 | Änderung | Wirkt | Warum |
 |---|---|---|
-| `custom_components/casora/scripts/*.js`, `scripts/local/*.js` (Dashboard-JS, i18n) | **ohne Neustart**, nach Neuladen im Browser | `scripts_view.py` liefert nach Änderungszeit der Datei aus, Cache nur bei passender Version |
+| `custom_components/casora/scripts/*.js`, `scripts/local/*.js` (Dashboard-JS, i18n) | Neustart (15.10.2026 in Prod nachgeprüft) | `scripts_view.py` liefert die neue Datei sofort aus, aber der Browser hält die alte: Sie kam unter derselben Ressourcen-Adresse (`?v=` = Stempel vom Start) mit „ein Jahr gültig“. Erst der Start setzt den neuen Stempel |
 | Vorlagen (`casora-templates.json`) | Neustart (Vorlagen-Auffrischung beim Start) bzw. Karten-Update | Vorlagen stehen in jeder Dashboard-Konfiguration |
 | Studio (`panel/*.js`) | Neustart | `casora-studio.js` und der Versionsstempel entstehen beim Start (`__init__.py`) |
 | Python (`*.py`), `services.yaml`, `helfer.yaml`, Übersetzungen der Integration | Neustart | – |

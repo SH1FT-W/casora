@@ -21,7 +21,7 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN, VERSION
-from .release_notes import newer, norm_version
+from .release_notes import newer, norm_version, version_key
 from .update import casora_update_entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,7 +113,7 @@ class UpdatePush:
         if st.attributes.get("in_progress"):
             return
         self.notified.add(latest)
-        self.store.async_delay_save(lambda: {"notified": sorted(self.notified)[-50:]}, 0)
+        self.store.async_delay_save(lambda: {"notified": sorted(self.notified, key=version_key)[-50:]}, 0)
         self.hass.async_create_task(self._send(latest, st.attributes), eager_start=False)
 
     async def _send(self, version: str, attrs: Any) -> None:

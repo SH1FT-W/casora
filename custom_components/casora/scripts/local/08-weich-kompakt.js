@@ -328,10 +328,12 @@
     var on = s === 'locked' || s === 'locking';
     // Zeile hervorgehoben, wenn entriegelt (wie die Kachel, Badge „1 entriegelt“). Der Schalter selbst
     // folgt dem Zustandswort: an = verriegelt (Nutzertest 06.10.2026: „Verriegelt“ mit Schalter aus wirkte verkehrt).
-    var open = !on;
+    // Offline: weder „Entriegelt“ noch hervorgehoben, kein Tipp-Hinweis.
+    var gone = s === 'unavailable';
+    var open = !on && !gone;
     var busy = s === 'locking' || s === 'unlocking';
-    var word = s === 'locking' ? 'Wird verriegelt …' : s === 'unlocking' ? 'Wird entriegelt …' : on ? 'Verriegelt' : 'Entriegelt';
-    var hint = busy ? '' : on ? (one ? 'Tippen zum Entriegeln' : 'Tippen, um alle zu entriegeln') : (one ? 'Tippen zum Verriegeln' : 'Tippen, um alle zu verriegeln');
+    var word = gone ? 'Offline' : s === 'locking' ? 'Wird verriegelt …' : s === 'unlocking' ? 'Wird entriegelt …' : on ? 'Verriegelt' : 'Entriegelt';
+    var hint = busy || gone ? '' : on ? (one ? 'Tippen zum Entriegeln' : 'Tippen, um alle zu entriegeln') : (one ? 'Tippen zum Verriegeln' : 'Tippen, um alle zu verriegeln');
     var ic = (typeof window.casoraIconUrl === 'function') ? window.casoraIconUrl(on ? 'lock-fill' : 'lock-open-fill') : '';
     var lkHue = 'var(--casora-lock-unlocked-color, var(--casora-lps-switch-on, #B67A50))';
     return '<div class="lkbar" role="switch" aria-checked="' + on + '" style="display:flex;align-items:center;gap:12px;min-height:var(--casora-soft-row-h, 60px);box-sizing:border-box;'

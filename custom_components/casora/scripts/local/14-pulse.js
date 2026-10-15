@@ -300,8 +300,11 @@
       return 'return window._casoraPulse ? window._casoraPulse.sec(' + JSON.stringify(part) + ', null, states, hass) : "";';
     };
     var f = { hero: { card: K.secCard(watch, call('hero'), states) } };
-    if (s.problems) f.prob = { card: K.secCard(watch, call('prob'), states) };
-    if (s.soon) f.soon = { card: K.secCard(watch, call('soon'), states) };
+    // Abschnitte nach ihrem Inhalt, nicht nach den Zählern: „prüfen“ wegen Batterie zählt als Problem,
+    // steht aber unter „Batterie“ (rechts) – mit nur so einem Gerät fehlte die Zeile ganz (Checkup 10/2026).
+    var batt = function (d) { return !!BATTERY[d.reason]; };
+    if (s.list.some(function (d) { return d.status === 'failed' || (d.status === 'check' && !batt(d)); })) f.prob = { card: K.secCard(watch, call('prob'), states) };
+    if (s.list.some(function (d) { return d.status === 'watch' || (d.status === 'check' && batt(d)); })) f.soon = { card: K.secCard(watch, call('soon'), states) };
     f.more = { card: K.secCard(watch, call('more'), states) };
     return K.layout({ fields: f, top: ['hero'], left: ['prob'], right: ['soon', 'more'], moveLeft: ['soon'] });
   };

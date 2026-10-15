@@ -195,6 +195,7 @@ async def _sync_script_resources(hass: HomeAssistant, scripts_dir: str, keep_hem
         for i in items
         if str(i.get("url", "")).startswith("/local/hemma/scripts/")
         and not any(str(i.get("url", "")).partition("?")[0].endswith("/" + n) for n in names)
+        and not is_own_module(i.get("url"))  # eigene Module bleiben bewusst dort (Hemma entfernen)
     ]
     if orphans:
         _LOGGER.warning(

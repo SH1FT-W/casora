@@ -300,18 +300,23 @@ def apply(config_dir: str) -> list[dict]:
         if p["error"]:
             out.append({**p, "ok": False})
             continue
-        with open(path, encoding="utf-8") as fh:
-            new, _found, err = clean_text(fh.read())
-        if err:
-            out.append({**p, "ok": False, "error": err})
+        # Je Datei: ein Schreibfehler hält die übrigen nicht auf, Erledigtes wird gemeldet.
+        try:
+            with open(path, encoding="utf-8") as fh:
+                new, _found, err = clean_text(fh.read())
+            if err:
+                out.append({**p, "ok": False, "error": err})
+                continue
+            if new is None:
+                os.remove(path)
+            else:
+                tmp = path + ".casora.tmp"
+                with open(tmp, "w", encoding="utf-8") as fh:
+                    fh.write(new)
+                os.replace(tmp, path)
+        except OSError as err:
+            out.append({**p, "ok": False, "error": f"os: {err}", "io": True})
             continue
-        if new is None:
-            os.remove(path)
-        else:
-            tmp = path + ".casora.tmp"
-            with open(tmp, "w", encoding="utf-8") as fh:
-                fh.write(new)
-            os.replace(tmp, path)
         out.append({**p, "ok": True})
     return out
 

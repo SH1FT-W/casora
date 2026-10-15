@@ -67,15 +67,14 @@
   C.xTicks = function (t0, t1, w) {
     var st = [15 * MIN, 30 * MIN, H, 2 * H, 3 * H, 6 * H, 12 * H, DAY, 2 * DAY, 7 * DAY], step = st[st.length - 1], out = [];
     for (var i = 0; i < st.length; i++) if (w / ((t1 - t0) / st[i]) >= Math.max(72, w / 6)) { step = st[i]; break; }
-    if (step >= DAY) {
-      var n = step / DAY, d = new Date(t0); d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
-      for (; d.getTime() < t1 - step * 0.3; d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + n)) out.push({ t: d.getTime(), day: true });
-      return out;
-    }
-    var off = new Date(t0).getTimezoneOffset() * MIN;
-    for (var t = Math.ceil((t0 - off) / step) * step + off; t < t1 - step * 0.3; t += step) {
-      var dd = new Date(t), mid = dd.getHours() === 0 && dd.getMinutes() === 0;
-      out.push({ t: t, day: mid && step >= 6 * H });
+    // Lokal zählen, auch über die Zeitumstellung (Frühjahr: fehlende Uhrzeit entfällt;
+    // Herbst: liegt die erste 02:00 vor t0, gilt die zweite).
+    var sm = step / MIN, b = new Date(t0);
+    for (var k = step > DAY ? 1440 : 0; k < 1e6; k += sm) {
+      var t = new Date(b.getFullYear(), b.getMonth(), b.getDate(), 0, k), m = t.getHours() * 60 + t.getMinutes(), u = +t;
+      if (u < t0 && new Date(u + H).getHours() === t.getHours()) u += H;
+      if (u >= t1 - step * 0.3) break;
+      if (u >= t0 && m === k % 1440) out.push({ t: u, day: !m && step >= 6 * H });
     }
     return out;
   };

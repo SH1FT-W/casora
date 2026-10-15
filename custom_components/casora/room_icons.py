@@ -243,24 +243,22 @@ def remove(path: str, file: str) -> bool:
     return True
 
 
-async def dashboards_using(hass: HomeAssistant, url: str) -> list[str]:
-    """Titel der Dashboards, deren Konfiguration diese Datei nennt."""
+async def dashboards_using(hass: HomeAssistant, urls: list[str]) -> dict[str, list[str]]:
+    """Je Datei die Titel der Dashboards, deren Konfiguration sie nennt (jedes Dashboard nur einmal geladen)."""
     data = hass.data.get("lovelace")
     dashes = getattr(data, "dashboards", None) or {}
-    titles: dict[str, str] = {}
-    try:
-        for item in getattr(data, "dashboards_collection", None).async_items():
-            titles[item.get("url_path")] = item.get("title") or item.get("url_path")
-    except Exception:  # noqa: BLE001 - nur für hübschere Namen
-        pass
-    used = []
+    # Titel steht in der Dashboard-Konfiguration (dashboards_collection gibt es in LovelaceData nicht).
+    titles = {key: (getattr(dash, "config", None) or {}).get("title") for key, dash in dashes.items()}
+    used: dict[str, list[str]] = {u: [] for u in urls}
     for key, dash in dashes.items():
         try:
             cfg = await dash.async_load(False)
         except Exception:  # noqa: BLE001 - leeres oder YAML-Dashboard ohne Datei
             continue
-        if cfg and url in json.dumps(cfg, ensure_ascii=False):
-            used.append(titles.get(key) or key or "Overview")
+        text = json.dumps(cfg, ensure_ascii=False) if cfg else ""
+        for u in urls:
+            if text and u in text:
+                used[u].append(titles.get(key) or key or "Overview")
     return used
 
 
@@ -274,9 +272,11 @@ class CasoraRoomIconsView(HomeAssistantView):
     async def get(self, request: web.Request) -> web.Response:
         hass: HomeAssistant = request.app["hass"]
         icons = await hass.async_add_executor_job(listing, hass.config.path(ICONS_DIR))
-        if request.query.get("used"):
+        # Dashboards durchsuchen nur für Admins (lädt jede Konfiguration).
+        if request.query.get("used") not in (None, "", "0", "false") and request["hass_user"].is_admin:
+            used = await dashboards_using(hass, [icon["url"] for icon in icons])
             for icon in icons:
-                icon["used_by"] = await dashboards_using(hass, icon["url"])
+                icon["used_by"] = used[icon["url"]]
         return self.json({"icons": icons, "max_bytes": MAX_BYTES})
 
     async def post(self, request: web.Request) -> web.Response:

@@ -720,11 +720,13 @@
     if (c.leak && states[c.leak]) {
       const ls = states[c.leak].state;
       const wet = ls === 'on';
+      /* unknown wie unavailable (wie Kachel/Kopf „Lecksensor offline“): nicht „Trocken“ melden */
+      const off = ls === 'unavailable' || ls === 'unknown';
       const b = c.leakBat ? parseFloat(states[c.leakBat]?.state) : NaN;
-      rows.push({ icon: 'mdi:water-alert', iconTone: wet ? 'bad' : 'good', label: 'Lecksensor',
+      rows.push({ icon: 'mdi:water-alert', iconTone: wet ? 'bad' : off ? 'warn' : 'good', label: 'Lecksensor',
         sub: !isNaN(b) ? 'Akku ' + Math.round(b) + ' %' : null,
-        value: ls === 'unavailable' ? 'Offline' : wet ? 'Wasser erkannt!' : 'Trocken',
-        valueTone: wet ? 'bad' : (!isNaN(b) ? (window.casoraBattery ? window.casoraBattery.tone((window.casoraBattery ? window.casoraBattery.level(b) : (b) <= 10 ? 'crit' : (b) <= 20 ? 'low' : 'ok')) : null) : null), entity: c.leakBat || c.leak });
+        value: off ? 'Offline' : wet ? 'Wasser erkannt!' : 'Trocken',
+        valueTone: wet ? 'bad' : off ? 'warn' : (!isNaN(b) ? (window.casoraBattery ? window.casoraBattery.tone((window.casoraBattery ? window.casoraBattery.level(b) : (b) <= 10 ? 'crit' : (b) <= 20 ? 'low' : 'ok')) : null) : null), entity: c.leakBat || c.leak });
     }
     if (c.tempBat && states[c.tempBat]) {
       const b = parseFloat(states[c.tempBat].state);
@@ -817,8 +819,9 @@
     if (cfg.leak && states[cfg.leak]) f2.gleak = `[[[
       const c = ${_c};
       const ls = states[c.leak] && states[c.leak].state, wet = ls === 'on';
-      return window._casoraUI.group([{ icon: 'mdi:water-alert', iconTone: wet ? 'bad' : 'good', label: 'Lecksensor',
-        value: ls === 'unavailable' ? 'Offline' : wet ? 'Wasser erkannt!' : 'Trocken', valueTone: wet ? 'bad' : ls === 'unavailable' ? 'warn' : null,
+      const off = ls === 'unavailable' || ls === 'unknown';
+      return window._casoraUI.group([{ icon: 'mdi:water-alert', iconTone: wet ? 'bad' : off ? 'warn' : 'good', label: 'Lecksensor',
+        value: off ? 'Offline' : wet ? 'Wasser erkannt!' : 'Trocken', valueTone: wet ? 'bad' : off ? 'warn' : null,
         entity: c.leak, active: wet }], 'Sicherheit');
     ]]]`;
     /* 1.1.2 (Frage 8): oben links Licht, Steuerung, Technik; rechts Düngeanlage (nur mit Pumpe) und
@@ -1692,7 +1695,8 @@
         var chosen = fmt(states, c.select) || progOf(c, states);
         if (chosen) rowsD.push({ icon: mIcon, iconTone: DIM, label: 'Programm', sub: 'An der Maschine gewählt', value: chosen });
       }
-      if (c.door && states[c.door] && states[c.door].state !== 'unavailable') {
+      /* unknown wie unavailable: keine Zeile statt „Geschlossen“ */
+      if (c.door && states[c.door] && states[c.door].state !== 'unavailable' && states[c.door].state !== 'unknown') {
         var dop = doorOpen(c, states);
         rowsD.push({ icon: dop ? 'mdi:door-open' : 'mdi:door-closed', iconTone: dop ? 'warn' : DIM, label: 'Tür',
           value: dop ? 'Geöffnet' : 'Geschlossen', valueTone: dop ? 'warn' : null });

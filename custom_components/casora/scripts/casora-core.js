@@ -6878,7 +6878,12 @@ window.casoraMenuGlass = {
 
     async open(data) {
       var cfg = data || {};
+      // Schließt das vorige Popup noch (Animation, bis 400 ms): erst fertig schließen – sonst galt es als
+      // offen, und das späte finish() räumte das neue Popup gleich wieder ab (Checkup 10/2026).
+      if (this.hasAttribute('closing') && this._closeFinish) this._closeFinish();
       var wasOpen = this.hasAttribute('open');
+      // Jedes Öffnen eine neue Runde: späte Neuaufbauten der vorigen Runde verwerfen (_buildCard).
+      this._openGen = (this._openGen || 0) + 1;
       // Gerät fehlt: Inhalt gar nicht erst bauen (bleibt ohnehin verborgen) – sonst melden Karten
       // ohne Entität Konfigurationsfehler in der Konsole (z. B. Diagramme ohne Datenreihe).
       if (this._src && missingEntityOf(this._src) && cfg.content && typeof cfg.content === 'object') {
@@ -7398,6 +7403,7 @@ window.casoraMenuGlass = {
       var finish = () => {
         if (done) return;
         done = true;
+        if (this._closeFinish === finish) this._closeFinish = null;
         this.removeAttribute('closing');
         this.removeAttribute('swipe-out');
         this.removeAttribute('open');
@@ -7416,6 +7422,7 @@ window.casoraMenuGlass = {
         this._dyn.textContent = '';
         this.dispatchEvent(new CustomEvent('casora-popup-closed', { bubbles: true, composed: true }));
       };
+      this._closeFinish = finish;
       this.surface.addEventListener('animationend', finish, { once: true });
       setTimeout(finish, 400);
     }
@@ -7434,6 +7441,8 @@ window.casoraMenuGlass = {
 
     async _buildCard(config, host) {
       var target = host || this.container;
+      var gen = this._openGen;
+      var mine = () => this.hasAttribute('open') && gen === this._openGen;
       if (this._bridge) {
         var hasLive = false;
         try { hasLive = JSON.stringify(config || '').indexOf('data-casora-live') > -1; }
@@ -7441,7 +7450,7 @@ window.casoraMenuGlass = {
         this._bridge._liveCache = { none: !hasLive, nodes: null, at: 0 };
       }
       var helpers = await cardHelpers();
-      if (!helpers || !this.hasAttribute('open')) return;
+      if (!helpers || !mine()) return;
 
       var el;
       try {
@@ -7450,7 +7459,7 @@ window.casoraMenuGlass = {
         console.error('casora-popup: could not build the popup card', err);
         return;
       }
-      if (!this.hasAttribute('open')) return;
+      if (!mine()) return;
 
       var ha = document.querySelector('home-assistant');
       if (ha && !this._bridge._provided) {
@@ -7460,7 +7469,7 @@ window.casoraMenuGlass = {
       el.hass = (this._bridge.hass || (ha && ha.hass));
 
       el.addEventListener('ll-rebuild', () => {
-        if (this.hasAttribute('open')) this._buildCard(config, target);
+        if (mine()) this._buildCard(config, target);
       }, { once: true });
 
       target.textContent = '';
@@ -7469,7 +7478,7 @@ window.casoraMenuGlass = {
 
       if (!customElements.get(el.localName)) {
         customElements.whenDefined(el.localName).then(() => {
-          if (this.hasAttribute('open')) this._buildCard(config, target);
+          if (mine()) this._buildCard(config, target);
         });
       }
     }
@@ -11467,9 +11476,18 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     return out;
   }
 
+  // Keine Glocke gefunden: nicht alle 2 s den ganzen DOM durchsuchen, sondern mit wachsender
+  // Pause (2 s … 30 s). location-changed setzt zurück – das Dashboard lädt oft verzögert.
+  var _bellMissAt = 0, _bellMissWait = 0;
   function bells() {
     _bells = _bells.filter(function (el) { return el.isConnected; });
-    if (!_bells.length) _bells = findBells();
+    if (!_bells.length) {
+      var now = Date.now();
+      if (_bellMissWait && now - _bellMissAt < _bellMissWait) return _bells;
+      _bells = findBells();
+      if (_bells.length) _bellMissWait = 0;
+      else { _bellMissAt = now; _bellMissWait = Math.min(30000, _bellMissWait ? _bellMissWait * 2 : 2000); }
+    }
     return _bells;
   }
 
@@ -12461,6 +12479,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       // A new bell arrives with every view change and starts out empty.
       window.addEventListener('location-changed', function () {
         _bells = [];
+        _bellMissWait = 0;
         setTimeout(announce, 120);
       }, true);
       setInterval(announce, 2000);

@@ -32,7 +32,7 @@ from homeassistant.helpers import selector
 from .const import DOMAIN
 from .ki import (OPT_AI, OPT_AI_WEB, OPT_AUTO, OPT_NOTES, OPT_OUT_RH, OPT_OUT_T, OPT_PLAN_UPDATE, OPT_PRICE,
                  OPT_RECIPE_LIST,
-                 PLAN_OPTS, UPDATE_PLANS, valid_plan)
+                 PLAN_OPTS, UPDATE_PLANS, _PLAN_RE, valid_plan)
 from .lueften_push import OPT_VENT_NOTIFY, OPT_VENT_PERSONS, notify_services
 from .update_push import OPT_UPDATE_PUSH
 from .update_source import LEGACY_OPTIONS, OPT_BETA
@@ -172,9 +172,10 @@ def build_options(hass: HomeAssistant, current: dict[str, Any], submitted: dict[
     # Eigene Zeit einheitlich speichern: „Sun 6:00“ → „sun 06:00“.
     for k in PLAN_OPTS.values():
         if valid.get(k) not in (None, "", "off", "auto"):
-            day, _, hm = str(valid[k]).strip().lower().rpartition(" ")
-            h, m = hm.split(":")
-            valid[k] = (day.strip() + " " if day.strip() else "") + f"{int(h):02d}:{m}"
+            # Wie parse_plan: auch Tab oder geschütztes Leerzeichen zwischen Tag und Zeit.
+            m = _PLAN_RE.match(str(valid[k]).strip().lower())
+            if m:
+                valid[k] = (m.group(1) + " " if m.group(1) else "") + f"{int(m.group(2)):02d}:{m.group(3)}"
     return clean_options(valid)
 
 

@@ -100,8 +100,7 @@ class LueftenPush:
                 if kind in NEEDS_HOME and not self._home():
                     continue
             if key in self.last and now - self.last[key] < AGAIN:
-                self.sent[key] = now
-                continue
+                continue  # noch zu früh – nach Ablauf senden, falls der Zustand anhält
             self.sent[key] = self.last[key] = now
             self.hass.async_create_task(self._send(kind, room), eager_start=False)
 

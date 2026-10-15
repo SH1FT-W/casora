@@ -2025,6 +2025,7 @@
     "Everything is in www/casora and no dashboard uses them any more. Included in the backup.": "Alles liegt in www/casora und kein Dashboard nutzt sie mehr. Sie kommen mit in die Sicherung.",
     "Old files in www/hemma stay": "Alte Dateien in www/hemma bleiben",
     "A dashboard still uses them or not all of them are in www/casora yet – Casora keeps reading them from there.": "Ein Dashboard nutzt sie noch oder noch nicht alle liegen in www/casora – Casora liest sie weiter von dort.",
+    "It also holds files that don't come from Hemma:": "Dort liegen auch Dateien, die nicht von Hemma stammen:",
     "Removing Hemma…": "Hemma wird entfernt …",
     "Hemma couldn't be removed": "Hemma konnte nicht entfernt werden",
     "Hemma removed": "Hemma entfernt",
