@@ -23,7 +23,7 @@ const LOCALE_12H = clock12(null);
 
 const REQUIREMENTS = [
   { kind: "integration", id: "uix", label: "UI eXtension", required: true,
-    why: "provides card_mod, which Casora's templates use throughout",
+    why: "styles Casora's tiles (successor to card-mod)",
     repo: "Lint-Free-Technology/uix", docs: "https://uix.lf.technology" },
   { kind: "card", id: "button-card", label: "button-card", required: true,
     why: "every Casora tile is one", repo: "custom-cards/button-card" },
@@ -14736,11 +14736,28 @@ class CasoraPanel extends HTMLElement {
     }
     const components = (this._hass && this._hass.config
       && this._hass.config.components) || [];
-    return REQUIREMENTS.filter((r) => {
+    const out = REQUIREMENTS.filter((r) => {
       if (r.kind === "integration") return !components.includes(r.id);
       if (customElements.get(r.id)) return false;
       return urls === null ? false : !urls.some((u) => u.includes(r.id));
-    });
+    }).map((r) => Object.assign({}, r));
+    // Integration fehlt: genauer sagen, woran (Forum 15.10.2026 – UIX heruntergeladen und neu
+    // gestartet, aber nie unter Geräte & Dienste hinzugefügt). step: get | add | restart.
+    for (const r of out) {
+      if (r.kind !== "integration") continue;
+      r.step = "get";
+      try {
+        const entries = await this._ws({ type: "config_entries/get", domain: r.id });
+        if (Array.isArray(entries) && entries.length) { r.step = "restart"; continue; }
+      } catch (e) { /* ältere HA: unten weiter */ }
+      try {
+        await this._ws({ type: "manifest/get", integration: r.id });
+        r.step = "add";
+      } catch (e) { /* nicht heruntergeladen */ }
+    }
+    // card-mod neben UIX: beide verarbeiten card_mod, das gibt doppelte Stile.
+    this._cardModToo = !!(urls && urls.some((u) => /card-mod/i.test(u)));
+    return out;
   }
 
   async _syncMods() {
@@ -14805,6 +14822,7 @@ class CasoraPanel extends HTMLElement {
     if (!missing.length) return false;
 
     const blockers = missing.filter((r) => r.required);
+    if (this._cardModToo) this._log("card-mod is installed as well - remove it, UIX replaces it", "warn");
     missing.filter((r) => !r.required).forEach((r) => {
       this._log(`${r.label} is not installed - ${r.why}`, "warn");
     });
@@ -14823,20 +14841,29 @@ class CasoraPanel extends HTMLElement {
       full: true, icon: "get",
       title: one ? "One More Thing to Install" : "A Few More Things to Install",
       lede: `Casora needs ${one ? "this" : "these"} from HACS before your dashboard `
-        + "can render. " + (restart ? "Restart Home Assistant once installed."
+        + "can render. " + (restart ? "After downloading, restart Home Assistant and add it under Settings > Devices & services."
           : "Come back here once installed."),
     });
     const list = this._flowGroup(s.body);
     blockers.forEach((r) => {
-      // my.home-assistant.io deep-links straight into the reader's own HACS.
+      // my.home-assistant.io deep-links straight into the reader's own HACS – oder, ist die
+      // Integration schon heruntergeladen, direkt in ihre Einrichtung unter Geräte & Dienste.
       const [owner, repository] = r.repo.split("/");
+      const add = r.step === "add", rs = r.step === "restart";
       const row = this._flowRow(list, {
-        tag: "a", icon: "get", tint: FLOW_TINT.teal, title: r.label, sub: r.why, get: "Get",
+        tag: rs ? "div" : "a", icon: "get", tint: FLOW_TINT.teal, title: r.label,
+        sub: add ? "Downloaded - now add it under Devices & services"
+          : rs ? "Added - restart Home Assistant to load it" : r.why,
+        get: rs ? undefined : add ? "Add" : "Get",
       }).row;
+      if (rs) return;
       row.target = "_blank";
       row.rel = "noreferrer";
-      row.href = "https://my.home-assistant.io/redirect/hacs_repository/?owner="
-        + encodeURIComponent(owner) + "&repository=" + encodeURIComponent(repository);
+      row.href = add
+        ? "https://my.home-assistant.io/redirect/config_flow_start/?domain=" + encodeURIComponent(r.id)
+        : "https://my.home-assistant.io/redirect/hacs_repository/?owner="
+          + encodeURIComponent(owner) + "&repository=" + encodeURIComponent(repository)
+          + (r.kind === "integration" ? "&category=integration" : "");
     });
     this._flowButton(s.acts, "Check Again", () => {
       this._saveBlocked = false;

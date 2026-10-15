@@ -119,7 +119,7 @@ Available now: **Robot lawn mower** (any lawn mower in Home Assistant, with extr
 | Requirement | Notes |
 |---|---|
 | **Home Assistant 2026.9** or newer | Required, with dashboards in storage mode (the default). |
-| [**UI eXtension (UIX)**](https://github.com/Lint-Free-Technology/uix) | Required, from HACS. Needs a restart. Use it instead of card-mod, not both. |
+| [**UI eXtension (UIX)**](https://github.com/Lint-Free-Technology/uix) | Required, from HACS. The successor to card-mod. After downloading, restart and add it under Settings → Devices & services → Add integration → **UI eXtension**. Use it instead of card-mod, not both. |
 | [**button-card**](https://github.com/custom-cards/button-card) | Required, from HACS. |
 | An **AI task** in Home Assistant | Optional, for the [AI features](docs/guide.md#ai-features-optional). |
 
@@ -135,7 +135,7 @@ There are two ways to install Casora: through HACS as a custom repository (recom
 
 1. **Add the repository.** Click the button above, or in HACS open the menu, choose **Custom repositories** and add `https://github.com/SH1FT-W/casora` with the type **Integration**.
 2. **Download Casora**, together with UIX and button-card if you don't have them yet, then **restart Home Assistant** once.
-3. **Add the integration** under Settings → Devices & services → Add integration → **Casora**.
+3. **Add the integrations** under Settings → Devices & services → Add integration: **Casora**, and **UI eXtension** if it isn't added yet. UIX does nothing until it is added there.
 4. **Open Casora Studio** in the sidebar. The setup assistant takes it from there: pick a look, let Casora sort your devices into rooms, check the preview and create your dashboard.
 
 Updates then arrive through HACS like any other integration. After an update, Casora brings your dashboards up to its new templates and saves a version first, so you can always go back. It never restarts Home Assistant on its own.
@@ -144,7 +144,7 @@ Updates then arrive through HACS like any other integration. After an update, Ca
 
 1. Download the [latest release](https://github.com/SH1FT-W/casora/releases) and copy its `custom_components/casora` folder into `/config/custom_components/` on your Home Assistant.
 2. Install UIX and button-card if you don't have them yet, then **restart Home Assistant**.
-3. Add the **Casora** integration and open **Casora Studio** in the sidebar, as above.
+3. Add the **Casora** and **UI eXtension** integrations and open **Casora Studio** in the sidebar, as above.
 
 To update, replace the folder with the new release and restart. Without HACS, new versions show up under Settings → Updates in Home Assistant. Step by step in the [guide](docs/guide.md#install).
 

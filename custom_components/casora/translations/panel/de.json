@@ -686,7 +686,10 @@
     "Preview the night photo": "Nachtfoto ansehen",
     "Progress from": "Fortschritt aus",
     "Progress ring": "Fortschrittsring",
-    "provides card_mod, which Casora's templates use throughout": "liefert card_mod, das Casoras Vorlagen überall nutzen",
+    "styles Casora's tiles (successor to card-mod)": "gestaltet Casoras Kacheln (Nachfolger von card-mod)",
+    "Downloaded - now add it under Devices & services": "Heruntergeladen – jetzt unter Geräte & Dienste hinzufügen",
+    "Added - restart Home Assistant to load it": "Hinzugefügt – Home Assistant neu starten, damit es lädt",
+    "card-mod is installed as well - remove it, UIX replaces it": "card-mod ist zusätzlich installiert – entferne es, UIX ersetzt es",
     "Pulses a dot beside this room in the navigation, and shows a motion icon on the phone.": "Zeigt Bewegung in der Navigation an.",
     "Remove": "Entfernen",
     "Remove card": "Karte entfernen",
@@ -2628,8 +2631,8 @@
       "Das ist ein Handy-Layout. Casora importiert es nur zusammen mit seinem Dashboard – das fehlt unter /{1}."
     ],
     [
-      "^Casora needs (?:this|these) from HACS before your dashboard can render\\. Restart Home Assistant once installed\\.$",
-      "Casora braucht das aus HACS. Danach Home Assistant neu starten."
+      "^Casora needs (?:this|these) from HACS before your dashboard can render\\. After downloading, restart Home Assistant and add it under Settings > Devices & services\\.$",
+      "Casora braucht das aus HACS. Nach dem Herunterladen Home Assistant neu starten und unter Einstellungen > Geräte & Dienste hinzufügen."
     ],
     [
       "^Casora needs (?:this|these) from HACS before your dashboard can render\\. Come back here once installed\\.$",

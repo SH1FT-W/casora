@@ -25,13 +25,13 @@ You need **Home Assistant 2026.9** or newer with dashboards in storage mode (the
 
 | | |
 |---|---|
-| [**UI eXtension (UIX)**](https://github.com/Lint-Free-Technology/uix) | Required. Needs a restart. Use it instead of card-mod, not both. |
+| [**UI eXtension (UIX)**](https://github.com/Lint-Free-Technology/uix) | Required. The successor to card-mod. After downloading, restart and add it under Settings → Devices & services → Add integration → **UI eXtension**. Use it instead of card-mod, not both. |
 | [**button-card**](https://github.com/custom-cards/button-card) | Required. |
 | An **AI task** in Home Assistant | Optional, for the [AI features](#ai-features-optional). |
 
 1. In HACS open the menu, choose **Custom repositories** and add `https://github.com/SH1FT-W/casora` with the type **Integration**. The button in the [README](../README.md#install) does the same in one click.
 2. **Download Casora**, together with UIX and button-card if you don't have them yet, then **restart Home Assistant** once.
-3. **Add the integration** under Settings → Devices & services → Add integration → **Casora**.
+3. **Add the integrations** under Settings → Devices & services → Add integration: **Casora**, and **UI eXtension** if it isn't added yet. UIX does nothing until it is added there.
 4. **Open Casora Studio** in the sidebar.
 
 Casora checks the requirements when you first open the Studio and links you to anything missing. Helpers, scripts, resources and the theme are created by Casora itself.
@@ -215,7 +215,7 @@ Dashboards defined in `configuration.yaml` (YAML mode) can't be hidden from the 
 Restart Home Assistant if you haven't yet. After the restart the Studio shows what is left and offers **Remove the rest**. Anything set up in YAML (resources, helper files) has to be removed from those files by hand; Casora names the lines.
 
 **A tile or popup looks unstyled.**
-UIX or button-card is probably missing, or card-mod is installed alongside UIX. Open Casora Studio: it checks the requirements and links you to anything missing. Then reload the browser. If you're using the Companion app, clear the frontend cache.
+UIX or button-card is probably missing, UIX was downloaded but never added under Settings → Devices & services, or card-mod is installed alongside UIX. Open Casora Studio: it checks the requirements and links you to anything missing. Then reload the browser. If you're using the Companion app, clear the frontend cache.
 
 **The look isn't quite right.**
 Make sure your Home Assistant profile uses one of Casora's themes. Casora's own look is called *Casora* there; the Studio shows a hint if another theme is active.
