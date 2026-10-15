@@ -223,8 +223,9 @@
       + '.hcal-bar{width:4px;border-radius:2px;flex:none;}'
       + '.hcal-tm{flex:none;width:52px;font-size:14px;font-variant-numeric:tabular-nums;color:' + T.ink2 + ';line-height:1.35;}'
       + '.hcal-tx{flex:1;min-width:0;}'
-      + '.hcal-tt{font-size:16px;color:' + T.ink + ';line-height:1.3;overflow:hidden;text-overflow:ellipsis;}'
-      + '.hcal-ts{font-size:13px;color:' + T.ink3 + ';margin-top:1px;}'
+      /* Titel und Unterzeile (Kalender · bis … · Ort) einzeilig mit „…“ – die Unterzeile lief sonst weiter. */
+      + '.hcal-tt{font-size:16px;color:' + T.ink + ';line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
+      + '.hcal-ts{font-size:13px;color:' + T.ink3 + ';margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
       + '.hcal-e{font-size:15px;color:' + T.ink3 + ';padding:6px 0 2px;}'
       + '.hcal-dh{font-size:13px;font-weight:600;color:' + T.ink2 + ';padding:10px 0 2px;}'
       + '.hcal-dh:first-child{padding-top:0;}'
