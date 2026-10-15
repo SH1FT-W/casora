@@ -284,7 +284,8 @@
     + '.row.quiet .ic{color:var(--casora-text-2, inherit);}'
     + '.tm span{flex:1;font-size:var(--casora-fs-row, 15px);font-weight:600;padding-left:8px;}';
 
-  var host = null, cur = null, poll = 0;
+  // lastName: Titel der Rückfrage, auch wenn das Menü schon zu ist (Hauptaktion schließt erst, dann fragt sie).
+  var host = null, cur = null, poll = 0, lastName = '';
 
   var isPhone = function () {
     return window.matchMedia('(max-width: 767px), (max-height: 500px)').matches;
@@ -401,7 +402,7 @@
     var go = function () { return call(it.svc, Object.assign({ entity_id: it.entity || id }, it.data || {})).catch(failed); };
     // Riskantes (Entriegeln, Tür öffnen) fragt immer – unabhängig von der Studio-Einstellung.
     if (it.ask) {
-      var name = (cur ? cur.name : id) + (it.mode ? ' · ' + T(it.mode) : ''), q = T(it.ask);
+      var name = (cur ? cur.name : lastName || id) + (it.mode ? ' · ' + T(it.mode) : ''), q = T(it.ask);
       // Alarm mit Code: Code im selben Dialog, verdeckt; leer = abbrechen.
       if (it.code && window.casoraAsk) {
         return window.casoraAsk({ title: name, text: q, yes: T(it.yes || it.t), input: { placeholder: 'Code', secret: true, numeric: !!it.numeric } })
@@ -595,6 +596,7 @@
     var r = tile.getBoundingClientRect(), rad = cardRadius(tile);
     var name = tileText(tile, '#name') || (h.states[id].attributes || {}).friendly_name || id;
     cur = { tile: tile, detail: detail, id: id, phone: phone, name: name, armed: false, opened: Date.now() };
+    lastName = name;
     host.shadowRoot.innerHTML = '<style>' + CSS + '</style><div class="veil"></div><div class="lift"></div>'
       + '<div class="pane' + (phone ? ' sheet' : '') + '" role="menu" aria-label="' + esc(name) + '"></div>';
     var hue = hueOf(tile);
