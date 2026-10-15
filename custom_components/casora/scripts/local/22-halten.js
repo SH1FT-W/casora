@@ -580,8 +580,8 @@
       if (!cur || !hh) return;
       if (hh.states[id] !== last || hh.states[TIMERS] !== lastT) { last = hh.states[id]; lastT = hh.states[TIMERS]; paint(); }
     }, 250);
-    var first = pane.querySelector('.row, .pill');
-    if (first && !phone) { try { first.focus({ preventScroll: true }); } catch (e) { /* egal */ } }
+    // Kein Fokus beim Öffnen (Halten kommt von Maus/Finger, ein Fokusring wirkte wie ein Fehler);
+    // Pfeiltasten/Tab springen auf die erste Zeile.
     return true;
   };
 
