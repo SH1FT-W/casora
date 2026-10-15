@@ -301,7 +301,10 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
       var field = null;
       if (w.input) {
         field = document.createElement('input');
-        field.type = 'text';
+        // input.secret: Code verdeckt (Alarm aus dem Halten-Menü), input.numeric: Ziffern-Tastatur.
+        field.type = w.input.secret ? 'password' : 'text';
+        if (w.input.secret) field.autocomplete = 'off';
+        if (w.input.numeric) field.inputMode = 'numeric';
         field.placeholder = T(w.input.placeholder || '');
         field.setAttribute('aria-label', field.placeholder || w.title || '');
         root.querySelector('.row').before(field);

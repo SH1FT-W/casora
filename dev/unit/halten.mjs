@@ -123,4 +123,13 @@ assert.equal(H.wants({ hold_action: { action: "[[[\nreturn window.casoraPopupAct
 assert.equal(H.wants({ hold_action: { action: "[[[ return 'call-service' ]]]" } }), false);
 assert.equal(H.wants({ hold_action: { action: "[[[ return window.casoraPopup && window.casoraPopup.enabled && window.CASORA_HOLD_MENU !== false ? 'more-info' : 'none'; ]]]" } }), true, 'neue Halten-Aktion der Info-Vorlagen');
 assert.equal(H.wants({ hold_action: { action: 'call-service', service: 'script.turn_on' } }), false, 'Licht-Badge: Smart-Toggle bleibt');
+// Alarm: unscharf → Scharf-Tasten je Modus mit Rückfrage (Code verdeckt, wenn verlangt); scharf → Unscharf als Hauptaktion.
+m = H.model(st('alarm_control_panel.a', 'disarmed', { supported_features: 3, code_format: 'number', code_arm_required: false }), { timers: {} });
+assert.equal(m.main, null);
+assert.deepEqual(m.quick[0].items.map((x) => x.t), ['Zuhause', 'Abwesend']);
+assert.ok(m.quick[0].items.every((x) => x.ask && !x.code), 'Scharf mit Rückfrage, ohne Code wenn code_arm_required false');
+assert.equal(m.timer, null); assert.equal(H.worth(m), true);
+m = H.model(st('alarm_control_panel.a', 'armed_away', { supported_features: 3, code_format: 'number' }), {});
+assert.equal(m.main.svc, 'alarm_control_panel.alarm_disarm'); assert.ok(m.main.ask && m.main.code && m.main.numeric);
+assert.equal(H.model(st('alarm_control_panel.a', 'triggered', {}), {}).main.t, 'Alarm beenden');
 console.log('halten: ok');

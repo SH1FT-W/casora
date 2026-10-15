@@ -146,6 +146,23 @@
       }
     }
 
+    // Alarm: scharf je Modus, unscharf als Hauptaktion – immer mit Rückfrage, Code verdeckt, wenn Alarmo einen verlangt.
+    // Die Warnung „Fenster offen“ beim Scharfschalten kommt zusätzlich aus casora-core (hängt am Dienstaufruf).
+    if (dom === 'alarm_control_panel' && !dead) {
+      var af = typeof a.supported_features === 'number' ? a.supported_features : 63;
+      var cn = a.code_format === 'number', needArm = !!a.code_format && a.code_arm_required !== false, needDis = !!a.code_format;
+      if (s === 'disarmed') {
+        var ab = [['Zuhause', 'mdi:shield-home-outline', 'alarm_arm_home', 1], ['Abwesend', 'mdi:shield-lock-outline', 'alarm_arm_away', 2],
+          ['Nacht', 'mdi:shield-moon-outline', 'alarm_arm_night', 4]].filter(function (x) { return af & x[3]; }).map(function (x) {
+          return svc(x[0], x[1], 'alarm_control_panel.' + x[2], null, { wide: true, ask: 'Alarm scharf schalten?', yes: 'Scharf schalten', mode: x[0], code: needArm, numeric: cn });
+        });
+        if (ab.length) m.quick.push({ kind: 'buttons', label: 'Scharf schalten', items: ab });
+      } else if (/^(armed_|arming|pending|triggered)/.test(s)) {
+        m.main = svc(s === 'triggered' ? 'Alarm beenden' : 'Unscharf schalten', 'mdi:shield-off-outline', 'alarm_control_panel.alarm_disarm', null,
+          { ask: 'Alarm unscharf schalten?', yes: 'Unscharf schalten', code: needDis, numeric: cn });
+      }
+    }
+
     // 3D-Drucker: Pause/Fortsetzen (Tasten der Integration) und Bauraumlicht – nur, was es gibt. Kein Abbrechen.
     var P = o.printer;
     if (P) {
@@ -384,7 +401,15 @@
     var go = function () { return call(it.svc, Object.assign({ entity_id: it.entity || id }, it.data || {})).catch(failed); };
     // Riskantes (Entriegeln, Tür öffnen) fragt immer – unabhängig von der Studio-Einstellung.
     if (it.ask) {
-      var name = cur ? cur.name : id, q = T(it.ask);
+      var name = (cur ? cur.name : id) + (it.mode ? ' · ' + T(it.mode) : ''), q = T(it.ask);
+      // Alarm mit Code: Code im selben Dialog, verdeckt; leer = abbrechen.
+      if (it.code && window.casoraAsk) {
+        return window.casoraAsk({ title: name, text: q, yes: T(it.yes || it.t), input: { placeholder: 'Code', secret: true, numeric: !!it.numeric } })
+          .then(function (code) {
+            if (!code) return null;
+            return call(it.svc, Object.assign({ entity_id: it.entity || id, code: String(code) }, it.data || {})).catch(failed);
+          });
+      }
       var w = window.casoraAsk ? window.casoraAsk({ title: name, text: q, yes: T(it.yes || it.t) }) : Promise.resolve(window.confirm(q));
       return w.then(function (ok) { return ok ? go() : null; });
     }

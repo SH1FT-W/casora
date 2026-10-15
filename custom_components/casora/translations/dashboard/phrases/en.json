@@ -1794,7 +1794,10 @@
   "Kamera live": "Live camera",
   "Live ansehen": "Watch live",
   "Auto": "Auto",
-  "Hat nicht geklappt": "Didn't work"
+  "Hat nicht geklappt": "Didn't work",
+  "Alarm scharf schalten?": "Arm the alarm?",
+  "Alarm unscharf schalten?": "Disarm the alarm?",
+  "Code": "Code"
  },
  "patterns": [
   [
