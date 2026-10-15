@@ -4,6 +4,12 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 1.5.5 – 15.10.2026
+
+### Changed
+- **Warnings instead of NINA:** The warning tile and popup are now simply called "Warnings" ("No warnings right now", a warning without a title: "Official warning"), and the bell shows "Official warning". Warnings can come from NINA, from DWD or from an integration that combines both.
+- **Warning area:** If a warning sensor has a `region` attribute, the popup shows the area ("No warnings for … right now"). For NINA sensors it still comes from the name.
+
 ## 1.5.4 – 15.10.2026
 
 ### Fixed
