@@ -98,7 +98,7 @@
     var me = R[id] || {}, dev = me.device_id ? D[me.device_id] : null;
     var c = { cam: id, device: me.device_id || null, name: dev ? String(dev.name_by_user || dev.name || '') : '',
       visitor: null, motion: null, det: {}, order: [], snap: null, quick: null, autoReply: null, autoTime: null,
-      vol: {}, sw: {}, led: null, ledLight: null, siren: null, battery: null, wifi: null, dayNight: null, reolink: me.platform === 'reolink' };
+      vol: {}, sw: {}, led: null, ledLight: null, dayMode: null, siren: null, battery: null, wifi: null, dayNight: null, reolink: me.platform === 'reolink' };
     if (me.device_id) {
       Object.keys(R).forEach(function (eid) {
         var e = R[eid];
@@ -114,6 +114,7 @@
           if (k === 'play_quick_reply_message') c.quick = eid;
           else if (k === 'auto_quick_reply_message') c.autoReply = eid;
           else if (k === 'doorbell_led') c.led = eid;
+          else if (k === 'day_night') c.dayMode = eid;
         } else if (dom === 'number') {
           if (k === 'volume') c.vol.spk = eid;
           else if (k === 'volume_speak') c.vol.speak = eid;
@@ -141,7 +142,7 @@
     return c;
   };
   KL.watch = function (c) {
-    var out = [c.cam, c.visitor, c.motion, c.snap, c.quick, c.autoReply, c.autoTime, c.led, c.ledLight, c.siren, c.battery, c.wifi, c.dayNight];
+    var out = [c.cam, c.visitor, c.motion, c.snap, c.quick, c.autoReply, c.autoTime, c.led, c.ledLight, c.siren, c.battery, c.wifi, c.dayNight, c.dayMode];
     c.order.forEach(function (o) { out.push(c.det[o]); });
     ['spk', 'speak', 'bell'].forEach(function (k) { out.push(c.vol[k]); });
     ['bell', 'audio', 'privacy', 'ir'].forEach(function (k) { out.push(c.sw[k]); });
@@ -525,9 +526,9 @@
       var rows = [
         swRow(S, c.sw.bell, 'mdi:bell-ring-outline', 'Klingelton an der Tür', false),
         swRow(S, c.sw.audio, 'mdi:microphone-outline', 'Ton aufnehmen', true, 'Ohne Ton hörst du die Tür nicht'),
-        // Infrarot-LEDs: dürfen nachts angehen (Schwarz-Weiß-Bild). Was das Bild gerade zeigt, sagt „Bildmodus“ unter „Gerät“.
-        swRow(S, c.sw.ir, 'mdi:lightbulb-night-outline', 'Infrarot-Licht', false,
-          S[c.sw.ir] && S[c.sw.ir].state === 'on' ? 'Geht nachts von selbst an' : 'Nachts bleibt das Bild dunkler'),
+        // Drei Reolink-Entitäten, drei eindeutige Namen (16.10., Daten aus #23): Schalter ir_lights „Infrarot-LEDs nachts“,
+        // Auswahl day_night „Tag/Nacht-Modus“ (Segmente unten), Sensor day_night_state „Bild gerade“ (unter „Gerät“).
+        swRow(S, c.sw.ir, 'mdi:lightbulb-night-outline', 'Infrarot-LEDs nachts', false),
         swRow(S, c.ledLight, 'mdi:led-on', 'Status-LED', false),
         swRow(S, c.sw.privacy, 'mdi:eye-off-outline', 'Privatsphäre', 'both', 'Kamera und Ton aus'),
       ].filter(Boolean);
@@ -545,6 +546,15 @@
       }
       if (rows.length) secs.push(UI.group(rows, 'Klingel'));
       if (segs) secs.push(segs);
+      var dm = c.dayMode && S[c.dayMode] && !bad(S[c.dayMode].state) ? S[c.dayMode] : null;
+      if (dm) {
+        var DM = { auto: 'Automatisch', color: 'Farbe', blackwhite: 'Schwarz-Weiß', blackandwhite: 'Schwarz-Weiß' };
+        var dw2 = ((dm.attributes || {}).options || []).map(function (o) {
+          return { label: DM[String(o).toLowerCase().replace(/[^a-z]/g, '')] || String(o), active: o === dm.state,
+            svc: { domain: 'select', service: 'select_option', target: { entity_id: c.dayMode }, data: { option: o } } };
+        });
+        if (dw2.length > 1 && dw2.length <= 4) secs.push(UI.segments(dw2, 'Tag/Nacht-Modus'));
+      }
       var ar = c.autoReply && S[c.autoReply] && !bad(S[c.autoReply].state) ? S[c.autoReply] : null;
       var dev = [];
       if (ar) {
@@ -567,11 +577,10 @@
       }
       if (c.dayNight && S[c.dayNight] && !bad(S[c.dayNight].state)) {
         var dn = S[c.dayNight].state;
-        // Ruhiges Symbol (kein Gelb): eine Info, kein Licht, das an ist. Bildmodus „Tag/Nacht“ statt „Nachtsicht An/Aus“ –
-        // „Nachtsicht · Aus“ neben „Infrarot · An“ las sich als Widerspruch (tagsüber ist beides richtig).
-        dev.push({ icon: dn === 'night' ? 'mdi:weather-night' : 'mdi:white-balance-sunny', iconTone: 'rgba(0,0,0,0)', label: 'Bildmodus',
-          sub: dn === 'night' ? 'Schwarz-Weiß mit Infrarot' : dn === 'led_day' ? 'Farbe mit Licht der Klingel' : null,
-          value: dn === 'night' ? 'Nacht' : 'Tag' });
+        // Ruhiges Symbol (kein Gelb): eine Info, kein Licht, das an ist. „Bild gerade · Farbe“ statt „Nachtsicht · Aus“ –
+        // das las sich neben „Infrarot · An“ als Widerspruch (tagsüber ist beides richtig).
+        dev.push({ icon: dn === 'night' ? 'mdi:weather-night' : 'mdi:white-balance-sunny', iconTone: 'rgba(0,0,0,0)', label: 'Bild gerade',
+          value: dn === 'night' ? 'Schwarz-Weiß' : dn === 'led_day' ? 'Farbe mit Licht' : 'Farbe' });
       }
       if (dev.length) secs.push(UI.group(dev, 'Gerät'));
       // Ohne Zähler (die Zahl der Abschnitte sagte niemandem etwas); aufgeklappt bleibt „Einstellungen“ stehen, nur der Pfeil dreht.

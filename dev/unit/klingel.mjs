@@ -208,13 +208,16 @@ states['switch.pforte_privat'].state = 'on';
 assert.ok(/Privatsphäre=An~Kamera und Ton aus!Ausschalten/.test(n(KL.sec('more', c, states, hass))), 'und ausschalten auch (gleiche Logik)');
 states['switch.pforte_privat'].state = 'off';
 assert.ok(/<seg Licht am Klingelknopf>Aus,Automatisch,Immer an\*<\/seg>/.test(mo), 'always/alwayson einmal');
-assert.ok(/Automatische Antwort=Aus~/.test(mo) && /Akku=15 %/.test(mo) && /WLAN=Schwach~\u221272 dBm/.test(mo) && /Bildmodus=Nacht~Schwarz-Weiß mit Infrarot/.test(mo), mo);
-// Infrarot-Schalter und Bildmodus widersprechen sich nicht mehr („Infrarot bei Nacht: An“ neben „Nachtsicht: Aus“).
-assert.ok(/Infrarot-Licht=An~Geht nachts von selbst an#switch\.turn_off/.test(mo) && !/Nachtsicht/.test(mo), mo);
+assert.ok(/Automatische Antwort=Aus~/.test(mo) && /Akku=15 %/.test(mo) && /WLAN=Schwach~\u221272 dBm/.test(mo) && /Bild gerade=Schwarz-Weiß~/.test(mo), mo);
+// Infrarot-Schalter, Tag/Nacht-Modus und Bild widersprechen sich nicht mehr („Infrarot bei Nacht: An“ neben „Nachtsicht: Aus“).
+assert.ok(/Infrarot-LEDs nachts=An~#switch\.turn_off/.test(mo) && !/Nachtsicht/.test(mo), mo);
 states['sensor.pforte_tagnacht'].state = 'day';
-assert.ok(/Bildmodus=Tag~[;<]/.test(n(KL.sec('more', c, states, hass))), 'tagsüber: Bildmodus Tag (ohne Unterzeile)');
-states['sensor.pforte_tagnacht'].state = 'led_day';
-assert.ok(/Bildmodus=Tag~Farbe mit Licht der Klingel/.test(n(KL.sec('more', c, states, hass))));
+assert.ok(/Bild gerade=Farbe~/.test(n(KL.sec('more', c, states, hass))), 'tagsüber: Bild gerade Farbe');
+add('select.pforte_tagnacht_modus', 'auto', { options: ['auto', 'color', 'blackwhite'] }, 'day_night');
+KL.forget(ID);
+const cdm = KL.find(Object.assign({}, hass, { entities: Object.assign({}, entities), states: Object.assign({}, states) }), ID);
+assert.ok(/<seg Tag\/Nacht-Modus>Automatisch\*,Farbe,Schwarz-Weiß<\/seg>/.test(n(KL.sec('more', cdm, states, hass))), n(KL.sec('more', cdm, states, hass)));
+delete states['select.pforte_tagnacht_modus']; delete entities['select.pforte_tagnacht_modus']; KL.forget(ID);
 states['sensor.pforte_tagnacht'].state = 'night';
 // Status-LED als light.* (C4): Dienst in der Domain der Entität, nicht switch.*.
 add('light.pforte_led', 'on', {}, 'status_led');
