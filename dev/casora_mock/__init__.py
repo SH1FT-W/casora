@@ -145,6 +145,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     frigate_setup(hass, mock)
     from .klingel import setup as klingel_setup
     klingel_setup(hass, mock)
+    # Kamerabilder Tag/Dämmerung/Nacht (kamerabild.py), Testdienst casora_mock.kamerabild.
+    from .kamerabild import setup as kamerabild_setup
+    kamerabild_setup(hass, mock)
     from .kaffee import setup as kaffee_setup
     kaffee_setup(hass, mock)
     mock.track_derived()

@@ -15,8 +15,6 @@ schon im Verlauf. Gerät, Namen und Nachrichten erfunden.
 """
 from __future__ import annotations
 
-import io
-
 DEV = "testklingel"
 UID = "9527000TESTKL"
 NAME = "Testklingel"
@@ -87,40 +85,12 @@ def extra(now) -> dict:
     }
 
 
-# ── Bild (Pillow liegt im HA-Image; ohne Pillow das Platzhalterbild) ─────────
-def picture(person: bool, stamp: str, w: int = 1280, h: int = 960) -> bytes | None:
-    try:
-        from PIL import Image, ImageDraw
-    except Exception:  # noqa: BLE001
-        return None
-    im = Image.new("RGB", (w, h))
-    d = ImageDraw.Draw(im)
-    # Weitwinkel einer Klingel neben der Tür: Hauswand, Vordach, Weg mit Platten, Hecke, Briefkasten.
-    for y in range(h):
-        t = y / h
-        c = (int(204 - 40 * t), int(196 - 40 * t), int(182 - 36 * t)) if t < .55 else (int(150 - 30 * (t - .55)), int(146 - 30 * (t - .55)), int(138 - 30 * (t - .55)))
-        d.line([(0, y), (w, y)], fill=c)
-    d.rectangle([0, 0, w, h * .1], fill=(92, 84, 78))
-    d.polygon([(w * .3, h * .55), (w * .7, h * .55), (w * 1.0, h), (0, h)], fill=(168, 160, 150))
-    for i in range(1, 6):
-        y = h * (.55 + i * .09)
-        d.line([(w * (.3 - i * .06), y), (w * (.7 + i * .06), y)], fill=(140, 132, 124), width=3)
-    d.rectangle([w * .78, h * .3, w * 1.0, h * .6], fill=(52, 92, 58))
-    for i in range(6):
-        x = w * (.8 + i * .045)
-        d.ellipse([x - w * .035, h * .24, x + w * .035, h * .36], fill=(60, 104, 64))
-    d.rectangle([w * .05, h * .32, w * .14, h * .44], fill=(60, 64, 70))
-    d.rectangle([w * .045, h * .3, w * .145, h * .33], fill=(44, 48, 54))
-    if person:
-        cx, top = w * .5, h * .2
-        d.ellipse([cx - w * .06, top, cx + w * .06, top + h * .16], fill=(222, 186, 160))
-        d.rounded_rectangle([cx - w * .14, top + h * .15, cx + w * .14, h * .88], radius=40, fill=(64, 92, 140))
-        d.rounded_rectangle([cx + w * .05, h * .5, cx + w * .2, h * .66], radius=10, fill=(176, 132, 86))
-    if stamp:
-        d.text((w * .015, h * .02), stamp, fill=(255, 255, 255))
-    buf = io.BytesIO()
-    im.save(buf, "JPEG", quality=80)
-    return buf.getvalue()
+# ── Bild: fertige Zeichnung je Stimmung (Tag/Dämmerung/Nacht, kamerabild.py) ─────────
+def picture(st: str, person: bool, stamp: str, w: int = 1280, h: int = 960) -> bytes | None:
+    """Weitwinkel der Klingel vor die Tür: Stufen, Weg, Gartentor, Briefkasten, Paket; mit Person, solange sie
+    erkannt wird."""
+    from .kamerabild import bild
+    return bild(st, "tuer", "tuer_person" if person else "tuer", w, h, stamp)
 
 
 def setup(hass, mock) -> None:

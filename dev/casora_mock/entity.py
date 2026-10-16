@@ -484,7 +484,8 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             MockEntity.__init__(self, mock, eid)
             Camera.__init__(self)
             self.content_type = "image/png"
-            # Frigate-Testkamera (frigate.py): Hofbild mit Uhrzeit wie Frigates latest.jpg.
+            # Frigate-Testkamera (frigate.py): Hofbild mit Uhrzeit wie Frigates latest.jpg, Stimmung nach der Sonne
+            # (kamerabild.py: Tag, Dämmerung, Nachtsicht).
             self._frigate = bool(mock.entities[eid].get("frigate"))
             # Reolink-Testklingel (klingel.py): Blick vor die Tür, mit Person, solange sie erkannt wird.
             self._klingel = bool(mock.entities[eid].get("klingel"))
@@ -494,15 +495,17 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         async def async_camera_image(self, width=None, height=None) -> bytes:
             if self._frigate:
                 from .frigate import picture
+                from .kamerabild import stimmung
                 stamp = dt_util.now().strftime("%d.%m.%Y %H:%M:%S")
-                img = await self.hass.async_add_executor_job(picture, None, 1, 1280, 720, stamp, False)
+                img = await self.hass.async_add_executor_job(picture, stimmung(self.hass), None, 1, 1280, 720, stamp, False)
                 if img:
                     return img
             if self._klingel:
+                from .kamerabild import stimmung
                 from .klingel import DEV, picture as bell
                 stamp = dt_util.now().strftime("%d.%m.%Y %H:%M:%S")
                 who = self.hass.states.is_state(f"binary_sensor.{DEV}_person", "on")
-                img = await self.hass.async_add_executor_job(bell, who, stamp)
+                img = await self.hass.async_add_executor_job(bell, stimmung(self.hass), who, stamp)
                 if img:
                     return img
             return PLACEHOLDER_PNG
@@ -548,9 +551,10 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         async def async_image(self) -> bytes | None:
             if self._frigate:
                 from .frigate import picture
+                from .kamerabild import stimmung
                 stamp = dt_util.as_local(self._attr_image_last_updated).strftime("%d.%m.%Y %H:%M:%S")
                 img = await self.hass.async_add_executor_job(
-                    picture, self._frigate, int(self._attr_image_last_updated.timestamp()) % 997, 1280, 720, stamp, True)
+                    picture, stimmung(self.hass, self._attr_image_last_updated), self._frigate, int(self._attr_image_last_updated.timestamp()) % 997, 1280, 720, stamp, True)
                 if img:
                     return img
             return MAP_PNG if self._is_map else PLACEHOLDER_PNG

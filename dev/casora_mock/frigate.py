@@ -24,10 +24,8 @@ Dazu, was sonst nur Frigate selbst kann (Antworten als JSON-Text wie die Integra
 """
 from __future__ import annotations
 
-import io
 import json
 import re
-import random
 from datetime import timedelta
 
 CAM = "testhof"
@@ -108,77 +106,14 @@ def extra(now) -> dict:
     }
 
 
-# ── Bilder (Pillow liegt im HA-Image; ohne Pillow das Platzhalterbild) ─────────
-def _scene(label: str | None, seed: int, w: int, h: int, stamp: str, box: bool) -> bytes | None:
-    try:
-        from PIL import Image, ImageDraw
-    except Exception:  # noqa: BLE001
-        return None
-    rnd = random.Random(seed)
-    im = Image.new("RGB", (w, h))
-    d = ImageDraw.Draw(im)
-    # Himmel, Rasen, Einfahrt, Haus, Hecke – Dämmerlicht wie eine Hofkamera.
-    for y in range(h):
-        t = y / h
-        if t < 0.42:
-            c = (int(120 + 60 * t), int(150 + 70 * t), int(185 + 40 * t))
-        else:
-            c = (int(70 + 30 * (t - .42)), int(100 + 25 * (t - .42)), int(62 + 10 * (t - .42)))
-        d.line([(0, y), (w, y)], fill=c)
-    d.polygon([(w * .38, h * .42), (w * .62, h * .42), (w * .95, h), (w * .05, h)], fill=(128, 124, 118))
-    d.rectangle([w * .06, h * .16, w * .34, h * .44], fill=(196, 182, 160))
-    d.polygon([(w * .03, h * .18), (w * .2, h * .04), (w * .37, h * .18)], fill=(130, 70, 56))
-    d.rectangle([w * .16, h * .28, w * .23, h * .44], fill=(92, 64, 48))
-    d.rectangle([w * .68, h * .30, w * 1.0, h * .45], fill=(46, 82, 50))
-    for i in range(7):
-        x = w * (.70 + i * .045)
-        d.ellipse([x - w * .03, h * .25, x + w * .03, h * .35], fill=(52, 94, 56))
-    bx = None
-    if label:
-        cx = w * (.45 + rnd.random() * .12)
-        if label == "person":
-            bw, bh = w * .07, h * .34
-            x0, y0 = cx - bw / 2, h * .5
-            d.ellipse([x0 + bw * .28, y0, x0 + bw * .72, y0 + bh * .2], fill=(222, 186, 160))
-            d.rounded_rectangle([x0 + bw * .1, y0 + bh * .2, x0 + bw * .9, y0 + bh * .62], radius=6, fill=(48, 72, 120))
-            d.rectangle([x0 + bw * .2, y0 + bh * .62, x0 + bw * .45, y0 + bh], fill=(40, 40, 46))
-            d.rectangle([x0 + bw * .55, y0 + bh * .62, x0 + bw * .8, y0 + bh], fill=(40, 40, 46))
-        elif label == "car":
-            bw, bh = w * .3, h * .2
-            x0, y0 = cx - bw / 2, h * .62
-            d.rounded_rectangle([x0, y0 + bh * .3, x0 + bw, y0 + bh * .82], radius=10, fill=(150, 36, 40))
-            d.rounded_rectangle([x0 + bw * .2, y0, x0 + bw * .78, y0 + bh * .42], radius=10, fill=(130, 30, 34))
-            d.rectangle([x0 + bw * .27, y0 + bh * .08, x0 + bw * .71, y0 + bh * .34], fill=(170, 196, 214))
-            for wx in (x0 + bw * .2, x0 + bw * .8):
-                d.ellipse([wx - bh * .18, y0 + bh * .64, wx + bh * .18, y0 + bh], fill=(24, 24, 26))
-        else:
-            bw, bh = w * .07, h * .09
-            x0, y0 = cx - bw / 2, h * .78
-            d.ellipse([x0, y0 + bh * .3, x0 + bw * .8, y0 + bh], fill=(196, 120, 52))
-            d.ellipse([x0 + bw * .6, y0, x0 + bw, y0 + bh * .45], fill=(196, 120, 52))
-        bx = (x0 - 6, y0 - 6, x0 + bw + 6, y0 + bh + 6)
-    if box and bx:
-        d.rectangle(bx, outline=(255, 210, 0), width=max(2, w // 320))
-        tag = f"{label} {int(70 + rnd.random() * 25)}%"
-        d.rectangle([bx[0], bx[1] - h * .05, bx[0] + len(tag) * w * .012, bx[1]], fill=(255, 210, 0))
-        d.text((bx[0] + 4, bx[1] - h * .045), tag, fill=(0, 0, 0))
-    if stamp:
-        d.text((w * .015, h * .02), stamp, fill=(255, 255, 255))
-    buf = io.BytesIO()
-    im.save(buf, "JPEG", quality=82)
-    return buf.getvalue()
-
-
-_CACHE: dict = {}
-
-
-def picture(label: str | None, seed: int = 1, w: int = 1280, h: int = 720, stamp: str = "", box: bool = True) -> bytes | None:
-    key = (label, seed, w, h, stamp, box)
-    if key not in _CACHE:
-        if len(_CACHE) > 64:
-            _CACHE.clear()
-        _CACHE[key] = _scene(label, seed, w, h, stamp, box)
-    return _CACHE[key]
+# ── Bilder: fertige Zeichnungen je Stimmung (Tag/Dämmerung/Nacht, kamerabild.py) ─────────
+def picture(st: str, label: str | None, seed: int = 1, w: int = 1280, h: int = 720, stamp: str = "",
+            box: bool = True) -> bytes | None:
+    """Hof-Bild: ohne label leer (Live-Bild); person/cat mit Figur, car = das geparkte Auto, andere Tiere
+    nehmen das Katzenbild. box = Erkennungsrahmen mit Treffer wie Frigates Schnappschuss."""
+    from .kamerabild import bild
+    name = {"person": "hof_person", "car": "hof"}.get(label or "", "hof_cat" if label else "hof")
+    return bild(st, "hof", name, w, h, stamp, label if box else None, "cat" if name == "hof_cat" else label, seed)
 
 
 # ── Ereignisse, WebSocket, Bilder-Adressen, Testdienst ─────────────────────────
@@ -224,6 +159,7 @@ def setup(hass, mock) -> None:
     from homeassistant.components.http import HomeAssistantView
     from homeassistant.core import callback
     from homeassistant.util import dt as dt_util
+    from .kamerabild import stimmung
 
     now = dt_util.utcnow().timestamp()
     events, reviews = [], []
@@ -420,15 +356,15 @@ def setup(hass, mock) -> None:
             r.headers["Content-Disposition"] = f'attachment; filename="{name}"'
         return r
 
-    def jpg(eid, w, h, box):
-        e = find(eid)
-        if not e:
-            return None
+    def jpg(e, st, w, h, box):
         stamp = dt_util.as_local(dt_util.utc_from_timestamp(e["start_time"])).strftime("%d.%m.%Y %H:%M:%S")
-        return picture(e["label"], int(e["start_time"]) % 997, w, h, stamp, box)
+        return picture(st, e["label"], int(e["start_time"]) % 997, w, h, stamp, box)
 
     async def image(request, eid, w, h, box, name):
-        body = await hass.async_add_executor_job(jpg, eid, w, h, box)
+        # Stimmung zur Zeit der Erkennung (ein Treffer von gestern Nacht bleibt ein Nachtbild).
+        e = find(eid)
+        st = stimmung(hass, dt_util.utc_from_timestamp(e["start_time"])) if e else None
+        body = await hass.async_add_executor_job(jpg, e, st, w, h, box) if e else None
         return disp(request, body, "image/jpeg", name) if body else web.Response(status=404)
 
     async def media_file(name):
