@@ -42,6 +42,21 @@ assert.equal(rooms[0].tiles.length, 1);
 assert.equal(rooms[1].tiles.length, 1, 'leeres Karussell entfernt');
 assert.equal(rooms[1].tiles[0].cards.length, 1);
 
+// Handy-Layout zählt mit (nur Kacheln ohne Gegenstück im Raum), eigene Kachelarten auf der Karte
+// (variables.casora_tile.base) auch – beim Entfernen beides.
+const tpls = { own_qa_rot: { template: 'casora_qa_com', variables: { casora_tile: { label: 'Rot', base: 'casora_qa_com' } } },
+  own_licht: { template: 'casora_light', variables: { casora_tile: { label: 'L', base: 'casora_light' } } } };
+const desk = [{ tiles: [t('casora_qa_com'), { ...t('own_qa_rot'), entity: 'sensor.y' }, t('casora_light')] }];
+const phone = [{ tiles: [t('casora_qa_com'), { type: 'conditional', conditions: [], card: t('casora_qa_com') }, t('own_licht')] },
+  { tiles: [{ ...t('casora_qa_com'), entity: 'sensor.nur_handy' }] }];
+assert.equal(C.usage(desk, fake), 1, 'ohne Vorlagen: nur die direkte Kachel');
+assert.equal(C.usage(desk, fake, null, tpls), 2, 'eigene Kachelart zählt mit');
+assert.equal(C.usage(desk, fake, phone, tpls), 4, 'Handy: Zwilling einmal, Bedingung + nur am Handy dazu');
+assert.equal(C.dropTiles(phone, fake, tpls), 3);
+assert.equal(C.dropTiles(desk, fake, tpls), 2);
+assert.deepEqual(phone.map((r) => r.tiles.length), [1, 0], 'am Handy bleibt nur die eigene Licht-Art');
+assert.equal(desk[0].tiles.length, 1);
+
 // Kartenwunsch: anonymisiert, mit Kennung für den Stand.
 const hass = { config: { version: '2026.10.0' },
   states: { 'sensor.wohnzimmer_volvo_tank': { state: '42', attributes: { unit_of_measurement: '%', friendly_name: 'Mein Volvo', latitude: 1 } } },

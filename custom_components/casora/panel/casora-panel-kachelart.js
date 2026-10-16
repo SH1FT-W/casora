@@ -185,7 +185,7 @@
     return bad;
   }
 
-  const lib = { mergeBC, overlayApply, overlayOf, buildOwn, effectiveOf, metaOf, ownName, slugOf, tilesUsing, brokenJs, PREFIX };
+  const lib = { mergeBC, overlayApply, overlayOf, buildOwn, effectiveOf, metaOf, ownName, slugOf, tilesUsing, brokenJs, baseTypes, PREFIX };
 
   // ── Studio ───────────────────────────────────────────────────────────────────
 
@@ -232,11 +232,12 @@
     return e;
   };
 
-  // Casoras Kachelarten, die als Grundlage taugen: eine Vorlage, die es im Bundle gibt.
-  function baseTypes(panelTemplates) {
-    const T = I().TILE_TYPES || [];
+  // Casoras Kachelarten, die als Grundlage taugen: eine Vorlage, die es im Bundle gibt – und nur, was
+  // „Kachel hinzufügen“ auch anbietet (onlyIf: Community-Karten erst nach dem Hinzufügen, Pulse nur mit Pulse).
+  function baseTypes(panelTemplates, hass, types) {
+    const T = types || I().TILE_TYPES || [];
     return T.filter((t) => !t.hidden && typeof t.template === "string" && t.template.indexOf("casora_") === 0
-      && (!panelTemplates || panelTemplates[t.template]));
+      && (!panelTemplates || panelTemplates[t.template]) && (!t.onlyIf || t.onlyIf(hass)));
   }
   const typeLabel = (t) => tr(t.label);
   const iconOf = (t) => {
@@ -387,7 +388,7 @@
       const s = this._flowScreen({ icon: "palette", step: [1, 3], title: "New Tile Type",
         lede: "Pick the Casora tile your tile type builds on. It keeps getting Casora's updates." });
       const list = this._flowGroup(s.body, { header: "Based on" });
-      const types = baseTypes(a.T).slice().sort((x, y) => typeLabel(x).localeCompare(typeLabel(y)));
+      const types = baseTypes(a.T, this._hass).slice().sort((x, y) => typeLabel(x).localeCompare(typeLabel(y)));
       types.forEach((t) => {
         const r = this._flowRow(list, { title: t.label, mask: iconOf(t), tint: tintOf(t), chevron: true,
           onTap: () => { a.base = t.template; a.label = ""; this._kaName(a); } });

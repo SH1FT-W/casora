@@ -129,4 +129,16 @@ assert.equal(ty.template, 'own_kamera_rot');
 assert.equal(ty.baseTemplate, 'casora_camera');
 assert.deepEqual(ty.fields, types[0].fields, 'Felder der Grundlage');
 assert.equal(ICON['own:own_kamera_rot'], 'camera', 'Symbol der Grundlage');
+// Grundlage wählen: nur, was „Kachel hinzufügen“ anbietet (onlyIf) – nicht hinzugefügte Community-Karten fehlen;
+// eine eigene Kachelart darauf erbt das onlyIf der Grundlage (Spread in syncUserTileTypes).
+const com = { id: 'casora_qa_com', template: 'casora_camera', label: 'QA', onlyIf: (h) => !!(h && h.on) };
+const plain = { id: 'casora_qa_plain', template: 'casora_camera', label: 'Plain' };
+assert.deepEqual(L.baseTypes(null, {}, [com, plain]).map((t) => t.id), ['casora_qa_plain'], 'Community-Karte ohne Hinzufügen keine Grundlage');
+assert.deepEqual(L.baseTypes(null, { on: true }, [com, plain]).map((t) => t.id), ['casora_qa_com', 'casora_qa_plain']);
+const e2 = env([{ ...com, template: 'casora_camera' }], {}, {});
+e2.sync({ own_qa: { template: 'casora_camera', variables: { casora_tile: { label: 'Q', base: 'casora_camera' } } } }, [], null, {});
+const ownOnCom = e2.USER_TILE_TYPES[0];
+assert.ok(ownOnCom && ownOnCom.own, 'eigene Kachelart erkannt');
+assert.equal(ownOnCom.onlyIf({}), false, 'eigene Kachelart auf nicht hinzugefügter Community-Karte nicht anbieten');
+assert.equal(ownOnCom.onlyIf({ on: true }), true);
 console.log('ok kachelart');

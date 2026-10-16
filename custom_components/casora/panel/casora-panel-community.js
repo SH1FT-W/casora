@@ -94,38 +94,66 @@
   const cards = (types, on) => (types || []).filter((t) => t && t.community && !t.hidden
     && (!t.community.retired || !!(on && on.has(t.id))));
   const tplOf = (t) => [].concat((t && t.template) || []).filter(Boolean);
+  // Vorlagen dieser Kachelart: ihre eigene und eigene Kachelarten darauf (variables.casora_tile.base,
+  // casora-panel-kachelart.js) – deren Kacheln hängen genauso an der Community-Karte.
+  const wantOf = (type, templates) => {
+    const want = tplOf(type);
+    Object.keys(templates || {}).forEach((name) => {
+      const m = templates[name] && templates[name].variables && templates[name].variables.casora_tile;
+      if (m && typeof m === "object" && want.includes(m.base) && !want.includes(name)) want.push(name);
+    });
+    return want;
+  };
   // Kacheln (auch in Bedingungen und Karussells), die diese Kachelart benutzen.
-  const uses = (tile, type) => {
+  const uses = (tile, type, want) => {
     let c = tile, n = 0;
     while (c && c.type === "conditional" && c.card && typeof c.card === "object" && n++ < 4) c = c.card;
-    const want = tplOf(type);
+    want = want || tplOf(type);
     return !!c && tplOf(c).some((x) => want.includes(x));
   };
   const isCarousel = (t) => !!t && /swipe|carousel/.test(String(t.type || "")) && Array.isArray(t.cards);
   const carouselIn = (t) => (isCarousel(t) ? t : t && t.type === "conditional" && isCarousel(t.card) ? t.card : null);
-  function usage(rooms, type) {
-    let n = 0;
+  // Kacheln dieser Art in den Räumen (bzw. Handy-Abschnitten) → [Kachel].
+  function usedIn(rooms, type, templates) {
+    const want = wantOf(type, templates), out = [];
     (rooms || []).forEach((r) => (r.tiles || []).forEach((t) => {
       const car = carouselIn(t);
-      if (car) n += car.cards.filter((x) => uses(x, type)).length;
-      else if (uses(t, type)) n++;
+      if (car) car.cards.forEach((x) => { if (uses(x, type, want)) out.push(x); });
+      else if (uses(t, type, want)) out.push(t);
     }));
-    return n;
+    return out;
+  }
+  // Zwilling über Art + Entität (die Handy-Kachel ist eine Kopie der Raum-Kachel, kein Verweis).
+  const innerOf = (t) => { let c = t, n = 0; while (c && c.type === "conditional" && c.card && n++ < 4) c = c.card; return c || t; };
+  const twinKey = (t) => { const c = innerOf(t); return tplOf(c).join(",") + "|" + String((c && c.entity) || ""); };
+  // Anzahl der Kacheln: Räume plus Handy-Kacheln ohne Gegenstück im Raum (phone: Handy-Abschnitte,
+  // templates: Vorlagen des Dashboards für eigene Kachelarten).
+  function usage(rooms, type, phone, templates) {
+    const desk = usedIn(rooms, type, templates);
+    if (!phone) return desk.length;
+    const left = desk.map(twinKey);
+    let extra = 0;
+    usedIn(phone, type, templates).forEach((t) => {
+      const i = left.indexOf(twinKey(t));
+      if (i > -1) left.splice(i, 1); else extra++;
+    });
+    return desk.length + extra;
   }
   // Entfernt die Kacheln dieser Art; ein dadurch leeres Karussell fällt mit weg. → Anzahl.
-  function dropTiles(rooms, type) {
+  function dropTiles(rooms, type, templates) {
+    const want = wantOf(type, templates);
     let n = 0;
     (rooms || []).forEach((r) => {
       if (!Array.isArray(r.tiles)) return;
       r.tiles = r.tiles.filter((t) => {
         const car = carouselIn(t);
         if (car) {
-          const keep = car.cards.filter((x) => !uses(x, type));
+          const keep = car.cards.filter((x) => !uses(x, type, want));
           n += car.cards.length - keep.length;
           car.cards = keep;
           return keep.length > 0;
         }
-        if (uses(t, type)) { n++; return false; }
+        if (uses(t, type, want)) { n++; return false; }
         return true;
       });
     });
@@ -516,9 +544,15 @@
         catch (e) { return { text: tr("Couldn't save. Try again."), tone: "err", id: type.id }; }
         return { text: fill(tr("“{x}” is now in Add tile."), { x: name }), tone: "ok", id: type.id };
       }
-      // Wird die Kachel in diesem Dashboard benutzt? Dann nachfragen: Kacheln behalten oder mit entfernen.
-      const rooms = (this._state && this._state.compact && this._state.compact.rooms) || [];
-      const n = C.usage(rooms, type);
+      // Wird die Kachel in diesem Dashboard benutzt (Räume, Handy-Layout, eigene Kachelarten darauf)?
+      // Dann nachfragen: Kacheln behalten oder mit entfernen.
+      const pair = this._pair && this._pair.safe !== false ? this._pair : null;
+      const desk = pair ? pair.desktop : this._state;
+      const roomsOf = (x) => (x && x.compact && x.compact.rooms) || [];
+      const rooms = roomsOf(desk);
+      const phone = pair && pair.mobile && pair.mobile !== desk ? roomsOf(pair.mobile) : null;
+      const tpls = { ...((pair && pair.templates) || {}), ...((this._state && this._state.templates) || {}) };
+      const n = C.usage(rooms, type, phone, tpls);
       let drop = false;
       if (n) {
         const res = await this._ask({
@@ -536,7 +570,9 @@
       ids.delete(type.id);
       try { await C.save(this._hass, ids); }
       catch (e) { return { text: tr("Couldn't save. Try again."), tone: "err", id: type.id }; }
-      if (drop && C.dropTiles(rooms, type)) {
+      // Auch am Handy entfernen – sonst blieb dort die Kachel einer nicht mehr hinzugefügten Karte stehen.
+      const dropped = drop ? C.dropTiles(rooms, type, tpls) + (phone ? C.dropTiles(phone, type, tpls) : 0) : 0;
+      if (dropped) {
         this._markDirty();
         this._renderForm();
         if (this._syncPreview) this._syncPreview();
