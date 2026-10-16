@@ -256,7 +256,7 @@ const lv = await page.evaluate(async (id) => {
     const el = pop && window.__pierce('casora-frigate-still', pop.shadowRoot)[0];
     const im = el && el.shadowRoot && el.shadowRoot.querySelector('img');
     if (im && im.src && src[src.length - 1] !== im.src) src.push(im.src);
-    if (src.length >= 2 && im.naturalWidth > 0) return { title: window.casoraPopup.current.title, n: src.length, w: im.naturalWidth, note: el.shadowRoot.querySelector('.nt').textContent };
+    if (src.length >= 2 && im.naturalWidth > 0) return { title: window.casoraPopup.current.title, n: src.length, w: im.naturalWidth, note: el.shadowRoot.querySelector('.ov').textContent };
     await new Promise((r) => setTimeout(r, 200));
   }
   return { title: (window.casoraPopup.current || {}).title, n: src.length };

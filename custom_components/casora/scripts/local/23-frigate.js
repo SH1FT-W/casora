@@ -1635,8 +1635,9 @@
     var SP = FStill.prototype;
     SP._build = function () {
       var r = this._root = this.attachShadow({ mode: 'open' });
-      r.innerHTML = '<style>' + PCSS + '.po{background:#000;}</style><div class="fr"><img class="po" alt=""></div>'
-        + '<div class="nt">' + esc(tr('Kein Live-Video – das Standbild wird alle 2 Sekunden erneuert')) + '</div>';
+      // Hinweis als Schild auf dem Bild (unter dem Bild lag er im ausgeblendeten Rand des Popups).
+      r.innerHTML = '<style>' + PCSS + '.po{background:#000;}</style><div class="fr"><img class="po" alt="">'
+        + '<div class="ov" role="note">' + esc(tr('Kein Live-Video · Standbild alle 2 s')) + '</div></div>';
       var im = r.querySelector('.po');
       im.addEventListener('load', function () { im.setAttribute('data-ok', '1'); });
       this._tick();
