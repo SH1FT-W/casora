@@ -361,6 +361,8 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "car_side_w2", "ebike", "chef-hat", "shield_check", "shield_lock", "shield_moon", "shield_off",
   "shield_alarm", "shield_bypass", "shield_vacation", "calendar", "calendar-day", "window-open",
   "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower", "coffee-maker",
+  "coffee-espresso", "coffee-doppio", "coffee-cup", "coffee-cappuccino", "coffee-latte", "coffee-tall", "coffee-water",
+  "coffee-milk", "coffee-tea",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
 // Vorschau: bedingte Karten (type: conditional) so zeigen wie das Dashboard –
@@ -505,9 +507,15 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   // Raumklima (casora_vent) und Solar-Tipp (casora_solar_tip) bilden ihren Text über
   // window._casoraVent / _casoraSolar aus scripts/local/05-standard-medien.js – ohne das
   // Modul stand in der Vorschau nur „Aus“. Einmal nachladen (reine Funktionen, keine Karten).
-  let medien = false, fussball = false;
+  let medien = false, fussball = false, kaffee = false;
   const needMedien = (tile) => {
     const tn = names(tile && tile.template);
+    // Kaffeevollautomat: Zustand („Bereit“, „Cappuccino · 40 %“) über window._casoraCoffee (scripts/local/25-kaffee.js);
+    // ohne das Modul stand der Rohzustand der Integration in der Vorschau („Brewing“).
+    if (!kaffee && !window._casoraCoffee && tn.includes("casora_coffee")) {
+      kaffee = true;
+      import("/casora_scripts/local/25-kaffee.js").catch(() => {});
+    }
     // Fußball: Text („Sa 18:30 · gegen …“) aus window._casoraFootball (scripts/local/11-fussball.js).
     if (!fussball && !window._casoraFootball && tn.includes("casora_football")) {
       fussball = true;
