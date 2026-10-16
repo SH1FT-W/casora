@@ -80,7 +80,8 @@
   // Alltagswörter je Kachelart – „Licht“ findet auch „Stehlampe“.
   const WORDS = { light: "licht lampe leuchte light lamp", cover: "jalousie rollladen rollo markise blind", thermostat: "heizung thermostat klima heating",
     media: "fernseher tv musik lautsprecher speaker", lock: "schloss tür tuer lock", vacuum: "sauger staubsauger saugroboter vacuum",
-    casora_switch: "schalter steckdose switch plug", fan: "ventilator lüfter fan", casora_camera: "kamera camera", casora_alarm: "alarm sicherheit" };
+    casora_switch: "schalter steckdose switch plug", fan: "ventilator lüfter fan", casora_camera: "kamera camera", casora_alarm: "alarm sicherheit",
+    casora_coffee: "kaffee kaffeemaschine vollautomat espresso coffee" };
   function typeFor(entity, typeIds, suggested) {
     if (suggested && typeIds.has(suggested)) return suggested;
     const t = BY_DOMAIN[String(entity || "").split(".")[0]];
@@ -89,6 +90,38 @@
     const ty = t && ((W.__casoraPanelInternals || {}).TILE_TYPES || []).find((x) => x.id === t);
     if (ty && ty.community) return null;
     return typeIds.has("entity_actions") ? "entity_actions" : null;
+  }
+  // Kaffeevollautomaten erkennen (Kurzfassung von scripts/local/25-kaffee.js – das Studio lädt die Dashboard-Module
+  // nicht): Integration oder Kaffee-Schlüssel am Gerät (Home Connect und Miele bauen auch Waschmaschinen).
+  const COFFEE_PLATFORMS = new Set(["delonghi_primadonna", "delonghi_coffee", "delonghi_coffeelink", "jura", "melitta_barista", "lamarzocco"]);
+  const COFFEE_KEY = /coffee(counter|temperature|cups)|beanamount|beancontainer|coffeebeans|totalcoffee|brewingactive|machinestatus/;
+  const COFFEE_OPT = /coffeemaker|cappuccino|espresso|lattemacchiato/;
+  const coffeeNk = (x) => String(x == null ? "" : x).toLowerCase().replace(/[\s_.\-]/g, "");
+  function coffeeAnchors(h) {
+    const R = (h && h.entities) || {}, S = (h && h.states) || {}, D = (h && h.devices) || {};
+    const byDev = new Map();
+    Object.keys(R).forEach((id) => {
+      const e = R[id];
+      if (!e || !e.device_id || !S[id] || e.hidden) return;
+      if (!byDev.has(e.device_id)) byDev.set(e.device_id, []);
+      byDev.get(e.device_id).push(e);
+    });
+    const out = [];
+    byDev.forEach((list, dev) => {
+      const yes = list.some((e) => COFFEE_PLATFORMS.has(e.platform)
+        || COFFEE_KEY.test(coffeeNk(e.translation_key || e.entity_id))
+        || (((S[e.entity_id] || {}).attributes || {}).options || []).some((o) => COFFEE_OPT.test(coffeeNk(o))));
+      if (!yes) return;
+      const k = (e) => coffeeNk(e.translation_key);
+      const sensor = list.find((e) => e.entity_id.startsWith("sensor.") && /operationstate$|^(machinestatus|devicestatus|status|state)$/.test(k(e)));
+      const power = list.find((e) => e.entity_id.startsWith("switch.") && /^(power|powerstate|switchpowerstate|main)$/.test(k(e)));
+      const sel = list.find((e) => e.entity_id.startsWith("select.") && /^(selectedprogram|selectprogram|beverage|product|recipe)$/.test(k(e)));
+      const a = sensor || power || sel;
+      if (!a) return;
+      const d = D[dev] || {};
+      out.push({ anchor: a.entity_id, name: d.name_by_user || d.name || "", also: power && power !== a ? [power.entity_id] : [] });
+    });
+    return out;
   }
   const foldTx = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ß/g, "ss");
   // Geräte-Treffer: jedes Wort muss in Name, Bereich oder Art vorkommen; vorn im Namen zählt mehr,
@@ -584,6 +617,9 @@
           loose: !!(e && !e.device_id && e.area_id),
           words: (WORDS[type] || "") + " " + ((S[id].attributes || {}).friendly_name || "") });
       };
+      // Kaffeevollautomat (Community-Karte, wenn hinzugefügt): je Gerät eine Kachel am Status-Sensor (sonst Strom/Getränke);
+      // der Strom-Schalter erscheint dann nicht noch einmal als Schalter.
+      if (typeIds.has("casora_coffee")) coffeeAnchors(h).forEach((x) => { push(x.anchor, x.name, "casora_coffee"); x.also.forEach((id) => seen.add(id)); });
       sugg.forEach((x) => push(x.entity, x.name, x.type));
       Object.keys(S).forEach((id) => { if (ADD_DOMAINS.indexOf(id.split(".")[0]) >= 0) push(id, "", byEntity.has(id) ? byEntity.get(id).type : null); });
       return out;

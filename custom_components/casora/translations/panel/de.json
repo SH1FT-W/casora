@@ -2416,7 +2416,9 @@
     "Frigate camera": "Frigate-Kamera",
     "Live camera with what Frigate detected last. The popup shows the live view, the latest detections with snapshot and clip, objects and the camera switches.": "Live-Kamera mit dem, was Frigate zuletzt erkannt hat. Im Popup das Live-Bild, die letzten Erkennungen mit Schnappschuss und Clip, Objekte und die Schalter der Kamera.",
     "For every camera of the Frigate integration": "Für jede Kamera der Frigate-Integration",
-    "Frigate integration not installed yet": "Frigate-Integration noch nicht installiert"
+    "Frigate integration not installed yet": "Frigate-Integration noch nicht installiert",
+    "Coffee machine": "Kaffeevollautomat",
+    "Ready, heating up or brewing with progress, and what the machine needs: water, beans, drip tray, descaling. The popup starts drinks with strength and amount, shows care and how many coffees you made. For Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco or a smart plug.": "Bereit, heizt auf oder bezieht mit Fortschritt – und was die Maschine braucht: Wasser, Bohnen, Schale, Entkalken. Im Popup Getränke starten mit Stärke und Menge, Pflege und wie viele Kaffees du gemacht hast. Für Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco oder eine Steckdose."
   },
   "patterns": [
     [

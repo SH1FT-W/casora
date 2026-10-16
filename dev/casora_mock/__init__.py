@@ -111,6 +111,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Eine erfundene Frigate-Kamera mit Erkennungen (Community-Karte), siehe frigate.py.
     from .frigate import extra as frigate_extra
     _merge(fixture, frigate_extra(dt_util.utcnow()), "Frigate-Testhof")
+    # Zwei erfundene Kaffeevollautomaten (Home-Connect- und De'Longhi-BT-artig, Community-Karte), siehe kaffee.py.
+    from .kaffee import extra as kaffee_extra
+    _merge(fixture, kaffee_extra(dt_util.utcnow()), "Testbarista/Morgenbohne")
     # Ein erfundener Luftbefeuchter mit Modi, Wassertank und Feuchtesensor, siehe befeuchter.py.
     from .befeuchter import extra as befeuchter_extra
     _merge(fixture, befeuchter_extra(dt_util.utcnow()), "Testbefeuchter")
@@ -137,6 +140,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     mock.register_websocket()
     from .frigate import setup as frigate_setup
     frigate_setup(hass, mock)
+    from .kaffee import setup as kaffee_setup
+    kaffee_setup(hass, mock)
     mock.track_derived()
     mock.backfill_history()
     _LOGGER.warning(

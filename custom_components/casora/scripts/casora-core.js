@@ -2148,7 +2148,7 @@ window.casoraMenuGlass = {
   if (typeof window.casoraAutoLarge !== 'function') {
     var AUTO_WHEN_ACTIVE = {
       casora_appliance: 2, casora_waschmaschine: 2, casora_trockner: 2, casora_geschirrspueler: 2,
-      casora_3d_printer: 2, casora_vacuum: 2, casora_lawn_mower: 2, casora_media: 1, casora_football: 1, casora_trash: 1,
+      casora_3d_printer: 2, casora_vacuum: 2, casora_lawn_mower: 2, casora_coffee: 2, casora_media: 1, casora_football: 1, casora_trash: 1,
       casora_weather_warning: 3, casora_alarm: 3, casora_pulse: 3,
     };
     var AUTO_ALWAYS = { casora_camera: 1, casora_cameras: 1, casora_frigate: 1 };
@@ -2704,6 +2704,7 @@ window.casoraMenuGlass = {
       casora_cameras:       'security',
       casora_frigate:       'security',
       casora_vacuum:        'unfiltered',
+      casora_coffee:        'unfiltered',
       casora_plant:         'unfiltered',
     };
   }
