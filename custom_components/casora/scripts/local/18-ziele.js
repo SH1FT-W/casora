@@ -362,7 +362,7 @@
   // gestuft hoch; andere Sensoren bleiben beim Akzent.
   // Farbe kräftiger/tiefer: mit der Schriftfarbe gemischt – hell dunkler, dunkel heller (Kontrast >= 3:1 beidseits).
   var deep = function (c, p) { return 'color-mix(in srgb, ' + c + ' ' + (p || 78) + '%, var(--primary-text-color, #3A322B))'; };
-  var NEU = 'var(--casora-color-neutral, #C9BFB2)';
+  var NEU = 'var(--casora-color-neutral, var(--secondary-text-color))';
   var WORD = { ok: 'Gut', learning: 'Lernt', watch: 'Beobachten', check: 'Prüfen', failed: 'Ausgefallen' };
   var HGT = { ok: 34, learning: 34, watch: 58, check: 80, failed: 100 };
   var stateTone = function (h, id, s) {
@@ -396,7 +396,7 @@
             sum[x.s] = (sum[x.s] || 0) + ((x.end || now) - Math.max(x.start, t0));
             if (tn) {
               return '<i style="left:' + l.toFixed(2) + '%;width:' + Math.max(0.4, w).toFixed(2) + '%;background:' + tn.fill + ';border-radius:3px;'
-                + 'box-shadow:0 0 0 1.5px var(--casora-popup-row-fill, rgba(127,127,127,.10));'
+                + 'outline:1.5px solid var(--casora-popup-row-fill, rgba(127,127,127,.10));'
                 + (C3 ? 'top:auto;height:' + HGT[x.s] + '%;' : '') + '"></i>';
             }
             return '<i style="left:' + l.toFixed(2) + '%;width:' + Math.max(0.4, w).toFixed(2) + '%;' + (bin ? '' : 'opacity:' + (0.35 + 0.65 * ((k % 2) ? 0.5 : 1)) + ';') + '"></i>';
