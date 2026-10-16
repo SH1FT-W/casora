@@ -1841,6 +1841,27 @@ window.casoraMenuGlass = {
     + '--casora-entity-background:var(--casora-perf-tile-fill,rgb(32,34,38))!important;'
     + '--ha-card-background:var(--casora-perf-card-fill,rgb(32,34,38))!important;'
     + '}';
+  // Weitere Flächen nur, wenn das Theme dafür einen deckenden Ersatz mitbringt (Casora Glas:
+  // Raumleiste, Kapsel, Handy-Leiste, aktive Kacheln sind dort halbtransparent). Ohne Ersatzwert
+  // bleibt die Fläche, wie das Theme sie setzt – Casora und Nebel ändern sich dadurch nicht.
+  var MORE = [
+    ['--casora-nav-bg', '--casora-perf-nav-fill'],
+    ['--casora-chrome-fill', '--casora-perf-chrome-fill'],
+    ['--casora-mnav-bg', '--casora-perf-mnav-fill'],
+    ['--casora-room-head-fill', '--casora-perf-head-fill'],
+    ['--casora-entity-background-active', '--casora-perf-tile-active-fill'],
+    ['--casora-entity-active-tint', '--casora-perf-tile-active-fill'],
+    ['--casora-entity-active-tint-mobile', '--casora-perf-tile-active-fill'],
+    ['--ha-card-background-active', '--casora-perf-tile-active-fill'],
+  ];
+  function css() {
+    var cs = null, more = '';
+    try { cs = getComputedStyle(document.documentElement); } catch (e) { cs = null; }
+    MORE.forEach(function (p) {
+      if (cs && cs.getPropertyValue(p[1]).trim()) more += p[0] + ':var(' + p[1] + ')!important;';
+    });
+    return more ? CSS.replace(/\}$/, more + '}') : CSS;
+  }
 
   function clean(v) {
     v = String(v == null ? '' : v).trim().toLowerCase();
@@ -1881,12 +1902,18 @@ window.casoraMenuGlass = {
     var head = document.head || document.documentElement;
     var el = document.getElementById(ID);
     var want = resolve();
-    if (want === !!el) return;
-    if (!want) { el.remove(); return; }
+    if (!want) { if (el) el.remove(); return; }
+    var text = css();
+    if (el) { if (el.textContent !== text) el.textContent = text; return; }
     el = document.createElement('style');
     el.id = ID;
-    el.textContent = CSS;
+    el.textContent = text;
     head.appendChild(el);
+  }
+  // Theme-Wechsel (HA setzt Themes als Stil auf <html>): Ersatzflächen des neuen Themes übernehmen.
+  if (typeof MutationObserver === 'function') {
+    new MutationObserver(function () { if (document.getElementById(ID)) apply(); })
+      .observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
   }
 
   window._casoraPerf = {

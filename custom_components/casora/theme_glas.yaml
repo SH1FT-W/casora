@@ -73,6 +73,14 @@ Casora Glas:
       # Glaskante: feine helle Linie innen + Casora-Ruheschatten
       casora-shadow-rest: inset 0 0 0 .5px rgba(255,255,255,0.70), 0 1px 2px rgba(90,70,50,0.05), 0 8px 22px -12px rgba(90,70,50,0.18)
       casora-shadow-raised: inset 0 0 0 .5px rgba(255,255,255,0.80), 0 2px 4px rgba(90,70,50,0.06), 0 18px 40px -14px rgba(120,85,50,0.32)
+      # Leistungsmodus (Effekte „Schnell“): ohne Blur deckend wie Casora statt klarem Glas.
+      # Kacheln/Badges/Pillen/Seitenleiste nehmen Casoras casora-perf-*-fill; diese hier ersetzt
+      # casora-core.js (_casoraPerf) nur, wenn ein Theme sie setzt.
+      casora-perf-nav-fill: var(--casora-perf-card-fill)
+      casora-perf-chrome-fill: var(--casora-perf-card-fill)
+      casora-perf-mnav-fill: var(--casora-perf-card-fill)
+      casora-perf-head-fill: var(--casora-perf-sidebar-fill)
+      casora-perf-tile-active-fill: rgb(255,253,249)
     dark:
       # Dunkles Glas: warmes Anthrazit halbtransparent, aktiv Creme-Glas
       ha-card-background: rgba(30,27,24,0.58)
@@ -110,3 +118,8 @@ Casora Glas:
       # Glaskante: feine helle Linie innen, sonst verschwimmen Leiste und Badges im dunklen Foto
       casora-shadow-rest: inset 0 0 0 .5px rgba(255,240,220,0.16), 0 6px 16px -10px rgba(0,0,0,0.45)
       casora-shadow-raised: inset 0 0 0 .5px rgba(255,240,220,0.20), 0 14px 32px -12px rgba(0,0,0,0.55)
+      casora-perf-nav-fill: var(--casora-perf-card-fill)
+      casora-perf-chrome-fill: var(--casora-perf-card-fill)
+      casora-perf-mnav-fill: var(--casora-perf-card-fill)
+      casora-perf-head-fill: var(--casora-perf-sidebar-fill)
+      casora-perf-tile-active-fill: rgb(242,232,218)

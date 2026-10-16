@@ -37,4 +37,16 @@ assert.ok(/^Casora Glas:/m.test(glas), 'theme_glas.yaml meldet „Casora Glas“
 assert.ok(/^\s+casora-theme-base:\s*Casora\s*$/m.test(glasCode), 'Casora Glas baut auf Casora auf');
 assert.ok(!/casora-popup-layout/.test(glasCode), 'Casora Glas behält casora-popup-layout: soft von Casora');
 assert.ok(/ha-card-backdrop-filter:\s*blur\(/.test(glasCode), 'Casora Glas setzt Milchglas (backdrop-filter)');
+// Leistungsmodus: casora-core.js ersetzt halbtransparente Glas-Flächen nur über Ersatzwerte des Themes
+// (MORE). Casora Glas bringt jeden davon hell und dunkel mit; Casora/Nebel setzen keinen (bleiben gleich).
+const core = fs.readFileSync(new URL('scripts/casora-core.js', cc), 'utf8');
+const more = [...core.slice(core.indexOf('var MORE = ['), core.indexOf('function css()')).matchAll(/'(--casora-perf-[a-z-]+)'/g)].map((m) => m[1].slice(2));
+assert.ok(more.length >= 5, 'Perf-Ersatzliste MORE gefunden');
+const modeOf = (txt, m) => { const i = txt.indexOf('\n    ' + m + ':'); const j = txt.indexOf('\n    ' + (m === 'light' ? 'dark' : 'zzz') + ':', i + 1); return txt.slice(i, j > i ? j : undefined); };
+for (const v of new Set(more)) for (const m of ['light', 'dark']) {
+  assert.ok(new RegExp('^\\s+' + v + ':', 'm').test(modeOf(glasCode, m)), 'Casora Glas ' + m + ': ' + v + ' fehlt');
+}
+for (const f of ['theme_weich.yaml', 'theme_nebel.yaml']) for (const v of new Set(more)) {
+  assert.ok(!new RegExp('^\\s+' + v + ':', 'm').test(read(f)), f + ' darf ' + v + ' nicht setzen (Casora/Nebel unverändert)');
+}
 console.log('ok designs_nur_casora');
