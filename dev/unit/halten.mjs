@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 globalThis.window = globalThis;
 globalThis.document = { querySelector: () => null, addEventListener: () => {} };
 globalThis.addEventListener = () => {};
+globalThis.casoraLocale = () => 'de-DE'; // Uhrzeit nicht von der Systemsprache abhängig (GitHub läuft auf Englisch)
 new Function(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/22-halten.js', import.meta.url), 'utf8'))();
 const H = window._casoraHold;
 const st = (id, state, attributes) => ({ entity_id: id, state, attributes: attributes || {} });
