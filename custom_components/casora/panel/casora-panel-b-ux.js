@@ -570,7 +570,13 @@
         // Frigate-Kamera (device_class „camera“ setzt nur Frigate): die Community-Karte, wenn sie hinzugefügt ist.
         const frig = !suggested && id.startsWith("camera.") && typeIds.has("casora_frigate")
           && (S[id].attributes || {}).device_class === "camera" ? "casora_frigate" : null;
-        const type = typeFor(id, typeIds, frig || suggested);
+        // Reolink-Türklingel (Live-Kamera „sub“/„main“ eines Geräts mit Klingelknopf „visitor“, wie
+        // 24-klingel.js liveCam): die Community-Karte, wenn sie hinzugefügt ist.
+        const bell = !suggested && !frig && id.startsWith("camera.") && typeIds.has("casora_reolink_doorbell")
+          && e && e.device_id && /^(sub|main)$/.test(String(e.translation_key || ""))
+          && Object.keys(R).some((x) => R[x] && R[x].device_id === e.device_id && R[x].translation_key === "visitor" && x.startsWith("binary_sensor."))
+          ? "casora_reolink_doorbell" : null;
+        const type = typeFor(id, typeIds, frig || bell || suggested);
         if (!type) return;
         seen.add(id);
         const aid = areaOf(id);

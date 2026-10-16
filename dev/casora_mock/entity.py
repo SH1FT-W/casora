@@ -36,7 +36,8 @@ class MockEntity(Entity):
         # Schlüssel im Speicher bleibt die Fixture-ID: benennt ein Test die Entität in HA um
         # (neue entity_id), behält sie Zustand und Attribute statt ohne Zustand dazustehen.
         self._key = eid
-        self._attr_unique_id = eid
+        # unique_id wie die echte Integration, wo die Fixture sie nennt (Reolink „<uid>_<kanal>_<key>“), sonst die ID.
+        self._attr_unique_id = mock.entities[eid].get("unique_id") or eid
         attrs = mock.store[eid][1]
         self._attr_name = attrs.get("friendly_name") or eid.split(".", 1)[1]
         self._attr_icon = attrs.get("icon")
@@ -485,7 +486,9 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             self.content_type = "image/png"
             # Frigate-Testkamera (frigate.py): Hofbild mit Uhrzeit wie Frigates latest.jpg.
             self._frigate = bool(mock.entities[eid].get("frigate"))
-            if self._frigate:
+            # Reolink-Testklingel (klingel.py): Blick vor die Tür, mit Person, solange sie erkannt wird.
+            self._klingel = bool(mock.entities[eid].get("klingel"))
+            if self._frigate or self._klingel:
                 self.content_type = "image/jpeg"
 
         async def async_camera_image(self, width=None, height=None) -> bytes:
@@ -495,6 +498,13 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
                 img = await self.hass.async_add_executor_job(picture, None, 1, 1280, 720, stamp, False)
                 if img:
                     return img
+            if self._klingel:
+                from .klingel import DEV, picture as bell
+                stamp = dt_util.now().strftime("%d.%m.%Y %H:%M:%S")
+                who = self.hass.states.is_state(f"binary_sensor.{DEV}_person", "on")
+                img = await self.hass.async_add_executor_job(bell, who, stamp)
+                if img:
+                    return img
             return PLACEHOLDER_PNG
 
         async def handle_async_mjpeg_stream(self, request):
@@ -502,7 +512,7 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             # Browser-Verbindungen pro Server – mit mehreren Kamera-Kacheln blieb
             # das Test-Dashboard sonst beim Laden hängen. Ein Standbild genügt.
             from aiohttp import web
-            if self._frigate:
+            if self._frigate or self._klingel:
                 img = await self.async_camera_image()
                 return web.Response(body=img, content_type=self.content_type)
             return web.Response(body=PLACEHOLDER_PNG, content_type="image/png")

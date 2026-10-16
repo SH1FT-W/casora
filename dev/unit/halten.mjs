@@ -191,4 +191,21 @@ assert.ok(!ex[1].ask && ex[1].svc === 'switch.turn_on', 'Aufnahme an ohne Rückf
 m = H.model(FS['camera.hof'], { tapPopup: true, extra: ex, states: FS });
 assert.deepEqual(m.acts.map((x) => x.t), ['Live ansehen', 'Erkennung aus', 'Aufnahme an', 'Letzte Erkennung', 'In Frigate öffnen']);
 assert.deepEqual(H.extras(fh, 'camera.hof', 'casora_camera', {}), [], 'normale Kamera-Kachel: keine Frigate-Einträge');
+// Reolink-Türklingel (24-klingel.js): Live (Kamera), Ton hören, Schnellantworten mit Rückfrage.
+new Function(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/24-klingel.js', import.meta.url), 'utf8'))();
+const KS = {
+  'camera.pforte_sub': st('camera.pforte_sub', 'idle', { supported_features: 2 }),
+  'binary_sensor.pforte_besucher': st('binary_sensor.pforte_besucher', 'off'),
+  'select.pforte_antwort': st('select.pforte_antwort', 'unknown', { options: ['Komme sofort'] }),
+  'switch.pforte_ton': st('switch.pforte_ton', 'on'),
+};
+const TK = { 'camera.pforte_sub': 'sub', 'binary_sensor.pforte_besucher': 'visitor', 'select.pforte_antwort': 'play_quick_reply_message', 'switch.pforte_ton': 'record_audio' };
+const kh = { states: KS, entities: Object.fromEntries(Object.keys(KS).map((k) => [k, { entity_id: k, platform: 'reolink', device_id: 'd_tuer', translation_key: TK[k] }])),
+  devices: { d_tuer: { id: 'd_tuer', name: 'Pforte' } } };
+ex = H.extras(kh, 'camera.pforte_sub', 'casora_camera casora_reolink_doorbell', {});
+assert.deepEqual(ex.map((x) => x.t + (x.sub ? ':' + x.sub : '')), ['Ton hören', 'Schnellantwort:Komme sofort']);
+assert.ok(ex[1].ask && ex[1].svc === 'select.select_option' && ex[1].data.option === 'Komme sofort', 'Schnellantwort fragt nach');
+m = H.model(KS['camera.pforte_sub'], { tapPopup: true, extra: ex, states: KS });
+assert.deepEqual(m.acts.map((x) => x.t), ['Live ansehen', 'Ton hören', 'Schnellantwort']);
+assert.deepEqual(H.extras(kh, 'camera.pforte_sub', 'casora_camera', {}), [], 'normale Kamera-Kachel: keine Klingel-Einträge');
 console.log('halten: ok');

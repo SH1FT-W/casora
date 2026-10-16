@@ -540,7 +540,7 @@
     casora_thermostat: 'climate', casora_air_purifier: 'climate', casora_air_device: 'climate',
     casora_fan: 'climate', casora_humidifier: 'climate', casora_vent: 'climate', casora_cover: 'covers',
     casora_lock: 'security', casora_alarm: 'security', casora_camera: 'security', casora_cameras: 'security',
-    casora_doorbell: 'security', casora_frigate: 'security', casora_motion: 'security',
+    casora_doorbell: 'security', casora_frigate: 'security', casora_reolink_doorbell: 'security', casora_motion: 'security',
     casora_media: 'media', casora_game: 'media',
   };
   const ROOM_GROUP_BY_DOMAIN = {

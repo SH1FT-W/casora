@@ -111,6 +111,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Eine erfundene Frigate-Kamera mit Erkennungen (Community-Karte), siehe frigate.py.
     from .frigate import extra as frigate_extra
     _merge(fixture, frigate_extra(dt_util.utcnow()), "Frigate-Testhof")
+    # Eine erfundene Reolink-Türklingel mit Klingeldrücken im Verlauf (Community-Karte), siehe klingel.py.
+    from .klingel import extra as klingel_extra
+    _merge(fixture, klingel_extra(dt_util.utcnow()), "Testklingel")
     # Ein erfundener Luftbefeuchter mit Modi, Wassertank und Feuchtesensor, siehe befeuchter.py.
     from .befeuchter import extra as befeuchter_extra
     _merge(fixture, befeuchter_extra(dt_util.utcnow()), "Testbefeuchter")
@@ -137,6 +140,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     mock.register_websocket()
     from .frigate import setup as frigate_setup
     frigate_setup(hass, mock)
+    from .klingel import setup as klingel_setup
+    klingel_setup(hass, mock)
     mock.track_derived()
     mock.backfill_history()
     _LOGGER.warning(
@@ -190,7 +195,7 @@ class CasoraMock:
                           "input_datetime", "sun", "automation"):
                 continue  # echte Helfer/Kern-Entitäten, siehe configuration.yaml
             entry = ents.async_get_or_create(
-                domain, DOMAIN, e["entity_id"],
+                domain, DOMAIN, e.get("unique_id") or e["entity_id"],
                 suggested_object_id=object_id,
                 config_entry=self.entry,
                 device_id=dev_ids.get(e.get("device")),

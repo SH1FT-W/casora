@@ -1884,7 +1884,48 @@
   "Mehr anzeigen": "Show more",
   "Weniger anzeigen": "Show less",
   "Alle Objekte zeigen": "Show all objects",
-  "Läuft noch": "Still running"
+  "Läuft noch": "Still running",
+  "Privatsphäre an": "Privacy on",
+  "Hat geklingelt": "Someone rang",
+  "Tier": "Animal",
+  "Schnellantworten": "Quick replies",
+  "Schnellantwort": "Quick reply",
+  "Spielt ab": "Playing",
+  "Antippen zum Stoppen": "Tap to stop",
+  "Laut an der Tür, 10 Sekunden": "Loud at the door, 10 seconds",
+  "Auslösen": "Sound it",
+  "Sirene läuft": "Siren is sounding",
+  "An der Tür": "At the door",
+  "Niemand hat geklingelt": "Nobody rang",
+  "Klingelton": "Chime",
+  "Lautsprecher": "Speaker",
+  "Klingelton an der Tür": "Chime at the door",
+  "Ton aufnehmen": "Record sound",
+  "Ohne Ton hörst du die Tür nicht": "Without it you can't hear the door",
+  "Infrarot bei Nacht": "Infrared at night",
+  "Status-LED": "Status LED",
+  "Privatsphäre": "Privacy",
+  "Kamera und Ton aus": "Camera and sound off",
+  "Licht am Klingelknopf": "Light on the button",
+  "Nachts an": "On at night",
+  "Immer an": "Always on",
+  "Automatische Antwort": "Automatic reply",
+  "Schwarz-Weiß": "Black & white",
+  "Farbe mit Licht": "Color with light",
+  "Kamera und Ton der Klingel sind aus.": "The doorbell's camera and sound are off.",
+  "Klingel nicht erreichbar": "Doorbell unreachable",
+  "Prüfe Strom und WLAN der Klingel.": "Check the doorbell's power and Wi-Fi.",
+  "Ton aus": "Sound off",
+  "Verbindet …": "Connecting…",
+  "Ton ist an der Klingel aus": "Sound is off on the doorbell",
+  "Sprechen klappt mit dieser Klingel nicht – Ton hören geht weiter": "Talking doesn't work with this doorbell – listening still works",
+  "Kein Zugriff aufs Mikrofon – im Browser erlauben": "No access to the microphone – allow it in the browser",
+  "Sprechen nach 90 Sekunden beendet": "Talking ended after 90 seconds",
+  "Verbindung zur Klingel beendet": "Connection to the doorbell ended",
+  "Ton hören": "Listen",
+  "An der Tür abspielen?": "Play it at the door?",
+  "Geklingelt": "Rang",
+  "In den letzten 3 Tagen": "In the last 3 days"
  },
  "patterns": [
   [
@@ -3670,6 +3711,18 @@
   [
    "^(\\d+) Tagen$",
    "{1} days"
+  ],
+  [
+   "^Geklingelt (vor .+|gestern|gerade eben)$",
+   "Rang {1}"
+  ],
+  [
+   "^In den letzten (\\d+) Tagen$",
+   "In the last {1} days"
+  ],
+  [
+   "^Nach (\\d+) s ohne Antwort$",
+   "After {1} s without an answer"
   ]
  ]
 }

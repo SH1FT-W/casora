@@ -2416,7 +2416,15 @@
     "Frigate camera": "Frigate-Kamera",
     "Live camera with what Frigate detected last. The popup shows the live view, the latest detections with snapshot and clip, objects and the camera switches.": "Live-Kamera mit dem, was Frigate zuletzt erkannt hat. Im Popup das Live-Bild, die letzten Erkennungen mit Schnappschuss und Clip, Objekte und die Schalter der Kamera.",
     "For every camera of the Frigate integration": "Für jede Kamera der Frigate-Integration",
-    "Frigate integration not installed yet": "Frigate-Integration noch nicht installiert"
+    "Frigate integration not installed yet": "Frigate-Integration noch nicht installiert",
+    "Reolink doorbell": "Reolink-Türklingel",
+    "Doorbell camera": "Kamera der Klingel",
+    "Doorbell with live picture that says when someone rang. The popup has the live view with sound, quick replies, the siren, who rang lately and the doorbell's settings.": "Türklingel mit Live-Bild, die sagt, wann jemand geklingelt hat. Im Popup das Live-Bild mit Ton, Schnellantworten, die Sirene, wer zuletzt geklingelt hat und die Einstellungen der Klingel.",
+    "For every Reolink doorbell": "Für jede Reolink-Türklingel",
+    "Reolink integration not installed yet": "Reolink-Integration noch nicht installiert",
+    "Talk (experiment)": "Sprechen (Versuch)",
+    "Adds a Talk button under the live picture: your microphone goes to the doorbell through Home Assistant's own WebRTC connection. Only works over HTTPS, with the doorbell connected in your network (RTSP), and only if the doorbell accepts it – many Reolink doorbells don't. If it doesn't, the popup says so and listening keeps working.": "Zeigt unter dem Live-Bild einen Knopf „Sprechen“: Dein Mikrofon geht über die WebRTC-Verbindung von Home Assistant an die Klingel. Klappt nur über HTTPS, mit der Klingel direkt im Netz (RTSP) und nur, wenn die Klingel es annimmt – viele Reolink-Klingeln tun das nicht. Dann sagt das Popup es, Ton hören geht weiter.",
+    "How often the tile fetches a new still image while it is visible. The tile says \"Ready\" while the picture is fresh and shows its age in the warning color when the doorbell stops delivering.": "Wie oft die Kachel ein neues Standbild holt, solange sie zu sehen ist. Die Kachel sagt „Bereit“, solange das Bild frisch ist, und zeigt sein Alter in der Warnfarbe, wenn die Klingel nichts mehr liefert."
   },
   "patterns": [
     [

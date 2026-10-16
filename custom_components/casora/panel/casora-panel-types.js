@@ -295,6 +295,25 @@ window.CASORA_TILE_TYPES = [
         optionLabels: { "5": "Every 5 seconds", "": "Every 10 seconds", "30": "Every 30 seconds", "60": "Every 60 seconds" },
         hint: "How often the tile fetches a new still image while it is visible. The tile says \"Up to date\" while the picture is fresh and shows its age in the warning color when the camera stops delivering." },
     ] },
+  // Reolink-Türklingel (Community-Karte, aus Kartenwunsch #23): Kamera-Kachel für die Live-Kamera einer Reolink-
+  // Klingel (Gerät mit Klingelknopf „visitor“), dazu Klingeln, Erkennungen, Schnellantworten, Sirene und
+  // Einstellungen am selben Gerät (scripts/local/24-klingel.js). „Sprechen“ ist ein Versuch und standardmäßig aus.
+  { id: "casora_reolink_doorbell", label: "Reolink doorbell", template: "casora_reolink_doorbell", domains: ["camera"],
+    icon: "doorbell", entityLabel: "Doorbell camera",
+    onlyIf: (hass) => !!(hass && hass.entities && Object.values(hass.entities).some((e) => e && e.translation_key === "visitor")),
+    community: { desc: "Doorbell with live picture that says when someone rang. The popup has the live view with sound, quick replies, the siren, who rang lately and the doorbell's settings.",
+      needs: "reolink", needsText: "For every Reolink doorbell", needsMissing: "Reolink integration not installed yet" },
+    fields: [ICON, TITLE_NAME,
+      { key: "still_entity", label: "Still image from", domains: ["camera", "image"], advanced: true,
+        placeholder: "Automatic",
+        hint: "Optional. Another camera or image entity whose picture the tile shows. Without it, Casora uses a snapshot entity of the same camera if there is one (e.g. Reolink snapshots), otherwise this camera. The popup always shows this camera live." },
+      { key: "refresh_s", label: "Refresh image", type: "select", advanced: true, tileLevel: true,
+        options: ["5", "", "30", "60"],
+        optionLabels: { "5": "Every 5 seconds", "": "Every 10 seconds", "30": "Every 30 seconds", "60": "Every 60 seconds" },
+        hint: "How often the tile fetches a new still image while it is visible. The tile says \"Ready\" while the picture is fresh and shows its age in the warning color when the doorbell stops delivering." },
+      { key: "talk", label: "Talk (experiment)", type: "bool", advanced: true, group: "Popup",
+        hint: "Adds a Talk button under the live picture: your microphone goes to the doorbell through Home Assistant's own WebRTC connection. Only works over HTTPS, with the doorbell connected in your network (RTSP), and only if the doorbell accepts it – many Reolink doorbells don't. If it doesn't, the popup says so and listening keeps working." },
+    ] },
   // Aquarien-Übersicht (Hemma 1 und ältere Fassungen „…_aquarium“): bis zu drei Becken in einer Kachel. Nur fürs
   // Bearbeiten umgezogener Kacheln – neue Becken bekommen die Aquarium-Kachel (casora_aquarium_tank).
   { id: "casora_aquariums", label: "Aquariums", template: "casora_aquarium", hidden: true, domains: ["sensor"],

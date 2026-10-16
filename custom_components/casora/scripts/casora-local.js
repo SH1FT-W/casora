@@ -87,6 +87,7 @@ const MODULES = [
   '20-energie-fokus',
   '22-halten',
   '23-frigate',
+  '24-klingel',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());
