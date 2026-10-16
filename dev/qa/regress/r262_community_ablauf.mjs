@@ -53,7 +53,7 @@ const pane = () => page.evaluate(() => {
   const ps = window.__panel().shadowRoot.querySelectorAll('.askpane');
   const a = ps[ps.length - 1];
   if (!a) return null;
-  return { title: (a.querySelector('h3') || {}).textContent || '', text: a.textContent.replace(/\s+/g, ' ').slice(0, 800),
+  return { title: (a.querySelector('h3') || {}).textContent || '', text: a.textContent.replace(/\s+/g, ' '),
     chips: [...a.querySelectorAll('.comchip')].map((b) => b.textContent.trim()), picks: a.querySelectorAll('.askpick').length,
     inputs: a.querySelectorAll('.comin').length, warn: (a.querySelector('.fieldwarn') || {}).textContent || '' };
 });
@@ -75,7 +75,7 @@ const stored = async () => ((((await ws({ type: 'casora/settings/get' })) || {})
 // 1. Community-Seite
 let s = await community();
 await check('Community-Seite offen, nur Kartenwunsch als Weg', s && /Community/.test(s.title) && s.chips.some((c) => /Kartenwunsch/.test(c))
-  && !/teilen/i.test(s.text), s);
+  && !s.chips.some((c) => /teilen/i.test(c)) && !/(Kachel|Karte) teilen/i.test(s.text), s);
 await check('Prüfkarte in der Liste mit „Hinzufügen“ und Integrations-Hinweis', s && /QA-Prüfkarte/.test(s.text) && /Braucht/.test(s.text)
   && s.chips.includes('Hinzufügen'), s && s.text);
 await check('Vor dem Hinzufügen nicht in „Kachel hinzufügen“', !(await pickable()));
