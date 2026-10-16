@@ -6611,6 +6611,8 @@ window.casoraMenuGlass = {
     var keep = function (ids) { ids = [].concat(ids || []).filter(function (x, i, a) { return x && S[x] && a.indexOf(x) === i; }); return ids.length ? ids : null; };
     pop._hsToggle = null;
     pop._hsOff = false;
+    pop._hsColor = null;
+    pop._hsLabel = null;
     if (c === false) return null;
     if (c && typeof c === 'object') return keep(c.entities || c.entity);
     if (!src || !src._config) return null;
@@ -6623,6 +6625,9 @@ window.casoraMenuGlass = {
       if (r && typeof r === 'object') {
         pop._hsToggle = typeof r.toggle === 'function' ? r.toggle : null;
         pop._hsOff = !!r.disabled;
+        // color: eigene Farbe des Schalters (Frigate: Bedien-Farbe statt Alarm-Rot), label: was er schaltet.
+        pop._hsColor = typeof r.color === 'string' ? r.color : null;
+        pop._hsLabel = typeof r.label === 'string' ? r.label : null;
         return keep(r.entities);
       }
     }
@@ -7371,8 +7376,11 @@ window.casoraMenuGlass = {
       if (this._hsPending && Date.now() < this._hsPending.until) on = this._hsPending.on;
       b.setAttribute('aria-checked', on ? 'true' : 'false');
       b.disabled = dead || (!!this._hsOff && !on);
-      var t = this._headerTitle.textContent || '';
-      b.setAttribute('aria-label', (window.casoraTr ? window.casoraTr(on ? 'Ausschalten' : 'Einschalten') : (on ? 'Ausschalten' : 'Einschalten')) + (t ? ' – ' + t : ''));
+      var tr = window.casoraTr || function (x) { return x; };
+      var t = this._hsLabel ? tr(this._hsLabel) : (this._headerTitle.textContent || '');
+      b.setAttribute('aria-label', tr(on ? 'Ausschalten' : 'Einschalten') + (t ? ' – ' + t : ''));
+      if (this._hsLabel) b.title = t; else b.removeAttribute('title');
+      if (this._hsColor) b.style.setProperty('--casora-popup-accent', this._hsColor); else b.style.removeProperty('--casora-popup-accent');
     }
     _toggleHeadSwitch() {
       var ids = this._hsIds;
@@ -8583,6 +8591,9 @@ window.casoraMenuGlass = {
       + "mask:url('" + url + "') center / contain no-repeat;\"></div></div>";
   }
 
+  // Selbst gewählte Texte (Nachrichten einer Klingel, Namen): r.labelLit/r.valueLit – casora-i18n übersetzt sie nicht.
+  function lit(t, on) { return on ? '<span data-no-i18n>' + esc(t) + '</span>' : esc(t); }
+
   // Funktion der Zeilen (Bestätigen-Knopf, Wischen zum Bestätigen) – gleich in beiden Gestaltungen.
   var ROW_FN_CSS = '.hui-row{overflow:hidden;position:relative;--cf-w:88px;}'
       /* Laufender Zustand einer Zeilen-Aktion (z. B. „Wird aktualisiert“, 04.10.2026): Zweitfarbe
@@ -8671,6 +8682,14 @@ window.casoraMenuGlass = {
       + '.hui-cf{font-weight:600;}'
       /* 1.2 (P7): „Bestätigen“ wie alle Text-Hauptknöpfe 44 hoch, voll rund. */
       + '.hui-srow .hui-cf{top:calc(50% - 22px);bottom:auto;height:44px;border-radius:999px;}'
+      /* D2 (Klingel-Runde 16.10.): Bestätigen so breit wie sein Wort („Einschalten“, „Abspielen“ wurden in 88 px
+         abgeschnitten) und die Zeile schiebt nicht mehr Symbol und Titel aus dem Bild („sphäre“): Symbol und Titel
+         bleiben stehen, Wert/Pfeil weichen, der Titel endet vor dem Knopf mit „…“. */
+      + '.hui-srow .hui-cf{width:auto;min-width:var(--cf-w);padding:0 16px;box-sizing:border-box;white-space:nowrap;'
+      +   'transform:translateX(calc(100% + 16px));}'
+      + '.hui-srow.armed .hui-cf{transform:none;}'
+      + '.hui-srow.armed .hui-inner{--armed-x:0px;padding-right:calc(var(--cf-real, var(--cf-w)) + 8px);}'
+      + '.hui-srow.armed .hui-inner>:nth-child(n+3){display:none!important;}'
       /* B-15: am Handy jede Unterzeile einzeilig mit Auslassung – gleich hohe Zeilen. */
       + '@media (max-width: 600px){.hui-srow .hui-sub{display:block!important;-webkit-line-clamp:1!important;white-space:nowrap!important;text-overflow:ellipsis!important;overflow:hidden!important;}.hui-srow .hui-sub2::before{content:none!important;}}'
       /* Hinweis-Zeilen (r.subWrap, z. B. „Noch keine Tageswerte“): ganzer Satz statt „…“ (07.10.2026). */
@@ -8736,7 +8755,7 @@ window.casoraMenuGlass = {
         + '<div style="flex:1;min-width:0;pointer-events:none;white-space:normal;">'
         + '<div style="font-size:var(--casora-soft-row-fs, 14.5px);font-weight:700;letter-spacing:-0.01em;line-height:1.3;color:'
         + (tone(r.labelTone) || T.ink) + ';overflow:hidden;'
-        + 'text-overflow:ellipsis;white-space:nowrap;">' + esc(r.label) + '</div>';
+        + 'text-overflow:ellipsis;white-space:nowrap;">' + lit(r.label, r.labelLit) + '</div>';
 
       if (r.sub) {
         var subs = Array.isArray(r.sub) ? r.sub : [r.sub];
@@ -8803,7 +8822,7 @@ window.casoraMenuGlass = {
         out += '<div' + vlive + (r.valueIcon ? ' class="hui-actx"' + actxLabel(r.value) : '') + ' style="font-size:14px;font-weight:600;'
           + 'font-variant-numeric:tabular-nums;color:' + (alertTone(r.valueTone) || T.ink2)
           + ';white-space:nowrap;pointer-events:none;">'
-          + (r.valueIcon ? actxInner(r.value, r.valueIcon, S.iconOff) : esc(r.value)) + '</div>';
+          + (r.valueIcon ? actxInner(r.value, r.valueIcon, S.iconOff) : lit(r.value, r.valueLit)) + '</div>';
       }
       if ((r.entity || r.tappable) && (!r.svc || armOnAction)) {
         out += '<svg class="hui-chev" width="7" height="12" viewBox="0 0 7 12" aria-hidden="true">'
@@ -8937,7 +8956,7 @@ window.casoraMenuGlass = {
         + 'font-weight:var(--casora-popup-row-label-weight, 400);'
         + 'letter-spacing:-0.022em;color:'
         + (tone(r.labelTone) || T.ink) + ';overflow:hidden;'
-        + 'text-overflow:ellipsis;white-space:nowrap;">' + esc(r.label) + '</div>';
+        + 'text-overflow:ellipsis;white-space:nowrap;">' + lit(r.label, r.labelLit) + '</div>';
 
       if (r.sub) {
         var subs = Array.isArray(r.sub) ? r.sub : [r.sub];
@@ -9009,7 +9028,7 @@ window.casoraMenuGlass = {
           + (tone(r.valueTone) || T.ink2)
           + ';margin-inline-start:var(--casora-popup-value-gap, 0px)'
           + ';white-space:nowrap;pointer-events:none;">'
-          + (r.valueIcon ? actxInner(r.value, r.valueIcon, T.fill2) : esc(r.value)) + '</div>';
+          + (r.valueIcon ? actxInner(r.value, r.valueIcon, T.fill2) : lit(r.value, r.valueLit)) + '</div>';
       }
       if ((r.entity || r.tappable) && (!r.svc || armOnAction)) {
         out += '<svg class="hui-chev" width="7" height="12" viewBox="0 0 7 12" aria-hidden="true">'
@@ -9283,6 +9302,9 @@ window.casoraMenuGlass = {
               if (o !== armRow) o.classList.remove('armed');
             });
           }
+          // D2: Breite des Bestätigen-Knopfs (passt sich dem Wort an) – um so viel weicht der Text der Zeile.
+          var cfEl = armRow.querySelector && armRow.querySelector(':scope > .hui-cf');
+          if (cfEl && cfEl.offsetWidth) armRow.style.setProperty('--cf-real', cfEl.offsetWidth + 'px');
           armRow.classList.toggle('armed');
           ev.preventDefault(); ev.stopPropagation();
           return;
