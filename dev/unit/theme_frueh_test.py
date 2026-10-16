@@ -38,7 +38,7 @@ def check(cond, msg):
 
 
 themes = _load_theme()
-check(set(themes) == {"Casora", "Casora Nebel"}, f"genau Casora und Casora Nebel geladen ({sorted(themes)})")
+check(set(themes) == {"Casora", "Casora Nebel", "Casora Glas"}, f"genau Casora, Casora Nebel und Casora Glas geladen ({sorted(themes)})")
 
 with tempfile.TemporaryDirectory() as d:
     cfg = os.path.join(d, "configuration.yaml")

@@ -235,7 +235,7 @@ customElements.whenDefined("casora-panel").then(() => {
     }
     const box = document.createElement("div");
     box.className = "subcard casora-look";
-    // Two small cards with a real screenshot each, like the setup assistant, instead of a
+    // Small cards (one per design) with a real screenshot each, like the setup assistant, instead of a
     // plain list: the choice is seen, not read.
     const grid = document.createElement("div");
     grid.className = "casora-looks";

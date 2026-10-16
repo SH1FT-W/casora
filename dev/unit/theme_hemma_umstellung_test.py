@@ -148,7 +148,7 @@ with tempfile.TemporaryDirectory() as d:
     check(("frontend", "set_theme", {"name": "Casora", "mode": "dark"}) in calls, "dunkel über set_theme")
     check("Hemma 2" not in store and "Hemma 1" not in store, "alte Designs aus der Liste")
     check(store.get("Eigenes") == {"primary-color": "#333"}, "eigenes Theme bleibt")
-    check(set(load_yaml(os.path.join(d, "themes", THEME_FILE))) == {"Casora", "Casora Nebel"},
+    check(set(load_yaml(os.path.join(d, "themes", THEME_FILE))) == {"Casora", "Casora Nebel", "Casora Glas"},
           "Theme-Datei ohne Hemma 1/2")
     check("themes_updated" in hass.bus.fired, "Oberfläche bekommt die neue Liste")
     check(USERS["a"].data["theme"] == {"theme": "Casora", "dark": False}, f"Profil umgestellt: {USERS['a'].data}")

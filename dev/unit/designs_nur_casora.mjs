@@ -1,4 +1,4 @@
-// Seit 1.6.1 nur noch die Designs „Casora“ und „Casora Nebel“ (Hemma 1/2 entfernt).  node dev/unit/designs_nur_casora.mjs
+// Seit 1.6.1 nur noch Casora-Designs: „Casora“, „Casora Nebel“ und „Casora Glas“ (Hemma 1/2 entfernt).  node dev/unit/designs_nur_casora.mjs
 // Auswahl im Assistenten und im Studio, Umstellung alter Namen im Browser, keine verwaisten Vorschaubilder.
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -11,7 +11,9 @@ const to = src.indexOf('const isCasoraTheme = ', from);
 assert.ok(from > 0 && to > from);
 const { CASORA_THEMES, THEME_RENAMED } = new Function(src.slice(from, to) + '\nreturn { CASORA_THEMES, THEME_RENAMED };')();
 
-assert.deepEqual(CASORA_THEMES.map((x) => x.name), ['Casora', 'Casora Nebel'], 'nur Casora und Nebel zur Wahl');
+assert.deepEqual(CASORA_THEMES.map((x) => x.name), ['Casora', 'Casora Nebel', 'Casora Glas'], 'Casora, Nebel und Glas zur Wahl');
+// Alte Namen landen weiter auf Casora, nie auf Casora Glas
+assert.ok(!Object.values(THEME_RENAMED).includes('Casora Glas'), 'keine Umleitung auf Casora Glas');
 for (const old of ['Hemma 2', 'Hemma 1', 'Casora Standard', 'Casora Glass', 'Casora Weich']) {
   assert.equal(THEME_RENAMED[old], 'Casora', old + ' → Casora');
 }
@@ -28,4 +30,8 @@ assert.ok(/hass\.themes\.themes\[to\] && !hass\.themes\.themes\[sel\.theme\]/.te
 // Integration meldet nur theme_*.yaml an, kein Glas-Theme mehr
 assert.ok(!fs.existsSync(new URL('theme_glass.yaml', cc)), 'theme_glass.yaml entfernt');
 assert.ok(/^Casora Basis:/m.test(read('theme.yaml')), 'theme.yaml = Grundwerte, kein Design');
+// Casora Glas: eigenes Theme auf den Grundwerten, Glas-Zweig (kein soft), nicht auf Casora aufgesetzt
+const glas = read('theme_glas.yaml');
+assert.ok(/^Casora Glas:/m.test(glas), 'theme_glas.yaml meldet „Casora Glas“ an');
+assert.ok(!/casora-popup-layout|casora-theme-base/.test(glas.replace(/#.*$/gm, '')), 'Casora Glas ohne soft-Schalter und ohne Basis Casora');
 console.log('ok designs_nur_casora');
