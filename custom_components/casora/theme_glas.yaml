@@ -19,6 +19,13 @@ Casora Glas:
   casora-glass-rim: inset 0 0 0 .5px rgba(255,255,255,0.22)
   casora-tile-glass-rim: inset 0 0 0 .5px rgba(255,255,255,0.22)
   casora-tile-glass-rim-desktop: inset 0 0 0 .5px rgba(255,255,255,0.22)
+  # Studio-Vorschau (casora-panel.js): Milchglas auf den Vorschau-Flächen, im Leistungsmodus ohne Blur
+  # und deckend. Die Vorschau ist verkleinert (~0,6), darum etwa 0,6 × der Dashboard-Blur.
+  casora-studio-glass-backdrop: blur(14px) saturate(1.6)
+  casora-studio-perf-backdrop: none
+  casora-studio-perf-tile: var(--casora-perf-tile-fill)
+  casora-studio-perf-card: var(--casora-perf-card-fill)
+  casora-studio-perf-active: var(--casora-perf-tile-active-fill)
   card-mod-theme: Casora Glas
   uix-theme: Casora Glas
 

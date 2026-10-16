@@ -53,4 +53,11 @@ for (const v of new Set(more)) for (const m of ['light', 'dark']) {
 for (const f of ['theme_weich.yaml', 'theme_nebel.yaml']) for (const v of new Set(more)) {
   assert.ok(!new RegExp('^\\s+' + v + ':', 'm').test(read(f)), f + ' darf ' + v + ' nicht setzen (Casora/Nebel unverändert)');
 }
+// Studio-Vorschau: Milchglas nur über --casora-studio-*; Casora/Nebel setzen keinen davon (Vorschau unverändert),
+// jeder Blur dort hat Rückfall none, und der Leistungsmodus (.perf) schaltet ihn ab.
+const panelSrc = src;
+assert.ok(/backdrop-filter:var\(--casora-studio-glass-backdrop, none\)/.test(panelSrc), 'Vorschau-Blur mit Rückfall none');
+assert.ok(/\.card\.map\.soft\.perf/.test(panelSrc) && /classList\.toggle\("perf", perfLook\(\)\)/.test(panelSrc), 'Vorschau kennt den Leistungsmodus');
+for (const f of ['theme_weich.yaml', 'theme_nebel.yaml']) assert.ok(!/^\s+casora-studio-(glass|perf)-/m.test(read(f)), f + ' setzt keine Glas-Vorschau-Werte');
+assert.ok(/^\s+casora-studio-glass-backdrop:\s*blur\(/m.test(glasCode), 'Casora Glas setzt den Vorschau-Blur');
 console.log('ok designs_nur_casora');

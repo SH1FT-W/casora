@@ -1821,6 +1821,8 @@ window.casoraMenuGlass = {
     + '--badge-blur:0px!important;'
     + '--casora-badge-media-backdrop:none!important;'
     + '--casora-badge-ring-backdrop:none!important;'
+    // Studio-Vorschau im Glas-Look (nur Casora Glas setzt ihn; sonst ohnehin none).
+    + '--casora-studio-glass-backdrop:none!important;'
     // The room photo is the one full-screen filter, and it repaints on every swap.
     + '--casora-view-photo-filter:none!important;'
     + '--hero-img-blur:0px!important;'

@@ -3839,6 +3839,18 @@ let ACCENT_THEME = "";
 // Pulse installiert? (Schalter „Pulse“ unter Benachrichtigungen) – je Registry-Stand einmal geprüft.
 let PULSE_HERE = false;
 let pulseReg = null;
+// Leistungsmodus für die Vorschau (Casora Glas: kein Blur, deckende Flächen wie im Dashboard).
+// Ist casora-core.js geladen, entscheidet es (Geräte-Pin, Studio-Einstellung, „auto“); sonst die
+// zuletzt dort gemerkte Wahl. Ohne Glas-Werte im Theme hat .perf in der Vorschau keine Wirkung.
+const perfLook = () => {
+  try { if (window._casoraPerf && typeof window._casoraPerf.on === "function") return !!window._casoraPerf.on(); } catch (e) { /* weiter */ }
+  let v = "";
+  try { v = localStorage.getItem("casora_perf") || localStorage.getItem("casora_perf_dash") || ""; } catch (e) { v = ""; }
+  if (v !== "auto") return v === "on";
+  const n = navigator || {}, ua = n.userAgent || "";
+  if (/iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && (n.maxTouchPoints || 0) > 1)) return false;
+  return (!!n.deviceMemory && n.deviceMemory <= 4) || (!!n.hardwareConcurrency && n.hardwareConcurrency <= 4);
+};
 // Weich-Look: theme_weich.yaml setzt casora-popup-layout: soft (Standard und Glas nicht).
 // Gelesen an <html>, wo HA das aktive Theme in der Fassung des Hell/Dunkel-Modus ablegt –
 // dasselbe Signal, nach dem sich die Popups des echten Dashboards richten.
@@ -5858,7 +5870,7 @@ class CasoraPanel extends HTMLElement {
   _syncSoftLook() {
     const apply = () => {
       const c = this.shadowRoot && this.shadowRoot.querySelector(".card.map");
-      if (c) c.classList.toggle("soft", softLook());
+      if (c) { c.classList.toggle("soft", softLook()); c.classList.toggle("perf", perfLook()); }
     };
     apply();
     requestAnimationFrame(apply);
@@ -9777,6 +9789,59 @@ class CasoraPanel extends HTMLElement {
           color:var(--casora-entity-name-active, rgba(0,0,0,0.88));
         }
         .card.map.soft .miniphone .mp-scene:not(.on) ha-icon { color:var(--casora-icon-off-ink, currentColor) !important; }
+        /* Casora Glas: echtes Milchglas in der Vorschau – Kacheln, Badges, Wiedergabe, Szenen, Kopf-Knöpfe
+           bekommen den Blur aus --casora-studio-glass-backdrop. Nur Casora Glas setzt ihn; Casora und
+           Nebel haben ihn nicht (none wie bisher). Leistungsmodus (.perf): kein Blur, deckende Ersatzflächen
+           über --casora-studio-perf-*, ohne Wert bleibt die bisherige Fläche. */
+        .card.map.soft .mtile:not(.ghost),
+        .card.map.soft .mini-nptile,
+        .card.map.soft .pbadge:not(.ghost),
+        .card.map.soft .miniphone :is(.mp-scene, .mp-np, .mp-np.noart),
+        .card.map.soft :is(.mini-settings, .mini-bell, .mini-assist, .mini-wave:not(.on)),
+        .card.map.soft .capsule .mini-cap {
+          backdrop-filter:var(--casora-studio-glass-backdrop, none);
+          -webkit-backdrop-filter:var(--casora-studio-glass-backdrop, none);
+        }
+        .card.map.soft.perf :is(.mtile:not(.ghost), .mini-nptile, .pbadge:not(.ghost), .mp-scene, .mp-np,
+          .mini-settings, .mini-bell, .mini-assist, .mini-wave, .mini-cap) {
+          backdrop-filter:var(--casora-studio-perf-backdrop, var(--casora-studio-glass-backdrop, none));
+          -webkit-backdrop-filter:var(--casora-studio-perf-backdrop, var(--casora-studio-glass-backdrop, none));
+        }
+        .card.map.soft.perf .miniphone .mp-nav {
+          backdrop-filter:var(--casora-studio-perf-backdrop, var(--casora-mnav-blur, none));
+          -webkit-backdrop-filter:var(--casora-studio-perf-backdrop, var(--casora-mnav-blur, none));
+        }
+        .card.map.soft.perf.size-tablet .mini-tabs::before,
+        .card.map.soft.perf .miniphone .mp-pill::before {
+          backdrop-filter:var(--casora-studio-perf-backdrop, var(--casora-pill-backdrop, blur(12px) saturate(1.4)));
+          -webkit-backdrop-filter:var(--casora-studio-perf-backdrop, var(--casora-pill-backdrop, blur(12px) saturate(1.4)));
+        }
+        .card.map.soft.perf .mtile:not(.ghost):not(.on),
+        .card.map.soft.perf .miniphone :is(.mp-scene:not(.on), .mp-np) {
+          background:var(--casora-studio-perf-tile, var(--casora-entity-background, rgba(0,0,0,0.40)));
+        }
+        .card.map.soft.perf .mtile.on {
+          background:var(--casora-studio-perf-active, var(--casora-entity-background-active, rgba(248,248,250,0.94)));
+        }
+        .card.map.soft.perf .miniphone .mp-tiles .mtile.on, .card.map.soft.perf .miniphone .mp-scene.on {
+          background:var(--casora-studio-perf-active, var(--casora-entity-active-tint-mobile, rgba(255,255,255,0.94)));
+        }
+        .card.map.soft.perf .pbadge:not(.ghost):not(.open) {
+          background:var(--casora-studio-perf-card, var(--badge-background, rgba(28,28,32,0.66)));
+        }
+        .card.map.soft.perf :is(.mini-settings, .mini-bell, .mini-assist, .mini-wave:not(.on)):not(.capsule *) {
+          background:var(--casora-studio-perf-card, var(--casora-chrome-fill, rgba(0,0,0,0.40)));
+        }
+        .card.map.soft.perf .capsule .mini-cap {
+          background:var(--casora-studio-perf-card, var(--casora-chrome-capsule-fill, transparent));
+        }
+        .card.map.soft.perf .miniphone .mp-nav {
+          background:var(--casora-studio-perf-card, var(--casora-mnav-pane, var(--casora-pill-fill, rgba(251,248,243,0.8))));
+        }
+        .card.map.soft.perf.size-tablet .mini-tabs::before,
+        .card.map.soft.perf .miniphone .mp-pill::before {
+          background-color:var(--casora-studio-perf-card, var(--casora-pill-fill, rgba(255,255,255,0.10)));
+        }
         .card.map.soft .miniphone .mp-nptitle { color:var(--casora-entity-name, #fff); }
         .card.map.soft .miniphone .mp-npsub { color:var(--casora-entity-state, rgba(255,255,255,0.62)); }
         .card.map.soft .miniphone .mp-npbtn path { fill:var(--casora-entity-name, #fff); }
@@ -24403,7 +24468,7 @@ class CasoraPanel extends HTMLElement {
 
     let shown = false;
     const card = document.createElement("section");
-    card.className = "card map size-" + this._miniSize + (softLook() ? " soft" : "");
+    card.className = "card map size-" + this._miniSize + (softLook() ? " soft" : "") + (perfLook() ? " perf" : "");
     card.dataset.k = "__map";
     card.style.visibility = "hidden";
 
