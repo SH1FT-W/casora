@@ -379,12 +379,6 @@
       + 'color:var(--casora-soft-mehr-ink, var(--casora-popup-tiles-text-primary, #3A322B));">'
       + '<span style="pointer-events:none;">' + esc(text) + '</span></div>';
   };
-  // Etikett über den Zeilen eines Tages im Verlauf (12/700, Großbuchstaben wie die Wert-Etiketten).
-  var dayLbl = function (t, first) {
-    return '<div style="font-family:var(--primary-font-family, system-ui);font-size:var(--casora-fs-label, 12px);font-weight:700;'
-      + 'text-transform:uppercase;letter-spacing:.1em;color:var(--casora-soft-sub, var(--secondary-text-color));'
-      + 'margin:' + (first ? '0' : 'var(--casora-space-4, 16px)') + ' 6px var(--casora-space-2, 8px);">' + esc(t) + '</div>';
-  };
   var swRow = function (S, id, icon, label, ask, sub) {
     if (!id || !S[id] || S[id].state === 'unavailable') return null;
     var isOn = S[id].state === 'on';
@@ -468,21 +462,32 @@
       } else {
         var max = more[c.cam] ? 30 : 8;
         var newest = list.filter(function (e) { return e.kind === 'ring'; })[0];
-        // Nach Tagen getrennt (Heute, Gestern, Mi., 14.10.) – die Unterzeile trägt dann nur noch die Uhrzeit.
-        var days = [];
-        list.slice(0, max).forEach(function (e) {
-          var dw = dayWord(e.at, now) || 'Heute';
-          if (!days.length || days[days.length - 1].t !== dw) days.push({ t: dw, rows: [] });
-          var ring = e.kind === 'ring';
-          // Klingeln in Gerätefarbe, Erkennungen ruhig (Sand) – so springen die Klingeldrücke ins Auge.
-          days[days.length - 1].rows.push({ icon: ICON[ring ? 'ring' : e.kind] || 'mdi:motion-sensor', iconTone: ring ? 'accent' : 'rgba(0,0,0,0)',
-            label: ring ? 'Hat geklingelt' : KL.label(e.kind) + ' erkannt', sub: dw === 'Heute' ? clock(e.at) + ' · ' + KL.ago(e.at, now) : clock(e.at),
+        // Zeitleiste wie Person/Schloss (15-person.js): Uhrzeit | Punkt mit Linie zum nächsten | Was, darunter wie lange her.
+        // Klingeln als Punkt in Gerätefarbe, Erkennungen ruhig – beim ersten Eintrag eines früheren Tags steht der Tag über der Uhrzeit.
+        var sub = 'var(--casora-soft-sub, rgba(58,50,43,.6))', ink = 'var(--casora-popup-tiles-text-primary, #3A322B)',
+          rowBg = 'var(--casora-soft-row-fill, rgba(140,115,90,0.07))', dim = 'var(--casora-soft-icon-off, rgba(140,115,90,0.18))',
+          ringHue = 'var(--casora-popup-accent, var(--casora-color-teal))', detHue = 'var(--casora-soft-sub, rgba(58,50,43,.45))';
+        var items = list.slice(0, max);
+        var body = items.map(function (e, i) {
+          var dw = dayWord(e.at, now), prev = items[i - 1];
+          var day = dw && (!prev || dayWord(prev.at, now) !== dw) ? dw : '';
+          var ring = e.kind === 'ring', last = i === items.length - 1;
+          var isNew = e === newest && now - e.at < HOLD;
+          var what = ring ? 'Hat geklingelt' : KL.label(e.kind) + ' erkannt';
+          return '<div class="kl-ev" style="display:grid;grid-template-columns:minmax(46px,max-content) 22px minmax(0,1fr) auto;align-items:start;column-gap:8px;position:relative;padding:9px 0;">'
+            + '<div style="font-size:13px;font-weight:600;color:' + sub + ';font-variant-numeric:tabular-nums;padding-top:2px;white-space:nowrap;">'
+            + (day ? '<div style="font-size:11.5px;font-weight:700;margin:-1px 0 1px;">' + esc(tr(day)) + '</div>' : '') + esc(clock(e.at)) + '</div>'
+            + '<div style="position:relative;height:100%;display:flex;justify-content:center;">'
+            + (last ? '' : '<div style="position:absolute;top:16px;bottom:-18px;width:2px;border-radius:2px;background:' + dim + ';"></div>')
+            + '<div style="position:relative;width:12px;height:12px;border-radius:50%;margin-top:4px;background:' + (ring ? ringHue : detHue) + ';box-shadow:0 0 0 3px ' + rowBg + ';"></div></div>'
+            + '<div style="min-width:0;"><div style="font-size:14.5px;font-weight:' + (ring ? 700 : 600) + ';color:' + ink + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(tr(what)) + '</div>'
+            + (dw ? '' : '<div style="font-size:12.5px;font-weight:500;color:' + sub + ';margin-top:1px;white-space:nowrap;">' + esc(tr(KL.ago(e.at, now))) + '</div>') + '</div>'
             // Letztes Klingeln, solange die Kachel es meldet (HOLD, 10 Min.): rechts „Neu“ in Schrift-Rot.
-            value: e === newest && now - e.at < HOLD ? 'Neu' : null,
-            valueTone: e === newest && now - e.at < HOLD ? 'var(--casora-color-red-text, var(--casora-color-red))' : null });
-        });
-        o2 = UI.label ? UI.label(head) : '';
-        days.forEach(function (d, i) { o2 += dayLbl(d.t, i === 0) + UI.group(d.rows, null); });
+            + (isNew ? '<div style="font-size:13px;font-weight:700;padding-top:2px;color:var(--casora-color-red-text, var(--casora-color-red));">' + esc(tr('Neu')) + '</div>' : '<div></div>')
+            + '</div>';
+        }).join('');
+        o2 = (UI.label ? UI.label(head) : '')
+          + '<div class="kl-verlauf" style="font-family:var(--primary-font-family, system-ui);background:' + rowBg + ';border-radius:var(--casora-popup-row-radius, 24px);padding:8px 16px 8px 12px;">' + body + '</div>';
         if (list.length > 8) o2 += pill(more[c.cam] ? 'Weniger anzeigen' : 'Mehr anzeigen', 'klingel-more:' + c.cam);
       }
       var media = KL.media(hass, c);

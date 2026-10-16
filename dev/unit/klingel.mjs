@@ -178,8 +178,10 @@ KL.forget(ID);
 KL.history(wsHass, c, null);
 await new Promise((r) => setTimeout(r, 0));
 let hist = n(KL.sec('hist', c, states, wsHass));
-assert.ok(/^<label Verlauf>/.test(hist) && /HEUTE|Heute/.test(hist) && /<group null>Hat geklingelt=Neu~\d\d:\d\d · vor 3 Min\./.test(hist), hist);
-assert.ok(/Paket erkannt=~/.test(hist) && /Aufnahmen=~In den Medien von Home Assistant@klingel-go:\/media-browser/.test(hist), hist);
+// Zeitleiste wie Person/Schloss: Uhrzeit | Punkt | Was + „vor …“, „Neu“ rechts beim frischen Klingeln.
+assert.ok(/^<label Verlauf><div class="kl-verlauf"/.test(hist) && />\d\d:\d\d<\/div>/.test(hist)
+  && /Hat geklingelt<\/div><div[^>]*>vor 3 Min\.<\/div><\/div><div[^>]*>Neu<\/div>/.test(hist), hist);
+assert.ok(/Paket erkannt/.test(hist) && /Aufnahmen=~In den Medien von Home Assistant@klingel-go:\/media-browser/.test(hist), hist);
 // Leer und Fehler
 const emptyHass = Object.assign({}, hass, { callWS: () => Promise.resolve({}) });
 KL.forget(ID); KL.history(emptyHass, c, null); await new Promise((r) => setTimeout(r, 0));
