@@ -377,7 +377,7 @@ assert.ok(/Nichts gefunden=~Filter ändern oder zurücksetzen/.test(none) && /fr
 F.setFilter(ID, 'reset');
 // Kachel: ungesehene Alarme nach „Person erkannt“; Gesehen markiert und meldet es Frigate.
 assert.equal(F.unseen(ID), 2, '2 ungesehene Alarme');
-assert.equal(n(F.tileText(F.status(c, states))), '2 neue Alarme'); assert.equal(n(F.tileText(F.status(c, states), null, 150)), '2 Alarme', 'sehr schmal (Handy)');
+assert.equal(n(F.tileText(F.status(c, states))), '2 neue Alarme'); assert.equal(n(F.tileText(F.status(c, states), null, 175)), '2 Alarme', 'sehr schmal (Handy ~175 px)');
 assert.equal(n(F.tileText(F.status(c, states), null, 228)), '2 neue Alarme', 'Tablet-Kachel (~230 px): sinnerhaltend „2 neue Alarme“');
 assert.ok(/^<line>2 neue Alarme\|/.test(n(F.sec('hero', c, states, rvWs))), 'Kopf');
 await F.seen(rvWs, c, 'r2');

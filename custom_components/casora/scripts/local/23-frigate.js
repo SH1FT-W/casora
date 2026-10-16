@@ -233,15 +233,15 @@
   // Kachel: Erkennung aus · jetzt erkannt · ungesehene Alarme · letzte Erkennung (bis 24 Std.) – sonst null (Kamera-Text).
   // Trenner „ · “ wie in der Liste; schmal (Handy) mit Uhrzeit „Person 14:23“ ohne Trenner – casoraStateFit kürzte an
   // „ · “ zu „Person +1“ – und keine Dauer-Verwechslung wie bei „Auto, 1 Min.“ (Nutzerprüfung Runde 2).
-  // short: true/false oder die Breite der Kachel in px (unter 240 schmal, unter 170 sehr schmal).
+  // short: true/false oder die Breite der Kachel in px (unter 240 schmal, unter 200 sehr schmal: Handy ~175 px).
   F.tileText = function (s, now, short) {
     if (!s || s.dead || s.off) return null;
-    var w = typeof short === 'number' ? short : short ? 200 : 999;
+    var w = typeof short === 'number' ? short : short ? 180 : 999;
     short = w < 240;
     if (s.detectOff) return short ? 'Erkennung aus' : 'Objekterkennung aus';
     if (s.live.length) return short && s.live.length > 1 ? s.live.length + ' Objekte erkannt' : who(s.live);
     // Nur die sehr schmale Handy-Kachel kürzt zu „2 Alarme“ (sonst „1 neuer Al…“); Tablet (~230 px) sagt „2 neue Alarme“.
-    if (s.unseen) return w < 170 ? (s.unseen === 1 ? '1 Alarm' : s.unseen + ' Alarme') : newAlerts(s.unseen);
+    if (s.unseen) return w < 200 ? (s.unseen === 1 ? '1 Alarm' : s.unseen + ' Alarme') : newAlerts(s.unseen);
     if (s.last && (now || Date.now()) - s.last.at < 86400000) return F.label(s.last.o) + (short ? ' ' + clock(s.last.at) : ' · ' + F.ago(s.last.at, now));
     return null;
   };
