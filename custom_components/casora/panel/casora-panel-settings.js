@@ -907,6 +907,16 @@
           if ((h.themes || []).length) {
             item(list, "", t("Hemma theme"), h.themes.join("\n") + "\n" + t("If it was your default, Casora takes over."));
           }
+          // Alte YAML-Dashboards/-Vorlagen (Hemma ohne HACS) – nur, wenn kein YAML-Dashboard sie lädt.
+          const yf = h.yaml_files || [];
+          if (yf.length) {
+            item(list, "", t("Old Hemma dashboard files ({1})").replace("{1}", yf.length),
+              yf.slice(0, 4).join("\n") + (yf.length > 4 ? "\n" + t("… and {1} more").replace("{1}", yf.length - 4) : "")
+                + "\n" + t("No dashboard loads them any more. Included in the backup."));
+          } else if ((h.yaml_held || []).length) {
+            item(list, "info", t("Stays: old Hemma dashboard files"),
+              t("A YAML dashboard still loads them:") + "\n" + h.yaml_held.join("\n"));
+          }
           const www = el("div");
           list.appendChild(www);
           const paintWww = () => {
@@ -1011,6 +1021,7 @@
       helpers: ["Hemma helpers, scripts and automations", null],
       helpers_manual: ["Remove Hemma's helpers from these files yourself:", null],
       themes: ["Hemma theme", null],
+      yaml: ["Old Hemma dashboard files", null],
       files: ["Old files in www/hemma", null],
     };
     const STATUS_ICON = {
@@ -1126,6 +1137,9 @@
               n(s.carried) ? t("Values carried over: {1}").replace("{1}", s.carried.join(", ")) : null, err || null].filter(Boolean).join("\n") || null);
         case "theme":
           return item(list, tone, s.ok ? t("Hemma theme removed") : t("Hemma theme not removed"), err || (s.removed || []).join("\n"));
+        case "yaml":
+          return item(list, tone, s.ok ? t("Old Hemma dashboard files removed") : t("Old Hemma dashboard files not removed"),
+            err || t("{1} files").replace("{1}", (s.removed || []).length));
         case "own": {
           const r = ownItem(list, s.files, s.entities);
           if (n(s.resources)) {

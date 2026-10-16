@@ -386,6 +386,37 @@ async def main():
         out = await hc.async_remove(hass, [], keep_files=True)
         check("reines Hemma-Paket gelöscht", not os.path.exists(os.path.join(tmp, "packages/hemma_helpers.yaml")))
 
+    # ── Alte YAML-Dashboards/-Vorlagen (Hemma ohne HACS) ─────────────────────
+    with tempfile.TemporaryDirectory() as tmp:
+        setup_tmp(tmp)
+        write(os.path.join(tmp, "dashboards/hemma/hemma.yaml"), "views: []\n")
+        write(os.path.join(tmp, "dashboards/templates/button_cards/cards/hemma_light.yaml"), "hemma_light: {}\n")
+        write(os.path.join(tmp, "dashboards/templates/includes/hemma_navbar_mobile.yaml"), "x: 1\n")
+        write(os.path.join(tmp, "dashboards/templates/button_cards/cards/meine_karte.yaml"), "meine: {}\n")
+        write(os.path.join(tmp, "dashboards/backups/eigene.json"), "{}")
+        hass, _ = make_hass(tmp, Resources([]), {}, [])
+        st = await hc.async_status(hass)
+        check("YAML-Reste erkannt (nur hemma*-Dateien)", st["yaml_files"] == [
+            "dashboards/hemma/hemma.yaml", "dashboards/templates/button_cards/cards/hemma_light.yaml",
+            "dashboards/templates/includes/hemma_navbar_mobile.yaml"] and st["leftovers"])
+        # Lädt ein YAML-Dashboard sie noch, bleiben sie.
+        write(os.path.join(tmp, "configuration.yaml"), "lovelace:\n  dashboards:\n    hemma-y:\n      filename: dashboards/hemma/hemma.yaml\n")
+        st = await hc.async_status(hass)
+        check("YAML-Dashboard in Gebrauch: bleibt", st["yaml_files"] == [] and st["yaml_held"] == ["configuration.yaml"])
+        os.remove(os.path.join(tmp, "configuration.yaml"))
+        out = await hc.async_remove(hass, [], keep_files=True)
+        steps = {s["step"]: s for s in out["steps"]}
+        names = zipfile.ZipFile(out["backup"]).namelist()
+        check("YAML-Reste entfernt, Eigenes bleibt", steps["yaml"]["ok"] and len(steps["yaml"]["removed"]) == 3
+              and not os.path.exists(os.path.join(tmp, "dashboards/hemma"))
+              and not os.path.exists(os.path.join(tmp, "dashboards/templates/includes"))
+              and os.path.isfile(os.path.join(tmp, "dashboards/templates/button_cards/cards/meine_karte.yaml"))
+              and os.path.isfile(os.path.join(tmp, "dashboards/backups/eigene.json")))
+        check("YAML-Reste in der Sicherung", "dashboards/hemma/hemma.yaml" in names
+              and "dashboards/templates/button_cards/cards/hemma_light.yaml" in names)
+        st = await hc.async_status(hass)
+        check("danach kein YAML-Rest", st["yaml_files"] == [])
+
     # ── HACS + YAML-Ressourcen ───────────────────────────────────────────────
     with tempfile.TemporaryDirectory() as tmp:
         setup_tmp(tmp)

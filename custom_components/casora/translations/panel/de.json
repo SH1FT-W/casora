@@ -2424,7 +2424,15 @@
     "Use Phone Version": "Wie am Handy",
     "Settings that only one side has are added to the other.": "Was nur eine Seite hat, kommt auch auf die andere.",
     "Keep on Both": "Auf beiden übernehmen",
-    "Percent (%)": "Prozent (%)"
+    "Percent (%)": "Prozent (%)",
+    "Old Hemma dashboard files ({1})": "Alte Hemma-Dashboard-Dateien ({1})",
+    "No dashboard loads them any more. Included in the backup.": "Kein Dashboard lädt sie mehr. In der Sicherung enthalten.",
+    "Stays: old Hemma dashboard files": "Bleibt: alte Hemma-Dashboard-Dateien",
+    "A YAML dashboard still loads them:": "Ein YAML-Dashboard lädt sie noch:",
+    "Old Hemma dashboard files": "Alte Hemma-Dashboard-Dateien",
+    "Old Hemma dashboard files removed": "Alte Hemma-Dashboard-Dateien entfernt",
+    "Old Hemma dashboard files not removed": "Alte Hemma-Dashboard-Dateien nicht entfernt",
+    "{1} files": "{1} Dateien"
   },
   "patterns": [
     [

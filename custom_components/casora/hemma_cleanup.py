@@ -29,7 +29,9 @@ Datei dort nicht in www/casora liegt (Casora liest es sonst weiter als Rückfall
 
 Was weggeräumt wird, richtet sich nach der Herkunft, nicht nach dem Namen: Hemmas
 Helfer-Paket (hemma_package.py, feste Liste aus allen Hemma-Versionen), sein Theme
-(themes/hemma, nur Themes namens „Hemma…“) und seine Schrift-Ressource. Eigene
+(themes/hemma, nur Themes namens „Hemma…“), seine Schrift-Ressource und die alten
+YAML-Dashboards/-Vorlagen einer Installation ohne HACS (dashboards/hemma, dashboards/templates,
+nur hemma*-Dateien und nur, wenn keine YAML-Datei der Konfiguration sie noch nennt). Eigene
 Automationen, Pakete oder Sensoren mit „hemma“ im Namen bleiben und werden im Dialog
 nur genannt. Werte der Hemma-Helfer gehen vorher auf die Casora-Helfer über, solange
 dort noch der Ausgangswert steht.
@@ -73,6 +75,8 @@ HACS_NAMES = ("willsanderson/hemma",)
 # Hemmas Skripte und seine Schrift (Casora bringt eigene Schriften mit).
 HEMMA_RESOURCE_PREFIXES = ("/hemma_scripts/", "/local/hemma/scripts/", "/local/hemma/fonts/")
 THEMES_HEMMA = "themes/hemma"
+# Alte Hemma-Installation ohne HACS: YAML-Dashboards und Vorlagen unter /config/dashboards.
+YAML_HEMMA = ("dashboards/hemma", "dashboards/templates")
 CASORA_DEFAULT_THEME = "Casora"
 # Casoras eigene Legacy-Looks – heißen wie Hemma, sind aber kein Hemma-Theme.
 CASORA_HEMMA_LOOKS = ("hemma 1", "hemma 2")
@@ -727,6 +731,39 @@ def _theme_files(config_dir: str) -> list[str]:
     return sorted(out)
 
 
+def _yaml_files(config_dir: str) -> dict:
+    """Hemmas alte YAML-Dateien (dashboards/hemma/hemma*.yaml, dashboards/templates/…/hemma_*.yaml).
+
+    held: eine YAML-Datei der Konfiguration (configuration.yaml, Pakete, ui-lovelace.yaml)
+    nennt die Ordner noch – dann läuft ein YAML-Dashboard damit, nichts wird angefasst."""
+    files = []
+    for sub in YAML_HEMMA:
+        base = os.path.join(config_dir, sub)
+        if not os.path.isdir(base):
+            continue
+        for root, _dirs, names in os.walk(base):
+            for f in names:
+                if f.lower().startswith("hemma") and f.endswith((".yaml", ".yml")):
+                    files.append(os.path.relpath(os.path.join(root, f), config_dir).replace(os.sep, "/"))
+    if not files:
+        return {"files": [], "held": []}
+    held = []
+    tops = [f for f in os.listdir(config_dir) if f.endswith((".yaml", ".yml"))]
+    pk = os.path.join(config_dir, "packages")
+    if os.path.isdir(pk):
+        for root, _dirs, names in os.walk(pk):
+            tops += [os.path.relpath(os.path.join(root, f), config_dir) for f in names if f.endswith((".yaml", ".yml"))]
+    for rel in tops:
+        try:
+            with open(os.path.join(config_dir, rel), encoding="utf-8", errors="replace") as fh:
+                text = fh.read()
+        except OSError:
+            continue
+        if any(sub in text for sub in YAML_HEMMA):
+            held.append(rel.replace(os.sep, "/"))
+    return {"files": sorted(files), "held": sorted(held)}
+
+
 def _storage_helpers(hass: HomeAssistant) -> list[tuple[str, str]]:
     """Hemma-Paket-Helfer, die als UI-Helfer (.storage) angelegt sind."""
     out = []
@@ -759,7 +796,7 @@ async def _extras(hass: HomeAssistant) -> dict:
 
     def _fs() -> dict:
         return {"package": pkg.scan(config_dir), "themes": _theme_files(config_dir),
-                "package_files": pkg.package_files(config_dir)}
+                "yaml": _yaml_files(config_dir), "package_files": pkg.package_files(config_dir)}
 
     fs = await hass.async_add_executor_job(_fs)
     items = [it for p in fs["package"] if not p["error"] for it in p["items"]]
@@ -772,6 +809,9 @@ async def _extras(hass: HomeAssistant) -> dict:
         "package_entities": yaml_ents,
         "storage_helpers": [f"{d}.{k}" for d, k in storage],
         "themes": fs["themes"],
+        # Nur, wenn kein YAML-Dashboard sie mehr lädt; sonst bleiben sie und werden genannt.
+        "yaml_files": [] if fs["yaml"]["held"] else fs["yaml"]["files"],
+        "yaml_held": fs["yaml"]["held"],
         "own": _own_named(hass, removed, fs["package_files"], gone_files),
     }
 
@@ -869,11 +909,13 @@ async def async_status(hass: HomeAssistant) -> dict:
         "installed": fs["installed"] or bool(entries),
         # Hemma ist weg, aber Teile davon noch da (Paket-Helfer, Theme, www/hemma, Ressourcen).
         "leftovers": bool(extras["package"] or extras["storage_helpers"] or extras["themes"] or www_left
-                          or hemma_res),
+                          or extras["yaml_files"] or hemma_res),
         "package": [{"file": p["file"], "delete": p["delete"], "error": p["error"],
                      "items": [f'{i["domain"]}.{i["key"]}' for i in p["items"]]} for p in extras["package"]],
         "storage_helpers": extras["storage_helpers"],
         "themes": extras["themes"],
+        "yaml_files": extras["yaml_files"],
+        "yaml_held": extras["yaml_held"],
         # Eigene Module (Ressourcen) bleiben registriert – im Dialog unter „Bleibt“.
         "own": {**extras["own"], "resources": own_res},
         "folder": fs["installed"],
@@ -947,7 +989,7 @@ async def async_remove(hass: HomeAssistant, remove_dashboards: list[str] | None,
         dom, key = eid.split(".", 1)
         coll = _collection(hass, dom)
         storage_cfg[eid] = dict(((getattr(coll, "data", None) or {}).get(key)) or {})
-    extra_files = [p["file"] for p in extras["package"] if not p["error"]] + extras["themes"]
+    extra_files = [p["file"] for p in extras["package"] if not p["error"]] + extras["themes"] + extras["yaml_files"]
 
     # a) Sicherung – ohne sie passiert nichts.
     stamp = dt_util.now().strftime("%Y-%m-%d_%H%M%S")
@@ -1118,6 +1160,26 @@ async def async_remove(hass: HomeAssistant, remove_dashboards: list[str] | None,
             pass
         steps.append({"step": "theme", "ok": not errs, "removed": extras["themes"], "error": "; ".join(errs) or None})
 
+    # g2) Alte YAML-Dashboards und -Vorlagen (Hemma ohne HACS), leere Ordner danach weg.
+    if extras["yaml_files"]:
+        def _rm_yaml() -> list[str]:
+            gone = []
+            for rel in extras["yaml_files"]:
+                os.remove(os.path.join(config_dir, rel))
+                gone.append(rel)
+            for sub in YAML_HEMMA:
+                base = os.path.join(config_dir, sub)
+                for root, _dirs, _files in os.walk(base, topdown=False):
+                    if os.path.isdir(root) and not os.listdir(root):
+                        os.rmdir(root)
+            return gone
+
+        try:
+            gone = await hass.async_add_executor_job(_rm_yaml)
+            steps.append({"step": "yaml", "ok": True, "removed": gone})
+        except OSError as err:
+            steps.append({"step": "yaml", "ok": False, "removed": [], "error": str(err)})
+
     # h) www/hemma – bleibt, außer ausdrücklich gewünscht und nichts braucht es mehr.
     www = os.path.join(config_dir, WWW_HEMMA)
     if keep_files:
@@ -1191,6 +1253,8 @@ async def async_leftovers(hass: HomeAssistant, rec: dict | None = None) -> list[
         out.append({"kind": "helpers_manual", "items": manual})
     if st["themes"]:
         out.append({"kind": "themes", "items": st["themes"]})
+    if st["yaml_files"]:
+        out.append({"kind": "yaml", "items": st["yaml_files"]})
     f = st["files"]
     gone = {u for b in boards for u in (b["url_path"], b["mobile"]) if u}
     if (rec.get("keep_files") is False and f["www_hemma"]
