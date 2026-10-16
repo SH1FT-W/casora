@@ -185,13 +185,13 @@ const FS = {
 const fh = { states: FS, entities: Object.fromEntries(Object.keys(FS).map((k) => [k, fe(k)])),
   devices: { d_hof: { id: 'd_hof', name: 'Hof', configuration_url: 'http://frigate.local:5000/cameras/hof' } }, panels: {} };
 ex = H.extras(fh, 'camera.hof', 'casora_camera casora_frigate', {});
-assert.deepEqual(ex.map((x) => x.t), ['Erkennung aus', 'Aufnahme an', 'Letzte Erkennung', 'In Frigate öffnen']);
+assert.deepEqual(ex.map((x) => x.t), ['Erkennung ausschalten', 'Aufnahme einschalten', 'Letzte Erkennung', 'In Frigate öffnen']);
 assert.ok(ex[0].ask && ex[0].svc === 'switch.turn_off' && ex[0].entity === 'switch.hof_detect', 'Erkennung aus fragt nach');
 assert.ok(!ex[1].ask && ex[1].svc === 'switch.turn_on', 'Aufnahme an ohne Rückfrage');
 m = H.model(FS['camera.hof'], { tapPopup: true, extra: ex, states: FS });
-assert.deepEqual(m.acts.map((x) => x.t), ['Live ansehen', 'Erkennung aus', 'Aufnahme an', 'Letzte Erkennung', 'In Frigate öffnen']);
+assert.deepEqual(m.acts.map((x) => x.t), ['Live ansehen', 'Erkennung ausschalten', 'Aufnahme einschalten', 'Letzte Erkennung', 'In Frigate öffnen']);
 assert.deepEqual(H.extras(fh, 'camera.hof', 'casora_camera', {}), [], 'normale Kamera-Kachel: keine Frigate-Einträge');
-// Reolink-Türklingel (24-klingel.js): Live (Kamera), Ton hören, Schnellantworten mit Rückfrage.
+// Reolink-Türklingel (24-klingel.js): Live (Kamera), Mithören, Schnellantworten (Nachricht als Beschriftung) mit Rückfrage; oben „Details“.
 new Function(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/24-klingel.js', import.meta.url), 'utf8'))();
 const KS = {
   'camera.pforte_sub': st('camera.pforte_sub', 'idle', { supported_features: 2 }),
@@ -203,9 +203,11 @@ const TK = { 'camera.pforte_sub': 'sub', 'binary_sensor.pforte_besucher': 'visit
 const kh = { states: KS, entities: Object.fromEntries(Object.keys(KS).map((k) => [k, { entity_id: k, platform: 'reolink', device_id: 'd_tuer', translation_key: TK[k] }])),
   devices: { d_tuer: { id: 'd_tuer', name: 'Pforte' } } };
 ex = H.extras(kh, 'camera.pforte_sub', 'casora_camera casora_reolink_doorbell', {});
-assert.deepEqual(ex.map((x) => x.t + (x.sub ? ':' + x.sub : '')), ['Ton hören', 'Schnellantwort:Komme sofort']);
+assert.deepEqual(ex.map((x) => x.t + (x.sub ? ':' + x.sub : '')), ['Mithören', 'Komme sofort']);
 assert.ok(ex[1].ask && ex[1].svc === 'select.select_option' && ex[1].data.option === 'Komme sofort', 'Schnellantwort fragt nach');
 m = H.model(KS['camera.pforte_sub'], { tapPopup: true, extra: ex, states: KS });
-assert.deepEqual(m.acts.map((x) => x.t), ['Live ansehen', 'Ton hören', 'Schnellantwort']);
+assert.deepEqual(m.acts.map((x) => x.t), ['Live ansehen', 'Mithören', 'Komme sofort']);
+assert.equal(m.main.t, 'Öffnen', 'ohne Kachelart: Öffnen wie Tippen');
+assert.equal(H.model(KS['camera.pforte_sub'], { tapPopup: true, extra: ex, states: KS, kind: 'doorbell' }).main.t, 'Details', 'Klingel: „Details“ statt „Öffnen“ (klang nach Tür öffnen)');
 assert.deepEqual(H.extras(kh, 'camera.pforte_sub', 'casora_camera', {}), [], 'normale Kamera-Kachel: keine Klingel-Einträge');
 console.log('halten: ok');

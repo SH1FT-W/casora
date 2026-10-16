@@ -227,6 +227,8 @@
     // Info-Kacheln (nichts zu bedienen): oben „Öffnen“ wie Tippen, darunter die Wege (Menü auf allen Kacheln).
     if (!m.main && !m.quick.length && !m.timer && (o.tapPopup || o.tapOpens)) m.main = { t: 'Öffnen', ic: 'mdi:arrow-top-right', open: true };
     if (o.kind === 'updates' && m.main && m.main.open) { m.main.t = 'Alle Updates'; m.main.ic = 'mdi:update'; }
+    // Türklingel: „Öffnen“ klänge nach Tür öffnen – hier heißt es „Details“.
+    if (o.kind === 'doorbell' && m.main && m.main.open) { m.main.t = 'Details'; m.main.ic = 'mdi:card-text-outline'; }
     // Wege: „Details“ nur, wenn Tippen nicht schon das Popup öffnet; Gerät und Bearbeiten nur für Admins.
     if (!o.tapPopup) m.rows.push({ key: 'popup', t: 'Details', ic: 'mdi:card-text-outline' });
     if (dom !== 'camera') m.rows.push({ key: 'history', t: 'Verlauf', ic: 'mdi:history' });
@@ -380,9 +382,10 @@
 
   var html = function (m, c) {
     var out = '';
-    var row = function (key, t, ic, cls, sub, i) {
+    // lit: selbst gewählter Text (Nachricht einer Klingel) – nicht übersetzen.
+    var row = function (key, t, ic, cls, sub, i, lit) {
       return '<div class="row' + (cls ? ' ' + cls : '') + '" role="menuitem" tabindex="-1" data-k="' + esc(key) + '"' + (i != null ? ' data-i="' + i + '"' : '') + '>'
-        + '<div class="ic"><ha-icon icon="' + esc(ic) + '"></ha-icon></div><span>' + esc(T(t)) + '</span>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div>';
+        + '<div class="ic"><ha-icon icon="' + esc(ic) + '"></ha-icon></div><span' + (lit ? ' data-no-i18n' : '') + '>' + esc(lit ? t : T(t)) + '</span>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div>';
     };
     // Handy: Kopf mit Name und Zustand nur, wenn das Blatt die Kachel verdeckt (sonst steht beides scharf darüber).
     if (c.phone) out += '<div class="head"><b>' + esc(c.name) + '</b>' + (c.state ? '<span>' + esc(c.state) + '</span>' : '') + '</div>';
@@ -431,7 +434,7 @@
     }
     // Wenige Linien wie in den übrigen Menüs: Bedienung | abgesetzte Aktionen und Wege | Bearbeiten.
     var blocks = [out, '', ''];
-    m.acts.forEach(function (x, i) { blocks[1] += row(x.key, x.t, x.ic, x.ask && x.svc === 'lock.open' ? 'quiet' : '', x.sub || null, i); });
+    m.acts.forEach(function (x, i) { blocks[1] += row(x.key, x.t, x.ic, x.ask && x.svc === 'lock.open' ? 'quiet' : '', x.sub || null, i, x.lit); });
     m.rows.forEach(function (r) { blocks[r.key === 'edit' ? 2 : 1] += row(r.key, r.t, r.ic); });
     out = blocks.filter(Boolean).join('<div class="sep"></div>');
     return out;
@@ -688,6 +691,7 @@
     o.extra = extras(h, id, tpl, VP);
     o.info = progInfo(h, id, tpl, VP);
     if (/\bcasora_energy\b/.test(tpl)) o.kind = 'energy';
+    if (/\bcasora_reolink_doorbell\b/.test(tpl)) o.kind = 'doorbell';
     if (/\bcasora_updates\b/.test(tpl)) { o.kind = 'updates'; o.updCheck = !!(window._casoraUpdCheck && window._casoraUpdCheck.run); }
     return H.model(id ? h.states[id] : null, o);
   };

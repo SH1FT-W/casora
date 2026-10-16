@@ -59,9 +59,13 @@ entities[ID].platform = 'casora_mock';
 assert.equal(KL.is(hass, ID), true, 'Test-HA (Mock) zählt mit');
 entities[ID].platform = 'reolink';
 
-// Finder
+// Finder – beim HA-Start (Registry da, Zustände noch nicht) nichts merken, sonst nie „Hat geklingelt“ (C2).
+const allStates = Object.assign({}, states);
+const early = KL.find(Object.assign({}, hass, { states: {} }), ID);
+assert.equal(early.visitor, null, 'ohne Zustände kein Klingelknopf');
 const c = KL.find(hass, ID);
-assert.equal(c.visitor, 'binary_sensor.pforte_besucher');
+assert.equal(c.visitor, 'binary_sensor.pforte_besucher', 'Zustände da: neu gesucht (nicht der leere Fund vom Start)');
+void allStates;
 assert.equal(c.motion, 'binary_sensor.pforte_bewegung', 'Bewegung ohne translation_key über device_class');
 assert.deepEqual(c.order, ['person', 'package', 'pet'], 'Reihenfolge Person, Paket, Tier (animal = Tier)');
 assert.equal(c.snap, 'camera.pforte_snapshots');
@@ -95,9 +99,10 @@ await new Promise((r) => setTimeout(r, 0));
 assert.equal(asked.type, 'history/history_during_period'); assert.ok(asked.minimal_response && asked.no_attributes);
 assert.ok(asked.entity_ids.includes('binary_sensor.pforte_besucher') && asked.entity_ids.includes('binary_sensor.pforte_paket'));
 s = KL.status(c, states, NOW);
-assert.equal(s.ring, ev[0].at); assert.equal(n(KL.tileText(s, NOW)), 'Geklingelt vor 3 Min.');
+assert.equal(s.ring, ev[0].at); assert.equal(n(KL.tileText(s, NOW)), 'Geklingelt · vor 3 Min.');
 assert.ok(KL.hot(s), 'hervorgehoben');
-assert.equal(KL.tileText(s, NOW, true), 'Geklingelt', 'schmale Handy-Kachel: Kurzform');
+assert.ok(/^Geklingelt \d\d:\d\d$/.test(KL.tileText(s, NOW, true)), 'schmale Handy-Kachel: mit Uhrzeit, nicht nur „Geklingelt“');
+assert.equal(KL.tileText(s, ev[0].at + 90000, true), 'Hat geklingelt', 'die ersten 2 Min.: „Hat geklingelt“, auch schmal');
 // Personen zweimal innerhalb einer Minute → einmal.
 assert.equal(KL.events(c, NOW).filter((e) => e.kind === 'person').length, 1);
 // Nach HOLD (10 Min.) nicht mehr „geklingelt“.
@@ -122,7 +127,7 @@ KL.forget(ID);
 states['switch.pforte_privat'].state = 'on'; states[ID].state = 'unavailable';
 s = KL.status(c, states, NOW);
 assert.equal(KL.tileText(s, NOW), 'Privatsphäre an'); assert.equal(KL.hot(s), false);
-assert.deepEqual(KL.hold(hass, ID).map((x) => x.t), ['Schnellantwort', 'Schnellantwort'], 'ohne Bild kein „Ton hören“');
+assert.deepEqual(KL.hold(hass, ID).map((x) => x.t), [], 'Privatsphäre: weder Mithören noch Schnellantworten');
 states['switch.pforte_privat'].state = 'off'; states[ID].state = 'idle';
 
 // Popup-Bereiche (UI-Bausteine als Platzhalter)
@@ -134,23 +139,38 @@ window._casoraUI = {
   label: (t) => '<label ' + t + '>',
   slider: (o) => '<slider ' + o.label + '=' + o.value + ' ' + JSON.stringify(o.svc.scale) + '>',
   segments: (items, label) => '<seg ' + label + '>' + items.map((i) => i.label + (i.active ? '*' : '')).join(',') + '</seg>',
-  more: (id, html, o) => '<more ' + o.label + ' ' + o.count + '>' + html + '</more>',
+  more: (id, html, o) => '<more ' + o.label + ' ' + o.count + ' ' + o.less + '>' + html + '</more>',
 };
 let h = n(KL.sec('hero', c, states, hass));
 assert.ok(/^<line>Bereit\|Akku 15 %!warn<\/line>$/.test(h), h);
 states['switch.pforte_ton'].state = 'off';
-assert.ok(/Ton aus/.test(n(KL.sec('hero', c, states, hass))), 'Ton an der Klingel aus steht im Kopf');
+assert.ok(!/Ton aus/.test(n(KL.sec('hero', c, states, hass))), 'Ton aus: nicht im Kopf (Hinweis unter dem Bild sagt es)');
 states['switch.pforte_ton'].state = 'on';
 const say = n(KL.sec('say', c, states, hass));
 assert.ok(/<group Schnellantworten>Komme sofort=~!Abspielen#select\.select_option\{"option":"Komme sofort"\}/.test(say), say);
 assert.ok(/Sirene=~Laut an der Tür, 10 Sekunden!Auslösen#siren\.turn_on\{"duration":10\}/.test(say), say);
+// Privatsphäre: Schnellantworten und Sirene ruhen (ohne Dienst).
+states['switch.pforte_privat'].state = 'on';
+const sayP = n(KL.sec('say', c, states, hass));
+assert.ok(!/#select|#siren/.test(sayP) && /Sirene=~Bei Privatsphäre aus/.test(sayP), sayP);
+states['switch.pforte_privat'].state = 'off';
 const mo = n(KL.sec('more', c, states, hass));
-assert.ok(/<more Einstellungen 4>/.test(mo), mo);
+assert.ok(/<more Einstellungen undefined Einstellungen>/.test(mo), 'ohne Zähler, aufgeklappt bleibt „Einstellungen“');
 assert.ok(/<slider Klingelton=40 \[0,100,1\]>.*<slider Sprechen=50.*<slider Lautsprecher=80/.test(mo), 'Lautstärken in der Reihenfolge Klingel, Sprechen, Lautsprecher');
 assert.ok(/Ton aufnehmen=An~Ohne Ton hörst du die Tür nicht!Ausschalten/.test(mo) && /Klingelton an der Tür=An~[^!]/.test(mo), mo);
 assert.ok(/Privatsphäre=Aus~Kamera und Ton aus!Einschalten/.test(mo), 'Privatsphäre einschalten fragt nach');
+states['switch.pforte_privat'].state = 'on';
+assert.ok(/Privatsphäre=An~Kamera und Ton aus!Ausschalten/.test(n(KL.sec('more', c, states, hass))), 'und ausschalten auch (gleiche Logik)');
+states['switch.pforte_privat'].state = 'off';
 assert.ok(/<seg Licht am Klingelknopf>Aus,Automatisch,Immer an\*<\/seg>/.test(mo), 'always/alwayson einmal');
-assert.ok(/Automatische Antwort=Aus~/.test(mo) && /Akku=15 %/.test(mo) && /WLAN=Schwach~-72 dBm/.test(mo) && /Bild=Schwarz-Weiß/.test(mo), mo);
+assert.ok(/Automatische Antwort=Aus~/.test(mo) && /Akku=15 %/.test(mo) && /WLAN=Schwach~\u221272 dBm/.test(mo) && /Nachtsicht=An~Bild in Schwarz-Weiß/.test(mo), mo);
+// Status-LED als light.* (C4): Dienst in der Domain der Entität, nicht switch.*.
+add('light.pforte_led', 'on', {}, 'status_led');
+KL.forget(ID);
+const cl = KL.find(Object.assign({}, hass, { entities: Object.assign({}, entities), states: Object.assign({}, states) }), ID);
+assert.equal(cl.ledLight, 'light.pforte_led');
+assert.ok(/Status-LED=An~[^#]*#light\.turn_off/.test(n(KL.sec('more', cl, states, hass))), 'Status-LED schaltet über light.turn_off');
+delete states['light.pforte_led']; delete entities['light.pforte_led'];
 // Verlauf: lädt … dann Liste mit „Neu“ beim frischen Klingeln, Aufnahmen über die Reolink-Medienquelle.
 const pend = Object.assign({}, hass, { callWS: () => new Promise(() => {}) });
 assert.ok(/Wird geladen/.test(KL.sec('hist', c, states, pend)), 'lädt');
@@ -158,7 +178,7 @@ KL.forget(ID);
 KL.history(wsHass, c, null);
 await new Promise((r) => setTimeout(r, 0));
 let hist = n(KL.sec('hist', c, states, wsHass));
-assert.ok(/<group Verlauf>Hat geklingelt=Neu~\d\d:\d\d · vor 3 Min\./.test(hist), hist);
+assert.ok(/^<label Verlauf>/.test(hist) && /HEUTE|Heute/.test(hist) && /<group null>Hat geklingelt=Neu~\d\d:\d\d · vor 3 Min\./.test(hist), hist);
 assert.ok(/Paket erkannt=~/.test(hist) && /Aufnahmen=~In den Medien von Home Assistant@klingel-go:\/media-browser/.test(hist), hist);
 // Leer und Fehler
 const emptyHass = Object.assign({}, hass, { callWS: () => Promise.resolve({}) });
@@ -170,8 +190,12 @@ assert.ok(/Verlauf nicht abrufbar/.test(KL.sec('hist', c, states, failHass)));
 
 // Halten-Menü: Ton hören, Schnellantworten mit Rückfrage.
 const m = KL.hold(hass, ID);
-assert.deepEqual(m.map((x) => x.t + (x.sub ? ':' + x.sub : '')), ['Ton hören', 'Schnellantwort:Komme sofort', 'Schnellantwort:Bitte warten']);
-assert.equal(m[1].svc, 'select.select_option'); assert.deepEqual(m[1].data, { option: 'Komme sofort' }); assert.ok(m[1].ask && m[1].done);
+assert.deepEqual(m.map((x) => x.t + (x.sub ? ':' + x.sub : '')), ['Mithören', 'Komme sofort', 'Bitte warten'], 'Nachricht selbst als Beschriftung');
+assert.equal(m[1].svc, 'select.select_option'); assert.deepEqual(m[1].data, { option: 'Komme sofort' }); assert.equal(m[1].lit, true);
+assert.equal(m[1].ask, '„Komme sofort“ an der Tür abspielen?'); assert.equal(m[1].done, 'Spielt ab: Komme sofort');
+states[ID].attributes = { supported_features: 0 };
+assert.ok(!KL.hold(hass, ID).some((x) => x.t === 'Mithören'), 'Standbild-Kamera: kein Mithören');
+states[ID].attributes = { supported_features: 2 };
 assert.deepEqual(KL.hold(hass, 'camera.carport_sub'), [], 'normale Kamera: nichts');
 
 // Sprechen: nimmt die Klingel das Mikrofon an? (Richtung der Audio-Spur aus Sicht der Klingel)
@@ -180,7 +204,11 @@ assert.equal(KL.talkAccepted(sdp('recvonly')), true); assert.equal(KL.talkAccept
 assert.equal(KL.talkAccepted(sdp('sendonly')), false, 'nur senden = kein Rückkanal');
 assert.equal(KL.talkAccepted(sdp('inactive')), false); assert.equal(KL.talkAccepted(sdp('recvonly', 0)), false, 'abgelehnt');
 assert.equal(KL.talkAccepted('v=0\r\nm=video 9 X 96\r\na=sendonly\r\n'), false, 'ohne Audio');
-assert.equal(KL.canTalk(), false, 'ohne Browser/HTTPS kein Sprechen-Knopf');
+assert.equal(KL.canTalk(), false, 'ohne Browser/HTTPS kein Sprechen');
+// go2rtc-Kandidaten ohne sdpMid/sdpMLineIndex (C3) – wie HAs Frontend der ersten Spur zuordnen.
+assert.deepEqual(KL.candidate('candidate:1 1 udp 1 10.0.0.2 5000 typ host'), { candidate: 'candidate:1 1 udp 1 10.0.0.2 5000 typ host', sdpMid: '0' });
+assert.deepEqual(KL.candidate({ candidate: 'candidate:2' }), { candidate: 'candidate:2', sdpMid: '0' });
+assert.deepEqual(KL.candidate({ candidate: 'candidate:3', sdpMLineIndex: 1 }), { candidate: 'candidate:3', sdpMLineIndex: 1 }, 'vorhandene Angabe bleibt');
 
 // Popup-Aufbau: Schnellantworten nur mit Nachrichten, Einstellungen als „Mehr“.
 window._casoraSoftKit = { secCard: (w, code) => ({ code }), layout: (o) => o };

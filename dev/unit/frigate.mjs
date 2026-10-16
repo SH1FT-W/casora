@@ -58,7 +58,17 @@ assert.equal(F.is(hass, ID), true, 'auch ohne Plattform über camera_name + clie
 entities[ID].platform = 'frigate';
 assert.equal(F.of(states['camera.andere'], hass, states), null);
 
-// Finder
+// Finder – beim HA-Start (Registry da, Zustand der Kamera noch nicht) nichts merken: sonst blieben Entitäten und
+// der Kameraname (Rückfall Entity-ID, falsch für frigate/events/get) für immer so (C2).
+const camSt = states[ID];
+delete states[ID];
+const early = F.find(hass, ID);
+assert.equal(early.name, 'gartentor', 'Rückfall Entity-ID');
+states[ID] = Object.assign({}, camSt, { attributes: Object.assign({}, camSt.attributes, { camera_name: 'tor_cam' }) });
+hass.states = Object.assign({}, states);
+assert.equal(F.find(hass, ID).name, 'tor_cam', 'Zustand da: neu gesucht, echter Kameraname');
+states[ID] = camSt; hass.states = states;
+F.find(Object.assign({}, hass, { entities: Object.assign({}, entities) }), ID);
 const c = F.find(hass, ID);
 assert.equal(c.name, 'gartentor'); assert.equal(c.inst, 'frigate');
 assert.deepEqual(c.order, ['person', 'car', 'cat'], 'Reihenfolge Person, Auto, Katze');
@@ -80,7 +90,8 @@ assert.ok(F.watch(c).includes('image.gartentor_car') && F.watch(c).includes('swi
 
 // Zustand und Kachel
 let s = F.status(c, states, NOW);
-assert.equal(s.last.o, 'person'); assert.equal(n(F.tileText(s, NOW)), 'Person, vor 3 Min.');
+assert.equal(s.last.o, 'person'); assert.equal(n(F.tileText(s, NOW)), 'Person · vor 3 Min.');
+assert.ok(/^Person \d\d:\d\d$/.test(n(F.tileText(s, NOW, true))), 'schmal: mit Uhrzeit');
 assert.equal(s.objs.car.at, NOW - 47 * 60000);
 states['binary_sensor.gartentor_car_occupancy'] = { state: 'on', attributes: {}, last_changed: iso(0.2) };
 states['sensor.gartentor_car_count'] = { state: '1', attributes: { unit_of_measurement: 'objects' } };
@@ -135,6 +146,8 @@ window._casoraUI = {
   esc: (t) => String(t), tokens: {},
   line: (m, r) => '<line>' + m + '|' + [].concat(r || []).join(';') + '</line>',
   group: (rows, label) => '<group ' + label + '>' + rows.map((r) => r.label + '=' + (r.value || '') + '~' + (r.sub || '') + (r.confirm ? '!' : '') + (r.entity ? '@' + r.entity : '')).join(';') + '</group>',
+  label: (t) => '<label ' + t + '>',
+  more: (id, html, o) => '<more ' + o.label + '/' + o.less + '>' + html + '</more>',
 };
 let h = n(F.sec('hero', c, states, hass));
 assert.ok(/^<line>Zuletzt: Person\|vor \d+ Min\.<\/line>$/.test(h), h);
@@ -144,6 +157,7 @@ states['switch.gartentor_recordings'].state = 'on';
 states['binary_sensor.gartentor_person_occupancy'] = { state: 'on', attributes: {}, last_changed: new Date().toISOString() };
 assert.ok(/^<line>Person erkannt\|/.test(n(F.sec('hero', c, states, hass))));
 const ctl = n(F.sec('ctl', c, states, hass));
+assert.ok(/^<more Einstellungen\/Einstellungen>/.test(ctl), 'Schalter unten unter „Einstellungen“');
 assert.ok(/<group Aufnahme & Erkennung>Aufnahme=An~!/.test(ctl) && /Schnappschüsse=An~[^!]/.test(ctl) && /Bewegungserkennung=An~Löst die Objekterkennung aus!/.test(ctl), ctl);
 assert.ok(!/(>|;)(Objekterkennung|Erkennung|Detect)=/.test(ctl), 'Erkennung ist der Hauptschalter im Kopf, nicht doppelt');
 const objs = n(F.sec('objs', c, states, hass));
@@ -178,13 +192,15 @@ F.sec('ev', c, states, okWs);
 await new Promise((r) => setTimeout(r, 10));
 let evh = n(F.sec('ev', c, states, okWs));
 assert.equal((evh.match(/@frigate-ev:/g) || []).length, 8, evh);
-assert.ok(/data-casora-mi="frigate-more:camera\.gartentor"[^>]*>.*Mehr anzeigen/.test(evh) && /Person=Läuft~/.test(evh), evh);
+assert.ok(/data-casora-mi="frigate-more:camera\.gartentor"[^>]*>.*Mehr anzeigen/.test(evh) && /Person=Live~/.test(evh), evh);
+assert.ok(/<label Letzte Erkennungen>/.test(evh) && /aria-pressed="true" data-casora-mi="frigate-flt:camera\.gartentor\|"/.test(evh)
+  && /data-casora-mi="frigate-flt:camera\.gartentor\|car"/.test(evh), 'Filter-Chips über der Liste: Alle (aktiv), Person, Auto');
 const hook = (id) => window._casoraMiHooks.some((fn) => fn(id));
 assert.ok(hook('frigate-more:camera.gartentor'));
 assert.equal((n(F.sec('ev', c, states, okWs)).match(/@frigate-ev:/g) || []).length, 10, 'Mehr: alle');
 assert.ok(hook('frigate-flt:camera.gartentor|person'));
 evh = n(F.sec('ev', c, states, okWs));
-assert.ok(/<group Letzte Erkennungen · Person>/.test(evh) && !/Auto=/.test(evh) && /Alle Objekte zeigen/.test(evh), evh);
+assert.ok(/aria-pressed="true" data-casora-mi="frigate-flt:camera\.gartentor\|person"/.test(evh) && !/Auto=/.test(evh), evh);
 assert.ok(/Person=[^;]*@frigate-flt:camera\.gartentor\|person/.test(n(F.sec('objs', c, states, okWs))), 'Objekt-Zeile filtert');
 assert.ok(hook('frigate-flt:camera.gartentor|person'));
 assert.equal(F.filter('camera.gartentor'), null, 'noch einmal: Filter aus');
@@ -192,12 +208,29 @@ assert.equal(F.filter('camera.gartentor'), null, 'noch einmal: Filter aus');
 // Halten-Menü: Erkennung/Aufnahme aus mit Rückfrage, an ohne; letzte Erkennung; Frigate öffnen.
 states['binary_sensor.gartentor_person_occupancy'].state = 'off';
 let m = F.hold(hass, ID);
-assert.deepEqual(m.map((x) => x.t), ['Erkennung aus', 'Aufnahme aus', 'Letzte Erkennung', 'In Frigate öffnen']);
+assert.deepEqual(m.map((x) => x.t), ['Erkennung ausschalten', 'Aufnahme ausschalten', 'Letzte Erkennung', 'In Frigate öffnen']);
 assert.equal(m[0].svc, 'switch.turn_off'); assert.equal(m[0].entity, 'switch.gartentor_detect'); assert.ok(m[0].ask);
 states['switch.gartentor_recordings'].state = 'off';
 m = F.hold(hass, ID);
-assert.equal(m[1].t, 'Aufnahme an'); assert.equal(m[1].svc, 'switch.turn_on'); assert.equal(m[1].ask, null, 'einschalten ohne Rückfrage');
+assert.equal(m[1].t, 'Aufnahme einschalten'); assert.equal(m[1].svc, 'switch.turn_on'); assert.equal(m[1].ask, null, 'einschalten ohne Rückfrage');
 states['switch.gartentor_detect'].state = 'unavailable';
-assert.ok(!F.hold(hass, ID).some((x) => /Erkennung (an|aus)/.test(x.t)), 'Schalter nicht verfügbar → kein Eintrag');
+assert.ok(!F.hold(hass, ID).some((x) => /Erkennung (ein|aus)schalten/.test(x.t)), 'Schalter nicht verfügbar → kein Eintrag');
 assert.deepEqual(F.hold(hass, 'camera.andere'), [], 'fremde Kamera: nichts');
+// Warteliste ohne Doppelte (C12): dieselbe Karte fragt mehrmals, während die Anfrage läuft.
+F.forget('camera.gartentor');
+const el = { isConnected: true };
+let release, kicks = 0;
+const slow = Object.assign({}, hass, { callWS: (m) => (m.type === 'auth/sign_path' ? Promise.resolve({ path: m.path }) : new Promise((r) => { release = () => r('[]'); })) });
+window.casoraKick = (w) => { if (w === el) kicks++; };
+F.events(slow, c, el); F.events(slow, c, el); F.events(slow, c, el);
+release(); await new Promise((r) => setTimeout(r, 10));
+assert.equal(kicks, 1, 'jede Karte einmal neu zeichnen');
+delete window.casoraKick;
+// Kopf: Ruhe = Sand, Erkennung = Rot; Hauptschalter = Objekterkennung in Bedien-Farbe mit Rückfrage beim Ausschalten (D7).
+const tsrc = { _config: { template: ['casora_frigate'] }, _stateObj: states[ID] };
+window.document.querySelector = (q) => (q === 'home-assistant' ? { hass } : null);
+const hue = window._casoraRingHueHooks.map((f) => f(tsrc, 'casora_frigate camera.gartentor')).find(Boolean);
+assert.deepEqual(hue, { off: true }, 'Ruhe: Sand');
+const hs = window._casoraHeadSwitchHooks.map((f) => f(tsrc, hass)).find((x) => x != null);
+assert.deepEqual(hs.entities, ['switch.gartentor_detect']); assert.equal(hs.label, 'Objekterkennung'); assert.ok(/ui-action/.test(hs.color));
 console.log('frigate: ok');

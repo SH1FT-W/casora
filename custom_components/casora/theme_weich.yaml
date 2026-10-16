@@ -953,6 +953,8 @@ Casora:
 
     dark:
       casora-weather-glyph-fill: "1"  # K5 (Weich-Audit)
+      # Klingel-Runde 16.10.: Schrift-Rot im Dunkeln heller („Neu“, „Läuft“ hatten 2,37:1 auf der dunklen Zeile).
+      casora-color-red-text: "#F08A7E"
       casora-color-violet: "#9D8BC0"   # Szenen-Lila, auf Anthrazit etwas heller
       # Flächen + Text: warmes Anthrazit, Leinen-Schrift
       primary-background-color: rgb(36,33,30)

@@ -28,6 +28,8 @@
   var HOLD = 10 * 60000;          // so lange heißt die Kachel „Hat geklingelt“ (in Akzent)
   var DAYS = 3;                   // Verlauf im Popup (Text „In den letzten 3 Tagen“ mitändern)
   var TALK_MAX = 90000;           // Sprechen endet spätestens nach 90 s (Klingel bleibt sonst im Sprechmodus)
+  var FRESH = 2 * 60000;          // so lange heißt es „Hat geklingelt“, danach „Geklingelt · 14:23“ (bis HOLD)
+  var HIST_TTL = 15 * 60000;      // Verlauf ohne Änderung höchstens so oft neu fragen
   var bad = function (s) { return s == null || s === 'unknown' || s === 'unavailable'; };
   var num = function (v) { var n = parseFloat(v); return isFinite(n) ? n : null; };
   var tr = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
@@ -124,7 +126,10 @@
       });
     }
     c.order.sort(function (x, y) { return ORDER.indexOf(x) - ORDER.indexOf(y); });
-    cache[id] = { R: R, D: D, c: c };
+    // Nur merken, wenn die Zustände schon da sind: beim HA-Start kommt die Registry vor den Zuständen –
+    // ein so gemerktes Ergebnis ohne Klingelknopf hätte nie wieder „Hat geklingelt“ gemeldet.
+    if (S[id] && c.visitor) cache[id] = { R: R, D: D, c: c };
+    else delete cache[id];
     return c;
   };
   KL.watch = function (c) {
@@ -191,14 +196,15 @@
       } catch (e) { /* schon weg */ }
     });
   };
-  // Einmal je Änderung an Klingel/Erkennungen bzw. höchstens jede Minute neu fragen; danach neu zeichnen.
+  // Einmal je Änderung an Klingel/Erkennungen neu fragen, ohne Änderung höchstens alle 15 Min. (Neues kommt
+  // ohnehin über „seen“ live dazu); danach neu zeichnen.
   KL.history = function (hass, c, el) {
     var S = (hass && hass.states) || {};
     var ids = [c.visitor].concat(c.order.map(function (o) { return c.det[o]; })).filter(Boolean);
     var key = ids.map(function (x) { return S[x] ? S[x].last_changed + S[x].state : ''; }).join('|');
     var hit = hc[c.cam];
     if (hit && el && hit.wait.indexOf(el) < 0) hit.wait.push(el);
-    var fresh = hit && hit.key === key && Date.now() - hit.at < 60000;
+    var fresh = hit && hit.key === key && Date.now() - hit.at < HIST_TTL;
     var busy = hit && hit.busy && Date.now() - hit.at < 15000;
     if (fresh || busy || !ids.length) return hit ? hit.list : (ids.length ? null : []);
     var job = hc[c.cam] = { key: key, at: Date.now(), list: hit ? hit.list : null, err: false, busy: true,
@@ -262,15 +268,16 @@
     if (list.length === 2) return KL.label(list[0]) + ' und ' + KL.label(list[1]) + ' erkannt';
     return list.length + ' Objekte erkannt';
   };
-  // Kachel: Privatsphäre · geklingelt (HOLD lang, ohne „ · “ – casoraStateFit kürzte sonst zu „… +1“) ·
-  // jetzt erkannt – sonst null (Kamera-Text: Bereit bzw. Alter des Bildes).
-  // short (schmale Handy-Kachel): „Geklingelt“ ohne Zeit, sonst endete es als „Hat gekli…“.
+  // Kachel: Privatsphäre · geklingelt (HOLD lang) · jetzt erkannt – sonst null (Kamera-Text: Bereit bzw. Alter
+  // des Bildes). Geklingelt: die ersten 2 Min. „Hat geklingelt“, danach „Geklingelt · vor 4 Min.“; schmal (Handy)
+  // mit Uhrzeit „Geklingelt 14:23“ – nur „Geklingelt“ fiel am Handy nicht auf (Nutzertests). Schmal ohne „ · “:
+  // passt es knapp nicht, kürzte casoraStateFit sonst zu „Geklingelt +1“.
   KL.tileText = function (s, now, short) {
     if (!s) return null;
     if (s.privacy) return 'Privatsphäre an';
     if (s.dead || s.off) return null;
     var t = now || Date.now();
-    if (s.ring) return short ? 'Geklingelt' : t - s.ring < 60000 ? 'Hat geklingelt' : 'Geklingelt ' + KL.ago(s.ring, t);
+    if (s.ring) return t - s.ring < FRESH ? 'Hat geklingelt' : (short ? 'Geklingelt ' + clock(s.ring) : 'Geklingelt · ' + KL.ago(s.ring, t));
     if (s.live.length) return short && s.live.length > 1 ? KL.label(s.live[0]) + ' erkannt' : who(s.live);
     return null;
   };
@@ -287,7 +294,11 @@
 
   // ── Zeitangaben ───────────────────────────────────────────────────────────
   var loc = function () { return window.casoraLocale ? window.casoraLocale() : undefined; };
-  var clock = function (ms) { return new Date(ms).toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' }); };
+  // Deutsch „09:05“ zweistellig, sonst hour 'numeric': Englisch „9:05 AM“ statt „09:05 AM“.
+  var clock = function (ms) {
+    var l = loc();
+    return new Date(ms).toLocaleTimeString(l, { hour: !l || /^de/i.test(String(l)) ? '2-digit' : 'numeric', minute: '2-digit' });
+  };
   var dayWord = function (ms, now) {
     var a = new Date(now || Date.now()); a.setHours(0, 0, 0, 0);
     var b = new Date(ms); b.setHours(0, 0, 0, 0);
@@ -307,6 +318,15 @@
     var tpl = [].concat((src && src._config && src._config.template) || []).join(' ');
     return /\bcasora_reolink_doorbell\b/.test(tpl) ? false : null;
   });
+  // Kopf-Symbol immer das der Kachel (Klingel): offline zeigte der Kopf sonst das Kamera-Symbol.
+  var prevRingUrl = window.casoraRingUrl;
+  window.casoraRingUrl = function (src, key) {
+    if (/\bcasora_reolink_doorbell\b/.test(key) && typeof window.casoraIconUrl === 'function') {
+      var vi = src && src._config && src._config.variables && src._config.variables.icon;
+      return window.casoraIconUrl(typeof vi === 'string' && /^[\w-]+$/.test(vi) ? vi : 'doorbell');
+    }
+    return typeof prevRingUrl === 'function' ? prevRingUrl(src, key) : null;
+  };
 
   // Zeilen tragen Schein-Entitäten (data-casora-mi): klingel-more:<kamera> (Verlauf länger), klingel-go:<pfad>.
   var more = {}, els = {};
@@ -359,13 +379,21 @@
       + 'color:var(--casora-soft-mehr-ink, var(--casora-popup-tiles-text-primary, #3A322B));">'
       + '<span style="pointer-events:none;">' + esc(text) + '</span></div>';
   };
+  // Etikett über den Zeilen eines Tages im Verlauf (12/700, Großbuchstaben wie die Wert-Etiketten).
+  var dayLbl = function (t, first) {
+    return '<div style="font-family:var(--primary-font-family, system-ui);font-size:var(--casora-fs-label, 12px);font-weight:700;'
+      + 'text-transform:uppercase;letter-spacing:.1em;color:var(--casora-soft-sub, var(--secondary-text-color));'
+      + 'margin:' + (first ? '0' : 'var(--casora-space-4, 16px)') + ' 6px var(--casora-space-2, 8px);">' + esc(t) + '</div>';
+  };
   var swRow = function (S, id, icon, label, ask, sub) {
     if (!id || !S[id] || S[id].state === 'unavailable') return null;
     var isOn = S[id].state === 'on';
     // Aus = Sand-Symbol wie ausgeschaltete Zeilen (ohne Ton färbte hueFor das Symbol trotzdem).
+    // Domain aus der Entität (Status-LED ist light.*, nicht switch.*). ask: true = Ausschalten fragt,
+    // 'both' = beide Richtungen fragen (Privatsphäre: an und aus mit derselben Logik).
     return { icon: icon, iconTone: isOn ? 'accent' : 'rgba(0,0,0,0)', label: label, sub: sub || null, value: isOn ? 'An' : 'Aus',
-      svc: { domain: 'switch', service: isOn ? 'turn_off' : 'turn_on', target: { entity_id: id } },
-      confirm: ask && (ask === 'on' ? !isOn : isOn) ? (isOn ? 'Ausschalten' : 'Einschalten') : null };
+      svc: { domain: id.split('.')[0], service: isOn ? 'turn_off' : 'turn_on', target: { entity_id: id } },
+      confirm: ask && (ask === 'both' || isOn) ? (isOn ? 'Ausschalten' : 'Einschalten') : null };
   };
   var slider = function (UI, S, id, label) {
     var st = id && S[id];
@@ -393,19 +421,23 @@
         main = 'Bereit';
         if (s.lastRing) rest.push('Geklingelt ' + KL.ago(s.lastRing, now));
       }
-      if (!s.dead && s.audio === false) rest.push('Ton aus');
+      // „Ton aus“ steht nicht im Kopf: der Hinweis unter dem Bild sagt es (mit „Einschalten“) – doppelt
+      // brach der Kopf am Handy zweizeilig um.
       if (s.battery != null && s.battery <= 20) rest.push({ text: 'Akku ' + Math.round(s.battery) + ' %', tone: 'warn' });
       return UI.line(main, rest, { tone: tone });
     }
     if (part === 'say') {
       var out = '';
       var q = c.quick && S[c.quick], opts = q ? (q.attributes || {}).options : null;
+      // Privatsphäre an: Kamera und Lautsprecher der Klingel sind aus – Schnellantworten und Sirene ruhen.
+      var hush = s.privacy || s.dead;
       if (Array.isArray(opts) && opts.length) {
-        var gone = q.state === 'unavailable';
-        // Antippen: Rückfrage in der Zeile („Abspielen“), dann spielt die Klingel die Nachricht ab.
+        var gone = q.state === 'unavailable' || hush;
+        // Antippen: Rückfrage in der Zeile („Abspielen“), dann spielt die Klingel die Nachricht ab; die Meldung
+        // nennt sie. Nachrichten sind selbst gewählte Texte – nicht übersetzen (labelLit).
         out += UI.group(opts.map(function (o) {
-          return { icon: 'mdi:message-reply-text-outline', iconTone: 'accent', label: String(o),
-            svc: gone ? null : { domain: 'select', service: 'select_option', target: { entity_id: c.quick }, data: { option: o }, done: 'Spielt ab' },
+          return { icon: 'mdi:message-reply-text-outline', iconTone: gone ? 'rgba(0,0,0,0)' : 'accent', label: String(o), labelLit: true,
+            svc: gone ? null : { domain: 'select', service: 'select_option', target: { entity_id: c.quick }, data: { option: o }, done: 'Spielt ab: ' + o },
             confirm: gone ? null : 'Abspielen' };
         }), 'Schnellantworten');
       }
@@ -414,8 +446,10 @@
         var siren = sOn
           ? { icon: 'mdi:alarm-light', iconTone: 'bad', label: 'Sirene', sub: 'Antippen zum Stoppen', value: 'Läuft',
             valueTone: 'var(--casora-color-red-text, var(--casora-color-red))', svc: { domain: 'siren', service: 'turn_off', target: { entity_id: c.siren } } }
-          : { icon: 'mdi:alarm-light-outline', iconTone: 'rgba(0,0,0,0)', label: 'Sirene', sub: 'Laut an der Tür, 10 Sekunden',
-            svc: { domain: 'siren', service: 'turn_on', target: { entity_id: c.siren }, data: { duration: 10 }, done: 'Sirene läuft' }, confirm: 'Auslösen' };
+          : hush
+            ? { icon: 'mdi:alarm-light-outline', iconTone: 'rgba(0,0,0,0)', label: 'Sirene', sub: s.privacy ? 'Bei Privatsphäre aus' : 'Klingel nicht erreichbar' }
+            : { icon: 'mdi:alarm-light-outline', iconTone: 'bad', label: 'Sirene', sub: 'Laut an der Tür, 10 Sekunden',
+              svc: { domain: 'siren', service: 'turn_on', target: { entity_id: c.siren }, data: { duration: 10 }, done: 'Sirene läuft' }, confirm: 'Auslösen' };
         out += (out ? '<div style="height:8px"></div>' : '') + UI.group([siren], out ? null : 'An der Tür');
       }
       return out;
@@ -434,17 +468,21 @@
       } else {
         var max = more[c.cam] ? 30 : 8;
         var newest = list.filter(function (e) { return e.kind === 'ring'; })[0];
-        o2 = UI.group(list.slice(0, max).map(function (e) {
-          var dw = dayWord(e.at, now);
-          var sub = dw ? dw + ', ' + clock(e.at) : clock(e.at) + ' · ' + KL.ago(e.at, now);
+        // Nach Tagen getrennt (Heute, Gestern, Mi., 14.10.) – die Unterzeile trägt dann nur noch die Uhrzeit.
+        var days = [];
+        list.slice(0, max).forEach(function (e) {
+          var dw = dayWord(e.at, now) || 'Heute';
+          if (!days.length || days[days.length - 1].t !== dw) days.push({ t: dw, rows: [] });
           var ring = e.kind === 'ring';
           // Klingeln in Gerätefarbe, Erkennungen ruhig (Sand) – so springen die Klingeldrücke ins Auge.
-          return { icon: ICON[ring ? 'ring' : e.kind] || 'mdi:motion-sensor', iconTone: ring ? 'accent' : 'rgba(0,0,0,0)',
-            label: ring ? 'Hat geklingelt' : KL.label(e.kind) + ' erkannt', sub: sub,
-            // Letztes Klingeln, solange die Kachel es meldet (HOLD): rechts „Neu“ in Schrift-Rot.
+          days[days.length - 1].rows.push({ icon: ICON[ring ? 'ring' : e.kind] || 'mdi:motion-sensor', iconTone: ring ? 'accent' : 'rgba(0,0,0,0)',
+            label: ring ? 'Hat geklingelt' : KL.label(e.kind) + ' erkannt', sub: dw === 'Heute' ? clock(e.at) + ' · ' + KL.ago(e.at, now) : clock(e.at),
+            // Letztes Klingeln, solange die Kachel es meldet (HOLD, 10 Min.): rechts „Neu“ in Schrift-Rot.
             value: e === newest && now - e.at < HOLD ? 'Neu' : null,
-            valueTone: e === newest && now - e.at < HOLD ? 'var(--casora-color-red-text, var(--casora-color-red))' : null };
-        }), head);
+            valueTone: e === newest && now - e.at < HOLD ? 'var(--casora-color-red-text, var(--casora-color-red))' : null });
+        });
+        o2 = UI.label ? UI.label(head) : '';
+        days.forEach(function (d, i) { o2 += dayLbl(d.t, i === 0) + UI.group(d.rows, null); });
         if (list.length > 8) o2 += pill(more[c.cam] ? 'Weniger anzeigen' : 'Mehr anzeigen', 'klingel-more:' + c.cam);
       }
       var media = KL.media(hass, c);
@@ -461,7 +499,7 @@
         swRow(S, c.sw.audio, 'mdi:microphone-outline', 'Ton aufnehmen', true, 'Ohne Ton hörst du die Tür nicht'),
         swRow(S, c.sw.ir, 'mdi:weather-night', 'Infrarot bei Nacht', false),
         swRow(S, c.ledLight, 'mdi:led-on', 'Status-LED', false),
-        swRow(S, c.sw.privacy, 'mdi:eye-off-outline', 'Privatsphäre', 'on', 'Kamera und Ton aus'),
+        swRow(S, c.sw.privacy, 'mdi:eye-off-outline', 'Privatsphäre', 'both', 'Kamera und Ton aus'),
       ].filter(Boolean);
       // Status-LED als Segmente (wenige Optionen), gleiche Wörter zusammengefasst („always“/„alwayson“).
       var led = c.led && S[c.led] && !bad(S[c.led].state) ? S[c.led] : null;
@@ -482,7 +520,8 @@
       if (ar) {
         var at2 = c.autoTime && S[c.autoTime] ? num(S[c.autoTime].state) : null;
         dev.push({ icon: 'mdi:message-badge-outline', iconTone: ar.state !== 'off' ? 'accent' : null, label: 'Automatische Antwort',
-          sub: ar.state !== 'off' && at2 ? 'Nach ' + Math.round(at2) + ' s ohne Antwort' : null, value: ar.state === 'off' ? 'Aus' : String(ar.state), entity: c.autoReply });
+          sub: ar.state !== 'off' && at2 ? 'Nach ' + Math.round(at2) + ' s ohne Antwort' : null, value: ar.state === 'off' ? 'Aus' : String(ar.state),
+          valueLit: ar.state !== 'off', entity: c.autoReply });
       }
       if (c.battery && S[c.battery] && !bad(S[c.battery].state)) {
         var bv = Math.round(num(S[c.battery].state));
@@ -492,16 +531,19 @@
         var wv = num(S[c.wifi].state), unit = (S[c.wifi].attributes || {}).unit_of_measurement;
         // dBm (Reolink): gut ab −60, schwach unter −70; Stufen 0–4 (ältere Fassungen) wie angezeigt.
         var word = unit === 'dBm' ? (wv >= -60 ? 'Gut' : wv >= -70 ? 'Mittel' : 'Schwach') : (wv >= 3 ? 'Gut' : wv >= 2 ? 'Mittel' : 'Schwach');
-        dev.push({ icon: 'mdi:wifi', iconTone: word === 'Schwach' ? 'warn' : null, label: 'WLAN', sub: unit === 'dBm' ? Math.round(wv) + ' dBm' : null,
+        // Echtes Minuszeichen (U+2212) statt Bindestrich: „−58 dBm“.
+        dev.push({ icon: 'mdi:wifi', iconTone: word === 'Schwach' ? 'warn' : null, label: 'WLAN', sub: unit === 'dBm' ? String(Math.round(wv)).replace('-', '\u2212') + ' dBm' : null,
           value: word, valueTone: word === 'Schwach' ? 'warn' : null, entity: c.wifi });
       }
       if (c.dayNight && S[c.dayNight] && !bad(S[c.dayNight].state)) {
         var dn = S[c.dayNight].state;
-        dev.push({ icon: dn === 'night' ? 'mdi:weather-night' : 'mdi:white-balance-sunny', label: 'Bild',
-          value: dn === 'night' ? 'Schwarz-Weiß' : dn === 'led_day' ? 'Farbe mit Licht' : 'Farbe' });
+        // Ruhiges Symbol (kein Gelb): eine Info, kein Licht, das an ist. „Nachtsicht · Aus“ statt „Bild · Farbe“.
+        dev.push({ icon: dn === 'night' ? 'mdi:weather-night' : 'mdi:white-balance-sunny', iconTone: 'rgba(0,0,0,0)', label: 'Nachtsicht',
+          sub: dn === 'night' ? 'Bild in Schwarz-Weiß' : null, value: dn === 'night' ? 'An' : dn === 'led_day' ? 'Mit Licht' : 'Aus' });
       }
       if (dev.length) secs.push(UI.group(dev, 'Gerät'));
-      return secs.length ? UI.more('klingel', secs.map(function (x) { return '<div>' + x + '</div>'; }).join(''), { count: secs.length, label: 'Einstellungen' }) : '';
+      // Ohne Zähler (die Zahl der Abschnitte sagte niemandem etwas); aufgeklappt bleibt „Einstellungen“ stehen, nur der Pfeil dreht.
+      return secs.length ? UI.more('klingel', secs.map(function (x) { return '<div>' + x + '</div>'; }).join(''), { label: 'Einstellungen', less: 'Einstellungen' }) : '';
     }
     return '';
   };
@@ -510,13 +552,16 @@
   KL.hold = function (hass, id) {
     if (!KL.is(hass, id)) return [];
     var S = hass.states || {}, c = KL.find(hass, id), s = KL.status(c, S), out = [];
-    if (!s.dead && !s.privacy && s.audio !== false) {
-      out.push({ key: 'fn', t: 'Ton hören', ic: 'mdi:volume-high', fn: function () { KL.listen(id); } });
+    // Mithören nur mit Live-Bild (Standbild-Kamera hat keinen Ton).
+    if (!s.dead && !s.privacy && s.audio !== false && streamOf(S[id])) {
+      out.push({ key: 'fn', t: 'Mithören', ic: 'mdi:volume-high', fn: function () { KL.listen(id); } });
     }
-    var q = c.quick && S[c.quick], opts = q && q.state !== 'unavailable' ? (q.attributes || {}).options : null;
+    // Schnellantworten: die Nachricht selbst ist die Beschriftung (vorher „Schnellantwort“ + abgeschnittene Nachricht),
+    // Rückfrage und Meldung nennen sie; selbst gewählter Text – nicht übersetzen (lit). Bei Privatsphäre keine.
+    var q = c.quick && S[c.quick], opts = q && q.state !== 'unavailable' && !s.privacy && !s.dead ? (q.attributes || {}).options : null;
     (Array.isArray(opts) ? opts.slice(0, 3) : []).forEach(function (o) {
-      out.push({ key: 'act', t: 'Schnellantwort', sub: String(o), ic: 'mdi:message-reply-text-outline', svc: 'select.select_option',
-        entity: c.quick, data: { option: o }, ask: 'An der Tür abspielen?', yes: 'Abspielen', done: 'Spielt ab' });
+      out.push({ key: 'act', t: String(o), lit: true, ic: 'mdi:message-reply-text-outline', svc: 'select.select_option',
+        entity: c.quick, data: { option: o }, ask: '„' + o + '“ an der Tür abspielen?', yes: 'Abspielen', done: 'Spielt ab: ' + o });
     });
     return out;
   };
@@ -529,9 +574,10 @@
 
   // ── Live-Bild mit Ton und Sprechen ────────────────────────────────────────
   // Karte im Popup (custom:casora-klingel-live). Das Bild kommt aus HAs eigenem Player (ha-camera-stream,
-  // bei Reolink über go2rtc mit Ton, wenn „Ton aufnehmen“ an ist), ohne Stream als Standbild. Der Ton ist
-  // aus, bis man ihn antippt (Browser spielen Ton erst nach einem Tipp); HA setzt „stumm“ bei jedem Update
-  // neu, darum folgt das <video> jede Sekunde dem gewünschten Zustand (wie das Kamera-Popup).
+  // bei Reolink über HAs go2rtc mit Ton, wenn „Ton aufnehmen“ an ist), ohne Stream als Standbild (dann ohne
+  // Mithören-Knopf). Stumm eingebunden wählt HA WebRTC und verwirft dabei die Tonspur (ha-web-rtc-player
+  // _addTrack); „Mithören“ bindet den Player darum ohne „stumm“ neu ein – der Tipp erlaubt dem Browser den Ton.
+  // HA setzt „stumm“ bei Updates neu, darum folgt das <video> jede Sekunde dem gewünschten Zustand.
   // Sprechen (Versuch, Studio-Feld „Sprechen“): eigene WebRTC-Verbindung über camera/webrtc/offer mit der
   // Mikrofonspur. Ob die Klingel sie annimmt, sagt die Antwort (Audio „recvonly/sendrecv“) – sonst eine
   // freundliche Meldung. Die Spur wird immer gestoppt und die Verbindung geschlossen (Popup zu, 90 s, Fehler).
@@ -544,8 +590,12 @@
     + '.ov[hidden]{display:none;}'
     + '.ov b{font-weight:700;}.ov small{font-size:13px;opacity:.75;max-width:340px;}'
     + '.ov ha-icon{--mdc-icon-size:34px;color:rgba(255,255,255,0.55);}'
+    // Knopf im dunklen Overlay: helle Pille wie ein aktives Segment (vorher Glas – auf Schwarz kaum zu sehen).
     + '.ob{margin-top:6px;min-height:44px;padding:0 20px;display:inline-flex;align-items:center;gap:8px;border-radius:999px;cursor:pointer;border:0;'
-    +   'font:inherit;font-size:14px;font-weight:600;background:var(--casora-glass-pill-fill, rgba(255,255,255,0.16));color:rgba(255,255,255,0.94);}'
+    +   'font:inherit;font-size:14px;font-weight:700;background:var(--casora-soft-seg-on, #FFFDF9);'
+    +   'color:var(--casora-soft-seg-on-ink, var(--casora-popup-tiles-text-primary, #3A322B));}'
+    + '.ob:active{transform:scale(var(--casora-press-scale, .97));}'
+    + '.bar[hidden]{display:none;}.b[hidden]{display:none;}'
     + '.bar{display:grid;grid-template-columns:repeat(var(--n,1),minmax(0,1fr));gap:10px;margin-top:10px;}'
     + '.b{box-sizing:border-box;min-height:46px;padding:0 12px;border:0;border-radius:var(--casora-soft-seg-radius, 18px);cursor:pointer;'
     +   'display:flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-size:14px;font-weight:700;white-space:nowrap;'
@@ -565,12 +615,13 @@
     +   'border-radius:var(--casora-popup-row-radius, 24px);background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));'
     +   'font-size:13px;font-weight:500;line-height:1.35;color:var(--casora-soft-sub, var(--secondary-text-color));}'
     + '.nt[hidden]{display:none;}.nt span{flex:1;min-width:0;}'
-    + '.nb{flex:none;min-height:32px;padding:0 16px;border:0;border-radius:999px;cursor:pointer;font:inherit;font-size:13px;font-weight:700;'
-    +   'background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, var(--casora-popup-tiles-text-primary, #3A322B));'
-    +   'box-shadow:var(--casora-soft-seg-on-shadow, none);position:relative;}'
-    + '.nb::before{content:"";position:absolute;inset:-4px -4px;}'
+    // Aktion im Hinweis in der Bedien-Farbe des Popups (wie „Bestätigen“), 36 hoch + 4 px unsichtbar = 44 Trefferfläche.
+    + '.nb{flex:none;min-height:36px;padding:0 16px;border:0;border-radius:999px;cursor:pointer;font:inherit;font-size:13px;font-weight:700;'
+    +   'background:var(--casora-popup-ui-action, #276B64);color:var(--casora-popup-ui-on-action, #fff);position:relative;}'
+    + '.nb::before{content:"";position:absolute;inset:-4px;}'
+    + '.nb:active{transform:scale(var(--casora-press-scale, .97));}'
     + '.nb[hidden]{display:none;}'
-    + '@media (prefers-reduced-motion:reduce){.b{transition:none;}.b:active{transform:none;}}';
+    + '@media (prefers-reduced-motion:reduce){.b{transition:none;}.b:active,.ob:active,.nb:active{transform:none;}}';
 
   var findVideo = function (root, d) {
     if (!root || d > 12) return null;
@@ -595,6 +646,14 @@
     }
     return false;
   };
+  // Kandidat aus HAs WebRTC-Antwort (go2rtc: nur Text bzw. ohne sdpMid) → RTCIceCandidateInit.
+  KL.candidate = function (x) {
+    if (typeof x === 'string') return { candidate: x, sdpMid: '0' };
+    var o = Object.assign({}, x || {});
+    if (o.sdpMid == null && o.sdpMLineIndex == null) o.sdpMid = '0';
+    return o;
+  };
+  var streamOf = function (st) { return !!((Number(((st || {}).attributes || {}).supported_features) || 0) & 2); };
   KL.canTalk = function () {
     return !!(window.isSecureContext && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.RTCPeerConnection);
   };
@@ -621,14 +680,15 @@
     var P = KLive.prototype;
     P._build = function () {
       var r = this._root = this.attachShadow({ mode: 'open' });
-      var talk = !!(this._cfg && this._cfg.talk) && KL.canTalk();
+      // Sprechen im Studio eingeschaltet: Knopf immer zeigen – ohne HTTPS/Mikrofon gesperrt mit Hinweis statt still weg.
+      var talk = !!(this._cfg && this._cfg.talk);
       r.innerHTML = '<style>' + CSS + '</style>'
-        + '<div class="fr"><div class="mt"></div><div class="ov" hidden></div></div>'
-        + '<div class="bar" style="--n:' + (talk ? 2 : 1) + '">'
-        + '<button class="b snd" type="button"><ha-icon icon="mdi:volume-off"></ha-icon><span></span></button>'
+        + '<div class="fr"><div class="mt"></div><div class="ov" role="status" aria-live="polite" hidden></div></div>'
+        + '<div class="bar">'
+        + '<button class="b snd" type="button" aria-pressed="false"><ha-icon icon="mdi:volume-off"></ha-icon><span></span></button>'
         + (talk ? '<button class="b tlk" type="button"><ha-icon icon="mdi:microphone-outline"></ha-icon><span></span></button>' : '')
         + '</div>'
-        + '<div class="nt" hidden><span></span><button class="nb" type="button" hidden></button></div>';
+        + '<div class="nt" role="status" aria-live="polite" hidden><span></span><button class="nb" type="button" hidden></button></div>';
       var self = this;
       // Popups schließen am Handy beim Wischen über touchstart – Knöpfe handeln auf click, Wischen bleibt beim Popup.
       r.querySelector('.snd').addEventListener('click', function (ev) { ev.stopPropagation(); self._toggleSound(); });
@@ -657,7 +717,7 @@
       var priv = this._st(cfg.privacy);
       var privacy = !!(priv && priv.state === 'on');
       var dead = bad(st.state) || privacy;
-      var stream = !!((Number((st.attributes || {}).supported_features) || 0) & 2);
+      var stream = this._stream = streamOf(st);
       // Neu einbinden nur, wenn sich Erreichbarkeit oder Stream-Art ändert (nicht bei jedem Token-Wechsel).
       var key = (dead ? (privacy ? 'p' : 'x') : 'ok') + (stream ? 's' : 'i');
       if (key !== this._key) {
@@ -665,6 +725,8 @@
         this._teardown();
         if (!dead) this._mount(stream);
       }
+      // Privatsphäre an / Klingel weg: Sprechen beenden (sonst hinge die Verbindung bis zu 90 s).
+      if (dead && this._t) { this._talkStop(); this._note(privacy ? 'Sprechen beendet – Privatsphäre an' : 'Sprechen beendet – Klingel nicht erreichbar', 6000); }
       if (this._card) {
         this._card.hass = this._hass;
         if (this._native && this._card.stateObj !== st) this._card.stateObj = st;
@@ -680,9 +742,9 @@
         var el = document.createElement('ha-camera-stream');
         el.controls = false;
         el.allowExoPlayer = false;
-        // Stumm einbinden: HA wählt dann WebRTC (kurze Verzögerung, bei Reolink über go2rtc mit Ton);
-        // den Ton schaltet das <video> selbst frei.
-        el.muted = true;
+        // Stumm eingebunden wählt HA WebRTC ohne Tonspur; zum Mithören ohne „stumm“ (siehe _toggleSound).
+        el.muted = this._muted !== false;
+        this._mountedMuted = el.muted;
         el.hass = this._hass;
         el.stateObj = st;
         mt.appendChild(el);
@@ -751,14 +813,21 @@
     };
     P._video = function () { return this._card ? findVideo(this._card.shadowRoot || this._card, 0) || findVideo(this._card, 0) : null; };
     P._applyAudio = function () {
+      var want = this._muted !== false;
+      if (this._native && this._card && this._card.muted !== want) this._card.muted = want;
       var v = this._video();
       if (!v) return;
-      var want = this._muted !== false;
       if (v.muted !== want) v.muted = want;
       if (!want) {
         if (v.hasAttribute('muted')) v.removeAttribute('muted');
         if (!v.volume) v.volume = 0.9;
-        if (v.paused) { var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+        if (v.paused && !this._playing) {
+          var self = this, p = v.play();
+          this._playing = true;
+          // Browser lässt den Ton nicht zu (kein Tipp erkannt): zurück auf stumm statt eines Knopfs, der lügt.
+          if (p && p.then) p.then(function () { self._playing = false; }, function () { self._playing = false; self._muted = true; self._applyAudio(); self._paint(); });
+          else this._playing = false;
+        }
       }
     };
     P._audioOff = function () {
@@ -766,14 +835,21 @@
       return !!(a && a.state === 'off');
     };
     P._toggleSound = function () {
+      if (this._audioOff() || !this._stream) return;
       if (window.casoraHaptic) window.casoraHaptic('light');
       this._muted = this._muted === false;
-      var v = this._video();
-      if (v && !this._muted) {
-        v.muted = false;
-        var self = this, p = v.play();
-        // Browser lässt den Ton nicht zu (kein Tipp erkannt): zurück auf stumm statt eines Knopfs, der lügt.
-        if (p && p.catch) p.catch(function () { self._muted = true; self._applyAudio(); self._paint(); });
+      // Stumm eingebundener Player hat keine Tonspur: ohne „stumm“ neu einbinden (Tipp = Nutzeraktivierung).
+      if (!this._muted && this._native && this._mountedMuted && this._key && this._key.charAt(0) === 'o') {
+        this._teardown();
+        this._mount(this._stream);
+      } else {
+        var v = this._video();
+        if (v && !this._muted) {
+          v.muted = false;
+          var self = this, p = v.play();
+          // Browser lässt den Ton nicht zu (kein Tipp erkannt): zurück auf stumm statt eines Knopfs, der lügt.
+          if (p && p.catch) p.catch(function () { self._muted = true; self._applyAudio(); self._paint(); });
+        }
       }
       this._applyAudio();
       this._paint();
@@ -789,17 +865,24 @@
       var r = this._root;
       if (!r) return;
       var off = this._muted !== false, cfg = this._cfg || {};
-      var snd = r.querySelector('.snd');
-      // Ohne Bild (Privatsphäre, nicht erreichbar) gibt es nichts zu hören und nichts zu sagen.
+      var snd = r.querySelector('.snd'), bar = r.querySelector('.bar');
+      // Ohne Bild (Privatsphäre, nicht erreichbar) gibt es nichts zu hören und nichts zu sagen: Leiste weg.
       var dead = !this._key || this._key.charAt(0) !== 'o';
-      snd.disabled = dead;
-      snd.classList.toggle('on', !off);
-      snd.setAttribute('aria-pressed', off ? 'false' : 'true');
-      snd.querySelector('ha-icon').setAttribute('icon', off ? 'mdi:volume-off' : 'mdi:volume-high');
-      snd.querySelector('span').textContent = tr(off ? 'Ton an' : 'Ton aus');
-      var tb = r.querySelector('.tlk');
+      var audioOff = this._audioOff();
+      // „Mithören“ feste Beschriftung, Zustand über aria-pressed, Symbol und helle Fläche. Ohne Stream (Standbild)
+      // kein Knopf; Ton an der Klingel aus: gesperrt (der Hinweis darunter schaltet ihn ein).
+      snd.hidden = !this._stream;
+      snd.disabled = dead || audioOff;
+      snd.classList.toggle('on', !off && !audioOff);
+      snd.setAttribute('aria-pressed', off || audioOff ? 'false' : 'true');
+      snd.querySelector('ha-icon').setAttribute('icon', off || audioOff ? 'mdi:volume-off' : 'mdi:volume-high');
+      snd.querySelector('span').textContent = tr('Mithören');
+      var tb = r.querySelector('.tlk'), canTalk = KL.canTalk();
+      var shown = (snd.hidden ? 0 : 1) + (tb ? 1 : 0);
+      bar.hidden = (dead && !this._t) || !shown;
+      bar.style.setProperty('--n', String(Math.max(1, shown)));
       if (tb) {
-        tb.disabled = dead && !this._t;
+        tb.disabled = (dead && !this._t) || !canTalk;
         var t = this._t, st = t ? t.state : null;
         tb.classList.toggle('talk', st === 'on');
         tb.classList.toggle('busy', st === 'connecting');
@@ -811,10 +894,14 @@
       var nt = r.querySelector('.nt'), nb = r.querySelector('.nb'), self = this;
       if (this._msg) {
         nt.hidden = false; nt.querySelector('span').textContent = tr(this._msg.text); nb.hidden = true; this._nbFn = null;
-      } else if (this._audioOff() && this._key && this._key.charAt(0) === 'o') {
+      } else if (audioOff && !dead && this._stream) {
         nt.hidden = false; nt.querySelector('span').textContent = tr('Ton ist an der Klingel aus');
         nb.hidden = false; nb.textContent = tr('Einschalten');
         this._nbFn = function () { self._call('switch', 'turn_on', cfg.audio); };
+      } else if (tb && !canTalk && !dead) {
+        // Sprechen braucht das Mikrofon im Browser – das gibt es nur über HTTPS (bzw. localhost).
+        nt.hidden = false; nb.hidden = true; this._nbFn = null;
+        nt.querySelector('span').textContent = tr(window.isSecureContext ? 'Sprechen geht in diesem Browser nicht' : 'Sprechen braucht HTTPS');
       } else { nt.hidden = true; this._nbFn = null; }
     };
 
@@ -831,9 +918,8 @@
         if (self._t !== t) return;
         try { console.info('casora klingel: Sprechen geht nicht –', why); } catch (e) { /* still */ }
         self._talkStop(true);
-        self._note(text || 'Sprechen klappt mit dieser Klingel nicht – Ton hören geht weiter', 9000);
+        self._note(text || (self._stream ? 'Sprechen klappt mit dieser Klingel nicht – Mithören geht weiter' : 'Sprechen klappt mit dieser Klingel nicht'), 9000);
       };
-      t.timer = setTimeout(function () { if (t.state !== 'on') fail('zeit-abgelaufen'); }, 12000);
       h.callWS({ type: 'camera/capabilities', entity_id: id }).catch(function () { return null; }).then(function (caps) {
         if (self._t !== t) return null;
         var types = (caps && caps.frontend_stream_types) || [];
@@ -848,8 +934,10 @@
         if (!mic) return null;
         if (self._t !== t) { mic.getTracks().forEach(function (x) { x.stop(); }); return null; }
         t.mic = mic;
+        // Zeitlimit erst ab hier: die Mikrofon-Frage des Browsers darf dauern, ohne dass Sprechen abbricht.
+        t.timer = setTimeout(function () { if (t.state !== 'on') fail('zeit-abgelaufen'); }, 12000);
         var pc = t.pc = new RTCPeerConnection((t.conf && t.conf.configuration) || {});
-        pc.addTransceiver('video', { direction: 'recvonly' });
+        // Nur die Tonspur – das Bild läuft schon im Player; ein zweiter Video-Empfang kostete Bandbreite.
         pc.addTransceiver(mic.getAudioTracks()[0], { direction: 'sendrecv', streams: [mic] });
         if (t.conf && t.conf.dataChannel) { try { pc.createDataChannel(t.conf.dataChannel); } catch (e) { /* ohne */ } }
         pc.onicecandidate = function (ev) {
@@ -887,7 +975,8 @@
               if (!KL.talkAccepted(msg.answer)) { fail('ohne-rueckkanal'); return; }
               pc.setRemoteDescription({ type: 'answer', sdp: msg.answer }).catch(function (e) { fail('Antwort: ' + (e && e.message)); });
             } else if (msg.type === 'candidate' && msg.candidate) {
-              var cc = typeof msg.candidate === 'string' ? { candidate: msg.candidate, sdpMLineIndex: 0 } : msg.candidate;
+              // go2rtc schickt Kandidaten ohne sdpMid/sdpMLineIndex – wie HAs Frontend der ersten Spur zuordnen.
+              var cc = KL.candidate(msg.candidate);
               pc.addIceCandidate(cc).catch(function () {});
             } else if (msg.type === 'error') fail('HA: ' + (msg.code || '') + ' ' + (msg.message || ''));
           }, { type: 'camera/webrtc/offer', entity_id: id, offer: offer.sdp });
