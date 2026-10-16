@@ -30,8 +30,11 @@ assert.ok(/hass\.themes\.themes\[to\] && !hass\.themes\.themes\[sel\.theme\]/.te
 // Integration meldet nur theme_*.yaml an, kein Glas-Theme mehr
 assert.ok(!fs.existsSync(new URL('theme_glass.yaml', cc)), 'theme_glass.yaml entfernt');
 assert.ok(/^Casora Basis:/m.test(read('theme.yaml')), 'theme.yaml = Grundwerte, kein Design');
-// Casora Glas: eigenes Theme auf den Grundwerten, Glas-Zweig (kein soft), nicht auf Casora aufgesetzt
+// Casora Glas: Casora mit Milchglas – baut auf Casora auf (soft-Zweig geerbt), schaltet ihn nicht ab
 const glas = read('theme_glas.yaml');
+const glasCode = glas.replace(/#.*$/gm, '');
 assert.ok(/^Casora Glas:/m.test(glas), 'theme_glas.yaml meldet „Casora Glas“ an');
-assert.ok(!/casora-popup-layout|casora-theme-base/.test(glas.replace(/#.*$/gm, '')), 'Casora Glas ohne soft-Schalter und ohne Basis Casora');
+assert.ok(/^\s+casora-theme-base:\s*Casora\s*$/m.test(glasCode), 'Casora Glas baut auf Casora auf');
+assert.ok(!/casora-popup-layout/.test(glasCode), 'Casora Glas behält casora-popup-layout: soft von Casora');
+assert.ok(/ha-card-backdrop-filter:\s*blur\(/.test(glasCode), 'Casora Glas setzt Milchglas (backdrop-filter)');
 console.log('ok designs_nur_casora');
