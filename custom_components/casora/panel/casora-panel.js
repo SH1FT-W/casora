@@ -535,6 +535,7 @@ const FILTER_CATEGORIES = {
   casora_frigate: "security",
   casora_reolink_doorbell: "security",
   casora_vacuum: "unfiltered",
+  casora_coffee: "unfiltered",
   casora_plant: "unfiltered",
 };
 

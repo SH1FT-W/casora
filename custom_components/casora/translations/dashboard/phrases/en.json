@@ -1925,7 +1925,87 @@
   "Ton hören": "Listen",
   "An der Tür abspielen?": "Play it at the door?",
   "Geklingelt": "Rang",
-  "In den letzten 3 Tagen": "In the last 3 days"
+  "In den letzten 3 Tagen": "In the last 3 days",
+  "Kaffeevollautomat": "Coffee machine",
+  "Kaffeemaschine": "Coffee machine",
+  "Kaffee": "Coffee",
+  "Kaffeekanne": "Coffee pot",
+  "XL-Kaffee": "XL coffee",
+  "Milchkaffee": "Café au lait",
+  "Kaffee verkehrt": "Milky coffee",
+  "Kaffee mit Milch": "Coffee with milk",
+  "Warme Milch": "Warm milk",
+  "Milchschaum": "Milk froth",
+  "Heißwasser": "Hot water",
+  "Tee": "Tea",
+  "Eiskaffee": "Iced coffee",
+  "Pulverkaffee": "Ground coffee",
+  "Milchgetränke": "Milk drinks",
+  "Mein Kaffee": "My coffee",
+  "Entkalken & Reinigen": "Descale & clean",
+  "Entkalkt": "Descaling",
+  "Spült": "Rinsing",
+  "Pflege läuft": "Care program running",
+  "Heizt auf": "Heating up",
+  "Wasser nachfüllen": "Refill water",
+  "Wassertank ist leer": "Water tank is empty",
+  "Bohnen nachfüllen": "Refill beans",
+  "Bohnenbehälter ist leer": "Bean container is empty",
+  "Schale leeren": "Empty drip tray",
+  "Tropfschale ist voll": "Drip tray is full",
+  "Satzbehälter leeren": "Empty grounds container",
+  "Kaffeesatz ist voll": "Grounds container is full",
+  "Milch kühlen": "Keep milk cool",
+  "Milch in den Kühlschrank stellen": "Put the milk in the fridge",
+  "Entkalkungsprogramm starten": "Start the descaling program",
+  "Pflegeprogramm starten": "Start the care program",
+  "Reinigungsprogramm starten": "Start the cleaning program",
+  "Filter wechseln": "Change filter",
+  "Wasserfilter ist verbraucht": "Water filter is used up",
+  "Wassertank einsetzen": "Insert water tank",
+  "Wassertank fehlt": "Water tank missing",
+  "Wasser bald leer": "Water almost empty",
+  "Wassertank ist fast leer": "Water tank is almost empty",
+  "Schale einsetzen": "Insert drip tray",
+  "Tropfschale fehlt": "Drip tray missing",
+  "Brühgruppe einsetzen": "Insert brew unit",
+  "Brühgruppe fehlt": "Brew unit missing",
+  "Entkalken überfällig": "Descaling overdue",
+  "Reinigen überfällig": "Cleaning overdue",
+  "Entkalken & Reinigen überfällig": "Descale & clean overdue",
+  "Entkalken blockiert": "Descaling blocked",
+  "Entkalken an der Maschine fortsetzen": "Continue descaling on the machine",
+  "Milchsystem reinigen": "Clean milk system",
+  "Milchsystem spülen und reinigen": "Rinse and clean the milk system",
+  "Mahlt": "Grinding",
+  "Brüht vor": "Pre-brewing",
+  "Brüht": "Brewing",
+  "Läuft ein": "Dispensing",
+  "Milch": "Milk",
+  "Bereitet vor": "Preparing",
+  "Getränke": "Drinks",
+  "Fernstart an der Maschine erlauben": "Allow remote start on the machine",
+  "Erst dann startet Casora Getränke aus der Ferne": "Only then can Casora start drinks remotely",
+  "Stärke": "Strength",
+  "Menge": "Amount",
+  "Sehr mild": "Very mild",
+  "Mild": "Mild",
+  "Stark": "Strong",
+  "Sehr stark": "Very strong",
+  "Extra stark": "Extra strong",
+  "Max": "Max",
+  "Getränk": "Drink",
+  "Getränk antippen, dann starten.": "Tap a drink, then start it.",
+  "Maschine": "Machine",
+  "Steckdose an": "Plug on",
+  "Steckdose aus": "Plug off",
+  "Maschine meldet einen Fehler": "The machine reports an error",
+  "Hinweis im Display der Maschine ansehen": "Check the message on the machine's display",
+  "Wasserfilter": "Water filter",
+  "Filterwechsel": "Filter change",
+  "Warnungen in Home Assistant aktivieren": "Turn on warnings in Home Assistant",
+  "Home Connect legt Wassertank, Bohnen, Schale und Entkalken ausgeschaltet an. Am Gerät unter Entitäten einschalten, dann meldet die Kachel sie.": "Home Connect creates water tank, beans, drip tray and descaling switched off. Turn them on under Entities on the device, then the tile reports them.",
+  "Getränke gesamt": "Drinks in total"
  },
  "patterns": [
   [
@@ -3723,6 +3803,46 @@
   [
    "^Nach (\\d+) s ohne Antwort$",
    "After {1} s without an answer"
+  ],
+  [
+   "^Mein Kaffee (\\d+)$",
+   "My coffee {1}"
+  ],
+  [
+   "^(Entkalken|Reinigen|Filterwechsel|Pflege) in 1 Tasse$",
+   "{1} in 1 cup"
+  ],
+  [
+   "^(Entkalken|Reinigen|Filterwechsel|Pflege) in (\\d+) Tassen$",
+   "{1} in {2} cups"
+  ],
+  [
+   "^In 1 Tasse$",
+   "In 1 cup"
+  ],
+  [
+   "^In (\\d+) Tassen$",
+   "In {1} cups"
+  ],
+  [
+   "^Alle Getränke \\((\\d+)\\)$",
+   "All drinks ({1})"
+  ],
+  [
+   "^Einschalten und (.+) starten$",
+   "Turn on and start {1}"
+  ],
+  [
+   "^(.+) starten$",
+   "Start {1}"
+  ],
+  [
+   "^Leistung (.+) W$",
+   "Power {1} W"
+  ],
+  [
+   "^Heute (\\d+)$",
+   "Today {1}"
   ]
  ]
 }

@@ -314,6 +314,13 @@ window.CASORA_TILE_TYPES = [
       { key: "talk", label: "Talk (experiment)", type: "bool", advanced: true, group: "Popup",
         hint: "Adds a Talk button under the live picture: your microphone goes to the doorbell through Home Assistant's own WebRTC connection. Only works over HTTPS, with the doorbell connected in your network (RTSP), and only if the doorbell accepts it – many Reolink doorbells don't. If it doesn't, the popup says so and listening keeps working." },
     ] },
+  // Kaffeevollautomat (Community-Karte, Kartenwunsch): eine Entität des Geräts wählen (Status, Strom oder
+  // Getränke-Auswahl), den Rest findet scripts/local/25-kaffee.js am Gerät – Home Connect, Miele, De'Longhi, Jura,
+  // Melitta/Nivona, La Marzocco oder eine Steckdose mit Leistungsmessung.
+  { id: "casora_coffee", label: "Coffee machine", template: "casora_coffee", domains: ["sensor", "switch", "select"],
+    icon: "coffee-maker", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Coffee machine",
+    community: { desc: "Ready, heating up or brewing with progress, and what the machine needs: water, beans, drip tray, descaling. The popup starts drinks with strength and amount, shows care and how many coffees you made. For Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco or a smart plug." },
+    fields: [ICON, TITLE_NAME] },
   // Aquarien-Übersicht (Hemma 1 und ältere Fassungen „…_aquarium“): bis zu drei Becken in einer Kachel. Nur fürs
   // Bearbeiten umgezogener Kacheln – neue Becken bekommen die Aquarium-Kachel (casora_aquarium_tank).
   { id: "casora_aquariums", label: "Aquariums", template: "casora_aquarium", hidden: true, domains: ["sensor"],
@@ -353,7 +360,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "3D_Printer", "dryer", "dishwasher", "fish", "camera", "attention2", "sun", "trash", "car", "car_side",
   "car_side_w2", "ebike", "chef-hat", "shield_check", "shield_lock", "shield_moon", "shield_off",
   "shield_alarm", "shield_bypass", "shield_vacation", "calendar", "calendar-day", "window-open",
-  "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower",
+  "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower", "coffee-maker",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
 // Vorschau: bedingte Karten (type: conditional) so zeigen wie das Dashboard –
