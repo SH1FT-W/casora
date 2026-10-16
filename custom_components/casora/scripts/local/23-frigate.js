@@ -211,7 +211,8 @@
     if (!s || s.dead || s.off) return null;
     if (s.detectOff) return 'Erkennung aus';
     if (s.live.length) return short && s.live.length > 1 ? s.live.length + ' Objekte erkannt' : who(s.live);
-    if (s.unseen) return newAlerts(s.unseen);
+    // Schmale Handy-Kachel: „2 Alarme“ (sonst „1 neuer Al…“).
+    if (s.unseen) return short ? (s.unseen === 1 ? '1 Alarm' : s.unseen + ' Alarme') : newAlerts(s.unseen);
     if (s.last && (now || Date.now()) - s.last.at < 86400000) return F.label(s.last.o) + (short ? ' ' + clock(s.last.at) : ' · ' + F.ago(s.last.at, now));
     return null;
   };
