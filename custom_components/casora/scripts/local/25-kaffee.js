@@ -1247,7 +1247,7 @@
       // Läuft ein Bezug: Ring (bzw. eine Zeile ohne Prozent) und darunter direkt „Abbrechen“ – einstufig, wirkt sofort.
       if (s.st === 'bezieht' || s.st === 'pflege') {
         // Höhe des Rasters halten (breit, zwei Spalten): beim Start sprang das Popup sonst von ~880 auf ~570 px.
-        var hold = !narrowNow() && gridH[a] ? 'min-height:' + gridH[a] + 'px;justify-content:center;' : '';
+        var hold = !narrowNow() && gridH[a] ? 'min-height:' + gridH[a] + 'px;' : '';
         var run = GRID_CSS + '<div class="cof-run"' + (hold ? ' style="' + hold + '"' : '') + '>';
         if (K.ring(s) != null) run += ringHtml(s);
         else {
