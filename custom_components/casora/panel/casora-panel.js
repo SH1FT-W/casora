@@ -8403,12 +8403,13 @@ class CasoraPanel extends HTMLElement {
           --chrome-top-btn:26.1px;
           --nav-lift:8.5px;
         }
+        /* --nav-reserve wie am Tablet-Dashboard: 188 px je Seite (casora-core.js) mal Vorschau-Maßstab 0,593. */
         .card.map.size-tablet {
           --pad-x:21px; --pad-t:24.1px; --pad-b:20.4px;
           --nav-top:17.8px; --nav-h:27.3px; --nav-inset:2.4px; --nav-gap:2.4px;
           --nav-label:9.5px; --nav-label-h:22.5px; --nav-pad-x:9.5px;
           --menu-k:0.5932;
-          --nav-reserve:49px; --chrome-top:26.7px; --chrome-font:10.7px;
+          --nav-reserve:111.5px; --chrome-top:26.7px; --chrome-font:10.7px;
           --wx:19.6px; --nm:43.2px;
           --bmh:23.7px; --bgl:15.4px; --bl:7.7px; --bv:7.1px;
           --bpt:4.2px; --bpb:4.7px; --bpr:8.3px; --bpl:4.2px; --bcg:2.4px; --bgap:5.9px;
@@ -8433,7 +8434,7 @@ class CasoraPanel extends HTMLElement {
           position:absolute; top:var(--nav-top); left:50%; transform:translateX(-50%);
           flex:0 1 auto; gap:var(--nav-gap); padding:0 var(--nav-inset);
           height:var(--nav-h); border-radius:9999px; align-items:center;
-          max-width:calc(100% - 2 * (var(--pad-x) + var(--nav-reserve))); overflow:hidden;
+          max-width:min(calc(75% - 20.8px), calc(100% - 2 * (var(--pad-x) + var(--nav-reserve)))); overflow:hidden;
         }
         /* Hochkant: die Leiste stößt an die drei Knöpfe rechts – Platz für sie freihalten. */
         .card.map.size-tablet.portrait { --nav-reserve:92px; }
@@ -20145,7 +20146,8 @@ class CasoraPanel extends HTMLElement {
     // The bell and its neighbours float over the bar's end: the bar stops short of
     // them. It is centred, so it narrows by the overlap on both sides.
     const box0 = tabs.getBoundingClientRect();
-    const btns = [...tabs.parentElement.querySelectorAll(".mini-bell, .mini-assist, .mini-settings, .capsule .mini-cap")]
+    // Die Medien-Welle hängt nicht in .mini-nav, sondern in .mz-np – darum in der ganzen Karte suchen.
+    const btns = [...(tabs.closest(".card.map") || tabs.parentElement).querySelectorAll(".mini-wave, .mini-bell, .mini-assist, .mini-settings, .capsule .mini-cap")]
       .map((b) => b.getBoundingClientRect())
       .filter((r) => r.width && r.bottom > box0.top && r.top < box0.bottom);
     if (btns.length) {
