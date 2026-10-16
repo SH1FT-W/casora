@@ -587,7 +587,7 @@ assert.deepEqual(hero, { main: 'Bereit', rest: [] }, 'Vorwarnung nicht im Kopf')
 set('sensor.bar_operation_state', 'run'); set('select.bar_active_program', PROGS[3]); set('sensor.bar_program_progress', '40');
 set('sensor.bar_program_finish_time', new Date(Date.now() + 12500).toISOString());
 hero = JSON.parse(K.sec('hero', c, states, hass()));
-assert.equal(hero.main, 'Cappuccino'); assert.match(hero.rest[0], /^noch 1[23] s$/, 'Kopf ohne „Läuft“ und Prozent');
+assert.equal(hero.main, 'Cappuccino'); assert.match(hero.rest[0], /^noch 1[23]\u00a0s$/, 'Kopf ohne „Läuft“ und Prozent');
 const run = K.sec('drinks', c, states, hass());
 assert.match(run, /stroke-dasharray/, 'Ring bei den Getränken (nicht im Kopf-Feld, das der Rahmen ausblendet)');
 assert.match(run, /coffee-stop:/, 'Abbrechen einstufig direkt unter dem Ring');

@@ -1019,7 +1019,7 @@
 
   var LBL = 'font-family:var(--primary-font-family, system-ui);';
   var remainTxt = function (s) {
-    return s.remain != null && s.remain > 0 ? (s.remain < 1 ? 'noch ' + Math.max(1, Math.round(s.remain * 60)) + ' s' : 'noch ' + Math.round(s.remain) + ' Min.') : null;
+    return s.remain != null && s.remain > 0 ? (s.remain < 1 ? 'noch ' + Math.max(1, Math.round(s.remain * 60)) + '\u00a0s' : 'noch ' + Math.round(s.remain) + '\u00a0Min.') : null;
   };
   // Großer Ring (Bezug): Spur in Sand, Bogen in Gerätefarbe, Prozent in der Mitte (nur hier, nicht im Kopf).
   var ringHtml = function (s) {
@@ -1065,7 +1065,7 @@
     + 'border-radius:999px;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;font-size:var(--casora-fs-row, 15px);font-weight:700;'
     + 'color:var(--casora-popup-tiles-text-primary, var(--primary-text-color));background:var(--casora-soft-row-fill, rgba(140,115,90,0.07));'
     + 'transition:background-color var(--casora-dur-feedback, 160ms) ease;}'
-    + '.cof-stop > *{pointer-events:none;}'
+    + '.cof-stop > *{pointer-events:none;flex:none;margin:0;}'
     + '.cof-stop ha-icon{--mdc-icon-size:18px;width:18px;height:18px;display:flex;color:var(--casora-soft-sub, var(--secondary-text-color));}'
     + '.cof-stop.done{cursor:default;color:var(--casora-soft-sub, var(--secondary-text-color));}'
     + '@media (hover:hover){.cof-stop:not(.done):hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}}'
@@ -1292,7 +1292,7 @@
         value: Math.round(s.total).toLocaleString(loc()), entity: c.total || null });
       var top = s.perDrink.slice(0, 3), mx = top.length ? top[0].n : 0;
       top.forEach(function (x) {
-        sr.push({ icon: x.icon && /:/.test(x.icon) ? x.icon : MUG, iconTone: 'accent', label: x.label, value: Math.round(x.n).toLocaleString(loc()),
+        sr.push({ icon: x.icon || MUG, iconTone: 'accent', label: x.label, value: Math.round(x.n).toLocaleString(loc()),
           bar: mx ? x.n / mx : null, barTone: 'accent', entity: x.ids && x.ids.length === 1 ? x.ids[0] : null });
       });
       return UI.group(sr, 'Statistik');

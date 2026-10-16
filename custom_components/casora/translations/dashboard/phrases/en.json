@@ -2885,6 +2885,14 @@
    "running since {1}"
   ],
   [
+   "^noch (\\d+)[  ]s$",
+   "{1} s left"
+  ],
+  [
+   "^noch (\\d+)[  ]Min\\.$",
+   "{1} min left"
+  ],
+  [
    "^noch (.+)$",
    "{1} left"
   ],
