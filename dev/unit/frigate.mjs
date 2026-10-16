@@ -5,6 +5,14 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
+// Feste Uhr (Mittag, Ortszeit): „Heute“, „vor 3 Min.“ und Uhrzeiten hängen sonst an der echten Tageszeit –
+// kurz nach Mitternacht oder in UTC (CI) fielen Testereignisse auf den Vortag.
+const FIX = new Date(2026, 9, 14, 12, 0, 0).getTime();
+const RealDate = Date;
+// Läuft ab Mittag weiter (Ruhezeiten im Test brauchen vergehende Zeit).
+const START = RealDate.now();
+const clock = () => FIX + (RealDate.now() - START);
+globalThis.Date = class extends RealDate { constructor(...a) { super(...(a.length ? a : [clock()])); } static now() { return clock(); } };
 globalThis.window = globalThis;
 globalThis.document = { querySelector: () => null };
 const src = (p) => fs.readFileSync(new URL('../../custom_components/casora/scripts/local/' + p, import.meta.url), 'utf8');
