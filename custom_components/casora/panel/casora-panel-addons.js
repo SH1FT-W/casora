@@ -93,7 +93,7 @@
   // Desktop-Werte (46 px Pille, 6 px Innenabstand, Zeile 33 px, 265 px Randreserve)
   // mal Vorschau-Maßstab 0,583.
   const DESKTOP_VARS = `.card.map.size-desktop{--nav-top:28px;--nav-h:26.8px;--nav-inset:3.5px;--nav-gap:2.4px;
-    --nav-label:10.5px;--nav-label-h:19.8px;--nav-pad-x:9.5px;--nav-reserve:60px;--chrome-top:37.2px;--chrome-font:10.5px;
+    --nav-label:10.5px;--nav-label-h:19.8px;--nav-pad-x:9.5px;--nav-reserve:154.5px;--chrome-top:37.2px;--chrome-font:10.5px;
     --chrome-top-btn:calc(var(--nav-top) + (var(--nav-h) - var(--chrome-btn)) / 2);}`
     // Uhr und Symbole rechts auf die Mitte der Pille – wie im echten Dashboard eine Linie.
     + `.card.map.size-desktop .mini-time{top:calc(var(--nav-top) + var(--nav-h) / 2);transform:translateY(-50%);line-height:1;}`;
