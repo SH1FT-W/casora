@@ -2,11 +2,15 @@
 // @deckt: custom_components/casora/scripts/local/23-frigate.js dev/casora_mock/frigate.py
 // Community-Karte Frigate (#22, „Frigate 2“) an der erfundenen Frigate-Testkamera camera.testhof (dev/casora_mock/frigate.py):
 //   1. Kachel: „2 neue Alarme“ (ungesehene Alarme aus frigate/reviews/get).
-//   2. Popup: Status im Kopf (Hauptschalter „Objekterkennung“), Reviews mit Chips (Alarme · Erkennungen · Ungesehen ·
-//      Behalten, Zeitraum, Objekte/Zonen/Gesicht), signierte review_thumbnail.webp, Aufnahmen der letzten Tage.
-//   3. Review öffnen → gesehen (Kachel „1 neuer Alarm“), Clip als MP4, „Behalten“ (frigate/event/retain);
-//      Notification-Proxy aus → Clip über HLS (vod/event); auch ohne HLS → „Kein Clip vorhanden“.
-//   4. Aufnahmen: Tag antippen → Wiedergabe (HLS) mit Zeitleiste; Antippen und Pfeiltasten springen.
+//   2. Popup: Status im Kopf (Hauptschalter „Objekterkennung“), Reviews mit EINER Chip-Reihe (Alle · Alarme ·
+//      Erkennungen · Neu n) und der Pille „Filter“ (Zeitraum, Favoriten, Objekte/Zonen/Gesicht), signierte
+//      review_thumbnail.webp, Aufnahmen der letzten Tage. Wieder geöffnet: Filter zurück auf „Alle“.
+//   3. Review öffnen → gesehen (Kachel „1 neuer Alarm“), Clip = Review-Zeitraum über HLS – gegen den strengen Mock
+//      (Unter-Liste pfadgenau signiert, A1); „Favorit“ (frigate/event/retain); ohne HLS → Clip des Ereignisses (MP4);
+//      ohne beides → „Kein Clip vorhanden“.
+//   4. Aufnahmen: Tag antippen → Wiedergabe (HLS) mit Zeitleiste; Antippen und Pfeiltasten springen; Ausschnitt
+//      „ab hier 1 Min.“ mit lesbarem Dateinamen; ohne HLS MP4-Rückfall mit „Springen nicht möglich“.
+//   4b. Halten „Letzte Erkennung“ öffnet die Review (mit Zurück, Tippen ins Leere schließt nicht).
 //   5. Frigate ohne Reviews → Ereignisliste wie bisher, ohne Fehlermeldung.
 //   6. Live auf der Kachel: nur sichtbar und mit Stream-Funktion eingebaut, aus dem Bild/weg → abgebaut, kein Leck.
 //   7. Neue Erkennung (Testdienst) → Kachel „Person erkannt“ mit rotem Punkt; offenes Popup über das Abo „Live“.
@@ -84,20 +88,37 @@ let p = await popText();
 await check('Popup: Kopf, Aufnahmen, Objekte, Einstellungen', p && /2 neue Alarme/.test(p.txt) && /Aufnahmen/.test(p.txt) && /Einstellungen/.test(p.txt)
   && /Objekte/.test(p.txt) && /Letzte Erkennungen/.test(p.txt), p && p.txt);
 await check('Hauptschalter im Kopf heißt „Objekterkennung“', p && p.hs === 'Objekterkennung', p && p.hs);
-await check('Chips: Alle · Alarme · Erkennungen · Ungesehen · Behalten · 7 Tage · Heute · Zonen', p && ['Alle', 'Alarme', 'Erkennungen', 'Behalten', '7 Tage', 'Heute', 'Einfahrt', 'Garten']
-  .every((x) => p.chips.includes(x)) && p.chips.some((x) => /^Ungesehen\s*3$/.test(x)), p && p.chips);
+await check('Chips: eine Reihe Alle · Alarme · Erkennungen · Neu 2 (wie Kachel/Kopf), Filter zu', p && ['Alle', 'Alarme', 'Erkennungen']
+  .every((x) => p.chips.includes(x)) && p.chips.some((x) => /^Neu\s*2$/.test(x)) && !p.chips.includes('Heute'), p && p.chips);
+await clickMi('frigate-fx:' + ID);
+await page.waitForTimeout(600);
+p = await popText();
+await check('Filter aufgeklappt: Zeitraum, Favoriten, Objekte, Zonen, Gesichter', p && ['7 Tage', 'Heute', 'Nur Favoriten', 'Einfahrt', 'Garten', 'Unbekannt']
+  .every((x) => p.chips.includes(x)), p && p.chips);
 await check('Reviews mit signierten Vorschaubildern (review_thumbnail.webp)', p && p.rv >= 6 && p.thumbs >= 6, p && { rv: p.rv, thumbs: p.thumbs });
 await check('Aufnahmen: drei Tage', p && p.rec >= 3, p && p.rec);
 await clickMi('frigate-f:' + ID + '|kind|alert');
 await page.waitForTimeout(800);
 p = await popText();
 await check('Chip „Alarme“: nur Alarme (Person/Auto in der Einfahrt)', p && p.rv === 4, p && p.rv);
-await clickMi('frigate-f:' + ID + '|kind|');
+await clickMi('frigate-f:' + ID + '|zone|einfahrt');
 await page.waitForTimeout(800);
-// Review öffnen: gesehen, Clip (MP4), Behalten
+p = await popText();
+await check('Zonen-Filter sichtbar: „1 Filter aktiv · Zurücksetzen“, Pille „Filter · 1“', p && /1 Filter aktiv/.test(p.txt) && /Filter · 1/.test(p.txt) && /Zurücksetzen/.test(p.txt), p && p.txt.slice(0, 400));
+await closePop();
+await page.mouse.click(at.x, at.y);
+p = await popText();
+await check('Wieder geöffnet: Filter zurück auf „Alle“ (kein hängender Filter)', p && !/Filter aktiv/.test(p.txt) && p.rv >= 6, p && { rv: p.rv });
+// Review öffnen: gesehen, Clip (Review-Zeitraum über HLS, strenger Mock), Favorit
 await clickMi('frigate-rv:');
 let cs = await clipSrc();
-await check('Detail: Clip als MP4 über den Notification-Proxy', cs && cs.src === 'mp4', cs);
+await check('Detail: Clip = Review-Zeitraum über HLS (Unter-Liste signiert, strenger Mock)', cs && cs.src === 'hls', cs);
+const hlsUrl = await page.evaluate(() => {
+  const pop = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
+  const pl = window.__pierce('ha-hls-player', pop.shadowRoot)[0];
+  return pl ? String(pl.url || '') : null;
+});
+await check('Player bekommt die pfadgenau signierte Unter-Liste (index.m3u8?authSig=…)', /\/vod\/testhof\/start\/\d+\/end\/\d+\/index\.m3u8\?authSig=/.test(hlsUrl || ''), hlsUrl);
 const fav = await page.evaluate(async () => {
   const pop = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
   const b = window.__pierce('casora-frigate-clip', pop.shadowRoot)[0].shadowRoot.querySelector('.fv');
@@ -107,19 +128,19 @@ const fav = await page.evaluate(async () => {
   const raw = await ha.hass.callWS({ type: 'frigate/events/get', instance_id: 'frigate', cameras: ['testhof'], favorites: true, limit: 50 });
   return { pressed: b.getAttribute('aria-pressed'), favs: JSON.parse(raw).length };
 });
-await check('„Behalten“: gedrückt, Frigate merkt es (favorites)', fav.pressed === 'true' && fav.favs === 2, fav);
+await check('„Favorit“: gedrückt, Frigate merkt es (favorites)', fav.pressed === 'true' && fav.favs === 2, fav);
 await closePop();
 t = await tile();
 await check('Geöffneter Alarm gilt als gesehen: Kachel „1 neuer Alarm“', t && t.text === '1 neuer Alarm', t);
 // Clip-Rückfall
-await svc('frigate_proxy', { notifications: false });
+await svc('frigate_proxy', { vod: false });
 await page.mouse.click(at.x, at.y);
 await popText();
 await clickMi('frigate-rv:', 1);
 cs = await clipSrc();
-await check('Notification-Proxy aus: Clip über HLS (vod/event)', cs && cs.src === 'hls', cs);
+await check('Ohne HLS: Clip des Ereignisses als MP4 (Notification-Proxy)', cs && cs.src === 'mp4', cs);
 await closePop();
-await svc('frigate_proxy', { vod: false });
+await svc('frigate_proxy', { notifications: false });
 await page.mouse.click(at.x, at.y);
 await popText();
 await clickMi('frigate-rv:', 2);
@@ -155,6 +176,45 @@ const jump = await page.evaluate(async () => {
   return { t0, t1, t2, h: Math.round(r.height), a: Number(tl.getAttribute('aria-valuemin')) };
 });
 await check('Zeitleiste: Antippen springt (¾ der Stunde), Pfeil → +10 s, 44 px hoch', jump.h >= 44 && Math.abs(jump.t1 - (jump.a + 2700)) <= 2 && jump.t2 - jump.t1 === 10, jump);
+// Ausschnitt „ab hier 1 Min.“: Datei mit lesbarem Namen.
+const dlP = page.waitForEvent('download', { timeout: 20000 }).catch(() => null);
+await page.evaluate(() => {
+  const pop = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
+  const el = window.__pierce('casora-frigate-rec', pop.shadowRoot)[0];
+  el.shadowRoot.querySelector('.dl').click();
+  el.shadowRoot.querySelector('.cut [data-min="1"]').click();
+});
+const dl = await dlP;
+await check('Ausschnitt ab hier (1 Min.): Datei „<Kamera> JJJJ-MM-TT HH-MM.mp4“', dl && /^.+ \d{4}-\d{2}-\d{2} \d{2}-\d{2}\.mp4$/.test(dl.suggestedFilename()), dl && dl.suggestedFilename());
+await closePop();
+// MP4-Rückfall (ohne HLS): spielt, aber springen geht nicht – die Leiste sagt es.
+await svc('frigate_proxy', { vod: false });
+await page.mouse.click(at.x, at.y);
+await popText();
+await page.evaluate((id) => { const d = new Date(Date.now() - 86400000); const day = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  window._casoraMiHooks.some((f) => f('frigate-rec:' + id + '|' + day + '|11')); }, ID);
+const mp4 = await stable(page, () => {
+  const pop = window.__pierce('casora-popup').find((x) => x.hasAttribute('open'));
+  const el = pop && window.__pierce('casora-frigate-rec', pop.shadowRoot)[0];
+  return el ? { src: el.getAttribute('data-src'), off: el.shadowRoot.querySelector('.tl').classList.contains('off'), txt: el.shadowRoot.querySelector('.now').textContent } : null;
+}, null, { max: 30000, quiet: 1500, until: (v) => v && v.src && v.src !== 'lädt' });
+await check('Ohne HLS: MP4-Rückfall, Zeitleiste aus, „Springen nicht möglich“', mp4 && mp4.src === 'mp4' && mp4.off && /Springen nicht möglich/.test(mp4.txt), mp4);
+await closePop();
+await svc('frigate_proxy', { vod: true });
+// Halten „Letzte Erkennung“: die Review, mit Weg zurück, Tippen ins Leere schließt nicht.
+const lat = await page.evaluate(async (id) => {
+  const ha = document.querySelector('home-assistant');
+  const it = window._casoraFrigate.hold(ha.hass, id).find((x) => x.t === 'Letzte Erkennung');
+  if (!it) return null;
+  it.fn();
+  for (let i = 0; i < 60; i++) {
+    const cur = window.casoraPopup.current;
+    if (cur && cur._frigView === 'detail') return { view: cur._frigView, back: typeof cur.back === 'function', bg: cur.dismiss_on_background, rv: !!(cur.content && JSON.stringify(cur.content).includes('"rv":"')) };
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  return { view: (window.casoraPopup.current || {})._frigView || null };
+}, ID);
+await check('Halten „Letzte Erkennung“: Review-Detail mit Zurück, Tippen ins Leere schließt nicht', lat && lat.view === 'detail' && lat.back && lat.bg === false && lat.rv, lat);
 await closePop();
 // Ältere Frigate-Version ohne Reviews
 await svc('frigate_proxy', { reviews: false });
