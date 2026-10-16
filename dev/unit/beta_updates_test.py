@@ -42,6 +42,11 @@ for a, b in (("1.1.0-beta.2", "1.1.0-beta.1"), ("1.1.0-beta.1", "1.0.3"), ("1.1.
              ("v1.1.0-beta.10", "1.1.0-beta.9"), ("1.1.0-rc.1", "1.1.0-beta.3"), ("1.0.10", "1.0.9")):
     check(f"{a} > {b}", newer(a, b) and not newer(b, a) and compare_versions(a, b) == 1)
 check("v1.0.3 == 1.0.3", compare_versions("v1.0.3", "1.0.3") == 0)
+# Kalender-Versionen YY.M.N (ab Oktober 2026): Sprung von 1.6.0 und Reihenfolge innerhalb/über Monate
+CAL = (("26.10.33", "1.6.0"), ("v26.10.10", "26.10.9"), ("26.10.1", "26.9.12"), ("27.1.1", "26.12.40"),
+       ("26.10.34-beta.1", "26.10.33"))
+for a, b in CAL:
+    check(f"Kalender: {a} > {b}", newer(a, b) and not newer(b, a))
 check("Vorabversion erkannt", is_prerelease("v1.1.0-beta.1") and not is_prerelease("1.0.3"))
 # Ohne AwesomeVersion (einfacher Vergleich) dasselbe Ergebnis
 saved = release_notes.AwesomeVersion
@@ -50,6 +55,7 @@ try:
     check("ohne AwesomeVersion: gleiche Reihenfolge",
           newer("1.1.0-beta.2", "1.1.0-beta.1") and newer("1.1.0", "1.1.0-beta.2") and newer("1.1.0-beta.1", "1.0.3")
           and newer("1.1.0-beta.10", "1.1.0-beta.9") and compare_versions("v1.0.3", "1.0.3") == 0)
+    check("ohne AwesomeVersion: Kalender-Versionen", all(newer(a, b) and not newer(b, a) for a, b in CAL))
 finally:
     release_notes.AwesomeVersion = saved
 

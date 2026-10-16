@@ -6,9 +6,9 @@ Kein Release und kein Karten-Update ohne grünes Gate für genau den Commit, der
 ## Kurz: welcher Aufruf wann
 
 ```sh
-dev/qa/gate.sh                  # Standard: Umfang nach Version im manifest (X.Y.0 voll, X.Y.Z patch)
-dev/qa/gate.sh --voll           # volles Gate, Pflicht für X.Y.0, zählt immer
-dev/qa/gate.sh --patch          # Grundprüfungen + nur die betroffenen Tests, zählt für X.Y.Z mit Z>0
+dev/qa/gate.sh                  # Standard: Umfang nach Version im manifest (Kalender-Version YY.M.N und X.Y.0 voll, alte X.Y.Z patch)
+dev/qa/gate.sh --voll           # volles Gate, Pflicht für jedes Release (YY.M.N), zählt immer
+dev/qa/gate.sh --patch          # Grundprüfungen + nur die betroffenen Tests (Zwischenstand; Freigabe nur für alte X.Y.Z mit Z>0)
 dev/qa/gate.sh --nachholen      # nach einem roten Lauf: nur die roten und seitdem geänderten Tests
 dev/qa/gate.sh --dry-run        # Plan zeigen (Umfang, Zuordnung Datei → Tests, HAs, Zeitschätzung)
 ```
@@ -55,9 +55,9 @@ Fehlt etwas ganz, startet das Gate nicht, statt später als roter Test (früher:
 
 ## Umfang: voll oder patch
 
-**Voll** (`--voll`, Standard bei Version X.Y.0): alle Zustände, alle Tests, voller Klick-Durchlauf.
+**Voll** (`--voll`, Standard bei Kalender-Version YY.M.N und bei X.Y.0): alle Zustände, alle Tests, voller Klick-Durchlauf.
 
-**Patch** (`--patch`, Standard bei X.Y.Z mit Z>0): statisch + Unit wie immer, dazu nur die Tests, die
+**Patch** (`--patch`, Standard nur noch bei alten X.Y.Z mit Z>0): statisch + Unit wie immer, dazu nur die Tests, die
 die seit dem **letzten grünen vollen Gate** (Vorfahre von HEAD, in allen Worktrees gesucht; anders mit
 `--basis <commit>`) geänderten Dateien berühren. Die Zuordnung macht `dev/qa/auswahl.mjs` und zeigt sie
 vorher als Tabelle (`--dry-run`), in dieser Reihenfolge je Datei:
@@ -77,8 +77,10 @@ vorher als Tabelle (`--dry-run`), in dieser Reihenfolge je Datei:
 zusätzlich stress komplett dazu (voller Klick-Durchlauf). Teure Teile (voller Klick-Durchlauf, r56,
 r20 …) laufen damit nur im vollen Gate oder wenn die Änderung sie berührt.
 
-Freigabe: `tools/release.sh X.Y.Z` (über `tools/qa_gate.py --version`) nimmt ein Patch-Gate nur für
-Z>0 und nur, wenn sein Bezug ein grünes volles Gate eines Vorfahren ist. X.Y.0 braucht immer `--voll`.
+Freigabe: `tools/release.sh YY.M.N` (über `tools/qa_gate.py --version`) braucht für Kalender-Versionen
+(seit Oktober 2026, ein gebündeltes Release pro Woche) standardmäßig das volle Gate; `gate.sh` wählt dafür
+nie automatisch ein Patch-Gate. Nur für einen echten Notfall-Hotfix: `dev/qa/gate.sh --patch` und
+`tools/release.sh YY.M.N --patch` – und nur, wenn der Bezug ein grünes volles Gate eines Vorfahren ist.
 Karten-Updates (`build-card-update.py`) nehmen beide.
 
 ## Nachholen statt Neulauf
@@ -176,13 +178,14 @@ gemessenen Zeiten.
 Danach, wenn alles grün und committet ist:
 
 ```sh
-tools/release.sh 1.2.1            # prüft Gate (Umfang passend zur Version), CHANGELOG, manifest, WHATS_NEW
-tools/release.sh 1.2.1 --publish  # führt Tag, Push und gh release create aus
+tools/next-version                # nächste Kalender-Version YY.M.N (zählt die GitHub-Releases des Monats)
+tools/release.sh                  # Version von tools/next-version; prüft Gate (voll), CHANGELOG, manifest, WHATS_NEW
+tools/release.sh 26.10.31 --publish  # führt Tag, Push und gh release create aus
 python3 tools/build-card-update.py --note casora_x="…"   # Karten-Update, ebenfalls nur mit grünem Gate
 ```
 
-Jede Änderung nach dem Gate (auch nur CHANGELOG) heißt: committen, Gate neu, bei Patch-Releases ist
-das ein kurzer Patch-Lauf, bei reinen Teständerungen `--nachholen`.
+Jede Änderung nach dem Gate (auch nur CHANGELOG) heißt: committen, Gate neu, für die Freigabe ist
+das ein volles Gate, bei reinen Teständerungen `--nachholen`.
 
 Ausgeliefert wird automatisch: Die GitHub-Releases sind die Quelle. Casora fragt die
 öffentliche GitHub-API anonym nach neuen `v…`-Releases und `karten-…`-Paketen (alle 6 Stunden),

@@ -5,12 +5,16 @@ Gebraucht von tools/release.sh und tools/build-card-update.py:
   - Arbeitsstand sauber (keine geänderten Dateien unter Versionskontrolle),
   - .qa/gate-<HEAD>.json vorhanden, alle Schritte ok,
   - vollständiger Lauf: nicht --quick, nicht --only/--no-switch, nicht auf geändertem Stand,
-  - Umfang: ein volles Gate gilt immer. Ein Patch-Gate (nur die betroffenen Tests, dev/qa/gate.sh
-    --patch) gilt für ein Release X.Y.Z nur mit Z>0 und nur, wenn sein Bezug ein grünes volles Gate
-    eines Vorfahren von HEAD ist. Ein nachgeholtes Gate (--nachholen) hat den Umfang seines Vorlaufs.
+  - Umfang: ein volles Gate gilt immer. Releases mit Kalender-Version YY.M.N (seit Oktober 2026,
+    gebündelt einmal pro Woche) brauchen standardmäßig das volle Gate. Ein Patch-Gate (nur die betroffenen
+    Tests, dev/qa/gate.sh --patch) zählt dort nur mit --patch (bewusst, für echte Notfall-Hotfixes:
+    tools/release.sh --patch), für ein altes Release X.Y.Z nur mit Z>0 – und immer nur, wenn sein
+    Bezug ein grünes volles Gate eines Vorfahren von HEAD ist. Ein nachgeholtes Gate (--nachholen) hat
+    den Umfang seines Vorlaufs.
 
-    python3 tools/qa_gate.py                   # Rückgabe 0 = grün, sonst 1 mit Begründung
-    python3 tools/qa_gate.py --version 1.2.1   # für dieses Release (Patch-Gate nur bei Z>0)
+    python3 tools/qa_gate.py                     # Rückgabe 0 = grün, sonst 1 mit Begründung
+    python3 tools/qa_gate.py --version 26.10.31  # für dieses Release (Kalender-Version: volles Gate)
+    python3 tools/qa_gate.py --version 26.10.32 --patch  # Notfall-Hotfix: Patch-Gate zugelassen
 """
 from __future__ import annotations
 
@@ -72,7 +76,16 @@ def last_full_green() -> str:
     return best[1] if best else ""
 
 
-def gate_status(require_clean: bool = True, version: str | None = None) -> tuple[bool, str]:
+def is_calendar_version(version: str) -> bool:
+    """Kalender-Version YY.M.N (26.10.31) statt alter X.Y.Z (1.6.0) – alte Hauptversionen waren < 24."""
+    parts = version.split(".")
+    if len(parts) != 3 or not all(p.isdigit() for p in parts):
+        return False
+    yy, m, n = (int(p) for p in parts)
+    return yy >= 24 and 1 <= m <= 12 and n >= 1
+
+
+def gate_status(require_clean: bool = True, version: str | None = None, patch_ok: bool = False) -> tuple[bool, str]:
     """(ok, Text) – Text nennt bei ok die Gate-Datei, sonst den Grund."""
     head = _git("rev-parse", "HEAD")
     if require_clean:
@@ -110,7 +123,13 @@ def gate_status(require_clean: bool = True, version: str | None = None) -> tuple
     if umfang == "patch":
         if version is not None:
             parts = version.split(".")
-            if len(parts) != 3 or parts[2] == "0":
+            if is_calendar_version(version):
+                if not patch_ok:
+                    return False, (f"Gate für {head[:12]} ist ein Patch-Gate – ein Release {version} (Kalender-Version) "
+                                   "braucht das volle Gate: dev/qa/gate.sh --voll (nur echter Notfall-Hotfix: "
+                                   "tools/release.sh --patch)")
+                extra += ", Notfall-Hotfix (--patch)"
+            elif len(parts) != 3 or parts[2] == "0":
                 return False, (f"Gate für {head[:12]} ist ein Patch-Gate – ein Release {version} (X.Y.0) braucht das "
                                "volle Gate: dev/qa/gate.sh --voll")
         basis = doc.get("basis") or ""
@@ -133,6 +152,6 @@ if __name__ == "__main__":
         print(last_full_green())
         sys.exit(0)
     ver = sys.argv[sys.argv.index("--version") + 1] if "--version" in sys.argv[1:-1] else None
-    ok, msg = gate_status(version=ver)
+    ok, msg = gate_status(version=ver, patch_ok="--patch" in sys.argv[1:])
     print(msg)
     sys.exit(0 if ok else 1)

@@ -78,7 +78,7 @@ Zeiten nur auf ruhigem Rechner vergleichen; unter Last streuen sie um Faktor 2�
 
 ```sh
 dev/qa/gate.sh --dry-run     # Plan
-dev/qa/gate.sh               # Umfang nach Version: X.Y.0 voll, X.Y.Z patch
+dev/qa/gate.sh               # Umfang nach Version: Kalender-Version YY.M.N voll
 dev/qa/gate.sh --nachholen   # nach rotem Lauf nur rote/geänderte Tests
 ```
 
@@ -98,13 +98,18 @@ Vor einem Release zusätzlich:
 1. Alle Fixes fertig und abgenommen → erst dann Gate.
 2. **Neu-Popup füllen**: `WHATS_NEW` in `custom_components/casora/panel/casora-panel-welcome.js`
    (2–4 Einträge: mdi-Symbol, Titel, Text in `TEXT.de`/`TEXT.en`).
-3. Version in `custom_components/casora/manifest.json`.
-4. `CHANGELOG.md` und `CHANGELOG.de.md` je Abschnitt `## X.Y.Z`; `python3 tools/sync-changelog.py`.
+3. Version in `custom_components/casora/manifest.json`: Kalender-Version **YY.M.N** aus `tools/next-version`
+   (Jahr zweistellig, Monat ohne Null, N = laufende Nummer des Releases im Monat ab 1; es zählen die
+   veröffentlichten GitHub-Releases des Monats, auch alte X.Y.Z, bloße Tags nicht; neuer Monat → wieder .1). Jedes Release ist einfach die nächste Nummer – kein
+   Unterschied mehr zwischen Fix- und Funktions-Release.
+4. `CHANGELOG.md` und `CHANGELOG.de.md` je Abschnitt `## YY.M.N`; `python3 tools/sync-changelog.py`.
 5. Vorschaubilder (`assets/themes/`) neu, wenn sich der Casora-Look geändert hat (demo-Haus, Handy 393×852
    mit Safe-Area, Theme „Casora“); Assistent einmal durchklicken.
 6. Keine persönlichen Daten: `tools/privacy-check.py`; „Studio B“ nur intern (`git grep "Studio B"` in Texten).
-7. Gate grün für genau diesen Commit → `tools/release.sh X.Y.Z` (prüft Gate, CHANGELOG, manifest, WHATS_NEW)
-   → `tools/release.sh X.Y.Z --publish`. Titel nur „vX.Y.Z“.
+7. Volles Gate grün für genau diesen Commit → `tools/release.sh` (nimmt die Version von `tools/next-version`;
+   prüft Version, Gate, CHANGELOG, manifest, WHATS_NEW) → `tools/release.sh YY.M.N --publish`.
+   Tag und Titel nur „vYY.M.N“ (z. B. v26.10.31). Nur bei einem echten Notfall-Hotfix: `dev/qa/gate.sh --patch`
+   und `tools/release.sh YY.M.N --patch` (Patch-Gate bewusst zugelassen, nie automatisch).
 
 **Karten-Update statt Release** (`python3 tools/build-card-update.py --note casora_x="…"`, Tag
 `karten-JJJJ-MM-TT-N`, `--latest=false`): nur wenn ausschließlich bestehende `casora_*`-Vorlagen in

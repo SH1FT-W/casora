@@ -1,12 +1,20 @@
 #!/bin/sh
 # Release vorbereiten – nur mit grünem Qualitäts-Gate für HEAD (dev/qa/gate.sh).
 #
-#   tools/release.sh 0.6.0             prüft alles und zeigt die Befehle (führt nichts aus)
-#   tools/release.sh 0.6.0 --publish   führt Tag, Push und gh release create danach aus
-#   tools/release.sh 0.6.0 --same-whats-new   WHATS_NEW darf wie beim letzten Release sein
+# Versionen sind Kalender-Versionen YY.M.N (Jahr zweistellig, Monat ohne Null, N = laufende Nummer des
+# Releases im Monat ab 1, veröffentlichte GitHub-Releases des Monats zählen, auch alte X.Y.Z) – Tag „vYY.M.N“, z. B. v26.10.31.
+# Die nächste Nummer rechnet tools/next-version aus.
 #
-# Prüft: sauberer Arbeitsstand, .qa/gate-<HEAD>.json grün und vollständig (X.Y.0: volles Gate,
-# X.Y.Z mit Z>0: auch Patch-Gate auf einem grünen vollen Gate eines Vorfahren, dev/qa/gate.sh --patch),
+#   tools/release.sh                   Version von tools/next-version, prüft alles, zeigt die Befehle
+#   tools/release.sh 26.10.31          dasselbe mit ausdrücklicher Version (muss = tools/next-version sein)
+#   tools/release.sh 26.10.31 --publish   führt Tag, Push und gh release create danach aus
+#   tools/release.sh 26.10.31 --same-whats-new   WHATS_NEW darf wie beim letzten Release sein
+#   tools/release.sh 26.10.32 --andere-version   Version weicht bewusst von tools/next-version ab
+#   tools/release.sh 26.10.32 --patch   echter Notfall-Hotfix: Patch-Gate (dev/qa/gate.sh --patch) zugelassen
+#                                       – nie automatisch, Standard bleibt das volle Gate
+#
+# Prüft: Version im Schema YY.M.N und = tools/next-version, sauberer Arbeitsstand, .qa/gate-<HEAD>.json
+# grün und vollständig (Kalender-Version: volles Gate, dev/qa/gate.sh --voll; Patch-Gate nur mit --patch),
 # CHANGELOG in der Integration aktuell (sync-changelog --check), manifest-Version = <version>,
 # CHANGELOG.md und CHANGELOG.de.md haben je einen Abschnitt „## <version>“, WHATS_NEW (casora-panel-welcome.js) gefüllt
 # und seit dem letzten Release geändert. Versionshinweise: .qa/release-notes-<version>.md.
@@ -16,25 +24,40 @@ set -eu
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO"
 
-VER=""; PUBLISH=0; SAME_WN=0
+VER=""; PUBLISH=0; SAME_WN=0; OTHER_VER=0; PATCH=""
 for a in "$@"; do
   case "$a" in
     --publish) PUBLISH=1 ;;
     --same-whats-new) SAME_WN=1 ;;
-    -h|--help) sed -n '2,11p' "$0"; exit 0 ;;
+    --andere-version) OTHER_VER=1 ;;
+    --patch) PATCH="--patch" ;;
+    -h|--help) sed -n '2,23p' "$0"; exit 0 ;;
     -*) echo "Unbekannte Option: $a" >&2; exit 2 ;;
     *) VER="${a#v}" ;;
   esac
 done
-[ -n "$VER" ] || { echo "Aufruf: tools/release.sh <version> [--publish]" >&2; exit 2; }
-echo "$VER" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "Version muss X.Y.Z sein: $VER" >&2; exit 2; }
-TAG="v$VER"
 
 fail() { echo "✗ $*" >&2; exit 1; }
 ok() { echo "✓ $*"; }
 
-# 1) Gate (inkl. sauberem Arbeitsstand)
-MSG="$(python3 tools/qa_gate.py --version "$VER")" || fail "$MSG"
+# 0) Version: Kalender-Schema YY.M.N, Vorschlag aus tools/next-version (zählt die GitHub-Releases des Monats)
+NEXT="$(tools/next-version)" || fail "tools/next-version fehlgeschlagen"
+if [ -z "$VER" ]; then
+  VER="$NEXT"
+  echo "Version von tools/next-version: $VER"
+fi
+echo "$VER" | grep -Eq '^[0-9]{2}\.([1-9]|1[0-2])\.[1-9][0-9]*$' \
+  || { echo "Version muss YY.M.N sein (z. B. $NEXT): $VER" >&2; exit 2; }
+if [ "$VER" != "$NEXT" ]; then
+  [ $OTHER_VER = 1 ] || fail "Version $VER ≠ $NEXT (tools/next-version) – bewusst so? Dann --andere-version"
+  echo "! Version $VER weicht von tools/next-version ($NEXT) ab (--andere-version)"
+fi
+ok "Version $VER"
+TAG="v$VER"
+
+# 1) Gate (inkl. sauberem Arbeitsstand; Kalender-Versionen brauchen das volle Gate, Patch-Gate nur mit --patch)
+[ -n "$PATCH" ] && echo "! --patch: Notfall-Hotfix, Patch-Gate wird angenommen"
+MSG="$(python3 tools/qa_gate.py --version "$VER" $PATCH)" || fail "$MSG"
 ok "$MSG"
 
 # 2) CHANGELOG in der Integration aktuell
