@@ -39,8 +39,9 @@ const SETUP_ENTITIES = [
 // Weich ist seit 01.10.2026 DAS Casora-Design; die Legacy-Designs Hemma 1/2 gibt es seit 1.6.1 nicht mehr.
 const CASORA_THEME = "Casora";
 // Frühere Theme-Namen → heutiger Name; helfer.py THEME_RENAMED (+ „Hemma“, nur wenn es nicht mehr da ist).
-const THEME_RENAMED = { "Casora Weich": "Casora", "Casora Standard": "Casora", "Casora Glass": "Casora",
-  "Hemma 2": "Casora", "Hemma 1": "Casora", "Hemma": "Casora" };
+// Hemma 1/2 (und Hemmas „Hemma“) waren Glas-Looks: ihr Ersatz ist Casora Glas.
+const THEME_RENAMED = { "Casora Weich": "Casora", "Casora Standard": "Casora Glas", "Casora Glass": "Casora Glas",
+  "Hemma 2": "Casora Glas", "Hemma 1": "Casora Glas", "Hemma": "Casora Glas" };
 // The looks offered on first run. Each ships in theme_*.yaml; the photo is the preview.
 // aliases: weitere Namen, unter denen dasselbe Theme registriert ist (Übergang von Hemma).
 // shot: echter Dashboard-Screenshot je Modus als Vorschau.

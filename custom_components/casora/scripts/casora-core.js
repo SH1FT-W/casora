@@ -1931,6 +1931,45 @@ window.casoraMenuGlass = {
   apply();
 })();
 
+// ── Hinweis nach Design-Umstellung (Hemma 1/2 → Casora Glas) ───────────────────
+// helfer.py setzt bei der Umstellung je betroffenem HA-Benutzer die Benutzerdaten
+// casora_theme_notice = { from: 'Hemma 2' | 'Hemma 1' | 'Hemma', to: 'Casora Glas' }. Einmal als
+// Meldung zeigen (bleibt, bis sie weggeklickt wird), dann löschen – auf allen Geräten nur einmal.
+(function () {
+  if (window._casoraThemeNotice) return;
+  window._casoraThemeNotice = true;
+  var KEY = 'casora_theme_notice';
+  var TEXT = {
+    'Hemma 2': 'Hemma 2 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.',
+    'Hemma 1': 'Hemma 1 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.',
+    'Hemma': 'Das Hemma-Design gibt es nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.',
+  };
+  var tries = 0;
+  function check() {
+    var el = document.querySelector('home-assistant');
+    var h = el && el.hass;
+    var conn = h && h.connection;
+    if (!conn || typeof conn.sendMessagePromise !== 'function' || conn.connected === false) {
+      if (++tries < 60) setTimeout(check, 2000);
+      return;
+    }
+    conn.sendMessagePromise({ type: 'frontend/get_user_data', key: KEY }).then(function (r) {
+      var v = r && r.value;
+      var msg = v && TEXT[v.from];
+      if (!msg) return;
+      // Erst löschen, dann zeigen: ein zweiter Tab oder ein Neuladen zeigt ihn nicht noch einmal.
+      return conn.sendMessagePromise({ type: 'frontend/set_user_data', key: KEY, value: null }).then(function () {
+        var T = window.casoraTr || function (x) { return x; };
+        var ev = new Event('hass-notification', { bubbles: true, composed: true });
+        ev.detail = { message: T(msg), duration: -1, dismissable: true,
+          action: { text: T('OK'), action: function () {} } };
+        el.dispatchEvent(ev);
+      });
+    }).catch(function () { /* ältere HA ohne Benutzerdaten: kein Hinweis */ });
+  }
+  setTimeout(check, 3000);
+})();
+
 // ── Now Playing collector ────────────────────────────────────────────────────
 (function () {
   if (!window.CASORA_ACTIVE_STATES) {

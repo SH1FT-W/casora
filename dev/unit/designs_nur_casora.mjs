@@ -1,4 +1,4 @@
-// Seit 1.6.1 nur noch Casora-Designs: „Casora“, „Casora Nebel“ und „Casora Glas“ (Hemma 1/2 entfernt).  node dev/unit/designs_nur_casora.mjs
+// Seit 1.6.1 nur noch Casora-Designs: „Casora“, „Casora Nebel“ und „Casora Glas“ (Hemma 1/2 entfernt, ihre Nutzer → Casora Glas).  node dev/unit/designs_nur_casora.mjs
 // Auswahl im Assistenten und im Studio, Umstellung alter Namen im Browser, keine verwaisten Vorschaubilder.
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -12,11 +12,15 @@ assert.ok(from > 0 && to > from);
 const { CASORA_THEMES, THEME_RENAMED } = new Function(src.slice(from, to) + '\nreturn { CASORA_THEMES, THEME_RENAMED };')();
 
 assert.deepEqual(CASORA_THEMES.map((x) => x.name), ['Casora', 'Casora Nebel', 'Casora Glas'], 'Casora, Nebel und Glas zur Wahl');
-// Alte Namen landen weiter auf Casora, nie auf Casora Glas
-assert.ok(!Object.values(THEME_RENAMED).includes('Casora Glas'), 'keine Umleitung auf Casora Glas');
-for (const old of ['Hemma 2', 'Hemma 1', 'Casora Standard', 'Casora Glass', 'Casora Weich']) {
-  assert.equal(THEME_RENAMED[old], 'Casora', old + ' → Casora');
+// Hinweis nach der Umstellung: casora-core.js liest die Benutzerdaten von helfer.py, ein Text je Hemma-Look
+const coreTxt = fs.readFileSync(new URL('scripts/casora-core.js', cc), 'utf8');
+assert.ok(/casora_theme_notice/.test(coreTxt) && /THEME_NOTICE_KEY = "casora_theme_notice"/.test(read('helfer.py')), 'Hinweis-Schlüssel in helfer.py und casora-core.js gleich');
+for (const k of ["'Hemma 2':", "'Hemma 1':", "'Hemma':"]) assert.ok(coreTxt.includes(k), 'Hinweistext für ' + k);
+// Hemma 1/2 (auch Altnamen und Hemmas „Hemma“) waren Glas-Looks → Casora Glas; „Casora Weich“ → Casora
+for (const old of ['Hemma 2', 'Hemma 1', 'Casora Standard', 'Casora Glass', 'Hemma']) {
+  assert.equal(THEME_RENAMED[old], 'Casora Glas', old + ' → Casora Glas');
 }
+assert.equal(THEME_RENAMED['Casora Weich'], 'Casora', 'Casora Weich → Casora');
 // Bilder der Auswahl gibt es, die der alten Designs nicht mehr
 for (const x of CASORA_THEMES) for (const u of Object.values(x.shot)) {
   assert.ok(fs.existsSync(new URL('assets/themes/' + u.split('/').pop(), cc)), 'Vorschau fehlt: ' + u);

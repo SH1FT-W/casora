@@ -42,13 +42,19 @@ _LOGGER = logging.getLogger(__name__)
 HELPER_DOMAINS = ("input_boolean", "input_text", "input_select", "input_number", "input_datetime")
 # Grundwerte in theme.yaml (kein eigenes Design); die Designs stehen in theme_*.yaml.
 THEME_BASE = "Casora Basis"
-# Frühere Namen: ein so gespeichertes Standard-Theme wird einmal auf „Casora“ umgestellt.
-# „Casora Weich“ hieß Casora bis 05.10.2026; die Legacy-Designs Hemma 2 (früher „Casora Standard“)
-# und Hemma 1 (früher „Casora Glass“) gibt es seit 1.6.1 nicht mehr.
-THEME_RENAMED = {"Casora Weich": "Casora", "Casora Standard": "Casora", "Casora Glass": "Casora",
-                 "Hemma 2": "Casora", "Hemma 1": "Casora"}
+# Frühere Namen: ein so gespeichertes Standard-Theme wird einmal auf den heutigen Namen umgestellt.
+# „Casora Weich“ hieß Casora bis 05.10.2026. Die Legacy-Designs Hemma 2 (früher „Casora Standard“)
+# und Hemma 1 (früher „Casora Glass“) gibt es seit 1.6.1 nicht mehr – ihre Nutzer bekommen
+# „Casora Glas“, den Glas-Look im Casora-Aufbau.
+THEME_GLAS = "Casora Glas"
+THEME_RENAMED = {"Casora Weich": "Casora", "Casora Standard": THEME_GLAS, "Casora Glass": THEME_GLAS,
+                 "Hemma 2": THEME_GLAS, "Hemma 1": THEME_GLAS}
 # Hemmas eigenes Theme hieß „Hemma“ – nur umstellen, wenn es nicht mehr da ist (Hemma entfernt).
-THEME_RENAMED_IF_GONE = {"Hemma": "Casora"}
+THEME_RENAMED_IF_GONE = {"Hemma": THEME_GLAS}
+# Einmaliger Hinweis im Dashboard (Benutzerdaten, casora-core.js): welcher Hemma-Look ersetzt wurde.
+THEME_NOTICE_KEY = "casora_theme_notice"
+THEME_NOTICE_FROM = {"Hemma 2": "Hemma 2", "Casora Standard": "Hemma 2", "Hemma 1": "Hemma 1",
+                     "Casora Glass": "Hemma 1", "Hemma": "Hemma"}
 EXPANDED_ROW = "input_select.casora_expanded_row"
 RESTART_DONE = ("input_boolean.casora_restart_done_1", "input_boolean.casora_restart_done_2")
 PLAYING = ("playing", "buffering")
@@ -291,8 +297,10 @@ def user_theme_rename(value: Any, known: Any) -> Any:
     return dict(value, theme=to) if to else None
 
 
-async def _migrate_user_themes(hass: HomeAssistant, known: Any) -> None:
-    """Profil-Theme je Benutzer (HA speichert es auf dem Server) einmal umstellen."""
+async def _migrate_user_themes(hass: HomeAssistant, known: Any, default_from: str | None = None) -> None:
+    """Profil-Theme je Benutzer (HA speichert es auf dem Server) einmal umstellen.
+    default_from: Hemma-Look, den das Standard-Theme gerade verloren hat – Benutzer ohne eigenes
+    Profil-Theme sehen das Standard-Theme und bekommen dafür den Hinweis."""
     try:
         from homeassistant.components.frontend.storage import async_user_store
     except ImportError:  # ältere HA-Fassung ohne Benutzerdaten
@@ -302,9 +310,19 @@ async def _migrate_user_themes(hass: HomeAssistant, known: Any) -> None:
             continue
         try:
             store = await async_user_store(hass, user.id)
-            new = user_theme_rename(store.data.get("theme"), known)
+            old = store.data.get("theme")
+            new = user_theme_rename(old, known)
             if new:
                 await store.async_set_item("theme", new)
+            own = old.get("theme") if isinstance(old, dict) else None
+            # Hinweis nur, wer wirklich von einem Hemma-Look auf Casora Glas wechselt: eigenes
+            # Profil-Theme umgestellt, oder kein eigenes und das Standard-Theme wurde umgestellt.
+            if new:
+                frm = THEME_NOTICE_FROM.get(own) if new.get("theme") == THEME_GLAS else None
+            else:
+                frm = default_from if own in (None, "", "default") else None
+            if frm:
+                await store.async_set_item(THEME_NOTICE_KEY, {"from": frm, "to": THEME_GLAS})
         except Exception as err:  # noqa: BLE001 – ein Benutzer ohne Daten hält die anderen nicht auf
             _LOGGER.debug("Casora: Profil-Theme nicht umgestellt: %s", err)
 
@@ -385,7 +403,10 @@ async def _setup_theme(hass: HomeAssistant, runtime: dict) -> None:
             _LOGGER.debug("Casora: Theme %s nicht umgestellt: %s", name, err)
 
     # Profil-Theme der Benutzer: im Hintergrund, der Start wartet nicht darauf.
-    hass.async_create_task(_migrate_user_themes(hass, None if known is None else set(known) - retired | set(themes)))
+    default_from = next((THEME_NOTICE_FROM[saved.get(k)] for k in DEFAULT_KEYS
+                         if renamed.get(k) == THEME_GLAS and saved.get(k) in THEME_NOTICE_FROM), None)
+    hass.async_create_task(_migrate_user_themes(hass, None if known is None else set(known) - retired | set(themes),
+                                                default_from))
 
     @callback
     def _updated(_event: Event) -> None:

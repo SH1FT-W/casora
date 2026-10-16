@@ -77,7 +77,8 @@ HEMMA_RESOURCE_PREFIXES = ("/hemma_scripts/", "/local/hemma/scripts/", "/local/h
 THEMES_HEMMA = "themes/hemma"
 # Alte Hemma-Installation ohne HACS: YAML-Dashboards und Vorlagen unter /config/dashboards.
 YAML_HEMMA = ("dashboards/hemma", "dashboards/templates")
-CASORA_DEFAULT_THEME = "Casora"
+# Hemmas Theme war dunkles Glas über den Raumfotos – sein Ersatz ist Casora Glas (helfer.py THEME_RENAMED_IF_GONE).
+CASORA_DEFAULT_THEME = "Casora Glas"
 # Hemma-Helfer, deren Wert Casora übernimmt (wie carryHelpers im Umzug, casora-panel-umzug.js).
 CARRY = ("input_boolean.dashboard_redirect", "input_boolean.motion_badges", "input_boolean.now_playing_minimized",
          "input_text.now_playing_pinned", "input_select.thermostat_mode", "input_number.thermostat_target_temperature",
@@ -1128,7 +1129,7 @@ async def async_remove(hass: HomeAssistant, remove_dashboards: list[str] | None,
                   "deleted_files": [p["file"] for p in applied if p["ok"] and p["delete"]],
                   "carried": carried, "manual": manual, "error": "; ".join(errs) or None})
 
-    # g) Theme „Hemma“ (themes/hemma). War es Standard, übernimmt Casora.
+    # g) Theme „Hemma“ (themes/hemma). War es Standard, übernimmt Casora Glas.
     if extras["themes"]:
         errs = []
 
