@@ -108,6 +108,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Ein erfundener Gardena-artiger Mähroboter (Community-Karte), siehe maeher.py.
     from .maeher import extra as maeher_extra
     _merge(fixture, maeher_extra(dt_util.utcnow()), "Testmäher")
+    # Eine erfundene Frigate-Kamera mit Erkennungen (Community-Karte), siehe frigate.py.
+    from .frigate import extra as frigate_extra
+    _merge(fixture, frigate_extra(dt_util.utcnow()), "Frigate-Testhof")
     # Ein erfundener Luftbefeuchter mit Modi, Wassertank und Feuchtesensor, siehe befeuchter.py.
     from .befeuchter import extra as befeuchter_extra
     _merge(fixture, befeuchter_extra(dt_util.utcnow()), "Testbefeuchter")
@@ -132,6 +135,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
     mock.register_services()
     mock.register_websocket()
+    from .frigate import setup as frigate_setup
+    frigate_setup(hass, mock)
     mock.track_derived()
     mock.backfill_history()
     _LOGGER.warning(

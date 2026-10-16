@@ -1821,7 +1821,70 @@
   "Tipp: Kachel gedrückt halten – Schnellbedienung": "Tip: press and hold a tile for quick controls",
   "Zeitschalter aus": "Stop timer",
   "Ändern auf": "Change to",
-  "Update gestartet": "Update started"
+  "Update gestartet": "Update started",
+  "Aufnahme an": "Recording on",
+  "Aufnahme aus": "Recording off",
+  "Aufnahme ausschalten?": "Turn off recording?",
+  "Aufnahmen": "Recordings",
+  "Automatisch folgen": "Auto-tracking",
+  "Bewegungserkennung": "Motion detection",
+  "Erkennung an": "Detection on",
+  "Erkennung aus": "Detection off",
+  "Erkennung ausschalten?": "Turn off detection?",
+  "Frigate meldet Fehler": "Frigate reports an error",
+  "Frigate startet": "Frigate is starting",
+  "Frigate antwortet nicht": "Frigate isn't responding",
+  "Gerade im Bild": "In view now",
+  "Geräuscherkennung": "Audio detection",
+  "In Frigate öffnen": "Open in Frigate",
+  "In den Medien von Home Assistant": "In Home Assistant media",
+  "Kamera aus": "Camera off",
+  "Keine Erkennung": "No detection",
+  "Keine Erkennungen in den letzten 7 Tagen": "No detections in the last 7 days",
+  "Letzte Erkennung": "Last detection",
+  "Letzte Erkennungen": "Latest detections",
+  "Liste über die Frigate-Integration nicht abrufbar": "Couldn't load the list from the Frigate integration",
+  "Noch nicht erkannt": "Not detected yet",
+  "Objekte": "Objects",
+  "Objekt": "Object",
+  "Schnappschuss": "Snapshot",
+  "Schnappschüsse": "Snapshots",
+  "Zonen": "Zones",
+  "läuft noch": "still running",
+  "System": "System",
+  "Frigate": "Frigate",
+  "Bär": "Bear",
+  "Eichhörnchen": "Squirrel",
+  "Fahrrad": "Bicycle",
+  "FedEx": "FedEx",
+  "Fuchs": "Fox",
+  "Gesicht": "Face",
+  "Hund": "Dog",
+  "Kaninchen": "Rabbit",
+  "Katze": "Cat",
+  "Kennzeichen": "License plate",
+  "Motorrad": "Motorcycle",
+  "Mülltonne": "Waste bin",
+  "Paket": "Package",
+  "Pferd": "Horse",
+  "Schaf": "Sheep",
+  "Schirm": "Umbrella",
+  "USPS": "USPS",
+  "Vogel": "Bird",
+  "Waschbär": "Raccoon",
+  "Reh": "Deer",
+  "Kuh": "Cow",
+  "Boot": "Boat",
+  "Lkw": "Truck",
+  "Bus": "Bus",
+  "Aufnahme & Erkennung": "Recording & detection",
+  "Löst die Objekterkennung aus": "Triggers object detection",
+  "Neuere Erkennung": "Newer detection",
+  "Ältere Erkennung": "Older detection",
+  "Mehr anzeigen": "Show more",
+  "Weniger anzeigen": "Show less",
+  "Alle Objekte zeigen": "Show all objects",
+  "Läuft noch": "Still running"
  },
  "patterns": [
   [
@@ -2567,6 +2630,10 @@
   [
    "^Zuletzt: (.+)$",
    "Last: {1}"
+  ],
+  [
+   "^Zuletzt (vor .+|gestern|gerade eben)$",
+   "Last seen {1}"
   ],
   [
    "^Zuletzt (.+)$",
@@ -3567,6 +3634,42 @@
   [
    "^Netz ([\\d.,]+) kWh$",
    "Grid {1} kWh"
+  ],
+  [
+   "^(\\d+) im Bild$",
+   "{1} in view"
+  ],
+  [
+   "^(\\d+)× heute$",
+   "{1}× today"
+  ],
+  [
+   "^(\\d+) Objekte erkannt$",
+   "{1} objects detected"
+  ],
+  [
+   "^(.+) und (.+) erkannt$",
+   "{1} and {2} detected"
+  ],
+  [
+   "^(.+) erkannt$",
+   "{1} detected"
+  ],
+  [
+   "^([^,]+), (vor .+|gerade eben|gestern|Gestern|jetzt|\\d+ Min\\.|\\d+ Std\\.|\\d+ Tagen)$",
+   "{1}, {2}"
+  ],
+  [
+   "^(\\d{1,2}:\\d{2}) \\((.+)\\)$",
+   "{1} ({2})"
+  ],
+  [
+   "^Keine (.+) in den letzten 7 Tagen$",
+   "No {1} in the last 7 days"
+  ],
+  [
+   "^(\\d+) Tagen$",
+   "{1} days"
   ]
  ]
 }

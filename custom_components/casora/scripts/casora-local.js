@@ -86,6 +86,7 @@ const MODULES = [
   '19-befeuchter',
   '20-energie-fokus',
   '22-halten',
+  '23-frigate',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());

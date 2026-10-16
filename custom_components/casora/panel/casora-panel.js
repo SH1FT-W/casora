@@ -532,6 +532,7 @@ const FILTER_CATEGORIES = {
   casora_camera: "security",
   casora_doorbell: "security",
   casora_cameras: "security",
+  casora_frigate: "security",
   casora_vacuum: "unfiltered",
   casora_plant: "unfiltered",
 };

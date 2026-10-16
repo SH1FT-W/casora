@@ -359,7 +359,9 @@
   };
   var tileText = function (tile, sel) {
     var n = tile && tile.shadowRoot && tile.shadowRoot.querySelector(sel);
-    return n ? String(n.textContent || '').replace(/\s+/g, ' ').trim() : '';
+    // Gekürzter Zustand (casoraStateFit): nur der volle Text, nicht zusätzlich die versteckte Kurzform („… +1“).
+    var full = n && n.querySelector && n.querySelector('.sf-f');
+    return n ? String((full || n).textContent || '').replace(/\s+/g, ' ').trim() : '';
   };
   // Maske: ganze Fläche sichtbar, abgerundetes Loch an der Kachel.
   var holeMask = function (r, rad) {
@@ -559,6 +561,8 @@
             noEntity: true, ask: 'Batterie gewechselt?', yes: 'Gewechselt', done: 'Batteriewechsel gemeldet' });
         }
       }
+      // Frigate: Erkennung/Aufnahme an/aus (Aus mit Rückfrage), letzte Erkennung, Frigate öffnen (23-frigate.js).
+      if (has(/\bcasora_frigate\b/) && window._casoraFrigate && window._casoraFrigate.hold) out = out.concat(window._casoraFrigate.hold(h, id));
       // Netzwerk: Gäste-WLAN (genau ein Schalter), Speedtest-Taste der Kachel.
       if (has(/\bcasora_network\b/)) {
         var CD = window.casoraDevice;

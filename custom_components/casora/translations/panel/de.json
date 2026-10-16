@@ -2412,7 +2412,11 @@
     "Same as dashboard": "Wie Dashboard",
     "Same as dashboard ({mode})": "Wie Dashboard ({mode})",
     "What holding this tile does. Same as dashboard follows Controls › Tiles.": "Was Halten auf dieser Kachel tut. „Wie Dashboard“ folgt Bedienung › Kacheln.",
-    "Hold on this tile": "Halten auf dieser Kachel"
+    "Hold on this tile": "Halten auf dieser Kachel",
+    "Frigate camera": "Frigate-Kamera",
+    "Live camera with what Frigate detected last. The popup shows the live view, the latest detections with snapshot and clip, objects and the camera switches.": "Live-Kamera mit dem, was Frigate zuletzt erkannt hat. Im Popup das Live-Bild, die letzten Erkennungen mit Schnappschuss und Clip, Objekte und die Schalter der Kamera.",
+    "For every camera of the Frigate integration": "Für jede Kamera der Frigate-Integration",
+    "Frigate integration not installed yet": "Frigate-Integration noch nicht installiert"
   },
   "patterns": [
     [

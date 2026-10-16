@@ -173,4 +173,22 @@ assert.equal(H.minutesLeft(st('sensor.r', 'unavailable')), null);
 assert.equal(H.leftText({ at: now0 + 28 * 60000, action: 'turn_off' }, now0), 'Aus in 28 Min.');
 assert.equal(H.leftText({ at: now0 + 65 * 60000, action: 'turn_off' }, now0), 'Aus in 1 Std. 5 Min.');
 assert.equal(H.model(st('sensor.w', 'run'), { info: { t: 'Fertig um 14:20', ic: 'mdi:timer-sand' } }).info.t, 'Fertig um 14:20');
+// Frigate-Kamera (23-frigate.js): Live (Kamera), Erkennung/Aufnahme aus mit Rückfrage, letzte Erkennung, Frigate öffnen.
+new Function(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/23-frigate.js', import.meta.url), 'utf8'))();
+const fe = (id, state, attributes, dev) => ({ entity_id: id, platform: 'frigate', device_id: dev || 'd_hof' });
+const FS = {
+  'camera.hof': st('camera.hof', 'recording', { camera_name: 'hof', client_id: 'frigate', device_class: 'camera' }),
+  'switch.hof_detect': st('switch.hof_detect', 'on', { icon: 'mdi:motion-sensor' }),
+  'switch.hof_recordings': st('switch.hof_recordings', 'off', { icon: 'mdi:filmstrip-box-multiple' }),
+  'image.hof_person': st('image.hof_person', new Date(Date.now() - 120000).toISOString(), { entity_picture: '/api/image_proxy/image.hof_person' }),
+};
+const fh = { states: FS, entities: Object.fromEntries(Object.keys(FS).map((k) => [k, fe(k)])),
+  devices: { d_hof: { id: 'd_hof', name: 'Hof', configuration_url: 'http://frigate.local:5000/cameras/hof' } }, panels: {} };
+ex = H.extras(fh, 'camera.hof', 'casora_camera casora_frigate', {});
+assert.deepEqual(ex.map((x) => x.t), ['Erkennung aus', 'Aufnahme an', 'Letzte Erkennung', 'In Frigate öffnen']);
+assert.ok(ex[0].ask && ex[0].svc === 'switch.turn_off' && ex[0].entity === 'switch.hof_detect', 'Erkennung aus fragt nach');
+assert.ok(!ex[1].ask && ex[1].svc === 'switch.turn_on', 'Aufnahme an ohne Rückfrage');
+m = H.model(FS['camera.hof'], { tapPopup: true, extra: ex, states: FS });
+assert.deepEqual(m.acts.map((x) => x.t), ['Live ansehen', 'Erkennung aus', 'Aufnahme an', 'Letzte Erkennung', 'In Frigate öffnen']);
+assert.deepEqual(H.extras(fh, 'camera.hof', 'casora_camera', {}), [], 'normale Kamera-Kachel: keine Frigate-Einträge');
 console.log('halten: ok');
