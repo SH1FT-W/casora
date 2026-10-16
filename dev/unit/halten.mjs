@@ -185,11 +185,11 @@ const FS = {
 const fh = { states: FS, entities: Object.fromEntries(Object.keys(FS).map((k) => [k, fe(k)])),
   devices: { d_hof: { id: 'd_hof', name: 'Hof', configuration_url: 'http://frigate.local:5000/cameras/hof' } }, panels: {} };
 ex = H.extras(fh, 'camera.hof', 'casora_camera casora_frigate', {});
-assert.deepEqual(ex.map((x) => x.t), ['Erkennung ausschalten', 'Aufnahme einschalten', 'Letzte Erkennung', 'Aufnahmen', 'In Frigate öffnen']);
+assert.deepEqual(ex.map((x) => x.t), ['Objekterkennung ausschalten', 'Aufnahme einschalten', 'Letzte Erkennung', 'Aufnahmen', 'In Frigate öffnen']);
 assert.ok(ex[0].ask && ex[0].svc === 'switch.turn_off' && ex[0].entity === 'switch.hof_detect', 'Erkennung aus fragt nach');
 assert.ok(!ex[1].ask && ex[1].svc === 'switch.turn_on', 'Aufnahme an ohne Rückfrage');
 m = H.model(FS['camera.hof'], { tapPopup: true, extra: ex, states: FS });
-assert.deepEqual(m.acts.map((x) => x.t), ['Live ansehen', 'Erkennung ausschalten', 'Aufnahme einschalten', 'Letzte Erkennung', 'Aufnahmen', 'In Frigate öffnen']);
+assert.deepEqual(m.acts.map((x) => x.t), ['Live ansehen', 'Objekterkennung ausschalten', 'Aufnahme einschalten', 'Letzte Erkennung', 'Aufnahmen', 'In Frigate öffnen']);
 assert.deepEqual(H.extras(fh, 'camera.hof', 'casora_camera', {}), [], 'normale Kamera-Kachel: keine Frigate-Einträge');
 // Reolink-Türklingel (24-klingel.js): Live (Kamera), Mithören, Schnellantworten (Nachricht als Beschriftung) mit Rückfrage; oben „Details“.
 new Function(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/24-klingel.js', import.meta.url), 'utf8'))();

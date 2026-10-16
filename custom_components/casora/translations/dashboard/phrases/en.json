@@ -2179,15 +2179,11 @@
   "Zone": "Zone",
   "Alarme": "Alerts",
   "Erkennungen": "Detections",
-  "Ungesehen": "Unreviewed",
-  "Behalten": "Keep",
   "Herunterladen": "Download",
   "Zeitleiste": "Timeline",
   "Nichts gefunden": "Nothing found",
   "Filter ändern oder zurücksetzen": "Change or reset the filters",
   "Filter zurücksetzen": "Reset filters",
-  "Nichts behalten": "Nothing kept",
-  "Im Detail einer Erkennung „Behalten“ antippen": "Tap “Keep” on a detection",
   "Alle Aufnahmen": "All recordings",
   "Keine Aufnahmen": "No recordings",
   "Aufnahme unter „Einstellungen“ einschalten": "Turn on recording under “Settings”",
@@ -2200,7 +2196,33 @@
   "Keine Aufnahme in dieser Stunde": "No recording in this hour",
   "1 neuer Alarm": "1 new alert",
   "1 Erkennung": "1 detection",
-  "1 Alarm": "1 alert"
+  "1 Alarm": "1 alert",
+  "Objekterkennung aus": "Object detection off",
+  "Objekterkennung einschalten": "Turn on object detection",
+  "Objekterkennung ausschalten": "Turn off object detection",
+  "Favorit ✓": "Favorited",
+  "Nur Favoriten": "Favorites only",
+  "Wird nicht automatisch gelöscht": "Won't be deleted automatically",
+  "Teilen": "Share",
+  "Jetzt teilen": "Share now",
+  "Bild herunterladen": "Download image",
+  "Gespeichert": "Saved",
+  "Nicht geladen": "Couldn't load",
+  "Sicher erkannt": "Clearly detected",
+  "Als neu markieren": "Mark as new",
+  "Alle als gesehen markieren": "Mark all as reviewed",
+  "Alle als gesehen markieren?": "Mark all as reviewed?",
+  "Danach steht nichts mehr als „Neu“ da.": "Nothing will show as “New” afterwards.",
+  "Markieren": "Mark",
+  "Zeitraum": "Time range",
+  "Gesichter": "Faces",
+  "1 Filter aktiv": "1 filter active",
+  "Alarme: wichtige Erkennungen, z. B. eine Person in einer Zone": "Alerts: important detections, e.g. a person in a zone",
+  "Keine Favoriten": "No favorites",
+  "Im Detail einer Erkennung „Favorit“ antippen": "Tap “Favorite” on a detection",
+  "Springen nicht möglich": "Can't skip in this video",
+  "Ab hier:": "From here:",
+  "Anhalten": "Pause"
  },
  "patterns": [
   [
@@ -3988,10 +4010,6 @@
    "{1} in view"
   ],
   [
-   "^(\\d+)× heute$",
-   "{1}× today"
-  ],
-  [
    "^(\\d+) Objekte erkannt$",
    "{1} objects detected"
   ],
@@ -4097,6 +4115,18 @@
   ],
   [
    "^Heute (\\d+)$",
+   "{1} today"
+  ],
+  [
+   "^(\\d+) Filter aktiv$",
+   "{1} filters active"
+  ],
+  [
+   "^Filter · (\\d+)$",
+   "Filter · {1}"
+  ],
+  [
+   "^(\\d+) heute$",
    "{1} today"
   ]
  ]

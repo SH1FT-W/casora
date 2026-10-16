@@ -209,7 +209,7 @@
   // „ · “ zu „Person +1“ – und keine Dauer-Verwechslung wie bei „Auto, 1 Min.“ (Nutzerprüfung Runde 2).
   F.tileText = function (s, now, short) {
     if (!s || s.dead || s.off) return null;
-    if (s.detectOff) return 'Erkennung aus';
+    if (s.detectOff) return short ? 'Erkennung aus' : 'Objekterkennung aus';
     if (s.live.length) return short && s.live.length > 1 ? s.live.length + ' Objekte erkannt' : who(s.live);
     // Schmale Handy-Kachel: „2 Alarme“ (sonst „1 neuer Al…“).
     if (s.unseen) return short ? (s.unseen === 1 ? '1 Alarm' : s.unseen + ' Alarme') : newAlerts(s.unseen);
@@ -224,17 +224,33 @@
 
   // ── Adressen (signiert) ───────────────────────────────────────────────────
   // Frigates Bilder und Videos liegen hinter HAs Anmeldung (/api/frigate/<instanz>/…); ein <img>/<video> schickt kein
-  // Token – darum signiert (auth/sign_path), wie HAs eigene Medien. Signiert für 10 Min., neu nach 8.
+  // Token – darum signiert (auth/sign_path), wie HAs eigene Medien. Bilder für 10 Min. (neu nach 8), Videos (ttl 3600)
+  // für 1 Std. (neu nach 48 Min.). Fehlschläge (null) werden nicht gemerkt; der Speicher bleibt klein (≤ 300 Adressen).
   var signed = {};
-  F.sign = function (hass, path) {
-    var x = signed[path];
-    if (x && Date.now() - x.at < 480000) return x.p;
+  var SIGN_MAX = 300;
+  F.sign = function (hass, path, ttl, force) {
+    var life = ttl || 600, x = signed[path];
+    if (!force && x && Date.now() - x.at < life * 800) return x.p;
     if (!hass || !hass.callWS) return Promise.resolve(null);
-    var p = hass.callWS({ type: 'auth/sign_path', path: path, expires: 600 })
-      .then(function (r) { return r && r.path ? r.path : null; }).catch(function () { return null; });
-    signed[path] = { at: Date.now(), p: p };
-    return p;
+    var keys = Object.keys(signed);
+    if (keys.length >= SIGN_MAX) {
+      var t0 = Date.now();
+      keys.forEach(function (k) { if (t0 - signed[k].at > signed[k].life * 800) delete signed[k]; });
+      keys = Object.keys(signed);
+      // Immer noch voll: die ältesten weg.
+      if (keys.length >= SIGN_MAX) keys.sort(function (a, b) { return signed[a].at - signed[b].at; }).slice(0, keys.length - SIGN_MAX + 1).forEach(function (k) { delete signed[k]; });
+    }
+    var job = { at: Date.now(), life: life, p: null };
+    job.p = hass.callWS({ type: 'auth/sign_path', path: path, expires: life })
+      .then(function (r) { return r && r.path ? r.path : null; }).catch(function () { return null; })
+      .then(function (u) { if (!u && signed[path] === job) delete signed[path]; return u; });
+    signed[path] = job;
+    return job.p;
   };
+  // Alter der gemerkten Signatur in ms (null = keine) – für „einmal neu signieren“ vor einem Rückfall.
+  F.signAge = function (path) { var x = signed[path]; return x ? Date.now() - x.at : null; };
+  F._signedN = function () { return Object.keys(signed).length; };
+  var VOD_TTL = 3600;
   var sec0 = function (ms) { return Math.floor(ms / 1000); };
   // vod/rec: F.path(c, 'vod', start, end) in Sekunden.
   F.path = function (c, kind, id, a) {
@@ -242,6 +258,7 @@
     if (kind === 'thumb') return base + '/thumbnail/' + encodeURIComponent(id);
     if (kind === 'snap') return base + '/snapshot/' + encodeURIComponent(id);
     if (kind === 'rthumb') return base + '/notifications/' + encodeURIComponent(id) + '/' + cam + '/review_thumbnail.webp';
+    if (kind === 'nhls') return base + '/notifications/' + encodeURIComponent(id) + '/master.m3u8';
     if (kind === 'vodev') return base + '/vod/event/' + encodeURIComponent(id) + '/master.m3u8';
     if (kind === 'vod') return base + '/vod/' + cam + '/start/' + id + '/end/' + a + '/master.m3u8';
     if (kind === 'rec') return base + '/recording/' + cam + '/start/' + id + '/end/' + a;
@@ -254,8 +271,79 @@
     try { return new URL(p, window.location.href).href; } catch (e) { return p; }
   };
   F.abs = abs;
-  // Herunterladen: ?download=true (Frigate schickt den Anhang), signiert mit, dann über einen Link geladen.
+  // HLS: HA signiert pfadgenau, Frigates master.m3u8 verweist aber auf eine Unter-Liste (index-v1.m3u8) – deren
+  // Abruf bekäme die Signatur des Masters nicht (401, VodProxyView verlangt Anmeldung). Darum wie Sightline: den Master
+  // selbst laden, die Zeile nach #EXT-X-STREAM-INF auflösen, genau deren Pfad signieren und diese Adresse an den Player
+  // geben; Frigates nginx hängt die Signatur an die Segmente, VodSegmentProxyView prüft das Verzeichnis.
+  // Antwortet der Master mit 401/403, einmal neu signieren. Ergebnis: absolute Adresse oder Fehler.
+  F.childList = function (text) {
+    var lines = String(text || '').split(/\r?\n/).map(function (x) { return x.trim(); }).filter(Boolean);
+    for (var i = 0; i < lines.length; i++) {
+      if (lines[i].indexOf('#EXT-X-STREAM-INF') !== 0) continue;
+      for (var j = i + 1; j < lines.length; j++) if (lines[j].charAt(0) !== '#') return lines[j];
+    }
+    return null;
+  };
+  F.hlsUrl = function (hass, path, force0) {
+    var get = function (force) {
+      return F.sign(hass, path, VOD_TTL, force).then(function (u) {
+        if (!u) throw new Error('nicht signiert');
+        var url = abs(hass, u);
+        if (typeof fetch !== 'function') return { url: url, res: null };
+        return fetch(url, { credentials: 'same-origin', cache: 'no-store' }).then(function (res) { return { url: url, res: res }; });
+      });
+    };
+    return get(!!force0).then(function (x) {
+      if (!force0 && x.res && (x.res.status === 401 || x.res.status === 403)) { force0 = true; return get(true); }
+      return x;
+    }).then(function (x) {
+      if (!x.res) return x.url;
+      if (!x.res.ok) throw new Error('HLS ' + x.res.status);
+      return x.res.text().then(function (text) {
+        var line = F.childList(text);
+        if (!line) return x.url;
+        var child = new URL(line, x.url);
+        return F.sign(hass, child.pathname, VOD_TTL, !!force0).then(function (cu) {
+          if (!cu) throw new Error('Unter-Liste nicht signiert');
+          return abs(hass, cu);
+        });
+      });
+    });
+  };
+  // Lesbarer Dateiname: „Hofkamera 2026-10-15 16-22.mp4“ (Ortszeit, ohne Zeichen, die Dateisysteme nicht mögen).
+  F.fileName = function (cam, ms, ext) {
+    var d = new Date(ms || Date.now()), z = function (n) { return String(n).padStart(2, '0'); };
+    var nm = String(cam || 'Frigate').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Frigate';
+    return nm + ' ' + d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + '-' + z(d.getMinutes()) + '.' + (ext || 'mp4');
+  };
+  // Datei holen (signiert, ?download=true): als Blob, damit der Dateiname gilt (Frigates Content-Disposition nennt nur
+  // die ID); ohne fetch/Blob über einen Link wie bisher.
+  F.fetchBlob = function (hass, path) {
+    var p = path + (path.indexOf('?') < 0 ? '?' : '&') + 'download=true';
+    var go = function (force) {
+      return F.sign(hass, p, VOD_TTL, force).then(function (u) {
+        if (!u) throw new Error('nicht signiert');
+        return fetch(abs(hass, u), { credentials: 'same-origin' });
+      });
+    };
+    return go(false).then(function (res) { return res.status === 401 || res.status === 403 ? go(true) : res; }).then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.blob();
+    });
+  };
+  F.saveBlob = function (blob, name) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name || ''; a.rel = 'noopener'; a.style.display = 'none';
+    (document.body || document.documentElement).appendChild(a);
+    a.click();
+    setTimeout(function () { try { a.remove(); URL.revokeObjectURL(url); } catch (e) { /* weg */ } }, 4000);
+    return true;
+  };
   F.download = function (hass, path, name) {
+    if (typeof fetch === 'function' && typeof URL !== 'undefined' && URL.createObjectURL) {
+      return F.fetchBlob(hass, path).then(function (b) { return F.saveBlob(b, name); }).catch(function () { return false; });
+    }
     var p = path + (path.indexOf('?') < 0 ? '?' : '&') + 'download=true';
     return F.sign(hass, p).then(function (u) {
       if (!u) return false;
@@ -266,6 +354,13 @@
       setTimeout(function () { try { a.remove(); } catch (e) { /* weg */ } }, 1000);
       return true;
     });
+  };
+  // Teilen (Handy): nur, wenn der Browser Dateien teilen kann.
+  F.canShare = function () {
+    try {
+      return typeof navigator !== 'undefined' && typeof navigator.share === 'function' && typeof navigator.canShare === 'function'
+        && typeof File === 'function' && navigator.canShare({ files: [new File([''], 'x.mp4', { type: 'video/mp4' })] });
+    } catch (e) { return false; }
   };
 
   // ── Listen der Integration ────────────────────────────────────────────────
@@ -305,8 +400,15 @@
     var list = jparse(raw);
     if (!Array.isArray(list)) return [];
     return list.filter(function (d) { return d && /^\d{4}-\d{2}-\d{2}$/.test(String(d.day || '')); }).map(function (d) {
-      var hours = (d.hours || []).map(function (h) { return { h: parseInt(h.hour, 10), dur: num(h.duration) || 0, n: num(h.events) || 0 }; })
-        .filter(function (h) { return h.h >= 0 && h.h < 24 && h.dur > 0; }).sort(function (x, y) { return x.h - y.h; });
+      // Nur Stunden mit Aufnahme im Hauptstream (sub_only: nur der Unterstream – die Wiedergabe hätte nichts).
+      // Doppelte Stunde (Zeitumstellung im Herbst): zusammengelegt, die Wiedergabe deckt dann beide ab (F.hourSpan).
+      var by = {};
+      (d.hours || []).forEach(function (h) {
+        var x = { h: parseInt(h.hour, 10), dur: num(h.duration) || 0, n: num(h.events) || 0 };
+        if (h.sub_only || !(x.h >= 0 && x.h < 24) || x.dur <= 0) return;
+        if (by[x.h]) { by[x.h].dur += x.dur; by[x.h].n += x.n; } else by[x.h] = x;
+      });
+      var hours = Object.keys(by).map(function (k) { return by[k]; }).sort(function (x, y) { return x.h - y.h; });
       return { day: String(d.day), n: num(d.events) || hours.reduce(function (s, h) { return s + h.n; }, 0), hours: hours };
     }).filter(function (d) { return d.hours.length; }).sort(function (x, y) { return x.day < y.day ? 1 : -1; });
   };
@@ -366,9 +468,10 @@
   };
 
   // ── Laden mit Cache (je Kamera) ───────────────────────────────────────────
-  // Einmal je Änderung an der Kamera (neuer Schnappschuss/Belegung) bzw. höchstens alle 30 s neu fragen – mit Abo
-  // (frigate/reviews/subscribe) erst, wenn Frigate etwas meldet (spätestens nach 5 Min.); danach die offenen Bereiche
-  // neu zeichnen (wie Personen-/Mäher-Popup).
+  // Ohne Abo: einmal je neuem Schnappschuss/Review-Status bzw. höchstens alle 30 s neu fragen. Mit Abo
+  // (frigate/reviews/subscribe) nur, wenn Frigate etwas meldet (spätestens nach 5 Min.) – Bewegung und Belegung zählen
+  // nicht (sie wechseln ständig). Dazwischen höchstens alle 5 s; „new“/„end“ aus dem Abo sofort. Danach die offenen
+  // Bereiche neu zeichnen (wie Personen-/Mäher-Popup).
   var kick = function (w) {
     try {
       if (typeof window.casoraKick === 'function') window.casoraKick(w);
@@ -377,17 +480,30 @@
   };
   var evc = {}, rvc = {}, fvc = {}, recc = {};
   var keyOf = function (hass, c) {
+    if (subOn(c.inst)) return 'abo';
     var S = (hass && hass.states) || {};
-    return F.watch(c).filter(function (x) { return /^(image|binary_sensor)\./.test(x) || x === c.review; })
+    return F.watch(c).filter(function (x) { return /^image\./.test(x) || x === c.review; })
       .map(function (x) { return S[x] ? S[x].last_changed : ''; }).join('|');
   };
+  F.keyOf = keyOf;
+  var MIN_GAP = 5000;
   var load = function (store, cam, key, el, maxAge, run, failList) {
     var hit = store[cam];
     var fresh = hit && !hit.stale && hit.key === key && Date.now() - hit.at < maxAge;
     // Hängt eine Anfrage (keine Antwort), nach 15 s neu fragen – sonst bliebe „Wird geladen …“ für immer.
     var busy = hit && hit.busy && Date.now() - hit.at < 15000;
     if (fresh || busy) { if (el && busy && hit.wait.indexOf(el) < 0) hit.wait.push(el); return hit.list; }
-    var job = store[cam] = { key: key, at: Date.now(), list: hit ? hit.list : null, err: hit ? hit.err : false, busy: true, wait: el ? [el] : [] };
+    // Gerade erst gefragt: später nachholen statt sofort (außer „new“/„end“ aus dem Abo).
+    if (hit && !hit.force && hit.list != null && Date.now() - hit.at < MIN_GAP) {
+      hit.later = hit.later || [];
+      if (el && hit.later.indexOf(el) < 0) hit.later.push(el);
+      if (!hit.laterT) {
+        hit.laterT = setTimeout(function () { hit.laterT = null; var w = hit.later; hit.later = []; w.forEach(kick); }, MIN_GAP - (Date.now() - hit.at) + 50);
+      }
+      return hit.list;
+    }
+    var job = store[cam] = { key: key, at: Date.now(), list: hit ? hit.list : null, err: hit ? hit.err : false, busy: true, wait: el ? [el] : [], later: [] };
+    if (hit && hit.laterT) { clearTimeout(hit.laterT); hit.laterT = null; }
     var pr;
     try { pr = Promise.resolve(run()); } catch (e) { pr = Promise.reject(e); }
     pr.then(function (list) { job.list = list; job.err = false; })
@@ -399,9 +515,10 @@
       });
     return job.list;
   };
+  F._calls = function (cam) { return { ev: evc[cam] && evc[cam].at, rv: rvc[cam] && rvc[cam].at }; };
   var age = function (inst) { return subOn(inst) ? 300000 : 30000; };
   var thumbs = function (hass, c, list) {
-    return Promise.all(list.slice(0, 16).map(function (e) {
+    return Promise.all(list.slice(0, 30).map(function (e) {
       if (e.thumb) return null;
       return F.sign(hass, F.path(c, 'thumb', e.id)).then(function (u) { e.thumb = u; });
     })).then(function () { return list; });
@@ -426,7 +543,8 @@
       if (!u) return false;
       return fetch(abs(hass, u), { cache: 'no-store' }).then(function (res) { return !!res.ok; }).catch(function () { return false; });
     });
-    proxyOk[c.inst] = { at: Date.now(), p: job };
+    var rec = proxyOk[c.inst] = { at: Date.now(), p: job, v: null };
+    job.then(function (v) { rec.v = v; });
     return job;
   };
   F.reviews = function (hass, c, el) {
@@ -438,7 +556,7 @@
           var list = F.parseReviews(raw);
           if (!list) throw new Error('keine Reviews');
           return probe(hass, c, list).then(function (ok) {
-            return Promise.all(list.slice(0, 16).map(function (r) {
+            return Promise.all(list.slice(0, 30).map(function (r) {
               var p = ok || !r.dets.length ? F.path(c, 'rthumb', r.id) : F.path(c, 'thumb', r.dets[0]);
               return F.sign(hass, p).then(function (u) { r.thumb = u; });
             }));
@@ -465,20 +583,27 @@
     }, false);
   };
   F.forget = function (cam) { delete evc[cam]; delete rvc[cam]; delete fvc[cam]; delete recc[cam]; };
-  var stale = function (cam) { [evc, rvc, fvc].forEach(function (s) { if (s[cam]) s[cam].stale = true; }); };
+  var stale = function (cam, force) { [evc, rvc, fvc].forEach(function (s) { if (s[cam]) { s[cam].stale = true; if (force) s[cam].force = true; } }); };
 
   // ── Filter (Chips) und Einträge ───────────────────────────────────────────
-  // kind: '' | 'alert' | 'detection' | 'unseen' | 'fav'; range: 'week' | 'today'; o/zone/face: ein Wert oder null.
-  var flts = {}, more = {}, els = {};
-  var flt = function (cam) { return flts[cam] || (flts[cam] = { kind: '', range: 'week', o: null, zone: null, face: null }); };
+  // kind: '' | 'alert' | 'detection' | 'unseen' (oben, eine Reihe); im Bereich „Filter“: range 'week' | 'today',
+  // fav (nur Favoriten), o/zone/face: ein Wert oder null (face NOFACE = Person ohne erkanntes Gesicht).
+  var flts = {}, more = {}, els = {}, fopen = {};
+  var NOFACE = '\u2205';
+  F.NOFACE = NOFACE;
+  var F0 = function () { return { kind: '', range: 'week', fav: false, o: null, zone: null, face: null }; };
+  var flt = function (cam) { return flts[cam] || (flts[cam] = F0()); };
   F.filter = function (cam) { return (flts[cam] && flts[cam].o) || null; };
   F.filters = function (cam) { return Object.assign({}, flt(cam)); };
+  // Wie viele Filter im Bereich „Filter“ gesetzt sind (Zähler an der Pille, „2 Filter aktiv“).
+  F.fcount = function (f) { f = f || {}; return (f.range === 'today' ? 1 : 0) + (f.fav ? 1 : 0) + (f.o ? 1 : 0) + (f.zone ? 1 : 0) + (f.face ? 1 : 0); };
   var evItem = function (e) { return Object.assign({ kind: 'event', objs: [e.o], subs: e.sub ? [e.sub] : [], dets: [e.id], sev: null, seen: null }, e); };
-  // Alle Einträge der Kamera: Reviews (mit dem Ereignis der ersten Erkennung: Treffer, Gesicht, „Behalten“) oder Ereignisse.
-  F.items = function (cam) {
-    var r = rvc[cam], ev = (evc[cam] && evc[cam].list) || null, f = flt(cam);
+  // Alle Einträge der Kamera: Reviews (mit dem Ereignis der ersten Erkennung: Treffer, Gesicht, Favorit) oder Ereignisse.
+  // all: ohne den Filter „Nur Favoriten“ (Kopf, Objekte, Halten).
+  F.items = function (cam, all) {
+    var r = rvc[cam], ev = (evc[cam] && evc[cam].list) || null, f = all ? F0() : flt(cam);
     var mode = r && Array.isArray(r.list) ? 'review' : (!r || r.list === false) && ev ? 'event' : null;
-    if (f.kind === 'fav') { var fl = fvc[cam] && fvc[cam].list; return { mode: mode || 'event', list: fl ? fl.map(evItem) : null, fav: true }; }
+    if (f.fav) { var fl = fvc[cam] && fvc[cam].list; return { mode: mode || 'event', list: fl ? fl.map(evItem) : null, fav: true }; }
     if (mode === 'review') {
       var by = {};
       (ev || []).concat((fvc[cam] && fvc[cam].list) || []).forEach(function (e) { if (!by[e.id] || e.fav) by[e.id] = e; });
@@ -497,21 +622,23 @@
     return (list || []).filter(function (it) {
       if (f.kind === 'alert' && it.sev !== 'alert') return false;
       if (f.kind === 'detection' && it.sev !== 'detection') return false;
-      if (f.kind === 'unseen' && it.seen !== false) return false;
+      // „Neu“ = ungesehene Alarme (dieselbe Zahl wie Kopf und Kachel).
+      if (f.kind === 'unseen' && !(it.seen === false && it.sev === 'alert')) return false;
       if (f.range === 'today' && it.start < d0.getTime()) return false;
       if (f.o && (it.objs || [it.o]).indexOf(f.o) < 0) return false;
       if (f.zone && (it.zones || []).indexOf(f.zone) < 0) return false;
-      if (f.face && [it.sub].concat(it.subs || []).indexOf(f.face) < 0) return false;
+      var names = [it.sub].concat(it.subs || []).filter(Boolean);
+      if (f.face === NOFACE) { if (names.length || (it.objs || [it.o]).indexOf('person') < 0) return false; }
+      else if (f.face && names.indexOf(f.face) < 0) return false;
       return true;
     });
   };
   var shown = function (cam) { return F.pick(F.items(cam).list || [], flt(cam)); };
   F.shown = shown;
-  // Ungesehene Alarme der letzten 24 Std. (Kachel, Kopf).
-  F.unseen = function (cam, now) {
+  // Neue (ungesehene) Alarme der geladenen 7 Tage – Kachel, Kopf und Chip „Neu“ zählen gleich.
+  F.unseen = function (cam) {
     var l = rvc[cam] && Array.isArray(rvc[cam].list) ? rvc[cam].list : [];
-    var t = (now || Date.now()) - 86400000;
-    return l.filter(function (r) { return r.sev === 'alert' && r.seen === false && r.start >= t; }).length;
+    return l.filter(function (r) { return r.sev === 'alert' && r.seen === false; }).length;
   };
   var redraw = function (cam) {
     (els[cam] || []).forEach(function (w) { if (w && w.isConnected) kick(w); });
@@ -523,7 +650,7 @@
     return null;
   };
   var itemById = function (cam, id) {
-    var l = F.items(cam).list || [];
+    var l = (F.items(cam).list || []).concat(F.items(cam, true).list || []);
     for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i];
     var r = rvc[cam] && Array.isArray(rvc[cam].list) ? rvc[cam].list : [];
     for (var k = 0; k < r.length; k++) if (r[k].id === id) return r[k];
@@ -531,17 +658,27 @@
     return e ? evItem(e) : null;
   };
   // Gesehen: Review beim Öffnen markieren (frigate/reviews/viewed), sofort in der Liste und auf der Kachel.
-  F.seen = function (hass, c, rid) {
+  // „Gesehen“ speichert Frigate je Frigate-Benutzer – hier ist das der Benutzer, mit dem die Integration angemeldet ist;
+  // alle in Home Assistant teilen sich also denselben Stand (Hinweis auch im Studio). Scheitert es, gilt es wieder als neu.
+  F.mark = function (hass, c, ids, viewed) {
     var l = rvc[c.cam] && Array.isArray(rvc[c.cam].list) ? rvc[c.cam].list : [];
-    var r = l.filter(function (x) { return x.id === rid; })[0];
-    if (!r || r.seen) return Promise.resolve(false);
-    r.seen = true;
+    var hit = l.filter(function (x) { return ids.indexOf(x.id) >= 0 && x.seen !== !!viewed; });
+    if (!hit.length) return Promise.resolve(false);
+    hit.forEach(function (r) { r.seen = !!viewed; });
     redraw(c.cam);
     if (!hass || !hass.callWS) return Promise.resolve(false);
-    return hass.callWS({ type: 'frigate/reviews/viewed', instance_id: c.inst, ids: [rid], viewed: true })
-      .then(function () { return true; }).catch(function () { return false; });
+    var back = function () { hit.forEach(function (r) { r.seen = !viewed; }); redraw(c.cam); return false; };
+    return hass.callWS({ type: 'frigate/reviews/viewed', instance_id: c.inst, ids: hit.map(function (r) { return r.id; }), viewed: !!viewed })
+      .then(function (raw) { var r = jparse(raw); return r && r.success === false ? back() : true; }, back);
   };
-  // Behalten (Frigate: retain_indefinitely) an/aus; die Listen übernehmen es sofort, „Behalten“ fragt neu.
+  F.seen = function (hass, c, rid) { return F.mark(hass, c, [rid], true); };
+  // Alle als gesehen (Power-User, mit Rückfrage im Popup): alle ungesehenen der geladenen 7 Tage.
+  F.seenAll = function (hass, c) {
+    var l = rvc[c.cam] && Array.isArray(rvc[c.cam].list) ? rvc[c.cam].list : [];
+    return F.mark(hass, c, l.filter(function (r) { return r.seen === false; }).map(function (r) { return r.id; }), true);
+  };
+  // Favorit (Frigate: retain_indefinitely, wird nicht automatisch gelöscht) an/aus; die Listen übernehmen es sofort,
+  // „Favoriten“ fragt neu.
   F.retain = function (hass, c, evId, want) {
     if (!hass || !hass.callWS || !evId) return Promise.resolve(false);
     return hass.callWS({ type: 'frigate/event/retain', instance_id: c.inst, event_id: evId, retain: !!want }).then(function (raw) {
@@ -567,9 +704,11 @@
     var m = jparse(payload) || {};
     var x = m.after || m.before || m;
     var name = x && x.camera;
+    // „update“ kommt laufend (Zonen, Treffer) – höchstens alle 5 s neu fragen; Beginn und Ende sofort.
+    var now = m.type === 'new' || m.type === 'end';
     Object.keys(info).forEach(function (cam) {
       if (info[cam].inst !== inst || (name && info[cam].name !== name)) return;
-      stale(cam);
+      stale(cam, now);
       // Mehrere Meldungen kurz hintereinander (update, update, end): einmal neu fragen.
       clearTimeout(bump[cam]);
       bump[cam] = setTimeout(function () { redraw(cam); }, 600);
@@ -609,6 +748,8 @@
   var sweep = function () {
     var want = {};
     holders = holders.filter(function (h) { return h.el && h.el.isConnected; });
+    // Geschlossene Popup-Bereiche nicht festhalten.
+    Object.keys(els).forEach(function (cam) { els[cam] = els[cam].filter(function (w) { return w && w.isConnected; }); if (!els[cam].length) delete els[cam]; });
     holders.forEach(function (h) {
       var ok = !hidden() && (h.kind !== 'tile' || (h.el._frig && h.el._frig.vis));
       if (ok) want[h.inst] = h.hass;
@@ -685,10 +826,20 @@
     var S = (st.hass && st.hass.states) || {}, cs = S[st.id];
     var stream = !!(cs && (Number((cs.attributes || {}).supported_features) || 0) & 2);
     var ok = st.want && st.vis && !hidden() && host.isConnected && stream && cs && !bad(cs.state) && cs.state !== 'off'
-      && !(st.fail && Date.now() - st.fail < 300000) && typeof customElements !== 'undefined' && !!customElements.get('ha-camera-stream');
+      && !(st.fail && Date.now() - st.fail < 300000) && (liveFails[st.id] || 0) < 2 && typeof customElements !== 'undefined' && !!customElements.get('ha-camera-stream');
     if (ok && !st.layer) liveMount(host, st);
     else if (!ok && st.layer) liveDrop(host, st);
     else if (st.layer && st.cam) { st.cam.hass = st.hass; if (st.cam.stateObj !== cs) st.cam.stateObj = cs; liveCheck(host, st); }
+  };
+  // Zweimal kein Bild: für diese Sitzung aufgeben (Standbild), statt alle 5 Min. neu zu versuchen.
+  var liveFails = {};
+  var findImg = function (root, d) {
+    if (!root || d > 12) return null;
+    var im = root.querySelector && root.querySelector('img');
+    if (im) return im;
+    var all = root.querySelectorAll ? root.querySelectorAll('*') : [];
+    for (var i = 0; i < all.length; i++) if (all[i].shadowRoot) { var x = findImg(all[i].shadowRoot, d + 1); if (x) return x; }
+    return null;
   };
   var liveMount = function (host, st) {
     var root = host.shadowRoot, card = root && root.querySelector('ha-card');
@@ -704,6 +855,15 @@
     el.style.cssText = 'display:block;width:100%;height:100%;--video-max-height:100%;';
     el.hass = st.hass; el.stateObj = (st.hass.states || {})[st.id];
     layer.appendChild(el);
+    // Kleines „Live“-Zeichen oben rechts, sobald das Bild läuft (mit der Ebene eingeblendet).
+    var tag = document.createElement('span');
+    tag.className = 'casora-frigate-live-tag';
+    tag.setAttribute('aria-hidden', 'true');
+    tag.style.cssText = 'position:absolute;top:var(--casora-space-3, 12px);right:var(--casora-space-3, 12px);display:inline-flex;align-items:center;gap:6px;'
+      + 'padding:4px 10px;border-radius:999px;background:rgba(0,0,0,0.55);color:#fff;font:600 var(--casora-fs-label, 12px)/1.2 var(--primary-font-family, system-ui);';
+    tag.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:var(--casora-color-red, #D35A4E);"></span><span></span>';
+    tag.lastChild.textContent = tr('Live');
+    layer.appendChild(tag);
     card.insertBefore(layer, card.firstChild);
     st.layer = layer; st.cam = el; st.at = Date.now(); st.playing = false;
   };
@@ -716,14 +876,16 @@
   // Läuft das Video? Dann einblenden (Text „Live“); nach 20 s ohne Bild oder bei Abbruch zurück aufs Standbild.
   var liveCheck = function (host, st) {
     var v = st.cam && findVideo(st.cam.shadowRoot || st.cam, 0);
-    var ok = !!(v && v.readyState >= 2 && !v.error);
+    // Ohne HLS/WebRTC zeigt ha-camera-stream MJPEG als <img> – läuft auch.
+    var im = !v && st.cam ? findImg(st.cam.shadowRoot || st.cam, 0) : null;
+    var ok = !!(v && v.readyState >= 2 && !v.error) || !!(im && im.complete && im.naturalWidth > 0);
     if (ok) {
       st.okAt = Date.now();
       if (!st.playing) { st.playing = true; st.layer.style.opacity = '1'; kick(host); }
-      try { v.muted = true; if (v.style.objectFit !== 'cover') v.style.objectFit = 'cover'; } catch (e) { /* egal */ }
+      try { if (v) { v.muted = true; if (v.style.objectFit !== 'cover') v.style.objectFit = 'cover'; } else if (im.style.objectFit !== 'cover') im.style.objectFit = 'cover'; } catch (e) { /* egal */ }
       return;
     }
-    if (Date.now() - (st.okAt || st.at) > 20000) { st.fail = Date.now(); liveDrop(host, st); }
+    if (Date.now() - (st.okAt || st.at) > 20000) { st.fail = Date.now(); liveFails[st.id] = (liveFails[st.id] || 0) + 1; liveDrop(host, st); }
   };
   var tileDrop = function (host) {
     var st = host._frig;
@@ -791,11 +953,31 @@
   F.dayStart = dayStart;
   var dayName = function (day, now) { var dw = dayWord(dayStart(day, 12), now); return dw || 'Heute'; };
   F.dayName = dayName;
-  var hourName = function (day, h) { return new Date(dayStart(day, h)).toLocaleTimeString(loc(), { hour: 'numeric' }); };
+  // Stunde ohne führende Null: „9 Uhr“, Englisch „9 AM“ (de-DE schriebe „09 Uhr“).
+  var hourName = function (day, h) {
+    if (deUI()) return h + '\u00a0Uhr';
+    return new Date(dayStart(day, h)).toLocaleTimeString(loc(), { hour: 'numeric' });
+  };
+  F.hourName = hourName;
+  // Zeitraum einer Stunde für den Kopf: „10–11 Uhr“, Englisch „10–11 AM“ bzw. „11 AM–12 PM“.
+  var hourRange = function (a, b) {
+    var x = new Date(a * 1000), y = new Date(b * 1000);
+    if (deUI()) return x.getHours() + '–' + y.getHours() + '\u00a0Uhr';
+    var o = { hour: 'numeric' }, p = x.toLocaleTimeString(loc(), o), q = y.toLocaleTimeString(loc(), o);
+    var sx = p.replace(/^[\d\s\u202f\u00a0]+/, ''), sy = q.replace(/^[\d\s\u202f\u00a0]+/, '');
+    return sx && sx === sy ? p.replace(sx, '').trim() + '–' + q : p + '–' + q;
+  };
+  F.hourRange = hourRange;
+  // Länge einer Ortszeit-Stunde in s (Zeitumstellung: die doppelte Stunde dauert 2 Std.).
+  F.hourSpan = function (day, h) {
+    var a = dayStart(day, h), b = dayStart(day, h + 1);
+    var d = Math.round((b - a) / 1000);
+    return d >= 1800 && d <= 7200 ? d : 3600;
+  };
   var hrs = function (s) {
     var m = Math.round(s / 60);
-    if (m < 60) return m + ' Min.';
-    return Math.round(m / 60) + ' Std.';
+    if (m < 60) return m + '\u00a0Min.';
+    return Math.round(m / 60) + '\u00a0Std.';
   };
   F.hrs = hrs;
 
@@ -851,40 +1033,58 @@
       p.style.cssText = 'display:block;width:100%;height:100%;--video-max-height:100%;';
       holder.appendChild(p);
       p.url = url;
+      // Fehler sofort erkennen: HAs Player zeigt dann ein ha-alert (401, Stream nie gestartet) – zweimal hintereinander
+      // gesehen (300 ms) gilt als gescheitert, statt bis zum Zeitlimit zu warten (A4).
       return new Promise(function (res, rej) {
-        var n = 0;
+        var t0 = Date.now(), alerts = 0, done = false;
+        var fin = function (ok, v) { if (done) return; done = true; if (ok) res(v); else rej(new Error(v || 'HLS-Fehler')); };
+        p.addEventListener('streams', function () { setTimeout(look, 50); });
         var look = function () {
-          if (!p.isConnected) { rej(new Error('weg')); return; }
+          if (done) return;
+          if (!p.isConnected) { fin(false, 'weg'); return; }
           var r = p.shadowRoot;
-          if (r && r.querySelector('ha-alert')) { rej(new Error('HLS-Fehler')); return; }
+          if (r && r.querySelector('ha-alert')) { if (++alerts >= 2) { fin(false, 'HLS-Fehler'); return; } } else alerts = 0;
           var v = findVideo(r || p, 0);
-          if (v) { playable(v, 12000 - n * 150).then(res, rej); return; }
-          if (++n > 80) { rej(new Error('kein Video')); return; }
-          setTimeout(look, 150);
+          if (v && v.error) { fin(false, 'Videofehler'); return; }
+          if (v && v.readyState >= 1) { fin(true, v); return; }
+          if (Date.now() - t0 > 12000) { fin(false, 'lädt nicht'); return; }
+          setTimeout(look, 300);
         };
         look();
       });
     });
   };
-  // sources: [{k:'mp4'|'hls', path}] – nacheinander versuchen; Ergebnis {video, k, path} oder Fehler.
+  // sources: [{k:'mp4'|'hls', path}] – nacheinander versuchen; Ergebnis {video, k, path} oder Fehler. HLS über die
+  // signierte Unter-Liste (F.hlsUrl). Scheitert eine Quelle mit einer älteren Signatur, einmal frisch signiert neu
+  // versuchen, bevor der Rückfall greift (A6).
   F.playChain = function (holder, hass, sources, o, alive) {
     var i = 0;
+    var one = function (s, force) {
+      var urlP = s.k === 'hls' ? F.hlsUrl(hass, s.path, force)
+        : F.sign(hass, s.path, VOD_TTL, force).then(function (u) { if (!u) throw new Error('nicht signiert'); return abs(hass, u); });
+      return urlP.then(function (url) {
+        if (alive && !alive()) throw new Error('weg');
+        while (holder.firstChild) holder.removeChild(holder.firstChild);
+        return (s.k === 'hls' ? mountHls(holder, hass, url, o) : mountMp4(holder, url, o)).then(function (v) { return { video: v, k: s.k, path: s.path }; });
+      });
+    };
     var next = function () {
       if (alive && !alive()) return Promise.reject(new Error('weg'));
       var s = sources[i++];
       if (!s) return Promise.reject(new Error('keine Quelle'));
-      return F.sign(hass, s.path).then(function (u) {
-        if (!u) throw new Error('nicht signiert');
-        while (holder.firstChild) holder.removeChild(holder.firstChild);
-        var url = abs(hass, u);
-        return (s.k === 'hls' ? mountHls(holder, hass, url, o) : mountMp4(holder, url, o)).then(function (v) { return { video: v, k: s.k, path: s.path }; });
+      var age0 = F.signAge(s.path);
+      return one(s, false).catch(function () {
+        if (alive && !alive()) throw new Error('weg');
+        if (age0 != null && age0 > 60000) return one(s, true);
+        throw new Error('weiter');
       }).catch(function () { return next(); });
     };
     return next();
   };
 
   var PCSS = ':host{display:block;text-align:left;font-family:var(--primary-font-family, system-ui, sans-serif);}'
-    + '.fr{position:relative;width:100%;aspect-ratio:16/9;border-radius:var(--casora-popup-row-radius, 24px);overflow:hidden;background:#000;}'
+    // Höchstens 56 % der Fensterhöhe (Querformat/Tablet), das Bild bleibt ganz (contain).
+    + '.fr{position:relative;width:100%;aspect-ratio:16/9;max-height:56vh;border-radius:var(--casora-popup-row-radius, 24px);overflow:hidden;background:#000;}'
     + '.mt{position:absolute;inset:0;}.mt>*{width:100%;height:100%;display:block;}'
     + '.po{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;}'
     + '.po[hidden]{display:none;}'
@@ -892,15 +1092,18 @@
     +   'background:rgba(0,0,0,0.55);color:rgba(255,255,255,0.92);pointer-events:none;}'
     + '.ov[hidden]{display:none;}'
     + '.ar{position:absolute;top:50%;width:44px;height:44px;margin-top:-22px;border-radius:50%;display:grid;place-items:center;cursor:pointer;'
-    +   'background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, #3A322B);box-shadow:var(--casora-shadow-raised, none);}'
+    +   'background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, #3A322B);box-shadow:var(--casora-shadow-raised, none);'
+    +   'transition:opacity var(--casora-dur-feedback, 160ms) var(--casora-ease-feedback, ease);}'
+    // Beim Abspielen keine Blätter-Pfeile über dem Video (Bedienleiste des Videos bleibt frei).
+    + '.fr.playing .ar{opacity:0;pointer-events:none;}'
     + '.ar ha-icon{--mdc-icon-size:24px;pointer-events:none;}'
     + '.ar:active{transform:scale(var(--casora-press-scale, .97));}'
     + '.bar{display:grid;grid-template-columns:repeat(var(--n,2),minmax(0,1fr));gap:var(--casora-space-3, 12px);margin-top:var(--casora-space-3, 12px);}'
-    + '.b{box-sizing:border-box;min-height:46px;padding:0 12px;border:0;border-radius:var(--casora-soft-seg-radius, 18px);cursor:pointer;'
-    +   'display:flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-size:14px;font-weight:700;white-space:nowrap;'
+    + '.b{box-sizing:border-box;min-height:46px;padding:0 12px;border:0;border-radius:var(--casora-r-pill, 999px);cursor:pointer;'
+    +   'display:flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-size:14px;font-weight:700;white-space:nowrap;min-width:0;'
     +   'background:var(--casora-soft-control-fill, rgba(140,115,90,0.10));color:var(--casora-popup-tiles-text-primary, var(--primary-text-color, #3A322B));'
     +   'transition:background-color var(--casora-dur-feedback, 160ms) var(--casora-ease-feedback, ease);-webkit-tap-highlight-color:transparent;touch-action:manipulation;}'
-    + '.b ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;pointer-events:none;}'
+    + '.b ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;flex:none;pointer-events:none;}'
     + '.b span{pointer-events:none;overflow:hidden;text-overflow:ellipsis;}'
     + '.b:active{transform:scale(var(--casora-press-scale, .97));}'
     + '@media (hover:hover){.b:not(.on):hover{background:var(--casora-soft-row-hover, rgba(140,115,90,0.11));}}'
@@ -908,9 +1111,48 @@
     + '.b.on ha-icon{color:var(--casora-popup-accent, currentColor);}'
     + '.b:disabled{opacity:.45;cursor:default;transform:none;}'
     + '.b[hidden]{display:none;}'
-    + '@media (prefers-reduced-motion:reduce){.b{transition:none;}.b:active,.ar:active{transform:none;}}';
+    + '.nt{margin-top:var(--casora-space-2, 8px);font-size:var(--casora-fs-sub, 13px);font-weight:500;text-align:center;'
+    +   'color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color));}'
+    + '.nt[hidden]{display:none;}'
+    + '@media (prefers-reduced-motion:reduce){.b,.ar{transition:none;}.b:active,.ar:active{transform:none;}}';
 
-  // ── Detail einer Erkennung: Clip (MP4 → HLS → Hinweis), Herunterladen, Behalten, Blättern ──
+  // Rückmeldung an einem Knopf: Text kurz tauschen („Wird geladen …“ → „Gespeichert“), dann zurück.
+  var btnSay = function (b, text, ms) {
+    var sp = b && b.querySelector('span');
+    if (!sp) return;
+    if (b._txt == null) b._txt = sp.textContent;
+    clearTimeout(b._sayT);
+    sp.textContent = tr(text);
+    if (ms) b._sayT = setTimeout(function () { sp.textContent = b._txt; b._txt = null; }, ms);
+  };
+  var btnBack = function (b) { var sp = b && b.querySelector('span'); clearTimeout(b && b._sayT); if (sp && b._txt != null) { sp.textContent = b._txt; b._txt = null; } };
+  // Herunterladen mit Rückmeldung (Datei als Blob mit lesbarem Namen, F.download).
+  var dlWith = function (b, hass, path, name) {
+    if (!b || b.disabled) return Promise.resolve(false);
+    haptic('light');
+    b.disabled = true;
+    btnSay(b, 'Wird geladen …');
+    return F.download(hass, path, name).then(function (ok) {
+      b.disabled = false;
+      btnSay(b, ok ? 'Gespeichert' : 'Nicht geladen', 2200);
+      return ok;
+    });
+  };
+
+  // ── Detail einer Erkennung: Clip, Herunterladen, Teilen, Favorit, Blättern ──
+  // Review: der ganze Review-Zeitraum aus den Aufnahmen (vod/<kamera>/start/end), sonst der Clip des Ereignisses
+  // (MP4 über den Notification-Proxy → HLS notifications/<id>/master.m3u8 → HLS vod/event); erst dann „Kein Clip“.
+  // Favorit und Herunterladen bleiben am Ereignis.
+  F.clipSources = function (c, cfg) {
+    var src = [];
+    if (cfg.rv && cfg.start) {
+      var end = cfg.end || Date.now();
+      src.push({ k: 'hls', path: F.path(c, 'vod', sec0(cfg.start), Math.max(sec0(cfg.start) + 1, Math.ceil(end / 1000))) });
+    }
+    if (cfg.ev && cfg.clip) src.push({ k: 'mp4', path: F.path(c, 'clip', cfg.ev) }, { k: 'hls', path: F.path(c, 'nhls', cfg.ev) }, { k: 'hls', path: F.path(c, 'vodev', cfg.ev) });
+    else if (!cfg.rv && !cfg.ev && cfg.start) src.push({ k: 'hls', path: F.path(c, 'vod', sec0(cfg.start), Math.ceil((cfg.end || cfg.start + 30000) / 1000)) });
+    return src;
+  };
   var clips = new Set();
   if (typeof customElements !== 'undefined' && !customElements.get('casora-frigate-clip')) {
     class FClip extends HTMLElement {
@@ -918,7 +1160,7 @@
       getCardSize() { return 5; }
       set hass(h) { this._hass = h; if (!this._root) this._build(); }
       get hass() { return this._hass; }
-      connectedCallback() { clips.add(this); if (this._hass && !this._root) this._build(); }
+      connectedCallback() { clips.add(this); this._gone = false; if (this._hass && !this._root) this._build(); }
       disconnectedCallback() { clips.delete(this); this._gone = true; }
     }
     var CP = FClip.prototype;
@@ -930,13 +1172,20 @@
         return '<div class="ar" role="button" tabindex="0" aria-label="' + esc(tr(label)) + '" data-casora-mi="frigate-' + (nav.rv ? 'rv' : 'ev') + ':'
           + esc(cfg.entity + '|' + id + '|' + (nav.back ? 'b' : '')) + '" style="' + side + ':12px;"><ha-icon icon="mdi:chevron-' + side + '"></ha-icon></div>';
       };
+      var share = F.canShare();
+      var hasClip = F.clipSources(this._c(), cfg).length > 0;
+      var n = 1 + (share ? 1 : 0) + (cfg.ev ? 1 : 0);
       r.innerHTML = '<style>' + PCSS + '</style>'
         + '<div class="fr" data-frigate-swipe="' + esc(cfg.entity) + '"><img class="po" alt="" hidden><div class="mt"></div>'
         + '<div class="ov frig-noclip" hidden>' + esc(tr('Kein Clip vorhanden')) + '</div>'
         + arrow('left', nav.newer, 'Neuere Erkennung') + arrow('right', nav.older, 'Ältere Erkennung') + '</div>'
-        + '<div class="bar"><button class="b dl" type="button"><ha-icon icon="mdi:download"></ha-icon><span>' + esc(tr('Herunterladen')) + '</span></button>'
-        + '<button class="b fv" type="button" aria-pressed="false"><ha-icon icon="mdi:star-outline"></ha-icon><span>' + esc(tr('Behalten')) + '</span></button></div>';
-      r.querySelector('.dl').addEventListener('click', function (ev) { ev.stopPropagation(); self._download(); });
+        + '<div class="bar" style="--n:' + n + ';"><button class="b dl" type="button"><ha-icon icon="mdi:download"></ha-icon><span>'
+        + esc(tr(hasClip ? 'Herunterladen' : 'Bild herunterladen')) + '</span></button>'
+        + (share ? '<button class="b sh" type="button"><ha-icon icon="mdi:share-variant-outline"></ha-icon><span>' + esc(tr('Teilen')) + '</span></button>' : '')
+        + '<button class="b fv" type="button" aria-pressed="false"><ha-icon icon="mdi:star-outline"></ha-icon><span>' + esc(tr('Favorit')) + '</span></button></div>'
+        + '<div class="nt fvn" hidden>' + esc(tr('Wird nicht automatisch gelöscht')) + '</div>';
+      r.querySelector('.dl').addEventListener('click', function (ev) { ev.stopPropagation(); self._download(ev.currentTarget); });
+      if (share) r.querySelector('.sh').addEventListener('click', function (ev) { ev.stopPropagation(); self._share(ev.currentTarget); });
       r.querySelector('.fv').addEventListener('click', function (ev) { ev.stopPropagation(); self._fav(); });
       var fv = r.querySelector('.fv');
       if (!cfg.ev) fv.hidden = true;
@@ -948,23 +1197,27 @@
     CP._c = function () { var cfg = this._cfg || {}; return { cam: cfg.entity, inst: cfg.inst, name: cfg.name }; };
     CP._play = function () {
       var cfg = this._cfg || {}, self = this, r = this._root, c = this._c();
-      var mt = r.querySelector('.mt'), ov = r.querySelector('.ov'), po = r.querySelector('.po');
-      var src = [];
-      if (cfg.ev && cfg.clip) src.push({ k: 'mp4', path: F.path(c, 'clip', cfg.ev) }, { k: 'hls', path: F.path(c, 'vodev', cfg.ev) });
-      else if (!cfg.ev && cfg.start) src.push({ k: 'hls', path: F.path(c, 'vod', sec0(cfg.start), Math.ceil((cfg.end || cfg.start + 30000) / 1000)) });
+      var mt = r.querySelector('.mt'), ov = r.querySelector('.ov'), po = r.querySelector('.po'), fr = r.querySelector('.fr');
+      var src = F.clipSources(c, cfg);
       if (!src.length) { ov.hidden = false; this.setAttribute('data-src', 'none'); return; }
       this.setAttribute('data-src', 'lädt');
       (cfg.poster ? F.sign(this._hass, cfg.poster) : Promise.resolve(null)).then(function (pu) {
         return F.playChain(mt, self._hass, src, { poster: pu ? abs(self._hass, pu) : null, controls: true }, function () { return !self._gone; });
       }).then(function (res) {
-        self._src = res.k;
+        self._src = res.k; self._srcPath = res.path;
         self.setAttribute('data-src', res.k);
         po.hidden = true;
+        var v = res.video;
+        var pl = function () { fr.classList.toggle('playing', !v.paused && !v.ended); };
+        ['play', 'playing', 'pause', 'ended'].forEach(function (k) { v.addEventListener(k, pl); });
+        pl();
       }).catch(function () {
         while (mt.firstChild) mt.removeChild(mt.firstChild);
         self._src = null;
         self.setAttribute('data-src', 'none');
         ov.hidden = false;
+        // Ohne Clip: herunterladen heißt das Bild.
+        if (cfg.ev) { var sp = r.querySelector('.dl span'); if (sp) sp.textContent = tr('Bild herunterladen'); }
       });
     };
     CP._paintFav = function () {
@@ -975,6 +1228,9 @@
       b.classList.toggle('on', onv);
       b.setAttribute('aria-pressed', onv ? 'true' : 'false');
       b.querySelector('ha-icon').setAttribute('icon', onv ? 'mdi:star' : 'mdi:star-outline');
+      b.querySelector('span').textContent = tr(onv ? 'Favorit ✓' : 'Favorit');
+      var nt = this._root.querySelector('.fvn');
+      if (nt) nt.hidden = !onv;
     };
     CP._fav = function () {
       var cfg = this._cfg || {}, self = this, b = this._root.querySelector('.fv');
@@ -988,19 +1244,47 @@
         self._paintFav();
       });
     };
-    // Clip, wenn er als MP4 lief (Frigate schickt ihn als Anhang); sonst der Abschnitt aus den Aufnahmen, ohne Clip
-    // der Schnappschuss.
-    CP._download = function () {
-      var cfg = this._cfg || {}, c = this._c(), h = this._hass;
+    // Was „Herunterladen“/„Teilen“ holt: der Clip des Ereignisses (MP4), ohne Notification-Proxy derselbe Abschnitt aus
+    // den Aufnahmen; ohne Clip der Schnappschuss.
+    CP._file = function () {
+      var cfg = this._cfg || {}, c = this._c();
+      var at = cfg.start || Date.now(), nm = function (ext) { return F.fileName(cfg.camName || c.name, at, ext); };
+      var noProxy = proxyOk[c.inst] && proxyOk[c.inst].v === false;
+      if (cfg.ev && cfg.clip && this._src !== null && !noProxy) return { path: F.path(c, 'clip', cfg.ev), name: nm('mp4'), type: 'video/mp4', alt: this._rec() };
+      var rec = this._src !== null ? this._rec() : null;
+      if (rec) return rec;
+      if (cfg.ev) return { path: F.path(c, 'snap', cfg.ev), name: nm('jpg'), type: 'image/jpeg' };
+      return null;
+    };
+    CP._rec = function () {
+      var cfg = this._cfg || {}, c = this._c();
+      if (!cfg.start) return null;
+      var a = sec0(cfg.start), b = Math.max(a + 1, Math.ceil((cfg.end || cfg.start + 30000) / 1000));
+      return { path: F.path(c, 'rec', a, Math.min(b, a + 3600)), name: F.fileName(cfg.camName || c.name, cfg.start, 'mp4'), type: 'video/mp4' };
+    };
+    CP._download = function (b) {
+      var f = this._file(), h = this._hass;
+      if (!f) return Promise.resolve(false);
+      return dlWith(b, h, f.path, f.name).then(function (ok) { return ok || !f.alt ? ok : dlWith(b, h, f.alt.path, f.alt.name); });
+    };
+    // Teilen: Datei holen, dann navigator.share. Geht die Freigabe des Tippens beim Laden verloren (Safari), liegt die
+    // Datei bereit: „Jetzt teilen“ teilt sofort.
+    CP._share = function (b) {
+      var self = this, f = this._file();
+      if (!f || b.disabled) return;
       haptic('light');
-      var nm = (c.name || 'frigate') + '-' + String(cfg.ev || sec0(cfg.start || Date.now()));
-      if (this._src === 'mp4' && cfg.ev) return F.download(h, F.path(c, 'clip', cfg.ev), nm + '.mp4');
-      if (this._src && cfg.start) {
-        var a = sec0(cfg.start), b = Math.max(a + 1, Math.ceil((cfg.end || cfg.start + 30000) / 1000));
-        return F.download(h, F.path(c, 'rec', a, Math.min(b, a + 3600)), nm + '.mp4');
-      }
-      if (cfg.ev) return F.download(h, F.path(c, 'snap', cfg.ev), nm + '.jpg');
-      return Promise.resolve(false);
+      var go = function (file) {
+        return navigator.share({ files: [file] }).then(function () { btnBack(b); self._ready = null; }, function (e) {
+          if (e && e.name === 'NotAllowedError') { self._ready = file; btnSay(b, 'Jetzt teilen'); } else btnBack(b);
+        });
+      };
+      if (this._ready) { go(this._ready); return; }
+      b.disabled = true;
+      btnSay(b, 'Wird geladen …');
+      F.fetchBlob(this._hass, f.path).then(function (blob) {
+        b.disabled = false;
+        return go(new File([blob], f.name, { type: f.type }));
+      }).catch(function () { b.disabled = false; btnSay(b, 'Nicht geladen', 2200); });
     };
     customElements.define('casora-frigate-clip', FClip);
   }
@@ -1018,11 +1302,35 @@
     return true;
   };
   F.navGo = navGo;
+  var recs = new Set();
   var listen = typeof document !== 'undefined' && typeof document.addEventListener === 'function' ? document.addEventListener.bind(document) : function () {};
+  // Tasten: ←/→ blättern im Detail, Leertaste hält die Aufnahme an. Ziel ist das innerste Element (composedPath) –
+  // Video-Bedienelemente, Zeitleiste und Eingabefelder behalten ihre Tasten.
+  F.keyTarget = function (ev) {
+    var path = ev && ev.composedPath ? ev.composedPath() : [];
+    var t0 = path[0] || (ev && ev.target);
+    var tag = t0 && t0.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t0 && t0.isContentEditable)) return 'input';
+    for (var i = 0; i < path.length; i++) {
+      var x = path[i];
+      if (!x || !x.tagName) continue;
+      if (/^(VIDEO|HA-HLS-PLAYER|HA-CAMERA-STREAM)$/.test(x.tagName) || (x.getAttribute && x.getAttribute('role') === 'slider')) return 'media';
+      if (x.tagName === 'BUTTON' || (x.getAttribute && x.getAttribute('role') === 'button')) return 'button';
+    }
+    return null;
+  };
   listen('keydown', function (ev) {
+    var k = F.keyTarget(ev);
+    if (k === 'input') return;
+    if (ev.key === ' ' && k !== 'button') {
+      var cur = window.casoraPopup && window.casoraPopup.current;
+      var rec = null;
+      recs.forEach(function (x) { if (x.isConnected) rec = x; });
+      if (rec && cur && cur._frigView === 'rec') { ev.preventDefault(); rec.toggle(); }
+      return;
+    }
     if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
-    var t = ev.target && ev.target.tagName;
-    if (t === 'INPUT' || t === 'TEXTAREA' || t === 'VIDEO' || t === 'CASORA-FRIGATE-REC') return;
+    if (k === 'media') return;
     if (navGo(ev.key === 'ArrowLeft' ? -1 : 1)) ev.preventDefault();
   });
   var sw0 = null;
@@ -1039,6 +1347,42 @@
   }, { passive: true, capture: true });
   var zoneName = function (z) { var t = String(z || '').replace(/_/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1); };
   F.zoneName = zoneName;
+  // Name der Kamera für Etikett und Dateinamen (wie im Kamera-Popup).
+  var camName = function (hass, cam) {
+    var st = hass && hass.states && hass.states[cam];
+    return String((st && st.attributes && st.attributes.friendly_name) || (info[cam] && info[cam].name) || cam || '');
+  };
+  F.camName = camName;
+  // Zurück zum Kamera-Popup, wenn etwas aus dem Halten-Menü geöffnet wurde: die Kachel antippen (gleiches Popup).
+  var camBack = function (cam) {
+    if (typeof window._casoraTapTile !== 'function') return null;
+    return function () { window._casoraTapTile(cam, function (ok) { if (!ok && window.casoraPopup) window.casoraPopup.close(); }); };
+  };
+  F.camBack = camBack;
+  var WIDE = '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);';
+  // Unterseiten (Detail, Aufnahmen, Laden) im Rahmen des Kamera-Popups: gleiche Ränder wie dessen Inhalt (K.layout),
+  // Tippen ins Leere schließt nicht (Weg zurück über ‹ bzw. X).
+  var subPage = function (o) {
+    var P = window.casoraPopup;
+    return Object.assign({ dismiss_on_background: false, head_switch: false, style: WIDE, popup_styles: (P.current || {}).popup_styles }, o);
+  };
+  var oneCol = function (K, fields) {
+    var keys = Object.keys(fields).filter(function (k) { return fields[k] != null && fields[k] !== ''; });
+    var f = {};
+    keys.forEach(function (k) { f[k] = fields[k]; });
+    return K.layout({ fields: f, top: keys, left: [], right: [] });
+  };
+  // Sofort öffnen mit „Wird geladen …“; der echte Inhalt ersetzt es nur, solange genau dieses Popup noch offen ist.
+  var loading = function (title, back, eyebrow) {
+    var P = window.casoraPopup, UI = window._casoraUI, K = window._casoraSoftKit;
+    if (!P || !UI || !K) return null;
+    var tok = { at: Date.now() };
+    P.open(subPage({ title: title, eyebrow: eyebrow || '', back: back || null, _frigLoad: tok,
+      content: oneCol(K, { l: UI.group([{ icon: 'mdi:timer-sand', label: 'Wird geladen …' }], null) }) }));
+    return tok;
+  };
+  var still = function (tok) { var cur = window.casoraPopup && window.casoraPopup.current; return !tok || !!(cur && cur._frigLoad === tok); };
+  F.still = still;
   F.detail = function (cam, ref, back) {
     var ha = document.querySelector('home-assistant'), hass = ha && ha.hass;
     var P = window.casoraPopup, UI = window._casoraUI, K = window._casoraSoftKit;
@@ -1046,6 +1390,7 @@
     var c = F.find(hass, cam);
     var it = typeof ref === 'object' && ref ? (ref.kind ? ref : evItem(ref)) : itemById(cam, ref);
     if (!it) return false;
+    if (!back) back = camBack(cam);
     // Blättern wie in Frigate: neuere/ältere Erkennung derselben Liste (Filter gelten mit).
     var all = shown(cam), at = -1;
     for (var k = 0; k < all.length; k++) if (all[k].id === it.id) at = k;
@@ -1055,13 +1400,16 @@
     var e0 = evId ? F.eventById(cam, evId) : null;
     var score = it.score != null ? it.score : e0 ? e0.score : null;
     var dur = it.end ? Math.max(1, Math.round((it.end - it.start) / 1000)) : null;
-    // Kopf: Titel = Objekt, Statuszeile = Zeitpunkt · Dauer bzw. „Live“ · „Treffer 86 %“ · Alarm (UI.line wandert in den Kopf).
-    var line = UI.line(stamp(it.start), [dur ? (dur < 60 ? dur + ' s' : Math.round(dur / 60) + ' Min.') : 'Live',
-      score != null ? 'Treffer ' + Math.round(score * 100) + ' %' : null, isRv && it.sev === 'alert' ? 'Alarm' : null].filter(Boolean));
+    // Kopf: Titel = Objekt, Statuszeile = Zeitpunkt · Dauer bzw. „Live“ · Art (Alarm/Erkennung). Der Treffer steht unten.
+    var kindWord = isRv ? (it.sev === 'alert' ? (deUI() ? 'Alarm' : 'Alert') : 'Erkennung') : null;
+    var line = UI.line(stamp(it.start), [dur ? (dur < 60 ? dur + ' s' : Math.round(dur / 60) + ' Min.') : 'Live', kindWord].filter(Boolean));
     var rows = [];
     if (it.zones && it.zones.length) rows.push({ icon: 'mdi:vector-square', iconTone: 'accent', label: it.zones.length > 1 ? 'Zonen' : 'Zone', value: it.zones.map(zoneName).join(', ') });
     var faces = [it.sub].concat(it.subs || []).filter(uniq);
     if (faces.length) rows.push({ icon: 'mdi:face-recognition', iconTone: 'accent', label: 'Gesicht', value: faces.join(', '), valueLit: true });
+    // Für Laien: „Sicher erkannt“ statt „Treffer 86 %“; der Wert klein rechts.
+    if (score != null) rows.push({ icon: 'mdi:check-decagram-outline', iconTone: 'accent', label: score >= 0.8 ? 'Sicher erkannt' : 'Erkannt', value: Math.round(score * 100) + ' %' });
+    if (isRv) rows.push({ icon: 'mdi:email-mark-as-unread', iconTone: 'accent', label: 'Als neu markieren', entity: 'frigate-new:' + cam + '|' + it.id });
     var nb = at > 0 ? all[at - 1] : null, ob = at >= 0 && at < all.length - 1 ? all[at + 1] : null;
     var navRow = function (x, label) {
       return { image: x.thumb || '', imageFit: 'cover', label: label, sub: objLabel(x) + ' · ' + stamp(x.start),
@@ -1070,96 +1418,106 @@
     var nav = [];
     if (nb) nav.push(navRow(nb, 'Neuere Erkennung'));
     if (ob) nav.push(navRow(ob, 'Ältere Erkennung'));
-    // Clip mit dem Schnappschuss als Vorschaubild: MP4 über den Notification-Proxy, sonst HLS (vod/event), erst
-    // dann „Kein Clip vorhanden“. Pfeile über dem Bild blättern (auch Wischen, Pfeiltasten).
+    var nm = camName(hass, cam);
     var clipOk = isRv ? !!evId : !!it.clip;
-    var media = { type: 'custom:casora-frigate-clip', entity: cam, inst: c.inst, name: c.name, ev: evId, clip: clipOk,
-      fav: !!it.fav, start: it.start, end: it.end, poster: evId ? F.path(c, 'snap', evId) : null,
+    var media = { type: 'custom:casora-frigate-clip', entity: cam, inst: c.inst, name: c.name, camName: nm, ev: evId, clip: clipOk,
+      rv: isRv ? it.id : null, fav: !!it.fav, start: it.start, end: it.end, poster: evId ? F.path(c, 'snap', evId) : null,
       nav: { newer: nb ? nb.id : null, older: ob ? ob.id : null, back: !!back, rv: isRv } };
-    var card = K.bare();
-    card.styles = { card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0 26px 24px 26px' }],
-      grid: [{ 'grid-template-areas': '"h" "m" "i"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'row-gap': 'var(--casora-popup-sec-gap, 22px)' }],
-      custom_fields: { h: [{ 'justify-self': 'stretch' }], m: [{ 'justify-self': 'stretch' }, { overflow: 'visible' }], i: [{ 'justify-self': 'stretch' }, { 'text-align': 'left' }, { overflow: 'visible' }] } };
     var infoHtml = (rows.length ? UI.group(rows, null) : '') + (nav.length ? (rows.length ? '<div style="height:8px"></div>' : '') + UI.group(nav, null) : '');
-    card.custom_fields = { h: line, m: { card: media } };
-    if (infoHtml) card.custom_fields.i = infoHtml;
-    else card.styles.grid[0] = { 'grid-template-areas': '"h" "m"' };
     lastBack = back || null;
-    var cfg = { title: objLabel(it) + (it.sub ? ' · ' + it.sub : ''), back: back || null, dismiss_on_background: true, content: card, head_switch: false,
-      style: '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);',
-      popup_styles: (P.current || {}).popup_styles };
+    var cfg = subPage({ title: objLabel(it) + (it.sub ? ' · ' + it.sub : ''), eyebrow: nm, back: back || null, _frigView: 'detail',
+      content: oneCol(K, { h: line, m: { card: media }, i: infoHtml }) });
     P.open(cfg);
     navNow = { cfg: P.current || cfg, nav: { cam: cam, newer: nb ? nb.id : null, older: ob ? ob.id : null, back: !!back } };
     return true;
   };
   // Letzter Schnappschuss eines Objekts (Bild-Entität), wenn es keine Ereignisliste gibt.
-  F.snapshot = function (imgId, back, title) {
+  F.snapshot = function (imgId, back, title, cam) {
     var ha = document.querySelector('home-assistant'), hass = ha && ha.hass, P = window.casoraPopup, K = window._casoraSoftKit;
     var st = hass && hass.states[imgId];
     if (!st || !P || !K || !st.attributes.entity_picture) return false;
-    var card = K.bare();
-    card.styles = { card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0 26px 24px 26px' }] };
-    card.custom_fields = { m: '<div style="width:100%;aspect-ratio:16/9;border-radius:var(--casora-popup-row-radius, 24px);overflow:hidden;background:#000;">'
-      + '<img src="' + esc(st.attributes.entity_picture) + '" alt="" style="width:100%;height:100%;object-fit:contain;display:block;"></div>' };
-    P.open({ title: title || 'Schnappschuss', back: back || null, dismiss_on_background: true, content: card, head_switch: false,
-      style: '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);', popup_styles: (P.current || {}).popup_styles });
+    var m = '<div style="width:100%;aspect-ratio:16/9;max-height:56vh;border-radius:var(--casora-popup-row-radius, 24px);overflow:hidden;background:#000;">'
+      + '<img src="' + esc(st.attributes.entity_picture) + '" alt="" style="width:100%;height:100%;object-fit:contain;display:block;"></div>';
+    P.open(subPage({ title: title || 'Schnappschuss', eyebrow: cam ? camName(hass, cam) : '', back: back || null, content: oneCol(K, { m: m }) }));
     return true;
   };
 
-  // ── Aufnahmen: Stunde abspielen, Zeitleiste, Herunterladen ────────────────
-  // <casora-frigate-rec> spielt eine Stunde (vod/<kamera>/start/end über HAs HLS-Player, sonst MP4 recording/…),
-  // die Leiste zeigt aufgenommene Abschnitte (recordings/get) und Erkennungen (events/get) dieser Stunde; Antippen,
-  // Ziehen (Touch, 44 px hoch) und Pfeiltasten springen an die Stelle. „Herunterladen“ lädt den aufgenommenen Teil der Stunde.
+  // ── Aufnahmen: Stunde abspielen, Zeitleiste, Ausschnitt herunterladen ─────
+  // <casora-frigate-rec> spielt eine Stunde (vod/<kamera>/start/end über HAs HLS-Player mit signierter Unter-Liste;
+  // nur als letzter Rückfall MP4 recording/… – das kann nicht springen, die Leiste sagt das dann). Die Leiste zeigt
+  // aufgenommene Abschnitte (recordings/get) und Erkennungen (events/get) dieser Stunde; Antippen, Ziehen (Touch,
+  // 44 px hoch), Pfeiltasten und die Erkennungs-Punkte springen. Eigene Bedienung (Play/Pause, Leertaste) statt der
+  // Leiste des Videos; am Ende geht es in der nächsten Stunde weiter. „Herunterladen“: ab hier 1/5/10 Min.
   var RCSS = PCSS
     + '.ld{position:absolute;inset:0;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;'
     +   'padding:20px;background:rgba(0,0,0,0.45);color:rgba(255,255,255,0.88);font-size:15px;font-weight:600;}'
     + '.ld[hidden]{display:none;}.ld small{font-size:13px;font-weight:500;opacity:.8;}'
     + '.tl{position:relative;height:44px;margin-top:var(--casora-space-3, 12px);cursor:pointer;touch-action:none;outline:none;'
     +   '-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}'
+    + '.tl.off{cursor:default;}'
     + '.tl:focus-visible .trk{box-shadow:0 0 0 2px var(--casora-popup-accent, var(--casora-color-teal, #4E9E95));}'
+    // Lücken als gestreifte Spur, Aufgenommenes deckend in der Bedien-Farbe (≥ 3 : 1).
     + '.trk{position:absolute;left:0;right:0;top:14px;height:16px;border-radius:999px;overflow:hidden;'
-    +   'background:var(--casora-soft-control-fill, rgba(140,115,90,0.10));}'
-    // Aufgenommen in der Bedien-Farbe (die Kopf-Farbe ist bei Kameras Alarm-Rot – das hieße „Alarm“).
-    + '.sg{position:absolute;top:0;bottom:0;background:var(--casora-popup-ui-action, var(--casora-color-teal, #276B64));opacity:.4;}'
-    + '.dt{position:absolute;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;'
-    +   'background:var(--casora-popup-ui-action, var(--casora-color-teal, #276B64));box-shadow:0 0 0 2px var(--casora-soft-seg-on, #FFFDF9);}'
-    + '.dt.al{background:var(--casora-color-red, #D35A4E);}'
+    +   'background:repeating-linear-gradient(135deg, var(--casora-soft-control-fill, rgba(140,115,90,0.10)) 0 4px, transparent 4px 8px),'
+    +   'var(--casora-soft-row-fill, rgba(140,115,90,0.07));}'
+    + '.sg{position:absolute;top:0;bottom:0;background:var(--casora-popup-ui-action, var(--casora-color-teal, #276B64));}'
+    + '.dts{position:absolute;inset:0;pointer-events:none;}'
+    // Erkennungs-Punkt: 10 px sichtbar, 44 px Tippfläche.
+    + '.dt{position:absolute;top:0;width:44px;height:44px;margin-left:-22px;padding:0;border:0;background:none;cursor:pointer;pointer-events:auto;'
+    +   '-webkit-tap-highlight-color:transparent;}'
+    + '.dt::after{content:"";position:absolute;left:17px;top:5px;width:10px;height:10px;border-radius:50%;'
+    +   'background:var(--casora-popup-tiles-text-primary, #3A322B);box-shadow:0 0 0 2px var(--casora-soft-seg-on, #FFFDF9);}'
+    + '.dt.al::after{background:var(--casora-color-red, #D35A4E);}'
+    + '.tl.off .dt{cursor:default;}'
     + '.ph{position:absolute;top:8px;width:4px;height:28px;margin-left:-2px;border-radius:999px;pointer-events:none;'
-    +   'background:var(--casora-popup-tiles-text-primary, var(--primary-text-color, #3A322B));box-shadow:0 0 0 2px var(--casora-soft-seg-on, #FFFDF9);}'
+    +   'background:var(--casora-popup-tiles-text-primary, var(--primary-text-color, #3A322B));'
+    +   'box-shadow:0 0 0 2px var(--casora-soft-seg-on, #FFFDF9);outline:1px solid var(--casora-popup-tiles-text-secondary, rgba(58,50,43,0.6));outline-offset:2px;}'
     + '.tk{display:flex;justify-content:space-between;margin-top:2px;font-size:var(--casora-fs-label, 12px);font-weight:600;'
     +   'font-variant-numeric:tabular-nums;color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color));}'
-    + '.rw{display:flex;align-items:center;justify-content:space-between;gap:var(--casora-space-3, 12px);margin-top:var(--casora-space-3, 12px);}'
-    + '.now{font-size:var(--casora-fs-row, 15px);font-weight:700;font-variant-numeric:tabular-nums;'
+    + '.rw{display:flex;align-items:center;gap:var(--casora-space-3, 12px);margin-top:var(--casora-space-3, 12px);}'
+    + '.now{flex:1;min-width:0;font-size:var(--casora-fs-row, 15px);font-weight:700;font-variant-numeric:tabular-nums;'
     +   'color:var(--casora-popup-tiles-text-primary, var(--primary-text-color, #3A322B));}'
-    + '.rw .b{flex:none;padding:0 20px;}';
+    + '.now small{display:block;font-size:var(--casora-fs-sub, 13px);font-weight:500;color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color));}'
+    + '.rw .b{flex:none;padding:0 20px;}'
+    + '.rw .pp{width:46px;padding:0;}'
+    + '.cut{display:flex;flex-wrap:wrap;align-items:center;gap:var(--casora-space-2, 8px);margin-top:var(--casora-space-3, 12px);}'
+    + '.cut[hidden]{display:none;}'
+    + '.cut .lb{font-size:var(--casora-fs-sub, 13px);font-weight:600;margin-right:4px;color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color));}'
+    + '.cut .b{min-height:40px;padding:0 16px;}';
   if (typeof customElements !== 'undefined' && !customElements.get('casora-frigate-rec')) {
     class FRec extends HTMLElement {
       setConfig(cfg) { this._cfg = cfg || {}; }
       getCardSize() { return 6; }
       set hass(h) { this._hass = h; if (!this._root) this._build(); }
       get hass() { return this._hass; }
-      connectedCallback() { this._gone = false; if (this._hass && !this._root) this._build(); }
-      disconnectedCallback() { this._gone = true; }
+      connectedCallback() { this._gone = false; recs.add(this); if (this._hass && !this._root) this._build(); }
+      disconnectedCallback() { this._gone = true; recs.delete(this); }
     }
     var RP = FRec.prototype;
     RP._build = function () {
       var cfg = this._cfg || {}, self = this;
-      var a = this._a = cfg.start, b = this._b = cfg.start + 3600;
+      var a = this._a = cfg.start, b = this._b = cfg.start + (cfg.len || 3600);
       var r = this._root = this.attachShadow({ mode: 'open' });
-      var tk = [0, 15, 30, 45, 60].map(function (m) { return '<span>' + esc(clock((a + m * 60) * 1000)) + '</span>'; }).join('');
+      var tk = [0, 0.25, 0.5, 0.75, 1].map(function (f) { return '<span>' + esc(clock((a + f * (b - a)) * 1000)) + '</span>'; }).join('');
       r.innerHTML = '<style>' + RCSS + '</style>'
         + '<div class="fr"><div class="mt"></div><div class="ld" role="status" aria-live="polite"><span>' + esc(tr('Wird geladen …')) + '</span></div></div>'
-        + '<div class="tl" role="slider" tabindex="0" aria-label="' + esc(tr('Zeitleiste')) + '" aria-valuemin="' + a + '" aria-valuemax="' + b + '">'
-        + '<div class="trk"><div class="sgs"></div><div class="dts"></div></div><div class="ph" hidden></div></div>'
+        + '<div class="tl" role="slider" tabindex="0" aria-label="' + esc(tr('Zeitleiste')) + '" aria-valuemin="' + a + '" aria-valuemax="' + b
+        + '" aria-valuenow="' + a + '" aria-valuetext="' + esc(clock(a * 1000)) + '">'
+        + '<div class="trk"><div class="sgs"></div></div><div class="dts"></div><div class="ph" hidden></div></div>'
         + '<div class="tk" aria-hidden="true">' + tk + '</div>'
-        + '<div class="rw"><span class="now"></span><button class="b dl" type="button" disabled><ha-icon icon="mdi:download"></ha-icon><span>' + esc(tr('Herunterladen')) + '</span></button></div>';
+        + '<div class="rw"><button class="b pp" type="button" aria-label="' + esc(tr('Abspielen')) + '" disabled><ha-icon icon="mdi:play"></ha-icon></button>'
+        + '<span class="now"></span>'
+        + '<button class="b dl" type="button" aria-expanded="false" disabled><ha-icon icon="mdi:download"></ha-icon><span>' + esc(tr('Herunterladen')) + '</span></button></div>'
+        + '<div class="cut" hidden><span class="lb">' + esc(tr('Ab hier:')) + '</span>'
+        + [1, 5, 10].map(function (m) { return '<button class="b" type="button" data-min="' + m + '"><span>' + esc(tr(m + ' Min.')) + '</span></button>'; }).join('') + '</div>';
       var tl = r.querySelector('.tl');
       var frac = function (ev) { var rc = tl.getBoundingClientRect(); return rc.width ? (ev.clientX - rc.left) / rc.width : 0; };
       // Popups schließen am Handy beim Wischen – auf der Leiste gehört das Ziehen ihr.
       ['touchstart', 'touchmove'].forEach(function (k) { tl.addEventListener(k, function (ev) { ev.stopPropagation(); }, { passive: true }); });
       tl.addEventListener('pointerdown', function (ev) {
         ev.stopPropagation();
-        if (!self._segs || !self._segs.length) return;
+        if (!self._segs || !self._segs.length || self._noSeek) return;
+        if (ev.target && ev.target.classList && ev.target.classList.contains('dt')) return;
         self._drag = true;
         try { tl.setPointerCapture(ev.pointerId); } catch (e) { /* egal */ }
         self._head(F.tlTime(frac(ev), a, b));
@@ -1174,8 +1532,13 @@
       };
       tl.addEventListener('pointerup', up);
       tl.addEventListener('pointercancel', function () { self._drag = false; });
-      tl.addEventListener('click', function (ev) { ev.stopPropagation(); });
+      tl.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        var d = ev.target && ev.target.closest && ev.target.closest('.dt');
+        if (d && !self._noSeek) { haptic('selection'); self.seek(Number(d.getAttribute('data-t'))); }
+      });
       tl.addEventListener('keydown', function (ev) {
+        if (self._noSeek) return;
         var t = F.tlKey(ev.key, ev.shiftKey, self._t != null ? self._t : a, a, b);
         if (t == null) return;
         ev.preventDefault(); ev.stopPropagation();
@@ -1183,7 +1546,17 @@
         clearTimeout(self._kt);
         self._kt = setTimeout(function () { self.seek(t); }, 250);
       });
-      r.querySelector('.dl').addEventListener('click', function (ev) { ev.stopPropagation(); self._download(); });
+      r.querySelector('.pp').addEventListener('click', function (ev) { ev.stopPropagation(); self.toggle(); });
+      r.querySelector('.dl').addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        var cut = r.querySelector('.cut'), open = cut.hidden;
+        cut.hidden = !open;
+        ev.currentTarget.setAttribute('aria-expanded', open ? 'true' : 'false');
+        haptic('light');
+      });
+      r.querySelectorAll('.cut .b').forEach(function (btn) {
+        btn.addEventListener('click', function (ev) { ev.stopPropagation(); self._download(Number(btn.getAttribute('data-min')), btn); });
+      });
       this._load();
     };
     RP._c = function () { var cfg = this._cfg || {}; return { cam: cfg.entity, inst: cfg.inst, name: cfg.name }; };
@@ -1197,11 +1570,11 @@
       Promise.all([segP, evP]).then(function (x) {
         if (self._gone && !self.isConnected) return;
         var segs = self._segs = (x[0] || []).map(function (s) { return { s: Math.max(a, s.s), e: Math.min(b, s.e) }; }).filter(function (s) { return s.e > s.s; });
-        self._evs = x[1] || [];
+        self._evs = (x[1] || []).filter(function (e) { return e.start / 1000 >= a && e.start / 1000 < b; }).sort(function (p, q) { return p.start - q.start; });
         self._draw();
         if (x[0] == null) { self._msg('Aufnahme nicht abrufbar', 'Frigate antwortet nicht'); return; }
         if (!segs.length) { self._msg('Keine Aufnahme in dieser Stunde'); return; }
-        self.seek(self._cfg.at && self._cfg.at >= a && self._cfg.at < b ? self._cfg.at : segs[0].s);
+        self.seek(F.recStart(self._cfg, segs, self._evs, a, b));
       });
     };
     RP._msg = function (t, sub) {
@@ -1219,11 +1592,13 @@
       var al = {};
       var rv = rvc[(this._cfg || {}).entity];
       ((rv && Array.isArray(rv.list) && rv.list) || []).forEach(function (x) { if (x.sev === 'alert') x.dets.forEach(function (d) { al[d] = 1; }); });
-      r.querySelector('.dts').innerHTML = (this._evs || []).filter(function (e) { return e.start / 1000 >= a && e.start / 1000 < b; }).map(function (e) {
-        return '<div class="dt' + (al[e.id] ? ' al' : '') + '" title="' + esc(F.label(e.o) + ' · ' + clock(e.start)) + '" style="left:' + pct(e.start / 1000) + ';"></div>';
+      r.querySelector('.dts').innerHTML = (this._evs || []).map(function (e) {
+        var lb = F.label(e.o) + ' · ' + clock(e.start);
+        return '<button type="button" class="dt' + (al[e.id] ? ' al' : '') + '" data-t="' + (e.start / 1000) + '" aria-label="' + esc(tr(lb)) + '" title="' + esc(tr(lb))
+          + '" style="left:' + pct(e.start / 1000) + ';"></button>';
       }).join('');
-      var dl = r.querySelector('.dl');
-      dl.disabled = !(this._segs && this._segs.length);
+      var ok = !!(this._segs && this._segs.length);
+      r.querySelector('.dl').disabled = !ok;
     };
     // Wiedergabe-Kopf und Uhrzeit (ohne zu springen – das macht seek).
     RP._head = function (t) {
@@ -1232,14 +1607,30 @@
       ph.hidden = false;
       ph.style.left = (F.tlFrac(t, this._a, this._b) * 100).toFixed(3) + '%';
       var txt = clock(t * 1000, true);
-      r.querySelector('.now').textContent = txt;
+      var now = r.querySelector('.now');
+      now.textContent = txt;
+      if (this._noSeek) { var sm = document.createElement('small'); sm.textContent = tr('Springen nicht möglich'); now.appendChild(sm); }
       tl.setAttribute('aria-valuenow', String(Math.round(t)));
       tl.setAttribute('aria-valuetext', txt);
+    };
+    RP.toggle = function () {
+      var v = this._video;
+      if (!v) return;
+      haptic('light');
+      try { if (v.paused || v.ended) { var p = v.play(); if (p && p.catch) p.catch(function () {}); } else v.pause(); } catch (e) { /* egal */ }
+    };
+    RP._paintPP = function () {
+      var v = this._video, b = this._root.querySelector('.pp');
+      var playing = !!(v && !v.paused && !v.ended);
+      b.disabled = !v;
+      b.querySelector('ha-icon').setAttribute('icon', playing ? 'mdi:pause' : 'mdi:play');
+      b.setAttribute('aria-label', tr(playing ? 'Anhalten' : 'Abspielen'));
     };
     RP.seek = function (t) {
       var segs = this._segs || [], self = this;
       var o = F.recOffset(segs, t);
       if (!o) return;
+      if (this._noSeek && this._video) return;
       this._head(o.t);
       this.setAttribute('data-t', String(Math.round(o.t)));
       if (this._video) { try { this._video.currentTime = o.off; var p = this._video.play && this._video.play(); if (p && p.catch) p.catch(function () {}); } catch (e) { /* lädt noch */ } return; }
@@ -1251,7 +1642,7 @@
       ld.hidden = false;
       this.setAttribute('data-src', 'lädt');
       F.playChain(r.querySelector('.mt'), this._hass, [{ k: 'hls', path: F.path(c, 'vod', a, b) }, { k: 'mp4', path: F.path(c, 'rec', a, b) }],
-        { controls: true, muted: true, autoplay: true }, function () { return self.isConnected; })
+        { controls: false, muted: true, autoplay: true }, function () { return self.isConnected; })
         .then(function (res) {
           self._busy = false;
           self._video = res.video; self._src = res.k;
@@ -1259,141 +1650,286 @@
           ld.hidden = true;
           var v = res.video;
           v.muted = true;
-          try { v.currentTime = self._want.off; } catch (e) { /* gleich */ }
+          try { v.controls = false; } catch (e) { /* egal */ }
+          // MP4-Rückfall (Frigate liefert recording/… ohne Bereichsabruf): spielt von vorn, springen geht nicht.
+          if (res.k === 'mp4') {
+            self._noSeek = true;
+            var tl = r.querySelector('.tl');
+            tl.classList.add('off'); tl.setAttribute('aria-disabled', 'true');
+            self._head(segs[0].s);
+          } else { try { v.currentTime = self._want.off; } catch (e) { /* gleich */ } }
           var p = v.play && v.play(); if (p && p.catch) p.catch(function () {});
           v.addEventListener('timeupdate', function () {
             if (self._drag) return;
             var w = F.recAt(self._segs, v.currentTime);
             if (w != null) self._head(w);
           });
+          ['play', 'playing', 'pause', 'ended'].forEach(function (k) { v.addEventListener(k, function () { self._paintPP(); }); });
+          // Am Ende in der nächsten Stunde weiter (wie ein durchgehendes Video).
+          v.addEventListener('ended', function () {
+            var nx = (self._cfg || {}).next;
+            if (nx && self.isConnected && window.casoraPopup && window.casoraPopup.current && window.casoraPopup.current._frigView === 'rec') {
+              F.recView(self._cfg.entity, nx.day, nx.h, recBack, null, { at: 'start' });
+            }
+          });
+          self._paintPP();
         }).catch(function () {
           self._busy = false;
           self._msg('Aufnahme nicht abrufbar', 'Frigate liefert dieses Video nicht');
         });
     };
-    RP._download = function () {
-      var segs = this._segs || [], c = this._c();
+    // Ausschnitt ab der aktuellen Stelle (1/5/10 Min., höchstens bis zum Ende der Aufnahme) als MP4 aus recording/….
+    RP._download = function (min, btn) {
+      var segs = this._segs || [], c = this._c(), cfg = this._cfg || {};
       if (!segs.length) return;
-      haptic('light');
-      var a = Math.floor(segs[0].s), b = Math.min(Math.ceil(segs[segs.length - 1].e), a + 3600);
-      var d = new Date(a * 1000);
-      var nm = (c.name || 'frigate') + '-' + d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0')
-        + '-' + String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0') + '.mp4';
-      F.download(this._hass, F.path(c, 'rec', a, b), nm);
+      var t = F.cut(segs, this._t != null ? this._t : segs[0].s, min);
+      if (!t) return;
+      dlWith(btn, this._hass, F.path(c, 'rec', t.a, t.b), F.fileName(cfg.camName || c.name, t.a * 1000, 'mp4'));
     };
     customElements.define('casora-frigate-rec', FRec);
   }
+  // Ausschnitt [a, b] in s ab t für min Minuten, in den aufgenommenen Bereich gelegt.
+  F.cut = function (segs, t, min) {
+    if (!segs || !segs.length) return null;
+    var first = Math.floor(segs[0].s), last = Math.ceil(segs[segs.length - 1].e);
+    var a = Math.max(first, Math.min(Math.floor(t), last - 1));
+    return { a: a, b: Math.min(last, a + Math.max(1, min) * 60) };
+  };
+  // Startstelle der Aufnahmen-Ansicht: ausdrücklich (at = Sekunde), „end“ = jetzt (Ende der Aufnahme − 60 s), „start“ =
+  // Anfang; sonst die erste Erkennung der Stunde (3 s davor), ohne Erkennung in der laufenden Stunde jetzt, sonst der Anfang.
+  F.recStart = function (cfg, segs, evs, a, b, now) {
+    cfg = cfg || {};
+    var s0 = segs[0].s, e1 = segs[segs.length - 1].e;
+    if (typeof cfg.at === 'number' && cfg.at >= a && cfg.at < b) return cfg.at;
+    if (cfg.at === 'end') return Math.max(s0, e1 - 60);
+    if (cfg.at === 'start') return s0;
+    if (evs && evs.length) return Math.max(s0, evs[0].start / 1000 - 3);
+    var t = (now || Date.now()) / 1000;
+    if (t >= a && t < b + 60) return Math.max(s0, e1 - 60);
+    return s0;
+  };
 
   // Chip (Filter, Tag, Stunde): Pille 36 hoch + unsichtbar 4 px = 44 Trefferfläche, aktiv hell hinterlegt.
-  var chip = function (mid, label, onc, count) {
+  // o.lit: selbst gewählter Name (Gesicht) – nicht übersetzen; o.icon: Symbol davor; o.expanded: aufklappende Pille.
+  var chip = function (mid, label, onc, count, o) {
+    o = o || {};
     return '<div role="button" tabindex="0" aria-pressed="' + (onc ? 'true' : 'false') + '" data-casora-mi="' + esc(mid) + '"'
+      + (o.expanded != null ? ' aria-expanded="' + (o.expanded ? 'true' : 'false') + '"' : '')
       + ' style="flex:none;position:relative;min-height:36px;padding:0 14px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;'
       + 'font-size:var(--casora-fs-sub, 13px);font-weight:700;white-space:nowrap;margin-block:4px;'
       + (onc ? 'background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, #3A322B);box-shadow:var(--casora-soft-seg-on-shadow, none);'
         : 'background:var(--casora-soft-control-fill, rgba(140,115,90,0.10));color:var(--casora-popup-tiles-text-primary, #3A322B);') + '">'
-      + '<span style="pointer-events:none;">' + esc(T(label)) + '</span>'
+      + (o.icon ? '<ha-icon icon="' + esc(o.icon) + '" style="--mdc-icon-size:18px;width:18px;height:18px;display:flex;pointer-events:none;"></ha-icon>' : '')
+      + (o.lit ? '<span data-no-i18n style="pointer-events:none;">' + esc(label) + '</span>' : '<span style="pointer-events:none;">' + esc(T(label)) + '</span>')
       + (count ? '<span style="pointer-events:none;min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:999px;display:inline-flex;'
         + 'align-items:center;justify-content:center;font-size:var(--casora-fs-label, 12px);font-variant-numeric:tabular-nums;'
-        + 'background:var(--casora-popup-ui-action, #276B64);color:var(--casora-popup-ui-on-action, #fff);">' + esc(count) + '</span>' : '')
+        + 'background:' + (o.countBg || 'var(--casora-popup-ui-action, #276B64)') + ';color:var(--casora-popup-ui-on-action, #fff);">' + esc(count) + '</span>' : '')
       + '</div>';
   };
-  var chipSep = '<span class="frig-sep" aria-hidden="true" style="flex:none;width:1px;height:20px;align-self:center;margin:0 4px;'
-    + 'background:var(--casora-popup-ui-divider, rgba(140,115,90,0.22));"></span>';
-  var chipRow = function (groups) {
+  var CHIP_CSS = '<style>.frig-chips{display:flex;flex-wrap:nowrap;gap:var(--casora-space-2, 8px);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;'
+    + 'margin:0;padding:0 2px;font-family:var(--primary-font-family, system-ui);min-width:0;'
+    // Weicher Auslauf rechts: man sieht, dass es weitergeht (keine harte Kante).
+    + '-webkit-mask-image:linear-gradient(to right, black calc(100% - 24px), transparent);mask-image:linear-gradient(to right, black calc(100% - 24px), transparent);}'
+    + '.frig-chips::-webkit-scrollbar{display:none;}'
+    + '.frig-chips>[role=button]::before,.frig-fx::before{content:"";position:absolute;inset:-4px 0;}'
+    + '.frig-head{display:flex;align-items:flex-start;gap:var(--casora-space-3, 12px);}'
+    + '.frig-head>.frig-fx{margin-top:-7px !important;}'
+    // Auslauf rechts nur, solange dort noch etwas verborgen ist (F.fixChips setzt .ov).
+    + '.frig-chips:not(.ov){-webkit-mask-image:none;mask-image:none;}'
+    + '@media (max-width:760px){.frig-chips>[role=button]{padding:0 12px !important;}}'
+    + '.frig-fg{margin-top:var(--casora-space-2, 8px);}'
+    + '.frig-fl{font-size:var(--casora-fs-label, 12px);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin:0 2px 2px;'
+    +   'color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color));}'
+    + '.frig-act{display:flex;align-items:center;gap:6px;margin:var(--casora-space-2, 8px) 2px 0;font-size:var(--casora-fs-sub, 13px);font-weight:600;'
+    +   'color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color));}'
+    + '.frig-act [role=button]{position:relative;cursor:pointer;font-weight:700;color:var(--casora-popup-ui-action, #276B64);}'
+    + '.frig-act [role=button]::before{content:"";position:absolute;inset:-12px -8px;}'
+    + '.frig-note{margin:var(--casora-space-2, 8px) 2px 0;font-size:var(--casora-fs-sub, 13px);font-weight:500;line-height:1.35;'
+    +   'color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color));}'
+    + '.frig-strip{display:flex;gap:2px;}'
+    + '.frig-strip>div{flex:1;position:relative;height:44px;min-width:0;}'
+    + '.frig-strip>[role=button]{cursor:pointer;-webkit-tap-highlight-color:transparent;}'
+    + '.frig-strip i{position:absolute;left:0;right:0;top:14px;bottom:14px;border-radius:999px;background:var(--casora-soft-control-fill, rgba(140,115,90,0.10));}'
+    + '.frig-strip b{position:absolute;left:50%;top:4px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--casora-popup-tiles-text-primary, #3A322B);}'
+    + '.frig-strip [aria-pressed=true] i{outline:2px solid var(--casora-popup-tiles-text-primary, #3A322B);outline-offset:1px;}'
+    + '.frig-ticks{display:flex;justify-content:space-between;font-size:var(--casora-fs-label, 12px);font-weight:600;font-variant-numeric:tabular-nums;'
+    +   'color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color));margin:0 0 var(--casora-space-2, 8px);}'
+    + '</style>';
+  var chipRow = function (groups, row) {
     var g = groups.filter(function (x) { return x && x.length; });
     if (!g.length) return '';
-    // Eine Reihe je Gruppe-Bündel, waagerecht scrollbar (Handy), ohne Leiste; Trennstrich zwischen den Gruppen.
-    // Breit (≥ 761 px) umbrechen statt verstecken; am Handy eine Reihe zum Wischen.
-    return '<style>.frig-chips{display:flex;flex-wrap:nowrap;gap:var(--casora-space-2, 8px);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;'
-      + 'margin:0 0 var(--casora-space-1, 4px);padding:0 2px;font-family:var(--primary-font-family, system-ui);'
-      // Weicher Auslauf rechts: man sieht, dass es weitergeht (keine harte Kante).
-      + '-webkit-mask-image:linear-gradient(to right, black calc(100% - 24px), transparent);mask-image:linear-gradient(to right, black calc(100% - 24px), transparent);}'
-      + '.frig-chips::-webkit-scrollbar{display:none;}'
-      + '.frig-chips>[role=button]::before{content:"";position:absolute;inset:-4px 0;}'
-      // Umgebrochen stünde der Trennstrich sonst allein am Zeilenanfang.
-      + '@media (min-width:761px){.frig-chips{flex-wrap:wrap;overflow:visible;-webkit-mask-image:none;mask-image:none;}.frig-sep{display:none;}}</style>'
-      + '<div class="frig-chips" data-casora-nodismiss="">'
-      + g.map(function (x) { return x.join(''); }).join(chipSep) + '</div>';
+    // Eine Reihe, waagerecht scrollbar, ohne Leiste; Stand je Reihe bleibt beim Neuzeichnen (data-row, F.fixChips).
+    return '<div class="frig-chips" data-row="' + esc(row || '') + '" data-casora-nodismiss="">' + g.map(function (x) { return x.join(''); }).join('') + '</div>';
   };
   F.chipRow = chipRow;
+  // Reihen-Stand merken/wiederherstellen und den aktiven Chip ins Bild holen (nur waagerecht, ohne die Seite zu bewegen).
+  var rowPos = {};
+  var findAll = function (root, sel, d, out) {
+    out = out || [];
+    if (!root || d > 10) return out;
+    if (root.querySelectorAll) root.querySelectorAll(sel).forEach(function (x) { out.push(x); });
+    var all = root.querySelectorAll ? root.querySelectorAll('*') : [];
+    for (var i = 0; i < all.length; i++) if (all[i].shadowRoot) findAll(all[i].shadowRoot, sel, d + 1, out);
+    return out;
+  };
+  var chipRoots = function () {
+    var P = window.casoraPopup, el = P && P.element;
+    return el && el.shadowRoot ? findAll(el.shadowRoot, '.frig-chips', 0) : [];
+  };
+  F.saveChips = function () { chipRoots().forEach(function (r) { var k = r.getAttribute('data-row'); if (k) rowPos[k] = r.scrollLeft; }); };
+  F.fixChips = function () {
+    chipRoots().forEach(function (r) {
+      var k = r.getAttribute('data-row');
+      if (k && rowPos[k] != null) r.scrollLeft = rowPos[k];
+      var more = function () { r.classList.toggle('ov', r.scrollLeft + r.clientWidth < r.scrollWidth - 2); };
+      if (!r._frigS) { r._frigS = true; r.addEventListener('scroll', more, { passive: true }); }
+      more();
+      var on = r.querySelector('[aria-pressed="true"]');
+      if (!on || r.scrollWidth <= r.clientWidth) return;
+      var l = on.offsetLeft - r.offsetLeft, w = on.offsetWidth;
+      if (l < r.scrollLeft) r.scrollLeft = Math.max(0, l - 8);
+      else if (l + w > r.scrollLeft + r.clientWidth - 24) r.scrollLeft = l + w - r.clientWidth + 32;
+      more();
+    });
+  };
+  var fixSoon = function () { [30, 120, 300, 700].forEach(function (ms) { setTimeout(F.fixChips, ms); }); };
 
-  // Aufnahmen-Ansicht: Kopf (Tag · Stunde), Wiedergabe mit Zeitleiste, Tage und Stunden als Chips.
-  F.recView = function (cam, day, hour, back, tries) {
+  // Aufnahmen-Ansicht: Kopf (Tag · Stunde), Wiedergabe mit Zeitleiste, Tagesstreifen, Tage und Stunden als Chips.
+  // o: { now: true } = Halten „Aufnahmen“ (jetzt), { at } = Startstelle. Ohne Übersicht sofort „Wird geladen …“ (A8).
+  var recBack = null;
+  F.recDefault = function (d, hour, now) {
+    if (!d || !d.hours.length) return null;
+    var h = d.hours.filter(function (x) { return x.h === hour; })[0];
+    if (h) return h;
+    if (now) return d.hours[d.hours.length - 1];
+    var withDet = d.hours.filter(function (x) { return x.n > 0; });
+    return withDet.length ? withDet[withDet.length - 1] : d.hours[d.hours.length - 1];
+  };
+  F.recView = function (cam, day, hour, back, tries, o) {
     var ha = document.querySelector('home-assistant'), hass = ha && ha.hass;
     var P = window.casoraPopup, UI = window._casoraUI, K = window._casoraSoftKit;
     if (!hass || !P || !UI || !K || !F.is(hass, cam)) return false;
+    o = o || {};
     var c = F.find(hass, cam);
+    var nm = camName(hass, cam);
     var sum = recc[cam] && recc[cam].list;
-    if (!Array.isArray(sum) && !(recc[cam] && recc[cam].list === false && !recc[cam].busy)) {
-      if ((tries || 0) > 20) return false;
+    if (!Array.isArray(sum) && !(recc[cam] && recc[cam].list === false && !recc[cam].busy) && (tries || 0) <= 24) {
+      if (!tries) o.tok = loading('Aufnahmen', back, nm);
+      else if (!still(o.tok)) return false;
       F.recSummary(hass, c, null);
-      setTimeout(function () { F.recView(cam, day, hour, back, (tries || 0) + 1); }, 250);
+      setTimeout(function () { F.recView(cam, day, hour, back, (tries || 0) + 1, o); }, 250);
       return true;
     }
+    if (o.tok && !still(o.tok)) return false;
     var days = Array.isArray(sum) ? sum : [];
     var d = days.filter(function (x) { return x.day === day; })[0] || days[0];
-    var card = K.bare();
-    card.styles = { card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0 26px 24px 26px' }],
-      grid: [{ 'grid-template-areas': '"h" "m" "d"' }, { 'grid-template-columns': 'minmax(0, 1fr)' }, { 'row-gap': 'var(--casora-popup-sec-gap, 22px)' }],
-      custom_fields: { h: [{ 'justify-self': 'stretch' }], m: [{ 'justify-self': 'stretch' }, { overflow: 'visible' }], d: [{ 'justify-self': 'stretch' }, { 'text-align': 'left' }, { overflow: 'visible' }] } };
+    var f = {};
     if (!d) {
-      card.styles.grid[0] = { 'grid-template-areas': '"h" "d"' };
-      card.custom_fields = { h: UI.line('Keine Aufnahmen', []), d: UI.group([{ icon: 'mdi:filmstrip-box-multiple', label: 'Frigate hat keine Aufnahmen dieser Kamera',
-        sub: Array.isArray(sum) ? 'Aufnahme in den Einstellungen einschalten' : 'Liste über die Frigate-Integration nicht abrufbar' }], null) };
+      f.h = UI.line('Keine Aufnahmen', []);
+      f.d = UI.group([{ icon: 'mdi:filmstrip-box-multiple', label: 'Frigate hat keine Aufnahmen dieser Kamera',
+        sub: Array.isArray(sum) ? 'Aufnahme in den Einstellungen einschalten' : 'Liste über die Frigate-Integration nicht abrufbar' }], null);
     } else {
-      var hr = d.hours.filter(function (x) { return x.h === hour; })[0] || d.hours[d.hours.length - 1];
+      var hr = F.recDefault(d, hour, o.now);
+      var len = F.hourSpan(d.day, hr.h);
       var a = sec0(dayStart(d.day, hr.h));
-      var line = UI.line(dayName(d.day) + ' · ' + clock(a * 1000) + '–' + clock((a + 3600) * 1000),
-        [hrs(hr.dur) + ' aufgenommen', hr.n ? (hr.n === 1 ? '1 Erkennung' : hr.n + ' Erkennungen') : null].filter(Boolean));
+      f.h = UI.line(dayName(d.day) + ' · ' + hourRange(a, a + len),
+        [hrs(hr.dur), hr.n ? (hr.n === 1 ? '1 Erkennung' : hr.n + ' Erkennungen') : null].filter(Boolean));
+      // Nächste Stunde mit Aufnahme (auch am nächsten Tag) – die Wiedergabe läuft dort weiter.
+      var ix = d.hours.indexOf(hr), next = null;
+      if (ix >= 0 && ix < d.hours.length - 1) next = { day: d.day, h: d.hours[ix + 1].h };
+      else {
+        var di = days.indexOf(d);
+        if (di > 0 && days[di - 1].hours.length) next = { day: days[di - 1].day, h: days[di - 1].hours[0].h };
+      }
+      var at = o.now ? 'end' : o.at != null ? o.at : null;
+      f.m = { card: { type: 'custom:casora-frigate-rec', entity: cam, inst: c.inst, name: c.name, camName: nm, start: a, len: len, at: at, next: next } };
       var dayChips = days.slice(0, 7).map(function (x) { return chip('frigate-rec:' + cam + '|' + x.day, dayName(x.day), x.day === d.day); });
-      // Neueste Stunde zuerst (wie die Listen) – am Handy steht die aktuelle Stunde so gleich vorn.
-      var hourChips = d.hours.slice().reverse().map(function (x) { return chip('frigate-rec:' + cam + '|' + d.day + '|' + x.h, hourName(d.day, x.h), x.h === hr.h, x.n || null); });
-      card.custom_fields = { h: line,
-        m: { card: { type: 'custom:casora-frigate-rec', entity: cam, inst: c.inst, name: c.name, start: a } },
-        d: (UI.label ? UI.label('Tag') : '') + chipRow([dayChips]) + '<div style="height:12px"></div>' + (UI.label ? UI.label('Uhrzeit') : '') + chipRow([hourChips]) };
+      // Tagesstreifen: 24 Stunden, Aufnahme deckend (je nach Anteil), Punkt = Erkennungen; Antippen wählt die Stunde.
+      var byH = {};
+      d.hours.forEach(function (x) { byH[x.h] = x; });
+      var cells = [];
+      for (var h = 0; h < 24; h++) {
+        var x = byH[h];
+        var fill = x ? 'background:var(--casora-popup-ui-action, #276B64);opacity:' + Math.max(0.45, Math.min(1, x.dur / 3600)).toFixed(2) + ';' : '';
+        cells.push(x ? '<div role="button" tabindex="0" aria-pressed="' + (h === hr.h ? 'true' : 'false') + '" aria-label="' + esc(T(hourName(d.day, h))) + '"'
+          + ' data-casora-mi="frigate-rec:' + esc(cam + '|' + d.day + '|' + h) + '"><i style="' + fill + '"></i>' + (x.n ? '<b></b>' : '') + '</div>'
+          : '<div aria-hidden="true"><i></i></div>');
+      }
+      var ticks = [0, 6, 12, 18, 24].map(function (h2) { return '<span>' + esc(h2 === 24 ? '24' : String(h2)) + '</span>'; }).join('');
+      var strip = '<div class="frig-strip" role="group" aria-label="' + esc(T(dayName(d.day))) + '" data-casora-nodismiss="">' + cells.join('') + '</div>'
+        + '<div class="frig-ticks" aria-hidden="true">' + ticks + '</div>';
+      // Stunden aufsteigend in einer Reihe; die gewählte wird ins Bild geholt.
+      var hourChips = d.hours.map(function (x) { return chip('frigate-rec:' + cam + '|' + d.day + '|' + x.h, hourName(d.day, x.h), x.h === hr.h, x.n || null); });
+      f.d = CHIP_CSS + (UI.label ? UI.label('Tag') : '') + chipRow([dayChips], 'rec-day') + '<div style="height:12px"></div>'
+        + (UI.label ? UI.label(deUI() ? 'Stunde' : 'Hour') : '') + strip + chipRow([hourChips], 'rec-hour');
     }
-    var cfg = { title: 'Aufnahmen', back: back || null, dismiss_on_background: true, content: card, head_switch: false,
-      style: '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);', popup_styles: (P.current || {}).popup_styles };
     recBack = back || null;
-    P.open(cfg);
+    P.open(subPage({ title: 'Aufnahmen', eyebrow: nm, back: back || null, _frigView: 'rec', content: oneCol(K, f) }));
+    fixSoon();
     return true;
   };
-  var recBack = null;
 
   // Zeilen im Popup tragen eine Schein-Entität (data-casora-mi): frigate-ev:<kamera>|<id>, frigate-rv:<kamera>|<review>,
-  // frigate-img:<bild>, frigate-go:<wohin>, frigate-flt/-f (Filter), frigate-more, frigate-rec:<kamera>|<tag>[|<stunde>].
+  // frigate-img:<bild>, frigate-go:<wohin>, frigate-flt/-f (Filter, Werte mit encodeURIComponent), frigate-fx (Filter
+  // auf/zu), frigate-more, frigate-rec:<kamera>|<tag>[|<stunde>], frigate-new (als neu), frigate-seenall.
   var backHere = function () {
     var cur = window.casoraPopup && window.casoraPopup.current;
     return cur ? function () { window.casoraPopup.open(cur); } : null;
   };
   var setF = function (cam, key, val) {
     var f = flt(cam);
-    if (key === 'reset') { flts[cam] = { kind: '', range: 'week', o: null, zone: null, face: null }; return; }
+    if (key === 'reset') { flts[cam] = F0(); return; }
+    // „Zurücksetzen“ unter den Chips: nur, was im Bereich „Filter“ steht (die Art oben bleibt sichtbar gewählt).
+    if (key === 'clear') { Object.assign(f, { range: 'week', fav: false, o: null, zone: null, face: null }); return; }
     if (key === 'kind') f.kind = f.kind === val ? '' : (val || '');
     else if (key === 'range') f.range = val === 'today' ? 'today' : 'week';
+    else if (key === 'fav') f.fav = !f.fav;
     else if (key === 'o' || key === 'zone' || key === 'face') f[key] = f[key] === val || !val ? null : val;
   };
   F.setFilter = setF;
-  var afterFilter = function (cam) {
+  var afterFilter = function (cam, scroll) {
     more[cam] = false;
+    F.saveChips();
     redraw(cam);
-    // Am Handy steht die Liste über „Objekte“: nach dem Filtern dorthin, sonst sah man die gefilterte Liste nicht.
-    if (window.innerWidth <= 760) setTimeout(function () { var w = (els[cam] || []).filter(function (x) { return x.isConnected; })[0]; if (w && w.scrollIntoView) w.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 120);
+    fixSoon();
+    // Am Handy steht die Liste über „Objekte“: nach dem Filtern über die Objekt-Zeile dorthin.
+    if (scroll && window.innerWidth <= 760) setTimeout(function () { var w = (els[cam] || []).filter(function (x) { return x.isConnected; })[0]; if (w && w.scrollIntoView) w.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 120);
   };
+  var dec = function (x) { try { return decodeURIComponent(x); } catch (e) { return x; } };
+  F.enc = function (x) { return encodeURIComponent(String(x == null ? '' : x)); };
   (window._casoraMiHooks = window._casoraMiHooks || []).push(function (mid) {
-    var m = /^frigate-(ev|rv|img|go|flt|f|more|rec):(.*)$/.exec(String(mid || ''));
+    var m = /^frigate-(ev|rv|img|go|flt|fx|f|more|rec|new|seenall):(.*)$/.exec(String(mid || ''));
     if (!m) return false;
     var p = m[2].split('|');
     // Blättern im Detail: dasselbe „zurück“ wie das erste Detail (nicht Detail für Detail zurück).
     if (m[1] === 'ev' || m[1] === 'rv') return F.detail(p[0], p[1], p[2] === 'b' ? lastBack : (p.length > 2 ? null : backHere()));
     if (m[1] === 'img') return F.snapshot(m[2], backHere());
-    if (m[1] === 'flt') { setF(p[0], 'o', p[1] || null); afterFilter(p[0]); return true; }
-    if (m[1] === 'f') { setF(p[0], p[1], p[2] || ''); afterFilter(p[0]); return true; }
+    if (m[1] === 'flt') { setF(p[0], 'o', dec(p[1] || '') || null); afterFilter(p[0], true); return true; }
+    if (m[1] === 'fx') { fopen[p[0]] = !fopen[p[0]]; F.saveChips(); redraw(p[0]); fixSoon(); return true; }
+    if (m[1] === 'f') { setF(p[0], p[1], dec(p[2] || '')); afterFilter(p[0]); return true; }
     if (m[1] === 'more') { more[p[0]] = !more[p[0]]; redraw(p[0]); return true; }
     if (m[1] === 'rec') {
       // Aus dem Kamera-Popup: ‹ zurück dorthin; innerhalb der Aufnahmen bleibt dasselbe Zurück.
-      var inRec = window.casoraPopup && window.casoraPopup.current && window.casoraPopup.current.title === 'Aufnahmen';
+      var cur = window.casoraPopup && window.casoraPopup.current;
+      var inRec = cur && cur._frigView === 'rec';
+      if (inRec) F.saveChips();
       return F.recView(p[0], p[1], p.length > 2 ? parseInt(p[2], 10) : null, inRec ? recBack : backHere());
+    }
+    var ha = document.querySelector('home-assistant'), hass = ha && ha.hass;
+    if (m[1] === 'new') {
+      if (!hass || !F.is(hass, p[0])) return false;
+      F.mark(hass, F.find(hass, p[0]), [p[1]], false);
+      // Zurück in die Liste (dort steht es wieder als „Neu“).
+      if (lastBack) lastBack(); else if (window.casoraPopup) window.casoraPopup.close();
+      return true;
+    }
+    if (m[1] === 'seenall') {
+      if (!hass || !F.is(hass, p[0])) return false;
+      var c = F.find(hass, p[0]);
+      var ask = window.casoraAsk ? window.casoraAsk({ title: T('Alle als gesehen markieren?'), text: T('Danach steht nichts mehr als „Neu“ da.'), yes: T('Markieren') })
+        : Promise.resolve(window.confirm(T('Alle als gesehen markieren?')));
+      ask.then(function (ok) { if (ok) { haptic('light'); F.seenAll(hass, c); } });
+      return true;
     }
     var w = m[2];
     go(/^https?:\/\//.test(w) ? { url: w } : { path: w });
@@ -1401,9 +1937,11 @@
   });
 
   // Kopf-Kachel: Rot, solange etwas erkannt wird (Sicherheit), sonst Sand (Ruhe) – vorher blieb der Kopf rot,
-  // weil die Kamera „recording“ meldet.
+  // weil die Kamera „recording“ meldet. In den Aufnahmen immer Ruhe (dort geht es nicht um „jetzt“).
   (window._casoraRingHueHooks = window._casoraRingHueHooks || []).push(function (src, key) {
     if (!/\bcasora_frigate\b/.test(key) || !src || !src._stateObj) return null;
+    var cur = window.casoraPopup && window.casoraPopup.current;
+    if (cur && cur._frigView === 'rec') return { off: true };
     var ha = document.querySelector('home-assistant');
     var s = F.of(src._stateObj, ha && ha.hass);
     if (!s) return null;
@@ -1414,6 +1952,8 @@
   (window._casoraHeadSwitchHooks = window._casoraHeadSwitchHooks || []).push(function (src, hass) {
     var tpl = [].concat((src && src._config && src._config.template) || []).join(' ');
     if (!/\bcasora_frigate\b/.test(tpl)) return null;
+    var cur = window.casoraPopup && window.casoraPopup.current;
+    if (cur && cur._frigView) return false;
     var id = src._stateObj && src._stateObj.entity_id;
     if (!F.is(hass, id)) return null;
     var d = F.find(hass, id).sw.detect;
@@ -1435,6 +1975,8 @@
     if (!K || !UI) return empty;
     var id = entity && entity.entity_id;
     if (!id) return empty;
+    // Jedes Öffnen beginnt bei „Alle · 7 Tage“ (ein hängender Filter versteckte sonst neue Alarme).
+    flts[id] = F0(); fopen[id] = false; more[id] = false;
     var c = F.find(hass, id);
     var watch = F.watch(c);
     var call = function (part) {
@@ -1477,6 +2019,13 @@
     if (els[c.cam].indexOf(el) < 0) els[c.cam].push(el);
     hold(el, c, hass, 'pop');
   };
+  // Neuester Eintrag der Liste (ohne Filter) – Kopf und Objekt-Zeiten passen so zur Liste.
+  var newest = function (cam, o) {
+    var l = F.items(cam, true).list || [];
+    for (var i = 0; i < l.length; i++) if (!o || (l[i].objs || [l[i].o]).indexOf(o) >= 0) return l[i];
+    return null;
+  };
+  F.newest = newest;
 
   F.sec = function (part, c, states, hass, el) {
     var UI = window._casoraUI;
@@ -1485,15 +2034,22 @@
     var s = F.status(c, S, now);
     if (part === 'hero') {
       var main, rest = [], tone = null;
+      var nw = newest(c.cam);
       if (s.dead) main = 'Offline';
       else if (s.off) main = 'Kamera aus';
-      else if (s.detectOff) { main = 'Erkennung aus'; tone = 'warn'; }
+      else if (s.detectOff) { main = 'Objekterkennung aus'; tone = 'warn'; }
       else if (s.live.length) { main = who(s.live); tone = 'bad'; }
-      else if (s.unseen) { main = newAlerts(s.unseen); tone = 'bad'; if (s.last) rest.push(F.ago(s.last.at, now)); }
-      else if (s.last) { main = 'Zuletzt: ' + F.label(s.last.o); rest.push(F.ago(s.last.at, now)); }
+      else if (s.unseen) {
+        main = newAlerts(s.unseen); tone = 'bad';
+        var na = (rvc[c.cam] && Array.isArray(rvc[c.cam].list) ? rvc[c.cam].list : []).filter(function (r) { return r.sev === 'alert' && r.seen === false; })[0];
+        if (na) rest.push(F.ago(na.start, now));
+      }
+      // Wie die Liste: „Auto · vor 4 Min.“ (der neueste Eintrag), sonst der letzte Schnappschuss.
+      else if (nw) { main = objLabel(nw); rest.push(F.ago(nw.start, now)); }
+      else if (s.last) { main = F.label(s.last.o); rest.push(F.ago(s.last.at, now)); }
       else main = 'Keine Erkennung';
       // Nur die Ausnahme: „Aufnahme aus“ (an ist der Normalfall; am Handy brach der Kopf sonst dreizeilig um).
-      if (!s.dead && s.rec === false) rest.push('Aufnahme aus');
+      if (!s.dead && s.rec === false) rest.push('Aufnahme aus');
       if (s.server && s.server !== 'running' && !bad(s.server)) rest.push(s.server === 'starting' ? 'Frigate startet' : 'Frigate meldet Fehler');
       return UI.line(main, rest, { tone: tone });
     }
@@ -1513,15 +2069,19 @@
     }
     if (part === 'objs') {
       if (!c.order.length) return '';
-      var ev = (evc[c.cam] && evc[c.cam].list) || null, start = new Date(now); start.setHours(0, 0, 0, 0);
+      var ilist = F.items(c.cam, true).list, start = new Date(now); start.setHours(0, 0, 0, 0);
       var orows = c.order.map(function (o) {
-        var x = s.objs[o] || {}, today = ev ? ev.filter(function (e) { return e.o === o && e.start >= start.getTime(); }).length : null;
-        var sub = x.live ? (x.n > 1 ? x.n + ' im Bild' : 'Gerade im Bild') : x.at ? 'Zuletzt ' + F.ago(x.at, now) : 'Noch nicht erkannt';
+        var x = s.objs[o] || {};
+        var today = ilist ? ilist.filter(function (e) { return (e.objs || [e.o]).indexOf(o) >= 0 && e.start >= start.getTime(); }).length : null;
+        var nwo = newest(c.cam, o);
+        var at = nwo ? nwo.start : x.at;
+        var sub = x.live ? (x.n > 1 ? x.n + ' im Bild' : 'Gerade im Bild') : at ? 'Zuletzt ' + F.ago(at, now) : 'Noch nicht erkannt';
         var img = c.objs[o].img;
-        // Antippen filtert „Letzte Erkennungen“ auf dieses Objekt (noch einmal: alle); ohne Liste der letzte Schnappschuss.
-        var tap = ev && ev.length ? 'frigate-flt:' + c.cam + '|' + o : (img && S[img] && S[img].attributes.entity_picture && x.at ? 'frigate-img:' + img : null);
-        return { icon: F.icon(o), iconTone: x.live ? 'bad' : x.at ? 'accent' : null, label: F.label(o), sub: sub,
-          selected: flt(c.cam).o === o, value: today ? today + '× heute' : null, entity: tap };
+        // Antippen filtert die Liste auf dieses Objekt (sichtbar: „1 Filter aktiv · Zurücksetzen“); ohne Liste der letzte
+        // Schnappschuss.
+        var tap = ilist && ilist.length ? 'frigate-flt:' + c.cam + '|' + F.enc(o) : (img && S[img] && S[img].attributes.entity_picture && x.at ? 'frigate-img:' + img : null);
+        return { icon: F.icon(o), iconTone: x.live ? 'bad' : at ? 'accent' : null, label: F.label(o), sub: sub,
+          selected: flt(c.cam).o === o, value: today ? today + ' heute' : null, entity: tap };
       });
       return UI.group(orows, 'Objekte');
     }
@@ -1539,52 +2099,76 @@
     return '';
   };
 
-  // Alarme/Erkennungen (Reviews) bzw. Ereignisse mit Filter-Chips: oben die Art (Alle · Alarme · Erkennungen ·
-  // Ungesehen · Behalten) und der Zeitraum, darunter, was es in den Daten gibt (Objekte · Zonen · Gesichter).
+  // Alarme/Erkennungen (Reviews) bzw. Ereignisse: oben EINE Reihe mit der Art (Alle · Alarme · Erkennungen · Neu n),
+  // dahinter die Pille „Filter“ (mit Zähler), die die übrigen Filter aufklappt – je Gruppe eine beschriftete Reihe:
+  // Zeitraum, Favoriten, Objekte, Zonen, Gesichter. Gesetzte Filter stehen sichtbar über der Liste („2 Filter aktiv ·
+  // Zurücksetzen“), auch wenn der Bereich zu ist.
   var secEv = function (UI, c, S, hass, el, now) {
     reg(c, el, hass);
     var cam = c.cam, f = flt(cam);
     var rv = F.reviews(hass, c, el);
     F.events(hass, c, el);
-    if (f.kind === 'fav') F.favs(hass, c, el);
+    if (f.fav) F.favs(hass, c, el);
     var x = F.items(cam), mode = x.mode;
     // Reviews noch unterwegs: einen Moment „Wird geladen …“ (nicht erst die Ereignisse, dann umspringen).
     if (rv == null && rvc[cam] && rvc[cam].busy) { x = { mode: null, list: null }; mode = null; }
     var all = x.list, list = all ? F.pick(all, f, now) : null;
-    var head = 'Letzte Erkennungen';
-    var src = all || [];
-    var kinds = [], zones = [], faces = [];
+    var src = F.items(cam, true).list || all || [];
+    var kinds = [], zones = [], faces = [], noFace = false;
     src.forEach(function (it) {
       (it.objs || [it.o]).forEach(function (o) { if (kinds.indexOf(o) < 0) kinds.push(o); });
       (it.zones || []).forEach(function (z) { if (zones.indexOf(z) < 0) zones.push(z); });
-      [it.sub].concat(it.subs || []).forEach(function (n) { if (n && faces.indexOf(n) < 0) faces.push(n); });
+      var nn = [it.sub].concat(it.subs || []).filter(Boolean);
+      nn.forEach(function (n) { if (faces.indexOf(n) < 0) faces.push(n); });
+      if (!nn.length && (it.objs || [it.o]).indexOf('person') >= 0) noFace = true;
     });
     var base = 'frigate-f:' + cam + '|';
-    var unseenN = mode === 'review' && rvc[cam] && Array.isArray(rvc[cam].list) ? rvc[cam].list.filter(function (r) { return r.seen === false; }).length : 0;
-    var kindG = [chip(base + 'kind|', 'Alle', !f.kind)];
-    if (mode === 'review' || (f.kind && f.kind !== 'fav')) {
-      kindG.push(chip(base + 'kind|alert', 'Alarme', f.kind === 'alert'), chip(base + 'kind|detection', 'Erkennungen', f.kind === 'detection'),
-        chip(base + 'kind|unseen', 'Ungesehen', f.kind === 'unseen', unseenN || null));
+    var nNew = mode === 'review' ? F.unseen(cam) : 0;
+    var nF = F.fcount(f);
+    var chips = '', head = UI.label ? UI.label('Letzte Erkennungen') : '';
+    if (all || nF || f.kind) {
+      var kindG = [];
+      if (mode === 'review' || f.kind) {
+        kindG.push(chip(base + 'kind|', 'Alle', !f.kind), chip(base + 'kind|alert', 'Alarme', f.kind === 'alert'),
+          chip(base + 'kind|detection', 'Erkennungen', f.kind === 'detection'),
+          chip(base + 'kind|unseen', 'Neu', f.kind === 'unseen', nNew || null, { countBg: 'var(--casora-color-red-text, var(--casora-color-red, #D35A4E))' }));
+      }
+      var fx = chip('frigate-fx:' + cam, nF ? 'Filter · ' + nF : 'Filter', !!fopen[cam], null, { icon: 'mdi:filter-variant', expanded: !!fopen[cam] })
+        .replace('style="flex:none;position:relative;', 'class="frig-fx" style="flex:none;position:relative;');
+      // Pille „Filter“ rechts neben der Überschrift – so hat die Art-Reihe am Handy die ganze Breite (Neu bleibt sichtbar).
+      head = '<div class="frig-head"><div style="flex:1;min-width:0;">' + (UI.label ? UI.label('Letzte Erkennungen') : '') + '</div>' + fx + '</div>';
+      chips = kindG.length ? chipRow([kindG], 'kind') : '';
+      if (fopen[cam]) {
+        var grp = function (label, row, items) { return items.length ? '<div class="frig-fg"><div class="frig-fl">' + esc(T(label)) + '</div>' + chipRow([items], row) + '</div>' : ''; };
+        chips += grp('Zeitraum', 'range', [chip(base + 'range|today', 'Heute', f.range === 'today'), chip(base + 'range|week', '7 Tage', f.range !== 'today')])
+          + grp('Favoriten', 'fav', [chip(base + 'fav|', 'Nur Favoriten', !!f.fav, null, { icon: f.fav ? 'mdi:star' : 'mdi:star-outline' })])
+          + grp('Objekte', 'o', kinds.length > 1 || f.o ? kinds.map(function (o) { return chip('frigate-flt:' + cam + '|' + F.enc(o), F.label(o), f.o === o); }) : [])
+          + grp('Zonen', 'zone', zones.map(function (z) { return chip(base + 'zone|' + F.enc(z), zoneName(z), f.zone === z); }))
+          + grp('Gesichter', 'face', faces.length ? faces.map(function (n) { return chip(base + 'face|' + F.enc(n), n, f.face === n, null, { lit: true }); })
+            .concat(noFace ? [chip(base + 'face|' + F.enc(NOFACE), 'Unbekannt', f.face === NOFACE)] : []) : []);
+      }
+      if (nF) {
+        chips += '<div class="frig-act"><span>' + esc(T(nF === 1 ? '1 Filter aktiv' : nF + ' Filter aktiv')) + '</span><span aria-hidden="true">·</span>'
+          + '<span role="button" tabindex="0" data-casora-mi="' + esc(base + 'clear|') + '">' + esc(T('Zurücksetzen')) + '</span></div>';
+      }
+      // Was „Alarme“ heißt (für Laien), solange der Chip gewählt ist.
+      if (f.kind === 'alert') chips += '<div class="frig-note">' + esc(T('Alarme: wichtige Erkennungen, z. B. eine Person in einer Zone')) + '</div>';
+      chips = CHIP_CSS + chips;
     }
-    kindG.push(chip(base + 'kind|fav', 'Behalten', f.kind === 'fav'));
-    var rangeG = [chip(base + 'range|week', '7 Tage', f.range !== 'today'), chip(base + 'range|today', 'Heute', f.range === 'today')];
-    var objG = kinds.length > 1 || f.o ? kinds.map(function (o) { return chip('frigate-flt:' + cam + '|' + o, F.label(o), f.o === o); }) : [];
-    var zoneG = zones.map(function (z) { return chip(base + 'zone|' + z, zoneName(z), f.zone === z); });
-    var faceG = faces.map(function (n) { return chip(base + 'face|' + n, n, f.face === n); });
-    var chips = all ? chipRow([kindG, rangeG]) + chipRow([objG, zoneG, faceG]) : '';
-    var top = (UI.label ? UI.label(head) : '') + (chips ? chips + '<div style="height:8px"></div>' : '');
-    var job = (mode === 'event' ? evc[cam] : f.kind === 'fav' ? fvc[cam] : rvc[cam]) || {};
+    var top = head + (chips ? chips + '<div style="height:8px"></div>' : '');
+    var job = (mode === 'event' ? evc[cam] : f.fav ? fvc[cam] : rvc[cam]) || {};
     var out;
     if (!list) out = top + UI.group([{ icon: 'mdi:timer-sand', label: 'Wird geladen …' }], null);
     else if (!list.length) {
-      var any = f.kind || f.range === 'today' || f.o || f.zone || f.face;
+      var any = f.kind || nF;
       var err = job.err && !(job.list && job.list.length) && mode === 'event';
       var empty = err ? 'Frigate antwortet nicht'
-        : f.kind === 'fav' ? 'Nichts behalten'
-          : f.o && !f.kind && !f.zone && !f.face ? 'Keine ' + F.label(f.o) + (f.range === 'today' ? ' heute' : ' in den letzten 7 Tagen')
-            : any ? 'Nichts gefunden' : 'Keine Erkennungen in den letzten 7 Tagen';
-      out = top + UI.group([{ icon: err ? 'mdi:alert-circle-outline' : 'mdi:check', iconTone: err ? 'warn' : null, label: empty,
-        sub: err ? 'Liste über die Frigate-Integration nicht abrufbar' : f.kind === 'fav' ? 'Im Detail einer Erkennung „Behalten“ antippen' : any ? 'Filter ändern oder zurücksetzen' : null }], null);
+        : f.fav && !f.kind && nF === 1 ? 'Keine Favoriten'
+          : f.o && !f.kind && nF === 1 + (f.range === 'today' ? 1 : 0) ? 'Keine ' + F.label(f.o) + (f.range === 'today' ? ' heute' : ' in den letzten 7 Tagen')
+            : f.kind === 'unseen' && !nF ? 'Nichts Neues'
+              : any ? 'Nichts gefunden' : 'Keine Erkennungen in den letzten 7 Tagen';
+      out = top + UI.group([{ icon: err ? 'mdi:alert-circle-outline' : any ? 'mdi:filter-off-outline' : 'mdi:check', iconTone: err ? 'warn' : null, label: empty,
+        sub: err ? 'Liste über die Frigate-Integration nicht abrufbar' : f.fav && nF === 1 && !f.kind ? 'Im Detail einer Erkennung „Favorit“ antippen' : any ? 'Filter ändern oder zurücksetzen' : null }], null);
       if (any && !err) out += pill('Filter zurücksetzen', base + 'reset|');
     } else {
       var max = more[cam] ? 30 : 8;
@@ -1594,22 +2178,26 @@
         var sub = dw ? [dw, clock(it.start)] : [clock(it.start), F.ago(it.start, now)];
         if (it.zones && it.zones.length) sub.push(it.zones.map(zoneName).join(', '));
         var liveNow = it.end == null;
-        var fresh = it.seen === false;
-        // Rechts „Live“ (Schrift-Rot) bzw. „Neu“ für ungesehene (Alarm in Rot, Erkennung in der Bedien-Farbe); ★ = behalten.
+        // „Neu“ nur für ungesehene Alarme (zählt wie Chip, Kopf und Kachel), in einer Farbe: Schrift-Rot wie die Klingel.
+        var fresh = it.seen === false && it.sev === 'alert';
         return { image: it.thumb || '', imageFit: 'cover', iconTone: null,
           label: objLabel(it) + (it.sub ? ' · ' + it.sub : '') + (it.fav ? ' ★' : ''),
           sub: sub.join(' · '), value: liveNow ? 'Live' : fresh ? 'Neu' : null,
-          valueTone: liveNow || (fresh && it.sev === 'alert') ? RED_TEXT : fresh ? 'var(--casora-popup-ui-action, #276B64)' : null,
+          valueTone: liveNow || fresh ? RED_TEXT : null,
           entity: 'frigate-' + (it.kind === 'review' ? 'rv' : 'ev') + ':' + cam + '|' + it.id };
       });
       out = top + UI.group(erows, null);
-      // „Mehr anzeigen“ / „Alle Objekte zeigen“ als Pille unter der Liste wie „Ganzer Verlauf“ im Mähroboter-Popup.
+      // „Mehr anzeigen“ als Pille unter der Liste wie „Ganzer Verlauf“ im Mähroboter-Popup.
       if (list.length > 8) out += pill(more[cam] ? 'Weniger anzeigen' : 'Mehr anzeigen', 'frigate-more:' + cam);
     }
+    // Power-User: alle ungesehenen auf einmal als gesehen (mit Rückfrage).
+    var anyNew = mode === 'review' && rvc[cam] && Array.isArray(rvc[cam].list) && rvc[cam].list.some(function (r) { return r.seen === false; });
+    if (anyNew && list && list.length) out += pill('Alle als gesehen markieren', 'frigate-seenall:' + cam);
     // Weg zur Frigate-Oberfläche (die Aufnahmen stehen im eigenen Abschnitt).
     var ui = F.ui(hass, c);
     var links = [];
     if (ui) links.push({ icon: 'mdi:open-in-new', iconTone: 'accent', label: 'In Frigate öffnen', entity: 'frigate-go:' + (ui.url || ui.path) });
+    if (el) setTimeout(F.fixChips, 30);
     return out + (links.length ? '<div style="height:8px"></div>' + UI.group(links, null) : '');
   };
 
@@ -1625,7 +2213,7 @@
       rows = sum.slice(0, 3).map(function (d) {
         var dur = d.hours.reduce(function (x, h) { return x + h.dur; }, 0);
         return { icon: 'mdi:filmstrip-box-multiple', iconTone: 'accent', label: dayName(d.day, now),
-          sub: hrs(dur) + ' aufgenommen' + (d.n ? ' · ' + (d.n === 1 ? '1 Erkennung' : d.n + ' Erkennungen') : ''),
+          sub: hrs(dur) + ' aufgenommen' + (d.n ? ' · ' + (d.n === 1 ? '1 Erkennung' : d.n + ' Erkennungen') : ''),
           entity: 'frigate-rec:' + c.cam + '|' + d.day };
       });
       if (!rows.length) rows = [{ icon: 'mdi:filmstrip-box-multiple', label: 'Keine Aufnahmen', sub: c.sw.recordings ? 'Aufnahme unter „Einstellungen“ einschalten' : null }];
@@ -1636,25 +2224,34 @@
     return UI.group(rows.concat(foot), 'Aufnahmen');
   };
 
-  // Letzte Erkennung groß (Halten-Menü): das Ereignis aus der Frigate-Liste mit Clip und Blättern; ohne Liste der
-  // Schnappschuss der Bild-Entität mit lesbarem Titel („Auto · 23:30“ statt des Entitätsnamens).
+  // Letzte Erkennung groß (Halten-Menü): die neueste Review (bevorzugt mit dem zuletzt erkannten Objekt) – geöffnet gilt
+  // sie als gesehen; ohne Reviews das Ereignis, ohne Liste der Schnappschuss der Bild-Entität („Auto · 23:30“).
+  // Öffnet sofort mit „Wird geladen …“ und ersetzt es nur, solange es noch offen ist (A8).
+  F.whenLoaded = function (hass, c, ms) {
+    var t0 = Date.now();
+    F.reviews(hass, c, null); F.events(hass, c, null);
+    return new Promise(function (res) {
+      var look = function () {
+        var busy = (rvc[c.cam] && rvc[c.cam].busy) || (evc[c.cam] && evc[c.cam].busy);
+        if (!busy || Date.now() - t0 > (ms || 8000)) { res(); return; }
+        setTimeout(look, 120);
+      };
+      look();
+    });
+  };
   F.latest = function (hass, c, o, img, at) {
-    var fall = function () { F.snapshot(img, null, F.label(o) + ' · ' + stamp(at)); };
-    var have = evc[c.cam] && evc[c.cam].list && evc[c.cam].list.length ? evc[c.cam].list : null;
-    var pickE = function (l) { return (l || []).filter(function (e) { return e.o === o; })[0] || (l || [])[0]; };
-    if (have) { if (!F.detail(c.cam, evItem(pickE(have)), null)) fall(); return; }
+    var back = camBack(c.cam);
+    var fall = function () { if (!(img && F.snapshot(img, back, F.label(o) + ' · ' + stamp(at), c.cam)) && window.casoraPopup) window.casoraPopup.close(); };
     if (!hass || !hass.callWS) { fall(); return; }
-    hass.callWS({ type: 'frigate/events/get', instance_id: c.inst, cameras: [c.name], limit: 40, after: Math.floor(Date.now() / 1000) - 7 * 86400 })
-      .then(function (raw) {
-        var l = F.parse(raw);
-        evc[c.cam] = { key: '', at: 0, list: l, err: false, busy: false, wait: [] };
-        var e = pickE(l);
-        if (!e) return fall();
-        F.sign(hass, F.path(c, 'thumb', e.id)).then(function (u) { e.thumb = u; if (!F.detail(c.cam, evItem(e), null)) fall(); });
-      }).catch(fall);
+    var tok = loading('Letzte Erkennung', back, camName(hass, c.cam));
+    F.whenLoaded(hass, c).then(function () {
+      if (!still(tok)) return;
+      var it = (o && newest(c.cam, o)) || newest(c.cam);
+      if (!it || !F.detail(c.cam, it.kind === 'review' ? it.id : it, back)) fall();
+    });
   };
 
-  // ── Halten-Menü (22-halten.js): Erkennung/Aufnahme schalten, letzte Erkennung, Aufnahmen, Frigate ───────
+  // ── Halten-Menü (22-halten.js): Objekterkennung/Aufnahme schalten, letzte Erkennung, Aufnahmen, Frigate ───────
   // Ausschalten fragt nach (die Kamera erkennt bzw. nimmt dann nichts mehr auf), Einschalten nicht.
   F.hold = function (hass, id) {
     if (!F.is(hass, id)) return [];
@@ -1665,16 +2262,17 @@
       out.push({ key: 'act', t: v ? offT : onT, ic: icon, svc: v ? 'switch.turn_off' : 'switch.turn_on', entity: sw,
         ask: v ? ask : null, yes: 'Ausschalten' });
     };
-    // Befehle statt Zustandswörter („Erkennung aus“ las sich wie der Zustand).
-    tog(c.sw.detect, 'Erkennung einschalten', 'Erkennung ausschalten', 'mdi:eye-outline', 'Erkennung ausschalten?');
+    // Befehle statt Zustandswörter, überall dasselbe Wort wie der Kopfschalter („Objekterkennung“).
+    tog(c.sw.detect, 'Objekterkennung einschalten', 'Objekterkennung ausschalten', 'mdi:eye-outline', 'Objekterkennung ausschalten?');
     tog(c.sw.recordings, 'Aufnahme einschalten', 'Aufnahme ausschalten', 'mdi:record-rec', 'Aufnahme ausschalten?');
-    if (s.last && c.objs[s.last.o] && c.objs[s.last.o].img && S[c.objs[s.last.o].img]) {
-      var img = c.objs[s.last.o].img;
-      var lo = s.last.o, lat = s.last.at;
+    var nw = newest(id);
+    if (nw || (s.last && c.objs[s.last.o] && c.objs[s.last.o].img && S[c.objs[s.last.o].img])) {
+      var lo = s.last ? s.last.o : nw.o, lat = s.last ? s.last.at : nw.start;
+      var img = s.last && c.objs[s.last.o] ? c.objs[s.last.o].img : null;
       out.push({ key: 'fn', t: 'Letzte Erkennung', ic: 'mdi:image-outline', fn: function () { F.latest(hass, c, lo, img, lat); } });
     }
-    // Aufnahmen (heute, letzte Stunde) – nur, wenn die Kamera aufnehmen kann.
-    if (c.sw.recordings && S[c.sw.recordings]) out.push({ key: 'fn', t: 'Aufnahmen', ic: 'mdi:filmstrip-box-multiple', fn: function () { F.recView(id, null, null, null); } });
+    // Aufnahmen ab jetzt (Ende der Aufnahme − 1 Min.) – nur, wenn die Kamera aufnehmen kann.
+    if (c.sw.recordings && S[c.sw.recordings]) out.push({ key: 'fn', t: 'Aufnahmen', ic: 'mdi:filmstrip-box-multiple', fn: function () { F.recView(id, null, null, camBack(id), 0, { now: true }); } });
     var ui = F.ui(hass, c);
     if (ui) out.push({ key: 'fn', t: 'In Frigate öffnen', ic: 'mdi:open-in-new', fn: function () { go(ui); } });
     return out;

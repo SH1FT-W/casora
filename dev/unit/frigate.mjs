@@ -103,7 +103,7 @@ assert.equal(n(F.tileText(F.status(c, states, NOW), NOW)), 'Person und Auto erka
 states['binary_sensor.gartentor_car_occupancy'].state = 'off'; states['sensor.gartentor_car_count'].state = '0';
 states['binary_sensor.gartentor_person_occupancy'].state = 'off';
 states['switch.gartentor_detect'].state = 'off';
-assert.equal(n(F.tileText(F.status(c, states, NOW), NOW)), 'Erkennung aus');
+assert.equal(n(F.tileText(F.status(c, states, NOW), NOW)), 'Objekterkennung aus'); assert.equal(n(F.tileText(F.status(c, states, NOW), NOW, true)), 'Erkennung aus', 'schmal kurz');
 states['switch.gartentor_detect'].state = 'on';
 // Lange her (> 24 Std.) oder nie: null → die Kachel zeigt den Kamera-Text (Aktuell/Online).
 states['image.gartentor_person'].state = iso(3000); states['image.gartentor_car'].state = 'unknown';
@@ -150,7 +150,7 @@ window._casoraUI = {
   more: (id, html, o) => '<more ' + o.label + '/' + o.less + '>' + html + '</more>',
 };
 let h = n(F.sec('hero', c, states, hass));
-assert.ok(/^<line>Zuletzt: Person\|vor \d+ Min\.<\/line>$/.test(h), h);
+assert.ok(/^<line>Person\|vor \d+ Min\.<\/line>$/.test(h), 'Kopf wie die Liste: „Person · vor 3 Min.“ (C10)');
 states['switch.gartentor_recordings'].state = 'off';
 assert.ok(/Aufnahme aus/.test(n(F.sec('hero', c, states, hass))), 'nur „Aufnahme aus“ steht im Kopf');
 states['switch.gartentor_recordings'].state = 'on';
@@ -198,16 +198,20 @@ await new Promise((r) => setTimeout(r, 10));
 let evh = n(F.sec('ev', c, states, okWs));
 assert.equal((evh.match(/@frigate-ev:/g) || []).length, 8, evh);
 assert.ok(/data-casora-mi="frigate-more:camera\.gartentor"[^>]*>.*Mehr anzeigen/.test(evh) && /Person=Live~/.test(evh), evh);
-assert.ok(/<label Letzte Erkennungen>/.test(evh) && /aria-pressed="true" data-casora-mi="frigate-f:camera\.gartentor\|kind\|"/.test(evh)
-  && /data-casora-mi="frigate-flt:camera\.gartentor\|car"/.test(evh), 'Filter-Chips über der Liste: Alle (aktiv), Person, Auto');
-// Ohne Reviews (die Antwort hat kein „severity“ – ältere Frigate-Version): Ereignisliste wie bisher, ohne Alarm-Chips.
-assert.ok(!/kind\|alert/.test(evh) && /kind\|fav/.test(evh) && /range\|today/.test(evh), 'Ereignis-Modus: Alle · Behalten · Zeitraum');
+// Ohne Reviews (die Antwort hat kein „severity“ – ältere Frigate-Version): Ereignisliste, nur die Pille „Filter“ (zu).
+assert.ok(/<label Letzte Erkennungen>/.test(evh) && /data-casora-mi="frigate-fx:camera\.gartentor"/.test(evh) && /aria-expanded="false"/.test(evh)
+  && !/kind\|/.test(evh) && !/frigate-flt:/.test(evh), 'Ereignis-Modus: Pille „Filter“ ohne Art-Chips, Bereich zu');
 const hook = (id) => window._casoraMiHooks.some((fn) => fn(id));
+assert.ok(hook('frigate-fx:camera.gartentor'));
+evh = n(F.sec('ev', c, states, okWs));
+assert.ok(/aria-expanded="true"/.test(evh) && /<div class="frig-fl">Zeitraum<\/div>/.test(evh) && /range\|today/.test(evh) && /fav\|/.test(evh)
+  && /<div class="frig-fl">Objekte<\/div>/.test(evh) && /data-casora-mi="frigate-flt:camera\.gartentor\|car"/.test(evh), 'Filter aufgeklappt: Zeitraum, Favoriten, Objekte je eine Reihe');
 assert.ok(hook('frigate-more:camera.gartentor'));
 assert.equal((n(F.sec('ev', c, states, okWs)).match(/@frigate-ev:/g) || []).length, 10, 'Mehr: alle');
 assert.ok(hook('frigate-flt:camera.gartentor|person'));
 evh = n(F.sec('ev', c, states, okWs));
 assert.ok(/aria-pressed="true" data-casora-mi="frigate-flt:camera\.gartentor\|person"/.test(evh) && !/Auto=/.test(evh), evh);
+assert.ok(/1 Filter aktiv/.test(evh) && /frigate-f:camera\.gartentor\|clear\|/.test(evh) && /Filter · 1/.test(evh), 'gesetzter Filter sichtbar: „1 Filter aktiv · Zurücksetzen“, Pille mit Zähler');
 assert.ok(/Person=[^;]*@frigate-flt:camera\.gartentor\|person/.test(n(F.sec('objs', c, states, okWs))), 'Objekt-Zeile filtert');
 assert.ok(hook('frigate-flt:camera.gartentor|person'));
 assert.equal(F.filter('camera.gartentor'), null, 'noch einmal: Filter aus');
@@ -215,8 +219,8 @@ assert.equal(F.filter('camera.gartentor'), null, 'noch einmal: Filter aus');
 // Halten-Menü: Erkennung/Aufnahme aus mit Rückfrage, an ohne; letzte Erkennung; Frigate öffnen.
 states['binary_sensor.gartentor_person_occupancy'].state = 'off';
 let m = F.hold(hass, ID);
-assert.deepEqual(m.map((x) => x.t), ['Erkennung ausschalten', 'Aufnahme ausschalten', 'Letzte Erkennung', 'Aufnahmen', 'In Frigate öffnen']);
-assert.equal(m[0].svc, 'switch.turn_off'); assert.equal(m[0].entity, 'switch.gartentor_detect'); assert.ok(m[0].ask);
+assert.deepEqual(m.map((x) => x.t), ['Objekterkennung ausschalten', 'Aufnahme ausschalten', 'Letzte Erkennung', 'Aufnahmen', 'In Frigate öffnen']);
+assert.equal(m[0].svc, 'switch.turn_off'); assert.equal(m[0].entity, 'switch.gartentor_detect'); assert.equal(m[0].ask, 'Objekterkennung ausschalten?', 'B11: überall „Objekterkennung“');
 states['switch.gartentor_recordings'].state = 'off';
 m = F.hold(hass, ID);
 assert.equal(m[1].t, 'Aufnahme einschalten'); assert.equal(m[1].svc, 'switch.turn_on'); assert.equal(m[1].ask, null, 'einschalten ohne Rückfrage');
@@ -287,11 +291,20 @@ F.forget(ID); F.setFilter(ID, 'reset');
 F.sec('ev', c, states, rvWs);
 await new Promise((r) => setTimeout(r, 20));
 let rh = n(F.sec('ev', c, states, rvWs));
-assert.ok(/kind\|alert/.test(rh) && /kind\|detection/.test(rh) && /kind\|unseen/.test(rh) && /kind\|fav/.test(rh), 'Review-Chips: Alarme · Erkennungen · Ungesehen · Behalten');
-assert.ok(/>Ungesehen<\/span><span[^>]*>3<\/span>/.test(rh), 'Ungesehen mit Anzahl 3');
+assert.ok(/kind\|alert/.test(rh) && /kind\|detection/.test(rh) && /kind\|unseen/.test(rh) && /frigate-fx:/.test(rh), 'Review-Chips: eine Reihe Alle · Alarme · Erkennungen · Neu, dahinter „Filter“');
+// B10: „Neu“ zählt die ungesehenen Alarme – dieselbe Zahl wie Kachel und Kopf.
+assert.ok(/>Neu<\/span><span[^>]*>2<\/span>/.test(rh), 'Neu mit Anzahl 2');
+assert.equal(F.unseen(ID), 2, 'Chip = F.unseen');
+assert.ok(/^<line>2 neue Alarme\|/.test(n(F.sec('hero', c, states, rvWs))), 'Kopf zählt gleich');
+assert.ok(!/frig-fl/.test(rh.replace(/<style>[\s\S]*?<\/style>/g, '')) || /aria-expanded="true"/.test(rh), 'Bereich zu: keine Gruppen');
+if (!/aria-expanded="true"/.test(rh)) assert.ok(hook('frigate-fx:camera.gartentor'));
+rh = n(F.sec('ev', c, states, rvWs));
 assert.ok(/zone\|einfahrt/.test(rh) && /zone\|garten/.test(rh) && /face\|Kim/.test(rh), 'Zonen- und Gesicht-Chips aus den Daten');
+assert.ok(/<span data-no-i18n[^>]*>Kim<\/span>/.test(rh), 'Gesichtsname nicht übersetzt (A14)');
+assert.ok(/face\|%E2%88%85/.test(rh) && />Unbekannt</.test(rh), 'Gesichter: „Unbekannt“ als Gegenstück (Person ohne Namen)');
 assert.ok(/Person, Auto · Kim=Neu~/.test(rh) && /@frigate-rv:camera\.gartentor\|r1/.test(rh), 'Review-Zeile: Objekte, Gesicht, „Neu“, öffnet als Review');
-assert.ok(/Person ★=Neu~/.test(rh), 'behalten (über das Ereignis der Erkennung): Stern');
+assert.ok(/Person ★=Neu~/.test(rh), 'Favorit (über das Ereignis der Erkennung): Stern');
+assert.ok(/=~[^;]*@frigate-rv:camera\.gartentor\|r4/.test(rh), 'ungesehene Erkennung: kein „Neu“ (nur Alarme)');
 assert.ok(/Katze=Live~/.test(rh), 'laufend: Live');
 const r1 = calls.find((m) => m.type === 'frigate/reviews/get');
 assert.ok(r1 && r1.instance_id === 'frigate' && r1.cameras[0] === 'gartentor' && r1.after > 0, 'reviews/get mit Instanz, Kamera, 7 Tage');
@@ -300,13 +313,20 @@ assert.ok(F.items(ID).list.some((x) => /review_thumbnail\.webp\?authSig=x$/.test
 assert.ok(hook('frigate-f:camera.gartentor|kind|alert'));
 assert.deepEqual(F.shown(ID).map((x) => x.id), ['r1', 'r2'], 'Alarme');
 assert.ok(hook('frigate-f:camera.gartentor|kind|unseen'));
-assert.deepEqual(F.shown(ID).map((x) => x.id), ['r1', 'r2', 'r4'], 'Ungesehen');
+assert.deepEqual(F.shown(ID).map((x) => x.id), ['r1', 'r2'], 'Neu = ungesehene Alarme');
+assert.ok(hook('frigate-f:camera.gartentor|kind|'));
 assert.ok(hook('frigate-f:camera.gartentor|range|today'));
 assert.ok(!F.shown(ID).some((x) => x.id === 'r4'), 'Heute ohne die vor 3 Tagen');
+assert.ok(hook('frigate-f:camera.gartentor|face|' + encodeURIComponent(F.NOFACE)));
+assert.deepEqual(F.shown(ID).map((x) => x.id), ['r2'], 'Unbekannt: Person ohne Gesicht');
+assert.ok(hook('frigate-f:camera.gartentor|face|' + encodeURIComponent(F.NOFACE)));
 assert.ok(hook('frigate-f:camera.gartentor|zone|einfahrt'));
 assert.deepEqual(F.shown(ID).map((x) => x.id), ['r1'], 'Zone');
 assert.ok(hook('frigate-f:camera.gartentor|reset|'));
-assert.deepEqual(F.filters(ID), { kind: '', range: 'week', o: null, zone: null, face: null }, 'zurückgesetzt');
+assert.deepEqual(F.filters(ID), { kind: '', range: 'week', fav: false, o: null, zone: null, face: null }, 'zurückgesetzt');
+// A14: „|“ im Wert (Zone, Gesicht) bleibt heil.
+assert.ok(hook('frigate-f:camera.gartentor|zone|' + encodeURIComponent('a|b'))); assert.equal(F.filters(ID).zone, 'a|b');
+assert.ok(hook('frigate-f:camera.gartentor|clear|')); assert.equal(F.filters(ID).zone, null, 'Zurücksetzen (Bereich)');
 assert.ok(hook('frigate-f:camera.gartentor|face|Kim')); assert.deepEqual(F.shown(ID).map((x) => x.id), ['r1'], 'Gesicht');
 assert.ok(hook('frigate-f:camera.gartentor|face|Kim')); assert.equal(F.filters(ID).face, null, 'noch einmal: aus');
 assert.ok(hook('frigate-f:camera.gartentor|kind|detection')); assert.ok(hook('frigate-f:camera.gartentor|range|today'));
@@ -315,7 +335,7 @@ const none = n(F.sec('ev', c, states, rvWs));
 assert.ok(/Nichts gefunden=~Filter ändern oder zurücksetzen/.test(none) && /frigate-f:camera\.gartentor\|reset\|/.test(none), 'leer mit Filter: Zurücksetzen');
 F.setFilter(ID, 'reset');
 // Kachel: ungesehene Alarme nach „Person erkannt“; Gesehen markiert und meldet es Frigate.
-assert.equal(F.unseen(ID), 2, '2 ungesehene Alarme (24 Std.)');
+assert.equal(F.unseen(ID), 2, '2 ungesehene Alarme');
 assert.equal(n(F.tileText(F.status(c, states))), '2 neue Alarme'); assert.equal(n(F.tileText(F.status(c, states), null, true)), '2 Alarme', 'schmal');
 assert.ok(/^<line>2 neue Alarme\|/.test(n(F.sec('hero', c, states, rvWs))), 'Kopf');
 await F.seen(rvWs, c, 'r2');
@@ -328,10 +348,10 @@ states['binary_sensor.gartentor_person_occupancy'].state = 'off';
 assert.ok(await F.retain(rvWs, c, 'e1', true));
 assert.ok(calls.some((m) => m.type === 'frigate/event/retain' && m.event_id === 'e1' && m.retain === true));
 assert.ok(F.items(ID).list.find((x) => x.id === 'r1').fav, 'sofort behalten');
-assert.ok(hook('frigate-f:camera.gartentor|kind|fav'));
+assert.ok(hook('frigate-f:camera.gartentor|fav|'));
 F.sec('ev', c, states, rvWs); await new Promise((r) => setTimeout(r, 20));
 assert.ok(calls.some((m) => m.type === 'frigate/events/get' && m.favorites === true), 'favorites:true');
-assert.deepEqual(F.shown(ID).map((x) => x.id).sort(), ['e1', 'e2'], 'Behalten: Ereignisse');
+assert.deepEqual(F.shown(ID).map((x) => x.id).sort(), ['e1', 'e2'], 'Favoriten: Ereignisse');
 F.setFilter(ID, 'reset');
 // Rückfall: reviews/get scheitert → Ereignisliste ohne Fehlermeldung, ohne Alarm-Chips.
 const oldWs = Object.assign({}, rvWs, { callWS: (m) => (m.type === 'frigate/reviews/get' ? Promise.reject(new Error('unknown_command')) : rvWs.callWS(m)) });
@@ -422,4 +442,140 @@ host.isConnected = false; F.sweep();
 assert.equal(F._dbg().tiles, 0, 'Kachel weg: aufgeräumt'); assert.equal(F._dbg().holders, 0); assert.ok(!host._frig);
 assert.equal(F._dbg().timer, false);
 delete window.casoraKick;
+
+// ── Frigate 2, Fix-Runde ───────────────────────────────────────────────────
+// A1: HLS – Master selbst laden, die Unter-Liste pfadgenau signieren (die Signatur des Masters gilt dort nicht).
+assert.equal(F.childList('#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1,CODECS="avc1.4d401f"\nindex-v1.m3u8\n'), 'index-v1.m3u8');
+assert.equal(F.childList('#EXTM3U\n#EXTINF:10,\nseg-1.ts\n'), null, 'schon eine Medienliste: keine Unter-Liste');
+{
+  const signs = [], fetched = [];
+  let deny = 0;
+  const hh = { hassUrl: (x) => 'http://ha.local' + x, callWS: (m) => { signs.push(m); return Promise.resolve({ path: m.path + '?authSig=s' + signs.length }); } };
+  globalThis.fetch = (url) => {
+    fetched.push(url);
+    if (deny > 0) { deny--; return Promise.resolve({ ok: false, status: 403, text: () => Promise.resolve('') }); }
+    return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve('#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1\nindex-v1.m3u8\n') });
+  };
+  const master = '/api/frigate/frigate/vod/gartentor/start/100/end/200/master.m3u8';
+  const u = await F.hlsUrl(hh, master);
+  assert.equal(u, 'http://ha.local/api/frigate/frigate/vod/gartentor/start/100/end/200/index-v1.m3u8?authSig=s2', 'Player bekommt die signierte Unter-Liste');
+  assert.deepEqual(signs.map((m) => [m.path, m.expires]), [[master, 3600], ['/api/frigate/frigate/vod/gartentor/start/100/end/200/index-v1.m3u8', 3600]], 'beide pfadgenau, 1 Std.');
+  assert.ok(/master\.m3u8\?authSig=s1$/.test(fetched[0]), 'Master signiert geladen');
+  // A6: 403 auf den Master → einmal frisch signieren, dann klappt es.
+  deny = 1; signs.length = 0;
+  const m2 = '/api/frigate/frigate/vod/gartentor/start/300/end/400/master.m3u8';
+  const u2 = await F.hlsUrl(hh, m2);
+  assert.ok(/index-v1\.m3u8\?authSig=/.test(u2) && signs.filter((m) => m.path === m2).length === 2, 'nach 403 neu signiert');
+  // A6: Fehlschlag (null) wird nicht gemerkt; Bilder 10 Min., Videos 1 Std.
+  let fail = true;
+  const h2 = { callWS: (m) => (fail ? Promise.reject(new Error('x')) : Promise.resolve({ path: m.path + '?authSig=ok' })) };
+  assert.equal(await F.sign(h2, '/x.jpg'), null);
+  assert.equal(F.signAge('/x.jpg'), null, 'null nicht gemerkt');
+  fail = false;
+  assert.equal(await F.sign(h2, '/x.jpg'), '/x.jpg?authSig=ok', 'gleich danach neu versucht');
+  // A16: Speicher begrenzt.
+  for (let i = 0; i < 400; i++) F.sign(h2, '/many/' + i);
+  assert.ok(F._signedN() <= 300, 'höchstens 300 Signaturen gemerkt: ' + F._signedN());
+  // A5: Review-Clip = ganzer Review-Zeitraum, danach der Clip des Ereignisses (MP4 → HLS über den Proxy → vod/event).
+  const srcs = F.clipSources(c, { rv: 'r1', ev: 'e1', clip: true, start: 1000000, end: 1060500 });
+  assert.deepEqual(srcs.map((x) => x.k + ' ' + x.path.replace('/api/frigate/frigate/', '')), ['hls vod/gartentor/start/1000/end/1061/master.m3u8',
+    'mp4 notifications/e1/clip.mp4', 'hls notifications/e1/master.m3u8', 'hls vod/event/e1/master.m3u8']);
+  assert.deepEqual(F.clipSources(c, { ev: 'e1', clip: true, start: 1 }).map((x) => x.k), ['mp4', 'hls', 'hls'], 'Ereignis ohne Review: Clip zuerst');
+  globalThis.fetch = () => Promise.resolve({ ok: true });
+}
+// C4: lesbarer Dateiname.
+assert.equal(F.fileName('Hof/Kamera', new Date(2026, 9, 15, 16, 22).getTime(), 'mp4'), 'Hof Kamera 2026-10-15 16-22.mp4');
+// C7: Ausschnitt ab hier, in den aufgenommenen Bereich gelegt.
+assert.deepEqual(F.cut([{ s: 100, e: 200 }, { s: 300, e: 1000 }], 150, 5), { a: 150, b: 450 });
+assert.deepEqual(F.cut([{ s: 100, e: 200 }], 150, 10), { a: 150, b: 200 }, 'nicht über das Ende');
+// A17/C3: Startstelle der Aufnahmen.
+const sg = [{ s: 3600, e: 7000 }];
+assert.equal(F.recStart({ at: 'end' }, sg, [], 3600, 7200), 6940, 'Halten „Aufnahmen“: jetzt (Ende − 60 s)');
+assert.equal(F.recStart({}, sg, [{ start: 5000000 }], 3600, 7200), 4997, 'erste Erkennung der Stunde, 3 s davor');
+assert.equal(F.recStart({}, sg, [], 3600, 7200, 1e9), 3600, 'alte Stunde ohne Erkennung: Anfang');
+assert.equal(F.recStart({ at: 5000 }, sg, [], 3600, 7200), 5000);
+// C3: Tag ohne Stunde → letzte Stunde mit Erkennung (nicht 23 Uhr).
+const dd = { day: '2026-10-15', hours: [{ h: 9, n: 2, dur: 3600 }, { h: 16, n: 1, dur: 3600 }, { h: 23, n: 0, dur: 3600 }] };
+assert.equal(F.recDefault(dd, null).h, 16); assert.equal(F.recDefault(dd, 9).h, 9); assert.equal(F.recDefault(dd, null, true).h, 23, 'jetzt: neueste Stunde');
+// B8: Stunden ohne führende Null.
+assert.equal(n(F.hourName('2026-10-15', 9)), '9 Uhr');
+assert.equal(n(F.hourRange(new Date(2026, 9, 15, 10).getTime() / 1000, new Date(2026, 9, 15, 11).getTime() / 1000)), '10–11 Uhr');
+window.casoraLocale = () => 'en-US';
+assert.equal(F.hourName('2026-10-15', 9), '9 AM');
+assert.equal(n(F.hourRange(new Date(2026, 9, 15, 10).getTime() / 1000, new Date(2026, 9, 15, 11).getTime() / 1000)), '10–11 AM');
+delete window.casoraLocale;
+// A11/A12: Zeitumstellung – doppelte Stunde zusammengelegt und 2 Std. lang; sub_only-Stunden weg.
+{
+  const sum2 = F.parseSummary(JSON.stringify([{ day: '2026-10-25', events: 3, hours: [{ hour: '02', duration: 3600, events: 1 }, { hour: '02', duration: 3000, events: 2 },
+    { hour: '05', duration: 1200, events: 0, sub_only: true }, { hour: '04', duration: 3600, events: 0 }] }]));
+  assert.deepEqual(sum2[0].hours.map((h) => [h.h, h.dur, h.n]), [[2, 6600, 3], [4, 3600, 0]]);
+  const tz = process.env.TZ;
+  process.env.TZ = 'Europe/Berlin';
+  assert.equal(F.hourSpan('2026-10-25', 2), 7200, 'Herbst: die Stunde 2 Uhr dauert 2 Std.');
+  assert.equal(F.hourSpan('2026-10-25', 4), 3600);
+  assert.equal(F.hourSpan('2026-10-25', 23), 3600, 'letzte Stunde bis Mitternacht');
+  if (tz == null) delete process.env.TZ; else process.env.TZ = tz;
+}
+// A7: Mit Abo zählen Bewegung/Belegung nicht; „update“ höchstens alle 5 s, „new“/„end“ sofort.
+{
+  F.forget(ID);
+  let nGet = 0, cb = null;
+  const conn2 = { subscribeMessage: (fn) => { cb = fn; return Promise.resolve(() => {}); } };
+  const ws7 = Object.assign({}, rvWs, { connection: conn2, callWS: (m) => { if (m.type === 'frigate/reviews/get') nGet++; return rvWs.callWS(m); } });
+  const pop7 = { isConnected: true };
+  F.sec('ev', c, states, ws7, pop7); await new Promise((r) => setTimeout(r, 30));
+  assert.ok(F.subOn('frigate')); assert.equal(F.keyOf(ws7, c), 'abo', 'mit Abo: Schlüssel unabhängig vom Zustand');
+  const n0 = nGet;
+  states['binary_sensor.gartentor_motion'] = Object.assign({}, states['binary_sensor.gartentor_motion'], { last_changed: new Date().toISOString() });
+  states['image.gartentor_person'] = Object.assign({}, states['image.gartentor_person'], { last_changed: new Date().toISOString() });
+  F.sec('ev', c, states, ws7, pop7); await new Promise((r) => setTimeout(r, 30));
+  assert.equal(nGet, n0, 'Bewegung/Schnappschuss mit Abo: keine neue Abfrage');
+  cb(JSON.stringify({ type: 'update', after: { camera: 'gartentor' } }));
+  F.sec('ev', c, states, ws7, pop7); await new Promise((r) => setTimeout(r, 30));
+  assert.equal(nGet, n0, '„update“ innerhalb von 5 s: später');
+  cb(JSON.stringify({ type: 'end', after: { camera: 'gartentor' } }));
+  F.sec('ev', c, states, ws7, pop7); await new Promise((r) => setTimeout(r, 30));
+  assert.equal(nGet, n0 + 1, '„end“: sofort');
+  pop7.isConnected = false; F.sweep();
+}
+// A13: „gesehen“ scheitert → wieder neu.
+{
+  F.forget(ID);
+  F.sec('ev', c, states, rvWs); await new Promise((r) => setTimeout(r, 20));
+  const bad = Object.assign({}, rvWs, { callWS: (m) => (m.type === 'frigate/reviews/viewed' ? Promise.reject(new Error('x')) : rvWs.callWS(m)) });
+  const u0 = F.unseen(ID);
+  const p = F.seen(bad, c, 'r1');
+  assert.equal(F.unseen(ID), u0 - 1, 'sofort gesehen');
+  assert.equal(await p, false);
+  assert.equal(F.unseen(ID), u0, 'Fehler: wieder neu');
+}
+// C1: Halten „Letzte Erkennung“ öffnet die Review (nicht nur das Ereignis) und markiert sie gesehen; mit Weg zurück.
+{
+  const opened = [];
+  window.casoraPopup = { _cur: null, open(cfg) { this._cur = cfg; opened.push(cfg); }, close() { this._cur = null; }, get current() { return this._cur; } };
+  window._casoraSoftKit = { layout: (o) => ({ type: 'layout', fields: o.fields }), bare: () => ({}) };
+  window._casoraTapTile = (id, done) => done(true);
+  window.document.querySelector = (q) => (q === 'home-assistant' ? { hass: rvWs } : null);
+  F.forget(ID);
+  calls.length = 0;
+  const lat = F.hold(rvWs, ID).find((x) => x.t === 'Letzte Erkennung');
+  assert.ok(lat, 'Eintrag da');
+  lat.fn();
+  assert.equal(opened[0].title, 'Letzte Erkennung', 'sofort ein Popup mit „Wird geladen …“ (A8)');
+  for (let i = 0; i < 30 && opened.length < 2; i++) await new Promise((r) => setTimeout(r, 50));
+  const det = opened[opened.length - 1];
+  assert.equal(det._frigView, 'detail', 'Detail geöffnet');
+  assert.equal(det.content.fields.m.card.rv, 'r1', 'die neueste Review');
+  assert.ok(typeof det.back === 'function', 'Weg zurück zum Kamera-Popup');
+  assert.equal(det.dismiss_on_background, false, 'Tippen ins Leere schließt nicht');
+  assert.equal(det.eyebrow, 'Gartentor', 'Kameraname über dem Titel (B13)');
+  assert.ok(calls.some((m) => m.type === 'frigate/reviews/viewed' && m.ids[0] === 'r1'), 'als gesehen markiert');
+  // Geschlossen, bevor die Daten da sind: nichts öffnet sich später (A8).
+  F.forget(ID); opened.length = 0;
+  F.hold(rvWs, ID).find((x) => x.t === 'Letzte Erkennung').fn();
+  window.casoraPopup.close();
+  await new Promise((r) => setTimeout(r, 300));
+  assert.equal(opened.length, 1, 'kein spätes Popup');
+  delete window.casoraPopup; delete window._casoraTapTile;
+}
 console.log('frigate: ok');
