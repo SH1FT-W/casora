@@ -1135,7 +1135,7 @@
   "Sonstige Wartung": "Other maintenance",
   "Speedtest starten": "Run speed test",
   "Spracheingabe fehlgeschlagen.": "Voice input failed.",
-  "Sprechen": "Speak",
+  "Sprechen": "Talk",
   "Starte den Saugroboter": "Start the robot vacuum",
   "Starts insgesamt": "Total starts",
   "Stoppt …": "Stopping…",
@@ -1893,7 +1893,7 @@
   "Spielt ab": "Playing",
   "Antippen zum Stoppen": "Tap to stop",
   "Laut an der Tür, 10 Sekunden": "Loud at the door, 10 seconds",
-  "Auslösen": "Sound it",
+  "Auslösen": "Sound siren",
   "Sirene läuft": "Siren is sounding",
   "An der Tür": "At the door",
   "Niemand hat geklingelt": "Nobody rang",
@@ -1906,7 +1906,7 @@
   "Status-LED": "Status LED",
   "Privatsphäre": "Privacy",
   "Kamera und Ton aus": "Camera and sound off",
-  "Licht am Klingelknopf": "Light on the button",
+  "Licht am Klingelknopf": "Button light",
   "Nachts an": "On at night",
   "Immer an": "Always on",
   "Automatische Antwort": "Automatic reply",
@@ -1924,7 +1924,7 @@
   "Verbindung zur Klingel beendet": "Connection to the doorbell ended",
   "Ton hören": "Listen",
   "An der Tür abspielen?": "Play it at the door?",
-  "Geklingelt": "Rang",
+  "Geklingelt": "Someone rang",
   "In den letzten 3 Tagen": "In the last 3 days",
   "Kaffeevollautomat": "Coffee machine",
   "Kaffeemaschine": "Coffee machine",
@@ -2006,9 +2006,52 @@
   "Warnungen in Home Assistant aktivieren": "Turn on warnings in Home Assistant",
   "Home Connect legt Wassertank, Bohnen, Schale und Entkalken ausgeschaltet an. Am Gerät unter Entitäten einschalten, dann meldet die Kachel sie.": "Home Connect creates water tank, beans, drip tray and descaling switched off. Turn them on under Entities on the device, then the tile reports them.",
   "Getränke gesamt": "Drinks in total",
-  "Lernt": "Learning"
+  "Lernt": "Learning",
+  "Mithören": "Listen",
+  "Bei Privatsphäre aus": "Off while privacy is on",
+  "Nachtsicht": "Night vision",
+  "Bild in Schwarz-Weiß": "Black & white picture",
+  "Mit Licht": "With light",
+  "Sprechen beendet – Privatsphäre an": "Talking ended – privacy on",
+  "Sprechen beendet – Klingel nicht erreichbar": "Talking ended – doorbell unreachable",
+  "Sprechen geht in diesem Browser nicht": "Talking isn't available in this browser",
+  "Sprechen braucht HTTPS": "Talking needs HTTPS",
+  "Sprechen klappt mit dieser Klingel nicht – Mithören geht weiter": "Talking doesn't work with this doorbell – listening still works",
+  "Sprechen klappt mit dieser Klingel nicht": "Talking doesn't work with this doorbell",
+  "Objekterkennung": "Object detection",
+  "Objekterkennung ausschalten?": "Turn off object detection?",
+  "Erkennung einschalten": "Turn on detection",
+  "Erkennung ausschalten": "Turn off detection",
+  "Aufnahme einschalten": "Turn on recording",
+  "Aufnahme ausschalten": "Turn off recording",
+  "Kein Clip vorhanden": "No clip available",
+  "Zone": "Zone"
  },
  "patterns": [
+  [
+   "^Spielt ab: (.+)$",
+   "Playing: {1}"
+  ],
+  [
+   "^„(.+)“ an der Tür abspielen\\?$",
+   "Play “{1}” at the door?"
+  ],
+  [
+   "^Geklingelt · (.+)$",
+   "Rang · {1}"
+  ],
+  [
+   "^Geklingelt (\\d{1,2}:\\d{2}.*)$",
+   "Rang {1}"
+  ],
+  [
+   "^Treffer (\\d+) %$",
+   "Match {1}%"
+  ],
+  [
+   "^Gestern (\\d{1,2}:\\d{2})$",
+   "Yesterday {1}"
+  ],
   [
    "^(\\d+) Probleme$",
    "{1} problems"
