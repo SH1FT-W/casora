@@ -283,7 +283,8 @@ window.CASORA_TILE_TYPES = [
   // (scripts/local/23-frigate.js). Felder wie die Kamera-Kachel, ohne die Popup-Felder der Kamera-Übersicht.
   { id: "casora_frigate", label: "Frigate camera", template: "casora_frigate", domains: ["camera"], classes: ["camera"],
     icon: "camera", entityLabel: "Frigate camera",
-    community: { desc: "Live camera with what Frigate detected last. The popup shows the live view, alerts and detections with snapshot, clip, download and keep, the recordings of the last days with a timeline, objects and the camera switches.",
+    // „Gesehen“ (frigate/reviews/viewed) gilt je Frigate-Benutzer = dem der Integration (23-frigate.js F.mark).
+    community: { desc: "Live camera with what Frigate detected last. The popup shows the live view, alerts and detections with clip, download, share and favorite, the recordings of the last days with a timeline, objects and the camera switches. “Seen” is stored by Frigate for the user the integration signs in with – so everyone in Home Assistant shares the same state.",
       needs: "frigate", needsText: "For every camera of the Frigate integration",
       needsMissing: "Frigate integration not installed yet" },
     fields: [ICON, TITLE_NAME,
