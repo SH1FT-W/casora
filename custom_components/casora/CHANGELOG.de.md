@@ -4,6 +4,30 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.31 – 16.10.2026
+
+**Neue Versionsnummern:** Casora zählt ab jetzt Jahr.Monat.Nummer – 26.10.31 ist das 31. Release im Oktober 2026. Der Sprung von 1.6.0 ist gewollt; HACS und das Casora-Update erkennen die neue Version ganz normal.
+
+### Neu
+- **Frigate-Kamera:** Live-Kamera mit dem, was Frigate zuletzt erkannt hat. Im Popup Live-Bild, Alarme und Erkennungen mit Clip, Herunterladen, Teilen und Favorit, Filter, die Aufnahmen der letzten Tage mit Zeitleiste, Objekte und die Schalter der Kamera. Auf Wunsch zeigt die Kachel das stumme Live-Bild.
+- **Reolink-Türklingel:** Live-Bild, das sagt, wann jemand geklingelt hat. Im Popup Mithören, Schnellantworten, Sirene, wer zuletzt geklingelt hat (Zeitleiste) und die Einstellungen der Klingel. „Sprechen“ gibt es als Versuch im Studio – viele Reolink-Klingeln nehmen es nicht an.
+- **Kaffeevollautomat:** Bereit, heizt auf oder bezieht mit Fortschritt – und was die Maschine braucht (Wasser, Bohnen, Schale, Entkalken). Im Popup Getränke mit Stärke und Menge starten, Pflege und wie viele Kaffees du gemacht hast. Für Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco oder eine Steckdose.
+- **Casora Glas:** Ein drittes Design – Casora mit Milchglas über den Raumfotos, hell und dunkel, auch in der Studio-Vorschau. Im Leistungsmodus werden die Glasflächen deckend.
+
+### Geändert
+- **Hemma-Designs entfernt:** „Hemma 1“ und „Hemma 2“ gibt es nicht mehr. Wer sie als Standard- oder Profil-Design hatte, wird einmal auf Casora Glas umgestellt und bekommt dazu einen Hinweis.
+- **Desktop und Handy angleichen:** Das Fenster zeigt eine Zeile je Sache („Unter-Badge 5 · …“ statt drei Einzelzeilen), sagt „Nur am Handy“ bzw. „Nur am Desktop“, ist vollständig übersetzt, und der Knopf heißt „Auf beiden übernehmen“, wenn nur eine Seite etwas hat.
+- **Studio-Vorschau:** Die Raumleiste in der Tablet- und Desktop-Vorschau ist so breit wie im Dashboard und endet vor der Medien-Welle.
+- **Hemma entfernen** räumt auch die alten YAML-Dashboards und -Vorlagen einer Hemma-Installation ohne HACS weg (dashboards/hemma, dashboards/templates; mit Sicherung, nur wenn keine YAML-Konfiguration sie noch nennt).
+- **Pulse-Verlauf:** Zustände mit Farbe und Höhe, Legende ab drei Zuständen.
+
+### Behoben
+- **Hemma entfernen bot sich endlos an,** wenn eine Automation noch in www/hemma schreibt. Ein solcher Ordner zählt nicht mehr als Rest. Bleibt www/hemma, nennt der Dialog jetzt den richtigen Grund (z. B. abweichende Dateien) statt „Ein Dashboard nutzt sie noch“.
+- **Casora-KI blieb passiv,** wenn alte eigene KI-Pakete gelöscht waren, aber ihre Einträge noch in der Entitätenliste standen. Jetzt zählen nur Sensoren, die noch geliefert werden.
+- **Fußbodenheizung:** Aus dem Gruppen-Popup geöffnete Raum- und Heizkörper-Popups haben wieder den ‹ Zurück-Pfeil.
+- **Übersetzung:** In Person-, Mäher-, Update-, Ziel- und weiteren Popups blieben einzelne Texte unübersetzt.
+- **Popup-Zeilen:** Ein Bestätigen-Knopf in einer Zeile schiebt den Titel nicht mehr weg.
+
 ## 1.6.0 – 16.10.2026
 
 ### Neu

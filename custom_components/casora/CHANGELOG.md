@@ -4,6 +4,30 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.31 – 16.10.2026
+
+**New version numbers:** From now on Casora counts year.month.number – 26.10.31 is the 31st release in October 2026. The jump from 1.6.0 is intended; HACS and the Casora update see the new version as usual.
+
+### New
+- **Frigate camera:** Live camera with what Frigate detected last. The popup has the live view, alerts and detections with clip, download, share and favorite, filters, the recordings of the last days with a timeline, objects and the camera switches. Optionally the tile shows the muted live stream.
+- **Reolink doorbell:** Live picture that says when someone rang. The popup has listening, quick replies, the siren, who rang lately (timeline) and the doorbell's settings. "Talk" is available as an experiment in the Studio – many Reolink doorbells don't accept it.
+- **Coffee machine:** Ready, heating up or brewing with progress – and what the machine needs (water, beans, drip tray, descaling). The popup starts drinks with strength and amount, shows care and how many coffees you made. For Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco or a smart plug.
+- **Casora Glas:** A third design – Casora with frosted glass over your room photos, light and dark, also in the Studio preview. In performance mode the glass surfaces turn opaque.
+
+### Changed
+- **Hemma designs removed:** "Hemma 1" and "Hemma 2" are gone. If you had them as default or profile design, you are switched to Casora Glas once and get a note about it.
+- **Match desktop and phone:** The sheet shows one row per item ("Sub-badge 5 · …" instead of three separate rows), says "Only on the phone" or "Only on the desktop", is fully translated, and the button reads "Keep on both" when only one side has a value.
+- **Studio preview:** The room bar in the tablet and desktop preview is as wide as in the dashboard and ends before the media wave.
+- **Remove Hemma** also removes the old YAML dashboards and templates of a Hemma install without HACS (dashboards/hemma, dashboards/templates; backed up, and only when no YAML configuration still names them).
+- **Pulse history:** States with color and height, legend from three states on.
+
+### Fixed
+- **Remove Hemma kept offering itself** when an automation still writes into www/hemma. Such a folder no longer counts as a leftover. If www/hemma stays, the dialog now names the real reason (e.g. files that differ) instead of "A dashboard still uses them".
+- **Casora AI stayed passive** when old own AI packages were deleted but their entries were still in the entity list. Now only sensors that are still provided count.
+- **Floor heating:** Room and radiator popups opened from the group popup have the ‹ back arrow again.
+- **Translation:** Single texts in the person, mower, updates, goals and other popups stayed untranslated.
+- **Popup rows:** A confirm button in a row no longer pushes the title away.
+
 ## 1.6.0 – 16.10.2026
 
 ### New

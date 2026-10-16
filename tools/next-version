@@ -10,7 +10,7 @@
 # Damit die Zählung stimmt, jedes Release als GitHub-Release veröffentlichen.
 # Ist gh nicht erreichbar: Warnung und Rückfall auf die Git-Tags des Monats.
 # Schutz gegen doppelte Nummern: steht in der Versionsdatei (--file) schon
-# YY.M.k des laufenden Monats, ist N mindestens k+1.
+# YY.M.k des laufenden Monats, ist N mindestens k (ein schon veröffentlichtes k zählt ohnehin mit).
 #
 # Standard in diesem Repo: Präfix "v", Versionsdatei custom_components/casora/manifest.json
 # Aufruf:  next-version [--prefix P] [--file F] [--pre] [--tag] [--month YYYY-MM] [--no-fetch]
@@ -61,7 +61,9 @@ else
 fi
 if [ -n "$vfile" ] && [ -f "$vfile" ]; then
   cur=$(sed -n 's/^[[:space:]"]*version"\{0,1\}[[:space:]]*:[[:space:]]*["'\'']\{0,1\}\([0-9][0-9.]*\).*/\1/p' "$vfile" | head -1)
-  [[ $cur == "${yy}.${m}."* ]] && bump "$cur"
+  # Eine schon eingetragene, noch nicht veröffentlichte Nummer ist selbst die nächste (k-1 + 1 = k);
+  # ist sie veröffentlicht, zählt sie oben schon mit.
+  if [[ $cur == "${yy}.${m}."* ]]; then k=${cur##*.}; [[ $k =~ ^[0-9]+$ ]] && (( 10#$k - 1 > maxn )) && maxn=$((10#$k - 1)); fi
 fi
 n=$(( count > maxn ? count : maxn ))
 v="${yy}.${m}.$((n + 1))"

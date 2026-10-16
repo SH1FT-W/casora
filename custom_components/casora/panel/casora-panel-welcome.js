@@ -27,10 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Halten-Schnellmenü", n0: "Lange drücken (oder Rechtsklick) auf eine Kachel: Hauptaktion, Helligkeit, Jalousie, Temperatur und mehr direkt an der Kachel.",
-      n1t: "Zeitschalter", n1: "„Ausschalten in 30 Min.“ für Licht, Schalter, Heizung und Medien. Ein Kreis auf der Kachel zeigt, wie lange es noch läuft.",
-      n2t: "Energie je Badge", n2: "Solar, Akku, Haus und Netz im Energie-Badge öffnen jetzt jeweils ein eigenes Popup mit Verlauf und Steuerung.",
-      n3t: "Halten einstellbar", n3: "Im Studio unter Bedienung › Kacheln: Schnellmenü, Popup oder Home-Assistant-Dialog, auch je Kachel.",
+      n0t: "Drei neue Karten", n0: "Frigate-Kamera mit Alarmen, Erkennungen und Aufnahmen, Reolink-Türklingel mit Ton und Schnellantworten, Kaffeevollautomat mit Getränkestart und Pflege.",
+      n1t: "Casora Glas", n1: "Ein drittes Design: Casora mit Milchglas über deinen Raumfotos. Zu finden unter Studio › Einstellungen › Design.",
+      n2t: "Hemma-Designs entfernt", n2: "Hemma 1 und Hemma 2 gibt es nicht mehr. Wer sie genutzt hat, ist jetzt automatisch auf Casora Glas.",
+      n3t: "Neue Versionsnummern", n3: "Ab jetzt Jahr.Monat.Nummer: 26.10.31 ist das 31. Release im Oktober 2026. Der Sprung von 1.6.0 ist gewollt.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Hold quick menu", n0: "Press and hold (or right-click) a tile: main action, brightness, covers, temperature and more right at the tile.",
-      n1t: "Timer", n1: "\"Turn off in 30 min\" for lights, switches, heating and media. A ring on the tile shows how long is left.",
-      n2t: "Energy per badge", n2: "Solar, battery, house and grid in the energy badge now each open their own popup with history and controls.",
-      n3t: "Hold is configurable", n3: "In the Studio under Controls › Tiles: quick menu, popup or Home Assistant dialog, also per tile.",
+      n0t: "Three new cards", n0: "Frigate camera with alerts, detections and recordings, Reolink doorbell with sound and quick replies, coffee machine with drink start and care.",
+      n1t: "Casora Glas", n1: "A third design: Casora with frosted glass over your room photos. Find it under Studio › Settings › Design.",
+      n2t: "Hemma designs removed", n2: "Hemma 1 and Hemma 2 are gone. If you used them, you're now on Casora Glas automatically.",
+      n3t: "New version numbers", n3: "From now on year.month.number: 26.10.31 is the 31st release in October 2026. The jump from 1.6.0 is intended.",
     },
   };
 
@@ -56,10 +56,10 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:gesture-tap-hold", "n0t", "n0"],
-    ["mdi:timer-outline", "n1t", "n1"],
-    ["mdi:solar-power-variant-outline", "n2t", "n2"],
-    ["mdi:tune-variant", "n3t", "n3"],
+    ["mdi:cctv", "n0t", "n0"],
+    ["mdi:blur", "n1t", "n1"],
+    ["mdi:palette-swatch-outline", "n2t", "n2"],
+    ["mdi:calendar-month-outline", "n3t", "n3"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.
