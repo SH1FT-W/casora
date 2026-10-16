@@ -65,8 +65,8 @@ RELEASES = [
      "assets": [{"id": 11, "name": "karten-2026-10-01.json", "size": len(PKG_GOOD), "updated_at": "a",
                  "digest": "sha256:" + hashlib.sha256(PKG_GOOD).hexdigest()}]},
     {"tag_name": "karten-leer", "draft": False, "prerelease": False, "body": "", "assets": []},
-    {"tag_name": "v9.0.1", "draft": False, "prerelease": False, "body": "- **New:** public\n\n<details><summary>Deutsch</summary>\n\n- **Neu:** öffentlich\n\n</details>\n",
-     "published_at": "2026-10-03T00:00:00Z", "html_url": "https://github.com/OWNER/casora/releases/tag/v9.0.1",
+    {"tag_name": "v99.0.1", "draft": False, "prerelease": False, "body": "- **New:** public\n\n<details><summary>Deutsch</summary>\n\n- **Neu:** öffentlich\n\n</details>\n",
+     "published_at": "2026-10-03T00:00:00Z", "html_url": "https://github.com/OWNER/casora/releases/tag/v99.0.1",
      "assets": []},
     {"tag_name": "v0.5.0", "draft": False, "prerelease": False, "body": "", "published_at": "2026-09-29T00:00:00Z",
      "html_url": "https://github.com/OWNER/casora/releases/tag/v0.5.0", "assets": []},
@@ -103,9 +103,9 @@ async def gh_releases(request):
 
 async def gh_zip(request):
     guard(request)
-    if request.match_info["tag"] != "v9.0.1":
+    if request.match_info["tag"] != "v99.0.1":
         raise web.HTTPNotFound()
-    return web.Response(body=make_zip("9.0.1"), content_type="application/zip")
+    return web.Response(body=make_zip("99.0.1"), content_type="application/zip")
 
 
 async def gh_asset(request):
@@ -159,8 +159,8 @@ async def main():
         # ── Erfolg: Releases, anonym ─────────────────────────────────────
         rels = await update_source.fetch_releases(hass)
         check("Releases in GitHub-Form", [r["tag_name"] for r in rels][:4] == ["karten-2026-10-02", "karten-2026-10-01",
-                                                                             "karten-leer", "v9.0.1"])
-        check("latest_casora = v9.0.1 (Karten-Releases zählen nicht)", (latest_casora(rels) or {}).get("tag_name") == "v9.0.1")
+                                                                             "karten-leer", "v99.0.1"])
+        check("latest_casora = v99.0.1 (Karten-Releases zählen nicht)", (latest_casora(rels) or {}).get("tag_name") == "v99.0.1")
         check("anonym: kein Authorization", all(s["auth"] is None for s in SEEN), repr(SEEN[-1]))
         check("User-Agent Casora/<Version>", SEEN[-1]["ua"] == f"Casora/{update.VERSION}", SEEN[-1]["ua"])
         n = len(SEEN)
@@ -170,7 +170,7 @@ async def main():
 
         # ── Studio-Liste (updates.py) ───────────────────────────────────
         items, err = await updates._remote(hass, force=True)
-        check("Studio: Einträge mit GitHub-Adresse", err is None and items[0]["version"] == "9.0.1"
+        check("Studio: Einträge mit GitHub-Adresse", err is None and items[0]["version"] == "99.0.1"
               and str(items[0]["url"]).startswith("https://github.com/"), repr(items[:1]))
         check("Studio englisch: nur der englische Teil", items[0]["notes_md"] == "- **New:** public"
               and items[0]["notes_lang"] == "en", repr(items[0]["notes_md"]))
@@ -182,8 +182,8 @@ async def main():
         ent = update.CasoraUpdate(hass, SimpleNamespace(entry_id="e1", options={}))
         ent.async_write_ha_state = lambda: None
         await ent.async_update()
-        check("Entität: neueste Version 9.0.1 mit Link", ent.latest_version == "9.0.1"
-              and str(ent.release_url).endswith("/v9.0.1") and hass.data["casora"][update.DATA_LAST_ERROR] is None,
+        check("Entität: neueste Version 99.0.1 mit Link", ent.latest_version == "99.0.1"
+              and str(ent.release_url).endswith("/v99.0.1") and hass.data["casora"][update.DATA_LAST_ERROR] is None,
               f"{ent.latest_version} {ent.release_url}")
         check("Entität englisch: Kurzfassung und Hinweise ohne Deutsch-Block",
               ent.release_summary == "New" and "Neu" not in (await ent.async_release_notes() or ""),
@@ -214,11 +214,11 @@ async def main():
         for cb in hass.on_stop:
             await cb(None)
         with open(os.path.join(target, "manifest.json")) as fh:
-            check("Installiert aus dem zipball", json.load(fh)["version"] == "9.0.1")
-        check("zipball anonym geladen", SEEN[-1]["path"].endswith("/zipball/v9.0.1") and SEEN[-1]["auth"] is None)
+            check("Installiert aus dem zipball", json.load(fh)["version"] == "99.0.1")
+        check("zipball anonym geladen", SEEN[-1]["path"].endswith("/zipball/v99.0.1") and SEEN[-1]["auth"] is None)
         backups = os.listdir(hass.config.path("casora_sicherungen"))
         check("Alte Fassung gesichert", len(backups) == 1 and backups[0].endswith(".zip"), repr(backups))
-        check("Neustart-Hinweis", issues and issues[0]["translation_placeholders"] == {"version": "9.0.1"})
+        check("Neustart-Hinweis", issues and issues[0]["translation_placeholders"] == {"version": "99.0.1"})
 
         # ── 404: Repo (noch) nicht öffentlich → still keine Updates ───────
         MODE["now"] = "404"
@@ -257,7 +257,7 @@ async def main():
         hrl.data["casora"][update_source._PAUSE] = 0  # Freigabe erreicht
         MODE["now"] = "ok"
         check("nach der Freigabe wieder Abrufe", (latest_casora(await update_source.fetch_releases(hrl)) or {}).get("tag_name")
-              == "v9.0.1")
+              == "v99.0.1")
 
         # ── 429 mit Retry-After, 403 ohne Limit ──────────────────────────
         MODE["now"] = "429"

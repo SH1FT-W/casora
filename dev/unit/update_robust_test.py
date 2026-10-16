@@ -55,8 +55,8 @@ class Hass:
         return fn(*args)
 
 
-REL = {"tag_name": "v9.0.1", "draft": False, "prerelease": False, "body": "- **New:** x",
-       "html_url": "https://github.com/OWNER/casora/releases/tag/v9.0.1", "assets": []}
+REL = {"tag_name": "v99.0.1", "draft": False, "prerelease": False, "body": "- **New:** x",
+       "html_url": "https://github.com/OWNER/casora/releases/tag/v99.0.1", "assets": []}
 
 
 async def main():
@@ -67,7 +67,7 @@ async def main():
         return [REL]
 
     async def _dl(h, tag):
-        return make_zip("9.0.1")
+        return make_zip("99.0.1")
 
     async def _rec(*a):
         return None
@@ -86,7 +86,7 @@ async def main():
     ent = update.CasoraUpdate(hass, SimpleNamespace(entry_id="e1", options={}))
     ent.async_write_ha_state = lambda: None
     await ent.async_update()
-    check("vorher: 9.0.1 angeboten", ent.latest_version == "9.0.1" and ent.installed_version == update.VERSION)
+    check("vorher: 99.0.1 angeboten", ent.latest_version == "99.0.1" and ent.installed_version == update.VERSION)
     await ent.async_install(None, False)
     with open(os.path.join(target, "manifest.json")) as fh:
         before = json.load(fh).get("version")
@@ -99,9 +99,9 @@ async def main():
     ent2 = update.CasoraUpdate(hass, SimpleNamespace(entry_id="e1", options={}))
     ent2.async_write_ha_state = lambda: None
     check("B-PY-01: neue Entität kennt die installierte Version sofort",
-          ent2.installed_version == "9.0.1" and ent2.latest_version == "9.0.1", f"{ent2.installed_version}")
+          ent2.installed_version == "99.0.1" and ent2.latest_version == "99.0.1", f"{ent2.installed_version}")
     await ent2.async_update()
-    check("B-PY-01: nach Prüfung kein erneutes Angebot", ent2.latest_version == ent2.installed_version == "9.0.1",
+    check("B-PY-01: nach Prüfung kein erneutes Angebot", ent2.latest_version == ent2.installed_version == "99.0.1",
           f"{ent2.installed_version} → {ent2.latest_version}")
     await ent2.async_install(None, False)
     check("B-PY-03: zweites Installieren meldet sich nicht doppelt an", len(hass.on_stop) == 1)
@@ -111,7 +111,7 @@ async def main():
     await hass.on_stop[0][1](None)
     with open(os.path.join(target, "manifest.json")) as fh:
         after = json.load(fh).get("version")
-    check("B-PY-03: beim Beenden eingespielt", after == "9.0.1" and os.path.isfile(os.path.join(target, "neu.py"))
+    check("B-PY-03: beim Beenden eingespielt", after == "99.0.1" and os.path.isfile(os.path.join(target, "neu.py"))
           and not os.path.exists(hass.config.path(update.STAGE_DIR)) and not os.path.exists(target + ".alt"), after)
     # Nächster Start ohne wartende Version, aber mit Rest im Wartebereich (Absturz): verwerfen.
     os.makedirs(hass.config.path(update.STAGE_DIR, "x"))
@@ -134,7 +134,7 @@ async def main():
 
     update.shutil.copytree = voll
     try:
-        update.install_zip(make_zip("9.0.1"), t2, os.path.join(tmp, "b2", "sich"), "casora_1.0.0_x")
+        update.install_zip(make_zip("99.0.1"), t2, os.path.join(tmp, "b2", "sich"), "casora_1.0.0_x")
         raised = False
     except OSError:
         raised = True
@@ -159,7 +159,7 @@ async def main():
     await e3.async_added_to_hass()
     check("B-PY-16: erste Prüfung als Hintergrundaufgabe", len(tasks) == 1)
     await asyncio.gather(*tasks)
-    check("B-PY-16: Hintergrund-Prüfung findet das Update", e3.latest_version == "9.0.1", e3.latest_version)
+    check("B-PY-16: Hintergrund-Prüfung findet das Update", e3.latest_version == "99.0.1", e3.latest_version)
 
 
 asyncio.run(main())

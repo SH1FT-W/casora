@@ -83,7 +83,7 @@ class Services:
 def fake_hass(items):
     async def job(fn, *a):
         return fn(*a)
-    return SimpleNamespace(states=States(items), bus=Bus(), services=Services(), data={},
+    return SimpleNamespace(is_running=True, states=States(items), bus=Bus(), services=Services(), data={},
                            async_add_executor_job=job)
 
 
