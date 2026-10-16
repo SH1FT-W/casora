@@ -578,6 +578,9 @@ def setup(hass, mock) -> None:
         if "stream" in call.data:
             mock.set(f"camera.{CAM}", None, supported_features=2 if flags["stream"] else 0)
         if call.data.get("zuruecksetzen"):
+            # Erkennungen aus dem Testdienst weg, Gesehen/Behalten wie beim Start (wiederholbare Tests).
+            evs()[:] = [e for e in evs() if not e["id"].endswith("mockneu")]
+            revs()[:] = [r for r in revs() if not r["id"].endswith("revneu")]
             for r in revs():
                 r["has_been_reviewed"] = not r["id"].endswith(("rev0", "rev1", "rev2"))
             for i, e in enumerate(evs()):
