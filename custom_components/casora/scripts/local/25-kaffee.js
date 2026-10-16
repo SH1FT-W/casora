@@ -257,8 +257,13 @@
       items.forEach(function (it) { if (!c.sel && it.domain === 'select' && it.entity_id !== c.actSel && hit(it, ['program', 'programs'])) c.sel = it.entity_id; });
     }
     c.start = by('button', ['startprogram', 'buttonstartprogram', 'make', 'brew', 'start'], true) || by('button', ['startprogram']);
+    // home_connect_alt: ein Knopf „<gerät>_start_pause“, dessen translation_key je Zustand start_/pause_/resume_program
+    // heißt (beim Bezug angelegt stand er sonst als Pause da und Casora fand keinen Start).
+    var sp = items.filter(function (it) { return it.domain === 'button' && /startpause$/.test(tail(it)); })[0];
+    if (!c.start && sp) c.start = sp.entity_id;
     c.stop = by('button', ['stopprogram', 'abortprogram', 'buttonabortprogram', 'cancelbrew', 'cancel', 'stop'], true) || by('button', ['abortprogram', 'stopprogram']);
     c.pause = by('button', ['pauseprogram', 'pause'], true);
+    if (c.pause && c.pause === c.start) c.pause = null;
     items.forEach(function (it) {
       if (it.domain !== 'button' || it.entity_id === c.start || it.entity_id === c.stop) return;
       var k = String(it.key || '').toLowerCase(), m = /^(brew|start)_(.+)$/.exec(k);
@@ -548,6 +553,8 @@
     }
     if (c.fam === 'dlbt' && v(c.dispensing) === 'on' && (st === 'bereit' || st === 'sonst')) st = 'bezieht';
     if (s.power === false && st !== 'offline') st = 'aus';
+    // Status-Sensor nicht verfügbar (Integration weg, Gerät offline), Strom-Schalter lebt noch: nicht „Bereit“ behaupten.
+    if (c.status && S[c.status] && S[c.status].state === 'unavailable' && st !== 'aus' && c.fam !== 'plug') st = 'offline';
     // Verbindung getrennt (Jura Bluetooth, Melitta): der letzte Zustand gilt nicht mehr.
     var cv = v(c.conn);
     var noConn = !!(c.conn && cv != null && (cv === 'off' || nk(cv) === 'disconnected'));
@@ -641,17 +648,27 @@
 
   // ── Kachel ────────────────────────────────────────────────────────────────
   var pctTxt = function (p) { return Math.round(p) + ' %'; };
-  K.tileText = function (s) {
+  // Warnung, die einen Bezug wirklich verhindert (leer/voll/fehlt) – nur sie verdrängt den laufenden Bezug von der Kachel.
+  var blocking = function (w) { return !w.soft && !!STOP_ASK[w.art]; };
+  // short: schmale Kachel (Handy) – „20 % Cappuccino“ ohne „ · “ (casoraStateFit machte sonst „20 % +1“ daraus).
+  // name: Name der Kachel – heißt das Getränk genauso („Kaffee“), steht statt des Namens „Läuft“.
+  K.tileText = function (s, short, name) {
     if (!s) return '';
     if (s.st === 'offline') return s.label;
     if (s.st === 'fehler') return s.warns.length ? s.warns[0].short : 'Fehler';
-    // Warnung hat Vorrang (in Warnfarbe: Symbol orange/rot, Kachel hinterlegt) – als kurzes Wort („Wasser leer“);
-    // „bald leer“ erst in Ruhe.
-    var hard = s.warns.filter(function (w) { return !w.soft; })[0];
+    // Blockierende Warnung hat Vorrang (in Warnfarbe) – als kurzes Wort („Wasser leer“), ohne „+N“.
+    var hard = s.warns.filter(blocking)[0];
     if (hard) return hard.short;
-    // Beim Bezug die Zahl zuerst („40 % · Cappuccino“): am Handy bleibt sie stehen, wenn der Name gekürzt wird.
-    if (s.st === 'bezieht') return s.pct != null && !s.paused ? pctTxt(s.pct) + ' · ' + s.label : s.label;
-    if (s.st === 'pflege') return s.pct != null ? pctTxt(s.pct) + ' · ' + s.label : s.label;
+    // Beim Bezug: „Cappuccino · 20 %“, schmal „20 % Cappuccino“. Weitere Warnungen hängen nicht daran (stehen im Popup).
+    if ((s.st === 'bezieht' || s.st === 'pflege') && s.pct != null && !s.paused) {
+      var lb = name && nk(name) === nk(s.label) ? null : s.label;
+      if (!lb) return short ? pctTxt(s.pct) : 'Läuft · ' + pctTxt(s.pct);
+      return short ? pctTxt(s.pct) + ' ' + lb : lb + ' · ' + pctTxt(s.pct);
+    }
+    if (s.st === 'bezieht' || s.st === 'pflege') return name && nk(name) === nk(s.label) ? 'Läuft' : s.label;
+    // In Ruhe: fällige Warnung („Entkalken fällig“); Vorwarnungen („in 10 Tassen“) nie auf der Kachel.
+    var due = s.warns.filter(function (w) { return !w.soft; })[0];
+    if (due) return due.short;
     if (s.warns.length) return s.warns[0].short;
     return s.label;
   };
@@ -685,7 +702,8 @@
     var id = src._stateObj && src._stateObj.entity_id;
     if (!id) return false;
     var c = K.find(hass, id);
-    return c.power ? [c.power] : false;
+    // Schalter in Gerätefarbe (Türkis), auch wenn die Kopf-Kachel eine Warnung zeigt (orange/rot).
+    return c.power ? { entities: [c.power], color: COLOR.on } : false;
   });
 
   // ── Heute (Differenz der Zähler seit Mitternacht aus HAs Verlauf) ─────────────
@@ -744,7 +762,7 @@
     }
     return out;
   };
-  var pick = {}, started = {}, pending = {}, stopped = {};
+  var pick = {}, started = {}, pending = {}, stopped = {}, unwait = {};
   K.picked = function (c, states) {
     var p = pick[c.anchor];
     if (p) return p;
@@ -768,17 +786,30 @@
   };
   var hassNow = function () { var ha = typeof document !== 'undefined' && document.querySelector('home-assistant'); return ha && ha.hass; };
   // Startbereit: Status „bereit“ (bzw. „fertig“) und – falls die Maschine einen Start-Knopf hat – der Knopf verfügbar.
-  K.readyNow = function (c, S) {
-    var s = K.status(c, S || {});
+  // strict (nach eigenem Einschalten): Home Connect erst bei echtem „ready“ – „inactive“ mit Strom an zeigt die Kachel
+  // zwar als „Bereit“, ein Start in dem Moment lehnt die Maschine aber ab.
+  K.readyNow = function (c, S, strict) {
+    S = S || {};
+    var s = K.status(c, S);
     if (s.dead || !/^(bereit|fertig)$/.test(s.st)) return false;
+    if (strict && HC[c.fam] && c.status && S[c.status] && lastSeg(S[c.status].state) === 'inactive') return false;
     return !(c.start && S[c.start] && S[c.start].state === 'unavailable');
   };
-  // Wartet nach dem Einschalten bzw. beim Aufheizen, bis die Maschine bereit ist (Promise<true|false>).
-  K.waitReady = function (c, getS, ms, step) {
+  // Wartet nach dem Einschalten bzw. beim Aufheizen, bis die Maschine bereit ist. Promise<true | false (Zeit um) |
+  // 'cancel' (o.cancelled() – Knopf „Start abbrechen“) | 'off' (Strom wieder aus)>.
+  K.waitReady = function (c, getS, ms, step, o) {
+    o = o || {};
     return new Promise(function (res) {
-      var t0 = Date.now();
+      var t0 = Date.now(), seenOn = false;
       var tick = function () {
-        if (K.readyNow(c, getS() || {})) return res(true);
+        if (o.cancelled && o.cancelled()) return res('cancel');
+        var S = getS() || {};
+        var pw = c.power && S[c.power] ? S[c.power].state : null;
+        if (pw === 'on') seenOn = true;
+        // Strom wieder aus (an der Maschine oder im Kopf): nicht weiter warten. Erst nach „an“ bzw. 10 s –
+        // direkt nach dem Einschalten meldet HA kurz noch „aus“.
+        if (pw === 'off' && (seenOn || Date.now() - t0 > 10000)) return res('off');
+        if (K.readyNow(c, S, o.strict)) return res(true);
         if (Date.now() - t0 >= ms) return res(false);
         setTimeout(tick, step);
       };
@@ -802,8 +833,9 @@
     return on.then(function () {
       if (!needWait) return true;
       if (o.onWait) o.onWait();
-      return K.waitReady(c, get, o.wait != null ? o.wait : 90000, o.step || 1000);
+      return K.waitReady(c, get, o.wait != null ? o.wait : 90000, o.step || 1000, { strict: off, cancelled: o.cancelled });
     }).then(function (ready) {
+      if (ready === 'cancel' || ready === 'off') return ready;
       if (!ready) return 'on';
       S = get() || S;
       var item = K.drinks(c, S).filter(function (x) { return x.raw === raw; })[0];
@@ -824,6 +856,8 @@
         return (same ? Promise.resolve() : call('select', 'select_option', { entity_id: c.sel, option: raw }))
           .then(function () { return call('button', 'press', { entity_id: c.start }); }).then(function () { return true; });
       }
+      // Home Connect ohne Start-Knopf/Fernstart-Dienst: die Auswahl wählt nur vor – nicht als „gestartet“ melden.
+      if (c.sel && HC[c.fam]) return call('select', 'select_option', { entity_id: c.sel, option: raw }).then(function () { return 'sel'; });
       // De'Longhi BT (make_beverage) u. a.: die Auswahl startet sofort.
       if (c.sel) return call('select', 'select_option', { entity_id: c.sel, option: raw }).then(function () { return true; });
       return false;
@@ -871,7 +905,8 @@
   var errText = function (r) { var m = r && r.error && r.error.message; return T('Start hat nicht geklappt') + (m ? ': ' + m : ''); };
 
   // ── Klicks im Popup: Schein-Entitäten coffee-pick:/coffee-start:/coffee-stop:/coffee-more:/coffee-go: ─────
-  var more = {}, els = {};
+  var more = {}, els = {}, gridH = {};
+  var narrowNow = function () { return typeof window !== 'undefined' && window.innerWidth <= 760; };
   var redraw = function (anchor) {
     (els[anchor] || []).forEach(function (w) {
       if (!w || !w.isConnected) return;
@@ -895,11 +930,15 @@
     var d = K.drink(raw);
     var run = function () {
       busy[a] = Date.now();
+      unwait[a] = false;
       pending[a] = s.power === false || s.st === 'heizt' ? 'wait' : 'go';
       redraw(a);
-      return K.start(hass, c, raw, { onWait: function () { pending[a] = 'wait'; busy[a] = Date.now() + 90000; redraw(a); } }).then(function (r) {
-        busy[a] = 0; pending[a] = null;
+      return K.start(hass, c, raw, { onWait: function () { pending[a] = 'wait'; busy[a] = Date.now() + 90000; redraw(a); },
+        cancelled: function () { return !!unwait[a]; } }).then(function (r) {
+        busy[a] = 0; pending[a] = null; unwait[a] = false;
         if (r === true) { pick[a] = null; started[a] = { raw: raw, t: Date.now() }; }
+        else if (r === 'cancel' || r === 'off') { /* selbst abgebrochen bzw. Strom aus – nichts melden */ }
+        else if (r === 'sel') notice(T('Ausgewählt – Getränk an der Maschine starten'));
         else if (r === 'on') notice(T('Eingeschaltet, aber noch nicht bereit – Getränk an der Maschine starten'));
         else notice(errText(r));
         redraw(a);
@@ -907,17 +946,22 @@
       });
     };
     var why = K.startWarn(s);
-    var title = d ? T(d.label) : '';
+    // Rückfrage nennt das Getränk („Cappuccino starten?“) und schließt mit dem Popup (blieb sonst stehen).
+    var title = T((d ? d.label : 'Getränk') + ' starten?');
+    var pop = window.casoraPopup && window.casoraPopup.element;
+    var withPopup = !!(pop && pop.hasAttribute && pop.hasAttribute('open'));
     if (why && window.casoraAsk) {
-      return window.casoraAsk({ title: title, text: T(why) + ' – ' + T('trotzdem starten?'), yes: T('Trotzdem starten'), stack: true })
+      return window.casoraAsk({ title: title, text: T(why) + ' – ' + T('trotzdem starten?'), yes: T('Trotzdem starten'), stack: true, withPopup: withPopup })
         .then(function (ok) { return ok ? run() : null; });
     }
     if (ask && window.casoraAsk) {
-      return window.casoraAsk({ title: title, text: T((d ? d.label : 'Getränk') + ' starten?'), yes: T('Starten') })
+      return window.casoraAsk({ title: title, text: '', yes: T('Starten'), withPopup: withPopup })
         .then(function (ok) { return ok ? run() : null; });
     }
     return run();
   };
+  // Wartender Start („Startet, sobald bereit“) abbrechen – das Gerät bleibt an, es wird nur nichts gestartet.
+  K.unwait = function (c) { var a = c.anchor; if (pending[a] !== 'wait') return; unwait[a] = true; pending[a] = null; busy[a] = 0; redraw(a); };
   K.cancel = function (hass, c) {
     var a = c.anchor;
     stopped[a] = Date.now();
@@ -927,7 +971,7 @@
     return K.stop(hass, c).then(function (ok) { if (!ok) { stopped[a] = 0; notice(T('Abbrechen hat nicht geklappt')); redraw(a); } return ok; });
   };
   (window._casoraMiHooks = window._casoraMiHooks || []).push(function (mid) {
-    var m = /^coffee-(pick|start|stop|more|go):(.*)$/.exec(String(mid || ''));
+    var m = /^coffee-(pick|start|stop|unwait|more|go):(.*)$/.exec(String(mid || ''));
     if (!m) return false;
     var hass = hassNow();
     // Nur am ersten „|“ trennen: Programmnamen dürfen selbst „|“ enthalten.
@@ -943,6 +987,7 @@
     var c = hass ? K.find(hass, p[0]) : null;
     if (!c) return true;
     if (m[1] === 'stop') { K.cancel(hass, c); return true; }
+    if (m[1] === 'unwait') { K.unwait(c); return true; }
     if (locked(p[0])) return true;
     if (m[1] === 'pick') {
       pick[p[0]] = pick[p[0]] === p[1] ? null : p[1];
@@ -978,19 +1023,25 @@
     if (K.blocked(c, s)) return out;
     var bev = K.drinks(c, S).filter(function (x) { return !x.care; });
     if (!bev.length) return out;
-    // Zuletzt gestartete zuerst, dann die meistgetrunkenen (Zähler mit gleichem Namen), dann die ersten der Liste.
+    // Zuletzt gestartete zuerst, dann die meistgetrunkenen (Zähler mit gleichem Namen), dann die ersten der Liste –
+    // je Stufe erst echte Getränke: Milch- und Wasserprogramme („Milchschaum“, „Heißwasser“) nur, wenn sonst nichts bleibt
+    // (der Zähler „Milchschaum“ stand sonst als meistgetrunken oben).
     var top = [];
-    var addRaw = function (raw) { var x = bev.filter(function (b) { return b.raw === raw; })[0]; if (x && top.indexOf(x) < 0 && top.length < 2) top.push(x); };
-    K.recent(c.anchor).forEach(addRaw);
-    s.perDrink.forEach(function (pd) { var x = bev.filter(function (b) { return b.label === pd.label; })[0]; if (x) addRaw(x.raw); });
-    bev.forEach(function (b) { addRaw(b.raw); });
+    var real = function (x) { return x.icon !== MILKJ && x.icon !== WATER; };
+    var addRaw = function (raw, any) { var x = bev.filter(function (b) { return b.raw === raw; })[0]; if (x && (any || real(x)) && top.indexOf(x) < 0 && top.length < 2) top.push(x); };
+    var recent = K.recent(c.anchor);
+    var most = s.perDrink.map(function (pd) { var x = bev.filter(function (b) { return b.label === pd.label; })[0]; return x ? x.raw : null; }).filter(Boolean);
+    [false, true].forEach(function (any) {
+      recent.forEach(function (r) { addRaw(r, any); });
+      most.forEach(function (r) { addRaw(r, any); });
+      bev.forEach(function (b) { addRaw(b.raw, any); });
+    });
     top.forEach(function (x) {
-      out.push({ key: 'fn', t: x.label + ' starten', ic: iconOf(x.icon), fn: function () { var h = hassNow() || hass; K.go(h, K.find(h, id), x.raw, true); } });
+      // Symbol des Getränks wie im Raster (eigene Masken kann das Halten-Menü seit 16.10. auch).
+      out.push({ key: 'fn', t: x.label + ' starten', ic: x.icon, fn: function () { var h = hassNow() || hass; K.go(h, K.find(h, id), x.raw, true); } });
     });
     return out;
   };
-  // Eigene Getränke-Symbole sind Masken (Name ohne „mdi:“); das Halten-Menü kann nur mdi-Symbole.
-  var iconOf = function (ic) { return /:/.test(ic) ? ic : 'mdi:coffee-outline'; };
 
   // ── Popup ─────────────────────────────────────────────────────────────────
   K.popup = function (entity, states, hass) {
@@ -1001,6 +1052,7 @@
     var c = K.find(hass, id);
     // Beim Öffnen immer die kurze Getränkeliste (D18).
     more[c.anchor] = false;
+    gridH[c.anchor] = 0;
     var watch = K.watch(c);
     var call = function (part) {
       return 'return window._casoraCoffee ? window._casoraCoffee.sec(' + JSON.stringify(part) + ', ' + JSON.stringify(c) + ', states, hass, this) : "";';
@@ -1019,12 +1071,14 @@
 
   var LBL = 'font-family:var(--primary-font-family, system-ui);';
   var remainTxt = function (s) {
-    return s.remain != null && s.remain > 0 ? (s.remain < 1 ? 'noch ' + Math.max(1, Math.round(s.remain * 60)) + '\u00a0s' : 'noch ' + Math.round(s.remain) + '\u00a0Min.') : null;
+    // Geschützte Leerzeichen: der Kopf brach sonst „noch / 27 s“ um.
+    return s.remain != null && s.remain > 0 ? (s.remain < 1 ? 'noch\u00a0' + Math.max(1, Math.round(s.remain * 60)) + '\u00a0s' : 'noch\u00a0' + Math.round(s.remain) + '\u00a0Min.') : null;
   };
-  // Großer Ring (Bezug): Spur in Sand, Bogen in Gerätefarbe, Prozent in der Mitte (nur hier, nicht im Kopf).
+  // Großer Ring (Bezug): Spur in Sand, Bogen in Gerätefarbe, in der Mitte nur das Prozent – Restzeit bzw. Phase stehen
+  // schon im Kopf („noch 27 s“ stand sonst doppelt).
   var ringHtml = function (s) {
     var p = Math.max(0, Math.min(100, s.pct || 0)), r = 52, L = 2 * Math.PI * r;
-    var under = (s.paused ? 'Pausiert' : s.phase) || remainTxt(s) || '';
+    var under = '';
     return '<div style="' + LBL + 'display:flex;justify-content:center;padding:var(--casora-space-1, 4px) 0 0;">'
       + '<div role="img" aria-label="' + esc(T(pctTxt(p))) + '" style="position:relative;width:var(--casora-coffee-ring, 140px);height:var(--casora-coffee-ring, 140px);">'
       + '<svg viewBox="0 0 120 120" style="display:block;width:100%;height:100%;transform:rotate(-90deg);">'
@@ -1113,10 +1167,13 @@
     return opts.map(function (o) {
       var m = /(\d{2,3})c$/.exec(optKey(o));
       var k = optKey(o);
-      return { raw: o, label: m ? m[1] + '°' : /normal/.test(k) ? 'Normal' : /high/.test(k) ? 'Hoch' : /max/.test(k) ? 'Max' : pretty(k), on: st.state === o };
+      return { raw: o, label: m ? m[1] + '\u00a0°C' : /normal/.test(k) ? 'Normal' : /high/.test(k) ? 'Hoch' : /max/.test(k) ? 'Max' : pretty(k), on: st.state === o };
     });
   };
-  // Menge: runde 50er-Schritte im erlaubten Bereich (höchstens fünf), die eingestellte kommt dazu.
+  // Menge: runde 50er-Schritte im erlaubten Bereich (höchstens fünf) – je Getränk (Bereich) eine feste Liste. Eine
+  // eingestellte Menge außerhalb kommt dazu und bleibt dabei, auch wenn danach eine Stufe gewählt wird (vorher fiel
+  // sie wieder weg, die Leiste wurde schmaler und die Chips sprangen). Ist kein Platz, ersetzt sie die nächste Stufe.
+  var amtKeep = {};
   K.amounts = function (st, max) {
     if (!st) return [];
     var a = st.attributes || {}, mn = num(a.min), mx = num(a.max), cur = num(st.state);
@@ -1126,8 +1183,21 @@
     if (!all.length) all = [Math.round(mn), Math.round(mx)];
     var lim = max || 5, out = all;
     if (all.length > lim) { out = []; for (var i = 0; i < lim; i++) { var v = all[Math.round(i * (all.length - 1) / (lim - 1))]; if (out.indexOf(v) < 0) out.push(v); } }
-    if (cur != null && out.indexOf(Math.round(cur)) < 0) { out.push(Math.round(cur)); out.sort(function (p, q) { return p - q; }); }
-    return out.map(function (v) { return { v: v, label: v + ' ml', on: cur != null && Math.round(cur) === v }; });
+    out = out.slice();
+    var c0 = cur != null ? Math.round(cur) : null;
+    var key = (st.entity_id || '') + '|' + mn + '|' + mx + '|' + lim;
+    if (c0 != null && out.indexOf(c0) < 0) amtKeep[key] = c0;
+    var extra = amtKeep[key];
+    if (extra != null && out.indexOf(extra) < 0) {
+      if (out.length < lim) out.push(extra);
+      else {
+        var near = 0;
+        out.forEach(function (v, i) { if (Math.abs(v - extra) < Math.abs(out[near] - extra)) near = i; });
+        out[near] = extra;
+      }
+      out.sort(function (p, q) { return p - q; });
+    }
+    return out.map(function (v) { return { v: v, label: v + '\u00a0ml', on: c0 === v }; });
   };
   // Pflege-Arten, die die Pflege-Zeilen zeigen (dort, nicht noch einmal unter „Hinweise“).
   var careArts = function (c, s) {
@@ -1150,21 +1220,19 @@
     var HH = window._casoraHH;
     var a = c.anchor;
     if (part === 'hero') {
-      // Kopf: höchstens eine Warnung (+N); mit bekanntem Grund steht die Warnung vorn („Wasser nachfüllen“).
+      // Kopf: höchstens eine Warnung, ohne „+N“ (alle stehen unter „Hinweise“); mit bekanntem Grund steht die Warnung
+      // vorn („Wasser nachfüllen“). Beim Bezug hängt nur eine blockierende Warnung an (keine Pflege-Erinnerung).
       var main = s.label, tone = s.st === 'fehler' ? 'bad' : null, rest = [];
       var ws = s.warns.slice();
       if (s.st === 'bezieht' || s.st === 'pflege') {
         var rt = remainTxt(s);
         if (s.paused) { /* „Pausiert“ steht schon vorn */ } else if (rt) rest.push(rt); else if (s.phase) rest.push(s.phase);
+        ws = ws.filter(blocking);
       } else if (ws.length && /^(bereit|fertig|aktion_noetig)$/.test(s.st)) {
-        main = ws[0].label; tone = ws[0].sev; ws = ws.slice(1);
-        if (ws.length) rest.push('+' + ws.length);
+        main = ws[0].label; tone = ws[0].sev;
         ws = [];
       }
-      if (ws.length) {
-        rest.push({ text: ws[0].label, tone: ws[0].sev });
-        if (ws.length > 1) rest.push({ text: '+' + (ws.length - 1), tone: ws[0].sev });
-      }
+      if (ws.length) rest.push({ text: ws[0].label, tone: ws[0].sev });
       if (c.fam === 'plug' && s.plugW != null) rest.push(fmtW(s.plugW));
       return UI.line(main, rest, { tone: tone });
     }
@@ -1178,7 +1246,9 @@
       var stopRecent = stopped[a] && Date.now() - stopped[a] < STOP_SHOW_MS;
       // Läuft ein Bezug: Ring (bzw. eine Zeile ohne Prozent) und darunter direkt „Abbrechen“ – einstufig, wirkt sofort.
       if (s.st === 'bezieht' || s.st === 'pflege') {
-        var run = GRID_CSS + '<div class="cof-run">';
+        // Höhe des Rasters halten (breit, zwei Spalten): beim Start sprang das Popup sonst von ~880 auf ~570 px.
+        var hold = !narrowNow() && gridH[a] ? 'min-height:' + gridH[a] + 'px;justify-content:center;' : '';
+        var run = GRID_CSS + '<div class="cof-run"' + (hold ? ' style="' + hold + '"' : '') + '>';
         if (K.ring(s) != null) run += ringHtml(s);
         else {
           var d = s.drink;
@@ -1189,9 +1259,14 @@
         else if (c.stop && S[c.stop] && S[c.stop].state !== 'unavailable' && !s.aborting) {
           run += '<div class="cof-stop" role="button" tabindex="0" data-casora-mi="' + esc('coffee-stop:' + a) + '"><ha-icon icon="mdi:stop"></ha-icon><span>'
             + esc(T('Abbrechen')) + '</span></div>';
+        } else if (!c.stop && !s.aborting) {
+          // Ohne Abbrechen-Taste (De'Longhi u. a.): sagen, wo es geht – statt den Knopf still wegzulassen.
+          run += UI.note ? UI.note('Abbrechen geht nur an der Maschine') : '';
         }
         return run + '</div>';
       }
+      // Höhe des Rasters merken (nach dem Zeichnen), damit der Bezug sie halten kann.
+      if (el && typeof requestAnimationFrame === 'function') requestAnimationFrame(function () { if (el.isConnected && el.offsetHeight > 0) gridH[a] = el.offsetHeight; });
       var list = K.drinks(c, S);
       var bev = list.filter(function (x) { return !x.care; });
       if (!bev.length) {
@@ -1202,7 +1277,7 @@
       var why = K.blocked(c, s);
       var lock = locked(a);
       var chosen = K.picked(c, S);
-      var narrow = typeof window !== 'undefined' && window.innerWidth <= 760;
+      var narrow = narrowNow();
       // Handy: zwei Reihen, damit „Starten“ ohne Scrollen erreichbar bleibt (U2).
       var base = narrow ? 6 : 9;
       var shown = bev.slice(0, more[a] ? 99 : base);
@@ -1218,7 +1293,7 @@
       html += '<div class="cof-grid">' + shown.map(function (x) {
         var on = x.raw === chosen, off = why || lock;
         return '<div class="cof-d' + (on ? ' on' : '') + (off ? ' dis' : '') + '" role="button" aria-pressed="' + (on ? 'true' : 'false') + '"'
-          + (off ? '' : ' data-casora-mi="' + esc('coffee-pick:' + a + '|' + x.raw) + '"') + '>'
+          + (off ? ' aria-disabled="true"' : ' tabindex="0" data-casora-mi="' + esc('coffee-pick:' + a + '|' + x.raw) + '"') + '>'
           + iconHtml(x.icon) + '<div class="n">' + esc(T(x.label)) + '</div></div>';
       }).join('') + '</div>';
       if (bev.length > base) {
@@ -1235,9 +1310,12 @@
         var pend = pending[a];
         var go = pend === 'wait' ? 'Startet, sobald bereit' : pend === 'go' ? 'Startet …' : (s.power === false ? 'Einschalten und ' + nm + ' starten' : nm + ' starten');
         html += '<div class="cof-go">' + (HH && HH.pillCss ? HH.pillCss : '') + '<div class="hh-pills"><div class="hh-pill pri' + (pend ? ' wait' : '') + '" role="button"'
-          + (pend || lock ? '' : ' data-casora-mi="' + esc('coffee-start:' + a + '|' + chosen) + '"') + '>'
+          + (pend || lock ? ' aria-disabled="true"' : ' tabindex="0" data-casora-mi="' + esc('coffee-start:' + a + '|' + chosen) + '"') + '>'
           + '<ha-icon icon="' + (pend ? 'mdi:timer-sand' : 'mdi:play') + '" style="--mdc-icon-size:20px;width:20px;height:20px;display:block;pointer-events:none;"></ha-icon>'
           + '<span style="pointer-events:none;">' + esc(T(go)) + '</span></div></div></div>';
+        // Wartet auf „bereit“ (nach dem Einschalten): abbrechbar – sonst startete der Bezug noch Minuten später.
+        if (pend === 'wait') html += '<div class="cof-stop cof-unwait" role="button" tabindex="0" style="margin-top:var(--casora-space-2, 8px);" data-casora-mi="'
+          + esc('coffee-unwait:' + a) + '"><ha-icon icon="mdi:close"></ha-icon><span>' + esc(T('Start abbrechen')) + '</span></div>';
         var sw = function (id, items, label, svcOf) {
           if (!id || !S[id] || !items.length) return '';
           return '<div style="height:var(--casora-space-4, 16px)"></div>' + UI.segments(items.map(function (it) {
@@ -1270,7 +1348,9 @@
         var due = s.warns.filter(function (w) { return w.art === k && isCare(w); })[0];
         var pre = s.pre.filter(function (p) { return p.art === k; })[0];
         // Eine Unterzeile nur, wenn sie etwas sagt: bei „Fällig“ die Anleitung, sonst keine (D15).
-        cr.push({ icon: WARN_TXT[k][2], iconTone: due ? (due.sev === 'bad' ? 'bad' : 'warn') : pre && pre.cups <= 10 ? 'warn' : 'good', label: CARE_NAME[k],
+        // Symbol mit 3:1 auf der Platte: Fällig/Vorwarnung Tieforange (Orange war zu hell), „OK“ ruhig in Sand (Hellgrün lag darunter).
+        var careTone = due ? (due.sev === 'bad' ? 'bad' : COLOR.warn) : pre && pre.cups <= 10 ? COLOR.warn : 'rgba(0,0,0,0)';
+        cr.push({ icon: WARN_TXT[k][2], iconTone: careTone, label: CARE_NAME[k],
           sub: due ? due.sub : null, subWrap: !!due,
           value: due ? (due.sev === 'bad' ? 'Überfällig' : 'Fällig') : pre ? 'In ' + cupsTxt(pre.cups) : 'OK',
           valueTone: due ? due.sev : pre && pre.cups <= 10 ? 'warn' : null });

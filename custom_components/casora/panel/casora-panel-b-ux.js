@@ -94,7 +94,8 @@
   // Kaffeevollautomaten erkennen (Kurzfassung von scripts/local/25-kaffee.js – das Studio lädt die Dashboard-Module
   // nicht): Integration oder Kaffee-Schlüssel am Gerät (Home Connect und Miele bauen auch Waschmaschinen).
   const COFFEE_PLATFORMS = new Set(["delonghi_primadonna", "delonghi_coffee", "delonghi_coffeelink", "jura", "melitta_barista", "lamarzocco"]);
-  const COFFEE_KEY = /coffee(counter|temperature|cups)|beanamount|beancontainer|coffeebeans|totalcoffee|brewingactive|brewactive|machinestatus|makebeverage|beveragecounter/;
+  // „machinestatus“ nur als ganzer Schlüssel (De'Longhi): als Teil traf er „Washing Machine Status“ einer Waschmaschine.
+  const COFFEE_KEY = /coffee(counter|temperature|cups)|beanamount|beancontainer|coffeebeans|totalcoffee|brewingactive|brewactive|makebeverage|beveragecounter/;
   const COFFEE_OPT = /coffeemaker|cappuccino|espresso|lattemacchiato/;
   const coffeeNk = (x) => String(x == null ? "" : x).toLowerCase().replace(/[\s_.\-]/g, "");
   // Wie im Modul (keyOf): home_connect_alt nennt alle Entitäten einer Art gleich (statuses, settings, options, programs),
@@ -130,7 +131,7 @@
     const out = [];
     byDev.forEach((list, dev) => {
       const yes = list.some((e) => COFFEE_PLATFORMS.has(e.platform)
-        || COFFEE_KEY.test(coffeeKey(e) || coffeeTail(e))
+        || COFFEE_KEY.test(coffeeKey(e) || coffeeTail(e)) || coffeeKey(e) === "machinestatus"
         || (((S[e.entity_id] || {}).attributes || {}).options || []).some((o) => COFFEE_OPT.test(coffeeNk(o))));
       if (!yes) return;
       const k = (e) => coffeeKey(e);

@@ -306,6 +306,7 @@
     + '.ic{width:var(--casora-ic-row, 36px);height:var(--casora-ic-row, 36px);border-radius:50%;display:flex;align-items:center;justify-content:center;'
     +   'background:var(--casora-icon-circle-bg, rgba(140,115,90,0.12));color:var(--casora-popup-tiles-text-primary, currentColor);}'
     + '.ic ha-icon{--mdc-icon-size:20px;width:20px;height:20px;display:flex;}'
+    + '.ic i{display:block;width:22px;height:22px;background-color:currentColor;-webkit-mask:var(--m) center / contain no-repeat;mask:var(--m) center / contain no-repeat;}'
     + '.row.main{background:var(--casora-soft-row-active, rgba(127,127,127,0.10));box-shadow:var(--casora-soft-row-active-shadow, none);}'
     + '.row.main .ic{background:var(--casora-hold-hue, var(--casora-color-teal, #4E9E95));color:var(--casora-soft-glyph, #fff);}'
     + '@media (prefers-reduced-motion: reduce){.pane,.pane.sheet,.veil,.lift{transition:opacity .12s linear !important;transform:none !important;}.row:active,.row.press,.pill:active,.pill.press{transform:none;}}'
@@ -383,9 +384,15 @@
   var html = function (m, c) {
     var out = '';
     // lit: selbst gewählter Text (Nachricht einer Klingel) – nicht übersetzen.
+    // Symbol: mdi:… über ha-icon, ein Casora-Symbol ohne „:“ (Getränke der Kaffee-Kachel) als Maske wie im Popup.
+    var glyph = function (ic) {
+      if (/:/.test(String(ic || ''))) return '<ha-icon icon="' + esc(ic) + '"></ha-icon>';
+      var url = typeof window.casoraIconUrl === 'function' ? window.casoraIconUrl(ic) : '/casora_assets/icons/' + ic + '.svg';
+      return '<i style="--m:url(\'' + esc(url) + '\')"></i>';
+    };
     var row = function (key, t, ic, cls, sub, i, lit) {
       return '<div class="row' + (cls ? ' ' + cls : '') + '" role="menuitem" tabindex="-1" data-k="' + esc(key) + '"' + (i != null ? ' data-i="' + i + '"' : '') + '>'
-        + '<div class="ic"><ha-icon icon="' + esc(ic) + '"></ha-icon></div><span' + (lit ? ' data-no-i18n' : '') + '>' + esc(lit ? t : T(t)) + '</span>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div>';
+        + '<div class="ic">' + glyph(ic) + '</div><span' + (lit ? ' data-no-i18n' : '') + '>' + esc(lit ? t : T(t)) + '</span>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div>';
     };
     // Handy: Kopf mit Name und Zustand nur, wenn das Blatt die Kachel verdeckt (sonst steht beides scharf darüber).
     if (c.phone) out += '<div class="head"><b>' + esc(c.name) + '</b>' + (c.state ? '<span>' + esc(c.state) + '</span>' : '') + '</div>';

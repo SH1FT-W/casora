@@ -2041,6 +2041,9 @@
   "Bohnenbehälter einsetzen, bis er einrastet": "Insert the bean container until it clicks",
   "Verbindung zur Maschine prüfen": "Check the connection to the machine",
   "Eingeschaltet, aber noch nicht bereit – Getränk an der Maschine starten": "Turned on, but not ready yet – start the drink on the machine",
+  "Ausgewählt – Getränk an der Maschine starten": "Selected – start the drink on the machine",
+  "Start abbrechen": "Cancel start",
+  "Abbrechen geht nur an der Maschine": "You can only cancel on the machine",
   "Start hat nicht geklappt": "Start failed",
   "Abbrechen hat nicht geklappt": "Canceling failed",
   "Wasser ist leer": "Water is empty",
@@ -4129,6 +4132,10 @@
   [
    "^(\\d+) heute$",
    "{1} today"
+  ],
+  [
+   "^(\\d+) % ([A-Za-zÄÖÜäöüß].*)$",
+   "{1}% {2}"
   ]
  ]
 }
