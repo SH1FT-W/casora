@@ -1,0 +1,31 @@
+// Seit 1.6.1 nur noch die Designs „Casora“ und „Casora Nebel“ (Hemma 1/2 entfernt).  node dev/unit/designs_nur_casora.mjs
+// Auswahl im Assistenten und im Studio, Umstellung alter Namen im Browser, keine verwaisten Vorschaubilder.
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+
+const cc = new URL('../../custom_components/casora/', import.meta.url);
+const read = (p) => fs.readFileSync(new URL(p, cc), 'utf8');
+const src = read('panel/casora-panel.js');
+const from = src.indexOf('const CASORA_THEME = ');
+const to = src.indexOf('const isCasoraTheme = ', from);
+assert.ok(from > 0 && to > from);
+const { CASORA_THEMES, THEME_RENAMED } = new Function(src.slice(from, to) + '\nreturn { CASORA_THEMES, THEME_RENAMED };')();
+
+assert.deepEqual(CASORA_THEMES.map((x) => x.name), ['Casora', 'Casora Nebel'], 'nur Casora und Nebel zur Wahl');
+for (const old of ['Hemma 2', 'Hemma 1', 'Casora Standard', 'Casora Glass', 'Casora Weich']) {
+  assert.equal(THEME_RENAMED[old], 'Casora', old + ' → Casora');
+}
+// Bilder der Auswahl gibt es, die der alten Designs nicht mehr
+for (const x of CASORA_THEMES) for (const u of Object.values(x.shot)) {
+  assert.ok(fs.existsSync(new URL('assets/themes/' + u.split('/').pop(), cc)), 'Vorschau fehlt: ' + u);
+}
+const imgs = fs.readdirSync(new URL('assets/themes/', cc));
+assert.ok(!imgs.some((f) => /^(hemma|glass|perf-glass)-/.test(f)), 'keine Hemma-Vorschaubilder mehr');
+assert.ok(!/perf-glass|"glass"|look-glass|Hemma 1 \(Legacy\)|Hemma 2 \(Legacy\)/.test(src + read('panel/casora-panel-addons.js')),
+  'kein Glas-/Legacy-Zweig in der Design-Wahl');
+// Browser: ein altes Theme wechselt nur, wenn es das alte nicht mehr gibt (Hemmas „Hemma“ bleibt, solange es da ist)
+assert.ok(/hass\.themes\.themes\[to\] && !hass\.themes\.themes\[sel\.theme\]/.test(src), 'Browser-Umstellung prüft altes Theme');
+// Integration meldet nur theme_*.yaml an, kein Glas-Theme mehr
+assert.ok(!fs.existsSync(new URL('theme_glass.yaml', cc)), 'theme_glass.yaml entfernt');
+assert.ok(/^Casora Basis:/m.test(read('theme.yaml')), 'theme.yaml = Grundwerte, kein Design');
+console.log('ok designs_nur_casora');

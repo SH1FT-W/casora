@@ -20,7 +20,7 @@ const pick = (H) => H(() => { const rs = window.__panel()._state.compact.rooms;
 // ── Desktop 1600 ────────────────────────────────────────────────────────────────
 {
   const { page, browser, context } = await open({ width: 1600, height: 1000, dark: false });
-  await context.addInitScript(() => localStorage.setItem('selectedTheme', JSON.stringify({ theme: 'Hemma 2' })));
+  await context.addInitScript(() => localStorage.setItem('selectedTheme', JSON.stringify({ theme: 'default' })));
   await studio(page, dash.url);
   const H = (fn, a) => page.evaluate(fn, a);
   await H(() => window.__panel()._bClose && window.__panel()._bClose());

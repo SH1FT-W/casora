@@ -212,7 +212,7 @@ const askClick = (page, cls) => page.evaluate((cls) => { const h = document.quer
 
 // ── Standard-Look: keine Schloss-Ansicht, seit 1.5 aber auch kein HA-Dialog (Casora-Seite mit ‹) ──────
 {
-  const page = await setup({ width: 1440, height: 900, dark: false, theme: 'Hemma 2' });
+  const page = await setup({ width: 1440, height: 900, dark: false, theme: 'default' });
   await openPopup(page, false);
   const at = await rowAt(page, A);
   if (at) {

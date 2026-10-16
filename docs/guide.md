@@ -42,7 +42,7 @@ Casora checks the requirements when you first open the Studio and links you to a
 
 The first time you open Casora Studio, it greets you with a short welcome. The setup assistant then walks you through these pages. **Back** works on every page, and nothing is created until the end.
 
-1. **Choose your look.** *Casora* is the default: warm linen, soft shadows and big round corners. The two classic looks from Hemma are offered as *Hemma 2 (Legacy)* and *Hemma 1 (Legacy)*. The look is applied the moment you pick it. More in [Looks and fonts](#looks-and-fonts).
+1. **Choose your look.** *Casora* is the default: warm linen, soft shadows and big round corners. *Casora Nebel* is the same design in cool grey with a petrol accent. The look is applied the moment you pick it. More in [Looks and fonts](#looks-and-fonts).
 2. **Choose your font.** *Inter* is Casora's font. *Hanken Grotesk* is a little rounder, and *System font* uses the device's own (SF Pro on Apple devices). Each option shows a large specimen.
 3. **Smooth on every screen.** *Automatic* lets each device choose for itself, *All effects* keeps glass, blur and depth everywhere, and *Reduced effects* uses clear panels for older tablets. With *Automatic*, older wall tablets switch to reduced effects on their own.
 4. **Existing dashboard found.** This page only appears if Casora finds something to bring along: a Hemma dashboard (*Take over from Hemma*, see [Moving from Hemma](#moving-from-hemma)) or a Casora dashboard in YAML (*Import YAML dashboard*). Each is shown as a live preview. *Start from scratch* continues with the steps below.
@@ -80,10 +80,9 @@ These are the same options as in Home Assistant under Settings → Devices & ser
 | Look | What it is |
 |---|---|
 | **Casora** | The default. Warm linen and sand, large corners, soft shadows, in light and dark. Its theme has the same name in your Home Assistant profile. |
-| **Hemma 2 (Legacy)** | The original dark glass over your room photos, exactly as before. |
-| **Hemma 1 (Legacy)** | Clear glass tiles that let the room shine through. |
+| **Casora Nebel** | The same design in cool light grey with a petrol accent. |
 
-All three follow Home Assistant's light and dark mode. You can change the look later under Studio → **Look & Controls → Design**. Older Hemma dashboards keep their look under Casora's themes.
+Both follow Home Assistant's light and dark mode. You can change the look later under Studio → **Look & Controls → Design**. The legacy looks Hemma 2 and Hemma 1 were removed in 1.6.1; if you used one, Casora switches you to *Casora* once.
 
 The font is **Inter** in every look. You can switch to Hanken Grotesk or the system font under **Look & Controls → Text**, and upload fonts you hold a licence for there as well (for example Gilroy). Casora doesn't ship commercial fonts itself.
 

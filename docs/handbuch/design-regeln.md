@@ -1,9 +1,9 @@
 # Design-Regeln
 
 Gilt für Dashboard (Kacheln, Badges, Popups, Menüs, Handy) und – wo genannt – Studio. Maßstab ist das
-Theme **„Casora“** (`custom_components/casora/theme_weich.yaml`), hell und dunkel. „Hemma 2“/„Hemma 1“
-(Standard-Look für umgezogene Häuser) und „Casora Nebel“ müssen weiter funktionieren, bestimmen aber
-nicht das Maß.
+Theme **„Casora“** (`custom_components/casora/theme_weich.yaml`), hell und dunkel. „Casora Nebel“ und
+Dashboards ohne Casora-Theme (eigenes HA-Theme, Rückfall-Look) müssen weiter funktionieren, bestimmen aber
+nicht das Maß. Die Legacy-Designs „Hemma 2“/„Hemma 1“ gibt es seit 1.6.1 nicht mehr.
 
 Grundsatz: **Werte kommen aus Theme-Variablen oder aus den Kern-Bausteinen**, nicht als feste Zahl
 im neuen Code. Wo ein fester Wert nötig ist (Rückfallwert in `var(--x, …)`), nimmt man den Wert der Variable.
@@ -14,8 +14,8 @@ im neuen Code. Wo ein fester Wert nötig ist (Rückfallwert in `var(--x, …)`),
 
 Gilt: Die Werte stehen **einmal** als CSS-Variablen im Theme „Casora“ (`theme_weich.yaml`, Abschnitt
 „Designsprache“; „Casora Nebel“ wird daraus gebaut). Neuer Code nimmt nur diese Variablen; feste Zahlen nur
-als Rückfallwert `var(--casora-r-row, 24px)` – der Rückfallwert ist der **alte** Wert, damit Hemma 1/2 (die die
-Tokens nicht setzen) unverändert bleiben. Umgestellt sind Popups (1.3, um-popups) und seit um-tokens auch
+als Rückfallwert `var(--casora-r-row, 24px)` – der Rückfallwert ist der **alte** Wert, damit Dashboards ohne
+Casora-Theme (bis 1.6.0 auch Hemma 1/2) unverändert bleiben. Umgestellt sind Popups (1.3, um-popups) und seit um-tokens auch
 Kacheln, Badges, Raumkarten, Menüs (Glocke, ⋯, Räume, Szenen, Raumleisten-Menü), Navigationsleisten und Studio.
 
 | Gruppe | Variablen | Werte |
@@ -153,8 +153,8 @@ Studio heute: eigener Satz `--t-caption 12 · --t-foot 13 · --t-callout 15 · -
 --t-large 34` (`casora-panel.js`). Neue Studio-Regeln nehmen nur diese.
 
 Gilt (Studio-Schrift, entschieden 11.10.2026): Das Studio schreibt im Casora- und Nebel-Look **Inter**
-(`--casora-font-studio`, siehe § 0), Radien aus den Tokens (12/12/18/32). Hemma 1/2 setzen das Token nicht
-und bleiben bei SF/System.
+(`--casora-font-studio`, siehe § 0), Radien aus den Tokens (12/12/18/32). Ohne Casora-Theme fehlt das Token,
+dann bleibt es bei SF/System.
 
 Gilt (Sprachen-Frage 1, entschieden B): Abschnittsüberschriften sind **normale Überschriften** („Räume“,
 nicht „RÄUME“), 17/700 – in Popups umgesetzt über `--casora-h15-fs/-fw/-ls/-tt/-c` (Weich-Rahmen) bzw.

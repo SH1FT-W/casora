@@ -78,8 +78,6 @@ THEMES_HEMMA = "themes/hemma"
 # Alte Hemma-Installation ohne HACS: YAML-Dashboards und Vorlagen unter /config/dashboards.
 YAML_HEMMA = ("dashboards/hemma", "dashboards/templates")
 CASORA_DEFAULT_THEME = "Casora"
-# Casoras eigene Legacy-Looks – heißen wie Hemma, sind aber kein Hemma-Theme.
-CASORA_HEMMA_LOOKS = ("hemma 1", "hemma 2")
 # Hemma-Helfer, deren Wert Casora übernimmt (wie carryHelpers im Umzug, casora-panel-umzug.js).
 CARRY = ("input_boolean.dashboard_redirect", "input_boolean.motion_badges", "input_boolean.now_playing_minimized",
          "input_text.now_playing_pinned", "input_select.thermostat_mode", "input_number.thermostat_target_temperature",
@@ -1148,7 +1146,7 @@ async def async_remove(hass: HomeAssistant, remove_dashboards: list[str] | None,
             errs.append(str(err))
         for key, mode in (("frontend_default_theme", None), ("frontend_default_dark_theme", "dark")):
             cur = hass.data.get(key)
-            if cur and str(cur).lower().startswith("hemma") and str(cur).lower() not in CASORA_HEMMA_LOOKS:
+            if cur and str(cur).lower().startswith("hemma"):
                 data = {"name": CASORA_DEFAULT_THEME, **({"mode": mode} if mode else {})}
                 try:
                     await hass.services.async_call("frontend", "set_theme", data, blocking=True)

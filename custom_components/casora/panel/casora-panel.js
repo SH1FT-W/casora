@@ -36,12 +36,12 @@ const SETUP_ENTITIES = [
   "input_boolean.casora_mobile_navigation", "input_text.casora_thermostat_active_entity",
   "script.casora_light_smart_toggle", "script.casora_thermostat_overlay_toggle",
 ];
-// Weich ist seit 01.10.2026 DAS Casora-Design; Standard und Glas laufen als Legacy weiter.
+// Weich ist seit 01.10.2026 DAS Casora-Design; die Legacy-Designs Hemma 1/2 gibt es seit 1.6.1 nicht mehr.
 const CASORA_THEME = "Casora";
-const CASORA_LEGACY = "Hemma 2";
-// Frühere Theme-Namen (05.10.2026 umbenannt) → heutiger Name; helfer.py THEME_RENAMED.
-const THEME_RENAMED = { "Casora Weich": "Casora", "Casora Standard": "Hemma 2", "Casora Glass": "Hemma 1" };
-// The looks offered on first run. Each ships in theme.yaml; the photo is the preview.
+// Frühere Theme-Namen → heutiger Name; helfer.py THEME_RENAMED (+ „Hemma“, nur wenn es nicht mehr da ist).
+const THEME_RENAMED = { "Casora Weich": "Casora", "Casora Standard": "Casora", "Casora Glass": "Casora",
+  "Hemma 2": "Casora", "Hemma 1": "Casora", "Hemma": "Casora" };
+// The looks offered on first run. Each ships in theme_*.yaml; the photo is the preview.
 // aliases: weitere Namen, unter denen dasselbe Theme registriert ist (Übergang von Hemma).
 // shot: echter Dashboard-Screenshot je Modus als Vorschau.
 const CASORA_THEMES = [
@@ -52,10 +52,6 @@ const CASORA_THEMES = [
   { name: "Casora Nebel", label: "Casora Nebel", sub: "Cool light gray with a teal accent, slightly crisper corners.",
     shot: { light: "/casora_assets/themes/nebel-light.webp", dark: "/casora_assets/themes/nebel-dark.webp" },
     ph: { light: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23EEF1F3%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2226%22%20width%3D%22120%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%23D5DCE1%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23FFFFFF%22/%3E%3Crect%20x%3D%22116%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23FFFFFF%22/%3E%3Crect%20x%3D%2224%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%23FFFFFF%22/%3E%3Crect%20x%3D%22168%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%23FFFFFF%22/%3E%3Ccircle%20cx%3D%2246%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%233F7491%22/%3E%3Ccircle%20cx%3D%22190%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%233F7491%22%20opacity%3D%22.35%22/%3E%3C/svg%3E")', dark: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%231C2226%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2226%22%20width%3D%22120%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%2338434A%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%232A3237%22/%3E%3Crect%20x%3D%22116%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%232A3237%22/%3E%3Crect%20x%3D%2224%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%232A3237%22/%3E%3Crect%20x%3D%22168%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%232A3237%22/%3E%3Ccircle%20cx%3D%2246%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%235E9AB8%22/%3E%3Ccircle%20cx%3D%22190%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%235E9AB8%22%20opacity%3D%22.35%22/%3E%3C/svg%3E")' } },
-  { name: CASORA_LEGACY, aliases: ["Casora Standard", "Hemma"], label: "Hemma 2 (Legacy)", sub: "The original dark glass over your room photos.",
-    legacy: true, shot: { light: "/casora_assets/themes/hemma-light.webp", dark: "/casora_assets/themes/hemma-dark.webp" } },
-  { name: "Hemma 1", aliases: ["Casora Glass"], label: "Hemma 1 (Legacy)", sub: "Clear glass tiles that let the room shine through.",
-    legacy: true, shot: { light: "/casora_assets/themes/glass-light.webp", dark: "/casora_assets/themes/glass-dark.webp" } },
 ];
 const isCasoraTheme = (n) => !!n && CASORA_THEMES.some((x) => x.name === n || (x.aliases || []).includes(n));
 
@@ -5828,7 +5824,8 @@ class CasoraPanel extends HTMLElement {
       try {
         const sel = JSON.parse(localStorage.getItem("selectedTheme") || "null");
         const to = sel && THEME_RENAMED[sel.theme];
-        if (to && hass.themes && hass.themes.themes && hass.themes.themes[to]) {
+        // Nur wenn es das alte Theme nicht mehr gibt (z. B. Hemmas eigenes „Hemma“ bleibt, solange es da ist).
+        if (to && hass.themes && hass.themes.themes && hass.themes.themes[to] && !hass.themes.themes[sel.theme]) {
           const detail = { theme: to };
           if (typeof sel.dark === "boolean") detail.dark = sel.dark;
           setTimeout(() => this.dispatchEvent(new CustomEvent("settheme", { detail, bubbles: true, composed: true })), 0);
@@ -13349,7 +13346,8 @@ class CasoraPanel extends HTMLElement {
     try { local = JSON.parse(localStorage.getItem("selectedTheme") || "null"); } catch (e) { local = null; }
     const current = (local && local.theme && local.theme !== "default") ? local.theme : t.default_theme;
     const ours = themes.find((x) => x.name === current || (x.aliases || []).includes(current));
-    const own = current && current !== "default" && !ours ? current : null;
+    // Eigenes Theme nur anbieten, wenn es das noch gibt (nicht z. B. das entfernte „Hemma 2“).
+    const own = current && current !== "default" && !ours && have[current] ? current : null;
     // Ersteinrichtung: immer „Standard“ vorschlagen. Erneut gestartet (es gibt schon ein
     // Dashboard): das Design, das gerade aktiv ist.
     let pick = (this._dashUrl && ours) ? ours.name : themes[0].name;
@@ -13494,8 +13492,8 @@ class CasoraPanel extends HTMLElement {
     let look = this._lookPick;
     if (!look) { try { look = (JSON.parse(localStorage.getItem("selectedTheme") || "null") || {}).theme; } catch (e) { look = null; } }
     look = THEME_RENAMED[look] || look;
-    // Nebel hat eigene Bilder (perf-nebel-*), gleicher Aufbau wie Weich.
-    const set = look === "Hemma 1" ? "glass" : look === "Casora Nebel" ? "nebel" : look === CASORA_THEME ? "weich" : "std";
+    // Nebel hat eigene Bilder (perf-nebel-*), gleicher Aufbau wie Weich; std = eigenes Theme (Dashboard ohne Casora-Look).
+    const set = look === "Casora Nebel" ? "nebel" : look === CASORA_THEME ? "weich" : "std";
     const shot = (mode) => shotLang("/casora_assets/themes/perf-" + set + "-" + mode + "-" + (dark ? "dark" : "light") + ".webp", this._hass);
     const grid = document.createElement("div");
     grid.className = "themegrid perfgrid";

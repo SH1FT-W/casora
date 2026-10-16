@@ -1,6 +1,8 @@
-# Casora
+# Casora – Grundwerte. Kein eigenes Design (bis 1.6 das Legacy-Design „Hemma 2“):
+# helfer.py legt „Casora“ (theme_weich.yaml) darüber, „Casora Nebel“ wiederum über Casora.
+# Registriert wird nur, was in theme_*.yaml steht.
 
-Hemma 2: &casora_theme
+Casora Basis: &casora_theme
   modes:
     light:
       # ------------------------------------------------------------------------
@@ -1021,7 +1023,7 @@ Hemma 2: &casora_theme
   # Layout engine
   # ----------------------------------------------------------------------------
 
-  card-mod-theme: "Hemma 2"
+  card-mod-theme: "Casora"
 
   card-mod-root-yaml: |
     .: |
@@ -1643,7 +1645,7 @@ Hemma 2: &casora_theme
   # View backgrounds
   # ----------------------------------------------------------------------------
 
-  uix-theme: "Hemma 2"
+  uix-theme: "Casora"
 
   uix-drawer: |
     .mdc-drawer, .sidebar-shell {

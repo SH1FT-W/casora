@@ -118,7 +118,7 @@ const tapAndRead = async (pg) => {
   return { thrown, res };
 };
 
-const RUNS = [{ theme: 'Casora', lang: null }, { theme: 'Hemma 2', lang: null }, { theme: 'Casora', lang: 'en' },
+const RUNS = [{ theme: 'Casora', lang: null }, { theme: 'default', lang: null }, { theme: 'Casora', lang: 'en' },
   { theme: 'Casora', lang: null, mobile: true }];
 for (const run of RUNS) {
   const tag = run.theme + (run.lang ? ' ' + run.lang : '') + (run.mobile ? ' Handy' : '');

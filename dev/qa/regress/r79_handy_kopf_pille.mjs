@@ -7,7 +7,7 @@
 // Erwartet (iPhone 393×852, Theme „Casora“ hell und „Casora Nebel“ dunkel): Raum gescrollt = Pille
 // sichtbar mit Raumnamen, schmaler als der Bildschirm, kein Vollbreiten-Balken, Zurück-Pfeil
 // ausgeblendet; Startseite gescrollt = weicher Verlauf statt Glasbalken mit Kante, Pille endet vor
-// Glocke/Menü. Hemma 2: alter Balken unverändert (Vollbreite, keine Pille).
+// Glocke/Menü. Ohne Casora-Theme (bis 1.6.0 „Hemma 2“): alter Balken unverändert (Vollbreite, keine Pille).
 import { open, casoraDashboards, dashboard, check, need, finish, usePage } from './lib.mjs';
 
 const all = await casoraDashboards();
@@ -139,22 +139,22 @@ for (const [theme, dark] of [['Casora', false], ['Casora Nebel', true]]) {
   if (process.env.R79_BILDER) await page.screenshot({ path: `${process.env.CASORA_OUT}/r79_${tag.replace(/ /g, '_')}.png` });
 }
 
-// Hemma 2: alter Balken unverändert.
+// Ohne Casora-Theme (Rückfall-Look, bis 1.6.0 „Hemma 2“): alter Balken unverändert.
 {
-  const { page } = await open({ width: 393, height: 852, mobile: true, scale: 2, dark: true, theme: 'Hemma 2' });
+  const { page } = await open({ width: 393, height: 852, mobile: true, scale: 2, dark: true, theme: 'default' });
   usePage(page);
   await dashboard(page, phone.url, 3);
   await page.waitForTimeout(1500);
   // Gate 1.1.1: einmal stand die Seite trotz „Hemma 2“ im Casora-Look (Messwerte wie Nebel) – das
-  // Theme hatte noch nicht gegriffen. Erst messen, wenn Hemma 2 wirklich gilt; sonst neu setzen.
+  // Theme hatte noch nicht gegriffen. Erst messen, wenn der Rückfall-Look wirklich gilt; sonst neu setzen.
   const hemma = () => page.waitForFunction(() => window._casoraSoft && !window._casoraSoft(), null, { timeout: 8000 }).then(() => true, () => false);
   if (!(await hemma())) {
     await page.evaluate(() => document.querySelector('home-assistant')
-      .dispatchEvent(new CustomEvent('settheme', { detail: { theme: 'Hemma 2', dark: true }, bubbles: true, composed: true })));
-    await need('Hemma 2: Theme gilt', await hemma());
+      .dispatchEvent(new CustomEvent('settheme', { detail: { theme: 'default', dark: true }, bubbles: true, composed: true })));
+    await need('Ohne Casora-Theme: Theme gilt', await hemma());
   }
   const label = await openRoom(page);
-  await need('Hemma 2: Raum öffnen', label);
+  await need('Ohne Casora-Theme: Raum öffnen', label);
   let r = null;
   for (let i = 0; i < 12 && !(r && r.op > 0.9); i++) {
     await page.waitForTimeout(500);
@@ -162,9 +162,9 @@ for (const [theme, dark] of [['Casora', false], ['Casora Nebel', true]]) {
     await page.waitForTimeout(300);
     r = await roomState(page);
   }
-  console.log('Hemma 2 Raum', JSON.stringify(r));
-  await need('Hemma 2: Raum – Kopf erscheint beim Scrollen', r && r.op > 0.9, r);
-  await check('Hemma 2: Raum – Vollbreiten-Balken wie bisher, keine Pille', !r.pill && r.w >= r.vw - 1, r);
-  await check('Hemma 2: Raum – Zurück-Pfeil bleibt', r.back !== null && r.back > 0.9, r);
+  console.log('Ohne Casora-Theme Raum', JSON.stringify(r));
+  await need('Ohne Casora-Theme: Raum – Kopf erscheint beim Scrollen', r && r.op > 0.9, r);
+  await check('Ohne Casora-Theme: Raum – Vollbreiten-Balken wie bisher, keine Pille', !r.pill && r.w >= r.vw - 1, r);
+  await check('Ohne Casora-Theme: Raum – Zurück-Pfeil bleibt', r.back !== null && r.back > 0.9, r);
 }
 await finish();

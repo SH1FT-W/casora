@@ -211,17 +211,17 @@ const closePopup = async (pg) => { await pg.evaluate(() => window.casoraPopup &&
   await closePopup(page);
 }
 
-// ── Hemma 2: kein zweites Lila ───────────────────────────────────────────
+// ── Ohne Casora-Theme (bis 1.6.0 „Hemma 2“): kein zweites Lila ───────────────────────────────────────────
 {
   await noUserTheme();
-  const { page } = await open({ width: 1600, height: 1000, dark: false, theme: 'Hemma 2', studio: 'b' });
+  const { page } = await open({ width: 1600, height: 1000, dark: false, theme: 'default', studio: 'b' });
   await studio(page, dash.url);
   await page.evaluate(() => { const p = window.__panel(); p._bClose(); p._room = 0; p._renderTabs(); p._bOpen = true; p._select({ group: 'rooms', key: 'Scenes', label: 'Scenes' }); });
   await W(page, 1500);
   const sp = await center(page, '#pane .scpick');
   if (sp) { await page.mouse.click(sp[0], sp[1]); await W(page, 600); }
   const cm = await menu(page);
-  await check('4: unter „Hemma 2“ genau ein „Lila“, kein „Dunkelrot“', cm.filter((t) => t === 'Lila').length === 1 && !cm.includes('Dunkelrot'), cm);
+  await check('4: ohne Casora-Theme genau ein „Lila“, kein „Dunkelrot“', cm.filter((t) => t === 'Lila').length === 1 && !cm.includes('Dunkelrot'), cm);
 }
 
 await finish();
