@@ -14,6 +14,8 @@ const START = RealDate.now();
 const clock = () => FIX + (RealDate.now() - START);
 globalThis.Date = class extends RealDate { constructor(...a) { super(...(a.length ? a : [clock()])); } static now() { return clock(); } };
 globalThis.window = globalThis;
+// Sprache wie im Dashboard aus HA (casoraLocale) – sonst nähme Intl die Systemsprache (CI: Englisch, 12-h-Uhr).
+globalThis.casoraLocale = () => 'de-DE';
 globalThis.document = { querySelector: () => null, addEventListener: () => {} };
 const src = (p) => fs.readFileSync(new URL('../../custom_components/casora/scripts/local/' + p, import.meta.url), 'utf8');
 new Function(src('24-klingel.js'))();
