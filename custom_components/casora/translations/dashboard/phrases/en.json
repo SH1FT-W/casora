@@ -2176,7 +2176,31 @@
   "Aufnahme einschalten": "Turn on recording",
   "Aufnahme ausschalten": "Turn off recording",
   "Kein Clip vorhanden": "No clip available",
-  "Zone": "Zone"
+  "Zone": "Zone",
+  "Alarme": "Alerts",
+  "Erkennungen": "Detections",
+  "Ungesehen": "Unreviewed",
+  "Behalten": "Keep",
+  "Herunterladen": "Download",
+  "Zeitleiste": "Timeline",
+  "Nichts gefunden": "Nothing found",
+  "Filter ändern oder zurücksetzen": "Change or reset the filters",
+  "Filter zurücksetzen": "Reset filters",
+  "Nichts behalten": "Nothing kept",
+  "Im Detail einer Erkennung „Behalten“ antippen": "Tap “Keep” on a detection",
+  "Alle Aufnahmen": "All recordings",
+  "Keine Aufnahmen": "No recordings",
+  "Aufnahme unter „Einstellungen“ einschalten": "Turn on recording under “Settings”",
+  "Frigate hat keine Aufnahmen dieser Kamera": "Frigate has no recordings of this camera",
+  "Aufnahme in den Einstellungen einschalten": "Turn on recording in the settings",
+  "Tag": "Day",
+  "Uhrzeit": "Time",
+  "Aufnahme nicht abrufbar": "Couldn't load the recording",
+  "Frigate liefert dieses Video nicht": "Frigate doesn't deliver this video",
+  "Keine Aufnahme in dieser Stunde": "No recording in this hour",
+  "1 neuer Alarm": "1 new alert",
+  "1 Erkennung": "1 detection",
+  "1 Alarm": "1 alert"
  },
  "patterns": [
   [
@@ -3986,6 +4010,30 @@
   [
    "^(\\d{1,2}:\\d{2}) \\((.+)\\)$",
    "{1} ({2})"
+  ],
+  [
+   "^(\\d+) neue Alarme$",
+   "{1} new alerts"
+  ],
+  [
+   "^(\\d+) Erkennungen$",
+   "{1} detections"
+  ],
+  [
+   "^(\\d+) Std\\. aufgenommen$",
+   "{1} h recorded"
+  ],
+  [
+   "^(\\d+) Min\\. aufgenommen$",
+   "{1} min recorded"
+  ],
+  [
+   "^Keine (.+) heute$",
+   "No {1} today"
+  ],
+  [
+   "^(\\d+) Alarme$",
+   "{1} alerts"
   ],
   [
    "^Keine (.+) in den letzten 7 Tagen$",

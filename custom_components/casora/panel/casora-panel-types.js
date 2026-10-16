@@ -283,7 +283,7 @@ window.CASORA_TILE_TYPES = [
   // (scripts/local/23-frigate.js). Felder wie die Kamera-Kachel, ohne die Popup-Felder der Kamera-Übersicht.
   { id: "casora_frigate", label: "Frigate camera", template: "casora_frigate", domains: ["camera"], classes: ["camera"],
     icon: "camera", entityLabel: "Frigate camera",
-    community: { desc: "Live camera with what Frigate detected last. The popup shows the live view, the latest detections with snapshot and clip, objects and the camera switches.",
+    community: { desc: "Live camera with what Frigate detected last. The popup shows the live view, alerts and detections with snapshot, clip, download and keep, the recordings of the last days with a timeline, objects and the camera switches.",
       needs: "frigate", needsText: "For every camera of the Frigate integration",
       needsMissing: "Frigate integration not installed yet" },
     fields: [ICON, TITLE_NAME,
@@ -294,6 +294,9 @@ window.CASORA_TILE_TYPES = [
         options: ["5", "", "30", "60"],
         optionLabels: { "5": "Every 5 seconds", "": "Every 10 seconds", "30": "Every 30 seconds", "60": "Every 60 seconds" },
         hint: "How often the tile fetches a new still image while it is visible. The tile says \"Up to date\" while the picture is fresh and shows its age in the warning color when the camera stops delivering." },
+      // Frigate 2: Live-Bild statt Standbild (23-frigate.js tileWatch) – nur sichtbar und im Vordergrund, sonst abgebaut.
+      { key: "live_tile", label: "Live on the tile", type: "bool", boolDefault: false, advanced: true, tileLevel: true,
+        hint: "Plays the muted live stream on the tile instead of the still image – only while the tile is visible and the page is open, so it uses more data only then. Without a stream (or if it fails) the tile keeps the still image." },
     ] },
   // Reolink-Türklingel (Community-Karte, aus Kartenwunsch #23): Kamera-Kachel für die Live-Kamera einer Reolink-
   // Klingel (Gerät mit Klingelknopf „visitor“), dazu Klingeln, Erkennungen, Schnellantworten, Sirene und
