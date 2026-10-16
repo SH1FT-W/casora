@@ -8,10 +8,17 @@ translation_key, Namen englisch, alles am Gerät der Kamera:
   image.<cam>_<objekt> (letzter Schnappschuss, Zustand = Zeitpunkt) · binary_sensor.<cam>_motion
   switch.<cam>_detect / _motion / _recordings / _snapshots / _review_alerts / _review_detections
   sensor.<cam>_review_status · am Server-Gerät „Frigate“: sensor.frigate_status, sensor.frigate_uptime
-Dazu, was sonst nur Frigate selbst kann: WebSocket „frigate/events/get“ (Ereignisliste als JSON-Text wie
-die Integration), Bilder unter /api/frigate/<instanz>/thumbnail|snapshot/<id> und
-/api/frigate/<instanz>/notifications/<id>/<datei> (Clips gibt es hier nicht → 404) sowie den Testdienst
-casora_mock.frigate_erkennung {label}, der eine neue Erkennung auslöst. Kamera-Name erfunden.
+Dazu, was sonst nur Frigate selbst kann (Antworten als JSON-Text wie die Integration):
+  WebSocket frigate/events/get (auch favorites, zones, sub_labels), frigate/reviews/get (Alarme/Erkennungen,
+  einige ungesehen), frigate/reviews/viewed, frigate/event/retain (merkt sich „Behalten“),
+  frigate/recordings/summary (Stunden der letzten 3 Tage) und frigate/recordings/get (10-s-Segmente, je Stunde
+  eine Lücke ab :20), frigate/events|reviews/subscribe (+ unsubscribe) – neue Erkennungen kommen dort an.
+  Proxy /api/frigate/<instanz>/: thumbnail|snapshot/<id>, notifications/<id>/{thumbnail.jpg|snapshot.jpg|clip.mp4|
+  <kamera>/review_thumbnail.webp|master.m3u8}, vod/…/master.m3u8 (HLS), recording/<kamera>/start/<s>/end/<e> (MP4),
+  jeweils mit ?download=true als Anhang. Videos: 60 s Testbild, beim ersten Abruf mit dem ffmpeg des HA-Images erzeugt.
+  Testdienste: casora_mock.frigate_erkennung {label, dauer} löst eine neue Erkennung aus;
+  casora_mock.frigate_proxy {notifications, vod, reviews, stream, zuruecksetzen} schaltet Rückfälle
+  (Notification-Proxy aus, ohne HLS, Frigate ohne Reviews, Kamera mit Stream-Funktion). Kamera- und Gesichtsname erfunden.
 """
 from __future__ import annotations
 
@@ -172,7 +179,42 @@ def picture(label: str | None, seed: int = 1, w: int = 1280, h: int = 720, stamp
 
 
 # ── Ereignisse, WebSocket, Bilder-Adressen, Testdienst ─────────────────────────
+# ── Testvideo (ffmpeg liegt im HA-Image; ohne ffmpeg gibt es keine Clips → 404) ──
+# Erzeugt einmal beim ersten Abruf: Testbild (testsrc2 mit Laufzeit, 320 × 180) als MP4-Clip (60 s) und als HLS über
+# eine Stunde (10-s-Stücke). Nur synthetisches Bild, nichts Fremdes; liegt im Container unter /tmp, nicht im Repo.
+_MEDIA = "/tmp/casora_mock_frigate_media"
+
+
+def _media() -> str | None:
+    import os
+    import shutil
+    import subprocess
+    ok = os.path.join(_MEDIA, "fertig-2")
+    if os.path.exists(ok):
+        return _MEDIA
+    ff = shutil.which("ffmpeg")
+    if not ff:
+        return None
+    os.makedirs(_MEDIA, exist_ok=True)
+    enc = ["-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", "-an"]
+    # Clip 60 s (10 fps); HLS eine ganze Stunde (2 fps), damit die Zeitleiste überall hin springen kann.
+    clip = ["-f", "lavfi", "-i", "testsrc2=size=320x180:rate=10", "-t", "60", *enc, "-g", "20"]
+    hour = ["-f", "lavfi", "-i", "testsrc2=size=320x180:rate=2", "-t", "3600", *enc, "-g", "20"]
+    try:
+        subprocess.run([ff, "-y", "-loglevel", "error", *clip, "-movflags", "+faststart", os.path.join(_MEDIA, "clip.mp4")],
+                       check=True, timeout=60)
+        subprocess.run([ff, "-y", "-loglevel", "error", *hour, "-f", "hls", "-hls_time", "10", "-hls_playlist_type", "vod",
+                        "-hls_segment_filename", os.path.join(_MEDIA, "seg%03d.ts"), os.path.join(_MEDIA, "index.m3u8")],
+                       check=True, timeout=180)
+    except Exception:  # noqa: BLE001
+        return None
+    open(ok, "w").close()
+    return _MEDIA
+
+
+# ── Ereignisse, Reviews, Aufnahmen, WebSocket, Proxy-Adressen, Testdienste ─────
 def setup(hass, mock) -> None:
+    import os
     from aiohttp import web
     import voluptuous as vol
     from homeassistant.components import websocket_api
@@ -181,25 +223,51 @@ def setup(hass, mock) -> None:
     from homeassistant.util import dt as dt_util
 
     now = dt_util.utcnow().timestamp()
-    events = []
+    events, reviews = [], []
     for i, (m, label, score, dur, zones) in enumerate(EVENTS):
         start = now - m * 60
-        events.append({"id": f"{start:.6f}-mock{i}", "camera": CAM, "label": label, "sub_label": None,
+        eid = f"{start:.6f}-mock{i}"
+        # Ein Gesicht (sub_label) an einer Person – erfundener Name.
+        sub = FACE if i == 4 else None
+        events.append({"id": eid, "camera": CAM, "label": label, "sub_label": sub,
                        "start_time": start, "end_time": start + dur, "has_clip": True, "has_snapshot": True,
-                       "zones": zones, "top_score": score, "false_positive": None, "retain_indefinitely": False,
+                       "zones": zones, "top_score": score, "false_positive": None, "retain_indefinitely": i == 5,
                        "data": {"score": score, "top_score": score, "type": "object"}})
+        # Review je Erkennung (Frigate ≥ 0.14): Person/Auto in der Einfahrt = Alarm, sonst Erkennung; die drei
+        # neuesten sind ungesehen.
+        reviews.append(_review(f"{start:.6f}-rev{i}", start, start + dur, eid, label, zones, sub, i >= 3))
     hass.data["casora_mock_frigate"] = events
+    hass.data["casora_mock_frigate_rev"] = reviews
+    # Schalter fürs Testen der Rückfälle (Dienst casora_mock.frigate_proxy): Notification-Proxy (Integrations-
+    # Option), VOD/HLS, reviews/get (ältere Frigate-Versionen), Stream-Funktion der Kamera.
+    flags = hass.data["casora_mock_frigate_flags"] = {"notifications": True, "vod": True, "reviews": True, "stream": False}
+    subs: dict = {"events": {}, "reviews": {}}
 
     base = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA
+
+    def reg(name, fn):
+        websocket_api.async_register_command(hass, name, fn, base.extend({vol.Required("type"): name}, extra=vol.ALLOW_EXTRA))
+
+    def evs():
+        return hass.data["casora_mock_frigate"]
+
+    def revs():
+        return hass.data["casora_mock_frigate_rev"]
 
     @callback
     def ws_events(hass_, connection, msg):
         # Wie die Integration (decode_json=False): die Antwort ist der JSON-Text von Frigates /api/events.
-        out = sorted(hass.data["casora_mock_frigate"], key=lambda e: -e["start_time"])
+        out = sorted(evs(), key=lambda e: -e["start_time"])
         if msg.get("cameras"):
             out = [e for e in out if e["camera"] in msg["cameras"]]
         if msg.get("labels"):
             out = [e for e in out if e["label"] in msg["labels"]]
+        if msg.get("zones"):
+            out = [e for e in out if set(e["zones"]) & set(msg["zones"])]
+        if msg.get("sub_labels"):
+            out = [e for e in out if e.get("sub_label") in msg["sub_labels"]]
+        if msg.get("favorites"):
+            out = [e for e in out if e.get("retain_indefinitely")]
         if msg.get("after") is not None:
             out = [e for e in out if e["start_time"] >= msg["after"]]
         if msg.get("before") is not None:
@@ -207,97 +275,337 @@ def setup(hass, mock) -> None:
         out = out[: int(msg.get("limit") or 50)]
         connection.send_result(msg["id"], json.dumps(out))
 
-    websocket_api.async_register_command(hass, "frigate/events/get", ws_events,
-                                         base.extend({vol.Required("type"): "frigate/events/get"}, extra=vol.ALLOW_EXTRA))
+    @callback
+    def ws_reviews(hass_, connection, msg):
+        if not flags["reviews"]:
+            connection.send_error(msg["id"], "unknown_command", "Unknown command.")
+            return
+        out = sorted(revs(), key=lambda r: -r["start_time"])
+        if msg.get("cameras"):
+            out = [r for r in out if r["camera"] in msg["cameras"]]
+        if msg.get("severity"):
+            out = [r for r in out if r["severity"] == msg["severity"]]
+        if msg.get("labels"):
+            out = [r for r in out if set(r["data"]["objects"]) & set(msg["labels"])]
+        if msg.get("zones"):
+            out = [r for r in out if set(r["data"]["zones"]) & set(msg["zones"])]
+        if msg.get("reviewed") is not None:
+            out = [r for r in out if bool(r["has_been_reviewed"]) == bool(msg["reviewed"])]
+        if msg.get("after") is not None:
+            out = [r for r in out if r["start_time"] >= float(msg["after"])]
+        if msg.get("before") is not None:
+            out = [r for r in out if r["start_time"] <= float(msg["before"])]
+        out = out[: int(msg.get("limit") or 100)]
+        connection.send_result(msg["id"], json.dumps(out))
+
+    @callback
+    def ws_viewed(hass_, connection, msg):
+        if not flags["reviews"]:
+            connection.send_error(msg["id"], "unknown_command", "Unknown command.")
+            return
+        ids = set(msg.get("ids") or [])
+        for r in revs():
+            if r["id"] in ids:
+                r["has_been_reviewed"] = bool(msg.get("viewed", True))
+        connection.send_result(msg["id"], {"success": True, "message": "Reviewed multiple items"})
+
+    @callback
+    def ws_retain(hass_, connection, msg):
+        e = next((x for x in evs() if x["id"] == msg.get("event_id")), None)
+        if e is None:
+            connection.send_error(msg["id"], "frigate_error", "Event not found")
+            return
+        e["retain_indefinitely"] = bool(msg.get("retain"))
+        connection.send_result(msg["id"], json.dumps({"success": True, "message": "Event " + e["id"] + (" retained" if e["retain_indefinitely"] else " un-retained")}))
+
+    def tz_of(msg):
+        from zoneinfo import ZoneInfo
+        try:
+            return ZoneInfo(msg.get("timezone") or "UTC")
+        except Exception:  # noqa: BLE001
+            return ZoneInfo("UTC")
+
+    @callback
+    def ws_rec_summary(hass_, connection, msg):
+        # Wie Frigates /api/<kamera>/recordings/summary: je Tag die Stunden mit Aufnahme (Dauer, Erkennungen).
+        from datetime import datetime
+        tz = tz_of(msg)
+        t = datetime.now(tz)
+        days = {}
+        top = t.replace(minute=0, second=0, microsecond=0)
+        for h in range(0, 3 * 24 + 1):
+            hs = top - timedelta(hours=h)
+            dd = (t.date() - hs.date()).days
+            if dd > 2:
+                break
+            if dd == 2 and hs.hour < 6:  # vorgestern erst ab 6 Uhr
+                continue
+            a = hs.timestamp()
+            dur = min(3600.0, now_ts() - a) - max(0.0, min(now_ts(), a + 1200 + _GAP) - (a + 1200))
+            n = sum(1 for e in evs() if a <= e["start_time"] < a + 3600)
+            key = hs.strftime("%Y-%m-%d")
+            d = days.setdefault(key, {"day": key, "events": 0, "hours": []})
+            d["events"] += n
+            d["hours"].append({"hour": hs.strftime("%H"), "events": n, "motion": 0, "objects": n, "duration": round(max(dur, 1))})
+        out = sorted(days.values(), key=lambda d: d["day"], reverse=True)
+        connection.send_result(msg["id"], json.dumps(out))
+
+    @callback
+    def ws_rec_get(hass_, connection, msg):
+        # Segmente à 10 s wie Frigates /api/<kamera>/recordings; je Stunde fehlen 4 Min. (Lücke ab :20).
+        a = float(msg.get("after") or now_ts() - 3600)
+        b = min(float(msg.get("before") or now_ts()), now_ts())
+        out = []
+        s = a - (a % 10)
+        while s < b and len(out) < 2000:
+            mi = (s % 3600) / 60
+            if not (20 <= mi < 24):
+                out.append({"id": f"{s:.1f}-seg", "start_time": s, "end_time": s + 10, "segment_size": 0.4,
+                            "motion": 0, "objects": 0, "dBFS": 0, "duration": 10})
+            s += 10
+        connection.send_result(msg["id"], json.dumps(out))
+
+    def ws_sub(kind):
+        @callback
+        def handler(hass_, connection, msg):
+            if kind == "reviews" and not flags["reviews"]:
+                connection.send_error(msg["id"], "unknown_command", "Unknown command.")
+                return
+            sid = msg["id"]
+            subs[kind][sid] = connection
+            connection.subscriptions[sid] = lambda: subs[kind].pop(sid, None)
+            connection.send_result(sid, sid)
+        return handler
+
+    def ws_unsub(kind):
+        @callback
+        def handler(hass_, connection, msg):
+            sid = msg.get("subscription_id")
+            if subs[kind].pop(sid, None) is None:
+                connection.send_error(msg["id"], "not_found", "Subscription not found.")
+                return
+            connection.subscriptions.pop(sid, None)
+            connection.send_result(msg["id"])
+        return handler
+
+    def push(kind, payload):
+        text = json.dumps(payload)
+        for sid, conn in list(subs[kind].items()):
+            try:
+                conn.send_message(websocket_api.event_message(sid, text))
+            except Exception:  # noqa: BLE001
+                subs[kind].pop(sid, None)
+
+    hass.data["casora_mock_frigate_subs"] = subs
+    reg("frigate/events/get", ws_events)
+    reg("frigate/reviews/get", ws_reviews)
+    reg("frigate/reviews/viewed", ws_viewed)
+    reg("frigate/event/retain", ws_retain)
+    reg("frigate/recordings/summary", ws_rec_summary)
+    reg("frigate/recordings/get", ws_rec_get)
+    reg("frigate/events/subscribe", ws_sub("events"))
+    reg("frigate/reviews/subscribe", ws_sub("reviews"))
+    reg("frigate/events/unsubscribe", ws_unsub("events"))
+    reg("frigate/reviews/unsubscribe", ws_unsub("reviews"))
 
     def find(eid):
-        return next((e for e in hass.data["casora_mock_frigate"] if e["id"] == eid), None)
+        return next((e for e in evs() if e["id"] == eid), None)
+
+    def disp(request, body, ctype, name):
+        r = web.Response(body=body, content_type=ctype)
+        if request.query.get("download") == "true":
+            r.headers["Content-Disposition"] = f'attachment; filename="{name}"'
+        return r
 
     def jpg(eid, w, h, box):
         e = find(eid)
         if not e:
-            return web.Response(status=404)
+            return None
         stamp = dt_util.as_local(dt_util.utc_from_timestamp(e["start_time"])).strftime("%d.%m.%Y %H:%M:%S")
-        body = picture(e["label"], int(e["start_time"]) % 997, w, h, stamp, box)
-        return web.Response(body=body, content_type="image/jpeg") if body else web.Response(status=404)
+        return picture(e["label"], int(e["start_time"]) % 997, w, h, stamp, box)
+
+    async def image(request, eid, w, h, box, name):
+        body = await hass.async_add_executor_job(jpg, eid, w, h, box)
+        return disp(request, body, "image/jpeg", name) if body else web.Response(status=404)
+
+    async def media_file(name):
+        d = await hass.async_add_executor_job(_media)
+        p = d and os.path.join(d, name)
+        if not p or not os.path.exists(p):
+            return None
+        return await hass.async_add_executor_job(lambda: open(p, "rb").read())
+
+    async def mp4(request, name):
+        body = await media_file("clip.mp4")
+        return disp(request, body, "video/mp4", name) if body else web.Response(status=404)
+
+    async def hls(file):
+        # master → index.m3u8 (relativ) → seg000.ts …; dieselben Stücke für jede Stunde und jede Erkennung.
+        if file == "master.m3u8":
+            if not await media_file("index.m3u8"):
+                return web.Response(status=404)
+            body = "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=200000,CODECS=\"avc1.42c00d\",RESOLUTION=320x180\nindex.m3u8\n"
+            return web.Response(text=body, content_type="application/vnd.apple.mpegurl")
+        body = await media_file(file)
+        if not body:
+            return web.Response(status=404)
+        ctype = "application/vnd.apple.mpegurl" if file.endswith(".m3u8") else "video/mp2t"
+        return web.Response(body=body, content_type=ctype)
 
     class Thumb(HomeAssistantView):
         url = "/api/frigate/{inst}/thumbnail/{eid}"
         name = "api:casora_mock:frigate_thumb"
 
         async def get(self, request, inst, eid):
-            return await hass.async_add_executor_job(jpg, eid, 320, 180, False)
+            return await image(request, eid, 320, 180, False, f"{eid}-thumb.jpg")
 
     class Snap(HomeAssistantView):
         url = "/api/frigate/{inst}/snapshot/{eid}"
         name = "api:casora_mock:frigate_snap"
 
         async def get(self, request, inst, eid):
-            return await hass.async_add_executor_job(jpg, eid, 1280, 720, True)
+            return await image(request, eid, 1280, 720, True, f"{eid}.jpg")
 
     class Notif(HomeAssistantView):
         url = "/api/frigate/{inst}/notifications/{eid}/{path:.*}"
         name = "api:casora_mock:frigate_notif"
+        # Wie die Integration: Segmente laden ohne Anmeldung (die Adresse der Wiedergabeliste ist signiert).
+        requires_auth = False
 
         async def get(self, request, inst, eid, path):
+            if not flags["notifications"]:
+                return web.Response(status=403)  # Integrations-Option „Notification-Proxy“ aus
             if path == "thumbnail.jpg":
-                return await hass.async_add_executor_job(jpg, eid, 320, 180, False)
+                return await image(request, eid, 320, 180, False, f"{eid}-thumb.jpg")
             if path == "snapshot.jpg":
-                return await hass.async_add_executor_job(jpg, eid, 1280, 720, True)
-            return web.Response(status=404)  # Clips gibt es im Testhaus nicht
+                return await image(request, eid, 1280, 720, True, f"{eid}.jpg")
+            if path.endswith("review_thumbnail.webp"):
+                r = next((x for x in revs() if x["id"] == eid), None)
+                det = r and (r["data"]["detections"] or [None])[0]
+                return await image(request, det, 320, 180, False, f"{eid}.webp") if det else web.Response(status=404)
+            if path.endswith("clip.mp4"):
+                return await mp4(request, f"{eid}.mp4") if find(eid) else web.Response(status=404)
+            if path.endswith((".m3u8", ".ts")):
+                return await hls(os.path.basename(path)) if flags["vod"] else web.Response(status=404)
+            return web.Response(status=404)
 
-    for v in (Thumb, Snap, Notif):
+    class Vod(HomeAssistantView):
+        url = "/api/frigate/{inst}/vod/{path:.+}"
+        name = "api:casora_mock:frigate_vod"
+        requires_auth = False
+
+        async def get(self, request, inst, path):
+            if not flags["vod"]:
+                return web.Response(status=404)
+            return await hls(os.path.basename(path))
+
+    class Rec(HomeAssistantView):
+        url = "/api/frigate/{inst}/recording/{cam}/start/{start}/end/{end}"
+        name = "api:casora_mock:frigate_rec"
+
+        async def get(self, request, inst, cam, start, end):
+            return await mp4(request, f"{cam}-{start}.mp4")
+
+    for v in (Thumb, Snap, Notif, Vod, Rec):
         hass.http.register_view(v())
 
+    def now_ts():
+        return dt_util.utcnow().timestamp()
+
+    def rev_of(ev_id):
+        return next((r for r in revs() if ev_id in r["data"]["detections"]), None)
+
+    def ev_msg(kind, e):
+        return {"type": kind, "before": e, "after": dict(e, current_zones=e["zones"], snapshot={"frame_time": e["start_time"]})}
+
     async def erkennung(call) -> None:
-        # Neue Erkennung: Belegung an, Zähler 1, Schnappschuss neu, Ereignis vorn; nach 30 s wieder ruhig.
+        # Neue Erkennung: Belegung an, Zähler 1, Schnappschuss neu, Ereignis + Review vorn (Abos bekommen sie);
+        # nach „dauer“ s wieder ruhig.
         label = call.data.get("label", "person")
         if label not in OBJECTS:
             return
         t = dt_util.utcnow()
         dauer = float(call.data.get("dauer", 30))
         ev_id = f"{t.timestamp():.6f}-mockneu"
-        hass.data["casora_mock_frigate"].append({
-            "id": ev_id, "camera": CAM, "label": label, "sub_label": None,
-            "start_time": t.timestamp(), "end_time": None, "has_clip": True, "has_snapshot": True, "zones": ["einfahrt"],
-            "top_score": 0.86, "false_positive": None, "retain_indefinitely": False,
-            "data": {"score": 0.86, "top_score": 0.86, "type": "object"}})
+        ev = {"id": ev_id, "camera": CAM, "label": label, "sub_label": None,
+              "start_time": t.timestamp(), "end_time": None, "has_clip": True, "has_snapshot": True, "zones": ["einfahrt"],
+              "top_score": 0.86, "false_positive": None, "retain_indefinitely": False,
+              "data": {"score": 0.86, "top_score": 0.86, "type": "object"}}
+        evs().append(ev)
+        rv = _review(f"{t.timestamp():.6f}-revneu", t.timestamp(), None, ev_id, label, ["einfahrt"], None, False)
+        revs().append(rv)
+        push("events", ev_msg("new", ev))
+        push("reviews", {"type": "new", "before": rv, "after": rv})
         img = mock.objs.get(f"image.{CAM}_{label}")
         if img is not None:
             img._attr_image_last_updated = t
         mock.set(f"image.{CAM}_{label}", t.isoformat())
-        for eid, st in ((f"binary_sensor.{CAM}_{label}_occupancy", "on"), (f"sensor.{CAM}_{label}_count", "1"),
+        for eid, sv in ((f"binary_sensor.{CAM}_{label}_occupancy", "on"), (f"sensor.{CAM}_{label}_count", "1"),
                         (f"sensor.{CAM}_{label}_active_count", "1"), (f"binary_sensor.{CAM}_all_occupancy", "on"),
                         (f"sensor.{CAM}_all_count", "1"), (f"binary_sensor.{CAM}_motion", "on"),
                         (f"sensor.{CAM}_review_status", "ALERT")):
-            mock.set(eid, st)
+            mock.set(eid, sv)
 
         async def ruhig(_now) -> None:
             # Genau dieses Ereignis beenden (bei zwei Erkennungen nacheinander blieb sonst das erste „läuft“).
-            ev = next((e for e in hass.data["casora_mock_frigate"] if e["id"] == ev_id), None)
-            if ev is not None and ev.get("end_time") is None:
-                ev["end_time"] = ev["start_time"] + dauer
-            for eid, st in ((f"binary_sensor.{CAM}_{label}_occupancy", "off"), (f"sensor.{CAM}_{label}_count", "0"),
+            e = next((x for x in evs() if x["id"] == ev_id), None)
+            if e is not None and e.get("end_time") is None:
+                e["end_time"] = e["start_time"] + dauer
+                push("events", ev_msg("end", e))
+            r = rev_of(ev_id)
+            if r is not None and r.get("end_time") is None:
+                r["end_time"] = r["start_time"] + dauer
+                push("reviews", {"type": "end", "before": r, "after": r})
+            for eid, sv in ((f"binary_sensor.{CAM}_{label}_occupancy", "off"), (f"sensor.{CAM}_{label}_count", "0"),
                             (f"sensor.{CAM}_{label}_active_count", "0")):
-                mock.set(eid, st)
+                mock.set(eid, sv)
             # Haus-weit erst ruhig, wenn kein anderes Objekt mehr im Bild ist.
             if not any(hass.states.is_state(f"binary_sensor.{CAM}_{o}_occupancy", "on") for o in OBJECTS):
-                for eid, st in ((f"binary_sensor.{CAM}_all_occupancy", "off"), (f"sensor.{CAM}_all_count", "0"),
+                for eid, sv in ((f"binary_sensor.{CAM}_all_occupancy", "off"), (f"sensor.{CAM}_all_count", "0"),
                                 (f"binary_sensor.{CAM}_motion", "off"), (f"sensor.{CAM}_review_status", "NONE")):
-                    mock.set(eid, st)
+                    mock.set(eid, sv)
 
         from homeassistant.helpers.event import async_call_later
         async_call_later(hass, dauer, ruhig)
 
     hass.services.async_register("casora_mock", "frigate_erkennung", erkennung)
 
+    async def proxy(call) -> None:
+        # Rückfälle testen: {notifications, vod, reviews, stream} je true/false (fehlende bleiben).
+        for k in flags:
+            if k in call.data:
+                flags[k] = bool(call.data[k])
+        if "stream" in call.data:
+            mock.set(f"camera.{CAM}", None, supported_features=2 if flags["stream"] else 0)
+        if call.data.get("zuruecksetzen"):
+            for r in revs():
+                r["has_been_reviewed"] = not r["id"].endswith(("rev0", "rev1", "rev2"))
+            for i, e in enumerate(evs()):
+                e["retain_indefinitely"] = e["id"].endswith("mock5")
+
+    hass.services.async_register("casora_mock", "frigate_proxy", proxy)
+    # Testvideos gleich im Hintergrund erzeugen (die Stunde braucht ein paar Sekunden).
+    hass.async_add_executor_job(_media)
+
     # Aufnahme aus → Kamera „streaming“ wie bei Frigate (Zustand folgt dem Aufnahme-Schalter).
     from homeassistant.helpers.event import async_track_state_change_event
 
     @callback
     def rec(event) -> None:
-        st = event.data.get("new_state")
-        if st is not None and st.state in ("on", "off"):
-            mock.set(f"camera.{CAM}", "recording" if st.state == "on" else "streaming")
+        sv = event.data.get("new_state")
+        if sv is not None and sv.state in ("on", "off"):
+            mock.set(f"camera.{CAM}", "recording" if sv.state == "on" else "streaming")
 
     async_track_state_change_event(hass, [f"switch.{CAM}_recordings"], rec)
+
+
+# Lücke je Stunde in den Test-Aufnahmen (Sekunden, siehe ws_rec_get).
+_GAP = 240
+FACE = "Robin"
+
+
+def _review(rid, start, end, ev_id, label, zones, sub, seen):
+    return {"id": rid, "camera": CAM, "start_time": start, "end_time": end, "has_been_reviewed": seen,
+            "severity": "alert" if label in ("person", "car") and "einfahrt" in zones else "detection",
+            "thumb_path": f"/media/frigate/clips/review/thumb-{CAM}-{rid}.webp",
+            "data": {"detections": [ev_id], "objects": [label], "sub_labels": [sub] if sub else [], "zones": list(zones), "audio": []}}
