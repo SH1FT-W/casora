@@ -29,6 +29,12 @@ Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
 - Für einen gemeldeten Fehler möglichst einen Test ergänzen (`dev/unit/` ohne HA,
   `dev/qa/regress/` mit Test-HA – siehe `dev/qa/README.md`).
 
+## Version
+- Kalender-Versionen **YY.M.N** (z. B. 26.10.31), Tag/Titel „vYY.M.N“. N = laufende Nummer des Releases
+  im Monat; jedes Release ist die nächste Nummer (kein Patch/Minor mehr). Nächste Nummer: `tools/next-version`,
+  `tools/release.sh` schlägt sie vor und prüft sie. Release-Gate standardmäßig voll (`dev/qa/gate.sh --voll`);
+  Patch-Gate nur bewusst für echte Notfall-Hotfixes (`dev/qa/gate.sh --patch` + `tools/release.sh --patch`), nie automatisch.
+
 ## Nicht anfassen
 - Version (`manifest.json`), `CHANGELOG*.md`, „Neu“-Popup (`casora-panel-welcome.js`, WHATS_NEW),
   Vorschaubilder unter `assets/themes/`, `.github/` – das gehört zum Release.

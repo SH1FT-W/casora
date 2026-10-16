@@ -102,7 +102,7 @@ for (const f of files) {
   let hit = [], states = [], grund = '', teile = [];
   if (/\.md$|^docs\/|^LICENSE$|^\.github\/|^brand\/|^hacs\.json$|^\.gitignore$|^custom_components\/casora\/brand\/|^dev\/demo\//.test(f)) grund = 'Doku/Bilder';
   else if (/^dev\/unit\//.test(f)) grund = 'Unit-Test (läuft immer)';
-  else if (/^tools\/(release\.sh|sync-changelog\.py|privacy-check\.py|qa_gate\.py|build-card-update\.py|i18ncheck\.py|phrase-gaps\.py)$/.test(f)) grund = 'Werkzeug (statische Prüfung)';
+  else if (/^tools\/(release\.sh|next-version|sync-changelog\.py|privacy-check\.py|qa_gate\.py|build-card-update\.py|i18ncheck\.py|phrase-gaps\.py)$/.test(f)) grund = 'Werkzeug (statische Prüfung)';
   else if (/^dev\/qa\/(alles\.mjs|inpage\.js)$/.test(f)) {
     // Nur der Klick-Durchlauf (schnell in arbeit, voll in stress) – keine Regress-/E2E-Tests.
     ['desktop-studio', 'desktop-dashboard', 'phone-studio', 'phone-dashboard'].forEach((x) => sel.arbeit.teile.add(x));

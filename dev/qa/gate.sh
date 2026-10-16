@@ -3,9 +3,10 @@
 #
 #   dev/qa/gate.sh                 Standard: Umfang nach Version (--umfang auto), Zustände gleichzeitig
 #                                  auf eigenen Wegwerf-Test-HAs (Ports 8301–8307), 1 Test je HA
-#   dev/qa/gate.sh --voll          volles Gate (für X.Y.0 Pflicht): alle Zustände, alle Tests
+#   dev/qa/gate.sh --voll          volles Gate (für Releases Pflicht): alle Zustände, alle Tests
 #   dev/qa/gate.sh --patch         Grundprüfungen + nur die Tests, die die Änderungen seit dem letzten
-#                                  grünen vollen Gate berühren (dev/qa/auswahl.mjs) – Freigabe für X.Y.Z, Z>0
+#                                  grünen vollen Gate berühren (dev/qa/auswahl.mjs) – Zwischenstand; als
+#                                  Freigabe für Kalender-Versionen nur als Notfall-Hotfix (release.sh --patch)
 #   dev/qa/gate.sh --basis C       Bezug für --patch (sonst letztes grünes volles Gate, Vorfahre von HEAD)
 #   dev/qa/gate.sh --nachholen[=C] nur die im Vorlauf (bzw. Gate von C) roten und seitdem geänderten Tests;
 #                                  zusammen mit dem Vorlauf gilt das Ergebnis als vollständig
@@ -25,8 +26,10 @@
 #
 # Schreibt .qa/gate-<commit>.json (Commit, Zeit, Umfang, je Schritt und je Test ok/fehlgeschlagen,
 # Wackler) und die Protokolle nach .qa/logs/<commit>/. Rückgabe ≠ 0 bei jedem Fehler.
-# tools/release.sh (über tools/qa_gate.py) nimmt ein volles Gate immer, ein Patch-Gate nur für X.Y.Z mit
-# Z>0 und nur, wenn sein Bezug ein grünes volles Gate eines Vorfahren ist.
+# tools/release.sh (über tools/qa_gate.py) nimmt ein volles Gate immer. Kalender-Versionen YY.M.N
+# (26.10.31) brauchen standardmäßig das volle Gate (Umfang auto wählt nie patch); ein Patch-Gate zählt
+# nur bewusst mit tools/release.sh --patch (Notfall-Hotfix) und nur, wenn sein Bezug ein grünes volles
+# Gate eines Vorfahren ist.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$REPO" || exit 2
@@ -466,10 +469,11 @@ CUR="$(cat "$HOME/casora-haus/aktiv" 2>/dev/null || echo '?')"
 
 if [ $PAR = 1 ]; then
   [ $DRY = 1 ] || mkdir -p "$LOGS"
-  # Umfang auto: Version im manifest X.Y.Z mit Z>0 = Patch, sonst voll.
+  # Umfang auto: Kalender-Version YY.M.N (Hauptteil ≥ 24) = voll, alte X.Y.Z mit Z>0 = Patch, sonst voll.
   VER="$(python3 -c 'import json;print(json.load(open("custom_components/casora/manifest.json"))["version"])' 2>/dev/null)"
   if [ "$UMFANG" = auto ]; then
     case "$VER" in *.0|"") UMFANG=voll; echo "Umfang: voll (Version ${VER:-?})" ;;
+      2[4-9].*|[3-9][0-9].*) UMFANG=voll; echo "Umfang: voll (Kalender-Version $VER – Release braucht das volle Gate)" ;;
       *) UMFANG=patch; echo "Umfang: patch (Version $VER – Patch-Release; volles Gate mit --voll)" ;; esac
   fi
   if [ "$UMFANG" = patch ]; then
