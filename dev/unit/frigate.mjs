@@ -57,6 +57,12 @@ entities[ID].platform = 'casora_mock';
 assert.equal(F.is(hass, ID), true, 'auch ohne Plattform über camera_name + client_id (Test-HA)');
 entities[ID].platform = 'frigate';
 assert.equal(F.of(states['camera.andere'], hass, states), null);
+// Birdseye: Kamera der Integration ohne camera_name/client_id – keine einzelne Frigate-Kamera (fix3 #4).
+add('camera.birdseye', 'streaming', { device_class: 'camera', friendly_name: 'Birdseye' }, 'd_srv');
+assert.equal(F.is(hass, 'camera.birdseye'), false, 'Birdseye ist keine Frigate-Kamera');
+states['camera.birdseye'].state = 'unavailable';
+assert.equal(F.is(hass, 'camera.birdseye'), false, 'auch nicht erreichbar nicht');
+delete states['camera.birdseye']; delete entities['camera.birdseye'];
 
 // Finder – beim HA-Start (Registry da, Zustand der Kamera noch nicht) nichts merken: sonst blieben Entitäten und
 // der Kameraname (Rückfall Entity-ID, falsch für frigate/events/get) für immer so (C2).
@@ -87,6 +93,26 @@ assert.equal(c.sw.snapshots, 'switch.schnappschuesse_tor', 'umbenannt: über das
 assert.equal(c.review, 'sensor.gartentor_review_status');
 assert.equal(c.server, 'sensor.frigate_status', 'Server-Status am via-Gerät');
 assert.ok(F.watch(c).includes('image.gartentor_car') && F.watch(c).includes('switch.gartentor_detect'));
+// Nicht erreichbar (Attribute weg): bleibt Frigate-Kamera mit dem gemerkten Namen, gemerkt (keine Registry-Suche je Zeichnung).
+{
+  const keep = states[ID];
+  states[ID] = { entity_id: ID, state: 'unavailable', attributes: { friendly_name: 'Gartentor' }, last_changed: iso(1) };
+  assert.equal(F.is(hass, ID), true, 'nicht erreichbar: weiter Frigate');
+  const u1 = F.find(hass, ID);
+  assert.equal(u1.name, 'gartentor', 'gemerkter Kameraname'); assert.equal(u1.inst, 'frigate');
+  assert.equal(F.find(hass, ID), u1, 'aus dem Speicher (keine neue Suche)');
+  states[ID] = keep;
+  assert.notEqual(F.find(hass, ID), u1, 'wieder da: neu gesucht');
+}
+// Name für Titel und Dateien: der Kachelname, nicht der Gerätename (fix3 #2).
+assert.equal(F.camName(hass, ID), 'Gartentor');
+F.setName(ID, 'Hofkamera');
+assert.equal(F.camName(hass, ID), 'Hofkamera');
+F.setName(ID, '[[[ return 1 ]]]');
+assert.equal(F.camName(hass, ID), 'Hofkamera', 'Vorlage ist kein Name');
+assert.equal(F.fileName('Hofkamera', new Date(2026, 9, 16, 19, 19).getTime(), 'mp4', 300), 'Hofkamera 2026-10-16 19-19 (5 Min.).mp4', 'Länge im Namen');
+assert.equal(F.fileName('Hof/kamera', new Date(2026, 9, 16, 19, 19).getTime(), 'mp4', 42), 'Hof kamera 2026-10-16 19-19 (42 s).mp4');
+assert.equal(F.fileName('Hofkamera', new Date(2026, 9, 16, 19, 19).getTime(), 'jpg'), 'Hofkamera 2026-10-16 19-19.jpg');
 
 // Zustand und Kachel
 let s = F.status(c, states, NOW);
@@ -219,13 +245,13 @@ assert.equal(F.filter('camera.gartentor'), null, 'noch einmal: Filter aus');
 // Halten-Menü: Erkennung/Aufnahme aus mit Rückfrage, an ohne; letzte Erkennung; Frigate öffnen.
 states['binary_sensor.gartentor_person_occupancy'].state = 'off';
 let m = F.hold(hass, ID);
-assert.deepEqual(m.map((x) => x.t), ['Objekterkennung ausschalten', 'Aufnahme ausschalten', 'Letzte Erkennung', 'Aufnahmen', 'In Frigate öffnen']);
-assert.equal(m[0].svc, 'switch.turn_off'); assert.equal(m[0].entity, 'switch.gartentor_detect'); assert.equal(m[0].ask, 'Objekterkennung ausschalten?', 'B11: überall „Objekterkennung“');
+assert.deepEqual(m.map((x) => x.t), ['Erkennung aus', 'Aufnahme aus', 'Letzte Erkennung', 'Aufnahmen', 'In Frigate öffnen'], 'kurz wie die übrigen Befehle (passte am Desktop nicht ins Menü)');
+assert.equal(m[0].svc, 'switch.turn_off'); assert.equal(m[0].entity, 'switch.gartentor_detect'); assert.equal(m[0].ask, 'Erkennung ausschalten?', 'Rückfrage mit demselben Wort');
 states['switch.gartentor_recordings'].state = 'off';
 m = F.hold(hass, ID);
-assert.equal(m[1].t, 'Aufnahme einschalten'); assert.equal(m[1].svc, 'switch.turn_on'); assert.equal(m[1].ask, null, 'einschalten ohne Rückfrage');
+assert.equal(m[1].t, 'Aufnahme an'); assert.equal(m[1].svc, 'switch.turn_on'); assert.equal(m[1].ask, null, 'einschalten ohne Rückfrage');
 states['switch.gartentor_detect'].state = 'unavailable';
-assert.ok(!F.hold(hass, ID).some((x) => /Erkennung (ein|aus)schalten/.test(x.t)), 'Schalter nicht verfügbar → kein Eintrag');
+assert.ok(!F.hold(hass, ID).some((x) => /^Erkennung (an|aus)$/.test(x.t)), 'Schalter nicht verfügbar → kein Eintrag');
 assert.deepEqual(F.hold(hass, 'camera.andere'), [], 'fremde Kamera: nichts');
 // Warteliste ohne Doppelte (C12): dieselbe Karte fragt mehrmals, während die Anfrage läuft.
 F.forget('camera.gartentor');
@@ -308,7 +334,22 @@ assert.ok(/=~[^;]*@frigate-rv:camera\.gartentor\|r4/.test(rh), 'ungesehene Erken
 assert.ok(/Katze=Live~/.test(rh), 'laufend: Live');
 const r1 = calls.find((m) => m.type === 'frigate/reviews/get');
 assert.ok(r1 && r1.instance_id === 'frigate' && r1.cameras[0] === 'gartentor' && r1.after > 0, 'reviews/get mit Instanz, Kamera, 7 Tage');
-assert.ok(F.items(ID).list.some((x) => /review_thumbnail\.webp\?authSig=x$/.test(x.thumb)), 'Vorschaubild review_thumbnail.webp (signiert)');
+assert.ok(F.items(ID).list.some((x) => /\/api\/frigate\/frigate\/clips\/review\/thumb-gartentor-r1\.webp\?authSig=x$/.test(x.thumb)), 'Vorschaubild zuerst über den Clips-Proxy (signiert)');
+assert.ok(calls.some((m) => m.type === 'frigate/reviews/get' && m.reviewed === false && m.severity === 'alert'), 'Neu-Zähler: eigene Abfrage ungesehener Alarme');
+assert.ok(calls.some((m) => m.type === 'frigate/events/get' && m.favorites === true), 'Favoriten immer mitgeladen (Stern an älteren Reviews)');
+// Gesehen-Rennen: lokal gesetztes „Gesehen“ gilt vor einer älteren Antwort (~10 s).
+F._localSeen.r2 = { v: true, at: Date.now() };
+assert.ok(!F.unseenIds(ID).includes('r2'), 'lokal gesehen zählt nicht als neu');
+delete F._localSeen.r2;
+assert.equal(F.path(c, 'rclip', 'r9', '/media/frigate/clips/review/thumb-gartentor-r9.webp'), '/api/frigate/frigate/clips/review/thumb-gartentor-r9.webp', 'thumb_path der Review');
+// Rückfälle des Vorschaubilds: Clips-Proxy fehlt → review_thumbnail.webp; Notification-Proxy aus → Bild der Erkennung,
+// eine Review ohne Erkennung ohne Bild (nicht über den gesperrten Proxy).
+{
+  const r4 = F.parseReviews(JSON.stringify(rvRaw))[3], r1x = F.parseReviews(JSON.stringify(rvRaw))[0];
+  assert.ok(/review_thumbnail\.webp$/.test(F.thumbPath(c, r1x, false, true)), 'ohne Clips-Proxy: review_thumbnail.webp');
+  assert.ok(/\/thumbnail\/e1$/.test(F.thumbPath(c, r1x, false, false)), 'Proxy aus: Bild der Erkennung');
+  assert.equal(F.thumbPath(c, r4, false, false), null, 'Review ohne Erkennung bei gesperrtem Proxy: kein Bild');
+}
 // Filter
 assert.ok(hook('frigate-f:camera.gartentor|kind|alert'));
 assert.deepEqual(F.shown(ID).map((x) => x.id), ['r1', 'r2'], 'Alarme');
@@ -336,7 +377,8 @@ assert.ok(/Nichts gefunden=~Filter ändern oder zurücksetzen/.test(none) && /fr
 F.setFilter(ID, 'reset');
 // Kachel: ungesehene Alarme nach „Person erkannt“; Gesehen markiert und meldet es Frigate.
 assert.equal(F.unseen(ID), 2, '2 ungesehene Alarme');
-assert.equal(n(F.tileText(F.status(c, states))), '2 neue Alarme'); assert.equal(n(F.tileText(F.status(c, states), null, true)), '2 Alarme', 'schmal');
+assert.equal(n(F.tileText(F.status(c, states))), '2 neue Alarme'); assert.equal(n(F.tileText(F.status(c, states), null, 150)), '2 Alarme', 'sehr schmal (Handy)');
+assert.equal(n(F.tileText(F.status(c, states), null, 228)), '2 neue Alarme', 'Tablet-Kachel (~230 px): sinnerhaltend „2 neue Alarme“');
 assert.ok(/^<line>2 neue Alarme\|/.test(n(F.sec('hero', c, states, rvWs))), 'Kopf');
 await F.seen(rvWs, c, 'r2');
 assert.ok(calls.some((m) => m.type === 'frigate/reviews/viewed' && m.ids[0] === 'r2' && m.viewed === true), 'reviews/viewed');
@@ -406,18 +448,18 @@ assert.deepEqual(subLog, ['+frigate/reviews/subscribe'], 'Popup offen: Abo');
 assert.ok(F.subOn('frigate'));
 let kicked = 0;
 window.casoraKick = (w) => { if (w === pop) kicked++; };
-const nGet0 = calls.filter((m) => m.type === 'frigate/reviews/get').length;
+const nGet0 = calls.filter((m) => m.type === 'frigate/reviews/get' && m.reviewed == null).length;
 F.sec('ev', c, states, subWs, pop); await new Promise((r) => setTimeout(r, 20));
-assert.equal(calls.filter((m) => m.type === 'frigate/reviews/get').length, nGet0, 'mit Abo: kein Abfrage-Takt');
+assert.equal(calls.filter((m) => m.type === 'frigate/reviews/get' && m.reviewed == null).length, nGet0, 'mit Abo: kein Abfrage-Takt');
 pushMsg(JSON.stringify({ type: 'new', after: { id: 'r9', camera: 'gartentor' } }));
 await new Promise((r) => setTimeout(r, 700));
 assert.ok(kicked >= 1, 'Meldung: Bereich neu zeichnen');
 F.sec('ev', c, states, subWs, pop); await new Promise((r) => setTimeout(r, 20));
-assert.equal(calls.filter((m) => m.type === 'frigate/reviews/get').length, nGet0 + 1, 'nach der Meldung neu gefragt');
+assert.equal(calls.filter((m) => m.type === 'frigate/reviews/get' && m.reviewed == null).length, nGet0 + 1, 'nach der Meldung neu gefragt');
 pushMsg(JSON.stringify({ type: 'new', after: { id: 'x', camera: 'andere_kamera' } }));
 await new Promise((r) => setTimeout(r, 700));
 F.sec('ev', c, states, subWs, pop); await new Promise((r) => setTimeout(r, 20));
-assert.equal(calls.filter((m) => m.type === 'frigate/reviews/get').length, nGet0 + 1, 'andere Kamera: nichts');
+assert.equal(calls.filter((m) => m.type === 'frigate/reviews/get' && m.reviewed == null).length, nGet0 + 1, 'andere Kamera: nichts');
 pop.isConnected = false; F.sweep();
 assert.deepEqual(subLog, ['+frigate/reviews/subscribe', '-frigate/reviews/subscribe'], 'Popup zu: abgemeldet');
 assert.equal(F._dbg().holders, 0); assert.equal(F._dbg().timer, false, 'kein Takt mehr');
@@ -461,6 +503,18 @@ assert.equal(F.childList('#EXTM3U\n#EXTINF:10,\nseg-1.ts\n'), null, 'schon eine 
   assert.equal(u, 'http://ha.local/api/frigate/frigate/vod/gartentor/start/100/end/200/index-v1.m3u8?authSig=s2', 'Player bekommt die signierte Unter-Liste');
   assert.deepEqual(signs.map((m) => [m.path, m.expires]), [[master, 3600], ['/api/frigate/frigate/vod/gartentor/start/100/end/200/index-v1.m3u8', 3600]], 'beide pfadgenau, 1 Std.');
   assert.ok(/master\.m3u8\?authSig=s1$/.test(fetched[0]), 'Master signiert geladen');
+  // Master-Zeile mit eigener Signatur (Frigates nginx hängt ?authSig an): signiert wird nur der Pfad der Unter-Liste.
+  {
+    const old = globalThis.fetch;
+    globalThis.fetch = () => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve('#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1\nindex-v1.m3u8?authSig=alt\n') });
+    signs.length = 0;
+    const m3 = '/api/frigate/frigate/vod/gartentor/start/500/end/600/master.m3u8';
+    const u3 = await F.hlsUrl(hh, m3);
+    assert.equal(F.childList('#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1\nindex-v1.m3u8?authSig=alt\n'), 'index-v1.m3u8?authSig=alt');
+    assert.equal(signs[1].path, '/api/frigate/frigate/vod/gartentor/start/500/end/600/index-v1.m3u8', 'Unter-Liste ohne alte Signatur signiert');
+    assert.ok(/index-v1\.m3u8\?authSig=s2$/.test(u3) && !/authSig=alt/.test(u3), 'Player bekommt nur die neue Signatur: ' + u3);
+    globalThis.fetch = old;
+  }
   // A6: 403 auf den Master → einmal frisch signieren, dann klappt es.
   deny = 1; signs.length = 0;
   const m2 = '/api/frigate/frigate/vod/gartentor/start/300/end/400/master.m3u8';
@@ -521,7 +575,7 @@ delete window.casoraLocale;
   F.forget(ID);
   let nGet = 0, cb = null;
   const conn2 = { subscribeMessage: (fn) => { cb = fn; return Promise.resolve(() => {}); } };
-  const ws7 = Object.assign({}, rvWs, { connection: conn2, callWS: (m) => { if (m.type === 'frigate/reviews/get') nGet++; return rvWs.callWS(m); } });
+  const ws7 = Object.assign({}, rvWs, { connection: conn2, callWS: (m) => { if (m.type === 'frigate/reviews/get' && m.reviewed == null) nGet++; return rvWs.callWS(m); } });
   const pop7 = { isConnected: true };
   F.sec('ev', c, states, ws7, pop7); await new Promise((r) => setTimeout(r, 30));
   assert.ok(F.subOn('frigate')); assert.equal(F.keyOf(ws7, c), 'abo', 'mit Abo: Schlüssel unabhängig vom Zustand');
@@ -537,6 +591,49 @@ delete window.casoraLocale;
   F.sec('ev', c, states, ws7, pop7); await new Promise((r) => setTimeout(r, 30));
   assert.equal(nGet, n0 + 1, '„end“: sofort');
   pop7.isConnected = false; F.sweep();
+}
+// Abo nach langer Sitzung (fix3 #5): WebSocket neu verbunden („ready“), neues hass.connection oder stummes Abo trotz
+// neuer Erkennung → neu angemeldet; zweimal stumm → Abfrage-Takt.
+{
+  F.forget(ID);
+  const mk = () => {
+    const on = {}, log = [];
+    const cn = { log, on, subscribeMessage: (fn, msg) => { log.push('+' + msg.type); cn.cb = fn; return Promise.resolve(() => log.push('-' + msg.type)); },
+      addEventListener: (k, fn) => { (on[k] = on[k] || []).push(fn); }, fire: (k) => (on[k] || []).forEach((f) => f()) };
+    return cn;
+  };
+  const cA = mk();
+  const wsA = Object.assign({}, rvWs, { connection: cA, states });
+  const pA = { isConnected: true };
+  F.sec('ev', c, states, wsA, pA); await new Promise((r) => setTimeout(r, 30));
+  assert.deepEqual(cA.log, ['+frigate/reviews/subscribe'], 'angemeldet');
+  cA.fire('disconnected');
+  assert.ok(!F.subOn('frigate'), 'Verbindung weg: Abo gilt nicht mehr (Abfrage-Takt)');
+  assert.notEqual(F.keyOf(wsA, c), 'abo');
+  cA.fire('ready'); await new Promise((r) => setTimeout(r, 30));
+  assert.deepEqual(cA.log, ['+frigate/reviews/subscribe', '-frigate/reviews/subscribe', '+frigate/reviews/subscribe'], 'wieder verbunden: neu angemeldet');
+  assert.ok(F.subOn('frigate'));
+  // Neues connection-Objekt (Seite/Verbindung neu aufgebaut).
+  const cB = mk();
+  const wsB = Object.assign({}, wsA, { connection: cB });
+  F.sec('ev', c, states, wsB, pA); F.sweep(); await new Promise((r) => setTimeout(r, 30));
+  assert.deepEqual(cB.log, ['+frigate/reviews/subscribe'], 'neues hass.connection: dort angemeldet');
+  // Stummes Abo: neuer Schnappschuss, aber keine Meldung → nach der Ruhezeit neu angemeldet.
+  F._aboQuiet.quiet = 40;
+  F.sweep();
+  states['image.gartentor_person'] = Object.assign({}, states['image.gartentor_person'], { last_changed: new Date(Date.now() + 1000).toISOString() });
+  F.sweep(); await new Promise((r) => setTimeout(r, 60)); F.sweep(); await new Promise((r) => setTimeout(r, 30)); F.sweep(); await new Promise((r) => setTimeout(r, 30));
+  assert.equal(cB.log.filter((x) => x === '+frigate/reviews/subscribe').length, 2, 'stumm trotz Erkennung: neu angemeldet ' + cB.log.join(','));
+  // Meldet sich das Abo, bleibt es.
+  cB.cb(JSON.stringify({ type: 'update', after: { camera: 'gartentor' } }));
+  states['image.gartentor_car'] = Object.assign({}, states['image.gartentor_car'], { last_changed: new Date(Date.now() + 2000).toISOString() });
+  F.sweep(); await new Promise((r) => setTimeout(r, 10));
+  cB.cb(JSON.stringify({ type: 'new', after: { camera: 'gartentor' } }));
+  await new Promise((r) => setTimeout(r, 60)); F.sweep(); await new Promise((r) => setTimeout(r, 20));
+  assert.equal(cB.log.filter((x) => x === '+frigate/reviews/subscribe').length, 2, 'Abo meldet sich: bleibt');
+  F._aboQuiet.quiet = 12000;
+  pA.isConnected = false; F.sweep();
+  assert.ok(!F.subOn('frigate'));
 }
 // A13: „gesehen“ scheitert → wieder neu.
 {
@@ -568,7 +665,8 @@ delete window.casoraLocale;
   assert.equal(det.content.fields.m.card.rv, 'r1', 'die neueste Review');
   assert.ok(typeof det.back === 'function', 'Weg zurück zum Kamera-Popup');
   assert.equal(det.dismiss_on_background, false, 'Tippen ins Leere schließt nicht');
-  assert.equal(det.eyebrow, 'Gartentor', 'Kameraname über dem Titel (B13)');
+  assert.equal(det.eyebrow, 'Hofkamera', 'Name der Kachel über dem Titel (B13, fix3 #2)');
+  assert.equal(det.content.fields.m.card.camName, 'Hofkamera', 'Dateinamen mit dem Kachelnamen');
   assert.ok(calls.some((m) => m.type === 'frigate/reviews/viewed' && m.ids[0] === 'r1'), 'als gesehen markiert');
   // Geschlossen, bevor die Daten da sind: nichts öffnet sich später (A8).
   F.forget(ID); opened.length = 0;

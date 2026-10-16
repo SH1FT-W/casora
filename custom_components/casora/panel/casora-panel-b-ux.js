@@ -610,8 +610,11 @@
         const e = R[id];
         if (e && (e.hidden || e.entity_category || e.disabled_by)) return;
         // Frigate-Kamera (device_class „camera“ setzt nur Frigate): die Community-Karte, wenn sie hinzugefügt ist.
+        // Birdseye (Sammelbild) hat weder camera_name noch client_id – keine einzelne Frigate-Kamera (wie 23-frigate.js F.is).
+        const fa = S[id].attributes || {};
         const frig = !suggested && id.startsWith("camera.") && typeIds.has("casora_frigate")
-          && (S[id].attributes || {}).device_class === "camera" ? "casora_frigate" : null;
+          && fa.device_class === "camera" && !/birdseye/i.test(id)
+          && (fa.camera_name || /^(unavailable|unknown)$/.test(String(S[id].state))) ? "casora_frigate" : null;
         // Reolink-Türklingel (Live-Kamera „sub“/„main“ eines Geräts mit Klingelknopf „visitor“, wie
         // 24-klingel.js liveCam): die Community-Karte, wenn sie hinzugefügt ist.
         // Nur Kameras der Reolink-Integration (wie KL.is; casora_mock = Test-HA) – eine fremde Kamera am selben Gerät nicht.

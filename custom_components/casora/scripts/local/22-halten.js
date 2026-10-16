@@ -794,6 +794,9 @@
       if (!ax) return;
       if (ax.path) { navigate(ax.path); return; }
       if (ax.fn) { try { ax.fn(); } catch (e) { failed(e); } return; }
+      // Frigate-Kamera: mit Kachelnamen, ohne Stream das erneuerte Standbild statt Schwarz (23-frigate.js F.live).
+      var FRL = window._casoraFrigate;
+      if (k === 'live' && FRL && FRL.live && FRL.live(ax.entity, lastName)) return;
       if (k === 'live') { if (!(Z && Z.openCamera(ax.entity)) && window.casoraPopup) window.casoraPopup.nativeMoreInfo(ax.entity); return; }
       act(id, ax);
       return;

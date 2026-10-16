@@ -2222,7 +2222,8 @@
   "Im Detail einer Erkennung „Favorit“ antippen": "Tap “Favorite” on a detection",
   "Springen nicht möglich": "Can't skip in this video",
   "Ab hier:": "From here:",
-  "Anhalten": "Pause"
+  "Anhalten": "Pause",
+  "Kein Live-Video – das Standbild wird alle 2 Sekunden erneuert": "No live video – the still image refreshes every 2 seconds"
  },
  "patterns": [
   [
@@ -4044,6 +4045,14 @@
   [
    "^(\\d+) Min\\. aufgenommen$",
    "{1} min recorded"
+  ],
+  [
+   "^Heute nichts erkannt: (.+)$",
+   "Nothing detected today: {1}"
+  ],
+  [
+   "^In 7 Tagen nichts erkannt: (.+)$",
+   "Nothing detected in 7 days: {1}"
   ],
   [
    "^Keine (.+) heute$",

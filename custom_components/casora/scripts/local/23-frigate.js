@@ -26,9 +26,10 @@
   var bad = function (s) { return s == null || s === 'unknown' || s === 'unavailable'; };
   var num = function (v) { var n = parseFloat(v); return isFinite(n) ? n : null; };
   var slug = function (t) { return String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''); };
-  var T = function (x) { return window.casoraT ? window.casoraT(x) : x; };
-  // Übersetzen für eigene Elemente (Schatten-DOM: dort übersetzt die Laufzeit nicht von selbst).
+  // Übersetzen für eigene Elemente (Schatten-DOM: dort übersetzt die Laufzeit nicht von selbst), Rückfragen und
+  // aria-labels (die übersetzt die Laufzeit nie). T und tr sind dasselbe (früher casoraT – das gibt es nicht).
   var tr = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
+  var T = tr;
   var esc = function (t) {
     return String(t == null ? '' : t).replace(/[&<>"']/g, function (ch) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
@@ -81,25 +82,49 @@
     'mdi:contrast-circle': 'contrast', 'mdi:bell-alert': 'alerts', 'mdi:eye-check': 'detections' };
 
   // ── Frigate-Kamera? ───────────────────────────────────────────────────────
+  // Letzter guter Kameraname je Entität (auch über ein Neuladen): eine nicht erreichbare Kamera verliert ihre Attribute,
+  // bleibt aber eine Frigate-Kamera mit demselben Namen.
+  var KNOWN_KEY = 'casora-frigate-cams';
+  var known = (function () {
+    try { var x = JSON.parse((window.localStorage && window.localStorage.getItem(KNOWN_KEY)) || '{}'); return x && typeof x === 'object' ? x : {}; } catch (e) { return {}; }
+  })();
+  var remember = function (id, name, inst) {
+    var k = known[id];
+    if (k && k.name === name && k.inst === inst) return;
+    known[id] = { name: name, inst: inst };
+    try { if (window.localStorage) window.localStorage.setItem(KNOWN_KEY, JSON.stringify(known)); } catch (e) { /* ohne Speicher */ }
+  };
+  F._known = known;
+  // Birdseye (Sammelbild aller Kameras) ist auch eine Kamera der Integration, hat aber weder camera_name noch
+  // client_id – keine einzelne Frigate-Kamera (keine Erkennungen, keine Aufnahmen): normale Kamera-Kachel.
   F.is = function (hass, id) {
     if (!id || !/^camera\./.test(id) || !hass) return false;
-    var e = (hass.entities || {})[id];
-    if (e && e.platform === 'frigate') return true;
-    var a = ((hass.states || {})[id] || {}).attributes || {};
-    return !!(a.camera_name && a.client_id);
+    var e = (hass.entities || {})[id], st = (hass.states || {})[id];
+    var a = (st || {}).attributes || {};
+    if (a.camera_name && a.client_id) return true;
+    if (!(e && e.platform === 'frigate')) return false;
+    if (known[id]) return true;
+    // Nicht erreichbar und noch nie gesehen: Frigate-Kamera, außer es ist erkennbar Birdseye.
+    return !!st && bad(st.state) && !/birdseye/i.test(id);
   };
 
   // ── Entitäten am Gerät der Kamera ─────────────────────────────────────────
   var cache = {}, info = {};
+  // Name je Kamera, wie er auf der Kachel bzw. im Popup-Titel steht (camName).
+  var tileNames = {};
+  F.setName = function (cam, name) { var n = String(name || '').replace(/\s+/g, ' ').trim(); if (cam && n && !/\[\[\[/.test(n)) tileNames[cam] = n; };
   F.find = function (hass, id) {
     var R = (hass && hass.entities) || {}, D = (hass && hass.devices) || {}, S = (hass && hass.states) || {};
     var hit = cache[id];
-    if (hit && hit.R === R && hit.D === D) return hit.c;
     var a = (S[id] || {}).attributes || {};
+    if (a.camera_name) remember(id, String(a.camera_name), String(a.client_id || 'frigate'));
+    var kn = known[id] || null;
+    // Neu suchen, wenn Registry oder Kameraname wechseln (nicht erreichbar → wieder da).
+    if (hit && hit.R === R && hit.D === D && hit.n === (a.camera_name || '')) return hit.c;
     var oid = String(id || '').split('.')[1] || '';
     var me = R[id] || {}, dev = me.device_id ? D[me.device_id] : null;
     var devName = dev ? String(dev.name_by_user || dev.name || '') : '';
-    var c = { cam: id, name: a.camera_name || oid, inst: String(a.client_id || 'frigate'), device: me.device_id || null,
+    var c = { cam: id, name: a.camera_name || (kn && kn.name) || oid, inst: String(a.client_id || (kn && kn.inst) || 'frigate'), device: me.device_id || null,
       objs: {}, order: [], all: {}, motion: null, sw: {}, review: null, server: null, config: dev && dev.configuration_url || null };
     var obj = function (o) { if (!c.objs[o]) { c.objs[o] = {}; c.order.push(o); } return c.objs[o]; };
     // Ende der Entity-ID hinter dem Kameranamen; umbenannt: Name ohne Gerätenamen.
@@ -145,8 +170,9 @@
     });
     // Nur merken, wenn der Zustand der Kamera (mit camera_name) schon da ist: beim HA-Start kommt die Registry
     // vor den Zuständen – sonst blieben Entitäten und der Kameraname (Rückfall Entity-ID, falsch für
-    // frigate/events/get) für immer so.
-    if (S[id] && a.camera_name) cache[id] = { R: R, D: D, c: c };
+    // frigate/events/get) für immer so. Nicht erreichbar (ohne Attribute): mit dem gemerkten Namen merken, sonst
+    // ginge jede Zeichnung durch die ganze Registry; kommt camera_name zurück, sucht hit.n neu.
+    if (S[id] && (a.camera_name || (bad(S[id].state) && kn))) cache[id] = { R: R, D: D, n: a.camera_name || '', c: c };
     else delete cache[id];
     info[id] = { name: c.name, inst: c.inst };
     return c;
@@ -207,12 +233,15 @@
   // Kachel: Erkennung aus · jetzt erkannt · ungesehene Alarme · letzte Erkennung (bis 24 Std.) – sonst null (Kamera-Text).
   // Trenner „ · “ wie in der Liste; schmal (Handy) mit Uhrzeit „Person 14:23“ ohne Trenner – casoraStateFit kürzte an
   // „ · “ zu „Person +1“ – und keine Dauer-Verwechslung wie bei „Auto, 1 Min.“ (Nutzerprüfung Runde 2).
+  // short: true/false oder die Breite der Kachel in px (unter 240 schmal, unter 170 sehr schmal).
   F.tileText = function (s, now, short) {
     if (!s || s.dead || s.off) return null;
+    var w = typeof short === 'number' ? short : short ? 200 : 999;
+    short = w < 240;
     if (s.detectOff) return short ? 'Erkennung aus' : 'Objekterkennung aus';
     if (s.live.length) return short && s.live.length > 1 ? s.live.length + ' Objekte erkannt' : who(s.live);
-    // Schmale Handy-Kachel: „2 Alarme“ (sonst „1 neuer Al…“).
-    if (s.unseen) return short ? (s.unseen === 1 ? '1 Alarm' : s.unseen + ' Alarme') : newAlerts(s.unseen);
+    // Nur die sehr schmale Handy-Kachel kürzt zu „2 Alarme“ (sonst „1 neuer Al…“); Tablet (~230 px) sagt „2 neue Alarme“.
+    if (s.unseen) return w < 170 ? (s.unseen === 1 ? '1 Alarm' : s.unseen + ' Alarme') : newAlerts(s.unseen);
     if (s.last && (now || Date.now()) - s.last.at < 86400000) return F.label(s.last.o) + (short ? ' ' + clock(s.last.at) : ' · ' + F.ago(s.last.at, now));
     return null;
   };
@@ -258,6 +287,11 @@
     if (kind === 'thumb') return base + '/thumbnail/' + encodeURIComponent(id);
     if (kind === 'snap') return base + '/snapshot/' + encodeURIComponent(id);
     if (kind === 'rthumb') return base + '/notifications/' + encodeURIComponent(id) + '/' + cam + '/review_thumbnail.webp';
+    // Frigates Review-Bild (Datei unter /media/frigate/clips/review/…) über den Clips-Proxy; a = thumb_path der Review.
+    if (kind === 'rclip') {
+      var m = /\/clips\/(.+)$/.exec(String(a || ''));
+      return base + '/clips/' + (m ? m[1].split('/').map(encodeURIComponent).join('/') : 'review/thumb-' + cam + '-' + encodeURIComponent(id) + '.webp');
+    }
     if (kind === 'nhls') return base + '/notifications/' + encodeURIComponent(id) + '/master.m3u8';
     if (kind === 'vodev') return base + '/vod/event/' + encodeURIComponent(id) + '/master.m3u8';
     if (kind === 'vod') return base + '/vod/' + cam + '/start/' + id + '/end/' + a + '/master.m3u8';
@@ -310,11 +344,20 @@
       });
     });
   };
-  // Lesbarer Dateiname: „Hofkamera 2026-10-15 16-22.mp4“ (Ortszeit, ohne Zeichen, die Dateisysteme nicht mögen).
-  F.fileName = function (cam, ms, ext) {
+  // Lesbarer Dateiname: „Hofkamera 2026-10-15 16-22 (5 Min.).mp4“ (Ortszeit, ohne Zeichen, die Dateisysteme nicht mögen);
+  // mit Länge (s), damit zwei Ausschnitte ab derselben Minute nicht gleich heißen.
+  var lenWord = function (sec) {
+    if (!(sec > 0)) return '';
+    return tr(sec < 60 ? Math.round(sec) + ' s' : Math.max(1, Math.round(sec / 60)) + ' Min.');
+  };
+  F.lenWord = lenWord;
+  F.fileName = function (cam, ms, ext, len) {
     var d = new Date(ms || Date.now()), z = function (n) { return String(n).padStart(2, '0'); };
-    var nm = String(cam || 'Frigate').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Frigate';
-    return nm + ' ' + d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + '-' + z(d.getMinutes()) + '.' + (ext || 'mp4');
+    var bad0 = /[\\/:*?"<>|]+/g;
+    var nm = String(cam || 'Frigate').replace(bad0, ' ').replace(/\s+/g, ' ').trim() || 'Frigate';
+    var lw = lenWord(len).replace(bad0, ' ');
+    return nm + ' ' + d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + '-' + z(d.getMinutes())
+      + (lw ? ' (' + lw + ')' : '') + '.' + (ext || 'mp4');
   };
   // Datei holen (signiert, ?download=true): als Blob, damit der Dateiname gilt (Frigates Content-Disposition nennt nur
   // die ID); ohne fetch/Blob über einen Link wie bisher.
@@ -392,7 +435,8 @@
       return { kind: 'review', id: String(r.id), o: o, objs: objs.length ? objs : [o], sub: subs[0] || null, subs: subs,
         start: num(r.start_time) * 1000, end: r.end_time != null ? num(r.end_time) * 1000 : null,
         zones: Array.isArray(d.zones) ? d.zones : [], sev: r.severity === 'alert' ? 'alert' : 'detection',
-        seen: !!r.has_been_reviewed, dets: (d.detections || []).map(String), clip: true, snap: true };
+        seen: !!r.has_been_reviewed, dets: (d.detections || []).map(String), clip: true, snap: true,
+        tp: typeof r.thumb_path === 'string' ? r.thumb_path : null };
     }).sort(function (x, y) { return y.start - x.start; });
   };
   // Aufnahmen-Übersicht (/api/<kamera>/recordings/summary) → [{day 'YYYY-MM-DD', n, hours:[{h, dur, n}]}], neueste zuerst.
@@ -479,12 +523,12 @@
     } catch (e) { /* Popup schon zu */ }
   };
   var evc = {}, rvc = {}, fvc = {}, recc = {};
-  var keyOf = function (hass, c) {
-    if (subOn(c.inst)) return 'abo';
+  var pollKey = function (hass, c) {
     var S = (hass && hass.states) || {};
     return F.watch(c).filter(function (x) { return /^image\./.test(x) || x === c.review; })
       .map(function (x) { return S[x] ? S[x].last_changed : ''; }).join('|');
   };
+  var keyOf = function (hass, c) { return subOn(c.inst) ? 'abo' : pollKey(hass, c); };
   F.keyOf = keyOf;
   var MIN_GAP = 5000;
   var load = function (store, cam, key, el, maxAge, run, failList) {
@@ -515,7 +559,6 @@
       });
     return job.list;
   };
-  F._calls = function (cam) { return { ev: evc[cam] && evc[cam].at, rv: rvc[cam] && rvc[cam].at }; };
   var age = function (inst) { return subOn(inst) ? 300000 : 30000; };
   var thumbs = function (hass, c, list) {
     return Promise.all(list.slice(0, 30).map(function (e) {
@@ -532,20 +575,43 @@
     }, []);
   };
   // Reviews: false = nicht verfügbar (ältere Frigate-/Integrationsversion, Fehler) → Ereignisliste wie bisher.
-  // Vorschaubild über review_thumbnail.webp; ist der Notification-Proxy aus (Integrations-Option), das Bild der Erkennung.
-  var proxyOk = {};
-  var probe = function (hass, c, list) {
-    var p = proxyOk[c.inst];
+  // Vorschaubild: zuerst Frigates eigenes Review-Bild über den Clips-Proxy (clips/review/thumb-<kamera>-<id>.webp,
+  // ReviewClipsProxyView, angemeldet → signiert), sonst review_thumbnail.webp über den Notification-Proxy; ist der aus
+  // (Integrations-Option), das Bild der Erkennung – eine Review ohne Erkennung dann ohne Bild (nicht über den gesperrten Proxy).
+  var proxyOk = {}, clipsOk = {};
+  var probeOne = function (store, hass, c, path) {
+    var p = store[c.inst];
     if (p && Date.now() - p.at < 600000) return p.p;
-    var r = list.filter(function (x) { return x.dets.length; })[0] || list[0];
-    if (!r || typeof fetch !== 'function') return Promise.resolve(true);
-    var job = F.sign(hass, F.path(c, 'rthumb', r.id)).then(function (u) {
+    if (!path || typeof fetch !== 'function') return Promise.resolve(true);
+    var job = F.sign(hass, path).then(function (u) {
       if (!u) return false;
       return fetch(abs(hass, u), { cache: 'no-store' }).then(function (res) { return !!res.ok; }).catch(function () { return false; });
     });
-    var rec = proxyOk[c.inst] = { at: Date.now(), p: job, v: null };
+    var rec = store[c.inst] = { at: Date.now(), p: job, v: null };
     job.then(function (v) { rec.v = v; });
     return job;
+  };
+  var probe = function (hass, c, list) {
+    var r = list.filter(function (x) { return x.dets.length; })[0] || list[0];
+    return probeOne(proxyOk, hass, c, r ? F.path(c, 'rthumb', r.id) : null);
+  };
+  F.thumbPath = function (c, r, clipsV, proxyV) {
+    if (clipsV) return F.path(c, 'rclip', r.id, r.tp);
+    if (proxyV) return F.path(c, 'rthumb', r.id);
+    return r.dets.length ? F.path(c, 'thumb', r.dets[0]) : null;
+  };
+  // Lokal gesetztes „Gesehen“ gilt ~10 s vor einer Antwort, die noch den alten Stand hat (Abo-Meldung kurz danach).
+  var localSeen = {};
+  var LOCAL_MS = 10000;
+  var applyLocal = function (list) {
+    var t = Date.now();
+    (list || []).forEach(function (r) { var x = localSeen[r.id]; if (x && t - x.at < LOCAL_MS) r.seen = x.v; });
+    return list;
+  };
+  F._localSeen = localSeen;
+  var noReviews = function (e) {
+    var code = e && (e.code || (e.error && e.error.code));
+    return code === 'unknown_command' || (e && e.message === 'keine Reviews');
   };
   F.reviews = function (hass, c, el) {
     if (!hass || !hass.callWS) return false;
@@ -555,15 +621,34 @@
         .then(function (raw) {
           var list = F.parseReviews(raw);
           if (!list) throw new Error('keine Reviews');
-          return probe(hass, c, list).then(function (ok) {
+          applyLocal(list);
+          var r0 = list[0];
+          var cp = r0 ? probeOne(clipsOk, hass, c, F.path(c, 'rclip', r0.id, r0.tp)) : Promise.resolve(false);
+          return cp.then(function (cv) { return cv ? [true, true] : probe(hass, c, list).then(function (pv) { return [false, pv]; }); }).then(function (v) {
             return Promise.all(list.slice(0, 30).map(function (r) {
-              var p = ok || !r.dets.length ? F.path(c, 'rthumb', r.id) : F.path(c, 'thumb', r.dets[0]);
-              return F.sign(hass, p).then(function (u) { r.thumb = u; });
+              var p = F.thumbPath(c, r, v[0], v[1]);
+              return p ? F.sign(hass, p).then(function (u) { r.thumb = u; }) : null;
             }));
           }).then(function () { return list; });
+        }, function (e) {
+          // Ältere Frigate-/Integrationsversion ohne Reviews: endgültig die Ereignisliste (nicht die alte Liste halten).
+          if (noReviews(e)) return false;
+          throw e;
         });
     }, false);
   };
+  // Neue (ungesehene) Alarme eigens abgefragt (reviewed:false, severity alert): zählt auch, was über die geladenen
+  // 100 Reviews hinausgeht; Liste der IDs.
+  var nvc = {};
+  F.unseenLoad = function (hass, c, el) {
+    if (!hass || !hass.callWS) return null;
+    return load(nvc, c.cam, keyOf(hass, c), el, age(c.inst), function () {
+      var after = Math.floor(Date.now() / 1000) - 7 * 86400;
+      return hass.callWS({ type: 'frigate/reviews/get', instance_id: c.inst, cameras: [c.name], after: after, limit: 500, reviewed: false, severity: 'alert' })
+        .then(function (raw) { var l = F.parseReviews(raw); return l ? l.filter(function (r) { return r.sev === 'alert' && r.seen === false; }).map(function (r) { return r.id; }) : null; });
+    }, null);
+  };
+
   // „Behalten“: Ereignisse mit retain_indefinitely (Frigate-Favoriten), auch älter als 7 Tage.
   F.favs = function (hass, c, el) {
     if (!hass || !hass.callWS) return [];
@@ -582,8 +667,8 @@
         .then(function (raw) { return F.parseSummary(raw); });
     }, false);
   };
-  F.forget = function (cam) { delete evc[cam]; delete rvc[cam]; delete fvc[cam]; delete recc[cam]; };
-  var stale = function (cam, force) { [evc, rvc, fvc].forEach(function (s) { if (s[cam]) { s[cam].stale = true; if (force) s[cam].force = true; } }); };
+  F.forget = function (cam) { delete evc[cam]; delete rvc[cam]; delete fvc[cam]; delete recc[cam]; delete nvc[cam]; };
+  var stale = function (cam, force) { [evc, rvc, fvc, nvc].forEach(function (s) { if (s[cam]) { s[cam].stale = true; if (force) s[cam].force = true; } }); };
 
   // ── Filter (Chips) und Einträge ───────────────────────────────────────────
   // kind: '' | 'alert' | 'detection' | 'unseen' (oben, eine Reihe); im Bereich „Filter“: range 'week' | 'today',
@@ -635,11 +720,25 @@
   };
   var shown = function (cam) { return F.pick(F.items(cam).list || [], flt(cam)); };
   F.shown = shown;
-  // Neue (ungesehene) Alarme der geladenen 7 Tage – Kachel, Kopf und Chip „Neu“ zählen gleich.
-  F.unseen = function (cam) {
+  // Neue (ungesehene) Alarme der letzten 7 Tage – Kachel, Kopf und Chip „Neu“ zählen gleich: die eigene Abfrage
+  // (F.unseenLoad, auch jenseits der geladenen Liste), abgeglichen mit der geladenen Liste (dort ist „Gesehen“ lokal
+  // sofort gesetzt) und lokal gesetztem „Gesehen“.
+  F.unseenIds = function (cam) {
     var l = rvc[cam] && Array.isArray(rvc[cam].list) ? rvc[cam].list : [];
-    return l.filter(function (r) { return r.sev === 'alert' && r.seen === false; }).length;
+    var ids = {}, t = Date.now();
+    ((nvc[cam] && Array.isArray(nvc[cam].list)) ? nvc[cam].list : []).forEach(function (id) { ids[id] = 1; });
+    l.forEach(function (r) {
+      if (r.sev === 'alert' && r.seen === false) ids[r.id] = 1;
+      else if (r.seen === true) delete ids[r.id];
+    });
+    Object.keys(localSeen).forEach(function (id) {
+      var x = localSeen[id];
+      if (t - x.at >= LOCAL_MS) { delete localSeen[id]; return; }
+      if (x.v) delete ids[id];
+    });
+    return Object.keys(ids);
   };
+  F.unseen = function (cam) { return F.unseenIds(cam).length; };
   var redraw = function (cam) {
     (els[cam] || []).forEach(function (w) { if (w && w.isConnected) kick(w); });
     tiles.forEach(function (h) { if (h._frig && h._frig.id === cam && h.isConnected) kick(h); });
@@ -663,19 +762,26 @@
   F.mark = function (hass, c, ids, viewed) {
     var l = rvc[c.cam] && Array.isArray(rvc[c.cam].list) ? rvc[c.cam].list : [];
     var hit = l.filter(function (x) { return ids.indexOf(x.id) >= 0 && x.seen !== !!viewed; });
-    if (!hit.length) return Promise.resolve(false);
+    // Auch ungesehene jenseits der geladenen Liste (eigene Abfrage, „Alle als gesehen“).
+    var extra = viewed ? ids.filter(function (id) { return !l.some(function (x) { return x.id === id; }) && F.unseenIds(c.cam).indexOf(id) >= 0; }) : [];
+    if (!hit.length && !extra.length) return Promise.resolve(false);
+    var all = hit.map(function (r) { return r.id; }).concat(extra);
+    var setLocal = function (v) { var t = Date.now(); all.forEach(function (id) { localSeen[id] = { v: v, at: t }; }); };
     hit.forEach(function (r) { r.seen = !!viewed; });
+    setLocal(!!viewed);
     redraw(c.cam);
     if (!hass || !hass.callWS) return Promise.resolve(false);
-    var back = function () { hit.forEach(function (r) { r.seen = !viewed; }); redraw(c.cam); return false; };
-    return hass.callWS({ type: 'frigate/reviews/viewed', instance_id: c.inst, ids: hit.map(function (r) { return r.id; }), viewed: !!viewed })
+    var back = function () { hit.forEach(function (r) { r.seen = !viewed; }); setLocal(!viewed); redraw(c.cam); return false; };
+    return hass.callWS({ type: 'frigate/reviews/viewed', instance_id: c.inst, ids: all, viewed: !!viewed })
       .then(function (raw) { var r = jparse(raw); return r && r.success === false ? back() : true; }, back);
   };
   F.seen = function (hass, c, rid) { return F.mark(hass, c, [rid], true); };
   // Alle als gesehen (Power-User, mit Rückfrage im Popup): alle ungesehenen der geladenen 7 Tage.
   F.seenAll = function (hass, c) {
     var l = rvc[c.cam] && Array.isArray(rvc[c.cam].list) ? rvc[c.cam].list : [];
-    return F.mark(hass, c, l.filter(function (r) { return r.seen === false; }).map(function (r) { return r.id; }), true);
+    var ids = l.filter(function (r) { return r.seen === false; }).map(function (r) { return r.id; });
+    F.unseenIds(c.cam).forEach(function (id) { if (ids.indexOf(id) < 0) ids.push(id); });
+    return F.mark(hass, c, ids, true);
   };
   // Favorit (Frigate: retain_indefinitely, wird nicht automatisch gelöscht) an/aus; die Listen übernehmen es sofort,
   // „Favoriten“ fragt neu.
@@ -685,9 +791,14 @@
       var r = jparse(raw);
       if (r && r.success === false) return false;
       [evc, fvc].forEach(function (s) { ((s[c.cam] && s[c.cam].list) || []).forEach(function (e) { if (e.id === evId) e.fav = !!want; }); });
-      var hit = F.eventById(c.cam, evId);
-      if (want && !hit && fvc[c.cam] && fvc[c.cam].list) fvc[c.cam].stale = true;
-      if (fvc[c.cam]) fvc[c.cam].stale = true;
+      // Favoriten-Liste sofort mitführen (wird ohnehin immer mitgeladen) und gleich neu fragen.
+      var fj = fvc[c.cam];
+      if (fj && Array.isArray(fj.list)) {
+        var have = fj.list.some(function (e) { return e.id === evId; }), ev0 = F.eventById(c.cam, evId);
+        if (want && !have && ev0) fj.list = [ev0].concat(fj.list);
+        if (!want) fj.list = fj.list.filter(function (e) { return e.id !== evId; });
+      }
+      if (fj) { fj.stale = true; fj.force = true; }
       redraw(c.cam);
       return true;
     }).catch(function () { return false; });
@@ -706,6 +817,7 @@
     var name = x && x.camera;
     // „update“ kommt laufend (Zonen, Treffer) – höchstens alle 5 s neu fragen; Beginn und Ende sofort.
     var now = m.type === 'new' || m.type === 'end';
+    if (subs[inst]) { subs[inst].msgAt = Date.now(); subs[inst].silent = 0; }
     Object.keys(info).forEach(function (cam) {
       if (info[cam].inst !== inst || (name && info[cam].name !== name)) return;
       stale(cam, now);
@@ -714,10 +826,55 @@
       bump[cam] = setTimeout(function () { redraw(cam); }, 600);
     });
   };
+  // Abo verloren (lange Sitzung): HAs WebSocket verbindet sich neu (HA-Neustart, Netz weg, Handy schlief) – das
+  // Abo der Integration kommt dabei nicht sicher zurück (Neu-Anmelden scheitert still, solange Frigate noch lädt), und
+  // „on“ blieb stehen: Casora fragte dann nur noch alle 5 Min. Darum: bei „disconnected“ gilt das Abo als weg (Abfrage-
+  // Takt), bei „ready“ (wieder verbunden) bzw. neuem hass.connection wird neu angemeldet; meldet sich das Abo trotz neuer
+  // Erkennung (Schnappschuss/Review-Status geändert) 12 s lang nicht, ebenso – zweimal stumm → 5 Min. Abfrage-Takt.
+  var conns = typeof WeakSet === 'function' ? new WeakSet() : null;
+  var subRenew = function (inst) {
+    var s = subs[inst];
+    if (s) { s.drop = true; if (s.unsub) { try { s.unsub(); } catch (e) { /* Verbindung weg */ } } delete subs[inst]; }
+    Object.keys(info).forEach(function (cam) { if (info[cam].inst === inst) { stale(cam, true); redraw(cam); } });
+  };
+  F._subRenew = subRenew;
+  var watchConn = function (conn) {
+    if (!conns || conns.has(conn) || typeof conn.addEventListener !== 'function') return;
+    conns.add(conn);
+    try {
+      conn.addEventListener('disconnected', function () {
+        Object.keys(subs).forEach(function (inst) { if (subs[inst].conn === conn) subs[inst].on = false; });
+      });
+      conn.addEventListener('ready', function () {
+        Object.keys(subs).forEach(function (inst) { if (subs[inst].conn === conn) subRenew(inst); });
+        setTimeout(sweep, 0);
+      });
+    } catch (e) { /* ohne Ereignisse: Wächter unten */ }
+  };
+  var AQ = { quiet: 12000 };
+  F._aboQuiet = AQ;
+  var wd = {};
+  var watchdog = function (h) {
+    if (!h.hass || !h.cam || !F.is(h.hass, h.cam)) return;
+    var c = F.find(h.hass, h.cam), s = subs[c.inst], k = pollKey(h.hass, c), t = Date.now();
+    var w = wd[h.cam];
+    if (!w || w.k !== k) { wd[h.cam] = w = { k: k, at: t, done: !w }; return; }
+    if (!s || !s.on || w.done || t - w.at < AQ.quiet) return;
+    w.done = true;
+    if ((s.msgAt || 0) >= w.at) return;
+    var silent = (s.silent || 0) + 1;
+    subRenew(c.inst);
+    if (silent >= 2) subFail[c.inst] = t;
+    else silentN[c.inst] = silent;
+  };
+  var silentN = {};
   var subStart = function (hass, inst) {
-    var s = subs[inst] = { on: false, busy: true, unsub: null, kind: null, at: Date.now() };
+    var s = subs[inst] = { on: false, busy: true, unsub: null, kind: null, at: Date.now(), silent: silentN[inst] || 0 };
+    delete silentN[inst];
     var conn = hass && hass.connection;
     if (!conn || typeof conn.subscribeMessage !== 'function') { s.busy = false; s.failed = Date.now(); return; }
+    s.conn = conn;
+    watchConn(conn);
     var go = function (type) {
       return conn.subscribeMessage(function (p) { onMsg(inst, p); }, { type: type, instance_id: inst });
     };
@@ -752,9 +909,12 @@
     Object.keys(els).forEach(function (cam) { els[cam] = els[cam].filter(function (w) { return w && w.isConnected; }); if (!els[cam].length) delete els[cam]; });
     holders.forEach(function (h) {
       var ok = !hidden() && (h.kind !== 'tile' || (h.el._frig && h.el._frig.vis));
-      if (ok) want[h.inst] = h.hass;
+      if (ok) { want[h.inst] = h.hass; try { watchdog(h); } catch (e) { /* weiter */ } }
     });
     Object.keys(want).forEach(function (inst) {
+      var s0 = subs[inst];
+      // Anderes hass.connection (neu verbunden): neu anmelden.
+      if (s0 && !s0.busy && s0.conn && want[inst] && want[inst].connection && want[inst].connection !== s0.conn) subRenew(inst);
       var s = subs[inst];
       if (!s && !(subFail[inst] && Date.now() - subFail[inst] < 300000)) subStart(want[inst], inst);
       else if (s && s.failed) { subFail[inst] = s.failed; delete subs[inst]; }
@@ -804,6 +964,10 @@
       if (!host || !id || !F.is(hass, id)) return;
       var st = host._frig || (host._frig = { vis: false, id: id });
       st.id = id; st.hass = hass; st.want = F.liveWanted(variables);
+      // Kachelname (für Titel und Dateinamen): eingetragener Name, sonst der gezeichnete.
+      var cfgName = host._config && typeof host._config.name === 'string' ? host._config.name : '';
+      var nmEl = !cfgName && host.shadowRoot && host.shadowRoot.querySelector('#name');
+      F.setName(id, cfgName || (nmEl && nmEl.textContent) || '');
       if (!st.io && typeof IntersectionObserver === 'function') {
         st.io = new IntersectionObserver(function (en) {
           st.vis = en.some(function (x) { return x.isIntersecting; });
@@ -1073,7 +1237,8 @@
       var s = sources[i++];
       if (!s) return Promise.reject(new Error('keine Quelle'));
       var age0 = F.signAge(s.path);
-      return one(s, false).catch(function () {
+      // o.fresh: gleich frisch signieren (Wiederaufbau nach längerer Pause).
+      return one(s, !!(o && o.fresh)).catch(function () {
         if (alive && !alive()) throw new Error('weg');
         if (age0 != null && age0 > 60000) return one(s, true);
         throw new Error('weiter');
@@ -1111,6 +1276,9 @@
     + '.b.on ha-icon{color:var(--casora-popup-accent, currentColor);}'
     + '.b:disabled{opacity:.45;cursor:default;transform:none;}'
     + '.b[hidden]{display:none;}'
+    // Schmal (Handy): „Herunterladen“ passt nicht neben einen zweiten Knopf („Heru…“, „Favor…“) – es steht über die
+    // ganze Breite, darunter Teilen und Favorit (bzw. Favorit allein).
+    + '@media (max-width:600px){.bar.n2{grid-template-columns:minmax(0,1fr);}.bar.n3{grid-template-columns:repeat(2,minmax(0,1fr));}.bar.n3 .dl{grid-column:1 / -1;}}'
     + '.nt{margin-top:var(--casora-space-2, 8px);font-size:var(--casora-fs-sub, 13px);font-weight:500;text-align:center;'
     +   'color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color));}'
     + '.nt[hidden]{display:none;}'
@@ -1153,15 +1321,14 @@
     else if (!cfg.rv && !cfg.ev && cfg.start) src.push({ k: 'hls', path: F.path(c, 'vod', sec0(cfg.start), Math.ceil((cfg.end || cfg.start + 30000) / 1000)) });
     return src;
   };
-  var clips = new Set();
   if (typeof customElements !== 'undefined' && !customElements.get('casora-frigate-clip')) {
     class FClip extends HTMLElement {
       setConfig(cfg) { this._cfg = cfg || {}; }
       getCardSize() { return 5; }
       set hass(h) { this._hass = h; if (!this._root) this._build(); }
       get hass() { return this._hass; }
-      connectedCallback() { clips.add(this); this._gone = false; if (this._hass && !this._root) this._build(); }
-      disconnectedCallback() { clips.delete(this); this._gone = true; }
+      connectedCallback() { this._gone = false; if (this._hass && !this._root) this._build(); }
+      disconnectedCallback() { this._gone = true; }
     }
     var CP = FClip.prototype;
     CP._build = function () {
@@ -1179,7 +1346,7 @@
         + '<div class="fr" data-frigate-swipe="' + esc(cfg.entity) + '"><img class="po" alt="" hidden><div class="mt"></div>'
         + '<div class="ov frig-noclip" hidden>' + esc(tr('Kein Clip vorhanden')) + '</div>'
         + arrow('left', nav.newer, 'Neuere Erkennung') + arrow('right', nav.older, 'Ältere Erkennung') + '</div>'
-        + '<div class="bar" style="--n:' + n + ';"><button class="b dl" type="button"><ha-icon icon="mdi:download"></ha-icon><span>'
+        + '<div class="bar' + (n > 1 ? ' n' + n : '') + '" style="--n:' + n + ';"><button class="b dl" type="button"><ha-icon icon="mdi:download"></ha-icon><span>'
         + esc(tr(hasClip ? 'Herunterladen' : 'Bild herunterladen')) + '</span></button>'
         + (share ? '<button class="b sh" type="button"><ha-icon icon="mdi:share-variant-outline"></ha-icon><span>' + esc(tr('Teilen')) + '</span></button>' : '')
         + '<button class="b fv" type="button" aria-pressed="false"><ha-icon icon="mdi:star-outline"></ha-icon><span>' + esc(tr('Favorit')) + '</span></button></div>'
@@ -1244,23 +1411,32 @@
         self._paintFav();
       });
     };
-    // Was „Herunterladen“/„Teilen“ holt: der Clip des Ereignisses (MP4), ohne Notification-Proxy derselbe Abschnitt aus
-    // den Aufnahmen; ohne Clip der Schnappschuss.
+    // Was „Herunterladen“/„Teilen“ holt: bei einer Review der ganze Review-Zeitraum aus den Aufnahmen (recording/…, so
+    // lang wie die Wiedergabe), Rückfall der Clip des Ereignisses; sonst der Clip des Ereignisses (MP4), ohne
+    // Notification-Proxy derselbe Abschnitt aus den Aufnahmen; ohne Clip der Schnappschuss.
     CP._file = function () {
-      var cfg = this._cfg || {}, c = this._c();
-      var at = cfg.start || Date.now(), nm = function (ext) { return F.fileName(cfg.camName || c.name, at, ext); };
+      var cfg = this._cfg || {}, c = this._c(), len = this._len();
+      var at = cfg.start || Date.now(), nm = function (ext, l) { return F.fileName(cfg.camName || c.name, at, ext, l); };
       var noProxy = proxyOk[c.inst] && proxyOk[c.inst].v === false;
-      if (cfg.ev && cfg.clip && this._src !== null && !noProxy) return { path: F.path(c, 'clip', cfg.ev), name: nm('mp4'), type: 'video/mp4', alt: this._rec() };
+      var evClip = cfg.ev && cfg.clip && !noProxy ? { path: F.path(c, 'clip', cfg.ev), name: nm('mp4', len), type: 'video/mp4' } : null;
+      if (cfg.rv && this._src !== null) { var rr = this._rec(); if (rr) return Object.assign(rr, { alt: evClip }); }
+      if (evClip && this._src !== null) return Object.assign(evClip, { alt: this._rec() });
       var rec = this._src !== null ? this._rec() : null;
       if (rec) return rec;
       if (cfg.ev) return { path: F.path(c, 'snap', cfg.ev), name: nm('jpg'), type: 'image/jpeg' };
       return null;
     };
+    CP._len = function () {
+      var cfg = this._cfg || {};
+      return cfg.start ? Math.max(1, Math.round(((cfg.end || Date.now()) - cfg.start) / 1000)) : 0;
+    };
     CP._rec = function () {
       var cfg = this._cfg || {}, c = this._c();
       if (!cfg.start) return null;
-      var a = sec0(cfg.start), b = Math.max(a + 1, Math.ceil((cfg.end || cfg.start + 30000) / 1000));
-      return { path: F.path(c, 'rec', a, Math.min(b, a + 3600)), name: F.fileName(cfg.camName || c.name, cfg.start, 'mp4'), type: 'video/mp4' };
+      // Laufende Review (ohne Ende): bis jetzt; höchstens 1 Std.
+      var a = sec0(cfg.start), b = Math.max(a + 1, Math.ceil((cfg.end || (cfg.rv ? Date.now() : cfg.start + 30000)) / 1000));
+      b = Math.min(b, a + 3600);
+      return { path: F.path(c, 'rec', a, b), name: F.fileName(cfg.camName || c.name, cfg.start, 'mp4', b - a), type: 'video/mp4' };
     };
     CP._download = function (b) {
       var f = this._file(), h = this._hass;
@@ -1281,9 +1457,13 @@
       if (this._ready) { go(this._ready); return; }
       b.disabled = true;
       btnSay(b, 'Wird geladen …');
-      F.fetchBlob(this._hass, f.path).then(function (blob) {
+      var h = this._hass;
+      F.fetchBlob(h, f.path).then(function (blob) { return { blob: blob, f: f }; }, function (e) {
+        if (!f.alt) throw e;
+        return F.fetchBlob(h, f.alt.path).then(function (blob) { return { blob: blob, f: f.alt }; });
+      }).then(function (x) {
         b.disabled = false;
-        return go(new File([blob], f.name, { type: f.type }));
+        return go(new File([x.blob], x.f.name, { type: x.f.type || f.type }));
       }).catch(function () { b.disabled = false; btnSay(b, 'Nicht geladen', 2200); });
     };
     customElements.define('casora-frigate-clip', FClip);
@@ -1319,6 +1499,7 @@
     }
     return null;
   };
+  listen('visibilitychange', function () { recs.forEach(function (x) { try { if (x.vis) x.vis(document.hidden === true); } catch (e) { /* weiter */ } }); });
   listen('keydown', function (ev) {
     var k = F.keyTarget(ev);
     if (k === 'input') return;
@@ -1347,8 +1528,10 @@
   }, { passive: true, capture: true });
   var zoneName = function (z) { var t = String(z || '').replace(/_/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1); };
   F.zoneName = zoneName;
-  // Name der Kamera für Etikett und Dateinamen (wie im Kamera-Popup).
+  // Name der Kamera für Kopf, Titel und Dateinamen: wie der Nutzer sie nennt – Titel des offenen Kamera-Popups bzw. Name
+  // der Kachel (tileWatch, F.sec), erst dann der Name in HA (Gerätename, bei Frigate oft der Kameraname „TESTHOF“).
   var camName = function (hass, cam) {
+    if (tileNames[cam]) return tileNames[cam];
     var st = hass && hass.states && hass.states[cam];
     return String((st && st.attributes && st.attributes.friendly_name) || (info[cam] && info[cam].name) || cam || '');
   };
@@ -1423,7 +1606,13 @@
     var media = { type: 'custom:casora-frigate-clip', entity: cam, inst: c.inst, name: c.name, camName: nm, ev: evId, clip: clipOk,
       rv: isRv ? it.id : null, fav: !!it.fav, start: it.start, end: it.end, poster: evId ? F.path(c, 'snap', evId) : null,
       nav: { newer: nb ? nb.id : null, older: ob ? ob.id : null, back: !!back, rv: isRv } };
-    var infoHtml = (rows.length ? UI.group(rows, null) : '') + (nav.length ? (rows.length ? '<div style="height:8px"></div>' : '') + UI.group(nav, null) : '');
+    // „Als neu markieren“ ist ein Befehl, kein Weg auf eine andere Seite: ohne Pfeil ›.
+    var noChev = function (html) {
+      return html.split('class="hui-row').map(function (part) {
+        return part.indexOf('frigate-new:') >= 0 ? part.replace(/<svg class="hui-chev"[\s\S]*?<\/svg>/, '') : part;
+      }).join('class="hui-row');
+    };
+    var infoHtml = (rows.length ? noChev(UI.group(rows, null)) : '') + (nav.length ? (rows.length ? '<div style="height:8px"></div>' : '') + UI.group(nav, null) : '');
     lastBack = back || null;
     var cfg = subPage({ title: objLabel(it) + (it.sub ? ' · ' + it.sub : ''), eyebrow: nm, back: back || null, _frigView: 'detail',
       content: oneCol(K, { h: line, m: { card: media }, i: infoHtml }) });
@@ -1431,6 +1620,64 @@
     navNow = { cfg: P.current || cfg, nav: { cam: cam, newer: nb ? nb.id : null, older: ob ? ob.id : null, back: !!back } };
     return true;
   };
+  // ── „Live ansehen“ (Halten-Menü, Bild im Popup antippen) ────────────────
+  // Groß wie Casoras Kamera-Vollbild, Titel = Name der Kachel. Ohne Stream-Funktion (supported_features ohne 2: Frigate
+  // ohne RTSP-Restream) bliebe HAs Live-Ansicht schwarz – dann das Standbild (camera_proxy), alle 2 s erneuert, mit Hinweis.
+  if (typeof customElements !== 'undefined' && !customElements.get('casora-frigate-still')) {
+    class FStill extends HTMLElement {
+      setConfig(cfg) { this._cfg = cfg || {}; }
+      getCardSize() { return 5; }
+      set hass(h) { this._hass = h; if (!this._root) this._build(); }
+      get hass() { return this._hass; }
+      connectedCallback() { if (this._hass && !this._root) this._build(); this._tick(); }
+      disconnectedCallback() { clearTimeout(this._t); this._t = null; }
+    }
+    var SP = FStill.prototype;
+    SP._build = function () {
+      var r = this._root = this.attachShadow({ mode: 'open' });
+      r.innerHTML = '<style>' + PCSS + '.po{background:#000;}</style><div class="fr"><img class="po" alt=""></div>'
+        + '<div class="nt">' + esc(tr('Kein Live-Video – das Standbild wird alle 2 Sekunden erneuert')) + '</div>';
+      var im = r.querySelector('.po');
+      im.addEventListener('load', function () { im.setAttribute('data-ok', '1'); });
+      this._tick();
+    };
+    SP._tick = function () {
+      var self = this;
+      clearTimeout(this._t);
+      if (!this._root || !this.isConnected) return;
+      var st = this._hass && this._hass.states[(this._cfg || {}).entity];
+      var pic = st && st.attributes && st.attributes.entity_picture;
+      var im = this._root.querySelector('.po');
+      // Nächstes Bild erst, wenn das vorige da ist (kein Stau bei langsamer Kamera); im Hintergrund nichts holen.
+      if (pic && !(typeof document !== 'undefined' && document.hidden) && !this._loading) {
+        this._loading = true;
+        var nx = new Image();
+        nx.onload = function () { self._loading = false; im.src = nx.src; };
+        nx.onerror = function () { self._loading = false; };
+        nx.src = pic + (pic.indexOf('?') < 0 ? '?' : '&') + '_=' + Date.now();
+      }
+      this._t = setTimeout(function () { self._tick(); }, 2000);
+    };
+    customElements.define('casora-frigate-still', FStill);
+  }
+  F.live = function (id, name, back) {
+    var ha = document.querySelector('home-assistant'), hass = ha && ha.hass, P = window.casoraPopup;
+    if (!hass || !P || !F.is(hass, id) || !hass.states[id]) return false;
+    if (name) F.setName(id, name);
+    var stream = !!(Number((hass.states[id].attributes || {}).supported_features || 0) & 2);
+    var content = stream
+      ? { type: 'picture-entity', entity: id, camera_view: 'live', show_name: false, show_state: false, aspect_ratio: '16:9',
+        tap_action: { action: 'none' }, hold_action: { action: 'none' },
+        card_mod: { style: 'ha-card { border-radius: var(--casora-popup-row-radius, 20px) !important; overflow: hidden !important;'
+          + ' border: none !important; background: #000 !important; }' } }
+      : { type: 'custom:casora-frigate-still', entity: id };
+    P.open({ title: camName(hass, id), back: back || null, dismiss_on_background: true, content: content, _frigView: 'live',
+      // 16:9 passt ganz auf den Schirm (wie das Kamera-Vollbild in 18-ziele.js).
+      style: '--popup-min-width: min(1400px, 96vw, calc((100vh - 260px) * 16 / 9)); --popup-max-width: min(1400px, 96vw, calc((100vh - 260px) * 16 / 9));',
+      popup_styles: (P.current || {}).popup_styles });
+    return true;
+  };
+
   // Letzter Schnappschuss eines Objekts (Bild-Entität), wenn es keine Ereignisliste gibt.
   F.snapshot = function (imgId, back, title, cam) {
     var ha = document.querySelector('home-assistant'), hass = ha && ha.hass, P = window.casoraPopup, K = window._casoraSoftKit;
@@ -1452,7 +1699,8 @@
     + '.ld{position:absolute;inset:0;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;'
     +   'padding:20px;background:rgba(0,0,0,0.45);color:rgba(255,255,255,0.88);font-size:15px;font-weight:600;}'
     + '.ld[hidden]{display:none;}.ld small{font-size:13px;font-weight:500;opacity:.8;}'
-    + '.tl{position:relative;height:44px;margin-top:var(--casora-space-3, 12px);cursor:pointer;touch-action:none;outline:none;'
+    + '.tlw{position:relative;margin-top:var(--casora-space-3, 12px);}'
+    + '.tl{position:relative;height:44px;cursor:pointer;touch-action:none;outline:none;'
     +   '-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}'
     + '.tl.off{cursor:default;}'
     + '.tl:focus-visible .trk{box-shadow:0 0 0 2px var(--casora-popup-accent, var(--casora-color-teal, #4E9E95));}'
@@ -1468,7 +1716,7 @@
     + '.dt::after{content:"";position:absolute;left:17px;top:5px;width:10px;height:10px;border-radius:50%;'
     +   'background:var(--casora-popup-tiles-text-primary, #3A322B);box-shadow:0 0 0 2px var(--casora-soft-seg-on, #FFFDF9);}'
     + '.dt.al::after{background:var(--casora-color-red, #D35A4E);}'
-    + '.tl.off .dt{cursor:default;}'
+    + '.tlw.off .dt{cursor:default;}'
     + '.ph{position:absolute;top:8px;width:4px;height:28px;margin-left:-2px;border-radius:999px;pointer-events:none;'
     +   'background:var(--casora-popup-tiles-text-primary, var(--primary-text-color, #3A322B));'
     +   'box-shadow:0 0 0 2px var(--casora-soft-seg-on, #FFFDF9);outline:1px solid var(--casora-popup-tiles-text-secondary, rgba(58,50,43,0.6));outline-offset:2px;}'
@@ -1492,6 +1740,16 @@
       get hass() { return this._hass; }
       connectedCallback() { this._gone = false; recs.add(this); if (this._hass && !this._root) this._build(); }
       disconnectedCallback() { this._gone = true; recs.delete(this); }
+      // Seite im Hintergrund: Stelle merken; zurück nach ≥ 30 s (Signatur/Verbindung womöglich weg) bzw. bei Videofehler
+      // mit frischer Signatur neu aufbauen und an derselben Stelle weitermachen.
+      vis(hidden) {
+        if (hidden) { this._hid = { at: Date.now(), t: this._t, play: !!(this._video && !this._video.paused && !this._video.ended) }; return; }
+        var h = this._hid; this._hid = null;
+        if (!h || !this.isConnected || !this._segs || !this._segs.length || this._busy) return;
+        var v = this._video;
+        if (Date.now() - h.at < 30000 && v && !v.error) return;
+        this.rebuild(h.t != null ? h.t : this._t, h.play);
+      }
     }
     var RP = FRec.prototype;
     RP._build = function () {
@@ -1501,9 +1759,10 @@
       var tk = [0, 0.25, 0.5, 0.75, 1].map(function (f) { return '<span>' + esc(clock((a + f * (b - a)) * 1000)) + '</span>'; }).join('');
       r.innerHTML = '<style>' + RCSS + '</style>'
         + '<div class="fr"><div class="mt"></div><div class="ld" role="status" aria-live="polite"><span>' + esc(tr('Wird geladen …')) + '</span></div></div>'
-        + '<div class="tl" role="slider" tabindex="0" aria-label="' + esc(tr('Zeitleiste')) + '" aria-valuemin="' + a + '" aria-valuemax="' + b
+        // Erkennungs-Punkte (Knöpfe) liegen neben dem Schieberegler, nicht in ihm (role=slider darf keine Bedienelemente enthalten).
+        + '<div class="tlw"><div class="tl" role="slider" tabindex="0" aria-label="' + esc(tr('Zeitleiste')) + '" aria-valuemin="' + a + '" aria-valuemax="' + b
         + '" aria-valuenow="' + a + '" aria-valuetext="' + esc(clock(a * 1000)) + '">'
-        + '<div class="trk"><div class="sgs"></div></div><div class="dts"></div><div class="ph" hidden></div></div>'
+        + '<div class="trk"><div class="sgs"></div></div><div class="ph" hidden></div></div><div class="dts"></div></div>'
         + '<div class="tk" aria-hidden="true">' + tk + '</div>'
         + '<div class="rw"><button class="b pp" type="button" aria-label="' + esc(tr('Abspielen')) + '" disabled><ha-icon icon="mdi:play"></ha-icon></button>'
         + '<span class="now"></span>'
@@ -1517,7 +1776,6 @@
       tl.addEventListener('pointerdown', function (ev) {
         ev.stopPropagation();
         if (!self._segs || !self._segs.length || self._noSeek) return;
-        if (ev.target && ev.target.classList && ev.target.classList.contains('dt')) return;
         self._drag = true;
         try { tl.setPointerCapture(ev.pointerId); } catch (e) { /* egal */ }
         self._head(F.tlTime(frac(ev), a, b));
@@ -1532,11 +1790,15 @@
       };
       tl.addEventListener('pointerup', up);
       tl.addEventListener('pointercancel', function () { self._drag = false; });
-      tl.addEventListener('click', function (ev) {
+      var dts = r.querySelector('.dts');
+      ['touchstart', 'touchmove'].forEach(function (k) { dts.addEventListener(k, function (ev) { ev.stopPropagation(); }, { passive: true }); });
+      dts.addEventListener('pointerdown', function (ev) { ev.stopPropagation(); });
+      dts.addEventListener('click', function (ev) {
         ev.stopPropagation();
         var d = ev.target && ev.target.closest && ev.target.closest('.dt');
         if (d && !self._noSeek) { haptic('selection'); self.seek(Number(d.getAttribute('data-t'))); }
       });
+      tl.addEventListener('click', function (ev) { ev.stopPropagation(); });
       tl.addEventListener('keydown', function (ev) {
         if (self._noSeek) return;
         var t = F.tlKey(ev.key, ev.shiftKey, self._t != null ? self._t : a, a, b);
@@ -1560,6 +1822,15 @@
       this._load();
     };
     RP._c = function () { var cfg = this._cfg || {}; return { cam: cfg.entity, inst: cfg.inst, name: cfg.name }; };
+    RP.rebuild = function (t, play) {
+      var mt = this._root && this._root.querySelector('.mt');
+      if (!mt) return;
+      try { if (this._video) this._video.pause(); } catch (e) { /* weg */ }
+      while (mt.firstChild) mt.removeChild(mt.firstChild);
+      this._video = null; this._fresh = true; this._resume = play !== false;
+      this.setAttribute('data-rebuilt', String((Number(this.getAttribute('data-rebuilt')) || 0) + 1));
+      this.seek(t != null ? t : this._a);
+    };
     RP._load = function () {
       var self = this, h = this._hass, c = this._c(), a = this._a, b = this._b;
       if (!h || !h.callWS) return;
@@ -1642,9 +1913,10 @@
       ld.hidden = false;
       this.setAttribute('data-src', 'lädt');
       F.playChain(r.querySelector('.mt'), this._hass, [{ k: 'hls', path: F.path(c, 'vod', a, b) }, { k: 'mp4', path: F.path(c, 'rec', a, b) }],
-        { controls: false, muted: true, autoplay: true }, function () { return self.isConnected; })
+        { controls: false, muted: true, autoplay: self._resume !== false, fresh: !!self._fresh }, function () { return self.isConnected; })
         .then(function (res) {
-          self._busy = false;
+          self._busy = false; self._fresh = false;
+          var resume = self._resume !== false; self._resume = true;
           self._video = res.video; self._src = res.k;
           self.setAttribute('data-src', res.k);
           ld.hidden = true;
@@ -1655,10 +1927,10 @@
           if (res.k === 'mp4') {
             self._noSeek = true;
             var tl = r.querySelector('.tl');
-            tl.classList.add('off'); tl.setAttribute('aria-disabled', 'true');
+            tl.classList.add('off'); tl.setAttribute('aria-disabled', 'true'); r.querySelector('.tlw').classList.add('off');
             self._head(segs[0].s);
           } else { try { v.currentTime = self._want.off; } catch (e) { /* gleich */ } }
-          var p = v.play && v.play(); if (p && p.catch) p.catch(function () {});
+          if (resume) { var p = v.play && v.play(); if (p && p.catch) p.catch(function () {}); }
           v.addEventListener('timeupdate', function () {
             if (self._drag) return;
             var w = F.recAt(self._segs, v.currentTime);
@@ -1684,7 +1956,7 @@
       if (!segs.length) return;
       var t = F.cut(segs, this._t != null ? this._t : segs[0].s, min);
       if (!t) return;
-      dlWith(btn, this._hass, F.path(c, 'rec', t.a, t.b), F.fileName(cfg.camName || c.name, t.a * 1000, 'mp4'));
+      dlWith(btn, this._hass, F.path(c, 'rec', t.a, t.b), F.fileName(cfg.camName || c.name, t.a * 1000, 'mp4', t.b - t.a));
     };
     customElements.define('casora-frigate-rec', FRec);
   }
@@ -1728,14 +2000,15 @@
   };
   var CHIP_CSS = '<style>.frig-chips{display:flex;flex-wrap:nowrap;gap:var(--casora-space-2, 8px);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;'
     + 'margin:0;padding:0 2px;font-family:var(--primary-font-family, system-ui);min-width:0;'
-    // Weicher Auslauf rechts: man sieht, dass es weitergeht (keine harte Kante).
-    + '-webkit-mask-image:linear-gradient(to right, black calc(100% - 24px), transparent);mask-image:linear-gradient(to right, black calc(100% - 24px), transparent);}'
+    // Weicher Auslauf an beiden Rändern, solange dort etwas verborgen ist (F.fixChips setzt .ov rechts, .ovl links).
+    + '--fl:0px;--fr:0px;-webkit-mask-image:linear-gradient(to right, transparent 0, black var(--fl), black calc(100% - var(--fr)), transparent 100%);'
+    + 'mask-image:linear-gradient(to right, transparent 0, black var(--fl), black calc(100% - var(--fr)), transparent 100%);}'
+    + '.frig-chips.ov{--fr:24px;}.frig-chips.ovl{--fl:24px;}'
     + '.frig-chips::-webkit-scrollbar{display:none;}'
     + '.frig-chips>[role=button]::before,.frig-fx::before{content:"";position:absolute;inset:-4px 0;}'
     + '.frig-head{display:flex;align-items:flex-start;gap:var(--casora-space-3, 12px);}'
     + '.frig-head>.frig-fx{margin-top:-7px !important;}'
-    // Auslauf rechts nur, solange dort noch etwas verborgen ist (F.fixChips setzt .ov).
-    + '.frig-chips:not(.ov){-webkit-mask-image:none;mask-image:none;}'
+    + '.frig-chips:not(.ov):not(.ovl){-webkit-mask-image:none;mask-image:none;}'
     + '@media (max-width:760px){.frig-chips>[role=button]{padding:0 12px !important;}}'
     + '.frig-fg{margin-top:var(--casora-space-2, 8px);}'
     + '.frig-fl{font-size:var(--casora-fs-label, 12px);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin:0 2px 2px;'
@@ -1744,14 +2017,17 @@
     +   'color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color));}'
     + '.frig-act [role=button]{position:relative;cursor:pointer;font-weight:700;color:var(--casora-popup-ui-action, #276B64);}'
     + '.frig-act [role=button]::before{content:"";position:absolute;inset:-12px -8px;}'
-    + '.frig-note{margin:var(--casora-space-2, 8px) 2px 0;font-size:var(--casora-fs-sub, 13px);font-weight:500;line-height:1.35;'
+    + '.frig-note{margin:var(--casora-space-2, 8px) 2px 0;font-size:var(--casora-fs-sub, 13px);font-weight:500;line-height:1.35;white-space:normal;overflow-wrap:anywhere;'
     +   'color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color));}'
     + '.frig-strip{display:flex;gap:2px;}'
     + '.frig-strip>div{flex:1;position:relative;height:44px;min-width:0;}'
     + '.frig-strip>[role=button]{cursor:pointer;-webkit-tap-highlight-color:transparent;}'
     + '.frig-strip i{position:absolute;left:0;right:0;top:14px;bottom:14px;border-radius:999px;background:var(--casora-soft-control-fill, rgba(140,115,90,0.10));}'
     + '.frig-strip b{position:absolute;left:50%;top:4px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--casora-popup-tiles-text-primary, #3A322B);}'
-    + '.frig-strip [aria-pressed=true] i{outline:2px solid var(--casora-popup-tiles-text-primary, #3A322B);outline-offset:1px;}'
+    + '.frig-strip [aria-pressed=true] i,.frig-strip .on i{outline:2px solid var(--casora-popup-tiles-text-primary, #3A322B);outline-offset:1px;}'
+    + '.frig-strip.ro{pointer-events:none;}.frig-strip.ro>div{height:28px;}.frig-strip.ro i{top:6px;bottom:6px;}.frig-strip.ro b{top:-2px;}'
+    // Stunden-Chips am Handy: echte 44 px (die einzige Bedienung der Stunde).
+    + '@media (max-width:760px){.frig-chips[data-row=rec-hour]>[role=button]{min-height:44px !important;margin-block:0 !important;}}'
     + '.frig-ticks{display:flex;justify-content:space-between;font-size:var(--casora-fs-label, 12px);font-weight:600;font-variant-numeric:tabular-nums;'
     +   'color:var(--casora-popup-tiles-text-secondary, var(--secondary-text-color));margin:0 0 var(--casora-space-2, 8px);}'
     + '</style>';
@@ -1781,7 +2057,7 @@
     chipRoots().forEach(function (r) {
       var k = r.getAttribute('data-row');
       if (k && rowPos[k] != null) r.scrollLeft = rowPos[k];
-      var more = function () { r.classList.toggle('ov', r.scrollLeft + r.clientWidth < r.scrollWidth - 2); };
+      var more = function () { r.classList.toggle('ov', r.scrollLeft + r.clientWidth < r.scrollWidth - 2); r.classList.toggle('ovl', r.scrollLeft > 2); };
       if (!r._frigS) { r._frigS = true; r.addEventListener('scroll', more, { passive: true }); }
       more();
       var on = r.querySelector('[aria-pressed="true"]');
@@ -1813,7 +2089,8 @@
     var c = F.find(hass, cam);
     var nm = camName(hass, cam);
     var sum = recc[cam] && recc[cam].list;
-    if (!Array.isArray(sum) && !(recc[cam] && recc[cam].list === false && !recc[cam].busy) && (tries || 0) <= 24) {
+    // Warten wie der Lader (15 s, dann fragt er neu): 60 × 250 ms.
+    if (!Array.isArray(sum) && !(recc[cam] && recc[cam].list === false && !recc[cam].busy) && (tries || 0) <= 60) {
       if (!tries) o.tok = loading('Aufnahmen', back, nm);
       else if (!still(o.tok)) return false;
       F.recSummary(hass, c, null);
@@ -1845,18 +2122,21 @@
       f.m = { card: { type: 'custom:casora-frigate-rec', entity: cam, inst: c.inst, name: c.name, camName: nm, start: a, len: len, at: at, next: next } };
       var dayChips = days.slice(0, 7).map(function (x) { return chip('frigate-rec:' + cam + '|' + x.day, dayName(x.day), x.day === d.day); });
       // Tagesstreifen: 24 Stunden, Aufnahme deckend (je nach Anteil), Punkt = Erkennungen; Antippen wählt die Stunde.
+      // Am Handy (≤ 760 px) nur Anzeige: 24 Felder à ~13 px sind keine Tippflächen – dort bedienen die Stunden-Chips.
+      var phone = typeof window.innerWidth === 'number' && window.innerWidth <= 760;
       var byH = {};
       d.hours.forEach(function (x) { byH[x.h] = x; });
       var cells = [];
       for (var h = 0; h < 24; h++) {
         var x = byH[h];
         var fill = x ? 'background:var(--casora-popup-ui-action, #276B64);opacity:' + Math.max(0.45, Math.min(1, x.dur / 3600)).toFixed(2) + ';' : '';
-        cells.push(x ? '<div role="button" tabindex="0" aria-pressed="' + (h === hr.h ? 'true' : 'false') + '" aria-label="' + esc(T(hourName(d.day, h))) + '"'
+        var sel = x && h === hr.h ? ' class="on"' : '';
+        cells.push(x && !phone ? '<div role="button" tabindex="0" aria-pressed="' + (h === hr.h ? 'true' : 'false') + '" aria-label="' + esc(T(hourName(d.day, h))) + '"'
           + ' data-casora-mi="frigate-rec:' + esc(cam + '|' + d.day + '|' + h) + '"><i style="' + fill + '"></i>' + (x.n ? '<b></b>' : '') + '</div>'
-          : '<div aria-hidden="true"><i></i></div>');
+          : '<div' + sel + '><i style="' + fill + '"></i>' + (x && x.n ? '<b></b>' : '') + '</div>');
       }
       var ticks = [0, 6, 12, 18, 24].map(function (h2) { return '<span>' + esc(h2 === 24 ? '24' : String(h2)) + '</span>'; }).join('');
-      var strip = '<div class="frig-strip" role="group" aria-label="' + esc(T(dayName(d.day))) + '" data-casora-nodismiss="">' + cells.join('') + '</div>'
+      var strip = (phone ? '<div class="frig-strip ro" aria-hidden="true">' : '<div class="frig-strip" role="group" aria-label="' + esc(T(dayName(d.day))) + '" data-casora-nodismiss="">') + cells.join('') + '</div>'
         + '<div class="frig-ticks" aria-hidden="true">' + ticks + '</div>';
       // Stunden aufsteigend in einer Reihe; die gewählte wird ins Bild geholt.
       var hourChips = d.hours.map(function (x) { return chip('frigate-rec:' + cam + '|' + d.day + '|' + x.h, hourName(d.day, x.h), x.h === hr.h, x.n || null); });
@@ -1898,6 +2178,11 @@
   var dec = function (x) { try { return decodeURIComponent(x); } catch (e) { return x; } };
   F.enc = function (x) { return encodeURIComponent(String(x == null ? '' : x)); };
   (window._casoraMiHooks = window._casoraMiHooks || []).push(function (mid) {
+    // Live-Bild im offenen Popup angetippt: groß, mit Kachelnamen; ohne Stream das erneuerte Standbild (F.live).
+    if (/^camera\./.test(String(mid || '')) && window.casoraPopup && window.casoraPopup.current) {
+      var h0 = document.querySelector('home-assistant');
+      return !!(h0 && h0.hass && F.is(h0.hass, mid) && F.live(mid, null, backHere()));
+    }
     var m = /^frigate-(ev|rv|img|go|flt|fx|f|more|rec|new|seenall):(.*)$/.exec(String(mid || ''));
     if (!m) return false;
     var p = m[2].split('|');
@@ -1962,8 +2247,8 @@
       toggle: function (onv, ids, h) {
         var run = function () { return h.callService('switch', onv ? 'turn_off' : 'turn_on', {}, { entity_id: d }); };
         if (!onv) { run(); return; }
-        var ask = window.casoraAsk ? window.casoraAsk({ title: T('Objekterkennung'), text: T('Objekterkennung ausschalten?'), yes: T('Ausschalten') })
-          : Promise.resolve(window.confirm(T('Objekterkennung ausschalten?')));
+        var ask = window.casoraAsk ? window.casoraAsk({ title: T('Objekterkennung'), text: T('Erkennung ausschalten?'), yes: T('Ausschalten') })
+          : Promise.resolve(window.confirm(T('Erkennung ausschalten?')));
         ask.then(function (ok) { if (ok) run(); });
       } };
   });
@@ -1992,7 +2277,10 @@
     var f = { hero: { card: K.secCard(watch, call('hero'), states) }, live: { card: live },
       rec: { card: K.secCard(watch, call('rec'), states) },
       objs: { card: K.secCard(watch, call('objs'), states) },
-      ev: { card: K.secCard(watch, call('ev'), states) }, sys: { card: K.secCard(watch, call('sys'), states) } };
+      ev: { card: K.secCard(watch, call('ev'), states) } };
+    // „System“ nur, wenn Frigate gerade ein Problem meldet – ein leerer Bereich gab sonst einen doppelten Abstand
+    // vor „Einstellungen“ (der Kopf meldet Störungen ohnehin auch später).
+    if (F.sec('sys', c, states || {}, hass)) f.sys = { card: K.secCard(watch, call('sys'), states) };
     if (F.sec('ctl', c, states || {}, hass)) f.more = { card: K.secCard(watch, call('ctl'), states) };
     // Live-Bild links, darunter die Aufnahmen der letzten Tage und die Objekte; rechts gleich die Alarme/Erkennungen
     // (mit Filtern); die Technik-Schalter stehen unten über beide Spalten unter „Einstellungen“.
@@ -2032,6 +2320,9 @@
     if (!UI || !c) return '';
     var S = states || {}, now = Date.now();
     var s = F.status(c, S, now);
+    // Titel des offenen Kamera-Popups = Name, den Detail, Aufnahmen und Dateinamen nutzen.
+    var P0 = window.casoraPopup;
+    if (P0 && P0.entity === c.cam && P0.current && !P0.current._frigView && typeof P0.current.title === 'string') F.setName(c.cam, P0.current.title);
     if (part === 'hero') {
       var main, rest = [], tone = null;
       var nw = newest(c.cam);
@@ -2063,8 +2354,10 @@
         swRow(S, c.sw.ptz, 'mdi:target-account', 'Automatisch folgen', false),
       ].filter(function (r) { return r && r.label; });
       if (!rows.length) return '';
-      // Zugeklappt wie in der Klingel; aufgeklappt bleibt „Einstellungen“ stehen (nur der Pfeil dreht).
-      return UI.more ? UI.more('frigate', '<div>' + UI.group(rows, 'Aufnahme & Erkennung') + '</div>', { label: 'Einstellungen', less: 'Einstellungen' })
+      // Zugeklappt wie in der Klingel; aufgeklappt bleibt „Einstellungen“ stehen (nur der Pfeil dreht). Nur ein
+      // Abschnitt: einspaltig über die volle Breite (das breite „Mehr“ teilte ihn sonst auf zwei Spalten).
+      var one = '<style>.hui-more.open > .hui-mbd{column-count:1 !important;}</style>';
+      return UI.more ? UI.more('frigate', one + '<div>' + UI.group(rows, 'Aufnahme & Erkennung') + '</div>', { label: 'Einstellungen', less: 'Einstellungen' })
         : UI.group(rows, 'Aufnahme & Erkennung');
     }
     if (part === 'objs') {
@@ -2108,7 +2401,9 @@
     var cam = c.cam, f = flt(cam);
     var rv = F.reviews(hass, c, el);
     F.events(hass, c, el);
-    if (f.fav) F.favs(hass, c, el);
+    // Favoriten immer mitladen (gecacht): sonst fehlt der Stern an älteren Reviews, deren Ereignis nicht in den 40 liegt.
+    F.favs(hass, c, el);
+    if (rv) F.unseenLoad(hass, c, el);
     var x = F.items(cam), mode = x.mode;
     // Reviews noch unterwegs: einen Moment „Wird geladen …“ (nicht erst die Ereignisse, dann umspringen).
     if (rv == null && rvc[cam] && rvc[cam].busy) { x = { mode: null, list: null }; mode = null; }
@@ -2128,7 +2423,9 @@
     var chips = '', head = UI.label ? UI.label('Letzte Erkennungen') : '';
     if (all || nF || f.kind) {
       var kindG = [];
-      if (mode === 'review' || f.kind) {
+      // Ohne Reviews (Ereignisliste) gibt es weder Alarme/Erkennungen noch „Neu“.
+      if (mode === 'event' && f.kind) f.kind = '';
+      if (mode === 'review') {
         kindG.push(chip(base + 'kind|', 'Alle', !f.kind), chip(base + 'kind|alert', 'Alarme', f.kind === 'alert'),
           chip(base + 'kind|detection', 'Erkennungen', f.kind === 'detection'),
           chip(base + 'kind|unseen', 'Neu', f.kind === 'unseen', nNew || null, { countBg: 'var(--casora-color-red-text, var(--casora-color-red, #D35A4E))' }));
@@ -2164,7 +2461,7 @@
       var err = job.err && !(job.list && job.list.length) && mode === 'event';
       var empty = err ? 'Frigate antwortet nicht'
         : f.fav && !f.kind && nF === 1 ? 'Keine Favoriten'
-          : f.o && !f.kind && nF === 1 + (f.range === 'today' ? 1 : 0) ? 'Keine ' + F.label(f.o) + (f.range === 'today' ? ' heute' : ' in den letzten 7 Tagen')
+          : f.o && !f.kind && nF === 1 + (f.range === 'today' ? 1 : 0) ? (f.range === 'today' ? 'Heute nichts erkannt: ' : 'In 7 Tagen nichts erkannt: ') + F.label(f.o)
             : f.kind === 'unseen' && !nF ? 'Nichts Neues'
               : any ? 'Nichts gefunden' : 'Keine Erkennungen in den letzten 7 Tagen';
       out = top + UI.group([{ icon: err ? 'mdi:alert-circle-outline' : any ? 'mdi:filter-off-outline' : 'mdi:check', iconTone: err ? 'warn' : null, label: empty,
@@ -2262,9 +2559,10 @@
       out.push({ key: 'act', t: v ? offT : onT, ic: icon, svc: v ? 'switch.turn_off' : 'switch.turn_on', entity: sw,
         ask: v ? ask : null, yes: 'Ausschalten' });
     };
-    // Befehle statt Zustandswörter, überall dasselbe Wort wie der Kopfschalter („Objekterkennung“).
-    tog(c.sw.detect, 'Objekterkennung einschalten', 'Objekterkennung ausschalten', 'mdi:eye-outline', 'Objekterkennung ausschalten?');
-    tog(c.sw.recordings, 'Aufnahme einschalten', 'Aufnahme ausschalten', 'mdi:record-rec', 'Aufnahme ausschalten?');
+    // Kurz wie die übrigen Menü-Befehle („Licht aus“, „Gäste-WLAN aus“) – „Objekterkennung ausschalten“ passte am Desktop
+    // nicht ins Menü; Rückfrage und Kopfschalter sagen dasselbe Wort („Erkennung“).
+    tog(c.sw.detect, 'Erkennung an', 'Erkennung aus', 'mdi:eye-outline', 'Erkennung ausschalten?');
+    tog(c.sw.recordings, 'Aufnahme an', 'Aufnahme aus', 'mdi:record-rec', 'Aufnahme ausschalten?');
     var nw = newest(id);
     if (nw || (s.last && c.objs[s.last.o] && c.objs[s.last.o].img && S[c.objs[s.last.o].img])) {
       var lo = s.last ? s.last.o : nw.o, lat = s.last ? s.last.at : nw.start;

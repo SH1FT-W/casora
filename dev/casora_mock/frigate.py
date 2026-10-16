@@ -18,13 +18,15 @@ Dazu, was sonst nur Frigate selbst kann (Antworten als JSON-Text wie die Integra
   bzw. pfadgenau signiert, Segmente mit Signatur aus demselben Verzeichnis), recording/<kamera>/start/<s>/end/<e> (MP4),
   jeweils mit ?download=true als Anhang. Videos: 60 s Testbild, beim ersten Abruf mit dem ffmpeg des HA-Images erzeugt.
   Testdienste: casora_mock.frigate_erkennung {label, dauer} löst eine neue Erkennung aus;
-  casora_mock.frigate_proxy {notifications, vod, reviews, stream, zuruecksetzen} schaltet Rückfälle
-  (Notification-Proxy aus, ohne HLS, Frigate ohne Reviews, Kamera mit Stream-Funktion). Kamera- und Gesichtsname erfunden.
+  casora_mock.frigate_proxy {notifications, vod, reviews, stream, clips, zuruecksetzen} schaltet Rückfälle
+  (Notification-Proxy aus, ohne HLS, Frigate ohne Reviews, Kamera mit Stream-Funktion, ohne Clips-Proxy
+  clips/review/thumb-<kamera>-<id>.webp). Kamera- und Gesichtsname erfunden.
 """
 from __future__ import annotations
 
 import io
 import json
+import re
 import random
 from datetime import timedelta
 
@@ -241,7 +243,7 @@ def setup(hass, mock) -> None:
     hass.data["casora_mock_frigate_rev"] = reviews
     # Schalter fürs Testen der Rückfälle (Dienst casora_mock.frigate_proxy): Notification-Proxy (Integrations-
     # Option), VOD/HLS, reviews/get (ältere Frigate-Versionen), Stream-Funktion der Kamera.
-    flags = hass.data["casora_mock_frigate_flags"] = {"notifications": True, "vod": True, "reviews": True, "stream": False}
+    flags = hass.data["casora_mock_frigate_flags"] = {"notifications": True, "vod": True, "reviews": True, "stream": False, "clips": True}
     subs: dict = {"events": {}, "reviews": {}}
 
     base = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA
@@ -514,6 +516,19 @@ def setup(hass, mock) -> None:
                 return await hls(os.path.basename(path), request.query_string) if flags["vod"] else web.Response(status=404)
             return web.Response(status=404)
 
+    class Clips(HomeAssistantView):
+        # Wie ReviewClipsProxyView (neuere Integrationen): Frigates Dateien unter /media/frigate/clips/, angemeldet bzw. signiert.
+        url = "/api/frigate/{inst}/clips/{path:.+}"
+        name = "api:casora_mock:frigate_clips"
+
+        async def get(self, request, inst, path):
+            if not flags["clips"]:
+                return web.Response(status=404)  # ältere Integration ohne Clips-Proxy
+            m = re.match(rf"review/thumb-{CAM}-(.+)\.webp$", path)
+            r = m and next((x for x in revs() if x["id"] == m.group(1)), None)
+            det = r and (r["data"]["detections"] or [None])[0]
+            return await image(request, det, 320, 180, False, f"{m.group(1)}.webp") if det else web.Response(status=404)
+
     class Vod(HomeAssistantView):
         url = "/api/frigate/{inst}/vod/{path:.+}"
         name = "api:casora_mock:frigate_vod"
@@ -534,7 +549,7 @@ def setup(hass, mock) -> None:
         async def get(self, request, inst, cam, start, end):
             return await mp4(request, f"{cam}-{start}.mp4")
 
-    for v in (Thumb, Snap, Notif, Vod, Rec):
+    for v in (Thumb, Snap, Notif, Clips, Vod, Rec):
         hass.http.register_view(v())
 
     def now_ts():
