@@ -94,9 +94,14 @@
   // Kaffeevollautomaten erkennen (Kurzfassung von scripts/local/25-kaffee.js – das Studio lädt die Dashboard-Module
   // nicht): Integration oder Kaffee-Schlüssel am Gerät (Home Connect und Miele bauen auch Waschmaschinen).
   const COFFEE_PLATFORMS = new Set(["delonghi_primadonna", "delonghi_coffee", "delonghi_coffeelink", "jura", "melitta_barista", "lamarzocco"]);
-  const COFFEE_KEY = /coffee(counter|temperature|cups)|beanamount|beancontainer|coffeebeans|totalcoffee|brewingactive|machinestatus/;
+  const COFFEE_KEY = /coffee(counter|temperature|cups)|beanamount|beancontainer|coffeebeans|totalcoffee|brewingactive|brewactive|machinestatus|makebeverage|beveragecounter/;
   const COFFEE_OPT = /coffeemaker|cappuccino|espresso|lattemacchiato/;
   const coffeeNk = (x) => String(x == null ? "" : x).toLowerCase().replace(/[\s_.\-]/g, "");
+  // Wie im Modul (keyOf): home_connect_alt nennt alle Entitäten einer Art gleich (statuses, settings, options, programs),
+  // Jura und Melitta haben keine Schlüssel – dann zählt das Ende der Entity-ID.
+  const COFFEE_GENERIC = new Set(["statuses", "settings", "options", "programs", "homeconnectstatus"]);
+  const coffeeKey = (e) => { const k = coffeeNk(e.translation_key); return COFFEE_GENERIC.has(k) ? "" : k; };
+  const coffeeTail = (e) => coffeeNk(String(e.entity_id).split(".")[1] || "");
   function coffeeAnchors(h) {
     const R = (h && h.entities) || {}, S = (h && h.states) || {}, D = (h && h.devices) || {};
     const byDev = new Map();
@@ -109,13 +114,17 @@
     const out = [];
     byDev.forEach((list, dev) => {
       const yes = list.some((e) => COFFEE_PLATFORMS.has(e.platform)
-        || COFFEE_KEY.test(coffeeNk(e.translation_key || e.entity_id))
+        || COFFEE_KEY.test(coffeeKey(e) || coffeeTail(e))
         || (((S[e.entity_id] || {}).attributes || {}).options || []).some((o) => COFFEE_OPT.test(coffeeNk(o))));
       if (!yes) return;
-      const k = (e) => coffeeNk(e.translation_key);
-      const sensor = list.find((e) => e.entity_id.startsWith("sensor.") && /operationstate$|^(machinestatus|devicestatus|status|state)$/.test(k(e)));
-      const power = list.find((e) => e.entity_id.startsWith("switch.") && /^(power|powerstate|switchpowerstate|main)$/.test(k(e)));
-      const sel = list.find((e) => e.entity_id.startsWith("select.") && /^(selectedprogram|selectprogram|beverage|product|recipe)$/.test(k(e)));
+      const k = (e) => coffeeKey(e);
+      // Ohne Schlüssel: Ende der Entity-ID (…_bsh_common_status_operationstate, <mac>_product, …_recipe, …_state).
+      const t = (e, re) => !k(e) && re.test(coffeeTail(e));
+      const sensor = list.find((e) => e.entity_id.startsWith("sensor.") && (/operationstate$|^(machinestatus|devicestatus|status|state)$/.test(k(e))
+        || t(e, /operationstate$|devicestatus$|machinestatus$/))) || list.find((e) => e.entity_id.startsWith("sensor.") && t(e, /state$/) && e.platform === "melitta_barista");
+      const power = list.find((e) => e.entity_id.startsWith("switch.") && (/^(power|powerstate|switchpowerstate|main)$/.test(k(e)) || t(e, /powerstate$/)));
+      const sel = list.find((e) => e.entity_id.startsWith("select.") && (/^(selectedprogram|selectprogram|makebeverage|beverage|product|recipe)$/.test(k(e))
+        || t(e, /programs$|product$|recipe$|recipeselect$/)));
       const a = sensor || power || sel;
       if (!a) return;
       const d = D[dev] || {};

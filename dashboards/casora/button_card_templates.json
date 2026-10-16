@@ -17747,7 +17747,7 @@
   ],
   "variables": {
    "icon": "coffee-maker",
-   "casora_default_name": "Kaffeevollautomat",
+   "casora_default_name": "Kaffee",
    "show_progress": true,
    "progress_transport": false,
    "progress_value": "[[[\n  /* Kreis oben rechts = Fortschritt des Bezugs (window._casoraCoffee.ring), sonst aus. */\n  const K = window._casoraCoffee;\n  const s = K ? K.of(entity, hass, states) : null;\n  return K && s ? K.ring(s) : null;\n]]]\n"
@@ -17889,7 +17889,7 @@
      }
     ],
     "style": "[[[\n  /* Zwei Spalten: links Getränke und Bezug, rechts Hinweise, Pflege, Statistik; oben Zustand und Ring. */\n  return '--popup-min-width: min(900px, 92vw); --popup-max-width: min(900px, 92vw);';\n]]]\n",
-    "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Kaffeevollautomat', ['Kaffeevollautomat', 'Kaffeemaschine', 'Coffee machine']) : (String(variables.room_name || '').trim() || 'Kaffeevollautomat'); ]]]",
+    "title": "[[[ return window.casoraPopupTitle ? window.casoraPopupTitle(this, variables, 'Kaffee', ['Kaffee', 'Kaffeevollautomat', 'Kaffeemaschine', 'Coffee machine']) : (String(variables.room_name || '').trim() || 'Kaffee'); ]]]",
     "extra": "[[[ return window.casoraPopupExtras ? window.casoraPopupExtras(this) : null; ]]]"
    }
   },
