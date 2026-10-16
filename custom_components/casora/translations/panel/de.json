@@ -144,8 +144,6 @@
     "Phone differs in 1 setting": "Handy weicht bei 1 Einstellung ab",
     "Desktop and phone are set differently here – tap to choose what applies": "Desktop und Handy sind hier verschieden eingestellt – antippen, um zu wählen, was gilt",
     "Match Desktop and Phone": "Desktop und Handy angleichen",
-    "Desktop and phone share these settings, but they are set differently right now – for example a different light. Choose for each row what should apply on both. Nothing changes until you choose, and you can also do this later.": "Desktop und Handy teilen sich diese Einstellungen, sie sind aber gerade verschieden gesetzt – zum Beispiel ein anderes Licht. Wähle je Zeile, was auf beiden gelten soll. Bis du wählst, ändert sich nichts; du kannst das auch später machen.",
-    "“Like the desktop everywhere” keeps the desktop value wherever both are set and fills in whichever layout is missing one.": "„Überall wie am Desktop“ behält den Desktop-Wert, wo beide gesetzt sind, und ergänzt, wo einer fehlt.",
     "Like the desktop everywhere": "Überall wie am Desktop",
     "1 device": "1 Gerät",
     "{n} devices": "{n} Geräte",
@@ -2426,7 +2424,21 @@
     "Adds a Talk button under the live picture: your microphone goes to the doorbell through Home Assistant's own WebRTC connection. Only works over HTTPS, with the doorbell connected in your network (RTSP), and only if the doorbell accepts it – many Reolink doorbells don't. If it doesn't, the popup says so and listening keeps working.": "Zeigt unter dem Live-Bild einen Knopf „Sprechen“: Dein Mikrofon geht über die WebRTC-Verbindung von Home Assistant an die Klingel. Klappt nur über HTTPS, mit der Klingel direkt im Netz (RTSP) und nur, wenn die Klingel es annimmt – viele Reolink-Klingeln tun das nicht. Dann sagt das Popup es, Ton hören geht weiter.",
     "How often the tile fetches a new still image while it is visible. The tile says \"Ready\" while the picture is fresh and shows its age in the warning color when the doorbell stops delivering.": "Wie oft die Kachel ein neues Standbild holt, solange sie zu sehen ist. Die Kachel sagt „Bereit“, solange das Bild frisch ist, und zeigt sein Alter in der Warnfarbe, wenn die Klingel nichts mehr liefert.",
     "Coffee machine": "Kaffeevollautomat",
-    "Ready, heating up or brewing with progress, and what the machine needs: water, beans, drip tray, descaling. The popup starts drinks with strength and amount, shows care and how many coffees you made. For Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco or a smart plug.": "Bereit, heizt auf oder bezieht mit Fortschritt – und was die Maschine braucht: Wasser, Bohnen, Schale, Entkalken. Im Popup Getränke starten mit Stärke und Menge, Pflege und wie viele Kaffees du gemacht hast. Für Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco oder eine Steckdose."
+    "Ready, heating up or brewing with progress, and what the machine needs: water, beans, drip tray, descaling. The popup starts drinks with strength and amount, shows care and how many coffees you made. For Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco or a smart plug.": "Bereit, heizt auf oder bezieht mit Fortschritt – und was die Maschine braucht: Wasser, Bohnen, Schale, Entkalken. Im Popup Getränke starten mit Stärke und Menge, Pflege und wie viele Kaffees du gemacht hast. Für Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco oder eine Steckdose.",
+    "Desktop and Phone Differ": "Desktop und Handy sind verschieden",
+    "These settings apply to desktop and phone together, but right now they differ. Tap a row to choose what applies. Until then, nothing changes.": "Diese Einstellungen gelten eigentlich für Desktop und Handy gemeinsam, sind aber gerade verschieden. Tippe eine Zeile an und wähle, was gelten soll. Bis dahin bleibt alles, wie es ist.",
+    "Only on the phone": "Nur am Handy",
+    "Only on the desktop": "Nur am Desktop",
+    "Set differently on desktop and phone": "Am Desktop und am Handy verschieden eingestellt",
+    "Add to Desktop": "Auch am Desktop zeigen",
+    "Add to Phone": "Auch am Handy zeigen",
+    "Remove From Phone": "Am Handy entfernen",
+    "Remove From Desktop": "Am Desktop entfernen",
+    "Use Desktop Version": "Wie am Desktop",
+    "Use Phone Version": "Wie am Handy",
+    "Settings that only one side has are added to the other.": "Was nur eine Seite hat, kommt auch auf die andere.",
+    "Keep on Both": "Auf beiden übernehmen",
+    "Percent (%)": "Prozent (%)"
   },
   "patterns": [
     [

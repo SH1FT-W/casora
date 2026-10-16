@@ -859,13 +859,16 @@ async def async_status(hass: HomeAssistant) -> dict:
         }
 
     fs = await hass.async_add_executor_job(_fs)
+    # Hält eine Automation oder eigene Datei www/hemma fest, bleibt der Ordner absichtlich –
+    # kein Rest, sonst bietet das Studio „Hemma entfernen“ endlos wieder an.
+    www_left = fs["www_hemma"] and not (fs["extra"] or fs["targets"])
     fs["hacs"] = await async_hacs_repo(hass, config_dir)
     plan = fs["plan"]
     extras = await _extras(hass)
     return {
         "installed": fs["installed"] or bool(entries),
         # Hemma ist weg, aber Teile davon noch da (Paket-Helfer, Theme, www/hemma, Ressourcen).
-        "leftovers": bool(extras["package"] or extras["storage_helpers"] or extras["themes"] or fs["www_hemma"]
+        "leftovers": bool(extras["package"] or extras["storage_helpers"] or extras["themes"] or www_left
                           or hemma_res),
         "package": [{"file": p["file"], "delete": p["delete"], "error": p["error"],
                      "items": [f'{i["domain"]}.{i["key"]}' for i in p["items"]]} for p in extras["package"]],
