@@ -5,13 +5,13 @@ import assert from 'node:assert/strict';
 const CC = new URL('../../custom_components/casora/', import.meta.url);
 const rd = (p) => fs.readFileSync(new URL(p, CC), 'utf8');
 
-// Token: nur das Casora-Theme setzt die Studio-Schrift (Nebel erbt sie), Hemma-Themes nicht.
+// Token: nur das Casora-Theme setzt die Studio-Schrift (Nebel erbt sie), die Grundwerte nicht.
 const weich = rd('theme_weich.yaml');
 const tok = weich.match(/^\s*casora-font-studio:\s*'(.+)'\s*$/m);
 assert.ok(tok, 'theme_weich.yaml setzt casora-font-studio');
 assert.ok(tok[1].startsWith('"Casora Studio Inter", "Inter"'), 'Inter zuerst: ' + tok[1]);
 assert.ok(/system-ui, sans-serif$/.test(tok[1]), 'Rückfall-Stapel bleibt');
-assert.ok(!/casora-font-studio/.test(rd('theme.yaml')), 'Hemma-/Standard-Theme setzt die Studio-Schrift nicht');
+assert.ok(!/casora-font-studio/.test(rd('theme.yaml')), 'Grundwerte (theme.yaml) setzen die Studio-Schrift nicht');
 assert.ok(!/casora-font-studio/.test(rd('theme_nebel.yaml')), 'Nebel erbt die Studio-Schrift von Casora');
 
 // Schrift lokal: @font-face zeigt auf eine mitgelieferte Datei, keine fremden Server.

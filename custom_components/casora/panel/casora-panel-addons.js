@@ -21,7 +21,7 @@
   // Studio-Schrift (1.3): Inter 4.1 aus dem offiziellen Release (rsms/inter), lokal
   // mitgeliefert – kein Abruf fremder Server. Eigener Familienname, damit das Dashboard-
   // „Inter“ (inter-v20) unberührt bleibt. Geladen wird sie nur, wenn das Theme
-  // --casora-font-studio setzt (Casora, Nebel); Hemma 1/2 fragen sie nie an. Die Version
+  // --casora-font-studio setzt (Casora, Nebel); eigene Themes fragen sie nie an. Die Version
   // steckt im Dateinamen – ein Update mit neuer Schrift bekommt eine neue Adresse.
   if (!document.getElementById("casora-studio-font")) {
     const face = document.createElement("style");
@@ -156,38 +156,14 @@ customElements.whenDefined("casora-panel").then(() => {
   const P = customElements.get("casora-panel").prototype;
   if (P.__casoraLookRow) return;
   P.__casoraLookRow = true;
-  const GLASS = "Hemma 1";
-  // Die Studio-Vorschau zeichnet ihre Kacheln selbst; im Glas-Design bekommen sie die
-  // Werte aus theme_glass.yaml (durchscheinend, aktiv hell getönt, weiße Schrift).
-  const GLASS_CSS = ""
-    + ":host(.look-glass) .mtile{background:rgba(255,255,255,0.08);"
-    + "backdrop-filter:blur(12px) saturate(1.4);-webkit-backdrop-filter:blur(12px) saturate(1.4);"
-    + "box-shadow:inset 0 0 0 .5px rgba(255,255,255,0.12),inset 0 10px 18px -16px rgba(255,255,255,0.2),inset 0 -10px 18px -16px rgba(255,255,255,0.16)}"
-    + ":host(.look-glass) .mtile.on,:host(.look-glass) .miniphone .mp-tiles .mtile.on{background:rgba(255,255,255,0.25)}"
-    + ":host(.look-glass) .mtile.on .mname{color:#fff}"
-    + ":host(.look-glass) .mtile.on .mstate{color:rgba(255,255,255,0.8)}"
-    + ":host(.look-glass) .mtile.on .mmore{color:#fff}"
-    + ":host(.look-glass) .mtile:not(.on) .mname{color:rgba(255,255,255,0.85)}";
-  // Weich hat keine festen Werte hier: casora-panel.js setzt .soft auf die Vorschau-Karte und
-  // liest die Theme-Variablen selbst (hell und dunkel, auch beim Umschalten ohne Neuladen).
+  // Die Vorschau braucht hier keine eigenen Werte: casora-panel.js setzt .soft auf die Vorschau-Karte
+  // und liest die Theme-Variablen selbst (hell und dunkel, auch beim Umschalten ohne Neuladen).
   const themeNow = (panel) => {
     if (panel._lookNow) return panel._lookNow;
     const t = (panel._hass && panel._hass.themes) || {};
     let local = null;
     try { local = JSON.parse(localStorage.getItem("selectedTheme") || "null"); } catch (e) { local = null; }
     return (local && local.theme && local.theme !== "default") ? local.theme : t.default_theme;
-  };
-  const paintLook = (panel) => {
-    const root = panel.shadowRoot;
-    if (!root) return;
-    if (!root.getElementById("casora-look-preview-css")) {
-      const st = document.createElement("style");
-      st.id = "casora-look-preview-css";
-      st.textContent = GLASS_CSS;
-      root.appendChild(st);
-    }
-    const look = themeNow(panel);
-    panel.classList.toggle("look-glass", look === GLASS);
   };
   // Das Design gilt sofort für alle Dashboards (HA-Theme, nicht Teil von „Speichern“),
   // lässt sich aber mit Rückgängig zurücknehmen: der Undo-Eintrag trägt das vorige Design.
@@ -198,7 +174,6 @@ customElements.whenDefined("casora-panel").then(() => {
     const r = undo.apply(this, arguments);
     if (top && top.look) {
       this._lookNow = top.look;
-      paintLook(this);
       Promise.resolve(this._applyTheme(top.look)).then(() => this._renderForm());
     }
     return r;
@@ -208,7 +183,6 @@ customElements.whenDefined("casora-panel").then(() => {
   const renderForm = P._renderForm;
   P._renderForm = function () {
     const r = renderForm.apply(this, arguments);
-    paintLook(this);
     const card = this.$("pane") && this.$("pane").querySelector('section.card[data-k="General"]');
     if (!card || card.querySelector(".casora-looklink")) return r;
     const tr = (x) => (window.casoraI18n ? window.casoraI18n.t(x) : x);
@@ -230,9 +204,8 @@ customElements.whenDefined("casora-panel").then(() => {
     this._bOpen = true;
     if (typeof this._csShow === "function") return this._csShow("design");
   };
-  // Design-Auswahl (drei Karten mit Bild) in host zeichnen – für „Einstellungen › Design“.
+  // Design-Auswahl (Karten mit Bild) in host zeichnen – für „Einstellungen › Design“.
   P._casoraLookPicker = function (host) {
-    paintLook(this);
     const themes = ((window.__casoraPanelInternals || {}).CASORA_THEMES || [])
       .filter((x) => this._hass && this._hass.themes && (this._hass.themes.themes || {})[x.name]);
     if (!host || !themes.length) return false;
@@ -245,8 +218,8 @@ customElements.whenDefined("casora-panel").then(() => {
       const st = document.createElement("style");
       st.id = "casora-look-css";
       st.textContent = ""
-        // M10 (Weich-Audit): drei Designs nebeneinander statt 2er-Raster mit Lücke, Namen einzeilig.
-        + ".casora-looks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:12px 0 14px}"
+        // M10 (Weich-Audit): alle Designs nebeneinander (höchstens drei) statt Raster mit Lücke, Namen einzeilig.
+        + ".casora-looks{display:grid;grid-template-columns:repeat(var(--casora-looks-n,3),minmax(0,1fr));gap:12px;padding:12px 0 14px}"
         + ".casora-lookcard b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"
         + ".casora-looktag{display:block;margin-top:-4px;font-size:11px;font-weight:500;letter-spacing:.02em;color:var(--ink-2)}"  /* ds-17: Text 2 statt .6 */
         + ".casora-lookcard{appearance:none;border:0;margin:0;padding:0;background:none;box-shadow:none;cursor:pointer;"
@@ -262,7 +235,7 @@ customElements.whenDefined("casora-panel").then(() => {
     }
     const box = document.createElement("div");
     box.className = "subcard casora-look";
-    // Two small cards with a real screenshot each, like the setup assistant, instead of a
+    // Small cards (one per design) with a real screenshot each, like the setup assistant, instead of a
     // plain list: the choice is seen, not read.
     const grid = document.createElement("div");
     grid.className = "casora-looks";
@@ -297,7 +270,6 @@ customElements.whenDefined("casora-panel").then(() => {
           this._markDirty();
         }
         this._lookNow = name;
-        paintLook(this);
         try { await this._applyTheme(name); } finally { cards.forEach((x) => { x.disabled = false; }); }
       };
       grid.appendChild(c);
@@ -306,7 +278,9 @@ customElements.whenDefined("casora-panel").then(() => {
     const SL = (window.__casoraPanelInternals || {}).shotLang || ((u) => u);
     themes.forEach((x) => add(x.name, tr(x.label), x.shot && SL(dark ? x.shot.dark : x.shot.light, this._hass),
       x.ph && (dark ? x.ph.dark : x.ph.light)));
-    if (!ours && cur) add(cur, cur, null);
+    // Eigenes Theme nur, solange HA es kennt (nicht das entfernte „Hemma 2“).
+    if (!ours && cur && (t.themes || {})[cur]) add(cur, cur, null);
+    grid.style.setProperty("--casora-looks-n", Math.min(3, cards.length) || 1);
     paint();
     box.appendChild(grid);
     const hint = document.createElement("div");

@@ -36,12 +36,13 @@ const SETUP_ENTITIES = [
   "input_boolean.casora_mobile_navigation", "input_text.casora_thermostat_active_entity",
   "script.casora_light_smart_toggle", "script.casora_thermostat_overlay_toggle",
 ];
-// Weich ist seit 01.10.2026 DAS Casora-Design; Standard und Glas laufen als Legacy weiter.
+// Weich ist seit 01.10.2026 DAS Casora-Design; die Legacy-Designs Hemma 1/2 gibt es seit 1.6.1 nicht mehr.
 const CASORA_THEME = "Casora";
-const CASORA_LEGACY = "Hemma 2";
-// Frühere Theme-Namen (05.10.2026 umbenannt) → heutiger Name; helfer.py THEME_RENAMED.
-const THEME_RENAMED = { "Casora Weich": "Casora", "Casora Standard": "Hemma 2", "Casora Glass": "Hemma 1" };
-// The looks offered on first run. Each ships in theme.yaml; the photo is the preview.
+// Frühere Theme-Namen → heutiger Name; helfer.py THEME_RENAMED (+ „Hemma“, nur wenn es nicht mehr da ist).
+// Hemma 1/2 (und Hemmas „Hemma“) waren Glas-Looks: ihr Ersatz ist Casora Glas.
+const THEME_RENAMED = { "Casora Weich": "Casora", "Casora Standard": "Casora Glas", "Casora Glass": "Casora Glas",
+  "Hemma 2": "Casora Glas", "Hemma 1": "Casora Glas", "Hemma": "Casora Glas" };
+// The looks offered on first run. Each ships in theme_*.yaml; the photo is the preview.
 // aliases: weitere Namen, unter denen dasselbe Theme registriert ist (Übergang von Hemma).
 // shot: echter Dashboard-Screenshot je Modus als Vorschau.
 const CASORA_THEMES = [
@@ -52,10 +53,11 @@ const CASORA_THEMES = [
   { name: "Casora Nebel", label: "Casora Nebel", sub: "Cool light gray with a teal accent, slightly crisper corners.",
     shot: { light: "/casora_assets/themes/nebel-light.webp", dark: "/casora_assets/themes/nebel-dark.webp" },
     ph: { light: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23EEF1F3%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2226%22%20width%3D%22120%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%23D5DCE1%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23FFFFFF%22/%3E%3Crect%20x%3D%22116%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23FFFFFF%22/%3E%3Crect%20x%3D%2224%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%23FFFFFF%22/%3E%3Crect%20x%3D%22168%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%23FFFFFF%22/%3E%3Ccircle%20cx%3D%2246%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%233F7491%22/%3E%3Ccircle%20cx%3D%22190%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%233F7491%22%20opacity%3D%22.35%22/%3E%3C/svg%3E")', dark: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%231C2226%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2226%22%20width%3D%22120%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%2338434A%22/%3E%3Crect%20x%3D%2224%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%232A3237%22/%3E%3Crect%20x%3D%22116%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%232A3237%22/%3E%3Crect%20x%3D%2224%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%232A3237%22/%3E%3Crect%20x%3D%22168%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%232A3237%22/%3E%3Ccircle%20cx%3D%2246%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%235E9AB8%22/%3E%3Ccircle%20cx%3D%22190%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%235E9AB8%22%20opacity%3D%22.35%22/%3E%3C/svg%3E")' } },
-  { name: CASORA_LEGACY, aliases: ["Casora Standard", "Hemma"], label: "Hemma 2 (Legacy)", sub: "The original dark glass over your room photos.",
-    legacy: true, shot: { light: "/casora_assets/themes/hemma-light.webp", dark: "/casora_assets/themes/hemma-dark.webp" } },
-  { name: "Hemma 1", aliases: ["Casora Glass"], label: "Hemma 1 (Legacy)", sub: "Clear glass tiles that let the room shine through.",
-    legacy: true, shot: { light: "/casora_assets/themes/glass-light.webp", dark: "/casora_assets/themes/glass-dark.webp" } },
+  // Casora Glas (16.10.2026): Casora mit Milchglas über den Raumfotos (theme_glas.yaml baut auf
+  // Casora auf, soft-Zweig). ph wie bei Nebel.
+  { name: "Casora Glas", label: "Casora Glas", sub: "Casora with frosted glass over your room photos.",
+    shot: { light: "/casora_assets/themes/glas-light.webp", dark: "/casora_assets/themes/glas-dark.webp" },
+    ph: { light: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23D9C3A5%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%238C8378%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Crect%20x%3D%2224%22%20y%3D%2226%22%20width%3D%22120%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%23FFFDFA%22%20fill-opacity%3D%22.6%22%2F%3E%3Crect%20x%3D%2224%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23FFFDFA%22%20fill-opacity%3D%22.6%22%2F%3E%3Crect%20x%3D%22116%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%23FFFDFA%22%20fill-opacity%3D%22.6%22%2F%3E%3Crect%20x%3D%2224%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%23FFFDFA%22%2F%3E%3Crect%20x%3D%22168%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%23FFFDFA%22%20fill-opacity%3D%22.6%22%2F%3E%3Ccircle%20cx%3D%2246%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%23B67A50%22%2F%3E%3Ccircle%20cx%3D%22190%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%23B67A50%22%20opacity%3D%22.35%22%2F%3E%3C%2Fsvg%3E")', dark: 'url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%233A4250%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%231C1916%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22url%28%23g%29%22%2F%3E%3Crect%20x%3D%2224%22%20y%3D%2226%22%20width%3D%22120%22%20height%3D%2214%22%20rx%3D%227%22%20fill%3D%22%231E1B18%22%20fill-opacity%3D%22.6%22%2F%3E%3Crect%20x%3D%2224%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%231E1B18%22%20fill-opacity%3D%22.6%22%2F%3E%3Crect%20x%3D%22116%22%20y%3D%2258%22%20width%3D%2284%22%20height%3D%2222%22%20rx%3D%2211%22%20fill%3D%22%231E1B18%22%20fill-opacity%3D%22.6%22%2F%3E%3Crect%20x%3D%2224%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%23F2E8DA%22%2F%3E%3Crect%20x%3D%22168%22%20y%3D%22104%22%20width%3D%22128%22%20height%3D%2272%22%20rx%3D%2216%22%20fill%3D%22%231E1B18%22%20fill-opacity%3D%22.6%22%2F%3E%3Ccircle%20cx%3D%2246%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%23B67A50%22%2F%3E%3Ccircle%20cx%3D%22190%22%20cy%3D%22126%22%20r%3D%2210%22%20fill%3D%22%23B67A50%22%20opacity%3D%22.35%22%2F%3E%3C%2Fsvg%3E")' } },
 ];
 const isCasoraTheme = (n) => !!n && CASORA_THEMES.some((x) => x.name === n || (x.aliases || []).includes(n));
 
@@ -3840,6 +3842,18 @@ let ACCENT_THEME = "";
 // Pulse installiert? (Schalter „Pulse“ unter Benachrichtigungen) – je Registry-Stand einmal geprüft.
 let PULSE_HERE = false;
 let pulseReg = null;
+// Leistungsmodus für die Vorschau (Casora Glas: kein Blur, deckende Flächen wie im Dashboard).
+// Ist casora-core.js geladen, entscheidet es (Geräte-Pin, Studio-Einstellung, „auto“); sonst die
+// zuletzt dort gemerkte Wahl. Ohne Glas-Werte im Theme hat .perf in der Vorschau keine Wirkung.
+const perfLook = () => {
+  try { if (window._casoraPerf && typeof window._casoraPerf.on === "function") return !!window._casoraPerf.on(); } catch (e) { /* weiter */ }
+  let v = "";
+  try { v = localStorage.getItem("casora_perf") || localStorage.getItem("casora_perf_dash") || ""; } catch (e) { v = ""; }
+  if (v !== "auto") return v === "on";
+  const n = navigator || {}, ua = n.userAgent || "";
+  if (/iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && (n.maxTouchPoints || 0) > 1)) return false;
+  return (!!n.deviceMemory && n.deviceMemory <= 4) || (!!n.hardwareConcurrency && n.hardwareConcurrency <= 4);
+};
 // Weich-Look: theme_weich.yaml setzt casora-popup-layout: soft (Standard und Glas nicht).
 // Gelesen an <html>, wo HA das aktive Theme in der Fassung des Hell/Dunkel-Modus ablegt –
 // dasselbe Signal, nach dem sich die Popups des echten Dashboards richten.
@@ -5831,7 +5845,8 @@ class CasoraPanel extends HTMLElement {
       try {
         const sel = JSON.parse(localStorage.getItem("selectedTheme") || "null");
         const to = sel && THEME_RENAMED[sel.theme];
-        if (to && hass.themes && hass.themes.themes && hass.themes.themes[to]) {
+        // Nur wenn es das alte Theme nicht mehr gibt (z. B. Hemmas eigenes „Hemma“ bleibt, solange es da ist).
+        if (to && hass.themes && hass.themes.themes && hass.themes.themes[to] && !hass.themes.themes[sel.theme]) {
           const detail = { theme: to };
           if (typeof sel.dark === "boolean") detail.dark = sel.dark;
           setTimeout(() => this.dispatchEvent(new CustomEvent("settheme", { detail, bubbles: true, composed: true })), 0);
@@ -5858,7 +5873,7 @@ class CasoraPanel extends HTMLElement {
   _syncSoftLook() {
     const apply = () => {
       const c = this.shadowRoot && this.shadowRoot.querySelector(".card.map");
-      if (c) c.classList.toggle("soft", softLook());
+      if (c) { c.classList.toggle("soft", softLook()); c.classList.toggle("perf", perfLook()); }
     };
     apply();
     requestAnimationFrame(apply);
@@ -9777,6 +9792,59 @@ class CasoraPanel extends HTMLElement {
           color:var(--casora-entity-name-active, rgba(0,0,0,0.88));
         }
         .card.map.soft .miniphone .mp-scene:not(.on) ha-icon { color:var(--casora-icon-off-ink, currentColor) !important; }
+        /* Casora Glas: echtes Milchglas in der Vorschau – Kacheln, Badges, Wiedergabe, Szenen, Kopf-Knöpfe
+           bekommen den Blur aus --casora-studio-glass-backdrop. Nur Casora Glas setzt ihn; Casora und
+           Nebel haben ihn nicht (none wie bisher). Leistungsmodus (.perf): kein Blur, deckende Ersatzflächen
+           über --casora-studio-perf-*, ohne Wert bleibt die bisherige Fläche. */
+        .card.map.soft .mtile:not(.ghost),
+        .card.map.soft .mini-nptile,
+        .card.map.soft .pbadge:not(.ghost),
+        .card.map.soft .miniphone :is(.mp-scene, .mp-np, .mp-np.noart),
+        .card.map.soft :is(.mini-settings, .mini-bell, .mini-assist, .mini-wave:not(.on)),
+        .card.map.soft .capsule .mini-cap {
+          backdrop-filter:var(--casora-studio-glass-backdrop, none);
+          -webkit-backdrop-filter:var(--casora-studio-glass-backdrop, none);
+        }
+        .card.map.soft.perf :is(.mtile:not(.ghost), .mini-nptile, .pbadge:not(.ghost), .mp-scene, .mp-np,
+          .mini-settings, .mini-bell, .mini-assist, .mini-wave, .mini-cap) {
+          backdrop-filter:var(--casora-studio-perf-backdrop, var(--casora-studio-glass-backdrop, none));
+          -webkit-backdrop-filter:var(--casora-studio-perf-backdrop, var(--casora-studio-glass-backdrop, none));
+        }
+        .card.map.soft.perf .miniphone .mp-nav {
+          backdrop-filter:var(--casora-studio-perf-backdrop, var(--casora-mnav-blur, none));
+          -webkit-backdrop-filter:var(--casora-studio-perf-backdrop, var(--casora-mnav-blur, none));
+        }
+        .card.map.soft.perf.size-tablet .mini-tabs::before,
+        .card.map.soft.perf .miniphone .mp-pill::before {
+          backdrop-filter:var(--casora-studio-perf-backdrop, var(--casora-pill-backdrop, blur(12px) saturate(1.4)));
+          -webkit-backdrop-filter:var(--casora-studio-perf-backdrop, var(--casora-pill-backdrop, blur(12px) saturate(1.4)));
+        }
+        .card.map.soft.perf .mtile:not(.ghost):not(.on),
+        .card.map.soft.perf .miniphone :is(.mp-scene:not(.on), .mp-np) {
+          background:var(--casora-studio-perf-tile, var(--casora-entity-background, rgba(0,0,0,0.40)));
+        }
+        .card.map.soft.perf .mtile.on {
+          background:var(--casora-studio-perf-active, var(--casora-entity-background-active, rgba(248,248,250,0.94)));
+        }
+        .card.map.soft.perf .miniphone .mp-tiles .mtile.on, .card.map.soft.perf .miniphone .mp-scene.on {
+          background:var(--casora-studio-perf-active, var(--casora-entity-active-tint-mobile, rgba(255,255,255,0.94)));
+        }
+        .card.map.soft.perf .pbadge:not(.ghost):not(.open) {
+          background:var(--casora-studio-perf-card, var(--badge-background, rgba(28,28,32,0.66)));
+        }
+        .card.map.soft.perf :is(.mini-settings, .mini-bell, .mini-assist, .mini-wave:not(.on)):not(.capsule *) {
+          background:var(--casora-studio-perf-card, var(--casora-chrome-fill, rgba(0,0,0,0.40)));
+        }
+        .card.map.soft.perf .capsule .mini-cap {
+          background:var(--casora-studio-perf-card, var(--casora-chrome-capsule-fill, transparent));
+        }
+        .card.map.soft.perf .miniphone .mp-nav {
+          background:var(--casora-studio-perf-card, var(--casora-mnav-pane, var(--casora-pill-fill, rgba(251,248,243,0.8))));
+        }
+        .card.map.soft.perf.size-tablet .mini-tabs::before,
+        .card.map.soft.perf .miniphone .mp-pill::before {
+          background-color:var(--casora-studio-perf-card, var(--casora-pill-fill, rgba(255,255,255,0.10)));
+        }
         .card.map.soft .miniphone .mp-nptitle { color:var(--casora-entity-name, #fff); }
         .card.map.soft .miniphone .mp-npsub { color:var(--casora-entity-state, rgba(255,255,255,0.62)); }
         .card.map.soft .miniphone .mp-npbtn path { fill:var(--casora-entity-name, #fff); }
@@ -13352,7 +13420,8 @@ class CasoraPanel extends HTMLElement {
     try { local = JSON.parse(localStorage.getItem("selectedTheme") || "null"); } catch (e) { local = null; }
     const current = (local && local.theme && local.theme !== "default") ? local.theme : t.default_theme;
     const ours = themes.find((x) => x.name === current || (x.aliases || []).includes(current));
-    const own = current && current !== "default" && !ours ? current : null;
+    // Eigenes Theme nur anbieten, wenn es das noch gibt (nicht z. B. das entfernte „Hemma 2“).
+    const own = current && current !== "default" && !ours && have[current] ? current : null;
     // Ersteinrichtung: immer „Standard“ vorschlagen. Erneut gestartet (es gibt schon ein
     // Dashboard): das Design, das gerade aktiv ist.
     let pick = (this._dashUrl && ours) ? ours.name : themes[0].name;
@@ -13497,8 +13566,8 @@ class CasoraPanel extends HTMLElement {
     let look = this._lookPick;
     if (!look) { try { look = (JSON.parse(localStorage.getItem("selectedTheme") || "null") || {}).theme; } catch (e) { look = null; } }
     look = THEME_RENAMED[look] || look;
-    // Nebel hat eigene Bilder (perf-nebel-*), gleicher Aufbau wie Weich.
-    const set = look === "Hemma 1" ? "glass" : look === "Casora Nebel" ? "nebel" : look === CASORA_THEME ? "weich" : "std";
+    // Nebel hat eigene Bilder (perf-nebel-*), gleicher Aufbau wie Weich; std = eigenes Theme (Dashboard ohne Casora-Look).
+    const set = look === "Casora Nebel" ? "nebel" : look === CASORA_THEME ? "weich" : "std";
     const shot = (mode) => shotLang("/casora_assets/themes/perf-" + set + "-" + mode + "-" + (dark ? "dark" : "light") + ".webp", this._hass);
     const grid = document.createElement("div");
     grid.className = "themegrid perfgrid";
@@ -24402,7 +24471,7 @@ class CasoraPanel extends HTMLElement {
 
     let shown = false;
     const card = document.createElement("section");
-    card.className = "card map size-" + this._miniSize + (softLook() ? " soft" : "");
+    card.className = "card map size-" + this._miniSize + (softLook() ? " soft" : "") + (perfLook() ? " perf" : "");
     card.dataset.k = "__map";
     card.style.visibility = "hidden";
 

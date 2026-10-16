@@ -92,7 +92,7 @@ Casora picks the right tile and popup for each device on its own. Everything bel
 | **Hobbies** | Plants, aquariums, football, game activity (PlayStation, Steam, Discord), recipe of the week |
 | **Your own** | Any Home Assistant card as a custom tile |
 
-The look is *Casora*: warm linen, generous corners and soft shadows, in light and dark, set in Inter. *Casora Nebel* is the same calm design in cool grey with a petrol accent. It follows Home Assistant's theme mode. The classic glass looks from Hemma are still there as legacy options.
+The look is *Casora*: warm linen, generous corners and soft shadows, in light and dark, set in Inter. *Casora Nebel* is the same calm design in cool grey with a petrol accent. It follows Home Assistant's theme mode.
 
 ## Community cards
 

@@ -40,7 +40,7 @@ auswerten, sonst fallen Namenskonflikte nicht auf.
 dev/qa/wegwerf-ha.sh start <name> <port> arbeit|frisch|demo|stress
 dev/qa/wegwerf-ha.sh wait  <name> <port>
 export CASORA_URL=http://localhost:<port>; export CASORA_TOKENS="$(node dev/qa/token.mjs)"
-export CASORA_THEME=Casora          # IMMER – der Harness-Standard ist sonst „Hemma 2“
+export CASORA_THEME=Casora          # Harness-Standard seit 1.6.1 (vorher „Hemma 2“); „default“ = ohne Casora-Theme
 CASORA_LOCAL=1 …                    # Dashboard-Skripte und Studio aus dem Checkout, ohne Neustart
 dev/qa/wegwerf-ha.sh weg <name>     # am Ende immer
 ```

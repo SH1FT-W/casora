@@ -1,5 +1,5 @@
 # Casora (früher Casora Weich) – Entwurf „Hell & weich“ (theme_weich.yaml).
-# Nur die Abweichungen vom Casora-Theme; helfer.py legt sie beim Laden darüber (wie theme_glass.yaml).
+# Nur die Abweichungen von den Grundwerten (theme.yaml); helfer.py legt sie beim Laden darüber.
 # Idee: Leinen/Sand statt dunkles Glas, kaum Blur, große Rundungen, warme weiche Schatten.
 # Dunkel: warmes Anthrazit (#24211E) statt kaltem Schwarz, aktive Kacheln in Creme.
 Casora:

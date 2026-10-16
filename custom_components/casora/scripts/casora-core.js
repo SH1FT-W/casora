@@ -1826,6 +1826,8 @@ window.casoraMenuGlass = {
     + '--badge-blur:0px!important;'
     + '--casora-badge-media-backdrop:none!important;'
     + '--casora-badge-ring-backdrop:none!important;'
+    // Studio-Vorschau im Glas-Look (nur Casora Glas setzt ihn; sonst ohnehin none).
+    + '--casora-studio-glass-backdrop:none!important;'
     // The room photo is the one full-screen filter, and it repaints on every swap.
     + '--casora-view-photo-filter:none!important;'
     + '--hero-img-blur:0px!important;'
@@ -1846,6 +1848,27 @@ window.casoraMenuGlass = {
     + '--casora-entity-background:var(--casora-perf-tile-fill,rgb(32,34,38))!important;'
     + '--ha-card-background:var(--casora-perf-card-fill,rgb(32,34,38))!important;'
     + '}';
+  // Weitere Flächen nur, wenn das Theme dafür einen deckenden Ersatz mitbringt (Casora Glas:
+  // Raumleiste, Kapsel, Handy-Leiste, aktive Kacheln sind dort halbtransparent). Ohne Ersatzwert
+  // bleibt die Fläche, wie das Theme sie setzt – Casora und Nebel ändern sich dadurch nicht.
+  var MORE = [
+    ['--casora-nav-bg', '--casora-perf-nav-fill'],
+    ['--casora-chrome-fill', '--casora-perf-chrome-fill'],
+    ['--casora-mnav-bg', '--casora-perf-mnav-fill'],
+    ['--casora-room-head-fill', '--casora-perf-head-fill'],
+    ['--casora-entity-background-active', '--casora-perf-tile-active-fill'],
+    ['--casora-entity-active-tint', '--casora-perf-tile-active-fill'],
+    ['--casora-entity-active-tint-mobile', '--casora-perf-tile-active-fill'],
+    ['--ha-card-background-active', '--casora-perf-tile-active-fill'],
+  ];
+  function css() {
+    var cs = null, more = '';
+    try { cs = getComputedStyle(document.documentElement); } catch (e) { cs = null; }
+    MORE.forEach(function (p) {
+      if (cs && cs.getPropertyValue(p[1]).trim()) more += p[0] + ':var(' + p[1] + ')!important;';
+    });
+    return more ? CSS.replace(/\}$/, more + '}') : CSS;
+  }
 
   function clean(v) {
     v = String(v == null ? '' : v).trim().toLowerCase();
@@ -1886,12 +1909,18 @@ window.casoraMenuGlass = {
     var head = document.head || document.documentElement;
     var el = document.getElementById(ID);
     var want = resolve();
-    if (want === !!el) return;
-    if (!want) { el.remove(); return; }
+    if (!want) { if (el) el.remove(); return; }
+    var text = css();
+    if (el) { if (el.textContent !== text) el.textContent = text; return; }
     el = document.createElement('style');
     el.id = ID;
-    el.textContent = CSS;
+    el.textContent = text;
     head.appendChild(el);
+  }
+  // Theme-Wechsel (HA setzt Themes als Stil auf <html>): Ersatzflächen des neuen Themes übernehmen.
+  if (typeof MutationObserver === 'function') {
+    new MutationObserver(function () { if (document.getElementById(ID)) apply(); })
+      .observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
   }
 
   window._casoraPerf = {
@@ -1907,6 +1936,45 @@ window.casoraMenuGlass = {
   };
 
   apply();
+})();
+
+// ── Hinweis nach Design-Umstellung (Hemma 1/2 → Casora Glas) ───────────────────
+// helfer.py setzt bei der Umstellung je betroffenem HA-Benutzer die Benutzerdaten
+// casora_theme_notice = { from: 'Hemma 2' | 'Hemma 1' | 'Hemma', to: 'Casora Glas' }. Einmal als
+// Meldung zeigen (bleibt, bis sie weggeklickt wird), dann löschen – auf allen Geräten nur einmal.
+(function () {
+  if (window._casoraThemeNotice) return;
+  window._casoraThemeNotice = true;
+  var KEY = 'casora_theme_notice';
+  var TEXT = {
+    'Hemma 2': 'Hemma 2 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.',
+    'Hemma 1': 'Hemma 1 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.',
+    'Hemma': 'Das Hemma-Design gibt es nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.',
+  };
+  var tries = 0;
+  function check() {
+    var el = document.querySelector('home-assistant');
+    var h = el && el.hass;
+    var conn = h && h.connection;
+    if (!conn || typeof conn.sendMessagePromise !== 'function' || conn.connected === false) {
+      if (++tries < 60) setTimeout(check, 2000);
+      return;
+    }
+    conn.sendMessagePromise({ type: 'frontend/get_user_data', key: KEY }).then(function (r) {
+      var v = r && r.value;
+      var msg = v && TEXT[v.from];
+      if (!msg) return;
+      // Erst löschen, dann zeigen: ein zweiter Tab oder ein Neuladen zeigt ihn nicht noch einmal.
+      return conn.sendMessagePromise({ type: 'frontend/set_user_data', key: KEY, value: null }).then(function () {
+        var T = window.casoraTr || function (x) { return x; };
+        var ev = new Event('hass-notification', { bubbles: true, composed: true });
+        ev.detail = { message: T(msg), duration: -1, dismissable: true,
+          action: { text: T('OK'), action: function () {} } };
+        el.dispatchEvent(ev);
+      });
+    }).catch(function () { /* ältere HA ohne Benutzerdaten: kein Hinweis */ });
+  }
+  setTimeout(check, 3000);
 })();
 
 // ── Now Playing collector ────────────────────────────────────────────────────

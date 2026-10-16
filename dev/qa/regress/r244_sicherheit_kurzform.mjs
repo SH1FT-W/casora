@@ -1,7 +1,7 @@
 // @zustand: stress
 // @parallel: ui
 // @deckt: custom_components/casora/scripts/local/00-finden.js
-// Tablet-Badge-Reihe (1.3, Look Hemma 2): Die lange Sicherheits-Zeile („3 Schlösser offen · Schloss offline ·
+// Tablet-Badge-Reihe (1.3, Look ohne Casora-Theme – bis 1.6.0 „Hemma 2“): Die lange Sicherheits-Zeile („3 Schlösser offen · Schloss offline ·
 // 2 Kameras offline“) schob am Tablet die übrigen Badges über den Rand, „Szenen“ war nicht zu sehen.
 // Jetzt zeigt das Sammel-Badge die Kurzform („3 offen · 3 offline“) nur, wenn die Reihe sonst nicht passt –
 // gemessen, nicht nach Gerät. Wo Platz ist (Desktop 1920), bleibt die lange Zeile.
@@ -23,7 +23,7 @@ const messen = (page) => page.evaluate(() => {
 });
 
 for (const [w, h, label] of [[1024, 768, 'Tablet'], [1920, 1080, 'Desktop breit']]) {
-  const { page } = await open({ width: w, height: h, touch: w === 1024, theme: 'Hemma 2', dark: false });
+  const { page } = await open({ width: w, height: h, touch: w === 1024, theme: 'default', dark: false });
   await ready(page, '/' + DASH + '/home', () => window.__pierce && window.__pierce('button-card').length > 3);
   await page.waitForTimeout(5000);
   const m = await messen(page);

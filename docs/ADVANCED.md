@@ -65,7 +65,7 @@ Make a full Home Assistant backup/snapshot before you start. YAML dashboards + t
 
 ### 2) Copy Casora into your Home Assistant config
 The theme and the helpers/scripts the cards use come with the Casora integration
-(`custom_components/casora/theme.yaml`, `custom_components/casora/helfer.yaml`) and are
+(`custom_components/casora/theme*.yaml`, `custom_components/casora/helfer.yaml`) and are
 set up automatically when it loads. There are no packages or theme folder to copy.
 
 Copy these folders/files from this repo into your HA `/config`:
@@ -154,7 +154,8 @@ These are the only files you edit to map Casora to your devices/entities. All be
 ### 6) Enable the Casora theme
 
 - Profile → Theme → choose **Casora**, Casora's own look (the setup assistant in Casora Studio does this for you)
-- The two classic glass looks are still there as legacy themes: **Hemma 2** (the dark glass over your room photos) and **Hemma 1** (clear glass tiles). They used to be called *Casora Standard* and *Casora Glass*, and Casora's own look *Casora Weich*; a saved choice moves along by itself
+- **Casora Nebel** is the second look: the same design in cool grey with a petrol accent
+- The legacy looks **Hemma 2** and **Hemma 1** (earlier *Casora Standard* and *Casora Glass*) were removed in 1.6.1, as was the old name *Casora Weich*: a saved choice, in the profile or as the default theme, moves to **Casora** by itself
   *(You may need to reload themes or restart after copying.)*
 
 ### 7) Add your room images + icons
@@ -631,7 +632,7 @@ Optionally add a `room_chips:` entry for its sensor chips, and set `mobile_filte
 This repo is intended as a starting point:
 
 - Swap out room/background images in `www/casora/rooms/`.
-- Tweak theme colors, shadows, and typography: copy `custom_components/casora/theme_weich.yaml` (the Casora look; `theme.yaml` and `theme_glass.yaml` hold the legacy looks) to `/config/themes/`, rename the theme inside it (updates overwrite the integration's copy) and pick your version in the profile.
+- Tweak theme colors, shadows, and typography: copy `custom_components/casora/theme_weich.yaml` (the Casora look; it builds on the base values in `theme.yaml`) to `/config/themes/`, rename the theme inside it (updates overwrite the integration's copy) and pick your version in the profile.
 - Adjust layouts (`casora_screen_layout.yaml`, etc.) to match your devices and preferences.
 
 ### HA Companion App iOS Settings

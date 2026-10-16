@@ -4,7 +4,7 @@
 // Player (Desktop: Kachel-Stapel unter der Welle, Handy: Medien-Zeile), bis die Skripte
 // 09-weich-wiedergabe.js / 10-weich-welle.js nachgeladen waren. Erwartet: Die Vorlagen erkennen
 // den Casora-Look schon beim ersten Zeichnen am Theme (--casora-popup-layout: soft) und blenden den
-// alten Player aus; in Hemma 2 bleibt er sichtbar. Die Zusatz-Skripte werden hier blockiert
+// alten Player aus; ohne Casora-Theme (bis 1.6.0 „Hemma 2“) bleibt er sichtbar. Die Zusatz-Skripte werden hier blockiert
 // (Zustand „noch nicht geladen“). Nur im Browser, gespeichert wird nichts.
 import { open, casoraDashboard, dashboard, fakeStates, check, need, finish } from './lib.mjs';
 
@@ -86,7 +86,7 @@ const soft = await look('Casora');
 await need('Wiedergabe-Karte im Casora-Look', soft.length, soft);
 await check('Skripte blockiert (Zustand vor dem Nachladen)', soft.every((x) => !x.loaded), soft);
 await check('Casora-Look: alter Stapel schon beim ersten Zeichnen aus', soft.every((x) => x.display === 'none' || x.h === 0), soft);
-const legacy = await look('Hemma 2');
-await need('Wiedergabe-Karte in Hemma 2', legacy.length, legacy);
-await check('Hemma 2: Stapel bleibt sichtbar', legacy.some((x) => x.display !== 'none' && x.h > 0), legacy);
+const legacy = await look('default');
+await need('Wiedergabe-Karte ohne Casora-Theme', legacy.length, legacy);
+await check('Ohne Casora-Theme: Stapel bleibt sichtbar', legacy.some((x) => x.display !== 'none' && x.h > 0), legacy);
 await finish();
