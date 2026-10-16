@@ -933,6 +933,14 @@
               const extra = (h.files || {}).extra || [];
               // Hält ihn nur eine Automation fest, erklärt das „Bleibt: Ordner, in die eine Automation schreibt“.
               if (!extra.length && ((h.files || {}).write_targets || []).length) return;
+              // Gleichnamige Dateien in www/casora weichen ab: die nennen statt „ein Dashboard nutzt sie“.
+              const conf = (h.files || {}).conflicts || [];
+              if (!extra.length && conf.length) {
+                item(www, "info", t("Old files in www/hemma stay"),
+                  t("These files differ from the ones with the same name in www/casora:") + "\n" + conf.slice(0, 4).join("\n")
+                    + (conf.length > 4 ? "\n" + t("… and {1} more").replace("{1}", conf.length - 4) : ""));
+                return;
+              }
               item(www, "info", t("Old files in www/hemma stay"), extra.length
                 ? t("It also holds files that don't come from Hemma:") + "\n" + extra.slice(0, 4).join("\n")
                   + (extra.length > 4 ? "\n" + t("… and {1} more").replace("{1}", extra.length - 4) : "")

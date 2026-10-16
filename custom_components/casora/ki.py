@@ -42,6 +42,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.script import Script, async_validate_actions_config
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import load_yaml
@@ -197,9 +198,18 @@ def answer_language(hass: HomeAssistant) -> str:
 # ── Hilfen ──────────────────────────────────────────────────────────────────
 
 def is_external(hass: HomeAssistant, key: str) -> bool:
-    """Alter Template-Sensor aus eigenen Paketen vorhanden → Casora bleibt passiv."""
-    reg = er.async_get(hass)
-    return reg.async_get_entity_id("sensor", "template", LEGACY[key][0]) is not None
+    """Alter Template-Sensor aus eigenen Paketen vorhanden → Casora bleibt passiv.
+
+    Zählt nur, solange das Paket ihn noch liefert: Ein gelöschtes Paket hinterlässt einen
+    verwaisten Registry-Eintrag (Zustand „restored“), der Casora sonst für immer stilllegte.
+    Vor dem Start von HA ist das nicht zu unterscheiden – dann gilt der Eintrag (siehe _schedule)."""
+    eid = er.async_get(hass).async_get_entity_id("sensor", "template", LEGACY[key][0])
+    if eid is None:
+        return False
+    if not hass.is_running:
+        return True
+    st = hass.states.get(eid)
+    return st is not None and not st.attributes.get("restored")
 
 
 def ai_entity(hass: HomeAssistant, entry: ConfigEntry, web: bool = False) -> str | None:
@@ -1129,7 +1139,15 @@ class KiRunner:
         for name, fn, schema in reg:
             hass.services.async_register(DOMAIN, name, fn, schema=schema)
 
-        self._schedule()
+        # Erst nach dem Start: dann ist klar, ob alte Paket-Sensoren noch geliefert werden (is_external).
+        if hass.is_running:
+            self._schedule()
+        else:
+            @callback
+            def started(_hass: HomeAssistant) -> None:
+                self._schedule()
+
+            self.unsub.append(async_at_started(hass, started))
 
     def _schedule(self) -> None:
         """Zeitpläne aus den Optionen (je Funktion aus, bisheriger Termin oder eigene Zeit)."""

@@ -2445,7 +2445,8 @@
     "Old Hemma dashboard files": "Alte Hemma-Dashboard-Dateien",
     "Old Hemma dashboard files removed": "Alte Hemma-Dashboard-Dateien entfernt",
     "Old Hemma dashboard files not removed": "Alte Hemma-Dashboard-Dateien nicht entfernt",
-    "{1} files": "{1} Dateien"
+    "{1} files": "{1} Dateien",
+    "These files differ from the ones with the same name in www/casora:": "Diese Dateien weichen von den gleichnamigen in www/casora ab:"
   },
   "patterns": [
     [
