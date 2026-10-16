@@ -2449,7 +2449,7 @@ const SECTIONS = [
         { key: "energy_unit_%", label: "Shows", type: "select", ord: 6,
           options: ["", "cost", "power", "energy"],
           optionLabels: { "": "Automatic", cost: "Running cost",
-            power: "Power now (W)", energy: "Energy used (kWh)" },
+            power: "Power now (W)", energy: "Energy used (kWh)", percent: "Percent (%)" },
           hint: "Automatic picks cost, kWh or watts from the sensor." },
         { ...T("energy_label_%", "Label"), labelOf: "energy_entity_%", advanced: true, ord: 6 },
         { ...E("energy_cost_%", "Also show cost", ["sensor"]), classes: ["monetary"],
@@ -15329,15 +15329,21 @@ class CasoraPanel extends HTMLElement {
 
     const s = this._flowScreen({
       icon: "alert", tone: "warn", quiet,
-      title: "Match Desktop and Phone",
-      lede: "Desktop and phone share these settings, but they are set differently right now – "
-        + "for example a different light. Choose for each row what should apply on both. "
-        + "Nothing changes until you choose, and you can also do this later.",
+      title: "Desktop and Phone Differ",
+      lede: "These settings apply to desktop and phone together, but right now they differ. "
+        + "Tap a row to choose what applies. Until then, nothing changes.",
     });
-    const shown = (v, key) => (v === undefined || v === null || v === "" ? "Not set"
-      : typeof v === "string" ? this._prettyEntity(v)
-        : typeof v === "boolean" ? ((this._fieldFor(key) || {}).invert ? !v : v) ? "On" : "Off"
-          : JSON.stringify(v));
+    // Werte lesbar und übersetzt: Auswahlfelder mit ihrem Namen, Entitäten mit ihrem Namen.
+    const shown = (v, key) => {
+      const f = this._fieldFor(key) || {};
+      if (v === undefined || v === null || v === "") return trLabel("Not set");
+      if (typeof v === "boolean") return trLabel((f.invert ? !v : v) ? "On" : "Off");
+      if (typeof v === "string") {
+        const ol = f.optionLabels && f.optionLabels[v];
+        return ol ? trLabel(ol) : this._prettyEntity(v);
+      }
+      return JSON.stringify(v);
+    };
     const apply = (c, value, why) => {
       pairWrite(pair, c.room, c.key, value);
       this._log(`${c.key}: kept ${JSON.stringify(value)} (${why}) on both layouts`, "ok");
@@ -15350,42 +15356,68 @@ class CasoraPanel extends HTMLElement {
       this._reviewDifferences(true);
     };
 
+    // Eine Zeile je Sache: Unter-Badge 5 mit Beschriftung und Anzeige ist ein Eintrag, nicht drei.
     const rooms = new Map();
     list.forEach((c) => {
       const dr = ((pair.desktop || {}).compact || {}).rooms || [];
       const room = dr[c.room] ? roomLabel(dr[c.room], dr, this._hass) : (c.roomName || homeRoomWord(this._hass));
-      if (!rooms.has(room)) rooms.set(room, []);
-      rooms.get(room).push(c);
+      if (!rooms.has(room)) rooms.set(room, new Map());
+      const f = this._fieldFor(c.key);
+      const unit = (f && f.unit) || c.key;
+      const units = rooms.get(room);
+      if (!units.has(unit)) units.set(unit, []);
+      units.get(unit).push(c);
     });
-    rooms.forEach((items, room) => {
+    rooms.forEach((units, room) => {
       const group = this._flowGroup(s.body, { header: room });
-      items.forEach((c) => {
-        const choices = c.kind === "differs"
-          ? [{ id: "desktop", label: "Use Desktop Value" }, { id: "mobile", label: "Use Phone Value" },
-             { id: "clear", label: "Remove From Both" }]
-          : [{ id: c.kind === "onlyDesktop" ? "desktop" : "mobile", label: "Use on Both" },
-             { id: "clear", label: c.kind === "onlyDesktop" ? "Remove From Desktop" : "Remove From Phone" }];
+      units.forEach((items) => {
+        const f0 = this._fieldFor(items[0].key) || {};
+        const kinds = new Set(items.map((c) => c.kind));
+        const side = kinds.size === 1 && !kinds.has("differs") ? items[0].kind : "differs";
+        // Titel: „Unter-Badge 5 · Solarbank Ladestand“ – das Gerät sagt, welches gemeint ist.
+        let title = trLabel(f0.unitLabel || f0.label || items[0].key);
+        const dev = items.find((c) => (this._fieldFor(c.key) || {}).domains);
+        if (f0.unit && dev) {
+          const v = side === "onlyMobile" ? dev.mobile : dev.desktop;
+          if (typeof v === "string" && v) title += " · " + this._prettyEntity(v);
+        }
+        let sub;
+        if (side === "onlyMobile") sub = trLabel("Only on the phone");
+        else if (side === "onlyDesktop") sub = trLabel("Only on the desktop");
+        else if (items.length === 1) {
+          sub = trLabel("Desktop") + ": " + shown(items[0].desktop, items[0].key)
+            + "   ·   " + trLabel("Phone") + ": " + shown(items[0].mobile, items[0].key);
+        } else sub = trLabel("Set differently on desktop and phone");
+        const choices = side === "onlyMobile"
+          ? [{ id: "mobile", label: "Add to Desktop" }, { id: "clear", label: "Remove From Phone" }]
+          : side === "onlyDesktop"
+            ? [{ id: "desktop", label: "Add to Phone" }, { id: "clear", label: "Remove From Desktop" }]
+            : [{ id: "desktop", label: "Use Desktop Version" }, { id: "mobile", label: "Use Phone Version" },
+               { id: "clear", label: "Remove From Both" }];
         const r = this._flowRow(group, {
-          title: this._fieldLabelFor(c.key) || c.key,
-          sub: trLabel("Desktop") + ": " + shown(c.desktop, c.key) + "   ·   " + trLabel("Phone") + ": " + shown(c.mobile, c.key),
-          chevron: true,
+          title, raw: true, sub, chevron: true,
           onTap: () => this._menuAt(r.row, choices, (id) => {
-            if (id === "desktop") apply(c, c.desktop, "from Desktop");
-            else if (id === "mobile") apply(c, c.mobile, "from Phone");
-            else apply(c, undefined, "removed");
+            items.forEach((c) => {
+              if (id === "desktop") apply(c, c.desktop, "from Desktop");
+              else if (id === "mobile") apply(c, c.mobile, "from Phone");
+              else apply(c, undefined, "removed");
+            });
             settled();
           }),
         });
       });
     });
-    const note = document.createElement("p");
-    note.className = "ffoot";
-    note.textContent = "“Like the desktop everywhere” keeps the desktop value wherever both are set "
-      + "and fills in whichever layout is missing one.";
-    s.body.appendChild(note);
+    // Ein Knopf für alles: wo beide etwas haben, gilt der Desktop; was nur eine Seite hat, kommt auf beide.
+    const mixed = list.some((c) => c.kind === "differs");
+    if (mixed && list.some((c) => c.kind !== "differs")) {
+      const note = document.createElement("p");
+      note.className = "ffoot";
+      note.textContent = "Settings that only one side has are added to the other.";
+      s.body.appendChild(note);
+    }
 
     this._flowButton(s.acts, "Later", () => this._flowBack(), true);
-    this._flowButton(s.acts, "Like the desktop everywhere", () => {
+    this._flowButton(s.acts, mixed ? "Like the desktop everywhere" : "Keep on Both", () => {
       list.forEach((c) => apply(c, c.kind === "onlyMobile" ? c.mobile : c.desktop, "Use Desktop Settings"));
       settled();
     });

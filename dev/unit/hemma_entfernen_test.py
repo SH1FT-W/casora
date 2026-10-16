@@ -481,6 +481,9 @@ async def main():
         hass, _ = make_hass(tmp, Resources([]), {}, [])
         st = await hc.async_status(hass)
         check("Status nennt Schreibziele", [x["path"] for x in st["files"]["write_targets"]] == ["www/hemma/eigen/plan.png", "www/hemma/snapshots/"])
+        # Hält nur ein Schreibziel www/hemma fest, ist das kein Rest – sonst bietet das Studio
+        # „Hemma entfernen“ endlos wieder an (gemeldet 16.10.2026).
+        check("Schreibziel allein ist kein Hemma-Rest", st["leftovers"] is False)
     check("Schreibziel-Teilpfade", hc._write_prefix("snapshots") == "snapshots/" and hc._write_prefix("{{ x }}.jpg") == ""
           and hc._write_prefix("a/b/c.jpg") == "a/b/c.jpg" and hc._write_prefix("a/{% if %}") == "a/")
 

@@ -980,6 +980,9 @@
     var open = window._casoraNotifyOpenViaCard; if (!open) return;
     if (window.casoraHaptic) window.casoraHaptic('light');
     window._casoraSuppressDismiss = Date.now() + 600;
+    // ‹ zurück ins Gruppen-Popup, wie bei Licht/Jalousie (casora-core.js)
+    var P = window.casoraPopup, prev = P && P.current;
+    window._casoraBackNext = prev ? { fn: function () { P.open(prev); }, at: Date.now() } : null;
     open(d.id, function (okd) { if (!okd && window.casoraPopup) window.casoraPopup.moreInfo(d.id); },
       { type: 'custom:button-card', template: ['casora_thermostat', 'casora_popup_fbh'], entity: d.id, name: d.name, variables: {} });
   };
