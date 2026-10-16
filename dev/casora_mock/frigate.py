@@ -14,7 +14,8 @@ Dazu, was sonst nur Frigate selbst kann (Antworten als JSON-Text wie die Integra
   frigate/recordings/summary (Stunden der letzten 3 Tage) und frigate/recordings/get (10-s-Segmente, je Stunde
   eine Lücke ab :20), frigate/events|reviews/subscribe (+ unsubscribe) – neue Erkennungen kommen dort an.
   Proxy /api/frigate/<instanz>/: thumbnail|snapshot/<id>, notifications/<id>/{thumbnail.jpg|snapshot.jpg|clip.mp4|
-  <kamera>/review_thumbnail.webp|master.m3u8}, vod/…/master.m3u8 (HLS), recording/<kamera>/start/<s>/end/<e> (MP4),
+  <kamera>/review_thumbnail.webp|master.m3u8}, vod/…/master.m3u8 (HLS; streng wie die Integration: Listen nur angemeldet
+  bzw. pfadgenau signiert, Segmente mit Signatur aus demselben Verzeichnis), recording/<kamera>/start/<s>/end/<e> (MP4),
   jeweils mit ?download=true als Anhang. Videos: 60 s Testbild, beim ersten Abruf mit dem ffmpeg des HA-Images erzeugt.
   Testdienste: casora_mock.frigate_erkennung {label, dauer} löst eine neue Erkennung aus;
   casora_mock.frigate_proxy {notifications, vod, reviews, stream, zuruecksetzen} schaltet Rückfälle
@@ -439,7 +440,7 @@ def setup(hass, mock) -> None:
         body = await media_file("clip.mp4")
         return disp(request, body, "video/mp4", name) if body else web.Response(status=404)
 
-    async def hls(file):
+    async def hls(file, query=""):
         # master → index.m3u8 (relativ) → seg000.ts …; dieselben Stücke für jede Stunde und jede Erkennung.
         if file == "master.m3u8":
             if not await media_file("index.m3u8"):
@@ -449,8 +450,32 @@ def setup(hass, mock) -> None:
         body = await media_file(file)
         if not body:
             return web.Response(status=404)
+        if file.endswith(".m3u8") and query:
+            # Wie Frigates nginx (secure_token $args): die Anfrage-Parameter (authSig der Unter-Liste) hängen an den Segmenten.
+            lines = body.decode().splitlines()
+            body = "\n".join(x + "?" + query if x and not x.startswith("#") else x for x in lines).encode() + b"\n"
         ctype = "application/vnd.apple.mpegurl" if file.endswith(".m3u8") else "video/mp2t"
         return web.Response(body=body, content_type=ctype)
+
+    def vod_allowed(request) -> bool:
+        # Streng wie die Integration (views.py): Wiedergabelisten (VodProxyView) nur angemeldet – eine Signatur gilt bei HA
+        # pfadgenau, die des Masters also nicht für die Unter-Liste; Segmente (VodSegmentProxyView) angemeldet oder mit
+        # einer Signatur, deren Pfad im selben Verzeichnis liegt.
+        from homeassistant.components.http import KEY_AUTHENTICATED
+        if request.get(KEY_AUTHENTICATED):
+            return True
+        if request.path.endswith(".m3u8"):
+            return False
+        import jwt
+        from homeassistant.components.http.auth import DATA_SIGN_SECRET
+        sig = request.query.get("authSig")
+        if not sig:
+            return False
+        try:
+            claims = jwt.decode(sig, str(hass.data.get(DATA_SIGN_SECRET)), algorithms=["HS256"], options={"verify_iss": False})
+        except jwt.InvalidTokenError:
+            return False
+        return str(claims.get("path", "")).startswith(request.path.rsplit("/", 1)[0])
 
     class Thumb(HomeAssistantView):
         url = "/api/frigate/{inst}/thumbnail/{eid}"
@@ -486,18 +511,21 @@ def setup(hass, mock) -> None:
             if path.endswith("clip.mp4"):
                 return await mp4(request, f"{eid}.mp4") if find(eid) else web.Response(status=404)
             if path.endswith((".m3u8", ".ts")):
-                return await hls(os.path.basename(path)) if flags["vod"] else web.Response(status=404)
+                return await hls(os.path.basename(path), request.query_string) if flags["vod"] else web.Response(status=404)
             return web.Response(status=404)
 
     class Vod(HomeAssistantView):
         url = "/api/frigate/{inst}/vod/{path:.+}"
         name = "api:casora_mock:frigate_vod"
+        # Prüft selbst (vod_allowed), wie VodProxyView/VodSegmentProxyView der Integration.
         requires_auth = False
 
         async def get(self, request, inst, path):
+            if not vod_allowed(request):
+                return web.Response(status=401)
             if not flags["vod"]:
                 return web.Response(status=404)
-            return await hls(os.path.basename(path))
+            return await hls(os.path.basename(path), request.query_string)
 
     class Rec(HomeAssistantView):
         url = "/api/frigate/{inst}/recording/{cam}/start/{start}/end/{end}"
