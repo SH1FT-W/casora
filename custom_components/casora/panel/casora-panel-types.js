@@ -286,7 +286,7 @@ window.CASORA_TILE_TYPES = [
     // „Gesehen“ (frigate/reviews/viewed) gilt je Frigate-Benutzer = dem der Integration (23-frigate.js F.mark).
     community: { desc: "Live camera with what Frigate detected last. The popup shows the live view, alerts and detections with clip, download, share and favorite, the recordings of the last days with a timeline, objects and the camera switches. “Seen” is stored by Frigate for the user the integration signs in with – so everyone in Home Assistant shares the same state.",
       needs: "frigate", needsText: "For every camera of the Frigate integration",
-      needsMissing: "Frigate integration not installed yet" },
+      needsMissing: "Frigate integration not installed yet", darkShots: true },
     fields: [ICON, TITLE_NAME,
       { key: "status_entity", label: "Status from", domains: ["camera", "binary_sensor"],
         classes: { binary_sensor: ["connectivity"] }, advanced: true, placeholder: "This camera",
@@ -306,7 +306,8 @@ window.CASORA_TILE_TYPES = [
     icon: "doorbell", entityLabel: "Doorbell camera",
     onlyIf: (hass) => !!(hass && hass.entities && Object.values(hass.entities).some((e) => e && e.translation_key === "visitor")),
     community: { desc: "Doorbell with live picture that says when someone rang. The popup has the live view with sound, quick replies, the siren, who rang lately and the doorbell's settings.",
-      needs: "reolink", needsText: "For every Reolink doorbell", needsMissing: "Reolink integration not installed yet" },
+      needs: "reolink", needsText: "For every Reolink doorbell", needsMissing: "Reolink integration not installed yet",
+      darkShots: true },
     fields: [ICON, TITLE_NAME,
       { key: "still_entity", label: "Still image from", domains: ["camera", "image"], advanced: true,
         placeholder: "Automatic",
@@ -344,6 +345,7 @@ window.CASORA_TILE_TYPES = [
 //   needs  – Integration (Domain), die die Karte braucht; fehlt sie, steht das als Hinweis dabei
 //   needsText / needsMissing – lesbarer Hinweis dazu (sonst „Braucht <Integration>“)
 //   preview – Vorschaubild, sonst /casora_assets/community/<id>.webp; Popup-Bild optional <id>-popup.webp
+//   darkShots – eigene Vorschaubilder fürs dunkle Profil: <id>-dark.webp / <id>-popup-dark.webp (Rückfall hell)
 //   retired – Karte wird eingestellt: nicht mehr in der Community-Liste (außer bei denen, die sie hinzugefügt
 //            haben – dort nur noch „Entfernen“) und nie mehr in „Kachel hinzufügen“; vorhandene Kacheln laufen
 //            weiter, der Editor zeigt einen Hinweis. Ein späteres Release kann Kachelart und Vorlage dann löschen.

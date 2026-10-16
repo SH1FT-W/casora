@@ -100,4 +100,18 @@ assert.equal(pickable(old), false, 'eingestellt → nicht in „Kachel hinzufüg
 assert.ok(/retired/.test(old.fields[0].hint || ''), 'Hinweis im Editor');
 assert.deepEqual(C.cards([old], new Set()).map((t) => t.id), [], 'nicht hinzugefügt → nicht in der Liste');
 assert.deepEqual(C.cards([old], new Set(['casora_qa_alt'])).map((t) => t.id), ['casora_qa_alt'], 'hinzugefügt → zum Entfernen in der Liste');
+
+// Vorschaubilder je Profil (darkShots): dunkel → „-dark“, hell oder ohne darkShots → helles Bild; Dateien liegen bei.
+const dk = { id: 'casora_qa_dk', community: { desc: 'x', darkShots: true } };
+assert.deepEqual([C.shots(dk, true).tile, C.shots(dk, true).popup], ['/casora_assets/community/casora_qa_dk-dark.webp', '/casora_assets/community/casora_qa_dk-popup-dark.webp']);
+assert.equal(C.shots(dk, true).light.tile, '/casora_assets/community/casora_qa_dk.webp', 'Rückfall hell');
+assert.equal(C.shots(dk, false).tile, '/casora_assets/community/casora_qa_dk.webp');
+assert.equal(C.shots(fake, true).tile, '/casora_assets/community/casora_qa_com.webp', 'ohne darkShots immer hell');
+assert.equal(C.isDark({ themes: { darkMode: false } }), false);
+assert.equal(C.isDark({ themes: { darkMode: true } }), true);
+const withDark = src.split('\n  { id: "').slice(1).filter((seg) => /darkShots: true/.test(seg.split('\n  { id: "')[0])).map((seg) => ({ id: seg.slice(0, seg.indexOf('"')) }));
+const assets = new URL('../../custom_components/casora/assets/community/', import.meta.url);
+assert.ok(withDark.length >= 2, 'Frigate und Klingel haben dunkle Bilder');
+for (const t of withDark) for (const f of [t.id + '.webp', t.id + '-dark.webp', t.id + '-popup.webp', t.id + '-popup-dark.webp'])
+  assert.ok(fs.existsSync(new URL(f, assets)), 'Bild fehlt: ' + f);
 console.log('community_karten: ok');

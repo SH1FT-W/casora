@@ -178,7 +178,17 @@
     W.casoraCommunityOn = new Set(list);
   }
 
-  W.casoraCommunity = { issueUrl, describe, wishBody, status, cards, usage, dropTiles, load, save, REPO, LABEL_WISH };
+  // Vorschaubilder einer Community-Karte: Kachel (Pflicht) und Popup (optional, „<id>-popup.webp“).
+  // Karten mit `darkShots` haben im dunklen Profil (hass.themes.darkMode) eigene Bilder „<id>-dark.webp“ /
+  // „<id>-popup-dark.webp“; fehlt eins, gilt das helle (light).
+  const isDark = (hass) => !(hass && hass.themes && hass.themes.darkMode === false);
+  const shots = (t, dark) => {
+    const base = "/casora_assets/community/" + t.id;
+    const light = { tile: t.community.preview || (base + ".webp"), popup: t.community.previewPopup || (base + "-popup.webp") };
+    if (!dark || !t.community.darkShots || t.community.preview) return { ...light, light };
+    return { tile: base + "-dark.webp", popup: base + "-popup-dark.webp", light };
+  };
+  W.casoraCommunity = { issueUrl, describe, wishBody, status, cards, usage, dropTiles, load, save, REPO, LABEL_WISH, shots, isDark };
   if (typeof module !== "undefined" && module.exports) module.exports = W.casoraCommunity;
   if (typeof customElements === "undefined") return;
 
@@ -265,15 +275,12 @@
     return d;
   };
   const hasIntegration = (hass, d) => !d || !!(hass && hass.config && (hass.config.components || []).includes(d));
-  // Vorschaubilder einer Community-Karte: Kachel (Pflicht) und Popup (optional, „<id>-popup.webp“).
-  const shots = (t) => ({ tile: t.community.preview || ("/casora_assets/community/" + t.id + ".webp"),
-    popup: t.community.previewPopup || ("/casora_assets/community/" + t.id + "-popup.webp") });
   // Große Vorschau über der Community-Seite; Esc oder Tipp daneben schließt nur die Vorschau.
-  const lightbox = (box, t, which, hasPopup) => {
+  const lightbox = (box, t, which, hasPopup, dark) => {
     const pane = box.closest(".askpane") || box;
     const old = pane.querySelector(".comlb");
     if (old) old.remove();
-    const S = shots(t);
+    const S = shots(t, dark);
     const lb = el("div", "comlb");
     lb.setAttribute("role", "dialog");
     lb.setAttribute("aria-label", tr(t.label));
@@ -281,7 +288,8 @@
     img.alt = tr(t.label);
     const seg = el("div", "comseg");
     // Popup-Bild ist genau auf den Rahmen geschnitten: Ecken rund wie das Popup selbst.
-    const show = (k) => { img.src = S[k]; img.style.borderRadius = k === "popup" ? "36px" : "13.33%/16%"; img.style.width = k === "popup" ? "" : "min(360px, 80vw)"; seg.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.k === k)); };
+    img.onerror = () => { const k = img.dataset.k; if (k && img.src.indexOf(S.light[k]) < 0) img.src = S.light[k]; };
+    const show = (k) => { img.dataset.k = k; img.src = S[k]; img.style.borderRadius = k === "popup" ? "36px" : "13.33%/16%"; img.style.width = k === "popup" ? "" : "min(360px, 80vw)"; seg.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.k === k)); };
     [["tile", "Tile"], ["popup", "Popup"]].forEach(([k, label]) => {
       if (k === "popup" && !hasPopup) return;
       const b = el("button", "", tr(label));
@@ -427,7 +435,8 @@
           if (!list.length) host.appendChild(el("div", "comnote", tr("No community cards yet. Ask for one – the first ones come with the next update.")));
           list.forEach((t) => {
             const r = el("div", "comrow card");
-            const S = shots(t);
+            const dark = isDark(hass);
+            const S = shots(t, dark);
             const zoom = el("button", "comzoom");
             zoom.type = "button";
             zoom.setAttribute("aria-label", fill(tr("Preview of “{x}”"), { x: tr(t.label) }));
@@ -435,8 +444,8 @@
             shot.alt = "";
             shot.loading = "lazy";
             shot.src = S.tile;
-            // Ohne Vorschaubild: leere Fläche statt Symbol für ein kaputtes Bild.
-            shot.onerror = () => { shot.replaceWith(el("div", "comshot")); };
+            // Ohne Vorschaubild: leere Fläche statt Symbol für ein kaputtes Bild (dunkles fehlt → erst das helle).
+            shot.onerror = () => { if (S.tile !== S.light.tile && shot.src.indexOf(S.light.tile) < 0) shot.src = S.light.tile; else shot.replaceWith(el("div", "comshot")); };
             zoom.appendChild(shot);
             const tx = el("div", "comtx");
             tx.append(el("b", "", tr(t.label)), el("span", "", tr(t.community.retired ? "This card is being retired. Your tiles keep working for now." : (t.community.desc || ""))));
@@ -455,12 +464,13 @@
             pop.innerHTML = '<ha-icon icon="mdi:open-in-app"></ha-icon>';
             pop.appendChild(el("span", "", tr("View popup")));
             pop.style.display = "none";
-            pop.onclick = () => lightbox(box, t, "popup", true);
+            pop.onclick = () => lightbox(box, t, "popup", true, dark);
             const probe = new Image();
             probe.onload = () => { hasPopup = true; pop.style.display = ""; };
+            probe.onerror = () => { if (probe.src.indexOf(S.light.popup) < 0 && S.popup !== S.light.popup) probe.src = S.light.popup; };
             probe.src = S.popup;
             tx.appendChild(pop);
-            zoom.onclick = () => lightbox(box, t, "tile", hasPopup);
+            zoom.onclick = () => lightbox(box, t, "tile", hasPopup, dark);
             const on = W.casoraCommunityOn.has(t.id);
             const b = el("button", "comchip" + (on ? "" : " on"), tr(on ? "Remove" : "Add"));
             b.type = "button";
