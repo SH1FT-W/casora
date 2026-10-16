@@ -102,6 +102,22 @@
   const COFFEE_GENERIC = new Set(["statuses", "settings", "options", "programs", "homeconnectstatus"]);
   const coffeeKey = (e) => { const k = coffeeNk(e.translation_key); return COFFEE_GENERIC.has(k) ? "" : k; };
   const coffeeTail = (e) => coffeeNk(String(e.entity_id).split(".")[1] || "");
+  // Live-Kamera einer Reolink-Klingel (je Gerät eine, sub vor main): aus 24-klingel.js (KL.liveCam), sobald das
+  // Dashboard-Modul geladen ist – das Studio lädt es dafür einmal nach. Bis dahin dieselbe Regel hier.
+  let klingelLoad = false;
+  function bellCam(h, id) {
+    const KL = W._casoraKlingel;
+    if (KL && KL.liveCam) return KL.liveCam(h, id);
+    if (!klingelLoad) { klingelLoad = true; import("/casora_scripts/local/24-klingel.js").catch(() => {}); }
+    const R = (h && h.entities) || {}, S = (h && h.states) || {}, e = R[id];
+    const tk = String((e && e.translation_key) || "");
+    if (!e || !e.device_id || !/^(sub|main)$/.test(tk)) return false;
+    // Nur Kameras der Reolink-Integration (casora_mock = Test-HA) – eine fremde Kamera am selben Gerät nicht.
+    if (e.platform && e.platform !== "reolink" && e.platform !== "casora_mock") return false;
+    const dev = Object.keys(R).filter((x) => R[x] && R[x].device_id === e.device_id);
+    if (!dev.some((x) => R[x].translation_key === "visitor" && x.startsWith("binary_sensor."))) return false;
+    return tk === "sub" || !dev.some((x) => x !== id && R[x].translation_key === "sub" && x.startsWith("camera.") && S[x] && !R[x].hidden && !R[x].disabled_by);
+  }
   function coffeeAnchors(h) {
     const R = (h && h.entities) || {}, S = (h && h.states) || {}, D = (h && h.devices) || {};
     const byDev = new Map();
@@ -612,13 +628,9 @@
         // Frigate-Kamera (device_class „camera“ setzt nur Frigate): die Community-Karte, wenn sie hinzugefügt ist.
         const frig = !suggested && id.startsWith("camera.") && typeIds.has("casora_frigate")
           && (S[id].attributes || {}).device_class === "camera" ? "casora_frigate" : null;
-        // Reolink-Türklingel (Live-Kamera „sub“/„main“ eines Geräts mit Klingelknopf „visitor“, wie
-        // 24-klingel.js liveCam): die Community-Karte, wenn sie hinzugefügt ist.
-        // Nur Kameras der Reolink-Integration (wie KL.is; casora_mock = Test-HA) – eine fremde Kamera am selben Gerät nicht.
-        const bell = !suggested && !frig && id.startsWith("camera.") && typeIds.has("casora_reolink_doorbell")
-          && e && e.device_id && (!e.platform || e.platform === "reolink" || e.platform === "casora_mock")
-          && /^(sub|main)$/.test(String(e.translation_key || ""))
-          && Object.keys(R).some((x) => R[x] && R[x].device_id === e.device_id && R[x].translation_key === "visitor" && x.startsWith("binary_sensor."))
+        // Reolink-Türklingel: die Community-Karte, wenn sie hinzugefügt ist – je Gerät eine Kamera (sub vor main,
+        // 24-klingel.js liveCam; vorher stand die Klingel zweimal in der Liste).
+        const bell = !suggested && !frig && id.startsWith("camera.") && typeIds.has("casora_reolink_doorbell") && bellCam(h, id)
           ? "casora_reolink_doorbell" : null;
         const type = typeFor(id, typeIds, frig || bell || suggested);
         if (!type) return;

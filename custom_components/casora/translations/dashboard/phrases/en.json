@@ -1904,7 +1904,9 @@
   "Klingelton an der Tür": "Chime at the door",
   "Ton aufnehmen": "Record sound",
   "Ohne Ton hörst du die Tür nicht": "Without it you can't hear the door",
-  "Infrarot bei Nacht": "Infrared at night",
+  "Infrarot-Licht": "Infrared light",
+  "Geht nachts von selbst an": "Turns on by itself at night",
+  "Nachts bleibt das Bild dunkler": "The picture stays darker at night",
   "Status-LED": "Status LED",
   "Privatsphäre": "Privacy",
   "Kamera und Ton aus": "Camera and sound off",
@@ -2162,9 +2164,9 @@
   "Einschalten und Kaffee to go starten": "Turn on and start coffee to go",
   "Mithören": "Listen",
   "Bei Privatsphäre aus": "Off while privacy is on",
-  "Nachtsicht": "Night vision",
-  "Bild in Schwarz-Weiß": "Black & white picture",
-  "Mit Licht": "With light",
+  "Bildmodus": "Picture mode",
+  "Schwarz-Weiß mit Infrarot": "Black & white with infrared",
+  "Farbe mit Licht der Klingel": "Color with the doorbell's light",
   "Sprechen beendet – Privatsphäre an": "Talking ended – privacy on",
   "Sprechen beendet – Klingel nicht erreichbar": "Talking ended – doorbell unreachable",
   "Sprechen geht in diesem Browser nicht": "Talking isn't available in this browser",
@@ -2237,11 +2239,11 @@
   ],
   [
    "^Geklingelt · (.+)$",
-   "Rang · {1}"
+   "Someone rang · {1}"
   ],
   [
    "^Geklingelt (\\d{1,2}:\\d{2}.*)$",
-   "Rang {1}"
+   "Rang at {1}"
   ],
   [
    "^Treffer (\\d+) %$",
@@ -4065,7 +4067,7 @@
   ],
   [
    "^Geklingelt (vor .+|gestern|gerade eben)$",
-   "Rang {1}"
+   "Last ring {1}"
   ],
   [
    "^In den letzten (\\d+) Tagen$",

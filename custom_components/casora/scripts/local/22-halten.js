@@ -227,8 +227,8 @@
     // Info-Kacheln (nichts zu bedienen): oben „Öffnen“ wie Tippen, darunter die Wege (Menü auf allen Kacheln).
     if (!m.main && !m.quick.length && !m.timer && (o.tapPopup || o.tapOpens)) m.main = { t: 'Öffnen', ic: 'mdi:arrow-top-right', open: true };
     if (o.kind === 'updates' && m.main && m.main.open) { m.main.t = 'Alle Updates'; m.main.ic = 'mdi:update'; }
-    // Türklingel: „Öffnen“ klänge nach Tür öffnen – hier heißt es „Details“.
-    if (o.kind === 'doorbell' && m.main && m.main.open) { m.main.t = 'Details'; m.main.ic = 'mdi:card-text-outline'; }
+    // Türklingel: oben „Öffnen“ mit Pfeil wie Frigate, Kaffee und alle Info-Kacheln (16.10.: ein Wort für alle;
+    // vorher „Details“, weil „Öffnen“ nach Tür öffnen klang – das Popup-Symbol ↗ sagt, was aufgeht).
     // Wege: „Details“ nur, wenn Tippen nicht schon das Popup öffnet; Gerät und Bearbeiten nur für Admins.
     if (!o.tapPopup) m.rows.push({ key: 'popup', t: 'Details', ic: 'mdi:card-text-outline' });
     if (dom !== 'camera') m.rows.push({ key: 'history', t: 'Verlauf', ic: 'mdi:history' });
@@ -691,7 +691,6 @@
     o.extra = extras(h, id, tpl, VP);
     o.info = progInfo(h, id, tpl, VP);
     if (/\bcasora_energy\b/.test(tpl)) o.kind = 'energy';
-    if (/\bcasora_reolink_doorbell\b/.test(tpl)) o.kind = 'doorbell';
     if (/\bcasora_updates\b/.test(tpl)) { o.kind = 'updates'; o.updCheck = !!(window._casoraUpdCheck && window._casoraUpdCheck.run); }
     return H.model(id ? h.states[id] : null, o);
   };
