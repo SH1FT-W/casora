@@ -476,12 +476,12 @@
           var what = ring ? 'Hat geklingelt' : KL.label(e.kind) + ' erkannt';
           return '<div class="kl-ev" style="display:grid;grid-template-columns:minmax(46px,max-content) 22px minmax(0,1fr) auto;align-items:start;column-gap:8px;position:relative;padding:9px 0;">'
             + '<div style="font-size:13px;font-weight:600;color:' + sub + ';font-variant-numeric:tabular-nums;padding-top:2px;white-space:nowrap;">'
-            + (day ? '<div style="font-size:11.5px;font-weight:700;margin:-1px 0 1px;">' + esc(tr(day)) + '</div>' : '') + esc(clock(e.at)) + '</div>'
+            + (day ? '<div style="font-size:12px;font-weight:700;margin:-1px 0 1px;">' + esc(tr(day)) + '</div>' : '') + esc(clock(e.at)) + '</div>'
             + '<div style="position:relative;height:100%;display:flex;justify-content:center;">'
             + (last ? '' : '<div style="position:absolute;top:16px;bottom:-18px;width:2px;border-radius:2px;background:' + dim + ';"></div>')
             + '<div style="position:relative;width:12px;height:12px;border-radius:50%;margin-top:4px;background:' + (ring ? ringHue : detHue) + ';box-shadow:0 0 0 3px ' + rowBg + ';"></div></div>'
-            + '<div style="min-width:0;"><div style="font-size:14.5px;font-weight:' + (ring ? 700 : 600) + ';color:' + ink + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(tr(what)) + '</div>'
-            + (dw ? '' : '<div style="font-size:12.5px;font-weight:500;color:' + sub + ';margin-top:1px;white-space:nowrap;">' + esc(tr(KL.ago(e.at, now))) + '</div>') + '</div>'
+            + '<div style="min-width:0;"><div style="font-size:15px;font-weight:' + (ring ? 700 : 600) + ';color:' + ink + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(tr(what)) + '</div>'
+            + (dw ? '' : '<div style="font-size:13px;font-weight:500;color:' + sub + ';margin-top:1px;white-space:nowrap;">' + esc(tr(KL.ago(e.at, now))) + '</div>') + '</div>'
             // Letztes Klingeln, solange die Kachel es meldet (HOLD, 10 Min.): rechts „Neu“ in Schrift-Rot.
             + (isNew ? '<div style="font-size:13px;font-weight:700;padding-top:2px;color:var(--casora-color-red-text, var(--casora-color-red));">' + esc(tr('Neu')) + '</div>' : '<div></div>')
             + '</div>';
