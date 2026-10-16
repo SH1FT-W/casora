@@ -154,7 +154,7 @@
   // (Pause und Rückfahrt gehören dazu). Fehler sind eigene Einträge. Einmal je Zustandswechsel abfragen, danach
   // die offenen Live-Bereiche neu zeichnen (wie das Personen-Popup, 15-person.js).
   var DAYS = 7;
-  var T = function (x) { return window.casoraT ? window.casoraT(x) : x; };
+  var T = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
   var two = function (n) { return (n < 10 ? '0' : '') + n; };
   var hm = function (ms) { var d = new Date(ms); return two(d.getHours()) + ':' + two(d.getMinutes()); };
   var dayStart = function (ms) { var d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };

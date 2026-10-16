@@ -19,7 +19,7 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   };
-  var T = function (x) { return window.casoraT ? window.casoraT(x) : x; };
+  var T = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
   var nameOf = function (states, id) {
     var e = states[id]; if (!e) return id;
     return String(e.attributes.title || e.attributes.friendly_name || id).replace(/\s+(Update|Firmware|Software-Aktualisierung)$/i, '').trim() || id;

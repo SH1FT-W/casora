@@ -40,7 +40,7 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
     });
   };
-  var T = function (x) { return window.casoraT ? window.casoraT(x) : x; };
+  var T = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
   var loc = function () { return window.casoraLocale ? window.casoraLocale() : undefined; };
 
   // ── Familien ──────────────────────────────────────────────────────────────

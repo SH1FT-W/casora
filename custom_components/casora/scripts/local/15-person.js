@@ -17,7 +17,7 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   };
-  var T = function (x) { return window.casoraT ? window.casoraT(x) : x; };
+  var T = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
   var num = function (v) { var n = parseFloat(v); return isFinite(n) ? n : null; };
   var bad = function (s) { return s == null || s === 'unknown' || s === 'unavailable' || s === ''; };
 
@@ -380,7 +380,7 @@
       notify(hass, svc, { message: 'request_location_update' }).then(function () { toast('Standort angefragt'); }, function () { toast('Konnte das Handy nicht erreichen'); });
     } else if (kind === 'msg') {
       if (!window.casoraAsk) return;
-      window.casoraAsk({ title: T('Nachricht an') + ' ' + name, text: '', yes: T('Senden'), input: { placeholder: 'Nachricht' } }).then(function (txt) {
+      window.casoraAsk({ title: T('Nachricht an') + ' ' + name, text: '', yes: T('Senden'), input: { placeholder: T('Nachricht') } }).then(function (txt) {
         if (!txt) return;
         notify(hass, svc, { title: 'Home Assistant', message: txt }).then(function () { toast('Nachricht gesendet'); }, function () { toast('Konnte das Handy nicht erreichen'); });
       });

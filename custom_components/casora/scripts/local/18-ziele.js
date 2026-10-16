@@ -21,7 +21,7 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   };
-  var T = function (x) { return window.casoraT ? window.casoraT(x) : x; };
+  var T = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
   var hassNow = function () { var ha = document.querySelector('home-assistant'); return ha && ha.hass; };
   var two = function (n) { return (n < 10 ? '0' : '') + n; };
   var hm = function (ms) { var d = new Date(ms); return two(d.getHours()) + ':' + two(d.getMinutes()); };
