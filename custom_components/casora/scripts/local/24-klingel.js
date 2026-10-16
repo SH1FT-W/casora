@@ -602,7 +602,7 @@
     + '.ob:active{transform:scale(var(--casora-press-scale, .97));}'
     + '.bar[hidden]{display:none;}.b[hidden]{display:none;}'
     + '.bar{display:grid;grid-template-columns:repeat(var(--n,1),minmax(0,1fr));gap:10px;margin-top:10px;}'
-    + '.b{box-sizing:border-box;min-height:46px;padding:0 12px;border:0;border-radius:var(--casora-soft-seg-radius, 18px);cursor:pointer;'
+    + '.b{box-sizing:border-box;min-height:46px;padding:0 12px;border:0;border-radius:var(--casora-r-pill, 999px);cursor:pointer;'
     +   'display:flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-size:14px;font-weight:700;white-space:nowrap;'
     +   'background:var(--casora-soft-control-fill, rgba(140,115,90,0.10));color:var(--casora-popup-tiles-text-primary, var(--primary-text-color, #3A322B));'
     +   'transition:background-color var(--casora-dur-feedback, 160ms) var(--casora-ease-feedback, ease), box-shadow var(--casora-dur-feedback, 160ms) var(--casora-ease-feedback, ease);'
