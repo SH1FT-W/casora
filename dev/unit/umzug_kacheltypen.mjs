@@ -45,4 +45,16 @@ const sw = tile('casora_switch', 'switch.skimmer', 'Skimmer');
 assert.equal(upgrade(sw, hass), sw);
 const m = tile('casora_match', 'sensor.italien', '');
 assert.equal(upgrade(m, hass), m);
+
+// Vorschläge für unbekannte Kacheln: nur, was „Kachel hinzufügen“ anbietet – eine nicht hinzugefügte
+// Community-Karte (onlyIf) nicht; erkannt (typeOf) wird sie trotzdem.
+const comT = { id: 'casora_qa_com', label: 'QA', template: 'casora_qa_com', domains: ['vacuum'], onlyIf: (h) => !!(h && h.on) };
+const plainT = { id: 'casora_qa_plain', label: 'Plain', template: 'casora_qa_plain', domains: ['vacuum'] };
+window.__casoraPanelInternals = { TILE_TYPES: [comT, plainT], USER_TILE_TYPES: [],
+  findType: (list, tp) => list.find((x) => x.template === tp) || null };
+const L2 = window.casoraLegacy;
+const sug = (h) => L2.suggest({ entity: 'vacuum.x', template: 'irgendwas' }, h).map((x) => x.type.id);
+assert.deepEqual(sug({}), ['casora_qa_plain'], 'nicht hinzugefügte Community-Karte nicht vorschlagen');
+assert.deepEqual(sug({ on: true }), ['casora_qa_com', 'casora_qa_plain']);
+assert.equal((L2.typeOf('casora_qa_com') || {}).id, 'casora_qa_com', 'erkannt wird sie weiter');
 console.log('ok umzug_kacheltypen');

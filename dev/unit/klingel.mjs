@@ -55,6 +55,13 @@ assert.equal(KL.is(hass, 'camera.carport_sub'), false, 'Reolink-Kamera ohne Klin
 assert.equal(KL.is(hass, 'camera.fremd'), false, 'fremde Integration am selben Gerät');
 assert.equal(KL.liveCam(hass, ID), true);
 assert.equal(KL.liveCam(hass, 'camera.pforte_snapshots'), false, 'Schnappschuss-Kamera ist keine Live-Kamera');
+// Je Gerät eine Live-Kamera (Studio-Geräteliste): main nur ohne sub.
+add('camera.pforte_main', 'idle', { supported_features: 2 }, 'main');
+assert.equal(KL.liveCam(hass, 'camera.pforte_main'), false, 'main neben sub: nicht noch einmal');
+entities[ID].disabled_by = 'user';
+assert.equal(KL.liveCam(hass, 'camera.pforte_main'), true, 'sub abgeschaltet: main');
+delete entities[ID].disabled_by;
+delete entities['camera.pforte_main']; delete states['camera.pforte_main'];
 entities[ID].platform = 'casora_mock';
 assert.equal(KL.is(hass, ID), true, 'Test-HA (Mock) zählt mit');
 entities[ID].platform = 'reolink';
@@ -105,6 +112,37 @@ assert.ok(/^Geklingelt \d\d:\d\d$/.test(KL.tileText(s, NOW, true)), 'schmale Han
 assert.equal(KL.tileText(s, ev[0].at + 90000, true), 'Hat geklingelt', 'die ersten 2 Min.: „Hat geklingelt“, auch schmal');
 // Personen zweimal innerhalb einer Minute → einmal.
 assert.equal(KL.events(c, NOW).filter((e) => e.kind === 'person').length, 1);
+// Gleiche Minute (gleiche Uhrzeit in der Zeitleiste): Klingeln vor Erkennung, auch wenn die Erkennung später kam.
+{
+  const m0 = Math.floor(NOW / 60000) * 60000 - 30 * 60000;
+  const cc = { cam: 'camera.qa_reihe', visitor: 'v', order: ['person'], det: { person: 'p' }, sw: {}, vol: {} };
+  KL.forget(cc.cam);
+  KL.history(Object.assign({}, hass, { states: {}, callWS: () => Promise.resolve({ v: [{ s: 'off', lu: (m0 - 9e6) / 1000 }, { s: 'on', lu: (m0 + 5000) / 1000 }],
+    p: [{ s: 'off', lu: (m0 - 9e6) / 1000 }, { s: 'on', lu: (m0 + 40000) / 1000 }, { s: 'off', lu: (m0 + 41000) / 1000 }, { s: 'on', lu: (m0 - 600000) / 1000 }] }) }), cc, null);
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(KL.events(cc, NOW).map((e) => e.kind), ['ring', 'person', 'person'], 'Klingeln vor Person in derselben Minute');
+  KL.forget(cc.cam);
+}
+// Verlauf neu fragen nur bei Änderung am Klingelknopf – eine Erkennung kommt live über „seen“ dazu.
+{
+  let calls = 0;
+  const cnt = Object.assign({}, hass, { callWS: () => { calls++; return Promise.resolve(raw); } });
+  KL.forget(ID); KL.history(cnt, c, null); await new Promise((r) => setTimeout(r, 0));
+  const pp = states['binary_sensor.pforte_paket'];
+  states['binary_sensor.pforte_paket'] = { state: 'on', attributes: {}, last_changed: new Date(NOW - 500).toISOString() };
+  KL.history(cnt, c, null);
+  assert.equal(calls, 1, 'Erkennung fragt den Verlauf nicht neu');
+  assert.ok(KL.status(c, states, NOW).live.includes('package') && KL.events(c, NOW).some((e) => e.kind === 'package' && NOW - e.at < 2000), 'Erkennung live');
+  states['binary_sensor.pforte_paket'] = pp;
+  const vv = states['binary_sensor.pforte_besucher'];
+  states['binary_sensor.pforte_besucher'] = Object.assign({}, vv, { last_changed: new Date(NOW - 300).toISOString() });
+  KL.history(cnt, c, null);
+  assert.equal(calls, 2, 'Klingelknopf fragt neu');
+  await new Promise((r) => setTimeout(r, 0));
+  states['binary_sensor.pforte_besucher'] = vv;
+  KL.forget(ID);
+  KL.history(wsHass, c, null); await new Promise((r) => setTimeout(r, 0));
+}
 // Nach HOLD (10 Min.) nicht mehr „geklingelt“.
 assert.equal(KL.tileText(KL.status(c, states, NOW + 11 * 60000), NOW + 11 * 60000), null);
 // Klingelknopf gerade gedrückt (selbst gesehen) → „Hat geklingelt“ sofort.
@@ -154,6 +192,13 @@ states['switch.pforte_privat'].state = 'on';
 const sayP = n(KL.sec('say', c, states, hass));
 assert.ok(!/#select|#siren/.test(sayP) && /Sirene=~Bei Privatsphäre aus/.test(sayP), sayP);
 states['switch.pforte_privat'].state = 'off';
+// Sirene eben gestoppt: 3 s „Gestoppt“ ohne Auslösen (der Stopp-Tipp landete sonst auf „Auslösen“), danach wieder auslösbar.
+states['siren.pforte_sirene'].last_changed = new Date(Date.now() - 1000).toISOString();
+const sayS = n(KL.sec('say', c, states, hass));
+assert.ok(/Sirene=Aus~Gestoppt[;<]/.test(sayS) && !/#siren/.test(sayS), sayS);
+states['siren.pforte_sirene'].last_changed = new Date(Date.now() - 4000).toISOString();
+assert.ok(/Sirene=~Laut an der Tür, 10 Sekunden!Auslösen#siren\.turn_on/.test(n(KL.sec('say', c, states, hass))), 'nach 3 s wieder auslösbar');
+states['siren.pforte_sirene'].last_changed = iso(120);
 const mo = n(KL.sec('more', c, states, hass));
 assert.ok(/<more Einstellungen undefined Einstellungen>/.test(mo), 'ohne Zähler, aufgeklappt bleibt „Einstellungen“');
 assert.ok(/<slider Klingelton=40 \[0,100,1\]>.*<slider Sprechen=50.*<slider Lautsprecher=80/.test(mo), 'Lautstärken in der Reihenfolge Klingel, Sprechen, Lautsprecher');
@@ -163,7 +208,17 @@ states['switch.pforte_privat'].state = 'on';
 assert.ok(/Privatsphäre=An~Kamera und Ton aus!Ausschalten/.test(n(KL.sec('more', c, states, hass))), 'und ausschalten auch (gleiche Logik)');
 states['switch.pforte_privat'].state = 'off';
 assert.ok(/<seg Licht am Klingelknopf>Aus,Automatisch,Immer an\*<\/seg>/.test(mo), 'always/alwayson einmal');
-assert.ok(/Automatische Antwort=Aus~/.test(mo) && /Akku=15 %/.test(mo) && /WLAN=Schwach~\u221272 dBm/.test(mo) && /Nachtsicht=An~Bild in Schwarz-Weiß/.test(mo), mo);
+assert.ok(/Automatische Antwort=Aus~/.test(mo) && /Akku=15 %/.test(mo) && /WLAN=Schwach~\u221272 dBm/.test(mo) && /Bild gerade=Schwarz-Weiß~/.test(mo), mo);
+// Infrarot-Schalter, Tag/Nacht-Modus und Bild widersprechen sich nicht mehr („Infrarot bei Nacht: An“ neben „Nachtsicht: Aus“).
+assert.ok(/Infrarot-LEDs nachts=An~#switch\.turn_off/.test(mo) && !/Nachtsicht/.test(mo), mo);
+states['sensor.pforte_tagnacht'].state = 'day';
+assert.ok(/Bild gerade=Farbe~/.test(n(KL.sec('more', c, states, hass))), 'tagsüber: Bild gerade Farbe');
+add('select.pforte_tagnacht_modus', 'auto', { options: ['auto', 'color', 'blackwhite'] }, 'day_night');
+KL.forget(ID);
+const cdm = KL.find(Object.assign({}, hass, { entities: Object.assign({}, entities), states: Object.assign({}, states) }), ID);
+assert.ok(/<seg Tag\/Nacht-Modus>Automatisch\*,Farbe,Schwarz-Weiß<\/seg>/.test(n(KL.sec('more', cdm, states, hass))), n(KL.sec('more', cdm, states, hass)));
+delete states['select.pforte_tagnacht_modus']; delete entities['select.pforte_tagnacht_modus']; KL.forget(ID);
+states['sensor.pforte_tagnacht'].state = 'night';
 // Status-LED als light.* (C4): Dienst in der Domain der Entität, nicht switch.*.
 add('light.pforte_led', 'on', {}, 'status_led');
 KL.forget(ID);
@@ -182,6 +237,18 @@ let hist = n(KL.sec('hist', c, states, wsHass));
 assert.ok(/^<label Verlauf><div class="kl-verlauf"/.test(hist) && />\d\d:\d\d<\/div>/.test(hist)
   && /Hat geklingelt<\/div><div[^>]*>vor 3 Min\.<\/div><\/div><div[^>]*>Neu<\/div>/.test(hist), hist);
 assert.ok(/Paket erkannt/.test(hist) && /Aufnahmen=~In den Medien von Home Assistant@klingel-go:\/media-browser/.test(hist), hist);
+// Zeile mit Tagesetikett („Gestern 18:31“): Punkt und Text rücken mit der Uhrzeit nach unten (Punkt verrutschte).
+{
+  const mid = new Date(NOW); mid.setHours(0, 0, 0, 0);
+  const y = mid.getTime() - 5 * 3600000;
+  const cy = { cam: 'camera.qa_gestern', visitor: 'v', order: [], det: {}, sw: {}, vol: {} };
+  const hy = Object.assign({}, hass, { states: {}, callWS: () => Promise.resolve({ v: [{ s: 'off', lu: (y - 9e6) / 1000 }, { s: 'on', lu: y / 1000 }, { s: 'off', lu: y / 1000 + 1 }] }) });
+  KL.forget(cy.cam); KL.history(hy, cy, null); await new Promise((r) => setTimeout(r, 0));
+  const hh = KL.sec('hist', cy, {}, hy);
+  const row = (hh.split('class="kl-ev"')[1] || '');
+  assert.ok(/class="kl-day"[^>]*>Gestern</.test(row) && /class="kl-dot"[^>]*margin-top:20px/.test(row) && /padding-top:16px;"><div[^>]*>Hat geklingelt/.test(row), row);
+  KL.forget(cy.cam);
+}
 // Leer und Fehler
 const emptyHass = Object.assign({}, hass, { callWS: () => Promise.resolve({}) });
 KL.forget(ID); KL.history(emptyHass, c, null); await new Promise((r) => setTimeout(r, 0));

@@ -17825,7 +17825,7 @@
     "value": "[[[\n  // Kaffeevollautomat: hinterlegt beim Bezug, Aufheizen, Pflege und bei Hinweisen (orange/rot, 25-kaffee.js).\n  const K = window._casoraCoffee;\n  const s = K ? K.of(entity, hass, states) : null;\n  return !!(K && K.active(s));\n]]]\n"
    }
   ],
-  "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? t;\n  // „Bereit“, „Heizt auf“, „Cappuccino · 40 %“, „Wasser nachfüllen“, „Aus“ (window._casoraCoffee.tileText).\n  const K = window._casoraCoffee;\n  return K ? fit(K.tileText(K.of(entity, hass, states))) : '';\n]]]\n",
+  "state_display": "[[[\n  const fit = (t) => window.casoraStateFit?.(t) ?? t;\n  // „Bereit“, „Heizt auf“, „Cappuccino · 40 %“ (schmal „40 % Cappuccino“), „Wasser leer“, „Aus“ (window._casoraCoffee.tileText).\n  // Name der Kachel mitgeben: heißt das Getränk genauso („Kaffee“), steht „Läuft“ statt doppeltem Namen.\n  const K = window._casoraCoffee;\n  const nm = typeof this._config?.name === 'string' && this._config.name.indexOf('[[[') < 0 ? this._config.name : (entity?.attributes?.friendly_name || '');\n  const narrow = (this.offsetWidth || 999) < 240;\n  return K ? fit(K.tileText(K.of(entity, hass, states), narrow, nm)) : '';\n]]]\n",
   "styles": {
    "card": [
     {

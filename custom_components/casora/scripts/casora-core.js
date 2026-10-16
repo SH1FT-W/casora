@@ -317,7 +317,10 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
       // Fokus nach dem Schließen zurück, wo er vorher war (Kachel, Menü …).
       var before = document.activeElement;
       while (before && before.shadowRoot && before.shadowRoot.activeElement) before = before.shadowRoot.activeElement;
+      // w.withPopup: Rückfrage aus einem offenen Popup – geht das Popup zu, schließt sie mit (Antwort „nein“).
+      var popWatch = null;
       var done = function (ok) {
+        if (popWatch) { clearInterval(popWatch); popWatch = null; }
         document.removeEventListener('keydown', key, true);
         host.remove();
         try { if (before && before.isConnected && before.focus) before.focus({ preventScroll: true }); } catch (e) { /* egal */ }
@@ -339,6 +342,8 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
       root.querySelector('.no').onclick = function () { done(false); };
       root.querySelector('.yes').onclick = function () { window.casoraHaptic('medium'); done(true); };
       document.body.appendChild(host);
+      var pop = w.withPopup && window.casoraPopup && window.casoraPopup.element;
+      if (pop) popWatch = setInterval(function () { if (!pop.isConnected || !pop.hasAttribute('open') || pop.hasAttribute('closing')) done(false); }, 250);
       // Fokus auf „Abbrechen“: ein versehentliches Enter schaltet nicht (Nutzertest). Mit Textfeld dorthin.
       setTimeout(function () { var n = field || root.querySelector('.no'); if (n) n.focus(); }, 30);
     });
@@ -8689,7 +8694,9 @@ window.casoraMenuGlass = {
       +   'transform:translateX(calc(100% + 16px));}'
       + '.hui-srow.armed .hui-cf{transform:none;}'
       + '.hui-srow.armed .hui-inner{--armed-x:0px;padding-right:calc(var(--cf-real, var(--cf-w)) + 8px);}'
-      + '.hui-srow.armed .hui-inner>:nth-child(n+3){display:none!important;}'
+      /* Bestätigen sichtbar: Wert, Aktion und Pfeil weg – über ihre Klasse (hui-end), nicht über die Stelle: ohne Symbol
+         war der Wert das zweite Kind und blieb neben „Bestätigen“ stehen. */
+      + '.hui-srow.armed .hui-inner>.hui-end{display:none!important;}'
       /* B-15: am Handy jede Unterzeile einzeilig mit Auslassung – gleich hohe Zeilen. */
       + '@media (max-width: 600px){.hui-srow .hui-sub{display:block!important;-webkit-line-clamp:1!important;white-space:nowrap!important;text-overflow:ellipsis!important;overflow:hidden!important;}.hui-srow .hui-sub2::before{content:none!important;}}'
       /* Hinweis-Zeilen (r.subWrap, z. B. „Noch keine Tageswerte“): ganzer Satz statt „…“ (07.10.2026). */
@@ -8799,8 +8806,8 @@ window.casoraMenuGlass = {
           aLive = ' data-casora-live="act" data-casora-ent="' + esc(r.entity) + '"'
             + ' data-casora-act="' + esc(JSON.stringify(r.actionLive)) + '"';
         }
-        var aCls = (r.actionBusy ? 'hui-busy' : '') + (r.actionIcon ? (r.actionBusy ? ' ' : '') + 'hui-actx' : '');
-        out += '<div' + aLive + (armOnAction ? ' data-casora-arm=""' : '') + (aCls ? ' class="' + aCls + '"' : '')
+        var aCls = 'hui-end' + (r.actionBusy ? ' hui-busy' : '') + (r.actionIcon ? ' hui-actx' : '');
+        out += '<div' + aLive + (armOnAction ? ' data-casora-arm=""' : '') + ' class="' + aCls + '"'
           + (r.actionIcon ? (armOnAction ? ' role="button"' : '') + actxLabel(r.action) : '')
           + ' style="font-size:14px;font-weight:700;color:'
           + (r.actionBusy ? S.sub : (tone(r.actionTone) || T.blue)) + ';white-space:nowrap;'
@@ -8819,13 +8826,13 @@ window.casoraMenuGlass = {
             + '" data-casora-attr="' + esc(r.liveAttr) + '"'
             + ' data-casora-suffix="' + esc(r.liveSuffix || '') + '"';
         }
-        out += '<div' + vlive + (r.valueIcon ? ' class="hui-actx"' + actxLabel(r.value) : '') + ' style="font-size:14px;font-weight:600;'
+        out += '<div' + vlive + (r.valueIcon ? ' class="hui-end hui-actx"' + actxLabel(r.value) : ' class="hui-end"') + ' style="font-size:14px;font-weight:600;'
           + 'font-variant-numeric:tabular-nums;color:' + (alertTone(r.valueTone) || T.ink2)
           + ';white-space:nowrap;pointer-events:none;">'
           + (r.valueIcon ? actxInner(r.value, r.valueIcon, S.iconOff) : lit(r.value, r.valueLit)) + '</div>';
       }
       if ((r.entity || r.tappable) && (!r.svc || armOnAction)) {
-        out += '<svg class="hui-chev" width="7" height="12" viewBox="0 0 7 12" aria-hidden="true">'
+        out += '<svg class="hui-chev hui-end" width="7" height="12" viewBox="0 0 7 12" aria-hidden="true">'
           // DP-30: Pfeil in Text 1 mit Deckkraft .6 (Text 3 · .6 lag bei 2,5 : 1).
           + '<path d="M1 1L6 6L1 11" fill="none" stroke="' + T.ink + '" stroke-width="2" '
           + 'stroke-linecap="round" stroke-linejoin="round"/></svg>';

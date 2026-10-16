@@ -30,6 +30,8 @@
   var TALK_MAX = 90000;           // Sprechen endet spätestens nach 90 s (Klingel bleibt sonst im Sprechmodus)
   var FRESH = 2 * 60000;          // so lange heißt es „Hat geklingelt“, danach „Geklingelt · 14:23“ (bis HOLD)
   var HIST_TTL = 15 * 60000;      // Verlauf ohne Änderung höchstens so oft neu fragen
+  var SIREN_REST = 3000;
+  var DAY_H = 16;                 // Höhe des Tagesetiketts über der Uhrzeit im Verlauf (Zeile 14 + 2 Abstand)          // nach dem Stoppen so lange „Gestoppt“ statt „Sirene auslösen“
   var bad = function (s) { return s == null || s === 'unknown' || s === 'unavailable'; };
   var num = function (v) { var n = parseFloat(v); return isFinite(n) ? n : null; };
   var tr = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
@@ -63,7 +65,6 @@
 
   // ── Reolink-Klingel? ──────────────────────────────────────────────────────
   // Kamera an einem Gerät, das einen Klingelknopf (binary_sensor visitor) hat. Ohne Registry: nein.
-  var CAM_KEYS = /^(telephoto_)?(sub|main|ext|snapshots_sub|snapshots_main)(_lens_\d+)?$/;
   KL.is = function (hass, id) {
     if (!id || !/^camera\./.test(id) || !hass) return false;
     var R = hass.entities || {}, me = R[id];
@@ -75,10 +76,17 @@
     }
     return false;
   };
-  // Live-Kamera fürs Studio: sub (Fluent) vor main (Clear); Schnappschuss-Kameras nie.
+  // Live-Kamera fürs Studio (Geräteliste, casora-panel-b-ux.js): je Gerät eine – sub (Fluent) vor main (Clear),
+  // main nur ohne sub; Schnappschuss-Kameras nie.
   KL.liveCam = function (hass, id) {
-    var R = (hass && hass.entities) || {}, tk = String((R[id] || {}).translation_key || '');
-    return KL.is(hass, id) && /^(sub|main)$/.test(tk);
+    var R = (hass && hass.entities) || {}, me = R[id] || {}, tk = String(me.translation_key || '');
+    if (!/^(sub|main)$/.test(tk) || !KL.is(hass, id)) return false;
+    if (tk === 'sub') return true;
+    var S = (hass && hass.states) || {};
+    return !Object.keys(R).some(function (x) {
+      var e = R[x];
+      return x !== id && e && e.device_id === me.device_id && e.translation_key === 'sub' && /^camera\./.test(x) && S[x] && !e.hidden && !e.disabled_by;
+    });
   };
 
   // ── Entitäten am Gerät ────────────────────────────────────────────────────
@@ -90,7 +98,7 @@
     var me = R[id] || {}, dev = me.device_id ? D[me.device_id] : null;
     var c = { cam: id, device: me.device_id || null, name: dev ? String(dev.name_by_user || dev.name || '') : '',
       visitor: null, motion: null, det: {}, order: [], snap: null, quick: null, autoReply: null, autoTime: null,
-      vol: {}, sw: {}, led: null, ledLight: null, siren: null, battery: null, wifi: null, dayNight: null, reolink: me.platform === 'reolink' };
+      vol: {}, sw: {}, led: null, ledLight: null, dayMode: null, siren: null, battery: null, wifi: null, dayNight: null, reolink: me.platform === 'reolink' };
     if (me.device_id) {
       Object.keys(R).forEach(function (eid) {
         var e = R[eid];
@@ -106,6 +114,7 @@
           if (k === 'play_quick_reply_message') c.quick = eid;
           else if (k === 'auto_quick_reply_message') c.autoReply = eid;
           else if (k === 'doorbell_led') c.led = eid;
+          else if (k === 'day_night') c.dayMode = eid;
         } else if (dom === 'number') {
           if (k === 'volume') c.vol.spk = eid;
           else if (k === 'volume_speak') c.vol.speak = eid;
@@ -133,7 +142,7 @@
     return c;
   };
   KL.watch = function (c) {
-    var out = [c.cam, c.visitor, c.motion, c.snap, c.quick, c.autoReply, c.autoTime, c.led, c.ledLight, c.siren, c.battery, c.wifi, c.dayNight];
+    var out = [c.cam, c.visitor, c.motion, c.snap, c.quick, c.autoReply, c.autoTime, c.led, c.ledLight, c.siren, c.battery, c.wifi, c.dayNight, c.dayMode];
     c.order.forEach(function (o) { out.push(c.det[o]); });
     ['spk', 'speak', 'bell'].forEach(function (k) { out.push(c.vol[k]); });
     ['bell', 'audio', 'privacy', 'ir'].forEach(function (k) { out.push(c.sw[k]); });
@@ -176,9 +185,13 @@
     return out.filter(function (e) { return isFinite(e.at); }).sort(function (x, y) { return y.at - x.at; });
   };
   // Verlauf und Gesehenes zusammen; Erkennungen derselben Art innerhalb einer Minute nur einmal.
+  // Reihenfolge: neueste zuerst; in derselben Minute (gleiche Uhrzeit in der Zeitleiste) Klingeln vor Erkennung.
+  var minute = function (ms) { return Math.floor(ms / 60000); };
   KL.events = function (c, now) {
     var h = hc[c.cam], all = ((h && h.list) || []).concat(seen[c.cam] || []);
-    all.sort(function (x, y) { return y.at - x.at; });
+    all.sort(function (x, y) {
+      return minute(y.at) - minute(x.at) || (x.kind === 'ring' ? 0 : 1) - (y.kind === 'ring' ? 0 : 1) || y.at - x.at;
+    });
     var out = [];
     all.forEach(function (e) {
       if (e.at > (now || Date.now()) + 60000) return;
@@ -196,12 +209,13 @@
       } catch (e) { /* schon weg */ }
     });
   };
-  // Einmal je Änderung an Klingel/Erkennungen neu fragen, ohne Änderung höchstens alle 15 Min. (Neues kommt
-  // ohnehin über „seen“ live dazu); danach neu zeichnen.
+  // Neu fragen nur, wenn sich der Klingelknopf (visitor) ändert, sonst höchstens alle 15 Min. – Erkennungen
+  // kommen live über „seen“ dazu (jede Personen-Erkennung fragte vorher den ganzen Verlauf neu); danach neu zeichnen.
   KL.history = function (hass, c, el) {
     var S = (hass && hass.states) || {};
     var ids = [c.visitor].concat(c.order.map(function (o) { return c.det[o]; })).filter(Boolean);
-    var key = ids.map(function (x) { return S[x] ? S[x].last_changed + S[x].state : ''; }).join('|');
+    var vs = c.visitor && S[c.visitor];
+    var key = vs ? vs.last_changed + vs.state : '';
     var hit = hc[c.cam];
     if (hit && el && hit.wait.indexOf(el) < 0) hit.wait.push(el);
     var fresh = hit && hit.key === key && Date.now() - hit.at < HIST_TTL;
@@ -222,7 +236,7 @@
         job.busy = false;
         kickAll(job.wait);
         // Der Recorder schreibt mit Verzug (Standard alle 5 s): änderte sich gerade etwas, nach 7 s noch einmal fragen.
-        var recent = ids.some(function (x) { return S[x] && Date.now() - Date.parse(S[x].last_changed) < 12000; });
+        var recent = !!(vs && Date.now() - Date.parse(vs.last_changed) < 12000);
         if (recent && !job.again) {
           job.again = true;
           setTimeout(function () {
@@ -437,11 +451,18 @@
       }
       if (c.siren && S[c.siren] && S[c.siren].state !== 'unavailable') {
         var sOn = S[c.siren].state === 'on';
+        // Eben gestoppt (bzw. abgelaufen): kurz „Gestoppt“ ohne Auslösen – der Tipp zum Stoppen landete sonst
+        // gleich auf „Sirene auslösen“. Nach SIREN_REST zeichnet sich die Zeile selbst neu.
+        var since = now - (Date.parse(S[c.siren].last_changed) || 0);
+        var rest = !sOn && !hush && since >= 0 && since < SIREN_REST;
+        if (rest && el) setTimeout(function () { kickAll([el]); }, SIREN_REST - since + 60);
         var siren = sOn
           ? { icon: 'mdi:alarm-light', iconTone: 'bad', label: 'Sirene', sub: 'Antippen zum Stoppen', value: 'Läuft',
             valueTone: 'var(--casora-color-red-text, var(--casora-color-red))', svc: { domain: 'siren', service: 'turn_off', target: { entity_id: c.siren } } }
           : hush
             ? { icon: 'mdi:alarm-light-outline', iconTone: 'rgba(0,0,0,0)', label: 'Sirene', sub: s.privacy ? 'Bei Privatsphäre aus' : 'Klingel nicht erreichbar' }
+            : rest
+            ? { icon: 'mdi:alarm-light-outline', iconTone: 'rgba(0,0,0,0)', label: 'Sirene', sub: 'Gestoppt', value: 'Aus' }
             : { icon: 'mdi:alarm-light-outline', iconTone: 'bad', label: 'Sirene', sub: 'Laut an der Tür, 10 Sekunden',
               svc: { domain: 'siren', service: 'turn_on', target: { entity_id: c.siren }, data: { duration: 10 }, done: 'Sirene läuft' }, confirm: 'Auslösen' };
         out += (out ? '<div style="height:8px"></div>' : '') + UI.group([siren], out ? null : 'An der Tür');
@@ -474,16 +495,19 @@
           var ring = e.kind === 'ring', last = i === items.length - 1;
           var isNew = e === newest && now - e.at < HOLD;
           var what = ring ? 'Hat geklingelt' : KL.label(e.kind) + ' erkannt';
+          // Tagesetikett („Gestern“) steht über der Uhrzeit: Punkt, Text und „Neu“ rücken um seine Höhe (DAY_H) nach
+          // unten, damit sie auf einer Linie mit der Uhrzeit bleiben (der Punkt saß vorher beim Etikett).
+          var off = day ? DAY_H : 0;
           return '<div class="kl-ev" style="display:grid;grid-template-columns:minmax(46px,max-content) 22px minmax(0,1fr) auto;align-items:start;column-gap:8px;position:relative;padding:9px 0;">'
             + '<div style="font-size:13px;font-weight:600;color:' + sub + ';font-variant-numeric:tabular-nums;padding-top:2px;white-space:nowrap;">'
-            + (day ? '<div style="font-size:12px;font-weight:700;margin:-1px 0 1px;">' + esc(tr(day)) + '</div>' : '') + esc(clock(e.at)) + '</div>'
+            + (day ? '<div class="kl-day" style="font-size:12px;font-weight:700;line-height:' + (DAY_H - 2) + 'px;margin:0 0 2px;">' + esc(tr(day)) + '</div>' : '') + esc(clock(e.at)) + '</div>'
             + '<div style="position:relative;height:100%;display:flex;justify-content:center;">'
-            + (last ? '' : '<div style="position:absolute;top:16px;bottom:-18px;width:2px;border-radius:2px;background:' + dim + ';"></div>')
-            + '<div style="position:relative;width:12px;height:12px;border-radius:50%;margin-top:4px;background:' + (ring ? ringHue : detHue) + ';box-shadow:0 0 0 3px ' + rowBg + ';"></div></div>'
-            + '<div style="min-width:0;"><div style="font-size:15px;font-weight:' + (ring ? 700 : 600) + ';color:' + ink + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(tr(what)) + '</div>'
+            + (last ? '' : '<div style="position:absolute;top:' + (16 + off) + 'px;bottom:-18px;width:2px;border-radius:2px;background:' + dim + ';"></div>')
+            + '<div class="kl-dot" style="position:relative;width:12px;height:12px;border-radius:50%;margin-top:' + (4 + off) + 'px;background:' + (ring ? ringHue : detHue) + ';box-shadow:0 0 0 3px ' + rowBg + ';"></div></div>'
+            + '<div style="min-width:0;padding-top:' + off + 'px;"><div style="font-size:15px;font-weight:' + (ring ? 700 : 600) + ';color:' + ink + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(tr(what)) + '</div>'
             + (dw ? '' : '<div style="font-size:13px;font-weight:500;color:' + sub + ';margin-top:1px;white-space:nowrap;">' + esc(tr(KL.ago(e.at, now))) + '</div>') + '</div>'
             // Letztes Klingeln, solange die Kachel es meldet (HOLD, 10 Min.): rechts „Neu“ in Schrift-Rot.
-            + (isNew ? '<div style="font-size:13px;font-weight:700;padding-top:2px;color:var(--casora-color-red-text, var(--casora-color-red));">' + esc(tr('Neu')) + '</div>' : '<div></div>')
+            + (isNew ? '<div style="font-size:13px;font-weight:700;padding-top:' + (2 + off) + 'px;color:var(--casora-color-red-text, var(--casora-color-red));">' + esc(tr('Neu')) + '</div>' : '<div></div>')
             + '</div>';
         }).join('');
         o2 = (UI.label ? UI.label(head) : '')
@@ -502,7 +526,9 @@
       var rows = [
         swRow(S, c.sw.bell, 'mdi:bell-ring-outline', 'Klingelton an der Tür', false),
         swRow(S, c.sw.audio, 'mdi:microphone-outline', 'Ton aufnehmen', true, 'Ohne Ton hörst du die Tür nicht'),
-        swRow(S, c.sw.ir, 'mdi:weather-night', 'Infrarot bei Nacht', false),
+        // Drei Reolink-Entitäten, drei eindeutige Namen (16.10., Daten aus #23): Schalter ir_lights „Infrarot-LEDs nachts“,
+        // Auswahl day_night „Tag/Nacht-Modus“ (Segmente unten), Sensor day_night_state „Bild gerade“ (unter „Gerät“).
+        swRow(S, c.sw.ir, 'mdi:lightbulb-night-outline', 'Infrarot-LEDs nachts', false),
         swRow(S, c.ledLight, 'mdi:led-on', 'Status-LED', false),
         swRow(S, c.sw.privacy, 'mdi:eye-off-outline', 'Privatsphäre', 'both', 'Kamera und Ton aus'),
       ].filter(Boolean);
@@ -520,6 +546,15 @@
       }
       if (rows.length) secs.push(UI.group(rows, 'Klingel'));
       if (segs) secs.push(segs);
+      var dm = c.dayMode && S[c.dayMode] && !bad(S[c.dayMode].state) ? S[c.dayMode] : null;
+      if (dm) {
+        var DM = { auto: 'Automatisch', color: 'Farbe', blackwhite: 'Schwarz-Weiß', blackandwhite: 'Schwarz-Weiß' };
+        var dw2 = ((dm.attributes || {}).options || []).map(function (o) {
+          return { label: DM[String(o).toLowerCase().replace(/[^a-z]/g, '')] || String(o), active: o === dm.state,
+            svc: { domain: 'select', service: 'select_option', target: { entity_id: c.dayMode }, data: { option: o } } };
+        });
+        if (dw2.length > 1 && dw2.length <= 4) secs.push(UI.segments(dw2, 'Tag/Nacht-Modus'));
+      }
       var ar = c.autoReply && S[c.autoReply] && !bad(S[c.autoReply].state) ? S[c.autoReply] : null;
       var dev = [];
       if (ar) {
@@ -542,9 +577,10 @@
       }
       if (c.dayNight && S[c.dayNight] && !bad(S[c.dayNight].state)) {
         var dn = S[c.dayNight].state;
-        // Ruhiges Symbol (kein Gelb): eine Info, kein Licht, das an ist. „Nachtsicht · Aus“ statt „Bild · Farbe“.
-        dev.push({ icon: dn === 'night' ? 'mdi:weather-night' : 'mdi:white-balance-sunny', iconTone: 'rgba(0,0,0,0)', label: 'Nachtsicht',
-          sub: dn === 'night' ? 'Bild in Schwarz-Weiß' : null, value: dn === 'night' ? 'An' : dn === 'led_day' ? 'Mit Licht' : 'Aus' });
+        // Ruhiges Symbol (kein Gelb): eine Info, kein Licht, das an ist. „Bild gerade · Farbe“ statt „Nachtsicht · Aus“ –
+        // das las sich neben „Infrarot · An“ als Widerspruch (tagsüber ist beides richtig).
+        dev.push({ icon: dn === 'night' ? 'mdi:weather-night' : 'mdi:white-balance-sunny', iconTone: 'rgba(0,0,0,0)', label: 'Bild gerade',
+          value: dn === 'night' ? 'Schwarz-Weiß' : dn === 'led_day' ? 'Farbe mit Licht' : 'Farbe' });
       }
       if (dev.length) secs.push(UI.group(dev, 'Gerät'));
       // Ohne Zähler (die Zahl der Abschnitte sagte niemandem etwas); aufgeklappt bleibt „Einstellungen“ stehen, nur der Pfeil dreht.

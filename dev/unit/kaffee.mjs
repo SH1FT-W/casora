@@ -100,7 +100,7 @@ assert.deepEqual(K.strengths(states['select.bar_bean_amount'], 3).map((x) => x.l
 set('select.bar_bean_amount', BEAN[5]);
 assert.deepEqual(K.strengths(states['select.bar_bean_amount']).map((x) => x.label), ['Mild', 'Normal', 'Stark', 'Extra stark'], 'eingestellte Stufe ist dabei');
 set('select.bar_bean_amount', BEAN[3]);
-assert.deepEqual(K.temps(states['select.bar_coffee_temperature']).map((x) => x.label), ['88°', '90°', '92°', '94°', '95°', '96°']);
+assert.deepEqual(K.temps(states['select.bar_coffee_temperature']).map((x) => x.label.replace(/\u00a0/g, ' ')), ['88 °C', '90 °C', '92 °C', '94 °C', '95 °C', '96 °C'], 'mit Einheit');
 assert.deepEqual(K.amounts(states['number.bar_fill_quantity']).map((x) => x.v), [100, 120, 150, 200, 250], '50er-Schritte + eingestellte');
 assert.ok(K.amounts(states['number.bar_fill_quantity']).some((x) => x.v === 120 && x.on), 'eingestellte Menge dabei');
 
@@ -129,7 +129,10 @@ set('sensor.bar_operation_state', 'run'); set('select.bar_active_program', PROGS
 set('sensor.bar_program_finish_time', new Date(Date.now() + 30000).toISOString());
 s = st('switch.bar_power');
 assert.equal(s.st, 'bezieht'); assert.equal(s.drink.label, 'Cappuccino'); assert.equal(s.pct, 40);
-assert.equal(K.tileText(s), '40 % · Cappuccino');
+assert.equal(K.tileText(s), 'Cappuccino · 40 %');
+assert.equal(K.tileText(s, true), '40 % Cappuccino', 'schmal: ohne „ · “ (sonst „40 % +1“)');
+assert.equal(K.tileText(s, false, 'Cappuccino'), 'Läuft · 40 %', 'Kachel heißt wie das Getränk: kein doppelter Name');
+assert.equal(K.tileText(s, true, 'cappuccino'), '40 %');
 assert.equal(K.ring(s), 40);
 assert.ok(s.remain > 0 && s.remain < 1);
 set('select.bar_active_program', PROGS[8]);
@@ -237,7 +240,7 @@ assert.equal(s.phase, 'Mahlt'); assert.ok(Math.abs(s.remain - 20 / 60) < 1e-6);
 assert.deepEqual(s.warns.map((w) => w.label), ['Wasser bald leer', 'Filter wechseln']);
 assert.equal(s.drink.label, 'Espresso', 'laufendes Getränk aus der Auswahl');
 assert.deepEqual(s.pre.map((p) => [p.art, p.cups]), [['entkalken', 35]]);
-assert.equal(K.tileText(s), 'Filter wechseln', 'harte Warnung vor dem Bezug, „bald leer“ nicht');
+assert.equal(K.tileText(s), 'Espresso · 70 %', 'Pflege-Warnung (Filter) und „bald leer“ verdrängen den Bezug nicht – nur Blockierendes');
 assert.deepEqual(s.perDrink.map((x) => x.label), ['Kaffee mit Milch', 'Ristretto & Espresso', 'Heißwasser'], 'deutsche Namen, ohne ml und gestartet/abgeschlossen');
 assert.equal(s.total, 90 + 140 + 12);
 set('sensor.ws_drip_tray', 'full');
@@ -342,7 +345,7 @@ for (const plat of ['delonghi_primadonna', 'casora_mock']) {
   set(`sensor.${p}_device_status`, 'brewing'); set(`binary_sensor.${p}_dispensing`, 'on', { percentage: 40 });
   s = st(`switch.${p}_power`);
   assert.equal(s.pct, 40, 'Fortschritt aus „Gibt aus“');
-  assert.equal(K.tileText(s), '40 % · Läuft', 'ohne Auswahl kennt die Kachel das Getränk nicht');
+  assert.equal(K.tileText(s), 'Läuft · 40 %', 'ohne Auswahl kennt die Kachel das Getränk nicht');
   set(`sensor.${p}_device_status`, 'ready'); set(`binary_sensor.${p}_dispensing`, 'off', { percentage: 0 }); set(`binary_sensor.${p}_descaling`, 'on');
   assert.equal(K.tileText(st(`switch.${p}_power`)), 'Entkalken fällig');
   set(`binary_sensor.${p}_descaling`, 'off');
@@ -358,7 +361,7 @@ set('sensor.dl19_device_status', 'ready');
 window._casoraMiHooks.forEach((f) => f('coffee-start:' + c.anchor + '|Cappuccino'));
 await new Promise((r) => setTimeout(r, 20));
 set('sensor.dl19_device_status', 'brewing'); set('binary_sensor.dl19_dispensing', 'on', { percentage: 20 });
-assert.equal(K.tileText(K.of({ entity_id: 'switch.dl19_power' }, hass())), '20 % · Cappuccino', 'gestartetes Getränk statt „Läuft“');
+assert.equal(K.tileText(K.of({ entity_id: 'switch.dl19_power' }, hass())), 'Cappuccino · 20 %', 'gestartetes Getränk statt „Läuft“');
 set('sensor.dl19_device_status', 'ready'); set('binary_sensor.dl19_dispensing', 'off', { percentage: 0 });
 HASS = null;
 
@@ -470,7 +473,7 @@ assert.equal(c.powerOff, 'button.barista_switch_off'); assert.equal(c.start, 'bu
 assert.equal(c.total, 'sensor.barista_total_cups');
 s = st('sensor.barista_state');
 assert.equal(s.st, 'bezieht'); assert.equal(s.phase, 'Mahlt'); assert.equal(s.pct, 55);
-assert.equal(K.tileText(s), '55 % · Latte Macchiato', 'Getränk aus der Auswahl');
+assert.equal(K.tileText(s), 'Latte Macchiato · 55 %', 'Getränk aus der Auswahl');
 assert.equal(s.warns.length, 0, 'Nivona-Merker „0“ ist nicht aktiv');
 set('sensor.barista_descale_warning', '1');
 assert.ok(st('sensor.barista_state').warns.some((w) => w.art === 'entkalken'), '„1“ ist aktiv');
@@ -551,7 +554,10 @@ assert.equal(hold[0].t, 'Ausschalten', 'An/Aus zuerst');
 const drinkItems = hold.filter((x) => /starten$/.test(x.t));
 assert.equal(drinkItems.length, 2, 'zwei Getränke');
 assert.equal(drinkItems[0].t, 'Espresso starten', 'zuletzt gestartetes zuerst');
-assert.ok(hold.every((x) => !x.ic || /^mdi:/.test(x.ic)), 'Halten-Menü nur mit mdi-Symbolen');
+// Symbol je Getränk wie im Raster (Masken kann das Halten-Menü seit 16.10.), keine Milch-/Wasserprogramme bevorzugt.
+const dIc = Object.fromEntries(K.drinks(K.find(HASS, 'sensor.bar_operation_state'), states).map((x) => [x.label + ' starten', x.icon]));
+assert.ok(drinkItems.every((x) => x.ic && x.ic === dIc[x.t]), JSON.stringify(drinkItems.map((x) => [x.t, x.ic])));
+assert.ok(!drinkItems.some((x) => /Milch|Heißwasser|Dampf/.test(x.t)), drinkItems.map((x) => x.t).join());
 assert.equal(K.hold(HASS, 'switch.bar_power').filter((x) => x.t === 'Ausschalten').length, 0, 'Kachel am Schalter: kein doppeltes An/Aus');
 set('binary_sensor.bar_remote_start', 'off');
 assert.equal(K.hold(HASS, 'sensor.bar_operation_state').filter((x) => /starten$/.test(x.t)).length, 0, 'ohne Fernstart keine Getränke');
@@ -574,7 +580,7 @@ c = K.find(hass(), 'sensor.bar_operation_state');
 set('sensor.bar_water_tank_empty', 'present'); set('sensor.bar_drip_tray_full', 'present'); set('sensor.bar_device_should_be_descaled', 'present');
 let hero = JSON.parse(K.sec('hero', c, states, hass()));
 assert.equal(hero.main, 'Wasser nachfüllen', 'Warnung zuerst, nicht „Bereit · …“');
-assert.deepEqual(hero.rest, ['+2'], 'höchstens eine Warnung, Rest als +N');
+assert.deepEqual(hero.rest, [], 'höchstens eine Warnung, ohne „+N“ (alle stehen unter Hinweise)');
 UIlog.length = 0;
 K.sec('info', c, states, hass());
 const hin = UIlog.find((g) => /^Hinweise/.test(g.label)), pfl = UIlog.find((g) => g.label === 'Pflege');
@@ -587,7 +593,7 @@ assert.deepEqual(hero, { main: 'Bereit', rest: [] }, 'Vorwarnung nicht im Kopf')
 set('sensor.bar_operation_state', 'run'); set('select.bar_active_program', PROGS[3]); set('sensor.bar_program_progress', '40');
 set('sensor.bar_program_finish_time', new Date(Date.now() + 12500).toISOString());
 hero = JSON.parse(K.sec('hero', c, states, hass()));
-assert.equal(hero.main, 'Cappuccino'); assert.match(hero.rest[0], /^noch 1[23]\u00a0s$/, 'Kopf ohne „Läuft“ und Prozent');
+assert.equal(hero.main, 'Cappuccino'); assert.match(hero.rest[0], /^noch\u00a01[23]\u00a0s$/, 'Kopf ohne „Läuft“ und Prozent, „noch“ bricht nicht um');
 const run = K.sec('drinks', c, states, hass());
 assert.match(run, /stroke-dasharray/, 'Ring bei den Getränken (nicht im Kopf-Feld, das der Rahmen ausblendet)');
 assert.match(run, /coffee-stop:/, 'Abbrechen einstufig direkt unter dem Ring');
@@ -598,6 +604,63 @@ assert.match(grid, /grid-auto-rows:1fr/);
 assert.ok(grid.indexOf('Cappuccino starten') < grid.indexOf('<s>Stärke'), 'Start direkt unter dem Raster, Optionen darunter');
 delete window._casoraUI;
 
+// ── Fix-Runde 3 (16.10.) ─────────────────────────────────────────────────
+{
+  const H0 = hass();
+  const cb = K.find(H0, 'sensor.bar_operation_state');
+  // Status-Sensor nicht verfügbar, Strom-Schalter lebt: „Nicht verfügbar“ statt „Bereit“.
+  set('sensor.bar_operation_state', 'unavailable');
+  assert.equal(K.tileText(st('sensor.bar_operation_state')), 'Nicht verfügbar');
+  // Home Connect nach eigenem Einschalten: „inactive“ mit Strom an zählt erst streng nicht als bereit.
+  set('sensor.bar_operation_state', 'inactive');
+  assert.equal(K.readyNow(cb, states), true, 'Kachel: inactive + Strom an = Bereit');
+  assert.equal(K.readyNow(cb, states, true), false, 'Start nach dem Einschalten wartet auf echtes ready');
+  set('sensor.bar_operation_state', 'ready');
+  assert.equal(K.readyNow(cb, states, true), true);
+  // Warten abbrechen bzw. Strom wieder aus.
+  set('sensor.bar_operation_state', 'inactive');
+  let stop = false;
+  const w1 = K.waitReady(cb, () => states, 2000, 5, { strict: true, cancelled: () => stop });
+  stop = true;
+  assert.equal(await w1, 'cancel', 'Start abbrechen');
+  const w2 = K.waitReady(cb, () => states, 2000, 5, { strict: true });
+  await new Promise((r) => setTimeout(r, 12));
+  set('switch.bar_power', 'off');
+  assert.equal(await w2, 'off', 'Strom wieder aus: Warten endet');
+  set('switch.bar_power', 'on'); set('sensor.bar_operation_state', 'ready');
+  // Hauptschalter im Kopf bleibt Gerätefarbe, auch bei Warnung.
+  const hs = window._casoraHeadSwitchHooks.map((f) => f({ _config: { template: ['casora_coffee'] }, _stateObj: { entity_id: 'sensor.bar_operation_state' } }, H0)).find(Boolean);
+  assert.deepEqual(hs, { entities: ['switch.bar_power'], color: K.COLOR.on });
+  // Mengen: eingestellte Menge außerhalb der Stufen bleibt in der Liste, auch nach Wahl einer Stufe (Chips springen nicht).
+  set('number.bar_fill_quantity', '120');
+  const a1 = K.amounts(states['number.bar_fill_quantity']).map((x) => x.v);
+  set('number.bar_fill_quantity', '150');
+  const a2 = K.amounts(states['number.bar_fill_quantity']).map((x) => x.v);
+  assert.deepEqual(a1, a2, 'gleiche Chips in gleicher Reihenfolge');
+  assert.ok(K.amounts(states['number.bar_fill_quantity']).some((x) => x.v === 150 && x.on));
+  set('number.bar_fill_quantity', '120');
+}
+// home_connect_alt: Start-Knopf „<gerät>_start_pause“ (translation_key je Zustand start_/pause_program); ohne Start-
+// Knopf wählt die Auswahl nur vor – nicht als „gestartet“ melden.
+{
+  const it = (id, key, state, extra) => Object.assign({ entity_id: id, key, platform: 'home_connect_alt', domain: id.split('.')[0], dc: null, unit: null,
+    options: null, name: '', device_id: 'alt', state }, extra || {});
+  const opts = ['ConsumerProducts.CoffeeMaker.Program.Beverage.Espresso'];
+  const items = [it('sensor.alt_bsh_common_status_operationstate', 'statuses', 'BSH.Common.EnumType.OperationState.Ready'),
+    it('select.alt_programs', 'programs', opts[0], { options: opts }), it('sensor.alt_beanamount', 'options', 'x'),
+    it('button.alt_start_pause', 'pause_program', 'unknown'), it('button.alt_stop', 'stop_program', 'unknown')];
+  const ca = K.roles(items, 'select.alt_programs');
+  assert.equal(ca.fam, 'hcalt');
+  assert.equal(ca.start, 'button.alt_start_pause', 'Start-Knopf trotz translation_key pause_program');
+  assert.equal(ca.pause, null);
+  const calls = [];
+  const S2 = { 'select.alt_programs': { state: opts[0], attributes: { options: opts } }, 'sensor.alt_bsh_common_status_operationstate': { state: 'BSH.Common.EnumType.OperationState.Ready', attributes: {} } };
+  const h2 = { states: S2, services: {}, callService: (d, sv, data) => { calls.push([d, sv, data && data.entity_id]); return Promise.resolve(); } };
+  assert.equal(await K.start(h2, ca, opts[0]), true);
+  assert.deepEqual(calls.map((x) => x[0] + '.' + x[1]), ['button.press'], 'gleiche Auswahl: nur Start drücken');
+  calls.length = 0;
+  assert.equal(await K.start(h2, Object.assign({}, ca, { start: null }), opts[0]), 'sel', 'nur ausgewählt');
+}
 // Programm-Namen
 assert.equal(K.drink('consumer_products_coffee_maker_program_coffee_world_americano').label, 'Americano');
 assert.equal(K.drink('consumer_products_coffee_maker_program_cleaning_modes_descaling').care, true);

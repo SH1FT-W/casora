@@ -101,9 +101,11 @@
 
   // Bekannte Kacheltypen (Casora + eigene) als Auswahl. withHidden: auch die, die das
   // Studio nicht zum Hinzufügen anbietet (Schloss-/Jalousiegruppe …) – für „kennt Casora das?“.
-  function knownTypes(withHidden) {
+  // Mit hass nur, was „Kachel hinzufügen“ anbietet (onlyIf: nicht hinzugefügte Community-Karten fehlen).
+  function knownTypes(withHidden, hass) {
     const I = window.__casoraPanelInternals;
-    return I.TILE_TYPES.filter((t) => withHidden || !t.hidden).concat(I.USER_TILE_TYPES || []);
+    const offered = (t) => !hass || !t.onlyIf || t.onlyIf(hass);
+    return I.TILE_TYPES.filter((t) => withHidden || !t.hidden).concat(I.USER_TILE_TYPES || []).filter(offered);
   }
 
   // Erkennen schließt versteckte Typen ein: die Standard-Gruppenkacheln sind keine eigenen Karten.
@@ -114,7 +116,7 @@
 
   // Vorschläge für eine unbekannte Kachel, bester zuerst.
   function suggest(tile, hass) {
-    const types = knownTypes();
+    const types = knownTypes(false, hass);
     const dom = String(tile.entity || "").split(".")[0];
     const out = [];
     const add = (t, why) => { if (t && !out.some((x) => x.type === t)) out.push({ type: t, why }); };

@@ -1631,6 +1631,8 @@
   "Handy klingelt": "Phone is ringing",
   "Senden": "Send",
   "Nachricht": "Message",
+  "Nachricht an": "Message to",
+  "von zuhause": "from home",
   "Handy klingeln lassen?": "Make the phone ring?",
   "Es klingelt auch, wenn es leise gestellt ist.": "It rings even when it is set to silent.",
   "Klingeln": "Ring",
@@ -1902,7 +1904,9 @@
   "Klingelton an der Tür": "Chime at the door",
   "Ton aufnehmen": "Record sound",
   "Ohne Ton hörst du die Tür nicht": "Without it you can't hear the door",
-  "Infrarot bei Nacht": "Infrared at night",
+  "Infrarot-LEDs nachts": "Infrared LEDs at night",
+  "Tag/Nacht-Modus": "Day/night mode",
+  "Bild gerade": "Picture now",
   "Status-LED": "Status LED",
   "Privatsphäre": "Privacy",
   "Kamera und Ton aus": "Camera and sound off",
@@ -2037,6 +2041,9 @@
   "Bohnenbehälter einsetzen, bis er einrastet": "Insert the bean container until it clicks",
   "Verbindung zur Maschine prüfen": "Check the connection to the machine",
   "Eingeschaltet, aber noch nicht bereit – Getränk an der Maschine starten": "Turned on, but not ready yet – start the drink on the machine",
+  "Ausgewählt – Getränk an der Maschine starten": "Selected – start the drink on the machine",
+  "Start abbrechen": "Cancel start",
+  "Abbrechen geht nur an der Maschine": "You can only cancel on the machine",
   "Start hat nicht geklappt": "Start failed",
   "Abbrechen hat nicht geklappt": "Canceling failed",
   "Wasser ist leer": "Water is empty",
@@ -2160,9 +2167,6 @@
   "Einschalten und Kaffee to go starten": "Turn on and start coffee to go",
   "Mithören": "Listen",
   "Bei Privatsphäre aus": "Off while privacy is on",
-  "Nachtsicht": "Night vision",
-  "Bild in Schwarz-Weiß": "Black & white picture",
-  "Mit Licht": "With light",
   "Sprechen beendet – Privatsphäre an": "Talking ended – privacy on",
   "Sprechen beendet – Klingel nicht erreichbar": "Talking ended – doorbell unreachable",
   "Sprechen geht in diesem Browser nicht": "Talking isn't available in this browser",
@@ -2236,11 +2240,11 @@
   ],
   [
    "^Geklingelt · (.+)$",
-   "Rang · {1}"
+   "Someone rang · {1}"
   ],
   [
    "^Geklingelt (\\d{1,2}:\\d{2}.*)$",
-   "Rang {1}"
+   "Rang at {1}"
   ],
   [
    "^Treffer (\\d+) %$",
@@ -4072,7 +4076,7 @@
   ],
   [
    "^Geklingelt (vor .+|gestern|gerade eben)$",
-   "Rang {1}"
+   "Last ring {1}"
   ],
   [
    "^In den letzten (\\d+) Tagen$",
@@ -4137,6 +4141,10 @@
   [
    "^(\\d+) heute$",
    "{1} today"
+  ],
+  [
+   "^(\\d+) % ([A-Za-zÄÖÜäöüß].*)$",
+   "{1}% {2}"
   ]
  ]
 }

@@ -7,7 +7,7 @@
 //   2. Popup: Titel „Kaffee“, Getränke-Raster, Cappuccino vorgewählt, „Cappuccino starten“ direkt unter dem Raster,
 //      Stärke/Menge/Temperatur, Pflege („In 10 Tassen“), Statistik (Getränke gesamt).
 //   3. „Espresso“ antippen + starten bei offenem Popup → Ring erscheint (fehlte beim ersten Öffnen) samt „Abbrechen“;
-//      Kachel „N % · Espresso“. „Abbrechen“ wirkt sofort (einstufig) und zeigt kurz „Abgebrochen“.
+//      Kachel „Espresso · N %“. „Abbrechen“ wirkt sofort (einstufig) und zeigt kurz „Abgebrochen“.
 //   4. Warnung (casora_mock.kaffee_warnung wasser) → Kachel „Wasser leer“, Kopf „Wasser nachfüllen“, Abschnitt „Hinweise“
 //      mit Anleitung.
 //   5. Morgenbohne: Cappuccino starten (Auswahl startet sofort) → Popup nennt „Cappuccino“ statt „Läuft“, Ring aus „Gibt aus“.
@@ -89,7 +89,7 @@ await check('Bezug (Popup vorher offen): Ring und „Abbrechen“', p && p.ring 
 await check('Bezug: Kopf ohne „Läuft“, keine „Gerade“-Zeile', p && !/Läuft/.test(p.txt) && !/Gerade/.test(p.txt), p && p.txt);
 await closePop();
 const t = await tile('qa-r281a');
-await check('Bezug: Kachel „N % · Espresso“', /^\d+\s?% · Espresso$/.test(String(t).replace(/[\u00a0\u202f]/g, ' ')), t);
+await check('Bezug: Kachel „Espresso · N %“ (Getränk vorn, 16.10.)', /^Espresso · \d+\s?%$/.test(String(t).replace(/[\u00a0\u202f]/g, ' ')), t);
 // Abbrechen: einstufig, sofort, danach kurz „Abgebrochen“
 await page.mouse.click(at.x + 40, at.y + 40);
 await popText();

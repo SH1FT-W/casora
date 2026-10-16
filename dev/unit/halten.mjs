@@ -191,7 +191,7 @@ assert.ok(!ex[1].ask && ex[1].svc === 'switch.turn_on', 'Aufnahme an ohne Rückf
 m = H.model(FS['camera.hof'], { tapPopup: true, extra: ex, states: FS });
 assert.deepEqual(m.acts.map((x) => x.t), ['Live ansehen', 'Erkennung aus', 'Aufnahme an', 'Letzte Erkennung', 'Aufnahmen', 'In Frigate öffnen']);
 assert.deepEqual(H.extras(fh, 'camera.hof', 'casora_camera', {}), [], 'normale Kamera-Kachel: keine Frigate-Einträge');
-// Reolink-Türklingel (24-klingel.js): Live (Kamera), Mithören, Schnellantworten (Nachricht als Beschriftung) mit Rückfrage; oben „Details“.
+// Reolink-Türklingel (24-klingel.js): Live (Kamera), Mithören, Schnellantworten (Nachricht als Beschriftung) mit Rückfrage; oben „Öffnen“.
 new Function(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/24-klingel.js', import.meta.url), 'utf8'))();
 const KS = {
   'camera.pforte_sub': st('camera.pforte_sub', 'idle', { supported_features: 2 }),
@@ -208,6 +208,8 @@ assert.ok(ex[1].ask && ex[1].svc === 'select.select_option' && ex[1].data.option
 m = H.model(KS['camera.pforte_sub'], { tapPopup: true, extra: ex, states: KS });
 assert.deepEqual(m.acts.map((x) => x.t), ['Live ansehen', 'Mithören', 'Komme sofort']);
 assert.equal(m.main.t, 'Öffnen', 'ohne Kachelart: Öffnen wie Tippen');
-assert.equal(H.model(KS['camera.pforte_sub'], { tapPopup: true, extra: ex, states: KS, kind: 'doorbell' }).main.t, 'Details', 'Klingel: „Details“ statt „Öffnen“ (klang nach Tür öffnen)');
+// 16.10.: ein Wort für alle Info-Kacheln (Frigate, Kaffee, Klingel) – „Öffnen“ mit Pfeil, nicht mehr „Details“.
+const km = H.model(KS['camera.pforte_sub'], { tapPopup: true, extra: ex, states: KS, kind: 'doorbell' }).main;
+assert.deepEqual([km.t, km.ic], ['Öffnen', 'mdi:arrow-top-right'], 'Klingel: „Öffnen“ wie Frigate und Kaffee');
 assert.deepEqual(H.extras(kh, 'camera.pforte_sub', 'casora_camera', {}), [], 'normale Kamera-Kachel: keine Klingel-Einträge');
 console.log('halten: ok');

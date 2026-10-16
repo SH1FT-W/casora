@@ -25329,7 +25329,8 @@ class CasoraPanel extends HTMLElement {
     // escape hatch for a card that has no template at all.
     // onlyIf: Typen, die eine bestimmte Integration brauchen (Pulse), nur anbieten, wenn sie da ist.
     const addable = TILE_TYPES.filter((t) => !t.hidden && (!t.onlyIf || t.onlyIf(this._hass))).slice().sort(byLabel)
-      .concat(USER_TILE_TYPES.slice().sort(byLabel))
+      // Eigene Kachelarten erben onlyIf ihrer Grundlage: auf einer nicht hinzugefügten Community-Karte erst nach dem Hinzufügen.
+      .concat(USER_TILE_TYPES.filter((t) => !t.onlyIf || t.onlyIf(this._hass)).sort(byLabel))
       .concat([CAROUSEL_TILE, CUSTOM_TILE]);
     const ka = window.casoraKachelart && window.casoraKachelart.addItems ? window.casoraKachelart : null;
     const addTile = async (id) => {

@@ -63,6 +63,9 @@ def extra(now) -> dict:
         _e("switch", "record_audio", "on", "Record audio", tk="record_audio", cat="config"),
         _e("switch", "privacy_mode", "off", "Privacy mode", tk="privacy_mode", cat="config"),
         _e("switch", "ir_lights", "on", "Infrared lights in night mode", tk="ir_lights", cat="config"),
+        # Wie Reolink: Auswahl Tag/Nacht-Modus neben Schalter ir_lights und Sensor day_night_state (#23).
+        _e("select", "day_night", "auto", "Day night mode", {"options": ["auto", "color", "blackwhite"]},
+           tk="day_night", cat="config"),
         _e("select", "status_led", "auto", "Doorbell LED", {"options": ["stayoff", "auto", "alwaysonatnight"]},
            tk="doorbell_led", cat="config"),
         _e("siren", "siren", "off", "Siren", {"supported_features": 27}, tk="siren"),

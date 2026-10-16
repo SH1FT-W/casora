@@ -27,7 +27,7 @@
   var num = function (v) { var n = parseFloat(v); return isFinite(n) ? n : null; };
   var slug = function (t) { return String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''); };
   // Übersetzen für eigene Elemente (Schatten-DOM: dort übersetzt die Laufzeit nicht von selbst), Rückfragen und
-  // aria-labels (die übersetzt die Laufzeit nie). T und tr sind dasselbe (früher casoraT – das gibt es nicht).
+  // aria-labels (die übersetzt die Laufzeit nie). T und tr sind dasselbe (eine frühere, nicht vorhandene Übersetzungsfunktion ließ alles deutsch).
   var tr = function (x) { return window.casoraTr ? window.casoraTr(x) : x; };
   var T = tr;
   var esc = function (t) {
