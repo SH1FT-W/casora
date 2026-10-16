@@ -2005,7 +2005,8 @@
   "Filterwechsel": "Filter change",
   "Warnungen in Home Assistant aktivieren": "Turn on warnings in Home Assistant",
   "Home Connect legt Wassertank, Bohnen, Schale und Entkalken ausgeschaltet an. Am Gerät unter Entitäten einschalten, dann meldet die Kachel sie.": "Home Connect creates water tank, beans, drip tray and descaling switched off. Turn them on under Entities on the device, then the tile reports them.",
-  "Getränke gesamt": "Drinks in total"
+  "Getränke gesamt": "Drinks in total",
+  "Lernt": "Learning"
  },
  "patterns": [
   [

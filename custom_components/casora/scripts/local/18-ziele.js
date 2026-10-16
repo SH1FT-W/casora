@@ -357,6 +357,23 @@
   var ACC = 'var(--casora-popup-accent, var(--casora-color-teal, #4E9E95))';
   var DIM = 'var(--casora-soft-icon-off, rgba(140,115,90,0.3))';
 
+
+  // Zustandsfarben im Verlauf (16.10.2026, Variante C): Pulse-Status farbig wie Kachel/Popup und nach Schwere
+  // gestuft hoch; andere Sensoren bleiben beim Akzent.
+  // Farbe kräftiger/tiefer: mit der Schriftfarbe gemischt – hell dunkler, dunkel heller (Kontrast >= 3:1 beidseits).
+  var deep = function (c, p) { return 'color-mix(in srgb, ' + c + ' ' + (p || 78) + '%, var(--primary-text-color, #3A322B))'; };
+  var NEU = 'var(--casora-color-neutral, #C9BFB2)';
+  var WORD = { ok: 'Gut', learning: 'Lernt', watch: 'Beobachten', check: 'Prüfen', failed: 'Ausgefallen' };
+  var HGT = { ok: 34, learning: 34, watch: 58, check: 80, failed: 100 };
+  var stateTone = function (h, id, s) {
+    var P = reg(h, id).platform === 'pulse' && window._casoraPulse;
+    if (!P || !WORD[s]) return null;   // generisch: andere Enum-Sensoren bekämen hier ihre Zuordnung, sonst ACC
+    var C = P.COLOR;
+    if (s === 'learning') { var lc = deep(NEU, 70); return { fill: 'repeating-linear-gradient(135deg,' + lc + ' 0 4px, transparent 4px 8px)', dot: lc }; }
+    if (s === 'ok') return { fill: deep(C.ok), dot: deep(C.ok) };
+    var pc = s === 'watch' ? 65 : 78;   // Gelb braucht mehr Tiefe für >= 3:1 auf Creme
+    return { fill: deep(C[s], pc), dot: deep(C[s], pc) };
+  };
   Z.sec = function (part, id, span, states, hass, el) {
     var UI = window._casoraUI;
     var st = states && states[id];
@@ -371,10 +388,31 @@
         var rows = Z.history(hass, id, span, el), t0 = now - SPANS[span];
         if (rows && (bin || rows.length)) {
           var sg = Z.segments(rows, now);
-          out += '<div class="cz-band">' + sg.segs.filter(function (x) { return bin ? x.s === 'on' : true; }).map(function (x, k) {
+          var C3 = stateTone(hass, id, st.state) || (sg.segs[0] && stateTone(hass, id, sg.segs[0].s));
+          var sum = {};
+          out += '<div class="cz-band"' + (C3 ? ' style="height:44px;"' : '') + '>' + sg.segs.filter(function (x) { return bin ? x.s === 'on' : true; }).map(function (x, k) {
             var l = (x.start - t0) / (now - t0) * 100, w = ((x.end || now) - x.start) / (now - t0) * 100;
+            var tn = stateTone(hass, id, x.s);
+            sum[x.s] = (sum[x.s] || 0) + ((x.end || now) - Math.max(x.start, t0));
+            if (tn) {
+              return '<i style="left:' + l.toFixed(2) + '%;width:' + Math.max(0.4, w).toFixed(2) + '%;background:' + tn.fill + ';border-radius:3px;'
+                + 'box-shadow:0 0 0 1.5px var(--casora-popup-row-fill, rgba(127,127,127,.10));'
+                + (C3 ? 'top:auto;height:' + HGT[x.s] + '%;' : '') + '"></i>';
+            }
             return '<i style="left:' + l.toFixed(2) + '%;width:' + Math.max(0.4, w).toFixed(2) + '%;' + (bin ? '' : 'opacity:' + (0.35 + 0.65 * ((k % 2) ? 0.5 : 1)) + ';') + '"></i>';
-          }).join('') + '</div><div class="cz-axis"><span>' + esc(when(t0, now)) + '</span><span>' + esc(T('Jetzt')) + '</span></div>';
+          }).join('') + '</div>';
+          var leg = '';
+          // Legende erst ab drei Zuständen im Zeitraum – bei „immer Gut“ wäre sie nur Rauschen.
+          if (C3 && Object.keys(sum).filter(function (k) { return WORD[k]; }).length > 2) {
+            leg = '<div style="display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;margin-top:10px;font-size:13px;font-weight:600;">'
+              + ['failed', 'check', 'watch', 'ok', 'learning'].filter(function (k) { return sum[k]; }).map(function (k) {
+                var tk = stateTone(hass, id, k);
+                return '<span style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">'
+                  + '<span style="width:10px;height:' + Math.round(4 + HGT[k] / 100 * 10) + 'px;border-radius:2px;background:' + tk.fill + ';align-self:flex-end;margin-bottom:3px;"></span>'
+                  + esc(T(WORD[k])) + ' <span style="opacity:.6;font-weight:500;">' + esc(dur(sum[k])) + '</span></span>';
+              }).join('') + '</div>';
+          }
+          out += '<div class="cz-axis"><span>' + esc(when(t0, now)) + '</span><span>' + esc(T('Jetzt')) + '</span></div>' + leg;
         }
       }
       return out;
@@ -442,7 +480,7 @@
         items = segs.map(function (x) {
           var word = Z.stateWord(hass, id, x.s);
           return { t: x.start, title: word, sub: x.end ? esc(T('nach')) + ' ' + esc(T(dur(x.end - x.start))) : esc(T('seitdem')),
-            color: x.s === 'on' || !bin ? ACC : DIM };
+            color: (stateTone(hass, id, x.s) || {}).dot || (x.s === 'on' || !bin ? ACC : DIM) };
         });
       }
       return head2 + (items.length ? timeline(items, now) : '<div style="padding:14px 4px;opacity:.65;">' + esc(T('Keine Änderung im Zeitraum')) + '</div>') + histLink(id, span);
