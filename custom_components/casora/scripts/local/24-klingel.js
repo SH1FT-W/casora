@@ -491,17 +491,21 @@
         var items = list.slice(0, max);
         var body = items.map(function (e, i) {
           var dw = dayWord(e.at, now), prev = items[i - 1];
-          var day = dw && (!prev || dayWord(prev.at, now) !== dw) ? dw : '';
+          // Tagesetikett kurz wie im Person-Verlauf („Gestern“, sonst Wochentag „Mi“) – das Datum machte die Spalte breiter.
+          var day = dw && (!prev || dayWord(prev.at, now) !== dw)
+            ? (dw === 'Gestern' ? dw : new Date(e.at).toLocaleDateString(loc(), { weekday: 'short' }).replace(/\.$/, '')) : '';
           var ring = e.kind === 'ring', last = i === items.length - 1;
           var isNew = e === newest && now - e.at < HOLD;
           var what = ring ? 'Hat geklingelt' : KL.label(e.kind) + ' erkannt';
           // Tagesetikett („Gestern“) steht über der Uhrzeit: Punkt, Text und „Neu“ rücken um seine Höhe (DAY_H) nach
           // unten, damit sie auf einer Linie mit der Uhrzeit bleiben (der Punkt saß vorher beim Etikett).
           var off = day ? DAY_H : 0;
-          return '<div class="kl-ev" style="display:grid;grid-template-columns:minmax(46px,max-content) 22px minmax(0,1fr) auto;align-items:start;column-gap:8px;position:relative;padding:9px 0;">'
+          return '<div class="kl-ev" style="display:grid;grid-template-columns:64px 22px minmax(0,1fr) auto;align-items:start;column-gap:8px;position:relative;padding:9px 0;">'
             + '<div style="font-size:13px;font-weight:600;color:' + sub + ';font-variant-numeric:tabular-nums;padding-top:2px;white-space:nowrap;">'
             + (day ? '<div class="kl-day" style="font-size:12px;font-weight:700;line-height:' + (DAY_H - 2) + 'px;margin:0 0 2px;">' + esc(tr(day)) + '</div>' : '') + esc(clock(e.at)) + '</div>'
             + '<div style="position:relative;height:100%;display:flex;justify-content:center;">'
+            // Mit Tagesetikett sitzt der Punkt tiefer: die Linie vom Eintrag darüber bis zum Punkt weiterführen.
+            + (off && i ? '<div style="position:absolute;top:0;height:' + (6 + off) + 'px;width:2px;background:' + dim + ';"></div>' : '')
             + (last ? '' : '<div style="position:absolute;top:' + (16 + off) + 'px;bottom:-18px;width:2px;border-radius:2px;background:' + dim + ';"></div>')
             + '<div class="kl-dot" style="position:relative;width:12px;height:12px;border-radius:50%;margin-top:' + (4 + off) + 'px;background:' + (ring ? ringHue : detHue) + ';box-shadow:0 0 0 3px ' + rowBg + ';"></div></div>'
             + '<div style="min-width:0;padding-top:' + off + 'px;"><div style="font-size:15px;font-weight:' + (ring ? 700 : 600) + ';color:' + ink + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(tr(what)) + '</div>'
