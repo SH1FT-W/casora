@@ -4,6 +4,12 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.32 – 17.10.2026
+
+### Fixed
+- **"JSTemplate error" on camera tiles:** If Home Assistant reports an unusual language code (e.g. with an underscore), the times on the doorbell and Frigate tiles failed and button-card showed "JSTemplate error". Casora now always uses a valid language code – this protects all time and number formats.
+- **Reolink doorbell:** The day/night selection in the popup was missing on real doorbells (Reolink names the key `day_night_mode`).
+
 ## 26.10.31 – 16.10.2026
 
 **New version numbers:** From now on Casora counts year.month.number – 26.10.31 is the 31st release in October 2026. The jump from 1.6.0 is intended; HACS and the Casora update see the new version as usual.

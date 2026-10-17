@@ -4,6 +4,12 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.32 – 17.10.2026
+
+### Behoben
+- **„JSTemplate error“ auf Kamera-Kacheln:** Meldet Home Assistant ein unübliches Sprachkürzel (z. B. mit Unterstrich), brachen die Uhrzeiten der Klingel- und Frigate-Kachel mit einem Fehler ab und button-card zeigte „JSTemplate error“. Casora nutzt jetzt immer ein gültiges Sprachkürzel – das sichert alle Zeit- und Zahlenformate ab.
+- **Reolink-Türklingel:** Die Tag/Nacht-Auswahl im Popup fehlte bei echten Klingeln (Reolink nennt den Schlüssel `day_night_mode`).
+
 ## 26.10.31 – 16.10.2026
 
 **Neue Versionsnummern:** Casora zählt ab jetzt Jahr.Monat.Nummer – 26.10.31 ist das 31. Release im Oktober 2026. Der Sprung von 1.6.0 ist gewollt; HACS und das Casora-Update erkennen die neue Version ganz normal.
