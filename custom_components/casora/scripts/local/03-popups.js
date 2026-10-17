@@ -3642,11 +3642,14 @@
   /* Hauptschalter im Popup-Kopf (1.3, ersetzt „Alles aus“): Raum bzw. Leuchte an/aus; das ganze Haus
      nur aus – mit Rückfrage, ausgegraut, wenn alles aus ist (wie vorher „Alles aus“). */
   S.head = function (src, hass) {
-    // Gilt, solange das offene Popup ein Licht-Popup ist (Kachel, Badge, Sammel-Badge): dessen Kopf-Karte ist eingehängt.
+    // Gilt nur, solange dieses Modul das offene Popup zeichnet: seine Kopf-Karte (hero) ist eingehängt, und
+    // S.cur ist deren Ansicht. Bis 26.10.34 reichte auch eine Licht-Vorlage am Auslöser – dann galt S.cur des
+    // zuvor offenen Raum-Popups für das Einzellampen-Popup aus casora_light (Lampenzeile im Raum-Popup, Kachel
+    // einer Einzellampe), und der Kopfschalter schaltete den ganzen Raum (17.10.2026). Das Einzellampen-Popup
+    // hat seinen eigenen Ein/Aus-Knopf und bekommt keinen Kopfschalter.
     if (!S.on() || !S.cur || !hass) return null;
     var live = (S.els[S.cur.gid] || []).some(function (el) { return el.isConnected && el._lpsPart === 'hero'; });
-    var tpl = [].concat((src && src._config && src._config.template) || []).join(' ');
-    if (!live && !/\bcasora_(popup_)?light\b/.test(tpl)) return null;
+    if (!live) return null;
     return S.headFor(S.cur, hass);
   };
   /* Nur Lichter, nur was der Benutzer sieht („Wer sieht das?“; im Haus auch ohne ausgeblendete Räume). */

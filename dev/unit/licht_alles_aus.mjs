@@ -17,6 +17,8 @@ globalThis.document = { querySelector: () => ({ hass }), documentElement: {} };
 globalThis.getComputedStyle = () => ({ getPropertyValue: () => 'soft' });
 new Function('window', 'document', src.slice(a, b))(window, document);
 const S = window._casoraLightSoft;
+// Kopf-Karte des Popups, wie sie eingehängt wäre (S.head gilt seit 26.10.35 nur, solange sie verbunden ist).
+const heroEl = () => ({ isConnected: true });
 assert.ok(S && S.render, 'Baustein fehlt');
 
 const L = (id, on) => { states[id] = { entity_id: id, state: on ? 'on' : 'off', attributes: { friendly_name: id, brightness: on ? 128 : null, supported_color_modes: ['brightness'] } }; };
@@ -26,7 +28,7 @@ const cfg = { gid: 'light.testraum_decke', flat: { name: 'Wohnzimmer', rid: 'lig
 
 // 1.3 Kopfzeile A: „Alles aus“ ist jetzt der Hauptschalter oben rechts im Popup-Kopf (casora-core.js,
 // Haken window._casoraHeadSwitchHooks → S.head). Der Inhalt zeigt keinen eigenen Knopf mehr.
-let html = S.render(cfg, 'hero', states, hass, null);
+let html = S.render(cfg, 'hero', states, hass, heroEl());
 assert.ok(!/lps-off|Alles aus/.test(html.replace(/<style>[\s\S]*?<\/style>/, '')), 'kein eigener „Alles aus“-Knopf mehr');
 assert.ok(/class="lps-s hui-line"/.test(html), 'Statuszeile als .hui-line (der Kopf spiegelt sie)');
 assert.ok((window._casoraHeadSwitchHooks || []).indexOf(S.head) > -1, 'Haken für den Hauptschalter angemeldet');
@@ -51,13 +53,13 @@ assert.equal(S.head({ _config: { template: ['casora_switch'] } }, hass), null);
 
 // Eine Leuchte (keine Gruppe): kein Kopfschalter – auch nicht aus einem Raum heraus (17.10.2026: er schaltete
 // den ganzen Raum; die Leuchte schaltet der Ein/Aus-Knopf im Popup).
-S.render({ gid: 'light.x', flat: { name: 'Flur', rid: 'light.decke', lights: ['light.decke'] } }, 'hero', states, hass, null);
+S.render({ gid: 'light.x', flat: { name: 'Flur', rid: 'light.decke', lights: ['light.decke'] } }, 'hero', states, hass, heroEl());
 assert.equal(S.head(tileSrc, hass), false, 'einzelne Leuchte: kein Kopfschalter');
-S.render({ gid: 'light.x', flat: { name: 'Wohnzimmer', rid: 'light.decke', lights: ['light.decke'], room: ['light.decke', 'light.stehlampe'] } }, 'hero', states, hass, null);
+S.render({ gid: 'light.x', flat: { name: 'Wohnzimmer', rid: 'light.decke', lights: ['light.decke'], room: ['light.decke', 'light.stehlampe'] } }, 'hero', states, hass, heroEl());
 assert.equal(S.head(tileSrc, hass), false, 'Leuchte aus einem Raum: kein Kopfschalter');
 // Lichtgruppe als eine Entität: Kopfschalter bleibt.
 states['light.grp'] = { entity_id: 'light.grp', state: 'on', attributes: { entity_id: ['light.decke', 'light.stehlampe'] } };
-S.render({ gid: 'light.x', flat: { name: 'Gruppe', rid: 'light.grp', lights: ['light.grp'] } }, 'hero', states, hass, null);
+S.render({ gid: 'light.x', flat: { name: 'Gruppe', rid: 'light.grp', lights: ['light.grp'] } }, 'hero', states, hass, heroEl());
 hs = S.head(tileSrc, hass);
 assert.deepEqual(hs && hs.entities, ['light.grp'], 'Gruppe behält den Kopfschalter');
 delete states['light.grp'];
@@ -78,4 +80,12 @@ delete states['light.grp'];
   // Ohne Bereiche (nichts zugeordnet): wie bisher die kleinste Gruppe.
   assert.deepEqual(S.roomOf('light.b1', st, {}), ['light.a1', 'light.a2', 'light.b1', 'light.c1']);
 }
+// Einzellampen-Popup aus casora_light (Lampenzeile im Raum-Popup, Kachel einer Einzellampe) zeichnet dieses
+// Modul nicht: die Kopf-Karte des zuvor offenen Raum-Popups ist dann nicht mehr eingehängt – kein Kopfschalter
+// aus dessen Ansicht (17.10.2026: der schaltete den ganzen Raum).
+const roomEl = heroEl();
+S.render(cfg, 'hero', states, hass, roomEl);
+assert.ok(S.head(tileSrc, hass) && S.head(tileSrc, hass).entities.length, 'Raum-Popup offen: Kopfschalter');
+roomEl.isConnected = false;
+assert.equal(S.head(tileSrc, hass), null, 'Raum-Popup zu, fremdes Licht-Popup offen: kein Kopfschalter aus alter Ansicht');
 console.log('ok licht_alles_aus');
