@@ -115,7 +115,7 @@ try:
 finally:
     updates.changelog_path = saved
 
-# ── tools/release.sh: Notizen aus beiden Dateien, wieder trennbar ───────────
+# ── tools/release.sh: Notizen englisch, deutsche Fassung im CHANGELOG trotzdem Pflicht ──
 sh = read("tools/release.sh")
 m = re.search(r"<<'PY' \|\| fail \"Versionshinweise.*?\n(.*?)\nPY\n", sh, re.S)
 check("release.sh: Notiz-Baustein gefunden", bool(m))
@@ -132,7 +132,8 @@ if m:
         check("release.sh: englisch oben", body.startswith(real_en[0]["notes_md"].strip()[:40]))
         got_en, got_de = rn.split_bilingual(body)
         check("release.sh → Casora englisch = CHANGELOG.md", got_en == real_en[0]["notes_md"].strip())
-        check("release.sh → Casora deutsch = CHANGELOG.de.md", (got_de or "").strip() == real_de[0]["notes_md"].strip())
+        # Seit 26.10.34 auf GitHub nur englisch; Deutsch liest Casora aus CHANGELOG.de.md.
+        check("release.sh: GitHub-Notizen nur englisch (kein Deutsch-Block)", not got_de and "<details>" not in body, body[-200:])
     # Deutsche Fassung fehlt → Abbruch
     work = os.path.join(tmp, "repo")
     os.makedirs(work)

@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.34 – 17.10.2026
+
+### Changed
+- **Light popup of a single lamp without header switch:** The switch at the top switched the whole room when opened from a room. For a single lamp it is gone, the on/off button in the popup switches it. Groups and rooms keep it.
+
 ## 26.10.33 – 17.10.2026
 
 ### New

@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.34 – 17.10.2026
+
+### Geändert
+- **Licht-Popup einer einzelnen Lampe ohne Kopfschalter:** Der Schalter oben im Kopf schaltete aus einem Raum heraus den ganzen Raum. Bei einer einzelnen Lampe ist er weg, sie schaltet der Ein/Aus-Knopf im Popup. Gruppen und Räume behalten ihn.
+
 ## 26.10.33 – 17.10.2026
 
 ### Neu

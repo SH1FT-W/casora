@@ -3658,8 +3658,11 @@
     };
     var onOf = function (ids) { var hh = hassNow() || hass; return ids.filter(function (x) { return hh.states[x] && hh.states[x].state === 'on'; }); };
     if (sc) {
-      // Einzelne Leuchte aus einem Raum (sc.room, Review 1.1.1): der Schalter gilt dem ganzen Raum („Alles aus“),
-      // Einschalten nur diese Leuchte.
+      // Einzelne Leuchte (keine Gruppe): kein Kopfschalter – der Ein/Aus-Knopf im Popup schaltet sie schon, und der
+      // Kopfschalter schaltete aus einem Raum heraus den ganzen Raum (17.10.2026). Gruppen und Räume behalten ihn.
+      var own = lights(sc.lights);
+      var grp = function (x) { var a = states[x] && states[x].attributes; return !!(a && Array.isArray(a.entity_id) && a.entity_id.length); };
+      if (own.length === 1 && !grp(own[0])) return false;
       var ids = lights(sc.room || sc.lights);
       if (!ids.length) return null;
       return { entities: ids, toggle: function (on) {

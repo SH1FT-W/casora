@@ -75,8 +75,8 @@ WV="$(grep -o 'id="casora-version">Version [0-9.]*' docs/index.html | grep -o '[
 ok "docs/index.html Fallback: $WV"
 git rev-parse -q --verify "refs/tags/$TAG" >/dev/null && fail "Tag $TAG gibt es schon"
 
-# 4) CHANGELOG-Abschnitte → Versionshinweise (englisch oben, deutsch eingeklappt darunter;
-#    Casora zeigt bei deutscher Oberfläche den Deutsch-Block, sonst Englisch: release_notes.pick_notes)
+# 4) CHANGELOG-Abschnitte → Versionshinweise auf GitHub nur englisch (seit 26.10.34). CHANGELOG.de.md bleibt Pflicht:
+#    Casora liest bei deutscher Oberfläche die deutsche Fassung aus CHANGELOG.de.md (Updates-Popup).
 mkdir -p .qa
 NOTES=".qa/release-notes-$VER.md"
 python3 - "$VER" "$NOTES" <<'PY' || fail "Versionshinweise für $VER unvollständig (siehe oben)"
@@ -95,13 +95,9 @@ if not de:
     print(f"✗ CHANGELOG.de.md hat keinen Abschnitt „## {ver} …“ mit Inhalt (deutsche Fassung fehlt)", file=sys.stderr)
 if not en or not de:
     sys.exit(1)
-if "</details>" in en + de:
-    print("✗ Die Abschnitte dürfen kein </details> enthalten (Trenner der Sprachen)", file=sys.stderr)
-    sys.exit(1)
-open(out, "w", encoding="utf-8").write(
-    en + "\n\n<details><summary>Deutsch</summary>\n\n" + de + "\n\n</details>\n")
+open(out, "w", encoding="utf-8").write(en + "\n")
 PY
-ok "Versionshinweise aus CHANGELOG.md + CHANGELOG.de.md: $NOTES ($(wc -l <"$NOTES" | tr -d ' ') Zeilen)"
+ok "Versionshinweise (englisch) aus CHANGELOG.md: $NOTES ($(wc -l <"$NOTES" | tr -d ' ') Zeilen)"
 
 # 5) WHATS_NEW gefüllt (und neu)
 WN_FILE=custom_components/casora/panel/casora-panel-welcome.js

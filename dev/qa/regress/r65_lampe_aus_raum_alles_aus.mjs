@@ -3,8 +3,8 @@
 // Gemeldet (07.10.2026, Nutzertest Tablet): Das Licht-Popup einer einzelnen Lampe aus der Raumseite
 // hieß „Licht <Raum>“, zeigte aber nur diese Lampe und kein „Alles aus“ – nur über die Startseite gab es
 // den Knopf. Erwartet im Casora-Look (Tablet 1024×768, hell): Popup einer Lampe, die zu einer
-// Raumgruppe gehört, zeigt rechts alle Leuchten des Raums und „Alles aus“ für genau diese; der Titel ist
-// die Lampe. Zustände nur im Browser (fakeStates).
+// Raumgruppe gehört, zeigt rechts alle Leuchten des Raums; der Titel ist die Lampe. Einen Kopfschalter
+// gibt es bei einer einzelnen Lampe seit 17.10.2026 nicht mehr (er schaltete den ganzen Raum). Zustände nur im Browser (fakeStates).
 import { open, dashboard, casoraDashboards as _cd, fakeStates, check, need, finish } from './lib.mjs';
 
 // (eigene Liste: Räume mit aufklappbarer Licht-Reihe)
@@ -46,8 +46,10 @@ outer: for (const dash of desks) for (const [i, v] of dash.config.views.entries(
     const el = window.casoraPopup.element, sw = el.shadowRoot.querySelector('.header-switch');
     return { rows: window.__pierce('.lps-row', s).length, ids: sw && !sw.hidden ? (el._hsIds || []) : [], title: el.shadowRoot.querySelector('.header-title').textContent }; });
   await check('Lampen-Popup zeigt alle Leuchten des Raums', p && p.rows === grp.m.length, { popup: p, raum: grp.m.length });
+  // Seit 17.10.2026: kein Kopfschalter bei einer einzelnen Lampe – er schaltete den ganzen Raum, die Lampe selbst
+  // schaltet der Ein/Aus-Knopf im Popup, die Raum-Leuchten ihre Zeilen.
   const ids = (p && p.ids) || [];
-  await check('„Alles aus“ da und für die Leuchten des Raums', !!ids.length && grp.m.every((x) => ids.includes(x)), { ids, raum: grp.m });
+  await check('kein Kopfschalter bei einer einzelnen Lampe (schaltete den ganzen Raum)', p && !ids.length, { ids });
   await check('Titel ist die Lampe, nicht „Licht <Raum>“', p && p.title && !/^Licht /.test(p.title), p && p.title);
   done = true;
   break outer;
