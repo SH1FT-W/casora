@@ -1,4 +1,4 @@
-// Klima-Popup: vom Luftfeuchtigkeits-Badge aus startet das Diagramm mit der Luftfeuchtigkeit (Daniel, 17.10.2026).
+// Klima-Popup: vom Luftfeuchtigkeits-Badge aus startet das Diagramm mit der Luftfeuchtigkeit (Wunsch vom 17.10.2026).
 // Prüft den Chart-Umschalter (selected: Index/Entität) und dass die Vorlage ihn setzt.   node dev/unit/klima_fokus.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
