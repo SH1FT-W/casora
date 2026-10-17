@@ -486,7 +486,8 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             self.content_type = "image/png"
             # Frigate-Testkamera (frigate.py): Hofbild mit Uhrzeit wie Frigates latest.jpg, Stimmung nach der Sonne
             # (kamerabild.py: Tag, Dämmerung, Nachtsicht).
-            self._frigate = bool(mock.entities[eid].get("frigate"))
+            # Zweite Kamera der Testklingel (klingel.py, camera.testhof): dasselbe Hofbild.
+            self._frigate = bool(mock.entities[eid].get("frigate") or mock.entities[eid].get("hof"))
             # Reolink-Testklingel (klingel.py): Blick vor die Tür, mit Person, solange sie erkannt wird.
             self._klingel = bool(mock.entities[eid].get("klingel"))
             if self._frigate or self._klingel:

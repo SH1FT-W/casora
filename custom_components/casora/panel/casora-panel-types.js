@@ -318,6 +318,11 @@ window.CASORA_TILE_TYPES = [
         hint: "How often the tile fetches a new still image while it is visible. The tile says \"Ready\" while the picture is fresh and shows its age in the warning color when the doorbell stops delivering." },
       { key: "talk", label: "Talk (experiment)", type: "bool", advanced: true, group: "Popup",
         hint: "Adds a Talk button under the live picture: your microphone goes to the doorbell through Home Assistant's own WebRTC connection. Only works over HTTPS, with the doorbell connected in your network (RTSP), and only if the doorbell accepts it – many Reolink doorbells don't. If it doesn't, the popup says so and listening keeps working." },
+      // Zweite Kamera (#23): Umschalter auf dem Live-Bild im Popup; Großes Bild beim Mithören/Sprechen (Tablet-Wunsch).
+      { key: "camera2", label: "Second camera", domains: ["camera"], group: "Popup",
+        hint: "Optional. Another camera, for example the entrance. The popup then shows a switch on the live picture to change between the doorbell and this camera. Talking always goes to the doorbell." },
+      { key: "big_on_audio", label: "Large picture when listening/talking", type: "bool", boolDefault: true, advanced: true, group: "Popup",
+        hint: "Tapping Listen or Talk opens the live picture large over the popup. Close it with ×, Esc or by swiping down." },
     ] },
   // Kaffeevollautomat (Community-Karte, Kartenwunsch): eine Entität des Geräts wählen (Status, Strom oder
   // Getränke-Auswahl), den Rest findet scripts/local/25-kaffee.js am Gerät – Home Connect, Miele, De'Longhi, Jura,
