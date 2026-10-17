@@ -81,3 +81,7 @@ assert.deepEqual(missing, [], 'fehlende deutsche Texte');
 assert.equal(de['Live Activities'], 'Live-Aktivitäten');
 for (const k of keys) assert.ok(!/\bSie (können|haben|müssen|sollten|wählen|finden)\b|\bIhre?[nms]?\b/.test(de[k]), 'du-Form: ' + de[k]);
 console.log('studio_live: ok (' + keys.size + ' Texte)');
+// Der Seiten-Dropdown im Studio (casora-panel-b.js) führt seine eigene Liste – „Live Activities“ muss dort stehen
+// (17.10.: über die Suche gefunden, im Menü „Einstellungen“ gefehlt).
+assert.match(fs.readFileSync(new URL('../../custom_components/casora/panel/casora-panel-b.js', import.meta.url), 'utf8'), /\["live", "Live Activities", "iphone"\]/, 'Dropdown kennt die Seite');
+console.log('studio_live: Dropdown ok');
