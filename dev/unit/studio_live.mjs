@@ -60,8 +60,32 @@ assert.ok(/setAttribute\("role", "switch"\)/.test(live) && /ev\.stopPropagation\
 assert.ok(/cs-note", t\("No phone with the Home Assistant app found/.test(live), 'Hinweis ohne HA-App-Empfänger');
 assert.ok(/pb\.disabled = !!cs\.lvBusy \|\| unsaved \|\| !\(lv\.targets \|\| \[\]\)\.length;/.test(live), 'Probe nur mit gespeicherten Empfängern');
 assert.ok(!/#[0-9a-fA-F]{3,8}\b/.test(live.replace(/\/\/.*$/gm, '')), 'keine festen Farben – nur Studio-Token');
-assert.ok(/const runs = lv\.test_runs \|\| \{\};[\s\S]*if \(!runDevs\.length\) return;[\s\S]*callService\("casora_mock", "live_lauf"/.test(live),
+assert.ok(/const runs = lv\.test_runs \|\| \{\};[\s\S]*if \(runDevs\.length\) \{[\s\S]*callService\("casora_mock", "live_lauf"/.test(live),
   'Testlauf-Knopf nur, wenn get test_runs liefert (Testhaus)');
+
+// ── Nutzertests 17.10. ─────────────────────────────────────────────────────────────
+// Fund 1: aus → speichern → an → speichern. Gespeichert wird jedes Gerät vollständig (devices_replace),
+// auch „an“ (Standard) – sonst blieb das alte „aus“ auf dem Server stehen.
+const L1 = { targets: [], devices: { a: { on: false } } };
+assert.deepEqual(M.saveDevices(L1, ['a', 'b']), { a: { on: false, done_min: 30, quiet: true, interval_min: 10 },
+  b: { on: true, done_min: 30, quiet: true, interval_min: 10 } });
+L1.devices.a = { on: true };
+assert.equal(M.saveDevices(L1, ['a']).a.on, true, 'wieder an wird mitgeschickt');
+assert.ok(/type: "casora\/live\/set", targets: cs\.L\.targets, devices: saveDevices\(cs\.L, ids\), devices_replace: true/.test(live), 'set ersetzt die Geräte');
+// Fund 3: Handy (kein split) zeichnet die Seite neu – Antippen einer Gerätezeile öffnet ihre Einstellungen.
+assert.ok(/P\._csRepaint = function \(\) \{[\s\S]{0,300}if \(this\._csOpen && this\.\$\("pane"\)\) this\._csRender\(\);/.test(settings), 'Neuzeichnen auch ohne split');
+// Fund 8: Unterzeilen umbrechen
+assert.ok(/\.cs-live-row \.rtext span[^"]*\{white-space:normal/.test(live), 'Geräte-Unterzeile bricht um');
+// Fund 9: Einzahl/Mehrzahl
+assert.equal(M.sentText(1), 'An ein Handy geschickt.');
+assert.equal(M.sentText(2), 'An 2 Handys geschickt.');
+// Fund 10: Testlauf eigener Block vor dem Protokoll, „Aktualisieren“ im Kopf des Protokolls (nicht unter den Einträgen)
+assert.ok(live.indexOf('header: t("Test run")') > 0 && live.indexOf('header: t("Test run")') < live.indexOf('header: t("Last sent")'), 'Testlauf vor Protokoll');
+assert.ok(!/t\("Protocol"\)/.test(live) && /cs-live-refresh/.test(live), 'Aktualisieren im Kopf');
+// Fund 11: Einstellungen je Gerät rechts in der Zeile (optRow), nicht als casora-prow darunter
+assert.equal((live.match(/optRow\(this, g,/g) || []).length, 3, 'drei Einstellungen mit Steuerung rechts');
+// Fund 12: Testlauf ohne gespeicherte Empfänger gesperrt
+assert.ok(/tb\.disabled = !!cs\.lvRun \|\| noTargets;/.test(live), 'Testlauf ohne Empfänger gesperrt');
 const panel = read('panel/casora-panel.js');
 assert.ok(/"set-live": \["energy", "var\(--casora-color-green, #30D158\)"\]/.test(panel), 'Symbolfarbe in STUDIO_ICON');
 const mehr = read('panel/casora-panel-b-mehr.js');

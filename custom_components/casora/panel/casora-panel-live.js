@@ -23,7 +23,7 @@
     lg_thinq: "LG ThinQ", washdata: "WashData", whirlpool: "Whirlpool", other: "Manufacturer app", vacuum: "Vacuum", bambu_lab: "Bambu Lab" };
   const GRADE_LABEL = { "sehr gut": "Verified", ungetestet: "Untested" };
   const PHASE_LABEL = { run: "Running", delay: "Starts later", pause: "Paused", attn: "Attention needed", done: "Done", error: "Error",
-    off: "Off", clear: "Ended", probe: "Test" };
+    off: "Off", clear: "Ended", probe: "Test", gone: "Not reachable" };
   const PHASE_TONE = { done: "ok", attn: "warn", error: "warn", pause: "warn" };
   const DEFAULTS = { on: true, done_min: 30, quiet: true, interval_min: 10 };
   const DONE_CHOICES = [10, 15, 30, 60, 120];
@@ -33,6 +33,7 @@
   const deviceSub = (f) => [t(KIND_LABEL[f.kind] || f.kind), SOURCE_LABEL[f.source] || f.source, t(GRADE_LABEL[f.grade] || f.grade)]
     .concat(f.phase && f.phase !== "off" ? [t(PHASE_LABEL[f.phase] || f.phase)] : []).join(" · ");
   // Nur Abweichungen vom Standard werden gespeichert (wie live_activity.merge_settings).
+  const settingsOf = (L, id) => Object.assign({}, DEFAULTS, (L && L.devices && L.devices[id]) || {});
   const cleanDevices = (devices) => {
     const out = {};
     Object.keys(devices || {}).sort().forEach((id) => {
@@ -42,8 +43,16 @@
     });
     return out;
   };
+  // Speichern: alle bekannten Geräte vollständig (devices_replace) – der Server ersetzt statt zu ergänzen.
+  // Vorher fehlte ein wieder eingeschaltetes Gerät (on: true = Standard) im Aufruf, das alte „aus“ blieb.
+  const saveDevices = (L, ids) => {
+    const out = {};
+    Array.from(new Set([].concat(ids || [], Object.keys((L && L.devices) || {})))).sort()
+      .forEach((id) => { out[id] = settingsOf(L, id); });
+    return out;
+  };
+  const sentText = (n) => (n === 1 ? t("Sent to 1 phone.") : t("Sent to {n} phones.").replace("{n}", n));
   const draftOf = (L) => JSON.stringify({ targets: (L && L.targets || []).slice().sort(), devices: cleanDevices(L && L.devices) });
-  const settingsOf = (L, id) => Object.assign({}, DEFAULTS, (L && L.devices && L.devices[id]) || {});
   const minutes = (n) => t("{n} min").replace("{n}", n);
   // Protokollzeile: Zeit, Titel + Phase, Text, Fortschritt.
   const logLine = (e, lang) => {
@@ -55,13 +64,25 @@
       progress: e.progress != null && !e.clear ? e.progress + "%" : "", tone: e.clear ? "" : (PHASE_TONE[e.phase] || ""),
       tag: e.tag || "", silent: !!e.silent };
   };
-  window.__casoraStudioLive = { KIND_LABEL, GRADE_LABEL, PHASE_LABEL, DEFAULTS, deviceSub, cleanDevices, draftOf, settingsOf, logLine };
+  window.__casoraStudioLive = { KIND_LABEL, GRADE_LABEL, PHASE_LABEL, DEFAULTS, deviceSub, cleanDevices, draftOf, settingsOf, logLine,
+    saveDevices, sentText };
 
   const CSS = ".cs-live-row .fswitch{margin-left:auto;flex:none}"
+    // Handy: Unterzeilen (Art · Quelle · Stufe) und Erklärtexte umbrechen statt „Home Connect (HAC…“.
+    + ".cs-wrap .frow.cs-live-row .rtext span,.cs-wrap .frow.cs-live-opt .rtext span,.cs-wrap .frow.cs-live-opt .rtext b{white-space:normal;overflow:visible;text-overflow:clip}"
+    // Einstellungen je Gerät: Auswahl/Schalter rechts in derselben Zeile (wie „Umkreis“ bei Tanken).
+    + ".cs-wrap .frow.cs-live-opt .rtext{flex:1 1 auto;min-width:0}"
+    + ".cs-live-ctl{flex:none;margin-left:12px;display:flex;align-items:center}"
+    + ".cs-live-ctl>.combo{width:112px;min-width:0;max-width:none}"
+    + ".cs-wrap .fhead.cs-live-head{display:flex;align-items:baseline;gap:12px}"
+    + ".cs-live-head>span{flex:1 1 auto;min-width:0}"
+    + ".cs-live-refresh{flex:none;border:none;background:none;padding:0;cursor:pointer;font:500 var(--t-foot) var(--casora-font-studio, system-ui);"
+    + "color:var(--casora-studio-link, var(--accent))}"
     + ".cs-live-row .rchev{margin-left:8px}"
     + ".cs-live-row.open .rchev{transform:rotate(90deg)}"
     + ".cs-wrap .frow.cs-live-opt{padding-left:26px}"
-    + ".cs-wrap .frow.cs-live-opt .rtext b{font-weight:500}"
+    + ".cs-wrap .frow.cs-live-opt .rtext b{font-weight:500;font-size:var(--t-foot)}"
+    + ".cs-wrap .frow.cs-live-opt .rtext span{font-size:var(--t-caption)}"
     + ".cs-live-log .rtext span{white-space:normal;overflow-wrap:anywhere}"
     + ".cs-live-log .rdetail{flex:none;margin-left:10px;font-variant-numeric:tabular-nums;color:var(--ink-2)}"
     + ".cs-live-log .rdetail.ok{color:var(--casora-studio-good)}.cs-live-log .rdetail.warn{color:var(--casora-studio-warn)}"
@@ -105,7 +126,8 @@
     };
     P._csLiveSave = async function () {
       const cs = this._cs;
-      take(cs, await this._hass.callWS({ type: "casora/live/set", targets: cs.L.targets, devices: cleanDevices(cs.L.devices) }));
+      const ids = ((cs.lv && cs.lv.found) || []).map((f) => f.device_id);
+      take(cs, await this._hass.callWS({ type: "casora/live/set", targets: cs.L.targets, devices: saveDevices(cs.L, ids), devices_replace: true }));
     };
     // Nur Protokoll und Zustände neu lesen; der Entwurf bleibt.
     P._csLiveRefresh = async function () {
@@ -151,6 +173,15 @@
         onChange(now);
       };
       return sw;
+    };
+    // Einstellung je Gerät: Text links, Auswahl/Schalter rechts in derselben Zeile.
+    const optRow = (self, list, title, sub, control) => {
+      const r = self._flowRow(list, { title, sub });
+      r.row.classList.add("cs-live-opt");
+      const c = el("div", "cs-live-ctl");
+      c.appendChild(control);
+      r.row.appendChild(c);
+      return r.row;
     };
     const ctl = (self, list, title, sub, control, cls) => {
       const r = self._flowRow(list, { title, sub });
@@ -214,16 +245,16 @@
         const set = (key, v) => { L.devices[f.device_id] = Object.assign({}, L.devices[f.device_id], { [key]: v }); self._csBar(); };
         const doneList = DONE_CHOICES.includes(st.done_min) ? DONE_CHOICES : DONE_CHOICES.concat([st.done_min]).sort((a, b) => a - b);
         const doneLabels = {}; doneList.forEach((n) => { doneLabels[String(n)] = minutes(n); });
-        ctl(this, g, t("“Done” stays for"), t("Then the activity disappears by itself."),
+        optRow(this, g, t("“Done” stays for"), t("Then the activity disappears by itself."),
           this._combo(String(st.done_min), doneList.map(String), "", (v) => { if (v) set("done_min", Number(v)); },
-            { fixed: true, labels: doneLabels }).wrap, "cs-live-opt");
-        ctl(this, g, t("Quiet progress updates"), t("Off: every progress step makes a sound."),
-          fswitch(st.quiet, (on) => set("quiet", on)), "cs-live-opt");
+            { fixed: true, labels: doneLabels }).wrap);
+        optRow(this, g, t("Quiet progress updates"), t("Off: every progress step makes a sound."),
+          fswitch(st.quiet, (on) => set("quiet", on)));
         const ivList = INTERVAL_CHOICES.includes(st.interval_min) ? INTERVAL_CHOICES : INTERVAL_CHOICES.concat([st.interval_min]).sort((a, b) => a - b);
         const ivLabels = {}; ivList.forEach((n) => { ivLabels[String(n)] = minutes(n); });
-        ctl(this, g, t("Refresh at least every"), t("Keeps the time left in step with the appliance."),
+        optRow(this, g, t("Refresh at least every"), t("Keeps the time left in step with the appliance."),
           this._combo(String(st.interval_min), ivList.map(String), "", (v) => { if (v) set("interval_min", Number(v)); },
-            { fixed: true, labels: ivLabels }).wrap, "cs-live-opt");
+            { fixed: true, labels: ivLabels }).wrap);
       });
       // 3 · Probe
       g = this._flowGroup(host, { header: t("Test"),
@@ -245,7 +276,7 @@
         cs.lvBusy = true; cs.lvProbe = null; this._csRepaint();
         try {
           const r = await this._hass.callWS({ type: "casora/live/probe", device_id: cs.lvProbeDev || null });
-          cs.lvProbe = t("Sent to {n} phones.").replace("{n}", r.targets);
+          cs.lvProbe = sentText(r.targets);
         } catch (e) {
           cs.lvProbe = t("Didn't work:") + " " + ((e && e.message) || String(e));
         }
@@ -254,10 +285,49 @@
       };
       pc.appendChild(pb);
       pr.row.appendChild(pc);
-      // 4 · Protokoll
+      // 4 · Testlauf – nur im Testhaus (casora_mock.live_lauf); get liefert test_runs sonst leer. Eigener Block,
+      // Erklärung als Fußnote (am Handy sonst einzeilig abgeschnitten); ohne gespeicherte Empfänger gesperrt wie die Probe.
+      const runs = lv.test_runs || {};
+      const runDevs = found.filter((f) => runs[f.device_id]);
+      if (runDevs.length) {
+        cs.lvRunDev = runDevs.some((f) => f.device_id === cs.lvRunDev) ? cs.lvRunDev : runDevs[0].device_id;
+        const runLabels = {}; runDevs.forEach((f) => { runLabels[f.device_id] = f.name || t(KIND_LABEL[f.kind] || f.kind); });
+        g = this._flowGroup(host, { header: t("Test run"),
+          footer: t("Test house only: plays a whole cycle on the device within a minute – start, progress, done, off.") });
+        const noTargets = unsaved || !(lv.targets || []).length;
+        const tr = this._flowRow(g, { title: t("Start a test run"),
+          sub: unsaved ? t("Save the recipients first.") : !(lv.targets || []).length ? t("Choose a recipient first.") : null });
+        tr.row.classList.add("casora-prow", "cs-live-run");
+        const tc = el("div", "casora-pctl");
+        tc.appendChild(this._combo(cs.lvRunDev, runDevs.map((f) => f.device_id), "", (v) => { if (v) cs.lvRunDev = v; }, { fixed: true, labels: runLabels }).wrap);
+        const tb = el("button", "ghost", cs.lvRun ? t("Running…") : t("Start test run"));
+        tb.type = "button";
+        tb.disabled = !!cs.lvRun || noTargets;
+        tb.onclick = async () => {
+          cs.lvRun = true; this._csRepaint();
+          try { await this._hass.callService("casora_mock", "live_lauf", { geraet: runs[cs.lvRunDev], sekunden: 60 }); } catch (e) { /* Dienst fehlt */ }
+          // Protokoll mitlaufen lassen, bis der Durchgang durch ist.
+          for (let i = 0; i < 14 && cs.lvRun; i++) { await new Promise((r) => setTimeout(r, 5000)); await this._csLiveRefresh(); }
+          cs.lvRun = false;
+          await this._csLiveRefresh();
+        };
+        tc.appendChild(tb);
+        tr.row.appendChild(tc);
+      }
+      // 5 · Protokoll: Kopf (mit „Aktualisieren“), Einträge, Fußnote – wie die anderen Studio-Seiten.
       const log = lv.log || [];
       g = this._flowGroup(host, { header: t("Last sent"),
         footer: log.length ? t("The last 20 notifications Casora sent, newest first.") : t("Nothing sent yet.") });
+      const head = g.parentElement && g.parentElement.querySelector(".fhead");
+      if (head) {
+        head.classList.add("cs-live-head");
+        const label = el("span", "", head.textContent);
+        const rb = el("button", "cs-live-refresh", t("Refresh"));
+        rb.type = "button";
+        rb.onclick = () => this._csLiveRefresh();
+        head.replaceChildren(label, rb);
+      }
+      if (!log.length) g.style.display = "none";
       const lg = lang(this);
       log.forEach((e) => {
         const line = logLine(e, lg);
@@ -267,38 +337,6 @@
         if (sub && !e.clear) sub.setAttribute("data-no-i18n", "");
         if (line.progress) r.row.insertBefore(el("span", "cs-live-pct", line.progress), r.row.querySelector(".rdetail"));
       });
-      const rb = el("button", "ghost", t("Refresh"));
-      rb.type = "button";
-      rb.onclick = () => this._csLiveRefresh();
-      const rr = this._flowRow(g, { title: t("Protocol"), sub: t("Reads the latest entries again.") });
-      rr.row.classList.add("casora-prow");
-      const rc = el("div", "casora-pctl");
-      rc.appendChild(rb);
-      rr.row.appendChild(rc);
-      // 5 · Testlauf – nur im Testhaus (casora_mock.live_lauf); get liefert test_runs sonst leer.
-      const runs = lv.test_runs || {};
-      const runDevs = found.filter((f) => runs[f.device_id]);
-      if (!runDevs.length) return;
-      cs.lvRunDev = runDevs.some((f) => f.device_id === cs.lvRunDev) ? cs.lvRunDev : runDevs[0].device_id;
-      const runLabels = {}; runDevs.forEach((f) => { runLabels[f.device_id] = f.name || t(KIND_LABEL[f.kind] || f.kind); });
-      const tr = this._flowRow(g, { title: t("Start a test run"),
-        sub: t("Test house only: plays a whole cycle on the device within a minute – start, progress, done, off.") });
-      tr.row.classList.add("casora-prow", "cs-live-run");
-      const tc = el("div", "casora-pctl");
-      tc.appendChild(this._combo(cs.lvRunDev, runDevs.map((f) => f.device_id), "", (v) => { if (v) cs.lvRunDev = v; }, { fixed: true, labels: runLabels }).wrap);
-      const tb = el("button", "ghost", cs.lvRun ? t("Running…") : t("Start test run"));
-      tb.type = "button";
-      tb.disabled = !!cs.lvRun;
-      tb.onclick = async () => {
-        cs.lvRun = true; this._csRepaint();
-        try { await this._hass.callService("casora_mock", "live_lauf", { geraet: runs[cs.lvRunDev], sekunden: 60 }); } catch (e) { /* Dienst fehlt */ }
-        // Protokoll mitlaufen lassen, bis der Durchgang durch ist.
-        for (let i = 0; i < 14 && cs.lvRun; i++) { await new Promise((r) => setTimeout(r, 5000)); await this._csLiveRefresh(); }
-        cs.lvRun = false;
-        await this._csLiveRefresh();
-      };
-      tc.appendChild(tb);
-      tr.row.appendChild(tc);
     };
   });
 })();

@@ -730,7 +730,9 @@
     };
 
     P._csRepaint = function () {
-      if (this._csOpen && split(this)) this._csRender();
+      // Seite offen (Desktop mit Seitenleiste oder Handy im neuen Studio, dort ohne split): neu zeichnen.
+      // Vorher nur mit split – am Handy (393 px) tat ein Antippen der Live-Geräte, der Probe usw. nichts sichtbar.
+      if (this._csOpen && this.$("pane")) this._csRender();
       else if (this._csSheetPage && this._flowMode) this._csSheet(this._csSheetPage, null, true);
       // Sonst (Handy im Studio: Seite als Blatt, kein split) zeichnet niemand neu – die Leiste blieb
       // nach dem Speichern bei „Ungespeicherte Änderungen“ / „Speichern …“ stehen (Nutzertest 4, E-T3).
