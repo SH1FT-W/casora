@@ -3776,6 +3776,9 @@
       // Einzelne Lampe: Casoras Licht-Popup wie an der Kachel, HAs Dialog nur als Rückfall.
       if (window._casoraNotifyOpenViaCard) {
         window._casoraSuppressDismiss = Date.now() + 600;
+        // ‹ zurück ins Raum-Popup (17.10.2026), wie Raum → Heizkörper (openRoom) und Liste → Detail (casora-core.js).
+        var P = window.casoraPopup, prev = P && P.current;
+        window._casoraBackNext = prev ? { fn: function () { P.open(prev); }, at: Date.now() } : null;
         window._casoraNotifyOpenViaCard(d.id, function (ok) { if (!ok && window.casoraPopup) window.casoraPopup.moreInfo(d.id); }, null, true);
         return;
       }

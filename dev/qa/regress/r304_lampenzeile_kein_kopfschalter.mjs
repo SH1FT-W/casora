@@ -4,6 +4,7 @@
 // antippen öffnet das Einzellampen-Popup (casora_light) – oben rechts stand weiter der Kopfschalter des Raums und
 // schaltete alle Leuchten des Raums. Erwartet (Casora-Look, Tablet 1024×768, hell): das Einzellampen-Popup trägt
 // den Namen der Lampe und keinen Kopfschalter (es hat seinen eigenen Ein/Aus-Knopf); das Raum-Popup davor behält ihn.
+// Dazu (Wunsch 17.10.2026) ‹ zurück im Kopf des Lampen-Popups: führt ins Raum-Popup zurück.
 import { open, dashboard, casoraDashboards as _cd, check, need, finish } from './lib.mjs';
 
 const desks = (await _cd()).filter((d) => !d.mobile && (d.config.views || []).length > 1);
@@ -11,8 +12,8 @@ await need('Casora-Dashboard mit Räumen', desks.length);
 const { page } = await open({ width: 1024, height: 768, dark: false, theme: 'Casora' });
 const readPopup = () => page.evaluate(() => {
   const P = window.casoraPopup; const el = P && P.element; if (!el || !P.surface) return null;
-  const sw = el.shadowRoot.querySelector('.header-switch');
-  return { title: (el.shadowRoot.querySelector('.header-title') || {}).textContent || '', ids: sw && !sw.hidden ? (el._hsIds || []) : [],
+  const sw = el.shadowRoot.querySelector('.header-switch'); const bk = el.shadowRoot.querySelector('.header-back');
+  return { back: !!(bk && !bk.hidden), title: (el.shadowRoot.querySelector('.header-title') || {}).textContent || '', ids: sw && !sw.hidden ? (el._hsIds || []) : [],
     rows: window.__pierce('.lps-row', P.surface).map((r) => r.getAttribute('data-lps-tap') || '') };
 });
 let done = false;
@@ -51,6 +52,12 @@ outer: for (const dash of desks) for (const [i, v] of dash.config.views.entries(
   const lamp = await readPopup();
   await check('Lampenzeile öffnet das Popup der Lampe', lamp && lamp.title && lamp.title !== room.title, { lamp, name: pick.name });
   await check('kein Kopfschalter im Einzellampen-Popup (schaltete den ganzen Raum)', lamp && !lamp.ids.length, lamp && lamp.ids);
+  await check('‹ zurück im Einzellampen-Popup', lamp && lamp.back, lamp);
+  await check('Raum-Popup hat kein ‹ zurück', room && !room.back, room);
+  const bk = await page.evaluate(() => { const el = window.casoraPopup.element; const b = el.shadowRoot.querySelector('.header-back'); if (!b || b.hidden) return null; const r = b.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+  if (bk) { await page.mouse.click(bk.x, bk.y); await page.waitForTimeout(2500); }
+  const again = await readPopup();
+  await check('‹ zurück führt ins Raum-Popup (Zeilen und Kopfschalter wie vorher)', again && !again.back && again.rows.join() === room.rows.join() && again.ids.length === room.ids.length, { again, room });
   done = true;
   break outer;
 }
