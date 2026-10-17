@@ -3,8 +3,9 @@
 // (Status-Sensor, Strom-Schalter oder Getränke-Auswahl), den Rest findet das Rollenmodell am selben Gerät:
 // über translation_key + Integration (platform), die Entity-ID nur als Rückfall. Unterstützt:
 //   Home Connect (home_connect, homeconnect_ws, home_connect_alt), Miele, De'Longhi (delonghi_primadonna,
-//   delonghi_coffee, delonghi_coffeelink), Jura, Melitta/Nivona (melitta_barista), La Marzocco und als
-//   Rückfall eine Steckdose mit Leistungsmessung (> 50 W bezieht/heizt, < 3 W aus).
+//   delonghi_coffee, delonghi_coffeelink), Jura, Melitta/Nivona (melitta_barista), La Marzocco, Integrationen, die
+//   Getränke am Stromverlauf einer Steckdose erkennen (Familie „strom“: Schlüssel learning + last_program, z. B. die
+//   SH1FT-W-Integrationen delonghi/krups) und als Rückfall eine Steckdose mit Leistungsmessung (> 50 W bezieht/heizt, < 3 W aus).
 // Im Testhaus läuft alles unter casora_mock – die Familie ergibt sich dann aus den Schlüsseln.
 //   window._casoraCoffee.items(hass, id)          → Entitäten des Geräts [{entity_id, key, platform, domain, dc, unit, options, state}]
 //   window._casoraCoffee.roles(items, anchor)     → Rollen (rein, ohne hass): {fam, power, status, sel, start, stop, warns, pre, counters, …}
@@ -78,6 +79,9 @@
     whitetea: ['Weißer Tee', TEA], japanesetea: ['Japanischer Tee', TEA], chailatte: ['Chai Latte', GLASS], choco: ['Kakao', MILKJ], chocolate: ['Kakao', MILKJ],
     redeye: ['Red Eye', TALL], blackeye: ['Black Eye', TALL], deadeye: ['Dead Eye', TALL], cafecortado: ['Café cortado', MILK],
     icedcoffee: ['Eiskaffee', GLASS], coldbrew: ['Cold Brew', GLASS], brewoverice: ['Kaffee auf Eis', GLASS],
+    // Selbst benannte Programme (Familie „strom“): deutsch, „2x“ für zwei Tassen.
+    kaffee: ['Kaffee', MUG], espresso2x: ['Espresso doppio', DOP], kaffee2x: ['Kaffee doppio', DOP], heißwasser: ['Heißwasser', WATER],
+    heisswasser: ['Heißwasser', WATER], milchschaum: ['Milchschaum', MILKJ], tee: ['Tee', TEA], kakao: ['Kakao', MILKJ],
   };
   // Keine Getränke (Miele „Barista-Assistent“, Einstellungen …): nicht ins Raster.
   var NOT_DRINK = /^(checkappliance|appliancesettings|baristaassistant|custom\d*|profile\d*)$/;
@@ -126,7 +130,7 @@
       var a = st.attributes || {};
       out.push({ entity_id: eid, key: e.translation_key || null, platform: e.platform || null, domain: eid.split('.')[0],
         dc: a.device_class || null, unit: a.unit_of_measurement || null, options: Array.isArray(a.options) ? a.options : null,
-        name: a.friendly_name || '', device_id: dev || null, state: st.state });
+        name: a.friendly_name || '', device_id: dev || null, state: st.state, attrs: a });
     });
     return out;
   };
@@ -190,6 +194,8 @@
     if (fam) return fam;
     var keys = items.map(function (it) { return keyOf(it); });
     var has = function (re) { return keys.some(function (k) { return re.test(k); }); };
+    // Getränke am Stromverlauf erkannt (delonghi, krups): Anlernstand + letztes Programm, egal unter welchem Domain-Namen.
+    if (has(/^learning$/) && has(/^lastprogram$/)) return 'strom';
     // Ohne Schlüssel (Jura, Melitta, home_connect_alt): Ende der Entity-ID.
     var tails = items.filter(function (it) { return !keyOf(it); }).map(tail);
     var hasT = function (re) { return tails.some(function (t) { return re.test(t); }); };
@@ -226,12 +232,41 @@
     return true;
   };
 
+  // Familie „strom“: Wartung als Sensor mit Attribut „due“ (Wert = Rest bis fällig, überfällig ins Minus), Milchsystem
+  // als Binärsensor, Bezüge heute/gesamt und je Getränk („cups“, Name = Programm). Getränke startet nur die Maschine.
+  var STROM_MAINT = { descale: ['entkalken', 'l'], filter: ['filter', 'd'], brewunit: ['bruehgruppe', 'd'], grounds: ['satz'], groundsin: ['satz'],
+    tank: ['wasser'], beans: ['bohnen'] };
+  var stromRoles = function (c, items, by, addW) {
+    c.total = by('sensor', ['drinkstotal'], true);
+    c.today = by('sensor', ['drinkstoday'], true);
+    c.last = by('sensor', ['lastprogram'], true);
+    // Name des Zählers: Name der Entität ohne den gemeinsamen Gerätenamen vorn („Kaffeevollautomat Espresso 2x“ → „Espresso 2x“).
+    var names = items.map(function (it) { return String(it.name || '').split(' '); });
+    var pre = names.length ? names[0] : [];
+    names.forEach(function (n) { var i = 0; while (i < pre.length && n[i] === pre[i]) i++; pre = pre.slice(0, i); });
+    items.forEach(function (it) {
+      var k = keyOf(it), m = STROM_MAINT[k];
+      if (it.domain === 'binary_sensor' && k === 'milk') { addW(it.entity_id, 'milch', 'system', 'bin'); return; }
+      if (it.domain !== 'sensor') return;
+      if (k === 'cups') {
+        var nm = String(it.name || '').split(' ').slice(pre.length).join(' ') || String(it.name || '');
+        var d = K.drink(nm);
+        c.counters.push({ id: it.entity_id, label: nm, icon: d ? d.icon : MUG, ml: false });
+        return;
+      }
+      if (!m) return;
+      addW(it.entity_id, m[0], null, 'due');
+      if (m[1]) c.pre.push({ id: it.entity_id, art: m[0], cups: null, how: 'strom', unit: m[1] });
+    });
+  };
+
   K.roles = function (items, anchor) {
     items = items || [];
     var fam = K.family(items);
     var c = { fam: fam, anchor: anchor || null, device: null, power: null, powerOff: null, status: null, activity: null, phase: null,
       program: null, actSel: null, sel: null, start: null, stop: null, pause: null, brew: [], progress: null, remaining: null, finish: null,
-      remote: null, dispensing: null, conn: null, opts: {}, warns: [], pre: [], counters: [], total: null, plugW: null, careSel: null };
+      remote: null, dispensing: null, conn: null, opts: {}, warns: [], pre: [], counters: [], total: null, plugW: null, careSel: null,
+      today: null, last: null };
     var by = function (dom, pats, exact) {
       for (var i = 0; i < items.length; i++) if (items[i].domain === dom && hit(items[i], pats, exact)) return items[i].entity_id;
       return null;
@@ -246,7 +281,7 @@
     c.status = by('sensor', ['operationstate'])
       || (fam === 'miele' ? by('sensor', ['status'], true) : null)
       || by('sensor', ['machinestatus', 'devicestatus'], true)
-      || (fam === 'melitta' || fam === 'jura' ? by('sensor', ['state', 'status'], true) : null);
+      || (fam === 'melitta' || fam === 'jura' || fam === 'strom' ? by('sensor', ['state', 'status'], true) : null);
     c.activity = fam === 'melitta' ? by('sensor', ['activity'], true) : null;
     c.phase = by('sensor', ['programphase'], true) || by('sensor', ['coffeemakerprocessphase']);
     c.program = by('sensor', ['programid', 'activeprogram'], true);
@@ -291,6 +326,7 @@
     // Warnungen
     var seen = {};
     var addW = function (id, art, sub, how) { if (!id || seen[id]) return; seen[id] = 1; c.warns.push({ id: id, art: art, sub: sub || null, how: how }); };
+    if (fam === 'strom') { stromRoles(c, items, by, addW); return c; }
     items.forEach(function (it) {
       if (it.domain !== 'binary_sensor' && it.domain !== 'sensor') return;
       var k = keyOf(it) || tail(it), m;
@@ -383,7 +419,8 @@
   };
   K.watch = function (c) {
     var out = [c.anchor, c.power, c.powerOff, c.status, c.activity, c.phase, c.program, c.actSel, c.sel, c.start, c.stop, c.pause,
-      c.progress, c.remaining, c.finish, c.remote, c.dispensing, c.conn, c.opts.strength, c.opts.temp, c.opts.amount, c.total, c.plugW];
+      c.progress, c.remaining, c.finish, c.remote, c.dispensing, c.conn, c.opts.strength, c.opts.temp, c.opts.amount, c.total, c.plugW,
+      c.today, c.last];
     c.brew.forEach(function (b) { out.push(b.id); });
     c.warns.forEach(function (w) { out.push(w.id); });
     c.pre.forEach(function (w) { out.push(w.id); });
@@ -403,11 +440,13 @@
     entkalkenreinigen: ['Entkalken & Reinigen fällig', 'Pflegeprogramm an der Maschine starten', 'mdi:spray-bottle', 'Pflege fällig'],
     reinigen: ['Reinigen fällig', 'Reinigungsprogramm an der Maschine starten', 'mdi:spray-bottle', 'Reinigen fällig'],
     filter: ['Filter wechseln', 'Wasserfilter an der Maschine tauschen', 'mdi:filter-outline', 'Filter wechseln'],
+    bruehgruppe: ['Brühgruppe spülen', 'Brühgruppe herausnehmen und unter Wasser ausspülen', 'mdi:water-sync', 'Brühgruppe spülen'],
   };
   // Name der Pflege-Art (Pflege-Zeile, „… überfällig“).
-  var CARE_NAME = { entkalken: 'Entkalken', entkalkenreinigen: 'Entkalken & Reinigen', reinigen: 'Reinigen', filter: 'Wasserfilter' };
+  var CARE_NAME = { entkalken: 'Entkalken', entkalkenreinigen: 'Entkalken & Reinigen', reinigen: 'Reinigen', filter: 'Wasserfilter',
+    bruehgruppe: 'Brühgruppe' };
   K.WARN_TXT = WARN_TXT;
-  var ORDER = ['wasser', 'bohnen', 'schale', 'satz', 'milch', 'entkalkenreinigen', 'entkalken', 'reinigen', 'filter'];
+  var ORDER = ['wasser', 'bohnen', 'schale', 'satz', 'milch', 'entkalkenreinigen', 'entkalken', 'reinigen', 'filter', 'bruehgruppe'];
   // Melitta „Action Required“: Anzeigetexte („Fill Water“, „Brew Unit Removed“), normalisiert verglichen (nk).
   var MELITTA_ACT = { fillwater: 'wasser', emptytrays: 'schale', emptytray: 'schale', traysmissing: ['schale', 'missing'],
     traymissing: ['schale', 'missing'], fillbeans: 'bohnen', emptygrounds: 'satz', insertbrewunit: ['reinigen', 'unit'],
@@ -449,6 +488,8 @@
   var warnLabel = function (art, sub, soft) {
     if (art === 'wasser' && sub === 'missing') return ['Wassertank einsetzen', 'Tank einsetzen, bis er einrastet', 'Tank fehlt'];
     if (art === 'wasser' && soft) return ['Wasser bald leer', 'Tank bei Gelegenheit füllen', 'Wasser bald leer'];
+    if (art === 'bohnen' && soft) return ['Bohnen bald leer', 'Bohnen bei Gelegenheit nachfüllen', 'Bohnen bald leer'];
+    if (art === 'bruehgruppe' && sub === 'overdue') return ['Brühgruppe spülen überfällig', WARN_TXT[art][1], 'Brühgruppe spülen'];
     if (art === 'schale' && sub === 'missing') return ['Schale einsetzen', 'Tropfschale einsetzen', 'Schale fehlt'];
     if (art === 'bohnen' && sub === 'missing') return ['Bohnenbehälter einsetzen', 'Bohnenbehälter einsetzen, bis er einrastet', 'Behälter fehlt'];
     if (art === 'reinigen' && sub === 'unit') return ['Brühgruppe einsetzen', 'Brühgruppe einsetzen, bis sie einrastet', 'Brühgruppe fehlt'];
@@ -523,6 +564,8 @@
     if (!anyAlive) return s;
     s.dead = false;
     var st = ST[key] || null;
+    // Strom-Erkennung: „running“ = Vorgang läuft (welches Getränk, steht erst danach fest).
+    if (c.fam === 'strom' && key === 'running') st = 'bezieht';
     // Home Connect „inactive“ mit eingeschaltetem Strom = wartet (Bereit).
     if (key === 'inactive' && s.power === true) st = 'bereit';
     var careRun = false;
@@ -594,6 +637,15 @@
       s.warns.push({ art: art, label: l[0], sub: l[1], short: l[2], sev: sev, id: id || null, icon: WARN_TXT[art][2], soft: !!soft });
     };
     c.warns.forEach(function (w) {
+      if (w.how === 'due') {
+        var ws0 = g(w.id);
+        if (!ws0 || bad(ws0.state) || (ws0.attributes || {}).due !== true) return;
+        var left = num(ws0.state);
+        // Wasser/Bohnen sind geschätzt: erst bei 0 wirklich leer, vorher „bald leer“; Pflege im Minus = überfällig.
+        var est = w.art === 'wasser' || w.art === 'bohnen';
+        add(w.art, !est && CARE_NAME[w.art] && left != null && left < 0 ? 'overdue' : null, est && left != null && left > 0, w.id);
+        return;
+      }
       var wv = v(w.id), on = warnOn(w, wv);
       // Melitta: unbekannte Aufforderung („Close Powder Lid“) → Eingriff nötig mit dem Text der Maschine.
       if (!on && w.how === 'melitta' && wv != null && !bad(wv) && !/^(none|ok|no)$/i.test(String(wv))) { s.need = prettyState(wv); return; }
@@ -610,6 +662,13 @@
     // Vorwarnungen (Tassen bis zur Pflege)
     c.pre.forEach(function (p) {
       var x = v(p.id);
+      if (p.how === 'strom') {
+        var n0 = num(x);
+        if (n0 == null || n0 <= 0) return;
+        s.pre.push({ art: p.art, cups: null, txt: p.unit === 'l' ? n0.toLocaleString(loc(), { maximumFractionDigits: 1 }) + '\u00a0l'
+          : Math.round(n0) + '\u00a0' + (Math.round(n0) === 1 ? 'Tag' : 'Tagen'), id: p.id });
+        return;
+      }
       if (p.how === 'count') {
         var n = num(x);
         if (n == null) return;
@@ -619,10 +678,11 @@
     });
     // Je Art nur die nächste Vorwarnung, und keine neben einer fälligen Warnung derselben Art.
     var best = {};
-    s.pre.forEach(function (p) { if (!best[p.art] || p.cups < best[p.art].cups) best[p.art] = p; });
+    var cupsOf = function (p) { return p.cups == null ? 1e9 : p.cups; };
+    s.pre.forEach(function (p) { if (!best[p.art] || cupsOf(p) < cupsOf(best[p.art])) best[p.art] = p; });
     s.pre = Object.keys(best).map(function (k) { return best[k]; })
       .filter(function (p) { return !s.warns.some(function (w) { return w.art === p.art; }); })
-      .sort(function (a, b) { return a.cups - b.cups; });
+      .sort(function (a, b) { return cupsOf(a) - cupsOf(b); });
     // Fernstart
     var rm = v(c.remote);
     s.remote = bad(rm) ? null : rm === 'on';
@@ -711,6 +771,8 @@
   var day0 = function (ms) { var d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
   var todayC = {};
   K.today = function (hass, c, el) {
+    // Integration zählt selbst (Familie „strom“).
+    if (c.today) { var tv = num(hass && hass.states && hass.states[c.today] && hass.states[c.today].state); return tv; }
     var ids = c.total ? [c.total] : c.counters.filter(function (x) { return !x.ml; }).map(function (x) { return x.id; });
     ids = ids.filter(function (id) { return hass && hass.states && hass.states[id]; });
     if (!ids.length) return null;
@@ -1235,6 +1297,9 @@
       }
       if (ws.length) rest.push({ text: ws[0].label, tone: ws[0].sev });
       if (c.fam === 'plug' && s.plugW != null) rest.push(fmtW(s.plugW));
+      // Strom-Erkennung: beim Vorgang die Leistung (das Getränk steht erst danach fest).
+      var pw0 = c.fam === 'strom' && s.st === 'bezieht' && S[c.status] ? num((S[c.status].attributes || {}).power_w) : null;
+      if (pw0 != null) rest.push(fmtW(pw0));
       return UI.line(main, rest, { tone: tone });
     }
     if (part === 'info') {
@@ -1270,6 +1335,17 @@
       if (el && typeof requestAnimationFrame === 'function') requestAnimationFrame(function () { if (el.isConnected && el.offsetHeight > 0) gridH[a] = el.offsetHeight; });
       var list = K.drinks(c, S);
       var bev = list.filter(function (x) { return !x.care; });
+      if (!bev.length && c.fam === 'strom') {
+        // Getränke wählt man an der Maschine; hier steht das zuletzt erkannte mit Uhrzeit.
+        var ls = S[c.last], lr = [];
+        if (ls && !bad(ls.state)) {
+          var ld = K.drink(ls.state), lt = Date.parse((ls.attributes || {}).start || ls.last_changed || '');
+          lr.push({ icon: ld ? ld.icon : MUG, iconTone: 'accent', label: ls.state,
+            sub: isFinite(lt) ? new Date(lt).toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' }) : null, entity: c.last });
+        }
+        return (lr.length ? UI.group(lr, 'Zuletzt') + '<div style="height:var(--casora-space-2, 8px)"></div>' : '')
+          + (UI.note ? UI.note('Getränk an der Maschine wählen – Casora erkennt es am Stromverlauf.') : '');
+      }
       if (!bev.length) {
         // Steckdose oder Maschine ohne Getränkeauswahl: nur Hinweis, wie gestartet wird.
         return c.fam === 'plug' ? UI.group([{ icon: 'mdi:power-plug-outline', iconTone: s.power ? 'accent' : null, label: s.power ? 'Steckdose an' : 'Steckdose aus',
@@ -1344,17 +1420,18 @@
       if (s.dead) return '';
       var cr = [];
       var ca = careArts(c, s);
-      ['entkalken', 'entkalkenreinigen', 'reinigen', 'filter'].forEach(function (k) {
+      ['entkalken', 'entkalkenreinigen', 'reinigen', 'filter', 'bruehgruppe'].forEach(function (k) {
         if (!ca[k]) return;
         var due = s.warns.filter(function (w) { return w.art === k && isCare(w); })[0];
         var pre = s.pre.filter(function (p) { return p.art === k; })[0];
         // Eine Unterzeile nur, wenn sie etwas sagt: bei „Fällig“ die Anleitung, sonst keine (D15).
         // Symbol mit 3:1 auf der Platte: Fällig/Vorwarnung Tieforange (Orange war zu hell), „OK“ ruhig in Sand (Hellgrün lag darunter).
-        var careTone = due ? (due.sev === 'bad' ? 'bad' : COLOR.warn) : pre && pre.cups <= 10 ? COLOR.warn : 'rgba(0,0,0,0)';
+        var soon = pre && pre.cups != null && pre.cups <= 10;
+        var careTone = due ? (due.sev === 'bad' ? 'bad' : COLOR.warn) : soon ? COLOR.warn : 'rgba(0,0,0,0)';
         cr.push({ icon: WARN_TXT[k][2], iconTone: careTone, label: CARE_NAME[k],
           sub: due ? due.sub : null, subWrap: !!due,
-          value: due ? (due.sev === 'bad' ? 'Überfällig' : 'Fällig') : pre ? 'In ' + cupsTxt(pre.cups) : 'OK',
-          valueTone: due ? due.sev : pre && pre.cups <= 10 ? 'warn' : null });
+          value: due ? (due.sev === 'bad' ? 'Überfällig' : 'Fällig') : pre ? 'In ' + (pre.txt || cupsTxt(pre.cups)) : 'OK',
+          valueTone: due ? due.sev : soon ? 'warn' : null });
       });
       // Home Connect (Core): Warnungen sind ab Werk aus – dann hier sagen, wie man sie bekommt.
       if (c.fam === 'hc' && !c.warns.length && !c.pre.length) {

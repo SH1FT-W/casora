@@ -1,5 +1,6 @@
 // Kaffeevollautomat (Community-Karte, 25-kaffee.js) ohne HA: Rollenmodell je Integration (Home Connect Core,
-// homeconnect_ws, home_connect_alt, Miele, De'Longhi BT/WLAN/Coffeelink, Jura, Melitta/Nivona, La Marzocco, Steckdose),
+// homeconnect_ws, home_connect_alt, Miele, De'Longhi BT/WLAN/Coffeelink, Jura, Melitta/Nivona, La Marzocco, Strom-Erkennung
+// (delonghi/krups), Steckdose),
 // Zustand, Warnungen und Vorwarnungen, Zähler, Kachel-Text, Start je Integration, Halten-Menü, Popup-Kopf.
 // Schlüssel, Entity-IDs und Zustandswerte wie in den Quellen der Integrationen (Stand 10/2026); Geräte und Namen erfunden.
 //   node dev/unit/kaffee.mjs
@@ -660,6 +661,117 @@ delete window._casoraUI;
   assert.deepEqual(calls.map((x) => x[0] + '.' + x[1]), ['button.press'], 'gleiche Auswahl: nur Start drücken');
   calls.length = 0;
   assert.equal(await K.start(h2, Object.assign({}, ca, { start: null }), opts[0]), 'sel', 'nur ausgewählt');
+}
+// ── 16. Strom-Erkennung (delonghi, krups): Getränke am Stromverlauf, Wartung mit Attribut „due“ ──
+{
+  const sd = { platform: 'delonghi', dev: 'sd' };
+  const nm = (n) => ({ friendly_name: 'Bohnenwerk ' + n });
+  add('sensor.bohnenwerk_status', 'ready', { ...sd, key: 'status', attrs: { ...nm('Betriebszustand'), device_class: 'enum', options: ['off', 'ready', 'running'], power_w: 2.1 } });
+  add('switch.bohnenwerk_einschalter', 'on', { ...sd, key: 'power', attrs: nm('Einschalter') });
+  add('sensor.bohnenwerk_letztes_programm', 'Cappuccino', { ...sd, key: 'last_program', attrs: { ...nm('Letztes Programm'), start: '2026-10-17T14:15:49+00:00' } });
+  add('sensor.bohnenwerk_angelernte_programme', '8', { ...sd, key: 'learning', attrs: nm('Angelernte Programme'), cat: 'diagnostic' });
+  add('sensor.bohnenwerk_bezuge_heute', '3', { ...sd, key: 'drinks_today', attrs: nm('Bezüge heute') });
+  add('sensor.bohnenwerk_bezuge_gesamt', '57', { ...sd, key: 'drinks_total', attrs: nm('Bezüge gesamt') });
+  add('sensor.bohnenwerk_espresso', '20', { ...sd, key: 'cups', attrs: nm('Espresso'), cat: 'diagnostic' });
+  add('sensor.bohnenwerk_espresso_2x', '5', { ...sd, key: 'cups', attrs: nm('Espresso 2x'), cat: 'diagnostic' });
+  add('sensor.bohnenwerk_cappuccino', '32', { ...sd, key: 'cups', attrs: nm('Cappuccino'), cat: 'diagnostic' });
+  add('sensor.bohnenwerk_entkalken_in', '12.3', { ...sd, key: 'descale', attrs: { ...nm('Entkalken in'), due: false, unit_of_measurement: 'L' } });
+  add('sensor.bohnenwerk_filterwechsel_in', '5', { ...sd, key: 'filter', attrs: { ...nm('Filterwechsel in'), due: false, unit_of_measurement: 'd' } });
+  add('sensor.bohnenwerk_bruhgruppe_ausspulen_in', '1', { ...sd, key: 'brew_unit', attrs: { ...nm('Brühgruppe ausspülen in'), due: false } });
+  add('sensor.bohnenwerk_trester_leeren_in', '4', { ...sd, key: 'grounds_in', attrs: { ...nm('Trester leeren in'), due: false } });
+  add('sensor.bohnenwerk_wassertank', '900', { ...sd, key: 'tank', attrs: { ...nm('Wassertank'), due: false } });
+  add('sensor.bohnenwerk_bohnen', '60', { ...sd, key: 'beans', attrs: { ...nm('Bohnen'), due: false } });
+  add('binary_sensor.bohnenwerk_milchsystem_reinigen', 'off', { ...sd, key: 'milk', attrs: nm('Milchsystem reinigen') });
+  add('binary_sensor.bohnenwerk_wartung_fallig', 'off', { ...sd, key: 'maintenance_due', attrs: { ...nm('Wartung fällig'), tasks: [] } });
+  add('sensor.bohnenwerk_nachste_wartung', 'none', { ...sd, key: 'next_maintenance', attrs: nm('Nächste Wartung') });
+  add('sensor.bohnenwerk_zuletzt_entkalkt', '2026-08-15T10:00:00+00:00', { ...sd, key: 'descale_last', attrs: nm('Zuletzt entkalkt'), cat: 'diagnostic' });
+  add('sensor.bohnenwerk_energie_pro_tasse', '9.8', { ...sd, key: 'energy_per_cup', attrs: nm('Energie pro Tasse'), cat: 'diagnostic' });
+  add('button.bohnenwerk_entkalkt', 'unknown', { ...sd, key: 'descale_done', attrs: nm('Entkalkt'), cat: 'config' });
+  add('event.bohnenwerk_vorgang', 'unknown', { ...sd, key: 'process', attrs: nm('Vorgang') });
+  const A = 'sensor.bohnenwerk_status';
+  const cs = K.find(hass(), A);
+  assert.equal(cs.fam, 'strom');
+  assert.equal(K.is(hass(), A), true, 'als Kaffeegerät erkannt');
+  assert.equal(K.is(hass(), 'switch.bohnenwerk_einschalter'), true);
+  assert.equal(cs.status, A); assert.equal(cs.power, 'switch.bohnenwerk_einschalter');
+  assert.equal(cs.total, 'sensor.bohnenwerk_bezuge_gesamt'); assert.equal(cs.today, 'sensor.bohnenwerk_bezuge_heute');
+  assert.equal(cs.last, 'sensor.bohnenwerk_letztes_programm');
+  assert.equal(cs.sel, null); assert.equal(cs.start, null); assert.equal(cs.stop, null);
+  assert.deepEqual(cs.counters.map((x) => x.label), ['Cappuccino', 'Espresso', 'Espresso 2x'], 'Zählername ohne Gerätename');
+  assert.equal(cs.counters.find((x) => x.label === 'Espresso 2x').icon, 'coffee-doppio');
+  assert.deepEqual(cs.warns.map((w) => w.art).sort(), ['bohnen', 'bruehgruppe', 'entkalken', 'filter', 'milch', 'satz', 'wasser']);
+  assert.deepEqual(cs.pre.map((p) => p.art).sort(), ['bruehgruppe', 'entkalken', 'filter']);
+  let ss = st(A);
+  assert.equal(ss.st, 'bereit'); assert.equal(K.tileText(ss), 'Bereit'); assert.equal(ss.warns.length, 0);
+  assert.equal(ss.total, 57); assert.deepEqual(ss.perDrink.map((x) => x.n), [32, 20, 5]);
+  assert.equal(K.today(hass(), cs), 3, 'heute aus dem Sensor der Integration');
+  assert.ok(ss.pre.some((p) => p.art === 'entkalken' && p.txt === '12,3' + NB + 'l'));
+  assert.ok(ss.pre.some((p) => p.art === 'bruehgruppe' && p.txt === '1' + NB + 'Tag'));
+  // Läuft: „Läuft“ und die Leistung im Kopf; Abbrechen nur an der Maschine.
+  set(A, 'running', { power_w: 1420 });
+  ss = st(A);
+  assert.equal(ss.st, 'bezieht'); assert.equal(K.tileText(ss), 'Läuft'); assert.equal(K.active(ss), true);
+  // Aus
+  set(A, 'off', { power_w: 0 }); set('switch.bohnenwerk_einschalter', 'off');
+  ss = st(A);
+  assert.equal(K.tileText(ss), 'Aus'); assert.equal(K.iconService(cs, ss), 'switch.turn_on');
+  set('switch.bohnenwerk_einschalter', 'on'); set(A, 'ready', { power_w: 2 });
+  // Fällig: Filter heute (0) = Fällig, Brühgruppe im Minus = überfällig (rot), Trester voll blockiert, Tank geschätzt „bald leer“.
+  set('sensor.bohnenwerk_filterwechsel_in', '0', { due: true });
+  set('sensor.bohnenwerk_bruhgruppe_ausspulen_in', '-3', { due: true });
+  ss = st(A);
+  assert.deepEqual(ss.warns.map((w) => [w.art, w.sev]), [['bruehgruppe', 'bad'], ['filter', 'warn']]);
+  assert.equal(K.tileText(ss), 'Brühgruppe spülen'); assert.equal(ss.tone, 'bad');
+  set('sensor.bohnenwerk_trester_leeren_in', '0', { due: true });
+  set('sensor.bohnenwerk_wassertank', '150', { due: true });
+  ss = st(A);
+  assert.equal(K.tileText(ss), 'Satz voll', 'voller Trester hat Vorrang (blockiert)');
+  assert.ok(ss.warns.some((w) => w.art === 'wasser' && w.soft && w.label === 'Wasser bald leer'));
+  set('sensor.bohnenwerk_wassertank', '0', { due: true });
+  assert.ok(st(A).warns.some((w) => w.art === 'wasser' && !w.soft && w.label === 'Wasser nachfüllen'));
+  set('sensor.bohnenwerk_bohnen', '8', { due: true });
+  assert.ok(st(A).warns.some((w) => w.label === 'Bohnen bald leer'));
+  set('binary_sensor.bohnenwerk_milchsystem_reinigen', 'on');
+  assert.ok(st(A).warns.some((w) => w.label === 'Milchsystem reinigen'));
+  // Popup mit Stub-Bausteinen: Zuletzt + Hinweis statt Raster, Pflege mit Brühgruppe, Statistik mit „Heute 3“.
+  window._casoraUI = {
+    line: (main, rest) => JSON.stringify({ main, rest: (rest || []).map((r) => (typeof r === 'object' ? r.text : r)) }),
+    group: (rows, label) => { UIlog.push({ label, rows }); return '<g>' + label + ':' + rows.map((r) => r.label).join('|') + '</g>'; },
+    label: (t) => '<l>' + t + '</l>', note: (t) => '<n>' + t + '</n>', segments: (items, label) => '<s>' + label + '</s>',
+  };
+  UIlog.length = 0;
+  const dr = K.sec('drinks', cs, states, hass());
+  assert.match(dr, /<g>Zuletzt:Cappuccino<\/g>/); assert.match(dr, /Stromverlauf/);
+  UIlog.length = 0;
+  K.sec('info', cs, states, hass());
+  const pf = UIlog.find((g) => g.label === 'Pflege');
+  assert.deepEqual(pf.rows.map((r) => [r.label, r.value]), [['Entkalken', 'In 12,3' + NB + 'l'], ['Wasserfilter', 'Fällig'], ['Brühgruppe', 'Überfällig']]);
+  const hw = UIlog.find((g) => /^Hinweise/.test(g.label));
+  assert.ok(hw && !hw.rows.some((r) => /Brühgruppe|Filter/.test(r.label)), 'Pflege nicht doppelt unter Hinweise');
+  UIlog.length = 0;
+  K.sec('stats', cs, states, hass());
+  const stt = UIlog.find((g) => g.label === 'Statistik');
+  assert.equal(stt.rows[0].sub, 'Heute 3'); assert.equal(stt.rows[0].value, '57');
+  set(A, 'running', { power_w: 1420 });
+  const hh = JSON.parse(K.sec('hero', cs, states, hass()));
+  assert.equal(hh.main, 'Läuft'); assert.ok(hh.rest.some((r) => /1[.,]?420 W/.test(r)), 'Leistung beim Vorgang');
+  assert.match(K.sec('drinks', cs, states, hass()), /Abbrechen geht nur an der Maschine/);
+  set(A, 'ready', { power_w: 2 });
+  // Halten-Menü: nur An/Aus (Getränke startet die Maschine).
+  assert.deepEqual(K.hold(hass(), A).map((x) => x.t), ['Ausschalten']);
+  delete window._casoraUI;
+  // Krups-Fassung: ohne Einschalter und Tassenzähler, Trester unter „grounds“.
+  const kr = { platform: 'krups', dev: 'kr' };
+  add('sensor.kruglein_status', 'off', { ...kr, key: 'status', attrs: { friendly_name: 'Krüglein Status', options: ['off', 'ready', 'running'] } });
+  add('sensor.kruglein_letztes_programm', 'unknown', { ...kr, key: 'last_program' });
+  add('sensor.kruglein_angelernte_programme', '0', { ...kr, key: 'learning' });
+  add('sensor.kruglein_bezuge_gesamt', '0', { ...kr, key: 'drinks_total' });
+  add('sensor.kruglein_trester', '9', { ...kr, key: 'grounds', attrs: { due: false } });
+  const ck = K.find(hass(), 'sensor.kruglein_status');
+  assert.equal(ck.fam, 'strom'); assert.equal(ck.power, null);
+  assert.deepEqual(ck.warns.map((w) => w.art), ['satz']);
+  const sk = st('sensor.kruglein_status');
+  assert.equal(K.tileText(sk), 'Aus'); assert.equal(K.iconService(ck, sk), null);
 }
 // Programm-Namen
 assert.equal(K.drink('consumer_products_coffee_maker_program_coffee_world_americano').label, 'Americano');

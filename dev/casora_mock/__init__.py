@@ -114,9 +114,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Eine erfundene Reolink-Türklingel mit Klingeldrücken im Verlauf (Community-Karte), siehe klingel.py.
     from .klingel import extra as klingel_extra
     _merge(fixture, klingel_extra(dt_util.utcnow()), "Testklingel")
-    # Zwei erfundene Kaffeevollautomaten (Home-Connect- und De'Longhi-BT-artig, Community-Karte), siehe kaffee.py.
+    # Drei erfundene Kaffeevollautomaten (Home-Connect-, De'Longhi-BT-artig und Strom-Erkennung, Community-Karte), siehe kaffee.py.
     from .kaffee import extra as kaffee_extra
-    _merge(fixture, kaffee_extra(dt_util.utcnow()), "Testbarista/Morgenbohne")
+    _merge(fixture, kaffee_extra(dt_util.utcnow()), "Testbarista/Morgenbohne/Bohnenwerk")
     # Ein erfundener Luftbefeuchter mit Modi, Wassertank und Feuchtesensor, siehe befeuchter.py.
     from .befeuchter import extra as befeuchter_extra
     _merge(fixture, befeuchter_extra(dt_util.utcnow()), "Testbefeuchter")

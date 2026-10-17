@@ -1,4 +1,4 @@
-"""Zwei erfundene Kaffeevollautomaten für das Testhaus (Community-Karte „Kaffeevollautomat“, immer dabei).
+"""Drei erfundene Kaffeevollautomaten für das Testhaus (Community-Karte „Kaffeevollautomat“, immer dabei).
 
 * „Testbarista“ – wie Home Connect (Core) ihn anlegt: Strom, Betriebszustand, aktives/gewähltes Programm,
   Fortschritt, Programmende, Programm beenden, Fernstart, Optionen (Stärke, Temperatur, Menge), Tassen-Zähler
@@ -8,10 +8,13 @@
   bei gesetztem Alarm-Bit – dessen Name), Strom, Getränke-Auswahl „make_beverage“ (Auswahl startet sofort, Zustand bleibt
   „none“), „Gibt aus“ (Attribut percentage), Entkalken/Filter, Zähler (total_coffee, total_coffee_with_milk, total_water in L).
   Ohne Abbrechen-Taste (die Integration hat keine).
+* „Bohnenwerk“ – wie die Strom-Integrationen delonghi/krups: Getränke am Stromverlauf erkannt (Betriebszustand
+  off/ready/running, letztes Programm, Bezüge heute/gesamt, Tassen je Getränk), Wartung als Sensor mit Attribut „due“,
+  Einschalter. Keine Getränke-Auswahl (startet nur die Maschine).
 
 Im Testhaus läuft alles unter casora_mock; Casora erkennt die Integration an den translation_keys.
 Testdienste:
-  casora_mock.kaffee_beziehen {getraenk, geraet: testbarista|morgenbohne, dauer}  – Bezug mit Fortschritt (~30 s), Zähler +1 am Ende
+  casora_mock.kaffee_beziehen {getraenk, geraet: testbarista|morgenbohne|bohnenwerk, dauer}  – Bezug mit Fortschritt (~30 s), Zähler +1 am Ende
   casora_mock.kaffee_warnung {art: wasser|bohnen|schale|entkalken|aus, geraet}      – Warnung setzen bzw. alle zurücknehmen
 Dazu antwortet home_connect.set_program_and_options (falls Home Connect nicht geladen ist) und die Auswahl des
 aktiven Programms bzw. der Getränke-Auswahl startet einen Bezug wie an der echten Maschine. Namen erfunden.
@@ -22,6 +25,8 @@ from datetime import timedelta
 
 HC = "testbarista"
 DL = "morgenbohne"
+SW = "bohnenwerk"
+SW_DRINKS = ("Espresso", "Espresso 2x", "Kaffee", "Cappuccino")
 P = "consumer_products_coffee_maker_program_"
 PROGRAMS = [P + x for x in (
     "beverage_ristretto", "beverage_espresso", "beverage_espresso_doppio", "beverage_coffee", "beverage_x_l_coffee",
@@ -99,6 +104,28 @@ def extra(now) -> dict:
            {"state_class": "total_increasing"}),
         _e(f"sensor.{d}_total_water", "86.4", "total_water", d, "Morgenbohne Wasser gesamt", {"state_class": "total_increasing"}, unit="L"),
     ]
+    w = SW
+    ents += [
+        _e(f"sensor.{w}_status", "ready", "status", w, "Bohnenwerk Betriebszustand",
+           {"options": ["off", "ready", "running"], "power_w": 2.0}, dc="enum"),
+        _e(f"switch.{w}_einschalter", "on", "power", w, "Bohnenwerk Einschalter"),
+        _e(f"sensor.{w}_letztes_programm", "Cappuccino", "last_program", w, "Bohnenwerk Letztes Programm",
+           {"start": (now - timedelta(minutes=40)).isoformat()}),
+        _e(f"sensor.{w}_angelernte_programme", "4", "learning", w, "Bohnenwerk Angelernte Programme", cat="diagnostic"),
+        _e(f"sensor.{w}_bezuge_heute", "2", "drinks_today", w, "Bohnenwerk Bezüge heute", {"state_class": "total_increasing"}),
+        _e(f"sensor.{w}_bezuge_gesamt", "86", "drinks_total", w, "Bohnenwerk Bezüge gesamt", {"state_class": "total_increasing"}),
+        *(_e(f"sensor.{w}_{n.lower().replace(' ', '_')}", str(c), "cups", w, f"Bohnenwerk {n}", {"state_class": "total_increasing"},
+             unit="cups", cat="diagnostic") for n, c in zip(SW_DRINKS, (31, 6, 22, 27))),
+        _e(f"sensor.{w}_entkalken_in", "42.5", "descale", w, "Bohnenwerk Entkalken in", {"due": False}, dc="volume", unit="L"),
+        _e(f"sensor.{w}_filterwechsel_in", "12", "filter", w, "Bohnenwerk Filterwechsel in", {"due": False}, dc="duration", unit="d"),
+        _e(f"sensor.{w}_bruhgruppe_ausspulen_in", "3", "brew_unit", w, "Bohnenwerk Brühgruppe ausspülen in", {"due": False},
+           dc="duration", unit="d"),
+        _e(f"sensor.{w}_trester_leeren_in", "6", "grounds_in", w, "Bohnenwerk Trester leeren in", {"due": False}, unit="drinks"),
+        _e(f"sensor.{w}_wassertank", "1100", "tank", w, "Bohnenwerk Wassertank", {"due": False}, dc="volume_storage", unit="mL"),
+        _e(f"sensor.{w}_bohnen", "70", "beans", w, "Bohnenwerk Bohnen", {"due": False}, unit="%"),
+        _e(f"binary_sensor.{w}_milchsystem_reinigen", "off", "milk", w, "Bohnenwerk Milchsystem reinigen", dc="problem"),
+        _e(f"binary_sensor.{w}_wartung_fallig", "off", "maintenance_due", w, "Bohnenwerk Wartung fällig", {"tasks": []}, dc="problem"),
+    ]
     # Verlauf der Zähler: heute früh drei Kaffees weniger – „Heute 3“ im Popup.
     hist = {}
     for eid, base in ((f"sensor.{h}_coffees", 418), (f"sensor.{h}_coffee_and_milk_counter", 655), (f"sensor.{d}_total_coffee", 1204)):
@@ -107,6 +134,7 @@ def extra(now) -> dict:
         "devices": [
             {"key": HC, "name": "Testbarista", "manufacturer": "Bosch", "model": "Vollautomat 9", "area": None},
             {"key": DL, "name": "Morgenbohne", "manufacturer": "De'Longhi", "model": "Bluetooth", "area": None},
+            {"key": SW, "name": "Bohnenwerk", "manufacturer": "De'Longhi", "model": "Stromerkennung", "area": None},
         ],
         "entities": ents,
         "_history": hist,
@@ -136,7 +164,7 @@ def setup(hass, mock) -> None:
     from homeassistant.helpers.event import async_call_later, async_track_state_change_event
     from homeassistant.util import dt as dt_util
 
-    run = {HC: None, DL: None}
+    run = {HC: None, DL: None, SW: None}
 
     def bump(eid: str, by: int = 1) -> None:
         st = hass.states.get(eid)
@@ -151,7 +179,15 @@ def setup(hass, mock) -> None:
             for cancel in job["timers"]:
                 cancel()
         run[dev] = None
-        if dev == HC:
+        if dev == SW:
+            # Erst nach dem Vorgang steht das Getränk fest (wie die Strom-Erkennung).
+            if done and job:
+                mock.set(f"sensor.{SW}_letztes_programm", job["prog"], start=job["t0"].isoformat())
+                bump(f"sensor.{SW}_bezuge_heute")
+                bump(f"sensor.{SW}_bezuge_gesamt")
+                bump(f"sensor.{SW}_{job['prog'].lower().replace(' ', '_')}")
+            mock.set(f"sensor.{SW}_status", "ready", power_w=2.0)
+        elif dev == HC:
             if done and job:
                 cid, ml = _counter(job["prog"])
                 if cid:
@@ -182,7 +218,9 @@ def setup(hass, mock) -> None:
             mock.set(f"switch.{dev}_power", "on")
         job = run[dev] = {"prog": prog, "timers": [], "t0": dt_util.utcnow()}
         steps = 10
-        if dev == HC:
+        if dev == SW:
+            mock.set(f"sensor.{SW}_status", "running", power_w=1420.0)
+        elif dev == HC:
             mock.set(f"sensor.{HC}_operation_state", "run")
             mock.set(f"select.{HC}_active_program", prog)
             mock.set(f"sensor.{HC}_program_progress", "0")
@@ -197,6 +235,8 @@ def setup(hass, mock) -> None:
                     return
                 if i == steps:
                     stop(dev, True)
+                elif dev == SW:
+                    pass
                 elif dev == HC:
                     mock.set(f"sensor.{HC}_program_progress", str(i * 100 // steps))
                 else:
@@ -207,7 +247,9 @@ def setup(hass, mock) -> None:
         dev = call.data.get("geraet", HC)
         g = str(call.data.get("getraenk", "cappuccino"))
         dauer = float(call.data.get("dauer", 30))
-        if dev == HC:
+        if dev == SW:
+            brew(SW, next((x for x in SW_DRINKS if x.lower() == g.lower()), "Cappuccino"), dauer)
+        elif dev == HC:
             prog = g if g.startswith(P) else next((p for p in PROGRAMS if p.endswith("_" + g)), P + "beverage_cappuccino")
             brew(HC, prog, dauer)
         else:
@@ -219,7 +261,14 @@ def setup(hass, mock) -> None:
     async def warnung(call) -> None:
         dev = call.data.get("geraet", HC)
         art = str(call.data.get("art", "wasser"))
-        if dev == HC:
+        if dev == SW:
+            # Strom-Integration: Wartung über das Attribut „due“ (Wert 0 = jetzt fällig).
+            for a, k in (("wasser", "wassertank"), ("bohnen", "bohnen"), ("satz", "trester_leeren_in"), ("entkalken", "entkalken_in")):
+                if art == "aus" or a == art:
+                    eid = f"sensor.{SW}_{k}"
+                    back = {"wassertank": "1100", "bohnen": "70", "trester_leeren_in": "6", "entkalken_in": "42.5"}[k]
+                    mock.set(eid, back if art == "aus" else "0", due=art != "aus")
+        elif dev == HC:
             for a, k in WARN.items():
                 if art == "aus" or a == art:
                     mock.set(f"sensor.{HC}_{k}", "off" if art == "aus" else "present")
@@ -233,9 +282,9 @@ def setup(hass, mock) -> None:
                 mock.set(f"sensor.{DL}_device_status", DL_WARN[art])
 
     hass.services.async_register("casora_mock", "kaffee_beziehen", beziehen, vol.Schema({
-        vol.Optional("getraenk"): str, vol.Optional("geraet"): vol.In([HC, DL]), vol.Optional("dauer"): vol.Coerce(float)}))
+        vol.Optional("getraenk"): str, vol.Optional("geraet"): vol.In([HC, DL, SW]), vol.Optional("dauer"): vol.Coerce(float)}))
     hass.services.async_register("casora_mock", "kaffee_warnung", warnung, vol.Schema({
-        vol.Required("art"): vol.In(["wasser", "bohnen", "schale", "satz", "entkalken", "aus"]), vol.Optional("geraet"): vol.In([HC, DL])}))
+        vol.Required("art"): vol.In(["wasser", "bohnen", "schale", "satz", "entkalken", "aus"]), vol.Optional("geraet"): vol.In([HC, DL, SW])}))
 
     # Wie Home Connect: Programm samt Optionen starten (nur, wenn die echte Integration fehlt).
     async def set_program(call) -> None:
@@ -279,9 +328,14 @@ def setup(hass, mock) -> None:
             mock.set(f"sensor.{HC}_operation_state", "inactive")
         elif eid == f"switch.{HC}_power" and new.state == "on" and hass.states.is_state(f"sensor.{HC}_operation_state", "inactive"):
             mock.set(f"sensor.{HC}_operation_state", "ready")
+        elif eid == f"switch.{SW}_einschalter":
+            if new.state == "off":
+                stop(SW, False)
+            mock.set(f"sensor.{SW}_status", "off" if new.state == "off" else "ready", power_w=0.0 if new.state == "off" else 2.0)
         elif eid == f"switch.{DL}_power":
             if new.state == "off":
                 stop(DL, False)
             mock.set(f"sensor.{DL}_device_status", "turned_off" if new.state == "off" else "ready")
 
-    async_track_state_change_event(hass, [f"button.{HC}_stop_program", f"switch.{HC}_power", f"switch.{DL}_power"], changed)
+    async_track_state_change_event(hass, [f"button.{HC}_stop_program", f"switch.{HC}_power", f"switch.{DL}_power",
+                                         f"switch.{SW}_einschalter"], changed)

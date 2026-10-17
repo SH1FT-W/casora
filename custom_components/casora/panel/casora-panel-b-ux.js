@@ -132,6 +132,8 @@
     byDev.forEach((list, dev) => {
       const yes = list.some((e) => COFFEE_PLATFORMS.has(e.platform)
         || COFFEE_KEY.test(coffeeKey(e) || coffeeTail(e)) || coffeeKey(e) === "machinestatus"
+        // Getränke am Stromverlauf erkannt (delonghi, krups): Anlernstand + letztes Programm.
+        || (coffeeKey(e) === "lastprogram" && list.some((x) => coffeeKey(x) === "learning"))
         || (((S[e.entity_id] || {}).attributes || {}).options || []).some((o) => COFFEE_OPT.test(coffeeNk(o))));
       if (!yes) return;
       const k = (e) => coffeeKey(e);

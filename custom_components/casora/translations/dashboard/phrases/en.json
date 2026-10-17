@@ -2263,7 +2263,15 @@
   "s ohne Antwort": "s without a response",
   "HTTP": "HTTP",
   "YYYY-MM-DD": "YYYY-MM-DD",
-  "TEXTAREA": "TEXTAREA"
+  "TEXTAREA": "TEXTAREA",
+  "Bohnen bald leer": "Beans running low",
+  "Bohnen bei Gelegenheit nachfüllen": "Top up beans when convenient",
+  "Brühgruppe": "Brew unit",
+  "Brühgruppe herausnehmen und unter Wasser ausspülen": "Take out the brew unit and rinse it under water",
+  "Brühgruppe spülen": "Rinse brew unit",
+  "Brühgruppe spülen überfällig": "Brew unit rinse overdue",
+  "Getränk an der Maschine wählen – Casora erkennt es am Stromverlauf.": "Choose the drink on the machine – Casora recognizes it from the power curve.",
+  "Kaffee doppio": "Double coffee"
  },
  "patterns": [
   [
@@ -4181,6 +4189,18 @@
   [
    "^(\\d+) % ([A-Za-zÄÖÜäöüß].*)$",
    "{1}% {2}"
+  ],
+  [
+   "^In 1[  ]Tag$",
+   "In 1 day"
+  ],
+  [
+   "^In (\\d+)[  ]Tagen$",
+   "In {1} days"
+  ],
+  [
+   "^In ([\\d.,]+)[  ]l$",
+   "In {1} l"
   ]
  ]
 }
