@@ -11,7 +11,8 @@ Nachgebaut wie die Reolink-Integration sie anlegt: alles am Gerät der Klingel, 
   siren siren · sensor wifi_signal (dBm) / day_night_state
 Dazu der Testdienst casora_mock.klingel_druecken: Klingelknopf kurz an (wie echt nur Sekunden), dazu eine
 Person vor der Tür – beides landet im Verlauf. Einige Klingeldrücke und Erkennungen der letzten Tage stehen
-schon im Verlauf. Gerät, Namen und Nachrichten erfunden.
+schon im Verlauf. Dazu eine zweite Reolink-Kamera camera.testhof (Gerät „Testhof“, Blick in den Hof) für das
+Studio-Feld „Zweite Kamera“ der Klingel-Kachel. Gerät, Namen und Nachrichten erfunden.
 """
 from __future__ import annotations
 
@@ -78,8 +79,14 @@ def extra(now) -> dict:
         steps = hist.setdefault(f"binary_sensor.{DEV}_{kind}", {"steps": []})["steps"]
         dur = 3 if kind == "visitor" else 30
         steps += [[m / 60, "on"], [max(m / 60 - dur / 3600, 0.001), "off"]]
+    # Zweite Kamera (Umschalter im Klingel-Popup): eigenes Gerät, Name wie Reolink „<Gerät> Fluent“.
+    ents.append({"entity_id": "camera.testhof", "state": "idle", "attributes": {"friendly_name": "Testhof Fluent", "supported_features": 0},
+                 "platform": "casora_mock", "device": "testhof", "area": None, "original_name": "Fluent", "name": None, "icon": None,
+                 "device_class": None, "unit": None, "hidden": False, "translation_key": "sub", "entity_category": None,
+                 "unique_id": "9527000TESTHF_0_sub", "hof": True})
     return {
-        "devices": [{"key": DEV, "name": NAME, "manufacturer": "Reolink", "model": "Video Doorbell WiFi", "area": None}],
+        "devices": [{"key": DEV, "name": NAME, "manufacturer": "Reolink", "model": "Video Doorbell WiFi", "area": None},
+                    {"key": "testhof", "name": "Testhof", "manufacturer": "Reolink", "model": "RLC-510A", "area": None}],
         "entities": ents,
         "_history": hist,
     }

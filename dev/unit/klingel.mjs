@@ -299,4 +299,116 @@ delete states['select.pforte_antwort']; delete states['siren.pforte_sirene'];
 KL.forget(ID);
 p = KL.popup(states[ID], states, Object.assign({}, hass, { entities: Object.assign({}, entities) }), {});
 assert.ok(!p.fields.say, 'ohne Nachrichten und Sirene kein Abschnitt'); assert.equal(p.fields.live.card.talk, false, 'Sprechen standardmäßig aus');
+
+// Studio-Optionen (#23): großes Bild beim Mithören/Sprechen standardmäßig an, zweite Kamera optional.
+assert.deepEqual(KL.opts({}, ID), { talk: false, big: true, cam2: null }, 'Standard: Sprechen aus, groß an, ohne zweite Kamera');
+assert.deepEqual(KL.opts({ talk: 'true', big_on_audio: false, camera2: 'camera.carport_sub' }, ID), { talk: true, big: false, cam2: 'camera.carport_sub' });
+assert.equal(KL.opts({ big_on_audio: 'false' }).big, false, 'aus (Text)');
+assert.equal(KL.opts({ camera2: ID }, ID).cam2, null, 'Klingel selbst ist keine zweite Kamera');
+assert.equal(KL.opts({ camera2: 'sensor.x' }, ID).cam2, null, 'nur camera.*');
+assert.equal(KL.opts({ camera2: '[[[ return 1 ]]]' }, ID).cam2, null, 'keine Vorlage');
+// Name der zweiten Kamera: friendly_name ohne Gerätenamen; nur Stream-Wort übrig → Gerätename.
+states['camera.carport_sub'].attributes = { friendly_name: 'Carport Fluent', supported_features: 2 };
+assert.equal(KL.camName(hass, 'camera.carport_sub'), 'Carport', 'Reolink „<Gerät> Fluent“ → Gerätename');
+devices.d_cam.name_by_user = 'Einfahrt';
+assert.equal(KL.camName(hass, 'camera.carport_sub'), 'Carport', 'Gerät umbenannt, friendly_name noch alt: ohne Stream-Wort');
+delete devices.d_cam.name_by_user;
+states['camera.carport_sub'].attributes.friendly_name = 'Carport Hofeinfahrt';
+assert.equal(KL.camName(hass, 'camera.carport_sub'), 'Hofeinfahrt', 'Entitätsname ohne Gerätenamen');
+states['camera.carport_sub'].attributes.friendly_name = 'Carport Fluent';
+states['camera.fremd'].attributes = { friendly_name: 'Gartenhaus' };
+entities['camera.fremd'].device_id = null;
+assert.equal(KL.camName(hass, 'camera.fremd'), 'Gartenhaus', 'ohne Gerät: friendly_name');
+entities['camera.fremd'].device_id = 'd_bell';
+// Popup gibt die zweite Kamera samt Namen und Option ans Live-Bild.
+KL.forget(ID);
+p = KL.popup(states[ID], states, Object.assign({}, hass, { entities: Object.assign({}, entities) }), { camera2: 'camera.carport_sub', big_on_audio: false });
+assert.equal(p.fields.live.card.cam2, 'camera.carport_sub'); assert.equal(p.fields.live.card.cam2Name, 'Carport'); assert.equal(p.fields.live.card.big, false);
+p = KL.popup(states[ID], states, hass, {});
+assert.equal(p.fields.live.card.cam2, null, 'ohne Feld unverändert'); assert.equal(p.fields.live.card.big, true);
+
+// Umschalter: was das Live-Bild zeigt.
+const lcfg = { entity: ID, cam2: 'camera.carport_sub', audio: 'switch.pforte_ton', privacy: 'switch.pforte_privat' };
+let vw = KL.view(lcfg, 0, states);
+assert.equal(vw.id, ID); assert.equal(vw.bell, true); assert.equal(vw.two, true); assert.equal(vw.dead, false); assert.equal(vw.stream, true);
+vw = KL.view(lcfg, 1, states);
+assert.equal(vw.id, 'camera.carport_sub'); assert.equal(vw.idx, 1); assert.equal(vw.bell, false);
+assert.notEqual(vw.key, KL.view(lcfg, 0, states).key, 'Wechsel bindet den Player neu ein');
+states['switch.pforte_ton'].state = 'off'; states['switch.pforte_privat'].state = 'on';
+assert.equal(KL.view(lcfg, 1, states).audioOff, false, '„Ton aufnehmen“ der Klingel gilt nicht für die zweite Kamera');
+assert.equal(KL.view(lcfg, 1, states).dead, false, 'Privatsphäre der Klingel sperrt die zweite Kamera nicht');
+assert.equal(KL.view(lcfg, 0, states).privacy, true); assert.equal(KL.view(lcfg, 0, states).audioOff, true);
+states['switch.pforte_ton'].state = 'on'; states['switch.pforte_privat'].state = 'off';
+assert.equal(KL.view(Object.assign({}, lcfg, { cam2: 'camera.weg' }), 1, states).idx, 0, 'zweite Kamera fehlt in HA: Klingel');
+assert.equal(KL.view(Object.assign({}, lcfg, { cam2: 'camera.weg' }), 1, states).two, false, '… und kein Umschalter');
+assert.equal(KL.view({ entity: ID }, 1, states).idx, 0, 'ohne zweite Kamera immer die Klingel');
+states['camera.carport_sub'].state = 'unavailable';
+assert.equal(KL.view(lcfg, 1, states).dead, true); assert.ok(/^1x/.test(KL.view(lcfg, 1, states).key));
+states['camera.carport_sub'].state = 'idle';
+
+// Live-Bild ohne DOM: großes Bild an/aus (Popover, Esc vor dem Popup), automatisch groß beim Mithören, Umschalter.
+{
+  const keys = [];
+  globalThis.addEventListener = (t, fn, cap) => keys.push({ t, fn, cap });
+  globalThis.removeEventListener = (t, fn) => { const i = keys.findIndex((k) => k.fn === fn); if (i >= 0) keys.splice(i, 1); };
+  let Live = null;
+  globalThis.HTMLElement = class {};
+  globalThis.customElements = { get: () => null, define: (n, c) => { if (n === 'casora-klingel-live') Live = c; } };
+  const mk = () => {
+    const at = {}, cls = new Set(), style = { _: {}, removeProperty(k) { delete this._[k]; } };
+    return { at, cls, style, hidden: false, open: false,
+      classList: { add: (c) => cls.add(c), remove: (c) => cls.delete(c), contains: (c) => cls.has(c) },
+      setAttribute(k, v) { at[k] = String(v); }, removeAttribute(k) { delete at[k]; }, hasAttribute(k) { return k in at; },
+      showPopover() { this.open = true; }, hidePopover() { this.open = false; }, matches(q) { return q === ':popover-open' && this.open; },
+      focus() { focused = this; }, querySelector: (q) => (q === '.in' ? inn : null) };
+  };
+  let focused = null;
+  const inn = mk(), stg = mk(), x = mk(), fsb = mk();
+  // Modul neu laden, damit die Klasse mit den Stubs entsteht (Marker zuerst weg).
+  delete window._casoraKlingel;
+  new Function(src('24-klingel.js'))();
+  assert.ok(Live, 'Live-Bild-Element definiert');
+  const el = Object.create(Live.prototype);
+  el.isConnected = true;
+  el._root = { querySelector: (q) => ({ '.st': stg, '.x': x, '.fs': fsb })[q] || null };
+  el._paint = () => {};
+  el._cfg = { entity: ID, big: true, audio: 'switch.pforte_ton' };
+  el._setBig(true);
+  assert.ok(stg.cls.has('big') && stg.at.popover === 'manual' && stg.open, 'groß: Popover in der obersten Ebene');
+  assert.ok('data-casora-esc' in stg.at && stg.at.role === 'dialog' && stg.at['aria-modal'] === 'true', 'Esc-Marke fürs Popup, Dialog-Rolle');
+  assert.equal(focused, x, 'Fokus aufs ×');
+  const k = keys.find((y) => y.t === 'keydown');
+  assert.ok(k && k.cap === true, 'Esc im Capture vor dem Popup');
+  let stopped = false;
+  k.fn({ key: 'Escape', preventDefault() {}, stopPropagation() { stopped = true; } });
+  assert.ok(stopped && !el._big && !stg.cls.has('big') && !stg.open && !('popover' in stg.at), 'Esc schließt nur das große Bild');
+  assert.equal(keys.filter((y) => y.t === 'keydown').length, 0, 'Esc-Wächter wieder weg');
+  assert.equal(focused, fsb, 'Fokus zurück auf den Groß-Knopf');
+  // Mithören an → automatisch groß (Option an); Mithören aus bleibt klein.
+  el._hass = { states };
+  el._stream = true; el._v = KL.view(el._cfg, 0, states); el._muted = true; el._native = false;
+  el._toggleSound();
+  assert.ok(el._muted === false && el._big, 'Mithören → groß');
+  el._toggleSound();
+  assert.ok(el._muted === true && el._big, 'Mithören aus: bleibt, wie es ist');
+  el._setBig(false);
+  el._cfg.big = false; el._muted = true;
+  el._toggleSound();
+  assert.ok(el._muted === false && !el._big, 'Option aus: Mithören bleibt klein');
+  // Ohne Popover-API: fest über allem (Klasse genügt).
+  delete stg.showPopover;
+  el._setBig(true);
+  assert.ok(stg.cls.has('big') && !('popover' in stg.at), 'Rückfall ohne Popover');
+  el._setBig(false, true);
+  // Umschalter: anderer Index → neu zeichnen; gleicher → nichts.
+  let syncs = 0;
+  el._sync = () => { syncs++; };
+  el._view = 0; el._switch(1); el._switch(1);
+  assert.equal(el._view, 1); assert.equal(syncs, 1, 'gleiches Segment noch einmal: nichts');
+  // Sprechen bei der zweiten Kamera nicht (nur über die Klingel).
+  el._v = KL.view({ entity: ID, cam2: 'camera.carport_sub' }, 1, states); el._hass = { states, callWS: () => { throw new Error('darf nicht'); } };
+  el._talk();
+  assert.equal(el._t, undefined, 'zweite Kamera: kein Sprechen');
+  delete globalThis.addEventListener; delete globalThis.removeEventListener;
+}
 console.log('klingel: ok');
