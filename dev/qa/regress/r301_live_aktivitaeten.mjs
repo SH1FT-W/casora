@@ -188,8 +188,8 @@ await check('Fund 7: Sauger „Fertig“ mit Fläche und Dauer', vac.some((l) =>
       cut: subs.filter((sp) => sp.scrollWidth > sp.clientWidth + 1).map((sp) => sp.textContent) };
   });
   usePage(ph);
-  await check('Fund 3: Handy – Antippen der Gerätezeile öffnet ihre Einstellungen', m.open === 1 && m.opts === 3, m);
-  await check('Fund 11: Handy – Auswahl/Schalter rechts in derselben Zeile', m.right.length === 3
+  await check('Fund 3: Handy – Antippen der Gerätezeile öffnet ihre Einstellungen', m.open === 1 && m.opts === 4, m);
+  await check('Fund 11: Handy – Auswahl/Schalter rechts in derselben Zeile', m.right.length === 4
     && m.right.every((r) => r.inRow && r.leftOfText && r.vCenter && r.rightGap <= 24), m.right);
   await check('Fund 8: Handy – Geräte-Unterzeilen nicht abgeschnitten', !m.cut.length, m.cut);
   usePage(page);
