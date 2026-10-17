@@ -20,7 +20,10 @@
 //   window._casoraKlingel.popup(entity, states, hass, variables) – Popup casora_popup_reolink_doorbell
 //   window._casoraKlingel.sec(part, c, states, hass, el) – Live-Bereiche (hero, say, hist, more)
 //   window._casoraKlingel.hold(hass, id)               – Einträge fürs Halten-Menü (22-halten.js)
-//   <casora-klingel-live> – Live-Bild mit Ton und Sprechen (Karte im Popup)
+//   window._casoraKlingel.opts(variables)              → {talk, big, cam2} aus den Studio-Feldern
+//   window._casoraKlingel.camName(hass, id)            → Name der zweiten Kamera im Umschalter
+//   window._casoraKlingel.view(cfg, idx, states)       → was das Live-Bild gerade zeigt (Klingel 0 / zweite Kamera 1)
+//   <casora-klingel-live> – Live-Bild mit Ton und Sprechen (Karte im Popup), großes Bild, Umschalter zweite Kamera
 (function () {
   // Nur das eigene Modul zählt: ein fremdes Skript, das denselben Namen bloß als Marker setzt, sperrte Casora sonst aus.
   if (window._casoraKlingel && typeof window._casoraKlingel.of === 'function') return;
@@ -361,6 +364,42 @@
       ? '/media-browser/browser/' + encodeURIComponent('app,media-source://reolink') : null;
   };
 
+  // ── Studio-Optionen, zweite Kamera ───────────────────────────────────────
+  // talk: Sprechen (Standard aus) · big: großes Bild beim Mithören/Sprechen (Standard an) · cam2: zweite Kamera (optional).
+  var yes = function (x, def) { return x === undefined || x === null || x === '' ? def : x === true || x === 'true' || x === 1; };
+  KL.opts = function (variables, id) {
+    var v = variables || {}, c2 = typeof v.camera2 === 'string' ? v.camera2.trim() : '';
+    return { talk: yes(v.talk, false), big: yes(v.big_on_audio, true),
+      cam2: /^camera\.[a-z0-9_]+$/.test(c2) && c2 !== id ? c2 : null };
+  };
+  // Name im Umschalter wie im Popup-Kopf: friendly_name ohne den Gerätenamen davor; bleibt dann nur der Stream
+  // („Entrada Fluent“ → „Fluent“), gilt der Gerätename („Entrada“).
+  var STREAM_WORD = /^(fluent|clear|klar|flüssig|sub|main|haupt|neben|stream|live|kamera|camera|hd|sd)$/i;
+  KL.camName = function (hass, id) {
+    var S = (hass && hass.states) || {}, R = (hass && hass.entities) || {}, D = (hass && hass.devices) || {};
+    var st = S[id], me = R[id] || {}, dev = me.device_id ? D[me.device_id] : null;
+    var fn = String((st && st.attributes && st.attributes.friendly_name) || '').trim().replace(/\s+/g, ' ');
+    var dn = dev ? String(dev.name_by_user || dev.name || '').trim() : '';
+    var rest = fn;
+    if (dn && fn.toLowerCase().indexOf(dn.toLowerCase()) === 0) rest = fn.slice(dn.length).trim();
+    var w = rest.split(' ').filter(function (x) { return x && !STREAM_WORD.test(x); });
+    if (w.length) return w.join(' ');
+    return dn || fn.split(' ').filter(function (x) { return !STREAM_WORD.test(x); }).join(' ') || fn || String(id || '').replace(/^camera\./, '');
+  };
+  // Was das Live-Bild zeigt: idx 0 = Klingel, 1 = zweite Kamera (nur wenn gesetzt und in HA vorhanden).
+  // Privatsphäre und „Ton aufnehmen“ gehören zur Klingel; Sprechen geht nur über die Klingel.
+  KL.view = function (cfg, idx, states) {
+    var S = states || {}, C = cfg || {};
+    var i = idx === 1 && C.cam2 && S[C.cam2] ? 1 : 0;
+    var id = i ? C.cam2 : C.entity, st = S[id];
+    var privacy = !i && !!(C.privacy && S[C.privacy] && S[C.privacy].state === 'on');
+    var dead = !st || bad(st.state) || privacy;
+    var stream = streamOf(st);
+    var audioOff = !i && !!(C.audio && S[C.audio] && S[C.audio].state === 'off');
+    return { idx: i, id: id, privacy: privacy, dead: dead, stream: stream, audioOff: audioOff, bell: !i, two: !!(C.cam2 && S[C.cam2]),
+      key: i + (dead ? (privacy ? 'p' : 'x') : 'o') + (stream ? 's' : 'i') };
+  };
+
   // ── Popup ─────────────────────────────────────────────────────────────────
   KL.popup = function (entity, states, hass, variables) {
     var K = window._casoraSoftKit, UI = window._casoraUI;
@@ -373,9 +412,9 @@
     var call = function (part) {
       return 'return window._casoraKlingel ? window._casoraKlingel.sec(' + JSON.stringify(part) + ', ' + JSON.stringify(c) + ', states, hass, this) : "";';
     };
-    var v = variables || {};
+    var o = KL.opts(variables, id);
     var live = { type: 'custom:casora-klingel-live', entity: id, audio: c.sw.audio || null, privacy: c.sw.privacy || null,
-      talk: v.talk === true || v.talk === 'true' };
+      talk: o.talk, big: o.big, cam2: o.cam2, cam2Name: o.cam2 ? KL.camName(hass, o.cam2) : null };
     var f = { hero: { card: K.secCard(watch, call('hero'), states) }, live: { card: live },
       hist: { card: K.secCard(watch, call('hist'), states) } };
     var opts = c.quick && S[c.quick] ? (S[c.quick].attributes || {}).options : null;
@@ -667,7 +706,50 @@
     + '.nb::before{content:"";position:absolute;inset:-4px;}'
     + '.nb:active{transform:scale(var(--casora-press-scale, .97));}'
     + '.nb[hidden]{display:none;}'
-    + '@media (prefers-reduced-motion:reduce){.b{transition:none;}.b:active,.ob:active,.nb:active{transform:none;}}';
+    // Knöpfe auf dem Bild (Groß-Knopf oben rechts, Umschalter oben links): dunkles Glas wie Kamera-Overlays,
+    // 36 sichtbar + unsichtbar auf 44 Trefferfläche.
+    + '.fs{position:absolute;top:8px;right:8px;z-index:2;width:36px;height:36px;padding:0;border:0;border-radius:50%;cursor:pointer;'
+    +   'display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.42);color:#fff;'
+    +   '-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);-webkit-tap-highlight-color:transparent;touch-action:manipulation;}'
+    + '.fs::before{content:"";position:absolute;inset:-4px;}.fs:focus:not(:focus-visible),.x:focus:not(:focus-visible),.sgb:focus:not(:focus-visible){outline:none;}'
+    + '.fs ha-icon{--mdc-icon-size:22px;display:flex;pointer-events:none;}'
+    + '.fs:active,.sgb:active,.x:active{transform:scale(var(--casora-press-scale, .97));}'
+    + '@media (hover:hover){.fs:hover{background:rgba(0,0,0,0.58);}}'
+    + '.fs[hidden],.sg[hidden],.x[hidden]{display:none;}'
+    + '.sg{position:absolute;top:8px;left:8px;z-index:2;max-width:calc(100% - 68px);display:flex;gap:2px;padding:2px;box-sizing:border-box;border-radius:999px;'
+    +   'background:rgba(0,0,0,0.42);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);}'
+    + '.sgb{position:relative;min-width:0;height:32px;padding:0 12px;border:0;border-radius:999px;cursor:pointer;font:inherit;font-size:13px;font-weight:700;'
+    +   'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:transparent;color:rgba(255,255,255,0.86);-webkit-tap-highlight-color:transparent;'
+    +   'transition:background-color var(--casora-dur-feedback, 160ms) var(--casora-ease-feedback, ease);}'
+    + '.sgb::before{content:"";position:absolute;inset:-6px 0;}'
+    + '.sgb[aria-pressed="true"]{background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, var(--casora-popup-tiles-text-primary, #3A322B));}'
+    // Großes Bild: dieselbe Bühne (Bild, Knöpfe, Hinweis) als Popover in der obersten Ebene – kein Umhängen,
+    // Player und Ton laufen weiter. Ohne Popover-API: fest über allem.
+    + '.st{--kl-reserve:196px;}'
+    + '.st.big{position:fixed;inset:0;z-index:2147483000;width:auto;height:auto;max-width:none;max-height:none;margin:0;border:0;'
+    +   'box-sizing:border-box;padding:max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));'
+    +   'display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgb(0,0,0);color:#fff;'
+    +   'font-family:var(--primary-font-family, system-ui, sans-serif);overscroll-behavior:contain;touch-action:none;}'
+    + '.st.big::backdrop{background:transparent;}'
+    + '.in{width:100%;}'
+    + '.st.big .in{width:min(100%, 1600px, calc((100vh - var(--kl-reserve)) * var(--ar, 1.3333)));'
+    +   'width:min(100%, 1600px, calc((100dvh - var(--kl-reserve)) * var(--ar, 1.3333)));'
+    +   'animation:kl-big-in var(--casora-dur-enter, 320ms) var(--casora-ease-enter, cubic-bezier(.2,.8,.3,1)) both;}'
+    + '@keyframes kl-big-in{from{opacity:0;transform:scale(.96);}}'
+    + '.st.big .b:not(.on):not(.talk){background:rgba(255,255,255,0.14);color:#fff;}'
+    + '@media (hover:hover){.st.big .b:not(.on):not(.talk):not(:disabled):hover{background:rgba(255,255,255,0.22);}}'
+    + '.st.big .nt{background:rgba(255,255,255,0.10);color:rgba(255,255,255,0.78);}'
+    + '.x{position:absolute;top:max(12px, env(safe-area-inset-top));right:max(12px, env(safe-area-inset-right));z-index:3;width:44px;height:44px;padding:0;border:0;'
+    +   'border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.16);color:#fff;'
+    +   '-webkit-tap-highlight-color:transparent;touch-action:manipulation;}'
+    + '.x ha-icon{--mdc-icon-size:24px;display:flex;pointer-events:none;}'
+    + '@media (hover:hover){.x:hover{background:rgba(255,255,255,0.24);}}'
+    // Handy quer: Knöpfe neben das Bild, sonst bliebe für das Bild kaum Höhe.
+    + '@media (orientation:landscape) and (max-height:500px){'
+    +   '.st.big .in{display:grid;grid-template-columns:minmax(0,1fr) 200px;column-gap:12px;align-items:center;'
+    +     'width:min(100%, calc((100vh - 32px) * var(--ar, 1.3333) + 212px));width:min(100%, calc((100dvh - 32px) * var(--ar, 1.3333) + 212px));}'
+    +   '.st.big .fr{grid-row:1 / span 2;}.st.big .bar{grid-template-columns:1fr;margin-top:0;align-self:end;}.st.big .nt{align-self:start;}}'
+    + '@media (prefers-reduced-motion:reduce){.b{transition:none;}.b:active,.ob:active,.nb:active,.fs:active,.sgb:active,.x:active{transform:none;}.st.big .in{animation:none;}}';
 
   var findVideo = function (root, d) {
     if (!root || d > 12) return null;
@@ -718,6 +800,7 @@
       connectedCallback() { lives.add(this); if (this._hass) this._sync(); }
       disconnectedCallback() {
         lives.delete(this);
+        this._setBig(false, true);
         this._talkStop(true);
         this._teardown();
         this._key = null;
@@ -727,15 +810,27 @@
     P._build = function () {
       var r = this._root = this.attachShadow({ mode: 'open' });
       // Sprechen im Studio eingeschaltet: Knopf immer zeigen – ohne HTTPS/Mikrofon gesperrt mit Hinweis statt still weg.
-      var talk = !!(this._cfg && this._cfg.talk);
+      var cfg = this._cfg || {}, talk = !!cfg.talk;
+      // Bühne .st: im Popup normal, groß als Popover (gleiche Elemente, gleicher Player). Umschalter nur mit zweiter Kamera.
       r.innerHTML = '<style>' + CSS + '</style>'
-        + '<div class="fr"><div class="mt"></div><div class="ov" role="status" aria-live="polite" hidden></div></div>'
+        + '<div class="st"><button class="x" type="button" hidden><ha-icon icon="mdi:close"></ha-icon></button><div class="in">'
+        + '<div class="fr"><div class="mt"></div><div class="ov" role="status" aria-live="polite" hidden></div>'
+        + (cfg.cam2 ? '<div class="sg" role="group" hidden><button class="sgb" type="button" data-i="0"></button><button class="sgb" type="button" data-i="1"></button></div>' : '')
+        + '<button class="fs" type="button" hidden><ha-icon icon="mdi:arrow-expand"></ha-icon></button></div>'
         + '<div class="bar">'
         + '<button class="b snd" type="button" aria-pressed="false"><ha-icon icon="mdi:volume-off"></ha-icon><span></span></button>'
         + (talk ? '<button class="b tlk" type="button"><ha-icon icon="mdi:microphone-outline"></ha-icon><span></span></button>' : '')
         + '</div>'
-        + '<div class="nt" role="status" aria-live="polite" hidden><span></span><button class="nb" type="button" hidden></button></div>';
+        + '<div class="nt" role="status" aria-live="polite" hidden><span></span><button class="nb" type="button" hidden></button></div>'
+        + '</div></div>';
       var self = this;
+      this._view = 0;
+      r.querySelector('.fs').addEventListener('click', function (ev) { ev.stopPropagation(); self._setBig(!self._big); });
+      r.querySelector('.x').addEventListener('click', function (ev) { ev.stopPropagation(); self._setBig(false); });
+      r.querySelectorAll('.sgb').forEach(function (b) {
+        b.addEventListener('click', function (ev) { ev.stopPropagation(); self._switch(Number(b.getAttribute('data-i'))); });
+      });
+      this._bindSwipe(r.querySelector('.st'));
       // Popups schließen am Handy beim Wischen über touchstart – Knöpfe handeln auf click, Wischen bleibt beim Popup.
       r.querySelector('.snd').addEventListener('click', function (ev) { ev.stopPropagation(); self._toggleSound(); });
       var tb = r.querySelector('.tlk');
@@ -747,7 +842,8 @@
       });
       this._muted = true;
       var w = KL._want;
-      if (w && w.id === (this._cfg || {}).entity && Date.now() - w.at < 8000) { this._muted = false; KL._want = null; }
+      // Mithören aus dem Halten-Menü: Ton gleich an – und, wie beim Tipp auf „Mithören“, groß (Studio-Option).
+      if (w && w.id === cfg.entity && Date.now() - w.at < 8000) { this._muted = false; KL._want = null; if (cfg.big) this._wantBig = true; }
       this._paint();
     };
     P._st = function (id) { var h = this._hass; return id && h && h.states ? h.states[id] : null; };
@@ -758,32 +854,39 @@
       return h.callService(dom, svc, data || {}, { entity_id: id });
     };
     P._sync = function () {
-      var cfg = this._cfg || {}, st = this._st(cfg.entity);
-      if (!st || !this._root || !this.isConnected) return;
-      var priv = this._st(cfg.privacy);
-      var privacy = !!(priv && priv.state === 'on');
-      var dead = bad(st.state) || privacy;
-      var stream = this._stream = streamOf(st);
-      // Neu einbinden nur, wenn sich Erreichbarkeit oder Stream-Art ändert (nicht bei jedem Token-Wechsel).
-      var key = (dead ? (privacy ? 'p' : 'x') : 'ok') + (stream ? 's' : 'i');
-      if (key !== this._key) {
-        this._key = key;
+      var cfg = this._cfg || {}, S = (this._hass && this._hass.states) || {};
+      if (!S[cfg.entity] || !this._root || !this.isConnected) return;
+      var v = this._v = KL.view(cfg, this._view, S);
+      var st = S[v.id], dead = v.dead, privacy = v.privacy;
+      var stream = this._stream = v.stream;
+      // Neu einbinden nur, wenn sich Kamera, Erreichbarkeit oder Stream-Art ändert (nicht bei jedem Token-Wechsel).
+      if (v.key !== this._key) {
+        this._key = v.key;
         this._teardown();
         if (!dead) this._mount(stream);
       }
-      // Privatsphäre an / Klingel weg: Sprechen beenden (sonst hinge die Verbindung bis zu 90 s).
-      if (dead && this._t) { this._talkStop(); this._note(privacy ? 'Sprechen beendet – Privatsphäre an' : 'Sprechen beendet – Klingel nicht erreichbar', 6000); }
+      // Privatsphäre an / Klingel weg: Sprechen beenden (sonst hinge die Verbindung bis zu 90 s). Gilt für die Klingel,
+      // auch wenn gerade die zweite Kamera zu sehen ist.
+      var bell = v.idx ? KL.view(cfg, 0, S) : v;
+      if (bell.dead && this._t) { this._talkStop(); this._note(bell.privacy ? 'Sprechen beendet – Privatsphäre an' : 'Sprechen beendet – Klingel nicht erreichbar', 6000); }
       if (this._card) {
         this._card.hass = this._hass;
         if (this._native && this._card.stateObj !== st) this._card.stateObj = st;
       }
-      this._overlay(dead, privacy);
+      this._overlay(dead, privacy, v.idx);
+      if (this._wantBig && !dead) {
+        this._wantBig = false;
+        var self = this;
+        // Erst wenn das Popup steht (Auftritt 320 ms), sonst läge das große Bild unter dessen Einblendung.
+        setTimeout(function () { if (self.isConnected) self._setBig(true); }, 380);
+      }
       this._applyAudio();
       this._paint();
     };
     P._mount = function (stream) {
-      var self = this, cfg = this._cfg || {}, mt = this._root.querySelector('.mt');
-      var st = this._st(cfg.entity);
+      var self = this, mt = this._root.querySelector('.mt');
+      var camId = (this._v && this._v.id) || (this._cfg || {}).entity;
+      var st = this._st(camId);
       if (stream && customElements.get('ha-camera-stream')) {
         var el = document.createElement('ha-camera-stream');
         el.controls = false;
@@ -799,7 +902,7 @@
       } else if (window.loadCardHelpers) {
         var mine = this._mountId = (this._mountId || 0) + 1;
         window.loadCardHelpers().then(function (h) {
-          return h.createCardElement({ type: 'picture-entity', entity: cfg.entity, camera_view: stream ? 'live' : 'auto',
+          return h.createCardElement({ type: 'picture-entity', entity: camId, camera_view: stream ? 'live' : 'auto',
             show_name: false, show_state: false, tap_action: { action: 'none' }, hold_action: { action: 'none' },
             card_mod: { style: 'ha-card { border-radius: 0 !important; border: none !important; background: #000 !important; box-shadow: none !important; height: 100%; }' } });
         }).then(function (card) {
@@ -822,9 +925,9 @@
       this._mountId = (this._mountId || 0) + 1;
       if (this._card) { try { this._card.remove(); } catch (e) { /* weg */ } this._card = null; }
     };
-    P._overlay = function (dead, privacy) {
+    P._overlay = function (dead, privacy, idx) {
       var ov = this._root.querySelector('.ov'), self = this, cfg = this._cfg || {};
-      var want = dead ? (privacy ? 'p' : 'x') : '';
+      var want = dead ? (privacy ? 'p' : idx ? 'c' : 'x') : '';
       if (ov._k === want) return;
       ov._k = want;
       if (!dead) { ov.hidden = true; ov.innerHTML = ''; this._obFn = null; return; }
@@ -833,6 +936,9 @@
         ov.innerHTML = '<ha-icon icon="mdi:eye-off-outline"></ha-icon><b>' + esc(tr('Privatsphäre an')) + '</b><small>'
           + esc(tr('Kamera und Ton der Klingel sind aus.')) + '</small><button class="ob" type="button">' + esc(tr('Ausschalten')) + '</button>';
         this._obFn = function () { self._call('switch', 'turn_off', cfg.privacy); };
+      } else if (idx) {
+        ov.innerHTML = '<ha-icon icon="mdi:cctv"></ha-icon><b>' + esc(tr('Kamera nicht erreichbar')) + '</b>';
+        this._obFn = null;
       } else {
         ov.innerHTML = '<ha-icon icon="mdi:doorbell-video"></ha-icon><b>' + esc(tr('Klingel nicht erreichbar')) + '</b><small>'
           + esc(tr('Prüfe Strom und WLAN der Klingel.')) + '</small>';
@@ -854,7 +960,8 @@
       }
       if (!w || !h) return;
       var ar = Math.max(0.75, Math.min(16 / 9, w / h)).toFixed(3);
-      var fr = this._root.querySelector('.fr');
+      // An der Bühne: das große Bild rechnet seine Breite daraus.
+      var fr = this._root.querySelector('.st');
       if (fr && fr.style.getPropertyValue('--ar') !== ar) fr.style.setProperty('--ar', ar);
     };
     P._video = function () { return this._card ? findVideo(this._card.shadowRoot || this._card, 0) || findVideo(this._card, 0) : null; };
@@ -876,7 +983,9 @@
         }
       }
     };
+    // „Ton aufnehmen“ aus gilt nur, solange die Klingel zu sehen ist (zweite Kamera: eigener Ton).
     P._audioOff = function () {
+      if (this._v && this._v.idx) return false;
       var a = this._st((this._cfg || {}).audio);
       return !!(a && a.state === 'off');
     };
@@ -884,8 +993,10 @@
       if (this._audioOff() || !this._stream) return;
       if (window.casoraHaptic) window.casoraHaptic('light');
       this._muted = this._muted === false;
+      // Mithören an: groß (Studio-Option, Standard an) – derselbe Player, nur in der obersten Ebene.
+      if (!this._muted && (this._cfg || {}).big && !this._big) this._setBig(true);
       // Stumm eingebundener Player hat keine Tonspur: ohne „stumm“ neu einbinden (Tipp = Nutzeraktivierung).
-      if (!this._muted && this._native && this._mountedMuted && this._key && this._key.charAt(0) === 'o') {
+      if (!this._muted && this._native && this._mountedMuted && this._v && !this._v.dead) {
         this._teardown();
         this._mount(this._stream);
       } else {
@@ -913,8 +1024,27 @@
       var off = this._muted !== false, cfg = this._cfg || {};
       var snd = r.querySelector('.snd'), bar = r.querySelector('.bar');
       // Ohne Bild (Privatsphäre, nicht erreichbar) gibt es nichts zu hören und nichts zu sagen: Leiste weg.
-      var dead = !this._key || this._key.charAt(0) !== 'o';
+      var v = this._v || { dead: true, idx: 0, two: false };
+      var dead = !this._key || v.dead;
       var audioOff = this._audioOff();
+      // Groß-Knopf nur mit Bild; Umschalter (zweite Kamera) immer, auch über „nicht erreichbar“.
+      var fs = r.querySelector('.fs');
+      fs.hidden = dead || !!this._big;
+      fs.setAttribute('aria-label', tr('Groß anzeigen'));
+      fs.title = tr('Groß anzeigen');
+      var x = r.querySelector('.x');
+      x.hidden = !this._big;
+      x.setAttribute('aria-label', tr('Schließen'));
+      var sg = r.querySelector('.sg');
+      if (sg) {
+        sg.hidden = !v.two;
+        sg.setAttribute('aria-label', tr('Kamera'));
+        var names = [tr('Klingel'), cfg.cam2Name || ''];
+        sg.querySelectorAll('.sgb').forEach(function (b, i) {
+          if (b.textContent !== names[i]) b.textContent = names[i];
+          b.setAttribute('aria-pressed', i === v.idx ? 'true' : 'false');
+        });
+      }
       // „Mithören“ feste Beschriftung, Zustand über aria-pressed, Symbol und helle Fläche. Ohne Stream (Standbild)
       // kein Knopf; Ton an der Klingel aus: gesperrt (der Hinweis darunter schaltet ihn ein).
       snd.hidden = !this._stream;
@@ -927,8 +1057,10 @@
       var shown = (snd.hidden ? 0 : 1) + (tb ? 1 : 0);
       bar.hidden = (dead && !this._t) || !shown;
       bar.style.setProperty('--n', String(Math.max(1, shown)));
+      // Sprechen geht nur über die Klingel: bei der zweiten Kamera gesperrt (läuft es schon, bleibt „Beenden“).
+      var away = !!v.idx && !this._t;
       if (tb) {
-        tb.disabled = (dead && !this._t) || !canTalk;
+        tb.disabled = (dead && !this._t) || !canTalk || away;
         var t = this._t, st = t ? t.state : null;
         tb.classList.toggle('talk', st === 'on');
         tb.classList.toggle('busy', st === 'connecting');
@@ -944,6 +1076,9 @@
         nt.hidden = false; nt.querySelector('span').textContent = tr('Ton ist an der Klingel aus');
         nb.hidden = false; nb.textContent = tr('Einschalten');
         this._nbFn = function () { self._call('switch', 'turn_on', cfg.audio); };
+      } else if (tb && away && canTalk && !dead) {
+        nt.hidden = false; nb.hidden = true; this._nbFn = null;
+        nt.querySelector('span').textContent = tr('Sprechen geht nur über die Klingel');
       } else if (tb && !canTalk && !dead) {
         // Sprechen braucht das Mikrofon im Browser – das gibt es nur über HTTPS (bzw. localhost).
         nt.hidden = false; nb.hidden = true; this._nbFn = null;
@@ -951,12 +1086,116 @@
       } else { nt.hidden = true; this._nbFn = null; }
     };
 
+    // Großes Bild an/aus. Die Bühne (.st) bleibt, wo sie ist, und kommt als Popover in die oberste Ebene:
+    // nichts wird umgehängt, darum laufen Player, Ton und Sprechen ohne Unterbrechung weiter. Esc (vor dem
+    // Popup abgefangen), × und Wischen nach unten schließen nur das große Bild.
+    P._setBig = function (on, quiet) {
+      var r = this._root;
+      on = !!on;
+      if (!r || on === !!this._big || (on && !this.isConnected)) return;
+      var st = r.querySelector('.st'), self = this;
+      this._big = on;
+      if (on) {
+        st.classList.add('big');
+        st.setAttribute('role', 'dialog');
+        st.setAttribute('aria-modal', 'true');
+        st.setAttribute('aria-label', tr('Live-Bild'));
+        st.setAttribute('data-casora-esc', '');
+        if (typeof st.showPopover === 'function') {
+          try { st.setAttribute('popover', 'manual'); st.showPopover(); } catch (e) { st.removeAttribute('popover'); }
+        }
+        this._onKeyBig = function (ev) {
+          if (ev.key !== 'Escape' && ev.key !== 'Esc') return;
+          ev.preventDefault();
+          ev.stopPropagation();
+          self._setBig(false);
+        };
+        window.addEventListener('keydown', this._onKeyBig, true);
+      } else {
+        if (this._onKeyBig) window.removeEventListener('keydown', this._onKeyBig, true);
+        this._onKeyBig = null;
+        if (st.hasAttribute('popover')) {
+          try { if (st.matches(':popover-open')) st.hidePopover(); } catch (e) { /* schon zu */ }
+          st.removeAttribute('popover');
+        }
+        st.classList.remove('big');
+        ['role', 'aria-modal', 'aria-label', 'data-casora-esc'].forEach(function (a) { st.removeAttribute(a); });
+        var inn = st.querySelector('.in');
+        inn.style.removeProperty('transform'); inn.style.removeProperty('transition'); st.style.removeProperty('background');
+      }
+      this._paint();
+      if (quiet) return;
+      if (window.casoraHaptic) window.casoraHaptic('light');
+      try { r.querySelector(on ? '.x' : '.fs').focus({ preventScroll: true }); } catch (e) { /* ohne Fokus */ }
+    };
+    // Umschalter Klingel | zweite Kamera: anderes Bild in derselben Bühne; Ton-Wunsch bleibt (Tipp erlaubt den Ton).
+    P._switch = function (i) {
+      i = i === 1 ? 1 : 0;
+      if (i === this._view) return;
+      if (window.casoraHaptic) window.casoraHaptic('light');
+      this._view = i;
+      this._sync();
+    };
+    // Wischen nach unten schließt das große Bild (Handy). Berührungen im großen Bild gehen nicht ans Popup
+    // darunter – dessen Wischen nach unten schlösse sonst das ganze Popup.
+    P._bindSwipe = function (st) {
+      var self = this, y0 = 0, x0 = 0, dy = 0, on = false, drag = false;
+      var inn = function () { return st.querySelector('.in'); };
+      var calm = function () {
+        var el = inn();
+        el.style.removeProperty('transform'); el.style.removeProperty('transition'); st.style.removeProperty('background');
+      };
+      st.addEventListener('touchstart', function (ev) {
+        if (!self._big) return;
+        ev.stopPropagation();
+        var t = ev.touches && ev.touches[0];
+        on = !!t && ev.touches.length === 1; drag = false; dy = 0;
+        if (on) { y0 = t.clientY; x0 = t.clientX; }
+      }, { passive: true });
+      st.addEventListener('touchmove', function (ev) {
+        if (!self._big) return;
+        ev.stopPropagation();
+        var t = ev.touches && ev.touches[0];
+        if (!on || !t) return;
+        var d = t.clientY - y0, dx = t.clientX - x0;
+        if (!drag) {
+          if (d < -8 || Math.abs(dx) > 16) { on = false; return; }
+          if (d < 10 || Math.abs(dx) > d) return;
+          drag = true;
+        }
+        dy = Math.max(0, d);
+        if (ev.cancelable) ev.preventDefault();
+        var el = inn();
+        el.style.transition = 'none';
+        el.style.transform = 'translateY(' + dy + 'px)';
+        st.style.background = 'rgba(0,0,0,' + Math.max(0.4, 1 - dy / 500).toFixed(3) + ')';
+      }, { passive: false });
+      var end = function (ev) {
+        if (!self._big) return;
+        ev.stopPropagation();
+        if (!on) return;
+        on = false;
+        if (!drag) return;
+        drag = false;
+        if (dy > 90) { calm(); self._setBig(false); return; }
+        var el = inn();
+        el.style.transition = 'transform 240ms var(--casora-ease-enter, cubic-bezier(.2,.8,.3,1))';
+        el.style.transform = 'translateY(0)';
+        st.style.removeProperty('background');
+        setTimeout(function () { if (!drag) calm(); }, 260);
+      };
+      st.addEventListener('touchend', end);
+      st.addEventListener('touchcancel', end);
+    };
+
     // Sprechen (Versuch).
     P._talk = function () {
       if (this._t) { this._talkStop(); return; }
       var self = this, h = this._hass, id = (this._cfg || {}).entity;
-      if (!h || !id || !KL.canTalk()) return;
+      if (!h || !id || !KL.canTalk() || (this._v && this._v.idx)) return;
       if (window.casoraHaptic) window.casoraHaptic('medium');
+      // Sprechen an: groß (Studio-Option, Standard an).
+      if ((this._cfg || {}).big && !this._big) this._setBig(true);
       var t = this._t = { state: 'connecting', sid: null, queue: [] };
       this._note(null);
       this._paint();

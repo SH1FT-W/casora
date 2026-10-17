@@ -5,6 +5,7 @@
 //   { type: 'custom:casora-chart', kind: 'line'|'bar'|'spark', span: '48h',
 //     series: [{ entity, name, color, unit, decimals, map }], source: 'auto'|'history'|'stats'|'change',
 //     agg: 'mean'|'max', bucket: '1h', height, y: { min, max, labels }, step, readout: 'own'|'hero'|'none', legend,
+//     selected: Index oder Entität der zuerst gezeigten Reihe (Umschalter),
 //     read_as: Entität, die die Hero-Zahl beim Ablesen mitliest, plate, title }
 //   Feste Säulen ohne Verlauf (z. B. Tanken „Typischer Tag“): kind: 'bar', points: [{ t, v, color, tick }],
 //     unit, decimals, focus: 'min' (Grundanzeige = kleinster Wert, „Am günstigsten, 19:00 Uhr“).
@@ -160,7 +161,9 @@
       if (!c) throw new Error('casora-chart: keine Konfiguration');
       var s = Array.isArray(c.series) ? c.series : c.entity ? [{ entity: c.entity, color: c.color, attribute: c.attribute }] : [];
       this._c = Object.assign({ kind: 'line', span: '24h', source: 'auto' }, c, { series: s.filter(function (x) { return x && x.entity; }) });
-      this._sel = 0; this._data = null; this._key = null;
+      var sel = c.selected, ser = this._c.series;  // selected: zuerst gezeigte Reihe (Index oder Entität)
+      this._sel = typeof sel === 'string' ? Math.max(0, ser.findIndex(function (x) { return x.entity === sel; })) : sel >= 0 && sel < ser.length ? Math.floor(sel) : 0;
+      this._data = null; this._key = null;
       this.toggleAttribute('plate', !!c.plate);
       if (!this.shadowRoot) {
         this.attachShadow({ mode: 'open' }).innerHTML = '<style>' + CSS + '</style><div id="b"></div><div class="srt" aria-live="polite"></div>';

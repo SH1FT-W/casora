@@ -1036,7 +1036,7 @@
   /* Spalte: Felder untereinander, Abstand nur zwischen nicht leeren Feldern (_casoraColGap). */
   H.col = function (keys, fields, watch, entity, extra) {
     var cf = {}, cs = {};
-    keys.forEach(function (k) { cf[k] = fields[k]; cs[k] = [{ 'justify-self': 'stretch' }, { 'min-width': '0' }]; });
+    keys.forEach(function (k) { cf[k] = H.own(fields[k]); cs[k] = [{ 'justify-self': 'stretch' }, { 'min-width': '0' }]; });
     return {
       type: 'custom:button-card', entity: entity || undefined, triggers_update: watch || [], tap_action: { action: 'none' },
       show_icon: false, show_name: false, show_label: false, show_state: false,
@@ -1052,6 +1052,11 @@
     };
   };
   /* o = { entity, watch, fields, top: ['hero'], left: [...], right: [...], colExtra } – fehlende Felder fallen weg. */
+  // Innere button-cards werten ihre Vorlagen selbst aus (do_not_eval) – wie own() in 05-weich-mehr.js:
+  // sonst baut die äußere Karte bei jeder Attributänderung ihre Kinder neu und Bereiche blitzen leer auf.
+  H.own = function (f) {
+    return f && f.card && f.card.type === 'custom:button-card' && f.do_not_eval === undefined ? Object.assign({}, f, { do_not_eval: true }) : f;
+  };
   H.layout = function (o) {
     var f = o.fields, has = function (k) { return f[k] !== undefined && f[k] !== null && f[k] !== ''; };
     var top = (o.top || ['hero']).filter(has), L = (o.left || []).filter(has), R = (o.right || []).filter(has);
@@ -1073,17 +1078,17 @@
     var cf = {}, cs = {};
     top.forEach(function (k) {
       /* Vorlagen (live) in eine eigene Karte; festes HTML (Diagramm-Platte) direkt, damit es nie neu gezeichnet wird. */
-      cf[k] = (typeof f[k] === 'string' && f[k].indexOf('[[[') > -1) ? { card: H.col([k], f, o.watch, o.entity) } : f[k];
+      cf[k] = H.own((typeof f[k] === 'string' && f[k].indexOf('[[[') > -1) ? { card: H.col([k], f, o.watch, o.entity) } : f[k]);
       cs[k] = [{ 'justify-self': 'stretch' }, { 'min-width': '0' }];
     });
-    cf.left = { card: H.col(L, f, o.watch, o.entity, o.colExtra) };
-    if (!one) cf.right = { card: H.col(R, f, o.watch, o.entity, o.colExtra) };
+    cf.left = H.own({ card: H.col(L, f, o.watch, o.entity, o.colExtra) });
+    if (!one) cf.right = H.own({ card: H.col(R, f, o.watch, o.entity, o.colExtra) });
     cs.left = [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }, { 'min-width': '0' }];
     if (!one) cs.right = [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }, { 'min-width': '0' }];
     if (wideMore) {
       var mc = f.more && f.more.card ? Object.assign({}, f.more.card) : null;
       if (mc) mc.extra_styles = (mc.extra_styles || '') + MORE_WIDE_CSS;
-      cf.more = mc ? { card: mc } : f.more;
+      cf.more = H.own(mc ? { card: mc } : f.more);
       cs.more = [{ 'justify-self': 'stretch' }, { 'min-width': '0' }];
     }
     var keys = top.concat(one ? ['left'] : ['left', 'right']).concat(wideMore ? ['more'] : []);

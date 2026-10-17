@@ -99,7 +99,7 @@
 
   // ── Verlauf holen (je Entität und Zeitraum einmal je Zustandswechsel) ───────
   var SPANS = { '24h': 864e5, '7d': 7 * 864e5, '30d': 30 * 864e5 };
-  var hist = {};
+  var hist = {}, retried = {};
   Z.history = function (h, id, span, el) {
     var st = h && h.states && h.states[id];
     if (!st) return null;
@@ -118,13 +118,28 @@
           rows.push({ s: x.state, t: Math.max(t, start) });
         });
         cell.rows = rows;
+        // Gerade gewechselt: Der Recorder schreibt mit kurzer Verzögerung, der neue Zustand fehlte dann bis zum
+        // nächsten Wechsel in „Änderungen“ und „Verlauf“. Einmal je Wechsel kurz danach nachladen.
+        var lc = Date.parse(st.last_changed), last = rows.length ? rows[rows.length - 1].t : 0;
+        if (isFinite(lc) && last < lc - 1000 && !retried[key]) { retried[key] = true; cell.again = true; }
       }, function () { cell.rows = cell.rows || []; })
       .then(function () {
         cell.busy = false;
-        cell.wait.forEach(function (w) {
-          try { if (typeof window.casoraKick === 'function') window.casoraKick(w); } catch (e) { /* Popup zu */ }
-        });
+        var kick = function (ws) {
+          ws.forEach(function (w) {
+            try { if (typeof window.casoraKick === 'function') window.casoraKick(w); } catch (e) { /* Popup zu */ }
+          });
+        };
+        var ws = cell.wait;
         cell.wait = [];
+        kick(ws);
+        if (cell.again) {
+          setTimeout(function () {
+            if (hist[id + '|' + span] !== cell) return;
+            cell.key += '|nachladen';
+            kick(ws);
+          }, 2500);
+        }
       });
     return cell.rows;
   };

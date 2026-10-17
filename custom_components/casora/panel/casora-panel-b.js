@@ -791,7 +791,7 @@
     const PAGES = [
       ["design", "Design", "desktop"], ["home", "Home & Devices", "home"], ["alerts", "Bell & Alerts", "bell"], ["dashboards", "New Dashboards", "tile"],
       ["ai", "AI", "assist"], ["outdoor", "Outdoor & Price", "temp-medium"], ["vent", "Ventilation", "fan"],
-      ["fuel", "Fuel prices", "car"],
+      ["live", "Live Activities", "iphone"], ["fuel", "Fuel prices", "car"],
     ];
     P._bHomeMenu = function (anchor) {
       const items = PAGES.map(([id, l, g]) => ({ id: "page:" + id, label: l, glyph: g, plainGlyph: true,

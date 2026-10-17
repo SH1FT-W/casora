@@ -246,7 +246,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _stamp() -> int:
         # Jüngste Änderung von Panel, Übersetzung und Lader – sonst liefert der Cache Altes.
         stamps = []
-        for name in ("casora-panel.js", "casora-panel-i18n.js", "casora-panel-addons.js", "casora-panel-types.js", "casora-panel-import.js", "casora-panel-assist.js", "casora-panel-welcome.js", "casora-panel-personal.js", "casora-panel-umzug.js", "casora-panel-basis.js", "casora-panel-versions.js", "casora-panel-updates.js", "casora-panel-settings.js", "casora-panel-glocke.js", "casora-panel-popups.js", "casora-panel-kachelart.js", "casora-panel-b.js", "casora-panel-b-plus.js", "casora-panel-b-mehr.js", "casora-panel-b-ux.js", "casora-panel-community.js"):
+        for name in ("casora-panel.js", "casora-panel-i18n.js", "casora-panel-addons.js", "casora-panel-types.js", "casora-panel-import.js", "casora-panel-assist.js", "casora-panel-welcome.js", "casora-panel-personal.js", "casora-panel-umzug.js", "casora-panel-basis.js", "casora-panel-versions.js", "casora-panel-updates.js", "casora-panel-settings.js", "casora-panel-glocke.js", "casora-panel-popups.js", "casora-panel-kachelart.js", "casora-panel-b.js", "casora-panel-b-plus.js", "casora-panel-b-mehr.js", "casora-panel-b-ux.js", "casora-panel-community.js", "casora-panel-live.js"):
             try:
                 stamps.append(int(os.path.getmtime(os.path.join(panel_dir, name))))
             except OSError:
@@ -284,6 +284,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f'import "./casora-panel-b-mehr.js?v={v}";\n'
             f'import "./casora-panel-b-ux.js?v={v}";\n'
             f'import "./casora-panel-community.js?v={v}";\n'
+            f'import "./casora-panel-live.js?v={v}";\n'
         )
         path = os.path.join(panel_dir, "casora-studio.js")
         try:
@@ -369,6 +370,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     from .tanken import async_setup_tanken
 
     await async_setup_tanken(hass)
+    # Live-Aktivitäten auf dem Handy (live_activity.py): Geräte wie die Kacheln finden, Store statt Optionen.
+    from .live_activity import async_setup_live
+
+    await async_setup_live(hass)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # Push bei neuen Casora-Versionen (update_push.py) – erst jetzt steht fest, ob HACS Casora verwaltet.
     hass.data[DOMAIN]["update_push"] = await async_start_update_push(hass, entry)
@@ -435,4 +440,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     tk = hass.data.get(DOMAIN, {}).pop("tanken", None)
     if tk:
         tk.stop()
+    live = hass.data.get(DOMAIN, {}).pop("live", None)
+    if live:
+        live.stop()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

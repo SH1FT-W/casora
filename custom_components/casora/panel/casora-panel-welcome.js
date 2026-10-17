@@ -27,10 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Drei neue Karten", n0: "Frigate-Kamera mit Alarmen, Erkennungen und Aufnahmen, Reolink-Türklingel mit Ton und Schnellantworten, Kaffeevollautomat mit Getränkestart und Pflege.",
-      n1t: "Casora Glas", n1: "Ein drittes Design: Casora mit Milchglas über deinen Raumfotos. Zu finden unter Studio › Einstellungen › Design.",
-      n2t: "Hemma-Designs entfernt", n2: "Hemma 1 und Hemma 2 gibt es nicht mehr. Wer sie genutzt hat, ist jetzt automatisch auf Casora Glas.",
-      n3t: "Neue Versionsnummern", n3: "Ab jetzt Jahr.Monat.Nummer: 26.10.31 ist das 31. Release im Oktober 2026. Der Sprung von 1.6.0 ist gewollt.",
+      n0t: "Live-Aktivitäten", n0: "Waschmaschine, Trockner, Spüler, Saugroboter und 3D-Drucker live auf dem Sperrbildschirm des Handys – Fortschritt, Restzeit, Fertig, Farbe je Gerät. Einschalten unter Einstellungen › Live-Aktivitäten.",
+      n1t: "Mehr Glas", n1: "Casora Glas lässt das Raumfoto jetzt deutlich stärker durchscheinen – mit feiner Lichtkante. Aktive Kacheln bleiben gut lesbar.",
+      n2t: "Klingel groß", n2: "Das Live-Bild der Klingel lässt sich groß öffnen, Mithören und Sprechen laufen weiter. Eine zweite Kamera ist per Umschalter direkt im Bild.",
+      n3t: "Feinschliff", n3: "Klima-Diagramm startet vom Luftfeuchtigkeits-Badge aus mit der Luftfeuchtigkeit, Auswahllisten im Studio klappen per zweitem Klick zu, Bereiche in Popups flackern bei Änderungen nicht mehr.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Three new cards", n0: "Frigate camera with alerts, detections and recordings, Reolink doorbell with sound and quick replies, coffee machine with drink start and care.",
-      n1t: "Casora Glas", n1: "A third design: Casora with frosted glass over your room photos. Find it under Studio › Settings › Design.",
-      n2t: "Hemma designs removed", n2: "Hemma 1 and Hemma 2 are gone. If you used them, you're now on Casora Glas automatically.",
-      n3t: "New version numbers", n3: "From now on year.month.number: 26.10.31 is the 31st release in October 2026. The jump from 1.6.0 is intended.",
+      n0t: "Live Activities", n0: "Washer, dryer, dishwasher, robot vacuum and 3D printer live on your phone's lock screen – progress, time left, done, a color per device. Turn it on under Settings › Live Activities.",
+      n1t: "More glass", n1: "Casora Glas now lets the room photo show through much more – with a fine light edge. Active tiles stay readable.",
+      n2t: "Bigger doorbell", n2: "The doorbell live picture opens large, listening and talking keep running. A second camera sits right in the picture behind a switch.",
+      n3t: "Polish", n3: "The climate chart starts with humidity when opened from the humidity badge, Studio pickers close on a second click, popup sections no longer flicker when something changes.",
     },
   };
 
@@ -56,10 +56,10 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:cctv", "n0t", "n0"],
+    ["mdi:cellphone-sound", "n0t", "n0"],
     ["mdi:blur", "n1t", "n1"],
-    ["mdi:palette-swatch-outline", "n2t", "n2"],
-    ["mdi:calendar-month-outline", "n3t", "n3"],
+    ["mdi:doorbell-video", "n2t", "n2"],
+    ["mdi:auto-fix", "n3t", "n3"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

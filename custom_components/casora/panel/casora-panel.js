@@ -2047,6 +2047,7 @@ const STUDIO_ICON = {
   "set-outdoor": ["heat", "var(--casora-color-orange, #FF9230)"],
   "set-vent": ["main", "var(--casora-color-blue, #0A84FF)"],
   "set-fuel": ["main", "var(--casora-color-teal, #00C3D0)"],
+  "set-live": ["energy", "var(--casora-color-green, #30D158)"],
   // Erststart und Umzug
   "flow-rooms": ["main", "#2fd6e0"],
   "flow-devices": ["light", "#ffb340"],
@@ -20909,8 +20910,12 @@ class CasoraPanel extends HTMLElement {
       input.style.cursor = "pointer";
       input.value = show(current);
       input.onfocus = () => { if (isPhone(this)) input.blur(); else open(); };
+      // Zweiter Klick aufs Feld klappt die Liste wieder zu (vorher öffnete er sie nur erneut).
+      // Gemerkt beim Drücken, weil der erste Klick die Liste schon über focus öffnet.
+      let wasOpen = false;
+      input.onmousedown = () => { wasOpen = this._openCombo === close && !!menu.parentNode && !menu._closing; };
       input.onclick = () => {
-        if (!isPhone(this)) { open(); return; }
+        if (!isPhone(this)) { if (wasOpen) close(); else open(); wasOpen = false; return; }
         this._menuAt(wrap, list.map((o) => ({ id: o, label: show(o), checked: o === current })), (v) => commit(v));
       };
       input.onblur = () => { if (!isPhone(this)) setTimeout(close, 120); };

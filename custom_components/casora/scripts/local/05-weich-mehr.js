@@ -102,6 +102,12 @@
     + ' .hui-more.open > .hui-mbd { display: block !important; column-count: 2; column-gap: var(--casora-popup-col-gap, 26px) !important; }'
     + ' .hui-more.open > .hui-mbd > * { break-inside: avoid; -webkit-column-break-inside: avoid; display: block; margin: 0; padding-bottom: 18px; }'
     + ' .hui-more.open > .hui-mbd > style { display: none; margin: 0; } }';
+  // Innere button-cards werten ihre Vorlagen selbst aus (do_not_eval). Sonst wertet die äußere Karte sie mit
+  // aus, beobachtet damit deren Entitäten und baut bei jeder Attributänderung alle Kinder neu – der Bereich
+  // blitzte kurz leer auf (Pulse → Gerät → Verlauf flackerte, 17.10.2026).
+  var own = function (f) {
+    return f && f.card && f.card.type === 'custom:button-card' && f.do_not_eval === undefined ? Object.assign({}, f, { do_not_eval: true }) : f;
+  };
   // Aufbau: top (volle Breite) – dann links/rechts; schmal eine Spalte in Lesereihenfolge.
   var layout = function (o) {
     var narrow = typeof window !== 'undefined' && window.innerWidth <= 760;
@@ -119,7 +125,7 @@
     var col = function (keys, first) {
       var c = bare();
       var cs = {}, cf = {};
-      keys.forEach(function (k, i) { cf[k] = o.fields[k]; cs[k] = fs(first + i * 2, k); });
+      keys.forEach(function (k, i) { cf[k] = own(o.fields[k]); cs[k] = fs(first + i * 2, k); });
       c.styles = {
         card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0' }],
         grid: [{ 'grid-template-areas': keys.map(function (k) { return '"' + k + '"'; }).join(' ') },
@@ -134,10 +140,10 @@
       var keys = top.concat(o.narrowOrder ? L.concat(R).sort(function (x, y) { return o.narrowOrder.indexOf(x) - o.narrowOrder.indexOf(y); }) : L.concat(R));
       areas = keys.map(function (k) { return '"' + k + '"'; }).join(' ');
       cols = 'minmax(0, 1fr)';
-      keys.forEach(function (k, i) { cf[k] = o.fields[k]; cs[k] = fs(i, k); });
+      keys.forEach(function (k, i) { cf[k] = own(o.fields[k]); cs[k] = fs(i, k); });
       /* Einspaltiges „Mehr“ am breiten Popup: aufgeklappt zwei ausgeglichene Spalten (MORE_WIDE_CSS greift erst ab 761 px). */
       if (oneMore && cf.more && cf.more.card) {
-        cf.more = { card: Object.assign({}, cf.more.card, { extra_styles: (cf.more.card.extra_styles || '') + MORE_WIDE_CSS }) };
+        cf.more = own({ card: Object.assign({}, cf.more.card, { extra_styles: (cf.more.card.extra_styles || '') + MORE_WIDE_CSS }) });
       }
     } else {
       /* „Mehr“ wie in den Geräte-Popups unter beiden Spalten über die volle Breite; aufgeklappt
@@ -146,11 +152,11 @@
       if (wideMore) R = R.slice(0, -1);
       areas = top.map(function (k) { return '"' + k + ' ' + k + '"'; }).join(' ') + ' "main side"' + (wideMore ? ' "more more"' : '');
       cols = 'minmax(0, 1fr) minmax(0, 1fr)';
-      top.forEach(function (k, i) { cf[k] = o.fields[k]; cs[k] = fs(i, k); });
-      cf.main = { card: col(L, top.length) }; cs.main = [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }, { 'min-width': '0' }];
-      cf.side = { card: col(R, top.length + 1) }; cs.side = [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }, { 'min-width': '0' }];
+      top.forEach(function (k, i) { cf[k] = own(o.fields[k]); cs[k] = fs(i, k); });
+      cf.main = own({ card: col(L, top.length) }); cs.main = [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }, { 'min-width': '0' }];
+      cf.side = own({ card: col(R, top.length + 1) }); cs.side = [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }, { 'min-width': '0' }];
       if (wideMore) {
-        cf.more = { card: Object.assign({}, o.fields.more.card, { extra_styles: (o.fields.more.card.extra_styles || '') + MORE_WIDE_CSS }) };
+        cf.more = own({ card: Object.assign({}, o.fields.more.card, { extra_styles: (o.fields.more.card.extra_styles || '') + MORE_WIDE_CSS }) });
         cs.more = fs(top.length + 2, 'more');
       }
     }
