@@ -1341,10 +1341,11 @@
         if (ls && !bad(ls.state)) {
           var ld = K.drink(ls.state), lt = Date.parse((ls.attributes || {}).start || ls.last_changed || '');
           lr.push({ icon: ld ? ld.icon : MUG, iconTone: 'accent', label: ls.state,
-            sub: isFinite(lt) ? new Date(lt).toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' }) : null, entity: c.last });
+            sub: isFinite(lt) ? whenTxt(lt) : null, entity: c.last });
         }
+        // Der Bereich bricht sonst nicht um (der Hinweis ragte in die rechte Spalte bzw. übers Handy hinaus).
         return (lr.length ? UI.group(lr, 'Zuletzt') + '<div style="height:var(--casora-space-2, 8px)"></div>' : '')
-          + (UI.note ? UI.note('Getränk an der Maschine wählen – Casora erkennt es am Stromverlauf.') : '');
+          + (UI.note ? '<div style="white-space:normal;">' + UI.note('Getränk an der Maschine wählen – Casora erkennt es am Stromverlauf.') + '</div>' : '');
       }
       if (!bev.length) {
         // Steckdose oder Maschine ohne Getränkeauswahl: nur Hinweis, wie gestartet wird.
@@ -1464,5 +1465,10 @@
     return n + ' in ' + cupsTxt(p.cups);
   };
   K.preText = preText;
+  // „Heute 07:12“, „Gestern 18:34“, sonst Datum mit Uhrzeit.
+  var whenTxt = function (ms) {
+    var d = new Date(ms), hm = d.toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' }), days = Math.round((day0(Date.now()) - day0(ms)) / 86400000);
+    return days === 0 ? 'Heute ' + hm : days === 1 ? 'Gestern ' + hm : d.toLocaleDateString(loc(), { day: 'numeric', month: 'numeric' }) + ' ' + hm;
+  };
   var fmtW = function (w) { return (w < 10 ? w.toLocaleString(loc(), { maximumFractionDigits: 1 }) : Math.round(w).toLocaleString(loc())) + ' W'; };
 })();
