@@ -34,6 +34,9 @@
       lede: "Outdoor values and the electricity price for ventilation, heating and energy tips." },
     { id: "vent", label: "Ventilation", icon: "fan", tone: "set-vent",
       lede: "Push notifications when it is time to open or close the windows." },
+    // Live-Aktivitäten (live_activity.py): eigener Speicher casora/live/*, Seite in casora-panel-live.js.
+    { id: "live", label: "Live Activities", icon: "iphone", tone: "set-live", live: true,
+      lede: "Washing machine, dryer, dishwasher, robot vacuum and 3D printer live on the phone's lock screen – progress, time left, done." },
     // Tanken (1.2, tanken.py): eigener Speicher casora/tanken/* – der Schlüssel geht nie an den Browser.
     { id: "fuel", label: "Fuel prices", icon: "car", tone: "set-fuel", tanken: true,
       lede: "Gas stations nearby in the car popup: price, distance, open or closed." },
@@ -171,9 +174,10 @@
     const optionsDirty = (cs) => !!cs.opt && JSON.stringify(cleanOpts(cs.O)) !== cs.O0;
     // Tanken: Entwurf ohne Schlüssel; F.key steht nur da, wenn ein neuer eingetippt (oder "" = entfernen) wurde.
     const tankenDirty = (cs) => !!cs.tk && JSON.stringify(cs.F) !== cs.F0;
+    const liveDirty = (self) => typeof self._csLiveDirty === "function" && self._csLiveDirty();
     P._csDirty = function () {
       const cs = this._cs;
-      return !!cs && (settingsDirty(cs) || optionsDirty(cs) || tankenDirty(cs));
+      return !!cs && (settingsDirty(cs) || optionsDirty(cs) || tankenDirty(cs) || liveDirty(this));
     };
     const takeTanken = (cs, r) => {
       cs.tk = r;
@@ -232,6 +236,7 @@
         cs.tk = null;
         cs.tkErr = e && e.code === "unknown_command" ? "old" : ((e && e.message) || String(e));
       }
+      if (typeof this._csLiveLoad === "function") await this._csLiveLoad(cs);
       cs.loaded = true;
       cs.at = Date.now();
       return true;
@@ -287,6 +292,10 @@
           takeTanken(cs, await this._hass.callWS(msg));
           cs.tkTest = null;
           done.push(t("Saved. Fuel prices follow within 10 minutes."));
+        }
+        if (liveDirty(this)) {
+          await this._csLiveSave();
+          done.push(t("Saved – live activities follow the devices from now on"));
         }
       } catch (e) {
         cs.err = (e && e.message) || String(e);
@@ -672,6 +681,10 @@
       host.appendChild(err);
       if (page.tanken) {
         this._csFillTanken(host);
+        return;
+      }
+      if (page.live) {
+        if (typeof this._csFillLive === "function") this._csFillLive(host);
         return;
       }
       if (page.personal) {
