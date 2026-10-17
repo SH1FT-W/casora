@@ -598,6 +598,31 @@ async def flow():
     check("nach stop(): keine Sendung mehr", not svc5.calls and L5.loaded is False, svc5.calls)
 
 
+# ── Gerätefarbe: gewählte Farbe für Läuft/kurze Pause, Signalfarben bleiben ──
+_vorher = dict(S)
+st("sensor.w_state", "running"); st("sensor.w_pct", "30")
+s = la.snapshot(washer(), S.get, NOW, 0)
+d = la.build_payload(s, "washer", "W", "t", "/", True, "violet")["data"]
+check("Farbe: violett beim Laufen (Symbol + Balken)", d["notification_icon_color"] == la.PALETTE["violet"] == d["progress_bar_color"], d)
+d = la.build_payload(s, "washer", "W", "t", "/", True, "auto")["data"]
+check("Farbe: auto = Farbe der Geräteart", d["notification_icon_color"] == la.COLOR["washer"], d)
+st("sensor.w_state", "finished"); st("sensor.w_pct", "100")
+d = la.build_payload(la.snapshot(washer(), S.get, NOW, 0), "washer", "W", "t", "/", False, "violet")["data"]
+check("Farbe: Fertig bleibt grün", d["notification_icon_color"] == la.COLOR["done"], d)
+st("sensor.w_state", "user_paused"); st("sensor.w_pct", "40")
+d = la.build_payload(la.snapshot(washer(), S.get, NOW, 0), "washer", "W", "t", "/", False, "violet")["data"]
+check("Farbe: Pause bleibt honig", d["notification_icon_color"] == la.COLOR["pause"], d)
+m = la.merge_settings({"targets": [], "devices": {}}, {"devices": {"a": {"color": "teal"}, "b": {"color": "auto"}}})
+check("Farbe: gespeichert, auto = Standard (kein Eintrag)", m["devices"] == {"a": {"color": "teal"}}, m)
+check("Farbe: device_settings liefert auto als Standard", la.device_settings({"devices": {}}, "x")["color"] == "auto")
+for bad in ("#ff0000", "pink", 3, True):
+    try:
+        la.merge_settings({"targets": [], "devices": {}}, {"devices": {"a": {"color": bad}}})
+        check(f"Farbe abgelehnt: {bad!r}", False)
+    except ValueError:
+        check(f"Farbe abgelehnt: {bad!r}", True)
+S.clear(); S.update(_vorher)
+
 asyncio.run(flow())
 
 print("\nALLES OK" if not fails else f"\n{len(fails)} FEHLER")

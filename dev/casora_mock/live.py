@@ -247,7 +247,7 @@ def note_notify(hass, call) -> None:
     d = dict(call.data.get("data") or {})
     entry = {"zeit": dt_util.now().strftime("%H:%M:%S"), "tag": d.get("tag"), "titel": call.data.get("title"),
              "text": call.data.get("message"), "fortschritt": d.get("progress"), "leise": d.get("silent", False),
-             "live": bool(d.get("live_update")), "wann": d.get("when")}
+             "live": bool(d.get("live_update")), "wann": d.get("when"), "farbe": d.get("notification_icon_color")}
     last.insert(0, entry)
     n = int(cur.state) + 1 if cur and str(cur.state).isdigit() else 1
     hass.states.async_set(eid, str(n), {"friendly_name": "Testhandy Meldungen", "icon": "mdi:cellphone-message",

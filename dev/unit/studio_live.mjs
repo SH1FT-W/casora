@@ -27,8 +27,15 @@ assert.deepEqual(M.cleanDevices({ b: { on: true, done_min: 30, quiet: true, inte
 assert.equal(M.draftOf({ targets: ['notify.mobile_app_b', 'notify.mobile_app_a'], devices: { x: { on: true } } }),
   M.draftOf({ targets: ['notify.mobile_app_a', 'notify.mobile_app_b'], devices: {} }), 'Reihenfolge der Empfänger und Standardwerte ändern nichts');
 assert.notEqual(M.draftOf({ targets: ['notify.mobile_app_a'], devices: {} }), M.draftOf({ targets: [], devices: {} }));
-assert.deepEqual(M.settingsOf({ devices: { x: { quiet: false } } }, 'x'), { on: true, done_min: 30, quiet: false, interval_min: 10 });
+assert.deepEqual(M.settingsOf({ devices: { x: { quiet: false } } }, 'x'), { on: true, done_min: 30, quiet: false, interval_min: 10, color: 'auto' });
 assert.deepEqual(M.settingsOf({ devices: {} }, 'y'), M.DEFAULTS);
+// Farbe: „auto“ ist Standard und wird nicht gespeichert; Palette wie live_activity.PALETTE
+assert.deepEqual(M.cleanDevices({ a: { color: 'auto' }, b: { color: 'violet' } }), { b: { color: 'violet' } });
+assert.deepEqual(Object.keys(M.COLORS), ['blue', 'teal', 'green', 'honey', 'orange', 'red', 'violet', 'rose']);
+{
+  const py = read('live_activity.py');
+  for (const k of Object.keys(M.COLORS)) assert.ok(py.includes(`"${k}": "#`), 'Palette gleich in Python: ' + k);
+}
 
 // Protokollzeile: Zeit, Titel · Phase, Text, Fortschritt; Ende ohne Fortschritt
 const sent = M.logLine({ time: '2026-10-17T12:34:00+00:00', title: 'Waschmaschine Test', phase: 'run', message: 'Baumwolle 40 · Spülen · 58 %',
@@ -67,8 +74,8 @@ assert.ok(/const runs = lv\.test_runs \|\| \{\};[\s\S]*if \(runDevs\.length\) \{
 // Fund 1: aus → speichern → an → speichern. Gespeichert wird jedes Gerät vollständig (devices_replace),
 // auch „an“ (Standard) – sonst blieb das alte „aus“ auf dem Server stehen.
 const L1 = { targets: [], devices: { a: { on: false } } };
-assert.deepEqual(M.saveDevices(L1, ['a', 'b']), { a: { on: false, done_min: 30, quiet: true, interval_min: 10 },
-  b: { on: true, done_min: 30, quiet: true, interval_min: 10 } });
+assert.deepEqual(M.saveDevices(L1, ['a', 'b']), { a: { on: false, done_min: 30, quiet: true, interval_min: 10, color: 'auto' },
+  b: { on: true, done_min: 30, quiet: true, interval_min: 10, color: 'auto' } });
 L1.devices.a = { on: true };
 assert.equal(M.saveDevices(L1, ['a']).a.on, true, 'wieder an wird mitgeschickt');
 assert.ok(/type: "casora\/live\/set", targets: cs\.L\.targets, devices: saveDevices\(cs\.L, ids\), devices_replace: true/.test(live), 'set ersetzt die Geräte');
@@ -83,7 +90,7 @@ assert.equal(M.sentText(2), 'An 2 Handys geschickt.');
 assert.ok(live.indexOf('header: t("Test run")') > 0 && live.indexOf('header: t("Test run")') < live.indexOf('header: t("Last sent")'), 'Testlauf vor Protokoll');
 assert.ok(!/t\("Protocol"\)/.test(live) && /cs-live-refresh/.test(live), 'Aktualisieren im Kopf');
 // Fund 11: Einstellungen je Gerät rechts in der Zeile (optRow), nicht als casora-prow darunter
-assert.equal((live.match(/optRow\(this, g,/g) || []).length, 3, 'drei Einstellungen mit Steuerung rechts');
+assert.equal((live.match(/optRow\(this, g,/g) || []).length, 4, 'vier Einstellungen mit Steuerung rechts');
 // Fund 12: Testlauf ohne gespeicherte Empfänger gesperrt
 assert.ok(/tb\.disabled = !!cs\.lvRun \|\| noTargets;/.test(live), 'Testlauf ohne Empfänger gesperrt');
 const panel = read('panel/casora-panel.js');

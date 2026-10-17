@@ -25,7 +25,9 @@
   const PHASE_LABEL = { run: "Running", delay: "Starts later", pause: "Paused", attn: "Attention needed", done: "Done", error: "Error",
     off: "Off", clear: "Ended", probe: "Test", gone: "Not reachable" };
   const PHASE_TONE = { done: "ok", attn: "warn", error: "warn", pause: "warn" };
-  const DEFAULTS = { on: true, done_min: 30, quiet: true, interval_min: 10 };
+  const DEFAULTS = { on: true, done_min: 30, quiet: true, interval_min: 10, color: "auto" };
+  // Wie live_activity.PALETTE; „auto“ = Farbe der Geräteart.
+  const COLORS = { blue: "Blue", teal: "Teal", green: "Green", honey: "Honey", orange: "Orange", red: "Red", violet: "Violet", rose: "Rosé" };
   const DONE_CHOICES = [10, 15, 30, 60, 120];
   const INTERVAL_CHOICES = [5, 10, 15, 30];
 
@@ -64,7 +66,7 @@
       progress: e.progress != null && !e.clear ? e.progress + "%" : "", tone: e.clear ? "" : (PHASE_TONE[e.phase] || ""),
       tag: e.tag || "", silent: !!e.silent };
   };
-  window.__casoraStudioLive = { KIND_LABEL, GRADE_LABEL, PHASE_LABEL, DEFAULTS, deviceSub, cleanDevices, draftOf, settingsOf, logLine,
+  window.__casoraStudioLive = { COLORS, KIND_LABEL, GRADE_LABEL, PHASE_LABEL, DEFAULTS, deviceSub, cleanDevices, draftOf, settingsOf, logLine,
     saveDevices, sentText };
 
   const CSS = ".cs-live-row .fswitch{margin-left:auto;flex:none}"
@@ -253,6 +255,12 @@
           fswitch(st.quiet, (on) => set("quiet", on)));
         const ivList = INTERVAL_CHOICES.includes(st.interval_min) ? INTERVAL_CHOICES : INTERVAL_CHOICES.concat([st.interval_min]).sort((a, b) => a - b);
         const ivLabels = {}; ivList.forEach((n) => { ivLabels[String(n)] = minutes(n); });
+        const colorLabels = { auto: t("Automatic") };
+        Object.keys(COLORS).forEach((k) => { colorLabels[k] = t(COLORS[k]); });
+        const colorList = ["auto"].concat(Object.keys(COLORS));
+        optRow(this, g, t("Color"), t("“Done”, “Paused” and “Attention needed” keep their signal colors."),
+          this._combo(COLORS[st.color] ? st.color : "auto", colorList, "", (v) => { if (v) set("color", v); },
+            { fixed: true, labels: colorLabels }).wrap);
         optRow(this, g, t("Refresh at least every"), t("Keeps the time left in step with the appliance."),
           this._combo(String(st.interval_min), ivList.map(String), "", (v) => { if (v) set("interval_min", Number(v)); },
             { fixed: true, labels: ivLabels }).wrap);

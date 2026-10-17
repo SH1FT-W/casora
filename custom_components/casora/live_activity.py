@@ -17,7 +17,7 @@ Casora-Palette; Texte Deutsch/Englisch nach HA-Sprache; Zeiten als Ortszeit.
 
 WebSocket (nur Admins):
   casora/live/get   ← {} → {targets, devices, found: [...], notify_services, log, active, url, test_runs (nur Testhaus)}
-  casora/live/set   ← {targets?: [notify.…], devices?: {<device_id>: {on?, done_min?, quiet?, interval_min?}},
+  casora/live/set   ← {targets?: [notify.…], devices?: {<device_id>: {on?, done_min?, quiet?, interval_min?, color?}},
                        devices_replace?: bool (devices = vollständige Liste, ersetzt alles)} → wie get
   casora/live/probe ← {device_id?} → {ok, targets}   (Beispiel-Aktivität, räumt sich nach 2 Min. selbst auf)
 """
@@ -46,7 +46,10 @@ _LOGGER = logging.getLogger(__name__)
 
 STORE_KEY = f"{DOMAIN}.live_activity"
 KINDS = ("washer", "dryer", "dishwasher", "vacuum", "printer")
-DEFAULTS = {"on": True, "done_min": 30, "quiet": True, "interval_min": 10}
+DEFAULTS = {"on": True, "done_min": 30, "quiet": True, "interval_min": 10, "color": "auto"}
+# Wählbare Farben je Gerät (Casora-Palette); „auto“ = Farbe der Geräteart.
+PALETTE = {"blue": "#5B8FC9", "teal": "#4E9E95", "green": "#6AAE78", "honey": "#E8B04A",
+           "orange": "#DE8A4E", "red": "#D35A4E", "violet": "#7E6A9E", "rose": "#D16E7E"}
 LIMITS = {"done_min": (1, 240), "interval_min": (1, 60)}
 LOG_MAX = 20
 PROBE_TAG = "casora-live-probe"
@@ -436,9 +439,12 @@ def _snap_printer(found: Found, g, now: datetime, lang: int) -> Snap:
     return s
 
 
-def build_payload(snap: Snap, kind: str, title: str, tag: str, url: str, silent: bool) -> dict[str, Any]:
-    """Benachrichtigung für notify.mobile_app_* – wie die Vorbild-Automationen."""
-    color = COLOR.get(kind, COLOR["washer"])
+def build_payload(snap: Snap, kind: str, title: str, tag: str, url: str, silent: bool,
+                  color_key: str = "auto") -> dict[str, Any]:
+    """Benachrichtigung für notify.mobile_app_* – wie die Vorbild-Automationen.
+
+    color_key: gewählte Gerätefarbe; Fertig/Pause/Eingriff/Fehler behalten ihre Signalfarben."""
+    color = PALETTE.get(color_key) or COLOR.get(kind, COLOR["washer"])
     if snap.phase in ("done", "attn", "error") or (snap.phase == "pause" and not snap.minor):
         color = COLOR[snap.phase]
     d: dict[str, Any] = {"tag": tag, "live_update": True, "notification_icon": ICON.get(kind, "mdi:bell"),
@@ -520,6 +526,9 @@ def merge_settings(cfg: dict, msg: dict) -> dict:
                     raise ValueError(f"{key} must be a number")
                 lo, hi = LIMITS[key]
                 v = int(max(lo, min(hi, v)))
+            elif key == "color":
+                if v != "auto" and v not in PALETTE:
+                    raise ValueError(f"invalid color {v!r}")
             elif not isinstance(v, bool):
                 raise ValueError(f"{key} must be true or false")
             if v == DEFAULTS[key]:
@@ -801,7 +810,8 @@ class LiveActivity:
     async def _send(self, f: Found, snap: Snap, silent: bool, now: datetime) -> None:
         lang = _lang(self.hass)
         tag = self.tag_for(f)
-        payload = build_payload(snap, f.kind, self._title(f, lang), tag, self.url, silent)
+        payload = build_payload(snap, f.kind, self._title(f, lang), tag, self.url, silent,
+                                device_settings(self.cfg, f.device_id)["color"])
         act = self.active.get(f.device_id) or {"tag": tag, "kind": f.kind, "since": now.isoformat()}
         if snap.phase in ("done", "error") and act.get("phase") not in ("done", "error"):
             act["done_at"] = now.timestamp()
