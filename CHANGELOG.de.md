@@ -6,6 +6,9 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 ## 26.10.33 – 17.10.2026
 
+### Neu
+- **Live-Aktivitäten:** Waschmaschine, Trockner, Geschirrspüler, Saugroboter und 3D-Drucker melden sich live auf dem Sperrbildschirm des Handys (iOS Live Activities, Android Live Updates über die Home-Assistant-App): Start, Fortschritt, Restzeit, Pause, Eingriff, Fertig – ohne eigene Automationen. Einschalten unter Studio › Einstellungen › Live-Aktivitäten: Empfänger (HA-App) wählen, Geräte an, Fertig-Dauer, leise Zwischenstände und Takt je Gerät, „Probe senden“ und ein Protokoll „Zuletzt gesendet“. Erkannt werden dieselben Geräte wie bei den Kacheln (Home Connect, WashData, Saugroboter sehr gut getestet; Miele, SmartThings, LG, Whirlpool, Bambu nach Doku). Laufende Aktivitäten überleben einen HA-Neustart, Ausschalten beendet sie sofort.
+
 ### Geändert
 - **Casora Glas deutlich glasiger:** Inaktive Kacheln, Badges, Leisten und Menüs lassen das Raumfoto jetzt viel stärker durchscheinen (hell 50 %, dunkel 32 % Deckkraft statt ~60 %), mit kräftigerem Weichzeichner, feiner Lichtkante und einem Hauch Glanz. Aktive Kacheln bleiben deckend und damit gut lesbar, die Zustandsschrift ist eine Spur kräftiger. Casora und Casora Nebel sind unverändert.
 - **Klima-Popup:** Öffnest du es vom Luftfeuchtigkeits-Badge aus, startet das Diagramm mit der Luftfeuchtigkeit statt immer mit der Temperatur. Umschalten geht wie bisher.

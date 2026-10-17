@@ -27,9 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Mehr Glas", n0: "Casora Glas lässt das Raumfoto jetzt deutlich stärker durchscheinen – mit feiner Lichtkante. Aktive Kacheln bleiben gut lesbar.",
-      n1t: "Klima-Diagramm passend", n1: "Vom Luftfeuchtigkeits-Badge aus startet das Diagramm im Klima-Popup mit der Luftfeuchtigkeit.",
-      n2t: "Stabiler", n2: "Zeiten und Zahlen auch bei ungewöhnlicher HA-Sprache, Klingel-Popup mit Tag/Nacht-Modus, eigene Skripte stören die Community-Karten nicht mehr.",
+      n0t: "Live-Aktivitäten", n0: "Waschmaschine, Trockner, Spüler, Saugroboter und 3D-Drucker live auf dem Sperrbildschirm des Handys – Fortschritt, Restzeit, Fertig. Einschalten unter Einstellungen › Live-Aktivitäten.",
+      n1t: "Mehr Glas", n1: "Casora Glas lässt das Raumfoto jetzt deutlich stärker durchscheinen – mit feiner Lichtkante. Aktive Kacheln bleiben gut lesbar.",
+      n2t: "Klima-Diagramm passend", n2: "Vom Luftfeuchtigkeits-Badge aus startet das Diagramm im Klima-Popup mit der Luftfeuchtigkeit.",
+      n3t: "Stabiler", n3: "Zeiten und Zahlen auch bei ungewöhnlicher HA-Sprache, Klingel-Popup mit Tag/Nacht-Modus, eigene Skripte stören die Community-Karten nicht mehr.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -39,9 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "More glass", n0: "Casora Glas now lets the room photo show through much more – with a fine light edge. Active tiles stay readable.",
-      n1t: "Climate chart that fits", n1: "Opened from the humidity badge, the chart in the climate popup starts with humidity.",
-      n2t: "More robust", n2: "Times and numbers even with an unusual HA language, doorbell popup with day/night mode, custom scripts no longer break the community cards.",
+      n0t: "Live Activities", n0: "Washer, dryer, dishwasher, robot vacuum and 3D printer live on your phone's lock screen – progress, time left, done. Turn it on under Settings › Live Activities.",
+      n1t: "More glass", n1: "Casora Glas now lets the room photo show through much more – with a fine light edge. Active tiles stay readable.",
+      n2t: "Climate chart that fits", n2: "Opened from the humidity badge, the chart in the climate popup starts with humidity.",
+      n3t: "More robust", n3: "Times and numbers even with an unusual HA language, doorbell popup with day/night mode, custom scripts no longer break the community cards.",
     },
   };
 
@@ -54,9 +56,10 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:blur", "n0t", "n0"],
-    ["mdi:water-percent", "n1t", "n1"],
-    ["mdi:shield-check-outline", "n2t", "n2"],
+    ["mdi:cellphone-sound", "n0t", "n0"],
+    ["mdi:blur", "n1t", "n1"],
+    ["mdi:water-percent", "n2t", "n2"],
+    ["mdi:shield-check-outline", "n3t", "n3"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

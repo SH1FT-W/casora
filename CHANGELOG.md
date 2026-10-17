@@ -6,6 +6,9 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ## 26.10.33 – 17.10.2026
 
+### New
+- **Live Activities:** Washer, dryer, dishwasher, robot vacuum and 3D printer report live on your phone's lock screen (iOS Live Activities, Android Live Updates via the Home Assistant app): start, progress, time left, pause, attention, done – no automations needed. Turn it on under Studio › Settings › Live Activities: pick recipients (HA app), enable devices, set done duration, quiet updates and interval per device, "Send a sample" and a "Last sent" log. Detected are the same devices as for the tiles (Home Connect, WashData, robot vacuums well tested; Miele, SmartThings, LG, Whirlpool, Bambu per docs). Running activities survive an HA restart, switching off ends them right away.
+
 ### Changed
 - **Casora Glas much glassier:** Inactive tiles, badges, bars and menus now let the room photo show through far more (light 50 %, dark 32 % opacity instead of ~60 %), with a stronger blur, a fine light edge and a hint of sheen. Active tiles stay opaque and readable, the state text is slightly bolder. Casora and Casora Nebel are unchanged.
 - **Climate popup:** Opened from the humidity badge, the chart now starts with humidity instead of always temperature. Switching works as before.
