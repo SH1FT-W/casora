@@ -124,6 +124,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not demo:
         from .halten import extra as halten_extra
         _merge(fixture, halten_extra(dt_util.utcnow()), "Halten-Testgeräte")
+        # Geschirrspüler/Trockner für Live-Aktivitäten + Dienst casora_mock.live_lauf, siehe live.py.
+        from .live import extra as live_extra
+        _merge(fixture, live_extra(dt_util.utcnow()), "Live-Testgeräte")
     _vacuum_map(fixture)
     # Nur auf Wunsch: HACS-artige Update-Entität für Casora (hacs_casora.py).
     hacs_cfg = await hass.async_add_executor_job(_load_optional, "hacs_casora.json")
@@ -150,6 +153,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     kamerabild_setup(hass, mock)
     from .kaffee import setup as kaffee_setup
     kaffee_setup(hass, mock)
+    from .live import setup as live_setup
+    live_setup(hass, mock)
     mock.track_derived()
     mock.backfill_history()
     _LOGGER.warning(
@@ -280,11 +285,14 @@ class CasoraMock:
                 if not h.services.has_service(domain, name):
                     reg(domain, name, generic)
 
-        # Test-Handy: Push-Meldungen landen in /config/notify_test.log (eine JSON-Zeile je Meldung).
+        # Test-Handy: Push-Meldungen landen in /config/notify_test.log (eine JSON-Zeile je Meldung)
+        # und als letzte Meldungen in sensor.casora_mock_testhandy (live.py).
         async def notify(call: ServiceCall) -> None:
             line = json.dumps({"target": call.service, **call.data}, ensure_ascii=False, default=str)
             path = h.config.path("notify_test.log")
             await h.async_add_executor_job(lambda: open(path, "a", encoding="utf-8").write(line + "\n"))
+            from .live import note_notify
+            note_notify(h, call)
 
         if not h.services.has_service("notify", "mobile_app_testhandy"):
             reg("notify", "mobile_app_testhandy", notify)

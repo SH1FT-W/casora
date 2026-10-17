@@ -15,3 +15,30 @@ scenario:
             - sauger_reinigt
             - alarm_ausgeloest
 reset:
+live_lauf:
+  name: Live-Testlauf
+  description: Spielt an einem Testgerät einen Durchgang durch (Start → Fortschritt → Fertig → aus), für Live-Aktivitäten.
+  fields:
+    geraet:
+      required: true
+      example: waschmaschine_a
+      selector:
+        select:
+          options:
+            - waschmaschine_a
+            - waschmaschine_b
+            - geschirrspueler
+            - trockner
+            - sauger
+            - drucker
+    sekunden:
+      required: false
+      example: 90
+      selector:
+        number:
+          min: 10
+          max: 3600
+          unit_of_measurement: s
+live_stopp:
+  name: Live-Testlauf anhalten
+  description: Bricht laufende Testläufe ab.
