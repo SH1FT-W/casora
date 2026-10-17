@@ -4,6 +4,12 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.33 – 17.10.2026
+
+### Geändert
+- **Casora Glas deutlich glasiger:** Inaktive Kacheln, Badges, Leisten und Menüs lassen das Raumfoto jetzt viel stärker durchscheinen (hell 50 %, dunkel 32 % Deckkraft statt ~60 %), mit kräftigerem Weichzeichner, feiner Lichtkante und einem Hauch Glanz. Aktive Kacheln bleiben deckend und damit gut lesbar, die Zustandsschrift ist eine Spur kräftiger. Casora und Casora Nebel sind unverändert.
+- **Klima-Popup:** Öffnest du es vom Luftfeuchtigkeits-Badge aus, startet das Diagramm mit der Luftfeuchtigkeit statt immer mit der Temperatur. Umschalten geht wie bisher.
+
 ## 26.10.32 – 17.10.2026
 
 ### Behoben
