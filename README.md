@@ -30,11 +30,13 @@ Shape the rest room by room in a visual studio. No YAML.</p>
 - **Design it, don't code it.** Casora Studio lives in the sidebar. Tap anything in the live preview for desktop, tablet and phone and change it right beside it. Press and hold to try the real popup.
 - **One home, three screens.** Desktop and wall tablet show each room with its photo. Phones get a layout of their own with your favourites first.
 - **A popup for every device.** Lights, climate, energy, locks, blinds, media, cameras, plants, washers and dryers each open a popup of their own.
+- **Hold for the quick menu.** Press and hold a tile and a small menu opens right there: the main action, brightness, position or volume, a timer that switches off in 30 minutes, history and the device. On desktop a right-click does the same.
+- **It stays in Casora.** A reading opens its chart with 24 hours, 7 or 30 days. A window contact shows when it was open. A device opens its device page. Each with a back arrow, instead of Home Assistant's dialog.
 - **Ask first, then switch.** Any tile can ask before it switches. When you arm the alarm, Casora names open windows, doors and unlocked locks.
 - **Nothing is ever lost.** Every save becomes a version you can preview and restore.
 - **It stays at home.** No cloud, no account, no telemetry. AI features are optional and use the provider you already set up.
 
-Casora recognises robot vacuums, washers and dryers, dishwashers, 3D printers, home batteries, cars, waste collection, calendars and your network, and gives each its own tile and popup. Room photos for 31 room types, by day and by night, are included.
+Casora recognises robot vacuums, washers and dryers, dishwashers, 3D printers, home batteries, cars, waste collection, calendars and your network, and gives each its own tile and popup. Community cards add a Frigate camera, a Reolink doorbell, a coffee machine and a robot lawn mower. Room photos for 31 room types, by day and by night, are included.
 
 ## A look around
 
@@ -90,9 +92,10 @@ Casora picks the right tile and popup for each device on its own. Everything bel
 | **Appliances** | Washing machine, dryer, dishwasher, robot vacuum, 3D printer |
 | **On the road** | Car with fuel prices nearby, e-bike |
 | **Hobbies** | Plants, aquariums, football, game activity (PlayStation, Steam, Discord), recipe of the week |
+| **Community cards** | Frigate camera with alerts, detections and recordings, Reolink doorbell with who rang and quick replies, coffee machine with drinks and care, robot lawn mower |
 | **Your own** | Any Home Assistant card as a custom tile |
 
-The look is *Casora*: warm linen, generous corners and soft shadows, in light and dark, set in Inter. *Casora Nebel* is the same calm design in cool grey with a petrol accent. It follows Home Assistant's theme mode.
+Three designs, all in light and dark and all following Home Assistant's theme mode. *Casora* is the default: warm linen, generous corners and soft shadows, set in Inter. *Casora Nebel* is the same calm design in cool grey with a petrol accent. *Casora Glas* puts frosted glass over your room photos; in performance mode the glass turns opaque.
 
 ## Community cards
 
@@ -112,7 +115,14 @@ Missing a card for one of your devices? Ask for it, and it may become a Communit
 
 **Add a card.** Community cards ship with Casora, but they only appear in **Add tile** once you add them in the Community, so your tile list stays short. Every card has a preview of its tile and popup. Removing a card asks whether tiles that use it stay or go. Nothing is downloaded from outside your Home Assistant: a new Community card comes with a Casora release. If a card is ever retired, it disappears from **Add tile** first while existing tiles keep working, and only a later release removes it.
 
-Available now: **Robot lawn mower** (any lawn mower in Home Assistant, with extra details for Gardena).
+Available now:
+
+| Card | What it does |
+|---|---|
+| **Frigate camera** | Live view with what Frigate detected last. The popup has alerts and detections with clip, download, share and favourite, the recordings of the last days with a timeline, objects and the camera switches. |
+| **Reolink doorbell** | Live picture that says when someone rang. The popup has listening, quick replies, the siren, who rang lately and the doorbell's settings. |
+| **Coffee machine** | Ready, heating up or brewing with progress, and what the machine needs: water, beans, drip tray, descaling. The popup starts drinks with strength and amount. For Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco or a smart plug. |
+| **Robot lawn mower** | Any lawn mower in Home Assistant, with extra details for Gardena. Battery ring, to station, mow and park, and the mowing time of the last 7 days. |
 
 ## Requirements
 
@@ -139,6 +149,8 @@ There are two ways to install Casora: through HACS as a custom repository (recom
 4. **Open Casora Studio** in the sidebar. The setup assistant takes it from there: pick a look, let Casora sort your devices into rooms, check the preview and create your dashboard.
 
 Updates then arrive through HACS like any other integration. After an update, Casora brings your dashboards up to its new templates and saves a version first, so you can always go back. It never restarts Home Assistant on its own.
+
+Casora counts versions as year.month.number: 26.10.31 is the 31st release of October 2026. Every release gets the next number, there are no separate patch or minor versions.
 
 ### Manual install
 
@@ -171,7 +183,7 @@ It only reaches outside for AI features you turn on (through the provider you co
 - [**Guide**](docs/guide.md): setup assistant, Studio, looks, moving from Hemma, rewind, AI features, FAQ and troubleshooting, actions
 - [**Advanced YAML**](docs/ADVANCED.md): building and tuning Casora dashboards by hand
 - [**Contributing**](docs/contributing.md): pull requests and screenshots
-- [**Changelog**](CHANGELOG.md): what changed in each version
+- [**Changelog**](CHANGELOG.md): what changed in each version, in English and [German](CHANGELOG.de.md)
 
 Found a bug or have an idea? [Open an issue](https://github.com/SH1FT-W/casora/issues).
 

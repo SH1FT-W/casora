@@ -106,6 +106,8 @@ Vor einem Release zusätzlich:
 5. Vorschaubilder (`assets/themes/`) neu, wenn sich der Casora-Look geändert hat (demo-Haus, Handy 393×852
    mit Safe-Area, Theme „Casora“); Assistent einmal durchklicken.
 6. Keine persönlichen Daten: `tools/privacy-check.py`; „Studio B“ nur intern (`git grep "Studio B"` in Texten).
+   Website und README: Versionszeile im Hero von `docs/index.html` („Version YY.M.N“, Reserve, wenn die
+   Live-Abfrage scheitert; `tools/release.sh` prüft sie), neue Karten/Funktionen in README und `docs/guide.md`.
 7. Volles Gate grün für genau diesen Commit → `tools/release.sh` (nimmt die Version von `tools/next-version`;
    prüft Version, Gate, CHANGELOG, manifest, WHATS_NEW) → `tools/release.sh YY.M.N --publish`.
    Tag und Titel nur „vYY.M.N“ (z. B. v26.10.31). Nur bei einem echten Notfall-Hotfix: `dev/qa/gate.sh --patch`

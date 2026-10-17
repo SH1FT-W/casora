@@ -11,6 +11,8 @@ Everything the [README](../README.md) leaves out: setting up, the Studio, moving
 - [What Casora recognises](#what-casora-recognises)
 - [Moving from Hemma](#moving-from-hemma)
 - [Removing Hemma](#removing-hemma)
+- [Using the dashboard](#using-the-dashboard)
+- [Community cards](#community-cards)
 - [When a device is missing](#when-a-device-is-missing)
 - [Rewind: going back to an earlier version](#rewind-going-back-to-an-earlier-version)
 - [Updates](#updates)
@@ -81,8 +83,9 @@ These are the same options as in Home Assistant under Settings → Devices & ser
 |---|---|
 | **Casora** | The default. Warm linen and sand, large corners, soft shadows, in light and dark. Its theme has the same name in your Home Assistant profile. |
 | **Casora Nebel** | The same design in cool light grey with a petrol accent. |
+| **Casora Glas** | Casora with frosted glass over your room photos, in light and dark. In performance mode the glass surfaces turn opaque. |
 
-Both follow Home Assistant's light and dark mode. You can change the look later under Studio → **Look & Controls → Design**. The legacy looks Hemma 2 and Hemma 1 were removed in 1.6.1; if you used one, Casora switches you to *Casora* once.
+All three follow Home Assistant's light and dark mode. You can change the look later under Studio → **Look & Controls → Design**. The legacy looks Hemma 2 and Hemma 1 were removed in 26.10.31; if you used one, Casora switches you to *Casora Glas* once and tells you.
 
 The font is **Inter** in every look. You can switch to Hanken Grotesk or the system font under **Look & Controls → Text**, and upload fonts you hold a licence for there as well (for example Gilroy). Casora doesn't ship commercial fonts itself.
 
@@ -133,6 +136,22 @@ Casora replaces Hemma. Once your dashboards have moved, Hemma is no longer neede
 
 **After the restart, Casora checks.** The Studio confirms *Hemma is completely removed* and shows where the backup is. If something is still there, for example a loaded integration or a leftover helper, it lists what is left and offers **Remove the rest**.
 
+## Using the dashboard
+
+- **Tap** the icon of a tile to switch the device, tap the rest of the tile to open its popup.
+- **Press and hold** a tile and a small menu opens right at the tile (a bottom sheet on phones). At the top sits the main action (turn off, unlock, pause …), below it quick controls for the device: brightness and colour, cover position, temperature, volume and tracks, target humidity or fan speed. **History**, **Device** and **Edit tile** (jumps to the tile in the Studio) follow. On desktop a right-click opens the same menu; on the keyboard use Shift+F10 or the context-menu key. Under Studio → **Look & Controls → Tiles**, "Hold on tiles" lets you choose the quick menu, the popup or Home Assistant's dialog instead, for the whole dashboard or per tile.
+- **Timers.** In the quick menu, "Turn off in" or "Turn on for" 15 min, 30 min, 1 h or 2 h is available for lights, switches, fans, air purifiers, humidifiers, heating and media players. While a timer runs, the tile shows a ring with a clock in the top corner that empties over time. Timers survive a restart and are dropped when you switch the device by hand first. Automations can use the [actions](#actions) `casora.set_timer` and `casora.cancel_timer`.
+- **Casora pages instead of Home Assistant's dialog.** A reading (temperature, power …) opens its chart with 24 h, 7 days or 30 days, highest, lowest and average value. A door or window contact shows when it was open. A device opens its device page with everything that belongs to it and "Open in Home Assistant" for the rest. All of them have ‹ back to where you came from.
+- **Ask first.** Unlock, "Open door" and the alarm always ask before they act; codes are asked masked. Any other tile can ask too: turn it on in the Studio under the tile's settings.
+
+## Community cards
+
+Cards for devices that not every home has ship with Casora but stay out of **Add tile** until you add them. In the Studio, open **Community** in the header.
+
+- **Add a card.** Every card has a preview of its tile and popup; tap it to see both large. Once added, the card appears in **Add tile** for all your dashboards. Removing a card asks whether tiles that use it stay or go.
+- **Request a card.** Choose **Request a card…**, describe the device and what the tile and popup should show, and pick a few example entities. Casora prepares a GitHub issue with the kind of device, units, device classes and attribute names, but without entity names, rooms or places, and shows you the exact text first. You submit it on GitHub yourself. **Your requests** shows where each one stands: Open, Question (with the answer), In progress, Built or Declined.
+- **Available now:** Frigate camera, Reolink doorbell, coffee machine and robot lawn mower. Nothing is downloaded from outside your Home Assistant: new cards come with a Casora release. If a card is ever retired, it disappears from **Add tile** first while existing tiles keep working.
+
 ## When a device is missing
 
 If a tile's device no longer exists in Home Assistant (renamed, re-paired or removed), the tile shows **Device missing** instead of *Off* or nothing at all. Its popup says the same and points you to the Studio, and the Studio marks the tile in its tile list and preview.
@@ -156,6 +175,8 @@ New versions arrive through **HACS** like any other integration: install the upd
 After an update, Casora brings your dashboards up to its new templates when Home Assistant starts. It only touches templates you haven't changed yourself, and it saves a version first, so a notification tells you which dashboards were updated and that you can undo it with [Rewind](#rewind-going-back-to-an-earlier-version).
 
 What's new in each version is shown once in the Studio and listed in the [changelog](../CHANGELOG.md).
+
+**Version numbers.** Since October 2026 Casora counts year.month.number: 26.10.31 is the 31st release of October 2026. Every release gets the next number; there are no separate patch or minor versions. The jump from 1.6.0 to 26.10.31 was intended, HACS and the Casora update treat it as a normal update.
 
 ## AI features (optional)
 

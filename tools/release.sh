@@ -68,6 +68,11 @@ ok "CHANGELOG in der Integration aktuell"
 MV="$(python3 -c 'import json;print(json.load(open("custom_components/casora/manifest.json"))["version"])')"
 [ "$MV" = "$VER" ] || fail "manifest.json hat Version $MV, nicht $VER"
 ok "manifest.json: $MV"
+
+# 3b) Website: statischer Fallback der Versionszeile (docs/index.html liest live aus manifest.json, der Text ist die Reserve)
+WV="$(grep -o 'id="casora-version">Version [0-9.]*' docs/index.html | grep -o '[0-9][0-9.]*$')"
+[ "$WV" = "$VER" ] || fail "docs/index.html zeigt als Fallback Version $WV, nicht $VER (Versionszeile im Hero anpassen)"
+ok "docs/index.html Fallback: $WV"
 git rev-parse -q --verify "refs/tags/$TAG" >/dev/null && fail "Tag $TAG gibt es schon"
 
 # 4) CHANGELOG-Abschnitte → Versionshinweise (englisch oben, deutsch eingeklappt darunter;

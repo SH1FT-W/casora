@@ -37,7 +37,7 @@ Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
 
 ## Nicht anfassen
 - Version (`manifest.json`), `CHANGELOG*.md`, „Neu“-Popup (`casora-panel-welcome.js`, WHATS_NEW),
-  Vorschaubilder unter `assets/themes/`, `.github/` – das gehört zum Release.
+  Vorschaubilder unter `assets/themes/`, `.github/`, Versionszeile in `docs/index.html` – das gehört zum Release.
 
 ## Pull Requests
 - „Fixes #N“ nur, wenn der PR alles erledigt, worum das Issue bittet. Löst er nur einen Teil,
