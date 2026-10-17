@@ -15,6 +15,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 - **Casora Glas much glassier:** Inactive tiles, badges, bars and menus now let the room photo show through far more (light 50 %, dark 32 % opacity instead of ~60 %), with a stronger blur, a fine light edge and a hint of sheen. Active tiles stay opaque and readable, the state text is slightly bolder. Casora and Casora Nebel are unchanged.
 - **Climate popup:** Opened from the humidity badge, the chart now starts with humidity instead of always temperature. Switching works as before.
 - **Studio pickers** close again on a second click on the field (before only by picking or clicking elsewhere).
+- **Popups no longer flicker:** Sections such as "History" (e.g. Pulse › device) were rebuilt on every attribute change and flashed empty. Each section now updates on its own. Measurement pages also count a change that just happened in "Changes" and "History" after a few seconds.
 
 ## 26.10.32 – 17.10.2026
 

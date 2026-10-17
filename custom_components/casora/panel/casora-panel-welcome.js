@@ -30,7 +30,7 @@
       n0t: "Live-Aktivitäten", n0: "Waschmaschine, Trockner, Spüler, Saugroboter und 3D-Drucker live auf dem Sperrbildschirm des Handys – Fortschritt, Restzeit, Fertig, Farbe je Gerät. Einschalten unter Einstellungen › Live-Aktivitäten.",
       n1t: "Mehr Glas", n1: "Casora Glas lässt das Raumfoto jetzt deutlich stärker durchscheinen – mit feiner Lichtkante. Aktive Kacheln bleiben gut lesbar.",
       n2t: "Klingel groß", n2: "Das Live-Bild der Klingel lässt sich groß öffnen, Mithören und Sprechen laufen weiter. Eine zweite Kamera ist per Umschalter direkt im Bild.",
-      n3t: "Feinschliff", n3: "Klima-Diagramm startet vom Luftfeuchtigkeits-Badge aus mit der Luftfeuchtigkeit, Auswahllisten im Studio klappen per zweitem Klick zu, Zeiten und Zahlen auch bei ungewöhnlicher HA-Sprache.",
+      n3t: "Feinschliff", n3: "Klima-Diagramm startet vom Luftfeuchtigkeits-Badge aus mit der Luftfeuchtigkeit, Auswahllisten im Studio klappen per zweitem Klick zu, Bereiche in Popups flackern bei Änderungen nicht mehr.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -43,7 +43,7 @@
       n0t: "Live Activities", n0: "Washer, dryer, dishwasher, robot vacuum and 3D printer live on your phone's lock screen – progress, time left, done, a color per device. Turn it on under Settings › Live Activities.",
       n1t: "More glass", n1: "Casora Glas now lets the room photo show through much more – with a fine light edge. Active tiles stay readable.",
       n2t: "Bigger doorbell", n2: "The doorbell live picture opens large, listening and talking keep running. A second camera sits right in the picture behind a switch.",
-      n3t: "Polish", n3: "The climate chart starts with humidity when opened from the humidity badge, Studio pickers close on a second click, times and numbers work even with an unusual HA language.",
+      n3t: "Polish", n3: "The climate chart starts with humidity when opened from the humidity badge, Studio pickers close on a second click, popup sections no longer flicker when something changes.",
     },
   };
 

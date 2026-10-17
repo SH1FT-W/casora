@@ -15,6 +15,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 - **Casora Glas deutlich glasiger:** Inaktive Kacheln, Badges, Leisten und Menüs lassen das Raumfoto jetzt viel stärker durchscheinen (hell 50 %, dunkel 32 % Deckkraft statt ~60 %), mit kräftigerem Weichzeichner, feiner Lichtkante und einem Hauch Glanz. Aktive Kacheln bleiben deckend und damit gut lesbar, die Zustandsschrift ist eine Spur kräftiger. Casora und Casora Nebel sind unverändert.
 - **Klima-Popup:** Öffnest du es vom Luftfeuchtigkeits-Badge aus, startet das Diagramm mit der Luftfeuchtigkeit statt immer mit der Temperatur. Umschalten geht wie bisher.
 - **Studio-Auswahlfelder** klappen bei einem zweiten Klick aufs Feld wieder zu (vorher nur über eine Auswahl oder einen Klick daneben).
+- **Popups flackern nicht mehr:** Bereiche wie „Verlauf“ (z. B. Pulse › Gerät) wurden bei jeder Attributänderung neu aufgebaut und blitzten kurz leer auf. Jetzt aktualisiert sich jeder Bereich für sich. Dazu zählen „Änderungen“ und „Verlauf“ auf Messwert-Seiten einen gerade erfolgten Wechsel nach wenigen Sekunden mit.
 
 ## 26.10.32 – 17.10.2026
 
