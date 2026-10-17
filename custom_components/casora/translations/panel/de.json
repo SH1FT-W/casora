@@ -2483,7 +2483,11 @@
     "Nothing sent yet.": "Noch nichts gesendet.",
     "Refresh": "Aktualisieren",
     "Protocol": "Protokoll",
-    "Reads the latest entries again.": "Liest die neuesten Einträge neu."
+    "Reads the latest entries again.": "Liest die neuesten Einträge neu.",
+    "Start a test run": "Testlauf starten",
+    "Test house only: plays a whole cycle on the device within a minute – start, progress, done, off.": "Nur im Testhaus: spielt am Gerät binnen einer Minute einen ganzen Durchgang durch – Start, Fortschritt, Fertig, aus.",
+    "Running…": "Läuft …",
+    "Start test run": "Testlauf starten"
   },
   "patterns": [
     [

@@ -18,6 +18,11 @@ HC_STATES = ["inactive", "ready", "delayedstart", "run", "pause", "actionrequire
 WD_STATES = ["off", "idle", "starting", "running", "paused", "user_paused", "ending", "finished", "anti_wrinkle",
              "delay_wait", "interrupted", "force_stopped", "unknown", "clean"]
 GERAETE = ["waschmaschine_a", "waschmaschine_b", "geschirrspueler", "trockner", "sauger", "drucker"]
+# Zustands-Entität je Testgerät – darüber ordnet Casora (live_activity.payload → test_runs) den Knopf
+# „Testlauf starten“ im Studio dem gefundenen Gerät zu.
+ZUSTAND = {"waschmaschine_a": "sensor.waschmaschine_a_zustand", "waschmaschine_b": "sensor.waschmaschine_b_betriebszustand",
+           "geschirrspueler": "sensor.geschirrspueler_test_betriebszustand", "trockner": "sensor.trockner_test_zustand",
+           "sauger": "vacuum.testsauger", "drucker": "sensor.testdrucker_druckstatus"}
 
 
 def _e(eid, state, key, device, name, attrs=None, dc=None, unit=None):
@@ -171,6 +176,7 @@ def setup(hass, mock) -> None:
     hass.services.async_register("casora_mock", "live_lauf", live_lauf, vol.Schema({
         vol.Required("geraet"): vol.In(GERAETE), vol.Optional("sekunden", default=90): vol.All(int, vol.Range(min=10, max=3600))}))
     hass.services.async_register("casora_mock", "live_stopp", live_stopp)
+    hass.data["casora_mock_live"] = {eid: g for g, eid in ZUSTAND.items()}
 
 
 def note_notify(hass, call) -> None:

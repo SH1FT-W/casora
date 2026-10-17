@@ -169,6 +169,45 @@ check("Drucker fehlgeschlagen: error, Text", s.phase == "error" and s.message ==
 st("sensor.p_state", "offline")
 check("Drucker offline = off", la.snapshot(printer(), S.get, NOW, 0).phase == "off")
 
+# Home Connect (offiziell): Programm aus dem select-Schlüssel, Endzeit als Zeitstempel, kein Phasen-Sensor
+hc = Found("d-hc", "washer", "home_connect", "sehr gut", {"state": "sensor.h_state", "program": "select.h_prog", "progress": "sensor.h_pct",
+                                                       "remaining": "sensor.h_end"}, name="")
+st("sensor.h_state", "run"); st("select.h_prog", "laundry_care_washer_program_cotton"); st("sensor.h_pct", "35")
+st("sensor.h_end", (NOW + timedelta(minutes=50)).isoformat())
+s = la.snapshot(hc, S.get, NOW, 0)
+check("Home Connect: Baumwolle · 35 %, Kurztext Prozent", s.message == "Baumwolle · 35 %" and s.critical == "35 %", s)
+check("Home Connect: Endzeit aus Zeitstempel", s.end_ts == int((NOW + timedelta(minutes=50)).timestamp()), s.end_ts)
+st("sensor.h_state", "finished")
+check("Home Connect fertig", la.snapshot(hc, S.get, NOW, 0).message == "Fertig · Wäsche rausnehmen")
+st("sensor.h_state", "pause")
+check("Home Connect Pause (nicht minor)", la.snapshot(hc, S.get, NOW, 0).phase == "pause" and not la.snapshot(hc, S.get, NOW, 0).minor)
+for raw in ("aborting", "inactive", "ready"):
+    st("sensor.h_state", raw)
+    check(f"Home Connect „{raw}“ = off", la.snapshot(hc, S.get, NOW, 0).phase == "off")
+
+# Trockner (WashData): Klartext-Programm, Knitterschutz
+dr = Found("d-dry", "dryer", "washdata", "sehr gut", {"state": "sensor.t_state", "program": "sensor.t_prog", "progress": "sensor.t_pct"})
+st("sensor.t_state", "running"); st("sensor.t_prog", "Schranktrocken"); st("sensor.t_pct", "45")
+s = la.snapshot(dr, S.get, NOW, 0)
+d = la.build_payload(s, "dryer", "T", "t", "/", True)["data"]
+check("Trockner: Schranktrocken · 45 %, Orange, Trockner-Symbol", s.message == "Schranktrocken · 45 %" and d["notification_icon_color"] == la.COLOR["dryer"]
+      and d["notification_icon"] == "mdi:tumble-dryer", (s, d))
+check("Trockner ohne Restzeit/Startzeit: kein chronometer", "chronometer" not in d, d)
+st("sensor.t_state", "anti_wrinkle")
+check("Trockner Knitterschutz = Fertig", la.snapshot(dr, S.get, NOW, 0).message == "Fertig · Wäsche rausnehmen · Knitterschutz läuft")
+
+# Miele (ungetestet): Zustände und Phase nach Dokumentation
+mi = Found("d-mi", "washer", "miele", "ungetestet", {"state": "sensor.m_state", "program": "sensor.m_prog", "phase": "sensor.m_phase", "remaining": "sensor.m_rem"})
+st("sensor.m_state", "in_use"); st("sensor.m_prog", "Cottons"); st("sensor.m_phase", "spin"); st("sensor.m_rem", "12", unit_of_measurement="min")
+s = la.snapshot(mi, S.get, NOW, 0)
+check("Miele läuft: Cottons · Schleudern, Restzeit", s.message == "Cottons · Schleudern" and s.end_ts == int(NOW.timestamp()) + 720, s)
+st("sensor.m_state", "program_ended")
+check("Miele program_ended = Fertig", la.snapshot(mi, S.get, NOW, 0).phase == "done")
+st("sensor.m_state", "failure")
+check("Miele failure = Fehler", la.snapshot(mi, S.get, NOW, 0).phase == "error")
+st("sensor.m_state", "not_connected")
+check("Miele not_connected = off", la.snapshot(mi, S.get, NOW, 0).phase == "off")
+
 # Probe
 pr = la.build_payload(la.probe_snapshot("washer", NOW, 0), "washer", "Probe", la.PROBE_TAG, "/", False)
 check("Probe: 42 %, chronometer, Hinweistext", pr["data"]["progress"] == 42 and pr["data"]["chronometer"] and "2 Minuten" in pr["message"], pr)
@@ -202,6 +241,11 @@ class Services:
 
     def async_services_for_domain(self, domain):
         return {"mobile_app_handy": None, "mobile_app_tablet": None, "send_message": None}
+
+    mock = False  # Testhaus-Dienst casora_mock.live_lauf vorhanden?
+
+    def has_service(self, domain, service):
+        return self.mock and (domain, service) == ("casora_mock", "live_lauf")
 
 
 def make(found, seed=None):
@@ -281,6 +325,12 @@ async def flow():
     check("Protokoll gefüllt, neueste zuerst, höchstens 20", 0 < len(L.payload()["log"]) <= 20 and L.payload()["log"][0]["clear"] is True)
     check("payload: Geräte mit Einstellungen und Stufe", L.payload()["found"][0]["settings"]["done_min"] == 30 and L.payload()["found"][0]["grade"] == "sehr gut")
     check("notify_services nur mobile_app", L.payload()["notify_services"] == ["notify.mobile_app_handy", "notify.mobile_app_tablet"])
+    # Testlauf-Knopf: nur mit Testhaus-Dienst und bekannter Zustands-Entität
+    check("ohne Testhaus: test_runs leer", L.payload()["test_runs"] == {})
+    svc.mock = True
+    L.hass.data["casora_mock_live"] = {"sensor.w_state": "waschmaschine_a", "sensor.fremd": "trockner"}
+    check("Testhaus: test_runs device_id → Gerät", L.payload()["test_runs"] == {"d-washer": "waschmaschine_a"}, L.payload()["test_runs"])
+    svc.mock = False
 
     # Gerät ausschalten → sofort clear; Empfänger abwählen → clear nur dort
     st("sensor.w_state", "running")
@@ -339,6 +389,25 @@ async def flow():
     await L3._resume()
     check("Neustart: inzwischen aus → clear, nichts aktiv", all(c[1].get("message") == "clear_notification" for c in svc3.calls) and not L3.active, svc3.calls)
 
+    # Ein Schritt ändert mehrere Entitäten zugleich: parallele Bewertungen schicken trotzdem nur einen Clear
+    st("sensor.w_state", "running"); st("sensor.w_pct", "50")
+    await L2._evaluate("d-washer", "state")
+    svc2.calls.clear()
+    st("sensor.w_state", "off"); st("sensor.w_pct", "0")
+    await asyncio.gather(*[L2._evaluate("d-washer", "state") for _ in range(6)])
+    check("6 gleichzeitige Zustandsänderungen → genau ein clear_notification, mit Titel im Protokoll",
+          [c[1]["message"] for c in svc2.calls] == ["clear_notification"] and L2.log[-1]["title"] == "Waschmaschine Test", svc2.calls)
+
+    # Einschalten/Neustart bei altem Fertig/Fehler: nicht nachträglich melden, erst der nächste Lauf
+    st("sensor.w_state", "finished"); st("sensor.w_pct", "100")
+    L6, svc6 = make([washer()])
+    await L6.async_start()
+    await L6.async_set({"targets": ["notify.mobile_app_handy"]})
+    check("Einschalten bei „fertig“: nichts gesendet, stumm bis zum nächsten Zustand", not svc6.calls and L6.muted.get("d-washer") == "done", svc6.calls)
+    st("sensor.w_state", "running"); st("sensor.w_pct", "5")
+    await L6._evaluate("d-washer", "state")
+    check("nächster Lauf startet wieder laut", svc6.calls and svc6.calls[0][1]["data"]["silent"] is False, svc6.calls)
+
     # Ohne Empfänger passiert nichts, auch wenn Geräte laufen
     L4, svc4 = make([washer()])
     await L4.async_start()
@@ -364,6 +433,13 @@ async def flow():
     r = await L5.async_probe("d-x")
     check("Probe: gesendet, Probe-Tag, Beispielwerte", r == {"ok": True, "targets": 1} and svc5.calls[0][1]["data"]["tag"] == la.PROBE_TAG
           and svc5.calls[0][1]["data"]["progress"] == 42 and svc5.calls[0][1]["title"] == "Dryer · Test", svc5.calls)
+
+    # Entladen der Integration: danach bewertet nichts mehr
+    svc5.calls.clear()
+    L5.stop()
+    st("sensor.w_state", "running"); st("sensor.w_pct", "77")
+    await L5._evaluate("d-x", "state")
+    check("nach stop(): keine Sendung mehr", not svc5.calls and L5.loaded is False, svc5.calls)
 
 
 asyncio.run(flow())

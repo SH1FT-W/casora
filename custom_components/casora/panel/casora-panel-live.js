@@ -49,7 +49,8 @@
   const logLine = (e, lang) => {
     const d = new Date(e.time);
     const time = isNaN(d) ? "" : d.toLocaleTimeString(lang || undefined, { hour: "2-digit", minute: "2-digit" });
-    const phase = e.clear ? t(PHASE_LABEL.clear) : t(PHASE_LABEL[e.phase] || e.phase || "");
+    // Probe: der Titel trägt „· Probe“ schon vom Server (in dessen Sprache), nicht noch einmal anhängen.
+    const phase = e.clear ? t(PHASE_LABEL.clear) : e.phase === "probe" ? "" : t(PHASE_LABEL[e.phase] || e.phase || "");
     return { time, title: [e.title, phase].filter(Boolean).join(" · "), text: e.clear ? t("Live activity ended") : (e.message || ""),
       progress: e.progress != null && !e.clear ? e.progress + "%" : "", tone: e.clear ? "" : (PHASE_TONE[e.phase] || ""),
       tag: e.tag || "", silent: !!e.silent };
@@ -274,6 +275,30 @@
       const rc = el("div", "casora-pctl");
       rc.appendChild(rb);
       rr.row.appendChild(rc);
+      // 5 · Testlauf – nur im Testhaus (casora_mock.live_lauf); get liefert test_runs sonst leer.
+      const runs = lv.test_runs || {};
+      const runDevs = found.filter((f) => runs[f.device_id]);
+      if (!runDevs.length) return;
+      cs.lvRunDev = runDevs.some((f) => f.device_id === cs.lvRunDev) ? cs.lvRunDev : runDevs[0].device_id;
+      const runLabels = {}; runDevs.forEach((f) => { runLabels[f.device_id] = f.name || t(KIND_LABEL[f.kind] || f.kind); });
+      const tr = this._flowRow(g, { title: t("Start a test run"),
+        sub: t("Test house only: plays a whole cycle on the device within a minute – start, progress, done, off.") });
+      tr.row.classList.add("casora-prow", "cs-live-run");
+      const tc = el("div", "casora-pctl");
+      tc.appendChild(this._combo(cs.lvRunDev, runDevs.map((f) => f.device_id), "", (v) => { if (v) cs.lvRunDev = v; }, { fixed: true, labels: runLabels }).wrap);
+      const tb = el("button", "ghost", cs.lvRun ? t("Running…") : t("Start test run"));
+      tb.type = "button";
+      tb.disabled = !!cs.lvRun;
+      tb.onclick = async () => {
+        cs.lvRun = true; this._csRepaint();
+        try { await this._hass.callService("casora_mock", "live_lauf", { geraet: runs[cs.lvRunDev], sekunden: 60 }); } catch (e) { /* Dienst fehlt */ }
+        // Protokoll mitlaufen lassen, bis der Durchgang durch ist.
+        for (let i = 0; i < 14 && cs.lvRun; i++) { await new Promise((r) => setTimeout(r, 5000)); await this._csLiveRefresh(); }
+        cs.lvRun = false;
+        await this._csLiveRefresh();
+      };
+      tc.appendChild(tb);
+      tr.row.appendChild(tc);
     };
   });
 })();

@@ -44,6 +44,7 @@ assert.equal(clear.title, 'W · Beendet');
 assert.equal(clear.text, 'Live-Aktivität beendet');
 assert.equal(clear.progress, '', 'Ende zeigt keinen Fortschritt');
 assert.equal(M.logLine({ time: 'kaputt', title: 'W', phase: 'probe' }, 'de').time, '', 'ungültige Zeit bleibt leer');
+assert.equal(M.logLine({ time: '2026-10-17T12:00:00+00:00', title: 'W · Probe', phase: 'probe' }, 'de').title, 'W · Probe', 'Probe-Titel nicht doppelt');
 
 // ── Anbindung ──────────────────────────────────────────────────────────────────────
 const settings = read('panel/casora-panel-settings.js');
@@ -59,6 +60,8 @@ assert.ok(/setAttribute\("role", "switch"\)/.test(live) && /ev\.stopPropagation\
 assert.ok(/cs-note", t\("No phone with the Home Assistant app found/.test(live), 'Hinweis ohne HA-App-Empfänger');
 assert.ok(/pb\.disabled = !!cs\.lvBusy \|\| unsaved \|\| !\(lv\.targets \|\| \[\]\)\.length;/.test(live), 'Probe nur mit gespeicherten Empfängern');
 assert.ok(!/#[0-9a-fA-F]{3,8}\b/.test(live.replace(/\/\/.*$/gm, '')), 'keine festen Farben – nur Studio-Token');
+assert.ok(/const runs = lv\.test_runs \|\| \{\};[\s\S]*if \(!runDevs\.length\) return;[\s\S]*callService\("casora_mock", "live_lauf"/.test(live),
+  'Testlauf-Knopf nur, wenn get test_runs liefert (Testhaus)');
 const panel = read('panel/casora-panel.js');
 assert.ok(/"set-live": \["energy", "var\(--casora-color-green, #30D158\)"\]/.test(panel), 'Symbolfarbe in STUDIO_ICON');
 const mehr = read('panel/casora-panel-b-mehr.js');

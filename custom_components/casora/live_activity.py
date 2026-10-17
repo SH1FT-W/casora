@@ -16,13 +16,14 @@ Regeln: nur zeigen, was das Gerät liefert; unbekannte Zustände nie als „Fert
 Casora-Palette; Texte Deutsch/Englisch nach HA-Sprache; Zeiten als Ortszeit.
 
 WebSocket (nur Admins):
-  casora/live/get   ← {} → {targets, devices, found: [...], notify_services, log, active, url}
+  casora/live/get   ← {} → {targets, devices, found: [...], notify_services, log, active, url, test_runs (nur Testhaus)}
   casora/live/set   ← {targets?: [notify.…], devices?: {<device_id>: {on?, done_min?, quiet?, interval_min?}}} → wie get
   casora/live/probe ← {device_id?} → {ok, targets}   (Beispiel-Aktivität, räumt sich nach 2 Min. selbst auf)
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from dataclasses import dataclass, field
@@ -510,6 +511,8 @@ class LiveActivity:
         self._unsubs: list = []
         self._unsub_states = None
         self._probe_timers: list = []
+        self._pending: list = []  # gesammelter Registry-Nachlauf (ein Timer)
+        self._lock = asyncio.Lock()  # Bewertungen nacheinander: ein Schritt ändert oft mehrere Entitäten zugleich
 
     # ── Start/Stop ─────────────────────────────────────────────────────────
     async def async_start(self) -> None:
@@ -535,7 +538,7 @@ class LiveActivity:
         self._unsubs.append(async_at_started(self.hass, _started))
         self._unsubs.append(async_track_time_interval(self.hass, self._tick, TICK))
 
-        pending: list = []
+        pending = self._pending
 
         @callback
         def _rescan_now(_now) -> None:
@@ -553,13 +556,15 @@ class LiveActivity:
 
     @callback
     def stop(self) -> None:
-        for unsub in [*self._unsubs, self._unsub_states, *self._probe_timers]:
+        for unsub in [*self._unsubs, self._unsub_states, *self._probe_timers, *self._pending]:
             try:
                 if unsub:
                     unsub()
             except Exception:  # noqa: BLE001 – schon abgemeldet
                 pass
         self._unsubs, self._unsub_states, self._probe_timers = [], None, []
+        self._pending.clear()
+        self.loaded = False
 
     async def _resume(self) -> None:
         await self.rescan()
@@ -646,7 +651,15 @@ class LiveActivity:
             "log": list(reversed(self.log[-LOG_MAX:])),
             "active": sorted(self.active),
             "url": self.url,
+            "test_runs": self._test_runs(),
         }
+
+    def _test_runs(self) -> dict[str, str]:
+        """Nur im Testhaus: Geräte, an denen casora_mock.live_lauf einen Durchgang spielt (device_id → Gerät)."""
+        if not self.hass.services.has_service("casora_mock", "live_lauf"):
+            return {}
+        by_state = self.hass.data.get("casora_mock_live") or {}
+        return {f.device_id: by_state[f.fields["state"]] for f in self.found if f.fields.get("state") in by_state}
 
     async def async_set(self, msg: dict) -> None:
         old_targets, new = set(self.targets), merge_settings(self.cfg, msg)
@@ -678,6 +691,10 @@ class LiveActivity:
         return f"casora-live-{f.kind}-{f.device_id[:8]}"
 
     async def _evaluate(self, device_id: str, reason: str) -> None:
+        async with self._lock:
+            await self._evaluate_locked(device_id, reason)
+
+    async def _evaluate_locked(self, device_id: str, reason: str) -> None:
         f = self._found(device_id)
         if not f or not self.loaded:
             return
@@ -696,6 +713,10 @@ class LiveActivity:
         if snap.phase == "off":
             if act:
                 await self._clear(device_id)
+            return
+        if reason == "resume" and not act and snap.phase in ("done", "error"):
+            # Einschalten/Neustart: ein altes Fertig/Fehler nicht nachträglich melden – erst der nächste Lauf.
+            self.muted[device_id] = snap.phase
             return
         if act and act.get("phase") in ("done", "error") and snap.phase in ("done", "error"):
             # Fertig/Fehler bleibt stehen, bis die Dauer um ist (Zwischenstände dort sind nichts Neues).
@@ -720,7 +741,7 @@ class LiveActivity:
         act = self.active.get(f.device_id) or {"tag": tag, "kind": f.kind, "since": now.isoformat()}
         if snap.phase in ("done", "error") and act.get("phase") not in ("done", "error"):
             act["done_at"] = now.timestamp()
-        act["phase"], act["sent_at"] = snap.phase, now.timestamp()
+        act["phase"], act["sent_at"], act["title"] = snap.phase, now.timestamp(), payload["title"]
         self.active[f.device_id] = act
         await self._deliver(self.targets, payload, device_id=f.device_id, phase=snap.phase, now=now)
         self._save()
@@ -729,13 +750,16 @@ class LiveActivity:
         act = self.active.get(device_id)
         if not act:
             return
-        await self._deliver(targets if targets is not None else self.targets, clear_payload(act["tag"]),
-                            device_id=device_id, phase="clear", now=dt_util.utcnow())
+        to = targets if targets is not None else self.targets
         if forget:
             self.active.pop(device_id, None)
+        if to:  # ohne Empfänger (schon abgewählt und dort beendet) nur vergessen
+            await self._deliver(to, clear_payload(act["tag"]), device_id=device_id, phase="clear", now=dt_util.utcnow(),
+                                title=act.get("title"))
         self._save()
 
-    async def _deliver(self, targets: list[str], payload: dict, device_id: str | None, phase: str, now: datetime) -> None:
+    async def _deliver(self, targets: list[str], payload: dict, device_id: str | None, phase: str, now: datetime,
+                       title: str | None = None) -> None:
         sent = []
         for target in targets:
             try:
@@ -745,7 +769,7 @@ class LiveActivity:
                 _LOGGER.warning("Live-Aktivität an notify.%s fehlgeschlagen: %s", target, err)
         d = payload.get("data") or {}
         self.log.append({"time": now.isoformat(), "targets": sent, "device_id": device_id, "phase": phase,
-                         "tag": d.get("tag"), "title": payload.get("title"), "message": payload.get("message"),
+                         "tag": d.get("tag"), "title": payload.get("title") or title, "message": payload.get("message"),
                          "progress": d.get("progress"), "when": d.get("when"), "silent": d.get("silent", False),
                          "clear": payload.get("message") == "clear_notification"})
         del self.log[:-LOG_MAX]
