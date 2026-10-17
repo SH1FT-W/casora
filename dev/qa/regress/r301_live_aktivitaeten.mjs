@@ -14,6 +14,10 @@ import { open, studioDashboard, studio, studioRetry, check, need, atFinish, fini
 import { ws } from '../ws.mjs';
 
 const dash = await studioDashboard();
+// Texte der Aktivitäten kommen in der HA-Sprache: für den Test Deutsch, danach wieder wie vorher (Gate-Haus: en).
+const setLang = async (l) => { const c = await ws(); await c.cmd({ type: 'config/core/update', language: l }); c.close(); };
+const lang0 = await (async () => { const c = await ws(); const r = await c.cmd({ type: 'get_config' }); c.close(); return r.language; })();
+if (lang0 !== 'de') { await setLang('de'); atFinish(() => setLang(lang0)); }
 await need('ein Dashboard fürs Studio', dash);
 const { page } = await open({ width: 1600, height: 1000 });
 await studio(page, dash);

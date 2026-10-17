@@ -8,10 +8,14 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ### New
 - **Live Activities:** Washer, dryer, dishwasher, robot vacuum and 3D printer report live on your phone's lock screen (iOS Live Activities, Android Live Updates via the Home Assistant app): start, progress, time left, pause, attention, done – no automations needed. Turn it on under Studio › Settings › Live Activities: pick recipients (HA app), enable devices, set done duration, quiet updates and interval per device, "Send a sample" and a "Last sent" log. Detected are the same devices as for the tiles (Home Connect, WashData, robot vacuums well tested; Miele, SmartThings, LG, Whirlpool, Bambu per docs). Running activities survive an HA restart, switching off ends them right away.
+- **Reolink doorbell: large picture and second camera:** A button at the top right of the live picture opens it large above the popup; listening and talking keep running without a break, close with ×, Esc or a swipe down. While listening/talking the large picture can open by itself (Studio option, on by default). New field "Second camera": a switch at the top left of the picture then flips between doorbell and second camera, talking only works through the doorbell (#23).
+- **Live Activities: color per device** (Automatic or the Casora palette). Done, pause and attention keep their signal colors.
 
 ### Changed
 - **Casora Glas much glassier:** Inactive tiles, badges, bars and menus now let the room photo show through far more (light 50 %, dark 32 % opacity instead of ~60 %), with a stronger blur, a fine light edge and a hint of sheen. Active tiles stay opaque and readable, the state text is slightly bolder. Casora and Casora Nebel are unchanged.
 - **Climate popup:** Opened from the humidity badge, the chart now starts with humidity instead of always temperature. Switching works as before.
+- **Studio pickers** close again on a second click on the field (before only by picking or clicking elsewhere).
+- **Popups no longer flicker:** Sections such as "History" (e.g. Pulse › device) were rebuilt on every attribute change and flashed empty. Each section now updates on its own. Measurement pages also count a change that just happened in "Changes" and "History" after a few seconds.
 
 ## 26.10.32 – 17.10.2026
 
