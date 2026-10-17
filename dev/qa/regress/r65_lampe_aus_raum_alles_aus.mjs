@@ -11,7 +11,8 @@ import { open, dashboard, casoraDashboards as _cd, fakeStates, check, need, fini
 const desks = (await _cd()).filter((d) => !d.mobile && (d.config.views || []).length > 1);
 await need('Casora-Dashboard mit Räumen', desks.length);
 const { page } = await open({ width: 1024, height: 768, dark: false, theme: 'Casora' });
-const expand = (opt) => page.evaluate((o) => document.querySelector('home-assistant').hass.callService('input_select', 'select_option', { entity_id: 'input_select.casora_expanded_row', option: o }).catch(() => {}), opt);
+// Beim Aufräumen kann die Seite gerade neu laden (Kontext weg) – das ist kein Fehler des Tests.
+const expand = (opt) => page.evaluate((o) => document.querySelector('home-assistant').hass.callService('input_select', 'select_option', { entity_id: 'input_select.casora_expanded_row', option: o }).catch(() => {}), opt).catch(() => {});
 let done = false;
 outer: for (const dash of desks) for (const [i, v] of dash.config.views.entries()) {
   if (!i || !/light\./.test(JSON.stringify(v))) continue;

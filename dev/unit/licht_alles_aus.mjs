@@ -49,23 +49,18 @@ assert.deepEqual(calls, [['light', 'turn_on', 'light.testraum_decke']], JSON.str
 S.els = {};
 assert.equal(S.head({ _config: { template: ['casora_switch'] } }, hass), null);
 
-// Eine Leuchte: Schalter für diese Leuchte.
+// Eine Leuchte (keine Gruppe): kein Kopfschalter – auch nicht aus einem Raum heraus (17.10.2026: er schaltete
+// den ganzen Raum; die Leuchte schaltet der Ein/Aus-Knopf im Popup).
 S.render({ gid: 'light.x', flat: { name: 'Flur', rid: 'light.decke', lights: ['light.decke'] } }, 'hero', states, hass, null);
-hs = S.head(tileSrc, hass);
-assert.deepEqual(hs.entities, ['light.decke']);
-calls.length = 0;
-hs.toggle(false);
-assert.deepEqual(calls, [['light', 'turn_on', ['light.decke']]]);
-// Leuchte aus einem Raum (sc.room): Schalter gilt dem Raum (aus), einschalten nur diese Leuchte.
+assert.equal(S.head(tileSrc, hass), false, 'einzelne Leuchte: kein Kopfschalter');
 S.render({ gid: 'light.x', flat: { name: 'Wohnzimmer', rid: 'light.decke', lights: ['light.decke'], room: ['light.decke', 'light.stehlampe'] } }, 'hero', states, hass, null);
+assert.equal(S.head(tileSrc, hass), false, 'Leuchte aus einem Raum: kein Kopfschalter');
+// Lichtgruppe als eine Entität: Kopfschalter bleibt.
+states['light.grp'] = { entity_id: 'light.grp', state: 'on', attributes: { entity_id: ['light.decke', 'light.stehlampe'] } };
+S.render({ gid: 'light.x', flat: { name: 'Gruppe', rid: 'light.grp', lights: ['light.grp'] } }, 'hero', states, hass, null);
 hs = S.head(tileSrc, hass);
-assert.deepEqual(hs.entities, ['light.decke', 'light.stehlampe'], 'Raum der Leuchte');
-calls.length = 0; L('light.decke', false); L('light.stehlampe', true);
-hs.toggle(true);
-assert.deepEqual(calls, [['light', 'turn_off', ['light.stehlampe']]]);
-calls.length = 0;
-hs.toggle(false);
-assert.deepEqual(calls, [['light', 'turn_on', ['light.decke']]]);
+assert.deepEqual(hs && hs.entities, ['light.grp'], 'Gruppe behält den Kopfschalter');
+delete states['light.grp'];
 // Raum einer einzelnen Leuchte (Review 1.1.1): kleinste Lichtgruppe in einem Bereich, nie die
 // Gruppe „alle Lichter“ über mehrere Bereiche – sonst schaltete „Alles aus“ das ganze Haus.
 {
