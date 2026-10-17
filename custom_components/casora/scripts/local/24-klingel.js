@@ -114,7 +114,7 @@
           if (k === 'play_quick_reply_message') c.quick = eid;
           else if (k === 'auto_quick_reply_message') c.autoReply = eid;
           else if (k === 'doorbell_led') c.led = eid;
-          else if (k === 'day_night') c.dayMode = eid;
+          else if (k === 'day_night' || k === 'day_night_mode') c.dayMode = eid;  // Reolink: day_night_mode
         } else if (dom === 'number') {
           if (k === 'volume') c.vol.spk = eid;
           else if (k === 'volume_speak') c.vol.speak = eid;
