@@ -7,16 +7,24 @@ Ergänzt zu Waschmaschine A/B (waesche.py), Testsauger und Testdrucker (halten.p
 Dienst casora_mock.live_lauf (geraet, sekunden): spielt an einem Gerät einen ganzen Durchgang durch –
 Start → Fortschritt in Schritten → Fertig → wieder aus/bereit – damit man im Studio-Protokoll und am
 Test-Handy (sensor.casora_mock_testhandy) sieht, wie die Live-Aktivität entsteht, sich aktualisiert und endet.
+Der Testsauger bekommt Fortschritt, Fläche und Reinigungszeit (Roborock-Schlüssel clean_percent, cleaning_area,
+cleaning_time), damit die Live-Aktivität Fortschritt und „läuft seit“ zeigt.
+
+Ein laufender Durchgang übersteht einen Neustart: Start und Dauer liegen in /config/casora_mock_live_lauf.json;
+nach dem Start spielt der Mock den Stand nach, der gerade dran wäre, und läuft weiter (Wiederaufnahme vorführbar).
 Alle Namen erfunden.
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+import json
+import os
+from datetime import datetime, timedelta, timezone
 
 DISH_PROGS = ["dishcare_dishwasher_program_eco50", "dishcare_dishwasher_program_auto2", "dishcare_dishwasher_program_quick45"]
 HC_STATES = ["inactive", "ready", "delayedstart", "run", "pause", "actionrequired", "finished", "error", "aborting"]
 WD_STATES = ["off", "idle", "starting", "running", "paused", "user_paused", "ending", "finished", "anti_wrinkle",
              "delay_wait", "interrupted", "force_stopped", "unknown", "clean"]
+LAUF_DATEI = "casora_mock_live_lauf.json"
 GERAETE = ["waschmaschine_a", "waschmaschine_b", "geschirrspueler", "trockner", "sauger", "drucker"]
 # Zustands-Entität je Testgerät – darüber ordnet Casora (live_activity.payload → test_runs) den Knopf
 # „Testlauf starten“ im Studio dem gefundenen Gerät zu.
@@ -66,6 +74,10 @@ def extra(now: datetime) -> dict:
            {"icon": "mdi:timer-outline"}, dc="duration", unit="s"),
         _e("sensor.trockner_test_zyklusanzahl", "88", "cycle_count", t, "Trockner Test Zyklusanzahl", {"icon": "mdi:counter"}, unit="cycles"),
         _e("binary_sensor.trockner_test_lauft", "off", "running", t, "Trockner Test Läuft"),
+        # Testsauger (Gerät aus halten.py): Fortschritt, Fläche, Reinigungszeit wie Roborock
+        _e("sensor.testsauger_reinigungsfortschritt", "0", "clean_percent", "testsauger", "Testsauger Reinigungsfortschritt", unit="%"),
+        _e("sensor.testsauger_reinigungsflaeche", "0", "cleaning_area", "testsauger", "Testsauger Reinigungsfläche", unit="m²"),
+        _e("sensor.testsauger_reinigungszeit", "0", "cleaning_time", "testsauger", "Testsauger Reinigungszeit", dc="duration", unit="min"),
     ]
     return {
         "areas": [],
@@ -120,8 +132,14 @@ def _plan(geraet: str, now: datetime, total_min: int = 60) -> list[dict]:
         steps += [{s: "finished", pct: "100", rem: "0"}, {s: "ready", pr: "unknown", ph: "unknown", pct: "0"}]
         return steps
     if geraet == "sauger":
-        v = "vacuum.testsauger"
-        return [{v: "cleaning"}, {v: "cleaning"}, {v: "cleaning"}, {v: "paused"}, {v: "cleaning"}, {v: "returning"}, {v: "docked"}]
+        v, pct, area, tm = ("vacuum.testsauger", "sensor.testsauger_reinigungsfortschritt", "sensor.testsauger_reinigungsflaeche",
+                            "sensor.testsauger_reinigungszeit")
+        steps = [{v: "cleaning", pct: "0", area: "0", tm: "0"}]
+        for i, p in enumerate((20, 45, 60), start=1):
+            steps.append({v: "cleaning", pct: str(p), area: str(round(p * 0.4)), tm: str(i * total_min // 6)})
+        steps += [{v: "paused"}, {v: "cleaning", pct: "85", area: "34", tm: str(4 * total_min // 6)},
+                  {v: "returning", pct: "100", area: "40", tm: str(5 * total_min // 6)}, {v: "docked"}]
+        return steps
     if geraet == "drucker":
         P = "testdrucker"
         st, stage, pct, rem, layer = (f"sensor.{P}_druckstatus", f"sensor.{P}_aktueller_arbeitsschritt", f"sensor.{P}_druckfortschritt",
@@ -142,41 +160,81 @@ def setup(hass, mock) -> None:
     from homeassistant.util import dt as dt_util
 
     timers: dict[str, list] = {}
+    laeufe: dict[str, dict] = {}  # geraet → {start (Unix-Sekunden), sekunden} – überlebt den Neustart (LAUF_DATEI)
+    path = hass.config.path(LAUF_DATEI)
+
+    def _write(data: dict) -> None:
+        if data:
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump(data, fh)
+        elif os.path.exists(path):
+            os.remove(path)
+
+    def merken() -> None:
+        hass.async_add_executor_job(_write, dict(laeufe))
 
     def cancel(geraet: str) -> None:
         for c in timers.pop(geraet, []):
             c()
 
-    async def live_lauf(call: ServiceCall) -> None:
-        geraet = call.data["geraet"]
-        seconds = max(10, int(call.data.get("sekunden", 90)))
+    def apply(step: dict) -> None:
+        for eid, state in step.items():
+            if eid:
+                mock.set(eid, state)
+
+    def spielen(geraet: str, start: float, seconds: int) -> None:
+        """Durchgang ab start abspielen; schon vergangene Schritte sofort (Wiederaufnahme nach Neustart)."""
         cancel(geraet)
-        steps = _plan(geraet, dt_util.utcnow())
+        steps = _plan(geraet, datetime.fromtimestamp(start, tz=timezone.utc))
         if not steps:
             return
         gap = seconds / max(1, len(steps) - 1)
-
-        def apply(step: dict) -> None:
-            for eid, state in step.items():
-                if eid:
-                    mock.set(eid, state)
-
-        apply(steps[0])
-        for i, step in enumerate(steps[1:], start=1):
-            @callback
-            def later(_now, step=step) -> None:
+        elapsed = max(0.0, dt_util.utcnow().timestamp() - start)
+        laeufe[geraet] = {"start": start, "sekunden": seconds}
+        merken()
+        for i, step in enumerate(steps):
+            if i * gap <= elapsed:
                 apply(step)
+                continue
 
-            timers.setdefault(geraet, []).append(async_call_later(hass, i * gap, later))
+            @callback
+            def later(_now, step=step, last=(i == len(steps) - 1)) -> None:
+                apply(step)
+                if last:
+                    laeufe.pop(geraet, None)
+                    merken()
+
+            timers.setdefault(geraet, []).append(async_call_later(hass, i * gap - elapsed, later))
+        if elapsed >= (len(steps) - 1) * gap:
+            laeufe.pop(geraet, None)
+            merken()
+
+    async def live_lauf(call: ServiceCall) -> None:
+        spielen(call.data["geraet"], dt_util.utcnow().timestamp(), max(10, int(call.data.get("sekunden", 90))))
 
     async def live_stopp(call: ServiceCall) -> None:
         for g in list(timers):
             cancel(g)
+        laeufe.clear()
+        merken()
+
+    async def wiederaufnehmen() -> None:
+        def _read() -> dict:
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    return json.load(fh)
+            except (OSError, ValueError):
+                return {}
+
+        for geraet, lauf in (await hass.async_add_executor_job(_read)).items():
+            if geraet in GERAETE and isinstance(lauf, dict):
+                spielen(geraet, float(lauf.get("start", 0)), int(lauf.get("sekunden", 90)))
 
     hass.services.async_register("casora_mock", "live_lauf", live_lauf, vol.Schema({
         vol.Required("geraet"): vol.In(GERAETE), vol.Optional("sekunden", default=90): vol.All(int, vol.Range(min=10, max=3600))}))
     hass.services.async_register("casora_mock", "live_stopp", live_stopp)
     hass.data["casora_mock_live"] = {eid: g for g, eid in ZUSTAND.items()}
+    hass.async_create_task(wiederaufnehmen(), eager_start=False)
 
 
 def note_notify(hass, call) -> None:

@@ -112,9 +112,13 @@ s = la.snapshot(washer(), S.get, NOW, 0)
 d = la.build_payload(s, "washer", "W", "t", "/", True)["data"]
 check("kurze Pause (WashData): minor, Grundfarbe, „Kurze Pause“", s.minor and d["notification_icon_color"] == la.COLOR["washer"]
       and s.message.startswith("Kurze Pause"), (s, d))
-for raw in ("unknown", "unavailable", "", "irgendwas_neues", "idle", "off", "clean_x"):
+for raw in ("irgendwas_neues", "idle", "off", "clean_x"):
     st("sensor.w_state", raw)
     check(f"„{raw}“ ist off, nie Fertig", la.snapshot(washer(), S.get, NOW, 0).phase == "off")
+# Nicht erreichbar ist kein Gerätezustand: „gone“ (nie off/Fertig) – Fund 2 Nutzertest 17.10.
+for raw in ("unknown", "unavailable", ""):
+    st("sensor.w_state", raw)
+    check(f"„{raw}“ ist nicht erreichbar (gone), nie Fertig", la.snapshot(washer(), S.get, NOW, 0).phase == "gone")
 
 # Geschirrspüler (Home Connect WS): Stunden, Programmname, Startverzögerung
 st("sensor.g_state", "run"); st("sensor.g_prog", "dishcare_dishwasher_program_eco50"); st("sensor.g_phase", "mainwash")
@@ -141,7 +145,10 @@ check("Programmname aus Schlüssel", la.program_name("laundry_care_washer_progra
 st("vacuum.v", "cleaning"); st("sensor.v_status", "segment_cleaning"); st("sensor.v_room", "Küche"); st("sensor.v_pct", "40")
 st("sensor.v_area", "32.4", unit_of_measurement="m²"); st("sensor.v_time", "2700", unit_of_measurement="s"); st("sensor.v_err", "none")
 s = la.snapshot(vac(), S.get, NOW, 0)
-check("Sauger reinigt: Reinigt · Küche · 40 %, Kurztext Raum", s.phase == "run" and s.message == "Reinigt · Küche · 40 %" and s.critical == "Küche", s)
+check("Sauger reinigt: Reinigt · Küche · 32 m² · 40 %, Kurztext Raum", s.phase == "run" and s.message == "Reinigt · Küche · 32 m² · 40 %" and s.critical == "Küche", s)
+# Fund 7: Fortschritt vom Sauger, Reinigungszeit → „läuft seit“ (chronometer ab Start)
+d = la.build_payload(s, "vacuum", "S", "t", "/", True)["data"]
+check("Sauger: Fortschritt 40, läuft seit Reinigungszeit", d["progress"] == 40 and d.get("chronometer") and d["when"] == int(NOW.timestamp()) - 2700, d)
 st("sensor.v_status", "washing_the_mop")
 check("Mopp waschen: Text statt Raum", la.snapshot(vac(), S.get, NOW, 0).critical == "Mopp waschen")
 st("vacuum.v", "docked"); st("sensor.v_status", "charging")
@@ -167,7 +174,9 @@ st("sensor.p_state", "failed"); st("sensor.p_stage", "idle")
 s = la.snapshot(printer(), S.get, NOW, 0)
 check("Drucker fehlgeschlagen: error, Text", s.phase == "error" and s.message == "Fehlgeschlagen · Testwürfel", s)
 st("sensor.p_state", "offline")
-check("Drucker offline = off", la.snapshot(printer(), S.get, NOW, 0).phase == "off")
+check("Drucker offline = nicht erreichbar (gone)", la.snapshot(printer(), S.get, NOW, 0).phase == "gone")
+st("sensor.p_state", "idle")
+check("Drucker idle = off", la.snapshot(printer(), S.get, NOW, 0).phase == "off")
 
 # Home Connect (offiziell): Programm aus dem select-Schlüssel, Endzeit als Zeitstempel, kein Phasen-Sensor
 hc = Found("d-hc", "washer", "home_connect", "sehr gut", {"state": "sensor.h_state", "program": "select.h_prog", "progress": "sensor.h_pct",
@@ -206,7 +215,40 @@ check("Miele program_ended = Fertig", la.snapshot(mi, S.get, NOW, 0).phase == "d
 st("sensor.m_state", "failure")
 check("Miele failure = Fehler", la.snapshot(mi, S.get, NOW, 0).phase == "error")
 st("sensor.m_state", "not_connected")
-check("Miele not_connected = off", la.snapshot(mi, S.get, NOW, 0).phase == "off")
+check("Miele not_connected = nicht erreichbar (gone)", la.snapshot(mi, S.get, NOW, 0).phase == "gone")
+
+# Fund 6: HA-Sprache Deutsch → keine englischen Texte in Meldungen (Probe, Phasen, Fertig, Schritte)
+EN_ONLY = set()
+for table in (la.T, la.PHASE, la.PROGRAM, la.VAC_TEXT, la.PRINT_STEP, la.TITLE):
+    for de_, en_ in table.values():
+        if en_ and en_ != de_ and not any(en_ in v[0] for v in table.values()):
+            EN_ONLY.add(en_.split(" {")[0])
+msgs = []
+for kind in la.KINDS:
+    ps = la.probe_snapshot(kind, NOW, 0)
+    msgs += [ps.message, ps.critical or "", ps.step or "", ps.program or "", ps.extra or "", la.TITLE[kind][0] + " · " + la.T["probe"][0]]
+for raw in ("running", "ending", "paused", "user_paused", "finished", "anti_wrinkle", "delay_wait", "interrupted"):
+    st("sensor.w_state", raw); st("sensor.w_phase", "spin"); st("sensor.w_rem", "20", unit_of_measurement="min")
+    sn = la.snapshot(washer(), S.get, NOW, 0)
+    msgs += [sn.message, sn.critical or "", sn.step or ""]
+for raw in ("run", "pause", "actionrequired", "error", "finished", "delayedstart"):
+    st("sensor.g_state", raw)
+    sn = la.snapshot(dish(), S.get, NOW, 0)
+    msgs += [sn.message, sn.critical or ""]
+for raw in la.VAC_TEXT:
+    st("vacuum.v", "cleaning"); st("sensor.v_status", raw)
+    sn = la.snapshot(vac(), S.get, NOW, 0)
+    msgs += [sn.message, sn.critical or ""]
+st("vacuum.v", "docked"); st("sensor.v_status", "charging")
+msgs.append(la.snapshot(vac(), S.get, NOW, 0, prev=la.Snap(phase="run")).message)
+for stage in la.PRINT_STEP:
+    for raw in ("prepare", "running", "pause", "finish", "failed"):
+        st("sensor.p_state", raw); st("sensor.p_stage", stage); st("sensor.p_task", "unknown")
+        sn = la.snapshot(printer(), S.get, NOW, 0)
+        msgs += [sn.message, sn.critical or ""]
+english = sorted({w for w in EN_ONLY for m in msgs if w and w in m})
+check("Deutsch: keine englischen Texte in Meldungen/Probe/Phasen/Schritten", not english, english)
+st("sensor.p_task", "Testwürfel.3mf")
 
 # Probe
 pr = la.build_payload(la.probe_snapshot("washer", NOW, 0), "washer", "Probe", la.PROBE_TAG, "/", False)
@@ -424,15 +466,129 @@ async def flow():
 
     # Probe: an gespeicherte Empfänger, mit Probe-Tag
     class _Later:
+        fn = None
+
         def __call__(self, hass, delay, fn):
+            _Later.fn = fn
             return lambda: None
 
     import homeassistant.helpers.event as ev
+    from homeassistant.core import is_callback
     ev.async_call_later = _Later()
+    tasks: list = []
+    L5.hass.async_create_task = lambda coro, eager_start=False: tasks.append(asyncio.ensure_future(coro))
     svc5.calls.clear()
     r = await L5.async_probe("d-x")
     check("Probe: gesendet, Probe-Tag, Beispielwerte", r == {"ok": True, "targets": 1} and svc5.calls[0][1]["data"]["tag"] == la.PROBE_TAG
           and svc5.calls[0][1]["data"]["progress"] == 42 and svc5.calls[0][1]["title"] == "Dryer · Test", svc5.calls)
+    # Fund 4: der Timer-Rückruf muss im Event-Loop laufen (@callback) – sonst ruft HA ihn im Worker-Thread
+    # und async_create_task wirft; das Clear der Probe kam nie an.
+    check("Probe-Timer: Rückruf ist @callback (Event-Loop, kein Worker-Thread)", _Later.fn is not None and is_callback(_Later.fn), _Later.fn)
+    svc5.calls.clear()
+    _Later.fn(NOW)
+    await asyncio.gather(*tasks)
+    check("Probe-Timer: Clear der Probe kommt an", [c[1]["message"] for c in svc5.calls] == ["clear_notification"]
+          and svc5.calls[0][1]["data"]["tag"] == la.PROBE_TAG, svc5.calls)
+
+    # ── Fund 1: Gerät aus → speichern → an → speichern → neu laden = an ──
+    L7, svc7 = make([washer()])
+    await L7.async_start()
+    full = lambda on: {"d-washer": {"on": on, "done_min": 30, "quiet": True, "interval_min": 10}}  # noqa: E731
+    await L7.async_set({"targets": ["notify.mobile_app_handy"], "devices": full(False), "devices_replace": True})
+    check("Fund 1: aus gespeichert", L7.cfg["devices"] == {"d-washer": {"on": False}}, L7.cfg)
+    await L7.async_set({"targets": ["notify.mobile_app_handy"], "devices": full(True), "devices_replace": True})
+    check("Fund 1: wieder an → Eintrag weg (Standard)", L7.cfg["devices"] == {}, L7.cfg)
+    L8, _ = make([washer()], dict(L7.store.saved))
+    await L8.async_start()
+    check("Fund 1: nach Neuladen an", L8.enabled("d-washer") and L8.payload()["found"][0]["settings"]["on"] is True, L8.cfg)
+    m = la.merge_settings({"targets": [], "devices": {"a": {"on": False}, "b": {"quiet": False}}},
+                          {"devices": {"b": {"on": True, "quiet": False}}, "devices_replace": True})
+    check("Fund 1: Ersetzen – nicht genannte Geräte fallen auf Standard", m["devices"] == {"b": {"quiet": False}}, m)
+
+    # ── Fund 2: nicht erreichbar ist nie „Fertig“; kurzer Ausfall läuft leise weiter ──
+    st("vacuum.v", "cleaning"); st("sensor.v_status", "segment_cleaning"); st("sensor.v_room", "Küche"); st("sensor.v_pct", "40")
+    L9, svc9 = make([vac()])
+    await L9.async_start()
+    await L9.async_set({"targets": ["notify.mobile_app_handy"]})
+    check("Sauger läuft: Aktivität beim Einschalten (leise) aufgenommen", L9.active.get("d-vac", {}).get("phase") == "run" and len(svc9.calls) == 1, svc9.calls)
+    svc9.calls.clear()
+    st("vacuum.v", "unavailable"); st("sensor.v_status", "unavailable")
+    await L9._evaluate("d-vac", "state")
+    check("Sauger nicht erreichbar: nichts gesendet, kein Fertig, bleibt aktiv", not svc9.calls and L9.active["d-vac"]["phase"] == "run"
+          and L9.payload()["found"][0]["phase"] == "gone", (svc9.calls, L9.active))
+    st("vacuum.v", "cleaning"); st("sensor.v_status", "segment_cleaning"); st("sensor.v_pct", "45")
+    await L9._evaluate("d-vac", "state")
+    check("Sauger wieder da: leise weiter, nicht laut neu", len(svc9.calls) == 1 and svc9.calls[0][1]["data"]["silent"] is True
+          and "gone_at" not in L9.active["d-vac"], svc9.calls)
+    svc9.calls.clear()
+    st("vacuum.v", "unavailable"); st("sensor.v_status", "unavailable")
+    await L9._evaluate("d-vac", "state")
+    st("vacuum.v", "docked"); st("sensor.v_status", "charging")
+    await L9._evaluate("d-vac", "state")
+    check("Ausfall, danach angedockt: leise beendet, kein „Fertig“", [c[1]["message"] for c in svc9.calls] == ["clear_notification"]
+          and not any(e["phase"] == "done" for e in L9.log), svc9.calls)
+    # Ausfall zu lange: leise abräumen
+    st("vacuum.v", "cleaning"); st("sensor.v_status", "segment_cleaning")
+    await L9._evaluate("d-vac", "state")
+    svc9.calls.clear()
+    st("vacuum.v", "unavailable"); st("sensor.v_status", "unavailable")
+    await L9._evaluate("d-vac", "state")
+    await L9._evaluate("d-vac", "tick")
+    check("Ausfall kurz, Takt: noch nichts", not svc9.calls and "d-vac" in L9.active)
+    L9.active["d-vac"]["gone_at"] -= la.GONE_MAX_S + 1
+    await L9._evaluate("d-vac", "tick")
+    check("Ausfall länger als GONE_MAX: leise abgeräumt", [c[1]["message"] for c in svc9.calls] == ["clear_notification"] and not L9.active, svc9.calls)
+    # Waschmaschine: läuft → unavailable → läuft: kein neuer lauter Start
+    st("sensor.w_state", "running"); st("sensor.w_pct", "30")
+    L10, svc10 = make([washer()])
+    await L10.async_start()
+    await L10.async_set({"targets": ["notify.mobile_app_handy"]})
+    svc10.calls.clear()
+    st("sensor.w_state", "unavailable")
+    await L10._evaluate("d-washer", "state")
+    check("Waschmaschine nicht erreichbar: kein Clear, kein Fertig", not svc10.calls and "d-washer" in L10.active, svc10.calls)
+    st("sensor.w_state", "running"); st("sensor.w_pct", "35")
+    await L10._evaluate("d-washer", "state")
+    check("Waschmaschine wieder da: leise weiter", len(svc10.calls) == 1 and svc10.calls[0][1]["data"]["silent"] is True, svc10.calls)
+    # Nicht aktiv, Ausfall, dann „finished“ (altes Fertig nach Neustart der Integration): nicht melden
+    L10.active.clear(); svc10.calls.clear()
+    st("sensor.w_state", "unavailable")
+    await L10._evaluate("d-washer", "state")
+    st("sensor.w_state", "finished")
+    await L10._evaluate("d-washer", "state")
+    check("nach Ausfall altes „finished“: nichts gemeldet", not svc10.calls and L10.muted.get("d-washer") == "done", svc10.calls)
+
+    # ── Fund 5: Neustart, Sauger inzwischen angedockt → Clear, nie „Fertig“ ──
+    st("vacuum.v", "docked"); st("sensor.v_status", "charging")
+    seedv = {"targets": ["notify.mobile_app_handy"], "devices": {},
+             "active": {"d-vac": {"tag": "casora-live-vacuum-d-vac", "kind": "vacuum", "phase": "run", "sent_at": 0,
+                                  "since": NOW.isoformat()}}}
+    L11, svc11 = make([vac()], seedv)
+    await L11.async_start()
+
+    async def _rescan11():
+        pass
+
+    L11.rescan = _rescan11
+    await L11._resume()
+    check("Neustart, Sauger angedockt: nur Clear, kein Fertig", [c[1]["message"] for c in svc11.calls] == ["clear_notification"]
+          and not L11.active, svc11.calls)
+    # Neustart, Sauger reinigt noch: leise wieder aufgenommen
+    st("vacuum.v", "cleaning"); st("sensor.v_status", "segment_cleaning")
+    L12, svc12 = make([vac()], seedv)
+    await L12.async_start()
+    L12.rescan = _rescan11
+    await L12._resume()
+    check("Neustart, Sauger reinigt: leise wieder aufgenommen", len(svc12.calls) == 1 and svc12.calls[0][1]["data"]["silent"] is True, svc12.calls)
+
+    # ── Fund 7: Sauger ohne Reinigungszeit → „läuft seit“ ab Start der Aktivität ──
+    vx = Found("d-vx", "vacuum", "vacuum", "sehr gut", {"state": "vacuum.vx"}, name="Sauger X")
+    st("vacuum.vx", "cleaning")
+    L13, svc13 = make([vx])
+    await L13.async_start()
+    await L13.async_set({"targets": ["notify.mobile_app_handy"]})
+    d13 = svc13.calls[0][1]["data"] if svc13.calls else {}
+    check("Sauger ohne Felder: chronometer ab Start", d13.get("chronometer") is True and abs(d13.get("when", 0) - dt_util.utcnow().timestamp()) < 5, d13)
 
     # Entladen der Integration: danach bewertet nichts mehr
     svc5.calls.clear()

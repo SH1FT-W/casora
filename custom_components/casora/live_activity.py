@@ -17,7 +17,8 @@ Casora-Palette; Texte Deutsch/Englisch nach HA-Sprache; Zeiten als Ortszeit.
 
 WebSocket (nur Admins):
   casora/live/get   ← {} → {targets, devices, found: [...], notify_services, log, active, url, test_runs (nur Testhaus)}
-  casora/live/set   ← {targets?: [notify.…], devices?: {<device_id>: {on?, done_min?, quiet?, interval_min?}}} → wie get
+  casora/live/set   ← {targets?: [notify.…], devices?: {<device_id>: {on?, done_min?, quiet?, interval_min?}},
+                       devices_replace?: bool (devices = vollständige Liste, ersetzt alles)} → wie get
   casora/live/probe ← {device_id?} → {ok, targets}   (Beispiel-Aktivität, räumt sich nach 2 Min. selbst auf)
 """
 
@@ -50,6 +51,10 @@ LIMITS = {"done_min": (1, 240), "interval_min": (1, 60)}
 LOG_MAX = 20
 PROBE_TAG = "casora-live-probe"
 PROBE_CLEAR_S = 120
+# Gerät nicht erreichbar (unavailable/unknown/offline): Aktivität ruhig stehen lassen; kommt das Gerät
+# wieder, geht sie leise weiter. Erst nach dieser Zeit ohne Gerät räumt Casora sie ab (leise, nie „Fertig“).
+GONE_MAX_S = 30 * 60
+GONE_STATES = {"unavailable", "unknown", "", "none", "not_connected", "offline", "device_offline"}
 TICK = timedelta(seconds=60)
 
 # Farben aus der Casora-Palette (theme_weich.yaml casora-color-*), keine iOS-Systemwerte.
@@ -69,7 +74,7 @@ T = {
     "endet": ("Endet", "Ending"), "endet_gleich": ("Endet gleich", "Ending soon"),
     "fehlgeschlagen": ("Fehlgeschlagen", "Failed"), "vorbereitung": ("Vorbereitung", "Preparing"),
     "schicht": ("Schicht {a}/{b}", "Layer {a}/{b}"), "druckauftrag": ("Druckauftrag", "Print job"),
-    "flaeche_dauer": ("{a} m² in {m} Min.", "{a} m² in {m} min"), "probe": ("Probe", "Test"),
+    "flaeche_dauer": ("{a} m² in {m} Min.", "{a} m² in {m} min"), "flaeche": ("{a} m²", "{a} m²"), "probe": ("Probe", "Test"),
     "probe_text": ("Beispiel aus Casora – verschwindet in 2 Minuten", "Sample from Casora – gone in 2 minutes"),
 }
 
@@ -128,8 +133,9 @@ PROGRAM_PREFIX = re.compile(r"^(laundry_care_(washer|dryer)_program_|dishcare_di
 VAC_CLEANING = {"cleaning", "segment_cleaning", "zoned_cleaning", "spot_cleaning", "robot_status_mopping", "segment_mopping",
                 "zoned_mopping", "clean_mop_cleaning", "clean_mop_mopping", "segment_clean_mop_cleaning",
                 "segment_clean_mop_mopping", "zoned_clean_mop_cleaning", "zoned_clean_mop_mopping"}
-VAC_REST = {"charging", "charging_complete", "idle", "device_offline", "shutting_down", "updating", "locked", "unknown",
-            "unavailable", "docked", "off", "sleeping"}
+# Ruhezustände – „unknown“/„unavailable“/„device_offline“ gehören nicht dazu: das ist „nicht erreichbar“ (gone),
+# nie Andocken und nie „Fertig“.
+VAC_REST = {"charging", "charging_complete", "idle", "shutting_down", "updating", "locked", "docked", "off", "sleeping"}
 VAC_TEXT = {
     "cleaning": ("Reinigt", "Cleaning"), "segment_cleaning": ("Reinigt", "Cleaning"), "zoned_cleaning": ("Reinigt", "Cleaning"),
     "spot_cleaning": ("Punktreinigung", "Spot cleaning"), "robot_status_mopping": ("Wischt", "Mopping"), "segment_mopping": ("Wischt", "Mopping"),
@@ -169,7 +175,7 @@ PRINT_PHASE = {"prepare": "run", "running": "run", "pause": "pause", "finish": "
 class Snap:
     """Was gerade zu zeigen ist – unabhängig von der Quelle."""
 
-    phase: str = "off"            # off | delay | run | pause | attn | done | error
+    phase: str = "off"            # off | delay | run | pause | attn | done | error | gone (nicht erreichbar)
     program: str | None = None
     step: str | None = None       # Phase, Arbeitsschritt oder Raum
     pct: int | None = None
@@ -235,6 +241,11 @@ def _end_from(st, now: datetime) -> int | None:
     return int(now.timestamp() + s) if s and s > 0 else None
 
 
+def _gone(st) -> bool:
+    """Zustands-Entität fehlt oder ist nicht erreichbar – kein Gerätezustand, nichts daraus ableiten."""
+    return st is None or str(st.state).strip().lower() in GONE_STATES
+
+
 def _clean(st) -> str:
     return str(st.state).strip() if st is not None and str(st.state).lower() not in ("unknown", "unavailable", "none", "") else ""
 
@@ -273,6 +284,8 @@ def snapshot(found: Found, get: Callable[[str], Any], now: datetime, lang: int, 
 
 
 def _snap_appliance(found: Found, g, now: datetime, lang: int) -> Snap:
+    if _gone(g("state")):
+        return Snap(phase="gone")
     raw = str(getattr(g("state"), "state", "") or "").lower()
     ph = STATE_PHASE.get(raw, "off")
     s = Snap(phase=ph)
@@ -325,8 +338,12 @@ def _snap_appliance(found: Found, g, now: datetime, lang: int) -> Snap:
 
 
 def _snap_vacuum(found: Found, g, now: datetime, lang: int, prev: Snap | None) -> Snap:
+    if _gone(g("state")):
+        return Snap(phase="gone")
     vst = str(getattr(g("state"), "state", "") or "").lower()
     sst = _clean(g("status")).lower()
+    if sst in GONE_STATES and sst:
+        return Snap(phase="gone")
     raw = sst or vst
     text = VAC_TEXT[raw][lang] if raw in VAC_TEXT else raw.replace("_", " ").capitalize()
     cleaning = raw in VAC_CLEANING
@@ -356,6 +373,14 @@ def _snap_vacuum(found: Found, g, now: datetime, lang: int, prev: Snap | None) -
             s.message = _join(T["fertig"][lang], s.extra)
         return s
     pct_t = _pct_text(s.pct, lang) if s.pct is not None else None
+    # Fortschritt/Dauer, wenn der Sauger sie liefert (Roborock: clean_percent, cleaning_area, cleaning_time):
+    # Reinigungszeit → „läuft seit“; ohne sie setzt _evaluate den Start der Aktivität ein.
+    secs = _seconds(g("time"))
+    if secs is not None and secs >= 0 and ph in ("run", "pause"):
+        s.start_ts = int(now.timestamp() - secs)
+    area = _num(g("area"))
+    if area and ph in ("run", "pause"):
+        s.extra = T["flaeche"][lang].format(a=int(round(area)))
     if ph == "error":
         err = _clean(g("error")).replace("_", " ")
         s.critical = T["fehler"][lang]
@@ -363,15 +388,17 @@ def _snap_vacuum(found: Found, g, now: datetime, lang: int, prev: Snap | None) -
     elif ph == "pause":
         s.step = room or None
         s.critical = T["pause"][lang]
-        s.message = _join(T["pausiert"][lang], room, pct_t)
+        s.message = _join(T["pausiert"][lang], room, s.extra, pct_t)
     else:
         s.step = room if cleaning and room else text
-        s.critical = s.step
-        s.message = _join(text, room if cleaning else None, pct_t)
+        s.critical = pct_t if cleaning and not room and pct_t else s.step
+        s.message = _join(text, room if cleaning else None, s.extra if cleaning else None, pct_t)
     return s
 
 
 def _snap_printer(found: Found, g, now: datetime, lang: int) -> Snap:
+    if _gone(g("state")):
+        return Snap(phase="gone")
     raw = str(getattr(g("state"), "state", "") or "").lower()
     ph = PRINT_PHASE.get(raw, "off")
     s = Snap(phase=ph)
@@ -462,8 +489,16 @@ def device_settings(cfg: dict, device_id: str) -> dict[str, Any]:
 
 
 def merge_settings(cfg: dict, msg: dict) -> dict:
-    """Neue Einstellungen aus dem Studio prüfen und einarbeiten (gibt die geänderte Kopie zurück)."""
+    """Neue Einstellungen aus dem Studio prüfen und einarbeiten (gibt die geänderte Kopie zurück).
+
+    devices_replace: true → alle Geräte-Einträge stehen vollständig im Aufruf; fehlende Geräte gelten als
+    Standard (Eintrag weg), genannte werden ersetzt. Ohne: nur die genannten Schlüssel ändern sich."""
+    replace = bool(msg.get("devices_replace"))
     new = {"targets": list(cfg.get("targets") or []), "devices": {k: dict(v) for k, v in (cfg.get("devices") or {}).items()}}
+    if replace and "devices" in msg:
+        # Das Studio schickt alle Geräte vollständig: ersetzen statt ergänzen – sonst blieb ein altes
+        # „on: false“ stehen, wenn „an“ (Standard) gar nicht mitkam (Nutzertest 17.10.).
+        new["devices"] = {}
     if "targets" in msg:
         tg = []
         for t in msg["targets"] or []:
@@ -506,6 +541,7 @@ class LiveActivity:
         self.log: list[dict[str, Any]] = []
         self.found: list[Found] = []
         self.snaps: dict[str, Snap] = {}
+        self.gone: set[str] = set()                   # gerade nicht erreichbar
         self.url = "/"
         self.loaded = False
         self._unsubs: list = []
@@ -645,7 +681,7 @@ class LiveActivity:
             "targets": list(self.cfg.get("targets") or []),
             "devices": {k: dict(v) for k, v in (self.cfg.get("devices") or {}).items()},
             "found": [{**f.as_dict(), "settings": device_settings(self.cfg, f.device_id),
-                       "phase": self.snaps[f.device_id].phase if f.device_id in self.snaps else None}
+                       "phase": "gone" if f.device_id in self.gone else self.snaps[f.device_id].phase if f.device_id in self.snaps else None}
                       for f in self.found],
             "notify_services": [f"notify.{s}" for s in notify_services(self.hass) if s.startswith("mobile_app_")],
             "log": list(reversed(self.log[-LOG_MAX:])),
@@ -702,7 +738,34 @@ class LiveActivity:
         lang = _lang(self.hass)
         prev = self.snaps.get(device_id)
         act = self.active.get(device_id)
-        snap = snapshot(f, self.hass.states.get, now, lang, prev if act else None)
+        # Nach einem Ausfall kein „Fertig“ aus dem Andocken ableiten (wer weiß, was dazwischen war).
+        snap = snapshot(f, self.hass.states.get, now, lang, prev if act and not act.get("gone_at") else None)
+        was_gone = device_id in self.gone
+        if snap.phase == "gone":
+            # Nicht erreichbar: letzten Stand behalten, nichts senden, nichts beenden – außer die Fertig-Dauer
+            # ist um oder das Gerät bleibt zu lange weg (dann leise abräumen).
+            self.gone.add(device_id)
+            if not act or not self.enabled(device_id):
+                return
+            if not act.get("gone_at"):
+                act["gone_at"] = now.timestamp()
+                self._save()
+            if reason == "tick":
+                st = device_settings(self.cfg, device_id)
+                if act.get("phase") in ("done", "error") and act.get("done_at"):
+                    if now.timestamp() - act["done_at"] >= st["done_min"] * 60:
+                        self.muted[device_id] = act["phase"]
+                        await self._clear(device_id)
+                elif now.timestamp() - act["gone_at"] >= GONE_MAX_S:
+                    await self._clear(device_id)
+            return
+        self.gone.discard(device_id)
+        if act and act.pop("gone_at", None) is not None:
+            self._save()
+        if snap.phase in ("run", "pause") and snap.start_ts is None and snap.end_ts is None:
+            # Ohne Restzeit und ohne Dauer vom Gerät: „läuft seit“ ab Start der Aktivität.
+            since = dt_util.parse_datetime(str(act.get("since") or "")) if act else None
+            snap.start_ts = int((since or now).timestamp())
         self.snaps[device_id] = snap
         if not self.enabled(device_id):
             return
@@ -714,8 +777,9 @@ class LiveActivity:
             if act:
                 await self._clear(device_id)
             return
-        if reason == "resume" and not act and snap.phase in ("done", "error"):
-            # Einschalten/Neustart: ein altes Fertig/Fehler nicht nachträglich melden – erst der nächste Lauf.
+        if (reason == "resume" or was_gone) and not act and snap.phase in ("done", "error"):
+            # Einschalten/Neustart/Gerät wieder erreichbar: ein altes Fertig/Fehler nicht nachträglich melden –
+            # erst der nächste Lauf.
             self.muted[device_id] = snap.phase
             return
         if act and act.get("phase") in ("done", "error") and snap.phase in ("done", "error"):
@@ -797,7 +861,13 @@ class LiveActivity:
             await self._deliver(self.targets, clear_payload(PROBE_TAG), device_id=device_id, phase="clear", now=dt_util.utcnow())
             self._save()
 
-        self._probe_timers.append(async_call_later(self.hass, PROBE_CLEAR_S, lambda _n: self.hass.async_create_task(_later(), eager_start=False)))
+        @callback
+        def _due(_now) -> None:
+            # @callback: läuft im Event-Loop. Ein nacktes lambda führte HA im Worker-Thread aus →
+            # async_create_task aus fremdem Thread, Traceback, das Clear der Probe kam nie an.
+            self.hass.async_create_task(_later(), eager_start=False)
+
+        self._probe_timers.append(async_call_later(self.hass, PROBE_CLEAR_S, _due))
         return {"ok": True, "targets": len(self.targets)}
 
 
@@ -823,6 +893,7 @@ async def ws_get(hass: HomeAssistant, connection: websocket_api.ActiveConnection
     vol.Required("type"): "casora/live/set",
     vol.Optional("targets"): [str],
     vol.Optional("devices"): {str: dict},
+    vol.Optional("devices_replace"): bool,
 })
 @websocket_api.async_response
 async def ws_set(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
