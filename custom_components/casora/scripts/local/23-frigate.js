@@ -20,7 +20,8 @@
 //   window._casoraFrigate.detail(cam, id, back) · recView(cam, day, hour, back) – Detail, Aufnahmen
 //   window._casoraFrigate.hold(hass, id)                  – Einträge fürs Halten-Menü (22-halten.js)
 (function () {
-  if (window._casoraFrigate) return;
+  // Nur das eigene Modul zählt: ein fremdes Skript, das denselben Namen bloß als Marker setzt, sperrte Casora sonst aus.
+  if (window._casoraFrigate && typeof window._casoraFrigate.status === 'function') return;
   var F = window._casoraFrigate = {};
 
   var bad = function (s) { return s == null || s === 'unknown' || s === 'unavailable'; };

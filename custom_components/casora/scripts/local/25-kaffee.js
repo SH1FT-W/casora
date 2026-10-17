@@ -14,7 +14,8 @@
 //   window._casoraCoffee.popup(entity, states, hass)    – Popup casora_popup_coffee
 //   window._casoraCoffee.sec(part, c, states, hass, el) – Live-Bereiche (hero, ring, drinks, run, warn, care, stats)
 (function () {
-  if (window._casoraCoffee) return;
+  // Nur das eigene Modul zählt: ein fremdes Skript, das denselben Namen bloß als Marker setzt, sperrte Casora sonst aus.
+  if (window._casoraCoffee && typeof window._casoraCoffee.popup === 'function') return;
   var K = window._casoraCoffee = {};
 
   var COLOR = {

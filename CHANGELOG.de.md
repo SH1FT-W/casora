@@ -9,6 +9,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ### Behoben
 - **„JSTemplate error“ auf Kamera-Kacheln:** Meldet Home Assistant ein unübliches Sprachkürzel (z. B. mit Unterstrich), brachen die Uhrzeiten der Klingel- und Frigate-Kachel mit einem Fehler ab und button-card zeigte „JSTemplate error“. Casora nutzt jetzt immer ein gültiges Sprachkürzel – das sichert alle Zeit- und Zahlenformate ab.
 - **Reolink-Türklingel:** Die Tag/Nacht-Auswahl im Popup fehlte bei echten Klingeln (Reolink nennt den Schlüssel `day_night_mode`).
+- **Fremde Skripte mit gleichem Namen:** Setzte ein eigenes Skript `window._casoraKlingel` (oder `_casoraFrigate`, `_casoraCoffee`) nur als Marker, lud Casoras Modul nicht und die Kachel zeigte „JSTemplate error“. Jetzt zählt nur das echte Modul.
 
 ## 26.10.31 – 16.10.2026
 

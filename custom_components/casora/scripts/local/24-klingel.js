@@ -22,7 +22,8 @@
 //   window._casoraKlingel.hold(hass, id)               – Einträge fürs Halten-Menü (22-halten.js)
 //   <casora-klingel-live> – Live-Bild mit Ton und Sprechen (Karte im Popup)
 (function () {
-  if (window._casoraKlingel) return;
+  // Nur das eigene Modul zählt: ein fremdes Skript, das denselben Namen bloß als Marker setzt, sperrte Casora sonst aus.
+  if (window._casoraKlingel && typeof window._casoraKlingel.of === 'function') return;
   var KL = window._casoraKlingel = {};
 
   var HOLD = 10 * 60000;          // so lange heißt die Kachel „Hat geklingelt“ (in Akzent)

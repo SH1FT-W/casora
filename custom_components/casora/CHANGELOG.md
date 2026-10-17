@@ -9,6 +9,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ### Fixed
 - **"JSTemplate error" on camera tiles:** If Home Assistant reports an unusual language code (e.g. with an underscore), the times on the doorbell and Frigate tiles failed and button-card showed "JSTemplate error". Casora now always uses a valid language code – this protects all time and number formats.
 - **Reolink doorbell:** The day/night selection in the popup was missing on real doorbells (Reolink names the key `day_night_mode`).
+- **Foreign scripts with the same name:** If a custom script set `window._casoraKlingel` (or `_casoraFrigate`, `_casoraCoffee`) merely as a marker, Casora's module did not load and the tile showed "JSTemplate error". Now only the real module counts.
 
 ## 26.10.31 – 16.10.2026
 
