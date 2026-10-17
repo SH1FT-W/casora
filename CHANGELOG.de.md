@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.36 – 18.10.2026
+
+### Neu
+- **Kaffee-Kachel für Integrationen mit Stromerkennung:** Integrationen, die Getränke am Stromverlauf einer Steckdose erkennen (Status aus/bereit/läuft, letztes Programm, angelernte Programme), werden jetzt erkannt, im Studio und auf der Kachel. Die Kachel zeigt Bereit, Läuft und was fällig ist; das Popup zeigt das letzte Getränk mit Uhrzeit, die Pflege mit Litern und Tagen (Entkalken, Wasserfilter, Brühgruppe), Hinweise zu Wassertank, Bohnen, Trester und Milchsystem sowie die Statistik für heute, gesamt und je Getränk. Der Einschalter geht über das Symbol und das Halten-Menü. Getränke wählt man weiter an der Maschine.
+
 ## 26.10.35 – 17.10.2026
 
 ### Behoben

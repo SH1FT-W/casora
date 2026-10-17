@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.36 – 18.10.2026
+
+### New
+- **Coffee machine card for power-based integrations:** Integrations that recognize drinks from a smart plug's power curve (status off/ready/running, last program, learned programs) are now detected, in the Studio and on the tile. The tile shows ready, running and what is due; the popup shows the last drink with its time, care with liters and days (descaling, water filter, brew unit), notes for water tank, beans, grounds and milk system, and statistics for today, in total and per drink. The power switch works from the icon and the hold menu. Drinks are still chosen on the machine.
+
 ## 26.10.35 – 17.10.2026
 
 ### Fixed
