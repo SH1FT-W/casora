@@ -27,10 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Live-Aktivitäten", n0: "Waschmaschine, Trockner, Spüler, Saugroboter und 3D-Drucker live auf dem Sperrbildschirm des Handys – Fortschritt, Restzeit, Fertig. Einschalten unter Einstellungen › Live-Aktivitäten.",
+      n0t: "Live-Aktivitäten", n0: "Waschmaschine, Trockner, Spüler, Saugroboter und 3D-Drucker live auf dem Sperrbildschirm des Handys – Fortschritt, Restzeit, Fertig, Farbe je Gerät. Einschalten unter Einstellungen › Live-Aktivitäten.",
       n1t: "Mehr Glas", n1: "Casora Glas lässt das Raumfoto jetzt deutlich stärker durchscheinen – mit feiner Lichtkante. Aktive Kacheln bleiben gut lesbar.",
-      n2t: "Klima-Diagramm passend", n2: "Vom Luftfeuchtigkeits-Badge aus startet das Diagramm im Klima-Popup mit der Luftfeuchtigkeit.",
-      n3t: "Stabiler", n3: "Zeiten und Zahlen auch bei ungewöhnlicher HA-Sprache, Klingel-Popup mit Tag/Nacht-Modus, eigene Skripte stören die Community-Karten nicht mehr.",
+      n2t: "Klingel groß", n2: "Das Live-Bild der Klingel lässt sich groß öffnen, Mithören und Sprechen laufen weiter. Eine zweite Kamera ist per Umschalter direkt im Bild.",
+      n3t: "Feinschliff", n3: "Klima-Diagramm startet vom Luftfeuchtigkeits-Badge aus mit der Luftfeuchtigkeit, Auswahllisten im Studio klappen per zweitem Klick zu, Zeiten und Zahlen auch bei ungewöhnlicher HA-Sprache.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Live Activities", n0: "Washer, dryer, dishwasher, robot vacuum and 3D printer live on your phone's lock screen – progress, time left, done. Turn it on under Settings › Live Activities.",
+      n0t: "Live Activities", n0: "Washer, dryer, dishwasher, robot vacuum and 3D printer live on your phone's lock screen – progress, time left, done, a color per device. Turn it on under Settings › Live Activities.",
       n1t: "More glass", n1: "Casora Glas now lets the room photo show through much more – with a fine light edge. Active tiles stay readable.",
-      n2t: "Climate chart that fits", n2: "Opened from the humidity badge, the chart in the climate popup starts with humidity.",
-      n3t: "More robust", n3: "Times and numbers even with an unusual HA language, doorbell popup with day/night mode, custom scripts no longer break the community cards.",
+      n2t: "Bigger doorbell", n2: "The doorbell live picture opens large, listening and talking keep running. A second camera sits right in the picture behind a switch.",
+      n3t: "Polish", n3: "The climate chart starts with humidity when opened from the humidity badge, Studio pickers close on a second click, times and numbers work even with an unusual HA language.",
     },
   };
 
@@ -58,8 +58,8 @@
   const WHATS_NEW = [
     ["mdi:cellphone-sound", "n0t", "n0"],
     ["mdi:blur", "n1t", "n1"],
-    ["mdi:water-percent", "n2t", "n2"],
-    ["mdi:shield-check-outline", "n3t", "n3"],
+    ["mdi:doorbell-video", "n2t", "n2"],
+    ["mdi:auto-fix", "n3t", "n3"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.
