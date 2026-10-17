@@ -79,7 +79,6 @@
     + ".cs-live-refresh{flex:none;border:none;background:none;padding:0;cursor:pointer;font:500 var(--t-foot) var(--casora-font-studio, system-ui);"
     + "color:var(--casora-studio-link, var(--accent))}"
     + ".cs-live-row .rchev{margin-left:8px}"
-    + ".cs-live-row.open .rchev{transform:rotate(90deg)}"
     + ".cs-wrap .frow.cs-live-opt{padding-left:26px}"
     + ".cs-wrap .frow.cs-live-opt .rtext b{font-weight:500;font-size:var(--t-foot)}"
     + ".cs-wrap .frow.cs-live-opt .rtext span{font-size:var(--t-caption)}"
@@ -219,6 +218,8 @@
           const cur = (L.targets || []).filter((x) => x !== id);
           if (on) cur.push(id);
           L.targets = cur;
+          // Test-Bereich sagt sofort „Speichere zuerst die Empfänger“ statt „Wähle zuerst …“.
+          this._csRepaint();
         })
         : el("span", "cs-empty", t("Nothing found in Home Assistant.")));
       // 2 · Geräte
