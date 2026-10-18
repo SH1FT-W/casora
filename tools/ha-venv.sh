@@ -120,7 +120,12 @@ start() {
   d="$(install "${3:-}")"
   port_setzen "$cfg" "$port"
   # Im Hintergrund und abgekoppelt, damit das HA das aufrufende Skript überlebt.
-  (cd "$cfg" || exit 1; nohup "$d/bin/hass" -c "$cfg" > "$cfg/.ha-venv.out" 2>&1 < /dev/null &)
+  # Restart like a container with "unless-stopped": homeassistant.restart only exits (code 100, on macOS
+  # often a segfault in the final write) and leaves the restart to the container. stop() leaves a marker;
+  # a run shorter than 20 s ends the loop so a broken config does not restart forever.
+  rm -f "$cfg/.ha-venv-stop"
+  (cd "$cfg" || exit 1; nohup bash -c 'while :; do t=$SECONDS; "$1/bin/hass" -c "$2"; [ -e "$2/.ha-venv-stop" ] && exit; [ $((SECONDS - t)) -lt 20 ] && exit 1; done' \
+    ha-venv "$d" "$cfg" > "$cfg/.ha-venv.out" 2>&1 < /dev/null &)
   sleep 1
   pid="$(pid_von "$cfg")"
   [ -n "$pid" ] || { tail -20 "$cfg/.ha-venv.out" >&2; fehler "Start fehlgeschlagen"; }
@@ -129,7 +134,12 @@ start() {
 
 stop() {
   local pid i=0
+  [ -d "$1" ] && touch "$1/.ha-venv-stop"
   pid="$(pid_von "$1" 2>/dev/null || true)"
+  # Between two runs of a restart there is no hass for a moment.
+  if [ -z "$pid" ] && ps -axo command= | awk -v s=" ha-venv " -v e=" $(abs "$1")" 'index($0, s) && substr($0, length($0) - length(e) + 1) == e { f = 1 } END { exit !f }'; then
+    sleep 2; pid="$(pid_von "$1" 2>/dev/null || true)"
+  fi
   [ -n "$pid" ] || return 0
   kill "$pid" 2>/dev/null || true
   while kill -0 "$pid" 2>/dev/null; do
