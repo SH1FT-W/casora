@@ -5,7 +5,10 @@ button-card-Vorlagen. Öffentliches Repo: keine persönlichen Daten (echte Entit
 Adressen, Zugangsdaten) in Code, Tests, Commits oder PR-Texten.
 
 ## Stil
-- Kommentare im Code auf Deutsch, knapp, wie der umliegende Code. Kein Umbau nebenbei.
+- Kommentare, Docstrings und Test-Beschreibungen im Code auf Englisch, knapp, wie der umliegende Code.
+  Bestehende deutsche Kommentare einer Datei beim nächsten Arbeiten an ihr mit umstellen (nur Kommentare,
+  keine Logik); Dateinamen dabei ebenfalls englisch (`git mv`, alle Verweise per `git grep` anpassen).
+  Kein Umbau nebenbei.
 - Texte, die Nutzer sehen, schreibt der Code auf Deutsch; die englische Fassung steht in
   `custom_components/casora/translations/dashboard/phrases/en.json` (Dashboard) bzw.
   `custom_components/casora/translations/panel/` (Studio). Danach `python3 tools/i18ncheck.py`.

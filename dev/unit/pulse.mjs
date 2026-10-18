@@ -87,6 +87,21 @@ assert.equal(by['Tür Geräteschuppen'].text, 'Meldet sich wie gewohnt · alle 2
 assert.equal(by['Taster Leseecke'].text, 'Lernt noch den Rhythmus');
 assert.equal(P.reason({ reason: 'unavailable', status: 'failed' }), 'Nicht erreichbar');
 assert.equal(P.reason({ reason: 'zukunft', status: 'check' }), 'Bitte prüfen', 'unbekannter Schlüssel → Wort zum Status');
+// Newer Pulse reasons (1.1, 26.10.5): own texts; an unknown reason on "watch" never claims a battery is due
+// (18.10.: leak sensor at 91 % showed "Bald fällig").
+assert.equal(P.reason({ reason: 'radio_only', status: 'watch' }), 'Funkt, schickt aber keine Werte');
+assert.equal(P.reason({ reason: 'battery_missing', status: 'watch' }), 'Batteriewert fehlt');
+assert.equal(P.reason({ reason: 'cloud_outage', status: 'check' }), 'Cloud antwortet nicht');
+assert.equal(P.reason({ reason: 'startup_waiting', status: 'watch' }), 'Seit dem Neustart noch keine Meldung');
+assert.equal(P.reason({ reason: 'ok_reachable', status: 'ok' }), 'Erreichbar, gerade nichts zu melden');
+assert.equal(P.reason({ reason: 'silent_reachable', status: 'watch' }), 'Erreichbar, gerade nichts zu melden');
+assert.equal(P.reason({ reason: 'zukunft', status: 'watch' }), 'Beobachten', 'unknown reason on watch → no battery claim');
+for (const k of ['radio_only', 'battery_missing', 'cloud_outage', 'startup_waiting', 'ok_reachable', 'zukunft'])
+  assert.notEqual(P.reason({ reason: k, status: 'watch' }), 'Bald fällig', k);
+assert.equal(P.icon({ reason: 'startup_waiting', status: 'watch' }), 'mdi:timer-sand');
+assert.equal(P.icon({ reason: 'battery_missing', status: 'watch' }), 'mdi:battery-unknown');
+assert.equal(P.icon({ reason: 'cloud_outage', status: 'check' }), 'mdi:cloud-off-outline');
+assert.equal(P.icon({ reason: 'radio_only', status: 'watch' }), 'mdi:access-point-off');
 assert.equal(P.every(600), 'alle 10 Min.');
 assert.equal(P.every(86400), 'einmal am Tag');
 assert.equal(P.every(null), null);

@@ -1,20 +1,20 @@
-// ── Pulse: Kachel + Popup (Casora 1.2.x) ─────────────────────────────────────
-// Für die Integration „Pulse“ (Batterie-/Funkwächter). Nur aus Entitäten, kein WebSocket-Abo.
-// Erkennung: hass.entities mit platform 'pulse'; welche Entität was ist, sagt der translation_key
-// (status, problem, last_report je Gerät; problems, monitored gesamt) – nie die Entity-ID, die hängt
-// an Sprache und Gerätenamen. Batterie-% aus dem Batteriesensor desselben Geräts (device_id).
-// Gründe (reason_key) als eigene kurze Sätze; Pulses fertiger Satz (reason) ist in Server-Sprache
-// und enthält laufende Zeiten.
-//   window._casoraPulse.installed(hass)        → Pulse-Entitäten vorhanden?
+// ── Pulse: tile + popup (Casora 1.2.x) ───────────────────────────────────────
+// For the "Pulse" integration (battery/radio watchdog). Built from entities only, no WebSocket subscription.
+// Detection: hass.entities with platform 'pulse'; which entity is which comes from the translation_key
+// (status, problem, last_report per device; problems, monitored overall) – never the entity ID, which depends
+// on language and device names. Battery % from the battery sensor of the same device (device_id).
+// Reasons (reason_key) become our own short sentences; Pulse's finished sentence (reason) is in the server
+// language and contains running times.
+//   window._casoraPulse.installed(hass)        → Pulse entities present?
 //   window._casoraPulse.scan(hass, states)     → {list, problems, soon, ok, total, worst, counts, …}
-//   window._casoraPulse.tileState(s) / .active(s) / .color(worst)  – Kachel casora_pulse
-//   window._casoraPulse.popup(states, hass, variables)             – Popup casora_popup_pulse
-//   window._casoraPulse.sec(part, C, states, hass)                 – Live-Bereiche des Popups
+//   window._casoraPulse.tileState(s) / .active(s) / .color(worst)  – tile casora_pulse
+//   window._casoraPulse.popup(states, hass, variables)             – popup casora_popup_pulse
+//   window._casoraPulse.sec(part, C, states, hass)                 – live sections of the popup
 (function () {
   if (window._casoraPulse) return;
   var P = window._casoraPulse = {};
 
-  // Schwere wie in Pulse (const.py SEVERITY), für die Sortierung.
+  // Severity as in Pulse (const.py SEVERITY), for sorting.
   var RANK = { failed: 0, check: 1, watch: 2, learning: 3, ok: 4 };
   var BATTERY = { battery_low: 1, battery_low_flag: 1, battery_soon: 1 };
   var COLOR = {
@@ -34,8 +34,8 @@
   var num = function (v) { var n = parseFloat(v); return isFinite(n) ? n : null; };
   var bad = function (s) { return s == null || s === 'unknown' || s === 'unavailable'; };
 
-  // ── Entitäten finden ──────────────────────────────────────────────────────
-  // Je Registry-Stand einmal (hass.entities wechselt nur bei Registry-Änderungen das Objekt).
+  // ── Finding entities ──────────────────────────────────────────────────────
+  // Once per registry state (hass.entities only swaps the object on registry changes).
   var cache = { R: null, idx: null };
   P.index = function (hass) {
     var R = (hass && hass.entities) || {};
@@ -52,8 +52,8 @@
       var d = idx.dev[e.device_id] || (idx.dev[e.device_id] = { device: e.device_id });
       if (!d[k]) d[k] = ids[i];
     }
-    // Batteriesensor je überwachtem Gerät (nicht von Pulse, device_class battery steht nur im Zustand –
-    // deshalb hier nur Kandidaten sammeln, die Prüfung macht scan()).
+    // Battery sensor per monitored device (not from Pulse; device_class battery is only in the state –
+    // so only collect candidates here, scan() does the check).
     for (var j = 0; j < ids.length; j++) {
       var x = R[ids[j]];
       if (!x || x.platform === 'pulse' || !x.device_id || !idx.dev[x.device_id]) continue;
@@ -68,8 +68,8 @@
     return !!(idx.problems || idx.monitored || Object.keys(idx.dev).length);
   };
 
-  // ── Texte ─────────────────────────────────────────────────────────────────
-  // Typischer Takt (Sekunden) → „alle 4 Std.“, „jede Stunde“, „einmal am Tag“.
+  // ── Texts ─────────────────────────────────────────────────────────────────
+  // Typical interval (seconds) → „alle 4 Std.“, „jede Stunde“, „einmal am Tag“.
   P.every = function (sec) {
     var s = num(sec);
     if (s == null || s <= 0) return null;
@@ -82,7 +82,7 @@
     var d = Math.round(s / 86400);
     return d < 2 ? 'einmal am Tag' : 'alle ' + d + ' Tage';
   };
-  // Zeitpunkt → „seit 12 Min.“, „seit 9 Std.“, „seit 2 T.“
+  // Timestamp → „seit 12 Min.“, „seit 9 Std.“, „seit 2 T.“
   P.since = function (ts, now) {
     var t = Date.parse(ts);
     if (isNaN(t)) return null;
@@ -92,7 +92,7 @@
     if (h < 24) return 'seit ' + h + ' Std.';
     return 'seit ' + Math.max(1, Math.floor(m / 1440)) + ' T.';
   };
-  // Kurzer Grund je reason_key; der Status unterscheidet still (prüfen) und ausgefallen.
+  // Short reason per reason_key; the status tells silent (check) from failed.
   P.reason = function (d) {
     var k = d.reason, ev = P.every(d.typical);
     switch (k) {
@@ -130,8 +130,8 @@
     return d.status === 'learning' ? 'mdi:school-outline' : 'mdi:pulse';
   };
 
-  // ── Auswertung ────────────────────────────────────────────────────────────
-  // → { installed, list (sortiert: schlimmstes zuerst, kritische Geräte vorn, längste Stille vorn),
+  // ── Evaluation ────────────────────────────────────────────────────────────
+  // → { installed, list (sorted: worst first, critical devices first, longest silence first),
   //     problems (check+failed), soon (watch), ok (ok+learning), total, worst, counts, problemsId, monitored }
   P.scan = function (hass, states, now) {
     var S = states || (hass && hass.states) || {};
@@ -183,16 +183,16 @@
     };
   };
 
-  // ── Glocke (Mitteilungszentrale) ──────────────────────────────────────────
-  // Nur echte Probleme (prüfen/ausgefallen) – „bald fällig“ braucht noch nichts zu tun und bleibt in
-  // Kachel und Popup, wie die Batterie-Quelle erst ab „schwach“ meldet. Pausierte Erinnerungen
-  // (snoozed) und Ausnahmen (ex: Entität → true, „Nicht melden“) nicht. Bis BELL_SINGLE Geräte je eine
-  // Zeile, darüber eine Sammelzeile (sonst flutet z. B. ein Funk-Ausfall die Glocke).
-  // Zeitpunkt: Beginn der Stille (silent_since, von Pulse über Neustarts gemerkt), sonst last_changed
-  // des Status; dazu `seen` je Gerät + Status + Grund – nach einem HA-Neustart bleibt Gelesenes
-  // gelesen (settleSeen in casora-core.js), ein neuer Grund ist neu.
-  // → { rows, devices } – devices: Geräte (device_id → true), deren Problem Pulse meldet oder bewusst
-  // pausiert ist; die Batterie-Quelle der Glocke überspringt deren Batteriesensoren (keine Doppelmeldung).
+  // ── Bell (notification centre) ────────────────────────────────────────────
+  // Real problems only (check/failed) – „bald fällig“ needs no action yet and stays in the tile and
+  // popup, just as the battery source only reports from „schwach“ on. Not for paused reminders
+  // (snoozed) or exceptions (ex: entity → true, „Nicht melden“). Up to BELL_SINGLE devices one row each,
+  // above that a summary row (otherwise e.g. a radio outage floods the bell).
+  // Time: start of the silence (silent_since, kept by Pulse across restarts), otherwise last_changed
+  // of the status; plus `seen` per device + status + reason – after an HA restart read stays
+  // read (settleSeen in casora-core.js), a new reason is new.
+  // → { rows, devices } – devices: devices (device_id → true) whose problem Pulse reports or that are
+  // deliberately paused; the bell's battery source skips their battery sensors (no double report).
   var BELL_SINGLE = 3;
   var BELL_OPENS = ['casora_pulse', 'casora_popup_pulse'];
   P.bellPhrase = function (d) {
@@ -228,7 +228,7 @@
     };
     var key = function (d) { return { k: d.device + '|' + d.status + '|' + (d.reason || ''), t: at(d) }; };
     var tone = function (list) { return list.some(function (d) { return d.status === 'failed'; }) ? 'bad' : 'warn'; };
-    // Ausgefallene wichtige Geräte (Rauch, Wasser) oben wie Sicherheitsmeldungen.
+    // Failed important devices (smoke, water) on top like security notices.
     var rank = function (list) { return list.some(function (d) { return d.status === 'failed' && d.critical; }) ? 1 : 0; };
     var target = s.problemsId || null;
     if (shown.length <= BELL_SINGLE) {
@@ -241,7 +241,7 @@
           value: BATTERY[d.reason] && d.battery != null ? Math.round(d.battery) + ' %' : null,
           icon: BATTERY[d.reason] ? 'battery' : 'pulse',
           tone: tone([d]),
-          // Tipp öffnet das Pulse-Popup über die Pulse-Kachel (deren Entität ist „Probleme“).
+          // Tap opens the Pulse popup via the Pulse tile (its entity is „Probleme“).
           entity: target || d.statusId,
           opens: BELL_OPENS,
           rank: rank([d]),
@@ -266,29 +266,29 @@
     return out;
   };
 
-  // ── Kachel ────────────────────────────────────────────────────────────────
-  // Hinterlegt (aktiv), sobald etwas Aufmerksamkeit braucht: Problem (prüfen/ausgefallen) oder bald
-  // fällig (1.4, vorher nur Probleme). „Lernt noch“ und ok bleiben ruhig. Farbe = schlimmster Zustand.
+  // ── Tile ──────────────────────────────────────────────────────────────────
+  // Highlighted (active) as soon as something needs attention: a problem (check/failed) or due soon
+  // (1.4, before only problems). „Lernt noch“ and ok stay calm. Colour = worst state.
   P.active = function (s) { return !!(s && (s.problems || s.soon)); };
   P.color = function (worst) { return COLOR[worst] && worst !== 'learning' ? COLOR[worst] : COLOR.ok; };
   P.tileState = function (s) {
     if (!s || !s.installed) return 'Nicht installiert';
     if (!s.total) return 'Keine Geräte';
-    // „Bald fällig“ getrennt nach Batterie und Rest (13.10.: „3 bald fällig“ war 1 Batterie + 2 beobachten).
+    // „Bald fällig“ split into battery and the rest (13.10.: „3 bald fällig“ was 1 battery + 2 watch).
     var bat = (s.list || []).filter(function (d) { return d.status === 'watch' && BATTERY[d.reason]; }).length;
     var rest = (s.soon || 0) - bat;
     var soon = [];
     if (bat) soon.push(bat === 1 ? '1 Batterie bald fällig' : bat + ' Batterien bald fällig');
     if (rest > 0) soon.push(rest + ' beobachten');
-    // Ohne Problem, aber bald fällig (z. B. Batterie 18 %): nicht „Alles ok“.
+    // No problem, but due soon (e.g. battery 18 %): not „Alles ok“.
     if (!s.problems) return soon.length ? soon.join(' · ') : 'Alles ok';
     return [s.problems === 1 ? '1 Problem' : s.problems + ' Probleme'].concat(soon).join(' · ');
   };
 
   // ── Popup ─────────────────────────────────────────────────────────────────
-  // Ring + Titel kommen aus dem Popup-Rahmen (Kachelsymbol in Kachelfarbe). Darunter die Unterzeile
-  // „N Probleme · M beobachten · K ok“ und die Übersichtsleiste, links „Ausgefallen“/„Prüfen“,
-  // rechts „Batterie“/„Beobachten“, darunter „Alles ok“ eingeklappt und „In Pulse öffnen“.
+  // Ring + title come from the popup frame (tile icon in tile colour). Below: the subline
+  // „N Probleme · M beobachten · K ok“ and the overview bar, left „Ausgefallen“/„Prüfen“,
+  // right „Batterie“/„Beobachten“, below that „Alles ok“ collapsed and „In Pulse öffnen“.
   P.wide = function (hass, states) {
     var s = P.scan(hass, states);
     var left = s.list.some(function (d) { return d.status === 'failed' || (d.status === 'check' && !BATTERY[d.reason]); });
@@ -311,8 +311,8 @@
       return 'return window._casoraPulse ? window._casoraPulse.sec(' + JSON.stringify(part) + ', null, states, hass) : "";';
     };
     var f = { hero: { card: K.secCard(watch, call('hero'), states) } };
-    // Abschnitte nach ihrem Inhalt, nicht nach den Zählern: „prüfen“ wegen Batterie zählt als Problem,
-    // steht aber unter „Batterie“ (rechts) – mit nur so einem Gerät fehlte die Zeile ganz (Checkup 10/2026).
+    // Sections by content, not by counters: „prüfen“ because of the battery counts as a problem,
+    // but sits under „Batterie“ (right) – with only one such device the row was missing (checkup 10/2026).
     var batt = function (d) { return !!BATTERY[d.reason]; };
     if (s.list.some(function (d) { return d.status === 'failed' || (d.status === 'check' && !batt(d)); })) f.prob = { card: K.secCard(watch, call('prob'), states) };
     if (s.list.some(function (d) { return d.status === 'watch' || (d.status === 'check' && batt(d)); })) f.soon = { card: K.secCard(watch, call('soon'), states) };
@@ -329,12 +329,12 @@
     var r = {
       entity: d.statusId, icon: P.icon(d), iconTone: tone,
       label: d.name,
-      // Marke vorn in der Unterzeile – hinter dem Namen schnitt die Auslassung („…“) sie ab.
+      // Badge at the start of the subline – behind the name the ellipsis („…“) cut it off.
       sub: (d.critical && (d.status === 'failed' || d.status === 'check') ? CHIP_MARK : '') + sub.join(' · '),
       value: silent && d.silentSince ? P.since(d.silentSince) : d.battery != null ? Math.round(d.battery) + ' %' : null,
       valueTone: d.status === 'failed' ? 'bad' : d.status === 'check' ? 'warn' : null,
     };
-    // „Gewechselt“ (pulse.mark_replaced) für Batterie-Gründe – mit Rückfrage („Bestätigen“-Schieber).
+    // „Gewechselt“ (pulse.mark_replaced) for battery reasons – with confirmation („Bestätigen“ slider).
     if (opts && opts.replace && BATTERY[d.reason]) {
       r.action = 'Gewechselt';
       r.svc = { domain: 'pulse', service: 'mark_replaced', data: { device_id: d.device }, done: 'Batteriewechsel gemeldet' };
@@ -342,13 +342,13 @@
     }
     return r;
   };
-  // „Wichtig“-Marke vor dem Grund kritischer Geräte (Rauch, Wasser).
+  // „Wichtig“ badge before the reason of critical devices (smoke, water).
   var chips = function (html) {
     return html.split(CHIP_MARK).join('<span style="display:inline-block;vertical-align:1px;margin-right:6px;padding:1px 7px;'
       + 'border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;'
       + 'background:' + COLOR.failed + ';">Wichtig</span>');
   };
-  // Übersichtsleiste: Anteile ausgefallen / prüfen / bald fällig / ok, darunter die Legende.
+  // Overview bar: shares failed / check / due soon / ok, legend below.
   P.bar = function (s) {
     var parts = [
       ['failed', s.counts.failed, s.counts.failed + ' ausgefallen'],
@@ -382,8 +382,8 @@
       var h = P.subline(s);
       return UI.line(h.main, h.rest, { tone: h.tone }) + P.bar(s);
     }
-    // Abschnitte wie im Pulse-Panel: links Ausgefallen + Prüfen, rechts Batterie + Beobachten.
-    // Batterie-Gründe stehen unter „Batterie“, egal ob Pulse sie als prüfen oder beobachten führt.
+    // Sections as in the Pulse panel: left Failed + Check, right Battery + Watch.
+    // Battery reasons go under „Batterie“, whether Pulse lists them as check or watch.
     var sect = function (rows, label) {
       return rows.length ? chips(UI.group(rows.map(function (d) { return rowOf(d, { replace: true }); }), label)) : '';
     };
@@ -399,21 +399,21 @@
     }
     if (part === 'more') {
       var ok = s.list.filter(function (d) { return d.status === 'ok' || d.status === 'learning'; });
-      // Niedrigste Batterie zuerst; ohne Batteriewert ans Ende, dann nach Name.
+      // Lowest battery first; without a battery value at the end, then by name.
       ok.sort(function (p, q) {
         return (p.battery == null ? 101 : p.battery) - (q.battery == null ? 101 : q.battery)
           || String(p.name).localeCompare(String(q.name));
       });
-      // Breit (Desktop/Tablet) zwei Spalten nebeneinander, schmal eine (auto-fit, ab 2 × 300 px).
-      // Abwechselnd verteilen, damit die schwächsten in beiden Spalten oben stehen (zeilenweise lesen).
+      // Wide (desktop/tablet) two columns side by side, narrow one (auto-fit, from 2 × 300 px).
+      // Alternate the distribution so the weakest are on top in both columns (read row by row).
       var cols = ok.length > 1 ? [ok.filter(function (d, i) { return i % 2 === 0; }), ok.filter(function (d, i) { return i % 2 === 1; })] : [ok];
-      // column-span: das breite „Mehr“ (02-geraete, MORE_WIDE_CSS) teilt seinen Inhalt selbst in zwei Spalten –
-      // ohne Spannen lag dieses zweispaltige Raster ganz in dessen linker Hälfte und fiel auf eine Spalte (11.10.2026).
+      // column-span: the wide „Mehr“ (02-geraete, MORE_WIDE_CSS) splits its own content into two columns –
+      // without spanning, this two-column grid sat entirely in its left half and fell to one column (11.10.2026).
       var okHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:start;column-span:all;-webkit-column-span:all;">'
         + cols.map(function (c) { return '<div style="min-width:0;">' + UI.group(c.map(function (d) { return rowOf(d); }), null) + '</div>'; }).join('')
         + '</div>';
       var out = ok.length ? UI.more('pulse-ok', okHtml, { label: 'Alles ok', count: ok.length }) : '';
-      // Fuß: ins Pulse-Panel (Rhythmusleisten, Wechsel-Verlauf, Einstellungen bleiben dort).
+      // Footer: into the Pulse panel (rhythm bars, replacement history, settings stay there).
       var foot = UI.group([{ icon: 'mdi:pulse', label: 'In Pulse öffnen', tappable: true }], null)
         .replace('<div class="hui-row', '<div data-casora-link="' + P.PANEL + '" class="hui-row');
       return out + (out ? '<div style="height:12px"></div>' : '') + foot;
