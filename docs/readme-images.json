@@ -1,0 +1,71 @@
+{
+  "$comment": "Content of the README pictures. Render with sh1ft-w.github.io/theme/v1/readme-images (node render.mjs <this repo>).",
+  "title": {
+    "name": "Casora",
+    "eyebrow": "For Home Assistant",
+    "lead": "Your home. <em>At ease.</em>",
+    "sub": "A calm, photo-backed dashboard that sets itself up. Shape the rest room by room in a visual studio. No YAML.",
+    "pills": [["No YAML"], ["Studio", "v"], ["HACS"]],
+    "logo": "custom_components/casora/brand/icon@2x.png",
+    "shot": { "light": "docs/images/casora-desktop-light.webp", "dark": "docs/images/casora-desktop-dark.webp", "srcW": 1600, "winW": 1600, "s": 0.56,
+      "strips": [[0, 1000]], "bar": "Home Assistant › Casora", "left": 600, "top": 80 }
+  },
+  "fonts": {
+    "display": "\"Inter\", system-ui, sans-serif",
+    "body": "\"Inter\", system-ui, sans-serif",
+    "mono": "ui-monospace, \"SF Mono\", Menlo, monospace",
+    "google": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+  },
+  "colors": {
+    "light": { "bg": "#F4EFE7", "bg2": "#FBF8F3", "ink": "#3A322B", "ink2": "#62574C", "ink3": "#8C7F70", "accentText": "#94603B", "accent": "#B67A50", "accent2": "#4E9E95",
+      "glow1": "rgba(217,162,122,0.30)", "glow2": "rgba(78,158,149,0.16)", "frame": "rgba(58,50,43,0.10)", "pillBg": "#FBF8F3", "pillLine": "rgba(58,50,43,0.08)", "win": "#F4EFE7", "bar": "linear-gradient(#FBF8F3, #F0E9DF)" },
+    "dark": { "bg": "#24211E", "bg2": "#1C1A18", "ink": "#F2EBE1", "ink2": "rgba(205,194,180,0.88)", "ink3": "rgba(205,194,180,0.55)", "accentText": "#D9A27A", "accent": "#D9A27A", "accent2": "#4E9E95",
+      "glow1": "rgba(217,162,122,0.18)", "glow2": "rgba(78,158,149,0.14)", "frame": "rgba(255,255,255,0.10)", "pillBg": "rgba(255,255,255,0.06)", "pillLine": "rgba(255,255,255,0.10)", "win": "#2E2A26", "bar": "linear-gradient(#342F2A, #2E2A26)" }
+  },
+  "cards": {
+    "new": [
+      { "icon": "cctv", "title": "Frigate camera", "ver": "26.10.31", "text": "Live view with what Frigate detected last. Alerts and detections with clip, download, share and favourite, the recordings of the last days with a timeline." },
+      { "icon": "doorbell-video", "title": "Reolink doorbell", "ver": "26.10.31", "text": "Live picture that says when someone rang. Listen in, send a quick reply, sound the siren and see who rang lately." },
+      { "icon": "coffee-maker-outline", "title": "Coffee machine", "ver": "26.10.31", "text": "Ready, heating up or brewing with progress, and what the machine needs. Start drinks from the popup. Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco or a smart plug." },
+      { "icon": "robot-mower-outline", "title": "Robot lawn mower", "ver": "1.5.0", "text": "Mowing, parked or trapped, the battery as a ring, to station, mow and park, and the mowing time of the last 7 days. Extra details for Gardena." }
+    ],
+    "layouts": { "cols": 3, "items": [
+      { "icon": "monitor", "title": "Desktop", "text": "Room by room. A full photo of each room, with its devices right below and every room one tap away." },
+      { "icon": "tablet", "title": "Wall tablet", "text": "Made for the hallway. Large tiles, readable from across the room, and a look that stays calm all day." },
+      { "icon": "cellphone", "title": "Phone", "text": "Your favourites first, a navigation bar under your thumb. Tiles can grow while something is going on and shrink again after." }
+    ] },
+    "popups": [
+      { "icon": "thermometer", "title": "Room climate", "text": "Temperature and humidity of every room, with a day of readings." },
+      { "icon": "washing-machine", "title": "Every wash", "text": "Washer and dryer with their program, time left and energy." },
+      { "icon": "gas-station-outline", "title": "Fuel", "text": "When to refuel, and where it is cheapest right now." },
+      { "icon": "sprout-outline", "title": "Plants", "text": "What a plant needs, in plain words." }
+    ],
+    "hold": [
+      { "icon": "gesture-tap-hold", "title": "The quick menu", "text": "The main action on top: turn off, unlock, pause. Below it brightness and colour, position, temperature, volume. Then history, device and Edit tile." },
+      { "icon": "timer-outline", "title": "Timers", "text": "Turn off in 30 minutes or on for 2 hours. The tile shows a ring that empties over time. Timers survive a restart and step aside when you switch by hand." },
+      { "icon": "arrow-left", "title": "It stays in Casora", "text": "A reading opens its chart with 24 hours, 7 or 30 days. A window contact shows when it was open. Each with a back arrow, not Home Assistant's dialog." },
+      { "icon": "help-circle-outline", "title": "Ask first, then switch", "text": "Any tile can ask before it switches. Unlock, Open door and the alarm always ask. When you arm the alarm, Casora names open windows and doors." }
+    ],
+    "tiles": [
+      { "icon": "home-outline", "title": "Every home", "text": "Lights and light groups, switches, scenes, blinds and covers, locks, thermostats and room climate, fans, air purifiers, humidifiers, media players, cameras and doorbells." },
+      { "icon": "shield-home-outline", "title": "Safety", "text": "Alarm system, doors and windows, smoke, water and gas sensors, official warnings." },
+      { "icon": "lightning-bolt-outline", "title": "Energy and house", "text": "Energy with solar and home battery, batteries of all devices, network, updates, waste collection, calendar, Pulse." },
+      { "icon": "washing-machine", "title": "Appliances", "text": "Washing machine, dryer, dishwasher, robot vacuum, 3D printer." },
+      { "icon": "car-outline", "title": "On the road", "text": "Car with fuel prices nearby, e-bike." },
+      { "icon": "flower-outline", "title": "Hobbies", "text": "Plants, aquariums, football, game activity (PlayStation, Steam, Discord), recipe of the week." },
+      { "icon": "account-group-outline", "title": "Community cards", "text": "Frigate camera, Reolink doorbell, coffee machine, robot lawn mower. They wait in the Studio until you add them." },
+      { "icon": "puzzle-outline", "title": "Your own", "text": "Any Home Assistant card as a custom tile." }
+    ],
+    "studio": [
+      { "icon": "eye-outline", "title": "See it before you save", "text": "Switch the preview between desktop, tablet and phone. Nothing is written until you click Save, and a draft survives a reload." },
+      { "icon": "history", "title": "Go back in time", "text": "Every save becomes a version. Preview any earlier one and restore it with a click. Nothing is ever lost." },
+      { "icon": "auto-fix", "title": "New devices find their place", "text": "The device assistant spots what is new in your home and suggests the room and the tile. You decide." },
+      { "icon": "tune", "title": "Hold is configurable", "text": "Under Controls, Tiles, Hold on tiles picks what press and hold does: quick menu, popup or Home Assistant dialog, for all tiles or one." }
+    ],
+    "looks": { "cols": 3, "items": [
+      { "icon": "palette-outline", "title": "Casora", "text": "The default. Warm linen and sand, large corners, soft shadows." },
+      { "icon": "weather-fog", "title": "Casora Nebel", "text": "The same calm design in cool grey with a petrol accent." },
+      { "icon": "blur", "title": "Casora Glas", "text": "Frosted glass over your room photos. In performance mode the glass turns opaque for older tablets." }
+    ] }
+  }
+}

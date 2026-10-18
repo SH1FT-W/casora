@@ -1,13 +1,11 @@
 <div align="center">
 
-<img src="custom_components/casora/brand/icon@2x.png" width="96" alt="Casora icon" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-title-dark.png" />
+  <img src="docs/images/readme-title-light.png" alt="Casora: Your home. At ease. The home view on a desktop with a house photo, weather, status badges and device tiles." />
+</picture>
 
-<h1>Casora</h1>
-
-<p><sub><b>FOR HOME ASSISTANT</b></sub></p>
-
-<p><b>Your home. At ease.</b><br/>
-A calm, photo-backed dashboard that sets itself up.<br/>
+<p>A calm, photo-backed dashboard that sets itself up.<br/>
 Shape the rest room by room in a visual studio. No YAML.</p>
 
 [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FSH1FT-W%2Fcasora%2Fmain%2Fcustom_components%2Fcasora%2Fmanifest.json&query=%24.version&label=version&style=flat-square&color=94603B&labelColor=3A322B)](https://github.com/SH1FT-W/casora/releases/latest)
@@ -16,13 +14,6 @@ Shape the rest room by room in a visual studio. No YAML.</p>
 [![License](https://img.shields.io/badge/license-MIT-94603B?style=flat-square&labelColor=3A322B)](LICENSE)
 
 <p><a href="https://sh1ft-w.github.io/casora"><b>Website</b></a> &nbsp;·&nbsp; <a href="#new">New</a> &nbsp;·&nbsp; <a href="#layouts">Layouts</a> &nbsp;·&nbsp; <a href="#popups">Popups</a> &nbsp;·&nbsp; <a href="#studio">Studio</a> &nbsp;·&nbsp; <a href="#look">Designs</a> &nbsp;·&nbsp; <a href="#privacy">Privacy</a> &nbsp;·&nbsp; <a href="#install">Install</a> &nbsp;·&nbsp; <a href="CHANGELOG.md">Changelog</a></p>
-
-<br/>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-hero-dark.webp" />
-  <img src="docs/images/readme-hero-light.webp" alt="Casora on a desktop display and a phone, side by side: the home view with a house photo, clock, weather and status badges above a row of device tiles, and the phone layout with favourite tiles." />
-</picture>
 
 </div>
 
@@ -34,13 +25,12 @@ Shape the rest room by room in a visual studio. No YAML.</p>
 
 Community cards come with every Casora release and wait in the Studio until you add them, so your tile list stays short.
 
-| | |
-|:--|:--|
-| **Frigate camera** <sub>26.10.31</sub> | Live view with what Frigate detected last. The popup has alerts and detections with clip, download, share and favourite, the recordings of the last days with a timeline, the objects and the camera switches. |
-| **Reolink doorbell** <sub>26.10.31</sub> | Live picture that says when someone rang. Listen in, send a quick reply, sound the siren and see who rang lately. |
-| **Coffee machine** <sub>26.10.31</sub> | Ready, heating up or brewing with progress, and what the machine needs: water, beans, drip tray, descaling. Start drinks from the popup. For Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco or a smart plug. |
-| **Robot lawn mower** <sub>1.5.0</sub> | Mowing, parked or trapped, the battery as a ring, to station, mow and park, and the mowing time of the last 7 days. Extra details for Gardena. |
-| **Casora Glas** <sub>26.10.31</sub> | Frosted glass over your room photos, light and dark. The third Casora design, next to Casora and Casora Nebel. In performance mode the glass turns opaque. |
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-new-dark.png" />
+  <img src="docs/images/readme-cards-new-light.png" alt="Frigate camera (26.10.31): live view with what Frigate detected last, alerts and detections with clip, download, share and favourite, the recordings of the last days with a timeline. Reolink doorbell (26.10.31): live picture that says when someone rang, listen in, send a quick reply, sound the siren and see who rang lately. Coffee machine (26.10.31): ready, heating up or brewing with progress, and what the machine needs, start drinks from the popup, for Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco or a smart plug. Robot lawn mower (1.5.0): mowing, parked or trapped, the battery as a ring, to station, mow and park, and the mowing time of the last 7 days, extra details for Gardena." />
+</picture>
+
+And a new look: **Casora Glas** <sub>26.10.31</sub>, frosted glass over your room photos, light and dark, next to Casora and Casora Nebel. In performance mode the glass turns opaque.
 
 Missing a card for one of your devices? Request it in the Studio under **Community**. It may become a card for everyone.
 
@@ -75,9 +65,10 @@ Every screen gets a layout made for it. Not a shrunken copy.
   </picture>
 </p>
 
-- **Desktop: room by room.** A full photo of each room, with its devices right below and every room one tap away.
-- **Wall tablet: made for the hallway.** Large tiles, readable from across the room, and a look that stays calm all day.
-- **Phone: your favourites first.** A layout of its own, with the things you use most at the top and a navigation bar under your thumb. Tiles can grow while something is going on and shrink again after.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-layouts-dark.png" />
+  <img src="docs/images/readme-cards-layouts-light.png" alt="Desktop: room by room, a full photo of each room with its devices right below and every room one tap away. Wall tablet: made for the hallway, large tiles readable from across the room, a look that stays calm all day. Phone: your favourites first, a navigation bar under your thumb, tiles can grow while something is going on and shrink again after." />
+</picture>
 
 <br/>
 
@@ -103,10 +94,10 @@ Lights, climate, energy, locks, blinds, media, cameras, plants, washers and drye
   <br/><sub><b>Energy at a glance.</b> Power right now, where it comes from, how the solar power splits between home, battery and grid, and which devices use the most.</sub>
 </p>
 
-- **Room climate**, with a day of readings.
-- **Every wash**, with its program, time and energy.
-- **Fuel**: when to refuel, and where it is cheapest.
-- **Plants**: what a plant needs, in plain words.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-popups-dark.png" />
+  <img src="docs/images/readme-cards-popups-light.png" alt="Room climate: temperature and humidity of every room, with a day of readings. Every wash: washer and dryer with their program, time left and energy. Fuel: when to refuel, and where it is cheapest right now. Plants: what a plant needs, in plain words." />
+</picture>
 
 <br/>
 
@@ -116,10 +107,10 @@ Lights, climate, energy, locks, blinds, media, cameras, plants, washers and drye
 
 The everyday actions should not need a popup. Press and hold any tile and a small menu opens right at the tile, a bottom sheet on the phone, a right-click on the desktop.
 
-- **The quick menu.** The main action on top: turn off, unlock, pause. Below it brightness and colour, cover position, temperature, volume and tracks, fan speed. Then history, device and "Edit tile", which jumps straight into the Studio.
-- **Timers.** "Turn off in 30 minutes" or "Turn on for 2 hours" for lights, switches, fans, heating and media. The tile shows a ring with a clock that empties over time. Timers survive a restart and step aside the moment you switch by hand.
-- **It stays in Casora.** A reading opens its chart with 24 hours, 7 or 30 days, highest, lowest and average. A window contact shows when it was open. A device opens its device page. Each with a back arrow, instead of Home Assistant's dialog.
-- **Ask first, then switch.** Any tile can ask before it switches. Unlock, "Open door" and the alarm always ask in the quick menu. When you arm the alarm, Casora names open windows, doors and unlocked locks.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-hold-dark.png" />
+  <img src="docs/images/readme-cards-hold-light.png" alt="The quick menu: the main action on top (turn off, unlock, pause), below it brightness and colour, position, temperature, volume, then history, device and Edit tile. Timers: turn off in 30 minutes or on for 2 hours, the tile shows a ring that empties over time, timers survive a restart and step aside when you switch by hand. It stays in Casora: a reading opens its chart with 24 hours, 7 or 30 days, a window contact shows when it was open, each with a back arrow instead of Home Assistant's dialog. Ask first, then switch: any tile can ask before it switches, unlock, Open door and the alarm always ask, when you arm the alarm Casora names open windows and doors." />
+</picture>
 
 <br/>
 
@@ -129,27 +120,15 @@ The everyday actions should not need a popup. Press and hold any tile and a smal
 
 Casora picks the right tile and popup for each device on its own, with the integrations you already have.
 
-| | Tiles and popups |
-|---|---|
-| **Every home** | Lights and light groups, switches, scenes, blinds and covers, locks, thermostats and room climate, fans, air purifiers, humidifiers, media players, cameras and doorbells |
-| **Safety** | Alarm system, doors and windows, smoke, water and gas sensors, official warnings |
-| **Energy and house** | Energy with solar and home battery, batteries of all devices, network, updates, waste collection, calendar, Pulse |
-| **Appliances** | Washing machine, dryer, dishwasher, robot vacuum, 3D printer |
-| **On the road** | Car with fuel prices nearby, e-bike |
-| **Hobbies** | Plants, aquariums, football, game activity (PlayStation, Steam, Discord), recipe of the week |
-| **Community cards** | Frigate camera with alerts, detections and recordings, Reolink doorbell with who rang and quick replies, coffee machine with drinks and care, robot lawn mower |
-| **Your own** | Any Home Assistant card as a custom tile |
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-tiles-dark.png" />
+  <img src="docs/images/readme-cards-tiles-light.png" alt="Every home: lights and light groups, switches, scenes, blinds and covers, locks, thermostats and room climate, fans, air purifiers, humidifiers, media players, cameras and doorbells. Safety: alarm system, doors and windows, smoke, water and gas sensors, official warnings. Energy and house: energy with solar and home battery, batteries of all devices, network, updates, waste collection, calendar, Pulse. Appliances: washing machine, dryer, dishwasher, robot vacuum, 3D printer. On the road: car with fuel prices nearby, e-bike. Hobbies: plants, aquariums, football, game activity (PlayStation, Steam, Discord), recipe of the week. Community cards: Frigate camera, Reolink doorbell, coffee machine, robot lawn mower, they wait in the Studio until you add them. Your own: any Home Assistant card as a custom tile." />
+</picture>
 
 ### Community cards
 
 Community cards ship with Casora, but they only appear in **Add tile** once you add them in the Community, so your tile list stays short. Every card has a preview of its tile and popup. Removing a card asks whether tiles that use it stay or go. Nothing is downloaded from outside your Home Assistant: a new Community card comes with a Casora release. If a card is ever retired, it disappears from **Add tile** first while existing tiles keep working, and only a later release removes it.
 
-| Card | What it does |
-|---|---|
-| **Frigate camera** | Live view with what Frigate detected last. The popup has alerts and detections with clip, download, share and favourite, the recordings of the last days with a timeline, objects and the camera switches. |
-| **Reolink doorbell** | Live picture that says when someone rang. The popup has listening, quick replies, the siren, who rang lately and the doorbell's settings. |
-| **Coffee machine** | Ready, heating up or brewing with progress, and what the machine needs: water, beans, drip tray, descaling. The popup starts drinks with strength and amount. For Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco or a smart plug. |
-| **Robot lawn mower** | Any lawn mower in Home Assistant, with extra details for Gardena. Battery ring, to station, mow and park, and the mowing time of the last 7 days. |
 
 <details>
 <summary><b>Request a card and follow it</b></summary>
@@ -193,10 +172,10 @@ A visual editor in the Home Assistant sidebar. Rooms, tiles, badges and popups, 
   <br/><sub><b>Assistants for the tedious part.</b> Place new devices, move from Hemma, go back to any version.</sub>
 </p>
 
-- **See it before you save.** Switch the preview between desktop, tablet and phone. Nothing is written until you click Save, and a draft survives a reload.
-- **Go back in time.** Every save becomes a version. Preview any earlier one and restore it with a click. Nothing is ever lost.
-- **New devices find their place.** The device assistant spots what is new in your home and suggests the room and the tile. You decide.
-- **Hold is configurable.** Under Controls, Tiles, "Hold on tiles" picks what press and hold does: quick menu, open popup or Home Assistant dialog, for the whole dashboard and per tile.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-studio-dark.png" />
+  <img src="docs/images/readme-cards-studio-light.png" alt="See it before you save: switch the preview between desktop, tablet and phone, nothing is written until you click Save, and a draft survives a reload. Go back in time: every save becomes a version, preview any earlier one and restore it with a click. New devices find their place: the device assistant spots what is new in your home and suggests the room and the tile, you decide. Hold is configurable: under Controls, Tiles, Hold on tiles picks what press and hold does, quick menu, popup or Home Assistant dialog, for all tiles or one." />
+</picture>
 
 <br/>
 
@@ -206,19 +185,21 @@ A visual editor in the Home Assistant sidebar. Rooms, tiles, badges and popups, 
 
 Warm linen, generous corners and gentle shadows, set in Inter. All three designs come in light and dark and follow Home Assistant's theme mode.
 
-- **Casora.** The default. Warm linen and sand, large corners, soft shadows.
-- **Casora Nebel.** The same calm design in cool grey with a petrol accent.
-- **Casora Glas.** Frosted glass over your room photos. In performance mode the glass turns opaque for older tablets.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-looks-dark.png" />
+  <img src="docs/images/readme-cards-looks-light.png" alt="Casora: the default, warm linen and sand, large corners, soft shadows. Casora Nebel: the same calm design in cool grey with a petrol accent. Casora Glas: frosted glass over your room photos, in performance mode the glass turns opaque for older tablets." />
+</picture>
 
 <details>
 <summary><b>The three designs in pictures</b></summary>
 <br/>
 
-| Casora | Casora Nebel |
-|:---:|:---:|
-| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/design-casora-dark.webp" /><img src="docs/images/design-casora-light.webp" width="420" alt="The Casora design: warm linen tiles on a desktop display and a phone." /></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/design-nebel-dark.webp" /><img src="docs/images/design-nebel-light.webp" width="420" alt="The Casora Nebel design: cool grey tiles with a petrol accent." /></picture> |
-| **Casora Glas** | |
-| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/design-glas-dark.webp" /><img src="docs/images/design-glas-light.webp" width="420" alt="The Casora Glas design: frosted glass tiles over the room photo." /></picture> | |
+<p align="center">
+<picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/design-casora-dark.webp" /><img src="docs/images/design-casora-light.webp" width="32%" alt="The Casora design: warm linen tiles on a desktop display and a phone." /></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/design-nebel-dark.webp" /><img src="docs/images/design-nebel-light.webp" width="32%" alt="The Casora Nebel design: cool grey tiles with a petrol accent." /></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/design-glas-dark.webp" /><img src="docs/images/design-glas-light.webp" width="32%" alt="The Casora Glas design: frosted glass tiles over the room photo." /></picture>
+<br/><sub>Casora, Casora Nebel and Casora Glas.</sub>
+</p>
 
 </details>
 
