@@ -122,15 +122,19 @@ await check('Probe im Protokoll: „Gerät · Probe“ (einmal), 42 %, deutscher
   && !/Probe · Probe$/.test(probeLine.title) && /Beispiel aus Casora – verschwindet in 2 Minuten/.test(probeLine.text), s.log);
 await check('Fund 9: „An ein Handy geschickt.“', s.probeSub === 'An ein Handy geschickt.', s.probeSub);
 
-// Testlauf an Waschmaschine A (30 s) → Start, Fortschritt, Fertig, Beendet
+// Testlauf an Waschmaschine A (30 s) → Start, Fortschritt, Fertig, Beendet. Since 26.10.37 "done" stays for the
+// done duration even when the device switches off (Home Connect jumps to "ready" 60 s after the end) – so the
+// test sets Waschmaschine A to 1 minute; the clear comes on the next minute tick after that.
 {
+  const wmDev = (s.devices || []).find((d) => /^Waschmaschine A/.test(d.title || ''));
   const c = await ws();
+  if (wmDev) await c.cmd({ type: 'casora/live/set', devices: { [wmDev.id]: { done_min: 1 } } });
   await c.cmd({ type: 'call_service', domain: 'casora_mock', service: 'live_lauf', service_data: { geraet: 'waschmaschine_a', sekunden: 30 } });
   c.close();
 }
-// Protokoll mitlesen, bis der Lauf beendet ist (30 s Lauf + Nachlauf), höchstens 75 s.
+// Read the log until the run has ended (30 s run + 1 min done + up to 1 min tick), at most ~3.5 min.
 let wm = [];
-for (let i = 0; i < 15; i++) {
+for (let i = 0; i < 38; i++) {
   await page.waitForTimeout(5000);
   await page.evaluate(() => window.__panel()._csLiveRefresh());
   await page.waitForTimeout(600);
@@ -146,17 +150,18 @@ await check('Testlauf: Fortschritt mit Prozent und Phase', wm.some((l) => l.titl
   && /Baumwolle 40 · (Waschen|Spülen|Schleudern)/.test(l.text)), wm);
 await check('Testlauf: „Fertig · Wäsche rausnehmen“ (deutsch)', wm.some((l) => l.title.endsWith('Fertig') && l.text === 'Fertig · Wäsche rausnehmen'), wm);
 await check('Fund 6: keine englischen Meldungstexte im Testlauf', !wm.some((l) => /\b(Running|Washing|Rinsing|Spinning|Ending soon|Done|Take out)\b/.test(l.text)), wm);
-await check('Testlauf: zum Schluss „Beendet“ (Gerät aus → clear), genau einmal', wm[0] && wm[0].title.endsWith('Beendet')
+await check('Testlauf: zum Schluss „Beendet“ (nach der Fertig-Dauer → clear), genau einmal', wm[0] && wm[0].title.endsWith('Beendet')
   && wm[0].text === 'Live-Aktivität beendet' && wm.filter((l) => l.title.endsWith('Beendet')).length === 1, wm.slice(0, 3));
 
-// Fund 7: Sauger-Testlauf (30 s) → Fortschritt + Fläche, danach „Fertig“ mit Fläche und Dauer
+// Fund 7: Sauger-Testlauf (30 s) → Fortschritt + Fläche, danach „Fertig“ mit Fläche und Dauer – since 26.10.37 only
+// after the vacuum has rested in the dock for VAC_SETTLE_S (90 s), so wait up to ~3 min.
 {
   const c = await ws();
   await c.cmd({ type: 'call_service', domain: 'casora_mock', service: 'live_lauf', service_data: { geraet: 'sauger', sekunden: 30 } });
   c.close();
 }
 let vac = [];
-for (let i = 0; i < 12; i++) {
+for (let i = 0; i < 32; i++) {
   await page.waitForTimeout(5000);
   await page.evaluate(() => window.__panel()._csLiveRefresh());
   await page.waitForTimeout(600);
