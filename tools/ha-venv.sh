@@ -74,8 +74,9 @@ abs() { (cd "$1" 2>/dev/null && pwd) || fehler "Ordner fehlt: $1"; }
 # PID des HA, das mit genau diesem Konfigurationsordner läuft (über die Befehlszeile, ohne PID-Datei).
 pid_von() {
   local cfg; cfg="$(abs "$1")"
+  # awk reads to the end: an early exit lets ps die of SIGPIPE, and pipefail turns a running HA into an error.
   ps -axo pid=,command= | awk -v s=" -c $cfg" '
-    index($0, "/bin/hass") && length($0) >= length(s) && substr($0, length($0) - length(s) + 1) == s { print $1; exit }'
+    !f && index($0, "/bin/hass") && length($0) >= length(s) && substr($0, length($0) - length(s) + 1) == s { print $1; f = 1 }'
 }
 
 port_pruefen() {
