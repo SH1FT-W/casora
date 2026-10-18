@@ -664,6 +664,8 @@ delete window._casoraUI;
 }
 // ── 16. Strom-Erkennung (delonghi, krups): Getränke am Stromverlauf, Wartung mit Attribut „due“ ──
 {
+  // Zahlen und Datum deutsch, egal welches Gebietsschema der Rechner hat (GitHub-Runner: en-US → „12.3“).
+  window.casoraLocale = () => 'de-DE';
   const sd = { platform: 'delonghi', dev: 'sd' };
   const nm = (n) => ({ friendly_name: 'Bohnenwerk ' + n });
   add('sensor.bohnenwerk_status', 'ready', { ...sd, key: 'status', attrs: { ...nm('Betriebszustand'), device_class: 'enum', options: ['off', 'ready', 'running'], power_w: 2.1 } });
@@ -742,7 +744,7 @@ delete window._casoraUI;
   UIlog.length = 0;
   const dr = K.sec('drinks', cs, states, hass());
   assert.match(dr, /<g>Zuletzt:Cappuccino<\/g>/); assert.match(dr, /white-space:normal;"><n>Getränk an der Maschine/, 'Hinweis bricht um');
-  assert.ok(/^\d{1,2}[./]\d{1,2}\.? \d\d:\d\d/.test(UIlog.find((g) => g.label === 'Zuletzt').rows[0].sub), 'älterer Bezug mit Datum');
+  assert.ok(/^\d{1,2}\.\d{1,2}\. \d\d:\d\d$/.test(UIlog.find((g) => g.label === 'Zuletzt').rows[0].sub), 'älterer Bezug mit Datum');
   set('sensor.bohnenwerk_letztes_programm', 'Espresso 2x', { start: new Date().toISOString() });
   UIlog.length = 0; K.sec('drinks', cs, states, hass());
   assert.match(UIlog.find((g) => g.label === 'Zuletzt').rows[0].sub, /^Heute \d\d:\d\d$/);
@@ -776,6 +778,7 @@ delete window._casoraUI;
   assert.deepEqual(ck.warns.map((w) => w.art), ['satz']);
   const sk = st('sensor.kruglein_status');
   assert.equal(K.tileText(sk), 'Aus'); assert.equal(K.iconService(ck, sk), null);
+  delete window.casoraLocale;
 }
 // Programm-Namen
 assert.equal(K.drink('consumer_products_coffee_maker_program_coffee_world_americano').label, 'Americano');
