@@ -60,6 +60,11 @@ TGZ="$HOME/casora-haus/zustaende/$SRC.tgz"
 rm -rf "$D"; mkdir -p "$D"
 tar -xzf "$TGZ" -C "$D"
 CFG="$D/config"
+# The states were made in Docker, where the config lives at /config; YAML dashboards (Hemma test
+# dashboards) include their files by that absolute path, which does not exist without Docker.
+grep -rlE '!include[a-z_]* /config/' "$CFG/dashboards" 2>/dev/null | while IFS= read -r f; do
+  sed -i '' -E "s#(!include[a-z_]*) /config/#\\1 $CFG/#g" "$f"
+done
 rsync -a --delete --exclude __pycache__ --exclude panel/casora-studio.js "$REPO/custom_components/casora/" "$CFG/custom_components/casora/"
 rsync -a --exclude __pycache__ --exclude stress.json "$REPO/dev/casora_mock/" "$CFG/custom_components/casora_mock/"
 # demo: neutrales Demo-Haus (wie dev/haus.sh demo) – Fixture aus dev/demo/demo_fixture.py, nie die Test-Fixture.
