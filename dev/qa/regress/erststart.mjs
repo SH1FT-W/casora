@@ -13,7 +13,7 @@
 //     Studio. Hilfe → „Einführung in Casora“ zeigt die Begrüßung, „Los geht’s“ schließt sie.
 // Schreibt nichts in HA – bis auf eins: fehlt ein Casora-Dashboard (Zustand „frisch“), legt der
 // Test vorab über den echten Anlege-Weg des Panels „qa-start“ (+ -mobile) an und löscht es am Ende
-// wieder. Aufruf (Docker-Test-HA, Port 8124):
+// wieder. Aufruf (Test-HA, Port 8124):
 //   CASORA_LOCAL=1 CASORA_TOKENS=… node dev/qa/regress/erststart.mjs [breite] [safari]
 import { open, ready, PIERCE } from '../../e2e/harness.mjs';
 import { ws } from '../ws.mjs';

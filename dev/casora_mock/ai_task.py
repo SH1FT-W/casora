@@ -1,4 +1,4 @@
-"""Test-KI (ai_task) der Mock-Integration – nur für das Docker-Test-HA.
+"""Test-KI (ai_task) der Mock-Integration – nur für das Test-HA.
 
 Kein Sprachmodell: beantwortet die Anfrage des Casora-Geräte-Assistenten
 deterministisch über Wortvergleich, damit der Weg Panel → ai_task.generate_data

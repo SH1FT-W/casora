@@ -1,4 +1,4 @@
-"""Casora Mock – Test-Integration für das Docker-Test-HA.
+"""Casora Mock – Test-Integration für das Test-HA.
 
 Legt aus fixture.json (anonymisierter Schnappschuss) Räume, Geräte und
 Entitäten an, reagiert auf die üblichen Dienste (Licht, Jalousie, Schloss …)

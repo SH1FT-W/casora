@@ -1,4 +1,4 @@
-// Test-Rahmen für das Casora-Test-HA (Docker casora-test, Port 8124, Zustand „arbeit“ – dev/haus.sh).
+// Test-Rahmen für das Casora-Test-HA (casora-test, Port 8124, Zustand „arbeit“ – dev/haus.sh).
 // Anmeldung per Token aus der Umgebung (CASORA_TOKENS = JSON von /auth/token),
 // nichts davon liegt im Repo. Playwright: PLAYWRIGHT_PATH, sonst der npx-Cache
 // im eigenen Heimordner (npx playwright …), sonst eine normale Installation.

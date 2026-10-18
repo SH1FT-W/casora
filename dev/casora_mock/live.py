@@ -238,7 +238,7 @@ def setup(hass, mock) -> None:
 
 
 def note_notify(hass, call) -> None:
-    """Test-Handy: letzte Meldungen als Sensor, damit man sie im Docker ohne echtes Handy sieht."""
+    """Test-Handy: letzte Meldungen als Sensor, damit man sie im Test-HA ohne echtes Handy sieht."""
     from homeassistant.util import dt as dt_util
 
     eid = "sensor.casora_mock_testhandy"

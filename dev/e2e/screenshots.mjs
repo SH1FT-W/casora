@@ -45,7 +45,7 @@ const ONLY = process.argv.slice(2);
 fs.mkdirSync(DIR, { recursive: true });
 fs.mkdirSync(RAW, { recursive: true });
 
-// ── Wächter 1: Zustand des Docker-HA (dev/haus.sh schreibt ihn nach ~/casora-haus/aktiv) ──
+// ── Wächter 1: Zustand des Test-HA (dev/haus.sh schreibt ihn nach ~/casora-haus/aktiv) ──
 if (/localhost:8124|127\.0\.0\.1:8124/.test(BASE)) {
   let aktiv = '?';
   try { aktiv = fs.readFileSync(path.join(os.homedir(), 'casora-haus', 'aktiv'), 'utf8').trim(); } catch (e) { /* unbekannt */ }

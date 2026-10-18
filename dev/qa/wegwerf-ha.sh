@@ -1,12 +1,13 @@
 #!/bin/sh
-# Wegwerf-Test-HA fürs parallele Gate (dev/qa/gate.sh): je Zustand ein eigener Docker-Container
-# „casora-gate-<name>“ mit einer Kopie des Zustands aus ~/casora-haus/zustaende/ – casora-test
+# Wegwerf-Test-HA fürs parallele Gate (dev/qa/gate.sh): je Zustand ein eigenes HA aus der venv
+# (tools/ha-venv.sh, ohne Docker) „casora-gate-<name>“ mit einer Kopie des Zustands aus ~/casora-haus/zustaende/ – casora-test
 # (:8124) und ~/casora-haus/config bleiben unberührt.
 #
 #   dev/qa/wegwerf-ha.sh start <name> <port> arbeit|frisch|stress|demo   anlegen + starten (ohne Warten)
-#                                                                    Image: CASORA_HA_IMAGE=…, sonst das von casora-test
+#                                                                    HA-Version: CASORA_HA_VERSION=… (z. B. beta),
+#                                                                    sonst die Standardversion von tools/ha-venv.sh
 #   dev/qa/wegwerf-ha.sh wait  <name> <port>                         warten, bis es bereit ist
-#   dev/qa/wegwerf-ha.sh weg   <name>                                Container + Daten entfernen
+#   dev/qa/wegwerf-ha.sh weg   <name>                                HA beenden + Daten entfernen
 #   dev/qa/wegwerf-ha.sh konten <name> <port>                        für Nutzertests: Benutzer „Kind“ (kein Admin)
 #                                                                    + Handy-Empfänger im Lüften-Coach (wegwerf-testkonten.mjs)
 #
@@ -20,17 +21,18 @@ NODE="${NODE:-/opt/homebrew/opt/node@22/bin/node}"
 cmd="$1"; name="$2"
 case "$name" in ''|*[!a-z0-9-]*) echo "wegwerf-ha: Name nur a-z0-9-" >&2; exit 2 ;; esac
 N="casora-gate-$name"; D="$HOME/casora-agents/gate/$name"
+HAV="$REPO/tools/ha-venv.sh"
 
 case "$cmd" in
   weg)
-    docker rm -f "$N" >/dev/null 2>&1 || true
+    "$HAV" stop "$D/config"
     rm -rf "$D"
     exit 0 ;;
   konten)
     # Nur auf Wunsch (Nutzertests), nicht im Gate: ein zweiter Benutzer ändert z. B. „Wer sieht das?“.
     P="$3"
     case "$P" in ''|*[!0-9]*|8124|8123) echo "wegwerf-ha: Port $P nicht erlaubt" >&2; exit 2 ;; esac
-    docker inspect "$N" >/dev/null 2>&1 || { echo "wegwerf-ha: $N läuft nicht" >&2; exit 1; }
+    "$HAV" laeuft "$D/config" || { echo "wegwerf-ha: $N läuft nicht" >&2; exit 1; }
     CASORA_URL="http://localhost:$P" "$NODE" "$REPO/dev/qa/wegwerf-testkonten.mjs"
     # Optionen geändert → Casora lädt neu; danach wieder bereit sein.
     CASORA_URL="http://localhost:$P" "$NODE" "$REPO/dev/qa/bereit.mjs" --max 120
@@ -38,7 +40,7 @@ case "$cmd" in
   wait)
     P="$3"
     i=0; until curl -s -o /dev/null -w '%{http_code}' "http://localhost:$P/manifest.json" | grep -q 200; do
-      i=$((i+1)); [ $i -gt 120 ] && { echo "$N antwortet nicht (Port $P)"; docker logs --tail 30 "$N" 2>&1; exit 1; }; /bin/sleep 2
+      i=$((i+1)); [ $i -gt 120 ] && { echo "$N antwortet nicht (Port $P)"; "$HAV" log "$D/config" 30; exit 1; }; /bin/sleep 2
     done
     CASORA_URL="http://localhost:$P" "$NODE" "$REPO/dev/qa/bereit.mjs" --max 120
     echo "$N bereit (Port $P)"
@@ -54,7 +56,7 @@ SRC="$Z"; [ "$Z" = stress ] && SRC=frisch
 TGZ="$HOME/casora-haus/zustaende/$SRC.tgz"
 [ -f "$TGZ" ] || { echo "wegwerf-ha: $TGZ fehlt" >&2; exit 1; }
 
-docker rm -f "$N" >/dev/null 2>&1 || true
+"$HAV" stop "$D/config"
 rm -rf "$D"; mkdir -p "$D"
 tar -xzf "$TGZ" -C "$D"
 CFG="$D/config"
@@ -81,7 +83,6 @@ fi
 grep -q '^scene:' "$CFG/configuration.yaml" 2>/dev/null || printf '\nscene: !include scenes.yaml\n' >> "$CFG/configuration.yaml"
 [ -f "$CFG/scenes.yaml" ] || echo '[]' > "$CFG/scenes.yaml"
 echo "$Z" > "$D/zustand"
-# CASORA_HA_IMAGE: anderes HA-Image (z. B. eine Beta vor dem nächsten HA-Release); sonst wie casora-test.
-IMG="${CASORA_HA_IMAGE:-$(docker inspect casora-test --format '{{.Config.Image}}' 2>/dev/null || echo ghcr.io/home-assistant/home-assistant:stable)}"
-docker run -d --name "$N" --label casora-gate=1 -p "$P:8123" -v "$CFG:/config" -e TZ=Europe/Berlin "$IMG" >/dev/null
+# CASORA_HA_VERSION: andere HA-Version (z. B. beta vor dem nächsten HA-Release); sonst die Standardversion.
+"$HAV" start "$CFG" "$P" "${CASORA_HA_VERSION:-}" >/dev/null
 echo "$N gestartet: $Z auf Port $P"

@@ -1,4 +1,4 @@
-// Holt Anmelde-Tokens fürs Docker-Test-HA (casora-test) über den normalen Login-Ablauf.
+// Holt Anmelde-Tokens fürs Test-HA (casora-test) über den normalen Login-Ablauf.
 // Zugang aus der Umgebung (CASORA_USER/CASORA_PASS) oder aus ~/casora-haus/ZUGANG.txt –
 // nichts davon liegt im Repo. Ausgabe: JSON wie /auth/token (für CASORA_TOKENS).
 //   node dev/qa/token.mjs > tok.json

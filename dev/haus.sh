@@ -1,5 +1,5 @@
 #!/bin/sh
-# Ein Docker-HA für Casora (Container „casora-test“, Port 8124) mit drei Zuständen:
+# Ein Test-HA für Casora („casora-test“, Port 8124, ohne Docker: tools/ha-venv.sh) mit drei Zuständen:
 #   arbeit – Testhaus mit Hemma-Dashboards und Einstellungen (Entwicklung, dev/e2e)
 #   frisch – wie ein neuer Nutzer: nur Hemma-Dashboards, nichts von Casora eingerichtet
 #   demo   – neutrales englisches Demo-Haus für README-/Website-Bilder
@@ -15,7 +15,8 @@
 #
 # Zusätze: --no-wait (Wechsel/sync: starten, aber nicht auf „bereit“ warten – dann „wait“),
 #   sync --if-changed (nur neu starten, wenn sich der eingespielte Stand seit dem letzten
-#   Start geändert hat oder der Container nicht läuft), sync --no-restart (nur einspielen).
+#   Start geändert hat oder das HA nicht läuft), sync --no-restart (nur einspielen).
+# HA-Version: CASORA_HA_VERSION (z. B. 2026.11.0b0 oder beta), sonst die Standardversion von tools/ha-venv.sh.
 # „Bereit“ heißt: manifest.json antwortet, dann dev/qa/bereit.mjs (Anmeldung, WebSocket,
 # HA-Zustand RUNNING, einige Sekunden ohne Aufbau-Ereignisse, Casora-Befehl antwortet).
 # Geht das nicht (kein node/Zugang), wie früher 15 s Pause.
@@ -30,6 +31,8 @@ CFG="$H/config"
 AKTIV="$H/aktiv"
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 now=$(cat "$AKTIV" 2>/dev/null || echo "?")
+HAV="$REPO/tools/ha-venv.sh"
+ha_start() { "$HAV" start "$CFG" 8124 "${CASORA_HA_VERSION:-}" >/dev/null; }
 
 sync_repo() {
   cd "$REPO"
@@ -83,14 +86,14 @@ if [ "$1" = "wait" ]; then wait_up; exit 0; fi
 if [ "$1" = "sync" ]; then
   sync_repo
   [ $NORESTART = 1 ] && exit 0
-  if [ $IFCHANGED = 1 ] && [ "$(docker inspect -f '{{.State.Running}}' casora-test 2>/dev/null)" = "true" ] \
+  if [ $IFCHANGED = 1 ] && "$HAV" laeuft "$CFG" \
      && [ "$(cat "$GELADEN" 2>/dev/null)" = "$(cat "$AKTIV") $(tree_hash)" ]; then
     echo "unverändert geladen: $(cat "$AKTIV") – kein Neustart"
     [ $NOWAIT = 1 ] || wait_up
     exit 0
   fi
   mark_start
-  docker restart casora-test >/dev/null
+  "$HAV" stop "$CFG"; ha_start
   [ $NOWAIT = 1 ] || wait_up
   exit 0
 fi
@@ -98,7 +101,7 @@ case "$1" in arbeit|frisch|demo|stress) ;; *) echo "Aufruf: $0 [arbeit|frisch|de
 if [ "$1" = "$now" ] && [ "$1" != "frisch" ] && [ "$1" != "stress" ]; then echo "schon aktiv: $1"; exit 0; fi
 
 rm -f "$GELADEN"
-docker stop casora-test >/dev/null
+"$HAV" stop "$CFG"
 if [ "$now" = "arbeit" ] || [ "$now" = "demo" ]; then
   # Erst in eine neue Datei, dann tauschen – ein Abbruch lässt die alte Sicherung heil.
   tar -czf "$H/zustaende/$now.tgz.neu" -C "$H" config
@@ -110,5 +113,5 @@ tar -xzf "$H/zustaende/$SRC.tgz" -C "$H"
 echo "$1" > "$AKTIV"
 sync_repo
 mark_start
-docker start casora-test >/dev/null
+ha_start
 [ $NOWAIT = 1 ] || wait_up

@@ -48,7 +48,7 @@ Rückgabe ≠ 0 bei jedem Fehler.
 
 Bevor ein HA startet, prüft das Gate, was die Tests brauchen, aber nicht im Repo liegt:
 private Testdateien (`dev/casora_mock/fixture.json`, `scenarios.json`, `dev/e2e/testhaus.json`,
-`dev/privat-woerter.txt`, optional `skip.txt`, `einstellungen.privat.js`), Docker, Test-Zugang
+`dev/privat-woerter.txt`, optional `skip.txt`, `einstellungen.privat.js`), `uv` (für `tools/ha-venv.sh`), Test-Zugang
 (`~/casora-haus/ZUGANG.txt`), die Zustände unter `~/casora-haus/zustaende/` und freie Ports 8301–8307.
 In einem Worktree werden fehlende private Dateien aus dem Haupt-Checkout kopiert (alle gitignored).
 Fehlt etwas ganz, startet das Gate nicht, statt später als roter Test (früher: t01/t11 ohne testhaus.json).
@@ -108,10 +108,11 @@ repariert (siehe „Wackler vermeiden“).
 
 ## Ablauf und Parallelität
 
-- **HAs**: je Zustand ein oder mehrere Docker-Container `casora-gate-<name>` (`dev/qa/wegwerf-ha.sh`,
+- **HAs**: je Zustand ein oder mehrere HA-Prozesse `casora-gate-<name>` ohne Docker (`dev/qa/wegwerf-ha.sh`
+  über `tools/ha-venv.sh`: HA Core aus `~/.cache/ha-venv/<version>`, andere Version mit `CASORA_HA_VERSION`, z. B. `beta`;
   Kopie aus `~/casora-haus/zustaende/`, Daten unter `~/casora-agents/gate/`): arbeit :8301 (+ :8304,
-  :8307), stress :8302 (+ :8306), frisch :8303. Wie viele, richtet sich nach freiem Docker-Speicher
-  (je HA ~600 MB, `GATE_HA_MB`) und höchstens `GATE_HAS_MAX` (5) bzw. `--has N`; verteilt wird nach
+  :8307), stress :8302 (+ :8306), frisch :8303. Wie viele, richtet sich nach freiem Arbeitsspeicher des Macs
+  (abzüglich `GATE_RESERVE_MB`, 2000; je HA ~600 MB, `GATE_HA_MB`) und höchstens `GATE_HAS_MAX` (5) bzw. `--has N`; verteilt wird nach
   geschätzter Arbeit (`.qa/zeiten.json`, ~7 min je HA lohnt ein weiteres). Nach den frisch-Tests (~2 min)
   wird aus dessen Speicher ein weiteres HA (:8305) für den Zustand mit der meisten Arbeit je HA.
   Die Container werden am Ende immer entfernt (auch bei Abbruch). casora-test bleibt unberührt.
@@ -164,7 +165,7 @@ dev/qa/gate.sh --no-switch     # casora-test nicht umschalten, nur Tests des akt
 node dev/qa/auswahl.mjs --basis <commit> [--head <commit>]   # Zuordnung Datei → Tests ansehen
 ```
 
-Vor dem Start prüfen, dass kein anderes Gate läuft (`docker ps`: keine `casora-gate-arbeit/stress/frisch…`).
+Vor dem Start prüfen, dass kein anderes Gate läuft (keine HAs auf den Ports 8301–8307, das prüft das Gate auch selbst).
 Wegwerf-HAs von Agenten mit anderen Namen/Ports (ab 8350) dürfen weiterlaufen, kosten aber Speicher und
 Rechenzeit (dann startet das Gate weniger HAs).
 Anmeldung: automatisch über `dev/qa/token.mjs` (Zugang aus `CASORA_USER`/`CASORA_PASS`

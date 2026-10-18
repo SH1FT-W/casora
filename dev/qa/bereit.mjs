@@ -1,4 +1,4 @@
-// Wartet, bis das Docker-Test-HA wirklich bereit ist (statt fester Pause nach manifest.json):
+// Wartet, bis das Test-HA wirklich bereit ist (statt fester Pause nach manifest.json):
 //   1. Anmeldung + WebSocket auth_ok,
 //   2. get_config meldet state RUNNING (Start abgeschlossen),
 //   3. danach Ruhe: einige Sekunden keine „Aufbau“-Ereignisse mehr (Integration geladen,
