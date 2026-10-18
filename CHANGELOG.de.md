@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.38 – 18.10.2026
+
+### Behoben
+- **Diagramme endeten am verzögerten Mittel:** Verläufe über 7 und 30 Tage (z. B. Bodenfeuchte im Pflanzen-Popup) kommen aus der Langzeitstatistik, die bis zu einer Stunde hinterherhinkt und sechs Stunden mittelt. Frisch gegossen stand oben 77 %, die Linie endete aber bei etwa 49 % und die Skala bei 50. Jetzt endet die Linie am aktuellen Wert, und die Skala passt sich an.
+
 ## 26.10.37 – 18.10.2026
 
 ### Behoben

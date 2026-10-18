@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.38 – 18.10.2026
+
+### Fixed
+- **Charts ended at a delayed average:** 7 and 30 day charts (e.g. soil moisture in the plant popup) come from long-term statistics, which lag up to an hour and average six hours. Right after watering the value read 77 % while the line ended near 49 % and the scale stopped at 50. The line now ends at the current value, and the scale follows it.
+
 ## 26.10.37 – 18.10.2026
 
 ### Fixed

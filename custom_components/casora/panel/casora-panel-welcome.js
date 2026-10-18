@@ -27,8 +27,9 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Live-Aktivitäten ruhiger", n0: "Ein „Fertig“ statt zwei beim Saugroboter, keine Meldung pro Schicht oder Prozent, Startzeitvorwahl und Weiterlaufen nach einer Pause ohne Ton. „Fertig“ bleibt jetzt 10 Minuten stehen (vorher 30) – einstellbar je Gerät.",
-      n1t: "Pulse versteht mehr", n1: "Neue Pulse-Gründe wie „Funkt, schickt aber keine Werte“ oder „Cloud antwortet nicht“ stehen im Popup mit eigenem Text – nichts heißt mehr fälschlich „Bald fällig“.",
+      n0t: "Diagramme zeigen den aktuellen Wert", n0: "Verläufe über 7 und 30 Tage enden jetzt am aktuellen Messwert statt am verzögerten Mittel – frisch gegossen steht die Bodenfeuchte gleich oben.",
+      n1t: "Live-Aktivitäten ruhiger", n1: "Ein „Fertig“ statt zwei beim Saugroboter, keine Meldung pro Schicht oder Prozent, Startzeitvorwahl und Weiterlaufen nach einer Pause ohne Ton. „Fertig“ bleibt jetzt 10 Minuten stehen (vorher 30) – einstellbar je Gerät.",
+      n2t: "Pulse versteht mehr", n2: "Neue Pulse-Gründe wie „Funkt, schickt aber keine Werte“ oder „Cloud antwortet nicht“ stehen im Popup mit eigenem Text – nichts heißt mehr fälschlich „Bald fällig“.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -38,8 +39,9 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Calmer Live Activities", n0: "One “done” instead of two for robot vacuums, no update per layer or percent, scheduled starts and resuming after a pause without a sound. “Done” now stays for 10 minutes (was 30) – adjustable per device.",
-      n1t: "Pulse understands more", n1: "New Pulse reasons such as “On the air, but sends no values” or “Cloud not responding” get their own text in the popup – nothing is wrongly shown as “Due soon” any more.",
+      n0t: "Charts show the current value", n0: "7 and 30 day charts now end at the current reading instead of a delayed average – right after watering, soil moisture is up at once.",
+      n1t: "Calmer Live Activities", n1: "One “done” instead of two for robot vacuums, no update per layer or percent, scheduled starts and resuming after a pause without a sound. “Done” now stays for 10 minutes (was 30) – adjustable per device.",
+      n2t: "Pulse understands more", n2: "New Pulse reasons such as “On the air, but sends no values” or “Cloud not responding” get their own text in the popup – nothing is wrongly shown as “Due soon” any more.",
     },
   };
 
@@ -52,8 +54,9 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:cellphone-sound", "n0t", "n0"],
-    ["mdi:pulse", "n1t", "n1"],
+    ["mdi:chart-line", "n0t", "n0"],
+    ["mdi:cellphone-sound", "n1t", "n1"],
+    ["mdi:pulse", "n2t", "n2"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.
