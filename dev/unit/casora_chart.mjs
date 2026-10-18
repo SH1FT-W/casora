@@ -43,6 +43,17 @@ console.log('ok Skala');
 }
 console.log('ok Zusammenfassen');
 
+// Live end: the last point is the current state (soil moisture 77 % after watering, 6 h stats mean ~49 %).
+{
+  const t0 = Date.UTC(2026, 9, 18, 0), t1 = t0 + 12 * H;
+  const b = C.live(C.bucket([[t0 + H, 40], [t0 + 7 * H, 39], [t0 + 11 * H, 49]], t0, t1, 6 * H), t1, 77);
+  assert.deepEqual(b[b.length - 1], [t1, 77]);
+  assert.equal(b[0][1], 40, 'earlier windows unchanged');
+  assert.deepEqual(C.live([[t1, 5]], t1, NaN), [[t1, 5]], 'no live value: mean stays');
+  assert.deepEqual(C.live([], t1, 77), [], 'no history: nothing invented');
+}
+console.log('ok Live-Ende');
+
 // Tagesbalken: lokale Mitternacht, letzter Tag = heute, Zeitumstellung 25.10.2026 (25-Stunden-Tag).
 {
   const now = new Date(2026, 9, 27, 14, 10).getTime();

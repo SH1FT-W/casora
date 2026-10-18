@@ -40,6 +40,11 @@
     if (last != null && out.length) out[out.length - 1] = [t1, out[out.length - 1][1]];
     return out;
   };
+  /* The line ends at the live state, not at the last window's mean (statistics lag up to an hour). */
+  C.live = function (b, t1, v) {
+    if (b.length && v != null && isFinite(v)) b[b.length - 1] = [t1, v];
+    return b;
+  };
   /* Tagesanfänge (lokal, 23/25-Stunden-Tage bei Zeitumstellung richtig), letzter = heute. */
   C.days = function (now, n) {
     var d = new Date(now), out = [];
@@ -384,7 +389,8 @@
       var ro = this._head(box, name, unit);
       var Hh = c.height || (spark ? 38 : 150), y = c.y || {};
       var bms = Math.max(C.ms(c.bucket) || 0, span / Math.max(8, W / 3), (this._data && this._data.stats) ? H : 0);
-      var B = list.map(function (s) { return C.bucket(me._points(s), t0, now, bms, c.agg); });
+      var live = function (s) { var st = me._h && s.entity && !s.map && !s.attribute && me._h.states[s.entity]; return st ? parseFloat(st.state) : NaN; };
+      var B = list.map(function (s) { return C.live(C.bucket(me._points(s), t0, now, bms, c.agg), now, live(s)); });
       var all = [].concat.apply([], B), vals = all.map(function (p) { return p[1]; });
       var padR = spark ? 4 : 40, padT = spark ? 4 : 10, padB = spark ? 4 : 24, padL = spark ? 3 : 2;
       var dec = this._dec(s0, vals.length ? vals[vals.length - 1] : 0);
@@ -396,7 +402,7 @@
       if (spark && vals.length) sc = { lo: lo - (hi - lo < 1e-9 ? 1 : 0), hi: hi + (hi - lo < 1e-9 ? 1 : 0), ticks: [] };
       var X = function (t) { return padL + (t - t0) / span * (W - padL - padR); };
       var Y = function (v) { return padT + (1 - (v - sc.lo) / (sc.hi - sc.lo || 1)) * (Hh - padT - padB); };
-      var cs = this._h && s0.entity && !s0.map && !s0.attribute && this._h.states[s0.entity], cv = cs ? parseFloat(cs.state) : NaN;
+      var cv = live(s0);
       var lastV = isFinite(cv) ? cv : vals.length ? B[0][B[0].length - 1][1] : null;
       var spanTxt = C.tr(({ '2h': 'letzte 2 Stunden', '4h': 'letzte 4 Stunden', '6h': 'letzte 6 Stunden', '24h': 'letzte 24 Stunden', '48h': 'letzte 48 Stunden', '7d': 'letzte 7 Tage', '30d': 'letzte 30 Tage' })[c.span] || c.span);
       var svg = this._svg(box, W, Hh, vals.length ? name + ', ' + spanTxt + ', ' + C.nf(lo, dec) + ' ' + C.tr('bis') + ' ' + C.nf(hi, dec) + ' ' + unit
