@@ -84,6 +84,12 @@ st("sensor.ws_prog", "dishcare_dishwasher_program_eco50", options=["dishcare_dis
 f = lf.classify("d7", ws, S.get)
 check("Home Connect WS Geschirrspüler über Schlüssel", f and f.kind == "dishwasher" and f.source == "home_connect_alt" and f.how == "keys", f)
 check("Home Connect WS Felder inkl. Startverzögerung", f and f.fields["phase"] == "sensor.ws_phase" and f.fields["start_in"] == "sensor.ws_start", f and f.fields)
+for key in ("sensor_laundry_process_phase", "sensor_dryer_process_phase"):
+    wsw = [E("sensor.wsw_state", "sensor_operation_state"), E("sensor.wsw_prog", "sensor_active_program"),
+           E("sensor.wsw_phase", key), E("sensor.wsw_pct", "sensor_program_progress")]
+    st("sensor.wsw_prog", "laundrycare_washer_program_cotton")
+    f = lf.classify("d7b", wsw, S.get)
+    check("Home Connect WS Phase über " + key, f and f.fields.get("phase") == "sensor.wsw_phase", f and f.fields)
 
 miele = [E("sensor.m_state", "status", "miele"), E("sensor.m_spin", "spin_speed", "miele"), E("sensor.m_rem", "remaining_time", "miele")]
 f = lf.classify("d8", miele, S.get)

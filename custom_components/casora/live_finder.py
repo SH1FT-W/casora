@@ -154,7 +154,8 @@ SOURCES: list[dict[str, Any]] = [
      "role": _hc_role(["sensor_active_program", "select_program", "sensor_selected_program"]),
      "fields": {"state": k("sensor_operation_state"), "program": k(["sensor_active_program", "sensor_selected_program"]),
                 "select": k("select_program", "select"), "remaining": k("sensor_remaining_program_time"),
-                "progress": k("sensor_program_progress"), "phase": k("sensor_program_phase"), "door": k("binary_sensor_door_state", "binary_sensor"),
+                "progress": k("sensor_program_progress"), "phase": k(["sensor_program_phase", "sensor_laundry_process_phase", "sensor_dryer_process_phase"]),
+                "door": k("binary_sensor_door_state", "binary_sensor"),
                 "stop": k("button_abort_program", "button"), "pause": k("button_pause_program", "button"),
                 "resume": k("button_resume_program", "button")},
      # Only here: start delay (Home Connect WS), not in the JS finder.

@@ -109,7 +109,7 @@ STATE_PHASE = {
 }
 # No program/phase, only the device state (otherwise WashData fills the phase with it).
 NOPROG = {"off", "none", "unknown", "unavailable", "detecting...", "detecting", "starting", "running", "idle", "paused",
-          "user_paused", "ending", "finished", "clean", "auto_detect", ""}
+          "user_paused", "ending", "finished", "clean", "auto_detect", "nophase", "progstarted", ""}
 PHASE = {
     "pre-wash": ("Vorwäsche", "Pre-wash"), "prewash": ("Vorwäsche", "Pre-wash"), "pre-rinse": ("Vorspülen", "Pre-rinse"),
     "prerinse": ("Vorspülen", "Pre-rinse"), "wash": ("Waschen", "Washing"), "mainwash": ("Reinigen", "Cleaning"),
@@ -119,6 +119,12 @@ PHASE = {
     "cooldown": ("Abkühlen", "Cooling down"), "heat-up": ("Aufheizen", "Heating up"), "heating": ("Aufheizen", "Heating up"),
     "heat": ("Aufheizen", "Heating up"), "drain": ("Abpumpen", "Draining"), "drain-&-switch": ("Abpumpen", "Draining"),
     "sensor-check": ("Prüfung", "Sensor check"), "sanitize": ("Hygiene", "Sanitize"),
+    # Home Connect WS laundry/dryer process phases
+    "washing": ("Waschen", "Washing"), "rinsing": ("Spülen", "Rinsing"), "rinsingsoftener": ("Spülen", "Rinsing"),
+    "rinsingfoam": ("Spülen", "Rinsing"), "spinning": ("Schleudern", "Spinning"), "spinningfinal": ("Schleudern", "Spinning"),
+    "intermediatespin": ("Schleudern", "Spinning"), "pumping": ("Abpumpen", "Draining"), "soaking": ("Einweichen", "Soaking"),
+    "coolingdown": ("Abkühlen", "Cooling down"), "cooling": ("Abkühlen", "Cooling down"),
+    "guardingwrinkle": ("Knitterschutz", "Anti-crease"), "finishedanticrease": ("Knitterschutz", "Anti-crease"),
 }
 PROGRAM = {
     "dishcare_dishwasher_program_eco50": ("Eco 50°", "Eco 50°"), "dishcare_dishwasher_program_auto2": ("Auto 45–65°", "Auto 45–65°"),
