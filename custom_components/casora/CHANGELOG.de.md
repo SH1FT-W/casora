@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.39 – 18.10.2026
+
+### Behoben
+- **Keine Programmphase bei Home Connect Local** ([#24](https://github.com/SH1FT-W/casora/issues/24)): Waschmaschinen und Trockner über `homeconnect_ws` melden die Phase unter einem eigenen Sensor (`laundry_process_phase` bzw. `dryer_process_phase`). Casora findet ihn jetzt; Popup und Live-Aktivität zeigen jetzt Waschen, Spülen, Schleudern usw.
+
 ## 26.10.38 – 18.10.2026
 
 ### Behoben

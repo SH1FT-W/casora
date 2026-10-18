@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.39 – 18.10.2026
+
+### Fixed
+- **No program phase with Home Connect Local** ([#24](https://github.com/SH1FT-W/casora/issues/24)): washers and dryers on `homeconnect_ws` report the phase on their own sensor (`laundry_process_phase` or `dryer_process_phase`). Casora now finds it, so the popup and Live Activity show washing, rinsing, spinning and so on.
+
 ## 26.10.38 – 18.10.2026
 
 ### Fixed
