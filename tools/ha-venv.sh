@@ -15,7 +15,7 @@
 # lösen die neueste Version bzw. die neueste Vorabversion von PyPI auf (z. B. 2026.11.0b0).
 # Port: steht seit HA 2026.10 in .storage/http (die YAML-Angabe „http: server_port“ wird nach der
 # einmaligen Übernahme ignoriert) – start setzt beides. Adresse: $HA_HOST, Standard 127.0.0.1
-# (nur dieser Mac; 0.0.0.0 = auch aus dem Netz). Gemeinsame Vorlage aus mac-werkzeuge/vorlagen,
+# (nur dieser Mac; 0.0.0.0 = auch aus dem Netz). Gemeinsame Vorlage aus repo-vorlagen/vorlagen,
 # in den Repos byteidentisch als tools/ha-venv.sh (Abgleich: vorlagen/abgleich.sh).
 set -euo pipefail
 
