@@ -2271,7 +2271,14 @@
   "Brühgruppe spülen": "Rinse brew unit",
   "Brühgruppe spülen überfällig": "Brew unit rinse overdue",
   "Getränk an der Maschine wählen – Casora erkennt es am Stromverlauf.": "Choose the drink on the machine – Casora recognizes it from the power curve.",
-  "Kaffee doppio": "Double coffee"
+  "Kaffee doppio": "Double coffee",
+  "Funkt, schickt aber keine Werte": "On the air, but sends no values",
+  "Batteriewert fehlt": "Battery level missing",
+  "Cloud antwortet nicht": "Cloud not responding",
+  "Seit dem Neustart noch keine Meldung": "No report since the restart",
+  "Erreichbar, gerade nichts zu melden": "Reachable, nothing to report right now",
+  "funkt, schickt aber keine Werte": "is on the air but sends no values",
+  "meldet keinen Batteriewert": "reports no battery level"
  },
  "patterns": [
   [

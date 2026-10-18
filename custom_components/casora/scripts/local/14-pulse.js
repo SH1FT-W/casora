@@ -104,11 +104,18 @@
       case 'battery_soon': return 'Batterie bald fällig';
       case 'battery_low_flag': return 'Meldet schwache Batterie';
       case 'waiting_first': return 'Gewechselt · wartet auf erste Meldung';
+      case 'radio_only': return 'Funkt, schickt aber keine Werte';
+      case 'battery_missing': return 'Batteriewert fehlt';
+      case 'cloud_outage': return 'Cloud antwortet nicht';
+      case 'startup_waiting': return 'Seit dem Neustart noch keine Meldung';
       case 'learning': return 'Lernt noch den Rhythmus';
+      case 'ok_reachable':
+      case 'silent_reachable': return 'Erreichbar, gerade nichts zu melden';
       case 'ok':
       case 'ok_rhythm': return 'Meldet sich wie gewohnt' + (ev ? ' · ' + ev : '');
       default:
-        return { failed: 'Ausgefallen', check: 'Bitte prüfen', watch: 'Bald fällig', learning: 'Lernt noch den Rhythmus' }[d.status]
+        // Unknown reason (newer Pulse): only the status, never a battery claim
+        return { failed: 'Ausgefallen', check: 'Bitte prüfen', watch: 'Beobachten', learning: 'Lernt noch den Rhythmus' }[d.status]
           || 'Meldet sich wie gewohnt';
     }
   };
@@ -116,8 +123,10 @@
     var k = d.reason;
     if (k === 'battery_low' || k === 'battery_low_flag') return 'mdi:battery-alert-variant-outline';
     if (k === 'battery_soon') return 'mdi:battery-low';
-    if (k === 'waiting_first') return 'mdi:timer-sand';
-    if (k === 'silent' || k === 'silent_new' || k === 'partner' || k === 'unavailable') return 'mdi:access-point-off';
+    if (k === 'waiting_first' || k === 'startup_waiting') return 'mdi:timer-sand';
+    if (k === 'battery_missing') return 'mdi:battery-unknown';
+    if (k === 'cloud_outage') return 'mdi:cloud-off-outline';
+    if (k === 'silent' || k === 'silent_new' || k === 'partner' || k === 'unavailable' || k === 'radio_only') return 'mdi:access-point-off';
     return d.status === 'learning' ? 'mdi:school-outline' : 'mdi:pulse';
   };
 
@@ -195,6 +204,8 @@
       case 'battery_low_flag': return 'meldet schwache Batterie';
       case 'battery_soon': return 'braucht bald eine neue Batterie';
       case 'waiting_first': return 'wartet auf die erste Meldung';
+      case 'radio_only': return 'funkt, schickt aber keine Werte';
+      case 'battery_missing': return 'meldet keinen Batteriewert';
       default: return d.status === 'failed' ? 'ist ausgefallen' : 'sollte geprüft werden';
     }
   };
@@ -314,7 +325,7 @@
     var tone = d.status === 'failed' ? 'bad' : d.status === 'check' ? 'warn' : d.status === 'watch' ? COLOR.watch : undefined;
     var sub = [d.text, d.area].filter(Boolean);
     if (d.snoozed) sub.push('Erinnerung pausiert');
-    var silent = d.reason === 'silent' || d.reason === 'silent_new' || d.reason === 'unavailable' || d.reason === 'partner';
+    var silent = d.reason === 'silent' || d.reason === 'silent_new' || d.reason === 'unavailable' || d.reason === 'partner' || d.reason === 'radio_only';
     var r = {
       entity: d.statusId, icon: P.icon(d), iconTone: tone,
       label: d.name,
