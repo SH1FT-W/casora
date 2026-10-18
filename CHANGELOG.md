@@ -4,6 +4,22 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.37 – 18.10.2026
+
+### Fixed
+- **Live Activities, robot vacuum:** After cleaning, “done” came twice with a sound and “washing the mop” in between, because the vacuum charges briefly and then washes its mop. Casora now waits until the vacuum has rested in the dock for 90 seconds and sends exactly one “done”. Mop washing, emptying the bin and docking after “done” (also after an HA restart) change nothing, undocking without cleaning and unknown states (e.g. drying) never start an activity.
+- **Live Activities, dishwasher:** “Done” disappeared after one minute because Home Connect switches to “ready” shortly after the end. It now stays for the set done duration.
+- **Live Activities, washer/dryer:** A short power blip after the end (e.g. anti-crease) caused a loud “running” or a second “done”. Only “running” counts as a new run now.
+- **Live Activities, delayed start:** Without a start time from the device the end time was shown. The start time now appears at once and no longer drifts with every update.
+- **Live Activities, program ended during an HA restart:** “Done” now comes with a sound instead of silently.
+- **Live Activities, stuck activities:** When a device disappears from Home Assistant, its activity ends after 30 minutes. Switching off during a send can no longer be overtaken by the running update.
+- **“Done” came up to 10 minutes late** because it waited for the update interval.
+- **Pulse popup:** New Pulse reasons (on the air without values, battery value missing, cloud not responding, waiting since restart, reachable) had no text of their own and showed as “Due soon”, e.g. a leak sensor at 91 %. They now have their own text and icon; unknown reasons read “Watch”.
+
+### Changed
+- **Calmer Live Activities:** Progress, printer layers and routine printer steps (e.g. filament changes in multi-color prints) follow the interval instead of every change; pause, attention, error and done still go out at once. Several changes of one device within the same second make one update. Resuming after a pause and the start after a delayed start come without a sound.
+- **Done duration now 10 instead of 30 minutes** by default. If you want 30, set it per device under Settings › Live Activities (also if you had chosen 30 before, since the default is not stored).
+
 ## 26.10.36 – 18.10.2026
 
 ### New

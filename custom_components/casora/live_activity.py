@@ -1,25 +1,25 @@
-"""Live-Aktivitäten (iOS Live Activities / Android Live Updates) über die HA-App – aus Casora heraus.
+"""Live activities (iOS Live Activities / Android Live Updates) via the HA app, driven by Casora.
 
-Statt je Gerät eine Automation: Casora beobachtet die Geräte, die der Finder kennt (live_finder.py –
-dieselbe Erkennung wie Kacheln und Popups), und schickt notify.mobile_app_… mit data.live_update. Eine
-Aktivität beginnt mit dem Programm, zeigt Programm/Phase, Fortschritt und Restzeit (chronometer bis zum
-Ende; ohne Restzeit „läuft seit“ ab Start), meldet Pause (gelb), Eingriff/Fehler (rot) und Fertig (grün)
-und räumt sich auf: „Fertig“ nach der eingestellten Dauer, sonst sobald das Gerät wieder aus/bereit ist.
-Zwischenstände (Fortschritt, Phase, Takt) gehen leise, Phasenwechsel laut.
+Instead of one automation per device: Casora watches the devices the finder knows (live_finder.py, the
+same detection as tiles and popups) and sends notify.mobile_app_… with data.live_update. An
+activity starts with the program, shows program/phase, progress and remaining time (chronometer to the
+end; without remaining time "running since" from the start), reports pause (yellow), attention/error (red)
+and done (green) and cleans up after itself: "done" after the set duration, otherwise once the device is off/ready again.
+Intermediate updates (progress, phase, tick) go out silently, phase changes loudly.
 
-Einstellungen (Studio → Einstellungen → Live-Aktivitäten) liegen im Casora-Speicher, nicht in den
-Optionen: Empfänger einmal, je Gerät Schalter, Fertig-Dauer, leise Zwischenstände, Takt. Laufende
-Aktivitäten stehen ebenfalls im Speicher – nach einem Neustart werden sie neu bewertet (läuft noch →
-leise neu gesendet, sonst beendet). Ausschalten (Gerät, Empfänger, alle) beendet laufende sofort.
+Settings (Studio → Settings → Live Activities) live in the Casora store, not in the
+options: recipients once, per device a switch, done duration, silent intermediate updates, interval. Running
+activities are stored there as well – after a restart they are re-evaluated (still running →
+resent silently, otherwise ended). Switching off (device, recipient, all) ends running ones at once.
 
-Regeln: nur zeigen, was das Gerät liefert; unbekannte Zustände nie als „Fertig“ deuten; Farben aus der
-Casora-Palette; Texte Deutsch/Englisch nach HA-Sprache; Zeiten als Ortszeit.
+Rules: only show what the device delivers; never read unknown states as "done"; colors from the
+Casora palette; texts German/English by HA language; times as local time.
 
-WebSocket (nur Admins):
-  casora/live/get   ← {} → {targets, devices, found: [...], notify_services, log, active, url, test_runs (nur Testhaus)}
+WebSocket (admins only):
+  casora/live/get   ← {} → {targets, devices, found: [...], notify_services, log, active, url, test_runs (test house only)}
   casora/live/set   ← {targets?: [notify.…], devices?: {<device_id>: {on?, done_min?, quiet?, interval_min?, color?}},
-                       devices_replace?: bool (devices = vollständige Liste, ersetzt alles)} → wie get
-  casora/live/probe ← {device_id?} → {ok, targets}   (Beispiel-Aktivität, räumt sich nach 2 Min. selbst auf)
+                       devices_replace?: bool (devices = complete list, replaces everything)} → same as get
+  casora/live/probe ← {device_id?} → {ok, targets}   (sample activity, cleans itself up after 2 min)
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from typing import Any, Callable
 
@@ -46,21 +46,22 @@ _LOGGER = logging.getLogger(__name__)
 
 STORE_KEY = f"{DOMAIN}.live_activity"
 KINDS = ("washer", "dryer", "dishwasher", "vacuum", "printer")
-DEFAULTS = {"on": True, "done_min": 30, "quiet": True, "interval_min": 10, "color": "auto"}
-# Wählbare Farben je Gerät (Casora-Palette); „auto“ = Farbe der Geräteart.
+DEFAULTS = {"on": True, "done_min": 10, "quiet": True, "interval_min": 10, "color": "auto"}
+# Selectable colors per device (Casora palette); "auto" = color of the device kind.
 PALETTE = {"blue": "#5B8FC9", "teal": "#4E9E95", "green": "#6AAE78", "honey": "#E8B04A",
            "orange": "#DE8A4E", "red": "#D35A4E", "violet": "#7E6A9E", "rose": "#D16E7E"}
 LIMITS = {"done_min": (1, 240), "interval_min": (1, 60)}
 LOG_MAX = 20
 PROBE_TAG = "casora-live-probe"
 PROBE_CLEAR_S = 120
-# Gerät nicht erreichbar (unavailable/unknown/offline): Aktivität ruhig stehen lassen; kommt das Gerät
-# wieder, geht sie leise weiter. Erst nach dieser Zeit ohne Gerät räumt Casora sie ab (leise, nie „Fertig“).
+# Device unreachable (unavailable/unknown/offline): leave the activity standing quietly; when the device
+# returns, it continues silently. Only after this long without the device does Casora clear it (silently, never "done").
 GONE_MAX_S = 30 * 60
 GONE_STATES = {"unavailable", "unknown", "", "none", "not_connected", "offline", "device_offline"}
 TICK = timedelta(seconds=60)
+STATE_COLLECT_S = 1.5
 
-# Farben aus der Casora-Palette (theme_weich.yaml casora-color-*), keine iOS-Systemwerte.
+# Colors from the Casora palette (theme_weich.yaml casora-color-*), no iOS system values.
 COLOR = {"washer": "#5B8FC9", "dryer": "#DE8A4E", "dishwasher": "#4E9E95", "vacuum": "#7E6A9E", "printer": "#D16E7E",
          "done": "#6AAE78", "pause": "#E8B04A", "attn": "#D35A4E", "error": "#D35A4E"}
 ICON = {"washer": "mdi:washing-machine", "dryer": "mdi:tumble-dryer", "dishwasher": "mdi:dishwasher",
@@ -81,14 +82,14 @@ T = {
     "probe_text": ("Beispiel aus Casora – verschwindet in 2 Minuten", "Sample from Casora – gone in 2 minutes"),
 }
 
-# Gerätezustand → Phase (wie STATE in scripts/local/02-geraete.js, Art off|idle|delay|run|pause|attn|done|error).
-# Unbekanntes fehlt bewusst: es gilt als „off“ und wird nie „Fertig“.
+# Device state → phase (like STATE in scripts/local/02-geraete.js, kind off|idle|delay|run|pause|attn|done|error).
+# Unknown states are missing on purpose: they count as "off" and never become "done".
 STATE_PHASE = {
     # WashData
     "off": "off", "idle": "off", "starting": "run", "running": "run", "paused": "pause", "user_paused": "pause",
     "ending": "run", "finished": "done", "anti_wrinkle": "done", "delay_wait": "delay", "interrupted": "error",
     "force_stopped": "off", "rinse": "run", "clean": "done",
-    # Home Connect (auch Geschirrspüler)
+    # Home Connect (also dishwashers)
     "inactive": "off", "ready": "off", "delayedstart": "delay", "run": "run", "pause": "pause", "actionrequired": "attn",
     "error": "error", "aborting": "off",
     # Miele
@@ -106,7 +107,7 @@ STATE_PHASE = {
     "cooling": "run", "cool_down": "run", "soaking": "run", "refreshing": "run", "wrinkle_care": "done", "end": "done",
     "done": "done", "reservation": "delay",
 }
-# Kein Programm/keine Phase, nur der Gerätezustand (WashData füllt die Phase sonst damit).
+# No program/phase, only the device state (otherwise WashData fills the phase with it).
 NOPROG = {"off", "none", "unknown", "unavailable", "detecting...", "detecting", "starting", "running", "idle", "paused",
           "user_paused", "ending", "finished", "clean", "auto_detect", ""}
 PHASE = {
@@ -132,13 +133,21 @@ PROGRAM = {
 }
 PROGRAM_PREFIX = re.compile(r"^(laundry_care_(washer|dryer)_program_|dishcare_dishwasher_program_)")
 
-# Saugroboter: Status-Sensor (Roborock) → Text; reinigt = Raum ist der Hauptwert.
+# Robot vacuum: status sensor (Roborock) → text; while cleaning, the room is the main value.
 VAC_CLEANING = {"cleaning", "segment_cleaning", "zoned_cleaning", "spot_cleaning", "robot_status_mopping", "segment_mopping",
                 "zoned_mopping", "clean_mop_cleaning", "clean_mop_mopping", "segment_clean_mop_cleaning",
                 "segment_clean_mop_mopping", "zoned_clean_mop_cleaning", "zoned_clean_mop_mopping"}
-# Ruhezustände – „unknown“/„unavailable“/„device_offline“ gehören nicht dazu: das ist „nicht erreichbar“ (gone),
-# nie Andocken und nie „Fertig“.
-VAC_REST = {"charging", "charging_complete", "idle", "shutting_down", "updating", "locked", "docked", "off", "sleeping"}
+# Idle states – "unknown"/"unavailable"/"device_offline" are not among them: that is "unreachable" (gone),
+# never docking and never "done".
+VAC_REST = {"charging", "charging_complete", "idle", "shutting_down", "updating", "locked", "docked", "off", "sleeping",
+            "charger_disconnected"}
+# Work at the station after cleaning (washing the mop, emptying dust, docking): belongs to the cleaning,
+# is never a new run after "done".
+VAC_STATION = {"washing_the_mop", "going_to_wash_the_mop", "back_to_dock_washing_duster", "emptying_the_bin", "docking",
+               "returning_home", "returning"}
+# How long the vacuum must rest after cleaning before "done" comes: the Roborock briefly reports "charging"
+# and washes the mop afterwards (otherwise "done" twice with sound).
+VAC_SETTLE_S = 90
 VAC_TEXT = {
     "cleaning": ("Reinigt", "Cleaning"), "segment_cleaning": ("Reinigt", "Cleaning"), "zoned_cleaning": ("Reinigt", "Cleaning"),
     "spot_cleaning": ("Punktreinigung", "Spot cleaning"), "robot_status_mopping": ("Wischt", "Mopping"), "segment_mopping": ("Wischt", "Mopping"),
@@ -149,12 +158,12 @@ VAC_TEXT = {
     "back_to_dock_washing_duster": ("Zur Moppwäsche", "Going to wash the mop"), "emptying_the_bin": ("Staub entleeren", "Emptying the bin"),
     "returning_home": ("Zurück zur Station", "Returning to dock"), "returning": ("Zurück zur Station", "Returning to dock"),
     "docking": ("Dockt an", "Docking"), "paused": ("Pausiert", "Paused"), "charging": ("Lädt", "Charging"),
-    "charging_complete": ("Geladen", "Charged"), "idle": ("Bereit", "Ready"), "error": ("Fehler", "Error"),
+    "charging_complete": ("Geladen", "Charged"), "charger_disconnected": ("Abgedockt", "Undocked"), "idle": ("Bereit", "Ready"), "error": ("Fehler", "Error"),
     "charging_problem": ("Ladeproblem", "Charging problem"), "going_to_target": ("Unterwegs", "On the way"), "mapping": ("Kartiert", "Mapping"),
     "attaching_the_mop": ("Mopp anbringen", "Attaching the mop"), "detaching_the_mop": ("Mopp abnehmen", "Detaching the mop"),
     "starting": ("Startet", "Starting"), "manual_mode": ("Manuell", "Manual"), "remote_control_active": ("Fernsteuerung", "Remote control"),
 }
-# 3D-Drucker (Bambu Lab): Arbeitsschritt → Text.
+# 3D printer (Bambu Lab): work step → text.
 PRINT_STEP = {
     "printing": ("Druckt", "Printing"), "heating_hotend": ("Düse heizt", "Heating nozzle"), "heatbed_preheating": ("Bett heizt", "Heating bed"),
     "waiting_for_heatbed_temperature": ("Bett heizt", "Heating bed"), "auto_bed_leveling": ("Bett-Leveling", "Bed leveling"),
@@ -176,21 +185,30 @@ PRINT_PHASE = {"prepare": "run", "running": "run", "pause": "pause", "finish": "
 
 @dataclass
 class Snap:
-    """Was gerade zu zeigen ist – unabhängig von der Quelle."""
+    """What to show right now – independent of the source."""
 
-    phase: str = "off"            # off | delay | run | pause | attn | done | error | gone (nicht erreichbar)
+    phase: str = "off"            # off | delay | run | pause | attn | done | error | gone (unreachable)
     program: str | None = None
-    step: str | None = None       # Phase, Arbeitsschritt oder Raum
+    step: str | None = None       # phase, work step or room
     pct: int | None = None
-    end_ts: int | None = None     # Restzeit bzw. Startzeit (chronometer bis dahin)
-    start_ts: int | None = None   # ohne Restzeit: läuft seit
-    extra: str | None = None      # Zusatz („Knitterschutz läuft“, „Schicht 12/80“, „32 m² in 45 Min.“)
-    critical: str | None = None   # Kurztext für die kompakte Ansicht
+    end_ts: int | None = None     # end of remaining time or start time (chronometer up to it)
+    start_ts: int | None = None   # without remaining time: running since
+    extra: str | None = None      # extra info („Knitterschutz läuft“, „Schicht 12/80“, „32 m² in 45 Min.“)
+    critical: str | None = None   # short text for the compact view
     message: str = ""
-    minor: bool = False           # kurze Pause/Endet gleich (WashData): leise, Grundfarbe
+    minor: bool = False           # short pause/ending soon (WashData): silent, base color
+    rest_since: int | None = None # vacuum: resting since (waiting for "done"), otherwise None
+    restored: bool = False        # rebuilt from the stored activity after a restart/outage (phase only)
+    tentative: bool = False       # WashData "starting": power detected, not yet a confirmed run
+    detail_on_tick: bool = False  # send percent/extra only on the tick (printer: otherwise one message per layer)
 
     def signature(self) -> tuple:
-        return (self.phase, self.program, self.step, self.pct, self.extra, self.minor)
+        """What sends at once when it changes; everything else (progress, printer layers and routine steps
+        such as AMS filament changes) follows on the interval tick. A changed start time sends at once."""
+        start = self.end_ts // 60 if self.phase == "delay" and self.end_ts else None
+        if self.detail_on_tick:
+            return (self.phase, self.program, None, None, None, self.minor, start)
+        return (self.phase, self.program, self.step, None, self.extra, self.minor, start)
 
 
 def _lang(hass) -> int:
@@ -215,7 +233,7 @@ def _unit(st) -> str:
 
 
 def _seconds(st) -> float | None:
-    """Dauer-Sensor in Sekunden (h/min/s nach Einheit, ohne Einheit Minuten)."""
+    """Duration sensor in seconds (h/min/s by unit, no unit means minutes)."""
     n = _num(st)
     if n is None:
         return None
@@ -224,7 +242,7 @@ def _seconds(st) -> float | None:
 
 
 def _timestamp(st) -> int | None:
-    """Zeitpunkt-Sensor (program_finish_time, end_time, completion_time) → Unix-Sekunden."""
+    """Timestamp sensor (program_finish_time, end_time, completion_time) → Unix seconds."""
     if st is None or st.state in ("unknown", "unavailable", "", None):
         return None
     d = dt_util.parse_datetime(str(st.state))
@@ -236,16 +254,21 @@ def _timestamp(st) -> int | None:
 
 
 def _end_from(st, now: datetime) -> int | None:
-    """Restzeit → Endzeitpunkt: Zeitstempel direkt, Dauer ab jetzt."""
+    """Remaining time → end timestamp: a timestamp as is, a duration from the sensor's last update (not from
+    now – a value that does not count down would otherwise drift by one tick on every evaluation)."""
     ts = _timestamp(st)
     if ts:
         return ts
     s = _seconds(st)
-    return int(now.timestamp() + s) if s and s > 0 else None
+    if not s or s <= 0:
+        return None
+    base = getattr(st, "last_updated", None)
+    base_ts = base.timestamp() if isinstance(base, datetime) and base.timestamp() <= now.timestamp() else now.timestamp()
+    return int(base_ts + s)
 
 
 def _gone(st) -> bool:
-    """Zustands-Entität fehlt oder ist nicht erreichbar – kein Gerätezustand, nichts daraus ableiten."""
+    """State entity missing or unreachable – no device state, derive nothing from it."""
     return st is None or str(st.state).strip().lower() in GONE_STATES
 
 
@@ -261,7 +284,7 @@ def program_name(raw: str, lang: int) -> str:
         return ""
     s = PROGRAM_PREFIX.sub("", key)
     if s == key and "_" not in key:
-        return raw.strip()  # Klartext der Integration („Baumwolle 40“) bleibt
+        return raw.strip()  # the integration's plain text („Baumwolle 40“) stays
     s = s.replace("_", " ").strip()
     return s[:1].upper() + s[1:]
 
@@ -276,7 +299,7 @@ def _time_text(ts: int, lang: int) -> str:
 
 
 def snapshot(found: Found, get: Callable[[str], Any], now: datetime, lang: int, prev: Snap | None = None) -> Snap:
-    """Zustand eines gefundenen Geräts als Schnappschuss. prev: letzter Stand (Sauger-„Fertig“ beim Andocken)."""
+    """State of a found device as a snapshot. prev: last state (vacuum "done" on docking)."""
     f = found.fields
     g = lambda name: get(f[name]) if f.get(name) else None  # noqa: E731
     if found.kind == "vacuum":
@@ -291,7 +314,7 @@ def _snap_appliance(found: Found, g, now: datetime, lang: int) -> Snap:
         return Snap(phase="gone")
     raw = str(getattr(g("state"), "state", "") or "").lower()
     ph = STATE_PHASE.get(raw, "off")
-    s = Snap(phase=ph)
+    s = Snap(phase=ph, tentative=raw == "starting")
     if ph == "off":
         return s
     prog = program_name(_clean(g("program")), lang)
@@ -315,7 +338,7 @@ def _snap_appliance(found: Found, g, now: datetime, lang: int) -> Snap:
         s.critical = T["fertig"][lang]
         s.message = _join(T["fertig"][lang], T["waesche_raus"][lang] if laundry else T["geschirr_raus"][lang], s.extra)
     elif ph == "pause":
-        s.minor = raw == "paused" and found.source == "washdata"  # kurze automatische Pause vor dem Ende
+        s.minor = raw == "paused" and found.source == "washdata"  # short automatic pause before the end
         s.critical = T["pause"][lang]
         s.message = _join(T["kurze_pause"][lang] if s.minor else T["pausiert"][lang], prog, pct_t)
     elif ph == "attn":
@@ -325,7 +348,8 @@ def _snap_appliance(found: Found, g, now: datetime, lang: int) -> Snap:
         s.critical = T["fehler"][lang]
         s.message = _join(T["fehler"][lang], prog)
     elif ph == "delay":
-        start = _end_from(g("start_in"), now) or s.end_ts
+        # Only the real start time – the program end is not one (otherwise „Startet <Endzeit>“).
+        start = _end_from(g("start_in"), now)
         s.end_ts = start
         s.critical = T["startzeit"][lang]
         s.message = _join(prog, T["startet"][lang].format(t=_time_text(start, lang)) if start else None)
@@ -348,6 +372,11 @@ def _snap_vacuum(found: Found, g, now: datetime, lang: int, prev: Snap | None) -
     if sst in GONE_STATES and sst:
         return Snap(phase="gone")
     raw = sst or vst
+    if raw in VAC_STATION and (not prev or prev.phase in ("off", "done")):
+        # Station work after "done" (or with no run before it, e.g. after the activity was cleared): never a new run
+        return replace(prev) if prev and prev.phase == "done" else Snap(phase="off")
+    if raw == "charger_disconnected" and prev and prev.phase == "pause":
+        return replace(prev)  # lifted off the dock during a pause: still paused
     text = VAC_TEXT[raw][lang] if raw in VAC_TEXT else raw.replace("_", " ").capitalize()
     cleaning = raw in VAC_CLEANING
     if raw in ("error", "charging_problem"):
@@ -356,15 +385,24 @@ def _snap_vacuum(found: Found, g, now: datetime, lang: int, prev: Snap | None) -
         ph = "pause"
     elif raw in VAC_REST or not raw:
         ph = "off"
-    else:
+    elif raw in VAC_CLEANING or raw in VAC_STATION or raw in VAC_TEXT or (prev and prev.phase in ("run", "pause")):
         ph = "run"
+    else:
+        ph = "off"  # unknown code (e.g. air_drying_stopping, patrol) without a run: never starts an activity
     s = Snap(phase=ph)
     pct_n = _num(g("progress"))
     s.pct = max(0, min(100, int(pct_n))) if pct_n is not None else None
     room = _clean(g("room"))
     if ph == "off":
-        # Zurück in der Station nach einer Reinigung: „Fertig“ mit Fläche und Dauer – bleibt stehen,
-        # bis die Fertig-Dauer um ist (Andocken ist beim Sauger der Normalzustand, kein Abräumen).
+        # Back in the station after cleaning: "done" with area and duration – only after VAC_SETTLE_S
+        # of rest (until then the last state stays silently), then until the done duration is over
+        # (docking is the normal state for a vacuum, not a reason to clear).
+        if prev and prev.restored and prev.phase != "done":
+            return s  # after a restart/outage: no "done" derived from docking (who knows what happened)
+        if prev and prev.phase in ("run", "pause"):
+            since = prev.rest_since or int(now.timestamp())
+            if now.timestamp() - since < VAC_SETTLE_S:
+                return replace(prev, rest_since=since)
         if prev and prev.phase in ("run", "pause", "done"):
             s.phase, s.pct = "done", 100
             s.critical = T["fertig"][lang]
@@ -376,8 +414,8 @@ def _snap_vacuum(found: Found, g, now: datetime, lang: int, prev: Snap | None) -
             s.message = _join(T["fertig"][lang], s.extra)
         return s
     pct_t = _pct_text(s.pct, lang) if s.pct is not None else None
-    # Fortschritt/Dauer, wenn der Sauger sie liefert (Roborock: clean_percent, cleaning_area, cleaning_time):
-    # Reinigungszeit → „läuft seit“; ohne sie setzt _evaluate den Start der Aktivität ein.
+    # Progress/duration if the vacuum delivers them (Roborock: clean_percent, cleaning_area, cleaning_time):
+    # cleaning time → "running since"; without it, _evaluate uses the start of the activity.
     secs = _seconds(g("time"))
     if secs is not None and secs >= 0 and ph in ("run", "pause"):
         s.start_ts = int(now.timestamp() - secs)
@@ -404,7 +442,7 @@ def _snap_printer(found: Found, g, now: datetime, lang: int) -> Snap:
         return Snap(phase="gone")
     raw = str(getattr(g("state"), "state", "") or "").lower()
     ph = PRINT_PHASE.get(raw, "off")
-    s = Snap(phase=ph)
+    s = Snap(phase=ph, detail_on_tick=True)
     if ph == "off":
         return s
     pct_n = _num(g("progress"))
@@ -441,9 +479,9 @@ def _snap_printer(found: Found, g, now: datetime, lang: int) -> Snap:
 
 def build_payload(snap: Snap, kind: str, title: str, tag: str, url: str, silent: bool,
                   color_key: str = "auto") -> dict[str, Any]:
-    """Benachrichtigung für notify.mobile_app_* – wie die Vorbild-Automationen.
+    """Notification for notify.mobile_app_* – like the reference automations.
 
-    color_key: gewählte Gerätefarbe; Fertig/Pause/Eingriff/Fehler behalten ihre Signalfarben."""
+    color_key: chosen device color; done/pause/attention/error keep their signal colors."""
     color = PALETTE.get(color_key) or COLOR.get(kind, COLOR["washer"])
     if snap.phase in ("done", "attn", "error") or (snap.phase == "pause" and not snap.minor):
         color = COLOR[snap.phase]
@@ -457,7 +495,7 @@ def build_payload(snap: Snap, kind: str, title: str, tag: str, url: str, silent:
         d["critical_text"] = snap.critical
     when = snap.end_ts if snap.phase in ("run", "delay") else None
     if when is None and snap.phase in ("run", "pause") and snap.start_ts:
-        when = snap.start_ts  # ohne Restzeit: läuft seit
+        when = snap.start_ts  # without remaining time: running since
     if when:
         d["chronometer"], d["when"] = True, int(when)
     return {"title": title, "message": snap.message, "data": d}
@@ -468,7 +506,7 @@ def clear_payload(tag: str) -> dict[str, Any]:
 
 
 def probe_snapshot(kind: str, now: datetime, lang: int) -> Snap:
-    """Beispiel für „Probe senden“: läuft, 42 %, noch 25 Minuten."""
+    """Sample for „Probe senden“: running, 42 %, 25 minutes left."""
     s = Snap(phase="run", pct=42, end_ts=int(now.timestamp() + 25 * 60), minor=False)
     if kind == "vacuum":
         s.step = ("Wohnzimmer", "Living room")[lang]
@@ -495,15 +533,15 @@ def device_settings(cfg: dict, device_id: str) -> dict[str, Any]:
 
 
 def merge_settings(cfg: dict, msg: dict) -> dict:
-    """Neue Einstellungen aus dem Studio prüfen und einarbeiten (gibt die geänderte Kopie zurück).
+    """Validate new settings from the Studio and merge them in (returns the changed copy).
 
-    devices_replace: true → alle Geräte-Einträge stehen vollständig im Aufruf; fehlende Geräte gelten als
-    Standard (Eintrag weg), genannte werden ersetzt. Ohne: nur die genannten Schlüssel ändern sich."""
+    devices_replace: true → all device entries are complete in the call; missing devices count as
+    default (entry removed), named ones are replaced. Without it: only the given keys change."""
     replace = bool(msg.get("devices_replace"))
     new = {"targets": list(cfg.get("targets") or []), "devices": {k: dict(v) for k, v in (cfg.get("devices") or {}).items()}}
     if replace and "devices" in msg:
-        # Das Studio schickt alle Geräte vollständig: ersetzen statt ergänzen – sonst blieb ein altes
-        # „on: false“ stehen, wenn „an“ (Standard) gar nicht mitkam (Nutzertest 17.10.).
+        # The Studio sends all devices in full: replace instead of merge – otherwise an old
+        # "on: false" stayed when "on" (the default) was not sent at all (user test 17.10.).
         new["devices"] = {}
     if "targets" in msg:
         tg = []
@@ -546,18 +584,19 @@ class LiveActivity:
         self.store: Store = Store(hass, 1, STORE_KEY)
         self.cfg: dict[str, Any] = {"targets": [], "devices": {}}
         self.active: dict[str, dict[str, Any]] = {}   # device_id → {tag, kind, since, phase, done_at, sent_at}
-        self.muted: dict[str, str] = {}               # nach Ablauf von Fertig/Fehler: Phase, die nicht neu startet
+        self.muted: dict[str, str] = {}               # after done/error has expired: phase that does not restart
         self.log: list[dict[str, Any]] = []
         self.found: list[Found] = []
         self.snaps: dict[str, Snap] = {}
-        self.gone: set[str] = set()                   # gerade nicht erreichbar
+        self.gone: set[str] = set()                   # currently unreachable
         self.url = "/"
         self.loaded = False
         self._unsubs: list = []
         self._unsub_states = None
         self._probe_timers: list = []
-        self._pending: list = []  # gesammelter Registry-Nachlauf (ein Timer)
-        self._lock = asyncio.Lock()  # Bewertungen nacheinander: ein Schritt ändert oft mehrere Entitäten zugleich
+        self._pending: list = []  # collected registry follow-up (one timer)
+        self._timers: dict[str, Any] = {}  # per device: state-change collector / vacuum settle check (one each)
+        self._lock = asyncio.Lock()  # evaluations one after another: one step often changes several entities at once
 
     # ── Start/Stop ─────────────────────────────────────────────────────────
     async def async_start(self) -> None:
@@ -570,7 +609,7 @@ class LiveActivity:
         self._listen()
 
     def _listen(self) -> None:
-        """HA-Ereignisse: Start (Wiederaufnahme), Minutentakt, Registry-Änderungen (neu suchen)."""
+        """HA events: start (resume), minute tick, registry changes (search again)."""
         from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
         from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
         from homeassistant.helpers.event import async_call_later, async_track_time_interval
@@ -592,7 +631,7 @@ class LiveActivity:
 
         @callback
         def _registry(_event) -> None:
-            # Geräte kommen und gehen: gesammelt neu suchen, nicht bei jedem Eintrag.
+            # Devices come and go: search again in batches, not on every entry.
             if not pending:
                 pending.append(async_call_later(self.hass, 5, _rescan_now))
 
@@ -601,24 +640,26 @@ class LiveActivity:
 
     @callback
     def stop(self) -> None:
-        for unsub in [*self._unsubs, self._unsub_states, *self._probe_timers, *self._pending]:
+        for unsub in [*self._unsubs, self._unsub_states, *self._probe_timers, *self._pending, *self._timers.values()]:
             try:
                 if unsub:
                     unsub()
-            except Exception:  # noqa: BLE001 – schon abgemeldet
+            except Exception:  # noqa: BLE001 – already unsubscribed
                 pass
         self._unsubs, self._unsub_states, self._probe_timers = [], None, []
         self._pending.clear()
+        self._timers.clear()
         self.loaded = False
 
     async def _resume(self) -> None:
         await self.rescan()
         await self._find_url()
         known = {f.device_id for f in self.found}
-        # Verwaist (Gerät weg oder aus): beenden. Sonst neu bewerten – läuft noch → leise neu senden.
-        for dev in list(self.active):
-            if dev not in known or not self.enabled(dev):
-                await self._clear(dev)
+        # Orphaned (device gone or off): end. Otherwise re-evaluate – still running → resend silently.
+        async with self._lock:
+            for dev in list(self.active):
+                if dev not in known or not self.enabled(dev):
+                    await self._clear(dev)
         for f in self.found:
             if self.enabled(f.device_id):
                 await self._evaluate(f.device_id, "resume")
@@ -626,7 +667,7 @@ class LiveActivity:
     async def rescan(self) -> None:
         try:
             self.found = find_devices(self.hass)
-        except Exception:  # noqa: BLE001 – Registry kaputt darf Casora nicht stoppen
+        except Exception:  # noqa: BLE001 – a broken registry must not stop Casora
             _LOGGER.exception("Live-Aktivitäten: Geräte nicht gefunden")
             self.found = []
         self._subscribe()
@@ -649,12 +690,30 @@ class LiveActivity:
         def _changed(event) -> None:
             dev = by_entity.get(event.data.get("entity_id"))
             if dev:
-                self.hass.async_create_task(self._evaluate(dev, "state"), eager_start=False)
+                # Integrations update progress, area and status one entity at a time: collect them for
+                # STATE_COLLECT_S and evaluate once (one update instead of three, never a stale value).
+                self._later(f"state:{dev}", STATE_COLLECT_S, dev)
 
         self._unsub_states = async_track_state_change_event(self.hass, list(by_entity), _changed)
 
+    def _later(self, key: str, delay: float, device_id: str) -> None:
+        """(Re)start the one timer for key; when due, evaluate the device."""
+        from homeassistant.helpers.event import async_call_later
+
+        old = self._timers.pop(key, None)
+        if old:
+            old()
+
+        @callback
+        def _due(_now) -> None:
+            self._timers.pop(key, None)
+            if self.loaded:
+                self.hass.async_create_task(self._evaluate(device_id, "state"), eager_start=False)
+
+        self._timers[key] = async_call_later(self.hass, delay, _due)
+
     async def _find_url(self) -> None:
-        """Casora-Handy-Dashboard als Ziel beim Antippen, sonst die Startseite."""
+        """Casora phone dashboard as the tap target, otherwise the home page."""
         try:
             from .phone_badges import is_mobile
 
@@ -665,16 +724,16 @@ class LiveActivity:
                     continue
                 try:
                     cfg = await dash.async_load(False)
-                except Exception:  # noqa: BLE001 – leeres oder ungültiges Dashboard
+                except Exception:  # noqa: BLE001 – empty or invalid dashboard
                     continue
                 if isinstance(cfg, dict) and is_mobile(cfg):
                     self.url = f"/{key}/"
                     return
-        except Exception:  # noqa: BLE001 – nur das Ziel beim Antippen
+        except Exception:  # noqa: BLE001 – only the tap target
             pass
         self.url = "/"
 
-    # ── Einstellungen ──────────────────────────────────────────────────────
+    # ── Settings ───────────────────────────────────────────────────────────
     @property
     def targets(self) -> list[str]:
         return [t.removeprefix("notify.") for t in self.cfg.get("targets") or []]
@@ -700,7 +759,7 @@ class LiveActivity:
         }
 
     def _test_runs(self) -> dict[str, str]:
-        """Nur im Testhaus: Geräte, an denen casora_mock.live_lauf einen Durchgang spielt (device_id → Gerät)."""
+        """Test house only: devices on which casora_mock.live_lauf plays a run (device_id → device)."""
         if not self.hass.services.has_service("casora_mock", "live_lauf"):
             return {}
         by_state = self.hass.data.get("casora_mock_live") or {}
@@ -710,12 +769,13 @@ class LiveActivity:
         old_targets, new = set(self.targets), merge_settings(self.cfg, msg)
         self.cfg = new
         gone = sorted(old_targets - set(self.targets))
-        # Abgewählte Empfänger: laufende Aktivitäten dort beenden.
-        for dev in list(self.active):
-            if gone:
-                await self._clear(dev, targets=gone, forget=False)
-            if not self.enabled(dev):
-                await self._clear(dev)
+        # Deselected recipients: end running activities there (under the lock: no send can overtake the clear).
+        async with self._lock:
+            for dev in list(self.active):
+                if gone:
+                    await self._clear(dev, targets=gone, forget=False)
+                if not self.enabled(dev):
+                    await self._clear(dev)
         self._subscribe()
         self._save()
         if self.targets:
@@ -724,7 +784,7 @@ class LiveActivity:
                 if self.enabled(f.device_id) and f.device_id not in self.active:
                     await self._evaluate(f.device_id, "resume")
 
-    # ── Bewertung und Versand ──────────────────────────────────────────────
+    # ── Evaluation and sending ─────────────────────────────────────────────
     def _found(self, device_id: str) -> Found | None:
         return next((f for f in self.found if f.device_id == device_id), None)
 
@@ -741,18 +801,35 @@ class LiveActivity:
 
     async def _evaluate_locked(self, device_id: str, reason: str) -> None:
         f = self._found(device_id)
-        if not f or not self.loaded:
+        if not self.loaded:
+            return
+        if not f:
+            # Device vanished from discovery (removed/renamed): clear its activity after GONE_MAX_S, so a
+            # short registry reload does not end a running one.
+            act = self.active.get(device_id)
+            if act and reason == "tick":
+                ts = dt_util.utcnow().timestamp()
+                act.setdefault("orphan_at", ts)
+                if ts - act["orphan_at"] >= GONE_MAX_S:
+                    await self._clear(device_id)
+                self._save()
             return
         now = dt_util.utcnow()
         lang = _lang(self.hass)
         prev = self.snaps.get(device_id)
         act = self.active.get(device_id)
-        # Nach einem Ausfall kein „Fertig“ aus dem Andocken ableiten (wer weiß, was dazwischen war).
-        snap = snapshot(f, self.hass.states.get, now, lang, prev if act and not act.get("gone_at") else None)
+        # After an outage, derive no "done" from docking (who knows what happened in between).
+        if act and act.pop("orphan_at", None) is not None:
+            self._save()
+        base = prev if act and not act.get("gone_at") else None
+        if act and base is None:
+            # Restart or outage: only the stored phase is known (keeps "done" across station work)
+            base = Snap(phase=act.get("phase") or "run", restored=True)
+        snap = snapshot(f, self.hass.states.get, now, lang, base)
         was_gone = device_id in self.gone
         if snap.phase == "gone":
-            # Nicht erreichbar: letzten Stand behalten, nichts senden, nichts beenden – außer die Fertig-Dauer
-            # ist um oder das Gerät bleibt zu lange weg (dann leise abräumen).
+            # Unreachable: keep the last state, send nothing, end nothing – unless the done duration
+            # is over or the device stays away too long (then clear silently).
             self.gone.add(device_id)
             if not act or not self.enabled(device_id):
                 return
@@ -772,37 +849,51 @@ class LiveActivity:
         if act and act.pop("gone_at", None) is not None:
             self._save()
         if snap.phase in ("run", "pause") and snap.start_ts is None and snap.end_ts is None:
-            # Ohne Restzeit und ohne Dauer vom Gerät: „läuft seit“ ab Start der Aktivität.
+            # Without remaining time and without a duration from the device: "running since" from the start of the activity.
             since = dt_util.parse_datetime(str(act.get("since") or "")) if act else None
             snap.start_ts = int((since or now).timestamp())
         self.snaps[device_id] = snap
+        if snap.rest_since and not (prev and prev.rest_since == snap.rest_since):
+            # Vacuum settle started: check right when it ends instead of on the next minute tick.
+            self._later(f"settle:{device_id}", VAC_SETTLE_S + 1, device_id)
         if not self.enabled(device_id):
             return
         st = device_settings(self.cfg, device_id)
+        if snap.tentative and (not act or act.get("phase") in ("done", "error")):
+            return  # WashData "starting" (power blip, anti-crease pulse): only "running" is a run; keeps muted
         if self.muted.get(device_id) == snap.phase:
-            return  # Fertig/Fehler schon gezeigt und abgeräumt – erst ein neuer Zustand startet neu
+            return  # done/error already shown and cleared – only a new state starts again
         self.muted.pop(device_id, None)
         if snap.phase == "off":
+            if act and act.get("phase") in ("done", "error") and act.get("done_at") \
+                    and now.timestamp() - act["done_at"] < st["done_min"] * 60:
+                return  # done stays until the done duration (Home Connect jumps to „Bereit“ 60 s after „Fertig“)
             if act:
                 await self._clear(device_id)
             return
         if (reason == "resume" or was_gone) and not act and snap.phase in ("done", "error"):
-            # Einschalten/Neustart/Gerät wieder erreichbar: ein altes Fertig/Fehler nicht nachträglich melden –
-            # erst der nächste Lauf.
+            # Switching on/restart/device reachable again: do not report an old done/error after the fact –
+            # only the next run.
             self.muted[device_id] = snap.phase
             return
         if act and act.get("phase") in ("done", "error") and snap.phase in ("done", "error"):
-            # Fertig/Fehler bleibt stehen, bis die Dauer um ist (Zwischenstände dort sind nichts Neues).
+            # done/error stays until the duration is over (intermediate updates there are nothing new).
             if reason == "tick" and act.get("done_at") and now.timestamp() - act["done_at"] >= st["done_min"] * 60:
                 self.muted[device_id] = snap.phase
                 await self._clear(device_id)
             return
         changed_phase = not act or act.get("phase") != snap.phase
-        if not changed_phase and reason != "tick" and prev is not None and prev.signature() == snap.signature():
+        if not changed_phase and reason != "tick" and not was_gone and prev is not None \
+                and prev.signature() == snap.signature():
             return
-        if reason == "tick" and act and now.timestamp() - act.get("sent_at", 0) < st["interval_min"] * 60 - 5:
+        if reason == "tick" and act and not changed_phase and now.timestamp() - act.get("sent_at", 0) < st["interval_min"] * 60 - 5:
             return
-        loud = changed_phase and reason != "resume" and not snap.minor
+        # Restart: only report a real end loudly (before running/paused, now done/error).
+        ended = bool(act) and act.get("phase") in ("run", "pause") and snap.phase in ("done", "error")
+        # Resuming after a pause and a scheduled start (delay → run, e.g. at 2 am) go out silently: the user
+        # started it or chose the time.
+        quiet_run = bool(act) and act.get("phase") in ("pause", "delay") and snap.phase == "run"
+        loud = changed_phase and (reason != "resume" or ended) and not snap.minor and not quiet_run
         if not changed_phase and not st["quiet"]:
             loud = True
         await self._send(f, snap, silent=not loud, now=now)
@@ -827,7 +918,7 @@ class LiveActivity:
         to = targets if targets is not None else self.targets
         if forget:
             self.active.pop(device_id, None)
-        if to:  # ohne Empfänger (schon abgewählt und dort beendet) nur vergessen
+        if to:  # without recipients (already deselected and ended there) just forget
             await self._deliver(to, clear_payload(act["tag"]), device_id=device_id, phase="clear", now=dt_util.utcnow(),
                                 title=act.get("title"))
         self._save()
@@ -839,7 +930,7 @@ class LiveActivity:
             try:
                 await self.hass.services.async_call("notify", target, payload, blocking=True)
                 sent.append(target)
-            except Exception as err:  # noqa: BLE001 – ein kaputter Empfänger soll die anderen nicht stoppen
+            except Exception as err:  # noqa: BLE001 – one broken recipient must not stop the others
                 _LOGGER.warning("Live-Aktivität an notify.%s fehlgeschlagen: %s", target, err)
         d = payload.get("data") or {}
         self.log.append({"time": now.isoformat(), "targets": sent, "device_id": device_id, "phase": phase,
@@ -873,8 +964,8 @@ class LiveActivity:
 
         @callback
         def _due(_now) -> None:
-            # @callback: läuft im Event-Loop. Ein nacktes lambda führte HA im Worker-Thread aus →
-            # async_create_task aus fremdem Thread, Traceback, das Clear der Probe kam nie an.
+            # @callback: runs in the event loop. A bare lambda made HA run it in a worker thread →
+            # async_create_task from a foreign thread, traceback, the probe's clear never arrived.
             self.hass.async_create_task(_later(), eager_start=False)
 
         self._probe_timers.append(async_call_later(self.hass, PROBE_CLEAR_S, _due))

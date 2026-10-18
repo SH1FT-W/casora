@@ -1,16 +1,16 @@
-"""Geräte für Live-Aktivitäten finden – Entsprechung zu casoraLaundryFind (scripts/local/00-finden.js).
+"""Find devices for live activities – counterpart of casoraLaundryFind (scripts/local/00-finden.js).
 
-Erkannt wird wie im Dashboard: über die Plattform der Entitäten und ihren translation_key, nie über
-Namen oder IDs. Ohne passende Plattform (Testhaus: alles casora_mock) reicht die Schlüssel-Kombination.
-Die Quellen-IDs und Felder entsprechen den SOURCES im JS; dev/unit/live_finder_test.py liest sie dort aus
-und vergleicht sie mit SOURCES hier – geht eine Seite auseinander, wird der Test rot.
+Detection works as in the dashboard: via the entities' platform and their translation_key, never via
+names or IDs. Without a matching platform (test house: everything casora_mock) the key combination suffices.
+The source IDs and fields match the SOURCES in the JS; dev/unit/live_finder_test.py reads them from there
+and compares them with SOURCES here – if one side diverges, the test turns red.
 
-Arten (kind): washer | dryer | dishwasher | vacuum | printer. Stufen (grade): „sehr gut“ (bei der Entwicklung
-mit echten Geräten geprüft: Home Connect auch als Geschirrspüler, WashData, Saugroboter) und „ungetestet“
-(Felder nach Dokumentation der Integration – aktiv, aber ohne Gewähr).
+Kinds (kind): washer | dryer | dishwasher | vacuum | printer. Grades (grade): „sehr gut“ (checked with real
+devices during development: Home Connect also as dishwasher, WashData, robot vacuum) and „ungetestet“
+(fields per the integration's documentation – active, but without guarantee).
 
-  find_devices(hass) → [Found]        (liest Geräte- und Entitäts-Registry)
-  classify(ents, states) → Found|None (reine Logik; ents = Einträge eines Geräts, für Tests ohne HA)
+  find_devices(hass) → [Found]        (reads the device and entity registry)
+  classify(ents, states) → Found|None (pure logic; ents = entries of one device, for tests without HA)
 """
 
 from __future__ import annotations
@@ -25,13 +25,13 @@ GRADE_UNTESTED = "ungetestet"
 
 @dataclass
 class Ent:
-    """Eine Entität des Geräts, so viel wie der Finder braucht."""
+    """One entity of the device, as much as the finder needs."""
 
     entity_id: str
     key: str | None = None
     platform: str | None = None
     category: str | None = None
-    icon: str | None = None  # Symbol aus der Registry (WashData: Gerätetyp)
+    icon: str | None = None  # icon from the registry (WashData: device type)
 
     @property
     def domain(self) -> str:
@@ -68,7 +68,7 @@ def _has(ents: list[Ent], key: str, domain: str | None = None) -> bool:
 
 
 def _opts(states: Callable[[str], Any], ents: list[Ent], keys: list[str]) -> str:
-    """Optionen und Zustand der Programm-Entitäten, klein geschrieben, als ein Text."""
+    """Options and state of the program entities, lowercased, as one text."""
     out: list[str] = []
     for e in ents:
         if e.key not in keys:
@@ -82,7 +82,7 @@ def _opts(states: Callable[[str], Any], ents: list[Ent], keys: list[str]) -> str
 
 
 def _hc_role(prog_keys: list[str]):
-    """Home Connect: Waschen/Trocknen/Spülen steht im Programmschlüssel."""
+    """Home Connect: washing/drying/rinsing is in the program key."""
 
     def role(states, ents: list[Ent], model: str) -> str | None:
         o = _opts(states, ents, prog_keys)
@@ -119,7 +119,7 @@ def _washdata_role(states, ents, model):
     st = next((e for e in ents if e.key == "washer_state" and e.domain == "sensor"), None)
     s = states(st.entity_id) if st else None
     icon = str(((s.attributes if s else {}) or {}).get("icon") or (st.icon if st else "") or "")
-    # WashData überwacht auch Geschirrspüler, Heißluftfritteusen und Pumpen – das Symbol sagt, was es ist.
+    # WashData also monitors dishwashers, air fryers and pumps – the icon says what it is.
     if re.search(r"dishwasher", icon):
         return "dishwasher"
     if re.search(r"pot-steam|water-pump|pump", icon):
@@ -140,7 +140,7 @@ def _other_role(states, ents, model):
     return "dryer" if re.search(r"dryer|tumble|(^|[_ ])td($|[_ ])|dry_level", t, re.I) else None
 
 
-# Reihenfolge, Plattformen, need/any und Felder wie casoraLaundryFind.SOURCES (00-finden.js).
+# Order, platforms, need/any and fields as in casoraLaundryFind.SOURCES (00-finden.js).
 SOURCES: list[dict[str, Any]] = [
     {"id": "home_connect", "grade": GRADE_GOOD, "platforms": ["home_connect"], "need": ["operation_state"],
      "any": ["program_progress", "active_program", "selected_program", "program_finish_time"],
@@ -157,7 +157,7 @@ SOURCES: list[dict[str, Any]] = [
                 "progress": k("sensor_program_progress"), "phase": k("sensor_program_phase"), "door": k("binary_sensor_door_state", "binary_sensor"),
                 "stop": k("button_abort_program", "button"), "pause": k("button_pause_program", "button"),
                 "resume": k("button_resume_program", "button")},
-     # Nur hier: Startverzögerung (Home Connect WS), nicht im JS-Finder.
+     # Only here: start delay (Home Connect WS), not in the JS finder.
      "extra": {"start_in": k("sensor_start_in")}},
     {"id": "miele", "grade": GRADE_UNTESTED, "platforms": ["miele"], "need": ["status"], "any": ["spin_speed", "drying_step", "twin_dos_1_level"],
      "role": _miele_role,
@@ -196,11 +196,11 @@ SOURCES: list[dict[str, Any]] = [
                 "progress": k(["program_progress", "progress"]), "door": k(["door", "door_lock", "door_status"], "binary_sensor")}},
 ]
 
-# Saugroboter: die vacuum-Entität genügt; Nachbarn (Roborock-Schlüssel) verfeinern Text und Fortschritt.
+# Robot vacuum: the vacuum entity is enough; neighbors (Roborock keys) refine text and progress.
 VACUUM_FIELDS = {"status": k("status"), "room": k("current_room"), "progress": k("clean_percent"),
                  "area": k("cleaning_area"), "time": k("cleaning_time"), "error": k("vacuum_error"),
                  "last_end": k("last_clean_end")}
-# 3D-Drucker (Bambu Lab): Druckstatus ist der Anker.
+# 3D printer (Bambu Lab): print status is the anchor.
 PRINTER_FIELDS = {"state": k("print_status"), "stage": k("stage"), "progress": k("print_progress"),
                   "remaining": k("remaining_time"), "end": k("end_time"), "task": k("subtask_name"),
                   "layer": k("current_layer"), "layers": k("total_layers")}
@@ -219,7 +219,7 @@ def _matches(src: dict[str, Any], ents: list[Ent]) -> str | None:
         return "platform"
     if src["need"] is None:
         return None
-    # Ein Gerät einer anderen bekannten Quelle ist es nicht (Whirlpool-Schlüssel an einem WashData-Gerät …).
+    # Not if it is a device of another known source (Whirlpool keys on a WashData device …).
     if any(o is not src and any(e.platform in o["platforms"] for e in ents) for o in SOURCES):
         return None
     ok = all(_has(ents, key) for key in src["need"]) and (not src["any"] or any(_has(ents, key) for key in src["any"]))
@@ -227,11 +227,11 @@ def _matches(src: dict[str, Any], ents: list[Ent]) -> str | None:
 
 
 def classify(device_id: str, ents: list[Ent], states: Callable[[str], Any], model: str = "") -> Found | None:
-    """Ein Gerät einordnen – oder None, wenn es kein Live-Gerät ist."""
+    """Classify a device – or None if it is not a live device."""
     ents = [e for e in ents if states(e.entity_id) is not None]
     if not ents:
         return None
-    # Saugroboter und Drucker zuerst: deren Nachbarn heißen „status“/„remaining_time“ wie bei Wäschequellen.
+    # Vacuums and printers first: their neighbors are called "status"/"remaining_time" as with laundry sources.
     vac = next((e for e in ents if e.domain == "vacuum"), None)
     if vac:
         f = {"state": vac.entity_id}
@@ -257,7 +257,7 @@ def classify(device_id: str, ents: list[Ent], states: Callable[[str], Any], mode
 
 
 def find_devices(hass) -> list[Found]:
-    """Alle Live-Geräte im Haus (Geräte- und Entitäts-Registry)."""
+    """All live devices in the house (device and entity registry)."""
     from homeassistant.helpers import area_registry as ar, device_registry as dr, entity_registry as er
 
     devs = dr.async_get(hass)

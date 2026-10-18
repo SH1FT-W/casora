@@ -1,13 +1,13 @@
-// Studio → Einstellungen → „Live Activities“ (live_activity.py, 17.10.2026)
+// Studio → Settings → „Live Activities“ (live_activity.py, 17.10.2026)
 //
-// Live-Aktivitäten auf dem Handy (iOS Sperrbildschirm/Dynamic Island, Android Live Updates) für
-// Waschmaschine, Trockner, Geschirrspüler, Saugroboter und 3D-Drucker – Casora findet die Geräte wie
-// seine Kacheln (live_finder.py) und schickt die Benachrichtigungen selbst. Hier: Empfänger einmal
-// wählen, je Gerät Schalter und Einstellungen (Fertig-Dauer, leise Zwischenstände, Takt), eine Probe
-// senden und das Protokoll der letzten Sendungen lesen. Entwurf und Speichern laufen über die
-// Einstellungen-Seite (casora-panel-settings.js: _csLiveLoad/_csLiveDirty/_csLiveSave), Speicher ist
-// casora/live/get|set|probe (eigener Store, nicht die Optionen).
-// Reine Teile unter window.__casoraStudioLive (Test: dev/unit/studio_live.mjs).
+// Live activities on the phone (iOS lock screen/Dynamic Island, Android Live Updates) for
+// washer, dryer, dishwasher, robot vacuum and 3D printer – Casora finds the devices like
+// its tiles (live_finder.py) and sends the notifications itself. Here: choose recipients once,
+// per device a switch and settings (done duration, silent intermediate updates, interval), send a
+// probe and read the log of the latest sends. Draft and saving go through the
+// settings page (casora-panel-settings.js: _csLiveLoad/_csLiveDirty/_csLiveSave), storage is
+// casora/live/get|set|probe (own store, not the options).
+// Pure parts under window.__casoraStudioLive (test: dev/unit/studio_live.mjs).
 (function () {
   const t = (s) => (window.casoraI18n ? window.casoraI18n.t(s) : s);
   const el = (tag, cls, text) => {
@@ -25,16 +25,16 @@
   const PHASE_LABEL = { run: "Running", delay: "Starts later", pause: "Paused", attn: "Attention needed", done: "Done", error: "Error",
     off: "Off", clear: "Ended", probe: "Test", gone: "Not reachable" };
   const PHASE_TONE = { done: "ok", attn: "warn", error: "warn", pause: "warn" };
-  const DEFAULTS = { on: true, done_min: 30, quiet: true, interval_min: 10, color: "auto" };
-  // Wie live_activity.PALETTE; „auto“ = Farbe der Geräteart.
+  const DEFAULTS = { on: true, done_min: 10, quiet: true, interval_min: 10, color: "auto" };
+  // Like live_activity.PALETTE; "auto" = color of the device kind.
   const COLORS = { blue: "Blue", teal: "Teal", green: "Green", honey: "Honey", orange: "Orange", red: "Red", violet: "Violet", rose: "Rosé" };
   const DONE_CHOICES = [10, 15, 30, 60, 120];
   const INTERVAL_CHOICES = [5, 10, 15, 30];
 
-  // Unterzeile eines Geräts: Art · Quelle · Stufe (· Zustand, wenn gerade aktiv).
+  // A device's subline: kind · source · grade (· state, when currently active).
   const deviceSub = (f) => [t(KIND_LABEL[f.kind] || f.kind), SOURCE_LABEL[f.source] || f.source, t(GRADE_LABEL[f.grade] || f.grade)]
     .concat(f.phase && f.phase !== "off" ? [t(PHASE_LABEL[f.phase] || f.phase)] : []).join(" · ");
-  // Nur Abweichungen vom Standard werden gespeichert (wie live_activity.merge_settings).
+  // Only deviations from the default are saved (like live_activity.merge_settings).
   const settingsOf = (L, id) => Object.assign({}, DEFAULTS, (L && L.devices && L.devices[id]) || {});
   const cleanDevices = (devices) => {
     const out = {};
@@ -45,8 +45,8 @@
     });
     return out;
   };
-  // Speichern: alle bekannten Geräte vollständig (devices_replace) – der Server ersetzt statt zu ergänzen.
-  // Vorher fehlte ein wieder eingeschaltetes Gerät (on: true = Standard) im Aufruf, das alte „aus“ blieb.
+  // Save: all known devices in full (devices_replace) – the server replaces instead of merging.
+  // Before, a device switched back on (on: true = default) was missing from the call, the old "off" stayed.
   const saveDevices = (L, ids) => {
     const out = {};
     Array.from(new Set([].concat(ids || [], Object.keys((L && L.devices) || {})))).sort()
@@ -56,11 +56,11 @@
   const sentText = (n) => (n === 1 ? t("Sent to 1 phone.") : t("Sent to {n} phones.").replace("{n}", n));
   const draftOf = (L) => JSON.stringify({ targets: (L && L.targets || []).slice().sort(), devices: cleanDevices(L && L.devices) });
   const minutes = (n) => t("{n} min").replace("{n}", n);
-  // Protokollzeile: Zeit, Titel + Phase, Text, Fortschritt.
+  // Log line: time, title + phase, text, progress.
   const logLine = (e, lang) => {
     const d = new Date(e.time);
     const time = isNaN(d) ? "" : d.toLocaleTimeString(lang || undefined, { hour: "2-digit", minute: "2-digit" });
-    // Probe: der Titel trägt „· Probe“ schon vom Server (in dessen Sprache), nicht noch einmal anhängen.
+    // Probe: the title already carries „· Probe“ from the server (in its language), do not append it again.
     const phase = e.clear ? t(PHASE_LABEL.clear) : e.phase === "probe" ? "" : t(PHASE_LABEL[e.phase] || e.phase || "");
     return { time, title: [e.title, phase].filter(Boolean).join(" · "), text: e.clear ? t("Live activity ended") : (e.message || ""),
       progress: e.progress != null && !e.clear ? e.progress + "%" : "", tone: e.clear ? "" : (PHASE_TONE[e.phase] || ""),
@@ -70,9 +70,9 @@
     saveDevices, sentText };
 
   const CSS = ".cs-live-row .fswitch{margin-left:auto;flex:none}"
-    // Handy: Unterzeilen (Art · Quelle · Stufe) und Erklärtexte umbrechen statt „Home Connect (HAC…“.
+    // Phone: wrap sublines (kind · source · grade) and explanations instead of „Home Connect (HAC…“.
     + ".cs-wrap .frow.cs-live-row .rtext span,.cs-wrap .frow.cs-live-opt .rtext span,.cs-wrap .frow.cs-live-opt .rtext b{white-space:normal;overflow:visible;text-overflow:clip}"
-    // Einstellungen je Gerät: Auswahl/Schalter rechts in derselben Zeile (wie „Umkreis“ bei Tanken).
+    // Per-device settings: select/switch on the right in the same row (like „Umkreis“ on the Tanken page).
     + ".cs-wrap .frow.cs-live-opt .rtext{flex:1 1 auto;min-width:0}"
     + ".cs-live-ctl{flex:none;margin-left:12px;display:flex;align-items:center}"
     + ".cs-live-ctl>.combo{width:112px;min-width:0;max-width:none}"
@@ -111,7 +111,7 @@
     };
     const lang = (self) => String((self._hass && self._hass.locale && self._hass.locale.language) || (self._hass && self._hass.language) || "en");
 
-    // ── Daten (von casora-panel-settings.js gerufen) ───────────────────────
+    // ── Data (called by casora-panel-settings.js) ──────────────────────────
     P._csLiveLoad = async function (cs) {
       try {
         take(cs, await this._hass.callWS({ type: "casora/live/get" }));
@@ -130,14 +130,14 @@
       const ids = ((cs.lv && cs.lv.found) || []).map((f) => f.device_id);
       take(cs, await this._hass.callWS({ type: "casora/live/set", targets: cs.L.targets, devices: saveDevices(cs.L, ids), devices_replace: true }));
     };
-    // Nur Protokoll und Zustände neu lesen; der Entwurf bleibt.
+    // Re-read only log and states; the draft stays.
     P._csLiveRefresh = async function () {
       const cs = this._cs;
       if (!cs || !cs.lv) return;
       try {
         const r = await this._hass.callWS({ type: "casora/live/get" });
         cs.lv = Object.assign({}, r, { targets: cs.lv.targets, devices: cs.lv.devices });
-      } catch (e) { /* alter Stand bleibt stehen */ }
+      } catch (e) { /* old state stays */ }
       this._csRepaint();
     };
 
@@ -175,7 +175,7 @@
       };
       return sw;
     };
-    // Einstellung je Gerät: Text links, Auswahl/Schalter rechts in derselben Zeile.
+    // Per-device setting: text on the left, select/switch on the right in the same row.
     const optRow = (self, list, title, sub, control) => {
       const r = self._flowRow(list, { title, sub });
       r.row.classList.add("cs-live-opt");
@@ -194,7 +194,7 @@
       return r.row;
     };
 
-    // ── Seite ──────────────────────────────────────────────────────────────
+    // ── Page ───────────────────────────────────────────────────────────────
     P._csFillLive = function (host) {
       css(this);
       const cs = this._cs;
@@ -212,7 +212,7 @@
       if (!known.length) {
         host.appendChild(el("div", "cs-note", t("No phone with the Home Assistant app found. Sign in with the Companion app on a phone first – it appears here as a recipient.")));
       }
-      // 1 · Empfänger
+      // 1 · Recipients
       let g = this._flowGroup(host, { header: t("Recipients"),
         footer: t("Live activities go to these phones. Needs the Home Assistant app; older app versions show a normal notification that keeps updating. None selected: off.") });
       ctl(this, g, t("Show live activities on"), null, known.length
@@ -220,11 +220,11 @@
           const cur = (L.targets || []).filter((x) => x !== id);
           if (on) cur.push(id);
           L.targets = cur;
-          // Test-Bereich sagt sofort „Speichere zuerst die Empfänger“ statt „Wähle zuerst …“.
+          // Test section says right away „Speichere zuerst die Empfänger“ instead of „Wähle zuerst …“.
           this._csRepaint();
         })
         : el("span", "cs-empty", t("Nothing found in Home Assistant.")));
-      // 2 · Geräte
+      // 2 · Devices
       const found = lv.found || [];
       g = this._flowGroup(host, { header: t("Devices"),
         footer: found.length
@@ -294,8 +294,8 @@
       };
       pc.appendChild(pb);
       pr.row.appendChild(pc);
-      // 4 · Testlauf – nur im Testhaus (casora_mock.live_lauf); get liefert test_runs sonst leer. Eigener Block,
-      // Erklärung als Fußnote (am Handy sonst einzeilig abgeschnitten); ohne gespeicherte Empfänger gesperrt wie die Probe.
+      // 4 · Test run – test house only (casora_mock.live_lauf); otherwise get returns test_runs empty. Own block,
+      // explanation as a footnote (otherwise cut to one line on the phone); locked without saved recipients like the probe.
       const runs = lv.test_runs || {};
       const runDevs = found.filter((f) => runs[f.device_id]);
       if (runDevs.length) {
@@ -314,8 +314,8 @@
         tb.disabled = !!cs.lvRun || noTargets;
         tb.onclick = async () => {
           cs.lvRun = true; this._csRepaint();
-          try { await this._hass.callService("casora_mock", "live_lauf", { geraet: runs[cs.lvRunDev], sekunden: 60 }); } catch (e) { /* Dienst fehlt */ }
-          // Protokoll mitlaufen lassen, bis der Durchgang durch ist.
+          try { await this._hass.callService("casora_mock", "live_lauf", { geraet: runs[cs.lvRunDev], sekunden: 60 }); } catch (e) { /* service missing */ }
+          // Keep the log updating until the run is through.
           for (let i = 0; i < 14 && cs.lvRun; i++) { await new Promise((r) => setTimeout(r, 5000)); await this._csLiveRefresh(); }
           cs.lvRun = false;
           await this._csLiveRefresh();
@@ -323,7 +323,7 @@
         tc.appendChild(tb);
         tr.row.appendChild(tc);
       }
-      // 5 · Protokoll: Kopf (mit „Aktualisieren“), Einträge, Fußnote – wie die anderen Studio-Seiten.
+      // 5 · Log: header (with „Aktualisieren“), entries, footnote – like the other Studio pages.
       const log = lv.log || [];
       g = this._flowGroup(host, { header: t("Last sent"),
         footer: log.length ? t("The last 20 notifications Casora sent, newest first.") : t("Nothing sent yet.") });

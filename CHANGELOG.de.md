@@ -4,6 +4,22 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.37 – 18.10.2026
+
+### Behoben
+- **Live-Aktivitäten, Saugroboter:** Nach der Reinigung kam „Fertig“ zweimal mit Ton und dazwischen „Mopp waschen“, weil der Sauger kurz lädt und danach den Mopp wäscht. Jetzt wartet Casora, bis der Sauger 90 Sekunden in der Station ruht, und meldet genau ein „Fertig“. Mopp waschen, Staub entleeren und Andocken nach „Fertig“ (auch nach einem HA-Neustart) ändern nichts mehr, ein Abdocken ohne Reinigung und unbekannte Zustände (z. B. Trocknen) starten keine Aktivität.
+- **Live-Aktivitäten, Geschirrspüler:** „Fertig“ verschwand nach einer Minute, weil Home Connect kurz nach dem Ende auf „Bereit“ springt. Jetzt bleibt es die eingestellte Fertig-Dauer stehen.
+- **Live-Aktivitäten, Waschmaschine/Trockner:** Ein kurzer Stromstoß nach dem Ende (z. B. Knitterschutz) löste ein lautes „Läuft“ oder ein zweites „Fertig“ aus. Erst „läuft“ zählt jetzt als neuer Lauf.
+- **Live-Aktivitäten, Startzeitvorwahl:** Ohne Startzeit vom Gerät stand dort die Endzeit. Die Startzeit erscheint sofort und wandert nicht mehr mit jeder Aktualisierung nach hinten.
+- **Live-Aktivitäten, Programmende während eines HA-Neustarts:** „Fertig“ kommt danach mit Ton statt leise.
+- **Live-Aktivitäten, hängende Aktivitäten:** Verschwindet ein Gerät aus Home Assistant, endet seine Aktivität nach 30 Minuten. Ausschalten während einer Sendung kann nicht mehr von der Lauf-Meldung überholt werden.
+- **„Fertig“ kam bis zu 10 Minuten zu spät,** weil es auf den Takt der Zwischenstände wartete.
+- **Pulse-Popup:** Neue Pulse-Gründe (funkt ohne Werte, Batteriewert fehlt, Cloud antwortet nicht, wartet seit dem Neustart, erreichbar) hatten keinen eigenen Text und standen als „Bald fällig“ da, z. B. ein Lecksensor mit 91 %. Jetzt mit eigenem Text und Symbol; unbekannte Gründe heißen „Beobachten“.
+
+### Geändert
+- **Live-Aktivitäten ruhiger:** Fortschritt, Schichten und Routine-Schritte des Druckers (z. B. Filamentwechsel beim Mehrfarbdruck) kommen im Takt statt bei jeder Änderung; Pause, Eingriff, Fehler und Fertig weiter sofort. Mehrere Änderungen eines Geräts in derselben Sekunde ergeben eine Meldung. Weiterlaufen nach einer Pause und der Start nach einer Startzeitvorwahl kommen ohne Ton.
+- **Fertig-Dauer jetzt 10 statt 30 Minuten** als Standard. Wer 30 möchte, stellt es unter Einstellungen › Live-Aktivitäten je Gerät ein (auch wer 30 vorher bewusst gewählt hatte, weil der Standard nicht gespeichert wird).
+
 ## 26.10.36 – 18.10.2026
 
 ### Neu
