@@ -1,0 +1,4224 @@
+{
+ "exact": {
+  "Tankinhalt": "Combustible en el depósito",
+  "Staubbeutel oder Filter fehlt": "Falta la bolsa o el filtro",
+  "Absauggebläse gestört": "Fallo del ventilador de vaciado",
+  "Absaugkanal verstopft": "Conducto de vaciado obstruido",
+  "Spannungsfehler an der Station": "Fallo de tensión en la base",
+  "Reinigungsbürste blockiert": "Cepillo de limpieza atascado",
+  "Schmutzwassertank nicht eingerastet": "Depósito de agua sucia mal encajado",
+  "Reinigungstank voll oder verstopft": "Depósito de limpieza lleno u obstruido",
+  "Entfernen": "Quitar",
+  "Alle entfernen": "Quitar todo",
+  "Alle Meldungen entfernen?": "¿Quitar todos los avisos?",
+  "Sie kommen wieder, wenn sich etwas ändert.": "Volverán cuando algo cambie.",
+  "Alle Meldungen entfernt": "Avisos quitados",
+  "Rückgängig": "Deshacer",
+  "Guten Morgen": "Buenos días",
+  "Guten Tag": "Buenas tardes",
+  "Guten Abend": "Buenas noches",
+  "und": "y",
+  "1 Problem": "1 problema",
+  "1 Batterie bald fällig": "1 batería por cambiar pronto",
+  "Keine Probleme": "Sin problemas",
+  "Keine Geräte": "Sin dispositivos",
+  "Nicht installiert": "No instalado",
+  "Pulse ist nicht installiert": "Pulse no está instalado",
+  "Bald fällig": "Pronto",
+  "Batterie bald fällig": "Batería por cambiar pronto",
+  "In Pulse öffnen": "Abrir en Pulse",
+  "Gewechselt": "Cambiada",
+  "Batterie gewechselt": "Batería cambiada",
+  "Batteriewechsel gemeldet": "Cambio de batería registrado",
+  "Wichtig": "Importante",
+  "Antwortet nicht": "No responde",
+  "Still": "En silencio",
+  "Hat sich noch nicht gemeldet": "Aún no ha informado",
+  "Still, obwohl das Partnergerät aktiv war": "En silencio aunque su dispositivo asociado estaba activo",
+  "Batterie fast leer": "Batería casi agotada",
+  "Meldet schwache Batterie": "Informa de batería baja",
+  "wartet auf erste Meldung": "esperando el primer informe",
+  "Lernt noch den Rhythmus": "Aún aprende su ritmo",
+  "Meldet sich wie gewohnt": "Informa con normalidad",
+  "Ausgefallen": "Averiado",
+  "Bitte prüfen": "Revísalo",
+  "Erinnerung pausiert": "Recordatorio en pausa",
+  "jede Minute": "cada minuto",
+  "jede Stunde": "cada hora",
+  "einmal am Tag": "una vez al día",
+  "sonst jede Minute": "normalmente cada minuto",
+  "sonst jede Stunde": "normalmente cada hora",
+  "sonst einmal am Tag": "normalmente una vez al día",
+  "Alarm!": "¡Alarma!",
+  "Scharf schalten": "Armar",
+  "Unscharf schalten": "Desarmar",
+  "Alarm beenden": "Detener alarma",
+  "Oder Modus wählen": "O elige un modo",
+  "Code eingeben": "Introduce el código",
+  "Code falsch": "Código incorrecto",
+  "Alarmanlage ausgeschaltet": "Alarma desactivada",
+  "Die Alarmanlage wurde ausgelöst": "La alarma ha saltado",
+  "Verlass das Haus oder brich ab": "Sal de casa o cancela",
+  "Jetzt unscharf schalten, sonst geht der Alarm los": "Desarma ahora o saltará la alarma",
+  "Wird scharf …": "Armando…",
+  "Dieses Gerät ist für dich ausgeblendet": "Este dispositivo está oculto para ti",
+  "wird scharf …": "armando…",
+  "scharf in": "armada en",
+  "Alarm in": "Alarma en",
+  "ausgelöst": "activada",
+  "Abholung heute": "Recogida hoy",
+  "Abholung morgen · heute Abend raus": "Recogida mañana · sácalo esta noche",
+  "Abholung": "Recogida",
+  "Casora wurde aktualisiert": "Casora se ha actualizado",
+  "Keine Abholung": "Sin recogida",
+  "An": "Encendido",
+  "Aus": "Apagado",
+  "an": "encendido",
+  "aus": "apagado",
+  "Neu laden": "Recargar",
+  "Neu laden (Cache leeren)": "Recargar (vaciar caché)",
+  "Offen": "Abierto",
+  "offen": "abierto",
+  "Geöffnet": "Abierto",
+  "Geschlossen": "Cerrado",
+  "geöffnet": "abierto",
+  "geschlossen": "cerrado",
+  "Verriegelt": "Bloqueado",
+  "Entriegelt": "Desbloqueado",
+  "Bereit": "Listo",
+  "Fertig": "Terminado",
+  "Pausiert": "En pausa",
+  "Läuft": "En marcha",
+  "läuft": "en marcha",
+  "Läuft …": "En marcha…",
+  "Lädt": "Cargando",
+  "Getrennt": "Desconectado",
+  "Verbunden": "Conectado",
+  "Fehler": "Error",
+  "Nicht verfügbar": "No disponible",
+  "nicht verfügbar": "no disponible",
+  "Gerade nicht verfügbar": "No disponible ahora",
+  "Keine": "Ninguno",
+  "Keine aktiv": "Ninguno activo",
+  "Kein Dienst": "Sin servicio",
+  "Neu": "Nuevo",
+  "Alle": "Todos",
+  "Gesamt": "Total",
+  "Fällig": "Pendiente",
+  "Überfällig": "Vencido",
+  "Übersprungen": "Omitido",
+  "Gelöst": "Resuelto",
+  "Ausgelöst": "Activado",
+  "Kühl": "Fresco",
+  "Heiß": "Calor",
+  "Sehr heiß": "Mucho calor",
+  "Mäßig": "Moderado",
+  "mäßig": "moderado",
+  "Gut": "Bueno",
+  "Schlecht": "Malo",
+  "Sehr schlecht": "Muy malo",
+  "Ausgezeichnet": "Excelente",
+  "Außergewöhnlich": "Excepcional",
+  "heute": "hoy",
+  "gestern": "ayer",
+  "morgen": "mañana",
+  "jetzt": "ahora",
+  "gerade eben": "justo ahora",
+  "Gerade eben": "Justo ahora",
+  "ganztägig": "todo el día",
+  "jede Woche": "cada semana",
+  "Demnächst": "Próximamente",
+  "Früher": "Antes",
+  "Diese Woche": "Esta semana",
+  "Letzte 30 Tage": "Últimos 30 días",
+  "Nächste 4 Wochen": "Próximas 4 semanas",
+  "30 Tage": "30 días",
+  "7 Tage": "7 días",
+  "Älter als ein Tag": "Hace más de un día",
+  "Räume": "Habitaciones",
+  "Raum": "Habitación",
+  "Szenen": "Escenas",
+  "Szene": "Escena",
+  "Favoriten": "Favoritos",
+  "Aktivität": "Actividad",
+  "Akku": "Batería",
+  "Akku schwach": "Batería baja",
+  "Akku verbraucht": "Batería agotada",
+  "Akku & Strom": "Batería y electricidad",
+  "Akku Lecksensor": "Batería del sensor de fugas",
+  "Akku Temperaturfühler": "Batería del termómetro",
+  "Akku-Bereich": "Autonomía",
+  "Akku-Gesundheit": "Salud de la batería",
+  "Aktualisieren": "Actualizar",
+  "Aktueller Raum": "Habitación actual",
+  "Aktueller Verbrauch": "Consumo actual",
+  "Alarm ausgelöst": "Alarma activada",
+  "Alarm ausgelöst!": "¡Alarma activada!",
+  "Alarm läuft an": "Armando alarma",
+  "Alle An": "Encender todo",
+  "Alle Aus": "Apagar todo",
+  "Alle an": "Encender todo",
+  "Alle aus": "Apagar todo",
+  "Alles aus": "Apagar todo",
+  "1 Licht im Haus ausschalten?": "¿Apagar 1 luz de la casa?",
+  "Alle Lichter": "Todas las luces",
+  "Alle Räume aus": "Todas las habitaciones apagadas",
+  "Alle Szenen": "Todas las escenas",
+  "Alle Temperaturen im Normalbereich": "Todas las temperaturas normales",
+  "Alle Türen entriegelt": "Todas las puertas desbloqueadas",
+  "Alle Türen verriegelt": "Todas las puertas bloqueadas",
+  "Alle aktualisieren": "Actualizar todo",
+  "Alle entriegelt": "Todo desbloqueado",
+  "Alle geschlossen": "Todo cerrado",
+  "Alle geöffnet": "Todo abierto",
+  "Alle offline": "Todos sin conexión",
+  "Alle unterwegs": "Todos fuera",
+  "Alle verriegelt": "Todo bloqueado",
+  "Alle zuhause": "Todos en casa",
+  "Alles im grünen Bereich": "Todo en orden",
+  "An · alle Räume warm genug": "Encendido · todas las habitaciones a buena temperatura",
+  "AquaStop ausgelöst": "AquaStop activado",
+  "Aufnahme nicht verfügbar": "Grabación no disponible",
+  "Ausfüllen": "Rellenar",
+  "Außenluft": "Aire exterior",
+  "Außenluft belastet": "Aire exterior contaminado",
+  "Außenluft enthält mehr Wasser": "El aire exterior tiene más humedad",
+  "Außenluft ist feuchter": "El aire exterior es más húmedo",
+  "Außenluft ist trockener": "El aire exterior es más seco",
+  "Außentemperatur": "Temperatura exterior",
+  "Bald lüften": "Ventila pronto",
+  "Beifahrertür": "Puerta del copiloto",
+  "Bekommt zu viel Licht": "Recibe demasiada luz",
+  "Bereit zum Starten": "Listo para empezar",
+  "Bereit zur Anpassung": "Listo para ajustar",
+  "Bestätigen": "Confirmar",
+  "Betttemperatur gestört": "Fallo de temperatura de la cama",
+  "Bewölkt": "Nublado",
+  "Bitte nachfüllen": "Rellénalo",
+  "Bitte nicht stören: an": "No molestar: encendido",
+  "Bitte nicht stören: aus": "No molestar: apagado",
+  "Braucht Dünger": "Necesita abono",
+  "Braucht etwas Pflege": "Necesita algo de cuidado",
+  "Braucht mehr Licht": "Necesita más luz",
+  "Braucht sofortige Pflege": "Necesita cuidado ya",
+  "Bypass und Entladen": "Bypass y descargando",
+  "CO₂ erhöht – lüften": "CO₂ elevado – ventila",
+  "CO₂ hoch – Fenster öffnen": "CO₂ alto – abre una ventana",
+  "Claude schaut sich das Bild an …": "Claude está mirando la imagen…",
+  "Cookidoo-App öffnen": "Abrir la app Cookidoo",
+  "Apple Music öffnen": "Abrir Apple Music",
+  "Dock-Fehler": "Error de la base",
+  "Dosiermenge je Stoß": "Dosis por pulso",
+  "Druck": "Impresión",
+  "Druck abbrechen": "Cancelar impresión",
+  "Druck läuft gerade": "Imprimiendo ahora",
+  "Druck prüfen": "Revisar impresión",
+  "Druckbett heizt vor": "Precalentando cama",
+  "Druckbett kühlt ab": "Cama enfriándose",
+  "Du bist diesen Monat nicht dran": "Este mes no te toca",
+  "Durchgänge erfasst": "Ciclos registrados",
+  "Düngeanlage": "Bomba dosificadora",
+  "Dünger": "Abono",
+  "Düse": "Boquilla",
+  "Düse heizt auf": "Calentando boquilla",
+  "Düse kühlt ab": "Boquilla enfriándose",
+  "Düse verstopft": "Boquilla obstruida",
+  "Düse wird gereinigt": "Limpiando boquilla",
+  "Düsentemperatur gestört": "Fallo de temperatura de la boquilla",
+  "EU-Data-Act-Portal, kommt verzögert": "Portal de la Ley de Datos de la UE, llega con retraso",
+  "Eigene Leistung": "Consumo propio",
+  "Eingriff nötig": "Requiere acción",
+  "Einkaufsliste nicht verfügbar": "Lista de la compra no disponible",
+  "Energie heute": "Energía hoy",
+  "Erde zu feucht": "Tierra demasiado húmeda",
+  "Erde zu trocken": "Tierra demasiado seca",
+  "Erhöhte Partikelbelastung": "Partículas elevadas",
+  "Erste Schicht wird geprüft": "Comprobando primera capa",
+  "Fahrertür": "Puerta del conductor",
+  "Falls das Ende nicht erkannt wird": "Si no se detecta el final",
+  "Fehler aufgetreten": "Se produjo un error",
+  "Fehler bei der Anfrage.": "La solicitud falló.",
+  "Fehler bei der Spracheingabe.": "La entrada de voz falló.",
+  "Fehler gemeldet": "Error notificado",
+  "Fehler in der ersten Schicht": "Fallo en la primera capa",
+  "Fenster": "Ventanas",
+  "Fenster & Schiebedach": "Ventanas y techo solar",
+  "Fenster &amp; Schiebedach": "Ventanas y techo solar",
+  "Fenster hinten links": "Ventana trasera izquierda",
+  "Fenster hinten rechts": "Ventana trasera derecha",
+  "Fenster offen": "Ventana abierta",
+  "Fenster schließen": "Cerrar ventana",
+  "Fenster vorne links": "Ventana delantera izquierda",
+  "Fenster vorne rechts": "Ventana delantera derecha",
+  "Fenster weit auf, nach Außentemperatur": "Ventanas abiertas de par en par, según la temperatura exterior",
+  "Fenster-Erkennung": "Detección de ventanas",
+  "Fensterläden": "Contraventanas",
+  "Fernstart am Gerät nicht erlaubt": "Inicio remoto no permitido en el aparato",
+  "Feuchte": "Humedad",
+  "Feuchter draußen": "Más húmedo fuera",
+  "Filter": "Filtro",
+  "Filter & Kondensator reinigen": "Limpiar filtro y condensador",
+  "Filter reinigen": "Limpiar filtro",
+  "Filter verstopft": "Filtro obstruido",
+  "Firmware passt nicht": "El firmware no coincide",
+  "Firmware-Update verfügbar": "Actualización de firmware disponible",
+  "Fläche": "Superficie",
+  "Fläche insgesamt": "Superficie total",
+  "Frischwasser auffüllen": "Rellenar agua limpia",
+  "Frontabdeckung prüfen": "Revisar la tapa frontal",
+  "Fußbodenheizung": "Suelo radiante",
+  "Fährt herunter": "Apagándose",
+  "Fährt zum Dock": "Volviendo a la base",
+  "Fährt zum Ziel": "Yendo al destino",
+  "Fährt zur Moppwäsche": "Yendo a lavar la mopa",
+  "Gehärteter Stahl": "Acero endurecido",
+  "Gerade kein Überschuss": "Ahora no hay excedente",
+  "Kein Sensor": "Sin sensor",
+  "Kein Überschuss": "Sin excedente",
+  "Kein Sensor gewählt": "Ningún sensor elegido",
+  "Jetzt nutzen": "Úsalo ahora",
+  "Keiner": "Ninguno",
+  "Hausverbrauch": "Consumo de la casa",
+  "Solar-Tipp": "Consejo solar",
+  "Sobald Sonnenstrom übrig ist, steht hier, welches Gerät sich lohnt.": "Cuando sobre energía solar, aquí verás qué aparato conviene usar.",
+  "Gereinigte Fläche": "Superficie limpiada",
+  "Gerät": "Dispositivo",
+  "Geräte": "Dispositivos",
+  "Geräte laufen schon": "Ya hay aparatos en marcha",
+  "Gerätemeldung (HMS)": "Mensaje del dispositivo (HMS)",
+  "Geräteprofil": "Perfil del dispositivo",
+  "Gerätestatus": "Estado del dispositivo",
+  "Geschirrspüler": "Lavavajillas",
+  "Waschmaschine": "Lavadora",
+  "Trockner": "Secadora",
+  "3D-Drucker": "Impresora 3D",
+  "Saugroboter": "Robot aspirador",
+  "Gilt bis morgen 9:00, dann übernimmt wieder der HA-Zeitplan.": "Válido hasta mañana a las 9:00; luego vuelve a mandar el horario de HA.",
+  "Für Räder mit Bosch Smart System: Die Werte kommen aus der Integration Bosch eBike (HACS: Xunil99/ha-bosch-ebike).": "Para bicis con Bosch Smart System: los valores vienen de la integración Bosch eBike (HACS: Xunil99/ha-bosch-ebike).",
+  "Gründlich": "A fondo",
+  "Gründlich+": "A fondo+",
+  "Hauptbürste": "Cepillo principal",
+  "Hauptbürste blockiert": "Cepillo principal bloqueado",
+  "Hauptspülen": "Aclarado principal",
+  "Hauptwäsche": "Lavado principal",
+  "Heizkörper": "Radiador",
+  "Heizung": "Calefacción",
+  "Herausnehmen und ausspülen": "Sácalo y acláralo",
+  "Home Assistant jetzt neu starten?": "¿Reiniciar Home Assistant ahora?",
+  "Höhenmeter": "Desnivel",
+  "Höhenmeter gesamt": "Desnivel total",
+  "Hört zu …": "Escuchando…",
+  "In der Cookidoo-App auf \"Meine Woche\" planen": "Planifícalo en la app Cookidoo en \"Mi semana\"",
+  "Info-Licht am Boden": "Luz de info en el suelo",
+  "Jetzt lüften": "Ventila ahora",
+  "Jetzt prüfen": "Revisar ahora",
+  "KI prüft noch …": "La IA sigue revisando…",
+  "KI-Blick auf den Druck": "La IA mira la impresión",
+  "KI-Check steht noch aus": "Revisión de IA pendiente",
+  "Kalender nicht erreichbar": "Calendario inaccesible",
+  "Kaum Aktivität": "Apenas hay actividad",
+  "Kehrt zurück": "Volviendo",
+  "Kehrt zurück & Moppwäsche": "Volviendo y lavando mopa",
+  "Kein Bild – die Kamera ist aus, schläft oder ist nicht erreichbar.": "Sin imagen – la cámara está apagada, en reposo o inaccesible.",
+  "Die Kamera ist aus oder offline und liefert gerade kein Bild.": "La cámara está apagada o sin conexión y ahora no da imagen.",
+  "Kein Zugriff aufs Mikrofon – bitte in den Einstellungen erlauben.": "Sin acceso al micrófono – permítelo en los ajustes.",
+  "Keine Antwort erhalten.": "No se recibió respuesta.",
+  "Keine Batteriesensoren gefunden": "No se encontraron sensores de batería",
+  "Keine Daten": "Sin datos",
+  "Keine Detailbeschreibung verfügbar.": "No hay descripción detallada.",
+  "Keine Idee gefunden": "No se encontró ninguna idea",
+  "Keine Kameras": "Sin cámaras",
+  "Keine Kameras verfügbar": "No hay cámaras disponibles",
+  "Keine Pflanzensensoren konfiguriert": "No hay sensores de plantas configurados",
+  "Keine Rückmeldung": "Sin respuesta",
+  "Keine Sensoren": "Sin sensores",
+  "Keine Statusdaten": "Sin datos de estado",
+  "Keine Szene aktiv": "Ninguna escena activa",
+  "Keine Szenen": "Sin escenas",
+  "Keine Termine": "Sin eventos",
+  "Keine Tonnen gefunden": "No se encontraron contenedores",
+  "Keine Updates in 30 Tagen": "Sin actualizaciones en 30 días",
+  "Keine Updates offen": "Sin actualizaciones pendientes",
+  "Keine Verbindung": "Sin conexión",
+  "Keine Verbindung zu Home Assistant.": "Sin conexión con Home Assistant.",
+  "Keine Warnung": "Sin aviso",
+  "Keine aktiven Warnungen": "Sin alertas activas",
+  "Klarspülen": "Aclarado",
+  "Klarspüler": "Abrillantador",
+  "Kosten Monat": "Coste del mes",
+  "Kosten heute": "Coste de hoy",
+  "Kosten letzter Durchgang": "Coste del último ciclo",
+  "Kosten pro Tag": "Coste por día",
+  "Kurz volle Leistung": "Potencia máxima breve",
+  "Laut Anker-App": "Según la app de Anker",
+  "Lautstärke": "Volumen",
+  "Leert Staubbehälter": "Vaciando el depósito de polvo",
+  "Leistung": "Potencia",
+  "Leistung der Station": "Potencia de la estación",
+  "Leistung jetzt": "Potencia ahora",
+  "Leistung · 24 Stunden": "Potencia · 24 horas",
+  "Letzte Aufgabe": "Última tarea",
+  "Letzte Aufnahme": "Última grabación",
+  "Letzte Durchgänge": "Últimos ciclos",
+  "Letzte Fahrt": "Último trayecto",
+  "Letzte Reinigung": "Última limpieza",
+  "Licht": "Luz",
+  "Licht nicht erreichbar": "Luz inaccesible",
+  "Licht offline": "Luz sin conexión",
+  "Luft gut": "Aire bueno",
+  "Luft zu feucht": "Aire demasiado húmedo",
+  "Luft zu trocken": "Aire demasiado seco",
+  "Luftfeuchte außen": "Humedad exterior",
+  "Luftqualität": "Calidad del aire",
+  "Luftqualität ist gut": "La calidad del aire es buena",
+  "Luftqualität ist hervorragend": "La calidad del aire es excelente",
+  "Luftqualität ist mäßig": "La calidad del aire es moderada",
+  "Luftqualität nicht verfügbar": "Calidad del aire no disponible",
+  "Länger abwesend": "Fuera hace tiempo",
+  "Lässt sich nicht fortsetzen": "No se puede reanudar",
+  "Läuft seit": "En marcha desde",
+  "Lüften": "Ventilar",
+  "Lüften empfohlen": "Se recomienda ventilar",
+  "Lüften erkannt": "Ventilación detectada",
+  "Lüften hilft gegen Feuchte": "Ventilar ayuda contra la humedad",
+  "Lüften hilft nicht gegen Feuchte": "Ventilar no ayuda contra la humedad",
+  "Lüfter zu langsam": "Ventilador demasiado lento",
+  "Lüftet": "Ventilando",
+  "Maschine läuft gerade": "La máquina está en marcha",
+  "Maschinenpflege fällig": "Toca cuidado de la máquina",
+  "Material wird geprüft": "Comprobando material",
+  "Mikrofon nicht verfügbar.": "Micrófono no disponible.",
+  "Min. übrig": "min restantes",
+  "Mopp nicht angebracht": "Mopa no colocada",
+  "Moppwäsche": "Lavado de mopa",
+  "Moppwäsche gestört": "Fallo en el lavado de mopa",
+  "Pause · wäscht Mopp": "Pausa · lavando mopa",
+  "Pause · saugt ab": "Pausa · vaciando depósito",
+  "Pause · trocknet": "Pausa · secando mopa",
+  "Pause · lädt": "Pausa · cargando",
+  "Pause · an der Station": "Pausa · en la base",
+  "Muss gedüngt werden": "Necesita abono",
+  "NO₂ erkannt – lüften": "NO₂ detectado – ventila",
+  "Nachfüllen & Pflege": "Rellenar y cuidar",
+  "Nachfüllen &amp; Pflege": "Rellenar y cuidar",
+  "Neu auswerten": "Volver a evaluar",
+  "Neu prüfen": "Volver a revisar",
+  "Neu starten": "Reiniciar",
+  "Nicht stören": "No molestar",
+  "Nichts Neues": "Nada nuevo",
+  "Nichts geplant": "Nada previsto",
+  "Nichts läuft": "No suena nada",
+  "Nichts in den nächsten 30 Tagen": "Nada en los próximos 30 días",
+  "Noch keine Idee": "Aún sin idea",
+  "Noch nicht geprüft": "Aún sin revisar",
+  "Nächste Abholung": "Próxima recogida",
+  "Nächste Solltemperatur": "Próxima temperatura objetivo",
+  "Nächster Service": "Próximo servicio",
+  "Nährstoffe": "Nutrientes",
+  "Oberer Stoßfänger gedrückt": "Parachoques superior presionado",
+  "Per Bluetooth nicht erreichbar": "Inaccesible por Bluetooth",
+  "Pflanze kämpft": "La planta lo pasa mal",
+  "Pflanze schwächelt": "La planta se debilita",
+  "Pflege": "Cuidado",
+  "Pflege fällig": "Toca cuidado",
+  "Prognose für dieses Programm": "Previsión para este programa",
+  "Programm": "Programa",
+  "Programm abbrechen": "Cancelar programa",
+  "Programm abgebrochen": "Programa cancelado",
+  "Programm abgeschlossen": "Programa terminado",
+  "Programm aus der Roborock-App": "Programa de la app Roborock",
+  "Programm festlegen": "Elegir programa",
+  "Programm „Maschinenpflege“ mit Reiniger starten": "Iniciar el programa “cuidado de la máquina” con limpiador",
+  "Prüfen": "Revisar",
+  "Prüft …": "Revisando…",
+  "Prüfung fehlgeschlagen": "La revisión falló",
+  "Aktiviert · Bypass": "Armada · Bypass",
+  "Einzelne Sensoren ausgenommen": "Algunos sensores excluidos",
+  "Alarm aus": "Alarma apagada",
+  "Rezepte": "Recetas",
+  "Kühlt": "Enfriando",
+  "Entfeuchten": "Deshumidificar",
+  "Nur Lüfter": "Solo ventilador",
+  "Keine KI eingerichtet (Einstellungen → KI-Aufgaben)": "No hay IA configurada (Ajustes → Tareas de IA)",
+  "Auswertung fehlgeschlagen.": "El análisis falló.",
+  "Qualität": "Calidad",
+  "Reichweite jetzt": "Autonomía ahora",
+  "Reichweite voller Akku": "Autonomía con batería llena",
+  "Restzeit": "Tiempo restante",
+  "Roboter lädt nicht": "El robot no carga",
+  "Räder blockiert": "Ruedas bloqueadas",
+  "Räder hängen in der Luft": "Ruedas en el aire",
+  "Räume auswählen": "Elegir habitaciones",
+  "Räume reinigen": "Limpiar habitaciones",
+  "Saugstärke": "Succión",
+  "Saugt & wischt Raum": "Aspirando y fregando habitación",
+  "Schalte alle Lichter aus": "Apaga todas las luces",
+  "Scharfschaltung läuft": "Armando",
+  "Schlafzimmer Fenster ist offen": "La ventana del dormitorio está abierta",
+  "Schließen": "Cerrar",
+  "Zurück": "Atrás",
+  "Schließt": "Cerrando",
+  "Schließt bei Temperatursturz": "Se cierra si baja la temperatura",
+  "Schließt sich …": "Cerrando…",
+  "Schmutzfänger (Station)": "Filtro de suciedad (base)",
+  "Schmutzfänger prüfen": "Revisar filtro de suciedad",
+  "Seitenbürste": "Cepillo lateral",
+  "Seitenbürste blockiert": "Cepillo lateral bloqueado",
+  "Sensordaten nicht verfügbar": "Datos del sensor no disponibles",
+  "Sensoren temporär deaktiviert": "Sensores desactivados temporalmente",
+  "Service fällig": "Toca servicio",
+  "Sirene an": "Sirena encendida",
+  "Sirene auslösen?": "¿Activar la sirena?",
+  "Solaranteil heute": "Parte solar hoy",
+  "Spaßmodus": "Modo diversión",
+  "Speiseplan nicht verfügbar": "Menú semanal no disponible",
+  "Spülen": "Aclarar",
+  "Starten": "Iniciar",
+  "Startet später": "Empieza más tarde",
+  "Staubbehälter fehlt": "Falta el depósito de polvo",
+  "Staubbehälter leeren": "Vaciar depósito de polvo",
+  "Std. übrig": "h restantes",
+  "Steckdose nicht erreichbar": "Enchufe inaccesible",
+  "Stoßfänger klemmt": "Parachoques atascado",
+  "Stoßlüften": "Ventilación intensa",
+  "Stromstärke": "Corriente",
+  "Süßwasser": "Agua dulce",
+  "Taste an der Steckdose": "Botón del enchufe",
+  "Tasten am Gerät gesperrt": "Botones del dispositivo bloqueados",
+  "Tasten an der Station": "Botones de la base",
+  "Teils bewölkt": "Parcialmente nublado",
+  "Teilweise bewölkt": "Parcialmente nublado",
+  "Teilweise geöffnet": "Parcialmente abierto",
+  "Temperatur": "Temperatura",
+  "Temperatur am Heizkörper": "Temperatura del radiador",
+  "Temperatur im AMS": "Temperatura en el AMS",
+  "Temperatur im Haus": "Temperatura en casa",
+  "Temperatur im Normalbereich": "Temperatura normal",
+  "Temperatur kritisch": "Temperatura crítica",
+  "Temperaturfühler": "Termómetro",
+  "Temperaturfühler offline": "Termómetro sin conexión",
+  "Ton an": "Sonido activado",
+  "Trotzdem aus": "Apagar igualmente",
+  "Tür": "Puerta",
+  "Tür entriegelt": "Puerta desbloqueada",
+  "Tür hinten links": "Puerta trasera izquierda",
+  "Tür hinten rechts": "Puerta trasera derecha",
+  "Tür ist offen": "La puerta está abierta",
+  "Tür offen": "Puerta abierta",
+  "Tür verriegelt": "Puerta bloqueada",
+  "Türen": "Puertas",
+  "Türen & Fenster": "Puertas y ventanas",
+  "Türen & Fenster überwacht": "Puertas y ventanas vigiladas",
+  "Türen & Klappen": "Puertas y portones",
+  "Türen &amp; Klappen": "Puertas y portones",
+  "Unbekanntes Programm": "Programa desconocido",
+  "VOCs erkannt – lüften": "COV detectados – ventila",
+  "Ventilöffnung": "Apertura de válvula",
+  "Verbrauch": "Consumo",
+  "Verbrauch Monat": "Consumo del mes",
+  "Verbrauch heute": "Consumo de hoy",
+  "Verbrauch pro Tag": "Consumo por día",
+  "Verfügbare Updates": "Actualizaciones disponibles",
+  "Verlauf nicht verfügbar": "Historial no disponible",
+  "Verzögerter Start": "Inicio diferido",
+  "Vollständig geladen": "Carga completa",
+  "Vorhänge": "Cortinas",
+  "Vorspülen": "Prelavado",
+  "Vorwäsche": "Prelavado",
+  "Wasser erkannt": "Agua detectada",
+  "Wasser erkannt!": "¡Agua detectada!",
+  "Wasserbehälter leer": "Depósito de agua vacío",
+  "Wasserstärke": "Caudal de agua",
+  "Weiter": "Siguiente",
+  "Weitere Geräte": "Más dispositivos",
+  "Welche Fenster sind offen?": "¿Qué ventanas están abiertas?",
+  "Welche Lichter sind an?": "¿Qué luces están encendidas?",
+  "Weniger als 1 Min. übrig": "Menos de 1 min restante",
+  "Windig & bewölkt": "Viento y nubes",
+  "Wird übernommen": "Aplicando",
+  "Wird abgebrochen": "Cancelando",
+  "Wird aktiviert …": "Activando…",
+  "Wird aktualisiert": "Actualizando",
+  "Wird deaktiviert …": "Desactivando…",
+  "Wird eingerichtet": "Configurando",
+  "Wird entfernt": "Quitando",
+  "Wird erkannt …": "Detectando…",
+  "Wird geladen …": "Cargando…",
+  "Wird geleert": "Vaciando",
+  "Wird gewaschen": "Lavando",
+  "Wird installiert": "Instalando",
+  "Wird unscharf geschaltet": "Desarmando",
+  "Wirklich öffnen?": "¿Seguro que quieres abrir?",
+  "Wischt Raum": "Fregando habitación",
+  "Wärmeanforderung": "Demanda de calor",
+  "Zeitplan überschrieben": "Horario anulado",
+  "Zeitüberschreitung – bitte nochmal versuchen.": "Tiempo agotado – inténtalo de nuevo.",
+  "Zieltemperatur alle Räume": "Temperatura objetivo, todas las habitaciones",
+  "Zu viel Dünger": "Demasiado abono",
+  "Zuletzt aktualisiert": "Última actualización",
+  "Zuletzt gedruckt": "Última impresión",
+  "Zum Öffnen tippen": "Toca para abrir",
+  "Zurücksetzen": "Restablecer",
+  "Zusätzliche Käufe": "Compras adicionales",
+  "Zählerstand": "Lectura del contador",
+  "außen": "fuera",
+  "Öffnen": "Abrir",
+  "Öffnet": "Abriendo",
+  "Öffnet sich …": "Abriendo…",
+  "Ölstand": "Nivel de aceite",
+  "Ölwechsel": "Cambio de aceite",
+  "Idee der Woche von Claude": "La idea de la semana de Claude",
+  "Lüftungs-Coach": "Asistente de ventilación",
+  "Heizungs-Coach": "Asistente de calefacción",
+  "Energie-Coach": "Asistente de energía",
+  "Raumklima": "Clima interior",
+  "Sonnenstrom übrig": "Sobra energía solar",
+  "Fahrzeug": "Vehículo",
+  "Rezept der Woche": "Receta de la semana",
+  "Schlösser": "Cerraduras",
+  "Beleuchtung": "Iluminación",
+  "Jalousien": "Persianas",
+  "Klima": "Clima",
+  "Energie": "Energía",
+  "Sicherheit": "Seguridad",
+  "Medien": "Multimedia",
+  "Personen": "Personas",
+  "Batterien": "Baterías",
+  "Netzwerk": "Red",
+  "Pflanzen": "Plantas",
+  "Kameras": "Cámaras",
+  "Kalender": "Calendario",
+  "Abfall": "Basura",
+  "Abfall heute": "Basura hoy",
+  "Abfall morgen": "Basura mañana",
+  "Restmüll": "Resto",
+  "Biomüll": "Orgánico",
+  "Papier": "Papel",
+  "Gelber Sack": "Envases",
+  "Wertstoff": "Reciclaje",
+  "Abkühlen": "Enfriando",
+  "Abpumpen nicht möglich": "No puede desaguar",
+  "Abbrechen": "Cancelar",
+  "Beispiel-Künstler": "Artista de ejemplo",
+  "Türen offen": "Puertas abiertas",
+  "Zuletzt": "Último",
+  "Zuletzt:": "Último:",
+  "Entlädt": "Descargando",
+  "Weißton": "Tono de blanco",
+  "Helligkeit": "Brillo",
+  "Farbe": "Color",
+  "Temperaturverlauf": "Historial de temperatura",
+  "Fenster offen · noch": "Ventana abierta · aún",
+  "Zu feucht": "Demasiado húmedo",
+  "Luftfeuchte": "Humedad",
+  "Heizt": "Calentando",
+  "Heizen": "Calor",
+  "Kühlen": "Frío",
+  "Druckt": "Imprimiendo",
+  "Reinigt": "Limpiando",
+  "Saugt": "Aspirando",
+  "Angedockt": "En la base",
+  "Lädt auf": "Cargando",
+  "Unterwegs": "Fuera",
+  "Zuhause": "En casa",
+  "Abwesend": "Fuera",
+  "Luft": "Aire",
+  "Wasser": "Agua",
+  "Strom": "Electricidad",
+  "Solar": "Solar",
+  "Netz": "Red",
+  "Haus": "Casa",
+  "Einspeisung": "Inyección",
+  "Netzbezug": "Consumo de red",
+  "Autarkie": "Autarquía",
+  "Eigenverbrauch": "Autoconsumo",
+  "Heute": "Hoy",
+  "Dieser Monat": "Este mes",
+  "Diesen Monat": "Este mes",
+  "Monat": "Mes",
+  "Woche": "Semana",
+  "Jahr": "Año",
+  "Schwach": "Bajo",
+  "Voll": "Lleno",
+  "Leer": "Vacío",
+  "Niedrig": "Bajo",
+  "Hoch": "Alto",
+  "Mittel": "Medio",
+  "Normal": "Normal",
+  "Online": "En línea",
+  "Offline": "Sin conexión",
+  "Unbekannt": "Desconocido",
+  "Bauteillüfter": "Ventilador de pieza",
+  "Druckkopflüfter": "Ventilador del hotend",
+  "Druckraumlüfter": "Ventilador de la cámara",
+  "Lüfter": "Ventilador",
+  "Claude wertet einmal pro Woche (samstags 10 Uhr) Feuchte, CO₂ und Fensterzeiten aus und sagt, wo, wann und wie lange sich Lüften lohnt.": "Una vez a la semana (los sábados a las 10:00) Claude analiza la humedad, el CO₂ y los tiempos de ventanas abiertas, y te dice dónde, cuándo y cuánto tiempo conviene ventilar.",
+  "Die Auswertung startet mit der Heizsaison: Sobald geheizt wird, prüft Claude jeden Montag Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad.": "El análisis empieza con la temporada de calefacción: en cuanto se encienda, Claude revisa cada lunes el tiempo de calefacción, las temperaturas, la calefacción con ventanas abiertas y el radiador del baño.",
+  "Gesichert": "Asegurado",
+  "Sicher": "Seguro",
+  "Braucht Aufmerksamkeit": "Requiere atención",
+  "Nicht gesichert": "No asegurado",
+  "Fortschritt": "Progreso",
+  "Schicht": "Capa",
+  "Aufgabe": "Trabajo",
+  "Steuerung": "Controles",
+  "Pausieren": "Pausar",
+  "Abspielen": "Reproducir",
+  "Fortsetzen": "Reanudar",
+  "Druckraumlicht": "Luz de la cámara",
+  "Kamera": "Cámara",
+  "Temperaturen": "Temperaturas",
+  "Druckbett": "Cama",
+  "Steckdose": "Enchufe",
+  "Spannung": "Tensión",
+  "Luftfeuchtigkeit im AMS": "Humedad en el AMS",
+  "Drucker": "Impresora",
+  "Druckzeit insgesamt": "Tiempo total de impresión",
+  "Druckplatte": "Placa de impresión",
+  "Texturiert (PEI)": "Texturizada (PEI)",
+  "Glatt (PEI)": "Lisa (PEI)",
+  "Edelstahl": "Acero inoxidable",
+  "Einstellungen": "Ajustes",
+  "Luftfeuchtigkeit": "Humedad",
+  "Status": "Estado",
+  "Modus": "Modo",
+  "Zustand": "Estado",
+  "Zielwert": "Objetivo",
+  "Feinstaub PM2,5": "Partículas PM2,5",
+  "Bodenfeuchtigkeit": "Humedad del suelo",
+  "Beleuchtungsstärke": "Iluminancia",
+  "Bewegung": "Movimiento",
+  "Ausschalten": "Apagar",
+  "Einschalten": "Encender",
+  "Durchschnitt im Haus": "Media de la casa",
+  "Halbe Ladung": "Media carga",
+  "Heizkreise mit Strom versorgt": "Circuitos de calefacción con corriente",
+  "Kindersicherung": "Bloqueo infantil",
+  "Nur im Betrieb schaltbar": "Solo en funcionamiento",
+  "Verbindung": "Conexión",
+  "Weitere Einstellungen": "Más ajustes",
+  "Nächste Stunden": "Próximas horas",
+  "Nachtlicht": "Luz nocturna",
+  "Anzeige": "Pantalla",
+  "Automatik": "Auto",
+  "Heizpause": "Pausa de calefacción",
+  "Temperaturabsenkung": "Bajada de temperatura",
+  "Abgerufen": "Obtenido",
+  "Abpumpen": "Desaguando",
+  "AdBlue-Reichweite": "Autonomía AdBlue",
+  "Akkufehler": "Error de batería",
+  "Akkustand": "Nivel de batería",
+  "Aktiv": "Activo",
+  "Aktiver": "Activo",
+  "Aktivieren": "Activar",
+  "Aktiviert": "Activado",
+  "Aktualisiert": "Actualizado",
+  "Aktuell": "Al día",
+  "Anbieter": "Proveedor",
+  "Angenehm": "Agradable",
+  "Angepasst": "Ajustado",
+  "Angezogen": "Puesto",
+  "Anpassen": "Ajustar",
+  "Anzeigen": "Mostrar",
+  "Aquarien": "Acuarios",
+  "Aquarium-Doktor": "Doctor del acuario",
+  "Aufgehoben": "Levantado",
+  "Aufheben": "Levantar",
+  "Aufheizen": "Calentando",
+  "Aufmerksamkeit": "Atención",
+  "Aufnahme": "Grabación",
+  "Aufwachen": "Despertando",
+  "Ausblenden": "Ocultar",
+  "Ausgeschaltet": "Apagado",
+  "Ausgewogen": "Equilibrado",
+  "Ausstehend": "Pendiente",
+  "Automatisch": "Automático",
+  "Badezimmer": "Baño",
+  "Batterie": "Batería",
+  "Beckenlicht": "Luz del acuario",
+  "Bedeckt": "Cubierto",
+  "Beenden": "Detener",
+  "Beendet": "Terminado",
+  "Benachrichtigungen": "Avisos",
+  "Beobachten": "Vigilar",
+  "Bereitschaft": "En espera",
+  "Beschattungsautomatik": "Sombreado automático",
+  "Betriebsart": "Modo de funcionamiento",
+  "Betriebssystem": "Sistema operativo",
+  "Bezug": "De la red",
+  "Bild": "Imagen",
+  "Blockiert": "Bloqueado",
+  "Bodenfeuchte": "Humedad del suelo",
+  "Büro": "Despacho",
+  "Datenstand": "Datos de",
+  "Deaktivieren": "Desactivar",
+  "Deaktiviert": "Desarmada",
+  "Diebstahl": "Robo",
+  "Dosieren": "Dosificar",
+  "Dosiert": "Dosificado",
+  "Druckfehler": "Error de impresión",
+  "Durchgang": "Ciclo",
+  "Durchgängen": "ciclos",
+  "Eigene": "Propio",
+  "Eigenversorgung": "Autoabastecimiento",
+  "Eingeschaltet": "Encendido",
+  "Einkaufsliste": "Lista de la compra",
+  "Einpassen": "Ajustar",
+  "Einweichen": "Remojo",
+  "Endet": "Termina",
+  "Energiebedarf": "Demanda de energía",
+  "Energieverbrauch": "Consumo de energía",
+  "Entkalken": "Descalcificar",
+  "Entwarnung": "Fin de la alerta",
+  "Erinnerung": "Recordatorio",
+  "Erkannt": "Detectado",
+  "Erkennung": "Detección",
+  "Erledigt": "Hecho",
+  "Extrem": "Extremo",
+  "Fahrt": "Trayecto",
+  "Fahrten": "Trayectos",
+  "Fahrzeit": "Tiempo de trayecto",
+  "Favorit": "Favorito",
+  "Fehlgeschlagen": "Falló",
+  "Fernstart": "Inicio remoto",
+  "Feststellbremse": "Freno de mano",
+  "Filamentwechsel": "Cambio de filamento",
+  "Flur": "Pasillo",
+  "Frei": "Libre",
+  "Freigeben": "Aprobar",
+  "Gekippt": "Inclinada",
+  "Gemeldet": "Notificado",
+  "Gering": "Bajo",
+  "Geringer": "Menor",
+  "Geschwindigkeit": "Velocidad",
+  "Gestartet": "Iniciado",
+  "Gestern": "Ayer",
+  "Gestoppt": "Detenido",
+  "Gesund": "Sana",
+  "Gewitter": "Tormenta",
+  "HA-Zeitplan": "Horario de HA",
+  "Hagel": "Granizo",
+  "Handeln": "Actuar",
+  "Hauptschalter": "Interruptor general",
+  "Hauswirtschaftsraum": "Lavadero",
+  "Heckklappe": "Portón trasero",
+  "Hinweis": "Aviso",
+  "Hinweise": "Avisos",
+  "Inaktiv": "Inactivo",
+  "Inspektion": "Revisión",
+  "Installiert": "Instalado",
+  "Intensiv": "Intensivo",
+  "Isoliert": "Aislado",
+  "Jalousien-Automatik": "Persianas automáticas",
+  "Jetzt": "Ahora",
+  "Kalibrierung": "Calibración",
+  "Kalorien": "Calorías",
+  "Kalt": "Frío",
+  "Kaltstart": "Arranque en frío",
+  "Kanal": "Canal",
+  "Kartierung": "Mapeo",
+  "Kilometerstand": "Kilometraje",
+  "Klar": "Despejado",
+  "Klingel": "Timbre",
+  "Knitterschutz": "Antiarrugas",
+  "Kritisch": "Crítico",
+  "Küche": "Cocina",
+  "LAN-Download": "Descarga por LAN",
+  "Ladefehler": "Error de carga",
+  "Ladevorrang": "Prioridad de carga",
+  "Ladezyklen": "Ciclos de carga",
+  "Lagerwartung": "Mantenimiento de rodamientos",
+  "Langzeit": "Largo plazo",
+  "Lecksensor": "Sensor de fugas",
+  "Leicht": "Leve",
+  "Leise": "Silencioso",
+  "Leiser": "Más silencioso",
+  "Lichtsteuerung": "Control de luces",
+  "Luftdruck": "Presión del aire",
+  "Luftreiniger": "Purificador",
+  "Manuell": "Manual",
+  "Markisen": "Toldos",
+  "Maschinenpflege": "Cuidado de la máquina",
+  "Maschinenreinigung": "Limpieza de la máquina",
+  "Meerwasser": "Agua salada",
+  "Meldefehler": "Error de notificación",
+  "Messwerte": "Mediciones",
+  "Minuten": "minutos",
+  "Motorhaube": "Capó",
+  "Motorstunden": "Horas de motor",
+  "Nacht": "Noche",
+  "Nachtmodus": "Modo noche",
+  "Neustart": "Reinicio",
+  "Nivellieren": "Nivelando",
+  "Notfall": "Emergencia",
+  "Notstrom": "Energía de respaldo",
+  "Optionen": "Opciones",
+  "Orten": "Localizar",
+  "Patrouille": "Patrulla",
+  "Pflanzen-Doktor": "Doctor de plantas",
+  "Profil": "Perfil",
+  "Punktreinigung": "Limpieza puntual",
+  "Quelle": "Fuente",
+  "Raumluft": "Aire interior",
+  "Raumreinigung": "Limpieza de habitación",
+  "Raumtemperatur": "Temperatura ambiente",
+  "Rausstellen": "Sacar",
+  "Referenzfahrt": "Recorrido de referencia",
+  "Regen": "Lluvia",
+  "Regeneriersalz": "Sal para lavavajillas",
+  "Regnerisch": "Lluvioso",
+  "Reichweite": "Autonomía",
+  "Reinigen": "Limpiar",
+  "Reinigung": "Limpieza",
+  "Reinigungen": "Limpiezas",
+  "Reinigungsmodus": "Modo de limpieza",
+  "Ruhig": "Tranquilo",
+  "Salz": "Sal",
+  "Sanft": "Suave",
+  "Sauber": "Limpio",
+  "Saugen": "Aspirar",
+  "Schiebedach": "Techo solar",
+  "Schildkröte": "Tortuga",
+  "Schlafzimmer": "Dormitorio",
+  "Schleudern": "Centrifugado",
+  "Schnee": "Nieve",
+  "Schneefall": "Nevada",
+  "Schneeregen": "Aguanieve",
+  "Schnell": "Rápido",
+  "Schnellwahl": "Selección rápida",
+  "Schrittverlust": "Pérdida de pasos",
+  "Schutzladung": "Carga de protección",
+  "Schwer": "Grave",
+  "Sensoren": "Sensores",
+  "Sicherheitswarnung": "Aviso de seguridad",
+  "Sichtweite": "Visibilidad",
+  "Slicen": "Laminando",
+  "Sofort": "Inmediato",
+  "Solaranlage": "Instalación solar",
+  "Sonnig": "Soleado",
+  "Speiseplan": "Menú semanal",
+  "Starker": "Fuerte",
+  "Starkregen": "Lluvia intensa",
+  "Startet": "Iniciando",
+  "Statistik": "Estadísticas",
+  "Stufe": "Nivel",
+  "Stumm": "Silenciado",
+  "Stunde": "hora",
+  "Stunden": "horas",
+  "Tagen": "días",
+  "Tarif": "Tarifa",
+  "Tastensperre": "Bloqueo de teclas",
+  "Technik": "Equipo",
+  "Temperaturwarnung": "Aviso de temperatura",
+  "Terrasse": "Terraza",
+  "Tonnen": "Contenedores",
+  "Trittfrequenz": "Cadencia",
+  "Trocken": "Seco",
+  "Trocknen": "Secar",
+  "Trocknet": "Secando",
+  "Trommelreinigung": "Limpieza del tambor",
+  "Unklar": "Incierto",
+  "Unkritisch": "Sin riesgo",
+  "Unscharf": "Desarmada",
+  "Unter": "Por debajo",
+  "Unterbrochen": "Interrumpido",
+  "Unwetter": "Temporal",
+  "Urlaub": "Vacaciones",
+  "VERBLEIBEND": "RESTANTE",
+  "Ventil-Anpassung": "Ajuste de válvulas",
+  "Verriegelung": "Bloqueo",
+  "Vorbereitung": "Preparando",
+  "WLAN-Download": "Descarga por Wi-Fi",
+  "Warm": "Cálido",
+  "Warnung": "Aviso",
+  "Wartung": "Mantenimiento",
+  "Waschen": "Lavar",
+  "Waschküche": "Lavadero",
+  "Wasserbedarf": "Demanda de agua",
+  "Wassertemperatur": "Temperatura del agua",
+  "Wetterwarnung": "Aviso meteorológico",
+  "Wiedergabe": "Reproducción",
+  "Windig": "Ventoso",
+  "Wischen": "Fregar",
+  "Wischmodus": "Modo de fregado",
+  "Wischt": "Fregando",
+  "Wohnzimmer": "Salón",
+  "Zeitplan": "Horario",
+  "Zonenreinigung": "Limpieza por zonas",
+  "Überschwemmung": "Inundación",
+  "überschwemmung": "inundación",
+  "Januar": "Enero",
+  "Februar": "Febrero",
+  "März": "Marzo",
+  "Mär": "Mar",
+  "April": "Abril",
+  "Mai": "Mayo",
+  "Juni": "Junio",
+  "Juli": "Julio",
+  "August": "Agosto",
+  "September": "Septiembre",
+  "Oktober": "Octubre",
+  "November": "Noviembre",
+  "Dezember": "Diciembre",
+  "Montag": "Lunes",
+  "Dienstag": "Martes",
+  "Mittwoch": "Miércoles",
+  "Donnerstag": "Jueves",
+  "Freitag": "Viernes",
+  "Samstag": "Sábado",
+  "Sonntag": "Domingo",
+  "1 Reinigung": "1 limpieza",
+  "1 Update braucht Aufmerksamkeit": "1 actualización requiere atención",
+  "AMS getrennt": "AMS desconectado",
+  "AMS wird vorbereitet": "Preparando AMS",
+  "Ablaufpumpe blockiert": "Bomba de desagüe bloqueada",
+  "Absturzsensor verschmutzt": "Sensor anticaída sucio",
+  "Abwesend scharf schalten?": "¿Armar en modo ausente?",
+  "Aktiviert (Abwesend)": "Armada (ausente)",
+  "Aktiviert (Bypass)": "Armada (bypass)",
+  "Aktiviert (Zuhause)": "Armada (en casa)",
+  "Aktiviert (Nacht)": "Armada (noche)",
+  "Aktiviert (Urlaub)": "Armada (vacaciones)",
+  "Alarm deaktiviert": "Alarma desarmada",
+  "Alles aktuell": "Todo al día",
+  "Alles eingekauft": "Todo comprado",
+  "Alles gelesen": "Todo leído",
+  "Als beendet markieren": "Marcar como terminado",
+  "Amtliche Warnung": "Aviso oficial",
+  "Andere Idee": "Otra idea",
+  "Aquarium-Licht": "Luz del acuario",
+  "Auf die Einkaufsliste": "A la lista de la compra",
+  "Automatisch erkennen": "Detectar automáticamente",
+  "Batterie schwach": "Batería baja",
+  "Betrifft bei dir": "Te afecta",
+  "Bett wird nivelliert": "Nivelando cama",
+  "Bewegung erkannt": "Movimiento detectado",
+  "Bewegungsmelder inaktiv": "Sensor de movimiento inactivo",
+  "Bitte warten": "Espera, por favor",
+  "Bluetooth-Verbindung kurz unterbrochen": "Conexión Bluetooth interrumpida brevemente",
+  "Braucht dringend Aufmerksamkeit": "Requiere atención urgente",
+  "Braucht etwas Aufmerksamkeit": "Requiere algo de atención",
+  "braucht Aufmerksamkeit": "requiere atención",
+  "Breaking Change betrifft dich": "cambio importante te afecta",
+  "Breaking Changes betreffen dich": "cambios importantes te afectan",
+  "CO₂-Wert hoch": "CO₂ alto",
+  "Claude liest die Release-Notes …": "Claude está leyendo las notas de la versión…",
+  "Claude prüft Bodenfeuchte, Licht, Temperatur und Luftfeuchte der letzten 7 Tage passend zur Art und gibt einen Pflegetipp.": "Claude revisa la humedad del suelo, la luz, la temperatura y la humedad de los últimos 7 días según la especie y te da un consejo de cuidado.",
+  "Zu hoch": "Demasiado alto",
+  "Zu niedrig": "Demasiado bajo",
+  "Claude prüft Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad der letzten 7 Tage.": "Claude revisa el tiempo de calefacción, las temperaturas, la calefacción con ventanas abiertas y el radiador del baño de los últimos 7 días.",
+  "Code eingeben …": "Introduce el código…",
+  "Dashboard bearbeiten": "Editar panel",
+  "Deine Region": "Tu región",
+  "Details in der Bambu-App": "Detalles en la app de Bambu",
+  "Diebstahl gemeldet": "Robo notificado",
+  "Du bist diesen Monat dran": "Este mes te toca a ti",
+  "Du bist dran": "Te toca",
+  "Nicht dran": "No te toca",
+  "Dock getrennt": "Base desconectada",
+  "Druckbett wird gescannt": "Escaneando cama",
+  "Drucker offline": "Impresora sin conexión",
+  "Druckplatte wird erkannt": "Detectando placa",
+  "Eigenes Tagesprofil der Lampe": "Perfil diario propio de la lámpara",
+  "Eingriff erforderlich": "Se requiere intervención",
+  "Einmalig erlaubt": "Permitido una vez",
+  "Endet gleich": "Termina enseguida",
+  "Energie gesamt": "Energía total",
+  "Erkennung fortsetzen": "Reanudar detección",
+  "Erkennung pausieren": "Pausar detección",
+  "Wenn die Maschine kurz angehalten wird": "Si la máquina se pausa un momento",
+  "Ersparnis gesamt": "Ahorro total",
+  "Erst saugen, dann wischen": "Primero aspirar, luego fregar",
+  "Extra Trocken": "Extra seco",
+  "Extreme Warnung": "Aviso extremo",
+  "Extremes Unwetter": "Temporal extremo",
+  "Extrusion wird kalibriert": "Calibrando extrusión",
+  "Fahrzeit gesamt": "Tiempo total de trayecto",
+  "Farben nach deiner Automation": "Colores de tu automatización",
+  "Fast fertig": "Casi listo",
+  "Feinstaub PM2.5": "Partículas PM2.5",
+  "Fernsteuerung aktiv": "Control remoto activo",
+  "Feste Zieltemperatur": "Temperatura objetivo fija",
+  "Filament wird entladen": "Descargando filamento",
+  "Filament wird geladen": "Cargando filamento",
+  "Fluss wird kalibriert": "Calibrando flujo",
+  "Frag Assist …": "Pregunta a Assist…",
+  "Frischwassertank leer": "Depósito de agua limpia vacío",
+  "Ganzes Haus": "Toda la casa",
+  "Gas erkannt": "Gas detectado",
+  "Geladen (12 Monate)": "Cargado (12 meses)",
+  "Gerade angekommen": "Acaba de llegar",
+  "Gerade gegangen": "Acaba de irse",
+  "Heute gefahren": "Recorrido hoy",
+  "Gestern gefahren": "Recorrido ayer",
+  "Heute gegossen": "Regada hoy",
+  "Gestern gegossen": "Regada ayer",
+  "Gewitter mit Regen": "Tormenta con lluvia",
+  "Heizkreise stromlos": "Circuitos de calefacción sin corriente",
+  "Heute dosiert": "Dosificado hoy",
+  "Hohe Feuchtigkeit": "Humedad alta",
+  "Ich habe nichts verstanden.": "No te he entendido.",
+  "Idee holen": "Pedir una idea",
+  "Im Anruf": "En una llamada",
+  "Immer erlaubt": "Permitido siempre",
+  "Intensiv 70°": "Intensivo 70°",
+  "Jetzt aktualisieren": "Actualizar ahora",
+  "Jetzt auswerten": "Analizar ahora",
+  "Jetzt dosieren": "Dosificar ahora",
+  "Jetzt neu starten": "Reiniciar ahora",
+  "Jetzt starten": "Iniciar ahora",
+  "Zeitversetzt starten": "Inicio diferido",
+  "Kindersicherung aktiv": "Bloqueo infantil activo",
+  "Klare Nacht": "Noche despejada",
+  "Kohlenmonoxid erkannt": "Monóxido de carbono detectado",
+  "Kritische Temperaturabweichung!": "¡Desviación crítica de temperatura!",
+  "Lädt und Bypass": "Cargando y bypass",
+  "Lade Vorhersage …": "Cargando previsión…",
+  "Laden bis": "Cargar hasta",
+  "Nicht entladen unter": "No descargar por debajo de",
+  "Laufzeit insgesamt": "Tiempo total de funcionamiento",
+  "Lecksensor offline": "Sensor de fugas sin conexión",
+  "Letzter Durchgang": "Último ciclo",
+  "Letzter Versuch fehlgeschlagen": "El último intento falló",
+  "Lidar blockiert": "Lidar bloqueado",
+  "Manueller Modus": "Modo manual",
+  "Mopp fehlt": "Falta la mopa",
+  "Mopp trocknen": "Secar mopa",
+  "Mopp waschen": "Lavar mopa",
+  "Mopp wird angebracht": "Colocando mopa",
+  "Mopp wird entfernt": "Quitando mopa",
+  "Motor wird kalibriert": "Calibrando motor",
+  "Nach Zeitplan": "Según horario",
+  "Neue Post im Briefkasten": "Correo nuevo en el buzón",
+  "Neues Gespräch": "Nueva conversación",
+  "Neustart ausstehend": "Reinicio pendiente",
+  "Neustart erforderlich": "Reinicio necesario",
+  "Nicht angepasst": "Sin ajustar",
+  "Nicht erkannt": "No detectado",
+  "Nicht gemeldet": "No notificado",
+  "Nicht verbunden": "No conectado",
+  "Nicht verriegelt": "No bloqueado",
+  "Niedriger Wasserdruck": "Presión de agua baja",
+  "Noch nie": "Nunca",
+  "Nur Anzeige": "Solo mostrar",
+  "Pflanze ist gesund": "La planta está sana",
+  "Push am Vorabend": "Aviso la tarde anterior",
+  "Rauch erkannt": "Humo detectado",
+  "Reichweite je Modus": "Autonomía por modo",
+  "Reinigung gestartet": "Limpieza iniciada",
+  "Reinigungen insgesamt": "Limpiezas totales",
+  "Reispfanne mit Hähnchen und Pilzen": "Arroz con pollo y champiñones",
+  "Roboter gekippt": "Robot volcado",
+  "Roboter steckt fest": "Robot atascado",
+  "Saugen & wischen": "Aspirar y fregar",
+  "Saugt & wischt": "Aspirando y fregando",
+  "Saugt & wischt Zone": "Aspirando y fregando zona",
+  "Wischt Zone": "Fregando zona",
+  "Scharf schalten?": "¿Armar?",
+  "Unscharf schalten?": "¿Desarmar?",
+  "Sirene stoppen?": "¿Detener sirena?",
+  "Schmutzwasser leeren": "Vaciar agua sucia",
+  "Schmutzwassertank voll": "Depósito de agua sucia lleno",
+  "Schnell 45°": "Rápido 45°",
+  "Schnell 65°": "Rápido 65°",
+  "Schnell 30": "Rápido 30",
+  "Baumwolle 40": "Algodón 40",
+  "Pflegeleicht": "Fácil cuidado",
+  "Schneller fertig": "Terminar antes",
+  "Schwere Warnung": "Aviso grave",
+  "Sehr kalt": "Mucho frío",
+  "Zu kalt": "Demasiado frío",
+  "Sehr trocken": "Muy seco",
+  "Sensoren reinigen": "Limpiar sensores",
+  "Service & Sicherheit": "Servicio y seguridad",
+  "Service nach Strecke": "Servicio por distancia",
+  "Sonstige Wartung": "Otro mantenimiento",
+  "Speedtest starten": "Medir velocidad",
+  "Spracheingabe fehlgeschlagen.": "La entrada de voz falló.",
+  "Sprechen": "Hablar",
+  "Starte den Saugroboter": "Inicia el robot aspirador",
+  "Starts insgesamt": "Inicios totales",
+  "Stoppt …": "Deteniendo…",
+  "Sucht ein Rezept …": "Buscando una receta…",
+  "Temperaturwarnung aktiv": "Aviso de temperatura activo",
+  "Trocknet Mopp": "Secando mopa",
+  "Trocknung endet": "Secado terminando",
+  "Verbindung stabil": "Conexión estable",
+  "Verschobene Termine": "Fechas aplazadas",
+  "Voll geladen": "Carga completa",
+  "Voll, Bypass": "Lleno, bypass",
+  "Vollschutz aktiv": "Protección total activa",
+  "Von dir pausiert": "Pausado por ti",
+  "WLAN & Sperren": "Wi-Fi y bloqueos",
+  "Warte auf Pflanzendaten": "Esperando datos de la planta",
+  "Warte auf Start": "Esperando inicio",
+  "Wartet auf Druckbett": "Esperando a la cama",
+  "Wartet auf Neustart": "Esperando reinicio",
+  "Was steht auf der Einkaufsliste?": "¿Qué hay en la lista de la compra?",
+  "Wasserheizung verkalkt": "Calentador de agua con cal",
+  "Wasserkasten fehlt": "Falta el depósito de agua",
+  "Wetterwarnung aufgehoben": "Aviso meteorológico retirado",
+  "Wie kann ich helfen?": "¿En qué te ayudo?",
+  "Wieder anzeigen": "Mostrar de nuevo",
+  "Zum Freigeben oben in der Update-Zeile auf „Freigeben“ tippen und bestätigen.": "Para aprobar, toca “Aprobar” en la fila de la actualización de arriba y confírmalo.",
+  "KI: alle unkritisch": "IA: todo sin riesgo",
+  "KI: unkritisch": "IA: sin riesgo",
+  "Installieren empfohlen": "Se recomienda instalar",
+  "auf der Arbeit": "en el trabajo",
+  "dauert länger als üblich": "tarda más de lo habitual",
+  "gibt es noch keine eigene Auswertung. „Neu auswerten“ erstellt sie für alle Räume.": "aún no tiene análisis propio. “Volver a evaluar” lo crea para todas las habitaciones.",
+  "sehr schlecht": "muy malo",
+  "Stufe 1": "Nivel 1",
+  "Stufe 2": "Nivel 2",
+  "Stufe 3": "Nivel 3",
+  "Durchgänge seit dem letzten Mal": "ciclos desde la última vez",
+  "Ø Dauer": "Ø duración",
+  "Ø pro Durchgang": "Ø por ciclo",
+  "Wertstoffabfall": "Reciclaje",
+  "Aktuelle Wiedergabe": "Reproduciendo",
+  "Beispiel-Titel": "Título de ejemplo",
+  "Daten: Deutscher Wetterdienst (DWD)": "Datos: Deutscher Wetterdienst (DWD)",
+  "Internetsperre": "Bloqueo de internet",
+  "Latenz": "Latencia",
+  "Startzeit": "Hora de inicio",
+  "Wetter": "Tiempo",
+  "Zieltemperatur": "Temperatura objetivo",
+  "braucht Wasser": "necesita agua",
+  "braucht Dünger": "necesita abono",
+  "braucht mehr Licht": "necesita más luz",
+  "steht in zu trockener Luft": "el aire es demasiado seco",
+  "steht in zu feuchter Luft": "el aire es demasiado húmedo",
+  "ausgezeichnet": "excelente",
+  "gut": "bueno",
+  "schlecht": "malo",
+  "Lädt aus dem Netz": "Cargando desde la red",
+  "Übernahme fehlgeschlagen": "La toma de control falló",
+  "Backup läuft": "Copia de seguridad en curso",
+  "An/Aus": "Encendido/Apagado",
+  "12-V-Batterie": "Batería de 12 V",
+  "Luftfeuchtigkeit außen": "Humedad exterior",
+  "Nächstes Backup überfällig": "Próxima copia de seguridad vencida",
+  "Kamera nicht erreichbar": "Cámara inaccesible",
+  "Kein Bild – Kamera ist offline oder ihr Dienst läuft nicht.": "Sin imagen – la cámara está sin conexión o su servicio no funciona.",
+  "Kamera offline": "Cámara sin conexión",
+  "Schloss offline": "Cerradura sin conexión",
+  "Fenster gekippt": "Ventana inclinada",
+  "Tor offen": "Portón abierto",
+  "Luft ausgezeichnet": "Aire excelente",
+  "Luft mäßig": "Aire moderado",
+  "Luft schlecht": "Aire malo",
+  "Luft sehr schlecht": "Aire muy malo",
+  "Klemmt": "Atascado",
+  "Wird geöffnet …": "Abriendo…",
+  "Gerät fehlt": "Falta el dispositivo",
+  "Aktionen": "Acciones",
+  "Gerät nicht erreichbar": "Dispositivo inaccesible",
+  "Aus (Bürste angehoben)": "Apagado (cepillo levantado)",
+  "Eigene Wassermenge": "Caudal propio",
+  "Nur wischen": "Solo fregar",
+  "Pflanze": "Planta",
+  "Rezept": "Receta",
+  "Tür gekippt": "Puerta inclinada",
+  "Ton": "Sonido",
+  "Beschreiben": "Describir",
+  "Prüfe Strom und WLAN der Kamera.": "Revisa la corriente y el Wi-Fi de la cámara.",
+  "Erneut versuchen": "Reintentar",
+  "Schloss": "Cerradura",
+  "Sirene": "Sirena",
+  "Alarm": "Alarma",
+  "Tor": "Portón",
+  "Lichtfarbe": "Color de luz",
+  "Leuchten im Raum": "Luces de la habitación",
+  "Gedimmt": "Atenuada",
+  "Volle Helligkeit": "Brillo máximo",
+  "Neutral": "Neutro",
+  "zuletzt": "último",
+  "Kanäle": "Canales",
+  "Becken": "Acuarios",
+  "Aquarien · Temperaturen": "Acuarios · Temperaturas",
+  "Mehr": "Más",
+  "Weniger": "Menos",
+  "WLAN": "Wi-Fi",
+  "Verbraucher": "Consumidores",
+  "Energiefluss": "Flujo de energía",
+  "Woher": "De dónde",
+  "Wohin Solar": "Adónde va lo solar",
+  "Verbrauch im Haus": "Consumo de la casa",
+  "Akku lädt": "Batería cargando",
+  "Akku entlädt": "Batería descargando",
+  "Akku bereit": "Batería en reposo",
+  "Solar liefert gerade nichts": "Ahora no hay producción solar",
+  "Kein Verbrauch": "Sin consumo",
+  "Noch keine Werte": "Aún sin valores",
+  "Noch keine Aufteilung": "Aún sin desglose",
+  "Sperren": "Bloqueos",
+  "Internet": "Internet",
+  "Durchsatz": "Rendimiento",
+  "Gerätedetails": "Detalles del dispositivo",
+  "Update verfügbar": "Actualización disponible",
+  "Problem": "Problema",
+  "Speedtest läuft …": "Midiendo velocidad…",
+  "Kapazität": "Capacidad",
+  "Tipps": "Consejos",
+  "Noch keine Auswertung": "Aún sin análisis",
+  "Solarbank": "Solarbank",
+  "Betriebszustand": "Estado de funcionamiento",
+  "Lastvorgabe": "Consigna de carga",
+  "Öffentliche IP": "IP pública",
+  "LAN-Upload": "Subida por LAN",
+  "WLAN-Upload": "Subida por Wi-Fi",
+  "pro Woche sparbar": "de ahorro posible por semana",
+  "Kein Strom ins Netz": "Sin inyección a la red",
+  "Abgabelimit": "Límite de salida",
+  "Claude wertet die letzte Woche aus …": "Claude está analizando la última semana…",
+  "Niedriger Akkustand": "Batería baja",
+  "Alle Geräte": "Todos los dispositivos",
+  "Keine Warnungen": "Sin avisos",
+  "Alles in Ordnung": "Todo en orden",
+  "Alle Schlösser": "Todas las cerraduras",
+  "Alle Kameras": "Todas las cámaras",
+  "Nicht geprüft": "Sin revisar",
+  "KI-Fehler": "Error de IA",
+  "KI prüft …": "La IA revisa…",
+  "1 Batterie schwach": "1 batería baja",
+  "Tippen zum Verriegeln": "Toca para bloquear",
+  "Tippen zum Entriegeln": "Toca para desbloquear",
+  "Tippen, um alle zu verriegeln": "Toca para bloquear todo",
+  "Tippen, um alle zu entriegeln": "Toca para desbloquear todo",
+  "Wird verriegelt …": "Bloqueando…",
+  "Wird entriegelt …": "Desbloqueando…",
+  "● Unkritisch": "● Sin riesgo",
+  "● Breaking": "● Breaking",
+  "● Handeln": "● Requiere acción",
+  "KI-Blick: Druck prüfen": "La IA mira: revisa la impresión",
+  "Fertig gegen": "Listo hacia las",
+  "Station": "Base",
+  "Alles aufgefüllt": "Todo relleno",
+  "Salz, Klarspüler und Pflege sind in Ordnung": "Sal, abrillantador y cuidado están bien",
+  "Fühler": "Sensores",
+  "Verlauf": "Historial",
+  "Verlauf der letzten 24 Stunden": "Historial de las últimas 24 horas",
+  "Rad-Check im Detail": "Revisión de la bici en detalle",
+  "Motor": "Motor",
+  "Alles zu und verriegelt": "Todo cerrado y bloqueado",
+  "Alles zu": "Todo cerrado",
+  "Feststellbremse angezogen": "Freno de mano puesto",
+  "Tank fast leer": "Depósito casi vacío",
+  "Speiseplan der nächsten 7 Tage ist leer": "El menú de los próximos 7 días está vacío",
+  "Zutaten der Idee": "Ingredientes de la idea",
+  "Raumluft gut": "Aire interior bueno",
+  "Heute keine Termine": "Hoy no hay eventos",
+  "1 Termin heute": "1 evento hoy",
+  "Keine Szenen gefunden. Casora zeigt alle Szenen, die in den Entitäten weder ausgeblendet noch deaktiviert sind.": "No se encontraron escenas. Casora muestra todas las escenas que no están ocultas ni desactivadas en las entidades.",
+  "Aquarium": "Acuario",
+  "Jalousie": "Persiana",
+  "E-Bike": "E-bike",
+  "Ventilator": "Ventilador",
+  "Spiel": "Juego",
+  "Luftbefeuchter": "Humidificador",
+  "Anwesenheit": "Presencia",
+  "Schalter": "Interruptor",
+  "Updates": "Actualizaciones",
+  "Wetterwarnungen": "Avisos meteorológicos",
+  "Noch keine Geräte – im Studio hinzufügen": "Aún no hay dispositivos – añádelos en el Studio",
+  "Noch kein Gerät zugeordnet": "Aún sin dispositivo asignado",
+  "Im Casora Studio dieser Kachel ein Gerät zuweisen": "Asigna un dispositivo a esta tarjeta en Casora Studio",
+  "Im Casora Studio neu zuordnen": "Vuelve a asignarlo en Casora Studio",
+  "Noch nicht eingerichtet": "Aún sin configurar",
+  "Im Casora Studio der Kachel den Solar-Tipp zuordnen.": "Asigna el consejo solar a esta tarjeta en Casora Studio.",
+  "Noch keine Tageswerte": "Aún sin valores diarios",
+  "Welche Geräte hier zählen, legst du im Studio fest.": "En el Studio eliges qué dispositivos cuentan aquí.",
+  "waschen": "lavar ropa",
+  "spülen": "poner el lavavajillas",
+  "trocknen": "poner la secadora",
+  "Fühlt sich wohl": "Está a gusto",
+  "Braucht Wasser": "Necesita agua",
+  "Steht zu nass": "Demasiado húmeda",
+  "Steht zu kalt": "Demasiado fría",
+  "Steht zu warm": "Demasiado calor",
+  "Zu viel Sonne": "Demasiado sol",
+  "Überdüngt": "Exceso de abono",
+  "Bitte nachsehen": "Échale un vistazo",
+  "Keine Messwerte": "Sin mediciones",
+  "Wartet auf Daten": "Esperando datos",
+  "steht zu nass": "está demasiado húmeda",
+  "ist überdüngt": "tiene exceso de abono",
+  "bekommt zu viel Sonne": "recibe demasiado sol",
+  "steht zu kalt": "está demasiado fría",
+  "steht zu warm": "tiene demasiado calor",
+  "Ausgeräumt": "Vaciada",
+  "Wäsche ist noch drin": "Aún hay ropa dentro",
+  "Wäsche ist noch im Trockner": "Aún hay ropa en la secadora",
+  "Fertig · Wäsche drin": "Terminado · ropa dentro",
+  "Wird beim Öffnen der Tür erkannt": "Se detecta al abrir la puerta",
+  "Welches Programm läuft?": "¿Qué programa está en marcha?",
+  "Nächstes Programm": "Próximo programa",
+  "Erkennung anhalten": "Pausar detección",
+  "Wenn die Maschine kurz unterbrochen wird": "Si la máquina se interrumpe un momento",
+  "Die Erkennung ist angehalten": "La detección está en pausa",
+  "Erkennung verbessern": "Mejorar detección",
+  "1 Einstellung empfohlen, in WashData übernehmen": "1 ajuste recomendado, aplícalo en WashData",
+  "Durchgänge insgesamt": "Ciclos en total",
+  "Programme": "Programas",
+  "Programm gewählt": "Programa elegido",
+  "An der Maschine gewählt": "Elegido en la máquina",
+  "Prüfung": "Revisión",
+  "Spülstopp": "Parada de aclarado",
+  "Stromausfall": "Corte de luz",
+  "Störung": "Avería",
+  "Wartung nötig": "Requiere mantenimiento",
+  "Abfallkalender gerade nicht erreichbar": "Calendario de basura no disponible ahora",
+  "Nicht erreichbar": "Inaccesible",
+  "Die Abholtermine kommen wieder, sobald der Entsorger antwortet.": "Las fechas de recogida volverán en cuanto responda el servicio de recogida.",
+  "Lautsprecher und TVs": "Altavoces y TV",
+  "Sonstiges": "Otros",
+  "Schlaf": "Sueño",
+  "Eco": "Eco",
+  "Smart": "Smart",
+  "Turbo": "Turbo",
+  "Boost": "Boost",
+  "Natur": "Natural",
+  "Hier gibt es noch keine Geräte": "Aún no hay dispositivos aquí",
+  "Im Casora Studio einem Raum zuordnen": "Asígnalos a una habitación en Casora Studio",
+  "weitere": "más",
+  "Zum Anfang": "Al inicio",
+  "Fast leer": "Casi vacío",
+  "Alle Batterien OK": "Todas las baterías OK",
+  "1 Akku schwach": "1 batería baja",
+  "Akku fast leer": "Batería casi agotada",
+  "Läuft gerade": "Reproduciendo",
+  "Scharf": "Armada",
+  "Alarm unscharf": "Alarma desarmada",
+  "Welche Türen sind offen?": "¿Qué puertas están abiertas?",
+  "Ist alles abgeschlossen?": "¿Está todo cerrado con llave?",
+  "Alarm scharf schalten": "Armar la alarma",
+  "Wie wird das Wetter heute?": "¿Qué tiempo hará hoy?",
+  "Muss heute eine Tonne raus?": "¿Hay que sacar hoy algún contenedor?",
+  "Öffne die Jalousien": "Abre las persianas",
+  "Schließe die Jalousien": "Cierra las persianas",
+  "Wie viel Strom brauchen wir gerade?": "¿Cuánta electricidad usamos ahora?",
+  "Läuft die Waschmaschine noch?": "¿Sigue en marcha la lavadora?",
+  "Was läuft gerade?": "¿Qué está sonando?",
+  "Vorschläge für den Morgen": "Sugerencias para la mañana",
+  "Vorschläge für heute": "Sugerencias para hoy",
+  "Vorschläge für den Abend": "Sugerencias para la tarde",
+  "Vorschläge für die Nacht": "Sugerencias para la noche",
+  "lädt": "cargando",
+  "Zum Dock": "A la base",
+  "Smart wählt Saugstärke und Wischen je Raum selbst.": "Smart elige la succión y el fregado de cada habitación por sí mismo.",
+  "Kein Bild": "Sin imagen",
+  "Zu": "Cerrar",
+  "Auf": "Abrir",
+  "Position": "Posición",
+  "Spielt": "Reproduciendo",
+  "Geräte im Casora Studio einem Raum zuordnen": "Asigna los dispositivos a una habitación en Casora Studio",
+  "Das Mikrofon funktioniert nur über HTTPS – bitte Home Assistant über eine https-Adresse öffnen.": "El micrófono solo funciona con HTTPS – abre Home Assistant desde una dirección https.",
+  "In der Summe": "En la suma",
+  "Nicht in der Summe": "Fuera de la suma",
+  "Keine Leistung": "No es potencia",
+  "Steckt hinter": "Detrás de",
+  "1 Gerät ohne Wert": "1 dispositivo sin valor",
+  "Schloss offen": "Cerradura abierta",
+  "Alles sicher": "Todo seguro",
+  "Auswertung der letzten 7 Tage": "Análisis de los últimos 7 días",
+  "Idee der Woche": "Idea de la semana",
+  "Vorschlag von Claude": "Sugerencia de Claude",
+  "Karte": "Mapa",
+  "Vom Hersteller, kommt verzögert": "Del fabricante, llega con retraso",
+  "der Entsorger": "el servicio de recogida",
+  "Mbit/s Download": "Mbit/s de bajada",
+  "Mbit/s Upload": "Mbit/s de subida",
+  "Download & Upload": "Bajada y subida",
+  "Download": "Bajada",
+  "Upload": "Subida",
+  "Sensor": "Sensor",
+  "Speedtest": "Speedtest",
+  "Standby": "En espera",
+  "Firmware": "Firmware",
+  "HACS": "HACS",
+  "Casora": "Casora",
+  "Cookidoo": "Cookidoo",
+  "Thermomix": "Thermomix",
+  "PowerTube": "PowerTube",
+  "PlayStation": "PlayStation",
+  "PlayStation Network": "PlayStation Network",
+  "1 Termin": "1 evento",
+  "1 Kamera offline": "1 cámara sin conexión",
+  "1 Schloss offline": "1 cerradura sin conexión",
+  "1 Tür gekippt": "1 puerta inclinada",
+  "1 Tag": "1 día",
+  "Wirklich ausschalten?": "¿Seguro que quieres apagar?",
+  "Wirklich einschalten?": "¿Seguro que quieres encender?",
+  "Wirklich schließen?": "¿Seguro que quieres cerrar?",
+  "Wirklich aufschließen?": "¿Seguro que quieres desbloquear?",
+  "Wirklich abschließen?": "¿Seguro que quieres bloquear?",
+  "Aufschließen": "Desbloquear",
+  "Abschließen": "Bloquear",
+  "Achtung": "Atención",
+  "Trotzdem scharf schalten?": "¿Armar igualmente?",
+  "Trotzdem scharf schalten": "Armar igualmente",
+  "1 Tür offen": "1 puerta abierta",
+  "1 Tor offen": "1 portón abierto",
+  "1 Fenster offen": "1 ventana abierta",
+  "1 Fenster gekippt": "1 ventana inclinada",
+  "Licht aus": "Luces apagadas",
+  "Kein Team-Tracker-Sensor": "No es un sensor de Team Tracker",
+  "Endstand": "Final",
+  "Live": "En vivo",
+  "Halbzeit": "Descanso",
+  "Morgen": "Mañana",
+  "Heim": "Local",
+  "Gast": "Visitante",
+  "Tabelle": "Clasificación",
+  "Form": "Racha",
+  "Letzte Duelle": "Enfrentamientos",
+  "Licht an": "Luz encendida",
+  "Feucht": "Húmedo",
+  "Ergebnis": "Resultado",
+  "Nächstes Spiel": "Próximo partido",
+  "Letztes Spiel": "Último partido",
+  "Testspiel": "Amistoso",
+  "Gegner": "rival",
+  "nächster Gegner": "próximo rival",
+  "Ganze Tabelle": "Clasificación completa",
+  "Weniger zeigen": "Ver menos",
+  "Keine Spiele gefunden": "No se encontraron partidos",
+  "Tabelle nicht erreichbar": "Clasificación no disponible",
+  "Keine Tabelle für diesen Wettbewerb": "Sin clasificación para esta competición",
+  "Fußball": "Fútbol",
+  "gegen": "vs",
+  "bei": "en",
+  "Kein Spiel angesetzt": "Sin partido programado",
+  "Nächstes Spiel noch nicht angesetzt": "Próximo partido aún sin programar",
+  "Verschoben": "Aplazado",
+  "Abgesagt": "Cancelado",
+  "Uhrzeit offen": "Hora por confirmar",
+  "Verlängerung": "Prórroga",
+  "Elfmeterschießen": "Penaltis",
+  "Gleich": "Enseguida",
+  "n. V.": "pr.",
+  "i. E.": "pen.",
+  "Sieg": "Victoria",
+  "Niederlage": "Derrota",
+  "1 Raum": "1 habitación",
+  "1 Licht an": "1 luz encendida",
+  "Keine Räume": "Sin habitaciones",
+  "Lampen-Modi": "Modos de la lámpara",
+  "Lampen-Profil": "Perfil de la lámpara",
+  "Farbkanäle": "Canales de color",
+  "Ohne Effekt": "Sin efecto",
+  "Home Assistant": "Home Assistant",
+  "Programm der Lampe": "Programa propio de la lámpara",
+  "Eigener Tagesablauf der Lampe": "Ciclo diario propio de la lámpara",
+  "Temperatur zu hoch": "Temperatura demasiado alta",
+  "Temperatur zu niedrig": "Temperatura demasiado baja",
+  "Aktinisch": "Actínica",
+  "UV": "UV",
+  "Kaltweiß": "Blanco frío",
+  "Warmweiß": "Blanco cálido",
+  "Mondlicht": "Luz de luna",
+  "Rot": "Rojo",
+  "Grün": "Verde",
+  "Blau": "Azul",
+  "Weiß": "Blanco",
+  "Tanken": "Repostar",
+  "Abruf gestört": "Fallo al consultar",
+  "Preise werden geladen": "Cargando precios",
+  "Empfehlung": "Recomendación",
+  "Am günstigsten": "Más barato",
+  "In der Nähe": "Cerca",
+  "Günstigste": "Más barata",
+  "Nächste": "Más cercana",
+  "Typischer Tag": "Día típico",
+  "Ø 14 Tage": "Ø 14 días",
+  "Lernphase": "Aprendiendo",
+  "Empfehlung kommt bald": "Recomendación en breve",
+  "Die Empfehlung kommt, sobald genug Preise gesammelt sind, in etwa einem Tag.": "La recomendación llegará cuando haya suficientes precios, en un día aproximadamente.",
+  "Gerade": "Ahora",
+  "Keine offene Tankstelle": "Ninguna gasolinera abierta",
+  "Im Umkreis hat gerade keine Tankstelle geöffnet.": "Ahora no hay ninguna gasolinera abierta en la zona.",
+  "Tank knapp": "Poco combustible",
+  "Jetzt tanken": "Reposta ahora",
+  "Warte bis heute Abend": "Espera a esta tarde",
+  "Warte bis morgen Abend": "Espera a mañana por la tarde",
+  "Warte bis heute Vormittag": "Espera a esta mañana",
+  "Warte bis morgen früh": "Espera a mañana temprano",
+  "Guter Zeitpunkt": "Buen momento",
+  "Kein großer Unterschied": "Poca diferencia",
+  "In den nächsten Stunden ändert sich der Preis meist um weniger als 2 ct.": "En las próximas horas el precio suele variar menos de 2 ct.",
+  "Noch keine Preise": "Aún sin precios",
+  "Tankpreise gerade nicht abrufbar": "Precios de combustible no disponibles ahora",
+  "Casora fragt alle 10 Minuten, die ersten Preise kommen gleich.": "Casora consulta cada 10 minutos; los primeros precios llegan enseguida.",
+  "Gerade keine offen": "Ahora ninguna abierta",
+  "Daten: Tankerkönig, CC BY 4.0": "Datos: Tankerkönig, CC BY 4.0",
+  "Umkreis": "Radio",
+  "bis": "hasta",
+  "Ø pro Tag": "Ø por día",
+  "Heute bis": "Hoy hasta",
+  "letzte 2 Stunden": "últimas 2 horas",
+  "letzte 4 Stunden": "últimas 4 horas",
+  "letzte 6 Stunden": "últimas 6 horas",
+  "letzte 24 Stunden": "últimas 24 horas",
+  "letzte 48 Stunden": "últimas 48 horas",
+  "letzte 7 Tage": "últimos 7 días",
+  "letzte 30 Tage": "últimos 30 días",
+  "noch nie": "nunca",
+  "Salz nachfüllen": "Rellenar sal",
+  "Klarspüler nachfüllen": "Rellenar abrillantador",
+  "Flusensieb reinigen": "Limpiar filtro de pelusas",
+  "Kondensator reinigen": "Limpiar condensador",
+  "Angehalten": "Detenida",
+  "steht still, evtl. Unwucht": "parada, quizá carga desequilibrada",
+  "Eigene Aufgabe": "Tarea propia",
+  "Am Schloss": "En la cerradura",
+  "Bedienen": "Controles",
+  "Entriegeln": "Desbloquear",
+  "Verriegeln": "Bloquear",
+  "Ganzer Verlauf": "Historial completo",
+  "Skript": "Script",
+  "Tür öffnen": "Abrir puerta",
+  "Türkontakt": "Contacto de puerta",
+  "Wirklich die Tür öffnen?": "¿Seguro que quieres abrir la puerta?",
+  "Mit Rückfrage, wie im Studio eingestellt": "Pregunta antes, como está ajustado en el Studio",
+  "Schloss nicht erreichbar": "Cerradura inaccesible",
+  "Verlauf nicht abrufbar": "Historial no disponible",
+  "Heute keine Änderung": "Hoy sin cambios",
+  "per App": "por app",
+  "Über": "Por",
+  "Alles ok": "Todo bien",
+  "Wirklich entriegeln?": "¿Seguro que quieres desbloquear?",
+  "Wirklich verriegeln?": "¿Seguro que quieres bloquear?",
+  "Nichts fällig": "Nada pendiente",
+  "Daten": "Datos",
+  "Jetzt nach Updates suchen": "Buscar actualizaciones ahora",
+  "Suche …": "Buscando…",
+  "Keine neuen Updates": "Sin actualizaciones nuevas",
+  "1 neues Update gefunden": "1 actualización nueva encontrada",
+  "Suche fehlgeschlagen": "La búsqueda falló",
+  "Vorheriger Titel": "Pista anterior",
+  "Nächster Titel": "Pista siguiente",
+  "Klappen": "Portones",
+  "Kraftstoff": "Combustible",
+  "jetzt günstig": "buen precio ahora",
+  "keine offen": "ninguna abierta",
+  "KI:": "IA:",
+  "1 heizt": "1 calentando",
+  "Handy": "Móvil",
+  "Lädt nicht": "No carga",
+  "Mobilfunk": "Datos móviles",
+  "kein WLAN": "sin Wi-Fi",
+  "Entfernung": "Distancia",
+  "Richtung": "Dirección",
+  "Nach Hause": "Camino a casa",
+  "Luftlinie zur Zone Zuhause": "En línea recta hasta la zona Casa",
+  "Standort jetzt holen": "Obtener ubicación ahora",
+  "fragt die Companion-App": "pregunta a la app Companion",
+  "Nachricht schicken": "Enviar un mensaje",
+  "Klingeln lassen": "Hacer sonar",
+  "auch wenn es leise ist": "aunque esté en silencio",
+  "Standort per GPS": "Ubicación por GPS",
+  "über das WLAN": "por Wi-Fi",
+  "über Bluetooth": "por Bluetooth",
+  "Verlauf wird geladen …": "Cargando historial…",
+  "Kein Verlauf der letzten drei Tage": "Sin historial de los últimos tres días",
+  "Entfernt sich": "Se aleja",
+  "Kommt näher": "Se acerca",
+  "Bleibt stehen": "Parado",
+  "Angekommen": "Ha llegado",
+  "Standort angefragt": "Ubicación solicitada",
+  "Konnte das Handy nicht erreichen": "No se pudo contactar con el móvil",
+  "Nachricht gesendet": "Mensaje enviado",
+  "Handy klingelt": "El móvil está sonando",
+  "Senden": "Enviar",
+  "Nachricht": "Mensaje",
+  "Nachricht an": "Mensaje para",
+  "von zuhause": "desde casa",
+  "Handy klingeln lassen?": "¿Hacer sonar el móvil?",
+  "Es klingelt auch, wenn es leise gestellt ist.": "Suena aunque esté en silencio.",
+  "Klingeln": "Hacer sonar",
+  "Hier bin ich!": "¡Estoy aquí!",
+  "Person": "Persona",
+  "jetzt hier": "aquí ahora",
+  "Keine Änderung in den letzten drei Tagen": "Sin cambios en los últimos tres días",
+  "Mähroboter": "Robot cortacésped",
+  "Mäht": "Cortando",
+  "In der Station": "En la base",
+  "Fährt zur Station": "Volviendo a la base",
+  "Mäht außerhalb des Zeitplans": "Cortando fuera del horario",
+  "Verlässt die Station": "Saliendo de la base",
+  "Parkt bis zum nächsten Zeitplan": "Aparcado hasta el próximo horario",
+  "Parkt bis auf Weiteres": "Aparcado hasta nuevo aviso",
+  "Parkt, Rasen wächst langsam": "Aparcado, el césped crece despacio",
+  "Parkt wegen Frost": "Aparcado por helada",
+  "Parkt, Tagesziel erreicht": "Aparcado, meta diaria alcanzada",
+  "Außerhalb des Mähbereichs": "Fuera de la zona de corte",
+  "Kein Signal vom Begrenzungsdraht": "Sin señal del cable perimetral",
+  "Falsches Signal vom Begrenzungsdraht": "Señal incorrecta del cable perimetral",
+  "Steckt fest": "Atascado",
+  "Umgekippt": "Volcado",
+  "Akku leer": "Batería agotada",
+  "Kann nicht fahren": "No puede avanzar",
+  "Angehoben": "Levantado",
+  "Kurz angehoben": "Levantado un momento",
+  "Steht schief": "Inclinado",
+  "Rutscht": "Patina",
+  "Hängt in der Station fest": "Atascado en la base",
+  "Station blockiert": "Base bloqueada",
+  "Ladestrom zu hoch": "Corriente de carga demasiado alta",
+  "Rad links blockiert": "Rueda izquierda bloqueada",
+  "Rad rechts blockiert": "Rueda derecha bloqueada",
+  "Rad links überlastet": "Rueda izquierda sobrecargada",
+  "Rad rechts überlastet": "Rueda derecha sobrecargada",
+  "Radantrieb links gestört": "Fallo de tracción izquierda",
+  "Radantrieb rechts gestört": "Fallo de tracción derecha",
+  "Mähwerk blockiert": "Sistema de corte bloqueado",
+  "Mähmotor gestört": "Fallo del motor de corte",
+  "Mähmotor defekt": "Motor de corte averiado",
+  "Schnitthöhe blockiert": "Altura de corte bloqueada",
+  "Schnitthöhe gestört": "Fallo de altura de corte",
+  "Stoßsensor vorne gestört": "Fallo del sensor de choque delantero",
+  "Stoßsensor hinten gestört": "Fallo del sensor de choque trasero",
+  "Neigungssensor gestört": "Fallo del sensor de inclinación",
+  "Stopp-Taste gestört": "Fallo del botón de parada",
+  "Elektronik gestört": "Fallo electrónico",
+  "Falsche PIN": "PIN incorrecto",
+  "Klappe offen": "Tapa abierta",
+  "Ausgeschaltet, Klappe zu": "Apagado, tapa cerrada",
+  "Alarm: ausgeschaltet": "Alarma: apagado",
+  "Alarm: angehalten": "Alarma: detenido",
+  "Alarm: angehoben": "Alarma: levantado",
+  "Alarm: gekippt": "Alarma: inclinado",
+  "Alarm: bewegt": "Alarma: movido",
+  "Alarm: außerhalb des Bereichs": "Alarma: fuera de la zona",
+  "Zur Station": "A la base",
+  "Mähen": "Cortar",
+  "Parken": "Aparcar",
+  "Pause": "Pausa",
+  "Betriebsstunden": "Horas de funcionamiento",
+  "In den letzten 7 Tagen nicht gemäht": "Sin cortar en los últimos 7 días",
+  "Mäht gerade": "Cortando ahora",
+  "Gemäht": "Cortado",
+  "besteht noch": "sigue activo",
+  "1 Fahrt": "1 recorrido",
+  "KI-Check": "Revisión de IA",
+  "Vorher sichern": "Copia de seguridad antes",
+  "Installieren": "Instalar",
+  "Überspringen": "Omitir",
+  "Was ist neu": "Novedades",
+  "Alle Hinweise": "Todas las notas",
+  "Keine Versionshinweise": "Sin notas de la versión",
+  "KI-Einschätzung": "Valoración de la IA",
+  "Breaking Change": "Cambio importante",
+  "seit": "desde",
+  "24 Std.": "24 h",
+  "Letzte 24 Std.": "Últimas 24 h",
+  "Letzte 7 Tage": "Últimos 7 días",
+  "Höchster Wert": "Máximo",
+  "Tiefster Wert": "Mínimo",
+  "Durchschnitt": "Media",
+  "Am längsten": "Lo más largo",
+  "Änderungen": "Cambios",
+  "Steigt": "Sube",
+  "Fällt": "Baja",
+  "nach": "tras",
+  "seitdem": "desde entonces",
+  "Keine Änderung im Zeitraum": "Sin cambios en este periodo",
+  "Hersteller": "Fabricante",
+  "Modell": "Modelo",
+  "Hardware": "Hardware",
+  "Verbunden über": "Conectado mediante",
+  "Bereich": "Área",
+  "Integration": "Integración",
+  "In Home Assistant öffnen": "Abrir en Home Assistant",
+  "Einstellungen, Umbenennen, Symbol": "Ajustes, renombrar, icono",
+  "Gehört dazu": "Pertenece a él",
+  "Diagnose": "Diagnóstico",
+  "Belegt": "Ocupado",
+  "Anwesend": "Presente",
+  "Nass": "Mojado",
+  "Rauch": "Humo",
+  "Eingesteckt": "Enchufado",
+  "Ausgesteckt": "Desenchufado",
+  "Insgesamt geöffnet": "Abierto en total",
+  "Insgesamt Bewegung": "Movimiento en total",
+  "Insgesamt belegt": "Ocupado en total",
+  "Insgesamt anwesend": "Presente en total",
+  "Insgesamt nass": "Mojado en total",
+  "Insgesamt verbunden": "Conectado en total",
+  "Insgesamt schwach": "Bajo en total",
+  "Insgesamt Rauch": "Humo en total",
+  "Insgesamt Problem": "Problema en total",
+  "Insgesamt entriegelt": "Desbloqueado en total",
+  "Insgesamt eingesteckt": "Enchufado en total",
+  "Insgesamt gelaufen": "En marcha en total",
+  "Insgesamt an": "Encendido en total",
+  "Befeuchtet": "Humidificando",
+  "Entfeuchtet": "Deshumidificando",
+  "Betrieb": "Funcionamiento",
+  "Zielfeuchte": "Humedad objetivo",
+  "Wassertank": "Depósito de agua",
+  "Komfort": "Confort",
+  "Warnungen": "Avisos",
+  "Aktuell keine Warnungen": "Ahora no hay avisos",
+  "Liefert gerade nichts": "Ahora no produce",
+  "Liefert": "Produce",
+  "Kein Austausch": "Sin intercambio",
+  "Module": "Módulos",
+  "Ertrag": "Producción",
+  "Entladen": "Descargar",
+  "Laden": "Cargar",
+  "Eingespeist gesamt": "Inyectado en total",
+  "Einspeisung und Eigenversorgung": "Inyección y autoabastecimiento",
+  "Solarleistung": "Potencia solar",
+  "Ladestand": "Nivel de carga",
+  "Akkuleistung": "Potencia de la batería",
+  "Netzleistung": "Potencia de red",
+  "Woher kommt der Strom": "De dónde viene la electricidad",
+  "Wohin geht der Solarstrom": "Adónde va la energía solar",
+  "Bypass": "Bypass",
+  "Popup öffnen": "Abrir ventana",
+  "Kachel bearbeiten": "Editar tarjeta",
+  "Aus in": "Apagar en",
+  "An für": "Encender durante",
+  "Aus um": "Apagar a las",
+  "An um": "Encender a las",
+  "Stopp": "Detener",
+  "Lauter": "Más alto",
+  "Kälter": "Más frío",
+  "Wärmer": "Más cálido",
+  "15 Min.": "15 min",
+  "30 Min.": "30 min",
+  "1 Std.": "1 h",
+  "2 Std.": "2 h",
+  "Details": "Detalles",
+  "Ausschalten in": "Apagar en",
+  "Einschalten für": "Encender durante",
+  "Kamera live": "Cámara en vivo",
+  "Live ansehen": "Ver en vivo",
+  "Auto": "Auto",
+  "Hat nicht geklappt": "No ha funcionado",
+  "Alarm scharf schalten?": "¿Armar la alarma?",
+  "Alarm unscharf schalten?": "¿Desarmar la alarma?",
+  "Code": "Código",
+  "Energie-Dashboard": "Panel de energía",
+  "Alle Updates": "Todas las actualizaciones",
+  "Nach Updates suchen": "Buscar actualizaciones",
+  "Suche nach Updates …": "Buscando actualizaciones…",
+  "Handy klingeln lassen": "Hacer sonar el móvil",
+  "Auf der Einkaufsliste": "En la lista de la compra",
+  "Rezept öffnen": "Abrir receta",
+  "Batterie gewechselt?": "¿Batería cambiada?",
+  "Gäste-WLAN an": "Wi-Fi de invitados encendido",
+  "Gäste-WLAN aus": "Wi-Fi de invitados apagado",
+  "Gäste-WLAN ausschalten?": "¿Apagar el Wi-Fi de invitados?",
+  "Daten aktualisieren": "Actualizar datos",
+  "Auto aufwecken und Daten holen?": "¿Despertar el coche y obtener datos?",
+  "Fertig um": "Listo a las",
+  "Fertig seit": "Listo desde",
+  "noch": "quedan",
+  "An in": "Encender en",
+  "Std.": "h",
+  "Min.": "min",
+  "Tipp: Kachel gedrückt halten oder rechts klicken – Schnellbedienung": "Consejo: mantén pulsada una tarjeta o haz clic derecho para el control rápido",
+  "Tipp: Kachel gedrückt halten – Schnellbedienung": "Consejo: mantén pulsada una tarjeta para el control rápido",
+  "Zeitschalter aus": "Detener temporizador",
+  "Ändern auf": "Cambiar a",
+  "Update gestartet": "Actualización iniciada",
+  "Aufnahme an": "Grabación activada",
+  "Aufnahme aus": "Grabación desactivada",
+  "Aufnahme ausschalten?": "¿Desactivar la grabación?",
+  "Aufnahmen": "Grabaciones",
+  "Automatisch folgen": "Seguimiento automático",
+  "Bewegungserkennung": "Detección de movimiento",
+  "Erkennung an": "Detección activada",
+  "Erkennung aus": "Detección desactivada",
+  "Erkennung ausschalten?": "¿Desactivar la detección?",
+  "Frigate meldet Fehler": "Frigate informa de un error",
+  "Frigate startet": "Frigate se está iniciando",
+  "Frigate antwortet nicht": "Frigate no responde",
+  "Gerade im Bild": "En imagen ahora",
+  "Geräuscherkennung": "Detección de audio",
+  "In Frigate öffnen": "Abrir en Frigate",
+  "In den Medien von Home Assistant": "En los medios de Home Assistant",
+  "Kamera aus": "Cámara apagada",
+  "Keine Erkennung": "Sin detección",
+  "Keine Erkennungen in den letzten 7 Tagen": "Sin detecciones en los últimos 7 días",
+  "Letzte Erkennung": "Última detección",
+  "Letzte Erkennungen": "Últimas detecciones",
+  "Liste über die Frigate-Integration nicht abrufbar": "No se pudo cargar la lista de la integración de Frigate",
+  "Noch nicht erkannt": "Aún no detectado",
+  "Objekte": "Objetos",
+  "Objekt": "Objeto",
+  "Schnappschuss": "Instantánea",
+  "Schnappschüsse": "Instantáneas",
+  "Zonen": "Zonas",
+  "läuft noch": "sigue en curso",
+  "System": "Sistema",
+  "Frigate": "Frigate",
+  "Bär": "Oso",
+  "Eichhörnchen": "Ardilla",
+  "Fahrrad": "Bicicleta",
+  "FedEx": "FedEx",
+  "Fuchs": "Zorro",
+  "Gesicht": "Cara",
+  "Hund": "Perro",
+  "Kaninchen": "Conejo",
+  "Katze": "Gato",
+  "Kennzeichen": "Matrícula",
+  "Motorrad": "Moto",
+  "Mülltonne": "Contenedor",
+  "Paket": "Paquete",
+  "Pferd": "Caballo",
+  "Schaf": "Oveja",
+  "Schirm": "Paraguas",
+  "USPS": "USPS",
+  "Vogel": "Pájaro",
+  "Waschbär": "Mapache",
+  "Reh": "Corzo",
+  "Kuh": "Vaca",
+  "Boot": "Barco",
+  "Lkw": "Camión",
+  "Bus": "Autobús",
+  "Aufnahme & Erkennung": "Grabación y detección",
+  "Löst die Objekterkennung aus": "Activa la detección de objetos",
+  "Neuere Erkennung": "Detección más reciente",
+  "Ältere Erkennung": "Detección anterior",
+  "Mehr anzeigen": "Ver más",
+  "Weniger anzeigen": "Ver menos",
+  "Alle Objekte zeigen": "Ver todos los objetos",
+  "Läuft noch": "Sigue en curso",
+  "Privatsphäre an": "Privacidad activada",
+  "Hat geklingelt": "Han llamado",
+  "Tier": "Animal",
+  "Schnellantworten": "Respuestas rápidas",
+  "Schnellantwort": "Respuesta rápida",
+  "Spielt ab": "Reproduciendo",
+  "Antippen zum Stoppen": "Toca para detener",
+  "Laut an der Tür, 10 Sekunden": "Fuerte en la puerta, 10 segundos",
+  "Auslösen": "Activar sirena",
+  "Sirene läuft": "La sirena está sonando",
+  "An der Tür": "En la puerta",
+  "Niemand hat geklingelt": "Nadie ha llamado",
+  "Klingelton": "Tono del timbre",
+  "Lautsprecher": "Altavoz",
+  "Klingelton an der Tür": "Tono en la puerta",
+  "Ton aufnehmen": "Grabar sonido",
+  "Ohne Ton hörst du die Tür nicht": "Sin sonido no oyes la puerta",
+  "Infrarot-LEDs nachts": "LED infrarrojos de noche",
+  "Tag/Nacht-Modus": "Modo día/noche",
+  "Bild gerade": "Imagen ahora",
+  "Status-LED": "LED de estado",
+  "Privatsphäre": "Privacidad",
+  "Kamera und Ton aus": "Cámara y sonido apagados",
+  "Licht am Klingelknopf": "Luz del botón",
+  "Nachts an": "Encendida de noche",
+  "Immer an": "Siempre encendida",
+  "Automatische Antwort": "Respuesta automática",
+  "Schwarz-Weiß": "Blanco y negro",
+  "Farbe mit Licht": "Color con luz",
+  "Kamera und Ton der Klingel sind aus.": "La cámara y el sonido del timbre están apagados.",
+  "Klingel nicht erreichbar": "Timbre inaccesible",
+  "Prüfe Strom und WLAN der Klingel.": "Revisa la corriente y el Wi-Fi del timbre.",
+  "Ton aus": "Sonido desactivado",
+  "Verbindet …": "Conectando…",
+  "Ton ist an der Klingel aus": "El sonido del timbre está apagado",
+  "Sprechen klappt mit dieser Klingel nicht – Ton hören geht weiter": "Hablar no funciona con este timbre – escuchar sí",
+  "Kein Zugriff aufs Mikrofon – im Browser erlauben": "Sin acceso al micrófono – permítelo en el navegador",
+  "Sprechen nach 90 Sekunden beendet": "Conversación terminada tras 90 segundos",
+  "Verbindung zur Klingel beendet": "Conexión con el timbre terminada",
+  "Ton hören": "Escuchar",
+  "An der Tür abspielen?": "¿Reproducir en la puerta?",
+  "Geklingelt": "Han llamado",
+  "In den letzten 3 Tagen": "En los últimos 3 días",
+  "Kaffeevollautomat": "Cafetera automática",
+  "Kaffeemaschine": "Cafetera",
+  "Kaffee": "Café",
+  "Kaffeekanne": "Jarra de café",
+  "XL-Kaffee": "Café XL",
+  "Milchkaffee": "Café con leche",
+  "Kaffee verkehrt": "Leche manchada",
+  "Kaffee mit Milch": "Café con leche",
+  "Warme Milch": "Leche caliente",
+  "Milchschaum": "Espuma de leche",
+  "Heißwasser": "Agua caliente",
+  "Tee": "Té",
+  "Eiskaffee": "Café con hielo",
+  "Pulverkaffee": "Café molido",
+  "Milchgetränke": "Bebidas con leche",
+  "Mein Kaffee": "Mi café",
+  "Entkalken & Reinigen": "Descalcificar y limpiar",
+  "Entkalkt": "Descalcificando",
+  "Spült": "Aclarando",
+  "Pflege läuft": "Cuidado en curso",
+  "Heizt auf": "Calentando",
+  "Wasser nachfüllen": "Rellenar agua",
+  "Wassertank ist leer": "El depósito de agua está vacío",
+  "Bohnen nachfüllen": "Rellenar café en grano",
+  "Bohnenbehälter ist leer": "El depósito de café está vacío",
+  "Schale leeren": "Vaciar bandeja",
+  "Tropfschale ist voll": "La bandeja de goteo está llena",
+  "Satzbehälter leeren": "Vaciar posos",
+  "Kaffeesatz ist voll": "El depósito de posos está lleno",
+  "Milch kühlen": "Mantén la leche fría",
+  "Milch in den Kühlschrank stellen": "Pon la leche en la nevera",
+  "Entkalkungsprogramm starten": "Iniciar descalcificación",
+  "Pflegeprogramm starten": "Iniciar programa de cuidado",
+  "Reinigungsprogramm starten": "Iniciar programa de limpieza",
+  "Filter wechseln": "Cambiar filtro",
+  "Wasserfilter ist verbraucht": "El filtro de agua está agotado",
+  "Wassertank einsetzen": "Colocar depósito de agua",
+  "Wassertank fehlt": "Falta el depósito de agua",
+  "Wasser bald leer": "Queda poca agua",
+  "Wassertank ist fast leer": "El depósito de agua está casi vacío",
+  "Schale einsetzen": "Colocar bandeja",
+  "Tropfschale fehlt": "Falta la bandeja de goteo",
+  "Brühgruppe einsetzen": "Colocar unidad de infusión",
+  "Brühgruppe fehlt": "Falta la unidad de infusión",
+  "Entkalken überfällig": "Descalcificación vencida",
+  "Reinigen überfällig": "Limpieza vencida",
+  "Entkalken & Reinigen überfällig": "Descalcificar y limpiar vencido",
+  "Entkalken blockiert": "Descalcificación bloqueada",
+  "Entkalken an der Maschine fortsetzen": "Continúa la descalcificación en la máquina",
+  "Milchsystem reinigen": "Limpiar sistema de leche",
+  "Milchsystem spülen und reinigen": "Aclara y limpia el sistema de leche",
+  "Mahlt": "Moliendo",
+  "Brüht vor": "Preinfusión",
+  "Brüht": "Preparando café",
+  "Läuft ein": "Sirviendo",
+  "Milch": "Leche",
+  "Bereitet vor": "Preparando",
+  "Getränke": "Bebidas",
+  "Fernstart an der Maschine erlauben": "Permite el inicio remoto en la máquina",
+  "Erst dann startet Casora Getränke aus der Ferne": "Solo entonces Casora puede preparar bebidas a distancia",
+  "Stärke": "Intensidad",
+  "Menge": "Cantidad",
+  "Sehr mild": "Muy suave",
+  "Mild": "Suave",
+  "Stark": "Fuerte",
+  "Sehr stark": "Muy fuerte",
+  "Extra stark": "Extra fuerte",
+  "Max": "Máx.",
+  "Getränk": "Bebida",
+  "Getränk antippen, dann starten.": "Toca una bebida y luego iníciala.",
+  "Maschine": "Máquina",
+  "Steckdose an": "Enchufe encendido",
+  "Steckdose aus": "Enchufe apagado",
+  "Maschine meldet einen Fehler": "La máquina informa de un error",
+  "Hinweis im Display der Maschine ansehen": "Mira el mensaje en la pantalla de la máquina",
+  "Wasserfilter": "Filtro de agua",
+  "Filterwechsel": "Cambio de filtro",
+  "Warnungen in Home Assistant aktivieren": "Activa los avisos en Home Assistant",
+  "Home Connect legt Wassertank, Bohnen, Schale und Entkalken ausgeschaltet an. Am Gerät unter Entitäten einschalten, dann meldet die Kachel sie.": "Home Connect crea el depósito de agua, el café en grano, la bandeja y la descalcificación desactivados. Actívalos en Entidades del dispositivo y la tarjeta los mostrará.",
+  "Getränke gesamt": "Bebidas en total",
+  "Lernt": "Aprendiendo",
+  "Tank herausnehmen, füllen, einsetzen": "Saca el depósito, llénalo y vuelve a colocarlo",
+  "Bohnen in den Behälter füllen": "Llena el depósito de café en grano",
+  "Tropfschale herausnehmen und leeren": "Saca y vacía la bandeja de goteo",
+  "Behälter herausnehmen und leeren": "Saca y vacía el depósito",
+  "Entkalken fällig": "Toca descalcificar",
+  "Entkalkungsprogramm an der Maschine starten": "Inicia la descalcificación en la máquina",
+  "Entkalken & Reinigen fällig": "Toca descalcificar y limpiar",
+  "Pflegeprogramm an der Maschine starten": "Inicia el programa de cuidado en la máquina",
+  "Reinigen fällig": "Toca limpiar",
+  "Reinigungsprogramm an der Maschine starten": "Inicia el programa de limpieza en la máquina",
+  "Wasserfilter an der Maschine tauschen": "Cambia el filtro de agua en la máquina",
+  "Wasser leer": "Sin agua",
+  "Bohnen leer": "Sin café",
+  "Schale voll": "Bandeja llena",
+  "Satz voll": "Posos llenos",
+  "Tank fehlt": "Falta el depósito",
+  "Schale fehlt": "Falta la bandeja",
+  "Behälter fehlt": "Falta el recipiente",
+  "Tank einsetzen, bis er einrastet": "Coloca el depósito hasta que encaje",
+  "Tank bei Gelegenheit füllen": "Llena el depósito cuando puedas",
+  "Tropfschale einsetzen": "Coloca la bandeja de goteo",
+  "Brühgruppe einsetzen, bis sie einrastet": "Coloca la unidad de infusión hasta que encaje",
+  "Filterwechsel überfällig": "Cambio de filtro vencido",
+  "Milchsystem an der Maschine spülen": "Aclara el sistema de leche en la máquina",
+  "Service nötig": "Requiere servicio",
+  "Maschine vom Kundendienst prüfen lassen": "Haz revisar la máquina por el servicio técnico",
+  "Bohnenbehälter einsetzen": "Colocar depósito de café",
+  "Bohnenbehälter einsetzen, bis er einrastet": "Coloca el depósito de café hasta que encaje",
+  "Verbindung zur Maschine prüfen": "Revisa la conexión con la máquina",
+  "Eingeschaltet, aber noch nicht bereit – Getränk an der Maschine starten": "Encendida, pero aún no lista – inicia la bebida en la máquina",
+  "Ausgewählt – Getränk an der Maschine starten": "Seleccionada – inicia la bebida en la máquina",
+  "Start abbrechen": "Cancelar inicio",
+  "Abbrechen geht nur an der Maschine": "Solo se puede cancelar en la máquina",
+  "Start hat nicht geklappt": "No se pudo iniciar",
+  "Abbrechen hat nicht geklappt": "No se pudo cancelar",
+  "Wasser ist leer": "No hay agua",
+  "Bohnen sind leer": "No hay café en grano",
+  "Schale ist voll": "La bandeja está llena",
+  "Satzbehälter ist voll": "El depósito de posos está lleno",
+  "trotzdem starten?": "¿iniciar igualmente?",
+  "Trotzdem starten": "Iniciar igualmente",
+  "Abgebrochen": "Cancelado",
+  "Startet, sobald bereit": "Empieza cuando esté lista",
+  "Startet …": "Iniciando…",
+  "Hinweise⁠": "Avisos",
+  "Rückspülen": "Contralavado",
+  "Getränk starten": "Preparar bebida",
+  "Getränk starten?": "¿Preparar bebida?",
+  "Doppio+": "Doppio+",
+  "Ristretto doppio": "Ristretto doppio",
+  "Caffè Crema doppio": "Caffè crema doppio",
+  "Americano extra": "Americano extra",
+  "Long Black": "Long black",
+  "Kaffee to go": "Café para llevar",
+  "Cappuccino Italiano": "Cappuccino italiano",
+  "Cappuccino doppio": "Cappuccino doppio",
+  "Macchiato": "Macchiato",
+  "Latte Macchiato extra": "Latte macchiato extra",
+  "Latte Macchiato triple": "Latte macchiato triple",
+  "Kalte Milch": "Leche fría",
+  "Dampf": "Vapor",
+  "Sehr heißes Wasser": "Agua muy caliente",
+  "Schwarzer Tee": "Té negro",
+  "Kräutertee": "Infusión de hierbas",
+  "Früchtetee": "Infusión de frutas",
+  "Grüner Tee": "Té verde",
+  "Weißer Tee": "Té blanco",
+  "Japanischer Tee": "Té japonés",
+  "Chai Latte": "Chai latte",
+  "Kakao": "Chocolate caliente",
+  "Kaffee auf Eis": "Café con hielo",
+  "Ristretto & Espresso": "Ristretto y espresso",
+  "Galão": "Galão",
+  "Café con leche": "Café con leche",
+  "Red Eye": "Red eye",
+  "Black Eye": "Black eye",
+  "Dead Eye": "Dead eye",
+  "Café cortado": "Café cortado",
+  "Cold Brew": "Cold brew",
+  "Espresso doppio": "Espresso doppio",
+  "Caffè Crema": "Caffè crema",
+  "Caffè Grande": "Caffè grande",
+  "Kaffee starten": "Preparar café",
+  "Kaffee starten?": "¿Preparar café?",
+  "Einschalten und Kaffee starten": "Encender y preparar café",
+  "Heißwasser starten": "Servir agua caliente",
+  "Heißwasser starten?": "¿Servir agua caliente?",
+  "Einschalten und Heißwasser starten": "Encender y servir agua caliente",
+  "Warme Milch starten": "Servir leche caliente",
+  "Warme Milch starten?": "¿Servir leche caliente?",
+  "Einschalten und Warme Milch starten": "Encender y servir leche caliente",
+  "Milchschaum starten": "Preparar espuma de leche",
+  "Milchschaum starten?": "¿Preparar espuma de leche?",
+  "Einschalten und Milchschaum starten": "Encender y preparar espuma de leche",
+  "Tee starten": "Preparar té",
+  "Tee starten?": "¿Preparar té?",
+  "Einschalten und Tee starten": "Encender y preparar té",
+  "Kakao starten": "Preparar chocolate caliente",
+  "Kakao starten?": "¿Preparar chocolate caliente?",
+  "Einschalten und Kakao starten": "Encender y preparar chocolate caliente",
+  "Kalte Milch starten": "Servir leche fría",
+  "Kalte Milch starten?": "¿Servir leche fría?",
+  "Einschalten und Kalte Milch starten": "Encender y servir leche fría",
+  "Dampf starten": "Iniciar vapor",
+  "Dampf starten?": "¿Iniciar vapor?",
+  "Einschalten und Dampf starten": "Encender y iniciar vapor",
+  "Milchkaffee starten": "Preparar café con leche",
+  "Milchkaffee starten?": "¿Preparar café con leche?",
+  "Einschalten und Milchkaffee starten": "Encender y preparar café con leche",
+  "Kaffeekanne starten": "Preparar jarra de café",
+  "Kaffeekanne starten?": "¿Preparar jarra de café?",
+  "Einschalten und Kaffeekanne starten": "Encender y preparar jarra de café",
+  "Sehr heißes Wasser starten": "Servir agua muy caliente",
+  "Sehr heißes Wasser starten?": "¿Servir agua muy caliente?",
+  "Einschalten und Sehr heißes Wasser starten": "Encender y servir agua muy caliente",
+  "Eiskaffee starten": "Preparar café con hielo",
+  "Eiskaffee starten?": "¿Preparar café con hielo?",
+  "Einschalten und Eiskaffee starten": "Encender y preparar café con hielo",
+  "Kaffee mit Milch starten": "Preparar café con leche",
+  "Kaffee mit Milch starten?": "¿Preparar café con leche?",
+  "Einschalten und Kaffee mit Milch starten": "Encender y preparar café con leche",
+  "XL-Kaffee starten": "Preparar café XL",
+  "XL-Kaffee starten?": "¿Preparar café XL?",
+  "Einschalten und XL-Kaffee starten": "Encender y preparar café XL",
+  "Kaffee auf Eis starten": "Preparar café sobre hielo",
+  "Kaffee auf Eis starten?": "¿Preparar café sobre hielo?",
+  "Einschalten und Kaffee auf Eis starten": "Encender y preparar café sobre hielo",
+  "Schwarzer Tee starten": "Preparar té negro",
+  "Schwarzer Tee starten?": "¿Preparar té negro?",
+  "Einschalten und Schwarzer Tee starten": "Encender y preparar té negro",
+  "Kräutertee starten": "Preparar infusión de hierbas",
+  "Kräutertee starten?": "¿Preparar infusión de hierbas?",
+  "Einschalten und Kräutertee starten": "Encender y preparar infusión de hierbas",
+  "Früchtetee starten": "Preparar infusión de frutas",
+  "Früchtetee starten?": "¿Preparar infusión de frutas?",
+  "Einschalten und Früchtetee starten": "Encender y preparar infusión de frutas",
+  "Grüner Tee starten": "Preparar té verde",
+  "Grüner Tee starten?": "¿Preparar té verde?",
+  "Einschalten und Grüner Tee starten": "Encender y preparar té verde",
+  "Weißer Tee starten": "Preparar té blanco",
+  "Weißer Tee starten?": "¿Preparar té blanco?",
+  "Einschalten und Weißer Tee starten": "Encender y preparar té blanco",
+  "Japanischer Tee starten": "Preparar té japonés",
+  "Japanischer Tee starten?": "¿Preparar té japonés?",
+  "Einschalten und Japanischer Tee starten": "Encender y preparar té japonés",
+  "Kaffee verkehrt starten": "Preparar leche manchada",
+  "Kaffee verkehrt starten?": "¿Preparar leche manchada?",
+  "Einschalten und Kaffee verkehrt starten": "Encender y preparar leche manchada",
+  "Pulverkaffee starten": "Preparar café molido",
+  "Pulverkaffee starten?": "¿Preparar café molido?",
+  "Einschalten und Pulverkaffee starten": "Encender y preparar café molido",
+  "Kaffee to go starten": "Preparar café para llevar",
+  "Kaffee to go starten?": "¿Preparar café para llevar?",
+  "Einschalten und Kaffee to go starten": "Encender y preparar café para llevar",
+  "Mithören": "Escuchar",
+  "Bei Privatsphäre aus": "Apagado con privacidad",
+  "Sprechen beendet – Privatsphäre an": "Conversación terminada – privacidad activada",
+  "Sprechen beendet – Klingel nicht erreichbar": "Conversación terminada – timbre inaccesible",
+  "Sprechen geht in diesem Browser nicht": "Hablar no funciona en este navegador",
+  "Sprechen braucht HTTPS": "Hablar requiere HTTPS",
+  "Sprechen klappt mit dieser Klingel nicht – Mithören geht weiter": "Hablar no funciona con este timbre – escuchar sí",
+  "Sprechen klappt mit dieser Klingel nicht": "Hablar no funciona con este timbre",
+  "Sprechen geht nur über die Klingel": "Solo se puede hablar con el timbre",
+  "Groß anzeigen": "Ver en grande",
+  "Live-Bild": "Imagen en vivo",
+  "Objekterkennung": "Detección de objetos",
+  "Objekterkennung ausschalten?": "¿Desactivar la detección de objetos?",
+  "Erkennung einschalten": "Activar detección",
+  "Erkennung ausschalten": "Desactivar detección",
+  "Aufnahme einschalten": "Activar grabación",
+  "Aufnahme ausschalten": "Desactivar grabación",
+  "Kein Clip vorhanden": "No hay clip",
+  "Zone": "Zona",
+  "Alarme": "Alertas",
+  "Erkennungen": "Detecciones",
+  "Herunterladen": "Descargar",
+  "Zeitleiste": "Línea de tiempo",
+  "Nichts gefunden": "No se encontró nada",
+  "Filter ändern oder zurücksetzen": "Cambia o restablece los filtros",
+  "Filter zurücksetzen": "Restablecer filtros",
+  "Alle Aufnahmen": "Todas las grabaciones",
+  "Keine Aufnahmen": "Sin grabaciones",
+  "Aufnahme unter „Einstellungen“ einschalten": "Activa la grabación en “Ajustes”",
+  "Frigate hat keine Aufnahmen dieser Kamera": "Frigate no tiene grabaciones de esta cámara",
+  "Aufnahme in den Einstellungen einschalten": "Activa la grabación en los ajustes",
+  "Tag": "Día",
+  "Uhrzeit": "Hora",
+  "Aufnahme nicht abrufbar": "No se pudo cargar la grabación",
+  "Frigate liefert dieses Video nicht": "Frigate no entrega este vídeo",
+  "Keine Aufnahme in dieser Stunde": "Sin grabación en esta hora",
+  "1 neuer Alarm": "1 alerta nueva",
+  "1 Erkennung": "1 detección",
+  "1 Alarm": "1 alerta",
+  "Objekterkennung aus": "Detección de objetos desactivada",
+  "Objekterkennung einschalten": "Activar detección de objetos",
+  "Objekterkennung ausschalten": "Desactivar detección de objetos",
+  "Favorit ✓": "Favorito ✓",
+  "Nur Favoriten": "Solo favoritos",
+  "Wird nicht automatisch gelöscht": "No se borrará automáticamente",
+  "Teilen": "Compartir",
+  "Jetzt teilen": "Compartir ahora",
+  "Bild herunterladen": "Descargar imagen",
+  "Gespeichert": "Guardado",
+  "Nicht geladen": "No se pudo cargar",
+  "Sicher erkannt": "Detectado con claridad",
+  "Als neu markieren": "Marcar como nuevo",
+  "Alle als gesehen markieren": "Marcar todo como visto",
+  "Alle als gesehen markieren?": "¿Marcar todo como visto?",
+  "Danach steht nichts mehr als „Neu“ da.": "Después nada aparecerá como “Nuevo”.",
+  "Markieren": "Marcar",
+  "Zeitraum": "Periodo",
+  "Gesichter": "Caras",
+  "1 Filter aktiv": "1 filtro activo",
+  "Alarme: wichtige Erkennungen, z. B. eine Person in einer Zone": "Alertas: detecciones importantes, p. ej. una persona en una zona",
+  "Keine Favoriten": "Sin favoritos",
+  "Im Detail einer Erkennung „Favorit“ antippen": "Toca “Favorito” en el detalle de una detección",
+  "Springen nicht möglich": "No se puede saltar en este vídeo",
+  "Ab hier:": "Desde aquí:",
+  "Anhalten": "Pausar",
+  "Kein Live-Video · Standbild alle 2 s": "Sin vídeo en vivo · imagen fija cada 2 s",
+  "Hemma 2 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 2 ya no forma parte de Casora – ahora usas Casora Glas, el aspecto de cristal con la estructura de Casora. Otros diseños: Studio › Ajustes › Diseño.",
+  "Hemma 1 gibt es in Casora nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "Hemma 1 ya no forma parte de Casora – ahora usas Casora Glas, el aspecto de cristal con la estructura de Casora. Otros diseños: Studio › Ajustes › Diseño.",
+  "Das Hemma-Design gibt es nicht mehr – du nutzt jetzt Casora Glas, den Glas-Look im Casora-Aufbau. Andere Designs: Studio › Einstellungen › Design.": "El diseño Hemma ya no existe – ahora usas Casora Glas, el aspecto de cristal con la estructura de Casora. Otros diseños: Studio › Ajustes › Diseño.",
+  "Americano": "Americano",
+  "Cappuccino": "Cappuccino",
+  "Cortado": "Cortado",
+  "Doppio": "Doppio",
+  "Espresso": "Espresso",
+  "Espresso Macchiato": "Espresso macchiato",
+  "Latte Macchiato": "Latte macchiato",
+  "Lungo": "Lungo",
+  "Ristretto": "Ristretto",
+  "Casora Glas": "Casora Glas",
+  "Hemma": "Hemma",
+  "Hemma 1": "Hemma 1",
+  "Hemma 2": "Hemma 2",
+  "Tassen": "Tazas",
+  "Türklingel": "Timbre",
+  "überfällig": "vencido",
+  "Einschalten und": "Encender y",
+  "HLS-Fehler": "Error de HLS",
+  "kein HLS": "sin HLS",
+  "kein Video": "sin vídeo",
+  "keine Quelle": "sin fuente",
+  "keine Reviews": "sin revisiones",
+  "lädt nicht": "no carga",
+  "Videofehler": "Error de vídeo",
+  "Unter-Liste nicht signiert": "sublista sin firmar",
+  "nicht signiert": "sin firmar",
+  "s ohne Antwort": "s sin respuesta",
+  "HTTP": "HTTP",
+  "YYYY-MM-DD": "YYYY-MM-DD",
+  "TEXTAREA": "TEXTAREA",
+  "Bohnen bald leer": "Queda poco café",
+  "Bohnen bei Gelegenheit nachfüllen": "Rellena el café en grano cuando puedas",
+  "Brühgruppe": "Unidad de infusión",
+  "Brühgruppe herausnehmen und unter Wasser ausspülen": "Saca la unidad de infusión y acláralo bajo el grifo",
+  "Brühgruppe spülen": "Aclarar unidad de infusión",
+  "Brühgruppe spülen überfällig": "Aclarado de la unidad de infusión vencido",
+  "Getränk an der Maschine wählen – Casora erkennt es am Stromverlauf.": "Elige la bebida en la máquina – Casora la reconoce por el consumo eléctrico.",
+  "Kaffee doppio": "Café doble",
+  "Funkt, schickt aber keine Werte": "Emite, pero no envía valores",
+  "Batteriewert fehlt": "Falta el nivel de batería",
+  "Cloud antwortet nicht": "La nube no responde",
+  "Seit dem Neustart noch keine Meldung": "Sin informes desde el reinicio",
+  "Erreichbar, gerade nichts zu melden": "Accesible, nada que informar ahora",
+  "funkt, schickt aber keine Werte": "emite, pero no envía valores",
+  "meldet keinen Batteriewert": "no informa del nivel de batería",
+  "Haustier": "Mascota",
+  "Meldet sich nicht": "No informa",
+  "Ungenaue Position": "Posición imprecisa",
+  "Live-Tracking": "Seguimiento en vivo",
+  "Ziel": "Meta",
+  "Min. aktiv": "min activo",
+  "Ruhe": "Descanso",
+  "Schlaf Tag": "Sueño de día",
+  "Schlaf Nacht": "Sueño de noche",
+  "Tracker": "Tracker",
+  "Energiesparen": "Ahorro de energía"
+ },
+ "patterns": [
+  [
+   "^Spielt ab: (.+)$",
+   "Reproduciendo: {1}"
+  ],
+  [
+   "^„(.+)“ an der Tür abspielen\\?$",
+   "¿Reproducir “{1}” en la puerta?"
+  ],
+  [
+   "^Geklingelt · (.+)$",
+   "Han llamado · {1}"
+  ],
+  [
+   "^Geklingelt (\\d{1,2}:\\d{2}.*)$",
+   "Han llamado a las {1}"
+  ],
+  [
+   "^Treffer (\\d+) %$",
+   "Coincidencia {1} %"
+  ],
+  [
+   "^Gestern (\\d{1,2}:\\d{2})$",
+   "Ayer {1}"
+  ],
+  [
+   "^(\\d+) Probleme$",
+   "{1} problemas"
+  ],
+  [
+   "^(\\d+) bald$",
+   "{1} pronto"
+  ],
+  [
+   "^(\\d+) beobachten$",
+   "{1} por vigilar"
+  ],
+  [
+   "^(\\d+) bald fällig$",
+   "{1} por cambiar pronto"
+  ],
+  [
+   "^(\\d+) Batterien bald fällig$",
+   "{1} baterías por cambiar pronto"
+  ],
+  [
+   "^(\\d+) ausgefallen$",
+   "{1} averiados"
+  ],
+  [
+   "^(\\d+) prüfen$",
+   "{1} por revisar"
+  ],
+  [
+   "^(\\d+) ok$",
+   "{1} ok"
+  ],
+  [
+   "^sonst alle (\\d+) Min\\.$",
+   "normalmente cada {1} min"
+  ],
+  [
+   "^sonst alle (\\d+) Std\\.$",
+   "normalmente cada {1} h"
+  ],
+  [
+   "^sonst alle (\\d+) Tage$",
+   "normalmente cada {1} días"
+  ],
+  [
+   "^alle (\\d+) Min\\.$",
+   "cada {1} min"
+  ],
+  [
+   "^alle (\\d+) Std\\.$",
+   "cada {1} h"
+  ],
+  [
+   "^alle (\\d+) Tage$",
+   "cada {1} días"
+  ],
+  [
+   "^seit (\\d+) Min\\.$",
+   "desde hace {1} min"
+  ],
+  [
+   "^seit (\\d+) Std\\.$",
+   "desde hace {1} h"
+  ],
+  [
+   "^seit (\\d+) T\\.$",
+   "desde hace {1} d"
+  ],
+  [
+   "^seit (\\d+) Tagen$",
+   "desde hace {1} días"
+  ],
+  [
+   "^zuletzt gemeldet gestern (.+)$",
+   "último informe ayer {1}"
+  ],
+  [
+   "^zuletzt gemeldet (.+)$",
+   "último informe {1}"
+  ],
+  [
+   "^seit gestern (.+)$",
+   "desde ayer {1}"
+  ],
+  [
+   "^Alle (\\d+) Lichter im Haus ausschalten\\?$",
+   "¿Apagar las {1} luces de la casa?"
+  ],
+  [
+   "^(\\d+) Geräte$",
+   "{1} dispositivos"
+  ],
+  [
+   "^(.+) unscharf$",
+   "{1} desarmada"
+  ],
+  [
+   "^(.+) scharf · (.+)$",
+   "{1} armada · {2}"
+  ],
+  [
+   "^Wartet seit (.+)$",
+   "Esperando desde hace {1}"
+  ],
+  [
+   "^Üblich sind (.+)$",
+   "Lo habitual es {1}"
+  ],
+  [
+   "^(\\d+) Einstellungen empfohlen, in WashData übernehmen$",
+   "{1} ajustes recomendados, aplícalos en WashData"
+  ],
+  [
+   "^Ø (.+)$",
+   "Ø {1}"
+  ],
+  [
+   "^Abholung in (\\d+) Tagen$",
+   "Recogida en {1} días"
+  ],
+  [
+   "^(\\d+) von (\\d+) An$",
+   "{1} de {2} encendidas"
+  ],
+  [
+   "^(\\d+) von (\\d+) Räumen an$",
+   "{1} de {2} habitaciones encendidas"
+  ],
+  [
+   "^KI: 1 Update braucht Aufmerksamkeit$",
+   "IA: 1 actualización requiere atención"
+  ],
+  [
+   "^KI: (\\d+) Updates brauchen Aufmerksamkeit$",
+   "IA: {1} actualizaciones requieren atención"
+  ],
+  [
+   "^Schließt (\\d+) Updates ab$",
+   "Terminando {1} actualizaciones"
+  ],
+  [
+   "^Backup (vor .+|gerade eben)$",
+   "Copia de seguridad {1}"
+  ],
+  [
+   "^Absenkung um (.+)$",
+   "Bajada de {1}"
+  ],
+  [
+   "^Letzte Fahrt vor (.+) T\\.$",
+   "Último trayecto hace {1} días"
+  ],
+  [
+   "^Diesen Monat bist du dran, danach wieder im (.+)\\.$",
+   "Este mes te toca a ti; la próxima vez en {1}."
+  ],
+  [
+   "^Diesen Monat bist du dran\\.?$",
+   "Este mes te toca a ti."
+  ],
+  [
+   "^startet in (.+)$",
+   "empieza en {1}"
+  ],
+  [
+   "^trocken in etwa (\\d+) Tagen?$",
+   "seca en unos {1} días"
+  ],
+  [
+   "^trocken in etwa 1 Tag$",
+   "seca en 1 día aprox."
+  ],
+  [
+   "^Vor (\\d+) Tagen gegossen$",
+   "Regada hace {1} días"
+  ],
+  [
+   "^davon (.+) Std\\. mit Unterstützung$",
+   "{1} h con asistencia"
+  ],
+  [
+   "^in (\\d[\\d.,]*) km$",
+   "en {1} km"
+  ],
+  [
+   "^(\\d+) ?% des aktuellen Verbrauchs$",
+   "{1} % del consumo actual"
+  ],
+  [
+   "^(\\d+) werden installiert$",
+   "{1} instalándose"
+  ],
+  [
+   "^(\\d+) Updates brauchen Aufmerksamkeit$",
+   "{1} actualizaciones requieren atención"
+  ],
+  [
+   "^(\\d+) Breaking Changes betreffen dich$",
+   "{1} cambios importantes te afectan"
+  ],
+  [
+   "^1 Breaking Change betrifft dich$",
+   "1 cambio importante te afecta"
+  ],
+  [
+   "^(.+) g/m³ absolut$",
+   "{1} g/m³ absoluta"
+  ],
+  [
+   "^drinnen Ø (.+)$",
+   "dentro Ø {1}"
+  ],
+  [
+   "^(\\d+) Verfügbar$",
+   "{1} disponibles"
+  ],
+  [
+   "^Heute (.+) kWh$",
+   "Hoy {1} kWh"
+  ],
+  [
+   "^Heute (.+) kWh Bezug$",
+   "Hoy {1} kWh de la red"
+  ],
+  [
+   "^Heute (.+) kWh entladen$",
+   "Hoy {1} kWh descargados"
+  ],
+  [
+   "^(.+) km aufgezeichnet$",
+   "{1} km registrados"
+  ],
+  [
+   "^(.+) ohne Strom$",
+   "{1} sin corriente"
+  ],
+  [
+   "^(.+) von (.+) aus Solar und Akku$",
+   "{1} de {2} de solar y batería"
+  ],
+  [
+   "^Reinigt (.+)$",
+   "Limpiando {1}"
+  ],
+  [
+   "^Schließt das (.+)-Update ab$",
+   "Terminando la actualización de {1}"
+  ],
+  [
+   "^(.+) Update verfügbar$",
+   "Actualización de {1} disponible"
+  ],
+  [
+   "^(.+) hat das Haus verlassen$",
+   "{1} ha salido de casa"
+  ],
+  [
+   "^(.+) ist angekommen$",
+   "{1} ha llegado a casa"
+  ],
+  [
+   "^(.+) ist gekippt$",
+   "{1} está inclinada"
+  ],
+  [
+   "^(.+) ist gleich fertig$",
+   "{1} termina enseguida"
+  ],
+  [
+   "^(.+) läuft$",
+   "{1} en marcha"
+  ],
+  [
+   "^(.+) hat geklingelt$",
+   "{1} ha llamado al timbre"
+  ],
+  [
+   "^(.+) hat fertig gereinigt$",
+   "{1} ha terminado de limpiar"
+  ],
+  [
+   "^(.+) reinigt$",
+   "{1} limpiando"
+  ],
+  [
+   "^(.+) ist auf der Arbeit$",
+   "{1} está en el trabajo"
+  ],
+  [
+   "^(.+) ist im (.+)$",
+   "{1} está en {2}"
+  ],
+  [
+   "^(.+) ist in der (.+)$",
+   "{1} está en {2}"
+  ],
+  [
+   "^(.+) ist am (.+)$",
+   "{1} está en {2}"
+  ],
+  [
+   "^(.+) ist bei (.+)$",
+   "{1} está en {2}"
+  ],
+  [
+   "^(.+) umgeschaltet auf (.+)$",
+   "{1} cambiado a {2}"
+  ],
+  [
+   "^(.+) aktiv · (Zuhause|Abwesend|Nacht|Urlaub|Bypass)$",
+   "{1} activa · {2}"
+  ],
+  [
+   "^Alarm scharf – (.+)$",
+   "Alarma armada – {1}"
+  ],
+  [
+   "^(.+) braucht Wasser$",
+   "{1} necesita agua"
+  ],
+  [
+   "^(.+) steht zu nass$",
+   "{1} está demasiado húmeda"
+  ],
+  [
+   "^(.+) braucht Dünger$",
+   "{1} necesita abono"
+  ],
+  [
+   "^(.+) ist überdüngt$",
+   "{1} tiene exceso de abono"
+  ],
+  [
+   "^(.+) braucht mehr Licht$",
+   "{1} necesita más luz"
+  ],
+  [
+   "^(.+) bekommt zu viel Sonne$",
+   "{1} recibe demasiado sol"
+  ],
+  [
+   "^(.+) steht zu kalt$",
+   "{1} está demasiado fría"
+  ],
+  [
+   "^(.+) steht zu warm$",
+   "{1} tiene demasiado calor"
+  ],
+  [
+   "^(.+) steht in zu trockener Luft$",
+   "{1}: aire demasiado seco"
+  ],
+  [
+   "^(.+) steht in zu feuchter Luft$",
+   "{1}: aire demasiado húmedo"
+  ],
+  [
+   "^(\\d+) Reinigungen$",
+   "{1} limpiezas"
+  ],
+  [
+   "^(\\d+) entriegelt$",
+   "{1} desbloqueadas"
+  ],
+  [
+   "^(\\d+) Schlösser entriegelt$",
+   "{1} cerraduras desbloqueadas"
+  ],
+  [
+   "^1 Tür entriegelt$",
+   "1 puerta desbloqueada"
+  ],
+  [
+   "^(\\d+) Türen entriegelt$",
+   "{1} puertas desbloqueadas"
+  ],
+  [
+   "^(.+) entriegelt$",
+   "{1} desbloqueada"
+  ],
+  [
+   "^Gestern, (.+)$",
+   "Ayer, {1}"
+  ],
+  [
+   "^Heute, (.+)$",
+   "Hoy, {1}"
+  ],
+  [
+   "^alle (\\d+) Wochen$",
+   "cada {1} semanas"
+  ],
+  [
+   "^jede Woche$",
+   "cada semana"
+  ],
+  [
+   "^Luft ([^·]+)$",
+   "Aire {1}"
+  ],
+  [
+   "^PM2,5 (.+)$",
+   "PM2,5 {1}"
+  ],
+  [
+   "^(\\d+) Tage?$",
+   "{1} días"
+  ],
+  [
+   "^(\\d+) Stunden$",
+   "{1} horas"
+  ],
+  [
+   "^ca\\. (.+)$",
+   "aprox. {1}"
+  ],
+  [
+   "^(\\d{1,2}) Uhr$",
+   "{1}:00"
+  ],
+  [
+   "^(.+) · Gehärteter Stahl$",
+   "{1} · acero endurecido"
+  ],
+  [
+   "^(.+) · Edelstahl$",
+   "{1} · acero inoxidable"
+  ],
+  [
+   "^Ziel (.+)$",
+   "Objetivo {1}"
+  ],
+  [
+   "^Stufe (\\d+) von (\\d+)$",
+   "Nivel {1} de {2}"
+  ],
+  [
+   "^(\\d+) von (\\d+) geöffnet$",
+   "{1} de {2} abiertas"
+  ],
+  [
+   "^(\\d+) von (\\d+)$",
+   "{1} de {2}"
+  ],
+  [
+   "^Temperatur · (\\d+) Stunden$",
+   "Temperatura · {1} horas"
+  ],
+  [
+   "^Leistung · (\\d+) Stunden$",
+   "Potencia · {1} horas"
+  ],
+  [
+   "^Online seit (\\d+) Stunden$",
+   "En línea desde hace {1} horas"
+  ],
+  [
+   "^Online seit (\\d+) Tagen$",
+   "En línea desde hace {1} días"
+  ],
+  [
+   "^vor 1 Stunde$",
+   "hace 1 hora"
+  ],
+  [
+   "^vor (\\d+) Stunden$",
+   "hace {1} horas"
+  ],
+  [
+   "^vor 1 Minute$",
+   "hace 1 minuto"
+  ],
+  [
+   "^vor (\\d+) Minuten$",
+   "hace {1} minutos"
+  ],
+  [
+   "^(\\d+) An$",
+   "{1} encendidas"
+  ],
+  [
+   "^(\\d+) an$",
+   "{1} encendidas"
+  ],
+  [
+   "^(\\d+) aktiv$",
+   "{1} activos"
+  ],
+  [
+   "^(\\d+) Aktiv$",
+   "{1} activos"
+  ],
+  [
+   "^(\\d+) Aus$",
+   "{1} apagadas"
+  ],
+  [
+   "^(\\d+) läuft$",
+   "{1} en marcha"
+  ],
+  [
+   "^(\\d+) laufen$",
+   "{1} en marcha"
+  ],
+  [
+   "^(\\d+) pausiert$",
+   "{1} en pausa"
+  ],
+  [
+   "^(\\d+) offen$",
+   "{1} abiertas"
+  ],
+  [
+   "^(\\d+) Offen$",
+   "{1} abiertas"
+  ],
+  [
+   "^1 Schloss$",
+   "1 cerradura"
+  ],
+  [
+   "^(\\d+) Schlösser$",
+   "{1} cerraduras"
+  ],
+  [
+   "^1 Raum heizt gerade$",
+   "1 habitación calentando"
+  ],
+  [
+   "^(\\d+) Räume heizen gerade$",
+   "{1} habitaciones calentando"
+  ],
+  [
+   "^(\\d+) heizen$",
+   "{1} calentando"
+  ],
+  [
+   "^(\\d+) von (\\d+) an$",
+   "{1} de {2} encendidas"
+  ],
+  [
+   "^1 Raum reinigen$",
+   "Limpiar 1 habitación"
+  ],
+  [
+   "^(\\d+) Räume reinigen$",
+   "Limpiar {1} habitaciones"
+  ],
+  [
+   "^(\\d+) Räume$",
+   "{1} habitaciones"
+  ],
+  [
+   "^1 Sensor offen$",
+   "1 sensor abierto"
+  ],
+  [
+   "^(\\d+) Sensoren offen$",
+   "{1} sensores abiertos"
+  ],
+  [
+   "^(\\d+) Öffnungen offen$",
+   "{1} aberturas abiertas"
+  ],
+  [
+   "^(\\d+) Updates verfügbar$",
+   "{1} actualizaciones disponibles"
+  ],
+  [
+   "^(\\d+) Geräte mit schwachem Akku$",
+   "{1} dispositivos con batería baja"
+  ],
+  [
+   "^(\\d+) Szenen$",
+   "{1} escenas"
+  ],
+  [
+   "^1 Szene$",
+   "1 escena"
+  ],
+  [
+   "^(\\d+) Durchgänge$",
+   "{1} ciclos"
+  ],
+  [
+   "^In (\\d+) Durchgängen oder (\\d+) Tagen fällig$",
+   "Toca en {1} ciclos o {2} días"
+  ],
+  [
+   "^In (\\d+) Durchgängen fällig$",
+   "Toca en {1} ciclos"
+  ],
+  [
+   "^In (\\d+) Tagen fällig$",
+   "Toca en {1} días"
+  ],
+  [
+   "^In (\\d+) Durchgängen$",
+   "En {1} ciclos"
+  ],
+  [
+   "^in (\\d+) Durchgängen$",
+   "en {1} ciclos"
+  ],
+  [
+   "^(\\d+) Durchgänge seit dem letzten Mal$",
+   "{1} ciclos desde la última vez"
+  ],
+  [
+   "^(\\d+) Tage seit dem letzten Mal$",
+   "{1} días desde la última vez"
+  ],
+  [
+   "^(\\d+) Durchgänge, (\\d+) Tage seit dem letzten Mal$",
+   "{1} ciclos, {2} días desde la última vez"
+  ],
+  [
+   "^In (\\d+) Durchgängen oder (\\d+) Tagen$",
+   "En {1} ciclos o {2} días"
+  ],
+  [
+   "^(\\d+) Unterwegs$",
+   "{1} fuera"
+  ],
+  [
+   "^(\\d+) unterwegs$",
+   "{1} fuera"
+  ],
+  [
+   "^(\\d+) Räumen an$",
+   "encendido en {1} habitaciones"
+  ],
+  [
+   "^(\\d+) Min\\. übrig$",
+   "{1} min restantes"
+  ],
+  [
+   "^(\\d+) Std\\. übrig$",
+   "{1} h restantes"
+  ],
+  [
+   "^(\\d+) Std\\. (\\d+) Min\\.$",
+   "{1} h {2} min"
+  ],
+  [
+   "^(\\d+) Min\\.$",
+   "{1} min"
+  ],
+  [
+   "^(\\d+) Std\\.$",
+   "{1} h"
+  ],
+  [
+   "^vor (\\d+) s$",
+   "hace {1} s"
+  ],
+  [
+   "^vor (\\d+) Min\\.$",
+   "hace {1} min"
+  ],
+  [
+   "^vor (\\d+) Std\\.$",
+   "hace {1} h"
+  ],
+  [
+   "^vor (\\d+) T\\.$",
+   "hace {1} d"
+  ],
+  [
+   "^vor (\\d+) Tagen$",
+   "hace {1} días"
+  ],
+  [
+   "^vor (\\d+) Tag$",
+   "hace {1} día"
+  ],
+  [
+   "^vor (\\d+) Std\\. (\\d+) Min\\.$",
+   "hace {1} h {2} min"
+  ],
+  [
+   "^seit (\\d+) Tagen fällig$",
+   "vencido desde hace {1} días"
+  ],
+  [
+   "^in (\\d+) Tagen$",
+   "en {1} días"
+  ],
+  [
+   "^In (\\d+) Tagen$",
+   "En {1} días"
+  ],
+  [
+   "^um (\\d+) Uhr$",
+   "a las {1}:00"
+  ],
+  [
+   "^heute (\\d{1,2}:\\d{2})$",
+   "hoy {1}"
+  ],
+  [
+   "^morgen (\\d{1,2}:\\d{2})$",
+   "mañana {1}"
+  ],
+  [
+   "^gestern (\\d{1,2}:\\d{2})$",
+   "ayer {1}"
+  ],
+  [
+   "^Fertig um (.+)$",
+   "Listo a las {1}"
+  ],
+  [
+   "^Fertig gegen (.+)$",
+   "Listo hacia las {1}"
+  ],
+  [
+   "^Läuft seit (.+)$",
+   "En marcha desde {1}"
+  ],
+  [
+   "^läuft seit (.+)$",
+   "en marcha desde {1}"
+  ],
+  [
+   "^noch (\\d+)[  ]s$",
+   "quedan {1} s"
+  ],
+  [
+   "^noch (\\d+)[  ]Min\\.$",
+   "quedan {1} min"
+  ],
+  [
+   "^noch (.+)$",
+   "quedan {1}"
+  ],
+  [
+   "^Zuletzt bekannt · vor (\\d+) Tagen$",
+   "Última posición · hace {1} días"
+  ],
+  [
+   "^(\\d+) neue Updates gefunden$",
+   "{1} actualizaciones nuevas encontradas"
+  ],
+  [
+   "^Zuletzt gesucht: (.+)$",
+   "Última búsqueda: {1}"
+  ],
+  [
+   "^Zuletzt: (.+)$",
+   "Último: {1}"
+  ],
+  [
+   "^Zuletzt (vor .+|gestern|gerade eben)$",
+   "Última vez {1}"
+  ],
+  [
+   "^Zuletzt (.+)$",
+   "Último {1}"
+  ],
+  [
+   "^KI-Einschätzung · vor (\\d+) Min\\.$",
+   "Valoración de la IA · hace {1} min"
+  ],
+  [
+   "^KI-Einschätzung · vor (\\d+) Std\\.$",
+   "Valoración de la IA · hace {1} h"
+  ],
+  [
+   "^KI-Einschätzung · vor (\\d+) T\\.$",
+   "Valoración de la IA · hace {1} d"
+  ],
+  [
+   "^KI-Einschätzung · gerade eben$",
+   "Valoración de la IA · justo ahora"
+  ],
+  [
+   "^Letzte Fahrt vor (\\d+) Tagen$",
+   "Último trayecto hace {1} días"
+  ],
+  [
+   "^Letzte Fahrt vor (\\d+) Tagen; Akkustand nach Lagerung unbekannt$",
+   "Último trayecto hace {1} días; nivel de batería tras el almacenamiento desconocido"
+  ],
+  [
+   "^Service fällig seit (\\S+) \\((\\d+) Tage überfällig\\)$",
+   "Servicio pendiente desde {1} ({2} días de retraso)"
+  ],
+  [
+   "^davon (\\d+) Std\\. mit Unterstützung$",
+   "{1} h de ellas con asistencia"
+  ],
+  [
+   "^Nächster Dienst im (.+)\\.$",
+   "Próximo turno en {1}."
+  ],
+  [
+   "^Verriegelt · Stand vor (\\d+) Std\\.$",
+   "Bloqueado · hace {1} h"
+  ],
+  [
+   "^Entriegelt · Stand vor (\\d+) Std\\.$",
+   "Desbloqueado · hace {1} h"
+  ],
+  [
+   "^Kühlt auf (.+)$",
+   "Enfriando a {1}"
+  ],
+  [
+   "^Heizt auf (.+)$",
+   "Calentando a {1}"
+  ],
+  [
+   "^Kühl · (.+)$",
+   "Frío · {1}"
+  ],
+  [
+   "^Heizt · (.+)$",
+   "Calentando · {1}"
+  ],
+  [
+   "^Bereit · (.+)$",
+   "Listo · {1}"
+  ],
+  [
+   "^Automatik · (.+)$",
+   "Auto · {1}"
+  ],
+  [
+   "^Lädt · (.+)$",
+   "Cargando · {1}"
+  ],
+  [
+   "^Entlädt · (.+)$",
+   "Descargando · {1}"
+  ],
+  [
+   "^Fällig · (.+)$",
+   "Pendiente · {1}"
+  ],
+  [
+   "^Prüfen · (.+)$",
+   "Revisar · {1}"
+  ],
+  [
+   "^Pausiert: (.+)$",
+   "En pausa: {1}"
+  ],
+  [
+   "^Akku (\\d+) ?%$",
+   "Batería {1} %"
+  ],
+  [
+   "^Akku (.+)$",
+   "Batería {1}"
+  ],
+  [
+   "^(\\d+) ?% Luftfeuchte$",
+   "{1} % de humedad"
+  ],
+  [
+   "^(\\d+) ?% Feuchtigkeit$",
+   "{1} % de humedad"
+  ],
+  [
+   "^(\\d+) ?% geöffnet$",
+   "{1} % abierto"
+  ],
+  [
+   "^(\\d+) ?% Geöffnet$",
+   "{1} % abierto"
+  ],
+  [
+   "^(\\d+) ?% Geschlossen$",
+   "{1} % cerrado"
+  ],
+  [
+   "^Boden bei (\\d+) ?%$",
+   "Suelo al {1} %"
+  ],
+  [
+   "^(\\d+) geöffnet$",
+   "{1} abiertas"
+  ],
+  [
+   "^(\\d+) gekippt$",
+   "{1} inclinadas"
+  ],
+  [
+   "^(\\d+) ?% Akku$",
+   "{1} % de batería"
+  ],
+  [
+   "^Tank (\\d+) ?%$",
+   "Depósito {1} %"
+  ],
+  [
+   "^CO₂ (\\d+) ppm$",
+   "CO₂ {1} ppm"
+  ],
+  [
+   "^Feuchte (\\d+) %$",
+   "Humedad {1} %"
+  ],
+  [
+   "^VOC (\\d+) ppb$",
+   "COV {1} ppb"
+  ],
+  [
+   "^Fenster offen · noch (\\d+) Min\\.$",
+   "Ventana abierta · quedan {1} min"
+  ],
+  [
+   "^Fenster offen seit (.+)$",
+   "Ventana abierta desde hace {1}"
+  ],
+  [
+   "^Fenster seit (.+) offen$",
+   "Ventana abierta desde hace {1}"
+  ],
+  [
+   "^Außenluft belastet \\(PM2\\.5 (\\d+)\\)$",
+   "Aire exterior contaminado (PM2.5 {1})"
+  ],
+  [
+   "^Feuchte (\\d+) % · draußen feuchter$",
+   "Humedad {1} % · más húmedo fuera"
+  ],
+  [
+   "^Feuchte (\\d+) % · Außenwerte fehlen$",
+   "Humedad {1} % · faltan valores exteriores"
+  ],
+  [
+   "^≈ (.+) frei · jetzt (.+)$",
+   "≈ {1} libres · ahora {2}"
+  ],
+  [
+   "^jetzt (.+)$",
+   "ahora {1}"
+  ],
+  [
+   "^(.+) oder (.+)$",
+   "{1} o {2}"
+  ],
+  [
+   "^(.+) fällig$",
+   "{1} pendiente"
+  ],
+  [
+   "^(.+) ist offen$",
+   "{1} está abierta"
+  ],
+  [
+   "^(.+) nachfüllen$",
+   "Rellenar {1}"
+  ],
+  [
+   "^Alle (\\d+) Updates jetzt installieren\\?$",
+   "¿Instalar ahora las {1} actualizaciones?"
+  ],
+  [
+   "^(\\d+) Tage$",
+   "{1} días"
+  ],
+  [
+   "^(\\d+) Tag$",
+   "{1} día"
+  ],
+  [
+   "^(\\d+) Woche$",
+   "{1} semana"
+  ],
+  [
+   "^(\\d+) Wochen$",
+   "{1} semanas"
+  ],
+  [
+   "^Nächstes (.+)$",
+   "Próximo: {1}"
+  ],
+  [
+   "^Als Nächstes: (.+)$",
+   "A continuación: {1}"
+  ],
+  [
+   "^Räume unterschiedlich · Ø (.+)$",
+   "Habitaciones distintas · Ø {1}"
+  ],
+  [
+   "^(.+) · heute Abend raus$",
+   "{1} · sácalo esta noche"
+  ],
+  [
+   "^(.+) · keine Leistung$",
+   "{1} · sin potencia"
+  ],
+  [
+   "^(.+) · lädt$",
+   "{1} · cargando"
+  ],
+  [
+   "^Aus · (.+)$",
+   "Apagado · {1}"
+  ],
+  [
+   "^An · (.+)$",
+   "Encendido · {1}"
+  ],
+  [
+   "^Über (.+)$",
+   "Más de {1}"
+  ],
+  [
+   "^bis (.+)$",
+   "hasta {1}"
+  ],
+  [
+   "^seit (.+)$",
+   "desde {1}"
+  ],
+  [
+   "^(\\d+) übersprungen$",
+   "{1} omitidos"
+  ],
+  [
+   "^Online seit (.+)$",
+   "En línea desde hace {1}"
+  ],
+  [
+   "^(.+) · (\\d+) Stunden$",
+   "{1} · {2} horas"
+  ],
+  [
+   "^(.+) · (\\d+) Tage$",
+   "{1} · {2} días"
+  ],
+  [
+   "^(\\d+) ?% Luftfeuchtigkeit$",
+   "{1} % de humedad"
+  ],
+  [
+   "^Einspeisung · (\\d+) % aus Solar und Akku · heute (.+)$",
+   "Inyección · {1} % de solar y batería · hoy {2}"
+  ],
+  [
+   "^Einspeisung · heute (.+)$",
+   "Inyección · hoy {1}"
+  ],
+  [
+   "^Einspeisung (.+)$",
+   "Inyección {1}"
+  ],
+  [
+   "^(\\d+) Kameras offline$",
+   "{1} cámaras sin conexión"
+  ],
+  [
+   "^(\\d+) Schlösser offline$",
+   "{1} cerraduras sin conexión"
+  ],
+  [
+   "^(\\d+) Tore offen$",
+   "{1} portones abiertos"
+  ],
+  [
+   "^(.+) ausgeschaltet$",
+   "{1} apagado"
+  ],
+  [
+   "^(.+) ausgelöst$",
+   "{1} activado"
+  ],
+  [
+   "^Vor (\\d+) Min\\.$",
+   "Hace {1} min"
+  ],
+  [
+   "^Vor (\\d+) Std\\.$",
+   "Hace {1} h"
+  ],
+  [
+   "^Vor (\\d+) T\\.$",
+   "Hace {1} d"
+  ],
+  [
+   "^Vor (\\d+) Tagen$",
+   "Hace {1} días"
+  ],
+  [
+   "^Vor 1 Tag$",
+   "Hace 1 día"
+  ],
+  [
+   "^Vor (\\d+) Minuten$",
+   "Hace {1} minutos"
+  ],
+  [
+   "^Vor (\\d+) Stunden$",
+   "Hace {1} horas"
+  ],
+  [
+   "^Seit (\\d+) Min\\.$",
+   "Desde hace {1} min"
+  ],
+  [
+   "^Seit (\\d+) Std\\.$",
+   "Desde hace {1} h"
+  ],
+  [
+   "^Seit (\\d+) T\\.$",
+   "Desde hace {1} d"
+  ],
+  [
+   "^Seit (.+)$",
+   "Desde {1}"
+  ],
+  [
+   "^(\\d+) Türen offen$",
+   "{1} puertas abiertas"
+  ],
+  [
+   "^(\\d+) Fenster offen$",
+   "{1} ventanas abiertas"
+  ],
+  [
+   "^(\\d+) Fenster gekippt$",
+   "{1} ventanas inclinadas"
+  ],
+  [
+   "^(\\d+) Türen gekippt$",
+   "{1} puertas inclinadas"
+  ],
+  [
+   "^(\\d+) % aus Solar und Akku · heute (.+)$",
+   "{1} % de solar y batería · hoy {2}"
+  ],
+  [
+   "^(\\d+) % aus Solar und Akku$",
+   "{1} % de solar y batería"
+  ],
+  [
+   "^heute (.+)$",
+   "hoy {1}"
+  ],
+  [
+   "^Solarbank-Fehler (.+)$",
+   "Error de Solarbank {1}"
+  ],
+  [
+   "^(.+) gespeichert$",
+   "{1} almacenados"
+  ],
+  [
+   "^Modul (\\d+)$",
+   "Módulo {1}"
+  ],
+  [
+   "^(\\d+) Clients$",
+   "{1} clientes"
+  ],
+  [
+   "^Gesamt (.+) kWh$",
+   "Total {1} kWh"
+  ],
+  [
+   "^(\\d+) Batterien schwach$",
+   "{1} baterías bajas"
+  ],
+  [
+   "^Am niedrigsten: (.+) (\\d+) %$",
+   "La más baja: {1} {2} %"
+  ],
+  [
+   "^(\\d+) von (\\d+) online$",
+   "{1} de {2} en línea"
+  ],
+  [
+   "^Bewegung vor (\\d+) Min\\.$",
+   "Movimiento hace {1} min"
+  ],
+  [
+   "^Bewegung vor (\\d+) Std\\.$",
+   "Movimiento hace {1} h"
+  ],
+  [
+   "^Bewegung vor (\\d+) T\\.$",
+   "Movimiento hace {1} d"
+  ],
+  [
+   "^Bewegung gerade eben$",
+   "Movimiento justo ahora"
+  ],
+  [
+   "^Neu: (.+) · KI: Nicht geprüft$",
+   "Nuevo: {1} · IA: sin revisar"
+  ],
+  [
+   "^Neu: (.+) · KI: Unklar$",
+   "Nuevo: {1} · IA: incierto"
+  ],
+  [
+   "^Neu: (.+) · KI: KI prüft …$",
+   "Nuevo: {1} · IA: revisando…"
+  ],
+  [
+   "^Neu: (.+) · $",
+   "Nuevo: {1} · "
+  ],
+  [
+   "^Neu: (.+)$",
+   "Nuevo: {1}"
+  ],
+  [
+   "^(\\d+) Termine heute$",
+   "{1} eventos hoy"
+  ],
+  [
+   "^Reichweite (\\d[\\d.,]*)$",
+   "Autonomía {1}"
+  ],
+  [
+   "^Nächste Inspektion in (.+) km$",
+   "Próxima revisión en {1} km"
+  ],
+  [
+   "^Nächste Inspektion (\\d{2}\\.\\d{2}\\.\\d{4})$",
+   "Próxima revisión {1}"
+  ],
+  [
+   "^(\\d+) % in (\\d+) Min\\.$",
+   "{1} % en {2} min"
+  ],
+  [
+   "^(Heute|Morgen|Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag): (.+)$",
+   "{1}: {2}"
+  ],
+  [
+   "^(\\d+) Schlösser offen$",
+   "{1} cerraduras abiertas"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · keine offen$",
+   "{1} · ninguna abierta"
+  ],
+  [
+   "^(.+) offen$",
+   "{1} abierto"
+  ],
+  [
+   "^(.+) gekippt$",
+   "{1} inclinado"
+  ],
+  [
+   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
+   "Las fechas de recogida volverán en cuanto responda {1}."
+  ],
+  [
+   "^(\\d+) Akkus schwach$",
+   "{1} baterías bajas"
+  ],
+  [
+   "^(\\d+) Schwach$",
+   "{1} bajas"
+  ],
+  [
+   "^(.+) Akku fast leer$",
+   "{1} batería casi agotada"
+  ],
+  [
+   "^(.+) Akku schwach$",
+   "{1} batería baja"
+  ],
+  [
+   "^(\\d+) Wiedergaben$",
+   "{1} reproduciendo"
+  ],
+  [
+   "^H (-?\\d+)°$",
+   "Máx {1}°"
+  ],
+  [
+   "^T (-?\\d+)°$",
+   "Mín {1}°"
+  ],
+  [
+   "^(\\d+) % Regen$",
+   "{1} % lluvia"
+  ],
+  [
+   "^Wie warm ist es (?:im|in der) (.+)\\?$",
+   "¿Qué temperatura hace en {1}?"
+  ],
+  [
+   "^Dimme das Licht (?:im|in der) (.+)$",
+   "Atenúa la luz de {1}"
+  ],
+  [
+   "^In der Summe · (\\d+) von (\\d+)$",
+   "En la suma · {1} de {2}"
+  ],
+  [
+   "^(\\d+) % der Summe$",
+   "{1} % del total"
+  ],
+  [
+   "^(\\d+) Geräte ohne Wert$",
+   "{1} dispositivos sin valor"
+  ],
+  [
+   "^Nicht in der Summe · Steckt hinter (.+)$",
+   "Fuera de la suma · detrás de {1}"
+  ],
+  [
+   "^Stand (.+) \\(verzögert\\)$",
+   "Datos de {1} (con retraso)"
+  ],
+  [
+   "^Stand (.+)$",
+   "Datos de {1}"
+  ],
+  [
+   "^Nächste Inspektion (.+)$",
+   "Próxima revisión {1}"
+  ],
+  [
+   "^Die Abholtermine kommen wieder, sobald (.+) antwortet\\.$",
+   "Las fechas de recogida volverán en cuanto responda {1}."
+  ],
+  [
+   "^(\\d+) Termine$",
+   "{1} eventos"
+  ],
+  [
+   "^(\\d+) an$",
+   "{1} encendidas"
+  ],
+  [
+   "^in (\\d+) Wochen$",
+   "en {1} semanas"
+  ],
+  [
+   "^in (\\d+) Monaten$",
+   "en {1} meses"
+  ],
+  [
+   "^Platz (1|21|31)$",
+   "{1}.º"
+  ],
+  [
+   "^Platz (2|22)$",
+   "{1}.º"
+  ],
+  [
+   "^Platz (3|23)$",
+   "{1}.º"
+  ],
+  [
+   "^Platz (\\d+)$",
+   "{1}.º"
+  ],
+  [
+   "^(\\d+) Punkte$",
+   "{1} puntos"
+  ],
+  [
+   "^(\\S+ : \\S+) bei (.+)$",
+   "{1} en {2}"
+  ],
+  [
+   "^(\\S+ : \\S+) gegen (.+)$",
+   "{1} vs {2}"
+  ],
+  [
+   "^bei (.+)$",
+   "en {1}"
+  ],
+  [
+   "^gegen (.+)$",
+   "vs {1}"
+  ],
+  [
+   "^Heute (\\d\\d:\\d\\d)$",
+   "Hoy {1}"
+  ],
+  [
+   "^Morgen (\\d\\d:\\d\\d)$",
+   "Mañana {1}"
+  ],
+  [
+   "^Mo (\\d.*)$",
+   "Lun {1}"
+  ],
+  [
+   "^Di (\\d.*)$",
+   "Mar {1}"
+  ],
+  [
+   "^Mi (\\d.*)$",
+   "Mié {1}"
+  ],
+  [
+   "^Do (\\d.*)$",
+   "Jue {1}"
+  ],
+  [
+   "^Fr (\\d.*)$",
+   "Vie {1}"
+  ],
+  [
+   "^Sa (\\d.*)$",
+   "Sáb {1}"
+  ],
+  [
+   "^So (\\d.*)$",
+   "Dom {1}"
+  ],
+  [
+   "^(\\d+) Monaten$",
+   "{1} meses"
+  ],
+  [
+   "^in (\\d+) Std\\.$",
+   "en {1} h"
+  ],
+  [
+   "^in (\\d+) Min\\.$",
+   "en {1} min"
+  ],
+  [
+   "^führt (\\d+:\\d+) (bei|gegen) (.+)$",
+   "gana {1} {2} {3}"
+  ],
+  [
+   "^liegt (\\d+:\\d+) zurück (bei|gegen) (.+)$",
+   "pierde {1} {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Sieg n\\. V\\. (bei|gegen) (.+)$",
+   "victoria {1} en la prórroga {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Niederlage n\\. V\\. (bei|gegen) (.+)$",
+   "derrota {1} en la prórroga {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Sieg (bei|gegen) (.+)$",
+   "victoria {1} {2} {3}"
+  ],
+  [
+   "^(\\d+:\\d+)-Niederlage (bei|gegen) (.+)$",
+   "derrota {1} {2} {3}"
+  ],
+  [
+   "^Sieg i\\. E\\. (bei|gegen) (.+)$",
+   "Victoria en penaltis {1} {2}"
+  ],
+  [
+   "^Niederlage i\\. E\\. (bei|gegen) (.+)$",
+   "Derrota en penaltis {1} {2}"
+  ],
+  [
+   "^(\\d+:\\d+) (bei|gegen) (.+)$",
+   "{1} {2} {3}"
+  ],
+  [
+   "^i\\. E\\. (\\d+:\\d+)$",
+   "pen. {1}"
+  ],
+  [
+   "^(\\d+) Lichter an$",
+   "{1} luces encendidas"
+  ],
+  [
+   "^Soll-Bereich (.+)$",
+   "Rango objetivo {1}"
+  ],
+  [
+   "^ab (\\d[\\d.,]*) €$",
+   "desde {1} €"
+  ],
+  [
+   "^Heute ab (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Hoy desde las {1}"
+  ],
+  [
+   "^Morgen ab (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Mañana desde las {1}"
+  ],
+  [
+   "^Warte bis (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Espera hasta las {1}"
+  ],
+  [
+   "^Warte bis morgen (\\d{1,2}:\\d{2}(?: [AP]M)?)$",
+   "Espera hasta mañana a las {1}"
+  ],
+  [
+   "^Tank reicht noch (\\d+) km\\. Ab (\\d{1,2}:\\d{2}(?: [AP]M)?) lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "Combustible para {1} km. Desde las {2}, {3} fue de media {4} ct más barato en los últimos 14 días."
+  ],
+  [
+   "^Ab (\\d{1,2}:\\d{2}(?: [AP]M)?) lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "Desde las {1}, {2} fue de media {3} ct más barato en los últimos 14 días."
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · ab (\\d{1,2}:\\d{2}(?: [AP]M)?) günstiger$",
+   "{1} · más barato desde las {2}"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · abends günstiger$",
+   "{1} · más barato por la tarde"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · ab (\\d+) Uhr günstiger$",
+   "{1} · más barato desde las {2}:00"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · jetzt günstig$",
+   "{1} · buen precio ahora"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · kaum Unterschied$",
+   "{1} · poca diferencia"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · Tank knapp$",
+   "{1} · poco combustible"
+  ],
+  [
+   "^(Super E5|Super E10|Diesel) · Preise werden gesammelt$",
+   "{1} · reuniendo precios"
+  ],
+  [
+   "^Die Empfehlung kommt, sobald genug Preise gesammelt sind, in etwa (\\d+) Tagen\\.$",
+   "La recomendación llegará cuando haya suficientes precios, en unos {1} días."
+  ],
+  [
+   "^Heute ab (\\d+) Uhr$",
+   "Hoy desde las {1}:00"
+  ],
+  [
+   "^Morgen ab (\\d+) Uhr$",
+   "Mañana desde las {1}:00"
+  ],
+  [
+   "^Warte bis (\\d+) Uhr$",
+   "Espera hasta las {1}:00"
+  ],
+  [
+   "^Warte bis morgen (\\d+) Uhr$",
+   "Espera hasta mañana a las {1}:00"
+  ],
+  [
+   "^Tank reicht noch (\\d+) km\\. Ab (\\d+) Uhr lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "Combustible para {1} km. Desde las {2}:00, {3} fue de media {4} ct más barato en los últimos 14 días."
+  ],
+  [
+   "^Ab (\\d+) Uhr lag (.+) in den letzten 14 Tagen im Schnitt (\\d+) ct niedriger\\.$",
+   "Desde las {1}:00, {2} fue de media {3} ct más barato en los últimos 14 días."
+  ],
+  [
+   "^(.+) liegt gerade im unteren Bereich der letzten 14 Tage\\.$",
+   "{1} está ahora en la parte baja de los últimos 14 días."
+  ],
+  [
+   "^Tank bei (\\d+) %, noch etwa (\\d+) km\\. Warten lohnt sich nicht\\.$",
+   "Depósito al {1} %, quedan unos {2} km. No compensa esperar."
+  ],
+  [
+   "^Tank bei (\\d+) %\\. Warten lohnt sich nicht\\.$",
+   "Depósito al {1} %. No compensa esperar."
+  ],
+  [
+   "^Noch etwa (\\d+) km\\. Warten lohnt sich nicht\\.$",
+   "Quedan unos {1} km. No compensa esperar."
+  ],
+  [
+   "^(\\d[\\d.,]*) € Tief$",
+   "{1} € mín."
+  ],
+  [
+   "^jetzt (\\d[\\d.,]*) €$",
+   "ahora {1} €"
+  ],
+  [
+   "^(\\d[\\d.,]*) € Hoch$",
+   "{1} € máx."
+  ],
+  [
+   "^(\\d+) Tankstellen in (\\d+) km$",
+   "{1} gasolineras en {2} km"
+  ],
+  [
+   "^1 Tankstelle in (\\d+) km$",
+   "1 gasolinera en {1} km"
+  ],
+  [
+   "^(\\d[\\d.,]*) km · offen$",
+   "{1} km · abierta"
+  ],
+  [
+   "^(\\d[\\d.,]*) km · zu$",
+   "{1} km · cerrada"
+  ],
+  [
+   "^(\\d+) weitere$",
+   "{1} más"
+  ],
+  [
+   "^und (\\d+) weitere$",
+   "y {1} más"
+  ],
+  [
+   "^Umkreis (\\d+) km um Zuhause$",
+   "{1} km alrededor de casa"
+  ],
+  [
+   "^Umkreis (\\d+) km um das Auto$",
+   "{1} km alrededor del coche"
+  ],
+  [
+   "^Tankerkönig antwortet gerade nicht: (.+)$",
+   "Tankerkönig no responde ahora: {1}"
+  ],
+  [
+   "^(.+) Uhr$",
+   "{1}"
+  ],
+  [
+   "^Reichweite (\\S+)$",
+   "Autonomía {1}"
+  ],
+  [
+   "^(\\d+) Geräte brauchen Aufmerksamkeit$",
+   "{1} dispositivos requieren atención"
+  ],
+  [
+   "^(.+) antwortet nicht$",
+   "{1} no responde"
+  ],
+  [
+   "^(.+) ist still$",
+   "{1} está en silencio"
+  ],
+  [
+   "^(.+) hat sich noch nicht gemeldet$",
+   "{1} aún no ha informado"
+  ],
+  [
+   "^(.+) ist nicht erreichbar$",
+   "{1} no está disponible"
+  ],
+  [
+   "^(.+) braucht bald eine neue Batterie$",
+   "{1} necesitará pronto una batería nueva"
+  ],
+  [
+   "^(.+) braucht eine neue Batterie$",
+   "{1} necesita una batería nueva"
+  ],
+  [
+   "^(.+) meldet schwache Batterie$",
+   "{1} informa de batería baja"
+  ],
+  [
+   "^(.+) wartet auf die erste Meldung$",
+   "{1} espera su primer informe"
+  ],
+  [
+   "^(.+) ist ausgefallen$",
+   "{1} está averiado"
+  ],
+  [
+   "^(.+) sollte geprüft werden$",
+   "Conviene revisar {1}"
+  ],
+  [
+   "^(\\d+) offline$",
+   "{1} sin conexión"
+  ],
+  [
+   "^seit (\\d{1,2}:\\d{2})$",
+   "desde las {1}"
+  ],
+  [
+   "^seit gestern (\\d{1,2}:\\d{2})$",
+   "desde ayer a las {1}"
+  ],
+  [
+   "^(.+) von zuhause$",
+   "{1} de casa"
+  ],
+  [
+   "^GPS · auf (\\d+) m genau$",
+   "GPS · precisión de {1} m"
+  ],
+  [
+   "^Nachricht an (.+)$",
+   "Mensaje para {1}"
+  ],
+  [
+   "^gestern (\\d{1,2}:\\d{2}) – (\\d{1,2}:\\d{2})$",
+   "ayer {1} – {2}"
+  ],
+  [
+   "^bis (\\d{1,2}:\\d\\d)$",
+   "hasta las {1}"
+  ],
+  [
+   "^Fehler: (.+)$",
+   "Error: {1}"
+  ],
+  [
+   "^(\\d+) Fahrten$",
+   "{1} recorridos"
+  ],
+  [
+   "^Neue Version (.+)$",
+   "Nueva versión {1}"
+  ],
+  [
+   "^Wird installiert · (\\d+) %$",
+   "Instalando · {1} %"
+  ],
+  [
+   "^(\\d+:\\d\\d) Std\\. übrig$",
+   "{1} h restantes"
+  ],
+  [
+   "^Schicht (\\d+)/(\\d+)$",
+   "Capa {1}/{2}"
+  ],
+  [
+   "^Aktuell keine Warnungen für (.+)$",
+   "Ahora no hay avisos para {1}"
+  ],
+  [
+   "^Warnungen · (.+)$",
+   "Avisos · {1}"
+  ],
+  [
+   "^(\\d+) Module liefern$",
+   "{1} módulos produciendo"
+  ],
+  [
+   "^Solaranteil am Verbrauch (\\d+) %$",
+   "Parte solar del consumo {1} %"
+  ],
+  [
+   "^Solar ([\\d.,]+) kWh$",
+   "Solar {1} kWh"
+  ],
+  [
+   "^Netz ([\\d.,]+) kWh$",
+   "Red {1} kWh"
+  ],
+  [
+   "^(\\d+) im Bild$",
+   "{1} en imagen"
+  ],
+  [
+   "^(\\d+) Objekte erkannt$",
+   "{1} objetos detectados"
+  ],
+  [
+   "^(.+) und (.+) erkannt$",
+   "{1} y {2} detectados"
+  ],
+  [
+   "^(.+) erkannt$",
+   "{1} detectado"
+  ],
+  [
+   "^([^,]+), (vor .+|gerade eben|gestern|Gestern|jetzt|\\d+ Min\\.|\\d+ Std\\.|\\d+ Tagen)$",
+   "{1}, {2}"
+  ],
+  [
+   "^(\\d{1,2}:\\d{2}) \\((.+)\\)$",
+   "{1} ({2})"
+  ],
+  [
+   "^(\\d+) neue Alarme$",
+   "{1} alertas nuevas"
+  ],
+  [
+   "^(\\d+) Erkennungen$",
+   "{1} detecciones"
+  ],
+  [
+   "^(\\d+) Std\\. aufgenommen$",
+   "{1} h grabadas"
+  ],
+  [
+   "^(\\d+) Min\\. aufgenommen$",
+   "{1} min grabados"
+  ],
+  [
+   "^Heute nichts erkannt: (.+)$",
+   "Hoy nada detectado: {1}"
+  ],
+  [
+   "^In 7 Tagen nichts erkannt: (.+)$",
+   "Nada detectado en 7 días: {1}"
+  ],
+  [
+   "^Keine (.+) heute$",
+   "Sin {1} hoy"
+  ],
+  [
+   "^(\\d+) Alarme$",
+   "{1} alertas"
+  ],
+  [
+   "^Keine (.+) in den letzten 7 Tagen$",
+   "Sin {1} en los últimos 7 días"
+  ],
+  [
+   "^(\\d+) Tagen$",
+   "{1} días"
+  ],
+  [
+   "^Geklingelt (vor .+|gestern|gerade eben)$",
+   "Último timbre {1}"
+  ],
+  [
+   "^In den letzten (\\d+) Tagen$",
+   "En los últimos {1} días"
+  ],
+  [
+   "^Nach (\\d+) s ohne Antwort$",
+   "Tras {1} s sin respuesta"
+  ],
+  [
+   "^Mein Kaffee (\\d+)$",
+   "Mi café {1}"
+  ],
+  [
+   "^(Entkalken|Reinigen|Filterwechsel|Pflege) in 1[  ]Tasse$",
+   "{1} en 1 taza"
+  ],
+  [
+   "^(Entkalken|Reinigen|Filterwechsel|Pflege) in (\\d+)[  ]Tassen$",
+   "{1} en {2} tazas"
+  ],
+  [
+   "^In 1[  ]Tasse$",
+   "En 1 taza"
+  ],
+  [
+   "^In (\\d+)[  ]Tassen$",
+   "En {1} tazas"
+  ],
+  [
+   "^Alle Getränke \\((\\d+)\\)$",
+   "Todas las bebidas ({1})"
+  ],
+  [
+   "^Einschalten und (.+) starten$",
+   "Encender y preparar {1}"
+  ],
+  [
+   "^(.+) starten\\?$",
+   "¿Preparar {1}?"
+  ],
+  [
+   "^(.+) starten$",
+   "Preparar {1}"
+  ],
+  [
+   "^Leistung (.+) W$",
+   "Potencia {1} W"
+  ],
+  [
+   "^Heute (\\d+)$",
+   "{1} hoy"
+  ],
+  [
+   "^(\\d+) Filter aktiv$",
+   "{1} filtros activos"
+  ],
+  [
+   "^Filter · (\\d+)$",
+   "Filtro · {1}"
+  ],
+  [
+   "^(\\d+) heute$",
+   "{1} hoy"
+  ],
+  [
+   "^(\\d+) % ([A-Za-zÄÖÜäöüß].*)$",
+   "{1} % {2}"
+  ],
+  [
+   "^In 1[  ]Tag$",
+   "En 1 día"
+  ],
+  [
+   "^In (\\d+)[  ]Tagen$",
+   "En {1} días"
+  ],
+  [
+   "^In ([\\d.,]+)[  ]l$",
+   "En {1} l"
+  ]
+ ]
+}

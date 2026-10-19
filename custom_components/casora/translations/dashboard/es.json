@@ -1,0 +1,14 @@
+{
+  "filter.all": "Casa",
+  "filter.climate": "Clima",
+  "filter.energy": "Energía",
+  "filter.lights": "Luces",
+  "filter.media": "Multimedia",
+  "filter.presence": "Personas",
+  "filter.security": "Seguridad",
+  "presence.all_away": "Todos fuera",
+  "presence.all_home": "Todos en casa",
+  "presence.group.title": "Personas",
+  "presence.n_away": "{n} fuera",
+  "presence.person": "Persona"
+}
