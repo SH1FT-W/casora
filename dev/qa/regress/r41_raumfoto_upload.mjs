@@ -152,6 +152,35 @@ const d2 = await slot(1);
 await check('Vorschau Nacht zeigt das neue Foto', d2 && d2.src.includes(NAME + '-night.jpg'), d2);
 await check('Foto bleibt gewählt', b.image === NAME, b.image);
 
+// (2b) Reported 19.10.2026: "Upload your own" always hit the day slot, so a night photo replaced
+// the day photo. Pick "Night" in its menu: the day photo must stay as it was.
+const dayBefore = (await slot(0)).src;
+const [fcN] = await Promise.all([
+  pg.waitForEvent('filechooser', { timeout: 10000 }),
+  (async () => {
+    await pg.evaluate(() => [...window.__panel().shadowRoot.querySelectorAll('.uxphoto button')][1].click());
+    await pg.waitForTimeout(400);
+    // The menu picks on mousedown (mouse) or click (touch): use a real pointer, not el.click().
+    const picked = await pg.evaluate(() => {
+      const item = [...window.__panel().shadowRoot.querySelectorAll('.combo-menu .combo-opt')]
+        .find((x) => /^(Night|Nacht)$/.test((x.querySelector('.lbl') || x).textContent.trim()));
+      if (!item) return null;
+      const r = item.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    });
+    if (picked) {
+      if (process.env.CASORA_R41_PHONE) await pg.touchscreen.tap(picked.x, picked.y);
+      else await pg.mouse.click(picked.x, picked.y);
+    }
+    if (!picked) throw new Error('no "Night" entry in the upload menu');
+  })(),
+]);
+await fcN.setFiles(F.small);
+await answer(null);
+const bn = await settled();
+await check('"Upload your own" → Night uploads the night photo', bn.last && /night/.test(bn.last[0]) && bn.last[1] === 'ok', bn.last);
+await check('"Upload your own" → Night leaves the day photo alone', (await slot(0)).src === dayBefore, { before: dayBefore, after: (await slot(0)).src });
+
 // (3) große Datei (> 12 MB) per Klick, Tag
 const c = await byClick(0, F.big, NAME);
 await check('großes Foto (' + (fs.statSync(F.big).size / 1048576).toFixed(1) + ' MB) wird angenommen', c.last && c.last[1] === 'ok', c.last);

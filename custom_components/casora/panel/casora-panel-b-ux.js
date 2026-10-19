@@ -1263,7 +1263,13 @@
         const c = row && (row.querySelector(".combo input") || row.querySelector(".combo"));
         if (c) { c.focus && c.focus(); c.click(); }
       });
-      mk("Upload your own", () => { const d = shots.querySelector(".shot"); if (d) d.click(); });
+      // Ask day or night first: the button used to hit the day slot, so a night photo replaced the day one.
+      mk("Upload your own", (ev) => {
+        const btn = ev.currentTarget;
+        const slots = shots.querySelectorAll(".shot");
+        const items = [{ id: "0", label: tr("Day") }, { id: "1", label: tr("Night") }];
+        this._menuAt(btn, items, (id) => { const d = slots[Number(id)]; if (d) d.click(); });
+      });
       shots.after(box);
     };
 
