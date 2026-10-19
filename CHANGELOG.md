@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.42 – 20.10.2026
+
+### Fixed
+- **Doorbell: listening switched itself off (#23):** While listening, a short reconnect of the stream could turn the Listen button off after a few seconds, and pressing it again showed the button on without any sound. The card now only mutes when the browser really refuses sound, and listening again builds a player with sound.
+
 ## 26.10.41 – 19.10.2026
 
 ### New

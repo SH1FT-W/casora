@@ -27,9 +27,9 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Haustier-Kachel für Tractive", n0: "Neue Community-Karte: wo dein Tier ist, Akku, Live-Tracking, Ton und Licht, dazu Aktivität, Schlaf und die Orte der letzten Tage.",
-      n1t: "Tag- und Nachtfoto getrennt hochladen", n1: "„Eigenes hochladen“ beim Raumfoto fragt jetzt zuerst „Tag“ oder „Nacht“ – ein Nachtfoto ersetzt nicht mehr das Tagfoto.",
-      n2t: "Programmphase bei Home Connect Local", n2: "Waschmaschine und Trockner über Home Connect Local zeigen im Popup und in der Live-Aktivität jetzt, ob gerade gewaschen, gespült oder geschleudert wird.",
+      n0t: "Mithören an der Klingel bleibt an", n0: "Ein kurzer Neuaufbau des Streams schaltet „Mithören“ nicht mehr ab, und erneutes Mithören kommt wieder mit Ton.",
+      n1t: "Haustier-Kachel für Tractive", n1: "Neue Community-Karte: wo dein Tier ist, Akku, Live-Tracking, Ton und Licht, dazu Aktivität, Schlaf und die Orte der letzten Tage.",
+      n2t: "Tag- und Nachtfoto getrennt hochladen", n2: "„Eigenes hochladen“ beim Raumfoto fragt jetzt zuerst „Tag“ oder „Nacht“ – ein Nachtfoto ersetzt nicht mehr das Tagfoto.",
       n3t: "Alle Lampen beim Einrichten", n3: "Lampen hinter Hue-Bridge, Zigbee oder Matter werden jetzt gefunden, Dimmer mit mehreren Kanälen bekommen je Lampe eine Kachel.",
     },
     en: {
@@ -40,9 +40,9 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Pet tracker card for Tractive", n0: "New Community card: where your pet is, battery, live tracking, sound and light, plus activity, sleep and the places of the last days.",
-      n1t: "Day and night photos upload separately", n1: "“Upload your own” for a room photo now asks “Day” or “Night” first – a night photo no longer replaces the day photo.",
-      n2t: "Program phase with Home Connect Local", n2: "Washers and dryers on Home Connect Local now show in the popup and Live Activity whether they are washing, rinsing or spinning.",
+      n0t: "Doorbell listening stays on", n0: "A short reconnect of the stream no longer turns Listen off, and listening again comes back with sound.",
+      n1t: "Pet tracker card for Tractive", n1: "New Community card: where your pet is, battery, live tracking, sound and light, plus activity, sleep and the places of the last days.",
+      n2t: "Day and night photos upload separately", n2: "“Upload your own” for a room photo now asks “Day” or “Night” first – a night photo no longer replaces the day photo.",
       n3t: "Every lamp when setting up", n3: "Lamps behind a Hue bridge, Zigbee or Matter are found now, and dimmers with several channels get one tile per lamp.",
     },
   };
@@ -56,9 +56,9 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:paw", "n0t", "n0"],
-    ["mdi:image-multiple", "n1t", "n1"],
-    ["mdi:washing-machine", "n2t", "n2"],
+    ["mdi:doorbell-video", "n0t", "n0"],
+    ["mdi:paw", "n1t", "n1"],
+    ["mdi:image-multiple", "n2t", "n2"],
     ["mdi:lightbulb-group", "n3t", "n3"],
   ];
 

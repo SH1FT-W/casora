@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.42 – 20.10.2026
+
+### Behoben
+- **Klingel: Mithören schaltete sich selbst ab (#23):** Beim Mithören konnte ein kurzer Neuaufbau des Streams den Knopf „Mithören“ nach ein paar Sekunden ausschalten, und ein erneuter Tipp zeigte den Knopf an, aber ohne Ton. Die Karte schaltet jetzt nur noch stumm, wenn der Browser den Ton wirklich verweigert, und erneutes Mithören baut einen Player mit Ton auf.
+
 ## 26.10.41 – 19.10.2026
 
 ### Neu
