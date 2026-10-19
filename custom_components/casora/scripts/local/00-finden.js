@@ -261,7 +261,7 @@ window.casoraPriceKwh = function (v) {
     var bins = ids.filter(function (id) { return S[id] || fromCal[id]; }).map(function (id) {
       var label = (named && !Array.isArray(named) && named[id]) || (fromCal[id] ? fromCal[id].label : wasteLabel(hass, id));
       var kind = WASTE_KINDS.filter(function (k) { return k[0].test(label) || k[0].test(id); })[0];
-      // No known kind: a colour word in the name ("Grüne Tonne") gives the colour (issue #27).
+      // No known kind: a colour word in the name (green, blue …) gives the colour (issue #27).
       var word = !kind && WASTE_WORDS.filter(function (w) { return w[0].test(label); })[0];
       var color = kind && kind[1] ? kind[1] : word ? word[1] : '#FF9F0A';
       var st = S[id] || { state: String(fromCal[id].days), attributes: {} };
@@ -277,7 +277,7 @@ window.casoraPriceKwh = function (v) {
       }
       return {
         id: id, label: label, color: color, tint: tint,
-        // Calendar bins match their own title exactly, so "Grüne Tonne" and "Grünschnitt" stay apart.
+        // Calendar bins match their own title exactly, so a green bin and green cuttings stay apart.
         re: fromCal[id] ? new RegExp('^' + label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i')
           : kind && kind[1] ? kind[0] : new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'),
         days: isNaN(days) ? null : days, cal: !!fromCal[id],
