@@ -69,6 +69,12 @@
 
   function devName(d) { return (d && (d.name_by_user || d.name)) || ""; }
 
+  // Devices behind a hub (Hue bridge, Zigbee coordinator, Matter bridge …) carry via_device_id. They count when they
+  // have something to operate; parts of another device (printer camera, AMS, dock) stay out.
+  const VIA_DOMAINS = new Set(["light", "cover", "lock", "climate", "fan", "humidifier", "media_player", "vacuum"]);
+  // A ceiling fan or a garage door with a light: the light gets its own tile next to the device's tile.
+  const LIGHT_TOO = new Set(["fan", "cover"]);
+
   // Vorschläge: [{id, device, name, room, area, type, entity, reason}]
   function suggest(hass, rooms, types) {
     const D = hass.devices || {}, A = hass.areas || {};
@@ -89,9 +95,12 @@
     const laundry = new Map(LF ? LF.all(hass).map((c) => [c.device, c]) : []);
     Object.keys(D).forEach((id) => {
       const d = D[id];
-      if (!d || d.entry_type === "service" || d.disabled_by || d.via_device_id) return;
+      if (!d || d.entry_type === "service" || d.disabled_by) return;
       const list = devEntities(hass, id).filter((e) => !e.category && (hass.states || {})[e.entity_id]);
-      if (!list.length || list.some((e) => used.has(e.entity_id))) return;
+      if (d.via_device_id && !list.some((e) => VIA_DOMAINS.has(e.domain))) return;
+      // Already on the dashboard: any entity except measurements (power sensors land in the room's energy list
+      // on their own and used to hide the lamp of the same plug or dimmer).
+      if (!list.length || list.some((e) => used.has(e.entity_id) && !/^(sensor|binary_sensor)$/.test(e.domain))) return;
       // Dasselbe Wäschegerät über eine schwächere Quelle (WashData neben der Hersteller-Integration): weglassen.
       if (LF && !laundry.has(id) && LF.classify(hass, id)) return;
       let name = devName(d);
@@ -136,14 +145,33 @@
         const fn = (((hass.states || {})[entity] || {}).attributes || {}).friendly_name;
         if (fn) name = fn;
       }
-      const room = roomOfArea(d.area_id);
+      // Room from the entity's own area first (a two-channel dimmer can light two rooms), else the device's.
+      const R = hass.entities || {};
+      const areaOf = (eid) => ((R[eid] || {}).area_id) || d.area_id;
+      // Every light of the device as its own tile: one per channel, plus the light of a fan or garage door.
+      const lights = type === "light" || LIGHT_TOO.has(type) ? list.filter((e) => e.domain === "light" && !used.has(e.entity_id)) : [];
+      if (typeIds.has("light") && (lights.length > 1 || (lights.length && type !== "light"))) {
+        if (type !== "light" && !used.has(entity)) {
+          const r0 = roomOfArea(areaOf(entity));
+          out.push({ id, device: id, name, room: r0 ? r0.name : null, area: (A[areaOf(entity)] || {}).name || null, type, entity, reason, rank: 9 });
+        }
+        lights.forEach((e) => {
+          const fn = (((hass.states || {})[e.entity_id] || {}).attributes || {}).friendly_name;
+          const ri = roomOfArea(areaOf(e.entity_id));
+          out.push({ id: id + ":" + e.entity_id, device: id, name: (lights.length > 1 || type !== "light") && fn ? fn : name,
+            room: ri ? ri.name : null, area: (A[areaOf(e.entity_id)] || {}).name || null, type: "light", entity: e.entity_id, reason: "domain", rank: 9 });
+        });
+        return;
+      }
+      if (used.has(entity)) return;
+      const room = roomOfArea(areaOf(entity));
       // Dasselbe Gerät doppelt (z. B. Hersteller-Integration + WashData): nur einmal.
       // Bei Wäschegeräten gewinnt die bessere Quelle (Rang 0 = Hersteller, 1 = WashData).
       const rank = lc ? lc.rank : 9;
-      const dup = out.findIndex((x) => x.type === type && norm(x.name) === norm(name) && x.area === ((A[d.area_id] || {}).name || null));
+      const dup = out.findIndex((x) => x.type === type && norm(x.name) === norm(name) && x.area === ((A[areaOf(entity)] || {}).name || null));
       if (dup >= 0 && !(out[dup].rank > rank)) return;
       if (dup >= 0) out.splice(dup, 1);
-      out.push({ id, device: id, name, room: room ? room.name : null, area: (A[d.area_id] || {}).name || null, type, entity, reason, rank });
+      out.push({ id, device: id, name, room: room ? room.name : null, area: (A[areaOf(entity)] || {}).name || null, type, entity, reason, rank });
     });
     // Fußball: Team-Tracker-Sensoren haben kein Gerät – je Team eine Fußball-Kachel, vorgeschlagen für die
     // Startseite („Zuhause“). Erkannt an der Integration, sonst an den Attributen des Sensors.
