@@ -281,7 +281,7 @@ window.CASORA_TILE_TYPES = [
   // Pet tracker (community card, card request #25): every Tractive device_tracker; battery, status, live tracking,
   // sound, light and activity come from the pet and its tracker device (scripts/local/26-haustier.js).
   { id: "casora_pet", label: "Pet tracker", template: "casora_pet", domains: ["device_tracker"],
-    icon: "paw", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Pet",
+    icon: "paw", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Pet", entityPlaceholder: "Choose your pet",
     community: { desc: "Where your pet is, battery and tracker status on the tile. The popup shows the map, live tracking, sound and light, today's activity against the daily goal, rest, sleep and the places of the last days. For Tractive.",
       needs: "tractive", needsText: "For every pet in the Tractive integration",
       needsMissing: "Tractive integration not installed yet" },

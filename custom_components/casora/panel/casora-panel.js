@@ -4647,6 +4647,8 @@ const TILE_MAIN_FIND = {
   casora_football: { domain: "sensor", platform: "teamtracker" },
   // Pulse: nur sein Sensor „Probleme“ (Integration + translation_key, nicht die Entity-ID).
   casora_pulse: { keys: ["problems"], domain: "sensor", platform: "pulse", both: true },
+  // Pet tracker: Tractive's device_tracker (issue #25 – a new tile showed "Device missing" until one was picked).
+  casora_pet: { domain: "device_tracker", pet: true },
   casora_weather_warning: { keys: ["warning", "warnings"], domain: "binary_sensor", dc: "safety" },
   // Ein Aquarium ist kein beliebiges Thermometer (sonst: Außentemperatur des Autos).
   casora_aquarium: { domain: "sensor", dc: "temperature", strict: true,
@@ -4659,6 +4661,14 @@ const platformHit = (spec, reg, st) => {
   if (reg && reg.platform === spec.platform) return true;
   const a = (st && st.attributes) || {};
   return spec.platform === "teamtracker" && a.sport_path != null && "team_abbr" in a && "opponent_abbr" in a;
+};
+// Tractive device_tracker: by platform, or by the tracker device behind the pet (manufacturer, as in the test house).
+const isPetTracker = (h, id) => {
+  const R = (h && h.entities) || {}, D = (h && h.devices) || {}, e = R[id];
+  if (!/^device_tracker\./.test(id) || !e) return false;
+  if (e.platform === "tractive") return true;
+  const d = D[e.device_id], hw = d && D[d.via_device_id];
+  return /tractive/i.test((hw && hw.manufacturer) || "");
 };
 // Geräte, die erkennbar etwas anderes sind, schlägt eine fremde Kachel nur vor, wenn
 // sonst nichts passt: Name, Modell oder Hersteller des Geräts.
@@ -21166,7 +21176,8 @@ class CasoraPanel extends HTMLElement {
         const keyHit = spec.both ? (spec.keys || []).includes(e.translation_key) && platformHit(spec, e, S[id])
           : (spec.keys || []).includes(e.translation_key) || platformHit(spec, e, S[id]);
         const dcHit = spec.dc && ((S[id].attributes || {}).device_class === spec.dc);
-        if (!keyHit && !dcHit) return false;
+        const petHit = spec.pet && isPetTracker(h, id);
+        if (!keyHit && !dcHit && !petHit) return false;
         const text = id + " " + nameOf(id) + " " + devName(id);
         if (spec.not && spec.not.test(text)) return false;
         return true;
@@ -21234,7 +21245,7 @@ class CasoraPanel extends HTMLElement {
       // Der Schlüssel der Integration ist sicherer als nur die Geräteklasse.
       const lr = laundryRank.has(id) ? laundryRank.get(id) : null;
       const keyHit = lr !== null ? lr < 2 : !!spec && ((spec.keys || []).includes((R[id] || {}).translation_key)
-        || platformHit(spec, R[id] || {}, S[id]));
+        || platformHit(spec, R[id] || {}, S[id]) || (!!spec.pet && isPetTracker(h, id)));
       if (keyHit) score += 8;
       // Hersteller-Integration vor WashData.
       if (lr === 0) score += 1;
@@ -26211,7 +26222,13 @@ class CasoraPanel extends HTMLElement {
       return (e && e.attributes && e.attributes.friendly_name) || null;
     };
     // Geräte dieses Raums zuerst, ohne Konfigurations-/Diagnose-Knöpfe („Identifizieren“, „Neustart“).
-    const entCombo = this._combo(tile.entity || "", this._rankedEntityList(type.domains, type.classes, room, tile.entity),
+    let entOptions = this._rankedEntityList(type.domains, type.classes, room, tile.entity);
+    // Pet tracker: only the Tractive trackers, not every phone (issue #25); all of them if none is found.
+    if (type.id === "casora_pet") {
+      const pets = entOptions.filter((e) => e === tile.entity || isPetTracker(this._hass, e));
+      if (pets.length) entOptions = pets;
+    }
+    const entCombo = this._combo(tile.entity || "", entOptions,
       // Kacheln, die ihre Daten selbst finden (Solar-Tipp, Abfall, Auto …): das Gerät ist freiwillig.
       type.entityPlaceholder || (type.ownData ? "Automatic" : pickHint(type.domains)),
       (v) => {
