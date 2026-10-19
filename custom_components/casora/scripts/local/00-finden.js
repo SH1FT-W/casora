@@ -1040,7 +1040,10 @@ window.casoraPriceKwh = function (v) {
 
   // ── Außensensor nach Geräteklasse (Wetter-Popup, 27.09.2026) ──────────────────
   // „outdoor/außen“ im Namen oder ein Außenbereich; Luftdruck ist ohnehin draußen gleich.
-  var OUTDOOR = /outdoor|aussen|außen|outside|draussen|draußen|garten|terrasse|balkon|garden|terrace|balcony/i;
+  var OUTDOOR = /outdoor|aussen|außen|outside|exterior|draussen|draußen|garten|terrasse|balkon|garden|terrace|balcony/i;
+  // Derived values share the device class with the real reading (issue #28: the dew point sorted before the
+  // temperature). They only count when nothing else is there.
+  var DERIVED = /dew|taupunkt|roc[ií]o|feels|gef[üu]hlt|apparent|sensaci[oó]n|heat_?index|hitze_?index|wind_?chill|(^|[_ ])(min|max|minimum|maximum)([_ ]|$)/i;
   // Keine Außenluft: Pflanzen-, Boden-, Wasser- und Fahrzeugsensoren.
   var NOT_AIR = /boden|soil|reifen|tire|tyre|wasser|water|pool|aquarium|teich|pond|akku|battery|motor|engine|kühl|coolant/i;
   function outdoor(hass, dcs) {
@@ -1058,6 +1061,8 @@ window.casoraPriceKwh = function (v) {
       if (/pressure/.test(st.attributes.device_class) && !/^(hpa|mbar|inhg|mmhg|kpa)$/i.test(st.attributes.unit_of_measurement || '')) return false;
       return !NOT_AIR.test(id + ' ' + (st.attributes.friendly_name || ''));
     }).sort();
+    var derived = function (id) { return DERIVED.test(id + ' ' + ((R[id] || {}).translation_key || '') + ' ' + (S[id].attributes.friendly_name || '')); };
+    cand = cand.filter(function (id) { return !derived(id); }).concat(cand.filter(derived));
     var byName = cand.filter(function (id) { return OUTDOOR.test(id + ' ' + (S[id].attributes.friendly_name || '')); });
     if (byName.length) return byName[0];
     var byArea = cand.filter(function (id) {
