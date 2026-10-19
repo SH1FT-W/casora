@@ -7,6 +7,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ## 26.10.42 – 20.10.2026
 
 ### Fixed
+- **Pet tracker card showed "Device missing" (#25):** A new pet tracker tile did not pick its Tractive tracker by itself, and the Pet field listed every tracker (phones, routers), while Tractive names its tracker only after the pet. The tile now finds the Tractive tracker on its own, and the Pet field only lists Tractive trackers.
 - **Doorbell: listening switched itself off (#23):** While listening, a short reconnect of the stream could turn the Listen button off after a few seconds, and pressing it again showed the button on without any sound. The card now only mutes when the browser really refuses sound, and listening again builds a player with sound.
 
 ## 26.10.41 – 19.10.2026

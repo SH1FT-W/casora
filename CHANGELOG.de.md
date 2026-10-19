@@ -7,6 +7,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ## 26.10.42 – 20.10.2026
 
 ### Behoben
+- **Haustier-Kachel zeigte „Gerät fehlt“ (#25):** Eine neue Haustier-Kachel hat ihren Tractive-Tracker nicht selbst gewählt, und das Feld „Tier“ listete alle Tracker (Handys, Router), während Tractive seinen Tracker nur nach dem Tier benennt. Die Kachel findet den Tractive-Tracker jetzt selbst, und das Feld „Tier“ zeigt nur Tractive-Tracker.
 - **Klingel: Mithören schaltete sich selbst ab (#23):** Beim Mithören konnte ein kurzer Neuaufbau des Streams den Knopf „Mithören“ nach ein paar Sekunden ausschalten, und ein erneuter Tipp zeigte den Knopf an, aber ohne Ton. Die Karte schaltet jetzt nur noch stumm, wenn der Browser den Ton wirklich verweigert, und erneutes Mithören baut einen Player mit Ton auf.
 
 ## 26.10.41 – 19.10.2026
