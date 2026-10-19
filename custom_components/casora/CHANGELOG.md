@@ -4,6 +4,15 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.41 – 19.10.2026
+
+### New
+- **Pet tracker card (Tractive):** New Community card from card request #25. The tile shows where your pet is, how far from home and the tracker battery, with "Live" while live tracking runs. The popup has the map, buttons for live tracking, sound and light, the tracker status, today's activity against the daily goal with rest and sleep, and the places of the last days. Add it under Studio → Community cards.
+
+### Fixed
+- **Waste calendar without bin sensors (#27):** If Waste Collection Schedule only provides a calendar, Casora now builds the bins from its events (one bin per event title, colour from the kind or a colour word such as "Green bin"). The tile no longer says "No bins found" and the popup shows the pickups.
+- **"What should go on the dashboard?" in the Studio:** Buttons and switches of a robot mower, coffee machine or pet tracker are no longer offered again on their own next to their card. The list no longer breaks when another integration reports its options as text instead of a list.
+
 ## 26.10.40 – 19.10.2026
 
 ### Fixed

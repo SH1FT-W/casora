@@ -4,6 +4,15 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.41 – 19.10.2026
+
+### Neu
+- **Haustier-Kachel (Tractive):** Neue Community-Karte aus Kartenwunsch #25. Die Kachel zeigt, wo dein Tier ist, wie weit es von zuhause weg ist und den Akku des Trackers, mit „Live“, solange Live-Tracking läuft. Das Popup zeigt die Karte, Knöpfe für Live-Tracking, Ton und Licht, den Tracker-Zustand, die Aktivität von heute gegen das Tagesziel mit Ruhe und Schlaf und die Orte der letzten Tage. Hinzufügen unter Studio → Community-Karten.
+
+### Behoben
+- **Abfallkalender ohne Tonnen-Sensoren (#27):** Liefert Waste Collection Schedule nur einen Kalender, baut Casora die Tonnen jetzt aus dessen Terminen (je Termintitel eine Tonne, Farbe aus der Art oder einem Farbwort wie „Grüne Tonne“). Die Kachel meldet nicht mehr „Keine Tonnen gefunden“, das Popup zeigt die Abholtage.
+- **„Was soll aufs Dashboard?“ im Studio:** Tasten und Schalter von Mähroboter, Kaffeemaschine oder Haustier-Tracker stehen nicht mehr zusätzlich einzeln neben ihrer Karte. Die Liste bricht nicht mehr ab, wenn eine andere Integration ihre Auswahl als Text statt als Liste meldet.
+
 ## 26.10.40 – 19.10.2026
 
 ### Behoben
