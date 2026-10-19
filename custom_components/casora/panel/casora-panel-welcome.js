@@ -30,7 +30,7 @@
       n0t: "Haustier-Kachel für Tractive", n0: "Neue Community-Karte: wo dein Tier ist, Akku, Live-Tracking, Ton und Licht, dazu Aktivität, Schlaf und die Orte der letzten Tage.",
       n1t: "Tag- und Nachtfoto getrennt hochladen", n1: "„Eigenes hochladen“ beim Raumfoto fragt jetzt zuerst „Tag“ oder „Nacht“ – ein Nachtfoto ersetzt nicht mehr das Tagfoto.",
       n2t: "Programmphase bei Home Connect Local", n2: "Waschmaschine und Trockner über Home Connect Local zeigen im Popup und in der Live-Aktivität jetzt, ob gerade gewaschen, gespült oder geschleudert wird.",
-      n3t: "Diagramme zeigen den aktuellen Wert", n3: "Verläufe über 7 und 30 Tage enden jetzt am aktuellen Messwert statt am verzögerten Mittel – frisch gegossen steht die Bodenfeuchte gleich oben.",
+      n3t: "Alle Lampen beim Einrichten", n3: "Lampen hinter Hue-Bridge, Zigbee oder Matter werden jetzt gefunden, Dimmer mit mehreren Kanälen bekommen je Lampe eine Kachel.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -43,7 +43,7 @@
       n0t: "Pet tracker card for Tractive", n0: "New Community card: where your pet is, battery, live tracking, sound and light, plus activity, sleep and the places of the last days.",
       n1t: "Day and night photos upload separately", n1: "“Upload your own” for a room photo now asks “Day” or “Night” first – a night photo no longer replaces the day photo.",
       n2t: "Program phase with Home Connect Local", n2: "Washers and dryers on Home Connect Local now show in the popup and Live Activity whether they are washing, rinsing or spinning.",
-      n3t: "Charts show the current value", n3: "7 and 30 day charts now end at the current reading instead of a delayed average – right after watering, soil moisture is up at once.",
+      n3t: "Every lamp when setting up", n3: "Lamps behind a Hue bridge, Zigbee or Matter are found now, and dimmers with several channels get one tile per lamp.",
     },
   };
 
@@ -59,7 +59,7 @@
     ["mdi:paw", "n0t", "n0"],
     ["mdi:image-multiple", "n1t", "n1"],
     ["mdi:washing-machine", "n2t", "n2"],
-    ["mdi:chart-line", "n3t", "n3"],
+    ["mdi:lightbulb-group", "n3t", "n3"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

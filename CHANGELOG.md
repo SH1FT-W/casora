@@ -11,6 +11,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ### Fixed
 - **Waste calendar without bin sensors (#27):** If Waste Collection Schedule only provides a calendar, Casora now builds the bins from its events (one bin per event title, colour from the kind or a colour word such as "Green bin"). The tile no longer says "No bins found" and the popup shows the pickups.
+- **Lights missing after setup:** Lamps behind a hub (Hue bridge, Zigbee, Matter) were skipped when setting up a dashboard and in the Device Assistant. They are found now. A device with several lights (two-channel dimmer, WLED) gets one tile per light, each in the room of its own area, and the light of a ceiling fan or garage door is offered next to it. A lamp whose power sensor is already in the room's energy list is no longer treated as used. The lighting badge now counts all ten lights of a room instead of eight.
 - **"What should go on the dashboard?" in the Studio:** Buttons and switches of a robot mower, coffee machine or pet tracker are no longer offered again on their own next to their card. The list no longer breaks when another integration reports its options as text instead of a list.
 
 ## 26.10.40 – 19.10.2026
