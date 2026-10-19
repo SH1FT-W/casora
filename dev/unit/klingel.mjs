@@ -409,6 +409,37 @@ states['camera.carport_sub'].state = 'idle';
   el._v = KL.view({ entity: ID, cam2: 'camera.carport_sub' }, 1, states); el._hass = { states, callWS: () => { throw new Error('darf nicht'); } };
   el._talk();
   assert.equal(el._t, undefined, 'zweite Kamera: kein Sprechen');
+  // Issue #23: listening must not switch itself off when HA reloads the stream, and pressing again after a mute
+  // builds a player with sound instead of unmuting one without an audio track.
+  const tick = () => new Promise((r) => setTimeout(r, 0));
+  const vid = (rej, tracks) => ({ muted: true, paused: true, volume: 1, hasAttribute: () => false, removeAttribute() {},
+    srcObject: tracks ? { getTracks: () => tracks, getAudioTracks: () => tracks.filter((t) => t.kind === 'audio') } : null,
+    play() { return rej ? Promise.reject(Object.assign(new Error(rej), { name: rej })) : Promise.resolve(); } });
+  const live = (v) => {
+    const e = Object.create(Live.prototype);
+    e.isConnected = true; e._paint = () => {}; e._cfg = { entity: ID }; e._hass = { states };
+    e._stream = true; e._v = KL.view(e._cfg, 0, states); e._native = true; e._card = { muted: false };
+    e._video = () => v; e._mounts = 0; e._teardown = () => {}; e._mount = () => { e._mounts++; e._mountedMuted = false; };
+    return e;
+  };
+  // Reload interrupts play(): stays on.
+  let lv = live(vid('AbortError')); lv._muted = false; lv._mountedMuted = false;
+  lv._applyAudio(); await tick(); await tick();
+  assert.equal(lv._muted, false, 'AbortError (stream reload): listening stays on');
+  // The browser really refuses sound: off, and the card remembers the player lost its audio track.
+  lv = live(vid('NotAllowedError')); lv._muted = false; lv._mountedMuted = false;
+  lv._applyAudio(); await tick(); await tick();
+  assert.equal(lv._muted, true, 'NotAllowedError: off');
+  assert.equal(lv._card.muted, true); assert.equal(lv._mountedMuted, true, 'muted player marked');
+  lv._toggleSound();
+  assert.equal(lv._mounts, 1, 'listen again: new player with sound');
+  // A WebRTC player without an audio track is rebuilt even if the card did not mute it itself.
+  lv = live(vid(null, [{ kind: 'video' }])); lv._muted = true; lv._mountedMuted = false;
+  lv._toggleSound();
+  assert.equal(lv._mounts, 1, 'no audio track: rebuilt');
+  lv = live(vid(null, [{ kind: 'video' }, { kind: 'audio' }])); lv._muted = true; lv._mountedMuted = false;
+  lv._toggleSound();
+  assert.equal(lv._mounts, 0, 'audio track present: only unmute');
   delete globalThis.addEventListener; delete globalThis.removeEventListener;
 }
 console.log('klingel: ok');

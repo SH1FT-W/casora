@@ -965,9 +965,21 @@
       if (fr && fr.style.getPropertyValue('--ar') !== ar) fr.style.setProperty('--ar', ar);
     };
     P._video = function () { return this._card ? findVideo(this._card.shadowRoot || this._card, 0) || findVideo(this._card, 0) : null; };
+    // Issue #23: only a real "no sound without a tap" (NotAllowedError) mutes; a play() interrupted by HA reloading
+    // the stream (AbortError) used to switch listening off by itself a few seconds in.
+    var blocked = function (err) { return !err || err.name === 'NotAllowedError'; };
+    // A player HA built while muted has no audio track (WebRTC); unmuting it plays silence.
+    var silent = function (v) {
+      var so = v && v.srcObject;
+      return !!(so && so.getAudioTracks && so.getTracks && so.getTracks().length && !so.getAudioTracks().length);
+    };
     P._applyAudio = function () {
       var want = this._muted !== false;
-      if (this._native && this._card && this._card.muted !== want) this._card.muted = want;
+      if (this._native && this._card && this._card.muted !== want) {
+        this._card.muted = want;
+        // HA rebuilds its player muted and drops the audio track: the next "listen" has to mount a new one.
+        if (want) this._mountedMuted = true;
+      }
       var v = this._video();
       if (!v) return;
       if (v.muted !== want) v.muted = want;
@@ -978,7 +990,11 @@
           var self = this, p = v.play();
           this._playing = true;
           // Browser lässt den Ton nicht zu (kein Tipp erkannt): zurück auf stumm statt eines Knopfs, der lügt.
-          if (p && p.then) p.then(function () { self._playing = false; }, function () { self._playing = false; self._muted = true; self._applyAudio(); self._paint(); });
+          if (p && p.then) p.then(function () { self._playing = false; }, function (err) {
+            self._playing = false;
+            if (!blocked(err)) return;
+            self._muted = true; self._applyAudio(); self._paint();
+          });
           else this._playing = false;
         }
       }
@@ -996,7 +1012,7 @@
       // Mithören an: groß (Studio-Option, Standard an) – derselbe Player, nur in der obersten Ebene.
       if (!this._muted && (this._cfg || {}).big && !this._big) this._setBig(true);
       // Stumm eingebundener Player hat keine Tonspur: ohne „stumm“ neu einbinden (Tipp = Nutzeraktivierung).
-      if (!this._muted && this._native && this._mountedMuted && this._v && !this._v.dead) {
+      if (!this._muted && this._native && (this._mountedMuted || silent(this._video())) && this._v && !this._v.dead) {
         this._teardown();
         this._mount(this._stream);
       } else {
@@ -1005,7 +1021,7 @@
           v.muted = false;
           var self = this, p = v.play();
           // Browser lässt den Ton nicht zu (kein Tipp erkannt): zurück auf stumm statt eines Knopfs, der lügt.
-          if (p && p.catch) p.catch(function () { self._muted = true; self._applyAudio(); self._paint(); });
+          if (p && p.catch) p.catch(function (err) { if (blocked(err)) { self._muted = true; self._applyAudio(); self._paint(); } });
         }
       }
       this._applyAudio();
