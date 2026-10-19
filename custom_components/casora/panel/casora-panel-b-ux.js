@@ -77,11 +77,12 @@
     input_boolean: "entity_actions", script: "entity_actions", scene: "entity_actions", button: "entity_actions",
     input_button: "entity_actions", remote: "entity_actions", lawn_mower: "casora_lawn_mower" };
   const ADD_DOMAINS = Object.keys(BY_DOMAIN);
+  const OWN_CARDS = new Set(["casora_lawn_mower", "casora_coffee", "casora_pet"]);
   // Alltagswörter je Kachelart – „Licht“ findet auch „Stehlampe“.
   const WORDS = { light: "licht lampe leuchte light lamp", cover: "jalousie rollladen rollo markise blind", thermostat: "heizung thermostat klima heating",
     media: "fernseher tv musik lautsprecher speaker", lock: "schloss tür tuer lock", vacuum: "sauger staubsauger saugroboter vacuum",
     casora_switch: "schalter steckdose switch plug", fan: "ventilator lüfter fan", casora_camera: "kamera camera", casora_alarm: "alarm sicherheit",
-    casora_coffee: "kaffee kaffeemaschine vollautomat espresso coffee" };
+    casora_coffee: "kaffee kaffeemaschine vollautomat espresso coffee", casora_pet: "haustier hund katze tracker tractive pet dog cat" };
   function typeFor(entity, typeIds, suggested) {
     if (suggested && typeIds.has(suggested)) return suggested;
     const t = BY_DOMAIN[String(entity || "").split(".")[0]];
@@ -134,7 +135,8 @@
         || COFFEE_KEY.test(coffeeKey(e) || coffeeTail(e)) || coffeeKey(e) === "machinestatus"
         // Getränke am Stromverlauf erkannt (delonghi, krups): Anlernstand + letztes Programm.
         || (coffeeKey(e) === "lastprogram" && list.some((x) => coffeeKey(x) === "learning"))
-        || (((S[e.entity_id] || {}).attributes || {}).options || []).some((o) => COFFEE_OPT.test(coffeeNk(o))));
+        // options is not always a list (a sensor of another integration had a plain string): only lists count.
+        || [].concat(((S[e.entity_id] || {}).attributes || {}).options || []).some((o) => COFFEE_OPT.test(coffeeNk(o))));
       if (!yes) return;
       const k = (e) => coffeeKey(e);
       // Ohne Schlüssel: Ende der Entity-ID (…_bsh_common_status_operationstate, <mac>_product, …_recipe, …_state).
@@ -655,9 +657,25 @@
       // Kaffeevollautomat (Community-Karte, wenn hinzugefügt): je Gerät eine Kachel am Status-Sensor (sonst Strom/Getränke);
       // der Strom-Schalter erscheint dann nicht noch einmal als Schalter.
       if (typeIds.has("casora_coffee")) coffeeAnchors(h).forEach((x) => { push(x.anchor, x.name, "casora_coffee"); x.also.forEach((id) => seen.add(id)); });
+      // Pet tracker (community card, when added): one tile per Tractive device_tracker - by platform, or by the
+      // tracker device behind the pet (manufacturer "Tractive GmbH"), which the test house uses as well.
+      if (typeIds.has("casora_pet")) Object.keys(S).forEach((id) => {
+        const e = (h.entities || {})[id];
+        if (!id.startsWith("device_tracker.") || !e) return;
+        const dev = D[e.device_id], hw = dev && D[dev.via_device_id];
+        if (e.platform !== "tractive" && !/tractive/i.test((hw && hw.manufacturer) || "")) return;
+        push(id, (dev && (dev.name_by_user || dev.name)) || "", "casora_pet");
+      });
       sugg.forEach((x) => push(x.entity, x.name, x.type));
       Object.keys(S).forEach((id) => { if (ADD_DOMAINS.indexOf(id.split(".")[0]) >= 0) push(id, "", byEntity.has(id) ? byEntity.get(id).type : null); });
-      return out;
+      // Buttons and switches of a device that already has its own card (mower, coffee machine, pet with the tracker
+      // behind it) are part of that card, not offered again on their own.
+      const owned = new Set();
+      out.filter((x) => OWN_CARDS.has(x.type)).forEach((x) => {
+        const d = (R[x.entity] || {}).device_id;
+        if (d) { owned.add(d); if (D[d] && D[d].via_device_id) owned.add(D[d].via_device_id); }
+      });
+      return out.filter((x) => !/^(entity_actions|casora_switch)$/.test(x.type) || !owned.has((R[x.entity] || {}).device_id));
     };
 
     // Die bisherige Typauswahl („Andere Kachelart …“) – unverändert aus casora-panel-b.js.

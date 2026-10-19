@@ -538,6 +538,7 @@ const FILTER_CATEGORIES = {
   casora_reolink_doorbell: "security",
   casora_vacuum: "unfiltered",
   casora_coffee: "unfiltered",
+  casora_pet: "unfiltered",
   casora_plant: "unfiltered",
 };
 

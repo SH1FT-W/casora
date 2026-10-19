@@ -117,6 +117,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Drei erfundene Kaffeevollautomaten (Home-Connect-, De'Longhi-BT-artig und Strom-Erkennung, Community-Karte), siehe kaffee.py.
     from .kaffee import extra as kaffee_extra
     _merge(fixture, kaffee_extra(dt_util.utcnow()), "Testbarista/Morgenbohne/Bohnenwerk")
+    # Ein erfundenes Haustier mit Tractive-artigem Tracker (Community-Karte #25), siehe haustier.py.
+    from .haustier import extra as haustier_extra
+    _merge(fixture, haustier_extra(dt_util.utcnow()), "Testhund")
     # Ein erfundener Luftbefeuchter mit Modi, Wassertank und Feuchtesensor, siehe befeuchter.py.
     from .befeuchter import extra as befeuchter_extra
     _merge(fixture, befeuchter_extra(dt_util.utcnow()), "Testbefeuchter")

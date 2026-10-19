@@ -89,6 +89,7 @@ const MODULES = [
   '23-frigate',
   '24-klingel',
   '25-kaffee',
+  '26-haustier',
 ];
 
 const v = new URL(import.meta.url).searchParams.get('v') || String(Date.now());

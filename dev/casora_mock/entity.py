@@ -720,7 +720,7 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         "calendar": MCalendar, "weather": MWeather,
         "update": MUpdate,
         # nur anzeigen, keine Dienste
-        "sensor": MockEntity, "binary_sensor": MockEntity,
+        "sensor": MockEntity, "binary_sensor": MockEntity, "device_tracker": MockEntity,
         "event": MockEntity, "time": MockEntity, "date": MockEntity,
     }
 
@@ -728,7 +728,7 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
 PLATFORMS = [
     "light", "switch", "siren", "remote", "fan", "cover", "lock", "climate", "media_player",
     "vacuum", "lawn_mower", "humidifier", "button", "select", "number", "alarm_control_panel", "scene", "camera", "todo", "image",
-    "calendar", "weather", "sensor", "binary_sensor", "update", "event", "time", "date",
+    "calendar", "weather", "sensor", "binary_sensor", "device_tracker", "update", "event", "time", "date",
 ]
 
 

@@ -278,6 +278,14 @@ window.CASORA_TILE_TYPES = [
       needs: "lawn_mower", needsText: "For every robot lawn mower in Home Assistant",
       needsMissing: "No robot lawn mower in Home Assistant yet" },
     fields: [ICON, TITLE_NAME] },
+  // Pet tracker (community card, card request #25): every Tractive device_tracker; battery, status, live tracking,
+  // sound, light and activity come from the pet and its tracker device (scripts/local/26-haustier.js).
+  { id: "casora_pet", label: "Pet tracker", template: "casora_pet", domains: ["device_tracker"],
+    icon: "paw", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Pet",
+    community: { desc: "Where your pet is, battery and tracker status on the tile. The popup shows the map, live tracking, sound and light, today's activity against the daily goal, rest, sleep and the places of the last days. For Tractive.",
+      needs: "tractive", needsText: "For every pet in the Tractive integration",
+      needsMissing: "Tractive integration not installed yet" },
+    fields: [ICON, TITLE_NAME] },
   // Frigate (Community-Karte, aus Kartenwunsch #22): Kamera-Kachel für Kameras der Frigate-Integration
   // (device_class „camera“ setzt nur Frigate), dazu Erkennungen, Schnappschüsse und Schalter am selben Gerät
   // (scripts/local/23-frigate.js). Felder wie die Kamera-Kachel, ohne die Popup-Felder der Kamera-Übersicht.
@@ -371,7 +379,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "3D_Printer", "dryer", "dishwasher", "fish", "camera", "attention2", "sun", "trash", "car", "car_side",
   "car_side_w2", "ebike", "chef-hat", "shield_check", "shield_lock", "shield_moon", "shield_off",
   "shield_alarm", "shield_bypass", "shield_vacation", "calendar", "calendar-day", "window-open",
-  "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower", "coffee-maker",
+  "window-closed", "heating_coil", "wind", "rooms", "soccer", "pulse", "lawn-mower", "coffee-maker", "paw",
   "coffee-espresso", "coffee-doppio", "coffee-cup", "coffee-cappuccino", "coffee-latte", "coffee-tall", "coffee-water",
   "coffee-milk", "coffee-tea",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));

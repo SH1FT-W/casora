@@ -2278,7 +2278,18 @@
   "Seit dem Neustart noch keine Meldung": "No report since the restart",
   "Erreichbar, gerade nichts zu melden": "Reachable, nothing to report right now",
   "funkt, schickt aber keine Werte": "is on the air but sends no values",
-  "meldet keinen Batteriewert": "reports no battery level"
+  "meldet keinen Batteriewert": "reports no battery level",
+  "Haustier": "Pet",
+  "Meldet sich nicht": "Not reporting",
+  "Ungenaue Position": "Inaccurate position",
+  "Live-Tracking": "Live tracking",
+  "Ziel": "Goal",
+  "Min. aktiv": "min active",
+  "Ruhe": "Rest",
+  "Schlaf Tag": "Day sleep",
+  "Schlaf Nacht": "Night sleep",
+  "Tracker": "Tracker",
+  "Energiesparen": "Power saving"
  },
  "patterns": [
   [

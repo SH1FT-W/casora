@@ -283,6 +283,8 @@
       + '<span style="flex:none;margin:0;">' + esc(T('Ganzer Verlauf')) + '</span><ha-icon icon="mdi:chevron-right" style="--mdc-icon-size:18px;display:flex;flex:none;margin:0;"></ha-icon></div></div>';
   };
 
+  P.lastHtml = lastHtml;  // shared with the pet popup (26-haustier.js)
+
   P.sec = function (part, pid, states, hass, el) {
     var UI = window._casoraUI;
     var st = states && states[pid];

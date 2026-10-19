@@ -213,6 +213,10 @@ window.casoraPriceKwh = function (v) {
     [/problem|schadstoff|sonderm|gift|hazard/i, null, 'hazard', '#D35A4E'],
     [/rest|residual|general|haus|black/i, '#8E8E93', 'rest', '#8F7E6D'],
   ];
+  var WASTE_WORDS = [
+    [/grün|green/i, '#30D158'], [/blau|blue/i, '#0A84FF'], [/braun|brown/i, '#8F7E6D'],
+    [/schwarz|grau|black|gr[ae]y/i, '#8E8E93'], [/rot\b|rote|red/i, '#FF453A'],
+  ];
   function isWasteSensor(hass, eid) {
     if (eid.indexOf('sensor.') !== 0) return false;
     var e = reg(hass)[eid], st = hass.states[eid];
@@ -233,16 +237,39 @@ window.casoraPriceKwh = function (v) {
     var ids = named ? (Array.isArray(named) ? named : Object.keys(named))
       : Object.keys(S).filter(function (eid) { return isWasteSensor(hass, eid); }).sort();
     var weich = !!(window._casoraSoft && window._casoraSoft());
-    var bins = ids.filter(function (id) { return S[id]; }).map(function (id) {
-      var label = (named && !Array.isArray(named) && named[id]) || wasteLabel(hass, id);
+    var calendar = V.trash_calendar || cfg.calendar || Object.keys(S).filter(function (eid) {
+      if (eid.indexOf('calendar.') !== 0) return false;
+      var e = reg(hass)[eid];
+      return (e && e.platform === 'waste_collection_schedule')
+        || /^waste collection schedule/i.test((S[eid].attributes || {}).friendly_name || '');
+    }).sort()[0] || null;
+    // Calendar only, no bin sensors (issue #27): one bin per event title from the preloaded
+    // waste calendar, countdown from its next event. Ids are synthetic (no HA state behind them).
+    var fromCal = {};
+    var TC = window._casoraTrashCal;
+    if (!named && !ids.filter(function (id) { return S[id]; }).length && calendar && TC && TC.id === calendar && Array.isArray(TC.ev)) {
+      var t0 = new Date(); t0.setHours(0, 0, 0, 0);
+      TC.ev.forEach(function (e) {
+        var lab = String((e && e.summary) || '').trim(), st0 = e && e.start && (e.start.date || e.start.dateTime);
+        var d = st0 ? new Date(String(st0).slice(0, 10) + 'T00:00:00') : null;
+        if (!lab || !d || isNaN(d) || d < t0) return;
+        var n = Math.round((d - t0) / 86400000), id = calendar + '#' + lab.toLowerCase();
+        if (!fromCal[id] || n < fromCal[id].days) fromCal[id] = { label: lab, days: n };
+      });
+      ids = Object.keys(fromCal).sort();
+    }
+    var bins = ids.filter(function (id) { return S[id] || fromCal[id]; }).map(function (id) {
+      var label = (named && !Array.isArray(named) && named[id]) || (fromCal[id] ? fromCal[id].label : wasteLabel(hass, id));
       var kind = WASTE_KINDS.filter(function (k) { return k[0].test(label) || k[0].test(id); })[0];
-      var color = kind && kind[1] ? kind[1] : '#FF9F0A';
-      var st = S[id];
+      // No known kind: a colour word in the name ("Grüne Tonne") gives the colour (issue #27).
+      var word = !kind && WASTE_WORDS.filter(function (w) { return w[0].test(label); })[0];
+      var color = kind && kind[1] ? kind[1] : word ? word[1] : '#FF9F0A';
+      var st = S[id] || { state: String(fromCal[id].days), attributes: {} };
       var days = parseInt(st.state, 10);
       if (isNaN(days)) days = parseInt(st.attributes && st.attributes.daysTo, 10);
       var r = parseInt(color.slice(1, 3), 16), g = parseInt(color.slice(3, 5), 16), b = parseInt(color.slice(5, 7), 16);
       var tint = 'rgba(' + r + ',' + g + ',' + b + ',0.25)';
-      if (weich) {
+      if (weich && !word) {
         color = 'var(--casora-waste-' + (kind ? kind[2] : 'other') + ', ' + (kind ? kind[3] : '#DE8A4E') + ')';
         // Kachel am Abholtag: voller Tonnenkreis mit hellem Symbol wie die Weich-Symbole
         // (casora_trash setzt dazu --casora-icon-off-ink auf --casora-waste-glyph).
@@ -250,16 +277,12 @@ window.casoraPriceKwh = function (v) {
       }
       return {
         id: id, label: label, color: color, tint: tint,
-        re: kind && kind[1] ? kind[0] : new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'),
-        days: isNaN(days) ? null : days,
+        // Calendar bins match their own title exactly, so "Grüne Tonne" and "Grünschnitt" stay apart.
+        re: fromCal[id] ? new RegExp('^' + label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i')
+          : kind && kind[1] ? kind[0] : new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'),
+        days: isNaN(days) ? null : days, cal: !!fromCal[id],
       };
     });
-    var calendar = V.trash_calendar || cfg.calendar || Object.keys(S).filter(function (eid) {
-      if (eid.indexOf('calendar.') !== 0) return false;
-      var e = reg(hass)[eid];
-      return (e && e.platform === 'waste_collection_schedule')
-        || /^waste collection schedule/i.test((S[eid].attributes || {}).friendly_name || '');
-    }).sort()[0] || null;
     var months = V.trash_duty_months || cfg.duty_months || null;
     if (Array.isArray(months) && !months.length) months = null;
     var dutyEnt = V.trash_duty_entity || cfg.duty_entity || null;
@@ -318,7 +341,7 @@ window.casoraPriceKwh = function (v) {
     if (!W || (!W.calendar && !W.bins.length)) return null;
     var bad = function (id) { var s = S[id]; return !s || s.state === 'unavailable' || s.state === 'unknown'; };
     var calDown = !!(W.calendar && bad(W.calendar));
-    var binsDown = W.bins.length > 0 && W.bins.every(function (b) { return bad(b.id); });
+    var binsDown = W.bins.length > 0 && W.bins.every(function (b) { return !b.cal && bad(b.id); });
     if (!calDown && !binsDown) return null;
     // Kalender da, aber noch nicht geladen: erst abwarten, nicht vorschnell „nicht erreichbar“.
     var TC = window._casoraTrashCal;
