@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.40 – 19.10.2026
+
+### Fixed
+- **Night photo replaced the day photo:** In the Studio, “Upload your own” under a room photo always went to the day slot, so uploading a night photo afterwards overwrote the day photo. The button now asks “Day” or “Night” first and the photo lands exactly there. Clicking or dropping onto a slot works as before.
+
 ## 26.10.39 – 18.10.2026
 
 ### Fixed

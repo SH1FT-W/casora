@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.40 – 19.10.2026
+
+### Behoben
+- **Nachtfoto ersetzte das Tagfoto:** Im Studio landete „Eigenes hochladen“ beim Raumfoto immer auf dem Platz „Tag“; ein danach hochgeladenes Nachtfoto überschrieb so das Tagfoto. Der Knopf fragt jetzt zuerst „Tag“ oder „Nacht“, und das Foto landet genau dort. Klicken oder Ziehen direkt auf einen Platz funktioniert wie bisher.
+
 ## 26.10.39 – 18.10.2026
 
 ### Behoben
