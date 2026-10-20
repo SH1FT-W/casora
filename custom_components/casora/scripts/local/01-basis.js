@@ -196,16 +196,17 @@ window._casoraRoomNames = function () {
 };
 /* defaults = Vorgaben der Vorlagen für room_name (z. B. „Waschmaschine“): kein eigener Titel,
    aber besser als der allgemeine Standard, wenn die Kachel keinen Namen hat. */
-/* Raum einer Kachel-Entität laut Dashboard (nicht laut HA-Bereich): ein im Studio umbenannter
-   Raum („Kochecke“, Bereich „Küche“) soll auch im Popup so heißen. Nur eindeutige Treffer
-   (Entität liegt in genau einem Raum); Home und „Favoriten“ zählen nicht als Raum. */
+/* Room of a tile entity per dashboard (not per HA area): a room renamed in the Studio (e.g. Kochecke
+   for the area Küche) keeps that name in the popup. Unique hits only (entity sits in exactly one room);
+   Home and "Favoriten" are no rooms. Also notes the popup light lists of room tiles
+   (_casoraRoomOfLists, #30). */
 window._casoraRoomOf = function (eid) {
   if (!eid) return null;
   try {
     var cfg = window._casoraLovelaceCfg();
     if (!cfg || !Array.isArray(cfg.views)) return null;
     if (window._casoraRoomOfCfg !== cfg) {
-      var map = {};
+      var map = {}, lists = {};
       var skip = /^(home|favoriten|favorites|zuhause)$/i;
       var add = function (room, e) {
         if (!room || skip.test(room) || typeof e !== 'string') return;
@@ -228,17 +229,82 @@ window._casoraRoomOf = function (eid) {
           list.forEach(function (c) {
             if (!c || typeof c !== 'object') return;
             if (tpl(c).indexOf('casora_mobile_header') > -1 && typeof c.name === 'string') { cur = (c.variables && c.variables.favorites === true) ? 'Favorites' : c.name.trim(); return; }
-            if (c.type === 'custom:button-card' && tpl(c).indexOf('casora_room') < 0) add(cur, c.entity);
+            if (c.type === 'custom:button-card' && tpl(c).indexOf('casora_room') < 0) {
+              add(cur, c.entity);
+              var L = c.variables && c.variables.lights;
+              if (Array.isArray(L) && L.length && cur && !skip.test(cur)) lists[L.join(' ')] = 1;
+            }
             walk(c.cards, cur, d + 1);
           });
         })(v.cards, hero, 0);
       });
       window._casoraRoomOfCfg = cfg;
       window._casoraRoomOfMap = map;
+      window._casoraRoomOfLists = lists;
     }
     var hit = window._casoraRoomOfMap[eid];
     return hit && hit.length === 1 ? hit[0] : null;
   } catch (e) { return null; }
+};
+/* Lights of a tile spread over the whole house (#30)? The house-wide tile on Home names its first light as
+   entity, so that light's room is not the tile's. One key per light: its dashboard room, else the room of the
+   tiles in its HA area, else the room whose tile is a light group holding it, else its area name. More than one
+   key is the house. Groups count by their own tile room or by their members. Room tiles stay their room: a light
+   group that is a room's tile (unless the popup lists more than that group), and any tile whose light list a room
+   holds. vars.house decides outright: true from the setup, false on light badges (named like their entity).
+   ids: the popup's lights (default: vars.lights, else gid). */
+window._casoraLightsHouse = function (vars, gid, ids, hass) {
+  var V = vars || {};
+  if (V.house === true) return true;
+  if (V.house === false) return false;
+  var roomOf = window._casoraRoomOf;
+  if (!hass || typeof roomOf !== 'function') return false;
+  try {
+    var S = hass.states || {}, E = hass.entities || {}, D = hass.devices || {}, A = hass.areas || {};
+    var mem = function (id) { var a = S[id] && S[id].attributes; return a && Array.isArray(a.entity_id) && a.entity_id.length ? a.entity_id : null; };
+    var cfg = window._casoraLovelaceCfg && window._casoraLovelaceCfg();
+    // No dashboard (Studio preview): no room to find, and each lookup would search the page again.
+    if (!cfg) roomOf = function () { return null; };
+    var list = Array.isArray(V.lights) && V.lights.length ? V.lights : null;
+    ids = [].concat(ids || list || gid || []);
+    if (cfg && ids.length) roomOf(ids[0]); // builds the room map and the room tiles' lists
+    if (gid && mem(gid) && roomOf(gid) && !(list && list.some(function (x) { return x !== gid; }))) return false;
+    if (list && cfg && window._casoraRoomOfCfg === cfg && (window._casoraRoomOfLists || {})[list.join(' ')]) return false;
+    var C = window._casoraLightsHouseC;
+    if (!C || C.cfg !== cfg || C.S !== S || C.E !== E || C.D !== D) {
+      var areaOf = function (id) { var e = E[id]; return e ? (e.area_id || (e.device_id && D[e.device_id] && D[e.device_id].area_id) || null) : null; };
+      // false = several rooms claim it.
+      var put = function (m, k, room) { m[k] = (m[k] === undefined || m[k] === room) ? room : false; };
+      var isLight = function (id) { return String(id).indexOf('light.') === 0; };
+      var byArea = {}, byGroup = {};
+      var map = (cfg && window._casoraRoomOfCfg === cfg && window._casoraRoomOfMap) || {};
+      Object.keys(map).forEach(function (eid) {
+        if (map[eid].length !== 1) return;
+        var room = map[eid][0], a = areaOf(eid), seen = {};
+        if (a) put(byArea, a, room);
+        // Light groups only: a scene tile lists lights of other rooms too.
+        if (!isLight(eid)) return;
+        (function walk(id) {
+          (mem(id) || []).forEach(function (m) { if (seen[m] || !isLight(m)) return; seen[m] = 1; put(byGroup, m, room); walk(m); });
+        })(eid);
+      });
+      C = window._casoraLightsHouseC = { cfg: cfg, S: S, E: E, D: D, byArea: byArea, byGroup: byGroup, areaOf: areaOf };
+    }
+    var keys = {}, n = 0, done = {};
+    var visit = function (id) {
+      if (n > 1 || typeof id !== 'string' || done[id] || !S[id]) return;
+      done[id] = 1;
+      var k = roomOf(id);
+      if (!k && mem(id)) return mem(id).forEach(visit);
+      if (!k) {
+        var a = C.areaOf(id);
+        k = (a && C.byArea[a]) || C.byGroup[id] || (a && C.byArea[a] === undefined && A[a] && A[a].name) || null;
+      }
+      if (k && !keys[k]) { keys[k] = 1; n++; }
+    };
+    ids.forEach(visit);
+    return n > 1;
+  } catch (e) { return false; }
 };
 window.casoraPopupTitle = function (card, variables, def, defaults) {
   var V = variables || {};

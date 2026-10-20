@@ -6656,8 +6656,8 @@ window.casoraMenuGlass = {
     return fill ? 'var(--casora-soft-glyph, #fff)' : null;
   }
   window._casoraInkOn = inkOn;
-  // Raum der auslösenden Kachel (laut Dashboard, nur eindeutige Treffer) – nicht bei Sammel-Popups
-  // (Badges, Batterien, Energie …), deren Entität zufällig auch in einem Raum liegt.
+  // Room of the tapped tile (per dashboard, unique hits only) – not for house-wide popups (badges,
+  // batteries, energy …) whose entity happens to sit in a room as well.
   var HOUSE_POPUP = /\bcasora_(badge_\w+|(popup_)?(pulse|battery|energy|network|updates|scenes|contacts|calendar|weather_warning|football|recipe|solar_tip|time)|weather|trash|now_playing_\w+)\b/;
   function roomLabelOf(src) {
     if (!src || !src._config) return '';
@@ -6665,6 +6665,12 @@ window.casoraMenuGlass = {
     if (HOUSE_POPUP.test(tpl)) return '';
     var id = src._stateObj && src._stateObj.entity_id;
     if (!id || typeof window._casoraRoomOf !== 'function') return '';
+    // Lights of the whole house (#30): the tile's entity is just the first light, its room is not the tile's.
+    if (/\bcasora_light\b/.test(tpl) && typeof window._casoraLightsHouse === 'function') {
+      var V = src._config.variables || {}, pg = V.popup_group || V.group_entity;
+      var h = src._hass || (document.querySelector('home-assistant') || {}).hass;
+      try { if (window._casoraLightsHouse(V, typeof pg === 'string' && pg !== 'none' ? pg : id, null, h)) return ''; } catch (e) {}
+    }
     try { return String(window._casoraRoomOf(id) || '').trim(); } catch (e) { return ''; }
   }
   // „Licht Badezimmer“ unter dem Etikett „Badezimmer“ → „Licht“ (Raum steht schon darüber).

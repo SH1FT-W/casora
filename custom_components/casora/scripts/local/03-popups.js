@@ -3540,6 +3540,8 @@
 
   var roomBody = function (cfg, sc, states, h) {
     var ids = sc.lights.filter(function (id) { return states[id]; });
+    // The whole house (#30): no room to name, and none to strip from lamp and scene names.
+    var room = sc.house ? null : sc.name;
     var left = '';
     var dim = ids.filter(function (id) { return dimmable(states[id]); });
     if (dim.length) {
@@ -3579,11 +3581,11 @@
       left += '<div class="lps-lbl' + (left ? ' lps-gap' : '') + '">' + esc(tr('Szenen')) + '</div>'
         + '<div class="lps-chips" style="margin-top:0">' + sc2.map(function (id) {
         return '<div class="lps-chip' + (id === last ? ' on' : '') + '" role="button" data-lps-tap="' + attr({ a: 'scene', id: id }) + '">'
-          + esc(short(nameOf(id, states), sc.name)) + '</div>';
+          + esc(short(nameOf(id, states), room)) + '</div>';
       }).join('') + '</div>';
     }
-    var right = '<div class="lps-lbl">' + esc(tr('Leuchten im Raum')) + '</div><div class="lps-rows">'
-      + (sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids).map(function (id) { return lampRow(id, states, sc.name); }).join('') + '</div>';
+    var right = '<div class="lps-lbl">' + esc(tr(sc.house ? 'Leuchten' : 'Leuchten im Raum')) + '</div><div class="lps-rows">'
+      + (sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids).map(function (id) { return lampRow(id, states, room); }).join('') + '</div>';
     return '<div class="lps-cols' + (left ? '' : ' one') + '">' + (left ? '<div>' + left + '</div>' : '') + '<div>' + right + '</div></div>';
   };
   var word = function (v) { return v <= 0 ? tr('Aus') : v >= 100 ? tr('Volle Helligkeit') : tr('Gedimmt'); };

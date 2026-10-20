@@ -154,13 +154,15 @@
     if (variables) out.variables = variables;
     return out;
   }
-  // Mehrere Geräte einer Art → eine Kachel (wie Casoras eigene Gruppen-Kacheln).
-  // wide: Übersicht (alle Räume) – dort darf die Gruppe des ganzen Hauses mehr enthalten.
+  // Several devices of one kind → one tile (like Casora's own group tiles).
+  // wide: the overview (all rooms) – there the whole house's group may hold more, and the light tile is
+  // marked as the house's (house: true): its popup is "Beleuchtung", not the room of its first light (#30).
   function groupTile(kind, ids, name, room, hass, wide) {
     if (kind === "light") {
       const g = ids.length === 1 ? ids[0] : groupFor(hass, ids, "light", !wide);
-      if (g) return tile("light", g, name);
-      return tile("light", ids[0], name, { lights: ids.slice(), active_entities: ids.slice() });
+      const house = wide && ids.length > 1 ? { house: true } : null;
+      if (g) return tile("light", g, name, house);
+      return tile("light", ids[0], name, Object.assign({ lights: ids.slice(), active_entities: ids.slice() }, house));
     }
     if (kind === "cover") return tile("cover_group", groupFor(hass, ids, "cover", !wide) || ids[0], name, { room_name: room, covers: ids.slice() });
     if (kind === "lock") return tile("lock_group", ids[0], name, { room_name: room, locks: ids.slice() });
