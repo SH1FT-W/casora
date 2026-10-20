@@ -19288,7 +19288,8 @@ class CasoraPanel extends HTMLElement {
       const needle = q.value.trim().toLowerCase();
       const hits = (list || []).filter((o) => !needle || String(o).toLowerCase().includes(needle)
         || String(name(o)).toLowerCase().includes(needle)
-        || (ents && meta(o) && meta(o).ctx.toLowerCase().includes(needle)));
+        // The shown name counts too, as in the desktop menu (Tractive: the pet's name, issue #25).
+        || (ents && meta(o) && (meta(o).ctx + " " + meta(o).name).toLowerCase().includes(needle)));
       listEl.innerHTML = "";
       const typed = q.value.trim();
       const groups = ents ? this._entGroups(hits.slice(0, 300)) : [["", hits.slice(0, 300)]];
@@ -19309,7 +19310,9 @@ class CasoraPanel extends HTMLElement {
         }));
       });
       const tail = () => {
-        if (free !== false && typed && !(list || []).includes(typed) && (!hits.length || typed.includes("."))) {
+        // free: false offers no typed text, a function decides which (device fields: entity IDs only).
+        const own = typeof free === "function" ? free(typed) : free !== false;
+        if (own && typed && !(list || []).includes(typed) && (!hits.length || typed.includes("."))) {
           listEl.appendChild(row(typed, "Use \u201c" + typed + "\u201d", null, false));
         }
         if (!hits.length && !typed) {
@@ -20647,14 +20650,32 @@ class CasoraPanel extends HTMLElement {
     // A fixed list is a chooser, not a text field: no typing, no filtering.
     const fixed = !!(opts && opts.fixed);
     const labels = (opts && opts.labels) || null;
-    // Beschriftungen und Platzhalter stehen im Eingabefeld – dort übersetzt die Seite nicht mit.
+    // Labels and placeholders sit in the input, where the page's translation does not reach.
     const t9 = (x) => (window.casoraI18n && typeof x === "string" ? window.casoraI18n.t(x) : x);
     const show = (v) => (labels && labels[v] !== undefined ? t9(labels[v]) : v);
     const nameSeen = new Map();
-    (list || []).forEach((o) => {
-      const nm = this._prettyEntity(o);
-      if (nm !== o) nameSeen.set(nm, (nameSeen.get(nm) || 0) + 1);
-    });
+    const countNames = () => {
+      nameSeen.clear();
+      (list || []).forEach((o) => {
+        const nm = this._prettyEntity(o);
+        if (nm !== o) nameSeen.set(nm, (nameSeen.get(nm) || 0) + 1);
+      });
+    };
+    countNames();
+    // opts.source: returns the current list. Devices may arrive after the field was drawn (an integration
+    // still starting after an HA restart, issue #25), so the list is read again whenever hass has changed.
+    const source = opts && typeof opts.source === "function" ? opts.source : null;
+    let sourceHass = this._hass;
+    const fresh = () => {
+      if (!source || this._hass === sourceHass) return;
+      sourceHass = this._hass;
+      const l = source();
+      if (!Array.isArray(l)) return;
+      list = l;
+      countNames();
+      // The chosen device may have arrived as well ("Device missing" until now).
+      if (wrap._paintEnt) wrap._paintEnt();
+    };
     const lang = this._hass && this._hass.language;
     const pretty = (v) => {
       if (iconMode) return v ? iconName(v, lang) : "";
@@ -20674,7 +20695,10 @@ class CasoraPanel extends HTMLElement {
     // there opens behind the scrim and looks like nothing happened.
     const comboHost = () => (wrap.closest && wrap.closest(".askpane")) || this.$("overlay");
     wrap.appendChild(input);
-    const entityish = !fixed && !iconMode && (list || []).some((o) => String(o).indexOf(".") > 0);
+    // opts.entity: a device field even while its list is still empty.
+    const entityish = !fixed && !iconMode && (!!(opts && opts.entity) || (list || []).some((o) => String(o).indexOf(".") > 0));
+    // Typed text a device field takes as it is: an ID from the list or HA, or ID-shaped text.
+    const asId = (t) => list.indexOf(t) >= 0 || !!(this._hass && this._hass.states[t]) || /^[a-z_]+\.[a-z0-9_]+$/.test(t);
 
     let shown = [];
     let active = -1;
@@ -20780,6 +20804,7 @@ class CasoraPanel extends HTMLElement {
     };
 
     const open = (all) => {
+      fresh();
       const q = fixed || all === true ? "" : input.value.trim().toLowerCase();
       // People read as names (and photo) everywhere, not as "person.x".
       const people = !fixed && !iconMode && list.length > 0 && list.every((o) => /^person\./.test(String(o)));
@@ -20940,6 +20965,7 @@ class CasoraPanel extends HTMLElement {
       input.onmousedown = () => { wasOpen = this._openCombo === close && !!menu.parentNode && !menu._closing; };
       input.onclick = () => {
         if (!isPhone(this)) { if (wasOpen) close(); else open(); wasOpen = false; return; }
+        fresh();
         this._menuAt(wrap, list.map((o) => ({ id: o, label: show(o), checked: o === current })), (v) => commit(v));
       };
       input.onblur = () => { if (!isPhone(this)) setTimeout(close, 120); };
@@ -20957,12 +20983,15 @@ class CasoraPanel extends HTMLElement {
       };
       input.onclick = () => {
         if (!isPhone(this)) return;
+        fresh();
         this._pickSheet(iconMode ? {
           title: rowLabel(), list, current, free: false, label: (o) => iconName(o, lang),
           glyph: (o) => iconUrl(o === ICON_DEFAULT && iconFallback ? iconFallback : o),
           onPick: (v) => commit(v),
         } : {
           title: rowLabel(), list, current,
+          // Device field: offer typed text only when it is an entity ID, as the desktop field does on blur.
+          free: entityish ? asId : undefined,
           onPick: (v) => commit(v),
         });
       };
@@ -20973,15 +21002,15 @@ class CasoraPanel extends HTMLElement {
         input.placeholder = placeholder || "";
         const typed = input.value.trim();
         if (!typed && current && (isPhone(this) || entityish)) { input.value = pretty(current); return; }
-        // Symbol-Feld: ein getippter Name („Glühbirne“) meint sein Symbol.
+        // Icon field: a typed name ("Light bulb") means its icon.
         const byName = iconMode && typed && list.find((o) => iconName(o, lang).toLowerCase() === typed.toLowerCase());
-        // Gerätefeld: nur eine echte Entität übernehmen (ID aus der Liste/HA, ID-Form oder eindeutiger Name).
-        // Vorher wurde jeder getippte Suchtext beim Verlassen (Tab, Klick daneben) zur „Entität“ der Kachel.
+        // Device field: take only a real entity (an ID from the list or HA, an ID-shaped text or a unique name).
+        // Before, any search text left behind (Tab, a click elsewhere) became the tile's "entity".
         if (entityish && typed) {
+          fresh();
           const low = typed.toLowerCase();
           const named = list.filter((o) => pretty(o).toLowerCase() === low || this._prettyEntity(o).toLowerCase() === low);
-          const pick = list.indexOf(typed) >= 0 || (this._hass && this._hass.states[typed]) || /^[a-z_]+\.[a-z0-9_]+$/.test(typed)
-            ? typed : named.length === 1 ? named[0] : null;
+          const pick = asId(typed) ? typed : named.length === 1 ? named[0] : null;
           if (pick && pick !== current) commit(pick); else input.value = pretty(current);
           return;
         }
@@ -26238,15 +26267,19 @@ class CasoraPanel extends HTMLElement {
       // Tractive: the pet's name, not the tracker hardware's (issue #25).
       return (id && petName(this._hass, id)) || (e && e.attributes && e.attributes.friendly_name) || null;
     };
-    // Geräte dieses Raums zuerst, ohne Konfigurations-/Diagnose-Knöpfe („Identifizieren“, „Neustart“).
-    let entOptions = this._rankedEntityList(type.domains, type.classes, room, tile.entity);
-    // Pet tracker: only the Tractive trackers, not every phone (issue #25); all of them if none is found.
-    if (type.id === "casora_pet") {
-      const pets = entOptions.filter((e) => e === tile.entity || isPetTracker(this._hass, e));
-      if (pets.length) entOptions = pets;
-    }
-    const entCombo = this._combo(tile.entity || "", entOptions,
-      // Kacheln, die ihre Daten selbst finden (Solar-Tipp, Abfall, Auto …): das Gerät ist freiwillig.
+    // This room's devices first, without config/diagnostic buttons ("Identify", "Restart").
+    // A function, so the field reads it again on open: right after an HA restart an integration
+    // (Tractive) may not have its entities yet while the inspector is drawn (issue #25). It is a device field
+    // even while that list is empty, also for tiles with their own data: typed text is no entity.
+    const entOptions = () => {
+      const all = this._rankedEntityList(type.domains, type.classes, room, tile.entity);
+      // Pet tracker: only the Tractive trackers, not every phone (issue #25); all of them if none is found.
+      if (type.id !== "casora_pet") return all;
+      const pets = all.filter((e) => e === tile.entity || isPetTracker(this._hass, e));
+      return pets.length ? pets : all;
+    };
+    const entCombo = this._combo(tile.entity || "", entOptions(),
+      // Tiles that find their data themselves (solar tip, waste, car …): the device is optional.
       type.entityPlaceholder || (type.ownData ? "Automatic" : pickHint(type.domains)),
       (v) => {
         const prev = tile.entity;
@@ -26291,7 +26324,7 @@ class CasoraPanel extends HTMLElement {
         if (type.glyphFromEntity && glyphNow() !== was) rebuild = true;
         if (rebuild) this._renderForm();
         else this._syncPreview();
-      });
+      }, { source: entOptions, entity: true });
     const entityLabel = isGroup ? grp.noun + " 1" : (type.entityLabel || "Entity");
     let entRowEl = null;
     const noEntityRow = !!type.noEntity;
