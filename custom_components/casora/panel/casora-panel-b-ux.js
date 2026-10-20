@@ -141,10 +141,13 @@
       const k = (e) => coffeeKey(e);
       // Ohne Schlüssel: Ende der Entity-ID (…_bsh_common_status_operationstate, <mac>_product, …_recipe, …_state).
       const t = (e, re) => !k(e) && re.test(coffeeTail(e));
-      const sensor = list.find((e) => e.entity_id.startsWith("sensor.") && (/operationstate$|^(machinestatus|devicestatus|status|state)$/.test(k(e))
-        || t(e, /operationstate$|devicestatus$|machinestatus$/))) || list.find((e) => e.entity_id.startsWith("sensor.") && t(e, /state$/) && e.platform === "melitta_barista");
-      const power = list.find((e) => e.entity_id.startsWith("switch.") && (/^(power|powerstate|switchpowerstate|main)$/.test(k(e)) || t(e, /powerstate$/)));
-      const sel = list.find((e) => e.entity_id.startsWith("select.") && (/^(selectedprogram|selectprogram|makebeverage|beverage|product|recipe)$/.test(k(e))
+      // The tile needs an entity the Studio lists: De'Longhi BT marks its status sensor diagnostic, then the power
+      // switch carries the tile (the module finds the status on the device). Before, the machine was not offered at all.
+      const pick = list.filter((e) => !e.entity_category && !e.disabled_by);
+      const sensor = pick.find((e) => e.entity_id.startsWith("sensor.") && (/operationstate$|^(machinestatus|devicestatus|status|state)$/.test(k(e))
+        || t(e, /operationstate$|devicestatus$|machinestatus$/))) || pick.find((e) => e.entity_id.startsWith("sensor.") && t(e, /state$/) && e.platform === "melitta_barista");
+      const power = pick.find((e) => e.entity_id.startsWith("switch.") && (/^(power|powerstate|switchpowerstate|main)$/.test(k(e)) || t(e, /powerstate$/)));
+      const sel = pick.find((e) => e.entity_id.startsWith("select.") && (/^(selectedprogram|selectprogram|makebeverage|beverage|product|recipe)$/.test(k(e))
         || t(e, /programs$|product$|recipe$|recipeselect$/)));
       const a = sensor || power || sel;
       if (!a) return;
@@ -155,6 +158,8 @@
   }
   // Also used by the panel's tile suggestions (_tileCandidates), so a new coffee tile only suggests coffee machines.
   W.__casoraCoffeeAnchors = coffeeAnchors;
+  // Also used by _tileCandidates: a new doorbell tile suggests the doorbell's live camera as a sure match.
+  W.__casoraBellCam = bellCam;
   const foldTx = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ß/g, "ss");
   // Geräte-Treffer: jedes Wort muss in Name, Bereich oder Art vorkommen; vorn im Namen zählt mehr,
   // Neues (ohne Kachel) und Vorschläge des Assistenten vor Vorhandenem.
@@ -624,12 +629,15 @@
         // Frigate camera (only Frigate sets device_class "camera"): the community card, if it is added.
         // Birdseye (combined view) has neither camera_name nor client_id – no single Frigate camera (as 23-frigate.js F.is).
         const fa = S[id].attributes || {};
-        const frig = !suggested && id.startsWith("camera.") && typeIds.has("casora_frigate")
+        // A camera the assistant suggests as a plain camera still becomes the community card when it is added
+        // (before, the Reolink doorbell stayed "Camera" and was missing as a doorbell).
+        const cam = !suggested || suggested === "casora_camera";
+        const frig = cam && id.startsWith("camera.") && typeIds.has("casora_frigate")
           && fa.device_class === "camera" && !/birdseye/i.test(id)
           && (fa.camera_name || /^(unavailable|unknown)$/.test(String(S[id].state))) ? "casora_frigate" : null;
         // Reolink-Türklingel: die Community-Karte, wenn sie hinzugefügt ist – je Gerät eine Kamera (sub vor main,
         // 24-klingel.js liveCam; vorher stand die Klingel zweimal in der Liste).
-        const bell = !suggested && !frig && id.startsWith("camera.") && typeIds.has("casora_reolink_doorbell") && bellCam(h, id)
+        const bell = cam && !frig && id.startsWith("camera.") && typeIds.has("casora_reolink_doorbell") && bellCam(h, id)
           ? "casora_reolink_doorbell" : null;
         const type = typeFor(id, typeIds, frig || bell || suggested);
         if (!type) return;

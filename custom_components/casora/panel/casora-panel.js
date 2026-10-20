@@ -4804,6 +4804,12 @@ const TILE_MAIN_FIND = {
   // De'Longhi, Jura, Melitta, La Marzocco and the power-curve integrations delonghi/krups); any sensor/switch/select
   // gave hundreds of suggestions.
   casora_coffee: { coffee: true },
+  // Community cards whose device is plain to see: every lawn mower, every Frigate camera (only Frigate sets
+  // device_class "camera"; Birdseye is no single camera, as 23-frigate.js), the live camera of a Reolink doorbell
+  // (casora-panel-b-ux.js bellCam). Before, adding the tile found them only as an unsure match.
+  casora_lawn_mower: { domain: "lawn_mower", match: () => true },
+  casora_frigate: { domain: "camera", match: (h, id) => ((((h.states || {})[id] || {}).attributes || {}).device_class === "camera") && !/birdseye/i.test(id) },
+  casora_reolink_doorbell: { domain: "camera", match: (h, id) => typeof window.__casoraBellCam === "function" && !!window.__casoraBellCam(h, id) },
   casora_weather_warning: { keys: ["warning", "warnings"], domain: "binary_sensor", dc: "safety" },
   // Ein Aquarium ist kein beliebiges Thermometer (sonst: Außentemperatur des Autos).
   casora_aquarium: { domain: "sensor", dc: "temperature", strict: true,
@@ -4851,7 +4857,7 @@ const DEVICE_KINDS = [
 ];
 // Die Art, die eine Kachel selbst zeigt – ihre eigenen Geräte sind nicht „fremd“.
 const TYPE_KIND = { casora_aquarium: "aquarium", casora_ebike: "ebike", casora_car: "car",
-  casora_3d_printer: "printer", vacuum: "vacuum" };
+  casora_3d_printer: "printer", vacuum: "vacuum", casora_lawn_mower: "vacuum" };
 // Netzwerk: welche Rate der Download ist (Name/translation_key vor der Entity-ID).
 const NET_UP = /upload|\btx\b|senden|transmit|\bup\b|hochladen/;
 const NET_DOWN = /download|\brx\b|empfang|receiv|\bdown\b|herunterladen/;
@@ -21458,7 +21464,8 @@ class CasoraPanel extends HTMLElement {
         const dcHit = spec.dc && ((S[id].attributes || {}).device_class === spec.dc);
         const petHit = spec.pet && isPetTracker(h, id);
         const coffeeHit = !!coffee && coffee.has(id);
-        if (!keyHit && !dcHit && !petHit && !coffeeHit) return false;
+        const matchHit = !!spec.match && spec.match(h, id);
+        if (!keyHit && !dcHit && !petHit && !coffeeHit && !matchHit) return false;
         const text = id + " " + nameOf(id) + " " + devName(id);
         if (spec.not && spec.not.test(text)) return false;
         return true;
@@ -21527,7 +21534,8 @@ class CasoraPanel extends HTMLElement {
       // Der Schlüssel der Integration ist sicherer als nur die Geräteklasse.
       const lr = laundryRank.has(id) ? laundryRank.get(id) : null;
       const keyHit = lr !== null ? lr < 2 : !!spec && ((spec.keys || []).includes((R[id] || {}).translation_key)
-        || platformHit(spec, R[id] || {}, S[id]) || (!!spec.pet && isPetTracker(h, id)) || (!!coffee && coffee.has(id)));
+        || platformHit(spec, R[id] || {}, S[id]) || (!!spec.pet && isPetTracker(h, id)) || (!!coffee && coffee.has(id))
+        || (!!spec.match && spec.match(h, id)));
       if (keyHit) score += 8;
       // Hersteller-Integration vor WashData.
       if (lr === 0) score += 1;
