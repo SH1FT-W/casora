@@ -9,6 +9,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ### Fixed
 - **Community could not be scrolled:** On phones and smaller screens the Community page was cut off at the top and bottom, so the title, "Request a card…" and "Close" were out of reach. Now the head and "Close" stay in place and only the list of cards scrolls. Other long dialogs in the Studio fit on the screen now too.
 - **Community cards without a frame:** The entries of the list sat in an unintended box.
+- **Latest change missing from the history:** On the value page of a popup, a state change that had just happened was sometimes missing from "Changes" and "History" until the state changed again. Home Assistant only saves the history after a few seconds; Casora now reloads until the change is there.
 
 ### Changed
 - **Community on the phone:** In the Studio on a phone there was no way to the Community except at the very bottom of "Add tile". Now "Community cards…" is in the ⋯ menu.

@@ -102,7 +102,7 @@
 
   // ── Verlauf holen (je Entität und Zeitraum einmal je Zustandswechsel) ───────
   var SPANS = { '24h': 864e5, '7d': 7 * 864e5, '30d': 30 * 864e5 };
-  var hist = {}, retried = {};
+  var hist = {}, retried = {}, RETRY = [2500, 6000, 12000];
   Z.history = function (h, id, span, el) {
     var st = h && h.states && h.states[id];
     if (!st) return null;
@@ -121,10 +121,10 @@
           rows.push({ s: x.state, t: Math.max(t, start) });
         });
         cell.rows = rows;
-        // Gerade gewechselt: Der Recorder schreibt mit kurzer Verzögerung, der neue Zustand fehlte dann bis zum
-        // nächsten Wechsel in „Änderungen“ und „Verlauf“. Einmal je Wechsel kurz danach nachladen.
+        // Just changed: the recorder writes with a delay (commit interval 5 s by default), and the new state was
+        // missing from "Changes" and "History" until the next change. Reload until it is there (2.5, 6, 12 s).
         var lc = Date.parse(st.last_changed), last = rows.length ? rows[rows.length - 1].t : 0;
-        if (isFinite(lc) && last < lc - 1000 && !retried[key]) { retried[key] = true; cell.again = true; }
+        if (isFinite(lc) && last < lc - 1000 && (retried[key] || 0) < RETRY.length) { cell.again = RETRY[retried[key] || 0]; retried[key] = (retried[key] || 0) + 1; }
       }, function () { cell.rows = cell.rows || []; })
       .then(function () {
         cell.busy = false;
@@ -141,7 +141,7 @@
             if (hist[id + '|' + span] !== cell) return;
             cell.key += '|nachladen';
             kick(ws);
-          }, 2500);
+          }, cell.again);
         }
       });
     return cell.rows;

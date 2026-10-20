@@ -9,6 +9,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ### Behoben
 - **Community ließ sich nicht scrollen:** Am Handy und auf kleineren Bildschirmen war die Community-Seite oben und unten abgeschnitten, Titel, „Kartenwunsch einreichen …“ und „Schließen“ waren nicht erreichbar. Jetzt bleiben Kopf und „Schließen“ stehen, und nur die Liste der Karten scrollt. Auch andere lange Dialoge im Studio passen jetzt auf den Bildschirm.
 - **Community-Karten ohne Rahmen:** Die Einträge der Liste lagen in einem ungewollten Kasten.
+- **Letzter Wechsel fehlte im Verlauf:** In der Messwert-Seite eines Popups fehlte ein gerade erfolgter Zustandswechsel manchmal in „Änderungen“ und „Verlauf“, bis sich der Zustand wieder änderte. Home Assistant speichert den Verlauf erst nach einigen Sekunden; Casora lädt jetzt so lange nach, bis der Wechsel da ist.
 
 ### Geändert
 - **Community am Handy:** Im Studio am Handy fehlte der Weg zur Community, außer ganz unten in „Kachel hinzufügen“. Jetzt steht „Community-Karten …“ im ⋯-Menü.
