@@ -10948,13 +10948,20 @@ class CasoraPanel extends HTMLElement {
         .iconcell.on { background:var(--fill); color:var(--on-fill); }
         .iconnone { font-size:var(--t-caption); font-weight:500; }
         .iconempty { grid-column:1 / -1; padding:18px 0; color:var(--ink-3); font-size:var(--t-foot); }
+        /* A dialog taller than the screen (Community page) scrolls inside the card; the
+           centered pane alone cut it off at both ends with nothing to scroll. */
         .askstack {
           position:relative; width:min(340px, 100%);
           border-radius:var(--casora-studio-alert-radius, 38px);
+          max-height:100%; display:flex; flex-direction:column;
         }
         .askcard {
           position:relative; box-sizing:border-box; padding:30px 24px 18px; text-align:center;
+          flex:0 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain;
+          touch-action:pan-y; border-radius:inherit;
+          scrollbar-width:none; -ms-overflow-style:none;
         }
+        .askcard::-webkit-scrollbar { width:0; height:0; display:none; }
         .askcard h3 {
           margin:0; font-size:var(--t-title); line-height:1.2; font-weight:700; letter-spacing:-0.02em;
           color:var(--ink); text-wrap:balance;
@@ -12821,7 +12828,7 @@ class CasoraPanel extends HTMLElement {
   _blockDrag(layer) {
     layer.addEventListener("touchmove", (ev) => {
       const t = ev.target;
-      const sc = t && t.closest ? t.closest(".flowscroll") : null;
+      const sc = t && t.closest ? t.closest(".flowscroll, .askcard") : null;
       if (!sc || sc.scrollHeight <= sc.clientHeight + 1) ev.preventDefault();
     }, { passive: false });
   }
