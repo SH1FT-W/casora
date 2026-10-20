@@ -1,9 +1,11 @@
-"""Entitätsklassen der Test-Integration.
+"""Entity classes of the test integration.
 
-Jede Entität liest Zustand und Attribute aus dem Speicher der Test-Integration
-(CasoraMock.store) und schreibt Änderungen durch Dienste dorthin zurück.
-Die berechneten Attribute der HA-Basisklassen werden bewusst übergangen, damit
-die Werte 1:1 dem Schnappschuss entsprechen.
+Every entity reads state and attributes from the test integration's store
+(CasoraMock.store) and writes changes made by services back there.
+Each platform inherits HA's real base class (SensorEntity, TrackerEntity, UpdateEntity ...),
+so HA's defaults apply as in a real installation: entity category, device class handling,
+registry behaviour. Only state and attributes are overridden: the computed attributes of
+the base classes are bypassed on purpose, so the values match the snapshot 1:1.
 """
 from __future__ import annotations
 
@@ -20,12 +22,12 @@ from homeassistant.util import dt as dt_util
 
 DOMAIN = "casora_mock"
 HIDE_ATTRS = {"friendly_name", "icon", "unit_of_measurement", "device_class", "supported_features"}
-# Zahlencode der Test-Alarmanlagen mit code_format (halten.py: „Testalarm Code“).
+# Numeric code of the test alarm panels with code_format (halten.py: "Testalarm Code").
 ALARM_CODE = "1234"
 
 
 class MockEntity(Entity):
-    """Gemeinsame Basis: Werte kommen aus dem Speicher."""
+    """Common base: values come from the store."""
 
     _attr_should_poll = False
     _attr_has_entity_name = False
@@ -33,10 +35,10 @@ class MockEntity(Entity):
     def __init__(self, mock, eid: str) -> None:
         self.mock = mock
         self.entity_id = eid
-        # Schlüssel im Speicher bleibt die Fixture-ID: benennt ein Test die Entität in HA um
-        # (neue entity_id), behält sie Zustand und Attribute statt ohne Zustand dazustehen.
+        # The store key stays the fixture ID: if a test renames the entity in HA (new entity_id),
+        # it keeps its state and attributes instead of ending up without a state.
         self._key = eid
-        # unique_id wie die echte Integration, wo die Fixture sie nennt (Reolink „<uid>_<kanal>_<key>“), sonst die ID.
+        # unique_id like the real integration where the fixture names it (Reolink "<uid>_<channel>_<key>"), else the ID.
         self._attr_unique_id = mock.entities[eid].get("unique_id") or eid
         attrs = mock.store[eid][1]
         self._attr_name = attrs.get("friendly_name") or eid.split(".", 1)[1]
@@ -44,11 +46,9 @@ class MockEntity(Entity):
         self._attr_device_class = attrs.get("device_class")
         # Language-independent key of the real integration - popups find their entities by it.
         self._attr_translation_key = mock.entities[eid].get("translation_key")
+        # Without a category in the fixture the base class default applies (device_tracker diagnostic since
+        # HA 2026.10, issue #25; update config/diagnostic ...); a category from the fixture overrides it.
         cat = mock.entities[eid].get("entity_category")
-        # As in HA 2026.10 (BaseTrackerEntity): every device_tracker is diagnostic unless the fixture names another
-        # category (issue #25). The mock's trackers are plain entities and would not inherit it.
-        if not cat and eid.startswith("device_tracker."):
-            cat = "diagnostic"
         if cat:
             from homeassistant.const import EntityCategory
             try:
@@ -59,9 +59,9 @@ class MockEntity(Entity):
         if key:
             self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, key)})
 
-    # Zustand/Attribute 1:1 aus dem Speicher
+    # State/attributes 1:1 from the store
     @property
-    def state(self) -> Any:  # noqa: D102 – überschreibt bewusst @final der Basisklassen
+    def state(self) -> Any:  # noqa: D102 - overrides the base classes' @final on purpose
         return self.mock.store[self._key][0]
 
     @property
@@ -106,7 +106,7 @@ class MockEntity(Entity):
         self.mock.objs[self._key] = self
 
 
-# ── Schaltbare Typen ─────────────────────────────────────────────────────
+# ── Switchable types ─────────────────────────────────────────────────────
 class ToggleMixin:
     @property
     def is_on(self) -> bool:
@@ -123,7 +123,7 @@ class ToggleMixin:
 
 
 def build_classes(hass: HomeAssistant) -> dict[str, type]:
-    """Klassen erst hier importieren, damit nur benötigte Komponenten laden."""
+    """Import the classes only here, so only the needed components load."""
     from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
     from homeassistant.components.button import ButtonEntity
     from homeassistant.components.calendar import CalendarEntity, CalendarEvent
@@ -145,6 +145,13 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
     from homeassistant.components.lawn_mower import LawnMowerEntity
     from homeassistant.components.humidifier import HumidifierEntity
     from homeassistant.components.weather import Forecast, WeatherEntity, WeatherEntityFeature
+    from homeassistant.components.binary_sensor import BinarySensorEntity
+    from homeassistant.components.date import DateEntity
+    from homeassistant.components.device_tracker import SourceType, TrackerEntity
+    from homeassistant.components.event import EventEntity
+    from homeassistant.components.sensor import SensorEntity
+    from homeassistant.components.time import TimeEntity
+    from homeassistant.components.update import UpdateEntity
 
     class MLight(MockEntity, ToggleMixin, LightEntity):
         def __init__(self, mock, eid):
@@ -168,7 +175,7 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             for k in ("color_temp_kelvin", "rgb_color", "rgbw_color", "rgbww_color", "hs_color", "xy_color", "effect"):
                 if k in kw:
                     attrs[k] = list(kw[k]) if isinstance(kw[k], tuple) else kw[k]
-            # Farbmodus folgt der gewählten Farbe (wie echte Leuchten) – sonst bliebe color_mode alt stehen.
+            # Color mode follows the chosen color (like real lights), else color_mode would stay stale.
             sup = self.a.get("supported_color_modes") or []
             for k, cm in (("color_temp_kelvin", "color_temp"), ("hs_color", "hs"), ("rgb_color", "rgb"),
                           ("rgbw_color", "rgbw"), ("rgbww_color", "rgbww"), ("xy_color", "xy")):
@@ -199,7 +206,7 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             return None
 
     class MFan(MockEntity, ToggleMixin, FanEntity):
-        # HA prüft set_preset_mode gegen preset_modes (Eigenschaft, nicht Attribut).
+        # HA checks set_preset_mode against preset_modes (property, not attribute).
         @property
         def preset_modes(self):
             return self.a.get("preset_modes")
@@ -212,12 +219,12 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         def percentage(self):
             return self.a.get("percentage")
 
-        # FanEntity ruft turn_on(percentage, preset_mode, **kw) mit Positionsargumenten auf.
+        # FanEntity calls turn_on(percentage, preset_mode, **kw) with positional arguments.
         async def async_turn_on(self, percentage=None, preset_mode=None, **kw) -> None:
             self.put("on", **{k: v for k, v in (("percentage", percentage), ("preset_mode", preset_mode)) if v is not None})
 
         async def async_set_percentage(self, percentage: int) -> None:
-            # Eine feste Stufe beendet den preset-Modus (wie echte Luftreiniger).
+            # A fixed speed ends the preset mode (like real air purifiers).
             if "preset_mode" in self.a:
                 self.a["preset_mode"] = None
             self.put("on" if percentage else "off", percentage=percentage)
@@ -318,7 +325,7 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         async def async_media_stop(self) -> None:
             self.put("idle")
 
-        # Titelwechsel nur mit Titelnummer (media_track, z. B. Testlautsprecher): „Testlied 1“ → „Testlied 2“.
+        # Track change only with a track number (media_track, e.g. test speaker): "Testlied 1" -> "Testlied 2".
         def _track(self, step: int) -> None:
             n = self.a.get("media_track")
             if not isinstance(n, int):
@@ -371,7 +378,7 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         async def async_send_command(self, command, params=None, **kw) -> None:
             return None
 
-    # Mähroboter wie Gardena: Zustand + Tätigkeit (activity) als Attribut, die Mäher-Popup und -Kachel lesen.
+    # Lawn mower like Gardena: state + activity as attribute, read by the mower popup and tile.
     class MLawnMower(MockEntity, LawnMowerEntity):
         async def async_start_mowing(self) -> None:
             self.put("mowing", activity="OK_CUTTING")
@@ -379,12 +386,12 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         async def async_pause(self) -> None:
             self.put("paused", activity="PAUSED")
 
-        # Ohne Fahrzeit: gleich wieder in der Station und nach Zeitplan geparkt (Grundzustand der Tests).
+        # No driving time: back in the dock at once and parked by schedule (base state of the tests).
         async def async_dock(self) -> None:
             self.put("docked", activity="PARKED_TIMER")
 
     class MHumidifier(MockEntity, ToggleMixin, HumidifierEntity):
-        # HA prüft set_mode/set_humidity gegen diese Eigenschaften, nicht gegen die Attribute.
+        # HA checks set_mode/set_humidity against these properties, not against the attributes.
         @property
         def available_modes(self):
             return self.a.get("available_modes")
@@ -431,8 +438,8 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             self.put(str(value))
 
     class MAlarm(MockEntity, AlarmControlPanelEntity):
-        # Code wie Alarmo aus den Attributen (code_format, code_arm_required). Mit code_format gilt der
-        # Testcode ALARM_CODE – ein anderer oder fehlender Code wird abgelehnt (Scharf nur mit code_arm_required).
+        # Code like Alarmo from the attributes (code_format, code_arm_required). With code_format the test code
+        # ALARM_CODE applies; another or missing code is rejected (arming only with code_arm_required).
         @property
         def code_format(self):
             from homeassistant.components.alarm_control_panel import CodeFormat
@@ -488,11 +495,11 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             MockEntity.__init__(self, mock, eid)
             Camera.__init__(self)
             self.content_type = "image/png"
-            # Frigate-Testkamera (frigate.py): Hofbild mit Uhrzeit wie Frigates latest.jpg, Stimmung nach der Sonne
-            # (kamerabild.py: Tag, Dämmerung, Nachtsicht).
-            # Zweite Kamera der Testklingel (klingel.py, camera.testhof): dasselbe Hofbild.
+            # Frigate test camera (frigate.py): yard picture with time like Frigate's latest.jpg, mood after the sun
+            # (kamerabild.py: day, dusk, night vision).
+            # Second camera of the test doorbell (klingel.py, camera.testhof): the same yard picture.
             self._frigate = bool(mock.entities[eid].get("frigate") or mock.entities[eid].get("hof"))
-            # Reolink-Testklingel (klingel.py): Blick vor die Tür, mit Person, solange sie erkannt wird.
+            # Reolink test doorbell (klingel.py): view in front of the door, with a person while one is detected.
             self._klingel = bool(mock.entities[eid].get("klingel"))
             if self._frigate or self._klingel:
                 self.content_type = "image/jpeg"
@@ -516,9 +523,9 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             return PLACEHOLDER_PNG
 
         async def handle_async_mjpeg_stream(self, request):
-            # Kein Endlos-Stream: Jeder offene MJPEG-Stream belegt eine der ~6
-            # Browser-Verbindungen pro Server – mit mehreren Kamera-Kacheln blieb
-            # das Test-Dashboard sonst beim Laden hängen. Ein Standbild genügt.
+            # No endless stream: every open MJPEG stream takes one of the ~6 browser
+            # connections per server; with several camera tiles the test dashboard
+            # hung while loading. A still image is enough.
             from aiohttp import web
             if self._frigate or self._klingel:
                 img = await self.async_camera_image()
@@ -534,8 +541,8 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
     from homeassistant.components.image import ImageEntity
 
     class MImage(MockEntity, ImageEntity):
-        """Bild-Entität (z. B. Saugroboter-Karte wie bei Roborock): an einem Saugroboter-Gerät
-        eine Karte mit durchsichtigem Rand, sonst das Platzhalterbild."""
+        """Image entity (e.g. vacuum map like Roborock): on a vacuum device a map with a
+        transparent border, else the placeholder image."""
         _attr_content_type = "image/png"
 
         def __init__(self, mock, eid):
@@ -545,7 +552,7 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             self._is_map = bool(dev) and any(
                 e.get("device") == dev and k.startswith("vacuum.") for k, e in mock.entities.items())
             self._attr_image_last_updated = dt_util.utcnow()
-            # Frigate-Schnappschuss (frigate.py): letzter Treffer je Objekt, Alter aus der Fixture.
+            # Frigate snapshot (frigate.py): last hit per object, age from the fixture.
             self._frigate = mock.entities[eid].get("frigate_label")
             if self._frigate:
                 self._attr_content_type = "image/jpeg"
@@ -656,10 +663,15 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         async def async_forecast_hourly(self):
             return self._fc(timedelta(hours=1), 24)
 
-    class MUpdate(MockEntity):
-        """Update-Entität: Werte aus dem Speicher; update.install wie HACS (in_progress → installiert).
+    class MUpdate(MockEntity, UpdateEntity):
+        """Update entity: values from the store; update.install like HACS (in_progress -> installed).
 
-        Die Dienste von update rufen nur diese Eigenschaften/Methoden auf (Duck-Typing)."""
+        UpdateEntity supplies HA's default category (config with INSTALL, else diagnostic)."""
+
+        # UpdateEntity would show the brand icon of casora_mock; keep the snapshot's picture (HACS logos).
+        @property
+        def entity_picture(self):
+            return self.a.get("entity_picture")
 
         @property
         def installed_version(self):
@@ -694,6 +706,50 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
             self.put("off" if new == latest else "on", installed_version=new, latest_version=latest,
                      release_summary=restart)
 
+        # Skipping as in HA (state off, skipped_version), but written to the store like every value here.
+        async def async_skip(self) -> None:
+            from homeassistant.exceptions import HomeAssistantError
+            if not self.latest_version or self.latest_version == self.installed_version:
+                raise HomeAssistantError("No update to skip (Test)")
+            self.put("off", skipped_version=self.latest_version)
+
+        async def async_clear_skipped(self) -> None:
+            self.a["skipped_version"] = None
+            newer = self.latest_version and self.latest_version != self.installed_version
+            self.put("on" if newer else "off")
+
+    # Display-only platforms: the real base classes bring HA's defaults (category, device class),
+    # state and attributes still come from the store (MockEntity first in the MRO).
+    class MSensor(MockEntity, SensorEntity):
+        pass
+
+    class MBinarySensor(MockEntity, BinarySensorEntity):
+        @property
+        def is_on(self) -> bool | None:
+            return {"on": True, "off": False}.get(self.s)
+
+    class MEvent(MockEntity, EventEntity):
+        def __init__(self, mock, eid):
+            super().__init__(mock, eid)
+            # EventEntity checks event_types when added (doorbell must offer "ring").
+            self._attr_event_types = list(self.a.get("event_types") or [])
+
+    class MTime(MockEntity, TimeEntity):
+        pass
+
+    class MDate(MockEntity, DateEntity):
+        pass
+
+    # Every tracker of the test house is TrackerEntity (category and attributes are the same for scanners);
+    # source_type from the store, like the GPS tracker of Tractive.
+    class MTracker(MockEntity, TrackerEntity):
+        def __init__(self, mock, eid):
+            super().__init__(mock, eid)
+            try:
+                self._attr_source_type = SourceType(self.a.get("source_type") or "gps")
+            except ValueError:
+                pass
+
     from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
     from homeassistant.components.camera import CameraEntityFeature
     from homeassistant.components.climate import ClimateEntityFeature
@@ -723,9 +779,9 @@ def build_classes(hass: HomeAssistant) -> dict[str, type]:
         "alarm_control_panel": MAlarm, "scene": MScene, "camera": MCamera, "todo": MTodo, "image": MImage,
         "calendar": MCalendar, "weather": MWeather,
         "update": MUpdate,
-        # nur anzeigen, keine Dienste
-        "sensor": MockEntity, "binary_sensor": MockEntity, "device_tracker": MockEntity,
-        "event": MockEntity, "time": MockEntity, "date": MockEntity,
+        # display only, no services
+        "sensor": MSensor, "binary_sensor": MBinarySensor, "device_tracker": MTracker,
+        "event": MEvent, "time": MTime, "date": MDate,
     }
 
 
@@ -756,7 +812,7 @@ PLACEHOLDER_PNG = _png(640, 360, (58, 62, 70))
 
 
 def _map_png(w: int, h: int) -> bytes:
-    """Erfundene Saugroboter-Karte (RGBA): Räume als Flächen, Rand durchsichtig, Seitenverhältnis 4:3."""
+    """Made-up vacuum map (RGBA): rooms as areas, transparent border, aspect ratio 4:3."""
     rooms = [((0.12, 0.18, 0.48, 0.55), (120, 170, 220)), ((0.48, 0.18, 0.86, 0.48), (240, 180, 110)),
              ((0.12, 0.55, 0.40, 0.84), (150, 210, 150)), ((0.40, 0.48, 0.86, 0.84), (210, 150, 200))]
     rows = []
