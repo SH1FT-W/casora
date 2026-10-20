@@ -22559,7 +22559,9 @@ class CasoraPanel extends HTMLElement {
 
     const thermostats = list("climate_entity_", 3);
     const temps = list("temp_sensor_", 5);
-    const climateOn = !!(thermostats.length || temps.length || V.humidity_sensor || V.quality_sensor);
+    // As casora_badge_climate_group: shown only with a temperature, humidity or air quality sensor - a thermostat
+    // alone gave a badge in the preview that the dashboard and the phone do not have (r44, radiator in the garage).
+    const climateOn = !!(temps.length || V.humidity_sensor || V.quality_sensor);
     if (on("show_climate") && climateOn) {
       const t = num(temps[0]) ?? (st(thermostats[0]) || {}).attributes?.current_temperature;
       const h = num(V.humidity_sensor);
