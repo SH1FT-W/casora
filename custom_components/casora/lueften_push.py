@@ -50,7 +50,7 @@ TEXT = {
 }
 # Gründe kommen deutsch aus raumklima.py; für Englisch die festen Teile tauschen.
 GRUND_EN = (("Feuchte", "Humidity"), ("Fenster seit", "Window open for"), (" offen", ""), ("Std.", "h"), ("Min.", "min"))
-GRUND = {"en": GRUND_EN, "es": (("Feuchte", "Humedad"), ("Fenster seit", "Ventana abierta desde hace"), (" offen", ""),
+GRUND = {"en": GRUND_EN, "es": (("Feuchte", "Humedad"), ("Fenster seit", "Ventana abierta hace"), (" offen", ""),
                                  ("Std.", "h"), ("Min.", "min"))}
 
 

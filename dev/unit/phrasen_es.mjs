@@ -130,6 +130,11 @@ let played = 0;
     ['Beleuchtung', 'Iluminación'],
     ['62 %', '62 %'],
     ['Home', 'Casa'],
+    // Singular before the plural pattern (exact entries win).
+    ['1 entriegelt', '1 desbloqueada'],
+    ['3 entriegelt', '3 desbloqueadas'],
+    ['1 An', '1 encendida'],
+    ['2 aktiv', '2 activas'],
     ['Favorites', 'Favoritos'],
   ];
   for (const [de, want] of EXPECT) assert.equal(trEs(de), want, de);

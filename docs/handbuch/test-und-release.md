@@ -97,7 +97,8 @@ Vor einem Release zusätzlich:
 
 1. Alle Fixes fertig und abgenommen → erst dann Gate.
 2. **Neu-Popup füllen**: `WHATS_NEW` in `custom_components/casora/panel/casora-panel-welcome.js`
-   (2–4 Einträge: mdi-Symbol, Titel, Text in `TEXT.de`/`TEXT.en`).
+   (2–4 Einträge: mdi-Symbol, Titel, Text in `TEXT.de`/`TEXT.en`/`TEXT.es`; `dev/unit/welcome_es.mjs` prüft,
+   dass Spanisch dieselben Schlüssel hat).
 3. Version in `custom_components/casora/manifest.json`: Kalender-Version **YY.M.N** aus `tools/next-version`
    (Jahr zweistellig, Monat ohne Null, N = laufende Nummer des Releases im Monat ab 1; es zählen die
    veröffentlichten GitHub-Releases des Monats, auch alte X.Y.Z, bloße Tags nicht; neuer Monat → wieder .1). Jedes Release ist einfach die nächste Nummer – kein

@@ -4246,6 +4246,14 @@
   [
    "^In ([\\d.,]+)[  ]l$",
    "In {1} l"
+  ],
+  [
+   "^([\\d.,]+) Mbit/s Download$",
+   "{1} Mbit/s Download"
+  ],
+  [
+   "^([\\d.,]+) Mbit/s Upload$",
+   "{1} Mbit/s Upload"
   ]
  ]
 }

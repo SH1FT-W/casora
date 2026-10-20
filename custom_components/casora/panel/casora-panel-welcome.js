@@ -52,10 +52,10 @@
       w1t: "Habitación por habitación", w1: "Diseña tu panel con los dispositivos que ya tienes en Home Assistant.",
       w2t: "Asistente de dispositivos", w2: "Casora propone las tarjetas adecuadas para cada habitación y las añade por ti.",
       w3t: "Escritorio, tableta y móvil", w3: "Un panel que se adapta a cada pantalla, con su propio diseño para el móvil.",
-      n0t: "La tarjeta de mascota encuentra tus localizadores", n0: "Home Assistant marca los localizadores como diagnóstico. Ahora Casora los ofrece igualmente: en el campo “Mascota”, al añadir la tarjeta y con el nombre de tu mascota.",
-      n1t: "Basura con calendario y nombres cortos", n1: "La ventana de basura muestra ahora el calendario del mes desde el principio. Los contenedores de Waste Collection Schedule aparecen sin el nombre del lugar delante, y la tarjeta cuenta los días.",
-      n2t: "“Iluminación” en Casa", n2: "La ventana de luces de la tarjeta Casa se llama ahora “Iluminación” en lugar de como la habitación de la primera luz, también en los paneles existentes.",
-      n3t: "Escuchar en el timbre sigue activo", n3: "Una breve reconexión de la transmisión ya no desactiva “Escuchar”, y al volver a escuchar vuelve el sonido.",
+      n0t: "La tarjeta de mascota encuentra tus localizadores", n0: "Home Assistant marca los localizadores como diagnóstico. Casora los ofrece igualmente: en el campo “Mascota”, al añadir la tarjeta y con el nombre de tu mascota.",
+      n1t: "Basura con calendario y nombres cortos", n1: "La ventana de basura muestra el calendario del mes desde el inicio. Los contenedores de Waste Collection Schedule aparecen sin el lugar delante y la tarjeta cuenta los días.",
+      n2t: "“Iluminación” en Casa", n2: "La ventana de luces de la tarjeta Casa se llama ahora “Iluminación”, no como la habitación de la primera luz, también en paneles existentes.",
+      n3t: "Escuchar en el timbre sigue activo", n3: "Una breve reconexión ya no desactiva “Escuchar”, y al volver a escuchar hay sonido.",
     },
   };
   // Texts for a language: its own, English for anything it does not have (yet).

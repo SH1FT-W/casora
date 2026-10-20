@@ -99,7 +99,7 @@
   "nicht verfügbar": "no disponible",
   "Gerade nicht verfügbar": "No disponible ahora",
   "Keine": "Ninguno",
-  "Keine aktiv": "Ninguno activo",
+  "Keine aktiv": "Ninguna activa",
   "Kein Dienst": "Sin servicio",
   "Neu": "Nuevo",
   "Alle": "Todos",
@@ -609,7 +609,7 @@
   "Farbe": "Color",
   "Temperaturverlauf": "Historial de temperatura",
   "Fenster offen · noch": "Ventana abierta · aún",
-  "Zu feucht": "Demasiado húmedo",
+  "Zu feucht": "Muy húmedo",
   "Luftfeuchte": "Humedad",
   "Heizt": "Calentando",
   "Heizen": "Calor",
@@ -656,7 +656,7 @@
   "Die Auswertung startet mit der Heizsaison: Sobald geheizt wird, prüft Claude jeden Montag Heizdauer, Raumtemperaturen, Heizen bei offenem Fenster und den Heizkörper im Bad.": "El análisis empieza con la temporada de calefacción: en cuanto se encienda, Claude revisa cada lunes el tiempo de calefacción, las temperaturas, la calefacción con ventanas abiertas y el radiador del baño.",
   "Gesichert": "Asegurado",
   "Sicher": "Seguro",
-  "Braucht Aufmerksamkeit": "Requiere atención",
+  "Braucht Aufmerksamkeit": "Revisar",
   "Nicht gesichert": "No asegurado",
   "Fortschritt": "Progreso",
   "Schicht": "Capa",
@@ -1334,9 +1334,9 @@
   "trocknen": "poner la secadora",
   "Fühlt sich wohl": "Está a gusto",
   "Braucht Wasser": "Necesita agua",
-  "Steht zu nass": "Demasiado húmeda",
-  "Steht zu kalt": "Demasiado fría",
-  "Steht zu warm": "Demasiado calor",
+  "Steht zu nass": "Muy húmeda",
+  "Steht zu kalt": "Muy fría",
+  "Steht zu warm": "Mucho calor",
   "Zu viel Sonne": "Demasiado sol",
   "Überdüngt": "Exceso de abono",
   "Bitte nachsehen": "Échale un vistazo",
@@ -2294,7 +2294,21 @@
   "Favorites": "Favoritos",
   "Scenes": "Escenas",
   "Ein": "Encendido",
-  "Home": "Casa"
+  "Home": "Casa",
+  "1 An": "1 encendida",
+  "1 an": "1 encendida",
+  "1 Aus": "1 apagada",
+  "1 entriegelt": "1 desbloqueada",
+  "1 aktiv": "1 activa",
+  "1 Aktiv": "1 activa",
+  "1 offen": "1 abierta",
+  "1 Offen": "1 abierta",
+  "1 geöffnet": "1 abierta",
+  "1 gekippt": "1 inclinada",
+  "1 Schwach": "1 baja",
+  "1 Verfügbar": "1 disponible",
+  "1 ausgefallen": "1 averiado",
+  "1 übersprungen": "1 omitido"
  },
  "patterns": [
   [
@@ -2807,11 +2821,11 @@
   ],
   [
    "^(\\d+) aktiv$",
-   "{1} activos"
+   "{1} activas"
   ],
   [
    "^(\\d+) Aktiv$",
-   "{1} activos"
+   "{1} activas"
   ],
   [
    "^(\\d+) Aus$",
@@ -3235,11 +3249,11 @@
   ],
   [
    "^Fenster offen seit (.+)$",
-   "Ventana abierta desde hace {1}"
+   "Ventana abierta hace {1}"
   ],
   [
    "^Fenster seit (.+) offen$",
-   "Ventana abierta desde hace {1}"
+   "Ventana abierta hace {1}"
   ],
   [
    "^Außenluft belastet \\(PM2\\.5 (\\d+)\\)$",
@@ -4224,6 +4238,14 @@
   [
    "^In ([\\d.,]+)[  ]l$",
    "En {1} l"
+  ],
+  [
+   "^([\\d.,]+) Mbit/s Download$",
+   "{1} Mbit/s bajada"
+  ],
+  [
+   "^([\\d.,]+) Mbit/s Upload$",
+   "{1} Mbit/s subida"
   ]
  ]
 }

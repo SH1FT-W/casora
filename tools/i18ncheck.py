@@ -101,6 +101,18 @@ def _leftovers(lang, value, german, reference):
     return sorted(set(bad))
 
 
+def _pattern_text(patterns, text):
+    """English text of the first pattern matching text (None without a match)."""
+    for rx, rep, *_ in patterns:
+        try:
+            m = re.search(rx, text)
+        except re.error:
+            continue
+        if m:
+            return re.sub(r"\{(\d)\}", lambda g: m.group(int(g.group(1))) or "", rep)
+    return None
+
+
 def check_language(lang, errors):
     """A further language (not de/en) has to match English entry for entry: same keys,
     same patterns in the same order, same placeholders and markup, no German leftovers."""
@@ -137,7 +149,13 @@ def check_language(lang, errors):
                     err("phrases", "%r is empty" % k)
                 continue
             if k not in en["exact"]:
-                err("phrases", "%r is not in en.json" % k)
+                # Grammar refinement: an exact text an English pattern covers, e.g. the singular
+                # "1 entriegelt" → "1 desbloqueada" next to "{1} desbloqueadas" (exact entries win).
+                ref = _pattern_text(en.get("patterns", []), k)
+                if ref is None:
+                    err("phrases", "%r is not in en.json (and no en pattern matches it)" % k)
+                else:
+                    common("phrases", k, v, ref, k, ref)
                 continue
             common("phrases", k, v, en["exact"][k], k, en["exact"][k])
         ep, tp = en.get("patterns", []), tbl.get("patterns", [])
@@ -168,7 +186,11 @@ def check_language(lang, errors):
                 err("panel", "missing %r (de: %r)" % (k, want[k]))
         for k, v in tbl.get("exact", {}).items():
             if k not in want:
-                err("panel", "%r is not in de.json" % k)
+                ref = _pattern_text(de.get("patterns", []), k)  # grammar refinement, see phrases
+                if ref is None:
+                    err("panel", "%r is not in de.json (and no de pattern matches it)" % k)
+                elif not v.strip():
+                    err("panel", "%r is empty" % k)
                 continue
             common("panel", k, v, k, want[k], k)
         dp, tp = de.get("patterns", []), tbl.get("patterns", [])

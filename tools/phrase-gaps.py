@@ -40,6 +40,7 @@ except OSError:
     ENGLISH = set()
 ENGLISH |= {"ok", "wifi", "wlan", "app", "apps", "online", "offline", "status", "min", "kwh", "ppm", "pm", "co", "uv",
             "hpa", "mbit", "rgb", "led", "usb", "tv", "ams", "pla", "petg", "pei", "eco", "auto", "bypass"}
+ENGLISH |= {"casa"}  # Spanish name of the overview in casora-core.js (casoraRoomName), not German
 TEXTLIKE = re.compile(r"^[A-Za-zÄÖÜäöüß0-9 .,:;·–\-!?()/%°²³₂„“”'…+&]+$")
 
 

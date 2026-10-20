@@ -71,6 +71,10 @@ def rows(lang, tr_dir=None):
     for en_txt, de_txt in de_extra.items():
         if en_txt not in en["exact"] and en_txt in tr["exact"]:
             out.append(("dash:exact:" + en_txt, "Dashboard", priority(en_txt, False, True), de_txt, en_txt, tr["exact"][en_txt]))
+    # Grammar refinements of this language only (singular forms a pattern would get wrong).
+    for k, v in tr["exact"].items():
+        if k not in en["exact"] and k not in de_extra:
+            out.append(("dash:exact:" + k, "Dashboard (singular)", 1, k, "", v))
     for i, (rx, en_txt) in enumerate(en["patterns"]):
         mine = tr["patterns"][i][1] if i < len(tr["patterns"]) and tr["patterns"][i][0] == rx else ""
         out.append(("dash:pattern:" + rx, "Dashboard (pattern)", priority(en_txt, True, True), rx, en_txt, mine))
@@ -79,6 +83,11 @@ def rows(lang, tr_dir=None):
     tr = load(os.path.join(TR, "panel/%s.json" % lang))
     for en_txt, de_txt in de["exact"].items():
         out.append(("panel:exact:" + en_txt, "Studio", priority(en_txt, False, False), de_txt, en_txt, tr["exact"].get(en_txt, "")))
+    en_path = os.path.join(TR, "panel/en.json")
+    en_extra = load(en_path).get("exact", {}) if os.path.exists(en_path) else {}
+    for k, v in tr["exact"].items():
+        if k not in de["exact"]:
+            out.append(("panel:exact:" + k, "Studio" if k in en_extra else "Studio (singular)", 2, "", en_extra.get(k, k), v))
     for i, (rx, de_txt) in enumerate(de["patterns"]):
         mine = tr["patterns"][i][1] if i < len(tr["patterns"]) and tr["patterns"][i][0] == rx else ""
         out.append(("panel:pattern:" + rx, "Studio (pattern)", priority(de_txt, False, False), de_txt, rx, mine))

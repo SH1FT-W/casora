@@ -106,6 +106,16 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 | Groß/klein **(V5)** | Studio: Titel und Knöpfe Title Case („Add Room“), Sätze/Hinweise Satzschreibung. Dashboard-Zustände: erstes Wort groß, Rest klein („All open“, „Due soon“) | „All Away“ neben „All away“ | – |
 | Deutsche Reste | keine – Eigennamen ausgenommen (Tankerkönig, Deutscher Wetterdienst) | „Klappen open“ | `phrasen_en.mjs` |
 
+## 5a. Spanisch
+
+| Regel | Spanisch | Prüfung |
+|---|---|---|
+| Tabellen | `phrases/es.json` (Schlüssel wie `en.json` + englische Reste aus `phrases/de.json`), `panel/es.json` (wie `de.json`), `dashboard/es.json`, `translations/es.json` | `python3 tools/i18ncheck.py`, `node dev/unit/phrasen_es.mjs` |
+| Begriffe | Kachel = tarjeta, Badge = insignia, Popup = ventana, Raum = habitación, Zuhause/Übersicht = Casa, Tonne = contenedor, Dashboard = panel | – |
+| Anrede | tú (nie usted) | `i18ncheck.py` |
+| Einzahl | Muster zählen in der Mehrzahl („{1} desbloqueadas“); die Einzahl steht als eigener exakter Eintrag davor („1 entriegelt“ → „1 desbloqueada“). Erlaubt nur, wenn ein Muster den Text abdeckt | `i18ncheck.py` |
+| Länge | Kürzere Wörter vor Layout-Änderung („Muy húmeda“ statt „Demasiado húmeda“) | Bilder am Handy |
+
 ## 6. Entschiedene Punkte (1.3, vorher OFFEN)
 
 | # | Frage | A | B | Empfehlung Audit |
