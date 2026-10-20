@@ -26818,6 +26818,12 @@ class CasoraPanel extends HTMLElement {
         return;
       }
 
+      // A Casora setting for all dashboards instead of a tile variable (casora-panel-personal.js).
+      if (f.setting) {
+        const sw = typeof this._casoraSettingSwitch === "function" ? this._casoraSettingSwitch(f) : null;
+        if (sw) { put(f.label, sw, f.sub); hintUnder(); }
+        return;
+      }
       if (f.type === "bool") {
         put(f.label, this._boolSwitch(cur, f.boolDefault, (v) => {
           if (v === undefined) {

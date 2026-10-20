@@ -224,6 +224,11 @@ window.CASORA_TILE_TYPES = [
       ICON,
       { key: "trash_calendar", label: "Waste calendar", domains: ["calendar"] },
       { ...TITLE, placeholder: "Waste" },
+      // Same switch as Settings → Home & Devices → Waste collection: a Casora setting for every
+      // waste tile, not a tile variable (setting: casora-panel-personal.js, _casoraSettingSwitch).
+      { key: "waste.calendar_popup", setting: true, type: "bool", boolDefault: true, advanced: true,
+        label: "Calendar in the waste popup", sub: "Month with the pickup days in the bin colors",
+        hint: "Applies to all waste tiles" },
       { key: "trash_reminder", label: "Reminder automation", domains: ["automation"], advanced: true },
     ] },
   { id: "casora_car", label: "Car", template: "casora_car", domains: ["sensor"], ownData: true, icon: "car_side_w2", fields: [ICON, TITLE] },

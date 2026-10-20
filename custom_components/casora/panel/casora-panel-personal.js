@@ -291,11 +291,24 @@
         // Abfall
         g = group("waste", { header: "Waste collection",
           footer: "Without bins here, Casora uses every Waste Collection Schedule sensor." });
-        // Überschrift nur über der ersten Zeile – nicht „Tonne“ vor jeder Tonne.
+        // Heading only above the first row – not "Bin" in front of every bin.
+        // A bin without a name was dropped on save (prune, issue #27): picking a sensor fills in its
+        // name as the picker shows it, without the device in front (the place, the integration name).
+        // Picking another sensor replaces a filled-in name, not a typed one; an emptied name field
+        // gets the filled-in name back instead of dropping the bin.
+        const binName = (v) => {
+          if (!v) return "";
+          const m = typeof self._entMeta === "function" ? self._entMeta(v) : null;
+          return String((m && m.short) || self._prettyEntity(v) || v).replace(/^waste collection schedule\s+/i, "").trim();
+        };
         mapRows(S.waste.sensors).forEach(([id, label], i) => {
           row(g, i ? "" : "Bin", [
-            ent(id, ["sensor"], (v) => { setMap(S.waste.sensors, id, v, S.waste.sensors[id]); render(); }),
-            txt(label, "Name", (v) => { S.waste.sensors[id] = v; }, true),
+            ent(id, ["sensor"], (v) => {
+              const cur = S.waste.sensors[id];
+              setMap(S.waste.sensors, id, v, cur && cur !== binName(id) ? cur : binName(v));
+              render();
+            }),
+            txt(label, "Name", (v) => { S.waste.sensors[id] = v.trim() ? v : binName(id); }, true),
             del(() => { delete S.waste.sensors[id]; }),
           ]);
         });
@@ -549,12 +562,14 @@
       "Now Playing": ["media", () => ["Player icons and volume controls for every dashboard", 0]],
       Notifications: ["notify", () => ["Mailbox, battery exceptions and more for every dashboard", 0]],
     };
-    // Die Studio-Szenenliste soll wissen, was überall ausgeblendet ist (einmal laden).
+    // The Studio scene list needs what is hidden everywhere, the tile inspector the settings it
+    // shows (_casoraSettingSwitch). Read once.
     const readSettings = (panel) => {
       if (panel._casoraSettingsRead || !panel._hass) return;
       panel._casoraSettingsRead = panel._hass.callWS({ type: "casora/settings/get" })
         .then((x) => (x && x.settings) || {}).catch(() => ({}));
       panel._casoraSettingsRead.then((S) => {
+        panel._casoraSettingsNow = S;
         const hide = ((S.scenes || {}).exclude || []).filter(Boolean);
         const was = JSON.stringify(panel._casoraSceneHide || []);
         panel._casoraSceneHide = hide;
@@ -564,6 +579,61 @@
           panel._rebuildPreview();
         }
       });
+    };
+
+    // Tile inspector (field with setting: true, key "<area>.<key>"): a switch for a Casora setting
+    // instead of a tile variable – the waste tile's "Calendar in the waste popup" is the same value
+    // as the switch under Settings → Home & Devices (issue #27; only "off" is stored). Like the
+    // Design it is saved right away for all dashboards; set replaces everything, so read fresh and
+    // change only this value, as the Settings page does.
+    P._casoraSettingSwitch = function (f) {
+      const [area, key] = String((f && f.key) || "").split(".");
+      if (!area || !key || typeof this._boolSwitch !== "function") return null;
+      const tr = (x) => (window.casoraI18n ? window.casoraI18n.t(x) : x);
+      const on = (S) => {
+        const v = ((S || {})[area] || {})[key];
+        return v === undefined || v === null || v === "" ? !!f.boolDefault : !!v;
+      };
+      readSettings(this);
+      const was = on(this._casoraSettingsNow || window.CASORA_SETTINGS);
+      const save = async (v) => {
+        const h = this._hass;
+        try {
+          const r0 = (await h.callWS({ type: "casora/settings/get" })) || {};
+          let cur = r0.settings || {};
+          // Still the older file (einstellungen.js): carry it over, as saving under Settings does.
+          if (!r0.stored) {
+            const file = await fileSettings();
+            if (file && Object.keys(file).length) cur = file;
+          }
+          cur = clone(cur);
+          const sec = cur[area] || {};
+          if (v === undefined) delete sec[key]; else sec[key] = v;
+          if (Object.keys(sec).length) cur[area] = sec; else delete cur[area];
+          const r = await h.callWS({ type: "casora/settings/set", settings: cur });
+          const S = (r && r.settings) || cur;
+          window.CASORA_SETTINGS = S;
+          this._casoraSettingsNow = S;
+          this._casoraSettingsRead = Promise.resolve(S);
+          // The Settings page reads again instead of showing its older copy; unsaved edits there
+          // take the value, so saving them keeps it.
+          const cs = this._cs;
+          if (cs && cs.S && typeof this._csDirty === "function" && this._csDirty()) {
+            const d = cs.S[area] = cs.S[area] || {};
+            if (v === undefined) delete d[key]; else d[key] = v;
+          } else if (cs) cs.at = 0;
+          this._status(tr("Saved – reload open dashboards to apply"), "ok");
+        } catch (e) {
+          this._status(tr("Could not save: ") + ((e && e.message) || e), "err");
+          this._renderForm();
+        }
+      };
+      const sw = this._boolSwitch(was, f.boolDefault, save, tr(f.label));
+      // Settings not read yet (or saved under Settings since): draw again once they are there.
+      if (this._casoraSettingsRead) {
+        this._casoraSettingsRead.then((S) => { if (on(S) !== was && sw.isConnected) this._renderForm(); });
+      }
+      return sw;
     };
     // Schon beim Laden anfragen (parallel zur Dashboard-Konfiguration): kam die Antwort erst nach
     // dem ersten Zeichnen, wurden Inspektor und Vorschau gleich ein zweites Mal gebaut.

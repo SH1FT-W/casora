@@ -196,14 +196,14 @@ window.casoraPriceKwh = function (v) {
     return keyCache.map[ck];
   }
 
-  // ── Abfall (Waste Collection Schedule o. Ä.) ──────────────────────────────
-  // Tonnen-Sensoren und Abfallkalender werden erkannt; eigene Angaben kommen aus
-  // den Kartenvariablen (trash_*) oder CASORA_SETTINGS.waste und haben Vorrang.
-  // [Muster, Farbe, Weich-Schlüssel, Weich-Ersatzfarbe]. Im Weich-Look kommt die Farbe aus
-  // --casora-waste-<Schlüssel> (theme_weich.yaml, 05.10.2026), wie bisher im Popup; Restmüll
-  // deckend statt halb durchsichtig, und die Kachel bekam am Abholtag ein graues Symbol auf
-  // grauem Kreis. Problemstoffe haben nur im Weich-Look eine eigene Farbe (Rot); sonst bleibt
-  // alles wie bisher (Farbe null = Orange, Kalender-Abgleich über den Namen).
+  // ── Waste (Waste Collection Schedule or similar) ───────────────────────────
+  // Bin sensors and the waste calendar are detected; own settings from the card variables
+  // (trash_*) or CASORA_SETTINGS.waste win.
+  // [pattern, colour, Soft key, Soft fallback colour]. In the Soft look the colour comes from
+  // --casora-waste-<key> (theme_weich.yaml, 05.10.2026), as in the popup; residual waste is
+  // opaque instead of half transparent, and on pickup day the tile got a grey icon on a grey
+  // circle. Hazardous waste has its own colour (red) only in the Soft look; otherwise nothing
+  // changes (colour null = orange, calendar match by name).
   var WASTE_KINDS = [
     [/bio|organ|kompost|green waste/i, '#30D158', 'bio', '#6AAE78'],
     [/papier|paper|pappe|karton|cardboard/i, '#0A84FF', 'paper', '#5B8FC9'],
@@ -214,9 +214,11 @@ window.casoraPriceKwh = function (v) {
     [/rest|residual|general|haus|black/i, '#8E8E93', 'rest', '#8F7E6D'],
   ];
   var WASTE_WORDS = [
-    [/grün|green/i, '#30D158'], [/blau|blue/i, '#0A84FF'], [/braun|brown/i, '#8F7E6D'],
+    [/gr(ü|ue)n|green/i, '#30D158'], [/blau|blue/i, '#0A84FF'], [/braun|brown/i, '#8F7E6D'],
     [/schwarz|grau|black|gr[ae]y/i, '#8E8E93'], [/rot\b|rote|red/i, '#FF453A'],
   ];
+  // Pickup date as attribute key or value (WCS: {'2026-11-12': 'Bio'}), as in wasteDates.
+  var WASTE_DAY = /^\d{4}-\d{2}-\d{2}$/;
   function isWasteSensor(hass, eid) {
     if (eid.indexOf('sensor.') !== 0) return false;
     var e = reg(hass)[eid], st = hass.states[eid];
@@ -224,25 +226,45 @@ window.casoraPriceKwh = function (v) {
     if (e && e.platform === 'waste_collection_schedule') return true;
     return st.attributes && st.attributes.daysTo !== undefined;
   }
+  // Bin name without the place (issue #27): since HA 2026.4 the friendly name is device name plus
+  // entity name; WCS names its device after the integration, users often rename it to the place.
+  // A name the user gave the entity has no device in front and stays as it is. Longest prefix first;
+  // without a registry only the integration's own device name goes.
   function wasteLabel(hass, eid) {
-    var st = hass.states[eid];
-    return String((st && st.attributes && st.attributes.friendly_name) || eid.split('.')[1])
-      .replace(/^waste collection schedule\s*/i, '').trim();
+    var st = hass.states[eid], e = reg(hass)[eid], d = e && e.device_id && devs(hass)[e.device_id];
+    var n = String((st && st.attributes && st.attributes.friendly_name) || (e && e.name) || '').trim();
+    var pre = [d && d.name_by_user, d && d.name].map(function (p) { return String(p || '').trim(); });
+    pre.sort(function (a, b) { return b.length - a.length; }).forEach(function (p) {
+      if (p && n.length > p.length && n.toLowerCase().indexOf(p.toLowerCase() + ' ') === 0) n = n.slice(p.length + 1).trim();
+    });
+    return n.replace(/^waste collection schedule\s+(?=\S)/i, '') || eid.split('.')[1];
+  }
+  // Days from today to a date ('YYYY-MM-DD', local) or a timestamp; null if it is neither.
+  function daysUntil(s) {
+    s = String(s == null ? '' : s);
+    if (!/^\d{4}-\d{2}-\d{2}/.test(s)) return null;
+    var d = new Date(s.length === 10 ? s + 'T00:00:00' : s), t = new Date();
+    if (isNaN(d)) return null;
+    d.setHours(0, 0, 0, 0); t.setHours(0, 0, 0, 0);
+    return Math.round((d - t) / 86400000);
   }
   function waste(hass, variables) {
     var V = variables || {};
     var cfg = settings('waste');
     var S = (hass && hass.states) || {};
-    var named = V.trash_sensors || cfg.sensors || null;   // {entity_id: label} oder [entity_id]
+    var named = V.trash_sensors || cfg.sensors || null;   // {entity_id: label} or [entity_id]
     var ids = named ? (Array.isArray(named) ? named : Object.keys(named))
       : Object.keys(S).filter(function (eid) { return isWasteSensor(hass, eid); }).sort();
     var weich = !!(window._casoraSoft && window._casoraSoft());
-    var calendar = V.trash_calendar || cfg.calendar || Object.keys(S).filter(function (eid) {
+    // A configured calendar that is gone (renamed, removed) falls back to the detected one; it only
+    // stays when nothing else is found, so the tile can still say the source is unreachable.
+    var calGiven = V.trash_calendar || cfg.calendar || null;
+    var calendar = (calGiven && S[calGiven] ? calGiven : null) || Object.keys(S).filter(function (eid) {
       if (eid.indexOf('calendar.') !== 0) return false;
       var e = reg(hass)[eid];
       return (e && e.platform === 'waste_collection_schedule')
         || /^waste collection schedule/i.test((S[eid].attributes || {}).friendly_name || '');
-    }).sort()[0] || null;
+    }).sort()[0] || calGiven;
     // Calendar only, no bin sensors (issue #27): one bin per event title from the preloaded
     // waste calendar, countdown from its next event. Ids are synthetic (no HA state behind them).
     var fromCal = {};
@@ -265,8 +287,24 @@ window.casoraPriceKwh = function (v) {
       var word = !kind && WASTE_WORDS.filter(function (w) { return w[0].test(label); })[0];
       var color = kind && kind[1] ? kind[1] : word ? word[1] : '#FF9F0A';
       var st = S[id] || { state: String(fromCal[id].days), attributes: {} };
-      var days = parseInt(st.state, 10);
+      // A date as state is a date, not a number of days (parseInt would give the year).
+      var stDays = daysUntil(st.state);
+      var days = stDays != null ? (stDays >= 0 ? stDays : NaN) : parseInt(st.state, 10);
       if (isNaN(days)) days = parseInt(st.attributes && st.attributes.daysTo, 10);
+      // WCS default sensors ('on Thu, 12.11.2026', no daysTo): the nearest date from today among the
+      // date attributes, as the popup lists them (wasteDates). Only when those dates are one bin's
+      // ({date: type} with one type, or one {type: date}): an overview sensor for every type would
+      // otherwise join the next pickup of the real bin.
+      if (isNaN(days) && !fromCal[id]) {
+        var a1 = st.attributes || {}, near = NaN, kinds = {};
+        Object.keys(a1).forEach(function (k) {
+          var byKey = WASTE_DAY.test(k), n1 = byKey ? daysUntil(k) : typeof a1[k] === 'string' && WASTE_DAY.test(a1[k]) ? daysUntil(a1[k]) : null;
+          if (n1 == null || n1 < 0) return;
+          kinds[byKey ? String(a1[k]).trim().toLowerCase() : k] = 1;
+          if (isNaN(near) || n1 < near) near = n1;
+        });
+        if (Object.keys(kinds).length === 1) days = near;
+      }
       var r = parseInt(color.slice(1, 3), 16), g = parseInt(color.slice(3, 5), 16), b = parseInt(color.slice(5, 7), 16);
       var tint = 'rgba(' + r + ',' + g + ',' + b + ',0.25)';
       if (weich && !word) {
