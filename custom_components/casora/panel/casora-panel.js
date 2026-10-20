@@ -10962,6 +10962,14 @@ class CasoraPanel extends HTMLElement {
           scrollbar-width:none; -ms-overflow-style:none;
         }
         .askcard::-webkit-scrollbar { width:0; height:0; display:none; }
+        /* A dialog with an .askbody keeps its head and actions in place; only the body scrolls. */
+        .askcard:has(> .askbody) { display:flex; flex-direction:column; overflow:hidden; }
+        .askcard:has(> .askbody) > * { flex:none; }
+        .askcard > .askbody {
+          flex:0 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain;
+          touch-action:pan-y; scrollbar-width:none; -ms-overflow-style:none;
+        }
+        .askcard > .askbody::-webkit-scrollbar { width:0; height:0; display:none; }
         .askcard h3 {
           margin:0; font-size:var(--t-title); line-height:1.2; font-weight:700; letter-spacing:-0.02em;
           color:var(--ink); text-wrap:balance;
@@ -12828,7 +12836,7 @@ class CasoraPanel extends HTMLElement {
   _blockDrag(layer) {
     layer.addEventListener("touchmove", (ev) => {
       const t = ev.target;
-      const sc = t && t.closest ? t.closest(".flowscroll, .askcard") : null;
+      const sc = t && t.closest ? t.closest(".flowscroll, .askbody, .askcard") : null;
       if (!sc || sc.scrollHeight <= sc.clientHeight + 1) ev.preventDefault();
     }, { passive: false });
   }

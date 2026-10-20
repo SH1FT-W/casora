@@ -220,10 +220,10 @@
     // Vorschaubild = genau die Kachel (240 × 200, Radius 32 px): gleiches Seitenverhältnis, Ecken anteilig.
     + ".comshot{width:120px;height:100px;border-radius:13.33%/16%;flex:none;object-fit:cover;background:rgba(127,127,127,.15);border:0;padding:0;display:block}"
     + "button.comzoom{border:0;padding:0;background:none;border-radius:13.33%/16%;flex:none;cursor:zoom-in;line-height:0}"
-    + ".comrow.card{align-items:flex-start}.comrow.card > .comchip{align-self:center}"
+    + ".comrow.comcard{align-items:flex-start}.comrow.comcard > .comchip{align-self:center}"
     // Handy: Bild kleiner, Text daneben in voller Breite, „Hinzufügen“ als breiter Knopf darunter.
-    + "@media (max-width: 600px){.comrow.card{flex-wrap:wrap}.comrow.card .comshot,.comrow.card button.comzoom{width:96px;height:80px}"
-    + ".comrow.card .comtx{flex:1 1 0}.comrow.card > .comchip{flex:1 0 100%;align-self:stretch;padding:9px 12px;text-align:center;font-weight:600}}"
+    + "@media (max-width: 600px){.comrow.comcard{flex-wrap:wrap}.comrow.comcard .comshot,.comrow.comcard button.comzoom{width:96px;height:80px}"
+    + ".comrow.comcard .comtx{flex:1 1 0}.comrow.comcard > .comchip{flex:1 0 100%;align-self:stretch;padding:9px 12px;text-align:center;font-weight:600}}"
     + ".comlink{display:inline-flex;align-items:center;gap:5px;margin-top:6px;border:0;border-radius:999px;padding:4px 10px 4px 8px;font:inherit;font-size:13px;font-weight:600;"
     + "background:var(--casora-studio-chip, rgba(118,118,128,.18));color:inherit;cursor:pointer}.comlink ha-icon{--mdc-icon-size:16px;display:flex}"
     // Große Vorschau über der Community-Seite: Kachel / Popup.
@@ -329,6 +329,22 @@
       };
     }
 
+    // Phone (and a tight tablet bar) hide the Community button next to the search: the "…" menu offers it there.
+    const menu0 = P._menuAt;
+    if (typeof menu0 === "function") {
+      P._menuAt = function (anchor, items, onPick, mopts) {
+        const h = Array.isArray(items) ? items.findIndex((x) => x && x.id === "hints") : -1;
+        if (h >= 0 && typeof this._comCatalog === "function" && this._state && !this._flowMode
+          && (this.classList.contains("phone") || this.classList.contains("btight")) && !items.some((x) => x && x.id === "community")) {
+          items = items.slice();
+          items.splice(h, 0, { id: "community", label: "Community cards…", group: items[h].group });
+          const pick = onPick;
+          onPick = (id) => (id === "community" ? this._comCatalog() : pick(id));
+        }
+        return menu0.call(this, anchor, items, onPick, mopts);
+      };
+    }
+
     // Kartenwunsch: Gerät, Beispiel-Entitäten (Pflicht), Kachel (Pflicht), Popup, Bild.
     P._comWish = async function () {
       const hass = this._hass;
@@ -427,14 +443,15 @@
           wish.onclick = () => { then = { wish: true }; ok.click(); };
           ways.appendChild(wish);
           box.insertBefore(ways, acts);
-          const host = el("div");
+          // Head (title, text, request, list label) and "Close" stay; only the list scrolls (.askbody).
+          // Note without a card (request removed): above the list.
+          if (note && !note.id) box.insertBefore(flash(note), acts);
+          box.insertBefore(el("div", "comlbl", tr("Community cards")), acts);
+          const host = el("div", "askbody");
           box.insertBefore(host, acts);
-          // Meldung ohne Karte (Wunsch entfernt): oben über der Liste.
-          if (note && !note.id) host.appendChild(flash(note));
-          host.appendChild(el("div", "comlbl", tr("Community cards")));
           if (!list.length) host.appendChild(el("div", "comnote", tr("No community cards yet. Ask for one – the first ones come with the next update.")));
           list.forEach((t) => {
-            const r = el("div", "comrow card");
+            const r = el("div", "comrow comcard");
             const dark = isDark(hass);
             const S = shots(t, dark);
             const zoom = el("button", "comzoom");

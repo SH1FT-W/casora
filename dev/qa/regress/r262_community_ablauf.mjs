@@ -86,7 +86,7 @@ const lb = async () => page.evaluate(() => {
   const l = a && a.querySelector('.comlb');
   return l ? { segs: [...l.querySelectorAll('.comseg button')].map((b) => b.textContent + (b.classList.contains('on') ? '*' : '')), src: (l.querySelector('img') || {}).src || '' } : null;
 });
-await inPane("a.querySelector('.comrow.card button.comzoom').click()");
+await inPane("a.querySelector('.comrow.comcard button.comzoom').click()");
 await wait(1200);
 let v = await lb();
 await check('Vorschau groß: Kachel aktiv, Umschalter Kachel/Popup', v && /community\/casora_lawn_mower\.webp$/.test(v.src) && v.segs.join() === 'Kachel*,Popup', v);
@@ -110,7 +110,7 @@ await check('Nach „Hinzufügen“: in der Auswahl', await pickable());
 await check('Gemerkt in den Casora-Einstellungen', (await stored()).includes('casora_qa_com'), await stored());
 await check('Knopf heißt jetzt „Entfernen“', s && s.chips.includes('Entfernen'), s && s.chips);
 await check('Bestätigung in der Seite (nicht unter dem Weichzeichner)', s && /steht jetzt in „Kachel hinzufügen“/.test(s.text)
-  && await inPane("return !!a.querySelector('.comrow.card .comflash')"), s && s.text);
+  && await inPane("return !!a.querySelector('.comrow.comcard .comflash')"), s && s.text);
 
 // Entfernen bei benutzter Kachel: nachfragen, „Kacheln auch entfernen“.
 await page.evaluate((k) => { window.__panel()._state.compact.rooms[k].tiles.push({ type: 'custom:button-card', template: 'casora_qa_com', entity: 'sensor.qa' }); }, room.key);
