@@ -4682,8 +4682,11 @@ const petName = (h, id) => {
   const pet = d.via_device_id ? d : D[Object.keys(D).find((k) => D[k] && D[k].via_device_id === e.device_id)];
   return String((pet && (pet.name_by_user || pet.name)) || "").trim();
 };
-// Geräte, die erkennbar etwas anderes sind, schlägt eine fremde Kachel nur vor, wenn
-// sonst nichts passt: Name, Modell oder Hersteller des Geräts.
+// The registry category that keeps an entity out of device lists ("Identify" button, status LED), else null.
+// None for device_trackers: HA 2026.10 marks them all diagnostic (BaseTrackerEntity), there it says nothing (issue #25).
+const listCategory = (id, e) => (e && e.entity_category && !/^device_tracker\./.test(id) ? e.entity_category : null);
+// Devices that are recognisably something else are suggested for another tile only when
+// nothing else fits: the device's name, model or manufacturer.
 const DEVICE_KINDS = [
   ["aquarium", /aquari|\breef\b|fluval|trigon|helialux|chihiros|juwel|terrari|schildkr/i],
   ["ebike", /e-?bike|pedelec|\bebike\b|fahrrad|bosch ebike|smart system/i],
@@ -21121,9 +21124,8 @@ class CasoraPanel extends HTMLElement {
     return out.slice();
   }
 
-  // Auswahlliste für Badge-Felder: Geräte des Raums zuerst, dann nach Namen;
-  // Konfigurations-/Diagnose-Entitäten (Status-LEDs am Router …) fallen raus –
-  // außer bei Sensoren (Akku, Signal) und der aktuell gewählten.
+  // Choices for entity fields: this room's devices first, then by name. Config/diagnostic entities (status LEDs
+  // on the router …) drop out, except sensors (battery, signal), device_trackers (listCategory) and the current one.
   _rankedEntityList(domains, classes, room, cur) {
     const h = this._hass;
     const R = (h && h.entities) || {}, D = (h && h.devices) || {};
@@ -21136,7 +21138,7 @@ class CasoraPanel extends HTMLElement {
       || (key.length > 2 && foldName(e + " " + this._prettyEntity(e)).includes(key));
     return this._entityList(domains, classes)
       .filter((e) => e === cur || /^(binary_)?sensor\./.test(e)
-        || !(R[e] && (R[e].entity_category === "config" || R[e].entity_category === "diagnostic")))
+        || !["config", "diagnostic"].includes(listCategory(e, R[e])))
       .map((e) => [e, mine(e) ? 0 : 1, name(e)])
       .sort((a, b) => a[1] - b[1] || a[2].localeCompare(b[2]))
       .map((x) => x[0]);
@@ -21192,7 +21194,7 @@ class CasoraPanel extends HTMLElement {
     const nameOf = (id) => ((S[id] && S[id].attributes && S[id].attributes.friendly_name) || id);
     const usable = (id) => {
       const e = R[id];
-      if (e && (e.hidden || e.entity_category || e.disabled_by)) return false;
+      if (e && (e.hidden || listCategory(id, e) || e.disabled_by)) return false;
       return !!S[id];
     };
     let ids;
@@ -27110,7 +27112,7 @@ class CasoraPanel extends HTMLElement {
 window.__casoraPanelInternals = {
   blankRoom, roomPhoto, slug, translit, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
   applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
-  findType, tileTypeAny, newTile, isPetTracker, petName, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
+  findType, tileTypeAny, newTile, isPetTracker, petName, listCategory, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,

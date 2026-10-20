@@ -42,9 +42,13 @@ class MockEntity(Entity):
         self._attr_name = attrs.get("friendly_name") or eid.split(".", 1)[1]
         self._attr_icon = attrs.get("icon")
         self._attr_device_class = attrs.get("device_class")
-        # Sprachunabhängiger Schlüssel der echten Integration – darüber finden Popups ihre Entitäten.
+        # Language-independent key of the real integration - popups find their entities by it.
         self._attr_translation_key = mock.entities[eid].get("translation_key")
         cat = mock.entities[eid].get("entity_category")
+        # As in HA 2026.10 (BaseTrackerEntity): every device_tracker is diagnostic unless the fixture names another
+        # category (issue #25). The mock's trackers are plain entities and would not inherit it.
+        if not cat and eid.startswith("device_tracker."):
+            cat = "diagnostic"
         if cat:
             from homeassistant.const import EntityCategory
             try:

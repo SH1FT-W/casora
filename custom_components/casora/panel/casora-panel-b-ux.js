@@ -626,12 +626,14 @@
       rooms.forEach((r, i) => { const a = this._roomArea ? this._roomArea(r) : null; if (a && !roomOfArea.has(a)) roomOfArea.set(a, i); });
       const out = [];
       const seen = new Set();
+      // Config/diagnostic entities stay out, device_trackers not (HA marks them all diagnostic, issue #25).
+      const category = I.listCategory || ((id, e) => e.entity_category);
       const push = (id, name, suggested) => {
         if (seen.has(id) || !S[id]) return;
         const e = R[id];
-        if (e && (e.hidden || e.entity_category || e.disabled_by)) return;
-        // Frigate-Kamera (device_class „camera“ setzt nur Frigate): die Community-Karte, wenn sie hinzugefügt ist.
-        // Birdseye (Sammelbild) hat weder camera_name noch client_id – keine einzelne Frigate-Kamera (wie 23-frigate.js F.is).
+        if (e && (e.hidden || category(id, e) || e.disabled_by)) return;
+        // Frigate camera (only Frigate sets device_class "camera"): the community card, if it is added.
+        // Birdseye (combined view) has neither camera_name nor client_id – no single Frigate camera (as 23-frigate.js F.is).
         const fa = S[id].attributes || {};
         const frig = !suggested && id.startsWith("camera.") && typeIds.has("casora_frigate")
           && fa.device_class === "camera" && !/birdseye/i.test(id)

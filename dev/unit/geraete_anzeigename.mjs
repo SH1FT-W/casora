@@ -12,18 +12,18 @@ const push = ux.slice(ux.indexOf('const push = (id, name, suggested) => {'), ux.
 assert.ok(/const own = e && typeof e\.name === "string" && e\.name\.trim\(\);/.test(push) && push.includes('name: own || name ||'), 'Registry-Name zuerst');
 assert.ok(push.includes('((S[id].attributes || {}).friendly_name || "")'), 'friendly_name bleibt suchbar');
 assert.ok(push.includes('loose: !!(e && !e.device_id && e.area_id)') && ux.includes('c.fresh && (c.suggested || c.loose)'), 'Entität ohne Gerät mit Bereich ist „neu“');
-// Das Verhalten an einer nachgebauten push-Funktion
+// Behaviour of the extracted push function (category: the panel's listCategory, here the plain registry value)
 const S = { 'light.c2': { attributes: { friendly_name: 'Lightstrip' } }, 'light.x': { attributes: { friendly_name: 'X' } } };
 const R = { 'light.c2': { name: 'Stehlampe', area_id: 'schlafzimmer' }, 'light.x': { device_id: 'd1' } };
 const out = [];
-const mk = new Function('S', 'R', 'out', 'used', 'typeFor', 'label', 'areaOf', 'roomOfArea', 'A', 'WORDS', 'seen', 'typeIds',
+const mk = new Function('S', 'R', 'out', 'used', 'typeFor', 'label', 'areaOf', 'roomOfArea', 'A', 'WORDS', 'seen', 'typeIds', 'category',
   'return ' + push.replace('const push = ', '').replace(/;\s*$/, '').trim());
-const p = mk.call({ _room: 0 }, S, R, out, new Set(), () => 'light', (x) => x, (id) => (R[id] || {}).area_id || null, new Map([['schlafzimmer', 0]]), { schlafzimmer: { name: 'Schlafzimmer' } }, {}, new Set(), []);
+const p = mk.call({ _room: 0 }, S, R, out, new Set(), () => 'light', (x) => x, (id) => (R[id] || {}).area_id || null, new Map([['schlafzimmer', 0]]), { schlafzimmer: { name: 'Schlafzimmer' } }, {}, new Set(), [], (id, e) => e.entity_category);
 p('light.c2', '', null); p('light.x', '', null);
 assert.equal(out[0].name, 'Stehlampe');
-assert.ok(out[0].loose && out[0].fresh && out[0].roomIndex === 0, 'neu in Schlafzimmer');
+assert.ok(out[0].loose && out[0].fresh && out[0].roomIndex === 0, 'new in Schlafzimmer');
 assert.ok(/lightstrip/i.test(out[0].words));
-assert.equal(out[1].loose, false, 'mit Gerät: wie bisher über die Vorschläge');
+assert.equal(out[1].loose, false, 'with a device: through the suggestions as before');
 // Weitere Stellen
 assert.ok(read('casora-panel-types.js').includes('return (r && r.name) || (s && s.attributes && s.attributes.friendly_name) || id;'), 'Kachelarten');
 assert.ok(read('casora-panel-b-plus.js').includes('b.textContent = (reg && reg.name) ||'), 'Szenen-Dialog');

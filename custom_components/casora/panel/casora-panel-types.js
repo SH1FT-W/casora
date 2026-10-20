@@ -707,10 +707,12 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   };
   const tr = (s) => (window.casoraI18n && window.casoraI18n.t ? window.casoraI18n.t(s) : s);
 
-  // Kandidaten: Entitäten am Gerät der Kachel und im selben Bereich; ohne Kachel-Entität
-  // alle Entitäten der Domains, die die Kachel braucht.
+  // Candidates: entities on the tile's device and in the same area; without a tile entity
+  // every entity of the domains the tile needs.
   function candidates(hass, tile, domains) {
     const R = hass.entities || {}, D = hass.devices || {}, S = hass.states || {};
+    // Diagnostic entities stay out, device_trackers not (the pet tile's tracker, issue #25).
+    const category = (window.__casoraPanelInternals || {}).listCategory || ((id, e) => e.entity_category);
     const areaOf = (id) => {
       const e = R[id];
       if (!e) return null;
@@ -723,11 +725,11 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     const out = Object.keys(S).filter((id) => {
       if (!want.has(id.split(".")[0])) return false;
       const e = R[id];
-      if (e && (e.hidden || e.entity_category === "diagnostic")) return false;
+      if (e && (e.hidden || category(id, e) === "diagnostic")) return false;
       if (!anchor) return true;
       if (e && dev && (e.device_id === dev || (D[e.device_id] || {}).via_device_id === dev)) return true;
-      // Außerhalb des Geräts nur Schalter im selben Raum (Zwischenstecker) – sonst
-      // greift die KI z. B. beim Trockner daneben.
+      // Off the device only switches in the same room (smart plugs) – otherwise
+      // the AI picks the wrong one, e.g. for the dryer.
       if (dev && !id.startsWith("switch.")) return false;
       return !!area && areaOf(id) === area;
     });

@@ -284,8 +284,8 @@
     // Picture tapped in an open camera popup → full screen; otherwise (holding the tile) the camera popup.
     if (dom === 'camera' && window.casoraPopup && window.casoraPopup.current) return Z.openCamera(id);
     if (MEAS.test(dom) || catOf(h, id)) return Z.openMeasure(id);
-    // Gerät, dessen Popup schon offen ist: nicht dasselbe Popup erneut öffnen, sondern seine Geräteseite
-    // („Weitere Einstellungen“ im Luftreiniger, Schloss-Zeile …); nur der Marker auf der Personen-Karte tut nichts.
+    // A device whose popup is already open: not the same popup again but its device page
+    // (settings row in the air purifier, lock row …); only the marker on the person card does nothing.
     if (DEVICE.test(dom) && window.casoraPopup && window.casoraPopup.entity === id) return dom === 'person' ? true : Z.openDevice(id);
     if (DEVICE.test(dom)) return Z.openDeviceTile(id);
     if (devOf(h, id)) return Z.openDevice(id);
