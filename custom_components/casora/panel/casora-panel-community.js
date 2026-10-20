@@ -336,8 +336,11 @@
         const h = Array.isArray(items) ? items.findIndex((x) => x && x.id === "hints") : -1;
         if (h >= 0 && typeof this._comCatalog === "function" && this._state && !this._flowMode
           && (this.classList.contains("phone") || this.classList.contains("btight")) && !items.some((x) => x && x.id === "community")) {
+          // Same glyph as the Community button (casora-panel-b-plus.js).
+          const M = (W.__casoraPanelInternals || {}).MENU_ICONS;
+          if (M && !M.community) M.community = '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9.5" r="2.4"/><path d="M3.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5M14.5 14.6c2.6-.4 5 .9 6 4.4"/>';
           items = items.slice();
-          items.splice(h, 0, { id: "community", label: "Community cards…", group: items[h].group });
+          items.splice(h, 0, { id: "community", label: "Community cards…", icon: "community", group: items[h].group });
           const pick = onPick;
           onPick = (id) => (id === "community" ? this._comCatalog() : pick(id));
         }

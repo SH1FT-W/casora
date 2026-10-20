@@ -53,6 +53,7 @@ for (const [name, o] of [
     await page.waitForTimeout(700);
     const opt = page.locator('.combo-opt', { hasText: 'Community-Karten' }).first();
     const picked = (await opt.count()) > 0;
+    await check('phone: Community in the "…" menu has an icon like its neighbours', picked && (await opt.locator('svg').count()) > 0);
     if (picked) await opt.click();
     await check('phone: "…" menu offers Community', picked);
     if (!picked) page.evaluate(() => window.__panel()._comCatalog()).catch(() => {});
