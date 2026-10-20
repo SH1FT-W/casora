@@ -1,0 +1,24 @@
+name: Bug report
+description: Something in Casora does not work as expected.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what did you see instead? Screenshots help.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Casora diagnostics
+      description: >
+        In the Casora Studio, open ⋯ → Help… → Copy diagnostics…, press Copy and paste the result here.
+        It only contains counts, versions and integration names, no device, room or person names.
+      placeholder: Paste the diagnostics here.
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      description: For example "iPhone, Home Assistant app" or "Windows, Chrome".

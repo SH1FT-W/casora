@@ -284,7 +284,7 @@
           if (alt) alt.addEventListener("click", () => {
             try {
               const a = document.createElement("a");
-              a.href = ISSUES; a.target = "_blank"; a.rel = "noopener noreferrer";
+              a.href = ISSUES + "/new/choose"; a.target = "_blank"; a.rel = "noopener noreferrer";
               a.style.display = "none";
               document.body.appendChild(a); a.click(); a.remove();
             } catch (e) { /* the dialog still closes */ }
