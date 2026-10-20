@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.43 – 20.10.2026
+
+### Fixed
+- **Pet tracker card: pet not found in the Pet field (#25):** Home Assistant names the Tractive tracker after its hardware ("Tracker 1A2B3C4D", in Spanish "Rastreador …"), and only a second device behind it carries the pet's name. Searching for the pet's name therefore found nothing. The Studio now shows Tractive trackers by the pet's name – in the Pet field (with the tracker below), when adding the tile, in the tile name and in "What should go on the dashboard?" – and searching for the pet's name finds them.
+
 ## 26.10.42 – 20.10.2026
 
 ### Fixed

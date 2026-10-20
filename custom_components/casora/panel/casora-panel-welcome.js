@@ -27,10 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Mithören an der Klingel bleibt an", n0: "Ein kurzer Neuaufbau des Streams schaltet „Mithören“ nicht mehr ab, und erneutes Mithören kommt wieder mit Ton.",
-      n1t: "Haustier-Kachel für Tractive", n1: "Neue Community-Karte: wo dein Tier ist, Akku, Live-Tracking, Ton und Licht, dazu Aktivität, Schlaf und die Orte der letzten Tage.",
-      n2t: "Tag- und Nachtfoto getrennt hochladen", n2: "„Eigenes hochladen“ beim Raumfoto fragt jetzt zuerst „Tag“ oder „Nacht“ – ein Nachtfoto ersetzt nicht mehr das Tagfoto.",
-      n3t: "Alle Lampen beim Einrichten", n3: "Lampen hinter Hue-Bridge, Zigbee oder Matter werden jetzt gefunden, Dimmer mit mehreren Kanälen bekommen je Lampe eine Kachel.",
+      n0t: "Haustiere heißen wie das Tier", n0: "Tractive-Tracker stehen im Studio jetzt mit dem Namen deines Tiers, und die Suche im Feld „Tier“ findet sie.",
+      n1t: "Mithören an der Klingel bleibt an", n1: "Ein kurzer Neuaufbau des Streams schaltet „Mithören“ nicht mehr ab, und erneutes Mithören kommt wieder mit Ton.",
+      n2t: "Haustier-Kachel für Tractive", n2: "Neue Community-Karte: wo dein Tier ist, Akku, Live-Tracking, Ton und Licht, dazu Aktivität, Schlaf und die Orte der letzten Tage.",
+      n3t: "Tag- und Nachtfoto getrennt hochladen", n3: "„Eigenes hochladen“ beim Raumfoto fragt jetzt zuerst „Tag“ oder „Nacht“ – ein Nachtfoto ersetzt nicht mehr das Tagfoto.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Doorbell listening stays on", n0: "A short reconnect of the stream no longer turns Listen off, and listening again comes back with sound.",
-      n1t: "Pet tracker card for Tractive", n1: "New Community card: where your pet is, battery, live tracking, sound and light, plus activity, sleep and the places of the last days.",
-      n2t: "Day and night photos upload separately", n2: "“Upload your own” for a room photo now asks “Day” or “Night” first – a night photo no longer replaces the day photo.",
-      n3t: "Every lamp when setting up", n3: "Lamps behind a Hue bridge, Zigbee or Matter are found now, and dimmers with several channels get one tile per lamp.",
+      n0t: "Pets go by their names", n0: "Tractive trackers now show your pet's name in the Studio, and searching the Pet field finds them.",
+      n1t: "Doorbell listening stays on", n1: "A short reconnect of the stream no longer turns Listen off, and listening again comes back with sound.",
+      n2t: "Pet tracker card for Tractive", n2: "New Community card: where your pet is, battery, live tracking, sound and light, plus activity, sleep and the places of the last days.",
+      n3t: "Day and night photos upload separately", n3: "“Upload your own” for a room photo now asks “Day” or “Night” first – a night photo no longer replaces the day photo.",
     },
   };
 
@@ -56,10 +56,10 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:doorbell-video", "n0t", "n0"],
-    ["mdi:paw", "n1t", "n1"],
-    ["mdi:image-multiple", "n2t", "n2"],
-    ["mdi:lightbulb-group", "n3t", "n3"],
+    ["mdi:dog-side", "n0t", "n0"],
+    ["mdi:doorbell-video", "n1t", "n1"],
+    ["mdi:paw", "n2t", "n2"],
+    ["mdi:image-multiple", "n3t", "n3"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.
