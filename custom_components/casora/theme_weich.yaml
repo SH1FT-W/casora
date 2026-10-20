@@ -425,7 +425,7 @@ Casora:
   casora-np-track: var(--casora-soft-control-fill)
   # Fortschritt (Balken und Ring) immer in Ton wie der Wiedergabe-Knopf, nicht im Medien-Ton (Variante B, 04.10.2026).
   # Gilt auch für die Studio-Vorschau; die Cover-Tönung der Karte bleibt. Das Medien-Popup nutzt seit 1.2 die Medien-Farbe (P6).
-  casora-np-progress: var(--casora-soft-media-play, #B67A50)
+  casora-np-progress: "var(--casora-soft-media-play, #B67A50)"
   casora-np-fill: var(--casora-np-progress)
   casora-np-glyph: var(--primary-text-color)
   casora-np-glyph-primary: var(--casora-ton-ink)
@@ -438,7 +438,7 @@ Casora:
   casora-np-head-ink: var(--casora-chrome-ink, rgba(255,255,255,0.90))
   # Aufgeklappt wie die offene Glocke: weißer Grund, dunkles Symbol (04.10.2026).
   # D8 (1.2): offene Welle in der Fläche der aktiven Raum-Pille (hell Weiß-Creme, dunkel Creme)
-  casora-np-head-on: var(--casora-nav-tab-active-fill, #fff)
+  casora-np-head-on: "var(--casora-nav-tab-active-fill, #fff)"
   casora-np-head-on-ink: "#000"
   casora-np-head-play-ink: var(--casora-ton-ink)
   # Heizung = Wärme-Orange (Puck, Modus-Symbole); Temperaturleiste in der Weich-Palette statt iOS-Regenbogen
@@ -464,7 +464,7 @@ Casora:
   casora-mnav-menu-pane: var(--casora-menu-pane)
   casora-mnav-menu-shadow: var(--casora-shadow-float)
   casora-mnav-on-fill: var(--casora-nav-active-fill)
-  casora-mnav-fg-on: var(--casora-menu-fg, #fff)
+  casora-mnav-fg-on: "var(--casora-menu-fg, #fff)"
   # D-12: Räume-Menü wie das ⋯-Menü (15 px / 600, aktiv 700) statt 15/400
   casora-mnav-item-weight: 600
   casora-mnav-item-on-weight: 700
