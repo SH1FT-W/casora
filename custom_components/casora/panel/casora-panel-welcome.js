@@ -27,10 +27,8 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Haustier-Kachel findet deine Tracker", n0: "Home Assistant markiert Tracker als Diagnose. Casora bietet sie jetzt trotzdem an: im Feld „Tier“, beim Anlegen der Kachel und mit dem Namen deines Tiers.",
-      n1t: "Abfall mit Kalender und kurzen Namen", n1: "Das Abfall-Popup zeigt den Monatskalender jetzt von Anfang an. Tonnen von Waste Collection Schedule heißen ohne den Ort davor, und die Kachel zählt die Tage.",
-      n2t: "„Beleuchtung“ auf Zuhause", n2: "Das Licht-Popup der Haus-Kachel heißt jetzt „Beleuchtung“ statt wie der Raum der ersten Leuchte, auch in bestehenden Dashboards.",
-      n3t: "Mithören an der Klingel bleibt an", n3: "Ein kurzer Neuaufbau des Streams schaltet „Mithören“ nicht mehr ab, und erneutes Mithören kommt wieder mit Ton.",
+      n0t: "OK und Speichern wieder sichtbar", n0: "Am Handy rutschten Popups von Home Assistant (Einstellungen, Reparaturen, Integrationen) nach unten, die Knöpfe unten waren abgeschnitten. Jetzt sitzen sie wieder ganz im Bild.",
+      n1t: "Haustier-Knöpfe zeigen ihren Zustand", n1: "Licht und Ton zeigen sofort, dass sie an sind. Im Energiesparmodus sind die Knöpfe gedimmt, und darunter steht, warum.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +38,8 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Pet card finds your trackers", n0: "Home Assistant marks trackers as diagnostic. Casora now offers them anyway: in the Pet field, when adding the card and with your pet's name.",
-      n1t: "Waste with calendar and short names", n1: "The waste popup now shows the month calendar right away. Waste Collection Schedule bins drop the place name, and the tile counts the days.",
-      n2t: "“Lighting” on Home", n2: "The light popup of the home tile is now called “Lighting” instead of the room of the first light, in existing dashboards too.",
-      n3t: "Doorbell listening stays on", n3: "A short reconnect of the stream no longer turns Listen off, and listening again comes back with sound.",
+      n0t: "OK and Save visible again", n0: "On phones, Home Assistant's own popups (settings, repairs, integrations) slid down and the buttons at the bottom were cut off. Now they fit on the screen again.",
+      n1t: "Pet buttons show their state", n1: "Light and Sound show right away that they are on. In power saving mode the buttons are dimmed, with a line saying why.",
     },
   };
 
@@ -56,10 +52,8 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:dog-side", "n0t", "n0"],
-    ["mdi:trash-can-outline", "n1t", "n1"],
-    ["mdi:lightbulb-group", "n2t", "n2"],
-    ["mdi:doorbell-video", "n3t", "n3"],
+    ["mdi:gesture-tap-button", "n0t", "n0"],
+    ["mdi:dog-side", "n1t", "n1"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

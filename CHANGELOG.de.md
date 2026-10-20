@@ -4,6 +4,12 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.45 – 20.10.2026
+
+### Behoben
+- **OK und Speichern in Popups von Home Assistant am Handy abgeschnitten:** Seit der Installation von Casora begannen Popups von Home Assistant selbst (Einstellungen, Reparaturen, Integration hinzufügen) in der App und im Handy-Browser rund 110 px zu tief, die Knöpfe unten lagen außerhalb des Bildschirms. Casora verschiebt jetzt nur noch Popups auf dem Dashboard und im Studio, und nie solche, die den Bildschirm füllen.
+- **Nach dem Entfernen bleiben keine Skripte zurück:** Wird die Integration gelöscht, trägt sie jetzt auch ihre Dashboard-Ressourcen aus, nicht nur ihre Theme-Datei. Vorher konnte die App das alte Skript weiter ausführen, bis sie neu installiert wurde.
+
 ## 26.10.44 – 20.10.2026
 
 ### Behoben
