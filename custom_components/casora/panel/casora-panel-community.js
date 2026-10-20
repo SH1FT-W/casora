@@ -1,11 +1,11 @@
-// Casora Studio · Community (1.5): „Sie fragen, wir bauen“.
-// Nutzer reichen Kartenwünsche ein (fertig ausgefülltes GitHub-Issue, ohne eigenen Server). Das
-// Casora-Team baut daraus Karten; sie kommen mit dem Release (Kachelarten mit `community` in
-// casora-panel-types.js) und stehen erst in „Kachel hinzufügen“, wenn man sie hier hinzufügt –
-// so bleibt die Kachelauswahl kurz. Kein Code wird von außen nachgeladen.
+// Casora Studio · Community (1.5): "you ask, we build".
+// Users submit card requests (a prefilled GitHub issue, no server of our own). The Casora team
+// builds cards from them; they ship with the release (tile types with `community` in
+// casora-panel-types.js) and only show in "Add tile" once added here, which keeps the tile
+// list short. No code is loaded from outside.
 //
-// Gemerkt pro Installation in den Casora-Einstellungen: settings.community = {added: [Typ-IDs]}.
-// window.casoraCommunityOn (Set) liest das onlyIf der Community-Kachelarten.
+// Stored per installation in the Casora settings: settings.community = {added: [type ids]}.
+// window.casoraCommunityOn (Set) is read by the onlyIf of the community tile types.
 (() => {
   const W = typeof window !== "undefined" ? window : globalThis;
   const tr = (x) => (W.casoraI18n && W.casoraI18n.t ? W.casoraI18n.t(x) : x);
@@ -24,15 +24,15 @@
   const version = () => (W.__casoraVersion || (W.casoraVersion && W.casoraVersion()) || "");
   const haVersion = (hass) => (hass && hass.config && hass.config.version) || "";
 
-  // Entität für den Wunsch: Wert, Einheit, Geräteklasse, Schlüssel, Attributnamen – ohne Persönliches.
+  // Entity for the request: value, unit, device class, key, attribute names, nothing personal.
   const PRIVATE_ATTR = /^(friendly_name|latitude|longitude|gps_accuracy|entity_picture|icon|address|street|location|ssid|bssid|ip|mac|host|serial|vin|user|email|phone|name)$/i;
   function describe(hass, eid) {
     const S = (hass && hass.states) || {}, R = (hass && hass.entities) || {};
     const st = S[eid] || {}, a = st.attributes || {}, e = R[eid] || {};
-    // Keine Namen, Räume, Seriennummern: von der ID bleibt nur die Art und der Schlüssel der Integration.
+    // No names, rooms or serial numbers: of the id only the kind and the integration's key remain.
     const dom = eid.split(".")[0];
     const short = dom + ".<geraet>" + (e.translation_key ? "_" + e.translation_key : "");
-    // Zustand nur als Zahl oder kurzer Schlüsselwert (on, idle, charging) – Koordinaten, IPs, Texte nie.
+    // State only as a number or a short key value (on, idle, charging); never coordinates, IPs or text.
     let val = st.state == null ? "" : String(st.state);
     if (!(/^-?\d+(\.\d+)?$/.test(val) || /^[a-z][a-z_]{0,29}$/.test(val))) val = "(Text)";
     return {
@@ -43,7 +43,7 @@
     };
   }
 
-  // id: Kennung im HTML-Kommentar – darüber findet das Studio den Stand des eigenen Wunschs.
+  // id: marker in an HTML comment, by which the Studio finds the state of the user's own request.
   function wishBody(f, hass, id) {
     const d = f.entities.map((x) => describe(hass, x));
     const plat = [...new Set(d.map((x) => x.platform).filter(Boolean))];
@@ -60,8 +60,8 @@
     };
   }
 
-  // Stand eines eigenen Wunschs: Suche nach der Kennung (ohne Anmeldung, wenige Anfragen). Ohne
-  // Label-Filter: das Label setzt die Action erst nach dem Einreichen.
+  // State of an own request: search for its marker (without sign-in, few requests). Without a
+  // label filter: the action only sets the label after the request is submitted.
   async function status(id) {
     const q = encodeURIComponent("repo:" + REPO + " is:issue casora-id:" + id);
     const r = await fetch("https://api.github.com/search/issues?q=" + q, { headers: { Accept: "application/vnd.github+json" } });
@@ -80,22 +80,22 @@
     if ((state === "question" || state === "declined") && it.comments) {
       try {
         const c = await (await fetch(it.comments_url + "?per_page=100")).json();
-        // Nur Antworten des Casora-Teams zeigen – sonst könnte jeder hier Text (Links) unterbringen.
+        // Only show replies from the Casora team, otherwise anyone could place text (links) here.
         const last = (c || []).filter((x) => x && /^(OWNER|MEMBER|COLLABORATOR)$/.test(x.author_association)).pop();
         note = last && last.body ? String(last.body).slice(0, 200) : "";
-      } catch (e) { /* ohne Kommentar */ }
+      } catch (e) { /* no comment */ }
     }
     return { state, note, url: it.html_url, number: it.number };
   }
 
-  // ── Community-Karten ────────────────────────────────────────────────────
-  // Kachelarten mit `community: {desc, needs?}` – mitgeliefert, standardmäßig nicht in der Auswahl.
-  // Eingestellte Karten (community.retired) nur noch für die, die sie hinzugefügt haben (zum Entfernen).
+  // ── Community cards ────────────────────────────────────────────────────
+  // Tile types with `community: {desc, needs?}`: shipped, not in the tile list by default.
+  // Retired cards (community.retired) only for those who added them (so they can remove them).
   const cards = (types, on) => (types || []).filter((t) => t && t.community && !t.hidden
     && (!t.community.retired || !!(on && on.has(t.id))));
   const tplOf = (t) => [].concat((t && t.template) || []).filter(Boolean);
-  // Vorlagen dieser Kachelart: ihre eigene und eigene Kachelarten darauf (variables.casora_tile.base,
-  // casora-panel-kachelart.js) – deren Kacheln hängen genauso an der Community-Karte.
+  // Templates of this tile type: its own and custom tile types built on it (variables.casora_tile.base,
+  // casora-panel-kachelart.js); their tiles depend on the community card just the same.
   const wantOf = (type, templates) => {
     const want = tplOf(type);
     Object.keys(templates || {}).forEach((name) => {
@@ -104,7 +104,7 @@
     });
     return want;
   };
-  // Kacheln (auch in Bedingungen und Karussells), die diese Kachelart benutzen.
+  // Tiles (also inside conditions and carousels) that use this tile type.
   const uses = (tile, type, want) => {
     let c = tile, n = 0;
     while (c && c.type === "conditional" && c.card && typeof c.card === "object" && n++ < 4) c = c.card;
@@ -113,7 +113,7 @@
   };
   const isCarousel = (t) => !!t && /swipe|carousel/.test(String(t.type || "")) && Array.isArray(t.cards);
   const carouselIn = (t) => (isCarousel(t) ? t : t && t.type === "conditional" && isCarousel(t.card) ? t.card : null);
-  // Kacheln dieser Art in den Räumen (bzw. Handy-Abschnitten) → [Kachel].
+  // Tiles of this type in the rooms (or phone sections) → [tile].
   function usedIn(rooms, type, templates) {
     const want = wantOf(type, templates), out = [];
     (rooms || []).forEach((r) => (r.tiles || []).forEach((t) => {
@@ -123,11 +123,11 @@
     }));
     return out;
   }
-  // Zwilling über Art + Entität (die Handy-Kachel ist eine Kopie der Raum-Kachel, kein Verweis).
+  // Twin by type + entity (the phone tile is a copy of the room tile, not a reference).
   const innerOf = (t) => { let c = t, n = 0; while (c && c.type === "conditional" && c.card && n++ < 4) c = c.card; return c || t; };
   const twinKey = (t) => { const c = innerOf(t); return tplOf(c).join(",") + "|" + String((c && c.entity) || ""); };
-  // Anzahl der Kacheln: Räume plus Handy-Kacheln ohne Gegenstück im Raum (phone: Handy-Abschnitte,
-  // templates: Vorlagen des Dashboards für eigene Kachelarten).
+  // Number of tiles: rooms plus phone tiles without a counterpart in the room (phone: phone sections,
+  // templates: the dashboard's templates for custom tile types).
   function usage(rooms, type, phone, templates) {
     const desk = usedIn(rooms, type, templates);
     if (!phone) return desk.length;
@@ -139,7 +139,7 @@
     });
     return desk.length + extra;
   }
-  // Entfernt die Kacheln dieser Art; ein dadurch leeres Karussell fällt mit weg. → Anzahl.
+  // Removes the tiles of this type; a carousel left empty by that goes too. → count.
   function dropTiles(rooms, type, templates) {
     const want = wantOf(type, templates);
     let n = 0;
@@ -160,13 +160,13 @@
     return n;
   }
 
-  // Gemerkte Auswahl lesen/schreiben (casora/settings: set ersetzt alles – darum frisch lesen und mischen).
+  // Read/write the stored choice (casora/settings: set replaces everything, so read fresh and merge).
   async function load(hass) {
     try {
       const r = await hass.callWS({ type: "casora/settings/get" });
       const ids = (((r && r.settings) || {}).community || {}).added;
       W.casoraCommunityOn = new Set(Array.isArray(ids) ? ids.filter((x) => typeof x === "string") : []);
-    } catch (e) { /* ohne Einstellungen: nichts hinzugefügt */ }
+    } catch (e) { /* no settings: nothing added */ }
     return W.casoraCommunityOn;
   }
   async function save(hass, ids) {
@@ -178,9 +178,9 @@
     W.casoraCommunityOn = new Set(list);
   }
 
-  // Vorschaubilder einer Community-Karte: Kachel (Pflicht) und Popup (optional, „<id>-popup.webp“).
-  // Karten mit `darkShots` haben im dunklen Profil (hass.themes.darkMode) eigene Bilder „<id>-dark.webp“ /
-  // „<id>-popup-dark.webp“; fehlt eins, gilt das helle (light).
+  // Preview images of a community card: tile (required) and popup (optional, "<id>-popup.webp").
+  // Cards with `darkShots` have their own images in dark mode (hass.themes.darkMode), "<id>-dark.webp" /
+  // "<id>-popup-dark.webp"; a missing one falls back to the light image (light).
   const isDark = (hass) => !(hass && hass.themes && hass.themes.darkMode === false);
   const shots = (t, dark) => {
     const base = "/casora_assets/community/" + t.id;
@@ -193,7 +193,7 @@
   if (typeof customElements === "undefined") return;
 
   // ── Studio ──────────────────────────────────────────────────────────────
-  // Eigene Wünsche (pro Nutzer): [{id, title, at}].
+  // Own requests (per user): [{id, title, at}].
   const KEY = "casora_community_wishes";
   const loadMine = async (hass) => {
     try { const r = await hass.connection.sendMessagePromise({ type: "frontend/get_user_data", key: KEY }); return (r && Array.isArray(r.value)) ? r.value : []; }
@@ -217,23 +217,23 @@
     + ".comrow{display:flex;align-items:center;gap:10px;padding:10px 4px;border-top:1px solid rgba(127,127,127,.15)}.comrow:first-child{border-top:0}"
     + ".comrow .comtx{flex:1;min-width:0}.comrow b{display:block;font-size:14px}.comrow span{font-size:13px;opacity:.7}"
     + ".comrow small{display:block;font-size:12px;opacity:.6;margin-top:2px}"
-    // Vorschaubild = genau die Kachel (240 × 200, Radius 32 px): gleiches Seitenverhältnis, Ecken anteilig.
+    // Preview = exactly the tile (240 × 200, radius 32 px): same aspect ratio, proportional corners.
     + ".comshot{width:120px;height:100px;border-radius:13.33%/16%;flex:none;object-fit:cover;background:rgba(127,127,127,.15);border:0;padding:0;display:block}"
     + "button.comzoom{border:0;padding:0;background:none;border-radius:13.33%/16%;flex:none;cursor:zoom-in;line-height:0}"
     + ".comrow.comcard{align-items:flex-start}.comrow.comcard > .comchip{align-self:center}"
-    // Handy: Bild kleiner, Text daneben in voller Breite, „Hinzufügen“ als breiter Knopf darunter.
+    // Phone: smaller image, text beside it at full width, "Add" as a wide button below.
     + "@media (max-width: 600px){.comrow.comcard{flex-wrap:wrap}.comrow.comcard .comshot,.comrow.comcard button.comzoom{width:96px;height:80px}"
     + ".comrow.comcard .comtx{flex:1 1 0}.comrow.comcard > .comchip{flex:1 0 100%;align-self:stretch;padding:9px 12px;text-align:center;font-weight:600}}"
     + ".comlink{display:inline-flex;align-items:center;gap:5px;margin-top:6px;border:0;border-radius:999px;padding:4px 10px 4px 8px;font:inherit;font-size:13px;font-weight:600;"
     + "background:var(--casora-studio-chip, rgba(118,118,128,.18));color:inherit;cursor:pointer}.comlink ha-icon{--mdc-icon-size:16px;display:flex}"
-    // Große Vorschau über der Community-Seite: Kachel / Popup.
+    // Large preview over the Community page: tile / popup.
     + ".comlb{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;box-sizing:border-box;"
     + "background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}"
     + ".comlb img{max-width:min(92vw,880px);max-height:72vh;border-radius:18px;box-shadow:var(--casora-popup-plate-shadow, 0 18px 50px -20px rgba(0,0,0,.6));background:rgba(127,127,127,.15)}"
     + ".comlb .comseg{display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.18)}"
     + ".comlb .comseg button{border:0;border-radius:999px;padding:7px 16px;font:inherit;font-size:14px;font-weight:600;background:none;color:#fff;cursor:pointer}"
     + ".comlb .comseg button.on{background:#fff;color:#000}"
-    // Bild + Leiste darüber (Umschalter mittig, × rechts bündig mit der Bildkante) als ein Block.
+    // Image + bar above it (switch centered, × flush right with the image edge) as one block.
     + ".comlb .comfig{display:flex;flex-direction:column;align-items:stretch;gap:12px;max-width:100%}"
     + ".comlb .combar{position:relative;display:flex;justify-content:center;align-items:center;min-height:44px}"
     + ".comlb .comfig img{max-width:100%;align-self:center}"
@@ -246,7 +246,7 @@
     + ".comflash{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;font-weight:600;color:var(--casora-color-green, #30D158)}"
     + ".comflash.err{color:var(--casora-color-red, #FF453A)}.comflash ha-icon{--mdc-icon-size:18px;width:18px;height:18px;display:flex;flex:none}"
     + ".comflash span{color:var(--primary-text-color);opacity:.85;font-size:13px}";
-  // Bestätigung in der Seite: grüner Haken bzw. rotes Ausrufezeichen und Text.
+  // Confirmation inside the page: green check or red exclamation mark, and text.
   const flash = (note) => {
     const f = el("div", "comflash" + (note.tone === "err" ? " err" : ""));
     f.setAttribute("role", "status");
@@ -255,8 +255,8 @@
     return f;
   };
   const css = (box) => { if (!box.querySelector("style.comcss")) { const s = el("style", "comcss"); s.textContent = CSS; box.appendChild(s); } };
-  // Neuer Tab über einen echten Link: Safari und die HA-App lassen nur das zu, und nur direkt im Klick
-  // (nach einem await gilt der Klick nicht mehr als Nutzeraktion – „GitHub öffnen“ tat dann nichts, 14.10.).
+  // New tab through a real link: Safari and the HA app allow only that, and only right in the click
+  // (after an await the click no longer counts as a user action; "Open GitHub" then did nothing, 14.10.).
   const open = (url) => {
     try {
       const a = document.createElement("a");
@@ -266,16 +266,16 @@
     } catch (e) { location.href = url; }
   };
 
-  // Casora-Version fürs Issue (casora/version, frontend_version.py).
+  // Casora version for the issue (casora/version, frontend_version.py).
   const loadVersion = (hass) => (W.__casoraVersion ? Promise.resolve() : Promise.resolve(hass && hass.callWS && hass.callWS({ type: "casora/version" }))
     .then((r) => { if (r && r.version) W.__casoraVersion = r.version; }).catch(() => {}));
-  // Integration lesbar („Roborock“ statt „roborock“), aus HAs eigenen Übersetzungen.
+  // Readable integration name ("Roborock" rather than "roborock"), from HA's own translations.
   const integrationName = (hass, d) => {
-    try { const t = hass && hass.localize && hass.localize("component." + d + ".title"); if (t) return t; } catch (e) { /* Rückfall */ }
+    try { const t = hass && hass.localize && hass.localize("component." + d + ".title"); if (t) return t; } catch (e) { /* fallback */ }
     return d;
   };
   const hasIntegration = (hass, d) => !d || !!(hass && hass.config && (hass.config.components || []).includes(d));
-  // Große Vorschau über der Community-Seite; Esc oder Tipp daneben schließt nur die Vorschau.
+  // Large preview over the Community page; Esc or a tap beside it closes only the preview.
   const lightbox = (box, t, which, hasPopup, dark) => {
     const pane = box.closest(".askpane") || box;
     const old = pane.querySelector(".comlb");
@@ -287,7 +287,7 @@
     const img = el("img");
     img.alt = tr(t.label);
     const seg = el("div", "comseg");
-    // Popup-Bild ist genau auf den Rahmen geschnitten: Ecken rund wie das Popup selbst.
+    // The popup image is cropped exactly to the frame: corners round like the popup itself.
     img.onerror = () => { const k = img.dataset.k; if (k && img.src.indexOf(S.light[k]) < 0) img.src = S.light[k]; };
     const show = (k) => { img.dataset.k = k; img.src = S[k]; img.style.borderRadius = k === "popup" ? "36px" : "13.33%/16%"; img.style.width = k === "popup" ? "" : "min(360px, 80vw)"; seg.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.k === k)); };
     [["tile", "Tile"], ["popup", "Popup"]].forEach(([k, label]) => {
@@ -320,7 +320,7 @@
   customElements.whenDefined("casora-panel").then(() => {
     const P = customElements.get("casora-panel").prototype;
 
-    // Beim Laden des Studios die gemerkte Auswahl holen – „Kachel hinzufügen“ fragt synchron (onlyIf).
+    // Fetch the stored choice when the Studio loads; "Add tile" asks synchronously (onlyIf).
     const load0 = P._load;
     if (typeof load0 === "function") {
       P._load = function () {
@@ -345,7 +345,7 @@
       };
     }
 
-    // Kartenwunsch: Gerät, Beispiel-Entitäten (Pflicht), Kachel (Pflicht), Popup, Bild.
+    // Card request: device, example entities (required), tile (required), popup, image.
     P._comWish = async function () {
       const hass = this._hass;
       const ents = Object.keys((hass && hass.states) || {}).sort();
@@ -399,16 +399,16 @@
       const id = Math.random().toString(36).slice(2, 10);
       const w = C.wishBody(f, hass, id);
       const url = C.issueUrl("Kartenwunsch: " + f.device, w.body, [LABEL_WISH].concat(w.plat.length ? ["integration: " + w.plat[0]] : []));
-      // Vorschau: genau dieser Text geht an GitHub (öffentlich).
+      // Preview: exactly this text goes to GitHub (public).
       const go = await this._ask({ title: tr("This is what will be public"), message: tr("Check the text. Nothing else is sent."),
         value: w.body, multiline: true, rows: 14, wide: true, confirmLabel: tr("Open GitHub"),
         extend: ({ input, ok }) => {
-          // GitHub direkt im Klick öffnen, nicht erst nach dem Schließen des Dialogs.
+          // Open GitHub right in the click, not after the dialog has closed.
           if (ok) ok.addEventListener("click", () => open(url), true);
           if (!input) return;
           input.readOnly = true;
-          // Nicht alles markiert und von oben lesen (der Dialog wählt sonst den ganzen Text aus).
-          setTimeout(() => { try { input.setSelectionRange(0, 0); input.scrollTop = 0; } catch (e) { /* egal */ } }, 60);
+          // Nothing selected, read from the top (the dialog otherwise selects all the text).
+          setTimeout(() => { try { input.setSelectionRange(0, 0); input.scrollTop = 0; } catch (e) { /* ignore */ } }, 60);
         } });
       if (!go) return;
       const mine = await loadMine(hass);
@@ -417,9 +417,9 @@
       if (this._status) this._status(tr("GitHub is open – submit the request there."), "ok");
     };
 
-    // Community-Seite: Community-Karten (Hinzufügen/Entfernen) und eigene Kartenwünsche mit Stand.
-    // note (nach Hinzufügen/Entfernen): {text, tone, id} – erscheint in der Seite selbst (an der Karte bzw. oben),
-    // eine Statusmeldung des Studios läge unter dem Weichzeichner der wieder geöffneten Seite.
+    // Community page: community cards (add/remove) and the user's own card requests with their state.
+    // note (after add/remove): {text, tone, id}, shown in the page itself (at the card or on top);
+    // a Studio status message would sit under the blur of the reopened page.
     P._comCatalog = async function (note) {
       const C = W.casoraCommunity;
       const I = W.__casoraPanelInternals || {};
@@ -461,7 +461,7 @@
             shot.alt = "";
             shot.loading = "lazy";
             shot.src = S.tile;
-            // Ohne Vorschaubild: leere Fläche statt Symbol für ein kaputtes Bild (dunkles fehlt → erst das helle).
+            // No preview image: an empty area instead of a broken-image icon (dark missing → try the light one first).
             shot.onerror = () => { if (S.tile !== S.light.tile && shot.src.indexOf(S.light.tile) < 0) shot.src = S.light.tile; else shot.replaceWith(el("div", "comshot")); };
             zoom.appendChild(shot);
             const tx = el("div", "comtx");
@@ -469,12 +469,12 @@
             const need = t.community.needs;
             if (need) {
               const ok2 = hasIntegration(hass, need);
-              // Lesbarer Hinweis aus der Karte (needsText/needsMissing), sonst der Name der Integration.
+              // Readable note from the card (needsText/needsMissing), otherwise the integration's name.
               const txt = ok2 ? (t.community.needsText ? tr(t.community.needsText) : fill(tr("Needs {x}"), { x: integrationName(hass, need) }))
                 : (t.community.needsMissing ? tr(t.community.needsMissing) : fill(tr("Needs {x} – not installed"), { x: integrationName(hass, need) }));
               tx.appendChild(el("small", "", txt));
             }
-            // „Popup ansehen“ nur, wenn es ein Popup-Bild gibt.
+            // "View popup" only when there is a popup image.
             let hasPopup = false;
             const pop = el("button", "comlink");
             pop.type = "button";
@@ -497,7 +497,7 @@
             r.append(zoom, tx, b);
             host.appendChild(r);
           });
-          // Eigene Wünsche
+          // Own requests
           loadMine(hass).then((mine) => {
             if (!mine.length) return;
             host.appendChild(el("div", "comlbl", tr("Your requests")));
@@ -510,7 +510,7 @@
               t.append(el("b", "", m.title), sub);
               t.setAttribute("data-no-i18n", "");
               const pill = el("span", "compill", "…");
-              // × nimmt den Wunsch aus der Liste (Rückfrage; auf GitHub zurückziehen = Issue dort schließen).
+              // × takes the request off the list (asks first; withdrawing on GitHub = closing the issue there).
               const rm = el("button", "comrm");
               rm.type = "button";
               rm.setAttribute("aria-label", tr("Remove from the list"));
@@ -518,7 +518,7 @@
               rm.onclick = (ev) => { ev.stopPropagation(); then = { unwish: m, url: r.dataset.url || "" }; ok.click(); };
               r.append(t, pill, rm);
               host.appendChild(r);
-              // Wenige Anfragen: GitHub erlaubt ohne Anmeldung nur einige je Minute.
+              // Few requests: without sign-in GitHub allows only a few per minute.
               setTimeout(() => C.status(m.id).then((st) => {
                 const l = L[st.state] || L.open;
                 pill.textContent = tr(l[0]); pill.style.background = l[1];
@@ -537,8 +537,8 @@
       return this._comCatalog(await this._comToggle(then.toggle));
     };
 
-    // Eigenen Kartenwunsch aus „Deine Kartenwünsche“ nehmen. Steht er schon auf GitHub, zieht man ihn dort
-    // zurück (Issue schließen) – das kann Casora ohne Anmeldung nicht; die Rückfrage bietet den Weg an.
+    // Take an own card request off "Your requests". If it is already on GitHub, it is withdrawn there
+    // (close the issue); Casora can't do that without sign-in, so the question offers the way.
     P._comUnwish = async function (m, url) {
       const res = await this._ask({
         title: fill(tr("Remove “{x}”?"), { x: m.title }),
@@ -560,7 +560,7 @@
       return { text: fill(tr("“{x}” removed from the list."), { x: m.title }), tone: "ok" };
     };
 
-    // Hinzufügen/Entfernen einer Community-Karte in der Kachelauswahl.
+    // Add/remove a community card in the tile list.
     P._comToggle = async function (type) {
       const C = W.casoraCommunity;
       const ids = new Set(W.casoraCommunityOn);
@@ -571,8 +571,8 @@
         catch (e) { return { text: tr("Couldn't save. Try again."), tone: "err", id: type.id }; }
         return { text: fill(tr("“{x}” is now in Add tile."), { x: name }), tone: "ok", id: type.id };
       }
-      // Wird die Kachel in diesem Dashboard benutzt (Räume, Handy-Layout, eigene Kachelarten darauf)?
-      // Dann nachfragen: Kacheln behalten oder mit entfernen.
+      // Is the tile used in this dashboard (rooms, phone layout, custom tile types built on it)?
+      // Then ask: keep the tiles or remove them too.
       const pair = this._pair && this._pair.safe !== false ? this._pair : null;
       const desk = pair ? pair.desktop : this._state;
       const roomsOf = (x) => (x && x.compact && x.compact.rooms) || [];
@@ -597,7 +597,7 @@
       ids.delete(type.id);
       try { await C.save(this._hass, ids); }
       catch (e) { return { text: tr("Couldn't save. Try again."), tone: "err", id: type.id }; }
-      // Auch am Handy entfernen – sonst blieb dort die Kachel einer nicht mehr hinzugefügten Karte stehen.
+      // Remove on the phone too, otherwise the tile of a card no longer added stayed there.
       const dropped = drop ? C.dropTiles(rooms, type, tpls) + (phone ? C.dropTiles(phone, type, tpls) : 0) : 0;
       if (dropped) {
         this._markDirty();
