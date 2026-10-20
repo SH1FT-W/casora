@@ -108,6 +108,23 @@ assert.match(today, />72</); assert.match(today, /Min\. aktiv/);
 assert.match(today, /1 Std\. 30 Min\./, 'goal');
 assert.match(today, /9 Std\. 40 Min\./, 'rest');
 assert.match(today, /8 Std\. 20 Min\./, 'night sleep');
+// Power saving (issue #25): Tractive makes the switches unavailable and HA skips the call silently - the keys stay
+// visible but dimmed, without an action, with a line saying why.
+assert.match(hero, /data-casora-svc/, 'available switches have an action');
+assert.ok(!/aria-disabled/.test(hero), 'nothing dimmed while available');
+for (const k of ['live', 'buzzer', 'led']) states[c[k]].state = 'unavailable';
+const cs = Object.assign({}, c, { saving: 'switch.tracker_power_saving' });
+states[cs.saving] = { entity_id: cs.saving, state: 'on', attributes: {} };
+const saving = P.sec('hero', cs, states, hass, null);
+assert.ok(!/data-casora-svc/.test(saving), 'no action on an unavailable switch');
+assert.equal((saving.match(/aria-disabled="true"/g) || []).length, 3, 'three dimmed keys');
+assert.match(saving, /Energiesparen ist an/);
+states[cs.saving].state = 'off';
+assert.match(P.sec('hero', cs, states, hass, null), /nicht erreichbar/, 'unavailable without power saving');
+states[c.live].state = 'off'; states[c.buzzer].state = 'off'; states[c.led].state = 'off';
+const mixed = P.sec('hero', c, states, hass, null);
+assert.equal((mixed.match(/data-casora-svc/g) || []).length, 3, 'back to normal');
+assert.ok(!/nicht erreichbar|Energiesparen ist an/.test(mixed), 'no hint when everything works');
 // No switches (other tracker model): no buttons.
 assert.ok(!/Live-Tracking/.test(P.sec('hero', Object.assign({}, c, { live: null, buzzer: null, led: null }), states, hass, null)));
 

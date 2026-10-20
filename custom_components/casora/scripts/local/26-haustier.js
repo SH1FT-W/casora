@@ -143,23 +143,32 @@
   };
 
   // Live tracking, sound and light as pills (Weich) or round keys; each one only if the tracker has it.
-  var buttons = function (s, c, UI) {
+  // Tractive makes these switches unavailable while the tracker saves power (switch.py: available = not power_saving),
+  // and HA skips a service call on an unavailable entity silently - such a key is shown dimmed, without an action,
+  // with one line saying why (issue #25: "buttons aren't working").
+  var buttons = function (s, c, UI, states) {
     var svc = function (target) { return esc(JSON.stringify({ domain: 'switch', service: 'toggle', data: {}, target: { entity_id: target } })); };
     var mdi = function (n, sz, col) { return '<ha-icon icon="' + n + '" style="--mdc-icon-size:' + sz + 'px;width:' + sz + 'px;height:' + sz + 'px;display:block;color:' + (col || 'currentColor') + ';"></ha-icon>'; };
-    var S = (window.document.querySelector('home-assistant') || {}).hass;
-    var on = function (id) { var st = S && S.states && S.states[id]; return !!(st && st.state === 'on'); };
+    var S = states || {};
+    var on = function (id) { var st = S[id]; return !!(st && st.state === 'on'); };
+    var off = function (id) { var st = S[id]; return !st || st.state === 'unavailable'; };
     var keys = [];
-    if (c.live) keys.push({ id: c.live, i: 'mdi:crosshairs-gps', l: 'Live-Tracking', on: s.live });
-    if (c.buzzer) keys.push({ id: c.buzzer, i: 'mdi:bell-ring-outline', l: 'Ton', on: on(c.buzzer) });
-    if (c.led) keys.push({ id: c.led, i: 'mdi:flashlight', l: 'Licht', on: on(c.led) });
+    if (c.live) keys.push({ id: c.live, i: 'mdi:crosshairs-gps', l: 'Live-Tracking', on: s.live, off: off(c.live) });
+    if (c.buzzer) keys.push({ id: c.buzzer, i: 'mdi:bell-ring-outline', l: 'Ton', on: on(c.buzzer), off: off(c.buzzer) });
+    if (c.led) keys.push({ id: c.led, i: 'mdi:flashlight', l: 'Licht', on: on(c.led), off: off(c.led) });
     if (!keys.length) return '';
+    var act = function (k) { return k.off ? ' aria-disabled="true" style="opacity:.38;cursor:default;"' : ' data-casora-svc="' + svc(k.id) + '"'; };
+    var why = !keys.some(function (k) { return k.off; }) ? ''
+      : '<div style="margin-top:10px;text-align:center;font-size:13px;line-height:1.35;color:' + (UI.tokens || {}).ink3 + ';font-family:' + (UI.tokens || {}).font + ';">'
+        + esc(T(s.saving ? 'Energiesparen ist an: der Tracker reagiert erst wieder, wenn er unterwegs ist.'
+          : 'Der Tracker ist gerade nicht erreichbar.')) + '</div>';
     var HH = window._casoraHH;
     if (HH && HH.on && HH.on()) {
       return HH.pillCss + '<style>.hh-pill > *{pointer-events:none;}</style><div class="hh-pills" style="margin-top:12px;">'
         + keys.map(function (k) {
-          return '<div class="hh-pill' + (k.on ? ' pri' : '') + '" data-casora-svc="' + svc(k.id) + '">' + mdi(k.i, 20)
+          return '<div class="hh-pill' + (k.on ? ' pri' : '') + '"' + act(k) + '>' + mdi(k.i, 20)
             + '<span style="pointer-events:none;">' + esc(T(k.l)) + '</span></div>';
-        }).join('') + '</div>';
+        }).join('') + '</div>' + why;
     }
     var TK = UI.tokens;
     return '<style>.hp-ctl{display:flex;align-items:center;justify-content:center;gap:22px;margin-top:14px;color:' + TK.ink + ';font-family:' + TK.font + ';}'
@@ -170,9 +179,9 @@
       + '.hp-cap{display:flex;justify-content:center;gap:22px;margin-top:6px;font-size:12px;color:' + TK.ink3 + ';font-family:' + TK.font + ';}'
       + '.hp-cap span{width:52px;display:flex;justify-content:center;white-space:nowrap;overflow:visible;}</style>'
       + '<div class="hp-ctl">' + keys.map(function (k) {
-        return '<div class="hp-b' + (k.on ? ' on' : '') + '" data-casora-svc="' + svc(k.id) + '">' + mdi(k.i, 24) + '</div>';
+        return '<div class="hp-b' + (k.on ? ' on' : '') + '"' + act(k) + '>' + mdi(k.i, 24) + '</div>';
       }).join('') + '</div>'
-      + '<div class="hp-cap">' + keys.map(function (k) { return '<span>' + esc(T(k.l)) + '</span>'; }).join('') + '</div>';
+      + '<div class="hp-cap">' + keys.map(function (k) { return '<span>' + esc(T(k.l)) + '</span>'; }).join('') + '</div>' + why;
   };
 
   // Minutes as "1 Std. 12 Min." (same wording as the person popup).
@@ -227,7 +236,7 @@
         if (s.away != null && s.away > 150) rest.push(PE.km(s.away) + ' ' + T('von zuhause'));
       }
       if (s.battery != null) rest.push('Akku ' + Math.round(s.battery) + ' %' + (s.charging ? ' · lädt' : ''));
-      return UI.line(s.place, rest) + (s.dead ? '' : buttons(s, c, UI));
+      return UI.line(s.place, rest) + (s.dead ? '' : buttons(s, c, UI, states));
     }
     if (part === 'info') {
       var rows = [];
