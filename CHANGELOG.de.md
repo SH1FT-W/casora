@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.43 – 20.10.2026
+
+### Behoben
+- **Haustier-Kachel: Tier im Feld „Tier“ nicht zu finden (#25):** Home Assistant benennt den Tractive-Tracker nach der Hardware („Tracker 1A2B3C4D“, auf Spanisch „Rastreador …“), den Namen des Tiers trägt nur ein zweites Gerät dahinter. Die Suche nach dem Tiernamen ergab deshalb „Keine Treffer“. Das Studio zeigt Tractive-Tracker jetzt mit dem Namen des Tiers – im Feld „Tier“ (darunter der Tracker), beim Anlegen der Kachel, im Kachelnamen und unter „Was soll aufs Dashboard?“ – und die Suche nach dem Tiernamen findet sie.
+
 ## 26.10.42 – 20.10.2026
 
 ### Behoben
