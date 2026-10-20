@@ -45,6 +45,9 @@
   // ── Namen, Gerät, Bereich ──────────────────────────────────────────────────
   var reg = function (h, id) { return ((h && h.entities) || {})[id] || {}; };
   var devOf = function (h, id) { var e = reg(h, id); return e.device_id ? ((h.devices || {})[e.device_id] || null) : null; };
+  // Registry category that makes an entity a setting or diagnostic value. Not for device_tracker: HA 2026.10
+  // marks every tracker diagnostic, yet a phone or pet tracker is a device, not a measurement (issue #25).
+  var catOf = function (h, id) { return String(id).indexOf('device_tracker.') === 0 ? null : (reg(h, id).entity_category || null); };
   var devName = function (d) { return d ? (d.name_by_user || d.name || '') : ''; };
   Z.nameOf = function (h, id) {
     var st = h.states[id], fn = (st && st.attributes && st.attributes.friendly_name) || id;
@@ -277,10 +280,10 @@
     // Ganzer Zeilentext: das erste div der Zeile ist oft die (leere) Symbol-Fläche.
     var label = el ? String(el.textContent || '').replace(/\s+/g, ' ') : '';
     if (el && SETTINGS_ROW.test(String(label || '').trim())) return Z.openDevice(id);
-    var dom = id.split('.')[0], e = reg(h, id);
-    // Bild im offenen Kamera-Popup angetippt → Vollbild; sonst (Halten auf der Kachel) das Kamera-Popup.
+    var dom = id.split('.')[0];
+    // Picture tapped in an open camera popup → full screen; otherwise (holding the tile) the camera popup.
     if (dom === 'camera' && window.casoraPopup && window.casoraPopup.current) return Z.openCamera(id);
-    if (MEAS.test(dom) || e.entity_category) return Z.openMeasure(id);
+    if (MEAS.test(dom) || catOf(h, id)) return Z.openMeasure(id);
     // Gerät, dessen Popup schon offen ist: nicht dasselbe Popup erneut öffnen, sondern seine Geräteseite
     // („Weitere Einstellungen“ im Luftreiniger, Schloss-Zeile …); nur der Marker auf der Personen-Karte tut nichts.
     if (DEVICE.test(dom) && window.casoraPopup && window.casoraPopup.entity === id) return dom === 'person' ? true : Z.openDevice(id);
@@ -530,10 +533,10 @@
       var ids = dv4 ? Object.keys(hass.entities || {}).filter(function (eid) { var x = hass.entities[eid]; return x.device_id === dv4.id && !x.hidden && states[eid]; }) : [id];
       var groups = { main: [], config: [], diagnostic: [] };
       ids.sort().forEach(function (eid) {
-        var x = reg(hass, eid), s5 = states[eid];
+        var s5 = states[eid];
         var row = { entity: eid, icon: Z.iconOf(s5), iconTone: 'accent', label: shortName(hass, eid, dv4),
           value: Z.stateWord(hass, eid, s5.state) };
-        (groups[x.entity_category] || groups.main).push(row);
+        (groups[catOf(hass, eid)] || groups.main).push(row);
       });
       var outE = '';
       if (groups.main.length) outE += UI.group(groups.main, 'Gehört dazu');
