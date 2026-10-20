@@ -19873,9 +19873,12 @@ class CasoraPanel extends HTMLElement {
       ...(news ? [{ id: "whatsNew", label: "What's new" }] : []),
       { id: "docs", label: "Guide on GitHub", group: "web", quiet: true },
       { id: "issue", label: "Report a problem", group: "web", quiet: true },
+      // Counts and versions for an issue, no names (casora-panel-diagnostics.js).
+      ...(typeof this._diagShow === "function" ? [{ id: "diag", label: "Copy diagnostics…", group: "web", quiet: true }] : []),
     ], (id) => {
       // Die Einführung ist der Willkommen-Bildschirm vom Erststart (über dem Studio als Blatt).
       if (id === "welcome") return this._welcomeScreen();
+      if (id === "diag") return this._diagShow();
       if (id === "whatsNew") return window.casoraWelcomeShow(id);
       window.open(id === "issue" ? ISSUES : DOCS, "_blank", "noopener");
     });
@@ -27352,7 +27355,7 @@ class CasoraPanel extends HTMLElement {
 window.__casoraPanelInternals = {
   blankRoom, roomPhoto, slug, translit, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
   applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
-  findType, tileTypeAny, newTile, isPetTracker, petName, isPlantEntity, listCategory, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
+  findType, tileTypeAny, newTile, isPetTracker, petName, isPlantEntity, listCategory, TILE_MAIN_FIND, tileMissingEntity, tileEntityGone, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,

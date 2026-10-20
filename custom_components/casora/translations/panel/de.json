@@ -1,6 +1,13 @@
 {
   "_comment": "Casora-Panel-Übersetzung. Schlüssel = englischer Originaltext im Panel. Neue Sprache: Datei <code>.json anlegen, dann tools/build-panel-i18n.py.",
   "exact": {
+    "Copy diagnostics…": "Diagnose kopieren …",
+    "Diagnostics": "Diagnose",
+    "Paste it into your GitHub issue. It contains only counts, versions and integrations – no names of devices, rooms or people, no addresses.": "Füg sie in dein GitHub-Issue ein. Sie enthält nur Zahlen, Versionen und Integrationen – keine Namen von Geräten, Räumen oder Personen, keine Adressen.",
+    "Copy": "Kopieren",
+    "The diagnostics could not be collected.": "Die Diagnose ließ sich nicht sammeln.",
+    "Copying is not possible here. The text is selected – copy it by hand.": "Kopieren geht hier nicht. Der Text ist markiert – kopier ihn von Hand.",
+    "GitHub is open – paste the diagnostics into your issue.": "GitHub ist geöffnet – füg die Diagnose in dein Issue ein.",
     "Pulse problems": "Pulse-Probleme",
     "Nobody switched on – nothing changed": "Niemand eingeschaltet – nichts geändert",
     "To hide it from everyone, switch it off.": "Für alle ausblenden: einfach ausschalten.",

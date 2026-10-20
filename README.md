@@ -265,7 +265,7 @@ Since October 2026 Casora uses calendar versions **`YY.M.N`**: year, month, and 
 - [**Contributing**](docs/contributing.md): pull requests and screenshots
 - [**Changelog**](CHANGELOG.md): what changed in each version, in English and [German](CHANGELOG.de.md)
 
-Found a bug or have an idea? [Open an issue](https://github.com/SH1FT-W/casora/issues).
+Found a bug or have an idea? [Open an issue](https://github.com/SH1FT-W/casora/issues). For a bug, add the diagnostics from the Studio (⋯ → **Help…** → **Copy diagnostics…**): versions and counts only, no names.
 
 <br/>
 

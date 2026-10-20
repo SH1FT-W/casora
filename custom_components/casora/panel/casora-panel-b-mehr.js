@@ -1042,6 +1042,8 @@
       A("match", "Match Desktop and Phone", "angleichen unterschiede handy desktop", () => this._reviewDifferences(), typeof this._reviewDifferences === "function" && !!this._pair);
       A("tour", "Quick tour", "einführung hilfe tour erklärung", () => this._bIntro && this._bIntro(true));
       A("updates", "Updates", "update aktualisieren version neu", () => this._cuFromMenu(), typeof this._cuFromMenu === "function");
+      A("diag", "Copy diagnostics…", "diagnose diagnostics fehler problem melden issue github support bug hilfe kopieren zwischenablage debug",
+        () => this._diagShow(), typeof this._diagShow === "function", way("Help…"));
       // Rooms
       rooms.forEach((r, i) => {
         const V = r.variables || {};
