@@ -140,12 +140,25 @@ stop() {
   if [ -z "$pid" ] && ps -axo command= | awk -v s=" ha-venv " -v e=" $(abs "$1")" 'index($0, s) && substr($0, length($0) - length(e) + 1) == e { f = 1 } END { exit !f }'; then
     sleep 2; pid="$(pid_von "$1" 2>/dev/null || true)"
   fi
-  [ -n "$pid" ] || return 0
-  kill "$pid" 2>/dev/null || true
-  while kill -0 "$pid" 2>/dev/null; do
-    i=$((i + 1)); [ $i -gt 30 ] && { kill -9 "$pid" 2>/dev/null || true; break; }
+  if [ -n "$pid" ]; then
+    kill "$pid" 2>/dev/null || true
+    while kill -0 "$pid" 2>/dev/null; do
+      i=$((i + 1)); [ $i -gt 30 ] && { kill -9 "$pid" 2>/dev/null || true; break; }
+      sleep 1
+    done
+  fi
+  # Wait for the restart loop itself: deleting the folder (and its marker) right after stop would otherwise
+  # let the loop start hass again.
+  i=0
+  while [ -n "$(schleife_von "$1")" ]; do
+    i=$((i + 1)); [ $i -gt 5 ] && { kill $(schleife_von "$1") 2>/dev/null || true; break; }
     sleep 1
   done
+}
+
+# PIDs of the restart loop (bash -c … ha-venv <venv> <config>) for this config folder.
+schleife_von() {
+  ps -axo pid=,command= | awk -v s=" ha-venv " -v e=" $(abs "$1")" 'index($0, s) && substr($0, length($0) - length(e) + 1) == e { print $1 }'
 }
 
 warten() {
