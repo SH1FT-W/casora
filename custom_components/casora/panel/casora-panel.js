@@ -4800,6 +4800,10 @@ const TILE_MAIN_FIND = {
   casora_pulse: { keys: ["problems"], domain: "sensor", platform: "pulse", both: true },
   // Pet tracker: Tractive's device_tracker (issue #25 – a new tile showed "Device missing" until one was picked).
   casora_pet: { domain: "device_tracker", pet: true },
+  // Coffee machine: only the anchors of real coffee machines (casora-panel-b-ux.js coffeeAnchors – Home Connect, Miele,
+  // De'Longhi, Jura, Melitta, La Marzocco and the power-curve integrations delonghi/krups); any sensor/switch/select
+  // gave hundreds of suggestions.
+  casora_coffee: { coffee: true },
   casora_weather_warning: { keys: ["warning", "warnings"], domain: "binary_sensor", dc: "safety" },
   // Ein Aquarium ist kein beliebiges Thermometer (sonst: Außentemperatur des Autos).
   casora_aquarium: { domain: "sensor", dc: "temperature", strict: true,
@@ -21426,6 +21430,8 @@ class CasoraPanel extends HTMLElement {
       if (e && (e.hidden || listCategory(id, e) || e.disabled_by)) return false;
       return !!S[id];
     };
+    const coffee = spec && spec.coffee
+      ? new Set((typeof window.__casoraCoffeeAnchors === "function" ? window.__casoraCoffeeAnchors(h) : []).map((x) => x.anchor)) : null;
     let ids;
     // Washer/dryer/dishwasher: the shared finder (scripts/local/00-finder.js) – the maker's integration before
     // WashData; washer/dryer without either: the smart plugs in the room's area. A dishwasher only from a source
@@ -21451,7 +21457,8 @@ class CasoraPanel extends HTMLElement {
           : (spec.keys || []).includes(e.translation_key) || platformHit(spec, e, S[id]);
         const dcHit = spec.dc && ((S[id].attributes || {}).device_class === spec.dc);
         const petHit = spec.pet && isPetTracker(h, id);
-        if (!keyHit && !dcHit && !petHit) return false;
+        const coffeeHit = !!coffee && coffee.has(id);
+        if (!keyHit && !dcHit && !petHit && !coffeeHit) return false;
         const text = id + " " + nameOf(id) + " " + devName(id);
         if (spec.not && spec.not.test(text)) return false;
         return true;
@@ -21520,7 +21527,7 @@ class CasoraPanel extends HTMLElement {
       // Der Schlüssel der Integration ist sicherer als nur die Geräteklasse.
       const lr = laundryRank.has(id) ? laundryRank.get(id) : null;
       const keyHit = lr !== null ? lr < 2 : !!spec && ((spec.keys || []).includes((R[id] || {}).translation_key)
-        || platformHit(spec, R[id] || {}, S[id]) || (!!spec.pet && isPetTracker(h, id)));
+        || platformHit(spec, R[id] || {}, S[id]) || (!!spec.pet && isPetTracker(h, id)) || (!!coffee && coffee.has(id)));
       if (keyHit) score += 8;
       // Hersteller-Integration vor WashData.
       if (lr === 0) score += 1;

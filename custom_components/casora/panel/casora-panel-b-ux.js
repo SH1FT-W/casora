@@ -153,6 +153,8 @@
     });
     return out;
   }
+  // Also used by the panel's tile suggestions (_tileCandidates), so a new coffee tile only suggests coffee machines.
+  W.__casoraCoffeeAnchors = coffeeAnchors;
   const foldTx = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ß/g, "ss");
   // Geräte-Treffer: jedes Wort muss in Name, Bereich oder Art vorkommen; vorn im Namen zählt mehr,
   // Neues (ohne Kachel) und Vorschläge des Assistenten vor Vorhandenem.
