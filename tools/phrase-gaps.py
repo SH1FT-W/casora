@@ -4,6 +4,7 @@
     python3 tools/phrase-gaps.py            # Liste der Lücken
     python3 tools/phrase-gaps.py --json     # als JSON (für Nachbearbeitung)
     python3 tools/phrase-gaps.py --max 70   # Gate: Rückgabe 1, wenn es mehr Lücken werden
+    python3 tools/phrase-gaps.py --lang es  # same check against phrases/es.json (default: en)
 
 Liest String-Literale aus den Kachel-Vorlagen (panel/casora-templates.json) und den
 Dashboard-Skripten (scripts/local/*.js, casora-core.js) und prüft sie wie die
@@ -19,7 +20,8 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CC = os.path.join(ROOT, "custom_components/casora")
-PHRASES = os.path.join(CC, "translations/dashboard/phrases/en.json")
+LANG = sys.argv[sys.argv.index("--lang") + 1] if "--lang" in sys.argv else "en"
+PHRASES = os.path.join(CC, "translations/dashboard/phrases/%s.json" % LANG)
 SOURCES = [os.path.join(CC, "scripts/casora-core.js")] + sorted(
     os.path.join(CC, "scripts/local", f) for f in os.listdir(os.path.join(CC, "scripts/local")) if f.endswith(".js"))
 
@@ -146,7 +148,7 @@ def main() -> int:
         limit = int(sys.argv[sys.argv.index("--max") + 1])
         if len(gaps) > limit:
             print(f"FEHLER: {len(gaps)} Übersetzungslücken, erlaubt höchstens {limit} – neue deutsche Texte "
-                  "brauchen einen Eintrag in phrases/en.json", file=sys.stderr)
+                  f"brauchen einen Eintrag in phrases/{LANG}.json", file=sys.stderr)
             return 1
     return 0
 

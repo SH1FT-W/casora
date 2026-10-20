@@ -42,9 +42,16 @@ TEXT = {
         "schliessen": ("Close window: {n}", "{grund} – you can close it again."),
         "co2krit": ("CO₂ critical: {n}", "{co2} ppm – ventilate right away."),
     },
+    "es": {
+        "jetzt": ("Ventilar: {n}", "{grund} – abre la ventana unos minutos."),
+        "schliessen": ("Cerrar ventana: {n}", "{grund} – ya puedes cerrarla."),
+        "co2krit": ("CO₂ crítico: {n}", "{co2} ppm – ventila ahora mismo."),
+    },
 }
 # Gründe kommen deutsch aus raumklima.py; für Englisch die festen Teile tauschen.
 GRUND_EN = (("Feuchte", "Humidity"), ("Fenster seit", "Window open for"), (" offen", ""), ("Std.", "h"), ("Min.", "min"))
+GRUND = {"en": GRUND_EN, "es": (("Feuchte", "Humedad"), ("Fenster seit", "Ventana abierta desde hace"), (" offen", ""),
+                                 ("Std.", "h"), ("Min.", "min"))}
 
 
 def notify_services(hass: HomeAssistant) -> list[str]:
@@ -105,11 +112,11 @@ class LueftenPush:
             self.hass.async_create_task(self._send(kind, room), eager_start=False)
 
     async def _send(self, kind: str, room: dict) -> None:
-        lang = "de" if (self.hass.config.language or "").startswith("de") else "en"
+        code = str(self.hass.config.language or "")[:2]
+        lang = code if code in TEXT else "en"
         grund = room.get("grund") or ""
-        if lang == "en":
-            for a, b in GRUND_EN:
-                grund = grund.replace(a, b)
+        for a, b in GRUND.get(lang, ()):
+            grund = grund.replace(a, b)
         title, msg = TEXT[lang][kind]
         title = title.format(n=room["n"])
         msg = msg.format(grund=grund, co2=room.get("co2")).lstrip(" –")

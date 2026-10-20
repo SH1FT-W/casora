@@ -348,9 +348,10 @@
       // Eingabe: „Bau den Luftreiniger im Büro ein“
       const ask = this._flowGroup(s.body, { header: "Describe it (optional)" });
       // Eingabefelder übersetzt der Panel-Übersetzer nicht – Platzhalter hier nach Sprache.
-      const de = String((this._hass.locale && this._hass.locale.language) || this._hass.language || "").indexOf("de") === 0;
+      const askLang = String((this._hass.locale && this._hass.locale.language) || this._hass.language || "").slice(0, 2);
       const askRow = this._flowRow(ask, { title: "Request", input: "",
-        placeholder: de ? "z.\u00a0B. Bau den Luftreiniger im Büro ein" : "e.g. Add the air purifier to the office" });
+        placeholder: { de: "z.\u00a0B. Bau den Luftreiniger im Büro ein", es: "p.\u00a0ej. Pon el purificador de aire en el despacho" }[askLang]
+          || "e.g. Add the air purifier to the office" });
       const askIn = askRow.input;
       const note = document.createElement("div");
       note.className = "ffoot casora-assist-note";

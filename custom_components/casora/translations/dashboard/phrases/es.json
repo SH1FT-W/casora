@@ -1229,6 +1229,7 @@
   "Tor": "Portón",
   "Lichtfarbe": "Color de luz",
   "Leuchten im Raum": "Luces de la habitación",
+  "Leuchten": "Luces",
   "Gedimmt": "Atenuada",
   "Volle Helligkeit": "Brillo máximo",
   "Neutral": "Neutro",
@@ -2289,7 +2290,11 @@
   "Schlaf Tag": "Sueño de día",
   "Schlaf Nacht": "Sueño de noche",
   "Tracker": "Tracker",
-  "Energiesparen": "Ahorro de energía"
+  "Energiesparen": "Ahorro de energía",
+  "Favorites": "Favoritos",
+  "Scenes": "Escenas",
+  "Ein": "Encendido",
+  "Home": "Casa"
  },
  "patterns": [
   [

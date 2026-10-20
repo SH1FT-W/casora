@@ -43,7 +43,23 @@
       n1t: "Copy diagnostics", n1: "Under ⋯ → Help, Casora collects versions and integrations for a bug report, without names.",
       n2t: "Devices recognised better", n2: "Home Connect from HACS, Miele dishwashers and vacuum values are recognised now, ovens are no longer suggested as dishwashers.",
     },
+    // Spanish: same keys as en (dev/unit/welcome_es.mjs); a missing key falls back to English.
+    es: {
+      welcomeTitle: "Te damos la bienvenida a Casora",
+      whatsNewTitle: "Novedades de Casora {version}",
+      continue: "Continuar",
+      all: "Todos los cambios",
+      w1t: "Habitación por habitación", w1: "Diseña tu panel con los dispositivos que ya tienes en Home Assistant.",
+      w2t: "Asistente de dispositivos", w2: "Casora propone las tarjetas adecuadas para cada habitación y las añade por ti.",
+      w3t: "Escritorio, tableta y móvil", w3: "Un panel que se adapta a cada pantalla, con su propio diseño para el móvil.",
+      n0t: "La tarjeta de mascota encuentra tus localizadores", n0: "Home Assistant marca los localizadores como diagnóstico. Ahora Casora los ofrece igualmente: en el campo “Mascota”, al añadir la tarjeta y con el nombre de tu mascota.",
+      n1t: "Basura con calendario y nombres cortos", n1: "La ventana de basura muestra ahora el calendario del mes desde el principio. Los contenedores de Waste Collection Schedule aparecen sin el nombre del lugar delante, y la tarjeta cuenta los días.",
+      n2t: "“Iluminación” en Casa", n2: "La ventana de luces de la tarjeta Casa se llama ahora “Iluminación” en lugar de como la habitación de la primera luz, también en los paneles existentes.",
+      n3t: "Escuchar en el timbre sigue activo", n3: "Una breve reconexión de la transmisión ya no desactiva “Escuchar”, y al volver a escuchar vuelve el sonido.",
+    },
   };
+  // Texts for a language: its own, English for anything it does not have (yet).
+  const texts = (lang) => Object.assign({}, TEXT.en, TEXT[String(lang || "").split(/[-_]/)[0]] || {});
 
   /** First visit: what Casora is - three lines, no more. */
   const WELCOME = [
@@ -112,7 +128,7 @@
   function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
   function show(mode, lang) {
-    const L = TEXT[String(lang || "").split("-")[0]] || TEXT.en;
+    const L = texts(lang);
     const list = mode === "welcome" ? WELCOME : WHATS_NEW;
     const host = document.createElement("div");
     host.setAttribute("data-casora-welcome", "");
@@ -137,7 +153,7 @@
 
   // For the updates page: the same news as plain text („Neu in …“).
   window.casoraWhatsNew = (lang) => {
-    const L = TEXT[String(lang || "").split("-")[0]] || TEXT.en;
+    const L = texts(lang);
     return { version: VERSION, title: L.whatsNewTitle.replace("{version}", VERSION),
       items: WHATS_NEW.map(([, t, x]) => [L[t], L[x]]) };
   };

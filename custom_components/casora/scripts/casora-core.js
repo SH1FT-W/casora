@@ -827,7 +827,7 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
 // Rückgabe {text, literal, auto}: literal = casora-i18n darf den Text nicht übersetzen.
 (function () {
   if (window.casoraRoomName) return;
-  var WORDS = { home: ['Home', 'Zuhause'] };
+  var WORDS = { home: ['Home', 'Zuhause', 'Casa'] };  // en, de, es
   var norm = function (x) { return String(x == null ? '' : x).trim().toLowerCase(); };
   var isWord = function (n) {
     return Object.keys(WORDS).some(function (k) { return WORDS[k].some(function (w) { return norm(w) === norm(n); }); });
@@ -837,7 +837,8 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
     var n = String(name == null ? '' : name).trim();
     var w = WORDS[v.casora_auto_name];
     if (w && v.name_literal !== true && (!n || w.some(function (x) { return norm(x) === norm(n); }))) {
-      var text = lang ? (String(lang).indexOf('de') === 0 ? w[1] : w[0])
+      var l2 = String(lang || '').slice(0, 2);
+      var text = lang ? (l2 === 'de' ? w[1] : l2 === 'es' ? w[2] : w[0])
         : (window.casoraTr ? window.casoraTr(w[0]) : w[0]);
       return { text: text, literal: false, auto: true };
     }

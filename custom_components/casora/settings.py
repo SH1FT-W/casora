@@ -38,6 +38,12 @@ STORAGE_VERSION = 1
 SECTIONS = ("waste", "calendars", "notify", "scenes", "contacts", "media", "night_entity", "ebike", "umzug", "basis", "welcome", "community")
 
 
+def ai_text_language(hass: HomeAssistant) -> str:
+    """Language the AI writes user-facing notes in (named inside a German prompt)."""
+    code = str(hass.config.language or "")[:2]
+    return {"de": "Deutsch", "es": "Spanisch (español)"}.get(code, "English")
+
+
 def _store(hass: HomeAssistant) -> Store:
     data = hass.data.setdefault(DOMAIN, {})
     if "settings_store" not in data:
@@ -360,7 +366,7 @@ async def ws_merge_template(hass: HomeAssistant, connection: websocket_api.Activ
     if not best:
         connection.send_error(msg["id"], "weak_ai", "Keine ausreichend starke KI eingerichtet")
         return
-    lang = "Deutsch" if (hass.config.language or "").startswith("de") else "English"
+    lang = ai_text_language(hass)
     instructions = (
         "Du hilfst beim Umzug eines Home-Assistant-Dashboards von Hemma nach Casora. Casora ist die "
         "Weiterentwicklung von Hemma; die Vorlagen sind custom:button-card-Templates (JSON).\n\n"
@@ -488,7 +494,7 @@ def adapt_card_result(card: dict, res: Any, lang: str) -> tuple[dict, list[str]]
     notes = [str(c).strip() for c in (changes or []) if str(c).strip()][:8]
     lost = sorted(_entity_ids(card) - _entity_ids(out))
     if lost:
-        head = "Nicht mehr enthalten" if lang == "Deutsch" else "No longer included"
+        head = {"Deutsch": "Nicht mehr enthalten", "Spanisch (español)": "Ya no incluido"}.get(lang, "No longer included")
         notes.insert(0, f"⚠ {head}: {', '.join(lost[:6])}")
     return out, notes
 
@@ -521,7 +527,7 @@ async def ws_adapt_card(hass: HomeAssistant, connection: websocket_api.ActiveCon
     if len(json.dumps(card, ensure_ascii=False)) > ADAPT_MAX_CHARS:
         connection.send_error(msg["id"], "too_big", "Die Karte ist für die KI zu groß")
         return
-    lang = "Deutsch" if (hass.config.language or "").startswith("de") else "English"
+    lang = ai_text_language(hass)
     try:
         res = await ask_ai(hass, entries[0], "Casora: Karte anpassen", adapt_card_prompt(card, msg["context"], lang),
                            ADAPT_STRUCTURE, entity=best["entity_id"])
@@ -563,7 +569,7 @@ async def ws_basis(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
     if not best:
         connection.send_error(msg["id"], "weak_ai", "Keine ausreichend starke KI eingerichtet")
         return
-    lang = "Deutsch" if (hass.config.language or "").startswith("de") else "English"
+    lang = ai_text_language(hass)
     instructions = (
         "Du richtest ein Home-Assistant-Dashboard (Casora) ein. Jeder Raum ist eine Seite mit Kacheln. "
         "Casora hat die Räume schon automatisch gefüllt (RÄUME). GERÄTE OHNE RAUM hatten in Home Assistant "

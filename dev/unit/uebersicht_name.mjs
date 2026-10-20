@@ -26,7 +26,8 @@ const one = (re) => { const m = re.exec(src); assert.ok(m, 'nicht gefunden: ' + 
 // ── Dashboard-Laufzeit: window.casoraRoomName + casora-i18n (Wortliste wie PHRASES.de) ──
 let LANG = 'de';
 const DE = { Home: 'Zuhause', Favorites: 'Favoriten' };
-const tr = (s) => (LANG === 'de' && DE[s]) || s;
+const ES = { Home: 'Casa', Favorites: 'Favoritos' };
+const tr = (s) => (LANG === 'de' && DE[s]) || (LANG === 'es' && ES[s]) || s;
 globalThis.window = { casoraTr: tr };
 const a = core.indexOf('// casora-room-name:start');
 const b = core.indexOf('// casora-room-name:end');
@@ -112,6 +113,8 @@ const R = (name, variables) => [{ path: 'home', name, variables: { ...(variables
 // 1. Markiert und unverändert → übersetzt, Handy und Desktop gleich.
 LANG = 'de'; all(R('Home', { casora_auto_name: 'home' }), 'Zuhause', 'markiert, unverändert');
 LANG = 'en'; all(R('Home', { casora_auto_name: 'home' }), 'Home', 'markiert, unverändert');
+LANG = 'es'; all(R('Home', { casora_auto_name: 'home' }), 'Casa', 'markiert, unverändert');
+LANG = 'es'; all(R('Zuhause'), 'Zuhause', 'ohne Markierung');
 // 2. Markiert, aber geändert → bleibt.
 LANG = 'de'; all(R('Unser Haus', { casora_auto_name: 'home' }), 'Unser Haus', 'markiert, geändert');
 // 3. Ohne Markierung → bleibt wie gespeichert (auch „Home“ auf Deutsch, ohne erneutes Speichern).

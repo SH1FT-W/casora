@@ -13,7 +13,7 @@ activities are stored there as well – after a restart they are re-evaluated (s
 resent silently, otherwise ended). Switching off (device, recipient, all) ends running ones at once.
 
 Rules: only show what the device delivers; never read unknown states as "done"; colors from the
-Casora palette; texts German/English by HA language; times as local time.
+Casora palette; texts German/English/Spanish by HA language; times as local time.
 
 WebSocket (admins only):
   casora/live/get   ← {} → {targets, devices, found: [...], notify_services, log, active, url, test_runs (test house only)}
@@ -66,20 +66,28 @@ COLOR = {"washer": "#5B8FC9", "dryer": "#DE8A4E", "dishwasher": "#4E9E95", "vacu
          "done": "#6AAE78", "pause": "#E8B04A", "attn": "#D35A4E", "error": "#D35A4E"}
 ICON = {"washer": "mdi:washing-machine", "dryer": "mdi:tumble-dryer", "dishwasher": "mdi:dishwasher",
         "vacuum": "mdi:robot-vacuum", "printer": "mdi:printer-3d-nozzle"}
-TITLE = {"washer": ("Waschmaschine", "Washing machine"), "dryer": ("Trockner", "Dryer"),
-         "dishwasher": ("Geschirrspüler", "Dishwasher"), "vacuum": ("Saugroboter", "Robot vacuum"),
-         "printer": ("3D-Drucker", "3D printer")}
+TITLE = {"washer": ("Waschmaschine", "Washing machine", "Lavadora"), "dryer": ("Trockner", "Dryer", "Secadora"),
+         "dishwasher": ("Geschirrspüler", "Dishwasher", "Lavavajillas"),
+         "vacuum": ("Saugroboter", "Robot vacuum", "Robot aspirador"),
+         "printer": ("3D-Drucker", "3D printer", "Impresora 3D")}
 T = {
-    "laeuft": ("Läuft", "Running"), "fertig": ("Fertig", "Done"), "pause": ("Pause", "Pause"), "pausiert": ("Pausiert", "Paused"),
-    "eingriff": ("Eingriff", "Attention"), "eingriff_noetig": ("Eingriff nötig", "Attention needed"), "fehler": ("Fehler", "Error"),
-    "startzeit": ("Startzeit", "Start time"), "startet": ("Startet {t} Uhr", "Starts at {t}"),
-    "waesche_raus": ("Wäsche rausnehmen", "Take out the laundry"), "geschirr_raus": ("Geschirr ausräumen", "Unload the dishes"),
-    "knitterschutz": ("Knitterschutz läuft", "Anti-crease running"), "kurze_pause": ("Kurze Pause", "Short pause"),
-    "endet": ("Endet", "Ending"), "endet_gleich": ("Endet gleich", "Ending soon"),
-    "fehlgeschlagen": ("Fehlgeschlagen", "Failed"), "vorbereitung": ("Vorbereitung", "Preparing"),
-    "schicht": ("Schicht {a}/{b}", "Layer {a}/{b}"), "druckauftrag": ("Druckauftrag", "Print job"),
-    "flaeche_dauer": ("{a} m² in {m} Min.", "{a} m² in {m} min"), "flaeche": ("{a} m²", "{a} m²"), "probe": ("Probe", "Test"),
-    "probe_text": ("Beispiel aus Casora – verschwindet in 2 Minuten", "Sample from Casora – gone in 2 minutes"),
+    "laeuft": ("Läuft", "Running", "En marcha"), "fertig": ("Fertig", "Done", "Terminado"), "pause": ("Pause", "Pause", "Pausa"),
+    "pausiert": ("Pausiert", "Paused", "En pausa"),
+    "eingriff": ("Eingriff", "Attention", "Atención"),
+    "eingriff_noetig": ("Eingriff nötig", "Attention needed", "Requiere acción"), "fehler": ("Fehler", "Error", "Error"),
+    "startzeit": ("Startzeit", "Start time", "Hora de inicio"),
+    "startet": ("Startet {t} Uhr", "Starts at {t}", "Empieza a las {t}"),
+    "waesche_raus": ("Wäsche rausnehmen", "Take out the laundry", "Saca la ropa"),
+    "geschirr_raus": ("Geschirr ausräumen", "Unload the dishes", "Vacía el lavavajillas"),
+    "knitterschutz": ("Knitterschutz läuft", "Anti-crease running", "Antiarrugas en marcha"),
+    "kurze_pause": ("Kurze Pause", "Short pause", "Pausa breve"),
+    "endet": ("Endet", "Ending", "Termina"), "endet_gleich": ("Endet gleich", "Ending soon", "Termina enseguida"),
+    "fehlgeschlagen": ("Fehlgeschlagen", "Failed", "Falló"), "vorbereitung": ("Vorbereitung", "Preparing", "Preparando"),
+    "schicht": ("Schicht {a}/{b}", "Layer {a}/{b}", "Capa {a}/{b}"),
+    "druckauftrag": ("Druckauftrag", "Print job", "Trabajo de impresión"),
+    "flaeche_dauer": ("{a} m² in {m} Min.", "{a} m² in {m} min", "{a} m² en {m} min"), "flaeche": ("{a} m²", "{a} m²", "{a} m²"),
+    "probe": ("Probe", "Test", "Prueba"),
+    "probe_text": ("Beispiel aus Casora – verschwindet in 2 Minuten", "Sample from Casora – gone in 2 minutes", "Ejemplo de Casora – desaparece en 2 minutos"),
 }
 
 # Device state → phase (like STATE in scripts/local/02-devices.js, kind off|idle|delay|run|pause|attn|done|error).
@@ -111,31 +119,50 @@ STATE_PHASE = {
 NOPROG = {"off", "none", "unknown", "unavailable", "detecting...", "detecting", "starting", "running", "idle", "paused",
           "user_paused", "ending", "finished", "clean", "auto_detect", "nophase", "progstarted", ""}
 PHASE = {
-    "pre-wash": ("Vorwäsche", "Pre-wash"), "prewash": ("Vorwäsche", "Pre-wash"), "pre-rinse": ("Vorspülen", "Pre-rinse"),
-    "prerinse": ("Vorspülen", "Pre-rinse"), "wash": ("Waschen", "Washing"), "mainwash": ("Reinigen", "Cleaning"),
-    "rinse": ("Spülen", "Rinsing"), "finalrinse": ("Klarspülen", "Final rinse"), "spin": ("Schleudern", "Spinning"),
-    "soak": ("Einweichen", "Soaking"), "anti-crease": ("Knitterschutz", "Anti-crease"), "anti-wrinkle": ("Knitterschutz", "Anti-crease"),
-    "drying": ("Trocknen", "Drying"), "dry": ("Trocknen", "Drying"), "cool-down": ("Abkühlen", "Cooling down"),
-    "cooldown": ("Abkühlen", "Cooling down"), "heat-up": ("Aufheizen", "Heating up"), "heating": ("Aufheizen", "Heating up"),
-    "heat": ("Aufheizen", "Heating up"), "drain": ("Abpumpen", "Draining"), "drain-&-switch": ("Abpumpen", "Draining"),
-    "sensor-check": ("Prüfung", "Sensor check"), "sanitize": ("Hygiene", "Sanitize"),
+    "pre-wash": ("Vorwäsche", "Pre-wash", "Prelavado"), "prewash": ("Vorwäsche", "Pre-wash", "Prelavado"),
+    "pre-rinse": ("Vorspülen", "Pre-rinse", "Prelavado"),
+    "prerinse": ("Vorspülen", "Pre-rinse", "Prelavado"), "wash": ("Waschen", "Washing", "Lavando"),
+    "mainwash": ("Reinigen", "Cleaning", "Limpiando"),
+    "rinse": ("Spülen", "Rinsing", "Aclarando"), "finalrinse": ("Klarspülen", "Final rinse", "Aclarado final"),
+    "spin": ("Schleudern", "Spinning", "Centrifugando"),
+    "soak": ("Einweichen", "Soaking", "Remojo"), "anti-crease": ("Knitterschutz", "Anti-crease", "Antiarrugas"),
+    "anti-wrinkle": ("Knitterschutz", "Anti-crease", "Antiarrugas"),
+    "drying": ("Trocknen", "Drying", "Secando"), "dry": ("Trocknen", "Drying", "Secando"),
+    "cool-down": ("Abkühlen", "Cooling down", "Enfriando"),
+    "cooldown": ("Abkühlen", "Cooling down", "Enfriando"), "heat-up": ("Aufheizen", "Heating up", "Calentando"),
+    "heating": ("Aufheizen", "Heating up", "Calentando"),
+    "heat": ("Aufheizen", "Heating up", "Calentando"), "drain": ("Abpumpen", "Draining", "Desaguando"),
+    "drain-&-switch": ("Abpumpen", "Draining", "Desaguando"),
+    "sensor-check": ("Prüfung", "Sensor check", "Revisión"), "sanitize": ("Hygiene", "Sanitize", "Higienizar"),
     # Home Connect WS laundry/dryer process phases
-    "washing": ("Waschen", "Washing"), "rinsing": ("Spülen", "Rinsing"), "rinsingsoftener": ("Spülen", "Rinsing"),
-    "rinsingfoam": ("Spülen", "Rinsing"), "spinning": ("Schleudern", "Spinning"), "spinningfinal": ("Schleudern", "Spinning"),
-    "intermediatespin": ("Schleudern", "Spinning"), "pumping": ("Abpumpen", "Draining"), "soaking": ("Einweichen", "Soaking"),
-    "coolingdown": ("Abkühlen", "Cooling down"), "cooling": ("Abkühlen", "Cooling down"),
-    "guardingwrinkle": ("Knitterschutz", "Anti-crease"), "finishedanticrease": ("Knitterschutz", "Anti-crease"),
+    "washing": ("Waschen", "Washing", "Lavando"), "rinsing": ("Spülen", "Rinsing", "Aclarando"),
+    "rinsingsoftener": ("Spülen", "Rinsing", "Aclarando"),
+    "rinsingfoam": ("Spülen", "Rinsing", "Aclarando"), "spinning": ("Schleudern", "Spinning", "Centrifugando"),
+    "spinningfinal": ("Schleudern", "Spinning", "Centrifugando"),
+    "intermediatespin": ("Schleudern", "Spinning", "Centrifugando"), "pumping": ("Abpumpen", "Draining", "Desaguando"),
+    "soaking": ("Einweichen", "Soaking", "Remojo"),
+    "coolingdown": ("Abkühlen", "Cooling down", "Enfriando"), "cooling": ("Abkühlen", "Cooling down", "Enfriando"),
+    "guardingwrinkle": ("Knitterschutz", "Anti-crease", "Antiarrugas"),
+    "finishedanticrease": ("Knitterschutz", "Anti-crease", "Antiarrugas"),
 }
 PROGRAM = {
-    "dishcare_dishwasher_program_eco50": ("Eco 50°", "Eco 50°"), "dishcare_dishwasher_program_auto2": ("Auto 45–65°", "Auto 45–65°"),
-    "dishcare_dishwasher_program_intensiv70": ("Intensiv 70°", "Intensive 70°"), "dishcare_dishwasher_program_quick45": ("Schnell 45°", "Quick 45°"),
-    "dishcare_dishwasher_program_quick65": ("Schnell 65°", "Quick 65°"), "dishcare_dishwasher_program_prerinse": ("Vorspülen", "Pre-rinse"),
-    "dishcare_dishwasher_program_machinecare": ("Maschinenpflege", "Machine care"), "favorite_001": ("Favorit", "Favorite"),
-    "laundry_care_washer_program_cotton": ("Baumwolle", "Cotton"), "laundry_care_washer_program_easy_care": ("Pflegeleicht", "Easy care"),
-    "laundry_care_washer_program_mix": ("Mix", "Mix"), "laundry_care_washer_program_delicates_silk": ("Feinwäsche", "Delicates"),
-    "laundry_care_washer_program_wool": ("Wolle", "Wool"), "laundry_care_washer_program_sensitive": ("Sensitiv", "Sensitive"),
-    "laundry_care_dryer_program_cotton": ("Baumwolle", "Cotton"), "laundry_care_dryer_program_synthetic": ("Pflegeleicht", "Synthetics"),
-    "laundry_care_dryer_program_mix": ("Mix", "Mix"),
+    "dishcare_dishwasher_program_eco50": ("Eco 50°", "Eco 50°", "Eco 50°"),
+    "dishcare_dishwasher_program_auto2": ("Auto 45–65°", "Auto 45–65°", "Auto 45–65°"),
+    "dishcare_dishwasher_program_intensiv70": ("Intensiv 70°", "Intensive 70°", "Intensivo 70°"),
+    "dishcare_dishwasher_program_quick45": ("Schnell 45°", "Quick 45°", "Rápido 45°"),
+    "dishcare_dishwasher_program_quick65": ("Schnell 65°", "Quick 65°", "Rápido 65°"),
+    "dishcare_dishwasher_program_prerinse": ("Vorspülen", "Pre-rinse", "Prelavado"),
+    "dishcare_dishwasher_program_machinecare": ("Maschinenpflege", "Machine care", "Cuidado de la máquina"),
+    "favorite_001": ("Favorit", "Favorite", "Favorito"),
+    "laundry_care_washer_program_cotton": ("Baumwolle", "Cotton", "Algodón"),
+    "laundry_care_washer_program_easy_care": ("Pflegeleicht", "Easy care", "Sintéticos"),
+    "laundry_care_washer_program_mix": ("Mix", "Mix", "Mixto"),
+    "laundry_care_washer_program_delicates_silk": ("Feinwäsche", "Delicates", "Delicada"),
+    "laundry_care_washer_program_wool": ("Wolle", "Wool", "Lana"),
+    "laundry_care_washer_program_sensitive": ("Sensitiv", "Sensitive", "Sensible"),
+    "laundry_care_dryer_program_cotton": ("Baumwolle", "Cotton", "Algodón"),
+    "laundry_care_dryer_program_synthetic": ("Pflegeleicht", "Synthetics", "Sintéticos"),
+    "laundry_care_dryer_program_mix": ("Mix", "Mix", "Mixto"),
 }
 # HA core: laundry_care_washer_program_…; Home Connect Local: laundrycare_washer_program_…; Home Connect Alt: the
 # Home Connect key with dots (LaundryCare.Washer.Program.Cotton), compared with the dots as underscores.
@@ -159,36 +186,63 @@ VAC_STATION = {"washing_the_mop", "going_to_wash_the_mop", "back_to_dock_washing
 # and washes the mop afterwards (otherwise "done" twice with sound).
 VAC_SETTLE_S = 90
 VAC_TEXT = {
-    "cleaning": ("Reinigt", "Cleaning"), "segment_cleaning": ("Reinigt", "Cleaning"), "zoned_cleaning": ("Reinigt", "Cleaning"),
-    "spot_cleaning": ("Punktreinigung", "Spot cleaning"), "robot_status_mopping": ("Wischt", "Mopping"), "segment_mopping": ("Wischt", "Mopping"),
-    "zoned_mopping": ("Wischt", "Mopping"), "clean_mop_cleaning": ("Reinigt", "Cleaning"), "clean_mop_mopping": ("Wischt", "Mopping"),
-    "segment_clean_mop_cleaning": ("Reinigt", "Cleaning"), "segment_clean_mop_mopping": ("Wischt", "Mopping"),
-    "zoned_clean_mop_cleaning": ("Reinigt", "Cleaning"), "zoned_clean_mop_mopping": ("Wischt", "Mopping"),
-    "washing_the_mop": ("Mopp waschen", "Washing the mop"), "going_to_wash_the_mop": ("Zur Moppwäsche", "Going to wash the mop"),
-    "back_to_dock_washing_duster": ("Zur Moppwäsche", "Going to wash the mop"), "emptying_the_bin": ("Staub entleeren", "Emptying the bin"),
-    "returning_home": ("Zurück zur Station", "Returning to dock"), "returning": ("Zurück zur Station", "Returning to dock"),
-    "docking": ("Dockt an", "Docking"), "paused": ("Pausiert", "Paused"), "charging": ("Lädt", "Charging"),
-    "charging_complete": ("Geladen", "Charged"), "charger_disconnected": ("Abgedockt", "Undocked"), "idle": ("Bereit", "Ready"), "error": ("Fehler", "Error"),
-    "charging_problem": ("Ladeproblem", "Charging problem"), "going_to_target": ("Unterwegs", "On the way"), "mapping": ("Kartiert", "Mapping"),
-    "attaching_the_mop": ("Mopp anbringen", "Attaching the mop"), "detaching_the_mop": ("Mopp abnehmen", "Detaching the mop"),
-    "starting": ("Startet", "Starting"), "manual_mode": ("Manuell", "Manual"), "remote_control_active": ("Fernsteuerung", "Remote control"),
+    "cleaning": ("Reinigt", "Cleaning", "Limpiando"), "segment_cleaning": ("Reinigt", "Cleaning", "Limpiando"),
+    "zoned_cleaning": ("Reinigt", "Cleaning", "Limpiando"),
+    "spot_cleaning": ("Punktreinigung", "Spot cleaning", "Limpieza puntual"),
+    "robot_status_mopping": ("Wischt", "Mopping", "Fregando"), "segment_mopping": ("Wischt", "Mopping", "Fregando"),
+    "zoned_mopping": ("Wischt", "Mopping", "Fregando"), "clean_mop_cleaning": ("Reinigt", "Cleaning", "Limpiando"),
+    "clean_mop_mopping": ("Wischt", "Mopping", "Fregando"),
+    "segment_clean_mop_cleaning": ("Reinigt", "Cleaning", "Limpiando"),
+    "segment_clean_mop_mopping": ("Wischt", "Mopping", "Fregando"),
+    "zoned_clean_mop_cleaning": ("Reinigt", "Cleaning", "Limpiando"),
+    "zoned_clean_mop_mopping": ("Wischt", "Mopping", "Fregando"),
+    "washing_the_mop": ("Mopp waschen", "Washing the mop", "Lavando la mopa"),
+    "going_to_wash_the_mop": ("Zur Moppwäsche", "Going to wash the mop", "A lavar la mopa"),
+    "back_to_dock_washing_duster": ("Zur Moppwäsche", "Going to wash the mop", "A lavar la mopa"),
+    "emptying_the_bin": ("Staub entleeren", "Emptying the bin", "Vaciando el polvo"),
+    "returning_home": ("Zurück zur Station", "Returning to dock", "Volviendo a la base"),
+    "returning": ("Zurück zur Station", "Returning to dock", "Volviendo a la base"),
+    "docking": ("Dockt an", "Docking", "Acoplándose"), "paused": ("Pausiert", "Paused", "En pausa"),
+    "charging": ("Lädt", "Charging", "Cargando"),
+    "charging_complete": ("Geladen", "Charged", "Cargado"), "charger_disconnected": ("Abgedockt", "Undocked", "Fuera de la base"),
+    "idle": ("Bereit", "Ready", "Listo"), "error": ("Fehler", "Error", "Error"),
+    "charging_problem": ("Ladeproblem", "Charging problem", "Problema de carga"),
+    "going_to_target": ("Unterwegs", "On the way", "En camino"), "mapping": ("Kartiert", "Mapping", "Mapeando"),
+    "attaching_the_mop": ("Mopp anbringen", "Attaching the mop", "Colocar la mopa"),
+    "detaching_the_mop": ("Mopp abnehmen", "Detaching the mop", "Quitar la mopa"),
+    "starting": ("Startet", "Starting", "Iniciando"), "manual_mode": ("Manuell", "Manual", "Manual"),
+    "remote_control_active": ("Fernsteuerung", "Remote control", "Control remoto"),
 }
 # 3D printer (Bambu Lab): work step → text.
 PRINT_STEP = {
-    "printing": ("Druckt", "Printing"), "heating_hotend": ("Düse heizt", "Heating nozzle"), "heatbed_preheating": ("Bett heizt", "Heating bed"),
-    "waiting_for_heatbed_temperature": ("Bett heizt", "Heating bed"), "auto_bed_leveling": ("Bett-Leveling", "Bed leveling"),
-    "bed_level_phase_1": ("Bett-Leveling", "Bed leveling"), "bed_level_phase_2": ("Bett-Leveling", "Bed leveling"),
-    "homing_toolhead": ("Homing", "Homing"), "cleaning_nozzle_tip": ("Düse reinigen", "Cleaning nozzle"),
-    "preparing_ams": ("AMS vorbereiten", "Preparing AMS"), "changing_filament": ("Filamentwechsel", "Changing filament"),
-    "filament_loading": ("Filament laden", "Loading filament"), "filament_unloading": ("Filament entladen", "Unloading filament"),
-    "inspecting_first_layer": ("Erste Schicht prüfen", "Inspecting first layer"), "calibrating_micro_lidar": ("Kalibrierung", "Calibrating"),
-    "calibrating_extrusion": ("Kalibrierung", "Calibrating"), "calibrating_extrusion_flow": ("Kalibrierung", "Calibrating"),
-    "pre_extrusion_before_printing": ("Vorextrusion", "Pre-extrusion"), "heating_chamber": ("Kammer heizt", "Heating chamber"),
-    "cooling_chamber": ("Kammer kühlt", "Cooling chamber"), "purifying_chamber_air": ("Luft filtern", "Purifying air"),
-    "paused_user": ("Pausiert", "Paused"), "paused_filament_runout": ("Filament leer", "Filament runout"),
-    "paused_front_cover_falling": ("Abdeckung offen", "Cover open"), "paused_nozzle_clog": ("Düse verstopft", "Nozzle clogged"),
-    "paused_first_layer_error": ("Erste Schicht fehlerhaft", "First layer error"), "paused_ams_lost": ("AMS getrennt", "AMS lost"),
-    "m400_pause": ("Pause (G-Code)", "Pause (G-code)"), "idle": ("", ""), "unknown": ("", ""), "offline": ("", ""), "unavailable": ("", ""),
+    "printing": ("Druckt", "Printing", "Imprimiendo"), "heating_hotend": ("Düse heizt", "Heating nozzle", "Calentando boquilla"),
+    "heatbed_preheating": ("Bett heizt", "Heating bed", "Calentando cama"),
+    "waiting_for_heatbed_temperature": ("Bett heizt", "Heating bed", "Calentando cama"),
+    "auto_bed_leveling": ("Bett-Leveling", "Bed leveling", "Nivelando cama"),
+    "bed_level_phase_1": ("Bett-Leveling", "Bed leveling", "Nivelando cama"),
+    "bed_level_phase_2": ("Bett-Leveling", "Bed leveling", "Nivelando cama"),
+    "homing_toolhead": ("Homing", "Homing", "Homing"),
+    "cleaning_nozzle_tip": ("Düse reinigen", "Cleaning nozzle", "Limpiando boquilla"),
+    "preparing_ams": ("AMS vorbereiten", "Preparing AMS", "Preparando AMS"),
+    "changing_filament": ("Filamentwechsel", "Changing filament", "Cambio de filamento"),
+    "filament_loading": ("Filament laden", "Loading filament", "Cargando filamento"),
+    "filament_unloading": ("Filament entladen", "Unloading filament", "Descargando filamento"),
+    "inspecting_first_layer": ("Erste Schicht prüfen", "Inspecting first layer", "Revisando primera capa"),
+    "calibrating_micro_lidar": ("Kalibrierung", "Calibrating", "Calibrando"),
+    "calibrating_extrusion": ("Kalibrierung", "Calibrating", "Calibrando"),
+    "calibrating_extrusion_flow": ("Kalibrierung", "Calibrating", "Calibrando"),
+    "pre_extrusion_before_printing": ("Vorextrusion", "Pre-extrusion", "Preextrusión"),
+    "heating_chamber": ("Kammer heizt", "Heating chamber", "Calentando cámara"),
+    "cooling_chamber": ("Kammer kühlt", "Cooling chamber", "Enfriando cámara"),
+    "purifying_chamber_air": ("Luft filtern", "Purifying air", "Filtrando aire"),
+    "paused_user": ("Pausiert", "Paused", "En pausa"),
+    "paused_filament_runout": ("Filament leer", "Filament runout", "Sin filamento"),
+    "paused_front_cover_falling": ("Abdeckung offen", "Cover open", "Tapa abierta"),
+    "paused_nozzle_clog": ("Düse verstopft", "Nozzle clogged", "Boquilla obstruida"),
+    "paused_first_layer_error": ("Erste Schicht fehlerhaft", "First layer error", "Error en la primera capa"),
+    "paused_ams_lost": ("AMS getrennt", "AMS lost", "AMS desconectado"),
+    "m400_pause": ("Pause (G-Code)", "Pause (G-code)", "Pausa (código G)"), "idle": ("", "", ""), "unknown": ("", "", ""),
+    "offline": ("", "", ""), "unavailable": ("", "", ""),
 }
 PRINT_PHASE = {"prepare": "run", "running": "run", "pause": "pause", "finish": "done", "failed": "error"}
 
@@ -222,11 +276,12 @@ class Snap:
 
 
 def _lang(hass) -> int:
-    return 0 if str(getattr(hass.config, "language", "") or "").startswith("de") else 1
+    # Index into the (de, en, es) text tuples.
+    return {"de": 0, "es": 2}.get(str(getattr(hass.config, "language", "") or "")[:2], 1)
 
 
 def _pct_text(pct: int, lang: int) -> str:
-    return f"{pct} %" if lang == 0 else f"{pct}%"
+    return f"{pct}%" if lang == 1 else f"{pct} %"
 
 
 def _num(st) -> float | None:
@@ -307,7 +362,7 @@ def _join(*parts: str | None) -> str:
 
 def _time_text(ts: int, lang: int) -> str:
     local = dt_util.as_local(dt_util.utc_from_timestamp(ts))
-    return local.strftime("%H:%M") if lang == 0 else local.strftime("%-I:%M %p")
+    return local.strftime("%-I:%M %p") if lang == 1 else local.strftime("%H:%M")
 
 
 def snapshot(found: Found, get: Callable[[str], Any], now: datetime, lang: int, prev: Snap | None = None) -> Snap:
@@ -521,17 +576,17 @@ def probe_snapshot(kind: str, now: datetime, lang: int) -> Snap:
     """Sample for „Probe senden“: running, 42 %, 25 minutes left."""
     s = Snap(phase="run", pct=42, end_ts=int(now.timestamp() + 25 * 60), minor=False)
     if kind == "vacuum":
-        s.step = ("Wohnzimmer", "Living room")[lang]
-        s.message = _join(("Reinigt", "Cleaning")[lang], s.step, _pct_text(42, lang))
+        s.step = ("Wohnzimmer", "Living room", "Salón")[lang]
+        s.message = _join(("Reinigt", "Cleaning", "Limpiando")[lang], s.step, _pct_text(42, lang))
     elif kind == "printer":
-        s.program = ("Beispielteil", "Sample part")[lang]
+        s.program = ("Beispielteil", "Sample part", "Pieza de ejemplo")[lang]
         s.extra = T["schicht"][lang].format(a=34, b=80)
         s.message = _join(s.program, s.extra, _pct_text(42, lang))
     elif kind == "dishwasher":
         s.program, s.step = "Eco 50°", PHASE["mainwash"][lang]
         s.message = _join(s.program, s.step, _pct_text(42, lang))
     else:
-        s.program, s.step = ("Baumwolle 40", "Cotton 40")[lang], PHASE["rinse"][lang]
+        s.program, s.step = ("Baumwolle 40", "Cotton 40", "Algodón 40")[lang], PHASE["rinse"][lang]
         s.message = _join(s.program, s.step, _pct_text(42, lang))
     s.critical = s.step or _pct_text(42, lang)
     s.message = _join(s.message, T["probe_text"][lang])

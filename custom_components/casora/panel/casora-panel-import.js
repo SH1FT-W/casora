@@ -140,7 +140,7 @@
     taken = new Set([...taken].concat(Object.values((hass && hass.panels) || {}).map((p) => (p.title || "").trim())));
     if (!taken.has(base)) return base;
     const lang = String((hass && ((hass.locale && hass.locale.language) || hass.language)) || "en");
-    const tag = lang.indexOf("de") === 0 ? "importiert" : "imported";
+    const tag = { de: "importiert", es: "importado" }[lang.slice(0, 2)] || "imported";
     let name = base + " (" + tag + ")";
     for (let n = 2; taken.has(name); n++) name = base + " (" + tag + " " + n + ")";
     return name;

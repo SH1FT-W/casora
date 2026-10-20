@@ -24,7 +24,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
-from .settings import _apply_ops, _json_list
+from .settings import _apply_ops, _json_list, ai_text_language
 
 PREFIX = "own_"
 MAX_CHARS = 60000        # Vorlage, die die KI ändern soll
@@ -146,7 +146,7 @@ async def ws_tile_type(hass: HomeAssistant, connection: websocket_api.ActiveConn
     if len(json.dumps(msg["template"], ensure_ascii=False)) > MAX_CHARS:
         connection.send_error(msg["id"], "too_big", "Die Vorlage ist für die KI zu groß")
         return
-    lang = "Deutsch" if (hass.config.language or "").startswith("de") else "English"
+    lang = ai_text_language(hass)
     prompt = tile_type_prompt(msg["name"], msg["template"], wish, msg["label"].strip()[:60], msg["parents"], lang)
     try:
         res = await ask_ai(hass, entries[0], "Casora Kachelart: Vorlage anpassen", prompt, TILE_TYPE_STRUCTURE,

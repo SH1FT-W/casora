@@ -247,7 +247,7 @@ check("Miele not_connected = nicht erreichbar (gone)", la.snapshot(mi, S.get, NO
 # Finding 6: HA language German → no English texts in messages (probe, phases, done, steps)
 EN_ONLY = set()
 for table in (la.T, la.PHASE, la.PROGRAM, la.VAC_TEXT, la.PRINT_STEP, la.TITLE):
-    for de_, en_ in table.values():
+    for de_, en_, *_ in table.values():
         if en_ and en_ != de_ and not any(en_ in v[0] for v in table.values()):
             EN_ONLY.add(en_.split(" {")[0])
 msgs = []
@@ -275,6 +275,16 @@ for stage in la.PRINT_STEP:
         msgs += [sn.message, sn.critical or ""]
 english = sorted({w for w in EN_ONLY for m in msgs if w and w in m})
 check("Deutsch: keine englischen Texte in Meldungen/Probe/Phasen/Schritten", not english, english)
+
+# Spanish (index 2): every text has a Spanish form, no German leftovers in the messages, 24 h and "42 %".
+tables = (la.T, la.PHASE, la.PROGRAM, la.VAC_TEXT, la.PRINT_STEP, la.TITLE)
+check("Spanisch: jede Tabelle (de, en, es)", all(len(v) == 3 for t in tables for v in t.values()))
+check("Spanisch: HA-Sprache es → Index 2", la._lang(SimpleNamespace(config=SimpleNamespace(language="es-ES"))) == 2)
+es_msgs = [la.probe_snapshot(kind, NOW, 2).message for kind in la.KINDS]
+st("sensor.w_state", "finished"); es_msgs.append(la.snapshot(washer(), S.get, NOW, 2).message)
+german_es = [m for m in es_msgs if any(c in m for c in "äöüßÄÖÜ")]
+check("Spanisch: Meldungen ohne deutsche Reste", not german_es and "Terminado" in es_msgs[-1], es_msgs)
+check("Spanisch: Prozent mit Leerzeichen", la._pct_text(42, 2) == "42\u202f%")
 st("sensor.p_task", "Testwürfel.3mf")
 
 # Probe

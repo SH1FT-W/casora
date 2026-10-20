@@ -35,6 +35,7 @@ MAX_TEXT = 140
 TEXT = {
     "de": ("Casora {v} ist da", "Neue Version verfügbar"),
     "en": ("Casora {v} is here", "New version available"),
+    "es": ("Ya está aquí Casora {v}", "Nueva versión disponible"),
 }
 
 
@@ -117,8 +118,8 @@ class UpdatePush:
         self.hass.async_create_task(self._send(latest, st.attributes), eager_start=False)
 
     async def _send(self, version: str, attrs: Any) -> None:
-        lang = "de" if (self.hass.config.language or "").startswith("de") else "en"
-        title_t, fallback = TEXT[lang]
+        code = str(self.hass.config.language or "")[:2]
+        title_t, fallback = TEXT.get(code, TEXT["en"])
         title = title_t.format(v=version)
         msg = plain_summary(attrs.get("release_summary")) or fallback
         tag = "casora-update"

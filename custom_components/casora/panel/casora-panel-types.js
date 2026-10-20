@@ -501,6 +501,10 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
           ready: "Bereit", anti_wrinkle: "Knitterschutz", rinse: "Spülen", clean: "Reinigen",
           delay_wait: "Startet später", printing: "Druckt", on: "An" },
     en: { running: "Running", run: "Running", off: "Off", idle: "Ready", ready: "Ready", finished: "Finished" },
+    es: { running: "En marcha", run: "En marcha", starting: "Iniciando", ending: "Termina", paused: "En pausa",
+          user_paused: "En pausa", finished: "Terminado", finish: "Terminado", off: "Apagado", idle: "Listo",
+          ready: "Listo", anti_wrinkle: "Antiarrugas", rinse: "Aclarar", clean: "Limpiar",
+          delay_wait: "Empieza más tarde", printing: "Imprimiendo", on: "Encendido" },
   };
   const OURS = new Set((window.CASORA_TILE_TYPES || []).map((t) => t.template));
   const names = (t) => (Array.isArray(t) ? t : t ? [t] : []);
@@ -676,6 +680,11 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
           all: "Everything is set or found automatically.", fail: "AI task failed: ",
           noai: "To use the AI helper, pick a default AI under Settings → AI tasks.",
           lead: "The AI can suggest the fields Casora cannot find on its own." },
+    es: { auto: "Automático: ", ai: "Completar con IA", busy: "La IA está buscando…", none: "La IA no encontró nada adecuado.",
+          done: (n) => n === 1 ? "1 campo completado: revísalo." : n + " campos completados: revísalos.",
+          all: "Todo está asignado o se encontró automáticamente.", fail: "Falló la tarea de IA: ",
+          noai: "Para usar la ayuda de IA, elige una IA predeterminada en Ajustes → Tareas de IA.",
+          lead: "La IA puede proponer los campos que Casora no encuentra por sí sola." },
   };
   const t = (hass) => T[lang(hass)] || T.en;
   const nameOf = (hass, id) => {
@@ -725,9 +734,13 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   window.casoraFieldMissing = (f, tile, hass, cur) => {
     if (!f.find || !f.find.fn || !cur || typeof cur !== "string" || !hass || (hass.states || {})[cur]) return null;
     const id = found(f, tile, hass);
-    const de = lang(hass) === "de";
-    if (!id) return de ? "Eingetragene Entität fehlt – keine Karte gefunden." : "The chosen entity is missing – no map found.";
-    return (de ? "Eingetragene Entität fehlt – automatisch: " : "The chosen entity is missing – automatic: ") + nameOf(hass, id);
+    const l = lang(hass);
+    const MISS = {
+      de: ["Eingetragene Entität fehlt – keine Karte gefunden.", "Eingetragene Entität fehlt – automatisch: "],
+      es: ["Falta la entidad elegida: no se encontró ningún mapa.", "Falta la entidad elegida; automático: "],
+    }[l] || ["The chosen entity is missing – no map found.", "The chosen entity is missing – automatic: "];
+    if (!id) return MISS[0];
+    return MISS[1] + nameOf(hass, id);
   };
   // The found entity itself (to prefill new tiles in the Studio).
   window.casoraFieldEntity = (f, tile, hass) => found(f, tile, hass);

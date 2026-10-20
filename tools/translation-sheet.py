@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Translation review sheet for a Casora language: export to Excel, import the corrections back.
 
-    uv run --python 3.14 --with openpyxl tools/translation-sheet.py export es [out.xlsx]
+    uv run --python 3.14 --with openpyxl tools/translation-sheet.py export es [out.xlsx] [--since <commit>]
     uv run --python 3.14 --with openpyxl tools/translation-sheet.py import es reviewed.xlsx [--dry-run]
 
 Export writes one row per text from the four translation files of that language (dashboard phrases, Studio
@@ -10,11 +10,18 @@ choice and a "Correction" column. Important rows come first (short labels, patte
 Import takes every row marked "Wrong" (or with a correction), checks the placeholders against the source and
 writes the correction into the JSON files; then run tools/build-i18n.py and tools/build-panel-i18n.py.
 Works for any language that has the four files (copy them from en/de to start a new one).
+
+--since <commit> exports only the rows that are new or changed since that commit (source or translation), as
+an addendum to a sheet sent out earlier. Import is safe for old sheets: a correction is only written when the
+row still has the source and translation the reviewer saw; otherwise it is reported as a conflict and the
+current text stays. Rows not in the sheet and keys added since are left as they are.
 """
 import json
 import os
 import re
+import subprocess
 import sys
+import tempfile
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.comments import Comment
@@ -49,14 +56,21 @@ def priority(text, pattern, dashboard):
     return 2 if len(text) <= 90 else 3
 
 
-def rows(lang):
+def rows(lang, tr_dir=None):
     """[(key, where, prio, german, english, translation)] – key is what import matches on."""
+    TR = tr_dir or globals()["TR"]
     out = []
     # Dashboard: German source, English table beside it.
     en = load(os.path.join(TR, "dashboard/phrases/en.json"))
     tr = load(os.path.join(TR, "dashboard/phrases/%s.json" % lang))
     for de_txt, en_txt in en["exact"].items():
         out.append(("dash:exact:" + de_txt, "Dashboard", priority(de_txt, False, True), de_txt, en_txt, tr["exact"].get(de_txt, "")))
+    # English leftovers the dashboard translates as well ("Favorites", "Home"): German from phrases/de.json.
+    de_path = os.path.join(TR, "dashboard/phrases/de.json")
+    de_extra = load(de_path).get("exact", {}) if os.path.exists(de_path) else {}
+    for en_txt, de_txt in de_extra.items():
+        if en_txt not in en["exact"] and en_txt in tr["exact"]:
+            out.append(("dash:exact:" + en_txt, "Dashboard", priority(en_txt, False, True), de_txt, en_txt, tr["exact"][en_txt]))
     for i, (rx, en_txt) in enumerate(en["patterns"]):
         mine = tr["patterns"][i][1] if i < len(tr["patterns"]) and tr["patterns"][i][0] == rx else ""
         out.append(("dash:pattern:" + rx, "Dashboard (pattern)", priority(en_txt, True, True), rx, en_txt, mine))
@@ -78,12 +92,50 @@ def rows(lang):
     return out
 
 
-def export(lang, path):
+def rows_at(lang, commit):
+    """rows() of an earlier commit (translation files read from git)."""
+    rel = os.path.relpath(TR, ROOT)
+    with tempfile.TemporaryDirectory() as tmp:
+        names = subprocess.run(["git", "-C", ROOT, "ls-tree", "-r", "--name-only", commit, rel + "/"],
+                               check=True, capture_output=True, text=True).stdout.split()
+        for name in names:
+            if not name.endswith(".json"):
+                continue
+            dest = os.path.join(tmp, os.path.relpath(name, rel))
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            blob = subprocess.run(["git", "-C", ROOT, "show", "%s:%s" % (commit, name)], check=True, capture_output=True).stdout
+            with open(dest, "wb") as f:
+                f.write(blob)
+        return rows(lang, tmp)
+
+
+def changes(lang, old_rows):
+    """Rows new or changed against old_rows, each with the reason ("New", "Source changed", "Translation changed")."""
+    old = {r[0]: r for r in old_rows}
+    out = []
+    for r in rows(lang):
+        o = old.get(r[0])
+        if o is None:
+            out.append((r, "New"))
+        elif (o[3], o[4]) != (r[3], r[4]):
+            out.append((r, "Source changed"))
+        elif o[5] != r[5]:
+            out.append((r, "Translation changed"))
+    return out
+
+
+def export(lang, path, since=None):
+    if since:
+        delta = changes(lang, rows_at(lang, since))
+        data_rows, why = [r for r, _ in delta], {r[0]: w for r, w in delta}
+    else:
+        data_rows, why = rows(lang), {}
     wb = Workbook()
     info = wb.active
     info.title = "How to"
     lines = [
-        ("Casora translation review: %s" % lang, True),
+        ("Casora translation review: %s%s" % (lang, " – addendum: only texts new or changed since the first sheet"
+                                                   if since else ""), True),
         ("", False),
         ("Thank you for helping! Each row on the sheet \"Texts\" is one text of Casora.", False),
         ("1. Read the column \"Translation\" (German and English are there for context).", False),
@@ -118,17 +170,17 @@ def export(lang, path):
     info.column_dimensions["B"].width = 12
 
     ws = wb.create_sheet("Texts")
-    ws.append(COLS)
+    ws.append(COLS + (["Change"] if since else []))
     head = PatternFill("solid", fgColor="3A322B")
     for c in ws[1]:
         c.font = Font(name=FONT, bold=True, color="FFFFFF")
         c.fill = head
         c.alignment = Alignment(vertical="center")
-    data = sorted(rows(lang), key=lambda r: (r[2], r[1], len(r[4])))
+    data = sorted(data_rows, key=lambda r: (r[2], r[1], len(r[4])))
     fill_in = PatternFill("solid", fgColor="FFF4C2")
     wrap = Alignment(wrap_text=True, vertical="top")
     for r in data:
-        ws.append(list(r) + ["", "", ""])
+        ws.append(list(r) + ["", "", ""] + ([why[r[0]]] if since else []))
     for row in ws.iter_rows(min_row=2):
         for c in row:
             c.font = Font(name=FONT)
@@ -141,15 +193,16 @@ def export(lang, path):
     dv = DataValidation(type="list", formula1='"OK,Wrong"', allow_blank=True)
     ws.add_data_validation(dv)
     dv.add("G2:G%d" % (len(data) + 1))
-    widths = {"A": 4, "B": 20, "C": 8, "D": 42, "E": 42, "F": 42, "G": 11, "H": 42, "I": 30}
+    widths = {"A": 4, "B": 20, "C": 8, "D": 42, "E": 42, "F": 42, "G": 11, "H": 42, "I": 30, "J": 20}
     for col, w in widths.items():
         ws.column_dimensions[col].width = w
     ws.column_dimensions["A"].hidden = True
     ws.freeze_panes = "D2"
-    ws.auto_filter.ref = "A1:I%d" % (len(data) + 1)
+    ws.auto_filter.ref = "%s1:%s%d" % ("A", "J" if since else "I", len(data) + 1)
     wb.active = 0
     wb.save(path)
-    print("%s: %d texts (priority 1: %d) for %s" % (path, len(data), sum(1 for r in data if r[2] == 1), lang))
+    print("%s: %d texts (priority 1: %d) for %s%s" % (path, len(data), sum(1 for r in data if r[2] == 1), lang,
+                                                    " since %s" % since if since else ""))
 
 
 def slots(s):
@@ -175,16 +228,33 @@ def import_(lang, path, dry):
         "ha": os.path.join(TR, "%s.json" % lang),
     }
     data = {k: load(p) for k, p in files.items()}
-    done, skipped = 0, []
+    cell = lambda row, name: "" if row[ix[name]] is None else str(row[ix[name]])  # noqa: E731
+    done, skipped, conflicts, same, open_ = 0, [], [], 0, []
     for row in ws.iter_rows(min_row=2, values_only=True):
-        key, verdict, fix = row[ix["Key"]], (row[ix["Correct?"]] or ""), row[ix["Correction"]]
-        if not key or not fix or (verdict and str(verdict).strip().lower() == "ok"):
+        key, verdict, fix = row[ix["Key"]], cell(row, "Correct?").strip().lower(), cell(row, "Correction").strip()
+        if not key:
             continue
-        fix = str(fix)
+        if not fix:
+            if verdict == "wrong":
+                open_.append(key)
+            continue
+        if verdict == "ok":
+            continue
         if key not in src:
             skipped.append((key, "text no longer in Casora"))
             continue
-        ref = src[key][4] if not key.startswith("panel:pattern:") else src[key][3]
+        now = src[key]
+        # Only where the row still shows what the reviewer saw: source (German, English) and translation.
+        if (cell(row, "German"), cell(row, "English")) != (now[3], now[4]):
+            conflicts.append((key, "source changed since the sheet", cell(row, "Translation"), now[5], fix))
+            continue
+        if now[5] == fix:
+            same += 1
+            continue
+        if cell(row, "Translation") != now[5]:
+            conflicts.append((key, "translation changed since the sheet", cell(row, "Translation"), now[5], fix))
+            continue
+        ref = now[4] if not key.startswith("panel:pattern:") else now[3]
         if slots(fix) != slots(ref):
             skipped.append((key, "placeholders differ: %s vs %s" % (slots(fix), slots(ref))))
             continue
@@ -203,19 +273,31 @@ def import_(lang, path, dry):
         done += 1
     for key, why in skipped:
         print("skipped %s: %s" % (key[:80], why))
-    print("%d corrections, %d skipped%s" % (done, len(skipped), " (dry run)" if dry else ""))
+    for key, why, saw, now_txt, fix in conflicts:
+        print("CONFLICT %s: %s\n  sheet: %r\n  now:   %r\n  fix:   %r" % (key[:80], why, saw, now_txt, fix))
+    for key in open_:
+        print("marked wrong without a correction: %s" % key[:80])
+    print("%d corrections, %d already in, %d conflicts (kept the current text), %d skipped, %d wrong without correction%s"
+          % (done, same, len(conflicts), len(skipped), len(open_), " (dry run)" if dry else ""))
     if dry:
-        return
+        return {"done": done, "conflicts": conflicts, "skipped": skipped, "same": same, "open": open_}
     indent = {"dash": 1, "panel": 2, "dashboard/": 2, "ha": 2}
     for k, p in files.items():
+        if data[k] == load(p):
+            continue
         with open(p, "w", encoding="utf-8") as f:
             f.write(json.dumps(data[k], ensure_ascii=False, indent=indent[k]) + "\n")
+    if done:
+        print("next: python3 tools/build-i18n.py && python3 tools/build-panel-i18n.py && python3 tools/i18ncheck.py")
+    return {"done": done, "conflicts": conflicts, "skipped": skipped, "same": same, "open": open_}
 
 
 if __name__ == "__main__":
     a = sys.argv[1:]
     if len(a) >= 2 and a[0] == "export":
-        export(a[1], a[2] if len(a) > 2 else "casora-%s-review.xlsx" % a[1])
+        since = a[a.index("--since") + 1] if "--since" in a else None
+        pos = [x for i, x in enumerate(a) if not x.startswith("--") and (i == 0 or a[i - 1] != "--since")]
+        export(a[1], pos[2] if len(pos) > 2 else "casora-%s-review.xlsx" % a[1], since)
     elif len(a) >= 3 and a[0] == "import":
         import_(a[1], a[2], "--dry-run" in a)
     else:

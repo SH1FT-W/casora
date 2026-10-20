@@ -108,10 +108,11 @@ console.log('ok B-JS-05');
 {
   const c = tpl('casora_weather');
   assert.ok(!/\) \+ ' mm' :/.test(c) && (c.match(/precipitation_unit \|\| 'mm'/g) || []).length === 2, 'Niederschlag mit Einheit');
-  const wd = c.match(/const WD = [\s\S]*?\]\n    : \[[^\]]+\];/);
+  const wd = c.match(/const WD = [\s\S]*?\n    \|\| \[[^\]]+\];/);
   assert.ok(wd, 'WD je Sprache');
   const dir = (lang, deg) => new Function('hass', wd[0] + ' return WD[Math.round(' + deg + ' / 45) % 8];')({ locale: { language: lang } });
   assert.equal(dir('en', 45), 'NE'); assert.equal(dir('en', 135), 'SE'); assert.equal(dir('de', 45), 'NO');
+  assert.equal(dir('es', 225), 'SO'); assert.equal(dir('es', 270), 'O'); assert.equal(dir('fr', 270), 'W');
 }
 console.log('ok B-TPL-08');
 

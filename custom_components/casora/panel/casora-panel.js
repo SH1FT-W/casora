@@ -846,12 +846,12 @@ const sameRoomName = (a, b) =>
 // gesetzt von Assistent, neuem Dashboard, Umzug) und der unverändert ist. Ein eingetippter oder
 // geänderter Name – und jeder Name ohne Markierung (ältere Dashboards) – steht, wie er ist.
 const HOME_ROOM_NAME = "Home";
-const isDefaultHomeName = (n) => /^(home|zuhause)?$/i.test(String(n == null ? "" : n).trim());
+const isDefaultHomeName = (n) => /^(home|zuhause|casa)?$/i.test(String(n == null ? "" : n).trim());
 const haLang = (hass) => {
   const h = hass || (document.querySelector("home-assistant") || {}).hass;
   return String((h && ((h.locale && h.locale.language) || h.language)) || "en");
 };
-const homeRoomWord = (hass) => (haLang(hass).indexOf("de") === 0 ? "Zuhause" : "Home");
+const homeRoomWord = (hass) => ({ de: "Zuhause", es: "Casa" })[haLang(hass).slice(0, 2)] || "Home";
 // Vorschaubilder im Assistenten gibt es englisch und deutsch (…-de.webp) – passend zur HA-Sprache.
 const shotLang = (url, hass) => (url && haLang(hass).indexOf("de") === 0 ? url.replace(/\.webp$/, "-de.webp") : url);
 // rooms: die Raumliste – ohne Pfad „home“ ist der erste Raum die Übersicht.
@@ -886,7 +886,7 @@ const shownRoomName = (room, rooms, hass) => {
   const n = roomLabel(room, rooms, hass);
   if (isDefaultHome(room, rooms) || typeof window.casoraTr !== "function") return n;
   const literal = !!(room.variables && room.variables.name_literal)
-    || /^(home|zuhause)$/i.test(String(n).trim());
+    || /^(home|zuhause|casa)$/i.test(String(n).trim());
   return literal ? n : window.casoraTr(String(n));
 };
 // Zu speichernder Name: der Standard der Übersicht immer als „Home“ (sprachunabhängig).
@@ -13932,8 +13932,8 @@ class CasoraPanel extends HTMLElement {
     }
     areas.forEach((a) => addRoom(a.name, !TECH.test(a.name || "")
       && (fillable ? fillable.has(a.name) : (!withDevices.size || withDevices.has(a.area_id)))));
-    if (!areas.length) (String((this._hass && this._hass.language) || "").indexOf("de") === 0
-      ? ["Wohnzimmer", "Küche", "Schlafzimmer"] : ["Living Room", "Kitchen", "Bedroom"]).forEach((n) => addRoom(n, false));
+    if (!areas.length) ({ de: ["Wohnzimmer", "Küche", "Schlafzimmer"], es: ["Salón", "Cocina", "Dormitorio"] }[
+      String((this._hass && this._hass.language) || "").slice(0, 2)] || ["Living Room", "Kitchen", "Bedroom"]).forEach((n) => addRoom(n, false));
 
     const dash = this._flowGroup(s.body, { header: "New Dashboard" });
     // Gibt es „Casora“ schon (auch als Titel in der Seitenleiste), „Casora 2“ usw. vorschlagen – wie der Umzug.
