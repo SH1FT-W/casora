@@ -25,6 +25,7 @@ from homeassistant.helpers.event import async_track_state_change_event, async_tr
 from homeassistant.util import dt as dt_util
 
 from .entity import PLATFORMS, build_classes
+from .haus import compose
 
 DOMAIN = "casora_mock"
 _LOGGER = logging.getLogger(__name__)
@@ -47,32 +48,6 @@ def _load_optional(name: str) -> dict:
     return _load(name) if (HERE / name).exists() else {}
 
 
-def _merge(fixture: dict, extra: dict, label: str = "Stresshaus aktiv") -> None:
-    """Zusätzliche Räume/Geräte/Entitäten anhängen; Vorhandenes gewinnt."""
-    fixture["areas"] = list(fixture["areas"]) + [a for a in extra.get("areas", []) if a not in fixture["areas"]]
-    keys = {d["key"] for d in fixture["devices"]}
-    fixture["devices"] = list(fixture["devices"]) + [d for d in extra.get("devices", []) if d["key"] not in keys]
-    ids = {e["entity_id"] for e in fixture["entities"]}
-    fixture["entities"] = list(fixture["entities"]) + [e for e in extra.get("entities", []) if e["entity_id"] not in ids]
-    fixture.setdefault("_buttons", {}).update(extra.get("_buttons", {}))
-    fixture.setdefault("_history_extra", {}).update(extra.get("_history", {}))
-    _LOGGER.warning("Casora Mock: %s (+%s Entitäten)", label, len(extra.get("entities", [])))
-
-
-def _vacuum_map(fixture: dict) -> None:
-    """Saugroboter ohne Karte bekommt eine (image.<sauger>_map, Bild aus entity.MAP_PNG),
-    damit das Popup die automatische Kartensuche zeigt."""
-    ents = fixture["entities"]
-    for v in [e for e in ents if e["entity_id"].startswith("vacuum.") and e.get("device")]:
-        if any(e["entity_id"].startswith("image.") and e.get("device") == v["device"] for e in ents):
-            continue
-        name = (v.get("attributes") or {}).get("friendly_name") or "Saugroboter"
-        ents.append({"entity_id": "image." + v["entity_id"].split(".", 1)[1] + "_map", "state": "2026-10-07T08:00:00+00:00",
-                     "attributes": {"friendly_name": name + " Karte"}, "platform": "casora_mock", "device": v["device"],
-                     "area": None, "original_name": "Karte", "name": None, "icon": None, "device_class": None,
-                     "unit": None, "hidden": False, "translation_key": "map", "entity_category": "diagnostic"})
-
-
 async def async_setup(hass: HomeAssistant, config) -> bool:
     # Fake-Tankerkönig (tankerkoenig.py): Casora fragt im Testhaus nur dort, nie im Netz.
     from .tankerkoenig import setup as tankerkoenig_setup
@@ -89,53 +64,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     scenarios = await hass.async_add_executor_job(_load_optional, "scenarios.json")
     # Stresshaus (dev/stress/stress_fixture.py): nur im Zustand „stress“ vorhanden, sonst nichts.
     stress = await hass.async_add_executor_job(_load_optional, "stress.json")
-    if stress:
-        _merge(fixture, stress)
-    # Demo-Haus (dev/demo/demo_fixture.py setzt „_demo“): ohne die deutschen Testgeräte
-    # (Waschmaschinen A/B mit Keller/Dachboden, Testbecken A/B) – die gehören nur in die Tests.
-    demo = bool(fixture.get("_demo"))
-    # Zwei neutrale Waschmaschinen (WashData-artig und Home-Connect-artig), siehe waesche.py.
-    if not demo:
-        from .waesche import extra as waesche_extra
-        _merge(fixture, waesche_extra(dt_util.utcnow()), "Waschmaschinen A/B")
-    # Ein erfundener Team-Tracker-Sensor (Fußball-Kachel), siehe fussball.py.
-    from .fussball import extra as fussball_extra
-    _merge(fixture, fussball_extra(dt_util.utcnow()), "Team-Tracker-Sensor")
-    # Zwei erfundene Aquarien (HeliaLux- und Fluval/Chihiros-artige Lampe, Dosierpumpe), siehe aquarium.py.
-    if not demo:
-        from .aquarium import extra as aquarium_extra
-        _merge(fixture, aquarium_extra(dt_util.utcnow()), "Testbecken A/B")
-    # Ein erfundener Gardena-artiger Mähroboter (Community-Karte), siehe maeher.py.
-    from .maeher import extra as maeher_extra
-    _merge(fixture, maeher_extra(dt_util.utcnow()), "Testmäher")
-    # Eine erfundene Frigate-Kamera mit Erkennungen (Community-Karte), siehe frigate.py.
-    from .frigate import extra as frigate_extra
-    _merge(fixture, frigate_extra(dt_util.utcnow()), "Frigate-Testhof")
-    # Eine erfundene Reolink-Türklingel mit Klingeldrücken im Verlauf (Community-Karte), siehe klingel.py.
-    from .klingel import extra as klingel_extra
-    _merge(fixture, klingel_extra(dt_util.utcnow()), "Testklingel")
-    # Drei erfundene Kaffeevollautomaten (Home-Connect-, De'Longhi-BT-artig und Strom-Erkennung, Community-Karte), siehe kaffee.py.
-    from .kaffee import extra as kaffee_extra
-    _merge(fixture, kaffee_extra(dt_util.utcnow()), "Testbarista/Morgenbohne/Bohnenwerk")
-    # Ein erfundenes Haustier mit Tractive-artigem Tracker (Community-Karte #25), siehe haustier.py.
-    from .haustier import extra as haustier_extra
-    _merge(fixture, haustier_extra(dt_util.utcnow()), "Testhund")
-    # Ein erfundener Luftbefeuchter mit Modi, Wassertank und Feuchtesensor, siehe befeuchter.py.
-    from .befeuchter import extra as befeuchter_extra
-    _merge(fixture, befeuchter_extra(dt_util.utcnow()), "Testbefeuchter")
-    # Je Kachelart ein Testgerät fürs Halten-Schnellmenü (Licht, Klima, Drucker, Alarm …), siehe halten.py.
-    if not demo:
-        from .halten import extra as halten_extra
-        _merge(fixture, halten_extra(dt_util.utcnow()), "Halten-Testgeräte")
-        # Geschirrspüler/Trockner für Live-Aktivitäten + Dienst casora_mock.live_lauf, siehe live.py.
-        from .live import extra as live_extra
-        _merge(fixture, live_extra(dt_util.utcnow()), "Live-Testgeräte")
-    _vacuum_map(fixture)
     # Nur auf Wunsch: HACS-artige Update-Entität für Casora (hacs_casora.py).
     hacs_cfg = await hass.async_add_executor_job(_load_optional, "hacs_casora.json")
-    if hacs_cfg:
-        from .hacs_casora import extra as hacs_extra
-        _merge(fixture, hacs_extra(hacs_cfg), "HACS-Update für Casora")
+    # Fixture plus the made-up devices of the modules beside it (haus.py, shared with the unit tests).
+    compose(fixture, dt_util.utcnow(), stress or None, hacs_cfg or None)
     fixture["_skip"] = await hass.async_add_executor_job(_skip_list)
     mock = CasoraMock(hass, entry, fixture, scenarios)
     hass.data[DOMAIN] = mock
