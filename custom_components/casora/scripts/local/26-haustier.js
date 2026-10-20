@@ -1,7 +1,8 @@
 // ── Pet tracker: tile + popup (community card, card request #25) ──────────────
-// One tile per Tractive device_tracker. Tractive creates two devices per pet: the pet (device_tracker and
-// the activity sensors) and the tracker hardware behind it via via_device_id (battery, status, buzzer, LED,
-// live tracking). Both are searched by translation_key / device class, never by entity id or name.
+// One tile per Tractive device_tracker. Tractive creates two devices per pet: the tracker hardware ("Tracker <id>":
+// device_tracker, battery, status, buzzer, LED, live tracking) and the pet hanging on it via via_device_id (activity
+// sensors, the pet's name). Older versions had the device_tracker on the pet device, the hardware behind it; both
+// layouts are read. Searched by translation_key / device class, never by entity id or name.
 // Place, zones, map and history come from the person module (15-person.js), so pets read like people.
 //   window._casoraPet.find(hass, id)                 → {tracker, battery, charging, state, saving, live, buzzer, led, active, rest, goal, sleepDay, sleepNight}
 //   window._casoraPet.status(c, states, hass)        → {place, home, battery, charging, level, dead, live, …}

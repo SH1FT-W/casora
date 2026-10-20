@@ -4662,13 +4662,25 @@ const platformHit = (spec, reg, st) => {
   const a = (st && st.attributes) || {};
   return spec.platform === "teamtracker" && a.sport_path != null && "team_abbr" in a && "opponent_abbr" in a;
 };
-// Tractive device_tracker: by platform, or by the tracker device behind the pet (manufacturer, as in the test house).
+// Tractive device_tracker: by platform, or by the manufacturer of its device or the one behind it (test house).
+// HA puts the tracker on the tracker hardware ("Tracker <id>", in Spanish "Rastreador <id>"); the pet's name is only
+// on the pet device that hangs on it via via_device (issue #25). Older versions had the tracker on the pet device.
 const isPetTracker = (h, id) => {
   const R = (h && h.entities) || {}, D = (h && h.devices) || {}, e = R[id];
   if (!/^device_tracker\./.test(id) || !e) return false;
   if (e.platform === "tractive") return true;
   const d = D[e.device_id], hw = d && D[d.via_device_id];
-  return /tractive/i.test((hw && hw.manufacturer) || "");
+  return [d, hw].some((x) => /tractive/i.test((x && x.manufacturer) || ""));
+};
+// The pet's name for a Tractive tracker, "" for anything else: the user's own entity name, else the pet device.
+const petName = (h, id) => {
+  if (!isPetTracker(h, id)) return "";
+  const R = h.entities || {}, D = h.devices || {}, e = R[id];
+  if (typeof e.name === "string" && e.name.trim()) return e.name.trim();
+  const d = D[e.device_id];
+  if (!d) return "";
+  const pet = d.via_device_id ? d : D[Object.keys(D).find((k) => D[k] && D[k].via_device_id === e.device_id)];
+  return String((pet && (pet.name_by_user || pet.name)) || "").trim();
 };
 // Geräte, die erkennbar etwas anderes sind, schlägt eine fremde Kachel nur vor, wenn
 // sonst nichts passt: Name, Modell oder Hersteller des Geräts.
@@ -19910,7 +19922,8 @@ class CasoraPanel extends HTMLElement {
     const areaId = (reg && reg.area_id) || (dev && dev.area_id) || "";
     const area = (areaId && h.areas && h.areas[areaId] && h.areas[areaId].name) || "";
     const devName = (dev && (dev.name_by_user || dev.name)) || "";
-    const name = String(this._prettyEntity(id));
+    // Tractive: the pet's name, not the tracker's ("Rastreador 1A2B3C4D" → "Luna", issue #25).
+    const name = petName(h, id) || String(this._prettyEntity(id));
     let short = name;
     if (devName && name.length > devName.length + 1 && name.startsWith(devName + " ")) short = name.slice(devName.length + 1);
     const ctx = [area, devName && devName !== name ? devName : ""].filter(Boolean).join(" \u00b7 ");
@@ -20774,7 +20787,7 @@ class CasoraPanel extends HTMLElement {
       const named = !fixed && !iconMode && (isPhone(this) || people || entityish);
       shown = list.filter((o) => !q || String(o).toLowerCase().includes(q)
         || (named && String(this._prettyEntity(o)).toLowerCase().includes(q))
-        || (entityish && this._entMeta(o).ctx.toLowerCase().includes(q))
+        || (entityish && (this._entMeta(o).ctx + " " + this._entMeta(o).name).toLowerCase().includes(q))
         || (iconMode && iconName(o, lang).toLowerCase().includes(q)));
       menu.innerHTML = "";
       // Entitäten nach Raum gruppiert, wie in HAs Auswahl.
@@ -21264,7 +21277,7 @@ class CasoraPanel extends HTMLElement {
       // network rate that says it is the download.
       const sure = !fallback && (keyHit || likeHit || sameArea || nameHit
         || (type.id === "network") || (type.id === "energy_tile" && ENERGY_HOUSE.test(foldName(nameOf(id)))));
-      return { id, i, score, name: nameOf(id), area: (a && A[a] && A[a].name) || "",
+      return { id, i, score, name: petName(h, id) || nameOf(id), area: (a && A[a] && A[a].name) || "",
         keyHit, sameArea, found: !!spec, sure, fresh: !used.has(id) };
     });
     scored.sort((x, y) => y.score - x.score || x.i - y.i);
@@ -21322,6 +21335,9 @@ class CasoraPanel extends HTMLElement {
     // Eine Pflanze heißt wie die Pflanze („Bogenhanf“), nicht wie der Kacheltyp.
     const fn = /^plant\./.test(entity) && this._prettyEntity(entity);
     if (fn && fn !== entity && (!tile.name || tile.name === trLabel(type.label))) tile.name = fn;
+    // A pet tracker is named like the pet ("Luna"), not like its tracker hardware (issue #25).
+    const pn = type.id === "casora_pet" && petName(this._hass, entity);
+    if (pn && (!tile.name || tile.name === trLabel(type.label))) tile.name = pn;
     const found = window.casoraFieldEntity;
     if (!found) return;
     const S = (this._hass && this._hass.states) || {};
@@ -26219,7 +26235,8 @@ class CasoraPanel extends HTMLElement {
     const autoName = !type.multiEntity && !isGroup;
     const friendlyOf = (id) => {
       const e = id && this._hass && this._hass.states[id];
-      return (e && e.attributes && e.attributes.friendly_name) || null;
+      // Tractive: the pet's name, not the tracker hardware's (issue #25).
+      return (id && petName(this._hass, id)) || (e && e.attributes && e.attributes.friendly_name) || null;
     };
     // Geräte dieses Raums zuerst, ohne Konfigurations-/Diagnose-Knöpfe („Identifizieren“, „Neustart“).
     let entOptions = this._rankedEntityList(type.domains, type.classes, room, tile.entity);
@@ -27054,7 +27071,7 @@ class CasoraPanel extends HTMLElement {
 window.__casoraPanelInternals = {
   blankRoom, roomPhoto, slug, translit, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
   applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
-  findType, tileTypeAny, newTile, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
+  findType, tileTypeAny, newTile, isPetTracker, petName, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,
