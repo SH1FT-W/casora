@@ -31,9 +31,13 @@
     } catch (e) { return Object.assign({}, DEFAULTS); }
   }
 
-  // Status-LEDs (Router, Access Point, Kamera): Licht-Entitäten, die auf „_led“ enden.
-  // „…_led_light“ (z. B. eine Aquarienleuchte) ist ein echtes Licht und bleibt.
-  const NOISE = /(^|_)status_led$|_led$/;
+  // Status LEDs (router, access point, camera): mostly marked config by their integration (UniFi led_control, Reolink
+  // status_led) and then out already; without the category by the integration's key or an ID ending in "status_led"
+  // (ESPHome). Not every "…_led": an LED strip "Bett LED" (light.bett_led) is a lamp (19.10.2026, before it was dropped).
+  const NOISE = /(^|_)status_led$/;
+  const NOISE_KEY = /^(status_led|led_control|status_light|led_indicator|indicator_light)$/;
+  const isStatusLed = (hass, eid) => NOISE.test(String(eid).split(".")[1] || "")
+    || NOISE_KEY.test(String((((hass || {}).entities || {})[eid] || {}).translation_key || ""));
 
   // Namen ohne den Raum („Jalousie Küche“ in der Küche → „Jalousie“).
   function shortName(name, room) {
@@ -176,7 +180,7 @@
     const types = (I().TILE_TYPES || []).filter((t) => !t.hidden && (!t.onlyIf || t.onlyIf(hass)));
     const rooms = [{ name: "Home", tiles: [] }].concat(roomNames.map((name) => ({ name, tiles: [] })));
     let items = window.casoraAssist ? window.casoraAssist.suggest(hass, rooms, types) : [];
-    if (r.skip_leds) items = items.filter((it) => !(it.type === "light" && NOISE.test(String(it.entity).split(".")[1] || "")));
+    if (r.skip_leds) items = items.filter((it) => !(it.type === "light" && isStatusLed(hass, it.entity)));
     const rank = (type) => { const i = r.order.indexOf(type); return i < 0 ? r.order.length : i; };
     const out = rooms.map((room) => ({ name: room.name, items: [] }));
     const byName = new Map(out.map((x) => [x.name, x]));
