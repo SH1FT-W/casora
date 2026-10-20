@@ -6,6 +6,9 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 ## 26.10.43 – 20.10.2026
 
+### Geändert
+- **Abfall-Popup zeigt den Monatskalender jetzt von Anfang an:** „Kalender im Abfall-Popup“ (Einstellungen → Haus & Geräte → Abfall) ist jetzt standardmäßig eingeschaltet, auch in bestehenden Installationen. Wer ihn nicht möchte, schaltet ihn dort aus.
+
 ### Behoben
 - **Haustier-Kachel: Tier im Feld „Tier“ nicht zu finden (#25):** Home Assistant benennt den Tractive-Tracker nach der Hardware („Tracker 1A2B3C4D“, auf Spanisch „Rastreador …“), den Namen des Tiers trägt nur ein zweites Gerät dahinter. Die Suche nach dem Tiernamen ergab deshalb „Keine Treffer“. Das Studio zeigt Tractive-Tracker jetzt mit dem Namen des Tiers – im Feld „Tier“ (darunter der Tracker), beim Anlegen der Kachel, im Kachelnamen und unter „Was soll aufs Dashboard?“ – und die Suche nach dem Tiernamen findet sie.
 

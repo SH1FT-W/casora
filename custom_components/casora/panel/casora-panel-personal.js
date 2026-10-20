@@ -302,11 +302,11 @@
         addRow(g, "Add bin", () => { S.waste.sensors[""] = ""; });
         row(g, "Waste calendar", [ent(S.waste.calendar, ["calendar"], (v) => { S.waste.calendar = v; })],
           "More dates in the popup");
-        // Monatskalender im Abfall-Popup (03.10.2026), Standard Aus.
+        // Month calendar in the waste popup (03.10.2026), on by default since 20.10.2026; only "off" is stored (false).
         const calSw = self._flowRow(g, { title: "Calendar in the waste popup", sub: "Month with the pickup days in the bin colors" });
         if (typeof self._boolSwitch === "function") {
-          calSw.row.appendChild(self._boolSwitch(S.waste.calendar_popup === true, false, (v) => {
-            if (v) S.waste.calendar_popup = true; else delete S.waste.calendar_popup;
+          calSw.row.appendChild(self._boolSwitch(S.waste.calendar_popup !== false, true, (v) => {
+            if (v === false) S.waste.calendar_popup = false; else delete S.waste.calendar_popup;
           }, window.casoraI18n ? window.casoraI18n.t("Calendar in the waste popup") : "Calendar in the waste popup"));
         }
         const chips = document.createElement("div");

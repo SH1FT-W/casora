@@ -6,6 +6,9 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ## 26.10.43 – 20.10.2026
 
+### Changed
+- **The waste popup now shows the month calendar from the start:** "Calendar in the waste popup" (Settings → Home & Devices → Waste collection) is now on by default, also in existing installations. If you don't want it, switch it off there.
+
 ### Fixed
 - **Pet tracker card: pet not found in the Pet field (#25):** Home Assistant names the Tractive tracker after its hardware ("Tracker 1A2B3C4D", in Spanish "Rastreador …"), and only a second device behind it carries the pet's name. Searching for the pet's name therefore found nothing. The Studio now shows Tractive trackers by the pet's name – in the Pet field (with the tracker below), when adding the tile, in the tile name and in "What should go on the dashboard?" – and searching for the pet's name finds them.
 

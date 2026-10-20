@@ -294,11 +294,11 @@ window.casoraPriceKwh = function (v) {
     var sorted = bins.filter(function (b) { return b.days != null; }).sort(function (a, b) { return a.days - b.days; });
     var days = sorted.length ? sorted[0].days : null;
     var nextBins = sorted.filter(function (b) { return b.days === days; });
-    // Monatskalender im Abfall-Popup (Studio → Einstellungen → Haus & Geräte), Standard aus.
+    // Month calendar in the waste popup (Studio → Settings → Home & devices), on unless switched off (false).
     var calPopup = V.trash_calendar_popup != null ? V.trash_calendar_popup : cfg.calendar_popup;
     return {
       bins: bins, calendar: calendar, reminder: V.trash_reminder || cfg.reminder || null,
-      months: months, duty: duty, days: days, calendarPopup: calPopup === true,
+      months: months, duty: duty, days: days, calendarPopup: calPopup !== false,
       next: nextBins.length ? { label: nextBins.map(function (b) { return b.label; }).join(' + '),
                                 tint: nextBins[0].tint, color: nextBins[0].color } : null,
     };

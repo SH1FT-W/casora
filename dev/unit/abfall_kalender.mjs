@@ -1,5 +1,5 @@
-// Monatskalender im Abfall-Popup (03.10.2026): Option aus → kein Kalender, Option an → Kalender
-// mit den Abholtagen in der Farbe der Tonne. Ohne Browser: Finder + Kalender-Modul laden und den
+// Month calendar in the waste popup (03.10.2026, on by default since 20.10.2026): off → no calendar,
+// on or not set → calendar with the pickup days in the bin's colour. Ohne Browser: Finder + Kalender-Modul laden und den
 // Popup-Ausdruck der Vorlage casora_trash ausführen.  node dev/unit/abfall_kalender.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -31,12 +31,16 @@ const hass = { states, entities: {}, devices: {} };
 const vars = { trash_sensors: { 'sensor.bio': 'Bio', 'sensor.papier': 'Papier' } };
 const cfg = (settings) => { window.CASORA_SETTINGS = settings; return popup(states, states['sensor.bio'], {}, hass, vars, null).cards[0]; };
 
-// Aus (Standard): kein Kalenderfeld, Layout wie bisher.
-let c = cfg({ waste: {} });
-assert.equal(c.custom_fields.cal, undefined, 'Option aus: kein Kalender');
+// Off (stored as false): no calendar field, layout without it.
+let c = cfg({ waste: { calendar_popup: false } });
+assert.equal(c.custom_fields.cal, undefined, 'switched off: no calendar');
 assert.equal(window.casoraDevice.waste(hass, vars).calendarPopup, false);
-c = cfg({ waste: { calendar_popup: false } });
-assert.equal(c.custom_fields.cal, undefined);
+// Not set (default) and no settings at all: calendar shown.
+c = cfg({ waste: {} });
+assert.ok(c.custom_fields.cal && c.custom_fields.cal.card, 'default: calendar shown');
+assert.equal(window.casoraDevice.waste(hass, vars).calendarPopup, true);
+c = cfg(undefined);
+assert.ok(c.custom_fields.cal && c.custom_fields.cal.card, 'no settings: calendar shown');
 
 // An: Kalenderfeld als Spalte mit Monat und Tag, im Raster links neben den Tonnen.
 c = cfg({ waste: { calendar_popup: true } });
