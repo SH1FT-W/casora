@@ -8024,12 +8024,16 @@ window.casoraMenuGlass = {
     '@keyframes casora-drawer-in { from { translate: 0 100%; } to { translate: 0 0; } }' +
     ':host([placement="bottom"]) dialog { animation-name: casora-drawer-in !important; }';
 
+  // HA's phone layout (its own breakpoint) fills the screen with the dialog, min-height 100dvh:
+  // a top margin there pushes OK/Save off the bottom. casora-offset: see wantsOffset().
   var CSS_BY_HOST = {
     'wa-dialog':
-      'dialog {' +
-      '  margin-block-start: var(--casora-popup-top, 112px) !important;' +
-      '  max-block-size: calc(100dvh - var(--casora-popup-top, 112px)' +
-      '                  - var(--casora-dialog-bottom-gap, 16px)) !important;' +
+      '@media (min-width: 451px) and (min-height: 501px) {' +
+      '  :host([casora-offset]) dialog {' +
+      '    margin-block-start: var(--casora-popup-top, 112px) !important;' +
+      '    max-block-size: calc(100dvh - var(--casora-popup-top, 112px)' +
+      '                    - var(--casora-dialog-bottom-gap, 16px)) !important;' +
+      '  }' +
       '}' + NO_ENTRANCE + STACKED_SCRIM + GRAIN,
     'wa-drawer': NO_ENTRANCE + STACKED_SCRIM + DRAWER_SLIDE + SHEET_RADIUS + GRAIN,
   };
@@ -8038,6 +8042,17 @@ window.casoraMenuGlass = {
   function isDialogHost(el) {
     if (!el || !CSS_BY_HOST[el.localName]) return false;
     return el.localName !== 'wa-drawer' || el.getAttribute('placement') === 'bottom';
+  }
+
+  // Only over a dashboard or the Studio; HA's own pages (settings, HACS ...) and its
+  // fullscreen dialogs keep HA's layout.
+  function wantsOffset(host) {
+    var outer = host.getRootNode && host.getRootNode().host;
+    if (outer && (outer.hasAttribute('fullscreen') || outer.getAttribute('width') === 'full')) return false;
+    var ha = document.querySelector('home-assistant');
+    var h = ha && ha.hass;
+    var p = h && h.panels && h.panels[h.panelUrl];
+    return !!p && (p.component_name === 'lovelace' || h.panelUrl === 'casora-studio');
   }
 
   function injectInto(el) {
@@ -8071,6 +8086,7 @@ window.casoraMenuGlass = {
         var root = this.getRootNode();
         if (root && root.host && isDialogHost(root.host)) {
           injectInto(root.host);
+          if (root.host.localName === 'wa-dialog') root.host.toggleAttribute('casora-offset', wantsOffset(root.host));
           var hp = window.casoraPopup && window.casoraPopup.element;
           root.host.toggleAttribute('casora-stacked', !!(hp && hp.hasAttribute('open')));
         }

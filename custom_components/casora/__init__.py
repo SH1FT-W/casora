@@ -409,9 +409,37 @@ async def _options_changed(hass: HomeAssistant, entry: ConfigEntry) -> None:
         hass.data.setdefault(DOMAIN, {}).pop("reloading", None)
 
 
+async def _remove_script_resources(hass: HomeAssistant) -> None:
+    """Drop the Lovelace resources pointing at /casora_scripts/.
+
+    Left behind, every page keeps requesting them, and an app that cached the
+    script keeps running it after Casora is gone.
+    """
+    res = _lovelace_resources(hass)
+    if res is None or not hasattr(res, "async_delete_item"):
+        return
+    try:
+        if not getattr(res, "loaded", False):
+            await res.async_load()
+            res.loaded = True
+        items = list(res.async_items())
+    except Exception:  # noqa: BLE001 - removal must not fail over the resource list
+        _LOGGER.exception("Casora: could not read the Lovelace resource list")
+        return
+    for item in items:
+        url = str(item.get("url", ""))
+        if not url.startswith(SCRIPTS_URL_BASE + "/"):
+            continue
+        try:
+            await res.async_delete_item(item["id"])
+        except Exception:  # noqa: BLE001
+            _LOGGER.exception("Casora: could not remove %s", url)
+
+
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Integration entfernt: die Theme-Kopie im Theme-Ordner mit entfernen."""
+    """Integration removed: drop the theme copy in the theme folder and the script resources."""
     await hass.async_add_executor_job(remove_theme_file, hass.config.config_dir)
+    await _remove_script_resources(hass)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
