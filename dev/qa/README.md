@@ -26,7 +26,9 @@ korrigieren, committen → `dev/qa/gate.sh --nachholen` (Minuten statt neuer Vol
    - alle `[[[ … ]]]`-Ausdrücke der Kartenvorlagen per `new Function` (`dev/qa/check-templates.mjs`)
    - JSON gültig (Übersetzungen, manifest, Vorlagen)
    - `tools/privacy-check.py` (ganzes Repo), `tools/i18ncheck.py`, `tools/sync-changelog.py --check`
-2. **Unit-Tests** `dev/unit/*` (ohne HA; `--with …` aus der Aufrufzeile des Tests wird übernommen)
+2. **Unit-Tests** `dev/unit/*` (ohne HA; `--with …` aus der Aufrufzeile des Tests wird übernommen;
+   Tests mit `@ha-venv` im Kopf laufen mit der Python von `tools/ha-venv.sh` in dessen Standardversion,
+   z. B. die HA-Annahmen, siehe unten)
 3. **Test-HAs** (Wegwerf-Container, je Zustand mit dem aktuellen Checkout eingespielt):
    - **arbeit**: zuerst legt `stress-setup.mjs --name qa-arbeit --state arbeit` auf jedem arbeit-HA ein
      Prüf-Dashboard über den echten Studio-Ablauf an; dann E2E-Reihe (Liste aus `dev/e2e/alle.sh`),
@@ -204,6 +206,29 @@ Rechner mit 10 Kernen, Docker 5,8 GB; meist liefen nebenher Wegwerf-HAs anderer 
 
 Engpass im vollen Lauf ist arbeit (~85 min Testzeit auf 3 HAs); stress braucht ~18 min.
 Mehr HAs (`GATE_HAS_MAX=6`, arbeit 3 + stress 2 + spätes HA) gehen, wenn sonst nichts läuft.
+
+## HA-Annahmen: Änderungen in Home Assistant früh bemerken
+
+`dev/unit/ha_annahmen_test.py` prüft ohne laufendes HA direkt am installierten `homeassistant`-Paket, worauf
+sich Casora verlässt: Kategorien (jeder `device_tracker` diagnostic, Issue #25), Felder von `hass.entities`
+(Registry-Anzeigeliste und ihre Übersetzung im Frontend), `friendly_name`-Bildung (#27), Standard-Nachkommastellen,
+`translation_key`s fremder Kern-Integrationen (Tractive, Reolink, Roborock, Wäsche …). Jeder Test nennt im
+Docstring die Casora-Stelle, die davon abhängt; Liste und Begründung in `docs/ha-annahmen.md`.
+
+```sh
+dev/qa/ha-annahmen.sh                   # neueste stabile Version + neueste Beta (keine Beta draußen: übersprungen)
+HA_VERSION=beta dev/qa/ha-annahmen.sh   # nur die Beta (HA-Beta-Bericht)
+dev/qa/ha-annahmen.sh standard 2026.10.1   # Standardversion des Gates bzw. eine bestimmte Version
+```
+
+Je Version eine venv aus `tools/ha-venv.sh` (beim ersten Mal ein paar Minuten) samt passendem Frontend-Paket.
+Im Gate läuft der Test im Schritt unit gegen die Standardversion (dieselbe wie die Test-HAs); die Beta nicht,
+sie ist kein Grund, ein Release aufzuhalten. Eine rote Beta-Annahme heißt: vor dem nächsten HA-Release die
+genannte Stelle anpassen. Ändert sich eine Annahme, `docs/ha-annahmen.md` im selben Commit mitpflegen.
+
+Das Testhaus (`dev/casora_mock/entity.py`) erbt dafür von den echten Plattform-Basisklassen (`SensorEntity`,
+`BinarySensorEntity`, `TrackerEntity`, `UpdateEntity`, `EventEntity` …): Kategorie, Device-Class-Behandlung und
+Registry-Verhalten kommen von HA, nur Zustand und Attribute weiter 1:1 aus der Fixture.
 
 ## Neuer Fehler gemeldet → neuer Regressionstest
 

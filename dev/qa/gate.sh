@@ -167,6 +167,13 @@ unit_tests() {
     echo "=== $f"; "$NODE" "$f" || { echo "FEHLER $f"; bad=1; }
   done
   for f in dev/unit/*_test.py; do
+    # „@ha-venv“ im Kopf: gegen das echte HA-Paket in der Standardversion der Test-HAs (tools/ha-venv.sh),
+    # z. B. die HA-Annahmen (ha_annahmen_test.py); Beta und neueste Version prüft dev/qa/ha-annahmen.sh.
+    if head -n 30 "$f" | grep -q "@ha-venv"; then
+      echo "=== $f (tools/ha-venv.sh)"
+      "$(env -u HA_VERSION tools/ha-venv.sh install)/bin/python" "$f" || { echo "FEHLER $f"; bad=1; }
+      continue
+    fi
     # Zusatzpakete stehen in der Aufrufzeile des Tests („uv run … --with homeassistant …“).
     withs="$(head -n 30 "$f" | grep -o -- '--with [A-Za-z0-9_.=<>-]*' | sort -u | tr '\n' ' ')"
     echo "=== $f $withs"; $PY $withs python "$f" || { echo "FEHLER $f"; bad=1; }

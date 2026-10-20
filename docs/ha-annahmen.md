@@ -1,18 +1,37 @@
 # HA-Annahmen
 
-<!-- Vorlage aus repo-vorlagen/vorlagen/ha-annahmen.md. Der HA-Beta-Bericht (repo-vorlagen/ha-beta-bericht.md)
-     gleicht diese Liste jeden Monat mit den Neuerungen der HA-Beta ab. Nur festhalten, was bei einer Änderung
-     in HA still kaputtginge. -->
+<!-- Vorlage aus repo-vorlagen/vorlagen/ha-annahmen.md. Liegt im Repo als docs/ha-annahmen.md.
+     Der HA-Beta-Bericht (repo-vorlagen/ha-beta-bericht.md) gleicht diese Liste jeden Monat mit den
+     Neuerungen der HA-Beta ab. Nur festhalten, was bei einer Änderung in HA still kaputtginge. -->
 
 Worauf sich dieses Repo bei Home Assistant verlässt. Bei jeder Änderung am Code mitpflegen.
-Angelegt im Oktober 2026 mit dem, was dabei gelesen wurde – noch nicht vollständig, wächst mit jeder Anpassung.
 
-**Getestet mit:** HA 2026.10 · **Mindestversion:** `hacs.json` (2026.9.0)
+**Getestet mit:** HA 2026.10.1 (Gate), 2026.10.2 · **Mindestversion:** siehe `hacs.json` / `manifest.json`
+
+Anlass: Issue #25. Jeder `device_tracker` ist in HA „diagnostic“ (`BaseTrackerEntity`), Casora blendete
+Diagnose-Entitäten in Gerätelisten aus, das Feld „Tier“ blieb leer. Das Testhaus (`dev/casora_mock`) baute
+alle Geräte auf der schlichten `Entity` auf und zeigte es nicht. Seitdem erben die Testgeräte von den echten
+Plattform-Basisklassen (siehe `dev/casora_mock/entity.py`), und die Annahmen unten laufen gegen das echte
+`homeassistant`-Paket.
 
 ## Annahmen
 
 | Annahme | Wo im Code | Abgesichert durch |
 |---|---|---|
+| Jeder `device_tracker` hat `entity_category: diagnostic` (`BaseTrackerEntity`, schon in 2026.9.4) | `panel/casora-panel.js` `listCategory()`, `isPetTracker()`; `scripts/local/26-haustier.js` | `dev/unit/ha_annahmen_test.py`: `Categories.test_device_tracker_is_diagnostic` |
+| Sensoren/Binärsensoren haben keine eigene Kategorie | Raum-/Gerätelisten filtern jede Kategorie: `casora-panel-basis.js`, `casora-panel-b-plus.js`, `scripts/casora-core.js` (Leistungssensoren), `raumklima.py` | `dev/unit/ha_annahmen_test.py`: `Categories.test_sensor_has_no_default_category` |
+| `update`: config mit INSTALL, sonst diagnostic | Studio-Vorschläge (`casora-panel-basis.js`) bieten Updates deshalb nie an; Testhaus erbt es | `dev/unit/ha_annahmen_test.py`: `Categories.test_update_default_category` |
+| `hass.entities` kommt aus `config/entity_registry/list_for_display` mit `ei, pl, di, ai, tk, ec` (Index in `entity_categories`), `hb, en, dp, lb, ic` | alles, was `hass.entities` liest: Kategorie/hidden (Raumlisten), `translation_key`/`platform` (`scripts/local/00-finder.js` `casoraDevice`, `byKey`, `casoraLaundryFind`), `display_precision` (Vorlagen) | `dev/unit/ha_annahmen_test.py`: `RegistryDisplay.test_display_fields` |
+| Das Frontend übersetzt diese Schlüssel in `entity_id, device_id, area_id, translation_key, platform, entity_category, name, hidden, display_precision` | wie oben | `dev/unit/ha_annahmen_test.py`: `Frontend.test_hass_entities_mapping` (braucht `hass_frontend`) |
+| Deaktivierte Entitäten fehlen in `hass.entities` (`disabled_by` dort nur Sicherheitsnetz) | `casora-panel-basis.js` u. a.; Python filtert selbst (`tanken.py`, `raumklima.py`) | `dev/unit/ha_annahmen_test.py`: `RegistryDisplay.test_disabled_entities_not_listed` |
+| `hass.entities[id].name` ist nur der eigene Namensteil: Benutzername, sonst Name ohne Gerät | „Registry-Name zuerst“: `casora-panel-b-ux.js` (Geräteliste), `casora-panel-types.js`, `casora-panel-b-plus.js`, `casora-panel-b-mehr.js` | `dev/unit/ha_annahmen_test.py`: `RegistryDisplay.test_name_is_entity_part_only` |
+| Tracker ohne eigenen Namen (`has_entity_name`, Name None) hat kein `name` in `hass.entities` | `casora-panel.js` `petName()` nimmt `name` als vom Nutzer vergebenen Tiernamen | `dev/unit/ha_annahmen_test.py`: `RegistryDisplay.test_unnamed_tracker_has_no_name` |
+| Temperatur in °C ohne Vorgabe der Integration bekommt `display_precision` 1 | Zahlenformat der Vorlagen (`display_precision`) | `dev/unit/ha_annahmen_test.py`: `RegistryDisplay.test_temperature_default_display_precision` |
+| `friendly_name` = Gerätename (`name_by_user` zuerst) + Entitätsname, ohne Entitätsname nur der Gerätename | `scripts/local/00-finder.js` `wasteLabel()` (#27), Zeilennamen in Popups | `dev/unit/ha_annahmen_test.py`: `FriendlyName.test_device_name_in_front` |
+| Vom Nutzer vergebener Entitätsname steht allein, ohne Gerät davor | `wasteLabel()` | `dev/unit/ha_annahmen_test.py`: `FriendlyName.test_user_name_without_device` |
+| Ohne `has_entity_name` an einem Gerät: Gerätename + eigener Name, außer der Name beginnt schon mit dem Gerät | wie oben; Testhaus (alle Mock-Entitäten sind so benannt) | `dev/unit/ha_annahmen_test.py`: `FriendlyName.test_legacy_name_gets_device_prefix` |
+| `translation_key`s der Kern-Integrationen, nach denen Casora sucht (Liste `KEYS` im Test) | siehe „Fremde Integrationen“ | `dev/unit/ha_annahmen_test.py`: `ForeignKeys.test_translation_keys_exist` |
+| Tractive: Gerät „Tracker <id>“ (Geräteübersetzung `tracker`), Tier-Gerät hängt per `via_device` daran | `casora-panel.js` `isPetTracker()`/`petName()`, `26-haustier.js` `P.find` | `dev/unit/ha_annahmen_test.py`: `ForeignKeys.test_tractive_layout` |
 | HA-Dialoge: `ha-dialog` → (Shadow) `wa-dialog` → (Shadow) natives `<dialog>`, geöffnet mit `showModal()` | `scripts/casora-core.js` Dialog-Chrome (`patchShowModal`, `CSS_BY_HOST`) | `dev/unit/dialog_offset_fullscreen.mjs` (nur Casora-Seite) |
 | HA zeigt Standard-Dialoge bei `max-width: 450px` oder `max-height: 500px` bildschirmfüllend (`min-height: 100dvh`); Casora setzt seinen Versatz nur außerhalb davon (`min-width: 451px and min-height: 501px`) | `scripts/casora-core.js` `CSS_BY_HOST['wa-dialog']` | `dev/unit/dialog_offset_fullscreen.mjs` (Grenze von Hand gegen `src/components/ha-dialog.ts` geprüft) |
 | Vollbild-Dialoge tragen am `ha-dialog` das Attribut `fullscreen` bzw. `width="full"` | `scripts/casora-core.js` `wantsOffset()` | `dev/unit/dialog_offset_fullscreen.mjs` |
@@ -32,19 +51,43 @@ Angelegt im Oktober 2026 mit dem, was dabei gelesen wurde – noch nicht vollst�
 | Entitäten-Registry (Python): die Pflanze von Pflanzenmonitor Plus hat `platform` `pflanzenmonitor_plus`, Domain `sensor`, `unique_id` „`<Pflanze>-status`“ | `ki.py` `is_plant`, `plant_devices` (auch `raumklima.py`) | `dev/unit/plant_plus_test.py` (Attrappe) |
 | Jinja `integration_entities('pflanzenmonitor_plus')` gibt ohne die Integration eine leere Liste (kein Fehler) | `ki/pflanzen.yaml` `room_lux` | keiner |
 
+Nur im Testhaus, kein Test: `async_update_entity(area_id=…)` lehnt seit 2026.10 einen eigenen Bereich für
+Entitäten ohne eigenen Namen ab (`dev/casora_mock/__init__.py` `build_registry`, fängt den `ValueError` ab).
+
 ## Fremde Integrationen
 
-Integrationen, deren Entitäten oder Attribute dieses Repo liest (Domain, was genau, wo):
+Kern-Integrationen (Schlüssel im Test geprüft):
 
-- **Dreame Vacuum** (HACS, Tasshack/dreame-vacuum, `dreame_vacuum`): Fehlersensor mit `translation_key` `error`, Zustand ein Code (`forward_suffocate` …), ohne Fehler `no_error`; der Text kommt aus der Übersetzung der Integration, ein Hinweis dazu aus dem Attribut `description` (`02-devices.js` `VFIND.err`, `errText`, `V.todo`, #33). Entitäts-ID ist `<gerät>_<key>`, `translation_key` = `key` (`entity.py`); gegen eine echte Entitätenliste abgeglichen (#33). Station/Tanks als Enum-Sensoren: `clean_water_tank_status` (`low_water`, `not_installed`), `low_water_warning` (`no_water_left`, `no_water_for_clean`, `low_water`, `tank_not_installed`), `dirty_water_tank_status` (`not_installed_or_full`), `dust_bag_status` (`not_installed`, `check`), `detergent_status` (`low_detergent`). Status-Sensor `status` mit eigenen Wörtern (`room_cleaning`, `zone_cleaning`, `follow_wall_cleaning`, `fast_mapping`, `remote_control`, `sleeping` …); der Saugroboter selbst meldet `returning` (`02-devices.js` `STATUS`, `CLEAN`). Fürs Saugroboter-Popup außerdem `cleaning_progress`, `cleaned_area`, `cleaning_time` (min), `dnd` (switch), `time.dnd_start`/`dnd_end`, `drying_left` (min), `cleaning_mode`, `water_volume`, `mop_pad_humidity`, `auto_empty_mode`, `cleaning_history`, `cleaning_count`, `total_cleaning_time` (min), `total_cleaned_area`, Verschleiß `*_time_left` (h, `sensor_dirty_time_left`, `tank_filter_time_left`, `mop_pad_time_left`, `water_outlet_filter_dirty_time_left`; in Tagen `wheel_dirty_time_left`, `onboard_dirty_water_tank_time_left`) und Reset-Tasten `reset_*` (`02-devices.js` `VFIND`, `PARTS`; `dev/unit/vacuum_integrations.mjs`). Nicht übernommen: `auto_drying`, `auto_dust_collecting`, `self_clean` (Einstellungen, keine Aktionen).
-- **Plant Monitor** (HACS, Olen/homeassistant-plant, `plant`): je Pflanze `plant.*`, Zustand `ok`/`problem`, Attribute `problems` (Liste aus `sensor_type`, `status` `Low`/`High`, `current`, `min`, `max`; teils als Text), `<messgröße>_status` (`Low`/`High`/`ok`/leer), `species`; Messwerte als `sensor.*` und Grenzwerte als `number.<pflanze>_<min|max>_<soil_moisture|temperature|…>` am selben Gerät (Glocke `casora-core.js`, `00-finder.js`, Vorlagen `casora_plant`/`casora_popup_plant`, Pflanzen-Doktor `ki/pflanzen.yaml`, `03-popups.js`, Lüften `ki.py`/`raumklima.py`).
-- **Pflanzenmonitor Plus** (`pflanzenmonitor_plus`, Ersatz für Plant Monitor): statt `plant.*` ein Zustands-Sensor je Pflanze (`translation_key` `status`, `unique_id` `<pflanze>-status`, `device_class` `enum`) mit denselben Zuständen und Attributen; Spiegel-Sensoren mit `translation_key` = Messgröße (`moisture`, `temperature`, `illuminance`, `humidity`, `conductivity`, `co2`, `soil_temperature`), Grenzwerte als `number` mit `translation_key` `min_<m>`/`max_<m>` und `lux_to_ppfd`, Licht `ppfd`/`total_light_integral`/`dli`/`dli_24h`, Lernwerte (`next_watering`, `last_watered` …) am selben Gerät. Beim Umzug vom Plant Monitor bleiben die Entitäts-IDs (aus `plant.x` wird `sensor.x`); neue Pflanzen heißen nach der Sprache (`number.x_max_bodenfeuchtigkeit`), daher Grenzwerte und Messgrößen über `translation_key` (`casora_popup_plant`, `casora-panel.js` `plantSlotOf`; `dev/unit/plant_plus.mjs`).
-- **Ecovacs** (HA-Kern, `ecovacs`): `stats_area`, `stats_time` (s), `work_mode`, `water_amount`, `auto_empty`, `child_lock`, `total_stats_cleanings`, `total_stats_time` (s), `total_stats_area` (`02-devices.js` `VFIND`; `dev/unit/vacuum_integrations.mjs`). Verschleiß nur in % (`lifespan_*`) – nicht übernommen.
-- **iRobot Roomba** (HA-Kern, `roomba`): `last_mission`, `total_missions` (`02-devices.js` `VFIND`).
-- Saugroboter allgemein: Dauern nach `unit_of_measurement` (s/min/h/d) umgerechnet (`numIn`); ohne Einheit wie bisher.
+- `tractive`: Tracker, Akku, Status, Live/Summer/LED, Aktivität und Schlaf (`26-haustier.js`)
+- `reolink`: Kamera-Streams `main`/`sub`/`snapshots_*`, Klingel-Sensoren, Schnellantworten, Lautstärken
+  (`casora-core.js` `casoraCamStill`, `24-klingel.js`, `casora-panel-b-ux.js`)
+- `roborock`: Status, Raum, Verbrauchsteile, Nicht-stören, Modi, Karte (`02-devices.js`, `00-finder.js`,
+  `live_finder.py`)
+- `home_connect`, `miele`, `smartthings`, `lg_thinq`, `whirlpool`: Wäsche/Spüler (`00-finder.js`
+  `casoraLaundryFind`, `live_finder.py`), Home Connect auch Kaffee
+- `cookidoo` (Rezept, `03-popups.js`, `ki.py`), `backup` (`03-popups.js`), `proximity` (`15-person.js`),
+  `unifi` (Netzwerk, `00-finder.js`), `lamarzocco` (Kaffee, `25-kaffee.js`), `tankerkoenig` (nur `platform`,
+  `tanken.py`)
+
+Nicht im Kern-Paket prüfbar (HACS), Casora liest `platform`/`translation_key`:
+`waste_collection_schedule`, `frigate`, `ha_washdata`, `home_connect_alt`/`homeconnect_ws`, `bambu_lab`,
+`anker_solix`, `pulse`, `teamtracker`, `bosch_ebike`, `powercalc`, `browser_mod`, `hacs`, Kaffee-Integrationen
+(De'Longhi, Jura, Melitta), Auto-Integrationen.
+
+Bekannt wacklig (Stand 2026.10.1, nicht im Test, weil es Rückfälle bzw. HACS-Schlüssel sind):
+
+- `reolink`: Kamera `clear`, `fluent`, `balanced` und Auswahl `day_night` gibt es im Kern nicht (nur Rückfall).
+- `mobile_app` setzt keine `translation_key`s; `15-person.js` findet Akku/WLAN nur über die Entitäts-ID.
+- Bosch-Raumklima-Schlüssel (`call_for_heat`, `summer_mode` …) gibt es nur in einer HACS-Variante;
+  `ki.py` (`call_for_heat`) hat keinen Rückfall.
+- `main_switch` (Fußbodenheizung) und `warnings` (Wetterwarnung) gibt es in keiner Kern-Integration.
 
 ## Prüfbefehl
 
+Befehl, der die Annahmen gegen eine bestimmte HA-Version prüft:
+
 ```sh
-keiner
+dev/qa/ha-annahmen.sh                   # neueste stabile Version + neueste Beta (ohne Beta: übersprungen)
+HA_VERSION=beta dev/qa/ha-annahmen.sh   # nur die Beta
+dev/qa/ha-annahmen.sh standard          # Standardversion des Gates (läuft auch im Gate, Schritt unit)
 ```
