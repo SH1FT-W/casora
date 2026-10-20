@@ -1,5 +1,6 @@
-// Pet tracker (community card #25, 26-haustier.js) without HA: Tractive pet device (tracker, activity) and the
-// tracker device behind it via via_device_id (battery, status, switches).  node dev/unit/haustier.mjs
+// Pet tracker (community card #25, 26-haustier.js) without HA. As in HA 2026.10: the tracker hardware carries the
+// device_tracker, battery, status and switches; the pet device hangs on it via via_device_id (activity, rest, sleep).
+// The older layout (device_tracker on the pet device) is checked at the end.  node dev/unit/haustier.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
@@ -23,7 +24,7 @@ const devices = {
   hw: { id: 'hw', name: 'Tracker ABCDEFGH' },
 };
 add('zone.home', 'zoning', { latitude: 50, longitude: 8 }, { platform: 'zone' });
-add('device_tracker.wuffi', 'home', { latitude: 50, longitude: 8, gps_accuracy: 8, source_type: 'gps' }, { device_id: 'pet', translation_key: 'tracker' });
+add('device_tracker.tracker_abcdefgh', 'home', { latitude: 50, longitude: 8, gps_accuracy: 8, source_type: 'gps' }, { device_id: 'hw', translation_key: 'tracker' });
 add('sensor.wuffi_activity_time', '72', {}, { device_id: 'pet', translation_key: 'activity_time' });
 add('sensor.wuffi_rest_time', '580', {}, { device_id: 'pet', translation_key: 'rest_time' });
 add('sensor.wuffi_daily_goal', '90', {}, { device_id: 'pet', translation_key: 'daily_goal' });
@@ -36,7 +37,7 @@ add('switch.tracker_live', 'off', {}, { device_id: 'hw', translation_key: 'live_
 add('switch.tracker_buzzer', 'off', {}, { device_id: 'hw', translation_key: 'tracker_buzzer' });
 add('switch.tracker_led', 'off', {}, { device_id: 'hw', translation_key: 'tracker_led' });
 const hass = { states, entities, devices };
-const ID = 'device_tracker.wuffi';
+const ID = 'device_tracker.tracker_abcdefgh';
 
 // Entities of the pet and of its tracker device.
 const c = P.find(hass, ID);
@@ -109,4 +110,8 @@ assert.match(today, /9 Std\. 40 Min\./, 'rest');
 assert.match(today, /8 Std\. 20 Min\./, 'night sleep');
 // No switches (other tracker model): no buttons.
 assert.ok(!/Live-Tracking/.test(P.sec('hero', Object.assign({}, c, { live: null, buzzer: null, led: null }), states, hass, null)));
+
+// Older layout: device_tracker on the pet device, the tracker hardware behind it - same entities found.
+entities[ID].device_id = 'pet';
+assert.deepEqual(P.find(hass, ID), c, 'older layout');
 console.log('haustier: ok');

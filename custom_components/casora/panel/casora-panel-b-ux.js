@@ -657,14 +657,10 @@
       // Kaffeevollautomat (Community-Karte, wenn hinzugefügt): je Gerät eine Kachel am Status-Sensor (sonst Strom/Getränke);
       // der Strom-Schalter erscheint dann nicht noch einmal als Schalter.
       if (typeIds.has("casora_coffee")) coffeeAnchors(h).forEach((x) => { push(x.anchor, x.name, "casora_coffee"); x.also.forEach((id) => seen.add(id)); });
-      // Pet tracker (community card, when added): one tile per Tractive device_tracker - by platform, or by the
-      // tracker device behind the pet (manufacturer "Tractive GmbH"), which the test house uses as well.
-      if (typeIds.has("casora_pet")) Object.keys(S).forEach((id) => {
-        const e = (h.entities || {})[id];
-        if (!id.startsWith("device_tracker.") || !e) return;
-        const dev = D[e.device_id], hw = dev && D[dev.via_device_id];
-        if (e.platform !== "tractive" && !/tractive/i.test((hw && hw.manufacturer) || "")) return;
-        push(id, (dev && (dev.name_by_user || dev.name)) || "", "casora_pet");
+      // Pet tracker (community card, when added): one tile per Tractive device_tracker, named like the pet - HA names
+      // the tracker after its hardware ("Tracker 1A2B3C4D"), the pet's name is on the device behind it (issue #25).
+      if (typeIds.has("casora_pet") && I.isPetTracker) Object.keys(S).forEach((id) => {
+        if (I.isPetTracker(h, id)) push(id, I.petName(h, id), "casora_pet");
       });
       sugg.forEach((x) => push(x.entity, x.name, x.type));
       Object.keys(S).forEach((id) => { if (ADD_DOMAINS.indexOf(id.split(".")[0]) >= 0) push(id, "", byEntity.has(id) ? byEntity.get(id).type : null); });
