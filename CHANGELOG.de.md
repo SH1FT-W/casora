@@ -4,6 +4,12 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.44 – 20.10.2026
+
+### Behoben
+- **Haustier-Popup: Licht und Ton zeigten nicht, dass sie an sind (#25):** Die Knöpfe Licht und Ton lasen ihren Zustand aus einem älteren Stand als Live-Tracking. War das Licht in Home Assistant an, blieb der Knopf aus, bis sich etwas anderes änderte. Jetzt zeigen alle drei Knöpfe ihren Zustand sofort.
+- **Haustier-Popup: Licht, Ton und Live-Tracking taten im Energiesparmodus nichts (#25):** Tractive schaltet diese Schalter im Energiesparmodus ab, und Home Assistant übergeht einen Tipp darauf ohne Meldung. Die Knöpfe sind dann gedimmt, und darunter steht, warum.
+
 ## 26.10.43 – 20.10.2026
 
 ### Geändert

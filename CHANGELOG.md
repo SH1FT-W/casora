@@ -4,6 +4,12 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.44 – 20.10.2026
+
+### Fixed
+- **Pet tracker popup: Light and Sound did not show that they were on (#25):** The Light and Sound buttons read their state from an older snapshot than Live tracking. With the light on in Home Assistant, the button stayed off until something else changed. Now all three buttons show their state right away.
+- **Pet tracker popup: Light, Sound and Live tracking did nothing in power saving mode (#25):** Tractive turns these switches off while the tracker saves power, and Home Assistant skips a tap on them without a message. The buttons are now dimmed, with a line below saying why.
+
 ## 26.10.43 – 20.10.2026
 
 ### Changed
