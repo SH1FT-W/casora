@@ -25,6 +25,7 @@ Private Testdateien (gitignored) fehlen in einem frischen Worktree – aus dem H
 | Art | Ort | Wann |
 |---|---|---|
 | Unit (Node, ohne HA) | `dev/unit/<name>.mjs` – Modul per `new Function(src)()` laden, `window` stubben, `assert` | Logik, Texte, Vorlagen-Struktur, Regeln (Vorbild `pulse.mjs`, `badge_haptic.mjs`) |
+| Unit gegen das Testhaus | `dev/unit/lib/testhaus.mjs`: `testhaus()` = Testhaus als `hass`, `loadPanel()` = echtes Studio | Erkennung und Vollständigkeit (`setup_completeness.mjs`, `community_first_use.mjs`); neue Community-Karte → Testgerät in `dev/casora_mock` + `TEST_DEVICES` |
 | Unit (Python) | `dev/unit/<name>_test.py` | Integration, WebSocket-Befehle |
 | Regress (Test-HA, Playwright) | `dev/qa/regress/rNNN_<name>.mjs`, Kopf `// @zustand: frisch|arbeit|stress`, optional `// @deckt: <glob>` | jeder gemeldete Fehler, der nur im Browser sichtbar ist |
 | E2E | `dev/e2e/tNN_*.mjs` | Abläufe (Studio, Assistent) |

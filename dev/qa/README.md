@@ -230,6 +230,25 @@ Das Testhaus (`dev/casora_mock/entity.py`) erbt dafür von den echten Plattform-
 `BinarySensorEntity`, `TrackerEntity`, `UpdateEntity`, `EventEntity` …): Kategorie, Device-Class-Behandlung und
 Registry-Verhalten kommen von HA, nur Zustand und Attribute weiter 1:1 aus der Fixture.
 
+## Testhaus ohne HA: Vollständigkeit und Community-Karten
+
+`dev/casora_mock/haus.py` baut das Testhaus wie die Mock-Integration zusammen (Fixture, falls vorhanden, plus die
+erfundenen Geräte der Module daneben) und gibt es als `hass` aus, wie das Frontend es sieht (Zustände, Entitäten-,
+Geräte- und Bereichsregistry; gegen das laufende Test-HA abgeglichen). Unit-Tests laden es über
+`dev/unit/lib/testhaus.mjs` (`testhaus()`, dazu `loadPanel()` mit dem echten Studio):
+
+- `setup_completeness.mjs`: jede Lampe, jedes Rollo, Thermostat und Schloss mit Bereich steht in den
+  Einrichtungs-Vorschlägen (`casoraAssist.suggest`) und in „Neu beginnen“ im richtigen Raum – oder hat einen Grund
+  aus `REASONS` (ausgeblendet, Konfig-/Diagnose-Entität, ohne Gerät, Teil eines Geräts mit eigener Kachel).
+  Eine neue Ausnahme braucht eine eigene Regel dort, nie einen Namen.
+- `community_first_use.mjs`: jede Community-Karte findet beim Anlegen ihr Testgerät als sicheren Treffer und steht mit
+  ihm in „Was soll aufs Dashboard?“. Neue Community-Karte → erfundenes Testgerät in `dev/casora_mock` und Eintrag in
+  `TEST_DEVICES`, sonst ist der Test rot.
+
+Lampen hinter Hubs (Hue-artige Bridge, Zigbee-Koordinator, Zwei-Kanal-Dimmer mit Kanälen als eigenen Geräten) liegen
+in `dev/casora_mock/hubs.py`, in den Räumen Garage und Garten; `r307_start_fresh_lamps` (frisch) prüft „Neu
+beginnen“ damit im Test-HA.
+
 ## Neuer Fehler gemeldet → neuer Regressionstest
 
 Jeder vom Nutzer gemeldete Fehler bekommt einen kleinen Test in `dev/qa/regress/`, damit er
@@ -322,6 +341,7 @@ Ansicht, `cards(page, vorlage)` liefert sichtbare Karten mit Lage und Text,
 | rf05_handy_ausgeblendet | arbeit | Im Studio ausgeblendete Kachel (enabled: false) blieb auf der Handy-Raumseite sichtbar |
 | rf06_wer_sieht_das | arbeit | „Wer sieht das?“ (Kachel, Badge, Raum) und „Vor dem Schalten fragen“ wirken im Dashboard (Desktop + Handy-Raumseite) |
 | rb11_studio_mehr | arbeit | Studio: Suche (⌘K, Alltagswörter), Änderungsliste am Titel, Wiederholen, Raum ausblenden, Wer sieht das, QR, Zeitreise anheften, Mobil-Vorschau Wiedergabe (F-13) |
+| r307_start_fresh_lamps | frisch | Lampen hinter einer Bridge fehlten in der Einrichtung (1.0.3 bis 26.10.41). „Neu beginnen“ bis vor das Anlegen: jede Lampe mit Bereich (ohne Status-LED, Konfig-Entität, Bauraumlicht) auf einer Kachel und im Beleuchtungs-Badge ihres Raums, Hub-/Dimmer-Lampen in Garage und Garten (nichts gespeichert) |
 | erststart | frisch | Erststart: Willkommen → Assistent (Hemma/YAML gefunden) bzw. Räume, sonst Studio; ⋯-Menü „Einrichtungsassistent …“ |
 
 Hinweise zu einzelnen Tests: Im Zustand **frisch** gibt es kein Casora-Dashboard; das Studio

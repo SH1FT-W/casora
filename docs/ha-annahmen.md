@@ -54,6 +54,7 @@ Plattform-Basisklassen (siehe `dev/casora_mock/entity.py`), und die Annahmen unt
 | Anzeige-Einträge in `hass.entities` tragen `platform` (keine `unique_id`): eine Pflanze von Pflanzenmonitor Plus ist im Browser `sensor.*` mit `platform` `pflanzenmonitor_plus` und `translation_key` `status` | `scripts/local/00-finder.js` `casoraIsPlant` (einzige Definition; `casora-core.js`, Vorlagen und `panel/casora-panel.js` `isPlantEntity` fragen sie) | `dev/unit/plant_plus.mjs` (Attrappe) |
 | Entitäten-Registry (Python): die Pflanze von Pflanzenmonitor Plus hat `platform` `pflanzenmonitor_plus`, Domain `sensor`, `translation_key` `status` (wie im Browser) und `unique_id` „`<Pflanze>-status`“ | `ki.py` `is_plant`, `plant_devices` (auch `raumklima.py`) | `dev/unit/plant_plus_test.py` (Attrappe, Abgleich mit `casoraIsPlant`) |
 | Jinja `integration_entities('pflanzenmonitor_plus')` gibt ohne die Integration eine leere Liste (kein Fehler) | `ki/pflanzen.yaml` `room_lux` | keiner |
+| Status-LEDs sind Lichter mit Kategorie „config“: Reolink `status_led`, UniFi `led_control` | „Neu beginnen“ (`casora-panel-basis.js` `plan()`) lässt sie über die Kategorie weg; die Namensregel `isStatusLed` (ID endet auf `status_led`) fängt nur die ohne | `ForeignKeys.test_status_leds_are_config` |
 
 Nur im Testhaus, kein Test: `async_update_entity(area_id=…)` lehnt seit 2026.10 einen eigenen Bereich für
 Entitäten ohne eigenen Namen ab (`dev/casora_mock/__init__.py` `build_registry`, fängt den `ValueError` ab).

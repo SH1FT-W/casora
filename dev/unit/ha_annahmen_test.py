@@ -389,6 +389,21 @@ class ForeignKeys(unittest.TestCase):
         with open(os.path.join(COMPONENTS, "tractive", "entity.py"), encoding="utf-8") as f:
             self.assertIn("via_device", f.read())
 
+    def test_status_leds_are_config(self):
+        """The status LEDs of cameras and access points are lights with the config category: Reolink status_led,
+        UniFi led_control.
+
+        Casora: panel/casora-panel-basis.js plan() leaves them out by the category (casoraAssist.suggest drops every
+        categorised entity); the name rule isStatusLed only catches those without one. Red: they lost the category -
+        "Start fresh" would put a camera's LED in the room unless its ID ends in status_led."""
+        for platform, key in (("reolink", "status_led"), ("unifi", "led_control")):
+            with open(os.path.join(COMPONENTS, platform, "light.py"), encoding="utf-8") as f:
+                src = f.read()
+            blocks = re.findall(r"translation_key=\"%s\",(.*?)\)" % key, src, re.S)
+            self.assertTrue(blocks, f"{platform} light {key} not found")
+            for b in blocks:
+                self.assertIn("entity_category=EntityCategory.CONFIG", b, f"{platform} {key}")
+
 
 # ── Frontend: how hass.entities is built from the display list ──────────────────────────────────────────────
 class Frontend(unittest.TestCase):
