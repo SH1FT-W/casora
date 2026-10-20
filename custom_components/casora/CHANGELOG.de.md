@@ -4,6 +4,16 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.46 – 20.10.2026
+
+### Behoben
+- **Community ließ sich nicht scrollen:** Am Handy und auf kleineren Bildschirmen war die Community-Seite oben und unten abgeschnitten, Titel, „Kartenwunsch einreichen …“ und „Schließen“ waren nicht erreichbar. Jetzt bleiben Kopf und „Schließen“ stehen, und nur die Liste der Karten scrollt. Auch andere lange Dialoge im Studio passen jetzt auf den Bildschirm.
+- **Community-Karten ohne Rahmen:** Die Einträge der Liste lagen in einem ungewollten Kasten.
+
+### Geändert
+- **Community am Handy:** Im Studio am Handy fehlte der Weg zur Community, außer ganz unten in „Kachel hinzufügen“. Jetzt steht „Community-Karten …“ im ⋯-Menü.
+- **„Als Nächstes“ entfernt:** Die Karte mit drei Schritten in „Inhalt“ gibt es nicht mehr.
+
 ## 26.10.45 – 20.10.2026
 
 ### Behoben

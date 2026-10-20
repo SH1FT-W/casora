@@ -27,8 +27,8 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "OK und Speichern wieder sichtbar", n0: "Am Handy rutschten Popups von Home Assistant (Einstellungen, Reparaturen, Integrationen) nach unten, die Knöpfe unten waren abgeschnitten. Jetzt sitzen sie wieder ganz im Bild.",
-      n1t: "Haustier-Knöpfe zeigen ihren Zustand", n1: "Licht und Ton zeigen sofort, dass sie an sind. Im Energiesparmodus sind die Knöpfe gedimmt, und darunter steht, warum.",
+      n0t: "Community scrollt", n0: "Kopf und „Schließen“ bleiben stehen, nur die Liste der Karten scrollt, auch am Handy und auf kleinen Bildschirmen.",
+      n1t: "Community am Handy im ⋯-Menü", n1: "Im Studio am Handy findest du die Community-Karten jetzt im ⋯-Menü oben rechts.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -38,8 +38,8 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "OK and Save visible again", n0: "On phones, Home Assistant's own popups (settings, repairs, integrations) slid down and the buttons at the bottom were cut off. Now they fit on the screen again.",
-      n1t: "Pet buttons show their state", n1: "Light and Sound show right away that they are on. In power saving mode the buttons are dimmed, with a line saying why.",
+      n0t: "Community scrolls", n0: "The head and “Close” stay in place and only the list of cards scrolls, on phones and small screens too.",
+      n1t: "Community in the ⋯ menu on phones", n1: "In the Studio on a phone, the community cards are now in the ⋯ menu at the top right.",
     },
   };
 
@@ -52,8 +52,8 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:gesture-tap-button", "n0t", "n0"],
-    ["mdi:dog-side", "n1t", "n1"],
+    ["mdi:gesture-swipe-vertical", "n0t", "n0"],
+    ["mdi:account-group-outline", "n1t", "n1"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

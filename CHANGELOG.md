@@ -4,6 +4,16 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.46 – 20.10.2026
+
+### Fixed
+- **Community could not be scrolled:** On phones and smaller screens the Community page was cut off at the top and bottom, so the title, "Request a card…" and "Close" were out of reach. Now the head and "Close" stay in place and only the list of cards scrolls. Other long dialogs in the Studio fit on the screen now too.
+- **Community cards without a frame:** The entries of the list sat in an unintended box.
+
+### Changed
+- **Community on the phone:** In the Studio on a phone there was no way to the Community except at the very bottom of "Add tile". Now "Community cards…" is in the ⋯ menu.
+- **"Next steps" removed:** The card with three steps in "Content" is gone.
+
 ## 26.10.45 – 20.10.2026
 
 ### Fixed

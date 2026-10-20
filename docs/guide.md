@@ -146,7 +146,7 @@ Casora replaces Hemma. Once your dashboards have moved, Hemma is no longer neede
 
 ## Community cards
 
-Cards for devices that not every home has ship with Casora but stay out of **Add tile** until you add them. In the Studio, open **Community** in the header.
+Cards for devices that not every home has ship with Casora but stay out of **Add tile** until you add them. In the Studio, open **Community** in the header; on a phone it is in the **⋯** menu.
 
 - **Add a card.** Every card has a preview of its tile and popup; tap it to see both large. Once added, the card appears in **Add tile** for all your dashboards. Removing a card asks whether tiles that use it stay or go.
 - **Request a card.** Choose **Request a card…**, describe the device and what the tile and popup should show, and pick a few example entities. Casora prepares a GitHub issue with the kind of device, units, device classes and attribute names, but without entity names, rooms or places, and shows you the exact text first. You submit it on GitHub yourself. **Your requests** shows where each one stands: Open, Question (with the answer), In progress, Built or Declined.
