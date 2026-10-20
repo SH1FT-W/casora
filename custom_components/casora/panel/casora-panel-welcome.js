@@ -27,10 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Haustiere heißen wie das Tier", n0: "Tractive-Tracker stehen im Studio jetzt mit dem Namen deines Tiers, und die Suche im Feld „Tier“ findet sie.",
-      n1t: "Mithören an der Klingel bleibt an", n1: "Ein kurzer Neuaufbau des Streams schaltet „Mithören“ nicht mehr ab, und erneutes Mithören kommt wieder mit Ton.",
-      n2t: "Haustier-Kachel für Tractive", n2: "Neue Community-Karte: wo dein Tier ist, Akku, Live-Tracking, Ton und Licht, dazu Aktivität, Schlaf und die Orte der letzten Tage.",
-      n3t: "Tag- und Nachtfoto getrennt hochladen", n3: "„Eigenes hochladen“ beim Raumfoto fragt jetzt zuerst „Tag“ oder „Nacht“ – ein Nachtfoto ersetzt nicht mehr das Tagfoto.",
+      n0t: "Haustier-Kachel findet deine Tracker", n0: "Seit Home Assistant 2026.10 sind Tracker als Diagnose markiert. Casora bietet sie trotzdem wieder an: im Feld „Tier“, beim Anlegen der Kachel und mit dem Namen deines Tiers.",
+      n1t: "Abfall mit Kalender und kurzen Namen", n1: "Das Abfall-Popup zeigt den Monatskalender jetzt von Anfang an. Tonnen von Waste Collection Schedule heißen ohne den Ort davor, und die Kachel zählt die Tage.",
+      n2t: "„Beleuchtung“ auf Zuhause", n2: "Das Licht-Popup der Haus-Kachel heißt jetzt „Beleuchtung“ statt wie der Raum der ersten Leuchte, auch in bestehenden Dashboards.",
+      n3t: "Mithören an der Klingel bleibt an", n3: "Ein kurzer Neuaufbau des Streams schaltet „Mithören“ nicht mehr ab, und erneutes Mithören kommt wieder mit Ton.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Pets go by their names", n0: "Tractive trackers now show your pet's name in the Studio, and searching the Pet field finds them.",
-      n1t: "Doorbell listening stays on", n1: "A short reconnect of the stream no longer turns Listen off, and listening again comes back with sound.",
-      n2t: "Pet tracker card for Tractive", n2: "New Community card: where your pet is, battery, live tracking, sound and light, plus activity, sleep and the places of the last days.",
-      n3t: "Day and night photos upload separately", n3: "“Upload your own” for a room photo now asks “Day” or “Night” first – a night photo no longer replaces the day photo.",
+      n0t: "Pet card finds your trackers", n0: "Since Home Assistant 2026.10, trackers are marked as diagnostic. Casora offers them again: in the Pet field, when adding the card and with your pet's name.",
+      n1t: "Waste with calendar and short names", n1: "The waste popup now shows the month calendar right away. Waste Collection Schedule bins drop the place name, and the tile counts the days.",
+      n2t: "“Lighting” on Home", n2: "The light popup of the home tile is now called “Lighting” instead of the room of the first light, in existing dashboards too.",
+      n3t: "Doorbell listening stays on", n3: "A short reconnect of the stream no longer turns Listen off, and listening again comes back with sound.",
     },
   };
 
@@ -57,9 +57,9 @@
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
     ["mdi:dog-side", "n0t", "n0"],
-    ["mdi:doorbell-video", "n1t", "n1"],
-    ["mdi:paw", "n2t", "n2"],
-    ["mdi:image-multiple", "n3t", "n3"],
+    ["mdi:trash-can-outline", "n1t", "n1"],
+    ["mdi:lightbulb-group", "n2t", "n2"],
+    ["mdi:doorbell-video", "n3t", "n3"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.
