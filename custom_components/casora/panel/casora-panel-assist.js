@@ -412,6 +412,7 @@
       const go = this._flowButton(s.acts, "Add", () => {
         const byName = new Map(rooms.map((r) => [r.name, r]));
         const touched = new Map();
+        const lamps = [];
         let n = 0;
         all.forEach((it) => {
           const p = picks.get(it.id);
@@ -425,6 +426,7 @@
           if (!touched.has(room)) touched.set(room, new Set());
           const cat = BADGE_OF_TYPE[type.id];
           if (cat) touched.get(room).add(cat);
+          if (type.id === "light") lamps.push([room, it.entity]);
         });
         // Badges im Raum: passend zu den neuen Geräten (Licht → Beleuchtung …) aus seinem
         // HA-Bereich ergänzen; ein Raum ganz ohne Badges bekommt alle, die passen. Was schon
@@ -439,6 +441,8 @@
           });
           try { B.fillBadges(this._hass, targets); } catch (e) { /* ohne Badges weiter */ }
         }
+        // A lamp that came later also goes on a Lights badge that is already filled (fillBadges leaves those alone).
+        if (B && B.addLight) lamps.forEach(([room, eid]) => { try { B.addLight(this._hass, rooms, room, eid); } catch (e) { /* tile stays */ } });
         this._exitFlow(true);
         this._markDirty();
         this._renderTabs();

@@ -880,6 +880,8 @@
       room.tiles = room.tiles || [];
       if (this.classList.contains("phone")) this._bAfterAdd = { room, n: room.tiles.length };
       room.tiles.push(tile);
+      // A lamp added later also goes on the Lights badge (casora-panel-basis.js addLight).
+      if (c.type === "light" && B && B.addLight) B.addLight(this._hass, rooms, room, c.entity);
       this._markDirty();
       this._renderForm();
       this._rebuildPreview && requestAnimationFrame(() => this._rebuildPreview());

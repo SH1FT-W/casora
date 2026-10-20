@@ -719,6 +719,35 @@
     return roomPowerIds(varsList).filter((id) => !houseMeter(hass, id));
   }
 
+  // A light that comes to a room later (Device Assistant, "What should go on the dashboard?") also goes on the Lights
+  // badge, where "Start fresh" would have put it (badgesOf). Before, the badge kept the lights of the setup and a new
+  // lamp never showed (19.10.2026). Only lists (light_entity_1…10) grow: a badge switched off (show_lights false), one
+  // that follows an HA light group, a full list, or a light already counted (also inside a listed group) stays as it
+  // is; light groups themselves are not added. The overview's house badge grows only when it lists lights already.
+  // Returns the rooms changed.
+  const LIGHT_KEYS = Array.from({ length: 10 }, (_, i) => "light_entity_" + (i + 1));
+  function addLight(hass, rooms, room, eid) {
+    const out = [];
+    if (!hass || !/^light\./.test(String(eid || "")) || membersOf(hass, eid).length) return out;
+    const list = rooms || [];
+    const home = list.find((r) => I() && I().isHomeRoom && I().isHomeRoom(r, list)) || list[0];
+    const put = (r, create) => {
+      if (!r) return;
+      const V = r.variables = r.variables || {};
+      if (V.show_lights === false) return;
+      const listed = LIGHT_KEYS.map((k) => V[k]).filter(Boolean);
+      if (!listed.length && (V.light_group_entity || !create)) return;
+      if (listed.some((id) => id === eid || deepMembers(hass, id).includes(eid))) return;
+      const free = LIGHT_KEYS.find((k) => !V[k]);
+      if (!free) return;
+      V[free] = eid;
+      out.push(r);
+    };
+    if (room && room !== home) put(room, true);
+    put(home, false);
+    return out;
+  }
+
   // 06.10.2026: power sensors of a room as the automatic picks them, for the Studio (extend the
   // list, the note about further sensors in the room). whole: sensor for the whole room; list:
   // devices; old: what Casora would have entered up to 1.0.11; any: all power sensors in the
@@ -733,7 +762,7 @@
       any: (room.powersAny || []).slice() };
   }
 
-  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo };
+  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo, addLight };
 
   // KI kostet: Casora schätzt vor dem ersten Einsatz grob, was es über den API-Schlüssel
   // kostet (Zeichen → Token, Listenpreise je Modellfamilie in USD pro 1 Mio. Token) und fragt nach.
