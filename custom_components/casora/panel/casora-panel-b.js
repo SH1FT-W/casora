@@ -191,6 +191,9 @@
     :host(.bmode) #pane #band-tiles .tile > .thead .count { display:none; }
     :host(.bmode) #pane #band-badges .card > .chead .count {
       grid-column:2; grid-row:2; justify-self:start; text-align:left; max-width:100%; opacity:1; transform:none; margin-top:1px; }
+    /* Two lines (count below the title): icon, switch and arrow centered across both, as in the room list. */
+    :host(.bmode) #pane #band-badges .card > .chead:has(> .count:not(:empty)) { row-gap:0; }
+    :host(.bmode) #pane #band-badges .card > .chead:has(> .count:not(:empty)) :is(.sicon, .plus, .sw, .fold) { grid-row:1 / 3; }
     /* Sortieren geht über die Griffe (Liste) und in der Vorschau, Löschen im Editor der Kachel:
        der eigene Bearbeiten-Modus entfällt. */
     :host(.bmode) .tilebar .editbtn, :host(.bmode) .badgebar .badgeedit { display:none !important; }
