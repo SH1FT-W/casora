@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.49 – 21.10.2026
+
+### Behoben
+- **Warnungen-Popup wirkte wie ein Popup im Popup:** Die Warnung stand als schmale Karte mittig im breiten Popup, rundherum blieb viel Fläche leer. Jetzt nutzt sie die ganze Breite, und mehrere Warnungen stehen auf großen Bildschirmen nebeneinander statt untereinander.
+
 ## 26.10.48 – 21.10.2026
 
 ### Behoben

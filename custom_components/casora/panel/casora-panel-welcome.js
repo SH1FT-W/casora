@@ -27,8 +27,7 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Thermostat klarer", n0: "Am Ziel steht jetzt „22,2° · Ziel 22°“ statt „An“, beim Heizen „Heizt auf 22°“, und am Handy bleibt „Heizt“ sichtbar.",
-      n1t: "Saugroboter von Dreame", n1: "Tank- und Stationshinweise, Räder, Auslassfilter und Tank im Roboter mit Reset-Taste und ein Hinweis unter dem Fehler.",
+      n0t: "Warnungen übersichtlicher", n0: "Das Warnungen-Popup nutzt jetzt die ganze Breite, mehrere Warnungen stehen nebeneinander.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -38,8 +37,7 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Clearer thermostat", n0: "At the target the tile now reads “22.2° · Target 22°” instead of “On”, while heating “Heating to 22°”, and the phone keeps “Heating” visible.",
-      n1t: "Dreame robot vacuums", n1: "Tank and station warnings, wheels, outlet filter and onboard tank with their reset buttons, and a hint under the error.",
+      n0t: "Clearer warnings", n0: "The warnings popup now uses the full width, and several warnings sit side by side.",
     },
   };
 
@@ -52,8 +50,7 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:thermostat", "n0t", "n0"],
-    ["mdi:robot-vacuum", "n1t", "n1"],
+    ["mdi:alert-outline", "n0t", "n0"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

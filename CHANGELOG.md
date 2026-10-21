@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.49 – 21.10.2026
+
+### Fixed
+- **Warnings popup looked like a popup inside a popup:** The warning sat as a narrow card in the middle of the wide popup, with a lot of empty space around it. It now uses the full width, and on large screens several warnings sit side by side instead of stacked.
+
 ## 26.10.48 – 21.10.2026
 
 ### Fixed
