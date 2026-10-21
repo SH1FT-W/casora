@@ -659,12 +659,17 @@
         const input = document.createElement("input");
         input.value = typeof tile.variables.popup_extra_title === "string" ? tile.variables.popup_extra_title : "";
         input.placeholder = "No heading";
-        input.onchange = () => {
+        // Taken while typing (issue #32), not only on leaving the field: until then the preview had no
+        // heading, and a redraw of the form dropped what was typed.
+        const put = () => {
           const v = input.value.trim();
           if (v) tile.variables.popup_extra_title = v;
           else delete tile.variables.popup_extra_title;
           this._syncPreview();
         };
+        let wait = 0;
+        input.oninput = () => { clearTimeout(wait); wait = setTimeout(put, 300); };
+        input.onchange = () => { clearTimeout(wait); put(); };
         advRow("Heading above your cards", input);
       }
     };

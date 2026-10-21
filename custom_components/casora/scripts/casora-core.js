@@ -6030,6 +6030,9 @@ window.casoraMenuGlass = {
     }
     .extra[hidden] { display: none; }
     .extra-title {
+      /* Above the cards: one that pulls itself up (negative margin) must not cover it (issue #32). */
+      position: relative;
+      z-index: 1;
       padding: 0 4px;
       margin-bottom: -4px;
       font-family: var(--primary-font-family, system-ui);
