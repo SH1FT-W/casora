@@ -235,8 +235,10 @@
     return true;
   };
 
-  // Gerät mit eigener Kachel: deren Casora-Popup (ohne zu schalten), sonst Geräteseite.
-  Z.openDeviceTile = function (id) {
+  // Device with its own tile: its Casora popup (without switching), otherwise the device page.
+  // fromRow: tapped in an open popup - no search for the visible tile, it would find the group tile
+  // listing this device and reopen the same popup (lock group, #37); its own card still wins.
+  Z.openDeviceTile = function (id, fromRow) {
     var open = window._casoraNotifyOpenViaCard;
     var back = backTo();
     if (!open) return Z.openDevice(id, back);
@@ -247,7 +249,7 @@
       if (ok) return;
       window._casoraBackNext = null;
       if (!Z.openDevice(id, back) && window.casoraPopup) window.casoraPopup.nativeMoreInfo(id);
-    });
+    }, null, !!fromRow);
     return true;
   };
 
@@ -286,8 +288,12 @@
     if (MEAS.test(dom) || catOf(h, id)) return Z.openMeasure(id);
     // A device whose popup is already open: not the same popup again but its device page
     // (settings row in the air purifier, lock row …); only the marker on the person card does nothing.
-    if (DEVICE.test(dom) && window.casoraPopup && window.casoraPopup.entity === id) return dom === 'person' ? true : Z.openDevice(id);
-    if (DEVICE.test(dom)) return Z.openDeviceTile(id);
+    // A group tile naming this device only as its first member is the group's popup, not the device's (#37).
+    var P = window.casoraPopup, src = P && P.element && P.element._src;
+    var ownOpen = P && P.entity === id
+      && !(src && src._config && window._casoraStandsForGroup && window._casoraStandsForGroup(src._config, id));
+    if (DEVICE.test(dom) && ownOpen) return dom === 'person' ? true : Z.openDevice(id);
+    if (DEVICE.test(dom)) return Z.openDeviceTile(id, !!el);
     if (devOf(h, id)) return Z.openDevice(id);
     return false;
   };
