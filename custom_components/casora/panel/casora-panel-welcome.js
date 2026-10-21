@@ -27,8 +27,10 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Jalousie ohne toten Pfeil", n0: "Die Detailansicht einer Jalousie zeigt nicht mehr sich selbst mit einem Pfeil, der nirgends hinführt.",
-      n1t: "Jede Leuchte öffnet sich", n1: "Im Beleuchtung-Popup öffnet jetzt auch die erste Leuchte ihre Detailansicht statt wieder der Liste.",
+      n0t: "Antippen führt ans Ziel", n0: "Jalousien, Leuchten und Schlösser öffnen aus jeder Liste ihre Detailansicht – kein toter Pfeil, kein Sprung zurück in die Liste.",
+      n1t: "Türen & Fenster", n1: "Ein einzelnes Fenster öffnet seine eigene Seite, und auf Zuhause zählen alle Türen und Fenster mit.",
+      n2t: "Warnungen in Stufenfarbe", n2: "Die Glocke zeigt Wetterwarnungen in der Farbe der Kachel – gelb, orange, rot oder lila.",
+      n3t: "Versteckte Kalender bleiben weg", n3: "Was in Home Assistant versteckt ist, zeigt auch die Kalender-Kachel nicht.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -38,8 +40,10 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Cover without a dead arrow", n0: "The detail view of a cover no longer lists itself with an arrow that leads nowhere.",
-      n1t: "Every light opens", n1: "In the lighting popup the first light now opens its detail view too instead of the list again.",
+      n0t: "Taps get you there", n0: "Covers, lights and locks open their detail view from every list – no dead arrow, no jump back to the list.",
+      n1t: "Doors & windows", n1: "A single window opens its own page, and Home counts every door and window.",
+      n2t: "Warnings in level colours", n2: "The bell shows weather warnings in the tile's colour – yellow, orange, red or purple.",
+      n3t: "Hidden calendars stay hidden", n3: "What is hidden in Home Assistant, the calendar tile does not show either.",
     },
   };
 
@@ -52,8 +56,10 @@
 
   /** After an update: the news of this version - replace on every release. */
   const WHATS_NEW = [
-    ["mdi:window-shutter", "n0t", "n0"],
-    ["mdi:lightbulb-outline", "n1t", "n1"],
+    ["mdi:gesture-tap", "n0t", "n0"],
+    ["mdi:window-closed-variant", "n1t", "n1"],
+    ["mdi:weather-windy", "n2t", "n2"],
+    ["mdi:calendar-remove", "n3t", "n3"],
   ];
 
   // Decide on load - before the Studio writes its own casora.* keys.

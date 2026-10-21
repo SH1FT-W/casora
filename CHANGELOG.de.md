@@ -9,6 +9,14 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 ### Behoben
 - **Jalousie: Pfeil ohne Funktion in der Detailansicht (#35):** Tippte man im Jalousien-Popup eine einzelne Jalousie an, stand rechts noch einmal genau diese Jalousie mit „›“, und Antippen öffnete nur dasselbe Popup. Jetzt zeigt die Detailansicht Position und Voreinstellungen ohne diese Zeile; ist eine Beschattungsautomatik eingerichtet, steht rechts die Automatik. Das gilt auch für Kacheln mit nur einer Jalousie.
 - **Beleuchtung: erste Leuchte und Leuchten mit Raum-Kachel öffneten ihre Detailansicht nicht (#37):** Ohne Lichtgruppe in Home Assistant öffnete die erste Leuchte der Liste wieder dasselbe Popup, und eine Leuchte aus einem Raum mit mehreren Leuchten öffnete die Liste dieses Raums statt ihrer Detailansicht. Jetzt öffnet jede Leuchte ihre eigene Detailansicht. Das gilt ebenso für Jalousie- und Schloss-Gruppen.
+- **Beleuchtung: Leuchte ohne eigene Kachel öffnete das Raum-Popup ihres Badges (#37):** Jetzt öffnet sie ihre Detailansicht. Im Popup genau einer Leuchte öffnet die eigene Zeile nicht noch einmal dasselbe Popup.
+- **Schloss-Gruppe: Schloss-Zeile öffnete wieder die Gruppe:** Jede Zeile öffnet jetzt ihr Schloss.
+- **Leuchtengruppe mit eigener Tippaktion öffnete die Geräteseite:** Hat eine Kachel eine eigene Tippaktion (z. B. „Mehr-Infos“), öffnet die Zeile in einer Liste trotzdem das Licht-Popup und nicht die Geräteseite ohne Steuerung.
+- **Kalender-Kachel zeigte versteckte Kalender (#38):** Ohne eigene Auswahl im Studio bleiben Kalender, die in Home Assistant versteckt sind, draußen – wie im Kalender von Home Assistant.
+- **Sicherheit: Fenster oder Tür öffnete alle Türen und Fenster (#39):** Ein einzelnes Fenster und eine einzelne Tür öffnen ihre eigene Seite, auch aus der Glocke. Ein Badge für die Türen oder Fenster eines Raums zeigt nur diese, über die volle Breite und mit dem Titel „Fenster“ bzw. „Türen“.
+- **Sicherheit auf Zuhause ohne Türen und Fenster (#39):** Das Badge auf Zuhause zählt jetzt alle Türen und Fenster im Haus mit.
+- **Wetterwarnung in der Glocke immer rot:** Die Glocke zeigt Warnungen in der Farbe der Kachel je Stufe (gelb, orange, rot, lila). Die Kachel erkennt eine extreme Warnung jetzt auch als solche.
+- **Studio: Karussell-Seite verlor Kachelart und Popup:** Eine Seite für ein Gerät, das im Raum schon eine Kachel hat, übernimmt diese Kachel (z. B. Fußbodenheizung mit Temperaturverlauf).
 
 ## 26.10.49 – 21.10.2026
 

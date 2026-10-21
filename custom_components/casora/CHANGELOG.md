@@ -9,6 +9,14 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 ### Fixed
 - **Cover: arrow without function in the detail view (#35):** Tapping a single cover in the covers popup showed that same cover again on the right with a "›", and tapping it only reopened the same popup. The detail view now shows position and presets without that row; with a shading automation set up, the automation sits on the right. This also applies to tiles with a single cover.
 - **Lights: first light and lights with a room tile did not open their detail view (#37):** Without a light group in Home Assistant, the first light in the list reopened the same popup, and a light from a room with several lights opened that room's list instead of its detail view. Every light now opens its own detail view. The same applies to cover and lock groups.
+- **Lights: a light without a tile of its own opened its badge's room popup (#37):** It now opens its detail view. In the popup of a single light, its own row no longer reopens the same popup.
+- **Lock group: a lock row reopened the group:** Every row now opens its lock.
+- **Light group with its own tap action opened the device page:** If a tile has a tap action of its own (e.g. "more info"), its row in a list still opens the light popup instead of the device page without controls.
+- **Calendar tile showed hidden calendars (#38):** Without calendars chosen in the Studio, calendars hidden in Home Assistant stay out – as in Home Assistant's own calendar.
+- **Security: a window or door opened all doors and windows (#39):** A single window or door opens its own page, also from the bell. A badge for a room's doors or windows shows only those, across the full width and titled "Windows" or "Doors".
+- **Security on Home without doors and windows (#39):** The badge on Home now counts every door and window in the house.
+- **Weather warning always red in the bell:** The bell shows warnings in the tile's colour per level (yellow, orange, red, purple). The tile now also recognises an extreme warning as such.
+- **Studio: carousel page lost its tile type and popup:** A page for a device that already has a tile in the room takes over that tile (e.g. underfloor heating with its temperature history).
 
 ## 26.10.49 – 21.10.2026
 
