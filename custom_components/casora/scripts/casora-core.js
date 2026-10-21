@@ -7893,6 +7893,12 @@ window.casoraMenuGlass = {
   window.casoraPopup = {
     // src (optional): auslösende Kachel für den Weich-Ring, auch wenn das Popup-Element erst jetzt entsteht.
     open: function (data) {
+      // route: the popup stands for one device (a single door/window badge, #39) - that device's own page
+      // instead of the list; without a page of its own the popup as before.
+      if (data && typeof data.route === 'string' && data.route && typeof window.casoraRoute === 'function') {
+        try { if (window.casoraRoute(data.route)) return; } catch (e) { /* popup */ }
+      }
+      if (data && data.route !== undefined) { data = Object.assign({}, data); delete data.route; }
       var el = instance();
       if (data && data.src) { el._src = data.src; data = Object.assign({}, data); delete data.src; }
       // 1.5: Entität der Kachel, deren Popup offen ist (nur beim Öffnen über die Kachel gesetzt).
