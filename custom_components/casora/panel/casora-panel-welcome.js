@@ -28,6 +28,7 @@
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
       n0t: "Jalousie ohne toten Pfeil", n0: "Die Detailansicht einer Jalousie zeigt nicht mehr sich selbst mit einem Pfeil, der nirgends hinführt.",
+      n1t: "Jede Leuchte öffnet sich", n1: "Im Beleuchtung-Popup öffnet jetzt auch die erste Leuchte ihre Detailansicht statt wieder der Liste.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -38,6 +39,7 @@
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
       n0t: "Cover without a dead arrow", n0: "The detail view of a cover no longer lists itself with an arrow that leads nowhere.",
+      n1t: "Every light opens", n1: "In the lighting popup the first light now opens its detail view too instead of the list again.",
     },
   };
 
@@ -51,6 +53,7 @@
   /** After an update: the news of this version - replace on every release. */
   const WHATS_NEW = [
     ["mdi:window-shutter", "n0t", "n0"],
+    ["mdi:lightbulb-outline", "n1t", "n1"],
   ];
 
   // Decide on load - before the Studio writes its own casora.* keys.

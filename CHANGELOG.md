@@ -8,6 +8,7 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ### Fixed
 - **Cover: arrow without function in the detail view (#35):** Tapping a single cover in the covers popup showed that same cover again on the right with a "›", and tapping it only reopened the same popup. The detail view now shows position and presets without that row; with a shading automation set up, the automation sits on the right. This also applies to tiles with a single cover.
+- **Lights: first light and lights with a room tile did not open their detail view (#37):** Without a light group in Home Assistant, the first light in the list reopened the same popup, and a light from a room with several lights opened that room's list instead of its detail view. Every light now opens its own detail view. The same applies to cover and lock groups.
 
 ## 26.10.49 – 21.10.2026
 

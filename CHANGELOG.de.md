@@ -8,6 +8,7 @@ Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
 ### Behoben
 - **Jalousie: Pfeil ohne Funktion in der Detailansicht (#35):** Tippte man im Jalousien-Popup eine einzelne Jalousie an, stand rechts noch einmal genau diese Jalousie mit „›“, und Antippen öffnete nur dasselbe Popup. Jetzt zeigt die Detailansicht Position und Voreinstellungen ohne diese Zeile; ist eine Beschattungsautomatik eingerichtet, steht rechts die Automatik. Das gilt auch für Kacheln mit nur einer Jalousie.
+- **Beleuchtung: erste Leuchte und Leuchten mit Raum-Kachel öffneten ihre Detailansicht nicht (#37):** Ohne Lichtgruppe in Home Assistant öffnete die erste Leuchte der Liste wieder dasselbe Popup, und eine Leuchte aus einem Raum mit mehreren Leuchten öffnete die Liste dieses Raums statt ihrer Detailansicht. Jetzt öffnet jede Leuchte ihre eigene Detailansicht. Das gilt ebenso für Jalousie- und Schloss-Gruppen.
 
 ## 26.10.49 – 21.10.2026
 
