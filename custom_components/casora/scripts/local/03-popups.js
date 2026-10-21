@@ -3594,7 +3594,8 @@
     }
     var right = '<div class="lps-lbl">' + esc(tr(sc.house ? 'Leuchten' : 'Leuchten im Raum')) + '</div><div class="lps-rows">'
       + (sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids).map(function (id) {
-        return lampRow(id, states, room, sc.lights.length === 1 && id === sc.lights[0]);
+        // Own row only in the popup of this one lamp - a room picked in the house popup is not its popup.
+        return lampRow(id, states, room, !cfg.rooms && sc.lights.length === 1 && id === sc.lights[0]);
       }).join('') + '</div>';
     return '<div class="lps-cols' + (left ? '' : ' one') + '">' + (left ? '<div>' + left + '</div>' : '') + '<div>' + right + '</div></div>';
   };
