@@ -3458,7 +3458,8 @@
 
   var glyph = function (n) { return '<span class="lps-g" style="--lps-ic:url(\'' + icon(n) + '\')"></span>'; };
 
-  var lampRow = function (id, states, roomName) {
+  // self: the lamp whose popup this is - its row still switches but does not open the same popup again.
+  var lampRow = function (id, states, roomName, self) {
     var st = states[id];
     var on = st && st.state === 'on';
     var na = !st || st.state === 'unavailable' || st.state === 'unknown';
@@ -3470,7 +3471,7 @@
         + ((!st.attributes.color_mode || st.attributes.color_mode === 'color_temp') && k ? ' · ' + Math.round(k / 50) * 50 + ' K' : '');
     } else sub = tr('Aus') + (st.last_changed ? ' · ' + tr('zuletzt') + ' ' + ago(st.last_changed) : '');
     var tg = attr({ a: 'toggle', id: id });
-    return '<div class="lps-row' + (on ? ' on' : '') + (na ? ' na' : '') + '" data-lps-tap="' + attr({ a: 'mi', id: id }) + '">'
+    return '<div class="lps-row' + (on ? ' on' : '') + (na ? ' na' : '') + '"' + (self ? '' : ' data-lps-tap="' + attr({ a: 'mi', id: id }) + '"') + '>'
       + '<div class="lps-ic" data-lps-tap="' + tg + '">' + glyph('light') + '</div>'
       + '<div class="lps-tx"><b>' + esc(short(nameOf(id, states), roomName)) + '</b><small>' + esc(sub) + '</small></div>'
       + '<div class="lps-sw" role="switch" aria-checked="' + (on ? 'true' : 'false') + '" data-lps-tap="' + tg + '"></div>'
@@ -3592,7 +3593,9 @@
       }).join('') + '</div>';
     }
     var right = '<div class="lps-lbl">' + esc(tr(sc.house ? 'Leuchten' : 'Leuchten im Raum')) + '</div><div class="lps-rows">'
-      + (sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids).map(function (id) { return lampRow(id, states, room); }).join('') + '</div>';
+      + (sc.room ? sc.room.filter(function (id) { return states[id]; }) : ids).map(function (id) {
+        return lampRow(id, states, room, !!sc.room && sc.lights.length === 1 && id === sc.lights[0]);
+      }).join('') + '</div>';
     return '<div class="lps-cols' + (left ? '' : ' one') + '">' + (left ? '<div>' + left + '</div>' : '') + '<div>' + right + '</div></div>';
   };
   var word = function (v) { return v <= 0 ? tr('Aus') : v >= 100 ? tr('Volle Helligkeit') : tr('Gedimmt'); };
