@@ -4,6 +4,15 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.48 – 21.10.2026
+
+### Fixed
+- **Thermostat tile said "On" between two numbers:** At the target the tile read "22.2° · On · 22°", and nobody could tell which number was which. It now reads "22.2° · Target 22°", and while heating "22.2° · Heating to 22°". On narrow tiles such as the phone it shortens to "22.2° · Heating" instead of "22.2° +1", so the word stays visible. With a target range it heats to the lower and cools to the upper bound. Both popups now use the same words, and the tile popup no longer shows the raw mode ("cool") for cooling, auto, dry or fan only.
+- **Robot vacuum: tank and station warnings for Dreame (#33):** Low or missing clean water, a full or missing dirty water tank, a missing dust bag and low detergent now show in the popup, as they do for Roborock.
+- **Robot vacuum: more maintenance items for Dreame (#33):** Wheels, water outlet filter and the onboard dirty water tank, each with its reset button. Parts the robot counts in days show "3 days left" instead of hours.
+- **Robot vacuum: hint under the error (#33):** Under the reason the popup also shows the integration's hint, for example Dreame's "The robot may be trapped or stuck".
+- **Robot vacuum status words:** Room and zone cleaning, edge cleaning, mapping and remote control now have their own labels for Dreame, and a vacuum returning to its dock reads "Returning" instead of the raw word.
+
 ## 26.10.47 – 21.10.2026
 
 ### Fixed

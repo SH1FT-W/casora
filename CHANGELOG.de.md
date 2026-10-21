@@ -4,6 +4,15 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.48 – 21.10.2026
+
+### Behoben
+- **Thermostat-Kachel zeigte „An“ zwischen zwei Zahlen:** Am Ziel stand „22,2° · An · 22°“, und welche Zahl was ist, war nicht zu erkennen. Jetzt steht dort „22,2° · Ziel 22°“, beim Heizen „22,2° · Heizt auf 22°“. Auf schmalen Kacheln wie am Handy wird daraus „22,2° · Heizt“ statt „22,2° +1“, das Wort bleibt also sichtbar. Mit einem Zielbereich heizt sie auf die untere und kühlt auf die obere Grenze. Beide Popups sagen jetzt dasselbe, und das Kachel-Popup zeigt bei Kühlen, Automatik, Entfeuchten und Nur Lüfter nicht mehr den rohen Modus („cool“).
+- **Saugroboter: Tank- und Stationshinweise bei Dreame (#33):** Wenig oder kein Frischwasser, ein voller oder fehlender Schmutzwassertank, ein fehlender Staubbeutel und wenig Reinigungsmittel erscheinen jetzt im Popup, wie bei Roborock.
+- **Saugroboter: weitere Verschleißteile bei Dreame (#33):** Räder, Wasserauslassfilter und der Schmutzwassertank im Roboter, jeweils mit Reset-Taste. Teile, die der Roboter in Tagen zählt, zeigen „noch 3 Tage“ statt Stunden.
+- **Saugroboter: Hinweis unter dem Fehler (#33):** Unter dem Grund zeigt das Popup auch den Hinweis der Integration, bei Dreame zum Beispiel „Möglicherweise ist der Roboter blockiert oder steckt fest.“
+- **Saugroboter-Zustände:** Raum- und Zonenreinigung, Kantenreinigung, Kartierung und Fernsteuerung haben bei Dreame eigene Bezeichnungen, und ein Roboter auf dem Rückweg zum Dock zeigt „Kehrt zurück“ statt des rohen Worts.
+
 ## 26.10.47 – 21.10.2026
 
 ### Behoben

@@ -27,10 +27,8 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Kalender-Kachel", n0: "Unter „Kachel hinzufügen“ steht jetzt „Kalender“. Welche Kalender sie zeigt, stellst du unter Einstellungen → Kalender ein.",
-      n1t: "Badges am Handy wie am Desktop", n1: "Ausgeblendete Badges und „Wer sieht das?“ gelten jetzt auch auf der Startseite am Handy.",
-      n2t: "Vorschau bei Tag und Nacht", n2: "Der Schalter über der Vorschau wechselt jetzt alles zwischen hell und dunkel, und der Player sieht aus wie im Dashboard.",
-      n3t: "Thermostat mit Raumtemperatur", n3: "Mit Temperatursensor zeigt die Kachel die Raumtemperatur vorn, etwa „21,3° · Heizt auf 24,5°“.",
+      n0t: "Thermostat klarer", n0: "Am Ziel steht jetzt „22,2° · Ziel 22°“ statt „An“, beim Heizen „Heizt auf 22°“, und am Handy bleibt „Heizt“ sichtbar.",
+      n1t: "Saugroboter von Dreame", n1: "Tank- und Stationshinweise, Räder, Auslassfilter und Tank im Roboter mit Reset-Taste und ein Hinweis unter dem Fehler.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -40,10 +38,8 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Calendar tile", n0: "“Calendar” is now in “Add tile”. Which calendars it shows is set under Settings → Calendar.",
-      n1t: "Phone badges like the desktop", n1: "Hidden badges and “Who sees this?” now apply on the phone’s start page too.",
-      n2t: "Preview by day and night", n2: "The switch above the preview now turns everything light or dark, and the player looks as it does on the dashboard.",
-      n3t: "Thermostat with room temperature", n3: "With a temperature sensor the tile shows the room temperature first, like “21.3° · Heating to 24.5°”.",
+      n0t: "Clearer thermostat", n0: "At the target the tile now reads “22.2° · Target 22°” instead of “On”, while heating “Heating to 22°”, and the phone keeps “Heating” visible.",
+      n1t: "Dreame robot vacuums", n1: "Tank and station warnings, wheels, outlet filter and onboard tank with their reset buttons, and a hint under the error.",
     },
   };
 
@@ -56,10 +52,8 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:calendar-month-outline", "n0t", "n0"],
-    ["mdi:cellphone-check", "n1t", "n1"],
-    ["mdi:theme-light-dark", "n2t", "n2"],
-    ["mdi:thermometer", "n3t", "n3"],
+    ["mdi:thermostat", "n0t", "n0"],
+    ["mdi:robot-vacuum", "n1t", "n1"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.
