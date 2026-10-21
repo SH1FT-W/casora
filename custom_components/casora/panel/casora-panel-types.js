@@ -232,9 +232,10 @@ window.CASORA_TILE_TYPES = [
       { key: "trash_reminder", label: "Reminder automation", domains: ["automation"], advanced: true },
     ] },
   // Calendar (issue #31): template and popup existed, the Studio did not offer the tile. Which calendars it
-  // shows, their names and colors are a Casora setting for every calendar tile (Settings → Calendar); the
-  // tile's own calendar is what the popup watches. The icon shows today's date, so no icon field.
-  { id: "casora_calendar", label: "Calendar", template: "casora_calendar", domains: ["calendar"],
+  // shows, their names and colors are a Casora setting for every calendar tile (Settings → Calendar), so the
+  // tile asks for no calendar of its own (noEntity; the popup anchors on the first one). An entity from
+  // older dashboards keeps working. The icon shows today's date, so no icon field.
+  { id: "casora_calendar", label: "Calendar", template: "casora_calendar", domains: ["calendar"], noEntity: true,
     icon: "calendar-day", color: "var(--casora-color-red, #FF453A)", fields: [
       { key: "calendars", settingsLink: "calendars", label: "Calendars",
         hint: "Which calendars the tile and popup show, with name and color – the same for every calendar tile." },

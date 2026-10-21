@@ -518,12 +518,16 @@
   };
 
   K.popup = function (entity, variables, states, hass) {
-    if (!entity) return { type: 'vertical-stack', cards: [] };
+    /* The tile needs no calendar of its own (Studio: no entity, issue #31) – the popup anchors on its first
+       calendar that exists (settings, else every calendar in the home). */
+    var eid = entity && entity.entity_id;
+    if (!eid) eid = (K.cals(variables).filter(function (c) { return c && states[c.entity]; })[0] || {}).entity;
+    if (!eid) return { type: 'vertical-stack', cards: [] };
     K.sel = null; K.month = null; K.ts = 0; K.load(hass, variables, true);
-    var watch = [entity.entity_id].concat(K.cals(variables).map(function (c) { return c.entity; }))
+    var watch = [eid].concat(K.cals(variables).map(function (c) { return c.entity; }))
       .filter(function (w, i, a) { return a.indexOf(w) === i && states[w]; });
     var fld = function (k) { return '[[[ return window._casoraCalendar ? window._casoraCalendar.sec(' + JSON.stringify(k) + ', states, hass, variables) : ""; ]]]'; };
-    var makeCol = function (keys) { return colCard(keys, entity.entity_id, watch, { calendars: variables.calendars || null }, 'sec'); };
+    var makeCol = function (keys) { return colCard(keys, eid, watch, { calendars: variables.calendars || null }, 'sec'); };
     var wrapperStyle = [
       ':host { --ha-card-box-shadow: none !important; --button-card-box-shadow: none !important; --button-card-box-shadow-hover: none !important; overflow: visible !important; }',
       'ha-card { background: transparent !important; border: none !important; border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; cursor: default !important; overflow: visible !important; will-change: auto !important; }',
@@ -535,7 +539,7 @@
       'ha-card.disabled { pointer-events: auto !important; }',
     ].join('\n');
     return {
-      type: 'custom:button-card', entity: entity.entity_id, triggers_update: watch, variables: { calendars: variables.calendars || null },
+      type: 'custom:button-card', entity: eid, triggers_update: watch, variables: { calendars: variables.calendars || null },
       card_mod: { style: wrapperStyle },
       extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: "hero hero" "left right" !important;'
         + ' grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; column-gap: 20px !important; } }',

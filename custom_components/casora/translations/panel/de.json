@@ -2504,7 +2504,8 @@
     "Which calendars the tile and popup show, with name and color – the same for every calendar tile.": "Welche Kalender Kachel und Popup zeigen, mit Name und Farbe – für jede Kalender-Kachel gleich.",
     "All calendars": "Alle Kalender",
     "1 calendar": "1 Kalender",
-    "{n} calendars": "{n} Kalender"
+    "{n} calendars": "{n} Kalender",
+    "No events": "Keine Termine"
   },
   "patterns": [
     [

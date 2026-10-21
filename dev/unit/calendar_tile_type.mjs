@@ -15,8 +15,8 @@ const cal = window.CASORA_TILE_TYPES.find((t) => t.id === 'casora_calendar');
 assert.ok(cal, 'calendar is a tile type');
 assert.equal(cal.template, 'casora_calendar');
 assert.ok(JSON.parse(read('dashboards/casora/button_card_templates.json')).casora_calendar, 'template exists');
-assert.deepEqual(cal.domains, ['calendar'], 'the tile needs a calendar – the popup watches it');
-assert.ok(!cal.ownData && !cal.hidden && !cal.onlyIf, 'offered in every home');
+assert.ok(cal.noEntity, 'no calendar of its own to pick: the calendars come from Settings');
+assert.ok(!cal.hidden && !cal.onlyIf, 'offered in every home');
 assert.equal((cal.fields.find((f) => f.settingsLink) || {}).settingsLink, 'calendars', 'link to the calendars');
 assert.ok(!cal.fields.some((f) => f.key === 'icon'), 'no icon field: the icon shows the date');
 [cal.label, ...cal.fields.flatMap((f) => [f.label, f.hint, f.placeholder])].filter(Boolean)
@@ -67,5 +67,26 @@ await one._casoraSettingsRead;
 await new Promise((r) => setTimeout(r));
 assert.equal(one._casoraSettingsLink({ settingsLink: 'calendars' }).textContent, '1 Kalender ›');
 assert.equal(studio._casoraSettingsLink({ settingsLink: 'unknown' }), null, 'unknown group: no row');
+
+// ── Without an entity of its own ─────────────────────────────────────────────────────
+// Studio preview: the next event instead of "Not set".
+const twAt = panel.indexOf('\nconst tileStateWord = ');
+const twSrc = panel.slice(twAt, panel.indexOf('\n};\n', twAt) + 4);
+assert.ok(/if \(kind === "casora_calendar" && !ent\)/.test(twSrc), 'preview handles the calendar without entity');
+// Popup: anchors on the first calendar that exists (from Settings).
+const cw = { casoraSettings: () => ({ calendars: [{ entity: 'calendar.gone' }, { entity: 'calendar.example_family', name: 'Family' }] }), addEventListener() {}, setTimeout: () => 0, setInterval: () => 0 };
+const cdoc = { querySelector: () => null, addEventListener() {} };
+// Its timers (midnight redraw) stay stubs, or the test would not end.
+const noTimer = () => 0;
+new Function('window', 'document', 'setTimeout', 'setInterval', read('custom_components/casora/scripts/local/06-kalender.js'))(cw, cdoc, noTimer, noTimer);
+const K = cw._casoraCalendar;
+assert.ok(K && K.popup, '06-kalender.js');
+K.load = () => {};
+const st = { 'calendar.example_family': { entity_id: 'calendar.example_family', state: 'off', attributes: {} } };
+const pop = K.popup(undefined, { calendars: null }, st, {});
+assert.equal(pop.type, 'custom:button-card', 'popup without the tile\'s own entity');
+assert.equal(pop.entity, 'calendar.example_family', 'anchored on the first calendar that exists');
+assert.equal(K.popup(undefined, {}, {}, {}).type, 'vertical-stack', 'no calendar at all: empty, no error');
+assert.equal(K.popup({ entity_id: 'calendar.example_family' }, {}, st, {}).entity, 'calendar.example_family', 'older tiles with an entity');
 
 console.log('ok calendar_tile_type');

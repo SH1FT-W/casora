@@ -5565,6 +5565,14 @@ const updateCount = (ent) => {
 
 const tileStateWord = (kind, tile, ent, states, hass) => {
   const V = (tile && tile.variables) || {};
+  // Calendar: no entity of its own (issue #31) – the next event across its calendars (06-kalender.js when loaded).
+  if (kind === "casora_calendar" && !ent) {
+    const K = typeof window !== "undefined" && window._casoraCalendar;
+    if (K && K.tile) return K.tile(states || {}, V);
+    const S = states || {};
+    const cal = Object.keys(S).sort().find((id) => id.startsWith("calendar.") && S[id].attributes && S[id].attributes.message);
+    return cal ? String(S[cal].attributes.message) : "No events";
+  }
   if (!ent) return tile && tile.entity ? "—" : "Not set";
   const cap = (x) => (x ? x.charAt(0).toUpperCase() + x.slice(1).replace(/_/g, " ") : "");
   switch (kind) {
