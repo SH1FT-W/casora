@@ -9,6 +9,7 @@ const pick = (re) => { const m = core.match(re); assert.ok(m, String(re)); retur
 const src = [
   pick(/  function templatesOf\(cfg\) \{[\s\S]*?\n  \}\n/),
   pick(/  function wants\(cfg, names, entityId\) \{[\s\S]*?\n  \}\n/),
+  pick(/  function standsForGroup\(cfg, entityId\) \{[\s\S]*?\n  \}\n/),
   pick(/  function tileFor\(entityId\) \{[\s\S]*?\n  \}\n/),
   pick(/  var OWN_TILE = [^\n]+\n/),
   pick(/  function cardWithTemplate\(names, entityId\) \{[\s\S]*?\n  \}\n/),

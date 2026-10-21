@@ -11996,10 +11996,17 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   window.addEventListener('location-changed', warm);
   warm();
 
-  // ── Glocke = Kachel (B-NOTI, 06.10.2026) ──────────────────────────────────
-  // Die Kachel, die man für diese Entität antippen würde: sichtbare button-card mit genau dieser
-  // Entität und eigenem Casora-Popup, eine Kachel vor einer Badge. So öffnet die Glocke dasselbe
-  // Popup (mit Ring und Kopf) wie der Tipp auf die Kachel.
+  // ── Bell = tile (B-NOTI, 06.10.2026) ──────────────────────────────────────
+  // The tile one would tap for this entity: a visible button-card with exactly this entity and
+  // its own Casora popup, a tile before a badge. So the bell opens the same popup (with ring and
+  // header) as tapping the tile.
+  // A group tile from the setup without an HA group names its first member as entity, next to the
+  // whole list (lights/covers/locks, #37): it stands for the group, not for that member.
+  function standsForGroup(cfg, entityId) {
+    var v = (cfg && cfg.variables) || {};
+    return Object.keys(v).some(function (k) { return Array.isArray(v[k]) && v[k].length > 1 && v[k].indexOf(entityId) !== -1; });
+  }
+  window._casoraStandsForGroup = standsForGroup;
   function tileFor(entityId) {
     if (!entityId) return null;
     var best = null, bestRank = 99;
@@ -12008,8 +12015,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       root.querySelectorAll('button-card').forEach(function (el) {
         var c = el._config;
         if (!c || !c.tap_action || !c.tap_action.casora_popup) return;
-        // Eigene Entität vor Variable (alarm_entity der Alarm-Kachel) vor Liste (locks einer Gruppe).
-        var v = c.variables || {}, how = c.entity === entityId ? 0 : -1;
+        // Own entity before a variable (alarm_entity of the alarm tile) before a list (locks of a group).
+        var v = c.variables || {}, how = c.entity === entityId && !standsForGroup(c, entityId) ? 0 : -1;
         if (how < 0) Object.keys(v).forEach(function (k) {
           if (v[k] === entityId) how = how < 0 || how > 1 ? 1 : how;
           else if (Array.isArray(v[k]) && v[k].indexOf(entityId) !== -1 && how < 0) how = 2;

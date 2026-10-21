@@ -491,9 +491,12 @@ window._casoraColGap = window._casoraColGap || function (keys) {
   // 2.1-Popup geöffnet. Keine Karte gefunden -> Engine-Verhalten bleibt.
   function findCardCfg(cfg, entityId) {
     var hit = null, badge = null;
+    // A group tile naming this entity only as its first member is the group's (#37): opening it from a
+    // row in that group's popup reopened the same popup.
     var hasPopup = function (c) {
       var t = c && c.template;
-      return !!(c && c.type === 'custom:button-card' && t && c.entity === entityId);
+      return !!(c && c.type === 'custom:button-card' && t && c.entity === entityId
+        && !(window._casoraStandsForGroup && window._casoraStandsForGroup(c, entityId)));
     };
     var isBadge = function (c) { return [].concat(c.template || []).some(function (n) { return /badge|chip/.test(String(n)); }); };
     (function walk(o) {
