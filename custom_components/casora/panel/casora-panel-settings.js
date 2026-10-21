@@ -22,8 +22,11 @@
     { id: "design", label: "Design", icon: "desktop", tone: "set-design", look: true,
       lede: "How every Casora dashboard looks – the change applies right away." },
     { id: "home", label: "Home & Devices", icon: "home", tone: "set-home",
-      personal: ["waste", "calendars", "contacts", "scenes", "media", "devices"],
-      lede: "Waste collection, calendars, doors and windows, scenes and players – the same in every dashboard." },
+      personal: ["waste", "contacts", "scenes", "media", "devices"],
+      lede: "Waste collection, doors and windows, scenes and players – the same in every dashboard." },
+    // Own page since issue #31: under Home & Devices the calendars were hard to find.
+    { id: "calendar", label: "Calendar", icon: "calendar", tone: "set-calendar", personal: ["calendars"],
+      lede: "The calendars every calendar tile and its popup show – with name, color and whether they appear on the tile." },
     { id: "alerts", label: "Bell & Alerts", icon: "bell", tone: "set-alerts",
       personal: ["notify"], lede: "What the bell shows in every dashboard." },
     { id: "dashboards", label: "New Dashboards", icon: "tile", tone: "set-dashboards",

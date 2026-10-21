@@ -789,7 +789,8 @@
     };
 
     const PAGES = [
-      ["design", "Design", "desktop"], ["home", "Home & Devices", "home"], ["alerts", "Bell & Alerts", "bell"], ["dashboards", "New Dashboards", "tile"],
+      ["design", "Design", "desktop"], ["home", "Home & Devices", "home"], ["calendar", "Calendar", "calendar"],
+      ["alerts", "Bell & Alerts", "bell"], ["dashboards", "New Dashboards", "tile"],
       ["ai", "AI", "assist"], ["outdoor", "Outdoor & Price", "temp-medium"], ["vent", "Ventilation", "fan"],
       ["live", "Live Activities", "iphone"], ["fuel", "Fuel prices", "car"],
     ];

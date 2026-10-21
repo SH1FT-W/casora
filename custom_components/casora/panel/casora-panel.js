@@ -2042,6 +2042,7 @@ const STUDIO_ICON = {
   updates: ["info", "var(--casora-color-blue, #0A84FF)"],
   "set-design": ["light", "var(--casora-color-pink, #ff4d70)"],
   "set-home": ["main", "var(--casora-color-teal, #00C3D0)"],
+  "set-calendar": ["alert", "var(--casora-color-red, #FF453A)"],
   "set-alerts": ["alert", "var(--casora-color-red, #FF453A)"],
   "set-dashboards": ["neutral", "var(--casora-color-indigo, #5E5CE6)"],
   "set-ai": ["main", "var(--casora-color-purple, #9333ea)"],
@@ -3214,7 +3215,7 @@ const autoRoomGlyph = (name) => {
 // Tile types about the whole home: a room's own device (a dishwasher's plug in the
 // kitchen) is no reason to offer them as "Fits <room>".
 const HOUSE_WIDE_TILES = new Set(["energy_tile", "network", "battery", "updates", "casora_alarm",
-  "casora_weather_warning", "casora_solar_tip", "casora_trash", "casora_recipe", "casora_pulse"]);
+  "casora_weather_warning", "casora_solar_tip", "casora_trash", "casora_recipe", "casora_pulse", "casora_calendar"]);
 
 // The automatic icon follows the name. A new name it doesn't know ("Küche" →
 // "Kochecke") would fall back to the house - keep the icon the room had instead.
@@ -26872,6 +26873,12 @@ class CasoraPanel extends HTMLElement {
       if (f.setting) {
         const sw = typeof this._casoraSettingSwitch === "function" ? this._casoraSettingSwitch(f) : null;
         if (sw) { put(f.label, sw, f.sub); hintUnder(); }
+        return;
+      }
+      // A jump to a Settings group instead of a tile variable (casora-panel-personal.js, issue #31).
+      if (f.settingsLink) {
+        const go = typeof this._casoraSettingsLink === "function" ? this._casoraSettingsLink(f) : null;
+        if (go) { put(f.label, go); hintUnder(); }
         return;
       }
       if (f.type === "bool") {

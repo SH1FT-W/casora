@@ -1964,7 +1964,6 @@
     "Only on button press": "Nur auf Knopfdruck",
     "Which AI": "Welche KI",
     "Home & Devices": "Haus & Geräte",
-    "Waste collection, calendars, doors and windows, scenes and players – the same in every dashboard.": "Abfall, Kalender, Türen und Fenster, Szenen und Player – in jedem Dashboard gleich.",
     "Bell & Alerts": "Glocke & Meldungen",
     "What the bell shows in every dashboard.": "Was die Glocke in jedem Dashboard zeigt.",
     "New Dashboards": "Neue Dashboards",
@@ -2499,7 +2498,13 @@
     "Where your pet is, battery and tracker status on the tile. The popup shows the map, live tracking, sound and light, today's activity against the daily goal, rest, sleep and the places of the last days. For Tractive.": "Wo dein Tier ist, Akku und Tracker-Zustand auf der Kachel. Das Popup zeigt die Karte, Live-Tracking, Ton und Licht, die Aktivität von heute gegen das Tagesziel, Ruhe, Schlaf und die Orte der letzten Tage. Für Tractive.",
     "For every pet in the Tractive integration": "Für jedes Tier in der Tractive-Integration",
     "Tractive integration not installed yet": "Tractive-Integration noch nicht installiert",
-    "Choose your pet": "Tier wählen"
+    "Choose your pet": "Tier wählen",
+    "Waste collection, doors and windows, scenes and players – the same in every dashboard.": "Abfall, Türen und Fenster, Szenen und Player – in jedem Dashboard gleich.",
+    "The calendars every calendar tile and its popup show – with name, color and whether they appear on the tile.": "Die Kalender, die jede Kalender-Kachel und ihr Popup zeigen – mit Name, Farbe und ob sie auf der Kachel erscheinen.",
+    "Which calendars the tile and popup show, with name and color – the same for every calendar tile.": "Welche Kalender Kachel und Popup zeigen, mit Name und Farbe – für jede Kalender-Kachel gleich.",
+    "All calendars": "Alle Kalender",
+    "1 calendar": "1 Kalender",
+    "{n} calendars": "{n} Kalender"
   },
   "patterns": [
     [

@@ -231,6 +231,15 @@ window.CASORA_TILE_TYPES = [
         hint: "Applies to all waste tiles" },
       { key: "trash_reminder", label: "Reminder automation", domains: ["automation"], advanced: true },
     ] },
+  // Calendar (issue #31): template and popup existed, the Studio did not offer the tile. Which calendars it
+  // shows, their names and colors are a Casora setting for every calendar tile (Settings → Calendar); the
+  // tile's own calendar is what the popup watches. The icon shows today's date, so no icon field.
+  { id: "casora_calendar", label: "Calendar", template: "casora_calendar", domains: ["calendar"],
+    icon: "calendar-day", color: "var(--casora-color-red, #FF453A)", fields: [
+      { key: "calendars", settingsLink: "calendars", label: "Calendars",
+        hint: "Which calendars the tile and popup show, with name and color – the same for every calendar tile." },
+      { ...TITLE, placeholder: "Calendar" },
+    ] },
   { id: "casora_car", label: "Car", template: "casora_car", domains: ["sensor"], ownData: true, icon: "car_side_w2", fields: [ICON, TITLE] },
   { id: "casora_ebike", label: "E-bike", template: "casora_ebike", domains: ["sensor"], ownData: true, icon: "ebike", fields: [ICON, TITLE] },
   // Fußbodenheizung: Thermostat-Kachel mit Casora-Popup – verhält sich wie ein Thermostat

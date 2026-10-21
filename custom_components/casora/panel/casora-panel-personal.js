@@ -545,7 +545,7 @@
 
     // Früher eine eigene Seite („Zuhause-Einstellungen“), jetzt Teil der Einstellungen.
     // Alte Sprünge (focus) landen auf der passenden Unterseite.
-    const FOCUS_PAGE = { notify: "alerts", scenes: "home", media: "home", basis: "dashboards" };
+    const FOCUS_PAGE = { notify: "alerts", scenes: "home", media: "home", basis: "dashboards", calendars: "calendar" };
     P._casoraPersonal = function (o) {
       o = o || {};
       if (typeof this._csShow !== "function") return undefined;
@@ -635,6 +635,32 @@
       }
       return sw;
     };
+    // Tile inspector (field with settingsLink: "<group>"): what is set there and a jump to it, instead of
+    // a tile variable – the calendar tile shows the calendars under Settings → Calendar (issue #31).
+    const LINK_TEXT = {
+      calendars: (S) => {
+        const n = (S.calendars || []).filter((c) => c && c.entity).length;
+        return n ? [n === 1 ? "1 calendar" : "{n} calendars", n] : ["All calendars", 0];
+      },
+    };
+    P._casoraSettingsLink = function (f) {
+      const focus = f && f.settingsLink;
+      if (!LINK_TEXT[focus]) return null;
+      readSettings(this);
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "casora-plink";
+      b.setAttribute("data-no-i18n", "");
+      b.onclick = () => this._casoraPersonal({ focus });
+      const paint = (S) => {
+        const [msg, n] = LINK_TEXT[focus](S || {});
+        const tr = window.casoraI18n ? window.casoraI18n.t(msg) : msg;
+        b.textContent = tr.replace("{n}", n) + " ›";
+      };
+      paint(this._casoraSettingsNow || window.CASORA_SETTINGS);
+      if (this._casoraSettingsRead) this._casoraSettingsRead.then(paint);
+      return b;
+    };
     // Schon beim Laden anfragen (parallel zur Dashboard-Konfiguration): kam die Antwort erst nach
     // dem ersten Zeichnen, wurden Inspektor und Vorschau gleich ein zweites Mal gebaut.
     const load = P._load;
@@ -672,6 +698,7 @@
         st.textContent = ".casora-plink{appearance:none;display:block;width:100%;margin:10px 0 0;padding:10px 0 2px;border:0;"
           + "background:none;box-shadow:none;text-align:left;font:500 var(--t-foot)/1.35 var(--casora-font-studio, system-ui);color:var(--casora-studio-link, #0a84ff);cursor:pointer}"
           + ".casora-plink:hover{opacity:.8;filter:none}"
+          + ".row>.casora-plink{margin:0;padding:4px 0}"
           + ":host(.is-light) .casora-plink{color:var(--casora-studio-link, #0071e3)}";
         this.shadowRoot.appendChild(st);
       }
