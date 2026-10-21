@@ -27,7 +27,7 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Warnungen übersichtlicher", n0: "Das Warnungen-Popup nutzt jetzt die ganze Breite, mehrere Warnungen stehen nebeneinander.",
+      n0t: "Jalousie ohne toten Pfeil", n0: "Die Detailansicht einer Jalousie zeigt nicht mehr sich selbst mit einem Pfeil, der nirgends hinführt.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -37,7 +37,7 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Clearer warnings", n0: "The warnings popup now uses the full width, and several warnings sit side by side.",
+      n0t: "Cover without a dead arrow", n0: "The detail view of a cover no longer lists itself with an arrow that leads nowhere.",
     },
   };
 
@@ -50,7 +50,7 @@
 
   /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
   const WHATS_NEW = [
-    ["mdi:alert-outline", "n0t", "n0"],
+    ["mdi:window-shutter", "n0t", "n0"],
   ];
 
   // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.

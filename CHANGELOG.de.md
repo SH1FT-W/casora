@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.50 – 21.10.2026
+
+### Behoben
+- **Jalousie: Pfeil ohne Funktion in der Detailansicht (#35):** Tippte man im Jalousien-Popup eine einzelne Jalousie an, stand rechts noch einmal genau diese Jalousie mit „›“, und Antippen öffnete nur dasselbe Popup. Jetzt zeigt die Detailansicht Position und Voreinstellungen ohne diese Zeile; ist eine Beschattungsautomatik eingerichtet, steht rechts die Automatik. Das gilt auch für Kacheln mit nur einer Jalousie.
+
 ## 26.10.49 – 21.10.2026
 
 ### Behoben

@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.50 – 21.10.2026
+
+### Fixed
+- **Cover: arrow without function in the detail view (#35):** Tapping a single cover in the covers popup showed that same cover again on the right with a "›", and tapping it only reopened the same popup. The detail view now shows position and presets without that row; with a shading automation set up, the automation sits on the right. This also applies to tiles with a single cover.
+
 ## 26.10.49 – 21.10.2026
 
 ### Fixed
