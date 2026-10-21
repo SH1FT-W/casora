@@ -75,6 +75,9 @@ const W = 'sensor.qa_raum_leistung_beispiel';
 await fakeStates(page, { [W]: { state: '0', attributes: { device_class: 'power', unit_of_measurement: 'W', friendly_name: 'Beispiel Steckdose' } } }, { sticky: true });
 await H((w) => { const p = window.__panel(); const v = p._state.compact.rooms[p._room].variables;
   ['energy_usage_today', 'energy_usage_month', 'energy_cost_today', 'energy_cost_month'].forEach((k) => delete v[k]);
+  // The device list wins over the single sensor (as on the dashboard, _casoraPowerSum – loaded in the Studio since
+  // r311): the room's own list goes, so the 0 W sensor is what counts.
+  delete v.energy_entities;
   delete v.show_energy; v.energy_power_entity = w; p._renderForm(); }, W);
 const isEnergy = (b) => /^(Energie|Energy)\b/.test(b.text);
 row = await badgesUntil((r) => r.some((b) => isEnergy(b) && !b.ghost && /0\s*W/.test(b.text)));
