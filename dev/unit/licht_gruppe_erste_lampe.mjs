@@ -26,6 +26,11 @@ assert.equal(findCardCfg(cfg, 'light.a'), lampA, 'first light of the house: its 
 assert.equal(findCardCfg(cfg, 'light.b'), null, 'first light of a room without own tile: no card (light popup of the device)');
 assert.equal(findCardCfg(cfg, 'light.g'), group, 'an HA light group stays its own tile');
 assert.equal(findCardCfg({ views: [{ cards: [house] }] }, 'light.a'), null, 'only the house tile: no card');
+const badge = (template, entity) => ({ type: 'custom:button-card', template, entity });
+assert.equal(findCardCfg({ views: [{ cards: [badge('casora_badge_light', 'light.c')] }] }, 'light.c'), null,
+  'only a light badge: no card (its popup is the room, not the lamp)');
+const lockBadge = badge('casora_badge_lock', 'lock.x');
+assert.equal(findCardCfg({ views: [{ cards: [lockBadge] }] }, 'lock.x'), lockBadge, 'other badges still stand in for a missing tile');
 
 // Visible tiles (bell, rows without own target → tileFor).
 const el = (c) => ({ _config: { tap_action: { casora_popup: {} }, ...c }, getClientRects: () => [1], shadowRoot: null });

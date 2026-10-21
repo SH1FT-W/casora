@@ -508,6 +508,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
       ['cards', 'card', 'filter', 'include', 'options', 'sections'].forEach(function (k) { if (o[k]) walk(o[k]); });
       if (o.custom_fields && typeof o.custom_fields === 'object') walk(Object.keys(o.custom_fields).map(function (k) { return o.custom_fields[k]; }));
     })((cfg && cfg.views) || []);
+    // A light badge opens its room's light popup, not the lamp (#37): without a tile the lamp popup
+    // of the light template is the lamp's. Badges of other devices open the same popup as their tile.
+    if (!hit && badge && String(entityId).indexOf('light.') === 0) return null;
     return hit || badge;
   }
 
