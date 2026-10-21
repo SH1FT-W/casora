@@ -11828,6 +11828,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     try { toned = !!getComputedStyle(document.documentElement).getPropertyValue('--casora-tone-general').trim(); } catch (e) {}
     var toneOf = function (r) {
       if (!toned) return r.tone;
+      // A colour of its own (weather warning by level, 01-basis.js casoraWarnHue) wins over the icon's.
+      if (r.hue) return r.hue;
       var ic = String(r.icon || '');
       /* Sicherheit ruhig (Variante 1): nur was Aufmerksamkeit braucht hat Farbe –
          Rot = Gefahr (ausgelöst, offen bei Abwesenheit), Orange = Hinweis (offen, entriegelt,

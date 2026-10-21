@@ -1114,6 +1114,14 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     window.addEventListener('click', handle, true);
   })();
 
+  // Warning colour by level, the same as the weather warning tile (casora_weather_warning): the bell's row
+  // was red for every warning in the Soft look, the tile yellow for „Minor“.
+  window.casoraWarnHue = function (sev) {
+    return sev === 'Extreme' ? 'var(--casora-color-purple, #9333ea)'
+      : sev === 'Severe' ? 'var(--casora-color-red, #FF4245)'
+      : sev === 'Moderate' ? 'var(--casora-color-orange, #FF9230)'
+      : 'var(--casora-color-yellow, #FFCC00)';
+  };
   var WARN_LEVEL = {
     Minor: 'Hinweis', Moderate: 'Warnung', Severe: 'Unwetter', Extreme: 'Extremes Unwetter',
   };
@@ -1327,6 +1335,7 @@ window._casoraColGap = window._casoraColGap || function (keys) {
             sub: (WARN_LEVEL[a.severity] || 'Warnung') + (until ? ' · bis ' + until : ''),
             icon: 'exclamation',
             tone: (a.severity === 'Severe' || a.severity === 'Extreme') ? 'bad' : 'warn',
+            hue: window.casoraWarnHue(a.severity),
             entity: id,
             rank: 1,
             seen: [id + '|' + warningType(st) + '|' + String(a.severity || '') + '|' + String(a.expires || '')],
