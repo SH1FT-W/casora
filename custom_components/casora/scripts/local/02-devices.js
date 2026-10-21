@@ -41,8 +41,8 @@
   };
 
   /* Schedule switch (1.1.2): what does "on" mean? 'ha' = Home Assistant controls the colours (Juwel HeliaLux
-     "manuelle Farbsimulation"), 'lamp' = the lamp runs its own program (Chihiros auto_mode,
-     Juwel AppControl "Automatik", auto mode switch). light_schedule_on from the Studio wins;
+     „manuelle Farbsimulation“), 'lamp' = the lamp runs its own program (Chihiros auto_mode,
+     Juwel AppControl „Automatik“, auto mode switch). light_schedule_on from the Studio wins;
      detected by translation_key, entity ID and name, when in doubt 'ha' as before. */
   window._casoraAqSwitchMeaning = function (sw, V, hass) {
     const set = V && V.light_schedule_on;
@@ -96,7 +96,7 @@
       const own = hit || window._casoraAqChannelOf([r.translation_key, id.split('.')[1], a.friendly_name].join(' '));
       let name = own ? own.name : String(a.friendly_name || id);
       if (!own && s.attributes.friendly_name) {
-        /* Drop the device name in front ("Becken Kanal 1" → "Kanal 1"). */
+        /* Drop the device name in front („Becken Kanal 1“ → „Kanal 1“). */
         const pre = String(s.attributes.friendly_name).split(' ').slice(0, -1).join(' ');
         if (pre && name.indexOf(pre + ' ') === 0) name = name.slice(pre.length + 1);
       }
@@ -139,8 +139,8 @@
     return { level: 0, dir: null };
   };
 
-  /* Tile: when all is well, only "Alles ok" without temperature (request 09.10.2026); on problems the
-     temperature first as before ("26,8° · Prüfen · Temperatur zu hoch"). */
+  /* Tile: when all is well, only „Alles ok“ without temperature (request 09.10.2026); on problems the
+     temperature first as before („26,8° · Prüfen · Temperatur zu hoch“). */
   window._casoraAqTileText = function (entity, ev) {
     const t = (ev && ev.text) || '';
     if (t && ev && !ev.level) return t;
@@ -222,7 +222,7 @@
       if (ds.aqDose) { dose = ds.aqDose; break; }
     }
     if (!dose) return;
-    /* The "Dosieren" button in the row stays separate (confirmation) */
+    /* The „Dosieren“ button in the row stays separate (confirmation) */
     for (let i = 0; i < p.length; i++) { if (p[i] && p[i].dataset && (p[i].dataset.casoraArm !== undefined || (p[i].classList && p[i].classList.contains('hui-cf')))) return; }
     ev.stopPropagation(); if (ev.cancelable) ev.preventDefault();
     window._casoraSuppressDismiss = Date.now() + 600;
@@ -272,7 +272,7 @@
         ].filter(Boolean), null);
       ]]]`),
       field('chart', { card: {
-        /* Dosed per day (daily maximum of the day counter), bars like "Verbrauch pro Tag". */
+        /* Dosed per day (daily maximum of the day counter), bars like „Verbrauch pro Tag“. */
         type: 'custom:casora-chart', kind: 'bar', span: '7d', source: 'history', agg: 'max', height: 130,
         series: [{ entity: d.today, name: 'Dosiert', decimals: 1 }], plate: true, title: 'Dosiert · 7 Tage',
       } }),
@@ -298,7 +298,7 @@
   };
 
   /* Tappable fields (lamp modes, lamp profile): wrap instead of clipping, hit area 46 px,
-     active field bright like the Soft segments ("Warm / Neutral / Kalt"). */
+     active field bright like the Soft segments („Warm / Neutral / Kalt“). */
   window._casoraAqChips = function (items, label) {
     const UI = window._casoraUI;
     const soft = !!(window._casoraSoft && window._casoraSoft());
@@ -323,7 +323,7 @@
   };
 
   /* Light in the tank popup (1.1.2): on/off row, brightness, colour channels (two columns) and the lamp's
-     own modes or profile to tap; "Weitere Einstellungen" opens the HA dialog. */
+     own modes or profile to tap; „Weitere Einstellungen“ opens the HA dialog. */
   window._casoraAqLight = function (c, states, hass) {
     const UI = window._casoraUI;
     if (!UI) return '';
@@ -362,7 +362,7 @@
           + UI.slider({ value: k.value, softHeight: 46, bar: true, small: true, label: k.name, svc: k.svc }) + '</div>').join('')
         + '</div>';
     }
-    /* Lamp modes: the light's effects (translated, as HA shows them); "none/off" becomes "Ohne Effekt". */
+    /* Lamp modes: the light's effects (translated, as HA shows them); "none/off" becomes „Ohne Effekt“. */
     const fxAll = (Array.isArray(a.effect_list) ? a.effect_list : []).filter((e) => typeof e === 'string' && e);
     const noFx = fxAll.filter((e) => /^(none|off|aus|kein)$/i.test(e))[0];
     const fx = fxAll.filter((e) => e !== noFx);
@@ -813,7 +813,7 @@
   }
   /* Soft (declutter 01.10.2026): head with temperature, history, light and equipment on the left, aquarium
      doctor and leak sensor on the right; profile/control (HeliaLux), dosing, energy and the
-     probes' batteries under "Mehr". The "Wassertemperatur" row goes (it is in the head). */
+     probes' batteries under „Mehr“. The „Wassertemperatur“ row goes (it is in the head). */
   const HH = window._casoraHH;
   if (HH && HH.on() && HH.layout) {
     const f2 = { hero: fields.hero, chart: fields.chart, glight: fields.glight, gtech: fields.gtech, gai: fields.gai };
@@ -826,7 +826,7 @@
         entity: c.leak, active: wet }], 'Sicherheit');
     ]]]`;
     /* 1.1.2 (question 8): top left light, control, equipment; right dosing (only with a pump) and
-       safety; under "Mehr" aquarium doctor, energy and batteries. */
+       safety; under „Mehr“ aquarium doctor, energy and batteries. */
     if (fields.glightx) f2.gctl = fields.glightx;
     if (fields.gdose) f2.gdose = fields.gdose;
     delete f2.gai;
@@ -917,8 +917,8 @@
     good: 'var(--casora-popup-ui-good, #30D158)', warn: 'var(--casora-popup-ui-warn, #FF9F0A)', bad: 'var(--casora-popup-ui-bad, #FF453A)',
   };
   /* 1.1.2 (direction A): slim bar across the full width right under the header – progress
-     belongs to the time left in the head. Below it a line like the popup sub lines: "25 %" on the left,
-     "Fertig gegen 22:06 Uhr" on the right. o = { pct, left, right, tone } */
+     belongs to the time left in the head. Below it a line like the popup sub lines: „25 %“ on the left,
+     „Fertig gegen 22:06 Uhr“ on the right. o = { pct, left, right, tone } */
   H.pbar = function (o) {
     var p = Math.max(0, Math.min(100, Number(o.pct) || 0));
     var c = TONE[o.tone] || o.tone || TONE.accent;
@@ -978,7 +978,7 @@
   };
   /* Many segments (start time, suction level): width by text instead of equal width so nothing is clipped. */
   H.dense = function (html, wrap) {
-    /* wrap: wrap instead of equal-width columns (robot vacuum: "Saugen & wischen" was clipped otherwise). */
+    /* wrap: wrap instead of equal-width columns (robot vacuum: „Saugen & wischen“ was clipped otherwise). */
     /* D-07: rows fill the full width (empty grid columns used to remain on the right), each field
        at least as wide as its text – desktop all in one row, on the phone 3 + 2. */
     if (wrap) return '<style>.hh-wrap .hui-seg{display:flex!important;flex-wrap:wrap;}'
@@ -1010,11 +1010,11 @@
     + '.hh-pill:not(.dis):active{filter:brightness(.94);}'
     + '@media (max-width: 420px){.hh-pills{gap:6px;}.hh-pill{padding:0 12px;font-size:13.5px;gap:5px;}}</style>';
 
-  // ── Declutter (01.10.2026): slim layout with "Mehr" ─────────────────
+  // ── Declutter (01.10.2026): slim layout with „Mehr“ ─────────────────
   // Soft only. The device popups (printer, vacuum, dishwasher, laundry, aquarium …)
   // hand over their finished fields (template strings or { card }) and get the
   // layout of the light popup: full-width header, controls on the left, info on the right,
-  // "Mehr" bottom right. Each column and the more section are their own button-cards with
+  // „Mehr“ bottom right. Each column and the more section are their own button-cards with
   // triggers_update – the frame itself is only built when opening.
   var COL_CSS = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
     + ' border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important;'
@@ -1061,17 +1061,17 @@
     var f = o.fields, has = function (k) { return f[k] !== undefined && f[k] !== null && f[k] !== ''; };
     var top = (o.top || ['hero']).filter(has), L = (o.left || []).filter(has), R = (o.right || []).filter(has);
     if (!L.length && R.length > 1) { L = R.slice(0, 1); R = R.slice(1); }
-    /* B-11: if only "Mehr" is on the right, the popup becomes one column and "Mehr" is the last row –
-       instead of an almost empty right column with "Mehr" on top. */
+    /* B-11: if only „Mehr“ is on the right, the popup becomes one column and „Mehr“ is the last row –
+       instead of an almost empty right column with „Mehr“ on top. */
     var one = false;
     if (L.length && R.length === 1 && R[0] === 'more') { L = L.concat(R); R = []; one = true; }
-    /* Even in one column (washer/dryer off) the expanded "Mehr" spreads over two columns in the wide
+    /* Even in one column (washer/dryer off) the expanded „Mehr“ spreads over two columns in the wide
        popup – otherwise statistics and consumption ran as rows across the full width. */
     if (one && f.more && f.more.card) {
       f = Object.assign({}, f, { more: { card: Object.assign({}, f.more.card, {
         extra_styles: (f.more.card.extra_styles || '') + MORE_WIDE_CSS }) } });
     }
-    /* "Mehr" under both columns across the full width; expanded, the sections spread
+    /* „Mehr“ under both columns across the full width; expanded, the sections spread
        evenly over two columns instead of stacking everything on the right (request 02.10.2026). */
     var wideMore = !one && R.length > 1 && R[R.length - 1] === 'more';
     if (wideMore) R = R.slice(0, -1);
@@ -1111,7 +1111,7 @@
       custom_fields: cf,
     };
   };
-  /* Wide "Mehr": expanded two balanced columns (sections do not break).
+  /* Wide „Mehr“: expanded two balanced columns (sections do not break).
      Spacing as padding instead of margin (04.10.2026): Safari carried the outer margin of the last
      section on the left over to the top of the right column, the right heading sat 18 px lower. */
   var MORE_WIDE_CSS = '\n@media (min-width: 761px) {'
@@ -1124,7 +1124,7 @@
   H.moreCard = function (watch, code, entity) {
     return { card: H.col(['m'], { m: '[[[\n' + code + '\n]]]' }, watch, entity) };
   };
-  /* Combine parts (finished HTML) into one "Mehr"; empty parts do not count. */
+  /* Combine parts (finished HTML) into one „Mehr“; empty parts do not count. */
   var vis = function (p) { return !!String(p || '').replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]*>/g, '').trim(); };
   H.more = function (id, parts, opts) {
     var UI = window._casoraUI;
@@ -1180,7 +1180,7 @@
     ending: ['Endet gleich', 'accent', true, 'run'], finished: ['Fertig', 'good', false, 'done'], anti_wrinkle: ['Knitterschutz', 'accent', true, 'run'],
     delay_wait: ['Startet später', 'accent', true, 'delay'], interrupted: ['Unterbrochen', 'bad', false, 'error'],
     force_stopped: ['Beendet', null, false, 'done'], rinse: ['Spülen', 'accent', true, 'run'],
-    /* "clean": cycle done, laundry still in the machine (until the door opens or "Ausgeräumt"). */
+    /* "clean": cycle done, laundry still in the machine (until the door opens or „Ausgeräumt“). */
     clean: ['Fertig', 'good', false, 'clean'],
     unknown: ['Unbekannt', null, false, 'off'], unavailable: ['Nicht verfügbar', 'bad', false, 'error'],
     /* Home Connect (dishwasher too) */
@@ -1459,7 +1459,7 @@
     return '<div data-hw-slot="' + kind + '" data-hw-key="' + esc(c.st) + '">' + L.inner(kind, c, states) + '</div>';
   };
 
-  /* Taps: chart rows (data-hp-metric) and "Erledigt" for maintenance (two steps). */
+  /* Taps: chart rows (data-hp-metric) and „Erledigt“ for maintenance (two steps). */
   L.wrap = function (html) {
     return '<style>.hui-row.hp-sel{background:var(--casora-popup-row-hover, rgba(255,255,255,0.08));}'
       + '.hw-done{display:inline-block;pointer-events:auto;cursor:pointer;padding:8px 10px;margin:-8px -10px;white-space:nowrap;'
@@ -1589,7 +1589,7 @@
         if (at.cycle_anomaly === 'overrun') { sub.push('dauert länger als üblich'); tone = 'warn'; }
         if (s === STALLED) { sub.push('steht still, evtl. Unwucht'); tone = 'warn'; }
       } else if (s[3] === 'clean') {
-        /* "Wäsche ist noch drin" sits below with "Ausgeräumt" – here only since when. */
+        /* „Wäsche ist noch drin“ sits below with „Ausgeräumt“ – here only since when. */
         if (stObj.last_changed) sub.push('seit ' + clock(new Date(stObj.last_changed)) + ' Uhr');
         tone = 'good';
       } else {
@@ -1611,7 +1611,7 @@
       return window._casoraHH.pbar({ pct: pctB, left: Math.round(pctB) + ' %',
         right: remB != null ? 'Fertig gegen ' + clock(new Date(Date.now() + remB * 60000)) + ' Uhr' : '' });
     }
-    /* Soft 1.1.2: "Programm abbrechen" as a calm pill at the end of the column (manufacturer integration). */
+    /* Soft 1.1.2: „Programm abbrechen“ as a calm pill at the end of the column (manufacturer integration). */
     if (kind === 'abort') {
       if (!active || !SF || !c.official || !ok(states, c.stop)) return '';
       return window._casoraHH.pill({ label: 'Programm abbrechen', icon: 'mdi:stop', svc: btn(c.stop), confirm: 'Abbrechen' });
@@ -1701,7 +1701,7 @@
         var chosen = fmt(states, c.select) || progOf(c, states);
         if (chosen) rowsD.push({ icon: mIcon, iconTone: DIM, label: 'Programm', sub: 'An der Maschine gewählt', value: chosen });
       }
-      /* unknown like unavailable: no row instead of "Geschlossen" */
+      /* unknown like unavailable: no row instead of „Geschlossen“ */
       if (c.door && states[c.door] && states[c.door].state !== 'unavailable' && states[c.door].state !== 'unknown') {
         var dop = doorOpen(c, states);
         rowsD.push({ icon: dop ? 'mdi:door-open' : 'mdi:door-closed', iconTone: dop ? 'warn' : DIM, label: 'Tür',
@@ -1775,7 +1775,7 @@
     }
 
     if (kind === 'energy') {
-      /* Laundry without a meter: nothing (dishwasher, printer, vacuum still show "—"). */
+      /* Laundry without a meter: nothing (dishwasher, printer, vacuum still show „—“). */
       if (!c.energy && !c.dish && !c.print && !c.vac) return '';
       var rowsE = [];
       /* Soft (declutter): without chart switching and without meter reading. */
@@ -1841,17 +1841,17 @@
       var ml = d.maint;
       if (!ml || !c.entry) return '';
       var mr = maintRows(ml, c.dryer);
-      /* Soft (declutter): due care visible (maint_due), the rest under "Mehr" (maint_rest). */
+      /* Soft (declutter): due care visible (maint_due), the rest under „Mehr“ (maint_rest). */
       if (kind !== 'maint') mr = mr.filter(function (r) { return kind === 'maint_due' ? r.due : !r.due; });
       if (!mr.length) return '';
       L._cfg[c.st] = c;
       var keys = mr.map(function (r) { return r.id; });
       var rowsM = mr.map(function (r) {
-        /* Soft 1.1.2: "Erledigt" only for due care. Own tasks: event_type = their ID. */
+        /* Soft 1.1.2: „Erledigt“ only for due care. Own tasks: event_type = their ID. */
         return { icon: r.icon, iconTone: r.due ? 'warn' : DIM, label: r.label, sub: r.sub,
           bar: r.bar, barTone: r.due ? 'warn' : 'good', value: (SF && !r.due) ? null : 'HWMAINT' + r.id + 'X' };
       });
-      /* "Erledigt" button in place of the value (two steps, see L.tap) */
+      /* „Erledigt“ button in place of the value (two steps, see L.tap) */
       var html = UI.group(rowsM, kind === 'maint_due' ? 'Pflege fällig' : 'Pflege');
       keys.forEach(function (k) {
         html = html.replace('HWMAINT' + k + 'X', '<span class="hw-done" data-hw-maint="' + esc(c.entry + '|' + k + '|' + c.st) + '">Erledigt</span>');
@@ -1862,7 +1862,7 @@
   };
 
   /* Due care according to WashData (attribute maintenance_due on the state); dryer only filter/condenser.
-     Own tasks (custom_…) named from the last loaded maintenance log, else "Pflege". */
+     Own tasks (custom_…) named from the last loaded maintenance log, else „Pflege“. */
   L.due = function (entity, V, states) {
     var st = (V && V.appliance_state) || (entity && entity.entity_id);
     var dryer = !!(V && V.device_type === 'dryer');
@@ -1964,14 +1964,14 @@
     }
 
     /* Soft (03.10.2026): head with time left. While running: cycle on the left (progress, program,
-       phase, run time), possibly "Welches Programm läuft?" and pause/cancel; on the right last cycles
-       and due care. Done with laundry inside: "Ausgeräumt" top left. Otherwise the last cycles on
-       the left, own programs on the right. Under "Mehr": detection and set program,
+       phase, run time), possibly „Welches Programm läuft?“ and pause/cancel; on the right last cycles
+       and due care. Done with laundry inside: „Ausgeräumt“ top left. Otherwise the last cycles on
+       the left, own programs on the right. Under „Mehr“: detection and set program,
        programs, statistics, consumption, remaining care, recommendations, plug. No chart. */
     if (window._casoraHH && window._casoraHH.on() && window._casoraHH.layout) {
       var HH = window._casoraHH;
       /* Due care only when WashData reports it (maintenance_due). Checked while building already
-         so an empty column does not put "Mehr" alone top right (B-11). */
+         so an empty column does not put „Mehr“ alone top right (B-11). */
       var _dueNow = WD && !!L.due({ entity_id: c.st }, { appliance_state: c.st, device_type: c.dryer ? 'dryer' : null }, states).length;
       var f2 = { hero: fields.hero, unload: fields.unload, run: fields.run, pick: fields.pick, act: fields.act, dev: fields.dev,
         cycles: fields.cycles, progs: fields.progs,
@@ -2265,7 +2265,7 @@
       if (pctB == null) return '';
       return window._casoraHH.pbar({ pct: pctB, left: Math.round(pctB) + ' %', right: endTxt || '' });
     }
-    /* Soft 1.1.2: "Programm abbrechen" as a calm pill at the end of the column. */
+    /* Soft 1.1.2: „Programm abbrechen“ as a calm pill at the end of the column. */
     if (kind === 'd_abort') {
       if (!active || !SF || !stopOk) return '';
       return window._casoraHH.pill({ label: 'Programm abbrechen', icon: 'mdi:stop', svc: stopSvc, confirm: 'Abbrechen' });
@@ -2324,7 +2324,7 @@
       var delay = U.num(states, c.startIn) || 0;
       if (c.startIn && states[c.startIn]) {
         var set = function (h) { return { domain: 'number', service: 'set_value', data: { value: h * 3600 }, target: { entity_id: c.startIn } }; };
-        /* Like the vacuum's "Reinigungsmodus" (25.09.): buttons in a card instead of loose in the air. */
+        /* Like the vacuum's „Reinigungsmodus“ (25.09.): buttons in a card instead of loose in the air. */
         var segS = UI.segments([0, 1, 2, 3, 4, 6].map(function (h) {
           return { label: h ? h + ' Std.' : 'Sofort', active: Math.round(delay / 3600) === h, svc: set(h) };
         }));
@@ -2406,14 +2406,14 @@
         if (lk != null && lk > 0 && c.price != null) rs.push({ icon: 'mdi:currency-eur', iconTone: DIM, label: 'Kosten letzter Durchgang', value: U.eur(lk * c.price) });
       }
       if (n != null) rs.push({ icon: 'mdi:counter', iconTone: 'accent', label: 'Starts insgesamt', value: String(Math.round(n)) });
-      /* Soft 1.1.2: "Verlauf" (while running on the left under the cycle, else under "Mehr"). */
+      /* Soft 1.1.2: „Verlauf“ (while running on the left under the cycle, else under „Mehr“). */
       return rs.length ? UI.group(rs, SF ? 'Verlauf' : 'Statistik') : '';
     }
 
     if (kind === 'd_device') {
       var rd = [];
       var SFd = window._casoraHH && window._casoraHH.on();
-      /* Soft (declutter): door is in the head; connection/remote start go, the switches stay (under "Mehr"). */
+      /* Soft (declutter): door is in the head; connection/remote start go, the switches stay (under „Mehr“). */
       if (c.door && states[c.door] && !SFd) rd.push({ icon: doorOpen ? 'mdi:door-open' : 'mdi:door-closed', iconTone: doorOpen ? 'warn' : DIM,
         label: 'Tür', value: doorOpen ? 'Geöffnet' : 'Geschlossen', valueTone: doorOpen ? 'warn' : null });
       if (c.conn && states[c.conn] && !SFd) { var cn = states[c.conn].state === 'on';
@@ -2505,7 +2505,7 @@
 
     /* Soft (declutter 01.10.2026): head with time left, on the left program/start time/start or
        cycle, on the right hints and refills (only what is due); options, consumption, statistics,
-       device switches and plug under "Mehr". No power chart. */
+       device switches and plug under „Mehr“. No power chart. */
     if (window._casoraHH && window._casoraHH.on() && window._casoraHH.layout) {
       var HH = window._casoraHH;
       var f2 = { hero: fields.hero, run: fields.run, prog: fields.prog, start: fields.start, alerts: fields.alerts, care: fields.care };
@@ -2513,7 +2513,7 @@
          grid gap on top), cancel pill at the end of the left column. */
       if (active) f2.pbar = tpl('d_pbar', false);
       f2.abort = tpl('d_abort', false);
-      /* While running "Verlauf" sits on the left under the cycle (column balance against the care list). */
+      /* While running „Verlauf“ sits on the left under the cycle (column balance against the care list). */
       if (active) f2.stats = fields.stats;
       var moreD = ['d_opts', 'energy'].concat(active ? [] : ['d_stats']).concat(['d_device', 'plug']);
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
@@ -2659,7 +2659,7 @@
   };
 
   /* Printer name without an own value (printer_name): the device's name in HA (renamed by the
-     user first), else "3D-Drucker". The template used to say "Bambu P1S" fixed. */
+     user first), else „3D-Drucker“. The template used to say „Bambu P1S“ fixed. */
   var devName = function (hass, eid) {
     var e = eid && hass && hass.entities && hass.entities[eid];
     var d = e && e.device_id && hass.devices && hass.devices[e.device_id];
@@ -2792,8 +2792,8 @@
         right: rem != null && rem > 0 ? 'Fertig gegen ' + U.clock(new Date(Date.now() + rem * 60000)) + ' Uhr' : '' });
     }
     if (kind === 'p_hero') {
-      /* Soft (declutter): sub line "Schicht 120/300 · PETG". 1.1.2 (direction A): while printing the
-         time left is the main value like dishwasher/laundry, percent and "Fertig gegen" at the bar (p_pbar). */
+      /* Soft (declutter): sub line „Schicht 120/300 · PETG“. 1.1.2 (direction A): while printing the
+         time left is the main value like dishwasher/laundry, percent and „Fertig gegen“ at the bar (p_pbar). */
       if (window._casoraHH && window._casoraHH.on()) {
         var pc = U.num(states, c.progress), sl = U.num(states, c.layer), st2 = U.num(states, c.layers);
         var fil = null, actS = U.str(states, c.activeSlot);
@@ -2861,7 +2861,7 @@
         sub: le != null && le > 0 ? U.f(le, 1) + ' m' : null, value: U.f(w, 1) + ' g' });
       /* Soft (declutter): progress and layer are in the head – here only end, start, task, filament. */
       if (window._casoraHH && window._casoraHH.on()) {
-        /* 1.1.2: "Fertig gegen" sits at the bar under the head (p_pbar). */
+        /* 1.1.2: „Fertig gegen“ sits at the bar under the head (p_pbar). */
         rows = rows.filter(function (r) { return r.label !== 'Fortschritt' && r.label !== 'Schicht'; });
         return rows.length ? UI.group(rows, active ? 'Druck' : 'Zuletzt gedruckt') : '';
       }
@@ -2883,7 +2883,7 @@
           svc: { domain: 'switch', service: co ? 'turn_off' : 'turn_on', target: { entity_id: c.camSw } } }); }
       var out = rc.length ? UI.group(rc, 'Steuerung') : '';
       var sp = c.speedSel && states[c.speedSel];
-      /* Soft: speed sits under "Mehr" (p_speed). */
+      /* Soft: speed sits under „Mehr“ (p_speed). */
       if (sp && sp.state !== 'unavailable' && !(window._casoraHH && window._casoraHH.on())) {
         var spSeg = UI.segments(((sp.attributes || {}).options || []).map(function (o) {
           return { label: SPEED[o] || o, active: sp.state === o, svc: { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.speedSel } } };
@@ -3047,7 +3047,7 @@
 
     /* Soft (declutter 01.10.2026): head with progress, on the left control and print, on the right
        camera with the AI look button below; filament, temperatures, speed, consumption, device and
-       plug under "Mehr". No power chart, no plug readings. */
+       plug under „Mehr“. No power chart, no plug readings. */
     if (window._casoraHH && window._casoraHH.on() && window._casoraHH.layout) {
       var HH = window._casoraHH;
       var f2 = { hero: fields.hero, alerts: fields.alerts, ctrl: fields.ctrl, job: fields.job };
@@ -3132,9 +3132,9 @@
 
 // ── Popup tap guard (23.09.2026) ───────────────────────────────────────────
 // 1) Right after a popup opens (600 ms) data-casora-svc elements do nothing –
-//    the finger that opened the popup must not hit "Heizen" or the like right away.
+//    the finger that opened the popup must not hit „Heizen“ or the like right away.
 // 2) Climate GROUPS (member_entities/entity_id, e.g. a floor heating group): turning on (heat/auto)
-//    needs a second tap "Bestätigen" within 4 s. "Aus" stays one tap.
+//    needs a second tap „Bestätigen“ within 4 s. „Aus“ stays one tap.
 // Runs in the capture phase on window, so before casora-core's document listener.
 (function () {
   if (window._casoraSvcGuard) return;
@@ -3240,7 +3240,7 @@
     segment_mopping: 'Wischt Raum', segment_clean_mop_cleaning: 'Saugt & wischt Raum', segment_clean_mop_mopping: 'Wischt Raum',
     zoned_mopping: 'Wischt Zone', zoned_clean_mop_cleaning: 'Saugt & wischt Zone', zoned_clean_mop_mopping: 'Wischt Zone',
     back_to_dock_washing_duster: 'Kehrt zurück & Moppwäsche',
-    // HA's own 'returning' (Dreame's vacuum state) and Dreame's status words (issue #33).
+    // The returning state of HA itself (as Dreame's vacuum reports it) and the status words of Dreame (issue #33).
     returning: 'Kehrt zurück', room_cleaning: 'Raumreinigung', zone_cleaning: 'Zonenreinigung',
     follow_wall_cleaning: 'Kantenreinigung', fast_mapping: 'Kartierung', remote_control: 'Fernsteuerung aktiv',
   };
@@ -3269,7 +3269,7 @@
     no_error: null,
   };
   // An error code Casora has no words for: Home Assistant's own text in the user's language (the integration's
-  // translation, e.g. Dreame's "Der Roboter steckt fest oder kann nicht vorwärts fahren"), first line only;
+  // translation, e.g. Dreame's „Der Roboter steckt fest oder kann nicht vorwärts fahren“), first line only;
   // without one the code with spaces (issue #33).
   var errText = function (states, eid, code) {
     if (ERRORS[code]) return ERRORS[code];
@@ -3466,7 +3466,7 @@
     }
     var e = U.str(states, c.err);
     if (e && ERRORS[e] !== null) {
-      // Dreame adds a hint to the reason ("Möglicherweise ist der Roboter blockiert …") as attribute 'description'.
+      // Dreame adds a hint to the reason („Möglicherweise ist der Roboter blockiert …“) as attribute 'description'.
       var lab = errText(states, c.err, e), hint = String(((states[c.err] || {}).attributes || {}).description || '').trim();
       out.unshift({ label: lab, level: 2, sub: hint && hint !== lab && hint !== e ? hint : null });
     }
@@ -3480,7 +3480,7 @@
     if (V.state(c, states).busy) return 0;
     return V.todo(c, states).reduce(function (m, t) { return Math.max(m, t.level); }, 0);
   };
-  /* Tile extra at rest: "Sensoren reinigen +1" */
+  /* Tile extra at rest: „Sensoren reinigen +1“ */
   V.hint = function (entity, VV, states, hass) {
     if (!entity) return '';
     var c = V.resolve(entity, VV, states, hass);
@@ -3581,7 +3581,7 @@
         if (area != null) sub.push(U.f(area, 1) + ' m²');
         if (mins != null) sub.push(U.dur(mins));
       } else {
-        /* D-08: translate parts one by one (the whole sentence matched no entry) and "Uhr" only in German. */
+        /* D-08: translate parts one by one (the whole sentence matched no entry) and „Uhr“ only in German. */
         var trV = window.casoraTr || function (x) { return x; };
         var deV = !window.casoraLocale || /^de/i.test(String(window.casoraLocale()));
         if (bat != null) sub.push(trV('Akku ' + Math.round(bat) + ' %') + (on(c.charging) ? ' · ' + trV('lädt') : ''));
@@ -3590,11 +3590,11 @@
         if (le) sub.push(lastW + ' ' + trV(U.day(new Date(le))).replace(/^(Heute|Gestern|Today|Yesterday)$/, function (x) { return x.toLowerCase(); }) + ', ' + U.clock(new Date(le)) + (deV ? ' Uhr' : ''));
       }
       var todo = V.todo(c, states);
-      // On an error its reason first ("Der Roboter steckt fest … · Akku 58 %", issue #33), other urgent care last.
+      // On an error its reason first („Der Roboter steckt fest … · Akku 58 %“, issue #33), other urgent care last.
       if (!s.run && todo.length && todo[0].level === 2) { if (s.error) sub.unshift(todo[0].label); else sub.push(todo[0].label); tone = 'bad'; }
       var value = s.label, unit = null;
       if ((s.run || s.paused) && pct != null) { value = String(Math.round(pct)); unit = '% · ' + s.label; }
-      /* Soft (declutter): "Akku 93 % · zuletzt Sa. 11:18, 20 m²" – the last cleaning's area belongs to it. */
+      /* Soft (declutter): „Akku 93 % · zuletzt Sa. 11:18, 20 m²“ – the last cleaning's area belongs to it. */
       if (SF && !(s.run || s.paused) && area != null && sub.length && sub[sub.length - 1].indexOf(lastW + ' ') === 0) sub[sub.length - 1] += ', ' + U.f(area, 1) + ' m²';
       var out = UI.hero({ value: value, unit: unit, sub: sub.join(' · ') || null, subTone: tone, center: true });
       /* Big buttons: to dock · start/pause · locate */
@@ -3647,7 +3647,7 @@
 
     if (kind === 'v_attn') {
       /* Soft (declutter): only what needs something now – error, station/tanks, mop/water box
-         and wear parts under 20 %. Everything else is under "Mehr" (care). */
+         and wear parts under 20 %. Everything else is under „Mehr“ (care). */
       var at = V.todo(c, states).filter(function (t) { return t.level === 2; }).map(function (t) {
         return { icon: 'mdi:alert-circle-outline', iconTone: 'bad', label: t.label, sub: t.sub || null };
       });
@@ -3747,7 +3747,7 @@
     }
 
     if (kind === 'v_mode') {
-      /* One "Reinigungsmodus" card with sub lines per setting instead of loose button blocks. */
+      /* One „Reinigungsmodus“ card with sub lines per setting instead of loose button blocks. */
       var part = function (items, cap) { return (cap ? CAP(cap) : '') + UI.segments(items); };
       var seg = function (e, cap) {
         var st = e && states[e];
@@ -3776,9 +3776,9 @@
       var outM = bits.length ? HEAD('Reinigungsmodus') + CARD(bits.join('<div style="height:16px"></div>')) : '';
       var rt = c.routines.filter(ok).map(function (b) {
         var nm = String((states[b].attributes || {}).friendly_name || b);
-        /* Drop device names in front: "<Roboter> Intensiv" → "Intensiv". */
+        /* Drop device names in front: „<Roboter> Intensiv“ → „Intensiv“. */
         var bd = hass && hass.entities && hass.entities[b] && hass.devices && hass.devices[hass.entities[b].device_id];
-        /* D-07: also the vacuum's own name (without a device entry it read "<Roboter> Intensiv"). */
+        /* D-07: also the vacuum's own name (without a device entry it read „<Roboter> Intensiv“). */
         [bd && bd.name_by_user, bd && bd.name, ((states[c.st] || {}).attributes || {}).friendly_name].forEach(function (dn) {
           if (dn && nm.length > dn.length && nm.toLowerCase().indexOf(String(dn).toLowerCase() + ' ') === 0) nm = nm.slice(dn.length + 1);
         });
@@ -3969,13 +3969,13 @@
     add('settings', tpl('v_settings', false));
 
     /* Soft (declutter 01.10.2026): head with buttons, on the left mode/programs and rooms, on the right
-       map and "Braucht Aufmerksamkeit"; station actions, auto empty, settings,
-       care, statistics, cleaning and the station's switch under "Mehr". No battery chart,
-       no "Akku & Strom", no consumption. */
+       map and „Braucht Aufmerksamkeit“; station actions, auto empty, settings,
+       care, statistics, cleaning and the station's switch under „Mehr“. No battery chart,
+       no „Akku & Strom“, no consumption. */
     if (window._casoraHH && window._casoraHH.on() && window._casoraHH.layout) {
       var HH = window._casoraHH;
       var f2 = { hero: fields.hero, mode: fields.mode, rooms: fields.rooms, map: hasMapS(c, states) ? fields.map : null,
-        /* B-11: "Braucht Aufmerksamkeit" only when something is pending – otherwise "Mehr" would sit alone top right. */
+        /* B-11: „Braucht Aufmerksamkeit“ only when something is pending – otherwise „Mehr“ would sit alone top right. */
         attn: (function () {
           try {
             var h = window._casoraLaundry && window._casoraLaundry.inner('v_attn', c, states);
@@ -4054,7 +4054,7 @@
 
 
 // ── Notifications: line wrapping (23.09.2026) ───────────────────────────────
-// Titles in the bell may take two lines instead of being cut off with "…".
+// Titles in the bell may take two lines instead of being cut off with „…“.
 // Whether a robot vacuum is done or only resting at the station in between has been decided
 // by the bell itself for all makers since 1.0.7 (vacuumRuns in casora-core.js).
 (function () {
