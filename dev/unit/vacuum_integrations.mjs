@@ -18,11 +18,11 @@ const reg = (domain, key, unit, state) => {
 const window = {};
 globalThis.document = { querySelector: (s) => (s === 'home-assistant' ? { hass } : null) };
 new Function('window', 'document', read('custom_components/casora/scripts/local/00-finden.js'))(window, globalThis.document);
-const geraete = read('custom_components/casora/scripts/local/02-geraete.js');
+const geraete = read('custom_components/casora/scripts/local/02-devices.js');
 const str = (states, e) => { const s = e && states[e] && states[e].state; return !s || ['unknown', 'unavailable', 'none', 'off'].includes(s) ? null : s; };
 const num = (states, e) => { const v = e && states[e] ? parseFloat(states[e].state) : NaN; return Number.isFinite(v) ? v : null; };
 window._casoraLaundry = { util: { str, num, DIM: {} } };
-new Function('window', 'document', cut(geraete, '// ── Saugroboter (casora_vacuum', '// ── Benachrichtigungen'))(window, globalThis.document);
+new Function('window', 'document', cut(geraete, '// ── Robot vacuum (casora_vacuum', '// ── Notifications'))(window, globalThis.document);
 const V = window._casoraVac;
 
 const vac = { entity_id: 'vacuum.example_robot', state: 'docked', attributes: {} };
@@ -100,7 +100,7 @@ assert.equal(todo[0], 'Frischwasser auffüllen', 'clean_water_tank_status low_wa
 assert.ok(todo.includes('Wasserauslassfilter') && todo.includes('Schmutzwassertank (Roboter)'), 'due extra parts');
 assert.ok(!todo.includes('Räder reinigen'), '3 days left is not due');
 assert.ok(geraete.includes("sub: due ? null : restText(states, p[0], h2)"), 'care list says days for day sensors');
-const restText = new Function('U', cut(geraete, '  var SEC = { s: 1', '  /* Verschleißteile:') + 'return restText;')({ num, f: (v) => String(v), dur: (m) => m + ' Min.' });
+const restText = new Function('U', cut(geraete, '  var SEC = { s: 1', '  /* Wear parts:') + 'return restText;')({ num, f: (v) => String(v), dur: (m) => m + ' Min.' });
 assert.equal(restText(hass.states, more.wheel, 72), 'noch 3 Tage');
 assert.equal(restText(hass.states, parts.main, 250), 'noch 250 Betriebsstd.');
 
@@ -143,7 +143,7 @@ for (const [read_, want] of [["mins = numIn(states, c.time, 'min')", 'time'], ["
   ["var tt = numIn(states, c.totalTime, 'h')", 'total time'], ["var h = numIn(states, p[0], 'h')", 'parts']]) {
   assert.ok(geraete.includes(read_), 'reads ' + want + ' in its unit');
 }
-const numIn = new Function('U', cut(geraete, '  var SEC = { s: 1', '  /* Verschleißteile:') + 'return numIn;')({ num });
+const numIn = new Function('U', cut(geraete, '  var SEC = { s: 1', '  /* Wear parts:') + 'return numIn;')({ num });
 const S = (state, unit) => ({ x: { state, attributes: unit ? { unit_of_measurement: unit } : {} } });
 assert.equal(numIn(S('90', 'min'), 'x', 'h'), 1.5, 'Dreame drying 90 min = 1.5 h');
 assert.equal(numIn(S('1500', 's'), 'x', 'min'), 25, 'Ecovacs 1500 s = 25 min');

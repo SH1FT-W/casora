@@ -122,9 +122,9 @@ assert.ok(sug.some((x) => x.type === 'casora_dryer' && x.entity === 'sensor.c1')
 assert.ok(sug.some((x) => x.type === 'casora_dryer' && x.entity === 'sensor.g1'), 'Miele-Trockner vorgeschlagen');
 assert.ok(!sug.some((x) => x.entity === 'sensor.d1'), 'WashData-Geschirrspüler nicht als Waschmaschine');
 
-// Kachel/Popup (02-geraete.js): Zustände der Hersteller sprachunabhängig, Quelle im Popup.
+// Kachel/Popup (02-devices.js): Zustände der Hersteller sprachunabhängig, Quelle im Popup.
 window._casoraUI = null;
-try { new Function(src('scripts/local/02-geraete.js'))(); } catch (e) { /* andere Module brauchen den Browser */ }
+try { new Function(src('scripts/local/02-devices.js'))(); } catch (e) { /* andere Module brauchen den Browser */ }
 const L = window._casoraLaundry;
 assert.ok(L, '_casoraLaundry fehlt');
 assert.deepEqual(L.state(hass.states, 'sensor.a1').slice(2), [true, 'run'], 'Home Connect „run“ läuft');
@@ -139,6 +139,6 @@ assert.deepEqual([c.source, c.official, c.remaining, c.program, c.stop], ['home_
 const w = L.resolve({ entity_id: 'sensor.b1' }, {}, hass.states, hass);
 assert.deepEqual([w.source, w.official, w.unload, w.select, w.entry], ['washdata', false, 'button.b4', 'select.b3', 'entry_wd']);
 console.log('waesche_quelle: ok');
-// 02-geraete.js wartet im Browser bis zu 60 s auf ein Element (setInterval 250 ms × 240) –
+// 02-devices.js wartet im Browser bis zu 60 s auf ein Element (setInterval 250 ms × 240) –
 // in Node kommt es nie, Node bliebe so lange offen. Test ist fertig: sofort beenden (T-08).
 process.exit(0);

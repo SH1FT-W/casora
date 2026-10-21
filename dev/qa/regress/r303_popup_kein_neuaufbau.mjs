@@ -1,5 +1,5 @@
 // @zustand: arbeit
-// @deckt: custom_components/casora/scripts/local/05-weich-mehr.js custom_components/casora/scripts/local/02-geraete.js
+// @deckt: custom_components/casora/scripts/local/05-weich-mehr.js custom_components/casora/scripts/local/02-devices.js
 // Popups bauen ihre Bereiche bei Attributänderungen nicht neu auf (17.10.2026: Pulse → Gerät → „Verlauf“ flackerte).
 // Ursache war, dass die äußere Layout-Karte (K.layout/H.layout) die Vorlagen ihrer inneren button-cards mit auswertete,
 // so alle Entitäten beobachtete und bei jeder Änderung die Kinder neu anlegte. Jetzt werten die Kinder selbst aus

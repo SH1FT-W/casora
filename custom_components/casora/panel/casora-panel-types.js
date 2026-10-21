@@ -29,7 +29,7 @@ const LAUNDRY = [
   TITLE,
   CHART(),
 ];
-// 3D printer: _casoraPrint.resolve() takes these variables before the device finder (FIND in 02-geraete.js).
+// 3D printer: _casoraPrint.resolve() takes these variables before the device finder (FIND in 02-devices.js).
 const PRINT_FIELDS = [
   { key: "entity_state", label: "Print stage", domains: ["sensor"], find: { keys: ["stage"], domain: "sensor" },
     advanced: true, group: "Print job", placeholder: "This tile's entity" },

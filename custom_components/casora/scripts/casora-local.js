@@ -64,7 +64,7 @@
 const MODULES = [
   '00-finden',
   '01-basis',
-  '02-geraete',
+  '02-devices',
   '03-popups',
   '04-navigation',
   '05-standard-medien',

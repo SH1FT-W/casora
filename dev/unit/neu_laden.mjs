@@ -39,7 +39,7 @@ assert.equal(need('1759600000', { stamp: 'abc' }, null), false);
 // Nur Casoras Adressen kommen aus dem Cache – HAs eigene bleiben.
 for (const u of [
   'http://ha:8123/casora_scripts/casora-core.js?v=1759600000',
-  'http://ha:8123/casora_scripts/local/02-geraete.js?v=1',
+  'http://ha:8123/casora_scripts/local/02-devices.js?v=1',
   '/casora_assets/fonts/hanken-grotesk.css',
   'https://ha.example/casora_panel/casora-studio.js?v=1.0.5.1',
   'http://ha/casora_images/x.jpg',

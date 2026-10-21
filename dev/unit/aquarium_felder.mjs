@@ -5,7 +5,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
-const src = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/02-geraete.js', import.meta.url), 'utf8');
+const src = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/02-devices.js', import.meta.url), 'utf8');
 const a = src.indexOf('(function () {\n  if (window._casoraAqParts) return;');
 const b = src.indexOf('\n})();', a);
 assert.ok(a > 0 && b > a, 'Aquarium-Teile-Block nicht gefunden');

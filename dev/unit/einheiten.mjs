@@ -82,7 +82,7 @@ console.log('ok B-JS-03');
 
 // B-JS-04: Aquarium, 3D-Drucker, Auto-Außentemperatur, Lüften, Netzwerk-Temperatur – Einheit des
 // Sensors bzw. von HA; fest eingebautes „ °C“ nur noch als Rückfall.
-for (const f of ['02-geraete.js', '03-popups.js', '05-standard-medien.js', '05-weich-mehr.js']) {
+for (const f of ['02-devices.js', '03-popups.js', '05-standard-medien.js', '05-weich-mehr.js']) {
   const bad = mod(f).split('\n').filter((l) => /' °C'|'°C',|<span> °C</.test(l) && !/\|\| '°C'/.test(l));
   assert.deepEqual(bad, [], f + ': fest eingebautes °C');
 }
@@ -94,7 +94,7 @@ console.log('ok B-JS-04');
 
 // B-JS-05: Kosten bei Haushaltsgeräten in der Währung von Home Assistant, nicht immer Euro.
 {
-  const src = mod('02-geraete.js');
+  const src = mod('02-devices.js');
   const m = src.match(/  var eur = function \(n\) \{[\s\S]*?\n  \};/);
   assert.ok(m, 'eur gefunden');
   const make = (cur) => new Function('window', 'document', m[0] + ' return eur;')({}, { querySelector: () => ({ hass: { config: { currency: cur } } }) });

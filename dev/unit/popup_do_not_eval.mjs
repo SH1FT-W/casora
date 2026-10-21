@@ -1,4 +1,4 @@
-// Popup-Layouts (K.layout in 05-weich-mehr.js, H.layout/H.col in 02-geraete.js): jede innere button-card wertet ihre
+// Popup-Layouts (K.layout in 05-weich-mehr.js, H.layout/H.col in 02-devices.js): jede innere button-card wertet ihre
 // Vorlagen selbst aus (do_not_eval: true). Sonst wertet die äußere Karte sie mit aus, beobachtet so deren Entitäten
 // und ruft bei jeder Inhaltsänderung setConfig auf die Spalte auf – button-card legt dann alle Bereiche neu an,
 // sie blitzen kurz leer auf (17.10.2026: Pulse → Gerät → „Verlauf“ flackerte; davor schon das Licht-Popup).
@@ -43,7 +43,7 @@ for (const w of [1400, 500]) {
 globalThis.innerWidth = 1400;
 
 // H.layout (Geräte-Popups)
-try { new Function(src('02-geraete.js'))(); } catch (e) { /* Rest braucht DOM – H ist vorher angelegt */ }
+try { new Function(src('02-devices.js'))(); } catch (e) { /* Rest braucht DOM – H ist vorher angelegt */ }
 const H = window._casoraHH;
 assert.ok(H && H.layout && H.own, 'H geladen');
 const hl = H.layout({ fields: { top: '[[[ return "k"; ]]]', a: '[[[ return "a"; ]]]', b: { card: sec('b') }, more: { card: sec('m') } },

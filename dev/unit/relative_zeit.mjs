@@ -15,7 +15,7 @@ assert.equal(core(NOW - 36 * H), 'gestern', 'Statusmeldung: gestern 9 Uhr → ge
 assert.equal(core(NOW - 5 * H), 'vor 5 Std.');
 assert.equal(core(NOW - 60 * H), 'vor 2 Tagen', 'vorgestern 9 Uhr → vor 2 Tagen');
 
-const dev = new Function('Date', pick(read('local/02-geraete.js'), /  var ago = function \(d\) \{[\s\S]*?\n  \};/) + ' return ago;')(FakeDate);
+const dev = new Function('Date', pick(read('local/02-devices.js'), /  var ago = function \(d\) \{[\s\S]*?\n  \};/) + ' return ago;')(FakeDate);
 assert.equal(dev(new RealDate(NOW - 36 * H)), 'gestern', 'Geräte-Popup: 36 h → gestern');
 assert.equal(dev(new RealDate(NOW - 50 * H)), 'vor 2 Tagen');
 
@@ -38,7 +38,7 @@ console.log('ok relative_zeit');
   assert.equal(w.casoraDaysAgo(36 * 60), 1, '36 Std. → 1 Tag (gestern)');
   assert.equal(w.casoraDaysAgo(24 * 60), 1);
   assert.equal(w.casoraDaysAgo(60 * 60), 2, '60 Std. (vorgestern 9 Uhr) → 2');
-  for (const f of ['04-navigation.js', '02-geraete.js', '03-popups.js', '05-standard-medien.js', '08-weich-szenen.js', '08-weich-kompakt.js']) {
+  for (const f of ['04-navigation.js', '02-devices.js', '03-popups.js', '05-standard-medien.js', '08-weich-szenen.js', '08-weich-kompakt.js']) {
     const s = read('local/' + f);
     assert.ok(!/[^:] Math\.round\(m \/ 1440\)/.test(s.replace(/window\.casoraDaysAgo \? window\.casoraDaysAgo\(m\) : Math\.round\(m \/ 1440\)/g, '')), f + ': noch 24-h-Rundung');
   }

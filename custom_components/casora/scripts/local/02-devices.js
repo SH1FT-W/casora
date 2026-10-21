@@ -1,8 +1,8 @@
-// ── Aquarium: Dosierpumpe und Lichtsteuerung aus den Kachelfeldern (1.0.3) ──────
-// Neu: frei gewählte Entitäten – dosing_buttons (Dosier-Knopf je Kanal) mit den Zuordnungen
+// ── Aquarium: dosing pump and light control from the tile fields (1.0.3) ──────
+// New: freely chosen entities – dosing_buttons (dose button per channel) with the mappings
 // dosing_volume / dosing_today / dosing_total / dosing_names (je Knopf), light_profile (select)
-// und light_schedule_switch (switch: an = HA-Zeitplan). Ältere Kacheln mit den Präfixen
-// dosing_prefix und helialux laufen unverändert weiter; ein gewähltes Feld geht vor.
+// and light_schedule_switch (switch: on = HA schedule). Older tiles with the prefixes
+// dosing_prefix and helialux keep working unchanged; a chosen field wins.
 (function () {
   if (window._casoraAqParts) return;
   window._casoraAqParts = function (variables, states) {
@@ -15,7 +15,7 @@
     const btns = (Array.isArray(V.dosing_buttons) ? V.dosing_buttons : []).filter((b) => typeof b === 'string' && b);
     if (btns.length) {
       dose = btns.map((btn, i) => {
-        /* Ein Knopf im alten Muster (button.<präfix>_dose_pump_<n>) findet seine Werte wie früher. */
+        /* A button in the old pattern (button.<prefix>_dose_pump_<n>) finds its values as before. */
         const m = /^button\.(.+)_dose_pump_(\d+)$/.exec(btn);
         const old = m ? { today: 'sensor.' + m[1] + '_pump_' + m[2] + '_dosed_today',
           total: 'sensor.dosierpumpe_' + m[1] + '_pump_' + m[2] + '_total_ml', vol: 'number.' + m[1] + '_pump_' + m[2] + '_dose_volume' } : {};
@@ -31,7 +31,7 @@
         vol: 'number.' + dp + '_pump_' + n + '_dose_volume',
         btn: 'button.' + dp + '_dose_pump_' + n,
       })).filter((c) => S[c.btn]);
-      /* Wie bisher: dosing_labels zählen über die vorhandenen Kanäle. */
+      /* As before: dosing_labels count across the existing channels. */
       dose.forEach((c, i) => { c.label = labels[i] || null; });
     }
     const hx = V.helialux || null;
@@ -40,10 +40,10 @@
     return { dose: dose, light: sw || sel ? { sw: sw, sel: sel, legacy: !!hx && !V.light_schedule_switch && !V.light_profile } : null };
   };
 
-  /* Zeitplan-Schalter (1.1.2): was heißt „an“? 'ha' = Home Assistant steuert die Farben (Juwel HeliaLux
-     „manuelle Farbsimulation“), 'lamp' = die Lampe fährt ihr eigenes Programm (Chihiros auto_mode,
-     Juwel AppControl „Automatik“, Auto-Modus-Schalter). light_schedule_on aus dem Studio geht vor;
-     erkannt wird über translation_key, Entitäts-ID und Namen, im Zweifel wie bisher 'ha'. */
+  /* Schedule switch (1.1.2): what does "on" mean? 'ha' = Home Assistant controls the colours (Juwel HeliaLux
+     "manuelle Farbsimulation"), 'lamp' = the lamp runs its own program (Chihiros auto_mode,
+     Juwel AppControl "Automatik", auto mode switch). light_schedule_on from the Studio wins;
+     detected by translation_key, entity ID and name, when in doubt 'ha' as before. */
   window._casoraAqSwitchMeaning = function (sw, V, hass) {
     const set = V && V.light_schedule_on;
     if (set === 'ha' || set === 'lamp') return set;
@@ -58,9 +58,9 @@
     return 'ha';
   };
 
-  /* Farbkanäle der Beckenlampe (1.1.2): je Kanal Name, Farbe, Wert (0–100) und Regler-Dienst.
-     Quelle: gewählte number-Entitäten (light_channels), sonst number-Entitäten am Gerät der Leuchte
-     mit Farbwort (Fluval, HeliaLux, Chihiros), sonst rgb/rgbw/rgbww der Leuchte selbst. */
+  /* Colour channels of the tank lamp (1.1.2): per channel name, colour, value (0–100) and slider service.
+     Source: chosen number entities (light_channels), else number entities on the light's device
+     with a colour word (Fluval, HeliaLux, Chihiros), else the light's own rgb/rgbw/rgbww. */
   const CH = [
     [/^(royal|actinic|aktinisch|aktinic)$/, 'Aktinisch', '#4F5BD5'],
     [/^(uv|violet|violett|purple)$/, 'UV', '#8E5CC7'],
@@ -73,7 +73,7 @@
     [/^(white|weiß|weiss|w)$/, 'Weiß', '#CDBFA8'],
   ];
   window._casoraAqChannelOf = function (text) {
-    /* Einzelbuchstaben (r/g/b/w) nur als letztes Wort („kanal_r“), sonst passt jedes „b“. */
+    /* Single letters (r/g/b/w) only as the last word ("kanal_r"), otherwise every "b" matches. */
     const toks = String(text || '').toLowerCase().split(/[^a-zäöüß0-9]+/).filter(Boolean);
     for (let i = 0; i < CH.length; i++) {
       for (let k = 0; k < toks.length; k++) {
@@ -96,7 +96,7 @@
       const own = hit || window._casoraAqChannelOf([r.translation_key, id.split('.')[1], a.friendly_name].join(' '));
       let name = own ? own.name : String(a.friendly_name || id);
       if (!own && s.attributes.friendly_name) {
-        /* Gerätename vorn weglassen („Becken Kanal 1“ → „Kanal 1“). */
+        /* Drop the device name in front ("Becken Kanal 1" → "Kanal 1"). */
         const pre = String(s.attributes.friendly_name).split(' ').slice(0, -1).join(' ');
         if (pre && name.indexOf(pre + ' ') === 0) name = name.slice(pre.length + 1);
       }
@@ -127,8 +127,8 @@
     });
   };
 
-  /* Soll-Bereich der Wassertemperatur (1.1.2, temp_min/temp_max aus dem Studio): 0 = im Bereich,
-     1 = draußen (Prüfen), 2 = um mehr als 2 °C (3,6 °F) draußen (Alarm). dir: 'low' | 'high'. */
+  /* Target range of the water temperature (1.1.2, temp_min/temp_max from the Studio): 0 = in range,
+     1 = outside (check), 2 = more than 2 °C (3.6 °F) outside (alarm). dir: 'low' | 'high'. */
   window._casoraAqTempRange = function (value, V, unit) {
     const n = parseFloat(value);
     const mn = parseFloat(V && V.temp_min), mx = parseFloat(V && V.temp_max);
@@ -139,8 +139,8 @@
     return { level: 0, dir: null };
   };
 
-  /* Kachel: ist alles in Ordnung, nur „Alles ok“ ohne Temperatur (Wunsch 09.10.2026); bei Problemen wie
-     bisher die Temperatur vorn („26,8° · Prüfen · Temperatur zu hoch“). */
+  /* Tile: when all is well, only "Alles ok" without temperature (request 09.10.2026); on problems the
+     temperature first as before ("26,8° · Prüfen · Temperatur zu hoch"). */
   window._casoraAqTileText = function (entity, ev) {
     const t = (ev && ev.text) || '';
     if (t && ev && !ev.level) return t;
@@ -150,9 +150,9 @@
     return t ? v + ' · ' + t : v;
   };
 
-  /* Technik (1.1.2): Studio-Felder tech_entities (Liste) mit tech_names / tech_alarm / tech_confirm (je
-     Eintrag) plus die älteren devices-Objekte aus YAML ({entity, label, icon, alarm, confirm, sub}).
-     Doppelte Entitäten zählen einmal (devices zuerst). */
+  /* Equipment (1.1.2): Studio fields tech_entities (list) with tech_names / tech_alarm / tech_confirm (per
+     entry) plus the older devices objects from YAML ({entity, label, icon, alarm, confirm, sub}).
+     Duplicate entities count once (devices first). */
   const TECH_ICON = { switch: 'mdi:power-plug', light: 'mdi:lightbulb', fan: 'mdi:fan', climate: 'mdi:thermometer',
     input_boolean: 'mdi:toggle-switch-outline', humidifier: 'mdi:air-humidifier', siren: 'mdi:alarm-light' };
   window._casoraAqDevices = function (V, states) {
@@ -171,7 +171,7 @@
     });
     return out;
   };
-  /* Schalten je Domain statt fest switch.* (Heizer als climate, Lüfter, Licht, Helfer). on: läuft das Gerät? */
+  /* Switch per domain instead of a fixed switch.* (heater as climate, fan, light, helper). on: is the device running? */
   window._casoraAqTechSvc = function (id, on) {
     const dom = String(id || '').split('.')[0];
     const own = ['switch', 'light', 'fan', 'input_boolean', 'climate', 'humidifier', 'siren'].indexOf(dom) !== -1;
@@ -183,7 +183,7 @@
     return st.state === 'on';
   };
 
-  /* Temperaturstatus eines eigenen Helfers: deutsch oder englisch, auch als binary_sensor (an = Problem). */
+  /* Temperature status of an own helper: German or English, also as binary_sensor (on = problem). */
   window._casoraAqStatusLevel = function (st) {
     if (!st) return 0;
     const s = String(st.state || '').toLowerCase();
@@ -194,9 +194,9 @@
   };
 })();
 
-// ── Aquarium-Kacheln (casora_aquarium_tank) ────────────────────────────────
-// Logik für Kachelstatus und Popup liegt hier statt im Dashboard, damit sie
-// Casora-Updates und Studio-Speichern übersteht. Die Templates rufen nur auf.
+// ── Aquarium tiles (casora_aquarium_tank) ────────────────────────────────
+// Logic for tile status and popup lives here instead of the dashboard so it
+// survives Casora updates and Studio saves. The templates only call it.
 (function () {
 
   window._casoraAqWrap = function (html) {
@@ -206,7 +206,7 @@
       + ' onclick="window._hpPlantTap&&window._hpPlantTap(event,\'c\');window._casoraAqTap(event,\'c\')">'
       + html + '</div>';
   };
-  /* Dünger-Zeile (data-aq-dose) öffnet das Dosier-Popup. Das Licht wird seit 1.1.2 im Becken-Popup selbst bedient. */
+  /* Fertilizer row (data-aq-dose) opens the dosing popup. Since 1.1.2 the light is controlled in the tank popup itself. */
   window._casoraAqTap = function (ev, kind) {
     if (kind === 's') { const t0 = ev.touches && ev.touches[0]; window._aqTy = t0 ? t0.clientY : 0; window._aqTx = t0 ? t0.clientX : 0; return; }
     if (kind === 't') {
@@ -222,14 +222,14 @@
       if (ds.aqDose) { dose = ds.aqDose; break; }
     }
     if (!dose) return;
-    /* Der „Dosieren“-Knopf in der Zeile bleibt eigenständig (Bestätigung) */
+    /* The "Dosieren" button in the row stays separate (confirmation) */
     for (let i = 0; i < p.length; i++) { if (p[i] && p[i].dataset && (p[i].dataset.casoraArm !== undefined || (p[i].classList && p[i].classList.contains('hui-cf')))) return; }
     ev.stopPropagation(); if (ev.cancelable) ev.preventDefault();
     window._casoraSuppressDismiss = Date.now() + 600;
     try { window._casoraAqDoseOpen(JSON.parse(decodeURIComponent(dose))); } catch (e) { console.error('casora aquarium dose', e); }
   };
 
-  /* Eigenes Casora-Popup je Dünger-Kanal (Sheet-Stil, Bedienung). Inhalt ohne Kachel-Schatten (sonst Karte in der Karte). */
+  /* Own Casora popup per fertilizer channel (sheet style, control). Content without tile shadow (else a card in a card). */
   window._casoraAqDoseOpen = function (d) {
     if (!window.casoraPopup || !d || !d.vol) return;
     const _d = JSON.stringify(d);
@@ -272,7 +272,7 @@
         ].filter(Boolean), null);
       ]]]`),
       field('chart', { card: {
-        /* Dosiert pro Tag (Tageshöchstwert des Tageszählers), Säulen wie „Verbrauch pro Tag“. */
+        /* Dosed per day (daily maximum of the day counter), bars like "Verbrauch pro Tag". */
         type: 'custom:casora-chart', kind: 'bar', span: '7d', source: 'history', agg: 'max', height: 130,
         series: [{ entity: d.today, name: 'Dosiert', decimals: 1 }], plate: true, title: 'Dosiert · 7 Tage',
       } }),
@@ -297,8 +297,8 @@
     });
   };
 
-  /* Antippbare Felder (Lampen-Modi, Lampen-Profil): brechen um statt abzuschneiden, Trefferfläche 46 px,
-     aktives Feld hell wie die Weich-Segmente („Warm / Neutral / Kalt“). */
+  /* Tappable fields (lamp modes, lamp profile): wrap instead of clipping, hit area 46 px,
+     active field bright like the Soft segments ("Warm / Neutral / Kalt"). */
   window._casoraAqChips = function (items, label) {
     const UI = window._casoraUI;
     const soft = !!(window._casoraSoft && window._casoraSoft());
@@ -322,8 +322,8 @@
       + '</div>';
   };
 
-  /* Licht im Becken-Popup (1.1.2): Zeile An/Aus, Helligkeit, Farbkanäle (zweispaltig) und die eigenen
-     Modi bzw. das Profil der Lampe zum Antippen; „Weitere Einstellungen“ öffnet den HA-Dialog. */
+  /* Light in the tank popup (1.1.2): on/off row, brightness, colour channels (two columns) and the lamp's
+     own modes or profile to tap; "Weitere Einstellungen" opens the HA dialog. */
   window._casoraAqLight = function (c, states, hass) {
     const UI = window._casoraUI;
     if (!UI) return '';
@@ -334,8 +334,8 @@
     const on = !!s && s.state === 'on';
     const rsx = c.reach && states[c.reach];
     const offMs = rsx && rsx.state === 'off' ? Date.now() - new Date(rsx.last_changed).getTime() : 0;
-    const far = offMs > 30 * 60 * 1000;        // erst nach 30 min als Problem (wie Kachel/Helfer)
-    const blip = offMs > 0 && !far;            // kurzer BT-Aussetzer, nur neutraler Hinweis
+    const far = offMs > 30 * 60 * 1000;        // only a problem after 30 min (like tile/helper)
+    const blip = offMs > 0 && !far;            // short BT dropout, only a neutral hint
     const gap = (px) => '<div style="height:' + px + 'px"></div>';
     const lbl = (t) => soft ? UI.label(t)
       : '<div style="font-family:var(--primary-font-family,system-ui);font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);'
@@ -343,10 +343,10 @@
     let out = UI.group([{ icon: 'mdi:lightbulb', iconTone: on ? null : 'rgba(255,255,255,0.18)', label: 'Beckenlicht',
       sub: far ? 'Per Bluetooth nicht erreichbar' : blip ? 'Bluetooth-Verbindung kurz unterbrochen' : (dead ? 'Nicht verfügbar' : null),
       value: dead ? '—' : on ? 'An' : 'Aus', valueTone: far ? 'warn' : null,
-      /* Einschalten mit Farbwerten (light_on_data): ein nacktes turn_on ließ die Juwel-Lampe dunkel. */
+      /* Turn on with colour values (light_on_data): a bare turn_on left the Juwel lamp dark. */
       svc: dead ? null : (on ? { domain: 'light', service: 'turn_off', target: { entity_id: c.light } }
                              : { domain: 'light', service: 'turn_on', data: c.lightOn || {}, target: { entity_id: c.light } }),
-      /* Ausschalten nur nach Bestätigung, wie bei Pumpe/Abschäumer. */
+      /* Turn off only after confirmation, like pump/skimmer. */
       confirm: on ? 'Ausschalten' : null }], 'Licht');
     if (dead) return out;
     const modes = Array.isArray(a.supported_color_modes) ? a.supported_color_modes : [];
@@ -362,7 +362,7 @@
           + UI.slider({ value: k.value, softHeight: 46, bar: true, small: true, label: k.name, svc: k.svc }) + '</div>').join('')
         + '</div>';
     }
-    /* Lampen-Modi: Effekte der Leuchte (übersetzt, wie HA sie zeigt); „none/off“ wird „Ohne Effekt“. */
+    /* Lamp modes: the light's effects (translated, as HA shows them); "none/off" becomes "Ohne Effekt". */
     const fxAll = (Array.isArray(a.effect_list) ? a.effect_list : []).filter((e) => typeof e === 'string' && e);
     const noFx = fxAll.filter((e) => /^(none|off|aus|kein)$/i.test(e))[0];
     const fx = fxAll.filter((e) => e !== noFx);
@@ -373,7 +373,7 @@
         .concat(fx.map((e) => ({ label: fxName(e), active: on && a.effect === e, svc: fxSvc(e) })));
       out += gap(18) + window._casoraAqChips(items, 'Lampen-Modi');
     }
-    /* Lampen-Profil (select): nur solange die Lampe ihr eigenes Programm fährt (oder kein Schalter da ist). */
+    /* Lamp profile (select): only while the lamp runs its own program (or there is no switch). */
     const sel = c.hx && c.hx.sel && states[c.hx.sel];
     if (sel) {
       const sw = c.hx.sw && states[c.hx.sw] ? c.hx.sw : null;
@@ -391,13 +391,13 @@
     return out + gap(12) + UI.group([{ icon: 'mdi:tune-variant', iconTone: 'rgba(255,255,255,0.18)', label: 'Weitere Einstellungen', entity: c.light }], null);
   };
 
-  /* Steuerung: Zeitplan-Schalter als zwei Zeilen (aktive hinterlegt); Bedeutung von „an“ je Lampe. */
+  /* Control: schedule switch as two rows (active one highlighted); meaning of "on" per lamp. */
   window._casoraAqSteer = function (c, states, hass) {
     const UI = window._casoraUI;
     if (!UI || !c.hx) return '';
     const sw = c.hx.sw && states[c.hx.sw] ? c.hx.sw : null;
     if (!sw) {
-      /* Profil ohne Leuchte: Auswahlliste wie bisher. */
+      /* Profile without a light: picker as before. */
       const sel = c.hx.sel && states[c.hx.sel];
       if (!sel) return '';
       const nm = (o) => { try { if (hass && hass.formatEntityState) return hass.formatEntityState(sel, o) || o; } catch (x) {} return o; };
@@ -420,7 +420,7 @@
   };
 
   window._casoraAqEval = function (entity, variables, states, hass) {
-  /* Drei Zustände: Alles ok / Prüfen (orange) / Alarm (rot), dahinter der wichtigste Grund. */
+  /* Three states: Alles ok / Prüfen (orange) / Alarm (red), followed by the most important reason. */
   const num = (e) => { const n = parseFloat(states[e]?.state); return isNaN(n) ? null : n; };
   const dead = (e) => !!e && (!states[e] || ['unavailable', 'unknown'].includes(states[e].state));
   const reg = (hass && hass.entities) || {};
@@ -444,10 +444,10 @@
     if (!d.alarm) return;
     if (s === 'off') { alarm.push(d.label + ' aus'); return; }
     const pw = num(powerOf(d.entity));
-    // Unter 2 W gilt ein eingeschaltetes Gerät als stromlos (kleine Pumpen ziehen 2–3 W).
+    // Below 2 W a switched-on device counts as without power (small pumps draw 2–3 W).
     if (s === 'on' && pw != null && pw < 2) alarm.push(d.label + ' ohne Strom');
   });
-  /* Soll-Bereich aus dem Studio (temp_min/temp_max); der eigene Statussensor bleibt als Zusatz. */
+  /* Target range from the Studio (temp_min/temp_max); the own status sensor stays as an extra. */
   const tr = window._casoraAqTempRange ? window._casoraAqTempRange(entity?.state, V, entity?.attributes?.unit_of_measurement) : { level: 0 };
   if (tr.level) (tr.level === 2 ? alarm : warn).push(tr.dir === 'low' ? 'Temperatur zu niedrig' : 'Temperatur zu hoch');
   const sl = window._casoraAqStatusLevel ? window._casoraAqStatusLevel(V.status_entity && states[V.status_entity])
@@ -456,21 +456,21 @@
   else if (sl === 1 && !tr.level) warn.push('Temperaturwarnung');
   if (dead(entity?.entity_id)) warn.push('Temperaturfühler offline');
   if (dead(V.leak_entity)) warn.push('Lecksensor offline');
-  /* Akku-Hinweise (battery_hints, 06.10.2026): steht schon eine Batterien-Kachel auf dem Dashboard,
-     macht ein schwacher Fühler-Akku die Kachel nicht orange (Wert bleibt im Popup unter den Sensoren). */
+  /* Battery hints (battery_hints, 06.10.2026): if a batteries tile is already on the dashboard, a weak
+     probe battery does not turn the tile orange (the value stays in the popup under the sensors). */
   const H = window.casoraBatteryHints;
   if (!H || H.on(V.battery_hints)) [[V.leak_battery, 'Akku Lecksensor'], [V.temp_battery, 'Akku Temperaturfühler']].forEach((b) => {
     const n = num(b[0]);
-    // Akku-Stufen (casoraBattery): Schwach und Fast leer sind ein Hinweis, kein Aquarium-Alarm.
+    // Battery levels (casoraBattery): weak and almost empty are a hint, not an aquarium alarm.
     const lv = n == null ? 'ok' : (window.casoraBattery ? window.casoraBattery.level(n) : (n) <= 10 ? 'crit' : (n) <= 20 ? 'low' : 'ok');
     if (lv === 'low' || lv === 'crit') warn.push(b[1] + ' ' + Math.round(n) + ' %');
   });
-  /* Bluetooth-Lampen fallen ständig kurz aus (Fluval: ~20×/Tag, meist < 5 min, max. ~19 min).
-     Erst nach 7 min am Stück zählt es als Problem (23.09., vorher 5 min); gleiche Schwelle im Helfer *_prufen. */
+  /* Bluetooth lamps drop out briefly all the time (Fluval: ~20×/day, mostly < 5 min, max. ~19 min).
+     Only 7 min in a row count as a problem (23.09., before 5 min); same threshold in the helper *_prufen. */
   const BT_TOL_MS = 30 * 60 * 1000;
   const rs = V.light_reachable && states[V.light_reachable];
   if (rs && rs.state === 'off' && Date.now() - new Date(rs.last_changed).getTime() > BT_TOL_MS) warn.push('Licht nicht erreichbar');
-  // Mit Erreichbar-Sensor gilt dessen Toleranz auch für „unavailable“ (BT-Lampen melden bei jedem Aussetzer beides).
+  // With a reachability sensor its tolerance also applies to "unavailable" (BT lamps report both on every dropout).
   else if (!rs && dead(V.light_entity)) warn.push('Licht offline');
   const all = alarm.concat(warn);
   if (!all.length) return { level: 0, text: 'Alles ok', reasons: [] };
@@ -478,8 +478,8 @@
   return { level: level, reasons: all,
     text: (level === 2 ? 'Alarm · ' : 'Prüfen · ') + all[0] + (all.length > 1 ? ' +' + (all.length - 1) : '') };
   };
-  /* Aquarium-Doktor (Casora-KI, ki.py): Ergebnis in sensor.casora_aquarium_ki (Attribut becken, je
-     Temperaturfühler). Ältere eigene Pakete schrieben nach sensor.hemma_aquarium_ki – das gilt als Rückfall. */
+  /* Aquarium doctor (Casora AI, ki.py): result in sensor.casora_aquarium_ki (attribute becken, per
+     temperature probe). Older own packages wrote to sensor.hemma_aquarium_ki – that counts as fallback. */
   const AQ_KI = ['sensor.casora_aquarium_ki', 'sensor.hemma_aquarium_ki'];
   window._casoraAqAiItem = function (temp, states) {
     for (let i = 0; i < AQ_KI.length; i++) {
@@ -489,7 +489,7 @@
     }
     return null;
   };
-  /* Knopf nur, wenn eine KI-Aufgabe eingerichtet ist (Einstellungen → KI-Aufgaben). */
+  /* Button only when an AI task is set up (Settings → AI tasks). */
   window._casoraAiReady = function (states) {
     return Object.keys(states || {}).some((k) => k.indexOf('ai_task.') === 0);
   };
@@ -523,7 +523,7 @@
     const btn = running || !ready ? '' : '<span' + svc + ' style="display:inline-flex;cursor:pointer;font-size:14px;font-weight:600;padding:9px 14px;border-radius:999px;margin-top:14px;'
       + (it ? 'color:var(--casora-popup-ui-action, var(--casora-color-teal, #00C3D0));background:var(--casora-popup-ui-action-tint, rgba(0,195,208,0.14));' : 'color:#000;background:var(--casora-color-teal, #00C3D0);') + '">'
       + (it ? 'Neu prüfen' : 'Jetzt prüfen') + '</span>';
-    /* Weich (01.10.2026): KI-Karte mit Etikett und rundem Knopf aus den Bausteinen. */
+    /* Soft (01.10.2026): AI card with label and round button from the building blocks. */
     const kc = UI.kiCard && UI.kiCard({ title: 'Aquarium-Doktor', body: body,
       foot: it && !running && it.at ? 'KI-Einschätzung · ' + ago(it.at) : '',
       btnSvc: svc, btnText: running || !ready ? '' : (it ? 'Neu prüfen' : 'Jetzt prüfen'), primary: !it });
@@ -565,7 +565,7 @@
   const devs = window._casoraAqDevices(variables, states).filter((d) => d && d.entity && states[d.entity])
     .map((d) => Object.assign({}, d, { power: powerOf(d.entity),
       today: meterOf(d.entity, /_energy_today$/), month: meterOf(d.entity, /_energy_month$/) }));
-  /* Dosierpumpe und Lichtsteuerung: gewählte Entitäten, sonst die alten Präfixe (window._casoraAqParts). */
+  /* Dosing pump and light control: chosen entities, else the old prefixes (window._casoraAqParts). */
   const parts = window._casoraAqParts(variables, states);
   const dose = parts.dose.filter((c) => states[c.btn]);
   const cfg = {
@@ -575,11 +575,11 @@
     tempBat: variables.temp_battery || null, devs: devs, dose: dose,
     lightOn: variables.light_on_data || null,
     hx: parts.light,
-    /* 1.1.2: Farbkanäle (light_channels), Bedeutung des Zeitplan-Schalters (light_schedule_on),
-       Soll-Bereich (temp_min/temp_max). Eigene Farbvorgaben (light_presets) zeigt Casora nicht mehr. */
+    /* 1.1.2: colour channels (light_channels), meaning of the schedule switch (light_schedule_on),
+       target range (temp_min/temp_max). Casora no longer shows own colour presets (light_presets). */
     lightChannels: Array.isArray(variables.light_channels) ? variables.light_channels : null,
     swOn: variables.light_schedule_on || null,
-    /* Für die Status-Zeile unter der Temperatur (gleiche Bewertung wie die Kachel) */
+    /* For the status line under the temperature (same rating as the tile) */
     V: { status_entity: variables.status_entity || null, leak_entity: variables.leak_entity || null,
          leak_battery: variables.leak_battery || null, temp_battery: variables.temp_battery || null,
          battery_hints: variables.battery_hints || 'auto',
@@ -620,14 +620,14 @@
     });
   ]]]`);
 
-  /* Weich (04.10.2026): ruhiges Türkis statt des grellen Cyan (#00C3D0), wie die Weich-Kacheln. */
-  /* Weich: die grellen iOS-Farben (auch aus Hemma übernommene) in ruhige Weich-Töne übersetzen. */
+  /* Soft (04.10.2026): calm turquoise instead of the glaring cyan (#00C3D0), like the Soft tiles. */
+  /* Soft: translate the glaring iOS colours (also those taken over from Hemma) into calm Soft tones. */
   const _aqCalm = { '#00c3d0': '#5E9E96', '#57fffc': '#5E9E96', '#64d2ff': '#5E9E96', '#30d158': '#6FA77A',
     '#ff9230': '#DE8A4E', '#ff9f0a': '#DE8A4E', '#0a84ff': '#5B8FC9', '#bf5af2': '#9B7BB8' };
   const _aqRaw = String(variables.chart_color || '#30D158');
   const chartColor = (window._casoraSoft && window._casoraSoft())
     ? (_aqCalm[_aqRaw.toLowerCase()] || _aqRaw) : _aqRaw;
-  /* Verlauf im 2.1-Muster: Zeilen mit data-hp-metric schalten dieses Diagramm um (statt HA-More-Info). */
+  /* History in the 2.1 pattern: rows with data-hp-metric switch this chart (instead of HA's more-info). */
   const hpOk = typeof window._hpChartCfg === 'function';
   const reg1 = (eid, label, span, color) => {
     if (!hpOk || !eid || !states[eid]) return;
@@ -640,7 +640,7 @@
   const plate = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
     + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);'
     + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);padding:var(--casora-soft-plate-pad, 14px 10px 6px);';
-  /* Weich (01.10.2026): Diagrammtitel als Etikett (Großbuchstaben, Laufweite) wie bei Klima. */
+  /* Soft (01.10.2026): chart title as a label (capitals, tracking) like climate. */
   const _aqSoft = !!(window._casoraSoft && window._casoraSoft());
   if (hpOk) {
     add('chart', '<div style="' + plate + (_aqSoft ? 'padding:18px 14px 8px;' : '') + '">'
@@ -653,15 +653,15 @@
     if (typeof window._hpChartInit === 'function') window._hpChartInit(cfg.temp);
   }
 
-  /* Licht (1.1.2, Variante b): An/Aus, Helligkeit, Farbkanäle und Lampen-Modi direkt im Becken-Popup –
-     kein Sprung mehr ins allgemeine Licht-Popup (window._casoraAqLight). */
+  /* Light (1.1.2, variant b): on/off, brightness, colour channels and lamp modes right in the tank popup –
+     no more jump to the general light popup (window._casoraAqLight). */
   if (cfg.light && states[cfg.light]) add('glight', `[[[
     const c = ${_c};
     return window._casoraAqLight ? window._casoraAqLight(c, states, hass) : '';
   ]]]`);
 
-  /* Steuerung: wer bestimmt die Farben – Home Assistant oder das Programm der Lampe (Zeitplan-Schalter,
-     Bedeutung über window._casoraAqSwitchMeaning). Profil ohne Leuchte: Auswahlliste wie bisher. */
+  /* Control: who sets the colours – Home Assistant or the lamp's program (schedule switch,
+     meaning via window._casoraAqSwitchMeaning). Profile without a light: picker as before. */
   if (cfg.hx && ((cfg.hx.sw && states[cfg.hx.sw]) || (cfg.hx.sel && states[cfg.hx.sel] && !(cfg.light && states[cfg.light])))) add('glightx', `[[[
     const c = ${_c};
     return window._casoraAqSteer ? window._casoraAqSteer(c, states, hass) : '';
@@ -691,7 +691,7 @@
     return window._casoraUI.group(rows, 'Technik');
   ]]]`);
 
-  /* Energie: Summe über alle Steckdosen des Beckens (Leistung jetzt, heute, Monat). */
+  /* Energy: sum over all plugs of the tank (power now, today, month). */
   if (devs.some((d) => d.power || d.today || d.month)) add('genergy', `[[[
     const c = ${_c};
     const num = (e) => { if (!e || !states[e]) return null; const n = parseFloat(states[e].state); return isNaN(n) ? null : n; };
@@ -774,9 +774,9 @@
     '#container { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }',
   ].join('\n');
 
-  /* Festes Raster: oben Temperatur + Verlauf über volle Breite, darunter links Bedienen
-     (Licht, Steuerung, Technik), rechts Ablesen (Energie, Sensoren, Düngeanlage). Jede Spalte
-     ist ein eigener Stapel, damit unterschiedlich hohe Platten keine Lücken reißen. */
+  /* Fixed grid: temperature + history across the full width on top, below on the left controls
+     (light, control, equipment), on the right readings (energy, sensors, dosing). Each column
+     is its own stack so plates of different heights leave no gaps. */
   const colStyle = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
     + ' border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important;'
     + ' -webkit-backdrop-filter: none !important; padding: 0 !important; cursor: default !important; overflow: visible !important; }'
@@ -802,8 +802,8 @@
       custom_fields: cf,
     };
   };
-  /* Aquarium-Doktor (Dienst casora.aquarium_doktor): bekommt die Entitäten dieses Beckens mit.
-     Bereich nur mit eingerichteter KI-Aufgabe oder vorhandener Einschätzung. */
+  /* Aquarium doctor (service casora.aquarium_doktor): gets this tank's entities.
+     Section only with an AI task set up or an existing assessment. */
   const _ai = JSON.stringify({ temp: cfg.temp, name: variables.tank_name || entity.attributes.friendly_name || 'Aquarium',
     devices: devs.map((d) => ({ label: d.label || d.entity, entity: d.entity, power: d.power || null })),
     light: cfg.light, leak: cfg.leak, status: cfg.status, leak_battery: cfg.leakBat, temp_battery: cfg.tempBat });
@@ -811,9 +811,9 @@
     AQ_KI.forEach((k) => { if (states[k]) watch.push(k); });
     add('gai', '[[[ return window._casoraAqAi ? window._casoraAqAi(' + _ai + ', states) : ""; ]]]');
   }
-  /* Weich (Entschlacken 01.10.2026): Kopf mit Temperatur, Verlauf, links Licht und Technik, rechts
-     Aquarium-Doktor und Lecksensor; Profil/Steuerung (HeliaLux), Düngeanlage, Energie und die
-     Akkus der Fühler unter „Mehr“. Die Zeile „Wassertemperatur“ fällt weg (steht im Kopf). */
+  /* Soft (declutter 01.10.2026): head with temperature, history, light and equipment on the left, aquarium
+     doctor and leak sensor on the right; profile/control (HeliaLux), dosing, energy and the
+     probes' batteries under "Mehr". The "Wassertemperatur" row goes (it is in the head). */
   const HH = window._casoraHH;
   if (HH && HH.on() && HH.layout) {
     const f2 = { hero: fields.hero, chart: fields.chart, glight: fields.glight, gtech: fields.gtech, gai: fields.gai };
@@ -825,8 +825,8 @@
         value: off ? 'Offline' : wet ? 'Wasser erkannt!' : 'Trocken', valueTone: wet ? 'bad' : off ? 'warn' : null,
         entity: c.leak, active: wet }], 'Sicherheit');
     ]]]`;
-    /* 1.1.2 (Frage 8): oben links Licht, Steuerung, Technik; rechts Düngeanlage (nur mit Pumpe) und
-       Sicherheit; unter „Mehr“ Aquarium-Doktor, Energie und Akkus. */
+    /* 1.1.2 (question 8): top left light, control, equipment; right dosing (only with a pump) and
+       safety; under "Mehr" aquarium doctor, energy and batteries. */
     if (fields.glightx) f2.gctl = fields.glightx;
     if (fields.gdose) f2.gdose = fields.gdose;
     delete f2.gai;
@@ -845,13 +845,13 @@
         value: isNaN(b) ? '—' : Math.round(b) + ' %', valueTone: tn, entity: x[0] });
     });
     return rows.length ? window._casoraAqWrap(window._casoraUI.group(rows, 'Sensoren').replace(/data-casora-mi="/g, 'data-hp-metric="')) : '';`);
-    /* Jeder Teil läuft als eigene Funktion; H.more fasst sie zusammen. */
+    /* Each part runs as its own function; H.more combines them. */
     f2.more = HH.moreCard(watch, 'const __p = [' + parts.map((p) => '(() => {' + p + '\n})()').join(',\n') + '];\n'
       + 'return window._casoraHH ? window._casoraHH.more("aquarium", __p) : "";', cfg.temp);
     return HH.layout({ entity: cfg.temp, watch: watch, fields: f2, top: ['hero', 'chart'],
       left: ['glight', 'gctl', 'gtech'].filter((k) => f2[k]), right: ['gdose', 'gleak', 'more'].filter((k) => f2[k]) });
   }
-  /* Popup-Standard (24.09.2026): links Bedienung (Licht, Technik, Düngeanlage), rechts Infos (Sicherheit, Verbrauch, KI-Doktor). */
+  /* Popup standard (24.09.2026): controls on the left (light, equipment, dosing), info on the right (safety, consumption, AI doctor). */
   const _sp = ((l, r) => window._casoraSplit ? window._casoraSplit('aquarium', l, r) : { left: l, right: r })(
     ['glight', 'glightx', 'gtech', 'gdose'].filter((k) => fields[k] !== undefined), ['gsafe', 'genergy', 'gai'].filter((k) => fields[k] !== undefined));
   const leftKeys = _sp.left, rightKeys = _sp.right;
@@ -867,7 +867,7 @@
     entity: cfg.temp,
     triggers_update: watch,
     card_mod: { style: wrapperStyle + '\nha-card.disabled { pointer-events: auto !important; }' },
-    /* Ab 761 px (Desktop/Tablet): zwei Spalten; darunter (iPhone) alles untereinander. */
+    /* From 761 px (desktop/tablet): two columns; below that (iPhone) everything stacked. */
     extra_styles: '@media (min-width: 761px) { #container { grid-template-areas: ' + wide + ' !important;'
       + ' grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important; column-gap: var(--casora-popup-col-gap, 20px) !important; } }',
     tap_action: { action: 'none' },
@@ -886,9 +886,9 @@
 
 
 // ── Haushalt-Popups in Weich (01.10.2026) ──────────────────────────────────
-// Gemeinsame Teile für Wäsche, Geschirrspüler, Drucker, Saugroboter, Auto, eBike,
-// Rezept, Kalender, Lüften und Fußbodenheizung im Weich-Design (Vorbild: Licht-Popup).
-// Nur aktiv, wenn _casoraSoft() an ist – die Aufrufer behalten sonst ihr bisheriges HTML.
+// Shared parts for laundry, dishwasher, printer, robot vacuum, car, e-bike,
+// recipe, calendar, airing and floor heating in the Soft design (model: light popup).
+// Only active when _casoraSoft() is on – otherwise callers keep their previous HTML.
 (function () {
   if (window._casoraHH) return;
   var esc = function (t) {
@@ -898,12 +898,12 @@
   var SUB = 'var(--casora-soft-sub, var(--secondary-text-color))';
   var H = window._casoraHH = { esc: esc };
   H.on = function () { return !!(window._casoraSoft && window._casoraSoft()); };
-  /* Etikett in Großbuchstaben (HELLIGKEIT, LEUCHTEN IM RAUM). */
+  /* Label in capitals (HELLIGKEIT, LEUCHTEN IM RAUM). */
   H.label = function (text, action) {
     var UI = window._casoraUI;
     return UI && UI.label ? UI.label(text, action) : '';
   };
-  /* Diagramm-Platte: Titel als Etikett; 01-basis tauscht später nur den Text von .hp-ct. */
+  /* Chart plate: title as a label; 01-basis later only swaps the text of .hp-ct. */
   H.chart = function (title, plate) {
     return '<div style="' + plate + 'padding:18px 14px 8px;">'
       + '<div class="hp-ct" style="font-family:' + FONT + ';font-size:var(--casora-h15-fs,17px);font-weight:var(--casora-h15-fw,700);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);'
@@ -911,14 +911,14 @@
       + title + '</div>'
       + '<div class="hp-chart-slot" style="min-height:150px;margin:8px 0 0;"></div></div>';
   };
-  /* Töne der Fortschritts-Leisten (HH.pbar, HH.forecast). Der breite Verlaufsblock HH.bar ist seit 1.1.2 weg. */
+  /* Tones of the progress bars (HH.pbar, HH.forecast). The wide history block HH.bar is gone since 1.1.2. */
   var TONE = {
     accent: 'var(--casora-hh-bar-fill, var(--casora-popup-ui-accent, #276B64))',
     good: 'var(--casora-popup-ui-good, #30D158)', warn: 'var(--casora-popup-ui-warn, #FF9F0A)', bad: 'var(--casora-popup-ui-bad, #FF453A)',
   };
-  /* 1.1.2 (Richtung A): schmale Leiste über die volle Breite direkt unter der Kopfzeile – Fortschritt
-     gehört zur Restzeit im Kopf. Darunter eine Zeile wie die Popup-Unterzeilen: links „25 %“,
-     rechts „Fertig gegen 22:06 Uhr“. o = { pct, left, right, tone } */
+  /* 1.1.2 (direction A): slim bar across the full width right under the header – progress
+     belongs to the time left in the head. Below it a line like the popup sub lines: "25 %" on the left,
+     "Fertig gegen 22:06 Uhr" on the right. o = { pct, left, right, tone } */
   H.pbar = function (o) {
     var p = Math.max(0, Math.min(100, Number(o.pct) || 0));
     var c = TONE[o.tone] || o.tone || TONE.accent;
@@ -932,7 +932,7 @@
         + '<span>' + esc(o.left || '') + '</span><span style="overflow:hidden;text-overflow:ellipsis;">' + esc(o.right || '') + '</span></div>' : '')
       + '</div>';
   };
-  /* 1.1.2: Prognose in einer Zeile – zwei Mini-Balken (Symbol je Balken, Prozent rechts) unter dem Titel. */
+  /* 1.1.2: forecast in one line – two mini bars (icon per bar, percent on the right) under the title. */
   H.forecast = function (label, items) {
     var UI = window._casoraUI;
     var cell = function (it) {
@@ -953,9 +953,9 @@
       + '<div style="display:grid;grid-template-columns:repeat(' + items.length + ', minmax(0, 1fr));gap:0 18px;margin-top:7px;">'
       + items.map(cell).join('') + '</div></div></div></div>';
   };
-  /* 1.1.2: ruhige Sand-Pille für eine Aktion am Spaltenende (Programm abbrechen), 48 px, Symbol gedimmt.
-     Zweistufig wie die Zeilen von UI.group (data-casora-arm → Bestätigen fährt rechts herein, dort erst
-     die Warnfarbe); casora-core löst data-casora-cf aus. o = { label, icon, svc, confirm } */
+  /* 1.1.2: calm sand pill for an action at the end of a column (cancel program), 48 px, icon dimmed.
+     Two steps like the rows of UI.group (data-casora-arm → confirm slides in from the right, only there
+     the warning colour); casora-core fires data-casora-cf. o = { label, icon, svc, confirm } */
   H.pill = function (o) {
     return '<style>.hh-abort{position:relative;overflow:hidden;--cf-w:96px;display:flex;align-items:center;justify-content:center;gap:8px;'
       + 'min-height:48px;box-sizing:border-box;padding:0 22px;border-radius:999px;cursor:pointer;user-select:none;-webkit-user-select:none;'
@@ -976,28 +976,28 @@
       + '<span>' + esc(o.label) + '</span></div>'
       + '<div class="hui-cf" data-casora-cf="' + esc(JSON.stringify(o.svc)) + '">' + esc(o.confirm || 'Bestätigen') + '</div></div>';
   };
-  /* Viele Segmente (Startzeit, Saugstufe): Breite nach Text statt gleich breit, damit nichts abgeschnitten wird. */
+  /* Many segments (start time, suction level): width by text instead of equal width so nothing is clipped. */
   H.dense = function (html, wrap) {
-    /* wrap: Umbruch statt gleich breiter Spalten (Saugroboter: „Saugen & wischen“ wurde sonst abgeschnitten). */
-    /* D-07: Reihen füllen die volle Breite (vorher blieben leere Rasterspalten rechts), jedes Feld
-       mindestens so breit wie sein Text – Desktop alle in einer Reihe, am Handy 3 + 2. */
+    /* wrap: wrap instead of equal-width columns (robot vacuum: "Saugen & wischen" was clipped otherwise). */
+    /* D-07: rows fill the full width (empty grid columns used to remain on the right), each field
+       at least as wide as its text – desktop all in one row, on the phone 3 + 2. */
     if (wrap) return '<style>.hh-wrap .hui-seg{display:flex!important;flex-wrap:wrap;}'
       + '.hh-wrap .hui-sg{flex:1 1 0;min-width:max-content;padding:0 14px;overflow:visible;}</style><div class="hh-wrap">' + html + '</div>';
     return '<style>.hh-dense .hui-sg{flex:0 1 auto;min-width:0;padding:0 16px;}</style><div class="hh-dense">' + html + '</div>';
   };
-  /* Weiße Glas-Töne (rgba(255,255,255,…)) wären auf Creme unsichtbar: im Weich-Design als gedimmter Kreis. */
+  /* White glass tones (rgba(255,255,255,…)) would be invisible on cream: in the Soft design a dimmed circle. */
   H.tone = function (t) {
     return (H.on() && typeof t === 'string' && /^rgba\(255,\s*255,\s*255,/.test(t) && t !== 'rgba(255,255,255,0.18)')
       ? 'rgba(255,255,255,0.18)' : t;
   };
-  /* Auswahlliste (_casoraSelRows, Klasse fb-sel): aktive Zeile hell mit weichem Schatten wie das aktive Segment. */
+  /* Picker (_casoraSelRows, class fb-sel): active row bright with a soft shadow like the active segment. */
   H.sel = function (html) {
     return H.on() ? '<style>.hui-row.fb-sel.hui-srow{background:var(--casora-soft-seg-on, #FFFDF9);'
       + 'box-shadow:var(--casora-soft-seg-on-shadow, none);}'
-      /* Dunkel ist die helle Fläche hell: Schrift folgt dem aktiven Segment. */
+      /* In dark mode the bright surface is bright: text follows the active segment. */
       + '.hui-row.fb-sel.hui-srow .hui-inner div{color:var(--casora-soft-seg-on-ink, inherit) !important;}</style>' + html : html;
   };
-  /* Runde Pillen-Knöpfe (Aktionen); primary = gefüllt in Akzentfarbe. */
+  /* Round pill buttons (actions); primary = filled in the accent colour. */
   H.pillCss = '<style>.hh-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}'
     + '.hh-pill{display:inline-flex;align-items:center;gap:7px;min-height:44px;box-sizing:border-box;padding:0 18px;border-radius:999px;'
     + 'font-family:' + FONT + ';font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer;user-select:none;-webkit-user-select:none;'
@@ -1010,12 +1010,12 @@
     + '.hh-pill:not(.dis):active{filter:brightness(.94);}'
     + '@media (max-width: 420px){.hh-pills{gap:6px;}.hh-pill{padding:0 12px;font-size:13.5px;gap:5px;}}</style>';
 
-  // ── Entschlacken (01.10.2026): schlanker Aufbau mit „Mehr“ ─────────────────
-  // Nur Weich. Die Geräte-Popups (Drucker, Sauger, Geschirrspüler, Wäsche, Aquarium …)
-  // übergeben ihre fertigen Felder (Vorlagen-Strings bzw. { card }) und bekommen den
-  // Aufbau wie das Licht-Popup: Kopfzeile volle Breite, links Bedienung, rechts Infos,
-  // unten rechts „Mehr“. Jede Spalte und der Mehr-Bereich sind eigene button-cards mit
-  // triggers_update – das Gerüst selbst wird nur beim Öffnen gebaut.
+  // ── Declutter (01.10.2026): slim layout with "Mehr" ─────────────────
+  // Soft only. The device popups (printer, vacuum, dishwasher, laundry, aquarium …)
+  // hand over their finished fields (template strings or { card }) and get the
+  // layout of the light popup: full-width header, controls on the left, info on the right,
+  // "Mehr" bottom right. Each column and the more section are their own button-cards with
+  // triggers_update – the frame itself is only built when opening.
   var COL_CSS = ':host { display: block; } ha-card { background: transparent !important; border: none !important;'
     + ' border-radius: 0 !important; box-shadow: none !important; backdrop-filter: none !important;'
     + ' -webkit-backdrop-filter: none !important; padding: 0 !important; cursor: default !important; overflow: visible !important; }'
@@ -1033,7 +1033,7 @@
     '#container { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }',
     'ha-card.disabled { pointer-events: auto !important; }',
   ].join('\n');
-  /* Spalte: Felder untereinander, Abstand nur zwischen nicht leeren Feldern (_casoraColGap). */
+  /* Column: fields stacked, gap only between non-empty fields (_casoraColGap). */
   H.col = function (keys, fields, watch, entity, extra) {
     var cf = {}, cs = {};
     keys.forEach(function (k) { cf[k] = H.own(fields[k]); cs[k] = [{ 'justify-self': 'stretch' }, { 'min-width': '0' }]; });
@@ -1052,8 +1052,8 @@
     };
   };
   /* o = { entity, watch, fields, top: ['hero'], left: [...], right: [...], colExtra } – fehlende Felder fallen weg. */
-  // Innere button-cards werten ihre Vorlagen selbst aus (do_not_eval) – wie own() in 05-weich-mehr.js:
-  // sonst baut die äußere Karte bei jeder Attributänderung ihre Kinder neu und Bereiche blitzen leer auf.
+  // Inner button-cards evaluate their templates themselves (do_not_eval) – like own() in 05-weich-mehr.js:
+  // otherwise the outer card rebuilds its children on every attribute change and sections flash empty.
   H.own = function (f) {
     return f && f.card && f.card.type === 'custom:button-card' && f.do_not_eval === undefined ? Object.assign({}, f, { do_not_eval: true }) : f;
   };
@@ -1061,23 +1061,23 @@
     var f = o.fields, has = function (k) { return f[k] !== undefined && f[k] !== null && f[k] !== ''; };
     var top = (o.top || ['hero']).filter(has), L = (o.left || []).filter(has), R = (o.right || []).filter(has);
     if (!L.length && R.length > 1) { L = R.slice(0, 1); R = R.slice(1); }
-    /* B-11: Steht rechts nur „Mehr“, wird das Popup einspaltig und „Mehr“ ist die letzte Zeile –
-       statt einer fast leeren rechten Spalte mit „Mehr“ oben. */
+    /* B-11: if only "Mehr" is on the right, the popup becomes one column and "Mehr" is the last row –
+       instead of an almost empty right column with "Mehr" on top. */
     var one = false;
     if (L.length && R.length === 1 && R[0] === 'more') { L = L.concat(R); R = []; one = true; }
-    /* Auch einspaltig (Waschmaschine/Trockner aus) verteilt sich das aufgeklappte „Mehr“ am breiten
-       Popup auf zwei Spalten – sonst liefen Statistik und Verbrauch als Zeilen über die volle Breite. */
+    /* Even in one column (washer/dryer off) the expanded "Mehr" spreads over two columns in the wide
+       popup – otherwise statistics and consumption ran as rows across the full width. */
     if (one && f.more && f.more.card) {
       f = Object.assign({}, f, { more: { card: Object.assign({}, f.more.card, {
         extra_styles: (f.more.card.extra_styles || '') + MORE_WIDE_CSS }) } });
     }
-    /* „Mehr“ unter beiden Spalten über die volle Breite; aufgeklappt verteilen sich die Abschnitte
-       gleichmäßig auf zwei Spalten statt alles rechts zu stapeln (Wunsch 02.10.2026). */
+    /* "Mehr" under both columns across the full width; expanded, the sections spread
+       evenly over two columns instead of stacking everything on the right (request 02.10.2026). */
     var wideMore = !one && R.length > 1 && R[R.length - 1] === 'more';
     if (wideMore) R = R.slice(0, -1);
     var cf = {}, cs = {};
     top.forEach(function (k) {
-      /* Vorlagen (live) in eine eigene Karte; festes HTML (Diagramm-Platte) direkt, damit es nie neu gezeichnet wird. */
+      /* Templates (live) go into their own card; fixed HTML (chart plate) directly so it is never redrawn. */
       cf[k] = H.own((typeof f[k] === 'string' && f[k].indexOf('[[[') > -1) ? { card: H.col([k], f, o.watch, o.entity) } : f[k]);
       cs[k] = [{ 'justify-self': 'stretch' }, { 'min-width': '0' }];
     });
@@ -1111,25 +1111,25 @@
       custom_fields: cf,
     };
   };
-  /* Breites „Mehr“: aufgeklappt zwei ausgeglichene Spalten (Abschnitte brechen nicht um).
-     Abstand als padding statt margin (04.10.2026): Safari nahm den Außenabstand des letzten
-     Abschnitts links mit an den Kopf der rechten Spalte, die rechte Überschrift stand 18 px tiefer. */
+  /* Wide "Mehr": expanded two balanced columns (sections do not break).
+     Spacing as padding instead of margin (04.10.2026): Safari carried the outer margin of the last
+     section on the left over to the top of the right column, the right heading sat 18 px lower. */
   var MORE_WIDE_CSS = '\n@media (min-width: 761px) {'
-    /* column-gap mit !important: UI.more setzt gap:18px (Kurzform) und gewann sonst – die Mehr-Spalten
-       standen 3 px versetzt zu den Spalten darüber. */
+    /* column-gap with !important: UI.more sets gap:18px (shorthand) and won otherwise – the more columns
+       sat 3 px off the columns above. */
     + ' .hui-more.open > .hui-mbd { display: block !important; column-count: 2; column-gap: var(--casora-popup-col-gap, 26px) !important; }'
     + ' .hui-more.open > .hui-mbd > * { break-inside: avoid; -webkit-column-break-inside: avoid; display: block; margin: 0; padding-bottom: 18px; }'
     + ' .hui-more.open > .hui-mbd > style { display: none; margin: 0; } }';
-  /* Mehr-Bereich als eigene button-card mit triggers_update; code = Rumpf (… return html). */
+  /* More section as its own button-card with triggers_update; code = body (… return html). */
   H.moreCard = function (watch, code, entity) {
     return { card: H.col(['m'], { m: '[[[\n' + code + '\n]]]' }, watch, entity) };
   };
-  /* Teile (fertiges HTML) zu einem „Mehr“ zusammenfassen; leere Teile zählen nicht. */
+  /* Combine parts (finished HTML) into one "Mehr"; empty parts do not count. */
   var vis = function (p) { return !!String(p || '').replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]*>/g, '').trim(); };
   H.more = function (id, parts, opts) {
     var UI = window._casoraUI;
-    /* Nachgeladene Platten (L.slot, data-hw-slot) bleiben auch leer im Baum – L.paint füllt sie
-       später; leer sind sie unsichtbar und zählen nicht mit. */
+    /* Lazy plates (L.slot, data-hw-slot) stay in the tree even when empty – L.paint fills them
+       later; empty they are invisible and do not count. */
     parts = (parts || []).filter(function (p) { return p && (vis(p) || String(p).indexOf('data-hw-slot') > -1); });
     var n = parts.filter(vis).length;
     if (!n || !UI || !UI.more) return '';
@@ -1137,9 +1137,9 @@
       + parts.map(function (p) { return /^<div data-hw-slot=/.test(p) ? p : '<div>' + p + '</div>'; }).join(''),
       Object.assign({ count: n }, opts || {}));
   };
-  /* KI-Blick als Knopf unter einem Kamerabild: nutzt das Kamera-Modul (_casoraCamAi) –
-     data-cam-ai löst die Beschreibung aus, .cam-ai-inline/.cam-ai-box füllt das Modul selbst.
-     Die Glas-Farben seiner Beschreibung werden hier nur auf die Weich-Töne umgefärbt. */
+  /* AI look as a button under a camera image: uses the camera module (_casoraCamAi) –
+     data-cam-ai triggers the description, the module fills .cam-ai-inline/.cam-ai-box itself.
+     Here the glass colours of its description are only recoloured to the Soft tones. */
   H.aiButton = function (camId, label) {
     var id = esc(camId);
     return H.pillCss + '<style>'
@@ -1153,21 +1153,21 @@
       + '<span>' + esc(label) + '</span></div></div>'
       + '<div class="cam-ai-box" style="display:none;"></div></div>';
   };
-  /* Zeilen, die im Standard-Design das Diagramm umschalten (data-hp-metric), öffnen im
-     schlanken Aufbau ohne Diagramm den HA-Dialog; reine Diagramm-Schlüssel (hwd7: …) nichts. */
+  /* Rows that switch the chart in the standard design (data-hp-metric) open the HA dialog
+     in the slim layout without a chart; pure chart keys (hwd7: …) do nothing. */
   H.mi = function (html) {
     return String(html || '').replace(/data-hp-metric="hwd\d+:[^"]*"/g, '').replace(/data-hp-metric="/g, 'data-casora-mi="');
   };
 })();
 
 
-// ── Waschmaschine / Trockner (casora_laundry) ─────────────────────────────────
-// Quellen (03.10.2026): zuerst die offizielle Integration des Herstellers (Home Connect,
-// Miele, SmartThings, LG ThinQ, Whirlpool …), sonst WashData (ha_washdata), sonst nur der
-// Zwischenstecker – window.casoraLaundryFind in 00-finden.js. Kachelstatus und Popup
-// liegen hier (update-sicher); die Templates rufen nur window._casoraLaundry.tile() /
-// .popup() auf. Nachladen per WS: Verbrauch Heute/Woche/Monat (Recorder-Statistik),
-// letzte Durchgänge + Wartung (WashData).
+// ── Washer / dryer (casora_laundry) ─────────────────────────────────
+// Sources (03.10.2026): first the manufacturer's official integration (Home Connect,
+// Miele, SmartThings, LG ThinQ, Whirlpool …), else WashData (ha_washdata), else only the
+// smart plug – window.casoraLaundryFind in 00-finden.js. Tile status and popup
+// live here (update-safe); the templates only call window._casoraLaundry.tile() /
+// .popup(). Loaded via WS: consumption today/week/month (recorder statistics),
+// last cycles + maintenance (WashData).
 (function () {
   if (window._casoraLaundry) return;
   var L = window._casoraLaundry = { data: {}, busy: {} };
@@ -1180,10 +1180,10 @@
     ending: ['Endet gleich', 'accent', true, 'run'], finished: ['Fertig', 'good', false, 'done'], anti_wrinkle: ['Knitterschutz', 'accent', true, 'run'],
     delay_wait: ['Startet später', 'accent', true, 'delay'], interrupted: ['Unterbrochen', 'bad', false, 'error'],
     force_stopped: ['Beendet', null, false, 'done'], rinse: ['Spülen', 'accent', true, 'run'],
-    /* „clean“: Durchgang fertig, Wäsche noch in der Maschine (bis Tür auf bzw. „Ausgeräumt“). */
+    /* "clean": cycle done, laundry still in the machine (until the door opens or "Ausgeräumt"). */
     clean: ['Fertig', 'good', false, 'clean'],
     unknown: ['Unbekannt', null, false, 'off'], unavailable: ['Nicht verfügbar', 'bad', false, 'error'],
-    /* Home Connect (auch Geschirrspüler) */
+    /* Home Connect (dishwasher too) */
     inactive: ['Aus', null, false, 'off'], ready: ['Bereit', 'good', false, 'idle'], delayedstart: ['Startet später', 'accent', true, 'delay'],
     run: ['Läuft', 'accent', true, 'run'], pause: ['Pausiert', 'warn', true, 'pause'], actionrequired: ['Eingriff nötig', 'bad', true, 'attn'],
     error: ['Fehler', 'bad', false, 'error'], aborting: ['Wird abgebrochen', 'bad', true, 'run'],
@@ -1208,29 +1208,29 @@
     refreshing: ['Läuft', 'accent', true, 'run'], wrinkle_care: ['Knitterschutz', 'accent', true, 'run'], end: ['Fertig', 'good', false, 'done'],
     done: ['Fertig', 'good', false, 'done'], reservation: ['Startet später', 'accent', true, 'delay'],
   };
-  /* WashData-Phasen (Phasenkatalog, englisch) und übliche Herstellerwerte */
+  /* WashData phases (phase catalogue, English) and common manufacturer values */
   var PHASE = {
     'pre-wash': 'Vorwäsche', prewash: 'Vorwäsche', 'pre-rinse': 'Vorspülen', wash: 'Waschen', rinse: 'Spülen', spin: 'Schleudern',
     soak: 'Einweichen', 'anti-crease': 'Knitterschutz', 'anti-wrinkle': 'Knitterschutz', drying: 'Trocknen', dry: 'Trocknen',
     'cool-down': 'Abkühlen', cooldown: 'Abkühlen', 'heat-up': 'Aufheizen', heating: 'Aufheizen', heat: 'Aufheizen', drain: 'Abpumpen',
     'drain-&-switch': 'Abpumpen', 'sensor-check': 'Prüfung', sanitize: 'Hygiene',
   };
-  /* Kein Programm/keine Phase, nur der Gerätezustand (WashData füllt die Phase sonst damit). */
+  /* No program/phase, only the device state (WashData fills the phase with it otherwise). */
   var NOPROG = { off: 1, none: 1, unknown: 1, unavailable: 1, 'detecting...': 1, detecting: 1, starting: 1, running: 1, idle: 1,
     paused: 1, user_paused: 1, ending: 1, finished: 1, clean: 1, auto_detect: 1 };
   var MAINT = {
     descale: ['Entkalken', 'mdi:water-opacity'], filter_clean: ['Filter reinigen', 'mdi:air-filter'],
     drum_clean: ['Trommelreinigung', 'mdi:washing-machine'], bearing_service: ['Lagerwartung', 'mdi:cog-outline'],
     other: ['Sonstige Wartung', 'mdi:wrench-outline'],
-    /* WashData 0.5.8: eigene Arten für Geschirrspüler und Trockner */
+    /* WashData 0.5.8: own kinds for dishwasher and dryer */
     salt: ['Salz nachfüllen', 'mdi:shaker-outline'], rinse_aid: ['Klarspüler nachfüllen', 'mdi:water-plus-outline'],
     lint_filter: ['Flusensieb reinigen', 'mdi:air-filter'], condenser_clean: ['Kondensator reinigen', 'mdi:hvac'],
   };
-  /* Trockner: nur Filter/Kondensator (Entkalken, Trommelreinigung gibt es dort nicht) */
+  /* Dryer: only filter/condenser (descaling, drum cleaning do not exist there) */
   var DRYER_MAINT = { filter_clean: 1, lint_filter: 1, condenser_clean: 1, other: 1 };
-  /* Eigene Wartungsaufgaben (WashData 0.5.8): Kennung beginnt mit custom_ */
+  /* Own maintenance tasks (WashData 0.5.8): ID starts with custom_ */
   var isCustom = function (k) { return /^custom_/.test(String(k || '')); };
-  /* Stillstand mitten im Durchgang (WashData 0.5.8: paused + cycle_anomaly stalled, z. B. Unwucht) */
+  /* Stall in the middle of a cycle (WashData 0.5.8: paused + cycle_anomaly stalled, e.g. imbalance) */
   var STALLED = ['Angehalten', 'warn', true, 'pause'];
   var DIM = 'rgba(255,255,255,0.18)';
 
@@ -1248,7 +1248,7 @@
   };
   var f = function (n, d) { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { minimumFractionDigits: d, maximumFractionDigits: d }); };
   var kwh = function (n) { return f(n, n < 10 ? 2 : 1) + ' kWh'; };
-  /* Währung von Home Assistant (CHF, USD …), sonst Euro. */
+  /* Home Assistant's currency (CHF, USD …), else euro. */
   var eur = function (n) {
     var ha = document.querySelector('home-assistant'), cur = (ha && ha.hass && ha.hass.config && ha.hass.config.currency) || 'EUR';
     try { return n.toLocaleString((window.casoraLocale ? window.casoraLocale() : 'de-DE'), { style: 'currency', currency: cur }); }
@@ -1272,13 +1272,13 @@
     if (m < 1) return 'gerade eben';
     if (m < 60) return 'vor ' + m + ' Min.';
     var h = Math.round(m / 60);
-    // Kalendertage statt 24-h-Blöcke: vor 36 Stunden ist noch „gestern“ (#11).
+    // Calendar days instead of 24 h blocks: 36 hours ago is still "gestern" (#11).
     var dd = Math.round((new Date(new Date().setHours(0, 0, 0, 0)) - new Date(new Date(d.getTime()).setHours(0, 0, 0, 0))) / 86400000);
     if (h < 24 || dd < 1) return 'vor ' + h + ' Std.';
     return dd === 1 ? 'gestern' : 'vor ' + dd + ' Tagen';
   };
   var HASS = function () { var h = document.querySelector('home-assistant'); return (h && h.hass) || null; };
-  /* Zustandstext, wie HA ihn übersetzt (Programme und Phasen der Hersteller-Integrationen). */
+  /* State text as HA translates it (programs and phases of the manufacturer integrations). */
   var fmt = function (states, e) {
     var st = e && states[e];
     if (!st || NOPROG[String(st.state).toLowerCase()]) return null;
@@ -1286,7 +1286,7 @@
     try { if (h && typeof h.formatEntityState === 'function') return h.formatEntityState(st); } catch (x) { /* roh */ }
     return st.state;
   };
-  /* Minuten aus einer Dauer (s/min/h) oder einem Zeitpunkt (bis dahin, mit past: seitdem). */
+  /* Minutes from a duration (s/min/h) or a point in time (until then, with past: since then). */
   var mins = function (states, e, past) {
     var st = e && states[e];
     if (!st) return null;
@@ -1301,7 +1301,7 @@
     var u = a.unit_of_measurement;
     return u === 's' ? n / 60 : u === 'h' ? n * 60 : u === 'd' ? n * 1440 : n;
   };
-  /* Energie eines Durchgangs (WashData speichert Wh, ältere Einträge kWh). */
+  /* Energy of a cycle (WashData stores Wh, older entries kWh). */
   var kwhOf = function (x) { return x ? (x.energy_wh != null ? x.energy_wh / 1000 : Number(x.energy_kwh) || 0) : 0; };
   var phaseName = function (s) {
     if (!s || NOPROG[String(s).toLowerCase()]) return null;
@@ -1312,7 +1312,7 @@
   var ok = function (states, e) { return !!(e && states[e] && states[e].state !== 'unavailable'); };
   var btn = function (e) { return { domain: 'button', service: 'press', target: { entity_id: e } }; };
 
-  /* Zustand der Maschine: [Text, Ton, aktiv, Art]. Nur Zwischenstecker: Leistung > 5 W = läuft. */
+  /* Machine state: [text, tone, active, kind]. Plug only: power > 5 W = running. */
   L.state = function (states, id) {
     var st = states[id];
     var raw = String((st && st.state) || 'unknown').toLowerCase();
@@ -1329,7 +1329,7 @@
     return [txt, null, false, 'other'];
   };
 
-  /* Alle Entitäten: feste Kartenvariablen vor dem Finder (casoraLaundryFind), Stecker per companionPlug. */
+  /* All entities: fixed card variables before the finder (casoraLaundryFind), plug via companionPlug. */
   L.resolve = function (entity, V, states, hass) {
     V = V || {};
     var reg = (hass && hass.entities) || {};
@@ -1338,7 +1338,7 @@
     var src = (LF && hass && st) ? LF.forEntity(hass, st) : null;
     var F = (src && src.f) || {};
     var devOf = function (eid) { return reg[eid] && reg[eid].device_id; };
-    /* Messwert am Stecker-Gerät über die Einheit (W, V, A, kWh) bzw. die Endung des Schalters. */
+    /* Reading on the plug device by unit (W, V, A, kWh) or the switch's suffix. */
     var onDev = function (eid, re, dom, unit) {
       var dev = devOf(eid);
       if (!dev) return null;
@@ -1347,7 +1347,7 @@
         var e = reg[k];
         if (hit || e.device_id !== dev || !states[e.entity_id]) return;
         if (dom && e.entity_id.indexOf(dom + '.') !== 0) return;
-        if (e.platform === 'powercalc') return;          // geschätzte Werte, nicht die Messung
+        if (e.platform === 'powercalc') return;          // estimated values, not the measurement
         if (re && !re.test(e.entity_id)) return;
         if (unit && (states[e.entity_id].attributes || {}).unit_of_measurement !== unit) return;
         hit = e.entity_id;
@@ -1383,7 +1383,7 @@
       .filter(Boolean);
   };
 
-  /* Werte, die mehrere Platten brauchen */
+  /* Values several plates need */
   var progOf = function (c, states) {
     var p = fmt(states, c.program);
     if (p) return p;
@@ -1406,10 +1406,10 @@
     var d = c.door && states[c.door];
     return !!(d && (d.state === 'on' || d.state === 'open'));
   };
-  /* Durchgänge, die zählen: länger als 10 Minuten. */
+  /* Cycles that count: longer than 10 minutes. */
   var realCycles = function (d) { return (d.cycles || []).filter(function (x) { return x && x.duration > 600; }); };
 
-  /* ── Nachladen (Statistik + WashData), höchstens alle 2 Minuten ── */
+  /* ── Loading (statistics + WashData), at most every 2 minutes ── */
   var find = function (root, sel) {
     var out = [];
     (function walk(n) {
@@ -1446,7 +1446,7 @@
       L.paint(c);
     });
   };
-  /* Nachgeladene Platten im offenen Popup neu zeichnen (ohne auf ein hass-Update zu warten). */
+  /* Redraw lazy plates in the open popup (without waiting for a hass update). */
   L.paint = function (c) {
     var ha = document.querySelector('home-assistant');
     var states = (ha && ha.hass && ha.hass.states) || {};
@@ -1459,7 +1459,7 @@
     return '<div data-hw-slot="' + kind + '" data-hw-key="' + esc(c.st) + '">' + L.inner(kind, c, states) + '</div>';
   };
 
-  /* Tipps: Diagramm-Zeilen (data-hp-metric) und „Erledigt“ bei Wartung (zweistufig). */
+  /* Taps: chart rows (data-hp-metric) and "Erledigt" for maintenance (two steps). */
   L.wrap = function (html) {
     return '<style>.hui-row.hp-sel{background:var(--casora-popup-row-hover, rgba(255,255,255,0.08));}'
       + '.hw-done{display:inline-block;pointer-events:auto;cursor:pointer;padding:8px 10px;margin:-8px -10px;white-space:nowrap;'
@@ -1505,7 +1505,7 @@
   };
   L._cfg = {};
 
-  /* Programme aus den Durchgängen (WashData): wie oft, wie lange, wie viel Strom. */
+  /* Programs from the cycles (WashData): how often, how long, how much power. */
   var programs = function (d) {
     var by = {};
     realCycles(d).forEach(function (x) {
@@ -1519,9 +1519,9 @@
     return Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return b.n - a.n || b.last - a.last; });
   };
 
-  /* Pflege-Zeilen aus get_maintenance_log: [{ id, label, icon, due, bar, sub }].
-     WashData 0.5.8 liefert status (eingebaute und eigene Aufgaben, Intervall in Durchgängen und/oder
-     Tagen, 0 = aus); 0.5.7 nur reminders/cycles_since (Durchgänge). */
+  /* Care rows from get_maintenance_log: [{ id, label, icon, due, bar, sub }].
+     WashData 0.5.8 returns status (built-in and own tasks, interval in cycles and/or
+     days, 0 = off); 0.5.7 only reminders/cycles_since (cycles). */
   var maintRows = function (ml, dryer) {
     if (!ml) return [];
     var due = ml.due || [];
@@ -1558,7 +1558,7 @@
     });
   };
 
-  /* ── Inhalte der Platten ── */
+  /* ── Plate contents ── */
   L.inner = function (kind, c, states) {
     var UI = window._casoraUI;
     if (!UI) return '';
@@ -1589,7 +1589,7 @@
         if (at.cycle_anomaly === 'overrun') { sub.push('dauert länger als üblich'); tone = 'warn'; }
         if (s === STALLED) { sub.push('steht still, evtl. Unwucht'); tone = 'warn'; }
       } else if (s[3] === 'clean') {
-        /* „Wäsche ist noch drin“ steht darunter mit „Ausgeräumt“ – hier nur seit wann. */
+        /* "Wäsche ist noch drin" sits below with "Ausgeräumt" – here only since when. */
         if (stObj.last_changed) sub.push('seit ' + clock(new Date(stObj.last_changed)) + ' Uhr');
         tone = 'good';
       } else {
@@ -1602,7 +1602,7 @@
       return UI.hero({ value: value, unit: unit, sub: sub.join(' · ') || null, subTone: tone, center: true });
     }
 
-    /* Weich 1.1.2 (Richtung A): Fortschritt als schmale Leiste unter der Kopfzeile. */
+    /* Soft 1.1.2 (direction A): progress as a slim bar under the header. */
     if (kind === 'pbar') {
       if (!active || !SF) return '';
       var pctB = pctOf(c, states);
@@ -1611,14 +1611,14 @@
       return window._casoraHH.pbar({ pct: pctB, left: Math.round(pctB) + ' %',
         right: remB != null ? 'Fertig gegen ' + clock(new Date(Date.now() + remB * 60000)) + ' Uhr' : '' });
     }
-    /* Weich 1.1.2: „Programm abbrechen“ als ruhige Pille am Spaltenende (Hersteller-Integration). */
+    /* Soft 1.1.2: "Programm abbrechen" as a calm pill at the end of the column (manufacturer integration). */
     if (kind === 'abort') {
       if (!active || !SF || !c.official || !ok(states, c.stop)) return '';
       return window._casoraHH.pill({ label: 'Programm abbrechen', icon: 'mdi:stop', svc: btn(c.stop), confirm: 'Abbrechen' });
     }
 
-    /* Laufender Durchgang: Fortschritt, Programm, Phase, Laufzeit (mit üblicher Dauer).
-       Weich: Fortschritt steht an der Leiste, Programm und Phase in der Kopfzeile – hier nur der Rest. */
+    /* Running cycle: progress, program, phase, run time (with usual duration).
+       Soft: progress is at the bar, program and phase in the header – here only the rest. */
     if (kind === 'run' || kind === 'prog') {
       if (!active) return '';
       var rows = [];
@@ -1642,7 +1642,7 @@
       return rows.length ? UI.group(rows, 'Durchgang') : '';
     }
 
-    /* Programm unbekannt, während es läuft: WashData fragen lassen, welches es ist. */
+    /* Program unknown while running: let WashData ask which one it is. */
     if (kind === 'pick') {
       var sel = c.select && states[c.select];
       if (!active || !sel || progOf(c, states)) return '';
@@ -1656,14 +1656,14 @@
       }), 'Welches Programm läuft?'), progName(sel.state)));
     }
 
-    /* Bedienen: Hersteller-Integration hält die Maschine an bzw. bricht ab; WashData nur die Erkennung. */
+    /* Controls: the manufacturer integration pauses or cancels the machine; WashData only the detection. */
     if (kind === 'act') {
       var rowsA = [];
       var paused = s[3] === 'pause';
       if (c.official) {
         if (active && !paused && ok(states, c.pause)) rowsA.push({ icon: 'mdi:pause', iconTone: 'warn', label: 'Pausieren', svc: btn(c.pause) });
         if (paused && ok(states, c.resume)) rowsA.push({ icon: 'mdi:play', iconTone: 'good', label: 'Fortsetzen', svc: btn(c.resume) });
-        /* Weich: Abbrechen ist die Pille am Spaltenende (abort). */
+        /* Soft: cancel is the pill at the end of the column (abort). */
         if (active && !SF && ok(states, c.stop)) rowsA.push({ icon: 'mdi:stop', iconTone: 'bad', label: 'Programm abbrechen', svc: btn(c.stop), confirm: 'Abbrechen' });
       } else if (raw === 'user_paused' && ok(states, c.resume)) {
         rowsA.push({ icon: 'mdi:play', iconTone: 'good', label: 'Erkennung fortsetzen', sub: 'Die Erkennung ist angehalten', svc: btn(c.resume) });
@@ -1671,7 +1671,7 @@
       return rowsA.length ? UI.group(rowsA) : '';
     }
 
-    /* Fertig, aber die Wäsche ist noch drin (WashData „clean“): ein Tipp sagt, dass sie raus ist. */
+    /* Done, but the laundry is still inside (WashData "clean"): a tap says it is out. */
     if (kind === 'unload') {
       if (s[3] !== 'clean') return '';
       var since = stObj.last_changed ? 'Wartet seit ' + dur((Date.now() - Date.parse(stObj.last_changed)) / 60000) : null;
@@ -1681,7 +1681,7 @@
         action: canUnload ? 'Ausgeräumt' : null, svc: canUnload ? btn(c.unload) : null }]);
     }
 
-    /* Letzter Durchgang (gerade fertig): Programm, Dauer, Strom und Kosten. */
+    /* Last cycle (just finished): program, duration, power and cost. */
     if (kind === 'last') {
       if (active || (s[3] !== 'clean' && s[3] !== 'done')) return '';
       var lc = realCycles(d)[0];
@@ -1693,7 +1693,7 @@
       return UI.group(rowsL, 'Letzter Durchgang');
     }
 
-    /* Hersteller-Integration ohne laufendes Programm: gewähltes Programm und Tür. */
+    /* Manufacturer integration without a running program: chosen program and door. */
     if (kind === 'dev') {
       if (!c.official) return '';
       var rowsD = [];
@@ -1701,7 +1701,7 @@
         var chosen = fmt(states, c.select) || progOf(c, states);
         if (chosen) rowsD.push({ icon: mIcon, iconTone: DIM, label: 'Programm', sub: 'An der Maschine gewählt', value: chosen });
       }
-      /* unknown wie unavailable: keine Zeile statt „Geschlossen“ */
+      /* unknown like unavailable: no row instead of "Geschlossen" */
       if (c.door && states[c.door] && states[c.door].state !== 'unavailable' && states[c.door].state !== 'unknown') {
         var dop = doorOpen(c, states);
         rowsD.push({ icon: dop ? 'mdi:door-open' : 'mdi:door-closed', iconTone: dop ? 'warn' : DIM, label: 'Tür',
@@ -1710,7 +1710,7 @@
       return rowsD.length ? UI.group(rowsD, 'Gerät') : '';
     }
 
-    /* Mehr: Erkennung (WashData) und Programm festlegen. */
+    /* More: detection (WashData) and set the program. */
     if (kind === 'ctrl') {
       var out = '';
       var pausedW = raw === 'paused' || raw === 'user_paused';
@@ -1724,7 +1724,7 @@
       }
       if (rowsC.length) out += UI.group(rowsC, 'Erkennung');
       var sel2 = c.select && states[c.select];
-      /* Läuft ein unbekanntes Programm, steht die Liste schon oben (pick). */
+      /* If an unknown program runs, the list is already on top (pick). */
       if (sel2 && c.source === 'washdata' && !(active && !progOf(c, states))) {
         var opts2 = (sel2.attributes && sel2.attributes.options) || [];
         if (opts2.length > 1) {
@@ -1740,7 +1740,7 @@
       return out;
     }
 
-    /* WashData hat Einstellungen gelernt, die die Erkennung verbessern (Details in WashData). */
+    /* WashData has learned settings that improve detection (details in WashData). */
     if (kind === 'tips') {
       var n = num(states, c.suggest);
       if (!n || n < 1) return '';
@@ -1760,7 +1760,7 @@
           svc: dead ? null : { domain: 'switch', service: on ? 'turn_off' : 'turn_on', target: { entity_id: c.plug } },
           confirm: on ? (active ? 'Trotzdem aus' : 'Ausschalten') : null });
       }
-      /* Weich (Entschlacken): nur die Schalter (Strom, Tastensperre), keine Messwerte. */
+      /* Soft (declutter): only the switches (power, button lock), no readings. */
       var pw = SF ? null : num(states, c.power), v = SF ? null : num(states, c.volt), a = SF ? null : num(states, c.amp);
       if (pw != null) rowsP.push({ icon: 'mdi:flash', iconTone: pw > 5 ? 'good' : DIM, label: 'Leistung',
         value: f(pw, pw < 10 ? 1 : 0) + ' W', entity: c.power });
@@ -1775,10 +1775,10 @@
     }
 
     if (kind === 'energy') {
-      /* Wäsche ohne Zähler: nichts (Geschirrspüler, Drucker, Sauger zeigen weiter „—“). */
+      /* Laundry without a meter: nothing (dishwasher, printer, vacuum still show "—"). */
       if (!c.energy && !c.dish && !c.print && !c.vac) return '';
       var rowsE = [];
-      /* Weich (Entschlacken): ohne Diagramm-Umschaltung und ohne Zählerstand. */
+      /* Soft (declutter): without chart switching and without meter reading. */
       var row = function (lbl, icon, val, key) {
         rowsE.push({ icon: icon, iconTone: 'good', label: lbl, sub: val != null && c.price != null ? eur(val * c.price) : null,
           value: val != null ? kwh(val) : (d.ready ? '—' : '…'), entity: SF ? null : key });
@@ -1810,7 +1810,7 @@
       return rowsS.length ? UI.group(rowsS, 'Statistik') : '';
     }
 
-    /* Deine Programme: wie oft, wie lange und wie viel Strom (aus den gelernten Durchgängen). */
+    /* Your programs: how often, how long and how much power (from the learned cycles). */
     if (kind === 'progs') {
       var pl = programs(d).slice(0, SF ? 4 : 6);
       if (!pl.length) return '';
@@ -1841,17 +1841,17 @@
       var ml = d.maint;
       if (!ml || !c.entry) return '';
       var mr = maintRows(ml, c.dryer);
-      /* Weich (Entschlacken): fällige Pflege sichtbar (maint_due), der Rest unter „Mehr“ (maint_rest). */
+      /* Soft (declutter): due care visible (maint_due), the rest under "Mehr" (maint_rest). */
       if (kind !== 'maint') mr = mr.filter(function (r) { return kind === 'maint_due' ? r.due : !r.due; });
       if (!mr.length) return '';
       L._cfg[c.st] = c;
       var keys = mr.map(function (r) { return r.id; });
       var rowsM = mr.map(function (r) {
-        /* Weich 1.1.2: „Erledigt“ nur bei fälliger Pflege. Eigene Aufgaben: event_type = ihre Kennung. */
+        /* Soft 1.1.2: "Erledigt" only for due care. Own tasks: event_type = their ID. */
         return { icon: r.icon, iconTone: r.due ? 'warn' : DIM, label: r.label, sub: r.sub,
           bar: r.bar, barTone: r.due ? 'warn' : 'good', value: (SF && !r.due) ? null : 'HWMAINT' + r.id + 'X' };
       });
-      /* „Erledigt“-Knopf an die Stelle des Werts (zweistufig, siehe L.tap) */
+      /* "Erledigt" button in place of the value (two steps, see L.tap) */
       var html = UI.group(rowsM, kind === 'maint_due' ? 'Pflege fällig' : 'Pflege');
       keys.forEach(function (k) {
         html = html.replace('HWMAINT' + k + 'X', '<span class="hw-done" data-hw-maint="' + esc(c.entry + '|' + k + '|' + c.st) + '">Erledigt</span>');
@@ -1861,8 +1861,8 @@
     return '';
   };
 
-  /* Fällige Pflege laut WashData (Attribut maintenance_due am Zustand); Trockner nur Filter/Kondensator.
-     Eigene Aufgaben (custom_…) mit Namen aus dem zuletzt geladenen Wartungsprotokoll, sonst „Pflege“. */
+  /* Due care according to WashData (attribute maintenance_due on the state); dryer only filter/condenser.
+     Own tasks (custom_…) named from the last loaded maintenance log, else "Pflege". */
   L.due = function (entity, V, states) {
     var st = (V && V.appliance_state) || (entity && entity.entity_id);
     var dryer = !!(V && V.device_type === 'dryer');
@@ -1881,7 +1881,7 @@
     return !L.state(states, st)[2] && L.due(entity, V, states).length > 0;
   };
 
-  /* ── Kachel: Status, Wäsche noch drin, im Ruhezustand ggf. fällige Pflege ── */
+  /* ── Tile: status, laundry still inside, at rest possibly due care ── */
   L.tile = function (entity, V, states) {
     var st = (V && V.appliance_state) || (entity && entity.entity_id);
     var s = L.state(states, st);
@@ -1890,11 +1890,11 @@
       var due = L.due(entity, V, states);
       return due.length ? s[0] + ' · ' + due[0] + ' fällig' + (due.length > 1 ? ' +' + (due.length - 1) : '') : s[0];
     }
-    // Keine Restzeit in der Kachel (23.09.) – die steht im Popup.
+    // No time left on the tile (23.09.) – it is in the popup.
     return s[0];
   };
-  /* Kachel hervorheben: läuft, pausiert, wartet auf Start – oder Wäsche noch drin.
-     Sprachunabhängig über L.state, damit auch Home Connect („run“) und Miele („in_use“) leuchten. */
+  /* Highlight the tile: running, paused, waiting to start – or laundry still inside.
+     Language-independent via L.state so Home Connect ("run") and Miele ("in_use") light up too. */
   L.tileActive = function (entity, V, states) {
     var st = (V && V.appliance_state) || (entity && entity.entity_id);
     if (!st || !states[st]) return null;
@@ -1923,7 +1923,7 @@
 
     add('hero', tpl('hero', true));
 
-    /* Verlauf: Leistung (4 h beim Laufen, sonst 24 h); Zeilen schalten auf Spannung/Strom bzw. Tagesverbrauch um. */
+    /* History: power (4 h while running, else 24 h); rows switch to voltage/current or daily consumption. */
     var hpOk = typeof window._hpChartCfg === 'function';
     var active = L.state(states, c.st)[2];
     if (hpOk && c.power) {
@@ -1931,7 +1931,7 @@
       if (c.volt) window._hpChartCfg(c.volt, 'Spannung', '24h', '#8E8E93', 150);
       if (c.amp) window._hpChartCfg(c.amp, 'Stromstärke', active ? '4h' : '24h', '#0A84FF', 150);
       if (c.energy) {
-        /* Verbrauch pro Tag als Säulen (Statistik change je Tag), 7 bzw. 30 Tage. */
+        /* Consumption per day as bars (statistic change per day), 7 or 30 days. */
         [['hwd7:', '7d'], ['hwd30:', '30d']].forEach(function (x) { window._hpBarCfg(x[0] + c.energy, c.energy, 'Verbrauch pro Tag', x[1], 1); });
       }
       var plate = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
@@ -1963,24 +1963,24 @@
       add('maint', tpl('maint', true));
     }
 
-    /* Weich (03.10.2026): Kopf mit Restzeit. Läuft etwas: links Durchgang (Fortschritt, Programm,
-       Phase, Laufzeit), ggf. „Welches Programm läuft?“ und Pause/Abbrechen; rechts letzte Durchgänge
-       und fällige Pflege. Fertig mit Wäsche drin: oben links „Ausgeräumt“. Sonst links die letzten
-       Durchgänge, rechts die eigenen Programme. Unter „Mehr“: Erkennung und Programm festlegen,
-       Programme, Statistik, Verbrauch, übrige Pflege, Empfehlungen, Steckdose. Kein Diagramm. */
+    /* Soft (03.10.2026): head with time left. While running: cycle on the left (progress, program,
+       phase, run time), possibly "Welches Programm läuft?" and pause/cancel; on the right last cycles
+       and due care. Done with laundry inside: "Ausgeräumt" top left. Otherwise the last cycles on
+       the left, own programs on the right. Under "Mehr": detection and set program,
+       programs, statistics, consumption, remaining care, recommendations, plug. No chart. */
     if (window._casoraHH && window._casoraHH.on() && window._casoraHH.layout) {
       var HH = window._casoraHH;
-      /* Fällige Pflege nur, wenn WashData sie meldet (maintenance_due). Schon beim Aufbau geprüft,
-         damit eine leere Spalte nicht „Mehr“ allein nach rechts oben stellt (B-11). */
+      /* Due care only when WashData reports it (maintenance_due). Checked while building already
+         so an empty column does not put "Mehr" alone top right (B-11). */
       var _dueNow = WD && !!L.due({ entity_id: c.st }, { appliance_state: c.st, device_type: c.dryer ? 'dryer' : null }, states).length;
       var f2 = { hero: fields.hero, unload: fields.unload, run: fields.run, pick: fields.pick, act: fields.act, dev: fields.dev,
         cycles: fields.cycles, progs: fields.progs,
         maint: _dueNow ? '[[[ const c = ' + _c + '; const L = window._casoraLaundry; return L && L.due({ entity_id: c.st }, { appliance_state: c.st, device_type: c.dryer ? "dryer" : null }, states).length'
           + " ? L.slot('maint_due', c, states) : ''; ]]]" : undefined };
       var run0 = L.state(states, c.st)[2];
-      /* 1.1.2 (Richtung A): Leiste unter dem Kopf, Abbrechen-Pille am Spaltenende; beim Laufen stehen
-         die letzten Durchgänge links unter dem Durchgang und die Programme rechts (wie im Zustand aus). */
-      if (run0) f2.pbar = tpl('pbar', false);   /* leer kostet oben einen Rasterabstand – nur beim Laufen anlegen */
+      /* 1.1.2 (direction A): bar under the head, cancel pill at the end of the column; while running
+         the last cycles sit on the left under the cycle and the programs on the right (as when off). */
+      if (run0) f2.pbar = tpl('pbar', false);   /* empty it costs a grid gap on top – only add it while running */
       f2.abort = tpl('abort', false);
       var moreKeys = WD ? ['ctrl', 'stats', 'energy', 'maint_rest', 'tips', 'plug'] : ['energy', 'plug'];
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
@@ -2015,7 +2015,7 @@
         custom_fields: cf,
       };
     };
-    /* Links: was gerade passiert + Bedienen; rechts: Verbrauch und Verlauf. */
+    /* Left: what is happening + controls; right: consumption and history. */
     var L0 = ['unload', 'run', 'pick', 'act', 'last', 'dev', 'ctrl', 'plug'].filter(function (k) { return fields[k] !== undefined; });
     var R0 = ['energy', 'progs', 'stats', 'cycles', 'maint'].filter(function (k) { return fields[k] !== undefined; });
     var _sp = window._casoraSplit ? window._casoraSplit('laundry', L0, R0) : { left: L0, right: R0 };
@@ -2023,7 +2023,7 @@
     var rightKeys = _sp.right;
     var top = {}, topStyle = {}, topAreas = [];
     ['hero', 'chart'].forEach(function (k) { if (fields[k] !== undefined) { top[k] = fields[k]; topStyle[k] = fstyle[k]; topAreas.push(k); } });
-    /* Die Hero-Zeile muss live bleiben: eigene Unterkarte mit triggers_update. */
+    /* The hero row has to stay live: own sub card with triggers_update. */
     top.hero = { card: makeCol(['hero']) };
     top.left = { card: makeCol(leftKeys) }; topStyle.left = [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }];
     top.right = { card: makeCol(rightKeys) }; topStyle.right = [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }];
@@ -2059,7 +2059,7 @@
       custom_fields: top,
     };
   };
-  /* Beim Re-Render der Spalten regelmäßig nachladen (Durchgang fertig → Liste/Statistik aktualisieren). */
+  /* Reload regularly when the columns re-render (cycle done → update list/statistics). */
   var _inner = L.inner;
   L.inner = function (kind, c, states) {
     if (kind === 'hero') {
@@ -2074,8 +2074,8 @@
 })();
 
 
-// ── Geschirrspüler (casora_dishwasher: Home Connect + Zwischenstecker) ─────────
-// Nutzt die Bausteine von window._casoraLaundry (Verbrauch, Steckdose, Nachladen).
+// ── Dishwasher (casora_dishwasher: Home Connect + smart plug) ─────────
+// Uses the building blocks of window._casoraLaundry (consumption, plug, loading).
 (function () {
   if (window._casoraDish || !window._casoraLaundry) return;
   var L = window._casoraLaundry;
@@ -2113,8 +2113,8 @@
     var reg = (hass && hass.entities) || {};
     var st = V.appliance_state || (entity && entity.entity_id);
     var devOf = function (eid) { return reg[eid] && reg[eid].device_id; };
-    // Nachbar-Entität auf demselben Gerät: zuerst über den sprachunabhängigen
-    // translation_key der Integration, sonst über die (deutsche) Namensendung.
+    // Neighbour entity on the same device: first via the integration's language-independent
+    // translation_key, else via the (German) name suffix.
     var sib = function (eid, re, dom, unit, key) {
       var dev = devOf(eid);
       if (!dev) return null;
@@ -2190,7 +2190,7 @@
       .concat(c.probs.map(function (p) { return p[0]; }), c.opts.map(function (o) { return o[0]; })).filter(Boolean);
   };
 
-  /* Was nachgefüllt / gepflegt werden muss (für Kachel und Popup) */
+  /* What needs refilling / care (for tile and popup) */
   D.todo = function (c, states) {
     var out = [];
     var on = function (e) { return e && states[e] && states[e].state === 'on'; };
@@ -2203,7 +2203,7 @@
     return out;
   };
 
-  /* Letzter Lauf: Verbrauch aus der Statistik des Zwischensteckers (Start/Ende aus der Startanzahl) */
+  /* Last run: consumption from the smart plug's statistics (start/end from the start count) */
   D.fetchLast = function (c, hass) {
     var a = (c.starts && hass.states[c.starts] && hass.states[c.starts].attributes) || {};
     var s0 = a['Last Start'], s1 = a['Last End'];
@@ -2258,14 +2258,14 @@
     var stopSvc = { domain: 'button', service: 'press', target: { entity_id: c.stop } };
     var endTxt = rem != null && rem > 0 ? 'Fertig gegen ' + U.clock(new Date(Date.now() + rem * 60000)) + ' Uhr' : null;
 
-    /* Weich 1.1.2 (Richtung A): Fortschritt als schmale Leiste unter der Kopfzeile. */
+    /* Soft 1.1.2 (direction A): progress as a slim bar under the header. */
     if (kind === 'd_pbar') {
       if (!active || !SF) return '';
       var pctB = U.num(states, c.progress);
       if (pctB == null) return '';
       return window._casoraHH.pbar({ pct: pctB, left: Math.round(pctB) + ' %', right: endTxt || '' });
     }
-    /* Weich 1.1.2: „Programm abbrechen“ als ruhige Pille am Spaltenende. */
+    /* Soft 1.1.2: "Programm abbrechen" as a calm pill at the end of the column. */
     if (kind === 'd_abort') {
       if (!active || !SF || !stopOk) return '';
       return window._casoraHH.pill({ label: 'Programm abbrechen', icon: 'mdi:stop', svc: stopSvc, confirm: 'Abbrechen' });
@@ -2275,7 +2275,7 @@
       if (!active) return '';
       var rows = [];
       var pct = U.num(states, c.progress);
-      /* Weich: Fortschritt steht an der Leiste, Phase und Programm in der Kopfzeile, Abbrechen ist die Pille. */
+      /* Soft: progress is at the bar, phase and program in the header, cancel is the pill. */
       if (SF) {
         var est = [[c.energyEst, 'Energie', 'mdi:lightning-bolt-outline'], [c.waterEst, 'Wasser', 'mdi:water-outline']].map(function (x) {
           var n = U.num(states, x[0]);
@@ -2300,8 +2300,8 @@
     if (kind === 'd_prog' || kind === 'd_start') {
       if (active) return '';
       var out = '';
-      /* Runde 2 (Spaltenbalance): Im Weich-Layout steht die Programmliste links allein, Startzeit
-         und Start kommen als eigener Block „d_start“ in die rechte, sonst fast leere Spalte. */
+      /* Round 2 (column balance): in the Soft layout the program list stands alone on the left, start time
+         and start come as their own block "d_start" into the right, otherwise almost empty column. */
       var splitStart = !!(window._casoraHH && window._casoraHH.on());
       var sel = (kind === 'd_start') ? null : c.sel && states[c.sel];
       if (kind === 'd_prog' && splitStart) {
@@ -2324,11 +2324,11 @@
       var delay = U.num(states, c.startIn) || 0;
       if (c.startIn && states[c.startIn]) {
         var set = function (h) { return { domain: 'number', service: 'set_value', data: { value: h * 3600 }, target: { entity_id: c.startIn } }; };
-        /* Wie Saugroboter „Reinigungsmodus“ (25.09.): Tasten in einer Karte statt lose in der Luft. */
+        /* Like the vacuum's "Reinigungsmodus" (25.09.): buttons in a card instead of loose in the air. */
         var segS = UI.segments([0, 1, 2, 3, 4, 6].map(function (h) {
           return { label: h ? h + ' Std.' : 'Sofort', active: Math.round(delay / 3600) === h, svc: set(h) };
         }));
-        /* Weich: Etikett + Segmente frei, ohne eigene Karte (wie Lichtfarbe im Licht-Popup). */
+        /* Soft: label + segments free, without an own card (like light colour in the light popup). */
         if (window._casoraHH && window._casoraHH.on()) out += (out ? '<div style="height:18px"></div>' : '') + window._casoraHH.label('Startzeit') + window._casoraHH.dense(segS);
         else out += '<div style="height:18px"></div>'
           + '<div style="font-family:var(--primary-font-family, system-ui);font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);'
@@ -2382,8 +2382,8 @@
       if (cr != null || c.machineCare) rc.push({ icon: 'mdi:spray-bottle', iconTone: mdue ? 'warn' : 'good', label: 'Maschinenpflege',
         sub: mdue ? 'Programm „Maschinenpflege“ mit Reiniger starten' : (cr != null ? 'In ' + Math.round(cr) + ' Durchgängen' : null),
         value: mdue ? 'Fällig' : null, valueTone: mdue ? 'warn' : null });
-      /* Weich 1.1.2: am Desktop/Tablet die volle Liste mit Füllständen (trägt die rechte Spalte);
-         am Handy nur Fälliges, sonst ein Satz – das Popup bleibt dort kurz. */
+      /* Soft 1.1.2: on desktop/tablet the full list with fill levels (carries the right column);
+         on the phone only what is due, else one sentence – the popup stays short there. */
       var phone = window.matchMedia && window.matchMedia('(max-width: 760px)').matches;
       if (SF && rc.length && phone) {
         var dueR = rc.filter(function (r) { return r.valueTone; });
@@ -2406,14 +2406,14 @@
         if (lk != null && lk > 0 && c.price != null) rs.push({ icon: 'mdi:currency-eur', iconTone: DIM, label: 'Kosten letzter Durchgang', value: U.eur(lk * c.price) });
       }
       if (n != null) rs.push({ icon: 'mdi:counter', iconTone: 'accent', label: 'Starts insgesamt', value: String(Math.round(n)) });
-      /* Weich 1.1.2: „Verlauf“ (steht beim Laufen links unter dem Durchgang, sonst unter „Mehr“). */
+      /* Soft 1.1.2: "Verlauf" (while running on the left under the cycle, else under "Mehr"). */
       return rs.length ? UI.group(rs, SF ? 'Verlauf' : 'Statistik') : '';
     }
 
     if (kind === 'd_device') {
       var rd = [];
       var SFd = window._casoraHH && window._casoraHH.on();
-      /* Weich (Entschlacken): Tür steht im Kopf; Verbindung/Fernstart fallen weg, die Schalter bleiben (unter „Mehr“). */
+      /* Soft (declutter): door is in the head; connection/remote start go, the switches stay (under "Mehr"). */
       if (c.door && states[c.door] && !SFd) rd.push({ icon: doorOpen ? 'mdi:door-open' : 'mdi:door-closed', iconTone: doorOpen ? 'warn' : DIM,
         label: 'Tür', value: doorOpen ? 'Geöffnet' : 'Geschlossen', valueTone: doorOpen ? 'warn' : null });
       if (c.conn && states[c.conn] && !SFd) { var cn = states[c.conn].state === 'on';
@@ -2430,16 +2430,16 @@
     return '';
   };
 
-  /* Nachgeladene Platten (d_hero/d_stats) laufen über L.paint → L.inner */
+  /* Lazy plates (d_hero/d_stats) go through L.paint → L.inner */
   var prevInner = L.inner;
   L.inner = function (kind, c, states) { return kind.indexOf('d_') === 0 ? D.inner(kind, c, states) : prevInner(kind, c, states); };
 
-  /* ── Kachel ── */
+  /* ── Tile ── */
   D.tile = function (entity, V, states, hass) {
     var c = D.resolve(entity, V, states, hass);
     var s = L.state(states, c.st);
     if (s[2]) {
-      // Keine Restzeit in der Kachel (23.09.) – die steht im Popup.
+      // No time left on the tile (23.09.) – it is in the popup.
       return PHASE[U.str(states, c.phase)] || s[0];
     }
     var todo = D.todo(c, states);
@@ -2476,7 +2476,7 @@
       if (c.volt) window._hpChartCfg(c.volt, 'Spannung', '24h', '#8E8E93', 150);
       if (c.amp) window._hpChartCfg(c.amp, 'Stromstärke', active ? '4h' : '24h', '#0A84FF', 150);
       if (c.energy) {
-        /* Verbrauch pro Tag als Säulen (Statistik change je Tag), 7 bzw. 30 Tage. */
+        /* Consumption per day as bars (statistic change per day), 7 or 30 days. */
         [['hwd7:', '7d'], ['hwd30:', '30d']].forEach(function (x) { window._hpBarCfg(x[0] + c.energy, c.energy, 'Verbrauch pro Tag', x[1], 1); });
       }
       var plate = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
@@ -2503,17 +2503,17 @@
     add('stats', tpl('d_stats', true));
     add('device', tpl('d_device', false));
 
-    /* Weich (Entschlacken 01.10.2026): Kopf mit Restzeit, links Programm/Startzeit/Start bzw.
-       Durchgang, rechts Hinweise und Nachfüllen (nur Fälliges); Optionen, Verbrauch, Statistik,
-       Geräteschalter und Steckdose unter „Mehr“. Kein Leistungsdiagramm. */
+    /* Soft (declutter 01.10.2026): head with time left, on the left program/start time/start or
+       cycle, on the right hints and refills (only what is due); options, consumption, statistics,
+       device switches and plug under "Mehr". No power chart. */
     if (window._casoraHH && window._casoraHH.on() && window._casoraHH.layout) {
       var HH = window._casoraHH;
       var f2 = { hero: fields.hero, run: fields.run, prog: fields.prog, start: fields.start, alerts: fields.alerts, care: fields.care };
-      /* 1.1.2 (Richtung A): Leiste unter dem Kopf (nur beim Laufen angelegt – leer kostet sie oben einen
-         Rasterabstand), Abbrechen-Pille am Ende der linken Spalte. */
+      /* 1.1.2 (direction A): bar under the head (only added while running – empty it costs a
+         grid gap on top), cancel pill at the end of the left column. */
       if (active) f2.pbar = tpl('d_pbar', false);
       f2.abort = tpl('d_abort', false);
-      /* Beim Laufen steht „Verlauf“ links unter dem Durchgang (Spaltenbalance gegen die Pflege-Liste). */
+      /* While running "Verlauf" sits on the left under the cycle (column balance against the care list). */
       if (active) f2.stats = fields.stats;
       var moreD = ['d_opts', 'energy'].concat(active ? [] : ['d_stats']).concat(['d_device', 'plug']);
       f2.more = HH.moreCard(watch, 'const c = ' + _c + ';\nconst L = window._casoraLaundry, H = window._casoraHH;\n'
@@ -2544,7 +2544,7 @@
         custom_fields: cf,
       };
     };
-    /* Links: Durchgang bzw. Programmwahl + Start, Optionen, Steckdose; rechts: Hinweise, Pflege, Verbrauch, Statistik, Gerät. */
+    /* Left: cycle or program choice + start, options, plug; right: hints, care, consumption, statistics, device. */
     var top = {}, topStyle = {}, topAreas = ['hero'];
     top.hero = { card: makeCol(['hero']) }; topStyle.hero = fstyle.hero;
     if (fields.chart !== undefined) { top.chart = fields.chart; topStyle.chart = fstyle.chart; topAreas.push('chart'); }
@@ -2584,8 +2584,8 @@
 })();
 
 
-// ── 3D-Drucker (casora_popup_3d_printer: Bambu Lab + Zwischenstecker) ─────────
-// Nutzt die Bausteine von window._casoraLaundry (Verbrauch, Steckdose, Nachladen, Diagramm-Zeilen).
+// ── 3D printer (casora_popup_3d_printer: Bambu Lab + smart plug) ─────────
+// Uses the building blocks of window._casoraLaundry (consumption, plug, loading, chart rows).
 (function () {
   if (window._casoraPrint || !window._casoraLaundry) return;
   var L = window._casoraLaundry;
@@ -2623,7 +2623,7 @@
     if (h.length < 6) return null;
     return [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16); });
   };
-  /* Kachelfarbe = Filamentfarbe; sehr helle Farben leicht abdunkeln, sonst verschwindet das weiße Symbol. */
+  /* Tile colour = filament colour; darken very light colours slightly, otherwise the white icon disappears. */
   var swatch = function (h) {
     var c = hexRgb(h);
     if (!c) return DIM;
@@ -2632,7 +2632,7 @@
     return 'rgb(' + c.map(function (v) { return Math.round(v * k); }).join(',') + ')';
   };
 
-  // Entitäten des Druckers: feste Variable → Geräte-Finder (translation_key, sprachunabhängig).
+  // Printer entities: fixed variable → device finder (translation_key, language-independent).
   var FIND = {
     status: { keys: ['print_status'], domain: 'sensor' }, stage: { keys: ['stage'], domain: 'sensor' },
     progress: { keys: ['print_progress'], domain: 'sensor' }, remaining: { keys: ['remaining_time'], domain: 'sensor' },
@@ -2658,8 +2658,8 @@
     pause: { keys: ['pause'], domain: 'button' }, resume: { keys: ['resume'], domain: 'button' }, stop: { keys: ['stop'], domain: 'button' },
   };
 
-  /* Druckername ohne eigene Angabe (printer_name): der Name des Geräts in HA (vom Nutzer
-     umbenannt zuerst), sonst „3D-Drucker“. Früher stand in der Vorlage fest „Bambu P1S“. */
+  /* Printer name without an own value (printer_name): the device's name in HA (renamed by the
+     user first), else "3D-Drucker". The template used to say "Bambu P1S" fixed. */
   var devName = function (hass, eid) {
     var e = eid && hass && hass.entities && hass.entities[eid];
     var d = e && e.device_id && hass.devices && hass.devices[e.device_id];
@@ -2675,11 +2675,11 @@
   P.resolve = function (entity, V, states, hass) {
     V = V || {};
     var st = V.entity_state || (entity && entity.entity_id);
-    // Anker fürs Gerät: der Zustand-Sensor oder die Kachel-Entität (Template-Helfer haben kein Gerät).
+    // Anchor for the device: the state sensor or the tile entity (template helpers have no device).
     var CD = window.casoraDevice;
     var anchor = [st, entity && entity.entity_id].filter(function (x) { return x && CD && CD.deviceOf(hass, x); })[0];
-    // Kachel an einem Template-Helfer ohne Gerät: den Drucker
-    // im Haus über seinen Status-Schlüssel suchen.
+    // Tile on a template helper without a device: find the printer
+    // in the home by its status key.
     if (!anchor && CD && hass && hass.entities) {
       anchor = Object.keys(hass.entities).filter(function (k) {
         var e = hass.entities[k];
@@ -2696,13 +2696,13 @@
     var slots = [V.entity_ams_slot_1, V.entity_ams_slot_2, V.entity_ams_slot_3, V.entity_ams_slot_4].filter(Boolean);
     if (!slots.length && F.slots) slots = F.slots.filter(function (x) { return states[x]; });
     var plug = V.plug_entity || plugF.switch || null;
-    // Eigene Steckdose aus der Variable: Messwerte desselben Geräts.
+    // Own plug from the variable: readings of the same device.
     if (V.plug_entity && CD && hass) {
       var pm = CD.map(hass, V.plug_entity, { power: { dc: 'power', domain: 'sensor' }, voltage: { dc: 'voltage', domain: 'sensor' },
         current: { dc: 'current', domain: 'sensor' }, energy: { dc: 'energy', domain: 'sensor' } });
       plugF = { switch: V.plug_entity, power: pm.power, voltage: pm.voltage, current: pm.current, energy: pm.energy };
     }
-    // Zustand (Arbeitsschritt): feste Variable, sonst der „stage“-Sensor des Geräts.
+    // State (work step): fixed variable, else the device's "stage" sensor.
     if (!V.entity_state && F.stage) st = F.stage;
     return {
       st: st, print: true, name: V.printer_name || devName(hass, anchor) || '3D-Drucker', entry: null, dryer: false,
@@ -2738,19 +2738,19 @@
       energy: plugF.energy || null, lock: null,
     };
   };
-  // Für die Kachel-Vorlage: Entitäten ohne Kartenvariablen, zwischengespeichert je
-  // Registry-Stand (die Vorlage fragt pro Zeichnen rund 30 Felder ab).
+  // For the tile template: entities without card variables, cached per
+  // registry state (the template asks for about 30 fields per draw).
   var autoCache = { reg: null, map: {} };
   P.auto = function (entity, hass) {
     if (!hass) return null;
     var id = (entity && entity.entity_id) || '';
     if (autoCache.reg !== hass.entities) autoCache = { reg: hass.entities, map: {} };
-    // Erst zwischenspeichern, wenn der Geräte-Finder geladen ist – sonst bliebe ein
-    // leeres Ergebnis vom ersten Zeichnen hängen, bis sich die Registry ändert.
+    // Only cache once the device finder is loaded – otherwise an empty result
+    // from the first draw would stick until the registry changes.
     if (!autoCache.map[id] || !autoCache.map[id]._finder) {
       var c = P.resolve(entity, {}, hass.states || {}, hass);
       c._finder = !!window.casoraDevice;
-      // Tagesverbrauch der Steckdose (nur Kachel)
+      // Plug's daily consumption (tile only)
       var CD = window.casoraDevice, today = null;
       if (c.plug && CD) {
         var pl = CD.entities(hass, c.plug, { children: false });
@@ -2784,7 +2784,7 @@
     var task = U.str(states, c.task);
     var errOn = (c.err && states[c.err] && states[c.err].state === 'on') || (c.hms && states[c.hms] && states[c.hms].state === 'on');
 
-    /* Weich 1.1.2: Fortschritt als schmale Leiste unter der Kopfzeile. */
+    /* Soft 1.1.2: progress as a slim bar under the header. */
     if (kind === 'p_pbar') {
       var pcB = U.num(states, c.progress);
       if (!active || pcB == null || !(window._casoraHH && window._casoraHH.on())) return '';
@@ -2792,8 +2792,8 @@
         right: rem != null && rem > 0 ? 'Fertig gegen ' + U.clock(new Date(Date.now() + rem * 60000)) + ' Uhr' : '' });
     }
     if (kind === 'p_hero') {
-      /* Weich (Entschlacken): Unterzeile „Schicht 120/300 · PETG“. 1.1.2 (Richtung A): beim Drucken ist die
-         Restzeit der Hauptwert wie bei Geschirrspüler/Wäsche, Prozent und „Fertig gegen“ an der Leiste (p_pbar). */
+      /* Soft (declutter): sub line "Schicht 120/300 · PETG". 1.1.2 (direction A): while printing the
+         time left is the main value like dishwasher/laundry, percent and "Fertig gegen" at the bar (p_pbar). */
       if (window._casoraHH && window._casoraHH.on()) {
         var pc = U.num(states, c.progress), sl = U.num(states, c.layer), st2 = U.num(states, c.layers);
         var fil = null, actS = U.str(states, c.activeSlot);
@@ -2812,7 +2812,7 @@
           if (raw === 'finish' && c.end && U.str(states, c.end)) sb.push('seit ' + U.clock(new Date(states[c.end].state)) + ' Uhr');
         }
         if (errOn) sb.push('Fehler gemeldet');
-        /* Runde 2 (B-16): Der Fehler steht im Zustand (rot), die Meta-Zeile bleibt ruhig. */
+        /* Round 2 (B-16): the error is in the state (red), the meta line stays calm. */
         var vH = s[0], uH = null;
         if (active && rem != null && rem > 0) {
           var hH = Math.floor(rem / 60), mH = Math.round(rem % 60);
@@ -2859,9 +2859,9 @@
       var w = U.num(states, c.weight), le = U.num(states, c.length);
       if (w != null && w > 0) rows.push({ icon: 'mdi:weight-gram', iconTone: active ? 'accent' : DIM, label: 'Filament',
         sub: le != null && le > 0 ? U.f(le, 1) + ' m' : null, value: U.f(w, 1) + ' g' });
-      /* Weich (Entschlacken): Fortschritt und Schicht stehen im Kopf – hier nur Ende, Start, Aufgabe, Filament. */
+      /* Soft (declutter): progress and layer are in the head – here only end, start, task, filament. */
       if (window._casoraHH && window._casoraHH.on()) {
-        /* 1.1.2: „Fertig gegen“ steht an der Leiste unter dem Kopf (p_pbar). */
+        /* 1.1.2: "Fertig gegen" sits at the bar under the head (p_pbar). */
         rows = rows.filter(function (r) { return r.label !== 'Fortschritt' && r.label !== 'Schicht'; });
         return rows.length ? UI.group(rows, active ? 'Druck' : 'Zuletzt gedruckt') : '';
       }
@@ -2883,7 +2883,7 @@
           svc: { domain: 'switch', service: co ? 'turn_off' : 'turn_on', target: { entity_id: c.camSw } } }); }
       var out = rc.length ? UI.group(rc, 'Steuerung') : '';
       var sp = c.speedSel && states[c.speedSel];
-      /* Weich: Geschwindigkeit steht unter „Mehr“ (p_speed). */
+      /* Soft: speed sits under "Mehr" (p_speed). */
       if (sp && sp.state !== 'unavailable' && !(window._casoraHH && window._casoraHH.on())) {
         var spSeg = UI.segments(((sp.attributes || {}).options || []).map(function (o) {
           return { label: SPEED[o] || o, active: sp.state === o, svc: { domain: 'select', service: 'select_option', data: { option: o }, target: { entity_id: c.speedSel } } };
@@ -2903,7 +2903,7 @@
 
     if (kind === 'p_temp') {
       var rt = [];
-      /* Einheit des Sensors (°C/°F), sonst °C. */
+      /* The sensor's unit (°C/°F), else °C. */
       var tu = function (id) { return (states[id] && states[id].attributes && states[id].attributes.unit_of_measurement) || '°C'; };
       var trow = function (id, tid, label, icon) {
         var v = U.num(states, id);
@@ -2987,7 +2987,7 @@
     var UI = window._casoraUI;
     if (!UI || !entity) return { type: 'vertical-stack', cards: [] };
     var c = P.resolve(entity, variables, states, hass);
-    /* Steckdose/Verbrauch nutzen L.state(c.st) für „läuft gerade“ → Druckerzustand an L weiterreichen */
+    /* Plug/consumption use L.state(c.st) for "running now" → pass the printer state on to L */
     c.st_active = P.state(c, states)[2];
     var d0 = L.data[c.st];
     L.fetch(c, hass, !d0 || !d0.ts || Date.now() - d0.ts > 10000);
@@ -3010,7 +3010,7 @@
       if (c.bed) window._hpChartCfg(c.bed, 'Druckbett', active ? '4h' : '24h', '#FF453A', 150);
       if (c.amsHum) { window._hpChartCfg(c.amsHum, 'Luftfeuchtigkeit im AMS', '7d', '#0A84FF', 150); if (window._hpSmooth) window._hpSmooth(c.amsHum); }
       if (c.energy) {
-        /* Verbrauch pro Tag als Säulen (Statistik change je Tag), 7 bzw. 30 Tage. */
+        /* Consumption per day as bars (statistic change per day), 7 or 30 days. */
         [['hwd7:', '7d'], ['hwd30:', '30d']].forEach(function (x) { window._hpBarCfg(x[0] + c.energy, c.energy, 'Verbrauch pro Tag', x[1], 1); });
       }
     }
@@ -3026,7 +3026,7 @@
         + '<div class="hp-chart-slot" style="min-height:150px;margin:6px 0 0;"></div></div>');
       if (typeof window._hpChartInit === 'function') window._hpChartInit(c.power);
     }
-    /* Kamerabild wie im bisherigen Popup (16:9, abgerundet); picture-entity aktualisiert sich selbst. */
+    /* Camera image as in the previous popup (16:9, rounded); picture-entity updates itself. */
     if (c.cam && states[c.cam]) {
       add('cam', { card: { type: 'picture-entity', entity: c.cam, camera_view: 'auto', show_name: false, show_state: false, tap_action: { action: 'none' }, hold_action: { action: 'none' },
         aspect_ratio: '16:9',
@@ -3034,7 +3034,7 @@
           + ' box-shadow: var(--casora-popup-plate-shadow, none) !important; background: var(--casora-soft-placeholder, rgba(0,0,0,0.35)) !important; }' } } });
     }
 
-    /* KI-Blick auf den Druck (✦): gleiches Modul wie im Kamera-Popup, eigener Bereich. */
+    /* AI look at the print (✦): same module as in the camera popup, own section. */
     if (c.cam && states[c.cam] && window._casoraCamAi && window._casoraCamAi.inline) add('camai', window._casoraCamAi.inline(c.cam, 'KI-Blick auf den Druck', 'Druck prüfen'));
     add('job', tpl('p_job', false));
     add('ctrl', tpl('p_ctrl', false));
@@ -3045,13 +3045,13 @@
     add('energy', tpl('energy', true));
     add('info', tpl('p_info', false));
 
-    /* Weich (Entschlacken 01.10.2026): Kopf mit Fortschritt, links Steuerung und Druck, rechts
-       Kamera mit KI-Blick-Knopf darunter; Filament, Temperaturen, Tempo, Verbrauch, Gerät und
-       Steckdose unter „Mehr“. Kein Leistungsdiagramm, keine Messwerte der Steckdose. */
+    /* Soft (declutter 01.10.2026): head with progress, on the left control and print, on the right
+       camera with the AI look button below; filament, temperatures, speed, consumption, device and
+       plug under "Mehr". No power chart, no plug readings. */
     if (window._casoraHH && window._casoraHH.on() && window._casoraHH.layout) {
       var HH = window._casoraHH;
       var f2 = { hero: fields.hero, alerts: fields.alerts, ctrl: fields.ctrl, job: fields.job };
-      /* 1.1.2 (Richtung A): Leiste unter dem Kopf, nur beim Drucken angelegt. */
+      /* 1.1.2 (direction A): bar under the head, only added while printing. */
       if (active) f2.pbar = tpl('p_pbar', false);
       if (fields.cam) {
         f2.camlbl = HH.label('Kamera');
@@ -3077,7 +3077,7 @@
         type: 'custom:button-card', entity: c.st, triggers_update: watch, tap_action: { action: 'none' },
         show_icon: false, show_name: false, show_label: false, show_state: false,
         card_mod: { style: colStyle },
-        /* KI-Blick ist die Überschrift des Kamerabilds: kein Abschnittsabstand dazwischen. */
+        /* AI look is the camera image's heading: no section gap in between. */
         extra_styles: window._casoraColGap(keys) + (keys[0] === 'camai' ? ' #container > #cam { margin-top: 0 !important; } #container > #camai { overflow: visible !important; }' : ''),
         styles: {
           card: [{ background: 'transparent' }, { border: 'none' }, { 'box-shadow': 'none' }, { padding: '0' }],
@@ -3088,8 +3088,8 @@
         custom_fields: cf,
       };
     };
-    /* Popup-Standard (24.09.2026): Status oben, Verlauf volle Breite; links Bedienung
-       (Hinweise, Druck, Steuerung, Temperaturen, Steckdose), rechts Infos (Kamera + KI, Filament, Verbrauch, Gerät). */
+    /* Popup standard (24.09.2026): status on top, history full width; controls on the left
+       (hints, print, control, temperatures, plug), info on the right (camera + AI, filament, consumption, device). */
     var has = function (k) { return fields[k] !== undefined; };
     var top = {}, topStyle = {};
     top.hero = { card: makeCol(['hero']) }; topStyle.hero = fstyle.hero;
@@ -3097,7 +3097,7 @@
     if (fields.chart) { top.chart = fields.chart; topStyle.chart = [{ 'justify-self': 'stretch' }, { 'align-self': 'stretch' }]; pair.push('chart'); }
     var _sp = (function (l, r) { return window._casoraSplit ? window._casoraSplit('printer', l, r, { pinRight: ['camai', 'cam'] }) : { left: l, right: r }; })(['alerts', 'job', 'ctrl', 'temp', 'plug'].filter(has), ['camai', 'cam', 'ams', 'energy', 'info'].filter(has));
     top.left = { card: makeCol(_sp.left) }; topStyle.left = [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }];
-    top.right = { card: makeCol(_sp.right) };  /* KI-Blick als Überschrift über dem Kamerabild (24.09.) */ topStyle.right = [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }];
+    top.right = { card: makeCol(_sp.right) };  /* AI look as a heading above the camera image (24.09.) */ topStyle.right = [{ 'justify-self': 'stretch' }, { 'align-self': 'start' }];
     var narrow = ['hero'].concat(pair, ['left', 'right']).map(function (k) { return '"' + k + '"'; }).join(' ');
     var wide = '"hero hero"' + (pair.length ? ' "chart chart"' : '') + ' "left right"';
     var wrapperStyle = [
@@ -3130,12 +3130,12 @@
   };
 })();
 
-// ── Popup-Tippschutz (23.09.2026) ───────────────────────────────────────────
-// 1) Direkt nach dem Öffnen eines Popups (600 ms) lösen data-casora-svc-Elemente nichts aus –
-//    der Finger, der das Popup geöffnet hat, darf nicht gleich „Heizen“ o. Ä. treffen.
-// 2) Klima-GRUPPEN (member_entities/entity_id, z. B. eine Fußbodenheizungs-Gruppe): Einschalten (Heizen/Auto)
-//    braucht einen zweiten Tipp „Bestätigen“ innerhalb von 4 s. „Aus“ bleibt ein Tipp.
-// Läuft im Capture auf window, also vor casora-cores document-Listener.
+// ── Popup tap guard (23.09.2026) ───────────────────────────────────────────
+// 1) Right after a popup opens (600 ms) data-casora-svc elements do nothing –
+//    the finger that opened the popup must not hit "Heizen" or the like right away.
+// 2) Climate GROUPS (member_entities/entity_id, e.g. a floor heating group): turning on (heat/auto)
+//    needs a second tap "Bestätigen" within 4 s. "Aus" stays one tap.
+// Runs in the capture phase on window, so before casora-core's document listener.
 (function () {
   if (window._casoraSvcGuard) return;
   window._casoraSvcGuard = true;
@@ -3206,7 +3206,7 @@
     var grp = st && (window.casoraClimateMembers ? window.casoraClimateMembers(st, ha.hass.states).length > 0 : Array.isArray((st.attributes || {}).member_entities));
     if (!grp || mode === 'off') return;
     if (st.state === mode) { block(); return; }
-    if (ev.type === 'click' && Date.now() - lastTouch < 700) { block(); return; }   // Maus-Klick nach dem Touch
+    if (ev.type === 'click' && Date.now() - lastTouch < 700) { block(); return; }   // mouse click after the touch
     if (ev.type === 'touchend') lastTouch = Date.now();
     if (armed === el && Date.now() - el._hgArmed < ARM_MS) { disarm(); return; }     // zweiter Tipp → durchlassen
     block();
@@ -3217,8 +3217,8 @@
 })();
 
 
-// ── Saugroboter (casora_vacuum: Roborock + Dock-Steckdose) — 23.09.2026 ─────────
-// Popup im Geräte-Stil (wie Geschirrspüler/3D-Drucker). Nutzt die Bausteine von window._casoraLaundry.
+// ── Robot vacuum (casora_vacuum: Roborock + dock plug) — 23.09.2026 ─────────
+// Popup in device style (like dishwasher/3D printer). Uses the building blocks of window._casoraLaundry.
 (function () {
   if (window._casoraVac || !window._casoraLaundry) return;
   var L = window._casoraLaundry;
@@ -3259,7 +3259,7 @@
     vertical_bumper_pressed: 'Oberer Stoßfänger gedrückt', robot_tilted: 'Roboter gekippt', clean_tank_empty: 'Frischwassertank leer',
     dirty_tank_full: 'Schmutzwassertank voll', water_box_empty: 'Wasserbehälter leer', no_mop: 'Mopp fehlt',
     strainer_error: 'Schmutzfänger prüfen', dock: 'Dock-Fehler', mop_washing_error: 'Moppwäsche gestört',
-    // Station (Roborock dock_error, 1.4.1): kamen sonst englisch („waste water tank full“).
+    // Station (Roborock dock_error, 1.4.1): came out in English otherwise ("waste water tank full").
     no_dustbin_or_filter: 'Staubbeutel oder Filter fehlt', auto_empty_dock_fan_error: 'Absauggebläse gestört',
     duct_blockage: 'Absaugkanal verstopft', auto_empty_dock_voltage_error: 'Spannungsfehler an der Station',
     water_empty: 'Frischwassertank leer', waste_water_tank_full: 'Schmutzwassertank voll',
@@ -3310,7 +3310,7 @@
     if (unitOf(states, e) === 'd') { var n = Math.round(h / 24); return n === 1 ? 'noch 1 Tag' : 'noch ' + n + ' Tage'; }
     return 'noch ' + (h >= 10 ? U.f(Math.round(h), 0) + ' Betriebsstd.' : U.dur(h * 60));
   };
-  /* Verschleißteile: [translation_key des Sensors, Name, Icon, Nennlaufzeit in Std. oder null, translation_key der Reset-Taste,
+  /* Wear parts: [sensor translation_key, name, icon, rated life in hours or null, reset button translation_key,
      further sensor keys, further reset keys] – Roborock first, then Dreame (same "_time_left" in hours; its own resets). */
   var PARTS = [
     ['main_brush_time_left', 'Hauptbürste', 'mdi:brush', 300, 'reset_main_brush_consumable', [], ['reset_main_brush']],
@@ -3378,19 +3378,19 @@
       power: null, volt: null, amp: null, energy: null,
       activeStates: VV.active_states || [],
     };
-    /* Casora: sprachunabhängig über translation_keys der Roborock-Integration
-       (Roboter + Station als Geschwister-Gerät). Feste Variablen haben Vorrang. */
+    /* Casora: language-independent via the Roborock integration's translation_keys
+       (robot + station as sibling device). Fixed variables win. */
     var CD = window.casoraDevice;
     if (CD && id && hass) {
       var F = CD.map(hass, id, VFIND, { siblings: true });
-      /* Karte: eingetragene, solange es sie gibt; leer oder gelöscht → am Gerät suchen (07.10.2026). */
+      /* Map: the configured one while it exists; empty or deleted → search on the device (07.10.2026). */
       if (CD.vacuumMapFor) c.map = CD.vacuumMapFor(hass, id, VV.entity_map) || null;
       Object.keys(VFIND).forEach(function (key) {
         if (VOWN[key] && VV[VOWN[key]]) return;
         if (F[key] && states[F[key]]) c[key] = F[key];
       });
-      /* Akku und Ladestatus tragen bei Roborock keinen eigenen Schlüssel und sind Diagnose-
-         Entitäten (der Finder lässt die bei device_class aus): am Roboter selbst nachsehen. */
+      /* Battery and charging state have no own key on Roborock and are diagnostic
+         entities (the finder skips those for device_class): look on the robot itself. */
       var own = CD.entities(hass, id, { children: false });
       [['battery', 'battery', 'sensor'], ['charging', 'battery_charging', 'binary_sensor']].forEach(function (b) {
         if (c[b[0]]) return;
@@ -3409,7 +3409,7 @@
         return s && states[s] ? [s, p[1], p[2], p[3], FP['r_' + p[0]] || null] : null;
       }).filter(Boolean);
       if (parts.length) c.parts = parts;
-      // Routinen: Tasten am Roboter/an der Station ohne eigenen Schlüssel (vom Nutzer angelegt).
+      // Routines: buttons on the robot/station without an own key (created by the user).
       var rt = CD.entities(hass, id, { siblings: true }).filter(function (e) {
         return e.domain === 'button' && !e.key && !e.category && states[e.entity_id];
       }).map(function (e) { return e.entity_id; });
@@ -3433,7 +3433,7 @@
       .concat(c.parts.map(function (p) { return p[0]; })).filter(Boolean);
   };
 
-  /* Zustand: { label, run (fährt/reinigt), paused, dock (Station arbeitet), error, dead } */
+  /* State: { label, run (driving/cleaning), paused, dock (station working), error, dead } */
   V.state = function (c, states) {
     var raw = String((states[c.st] && states[c.st].state) || '').toLowerCase();
     var status = String(U.str(states, c.status) || '').toLowerCase();
@@ -3448,7 +3448,7 @@
       busy: run || paused || (c.activeStates || []).indexOf(status) !== -1 };
   };
 
-  /* Fällige Pflege: Teile unter 0,5 Std. (wie die Wartungs-Automation) + Station/Tanks */
+  /* Due care: parts under 0.5 h (like the maintenance automation) + station/tanks */
   V.todo = function (c, states) {
     var out = [];
     c.parts.forEach(function (p) {
@@ -3480,7 +3480,7 @@
     if (V.state(c, states).busy) return 0;
     return V.todo(c, states).reduce(function (m, t) { return Math.max(m, t.level); }, 0);
   };
-  /* Kachel-Zusatz im Ruhezustand: „Sensoren reinigen +1“ */
+  /* Tile extra at rest: "Sensoren reinigen +1" */
   V.hint = function (entity, VV, states, hass) {
     if (!entity) return '';
     var c = V.resolve(entity, VV, states, hass);
@@ -3489,9 +3489,9 @@
     return t.length ? t[0].label + (t.length > 1 ? ' +' + (t.length - 1) : '') : '';
   };
 
-  /* Karte: transparente Ränder abschneiden und zentrieren. Maße in Prozent der Fläche (feste
-     16:10), damit sie für jede Breite gelten (Handy/Tablet/Desktop, Drehen); gemerkt je Karte.
-     Das vorige Bild bleibt liegen, bis das neue geladen ist (Token/Update ohne Flackern). */
+  /* Map: crop transparent edges and centre. Sizes in percent of the area (fixed
+     16:10) so they hold for every width (phone/tablet/desktop, rotating); remembered per map.
+     The previous image stays until the new one has loaded (token/update without flicker). */
   V._mapCss = V._mapCss || {};
   V._mapUrl = V._mapUrl || {};
   V.fit = function (i) {
@@ -3526,7 +3526,7 @@
     done();
   };
 
-  /* Raumauswahl bleibt über Re-Render erhalten */
+  /* Room selection survives re-renders */
   V.sel = V.sel || {};
   V.roomTap = function (el, ev, kind) {
     if (kind === 's') { var t0 = ev.touches && ev.touches[0]; V._ty = t0 ? t0.clientY : 0; V._tx = t0 ? t0.clientX : 0; return; }
@@ -3581,7 +3581,7 @@
         if (area != null) sub.push(U.f(area, 1) + ' m²');
         if (mins != null) sub.push(U.dur(mins));
       } else {
-        /* D-08: Teile einzeln übersetzen (der ganze Satz traf keinen Eintrag) und „Uhr“ nur auf Deutsch. */
+        /* D-08: translate parts one by one (the whole sentence matched no entry) and "Uhr" only in German. */
         var trV = window.casoraTr || function (x) { return x; };
         var deV = !window.casoraLocale || /^de/i.test(String(window.casoraLocale()));
         if (bat != null) sub.push(trV('Akku ' + Math.round(bat) + ' %') + (on(c.charging) ? ' · ' + trV('lädt') : ''));
@@ -3594,15 +3594,15 @@
       if (!s.run && todo.length && todo[0].level === 2) { if (s.error) sub.unshift(todo[0].label); else sub.push(todo[0].label); tone = 'bad'; }
       var value = s.label, unit = null;
       if ((s.run || s.paused) && pct != null) { value = String(Math.round(pct)); unit = '% · ' + s.label; }
-      /* Weich (Entschlacken): „Akku 93 % · zuletzt Sa. 11:18, 20 m²“ – die Fläche der letzten Reinigung gehört dazu. */
+      /* Soft (declutter): "Akku 93 % · zuletzt Sa. 11:18, 20 m²" – the last cleaning's area belongs to it. */
       if (SF && !(s.run || s.paused) && area != null && sub.length && sub[sub.length - 1].indexOf(lastW + ' ') === 0) sub[sub.length - 1] += ', ' + U.f(area, 1) + ' m²';
       var out = UI.hero({ value: value, unit: unit, sub: sub.join(' · ') || null, subTone: tone, center: true });
-      /* Große Tasten: Zum Dock · Start/Pause · Orten */
+      /* Big buttons: to dock · start/pause · locate */
       var svc = function (service) { return esc(JSON.stringify({ domain: 'vacuum', service: service, data: {}, target: { entity_id: c.st } })); };
       var mdi = function (n, sz, col) { return '<ha-icon icon="' + n + '" style="--mdc-icon-size:' + sz + 'px;width:' + sz + 'px;height:' + sz + 'px;display:block;color:' + (col || 'currentColor') + ';"></ha-icon>'; };
       var docked = !s.run && !s.paused;
       var main = s.run ? { s: svc('pause'), i: 'mdi:pause', l: 'Pause' } : { s: svc('start'), i: 'mdi:play', l: s.paused ? 'Fortsetzen' : 'Start' };
-      /* Weich: drei runde Pillen mit Symbol und Text, die Hauptaktion gefüllt. */
+      /* Soft: three round pills with icon and text, the main action filled. */
       if (SF) {
         var pill = function (cls, s0, ic, l) {
           return '<div class="hh-pill' + cls + '"' + (cls.indexOf('dis') > -1 ? '' : ' data-casora-svc="' + s0 + '"') + '>' + mdi(ic, 20) + '<span style="pointer-events:none;">' + l + '</span></div>';
@@ -3633,11 +3633,11 @@
       if (!url) return '';
       var mapCss = V._mapCss[c.map] || 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;';
       var prevUrl = V._mapUrl[c.map];
-      /* Bisheriges Bild unten liegen lassen, das neue erst nach dem Laden zeigen. */
+      /* Keep the previous image underneath, show the new one only once loaded. */
       var under = prevUrl && prevUrl !== url
         ? '<img data-old="1" src="' + esc(prevUrl) + '" alt="" style="' + mapCss + '">' : '';
       var fresh = !!under || !V._mapCss[c.map];
-      /* Überschrift wie bei allen Abschnitten (24.09.: sonst sitzt die Karte höher als links die erste Überschrift). */
+      /* Heading like all sections (24.09.: otherwise the map sits higher than the first heading on the left). */
       return (SF ? HH.label('Karte') : '<div style="font-family:var(--primary-font-family,system-ui);font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);'
         + 'color:var(--casora-h15-c, var(--casora-popup-tiles-text-primary,#fff));text-align:left;padding:0 4px 8px;">Karte</div>')
         + '<div class="cv-map" style="position:relative;width:100%;aspect-ratio:16/10;border-radius:var(--casora-popup-row-radius, 20px);overflow:hidden;'
@@ -3646,8 +3646,8 @@
     }
 
     if (kind === 'v_attn') {
-      /* Weich (Entschlacken): nur, was gerade etwas braucht – Fehler, Station/Tanks, Mopp/Wasserkasten
-         und Verschleißteile unter 20 %. Alles Weitere steht unter „Mehr“ (Pflege). */
+      /* Soft (declutter): only what needs something now – error, station/tanks, mop/water box
+         and wear parts under 20 %. Everything else is under "Mehr" (care). */
       var at = V.todo(c, states).filter(function (t) { return t.level === 2; }).map(function (t) {
         return { icon: 'mdi:alert-circle-outline', iconTone: 'bad', label: t.label, sub: t.sub || null };
       });
@@ -3677,14 +3677,14 @@
       return al.length ? UI.group(al, 'Hinweise') : '';
     }
 
-    /* Popup-Aufbau (24.09.2026): Tasten-Gruppen in Glaskarten wie alle Abschnitte, Überschrift darüber (Bedien-Popup). */
+    /* Popup layout (24.09.2026): button groups in glass cards like all sections, heading above (control popup). */
     var PL = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
       + 'box-shadow:var(--casora-popup-plate-shadow, none);backdrop-filter:var(--casora-popup-plate-backdrop, none);'
       + '-webkit-backdrop-filter:var(--casora-popup-plate-backdrop, none);padding:14px;';
     var HEAD = function (t) { return '<div style="font-family:' + T.font + ';font-size:var(--casora-h15-fs,15px);font-weight:var(--casora-h15-fw,600);letter-spacing:var(--casora-h15-ls,-0.01em);text-transform:var(--casora-h15-tt,none);color:var(--casora-h15-c, ' + T.ink + ');text-align:left;padding:0 4px 8px;">' + t + '</div>'; };
     var CAP = function (t) { return '<div style="font-family:' + T.font + ';font-size:13px;color:' + T.ink3 + ';text-align:left;padding:0 2px 8px;">' + t + '</div>'; };
     var CARD = function (inner) { return '<style>.hv-card .hui-seg{justify-content:flex-start;}</style><div class="hv-card" style="' + PL + '">' + inner + '</div>'; };
-    /* Weich: Etiketten in Großbuchstaben, Segmente frei ohne Karte, Unterzeilen gedämpft. */
+    /* Soft: labels in capitals, segments free without a card, sub lines dimmed. */
     if (SF) {
       HEAD = function (t) { return HH.label(t); };
       CAP = function (t) { return '<div style="font-family:' + T.font + ';font-size:13px;font-weight:600;color:var(--casora-soft-sub, ' + T.ink2 + ');text-align:left;padding:0 6px 8px;">' + t + '</div>'; };
@@ -3701,7 +3701,7 @@
         var ls = U.str(states, c.lastStart);
         if (mins != null) rows.push({ icon: 'mdi:timer-outline', iconTone: 'accent', label: 'Läuft seit', value: U.dur(mins) });
         else if (ls) rows.push({ icon: 'mdi:clock-start', iconTone: 'accent', label: 'Gestartet', value: U.clock(new Date(ls)) + ' Uhr' });
-        /* Weich: Fortschritt steht im Kopf, hier nur Raum, Fläche, Laufzeit. */
+        /* Soft: progress is in the head, here only room, area, run time. */
         if (SF) return UI.group(rows.filter(function (r) { return r.label !== 'Fortschritt'; }), 'Reinigung');
         return UI.group(rows, 'Reinigung');
       }
@@ -3735,7 +3735,7 @@
         + '.hv-go{margin-top:12px;text-align:center;font-size:16px;font-weight:600;padding:14px;border-radius:var(--casora-popup-row-radius, 20px);cursor:pointer;'
         + 'background:var(--casora-color-teal, #00C3D0);color:#fff;transition:opacity .16s ease;user-select:none;-webkit-user-select:none;}'
         + '.hv-go.dis{opacity:.35;pointer-events:none;}</style>'
-        /* Weich: Raum-Chips wie die Szenen-Chips im Licht-Popup, Start als runde Pille. */
+        /* Soft: room chips like the scene chips in the light popup, start as a round pill. */
         + (SF ? '<style>.hv-rw{gap:8px;}.hv-room{font-size:13px;font-weight:600;padding:10px 16px;background:var(--casora-lps-chip, var(--casora-soft-row-fill));'
           + 'color:var(--casora-lps-chip-ink, var(--casora-soft-sub));}.hv-room.on{background:var(--casora-soft-seg-on, #FFFDF9);color:var(--casora-soft-seg-on-ink, ' + T.ink + ');'
           + 'box-shadow:var(--casora-soft-seg-on-shadow, none);}.hv-go{border-radius:999px;font-size:14px;padding:13px;background:var(--casora-popup-ui-action, #276B64);'
@@ -3747,7 +3747,7 @@
     }
 
     if (kind === 'v_mode') {
-      /* Eine Karte „Reinigungsmodus“ mit Unterzeilen je Einstellung statt loser Tasten-Blöcke. */
+      /* One "Reinigungsmodus" card with sub lines per setting instead of loose button blocks. */
       var part = function (items, cap) { return (cap ? CAP(cap) : '') + UI.segments(items); };
       var seg = function (e, cap) {
         var st = e && states[e];
@@ -3776,9 +3776,9 @@
       var outM = bits.length ? HEAD('Reinigungsmodus') + CARD(bits.join('<div style="height:16px"></div>')) : '';
       var rt = c.routines.filter(ok).map(function (b) {
         var nm = String((states[b].attributes || {}).friendly_name || b);
-        /* Gerätenamen vorn weglassen: „<Roboter> Intensiv“ → „Intensiv“. */
+        /* Drop device names in front: "<Roboter> Intensiv" → "Intensiv". */
         var bd = hass && hass.entities && hass.entities[b] && hass.devices && hass.devices[hass.entities[b].device_id];
-        /* D-07: auch der Name des Saugers selbst (ohne Geräteeintrag stand „<Roboter> Intensiv“ da). */
+        /* D-07: also the vacuum's own name (without a device entry it read "<Roboter> Intensiv"). */
         [bd && bd.name_by_user, bd && bd.name, ((states[c.st] || {}).attributes || {}).friendly_name].forEach(function (dn) {
           if (dn && nm.length > dn.length && nm.toLowerCase().indexOf(String(dn).toLowerCase() + ' ') === 0) nm = nm.slice(dn.length + 1);
         });
@@ -3816,7 +3816,7 @@
 
     if (kind === 'v_power') {
       var rb = [];
-      /* Weich (Entschlacken): Akku steht im Kopf, Leistung fällt weg – nur der Schalter der Station bleibt. */
+      /* Soft (declutter): battery is in the head, power goes – only the station's switch stays. */
       if (SF) {
         var sw0 = c.plug && states[c.plug];
         if (!sw0) return '';
@@ -3825,7 +3825,7 @@
           value: dead0 ? 'Offline' : po0 ? 'An' : 'Aus', valueTone: dead0 || !po0 ? 'bad' : null,
           svc: dead0 ? null : { domain: 'switch', service: po0 ? 'turn_off' : 'turn_on', target: { entity_id: c.plug } }, confirm: po0 ? 'Ausschalten' : null }], 'Strom');
       }
-      // Akku-Stufen (casoraBattery): ≤ 10 % rot, ≤ 20 % orange – auch beim Laden bleibt der Balken ehrlich.
+      // Battery levels (casoraBattery): ≤ 10 % red, ≤ 20 % orange – the bar stays honest while charging too.
       var blv = (window.casoraBattery ? window.casoraBattery.level(bat) : (bat) <= 10 ? 'crit' : (bat) <= 20 ? 'low' : 'ok'), btn = (window.casoraBattery ? window.casoraBattery.tone(blv) : null);
       if (bat != null) rb.push({ icon: on(c.charging) ? 'mdi:battery-charging' : 'mdi:battery', iconTone: btn || 'good', label: 'Akku',
         sub: on(c.charging) ? 'Lädt' : null, value: Math.round(bat) + ' %', valueTone: btn, bar: bat / 100, barTone: btn || 'good', entity: c.battery });
@@ -3887,7 +3887,7 @@
     if (kind === 'v_stats') {
       var rs2 = [];
       var tot = U.num(states, c.total), base0 = U.num(states, c.dayBase);
-      // Ohne eigenen Tageszähler: Stand um Mitternacht aus dem Verlauf (Casora).
+      // Without an own day counter: reading at midnight from the history (Casora).
       if (base0 == null && c.total && window.casoraDevice && window.casoraDevice.dayStart) base0 = window.casoraDevice.dayStart(c.total);
       if (tot != null && base0 != null) {
         var today = Math.max(0, Math.round(tot - base0));
@@ -3914,7 +3914,7 @@
     var c = V.resolve(entity, variables, states, hass);
     var d0 = L.data[c.st];
     L.fetch(c, hass, !d0 || !d0.ts || Date.now() - d0.ts > 10000);
-    /* Räume: Bereichs-Zuordnung aus der Registry (vacuum.clean_area) */
+    /* Rooms: area mapping from the registry (vacuum.clean_area) */
     if (hass && hass.callWS && !V.areas['_req_' + c.st]) {
       V.areas['_req_' + c.st] = 1;
       hass.callWS({ type: 'config/entity_registry/get', entity_id: c.st }).then(function (r) {
@@ -3935,13 +3935,13 @@
     add('hero', tpl('v_hero', false));
     add('map', tpl('v_map', false));
 
-    /* Verlauf: Akku (48 h); Zeilen schalten auf Fortschritt, Leistung der Station bzw. Tagesverbrauch um. */
+    /* History: battery (48 h); rows switch to progress, station power or daily consumption. */
     if (typeof window._hpChartCfg === 'function' && c.battery) {
       window._hpChartCfg(c.battery, 'Akku', '48h', '#30D158', 150);
       if (c.progress) window._hpChartCfg(c.progress, 'Fortschritt', '24h', c.color, 150);
       if (c.power) window._hpChartCfg(c.power, 'Leistung der Station', '24h', '#FF9F0A', 150);
       if (c.energy) {
-        /* Verbrauch pro Tag als Säulen (Statistik change je Tag), 7 bzw. 30 Tage. */
+        /* Consumption per day as bars (statistic change per day), 7 or 30 days. */
         [['hwd7:', '7d'], ['hwd30:', '30d']].forEach(function (x) { window._hpBarCfg(x[0] + c.energy, c.energy, 'Verbrauch pro Tag', x[1], 2); });
       }
       var plate = 'background:var(--casora-popup-row-fill, rgba(255,255,255,0.10));border-radius:var(--casora-popup-row-radius, 20px);'
@@ -3968,14 +3968,14 @@
     add('stats', tpl('v_stats', false));
     add('settings', tpl('v_settings', false));
 
-    /* Weich (Entschlacken 01.10.2026): Kopf mit Tasten, links Modus/Programme und Räume, rechts
-       Karte und „Braucht Aufmerksamkeit“; Station-Aktionen, Automatisch leeren, Einstellungen,
-       Pflege, Statistik, Reinigung und der Schalter der Station unter „Mehr“. Kein Akku-Diagramm,
-       kein „Akku & Strom“, kein Verbrauch. */
+    /* Soft (declutter 01.10.2026): head with buttons, on the left mode/programs and rooms, on the right
+       map and "Braucht Aufmerksamkeit"; station actions, auto empty, settings,
+       care, statistics, cleaning and the station's switch under "Mehr". No battery chart,
+       no "Akku & Strom", no consumption. */
     if (window._casoraHH && window._casoraHH.on() && window._casoraHH.layout) {
       var HH = window._casoraHH;
       var f2 = { hero: fields.hero, mode: fields.mode, rooms: fields.rooms, map: hasMapS(c, states) ? fields.map : null,
-        /* B-11: „Braucht Aufmerksamkeit“ nur, wenn gerade etwas ansteht – sonst stünde „Mehr“ allein rechts oben. */
+        /* B-11: "Braucht Aufmerksamkeit" only when something is pending – otherwise "Mehr" would sit alone top right. */
         attn: (function () {
           try {
             var h = window._casoraLaundry && window._casoraLaundry.inner('v_attn', c, states);
@@ -4010,8 +4010,8 @@
         custom_fields: cf,
       };
     };
-    /* Popup-Standard (24.09.2026): Status + Tasten oben, Verlauf volle Breite; links Bedienung
-       (Hinweise, Reinigung, Räume, Modus, Station, Einstellungen), rechts Infos (Karte, Akku, Pflege, Verbrauch, Statistik). */
+    /* Popup standard (24.09.2026): status + buttons on top, history full width; controls on the left
+       (hints, cleaning, rooms, mode, station, settings), info on the right (map, battery, care, consumption, statistics). */
     var top = {}, topStyle = {};
     top.hero = { card: makeCol(['hero']) }; topStyle.hero = fstyle.hero;
     var pair = [];
@@ -4053,10 +4053,10 @@
 })();
 
 
-// ── Benachrichtigungen: Zeilenumbruch (23.09.2026) ───────────────────────────────
-// Titel in der Glocke dürfen zwei Zeilen haben statt mit „…“ abgeschnitten zu werden.
-// Ob ein Saugroboter fertig ist oder nur zwischendurch an der Station steht, entscheidet seit
-// 1.0.7 die Glocke selbst für alle Hersteller (vacuumRuns in casora-core.js).
+// ── Notifications: line wrapping (23.09.2026) ───────────────────────────────
+// Titles in the bell may take two lines instead of being cut off with "…".
+// Whether a robot vacuum is done or only resting at the station in between has been decided
+// by the bell itself for all makers since 1.0.7 (vacuumRuns in casora-core.js).
 (function () {
   if (window._casoraNotifyVac) return;
   window._casoraNotifyVac = true;

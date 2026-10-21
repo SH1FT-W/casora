@@ -25,11 +25,11 @@ globalThis.document = { querySelector: (s) => (s === 'home-assistant' ? { hass }
 new Function('window', 'document', read('custom_components/casora/scripts/local/00-finden.js'))(window, globalThis.document);
 assert.ok(window.casoraDevice && window.casoraDevice.map, 'finder');
 
-const geraete = read('custom_components/casora/scripts/local/02-geraete.js');
+const geraete = read('custom_components/casora/scripts/local/02-devices.js');
 const str = (states, e) => { const s = e && states[e] && states[e].state; return !s || ['unknown', 'unavailable', 'none', 'off'].includes(s) ? null : s; };
 const num = (states, e) => { const v = e && states[e] ? parseFloat(states[e].state) : NaN; return Number.isFinite(v) ? v : null; };
 window._casoraLaundry = { util: { str, num, DIM: {} } };
-new Function('window', 'document', cut(geraete, '// ── Saugroboter (casora_vacuum', '// ── Benachrichtigungen'))(window, globalThis.document);
+new Function('window', 'document', cut(geraete, '// ── Robot vacuum (casora_vacuum', '// ── Notifications'))(window, globalThis.document);
 const V = window._casoraVac;
 
 const states = (vac, err) => ({

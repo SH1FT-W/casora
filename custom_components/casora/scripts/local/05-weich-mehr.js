@@ -97,7 +97,7 @@
     styles.custom_fields = cs;
     return Object.assign({}, metricCard, { styles: styles, custom_fields: cf });
   };
-  /* Breites „Mehr“: aufgeklappt zwei ausgeglichene Spalten (wie MORE_WIDE_CSS in 02-geraete.js). */
+  /* Breites „Mehr“: aufgeklappt zwei ausgeglichene Spalten (wie MORE_WIDE_CSS in 02-devices.js). */
   var MORE_WIDE_CSS = '\n@media (min-width: 761px) {'
     + ' .hui-more.open > .hui-mbd { display: block !important; column-count: 2; column-gap: var(--casora-popup-col-gap, 26px) !important; }'
     + ' .hui-more.open > .hui-mbd > * { break-inside: avoid; -webkit-column-break-inside: avoid; display: block; margin: 0; padding-bottom: 18px; }'
@@ -114,7 +114,7 @@
     var has = function (k) { return o.fields[k] != null && o.fields[k] !== ''; };
     var top = o.top.filter(has), L = o.left.filter(has), R = o.right.filter(has);
     if (!L.length && R.length > 1 && o.moveLeft) { L = R.filter(function (k) { return o.moveLeft.indexOf(k) > -1; }); R = R.filter(function (k) { return L.indexOf(k) < 0; }); }
-    /* Wie B-11 in den Geräte-Popups (H.layout, 02-geraete.js): Steht rechts nur „Mehr“, wird das Popup
+    /* Wie B-11 in den Geräte-Popups (H.layout, 02-devices.js): Steht rechts nur „Mehr“, wird das Popup
        einspaltig und „Mehr“ ist die letzte Zeile. Sonst saß die Mehr-Pille oben rechts höher als das
        Etikett links (z. B. Updates ohne KI-Warnung: „Mehr“ über „Verfügbare Updates“, 03.10.2026). */
     var oneMore = false;

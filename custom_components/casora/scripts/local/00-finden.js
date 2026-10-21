@@ -1216,7 +1216,7 @@ window.casoraPriceKwh = function (v) {
 // (ha_washdata, lernt Programme am Zwischenstecker), 3. nur der Zwischenstecker.
 // Erkannt wird über die Plattform der Entität und ihren translation_key, nie über
 // Namen oder IDs. Ohne Plattform (Testhaus) reicht die Schlüssel-Kombination.
-// Genutzt von der Kachel/dem Popup (02-geraete.js) und vom Studio (Assistent,
+// Genutzt von der Kachel/dem Popup (02-devices.js) und vom Studio (Assistent,
 // Kachel hinzufügen): dort per import geladen (panel/casora-panel-types.js).
 (function () {
   if (window.casoraLaundryFind) return;

@@ -5,7 +5,7 @@
 //   • „Terrassentür ist offen“ stand zweimal da (Vorlage ohne Bereich + Kontakt mit Bereich).
 //   • Laufende Geräte sprangen nach dem Lesen wieder unter „Neu“ (when = jetzt).
 // Ohne Browser: das Mitteilungs-Modul aus casora-core.js und die Saugroboter-Erweiterung aus
-// scripts/local/02-geraete.js laden.
+// scripts/local/02-devices.js laden.
 //   node dev/unit/glocke_audit.mjs
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -16,7 +16,7 @@ const start = core.indexOf('(function () {\n  if (window._casoraNotify) return;'
 assert.ok(start > 0, 'Mitteilungs-Modul gefunden');
 const mod = core.slice(start, core.indexOf('\n})();', start) + 6);
 
-const geraete = fs.readFileSync(new URL('local/02-geraete.js', root), 'utf8');
+const geraete = fs.readFileSync(new URL('local/02-devices.js', root), 'utf8');
 const vs = geraete.indexOf('(function () {\n  if (window._casoraNotifyVac) return;');
 assert.ok(vs > 0, 'Saugroboter-Erweiterung gefunden');
 const vacMod = geraete.slice(vs, geraete.indexOf('\n})();', vs) + 6);
@@ -110,7 +110,7 @@ await check('„fertig“ bleibt stehen, wenn der Neuaufbau ihn nicht mehr herle
 });
 
 await check('Saugroboter-Ende-Sensor: Ende nach dem Beginn zählt sofort, alter Wert nicht', async () => {
-  // Seit 1.0.7 entscheidet die Glocke selbst (vacuumRuns), die Erweiterung in 02-geraete.js
+  // Seit 1.0.7 entscheidet die Glocke selbst (vacuumRuns), die Erweiterung in 02-devices.js
   // setzt nur noch den Zeilenumbruch.
   for (const k of Object.keys(store)) delete store[k];
   const END = 'sensor.robot_letztes_reinigungsende';

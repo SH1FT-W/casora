@@ -13,8 +13,8 @@ new Function('window', cut(core, '// casora-battery:start', '// casora-battery:e
 new Function('window', cut(core, '// casora-battery-hints:start', '// casora-battery-hints:end'))(window);
 const H = window.casoraBatteryHints;
 
-const geraete = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/02-geraete.js', import.meta.url), 'utf8');
-const evSrc = cut(geraete, '  window._casoraAqEval = function', '  /* Aquarium-Doktor');
+const geraete = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/02-devices.js', import.meta.url), 'utf8');
+const evSrc = cut(geraete, '  window._casoraAqEval = function', '  /* Aquarium doctor');
 new Function('window', evSrc)(window);
 const ev = window._casoraAqEval;
 

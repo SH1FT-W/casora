@@ -82,7 +82,7 @@ T = {
     "probe_text": ("Beispiel aus Casora – verschwindet in 2 Minuten", "Sample from Casora – gone in 2 minutes"),
 }
 
-# Device state → phase (like STATE in scripts/local/02-geraete.js, kind off|idle|delay|run|pause|attn|done|error).
+# Device state → phase (like STATE in scripts/local/02-devices.js, kind off|idle|delay|run|pause|attn|done|error).
 # Unknown states are missing on purpose: they count as "off" and never become "done".
 STATE_PHASE = {
     # WashData

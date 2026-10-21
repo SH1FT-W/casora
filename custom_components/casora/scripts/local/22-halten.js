@@ -685,7 +685,7 @@
       pendingTemp: cur && cur.id === id && cur.pendingTemp != null && Date.now() - (cur.pendingAt || 0) < 4000
         && num(((h.states[id] || {}).attributes || {}).temperature) !== cur.pendingTemp ? cur.pendingTemp : null,
     };
-    // Kachel-eigene Geräte: Drucker über seinen Finder (02-geraete.js), Aquarium über die Kachel-Variable.
+    // Kachel-eigene Geräte: Drucker über seinen Finder (02-devices.js), Aquarium über die Kachel-Variable.
     if (/\bcasora_3d_printer\b/.test(tpl) && window._casoraPrint && window._casoraPrint.auto) {
       var c = null;
       try { c = window._casoraPrint.auto(h.states[id], h); } catch (x) { c = null; }

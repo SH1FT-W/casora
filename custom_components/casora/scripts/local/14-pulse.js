@@ -407,7 +407,7 @@
       // Wide (desktop/tablet) two columns side by side, narrow one (auto-fit, from 2 × 300 px).
       // Alternate the distribution so the weakest are on top in both columns (read row by row).
       var cols = ok.length > 1 ? [ok.filter(function (d, i) { return i % 2 === 0; }), ok.filter(function (d, i) { return i % 2 === 1; })] : [ok];
-      // column-span: the wide „Mehr“ (02-geraete, MORE_WIDE_CSS) splits its own content into two columns –
+      // column-span: the wide „Mehr“ (02-devices, MORE_WIDE_CSS) splits its own content into two columns –
       // without spanning, this two-column grid sat entirely in its left half and fell to one column (11.10.2026).
       var okHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:start;column-span:all;-webkit-column-span:all;">'
         + cols.map(function (c) { return '<div style="min-width:0;">' + UI.group(c.map(function (d) { return rowOf(d); }), null) + '</div>'; }).join('')

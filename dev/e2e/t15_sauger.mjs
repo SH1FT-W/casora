@@ -26,7 +26,7 @@ await page.waitForTimeout(2000);
 const tag = await page.evaluate(() => { const h = document.querySelector('home-assistant').hass; return window.casoraDevice.dayStart(Object.keys(h.states).find((k) => /gesamtzahl_reinigungen|total_cleaning_count/.test(k))); });
 console.log('Tagesstart:', tag);
 console.log('Browser-Fehler:', errors.filter((e) => !/addEventListener|404/.test(e)).slice(0, 6));
-/* Seit dem Finder gibt es keinen Rückfall auf alte Namensmuster mehr (02-geraete.js: ohne
+/* Seit dem Finder gibt es keinen Rückfall auf alte Namensmuster mehr (02-devices.js: ohne
    casoraDevice bleiben die Felder leer) – „diff“ ist daher nur noch Info. Geprüft wird der Finder. */
 check('Saugroboter-Modul da', !r.fehler, r.fehler);
 check('Finder findet die Entitäten', r.gefunden >= 10, r.gefunden);
