@@ -2625,7 +2625,9 @@ window.casoraMenuGlass = {
       return em;
     };
 
-    window.casoraStateFit = function (text, weight) {
+    /* alt: the tile's own short form for narrow tiles ("22,2° · Heizt" instead of "22,2° +1"); without it the
+       first part and a counter as below. */
+    window.casoraStateFit = function (text, weight, alt) {
       const t = text == null ? '' : String(text);
       if (!t) return '';
       const em = window.casoraTextEm(t, weight);
@@ -2633,6 +2635,14 @@ window.casoraMenuGlass = {
       const esc = t.replace(/[&<>"]/g, (c) => (
         { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]
       ));
+      const a = alt == null ? '' : String(alt);
+      if (a && a !== t) {
+        const ea = a.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        return '<casora-statefit data-casora-clip style="display:inline-block;vertical-align:top;max-width:calc(100cqi - '
+          + 'var(--casora-tile-state-inset, 0px));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
+          + '<span class="sf-f">' + esc + '</span><span class="sf-s" style="display:none;max-width:100%">'
+          + '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis">' + ea + '</span></span></casora-statefit>';
+      }
       /* 1.4.1: überall (Handy und Desktop) dieselbe Schriftgröße – kein Verkleinern mehr. Passt ein Text
          mit „ · “ nicht, zeigt casora-statefit den ersten Teil ganz und zählt den Rest („Trocknet Mopp +3“,
          alles im Popup); passt auch der erste Teil nicht, endet er mit „…“. Beide Fassungen stehen im HTML,

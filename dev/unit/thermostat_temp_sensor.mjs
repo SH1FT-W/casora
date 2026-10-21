@@ -23,7 +23,7 @@ assert.equal(tile(trv, V, S), '21,3° · Heizt auf 24,5°', 'sensor in front');
 assert.equal(tile(trv, {}, S), 'Heizt auf 24,5°', 'no sensor: as before');
 assert.equal(tile({ ...trv, state: 'off' }, V, S), '21,3° · Aus');
 assert.equal(tile({ ...trv, attributes: { ...trv.attributes, hvac_action: 'idle', current_temperature: 24.5 } }, V, S),
-  '21,3° · An · 24,5°', 'at the target');
+  '21,3° · Ziel 24,5°', 'at the target');
 assert.equal(tile({ ...trv, state: 'unavailable' }, V, S), 'Nicht verfügbar', 'unavailable stays short');
 assert.equal(tile(trv, V, { 'sensor.example_room': { state: 'unavailable', attributes: { device_class: 'temperature' } } }),
   'Heizt auf 24,5°', 'sensor unavailable: no number');

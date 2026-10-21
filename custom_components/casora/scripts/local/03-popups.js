@@ -512,15 +512,22 @@
     var a = window.casoraClimateActive ? window.casoraClimateActive(e) : {};
     return !!(a && a.heating);
   };
+  /* Same words as the thermostat tile: Heizt/Kühlt auf, "Ziel" at the target ("An" next to a number said
+     nothing); with a range heating aims at its lower and cooling at its upper bound. */
   F.status = function (o, states) {
     var e = states[o.id]; if (!e) return '—';
-    var t = num(e.attributes.temperature);
-    var tt = t != null ? fmt(t) + ' ' + TU() : null;
+    var at = e.attributes || {}, t = num(at.temperature), lo = num(at.target_temp_low), hi = num(at.target_temp_high);
+    var deg = function (n) { return n != null ? fmt(n) + ' ' + TU() : null; };
+    var tt = deg(t) || (lo != null && hi != null ? fmt(lo) + '–' + fmt(hi) + ' ' + TU() : null);
+    var a = window.casoraClimateActive ? window.casoraClimateActive(e) || {} : {};
     if (e.state === 'unavailable') return 'Nicht verfügbar';
     if (e.state === 'off') return 'Aus';
-    if (F.heating(o, states)) return tt ? 'Heizt auf ' + tt : 'Heizt';
-    if (e.state === 'auto') return tt ? 'Automatik · ' + tt : 'Automatik';
-    if (e.state === 'heat' || e.state === 'cool') return tt ? 'An · ' + tt : 'An';
+    if (a.cooling) { var c = deg(t != null ? t : hi); return c ? 'Kühlt auf ' + c : 'Kühlt'; }
+    if (F.heating(o, states)) { var h = deg(t != null ? t : lo); return h ? 'Heizt auf ' + h : 'Heizt'; }
+    if (e.state === 'auto' || e.state === 'heat_cool') return tt ? 'Automatik · ' + tt : 'Automatik';
+    if (e.state === 'heat' || e.state === 'cool') return tt ? 'Ziel ' + tt : 'Bereit';
+    if (e.state === 'dry') return 'Entfeuchten';
+    if (e.state === 'fan_only') return 'Nur Lüfter';
     return tt ? 'Bereit · ' + tt : 'Bereit';
   };
 

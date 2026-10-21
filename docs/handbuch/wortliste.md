@@ -90,6 +90,7 @@ Bis zur Wahl gilt der heutige Stand der Nachbarstellen, nicht die Empfehlung.
 |---|---|---|---|
 | Prozent „62 %“ (mit Leerzeichen) | „62%“ (ohne; macht `casora-i18n` automatisch) | „62%“ im Deutschen **(V1: heute 9 Stellen)**, „62 %“ im Englischen | „Akku 62 %“ / „Battery 62%“ |
 | Temperatur „21,5 °C“, kurz „22°“ | „21.5 °C“, „22°“ | „21.5 °C“ im Deutschen | Thermostat „Heizt auf 22°“ |
+| Thermostat: Raum vorn, dann Zustand – „22,2° · Heizt auf 22°“ / „Kühlt auf 24°“, am Ziel „Ziel 22°“, „Automatik · 20–24°“, „Aus“; schmale Kachel „22,2° · Heizt“ | „Heating to 22°“, „Target 22°“, „Auto · 20–24°“ | „An · 22°“ (Schalterwort neben zwei Zahlen), roher Modus („cool“) | Kachel, Kachel-Popup, Popup-Kopf (`dev/unit/thermostat_wording.mjs`) |
 | Energie/Leistung | „3,2 kWh“, „850 W“ | „3,2 kWh“ im Englischen (Zahl kommt aus `casoraLocale`) | Energie-Popup |
 | Dezimal / Tausender | „1,5“ / „1.234“ – immer `toLocaleString(casoraLocale())` bzw. `casoraNum` | `toFixed()` für Anzeige, `replace('.', ',')` | – |
 | Uhrzeit | „14:30“, „um 8 Uhr“ | „14.30 Uhr“ | EN „7:00 PM“ kommt aus dem Browser-Format |
