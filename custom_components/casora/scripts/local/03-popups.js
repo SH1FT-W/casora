@@ -3478,7 +3478,7 @@
       + '</div>';
   };
 
-  // Statuszeile wie in allen Weich-Popups: erster Teil fett (Zustand), Rest gedämpft (Meta).
+  // Status line as in all Soft popups: first part bold (state), the rest muted (meta).
   var statusLine = function (sub) {
     var parts = String(sub || '').split(' · ');
     return '<b>' + esc(parts[0]) + '</b>' + parts.slice(1).map(function (p) { return '<i class="hui-sep"> · </i>' + esc(p); }).join('');
@@ -3489,7 +3489,7 @@
     if (sc) {
       var s = stat(sc.lights, states);
       title = /^(beleuchtung|licht|lichter|lampen|zuhause)$/i.test(String(sc.name)) ? tr('Beleuchtung') : tr('Licht') + ' ' + sc.name;
-      // Einzelne Leuchte mit Raum (sc.room): Titel = Leuchte, sonst stand „Licht <Raum>“ über einer Lampe.
+      // Single lamp with a room (sc.room): title = the lamp, otherwise „Licht <Raum>“ stood above one lamp.
       if (sc.room && sc.lights.length === 1) title = short(nameOf(sc.lights[0], states), sc.name);
       sub = subline(s, false); on = s.on > 0; id = sc.rid;
     } else {
@@ -3499,9 +3499,9 @@
       sub = ron ? tr(ron + ' von ' + cfg.rooms.length + ' Räumen an') : tr('Alle aus');
       on = ron > 0; id = cfg.gid;
     }
-    /* 1.3 Kopfzeile A: Symbol, Titel und Hauptschalter stehen im Popup-Kopf (casora-core.js); hier nur
-       noch die Statuszeile – der Rahmen spiegelt sie (.hui-line) unter den Titel. „Alles aus“ ist jetzt
-       der Hauptschalter oben rechts (S.head, Haken unten). */
+    /* 1.3 header A: icon, title and main switch sit in the popup header (casora-core.js); here only
+       the status line - the frame mirrors it (.hui-line) under the title. „Alles aus“ is now
+       the main switch top right (S.head, hook below). */
     void title; void on; void id;
     return '<div class="lps-head"><div class="lps-s hui-line">' + statusLine(sub) + '</div></div>';
   };
@@ -3511,10 +3511,10 @@
   };
   S.houseQ = houseQ;
 
-  /* Raum einer einzelnen Leuchte (Popup einer Lampe, 07.10.2026): die kleinste Lichtgruppe mit ihr
-     und mindestens zwei Leuchten. Nie eine Gruppe über mehrere Bereiche („alle Lichter“ des Hauses) –
-     sonst stand das ganze Haus unter „Leuchten im Raum“ und „Alles aus“ schaltete es ohne Rückfrage
-     aus (Review 1.1.1). Ohne passende Gruppe null: dann nur diese Leuchte. */
+  /* Room of a single lamp (popup of a lamp, 07.10.2026): the smallest light group holding it
+     and at least two lamps. Never a group across several areas (the house's „alle Lichter“) -
+     otherwise the whole house stood under „Leuchten im Raum“ and „Alles aus“ switched it off without
+     asking (review 1.1.1). No matching group: null, then only this lamp. */
   S.roomOf = function (id, states, hass) {
     if (!id || String(id).indexOf('light.') !== 0 || !states || !states[id]) return null;
     if (Array.isArray((states[id].attributes || {}).entity_id)) return null;
@@ -3585,7 +3585,7 @@
       var last = null, lastT = 0;
       sc2.forEach(function (id) { var t = Date.parse(states[id].state); if (!isNaN(t) && t > lastT) { lastT = t; last = id; } });
       if (Date.now() - lastT > 12 * 3600000) last = null;
-      // 1.3 Kopfzeile A: Szenen mit eigener Abschnittsüberschrift.
+      // 1.3 header A: scenes with their own section heading.
       left += '<div class="lps-lbl' + (left ? ' lps-gap' : '') + '">' + esc(tr('Szenen')) + '</div>'
         + '<div class="lps-chips" style="margin-top:0">' + sc2.map(function (id) {
         return '<div class="lps-chip' + (id === last ? ' on' : '') + '" role="button" data-lps-tap="' + attr({ a: 'scene', id: id }) + '">'
@@ -3599,7 +3599,7 @@
     return '<div class="lps-cols' + (left ? '' : ' one') + '">' + (left ? '<div>' + left + '</div>' : '') + '<div>' + right + '</div></div>';
   };
   var word = function (v) { return v <= 0 ? tr('Aus') : v >= 100 ? tr('Volle Helligkeit') : tr('Gedimmt'); };
-  /* Wert und Wort zweimal: gedämpft auf der Spur, in Füllschrift auf die Füllung zugeschnitten. */
+  /* Value and word twice: muted on the track, in fill ink clipped to the fill. */
   var barText = function (v) {
     var t = '<span class="v">' + v + ' %</span><em>' + esc(word(v)) + '</em>';
     return t + '<b aria-hidden="true" style="clip-path:inset(0 ' + (100 - v) + '% 0 0)">' + t + '</b>';

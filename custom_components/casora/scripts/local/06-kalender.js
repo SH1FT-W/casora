@@ -1,16 +1,16 @@
-// ── Kalender-Kachel + Popup (24.09.2026) ────────────────────────────────────
-// Template casora_calendar (['casora_entity','casora_popup_calendar']) ruft nur
-// window._casoraCalendar.tile()/popup()/sec() auf. Kalender kommen aus
-// variables.calendars ([{ entity, name, color, tile }]), sonst CASORA_SETTINGS.calendars bzw. alle Kalender.
-// Kachel: nächster Termin aus den Kalender-Zuständen (ohne Abruf). Popup
-// (Info-Stil): Hero mit heutigem Datum, links Monat mit Punkten und
-// Kalender-Legende (antippen = ein-/ausblenden), rechts gewählter Tag und
-// "Demnächst". Termine per REST calendars/…, 5 Min. gemerkt.
+// ── Calendar tile + popup (24.09.2026) ───────────────────────────────────────
+// Template casora_calendar (['casora_entity','casora_popup_calendar']) only calls
+// window._casoraCalendar.tile()/popup()/sec(). Calendars come from
+// variables.calendars ([{ entity, name, color, tile }]), else CASORA_SETTINGS.calendars or all calendars.
+// Tile: next event from the calendar states (no fetch). Popup
+// (info style): hero with today's date, left the month with dots and the
+// calendar legend (tap = show/hide), right the chosen day and
+// „Demnächst“. Events via REST calendars/…, kept for 5 min.
 (function () {
   if (window._casoraCalendar) return;
   var K = window._casoraCalendar = { ev: null, key: '', ts: 0, busy: false, hide: {}, sel: null, month: null };
-  // Kalender: variables.calendars, sonst CASORA_SETTINGS.calendars, sonst alle
-  // Kalender im Haus (Abfallkalender nur im Popup, nicht auf der Kachel).
+  // Calendars: variables.calendars, else CASORA_SETTINGS.calendars, else all
+  // calendars in the house (the waste calendar only in the popup, not on the tile).
   var PALETTE = ['#0A84FF', '#FF453A', '#30D158', '#BF5AF2', '#FF9F0A', '#64D2FF', '#FFD60A', '#FF375F'];
   var autoCache = { states: null, list: [] };
   var autoCals = function () {

@@ -1,14 +1,14 @@
-// ── Casora-Seiten statt HAs Dialog (1.5) ──────────────────────────────────────
-// window.casoraRoute(id, {el}) entscheidet, was ein Tipp auf ein Gerät/einen Messwert öffnet – aufgerufen
-// von Popup-Zeilen (data-casora-mi), casoraPopup.moreInfo und HAs more-info aus Casora heraus (Halten,
-// Badges; casora-core.js). Rückgabe true = Casora übernimmt.
-//   1. eigene Haken (window._casoraMiHooks, z. B. Update-Detailseite 17-update-detail.js)
-//   2. Zeile „Weitere Einstellungen“ → Geräteseite (Gerätedaten, „Gehört dazu“, „In Home Assistant öffnen“)
-//   3. Messwerte (sensor, binary_sensor, number …, Einstellungs-/Diagnose-Entitäten) → Messwert-Seite
-//      (Zeitraum, Diagramm bzw. Offen-Band, Höchst/Tiefst/Ø bzw. Zählwerte, Zeitleiste)
-//   4. Geräte (Licht, Klima, Medien, Sauger …) → das Casora-Popup ihrer Kachel (openViaCard), sonst Geräteseite;
-//      Kamera aus einem offenen Popup heraus (Tipp aufs Bild) → Vollbild
-// Jede Seite öffnet im selben Popup mit ‹ zurück (casoraPopup.open({back}) bzw. window._casoraBackNext).
+// ── Casora pages instead of the HA dialog (1.5) ─────────────────────────────
+// window.casoraRoute(id, {el}) decides what a tap on a device/measurement opens - called
+// from popup rows (data-casora-mi), casoraPopup.moreInfo and HA's more-info from within Casora (hold,
+// badges; casora-core.js). Returns true = Casora takes over.
+//   1. own hooks (window._casoraMiHooks, e.g. update detail page 17-update-detail.js)
+//   2. row „Weitere Einstellungen“ → device page (device data, „Gehört dazu“, „In Home Assistant öffnen“)
+//   3. measurements (sensor, binary_sensor, number …, config/diagnostic entities) → measurement page
+//      (range, chart or open band, high/low/avg or counts, timeline)
+//   4. devices (light, climate, media, vacuum …) → the Casora popup of their tile (openViaCard), else device page;
+//      camera from an open popup (tap on the picture) → full screen
+// Every page opens in the same popup with ‹ back (casoraPopup.open({back}) or window._casoraBackNext).
 (function () {
   if (window.casoraRoute) return;
   var Z = window._casoraZiele = {};
