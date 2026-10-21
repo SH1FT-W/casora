@@ -12031,8 +12031,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     })(document, 0);
     return best;
   }
-  // Geräte, die ihre eigene Kachel haben: ohne passende Kachel nie das Popup irgendeiner anderen
-  // Karte gleicher Vorlage öffnen (vorher: Schloss-Eintrag → Popup einer anderen Tür).
+  // Devices that have their own tile: without a matching tile never open the popup of some other
+  // card with the same template (before: lock entry → popup of another door).
   var OWN_TILE = /^(lock|alarm_control_panel|vacuum|lawn_mower|cover|climate|media_player|camera|light|fan|humidifier|water_heater)\./;
 
   function cardWithTemplate(names, entityId) {
@@ -12120,14 +12120,14 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       var cfg = ev.detail && ev.detail.config;
       var act = cfg && cfg[((ev.detail && ev.detail.action) || 'tap') + '_action'];
       if (!(act && act.casora_popup) && window._casoraTapPopupOnly) {
-        // casoraRoute will nur ein Popup öffnen – eine Kachel, die beim Tippen schaltet, darf dabei nicht schalten.
+        // casoraRoute only wants to open a popup - a tile that switches on tap must not switch here.
         ev.stopPropagation();
         return finish(false);
       }
       if (act && act.casora_popup && window.casoraPopup) {
         // Only ours gets intercepted; anything else stays HA's to handle.
         ev.stopPropagation();
-        // src: die Kachel liefert im Weich-Look Ring und Kopf – wie beim echten Antippen.
+        // src: in the Soft look the tile supplies ring and header - like a real tap.
         window.casoraPopup.open(Object.assign({}, act.casora_popup, { src: card }));
         return finish(true);
       }
@@ -12147,7 +12147,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     setTimeout(function () { finish(false); }, 400);
   }
 
-  // Für 01-basis (Einträge ohne opens): erst die sichtbare Kachel, wie beim Antippen.
+  // For 01-basis (entries without opens): first the visible tile, like a tap.
   window._casoraTapTile = function (entityId, done) {
     var t = tileFor(entityId);
     if (!t) return done(false);
@@ -12171,8 +12171,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     tapCard(own || cardWithTemplate(names, fallbackEntity), function (hit) {
       if (hit) return;
       cardFromConfig(names, fallbackEntity).then(function (el) {
-        // Keine Kachel im Dashboard (z. B. Pflanze ohne Pflanzen-Kachel): eine unsichtbare Kachel der
-        // ersten Vorlage für genau diese Entität – dasselbe Casora-Popup statt HAs Dialog („problem“).
+        // No tile on the dashboard (e.g. a plant without a plant tile): a hidden tile of the
+        // first template for exactly this entity - the same Casora popup instead of the HA dialog („problem“).
         if (!el) el = cardSynth(names, fallbackEntity);
         if (!el) return fall();
         // One frame for button-card to evaluate its config before the tap.

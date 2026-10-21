@@ -484,11 +484,11 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     return out;
   }
 
-  // ── Einträge ohne eigenes Popup-Ziel: passende Casora-Karte suchen ──────────
-  // Die Engine öffnet für Einträge ohne `opens` (Alarm, Saugroboter, Geräte …)
-  // das native More-Info. Hier wird stattdessen die Dashboard-Karte mit dieser
-  // Entität gesucht (auch hinter conditional/auto-entities) und deren
-  // 2.1-Popup geöffnet. Keine Karte gefunden -> Engine-Verhalten bleibt.
+  // ── Entries without their own popup target: find the matching Casora card ──
+  // For entries without `opens` (alarm, robot vacuum, devices …) the engine opens
+  // the native more-info. Here the dashboard card with this entity is looked up
+  // instead (also behind conditional/auto-entities) and its 2.1 popup opened.
+  // No card found -> the engine's behaviour stays.
   function findCardCfg(cfg, entityId) {
     var hit = null, badge = null;
     // A group tile naming this entity only as its first member is the group's (#37): opening it from a
@@ -502,9 +502,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     (function walk(o) {
       if (hit || !o || typeof o !== 'object') return;
       if (Array.isArray(o)) { o.forEach(walk); return; }
-      // Eine Kachel vor einer Badge derselben Entität (wie beim Antippen der Kachel, B-NOTI).
+      // A tile before a badge of the same entity (like tapping the tile, B-NOTI).
       if (hasPopup(o)) { if (!isBadge(o)) { hit = o; return; } if (!badge) badge = o; }
-      // Auch Filter-Overlays (sections) und Karten in custom_fields.
+      // Also filter overlays (sections) and cards in custom_fields.
       ['cards', 'card', 'filter', 'include', 'options', 'sections'].forEach(function (k) { if (o[k]) walk(o[k]); });
       if (o.custom_fields && typeof o.custom_fields === 'object') walk(Object.keys(o.custom_fields).map(function (k) { return o.custom_fields[k]; }));
     })((cfg && cfg.views) || []);
@@ -515,22 +515,22 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     var ha = document.querySelector('home-assistant');
     var h = ha && ha.hass;
     if (!h || !h.callWS || !window.casoraPopup) return done(false);
-    // „Wer sieht das?“ (R-01): für diesen Benutzer ausgeblendete Geräte nicht über Glocke oder
-    // Sammel-Popup öffnen – auch nicht als HA-Dialog (done(true), der Aufrufer fällt nicht zurück).
+    // „Wer sieht das?“ (R-01): devices hidden for this user do not open from the bell or a
+    // group popup - not even as the HA dialog (done(true), the caller does not fall back).
     if (!checked && window.casoraUserGuard) {
       return window.casoraUserGuard(entityId, function () { openViaCard(entityId, done, explicitCfg, noTile, true); },
         function () { done(true); });
     }
-    // Glocke = Kachel (B-NOTI): steht die Kachel im Dashboard, genau sie antippen – gleiches Popup,
-    // gleicher Ring und Kopf. Sonst wie bisher über die Konfiguration.
+    // Bell = tile (B-NOTI): if the tile is on the dashboard, tap exactly that one - same popup,
+    // same ring and header. Otherwise through the config as before.
     if (!explicitCfg && !noTile && window._casoraTapTile) {
       return window._casoraTapTile(entityId, function (ok) { if (ok) done(true); else openViaCard(entityId, done, null, true, true); });
     }
     var seg = (location.pathname || '').split('/').filter(Boolean);
     (window._casoraCfgOnce ? window._casoraCfgOnce(h, seg[0] || 'lovelace') : h.callWS({ type: 'lovelace/config', url_path: seg[0] || 'lovelace' })).then(function (cfg) {
       var found = explicitCfg || findCardCfg(cfg, entityId);
-      // Keine eigene Karte (Alarm/Schloss stecken oft nur als Badge in der Raumkarte): die Kachel-Vorlage
-      // der Domäne – dasselbe Popup wie deren Kachel statt HAs Dialog (B-NOTI).
+      // No own card (alarm/lock often sit only as a badge in the room card): the domain's tile
+      // template - the same popup as its tile instead of the HA dialog (B-NOTI).
       var tpl = !found && { lock: 'casora_lock', alarm_control_panel: 'casora_alarm', vacuum: 'casora_vacuum',
         cover: 'casora_cover', climate: 'casora_thermostat', media_player: 'casora_media', light: 'casora_light',
         person: 'casora_presence' }[String(entityId).split('.')[0]];
@@ -565,9 +565,9 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     }).catch(function () { done(false); });
   }
 
-  // ── Licht-Gruppen-Popup: Tipp auf eine Einzellampe -> 2.1-Einzellampen-Popup ─
-  // Das Licht-Modul feuert dafür ll-custom {casora_light_more_info} und öffnet
-  // sonst das native More-Info. Untergruppen bleiben beim Modul.
+  // ── Light group popup: tap on a single lamp -> 2.1 single-lamp popup ─────────
+  // The light module fires ll-custom {casora_light_more_info} for it and otherwise
+  // opens the native more-info. Subgroups stay with the module.
   window.addEventListener('ll-custom', function (e) {
     var d = (e.detail && e.detail.event_data) ? e.detail.event_data : (e.detail || {});
     var id = d && d.casora_light_more_info;
