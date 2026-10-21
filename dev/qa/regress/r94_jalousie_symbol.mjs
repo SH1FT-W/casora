@@ -11,6 +11,7 @@ const has = (x, t) => JSON.stringify(x).includes(`"${t}"`);
 const dash = await casoraDashboard((d) => has(d.config, 'casora_cover'));
 await need('Casora-Dashboard mit Jalousie-Kachel (Desktop + Handy)', dash && dash.phone && has(dash.phone.config, 'casora_cover'));
 // Desktop: Ansicht mit einer einzelnen Jalousie (ohne covers-Liste), sonst irgendeine mit Jalousie-Kachel.
+// Eine einzelne Jalousie hat seit #35 keine Zeile mit sich selbst: dort zählen Ring und „Position“.
 const single = (v) => /"template":"casora_cover","entity":"cover\./.test(JSON.stringify(v));
 const dview = dash.config.views.find((v) => has(v, 'casora_cover') && single(v)) || dash.config.views.find((v) => has(v, 'casora_cover'));
 const pview = dash.phone.config.views.find((v) => has(v, 'casora_cover'));
@@ -70,14 +71,20 @@ for (const [vp, url] of [
     await need(`${vp}: Jalousie-Kachel sichtbar`, t, t);
     await check(`${vp} ${k}: Kachel zeigt ${want}`, t.tile === want, t);
     // Popup öffnen; unter Last kommt es manchmal erst beim zweiten Tippen.
+    const group = ids.length > 1;
     let p = null;
-    for (let a = 0; a < 2 && !(p && p.n); a++) {
+    for (let a = 0; a < 2 && !(p && p.ring); a++) {
       const t2 = (await pick(page, ids[0])) || t;
       await page.mouse.click(t2.x, t2.y);
-      for (let w = 0; w < 12 && !(p && p.n && p.ring); w++) { await page.waitForTimeout(400); p = await popup(page); }
+      for (let w = 0; w < 12 && !(p && p.ring && (!group || p.n)); w++) { await page.waitForTimeout(400); p = await popup(page); }
     }
-    await check(`${vp} ${k}: Zeile zeigt ${want}`, p.row === want, p);
-    await check(`${vp} ${k}: Ring im Popup-Kopf wie die Zeile`, p.ring === want && p.ring === p.row, p);
+    if (group) {
+      await check(`${vp} ${k}: Zeile zeigt ${want}`, p.row === want, p);
+      await check(`${vp} ${k}: Ring im Popup-Kopf wie die Zeile`, p.ring === want && p.ring === p.row, p);
+    } else {
+      await check(`${vp} ${k}: einzelne Jalousie ohne Zeile mit sich selbst (#35)`, p.n === 0, p);
+      await check(`${vp} ${k}: Ring im Popup-Kopf zeigt ${want}`, p.ring === want, p);
+    }
     await check(`${vp} ${k}: Position zeigt ${want}`, p.pos === want, p);
     await page.keyboard.press('Escape');
     await page.waitForTimeout(900);
