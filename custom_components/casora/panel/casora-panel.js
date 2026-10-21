@@ -3865,6 +3865,26 @@ const softLook = () => {
     return getComputedStyle(document.documentElement).getPropertyValue("--casora-popup-layout").trim() === "soft";
   } catch (e) { return false; }
 };
+// The preview's own light/dark (day/night switch above it): the active theme's other mode as CSS
+// variables for the preview element, or null when the preview matches Home Assistant's mode anyway
+// (HA has put that mode on <html>). Keys only the current mode sets fall back to the theme's base
+// value; base values that refer to others (var(…)) are set again, else they keep what <html>
+// resolved them to. Nothing goes to <html> or the user's profile.
+function previewThemeVars(hass, dark) {
+  const T = hass && hass.themes;
+  if (!T || !!T.darkMode === !!dark) return null;
+  const name = (hass.selectedTheme && hass.selectedTheme.theme) || T.theme || T.default_theme;
+  const t = T.themes && T.themes[name];
+  const want = t && t.modes && t.modes[dark ? "dark" : "light"];
+  if (!want) return null;
+  const now = t.modes[dark ? "light" : "dark"] || {};
+  const out = {};
+  Object.keys(t).forEach((k) => {
+    if (k !== "modes" && ((k in now && !(k in want)) || /var\(/.test(String(t[k])))) out["--" + k] = String(t[k]);
+  });
+  Object.keys(want).forEach((k) => { out["--" + k] = String(want[k]); });
+  return out;
+}
 // Name nach dem, was das aktive Theme wirklich malt: ein Theme (auch eine eigene Kopie des
 // Casora-Looks unter anderem Namen), das „purple“ rot färbt, bekommt „Dunkelrot“ (Nutzertest 7).
 const hueOf = (c) => {
@@ -5906,6 +5926,22 @@ class CasoraPanel extends HTMLElement {
     apply();
     requestAnimationFrame(apply);
     setTimeout(apply, 300);
+    this._syncPreviewMode();
+  }
+
+  // Day/night of the preview (switch above it) for everything in it – tiles, badges, chrome, player,
+  // popup layer – not only the photo: the theme's mode as variables on .plinth, pv-dark/pv-light for
+  // the few rules that pick colors themselves. HA's own mode and the Studio around it stay as they are.
+  _syncPreviewMode() {
+    const host = this.shadowRoot && this.shadowRoot.querySelector(".plinth");
+    if (!host) return;
+    const dark = this._miniDark === undefined ? !!(this._hass && this._hass.themes && this._hass.themes.darkMode) : !!this._miniDark;
+    (this._pvKeys || []).forEach((k) => host.style.removeProperty(k));
+    const vars = previewThemeVars(this._hass, dark) || {};
+    this._pvKeys = Object.keys(vars);
+    this._pvKeys.forEach((k) => host.style.setProperty(k, vars[k]));
+    host.classList.toggle("pv-dark", dark);
+    host.classList.toggle("pv-light", !dark);
   }
 
   _liveRefresh() {
@@ -9308,8 +9344,8 @@ class CasoraPanel extends HTMLElement {
         .miniroom.focusing .mz.infocus,
         .miniroom.focusing .mini-subs.infocus { z-index:21; }
         /* Weich: der Rest der Vorschau tritt hell zurück (Leinen-Schleier) statt grau abzudunkeln. */
-        :host(.is-light) .card.map.soft .miniroom .mzscrim { background:rgba(246,241,234,0.5); }
-        :host(:not(.is-light)) .card.map.soft .miniroom .mzscrim { background:rgba(20,16,12,0.38); }
+        .plinth.pv-light .card.map.soft .miniroom .mzscrim, .card.map.soft .plinth.pv-light .miniroom .mzscrim { background:rgba(246,241,234,0.5); }
+        .plinth.pv-dark .card.map.soft .miniroom .mzscrim, .card.map.soft .plinth.pv-dark .miniroom .mzscrim { background:rgba(20,16,12,0.38); }
         .mz-tiles { margin:0 calc(var(--pad-x) * -1); }
         .mz-tiles .mini-tiles {
           padding-left:var(--pad-x); padding-right:var(--pad-x);
@@ -9604,6 +9640,13 @@ class CasoraPanel extends HTMLElement {
         }
         .card.map.soft .mini-settings i,
         .card.map.soft .mini-wave:not(.on) i { background:var(--casora-chrome-ink, #fff); }
+        /* Playing: the wave as casora_now_playing_header draws it (theme colors, not fixed white). */
+        .card.map.soft .mini-wave.on {
+          background:var(--casora-np-head-on, #fff); box-shadow:var(--casora-chrome-shadow, none);
+        }
+        .card.map.soft .mini-wave.on i {
+          background:var(--casora-np-head-play-ink, var(--casora-np-head-on-ink, #1c1c20));
+        }
         .card.map.soft :is(.mini-weather, .mini-name) {
           color:var(--primary-text-color); text-shadow:none;
         }
@@ -9711,6 +9754,17 @@ class CasoraPanel extends HTMLElement {
         /* Weich 1.0.7 (wie 10-weich-welle.js, Entwurf A): offene Welle = ein Menü unter ihr, je Player
            eine Zeile mit Cover, Titel, Unterzeile, Fortschritt und rundem Play/Pause-Knopf. */
         .card.map.soft .mz-np { gap:0; max-height:none; overflow:visible; }
+        /* The dashboard's own player strips (_npSoftInto) at the preview's scale: desktop/tablet sizes
+           are real px × --sim-k (zoom; it scales the width set in px, not percentages). The phone is
+           built in real px and scaled as a whole, so no zoom there. */
+        .card.map.soft .mini-npreal { zoom:var(--sim-k, .6); max-width:100%; }
+        .card.map.soft .mini-npreal.win {
+          width:332px; box-sizing:border-box; overflow:hidden; margin-left:auto;
+          border-radius:var(--casora-window-radius, var(--casora-menu-radius, 28px));
+          background:var(--casora-window-pane, var(--casora-menu-pane-webkit, var(--casora-menu-pane, rgba(30,33,38,0.9))));
+          box-shadow:var(--casora-notify-shadow, var(--casora-window-shadow, 0 8px 20px rgba(0,0,0,0.13)));
+        }
+        .card.map.soft .mp-nprow > .mini-npreal { zoom:1; width:100%; flex:0 0 100%; }
         .card.map.soft .mini-nptile { --np-pt:calc(var(--np-pl) * 0.7); --np-art:calc(var(--np-max) * 0.15); --np-ar:calc(var(--np-max) * 0.04); }
         .card.map.soft .mini-nphead { padding-bottom:calc(var(--np-gap) * 2); }
         .card.map.soft .mini-nptile, .card.map.soft .mini-nptile.noctl {
@@ -12038,8 +12092,10 @@ class CasoraPanel extends HTMLElement {
       if (this._miniSize === "phone" && was !== "phone") this._phoneFilter = this._phoneRoomFilter();
       this._rebuildPreview();
     });
+    this._syncPreviewMode();
     this._wireSeg(this.$("modeseg"), "mode", this._miniDark ? "night" : "day", (v) => {
       this._miniDark = v === "night";
+      this._syncPreviewMode();
       const mount = this.$("mapmount");
       const room = this._state && this._state.compact.rooms[this._room];
       if (!mount || !mount.firstChild || !room) return;
@@ -22943,8 +22999,52 @@ class CasoraPanel extends HTMLElement {
     return this._npList(V)[0] || null;
   }
 
+  // Soft look: the players as the dashboard draws them (09-weich-wiedergabe.js), at the preview's
+  // scale – on desktop/tablet the wave's menu (opt.panel: cover stage, then cover strips, in a
+  // 332 px window as 10-weich-welle.js opens it), on the phone the cover strips. The copy drawn
+  // here before stayed at the 05.10 list while the dashboard moved on. False without the module
+  // (not loaded yet: asked for once, the preview draws again) or with nothing playing – the copy
+  // stays then.
+  _npSoftInto(host, V, opt) {
+    const NP = window._casoraNPSoft;
+    if (!softLook()) return false;
+    if (!NP || typeof NP.paint !== "function" || typeof window._casoraNP !== "function") {
+      if (!this._npSoftAsked && typeof this._casoraCardsReady === "function") {
+        this._npSoftAsked = true;
+        Promise.resolve(this._casoraCardsReady())
+          .then(() => { if (window._casoraNPSoft && this._state) this._rebuildPreview(); }, () => {});
+      }
+      return false;
+    }
+    let list = [];
+    // The same input as the dashboard: room card and phone card both hand _casoraNP this shape.
+    const cfg = typeof NP.roomCfg === "function" ? NP.roomCfg(V) : V;
+    try { list = window._casoraNP(this._hass.states, cfg) || []; } catch (e) { list = []; }
+    if (!list.length) return false;
+    const box = document.createElement("div");
+    box.className = "mini-npreal";
+    box.dataset.mk = "npt";
+    box.setAttribute("data-no-i18n", "");
+    const sr = box.attachShadow({ mode: "open" });
+    sr.innerHTML = "<style>" + NP.CSS + "</style><div class=\"w\"></div>";
+    host.appendChild(box);
+    // One record per panel: paint() keeps it for the running progress bar.
+    const e = this._npSoftE = this._npSoftE || { kind: "studio" };
+    e.sig = null;
+    const o = { ...(opt || {}), dark: !!this._miniDark };
+    // Window frame from the theme's variables, not casoraMenuGlass: that copies HA's mode onto it.
+    if (o.panel) box.classList.add("win");
+    try { NP.paint(e, sr.querySelector(".w"), list, this._hass.states, o); }
+    catch (err) { box.remove(); return false; }
+    return true;
+  }
+
   _paintNpStack(host, V) {
     if (!host) return;
+    if (this._npSoftInto(host, V, { panel: true, stage: true })) {
+      host.querySelectorAll(".mini-nptile").forEach((t) => t.remove());
+      return;
+    }
     const list = this._npList(V);
     const first = host.querySelector(".mini-nptile");
     if (!list.length || !first) return;
@@ -23540,7 +23640,7 @@ class CasoraPanel extends HTMLElement {
         nprow.dataset.jump = "Now Playing";
         body.appendChild(nprow);
 
-        npall.slice(0, NP_STACK_SLOTS).forEach((nps) => {
+        (this._npSoftInto(nprow, npV, {}) ? [] : npall.slice(0, NP_STACK_SLOTS)).forEach((nps) => {
         const ctl = nps.controls;
         const hasCtl = ctl.toggle || ctl.next || ctl.prev;
 

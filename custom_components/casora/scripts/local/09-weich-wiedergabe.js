@@ -459,7 +459,8 @@
   function paint(e, w, list, states, opt) {
     opt = opt || {};
     var desk = !!opt.desk, cols = opt.cols || 1, stage = !!opt.stage;
-    var hs = getHass(), dk = !!(hs && hs.themes && hs.themes.darkMode);
+    // opt.dark: the Studio preview's own day/night instead of Home Assistant's mode.
+    var hs = getHass(), dk = opt.dark != null ? !!opt.dark : !!(hs && hs.themes && hs.themes.darkMode);
     var rows = {}, groups = {};
     var gl = group(list);
     var items = gl.map(function (g, gi) {

@@ -232,7 +232,10 @@
       const cfg = target.kind === "tile" ? clone(target.tile)
         : { ...clone(room._hero), name: room.name, variables: { ...clone(room.variables), casora_confirm_entities: ce.slice(), casora_confirm_names: { ...cn } } };
       try { el.setConfig(cfg); } catch (e) { return null; }
-      el.hass = this._hass;
+      // Day/night of the preview: templates that read hass.themes.darkMode follow the switch, not HA.
+      const dk = this._miniDark, th = this._hass.themes;
+      el.hass = dk === undefined || !th || !!th.darkMode === !!dk ? this._hass
+        : { ...this._hass, themes: { ...th, darkMode: !!dk } };
       h.appendChild(el);
       await settle(el);
       try { return await this._cpExtract(el, target); } finally { h.replaceChildren(); }
