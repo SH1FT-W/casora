@@ -28,7 +28,10 @@ Angelegt im Oktober 2026 mit dem, was dabei gelesen wurde – noch nicht vollst�
 
 Integrationen, deren Entitäten oder Attribute dieses Repo liest (Domain, was genau, wo):
 
-- **Dreame Vacuum** (HACS, Tasshack/dreame-vacuum, `dreame_vacuum`): Fehlersensor mit `translation_key` `error`, Zustand ein Code (`forward_suffocate` …), ohne Fehler `no_error`; der Text kommt aus der Übersetzung der Integration (`02-geraete.js` `VFIND.err`, `errText`, #33). Sonst noch nicht vollständig erfasst.
+- **Dreame Vacuum** (HACS, Tasshack/dreame-vacuum, `dreame_vacuum`): Fehlersensor mit `translation_key` `error`, Zustand ein Code (`forward_suffocate` …), ohne Fehler `no_error`; der Text kommt aus der Übersetzung der Integration (`02-geraete.js` `VFIND.err`, `errText`, #33). Fürs Saugroboter-Popup außerdem `cleaning_progress`, `cleaned_area`, `cleaning_time` (min), `dnd` (switch), `time.dnd_start`/`dnd_end`, `drying_left` (min), `cleaning_mode`, `water_volume`, `mop_pad_humidity`, `auto_empty_mode`, `cleaning_history`, `cleaning_count`, `total_cleaning_time` (min), `total_cleaned_area`, Verschleiß `*_time_left` (h, `sensor_dirty_time_left`, `tank_filter_time_left`, `mop_pad_time_left`) und Reset-Tasten `reset_*` (`02-geraete.js` `VFIND`, `PARTS`; `dev/unit/vacuum_integrations.mjs`). Nicht übernommen: `auto_drying`, `auto_dust_collecting`, `self_clean` (Einstellungen, keine Aktionen).
+- **Ecovacs** (HA-Kern, `ecovacs`): `stats_area`, `stats_time` (s), `work_mode`, `water_amount`, `auto_empty`, `child_lock`, `total_stats_cleanings`, `total_stats_time` (s), `total_stats_area` (`02-geraete.js` `VFIND`; `dev/unit/vacuum_integrations.mjs`). Verschleiß nur in % (`lifespan_*`) – nicht übernommen.
+- **iRobot Roomba** (HA-Kern, `roomba`): `last_mission`, `total_missions` (`02-geraete.js` `VFIND`).
+- Saugroboter allgemein: Dauern nach `unit_of_measurement` (s/min/h/d) umgerechnet (`numIn`); ohne Einheit wie bisher.
 
 ## Prüfbefehl
 

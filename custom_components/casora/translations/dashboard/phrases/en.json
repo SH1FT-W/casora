@@ -2292,7 +2292,13 @@
   "Tracker": "Tracker",
   "Energiesparen": "Power saving",
   "Energiesparen ist an: der Tracker reagiert erst wieder, wenn er unterwegs ist.": "Power saving is on: the tracker responds again once it is on the move.",
-  "Der Tracker ist gerade nicht erreichbar.": "The tracker cannot be reached right now."
+  "Der Tracker ist gerade nicht erreichbar.": "The tracker cannot be reached right now.",
+  "Leicht feucht": "Slightly damp",
+  "Häufig": "Often",
+  "Selten": "Rarely",
+  "Intelligent": "Intelligent",
+  "Sehr hoch": "Very high",
+  "Mopp-Pad": "Mop pad"
  },
  "patterns": [
   [

@@ -3285,35 +3285,58 @@
     vac_followed_by_mop: 'Erst saugen, dann wischen', smart: 'Smart', light: 'Leicht', auto: 'Auto',
     vac_and_mop: 'Saugen & wischen', unknown: 'Unbekannt', custom_water_flow: 'Eigene Wassermenge', min: 'Minimal',
     slight: 'Leicht', off_raise_main_brush: 'Aus (Bürste angehoben)', silent: 'Leise', mop_only: 'Nur wischen',
+    // Dreame and Ecovacs options (cleaning_mode, water_volume, mop_pad_humidity, auto_empty_mode, work_mode, water_amount).
+    sweeping: 'Saugen', mopping: 'Wischen', sweeping_and_mopping: 'Saugen & wischen', mopping_after_sweeping: 'Erst saugen, dann wischen',
+    mop_after_vacuum: 'Erst saugen, dann wischen', slightly_dry: 'Leicht feucht', moist: 'Feucht', wet: 'Nass',
+    high_frequency: 'Häufig', low_frequency: 'Selten', intelligent: 'Intelligent', ultrahigh: 'Sehr hoch',
   };
   var modeName = function (o) { return MODE[o] || String(o).replace(/_/g, ' ').replace(/^\w/, function (x) { return x.toUpperCase(); }); };
-  /* Verschleißteile: [translation_key des Sensors, Name, Icon, Nennlaufzeit in Std. oder null, translation_key der Reset-Taste] */
+  /* A duration in the unit the popup counts in ('min' or 'h'), from the unit the sensor states (s, min, h, d) –
+     Dreame reports minutes, Ecovacs seconds. Without a unit the number as before. */
+  var SEC = { s: 1, sec: 1, min: 60, h: 3600, d: 86400 };
+  var numIn = function (states, e, want) {
+    var v = U.num(states, e);
+    if (v == null) return null;
+    var u = String(((states[e] || {}).attributes || {}).unit_of_measurement || '').trim().toLowerCase();
+    return SEC[u] && SEC[want] ? v * SEC[u] / SEC[want] : v;
+  };
+  /* Verschleißteile: [translation_key des Sensors, Name, Icon, Nennlaufzeit in Std. oder null, translation_key der Reset-Taste,
+     further sensor keys, further reset keys] – Roborock first, then Dreame (same "_time_left" in hours; its own resets). */
   var PARTS = [
-    ['main_brush_time_left', 'Hauptbürste', 'mdi:brush', 300, 'reset_main_brush_consumable'],
-    ['side_brush_time_left', 'Seitenbürste', 'mdi:broom', 200, 'reset_side_brush_consumable'],
-    ['filter_time_left', 'Filter', 'mdi:air-filter', 150, 'reset_air_filter_consumable'],
-    ['sensor_time_left', 'Sensoren reinigen', 'mdi:eye-outline', 30, 'reset_sensor_consumable'],
-    ['strainer_time_left', 'Schmutzfänger (Station)', 'mdi:filter-outline', null, null],
+    ['main_brush_time_left', 'Hauptbürste', 'mdi:brush', 300, 'reset_main_brush_consumable', [], ['reset_main_brush']],
+    ['side_brush_time_left', 'Seitenbürste', 'mdi:broom', 200, 'reset_side_brush_consumable', [], ['reset_side_brush']],
+    ['filter_time_left', 'Filter', 'mdi:air-filter', 150, 'reset_air_filter_consumable', [], ['reset_filter']],
+    ['sensor_time_left', 'Sensoren reinigen', 'mdi:eye-outline', 30, 'reset_sensor_consumable', ['sensor_dirty_time_left'], ['reset_sensor']],
+    ['strainer_time_left', 'Schmutzfänger (Station)', 'mdi:filter-outline', null, null, ['tank_filter_time_left'], []],
+    ['mop_pad_time_left', 'Mopp-Pad', 'mdi:texture-box', null, 'reset_mop_pad', [], []],
   ];
 
+  /* Roborock's translation_keys first, then those of other integrations with the same meaning: Dreame (HACS,
+     Tasshack), Ecovacs and iRobot Roomba (HA core). Settings that only look alike (Dreame's auto drying, auto
+     dust collecting, self clean) stay out – the popup would treat them as "do it now". */
   var VFIND = {
     status: { keys: ['status'], domain: 'sensor' }, room: { keys: ['current_room'], domain: 'sensor' },
-    progress: { keys: ['clean_percent'], domain: 'sensor' }, area: { keys: ['cleaning_area'], domain: 'sensor' },
+    progress: { keys: ['clean_percent', 'cleaning_progress'], domain: 'sensor' },
+    area: { keys: ['cleaning_area', 'cleaned_area', 'stats_area'], domain: 'sensor' },
     battery: { dc: 'battery', domain: 'sensor' }, charging: { dc: 'battery_charging', domain: 'binary_sensor' },
-    time: { keys: ['cleaning_time'], domain: 'sensor' }, dnd: { keys: ['dnd_switch'], domain: 'switch' },
-    dndStart: { keys: ['dnd_start_time'], domain: 'time' }, dndEnd: { keys: ['dnd_end_time'], domain: 'time' },
-    drying: { keys: ['mop_drying'], domain: 'switch' }, dryLeft: { keys: ['mop_drying_remaining_time'], domain: 'sensor' },
+    time: { keys: ['cleaning_time', 'stats_time'], domain: 'sensor' }, dnd: { keys: ['dnd_switch', 'dnd'], domain: 'switch' },
+    dndStart: { keys: ['dnd_start_time', 'dnd_start'], domain: 'time' }, dndEnd: { keys: ['dnd_end_time', 'dnd_end'], domain: 'time' },
+    drying: { keys: ['mop_drying'], domain: 'switch' }, dryLeft: { keys: ['mop_drying_remaining_time', 'drying_left'], domain: 'sensor' },
     empty: { keys: ['dust_emptying'], domain: 'switch' }, wash: { keys: ['mop_washing'], domain: 'switch' },
-    cleanMode: { keys: ['cleaning_mode'], domain: 'select' }, mopInt: { keys: ['mop_intensity'], domain: 'select' },
-    mopMode: { keys: ['mop_mode'], domain: 'select' }, emptyMode: { keys: ['dust_collection_mode'], domain: 'select' },
+    cleanMode: { keys: ['cleaning_mode', 'work_mode'], domain: 'select' },
+    mopInt: { keys: ['mop_intensity', 'water_volume', 'water_amount'], domain: 'select' },
+    mopMode: { keys: ['mop_mode', 'mop_pad_humidity'], domain: 'select' },
+    emptyMode: { keys: ['dust_collection_mode', 'auto_empty_mode', 'auto_empty'], domain: 'select' },
     lock: { keys: ['child_lock'], domain: 'switch' }, volume: { keys: ['volume'], domain: 'number' },
     // 'error': Dreame (Tasshack) – its error sensor's translation_key; the state is a code like forward_suffocate (issue #33).
     err: { keys: ['vacuum_error', 'error'], domain: 'sensor' }, dockErr: { keys: ['dock_error'], domain: 'sensor' },
     water: { keys: ['water_shortage'], domain: 'binary_sensor' }, dirty: { keys: ['dirty_box_full'], domain: 'binary_sensor' },
     clean: { keys: ['clean_box_empty'], domain: 'binary_sensor' }, mopOn: { keys: ['mop_attached'], domain: 'binary_sensor' },
-    boxOn: { keys: ['water_box_attached'], domain: 'binary_sensor' }, lastStart: { keys: ['last_clean_start'], domain: 'sensor' },
-    lastEnd: { keys: ['last_clean_end'], domain: 'sensor' }, total: { keys: ['total_cleaning_count'], domain: 'sensor' },
-    totalTime: { keys: ['total_cleaning_time'], domain: 'sensor' }, totalArea: { keys: ['total_cleaning_area'], domain: 'sensor' },
+    boxOn: { keys: ['water_box_attached'], domain: 'binary_sensor' }, lastStart: { keys: ['last_clean_start', 'last_mission'], domain: 'sensor' },
+    lastEnd: { keys: ['last_clean_end', 'cleaning_history'], domain: 'sensor' },
+    total: { keys: ['total_cleaning_count', 'cleaning_count', 'total_stats_cleanings', 'total_missions'], domain: 'sensor' },
+    totalTime: { keys: ['total_cleaning_time', 'total_stats_time'], domain: 'sensor' },
+    totalArea: { keys: ['total_cleaning_area', 'total_cleaned_area', 'total_stats_area'], domain: 'sensor' },
   };
   var VOWN = { status: 'entity_status', room: 'entity_room', progress: 'entity_progress', area: 'entity_area',
     battery: 'entity_battery', dnd: 'entity_dnd', drying: 'entity_drying' };
@@ -3357,7 +3380,11 @@
         if (hit) c[b[0]] = hit.entity_id;
       });
       var spec = {};
-      PARTS.forEach(function (p) { spec['s_' + p[0]] = { keys: [p[0]], domain: 'sensor' }; if (p[4]) spec['r_' + p[0]] = { keys: [p[4]], domain: 'button' }; });
+      PARTS.forEach(function (p) {
+        spec['s_' + p[0]] = { keys: [p[0]].concat(p[5] || []), domain: 'sensor' };
+        var rk = [p[4]].concat(p[6] || []).filter(Boolean);
+        if (rk.length) spec['r_' + p[0]] = { keys: rk, domain: 'button' };
+      });
       var FP = CD.map(hass, id, spec, { siblings: true });
       var parts = PARTS.map(function (p) {
         var s = FP['s_' + p[0]];
@@ -3407,7 +3434,7 @@
   V.todo = function (c, states) {
     var out = [];
     c.parts.forEach(function (p) {
-      var h = U.num(states, p[0]);
+      var h = numIn(states, p[0], 'h');
       if (h != null && h < 0.5) out.push({ label: p[1].replace(' (Station)', ''), level: 1 });
     });
     var on = function (e) { return e && states[e] && states[e].state === 'on'; };
@@ -3513,7 +3540,7 @@
     var esc = UI.esc, T = UI.tokens;
     var on = function (e) { return e && states[e] && states[e].state === 'on'; };
     var ok = function (e) { return e && states[e] && states[e].state !== 'unavailable'; };
-    var pct = U.num(states, c.progress), bat = U.num(states, c.battery), area = U.num(states, c.area), mins = U.num(states, c.time);
+    var pct = U.num(states, c.progress), bat = U.num(states, c.battery), area = U.num(states, c.area), mins = numIn(states, c.time, 'min');
     var room = U.str(states, c.room);
     var HH = window._casoraHH, SF = !!(HH && HH.on());
 
@@ -3599,7 +3626,7 @@
       if (c.mopOn && states[c.mopOn] && states[c.mopOn].state === 'off') at.push({ icon: 'mdi:water-off-outline', iconTone: 'warn', label: 'Mopp nicht angebracht' });
       if (c.boxOn && states[c.boxOn] && states[c.boxOn].state === 'off') at.push({ icon: 'mdi:cup-off-outline', iconTone: 'warn', label: 'Wasserkasten fehlt' });
       c.parts.forEach(function (p) {
-        var h3 = U.num(states, p[0]);
+        var h3 = numIn(states, p[0], 'h');
         if (h3 == null) return;
         var due3 = h3 < 0.5, left3 = p[3] ? Math.max(0, Math.min(1, h3 / p[3])) : null;
         if (!due3 && !(left3 != null && left3 < 0.2)) return;
@@ -3744,7 +3771,7 @@
       if (docked2) {
         act(c.empty, 'mdi:delete-empty-outline', 'Staubbehälter leeren', 'Wird geleert');
         act(c.wash, 'mdi:water-sync', 'Mopp waschen', 'Wird gewaschen');
-        var dl = U.num(states, c.dryLeft);
+        var dl = numIn(states, c.dryLeft, 'h');
         act(c.drying, 'mdi:weather-windy', 'Mopp trocknen', dl != null && dl > 0 ? 'noch ' + U.dur(dl * 60) : 'Trocknet');
       }
       var em = c.emptyMode && states[c.emptyMode];
@@ -3788,7 +3815,7 @@
       /* Restzeiten sind Betriebsstunden des Roboters, keine Kalenderzeit */
       var span = function (h) { return h >= 10 ? U.f(Math.round(h), 0) + ' Betriebsstd.' : U.dur(h * 60); };
       var rc = c.parts.map(function (p) {
-        var h2 = U.num(states, p[0]);
+        var h2 = numIn(states, p[0], 'h');
         if (h2 == null) return null;
         var due = h2 < 0.5;
         var left = p[3] ? Math.max(0, Math.min(1, h2 / p[3])) : null;
@@ -3838,7 +3865,7 @@
         rs2.push({ icon: 'mdi:calendar-today', iconTone: 'accent', label: 'Heute', value: today === 1 ? '1 Reinigung' : today + ' Reinigungen' });
       }
       if (tot != null) rs2.push({ icon: 'mdi:counter', iconTone: 'accent', label: 'Reinigungen insgesamt', value: String(Math.round(tot)) });
-      var tt = U.num(states, c.totalTime), ta2 = U.num(states, c.totalArea);
+      var tt = numIn(states, c.totalTime, 'h'), ta2 = U.num(states, c.totalArea);
       if (tt != null) rs2.push({ icon: 'mdi:timer-sand', iconTone: 'accent', label: 'Laufzeit insgesamt', value: U.f(tt, 0) + ' Std.' });
       if (ta2 != null) rs2.push({ icon: 'mdi:floor-plan', iconTone: 'accent', label: 'Fläche insgesamt', value: U.f(ta2, 0) + ' m²' });
       if (tot && ta2) rs2.push({ icon: 'mdi:vector-square', iconTone: 'accent', label: 'Ø pro Reinigung',
