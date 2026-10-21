@@ -1,10 +1,10 @@
 // „Willkommen bei Casora“ / „Neu in Casora x.y.z“
-// (der „Was ist neu“-Bildschirm nach einem iOS-Update). Erscheint einmal pro
-// Version und Browser im Studio.
+// (like the „Was ist neu“ screen after an iOS update). Shows once per
+// version and browser in the Studio.
 //
-// Bei jedem Release: WHATS_NEW mit den Neuerungen füllen (2–4 Einträge), Version
-// in manifest.json anheben, CHANGELOG ergänzen. Die Version kommt aus der
-// Lader-URL (?v=<version>.<stempel>), die die Integration beim Start schreibt.
+// On every release: fill WHATS_NEW with the news (2-4 entries), bump the version
+// in manifest.json, extend the CHANGELOG. The version comes from the
+// loader URL (?v=<version>.<stamp>) that the integration writes on startup.
 (() => {
   if (window.__casoraWelcome) return;
   window.__casoraWelcome = true;
@@ -41,25 +41,25 @@
     },
   };
 
-  /** Erster Besuch: was Casora ist – drei Zeilen, nicht mehr. */
+  /** First visit: what Casora is - three lines, no more. */
   const WELCOME = [
     ["mdi:view-dashboard-edit-outline", "w1t", "w1"],
     ["mdi:auto-fix", "w2t", "w2"],
     ["mdi:cellphone-link", "w3t", "w3"],
   ];
 
-  /** Nach einem Update: die Neuerungen dieser Version – bei jedem Release ersetzen. */
+  /** After an update: the news of this version - replace on every release. */
   const WHATS_NEW = [
     ["mdi:window-shutter", "n0t", "n0"],
   ];
 
-  // Beim Laden entscheiden – bevor das Studio eigene casora.*-Schlüssel schreibt.
+  // Decide on load - before the Studio writes its own casora.* keys.
   const startMode = (() => {
     try {
       const seen = localStorage.getItem(SEEN_KEY);
       if (seen === VERSION) return null;
       if (seen !== null) return "whatsNew";
-      // Studio schon benutzt, bevor es dieses Blatt gab → ein Update.
+      // Studio used before this sheet existed → an update.
       const used = Object.keys(localStorage).some((k) => /^casora[._-]/i.test(k) && k !== SEEN_KEY);
       return used ? "whatsNew" : "welcome";
     } catch (e) { return null; }
@@ -69,7 +69,7 @@
     try { localStorage.setItem(SEEN_KEY, VERSION); } catch (e) { /* ohne Speicher eben wieder */ }
   }
 
-  // Das App-Zeichen (brand/icon.svg): Dach und Räume in Ton, ein Fenster in Honig.
+  // The app mark (brand/icon.svg): roof and rooms in clay, one window in honey.
   const MARK = '<svg viewBox="48 52 416 416" aria-hidden="true">'
     + '<path d="M76 236 256 86l180 150" fill="none" stroke="#B67A50" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/>'
     + '<rect x="138" y="254" width="104" height="96" rx="26" fill="#E8B04A"/><g fill="#B67A50"><rect x="270" y="254" width="104" height="96" rx="26"/>'
@@ -111,7 +111,7 @@
     const host = document.createElement("div");
     host.setAttribute("data-casora-welcome", "");
     const root = host.attachShadow({ mode: "open" });
-    // Hell, wenn HA hell ist (wie das Studio).
+    // Light when HA is light (like the Studio).
     const themes = ((document.querySelector("home-assistant") || {}).hass || {}).themes;
     const light = !!(themes && themes.darkMode === false);
     root.innerHTML = `<style>${CSS}</style><div class="cw-scrim${light ? " light" : ""}" role="dialog" aria-modal="true" aria-labelledby="cw-t">
@@ -129,7 +129,7 @@
     document.body.appendChild(host);
   }
 
-  // Für die Updates-Seite: dieselben Neuerungen in Klartext („Neu in …“).
+  // For the updates page: the same news as plain text („Neu in …“).
   window.casoraWhatsNew = (lang) => {
     const L = TEXT[String(lang || "").split("-")[0]] || TEXT.en;
     return { version: VERSION, title: L.whatsNewTitle.replace("{version}", VERSION),
@@ -141,8 +141,8 @@
 
   if (!startMode) return;
 
-  // Warten, bis das Studio weiß, ob es schon Dashboards gibt: ohne Casora-Dashboard
-  // begrüßt das Studio selbst („Willkommen bei Casora“ vor dem Assistenten) – dann nicht doppelt.
+  // Wait until the Studio knows whether dashboards exist: without a Casora dashboard
+  // the Studio greets on its own („Willkommen bei Casora“ before the assistant) - then not twice.
   const t0 = Date.now();
   const find = (root, d) => {
     if (!root || d > 8) return null;
