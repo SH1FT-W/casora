@@ -29,6 +29,11 @@ assert.equal(findCardCfg({ views: [{ cards: [house] }] }, 'light.a'), null, 'onl
 const badge = (template, entity) => ({ type: 'custom:button-card', template, entity });
 assert.equal(findCardCfg({ views: [{ cards: [badge('casora_badge_light', 'light.c')] }] }, 'light.c'), null,
   'only a light badge: no card (its popup is the room, not the lamp)');
+// A tile with its own tap action (more-info) gives no Casora popup: the light template's popup instead.
+const moreInfo = { type: 'custom:button-card', template: 'casora_light', entity: 'light.spots', tap_action: { action: 'more-info' } };
+assert.equal(findCardCfg({ views: [{ cards: [moreInfo] }] }, 'light.spots'), null, 'tile with tap action more-info: not the popup card');
+const casoraTap = { ...moreInfo, tap_action: { action: '[[[ return window.casoraPopupAction(); ]]]' } };
+assert.equal(findCardCfg({ views: [{ cards: [casoraTap] }] }, 'light.spots'), casoraTap, 'template tap action stays');
 const lockBadge = badge('casora_badge_lock', 'lock.x');
 assert.equal(findCardCfg({ views: [{ cards: [lockBadge] }] }, 'lock.x'), lockBadge, 'other badges still stand in for a missing tile');
 

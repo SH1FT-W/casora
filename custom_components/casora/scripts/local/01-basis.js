@@ -493,9 +493,15 @@ window._casoraColGap = window._casoraColGap || function (keys) {
     var hit = null, badge = null;
     // A group tile naming this entity only as its first member is the group's (#37): opening it from a
     // row in that group's popup reopened the same popup.
+    // A card with a tap action of its own (more-info, toggle …) replaces the template's Casora popup:
+    // tapping it gives no popup, and a row fell back to the device page (light group tile with more-info).
+    var ownTap = function (c) {
+      var a = c.tap_action && c.tap_action.action;
+      return typeof a === 'string' && a.indexOf('[[[') < 0 && a !== 'fire-dom-event';
+    };
     var hasPopup = function (c) {
       var t = c && c.template;
-      return !!(c && c.type === 'custom:button-card' && t && c.entity === entityId
+      return !!(c && c.type === 'custom:button-card' && t && c.entity === entityId && !ownTap(c)
         && !(window._casoraStandsForGroup && window._casoraStandsForGroup(c, entityId)));
     };
     var isBadge = function (c) { return [].concat(c.template || []).some(function (n) { return /badge|chip/.test(String(n)); }); };
