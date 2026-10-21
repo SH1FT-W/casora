@@ -23,6 +23,7 @@ Angelegt im Oktober 2026 mit dem, was dabei gelesen wurde – noch nicht vollst�
 | Themes: `hass.data["frontend_themes"]`, `["frontend_themes_store"]`, `["frontend_default_theme"]`, `["frontend_default_dark_theme"]`, Ereignis `themes_updated`, Dienst `frontend.set_theme` | `helfer.py` `_setup_theme`, `_inject_theme` | `dev/unit/theme_frueh_test.py`, `dev/unit/theme_hemma_umstellung_test.py` |
 | `hass.formatEntityState(stateObj)` gibt den Zustand in der Sprache des Nutzers aus, auch übersetzte Zustände von Integrationen über `translation_key` (z. B. Dreame-Fehlercode `forward_suffocate` → Satz, ggf. mehrzeilig) | `scripts/local/02-devices.js` `errText` (Saugroboter-Fehler, #33) | `dev/unit/vacuum_error_text.mjs` (Attrappe; Rückfall ohne die Funktion: der Code) |
 | Entitäten-Registry im Frontend (`hass.entities`) trägt `translation_key` und `device_id`; Geräte werden darüber sprachunabhängig gefunden (Roborock `vacuum_error`, Dreame `error`) | `scripts/local/00-finden.js` `entities`/`map`, `02-devices.js` `VFIND` | `dev/unit/vacuum_error_text.mjs` |
+| In HA versteckte Entitäten tragen in `hass.entities` `hidden: true` (Anzeige-Eintrag; `hidden_by` nur zur Sicherheit mitgeprüft); HAs eigener Kalender blendet sie aus, Casoras Kalender-Automatik ebenso (#38) | `scripts/local/06-kalender.js` `autoCals` | `dev/unit/kalender_versteckt.mjs` (Attrappe) |
 
 ## Fremde Integrationen
 

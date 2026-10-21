@@ -22,7 +22,12 @@
     if (!S) return autoCache.list;
     if (autoCache.states === S) return autoCache.list;
     var wasteCal = window.casoraDevice && window.casoraDevice.waste ? window.casoraDevice.waste(hass).calendar : null;
-    var list = Object.keys(S).filter(function (id) { return id.indexOf('calendar.') === 0; }).sort()
+    // Calendars hidden in HA stay out, as in HA's own calendar (Workday, #38); a list of one's own still shows them.
+    var E = hass.entities || {};
+    var list = Object.keys(S).filter(function (id) {
+      var e = E[id];
+      return id.indexOf('calendar.') === 0 && !(e && (e.hidden || e.hidden_by));
+    }).sort()
       .map(function (id, n) {
         var c = { entity: id, name: (S[id].attributes || {}).friendly_name || id, color: PALETTE[n % PALETTE.length] };
         if (id === wasteCal) { c.name = 'Abfall'; c.tile = false; }
