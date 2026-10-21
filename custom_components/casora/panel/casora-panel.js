@@ -21637,6 +21637,14 @@ class CasoraPanel extends HTMLElement {
 
   // Kandidat → Kachel wie beim Hinzufügen (Kachelart des Geräts, Finder-Variablen, Name ohne Raum).
   _carouselPageTile(c, room) {
+    // The room already has a tile of this device: it becomes the page with its own tile type, popup and
+    // variables (underfloor heating with its sensor) - a fresh tile of the suggested type lost them.
+    const own = c && c.entity && ((room && room.tiles) || []).find((t) => isPageTile(t) && t.entity === c.entity);
+    if (own) {
+      const page = JSON.parse(JSON.stringify(own));
+      delete page.enabled;
+      return page;
+    }
     const type = c && TILE_TYPES.find((t) => t.id === c.type);
     if (!type) { this._status("No tile type fits this device.", "warn"); return null; }
     const tile = newTile(type);
