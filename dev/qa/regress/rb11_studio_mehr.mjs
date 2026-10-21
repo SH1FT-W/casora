@@ -125,7 +125,9 @@ if (mp) {
   await fakeStates(page, { [mp]: { state: 'playing', attributes: { media_title: 'QA Lied', media_artist: 'QA', friendly_name: 'QA Player', supported_features: 16437 } } }, { sticky: true });
   await H(() => { const p = window.__panel(); p._miniSize = 'phone'; p._bSyncSize && p._bSyncSize(); p._rebuildPreview(); });
   await page.waitForTimeout(1500);
-  const np = await H(() => !!window.__panel().shadowRoot.querySelector('.card.map .mp-np'));
+  // Since r311 the Casora look draws the dashboard's own cover strips (.mini-npreal) instead of .mp-np rows.
+  await page.waitForFunction(() => !!window.__panel().shadowRoot.querySelector('.card.map .mp-np, .card.map .mp-nprow .mini-npreal'), null, { timeout: 15000 }).catch(() => {});
+  const np = await H(() => !!window.__panel().shadowRoot.querySelector('.card.map .mp-np, .card.map .mp-nprow .mini-npreal'));
   await check('Mobil-Vorschau zeigt „Aktuelle Wiedergabe“ (F-13)', np);
 } else await check('Handy-Layout mit „Aktuelle Wiedergabe“ (Testhaus)', false);
 await finish();

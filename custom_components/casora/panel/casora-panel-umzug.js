@@ -852,6 +852,12 @@
           if (!url) continue;
           try {
             if (r.type === "module") await import(url);
+            // Stylesheets (fonts of a dashboard) as a link – as a script the browser refused them with an error.
+            else if (r.type === "css") {
+              if (!document.querySelector('link[rel="stylesheet"][href="' + url.replace(/"/g, '\\"') + '"]')) {
+                const ln = document.createElement("link"); ln.rel = "stylesheet"; ln.href = url; document.head.appendChild(ln);
+              }
+            }
             else await new Promise((ok) => { const sc = document.createElement("script"); sc.src = url; sc.onload = sc.onerror = ok; document.head.appendChild(sc); });
           } catch (e) { /* eine fehlende Datei soll den Vergleich nicht verhindern */ }
         }

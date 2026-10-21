@@ -5889,6 +5889,14 @@ class CasoraPanel extends HTMLElement {
     ACCENT_THEME = (hass.selectedTheme && hass.selectedTheme.theme)
       || (hass.themes && (hass.themes.theme || hass.themes.default_theme)) || "";
     this._syncLight();
+    // HA switched light/dark: the preview's day/night follows, as before the preview had its own mode; the
+    // switch above it decides until the next change in HA.
+    const haDark = !!(hass.themes && hass.themes.darkMode);
+    if (this._haDarkSeen !== undefined && this._haDarkSeen !== haDark && this._built && !!this._miniDark !== haDark) {
+      const seg = this.shadowRoot && this.shadowRoot.querySelector('#modeseg [data-mode="' + (haDark ? "night" : "day") + '"]');
+      if (seg) seg.click(); else this._miniDark = haDark;
+    }
+    this._haDarkSeen = haDark;
     if (hass.entities !== pulseReg) {
       pulseReg = hass.entities;
       PULSE_HERE = Object.values(pulseReg || {}).some((e) => e && e.platform === "pulse");
