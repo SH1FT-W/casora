@@ -44,6 +44,19 @@ rows.length = 0;
 contacts(states, ent('binary_sensor.door_a'), {}, hass, {});
 assert.deepEqual(rows.sort(), ['binary_sensor.door_a', 'binary_sensor.win_a', 'binary_sensor.win_b'], 'no group: the whole house');
 
+// 2b. Title and width: a windows-only group says „Fenster“; one group spans the full width.
+for (const k of ['casora_popup_contacts', 'casora_badge_security']) {
+  const title = fn(T[k].tap_action.casora_popup.title);
+  assert.equal(title(states, ent('binary_sensor.windows_room_a'), {}, hass, {}), 'Fenster', k + ': windows only');
+  assert.equal(title(states, ent('binary_sensor.door_a'), {}, hass, {}), 'Türen & Fenster', k + ': whole house');
+}
+let stdOpts = null;
+window._casoraStd = (ui, o) => { stdOpts = o; return ui; };
+contacts(states, ent('binary_sensor.windows_room_a'), {}, hass, {});
+assert.deepEqual(stdOpts.full, ['grp1'], 'one group: full width');
+contacts(states, ent('binary_sensor.door_a'), {}, hass, {});
+assert.equal(stdOpts.full, undefined, 'doors and windows: two columns as before');
+
 // 3. Home counts every door and window; a room only what it lists.
 let seen = null;
 window.casoraSecuritySummary = (sec) => { seen = sec; return { text: '', parts: [] }; };
