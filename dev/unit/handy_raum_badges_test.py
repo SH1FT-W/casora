@@ -95,6 +95,20 @@ check(got.get("room_arbeitszimmer", {}).get("vars", {}).get("presence_entity_1")
 check("room_bad" not in got, "Raum ohne Handy-Abschnitt fehlt")
 check(not any(v.get("name") == "Home" for v in got.values()), "Übersicht ist keine Raumseite")
 
+print("Overview room for the start page")
+home = pb.home_badges(desktop)
+check(home == {"show_scenes": True, "temp_sensor_1": "sensor.beispiel_aussen"}, f"home: {home}")
+hidden = {"views": [view("home", "Home", {"show_energy": False, "casora_badge_users": {"media": ["u1"]},
+                                          "image": "/x.webp"}, [])] + desktop["views"][1:]}
+check(pb.home_badges(hidden) == {"show_energy": False, "casora_badge_users": {"media": ["u1"]}},
+      "hidden badge and 'Who sees this?' come along, pictures do not")
+first = {"views": desktop["views"][1:]}
+check((pb.home_badges(first) or {}).get("energy_power_entity") == "sensor.beispiel_kueche_leistung",
+      "without a home view: the first room")
+check(pb.home_badges({"views": []}) is None, "no desktop rooms: None")
+plain = {"views": [{"path": "home", "cards": [{"type": "markdown"}, {}, {}]}]}
+check(pb.home_badges(plain) is None, "first view is no Casora room: None")
+
 print("Grenzfälle")
 check(pb.desktop_url_of("qa-haus-mobile") == "qa-haus", "Desktop-URL")
 check(pb.desktop_url_of("dashboard-beispiel_mobile") == "dashboard-beispiel", "Desktop-URL mit _mobile")

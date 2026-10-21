@@ -1658,8 +1658,10 @@ window.casoraMenuGlass = {
 
 (function () {
   if (window._casoraEnergyOn) return;
-  window._casoraEnergyOn = function (V) {
+  window._casoraEnergyOn = function (V, user) {
     if (!V || V.show_energy === false) return false;
+    // "Who sees this?" of the energy badge – the templates ask this function instead of casoraSeen.
+    if (window.casoraSeen && window.casoraSeen(V, 'energy', user, true) === false) return false;
     if (V.energy_power_entity) return true;
     // Ohne Raumsensor: Summe mehrerer Geräte (energy_entities).
     if (Array.isArray(V.energy_entities) && V.energy_entities.some(Boolean)) return true;
@@ -13148,10 +13150,17 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   }
   function hassOf() { var ha = document.querySelector('home-assistant'); return ha && ha.hass; }
   function readLS(u) {
-    try { var r = JSON.parse(localStorage.getItem(LS + u) || 'null'); return r && typeof r === 'object' ? { rooms: r, at: 0 } : null; }
+    try {
+      var r = JSON.parse(localStorage.getItem(LS + u) || 'null');
+      var h = JSON.parse(localStorage.getItem(LS + 'home.' + u) || 'null');
+      return r && typeof r === 'object' ? { rooms: r, home: h && typeof h === 'object' ? h : null, at: 0 } : null;
+    }
     catch (e) { return null; }
   }
-  function writeLS(u, rooms) { try { localStorage.setItem(LS + u, JSON.stringify(rooms)); } catch (e) {} }
+  function writeLS(u, rooms, home) {
+    try { localStorage.setItem(LS + u, JSON.stringify(rooms)); localStorage.setItem(LS + 'home.' + u, JSON.stringify(home || null)); }
+    catch (e) {}
+  }
 
   function subscribe(h) {
     if (subscribed || !h || !h.connection || typeof h.connection.subscribeEvents !== 'function') return;
@@ -13173,10 +13182,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     subscribe(h);
     Promise.resolve(h.callWS({ type: 'casora/phone_room_badges', url_path: u })).then(function (r) {
       var rooms = (r && r.rooms && typeof r.rooms === 'object') ? r.rooms : {};
-      var was = JSON.stringify((cache[u] || {}).rooms || null);
-      cache[u] = { rooms: rooms, at: Date.now() };
-      writeLS(u, rooms);
-      if (was !== JSON.stringify(rooms) && window._casoraFilter && window._casoraFilter.bump) window._casoraFilter.bump();
+      // Overview room (older server: none) – the badge row of the start page follows it.
+      var home = (r && r.home && typeof r.home === 'object') ? r.home : null;
+      var was = JSON.stringify([(cache[u] || {}).rooms || null, (cache[u] || {}).home || null]);
+      cache[u] = { rooms: rooms, home: home, at: Date.now() };
+      writeLS(u, rooms, home);
+      if (was !== JSON.stringify([rooms, home]) && window._casoraFilter && window._casoraFilter.bump) window._casoraFilter.bump();
     }, function () {
       // Älterer Server ohne den Befehl: beim room_chips-Auszug bleiben, nicht dauernd fragen.
       cache[u] = cache[u] || { rooms: null };
@@ -13210,12 +13221,19 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       if (!e && !chip) return null;
       return merge(e ? (e.vars || {}) : null, chip, e ? e.name : null);
     },
+    // Variables of the desktop's overview room for the start page's badge row
+    // (casora_mobile_filter_badges: "hidden" and "Who sees this?" as on the desktop), or null.
+    home: function () {
+      var u = urlNow();
+      ensure(u);
+      return u && cache[u] ? cache[u].home || null : null;
+    },
     refresh: function () { var u = urlNow(); if (u) load(u); },
     // Was der Server liefert (rooms aus casora/phone_room_badges), z. B. für Prüfungen ohne Speichern.
-    prime: function (rooms) {
+    prime: function (rooms, home) {
       var u = urlNow();
       if (!u) return;
-      cache[u] = { rooms: rooms || {}, at: Date.now() };
+      cache[u] = { rooms: rooms || {}, home: home || null, at: Date.now() };
       if (window._casoraFilter && window._casoraFilter.bump) window._casoraFilter.bump();
     },
   };

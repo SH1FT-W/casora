@@ -5726,7 +5726,7 @@
        "type": "custom:button-card",
        "variables": {
         "cameras": "[[[ return variables.security_cameras || [] ]]]",
-        "enabled": true,
+        "enabled": "[[[ const _hv = variables.casora_hv; return !_hv || (window.casoraSeen?window.casoraSeen(_hv,'security',user,_hv.show_security):_hv.show_security)!==false ]]]",
         "entities": "[[[ return [1,2,3,4,5,6,7,8].map((i) => variables['security_entity_' + i]).filter(Boolean) ]]]",
         "lock_entity": "[[[ return variables.security_lock_entity || variables.lock_entity || (variables.security_locks || [])[0] || null ]]]",
         "lock_entity_2": "[[[ return variables.security_lock_entity_2 || variables.lock_entity_2 || (variables.security_locks || [])[1] || null ]]]",
@@ -5748,7 +5748,7 @@
        "variables": {
         "climate_entity": "[[[ return variables.climate_entity_1 || variables.climate_entity ]]]",
         "climate_entity_2": "[[[ return variables.climate_entity_2 ]]]",
-        "enabled": true,
+        "enabled": "[[[ const _hv = variables.casora_hv; return !_hv || (window.casoraSeen?window.casoraSeen(_hv,'climate',user,_hv.show_climate):_hv.show_climate)!==false ]]]",
         "humidity_sensor": "[[[ return variables.humidity_sensor ]]]",
         "quality_sensor": "[[[ return variables.quality_sensor ]]]",
         "temp_sensor": "[[[ return variables.temp_sensor_1 || variables.temp_sensor ]]]",
@@ -5771,7 +5771,7 @@
        "template": "casora_badge_light_group",
        "type": "custom:button-card",
        "variables": {
-        "enabled": true,
+        "enabled": "[[[ const _hv = variables.casora_hv; return !_hv || (window.casoraSeen?window.casoraSeen(_hv,'lights',user,_hv.show_lights):_hv.show_lights)!==false ]]]",
         "entity_1": "[[[ return variables.light_entity_1 ]]]",
         "entity_2": "[[[ return variables.light_entity_2 ]]]",
         "entity_3": "[[[ return variables.light_entity_3 ]]]",
@@ -5796,7 +5796,7 @@
        "template": "casora_badge_presence_group",
        "type": "custom:button-card",
        "variables": {
-        "enabled": true,
+        "enabled": "[[[ const _hv = variables.casora_hv; return !_hv || (window.casoraSeen?window.casoraSeen(_hv,'people',user,_hv.show_people):_hv.show_people)!==false ]]]",
         "entity_1": "[[[ return variables.presence_entity_1 ]]]",
         "entity_2": "[[[ return variables.presence_entity_2 ]]]",
         "entity_3": "[[[ return variables.presence_entity_3 ]]]",
@@ -5814,7 +5814,7 @@
        "template": "casora_badge_energy_group",
        "type": "custom:button-card",
        "variables": {
-        "enabled": true,
+        "enabled": "[[[ const _hv = variables.casora_hv; return !_hv || (window.casoraSeen?window.casoraSeen(_hv,'energy',user,_hv.show_energy):_hv.show_energy)!==false ]]]",
         "home_power_entity": "[[[ return variables.home_power_entity || variables.power_entity ]]]",
         "power_entity": "[[[ return variables.power_entity ]]]",
         "row_entity": "input_select.casora_mobile_filter",
@@ -5831,7 +5831,7 @@
        "template": "casora_badge_media_group",
        "type": "custom:button-card",
        "variables": {
-        "enabled": true,
+        "enabled": "[[[ const _hv = variables.casora_hv; return !_hv || (window.casoraSeen?window.casoraSeen(_hv,'media',user,_hv.show_media):_hv.show_media)!==false ]]]",
         "entity_1": "[[[ return variables.media_player_1 || variables.media_entity_1 ]]]",
         "entity_10": "[[[ return variables.media_player_7 || variables.media_entity_7 ]]]",
         "entity_11": "[[[ return variables.media_player_8 || variables.media_entity_8 ]]]",
@@ -6067,7 +6067,8 @@
    "security_summary": null,
    "security_title": null,
    "media_title": null,
-   "people_title": null
+   "people_title": null,
+   "casora_hv": "[[[\n  // Badge variables of the desktop's overview room (casora-core.js, casoraPhoneRoom.home): \"hidden\" and\n  // \"Who sees this?\" as on the desktop. null (older server, no desktop dashboard): every badge as before.\n  const f = states['input_select.casora_mobile_filter']?.state;\n  return window.casoraPhoneRoom && window.casoraPhoneRoom.home ? window.casoraPhoneRoom.home() : null;\n]]]\n"
   }
  },
  "casora_mobile_header": {
@@ -7521,7 +7522,7 @@
        "template": "casora_badge_energy_group",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; \n  return window._casoraEnergyOn\n    ? window._casoraEnergyOn(_rv)\n    : ((window.casoraSeen?window.casoraSeen(_rv,'energy',user,_rv.show_energy):_rv.show_energy)!==false && (!!_rv.energy_power_entity || (Array.isArray(_rv.energy_entities) && _rv.energy_entities.some(Boolean))));\n]]]\n",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; \n  return window._casoraEnergyOn\n    ? window._casoraEnergyOn(_rv, user)\n    : ((window.casoraSeen?window.casoraSeen(_rv,'energy',user,_rv.show_energy):_rv.show_energy)!==false && (!!_rv.energy_power_entity || (Array.isArray(_rv.energy_entities) && _rv.energy_entities.some(Boolean))));\n]]]\n",
         "entity_cost_month": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_cost_month ]]]",
         "entity_cost_today": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_cost_today ]]]",
         "entity_power": "[[[ const _rv = variables.casora_rv || {}; return (Array.isArray(_rv.energy_entities) && _rv.energy_entities.some(Boolean)) ? undefined : _rv.energy_power_entity ]]]",
@@ -7925,7 +7926,7 @@
        "variables": {
         "color": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_color_1 ]]]",
         "cost_entity": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_cost_1 ]]]",
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return (window._casoraEnergyOn ? window._casoraEnergyOn(_rv) : !!_rv.energy_power_entity) && !!_rv.energy_entity_1 ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return (window._casoraEnergyOn ? window._casoraEnergyOn(_rv, user) : !!_rv.energy_power_entity) && !!_rv.energy_entity_1 ]]]",
         "energy_focus": "[[[ const _rv = variables.casora_rv || {}; return window._casoraEnergyFocus ? window._casoraEnergyFocus.detect(hass, _rv, 1) : null ]]]",
         "energy_focus_entity": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_entity_1 ]]]",
         "energy_peers": "[[[ const _rv = variables.casora_rv || {}; return window._casoraEnergyFocus && _rv.energy_entity_1 ? window._casoraEnergyFocus.peers(hass, _rv) : null ]]]",
@@ -7947,7 +7948,7 @@
        "variables": {
         "color": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_color_2 ]]]",
         "cost_entity": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_cost_2 ]]]",
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return (window._casoraEnergyOn ? window._casoraEnergyOn(_rv) : !!_rv.energy_power_entity) && !!_rv.energy_entity_2 ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return (window._casoraEnergyOn ? window._casoraEnergyOn(_rv, user) : !!_rv.energy_power_entity) && !!_rv.energy_entity_2 ]]]",
         "energy_focus": "[[[ const _rv = variables.casora_rv || {}; return window._casoraEnergyFocus ? window._casoraEnergyFocus.detect(hass, _rv, 2) : null ]]]",
         "energy_focus_entity": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_entity_2 ]]]",
         "energy_peers": "[[[ const _rv = variables.casora_rv || {}; return window._casoraEnergyFocus && _rv.energy_entity_2 ? window._casoraEnergyFocus.peers(hass, _rv) : null ]]]",
@@ -7969,7 +7970,7 @@
        "variables": {
         "color": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_color_3 ]]]",
         "cost_entity": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_cost_3 ]]]",
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return (window._casoraEnergyOn ? window._casoraEnergyOn(_rv) : !!_rv.energy_power_entity) && !!_rv.energy_entity_3 ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return (window._casoraEnergyOn ? window._casoraEnergyOn(_rv, user) : !!_rv.energy_power_entity) && !!_rv.energy_entity_3 ]]]",
         "energy_focus": "[[[ const _rv = variables.casora_rv || {}; return window._casoraEnergyFocus ? window._casoraEnergyFocus.detect(hass, _rv, 3) : null ]]]",
         "energy_focus_entity": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_entity_3 ]]]",
         "energy_peers": "[[[ const _rv = variables.casora_rv || {}; return window._casoraEnergyFocus && _rv.energy_entity_3 ? window._casoraEnergyFocus.peers(hass, _rv) : null ]]]",
@@ -7991,7 +7992,7 @@
        "variables": {
         "color": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_color_4 ]]]",
         "cost_entity": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_cost_4 ]]]",
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return (window._casoraEnergyOn ? window._casoraEnergyOn(_rv) : !!_rv.energy_power_entity) && !!_rv.energy_entity_4 ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return (window._casoraEnergyOn ? window._casoraEnergyOn(_rv, user) : !!_rv.energy_power_entity) && !!_rv.energy_entity_4 ]]]",
         "energy_focus": "[[[ const _rv = variables.casora_rv || {}; return window._casoraEnergyFocus ? window._casoraEnergyFocus.detect(hass, _rv, 4) : null ]]]",
         "energy_focus_entity": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_entity_4 ]]]",
         "energy_peers": "[[[ const _rv = variables.casora_rv || {}; return window._casoraEnergyFocus && _rv.energy_entity_4 ? window._casoraEnergyFocus.peers(hass, _rv) : null ]]]",
@@ -8013,7 +8014,7 @@
        "variables": {
         "color": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_color_5 ]]]",
         "cost_entity": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_cost_5 ]]]",
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return (window._casoraEnergyOn ? window._casoraEnergyOn(_rv) : !!_rv.energy_power_entity) && !!_rv.energy_entity_5 ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return (window._casoraEnergyOn ? window._casoraEnergyOn(_rv, user) : !!_rv.energy_power_entity) && !!_rv.energy_entity_5 ]]]",
         "energy_focus": "[[[ const _rv = variables.casora_rv || {}; return window._casoraEnergyFocus ? window._casoraEnergyFocus.detect(hass, _rv, 5) : null ]]]",
         "energy_focus_entity": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_entity_5 ]]]",
         "energy_peers": "[[[ const _rv = variables.casora_rv || {}; return window._casoraEnergyFocus && _rv.energy_entity_5 ? window._casoraEnergyFocus.peers(hass, _rv) : null ]]]",
@@ -8035,7 +8036,7 @@
        "variables": {
         "color": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_color_6 ]]]",
         "cost_entity": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_cost_6 ]]]",
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return (window._casoraEnergyOn ? window._casoraEnergyOn(_rv) : !!_rv.energy_power_entity) && !!_rv.energy_entity_6 ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return (window._casoraEnergyOn ? window._casoraEnergyOn(_rv, user) : !!_rv.energy_power_entity) && !!_rv.energy_entity_6 ]]]",
         "energy_focus": "[[[ const _rv = variables.casora_rv || {}; return window._casoraEnergyFocus ? window._casoraEnergyFocus.detect(hass, _rv, 6) : null ]]]",
         "energy_focus_entity": "[[[ const _rv = variables.casora_rv || {}; return _rv.energy_entity_6 ]]]",
         "energy_peers": "[[[ const _rv = variables.casora_rv || {}; return window._casoraEnergyFocus && _rv.energy_entity_6 ? window._casoraEnergyFocus.peers(hass, _rv) : null ]]]",
@@ -13095,7 +13096,7 @@
        "template": "casora_badge_energy_group",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[\n  return window._casoraEnergyOn\n    ? window._casoraEnergyOn(variables)\n    : ((window.casoraSeen?window.casoraSeen(variables,'energy',user,variables.show_energy):variables.show_energy)!==false && (!!variables.energy_power_entity || (Array.isArray(variables.energy_entities) && variables.energy_entities.some(Boolean))));\n]]]\n",
+        "enabled": "[[[\n  return window._casoraEnergyOn\n    ? window._casoraEnergyOn(variables, user)\n    : ((window.casoraSeen?window.casoraSeen(variables,'energy',user,variables.show_energy):variables.show_energy)!==false && (!!variables.energy_power_entity || (Array.isArray(variables.energy_entities) && variables.energy_entities.some(Boolean))));\n]]]\n",
         "entity_cost_month": "[[[ return variables.energy_cost_month ]]]",
         "entity_cost_today": "[[[ return variables.energy_cost_today ]]]",
         "entity_power": "[[[ return (Array.isArray(variables.energy_entities) && variables.energy_entities.some(Boolean)) ? undefined : variables.energy_power_entity ]]]",
@@ -13886,7 +13887,7 @@
        "variables": {
         "color": "[[[ return variables.energy_color_1 ]]]",
         "cost_entity": "[[[ return variables.energy_cost_1 ]]]",
-        "enabled": "[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables) : !!variables.energy_power_entity) && !!variables.energy_entity_1 ]]]",
+        "enabled": "[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables, user) : !!variables.energy_power_entity) && !!variables.energy_entity_1 ]]]",
         "energy_focus": "[[[ return window._casoraEnergyFocus ? window._casoraEnergyFocus.detect(hass, variables, 1) : null ]]]",
         "energy_focus_entity": "[[[ return variables.energy_entity_1 ]]]",
         "energy_peers": "[[[ return window._casoraEnergyFocus && variables.energy_entity_1 ? window._casoraEnergyFocus.peers(hass, variables) : null ]]]",
@@ -13908,7 +13909,7 @@
        "variables": {
         "color": "[[[ return variables.energy_color_2 ]]]",
         "cost_entity": "[[[ return variables.energy_cost_2 ]]]",
-        "enabled": "[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables) : !!variables.energy_power_entity) && !!variables.energy_entity_2 ]]]",
+        "enabled": "[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables, user) : !!variables.energy_power_entity) && !!variables.energy_entity_2 ]]]",
         "energy_focus": "[[[ return window._casoraEnergyFocus ? window._casoraEnergyFocus.detect(hass, variables, 2) : null ]]]",
         "energy_focus_entity": "[[[ return variables.energy_entity_2 ]]]",
         "energy_peers": "[[[ return window._casoraEnergyFocus && variables.energy_entity_2 ? window._casoraEnergyFocus.peers(hass, variables) : null ]]]",
@@ -13930,7 +13931,7 @@
        "variables": {
         "color": "[[[ return variables.energy_color_3 ]]]",
         "cost_entity": "[[[ return variables.energy_cost_3 ]]]",
-        "enabled": "[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables) : !!variables.energy_power_entity) && !!variables.energy_entity_3 ]]]",
+        "enabled": "[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables, user) : !!variables.energy_power_entity) && !!variables.energy_entity_3 ]]]",
         "energy_focus": "[[[ return window._casoraEnergyFocus ? window._casoraEnergyFocus.detect(hass, variables, 3) : null ]]]",
         "energy_focus_entity": "[[[ return variables.energy_entity_3 ]]]",
         "energy_peers": "[[[ return window._casoraEnergyFocus && variables.energy_entity_3 ? window._casoraEnergyFocus.peers(hass, variables) : null ]]]",
@@ -13952,7 +13953,7 @@
        "variables": {
         "color": "[[[ return variables.energy_color_4 ]]]",
         "cost_entity": "[[[ return variables.energy_cost_4 ]]]",
-        "enabled": "[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables) : !!variables.energy_power_entity) && !!variables.energy_entity_4 ]]]",
+        "enabled": "[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables, user) : !!variables.energy_power_entity) && !!variables.energy_entity_4 ]]]",
         "energy_focus": "[[[ return window._casoraEnergyFocus ? window._casoraEnergyFocus.detect(hass, variables, 4) : null ]]]",
         "energy_focus_entity": "[[[ return variables.energy_entity_4 ]]]",
         "energy_peers": "[[[ return window._casoraEnergyFocus && variables.energy_entity_4 ? window._casoraEnergyFocus.peers(hass, variables) : null ]]]",
@@ -13974,7 +13975,7 @@
        "variables": {
         "color": "[[[ return variables.energy_color_5 ]]]",
         "cost_entity": "[[[ return variables.energy_cost_5 ]]]",
-        "enabled": "[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables) : !!variables.energy_power_entity) && !!variables.energy_entity_5 ]]]",
+        "enabled": "[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables, user) : !!variables.energy_power_entity) && !!variables.energy_entity_5 ]]]",
         "energy_focus": "[[[ return window._casoraEnergyFocus ? window._casoraEnergyFocus.detect(hass, variables, 5) : null ]]]",
         "energy_focus_entity": "[[[ return variables.energy_entity_5 ]]]",
         "energy_peers": "[[[ return window._casoraEnergyFocus && variables.energy_entity_5 ? window._casoraEnergyFocus.peers(hass, variables) : null ]]]",
@@ -13996,7 +13997,7 @@
        "variables": {
         "color": "[[[ return variables.energy_color_6 ]]]",
         "cost_entity": "[[[ return variables.energy_cost_6 ]]]",
-        "enabled": "[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables) : !!variables.energy_power_entity) && !!variables.energy_entity_6 ]]]",
+        "enabled": "[[[ return (window._casoraEnergyOn ? window._casoraEnergyOn(variables, user) : !!variables.energy_power_entity) && !!variables.energy_entity_6 ]]]",
         "energy_focus": "[[[ return window._casoraEnergyFocus ? window._casoraEnergyFocus.detect(hass, variables, 6) : null ]]]",
         "energy_focus_entity": "[[[ return variables.energy_entity_6 ]]]",
         "energy_peers": "[[[ return window._casoraEnergyFocus && variables.energy_entity_6 ? window._casoraEnergyFocus.peers(hass, variables) : null ]]]",
@@ -14350,7 +14351,7 @@
       "max-width": "100%"
      },
      {
-      "margin-top": "[[[\n  if (window._casoraEnergyOn ? !window._casoraEnergyOn(variables) : ((window.casoraSeen?window.casoraSeen(variables,'energy',user,variables.show_energy):variables.show_energy)===false || !!!variables.energy_power_entity)) return '0';\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';\n  return states['input_select.casora_expanded_row']?.state === 'energy'\n    ? 'var(--casora-badge-subrow-gap-current, 6px)' : '0';\n]]]\n"
+      "margin-top": "[[[\n  if (window._casoraEnergyOn ? !window._casoraEnergyOn(variables, user) : ((window.casoraSeen?window.casoraSeen(variables,'energy',user,variables.show_energy):variables.show_energy)===false || !!!variables.energy_power_entity)) return '0';\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';\n  return states['input_select.casora_expanded_row']?.state === 'energy'\n    ? 'var(--casora-badge-subrow-gap-current, 6px)' : '0';\n]]]\n"
      },
      {
       "margin-bottom": 0
@@ -14365,13 +14366,13 @@
       "height": "auto !important"
      },
      {
-      "opacity": "[[[\n  if (window._casoraEnergyOn ? !window._casoraEnergyOn(variables) : ((window.casoraSeen?window.casoraSeen(variables,'energy',user,variables.show_energy):variables.show_energy)===false || !!!variables.energy_power_entity)) return 0;\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;\n  return states['input_select.casora_expanded_row']?.state === 'energy' ? 1 : 0;\n]]]\n"
+      "opacity": "[[[\n  if (window._casoraEnergyOn ? !window._casoraEnergyOn(variables, user) : ((window.casoraSeen?window.casoraSeen(variables,'energy',user,variables.show_energy):variables.show_energy)===false || !!!variables.energy_power_entity)) return 0;\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;\n  return states['input_select.casora_expanded_row']?.state === 'energy' ? 1 : 0;\n]]]\n"
      },
      {
-      "display": "[[[\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 'none';\n  if (window._casoraEnergyOn ? !window._casoraEnergyOn(variables) : ((window.casoraSeen?window.casoraSeen(variables,'energy',user,variables.show_energy):variables.show_energy)===false || !!!variables.energy_power_entity)) return 'none';\n  return 'block';\n]]]\n"
+      "display": "[[[\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 'none';\n  if (window._casoraEnergyOn ? !window._casoraEnergyOn(variables, user) : ((window.casoraSeen?window.casoraSeen(variables,'energy',user,variables.show_energy):variables.show_energy)===false || !!!variables.energy_power_entity)) return 'none';\n  return 'block';\n]]]\n"
      },
      {
-      "max-height": "[[[\n  if (window._casoraEnergyOn ? !window._casoraEnergyOn(variables) : ((window.casoraSeen?window.casoraSeen(variables,'energy',user,variables.show_energy):variables.show_energy)===false || !!!variables.energy_power_entity)) return '0';\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';\n  return states['input_select.casora_expanded_row']?.state === 'energy' ? '200px' : '0';\n]]]\n"
+      "max-height": "[[[\n  if (window._casoraEnergyOn ? !window._casoraEnergyOn(variables, user) : ((window.casoraSeen?window.casoraSeen(variables,'energy',user,variables.show_energy):variables.show_energy)===false || !!!variables.energy_power_entity)) return '0';\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return '0';\n  return states['input_select.casora_expanded_row']?.state === 'energy' ? '200px' : '0';\n]]]\n"
      },
      {
       "overflow-x": "auto"
@@ -14386,7 +14387,7 @@
       "overscroll-behavior-x": "contain"
      },
      {
-      "--casora-row-fade": "[[[\n  if (window._casoraEnergyOn ? !window._casoraEnergyOn(variables) : ((window.casoraSeen?window.casoraSeen(variables,'energy',user,variables.show_energy):variables.show_energy)===false || !!!variables.energy_power_entity)) return 0;\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;\n  return states['input_select.casora_expanded_row']?.state === 'energy' ? 1 : 0;\n]]]\n"
+      "--casora-row-fade": "[[[\n  if (window._casoraEnergyOn ? !window._casoraEnergyOn(variables, user) : ((window.casoraSeen?window.casoraSeen(variables,'energy',user,variables.show_energy):variables.show_energy)===false || !!!variables.energy_power_entity)) return 0;\n  if (states['input_boolean.casora_mobile_navigation']?.state === 'on') return 0;\n  return states['input_select.casora_expanded_row']?.state === 'energy' ? 1 : 0;\n]]]\n"
      },
      {
       "--casora-converge-energy": "[[[\n  const st = states['input_select.casora_expanded_row']?.state;\n  const token = st + '|' + (window.innerWidth || 0);\n  if (this._casoraCvEnergy !== token) {\n    this._casoraCvEnergy = token;\n    const rootEl = this.shadowRoot;\n    if (st === 'energy' && rootEl) {\n      const go = (r) => {\n        if (typeof window._casoraConverge === 'function') {\n          window._casoraConverge(rootEl, 'badges_energy', 'casora_badge_energy_group', r);\n        }\n      };\n        requestAnimationFrame(() => go(false));\n      setTimeout(() => go(true), 700);\n    }\n  }\n  return '0';\n]]]\n"

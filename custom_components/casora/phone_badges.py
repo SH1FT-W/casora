@@ -11,7 +11,8 @@ nur lesen – dieselben Daten liefert lovelace/config ohnehin, nur ohne die 2 MB
 
   casora/phone_room_badges {url_path: "<handy-dashboard>"}
     → {"desktop": "<desktop-url>" | None,
-       "rooms": {"room_<schlüssel>": {"name": "Küche", "path": "kueche", "vars": {...}}}}
+       "rooms": {"room_<schlüssel>": {"name": "Küche", "path": "kueche", "vars": {...}}},
+       "home": {...} | None}   # overview room, for the badge row of the phone's start page
 
 Der Schlüssel ist der Filterwert der Raumseite (wie phoneRoomKeys im Studio), die Zuordnung
 Raum ↔ Handy-Abschnitt wie linkPair im Studio: Name, dann Pfad, dann gemeinsame Kacheln.
@@ -213,6 +214,20 @@ def room_badges(desktop_cfg: dict, mobile_cfg: dict) -> dict[str, dict]:
     return out
 
 
+def home_badges(desktop_cfg: dict) -> dict | None:
+    """Badge variables of the overview room (home, else the first view) for the phone's start page.
+
+    Its badge row (casora_mobile_filter_badges) follows the desktop's "hidden" and "Who sees this?"
+    switches with these – the Studio does not copy them into the phone layout (issue: energy badge
+    stayed visible on the phone).
+    """
+    rooms = desktop_rooms(desktop_cfg)
+    room = next((r for r in rooms if r.get("path") == "home"), rooms[0] if rooms else None)
+    if not room or not room["is_room"]:
+        return None
+    return badge_vars(room["variables"])
+
+
 # ─── WebSocket ────────────────────────────────────────────────────────────────
 
 async def _load(hass, url_path: str, admin: bool = True) -> dict | None:
@@ -242,7 +257,7 @@ async def async_room_badges(hass, mobile_url: str, admin: bool = True) -> dict:
     desktop = await _load(hass, desk_url, admin)
     if not desktop or is_mobile(desktop):
         return empty
-    return {"desktop": desk_url, "rooms": room_badges(desktop, mobile)}
+    return {"desktop": desk_url, "rooms": room_badges(desktop, mobile), "home": home_badges(desktop)}
 
 
 # ─── Partner-Daten statt Partner-Dashboard (Leistung 1.3, Vorschlag A) ────────
