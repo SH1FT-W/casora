@@ -1,24 +1,24 @@
-// Studio → „Einstellungen“ (30.09.2026)
+// Studio → "Settings" (30.09.2026)
 //
-// Alles, was für alle Dashboards gilt, an einer Stelle: im Abschnitt „Casora“ ganz
-// unten in der Seitenleiste, über den Updates, mit Unterseiten. Zwei Speicher:
-//   • Haus & Geräte, Glocke & Meldungen, Neue Dashboards – casora/settings/*
-//     (Bereiche aus casora-panel-personal.js, window.CASORA_SETTINGS wie bisher)
-//   • KI, Außenwerte & Strompreis, Lüften – die Optionen der Integration
-//     (casora/options/*, options.py; dieselben wie HA → Casora → Konfigurieren)
-// Ein Entwurf für beide, ein „Speichern“; ungespeichert bleibt er bis zum Neuladen.
-// Updates brauchen keinen Zugang mehr (öffentliches Repo, update_source.py).
-// Handy: dieselben Unterseiten als Blatt, erreichbar in der Abschnittsliste.
+// Everything that applies to all dashboards in one place: in the "Casora" section at the
+// bottom of the sidebar, above the updates, with subpages. Two stores:
+//   • Home & Devices, Bell & Alerts, New Dashboards – casora/settings/*
+//     (sections from casora-panel-personal.js, window.CASORA_SETTINGS as before)
+//   • AI, Outdoor & Price, Ventilation – the integration's options
+//     (casora/options/*, options.py; the same as HA → Casora → Configure)
+// One draft for both, one "Save"; unsaved, it stays until a reload.
+// Updates no longer need access (public repo, update_source.py).
+// Phone: the same subpages as a sheet, reachable in the section list.
 (function () {
   const OPTIONS_PATH = "/config/integrations/integration/casora";
   const I = () => window.__casoraPanelInternals || {};
   const icon = (name) => (I().iconUrl ? I().iconUrl(name) : "");
-  // Icon-Farbe aus der zentralen Tabelle des Panels (STUDIO_ICON, casora-panel.js).
+  // Icon color from the panel's central table (STUDIO_ICON, casora-panel.js).
   const tint = (p) => (I().studioIcon ? I().studioIcon(p.tone) : "var(--ink)");
 
-  // Unterseiten: personal = Bereiche aus casora-panel-personal.js, sonst Optionen.
+  // Subpages: personal = sections from casora-panel-personal.js, otherwise options.
   const PAGES = [
-    // Design (Theme): gilt sofort für alle Dashboards, ohne „Einstellungen speichern“ (casora-panel-addons.js).
+    // Design (theme): applies to all dashboards right away, without "Save settings" (casora-panel-addons.js).
     { id: "design", label: "Design", icon: "desktop", tone: "set-design", look: true,
       lede: "How every Casora dashboard looks – the change applies right away." },
     { id: "home", label: "Home & Devices", icon: "home", tone: "set-home",
@@ -37,19 +37,19 @@
       lede: "Outdoor values and the electricity price for ventilation, heating and energy tips." },
     { id: "vent", label: "Ventilation", icon: "fan", tone: "set-vent",
       lede: "Push notifications when it is time to open or close the windows." },
-    // Live-Aktivitäten (live_activity.py): eigener Speicher casora/live/*, Seite in casora-panel-live.js.
+    // Live activities (live_activity.py): own store casora/live/*, page in casora-panel-live.js.
     { id: "live", label: "Live Activities", icon: "iphone", tone: "set-live", live: true,
       lede: "Washing machine, dryer, dishwasher, robot vacuum and 3D printer live on the phone's lock screen – progress, time left, done." },
-    // Tanken (1.2, tanken.py): eigener Speicher casora/tanken/* – der Schlüssel geht nie an den Browser.
+    // Fuel prices (1.2, tanken.py): own store casora/tanken/* – the key never goes to the browser.
     { id: "fuel", label: "Fuel prices", icon: "car", tone: "set-fuel", tanken: true,
       lede: "Gas stations nearby in the car popup: price, distance, open or closed." },
   ];
   const pageOf = (id) => PAGES.find((p) => p.id === id) || PAGES[0];
 
   const CSS = ".cs-wrap{padding:4px 0 28px}"
-    // Gleiche Maße wie der Kachel-Editor (Inspektor): Feldbeschriftung 13 px, Wert/Eingabe
-    // 15 px bei 38 px Feldhöhe, Gruppen mit dem Radius der Editor-Karten und 10 px Einzug.
-    // Geprüft von dev/qa/regress/r19_einstellungen_feldgroesse.mjs.
+    // Same sizes as the tile editor (inspector): field label 13 px, value/input
+    // 15 px at 38 px field height, groups with the radius of the editor cards and 10 px indent.
+    // Checked by dev/qa/regress/r19_einstellungen_feldgroesse.mjs.
     + ".cs-wrap .flist{border-radius:var(--r-group)}"
     + ".cs-wrap .frow{min-height:44px;padding:10px;font-size:var(--t-callout);letter-spacing:-0.01em}"
     + ".cs-wrap .frow+.frow::before{left:10px;right:10px}"
@@ -61,9 +61,9 @@
     + ".cs-note{margin:0 0 14px;padding:10px 12px;border-radius:var(--r-m);background:var(--casora-studio-link-tint, rgba(10,132,255,.16));font-size:var(--t-foot);line-height:1.4}"
     + ".cs-err{margin:0 0 14px;padding:10px 12px;border-radius:var(--r-m);background:rgba(255,69,58,.16);color:var(--ink);font-size:var(--t-foot);line-height:1.4}"
     + ".cs-err:empty{display:none}"
-    // Speicherleiste: schwebende, abgerundete Leiste in Inhaltsbreite (wie ein Menü/Toast:
-    // deckende Fläche, weicher Schatten), mit Abstand zum unteren Rand. Ohne Änderungen ist sie
-    // ausgeblendet; sie behält ihren Platz am Seitenende, damit der Inhalt nie verdeckt bleibt.
+    // Save bar: floating, rounded bar at content width (like a menu/toast:
+    // opaque surface, soft shadow), spaced from the bottom edge. Without changes it is
+    // hidden; it keeps its space at the end of the page so the content never stays covered.
     + ".cs-wrap:has(.cs-bar){padding-bottom:0}"
     + ".cs-bar{position:sticky;bottom:max(16px, calc(env(safe-area-inset-bottom, 0px) + 10px));z-index:3;box-sizing:border-box;"
     + "display:flex;align-items:center;gap:12px;min-height:56px;margin:24px 0 16px;padding:8px 8px 8px 20px;border-radius:22px;"
@@ -71,7 +71,7 @@
     + "-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);"
     + "box-shadow:var(--toast-rim, var(--casora-studio-toast-rim, 0 0 0 .5px rgba(255,255,255,0.10), 0 14px 34px rgba(0,0,0,0.42)));"
     + "transition:opacity .22s ease, transform .34s var(--casora-ease-enter, cubic-bezier(.2,.9,.3,1.12)), visibility 0s}"
-    // Hell liegt die Leiste weiß auf weißer Karte – ein tieferer, weicher Schatten hebt sie ab.
+    // In light mode the bar sits white on a white card – a deeper, soft shadow lifts it off.
     + ":host(.is-light) .cs-bar{box-shadow:var(--toast-rim, 0 0 0 .5px rgba(0,0,0,0.08)), 0 18px 40px -12px color-mix(in srgb, var(--ink, #3C2814) 28%, transparent), 0 2px 8px color-mix(in srgb, var(--ink, #3C2814) 8%, transparent)}"
     + ".cs-bar.cs-clean{opacity:0;visibility:hidden;pointer-events:none;transform:translateY(18px) scale(.98);"
     + "transition:opacity .18s ease, transform .22s ease, visibility 0s .22s}"
@@ -79,13 +79,13 @@
     + ".cs-bar span{flex:1 1 auto;display:flex;align-items:center;gap:9px;min-width:0;font-size:var(--t-callout);font-weight:500;color:var(--ink)}"
     + ".cs-bar span::before{content:'';flex:none;width:8px;height:8px;border-radius:50%;background:var(--casora-studio-done, var(--casora-color-blue, #0A84FF))}"
     + ".cs-bar button{flex:none;min-height:40px;padding:9px 20px;border-radius:999px;font-weight:600}"
-    // Schmal (Handy): Zustand oben, Knopf darunter über die ganze Breite – sonst lag der Knopf über
-    // „Ungespeicherte Änderungen“ (Nutzertest 5).
+    // Narrow (phone): state on top, button below across the full width – otherwise the button lay over
+    // "Unsaved changes" (user test 5).
     + "@media (max-width:480px){.cs-bar{flex-wrap:wrap;gap:8px;padding:12px 8px 8px}.cs-bar span{flex:1 1 100%;padding-left:10px}.cs-bar button{flex:1 1 100%}}"
     + ".cs-bar .cs-save:not(:disabled){background:var(--casora-studio-done, var(--casora-color-blue, #0A84FF));color:var(--casora-studio-on-done, #fff)}"
     + ".cs-area{width:100%;min-height:84px;box-sizing:border-box;resize:vertical;padding:9px 11px;border-radius:var(--r-s);border:none;"
     + "background:var(--casora-studio-chip, rgba(118,118,128,.18));color:inherit;font:inherit;font-size:var(--t-callout);line-height:1.4}"
-    // Zeitpläne: Modus, Wochentag und Uhrzeit nebeneinander, am Handy untereinander.
+    // Schedules: mode, weekday and time side by side, stacked on the phone.
     + ".cs-wrap .frow.cs-plan .casora-pctl>.combo{flex:1 1 150px}"
     + ".cs-num{display:flex;align-items:center;gap:8px}"
     + ".cs-num input{width:110px;padding:7px 12px;border-radius:var(--r-m);border:none;background:var(--field, var(--casora-studio-field, rgba(118,118,128,.18)));color:inherit;font:inherit;text-align:right}"
@@ -93,24 +93,24 @@
     + ".casora-pctl>button.ghost{padding:7px 13px;font-size:var(--t-foot)}"
     + ".frow .sw{margin-left:auto;flex:none}"
     + ".cs-empty{font-size:var(--t-foot);color:var(--ink-2)}"
-    // Seitenleiste
+    // Sidebar
     + ".sidehead.cu-sidehead small{display:block;margin-top:1px;font-size:var(--t-caption);font-weight:400;"
     + "color:var(--casora-studio-cap-sub, color-mix(in srgb, var(--ink) 48%, transparent))}"
     + ".sidelist .siderow .cs-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--casora-studio-warn, #ff9f0a)}"
-    // Hemma entfernen
+    // Remove Hemma
     + ".casora-pctl>button.cs-danger{background:var(--casora-studio-danger, #ff453a);color:#fff}"
     + ".chr-list{display:flex;flex-direction:column;gap:9px;margin:14px 0 2px;max-height:52vh;overflow:auto;text-align:left}"
     + ".chr-item{display:flex;align-items:flex-start;gap:10px;font-size:var(--t-foot);line-height:1.4}"
     + ".chr-item>i{flex:none;width:8px;height:8px;margin-top:6px;border-radius:50%;background:var(--casora-studio-danger, #ff453a)}"
     + ".chr-item.ok>i{background:var(--casora-studio-good, #34c759)}.chr-item.warn>i{background:var(--casora-studio-warn, #ff9f0a)}.chr-item.info>i{background:#8e8e93}"
     + ".chr-item>input{flex:none;width:16px;height:16px;margin:2px 0 0;accent-color:var(--casora-studio-danger, #ff453a);cursor:pointer}"
-    // Liste mit Ankreuz-Zeilen: Punkt mittig über dem 16-px-Kästchen, Texte fluchten.
+    // List with checkbox rows: dot centered over the 16 px box, texts aligned.
     + ".chr-mix .chr-item>i{margin-left:4px;margin-right:4px}"
     + ".chr-item label,.chr-item>div{flex:1 1 auto;min-width:0;cursor:inherit}"
     + ".chr-item b{display:block;font-weight:600}"
     + ".chr-more{display:block;margin:2px 0 0;padding:0;border:0;background:none;font:inherit;font-size:var(--t-foot);font-weight:600;color:var(--accent);cursor:pointer;text-align:left}"
     + ".chr-item span{display:block;color:var(--ink-2);font-size:var(--t-foot);overflow-wrap:anywhere;white-space:pre-line}"
-    // Bestätigung nach dem Neustart: Haken in Casora-Grün bzw. Hinweis in Orange über dem Titel
+    // Confirmation after the restart: check mark in Casora green or hint in orange above the title
     + ".askcard.chv .chv-mark{width:60px;height:60px;margin:0 auto 16px;border-radius:50%;display:grid;place-items:center}"
     + ".askstack.wide .askcard.chv .chv-mark{margin-left:0}"
     + ".chv-mark svg{width:34px;height:34px}"
@@ -128,7 +128,7 @@
     if (text != null) e.textContent = text;
     return e;
   };
-  // Pfad nur nach „/“ umbrechen, nie mitten im Datum (Wortverbinder um die Bindestriche).
+  // Break the path only after "/", never inside the date (word joiners around the hyphens).
   const pathText = (p) => String(p || "").replace(/-/g, "\u2060-\u2060").replace(/\//g, "/\u200b");
   const btn = (label, onTap, ghost) => {
     const b = el("button", ghost ? "ghost" : "", label);
@@ -137,12 +137,12 @@
     return b;
   };
   const clone = (x) => JSON.parse(JSON.stringify(x || {}));
-  // Wie options.clean_options: leere Felder fallen weg.
+  // Like options.clean_options: empty fields are dropped.
   const cleanOpts = (o) => {
     const out = {};
     Object.keys(o || {}).sort().forEach((k) => {
       const v = o[k];
-      // Beta-Versionen stehen unter Updates (casora-panel-updates.js); fehlt der Schlüssel, behält options.py ihn.
+      // Beta versions are under Updates (casora-panel-updates.js); if the key is missing, options.py keeps it.
       if (k === "beta_updates") return;
       if (v === undefined || v === null || v === "" || (Array.isArray(v) && !v.length)) return;
       out[k] = v;
@@ -172,10 +172,10 @@
     };
     const split = (self) => self.classList.contains("split") && !!self.$("sidesections");
 
-    // ── Daten ────────────────────────────────────────────────────────────────
+    // ── Data ─────────────────────────────────────────────────────────────────
     const settingsDirty = (cs) => !!cs.S && JSON.stringify(PERS().prune(cs.S) || {}) !== cs.S0;
     const optionsDirty = (cs) => !!cs.opt && JSON.stringify(cleanOpts(cs.O)) !== cs.O0;
-    // Tanken: Entwurf ohne Schlüssel; F.key steht nur da, wenn ein neuer eingetippt (oder "" = entfernen) wurde.
+    // Fuel prices: draft without the key; F.key is only there when a new one was typed (or "" = remove).
     const tankenDirty = (cs) => !!cs.tk && JSON.stringify(cs.F) !== cs.F0;
     const liveDirty = (self) => typeof self._csLiveDirty === "function" && self._csLiveDirty();
     P._csDirty = function () {
@@ -193,7 +193,7 @@
     const takeOptions = (cs, r) => {
       cs.opt = r;
       cs.O = clone(r.options);
-      delete cs.O.ki_auto;  // bis 1.0.2; seit 1.0.3 Zeitpläne je Funktion (ki_plan_*)
+      delete cs.O.ki_auto;  // up to 1.0.2; since 1.0.3 schedules per function (ki_plan_*)
       cs.O0 = JSON.stringify(cleanOpts(cs.O));
     };
     const takeSettings = (cs, data, stored) => {
@@ -203,7 +203,7 @@
 
     P._csLoad = async function () {
       const cs = this._cs = this._cs || {};
-      // Entwurf behalten; sonst höchstens einmal pro Minute neu holen. false = nichts neu.
+      // Keep the draft; otherwise refetch at most once a minute. false = nothing new.
       if (cs.loaded && (this._csDirty() || Date.now() - cs.at < 60000)) return false;
       const hass = this._hass;
       let stored = false, data = {};
@@ -212,11 +212,11 @@
         const r = await hass.callWS({ type: "casora/settings/get" });
         stored = !!r.stored;
         data = r.settings || {};
-        // Preis aus HAs Energie-Dashboard: Hinweis am leeren Strompreis-Feld.
+        // Price from HA's energy dashboard: hint at the empty electricity price field.
         cs.energyPrice = { kwh: r.energy_price_kwh, entity: r.energy_price_entity || null };
       } catch (e) {
-        // Ältere Integration: nur Datei. Jeder andere Lesefehler sperrt das Speichern – settings/set
-        // ersetzt alles, ein leeres Formular hätte sonst alle Einstellungen gelöscht.
+        // Older integration: file only. Any other read error blocks saving – settings/set
+        // replaces everything, an empty form would otherwise have deleted all settings.
         if (!(e && e.code === "unknown_command")) cs.readErr = (e && e.message) || String(e);
       }
       cs.fromFile = false;
@@ -261,8 +261,8 @@
       try {
         if (settingsDirty(cs)) {
           if (cs.readErr) throw new Error(t("The settings could not be read. Reload the page, then try again."));
-          // Frisch lesen und nur die hier geänderten Bereiche übernehmen: was inzwischen woanders
-          // gespeichert wurde (Umzug, Willkommen, anderer Browser), bleibt erhalten.
+          // Read fresh and only take over the sections changed here: what was saved elsewhere
+          // in the meantime (migration, welcome, another browser) is kept.
           let fresh = null;
           try { fresh = (await this._hass.callWS({ type: "casora/settings/get" })).settings || {}; }
           catch (e) { if (!(e && e.code === "unknown_command")) throw e; }
@@ -280,7 +280,7 @@
           window.CASORA_SETTINGS = (r && r.settings) || clean;
           takeSettings(cs, window.CASORA_SETTINGS, true);
           cs.fromFile = false;
-          // Die Hinweise in den Studio-Seiten (Szenen …) lesen neu.
+          // The hints in the Studio pages (scenes …) read again.
           this._casoraSettingsRead = null;
           this.shadowRoot.querySelectorAll(".casora-plink").forEach((x) => x.remove());
           done.push(t("Saved – reload open dashboards to apply"));
@@ -308,7 +308,7 @@
       if (done.length && !cs.err) this._status(done[done.length - 1], "ok");
     };
 
-    // ── Bausteine der Optionen ───────────────────────────────────────────────
+    // ── Option building blocks ───────────────────────────────────────────────
     const ctlRow = (self, list, title, sub, controls) => {
       const r = self._flowRow(list, { title, sub });
       r.row.classList.add("casora-prow");
@@ -355,9 +355,9 @@
       if (on) cur.push(id);
       if (cur.length) cs.O[key] = cur; else delete cs.O[key];
     };
-    // ── KI-Zeitpläne (1.0.3) ─────────────────────────────────────────────────
-    // Je Funktion: Aus (Standard, nicht gespeichert), Automatisch (bisheriger Termin) oder
-    // eigene Zeit („sun 18:00“; tägliche Funktionen nur „18:00“). Wie ki.py PLAN_AUTO.
+    // ── AI schedules (1.0.3) ─────────────────────────────────────────────────
+    // Per function: off (default, not stored), auto (previous slot) or
+    // own time ("sun 18:00"; daily functions only "18:00"). Like ki.py PLAN_AUTO.
     const PLAN_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
     const PLANS = [
       { key: "ki_plan_energie", title: "Energy coach", auto: "sun 18:00" },
@@ -372,7 +372,7 @@
       return m ? { day: m[1] || null, time: m[2].padStart(2, "0") + ":" + m[3] } : null;
     };
     const dayName = (self, d) => new Intl.DateTimeFormat(planLang(self), { weekday: "long" })
-      .format(new Date(2026, 0, 5 + PLAN_DAYS.indexOf(d)));  // 05.01.2026 war ein Montag
+      .format(new Date(2026, 0, 5 + PLAN_DAYS.indexOf(d)));  // 05.01.2026 was a Monday
     const timeName = (self, hm) => {
       const [h, m] = hm.split(":").map(Number);
       return new Intl.DateTimeFormat(planLang(self), { hour: "numeric", minute: "2-digit" }).format(new Date(2026, 0, 5, h, m));
@@ -475,11 +475,11 @@
           footer: t("For the energy analysis, the solar tip and costs in device popups. Between 0 and 2 €/kWh. Empty: the grid price from the Energy dashboard.") });
         const wrap = el("div", "cs-num");
         const inp = el("input");
-        // Text statt number: „0,30“ mit Komma geht so in jedem Browser.
+        // Text instead of number: "0,30" with a comma works this way in every browser.
         inp.type = "text";
         inp.inputMode = "decimal";
-        // Leeres Feld: der Netzbezugspreis aus HAs Energie-Dashboard gilt (fester Wert oder
-        // aktueller Zustand der Preis-Entität) und steht als Platzhalter und Hinweis da.
+        // Empty field: the grid import price from HA's energy dashboard applies (fixed value or
+        // current state of the price entity) and shows as placeholder and hint.
         const ep = cs.energyPrice || {};
         let eKwh = typeof ep.kwh === "number" ? ep.kwh : null;
         const eSt = ep.entity && this._hass && this._hass.states[ep.entity];
@@ -511,7 +511,7 @@
         wrap.append(inp, el("span", "", "€/kWh"));
         pr.row.appendChild(wrap);
       } else if (page === "update_push") {
-        // Push bei neuen Casora-Versionen (update_push.py): nur Handys (mobile_app), leer = aus.
+        // Push on new Casora versions (update_push.py): phones only (mobile_app), empty = off.
         const known = (cs.opt.notify_services || []).filter((x) => /^notify\.mobile_app_/.test(x));
         (O.update_push || []).forEach((x) => { if (!known.includes(x)) known.push(x); });
         const g = this._flowGroup(host, { header: t("New Casora versions"),
@@ -535,7 +535,7 @@
       }
     };
 
-    // ── Tanken (tanken.py) ───────────────────────────────────────────────────
+    // ── Fuel prices (tanken.py) ──────────────────────────────────────────────
     const FUEL_LABELS = { e5: "Super E5", e10: "Super E10", diesel: "Diesel", off: "Off" };
     const tankenTestText = (self, r) => {
       if (r.ok) {
@@ -567,7 +567,7 @@
           sub: t("Found: {n} gas stations with prices").replace("{n}", tk.integration.stations), detail: t("In use") });
         r.row.classList.add("cs-tk-source");
       } else {
-        // 1 · Schlüssel
+        // 1 · Key
         const g = this._flowGroup(host, { header: t("1 · Key"),
           footer: t("The key stays in Home Assistant and never goes to the browser. Casora asks at most every 10 minutes, within at most 25 km.") });
         const r1 = this._flowRow(g, { title: t("Free Tankerkönig key"), sub: t("Arrives by e-mail after a short check") });
@@ -581,7 +581,7 @@
         r2.row.classList.add("casora-prow");
         const box = el("div", "casora-pctl");
         const inp = el("input", "fin cs-tk-key");
-        // Maskiert wie ein Kennwort; der gespeicherte Schlüssel kommt nie zurück ins Formular.
+        // Masked like a password; the stored key never comes back into the form.
         inp.type = "password";
         inp.autocomplete = "off";
         inp.spellcheck = false;
@@ -599,7 +599,7 @@
         box.appendChild(inp);
         if (tk.key_set) box.appendChild(btn(t("Remove"), () => { F.key = ""; this._csRepaint(); }, true));
         r2.row.appendChild(box);
-        // Test-Abruf: mit dem eingetippten Schlüssel, sonst mit dem gespeicherten.
+        // Test fetch: with the typed key, otherwise with the stored one.
         const r3 = this._flowRow(g, { title: t("Test request"), sub: cs.tkTest ? tankenTestText(this, cs.tkTest) : t("Asks Tankerkönig once around your home.") });
         r3.row.classList.add("casora-prow", "cs-tk-test");
         const sub3 = r3.row.querySelector(".rtext > span");
@@ -620,7 +620,7 @@
         const c3 = el("div", "casora-pctl");
         c3.appendChild(tb);
         r3.row.appendChild(c3);
-        // 2 · Umkreis
+        // 2 · Radius
         const g2 = this._flowGroup(host, { header: t("2 · Area"),
           footer: t("Around home, or around the car while it is out and about (if it reports its location). Between 1 and 25 km.") });
         const rr = this._flowRow(g2, { title: t("Radius"), sub: t("Around home") });
@@ -644,7 +644,7 @@
             : t("Last request {t} failed: {x}").replace("{t}", when).replace("{x}", st.error || "")));
         }
       }
-      // Kraftstoff je Auto
+      // Fuel per car
       const g3 = this._flowGroup(host, { header: t("Fuel per car"),
         footer: (tk.cars || []).length ? t("Off: no fuel row for this car. Electric cars don't appear here.")
           : t("No car with a fuel level found in Home Assistant.") });
@@ -663,7 +663,7 @@
       host.appendChild(el("p", "cs-lede", t("Data: Tankerkönig, CC BY 4.0")));
     };
 
-    // Inhalt einer Unterseite (Seite am Desktop, Blatt am Handy).
+    // Content of a subpage (page on desktop, sheet on the phone).
     P._csFill = function (host, pageId, rerender) {
       css(this);
       const cs = this._cs;
@@ -698,16 +698,16 @@
           this._casoraPersonalGroups(host, cs.S, page.personal, rerender);
         }
         if (page.id === "dashboards") this._csHemmaGroup(host);
-        // Optionen der Integration auf dieser Seite: Push bei neuen Casora-Versionen.
+        // Integration options on this page: push on new Casora versions.
         if (page.id === "alerts" && cs.opt) this._csFillOptions(host, "update_push");
       } else {
         this._csFillOptions(host, page.id);
       }
     };
 
-    // Speichern-Leiste und Punkt in der Seitenleiste nachziehen.
-    // „Einstellungen speichern“ statt „Speichern“: „Fertig“ speichert das Dashboard, dieser Knopf nur
-    // die Einstellungen für alle Dashboards (Nutzertest: drei gleich klingende Speicherwege).
+    // Update the save bar and the dot in the sidebar.
+    // "Save settings" instead of "Save": "Done" saves the dashboard, this button only
+    // the settings for all dashboards (user test: three similar-sounding ways to save).
     P._csBar = function () {
       const dirty = this._csDirty();
       const cs = this._cs || {};
@@ -718,7 +718,7 @@
       this.shadowRoot.querySelectorAll(".cs-state").forEach((s) => {
         s.textContent = dirty ? t("Unsaved changes") : t("Applies to all dashboards");
       });
-      // Ohne Änderungen keine Leiste; beim Speichern bleibt sie bis zum Ende stehen.
+      // No bar without changes; while saving it stays until the end.
       this.shadowRoot.querySelectorAll(".cs-bar").forEach((b) => {
         const hide = !dirty && !cs.busy;
         b.classList.toggle("cs-clean", hide);
@@ -733,16 +733,16 @@
     };
 
     P._csRepaint = function () {
-      // Seite offen (Desktop mit Seitenleiste oder Handy im neuen Studio, dort ohne split): neu zeichnen.
-      // Vorher nur mit split – am Handy (393 px) tat ein Antippen der Live-Geräte, der Probe usw. nichts sichtbar.
+      // Page open (desktop with sidebar or phone in the new Studio, there without split): redraw.
+      // Before, only with split – on the phone (393 px) tapping the live devices, the test etc. did nothing visible.
       if (this._csOpen && this.$("pane")) this._csRender();
       else if (this._csSheetPage && this._flowMode) this._csSheet(this._csSheetPage, null, true);
-      // Sonst (Handy im Studio: Seite als Blatt, kein split) zeichnet niemand neu – die Leiste blieb
-      // nach dem Speichern bei „Ungespeicherte Änderungen“ / „Speichern …“ stehen (Nutzertest 4, E-T3).
+      // Otherwise (phone in the Studio: page as a sheet, no split) nobody redraws – after saving the bar
+      // stayed on "Unsaved changes" / "Saving …" (user test 4, E-T3).
       else this._csBar();
     };
 
-    // Jede Änderung auf der Seite (auch im Auswahlmenü der Entitäten) → Leiste prüfen.
+    // Every change on the page (also in the entity picker menu) → check the bar.
     const watch = (self) => {
       if (self._csWatch) return;
       self._csWatch = () => { if (self._csOpen || self._csSheetPage !== undefined) setTimeout(() => self._csBar(), 0); };
@@ -757,22 +757,22 @@
       window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
     };
 
-    // ── Hemma entfernen (hemma_cleanup.py) ───────────────────────────────────
-    // Nur sichtbar, solange etwas von Hemma da ist: Integration, Einträge oder Ressourcen.
-    // Auch Reste nach dem Entfernen (Paket-Helfer, Theme, www/hemma), damit sie sich später noch wegräumen lassen.
+    // ── Remove Hemma (hemma_cleanup.py) ──────────────────────────────────────
+    // Only visible while something of Hemma is there: integration, entries or resources.
+    // Also leftovers after removal (package helpers, theme, www/hemma), so they can still be cleared later.
     const hemmaSeen = (h) => !!h && (h.installed || (h.entries || []).length > 0 || (h.resources || []).length > 0 || !!h.leftovers);
-    // Dashboards, die mitgehen: das Desktop-Dashboard und sein Handy-Layout.
+    // Dashboards that go along: the desktop dashboard and its phone layout.
     const withMobile = (h, urls) => {
       const out = new Set();
       (h.dashboards || []).forEach((d) => { if (urls.has(d.url_path)) { out.add(d.url_path); if (d.mobile) out.add(d.mobile); } });
       return out;
     };
-    // www/hemma darf weg: alles liegt in www/casora und nichts Bleibendes zeigt darauf (wie www_deletable).
+    // www/hemma may go: everything is in www/casora and nothing that stays points to it (like www_deletable).
     const wwwDeletable = (h, urls) => {
       const f = h.files || {};
-      // Nicht kopierte Dateien übernimmt das Entfernen vorher nach www/casora (hemma_cleanup.py).
+      // Removal first moves files that were not copied over into www/casora (hemma_cleanup.py).
       if (!f.www_hemma || (f.conflicts || []).length || (f.resource_refs || []).length) return false;
-      // Eigene Skripte/versteckte Dateien und Schreibziele (Automationen) halten www/hemma fest.
+      // Own scripts/hidden files and write targets (automations) keep www/hemma in place.
       if ((f.extra || []).length || (f.write_targets || []).length) return false;
       const gone = withMobile(h, urls);
       return Object.keys(f.refs || {}).every((u) => !f.refs[u] || gone.has(u));
@@ -787,7 +787,7 @@
       parent.appendChild(r);
       return r;
     };
-    // „Bleibt“-Liste kurz halten: vier Beispiele, „… und N weitere“ klappt den Rest auf.
+    // Keep the "Stays" list short: four examples, "… and N more" expands the rest.
     const ownItem = (parent, files, entities) => {
       const all = [...(files || []), ...(entities || [])];
       if (!all.length) return null;
@@ -863,7 +863,7 @@
       }
     };
 
-    // Bestätigen (was genau entfernt wird) → ausführen → Ergebnis mit „Jetzt neu starten“.
+    // Confirm (what exactly is removed) → run → result with "Restart Now".
     P._casoraHemmaRemove = async function () {
       css(this);
       const h = await this._csHemmaLoad(true);
@@ -873,7 +873,7 @@
       }
       const boards = h.dashboards || [];
       const sel = new Set(boards.filter((d) => d.moved_to && d.mode === "storage").map((d) => d.url_path));
-      // www/hemma geht mit, sobald alles in www/casora liegt (vorgewählt, steckt in der Sicherung).
+      // www/hemma goes along once everything is in www/casora (preselected, part of the backup).
       let delWww = true, wwwWish = true;
       const ok = await this._ask({
         title: t("Remove Hemma?"),
@@ -909,7 +909,7 @@
               });
             });
           }
-          // Hemmas Helfer-Paket: nur was aus Hemma stammt (Herkunft, nicht Name) – Eigenes bleibt.
+          // Hemma's helper package: only what comes from Hemma (origin, not name) – your own stays.
           const pk = (h.package || []).filter((p) => !p.error);
           const helperIds = [...new Set([...pk.flatMap((p) => p.items), ...(h.storage_helpers || [])])];
           if (helperIds.length) {
@@ -925,7 +925,7 @@
           if ((h.themes || []).length) {
             item(list, "", t("Hemma theme"), h.themes.join("\n") + "\n" + t("If it was your default, Casora takes over."));
           }
-          // Alte YAML-Dashboards/-Vorlagen (Hemma ohne HACS) – nur, wenn kein YAML-Dashboard sie lädt.
+          // Old YAML dashboards/templates (Hemma without HACS) – only if no YAML dashboard loads them.
           const yf = h.yaml_files || [];
           if (yf.length) {
             item(list, "", t("Old Hemma dashboard files ({1})").replace("{1}", yf.length),
@@ -947,11 +947,11 @@
                   : t("No dashboard uses them any more. Your photos and icons are copied to www/casora first. Included in the backup."), (on) => { delWww = wwwWish = on; });
             } else {
               delWww = false;
-              // Halten nur eigene/versteckte Dateien den Ordner fest, diese nennen statt „ein Dashboard nutzt sie“.
+              // If only own/hidden files hold the folder, name them instead of "a dashboard uses them".
               const extra = (h.files || {}).extra || [];
-              // Hält ihn nur eine Automation fest, erklärt das „Bleibt: Ordner, in die eine Automation schreibt“.
+              // If only an automation holds it, "Stays: folders an automation writes to" explains that.
               if (!extra.length && ((h.files || {}).write_targets || []).length) return;
-              // Gleichnamige Dateien in www/casora weichen ab: die nennen statt „ein Dashboard nutzt sie“.
+              // Same-named files in www/casora differ: name them instead of "a dashboard uses them".
               const conf = (h.files || {}).conflicts || [];
               if (!extra.length && conf.length) {
                 item(www, "info", t("Old files in www/hemma stay"),
@@ -966,18 +966,18 @@
             }
           };
           paintWww();
-          // Mit „hemma“ im Namen, aber nicht aus Hemma: bleibt – nur zur Info.
+          // With "hemma" in the name but not from Hemma: stays – for info only.
           const own = h.own || {};
           const ownN = (own.entities || []).length + (own.files || []).length;
           if (ownN) {
             ownItem(list, own.files, own.entities);
           }
-          // Eigene Module (Ressourcen, z. B. /local/hemma-local/…): bleiben geladen.
+          // Own modules (resources, e.g. /local/hemma-local/…): stay loaded.
           if ((own.resources || []).length) {
             item(list, "info", t("Stays: your own modules (dashboard resources)"),
               own.resources.join("\n") + "\n" + t("They keep loading – Casora's tiles find them under their old names."));
           }
-          // Pfade, die eine Automation benutzt (Kamera-Standbilder …): bleiben in www/hemma.
+          // Paths an automation uses (camera stills …): stay in www/hemma.
           const wt = (h.files || {}).write_targets || [];
           if (wt.length) {
             item(list, "info", t("Stays: folders an automation writes to"),
@@ -990,9 +990,9 @@
       await this._csHemmaRun({ remove_dashboards: [...sel], keep_files: !delWww });
     };
 
-    // Entfernen ausführen, Schritte zeigen, Neustart anbieten (auch für „Rest entfernen“).
-    // AB-09 (1.3): alle Ergebnis-Rückfragen von „Hemma entfernen“ gleich gebaut – breit, linksbündig,
-    // Zeichen oben (✓ fertig, ! noch etwas offen).
+    // Run the removal, show the steps, offer a restart (also for "Remove the Rest").
+    // AB-09 (1.3): all result dialogs of "Remove Hemma" built the same – wide, left-aligned,
+    // sign on top (✓ done, ! something still open).
     const resultMark = (box, tone) => {
       box.classList.add("chv");
       const m = el("div", "chv-mark " + tone);
@@ -1027,16 +1027,16 @@
       });
       this._csRepaint();
       if (restart && r.restart_required) {
-        // „Jetzt neu starten“ war schon die Bestätigung – nicht noch einmal fragen.
+        // "Restart Now" already was the confirmation – do not ask again.
         try { await this._hass.callService("homeassistant", "restart", {}); } catch (e) {
-          // Der Neustart trennt die Verbindung (Code 3) – das ist kein Fehler.
+          // The restart drops the connection (code 3) – that is not an error.
           if (!(e && (e.code === 3 || !e.message))) this._status(t("The restart didn't work."), "err");
         }
       }
     };
 
-    // ── Nach dem Neustart: Hemma wirklich weg? (casora/hemma/verify) ─────────
-    // Einmal je Entfernen, serverseitig gemerkt – auf jedem Gerät nur einmal.
+    // ── After the restart: is Hemma really gone? (casora/hemma/verify) ───────
+    // Once per removal, remembered on the server – only once on each device.
     const LEFT = {
       loaded: ["Hemma integration is still loaded", "Home Assistant still runs it."],
       entries: ["Hemma integration entry still set up", null],
@@ -1066,8 +1066,8 @@
           extend: ({ box, acts, cancel }) => {
             mark(box, "ok");
             cancel.remove();
-            // Satz und Pfad je auf eigener Zeile; der Pfad bricht nur nach einem „/“ um,
-            // nie mitten im Datum (Teile als inline-block, zu lange brechen trotzdem).
+            // Sentence and path each on its own line; the path only breaks after a "/",
+            // never inside the date (parts as inline-block, overlong ones still break).
             if (r.backup) {
               const path = el("p", "chv-path");
               String(r.backup).split("/").forEach((part, i, all) => {
@@ -1108,7 +1108,7 @@
       let r;
       try { r = await this._hass.callWS({ type: "casora/hemma/verify" }); } catch (e) { return; }
       if (!r || !r.due) return;
-      // Erst, wenn kein anderes Fenster offen ist („Neu in Casora“, Willkommen, eine Frage).
+      // Only when no other window is open ("New in Casora", welcome, a question).
       const t0 = Date.now();
       const busy = () => document.querySelector("[data-casora-welcome]")
         || (this.shadowRoot && this.shadowRoot.querySelector(".askpane"));
@@ -1118,7 +1118,7 @@
       await this._csHemmaVerifyShow(r);
     };
 
-    // Beim ersten Laden der Dashboard-Liste (Studio geöffnet) einmal prüfen.
+    // Check once on the first load of the dashboard list (Studio opened).
     const refreshDashboards = P._refreshDashboards;
     P._refreshDashboards = async function (...a) {
       const out = await refreshDashboards.apply(this, a);
@@ -1130,7 +1130,7 @@
       const tone = s.ok ? "ok" : "";
       const err = s.error && s.error !== "yaml" && s.error !== "still_needed" ? String(s.error) : "";
       const n = (x) => (x || []).length;
-      // Bei einem zweiten Durchgang (nur Reste): leere Schritte nicht als „0 … entfernt“ aufzählen.
+      // On a second pass (leftovers only): do not list empty steps as "0 … removed".
       if (s.ok && ["resources", "entries", "dashboards", "helpers"].includes(s.step) && !n(s.removed) && !n(s.manual)) return null;
       if (s.ok && s.step === "integration" && s.via === "none") return null;
       switch (s.step) {
@@ -1183,7 +1183,7 @@
       }
     };
 
-    // ── Seite (Desktop) ──────────────────────────────────────────────────────
+    // ── Page (desktop) ───────────────────────────────────────────────────────
     P._csRender = function () {
       const pane = this.$("pane");
       if (!pane || !this._csOpen) return;
@@ -1207,7 +1207,7 @@
       wrap.dataset.page = page.id;
       const body = el("div");
       wrap.appendChild(body);
-      // Design gilt sofort (eigener Weg, casora-panel-addons.js) – ohne Leiste „Einstellungen speichern“.
+      // Design applies right away (own path, casora-panel-addons.js) – without the "Save settings" bar.
       const bar = el("div", "cs-bar" + (this._csDirty() && !page.look ? "" : " cs-clean"));
       if (page.look) bar.style.display = "none";
       const state = el("span", "cs-state");
@@ -1238,7 +1238,7 @@
       this._csRender();
       this._csSideRow();
       const want = this._csPage;
-      // Neu geladen: neu zeichnen, die Felder hängen am Entwurf.
+      // Reloaded: redraw, the fields hang on the draft.
       if ((await this._csLoad()) && this._csOpen && this._csPage === want) this._csRender();
       if (!this._csOpen) return;
       if (focus) {
@@ -1266,13 +1266,13 @@
       if (dirty) this._status(t("Settings not saved yet – they wait under Settings"), "");
     };
 
-    // Von überall (Hinweise in den Studio-Seiten, Updates, Menü): Desktop-Seite oder Blatt.
+    // From anywhere (hints in the Studio pages, updates, menu): desktop page or sheet.
     P._csShow = function (pageId, focus) {
       if (split(this)) return this._csOpenPage(pageId, focus);
       return this._csSheet(pageId || null, focus);
     };
 
-    // Versionen und Updates öffnen schließt die Einstellungen.
+    // Opening versions and updates closes the settings.
     ["_cvOpenPage", "_cuOpenPage"].forEach((name) => {
       const orig = P[name];
       if (typeof orig !== "function") return;
@@ -1292,7 +1292,7 @@
       return r;
     };
 
-    // ── Seitenleiste: Überschrift „Einstellungen – für alle Dashboards“, darunter die Unterseiten ─
+    // ── Sidebar: heading "Settings – for all dashboards", the subpages below ──────────────────────
     P._csSideRow = function () {
       const host = this.shadowRoot.getElementById("sidesections");
       if (!host || !host.children.length || !this._dashUrl) return;
@@ -1321,7 +1321,7 @@
           rows.push(b);
         });
       }
-      // Unter der Überschrift „Casora“, vor den Updates.
+      // Under the "Casora" heading, before the updates.
       const at = upd || null;
       rows.forEach((r) => host.insertBefore(r, at));
       if (head.nextSibling !== rows[0]) host.insertBefore(head, rows[0]);
@@ -1356,7 +1356,7 @@
         host.querySelectorAll(".siderow").forEach((row) => {
           if (row.classList.contains("cs-row")) return;
           row.dataset.csOn = row.classList.contains("on") ? "1" : "";
-          // Eine andere Seite verlässt die Einstellungen – auch die schon aktive.
+          // Another page leaves the settings – even the one already active.
           const pick = row.onclick;
           row.onclick = (ev) => {
             if (this._csOpen) {
@@ -1373,16 +1373,16 @@
           };
         });
       }
-      // Alles andere in der Seitenleiste (Räume, Popups, Dashboard-Wahl) verlässt die
-      // Einstellungen ebenfalls – vor dem eigenen Klick, sonst zeichnet sich die
-      // Einstellungsseite gleich wieder über den gewählten Raum.
-      // Die Raumliste (#rooms) liegt neben #sidelist, daher am ganzen Studio lauschen.
+      // Everything else in the sidebar (rooms, popups, dashboard choice) leaves the
+      // settings as well – before its own click, otherwise the
+      // settings page draws itself right back over the chosen room.
+      // The room list (#rooms) sits next to #sidelist, so listen on the whole Studio.
       const root = this.shadowRoot;
       if (root && !root.__csLeave) {
         root.__csLeave = true;
-        // Die Raumliste wählt schon beim Loslassen (pointerup, wegen Ziehen zum Sortieren) –
-        // ein click kommt dort nicht an.
-        // Gilt für alle Inhaltsseiten: Einstellungen, Updates, Zeitreise.
+        // The room list selects on release already (pointerup, because of drag to sort) –
+        // a click never arrives there.
+        // Applies to all content pages: Settings, Updates, Rewind.
         const leave = (ev) => {
           if (!this._csOpen && !this._cuOpen && !this._cvOpen) return;
           const row = ev.target && ev.target.closest && ev.target.closest("button, [role=button], a");
@@ -1407,7 +1407,7 @@
       return r;
     };
 
-    // ── Handy: Blatt mit Unterseiten, in der Abschnittsliste erreichbar ───────
+    // ── Phone: sheet with subpages, reachable in the section list ─────────────
     P._csSheet = async function (pageId, focus, quiet) {
       css(this);
       watch(this);
@@ -1419,16 +1419,16 @@
         const list = this._flowGroup(s.body);
         PAGES.forEach((p) => this._flowRow(list, { mask: icon(p.icon), tint: tint(p), title: t(p.label), chevron: true,
           onTap: () => { this._flowDir = 1; this._csSheet(p.id); } }));
-        // Auch mit ungespeichertem Entwurf (z. B. Einstellungen noch aus der Datei) braucht
-        // die Vollbild-Seite einen Weg zurück: „Abbrechen“ (_flowBack). Der Entwurf bleibt.
+        // Even with an unsaved draft (e.g. settings still from the file) the
+        // full-screen page needs a way back: "Cancel" (_flowBack). The draft stays.
         this._flowCancel(s.acts);
         if (this._csDirty()) {
           const save = this._flowButton(s.acts, t("Save settings"), () => this._csSave().then(() => this._csSheet(null, null, true)));
           save.classList.add("cs-save");
         }
-        // Nur neu zeichnen, wenn die Seite noch offen ist: Wer schon „Abbrechen“ getippt hat,
-        // bekäme die Einstellungen sonst nach dem Laden wieder darübergelegt – bei langsamem
-        // HA kam man so nicht mehr heraus.
+        // Only redraw if the page is still open: someone who already tapped "Cancel"
+        // would otherwise get the settings laid over again after loading – with a slow
+        // HA there was no way out.
         if ((await this._csLoad()) && this._csSheetPage === null && this._flowMode && this._flowTok === tok) {
           this._csSheet(null, null, true);
         }
@@ -1438,7 +1438,7 @@
       this._csSheetPage = page.id;
       const s = this._flowScreen({ title: t(page.label), quiet,
         back: () => { this._csSheet(null); } });
-      // Die Einleitung steht schon unter dem Titel des Blatts.
+      // The intro already sits below the sheet's title.
       const host = el("div");
       s.body.appendChild(host);
       const fill = () => {
@@ -1452,7 +1452,7 @@
         s.box.insertBefore(lede, s.box.querySelector(".flowerr"));
       }
       fill();
-      // Design gilt sofort – dort kein „Einstellungen speichern“.
+      // Design applies right away – no "Save settings" there.
       if (page.look) { this._csBar(); return; }
       const save = this._flowButton(s.acts, t("Save settings"), () => this._csSave());
       save.classList.add("cs-save");
@@ -1464,15 +1464,15 @@
       }
     };
 
-    // Blatt geschlossen: nichts mehr beobachten.
+    // Sheet closed: stop observing.
     const exitFlow = P._exitFlow;
     P._exitFlow = function () {
       this._csSheetPage = undefined;
       return exitFlow.apply(this, arguments);
     };
 
-    // Abschnittsliste am Handy wie die Seitenleiste am Desktop: Überschrift „Einstellungen –
-    // für alle Dashboards“, darunter die Unterseiten einzeln, zuletzt die Updates.
+    // Section list on the phone like the sidebar on desktop: heading "Settings –
+    // for all dashboards", below it the subpages one by one, the updates last.
     const phoneList = P._phoneSectionList;
     if (typeof phoneList === "function") {
       P._phoneSectionList = function (bandFor) {
@@ -1509,7 +1509,7 @@
           col.appendChild(c);
         });
         if (typeof this._cuFromMenu === "function") {
-          // Dasselbe Symbol wie die Zeile „Updates“ in der Desktop-Seitenleiste (casora-panel-updates.js).
+          // The same icon as the "Updates" row in the desktop sidebar (casora-panel-updates.js).
           const upd = "data:image/svg+xml," + encodeURIComponent(
             '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.1" '
             + 'stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/>'

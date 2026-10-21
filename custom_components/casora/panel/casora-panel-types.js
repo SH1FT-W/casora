@@ -1,23 +1,23 @@
-// Casora-Kacheltypen für das Studio-Panel.
+// Casora tile types for the Studio panel.
 //
-// Das Panel kennt nur Casoras eingebaute Typen und nimmt fremde Vorlagen nur,
-// wenn sie nicht mit „casora_“ beginnen – Casoras Vorlagen tun das aber
-// (Stufe 3: Umbenennung). Diese Liste wird vor dem Panel geladen und dort an
-// TILE_TYPES angehängt, damit Editor und Vorschau die Kacheln erkennen.
-// Beschriftungen englisch; Übersetzung über translations/panel/*.json.
-// Feldangaben wie im Panel (key/label/domains/advanced/group …). Zusätzlich:
-//   find – wo Casora die Entität selbst findet, wenn das Feld leer bleibt
-//          ({keys, domain, dc} am Gerät der Kachel-Entität, {plug} = Zwischenstecker).
-//          Das Studio zeigt den Fund als Platzhalter („Automatisch: …“); die
-//          KI-Hilfe füllt nur, was der Finder nicht findet.
+// The panel only knows Casora's built-in types and only takes foreign templates
+// that do not start with "casora_" – but Casora's templates do
+// (stage 3: renaming). This list loads before the panel and is appended there to
+// TILE_TYPES so the editor and preview recognize the tiles.
+// Labels in English; translation via translations/panel/*.json.
+// Field specs as in the panel (key/label/domains/advanced/group …). In addition:
+//   find – where Casora finds the entity itself when the field stays empty
+//          ({keys, domain, dc} on the device of the tile entity, {plug} = smart plug).
+//          The Studio shows the match as a placeholder ("Auto: …"); the
+//          AI helper only fills what the finder does not find.
 const ICON = { key: "icon", label: "Icon", type: "icon" };
 const TITLE = { key: "room_name", label: "Popup title", type: "text", advanced: true };
-// Popups, deren Titel sonst der Kachelname ist (window.casoraPopupTitle).
+// Popups whose title is otherwise the tile name (window.casoraPopupTitle).
 const TITLE_NAME = { ...TITLE, placeholder: "The tile's name" };
 const PLUG = { key: "plug_entity", label: "Smart plug", domains: ["switch"], find: { plug: "switch" },
   advanced: true, group: "Popup", hint: "Measures power and energy; the popup shows usage and cost." };
 const PRICE = { key: "price_kwh", label: "Electricity price per kWh", type: "number", placeholder: "0.36", advanced: true };
-// Hex, weil die Diagramme die Farbe direkt ins SVG schreiben.
+// Hex, because the charts write the color straight into the SVG.
 const CHART = (ph) => ({ key: "chart_color", label: "Chart color", type: "text", placeholder: ph || "#00C3D0",
   advanced: true, hint: "A hex color, e.g. #30D158." });
 const LAUNDRY = [
@@ -29,7 +29,7 @@ const LAUNDRY = [
   TITLE,
   CHART(),
 ];
-// 3D-Drucker: _casoraPrint.resolve() nimmt diese Variablen vor dem Geräte-Finder (FIND in 02-geraete.js).
+// 3D printer: _casoraPrint.resolve() takes these variables before the device finder (FIND in 02-geraete.js).
 const PRINT_FIELDS = [
   { key: "entity_state", label: "Print stage", domains: ["sensor"], find: { keys: ["stage"], domain: "sensor" },
     advanced: true, group: "Print job", placeholder: "This tile's entity" },
@@ -87,7 +87,7 @@ window.CASORA_TILE_TYPES = [
       { key: "btn_start", label: "Start button", domains: ["button"], find: { keys: ["button_start_program"], domain: "button" }, advanced: true },
       { key: "btn_stop", label: "Stop button", domains: ["button"], find: { keys: ["button_abort_program"], domain: "button" }, advanced: true },
       TITLE_NAME,
-      // Weitere Popup-Werte (Home Connect); leer = Geräte-Finder über den translation_key.
+      // More popup values (Home Connect); empty = device finder via the translation_key.
       { key: "entity_phase", label: "Program phase", domains: ["sensor"], find: { keys: ["sensor_program_phase"] }, advanced: true },
       { key: "appliance_progress", label: "Progress", domains: ["sensor"], classes: ["progress"],
         find: { keys: ["sensor_program_progress"] }, advanced: true },
@@ -113,13 +113,13 @@ window.CASORA_TILE_TYPES = [
       ICON,
       { key: "tank_name", label: "Tank name", type: "text", placeholder: "Tile name",
         hint: "Heading in the popup. Empty: the tile's name." },
-      // Soll-Bereich (1.1.2): außerhalb „Prüfen“, mehr als 2 °C (3,6 °F) daneben „Alarm“ (_casoraAqTempRange).
+      // Target range (1.1.2): outside it "Check", more than 2 °C (3.6 °F) off "Alarm" (_casoraAqTempRange).
       { key: "temp_min", label: "Lowest water temperature", type: "number", placeholder: "24", advanced: true, group: "Popup",
         hint: "Below this the tile warns. Same unit as the thermometer." },
       { key: "temp_max", label: "Highest water temperature", type: "number", placeholder: "26", advanced: true,
         hint: "Above this the tile warns; more than 2 °C off raises an alarm." },
       { key: "light_entity", label: "Light", domains: ["light"], advanced: true },
-      // Farbkanäle (1.1.2): leer = number-Entitäten am Gerät der Leuchte mit Farbwort, sonst rgb/rgbw der Leuchte.
+      // Color channels (1.1.2): empty = number entities on the light's device with a color word, else the light's rgb/rgbw.
       { key: "light_channels", label: "Color channels", type: "list", domains: ["number"], advanced: true,
         when: (v) => !!v.light_entity, placeholder: "add channel number.",
         hint: "Empty: Casora finds the channels itself (numbers of the light's device, else the light's own colors)." },
@@ -129,21 +129,21 @@ window.CASORA_TILE_TYPES = [
       { key: "leak_battery", label: "Leak sensor battery", domains: ["sensor"], classes: ["battery"], advanced: true },
       { key: "temp_battery", label: "Thermometer battery", domains: ["sensor"], classes: ["battery"],
         find: { dc: "battery", domain: "sensor" }, advanced: true },
-      // Akku-Hinweise (window.casoraBatteryHints, scripts/casora-core.js): „Automatisch“ wird nicht
-      // gespeichert – die Variable fehlt dann, wie bei bestehenden Dashboards.
+      // Battery hints (window.casoraBatteryHints, scripts/casora-core.js): "Auto" is not
+      // stored – the variable is then missing, as on existing dashboards.
       { key: "battery_hints", label: "Battery hints", type: "select", advanced: true,
         options: ["", "always", "never"], optionLabels: { "": "Automatic", always: "Always", never: "Never" },
         when: (v) => !!(v.leak_battery || v.temp_battery || v.battery_hints),
         hint: "Automatic: a weak battery does not highlight this tile when the dashboard already has a Batteries tile." },
       { key: "light_reachable", label: "Light reachable", domains: ["binary_sensor"], advanced: true,
         hint: "Warns when the light has been unreachable for 30 minutes." },
-      // Lichtsteuerung und Dosierpumpe (1.0.3): frei gewählte Entitäten. Ältere Kacheln mit den
-      // Präfixen helialux / dosing_prefix laufen weiter; die Felder erscheinen nur, solange sie gesetzt sind.
+      // Light control and dosing pump (1.0.3): freely chosen entities. Older tiles with the
+      // prefixes helialux / dosing_prefix keep working; the fields only show while they are set.
       { key: "light_profile", label: "Light profile", domains: ["select"], advanced: true, group: "Light control",
         hint: "The light's own day profiles, e.g. of a Juwel HeliaLux." },
       { key: "light_schedule_switch", label: "Schedule switch", domains: ["switch"], advanced: true,
         hint: "Switches between your automation and the light's own program." },
-      // Bedeutung von „an“ (1.1.2): Automatisch = window._casoraAqSwitchMeaning (HeliaLux an = HA, Auto-Modus an = Lampe).
+      // Meaning of "on" (1.1.2): Auto = window._casoraAqSwitchMeaning (HeliaLux on = HA, auto mode on = lamp).
       { key: "light_schedule_on", label: "Schedule switch on means", type: "select", advanced: true,
         options: ["", "ha", "lamp"],
         optionLabels: { "": "Automatic", ha: "Home Assistant controls the light", lamp: "The light runs its own program" },
@@ -152,8 +152,8 @@ window.CASORA_TILE_TYPES = [
       { key: "helialux", label: "Light control (older setting)", type: "text", advanced: true,
         when: (v) => !!v.helialux, placeholder: "Entity prefix",
         hint: "Entity prefix from an older version. Used while the two fields above are empty." },
-      // Technik (1.1.2): Pumpe, Heizer, Abschäumer … – Dienst aus der Domain (switch, light, fan, climate …).
-      // Ältere Kacheln mit devices aus YAML laufen unverändert weiter (window._casoraAqDevices).
+      // Equipment (1.1.2): pump, heater, skimmer … – service from the domain (switch, light, fan, climate …).
+      // Older tiles with devices from YAML keep working unchanged (window._casoraAqDevices).
       { key: "tech_entities", label: "Equipment", type: "list", domains: ["switch", "light", "fan", "climate", "input_boolean", "humidifier"],
         advanced: true, group: "Equipment", placeholder: "add pump, heater …",
         hint: "Pump, heater, skimmer … Shown under “Equipment” in the popup and switchable there." },
@@ -181,17 +181,17 @@ window.CASORA_TILE_TYPES = [
   { id: "casora_camera", label: "Camera", template: "casora_camera", domains: ["camera"], icon: "camera", fields: [
       ICON,
       TITLE_NAME,
-      // „Status von: …“ (1.1.1): Bild über einen Proxy meldet „bereit“, obwohl die Kamera weg ist.
-      // casora-core.js casoraCamOffline – Kachel, Sicherheits- und Kamera-Badge, Popup.
+      // "Status from: …" (1.1.1): an image via a proxy reports "ready" although the camera is gone.
+      // casora-core.js casoraCamOffline – tile, security and camera badge, popup.
       { key: "status_entity", label: "Status from", domains: ["camera", "binary_sensor"],
         classes: { binary_sensor: ["connectivity"] }, advanced: true, placeholder: "This camera",
         hint: "Optional. Another camera or a connection sensor that tells whether the camera is reachable, e.g. when the picture comes through a proxy (go2rtc, Frigate, Scrypted) that stays ready although the camera is gone. Picture and popup stay with this camera." },
-      // „Standbild von: …“ (1.2.1): Bild der Kachel von einer anderen camera.*/image.* –
-      // ohne Eintrag automatisch eine Schnappschuss-Entität derselben Kamera (casora-core.js casoraCamStill).
+      // "Still image from: …" (1.2.1): the tile's image from another camera.*/image.* –
+      // without an entry, automatically a snapshot entity of the same camera (casora-core.js casoraCamStill).
       { key: "still_entity", label: "Still image from", domains: ["camera", "image"], advanced: true,
         placeholder: "Automatic",
         hint: "Optional. Another camera or image entity whose picture the tile shows. Without it, Casora uses a snapshot entity of the same camera if there is one (e.g. Reolink snapshots), otherwise this camera. The popup always shows this camera live." },
-      // „Bild auffrischen“ (1.2.1): Abfrage-Abstand des Standbilds als Kachel-Einstellung (casora-core.js casoraCamRefresh).
+      // "Refresh image" (1.2.1): polling interval of the still image as a tile setting (casora-core.js casoraCamRefresh).
       { key: "refresh_s", label: "Refresh image", type: "select", advanced: true, tileLevel: true,
         options: ["5", "", "30", "60"],
         optionLabels: { "5": "Every 5 seconds", "": "Every 10 seconds", "30": "Every 30 seconds", "60": "Every 60 seconds" },
@@ -203,7 +203,7 @@ window.CASORA_TILE_TYPES = [
     ] },
   { id: "casora_alarm", label: "Alarm", template: "casora_alarm", domains: ["alarm_control_panel"], icon: "shield_check",
     color: "var(--casora-color-red, #FF453A)", fields: [
-      // casora_popup_alarm liest alarm_entity vor der Kachel-Entität; Vorgabe der Vorlage: Alarmo.
+      // casora_popup_alarm reads alarm_entity before the tile entity; template default: Alarmo.
       { key: "alarm_entity", label: "Popup alarm panel", domains: ["alarm_control_panel"], advanced: true, group: "Popup",
         placeholder: "alarm_control_panel.alarmo", hint: "The alarm the popup arms and disarms." },
       { ...TITLE, placeholder: "Automatic" },
@@ -242,8 +242,8 @@ window.CASORA_TILE_TYPES = [
     ] },
   { id: "casora_car", label: "Car", template: "casora_car", domains: ["sensor"], ownData: true, icon: "car_side_w2", fields: [ICON, TITLE] },
   { id: "casora_ebike", label: "E-bike", template: "casora_ebike", domains: ["sensor"], ownData: true, icon: "ebike", fields: [ICON, TITLE] },
-  // Fußbodenheizung: Thermostat-Kachel mit Casora-Popup – verhält sich wie ein Thermostat
-  // (like), hat aber eigenen Namen und eigene Kennung, sonst stünde „Thermostat“ doppelt in der Auswahl.
+  // Underfloor heating: thermostat tile with a Casora popup – behaves like a thermostat
+  // (like) but has its own name and id, otherwise "Thermostat" would appear twice in the picker.
   { id: "fbh", like: "thermostat", label: "Floor heating", template: ["casora_thermostat", "casora_popup_fbh"],
     domains: ["climate"], icon: "heating_coil", fields: [
       { key: "temp_sensor", label: "Temperature sensor", domains: ["sensor"], classes: ["temperature"] },
@@ -254,15 +254,15 @@ window.CASORA_TILE_TYPES = [
     ] },
   { id: "casora_recipe", label: "Recipe of the week", template: "casora_recipe", domains: ["sensor"], ownData: true,
     icon: "chef-hat", color: "var(--casora-color-orange, #FF9F0A)", fields: [ICON, TITLE] },
-  // Schalter: aus Hemma 1 und älteren Fassungen umgezogene Kacheln (…_switch) und neue – Steckdosen, Pumpen, Lampen am Schalter.
+  // Switch: tiles migrated from Hemma 1 and older versions (…_switch) and new ones – sockets, pumps, lamps on a switch.
   { id: "casora_switch", label: "Switch", template: "casora_switch", domains: ["switch"], icon: "power_on",
     color: "var(--casora-color-teal, #00C3D0)", fields: [
       ICON,
       { key: "show_toggle", label: "Toggle button", type: "bool", boolDefault: false },
       TITLE_NAME,
     ] },
-  // Fußball (07.10.2026): ein Team-Tracker-Sensor je Kachel. Team, Gegner, Liga und Wappen liest die Kachel
-  // aus dem Sensor (scripts/local/11-fussball.js); TILE_MAIN_FIND im Panel schlägt nur Team-Tracker-Sensoren vor.
+  // Football (07.10.2026): one Team Tracker sensor per tile. The tile reads team, opponent, league and crest
+  // from the sensor (scripts/local/11-fussball.js); TILE_MAIN_FIND in the panel only suggests Team Tracker sensors.
   { id: "casora_football", label: "Football", template: "casora_football", domains: ["sensor"], icon: "soccer",
     color: "var(--casora-color-green, #30D158)", entityLabel: "Team (Team Tracker)",
     entityPlaceholder: "A Team Tracker sensor", fields: [
@@ -276,16 +276,16 @@ window.CASORA_TILE_TYPES = [
         when: (v) => ["week", "matchday", "around"].includes(v.show_when_match) },
       TITLE_NAME,
     ] },
-  // Pulse (Batterie-/Funkwächter, eigene Integration): Kachel + Popup aus den Pulse-Entitäten
-  // (scripts/local/14-pulse.js). Hauptentität = Pulses Sensor „Probleme“ (findet sich selbst);
-  // angeboten nur, wenn Pulse installiert ist (onlyIf), der Geräte-Assistent schlägt sie für die Startseite vor.
+  // Pulse (battery/radio watchdog, own integration): tile + popup from the Pulse entities
+  // (scripts/local/14-pulse.js). Main entity = Pulse's "Problems" sensor (finds itself);
+  // only offered when Pulse is installed (onlyIf), the device assistant suggests it for the home page.
   { id: "casora_pulse", label: "Pulse", template: "casora_pulse", domains: ["sensor"], ownData: true, icon: "pulse",
     color: "var(--casora-color-green, #30D158)", entityLabel: "Pulse problems", entityPlaceholder: "Automatic",
     onlyIf: (hass) => !!(hass && hass.entities && Object.values(hass.entities).some((e) => e && e.platform === "pulse")),
     fields: [ICON, { ...TITLE, placeholder: "Pulse" }] },
-  // Mähroboter (Community-Karte 1.5, aus einem Kartenwunsch): jede lawn_mower-Entität; Akku, Verbindung und
-  // „Parken bis auf Weiteres“ findet scripts/local/16-maeher.js am selben Gerät. Gardena liefert dazu Tätigkeit
-  // und Fehlercode als Attribute.
+  // Robot mower (community card 1.5, from a card request): any lawn_mower entity; battery, connection and
+  // "park until further notice" are found by scripts/local/16-maeher.js on the same device. Gardena also
+  // provides activity and error code as attributes.
   { id: "casora_lawn_mower", label: "Robot lawn mower", template: "casora_lawn_mower", domains: ["lawn_mower"],
     icon: "lawn-mower", color: "var(--casora-color-green, #30D158)", entityLabel: "Lawn mower",
     community: { desc: "Status, battery and connection. Mow, pause, back to the station and park. More details for Gardena.",
@@ -300,12 +300,12 @@ window.CASORA_TILE_TYPES = [
       needs: "tractive", needsText: "For every pet in the Tractive integration",
       needsMissing: "Tractive integration not installed yet" },
     fields: [ICON, TITLE_NAME] },
-  // Frigate (Community-Karte, aus Kartenwunsch #22): Kamera-Kachel für Kameras der Frigate-Integration
-  // (device_class „camera“ setzt nur Frigate), dazu Erkennungen, Schnappschüsse und Schalter am selben Gerät
-  // (scripts/local/23-frigate.js). Felder wie die Kamera-Kachel, ohne die Popup-Felder der Kamera-Übersicht.
+  // Frigate (community card, from card request #22): camera tile for cameras of the Frigate integration
+  // (only Frigate sets device_class "camera"), plus detections, snapshots and switches on the same device
+  // (scripts/local/23-frigate.js). Fields like the camera tile, without the popup fields of the camera overview.
   { id: "casora_frigate", label: "Frigate camera", template: "casora_frigate", domains: ["camera"], classes: ["camera"],
     icon: "camera", entityLabel: "Frigate camera",
-    // „Gesehen“ (frigate/reviews/viewed) gilt je Frigate-Benutzer = dem der Integration (23-frigate.js F.mark).
+    // "Seen" (frigate/reviews/viewed) applies per Frigate user = the integration's user (23-frigate.js F.mark).
     community: { desc: "Live camera with what Frigate detected last. The popup shows the live view, alerts and detections with clip, download, share and favorite, the recordings of the last days with a timeline, objects and the camera switches. “Seen” is stored by Frigate for the user the integration signs in with – so everyone in Home Assistant shares the same state.",
       needs: "frigate", needsText: "For every camera of the Frigate integration",
       needsMissing: "Frigate integration not installed yet", darkShots: true },
@@ -317,13 +317,13 @@ window.CASORA_TILE_TYPES = [
         options: ["5", "", "30", "60"],
         optionLabels: { "5": "Every 5 seconds", "": "Every 10 seconds", "30": "Every 30 seconds", "60": "Every 60 seconds" },
         hint: "How often the tile fetches a new still image while it is visible. The tile says \"Up to date\" while the picture is fresh and shows its age in the warning color when the camera stops delivering." },
-      // Frigate 2: Live-Bild statt Standbild (23-frigate.js tileWatch) – nur sichtbar und im Vordergrund, sonst abgebaut.
+      // Frigate 2: live image instead of a still (23-frigate.js tileWatch) – only while visible and in front, else torn down.
       { key: "live_tile", label: "Live on the tile", type: "bool", boolDefault: false, advanced: true, tileLevel: true,
         hint: "Plays the muted live stream on the tile instead of the still image – only while the tile is visible and the page is open, so it uses more data only then. Without a stream (or if it fails) the tile keeps the still image." },
     ] },
-  // Reolink-Türklingel (Community-Karte, aus Kartenwunsch #23): Kamera-Kachel für die Live-Kamera einer Reolink-
-  // Klingel (Gerät mit Klingelknopf „visitor“), dazu Klingeln, Erkennungen, Schnellantworten, Sirene und
-  // Einstellungen am selben Gerät (scripts/local/24-klingel.js). „Sprechen“ ist ein Versuch und standardmäßig aus.
+  // Reolink doorbell (community card, from card request #23): camera tile for the live camera of a Reolink
+  // doorbell (device with the "visitor" doorbell button), plus rings, detections, quick replies, siren and
+  // settings on the same device (scripts/local/24-klingel.js). "Talk" is experimental and off by default.
   { id: "casora_reolink_doorbell", label: "Reolink doorbell", template: "casora_reolink_doorbell", domains: ["camera"],
     icon: "doorbell", entityLabel: "Doorbell camera",
     onlyIf: (hass) => !!(hass && hass.entities && Object.values(hass.entities).some((e) => e && e.translation_key === "visitor")),
@@ -340,21 +340,21 @@ window.CASORA_TILE_TYPES = [
         hint: "How often the tile fetches a new still image while it is visible. The tile says \"Ready\" while the picture is fresh and shows its age in the warning color when the doorbell stops delivering." },
       { key: "talk", label: "Talk (experiment)", type: "bool", advanced: true, group: "Popup",
         hint: "Adds a Talk button under the live picture: your microphone goes to the doorbell through Home Assistant's own WebRTC connection. Only works over HTTPS, with the doorbell connected in your network (RTSP), and only if the doorbell accepts it – many Reolink doorbells don't. If it doesn't, the popup says so and listening keeps working." },
-      // Zweite Kamera (#23): Umschalter auf dem Live-Bild im Popup; Großes Bild beim Mithören/Sprechen (Tablet-Wunsch).
+      // Second camera (#23): switcher on the live image in the popup; large image while listening/talking (tablet request).
       { key: "camera2", label: "Second camera", domains: ["camera"], group: "Popup",
         hint: "Optional. Another camera, for example the entrance. The popup then shows a switch on the live picture to change between the doorbell and this camera. Talking always goes to the doorbell." },
       { key: "big_on_audio", label: "Large picture when listening/talking", type: "bool", boolDefault: true, advanced: true, group: "Popup",
         hint: "Tapping Listen or Talk opens the live picture large over the popup. Close it with ×, Esc or by swiping down." },
     ] },
-  // Kaffeevollautomat (Community-Karte, Kartenwunsch): eine Entität des Geräts wählen (Status, Strom oder
-  // Getränke-Auswahl), den Rest findet scripts/local/25-kaffee.js am Gerät – Home Connect, Miele, De'Longhi, Jura,
-  // Melitta/Nivona, La Marzocco oder eine Steckdose mit Leistungsmessung.
+  // Coffee machine (community card, card request): pick one entity of the device (status, power or
+  // drink selection); scripts/local/25-kaffee.js finds the rest on the device – Home Connect, Miele, De'Longhi, Jura,
+  // Melitta/Nivona, La Marzocco or a smart plug with power metering.
   { id: "casora_coffee", label: "Coffee machine", template: "casora_coffee", domains: ["sensor", "switch", "select"],
     icon: "coffee-maker", color: "var(--casora-color-teal, #00C3D0)", entityLabel: "Coffee machine",
     community: { desc: "Ready, heating up or brewing with progress, and what the machine needs: water, beans, drip tray, descaling. The popup starts drinks with strength and amount, shows care and how many coffees you made. For Home Connect, Miele, De'Longhi, Jura, Melitta, La Marzocco or a smart plug." },
     fields: [ICON, TITLE_NAME] },
-  // Aquarien-Übersicht (Hemma 1 und ältere Fassungen „…_aquarium“): bis zu drei Becken in einer Kachel. Nur fürs
-  // Bearbeiten umgezogener Kacheln – neue Becken bekommen die Aquarium-Kachel (casora_aquarium_tank).
+  // Aquarium overview (Hemma 1 and older versions "…_aquarium"): up to three tanks in one tile. Only for
+  // editing migrated tiles – new tanks get the aquarium tile (casora_aquarium_tank).
   { id: "casora_aquariums", label: "Aquariums", template: "casora_aquarium", hidden: true, domains: ["sensor"],
     classes: ["temperature"], entityLabel: "Water temperature", icon: "fish", fields: [
       ICON,
@@ -365,17 +365,17 @@ window.CASORA_TILE_TYPES = [
     ] },
 ];
 
-// Community-Karten (1.5): Kachelarten mit `community: {desc, needs?, preview?}` – gebaut aus Kartenwünschen,
-// kommen mit dem Release, stehen aber erst in „Kachel hinzufügen“, wenn man sie unter Community hinzufügt
-// (window.casoraCommunityOn, casora-panel-community.js). Bestehende Kacheln erkennt das Studio immer.
-//   desc   – Kurzbeschreibung (englisch, Übersetzung in translations/panel)
-//   needs  – Integration (Domain), die die Karte braucht; fehlt sie, steht das als Hinweis dabei
-//   needsText / needsMissing – lesbarer Hinweis dazu (sonst „Braucht <Integration>“)
-//   preview – Vorschaubild, sonst /casora_assets/community/<id>.webp; Popup-Bild optional <id>-popup.webp
-//   darkShots – eigene Vorschaubilder fürs dunkle Profil: <id>-dark.webp / <id>-popup-dark.webp (Rückfall hell)
-//   retired – Karte wird eingestellt: nicht mehr in der Community-Liste (außer bei denen, die sie hinzugefügt
-//            haben – dort nur noch „Entfernen“) und nie mehr in „Kachel hinzufügen“; vorhandene Kacheln laufen
-//            weiter, der Editor zeigt einen Hinweis. Ein späteres Release kann Kachelart und Vorlage dann löschen.
+// Community cards (1.5): tile types with `community: {desc, needs?, preview?}` – built from card requests,
+// they ship with the release but only show in "Add a tile" once added under Community
+// (window.casoraCommunityOn, casora-panel-community.js). The Studio always recognizes existing tiles.
+//   desc   – short description (English, translation in translations/panel)
+//   needs  – integration (domain) the card needs; if it is missing, a hint says so
+//   needsText / needsMissing – readable hint for it (otherwise "Needs <integration>")
+//   preview – preview image, otherwise /casora_assets/community/<id>.webp; popup image optional <id>-popup.webp
+//   darkShots – own preview images for the dark profile: <id>-dark.webp / <id>-popup-dark.webp (falls back to light)
+//   retired – card is discontinued: no longer in the community list (except for those who added it –
+//            there only "Remove") and never again in "Add a tile"; existing tiles keep
+//            working, the editor shows a hint. A later release can then delete the tile type and template.
 window.casoraCommunityType = (t) => {
   if (!t || !t.community || t._communityWrapped) return t;
   const own = t.onlyIf;
@@ -398,9 +398,9 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   "coffee-milk", "coffee-tea",
 ].map((n) => [n, "/casora_assets/icons/" + n + ".svg"]));
 
-// Vorschau: bedingte Karten (type: conditional) so zeigen wie das Dashboard –
-// unsichtbar, wenn die Bedingung gerade nicht erfüllt ist, sonst die Karte darin.
-// Rückgabe: {hidden: true} | {inner: <karte>} | {} (unverändert zeichnen).
+// Preview: show conditional cards (type: conditional) as the dashboard does –
+// invisible while the condition is not met, otherwise the card inside.
+// Returns: {hidden: true} | {inner: <card>} | {} (draw unchanged).
 (() => {
   const asList = (v) => (Array.isArray(v) ? v : v === undefined ? [] : [v]).map(String);
   function check(c, states) {
@@ -423,9 +423,9 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       if (c.below !== undefined && !(n < Number(c.below))) return false;
       return true;
     }
-    return true; // screen, user, time … zeigen
+    return true; // show screen, user, time …
   }
-  // Karten, die das Dashboard an dieser Stelle tatsächlich zeigt (0, 1 oder mehrere).
+  // Cards the dashboard actually shows at this spot (0, 1 or more).
   function shown(card, states) {
     if (!card || typeof card !== "object") return [];
     if (card.type === "custom:button-card") return [card];
@@ -434,7 +434,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       return shown(card.card, states);
     }
     if (card.type === "custom:auto-entities") {
-      // Nur explizite Einträge (entity_id + optional state) – wie in Casoras Dashboards.
+      // Only explicit entries (entity_id + optional state) – as in Casora's dashboards.
       const out = [];
       for (const inc of ((card.filter || {}).include || [])) {
         if (!inc || !inc.entity_id || String(inc.entity_id).includes("*")) continue;
@@ -446,15 +446,15 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       }
       return out;
     }
-    // Swipe-Karte: die erste Kachel darin steht stellvertretend.
+    // Swipe card: the first tile in it stands in for it.
     if (Array.isArray(card.cards)) {
       for (const c of card.cards) { const s = shown(c, states); if (s.length) return [s[0]]; }
     }
     return [];
   }
-  // Seiten einer Swipe-Karte – auch wenn sie in einer Bedingung steckt oder auto-entities ihre
-  // Seiten sammelt (Luftreiniger, Aquarien). Sonst 0. Bisher standen gesammelte Seiten in der
-  // Vorschau einzeln nebeneinander und kamen und gingen mit jedem Schalten (Blinken).
+  // Pages of a swipe card – also when it sits inside a condition or auto-entities collects its
+  // pages (air purifiers, aquariums). Otherwise 0. Previously collected pages sat side by side in the
+  // preview and came and went with every toggle (flicker).
   const isSwipe = (c) => !!c && /swipe|carousel/.test(String(c.type || ""));
   function swipePages(card, states) {
     let c = card, n = 0;
@@ -470,7 +470,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     if (!cards.length) return { hidden: true };
     const pages = swipePages(tile, (hass && hass.states) || {});
     if (pages) return { inner: cards[0], pages };
-    // Swipe-Karte: eine Kachel wie am Dashboard, dazu Seitenpunkte für die übrigen.
+    // Swipe card: one tile as on the dashboard, plus page dots for the others.
     if (cards.length === 1 && tile.type !== "conditional" && Array.isArray(tile.cards)) {
       const pages = tile.cards.filter((c) => shown(c, (hass && hass.states) || {}).length).length;
       return { inner: cards[0], pages };
@@ -479,12 +479,12 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   };
 })();
 
-// Vorschau: Symbol und Zustandstext der Casora-Kacheln aus ihrer Vorlagenkette,
-// damit die Vorschau dasselbe zeigt wie das Dashboard (state_display wird mit
-// denselben Werten ausgeführt). Fehler fallen still auf das Panel-Verhalten zurück.
+// Preview: icon and state text of Casora tiles from their template chain,
+// so the preview shows the same as the dashboard (state_display runs with
+// the same values). Errors silently fall back to the panel behavior.
 (() => {
-  // Rückfall für Gerätezustände, wenn die Vorlage ihren Text über ein im Panel
-  // nicht geladenes Modul bildet (z. B. Waschmaschine über _casoraLaundry).
+  // Fallback for device states when the template builds its text via a module
+  // not loaded in the panel (e.g. washing machine via _casoraLaundry).
   const WORDS = {
     de: { running: "Läuft", run: "Läuft", starting: "Startet", ending: "Endet", paused: "Pausiert",
           user_paused: "Pausiert", finished: "Fertig", finish: "Fertig", off: "Aus", idle: "Bereit",
@@ -495,7 +495,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   const OURS = new Set((window.CASORA_TILE_TYPES || []).map((t) => t.template));
   const names = (t) => (Array.isArray(t) ? t : t ? [t] : []);
   const isOurs = (tile) => names(tile && tile.template).some((n) => OURS.has(n));
-  // Auch Kachelarten mit Vorlagenliste (Fußbodenheizung: casora_thermostat + casora_popup_fbh).
+  // Also tile types with a template list (underfloor heating: casora_thermostat + casora_popup_fbh).
   const OURS_ANY = new Set((window.CASORA_TILE_TYPES || []).flatMap((t) => names(t.template)));
   const isOursAny = (tile) => names(tile && tile.template).some((n) => OURS_ANY.has(n));
 
@@ -527,7 +527,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   function ctxFor(tile, ent, hass, tpl) {
     const variables = Object.assign({}, tpl.variables, tile.variables || {});
     const ctx = { states: (hass && hass.states) || {}, entity: ent, variables, hass };
-    // Wie button-card: Variablen der Reihe nach auswerten, spätere sehen frühere.
+    // Like button-card: evaluate variables in order, later ones see earlier ones.
     for (const k of Object.keys(variables)) {
       const v = variables[k];
       if (typeof v === "string" && v.includes("[[[")) {
@@ -537,19 +537,19 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     return ctx;
   }
 
-  // Raumklima (casora_vent) und Solar-Tipp (casora_solar_tip) bilden ihren Text über
-  // window._casoraVent / _casoraSolar aus scripts/local/05-standard-medien.js – ohne das
-  // Modul stand in der Vorschau nur „Aus“. Einmal nachladen (reine Funktionen, keine Karten).
+  // Room climate (casora_vent) and solar tip (casora_solar_tip) build their text via
+  // window._casoraVent / _casoraSolar from scripts/local/05-standard-medien.js – without the
+  // module the preview only said "Off". Load it once (pure functions, no cards).
   let medien = false, fussball = false, kaffee = false;
   const needMedien = (tile) => {
     const tn = names(tile && tile.template);
-    // Kaffeevollautomat: Zustand („Bereit“, „Cappuccino · 40 %“) über window._casoraCoffee (scripts/local/25-kaffee.js);
-    // ohne das Modul stand der Rohzustand der Integration in der Vorschau („Brewing“).
+    // Coffee machine: state ("Ready", "Cappuccino · 40 %") via window._casoraCoffee (scripts/local/25-kaffee.js);
+    // without the module the preview showed the integration's raw state ("Brewing").
     if (!kaffee && !window._casoraCoffee && tn.includes("casora_coffee")) {
       kaffee = true;
       import("/casora_scripts/local/25-kaffee.js").catch(() => {});
     }
-    // Fußball: Text („Sa 18:30 · gegen …“) aus window._casoraFootball (scripts/local/11-fussball.js).
+    // Football: text ("Sat 18:30 · vs …") from window._casoraFootball (scripts/local/11-fussball.js).
     if (!fussball && !window._casoraFootball && tn.includes("casora_football")) {
       fussball = true;
       import("/casora_scripts/local/11-fussball.js").catch(() => {});
@@ -569,16 +569,16 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
         const lang = ((hass && ((hass.locale && hass.locale.language) || hass.language)) || "en").split("-")[0];
         const w = (WORDS[lang] || {})[String(ent.state).toLowerCase()];
         if (w) return w;
-        // Zahlen: sinnvoll runden und Einheit anhängen (z. B. 1191.59 → „1.192 km“).
+        // Numbers: round sensibly and append the unit (e.g. 1191.59 → "1.192 km").
         const n = Number(ent.state);
         const unit = ent.attributes && ent.attributes.unit_of_measurement;
         if (ent.state !== "" && Number.isFinite(n)) {
           const digits = Math.abs(n) >= 100 ? 0 : 1;
           const txt = n.toLocaleString(lang, { maximumFractionDigits: digits });
-          // Englisch ohne Leerzeichen vor % („62%“), wie HA selbst.
+          // English without a space before % ("62%"), like HA itself.
           return unit ? txt + (unit === "%" && lang === "en" ? "" : " ") + unit : txt;
         }
-        // HAs deutsches „Ein“ heißt im Dashboard „An“ (casora-i18n.js).
+        // HA's German "Ein" reads "An" on the dashboard (casora-i18n.js).
         const f = hass && hass.formatEntityState ? hass.formatEntityState(ent) : null;
         return f === "Ein" ? "An" : f;
       };
@@ -587,11 +587,11 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       try { v = run(tpl.state_display, ctxFor(tile, ent, hass, tpl)); } catch (e) { return fallback(); }
       if (v == null || v === "") return fallback();
       if (typeof v === "number" || /^-?\d+(\.\d+)?$/.test(String(v).trim())) return fallback();
-      // Vorlage ohne ihr Modul gibt oft nur den Rohzustand zurück („off“) → übersetzen.
+      // A template without its module often returns just the raw state ("off") → translate.
       if (String(v).trim() === String(ent.state)) return fallback();
-      // DOMParser statt div: ein nicht eingehängtes div lädt <img> und führt onerror aus.
-      // Vorlagentexte sind deutsch; das Dashboard übersetzt sie in button-card (casora-i18n.js),
-      // die Vorschau hier – sonst stand in englischer Oberfläche „3 Räume“ oder „Bereit“ (07.10.2026).
+      // DOMParser instead of a div: a detached div loads <img> and runs onerror.
+      // Template texts are German; the dashboard translates them in button-card (casora-i18n.js),
+      // the preview does it here – otherwise an English UI showed "3 Räume" or "Bereit" (07.10.2026).
       const tv = typeof window.casoraTr === "function" ? window.casoraTr(String(v)) : String(v);
       const d = new DOMParser().parseFromString(tv, "text/html");
       return ((d.body && d.body.textContent) || "").trim() || null;
@@ -600,9 +600,9 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     }
   };
 
-  // Entität wie im Dashboard: Kacheln ohne eigene Entität, deren Vorlage sie selbst bestimmt
-  // (Alarm: alarm_entity, Standard Alarmo). Vorher stand in der Vorschau „Gerät fehlt“, das
-  // Dashboard zeigte die Kachel „Alarmo · Zuhause“ (Nutzertest 6, H-T4).
+  // Entity as on the dashboard: tiles without their own entity whose template picks it itself
+  // (alarm: alarm_entity, Alarmo by default). Previously the preview said "Device missing" while the
+  // dashboard showed the tile as "Alarmo · Zuhause" (user test 6, H-T4).
   window.casoraTileEntity = (tile, hass, templates) => {
     if (!tile || tile.entity) return (tile && tile.entity) || null;
     if (!isOursAny(tile)) return null;
@@ -616,9 +616,9 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     }
   };
 
-  // Name wie im Dashboard (name der Vorlagenkette, z. B. casora_entity: Anzeigename der Entität,
-  // Warn-Kachel „Warnungen“). Leer (ohne Entität, je nach Design) → die Vorschau bleibt beim Namen der
-  // Kachelart. null = nichts Eigenes.
+  // Name as on the dashboard (name of the template chain, e.g. casora_entity: the entity's display name,
+  // warning tile "Warnings"). Empty (no entity, depending on the design) → the preview keeps the name of the
+  // tile type. null = nothing of its own.
   window.casoraTileName = (tile, ent, hass, templates) => {
     if (!tile || tile.name || !isOursAny(tile)) return null;
     try {
@@ -644,14 +644,14 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   };
 })();
 
-// Editor-Hilfen für Casora-Kacheln: Geräte-Finder als Platzhalter und „Mit KI ergänzen“.
+// Editor helpers for Casora tiles: device finder as placeholder and "Complete with AI".
 (() => {
-  // Derselbe Finder wie im Dashboard (scripts/local/00-finden.js) – ohne DOM, nur Registry.
+  // The same finder as on the dashboard (scripts/local/00-finden.js) – no DOM, registry only.
   if (!window.casoraDevice) import("/casora_scripts/local/00-finden.js").catch(() => {});
-  // Dashboard-Übersetzung (Deutsch → Benutzersprache) für Texte, die die Vorschau aus den
-  // Dashboard-Skripten übernimmt (z. B. Sicherheits-Unterzeile „Alles sicher“, 07.10.2026).
+  // Dashboard translation (German → user language) for texts the preview takes over from the
+  // dashboard scripts (e.g. security subline "Alles sicher", 07.10.2026).
   if (!window.casoraTr) import("/casora_scripts/casora-i18n.js").catch(() => {});
-  // Diagramm-Karte (1.2) für zuschaltbare Sparklines in der Vorschau.
+  // Chart card (1.2) for the optional sparklines in the preview.
   if (!window.casoraChart) import("/casora_scripts/casora-chart.js").catch(() => {});
 
   const lang = (hass) => (((hass && ((hass.locale && hass.locale.language) || hass.language)) || "en").split("-")[0]);
@@ -678,7 +678,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     const CD = window.casoraDevice;
     if (!CD || !f.find || !tile || !tile.entity || !hass) return null;
     try {
-      // Eigene Suche des Finders (z. B. Saugroboter-Karte: vacuumMap).
+      // The finder's own search (e.g. vacuum card: vacuumMap).
       if (f.find.fn) return (typeof CD[f.find.fn] === "function" && CD[f.find.fn](hass, tile.entity)) || null;
       if (f.find.plug) {
         const p = CD.companionPlug(hass, tile.entity);
@@ -690,7 +690,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       return null;
     }
   }
-  // Eingetragene Entität gibt es nicht (mehr): Hinweis, was stattdessen genommen wird.
+  // The entered entity does not exist (anymore): hint at what is used instead.
   window.casoraFieldMissing = (f, tile, hass, cur) => {
     if (!f.find || !f.find.fn || !cur || typeof cur !== "string" || !hass || (hass.states || {})[cur]) return null;
     const id = found(f, tile, hass);
@@ -698,12 +698,12 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     if (!id) return de ? "Eingetragene Entität fehlt – keine Karte gefunden." : "The chosen entity is missing – no map found.";
     return (de ? "Eingetragene Entität fehlt – automatisch: " : "The chosen entity is missing – automatic: ") + nameOf(hass, id);
   };
-  // Die gefundene Entität selbst (für das Vorbelegen neuer Kacheln im Studio).
+  // The found entity itself (to prefill new tiles in the Studio).
   window.casoraFieldEntity = (f, tile, hass) => found(f, tile, hass);
   window.casoraFieldFound = (f, tile, hass) => {
     const id = found(f, tile, hass);
     if (!id) return null;
-    // Nur ein echter Name, nie die Entity-ID („Automatisch“ statt „Automatisch: sensor.time“).
+    // Only a real name, never the entity ID ("Auto" instead of "Auto: sensor.time").
     const name = nameOf(hass, id);
     return name && name !== id ? t(hass).auto + name : t(hass).auto.replace(/:\s*$/, "");
   };
@@ -788,8 +788,8 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     if (!isOurs(type) || !body) return;
     const hass = panel._hass;
     const fields = entityFields(type);
-    // Ohne Zusatzfelder nur, wenn die Kachel ein Gerät braucht – nicht bei Kacheln, die ihre Daten
-    // selbst finden (Solar-Tipp, Raumklima, Auto, E-Bike, Rezept).
+    // Without extra fields only if the tile needs a device – not for tiles that find their data
+    // themselves (solar tip, room climate, car, e-bike, recipe).
     if (!fields.length && (tile.entity || type.ownData || type.noEntity)) return;
     const row = document.createElement("div");
     row.className = "hint casora-ai";
@@ -847,13 +847,13 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   };
 })();
 
-// Hemma → Casora: Dashboards aus Hemma (Import) in Casora-Namen übersetzen.
-// Gleiche Regel wie der Dienst casora.umstellen (umstellen.py):
-//   • „hemma“ → „casora“ in Vorlagen, Karten, CSS-Variablen und JS der Vorlagen,
-//   • Entitäten nur, wenn sie Casora gehören (panel/umbenennung.json), sonst bleiben
-//     sie – z. B. Sensoren aus eigenen Paketen,
-//   • eigene Dateien unter /local/hemma/ und Dashboard-Adressen bleiben.
-// Umbenannte Kopien (jedes „hemma“ z. B. als „zuhaus“) genauso, mit ihrem Präfix.
+// Hemma → Casora: translate dashboards from Hemma (import) into Casora names.
+// Same rule as the casora.umstellen service (umstellen.py):
+//   • "hemma" → "casora" in templates, cards, CSS variables and template JS,
+//   • entities only if they belong to Casora (panel/umbenennung.json), otherwise they
+//     stay – e.g. sensors from your own packages,
+//   • your own files under /local/hemma/ and dashboard URLs stay.
+// Renamed copies (every "hemma" e.g. as "zuhaus") the same way, with their prefix.
 (() => {
   let own = new Set(), prefixes = [];
   fetch(new URL("./umbenennung.json", import.meta.url)).then((r) => r.json()).then((j) => {
@@ -868,9 +868,9 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     const n = "casora_" + obj.slice(pre.length + 1);
     return own.has(n) || prefixes.some((p) => n.indexOf(p) === 0);
   };
-  // Umbenannte Hemma-Kopie („zuhaus_room“, „--zuhaus-…“, /local/zuhaus/): Präfix des
-  // Dashboards. Die Seiten beginnen mit einer Raumkarte „<präfix>_room“, und die Vorlagen
-  // (falls vorhanden) tragen überwiegend dasselbe Präfix. Sonst null.
+  // Renamed Hemma copy ("zuhaus_room", "--zuhaus-…", /local/zuhaus/): the dashboard's
+  // prefix. The pages start with a room card "<prefix>_room", and the templates
+  // (if any) mostly carry the same prefix. Otherwise null.
   const PREFIX_RE = /^[a-z][a-z0-9]*$/;
   function prefixOf(cfg) {
     const views = (cfg && Array.isArray(cfg.views)) ? cfg.views : [];
@@ -890,7 +890,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
   function renameOne(s, pre) {
     const keep = [];
     const hold = (m) => { keep.push(m); return "\u0001" + (keep.length - 1) + "\u0001"; };
-    // Andere Präfixe als „hemma“ nur am Wortanfang – nicht mitten in einem fremden Wort.
+    // Prefixes other than "hemma" only at the start of a word – not inside a foreign word.
     const at = pre === "hemma" ? "" : "(?<![A-Za-z])";
     const up = pre.toUpperCase();
     s = s.replace(new RegExp("/" + pre + "-studio", "g"), "/casora-studio");
@@ -900,7 +900,7 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     s = s.replace(new RegExp(at + pre, "gi"), (w) => (w === up ? "CASORA" : w[0] !== w[0].toLowerCase() ? "Casora" : "casora"));
     return s.replace(/\u0001(\d+)\u0001/g, (_, i) => keep[+i]);
   }
-  // prefix: Präfix einer umbenannten Kopie (z. B. „zuhaus“); „hemma“ wird immer mit übersetzt.
+  // prefix: prefix of a renamed copy (e.g. "zuhaus"); "hemma" is always translated as well.
   const otherPrefix = (p) => (p && p !== "hemma" && p !== "casora" && PREFIX_RE.test(p) ? p : null);
   function renameText(s, prefix) {
     const p = otherPrefix(prefix);

@@ -1,14 +1,14 @@
-// Neues Studio: mehr Bedienung (06.10.2026)
+// New Studio: more controls (06.10.2026)
 //
-// - Suche (Lupe, ⌘K/Strg+K; Handy: „…“ › Suchen): Räume, Kacheln, Badges, Szenen, Einstellungen
-//   und Aktionen („Zeitreise“, „Look ändern“) – mit Tastatur, springt direkt hin
-// - „Wer sieht das?“ je HA-Benutzer für Kachel, Badge und Raum (Admins sehen im Studio alles)
-// - Raum vorübergehend ausblenden (Raummenü; in „Räume ordnen“ grau, wieder einblendbar)
-// - „Vor dem Schalten fragen“ je Kachel (variables.confirm_toggle, Dialog: casora-core.js)
-// - QR-Code „Auf Handy öffnen“ im Titelmenü (lokal erzeugt, ohne Zugangsdaten)
-// - Liste der Änderungen vor dem Speichern und „Wiederholen“ (⌘⇧Z)
-// Datenmodell, Speichern und Rückgängig bleiben die des Panels – hier wird nur angeschlossen.
-// Ohne DOM prüfbar (dev/unit/studio_mehr.mjs): qrMatrix, changeLines, searchRank.
+// - Search (magnifier, ⌘K/Ctrl+K; phone: "…" › Search): rooms, tiles, badges, scenes, settings
+//   and actions ("Rewind", "Change the look") – keyboard-driven, jumps straight there
+// - "Who sees this?" per HA user for tile, badge and room (admins see everything in the Studio)
+// - Hide a room temporarily (room menu; gray in "Arrange Rooms", can be shown again)
+// - "Ask before switching" per tile (variables.confirm_toggle, dialog: casora-core.js)
+// - QR code "Open on phone" in the title menu (generated locally, without credentials)
+// - List of changes before saving, and "Redo" (⌘⇧Z)
+// Data model, saving and undo stay the panel's – this only hooks in.
+// Testable without DOM (dev/unit/studio_mehr.mjs): qrMatrix, changeLines, searchRank.
 (() => {
   const W = typeof window !== "undefined" ? window : globalThis;
   const tr = (x) => (W.casoraI18n && W.casoraI18n.t ? W.casoraI18n.t(x) : x);
@@ -17,9 +17,9 @@
   const fold = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/ß/g, "ss");
 
-  // ── QR-Code (Byte-Modus, Fehlerkorrektur M, Version 1–20) ──────────────────────────
-  // Kleiner eigener Kodierer nach ISO/IEC 18004 – kein externer Dienst, keine Bibliothek.
-  // qrMatrix(text) → Zeilen aus true/false (dunkel/hell), ohne Ruhezone.
+  // ── QR code (byte mode, error correction M, version 1–20) ──────────────────────────
+  // Small own encoder per ISO/IEC 18004 – no external service, no library.
+  // qrMatrix(text) → rows of true/false (dark/light), without quiet zone.
   const QR_ECC = [-1, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26, 30, 22, 22, 24, 24, 28, 28, 26, 26, 26];
   const QR_BLOCKS = [-1, 1, 1, 1, 2, 2, 4, 4, 4, 5, 5, 5, 8, 9, 9, 10, 10, 11, 13, 14, 16];
   const qrRaw = (v) => {
@@ -75,7 +75,7 @@
     for (let pad = 0xec; bits.length < cap; pad ^= 0xec ^ 0x11) put(pad, 8);
     const data = [];
     for (let i = 0; i < bits.length; i += 8) data.push(bits.slice(i, i + 8).reduce((a, b) => (a << 1) | b, 0));
-    // Fehlerkorrektur je Block, dann verschränkt
+    // Error correction per block, then interleaved
     const nb = QR_BLOCKS[ver], ecl = QR_ECC[ver], raw = Math.floor(qrRaw(ver) / 8);
     const nShort = nb - (raw % nb), shortLen = Math.floor(raw / nb);
     const div = rsDivisor(ecl);
@@ -91,7 +91,7 @@
     for (let i = 0; i < blocks[0].length; i++) {
       blocks.forEach((b, j) => { if (i !== shortLen - ecl || j >= nShort) words.push(b[i]); });
     }
-    // Felder
+    // Matrix
     const size = ver * 4 + 17;
     const mod = Array.from({ length: size }, () => new Array(size).fill(false));
     const fn = Array.from({ length: size }, () => new Array(size).fill(false));
@@ -137,7 +137,7 @@
         set(a, c, bit); set(c, a, bit);
       }
     }
-    // Daten im Zickzack
+    // Data in zigzag
     let i = 0;
     for (let right = size - 1; right >= 1; right -= 2) {
       if (right === 6) right = 5;
@@ -150,7 +150,7 @@
       (x, y) => (Math.floor(x / 3) + Math.floor(y / 2)) % 2 === 0, (x, y) => ((x * y) % 2) + ((x * y) % 3) === 0,
       (x, y) => (((x * y) % 2) + ((x * y) % 3)) % 2 === 0, (x, y) => (((x + y) % 2) + ((x * y) % 3)) % 2 === 0];
     const apply = (m) => { for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) if (!fn[y][x] && MASKS[m](x, y)) mod[y][x] = !mod[y][x]; };
-    // Strafpunkte (vereinfacht): Läufe, 2×2-Blöcke, Sucher-ähnliche Muster, Hell/Dunkel-Verhältnis
+    // Penalty points (simplified): runs, 2×2 blocks, finder-like patterns, light/dark ratio
     const penalty = () => {
       let p = 0, dark = 0;
       const line = (get) => {
@@ -183,7 +183,7 @@
     apply(best); format(best);
     return mod;
   }
-  // SVG mit Ruhezone (4 Module), dunkel auf weiß – unabhängig vom Theme gut lesbar.
+  // SVG with quiet zone (4 modules), dark on white – readable regardless of the theme.
   function qrSvg(text) {
     const m = qrMatrix(text);
     const n = m.length + 8;
@@ -193,22 +193,22 @@
       + '<rect width="' + n + '" height="' + n + '" fill="#fff"/><path d="' + d + '" fill="#111"/></svg>';
   }
 
-  // ── Änderungen seit dem Speichern in Klartext ─────────────────────────────────────
-  // before/after: [compact, scaffold, extras, chrome, mobile] wie _print() (stable JSON).
-  // ctx: { roomName(room), tileName(tile) } – Ergebnis: Zeilen zum Anzeigen.
+  // ── Changes since saving, in plain words ──────────────────────────────────────────
+  // before/after: [compact, scaffold, extras, chrome, mobile] as in _print() (stable JSON).
+  // ctx: { roomName(room), tileName(tile) } – result: lines to display.
   const BADGE_VAR = /^(show_|badge|climate|temp|humid|aqi|light|security|lock|contact|camera|energy|people|person|media|now_playing|motion|window|door|co2|power|quality|presence)/;
   const OWN_VAR = /^(casora_hidden|casora_users|casora_badge_users|casora_ui_managed|image|image_night|room_name)$/;
-  // Jede Zeile trägt ihre eigene Rücknahme: fix(x, b) setzt in x (Kopie des jetzigen Stands,
-  // flach wie before/after) genau diesen Teil auf den gespeicherten Stand b zurück. Ob das sauber
-  // geht, prüft revertLine über den Fingerabdruck (alle anderen Zeilen bleiben, diese verschwindet).
-  // Umbenennen setzt nebenbei room_name/aqi_room_name/area und hält das bisherige Raumsymbol
-  // fest (room_icon, wenn es vorher keins gab) – das gehört zur Umbenennung.
+  // Each line carries its own revert: fix(x, b) resets in x (copy of the current state,
+  // flat like before/after) exactly this part to the saved state b. Whether that works
+  // cleanly, revertLine checks via the fingerprint (all other lines stay, this one disappears).
+  // Renaming also sets room_name/aqi_room_name/area and pins the previous room icon
+  // (room_icon, if there was none before) – that is part of the rename.
   const RENAME_VAR = /^(room_name|aqi_room_name|area)$/;
   const BADGE_TITLE = { climate: "Climate", lights: "Lights", people: "People", media: "Media", security: "Security", energy: "Energy" };
   const setv = (V, k, v) => { if (v === undefined) delete V[k]; else V[k] = JSON.parse(J(v)); };
-  // Eine Dashboard-Einstellung in Worten (note1 Frage 6): „Uhrzeit: 12-Stunden-Uhr an“ statt
-  // „Dashboard-Einstellungen geändert“. Schlüssel → Abschnitt und Feld aus SECTIONS des Panels
-  // (ctx.sections, sonst window.__casoraPanelInternals.SECTIONS); unbekannt → null.
+  // A dashboard setting in words (note1 question 6): "Time: 12-hour clock on" instead of
+  // "Dashboard settings changed". Key → section and field from the panel's SECTIONS
+  // (ctx.sections, otherwise window.__casoraPanelInternals.SECTIONS); unknown → null.
   function settingText(k, v, ctx) {
     const secs = (ctx && ctx.sections) || ((W.__casoraPanelInternals || {}).SECTIONS) || [];
     for (const sec of secs) {
@@ -256,8 +256,8 @@
         slots.forEach((s, i) => { l[s] = common[i]; });
       });
     }
-    // Einstellungen, die das Studio in jedem Raum ablegt (z. B. Uhrzeit, 12-Stunden-Uhr): eine Zeile
-    // statt einer je Raum (Nutzertest: „15 Änderungen“ für einen Schalter).
+    // Settings the Studio stores in every room (e.g. time, 12-hour clock): one line
+    // instead of one per room (user test: "15 changes" for one switch).
     const common = R1.filter((r) => M0.has(key(r)));
     const changedIn = new Map();
     common.forEach((r) => {
@@ -303,7 +303,7 @@
       if (J(V0.image) !== J(V1.image) || J(V0.image_night) !== J(V1.image_night)) {
         add(tr("Photo changed") + ": " + n, copyVars((v) => v === "image" || v === "image_night"));
       }
-      // Kacheln: gleiche zählen sich weg, der Rest ist neu, entfernt oder (paarweise) geändert.
+      // Tiles: equal ones cancel out, the rest is new, removed or (pairwise) changed.
       const a = (o.tiles || []).map(J), bb = (r.tiles || []).map(J);
       const pool = new Map();
       a.forEach((x, i) => { if (!pool.has(x)) pool.set(x, []); pool.get(x).push(i); });
@@ -317,8 +317,8 @@
       const both = Math.min(added.length, removed.length);
       for (let i = 0; i < both; i++) {
         const nu = added[i], old = removed[i];
-        // Nur ein- oder ausgeschaltet: so sagen (statt „Kachel geändert“).
-        // Das Studio schaltet über variables.enabled (Nutzertest 4: hieß sonst „Kachel geändert“).
+        // Only switched on or off: say so (instead of "Tile changed").
+        // The Studio switches via variables.enabled (user test 4: otherwise it said "Tile changed").
         const sansOn = (t) => { const c = JSON.parse(J(t)); delete c.enabled; if (c.variables) { delete c.variables.enabled; if (!Object.keys(c.variables).length) delete c.variables; } return J(c); };
         const off = (t) => t.enabled === false || (t.variables || {}).enabled === false;
         const onoff = sansOn(nu) === sansOn(old) ? (off(nu) ? "Tile turned off" : "Tile turned on") : "Tile changed";
@@ -338,7 +338,7 @@
         if (BADGE_VAR.test(v) && !RENAME_VAR.test(v)) badgeKeys.push(v); else otherKeys.push(v);
       });
       if (badgeKeys.length) {
-        // Nur ein Badge-Name geändert: wortgenau („Klima → Luft“), sonst allgemein.
+        // Only a badge name changed: word for word ("Climate → Air"), otherwise generic.
         const m = badgeKeys.length === 1 && /^(climate|lights|people|media|security|energy)_title$/.exec(badgeKeys[0]);
         const bid = m && m[1];
         const txt = bid ? tr("Badge renamed") + ": " + (V0[bid + "_title"] || tr(BADGE_TITLE[bid])) + " → " + (V1[bid + "_title"] || tr(BADGE_TITLE[bid])) + " · " + n
@@ -357,7 +357,7 @@
     });
     const dash = J((before || []).slice(1, 4)) !== J((after || []).slice(1, 4));
     if (dash || wide.size) {
-      // Nur eine oder zwei bekannte Einstellungen in allen Räumen: beim Namen nennen.
+      // Only one or two known settings in all rooms: name them.
       const one = R1.find((r) => M0.get(key(r))) || {};
       const named = !dash && wide.size <= 2 ? [...wide].map((k) => settingText(k, (one.variables || {})[k], ctx)) : [];
       const label = named.length && named.every(Boolean) ? named.join(" · ") : tr("Dashboard settings changed");
@@ -373,15 +373,15 @@
     return out;
   }
   function changeLines(before, after, ctx) { return changeItems(before, after, ctx).map((x) => x.text); }
-  // Eine Zeile zurücknehmen: liefert den neuen Stand oder { why } – dann bleiben die übrigen
-  // Änderungen sonst nicht unberührt, und die Zeile wird ausgegraut statt still zu viel zu tun.
+  // Revert one line: returns the new state or { why } – then the other
+  // changes would not stay untouched, and the line is grayed out instead of silently doing too much.
   function revertLine(before, after, index, ctx) {
     const items = changeItems(before, after, ctx);
     const it = items[index];
     if (!it) return { why: "gone" };
     const x = JSON.parse(J(after));
     const clean = (y) => {
-      // Leere variables, die es vorher nicht gab, wieder weg (sonst bleibt der Stand „geändert“).
+      // Drop empty variables that did not exist before (otherwise the state stays "changed").
       const B = new Map((((before || [])[0] || {}).rooms || []).map((r) => [r.path || r.name || "", r]));
       (((y || [])[0] || {}).rooms || []).forEach((r) => {
         const o = B.get(r.path || r.name || "");
@@ -389,22 +389,22 @@
       });
     };
     try { it.fix(x, before); clean(x); } catch (e) { return { why: "error" }; }
-    // Das Handy-Layout folgt dem Desktop (Abgleich beim Anzeigen/Speichern, z. B. Raumnamen): es zählt
-    // nicht zum Fingerabdruck. Ist am Desktop alles zurück, kommt auch das Handy-Layout zurück –
-    // sonst blieb am Handy „Handy-Layout geändert“ übrig und das Zurücknehmen wirkte verknüpft.
+    // The phone layout follows the desktop (synced on display/save, e.g. room names): it does not count
+    // toward the fingerprint. Once everything is back on desktop, the phone layout comes back too –
+    // otherwise "Phone layout changed" was left over and reverting seemed linked.
     const PHONE = tr("Phone layout changed");
     const desk = (l) => l.filter((t) => t !== PHONE);
     if (!desk(changeLines(before, x, ctx)).length && J(x[4]) !== J((before || [])[4])) x[4] = JSON.parse(J((before || [])[4]));
-    // Fingerabdruck mit festem Raumschlüssel statt Anzeigename: Wer „Küche → Kochecke“ zurücknimmt,
-    // ändert nur den Namen in den übrigen Zeilen („… · Kochecke“ wird „… · Küche“) – das ist keine
-    // Abhängigkeit (Nutzertest 4: Umbenennung war gesperrt, sobald im Raum etwas anderes geändert war).
+    // Fingerprint with a fixed room key instead of the display name: whoever reverts "Kitchen → Cooking corner"
+    // only changes the name in the other lines ("… · Cooking corner" becomes "… · Kitchen") – that is no
+    // dependency (user test 4: the rename was locked as soon as something else in the room had changed).
     const fctx = Object.assign({}, ctx, { roomName: (r) => "#" + ((r && (r.path || r.name)) || "") });
     const itemsF = changeItems(before, after, fctx);
     const others = itemsF.map((y, i) => ({ f: y.text, text: (items[i] || y).text, i })).filter((y) => y.i !== index && y.f !== PHONE);
     const got = desk(changeLines(before, x, fctx)).sort();
     const want = others.map((y) => y.f).sort();
     if (J(got) !== J(want)) {
-      // Welche andere Zeile hängt mit dran? (für einen verständlichen Grund am ausgegrauten Knopf)
+      // Which other line is tied to it? (for an understandable reason on the grayed-out button)
       const left = got.slice();
       const tied = others.find((y) => { const k = left.indexOf(y.f); if (k >= 0) { left.splice(k, 1); return false; } return true; });
       return { why: "linked", with: tied ? tied.text : "" };
@@ -412,9 +412,9 @@
     return { state: x };
   }
 
-  // ── Suche: Treffer ordnen ────────────────────────────────────────────────────────
-  // items: [{kind, label, sub?, words?}] – jedes Wort der Suche muss vorkommen; vorn im
-  // Namen zählt am meisten. Leere Suche: nichts (die Vorschläge wählt der Aufrufer).
+  // ── Search: ranking hits ─────────────────────────────────────────────────────────
+  // items: [{kind, label, sub?, words?}] – every word of the query must occur; at the start of
+  // the name counts most. Empty query: nothing (the caller picks the suggestions).
   const KIND_RANK = { action: 6, room: 5, setting: 4, tile: 3, badge: 2, scene: 1, device: 0 };
   function searchRank(items, q, max) {
     const toks = fold(q).split(/\s+/).filter(Boolean);
@@ -438,7 +438,7 @@
   W.__casoraStudioMehr = { qrMatrix, qrSvg, changeLines, changeItems, revertLine, searchRank, fold };
   if (typeof customElements === "undefined" || !W.document) return;
 
-  // Symbole der Menüs (Strichzeichnungen wie MENU_ICONS des Panels).
+  // Menu icons (line drawings like the panel's MENU_ICONS).
   const ICONS = {
     search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
     redo: '<path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H12"/>',
@@ -454,26 +454,26 @@
   const isMac = () => /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
 
   const CSS = `
-    /* Lupe und Wiederholen in der Werkzeugleiste (Desktop/Tablet) */
+    /* Magnifier and redo in the toolbar (desktop/tablet) */
     :host(.bmode) #msearch, :host(.bmode) #mredo { display:none; }
     :host(.bmode:not(.phone)) #mredo.has { display:grid; }
-    /* Suche als sichtbarer Eingang: Feld „Suchen … ⌘K“ (Handy: Lupe neben „Fertig“) */
+    /* Search as a visible entry: field "Search … ⌘K" (phone: magnifier next to "Done") */
     :host(.bmode) #msearch { display:inline-flex; align-items:center; gap:8px; height:34px; min-width:0; padding:0 12px 0 10px;
       margin-right:8px; border-radius:999px; border:0; font:inherit; font-size:14px; color:var(--ink-2, inherit); cursor:text;
       background:var(--wash-fill, rgba(118,118,128,.12)); box-shadow:none; flex:none; }
     #msearch svg { width:17px; height:17px; flex:none; }
-    /* ds-17 (1.3): Tastenhinweise in Text 2 (≥ 4,5:1) statt halb durchsichtig. */
+    /* ds-17 (1.3): key hints in text 2 (≥ 4.5:1) instead of half transparent. */
     #msearch .mkb { font-size:12px; color:var(--ink-2); margin-left:12px; }
     :host(.bmode.btight) #msearch .mlab, :host(.bmode.btight) #msearch .mkb { display:none; }
     :host(.bmode.phone) #msearch { width:44px; height:44px; padding:0; justify-content:center; margin-right:6px; cursor:pointer;
       background:var(--casora-studio-chip, rgba(118,118,128,.18)); color:var(--ink, inherit); }
     :host(.bmode.phone) #msearch .mlab, :host(.bmode.phone) #msearch .mkb { display:none; }
-    /* „Bearbeitet · 3 Änderungen“ am Titel öffnet die Änderungsliste */
+    /* "Edited · 3 changes" on the title opens the change list */
     .toprow > .bedited.mlink { cursor:pointer; border-radius:8px; padding:2px 6px; margin-left:-12px !important; }
-    /* Als zweite Zeile unter dem Titel, nicht daneben: sonst rückten beim ersten Ändern alle
-       Knöpfe der Kopfzeile nach rechts (Nutzertest: Fehlklick). Am Handy so ebenfalls sichtbar. */
+    /* As a second line below the title, not beside it: otherwise all header buttons moved right
+       on the first change (user test: misclick). Visible this way on the phone too. */
     :host(.bmode.bdirty:not(.flow)) .toprow { position:relative; }
-    /* Eng: „Handy weicht bei N Einstellungen ab“ nur als Zahl (wie am Handy). */
+    /* Tight: "Phone differs in N settings" only as a number (as on the phone). */
     :host(.bmode.btight:not(.phone)) #diffs .s-long, :host(.bmode.uxs2:not(.phone)) #diffs .s-long { display:none; }
     :host(.bmode.btight:not(.phone)) #diffs .s-short, :host(.bmode.uxs2:not(.phone)) #diffs .s-short { display:inline; }
     :host(.bmode.bdirty:not(.flow):not(.btight)) .toprow > .bedited.mlink,
@@ -486,7 +486,7 @@
     :host(.is-light.bmode.bdirty.phone:not(.flow)) .toprow > .bedited.mlink { color:#1d1d1f; background:rgba(255,255,255,.86); }
     .toprow > .bedited.mlink:hover { background:var(--wash-fill, rgba(118,118,128,.12)); color:var(--ink, inherit); }
     .toprow > .bedited.mlink:focus-visible { outline:2px solid var(--accent, #B67A50); outline-offset:1px; }
-    /* Aufklapp-Liste */
+    /* Dropdown list */
     .mpop { position:fixed; z-index:1000; width:min(360px, calc(100vw - 32px)); max-height:min(70vh, 520px); overflow:auto;
       padding:14px 14px 12px; border-radius:20px; box-shadow:0 2px 6px rgba(0,0,0,.10), 0 22px 56px rgba(0,0,0,.24); }
     .mpop, .msearch .mbox { color:var(--ink, inherit); background:var(--menu-glass, var(--casora-studio-menu-glass, rgba(30,33,38,.92)));
@@ -496,7 +496,7 @@
     .mpop ul { margin:0; padding:0; list-style:none; }
     .mpop li { padding:7px 4px; font-size:14px; line-height:1.35; border-top:.5px solid var(--hair, rgba(127,127,127,.2)); overflow-wrap:anywhere; }
     .mpop li:first-child { border-top:0; }
-    /* Änderungsliste: je Zeile „Zurücknehmen“ (ausgegraut mit Grund, wenn es nicht sauber geht) */
+    /* Change list: "Take back" per line (grayed out with a reason when it cannot be done cleanly) */
     .mpop li.mline { display:grid; grid-template-columns:1fr auto; align-items:center; column-gap:10px; }
     .mpop li.mline .mwhy { grid-column:1 / -1; font-size:12px; color:var(--ink-2, #8a8a8e); margin-top:2px; }
     .mpop .mback { flex:none; min-height:32px; padding:4px 12px; border:0; border-radius:999px; font:inherit; font-size:13px; font-weight:600;
@@ -504,8 +504,8 @@
     .mpop li.mgone .mtxt { text-decoration:line-through; color:var(--ink-2, #8a8a8e); }
     .mpop .mback:disabled { color:var(--ink-2, #8a8a8e); background:var(--wash-fill, rgba(118,118,128,.10)); cursor:default; }
     :host(.phone) .mpop .mback { min-height:36px; }
-    /* Beide Beschriftungen übereinander, die andere unsichtbar: der Knopf ist immer so breit wie das längere
-       Wort – sonst wurde „Zurückgenommen“ breiter, der Text daneben brach um und die Knöpfe rutschten (rb14). */
+    /* Both labels stacked, the other invisible: the button is always as wide as the longer
+       word – otherwise "Zurückgenommen" got wider, the text beside it wrapped and the buttons shifted (rb14). */
     .mpop .mback .mbl { display:grid; }
     .mpop .mback .mbl > span { grid-area:1 / 1; }
     .mpop .mback .mbl > .malt { visibility:hidden; }
@@ -515,7 +515,7 @@
     .mpop .mkbd { margin-left:6px; color:var(--ink-2); font-weight:500; font-size:12px; }
     :host(.phone) .mpop { left:8px !important; right:8px; top:auto !important; bottom:calc(10px + env(safe-area-inset-bottom, 0px));
       width:auto; max-height:72vh; border-radius:24px; }
-    /* Suche */
+    /* Search */
     .msearch { position:fixed; inset:0; z-index:1001; display:flex; justify-content:center; align-items:flex-start;
       padding:12vh 16px 16px; background:rgba(0,0,0,.18); }
     .msearch .mbox { width:min(580px, 100%); max-height:min(72vh, 620px); display:flex; flex-direction:column; overflow:hidden;
@@ -536,9 +536,9 @@
     .msearch .mempty { padding:22px 12px; text-align:center; color:var(--ink-2, #8a8a8e); font-size:14px; }
     :host(.phone) .msearch { padding:calc(10px + env(safe-area-inset-top, 0px)) 8px 8px; background:rgba(0,0,0,.28); }
     :host(.phone) .msearch .mbox { max-height:78vh; border-radius:24px; }
-    /* Wer sieht das? / Rückfrage im Editor */
+    /* Who sees this? / confirmation in the editor */
     .mwho { margin-top:4px; }
-    /* „Halten“ nach Rückfrage-Hinweis bzw. „Ausprobieren“: Abstand wie zwischen den übrigen Zeilen. */
+    /* "Hold" after the confirmation hint or "Try it": spacing as between the other rows. */
     .mgroup > * + .row.mhold { margin-top:12px; }
     .mtry { display:block; margin:6px 0 2px; padding:8px 12px; border-radius:10px; font:inherit; font-weight:600; cursor:pointer; }
     .mtry[hidden] { display:none; }
@@ -552,7 +552,7 @@
       background:var(--field-fill, var(--wash-fill, rgba(118,118,128,.12))); }
     .mwho .mval svg { width:18px; height:18px; flex:none; opacity:.6; }
     .mwho .mval .mvt { flex:1 1 auto; min-width:0; }
-    /* Wie die Eingabefelder darüber (Raumname, Hintergrundbild): 15 px, normal, Text bei 12 px. */
+    /* Like the input fields above (room name, background image): 15 px, normal, text at 12 px. */
     .mwho .mnote { font-size:13px; line-height:1.35; color:var(--accent, #94603B); font-weight:600; margin:2px 0 0; }
     .mwhosheet .mu { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 2px;
       border-top:.5px solid var(--hair, rgba(127,127,127,.2)); font-size:15px; }
@@ -564,7 +564,7 @@
     .mqr .mcode svg { width:100%; height:100%; display:block; }
     .mqr .murl { font-size:13px; color:var(--ink-2, #8a8a8e); text-align:center; overflow-wrap:anywhere; user-select:all; }
     .mqr .mhint { font-size:13px; line-height:1.4; text-align:center; color:var(--ink-2, #8a8a8e); margin:0; }
-    /* Ausgeblendete Räume in „Räume ordnen“ */
+    /* Hidden rooms in "Arrange Rooms" */
     #pane .brow.mhid .bri, #pane .brow.mhid .bn { opacity:.45; }
     #pane .brow .mshow { margin-left:auto; padding:4px 10px; border-radius:999px; font:inherit; font-size:12px; font-weight:650;
       background:var(--wash-fill, rgba(118,118,128,.14)); color:inherit; cursor:pointer; }
@@ -587,7 +587,7 @@
     const isPhone = (p) => p.classList.contains("phone");
     const rooms$ = (p) => (p._state && p._state.compact && p._state.compact.rooms) || [];
     const isHome = (p, r) => !!(I().isHomeRoom && I().isHomeRoom(r, rooms$(p)));
-    // Eigene Symbole in die Menü-Symbole des Panels (einmal).
+    // Add own icons to the panel's menu icons (once).
     const icons = () => { const M = I().MENU_ICONS; if (M && !M.search) Object.keys(ICONS).forEach((k) => { if (!M[k]) M[k] = ICONS[k]; }); };
 
     P._mCss = function () {
@@ -607,7 +607,7 @@
       return (t && t.name) || (inner && inner.name) || v.casora_name || (ty && tr(ty.label)) || tr("Tile");
     };
 
-    // ── Wiederholen ──────────────────────────────────────────────────────────
+    // ── Redo ─────────────────────────────────────────────────────────────────
     wrap("_undo", (orig) => function () {
       const st = this._undoStack || [];
       if (st.length && this._state && !this._mRedoing) {
@@ -617,7 +617,7 @@
       const was = quiet ? null : this._mChanges();
       const r = orig.apply(this, arguments);
       this._mPaintRedo();
-      // „Rückgängig gemacht“ sagt jetzt, was: die Zeile, die aus der Änderungsliste verschwand.
+      // "Undone" now says what: the line that vanished from the change list.
       if (was && was.length && on(this) && this._bToast) {
         const left = this._mChanges().slice();
         const gone = was.filter((x) => { const i = left.indexOf(x); if (i >= 0) { left.splice(i, 1); return false; } return true; });
@@ -628,14 +628,14 @@
     P._redo = function () {
       const snap = (this._mRedo || []).pop();
       if (!snap || !this._state) return;
-      // Nach „Zurücknehmen“ liegt derselbe Stand schon oben auf dem Rückgängig-Stapel: nicht doppelt,
-      // damit ⌘Z danach die Zeile wieder zurücknimmt.
+      // After "Take back" the same state already sits on top of the undo stack: not twice,
+      // so that ⌘Z afterwards undoes the take-back.
       if (snap === this._mTakenBack) {
         const st = this._undoStack || [];
         if (st[st.length - 1] === snap) this._undoStack = st.slice(0, -1);
       }
       this._mTakenBack = null;
-      // Über den Rückgängig-Weg anwenden; der jetzige Stand kommt danach wieder auf den Stapel.
+      // Apply via the undo path; the current state then goes back onto the stack.
       const now = this._snap();
       this._undoStack = (this._undoStack || []).concat([snap]);
       this._mRedoing = true;
@@ -647,7 +647,7 @@
       this._mPaintRedo();
       if (this._bToast) this._bToast(tr("Redone"), { ms: 1800 });
     };
-    // Eine neue Änderung (nicht Rückgängig/Wiederholen) leert „Wiederholen“.
+    // A new change (not undo/redo) clears "Redo".
     wrap("_markDirty", (orig) => function () {
       const p0 = this._lastPrint;
       const r = orig.apply(this, arguments);
@@ -658,7 +658,7 @@
     });
     wrap("_resetUndo", (orig) => function () {
       const r = orig.apply(this, arguments);
-      // Gespeicherter Stand zum Vergleichen (gesetzt wie _clean: nach Laden und Speichern).
+      // Saved state for comparison (set like _clean: after loading and saving).
       this._mBase = this._shadow || null;
       this._mRedo = [];
       this._mPaintRedo();
@@ -674,45 +674,45 @@
       }
     };
 
-    // Vorschau folgt dem gewählten Raum (Nutzertest Handy: Raum im Räume-Menü gewählt, Vorschau
-    // blieb auf „Zuhause“). Nur bei echtem Raumwechsel neu zeichnen.
+    // The preview follows the selected room (phone user test: room picked in the Rooms menu, preview
+    // stayed on "Home"). Only redraw on a real room change.
     wrap("_renderTabs", (orig) => function () {
       const r = orig.apply(this, arguments);
       if (on(this) && this._state && this._mPvRoom !== undefined && this._mPvRoom !== this._room) {
         requestAnimationFrame(() => {
           try {
-            // Handy-Vorschau: Raumseite des gewählten Raums (wie beim Umschalten auf „Handy“).
+            // Phone preview: room page of the selected room (as when switching to "Phone").
             if (this._miniSize === "phone" && this._phoneRoomFilter) this._phoneFilter = this._phoneRoomFilter();
             if (this._rebuildPreview) this._rebuildPreview();
-          } catch (e) { /* nächstes Zeichnen */ }
+          } catch (e) { /* next draw */ }
         });
       }
       this._mPvRoom = this._room;
       return r;
     });
 
-    // Der Hinweis „Handy weicht … ab“ kommt nach dem Einpassen der Kopfzeile: danach neu einpassen.
+    // The hint "Phone differs … " comes after the header is fitted: refit afterwards.
     wrap("_renderReconcile", (orig) => function () {
       const r = orig.apply(this, arguments);
-      if (on(this) && typeof this._bFitTools === "function") requestAnimationFrame(() => { try { this._bFitTools(); } catch (e) { /* nächstes Mal */ } });
+      if (on(this) && typeof this._bFitTools === "function") requestAnimationFrame(() => { try { this._bFitTools(); } catch (e) { /* next time */ } });
       return r;
     });
 
-    // ── Änderungen ───────────────────────────────────────────────────────────
+    // ── Changes ──────────────────────────────────────────────────────────────
     const flat = (sn) => sn.s.concat([sn.m || null]);
     P._mCtx = function () { return { roomName: (r) => this._roomLabel(r), tileName }; };
     P._mItems = function () {
       if (!this._state || !this._mBase || !(this._isDirty && this._isDirty())) return [];
       try { return changeItems(flat(this._mBase), flat(this._snap()), this._mCtx()); } catch (e) { return []; }
     };
-    // Gespeicherter Stand eines Raums (für das Zurückbenennen im Raum-Namensfeld).
+    // Saved state of a room (for renaming back in the room name field).
     P._savedRoom = function (room) {
       const R = (this._mBase && this._mBase.s && this._mBase.s[0] && this._mBase.s[0].rooms) || [];
       return (room && R.find((r) => r.path === room.path)) || null;
     };
     P._mChanges = function () { return this._mItems().map((x) => x.text); };
-    // Eine Zeile der Liste zurücknehmen (Teil-Wiederherstellung aus dem gespeicherten Stand).
-    // Läuft über den Rückgängig-Weg: ⌘Z holt die Änderung danach wieder.
+    // Take back one line of the list (partial restore from the saved state).
+    // Runs via the undo path: ⌘Z brings the change back afterwards.
     P._mRevertPlan = function (i) {
       if (!this._state || !this._mBase) return { why: "gone" };
       try { return revertLine(flat(this._mBase), flat(this._snap()), i, this._mCtx()); } catch (e) { return { why: "error" }; }
@@ -731,7 +731,7 @@
       this._undoStack = (this._undoStack || []).concat([now]).slice(-50);
       this._bQuiet = true;
       try { this._markDirty(); } finally { this._bQuiet = false; }
-      // „Wiederholen“ (⇧⌘Z) holt die Zeile zurück – wie ⌘Z (Nutzertest: Knopf war ausgegraut).
+      // "Redo" (⇧⌘Z) brings the line back – like ⌘Z (user test: the button was grayed out).
       this._mRedo = [now];
       this._mTakenBack = now;
       this._mPaintRedo();
@@ -740,7 +740,7 @@
       return true;
     };
     const countText = (n) => (n === 1 ? tr("1 change") : tr("{n} changes").replace("{n}", n));
-    // „— Bearbeitet“ am Titel (casora-panel-b.js) wird „Bearbeitet · 3 Änderungen“ und öffnet die Liste.
+    // "— Edited" on the title (casora-panel-b.js) becomes "Edited · 3 changes" and opens the list.
     P._mPaintChanges = function () {
       if (!this.shadowRoot) return;
       clearTimeout(this._mChT);
@@ -749,7 +749,7 @@
         if (!e) return;
         const n = this._mChanges().length;
         e.textContent = tr("Edited") + (n ? " · " + countText(n) : "") + " ›";
-        // Unter dem Titelknopf (Desktop: Raumtitel, Handy: Dashboard-Titel) ausrichten.
+        // Align below the title button (desktop: room title, phone: dashboard title).
         const tb = this.shadowRoot.querySelector(isPhone(this) ? "#navtitle" : "#roomtitle");
         if (tb && tb.offsetParent) e.style.left = Math.max(0, tb.offsetLeft - (isPhone(this) ? 6 : 0)) + "px";
         if (!e._mWired) {
@@ -765,7 +765,7 @@
         e.setAttribute("aria-label", t);
       }, 120);
     };
-    // Nach dem Speichern: „Gespeichert · 3 Änderungen – in der Zeitreise als Stand 21:40“.
+    // After saving: "Saved · 3 changes – in Rewind as state 21:40".
     wrap("_save", (orig) => async function () {
       const n = on(this) ? this._mChanges().length : 0;
       const ok = await orig.apply(this, arguments);
@@ -775,8 +775,8 @@
       }
       return ok;
     });
-    // taken: in diesem Fenster zurückgenommene Zeilen ({at, text}). Sie bleiben als Platzhalter an
-    // ihrer Stelle stehen – nichts rutscht, „Speichern“ springt nicht unter den Mauszeiger.
+    // taken: lines taken back in this window ({at, text}). They stay as placeholders in
+    // their spot – nothing shifts, "Save" does not jump under the mouse pointer.
     P._mShowChanges = function (anchor, taken) {
       this._mCss();
       clearTimeout(this._bSoftT);
@@ -787,7 +787,7 @@
       const h = document.createElement("h4");
       h.textContent = items.length ? countText(items.length) : tr("No unsaved changes");
       box.appendChild(h);
-      // Sichtbare Beschriftung + unsichtbar die andere (Breite des längeren Worts, siehe .mbl).
+      // Visible label + the other one invisible (width of the longer word, see .mbl).
       const mlab = (btn, shown, alt) => {
         const w = document.createElement("span"); w.className = "mbl";
         const a = document.createElement("span"); a.textContent = shown;
@@ -828,7 +828,7 @@
           mlab(b, tr("Take back"), tr("Taken back"));
           b.setAttribute("aria-label", tr("Take back") + ": " + it.text);
           if (!plan.state) {
-            // Ehrlich ausgrauen statt still mehr zurückzunehmen als diese Zeile.
+            // Gray out honestly instead of silently taking back more than this line.
             b.disabled = true;
             const why = document.createElement("small");
             why.className = "mwhy";
@@ -838,7 +838,7 @@
           }
           b.onclick = () => {
             if (!this._mRevert(i)) return;
-            // Liste offen lassen und neu zeichnen: man sieht, was übrig bleibt (und was zurückgenommen ist).
+            // Keep the list open and redraw: you see what remains (and what was taken back).
             this._mShowChanges(anchor, taken.concat([{ at: pos, text: it.text }]));
           };
           li.insertBefore(b, li.children[1] || null);
@@ -863,14 +863,14 @@
       mk(tr("Undo"), mac ? "⌘Z" : "Ctrl+Z", !(this._undoStack || []).length, () => this._undo());
       mk(tr("Redo"), mac ? "⇧⌘Z" : "Ctrl+Y", !(this._mRedo || []).length, () => this._redo());
       if (items.length) mk(tr("Save"), mac ? "⌘S" : "Ctrl+S", false, () => this._save(), "");
-      // Fokus auf „Speichern“, nicht auf das erste „Zurücknehmen“ (Enter nähme sonst etwas zurück).
+      // Focus on "Save", not on the first "Take back" (Enter would otherwise take something back).
       const sv = acts.querySelector("button:not(.ghost)");
       if (sv) sv.setAttribute("data-autofocus", "");
       box.appendChild(acts);
       this._mPop(anchor, box, "mchg");
     };
 
-    // Kleines Aufklappfenster (Handy: Blatt unten). Esc und Klick daneben schließen.
+    // Small popover (phone: sheet at the bottom). Esc and a click outside close it.
     P._mPop = function (anchor, content, cls) {
       this._mPopClose();
       const root = this.shadowRoot;
@@ -883,7 +883,7 @@
         const r = anchor.getBoundingClientRect();
         const w = pop.offsetWidth;
         pop.style.top = Math.round(r.bottom + 8) + "px";
-        // Links im Fenster (Titel) linksbündig, rechts (Werkzeuge) rechtsbündig zum Auslöser.
+        // Left in the window (title) left-aligned, right (tools) right-aligned to the trigger.
         const x = r.left + r.width / 2 < window.innerWidth / 2 ? r.left - 6 : r.right - w;
         pop.style.left = Math.round(Math.max(12, Math.min(window.innerWidth - w - 12, x))) + "px";
       }
@@ -898,7 +898,7 @@
     };
     P._mPopClose = function () { if (this._mPopOff) { const f = this._mPopOff; this._mPopOff = null; f(); } };
 
-    // ── Werkzeugleiste: Lupe, Wiederholen, Änderungen ───────────────────────
+    // ── Toolbar: magnifier, redo, changes ───────────────────────────────────
     P._mTools = function () {
       const root = this.shadowRoot;
       const undo = root.getElementById("undo");
@@ -934,11 +934,11 @@
       this._mPaintChanges();
     };
 
-    // Tastatur: ⌘K/Strg+K Suche, ⌘⇧Z/Strg+Y Wiederholen (nicht in Eingabefeldern).
+    // Keyboard: ⌘K/Ctrl+K search, ⌘⇧Z/Ctrl+Y redo (not in input fields).
     P._mKeys = function () {
       if (this._mKeyed) return;
       this._mKeyed = true;
-      // Über _gOn: beim Verlassen des Panels wieder abgemeldet (sonst hält document die alte Instanz).
+      // Via _gOn: unregistered when leaving the panel (otherwise document keeps the old instance).
       this._gOn(document, "keydown", (ev) => {
         if (!this.isConnected || !this._state || !on(this)) return;
         const k = String(ev.key || "").toLowerCase();
@@ -953,11 +953,11 @@
           this._redo();
         }
       }, true);
-      // HA-Kürzel aus einem Buchstaben (a = Assist, e/c/d = Schnellsuche, m = My-Link, ? = Kürzel)
-      // feuern im Studio nicht (Nutzertest 4: Tippen kurz vor dem Fokus im Suchfeld öffnete Assist).
-      // HA lauscht auf window (Bubble) und lässt ein Ereignis mit defaultPrevented liegen – hier auf
-      // document (Bubble), also nach den eigenen Tastenhandlern des Studios. Eingabefelder bleiben
-      // unberührt (dort tippt man; HA ignoriert sie ohnehin).
+      // Single-letter HA shortcuts (a = Assist, e/c/d = quick bar, m = My link, ? = shortcuts)
+      // do not fire in the Studio (user test 4: typing just before focus reached the search field opened Assist).
+      // HA listens on window (bubble) and ignores an event with defaultPrevented – here on
+      // document (bubble), so after the Studio's own key handlers. Input fields stay
+      // untouched (that is where you type; HA ignores them anyway).
       this._gOn(document, "keydown", (ev) => {
         if (!this.isConnected || ev.defaultPrevented || ev.metaKey || ev.ctrlKey || ev.altKey) return;
         if (String(ev.key || "").length !== 1 || ev.key === " ") return;
@@ -969,7 +969,7 @@
 
     // ── Suche ───────────────────────────────────────────────────────────────
     const SECS = [
-      // Das Design gilt für alle Dashboards (Einstellungen › Design, unten bei PAGES); hier bleibt die Bedienung.
+      // The design applies to all dashboards (Settings › Design, below at PAGES); the controls stay here.
       ["General", "Controls", "bedienung kopfzeile knöpfe assist schrift leerlauf startseite tablet leistung dialoge halten gedrückt lange drücken schnellmenü hold"],
       ["Weather", "Weather", "wetter temperatur vorhersage"], ["Time", "Time", "uhrzeit uhr datum uhrformat format 12 12h 12-stunden 12-stunden-uhr 24 24h 24-stunden stunden am pm"],
       ["Notifications", "Notifications", "glocke benachrichtigungen hinweise meldungen push"], ["Scenes", "Scenes", "szenen stimmung"],
@@ -996,8 +996,8 @@
         this._renderForm();
       };
       const sel = (s) => requestAnimationFrame(() => { this._bOpen = true; this._select(s); });
-      // Aktionen
-      // Weg dorthin („Einstellungen › Design“) – so lernt man die Menüs nebenbei.
+      // Actions
+      // Path there ("Settings › Design") – this way you learn the menus along the way.
       const way = (...xs) => xs.filter(Boolean).map((x) => tr(x)).join(" › ");
       const here = rooms[this._room];
       const A = (id, label, words, run, ok, path) => { if (ok !== false) out.push({ kind: "action", id: "a:" + id, label: tr(label), words, run, path }); };
@@ -1009,7 +1009,7 @@
         () => { this._bLeavePages && this._bLeavePages(); sel({ group: "rooms", key: "Appearance", label: "Appearance" }); }, !!here,
         here ? this._roomLabel(here) + " › " + tr("Appearance") : "");
       A("addtile", "Add a tile", "kachel hinzufügen neu gerät lampe licht steckdose schalter einfügen", () => this._bAddTile(), true, way("Content", "Tiles"));
-      // Kachel-Optionen, die man unter anderem Namen sucht (Nutzertest 5: „rückfrage“ fand nichts).
+      // Tile options people search for under another name (user test 5: "rückfrage" found nothing).
       A("askfirst", "Ask before switching", "rückfrage rueckfrage bestätigen bestätigung nachfragen fragen vorher sicherheitsabfrage abfrage "
         + "absichern versehentlich aus versehen garage garagentor tor confirm", () => this._mGoTileOption("ask"), true, way("Tile", "Visibility, ask first & hold"));
       A("whosees", "Who sees this?", "wer sieht sichtbar sichtbarkeit benutzer nutzer kind kinder person gast ausblenden verbergen verstecken "
@@ -1042,25 +1042,25 @@
       A("match", "Match Desktop and Phone", "angleichen unterschiede handy desktop", () => this._reviewDifferences(), typeof this._reviewDifferences === "function" && !!this._pair);
       A("tour", "Quick tour", "einführung hilfe tour erklärung", () => this._bIntro && this._bIntro(true));
       A("updates", "Updates", "update aktualisieren version neu", () => this._cuFromMenu(), typeof this._cuFromMenu === "function");
-      // Räume
+      // Rooms
       rooms.forEach((r, i) => {
         const V = r.variables || {};
         out.push({ kind: "room", id: "r:" + i, label: this._roomLabel(r), sub: V.casora_hidden ? tr("Hidden") : "",
           words: "raum zimmer " + (r.path || ""), run: () => { go(i); this._bClose && this._bClose(); } });
       });
-      // Kacheln
+      // Tiles
       rooms.forEach((r, i) => (r.tiles || []).forEach((t) => {
         const key = this._tileKey(t);
         const inner = (t.type === "conditional" && t.card) || t;
-        // Auch über den Anzeigenamen des Geräts (Registry-Name, sonst friendly_name) zu finden.
+        // Also findable by the device's display name (registry name, otherwise friendly_name).
         const H = this._hass || {}, eid = String(inner.entity || "");
         const reg = (H.entities || {})[eid], st = (H.states || {})[eid];
         const alias = [(reg && reg.name) || "", (st && st.attributes && st.attributes.friendly_name) || ""].join(" ");
         out.push({ kind: "tile", id: "t:" + key, label: tileName(t), sub: this._roomLabel(r), path: this._roomLabel(r) + " › " + tr("Tiles"), here: i === this._room, words: eid + " " + alias + " kachel",
           run: () => { go(i); sel({ group: "tiles", key, label: tileName(t) }); setTimeout(() => this._bFlash && this._bFlash("t:" + key), 200); } });
       }));
-      // Geräte ohne Kachel (Nutzertest: ⌘K „Stehlampe“ fand nichts): „Kachel für … hinzufügen“,
-      // in den Raum des Geräts. Nur beim Tippen sichtbar (searchRank), nie in der leeren Liste.
+      // Devices without a tile (user test: ⌘K "Stehlampe" found nothing): "Add tile for …",
+      // into the device's room. Only visible while typing (searchRank), never in the empty list.
       if (typeof this._uxDevices === "function" && typeof this._uxAddDevice === "function") {
         let devs = [];
         try { devs = this._uxDevices().filter((c) => c.fresh); } catch (e) { devs = []; }
@@ -1072,9 +1072,9 @@
             run: () => { this._bOpen = true; this._uxAddDevice(c, { direct: true }); } });
         });
       }
-      // Geräte zum Einstellen (Nutzertest 5, H-T2: „Leselampe“ – ein Licht im Badge, ohne Kachel – fand
-      // nichts): Lichter, Jalousien, Lüfter, Schalter, Thermostate mit Bereich öffnen HAs großes Gerätefenster.
-      // Nur beim Tippen sichtbar (searchRank), wie „Kachel für … hinzufügen“.
+      // Devices to adjust (user test 5, H-T2: "Leselampe" – a light in the badge, without a tile – found
+      // nothing): lights, blinds, fans, switches, thermostats with an area open HA's large device dialog.
+      // Only visible while typing (searchRank), like "Add tile for …".
       {
         const H = this._hass || {}, S = H.states || {}, E = H.entities || {}, D = H.devices || {}, AR = H.areas || {};
         const fresh = new Set(out.filter((x) => x.kind === "device").map((x) => x.id.slice(2)));
@@ -1089,7 +1089,7 @@
             run: () => this.dispatchEvent(new CustomEvent("hass-more-info", { bubbles: true, composed: true, detail: { entityId: id } })) });
         });
       }
-      // Badges: im offenen Raum alle eingeschalteten, sonst nur eingerichtete
+      // Badges: in the open room all switched-on ones, otherwise only configured ones
       rooms.forEach((r, i) => {
         const V = r.variables || {};
         const keys = Object.keys(V).filter((k) => V[k] !== null && V[k] !== "" && V[k] !== undefined);
@@ -1101,7 +1101,7 @@
             run: () => { go(i); sel({ group: "badges", key: label, label }); } });
         });
       });
-      // Einstellungen
+      // Settings
       SECS.forEach(([key, label, words]) => out.push({ kind: "setting", id: "s:" + key, label: tr(label), sub: tr("This dashboard"), words,
         path: key === "Appearance" && here ? this._roomLabel(here) + " › " + tr(label) : way("Dashboard", label),
         run: () => { this._bLeavePages && this._bLeavePages(); sel({ group: "rooms", key, label: key }); } }));
@@ -1109,13 +1109,13 @@
         PAGES.forEach(([id, label, words]) => out.push({ kind: "setting", id: "p:" + id, label: tr(label), sub: tr("For all dashboards"), words, path: way("Settings", label),
           run: () => { this._bOpen = true; this._csOpenPage(id); } }));
       }
-      // Szenen
+      // Scenes
       (this._sceneCatalog ? this._sceneCatalog() : []).forEach((s) => out.push({ kind: "scene", id: "sc:" + s.id, label: s.label, words: s.id + " szene", path: way("Dashboard", "Scenes"),
         run: () => { this._bLeavePages && this._bLeavePages(); sel({ group: "rooms", key: "Scenes", label: "Scenes" }); } }));
       return out;
     };
-    // ⌘K → Kachel-Option: die gewählte Kachel (sonst die erste passende, zuerst im offenen Raum)
-    // öffnen, „Sichtbarkeit & Rückfrage“ aufklappen und die Zeile kurz hervorheben.
+    // ⌘K → tile option: open the chosen tile (otherwise the first match, the open room first),
+    // expand "Visibility & ask first" and briefly highlight the row.
     P._mGoTileOption = function (kind) {
       const rooms = rooms$(this);
       const fits = (t) => {
@@ -1250,17 +1250,17 @@
       document.addEventListener("keydown", esc, true);
       wrapEl.addEventListener("pointerdown", (ev) => { if (ev.target === wrapEl) close(true); });
       root.appendChild(wrapEl);
-      // per-03 (10.10.2026): Fläche erst rechts der angedockten HA-Seitenleiste – sonst lag der Kasten
-      // (Fenstermitte) am Tablet 1024 halb darunter.
+      // per-03 (10.10.2026): area only right of the docked HA sidebar – otherwise the box
+      // (window center) sat half under it on a 1024 tablet.
       wrapEl.style.left = Math.max(0, Math.round(this.getBoundingClientRect().left)) + "px";
       paint();
-      // Sofort fokussieren: sonst landeten Buchstaben, die direkt nach dem Klick kamen, beim Knopf
-      // (und in HA-Kürzeln). Der zweite Versuch fängt Fokus-Diebe (Toast, Popover) danach ab.
+      // Focus immediately: otherwise letters typed right after the click landed on the button
+      // (and in HA shortcuts). The second attempt catches focus thieves (toast, popover) afterwards.
       input.focus();
       setTimeout(() => { if (wrapEl.isConnected && root.activeElement !== input) input.focus(); }, 20);
     };
 
-    // ── QR-Code „Auf Handy öffnen“ ──────────────────────────────────────────
+    // ── QR code "Open on phone" ─────────────────────────────────────────────
     P._mDashLink = function () {
       const H = this._hass || {};
       const cfg = H.config || {};
@@ -1283,7 +1283,7 @@
           const q = document.createElement("div");
           q.className = "mqr";
           q.innerHTML = '<div class="mcode"></div><div class="murl" data-no-i18n></div><p class="mhint"></p>';
-          // Ohne Code (Adresse zu lang) nur Link und „Link kopieren“ zeigen.
+          // Without a code (URL too long) only show the link and "Copy link".
           const mc = q.querySelector(".mcode");
           mc.innerHTML = code;
           const svg = mc.querySelector("svg");
@@ -1316,11 +1316,11 @@
       return orig.apply(this, arguments);
     });
 
-    // ── Menüs: Suche, Wiederholen, Änderungen (Handy „…“); Raum ausblenden (Raummenü) ──
+    // ── Menus: search, redo, changes (phone "…"); hide room (room menu) ────────────────
     wrap("_menuAt", (orig) => function (anchor, items, onPick, mopts) {
       if (on(this) && Array.isArray(items)) {
         icons();
-        // Handy „…“: Suchen oben, Wiederholen unter Rückgängig, Änderungen ansehen.
+        // Phone "…": search on top, redo below undo, view changes.
         const u = items.findIndex((x) => x && x.id === "undo");
         if (isPhone(this) && u >= 0 && items.some((x) => x && x.id === "hints") && !items.some((x) => x && x.id === "msearch")) {
           items = items.slice();
@@ -1336,7 +1336,7 @@
             : id === "mredo" ? this._redo()
               : id === "mchanges" ? setTimeout(() => this._mShowChanges(more), 60) : pick(id));
         }
-        // „…“: „Auf Handy öffnen“ auch hier (Nutzertest: dort zuerst gesucht, lag nur im Titelmenü).
+        // "…": "Open on phone" here too (user test: looked for it there first, it was only in the title menu).
         const hi = items.findIndex((x) => x && x.id === "hints");
         if (hi >= 0 && this._dashUrl && !this._flowMode && !items.some((x) => x && x.id === "mqr")) {
           items = items.slice();
@@ -1344,7 +1344,7 @@
           const pick0 = onPick;
           onPick = (id) => (id === "mqr" ? setTimeout(() => this._mQr(), 60) : pick0(id));
         }
-        // Raummenü: ausblenden bzw. wieder einblenden; ausgeblendete Räume in der Liste gekennzeichnet.
+        // Room menu: hide or show again; hidden rooms marked in the list.
         if (items.some((x) => x && x.id === "rename" && x.group === "This Room")) {
           const rooms = rooms$(this);
           const room = rooms[this._room];
@@ -1354,9 +1354,9 @@
             const r = m && rooms[+m[1]];
             return r && (r.variables || {}).casora_hidden ? { ...x, label: x.label + " · " + tr("Hidden") } : x;
           });
-          // Ausgeblendete Räume oben, je Raum „… · Einblenden“ mit einem Tipp (Nutzertest 4, E-T6: der Weg
-          // über „1 Raum ausgeblendet“ → Räume ordnen → Einblenden waren 7 Schritte). Viele: wie bisher
-          // ein Hinweis, der zu „Räume ordnen“ führt.
+          // Hidden rooms on top, per room "… · Show again" with one tap (user test 4, E-T6: the path
+          // via "1 room hidden" → Arrange Rooms → Show again took 7 steps). Many: as before
+          // a hint that leads to "Arrange Rooms".
           const hid = rooms.map((r, i) => ({ r, i })).filter((x) => (x.r.variables || {}).casora_hidden);
           const nHid = hid.length;
           const first = items.findIndex((x) => x && /^go:/.test(x.id || ""));
@@ -1383,7 +1383,7 @@
       return orig.call(this, anchor, items, onPick, mopts);
     });
 
-    // ── Raum ausblenden ─────────────────────────────────────────────────────
+    // ── Hide room ───────────────────────────────────────────────────────────
     P._mHideRoom = function (i, hide) {
       const r = rooms$(this)[i];
       if (!r || (hide && isHome(this, r))) return;
@@ -1393,7 +1393,7 @@
       try { this._markDirty(); } finally { this._bQuiet = false; }
       this._renderTabs();
       this._renderForm();
-      // Vorschau neu: Auge an der Raumleiste und Zähler „N ausgeblendet“ (Nutzertest 7: blieben stehen).
+      // Preview anew: eye on the room bar and counter "N hidden" (user test 7: they stayed stale).
       if (this._rebuildPreview) this._rebuildPreview();
       if (this._bToast) {
         this._bToast(tr(hide ? "Room hidden" : "Room shown again") + ": " + this._roomLabel(r), {
@@ -1428,7 +1428,7 @@
       return r;
     });
 
-    // ── Wer sieht das? ──────────────────────────────────────────────────────
+    // ── Who sees this? ──────────────────────────────────────────────────────
     P._mUsers = function () {
       if (!this._mUsersP && this._hass && this._hass.callWS) {
         this._mUsersP = this._hass.callWS({ type: "config/auth/list" }).then((list) => (list || [])
@@ -1440,7 +1440,7 @@
     };
     const WHO_ONLY_HIDES = "Only hides it – no access protection. Anyone with an account can still control the devices in Home Assistant.";
     const namesOf = (ids, users) => ids.map((id) => (users.find((u) => u.id === id) || {}).name || tr("Unknown user"));
-    // Zeile „Wer sieht das?“: Wert „Alle“ bzw. „Nur für: …“, Antippen öffnet die Auswahl.
+    // "Who sees this?" row: value "Everyone" or "Only for: …", tapping opens the picker.
     P._mWhoRow = function (host, get, set, what, elsewhere, opt) {
       opt = opt || {};
       const box = document.createElement("div");
@@ -1459,12 +1459,12 @@
       const note = document.createElement("div");
       note.className = "mnote";
       note.setAttribute("data-no-i18n", "");
-      // Ehrlich sagen, was es ist: nur Ausblenden im Dashboard, kein Zugriffsschutz.
+      // Say honestly what it is: only hiding on the dashboard, no access protection.
       const warn = document.createElement("div");
       warn.className = "hint mwhowarn";
       warn.setAttribute("data-no-i18n", "");
       warn.textContent = tr(WHO_ONLY_HIDES);
-      // Nutzertest 5 (H-T4): dasselbe Gerät kann woanders weiter zu sehen sein (z. B. Sicherheits-Badge auf „Zuhause“).
+      // User test 5 (H-T4): the same device may still be visible elsewhere (e.g. security badge on "Home").
       const also = document.createElement("div");
       also.className = "hint mwhoalso";
       also.setAttribute("data-no-i18n", "");
@@ -1475,7 +1475,7 @@
       alsoFix.setAttribute("data-no-i18n", "");
       alsoFix.textContent = tr("Hide it there too");
       alsoFix.hidden = true;
-      // Gespeichert wird, wer es sieht – ein später angelegter HA-Benutzer steht nicht in der Liste.
+      // What is stored is who sees it – an HA user created later is not in the list.
       const fresh = document.createElement("div");
       fresh.className = "hint mwhonew";
       fresh.setAttribute("data-no-i18n", "");
@@ -1513,14 +1513,14 @@
       else host.appendChild(box);
       return box;
     };
-    // Wo sind diese Entitäten sonst noch zu sehen – für wen, den „ids“ ausblendet? Kacheln (mit ihrem
-    // „Wer sieht das?“) und Sicherheits-Badges (Badge-Freigabe; Kachel-Freigaben gelten dort mit,
-    // casora_entity_users). skip: die Stelle, um die es gerade geht. → Satz oder "".
+    // Where else are these entities visible – to whom that "ids" hides? Tiles (with their
+    // "Who sees this?") and security badges (badge sharing; tile sharing applies there too,
+    // casora_entity_users). skip: the spot at hand. → sentence or "".
     const SEC_KEYS = (V) => [].concat(Array.isArray(V.security_locks) ? V.security_locks : [], V.security_lock_entity || [], V.security_lock_entity_2 || [],
       Array.isArray(V.security_cameras) ? V.security_cameras : [], [1, 2, 3, 4, 5, 6, 7, 8].map((i) => V["security_entity_" + i]).filter(Boolean));
     P._mElsewhere = function (ents, ids, users, skip) { return this._mElseScan(ents, ids, users, skip).text; };
-    // Dieselben Stellen als Änderungen: „Dort auch ausblenden“ (Nutzertest 7, P-T4) gibt ihnen dieselbe
-    // Auswahl – war dort schon eingeschränkt, bleibt nur, wer an beiden Stellen sehen darf.
+    // The same spots as changes: "Hide it there too" (user test 7, P-T4) gives them the same
+    // selection – if already restricted there, only those allowed in both places remain.
     P._mElsewhereFix = function (ents, ids, users, skip) { return this._mElseScan(ents, ids, users, skip).fixes; };
     P._mElseScan = function (ents, ids, users, skip) {
       const none = { text: "", fixes: [] };
@@ -1569,8 +1569,8 @@
     P._mWhoSheet = async function (cur, what, done) {
       const users = await this._mUsers();
       this._mUsersCache = users;
-      // Schalter = „sieht es“. Ohne Einschränkung stehen alle an – wer es nicht sehen soll, wird
-      // ausgeschaltet (Nutzertest 3: man wollte das Kind abwählen, musste aber sich selbst wählen).
+      // Switch = "sees it". Without restriction everyone is on – whoever should not see it is
+      // switched off (user test 3: you wanted to deselect the child but had to select yourself).
       const pick = new Set(cur.length ? cur : users.map((u) => u.id));
       const ok = await this._ask({
         title: tr("Who sees this?"),
@@ -1597,18 +1597,18 @@
       });
       if (!ok) return;
       let ids = users.map((u) => u.id).filter((id) => pick.has(id));
-      // Niemand an: nichts ändern – gespeichert hieße das sonst „alle sehen es“ (Review 1.1.1).
-      // Für alle weg geht über „Kachel aus“ bzw. „Raum ausblenden“.
+      // Nobody on: change nothing – stored, that would otherwise mean "everyone sees it" (review 1.1.1).
+      // Gone for everyone works via "tile off" or "Hide room".
       if (users.length && !ids.length) {
         if (this._bToast) this._bToast(tr("Nobody switched on – nothing changed"), { sub: tr("To hide it from everyone, switch it off.") });
         return;
       }
-      // Alle an = alle sehen es (ohne Einschränkung, auch für später angelegte Benutzer).
+      // All on = everyone sees it (without restriction, also for users created later).
       if (ids.length === users.length) ids = [];
       if (J(ids) !== J(cur)) done(ids);
     };
 
-    // Was eine Kachel schalten oder fahren kann (Tipp, Symbol, Popup-Knöpfe) – dort fragt das Dashboard nach.
+    // What a tile can switch or move (tap, icon, popup buttons) – the dashboard asks there.
     const SWITCH_DOMAINS = ["light", "switch", "input_boolean", "fan", "cover", "lock", "valve", "humidifier",
       "climate", "media_player", "siren", "scene", "script", "button", "input_button"];
     const switchesSomething = (t) => {
@@ -1619,21 +1619,21 @@
     };
     P._mSwitchesSomething = switchesSomething;
 
-    // Halten je Kachel (variables.hold_mode): nur Casora-Kacheln (button-card mit Vorlage), keine
-    // Karussell-Hülle oder fremde Karte – das Halten-Menü liest die Variable an der Kachel selbst.
+    // Hold per tile (variables.hold_mode): only Casora tiles (button-card with template), no
+    // carousel wrapper or foreign card – the hold menu reads the variable on the tile itself.
     const HOLD_MODES = ["menu", "popup", "ha"];
     const HOLD_LABELS = { "": "Same as dashboard", menu: "Quick menu", popup: "Open popup", ha: "Home Assistant dialog" };
     const holdsTile = (t) => !!t && t.type === "custom:button-card"
       && [].concat(t.template || []).some((x) => typeof x === "string" && x.indexOf("casora_") === 0);
     P._mHoldsTile = holdsTile;
-    // Dashboard-Wert „Halten auf Kacheln“ ('' = Schnellmenü, Unbekanntes ebenso) – für „Wie Dashboard (…)“.
+    // Dashboard value "Hold on tiles" ('' = quick menu, unknown likewise) – for "Same as dashboard (…)".
     const dashHold = (rooms) => {
       const v = (rooms || []).map((r) => (r && r.variables || {}).hold_mode).find((x) => x !== undefined && x !== null && x !== "");
       return v === "popup" || v === "ha" ? v : "menu";
     };
     P._mDashHold = dashHold;
 
-    // Kachel: visibility (HA-Bedingung „user“) an der Kachel bzw. ihrer Hülle.
+    // Tile: visibility (HA condition "user") on the tile or its wrapper.
     const tileUsers = (t) => {
       const c = t && Array.isArray(t.visibility) ? t.visibility.find((x) => x && x.condition === "user" && Array.isArray(x.users)) : null;
       return c ? c.users.slice() : [];
@@ -1648,20 +1648,20 @@
       const pane = root.getElementById("pane");
       const room = rooms$(this)[this._room];
       if (!pane || !room) return;
-      // Kachel
+      // Tile
       if (this._sel && this._sel.group === "tiles") {
         const box = pane.querySelector("#band-tiles .tile.sel");
         const body = box && box.querySelector(".tbody");
         const shell = (room.tiles || []).find((t) => this._tileKey(t) === this._sel.key);
         if (body && shell && !body.querySelector(".mwho")) {
-          // Eigene Gruppe wie „Optionen“ (subcard), vor dem aufklappbaren „Popup“.
+          // Own group like "Options" (subcard), before the expandable "Popup".
           const group = document.createElement("div");
           group.className = "subcard mgroup";
           const subs = body.querySelectorAll(":scope > .subcard");
           if (subs.length) subs[subs.length - 1].after(group); else body.appendChild(group);
           const inner = (shell.type === "conditional" && shell.card) || shell;
-          // Kacheln, die etwas schalten oder fahren: mit An/Aus-Schalter (Feld show_toggle) oder mit
-          // einer schaltbaren Entität (Nutzertest 5: Garagentor/Jalousie hatten die Option nicht).
+          // Tiles that switch or move something: with an on/off switch (field show_toggle) or with
+          // a switchable entity (user test 5: garage door/blind lacked the option).
           const ty = I().tileTypeAny ? I().tileTypeAny(inner) : null;
           const tf = ty && (ty.fields || []).find((f) => f.key === "show_toggle");
           if (tf || switchesSomething(inner)) {
@@ -1674,14 +1674,14 @@
             const sw = this._boolSwitch(V.confirm_toggle === true, false, (v) => {
               if (v) { inner.variables = inner.variables || {}; inner.variables.confirm_toggle = true; }
               else if (inner.variables) { delete inner.variables.confirm_toggle; if (!Object.keys(inner.variables).length) delete inner.variables; }
-              // Eigene Meldung unten – nicht vom allgemeinen „Übernommen“ überdecken lassen.
+              // Own message at the bottom – do not let the generic "Change applied" cover it.
               this._bQuiet = true;
               try { this._markDirty(); } finally { this._bQuiet = false; }
-              // Ausprobieren geht jetzt auch hier: das Popup unter der Vorschau fragt ebenfalls (Nutzertest 3).
-              // Nutzertest 4 (iPad): der Hinweis nannte „Popup anzeigen unter der Vorschau“, der Knopf lag
-              // aber unter dem Rand bzw. erschien erst nach erneutem Antippen – jetzt öffnet der Toast es selbst.
+              // Trying it out now works here too: the popup below the preview asks as well (user test 3).
+              // User test 4 (iPad): the hint said "Show Popup below the preview", but the button lay
+              // below the edge or only appeared after another tap – now the toast opens it itself.
               const target = v && !isPhone(this) && typeof this._cpOpen === "function" && typeof this._cpTarget === "function" ? this._cpTarget() : null;
-              // Nutzertest 5 (H-T5): nach ~6 s war „Ausprobieren“ weg – länger stehen lassen, dazu der Knopf unten.
+              // User test 5 (H-T5): after ~6 s "Try it" was gone – keep it longer, plus the button below.
               if (try_) { try_.hidden = !v || !(canTry() || canAsk()); try_.textContent = tr(canTry() ? "Try it in the popup" : "Try the question"); }
               if (this._bToast) this._bToast(tr(v ? "The dashboard asks before switching" : "Switches right away again"),
                 target ? { ms: 15000, save: true, sub: tr("The popup in the preview asks too. Not saved yet."),
@@ -1692,21 +1692,21 @@
             r.append(l, sw);
             const h = document.createElement("div");
             h.className = "hint";
-            // Seit dem Nutzertest fragt jeder Schaltweg der Kachel nach, auch das Popup (casora-core.js).
+            // Since the user test every switching path of the tile asks, the popup too (casora-core.js).
             const moves = /^(cover|valve)\./.test(String(inner.entity || inner.variables && inner.variables.cover_entity || ""));
             h.textContent = moves
               ? tr("A calm question before this opens or closes – on the tile and in its popup. For the garage door, the gate or the blinds.")
               : tr("A calm question before this device turns on or off – on the tile and in its popup. For the oven, the garage or the pump.");
             h.setAttribute("data-no-i18n", "");
-            // Dauerhafter Weg zum Ausprobieren (nicht nur im Toast): öffnet das Popup der Vorschau.
+            // Permanent way to try it out (not only in the toast): opens the preview's popup.
             const canTry = () => !isPhone(this) && typeof this._cpOpen === "function" && typeof this._cpTarget === "function" && !!this._cpTarget();
-            // Nutzertest 6 (P-T5): Kacheln ohne eigenes Popup (Pumpe) zeigen die Rückfrage selbst – nur ansehen,
-            // in der Vorschau wird nichts geschaltet.
+            // User test 6 (P-T5): tiles without their own popup (pump) show the confirmation themselves – just look,
+            // nothing is switched in the preview.
             const askId = String(inner.entity || "");
-            // Der Dialog kommt aus casora-core.js; das Studio lädt Casoras Skripte erst bei Bedarf (wie das Popup).
+            // The dialog comes from casora-core.js; the Studio loads Casora's scripts only when needed (like the popup).
             const canAsk = () => !!askId && (typeof window.casoraAskFirstTry === "function" || typeof this._casoraCardsReady === "function");
             const askNow = async () => {
-              if (typeof window.casoraAskFirstTry !== "function" && this._casoraCardsReady) { try { await this._casoraCardsReady(); } catch (e) { /* unten */ } }
+              if (typeof window.casoraAskFirstTry !== "function" && this._casoraCardsReady) { try { await this._casoraCardsReady(); } catch (e) { /* below */ } }
               if (typeof window.casoraAskFirstTry !== "function") { if (this._bToast) this._bToast(tr("Done saves it to your dashboard.")); return; }
               window.casoraAskFirstTry(askId, typeof inner.name === "string" ? inner.name : "").then((ok) => {
                 if (this._bToast) this._bToast(tr(ok ? "In the dashboard it would switch now" : "Canceled – nothing switches"),
@@ -1725,8 +1725,8 @@
             };
             group.append(r, h, try_);
           }
-          // Halten (22-halten.js): leer = wie im Dashboard eingestellt (Bedienung › Kacheln, window._casoraHoldMode).
-          // „Wie Dashboard“ nennt den Dashboard-Wert (erster Raum mit hold_mode, wie das Studio-Feld; sonst Schnellmenü).
+          // Hold (22-halten.js): empty = as set for the dashboard (Controls › Tiles, window._casoraHoldMode).
+          // "Same as dashboard" names the dashboard value (first room with hold_mode, like the Studio field; else quick menu).
           if (holdsTile(inner) && typeof this._combo === "function") {
             const r = document.createElement("div");
             r.className = "row mhold";
@@ -1753,7 +1753,7 @@
         }
       }
       // Badges
-      // Nur im geöffneten Badge-Editor (die Liste aller Badges bleibt ruhig).
+      // Only in the open badge editor (the list of all badges stays calm).
       if (this._sel && this._sel.group === "badges") pane.querySelectorAll("[data-bid]").forEach((card) => {
         const bid = card.dataset.bid;
         if (!BADGES.some(([b, l]) => b === bid && l === this._sel.key) || card.querySelector(":scope > .mwho")) return;
@@ -1764,14 +1764,14 @@
           if (ids.length) m[bid] = ids; else delete m[bid];
           if (Object.keys(m).length) room.variables.casora_badge_users = m; else delete room.variables.casora_badge_users;
         };
-        // Oben unter dem Namen statt ganz am Ende eines langen Editors (Nutzertest 7, P-T4).
+        // At the top below the name instead of at the very end of a long editor (user test 7, P-T4).
         const nameRow = card.querySelector(":scope > .row");
         const before = nameRow ? nameRow.nextSibling : card.children[1] || null;
         this._mWhoRow(card, get, set, "Badge", bid === "security"
           ? (ids, users) => this._mElsewhere(SEC_KEYS(room.variables || {}), ids, users, { badge: this._room }) : null,
           { before, fix: bid === "security" ? (ids, users) => this._mElsewhereFix(SEC_KEYS(room.variables || {}), ids, users, { badge: this._room }) : null });
       });
-      // Raum (Darstellung)
+      // Room (appearance)
       const app = pane.querySelector('[data-k="Appearance"]');
       if (app && !app.querySelector(":scope .mwho")) {
         const host = app.querySelector(".cbody") || app;
@@ -1783,7 +1783,7 @@
       }
     };
 
-    // ── Anschließen ─────────────────────────────────────────────────────────
+    // ── Hooking in ──────────────────────────────────────────────────────────
     wrap("_renderForm", (orig) => function () {
       const r = orig.apply(this, arguments);
       try { if (on(this)) { this._mCss(); this._mDecorateEditors(); } } catch (e) { console.warn("Casora Studio:", e); }

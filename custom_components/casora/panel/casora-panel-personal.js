@@ -1,28 +1,28 @@
-// Studio → Einstellungen: Bereiche fürs ganze Zuhause (27.09.2026, seit 30.09.2026
-// in der Einstellungen-Seite von casora-panel-settings.js statt einer eigenen Seite)
+// Studio → Settings: sections for the whole home (27.09.2026; since 30.09.2026
+// in the Settings page of casora-panel-settings.js instead of a page of its own)
 //
-// Einstellungen, die fürs ganze Zuhause gelten statt für ein Dashboard: Abfall,
-// Kalender, Glocke, ausgeblendete Szenen, Tür-/Fenstergruppen, Now Playing,
-// eBike, Standardraum. Gespeichert in der Integration (casora/settings/*), gelesen
-// von den Dashboards als window.CASORA_SETTINGS. Ohne gespeicherte Werte übernimmt
-// die Seite /config/www/casora/einstellungen.js (früherer Weg).
+// Settings that apply to the whole home rather than one dashboard: waste,
+// calendar, bell, hidden scenes, door/window groups, Now Playing,
+// eBike, default room. Stored in the integration (casora/settings/*), read
+// by the dashboards as window.CASORA_SETTINGS. Without stored values the page
+// /config/www/casora/einstellungen.js (the earlier way) takes over.
 (function () {
   const CSS = ".frow.casora-prow{flex-wrap:wrap;row-gap:8px}"
     + ".frow.casora-prow .rtext{flex:1 1 100%;min-width:0}"
     + ".casora-pctl{display:flex;gap:8px;flex:1 1 100%;min-width:0;align-items:center;flex-wrap:wrap}"
     + ".casora-pctl>.combo{flex:1 1 260px;min-width:0;width:auto;max-width:none}"
-    // Grundbreite 100 statt 160: am Handy (Zeile 337 px) passen kurzes Feld + Feld + ✕ in eine Zeile –
-    // vorher rutschte das ✕ allein in eine eigene Zeile darunter (Zonen-Formulierung, Glocke).
+    // Base width 100 instead of 160: on the phone (337 px row) short field + field + ✕ fit in one row –
+    // before, the ✕ slipped alone into a row of its own below (zone wording, bell).
     + ".casora-pctl>input.fin{flex:1 1 100px;min-width:0;text-align:left;padding:7px 12px;border-radius:var(--r-m);height:var(--k-h, 38px);box-sizing:border-box;"
     + "background:var(--field, var(--casora-studio-field, rgba(118,118,128,.18)));border:none;color:inherit;font:inherit}"
     + ".casora-pctl>input.fin.casora-short{flex:0 1 130px}"
     + ".casora-pctl>input[type=color]{flex:0 0 38px;width:38px;height:32px;padding:0;border:none;border-radius:var(--r-s);background:none;cursor:pointer}"
-    // Entfernen wie im Baukasten: ✕ ohne Fläche, rot erst beim Zeigen; 32 px, am Handy 44 px.
+    // Remove as in the builder: ✕ without a surface, red only on hover; 32 px, 44 px on the phone.
     + ".casora-x{flex:0 0 auto;width:var(--k-hit, 32px);height:var(--k-hit, 32px);border-radius:50%;border:none;cursor:pointer;"
     + "background:transparent;color:var(--ink-3);display:grid;place-items:center;padding:0}"
     + ".casora-x svg{width:14px;height:14px}"
     + ".casora-x:is(:hover,:focus-visible){background:color-mix(in srgb, var(--casora-studio-danger, #d70015) 13%, transparent);color:var(--casora-studio-danger, #d70015)}"
-    // Felder heben sich von der Karte ab (am Handy ist --field so hell wie die Karte).
+    // Fields stand out from the card (on the phone --field is as light as the card).
     + ".frow.casora-prow .casora-pctl .combo>input,.frow.casora-prow .casora-pctl>input.fin{background:var(--casora-studio-field, var(--field));"
     + "border:0;border-radius:var(--r-m);height:var(--k-h, 38px);box-sizing:border-box;color:var(--ink);font-size:var(--t-callout)}"
     + ".frow.casora-prow .casora-pctl>input.fin{padding:0 12px}"
@@ -32,12 +32,12 @@
     + ".casora-chip{border:none;border-radius:999px;padding:6px 11px;cursor:pointer;font:500 var(--t-foot) var(--casora-font-studio, system-ui);"
     + "background:var(--casora-studio-chip-hi, rgba(118,118,128,.24));color:inherit}"
     + ".casora-chip.on{background:var(--casora-studio-done, #0a84ff);color:#fff}"
-    // Kalenderfarbe: derselbe Farbknopf wie bei den Szenen (nur der Punkt, Menü mit den Casora-Farben).
+    // Calendar color: the same color button as for scenes (just the dot, menu with the Casora colors).
     + ".casora-pctl>.scpick{gap:0;margin-right:0;flex:0 0 auto}"
     + ".casora-pctl>.scpick .scval{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}"
     + ".casora-pctl>.scpick .swatch{width:16px;height:16px;flex-basis:16px}"
     + ".casora-tog{display:flex;align-items:center;gap:6px;font-size:var(--t-foot);opacity:.85;white-space:nowrap}"
-    // Schalter statt Browser-Häkchen – wie überall sonst im Studio.
+    // Switches instead of browser checkboxes – as everywhere else in the Studio.
     + ".casora-tog{gap:8px}"
     + ".casora-tog input[type=checkbox]{-webkit-appearance:none;appearance:none;position:relative;flex:none;width:36px;height:22px;margin:0;"
     + "border-radius:11px;background:var(--sw-off, rgba(120,120,128,.24));cursor:pointer;transition:background .2s}"
@@ -50,20 +50,20 @@
     + ".frow.casora-pmore .rtext b{color:var(--casora-studio-link, #0a84ff);font-weight:500}"
     + ".frow.casora-pmore .rchev{transform:rotate(90deg);transition:transform .2s}"
     + ".frow.casora-pmore.open .rchev{transform:rotate(-90deg)}"
-    // Hell: Blau und Rot in den dunkleren Apple-Tönen, damit Text ≥ 4,5:1 bleibt.
+    // Light: blue and red in the darker Apple tones so text stays ≥ 4.5:1.
     + ":host(.is-light) .frow.casora-pmore .rtext b{color:var(--casora-studio-link, #0071e3)}"
 
     + ":host(.is-light) .casora-chip{background:var(--casora-studio-chip, rgba(118,118,128,.12))}:host(.is-light) .casora-chip.on{background:var(--casora-studio-link, #0071e3)}"
     + ":host(.is-light) .fgroup.casora-pfocus .flist{box-shadow:0 0 0 2px var(--casora-studio-link, #0071e3)}";
 
   const clone = (x) => JSON.parse(JSON.stringify(x || {}));
-  // Neue Kalender: Casora-Blau wie im Farbmenü (früher fest #0A84FF, das bleibt lesbar).
+  // New calendars: Casora blue as in the color menu (formerly fixed #0A84FF, which stays readable).
   const CAL_DEFAULT = "var(--casora-color-blue, #0088FF)";
   const ICONS = ["", "tv", "apple_tv", "homepod", "playstation", "speaker"];
   const ICON_LABELS = { "": "Icon: Automatic", tv: "TV", apple_tv: "Apple TV", homepod: "HomePod",
     playstation: "PlayStation", speaker: "Speaker" };
 
-  // Alles in eine feste Form bringen, damit die Oberfläche nicht jedes Mal prüfen muss.
+  // Bring everything into a fixed shape so the UI does not have to check every time.
   function normalize(src) {
     const s = clone(src);
     const w = s.waste = s.waste || {};
@@ -86,7 +86,7 @@
     return s;
   }
 
-  // Leere Einträge weglassen – gespeichert wird nur, was wirklich gesetzt ist.
+  // Drop empty entries – only what is really set gets stored.
   function prune(x) {
     if (Array.isArray(x)) return x.map(prune).filter((v) => v !== undefined);
     if (x && typeof x === "object") {
@@ -114,8 +114,8 @@
     }
   }
 
-  // Player, die die Casora-Dashboards zeigen: media_player_1…10 der Raumkarten und der
-  // Handy-Wiedergabe (Studio „Aktuelle Wiedergabe“; dieselbe Quelle wie _casoraNPSources).
+  // Players the Casora dashboards show: media_player_1…10 of the room cards and of the
+  // phone playback (Studio "Now Playing"; same source as _casoraNPSources).
   async function dashboardPlayers(hass) {
     const ids = [];
     let list = [];
@@ -132,7 +132,7 @@
         if (o.variables && tpl.some((x) => /^casora_(room|mobile_now_playing|now_playing)$/.test(x))) {
           for (let i = 1; i <= 10; i++) {
             const v = o.variables["media_player_" + i];
-            // Nur vorhandene Player (Hemma-Beispiele wie media_player.YOUR_ENTITY nicht).
+            // Only existing players (not Hemma examples like media_player.YOUR_ENTITY).
             if (typeof v === "string" && /^media_player\./.test(v) && hass.states[v] && !ids.includes(v)) ids.push(v);
           }
         }
@@ -145,16 +145,16 @@
     });
   }
 
-  // Für die Einstellungen-Seite (casora-panel-settings.js): Laden und Speichern bleiben gleich.
+  // For the Settings page (casora-panel-settings.js): loading and saving stay the same.
   window.casoraPersonal = { normalize, prune, fileSettings, CSS };
 
   customElements.whenDefined("casora-panel").then(() => {
     const P = customElements.get("casora-panel").prototype;
     if (P._casoraPersonal) return;
 
-    // Die Bereiche der Einstellungen (casora-panel-settings.js): Abfall, Kalender, Türen
-    // und Fenster, Szenen, Now Playing, Geräte, Glocke, Standardraum, Hemma-Suche.
-    // S ist der Entwurf (normalize), keys die Bereiche dieser Unterseite, render baut neu.
+    // The sections of the settings (casora-panel-settings.js): waste, calendar, doors
+    // and windows, scenes, Now Playing, devices, bell, default room, Hemma search.
+    // S is the draft (normalize), keys the sections of this subpage, render rebuilds.
     P._casoraPersonalGroups = function (host, S, keys, render) {
       const self = this;
       const hass = this._hass;
@@ -172,8 +172,8 @@
         this.shadowRoot.appendChild(st);
       }
 
-      // ── Bausteine ──────────────────────────────────────────────────────────
-      // cls: device_class-Filter wie im Panel (_entityList), Liste oder {domain: [...]}.
+      // ── Building blocks ────────────────────────────────────────────────────
+      // cls: device_class filter as in the panel (_entityList), list or {domain: [...]}.
       const ent = (value, domains, onChange, ph, cls) => self._combo(value || "", self._entityList(domains, cls),
         ph || (self._pickHint ? self._pickHint(domains) : ""), onChange).wrap;
       const txt = (value, ph, onChange, short) => {
@@ -216,13 +216,13 @@
         obj[newKey] = value;
       };
 
-      // Fortgeschrittenes hinter „Weitere Optionen“: zu, solange dort nichts eingestellt ist;
-      // einmal auf- oder zugeklappt bleibt es so, bis das Studio neu lädt.
-      // what: eigene Beschriftung je Bereich – zwei gleiche „Weitere Optionen …“ auf einer Seite verwirren.
+      // Advanced items behind "More options": closed while nothing is set there;
+      // once expanded or collapsed it stays so until the Studio reloads.
+      // what: own label per section – two identical "More options …" on one page confuse.
       const more = (list, key, isSet, build, what) => {
         const st = self._casoraPMore = self._casoraPMore || {};
         const open = st[key] !== undefined ? st[key] : !!isSet;
-        // Kopfzeile („Erweitert“) zuerst, der Inhalt klappt darunter auf.
+        // Header ("Advanced") first, the content expands below it.
         const r = self._flowRow(list, { title: open ? what[1] : what[0], chevron: true,
           onTap: () => { st[key] = !open; render(); } });
         r.row.classList.add("casora-pmore");
@@ -231,10 +231,10 @@
         if (open) build();
       };
 
-      // Farbknopf wie bei den Szenen (casora-panel.js, Szenenfarben): Punkt, Menü mit den
-      // Casora-Farben (in Weich z. B. „Dunkelrot“). Gespeichert wird wie dort
-      // var(--casora-color-…, #hex); ältere Hex-Werte bleiben lesbar und erscheinen als
-      // „Eigene Farbe“, bis eine Casora-Farbe gewählt wird.
+      // Color button as for scenes (casora-panel.js, scene colors): dot, menu with the
+      // Casora colors (in Weich e.g. "Dark red"). Stored as there:
+      // var(--casora-color-…, #hex); older hex values stay readable and show as
+      // "Custom color" until a Casora color is picked.
       const colorPick = (value, onChange) => {
         const P = I();
         const ACC = P.CASORA_ACCENTS || [];
@@ -288,7 +288,7 @@
       };
 
       if (want("waste")) {
-        // Abfall
+        // Waste
         g = group("waste", { header: "Waste collection",
           footer: "Without bins here, Casora uses every Waste Collection Schedule sensor." });
         // Heading only above the first row – not "Bin" in front of every bin.
@@ -339,8 +339,8 @@
           };
           chips.appendChild(b);
         }
-        // „Du bist dran“ (Dienstmonate), Sensor und Erinnerung braucht nicht jeder: unter „Erweitert“,
-        // Standard zu (auch wenn dort etwas eingestellt ist).
+        // "Your turn" (service months), sensor and reminder are not for everyone: under "Advanced",
+        // closed by default (even when something is set there).
         more(g, "waste", false, () => {
           row(g, "Your turn in", [chips], "Months you put the bins out");
           row(g, "Your turn sensor", [ent(S.waste.duty_entity, ["sensor", "binary_sensor", "input_boolean"],
@@ -351,7 +351,7 @@
       }
 
       if (want("calendars")) {
-        // Kalender
+        // Calendar
         g = group("calendars", { header: "Calendars",
           footer: "Without calendars here, the calendar tile shows all of them." });
         S.calendars.forEach((c, i) => {
@@ -375,7 +375,7 @@
       }
 
       if (want("contacts")) {
-        // Türen und Fenster
+        // Doors and windows
         g = group("contacts", { header: "Doors and windows",
           footer: "Groups of contact sensors for the security popups. Empty: every door and window sensor." });
         S.contacts.groups.forEach((c, i) => {
@@ -389,7 +389,7 @@
       }
 
       if (want("scenes")) {
-        // Szenen
+        // Scenes
         g = group("scenes", { header: "Hidden scenes",
           footer: "Hidden in every dashboard. To hide a scene in one dashboard only, use Scenes in the Studio." });
         S.scenes.exclude.forEach((id, i) => {
@@ -402,12 +402,12 @@
       }
 
       if (want("media")) {
-        // Aktuelle Wiedergabe: alle Player, die die Casora-Dashboards zeigen (Studio „Aktuelle
-        // Wiedergabe“), mit Symbol automatisch und Lautstärke über den Player. Gespeichert wird nur,
-        // was abweicht; selbst hinzugefügte Player bleiben mit Merker (listed) in der Liste.
+        // Now Playing: all players the Casora dashboards show (Studio "Now
+        // Playing"), with icon auto and volume via the player. Only what differs is
+        // stored; players added by hand stay in the list with a marker (listed).
         g = group("media", { header: "Now Playing",
           footer: "Which players a dashboard shows is set in the Studio under Now Playing. Here you set the icon and volume for all dashboards." });
-        // Einmal je Minute neu lesen: im Studio geänderte Player erscheinen beim nächsten Öffnen.
+        // Re-read once a minute: players changed in the Studio show up the next time it opens.
         if (!self._casoraNPShown || Date.now() - (self._casoraNPAt || 0) > 60000) {
           self._casoraNPAt = Date.now();
           self._casoraNPShown = self._casoraNPShown || [];
@@ -422,7 +422,7 @@
         const vol = (c, onSet) => ent(c.volume_entity, ["number", "media_player"],
           (v) => { if (v) c.volume_entity = v; else delete c.volume_entity; onSet && onSet(); }, "Volume: through the player");
         shown.forEach((id) => {
-          // Noch ohne Eintrag: erst beim Abweichen anlegen (leer räumt prune wieder weg).
+          // No entry yet: only create it once it differs (prune clears it away again when empty).
           const c = S.media.players[id] || {};
           const put = () => { S.media.players[id] = c; };
           const st = hass && hass.states[id];
@@ -444,7 +444,7 @@
       }
 
       if (want("devices")) {
-        // eBike: nur über die Integration Bosch eBike (Bosch Smart System), nichts einzustellen.
+        // eBike: only via the Bosch eBike integration (Bosch Smart System), nothing to set.
         g = group("devices", { header: "More devices",
           footer: "The e-bike tile is for bikes with the Bosch Smart System. Its values come from the Bosch eBike integration (HACS: Xunil99/ha-bosch-ebike)." });
         const reg = hass.entities || {};
@@ -455,7 +455,7 @@
       }
 
       if (want("notify")) {
-        // Glocke
+        // Bell
         g = group("notify", { header: "Notifications",
           footer: "For all dashboards. Which messages a dashboard shows is set in the Studio under Notifications." });
         mapRows(S.notify.zone_phrases).forEach(([zone, phrase], i) => {
@@ -499,7 +499,7 @@
       }
 
       if (want("basis")) {
-        // Standardraum: wie „Neu beginnen“ die Räume füllt (casora-panel-basis.js).
+        // Default room: how "Start from Scratch" fills the rooms (casora-panel-basis.js).
         const B = S.basis;
         const D = (window.casoraBasis && window.casoraBasis.DEFAULTS) || { order: [], group_min: 2, skip_leds: true, favorites: true };
         g = group("basis", { header: "Standard room",
@@ -534,7 +534,7 @@
       }
 
       if (want("umzug")) {
-        // Hemma-Dashboards finden (Umzug)
+        // Find Hemma dashboards (migration)
         g = group("umzug", { header: "Hemma dashboards" });
         row(g, "Hemma dashboards", [tog(!(S.umzug || {}).off, "Look for them automatically", (v) => {
           S.umzug = Object.assign({}, S.umzug || {});
@@ -543,8 +543,8 @@
       }
     };
 
-    // Früher eine eigene Seite („Zuhause-Einstellungen“), jetzt Teil der Einstellungen.
-    // Alte Sprünge (focus) landen auf der passenden Unterseite.
+    // Formerly a page of its own ("Home settings"), now part of the Settings.
+    // Old jumps (focus) land on the matching subpage.
     const FOCUS_PAGE = { notify: "alerts", scenes: "home", media: "home", basis: "dashboards", calendars: "calendar" };
     P._casoraPersonal = function (o) {
       o = o || {};
@@ -552,8 +552,8 @@
       return this._csShow(FOCUS_PAGE[o.focus] || "home", o.focus);
     };
 
-    // In den Studio-Seiten Szenen, Aktuelle Wiedergabe und Benachrichtigungen: Hinweis auf
-    // das, was für alle Dashboards gilt, mit Sprung dorthin.
+    // In the Studio pages Scenes, Now Playing and Notifications: hint at
+    // what applies to all dashboards, with a jump there.
     const LINKS = {
       Scenes: ["scenes", (S) => {
         const n = ((S.scenes || {}).exclude || []).filter(Boolean).length;
@@ -661,11 +661,11 @@
       if (this._casoraSettingsRead) this._casoraSettingsRead.then(paint);
       return b;
     };
-    // Schon beim Laden anfragen (parallel zur Dashboard-Konfiguration): kam die Antwort erst nach
-    // dem ersten Zeichnen, wurden Inspektor und Vorschau gleich ein zweites Mal gebaut.
+    // Request already while loading (in parallel with the dashboard config): when the answer came after
+    // the first draw, the inspector and preview were built a second time right away.
     const load = P._load;
     P._load = function () {
-      try { readSettings(this); } catch (e) { /* ohne */ }
+      try { readSettings(this); } catch (e) { /* ignore */ }
       return load.apply(this, arguments);
     };
     const renderForm = P._renderForm;

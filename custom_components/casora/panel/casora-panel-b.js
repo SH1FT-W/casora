@@ -1,17 +1,17 @@
-// Neues Studio „Vorschau ist der Editor“ (ab 1.1.0, 04.10.2026)
+// New Studio "the preview is the editor" (from 1.1.0, 04.10.2026)
 //
-// Ein zweiter Aufbau desselben Studios, kein Neubau: Die Vorschau ist die Arbeitsfläche,
-// ein Klick (am Handy: Antippen) auf Titel, Badge oder Kachel öffnet die bestehenden
-// Editoren in einem Inspektor rechts bzw. in einem Blatt von unten. Seitenleiste und
-// Raumliste weichen einer Werkzeugleiste (Räume, Inhalt, Dashboard, Einstellungen).
-// Datenmodell, Speichern („Fertig“), Rückgängig, Umzug und Vorlagen bleiben unverändert –
-// dieses Modul ordnet nur an, was das Panel ohnehin zeichnet.
+// A second layout of the same Studio, not a rebuild: the preview is the workspace,
+// a click (on the phone: a tap) on title, badge or tile opens the existing
+// editors in an inspector on the right or in a sheet from below. Sidebar and
+// room list give way to a toolbar (Rooms, Content, Dashboard, Settings).
+// Data model, saving ("Done"), undo, migration and templates stay unchanged –
+// this module only arranges what the panel draws anyway.
 //
-// Umschaltbar über „…“ › Hilfe › „Bisheriges Studio öffnen“ bzw. im bisherigen Studio „…“ ›
-// „Neues Studio öffnen“ (pro Browser, localStorage casora.studio.b).
+// Switchable via "…" › Help › "Open the previous Studio" or, in the previous Studio, "…" ›
+// "Open the new Studio" (per browser, localStorage casora.studio.b).
 (() => {
   const KEY = "casora.studio.b";
-  // Ab 1.1.0 Standard; das bisherige Studio bleibt über „…“ › Hilfe erreichbar.
+  // Default from 1.1.0; the previous Studio stays reachable via "…" › Help.
   const DEFAULT_ON = true;
 
   const ICON = {
@@ -31,7 +31,7 @@
     + ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[k] + "</svg>";
 
   const B_CSS = `
-    /* ── Desktop und Tablet ─────────────────────────────────────────── */
+    /* ── Desktop and tablet ─────────────────────────────────────────── */
     :host(.bmode.split:not(.flow)) .sidelist,
     :host(.bmode.split:not(.flow)) .sidegrip,
     :host(.bmode) #railbtn, :host(.bmode) #peekbtn, :host(.bmode) .railscrim { display:none !important; }
@@ -43,9 +43,9 @@
       transition:padding-right .26s var(--ease, ease);
     }
     :host(.bmode.split.narrow:not(.flow)) .stage { display:flex; }
-    /* Tablet: der Umschalter Desktop/Tablet/Mobil lag unter der Kopfzeile (z-index) und ließ
-       sich nicht antippen – unter die Kopfzeile rücken. „N ausgeblendet“ bleibt hinter der
-       Vorschau, falls es dort steht (die schmale Ansicht sortiert die Bühne per order). */
+    /* Tablet: the Desktop/Tablet/Mobile switcher lay under the header (z-index) and could
+       not be tapped – move it below the header. "N hidden" stays behind the
+       preview in case it sits there (the narrow view orders the stage via order). */
     :host(.bmode.split.narrow:not(.flow)) .canvas { padding-top:76px; }
     :host(.bmode.narrow) .canvas > .bhid { order:3; }
     :host(.bmode.split.binsp:not(.flow):not(.bpage)) .main { padding-right:calc(var(--b-insp-w, 388px) + 14px); }
@@ -57,37 +57,37 @@
       border-radius:22px; clip-path:inset(0 round 22px); flex:none;
       box-shadow:0 2px 6px rgba(0,0,0,.10), 0 26px 64px rgba(0,0,0,.26);
       display:none;
-      /* Absolut positioniert zählt align-self: „flex-start“ (aus dem bisherigen Studio) machte den
-         Inspektor so hoch wie sein Inhalt – lange Listen ragten dann über die Kopfzeile
-         und verdeckten „Fertig“. Gestreckt füllt er den Platz und scrollt innen. */
+      /* When absolutely positioned, align-self counts: "flex-start" (from the previous Studio) made the
+         inspector as tall as its content – long lists then rose above the header
+         and covered "Done". Stretched, it fills the space and scrolls inside. */
       align-self:stretch;
     }
     :host(.bmode.binsp.split:not(.flow)) .inspector { display:flex; animation:bInspIn .22s var(--ease, ease); }
-    /* Tablet (schmal, geteilt): der Inspektor ist fest hoch, also muss sein Inhalt scrollen –
-       „.narrow .sheet { overflow:visible }“ (alte Handy-Ansicht) schnitt sonst z. B. „Wer sieht
-       das?“ unten ab, Wischen und Mausrad halfen nicht (Nutzertest Tablet). */
+    /* Tablet (narrow, split): the inspector has a fixed height, so its content must scroll –
+       ".narrow .sheet { overflow:visible }" (old phone view) otherwise cut off e.g. "Who sees
+       this?" at the bottom; swiping and the mouse wheel did not help (tablet user test). */
     :host(.bmode.split.narrow:not(.flow):not(.phone)) .inspector .sheet {
       overflow-y:auto; overflow-x:hidden; min-height:0; overscroll-behavior:contain; touch-action:pan-y; -webkit-overflow-scrolling:touch; }
     :host(.bmode.bpage.split:not(.flow)) { --b-insp-w:min(760px, calc(100% - 28px)); }
     :host(.bmode.bpage.split:not(.flow)) .main { padding-right:0; }
-    /* Dunkel liegt die Seite über dem Hausfoto der Vorschau: fast deckend, sonst schimmert es bunt durch. */
+    /* Dark: the page lies over the preview's house photo: nearly opaque, otherwise it shows through in color. */
     :host(.bmode.bpage.split:not(.flow):not(.is-light)) .inspector { background:var(--casora-studio-page-solid, rgba(22,23,28,0.95)) !important; }
     :host(.bmode.bpage.split:not(.flow)) .inspector { top:calc(var(--top-h, 64px) + 4px) !important; margin:0 !important; }
-    /* Seiten (Einstellungen, Updates, Zeitreise) liegen über der Vorschau: deren Umschalter
-       Desktop/Tablet/Mobil ragte sonst halb über den Rand. */
+    /* Pages (Settings, Updates, Rewind) lie over the preview: its Desktop/Tablet/Mobile
+       switcher otherwise stuck out halfway over the edge. */
     :host(.bmode.bpage.split:not(.flow)) .stage .segrow { visibility:hidden; }
-    /* Ebenso der Hinweis „Im Dashboard stehen aktive Kacheln vorn“ unter der Vorschau: Er stand
-       mittig unter der ganzen Fläche, also halb unter der Seite, und rutschte in der Zeitreise
-       (Banner über der Vorschau) an den unteren Rand. Für Seiten ohne Bearbeiten ohne Belang. */
+    /* Same for the hint "Active tiles come first on the dashboard" below the preview: it sat
+       centered below the whole area, so half under the page, and in Rewind it slid
+       (banner above the preview) to the bottom edge. Irrelevant for pages without editing. */
     :host(.bmode.bpage.split:not(.flow)) .maprowhint { visibility:hidden; }
-    /* S-05: Die Vorschau steht in der Mitte der freien Höhe (oben Umschalter, darunter nichts
-       Leeres mehr) – auch wenn der Inspektor sie schmaler macht. */
+    /* S-05: the preview sits in the middle of the free height (switcher on top, nothing
+       empty below anymore) – even when the inspector makes it narrower. */
     :host(.bmode.split:not(.flow):not(.phone)) .stage > .canvas { align-self:stretch; box-sizing:border-box; }
     :host(.bmode.split:not(.flow):not(.phone)) .canvas > .plinth { margin-top:auto; margin-bottom:auto; }
     @keyframes bInspIn { from { opacity:0; transform:translateX(18px); } }
-    /* UX-01: Tablet hochkant (auch mit HA-Seitenleiste) – neben dem Inspektor blieb für die Vorschau
-       kaum ein Drittel der Breite, der Umschalter rutschte unter die Seitenleiste. Hier liegt der
-       Inspektor unten, die Vorschau behält die volle Breite darüber. */
+    /* UX-01: tablet portrait (also with the HA sidebar) – next to the inspector the preview had
+       barely a third of the width, the switcher slid under the sidebar. Here the
+       inspector sits at the bottom and the preview keeps the full width above it. */
     :host(.bmode.bstack.split:not(.flow):not(.phone)) { --b-insp-h:min(54vh, calc(100vh - 400px)); }
     :host(.bmode.bstack.split.binsp:not(.flow):not(.phone):not(.bpage)) .main {
       padding-right:0; padding-bottom:calc(var(--b-insp-h) + 14px); }
@@ -95,8 +95,8 @@
       left:14px; right:14px; width:auto; top:auto !important; bottom:14px; height:var(--b-insp-h); }
     :host(.bmode.bstack.binsp.split:not(.flow):not(.phone):not(.bpage)) .inspector { animation-name:bStackIn; }
     @keyframes bStackIn { from { opacity:0; transform:translateY(24px); } }
-    /* Sofortige Rückmeldung beim Antippen (auch ohne Maus): wie das Zeigen am Desktop, in der
-       Handy-Vorschau leicht eingedrückt wie die Knöpfe des Studios. */
+    /* Immediate feedback on tap (also without a mouse): like hover on desktop, in the
+       phone preview slightly pressed like the Studio's buttons. */
     :host(.bmode) .miniroom .bpress:not(.pvsel):not(.mini-fill) { outline-color:rgba(255,255,255,0.55); }
     :host(.bmode) .card.map.soft .miniroom .bpress:not(.pvsel):not(.mini-fill) {
       outline-color:color-mix(in srgb, var(--primary-text-color) 45%, transparent);
@@ -104,8 +104,8 @@
     :host(.bmode) .miniphone .bpress { transform:scale(0.97); }
     @media (prefers-reduced-motion: reduce) { :host(.bmode) .inspector { animation:none !important; } }
     :host(.bmode) .inspector .insphead { padding-right:52px; }
-    /* Das ✕ hat in der Kopfzeile einen eigenen Platz: die Zeile (Zurück, Titel, Schalter) endet davor.
-       Die Kopfzeile des Editors setzt ihr eigenes Padding – deshalb am Inhalt, nicht am Rahmen. */
+    /* The ✕ has its own spot in the header: the row (back, title, switch) ends before it.
+       The editor's header sets its own padding – hence on the content, not on the frame. */
     :host(.bmode.split:not(.flow):not(.phone)) .inspector .insphead > .navrow { margin-right:46px; }
     .bclose {
       position:absolute; top:16px; right:14px; z-index:12; width:34px; height:34px; border-radius:50%;
@@ -126,7 +126,7 @@
     .btool svg { width:17px; height:17px; flex:none; }
     .btool:hover, .btool[aria-expanded="true"], .btool.on { background:var(--chip, rgba(127,127,127,.14)); color:var(--ink, inherit); }
     .btool .blabel { overflow:hidden; text-overflow:ellipsis; max-width:160px; }
-    /* P-V3: ⋯ für „Dieser Raum“ direkt hinter dem Raumnamen, nur Symbol. */
+    /* P-V3: ⋯ for "This Room" right after the room name, icon only. */
     .btool.broomact { padding:0 8px; }
     .btool.broomact .blabel { display:none; }
     .btool.bhidroom::after {
@@ -134,23 +134,23 @@
       -webkit-mask:var(--eyeoff) center/contain no-repeat; mask:var(--eyeoff) center/contain no-repeat;
       --eyeoff:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M3 3l18 18M10.6 5.6A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3.2 4M6.3 6.8C3.9 8.5 2.5 12 2.5 12S6 18.5 12 18.5c1.6 0 3-.4 4.2-1'/%3E%3C/svg%3E");
     }
-    /* UX-10: Beschriftungen nur weglassen, wenn die Zeile wirklich nicht reicht (_bFitTools misst). */
+    /* UX-10: only drop labels when the row really does not fit (_bFitTools measures). */
     :host(.btight) .btool:not(.broom) .blabel { display:none; }
-    /* Der Inspektor liegt in B schon unter der Kopfzeile: kein zusätzlicher Abstand oben (Tablet),
-       sonst stand das ✕ abgesetzt über Zurück/Titel. */
+    /* In B the inspector already sits below the header: no extra top spacing (tablet),
+       otherwise the ✕ stood apart above back/title. */
     :host(.bmode.split.narrow:not(.flow):not(.phone)) .inspector { padding-top:0; }
-    /* Seiten (Einstellungen, Updates, Zeitreise): die ausgeblendete Listen-Kopfzeile darunter ließ
-       die Regel „Listenkopf am Tablet aus“ greifen – die Seite stand ohne Titel da. */
+    /* Pages (Settings, Updates, Rewind): the hidden list header below them triggered
+       the rule "list header off on tablet" – the page stood there without a title. */
     :host(.bmode.split.narrow:not(.flow):not(.phone)) .insphead:has(> .cs-head, > .cu-head, > .cv-head) { display:flex !important; }
     :host(.bmode.split.narrow:not(.flow):not(.phone)) .inspector:has(> .insphead > .cs-head, > .insphead > .cu-head, > .insphead > .cv-head) { padding-top:0 !important; }
 
-    /* Arbeitsfläche: Elemente zeigen, dass sie anklickbar sind. */
+    /* Workspace: elements show that they are clickable. */
     :host(.bmode) .card.map [data-mk], :host(.bmode) .card.map [data-pv],
     :host(.bmode) .card.map .pbadge, :host(.bmode) .card.map .mtile { cursor:pointer; }
     :host(.bmode) .card.map :is([data-mk], [data-pv], .pbadge, .mtile):focus-visible {
       outline:2px solid var(--accent, #B67A50); outline-offset:2px; }
 
-    /* Ausgeblendete Kacheln als gestrichelte Platzhalter. */
+    /* Hidden tiles as dashed placeholders. */
     :host(.bmode) .card.map .mtile.bghost {
       display:flex !important; flex-direction:column; justify-content:flex-end; gap:2px; opacity:.72;
       border:1.5px dashed rgba(127,127,127,.6); background:rgba(255,255,255,.18); box-shadow:none;
@@ -162,10 +162,10 @@
     :host(.bmode) .card.map .pbadge.btarget { box-shadow:0 0 0 2px var(--accent, #B67A50); }
     :host(.bmode) .card.map .pbadge, :host(.bmode) .card.map .mtile { -webkit-user-select:none; user-select:none;
       -webkit-touch-callout:none; }
-    /* Lange gedrückt (Ausprobieren, casora-panel-popups.js): Loslassen öffnet das echte Popup. */
+    /* Long press (try it, casora-panel-popups.js): releasing opens the real popup. */
     :host(.bmode) .card.map .mtile.btry { box-shadow:0 0 0 2px var(--casora-studio-done, var(--accent, #B67A50)), 0 6px 18px rgba(0,0,0,.2);
       transform:scale(.97); transition:transform .18s ease, box-shadow .18s ease; }
-    /* Wischen scrollt die Kachelreihe; gezogen wird erst nach langem Drücken. */
+    /* Swiping scrolls the tile row; dragging only starts after a long press. */
     :host(.bmode) .card.map .mtile { touch-action:pan-x pan-y; }
     .bhid { display:none; }
     :host(.bmode) .bhid {
@@ -175,8 +175,8 @@
     }
     :host(.bmode) .bhid svg { width:16px; height:16px; }
     :host(.bmode) .segrow .bhid { margin:0; height:36px; padding:0 14px; box-sizing:border-box; }
-    /* iPad quer mit HA-Seitenleiste und offenem Blatt: die Vorschau-Spalte ist schmal – die Zeile
-       Desktop/Tablet/Handy · Hell/Dunkel · Ansehen als … lief links unter die Seitenleiste. Umbrechen. */
+    /* iPad landscape with HA sidebar and open sheet: the preview column is narrow – the row
+       Desktop/Tablet/Phone · Light/Dark · View as … ran under the sidebar on the left. Wrap. */
     :host(.bmode.split:not(.flow):not(.phone)) .stage .segrow { flex-wrap:wrap; row-gap:10px; column-gap:14px; max-width:100%; }
     :host(.bmode.phone) .bhid { position:fixed; left:50%; transform:translateX(-50%); bottom:calc(84px + env(safe-area-inset-bottom, 0px));
       z-index:19; margin:0; white-space:nowrap; box-shadow:0 6px 18px rgba(0,0,0,.16);
@@ -184,7 +184,7 @@
     :host(.bmode.phone) .bhid.bphint { bottom:calc(128px + env(safe-area-inset-bottom, 0px)); }
     :host(.bmode.phone.binsp) .bhid { display:none; }
     :host(.bmode) .bhid:focus-visible { outline:2px solid var(--accent, #B67A50); outline-offset:2px; }
-    /* Liste „Inhalt“: Schalter direkt in den Badge- und Kachelzeilen. */
+    /* "Content" list: switches right in the badge and tile rows. */
     :host(.bmode) #pane.stack #band-badges .card > .chead .sw,
     :host(.bmode) #pane.sheet #band-badges .card > .chead .sw { display:flex; }
     :host(.bmode) #pane #band-tiles .tile > .thead .sw { display:flex; }
@@ -194,11 +194,11 @@
     /* Two lines (count below the title): icon, switch and arrow centered across both, as in the room list. */
     :host(.bmode) #pane #band-badges .card > .chead:has(> .count:not(:empty)) { row-gap:0; }
     :host(.bmode) #pane #band-badges .card > .chead:has(> .count:not(:empty)) :is(.sicon, .plus, .sw, .fold) { grid-row:1 / 3; }
-    /* Sortieren geht über die Griffe (Liste) und in der Vorschau, Löschen im Editor der Kachel:
-       der eigene Bearbeiten-Modus entfällt. */
+    /* Sorting works via the handles (list) and in the preview, deleting in the tile's editor:
+       the separate edit mode is gone. */
     :host(.bmode) .tilebar .editbtn, :host(.bmode) .badgebar .badgeedit { display:none !important; }
     .bupd { display:none; }
-    /* UX-05: Räume ordnen – Liste im Inspektor. */
+    /* UX-05: arrange rooms – list in the inspector. */
     .inspector.brooms-on > .insphead > :not(.broomshead) { display:none !important; }
     .inspector:not(.brooms-on) .broomshead { display:none !important; }
     .inspector.brooms-on > .insphead > .broomshead { display:flex !important; }
@@ -222,21 +222,21 @@
     .broomacts button { border:0; border-radius:10px; padding:9px 14px; cursor:pointer; font:inherit;
       font-size:var(--t-foot, 14px); font-weight:600; background:var(--chip, rgba(127,127,127,.14)); color:var(--ink, inherit); }
     .broomacts button:focus-visible { outline:2px solid var(--accent, #B67A50); outline-offset:2px; }
-    /* UX-08: Entfernen sichtbar am Ende des Kachel-Editors (wie „Kontakt löschen“ in iOS). */
+    /* UX-08: remove, visible at the end of the tile editor (like "Delete Contact" in iOS). */
     .bremove {
       display:block; width:100%; margin:16px 0 6px; padding:12px 14px; border:0; border-radius:12px;
       background:var(--chip, rgba(127,127,127,.12)); color:var(--casora-studio-bad, #FF453A);
       font:inherit; font-size:var(--t-body, 15px); font-weight:600; cursor:pointer; text-align:center; }
     .bremove:hover { filter:brightness(.97); }
     .bremove:focus-visible { outline:2px solid var(--accent, #B67A50); outline-offset:2px; }
-    /* UX-07: Ungesichertes wie am Mac neben dem Namen („— Bearbeitet“), nicht nur als Punkt. */
+    /* UX-07: unsaved state as on the Mac next to the name ("— Edited"), not just as a dot. */
     .bedited { display:none; }
     :host(.bmode.bdirty.split:not(.flow):not(.phone):not(.btight)) .toprow > .bedited {
       display:inline; flex:0 0 auto; margin-left:-6px; white-space:nowrap;
       font-size:var(--t-foot, 14px); font-weight:500; letter-spacing:0; color:var(--ink-2, inherit); }
     :host(.bmode.split:not(.phone)) .bupd.on { display:inline-flex; color:var(--accent, #B67A50); }
 
-    /* ── Handy ──────────────────────────────────────────────────────── */
+    /* ── Phone ──────────────────────────────────────────────────────── */
     :host(.bmode.phone) .stage { display:flex !important; }
     :host(.bmode.phone) .bigtitle { display:none; }
     :host(.bmode.phone) .inspector {
@@ -246,7 +246,7 @@
       background:var(--bar-solid, var(--casora-studio-bar-solid, rgb(242,242,247)));
       box-shadow:0 -10px 40px rgba(0,0,0,.25);
     }
-    /* Dunkel: --bar-solid gibt es nur hell – das Blatt blieb hellgrau, Überschriften und ✕ weiß darauf. */
+    /* Dark: --bar-solid only exists in light – the sheet stayed light gray, headings and ✕ white on it. */
     :host(.bmode.phone:not(.is-light)) .inspector { background:var(--pane-solid, #1d1f25); }
     :host(.bmode.phone.binsp) .inspector { display:flex !important; animation:bSheetIn .24s var(--ease, ease); }
     :host(.bmode.phone) .inspector .sheet { overflow-y:auto; max-height:calc(84dvh - 70px); }
@@ -255,11 +255,11 @@
       border-radius:9px; background:var(--ink-3, rgba(127,127,127,.5)); opacity:.5; z-index:2;
     }
     @keyframes bSheetIn { from { transform:translateY(40px); opacity:.4; } }
-    /* Im Blatt liegt nichts über einem Foto: Kopfzeile in Textfarbe statt Weiß mit Schatten. */
+    /* In the sheet nothing lies over a photo: header in text color instead of white with shadow. */
     :host(.bmode.phone) .inspector .insphead, :host(.bmode.phone) .inspector .insphead * ,
     :host(.bmode.phone) .inspector .detailbar h3 { color:var(--ink) !important; text-shadow:none !important; }
-    /* Gruppenüberschriften („Zuhause“, „Dashboard“): Casora Weich zeichnet sie hell fürs Foto –
-       im Blatt standen sie weiß auf Leinen. */
+    /* Group headings ("Home", "Dashboard"): Casora Weich draws them light for the photo –
+       in the sheet they stood white on linen. */
     :host(.bmode.phone) .inspector .sidehead.phonehead {
       color:color-mix(in srgb, var(--ink) 78%, transparent) !important; text-shadow:none !important; }
     :host(.bmode.phone) .inspector .sidehead.phonehead small {
@@ -268,13 +268,13 @@
       background:var(--chip, rgba(127,127,127,.16)) !important; box-shadow:none !important;
       backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
     :host(.bmode.phone) .inspector .insphead { padding:4px 60px 8px 16px; }
-    /* UX-09: ✕ auf der Mitte der Kopfzeile (Zurück/Titel), nicht darüber. */
+    /* UX-09: ✕ centered on the header (back/title), not above it. */
     :host(.bmode.phone) .bclose { top:27px; right:14px; }
     .bscrim { display:none; }
     :host(.bmode.phone.binsp) .bscrim { display:block; position:fixed; inset:0; z-index:29; background:rgba(0,0,0,.28); }
     .bbar { display:none; }
-    /* ds-15 (1.3): vier gleich breite Spalten um das „+“ – es steht in der Mitte, die Abstände hängen nicht
-       an der Wortlänge („Einstellungen“ passt ganz in eine Spalte). */
+    /* ds-15 (1.3): four equal-width columns around the "+" – it sits in the middle, the spacing does not
+       depend on word length ("Einstellungen" fits fully in one column). */
     :host(.bmode.phone) .bbar {
       display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr); justify-items:center; padding:0 4px; box-sizing:border-box;
       position:fixed; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom, 0px));
@@ -297,11 +297,11 @@
     .bbar .bplus { width:44px; height:44px; border-radius:50%; padding:0; justify-content:center;
       background:var(--casora-studio-done, var(--accent, #B67A50)); color:#fff; }
     :host(.bmode.phone) .body { padding-bottom:90px; }
-    /* ds-14 (1.3): Dashboard-Titel oben am Handy hell: dunkle Schrift wie die „Fertig“-Pille (weiß auf heller
-       Unschärfe nur ≈ 1,9:1). */
+    /* ds-14 (1.3): dashboard title at the top on the phone in light mode: dark text like the "Done" pill (white on
+       light blur only ≈ 1.9:1). */
     :host(.bmode.phone.is-light) .navtitle { color:var(--casora-studio-phone-ink, #3A322B); }
-    /* ds-16 (1.3): Touch (Tablet/Handy) – Trefferflächen ≥ 44 px durch einen unsichtbaren Rand, die Optik bleibt.
-       Die Werkzeuge der Leiste stehen Kante an Kante: dort nur die Höhe, sonst träfe man den Nachbarn. */
+    /* ds-16 (1.3): touch (tablet/phone) – hit areas ≥ 44 px via an invisible border, the look stays.
+       The toolbar tools sit edge to edge: only the height there, otherwise you would hit the neighbor. */
     @media (pointer: coarse) {
       .btool:not(.bhidroom), #msearch, .msearchbtn, .toprow .ghost, .segopt, .uxas, .roomtitle, .navtitle { position:relative; }
       .btool:not(.bhidroom)::after { content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%); }
@@ -332,7 +332,7 @@
     };
 
     P._bSetOn = function (on) {
-      try { localStorage.setItem(KEY, on ? "1" : "0"); } catch (e) { /* nur für diese Sitzung */ }
+      try { localStorage.setItem(KEY, on ? "1" : "0"); } catch (e) { /* session only */ }
       this._bOpen = false;
       this._bApply();
       if (this._state) {
@@ -342,35 +342,35 @@
       this._bRefit();
     };
 
-    // Das Layout hat sich geändert: die Vorschau neu einpassen.
+    // The layout changed: refit the preview.
     P._bRefit = function () {
       requestAnimationFrame(() => {
-        try { if (this._setVph) this._setVph(); } catch (e) { /* egal */ }
-        try { if (this._fitSlot) this._fitSlot(); } catch (e) { /* egal */ }
+        try { if (this._setVph) this._setVph(); } catch (e) { /* ignore */ }
+        try { if (this._fitSlot) this._fitSlot(); } catch (e) { /* ignore */ }
       });
     };
 
-    // Abläufe (Assistent, Design, Umzug …) liegen über allem: B beim Öffnen und Schließen eines
-    // Ablaufs neu anwenden – sonst blieben am Handy Größen-Umschalter und Inspektor-Blatt mit ✕ sichtbar.
+    // Flows (assistant, design, migration …) lie above everything: reapply B when a flow opens
+    // and closes – otherwise the size switcher and the inspector sheet with ✕ stayed visible on the phone.
     ["_flowOpen", "_exitFlow"].forEach((m) => {
       const orig = P[m];
       if (typeof orig !== "function") return;
       P[m] = function () {
         const r = orig.apply(this, arguments);
-        try { this._bApply(); } catch (e) { /* B bleibt, wie es ist */ }
+        try { this._bApply(); } catch (e) { /* B stays as it is */ }
         return r;
       };
     });
 
-    // Größen-Umschalter (Desktop/Tablet/Mobil) nach einer Größe von hier nachziehen: sonst stand
-    // am Handy „Tablet“ markiert über der Handy-Vorschau, und „Tablet“ antippen tat nichts.
+    // Update the size switcher (Desktop/Tablet/Mobile) after a size set from here: otherwise
+    // "Tablet" was marked above the phone preview on the phone, and tapping "Tablet" did nothing.
     const wireSeg = P._wireSeg;
     P._wireSeg = function (seg, attr, initial, onPick, opts) {
       if (seg && seg.id === "sizeseg") this._bSizeWire = [seg, attr, onPick, opts];
       return wireSeg.apply(this, arguments);
     };
     P._bSyncSize = function () {
-      try { if (this._syncSizeOpts) this._syncSizeOpts(); } catch (e) { /* ohne */ }
+      try { if (this._syncSizeOpts) this._syncSizeOpts(); } catch (e) { /* ignore */ }
       const w = this._bSizeWire;
       if (w && w[0].isConnected) this._wireSeg(w[0], w[1], this._miniSize, w[2], w[3]);
       else {
@@ -381,8 +381,8 @@
 
     P._bPage = function () { return !!(this._csOpen || this._cuOpen || this._cvOpen); };
 
-    // UX-02: Im neuen Studio ist der Titel auf jedem Gerät das Dashboard – der Raum hat seinen
-    // eigenen Knopf. Bisher war er am Tablet und Handy der Raumname (zweimal „Zuhause“ nebeneinander).
+    // UX-02: in the new Studio the title is the dashboard on every device – the room has its
+    // own button. Before, on tablet and phone it was the room name ("Home" twice side by side).
     const titleIsDash = P._titleIsDash;
     P._titleIsDash = function () {
       if (this.classList.contains("bmode") && !this.classList.contains("flow")) return true;
@@ -392,9 +392,9 @@
       const dirty = this._isDirty ? this._isDirty() : false;
       const was = this.classList.contains("bdirty");
       this.classList.toggle("bdirty", !!dirty);
-      // „Speichern“ kommt oder geht: Kopfzeile neu einpassen (Nutzertest 7, iPad hochkant).
-      if (was !== !!dirty && typeof this._bFitTools === "function") requestAnimationFrame(() => { try { this._bFitTools(); } catch (e) { /* nächstes Mal */ } });
-      // Neben dem Titelknopf, nicht darin: sonst bricht ein kurzer Name schon zweizeilig um.
+      // "Save" comes or goes: refit the header (user test 7, iPad portrait).
+      if (was !== !!dirty && typeof this._bFitTools === "function") requestAnimationFrame(() => { try { this._bFitTools(); } catch (e) { /* next time */ } });
+      // Next to the title button, not inside it: otherwise a short name already wraps onto two lines.
       const t = this.shadowRoot.getElementById("roomtitle");
       if (t && t.parentElement) {
         let e = t.parentElement.querySelector(":scope > .bedited");
@@ -420,8 +420,8 @@
       }
     });
 
-    // UX-03: Titelmenü wie bei einem Mac-Dokument – Dashboards wechseln und anlegen, darunter
-    // alles, was dieses Dashboard als Ganzes betrifft (bisher im „…“-Menü und unter „Dashboard“).
+    // UX-03: title menu like a Mac document – switch and create dashboards, below that
+    // everything that concerns this dashboard as a whole (before in the "…" menu and under "Dashboard").
     P._bDocItems = function () {
       if (!this._dashUrl || this._flowMode) return [];
       const g = "This dashboard";
@@ -465,20 +465,20 @@
         st.textContent = B_CSS;
         root.appendChild(st);
       }
-      // Dialog-Abläufe (Geräte-Assistent, YAML-Import) liegen über dem Studio: dahinter bleibt der
-      // Aufbau von B stehen – sonst erschien verschwommen das bisherige Studio mit Seitenleiste.
-      // Vollbild-Abläufe und das Handy schalten B wie bisher ab.
+      // Dialog flows (device assistant, YAML import) lie above the Studio: B's layout stays
+      // behind them – otherwise the previous Studio with its sidebar showed through blurred.
+      // Full-screen flows and the phone switch B off as before.
       const sheet = this._flowMode === "sheet" && !this.classList.contains("phone");
       const on = this._bOn() && (!this._flowMode || sheet);
       const wasOn = this.classList.contains("bmode");
-      // UX-01: hochkant und schmal → Inspektor unten statt rechts.
+      // UX-01: portrait and narrow → inspector at the bottom instead of on the right.
       const pw = this.clientWidth || 0, ph = window.innerHeight || 0;
       const stack = on && pw > 0 && pw < 1000 && ph > pw;
       if (stack !== this.classList.contains("bstack")) { this.classList.toggle("bstack", stack); this._bRefit(); }
       if (on && pw !== this._bFitW) { this._bFitW = pw; requestAnimationFrame(() => this._bFitTools()); }
       this.classList.toggle("bmode", on);
-      // Nach einem Ablauf (am Handy z. B. Updates, Zeitreise) war B kurz aus: die Vorschau kann
-      // inzwischen neu gebaut sein – Platzhalter, „N ausgeblendet“ und Tastatur neu anbringen.
+      // After a flow (on the phone e.g. updates, Rewind) B was briefly off: the preview may have
+      // been rebuilt meanwhile – reattach placeholders, "N hidden" and keyboard.
       if (on && !wasOn) requestAnimationFrame(() => this._bDecorate());
       if (on !== wasOn && this._state && this._syncTitles) this._syncTitles();
       if (on) { this._editTiles = false; this._editBadges = false; }
@@ -490,17 +490,17 @@
       this.classList.toggle("bpage", page);
       this._bTools(on);
       if (was !== open) this._bRefit();
-      // Neu an (oder Handy gedreht): die Vorschau war ausgeblendet und hat nichts gemessen.
+      // Newly on (or phone rotated): the preview was hidden and has measured nothing.
       const phone = this.classList.contains("phone");
-      // Auch nach dem Laden eines anderen Dashboards: ob es ein Mobil-Layout hat, ändert sich dann.
+      // Also after loading another dashboard: whether it has a mobile layout changes then.
       const reach = typeof this._phoneReachable === "function" && this._state ? this._phoneReachable() : false;
       const sig = on ? (phone ? "p" : "d") + "|" + (this._dashUrl || "") + "|" + reach : "";
       if (sig !== this._bSig) {
         this._bSig = sig;
         if (on && phone && typeof this._phoneReachable === "function" && this._phoneReachable()
           && this._miniSize !== "phone") { this._bPrePhone = this._miniSize; this._miniSize = "phone"; this._bSyncSize(); }
-        // Wieder breit (iPad gedreht, kurz schmal beim Drehen): die vorige Wahl zurück – Nutzertest 7:
-        // hochkant blieb die Vorschau auf „Handy“, obwohl das iPad dort das Tablet-Layout zeigt.
+        // Wide again (iPad rotated, briefly narrow while rotating): restore the previous choice – user test 7:
+        // in portrait the preview stayed on "Phone" although the iPad shows the tablet layout there.
         else if (on && !phone && this._bPrePhone && this._miniSize === "phone") {
           this._miniSize = this._sizeAllowed ? this._sizeAllowed(this._bPrePhone) : this._bPrePhone;
           this._bPrePhone = null;
@@ -511,7 +511,7 @@
       }
     };
 
-    // Werkzeugleiste (Desktop/Tablet) und untere Leiste (Handy).
+    // Toolbar (desktop/tablet) and bottom bar (phone).
     P._bTools = function (on) {
       const root = this.shadowRoot;
       const row = root.querySelector(".toprow");
@@ -535,19 +535,19 @@
           return b;
         };
         const rb = mk("rooms", "rooms", "Rooms", (b) => this._roomTitleMenu(b, "rooms"), "broom");
-        // P-V3 (1.3): Raumaktionen (Umbenennen, Symbol, Verschieben, Ausblenden, Löschen) als eigenes ⋯
-        // neben dem Raumnamen – im Raummenü lagen sie bei vielen Räumen unter der Falz.
+        // P-V3 (1.3): room actions (rename, icon, move, hide, delete) as their own ⋯
+        // next to the room name – in the room menu they were below the fold with many rooms.
         const ra = mk("roomact", "more", "Room actions", (b) => this._roomTitleMenu(b, "actions"), "broomact");
         ra.setAttribute("aria-label", tr("Room actions"));
-        // Raumnamen sind keine Casora-Texte: „Home“ stand sonst als „Zuhause“ neben dem
-        // gleichnamigen Knopf für die Einstellungen aller Dashboards.
+        // Room names are not Casora texts: "Home" otherwise showed as "Zuhause" next to the
+        // button of the same name for the settings of all dashboards.
         rb.querySelector(".blabel").setAttribute("data-no-i18n", "");
-        // V-02: „Inhalt“ statt „Elemente“ – alles, was in diesem Raum steht.
+        // V-02: "Content" instead of "Elements" – everything in this room.
         mk("list", "list", "Content", () => this._bShowList());
         mk("dash", "dash", "Dashboard", (b) => this._bDashMenu(b));
-        // UX-04: Einstellungen für alle Dashboards – nicht „Haus & Geräte“ (so heißt nur die erste Seite).
+        // UX-04: settings for all dashboards – not "Home & Devices" (only the first page is called that).
         mk("home", "gear", "Settings", (b) => this._bHomeMenu(b));
-        // 1.5: Community – Community-Karten hinzufügen/entfernen, Kartenwunsch (casora-panel-community.js).
+        // 1.5: Community – add/remove community cards, card request (casora-panel-community.js).
         const com = mk("com", "community", "Community", () => this._comCatalog && this._comCatalog());
         com.setAttribute("aria-haspopup", "dialog");
         const upd = mk("upd", "upd", "Update", () => this._cuFromMenu && this._cuFromMenu(), "bupd");
@@ -560,7 +560,7 @@
         const room = this._state && this._state.compact.rooms[this._room];
         const lab = tools.querySelector('[data-b="rooms"] .blabel');
         if (lab && room) lab.textContent = this._roomLabel(room);
-        // Ausgeblendeter Raum: am Raumknopf sichtbar (auch wenn nur das Symbol steht).
+        // Hidden room: visible on the room button (even when only the icon shows).
         const rbtn = tools.querySelector('[data-b="rooms"]');
         if (rbtn && room) {
           const hid = !!(room.variables || {}).casora_hidden;
@@ -569,7 +569,7 @@
         }
         const list = tools.querySelector('[data-b="list"]');
         if (list) list.classList.toggle("on", !!this._bOpen && !this._sel && !this._bPage());
-        // Update-Hinweis: dieselbe Zahl wie die (hier ausgeblendete) Zeile „Updates“.
+        // Update hint: the same number as the (here hidden) "Updates" row.
         const n = this._bUpdates();
         const upd = tools.querySelector(".bupd");
         if (upd) {
@@ -578,11 +578,11 @@
         }
       }
       if (on && tools) {
-        // Auch wenn „Speichern“ kommt oder geht (Nutzertest 7: hochkant lagen dann Zahnrad und Suche aufeinander).
+        // Also when "Save" comes or goes (user test 7: in portrait the gear and search then overlapped).
         const sig = tools.textContent + "|" + tools.querySelectorAll(".on").length + "|" + this.classList.contains("bdirty");
         if (sig !== this._bFitSig) { this._bFitSig = sig; requestAnimationFrame(() => this._bFitTools()); }
       }
-      // Handy: der Titel oben öffnet wie überall das Dashboard-Menü (Räume: untere Leiste).
+      // Phone: the title at the top opens the dashboard menu as everywhere (rooms: bottom bar).
       const nav = root.getElementById("navtitle");
       if (on && nav && !nav._bWired) {
         nav._bWired = true;
@@ -592,7 +592,7 @@
       }
       const homeBtn = root.querySelector('.bbar [data-b="home"]');
       if (homeBtn) homeBtn.classList.toggle("bdot", this._bUpdates() > 0);
-      // Schließen-Knopf im Inspektor.
+      // Close button in the inspector.
       const insp = root.querySelector(".inspector");
       if (on && insp && !insp.querySelector(".bclose")) {
         const x = document.createElement("button");
@@ -604,14 +604,14 @@
         x.onclick = () => this._bClose();
         insp.appendChild(x);
       }
-      // Handy: Abdunkelung hinter dem Blatt und die untere Leiste.
+      // Phone: dimming behind the sheet and the bottom bar.
       const shell = root.querySelector(".shell") || root;
       if (on && !root.querySelector(".bscrim")) {
         const s = document.createElement("div");
         s.className = "bscrim";
         s.onclick = (ev) => {
-          // „Fertig“, Rückgängig und „…“ liegen sichtbar über der Abdunkelung: ein Tipp darauf
-          // schließt das Blatt und löst den Knopf gleich aus (bisher brauchte „Fertig“ zwei Tipps).
+          // "Done", undo and "…" lie visibly above the dimming: a tap on them
+          // closes the sheet and triggers the button right away (before, "Done" needed two taps).
           s.style.pointerEvents = "none";
           const hit = root.elementFromPoint ? root.elementFromPoint(ev.clientX, ev.clientY) : null;
           s.style.pointerEvents = "";
@@ -653,13 +653,13 @@
       const tr0 = tools.getBoundingClientRect();
       let next = tools.nextElementSibling;
       while (next && (!next.getClientRects().length || next.getBoundingClientRect().width < 2)) next = next.nextElementSibling;
-      // Auch eng: der Dashboard-Name wird gekürzt („Test …“) oder die Knöpfe rechts
-      // (Rückgängig, Fertig) rücken bis an die Beschriftungen – Tablet hochkant.
+      // Also tight: the dashboard name is shortened ("Test …") or the buttons on the right
+      // (undo, Done) move up to the labels – tablet portrait.
       const lab = row.querySelector("#roomtitle .rt-label");
       const pill = [...this.shadowRoot.querySelectorAll(".navpill")].find((x) => x.getClientRects().length
         && x.getBoundingClientRect().left > tr0.left);
-      // Auch: die Knöpfe selbst laufen über ihren Platz (Nutzertest 1600 px: „Einstellungen“ unter
-      // dem Hinweis „Handy weicht … ab“).
+      // Also: the buttons themselves overflow their space (user test 1600 px: "Settings" below
+      // the hint "Phone differs … ").
       const tight = row.scrollWidth > row.clientWidth + 1 || tools.scrollWidth > tools.clientWidth + 1 || (next && next.getBoundingClientRect().left < tr0.right + 8)
         || (lab && lab.scrollWidth > lab.clientWidth + 1)
         || (pill && pill.getBoundingClientRect().left < tr0.right + 20);
@@ -671,7 +671,7 @@
       return b ? (parseInt(b.textContent, 10) || 1) : 0;
     };
 
-    // „Inhalt“: die Raumansicht mit allen Abschnitten, auch was in der Vorschau fehlt.
+    // "Content": the room view with all sections, including what the preview lacks.
     P._bShowList = function () {
       if (this._bOpen && !this._sel && !this._bPage()) return this._bClose();
       this._bLeavePages();
@@ -682,12 +682,12 @@
       this._bFocusInspector();
     };
 
-    // „Kachel hinzufügen“ (Platz in der Vorschau, am Handy „+“): Kachelliste im Inspektor und
-    // gleich die Typauswahl. Der Platz der Vorschau rief bisher scrollIntoView auf – das schob
-    // im neuen Aufbau die ganze Seite samt Vorschau aus dem Bild. Hier scrollt nur der Inspektor.
+    // "Add a tile" (slot in the preview, "+" on the phone): tile list in the inspector and
+    // the type picker right away. The preview's slot used to call scrollIntoView – in the
+    // new layout that pushed the whole page including the preview out of view. Here only the inspector scrolls.
     P._bAddTile = function () {
-      // Handy: nur die Typauswahl über der Vorschau – nicht zusätzlich das Blatt mit der
-      // Kachelliste dahinter (zwei Fenster übereinander). Nach der Wahl öffnet die neue Kachel.
+      // Phone: only the type picker above the preview – not also the sheet with the
+      // tile list behind it (two windows on top of each other). After the choice the new tile opens.
       if (this.classList.contains("phone") && this._state) return this._bAddTilePhone();
       this._bLeavePages();
       this._group = "tiles";
@@ -730,30 +730,30 @@
 
     P._bLeavePages = function () {
       this._bRooms = false;
-      try { if (this._csOpen) this._csClose(); } catch (e) { /* weiter */ }
-      try { if (this._cuOpen) this._cuClose(); } catch (e) { /* weiter */ }
-      try { if (this._cvOpen) this._cvClose(); } catch (e) { /* weiter */ }
+      try { if (this._csOpen) this._csClose(); } catch (e) { /* carry on */ }
+      try { if (this._cuOpen) this._cuClose(); } catch (e) { /* carry on */ }
+      try { if (this._cvOpen) this._cvClose(); } catch (e) { /* carry on */ }
     };
 
     P._bClose = function () {
       if (this._openCombo) this._openCombo();
-      // Offene Anfrage „Kacheln aufklappen“ (Kachel hinzufügen) hielt den Inspektor sonst offen:
-      // am Handy ließ sich das Blatt danach weder per ✕ noch per Esc schließen.
+      // An open "expand tiles" request (Add a tile) otherwise kept the inspector open:
+      // on the phone the sheet then could not be closed by ✕ or Esc.
       this._stackOpenReq = null;
       this._bLeavePages();
       this._bOpen = false;
       this._bRooms = false;
-      // Auch ohne Auswahl zurück auf „Räume“: nach Kachel hinzufügen + Rückgängig war die Auswahl
-      // schon weg, _group blieb „tiles“ – der Schleier über der Vorschau blieb nach dem Schließen stehen.
+      // Back to "Rooms" even without a selection: after Add a tile + undo the selection was
+      // already gone, _group stayed "tiles" – the veil over the preview stayed after closing.
       this._sel = null;
       this._group = "rooms";
       this._renderForm();
       this._bApply();
-      // Fokus zurück an das Element, das den Inspektor geöffnet hat.
+      // Focus back to the element that opened the inspector.
       const back = this._bFrom;
       this._bFrom = null;
       if (back && back.isConnected && back.focus) back.focus({ preventScroll: true });
-      // Die Vorschau ist inzwischen neu gezeichnet: dasselbe Element über seinen Schlüssel suchen.
+      // The preview has been redrawn meanwhile: look up the same element by its key.
       else if (back && back.dataset && back.dataset.mk) this._bRefocus(back.dataset.mk);
     };
 
@@ -766,17 +766,17 @@
       });
     };
 
-    // Symbole wie in der Seitenleiste des bisherigen Studios (Abschnitte bzw. Einstellungsseiten).
+    // Icons as in the previous Studio's sidebar (sections or settings pages).
     const SECS = [
       ["General", "Controls", "settings"], ["Weather", "Weather", "weather"], ["Time", "Time", "clock"],
       ["Notifications", "Notifications", "bell"], ["Scenes", "Scenes", "scenes"],
     ];
     P._bDashMenu = function (anchor) {
-      // UX-03: nur Einstellungen dieses Dashboards. Zeitreise und Mobil-Layout gehören zum
-      // Dashboard selbst und stehen im Titelmenü (_bDocItems).
+      // UX-03: only settings of this dashboard. Rewind and mobile layout belong to the
+      // dashboard itself and sit in the title menu (_bDocItems).
       const items = SECS.map(([k, l, g]) => ({ id: "sec:" + k, label: l, glyph: g, plainGlyph: true,
         group: "Only this dashboard" }));
-      // Das Design gilt für alle Dashboards und steht unter „Einstellungen“ – hier nur ein Verweis.
+      // The design applies to all dashboards and sits under "Settings" – only a link here.
       if (typeof this._casoraShowDesign === "function") {
         items.push({ id: "design", label: "Design (for all dashboards) ›", glyph: "desktop", plainGlyph: true, group: "design", quiet: true });
       }
@@ -814,9 +814,9 @@
       });
     };
 
-    // ── Unsichtbares sichtbar machen ───────────────────────────────────
-    // Kacheln, die die Vorschau nicht zeigt (ausgeschaltet, nur am Handy, Bedingung oder
-    // „nur wenn aktiv“ gerade nicht erfüllt), und ausgeschaltete Badges.
+    // ── Making the invisible visible ───────────────────────────────────
+    // Tiles the preview does not show (switched off, phone only, condition or
+    // "only when active" not met right now), and switched-off badges.
     P._bHidden = function () {
       const room = this._state && this._state.compact.rooms[this._room];
       const map = this.shadowRoot.querySelector(".card.map");
@@ -829,8 +829,8 @@
         if (V.enabled === false) why = "Hidden";
         else if (V.surfaces === "phone") why = "Phone only";
         else {
-          // data-mk trägt den Schlüssel dieses Raums; data-jump zeigt in der Handy-Vorschau auf
-          // die Kachel des Mobil-Layouts (anderer Schlüssel) – sonst galt dort alles als verborgen.
+          // data-mk carries this room's key; data-jump in the phone preview points to
+          // the tile of the mobile layout (another key) – otherwise everything there counted as hidden.
           const el = map.querySelector('.mtile[data-mk="t:' + CSS.escape(key) + '"]:not(.bghost)')
             || map.querySelector('.mtile[data-jump="' + CSS.escape(key) + '"]:not(.bghost)');
           if (!el || el.style.display === "none") why = "Hidden right now";
@@ -854,11 +854,11 @@
       const map = root.querySelector(".card.map");
       if (!map) return;
       const hid = this._bHidden();
-      // Gestrichelte Platzhalter für ausgeblendete Kacheln, hinten in der Reihe.
+      // Dashed placeholders for hidden tiles, at the back of the row.
       const row = map.querySelector(".mini-tiles");
       const ghosts = hid.tiles.filter((h) => h.why === "Hidden");
       const gsig = ghosts.map((h) => h.key + "|" + h.label).join(",");
-      // Nur bei Änderung neu einsetzen – der Beobachter der Vorschau sähe sonst jede Runde neu.
+      // Only reinsert on change – the preview's observer would otherwise see something new every round.
       const same = row && row._bSig === gsig && row.querySelectorAll(".bghost").length === ghosts.length;
       if (!same) map.querySelectorAll(".bghost").forEach((n) => n.remove());
       if (row && !same) {
@@ -875,12 +875,12 @@
           row.appendChild(g);
         });
       }
-      // Alles Anklickbare ist auch per Tastatur erreichbar.
+      // Everything clickable is also reachable by keyboard.
       map.querySelectorAll("[data-mk], [data-pv], .mtile.ghost, .pbadge.ghost, .mini-tab").forEach((el) => {
         if (el.tabIndex < 0 || !el.hasAttribute("tabindex")) el.tabIndex = 0;
         el.setAttribute("role", "button");
-        // Name aus dem sichtbaren Text: der Tooltip ist teils ein Hinweis („Intelligente
-        // Sortierung ist an …“) und taugt nicht als Name für Screenreader.
+        // Name from the visible text: the tooltip is partly a hint ("Smart
+        // Sort is on …") and does not work as a name for screen readers.
         const nm = el.querySelector(".mname, .plabel, .bgn");
         const t = ((nm && nm.textContent) || el.textContent || el.title || "").trim().replace(/\s+/g, " ").slice(0, 80);
         if (t && el.getAttribute("aria-label") !== t) el.setAttribute("aria-label", t);
@@ -901,24 +901,24 @@
           window.addEventListener("pointerup", off, true);
           window.addEventListener("pointercancel", off, true);
         }, true);
-        // Nach einem Ziehen löst das Loslassen keinen Klick aus.
+        // After a drag, the release does not trigger a click.
         map.addEventListener("click", (ev) => {
           if (this._bDragged) { ev.stopPropagation(); ev.preventDefault(); return; }
-          // Platz „Kachel hinzufügen“: eigener Ablauf ohne Seiten-Scrollen (_bAddTile).
+          // "Add a tile" slot: own flow without page scrolling (_bAddTile).
           const slot = ev.target.closest && ev.target.closest(".mtile.ghost:not(.bghost)");
           if (slot) { ev.stopPropagation(); ev.preventDefault(); this._bFrom = slot; this._bAddTile(); }
         }, true);
-        // Touch: nach langem Drücken scrollt die Seite nicht mehr, das Ziehen hat Vorrang.
+        // Touch: after a long press the page no longer scrolls, dragging takes precedence.
         map.addEventListener("touchmove", (ev) => { if (this._bHold) ev.preventDefault(); }, { passive: false });
         map.addEventListener("contextmenu", (ev) => { if (this._bHold) ev.preventDefault(); });
       }
-      // Langes Drücken / Rechtsklick / Alt+Klick auf eine Kachel: echtes Popup zum Ausprobieren.
+      // Long press / right click / Alt+click on a tile: real popup to try it out.
       if (typeof this._tryWire === "function") this._tryWire(map);
       this._bHiddenChip(hid);
       this._bPhoneHint();
     };
 
-    // Ausgeblendete Räume des Dashboards ({ i, label }) – nur mit „Wieder einblenden“ (casora-panel-b-mehr.js).
+    // Hidden rooms of the dashboard ({ i, label }) – only with "Show again" (casora-panel-b-mehr.js).
     P._bHiddenRooms = function () {
       if (!this._state || typeof this._mHideRoom !== "function") return [];
       return (this._state.compact.rooms || []).map((r, i) => ({ r, i }))
@@ -926,13 +926,13 @@
         .map((x) => ({ i: x.i, label: this._roomLabel(x.r) }));
     };
 
-    // „N ausgeblendet“ unter der Vorschau: Liste aller unsichtbaren Dinge.
+    // "N hidden" below the preview: list of all invisible things.
     P._bHiddenChip = function (hid) {
       const canvas = this.shadowRoot.querySelector(".canvas");
       if (!canvas) return;
       let chip = canvas.querySelector(".bhid");
-      // Ausgeblendete Räume gehören dazu (Nutzertest 4: der Raum stand nicht in der Liste) –
-      // antippen blendet ihn wieder ein.
+      // Hidden rooms belong to it (user test 4: the room was not in the list) –
+      // tapping shows it again.
       const hRooms = this._bHiddenRooms();
       const n = hid.tiles.length + hid.badges.length + hRooms.length;
       if (!n) { if (chip) chip.remove(); return; }
@@ -961,9 +961,9 @@
           });
         };
       }
-      // Desktop/Tablet: neben dem Umschalter Desktop/Tablet/Mobil. Unter der Vorschau lag der
-      // Knopf bei großer Vorschau halb unter dem Fensterrand (die Bühne scrollt nicht).
-      // Handy: unten über der Leiste (CSS, fixed).
+      // Desktop/tablet: next to the Desktop/Tablet/Mobile switcher. Below the preview the
+      // button sat half under the window edge with a large preview (the stage does not scroll).
+      // Phone: at the bottom above the bar (CSS, fixed).
       const row = !this.classList.contains("phone") && canvas.querySelector(".segrow");
       if (row) { if (chip.parentElement !== row) row.appendChild(chip); }
       else {
@@ -977,7 +977,7 @@
       chip.appendChild(document.createTextNode(tr("{n} hidden").replace("{n}", n)));
     };
 
-    // Handy ohne Mobil-Layout: die Vorschau ist nur verkleinert – Hinweis zum Anlegen.
+    // Phone without a mobile layout: the preview is only scaled down – hint to create one.
     P._bPhoneHint = function () {
       const canvas = this.shadowRoot.querySelector(".canvas");
       if (!canvas) return;
@@ -996,7 +996,7 @@
       }
     };
 
-    // ── Reihenfolge: Kacheln und Badges in der Vorschau ────────────────
+    // ── Order: tiles and badges in the preview ─────────────────────────
     const room$ = (p) => p._state && p._state.compact.rooms[p._room];
     const bidOf = (el) => String((el && el.dataset.mk) || "").replace(/^b:/, "").split(":")[0];
 
@@ -1013,7 +1013,7 @@
       this._markDirty();
       this._mapSig = null;
       this._renderForm();
-      // Die Handy-Vorschau baut ihre Badge-Reihe nicht bei jedem Zeichnen neu.
+      // The phone preview does not rebuild its badge row on every draw.
       this._rebuildPreview();
     };
 
@@ -1067,7 +1067,7 @@
         this._bFrom = el;
         this._bKbd = true;
         el.click();
-        // Per Tastatur geöffnet: der Fokus wandert in den Inspektor.
+        // Opened via keyboard: focus moves into the inspector.
         if (this._bKbd) { this._bKbd = false; if (this.classList.contains("binsp")) this._bFocusInspector(); }
         return;
       }
@@ -1084,7 +1084,7 @@
       if (ok) this._bRefocus(mk);
     };
 
-    // Langes Drücken (Touch) bzw. Ziehen mit der Maus sortiert die Badges.
+    // Long press (touch) or dragging with the mouse sorts the badges.
     P._bBadgeDown = function (ev) {
       if (!this.classList.contains("bmode") || ev.button) return;
       const pill = ev.target.closest && ev.target.closest('.pbadge[data-mk^="b:"]:not(.ghost)');
@@ -1111,7 +1111,7 @@
           if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
           moved = true;
           pill.classList.add("mdrag");
-          try { pill.setPointerCapture(ev.pointerId); } catch (e) { /* ohne */ }
+          try { pill.setPointerCapture(ev.pointerId); } catch (e) { /* ignore */ }
         }
         pill.style.transform = "translate(" + dx / scale + "px," + dy / scale + "px)";
         let best = me, bd = Infinity;
@@ -1136,8 +1136,8 @@
         this._bDragged = true;
         setTimeout(() => { this._bDragged = false; }, 0);
         if (target === me) return;
-        // Getrennte Klima-/Sicherheits-Badges (climate:0, :1 …) gehören zu einer Karte:
-        // sortiert wird nach Karte, nicht nach einzelner Pille.
+        // Split climate/security badges (climate:0, :1 …) belong to one card:
+        // sorting goes by card, not by single pill.
         const ids = pills.map(bidOf).filter((v, i, a) => a.indexOf(v) === i);
         const mine = bidOf(pill), there = bidOf(pills[target]);
         if (mine === there) return;
@@ -1155,7 +1155,7 @@
       window.addEventListener("pointercancel", cancelUp);
     };
 
-    // ── Haken in bestehende Abläufe ────────────────────────────────────
+    // ── Hooks into existing flows ──────────────────────────────────────
     const after = (name, fn) => {
       const orig = P[name];
       if (typeof orig !== "function") return;
@@ -1174,7 +1174,7 @@
       };
     };
 
-    // Auswahl öffnet den Inspektor; wer ausgewählt hat, bekommt später den Fokus zurück.
+    // Selecting opens the inspector; whoever selected gets the focus back later.
     before("_select", function () {
       if (!this.classList.contains("bmode")) return;
       this._bRooms = false;
@@ -1184,7 +1184,7 @@
     });
     before("_pvPick", function () { if (this.classList.contains("bmode")) this._bOpen = true; });
     before("_openRoomSec", function () { if (this.classList.contains("bmode")) this._bOpen = true; });
-    // Hat dieser Durchlauf die Vorschau selbst neu gebaut? (Desktop: ja, beim Raumwechsel.)
+    // Did this pass rebuild the preview itself? (Desktop: yes, on a room change.)
     const renderForm0 = P._renderForm;
     P._renderForm = function () {
       const tok = this._mapSwap;
@@ -1193,13 +1193,13 @@
       return r;
     };
     before("_renderForm", function () {
-      // „Kachel hinzufügen“ in der Vorschau will die Liste offen haben.
+      // "Add a tile" in the preview wants the list open.
       if (this._stackOpenReq && this.classList.contains("bmode")) this._bOpen = true;
     });
     after("_renderForm", function () {
       this._bApply();
       this._bRoomsPaint();
-      // Handy-„+“: die eben hinzugefügte Kachel gleich im Editor öffnen.
+      // Phone "+": open the tile just added in the editor right away.
       const aa = this._bAfterAdd;
       if (aa && aa.room === (this._state && this._state.compact.rooms[this._room])
         && (aa.room.tiles || []).length > aa.n) {
@@ -1208,7 +1208,7 @@
         const key = this._tileKey(t);
         requestAnimationFrame(() => this._select({ group: "tiles", key, label: t.name || key }));
       }
-      // UX-08: „Kachel entfernen“ unten im Editor – dieselbe Aktion wie im „…“-Menü.
+      // UX-08: "Remove tile" at the bottom of the editor – the same action as in the "…" menu.
       if (this.classList.contains("bmode") && this._sel && this._sel.group === "tiles") {
         const box = this.shadowRoot.querySelector("#pane #band-tiles .tile.sel");
         const del = box && box.querySelector(":scope > .delbtn");
@@ -1221,8 +1221,8 @@
           box.appendChild(b);
         }
       }
-      // Raumwechsel: am Handy zeichnet _renderForm die Vorschau nicht von selbst neu. Am Desktop
-      // hat es das gerade getan – ein zweites Mal im nächsten Bild war doppelte Arbeit.
+      // Room change: on the phone _renderForm does not redraw the preview by itself. On desktop
+      // it just did – a second time in the next frame was double work.
       if (this.classList.contains("bmode") && this._bRoomSeen !== this._room) {
         this._bRoomSeen = this._room;
         if (!this._bSwapped) requestAnimationFrame(() => this._syncPreview());
@@ -1230,7 +1230,7 @@
     });
     after("_swapMap", function () {
       this._bDecorate();
-      // Die Vorschau tauscht weich über; danach noch einmal (neue Elemente).
+      // The preview crossfades; then once more (new elements).
       requestAnimationFrame(() => this._bDecorate());
     });
     ["_csOpenPage", "_csClose", "_cuOpenPage", "_cuClose", "_cvOpenPage", "_cvClose", "_renderTabs"].forEach((n) => after(n, function (r) {
@@ -1238,14 +1238,14 @@
       if (r && typeof r.then === "function") r.then(() => this._bApply());
     }));
 
-    // Umschalten zwischen den beiden Studios (V-08): im neuen Studio unter „…“ › Hilfe
-    // „Bisheriges Studio öffnen“, im bisherigen Studio im „…“ „Neues Studio öffnen“.
-    // „Neues Studio“ mit Haken klang, als gäbe es ein besseres altes.
+    // Switching between the two Studios (V-08): in the new Studio under "…" › Help
+    // "Open the previous Studio", in the previous Studio in the "…" "Open the new Studio".
+    // "New Studio" with a check mark sounded as if there were a better old one.
     const menuAt = P._menuAt;
     P._menuAt = function (anchor, items, onPick, mopts) {
-      // Typauswahl vom „+“ der unteren Leiste: am „+“ öffnen, nicht am verborgenen Knopf im Blatt.
+      // Type picker from the "+" of the bottom bar: open at the "+", not at the hidden button in the sheet.
       if (this._bMenuAnchor && anchor && !anchor.getClientRects().length) anchor = this._bMenuAnchor;
-      // UX-03: Umbenennen, Symbol, Zeitreise, Mobil-Layout und Löschen stehen im neuen Studio im Titelmenü.
+      // UX-03: rename, icon, Rewind, mobile layout and delete sit in the title menu in the new Studio.
       if (this.classList.contains("bmode") && Array.isArray(items) && items.some((x) => x && x.id === "hints")) {
         const DOC = ["renamedash", "icondash", "delete", "addmobile", "casora_versions"];
         items = items.filter((x) => !(x && DOC.indexOf(x.id) >= 0));
@@ -1257,14 +1257,14 @@
         const pick = onPick;
         onPick = (id) => (id === "studio_b" ? this._bSetOn(true) : pick(id));
       }
-      // Hilfe-Untermenü (welcome … issue): zurück zum bisherigen Studio.
+      // Help submenu (welcome … issue): back to the previous Studio.
       if (Array.isArray(items) && this._bOn() && items.some((x) => x && x.id === "welcome") && items.some((x) => x && x.id === "issue")
         && !items.some((x) => x && x.id === "studio_b")) {
         items = items.concat([{ id: "studio_b", label: "Open the previous Studio", glyph: "tile", plainGlyph: true, group: "studio", quiet: true }]);
         const pick = onPick;
         onPick = (id) => (id === "studio_b" ? this._bSetOn(false) : pick(id));
       }
-      // Raummenü in B: Räume sortieren (die Raumliste der Seitenleiste fehlt hier).
+      // Room menu in B: sort rooms (the sidebar's room list is missing here).
       if (this.classList.contains("bmode") && Array.isArray(items)
         && items.some((x) => x && x.id === "rename" && x.group === "This Room")) {
         const rooms = (this._state && this._state.compact.rooms) || [];
@@ -1272,7 +1272,7 @@
         const home = (i) => !!(I.isHomeRoom && I.isHomeRoom(rooms[i], rooms));
         const i = this._room;
         items = items.slice();
-        // UX-05: ganze Reihenfolge auf einen Blick (Ziehen, Alphabetisch) statt Schritt für Schritt.
+        // UX-05: the whole order at a glance (drag, alphabetical) instead of step by step.
         const add = items.findIndex((x) => x && x.id === "add");
         if (add >= 0) items.splice(add + 1, 0, { id: "barrange", label: "Arrange Rooms\u2026", glyph: "rooms", plainGlyph: true,
           group: items[add].group, quiet: true, disabled: rooms.length < 2 });
@@ -1295,7 +1295,7 @@
       return menuAt.call(this, anchor, items, onPick, mopts);
     };
 
-    // ── UX-05: Räume ordnen ─────────────────────────────────────────────
+    // ── UX-05: Arrange rooms ────────────────────────────────────────────
     P._bRoomsOpen = function () {
       this._bLeavePages();
       this._sel = null;
@@ -1345,7 +1345,7 @@
       const insp = root.querySelector(".inspector");
       const head = insp && insp.querySelector(".insphead");
       const pane = root.getElementById("pane");
-      // Eigene Kopfzeile neben der des Panels (die bleibt unangetastet, nur ausgeblendet).
+      // Own header next to the panel's (which stays untouched, only hidden).
       let own = head && head.querySelector(":scope > .broomshead");
       if (insp) insp.classList.toggle("brooms-on", !!want);
       if (!want) { if (own) own.remove(); return; }
@@ -1428,7 +1428,7 @@
       hint.className = "hint";
       hint.textContent = tr("Drag to change the order. It applies on desktop, tablet and phone.");
       hint.setAttribute("data-no-i18n", "");
-      // .col > .card: dieselbe Kartenfläche wie die übrigen Listen im Inspektor.
+      // .col > .card: the same card surface as the other lists in the inspector.
       const col = document.createElement("div");
       col.className = "col";
       col.appendChild(card);
@@ -1483,17 +1483,17 @@
       window.addEventListener("pointercancel", end);
     };
 
-    // Esc schließt den Inspektor (Menüs und Dialoge zuerst). Einmal je Element verdrahtet –
-    // connectedCallback lässt sich nach customElements.define nicht mehr umhängen.
+    // Esc closes the inspector (menus and dialogs first). Wired once per element –
+    // connectedCallback cannot be rewired after customElements.define.
     P._bWireKeys = function () {
       if (this._bKeys) return;
       this._bKeys = true;
-      // Drehen oder HA-Seitenleiste auf/zu: Lage des Inspektors (rechts/unten) neu bestimmen.
+      // Rotation or HA sidebar open/closed: redetermine the inspector's position (right/bottom).
       if (window.ResizeObserver) new ResizeObserver(() => { if (this.isConnected) this._bApply(); }).observe(this);
       this.addEventListener("keydown", (ev) => {
         if (ev.key !== "Escape" || !this.classList.contains("binsp")) return;
         if (this._openCombo) return;
-        // Offene Dialoge (Rückfrage, Auswahlblatt) schließen zuerst selbst.
+        // Open dialogs (confirmation, picker sheet) close themselves first.
         if ([...this.shadowRoot.querySelectorAll(".askpane, .psheet-panel")].some((n) => n.getClientRects().length)) return;
         ev.preventDefault();
         ev.stopPropagation();
@@ -1502,8 +1502,8 @@
     };
     after("_bApply", function () {
       this._bWireKeys();
-      // Die Vorschau wird an mehreren Stellen (auch zeitversetzt) neu gebaut: jede neue
-      // Karte bekommt Platzhalter, Tastatur und Ziehen.
+      // The preview is rebuilt in several places (also delayed): every new
+      // card gets placeholders, keyboard and dragging.
       const mount = this.shadowRoot.getElementById("mapmount");
       if (mount && !this._bObs) {
         let q = 0;
