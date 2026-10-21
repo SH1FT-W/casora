@@ -3240,11 +3240,15 @@
     segment_mopping: 'Wischt Raum', segment_clean_mop_cleaning: 'Saugt & wischt Raum', segment_clean_mop_mopping: 'Wischt Raum',
     zoned_mopping: 'Wischt Zone', zoned_clean_mop_cleaning: 'Saugt & wischt Zone', zoned_clean_mop_mopping: 'Wischt Zone',
     back_to_dock_washing_duster: 'Kehrt zurück & Moppwäsche',
+    // HA's own 'returning' (Dreame's vacuum state) and Dreame's status words (issue #33).
+    returning: 'Kehrt zurück', room_cleaning: 'Raumreinigung', zone_cleaning: 'Zonenreinigung',
+    follow_wall_cleaning: 'Kantenreinigung', fast_mapping: 'Kartierung', remote_control: 'Fernsteuerung aktiv',
   };
   var CLEAN = ['cleaning', 'returning', 'returning_home', 'docking', 'spot_cleaning', 'zoned_cleaning', 'segment_cleaning',
     'going_to_target', 'mapping', 'patrol', 'remote_control_active', 'manual_mode', 'robot_status_mopping', 'clean_mop_cleaning',
     'clean_mop_mopping', 'segment_mopping', 'segment_clean_mop_cleaning', 'segment_clean_mop_mopping', 'zoned_mopping',
-    'zoned_clean_mop_cleaning', 'zoned_clean_mop_mopping'];
+    'zoned_clean_mop_cleaning', 'zoned_clean_mop_mopping', 'room_cleaning', 'zone_cleaning', 'follow_wall_cleaning', 'fast_mapping',
+    'remote_control'];
   var DOCKWORK = ['emptying_the_bin', 'washing_the_mop', 'washing_the_mop_2', 'going_to_wash_the_mop', 'attaching_the_mop',
     'detaching_the_mop', 'back_to_dock_washing_duster', 'air_drying_stopping'];
   var ERRORS = {
@@ -3294,11 +3298,17 @@
   /* A duration in the unit the popup counts in ('min' or 'h'), from the unit the sensor states (s, min, h, d) –
      Dreame reports minutes, Ecovacs seconds. Without a unit the number as before. */
   var SEC = { s: 1, sec: 1, min: 60, h: 3600, d: 86400 };
+  var unitOf = function (states, e) { return String(((states[e] || {}).attributes || {}).unit_of_measurement || '').trim().toLowerCase(); };
   var numIn = function (states, e, want) {
     var v = U.num(states, e);
     if (v == null) return null;
-    var u = String(((states[e] || {}).attributes || {}).unit_of_measurement || '').trim().toLowerCase();
+    var u = unitOf(states, e);
     return SEC[u] && SEC[want] ? v * SEC[u] / SEC[want] : v;
+  };
+  /* Time left on a part: operating hours, or days when the sensor counts days (Dreame wheels, onboard tank). */
+  var restText = function (states, e, h) {
+    if (unitOf(states, e) === 'd') { var n = Math.round(h / 24); return n === 1 ? 'noch 1 Tag' : 'noch ' + n + ' Tage'; }
+    return 'noch ' + (h >= 10 ? U.f(Math.round(h), 0) + ' Betriebsstd.' : U.dur(h * 60));
   };
   /* Verschleißteile: [translation_key des Sensors, Name, Icon, Nennlaufzeit in Std. oder null, translation_key der Reset-Taste,
      further sensor keys, further reset keys] – Roborock first, then Dreame (same "_time_left" in hours; its own resets). */
@@ -3309,6 +3319,10 @@
     ['sensor_time_left', 'Sensoren reinigen', 'mdi:eye-outline', 30, 'reset_sensor_consumable', ['sensor_dirty_time_left'], ['reset_sensor']],
     ['strainer_time_left', 'Schmutzfänger (Station)', 'mdi:filter-outline', null, null, ['tank_filter_time_left'], []],
     ['mop_pad_time_left', 'Mopp-Pad', 'mdi:texture-box', null, 'reset_mop_pad', [], []],
+    // Dreame only; wheels and onboard tank count days.
+    ['wheel_dirty_time_left', 'Räder reinigen', 'mdi:tire', null, 'reset_wheel', [], []],
+    ['water_outlet_filter_dirty_time_left', 'Wasserauslassfilter', 'mdi:filter-outline', null, 'reset_water_outlet_filter', [], []],
+    ['onboard_dirty_water_tank_time_left', 'Schmutzwassertank (Roboter)', 'mdi:cup-water', null, 'reset_onboard_dirty_water_tank', [], []],
   ];
 
   /* Roborock's translation_keys first, then those of other integrations with the same meaning: Dreame (HACS,
@@ -3332,6 +3346,10 @@
     err: { keys: ['vacuum_error', 'error'], domain: 'sensor' }, dockErr: { keys: ['dock_error'], domain: 'sensor' },
     water: { keys: ['water_shortage'], domain: 'binary_sensor' }, dirty: { keys: ['dirty_box_full'], domain: 'binary_sensor' },
     clean: { keys: ['clean_box_empty'], domain: 'binary_sensor' }, mopOn: { keys: ['mop_attached'], domain: 'binary_sensor' },
+    // Dreame's station and tanks: enum sensors where Roborock has binary sensors (issue #33).
+    cleanTank: { keys: ['clean_water_tank_status'], domain: 'sensor' }, lowWater: { keys: ['low_water_warning'], domain: 'sensor' },
+    dirtyTank: { keys: ['dirty_water_tank_status'], domain: 'sensor' }, dustBag: { keys: ['dust_bag_status'], domain: 'sensor' },
+    detergent: { keys: ['detergent_status'], domain: 'sensor' },
     boxOn: { keys: ['water_box_attached'], domain: 'binary_sensor' }, lastStart: { keys: ['last_clean_start', 'last_mission'], domain: 'sensor' },
     lastEnd: { keys: ['last_clean_end', 'cleaning_history'], domain: 'sensor' },
     total: { keys: ['total_cleaning_count', 'cleaning_count', 'total_stats_cleanings', 'total_missions'], domain: 'sensor' },
@@ -3355,7 +3373,7 @@
       map: VV.entity_map || null, dnd: VV.entity_dnd || null, dndStart: null, dndEnd: null,
       drying: VV.entity_drying || null, dryLeft: null, empty: null, wash: null, cleanMode: null, mopInt: null,
       mopMode: null, emptyMode: null, lock: null, volume: null, err: null, dockErr: null, water: null, dirty: null,
-      clean: null, mopOn: null, boxOn: null, lastStart: null, lastEnd: null, total: null, totalTime: null,
+      clean: null, mopOn: null, boxOn: null, cleanTank: null, lowWater: null, dirtyTank: null, dustBag: null, detergent: null, lastStart: null, lastEnd: null, total: null, totalTime: null,
       totalArea: null, dayBase: VV.entity_day_base || null, routines: [], parts: [], plug: plug,
       power: null, volt: null, amp: null, energy: null,
       activeStates: VV.active_states || [],
@@ -3411,7 +3429,7 @@
   V.watch = function (c) {
     return [c.st, c.status, c.room, c.progress, c.area, c.battery, c.charging, c.time, c.map, c.dnd, c.dndStart, c.dndEnd, c.drying,
       c.dryLeft, c.empty, c.wash, c.cleanMode, c.mopInt, c.mopMode, c.emptyMode, c.lock, c.volume, c.err, c.dockErr, c.water,
-      c.dirty, c.clean, c.mopOn, c.boxOn, c.lastStart, c.lastEnd, c.total, c.dayBase, c.plug, c.power, c.energy]
+      c.dirty, c.clean, c.mopOn, c.boxOn, c.cleanTank, c.lowWater, c.dirtyTank, c.dustBag, c.detergent, c.lastStart, c.lastEnd, c.total, c.dayBase, c.plug, c.power, c.energy]
       .concat(c.parts.map(function (p) { return p[0]; })).filter(Boolean);
   };
 
@@ -3438,10 +3456,20 @@
       if (h != null && h < 0.5) out.push({ label: p[1].replace(' (Station)', ''), level: 1 });
     });
     var on = function (e) { return e && states[e] && states[e].state === 'on'; };
+    var ct = U.str(states, c.cleanTank), lw = U.str(states, c.lowWater), bag = U.str(states, c.dustBag);
+    if (bag === 'not_installed' || bag === 'check') out.unshift({ label: bag === 'check' ? 'Staubbeutel prüfen' : 'Staubbeutel fehlt', level: 2 });
+    if (U.str(states, c.dirtyTank) === 'not_installed_or_full') out.unshift({ label: 'Schmutzwassertank voll oder nicht eingesetzt', level: 2 });
     if (on(c.dirty)) out.unshift({ label: 'Schmutzwasser leeren', level: 2 });
-    if (on(c.clean) || on(c.water)) out.unshift({ label: 'Frischwasser auffüllen', level: 2 });
+    if (ct === 'not_installed' || lw === 'tank_not_installed') out.unshift({ label: 'Frischwassertank fehlt', level: 2 });
+    else if (on(c.clean) || on(c.water) || ct === 'low_water' || /^(no_water_left|no_water_for_clean|low_water)$/.test(lw || '')) {
+      out.unshift({ label: 'Frischwasser auffüllen', level: 2 });
+    }
     var e = U.str(states, c.err);
-    if (e && ERRORS[e] !== null) out.unshift({ label: errText(states, c.err, e), level: 2 });
+    if (e && ERRORS[e] !== null) {
+      // Dreame adds a hint to the reason ("Möglicherweise ist der Roboter blockiert …") as attribute 'description'.
+      var lab = errText(states, c.err, e), hint = String(((states[c.err] || {}).attributes || {}).description || '').trim();
+      out.unshift({ label: lab, level: 2, sub: hint && hint !== lab && hint !== e ? hint : null });
+    }
     var de = U.str(states, c.dockErr);
     if (de && de !== 'ok') out.unshift({ label: 'Station: ' + (ERRORS[de] || de.replace(/_/g, ' ')), level: 2 });
     return out;
@@ -3621,16 +3649,17 @@
       /* Weich (Entschlacken): nur, was gerade etwas braucht – Fehler, Station/Tanks, Mopp/Wasserkasten
          und Verschleißteile unter 20 %. Alles Weitere steht unter „Mehr“ (Pflege). */
       var at = V.todo(c, states).filter(function (t) { return t.level === 2; }).map(function (t) {
-        return { icon: 'mdi:alert-circle-outline', iconTone: 'bad', label: t.label };
+        return { icon: 'mdi:alert-circle-outline', iconTone: 'bad', label: t.label, sub: t.sub || null };
       });
       if (c.mopOn && states[c.mopOn] && states[c.mopOn].state === 'off') at.push({ icon: 'mdi:water-off-outline', iconTone: 'warn', label: 'Mopp nicht angebracht' });
       if (c.boxOn && states[c.boxOn] && states[c.boxOn].state === 'off') at.push({ icon: 'mdi:cup-off-outline', iconTone: 'warn', label: 'Wasserkasten fehlt' });
+      if (U.str(states, c.detergent) === 'low_detergent') at.push({ icon: 'mdi:bottle-tonic-outline', iconTone: 'warn', label: 'Reinigungsmittel nachfüllen' });
       c.parts.forEach(function (p) {
         var h3 = numIn(states, p[0], 'h');
         if (h3 == null) return;
         var due3 = h3 < 0.5, left3 = p[3] ? Math.max(0, Math.min(1, h3 / p[3])) : null;
         if (!due3 && !(left3 != null && left3 < 0.2)) return;
-        var r3 = { icon: p[2], iconTone: 'warn', label: p[1], sub: due3 ? null : 'noch ' + (h3 >= 10 ? U.f(Math.round(h3), 0) + ' Betriebsstd.' : U.dur(h3 * 60)),
+        var r3 = { icon: p[2], iconTone: 'warn', label: p[1], sub: due3 ? null : restText(states, p[0], h3),
           value: due3 ? (h3 < -1 ? 'Überfällig' : 'Fällig') : Math.round(left3 * 100) + ' %', valueTone: 'warn' };
         if (due3 && ok(p[4])) { r3.action = 'Erledigt'; r3.confirm = 'Zurücksetzen'; r3.svc = { domain: 'button', service: 'press', target: { entity_id: p[4] } }; r3.value = null; }
         at.push(r3);
@@ -3640,10 +3669,11 @@
 
     if (kind === 'v_alerts') {
       var al = V.todo(c, states).filter(function (t) { return t.level === 2; }).map(function (t) {
-        return { icon: 'mdi:alert-circle-outline', iconTone: 'bad', label: t.label };
+        return { icon: 'mdi:alert-circle-outline', iconTone: 'bad', label: t.label, sub: t.sub || null };
       });
       if (c.mopOn && states[c.mopOn] && states[c.mopOn].state === 'off') al.push({ icon: 'mdi:water-off-outline', iconTone: 'warn', label: 'Mopp nicht angebracht' });
       if (c.boxOn && states[c.boxOn] && states[c.boxOn].state === 'off') al.push({ icon: 'mdi:cup-off-outline', iconTone: 'warn', label: 'Wasserkasten fehlt' });
+      if (U.str(states, c.detergent) === 'low_detergent') al.push({ icon: 'mdi:bottle-tonic-outline', iconTone: 'warn', label: 'Reinigungsmittel nachfüllen' });
       return al.length ? UI.group(al, 'Hinweise') : '';
     }
 
@@ -3812,8 +3842,7 @@
     }
 
     if (kind === 'v_care') {
-      /* Restzeiten sind Betriebsstunden des Roboters, keine Kalenderzeit */
-      var span = function (h) { return h >= 10 ? U.f(Math.round(h), 0) + ' Betriebsstd.' : U.dur(h * 60); };
+      /* Time left is the robot's operating hours, not calendar time (except parts counted in days, restText) */
       var rc = c.parts.map(function (p) {
         var h2 = numIn(states, p[0], 'h');
         if (h2 == null) return null;
@@ -3821,7 +3850,7 @@
         var left = p[3] ? Math.max(0, Math.min(1, h2 / p[3])) : null;
         var warn = !due && left != null && left < 0.15;
         var row = { icon: p[2], iconTone: due ? 'warn' : warn ? 'warn' : 'accent', label: p[1],
-          sub: due ? null : 'noch ' + span(h2),
+          sub: due ? null : restText(states, p[0], h2),
           value: due ? (h2 < -1 ? 'Überfällig' : 'Fällig') : left != null ? Math.round(left * 100) + ' %' : null, valueTone: due ? 'warn' : null,
           bar: left != null ? left : null, barTone: due || warn ? 'warn' : 'good' };
         if (due && ok(p[4])) { row.action = 'Erledigt'; row.confirm = 'Zurücksetzen'; row.svc = { domain: 'button', service: 'press', target: { entity_id: p[4] } }; }

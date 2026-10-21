@@ -2298,7 +2298,17 @@
   "Selten": "Rarely",
   "Intelligent": "Intelligent",
   "Sehr hoch": "Very high",
-  "Mopp-Pad": "Mop pad"
+  "Mopp-Pad": "Mop pad",
+  "Kantenreinigung": "Edge cleaning",
+  "Frischwassertank fehlt": "Clean water tank missing",
+  "Schmutzwassertank voll oder nicht eingesetzt": "Dirty water tank full or not inserted",
+  "Staubbeutel fehlt": "Dust bag missing",
+  "Staubbeutel prüfen": "Check dust bag",
+  "Reinigungsmittel nachfüllen": "Refill detergent",
+  "Räder reinigen": "Clean wheels",
+  "Wasserauslassfilter": "Water outlet filter",
+  "Schmutzwassertank (Roboter)": "Dirty water tank (robot)",
+  "noch 1 Tag": "1 day left"
  },
  "patterns": [
   [
@@ -3056,6 +3066,10 @@
   [
    "^noch (\\d+)[  ]Min\\.$",
    "{1} min left"
+  ],
+  [
+   "^noch (\\d+) Tage$",
+   "{1} days left"
   ],
   [
    "^noch (.+)$",

@@ -73,6 +73,69 @@ assert.ok(!c.parts.some((p) => p[0] === parts.pct), 'percent sensor not taken as
 // Due part (0.2 h < 0.5 h) shows under care.
 assert.ok(V.todo(c, hass.states).some((t) => t.label === 'Sensoren reinigen'), 'due part');
 
+// ── Dreame, as a real robot reports it (entity list in issue #33) ────────────────
+// Station and tanks are enum sensors; extra parts count hours or days; the error sensor carries a hint.
+const tank = {
+  cleanTank: reg('sensor', 'clean_water_tank_status', null, 'low_water'),
+  lowWater: reg('sensor', 'low_water_warning', null, 'no_warning'),
+  dirtyTank: reg('sensor', 'dirty_water_tank_status', null, 'installed'),
+  dustBag: reg('sensor', 'dust_bag_status', null, 'installed'),
+  detergent: reg('sensor', 'detergent_status', null, 'installed'),
+};
+const more = {
+  wheel: reg('sensor', 'wheel_dirty_time_left', 'd', '3'), wheelR: reg('button', 'reset_wheel', null, 'unknown'),
+  outlet: reg('sensor', 'water_outlet_filter_dirty_time_left', 'h', '0'), outletR: reg('button', 'reset_water_outlet_filter', null, 'unknown'),
+  onboard: reg('sensor', 'onboard_dirty_water_tank_time_left', 'd', '0.0'),
+  onboardR: reg('button', 'reset_onboard_dirty_water_tank', null, 'unknown'),
+};
+c = V.resolve(vac, {}, hass.states, hass);
+for (const [k, id] of Object.entries(tank)) assert.equal(c[k], id, 'Dreame ' + k);
+const P2 = Object.fromEntries(c.parts.map((p) => [p[1], p]));
+assert.equal(P2['Räder reinigen'][0], more.wheel);
+assert.equal(P2['Räder reinigen'][4], more.wheelR);
+assert.equal(P2['Wasserauslassfilter'][4], more.outletR);
+assert.equal(P2['Schmutzwassertank (Roboter)'][4], more.onboardR);
+let todo = V.todo(c, hass.states).map((t) => t.label);
+assert.equal(todo[0], 'Frischwasser auffüllen', 'clean_water_tank_status low_water');
+assert.ok(todo.includes('Wasserauslassfilter') && todo.includes('Schmutzwassertank (Roboter)'), 'due extra parts');
+assert.ok(!todo.includes('Räder reinigen'), '3 days left is not due');
+assert.ok(geraete.includes("sub: due ? null : restText(states, p[0], h2)"), 'care list says days for day sensors');
+const restText = new Function('U', cut(geraete, '  var SEC = { s: 1', '  /* Verschleißteile:') + 'return restText;')({ num, f: (v) => String(v), dur: (m) => m + ' Min.' });
+assert.equal(restText(hass.states, more.wheel, 72), 'noch 3 Tage');
+assert.equal(restText(hass.states, parts.main, 250), 'noch 250 Betriebsstd.');
+
+hass.states[tank.cleanTank].state = 'installed';
+hass.states[tank.dirtyTank].state = 'not_installed_or_full';
+hass.states[tank.dustBag].state = 'check';
+todo = V.todo(c, hass.states).map((t) => t.label);
+assert.ok(!todo.includes('Frischwasser auffüllen'), 'tank refilled');
+assert.ok(todo.includes('Schmutzwassertank voll oder nicht eingesetzt') && todo.includes('Staubbeutel prüfen'));
+hass.states[tank.lowWater].state = 'tank_not_installed';
+assert.equal(V.todo(c, hass.states)[0].label, 'Frischwassertank fehlt');
+hass.states[tank.lowWater].state = 'no_warning';
+
+// Error: the integration's text first, its hint below; status words Casora does not know fall back to the vacuum state.
+const err = reg('sensor', 'error', null, 'forward_suffocate');
+hass.states[err].attributes = { value: 18, faults: [18], description: 'The robot may be trapped or stuck.' };
+hass.formatEntityState = (s) => (s.entity_id === err ? 'The robot is stuck, or cannot go forward' : s.state);
+const status = reg('sensor', 'status', null, 'sleeping');
+hass.states['vacuum.example_robot'] = { ...vac, state: 'error' };
+c = V.resolve(hass.states['vacuum.example_robot'], {}, hass.states, hass);
+assert.equal(c.err, err);
+const first = V.todo(c, hass.states)[0];
+assert.equal(first.label, 'The robot is stuck, or cannot go forward');
+assert.equal(first.sub, 'The robot may be trapped or stuck.', 'Dreame hint');
+assert.equal(V.state(c, hass.states).label, 'Fehler', '"sleeping" while the vacuum reports an error');
+hass.states[status].state = 'room_cleaning';
+hass.states['vacuum.example_robot'] = { ...vac, state: 'cleaning' };
+let s = V.state(c, hass.states);
+assert.ok(s.run && s.label === 'Raumreinigung', 'Dreame room cleaning');
+hass.states[status].state = 'returning';
+hass.states['vacuum.example_robot'] = { ...vac, state: 'returning' };
+assert.equal(V.state(c, hass.states).label, 'Kehrt zurück', "HA's 'returning' had no label");
+hass.states['vacuum.example_robot'] = vac;
+delete hass.formatEntityState;
+
 // ── Units ────────────────────────────────────────────────────────────────────────
 const SEC = { s: 1, min: 60, h: 3600, d: 86400 };
 assert.ok(/var numIn = function \(states, e, want\)/.test(geraete), 'unit helper');
