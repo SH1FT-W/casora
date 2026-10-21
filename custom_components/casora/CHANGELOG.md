@@ -4,6 +4,23 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.47 – 21.10.2026
+
+### Fixed
+- **Calendar tile could not be added (#31):** The calendar tile and its popup existed, but "Add tile" in the Studio did not offer them. Now "Calendar" is in the list. Which calendars it shows, their names and colours are set under Settings → Calendar, and the tile's side panel links there.
+- **Hidden badges still showed on the phone:** A badge switched off in the Studio (for example Energy) disappeared on the desktop but stayed on the phone's start page. The start page now follows the desktop's switches and "Who sees this?", right away and without saving again.
+- **"Who sees this?" did nothing for the energy badge:** It now applies to the energy badge as it does to the others, on the desktop and on the phone.
+- **Studio preview: day and night only changed the photo:** With the switch above the preview, tiles, badges, the bar, the player and the popup preview now change between light and dark too, whatever mode Home Assistant is in.
+- **Studio preview showed an old player:** At the wave the preview drew the player as it looked in early October. It now shows what the dashboard shows: the cover stage in the wave's window, and cover strips on the phone.
+- **Thermostat tile without its temperature sensor (#32):** The sensor set in the Studio only showed in the popup. The tile now puts the room temperature in front, for example "21.3° · Heating to 24.5°".
+- **Heading above your own popup cards (#32):** The heading is taken while you type, not only when you leave the field, so the preview shows it straight away, and it stays above the cards.
+- **Robot vacuum showed "error" without a reason (#33):** The popup said "error" and not why. It now says "Error" and puts the reason first, also on the tile, for example Dreame's "The robot is stuck, or cannot go forward" in your Home Assistant language. Without an error nothing extra shows.
+- **Robot vacuums beyond Roborock:** The vacuum popup now also finds the progress, cleaned area, cleaning time, do-not-disturb times, mop drying time, cleaning, water and mop modes, auto-empty mode, history, totals, consumables and their reset buttons of Dreame robots, and several of these for Ecovacs and iRobot Roomba. Times are read in the unit the robot reports.
+- **Badge order on the phone:** In rows with a second line ("4 set") the icon, switch and arrow are centred again instead of sitting at the top.
+
+### Changed
+- **Calendar has its own page in Settings:** The calendars moved from "Home & Devices" to a new page "Calendar", also in the Settings menu and the search.
+
 ## 26.10.46 – 20.10.2026
 
 ### Fixed

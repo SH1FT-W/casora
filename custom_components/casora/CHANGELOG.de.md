@@ -4,6 +4,23 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.47 – 21.10.2026
+
+### Behoben
+- **Kalender-Kachel ließ sich nicht hinzufügen (#31):** Kalender-Kachel und Popup gab es, aber „Kachel hinzufügen“ im Studio bot sie nicht an. Jetzt steht „Kalender“ in der Liste. Welche Kalender sie zeigt, mit Namen und Farben, stellst du unter Einstellungen → Kalender ein; die Seitenleiste der Kachel führt dorthin.
+- **Ausgeblendete Badges blieben am Handy sichtbar:** Ein im Studio ausgeschaltetes Badge (zum Beispiel Energie) verschwand am Desktop, blieb aber auf der Startseite am Handy. Die Startseite folgt jetzt den Schaltern des Desktops und „Wer sieht das?“, sofort und ohne erneutes Speichern.
+- **„Wer sieht das?“ wirkte beim Energie-Badge nicht:** Es gilt jetzt auch für das Energie-Badge wie für die anderen, am Desktop und am Handy.
+- **Studio-Vorschau: Tag und Nacht wechselten nur das Foto:** Mit dem Schalter über der Vorschau wechseln jetzt auch Kacheln, Badges, Leiste, Player und die Popup-Vorschau zwischen hell und dunkel, egal in welchem Modus Home Assistant steht.
+- **Studio-Vorschau zeigte einen alten Player:** An der Welle zeichnete die Vorschau den Player noch wie Anfang Oktober. Jetzt zeigt sie, was das Dashboard zeigt: die Cover-Bühne im Fenster der Welle und am Handy die Cover-Streifen.
+- **Thermostat-Kachel ohne ihren Temperatursensor (#32):** Der im Studio eingestellte Sensor erschien nur im Popup. Die Kachel stellt die Raumtemperatur jetzt voran, zum Beispiel „21,3° · Heizt auf 24,5°“.
+- **Überschrift über deinen eigenen Popup-Karten (#32):** Die Überschrift wird schon beim Tippen übernommen, nicht erst beim Verlassen des Feldes, die Vorschau zeigt sie also sofort, und sie bleibt über den Karten.
+- **Saugroboter zeigte „error“ ohne Grund (#33):** Das Popup zeigte „error“ und nicht, warum. Jetzt steht dort „Fehler“ und der Grund vorn, auch auf der Kachel, zum Beispiel bei Dreame „Der Roboter steckt fest oder kann nicht vorwärts fahren“ in der Sprache deines Home Assistant. Ohne Fehler erscheint nichts zusätzlich.
+- **Saugroboter über Roborock hinaus:** Das Saugroboter-Popup findet jetzt auch bei Dreame-Robotern Fortschritt, gereinigte Fläche, Reinigungsdauer, Ruhezeiten, Trocknungsrestzeit, Reinigungs-, Wasser- und Wischmodus, Absaugmodus, Verlauf, Summen, Verschleißteile und ihre Reset-Tasten, und vieles davon auch bei Ecovacs und iRobot Roomba. Zeiten werden in der Einheit gelesen, die der Roboter meldet.
+- **Reihenfolge der Badges am Handy:** In Zeilen mit zweiter Zeile („4 festgelegt“) stehen Symbol, Schalter und Pfeil wieder mittig statt oben.
+
+### Geändert
+- **Kalender hat eine eigene Seite in den Einstellungen:** Die Kalender sind von „Haus & Geräte“ auf die neue Seite „Kalender“ umgezogen, auch im Einstellungsmenü und in der Suche.
+
 ## 26.10.46 – 20.10.2026
 
 ### Behoben

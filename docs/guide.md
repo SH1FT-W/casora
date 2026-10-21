@@ -68,7 +68,8 @@ Everything after the first setup happens in the Studio: rooms and room photos, t
 
 | Page | What you set there |
 |---|---|
-| **Home & Devices** | The few things Casora can't guess: waste collection (your names for the bins), calendars and their colours, doors and windows, scenes to hide and media players. |
+| **Home & Devices** | The few things Casora can't guess: waste collection (your names for the bins), doors and windows, scenes to hide and media players. |
+| **Calendar** | The calendars the calendar tile and its popup show, with name and colour, and whether they count on the tile. The calendar tile's side panel links here. |
 | **Bell & Alerts** | What the notification bell reports, for example a mailbox sensor or batteries to ignore. |
 | **New Dashboards** | How Casora fills a new dashboard and whether it looks for Hemma dashboards. This is also where you [remove Hemma](#removing-hemma). |
 | **AI** | Which AI Casora uses, notes for the AI and a schedule for each AI feature (off, automatic or a time you pick). |
@@ -91,7 +92,7 @@ The font is **Inter** in every look. You can switch to Hanken Grotesk or the sys
 
 ## What Casora recognises
 
-3D printers (Bambu Lab), washing machines and dryers (from the maker's integration such as Home Connect, Miele, SmartThings or LG ThinQ, from WashData, or from a smart plug), dishwashers (Home Connect), robot vacuums (Roborock), underfloor heating, home batteries (Anker Solix), cars (recognised by their values, so any integration works, including EVs with battery level), waste collection, calendars and your network (UniFi, FRITZ!Box, TP-Link, ASUS, Netgear, MikroTik, OpenWrt …) are found through the device registry. Each gets its own tile and popup.
+3D printers (Bambu Lab), washing machines and dryers (from the maker's integration such as Home Connect, Miele, SmartThings or LG ThinQ, from WashData, or from a smart plug), dishwashers (Home Connect), robot vacuums (Roborock, Dreame, Ecovacs, iRobot Roomba), underfloor heating, home batteries (Anker Solix), cars (recognised by their values, so any integration works, including EVs with battery level), waste collection, calendars and your network (UniFi, FRITZ!Box, TP-Link, ASUS, Netgear, MikroTik, OpenWrt …) are found through the device registry. Each gets its own tile and popup.
 
 The washer and dryer popup shows progress, finish time, program and phase. When a run is over it says *Done · laundry inside* until you tap **Unloaded**, and it lists recent runs with stats per program.
 
