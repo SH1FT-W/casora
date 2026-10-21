@@ -25,12 +25,12 @@ assert.ok(Panel, 'panel class');
 const p = Object.create(Panel.prototype);
 
 const fbh = { type: 'custom:button-card', template: ['casora_thermostat', 'casora_popup_fbh'], entity: 'climate.floor_test',
-  name: 'Floor heating', enabled: false, variables: { temp_sensor: 'sensor.floor_test_temp', size: 'small' } };
+  name: 'Floor heating', variables: { temp_sensor: 'sensor.floor_test_temp', size: 'small', enabled: false } };
 const room = { name: 'Bath', tiles: [fbh, { type: 'custom:casora-swipe-card', cards: [] }] };
 const page = p._carouselPageTile({ type: 'thermostat', entity: 'climate.floor_test', name: 'Floor heating' }, room);
 assert.deepEqual(page.template, ['casora_thermostat', 'casora_popup_fbh'], 'own tile type and popup');
 assert.equal(page.variables.temp_sensor, 'sensor.floor_test_temp', 'own variables');
-assert.equal(page.enabled, undefined, 'the page is shown');
+assert.equal(page.variables.enabled, undefined, 'the page is shown (hidden room tile)');
 assert.notEqual(page, fbh, 'a copy, the room tile stays as it is');
-assert.equal(fbh.enabled, false);
+assert.equal(fbh.variables.enabled, false, 'room tile stays hidden');
 console.log('ok karussell_seite_vorhandene_kachel');

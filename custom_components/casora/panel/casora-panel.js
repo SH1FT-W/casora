@@ -21642,7 +21642,9 @@ class CasoraPanel extends HTMLElement {
     const own = c && c.entity && ((room && room.tiles) || []).find((t) => isPageTile(t) && t.entity === c.entity);
     if (own) {
       const page = JSON.parse(JSON.stringify(own));
+      // A hidden room tile (variables.enabled: false) still makes a visible page.
       delete page.enabled;
+      if (page.variables) delete page.variables.enabled;
       return page;
     }
     const type = c && TILE_TYPES.find((t) => t.id === c.type);
