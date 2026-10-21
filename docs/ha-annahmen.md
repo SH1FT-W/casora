@@ -21,12 +21,14 @@ Angelegt im Oktober 2026 mit dem, was dabei gelesen wurde – noch nicht vollst�
 | Lovelace-Ressourcen unter `hass.data["lovelace"].resources` (früher Dict-Schlüssel) mit `async_items`, `async_load`/`loaded`, `async_create_item`, `async_update_item`, `async_delete_item`; im yaml-Modus ohne `async_create_item` | `__init__.py` `_lovelace_resources`, `_sync_script_resources`, `_remove_script_resources` | `dev/unit/hemma_entfernen_test.py`, `dev/unit/remove_entry_resources_test.py` (Attrappen) |
 | `async_remove_entry` läuft beim Löschen des Config-Eintrags | `__init__.py` | keiner |
 | Themes: `hass.data["frontend_themes"]`, `["frontend_themes_store"]`, `["frontend_default_theme"]`, `["frontend_default_dark_theme"]`, Ereignis `themes_updated`, Dienst `frontend.set_theme` | `helfer.py` `_setup_theme`, `_inject_theme` | `dev/unit/theme_frueh_test.py`, `dev/unit/theme_hemma_umstellung_test.py` |
+| `hass.formatEntityState(stateObj)` gibt den Zustand in der Sprache des Nutzers aus, auch übersetzte Zustände von Integrationen über `translation_key` (z. B. Dreame-Fehlercode `forward_suffocate` → Satz, ggf. mehrzeilig) | `scripts/local/02-geraete.js` `errText` (Saugroboter-Fehler, #33) | `dev/unit/vacuum_error_text.mjs` (Attrappe; Rückfall ohne die Funktion: der Code) |
+| Entitäten-Registry im Frontend (`hass.entities`) trägt `translation_key` und `device_id`; Geräte werden darüber sprachunabhängig gefunden (Roborock `vacuum_error`, Dreame `error`) | `scripts/local/00-finden.js` `entities`/`map`, `02-geraete.js` `VFIND` | `dev/unit/vacuum_error_text.mjs` |
 
 ## Fremde Integrationen
 
 Integrationen, deren Entitäten oder Attribute dieses Repo liest (Domain, was genau, wo):
 
-- noch nicht erfasst
+- **Dreame Vacuum** (HACS, Tasshack/dreame-vacuum, `dreame_vacuum`): Fehlersensor mit `translation_key` `error`, Zustand ein Code (`forward_suffocate` …), ohne Fehler `no_error`; der Text kommt aus der Übersetzung der Integration (`02-geraete.js` `VFIND.err`, `errText`, #33). Sonst noch nicht vollständig erfasst.
 
 ## Prüfbefehl
 

@@ -3261,6 +3261,21 @@
     water_empty: 'Frischwassertank leer', waste_water_tank_full: 'Schmutzwassertank voll',
     maintenance_brush_jammed: 'Reinigungsbürste blockiert', dirty_tank_latch_open: 'Schmutzwassertank nicht eingerastet',
     cleaning_tank_full_or_blocked: 'Reinigungstank voll oder verstopft',
+    // Dreame: "no error" (issue #33).
+    no_error: null,
+  };
+  // An error code Casora has no words for: Home Assistant's own text in the user's language (the integration's
+  // translation, e.g. Dreame's "Der Roboter steckt fest oder kann nicht vorwärts fahren"), first line only;
+  // without one the code with spaces (issue #33).
+  var errText = function (states, eid, code) {
+    if (ERRORS[code]) return ERRORS[code];
+    try {
+      var ha = document.querySelector('home-assistant'), h = ha && ha.hass;
+      var t = h && typeof h.formatEntityState === 'function' && states[eid] ? String(h.formatEntityState(states[eid]) || '') : '';
+      t = t.split('\n')[0].trim();
+      if (t && t !== code) return t;
+    } catch (e) { /* no text: the code */ }
+    return code.replace(/_/g, ' ');
   };
   var MODE = {
     smart_mode: 'Smart', custom: 'Eigene', off: 'Aus', quiet: 'Leise', balanced: 'Ausgewogen', turbo: 'Turbo', max: 'Max',
@@ -3292,7 +3307,8 @@
     cleanMode: { keys: ['cleaning_mode'], domain: 'select' }, mopInt: { keys: ['mop_intensity'], domain: 'select' },
     mopMode: { keys: ['mop_mode'], domain: 'select' }, emptyMode: { keys: ['dust_collection_mode'], domain: 'select' },
     lock: { keys: ['child_lock'], domain: 'switch' }, volume: { keys: ['volume'], domain: 'number' },
-    err: { keys: ['vacuum_error'], domain: 'sensor' }, dockErr: { keys: ['dock_error'], domain: 'sensor' },
+    // 'error': Dreame (Tasshack) – its error sensor's translation_key; the state is a code like forward_suffocate (issue #33).
+    err: { keys: ['vacuum_error', 'error'], domain: 'sensor' }, dockErr: { keys: ['dock_error'], domain: 'sensor' },
     water: { keys: ['water_shortage'], domain: 'binary_sensor' }, dirty: { keys: ['dirty_box_full'], domain: 'binary_sensor' },
     clean: { keys: ['clean_box_empty'], domain: 'binary_sensor' }, mopOn: { keys: ['mop_attached'], domain: 'binary_sensor' },
     boxOn: { keys: ['water_box_attached'], domain: 'binary_sensor' }, lastStart: { keys: ['last_clean_start'], domain: 'sensor' },
@@ -3382,7 +3398,7 @@
     var dock = !run && (DOCKWORK.indexOf(status) !== -1 || drying);
     var error = raw === 'error' || status === 'error';
     var label = drying && !run && DOCKWORK.indexOf(status) === -1 ? 'Trocknet Mopp'
-      : STATUS[status] || (raw === 'docked' ? 'Angedockt' : raw === 'idle' ? 'Bereit' : raw === 'unavailable' ? 'Nicht verfügbar' : raw || 'Unbekannt');
+      : STATUS[status] || STATUS[raw] || (raw === 'docked' ? 'Angedockt' : raw === 'idle' ? 'Bereit' : raw === 'unavailable' ? 'Nicht verfügbar' : raw || 'Unbekannt');
     return { label: label, run: run, paused: paused, dock: dock, error: error, dead: raw === 'unavailable',
       busy: run || paused || (c.activeStates || []).indexOf(status) !== -1 };
   };
@@ -3398,7 +3414,7 @@
     if (on(c.dirty)) out.unshift({ label: 'Schmutzwasser leeren', level: 2 });
     if (on(c.clean) || on(c.water)) out.unshift({ label: 'Frischwasser auffüllen', level: 2 });
     var e = U.str(states, c.err);
-    if (e && ERRORS[e] !== null) out.unshift({ label: ERRORS[e] || e.replace(/_/g, ' '), level: 2 });
+    if (e && ERRORS[e] !== null) out.unshift({ label: errText(states, c.err, e), level: 2 });
     var de = U.str(states, c.dockErr);
     if (de && de !== 'ok') out.unshift({ label: 'Station: ' + (ERRORS[de] || de.replace(/_/g, ' ')), level: 2 });
     return out;
@@ -3519,7 +3535,8 @@
         if (le) sub.push(lastW + ' ' + trV(U.day(new Date(le))).replace(/^(Heute|Gestern|Today|Yesterday)$/, function (x) { return x.toLowerCase(); }) + ', ' + U.clock(new Date(le)) + (deV ? ' Uhr' : ''));
       }
       var todo = V.todo(c, states);
-      if (!s.run && todo.length && todo[0].level === 2) { sub.push(todo[0].label); tone = 'bad'; }
+      // On an error its reason first ("Der Roboter steckt fest … · Akku 58 %", issue #33), other urgent care last.
+      if (!s.run && todo.length && todo[0].level === 2) { if (s.error) sub.unshift(todo[0].label); else sub.push(todo[0].label); tone = 'bad'; }
       var value = s.label, unit = null;
       if ((s.run || s.paused) && pct != null) { value = String(Math.round(pct)); unit = '% · ' + s.label; }
       /* Weich (Entschlacken): „Akku 93 % · zuletzt Sa. 11:18, 20 m²“ – die Fläche der letzten Reinigung gehört dazu. */
