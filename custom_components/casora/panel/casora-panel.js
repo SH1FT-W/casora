@@ -5571,9 +5571,15 @@ const tileStateWord = (kind, tile, ent, states, hass) => {
     case "thermostat": {
       const mode = String(ent.state).toLowerCase();
       const target = ent.attributes && ent.attributes.temperature;
-      if (mode !== "cool" && mode !== "heat") return "Off";
-      if (target == null) return mode === "cool" ? "Cooling" : "Heating";
-      return (mode === "cool" ? "Cooling to " : "Heating to ") + target + "°";
+      // Room temperature from the "Temperature sensor" in front, as casora_thermostat shows it (issue #32).
+      const s = V.temp_sensor && (states || {})[V.temp_sensor];
+      const sa = (s && s.attributes) || {};
+      const v = s ? parseFloat(s.state) : NaN;
+      const room = Number.isFinite(v) && (sa.device_class === "temperature" || /°|^K$/.test(String(sa.unit_of_measurement || "")))
+        ? Math.round(v * 10) / 10 + "° · " : "";
+      if (mode !== "cool" && mode !== "heat") return room + "Off";
+      if (target == null) return room + (mode === "cool" ? "Cooling" : "Heating");
+      return room + (mode === "cool" ? "Cooling to " : "Heating to ") + target + "°";
     }
     case "cameras": return cameraWord(V, states, hass);
     case "media": return mediaWord(ent);

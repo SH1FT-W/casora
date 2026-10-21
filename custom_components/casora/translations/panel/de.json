@@ -2608,6 +2608,26 @@
       "„{1} Mobile“ hinzugefügt. Öffnen über „Dashboard wählen“."
     ],
     [
+      "^(-?[\\d.]+°) · Cooling$",
+      "{1} · Kühlt"
+    ],
+    [
+      "^(-?[\\d.]+°) · Heating$",
+      "{1} · Heizt"
+    ],
+    [
+      "^(-?[\\d.]+°) · Off$",
+      "{1} · Aus"
+    ],
+    [
+      "^(-?[\\d.]+°) · Heating to (.+)$",
+      "{1} · Heizt auf {2}"
+    ],
+    [
+      "^(-?[\\d.]+°) · Cooling to (.+)$",
+      "{1} · Kühlt auf {2}"
+    ],
+    [
       "^Cooling to (.+)$",
       "Kühlt auf {1}"
     ],
