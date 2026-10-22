@@ -117,7 +117,10 @@
   // Vorschläge für eine unbekannte Kachel, bester zuerst.
   function suggest(tile, hass) {
     const types = knownTypes(false, hass);
-    const dom = String(tile.entity || "").split(".")[0];
+    // A Pflanzenmonitor Plus plant (sensor.*) is a plant like plant.*.
+    const I = window.__casoraPanelInternals || {};
+    const plant = hass && I.isPlantEntity && I.isPlantEntity(hass, tile.entity);
+    const dom = plant ? "plant" : String(tile.entity || "").split(".")[0];
     const out = [];
     const add = (t, why) => { if (t && !out.some((x) => x.type === t)) out.push({ type: t, why }); };
     const renamed = RENAMED[tplName(tile.template)];
