@@ -91,14 +91,26 @@ await check('desktop, module loaded: the preview redraws with the dashboard\'s p
 // Phone.
 await page.evaluate(() => { const b = window.__panel().shadowRoot.querySelector('#sizeseg [data-size="phone"]'); if (b) b.click(); });
 await page.waitForTimeout(2500);
-await useRoom();
-await settle();
+// Under load the Studio may reload the room after the switch, dropping the in-memory settings: set them
+// again until they hold.
+const phoneRoom = async () => {
+  for (let i = 0; i < 10; i++) {
+    await useRoom();
+    await settle();
+    const held = await page.evaluate((id) => {
+      const p = window.__panel();
+      const v = (p._state.compact.rooms[p._room || 0] || {}).variables || {};
+      return v.show_now_playing === true && v.media_player_1 === id;
+    }, PLAYER);
+    if (held) return;
+  }
+};
+await phoneRoom();
 d = await look();
 await check('phone, playing: the dashboard\'s cover strips', d.real && d.head && !d.old, d);
 
 await pausedLong();
-await useRoom();
-await settle();
+await phoneRoom();
 d = await look();
 await check('phone, paused an hour: no "Now Playing" and no old player', !d.head && !d.old && !d.real, d);
 
