@@ -22524,8 +22524,8 @@ class CasoraPanel extends HTMLElement {
 
     const people = list("presence_entity_", 4);
     if (on("show_people") && people.length) {
-      // Wie casora_badge_presence(_group): „zuhause“ = home oder just_arrived;
-      // eine einzelne Person ohne Zustand (unknown/unavailable) blendet das Dashboard aus.
+      // As casora_badge_presence(_group): at home = home or just_arrived; a single person
+      // without a state (unknown/unavailable) is hidden by the dashboard.
       const pState = (e) => String((st(e) || {}).state || "").trim().toLowerCase().replace(/_/g, " ");
       const isHome = (e) => /^(home|just arrived|on)$/.test(pState(e));
       const hidden = (e) => !pState(e) || ["unknown", "unavailable", "none"].includes(pState(e));
@@ -22693,8 +22693,8 @@ class CasoraPanel extends HTMLElement {
           }),
       ];
       if (V.show_security_inline && !forPhone) {
-        // Wie casora_room mit show_security_inline: Schlösser, Alarm, Kontakte, Kameras
-        // als eigene Badges an der Stelle der Sicherheits-Badge. Am Handy bleibt der Filter.
+        // As casora_room with show_security_inline: locks, alarm, contacts and cameras as
+        // badges of their own in the security badge's place. The phone keeps the filter badge.
         lockSubs.concat(entSubs, camSubs)
           .forEach((sb, i) => out.push({ ...sb, id: "security:" + i, subs: [] }));
       } else {
@@ -23577,7 +23577,7 @@ class CasoraPanel extends HTMLElement {
       };
       brow.appendChild(el);
     });
-    // Wie am Desktop: ausgeschaltete Badges gestrichelt, Antippen führt zu ihrem Schalter.
+    // As on the desktop: badges switched off are dashed, a tap leads to their switch.
     const phoneShown = new Set(model.map((b) => bidOf(b.id)));
     SECTIONS.filter((sec) => sec.group === "badges" && sec.icon && PHONE_FILTERS.includes(sec.bid)
       && !phoneShown.has(sec.bid) && sec.toggle && bvv[sec.toggle] === false)
