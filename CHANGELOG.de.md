@@ -4,6 +4,11 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.54 – 22.10.2026
+
+### Behoben
+- **Player in der Studio-Vorschau:** In Casora, Casora Glas und Casora Nebel zeigte die Vorschau an der Welle wieder den alten Player, sobald im Dashboard nichts lief, ein Player länger pausiert war oder die Dashboard-Skripte noch luden. Jetzt zeigt sie immer den Player des Dashboards. Läuft dort nichts, fehlen Welle und Player auch in der Vorschau, am Handy die „Aktuelle Wiedergabe“.
+
 ## 26.10.53 – 22.10.2026
 
 ### Behoben

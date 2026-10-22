@@ -4,6 +4,11 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.54 – 22.10.2026
+
+### Fixed
+- **Player in the Studio preview:** In Casora, Casora Glas and Casora Nebel the preview showed the old player at the wave again whenever nothing was playing on the dashboard, a player had been paused for a while or the dashboard scripts were still loading. It now always shows the dashboard's player. With nothing playing there, wave and player are gone in the preview as well, on the phone “Now Playing” too.
+
 ## 26.10.53 – 22.10.2026
 
 ### Fixed

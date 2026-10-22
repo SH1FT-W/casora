@@ -27,8 +27,7 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Sicherheit auf Zuhause", n0: "Das Badge zählt die Türen und Fenster des Hauses jetzt auch am Tablet und Desktop. Ohne eigene Einträge öffnet ein Tipp die Liste aller Türen und Fenster.",
-      n1t: "Zurück zur Leuchtenliste", n1: "Nach „Weitere Einstellungen“ führt der Pfeil in einer Leuchte wieder zur Liste aller Leuchten.",
+      n0t: "Player in der Studio-Vorschau", n0: "Die Vorschau zeigt an der Welle immer den Player des Dashboards. Läuft nichts, fehlen Welle und Player wie im Dashboard.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -38,8 +37,7 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Security on Home", n0: "The badge now counts the house's doors and windows on tablet and desktop too. Without entries of its own, a tap opens the list of all doors and windows.",
-      n1t: "Back to the light list", n1: "After “More settings” the arrow in a light leads back to the list of all lights again.",
+      n0t: "Player in the Studio preview", n0: "The preview always shows the dashboard's player at the wave. With nothing playing, wave and player are gone, as on the dashboard.",
     },
   };
 
@@ -52,8 +50,7 @@
 
   /** After an update: the news of this version - replace on every release. */
   const WHATS_NEW = [
-    ["mdi:shield-home-outline", "n0t", "n0"],
-    ["mdi:arrow-left-circle-outline", "n1t", "n1"],
+    ["mdi:play-box-multiple-outline", "n0t", "n0"],
   ];
 
   // Decide on load - before the Studio writes its own casora.* keys.
