@@ -57,6 +57,9 @@ def _tx(s):
     at = s.index("[[[") + 3
     body = s[at:]
     body = body.replace("this._config?.name", "_rv._name")
+    # On the phone the room pages sit in the home view: without the card, casoraHasSec does not count
+    # the house's doors and windows there (that is the home page's security badge only, #39).
+    body = body.replace("casoraHasSec(variables,user,this)", "casoraHasSec(variables,user)")
     body = re.sub(r"(?<![\w.$])variables(?![\w$])", "_rv", body)
     return "[[[ " + RV + body.lstrip(" ")
 

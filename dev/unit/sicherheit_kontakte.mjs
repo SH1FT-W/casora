@@ -102,6 +102,8 @@ assert.equal(cw.casoraHasSec({ show_security: true }, { id: 'a' }, { hass: { ...
 const roomTpl = JSON.stringify(T.casora_room);
 assert.ok(!roomTpl.includes('casoraHasSec(variables,user)') && roomTpl.includes('casoraHasSec(variables,user,this)'),
   'casora_room: casoraHasSec gets the card');
+// The phone room pages sit in the home view: they must not count the house (tools/phone_room_badges.py).
+assert.ok(!JSON.stringify(T.casora_mobile_sensor_chips).includes('user,this)'), 'phone room page: no house count');
 // A tap on Home without entries lists the house's doors and windows (wide: instead of an empty row,
 // phone: instead of a filter with nothing in it); with entries everything stays as before.
 assert.equal(cw.casoraSecContactsTap({ place: 'home' }, { id: 'a' }), true, 'Home, no entries: list');

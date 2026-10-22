@@ -7260,7 +7260,7 @@
        "type": "custom:button-card",
        "variables": {
         "cameras": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_cameras || [] ]]]",
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !_rv.show_security_inline ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !_rv.show_security_inline ]]]",
         "entities": "[[[ const _rv = variables.casora_rv || {}; return [1,2,3,4,5,6,7,8].map((i) => _rv['security_entity_' + i]).filter(Boolean) ]]]",
         "lock_entity": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_lock_entity ]]]",
         "lock_entity_2": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_lock_entity_2 ]]]",
@@ -7282,7 +7282,7 @@
        "variables": {
         "battery_entities": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_lock_batteries || {} ]]]",
         "door_sensors": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_door_sensors || {} ]]]",
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && [...new Set([_rv.security_lock_entity, _rv.security_lock_entity_2, ...(_rv.security_locks || [])].filter(Boolean))].length) ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && [...new Set([_rv.security_lock_entity, _rv.security_lock_entity_2, ...(_rv.security_locks || [])].filter(Boolean))].length) ]]]",
         "inline": true,
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_locks_label ]]]",
         "locks": "[[[ const _rv = variables.casora_rv || {}; return [...new Set([_rv.security_lock_entity, _rv.security_lock_entity_2, ...(_rv.security_locks || [])].filter(Boolean))] ]]]",
@@ -7294,7 +7294,7 @@
        "template": "casora_badge_security",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && _rv.security_entity_1) ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && _rv.security_entity_1) ]]]",
         "inline": true,
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_label_1 ]]]"
        }
@@ -7304,7 +7304,7 @@
        "template": "casora_badge_contact_group",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && _rv.security_entity_2) ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && _rv.security_entity_2) ]]]",
         "inline": true,
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_label_2 ]]]"
        }
@@ -7314,7 +7314,7 @@
        "template": "casora_badge_contact_group",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && _rv.security_entity_3) ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && _rv.security_entity_3) ]]]",
         "inline": true,
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_label_3 ]]]"
        }
@@ -7324,7 +7324,7 @@
        "template": "casora_badge_security",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && _rv.security_entity_4) ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && _rv.security_entity_4) ]]]",
         "inline": true,
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_label_4 ]]]"
        }
@@ -7334,7 +7334,7 @@
        "template": "casora_badge_security",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && _rv.security_entity_5) ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && _rv.security_entity_5) ]]]",
         "inline": true,
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_label_5 ]]]"
        }
@@ -7344,7 +7344,7 @@
        "template": "casora_badge_security",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && _rv.security_entity_6) ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && _rv.security_entity_6) ]]]",
         "inline": true,
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_label_6 ]]]"
        }
@@ -7354,7 +7354,7 @@
        "template": "casora_badge_security",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && _rv.security_entity_7) ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && _rv.security_entity_7) ]]]",
         "inline": true,
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_label_7 ]]]"
        }
@@ -7364,7 +7364,7 @@
        "template": "casora_badge_security",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && _rv.security_entity_8) ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && _rv.security_entity_8) ]]]",
         "inline": true,
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_label_8 ]]]"
        }
@@ -7375,7 +7375,7 @@
        "type": "custom:button-card",
        "variables": {
         "cameras": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_cameras || [] ]]]",
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && (_rv.security_cameras || []).length) ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return !!(((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && _rv.show_security_inline && (_rv.security_cameras || []).length) ]]]",
         "inline": true,
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_cameras_label ]]]",
         "room_name": "[[[ const _rv = variables.casora_rv || {}; return _rv.room_name || _rv.aqi_room_name ]]]"
@@ -7692,7 +7692,7 @@
        "variables": {
         "battery_entities": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_lock_batteries || {} ]]]",
         "door_sensors": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_door_sensors || {} ]]]",
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_locks ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_locks ]]]",
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_locks_label ]]]",
         "locks": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_locks || [] ]]]",
         "room_name": "[[[ const _rv = variables.casora_rv || {}; return _rv.room_name || _rv.aqi_room_name ]]]"
@@ -7704,7 +7704,7 @@
        "type": "custom:button-card",
        "variables": {
         "cameras": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_cameras || [] ]]]",
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!(_rv.security_cameras || []).length ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!(_rv.security_cameras || []).length ]]]",
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_cameras_label ]]]",
         "room_name": "[[[ const _rv = variables.casora_rv || {}; return _rv.room_name || _rv.aqi_room_name ]]]"
        }
@@ -7714,7 +7714,7 @@
        "template": "casora_badge_security",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_entity_1 ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_entity_1 ]]]",
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_label_1 ]]]"
        }
       },
@@ -7723,7 +7723,7 @@
        "template": "casora_badge_contact_group",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_entity_2 ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_entity_2 ]]]",
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_label_2 ]]]"
        }
       },
@@ -7732,7 +7732,7 @@
        "template": "casora_badge_contact_group",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_entity_3 ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_entity_3 ]]]",
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_label_3 ]]]"
        }
       },
@@ -7741,7 +7741,7 @@
        "template": "casora_badge_security",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_entity_4 ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_entity_4 ]]]",
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_label_4 ]]]"
        }
       },
@@ -7750,7 +7750,7 @@
        "template": "casora_badge_security",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_entity_5 ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_entity_5 ]]]",
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_label_5 ]]]"
        }
       },
@@ -7759,7 +7759,7 @@
        "template": "casora_badge_security",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_entity_6 ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_entity_6 ]]]",
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_label_6 ]]]"
        }
       },
@@ -7768,7 +7768,7 @@
        "template": "casora_badge_security",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_entity_7 ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_entity_7 ]]]",
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_label_7 ]]]"
        }
       },
@@ -7777,7 +7777,7 @@
        "template": "casora_badge_security",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user,this):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_entity_8 ]]]",
+        "enabled": "[[[ const _rv = variables.casora_rv || {}; return ((window.casoraSeen?window.casoraSeen(_rv,'security',user,_rv.show_security):_rv.show_security)!==false&&(window.casoraHasSec?window.casoraHasSec(_rv,user):(!!_rv.security_lock_entity||[1,2,3,4,5,6,7,8].some((i) => !!_rv['security_entity_' + i])||!!(_rv.security_locks||[]).length||!!(_rv.security_cameras||[]).length))) && !!_rv.security_entity_8 ]]]",
         "label": "[[[ const _rv = variables.casora_rv || {}; return _rv.security_label_8 ]]]"
        }
       }
