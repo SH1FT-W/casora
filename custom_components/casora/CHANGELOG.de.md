@@ -4,6 +4,12 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.51 – 22.10.2026
+
+### Behoben
+- **Handy: Personen-Badge auf Zuhause setzte den Filter statt das Popup zu öffnen (#40):** Mit „Personen als eigene Badges“ oder nur einer ausgewählten Person zeigte das Badge am Handy zwar den Namen, Antippen wechselte aber in die Ansicht „Personen“. Jetzt hat am Handy wie am Desktop jede Person ihr eigenes Badge, und Antippen öffnet ihr Popup. Bei zwei oder mehr Personen ohne den Schalter bleibt das Sammel-Badge mit dem Filter.
+- **Studio: Personen-Badge fehlte in der Handy-Vorschau (#41):** Mit „Personen als eigene Badges“ oder nur einer Person fehlte das Badge oben auf Zuhause in der Handy-Vorschau. Jetzt steht es dort wie auf dem Handy. Auch Klima mit einzelnen Werten zeigt die Handy-Vorschau wie das Handy als ein Badge.
+
 ## 26.10.50 – 21.10.2026
 
 ### Behoben

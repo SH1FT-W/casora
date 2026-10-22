@@ -4,6 +4,12 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.51 – 22.10.2026
+
+### Fixed
+- **Phone: the people badge on Home set the filter instead of opening the popup (#40):** With "Separate people badges" or only one person selected, the badge on the phone showed the name, but a tap switched to the "People" view. The phone now gives every person a badge of their own, as the desktop does, and a tap opens their popup. With two or more people and the switch off, the group badge with the filter stays.
+- **Studio: people badge missing from the phone preview (#41):** With "Separate people badges" or only one person, the badge at the top of Home was missing in the phone preview. It now shows there as on the phone. Climate with separate readings also shows as one badge in the phone preview, as on the phone.
+
 ## 26.10.50 – 21.10.2026
 
 ### Fixed
