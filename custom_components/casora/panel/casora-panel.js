@@ -22478,7 +22478,8 @@ class CasoraPanel extends HTMLElement {
             ? Math.min(...readings) + unit
             : Math.min(...readings) + "\u2013" + Math.max(...readings) + unit)
         : null;
-      if (V.show_climate_inline) {
+      // The phone's start page keeps the climate filter badge (casora_mobile_filter_badges).
+      if (V.show_climate_inline && !forPhone) {
         subs.forEach((sb, i) => out.push({ ...sb, id: "climate:" + i, subs: [] }));
       } else {
         // casora_badge_climate_group's own test, so the fan turns here exactly
@@ -23550,16 +23551,25 @@ class CasoraPanel extends HTMLElement {
     });
     const wideRoom = (wideHome.find((r) => r.path === "home") || wideHome[0] || {});
     const border = this._badgeOrder(wideRoom);
+    // Single people (people:0 …) stand at the people badge's place and, like casora_mobile_filter_badges,
+    // open the person popup instead of filtering (issue #41).
+    const bidOf = (id) => String(id).split(":")[0];
     const model = this._miniModel({ variables: { ...bvv, ...wideV } }, { phone: true, place: "home" })
-      .filter((b) => PHONE_FILTERS.indexOf(b.id) !== -1)
-      .sort((a, b) => border.indexOf(a.id) - border.indexOf(b.id));
+      .filter((b) => PHONE_FILTERS.indexOf(bidOf(b.id)) !== -1)
+      .sort((a, b) => border.indexOf(bidOf(a.id)) - border.indexOf(bidOf(b.id)));
 
     model.forEach((b) => {
       const el = this._paintBadge(b, false);
+      const person = bidOf(b.id) !== b.id;
       el.classList.toggle("open", this._phoneFilter === b.id);
-      el.title = "Filter the dashboard to " + (b.label || b.id);
+      el.title = person ? "On the phone, a tap opens this person's popup" : "Filter the dashboard to " + (b.label || b.id);
       el.onclick = (ev) => {
         ev.stopPropagation();
+        if (person) {
+          const pick = selKeyOf(el.dataset.mk);
+          if (pick) this._select(pick);
+          return;
+        }
         this._phoneFilter = this._phoneFilter === b.id ? null : b.id;
         this._phoneFilterAnim = true;
         const pick = selKeyOf(el.dataset.mk);
@@ -23568,7 +23578,7 @@ class CasoraPanel extends HTMLElement {
       brow.appendChild(el);
     });
     // Wie am Desktop: ausgeschaltete Badges gestrichelt, Antippen führt zu ihrem Schalter.
-    const phoneShown = new Set(model.map((b) => b.id));
+    const phoneShown = new Set(model.map((b) => bidOf(b.id)));
     SECTIONS.filter((sec) => sec.group === "badges" && sec.icon && PHONE_FILTERS.includes(sec.bid)
       && !phoneShown.has(sec.bid) && sec.toggle && bvv[sec.toggle] === false)
       .sort((a, b) => border.indexOf(a.bid) - border.indexOf(b.bid)).forEach((sec) => {

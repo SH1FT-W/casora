@@ -37,9 +37,12 @@ const tpl = T.casora_mobile_filter_badges;
 const BID = { casora_badge_security_group: 'security', casora_badge_climate_group: 'climate',
   casora_badge_light_group: 'lights', casora_badge_presence_group: 'people',
   casora_badge_energy_group: 'energy', casora_badge_media_group: 'media' };
-const cards = tpl.custom_fields.badges.card.cards;
+const row = tpl.custom_fields.badges.card.cards;
+const cards = row.filter((c) => BID[c.template]);
 assert.deepEqual(cards.map((c) => BID[c.template]).sort(), Object.values(BID).sort(), 'six badges');
-const shown = (hv, user) => Object.fromEntries(cards.map((c) => [BID[c.template], run(c.variables.enabled, { casora_hv: hv }, user)]));
+// Two people, so people stay one filter badge (single people: see below).
+const two = { presence_entity_1: 'person.example_a', presence_entity_2: 'person.example_b' };
+const shown = (hv, user) => Object.fromEntries(cards.map((c) => [BID[c.template], run(c.variables.enabled, { ...two, casora_hv: hv }, user)]));
 const all = (v) => Object.fromEntries(Object.values(BID).map((b) => [b, v]));
 
 // No answer from the server (older server, no desktop dashboard): as before.
@@ -53,6 +56,33 @@ for (const b of Object.values(BID)) {
 const users = { casora_badge_users: { energy: ['u2'], media: ['u1'] } };
 assert.deepEqual(shown(users, { id: 'u1' }), { ...all(true), energy: false }, 'u1 does not see energy');
 assert.deepEqual(shown(users, { id: 'u2' }), { ...all(true), media: false }, 'u2 does not see media');
+
+// People as on the desktop (casora_room badges, issue #40): the filter badge only for two or more
+// people without "Separate people badges"; otherwise one badge per person that opens the person popup.
+{
+  const persons = row.filter((c) => c.template === 'casora_badge_presence');
+  assert.equal(persons.length, 4, 'one badge per person (presence_entity_1..4)');
+  persons.forEach((c, i) => {
+    assert.equal(run(c.entity, { [`presence_entity_${i + 1}`]: 'person.x' }), 'person.x', 'badge ' + (i + 1) + ' entity');
+    assert.ok(!c.tap_action, 'person badge keeps the popup of casora_badge_presence, no filter');
+  });
+  const group = cards.find((c) => c.template === 'casora_badge_presence_group');
+  const people = (vars, hv, user = { id: 'u1' }) => ({
+    group: run(group.variables.enabled, { ...vars, casora_hv: hv }, user),
+    persons: persons.map((c) => run(c.variables.enabled, { ...vars, casora_hv: hv }, user)),
+  });
+  const one = { presence_entity_1: 'person.example_a' };
+  const three = { ...two, presence_entity_3: 'person.example_c' };
+  assert.deepEqual(people(one, {}), { group: false, persons: [true, false, false, false] }, 'one person: own badge');
+  assert.deepEqual(people(one, null), { group: false, persons: [true, false, false, false] }, 'one person, older server');
+  assert.deepEqual(people(one, { show_people_inline: true }), { group: false, persons: [true, false, false, false] }, 'one person, separate');
+  assert.deepEqual(people(three, {}), { group: true, persons: [false, false, false, false] }, 'three people: filter badge');
+  assert.deepEqual(people(three, { show_people_inline: true }), { group: false, persons: [true, true, true, false] }, 'three people, separate');
+  assert.deepEqual(people(three, { show_people_inline: true, show_people: false }), { group: false, persons: [false, false, false, false] }, 'hidden');
+  assert.deepEqual(people(one, { casora_badge_users: { people: ['u2'] } }), { group: false, persons: [false, false, false, false] }, 'u1 does not see people');
+  assert.deepEqual(people(one, { casora_badge_users: { people: ['u2'] } }, { id: 'u2' }), { group: false, persons: [true, false, false, false] }, 'u2 does');
+  assert.deepEqual(people({}, {}), { group: false, persons: [false, false, false, false] }, 'nobody set up');
+}
 
 // casora_hv comes from casoraPhoneRoom.home() and reads the filter helper (redraw on bump()).
 assert.ok(/states\['input_select\.casora_mobile_filter'\]/.test(tpl.variables.casora_hv), 'casora_hv reads the filter helper');

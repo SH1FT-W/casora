@@ -5797,12 +5797,44 @@
        "template": "casora_badge_presence_group",
        "type": "custom:button-card",
        "variables": {
-        "enabled": "[[[ const _hv = variables.casora_hv; return !_hv || (window.casoraSeen?window.casoraSeen(_hv,'people',user,_hv.show_people):_hv.show_people)!==false ]]]",
+        "enabled": "[[[ const _hv = variables.casora_hv; const _pi = !!(_hv && _hv.show_people_inline); return (!_hv || (window.casoraSeen?window.casoraSeen(_hv,'people',user,_hv.show_people):_hv.show_people)!==false) && !!variables.presence_entity_1 && !!variables.presence_entity_2 && !_pi ]]]",
         "entity_1": "[[[ return variables.presence_entity_1 ]]]",
         "entity_2": "[[[ return variables.presence_entity_2 ]]]",
         "entity_3": "[[[ return variables.presence_entity_3 ]]]",
         "entity_4": "[[[ return variables.presence_entity_4 ]]]",
         "title": "[[[ return variables.people_title ]]]"
+       }
+      },
+      {
+       "entity": "[[[ return variables.presence_entity_1 ]]]",
+       "template": "casora_badge_presence",
+       "type": "custom:button-card",
+       "variables": {
+        "enabled": "[[[ const _hv = variables.casora_hv; const _pi = !!(_hv && _hv.show_people_inline); return (!_hv || (window.casoraSeen?window.casoraSeen(_hv,'people',user,_hv.show_people):_hv.show_people)!==false) && !!variables.presence_entity_1 && (_pi || !variables.presence_entity_2) ]]]"
+       }
+      },
+      {
+       "entity": "[[[ return variables.presence_entity_2 ]]]",
+       "template": "casora_badge_presence",
+       "type": "custom:button-card",
+       "variables": {
+        "enabled": "[[[ const _hv = variables.casora_hv; const _pi = !!(_hv && _hv.show_people_inline); return (!_hv || (window.casoraSeen?window.casoraSeen(_hv,'people',user,_hv.show_people):_hv.show_people)!==false) && !!variables.presence_entity_2 && _pi ]]]"
+       }
+      },
+      {
+       "entity": "[[[ return variables.presence_entity_3 ]]]",
+       "template": "casora_badge_presence",
+       "type": "custom:button-card",
+       "variables": {
+        "enabled": "[[[ const _hv = variables.casora_hv; const _pi = !!(_hv && _hv.show_people_inline); return (!_hv || (window.casoraSeen?window.casoraSeen(_hv,'people',user,_hv.show_people):_hv.show_people)!==false) && !!variables.presence_entity_3 && _pi ]]]"
+       }
+      },
+      {
+       "entity": "[[[ return variables.presence_entity_4 ]]]",
+       "template": "casora_badge_presence",
+       "type": "custom:button-card",
+       "variables": {
+        "enabled": "[[[ const _hv = variables.casora_hv; const _pi = !!(_hv && _hv.show_people_inline); return (!_hv || (window.casoraSeen?window.casoraSeen(_hv,'people',user,_hv.show_people):_hv.show_people)!==false) && !!variables.presence_entity_4 && _pi ]]]"
        }
       },
       {
