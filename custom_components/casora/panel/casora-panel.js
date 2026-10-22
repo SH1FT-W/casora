@@ -9686,6 +9686,10 @@ class CasoraPanel extends HTMLElement {
           background:var(--sc, var(--casora-color-teal, #00C3D0));
         }
         .card.map.soft .pbadge.dim .pring { opacity:.55; }
+        /* A person's picture fills the same img_cell as the ring (casora_badge_base), not the bare glyph size. */
+        .card.map.soft .ppic {
+          width:calc(var(--bgl) * 1.75); height:calc(var(--bgl) * 1.75); flex-basis:calc(var(--bgl) * 1.75);
+        }
         /* Vorschaumaß (1.1.0): Weich-Größen = echte Dashboard-Maße mal --sim-k (gesetzt in applySize).
            Gemessen im Theme „Casora“: Desktop (feste Pixel, Titel clamp über die Bildschirmbreite)
            und iPad 1024 px. Vorher waren es die Werte der dunklen Legacy-Looks: Kacheln zu klein,

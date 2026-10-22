@@ -51,4 +51,13 @@ assert.deepEqual(phone(clim).filter((id) => bidOf(id) === 'climate'), ['climate'
 assert.ok(miniModel.call(ctx, { variables: clim }, { place: 'room' }).some((b) => /^climate:/.test(b.id)),
   'desktop and phone room page: climate inline as before');
 
+// Soft look: the picture fills the same circle as a glyph's ring (casora_badge_base img_cell).
+// Reported after 26.10.51: the person badge in the phone preview was smaller than its neighbours.
+const sizeOf = (sel) => {
+  const m = new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' \\{[^}]*?width:([^;]+);').exec(src);
+  assert.ok(m, sel + ' not found');
+  return m[1].trim();
+};
+assert.equal(sizeOf('.card.map.soft .ppic'), sizeOf('.card.map.soft .pring'), 'soft look: picture as large as the ring');
+
 console.log('ok phone_preview_people');
