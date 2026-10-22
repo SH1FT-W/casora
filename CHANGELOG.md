@@ -4,6 +4,12 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.53 – 22.10.2026
+
+### Fixed
+- **Security on Home on tablet and desktop (#39):** Without entries of its own, the security badge on Home counted the house's doors and windows only on the phone, on tablet and desktop it was missing. It now shows on every device. Without entries of its own, a tap opens the list of all doors and windows instead of unfolding an empty row or, on the phone, filtering to nothing. The Studio shows in the badge how many doors and windows were found automatically.
+- **Back to the light list after “More settings” (#43):** Opening a light from the lighting list, then “More settings” and going back again, the light lost its arrow back to the list. It now stays.
+
 ## 26.10.52 – 22.10.2026
 
 ### New

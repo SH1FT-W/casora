@@ -27,8 +27,8 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Pflanzenmonitor Plus", n0: "Pflanzen von Pflanzenmonitor Plus funktionieren in Kachel, Popup, Glocke und Pflanzen-Doktor wie die des Plant Monitor.",
-      n1t: "Handy-Vorschau in echter Größe", n1: "Die Badges der Handy-Vorschau im Studio sind so groß wie auf dem Handy, das Personen-Badge so hoch wie die anderen.",
+      n0t: "Sicherheit auf Zuhause", n0: "Das Badge zählt die Türen und Fenster des Hauses jetzt auch am Tablet und Desktop. Ohne eigene Einträge öffnet ein Tipp die Liste aller Türen und Fenster.",
+      n1t: "Zurück zur Leuchtenliste", n1: "Nach „Weitere Einstellungen“ führt der Pfeil in einer Leuchte wieder zur Liste aller Leuchten.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -38,8 +38,8 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "Pflanzenmonitor Plus", n0: "Plants from Pflanzenmonitor Plus work in the tile, popup, bell and plant doctor like those of Plant Monitor.",
-      n1t: "Phone preview at true size", n1: "The badges in the Studio's phone preview are as large as on the phone, the people badge as tall as the others.",
+      n0t: "Security on Home", n0: "The badge now counts the house's doors and windows on tablet and desktop too. Without entries of its own, a tap opens the list of all doors and windows.",
+      n1t: "Back to the light list", n1: "After “More settings” the arrow in a light leads back to the list of all lights again.",
     },
   };
 
@@ -52,8 +52,8 @@
 
   /** After an update: the news of this version - replace on every release. */
   const WHATS_NEW = [
-    ["mdi:flower-outline", "n0t", "n0"],
-    ["mdi:cellphone-check", "n1t", "n1"],
+    ["mdi:shield-home-outline", "n0t", "n0"],
+    ["mdi:arrow-left-circle-outline", "n1t", "n1"],
   ];
 
   // Decide on load - before the Studio writes its own casora.* keys.

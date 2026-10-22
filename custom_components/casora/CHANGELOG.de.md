@@ -4,6 +4,12 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.53 – 22.10.2026
+
+### Behoben
+- **Sicherheit auf Zuhause am Tablet und Desktop (#39):** Ohne eigene Einträge zählte das Badge Sicherheit auf Zuhause die Türen und Fenster des Hauses nur am Handy, am Tablet und Desktop fehlte es ganz. Jetzt erscheint es auf allen Geräten. Ohne eigene Einträge öffnet ein Tipp die Liste aller Türen und Fenster, statt eine leere Zeile aufzuklappen oder am Handy ins Leere zu filtern. Das Studio zeigt im Badge, wie viele Türen und Fenster automatisch erkannt sind.
+- **Zurück zur Leuchtenliste nach „Weitere Einstellungen“ (#43):** Öffnete man eine Leuchte aus der Beleuchtungsliste, dann „Weitere Einstellungen“ und ging wieder zurück, fehlte in der Leuchte der Pfeil zurück zur Liste. Er bleibt jetzt erhalten.
+
 ## 26.10.52 – 22.10.2026
 
 ### Neu
