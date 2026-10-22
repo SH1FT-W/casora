@@ -4,6 +4,14 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
+## 26.10.52 – 22.10.2026
+
+### New
+- **Pflanzenmonitor Plus:** Casora recognises the plants of Pflanzenmonitor Plus like those of Plant Monitor. The plant tile, the plant popup with readings and limits, the plant doctor, hints in the bell, tile suggestions and the import in the Studio work with both. Ventilation and room climate leave the plant sensors out. With Plant Monitor everything stays as it was.
+
+### Fixed
+- **Studio: badges in the phone preview too tall, people badge lower than the others (#41):** In the Casora look the phone preview drew the badges taller than on the phone, and a person's picture was smaller than the colour circles next to it. All badges now have the phone's sizes, and a person's picture is as large as a colour circle, in the desktop preview too.
+
 ## 26.10.51 – 22.10.2026
 
 ### Fixed

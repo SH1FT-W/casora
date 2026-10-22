@@ -4,6 +4,14 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
+## 26.10.52 – 22.10.2026
+
+### Neu
+- **Pflanzenmonitor Plus:** Casora erkennt die Pflanzen von Pflanzenmonitor Plus wie die des Plant Monitor. Pflanzen-Kachel, Pflanzen-Popup mit Messwerten und Grenzwerten, Pflanzen-Doktor, Hinweise in der Glocke, Kachelvorschläge und der Import im Studio funktionieren mit beiden. Lüften und Raumklima lassen die Pflanzensensoren aus. Mit dem Plant Monitor bleibt alles wie bisher.
+
+### Behoben
+- **Studio: Badges in der Handy-Vorschau zu hoch, Personen-Badge niedriger als die anderen (#41):** Im Look Casora zeigte die Handy-Vorschau die Badges höher als auf dem Handy, und das Personenbild war kleiner als die Farbkreise daneben. Jetzt haben alle Badges die Maße vom Handy, und das Bild einer Person ist so groß wie ein Farbkreis, auch in der Desktop-Vorschau.
+
 ## 26.10.51 – 22.10.2026
 
 ### Behoben

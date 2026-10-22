@@ -27,8 +27,8 @@
       w1t: "Raum für Raum", w1: "Gestalte dein Dashboard mit den Geräten, die du schon in Home Assistant hast.",
       w2t: "Geräte-Assistent", w2: "Casora schlägt für jeden Raum passende Kacheln vor und baut sie ein.",
       w3t: "Desktop, Tablet und Handy", w3: "Ein Dashboard, das sich jedem Bildschirm anpasst, mit eigener Handy-Ansicht.",
-      n0t: "Personen einzeln am Handy", n0: "Mit „Personen als eigene Badges“ oder nur einer Person öffnet das Badge auf Zuhause auch am Handy das Popup der Person.",
-      n1t: "Handy-Vorschau komplett", n1: "Die Handy-Vorschau im Studio zeigt das Personen-Badge jetzt auch für einzelne Personen.",
+      n0t: "Pflanzenmonitor Plus", n0: "Pflanzen von Pflanzenmonitor Plus funktionieren in Kachel, Popup, Glocke und Pflanzen-Doktor wie die des Plant Monitor.",
+      n1t: "Handy-Vorschau in echter Größe", n1: "Die Badges der Handy-Vorschau im Studio sind so groß wie auf dem Handy, das Personen-Badge so hoch wie die anderen.",
     },
     en: {
       welcomeTitle: "Welcome to Casora",
@@ -38,8 +38,8 @@
       w1t: "Room by room", w1: "Design your dashboard with the devices you already have in Home Assistant.",
       w2t: "Device Assistant", w2: "Casora suggests the right tiles for every room and adds them for you.",
       w3t: "Desktop, tablet and phone", w3: "One dashboard that fits every screen, with its own phone layout.",
-      n0t: "People one by one on the phone", n0: "With “Separate people badges” or only one person, the badge on Home opens the person's popup on the phone too.",
-      n1t: "Complete phone preview", n1: "The Studio's phone preview now shows the people badge for single people too.",
+      n0t: "Pflanzenmonitor Plus", n0: "Plants from Pflanzenmonitor Plus work in the tile, popup, bell and plant doctor like those of Plant Monitor.",
+      n1t: "Phone preview at true size", n1: "The badges in the Studio's phone preview are as large as on the phone, the people badge as tall as the others.",
     },
   };
 
@@ -52,7 +52,7 @@
 
   /** After an update: the news of this version - replace on every release. */
   const WHATS_NEW = [
-    ["mdi:account-multiple-outline", "n0t", "n0"],
+    ["mdi:flower-outline", "n0t", "n0"],
     ["mdi:cellphone-check", "n1t", "n1"],
   ];
 
