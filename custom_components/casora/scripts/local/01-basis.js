@@ -1063,6 +1063,18 @@ window._casoraColGap = window._casoraColGap || function (keys) {
 
   window._casoraNotifyOpenViaCard = openViaCard;
 
+  // Security badge on Home without entries of its own (casoraSecContactsTap, #39): a tap opens
+  // „Türen & Fenster“ of the whole house, the popup of casora_popup_contacts without an entity.
+  if (!window._casoraContactsOpen) {
+    window._casoraContactsOpen = true;
+    document.addEventListener('ll-custom', function (e) {
+      var d = (e.detail && e.detail.event_data) ? e.detail.event_data : (e.detail || {});
+      if (d.casora_contacts_open !== true) return;
+      e.stopPropagation();
+      openViaCard(null, function () {}, { type: 'custom:button-card', template: 'casora_popup_contacts' }, true, true);
+    }, true);
+  }
+
   // Zeile im Gruppen-Popup (Jalousien): einzelnes Gerät mit Casoras Popup öffnen, HAs Dialog nur als Rückfall.
   if (!window._casoraMemberOpen) {
     window._casoraMemberOpen = true;

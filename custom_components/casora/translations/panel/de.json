@@ -3168,6 +3168,10 @@
     [
       "^That looks like JSON but does not parse: (.+)$",
       "Das sieht nach JSON aus, lässt sich aber nicht lesen: {1}"
+    ],
+    [
+      "^On the home page every door and window in the house counts automatically \\((\\d+) found\\)\\. The badge shows the open ones\\.$",
+      "Auf Zuhause zählen alle Türen und Fenster im Haus automatisch mit ({1} gefunden). Das Badge zeigt die offenen."
     ]
   ]
 }

@@ -18159,6 +18159,18 @@ class CasoraPanel extends HTMLElement {
       } else {
         plain.forEach((f) => renderField(f, fs));
       }
+      // Home: say that the house's doors and windows count without entries, and how many were found (#39).
+      if (sec.bid === "security" && (room.variables || {}).show_security !== false
+        && isHomeRoom(room, this._state.compact.rooms) && typeof window.casoraHouseContacts === "function") {
+        const house = window.casoraHouseContacts(this._hass);
+        const units = window.casoraBasis && window.casoraBasis.openings
+          ? window.casoraBasis.openings(this._hass, house) : house;
+        const h = document.createElement("div");
+        h.className = "hint";
+        h.textContent = "On the home page every door and window in the house counts automatically ("
+          + units.length + " found). The badge shows the open ones.";
+        fs.appendChild(h);
+      }
 
       const advanced = visible.filter((f) => f.advanced);
       const advOffer = offersFrom(units.filter((u) => !unitLive(u) && advUnit(u)
@@ -22594,14 +22606,19 @@ class CasoraPanel extends HTMLElement {
     const locks = (Array.isArray(V.security_locks) ? V.security_locks : [])
       .concat([V.security_lock_entity, V.security_lock_entity_2]).filter(Boolean).filter(sees);
     const cams = (Array.isArray(V.security_cameras) ? V.security_cameras : []).filter(Boolean).filter(sees);
-    if (on("show_security") && (secEntities.length || locks.length || cams.length)) {
+    // Home: every door and window of the house counts, also without entries of its own, as on the dashboard (#39).
+    const secPlace = (opts && opts.place) || (typeof isHomeRoom === "function"
+      && isHomeRoom(room, ((this._state || {}).compact || {}).rooms) ? "home" : "room");
+    const house = secPlace === "home" && typeof window.casoraHouseContacts === "function"
+      ? window.casoraHouseContacts(this._hass).filter(sees) : [];
+    if (on("show_security") && (secEntities.length || locks.length || cams.length || house.length)) {
       // Text wie casora_badge_security_group (Wortlaut des Produktiv-Dashboards): Schlösser,
       // Alarm, Türen, Tore, Fenster, Kipp-Stellung, Geräte offline. Kontakt + Kippsensor
       // (+ Kombi-Sensor) einer Tür zählen einmal (casoraBasis.openings), Gruppen über ihre Mitglieder.
       const H = this._hass;
       const sOf = (e) => String((st(e) || {}).state || "").toLowerCase();
       const dead = (e) => /^(unavailable|unknown|)$/.test(sOf(e));
-      const flat = [...new Set(secEntities.flatMap((e) => {
+      const flat = [...new Set(secEntities.concat(house).flatMap((e) => {
         const m = ((st(e) || {}).attributes || {}).entity_id;
         return String(e).startsWith("binary_sensor.") && Array.isArray(m) ? m : [e];
       }))];
@@ -22636,9 +22653,7 @@ class CasoraPanel extends HTMLElement {
       if (sec.camDead) parts.push(nn(sec.camDead, "Camera offline", "Cameras offline"));
       // Weich/Nebel: dieselbe Unterzeile wie das Dashboard (00-finden.js, Kurz = Symbole mit Zahl).
       let secSum = null;
-      // Kurz oder ausführlich wie im Dashboard: „Automatisch“ = Startseite kurz, Räume ausgeschrieben.
-      const secPlace = (opts && opts.place) || (typeof isHomeRoom === "function"
-        && isHomeRoom(room, ((this._state || {}).compact || {}).rooms) ? "home" : "room");
+      // Short or detailed as on the dashboard: „Automatisch“ = short on Home, spelled out in rooms.
       const secMode = typeof window.casoraSecurityMode === "function" ? window.casoraSecurityMode(V.security_summary, secPlace)
         : (V.security_summary === "detailed" || V.security_summary === "short" ? V.security_summary : secPlace === "home" ? "short" : "detailed");
       if (soft && typeof window.casoraSecuritySummary === "function") {

@@ -64,15 +64,32 @@ window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
     var m = (vars && vars.casora_entity_users) || entityUsers;
     return allowed(m && m[id], user);
   };
-  // Hat der Raum (für diesen Benutzer) etwas für das Sicherheits-Badge?
-  window.casoraHasSec = function (v, user) {
+  // Does the room (for this user) have anything for the security badge? el (optional): the card.
+  // On the home view every door and window of the house counts too, as in casora_badge_security_group (#39).
+  window.casoraHasSec = function (v, user, el) {
     if (!v) return false;
     window.casoraEntityUsersFrom(v);
     var sees = function (id) { return !!id && window.casoraSeesEntity(id, user, v); };
     if (sees(v.security_lock_entity) || sees(v.security_lock_entity_2)) return true;
     for (var i = 1; i <= 8; i++) if (sees(v['security_entity_' + i])) return true;
     if ((v.security_locks || []).some(sees)) return true;
-    return (v.security_cameras || []).some(sees);
+    if ((v.security_cameras || []).some(sees)) return true;
+    if (!el || typeof window.casoraHouseContacts !== 'function' || typeof window.casoraOnHomeView !== 'function'
+      || window.casoraOnHomeView(el) !== true) return false;
+    var h = el.hass || el._hass;
+    if (!h) { try { var ha = document.querySelector('home-assistant'); h = ha && ha.hass; } catch (e) { h = null; } }
+    return !!h && window.casoraHouseContacts(h).some(sees);
+  };
+  // Security badge (casora_badge_security_group) on Home without entries of its own (#39): it counts the
+  // house's doors and windows, so a tap lists them (casora_contacts_open) instead of an empty row or filter.
+  window.casoraSecContactsTap = function (v, user, el) {
+    if (!v) return false;
+    var arr = function (x) { return Array.isArray(x) ? x : (x ? [x] : []); };
+    var own = [v.alarm_entity, v.doors_entity, v.windows_entity, v.lock_entity, v.lock_entity_2]
+      .concat(arr(v.locks), arr(v.entities), arr(v.cameras))
+      .filter(function (x) { return typeof x === 'string' && x.indexOf('.') > 0 && window.casoraSeesEntity(x, user); });
+    if (own.length) return false;
+    return v.place ? v.place === 'home' : !!(el && window.casoraOnHomeView && window.casoraOnHomeView(el) === true);
   };
 })();
 
@@ -13097,6 +13114,8 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       return;
     }
     if (!('casora_filter' in d)) return;
+    // Security badge on Home without entries: the list of doors and windows instead (01-basis.js, #39).
+    if (d.casora_contacts_open === true) return;
     ev.stopPropagation();
     var v = set(d.casora_filter);
     var ha = document.querySelector('home-assistant');

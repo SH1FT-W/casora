@@ -59,7 +59,7 @@ assert.ok(asked.includes('focus.no') && !asked.includes('focus.yes'), 'Fokus auf
 const tpl = JSON.parse(fs.readFileSync(new URL('../../dashboards/casora/button_card_templates.json', import.meta.url), 'utf8'));
 const all = JSON.stringify(tpl);
 { const raw = (all.match(/\(!!(variables|_rv)\.security_lock_entity\|\|/g) || []).length;
-  const wrapped = (all.match(/casoraHasSec\((variables|_rv),user\):\(!!(variables|_rv)\.security_lock_entity\|\|/g) || []).length;
+  const wrapped = (all.match(/casoraHasSec\((variables|_rv),user(,this)?\):\(!!(variables|_rv)\.security_lock_entity\|\|/g) || []).length;
   assert.ok(raw > 40 && raw === wrapped, 'jede Sicherheits-Prüfung über casoraHasSec: ' + wrapped + '/' + raw); }
 assert.ok(JSON.stringify(tpl.casora_badge_lock_group).includes('window.casoraSeesEntity(id, user)'), 'Schloss-Gruppe zählt nur Sichtbares');
 assert.equal((JSON.stringify(tpl.casora_badge_security_group).match(/window\.casoraSeesEntity\(x, user\)/g) || []).length, 4, 'Sicherheits-Gruppe („Schloss offen“) zählt nur Sichtbares');

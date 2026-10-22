@@ -659,6 +659,15 @@ window.casoraPriceKwh = function (v) {
     return { groups: groups, sub: sub, excl: excl, tilt: tilt };
   }
   window.casoraContacts = contacts;
+  // Every door and window of the house, merged sensors left out: what the security badge counts
+  // on the home view without entries of its own (#39).
+  window.casoraHouseContacts = function (hass) {
+    var cc = contacts(hass), out = [];
+    cc.groups.forEach(function (g) {
+      (g.members || []).forEach(function (x) { if (out.indexOf(x) < 0 && cc.excl.indexOf(x) < 0) out.push(x); });
+    });
+    return out;
+  };
 
   // ── Öffnungen: Kontakt, Kippsensor und Kombi-Sensor = eine Tür/ein Fenster (30.09.2026) ──
   // Manche Türen/Fenster haben zwei Sensoren (Kontakt für offen/zu, Kippsensor für
