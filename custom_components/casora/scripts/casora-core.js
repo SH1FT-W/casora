@@ -7170,6 +7170,11 @@ window.casoraMenuGlass = {
       this._headerBack.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Zurück') : 'Zurück');
       this.toggleAttribute('has-back', !!this._backFn);
       this._cfgCurrent = data || {};
+      // A back noted beforehand belongs to this config: reopened from a page further in (‹ from the device
+      // page of „Weitere Einstellungen“), the popup keeps its own ‹, e.g. back to the light list (#43).
+      if (this._backFn && typeof this._cfgCurrent.back !== 'function') {
+        this._cfgCurrent = Object.assign({}, this._cfgCurrent, { back: this._backFn });
+      }
       /* D-02: Bildschirmleser-Name in der Oberflächensprache (war fest „Close“) */
       this._headerClose.setAttribute('aria-label', window.casoraTr ? window.casoraTr('Schließen') : 'Schließen');
       // Weich: Ring aus der auslösenden Kachel. Gemerkt wird die Kachel, nicht das Ergebnis –
