@@ -2228,12 +2228,12 @@
   });
 })();
 
-// ── Pflanzen-Doktor im Pflanzen-Popup (23.09.2026) ───────────────────────────
-// casora_popup_plant (Casora-Template) bleibt unverändert: Solange ein Popup
-// offen ist, sucht dieses Modul jede Sekunde die Messwert-Zeilen
-// ([data-hp-metric]), ermittelt über das Gerät die plant.*-Entität und hängt
-// unter die Messwerte einen Bereich "Pflanzen-Doktor" (sensor.casora_pflanzen_ki,
-// Knopf → script.casora_pflanzen_doktor).
+// ── Plant doctor in the plant popup (23.09.2026) ─────────────────────────────
+// casora_popup_plant (Casora template) stays as it is: while a popup is open,
+// this module looks for the reading rows ([data-hp-metric]) every second, finds
+// the plant over their device (plant.* or Pflanzenmonitor Plus) and puts a
+// "Pflanzen-Doktor" section under the readings (sensor.casora_pflanzen_ki,
+// button → script.casora_pflanzen_doktor).
 (function () {
   if (window._casoraPlantAi) return;
   var PA = window._casoraPlantAi = {};
@@ -2297,12 +2297,18 @@
       + body + (it && !running && it.at ? '<div style="font-size:12px;color:' + T.ink3 + ';margin-top:10px;">KI-Einschätzung · ' + ago(it.at) + '</div>' : '')
       + btn + '</div></div>';
   };
+  // The plant on the reading's device: plant.* or a Pflanzenmonitor Plus status sensor (window.casoraIsPlant,
+  // casora-core.js; until that has loaded only plant.*).
+  var isPlant = function (hass, id) {
+    return typeof window.casoraIsPlant === 'function' ? window.casoraIsPlant(hass, id) : id.indexOf('plant.') === 0;
+  };
   var plantOf = function (hass, sensorId) {
     var reg = hass.entities || {}, dev = reg[sensorId] && reg[sensorId].device_id;
     if (!dev) return null;
-    var ids = Object.keys(reg).filter(function (e) { return reg[e].device_id === dev && e.indexOf('plant.') === 0; });
+    var ids = Object.keys(reg).filter(function (e) { return reg[e].device_id === dev && isPlant(hass, e); });
     return ids[0] || null;
   };
+  PA.plantOf = plantOf;
   var sweep = function () {
     var P = window.casoraPopup, el = P && P.element;
     if (!el || !el.isConnected) return;

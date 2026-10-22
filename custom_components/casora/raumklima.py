@@ -39,7 +39,7 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .ki import OPT_OUT_RH, OPT_OUT_T, OUTDOOR, _area_id, _outdoor
+from .ki import OPT_OUT_RH, OPT_OUT_T, OUTDOOR, _area_id, _outdoor, plant_devices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ def find_rooms(hass: HomeAssistant) -> list[dict]:
     """Bereiche mit Feuchte- oder CO₂-Sensor, samt Temperatur, VOC, Fenster, Heizung."""
     reg = er.async_get(hass)
     areas = ar.async_get(hass)
-    plants = {e.device_id for e in reg.entities.values() if e.domain == "plant" and e.device_id}
+    plants = plant_devices(reg)
     rooms: dict[str, dict] = {}
 
     def room(aid: str) -> dict | None:

@@ -241,6 +241,22 @@ def _area_id(hass: HomeAssistant, entity_id: str) -> str | None:
     return None
 
 
+# Pflanzenmonitor Plus: one status sensor per plant (unique_id "<plant>-status") instead of plant.*.
+PLANT_PLUS = "pflanzenmonitor_plus"
+
+
+def is_plant(entry: er.RegistryEntry) -> bool:
+    """A plant: Plant Monitor's plant.* or the status sensor of Pflanzenmonitor Plus."""
+    if entry.domain == "plant":
+        return True
+    return entry.domain == "sensor" and entry.platform == PLANT_PLUS and str(entry.unique_id).endswith("-status")
+
+
+def plant_devices(reg: er.EntityRegistry) -> set[str]:
+    """Devices that are a plant (its readings belong to the plant, not to the room)."""
+    return {e.device_id for e in reg.entities.values() if e.device_id and is_plant(e)}
+
+
 def _area_name(hass: HomeAssistant, area_id: str | None) -> str | None:
     area = ar.async_get(hass).async_get_area(area_id) if area_id else None
     return area.name if area else None
@@ -791,14 +807,14 @@ async def run_heating(hass: HomeAssistant, entry: ConfigEntry, only_season: bool
 def vent_rooms(hass: HomeAssistant) -> list[dict]:
     """Bereiche mit Feuchtesensor (keine Pflanzen, nicht draußen) + CO₂ + Fenster."""
     reg = er.async_get(hass)
-    plant_devices = {e.device_id for e in reg.entities.values() if e.domain == "plant" and e.device_id}
+    plants = plant_devices(reg)
     by_area: dict[str, dict] = {}
     for st in sorted(hass.states.async_all("sensor"), key=lambda s: s.entity_id):
         dc = st.attributes.get("device_class")
         if dc not in ("humidity", "carbon_dioxide") or st.state in ("unknown", "unavailable"):
             continue
         ent = reg.async_get(st.entity_id)
-        if ent and ent.device_id in plant_devices:
+        if ent and ent.device_id in plants:
             continue
         aid = _area_id(hass, st.entity_id)
         name = _area_name(hass, aid)

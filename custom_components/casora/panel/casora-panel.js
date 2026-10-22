@@ -3778,7 +3778,19 @@ const PLANT_SLOTS = [
   { type: "humidity", label: "Air humidity", match: (id) => id.includes("humid") },
   { type: "battery", label: "Battery", match: (id) => id.includes("battery") },
 ];
-const plantSlotOf = (id) => {
+// Plant entity: Plant Monitor's plant.* or the status sensor of Pflanzenmonitor Plus (same state and attributes).
+// The dashboard asks window.casoraIsPlant (scripts/casora-core.js) the same; the Studio does not load that file.
+const PLANT_PLUS = "pflanzenmonitor_plus";
+const isPlantEntity = (h, id) => {
+  const eid = String(id || "");
+  if (eid.startsWith("plant.")) return true;
+  const e = eid.startsWith("sensor.") && h && h.entities && h.entities[eid];
+  return !!e && e.platform === PLANT_PLUS && e.translation_key === "status";
+};
+// reg: the entity's registry entry (optional). Pflanzenmonitor Plus names its readings by translation_key
+// (moisture …) in any language; everything else goes by the entity id.
+const plantSlotOf = (id, reg) => {
+  if (reg && reg.platform === PLANT_PLUS && PLANT_SLOTS.some((s) => s.type === reg.translation_key)) return reg.translation_key;
   const low = String(id || "").toLowerCase();
   const hit = PLANT_SLOTS.find((s) => s.match(low));
   return hit ? hit.type : null;
@@ -20117,11 +20129,12 @@ class CasoraPanel extends HTMLElement {
     const reg = (H.entities || {})[plantId];
     const dev = reg && reg.device_id;
     if (!dev) return [];
+    // Not the plant itself (Pflanzenmonitor Plus: a sensor on the same device).
     const sibs = Object.keys(H.entities || {})
-      .filter((id) => id.startsWith("sensor.") && (H.entities[id] || {}).device_id === dev);
+      .filter((id) => id !== plantId && id.startsWith("sensor.") && (H.entities[id] || {}).device_id === dev);
     const out = [];
     PLANT_SLOTS.forEach((slot) => {
-      const hits = sibs.filter((id) => plantSlotOf(id) === slot.type);
+      const hits = sibs.filter((id) => plantSlotOf(id, H.entities[id]) === slot.type);
       if (!hits.length) return;
       // Shortest id wins: "sensor.x_temperature" over "sensor.x_soil_temperature_2".
       hits.sort((a, b) => a.length - b.length || a.localeCompare(b));
@@ -21203,8 +21216,12 @@ class CasoraPanel extends HTMLElement {
     }
     const perDomain = classes && !Array.isArray(classes) ? classes : null;
     const all = Array.isArray(classes) && classes.length ? classes : null;
+    // "plant" also takes the status sensors of Pflanzenmonitor Plus (isPlantEntity).
+    const plus = domains.includes("plant") && !domains.includes("sensor")
+      ? (this._entMemo.byDom.get("sensor") || []).filter((e) => isPlantEntity(this._hass, e)) : [];
     const out = [...this._entMemo.byDom.keys()].filter((d) => domains.includes(d))
       .flatMap((d) => this._entMemo.byDom.get(d))
+      .concat(plus)
       .filter((e) => {
         const want = perDomain ? perDomain[e.split(".")[0]] : all;
         if (!want || !want.length) return true;
@@ -21458,7 +21475,7 @@ class CasoraPanel extends HTMLElement {
   _fillTile(tile, type, entity) {
     tile.entity = entity;
     // Eine Pflanze heißt wie die Pflanze („Bogenhanf“), nicht wie der Kacheltyp.
-    const fn = /^plant\./.test(entity) && this._prettyEntity(entity);
+    const fn = isPlantEntity(this._hass, entity) && this._prettyEntity(entity);
     if (fn && fn !== entity && (!tile.name || tile.name === trLabel(type.label))) tile.name = fn;
     // A pet tracker is named like the pet ("Luna"), not like its tracker hardware (issue #25).
     const pn = type.id === "casora_pet" && petName(this._hass, entity);
@@ -26905,8 +26922,9 @@ class CasoraPanel extends HTMLElement {
         const raw = Array.isArray(cur) ? cur.filter(Boolean) : [];
         const bySlot = {};
         const extra = [];
+        const RP = this._hass.entities || {};
         raw.forEach((id) => {
-          const t = plantSlotOf(id);
+          const t = plantSlotOf(id, RP[id]);
           if (t && !bySlot[t]) bySlot[t] = id;
           else extra.push(id);
         });
@@ -26925,7 +26943,7 @@ class CasoraPanel extends HTMLElement {
           // Sensoren desselben Geräts wie die Pflanze zuerst.
           const R = this._hass.entities || {};
           const dev = (R[tile.entity] || {}).device_id;
-          const opts = this._entityList(["sensor"]).filter((id) => plantSlotOf(id) === sl.type)
+          const opts = this._entityList(["sensor"]).filter((id) => plantSlotOf(id, R[id]) === sl.type)
             .map((id, i) => [id, dev && (R[id] || {}).device_id === dev ? 0 : 1, i])
             .sort((a, b) => a[1] - b[1] || a[2] - b[2]).map((x) => x[0]);
           const c = this._combo(bySlot[sl.type] || "", opts, "Automatic", (v) => {
@@ -27276,7 +27294,7 @@ class CasoraPanel extends HTMLElement {
 window.__casoraPanelInternals = {
   blankRoom, roomPhoto, slug, translit, expandConfig, expandAny, extractAny, retargetRoutes, mobileFromRooms,
   applyScenePick, confirmEntities, confirmNames, entityUsers, wrapCustomCard, FINGERPRINT_KEY, fingerprintOf, refreshTemplates, templatePrint, TILE_TYPES, USER_TILE_TYPES,
-  findType, tileTypeAny, newTile, isPetTracker, petName, listCategory, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
+  findType, tileTypeAny, newTile, isPetTracker, petName, isPlantEntity, listCategory, iconUrl, studioIcon, roomGlyph, roomIconSrc, titleCase, clone, FLOW_TINT, isMobileConfig, applyKiosk,
   applyMotion, markPhoneManaged, applyFirstRun, CASORA_THEMES, ensureCustomFontCss, sceneBadgeOn, dropNavScenes,
   parseCardText, cardToText,
   isDefaultHomeName, homeRoomWord, shotLang, isHomeRoom, roomLabel, storedRoomName, HOME_ROOM_NAME, markAutoHome, isDefaultHome, setHomeName, badgeOrderOf, BADGE_ORDER_IDS,

@@ -39,6 +39,11 @@ window.casoraPriceKwh = function (v) {
     var s = hass && hass.states && hass.states[eid];
     return s && s.attributes ? s.attributes.device_class : undefined;
   }
+  // Plant (plant.* or a Pflanzenmonitor Plus status sensor): window.casoraIsPlant (casora-core.js);
+  // until that has loaded only plant.*, as before.
+  function isPlant(hass, id) {
+    return typeof window.casoraIsPlant === 'function' ? window.casoraIsPlant(hass, id) : String(id).indexOf('plant.') === 0;
+  }
 
   // Gerät einer Entität (oder die Geräte-ID selbst).
   function deviceOf(hass, anchor) {
@@ -797,8 +802,8 @@ window.casoraPriceKwh = function (v) {
     var lowPct = Number(o.battery); if (!isFinite(lowPct)) lowPct = 20;
     var openMin = Number(o.open_minutes); if (!isFinite(openMin)) openMin = 10;
     var co2 = Number(o.co2); if (!isFinite(co2)) co2 = 1800;
-    var plants = Object.keys(S).filter(function (id) { return id.indexOf('plant.') === 0; })
-      .map(function (id) { return id.slice(6); });
+    var plants = Object.keys(S).filter(function (id) { return isPlant(hass, id); })
+      .map(function (id) { return id.slice(id.indexOf('.') + 1); });
     var out = {};
     var add = function (id, kind, active) {
       var x = out[id] = out[id] || { entity: id, kinds: [], active: false };
@@ -813,7 +818,7 @@ window.casoraPriceKwh = function (v) {
       else if (dom === 'vacuum') add(id, 'vacuum', s === 'error');
       else if (dom === 'person') add(id, 'person', false);
       else if (dom === 'update') add(id, 'update', s === 'on' && !a.in_progress);
-      else if (dom === 'plant') add(id, 'plant', s === 'problem');
+      else if (isPlant(hass, id)) add(id, 'plant', s === 'problem');
       if ((dom === 'event' && dc === 'doorbell') || (dom === 'binary_sensor' && dc === 'occupancy' && /doorbell|ding|chime/i.test(id))) {
         add(id, 'doorbell', false);
       }
@@ -1090,7 +1095,7 @@ window.casoraPriceKwh = function (v) {
     var skipDev = vehicleDevs(hass);
     Object.keys(R).forEach(function (id) {
       var e = R[id];
-      if (e && e.device_id && (id.indexOf('plant.') === 0 || id.indexOf('device_tracker.') === 0)) skipDev[e.device_id] = true;
+      if (e && e.device_id && (isPlant(hass, id) || id.indexOf('device_tracker.') === 0)) skipDev[e.device_id] = true;
     });
     var cand = Object.keys(S).filter(function (id) {
       var st = S[id], e = R[id] || {};

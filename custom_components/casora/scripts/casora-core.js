@@ -7,6 +7,20 @@ window.casoraHaptic = window.casoraHaptic || function (kind) {
   try { window.dispatchEvent(new CustomEvent('haptic', { detail: kind || 'light' })); } catch (e) { /* egal */ }
 };
 
+// Is this entity a plant? Plant Monitor (HACS, domain plant) has plant.*; Pflanzenmonitor Plus has one
+// status sensor per plant instead (platform pflanzenmonitor_plus, translation_key status) with the same
+// state (ok/problem) and attributes (problems, <m>_status, species). Every plant check in the dashboard
+// goes through here. hass is optional (default: the one on <home-assistant>).
+window.CASORA_PLANT_PLUS = 'pflanzenmonitor_plus';
+window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
+  id = String(id || '');
+  if (id.indexOf('plant.') === 0) return true;
+  if (id.indexOf('sensor.') !== 0) return false;
+  if (!hass) { try { var ha = document.querySelector('home-assistant'); hass = ha && ha.hass; } catch (e) { hass = null; } }
+  var e = hass && hass.entities && hass.entities[id];
+  return !!e && e.platform === window.CASORA_PLANT_PLUS && e.translation_key === 'status';
+};
+
 // Casora Studio „Wer sieht das?“ (06.10.2026): Badges und Räume nur für bestimmte HA-Benutzer.
 // casoraSeen(vars, badge, user, wert) – liefert false, wenn die Badge für diesen Benutzer
 // ausgeblendet ist, sonst den Wert unverändert (in den Vorlagen statt variables.show_<badge>).
@@ -10460,6 +10474,12 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   var KEY = 'casora_notify_read_v1';
   var COUNT_IN_BADGE = true;
 
+  // Plant (plant.* or a Pflanzenmonitor Plus status sensor): window.casoraIsPlant at the top of this
+  // file; without it (module loaded on its own) only plant.*, as before.
+  function isPlant(hass, id) {
+    return typeof window.casoraIsPlant === 'function' ? window.casoraIsPlant(hass, id) : id.indexOf('plant.') === 0;
+  }
+
   // Tür/Fenster nur dem Namen der Geräteklasse nach (Tankerkönig-Status …): window.casoraNotAnOpening
   // aus 00-finden.js; lädt das (noch) nicht, wenigstens die bekannten Plattformen.
   function notAnOpening(hass, id) {
@@ -11392,8 +11412,9 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       try { co2Since = JSON.parse(localStorage.getItem(CO2_KEY) || '{}') || {}; }
       catch (e) { co2Since = {}; }
       var co2Now = {};
-      var plants = allIds.filter(function (id) { return id.indexOf('plant.') === 0; })
-        .map(function (id) { return id.slice(6); });
+      // A plant's own sensors carry its name in front (plant.x → sensor.x_co2, Plus: sensor.x → sensor.x_co2).
+      var plants = allIds.filter(function (id) { return isPlant(hass, id); })
+        .map(function (id) { return id.slice(id.indexOf('.') + 1); });
       ids.forEach(function (id) {
         if (id.indexOf('sensor.') !== 0) return;
         var st = S[id];
@@ -11439,7 +11460,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
       var midnight = new Date();
       midnight.setHours(0, 0, 0, 0);
       ids.forEach(function (id) {
-        if (id.indexOf('plant.') !== 0) return;
+        if (!isPlant(hass, id)) return;
         var st = S[id];
         if (st.state !== 'problem') return;
         var probs = (st.attributes || {}).problems;
