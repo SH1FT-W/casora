@@ -9755,8 +9755,7 @@ class CasoraPanel extends HTMLElement {
         }
         .card.map.soft .pbadge.ghost .plabel,
         .card.map.soft .mtile.ghost { color:var(--casora-text-2, var(--secondary-text-color)); }
-        .card.map.soft .mtile:not(.ghost),
-        .card.map.soft .mini-nptile {
+        .card.map.soft .mtile:not(.ghost) {
           background:var(--casora-entity-background, rgba(0,0,0,0.40));
           backdrop-filter:none; -webkit-backdrop-filter:none;
           box-shadow:var(--button-card-box-shadow, none);
@@ -9783,14 +9782,7 @@ class CasoraPanel extends HTMLElement {
         }
         .card.map.soft .mtile:not(.on) .mtgl circle { fill:#fff; }
         .card.map.soft .mtile:not(.on) .mtgl { opacity:1; }
-        .card.map.soft .mini-nptitle { color:var(--casora-entity-name, #fff); }
-        .card.map.soft .mini-npsub { color:var(--casora-entity-state, rgba(255,255,255,0.62)); }
-        .card.map.soft .mini-npctl path { fill:var(--casora-entity-name, #fff); }
-        .card.map.soft .mini-npbar { background:var(--casora-progress-track-color, rgba(255,255,255,0.16)); }
-        /* Weich: Fortschritt in Ton wie der Wiedergabe-Knopf (Variante B, 04.10.2026). */
-        .card.map.soft .mini-npbar > span { background:var(--casora-np-progress, #B67A50); }
-        /* Weich 1.0.7 (wie 10-weich-welle.js, Entwurf A): offene Welle = ein Menü unter ihr, je Player
-           eine Zeile mit Cover, Titel, Unterzeile, Fortschritt und rundem Play/Pause-Knopf. */
+        /* Open wave: the dashboard's window below it (.mini-npreal.win). */
         .card.map.soft .mz-np { gap:0; max-height:none; overflow:visible; }
         /* The dashboard's own player strips (_npSoftInto) at the preview's scale: desktop/tablet sizes
            are real px × --sim-k (zoom; it scales the width set in px, not percentages). The phone is
@@ -9803,33 +9795,7 @@ class CasoraPanel extends HTMLElement {
           box-shadow:var(--casora-notify-shadow, var(--casora-window-shadow, 0 8px 20px rgba(0,0,0,0.13)));
         }
         .card.map.soft .mp-nprow > .mini-npreal { zoom:1; width:100%; flex:0 0 100%; }
-        .card.map.soft .mini-nptile { --np-pt:calc(var(--np-pl) * 0.7); --np-art:calc(var(--np-max) * 0.15); --np-ar:calc(var(--np-max) * 0.04); }
         .card.map.soft .mini-nphead { padding-bottom:calc(var(--np-gap) * 2); }
-        .card.map.soft .mini-nptile, .card.map.soft .mini-nptile.noctl {
-          position:relative; grid-template-areas:"art meta ctl";
-          grid-template-columns:max-content minmax(0, 1fr) max-content; grid-template-rows:auto; row-gap:0;
-          border-radius:0; box-shadow:none;
-          background:var(--casora-menu-pane, var(--casora-entity-background, rgba(0,0,0,0.40)));
-        }
-        .card.map.soft .mini-nphead + .mini-nptile {
-          border-top-left-radius:var(--np-r); border-top-right-radius:var(--np-r);
-        }
-        .card.map.soft .mini-nptile:last-child {
-          border-bottom-left-radius:var(--np-r); border-bottom-right-radius:var(--np-r);
-          box-shadow:var(--casora-notify-shadow, none);
-        }
-        .card.map.soft .mini-nptile + .mini-nptile::before {
-          content:""; position:absolute; top:0; right:var(--np-pr);
-          left:calc(var(--np-pl) + var(--np-art) + var(--np-cg));
-          height:1px; background:var(--casora-pill-divider, rgba(120,100,80,0.16));
-        }
-        .card.map.soft .mini-npctl span:not([data-slot="toggle"]) { display:none; }
-        .card.map.soft .mini-npctl span[data-slot="toggle"] {
-          display:grid; place-items:center; width:calc(var(--np-art) * 0.72); height:calc(var(--np-art) * 0.72);
-          border-radius:50%; background:var(--casora-soft-media-play, var(--casora-np-progress, #B67A50));
-        }
-        .card.map.soft .mini-npctl span[data-slot="toggle"] svg { height:45%; }
-        .card.map.soft .mini-npctl span[data-slot="toggle"] path { fill:#fff; }
         @media (hover:hover) {
           .card.map.soft .miniroom [data-pv]:not(.mini-fill):not(.pvsel):hover,
           .card.map.soft .miniroom .pbadge[data-mk]:not(.pvsel):hover,
@@ -9908,7 +9874,7 @@ class CasoraPanel extends HTMLElement {
         .card.map.soft .miniphone .mp-back path { stroke:var(--casora-chrome-ink, #fff); }
         .card.map.soft .miniphone .mp-scrim { background:var(--casora-filter-veil, rgba(0,0,0,0.22)); }
         .card.map.soft .miniphone.filtered .mp-veil { background:var(--casora-filter-veil, rgba(0,0,0,0.22)); }
-        .card.map.soft .miniphone :is(.mp-scene, .mp-np, .mp-np.noart) {
+        .card.map.soft .miniphone .mp-scene {
           background:var(--casora-entity-background, rgba(0,0,0,0.40));
           backdrop-filter:none; -webkit-backdrop-filter:none;
           box-shadow:var(--button-card-box-shadow-mobile, none);
@@ -9924,15 +9890,14 @@ class CasoraPanel extends HTMLElement {
            Nebel haben ihn nicht (none wie bisher). Leistungsmodus (.perf): kein Blur, deckende Ersatzflächen
            über --casora-studio-perf-*, ohne Wert bleibt die bisherige Fläche. */
         .card.map.soft .mtile:not(.ghost),
-        .card.map.soft .mini-nptile,
         .card.map.soft .pbadge:not(.ghost),
-        .card.map.soft .miniphone :is(.mp-scene, .mp-np, .mp-np.noart),
+        .card.map.soft .miniphone .mp-scene,
         .card.map.soft :is(.mini-settings, .mini-bell, .mini-assist, .mini-wave:not(.on)),
         .card.map.soft .capsule .mini-cap {
           backdrop-filter:var(--casora-studio-glass-backdrop, none);
           -webkit-backdrop-filter:var(--casora-studio-glass-backdrop, none);
         }
-        .card.map.soft.perf :is(.mtile:not(.ghost), .mini-nptile, .pbadge:not(.ghost), .mp-scene, .mp-np,
+        .card.map.soft.perf :is(.mtile:not(.ghost), .pbadge:not(.ghost), .mp-scene,
           .mini-settings, .mini-bell, .mini-assist, .mini-wave, .mini-cap) {
           backdrop-filter:var(--casora-studio-perf-backdrop, var(--casora-studio-glass-backdrop, none));
           -webkit-backdrop-filter:var(--casora-studio-perf-backdrop, var(--casora-studio-glass-backdrop, none));
@@ -9947,7 +9912,7 @@ class CasoraPanel extends HTMLElement {
           -webkit-backdrop-filter:var(--casora-studio-perf-backdrop, var(--casora-pill-backdrop, blur(12px) saturate(1.4)));
         }
         .card.map.soft.perf .mtile:not(.ghost):not(.on),
-        .card.map.soft.perf .miniphone :is(.mp-scene:not(.on), .mp-np) {
+        .card.map.soft.perf .miniphone .mp-scene:not(.on) {
           background:var(--casora-studio-perf-tile, var(--casora-entity-background, rgba(0,0,0,0.40)));
         }
         .card.map.soft.perf .mtile.on {
@@ -9972,11 +9937,6 @@ class CasoraPanel extends HTMLElement {
         .card.map.soft.perf .miniphone .mp-pill::before {
           background-color:var(--casora-studio-perf-card, var(--casora-pill-fill, rgba(255,255,255,0.10)));
         }
-        .card.map.soft .miniphone .mp-nptitle { color:var(--casora-entity-name, #fff); }
-        .card.map.soft .miniphone .mp-npsub { color:var(--casora-entity-state, rgba(255,255,255,0.62)); }
-        .card.map.soft .miniphone .mp-npbtn path { fill:var(--casora-entity-name, #fff); }
-        .card.map.soft .miniphone .mp-npbar { background:var(--casora-progress-track-color, rgba(255,255,255,0.16)); }
-        .card.map.soft .miniphone .mp-npbar > span { background:var(--casora-np-progress, #B67A50); }
         .card.map.soft .miniphone.nophone::after { color:var(--casora-text-2, rgba(255,255,255,0.55)); }
         /* Handy-Leiste unten (Nachbildung aus casora-panel-addons.js) wie 04-navigation.js. */
         .card.map.soft .casora-mnav {
@@ -10003,44 +9963,10 @@ class CasoraPanel extends HTMLElement {
         }
         .card.map.soft .casora-mnav span.b.on > span { display:block; font-size:14.5px; max-width:150px; letter-spacing:-0.01em; }
         .card.map.soft .casora-mnav span.b.on :is(ha-icon, i) { color:var(--casora-mnav-pill-ink, #fff); }
-        /* Weich 1.0.7 (wie 09-weich-wiedergabe.js, Entwurf A): Aktuelle Wiedergabe als ruhige Liste –
-           eine Karte, je Player eine Zeile mit Cover, Titel, Unterzeile, Fortschritt und Play/Pause. */
+        /* Now Playing: the dashboard's cover strips (.mini-npreal) bring their own surfaces. */
         .card.map.soft .miniphone .mp-nprow {
-          flex-direction:column; gap:0; overflow:visible; scroll-snap-type:none;
-          margin:0; padding:4px 0; border-radius:26px;
-          background:var(--casora-np-list-surface, var(--ha-card-background, rgba(251,248,243,0.88)));
-          box-shadow:var(--button-card-box-shadow-mobile, none);
+          flex-direction:column; gap:0; overflow:visible; scroll-snap-type:none; margin:0; padding:0;
         }
-        .card.map.soft .miniphone .mp-nprow > .mp-np.mp-np {
-          flex:none; min-width:0; max-width:none; scroll-snap-align:none; position:relative;
-          grid-template-areas:"art meta ctl"; grid-template-columns:max-content minmax(0, 1fr) max-content;
-          grid-template-rows:auto; row-gap:0; column-gap:14px; min-height:0; padding:12px 14px 12px 12px;
-          border-radius:0; background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-        }
-        .card.map.soft .miniphone .mp-nprow > .mp-np + .mp-np::before {
-          content:""; position:absolute; top:0; left:78px; right:16px; height:1px;
-          background:var(--casora-pill-divider, rgba(120,100,80,0.16));
-        }
-        .card.map.soft .miniphone .mp-nprow .mp-npart {
-          width:52px; height:52px; border-radius:14px;
-          background-color:var(--casora-np-art-fill, var(--casora-soft-control-fill, rgba(140,115,90,0.14)));
-        }
-        .card.map.soft .miniphone .mp-nprow .mp-nptext { align-self:center; }
-        .card.map.soft .miniphone .mp-nprow .mp-nptitle { color:var(--primary-text-color, #3A322B); }
-        .card.map.soft .miniphone .mp-nprow .mp-npsub { color:var(--secondary-text-color, rgba(98,87,76,0.92)); font-size:13px; }
-        .card.map.soft .miniphone .mp-nprow .mp-npbar { height:3px; background:var(--casora-np-track, rgba(140,115,90,0.14)); }
-        .card.map.soft .miniphone .mp-nprow .mp-nptransport { grid-area:ctl; gap:0; }
-        .card.map.soft .miniphone .mp-nprow .mp-npbtn:not([data-slot="toggle"]) { display:none; }
-        .card.map.soft .miniphone .mp-nprow .mp-npbtn[data-slot="toggle"] {
-          width:44px; height:44px; border-radius:50%; display:grid; place-items:center;
-          background:var(--casora-soft-media-play, var(--primary-color, #B67A50));
-          box-shadow:var(--casora-soft-media-play-shadow, none);
-        }
-        .card.map.soft .miniphone .mp-nprow .mp-npbtn[data-slot="toggle"] path { fill:#fff; }
-        .card.map.soft .miniphone .mp-nprow .mp-np.paused .mp-npbtn[data-slot="toggle"] {
-          background:var(--casora-np-track, rgba(140,115,90,0.14)); box-shadow:none;
-        }
-        .card.map.soft .miniphone .mp-nprow .mp-np.paused .mp-npbtn[data-slot="toggle"] path { fill:var(--primary-text-color, #3A322B); }
 
         .card {
           width:100%; box-sizing:border-box;
@@ -23075,28 +23001,46 @@ class CasoraPanel extends HTMLElement {
     return this._npList(V)[0] || null;
   }
 
-  // Soft look: the players as the dashboard draws them (09-weich-wiedergabe.js), at the preview's
-  // scale – on desktop/tablet the wave's menu (opt.panel: cover stage, then cover strips, in a
-  // 332 px window as 10-weich-welle.js opens it), on the phone the cover strips. The copy drawn
-  // here before stayed at the 05.10 list while the dashboard moved on. False without the module
-  // (not loaded yet: asked for once, the preview draws again) or with nothing playing – the copy
-  // stays then.
-  _npSoftInto(host, V, opt) {
+  // Casora themes (Casora, Glas, Nebel – all set casora-popup-layout: soft): the players exactly as
+  // the dashboard lists them (_casoraNP: pause timeout, hidden players), or null for other themes,
+  // which keep the tile stack below. Empty while 09-weich-wiedergabe.js is not loaded yet – the
+  // preview then shows no player and draws again once it is (_npSoftLoad).
+  _npSoftList(V) {
+    if (!softLook()) return null;
     const NP = window._casoraNPSoft;
-    if (!softLook()) return false;
     if (!NP || typeof NP.paint !== "function" || typeof window._casoraNP !== "function") {
-      if (!this._npSoftAsked && typeof this._casoraCardsReady === "function") {
-        this._npSoftAsked = true;
-        Promise.resolve(this._casoraCardsReady())
-          .then(() => { if (window._casoraNPSoft && this._state) this._rebuildPreview(); }, () => {});
-      }
-      return false;
+      this._npSoftLoad();
+      return [];
     }
-    let list = [];
     // The same input as the dashboard: room card and phone card both hand _casoraNP this shape.
     const cfg = typeof NP.roomCfg === "function" ? NP.roomCfg(V) : V;
-    try { list = window._casoraNP(this._hass.states, cfg) || []; } catch (e) { list = []; }
-    if (!list.length) return false;
+    try { return window._casoraNP(this._hass.states, cfg) || []; } catch (e) { return []; }
+  }
+
+  // Loads the dashboard scripts once and redraws when the player module is there. With button-card
+  // already defined _casoraCardsReady loads nothing and returns at once, while casora-local.js may
+  // still be running – so the loader's own "casora-local-loaded" counts as well.
+  _npSoftLoad() {
+    if (this._npSoftWait) return;
+    this._npSoftWait = true;
+    const ready = () => {
+      if (!window._casoraNPSoft || !this._npSoftWait) return;
+      this._npSoftWait = false;
+      window.removeEventListener("casora-local-loaded", ready);
+      if (this._state) this._rebuildPreview();
+    };
+    window.addEventListener("casora-local-loaded", ready);
+    if (typeof this._casoraCardsReady === "function") {
+      Promise.resolve(this._casoraCardsReady()).then(ready, ready);
+    }
+  }
+
+  // Paints a non-empty _npSoftList at the preview's scale with the dashboard's own code
+  // (09-weich-wiedergabe.js): on desktop/tablet the wave's menu (opt.panel: cover stage, then cover
+  // strips, in a 332 px window as 10-weich-welle.js opens it), on the phone the cover strips.
+  _npSoftInto(host, list, opt) {
+    const NP = window._casoraNPSoft;
+    if (!NP || !list || !list.length) return;
     const box = document.createElement("div");
     box.className = "mini-npreal";
     box.dataset.mk = "npt";
@@ -23111,14 +23055,15 @@ class CasoraPanel extends HTMLElement {
     // Window frame from the theme's variables, not casoraMenuGlass: that copies HA's mode onto it.
     if (o.panel) box.classList.add("win");
     try { NP.paint(e, sr.querySelector(".w"), list, this._hass.states, o); }
-    catch (err) { box.remove(); return false; }
-    return true;
+    catch (err) { box.remove(); }
   }
 
   _paintNpStack(host, V) {
     if (!host) return;
-    if (this._npSoftInto(host, V, { panel: true, stage: true })) {
+    const soft = this._npSoftList(V);
+    if (soft) {
       host.querySelectorAll(".mini-nptile").forEach((t) => t.remove());
+      this._npSoftInto(host, soft, { panel: true, stage: true });
       return;
     }
     const list = this._npList(V);
@@ -23194,7 +23139,11 @@ class CasoraPanel extends HTMLElement {
     });
     if (this._scenesOn()) out.add("sc");
     if (V.weather_temp_sensor || V.weather_entity) out.add("w");
-    if (V.show_media !== false && V.show_now_playing) {
+    const soft = V.show_media !== false && V.show_now_playing ? this._npSoftList(V) : null;
+    if (soft) {
+      if (soft.length) out.add("np");
+      if (soft.length && !this._npMinFor(room)) out.add("npt");
+    } else if (V.show_media !== false && V.show_now_playing) {
       out.add("np");
       if (!this._npMinFor(room)) {
         out.add("npt");
@@ -23710,7 +23659,8 @@ class CasoraPanel extends HTMLElement {
       .find((c) => c && [].concat(c.template || []).includes("casora_mobile_now_playing"));
     const npV = mNp ? { ...wideV, ...(mNp.variables || {}) } : wideV;
     if (!this._phoneFilter && (mNp || (wideV.show_media !== false && wideV.show_now_playing))) {
-      const npall = this._npList(npV);
+      const npSoft = this._npSoftList(npV);
+      const npall = npSoft || this._npList(npV);
       if (npall.length) {
         const nphead = document.createElement("div");
         nphead.className = "mp-head";
@@ -23725,7 +23675,8 @@ class CasoraPanel extends HTMLElement {
         nprow.dataset.jump = "Now Playing";
         body.appendChild(nprow);
 
-        (this._npSoftInto(nprow, npV, {}) ? [] : npall.slice(0, NP_STACK_SLOTS)).forEach((nps) => {
+        if (npSoft) this._npSoftInto(nprow, npSoft, {});
+        (npSoft ? [] : npall.slice(0, NP_STACK_SLOTS)).forEach((nps) => {
         const ctl = nps.controls;
         const hasCtl = ctl.toggle || ctl.next || ctl.prev;
 
@@ -24891,7 +24842,9 @@ class CasoraPanel extends HTMLElement {
       if (nBtn > 1) q(".mini-nav").appendChild(Object.assign(document.createElement("span"), { className: "mini-capsep" }));
     }
 
-    const npOn = V.show_media !== false && !!V.show_now_playing;
+    // Casora themes: with nothing to list the dashboard hides the wave, so does the preview.
+    const npSoft = V.show_media !== false && V.show_now_playing ? this._npSoftList(V) : null;
+    const npOn = V.show_media !== false && !!V.show_now_playing && (!npSoft || npSoft.length > 0);
     if (!npOn) q(".mz-np").remove();
     else {
       const head = q(".mini-nphead");
