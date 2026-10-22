@@ -9829,6 +9829,13 @@ class CasoraPanel extends HTMLElement {
           }
         }
         /* Handy */
+        /* Badges at the soft theme's phone sizes (theme_weich.yaml badge-*-mobile): 28 px circle
+           (--bgl × 1.75), 40 px pill, 12.5/11 px text. The --ph-badge-* values above are the dark look's. */
+        .card.map.soft .miniphone .mp-chips .pbadge,
+        .card.map.soft .miniphone .mp-badges .pbadge {
+          --bmh:40px; --bgl:16px; --bl:12.5px; --bv:11px;
+          --bpt:5px; --bpb:5px; --bpl:5px; --bcg:7px;
+        }
         .card.map.soft .miniphone .mp-tiles .mtile { border-radius:var(--casora-tile-radius-phone, var(--ph-radius)); }
         .card.map.soft .miniphone .mp-tiles .mtile.on {
           background:var(--casora-entity-active-tint-mobile, var(--casora-entity-background-active, rgba(255,255,255,0.80)));

@@ -60,4 +60,16 @@ const sizeOf = (sel) => {
 };
 assert.equal(sizeOf('.card.map.soft .ppic'), sizeOf('.card.map.soft .pring'), 'soft look: picture as large as the ring');
 
+// Soft look on the phone: the theme's mobile badge sizes (theme_weich.yaml), not the dark look's.
+// Reported after 26.10.51: phone preview pills 52 px high with a 42 px circle instead of 40 and 28.
+const weich = fs.readFileSync(new URL('../../custom_components/casora/theme_weich.yaml', import.meta.url), 'utf8');
+const tok = (name) => parseFloat(new RegExp('^\\s*' + name + ':\\s*([\\d.]+)px', 'm').exec(weich)[1]);
+const phoneSoft = /\.card\.map\.soft \.miniphone \.mp-badges \.pbadge \{([^}]*)\}/.exec(src);
+assert.ok(phoneSoft, 'soft phone badge sizes');
+const px = (v) => parseFloat(new RegExp('--' + v + ':([\\d.]+)px').exec(phoneSoft[1])[1]);
+assert.ok(sizeOf('.card.map.soft .pring').includes('var(--bgl) * 1.75'), 'ring is --bgl × 1.75');
+assert.equal(px('bgl') * 1.75, tok('badge-icon-size-mobile'), 'phone: circle as the theme');
+assert.equal(px('bmh'), tok('badge-min-height-mobile'), 'phone: pill height as the theme');
+assert.equal(px('bl'), tok('badge-font-size-mobile'), 'phone: title size as the theme');
+
 console.log('ok phone_preview_people');
