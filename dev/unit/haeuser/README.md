@@ -20,3 +20,8 @@ Felder von `expect` (alle optional):
 - `plants`: Entitäten, die Pflanzen sind; `not_plants`: die es nicht sind
 - `dishwasher`: `{ "entity": Betriebszustand, "fields": { remaining, program, sel, door, progress, stop } }`
 - `energy_roles`: `{ entity_id: "solar" | "grid" | "battery" | "home" | null }` für das Popup „Woher kommt der Strom“
+- `energy_peers`: `{ grid, solar, battery }` – Leistungssensor je Teil der Anlage, den die Energie-Popups ohne
+  Sub-Badges nehmen (`peers`), `null` = keiner
+- `energy_night`: `{ "states": { entity_id: Zustand }, "home": "700 W", "focus": { solar: "0 W", … } }` – die
+  Zustände ersetzt (z. B. Wechselrichter nachts `unavailable`): Kopf des Zuhause-Popups (ohne „ohne Wert“) und
+  Kopf der Popups je Teil

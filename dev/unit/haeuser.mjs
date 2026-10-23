@@ -40,6 +40,19 @@ block('(function () {\n  if (window._casoraDish || !window._casoraLaundry) retur
 // Energy flow popup roles.
 new Function(src('custom_components/casora/scripts/local/20-energie-fokus.js'))();
 const F = window._casoraEnergyFocus;
+// Home energy popup (Weich) with the sum casora-core.js uses; a UI stub that returns the hero as an object.
+const ps0 = core.indexOf('if (window._casoraPowerSum) return;');
+new Function(core.slice(core.lastIndexOf('(function () {', ps0), core.indexOf('})();', ps0) + 5))();
+window._casoraUI = { more: () => '', label: (t) => '[' + t + ']', group: () => 'G', hero: (o) => o };
+new Function(src('custom_components/casora/scripts/local/05-weich-mehr.js'))();
+const SE = window._casoraSoftEnergy;
+// The hero of the Home popup over a list, as the popup builds it (its card code run as button-card would).
+const homeHero = (hass, ids) => {
+  const out = SE.build({ hass, states: hass.states, variables: { power_entities: ids }, powerId: null });
+  const m = JSON.stringify(out).match(/\[\[\[\\n(return window\._casoraSoftEnergy \? window\._casoraSoftEnergy\.sec\(\\"hero\\".*?)\\n\]\]\]/);
+  assert.ok(m, 'home popup hero found');
+  return new Function('states', 'hass', JSON.parse('"' + m[1] + '"'))(hass.states, hass);
+};
 
 const dir = new URL('dev/unit/haeuser/', root);
 const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort();
@@ -75,6 +88,28 @@ for (const f of files) {
   for (const [id, want] of Object.entries(X.energy_roles || {})) {
     assert.equal(F.detect(hass, { energy_entity_1: id }, 1), want, at('energy role ' + id));
     checks++;
+  }
+  // Flow popups without sub-badges: the system's power sensor per role.
+  if (X.energy_peers) {
+    const P = F.peers(hass, {});
+    for (const [role, want] of Object.entries(X.energy_peers)) { assert.equal(P[role].power || null, want, at('energy peer ' + role)); checks++; }
+  }
+  // Night: the states replaced, the Home popup's hero and the focus popups' heroes as written.
+  if (X.energy_night) {
+    const N = X.energy_night, saved = {};
+    for (const [id, state] of Object.entries(N.states || {})) { saved[id] = H.states[id].state; H.states[id].state = state; }
+    if (N.home) {
+      const h = homeHero(hass, X.house_list || window.casoraEnergyHouse(hass).ids);
+      assert.equal(h.value, N.home, at('night: home hero'));
+      assert.ok(!/ohne Wert/.test(h.sub || ''), at('night: no device without a value (' + h.sub + ')'));
+      checks += 2;
+    }
+    for (const [focus, want] of Object.entries(N.focus || {})) {
+      const h = F.sec('hero', F.model(hass, focus, F.peers(hass, {}), null), H.states, hass);
+      assert.equal(h.value, want, at('night: ' + focus + ' hero'));
+      checks++;
+    }
+    for (const [id, state] of Object.entries(saved)) H.states[id].state = state;
   }
   current = null;
 }

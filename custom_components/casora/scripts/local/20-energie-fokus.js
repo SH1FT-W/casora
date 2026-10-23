@@ -1,26 +1,26 @@
-// ── Energie: eigenes Popup je Sub-Badge (15.10.2026) ──────────────────────────
-// Die Sub-Badges der Energie-Zeile (Solar, Akku, Haus, Netz, Akkustand) öffneten alle
-// dasselbe schlichte Popup bzw. das große Haus-Popup. Jetzt erkennt Casora die Art des
-// Badges und baut ein Popup nur für diesen Teil – aus den Bausteinen des großen
-// Energie-Popups (Diagramm, Energiefluss, Steuerung, Verbraucher).
-//   detect(hass, V, n) – Art des n-ten Sub-Badges: 'solar' | 'battery' | 'home' | 'grid' | null
-//                         (Studio-Feld energy_popup_focus_n, sonst Schlüssel der Integration,
-//                         Gerätetyp/Einheit und zuletzt der Name).
-//   peers(hass, V)     – Entitäten der ganzen Anlage aus allen Sub-Badges des Raums, ergänzt um
-//                         Anker-Solix-Schlüssel und die HA-Energie-Einstellungen.
-//   build(ctx)         – fertige ui-Karte; aufgerufen aus casora_popup_energy (energy_focus gesetzt).
-// Live wie das Weich-Energie-Popup: Kopf und Fluss als eigene Karten mit triggers_update,
-// Zeilen mit Leistung nur per Text-Tausch (liveAttr), damit nichts neu gezeichnet wird.
+// ── Energy: a popup of its own per sub-badge (15.10.2026) ─────────────────────
+// The energy row's sub-badges (solar, battery, house, grid, state of charge) all opened the
+// same plain popup or the big house popup. Now Casora detects the badge's kind and builds a
+// popup for just that part, from the big energy popup's pieces (chart, energy flow, controls,
+// consumers).
+//   detect(hass, V, n) – kind of the n-th sub-badge: 'solar' | 'battery' | 'home' | 'grid' | null
+//                         (Studio field energy_popup_focus_n, else HA's energy settings, the
+//                         integration's key, device class/unit and last the name).
+//   peers(hass, V)     – entities of the whole system from all of the room's sub-badges, filled
+//                         in from HA's energy settings (one sensor per role) and Anker Solix keys.
+//   build(ctx)         – the finished ui card; called from casora_popup_energy (energy_focus set).
+// Live like the Weich energy popup: hero and flow as cards of their own with triggers_update,
+// rows with power only by swapping their text (liveAttr), so nothing is redrawn.
 (function () {
   if (window._casoraEnergyFocus) return;
 
   var FOCI = ['solar', 'battery', 'home', 'grid'];
-  // Farben aus dem Theme (Design-Regeln § 5) – dieselben Töne wie der Energiefluss (FLOW_COL) und der
-  // Popup-Kopf (Ring-Hook unten).
+  // Colours from the theme (design rules § 5): the same tones as the energy flow (FLOW_COL) and the
+  // popup head (ring hook below).
   var COL = { solar: 'var(--casora-color-yellow, #E8B04A)', battery: 'var(--casora-color-blue, #5B8FC9)',
     home: 'var(--casora-color-teal, #4E9E95)', grid: 'var(--casora-color-red, #D35A4E)', green: 'var(--casora-color-green, #6AAE78)',
     warm: 'var(--casora-color-orange, #DE8A4E)' };
-  // Schlüssel (translation_key) bekannter Integrationen; Anker Solix zuerst.
+  // Keys (translation_key) of known integrations; Anker Solix first.
   var TK = {
     input_power: 'solar', solarbank_input_power: 'solar', solar_power_1: 'solar', solar_power_2: 'solar',
     solar_power_3: 'solar', solar_power_4: 'solar',
@@ -29,8 +29,8 @@
     home_load_power: 'home', ac_to_home_load: 'home',
     grid_power_signed: 'grid', grid_to_home_power: 'grid', grid_export_power: 'grid',
   };
-  // Namen nur als letzter Rückfall und nur ganze Wörter: „Netzwerkschrank“, „Homeserver“ oder
-  // „Kühlschrank Verbrauch“ sind keine Anlage.
+  // Names only as the last fallback and only whole words: a network cabinet, a home server or a
+  // fridge's consumption are no part of the system.
   var NAMES = [[/\b(solar|solarleistung|solaranlage|solarstrom|pv|pv-anlage|photovoltaik)\b/i, 'solar'],
     [/\b(akku|akkustand|akkuleistung|batterie|batteriespeicher|stromspeicher|battery|ladestand|soc)\b/i, 'battery'],
     [/\b(netz|netzbezug|netzleistung|netzeinspeisung|grid|einspeisung|smart ?meter|smartmeter)\b/i, 'grid'],
@@ -91,7 +91,7 @@
     return (list && list[0] && list[0][k]) || null;
   };
 
-  // Studio-Feld je Entität gemerkt, damit der Popup-Kopf (casoraRingUrl) „Einfach“ kennt.
+  // Studio field remembered per entity, so the popup head (casoraRingUrl) knows the simple popup.
   var OVR = {};
   function detect(hass, V, n) {
     V = V || {};
@@ -117,7 +117,7 @@
     }
     var a = states[id].attributes || {};
     if (a.device_class === 'battery' || (a.unit_of_measurement === '%' && /akku|batter|lade|soc/i.test(id + ' ' + (a.friendly_name || '')))) return 'battery';
-    if (!isPower(states, id) && !isPct(states, id)) return null; /* Kosten/kWh-Badges sind keine Anlage */
+    if (!isPower(states, id) && !isPct(states, id)) return null; /* cost/kWh badges are no part of the system */
     var txt = [V['energy_label_' + n], V['energy_popup_name_' + n], a.friendly_name, id].filter(Boolean).join(' ');
     for (var i = 0; i < NAMES.length; i++) if (NAMES[i][0].test(txt) && !(NAMES[i][1] === 'home' && NOT_HOME.test(txt))) return NAMES[i][1];
     return null;
@@ -143,7 +143,7 @@
         if (v && !p[kk]) p[kk] = v;
       });
     }
-    // Haus: Werte des Raums; Netz: Kosten des Raums (Strom kostet nur aus dem Netz).
+    // House: the room's values; grid: the room's costs (only power from the grid costs money).
     P.home.power = P.home.power || V.energy_home_power_entity || V.energy_power_entity || key(hass, 'anker_solix', 'home_load_power', 'sensor');
     P.home.today = P.home.today || V.energy_usage_today || null;
     P.home.month = P.home.month || V.energy_usage_month || null;
@@ -151,6 +151,10 @@
     P.home.costMonth = P.home.costMonth || V.energy_cost_month || null;
     P.grid.costToday = P.grid.costToday || V.energy_cost_today || null;
     P.grid.costMonth = P.grid.costMonth || V.energy_cost_month || null;
+    // HA's energy settings (00-finder.js) for a role no sub-badge names; badges and Studio fields above win.
+    // Only a role with exactly one sensor: of two inverters, one alone would show half the solar power.
+    var pw = window.casoraEnergyPowers ? window.casoraEnergyPowers(hass) : null;
+    if (pw) ['grid', 'solar', 'battery'].forEach(function (r) { if (!P[r].power && pw[r].length === 1) P[r].power = pw[r][0]; });
     P.solar.power = P.solar.power || key(hass, 'anker_solix', 'input_power', 'sensor');
     P.battery.power = P.battery.power || key(hass, 'anker_solix', 'battery_power_signed', 'sensor');
     P.battery.soc = P.battery.soc || key(hass, 'anker_solix', 'state_of_charge', 'sensor');
@@ -159,10 +163,10 @@
     return P;
   }
 
-  // Alle Entitäten, die ein Popup braucht, in einem Objekt (geht als JSON in die Live-Karten).
+  // All entities a popup needs, in one object (goes into the live cards as JSON).
   function model(hass, focus, P, self) {
     var k = function (key2, domain) { return key(hass, 'anker_solix', key2, domain || 'sensor'); };
-    // Der eigene Sensor des Badges ist der Hauptwert (zwei Solar-Badges zeigen nicht beide den ersten).
+    // The badge's own sensor is the main value (two solar badges do not both show the first).
     var S0 = (hass && hass.states) || {};
     if (self && S0[self]) {
       P = JSON.parse(JSON.stringify(P));
@@ -170,8 +174,10 @@
       if (focus === 'home' && isPower(S0, self)) P.home.power = self;
       if (focus === 'battery') { if (isPct(S0, self)) P.battery.soc = self; else if (isPower(S0, self)) P.battery.power = self; }
     }
+    // Solar and battery sensors of HA's energy settings: unavailable at night is an inverter asleep, so 0 W.
+    var pw = window.casoraEnergyPowers ? window.casoraEnergyPowers(hass) : null;
     return {
-      focus: focus, self: self || null,
+      focus: focus, self: self || null, asleep: pw ? pw.solar.concat(pw.battery) : [],
       solar: P.solar.power || null, solarToday: P.solar.today || null, solarMonth: P.solar.month || null,
       soc: P.battery.soc || null, batt: P.battery.power || null, battToday: P.battery.today || null, battMonth: P.battery.month || null,
       home: P.home.power || null, today: P.home.today || null, month: P.home.month || null,
@@ -195,21 +201,25 @@
   };
   var ON = 5;
 
-  // Live-Teile (aus den Karten mit triggers_update aufgerufen).
+  // Live parts (called from the cards with triggers_update).
   function sec(part, C, states, hass) {
     var UI = window._casoraUI;
     if (!UI) return '';
     if (part === 'hero') {
       var value = '—', bits = [];
+      var sleepy = function (id) {
+        var w = watt(states, id);
+        return w == null && id && states[id] && (C.asleep || []).indexOf(id) > -1 ? 0 : w;
+      };
       if (C.focus === 'solar') {
-        var s = watt(states, C.solar);
+        var s = sleepy(C.solar);
         value = fW(s, hass);
         var mods = C.pv.filter(function (id) { var w = watt(states, id); return w != null && w > ON; }).length;
         bits.push(s == null || s <= ON ? 'Liefert gerade nichts' : mods > 1 ? mods + ' Module liefern' : 'Liefert');
         var st = kwh(states, C.solarToday, hass);
         if (st) bits.push('heute ' + st);
       } else if (C.focus === 'battery') {
-        var soc = num(states, C.soc), chg = watt(states, C.charge), dis = watt(states, C.discharge), bp = watt(states, C.batt);
+        var soc = num(states, C.soc), chg = watt(states, C.charge), dis = watt(states, C.discharge), bp = sleepy(C.batt);
         value = soc != null ? Math.round(soc) + ' %' : fW(bp, hass);
         var lade = chg != null ? chg : (bp != null && bp > 0 ? bp : 0), ent = dis != null ? dis : (bp != null && bp < 0 ? -bp : 0);
         var raw = C.state && states[C.state] ? states[C.state].state : null;
@@ -249,12 +259,12 @@
     try { mem = JSON.parse(localStorage.getItem(PV_KEY) || '{}') || {}; } catch (e) { mem = {}; }
     var add = false;
     ids.forEach(function (id) { var w = watt(states, id); if (w != null && w > ON && !mem[id]) { mem[id] = 1; add = true; } });
-    if (add) { try { localStorage.setItem(PV_KEY, JSON.stringify(mem)); } catch (e) { /* privat */ } }
+    if (add) { try { localStorage.setItem(PV_KEY, JSON.stringify(mem)); } catch (e) { /* private mode */ } }
     var on = ids.filter(function (id) { return mem[id]; });
     return on.length ? on : ids;
   }
 
-  // Zeilen, die sich nur beim Öffnen aufbauen (Leistung läuft per Text-Tausch mit).
+  // Rows built only on opening (power follows by swapping the text).
   function rows(UI, C, states, hass) {
     var out = {};
     var row = function (id, icon, tone, label, value, sub, live) {
@@ -265,8 +275,8 @@
     };
     var grp = function (list, label) { list = list.filter(Boolean); return list.length ? UI.group(list, label) : ''; };
     if (C.focus === 'solar') {
-      // Nur Eingänge, an denen ein Modul hängt: einmal mit Leistung gesehen (im Browser gemerkt);
-      // noch keiner gesehen (nachts, erster Start) – alle.
+      // Only inputs with a panel: seen with power once (remembered in the browser); none seen yet
+      // (at night, first start): all.
       var seen = pvSeen(C.pv, states);
       out.mods = grp(C.pv.map(function (id, i) {
         return seen.indexOf(id) < 0 ? null : row(id, 'mdi:solar-panel', COL.solar, 'Modul ' + (i + 1), fW(watt(states, id), hass), null, true);
@@ -321,11 +331,11 @@
     if (!main || !states[main]) return null;
     var f = {};
 
-    // Diagramm: Solar/Haus 4 Std. Leistung, Akku 24 Std. Ladestand, Netz 24 Std. (über 0 Bezug, unter 0 Einspeisung).
+    // Chart: solar/house 4 h of power, battery 24 h of charge, grid 24 h (above 0 import, below 0 feed-in).
     var CH = { solar: ['Solarleistung', '4h'], battery: [C.soc ? 'Ladestand' : 'Akkuleistung', '24h'],
       home: ['Verbrauch', '4h'], grid: ['Netzleistung', '24h'] }[focus];
     if (typeof window._hpChartCfg === 'function' && ctx.metricCard) {
-      // Diagramm: geprüfte Stufen von casora-chart (c1 Blau, c2 Orange, c3 Türkis, c4 Gold) passend zur Art.
+      // Chart: casora-chart's checked steps (c1 blue, c2 orange, c3 teal, c4 gold) to match the kind.
       window._hpChartCfg(main, CH[0], CH[1], { solar: 'c4', battery: 'c1', home: 'c3', grid: 'c2' }[focus], 120);
       if (CH[1] === '24h' && window._hpSmooth) window._hpSmooth(main, '15min');
       var mc = ctx.metricCard;
@@ -349,7 +359,7 @@
     f.hero = { card: K.secCard(watch, 'return window._casoraEnergyFocus ? window._casoraEnergyFocus.sec("hero", '
       + JSON.stringify(C) + ', states, hass) : "";', states) };
 
-    // Energiefluss als Balken – nur die Hälfte, um die es geht.
+    // Energy flow as bars: only the half this popup is about.
     var only = focus === 'solar' ? 'to' : focus === 'home' ? 'from' : null;
     if (only && C.solar && states[C.solar] && C.home && states[C.home]) {
       C.flow = { home: C.home, solar: C.solar, soc: C.soc, grid: C.grid, charge: C.charge, discharge: C.discharge,
@@ -361,7 +371,7 @@
     var r = rows(UI, C, states, hass);
     Object.keys(r).forEach(function (k2) { if (r[k2]) f[k2] = r[k2]; });
 
-    // Verbraucher (Haus): wie im großen Popup die größten automatisch, ohne die Anlage selbst.
+    // Consumers (house): the largest found automatically as in the big popup, without the system itself.
     if (focus === 'home' && window._casoraAutoConsumers) {
       var CA = { home: C.home, auto: { exclude: [C.home, C.solar, C.grid, C.batt, C.charge, C.discharge, C.output].concat(C.pv).filter(Boolean),
         area: null, max: 5 } };
@@ -369,7 +379,7 @@
       if (cand.ids.length) f.top = { card: K.secCard([C.home].concat(cand.ids.slice(0, 60)), K.call('_casoraSoftEnergy', 'auto', CA), states) };
     }
 
-    // Steuerung: Akku = Ladegrenzen, Netz = Einspeisung erlauben (gleicher Rumpf wie im großen Popup).
+    // Controls: battery = charge limits, grid = allow feed-in (same body as in the big popup).
     var inner = ctx.inner || {};
     var CC = focus === 'battery' ? { socMin: C.socMin, socMax: C.socMax }
       : focus === 'grid' ? { exportSwitch: C.exportSwitch } : null;
@@ -378,14 +388,14 @@
       f.ctl = { card: K.secCard([CC.socMin, CC.socMax, CC.exportSwitch], inner.common + 'const C = ' + JSON.stringify(CC) + ';\n' + ctl, states) };
     }
 
-    // Blaupause Popup: links Bedienung, rechts Infos.
+    // Popup blueprint: controls on the left, information on the right.
     var L = { solar: ['flow', 'mods'], battery: ['ctl'], home: ['flow', 'use'], grid: ['ctl'] }[focus];
     var R = { solar: ['yield'], battery: ['batt'], home: ['top'], grid: ['use', 'aut'] }[focus];
     return K.layout({ fields: f, top: ['hero', 'chart'], left: L, right: R, moveLeft: ['top'],
       narrowOrder: L.concat(R) });
   }
 
-  // Popup-Kopf: Symbol der Art statt des Blitzes (Badge-Entität wie in detect, ohne Studio-Feld).
+  // Popup head: the kind's symbol instead of the bolt (badge entity as in detect, without the Studio field).
   var GLYPH = { solar: 'sun', battery: 'battery', home: 'home', grid: 'electric' };
   var prevRingUrl = window.casoraRingUrl;
   window.casoraRingUrl = function (src, key2) {
@@ -398,7 +408,7 @@
     return typeof prevRingUrl === 'function' ? prevRingUrl(src, key2) : null;
   };
 
-  // Popup-Kopf in der Farbe der Art (wie Diagramm und Zeilen), nicht in der freien Badge-Farbe.
+  // Popup head in the kind's colour (like chart and rows), not in the badge's free colour.
   (window._casoraRingHueHooks = window._casoraRingHueHooks || []).push(function (src, key2) {
     if (!/\bcasora_badge_energy\b/.test(key2)) return null;
     var h = src && (src._hass || (document.querySelector('home-assistant') || {}).hass);

@@ -400,16 +400,17 @@
       ? { energy_entities: v.power_entities.filter(Boolean), energy_parent: v.power_parent || null } : null;
     if (parts) { C.sum = parts; C.icons = v.power_icons || null; }
     var sumIds = parts ? window._casoraPowerIds(parts) : [];
+    // #44: Home's list is the house from HA's energy settings: grid, solar and battery as such (before the hero,
+    // which counts a sleeping inverter as 0 W, not as a device without a value).
+    var srcs = parts && window.casoraEnergySources ? window.casoraEnergySources(ctx.hass, sumIds) : null;
+    if (srcs) C.sources = srcs;
     var f = {};
     f.hero = { card: secCard([C.home, C.grid, C.costToday, C.today, C.error].concat(sumIds), call('_casoraSoftEnergy', 'hero', C), states) };
     if (ctx.metricCard) f.metric = { card: chartCard(ctx.metricCard) };
     var fl = ctx.fields || {}, autoTop = null;
     if (typeof fl.use === 'string' && fl.use) f.use = UI.label('Verbrauch') + fl.use;
-    // #44: Home's list is the house from HA's energy settings: grid, solar and battery as such, then the
-    // largest consumers as with a house sensor (the parts are no consumers).
-    var srcs = parts && window.casoraEnergySources ? window.casoraEnergySources(ctx.hass, sumIds) : null;
+    // #44: the settings' sources, then the largest consumers as with a house sensor (the parts are no consumers).
     if (srcs) {
-      C.sources = srcs;
       var cand0 = { ids: [] };
       if (window._casoraAutoConsumers) {
         C.auto = { exclude: sumIds.concat(C.solar, C.grid).filter(Boolean), area: null, max: 5 };
@@ -646,7 +647,9 @@
       if (C.sum && window._casoraPowerSum) {
         var R0 = window._casoraPowerSum(C.sum, states);
         p = isFinite(R0.sum) ? R0.sum : null;
-        var off0 = R0.items.filter(function (x) { return x.skip === 'off'; }).length;
+        // #44: a solar or battery sensor of HA's energy settings without a value is an inverter asleep (0 W).
+        var asleep = C.sources ? (C.sources.solar || []).concat(C.sources.battery || []) : [];
+        var off0 = R0.items.filter(function (x) { return x.skip === 'off' && asleep.indexOf(x.id) < 0; }).length;
         if (off0) bits.push(off0 === 1 ? '1 Gerät ohne Wert' : off0 + ' Geräte ohne Wert');
       }
       if (p != null && p < -20) bits.push('Einspeisung');
@@ -684,6 +687,8 @@
       ROLE.forEach(function (r) {
         (C.sources[r[0]] || []).forEach(function (id) {
           var w = watt(states, id);
+          // Solar and battery without a value: asleep (at night), 0 W rather than unreachable.
+          if (w == null && r[0] !== 'grid' && states[id]) w = 0;
           var how = w == null ? 'Nicht erreichbar' : r[0] === 'grid' && w < -FLOW_ON ? 'Einspeisung'
             : r[0] === 'battery' && w > FLOW_ON ? 'Entlädt' : r[0] === 'battery' && w < -FLOW_ON ? 'Lädt' : null;
           srows.push({ entity: id, icon: r[2], label: r[1], sub: how, value: fW(w == null ? null : Math.abs(w), hass) });

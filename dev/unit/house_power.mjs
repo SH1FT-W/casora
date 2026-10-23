@@ -524,4 +524,40 @@ const FULL_IDS = ['sensor.energy_grid_power', 'sensor.wechselrichter_ac_power', 
   await prefsLoad(h, notFound);
 }
 
+// 14. Home popup (Weich, 05-weich-mehr.js) over the settings' list at night: the sleeping inverter is 0 W, not
+//     "1 Gerät ohne Wert", in the hero and in "Woher kommt der Strom"; a room's device without a value still counts.
+{
+  const { h } = solarHouse();
+  await prefsLoad(h, FULL);
+  current = h;
+  const groups = [];
+  window._casoraUI = { more: () => '', label: (t) => '[' + t + ']', group: (rows) => { groups.push(rows); return 'G'; },
+    hero: (o) => 'H:' + o.value + '|' + (o.sub || '') };
+  window.addEventListener = window.addEventListener || (() => {});
+  new Function(src('custom_components/casora/scripts/local/05-weich-mehr.js'))();
+  const E = window._casoraSoftEnergy;
+  // The hero card's code, as the popup builds it (the sources must be known before the hero).
+  const heroOf = (ids) => {
+    const out = E.build({ hass: h, states: h.states, variables: { power_entities: ids }, powerId: null });
+    const code = JSON.stringify(out).match(/\[\[\[\\n(return window\._casoraSoftEnergy \? window\._casoraSoftEnergy\.sec\(\\"hero\\".*?)\\n\]\]\]/);
+    assert.ok(code, 'hero card found');
+    return new Function('states', 'hass', JSON.parse('"' + code[1] + '"'))(h.states, h);
+  };
+  h.states['sensor.wechselrichter_ac_power'].state = 'unavailable';
+  h.states['sensor.energy_grid_power'].state = '400';
+  h.states['sensor.energy_battery_power'].state = '300';
+  assert.equal(heroOf(FULL_IDS), 'H:700 W|', 'night: grid + battery, no device without a value');
+  const C = { sum: { energy_entities: FULL_IDS }, sources: window.casoraEnergySources(h, FULL_IDS) };
+  E.sec('sources', C, h.states, h);
+  const solarRow = groups.pop().find((r) => r.entity === 'sensor.wechselrichter_ac_power');
+  assert.equal(solarRow.value, '0 W', 'sources: solar asleep');
+  assert.equal(solarRow.sub, null, 'sources: not "Nicht erreichbar"');
+  // The grid is never asleep; a room's list without the settings keeps "ohne Wert".
+  h.states['sensor.energy_grid_power'].state = 'unavailable';
+  assert.match(heroOf(FULL_IDS), /1 Gerät ohne Wert/, 'grid without a value still counts');
+  h.states['sensor.fernseher_power'].state = 'unavailable';
+  assert.match(heroOf(['sensor.fernseher_power', 'sensor.stehlampe_power']), /1 Gerät ohne Wert/, 'room list: as before');
+  current = null;
+}
+
 console.log('house_power: ok');
