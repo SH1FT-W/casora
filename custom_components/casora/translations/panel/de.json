@@ -2513,7 +2513,22 @@
     "All calendars": "Alle Kalender",
     "1 calendar": "1 Kalender",
     "{n} calendars": "{n} Kalender",
-    "No events": "Keine Termine"
+    "No events": "Keine Termine",
+    "Chosen automatically: your grid power from the Energy dashboard.": "Automatisch gewählt: dein Netzbezug aus dem Energie-Dashboard.",
+    "Chosen automatically by its name.": "Automatisch gewählt anhand des Namens.",
+    "Chosen automatically: the total of a power meter.": "Automatisch gewählt: die Gesamtleistung eines Stromzählers.",
+    "Chosen automatically: the name contains “{word}”.": "Automatisch gewählt: der Name enthält „{word}“.",
+    "Chosen automatically: the entity ID contains “{word}”.": "Automatisch gewählt: die Entitäts-ID enthält „{word}“.",
+    "Chosen automatically: grid, solar and battery from the Energy dashboard, added up.": "Automatisch gewählt: Netz, Solar und Akku aus dem Energie-Dashboard, zusammengezählt.",
+    "Chosen automatically: the sum of the rooms – no sensor for the whole house found. Add your grid and solar power to the Energy dashboard for an exact value.": "Automatisch gewählt: die Summe der Räume – kein Sensor fürs ganze Haus gefunden. Für einen genauen Wert trag Netz- und Solarleistung im Energie-Dashboard ein.",
+    "Found automatically on the same device ({source}).": "Automatisch gefunden am selben Gerät ({source}).",
+    "Found automatically in the same room ({source}).": "Automatisch gefunden im selben Raum ({source}).",
+    "Found automatically ({source}).": "Automatisch gefunden ({source}).",
+    "Found automatically on the same device.": "Automatisch gefunden am selben Gerät.",
+    "Found automatically in the same room.": "Automatisch gefunden im selben Raum.",
+    "Found automatically.": "Automatisch gefunden.",
+    "Found automatically: the plug named after this device ({source}).": "Automatisch gefunden: die Steckdose mit dem Namen dieses Geräts ({source}).",
+    "Found automatically: the plug named after this device.": "Automatisch gefunden: die Steckdose mit dem Namen dieses Geräts."
   },
   "patterns": [
     [

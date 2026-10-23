@@ -472,13 +472,58 @@
     const d = D[dev] || {};
     return METER_MODEL.test([d.model, d.name, d.name_by_user].filter(Boolean).join(" "));
   }
+  // Does stage i of HOUSE_POWER take this sensor? Stage 1 ("total") only for a meter or a sensor
+  // that belongs to no device and no room.
+  const houseStage = (hass, p, i) => {
+    const R = (hass && hass.entities) || {};
+    return HOUSE_POWER[i].test(houseLabel((hass && hass.states) || {}, p))
+      && !(i === 1 && ((R[p] || {}).device_id || roomOfPower(hass, p)) && !meterDevice(hass, p));
+  };
   function housePower(hass) {
-    const S = (hass && hass.states) || {}, R = (hass && hass.entities) || {};
     const powers = housePowers(hass);
     for (let i = 0; i < HOUSE_POWER.length; i++) {
-      const id = powers.find((p) => HOUSE_POWER[i].test(houseLabel(S, p))
-        && !(i === 1 && ((R[p] || {}).device_id || roomOfPower(hass, p)) && !meterDevice(hass, p)));
+      const id = powers.find((p) => houseStage(hass, p, i));
       if (id) return id;
+    }
+    return null;
+  }
+  // Why the house search takes this sensor (the "why" line in the Studio): the first stage that takes it,
+  // the same as housePower, and the word it matched on as written, in the friendly name ("name") or else
+  // in the entity ID ("id"). Stages: "house" (house consumption name), "total" (a meter's total), "grid"
+  // (grid or meter name). null: the search would not take it (no live power, a peak or period value, an
+  // inverter's output, no matching name).
+  function housePowerWhy(hass, id) {
+    if (!id || !housePowerOk(hass, id)) return null;
+    const st = ((hass && hass.states) || {})[id] || {};
+    const name = String((st.attributes || {}).friendly_name || "");
+    for (let i = 0; i < HOUSE_POWER.length; i++) {
+      if (!houseStage(hass, id, i)) continue;
+      const n = name.match(HOUSE_POWER[i]), e = n ? null : id.match(HOUSE_POWER[i]);
+      return { stage: ["house", "total", "grid"][i], word: n ? n[0] : e ? e[0] : "", in: n ? "name" : e ? "id" : "" };
+    }
+    return null;
+  }
+  // The "why" line under Home's energy fields when Casora chose them (casora_energy_auto): English text,
+  // {word} filled in after the Studio translated it. key: "energy_power_entity" or "energy_entities".
+  // null: the user chose, or the field is empty.
+  function homeEnergyWhy(hass, V, key) {
+    if (!V || V.show_energy === false) return null;
+    const m = V.casora_energy_auto;
+    if (key === "energy_power_entity") {
+      if (!V.energy_power_entity) return null;
+      if (m === "prefs") return { text: "Chosen automatically: your grid power from the Energy dashboard." };
+      if (m !== "house") return null;
+      const w = housePowerWhy(hass, V.energy_power_entity);
+      if (w && w.stage === "total") return { text: "Chosen automatically: the total of a power meter." };
+      if (!w || !w.word) return { text: "Chosen automatically by its name." };
+      if (w.in === "id") return { text: "Chosen automatically: the entity ID contains “{word}”.", word: w.word };
+      return { text: "Chosen automatically: the name contains “{word}”.", word: w.word };
+    }
+    const list = Array.isArray(V.energy_entities) ? V.energy_entities.filter(Boolean) : [];
+    if (key !== "energy_entities" || !list.length || V.energy_power_entity) return null;
+    if (m === "prefs") return { text: "Chosen automatically: grid, solar and battery from the Energy dashboard, added up." };
+    if (m === 2) {
+      return { text: "Chosen automatically: the sum of the rooms – no sensor for the whole house found. Add your grid and solar power to the Energy dashboard for an exact value." };
     }
     return null;
   }
@@ -688,7 +733,7 @@
       any: (room.powersAny || []).slice() };
   }
 
-  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo };
+  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, housePowerOk, housePowerWhy, homeEnergyWhy, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, prefsHouse, prefsHomeVars, energyPrefsReady, openings, isCombo };
 
   // KI kostet: Casora schätzt vor dem ersten Einsatz grob, was es über den API-Schlüssel
   // kostet (Zeichen → Token, Listenpreise je Modellfamilie in USD pro 1 Mio. Token) und fragt nach.

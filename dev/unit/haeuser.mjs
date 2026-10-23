@@ -108,6 +108,12 @@ for (const f of files) {
     delete window._casoraHPGuess;
     assert.equal(window._casoraHousePower(), X.house_power, at('house sensor (dashboard)'));
     checks += 2;
+    // The Studio's "why" line agrees with the pick: the picked sensor has a reason.
+    if (X.house_power) { assert.ok(B.housePowerWhy(hass, X.house_power), at('house sensor has a reason')); checks++; }
+  }
+  if ('house_power_why' in X) {
+    assert.deepEqual(B.housePowerWhy(hass, X.house_power), X.house_power_why, at('why line for the house sensor'));
+    checks++;
   }
   for (const id of X.plants || []) { assert.ok(window.casoraIsPlant(hass, id), at('plant ' + id)); checks++; }
   for (const id of X.not_plants || []) { assert.ok(!window.casoraIsPlant(hass, id), at('no plant ' + id)); checks++; }
@@ -145,6 +151,11 @@ for (const f of files) {
       const fld = (type.fields || []).find((x) => x.key === key);
       assert.ok(fld && fld.find, at(tid + ' field ' + key + ' has a finder'));
       assert.equal(window.casoraFieldEntity(fld, tile, hass), want, at(tid + ' field ' + key));
+      checks++;
+      // The hint under the empty field names the same entity and where it was found.
+      const why = window.casoraFieldWhy(fld, tile, hass);
+      assert.equal(why ? why.id : null, want, at(tid + ' field ' + key + ' why line'));
+      if (spec.why && key in spec.why) assert.equal(why && why.text.replace('{source}', why.source), spec.why[key], at(tid + ' why ' + key));
       checks++;
     }
   }
