@@ -100,7 +100,10 @@ def _hc_role(prog_keys: list[str]):
 def _miele_role(states, ents, model):
     if _has(ents, "spin_speed") or _has(ents, "twin_dos_1_level"):
         return "washer"
-    return "dryer" if _has(ents, "drying_step") else None
+    if _has(ents, "drying_step"):
+        return "dryer"
+    # Dishwasher: only it reports salt, rinse aid and PowerDisk levels.
+    return "dishwasher" if any(_has(ents, key) for key in ("salt_level", "rinse_aid_level", "power_disk_level")) else None
 
 
 def _smartthings_role(states, ents, model):

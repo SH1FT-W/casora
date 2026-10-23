@@ -1292,14 +1292,18 @@ window.casoraPriceKwh = function (v) {
   };
 })();
 
-// ── Washer and dryer: where the values come from (03.10.2026) ──────────
+// ── Washer, dryer and dishwasher: where the values come from (03.10.2026) ──────────
 // Priority: 1. the maker's official integration (Home Connect, Miele,
 // SmartThings, LG ThinQ, Whirlpool, hOn/Electrolux and the like), 2. WashData
 // (ha_washdata, learns programmes on the smart plug), 3. the smart plug only.
 // Detected by the entity's platform and its translation_key, never by names
 // or ids. Without a platform (test house) the key combination is enough.
+// One table for every card (issue #48: the dishwasher had its own key lists and
+// missed Home Connect from HA core): `fields` feed washer/dryer, `dish` the
+// dishwasher card (dish()). Python mirror for live activities: live_finder.py
+// (dev/unit/live_finder_test.py compares the tables).
 // Used by the tile/popup (02-devices.js) and by the Studio (assistant,
-// add tile): loaded there via import (panel/casora-panel-types.js).
+// add tile, field placeholders): loaded there via import (panel/casora-panel-types.js).
 (function () {
   if (window.casoraLaundryFind) return;
 
@@ -1320,18 +1324,22 @@ window.casoraPriceKwh = function (v) {
     return out.map(function (o) { return String(o || '').toLowerCase(); });
   };
   var model = function (hass, devId) { var d = devs(hass)[devId] || {}; return String(d.model || '') + ' ' + String(d.model_id || ''); };
-  /* Home Connect: washing/drying is in the programme key (laundry_care_washer_… / laundry_care_dryer_…). */
+  /* Home Connect: washing/drying/rinsing is in the programme key (laundry_care_washer_… / dishcare_dishwasher_…). */
   var hcRole = function (progKeys) {
     return function (hass, list) {
       var o = opts(hass, list, progKeys).join(' ');
       if (/laundry_?care[._]washer/.test(o) || has(list, 'washer_temperature') || has(list, 'prewash')) return 'washer';
       if (/laundry_?care[._]dryer/.test(o) || has(list, 'drying_target')) return 'dryer';
+      if (/dishcare/.test(o) || has(list, 'sensor_salt') || has(list, 'sensor_rinse_aid') || has(list, 'select_rinse_aid')) return 'dishwasher';
       return null;
     };
   };
+  // Dishwasher fields (02-devices.js _casoraDish): same keys on every device of that source.
+  var bk = function (key) { return k(key, 'binary_sensor'); };
 
   // need: every key required, any: one of them – only when the platform does not match (test house).
-  // role(hass, list, devId) → 'washer' | 'dryer' | null (null = no laundry appliance, e.g. an oven).
+  // role(hass, list, devId) → 'washer' | 'dryer' | 'dishwasher' | null (null = none of them, e.g. an oven).
+  // dish: the dishwasher card's fields; a spec may name a device class (dc) for entities without a key.
   var SOURCES = [
     { id: 'home_connect', rank: 0, platforms: ['home_connect'], need: ['operation_state'],
       any: ['program_progress', 'active_program', 'selected_program', 'program_finish_time'],
@@ -1339,7 +1347,10 @@ window.casoraPriceKwh = function (v) {
       fields: { state: k('operation_state'), program: k(['active_program', 'selected_program'], 'select'),
         select: k('selected_program', 'select'), remaining: k('program_finish_time'), progress: k('program_progress'),
         door: k('door'), pause: k('pause_program', 'button'), resume: k('resume_program', 'button'),
-        stop: k('stop_program', 'button') } },
+        stop: k('stop_program', 'button') },
+      // HA core has no start button (the active_program select starts) and reports the finish time.
+      dish: { program: k('active_program', 'select'), sel: k('selected_program', 'select'), progress: k('program_progress'),
+        remaining: k('program_finish_time'), door: k('door'), stop: k('stop_program', 'button') } },
     /* Home Connect Alt / Home Connect WS (HACS): keys of their own with a prefix. */
     { id: 'home_connect_alt', rank: 0, platforms: ['home_connect_alt', 'homeconnect_ws'], need: ['sensor_operation_state'],
       any: ['sensor_active_program', 'select_program', 'sensor_program_progress'],
@@ -1349,15 +1360,35 @@ window.casoraPriceKwh = function (v) {
         progress: k('sensor_program_progress'), phase: k(['sensor_program_phase', 'sensor_laundry_process_phase', 'sensor_dryer_process_phase']),
         door: k('binary_sensor_door_state', 'binary_sensor'),
         stop: k('button_abort_program', 'button'), pause: k('button_pause_program', 'button'),
-        resume: k('button_resume_program', 'button') } },
+        resume: k('button_resume_program', 'button') },
+      dish: { program: k('sensor_active_program'), sel: k('select_program', 'select'), phase: k('sensor_program_phase'),
+        progress: k('sensor_program_progress'), remaining: k('sensor_remaining_program_time'),
+        energyEst: k('sensor_energy_forecast'), waterEst: k('sensor_water_forecast'), salt: k('sensor_salt'),
+        rinse: k('sensor_rinse_aid'), door: { keys: ['binary_sensor_door_state'], domain: 'binary_sensor', dc: 'door' },
+        care: k('sensor_machine_care_reminder'), starts: k('sensor_count_started'), conn: bk('connection'),
+        remote: k('select_remote_control_level', 'select'), startIn: k('number_start_in', 'number'),
+        power_sw: k('switch_power_state', 'switch'), light: k('switch_info_light', 'switch'),
+        smartFilter: bk('binary_sensor_smartfiltercleaningreminder'), filterCheck: bk('binary_sensor_checkfiltersystem'),
+        machineCare: bk('binary_sensor_machinecarereminder'),
+        machineFilter: bk('binary_sensor_machinecareandfiltercleaningreminder'),
+        extraDry: k('switch_extra_dry', 'switch'), halfLoad: k('switch_half_load', 'switch'),
+        speed: k('switch_speed_on_demand', 'switch'), silence: k('switch_silence_on_demand', 'switch'),
+        start: k('button_start_program', 'button'), stop: k('button_abort_program', 'button'),
+        aquaStop: bk('binary_sensor_aqua_stop'), drainBlocked: bk('binary_sensor_drainpumpblocked'),
+        drainImpossible: bk('binary_sensor_drainingnotpossible'), lowPressure: bk('binary_sensor_low_water_pressure'),
+        calcified: bk('binary_sensor_waterheatercalcified'), aborted: bk('binary_sensor_program_aborted') } },
     { id: 'miele', rank: 0, platforms: ['miele'], need: ['status'], any: ['spin_speed', 'drying_step', 'twin_dos_1_level'],
       role: function (hass, list) {
         if (has(list, 'spin_speed') || has(list, 'twin_dos_1_level')) return 'washer';
-        return has(list, 'drying_step') ? 'dryer' : null;
+        if (has(list, 'drying_step')) return 'dryer';
+        return (has(list, 'salt_level') || has(list, 'rinse_aid_level') || has(list, 'power_disk_level')) ? 'dishwasher' : null;
       },
       fields: { state: k('status'), program: k('program_id'), phase: k(['program_phase', 'drying_step']),
         remaining: k(['remaining_time', 'finish']), elapsed: k(['elapsed_time', 'start']), energy: k('energy_consumption'),
-        pause: k('pause', 'button'), stop: k('stop', 'button') } },
+        pause: k('pause', 'button'), stop: k('stop', 'button') },
+      // Salt/rinse aid (percent) and the forecasts (percent) do not fit the card's levels; the door has no key.
+      dish: { program: k('program_id'), phase: k('program_phase'), remaining: k(['remaining_time', 'finish']),
+        door: { keys: [], domain: 'binary_sensor', dc: 'door' }, start: k('start', 'button'), stop: k('stop', 'button') } },
     { id: 'smartthings', rank: 0, platforms: ['smartthings'],
       need: [], any: ['washer_machine_state', 'washer_job_state', 'dryer_machine_state', 'dryer_job_state'],
       role: function (hass, list) {
@@ -1382,7 +1413,8 @@ window.casoraPriceKwh = function (v) {
         var a = (st && sts(hass)[st.entity_id] && sts(hass)[st.entity_id].attributes) || {};
         var icon = String(a.icon || (reg(hass)[st ? st.entity_id : ''] || {}).icon || '');
         // WashData also watches dishwashers, air fryers and pumps – the icon says what it is.
-        if (/dishwasher|pot-steam|water-pump|pump/.test(icon)) return null;
+        if (/dishwasher/.test(icon)) return 'dishwasher';
+        if (/pot-steam|water-pump|pump/.test(icon)) return null;
         return /tumble-dryer|dryer/.test(icon) ? 'dryer' : 'washer';
       },
       fields: { state: k('washer_state'), program: k('washer_program'), phase: k('current_phase'),
@@ -1426,11 +1458,18 @@ window.casoraPriceKwh = function (v) {
                category: e.entity_category || null };
     });
   }
-  function pick(lst, spec) {
+  function pick(lst, spec, hass) {
     var keys = spec.keys;
     for (var i = 0; i < keys.length; i++) {
       for (var j = 0; j < lst.length; j++) {
         if (lst[j].key === keys[i] && lst[j].domain === spec.domain) return lst[j].entity_id;
+      }
+    }
+    // Device class (dish door: Miele's door has no key): visible entities only.
+    if (spec.dc && hass) {
+      for (var m = 0; m < lst.length; m++) {
+        var a = (sts(hass)[lst[m].entity_id] || {}).attributes || {};
+        if (lst[m].domain === spec.domain && !lst[m].category && a.device_class === spec.dc) return lst[m].entity_id;
       }
     }
     return null;
@@ -1447,8 +1486,11 @@ window.casoraPriceKwh = function (v) {
   }
 
   // Classify a device: { device, source, rank, role, state, f: {program, …}, entry } or null.
-  function classify(hass, devId) {
+  // roles: the kinds asked for; default washer and dryer (the laundry cards and the Studio's laundry lists).
+  var LAUNDRY = ['washer', 'dryer'];
+  function classify(hass, devId, roles) {
     if (!devId) return null;
+    roles = roles || LAUNDRY;
     var lst = list(hass, devId);
     if (!lst.length) return null;
     for (var i = 0; i < SOURCES.length; i++) {
@@ -1456,7 +1498,7 @@ window.casoraPriceKwh = function (v) {
       var how = matches(src, lst);
       if (!how) continue;
       var role = src.role(hass, lst, devId);
-      if (!role) continue;
+      if (!role || roles.indexOf(role) < 0) continue;
       var f = {};
       Object.keys(src.fields).forEach(function (name) { f[name] = pick(lst, src.fields[name]); });
       if (!f.state) continue;
@@ -1488,9 +1530,9 @@ window.casoraPriceKwh = function (v) {
   }
 
   // For the tile: source of the device behind the main entity (or the plug itself).
-  function forEntity(hass, eid) {
+  function forEntity(hass, eid, roles) {
     var devId = deviceOf(hass, eid);
-    var c = classify(hass, devId);
+    var c = classify(hass, devId, roles);
     if (c) return c;
     var dom = String(eid || '').split('.')[0];
     if (devId && (dom === 'switch' || dom === 'sensor')) {
@@ -1500,15 +1542,15 @@ window.casoraPriceKwh = function (v) {
     return null;
   }
 
-  // Every laundry appliance in the house; per area and kind the best source wins
-  // (official before WashData). Devices without an area all stay in.
+  // Every laundry appliance in the house (role 'dishwasher': every dishwasher); per area and kind the best
+  // source wins (official before WashData). Devices without an area all stay in.
   function all(hass, role) {
     var D = devs(hass);
     var out = [];
     Object.keys(D).forEach(function (id) {
       var d = D[id];
       if (!d || d.disabled_by || d.entry_type === 'service') return;
-      var c = classify(hass, id);
+      var c = classify(hass, id, role === 'dishwasher' ? [role] : null);
       if (c && (!role || c.role === role)) out.push(c);
     });
     out.sort(function (a, b) { return a.rank - b.rank || (a.device < b.device ? -1 : 1); });
@@ -1531,7 +1573,56 @@ window.casoraPriceKwh = function (v) {
     }).map(function (id) { return plugOf(hass, id); }).filter(Boolean);
   }
 
-  window.casoraLaundryFind = { classify: classify, forEntity: forEntity, all: all, plugs: plugs, sources: SOURCES };
+  // Dishwasher: German entity-id suffixes (Home Connect Alt in German), only when no key and no device class
+  // matches – older installs without translation_key. [pattern, domain]
+  var DISH_NAMES = {
+    program: [/_aktives_programm$/, 'sensor'], sel: [/_ausgewahltes_programm$/, 'select'], phase: [/_programmphase$/, 'sensor'],
+    progress: [/_programmfortschritt$/, 'sensor'], remaining: [/_verbleibende_programmlaufzeit$/, 'sensor'],
+    energyEst: [/_energieverbrauch_schatzung$/, 'sensor'], waterEst: [/_wasserverbrauch_schatzung$/, 'sensor'],
+    salt: [/_salz$/, 'sensor'], rinse: [/_klarspuler$/, 'sensor'], door: [/_tur$/, 'binary_sensor'],
+    care: [/_maschinenpflege_erinnerung$/, 'sensor'], starts: [/_startanzahl$/, 'sensor'], conn: [/_verbindung$/, 'binary_sensor'],
+    remote: [/_fernbedienung$/, 'select'], startIn: [/_start_in$/, 'number'], power_sw: [/_einschalter$/, 'switch'],
+    light: [/_info_licht$/, 'switch'], smartFilter: [/_smarte_filterreinigung$/, 'binary_sensor'],
+    filterCheck: [/_filtersystem_prufen$/, 'binary_sensor'], machineCare: [/_maschinenreinigung$/, 'binary_sensor'],
+    machineFilter: [/_maschinenreinigung_filter$/, 'binary_sensor'],
+    extraDry: [/_extra_trocken$/, 'switch'], halfLoad: [/_halbe_ladung$/, 'switch'], speed: [/_speed_on_demand$/, 'switch'],
+    silence: [/_silence_on_demand$/, 'switch'], start: [/_start$/, 'button'], stop: [/_abbrechen$/, 'button'],
+    aquaStop: [/_aquastop_aufgetreten$/, 'binary_sensor'], drainBlocked: [/_ablaufpumpe_blockiert$/, 'binary_sensor'],
+    drainImpossible: [/_abpumpen_nicht_moglich$/, 'binary_sensor'], lowPressure: [/_niedriger_wasserdruck$/, 'binary_sensor'],
+    calcified: [/_wasserheizung_verkalkt$/, 'binary_sensor'], aborted: [/_programm_abgebrochen$/, 'binary_sensor'],
+  };
+
+  // Dishwasher fields on the device of `anchor`: { source, f: {program, sel, door, …} } (every name of
+  // DISH_NAMES, null when missing). Sources whose platform the device has come first; without one (test house,
+  // a fork with its own platform) every source with a dish spec, in table order. Per field the first hit:
+  // keys/device class of the sources, then the German name suffix (not powercalc's estimates).
+  function dish(hass, anchor) {
+    var devId = deviceOf(hass, anchor);
+    var out = { source: null, f: {} };
+    var lst = devId ? list(hass, devId) : [];
+    var mine = SOURCES.filter(function (s) {
+      return s.dish && lst.some(function (e) { return s.platforms.indexOf(e.platform) >= 0; });
+    });
+    var srcs = mine.length ? mine : SOURCES.filter(function (s) { return s.dish; });
+    if (mine.length) out.source = mine[0].id;
+    Object.keys(DISH_NAMES).forEach(function (name) {
+      var hit = null;
+      srcs.forEach(function (s) { if (!hit && s.dish[name]) hit = pick(lst, s.dish[name], hass); });
+      var nm = DISH_NAMES[name];
+      if (!hit) {
+        hit = (lst.filter(function (e) {
+          return e.domain === nm[1] && e.platform !== 'powercalc' && nm[0].test(e.entity_id);
+        })[0] || {}).entity_id || null;
+      }
+      out.f[name] = hit;
+    });
+    return out;
+  }
+  // One field (Studio placeholder „Automatisch: …“).
+  dish.field = function (hass, anchor, name) { return dish(hass, anchor).f[name] || null; };
+
+  window.casoraLaundryFind = { classify: classify, forEntity: forEntity, all: all, plugs: plugs, sources: SOURCES,
+    dish: dish, dishNames: DISH_NAMES };
 })();
 
 // ── Assist suggestions from the own house (D-ASSIST, 06.10.2026) ────────────

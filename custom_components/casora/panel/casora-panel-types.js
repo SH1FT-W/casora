@@ -7,7 +7,8 @@
 // Labels in English; translation via translations/panel/*.json.
 // Field specs as in the panel (key/label/domains/advanced/group …). In addition:
 //   find – where Casora finds the entity itself when the field stays empty
-//          ({keys, domain, dc} on the device of the tile entity, {plug} = smart plug).
+//          ({keys, domain, dc} on the device of the tile entity, {plug} = smart plug,
+//          {dish: field} = the dishwasher card's lookup, casoraLaundryFind.dish in 00-finder.js).
 //          The Studio shows the match as a placeholder ("Auto: …"); the
 //          AI helper only fills what the finder does not find.
 const ICON = { key: "icon", label: "Icon", type: "icon" };
@@ -80,30 +81,31 @@ window.CASORA_TILE_TYPES = [
       ICON,
       PLUG,
       PRICE,
+      // find.dish: the card's own lookup (00-finder.js casoraLaundryFind.dish: keys per integration, German names last).
       // Home Connect in HA core: program as select (active_program), door as enum sensor (open/closed/locked).
-      { key: "entity_program", label: "Active program", domains: ["sensor", "select"], find: { keys: ["sensor_active_program", "active_program"], domain: "" }, advanced: true },
+      { key: "entity_program", label: "Active program", domains: ["sensor", "select"], find: { dish: "program" }, advanced: true },
       { key: "entity_door", label: "Door", domains: ["binary_sensor", "sensor"], classes: { binary_sensor: ["door", "opening"], sensor: ["enum"] },
-        find: { keys: ["binary_sensor_door_state", "door"], dc: "door", domain: "" }, advanced: true },
-      { key: "entity_salt", label: "Salt", domains: ["sensor"], find: { keys: ["sensor_salt"] }, advanced: true },
-      { key: "entity_rinse_aid", label: "Rinse aid", domains: ["sensor"], find: { keys: ["sensor_rinse_aid"] }, advanced: true },
-      { key: "btn_start", label: "Start button", domains: ["button"], find: { keys: ["button_start_program"], domain: "button" }, advanced: true },
-      { key: "btn_stop", label: "Stop button", domains: ["button"], find: { keys: ["button_abort_program", "stop_program"], domain: "button" }, advanced: true },
+        find: { dish: "door" }, advanced: true },
+      { key: "entity_salt", label: "Salt", domains: ["sensor"], find: { dish: "salt" }, advanced: true },
+      { key: "entity_rinse_aid", label: "Rinse aid", domains: ["sensor"], find: { dish: "rinse" }, advanced: true },
+      { key: "btn_start", label: "Start button", domains: ["button"], find: { dish: "start" }, advanced: true },
+      { key: "btn_stop", label: "Stop button", domains: ["button"], find: { dish: "stop" }, advanced: true },
       TITLE_NAME,
-      // More popup values (Home Connect); empty = device finder via the translation_key.
-      { key: "entity_phase", label: "Program phase", domains: ["sensor"], find: { keys: ["sensor_program_phase"] }, advanced: true },
+      // More popup values (Home Connect, Miele); empty = the dish lookup.
+      { key: "entity_phase", label: "Program phase", domains: ["sensor"], find: { dish: "phase" }, advanced: true },
       { key: "appliance_progress", label: "Progress", domains: ["sensor"], classes: ["progress"],
-        find: { keys: ["sensor_program_progress", "program_progress"] }, advanced: true },
+        find: { dish: "progress" }, advanced: true },
       { key: "appliance_remaining", label: "Time remaining", domains: ["sensor"],
-        find: { keys: ["sensor_remaining_program_time", "program_finish_time"] }, advanced: true },
-      { key: "entity_energy_est", label: "Energy forecast", domains: ["sensor"], find: { keys: ["sensor_energy_forecast"] }, advanced: true },
-      { key: "entity_water_est", label: "Water forecast", domains: ["sensor"], find: { keys: ["sensor_water_forecast"] }, advanced: true },
+        find: { dish: "remaining" }, advanced: true },
+      { key: "entity_energy_est", label: "Energy forecast", domains: ["sensor"], find: { dish: "energyEst" }, advanced: true },
+      { key: "entity_water_est", label: "Water forecast", domains: ["sensor"], find: { dish: "waterEst" }, advanced: true },
       { key: "entity_filter", label: "Check filter", domains: ["binary_sensor"],
-        find: { keys: ["binary_sensor_checkfiltersystem"], domain: "binary_sensor" }, advanced: true },
-      { key: "sw_extra_dry", label: "Extra dry", domains: ["switch"], find: { keys: ["switch_extra_dry"], domain: "switch" },
+        find: { dish: "filterCheck" }, advanced: true },
+      { key: "sw_extra_dry", label: "Extra dry", domains: ["switch"], find: { dish: "extraDry" },
         advanced: true, group: "Options" },
-      { key: "sw_half_load", label: "Half load", domains: ["switch"], find: { keys: ["switch_half_load"], domain: "switch" }, advanced: true },
-      { key: "sw_speed", label: "Faster", domains: ["switch"], find: { keys: ["switch_speed_on_demand"], domain: "switch" }, advanced: true },
-      { key: "sw_silence", label: "Quieter", domains: ["switch"], find: { keys: ["switch_silence_on_demand"], domain: "switch" }, advanced: true },
+      { key: "sw_half_load", label: "Half load", domains: ["switch"], find: { dish: "halfLoad" }, advanced: true },
+      { key: "sw_speed", label: "Faster", domains: ["switch"], find: { dish: "speed" }, advanced: true },
+      { key: "sw_silence", label: "Quieter", domains: ["switch"], find: { dish: "silence" }, advanced: true },
       { key: "entity_power", label: "Power", domains: ["sensor"], classes: ["power"], advanced: true,
         hint: "Only without a smart plug." },
       { key: "entity_energy", label: "Energy", domains: ["sensor"], classes: ["energy"], advanced: true,
@@ -683,6 +685,11 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     try {
       // The finder's own search (e.g. vacuum card: vacuumMap).
       if (f.find.fn) return (typeof CD[f.find.fn] === "function" && CD[f.find.fn](hass, tile.entity)) || null;
+      // Dishwasher: the same lookup as the card (keys per integration from the shared table).
+      if (f.find.dish) {
+        const LF = window.casoraLaundryFind;
+        return (LF && LF.dish && LF.dish.field(hass, tile.entity, f.find.dish)) || null;
+      }
       if (f.find.plug) {
         const p = CD.companionPlug(hass, tile.entity);
         return (p && p[f.find.plug]) || null;
