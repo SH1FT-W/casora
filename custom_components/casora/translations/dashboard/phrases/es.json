@@ -2308,7 +2308,25 @@
   "1 Schwach": "1 baja",
   "1 Verfügbar": "1 disponible",
   "1 ausgefallen": "1 averiado",
-  "1 übersprungen": "1 omitido"
+  "1 übersprungen": "1 omitido",
+  "Energiesparen ist an: der Tracker reagiert erst wieder, wenn er unterwegs ist.": "El ahorro de energía está activado: el localizador vuelve a responder cuando se mueve.",
+  "Der Tracker ist gerade nicht erreichbar.": "El localizador no está disponible ahora mismo.",
+  "Leicht feucht": "Ligeramente húmedo",
+  "Häufig": "A menudo",
+  "Selten": "Pocas veces",
+  "Intelligent": "Inteligente",
+  "Sehr hoch": "Muy alto",
+  "Mopp-Pad": "Mopa",
+  "Kantenreinigung": "Limpieza de bordes",
+  "Frischwassertank fehlt": "Falta el depósito de agua limpia",
+  "Schmutzwassertank voll oder nicht eingesetzt": "Depósito de agua sucia lleno o no colocado",
+  "Staubbeutel fehlt": "Falta la bolsa de polvo",
+  "Staubbeutel prüfen": "Revisar la bolsa de polvo",
+  "Reinigungsmittel nachfüllen": "Rellenar detergente",
+  "Räder reinigen": "Limpiar las ruedas",
+  "Wasserauslassfilter": "Filtro de salida de agua",
+  "Schmutzwassertank (Roboter)": "Depósito de agua sucia (robot)",
+  "noch 1 Tag": "queda 1 día"
  },
  "patterns": [
   [
@@ -2334,6 +2352,10 @@
   [
    "^Gestern (\\d{1,2}:\\d{2})$",
    "Ayer {1}"
+  ],
+  [
+   "^Top (\\d+) Verbraucher$",
+   "Top {1} consumidores"
   ],
   [
    "^(\\d+) Probleme$",
@@ -3066,6 +3088,10 @@
   [
    "^noch (\\d+)[  ]Min\\.$",
    "quedan {1} min"
+  ],
+  [
+   "^noch (\\d+) Tage$",
+   "quedan {1} días"
   ],
   [
    "^noch (.+)$",

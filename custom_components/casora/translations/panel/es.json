@@ -458,6 +458,7 @@
     "Fan": "Ventilador",
     "Fertility": "Fertilización",
     "Filter the dashboard to": "Filtrar el panel por",
+    "On the phone, a tap opens this person's popup": "En el móvil, un toque abre la ventana de esta persona",
     "Font": "Fuente",
     "From the entity's domain": "Del dominio de la entidad",
     "Game activity": "Actividad de juego",
@@ -1971,7 +1972,6 @@
     "Only on button press": "Solo al pulsar un botón",
     "Which AI": "Qué IA",
     "Home & Devices": "Casa y dispositivos",
-    "Waste collection, calendars, doors and windows, scenes and players – the same in every dashboard.": "Recogida de residuos, calendarios, puertas y ventanas, escenas y reproductores: igual en todos los paneles.",
     "Bell & Alerts": "Avisos y alertas",
     "What the bell shows in every dashboard.": "Lo que muestran los avisos en todos los paneles.",
     "New Dashboards": "Paneles nuevos",
@@ -2198,11 +2198,6 @@
     "Room name and photo": "Nombre y foto de la habitación",
     "Choose a photo": "Elige una foto",
     "Upload your own": "Subir una propia",
-    "Next steps": "Próximos pasos",
-    "Hide for good": "Ocultar para siempre",
-    "Your own photo for {room}": "Tu propia foto para {room}",
-    "Save your first scene": "Guarda tu primera escena",
-    "Open it on your phone": "Ábrelo en tu móvil",
     "Battery hints": "Avisos de batería",
     "Automatic: a weak battery does not highlight this tile when the dashboard already has a Batteries tile.": "Automático: una batería baja no resalta esta tarjeta cuando el panel ya tiene una tarjeta de baterías.",
     "Garage open": "Garaje abierto",
@@ -2512,12 +2507,28 @@
     "For every pet in the Tractive integration": "Para cada mascota de la integración Tractive",
     "Tractive integration not installed yet": "La integración Tractive aún no está instalada",
     "Choose your pet": "Elige tu mascota",
-    "1 hidden": "1 oculto",
-    "1 active": "1 activo",
-    "1 on": "1 encendida",
-    "1 Open": "1 abierta",
-    "1 Off": "1 apagada",
-    "1 Unlocked": "1 abierta"
+    "Waste collection, doors and windows, scenes and players – the same in every dashboard.": "Recogida de basura, puertas y ventanas, escenas y reproductores: igual en todos los paneles.",
+    "The calendars every calendar tile and its popup show – with name, color and whether they appear on the tile.": "Los calendarios que muestran cada tarjeta de calendario y su ventana, con nombre, color y si aparecen en la tarjeta.",
+    "Which calendars the tile and popup show, with name and color – the same for every calendar tile.": "Qué calendarios muestran la tarjeta y la ventana, con nombre y color: igual para todas las tarjetas de calendario.",
+    "All calendars": "Todos los calendarios",
+    "1 calendar": "1 calendario",
+    "{n} calendars": "{n} calendarios",
+    "No events": "Sin eventos",
+    "Chosen automatically: your grid power from the Energy dashboard.": "Elegido automáticamente: tu consumo de red del panel de Energía.",
+    "Chosen automatically by its name.": "Elegido automáticamente por su nombre.",
+    "Chosen automatically: the total of a power meter.": "Elegido automáticamente: la potencia total de un contador.",
+    "Chosen automatically: the name contains “{word}”.": "Elegido automáticamente: el nombre contiene «{word}».",
+    "Chosen automatically: the entity ID contains “{word}”.": "Elegido automáticamente: el ID de entidad contiene «{word}».",
+    "Chosen automatically: grid, solar and battery from the Energy dashboard, added up.": "Elegido automáticamente: red, solar y batería del panel de Energía, sumados.",
+    "Chosen automatically: the sum of the rooms – no sensor for the whole house found. Add your grid and solar power to the Energy dashboard for an exact value.": "Elegido automáticamente: la suma de las habitaciones, no se encontró un sensor para toda la casa. Para un valor exacto, añade la potencia de red y solar en el panel de Energía.",
+    "Found automatically on the same device ({source}).": "Encontrado automáticamente en el mismo dispositivo ({source}).",
+    "Found automatically in the same room ({source}).": "Encontrado automáticamente en la misma habitación ({source}).",
+    "Found automatically ({source}).": "Encontrado automáticamente ({source}).",
+    "Found automatically on the same device.": "Encontrado automáticamente en el mismo dispositivo.",
+    "Found automatically in the same room.": "Encontrado automáticamente en la misma habitación.",
+    "Found automatically.": "Encontrado automáticamente.",
+    "Found automatically: the plug named after this device ({source}).": "Encontrado automáticamente: el enchufe con el nombre de este dispositivo ({source}).",
+    "Found automatically: the plug named after this device.": "Encontrado automáticamente: el enchufe con el nombre de este dispositivo."
   },
   "patterns": [
     [
@@ -2619,6 +2630,26 @@
     [
       "^Added \"(.+) Mobile\"\\. Open it from Choose dashboard\\.$",
       "Se añadió “{1} Mobile”. Ábrelo desde Elige un panel."
+    ],
+    [
+      "^(-?[\\d.]+°) · Cooling$",
+      "{1} · Enfría"
+    ],
+    [
+      "^(-?[\\d.]+°) · Heating$",
+      "{1} · Calienta"
+    ],
+    [
+      "^(-?[\\d.]+°) · Off$",
+      "{1} · Apagado"
+    ],
+    [
+      "^(-?[\\d.]+°) · Heating to (.+)$",
+      "{1} · Calienta a {2}"
+    ],
+    [
+      "^(-?[\\d.]+°) · Cooling to (.+)$",
+      "{1} · Enfría a {2}"
     ],
     [
       "^Cooling to (.+)$",
@@ -3159,6 +3190,10 @@
     [
       "^That looks like JSON but does not parse: (.+)$",
       "Parece JSON, pero no se puede leer: {1}"
+    ],
+    [
+      "^On the home page every door and window in the house counts automatically \\((\\d+) found\\)\\. The badge shows the open ones\\.$",
+      "En la página de inicio cuentan automáticamente todas las puertas y ventanas de la casa ({1} encontradas). La insignia muestra las abiertas."
     ]
   ]
 }

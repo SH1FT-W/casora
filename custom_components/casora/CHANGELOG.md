@@ -6,12 +6,16 @@ The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
 ## 26.10.58 – 23.10.2026
 
-### Added
+### New
+- **Casora in Spanish:** dashboard, Studio and setup are available in Spanish (the language follows Home Assistant).
+- **Why it was picked:** In the Studio, a value Casora chose by itself now says why underneath, e.g. “Chosen automatically: the name contains ‘Hausbedarf’.”, “from the Energy dashboard” or “Found automatically on the same device (Home Connect)”, so a wrong pick is easy to spot.
 - **Energy from Home Assistant's energy settings:** If you entered power sensors for grid, solar and battery in Home Assistant's energy dashboard, the energy badge on Home now uses them first: with the grid alone that sensor, with solar or a battery the house consumption as grid + solar + battery. Its popup shows “Where the power comes from” with grid, solar and battery, and the energy popups use these sensors even without sub-badges. An inverter asleep at night counts as 0 W. Name guessing is only the fallback now; a sensor you picked yourself is never replaced.
 - **Copy diagnostics:** Studio → ⋯ → Help → “Copy diagnostics…” collects counts, versions and integrations (no names of devices, rooms or people) for a GitHub issue, and “Report a problem” opens a new issue with a field for it.
 - **Miele dishwashers** are recognised.
 
 ### Fixed
+- **Coffee tile:** When adding it, only real coffee machines are suggested (also De'Longhi and Krups), no thermometers or plugs.
+- **Doorbell diagnostics (#23):** While talking, the browser console logs the level and data of doorbell and microphone every 2 seconds.
 - **Home Connect from HACS:** Washers, dryers and dishwashers of Home Connect Alt (ekutner) were never recognised, Home Connect Local (homeconnect_ws) is now recognised separately with its own keys.
 - **Dishwasher suggestions:** The Studio no longer suggests a Home Connect oven or coffee machine as a dishwasher, in any language.
 - **Second map camera of a vacuum** (e.g. `…_map_2`) is no longer suggested as a security camera.
