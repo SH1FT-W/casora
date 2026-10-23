@@ -195,6 +195,11 @@
  },
  "expect": {
   "house_power": "sensor.stromzahler_emh_power_curr",
+  "house_power_why": {
+   "stage": "grid",
+   "word": "stromzahler",
+   "in": "id"
+  },
   "energy_roles": {
    "sensor.stp_8000tl_20_grid_power": "solar",
    "sensor.stromzahler_emh_power_curr": "grid"

@@ -16,6 +16,8 @@ Neues Haus aus einem Issue:
 Felder von `expect` (alle optional):
 
 - `house_power`: Haussensor auf Zuhause (Studio und Dashboard gleich), `null` = keiner
+- `house_power_why`: `{ "stage": "house" | "total" | "grid", "word", "in": "name" | "id" }` – warum die Haussuche
+  ihn nimmt (Warum-Zeile im Studio, `casoraBasis.housePowerWhy`)
 - `house_list`: stattdessen Liste auf Zuhause (Summe), z. B. aus den Energie-Einstellungen
 - `plants`: Entitäten, die Pflanzen sind; `not_plants`: die es nicht sind
 - `dishwasher`: `{ "entity": Betriebszustand, "fields": { remaining, program, sel, door, progress, stop } }`
@@ -27,7 +29,8 @@ Felder von `expect` (alle optional):
 - `studio_main`: `{ Kacheltyp: [Entitäten] }` – was das Studio für eine neue Kachel vorschlägt, in dieser Reihenfolge
   (`_tileCandidates`, Raum „Home“ ohne Bereich), z. B. `{ "casora_dishwasher": ["sensor.…"] }`
 - `studio_fields`: `{ Kacheltyp: { "entity": Hauptentität, "fields": { Feld: Entität | null } } }` – was ein leeres
-  Studio-Feld als „Automatisch: …“ findet (`casoraFieldEntity`, dieselbe Suche wie die Karte)
+  Studio-Feld als „Automatisch: …“ findet (`casoraFieldEntity`, dieselbe Suche wie die Karte); optional `"why": { Feld:
+  "Found automatically on the same device (Bambu Lab)." }` – die Warum-Zeile darunter (`casoraFieldWhy`, englisch)
 - `assist`: `{ Kacheltyp: [Entitäten] }` – genau diese Vorschläge macht der Geräte-Assistent für den Typ (Reihenfolge egal)
 - `printer`: `{ "entity": Druckstatus, "fields": { status, st, progress, cam, … } }` – was die Druckerkarte findet
   (`_casoraPrint.resolve`)

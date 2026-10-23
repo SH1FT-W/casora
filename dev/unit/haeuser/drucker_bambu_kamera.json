@@ -328,6 +328,10 @@
      "entity_light": "light.werkbank_p1s_kammerbeleuchtung",
      "btn_pause": "button.werkbank_p1s_pause",
      "btn_stop": null
+    },
+    "why": {
+     "entity_state": "Found automatically on the same device (Bambu Lab).",
+     "entity_camera": "Found automatically on the same device (Bambu Lab)."
     }
    }
   },

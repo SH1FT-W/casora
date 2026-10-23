@@ -738,6 +738,39 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
     const name = nameOf(hass, id);
     return name && name !== id ? t(hass).auto + name : t(hass).auto.replace(/:\s*$/, "");
   };
+  // Why an empty field shows that entity (the hint under it): the English line with {source} still to fill
+  // (the Studio translates first), and the integration that provides it. "On the same device" also for a
+  // device linked to the tile's (robot and dock), "in the same room" for the same area. null: nothing found.
+  window.casoraFieldWhy = (f, tile, hass) => {
+    const id = found(f, tile, hass);
+    if (!id) return null;
+    const R = hass.entities || {}, D = hass.devices || {};
+    const e = R[id] || {}, a = R[tile.entity] || {};
+    const via = (x) => (D[x] || {}).via_device_id;
+    const sameDev = !!(e.device_id && a.device_id && (e.device_id === a.device_id
+      || via(e.device_id) === a.device_id || via(a.device_id) === e.device_id));
+    const areaOf = (r) => r.area_id || (D[r.device_id] || {}).area_id || null;
+    const source = integrationTitle(hass, e.platform);
+    // The plug field: a plug device named like the tile's device (companionPlug).
+    const where = f.find.plug ? ": the plug named after this device" : sameDev ? " on the same device"
+      : (areaOf(e) && areaOf(e) === areaOf(a) ? " in the same room" : "");
+    const text = "Found automatically" + where + (source ? " ({source})." : ".");
+    return { id, text, source };
+  };
+  // Readable integration name: HA's own title if loaded, else a few known spellings, else the domain in
+  // words ("home_connect" → "Home Connect").
+  const INTEGRATION_TITLES = { ha_washdata: "WashData", washdata: "WashData", homeconnect_ws: "Home Connect Local",
+    home_connect_alt: "Home Connect Alt", mqtt: "MQTT", zha: "ZHA", esphome: "ESPHome", smartthings: "SmartThings",
+    lg_thinq: "LG ThinQ", smartthinq_sensors: "SmartThinQ", hon: "hOn", bambu_lab: "Bambu Lab", octoprint: "OctoPrint",
+    xiaomi_miot: "Xiaomi Miot", tplink: "TP-Link", tuya: "Tuya", shelly: "Shelly" };
+  function integrationTitle(hass, d) {
+    if (!d) return "";
+    try {
+      const l = hass && hass.localize && hass.localize("component." + d + ".title");
+      if (l && typeof l === "string") return l;
+    } catch (e) { /* fall back */ }
+    return INTEGRATION_TITLES[d] || String(d).split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  }
 
   const isOurs = (type) => type && (String(type.id).startsWith("casora_"));
   const entityFields = (type) => (type.fields || []).filter((f) => f.domains && (!f.type || f.type === "entity"));

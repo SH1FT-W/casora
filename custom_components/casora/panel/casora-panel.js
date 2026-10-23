@@ -10497,6 +10497,9 @@ class CasoraPanel extends HTMLElement {
         :is(.card, .tile).grouped .hint:has(+ :is(.row, .subhead, .adv)) { padding-bottom:10px; }
         :is(.card, .tile).grouped .hint + .livehint { padding-top:0; }
         .hint.livehint { font-variant-numeric:tabular-nums; }
+        /* Why Casora chose a value (#44): a second line right under the field's own hint. */
+        .hint + .hint.autowhy { padding-top:0; margin-top:-8px; }
+        :is(.card, .tile).grouped .hint + .hint.autowhy { margin-top:0; padding-top:2px; }
         .hint.livehint.on { color:var(--casora-studio-accent, var(--casora-color-teal, #00C3D0)); }
         .fieldwarn {
           color:var(--casora-color-orange, #FF9230);
@@ -17915,10 +17918,29 @@ class CasoraPanel extends HTMLElement {
           const w = document.createElement("div");
           w.className = "fieldwarn"; w.textContent = why;
           faultEl = w;
-          const after = hintEl && hintEl.parentNode ? hintEl
+          const after = whyEl && whyEl.parentNode ? whyEl : hintEl && hintEl.parentNode ? hintEl
             : (row.parentNode ? row : null);
           if (after && after.parentNode) after.parentNode.insertBefore(w, after.nextSibling);
           else fs.appendChild(w);
+        };
+        // #44: why Casora chose Home's energy sensors (casoraBasis.homeEnergyWhy), so a wrong pick shows.
+        // Gone as soon as the user picks (the marker turns false).
+        let whyEl = null;
+        const addWhy = () => {
+          if (whyEl) { whyEl.remove(); whyEl = null; }
+          const B = window.casoraBasis;
+          if (!B || !B.homeEnergyWhy || !/^energy_(power_entity|entities)$/.test(f.key)
+            || !(room === this._state.compact.rooms[0] || room.path === "home")) return;
+          const w = B.homeEnergyWhy(this._hass, room.variables, f.key);
+          if (!w) return;
+          const h = document.createElement("div");
+          h.className = "hint autowhy";
+          h.setAttribute("data-no-i18n", "");
+          h.textContent = trLabel(w.text).replace("{word}", w.word || "");
+          whyEl = h;
+          const after = hintEl && hintEl.parentNode ? hintEl : (row.parentNode ? row : null);
+          if (after && after.parentNode) after.parentNode.insertBefore(h, after.nextSibling);
+          else fs.appendChild(h);
         };
 
         if (f.type === "image") {
@@ -17962,6 +17984,7 @@ class CasoraPanel extends HTMLElement {
           addDrop(row, f);
           fs.appendChild(row);
           addHint();
+          addWhy();
           if (energy) this._energyListNotes(room, fs, writeList, exOf);
           return;
         }
@@ -18086,6 +18109,7 @@ class CasoraPanel extends HTMLElement {
             f.placeholder || (ghosts.has(unitOf(f)) ? "Choose" : pickHint(doms)),
             (v) => {
               setVar(f.key, v, f);
+              addWhy();
               addFault(v);
               filled(f);
             }, { clearable: true });
@@ -18093,6 +18117,7 @@ class CasoraPanel extends HTMLElement {
           addDrop(row, f);
           fs.appendChild(row);
           addHint();
+          addWhy();
           addFault(cur);
           return;
         } else {
@@ -27328,9 +27353,22 @@ class CasoraPanel extends HTMLElement {
         if (f.domains) {
           // Casora: leeres Feld zeigt, was der Geräte-Finder stattdessen nimmt.
           const found = f.find && window.casoraFieldFound && window.casoraFieldFound(f, tile, this._hass);
+          let whyEl = null;
           put(f.label, this._combo(cur, this._entityList(f.domains, f.classes),
-            found || f.placeholder || pickHint(f.domains), set, { clearable: true }).wrap);
+            found || f.placeholder || pickHint(f.domains), (v) => { if (whyEl && v) { whyEl.remove(); whyEl = null; } set(v); },
+            { clearable: true }).wrap);
           hintUnder();
+          // Where the finder found it (#44: a wrong pick should be easy to spot), only while the field is empty.
+          const why = found && !cur && window.casoraFieldWhy && window.casoraFieldWhy(f, tile, this._hass);
+          if (why) {
+            const h = whyEl = document.createElement("div");
+            h.className = "hint autowhy";
+            h.setAttribute("data-no-i18n", "");
+            h.textContent = trLabel(why.text).replace("{source}", why.source || "");
+            if (!f.advanced && !f.section) h.dataset.opt = "1";
+            const drop = f.section && drops.get(f.section);
+            (drop ? drop.body : f.advanced && advBody ? advBody : body).appendChild(h);
+          }
           // Eingetragene Entität gelöscht: sagen, was stattdessen gilt (Saugroboter-Karte).
           const miss = window.casoraFieldMissing && window.casoraFieldMissing(f, tile, this._hass, cur);
           if (miss) {
