@@ -71,6 +71,17 @@ assert.equal(P.grid.costToday, 'sensor.kosten_heute');
   const d3 = (id) => F.detect({ states: S3, entities: {} }, { energy_entity_1: id }, 1);
   assert.equal(d3('sensor.sp'), null, 'Solarpumpe'); assert.equal(d3('sensor.as'), null, 'Akkuschrauber');
   assert.equal(d3('sensor.ho'), null, 'Home Office'); assert.equal(d3('sensor.bl'), null, 'Batterieladegerät');
+  // #44: SMA "Grid power" is the inverter's output (solar), its energy meter's "Metering power" the grid; the
+  // electricity meter's entity ID without umlaut ("stromzahler") is the grid.
+  const S4 = { ...S3, 'sensor.stp_8000tl_20_grid_power': st(2400, 'W', 'power', 'STP 8000TL-20 Grid power'),
+    'sensor.sma_metering_power_absorbed': st(300, 'W', 'power', 'Metering power absorbed'),
+    'sensor.stromzahler_emh_power_curr': st(424, 'W', 'power', 'Wirkleistung (W)') };
+  const E4 = { 'sensor.stp_8000tl_20_grid_power': { platform: 'sma' }, 'sensor.sma_metering_power_absorbed': { platform: 'sma' },
+    'sensor.stromzahler_emh_power_curr': { platform: 'tasmota' } };
+  const d4 = (id) => F.detect({ states: S4, entities: E4 }, { energy_entity_1: id }, 1);
+  assert.equal(d4('sensor.stp_8000tl_20_grid_power'), 'solar', 'SMA grid power = inverter output');
+  assert.equal(d4('sensor.sma_metering_power_absorbed'), 'grid', 'SMA metering = grid');
+  assert.equal(d4('sensor.stromzahler_emh_power_curr'), 'grid', 'stromzahler = grid');
   // Eigener Sensor ist Hauptwert: zweites Solar-Badge zeigt seinen Wert, nicht den des ersten.
   const C = F.model({ states: S2, entities: {} }, 'solar', F.peers(hass, V), 'sensor.pv2');
   assert.equal(C.solar, 'sensor.pv2');

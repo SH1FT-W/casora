@@ -34,6 +34,8 @@
   var NAMES = [[/\b(solar|solarleistung|solaranlage|solarstrom|pv|pv-anlage|photovoltaik)\b/i, 'solar'],
     [/\b(akku|akkustand|akkuleistung|batterie|batteriespeicher|stromspeicher|battery|ladestand|soc)\b/i, 'battery'],
     [/\b(netz|netzbezug|netzleistung|netzeinspeisung|grid|einspeisung|smart ?meter|smartmeter)\b/i, 'grid'],
+    // Electricity meter, also in an entity ID without umlaut (sensor.stromzahler_…).
+    [/(^|[^a-zäöü])stromz(ä|ae|a)hler/i, 'grid'],
     [/\b(haus|hausbedarf|hausverbrauch|house|home)\b/i, 'home']];
   var NOT_HOME = /\bhome\s*office\b/i;
 
@@ -107,6 +109,13 @@
     if (!id || !states[id]) return null;
     var reg = ((hass && hass.entities) || {})[id];
     if (reg && TK[reg.translation_key]) return TK[reg.translation_key];
+    // #44: SMA names the inverter's output "Grid power" (no translation_key): that is the solar power,
+    // the SMA energy meter's "Metering power" is the grid.
+    if (reg && reg.platform === 'sma') {
+      var sl = id + ' ' + ((states[id].attributes || {}).friendly_name || '');
+      if (/metering.?power/i.test(sl)) return 'grid';
+      if (/grid.?power|pv.?power/i.test(sl)) return 'solar';
+    }
     var a = states[id].attributes || {};
     if (a.device_class === 'battery' || (a.unit_of_measurement === '%' && /akku|batter|lade|soc/i.test(id + ' ' + (a.friendly_name || '')))) return 'battery';
     if (!isPower(states, id) && !isPct(states, id)) return null; /* Kosten/kWh-Badges sind keine Anlage */

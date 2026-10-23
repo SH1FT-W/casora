@@ -162,12 +162,18 @@ window._casoraHousePower = function () {
     if (c && Date.now() - c.t < 60000 && (c.id === null || isPower(c.id))) return c.id;
     var HOUSE = [/hausbedarf|hausverbrauch|haus.?leistung|house.?(power|consumption)|home.?(power|consumption)/i,
       /gesamt|total/i, /netzbezug|grid|smart.?meter|stromz(ä|ae|a)hler/i];
-    /* #44: no peak, average or period value (NOT_LIVE in panel/casora-panel-basis.js). */
+    /* #44: no peak, average or period value, no PV inverter output (NOT_LIVE, inverterOut in panel/casora-panel-basis.js). */
+    var inverterOut = function (id) {
+      var label = id + ' ' + ((S[id].attributes || {}).friendly_name || '');
+      return /(^|[^a-z])(solar|pv|photovoltaik|wechselrichter|inverter)([^a-z]|$)/i.test(label)
+        || ((R[id] || {}).platform === 'sma' && /grid.?power/i.test(label));
+    };
     var NOT_LIVE = /spitze|peak|maxim|minim|(^|[_\s.])(max|min)([_\s.]|$)|mittel|durchschnitt|average|\bavg|_avg|mean|heute|today|gestern|yesterday|stunde|hour|woche|week|monat|month|jahr|year|grundlast|base.?load|prognose|forecast|vorhersage|(ü|ue)berschuss|surplus/i;
     var powers = Object.keys(S).filter(function (id) {
       return id.indexOf('sensor.') === 0 && ((S[id].attributes || {}).device_class) === 'power'
         && isFinite(parseFloat(S[id].state)) && !((R[id] || {}).entity_category)
-        && !NOT_LIVE.test(id + ' ' + ((S[id].attributes || {}).friendly_name || ''));
+        && !NOT_LIVE.test(id + ' ' + ((S[id].attributes || {}).friendly_name || ''))
+        && !inverterOut(id);
     });
     var id = null;
     /* #44: a "total" of a device, in an area or named after one is the total of that device or

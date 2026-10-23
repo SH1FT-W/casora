@@ -438,9 +438,17 @@
     return Object.keys(S).filter((id) => id.startsWith("sensor.") && ((S[id].attributes || {}).device_class) === "power"
       && Number.isFinite(parseFloat(S[id].state)) && !((R[id] || {}).entity_category));
   };
+  // #44: a PV inverter's output is no house consumption: solar/PV/inverter in the sensor's own name, or SMA's
+  // "Grid power" (the inverter's AC output, no translation_key).
+  const INVERTER = /(^|[^a-z])(solar|pv|photovoltaik|wechselrichter|inverter)([^a-z]|$)/i;
+  const inverterOut = (hass, id) => {
+    const S = (hass && hass.states) || {}, e = ((hass && hass.entities) || {})[id] || {};
+    const label = houseLabel(S, id);
+    return INVERTER.test(label) || (e.platform === "sma" && /grid.?power/i.test(label));
+  };
   const housePowers = (hass) => {
     const S = (hass && hass.states) || {};
-    return anyPowers(hass).filter((id) => !NOT_LIVE.test(houseLabel(S, id)));
+    return anyPowers(hass).filter((id) => !NOT_LIVE.test(houseLabel(S, id)) && !inverterOut(hass, id));
   };
   // May this sensor be the house at all (live power, no peak or period value)?
   const housePowerOk = (hass, id) => housePowers(hass).includes(id);

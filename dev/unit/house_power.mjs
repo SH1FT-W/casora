@@ -319,6 +319,15 @@ const ROOM_IDS = ['sensor.fernseher_power', 'sensor.stehlampe_power', 'sensor.ku
   same(h, null, 'peak and period values are not the house');
   dev('d_ir', null, 'Tasmota');
   ent('sensor.stromzahler_emh_power_curr', { dev: 'd_ir', name: 'Wirkleistung (W)', state: '424' });
+  // An SMA inverter's "Grid power" is its output, never the house; neither is anything named solar/PV.
+  dev('d_sma', null, 'STP 8000TL-20');
+  ent('sensor.stp_8000tl_20_grid_power', { dev: 'd_sma', name: 'STP 8000TL-20 Grid power', state: '2400' });
+  h.entities['sensor.stp_8000tl_20_grid_power'].platform = 'sma';
+  ent('sensor.solar_netzleistung', { name: 'Solar Netzleistung', state: '2400' });
+  const meter = h.states['sensor.stromzahler_emh_power_curr'];
+  delete h.states['sensor.stromzahler_emh_power_curr'];
+  same(h, null, 'inverter output is not the house');
+  h.states['sensor.stromzahler_emh_power_curr'] = meter;
   same(h, 'sensor.stromzahler_emh_power_curr', 'meter without umlaut in the entity ID');
   assert.equal(B.housePowerOk(h, 'sensor.pv_netzbezugs_spitze_heute'), false);
   // Casora picked the peak (marker "house"): picked again on the next Studio load.
