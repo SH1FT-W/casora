@@ -1,4 +1,4 @@
-// Assist-Vorschläge (D-ASSIST, 06.10.2026): window.casoraAssistIdeas (00-finden.js) baut die
+// Assist-Vorschläge (D-ASSIST, 06.10.2026): window.casoraAssistIdeas (00-finder.js) baut die
 // Vorschlags-Chips aus dem eigenen Haus statt aus festen Sätzen. Geprüft: nur vorhandene Geräte,
 // Raumnamen aus den Bereichen (im/in der), Reihenfolge Handlungsbedarf → Tageszeit → Allgemein,
 // Anzahl (Handy 4, Desktop 6), gleiche Lage = gleiche Vorschläge.
@@ -10,7 +10,7 @@ globalThis.window = globalThis;
 globalThis.document = { querySelector: () => null };
 globalThis.customElements = { whenDefined: () => new Promise(() => {}), get: () => null };
 const src = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
-new Function(src('custom_components/casora/scripts/local/00-finden.js'))();
+new Function(src('custom_components/casora/scripts/local/00-finder.js'))();
 
 const ideas = window.casoraAssistIdeas;
 const qs = (l) => l.map((x) => x.q);

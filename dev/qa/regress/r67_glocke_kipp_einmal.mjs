@@ -1,7 +1,7 @@
 // @zustand: arbeit
 // Gemeldet (07.10.2026, P2-01, schon in 1.0.11): Die Glocke zeigte eine gekippte Tür manchmal doppelt –
 // „… ist offen“ (Kombi-Sensor) und „… Kippsensor ist offen“ statt einmal „… ist gekippt“. Ursache: Die
-// Glocke sammelte vor den lokalen Modulen (00-finden fasst Kontakt + Kippsensor zusammen, 01-basis
+// Glocke sammelte vor den lokalen Modulen (00-finder fasst Kontakt + Kippsensor zusammen, 01-basis
 // schreibt „gekippt“) und erst nach 60 s wieder. Nachgestellt mit einem künstlich langsamen Lader
 // (casora-local.js 20 s verzögert). Erwartet: spätestens 3 s nach dem Laden der Module je Tür nur ein
 // Eintrag, kein „Kippsensor“ in der Glocke.

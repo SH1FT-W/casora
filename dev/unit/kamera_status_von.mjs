@@ -68,7 +68,7 @@ assert.ok(has('casora_camera', /casoraCamOffline\?\.\(entity\?\.entity_id, state
 assert.ok(has('casora_badge_security_group', /casoraCamOffline\?\.\(id, states\)\) r\.camDead\+\+/), 'Sicherheits-Badge: „Kamera offline“');
 assert.ok(has('casora_badge_camera_group', /casoraCamOffline/), 'Kamera-Badge');
 assert.ok(has('casora_popup_camera', /casoraCamOffline/), 'Kamera-Popup');
-const finden = fs.readFileSync(new URL('custom_components/casora/scripts/local/00-finden.js', root), 'utf8');
+const finden = fs.readFileSync(new URL('custom_components/casora/scripts/local/00-finder.js', root), 'utf8');
 assert.ok(/dom === 'camera' && !!\(window\.casoraCamOffline && window\.casoraCamOffline\(id, S\)\)/.test(finden), 'Sicherheits-Stufe (Farben)');
 const types = fs.readFileSync(new URL('custom_components/casora/panel/casora-panel-types.js', root), 'utf8');
 assert.ok(/key: "status_entity", label: "Status from", domains: \["camera", "binary_sensor"\]/.test(types), 'Studio-Feld „Status from“');

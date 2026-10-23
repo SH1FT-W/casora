@@ -62,7 +62,7 @@
 })();
 
 const MODULES = [
-  '00-finden',
+  '00-finder',
   '01-basis',
   '02-devices',
   '03-popups',

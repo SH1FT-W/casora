@@ -8,7 +8,7 @@
   Pause/Fortsetzen/Abbrechen.
 
 Im Testhaus läuft alles unter der Plattform casora_mock; Casora erkennt die Quelle dann
-über die Kombination der translation_keys (scripts/local/00-finden.js, casoraLaundryFind).
+über die Kombination der translation_keys (scripts/local/00-finder.js, casoraLaundryFind).
 """
 from __future__ import annotations
 

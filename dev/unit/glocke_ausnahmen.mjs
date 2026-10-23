@@ -1,5 +1,5 @@
 // Glocke „Nicht melden“ (1.1.2): Ausnahmeliste notify.exclude in den Casora-Einstellungen.
-// Prüft: (1) die Auswahl (casoraNotifySources, 00-finden.js) enthält nur meldefähige Entitäten –
+// Prüft: (1) die Auswahl (casoraNotifySources, 00-finder.js) enthält nur meldefähige Entitäten –
 // jede echte Glocken-Zeile stammt aus ihr, eine Lampe nicht; „meldet gerade“ stimmt;
 // (2) eine Ausnahme nimmt den Eintrag aus der Glocke (auch Akku über 01-basis und eine Öffnung mit
 // Kombi-Sensor als Ganzes), der Zähler sinkt; (3) entfernt, kommt er wieder.
@@ -16,7 +16,7 @@ const basis = fs.readFileSync(new URL('local/01-basis.js', root), 'utf8');
 const bs = basis.indexOf('(function () {\n  if (window._casoraNotifyLocal) return;');
 assert.ok(bs > 0, 'Mitteilungs-Erweiterung (01-basis) gefunden');
 const basisMod = basis.slice(bs, basis.indexOf('\n})();', bs) + 6);
-const finden = fs.readFileSync(new URL('local/00-finden.js', root), 'utf8');
+const finden = fs.readFileSync(new URL('local/00-finder.js', root), 'utf8');
 
 // Erfundenes Haus.
 const MIN = 60000;
@@ -68,7 +68,7 @@ window.CASORA_SETTINGS = { notify: {} };
 new Function(mod)();
 new Function(finden)();
 new Function(basisMod)();
-window._casoraLocalLoaded = ['00-finden.js', '01-basis.js'];
+window._casoraLocalLoaded = ['00-finder.js', '01-basis.js'];
 
 const N = window._casoraNotify;
 const rows = async () => (await N.refresh(), N.rows);

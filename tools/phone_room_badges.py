@@ -1,23 +1,23 @@
-"""Raumseite am Handy = Raum-Kopf am Desktop: Badge-Reihe aus casora_room ableiten (05.10.2026).
+"""Phone room page = room header on the desktop: derive the badge row from casora_room (05.10.2026).
 
-    python3 tools/phone_room_badges.py          # schreibt dashboards/casora/button_card_templates.json
-    python3 tools/phone_room_badges.py --check  # nur prüfen (Rückgabe 1, wenn veraltet)
+    python3 tools/phone_room_badges.py          # writes dashboards/casora/button_card_templates.json
+    python3 tools/phone_room_badges.py --check  # check only (returns 1 when out of date)
 
-build-templates.py ruft derive() vor dem Bauen auf, die beiden Vorlagen bleiben so von selbst gleich.
+build-templates.py calls derive() before building, so the two templates stay equal by themselves.
 
-Die Reihe rooms_row in casora_mobile_sensor_chips (Raumseite am Handy) bekommt genau die Karten
-der oberen Badge-Reihe von casora_room (custom_fields.badges), die Unter-Reihen room_sub_<art>
-die Karten der Desktop-Unter-Reihen (badges_climate, badges_security …). Statt der Variablen der
-Raum-Karte lesen sie variables.casora_rv – die Variablen des Desktop-Raums, die
-window.casoraPhoneRoom.vars() zur Laufzeit liefert (casora-core.js, WS casora/phone_room_badges).
+The row rooms_row in casora_mobile_sensor_chips (phone room page) gets exactly the cards of
+casora_room's top badge row (custom_fields.badges), the sub-rows room_sub_<kind> the cards of the
+desktop sub-rows (badges_climate, badges_security …). Instead of the room card's variables they
+read variables.casora_rv – the desktop room's variables, which window.casoraPhoneRoom.vars()
+delivers at runtime (casora-core.js, WS casora/phone_room_badges).
 
-Bewusst anders als am Desktop:
-  - Szenen: keine Badge, die Raumseite am Handy hat dafür einen eigenen Bereich.
-  - Sammel-Badges klappen ihre Unter-Reihe je Gerät auf (ll-custom casora_phone_row,
-    window._casoraFilter.setRow) statt über den gemeinsamen Helfer casora_expanded_row – sonst
-    klappte ein Tippen am Wand-Tablet die Reihe am Handy auf und umgekehrt.
-  - Bewegung (room_chips[<raum>].motion_entity, nur Handy) steht als letzte Badge dahinter.
-  - Sicherheit bekommt place: room (Unterzeile „Automatisch“ = ausgeschrieben wie im Raum).
+Deliberately different from the desktop:
+  - Scenes: no badge, the phone room page has an area of its own for them.
+  - Group badges open their sub-row per device (ll-custom casora_phone_row,
+    window._casoraFilter.setRow) instead of via the shared helper casora_expanded_row – otherwise
+    a tap on the wall tablet opened the row on the phone and vice versa.
+  - Motion (room_chips[<room>].motion_entity, phone only) is the last badge.
+  - Security gets place: room (sub-line „Automatisch“ = spelled out as in a room).
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ ROW = "rooms_row"
 RV = "const _rv = variables.casora_rv || {}; "
 FILTER = "input_select.casora_mobile_filter"
 
-# Sammel-Badge → Art der Unter-Reihe (wie casora_expanded_row am Desktop) → Desktop-Feld.
+# Group badge → kind of sub-row (as casora_expanded_row on the desktop) → desktop field.
 GROUPS = {
     "casora_badge_security_group": "security",
     "casora_badge_climate_group": "climate",
@@ -51,15 +51,16 @@ SUB_IDS = ["room_sub_" + k for k in SUBS]
 
 
 def _tx(s):
-    """[[[ … variables … ]]] des Raum-Kopfs → dasselbe über variables.casora_rv."""
+    """[[[ … variables … ]]] of the room header → the same via variables.casora_rv."""
     if not isinstance(s, str) or not s.lstrip().startswith("[[["):
         return s
     at = s.index("[[[") + 3
     body = s[at:]
     body = body.replace("this._config?.name", "_rv._name")
     # On the phone the room pages sit in the home view: without the card, casoraHasSec does not count
-    # the house's doors and windows there (that is the home page's security badge only, #39).
+    # the house's doors and windows there and casoraHouseContactsOf lists none (Home only, #39).
     body = body.replace("casoraHasSec(variables,user,this)", "casoraHasSec(variables,user)")
+    body = re.sub(r"(casoraHouseContactsOf\(hass,variables,'(?:door|window)',user),this\)", r"\1)", body)
     body = re.sub(r"(?<![\w.$])variables(?![\w$])", "_rv", body)
     return "[[[ " + RV + body.lstrip(" ")
 
@@ -76,13 +77,13 @@ def _row_cards(room: dict) -> list:
     out = []
     for c in room["custom_fields"]["badges"]["card"]["cards"]:
         if c.get("template") == "casora_badge_scene_group":
-            continue   # Szenen: eigener Bereich auf der Raumseite am Handy
+            continue   # scenes: an area of their own on the phone room page
         c = _deep(copy.deepcopy(c))
         kind = GROUPS.get(c.get("template"))
         if kind == "energy":
             subs = ("[[[ " + RV + "let s = false; for (let i = 1; i <= 8; i++) if (_rv['energy_entity_' + i]) s = true; ")
             c["tap_action"] = {
-                # Ohne Unter-Badges gleich das Energie-Popup (wie casora_badge_energy_group).
+                # Without sub-badges straight to the energy popup (as casora_badge_energy_group).
                 "action": subs + "return s ? 'fire-dom-event' : (window.casoraPopupAction ? window.casoraPopupAction() : 'more-info'); ]]]",
                 "casora_phone_row": subs + "return s ? 'energy' : null; ]]]",
                 "haptic": "light",
@@ -90,8 +91,8 @@ def _row_cards(room: dict) -> list:
         elif kind:
             c["tap_action"] = {"action": "fire-dom-event", "casora_phone_row": kind, "haptic": "light"}
         if kind == "security":
-            # Die Raumseite am Handy liegt in der Ansicht „home“ – sie ist trotzdem ein Raum
-            # (Sicherheit „Automatisch“ = ausgeschrieben, 07.10.2026).
+            # The phone room page sits in the view „home“ – it is still a room
+            # (security „Automatisch“ = spelled out, 07.10.2026).
             c.setdefault("variables", {})["place"] = "room"
         out.append(c)
     return out
@@ -120,7 +121,7 @@ RV_VAR = ("[[[\n  // Variablen des Desktop-Raums für die Raumseite (casora-core
 
 
 def derive(templates: dict) -> bool:
-    """casora_mobile_sensor_chips aus casora_room nachziehen. True, wenn sich etwas geändert hat."""
+    """Bring casora_mobile_sensor_chips up to date with casora_room. True if something changed."""
     room, chips = templates["casora_room"], templates[CHIPS]
     before = json.dumps(chips, sort_keys=True, ensure_ascii=False)
     cf = chips["custom_fields"]
@@ -132,7 +133,7 @@ def derive(templates: dict) -> bool:
             m["extra_styles"] = es.replace("return (hide ?", "return ':host{order:99;}\\n' + (hide ?", 1)
     row["cards"] = _row_cards(room) + motion
 
-    # Unter-Reihen, hinter der Reihe in dieser Reihenfolge.
+    # Sub-rows, after the row in this order.
     for k in [k for k in cf if k.startswith("room_sub_")]:
         del cf[k]
     for kind, field in SUBS.items():
@@ -143,7 +144,7 @@ def derive(templates: dict) -> bool:
             card["card_mod"] = copy.deepcopy(row.get("card_mod"))
         cf["room_sub_" + kind] = sub
 
-    # Stile: Reihe wie bisher, Reihenfolge der Badges wie im Raum-Kopf (badge_order).
+    # Styles: row as before, badge order as in the room header (badge_order).
     st = chips["styles"]["custom_fields"]
     base = [e for e in st[ROW] if not any(k.startswith("--casora-badge-order-") for k in e)]
     order = [{k: _tx(v)} for e in room["styles"]["card"] for k, v in e.items()
@@ -165,7 +166,7 @@ def derive(templates: dict) -> bool:
                 e["margin"] = "0 0 var(--casora-room-badges-gap-mobile, 24px) 0 !important"
         st["room_sub_" + kind] = sub_st
 
-    # Weiche Ränder, Wischen, kein Scrollbalken auch für die Unter-Reihen.
+    # Soft edges, swiping, no scrollbar for the sub-rows too.
     es = chips.get("extra_styles", "")
     if "#room_sub_" not in es:
         def widen(m):

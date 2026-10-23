@@ -1,4 +1,4 @@
-"""Find devices for live activities – counterpart of casoraLaundryFind (scripts/local/00-finden.js).
+"""Find devices for live activities – counterpart of casoraLaundryFind (scripts/local/00-finder.js).
 
 Detection works as in the dashboard: via the entities' platform and their translation_key, never via
 names or IDs. Without a matching platform (test house: everything casora_mock) the key combination suffices.
@@ -140,7 +140,7 @@ def _other_role(states, ents, model):
     return "dryer" if re.search(r"dryer|tumble|(^|[_ ])td($|[_ ])|dry_level", t, re.I) else None
 
 
-# Order, platforms, need/any and fields as in casoraLaundryFind.SOURCES (00-finden.js).
+# Order, platforms, need/any and fields as in casoraLaundryFind.SOURCES (00-finder.js).
 SOURCES: list[dict[str, Any]] = [
     {"id": "home_connect", "grade": GRADE_GOOD, "platforms": ["home_connect"], "need": ["operation_state"],
      "any": ["program_progress", "active_program", "selected_program", "program_finish_time"],

@@ -1,5 +1,5 @@
 // Unterzeile des Sicherheits-Sammelbadges (06.10.2026): Weich/Nebel bilden den Text mit
-// window.casoraSecuritySummary (00-finden.js). Variable summary: short (Standard, Symbole mit Zahl)
+// window.casoraSecuritySummary (00-finder.js). Variable summary: short (Standard, Symbole mit Zahl)
 // | detailed (Liste in Worten). Zustandswörter: „Alles sicher“, „Aktiv · <Modus>“, „Alarm!“.
 //   node dev/unit/sicherheit_unterzeile.mjs
 import fs from 'node:fs';
@@ -9,7 +9,7 @@ globalThis.window = globalThis;
 globalThis.document = { querySelector: () => null };
 globalThis.customElements = { whenDefined: () => new Promise(() => {}), get: () => null };
 const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
-new Function(read('custom_components/casora/scripts/local/00-finden.js'))();
+new Function(read('custom_components/casora/scripts/local/00-finder.js'))();
 window.casoraIconUrl = (k) => '/i/' + k + '.svg';
 
 const Z = { triggered: false, disarmed: false, locks: 0, lockDead: 0, doors: 0, windows: 0,

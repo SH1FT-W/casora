@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 
-const src = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finden.js', import.meta.url), 'utf8');
+const src = fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finder.js', import.meta.url), 'utf8');
 const ctx = { window: {}, document: { querySelector: () => null } };
 ctx.window.window = ctx.window;
 vm.createContext(ctx);

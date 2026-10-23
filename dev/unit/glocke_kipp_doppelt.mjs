@@ -1,6 +1,6 @@
 // Glocke (P2-01, schon in 1.0.11): eine Tür mit Kontakt + Kippsensor + Kombi-Vorlage stand manchmal
 // doppelt da („Gartentür ist offen“ und „Gartentür Kippsensor ist offen“ statt einmal „Gartentür ist
-// gekippt“). Ursache: Die Glocke sammelte, bevor die lokalen Module (00-finden: casoraOpenings,
+// gekippt“). Ursache: Die Glocke sammelte, bevor die lokalen Module (00-finder: casoraOpenings,
 // 01-basis: „gekippt“) geladen waren – HA lädt casora-local.js ohne feste Reihenfolge, sein Merker
 // fehlte noch, und neu gesammelt wurde erst nach 60 s.
 // Prüft: (1) mit Modulen genau ein Eintrag „gekippt“, (2) ohne Lader wartet die Glocke,
@@ -18,7 +18,7 @@ const basis = fs.readFileSync(new URL('local/01-basis.js', root), 'utf8');
 const bs = basis.indexOf('(function () {\n  if (window._casoraNotifyLocal) return;');
 assert.ok(bs > 0, 'Mitteilungs-Erweiterung (01-basis) gefunden');
 const basisMod = basis.slice(bs, basis.indexOf('\n})();', bs) + 6);
-const finden = fs.readFileSync(new URL('local/00-finden.js', root), 'utf8');
+const finden = fs.readFileSync(new URL('local/00-finder.js', root), 'utf8');
 
 // Erfundenes Haus wie im Fehlerbild: Kontakt und Kippsensor sind zwei Geräte ohne Bereich,
 // die Kombi-Vorlage hat kein Gerät und heißt wie der Kontakt. Tür ist gekippt.
@@ -78,7 +78,7 @@ assert.deepEqual(naked.filter((r) => /^casora:open:/.test(r.id)).map((r) => r.la
 // (3) Module kommen: Ereignis löst sofort neues Sammeln aus.
 new Function(finden)();
 new Function(basisMod)();
-window._casoraLocalLoaded = ['00-finden.js', '01-basis.js'];
+window._casoraLocalLoaded = ['00-finder.js', '01-basis.js'];
 assert.ok((listeners['casora-local-loaded'] || []).length >= 1, 'Glocke hört auf „casora-local-loaded“');
 listeners['casora-local-loaded'].forEach((fn) => fn());
 await settle();

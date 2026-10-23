@@ -17,7 +17,7 @@ const reg = (domain, key, unit, state) => {
 };
 const window = {};
 globalThis.document = { querySelector: (s) => (s === 'home-assistant' ? { hass } : null) };
-new Function('window', 'document', read('custom_components/casora/scripts/local/00-finden.js'))(window, globalThis.document);
+new Function('window', 'document', read('custom_components/casora/scripts/local/00-finder.js'))(window, globalThis.document);
 const geraete = read('custom_components/casora/scripts/local/02-devices.js');
 const str = (states, e) => { const s = e && states[e] && states[e].state; return !s || ['unknown', 'unavailable', 'none', 'off'].includes(s) ? null : s; };
 const num = (states, e) => { const v = e && states[e] ? parseFloat(states[e].state) : NaN; return Number.isFinite(v) ? v : null; };

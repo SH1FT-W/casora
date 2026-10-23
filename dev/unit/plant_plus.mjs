@@ -121,9 +121,9 @@ new Function(slice(core, '// Is this entity a plant?', '\n};\n'))();
 
 // ── Bell (casora-core.js notify module) ────────────────────────────────────────
 new Function(slice(core, '(function () {\n  if (window._casoraNotify) return;', '\n})();'))();
-const finden = read('custom_components/casora/scripts/local/00-finden.js');
+const finden = read('custom_components/casora/scripts/local/00-finder.js');
 new Function(finden)();
-window._casoraLocalLoaded = ['00-finden.js'];
+window._casoraLocalLoaded = ['00-finder.js'];
 {
   const N = window._casoraNotify;
   await N.refresh();
@@ -144,7 +144,7 @@ window._casoraLocalLoaded = ['00-finden.js'];
   console.log('ok plant_plus: bell');
 }
 
-// ── Finder (00-finden.js) ──────────────────────────────────────────────────────
+// ── Finder (00-finder.js) ──────────────────────────────────────────────────────
 {
   const src = window.casoraNotifySources(hass, {});
   const byId = Object.fromEntries(src.map((x) => [x.entity, x]));

@@ -1,6 +1,6 @@
 // @zustand: stress
 // @parallel: ui
-// @deckt: custom_components/casora/scripts/local/00-finden.js
+// @deckt: custom_components/casora/scripts/local/00-finder.js
 // Tablet-Badge-Reihe (1.3, Look ohne Casora-Theme – bis 1.6.0 „Hemma 2“): Die lange Sicherheits-Zeile („3 Schlösser offen · Schloss offline ·
 // 2 Kameras offline“) schob am Tablet die übrigen Badges über den Rand, „Szenen“ war nicht zu sehen.
 // Jetzt zeigt das Sammel-Badge die Kurzform („3 offen · 3 offline“) nur, wenn die Reihe sonst nicht passt –

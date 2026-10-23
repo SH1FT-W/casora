@@ -7,11 +7,11 @@ import assert from 'node:assert/strict';
 
 const read = (p) => fs.readFileSync(new URL('../../custom_components/casora/' + p, import.meta.url), 'utf8');
 
-// casoraOpenings (Kontakt + Kippsensor = eine Öffnung) aus 00-finden.js.
+// casoraOpenings (Kontakt + Kippsensor = eine Öffnung) aus 00-finder.js.
 globalThis.window = globalThis;
 globalThis.document = { querySelector: () => null };
 globalThis.customElements = { whenDefined: () => new Promise(() => {}), get: () => null };
-new Function(read('scripts/local/00-finden.js'))();
+new Function(read('scripts/local/00-finder.js'))();
 
 const core = read('scripts/casora-core.js');
 const block = (start, end) => { const i = core.indexOf(start); return core.slice(i, core.indexOf(end, i) + end.length); };

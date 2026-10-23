@@ -1,6 +1,6 @@
 // Glocke: Sensoren, die nur technisch device_class door tragen, sind keine Türen (03.10.2026).
 // Tankerkönig legt je Tankstelle einen „Status“-Sensor (an = geöffnet) mit device_class door an –
-// die Glocke meldete „… Status ist offen“. window.casoraNotAnOpening (00-finden.js) erkennt
+// die Glocke meldete „… Status ist offen“. window.casoraNotAnOpening (00-finder.js) erkennt
 // solche Plattformen, Sensoren mit Ortsangabe und Diagnose-Entitäten; casora-core.js fragt es
 // vor jeder „ist offen“-Meldung.
 //   node dev/unit/glocke_keine_tuer.mjs
@@ -11,7 +11,7 @@ globalThis.window = globalThis;
 globalThis.document = { querySelector: () => null };
 globalThis.customElements = { whenDefined: () => new Promise(() => {}), get: () => null };
 const src = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
-new Function(src('custom_components/casora/scripts/local/00-finden.js'))();
+new Function(src('custom_components/casora/scripts/local/00-finder.js'))();
 
 const no = window.casoraNotAnOpening;
 assert.equal(typeof no, 'function');

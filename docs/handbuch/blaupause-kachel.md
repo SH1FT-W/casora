@@ -22,7 +22,7 @@ Vorlage ruft nur auf, das Studio bietet sie an, ein Unit-Test prüft ohne HA. Di
 
 - **Grundvorlage `casora_entity`** – Größe, Radius, Symbolkreis, Name/Zustand, Haptik, aktive Optik.
   Eigene Vorlage erbt: `"template": ["casora_entity", "casora_popup_name"]`.
-- **Finder `window.casoraDevice`** (`scripts/local/00-finden.js`): `deviceOf`, `entities`, `byKey`,
+- **Finder `window.casoraDevice`** (`scripts/local/00-finder.js`): `deviceOf`, `entities`, `byKey`,
   `siblings`, `companionPlug`, `contacts`, `openings`, `network` … Entitäten **über Integration +
   `translation_key`** finden, nie über die Entity-ID (die hängt an Sprache und Gerätenamen).
 - **Text in der Kachel**: `window.casoraStateFit(text)` für den Zustand; Zahlen mit `window.casoraNum(v, min, max)`

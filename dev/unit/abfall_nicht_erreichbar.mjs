@@ -9,7 +9,7 @@ globalThis.document = { querySelector: () => null };
 globalThis.addEventListener = () => {};
 globalThis.setTimeout = () => 0;
 const load = (p) => new Function(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/' + p, import.meta.url), 'utf8'))();
-load('00-finden.js');
+load('00-finder.js');
 load('06-kalender.js');
 window._casoraUI = {
   tokens: { ink: '#fff', ink2: '#ccc', ink3: '#999', fill: '#333', accent: '#0a84ff', green: '#30d158', font: 'system-ui' },

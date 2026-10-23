@@ -9,7 +9,7 @@ globalThis.document = { querySelector: () => null };
 globalThis.addEventListener = () => {};
 globalThis.setTimeout = () => 0;  // Mitternachts-/Nachzeichnen-Timer nicht abwarten
 const load = (p) => new Function(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/' + p, import.meta.url), 'utf8'))();
-load('00-finden.js');
+load('00-finder.js');
 load('06-kalender.js');
 // Popup-Bausteine (casora-core) nur so weit, wie das Abfall-Popup sie braucht.
 window._casoraUI = {

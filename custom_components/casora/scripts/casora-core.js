@@ -10503,7 +10503,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
   }
 
   // Tür/Fenster nur dem Namen der Geräteklasse nach (Tankerkönig-Status …): window.casoraNotAnOpening
-  // aus 00-finden.js; lädt das (noch) nicht, wenigstens die bekannten Plattformen.
+  // aus 00-finder.js; lädt das (noch) nicht, wenigstens die bekannten Plattformen.
   function notAnOpening(hass, id) {
     if (typeof window.casoraNotAnOpening === 'function') {
       try { return !!window.casoraNotAnOpening(hass, id); } catch (e) { return false; }
@@ -11025,7 +11025,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     if (id.indexOf('alarm_control_panel.') === 0) {
       var word = ALARM_WORD[s];
       if (!word) return null;
-      /* Weich: dieselben Wörter wie Kachel, Badge und Popup (casoraSecurityWord, 00-finden.js). */
+      /* Weich: dieselben Wörter wie Kachel, Badge und Popup (casoraSecurityWord, 00-finder.js). */
       if (window._casoraSoft && window._casoraSoft() && window.casoraSecurityWord && window.casoraSecurityWord(id, s))
         word = 'Alarm ' + window.casoraSecurityWord(id, s).replace(/^./, function (c) { return c.toLowerCase(); });
       return {
@@ -11314,7 +11314,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
         var kind = dc(st);
         if (kind !== 'door' && kind !== 'window' && kind !== 'garage_door'
           && kind !== 'opening') return;
-        // Nur technisch „Tür“ (Tankerkönig-Status je Tankstelle …): keine Meldung (00-finden.js).
+        // Nur technisch „Tür“ (Tankerkönig-Status je Tankstelle …): keine Meldung (00-finder.js).
         if (notAnOpening(hass, id)) return;
         // Echter Öffnungszeitpunkt aus der Integration (1.0.5): nach einem HA-Neustart beginnt
         // last_changed neu, die Glocke zeigte „Seit 10 Min.“ als neue Mitteilung. `when` ist
@@ -11348,7 +11348,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
           openList = openList.filter(function (o) { return !gone[o.id]; });
         } catch (e) { /* ohne Gruppen: nur die Sensoren selbst */ }
       }
-      // Kontakt + Kippsensor + Kombi-Sensor derselben Öffnung (00-finden.js, casoraOpenings):
+      // Kontakt + Kippsensor + Kombi-Sensor derselben Öffnung (00-finder.js, casoraOpenings):
       // nur der Hauptsensor meldet, egal ob sie im selben Bereich liegen.
       if (typeof window.casoraOpenings === 'function' && openList.length > 1) {
         try {
@@ -11878,7 +11878,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
          Rot = Gefahr (ausgelöst, offen bei Abwesenheit), Orange = Hinweis (offen, entriegelt,
          unscharf); Erledigtes (verriegelt, scharf) neutral in Sand statt durchgehend Rot. */
       /* 05.10.2026: dieselben Stufenfarben wie Badges, Kacheln und Popups (--casora-security-*,
-         00-finden.js); ohne diese Variablen wie bisher. */
+         00-finder.js); ohne diese Variablen wie bisher. */
       if (r.sec) {
         return r.tone === 'bad' ? 'var(--casora-notify-sec-alert, var(--casora-security-alarm-color, var(--casora-tone-alert)))'
           : r.tone === 'warn' ? 'var(--casora-notify-sec-warn, var(--casora-security-warn-color, var(--casora-color-orange, #DE8A4E)))'
@@ -12774,7 +12774,7 @@ window.casoraSecurityIcon = window.casoraSecurityIcon || function (id, s, attrs)
     var tick = function () { if (!document.hidden) collect(); };
     var t0 = Date.now();
     // Kommen die lokalen Module erst nach dem ersten Sammeln (langsames Laden, > 15 s), gleich
-    // neu sammeln statt bis zum nächsten Takt (60 s) zu warten: ohne 00-finden/01-basis stand
+    // neu sammeln statt bis zum nächsten Takt (60 s) zu warten: ohne 00-finder/01-basis stand
     // eine Tür mit Kontakt + Kippsensor doppelt in der Glocke („… ist offen“ und „… Kippsensor
     // ist offen“ statt einmal „… ist gekippt“). Läuft gerade ein Sammeln, danach.
     window.addEventListener('casora-local-loaded', function () {

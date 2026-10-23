@@ -171,7 +171,7 @@ Casora:
   casora-security-accent: var(--casora-color-red)
   casora-badge-alert-color: var(--casora-color-red)
   # Sicherheits-Badges (Sicherheit, Schlösser, Kameras, Türen/Fenster, Alarm) nach Zustand
-  # (Stufe aus window.casoraSecurityLevel, 00-finden.js; die große Badge = schlimmster Zustand):
+  # (Stufe aus window.casoraSecurityLevel, 00-finder.js; die große Badge = schlimmster Zustand):
   #   ok    Grün   – verriegelt, geschlossen, Alarm scharf, Kamera online
   #   warn  Orange – entriegelt, offen, gekippt, Alarm unscharf, Gerät offline
   #   alarm Rot    – Alarm ausgelöst, Schloss klemmt, offen/entriegelt bei Abwesenheit

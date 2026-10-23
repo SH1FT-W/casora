@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 globalThis.window = globalThis;
 globalThis.document = { querySelector: () => null };
 globalThis.addEventListener = () => {};
-new Function(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finden.js', import.meta.url), 'utf8'))();
+new Function(fs.readFileSync(new URL('../../custom_components/casora/scripts/local/00-finder.js', import.meta.url), 'utf8'))();
 const D = window.casoraDevice;
 
 const hass = (list) => {

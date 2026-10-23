@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 globalThis.window = globalThis;
 globalThis.document = { querySelector: () => null };
 const src = (p) => fs.readFileSync(new URL('../../custom_components/casora/scripts/local/' + p, import.meta.url), 'utf8');
-new Function(src('00-finden.js'))();
+new Function(src('00-finder.js'))();
 new Function(src('16-maeher.js'))();
 const M = window._casoraMower;
 assert.ok(M && window.casoraDevice, 'Module geladen');

@@ -21258,7 +21258,7 @@ class CasoraPanel extends HTMLElement {
       return !!S[id];
     };
     let ids;
-    // Waschmaschine/Trockner: gemeinsamer Finder (scripts/local/00-finden.js) – Hersteller-
+    // Waschmaschine/Trockner: gemeinsamer Finder (scripts/local/00-finder.js) – Hersteller-
     // Integration vor WashData; gibt es beides nicht, die Zwischenstecker im Bereich des Raums.
     const LF = window.casoraLaundryFind;
     const laundryRole = LF ? { casora_washer: "washer", casora_dryer: "dryer" }[type.id] : null;
@@ -22577,7 +22577,7 @@ class CasoraPanel extends HTMLElement {
       if (sec.doorsTilted) parts.push(nn(sec.doorsTilted, "Door tilted", "Doors tilted"));
       if (sec.lockDead) parts.push(nn(sec.lockDead, "Lock offline", "Locks offline"));
       if (sec.camDead) parts.push(nn(sec.camDead, "Camera offline", "Cameras offline"));
-      // Weich/Nebel: dieselbe Unterzeile wie das Dashboard (00-finden.js, Kurz = Symbole mit Zahl).
+      // Weich/Nebel: dieselbe Unterzeile wie das Dashboard (00-finder.js, Kurz = Symbole mit Zahl).
       let secSum = null;
       // Short or detailed as on the dashboard: „Automatisch“ = short on Home, spelled out in rooms.
       const secMode = typeof window.casoraSecurityMode === "function" ? window.casoraSecurityMode(V.security_summary, secPlace)
@@ -22590,7 +22590,7 @@ class CasoraPanel extends HTMLElement {
               || sec.windowsTilted || sec.gates),
             problem: !!(sec.lockDead || sec.camDead) }, { summary: secMode, alarmState: al });
         } catch (e) { secSum = null; }
-        // Die Wörter kommen deutsch aus 00-finden.js (Dashboard-Quelltext). Das Dashboard übersetzt sie
+        // Die Wörter kommen deutsch aus 00-finder.js (Dashboard-Quelltext). Das Dashboard übersetzt sie
         // über casora-i18n.js; die Vorschau tut es hier selbst (07.10.2026: „Alles sicher“ blieb in der
         // englischen Vorschau deutsch). Ohne geladene Übersetzung in fremder Sprache: eigener Text unten.
         const deUi = /^de\b/i.test(String(((this._hass || {}).locale || {}).language || (this._hass || {}).language || ""));

@@ -53,7 +53,7 @@ kleine Designsprache erzeugt – das nicht wiederholen.
 | `window._casoraStd(ui, o)` | `05-standard-medien.js` | ältere Inline-Popups: dieselbe Spaltenaufteilung für ein fertiges button-card-Objekt (`o.top/full/left/right/single`) |
 | `window._casoraSplit` | `05-standard-medien.js` | Spalten nach gemessener Höhe ausgleichen (macht `_casoraStd` selbst) |
 | `window._casoraSelRows(html, aktiv)` | `01-basis.js` | Auswahlliste: aktive Zeile hinterlegen statt Haken |
-| `window.casoraDevice` | `00-finden.js` | Geräte/Entitäten finden (über `translation_key`, Gerät, Bereich) |
+| `window.casoraDevice` | `00-finder.js` | Geräte/Entitäten finden (über `translation_key`, Gerät, Bereich) |
 | `window.casoraPopup.open/close/moreInfo` | `casora-core.js` | Popup aus Code öffnen/schließen, HA-Detaildialog |
 | `casoraAsk` / Zeilen-`confirm` | `casora-core.js` | Rückfrage vor kritischen Diensten |
 

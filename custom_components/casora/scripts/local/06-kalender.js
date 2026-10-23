@@ -634,7 +634,7 @@ if (typeof window.casoraClimateActive !== 'function') {
   window._casoraRestartGuard = true;
   var DEAD = { unavailable: 1, unknown: 1, '': 1 };
   // Fahrzeug-Sensoren (Türen, Schlösser, Klappen eines Autos; Daten oft verzögert) nie in der
-  // Glocke: window.casoraIsVehicle aus 00-finden.js.
+  // Glocke: window.casoraIsVehicle aus 00-finder.js.
   var vehicle = function (id) {
     if (id.indexOf('binary_sensor.') !== 0 || typeof window.casoraIsVehicle !== 'function') return false;
     var ha = document.querySelector('home-assistant');
