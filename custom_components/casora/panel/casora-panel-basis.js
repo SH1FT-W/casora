@@ -428,31 +428,55 @@
       && words(a.name).some((w) => w.trim() && label.some((l) => l.includes(w))));
     return hit ? hit.name : null;
   }
+  // Power sensors that may be the house: device class power, a number, no diagnostic entity.
+  const housePowers = (hass) => {
+    const S = (hass && hass.states) || {}, R = (hass && hass.entities) || {};
+    return Object.keys(S).filter((id) => id.startsWith("sensor.") && ((S[id].attributes || {}).device_class) === "power"
+      && Number.isFinite(parseFloat(S[id].state)) && !((R[id] || {}).entity_category));
+  };
+  // A meter with phase sensors on its device (three phase, e.g. a clamp meter): its "total" is
+  // the house, wherever the device sits.
+  const PHASE = /phase|(^|[_\s])l[123]([_\s]|$)/i;
+  function phaseMeter(hass, id) {
+    const S = (hass && hass.states) || {}, R = (hass && hass.entities) || {};
+    const dev = (R[id] || {}).device_id;
+    return !!dev && Object.keys(R).some((x) => x !== id && R[x] && R[x].device_id === dev && x.startsWith("sensor.")
+      && PHASE.test(houseLabel(S, x)));
+  }
   function housePower(hass) {
     const S = (hass && hass.states) || {}, R = (hass && hass.entities) || {};
-    const powers = Object.keys(S).filter((id) => id.startsWith("sensor.") && ((S[id].attributes || {}).device_class) === "power"
-      && Number.isFinite(parseFloat(S[id].state)) && !((R[id] || {}).entity_category));
+    const powers = housePowers(hass);
     for (let i = 0; i < HOUSE_POWER.length; i++) {
       const id = powers.find((p) => HOUSE_POWER[i].test(houseLabel(S, p))
-        && !(i === 1 && ((R[p] || {}).device_id || roomOfPower(hass, p))));
+        && !(i === 1 && ((R[p] || {}).device_id || roomOfPower(hass, p)) && !phaseMeter(hass, p)));
       if (id) return id;
     }
     return null;
   }
+  // The rule before #44, only where it differs: the first "total" when nothing matched stage 1.
+  // fixHomePower touches a Home sensor only when it is exactly this pick.
+  function oldHouseTotal(hass) {
+    const S = (hass && hass.states) || {}, powers = housePowers(hass);
+    if (powers.some((p) => HOUSE_POWER[0].test(houseLabel(S, p)))) return null;
+    return powers.find((p) => HOUSE_POWER[1].test(houseLabel(S, p))) || null;
+  }
+  // A sensor that measures the house (house/grid name, or a phase meter's total): never a summand
+  // of the rooms' sum on Home, it would count twice.
+  function houseMeter(hass, id) {
+    const label = houseLabel((hass && hass.states) || {}, id);
+    return HOUSE_POWER[0].test(label) || HOUSE_POWER[2].test(label) || (HOUSE_POWER[1].test(label) && phaseMeter(hass, id));
+  }
 
   // A Home sensor only the rule before #44 picked: "total" in its name and nothing else that
   // makes it a house sensor, belonging to one of the dashboard's rooms (rooms: their names). A
-  // meter with phase sensors on its device (three phase, e.g. a clamp meter) stays: that one
-  // measures the house.
+  // phase meter stays: that one measures the house.
   function wrongHousePower(hass, id, rooms) {
-    const S = (hass && hass.states) || {}, R = (hass && hass.entities) || {};
+    const S = (hass && hass.states) || {};
     const label = houseLabel(S, id);
     if (!S[id] || !HOUSE_POWER[1].test(label) || HOUSE_POWER[0].test(label) || HOUSE_POWER[2].test(label)) return false;
     const room = roomOfPower(hass, id);
     if (!room || !(rooms || []).some((n) => norm(n) === norm(room))) return false;
-    const dev = (R[id] || {}).device_id;
-    const PHASE = /phase|(^|[_\s])l[123]([_\s]|$)/i;
-    return !(dev && Object.keys(R).some((x) => R[x] && R[x].device_id === dev && x.startsWith("sensor.") && PHASE.test(houseLabel(S, x))));
+    return !phaseMeter(hass, id);
   }
 
   // Badges per room from what is ticked: lights, climate, media, security.
@@ -494,8 +518,10 @@
     if (hh) h.humidity_sensor = hh;
     // Without a house sensor Home counts the rooms, the same sensors as their energy badges
     // (#44). casora_energy_auto 2: the Studio adds what the rooms gain later (fillHomeEnergy).
-    if (p.housePower) h.energy_power_entity = p.housePower;
-    else if (all.power.length) { h.energy_entities = [...new Set(all.power)]; h.casora_energy_auto = 2; }
+    // casora_energy_auto "house": the Studio picked the house sensor, not the user.
+    const sum = [...new Set(all.power)].filter((id) => !houseMeter(hass, id));
+    if (p.housePower) { h.energy_power_entity = p.housePower; h.casora_energy_auto = "house"; }
+    else if (sum.length) { h.energy_entities = sum; h.casora_energy_auto = 2; }
     put(h, "media_player_", [...new Set(all.media)], 10);
     if (all.lock.length) h.security_locks = [...new Set(all.lock)];
     if (all.camera.length) h.security_cameras = [...new Set(all.camera)];
@@ -567,7 +593,7 @@
     const hi = list.findIndex((t) => t && t.home && t.vars);
     const others = list.filter((t) => t && !t.home && t.vars);
     if (hi >= 0 && others.length && res[hi].includes("energy") && Array.isArray(list[hi].vars.energy_entities)) {
-      const H = list[hi].vars, ids = roomPowerIds(others.map((t) => t.vars));
+      const H = list[hi].vars, ids = homeSumIds(hass, others.map((t) => t.vars));
       if (ids.length) H.energy_entities = ids;
       else {
         delete H.energy_entities; delete H.casora_energy_auto;
@@ -590,6 +616,10 @@
     });
     return out;
   }
+  // The sum on Home: the rooms' sensors without the ones that measure the house (#44).
+  function homeSumIds(hass, varsList) {
+    return roomPowerIds(varsList).filter((id) => !houseMeter(hass, id));
+  }
 
   // 06.10.2026: power sensors of a room as the automatic picks them, for the Studio (extend the
   // list, the note about further sensors in the room). whole: sensor for the whole room; list:
@@ -605,7 +635,7 @@
       any: (room.powersAny || []).slice() };
   }
 
-  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, wrongHousePower, roomPowerIds, openings, isCombo };
+  window.casoraBasis = { plan, tilesOf, rules, DEFAULTS, shortName, fillBadges, energyProbe, housePower, oldHouseTotal, wrongHousePower, roomPowerIds, homeSumIds, openings, isCombo };
 
   // KI kostet: Casora schätzt vor dem ersten Einsatz grob, was es über den API-Schlüssel
   // kostet (Zeichen → Token, Listenpreise je Modellfamilie in USD pro 1 Mio. Token) und fragt nach.

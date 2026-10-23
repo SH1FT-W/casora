@@ -176,8 +176,17 @@ window._casoraHousePower = function () {
         l.replace(/ä/g, 'a').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/ß/g, 'ss')]
         .map(function (x) { return ' ' + x.replace(/[^a-z0-9]+/g, ' ').trim() + ' '; });
     };
+    /* A meter with phase sensors on its device: its "total" is the house (phaseMeter there). */
+    var phaseMeter = function (p) {
+      var dev = (R[p] || {}).device_id;
+      return !!dev && Object.keys(R).some(function (x) {
+        return x !== p && R[x] && R[x].device_id === dev && x.indexOf('sensor.') === 0
+          && /phase|(^|[_\s])l[123]([_\s]|$)/i.test(x + ' ' + (((S[x] || {}).attributes || {}).friendly_name || ''));
+      });
+    };
     var owned = function (p) {
       var e = R[p];
+      if (phaseMeter(p)) return false;
       if (e && (e.device_id || e.area_id)) return true;
       var label = words(p + ' ' + ((S[p].attributes || {}).friendly_name || ''));
       return Object.keys(A).some(function (k) {

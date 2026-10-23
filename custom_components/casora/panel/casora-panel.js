@@ -2696,42 +2696,60 @@ function fillRoomEnergy(hass, rooms) {
   return n + up;
 }
 
-// #44: Home without a house sensor counts the rooms (casoraBasis.roomPowerIds). With
-// casora_energy_auto 2 the Studio adds on load what the rooms gained; it never takes anything
-// away and leaves energy_exclude out. Runs after fillRoomEnergy, quietly like it.
+// #44: Home without a house sensor counts the rooms (casoraBasis.homeSumIds). While
+// casora_energy_auto is 2 the list is Casora's: on load it follows the rooms (adds and removes),
+// leaves energy_exclude out. A list the user edited (marker false) is never touched. Runs after
+// fillRoomEnergy, quietly like it.
 function fillHomeEnergy(hass, rooms) {
   const B = typeof window !== "undefined" && window.casoraBasis;
   const V = rooms && rooms[0] && rooms[0].variables;
-  if (!B || !B.roomPowerIds || !V || V.show_energy === false || V.casora_energy_auto !== 2 || V.energy_power_entity) return 0;
+  if (!B || !B.homeSumIds || !V || V.show_energy === false || V.casora_energy_auto !== 2 || V.energy_power_entity) return 0;
   const arr = (v) => (Array.isArray(v) ? v.filter(Boolean) : []);
   const has = arr(V.energy_entities), ex = arr(V.energy_exclude);
-  const next = has.concat(B.roomPowerIds(rooms.slice(1).map((r) => r && r.path !== "home" && r.variables))
-    .filter((id) => !has.includes(id) && !ex.includes(id)));
-  if (next.length === has.length) return 0;
-  V.energy_entities = next;
+  const want = B.homeSumIds(hass, rooms.slice(1).map((r) => r && r.path !== "home" && r.variables))
+    .filter((id) => !ex.includes(id));
+  const next = has.filter((id) => want.includes(id)).concat(want.filter((id) => !has.includes(id)));
+  if (next.length === has.length && next.every((id, i) => id === has[i])) return 0;
+  if (next.length) V.energy_entities = next;
+  else delete V.energy_entities;
   return 1;
 }
 
-// #44: a Home sensor that only the old rule picked (a device's "total" in one of the rooms,
-// casoraBasis.wrongHousePower) becomes the house sensor, else the sum of the rooms. Once:
-// casora_energy_auto 2 marks it, so a sensor picked by hand afterwards stays. Returns whether
-// Home changed; the Studio shows that as unsaved, so saving once fixes the dashboard.
+// #44: a Home sensor that the old rule picked (exactly casoraBasis.oldHouseTotal, a device's
+// "total" in one of the rooms, casoraBasis.wrongHousePower) becomes the house sensor, else the
+// sum of the rooms. Only on dashboards without a marker: casora_energy_auto is set once Casora
+// or the user chose, so a user's choice is never overwritten. When in doubt it stays: the sensor
+// is a room's only sensor (it may be the house meter, the sum would count it twice) or the rooms
+// measure nothing. Returns whether Home changed; the Studio shows that as unsaved.
 function fixHomePower(hass, rooms) {
   const B = typeof window !== "undefined" && window.casoraBasis;
   const V = rooms && rooms[0] && rooms[0].variables;
-  if (!B || !B.wrongHousePower || !hass || !V || V.show_energy === false || !V.energy_power_entity) return false;
+  if (!B || !B.wrongHousePower || !B.oldHouseTotal || !hass || !V || V.show_energy === false || !V.energy_power_entity) return false;
   if (V.casora_energy_auto !== undefined) return false;
   if (Array.isArray(V.energy_entities) && V.energy_entities.some(Boolean)) return false;
+  const id = V.energy_power_entity;
+  if (B.oldHouseTotal(hass) !== id) return false;
   const others = rooms.slice(1).filter((r) => r && r.path !== "home");
-  if (!B.wrongHousePower(hass, V.energy_power_entity, others.map((r) => r.name))) return false;
+  if (!B.wrongHousePower(hass, id, others.map((r) => r.name))) return false;
   const pick = B.housePower(hass);
-  V.casora_energy_auto = 2;
-  if (pick) { V.energy_power_entity = pick; return true; }
-  delete V.energy_power_entity;
+  if (pick && pick !== id) { V.energy_power_entity = pick; V.casora_energy_auto = "house"; return true; }
+  if (others.some((r) => { const own = B.roomPowerIds([r.variables]); return own.length === 1 && own[0] === id; })) return false;
   const ex = Array.isArray(V.energy_exclude) ? V.energy_exclude : [];
-  const ids = B.roomPowerIds(others.map((r) => r.variables)).filter((id) => !ex.includes(id));
-  if (ids.length) V.energy_entities = ids;
+  const ids = B.homeSumIds(hass, others.map((r) => r.variables)).filter((x) => !ex.includes(x));
+  if (!ids.length) return false;
+  delete V.energy_power_entity;
+  V.energy_entities = ids;
+  V.casora_energy_auto = 2;
   return true;
+}
+
+// #44: the user edits Home's energy sensors: from now on they are the user's (marker false, no
+// automatic changes). A house sensor entered over Casora's automatic sum replaces the sum, so the
+// Studio preview (sensor first) and the dashboard (list first) show the same number.
+function homeEnergyEdit(V, key, value) {
+  if (!V || !/^energy_(power_entity|entities|exclude)$/.test(key)) return;
+  if (key === "energy_power_entity" && value && V.casora_energy_auto === 2) delete V.energy_entities;
+  V.casora_energy_auto = false;
 }
 
 function deriveEnergyRooms(rooms) {
@@ -17724,6 +17742,7 @@ class CasoraPanel extends HTMLElement {
         const rooms = targets(f);
         rooms.forEach((r) => {
           if (ENERGY_SLOT.test(key)) r.variables.energy_subs_auto = false;
+          if (r === this._state.compact.rooms[0] || r.path === "home") homeEnergyEdit(r.variables, key, value);
           if (value === undefined || value === "" || (Array.isArray(value) && !value.length)) delete r.variables[key];
           else r.variables[key] = value;
         });

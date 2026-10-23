@@ -6,8 +6,9 @@
 // - Without a house sensor Home gets the rooms' sensors as energy_entities (setup and fillBadges),
 //   only the rooms on the dashboard, energy_exclude left out.
 // - Existing dashboards: a Home sensor only the old rule picked becomes the house sensor or the
-//   sum (fixHomePower); a three phase meter or a sensor outside the rooms stays. fillHomeEnergy
-//   adds new room sensors, never removes.
+//   sum (fixHomePower), only exactly the old rule's pick on an unmarked Home; a phase meter, a
+//   sensor outside the rooms, a room's only sensor or any choice stays. fillHomeEnergy keeps
+//   Casora's sum in step with the rooms, never a list the user edited (homeEnergyEdit).
 // All IDs made up.
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -22,8 +23,8 @@ window.__casoraPanelInternals = { TILE_TYPES: [], clone: (x) => JSON.parse(JSON.
 new Function(src('custom_components/casora/panel/casora-panel-basis.js'))();
 const panel = src('custom_components/casora/panel/casora-panel.js');
 const from = panel.indexOf('const ENERGY_VAR = ');
-const { fillRoomEnergy, fillHomeEnergy, fixHomePower } = new Function(panel.slice(from, panel.indexOf('\nfunction deriveEnergyRooms(', from))
-  + '\nreturn { fillRoomEnergy, fillHomeEnergy, fixHomePower };')();
+const { fillRoomEnergy, fillHomeEnergy, fixHomePower, homeEnergyEdit } = new Function(panel.slice(from, panel.indexOf('\nfunction deriveEnergyRooms(', from))
+  + '\nreturn { fillRoomEnergy, fillHomeEnergy, fixHomePower, homeEnergyEdit };')();
 const basis = src('custom_components/casora/scripts/local/01-basis.js');
 const b0 = basis.indexOf('window._casoraHousePower = function');
 new Function(basis.slice(b0, basis.indexOf('\n};', b0) + 3))();
@@ -82,6 +83,7 @@ const ROOM_IDS = ['sensor.fernseher_power', 'sensor.stehlampe_power', 'sensor.ku
   const home = B.tilesOf(planOf(h), h).vars.Home;
   assert.equal(home.energy_power_entity, 'sensor.hausverbrauch');
   assert.equal(home.energy_entities, undefined);
+  assert.equal(home.casora_energy_auto, 'house', 'picked by the Studio: marked, the fix leaves it alone');
 }
 
 // 3. Grid meter at a device stays the last resort; an area named "Haus" names no room.
@@ -158,7 +160,8 @@ const ROOM_IDS = ['sensor.fernseher_power', 'sensor.stehlampe_power', 'sensor.ku
   assert.equal(fixHomePower(h, off), false, 'switched off stays off');
 }
 
-// 7. fillHomeEnergy: the sum gains new room sensors, keeps hand-added ones, leaves excluded out.
+// 7. fillHomeEnergy: while the list is Casora's (marker 2) it follows the rooms, adds and removes;
+//    excluded ones (Home or room) stay out; a list the user edited (marker false) stays.
 {
   const { h } = house();
   const r = [{ name: 'Home', path: 'home', variables: { energy_entities: ['sensor.fernseher_power', 'sensor.pumpe_total_power'],
@@ -166,11 +169,90 @@ const ROOM_IDS = ['sensor.fernseher_power', 'sensor.stehlampe_power', 'sensor.ku
   { name: 'Wohnzimmer', path: 'wohnzimmer', variables: { energy_entities: ['sensor.fernseher_power', 'sensor.stehlampe_power'] } },
   { name: 'Küche', path: 'kueche', variables: { energy_entities: ['sensor.kuhlschrank_power'] } }];
   assert.equal(fillHomeEnergy(h, r), 1);
-  assert.deepEqual(r[0].variables.energy_entities, ['sensor.fernseher_power', 'sensor.pumpe_total_power', 'sensor.kuhlschrank_power']);
+  assert.deepEqual(r[0].variables.energy_entities, ['sensor.fernseher_power', 'sensor.kuhlschrank_power'], 'pump not in a room: out');
   assert.equal(fillHomeEnergy(h, r), 0, 'nothing new');
-  r[0].variables.casora_energy_auto = false;
-  r[2].variables.energy_entities.push('sensor.neu_power');
-  assert.equal(fillHomeEnergy(h, r), 0, 'hand-made list stays');
+  // Excluded in the room: out of Home too.
+  r[1].variables.energy_exclude = ['sensor.fernseher_power'];
+  assert.equal(fillHomeEnergy(h, r), 1);
+  assert.deepEqual(r[0].variables.energy_entities, ['sensor.kuhlschrank_power']);
+  // Room deleted, no room measures: no sum left.
+  r.splice(2, 1);
+  r[1].variables.show_energy = false;
+  assert.equal(fillHomeEnergy(h, r), 1);
+  assert.equal(r[0].variables.energy_entities, undefined);
+  assert.equal(r[0].variables.casora_energy_auto, 2, 'stays automatic, comes back with a measuring room');
+  r[1].variables.show_energy = true;
+  r[1].variables.energy_exclude = [];
+  assert.equal(fillHomeEnergy(h, r), 1);
+  assert.deepEqual(r[0].variables.energy_entities, ['sensor.fernseher_power'], 'back, the exclude on Home still out');
+  // Edited by the user: never touched again.
+  const u = [{ name: 'Home', path: 'home', variables: { energy_entities: ['sensor.fernseher_power'], casora_energy_auto: 2 } },
+    { name: 'Küche', path: 'kueche', variables: { energy_entities: ['sensor.kuhlschrank_power'] } }];
+  homeEnergyEdit(u[0].variables, 'energy_entities', ['sensor.fernseher_power']);
+  assert.equal(u[0].variables.casora_energy_auto, false);
+  assert.equal(fillHomeEnergy(h, u), 0, 'hand-made list stays');
+  assert.deepEqual(u[0].variables.energy_entities, ['sensor.fernseher_power']);
+}
+
+// 8. A house meter in a dashboard room never counts twice: a phase meter's total is the house
+//    sensor (Studio and dashboard), never a summand; a room's only sensor that the old rule put on
+//    Home stays there (it may be the house meter).
+{
+  const { h, ent, dev } = house();
+  dev('d_3em', 'ke', 'Messklemme');
+  ent('sensor.klemme_total_power', { dev: 'd_3em', name: 'Klemme Total power', state: '700' });
+  ent('sensor.klemme_phase_a_power', { dev: 'd_3em', name: 'Klemme Phase A power', state: '200' });
+  same(h, 'sensor.klemme_total_power', 'phase meter is the house');
+  const p = B.plan(h, ['Wohnzimmer', 'Küche', 'Keller'], Object.assign({}, B.DEFAULTS));
+  const home = B.tilesOf(p, h).vars[p.rooms[0].name];
+  assert.equal(home.energy_power_entity, 'sensor.klemme_total_power');
+  assert.equal(home.energy_entities, undefined);
+  assert.deepEqual(B.homeSumIds(h, [{ energy_power_entity: 'sensor.klemme_total_power' }, { energy_entities: ['sensor.fernseher_power'] }]),
+    ['sensor.fernseher_power'], 'phase meter is no summand');
+  // Single phase clamp (no phase sensors) as the Keller room's only sensor, picked by the old rule.
+  const s = house();
+  s.dev('d_em', 'ke', 'Messklemme');
+  s.ent('sensor.klemme_total_power', { dev: 'd_em', name: 'Klemme Total power', state: '700' });
+  delete s.h.states['sensor.wohnzimmer_gesamtleistung'];
+  delete s.h.states['sensor.pumpe_total_power'];
+  assert.equal(B.oldHouseTotal(s.h), 'sensor.klemme_total_power');
+  const r = [{ name: 'Home', path: 'home', variables: { energy_power_entity: 'sensor.klemme_total_power' } },
+    { name: 'Wohnzimmer', path: 'wohnzimmer', variables: { energy_entities: ['sensor.fernseher_power'] } },
+    { name: 'Keller', path: 'keller', variables: { energy_power_entity: 'sensor.klemme_total_power' } }];
+  assert.equal(fixHomePower(s.h, r), false, 'a room\'s only sensor: no sum that counts it twice');
+  assert.equal(r[0].variables.energy_power_entity, 'sensor.klemme_total_power');
+}
+
+// 9. A choice is never overwritten: only exactly the old rule's pick on an unmarked Home.
+{
+  const { h, ent } = house();
+  ent('sensor.kueche_gesamt', { name: 'Küche Gesamt', state: '90' });
+  const rooms = (id, extra) => [{ name: 'Home', path: 'home', variables: Object.assign({ energy_power_entity: id }, extra || {}) },
+    { name: 'Wohnzimmer', path: 'wohnzimmer', variables: { energy_entities: ['sensor.fernseher_power', 'sensor.stehlampe_power'] } },
+    { name: 'Küche', path: 'kueche', variables: { energy_entities: ['sensor.kuhlschrank_power'] } }];
+  assert.equal(B.oldHouseTotal(h), 'sensor.wohnzimmer_gesamtleistung');
+  assert.equal(fixHomePower(h, rooms('sensor.kueche_gesamt')), false, 'not the old pick: chosen by someone');
+  assert.equal(fixHomePower(h, rooms('sensor.wohnzimmer_gesamtleistung', { casora_energy_auto: false })), false, 'edited by the user');
+  assert.equal(fixHomePower(h, rooms('sensor.wohnzimmer_gesamtleistung', { casora_energy_auto: 'house' })), false, 'picked by the Studio');
+  const r = rooms('sensor.wohnzimmer_gesamtleistung');
+  homeEnergyEdit(r[0].variables, 'energy_power_entity', 'sensor.wohnzimmer_gesamtleistung');
+  assert.equal(fixHomePower(h, r), false, 'entered in the Studio');
+  assert.equal(fixHomePower(h, rooms('sensor.wohnzimmer_gesamtleistung')), true, 'the old pick, unmarked: fixed');
+}
+
+// 10. A house sensor entered over the automatic sum replaces it; over a hand-made list it does not.
+{
+  const V = { energy_entities: ['sensor.fernseher_power'], casora_energy_auto: 2 };
+  homeEnergyEdit(V, 'energy_power_entity', 'sensor.hausverbrauch');
+  V.energy_power_entity = 'sensor.hausverbrauch';
+  assert.equal(V.energy_entities, undefined, 'automatic sum gone: preview and dashboard show the sensor');
+  assert.equal(V.casora_energy_auto, false);
+  const W = { energy_entities: ['sensor.fernseher_power'], casora_energy_auto: false };
+  homeEnergyEdit(W, 'energy_power_entity', 'sensor.hausverbrauch');
+  assert.deepEqual(W.energy_entities, ['sensor.fernseher_power'], 'hand-made list stays');
+  const X = { energy_entities: ['sensor.fernseher_power'], casora_energy_auto: 2 };
+  homeEnergyEdit(X, 'energy_title', 'Strom');
+  assert.equal(X.casora_energy_auto, 2, 'other fields: still automatic');
 }
 
 console.log('house_power: ok');
