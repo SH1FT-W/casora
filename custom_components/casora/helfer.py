@@ -148,7 +148,8 @@ def _scripts_file_ok(config_dir: str) -> bool:
             text = f.read()
     except OSError:
         return False
-    return re.search(r"^script:\s*!include\s+scripts\.yaml\s*$", text, re.M) is not None
+    # Also with quotes or a trailing comment (script: !include "scripts.yaml"  # UI).
+    return re.search(r"^script:[ \t]*!include[ \t]+['\"]?scripts\.yaml['\"]?[ \t]*(#.*)?$", text.lstrip("\ufeff"), re.M) is not None
 
 
 def _append_scripts(config_dir: str, scripts: dict) -> None:
@@ -171,17 +172,18 @@ def _append_scripts(config_dir: str, scripts: dict) -> None:
     os.replace(tmp, path)
 
 
-async def _ensure_scripts(hass: HomeAssistant, spec: dict) -> tuple[list[str], list[str]]:
+async def _ensure_scripts(hass: HomeAssistant, spec: dict) -> tuple[list[str], list[str], bool]:
+    """Returns (created, failed, include_ok). include_ok False: configuration.yaml does not load scripts.yaml."""
     wanted = spec.get("script") or {}
     missing = {k: v for k, v in wanted.items() if not _exists(hass, f"script.{k}")}
     if not missing:
-        return [], []
+        return [], [], True
     ids = [f"script.{k}" for k in missing]
     if not await hass.async_add_executor_job(_scripts_file_ok, hass.config.config_dir):
-        return [], ids
+        return [], ids, False
     await hass.async_add_executor_job(_append_scripts, hass.config.config_dir, missing)
     await hass.services.async_call("script", "reload", blocking=True)
-    return ids, [i for i in ids if hass.states.get(i) is None]
+    return ids, [i for i in ids if hass.states.get(i) is None], True
 
 
 # ── Theme ────────────────────────────────────────────────────────────────────
@@ -482,21 +484,31 @@ def _setup_automatik(hass: HomeAssistant, runtime: dict) -> None:
 async def async_einrichten(hass: HomeAssistant) -> dict[str, Any]:
     spec = await hass.async_add_executor_job(_read, "helfer.yaml")
     h_new, h_fail = await _ensure_helpers(hass, spec)
-    s_new, s_fail = await _ensure_scripts(hass, spec)
+    s_new, s_fail, include_ok = await _ensure_scripts(hass, spec)
     result = {"angelegt": h_new + s_new, "fehlt": h_fail + s_fail}
     if result["angelegt"]:
         _LOGGER.info("Casora: %d Helfer/Skripte angelegt: %s", len(result["angelegt"]), ", ".join(result["angelegt"]))
-    if result["fehlt"]:
-        _LOGGER.warning(
-            "Casora: konnte nicht anlegen: %s. Skripte brauchen „script: !include scripts.yaml“ "
-            "in configuration.yaml (Standard bei neuen Installationen).", ", ".join(result["fehlt"]))
-        hass.async_create_task(hass.services.async_call("persistent_notification", "create", {
-            "notification_id": "casora_einrichten",
-            "title": "Casora",
-            "message": "Diese Helfer oder Skripte konnte Casora nicht selbst anlegen:\n\n"
-                       + "\n".join(f"- `{i}`" for i in result["fehlt"])
-                       + "\n\nSkripte brauchen `script: !include scripts.yaml` in configuration.yaml.",
-        }))
+    if not result["fehlt"]:
+        # Everything is there (again): an older notice must not stay behind.
+        hass.async_create_task(hass.services.async_call("persistent_notification", "dismiss",
+                                                        {"notification_id": "casora_einrichten"}))
+        return result
+    if s_fail and not include_ok:
+        hint = "Skripte brauchen `script: !include scripts.yaml` in configuration.yaml."
+    elif s_fail:
+        # scripts.yaml is loaded, the scripts were written there, but HA did not create them after the reload.
+        hint = ("Casora hat die Skripte in scripts.yaml eingetragen, Home Assistant hat sie nach dem Neuladen "
+                "aber nicht angelegt. Im Protokoll unter „script“ steht der Grund.")
+    else:
+        hint = ""
+    _LOGGER.warning("Casora: konnte nicht anlegen: %s. %s", ", ".join(result["fehlt"]), hint)
+    hass.async_create_task(hass.services.async_call("persistent_notification", "create", {
+        "notification_id": "casora_einrichten",
+        "title": "Casora",
+        "message": "Diese Helfer oder Skripte konnte Casora nicht selbst anlegen:\n\n"
+                   + "\n".join(f"- `{i}`" for i in result["fehlt"])
+                   + ("\n\n" + hint if hint else ""),
+    }))
     return result
 
 
