@@ -4,7 +4,7 @@ Casora ist aus [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) entst
 dem 26.09.2026 eigenständig weiterentwickelt. Hemmas frühere Einträge stehen in der Git-Historie.
 Die englische Fassung steht in [CHANGELOG.md](CHANGELOG.md).
 
-## 26.10.58 – 24.10.2026
+## 26.10.58 – 23.10.2026
 
 ### Neu
 - **Energie aus den Energie-Einstellungen von Home Assistant:** Wer im HA-Energie-Dashboard Leistungssensoren für Netz, Solar und Akku eingetragen hat, bekommt sie jetzt zuerst im Energie-Badge auf Zuhause: nur Netz ergibt diesen Sensor, mit Solar oder Akku ist der Hausverbrauch Netz + Solar + Akku. Das Popup zeigt „Woher kommt der Strom“ mit Netz, Solar und Akku, die Energie-Popups nutzen diese Sensoren auch ohne Unter-Badges. Ein Wechselrichter, der nachts schläft, zählt als 0 W. Die Suche über Namen ist nur noch der Rückfall; ein selbst gewählter Sensor wird nie ersetzt.

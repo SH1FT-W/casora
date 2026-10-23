@@ -4,7 +4,7 @@ Casora grew out of [Hemma](https://github.com/willsanderson/Hemma) 2.1.2 (MIT) a
 developed independently since 26.09.2026. Hemma's earlier entries are in the Git history.
 The German version is in [CHANGELOG.de.md](CHANGELOG.de.md).
 
-## 26.10.58 – 24.10.2026
+## 26.10.58 – 23.10.2026
 
 ### Added
 - **Energy from Home Assistant's energy settings:** If you entered power sensors for grid, solar and battery in Home Assistant's energy dashboard, the energy badge on Home now uses them first: with the grid alone that sensor, with solar or a battery the house consumption as grid + solar + battery. Its popup shows “Where the power comes from” with grid, solar and battery, and the energy popups use these sensors even without sub-badges. An inverter asleep at night counts as 0 W. Name guessing is only the fallback now; a sensor you picked yourself is never replaced.
