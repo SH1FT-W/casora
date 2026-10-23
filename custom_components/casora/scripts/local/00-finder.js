@@ -124,6 +124,23 @@ window.casoraPriceKwh = function (v) {
   };
 })();
 
+// ── Is this entity a plant? ──────────────────────────────────────────────────
+// Plant Monitor (HACS, domain plant) has plant.*; Pflanzenmonitor Plus has one status sensor per plant
+// instead (platform pflanzenmonitor_plus, translation_key status) with the same state (ok/problem) and
+// attributes (problems, <m>_status, species). The single definition: the dashboard (casora-core.js,
+// templates, popups) and the Studio (loads this file) ask this one. hass is optional (default: the one
+// on <home-assistant>). Python counterpart: ki.py is_plant (dev/unit/plant_plus_test.py compares them).
+// Callers that may run before this file has loaded fall back to plant.* only.
+window.CASORA_PLANT_PLUS = 'pflanzenmonitor_plus';
+window.casoraIsPlant = window.casoraIsPlant || function (hass, id) {
+  id = String(id || '');
+  if (id.indexOf('plant.') === 0) return true;
+  if (id.indexOf('sensor.') !== 0) return false;
+  if (!hass) { try { var ha = document.querySelector('home-assistant'); hass = ha && ha.hass; } catch (e) { hass = null; } }
+  var e = hass && hass.entities && hass.entities[id];
+  return !!e && e.platform === window.CASORA_PLANT_PLUS && e.translation_key === 'status';
+};
+
 (function () {
   if (window.casoraDevice) return;
 
@@ -133,11 +150,7 @@ window.casoraPriceKwh = function (v) {
     var s = hass && hass.states && hass.states[eid];
     return s && s.attributes ? s.attributes.device_class : undefined;
   }
-  // Plant (plant.* or a Pflanzenmonitor Plus status sensor): window.casoraIsPlant (casora-core.js);
-  // until that has loaded only plant.*, as before.
-  function isPlant(hass, id) {
-    return typeof window.casoraIsPlant === 'function' ? window.casoraIsPlant(hass, id) : String(id).indexOf('plant.') === 0;
-  }
+  function isPlant(hass, id) { return window.casoraIsPlant(hass, id); }
 
   // Device of an entity (or the device id itself).
   function deviceOf(hass, anchor) {
@@ -1322,13 +1335,78 @@ window.casoraPriceKwh = function (v) {
     totalArea: { keys: ['total_cleaning_area', 'total_cleaned_area', 'total_stats_area'], domain: 'sensor' },
   };
 
+  /* 3D printer fields (Bambu Lab, HACS), shared by the card (02-devices.js _casoraPrint.resolve), its Studio fields
+     (find.print) and the new-tile finder (TILE_MAIN_FIND). Python mirror for live activities: live_finder.py
+     PRINTER_FIELDS (dev/unit/live_finder_test.py compares them). */
+  var PRINTER_FIELDS = {
+    status: { keys: ['print_status'], domain: 'sensor' }, stage: { keys: ['stage'], domain: 'sensor' },
+    progress: { keys: ['print_progress'], domain: 'sensor' }, remaining: { keys: ['remaining_time'], domain: 'sensor' },
+    layer: { keys: ['current_layer'], domain: 'sensor' }, layers: { keys: ['total_layers'], domain: 'sensor' },
+    task: { keys: ['subtask_name'], domain: 'sensor' }, start: { keys: ['start_time'], domain: 'sensor' },
+    end: { keys: ['end_time'], domain: 'sensor' }, weight: { keys: ['print_weight'], domain: 'sensor' },
+    length: { keys: ['print_length'], domain: 'sensor' },
+    noz: { keys: ['nozzle_temp'], domain: 'sensor' }, nozT: { keys: ['target_nozzle_temp'], domain: 'sensor' },
+    bed: { keys: ['bed_temp'], domain: 'sensor' }, bedT: { keys: ['target_bed_temp'], domain: 'sensor' },
+    slots: { keys: ['tray'], domain: 'sensor', all: true }, ext: { keys: ['external_spool'], domain: 'sensor' },
+    activeSlot: { keys: ['active_tray'], domain: 'sensor' },
+    amsHum: { keys: ['humidity'], domain: 'sensor' }, amsIdx: { keys: ['humidity_index'], domain: 'sensor' },
+    amsTemp: { keys: ['ams_temp'], domain: 'sensor' },
+    speedSel: { keys: ['printing_speed'], domain: 'select' }, speed: { keys: ['speed_profile'], domain: 'sensor' },
+    auxFan: { keys: ['aux_fan'], domain: 'fan' }, coolFan: { keys: ['cooling_fan'], domain: 'fan' },
+    chamberFan: { keys: ['chamber_fan'], domain: 'fan' },
+    usage: { keys: ['total_usage_hours'], domain: 'sensor' }, nozSize: { keys: ['nozzle_diameter'], domain: 'sensor' },
+    nozType: { keys: ['nozzle_type'], domain: 'sensor' }, plate: { keys: ['print_bed_type'], domain: 'sensor' },
+    fw: { keys: ['firmware_update'], domain: 'update' }, online: { keys: ['online'], domain: 'binary_sensor' },
+    hms: { keys: ['hms_errors'], domain: 'binary_sensor' }, err: { keys: ['print_error'], domain: 'binary_sensor' },
+    cam: { keys: ['camera'], domain: 'camera' }, camSw: { keys: ['camera'], domain: 'switch' },
+    light: { keys: ['chamber_light'], domain: 'light' },
+    pause: { keys: ['pause'], domain: 'button' }, resume: { keys: ['resume'], domain: 'button' }, stop: { keys: ['stop'], domain: 'button' },
+  };
+  // A device is a 3D printer when it has the print status or the print stage sensor (the same keys as above).
+  var PRINTER_KEYS = PRINTER_FIELDS.status.keys.concat(PRINTER_FIELDS.stage.keys);
+
+  // Robot vacuums and 3D printers per device, built once per registry (cameras ask for every camera).
+  var kindsMemo = { reg: null, out: null };
+  function deviceKinds(hass) {
+    var R = reg(hass);
+    if (kindsMemo.reg === R && kindsMemo.out) return kindsMemo.out;
+    var out = { vacuum: {}, printer: {} };
+    Object.keys(R).forEach(function (id) {
+      var e = R[id];
+      if (!e || !e.device_id) return;
+      if (id.indexOf('vacuum.') === 0) out.vacuum[e.device_id] = true;
+      if (id.indexOf('sensor.') === 0 && PRINTER_KEYS.indexOf(e.translation_key) >= 0) out.printer[e.device_id] = true;
+    });
+    kindsMemo = { reg: R, out: out };
+    return out;
+  }
+  // Is the device of `anchor` (entity or device id) a 3D printer? Python: live_finder.py is_printer.
+  function isPrinter(hass, anchor) {
+    var devId = deviceOf(hass, anchor);
+    return !!(devId && deviceKinds(hass).printer[devId]);
+  }
+
+  // A map by its name: an object id or translation_key with the word map/maps/karte/karten
+  // (camera.robby_map, camera.robby_map_2, image.erdgeschoss_karte, camera.wohnungskarte). One rule for the
+  // vacuum map finder below, the Cameras tile (_casoraCams) and the Studio assistant.
+  var MAP_RE = /(^|_)(map|maps|karte|karten)(_|$)|karte(_\d+)?$/;
+  function isMapName(x) { return MAP_RE.test(String(x || '')); }
+  // Camera (or image) that is no surveillance camera: a map by its id or key, or one on a robot vacuum's device;
+  // with `printers` also a 3D printer's camera (left out of automatic lists, kept when chosen by hand).
+  function notSurveillance(hass, id, printers) {
+    var e = reg(hass)[id];
+    if (isMapName(String(id || '').split('.')[1]) || (e && isMapName(e.translation_key))) return true;
+    if (!e || !e.device_id) return false;
+    var K = deviceKinds(hass);
+    return !!(K.vacuum[e.device_id] || (printers && K.printer[e.device_id]));
+  }
+
   // ── Robot vacuum map (07.10.2026) ───────────────────────────────────────────
   // Image or camera entity on the robot (or its dock) that is a map:
   // Roborock creates an image.* per floor (name = map name, without a key),
   // Dreame/Valetudo/Map Extractor a camera.*_map. Detected by platform, key
   // or id (map|karte), never by room names. Active map first (a select with the
   // key selected_map names it), then reachable ones, otherwise the first.
-  var MAP_RE = /(^|_)(map|maps|karte|karten)(_|$)/;
   function vacuumMap(hass, anchor) {
     var S = (hass && hass.states) || {}, R = reg(hass);
     if (!anchor) return null;
@@ -1340,7 +1418,7 @@ window.casoraPriceKwh = function (v) {
       if (e.domain !== 'image' && e.domain !== 'camera') return false;
       var r = R[e.entity_id] || {};
       if (e.domain === 'image' && (r.platform === 'roborock' || mapDev[e.device_id])) return true;
-      return MAP_RE.test(String(e.key || '')) || MAP_RE.test(e.entity_id.split('.')[1]);
+      return isMapName(e.key) || isMapName(e.entity_id.split('.')[1]);
     };
     var maps = list.filter(function (e) { return S[e.entity_id] && isMap(e); }).map(function (e) { return e.entity_id; });
     // Without a device (e.g. Map Extractor): camera./image.<robot>_map.
@@ -1373,6 +1451,8 @@ window.casoraPriceKwh = function (v) {
 
   window.casoraDevice = {
     vacuumMap: vacuumMap, vacuumMapFor: vacuumMapFor, vacuumFields: VACUUM_FIELDS,
+    printerFields: PRINTER_FIELDS, printerKeys: PRINTER_KEYS, isPrinter: isPrinter, isMapName: isMapName,
+    notSurveillance: notSurveillance,
     deviceOf: deviceOf, entities: entities, map: map, companionPlug: companionPlug, byKey: byKey,
     waste: waste, wasteDates: wasteDates, wasteDown: wasteDown, siblings: siblings, dayStart: dayStart, onHours: onHours, lastOn: lastOn, keyAny: keyAny, network: network,
     contacts: contacts, outdoor: outdoor, openings: openings,
@@ -1381,7 +1461,7 @@ window.casoraPriceKwh = function (v) {
 
 // ── Cameras tile without a choice (27.09.2026) ─────────────────────────────────
 // variables.cameras empty: every camera in the house – without robot vacuum maps and
-// printer cameras (devices with a vacuum or print status), those are no surveillance.
+// printer cameras (casoraDevice.notSurveillance), those are no surveillance.
 (function () {
   if (window._casoraCams) return;
   // 30.09.2026: a chosen list without maps too (robot vacuum map and the like);
@@ -1389,19 +1469,9 @@ window.casoraPriceKwh = function (v) {
   window._casoraCams = function (variables, entity, hass) {
     var H = hass || (document.querySelector('home-assistant') || {}).hass || {};
     var S = H.states || {}, R = H.entities || {};
-    var skip = {}, vac = {};
-    Object.keys(R).forEach(function (id) {
-      var e = R[id];
-      if (!e || !e.device_id) return;
-      if (id.indexOf('vacuum.') === 0) vac[e.device_id] = true;
-      if (id.indexOf('vacuum.') === 0 || /^(print_status|stage)$/.test(e.translation_key || '')) skip[e.device_id] = true;
-    });
-    // Map = name ends in _map/karte or a robot vacuum's camera; auto = printer cameras too.
-    var isMap = function (id, auto) {
-      var e = R[id];
-      if (/(_map|karte)(_\d+)?$/.test(id)) return true;
-      return !!(e && e.device_id && (auto ? skip : vac)[e.device_id]);
-    };
+    var CD = window.casoraDevice;
+    // Map = by name or a robot vacuum's camera; auto = printer cameras too.
+    var isMap = function (id, auto) { return !!(CD && CD.notSurveillance && CD.notSurveillance(H, id, auto)); };
     var dead = function (id) { var st = S[id]; return !st || st.state === 'unavailable' || st.state === 'unknown'; };
     var byLive = function (a, b) { return (dead(a) ? 1 : 0) - (dead(b) ? 1 : 0); };
     var list = Array.isArray(variables && variables.cameras) ? variables.cameras.filter(Boolean) : [];
@@ -1693,6 +1763,15 @@ window.casoraPriceKwh = function (v) {
     });
   }
 
+  // Dishwashers the dishwasher card can show: role 'dishwasher' from a source with a dish spec (Home Connect,
+  // Home Connect Alt/WS, Miele). Never an oven or coffee machine that shares the operation_state key (Studio:
+  // main entity of a new tile and the assistant). WashData dishwashers stay out (the card has no fields for them).
+  function dishwashers(hass) {
+    return all(hass, 'dishwasher').filter(function (c) {
+      return SOURCES.some(function (s) { return s.id === c.source && !!s.dish; });
+    });
+  }
+
   // Last resort: smart plugs in an area (only when no laundry appliance is detected there).
   function plugs(hass, areaId) {
     var D = devs(hass);
@@ -1750,7 +1829,7 @@ window.casoraPriceKwh = function (v) {
   dish.field = function (hass, anchor, name) { return dish(hass, anchor).f[name] || null; };
 
   window.casoraLaundryFind = { classify: classify, forEntity: forEntity, all: all, plugs: plugs, sources: SOURCES,
-    dish: dish, dishNames: DISH_NAMES };
+    dish: dish, dishNames: DISH_NAMES, dishwashers: dishwashers };
 })();
 
 // ── Assist suggestions from the own house (D-ASSIST, 06.10.2026) ────────────

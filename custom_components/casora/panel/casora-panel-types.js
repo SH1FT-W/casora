@@ -9,7 +9,9 @@
 //   find – where Casora finds the entity itself when the field stays empty
 //          ({keys, domain, dc} on the device of the tile entity, {plug} = smart plug,
 //          {dish: field} = the dishwasher card's lookup, casoraLaundryFind.dish in 00-finder.js,
-//          {vac: field} = the vacuum card's table, casoraDevice.vacuumFields).
+//          {vac: field} = the vacuum card's table, casoraDevice.vacuumFields,
+//          {print: field} = the 3D printer card's table, casoraDevice.printerFields,
+//          {laundry: field} = the washer/dryer card's source fields, casoraLaundryFind.forEntity).
 //          The Studio shows the match as a placeholder ("Auto: …"); the
 //          AI helper only fills what the finder does not find.
 const ICON = { key: "icon", label: "Icon", type: "icon" };
@@ -26,38 +28,40 @@ const LAUNDRY = [
   ICON,
   PLUG,
   PRICE,
-  { key: "appliance_progress", label: "Progress", domains: ["sensor"], classes: ["progress"], find: { keys: ["cycle_progress", "program_progress", "sensor_program_progress"] }, advanced: true },
-  { key: "appliance_remaining", label: "Time remaining", domains: ["sensor"], classes: ["duration", "timestamp"], find: { keys: ["time_remaining", "remaining_time", "sensor_remaining_program_time", "program_finish_time"] }, advanced: true },
+  // find.laundry: the card's own source fields (casoraLaundryFind.forEntity in 00-finder.js, every integration).
+  { key: "appliance_progress", label: "Progress", domains: ["sensor"], classes: ["progress"], find: { laundry: "progress" }, advanced: true },
+  { key: "appliance_remaining", label: "Time remaining", domains: ["sensor"], classes: ["duration", "timestamp"], find: { laundry: "remaining" }, advanced: true },
   TITLE,
   CHART(),
 ];
-// 3D printer: _casoraPrint.resolve() takes these variables before the device finder (FIND in 02-devices.js).
+// 3D printer: _casoraPrint.resolve() takes these variables before the device finder; find.print names the
+// field of the card's own table (casoraDevice.printerFields in 00-finder.js).
 const PRINT_FIELDS = [
-  { key: "entity_state", label: "Print stage", domains: ["sensor"], find: { keys: ["stage"], domain: "sensor" },
+  { key: "entity_state", label: "Print stage", domains: ["sensor"], find: { print: "stage" },
     advanced: true, group: "Print job", placeholder: "This tile's entity" },
-  { key: "entity_task_name", label: "Job name", domains: ["sensor"], find: { keys: ["subtask_name"], domain: "sensor" }, advanced: true },
-  { key: "entity_layer", label: "Current layer", domains: ["sensor"], find: { keys: ["current_layer"], domain: "sensor" }, advanced: true },
-  { key: "entity_layers_total", label: "Total layers", domains: ["sensor"], find: { keys: ["total_layers"], domain: "sensor" }, advanced: true },
-  { key: "entity_start_time", label: "Start time", domains: ["sensor"], find: { keys: ["start_time"], domain: "sensor" }, advanced: true },
-  { key: "entity_end_time", label: "End time", domains: ["sensor"], find: { keys: ["end_time"], domain: "sensor" }, advanced: true },
-  { key: "entity_weight", label: "Filament weight", domains: ["sensor"], find: { keys: ["print_weight"], domain: "sensor" }, advanced: true },
-  { key: "entity_error", label: "Print error", domains: ["binary_sensor"], find: { keys: ["print_error"], domain: "binary_sensor" }, advanced: true },
+  { key: "entity_task_name", label: "Job name", domains: ["sensor"], find: { print: "task" }, advanced: true },
+  { key: "entity_layer", label: "Current layer", domains: ["sensor"], find: { print: "layer" }, advanced: true },
+  { key: "entity_layers_total", label: "Total layers", domains: ["sensor"], find: { print: "layers" }, advanced: true },
+  { key: "entity_start_time", label: "Start time", domains: ["sensor"], find: { print: "start" }, advanced: true },
+  { key: "entity_end_time", label: "End time", domains: ["sensor"], find: { print: "end" }, advanced: true },
+  { key: "entity_weight", label: "Filament weight", domains: ["sensor"], find: { print: "weight" }, advanced: true },
+  { key: "entity_error", label: "Print error", domains: ["binary_sensor"], find: { print: "err" }, advanced: true },
   { key: "entity_nozzle_temp", label: "Nozzle temperature", domains: ["sensor"], classes: ["temperature"],
-    find: { keys: ["nozzle_temp"], domain: "sensor" }, advanced: true, group: "Temperatures" },
+    find: { print: "noz" }, advanced: true, group: "Temperatures" },
   { key: "entity_nozzle_target", label: "Nozzle target", domains: ["sensor", "number"],
-    find: { keys: ["target_nozzle_temp"], domain: "sensor" }, advanced: true },
+    find: { print: "nozT" }, advanced: true },
   { key: "entity_bed_temp", label: "Bed temperature", domains: ["sensor"], classes: ["temperature"],
-    find: { keys: ["bed_temp"], domain: "sensor" }, advanced: true },
+    find: { print: "bed" }, advanced: true },
   { key: "entity_bed_target", label: "Bed target", domains: ["sensor", "number"],
-    find: { keys: ["target_bed_temp"], domain: "sensor" }, advanced: true },
-  { key: "entity_active_slot", label: "Active filament", domains: ["sensor"], find: { keys: ["active_tray"], domain: "sensor" },
+    find: { print: "bedT" }, advanced: true },
+  { key: "entity_active_slot", label: "Active filament", domains: ["sensor"], find: { print: "activeSlot" },
     advanced: true, group: "Filament" },
   ...[1, 2, 3, 4].map((n) => ({ key: "entity_ams_slot_" + n, label: "AMS slot " + n, domains: ["sensor"], advanced: true,
     placeholder: "Automatic" })),
-  { key: "btn_pause", label: "Pause button", domains: ["button"], find: { keys: ["pause"], domain: "button" },
+  { key: "btn_pause", label: "Pause button", domains: ["button"], find: { print: "pause" },
     advanced: true, group: "Buttons" },
-  { key: "btn_resume", label: "Resume button", domains: ["button"], find: { keys: ["resume"], domain: "button" }, advanced: true },
-  { key: "btn_stop", label: "Stop button", domains: ["button"], find: { keys: ["stop"], domain: "button" }, advanced: true },
+  { key: "btn_resume", label: "Resume button", domains: ["button"], find: { print: "resume" }, advanced: true },
+  { key: "btn_stop", label: "Stop button", domains: ["button"], find: { print: "stop" }, advanced: true },
   CHART(),
 ];
 window.CASORA_TILE_TYPES = [
@@ -68,9 +72,9 @@ window.CASORA_TILE_TYPES = [
         hint: "Empty: the printer's name in Home Assistant." },
       { ...PLUG },
       PRICE,
-      { key: "entity_camera", label: "Camera", domains: ["camera"], find: { keys: ["camera"], domain: "camera" }, advanced: true },
-      { key: "entity_light", label: "Chamber light", domains: ["light"], find: { keys: ["chamber_light"], domain: "light" }, advanced: true },
-      { key: "entity_progress", label: "Progress", domains: ["sensor"], classes: ["progress"], find: { keys: ["print_progress"] }, advanced: true },
+      { key: "entity_camera", label: "Camera", domains: ["camera"], find: { print: "cam" }, advanced: true },
+      { key: "entity_light", label: "Chamber light", domains: ["light"], find: { print: "light" }, advanced: true },
+      { key: "entity_progress", label: "Progress", domains: ["sensor"], classes: ["progress"], find: { print: "progress" }, advanced: true },
       ...PRINT_FIELDS,
     ] },
   { id: "casora_washer", label: "Washing machine", template: "casora_waschmaschine", domains: ["sensor"],
@@ -690,6 +694,17 @@ window.CASORA_EXTRA_ICONS = Object.fromEntries([
       if (f.find.vac) {
         const spec = (CD.vacuumFields || {})[f.find.vac];
         return spec ? CD.map(hass, tile.entity, { x: spec }, { siblings: true }).x || null : null;
+      }
+      // 3D printer: the card's field table, on the tile entity's device like the card.
+      if (f.find.print) {
+        const spec = (CD.printerFields || {})[f.find.print];
+        return spec ? CD.map(hass, tile.entity, { x: spec }).x || null : null;
+      }
+      // Washer/dryer: the source the card uses (maker integration, WashData …) and its field.
+      if (f.find.laundry) {
+        const LF = window.casoraLaundryFind;
+        const c = LF && LF.forEntity(hass, tile.entity);
+        return (c && c.f && c.f[f.find.laundry]) || null;
       }
       // Dishwasher: the same lookup as the card (keys per integration from the shared table).
       if (f.find.dish) {

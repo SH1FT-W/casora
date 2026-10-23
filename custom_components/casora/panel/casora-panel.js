@@ -3895,13 +3895,12 @@ const PLANT_SLOTS = [
   { type: "battery", label: "Battery", match: (id) => id.includes("battery") },
 ];
 // Plant entity: Plant Monitor's plant.* or the status sensor of Pflanzenmonitor Plus (same state and attributes).
-// The dashboard asks window.casoraIsPlant (scripts/casora-core.js) the same; the Studio does not load that file.
+// One rule with the dashboard: window.casoraIsPlant (scripts/local/00-finder.js, imported by casora-panel-types.js);
+// until that import has arrived only plant.*.
 const PLANT_PLUS = "pflanzenmonitor_plus";
 const isPlantEntity = (h, id) => {
-  const eid = String(id || "");
-  if (eid.startsWith("plant.")) return true;
-  const e = eid.startsWith("sensor.") && h && h.entities && h.entities[eid];
-  return !!e && e.platform === PLANT_PLUS && e.translation_key === "status";
+  if (typeof window !== "undefined" && typeof window.casoraIsPlant === "function") return !!window.casoraIsPlant(h, id);
+  return String(id || "").startsWith("plant.");
 };
 // reg: the entity's registry entry (optional). Pflanzenmonitor Plus names its readings by translation_key
 // (moisture …) in any language; everything else goes by the entity id.
@@ -4784,14 +4783,16 @@ function tileMissingEntity(tile, type) {
     || (Array.isArray(v) && v.some(looks)));
 }
 
-// Die Haupt-Entität, die eine neue Kachel vorschlägt: über den translation_key der
-// Integration (sprachunabhängig, egal wie umbenannt) – WashData, Home Connect,
-// Bambu Lab, NINA/DWD. like/not trennen Geräte mit demselben Schlüssel (Trockner).
+// The main entity a new tile suggests: by the integration's translation_key (language-independent, however
+// renamed) – WashData, Home Connect, Bambu Lab, NINA/DWD. like/not separate devices with the same key (dryer).
+// laundry: the shared washer/dryer/dishwasher recognition (casoraLaundryFind in scripts/local/00-finder.js, the
+// keys only while that has not loaded); print: the printer card's field table (casoraDevice.printerFields).
 const TILE_MAIN_FIND = {
-  casora_washer: { keys: ["washer_state"], domain: "sensor", not: /trockn|dryer/i },
-  casora_dryer: { keys: ["dryer_state", "washer_state"], domain: "sensor", like: /trockn|dryer/i },
-  casora_dishwasher: { keys: ["sensor_operation_state", "operation_state"], domain: "sensor" },
-  casora_3d_printer: { keys: ["print_status"], domain: "sensor" },
+  casora_washer: { laundry: "washer", keys: ["washer_state"], domain: "sensor", not: /trockn|dryer/i },
+  casora_dryer: { laundry: "dryer", keys: ["dryer_state", "washer_state"], domain: "sensor", like: /trockn|dryer/i },
+  // No keys of its own: ovens and coffee machines report operation_state too (Spanish "Horno" slipped through).
+  casora_dishwasher: { laundry: "dishwasher", domain: "sensor" },
+  casora_3d_printer: { print: "status", domain: "sensor" },
   // Fußball: jeder Sensor der HACS-Integration Team Tracker (ohne Gerät, ohne translation_key);
   // ohne Registry-Eintrag an den Attributen erkannt.
   casora_football: { domain: "sensor", platform: "teamtracker" },
@@ -21377,7 +21378,12 @@ class CasoraPanel extends HTMLElement {
     // A type that takes almost any entity (Entity with buttons) has nothing to suggest.
     if (doms.length > 5) return [];
     const R = h.entities || {}, D = h.devices || {}, S = h.states || {};
-    const spec = TILE_MAIN_FIND[type.id] || null;
+    let spec = TILE_MAIN_FIND[type.id] || null;
+    // Printer: the status key from the card's own table.
+    if (spec && spec.print) {
+      const PF = (window.casoraDevice && window.casoraDevice.printerFields) || {};
+      spec = { ...spec, keys: (PF[spec.print] || {}).keys || [] };
+    }
     const vague = !spec && doms.every((d) => VAGUE_DOMAINS.has(d))
       && !(type.classes && (Array.isArray(type.classes) ? type.classes.length : Object.keys(type.classes).length));
     if (vague) return [];
@@ -21396,14 +21402,15 @@ class CasoraPanel extends HTMLElement {
       return !!S[id];
     };
     let ids;
-    // Waschmaschine/Trockner: gemeinsamer Finder (scripts/local/00-finder.js) – Hersteller-
-    // Integration vor WashData; gibt es beides nicht, die Zwischenstecker im Bereich des Raums.
+    // Washer/dryer/dishwasher: the shared finder (scripts/local/00-finder.js) – the maker's integration before
+    // WashData; washer/dryer without either: the smart plugs in the room's area. A dishwasher only from a source
+    // the dishwasher card knows (never an oven with the same operation_state key).
     const LF = window.casoraLaundryFind;
-    const laundryRole = LF ? { casora_washer: "washer", casora_dryer: "dryer" }[type.id] : null;
+    const laundryRole = LF && spec && spec.laundry ? spec.laundry : null;
     const laundryRank = new Map();
     if (laundryRole) {
-      LF.all(h, laundryRole).forEach((c) => laundryRank.set(c.state, c.rank));
-      if (!laundryRank.size) {
+      (laundryRole === "dishwasher" ? LF.dishwashers(h) : LF.all(h, laundryRole)).forEach((c) => laundryRank.set(c.state, c.rank));
+      if (!laundryRank.size && laundryRole !== "dishwasher") {
         const area0 = this._roomArea(room);
         if (area0) LF.plugs(h, area0).forEach((p) => laundryRank.set(p.f.power, p.rank));
       }
@@ -21453,7 +21460,8 @@ class CasoraPanel extends HTMLElement {
       if (!k) {
         const mine = Object.keys(R).filter((x) => R[x] && R[x].device_id === devId);
         if (mine.some((x) => /^(vacuum|lawn_mower)\./.test(x))) k = "vacuum";
-        else if (mine.some((x) => ["print_status", "print_progress"].includes((R[x] || {}).translation_key))) k = "printer";
+        // The card's own printer rule (casoraDevice.isPrinter: print status or stage sensor).
+        else if (window.casoraDevice && window.casoraDevice.isPrinter && window.casoraDevice.isPrinter(h, devId)) k = "printer";
         else if (mine.some((x) => /odometer|mileage|kilometerstand|fuel_level|tank_level/.test(x + " " + ((R[x] || {}).translation_key || "")))) k = "car";
       }
       kindMemo.set(devId, k);

@@ -200,14 +200,29 @@ SOURCES: list[dict[str, Any]] = [
                 "progress": k(["program_progress", "progress"]), "door": k(["door", "door_lock", "door_status"], "binary_sensor")}},
 ]
 
-# Robot vacuum: the vacuum entity is enough; neighbors (Roborock keys) refine text and progress.
-VACUUM_FIELDS = {"status": k("status"), "room": k("current_room"), "progress": k("clean_percent"),
-                 "area": k("cleaning_area"), "time": k("cleaning_time"), "error": k("vacuum_error"),
-                 "last_end": k("last_clean_end")}
-# 3D printer (Bambu Lab): print status is the anchor.
+# Robot vacuum: the vacuum entity is enough; neighbors refine text and progress. Keys as in the card's table
+# casoraDevice.vacuumFields (00-finder.js): Roborock first, then Dreame, Ecovacs and iRobot. Durations go through
+# live_activity._seconds by their unit (Ecovacs reports seconds, shown in minutes; Roborock/Dreame minutes).
+# JS name of each field: VACUUM_JS (dev/unit/live_finder_test.py compares the keys).
+VACUUM_FIELDS = {"status": k("status"), "room": k("current_room"), "progress": k(["clean_percent", "cleaning_progress"]),
+                 "area": k(["cleaning_area", "cleaned_area", "stats_area"]), "time": k(["cleaning_time", "stats_time"]),
+                 "error": k(["vacuum_error", "error"]), "last_end": k(["last_clean_end", "cleaning_history"])}
+VACUUM_JS = {"status": "status", "room": "room", "progress": "progress", "area": "area", "time": "time",
+             "error": "err", "last_end": "lastEnd"}
+# 3D printer (Bambu Lab): print status is the anchor. Keys as in casoraDevice.printerFields (00-finder.js),
+# JS name of each field: PRINTER_JS.
 PRINTER_FIELDS = {"state": k("print_status"), "stage": k("stage"), "progress": k("print_progress"),
                   "remaining": k("remaining_time"), "end": k("end_time"), "task": k("subtask_name"),
                   "layer": k("current_layer"), "layers": k("total_layers")}
+PRINTER_JS = {"state": "status", "stage": "stage", "progress": "progress", "remaining": "remaining", "end": "end",
+              "task": "task", "layer": "layer", "layers": "layers"}
+# A device is a 3D printer when it has the print status or stage sensor (casoraDevice.printerKeys / isPrinter).
+PRINTER_KEYS = PRINTER_FIELDS["state"]["keys"] + PRINTER_FIELDS["stage"]["keys"]
+
+
+def is_printer(ents: list[Ent]) -> bool:
+    """Same rule as casoraDevice.isPrinter (00-finder.js): a print status or stage sensor."""
+    return any(e.domain == "sensor" and e.key in PRINTER_KEYS for e in ents)
 
 
 def _pick(ents: list[Ent], spec: dict[str, Any]) -> str | None:
@@ -241,9 +256,10 @@ def classify(device_id: str, ents: list[Ent], states: Callable[[str], Any], mode
         f = {"state": vac.entity_id}
         f.update({n: _pick(ents, s) for n, s in VACUUM_FIELDS.items()})
         return Found(device_id, "vacuum", "vacuum", GRADE_GOOD, f, model=model)
-    if _has(ents, "print_status", "sensor"):
+    if is_printer(ents):
         f = {n: _pick(ents, s) for n, s in PRINTER_FIELDS.items()}
-        return Found(device_id, "printer", "bambu_lab", GRADE_UNTESTED, f, model=model)
+        # Without a print status there is no state to follow; a printer is never a laundry device either.
+        return Found(device_id, "printer", "bambu_lab", GRADE_UNTESTED, f, model=model) if f["state"] else None
     for src in SOURCES:
         how = _matches(src, ents)
         if not how:

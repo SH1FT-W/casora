@@ -24,14 +24,11 @@
   // Reihenfolge = Vorrang: erst der Gesamtzustand, eine Phase („aktuelle Phase“) nur zur Not.
   const STATE_LIKE = [/(^|_)(zustand|betriebszustand|operation_state|washer_state|dryer_state|state)$/i,
     /(^|_)status$/i, /(^|_)(program_phase|phase)$/i];
-  // keys: translation_key der Integration, in dieser Reihenfolge (Hauptentität zuerst) –
-  // Bambu print_status, Home Connect operation_state, WashData washer_state.
-  // keyNeedsName: der Schlüssel allein reicht nicht (WashData nennt auch Trockner „washer_state“).
-  // notName: Geräte mit diesem Namen sind etwas anderes (Home-Connect-Waschmaschine ≠ Geschirrspüler).
+  // keys: the integration's translation_key, in this order (main entity first) – WashData washer_state.
+  // keyNeedsName: the key alone is not enough (WashData calls a dryer "washer_state" too).
+  // notName: devices with this name are something else.
+  // Printers and dishwashers come from the shared finder (printerOf, dishwashers below), not from here.
   const SPECIAL = [
-    { type: "casora_3d_printer", keys: ["print_status", "stage"], domain: "sensor" },
-    { type: "casora_dishwasher", keys: ["sensor_operation_state", "operation_state"], domain: "sensor", name: /dish|geschirr|spül/i,
-      notName: /wasch|washer|washing|trockner|dryer|ofen|oven|backofen|k(ü|ue)hl|fridge|freezer|gefrier/i },
     { type: "@air_purifier", name: /luftrein|purifier|air ?clean/i, domain: "fan" },
     { type: "casora_washer", keys: ["washer_state", "sensor_operation_state", "operation_state"], keyNeedsName: true,
       name: /wasch(?!trockn)|washer|washing/i, domain: "sensor", prefer: STATE_LIKE },
@@ -93,6 +90,18 @@
     // offizielle Hersteller-Integration vor WashData, je Bereich nur die beste Quelle.
     const LF = window.casoraLaundryFind;
     const laundry = new Map(LF ? LF.all(hass).map((c) => [c.device, c]) : []);
+    // Dishwashers: the shared recognition (Home Connect, Miele …) – an oven or coffee machine with the same
+    // operation_state key is no dishwasher, whatever its name (issue #48 follow-up: a Spanish "Horno").
+    const dishes = new Map(LF && LF.dishwashers ? LF.dishwashers(hass).map((c) => [c.device, c]) : []);
+    // 3D printers: the printer card's rule and table (casoraDevice.isPrinter/printerFields in 00-finder.js);
+    // the main entity is the print status, else the stage.
+    const CD = window.casoraDevice;
+    const printerOf = (id, list) => {
+      if (!CD || !CD.isPrinter || !CD.isPrinter(hass, id)) return null;
+      const PF = CD.printerFields || {};
+      const keys = [].concat((PF.status || {}).keys || [], (PF.stage || {}).keys || []);
+      return firstBy(list.filter((e) => e.domain === "sensor"), keys.map((k) => (x) => x === k), (e) => e.key);
+    };
     Object.keys(D).forEach((id) => {
       const d = D[id];
       if (!d || d.entry_type === "service" || d.disabled_by) return;
@@ -110,6 +119,10 @@
         const t = lc.role === "dryer" ? "casora_dryer" : "casora_washer";
         if (typeIds.has(t)) { type = t; entity = lc.state; reason = "key"; }
       }
+      const dw = !type && dishes.get(id);
+      if (dw && typeIds.has("casora_dishwasher")) { type = "casora_dishwasher"; entity = dw.state; reason = "key"; }
+      const pr = !type && typeIds.has("casora_3d_printer") && printerOf(id, list);
+      if (pr) { type = "casora_3d_printer"; entity = pr.entity_id; reason = "key"; }
       for (const s of SPECIAL) {
         if (type) break;
         if (!typeIds.has(s.type)) continue;
@@ -127,10 +140,9 @@
         const hit = byKey || byName;
         if (hit) { type = s.type; entity = hit.entity_id; reason = byKey ? "key" : "name"; break; }
       }
-      // Saugroboter-Karten und Drucker-Kameras sind keine Überwachungskameras
-      // (dieselbe Regel wie window._casoraCams in scripts/local/00-finder.js).
-      const noCam = list.some((x) => x.domain === "vacuum" || /^(print_status|stage)$/.test(x.key || ""));
-      const isCam = (x) => x.domain === "camera" && !noCam && !/(_map|karte)$/.test(x.entity_id);
+      // Robot vacuum maps and printer cameras are no surveillance cameras – the same rule as the Cameras tile
+      // (casoraDevice.notSurveillance in scripts/local/00-finder.js).
+      const isCam = (x) => x.domain === "camera" && !(CD && CD.notSurveillance && CD.notSurveillance(hass, x.entity_id, true));
       if (!type) {
         for (const [dom, t] of BY_DOMAIN) {
           const e = list.find((x) => x.domain === dom && (dom !== "camera" || isCam(x)));
@@ -167,7 +179,7 @@
       const room = roomOfArea(areaOf(entity));
       // Dasselbe Gerät doppelt (z. B. Hersteller-Integration + WashData): nur einmal.
       // Bei Wäschegeräten gewinnt die bessere Quelle (Rang 0 = Hersteller, 1 = WashData).
-      const rank = lc ? lc.rank : 9;
+      const rank = lc ? lc.rank : dw ? dw.rank : 9;
       const dup = out.findIndex((x) => x.type === type && norm(x.name) === norm(name) && x.area === ((A[areaOf(entity)] || {}).name || null));
       if (dup >= 0 && !(out[dup].rank > rank)) return;
       if (dup >= 0) out.splice(dup, 1);

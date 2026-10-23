@@ -20,3 +20,12 @@ Felder von `expect` (alle optional):
 - `plants`: Entitäten, die Pflanzen sind; `not_plants`: die es nicht sind
 - `dishwasher`: `{ "entity": Betriebszustand, "fields": { remaining, program, sel, door, progress, stop } }`
 - `energy_roles`: `{ entity_id: "solar" | "grid" | "battery" | "home" | null }` für das Popup „Woher kommt der Strom“
+- `studio_main`: `{ Kacheltyp: [Entitäten] }` – was das Studio für eine neue Kachel vorschlägt, in dieser Reihenfolge
+  (`_tileCandidates`, Raum „Home“ ohne Bereich), z. B. `{ "casora_dishwasher": ["sensor.…"] }`
+- `studio_fields`: `{ Kacheltyp: { "entity": Hauptentität, "fields": { Feld: Entität | null } } }` – was ein leeres
+  Studio-Feld als „Automatisch: …“ findet (`casoraFieldEntity`, dieselbe Suche wie die Karte)
+- `assist`: `{ Kacheltyp: [Entitäten] }` – genau diese Vorschläge macht der Geräte-Assistent für den Typ (Reihenfolge egal)
+- `printer`: `{ "entity": Druckstatus, "fields": { status, st, progress, cam, … } }` – was die Druckerkarte findet
+  (`_casoraPrint.resolve`)
+- `cameras`: Liste der Kamera-Kachel ohne Auswahl (`_casoraCams`: ohne Saugroboter-Karten und Druckerkameras);
+  `cameras_chosen`: `{ "pick": [gewählt], "want": [gezeigt] }` mit Auswahl (Karten raus, Druckerkameras bleiben)
